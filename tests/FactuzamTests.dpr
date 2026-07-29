@@ -25,6 +25,8 @@ uses
     '..\src\Lib\inLibGestorTareasMto.pas',
   inLibGestorArticulosMto in
     '..\src\Lib\inLibGestorArticulosMto.pas',
+  inLibGestorCopiaLineasCompra in
+    '..\src\Lib\inLibGestorCopiaLineasCompra.pas',
   inLibDiag in '..\src\Lib\inLibDiag.pas',
   inLibCadenas in '..\src\Lib\inLibCadenas.pas',
   inLibCifrado in '..\src\Lib\inLibCifrado.pas',
@@ -70,6 +72,14 @@ uses
   inLibCajaCierreVenta in '..\src\Caja\Lib\inLibCajaCierreVenta.pas',
   inLibComprasSesionesReglas in
     '..\src\Lib\inLibComprasSesionesReglas.pas',
+  inLibCatalogoSqlIntf in
+    '..\src\Lib\inLibCatalogoSqlIntf.pas',
+  inLibCatalogoSqlValidacion in
+    '..\src\Lib\inLibCatalogoSqlValidacion.pas',
+  inLibCatalogoSqlPerfiles in
+    '..\src\Lib\inLibCatalogoSqlPerfiles.pas',
+  inLibCatalogoSqlAdmin in
+    '..\src\Lib\inLibCatalogoSqlAdmin.pas',
   inLibPerfilesUsuarioValores in
     '..\src\Lib\inLibPerfilesUsuarioValores.pas',
   inLibExcepcionesAplicacionIntf in
@@ -82,6 +92,8 @@ uses
   PruebasGestorGuiasGridMto in 'PruebasGestorGuiasGridMto.pas',
   PruebasGestorTareasMto in 'PruebasGestorTareasMto.pas',
   PruebasGestorArticulosMto in 'PruebasGestorArticulosMto.pas',
+  PruebasGestorCopiaLineasCompra in
+    'PruebasGestorCopiaLineasCompra.pas',
   PruebasDiagnosticoMetadata in 'PruebasDiagnosticoMetadata.pas',
   PruebasCadenas in 'PruebasCadenas.pas',
   PruebasCifrado in 'PruebasCifrado.pas',
@@ -94,6 +106,7 @@ uses
   PruebasValoresAutomaticos in
     'PruebasValoresAutomaticos.pas',
   PruebasBusquedasCompra in 'PruebasBusquedasCompra.pas',
+  PruebasCatalogoSql in 'PruebasCatalogoSql.pas',
   PruebasValidacionTallasCompra in
     'PruebasValidacionTallasCompra.pas',
   PruebasPresentacionDocumento in

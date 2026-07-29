@@ -1,7 +1,7 @@
 param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [int]$MaximoFlujo = 100,
-  [int]$MaximoMetodosMayoresDe200 = 41
+  [int]$MaximoMetodosMayoresDe200 = 38
 )
 
 Set-StrictMode -Version Latest
@@ -172,8 +172,20 @@ $objetivos = @(
     Nombre = 'TdmConsultaOpe.DataModuleCreate'
   },
   @{
+    Ruta = 'src\Lib\inLibColumnasSkuModoTallas.pas'
+    Nombre = 'TModoEntradaTallas.Desmontar'
+  },
+  @{
+    Ruta = 'src\Lib\inLibPrestaImporter.pas'
+    Nombre = 'TPrestaConn.CargarPedido'
+  },
+  @{
     Ruta = 'src\Forms\inMtoDevolucionesCompra.pas'
     Nombre = 'TfrmMtoDevolucionesCompra.DevolverTodoStock'
+  },
+  @{
+    Ruta = 'src\Forms\inMtoDevolucionesCompra.pas'
+    Nombre = 'TfrmMtoDevolucionesCompra.AplicarArticuloDevolucion'
   }
 )
 $mediciones = [System.Collections.Generic.List[object]]::new()
@@ -701,6 +713,253 @@ $contenidoDfmConsultaOpe =
 if ($contenidoDfmConsultaOpe -notmatch
     '(?m)^\s*OnCreate\s*=\s*DataModuleCreate\s*$') {
   throw 'El DFM de consulta F10 no conserva su evento OnCreate.'
+}
+
+$rutaModoTallas =
+  Join-Path $Raiz 'src\Lib\inLibColumnasSkuModoTallas.pas'
+$contenidoModoTallas =
+  Get-Content -LiteralPath $rutaModoTallas -Raw
+$ayudantesDesmontajeTallas = @(
+  'LocalizarLinea',
+  'PonerLineaNueva',
+  'CargarCeldas',
+  'CalcularMaximaLinea',
+  'CargarDatosLinea',
+  'ActualizarPrimeraLinea',
+  'CrearLinea',
+  'AplicarCelda',
+  'ExpandirCeldas',
+  'BorrarCeldas',
+  'Ejecutar'
+)
+$metodosModoTallas =
+  Obtener-MetodosPascal -Ruta $rutaModoTallas
+foreach ($nombre in $ayudantesDesmontajeTallas) {
+  $nombreCompleto = 'TDesmontajeTallas.' + $nombre
+  $metodo = @(
+    $metodosModoTallas |
+      Where-Object { $_.Nombre -eq $nombreCompleto }
+  )
+  if ($metodo.Count -ne 1) {
+    throw "No se encontro un ayudante unico de des-pivote: $nombre."
+  }
+  if ($metodo[0].Lineas -gt $MaximoFlujo) {
+    throw (
+      "inLibColumnasSkuModoTallas.pas`:$($metodo[0].Linea) " +
+      "$nombre ocupa $($metodo[0].Lineas) lineas; " +
+      "maximo permitido: $MaximoFlujo.")
+  }
+  $referencias = [regex]::Matches(
+    $contenidoModoTallas,
+    "\b$nombre\b").Count
+  if ($referencias -lt 3) {
+    throw "El ayudante de des-pivote $nombre no tiene consumidor."
+  }
+}
+if ($contenidoModoTallas -notmatch
+    '(?s)TDesmontajeTallas\.Ejecutar.*?' +
+    'StartTransaction.*?UnidadesDocumento.*?CargarCeldas.*?' +
+    'ExpandirCeldas.*?BorrarCeldas.*?' +
+    'ComprobarInvarianteUnidades.*?Commit.*?except.*?Rollback') {
+  throw 'El des-pivote no conserva su orden transaccional.'
+}
+if ($contenidoModoTallas -notmatch
+    '(?s)TModoEntradaTallas\.Desmontar.*?' +
+    'TDesmontajeTallas\.Create\(Self\).*?Ejecutar.*?' +
+    'FreeAndNil\(Desmontaje\)') {
+  throw 'La fachada de des-pivote no coordina su colaborador.'
+}
+$contratosDesmontajeTallas = @(
+  'JOIN fza_atributos_valores AV',
+  'AS ALMC',
+  'AS VALOR',
+  'AS CANT',
+  'GROUP BY c.',
+  'HAVING SUM(c.',
+  'ORDER BY LIN, ALMC, VALOR',
+  'DELETE FROM ',
+  'WhereNumero',
+  'WhereDocExtra',
+  'Format(''%.*d''',
+  'FieldConjuntoPivot).AsInteger := 0',
+  'ModoTallas.Desmontar: %d celdas expandidas a lineas'
+)
+foreach ($contrato in $contratosDesmontajeTallas) {
+  if (-not $contenidoModoTallas.Contains($contrato)) {
+    throw "El des-pivote no conserva el contrato: $contrato."
+  }
+}
+
+$rutaPrestaImporter =
+  Join-Path $Raiz 'src\Lib\inLibPrestaImporter.pas'
+$contenidoPrestaImporter =
+  Get-Content -LiteralPath $rutaPrestaImporter -Raw
+$ayudantesCargaPedidoPresta = @(
+  'SolicitarNodo',
+  'LeerImporte',
+  'LeerNif',
+  'CargarPedidoBase',
+  'CargarCliente',
+  'AsignarDireccion',
+  'CargarProvincia',
+  'CargarDireccion',
+  'CargarDirecciones',
+  'CargarCabeceraEconomica',
+  'CargarTransportista',
+  'CargarEstadoPedido',
+  'CargarLineas',
+  'CargarMensajesHilo',
+  'CargarMensajes',
+  'Ejecutar'
+)
+$metodosPrestaImporter =
+  Obtener-MetodosPascal -Ruta $rutaPrestaImporter
+foreach ($nombre in $ayudantesCargaPedidoPresta) {
+  $nombreCompleto = 'TCargaPedidoPresta.' + $nombre
+  $metodo = @(
+    $metodosPrestaImporter |
+      Where-Object { $_.Nombre -eq $nombreCompleto }
+  )
+  if ($metodo.Count -ne 1) {
+    throw "No se encontro un ayudante unico de pedido Presta: $nombre."
+  }
+  if ($metodo[0].Lineas -gt $MaximoFlujo) {
+    throw (
+      "inLibPrestaImporter.pas`:$($metodo[0].Linea) " +
+      "$nombre ocupa $($metodo[0].Lineas) lineas; " +
+      "maximo permitido: $MaximoFlujo.")
+  }
+  $referencias = [regex]::Matches(
+    $contenidoPrestaImporter,
+    "\b$nombre\b").Count
+  if ($referencias -lt 3) {
+    throw "El ayudante de pedido Presta $nombre no tiene consumidor."
+  }
+}
+if ($contenidoPrestaImporter -notmatch
+    '(?s)TCargaPedidoPresta\.Ejecutar.*?' +
+    'CargarPedidoBase.*?CargarCliente.*?CargarDirecciones.*?' +
+    'CargarCabeceraEconomica.*?CargarTransportista.*?' +
+    'CargarEstadoPedido.*?CargarLineas.*?try.*?' +
+    'CargarMensajes.*?except.*?Result := FPedido.*?FPedido := nil') {
+  throw 'La carga de pedido Presta no conserva su secuencia.'
+}
+if ($contenidoPrestaImporter -notmatch
+    '(?s)TPrestaConn\.CargarPedido.*?' +
+    'TCargaPedidoPresta\.Create\(Self\).*?Ejecutar\(sIdPedido\).*?' +
+    'FreeAndNil\(Carga\)') {
+  throw 'La fachada de pedido Presta no coordina su colaborador.'
+}
+$contratosCargaPedidoPresta = @(
+  '/orders/?display=full&filter[id]=[',
+  '/customers/?display=[firstname,lastname,email]&filter[id]=[',
+  '/addresses/?display=[id,firstname,lastname,address1,address2,',
+  '/states/?display=[id,name]&filter[id]=[',
+  '/carriers/?display=[name]&filter[id]=[',
+  '/order_states/?display=[name]&filter[id]=[',
+  '/customer_threads/?display=full&filter[id_order]=[',
+  '/customer_messages/?display=full&filter[id_customer_thread]=[',
+  'LeerNif(Nodo, ''vatnumber'', ''vat_number'')',
+  'LeerNif(Nodo, ''vat_number'', ''vatnumber'')',
+  'FPedido.PutAdressDelinbil',
+  'Nodo.NodeName = ''order_row''',
+  'Nodo.NodeName = ''customer_message''',
+  'Los pedidos sin hilos de mensajes son válidos.'
+)
+foreach ($contrato in $contratosCargaPedidoPresta) {
+  if (-not $contenidoPrestaImporter.Contains($contrato)) {
+    throw "La carga de pedido Presta no conserva: $contrato."
+  }
+}
+
+$rutaAplicacionArticuloDevolucion =
+  Join-Path $Raiz 'src\Forms\inMtoDevolucionesCompra.pas'
+$contenidoAplicacionArticuloDevolucion =
+  Get-Content -LiteralPath $rutaAplicacionArticuloDevolucion -Raw
+$ayudantesAplicacionArticuloDevolucion = @(
+  'CampoCabeceraString',
+  'FechaCabecera',
+  'ResolverConjuntoPivotArticulo',
+  'ModeloProveedorArticulo',
+  'EsCodigoArticuloExacto',
+  'PonerString',
+  'PonerFloat',
+  'PonerInteger',
+  'LimpiarCampo',
+  'EnfocarSku',
+  'PrepararEdicion',
+  'CargarDatosArticulo',
+  'ResolverEntradaSku',
+  'ResolverArticulo',
+  'AplicarCamposArticulo',
+  'AplicarCantidades',
+  'ActualizarInterfaz',
+  'AplicarDatos',
+  'Ejecutar'
+)
+$metodosAplicacionArticuloDevolucion =
+  Obtener-MetodosPascal -Ruta $rutaAplicacionArticuloDevolucion
+foreach ($nombre in $ayudantesAplicacionArticuloDevolucion) {
+  $nombreCompleto = 'TAplicacionArticuloDevolucion.' + $nombre
+  $metodo = @(
+    $metodosAplicacionArticuloDevolucion |
+      Where-Object { $_.Nombre -eq $nombreCompleto }
+  )
+  if ($metodo.Count -ne 1) {
+    throw (
+      'No se encontro un ayudante unico de articulo devuelto: ' +
+      "$nombre.")
+  }
+  if ($metodo[0].Lineas -gt $MaximoFlujo) {
+    throw (
+      "inMtoDevolucionesCompra.pas`:$($metodo[0].Linea) " +
+      "$nombre ocupa $($metodo[0].Lineas) lineas; " +
+      "maximo permitido: $MaximoFlujo.")
+  }
+  $referencias = [regex]::Matches(
+    $contenidoAplicacionArticuloDevolucion,
+    "\b$nombre\b").Count
+  if ($referencias -lt 3) {
+    throw "El ayudante de articulo devuelto $nombre no tiene consumidor."
+  }
+}
+if ($contenidoAplicacionArticuloDevolucion -notmatch
+    '(?s)TAplicacionArticuloDevolucion\.Ejecutar.*?' +
+    'AsegurarCabeceraPersistidaParaLineas.*?' +
+    'FAplicandoArticulo := True.*?try.*?PrepararEdicion.*?' +
+    'ResolverArticulo.*?if FDatos\.Encontrado then.*?AplicarDatos.*?' +
+    'MessageDlg.*?finally.*?FAplicandoArticulo := False') {
+  throw 'La aplicacion de articulo devuelto no conserva su secuencia.'
+}
+if ($contenidoAplicacionArticuloDevolucion -notmatch
+    '(?s)TfrmMtoDevolucionesCompra\.AplicarArticuloDevolucion.*?' +
+    'TAplicacionArticuloDevolucion\.Create\(Self, ACodigoArt\).*?' +
+    'Aplicacion\.Ejecutar.*?FreeAndNil\(Aplicacion\)') {
+  throw 'La fachada de articulo devuelto no coordina su colaborador.'
+}
+$contratosAplicacionArticuloDevolucion = @(
+  'FROM fza_articulos_conjuntos_asign aca',
+  'aca.ID_VA_ACA <>',
+  'FROM fza_articulos_proveedores ap',
+  'ap.CODIGO_PRV_AP = :prv',
+  'ap.ESPROVEEDORPRINCIPAL_AP',
+  'FROM fza_articulos',
+  'Resolver.ResolverDatos(',
+  'Resolver.ResolverUltimoCoste(',
+  'FDatos.UltimoCoste.RefProveedor',
+  'PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN',
+  'ID_AC_PIVOT_DEVCLIN',
+  'TOTAL_UNIDADES_DEVCLIN',
+  'FCantidad * FDatos.UltimoCoste.PrecioUltCompra',
+  'PrepararColorPendienteArticuloDevolucion(',
+  'TThread.ForceQueue(nil',
+  'RefrescarVisibilidadTallas',
+  'CargarCaptionsAtributosLineaActiva'
+)
+foreach ($contrato in $contratosAplicacionArticuloDevolucion) {
+  if (-not $contenidoAplicacionArticuloDevolucion.Contains($contrato)) {
+    throw "La aplicacion de articulo devuelto no conserva: $contrato."
+  }
 }
 
 $exclusiones = @(

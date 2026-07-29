@@ -334,6 +334,45 @@ uses
 
 {$R *.dfm}
 
+type
+  TAplicacionArticuloDevolucion = class
+  private
+    FFormulario: TfrmMtoDevolucionesCompra;
+    FDataSet: TDataSet;
+    FCodigoArticulo: string;
+    FCodigoSku: string;
+    FCodigoProveedor: string;
+    FCodigoAlmacen: string;
+    FFecha: TDateTime;
+    FDatos: TArticuloDatos;
+    FIdConjuntoPivot: Integer;
+    FCantidad: Double;
+    function CampoCabeceraString(const Campo: string): string;
+    function FechaCabecera: TDateTime;
+    function ResolverConjuntoPivotArticulo(
+      const CodigoArticulo: string): Integer;
+    function ModeloProveedorArticulo(const CodigoArticulo,
+      CodigoProveedor: string): string;
+    function EsCodigoArticuloExacto(const Codigo: string): Boolean;
+    procedure PonerString(const Campo, Valor: string);
+    procedure PonerFloat(const Campo: string; Valor: Double);
+    procedure PonerInteger(const Campo: string; Valor: Integer);
+    procedure LimpiarCampo(const Campo: string);
+    procedure EnfocarSku(AbrirBusqueda: Boolean);
+    procedure PrepararEdicion;
+    procedure CargarDatosArticulo;
+    procedure ResolverEntradaSku;
+    procedure ResolverArticulo;
+    procedure AplicarCamposArticulo;
+    procedure AplicarCantidades;
+    procedure ActualizarInterfaz;
+    procedure AplicarDatos;
+  public
+    constructor Create(Formulario: TfrmMtoDevolucionesCompra;
+      const Codigo: string);
+    procedure Ejecutar;
+  end;
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TfrmMtoDevolucionesCompra.cbbSERIE_DEVCPropertiesInitPopup(
@@ -2071,314 +2110,370 @@ begin
   end;
 end;
 
+{ TAplicacionArticuloDevolucion }
+
+constructor TAplicacionArticuloDevolucion.Create(
+  Formulario: TfrmMtoDevolucionesCompra; const Codigo: string);
+begin
+  inherited Create;
+  FFormulario := Formulario;
+  FCodigoArticulo := Trim(Codigo);
+end;
+
+function TAplicacionArticuloDevolucion.CampoCabeceraString(
+  const Campo: string): string;
+var
+  CampoDataSet: TField;
+begin
+  Result := '';
+  if Assigned(FFormulario.dsTablaG) and
+     Assigned(FFormulario.dsTablaG.DataSet) then
+  begin
+    CampoDataSet := FFormulario.dsTablaG.DataSet.FindField(Campo);
+    if CampoDataSet <> nil then
+      Result := Trim(CampoDataSet.AsString);
+  end;
+end;
+
+function TAplicacionArticuloDevolucion.FechaCabecera: TDateTime;
+var
+  Campo: TField;
+begin
+  Result := Date;
+  if Assigned(FFormulario.dsTablaG) and
+     Assigned(FFormulario.dsTablaG.DataSet) then
+  begin
+    Campo := FFormulario.dsTablaG.DataSet.FindField('FECHA_DEVC');
+    if (Campo <> nil) and (not Campo.IsNull) then
+      Result := Campo.AsDateTime;
+  end;
+end;
+
+function TAplicacionArticuloDevolucion.ResolverConjuntoPivotArticulo(
+  const CodigoArticulo: string): Integer;
+var
+  Consulta: TUniQuery;
+begin
+  Result := 0;
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := FFormulario.ConexionPrincipal;
+    Consulta.SQL.Text :=
+      'SELECT aca.ID_AC_ACA ' +
+      '  FROM fza_articulos_conjuntos_asign aca ' +
+      ' WHERE aca.CODIGO_ART_ACA = :art ' +
+      '   AND aca.ID_VA_ACA <> ''CO'' ' +
+      ' ORDER BY aca.ID_VA_ACA ' +
+      ' LIMIT 1';
+    Consulta.ParamByName('art').AsString := CodigoArticulo;
+    Consulta.Open;
+    if not Consulta.IsEmpty then
+      Result := Consulta.FieldByName('ID_AC_ACA').AsInteger;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+
+function TAplicacionArticuloDevolucion.ModeloProveedorArticulo(
+  const CodigoArticulo, CodigoProveedor: string): string;
+var
+  Consulta: TUniQuery;
+begin
+  Result := '';
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := FFormulario.ConexionPrincipal;
+    Consulta.SQL.Text :=
+      'SELECT ap.REF_PROVEEDOR_AP ' +
+      '  FROM fza_articulos_proveedores ap ' +
+      ' WHERE ap.CODIGO_ART_AP = :art ' +
+      '   AND COALESCE(TRIM(ap.REF_PROVEEDOR_AP), '''') <> '''' ' +
+      ' ORDER BY CASE WHEN ap.CODIGO_PRV_AP = :prv THEN 0 ELSE 1 END, ' +
+      '          CASE ap.ESPROVEEDORPRINCIPAL_AP WHEN ''S'' THEN 0 ' +
+      '               ELSE 1 END, ' +
+      '          ap.FECHA_VALIDEZ_AP DESC, ap.CODIGO_PRV_AP ' +
+      ' LIMIT 1';
+    Consulta.ParamByName('art').AsString := CodigoArticulo;
+    Consulta.ParamByName('prv').AsString := CodigoProveedor;
+    Consulta.Open;
+    if not Consulta.IsEmpty then
+      Result := Consulta.FieldByName('REF_PROVEEDOR_AP').AsString;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+
+function TAplicacionArticuloDevolucion.EsCodigoArticuloExacto(
+  const Codigo: string): Boolean;
+var
+  Consulta: TUniQuery;
+begin
+  Result := False;
+  if Trim(Codigo) <> '' then
+  begin
+    Consulta := TUniQuery.Create(nil);
+    try
+      Consulta.Connection := FFormulario.ConexionPrincipal;
+      Consulta.SQL.Text :=
+        'SELECT 1 ' +
+        '  FROM fza_articulos ' +
+        ' WHERE CODIGO_ART_ART = :art ' +
+        ' LIMIT 1';
+      Consulta.ParamByName('art').AsString := Trim(Codigo);
+      Consulta.Open;
+      Result := not Consulta.IsEmpty;
+    finally
+      FreeAndNil(Consulta);
+    end;
+  end;
+end;
+
+procedure TAplicacionArticuloDevolucion.PonerString(
+  const Campo, Valor: string);
+var
+  CampoDataSet: TField;
+begin
+  CampoDataSet := FDataSet.FindField(Campo);
+  if CampoDataSet <> nil then
+    CampoDataSet.AsString := Valor;
+end;
+
+procedure TAplicacionArticuloDevolucion.PonerFloat(
+  const Campo: string; Valor: Double);
+var
+  CampoDataSet: TField;
+begin
+  CampoDataSet := FDataSet.FindField(Campo);
+  if CampoDataSet <> nil then
+    CampoDataSet.AsFloat := Valor;
+end;
+
+procedure TAplicacionArticuloDevolucion.PonerInteger(
+  const Campo: string; Valor: Integer);
+var
+  CampoDataSet: TField;
+begin
+  CampoDataSet := FDataSet.FindField(Campo);
+  if CampoDataSet <> nil then
+    CampoDataSet.AsInteger := Valor;
+end;
+
+procedure TAplicacionArticuloDevolucion.LimpiarCampo(
+  const Campo: string);
+var
+  CampoDataSet: TField;
+begin
+  CampoDataSet := FDataSet.FindField(Campo);
+  if CampoDataSet <> nil then
+    CampoDataSet.Clear;
+end;
+
+procedure TAplicacionArticuloDevolucion.EnfocarSku(
+  AbrirBusqueda: Boolean);
+var
+  ColumnaSku: TcxGridDBColumn;
+  Formulario: TfrmMtoDevolucionesCompra;
+begin
+  Formulario := FFormulario;
+  ColumnaSku := Formulario.tvLineasDevolucion.GetColumnByFieldName(
+    'CODIGO_UNIDAD_DEVCLIN');
+  if ColumnaSku <> nil then
+  begin
+    ColumnaSku.Visible := True;
+    TThread.ForceQueue(nil,
+      procedure
+      begin
+        Formulario.tvLineasDevolucion.Controller.FocusedColumn :=
+          ColumnaSku;
+        Formulario.tvLineasDevolucion.Controller.EditingController.ShowEdit;
+        if AbrirBusqueda then
+          Formulario.colLineaDevcCODIGO_UNIDADPropertiesButtonClick(nil, 0);
+      end);
+  end;
+end;
+
+procedure TAplicacionArticuloDevolucion.PrepararEdicion;
+begin
+  if FDataSet.IsEmpty then
+    FDataSet.Append;
+  if not (FDataSet.State in dsEditModes) then
+    FDataSet.Edit;
+  FCodigoProveedor := CampoCabeceraString('CODIGO_PRV_DEVC');
+  FCodigoAlmacen := CampoCabeceraString('CODIGO_ALM_DEVC');
+  FFecha := FechaCabecera;
+end;
+
+procedure TAplicacionArticuloDevolucion.CargarDatosArticulo;
+var
+  Resolver: TArticulosResolver;
+begin
+  Resolver := TArticulosResolver.Create(
+    FFormulario.ConexionPrincipal,
+    FFormulario.ParametrosCaja);
+  try
+    FDatos := Resolver.ResolverDatos(
+      FCodigoArticulo, FCodigoSku, '', FFecha,
+      FCodigoAlmacen, FCodigoProveedor);
+    if FDatos.Encontrado and FDatos.RequiereSku then
+      FDatos.UltimoCoste := Resolver.ResolverUltimoCoste(
+        FDatos.CodigoArticulo, FCodigoProveedor, '');
+  finally
+    FreeAndNil(Resolver);
+  end;
+end;
+
+procedure TAplicacionArticuloDevolucion.ResolverEntradaSku;
+var
+  Validador: TArticulosValidador;
+  Resolucion: TArtResolucionEntrada;
+begin
+  Validador := TArticulosValidador.Create(
+    FFormulario.ConexionPrincipal);
+  try
+    Resolucion := Validador.Resolver(FCodigoArticulo);
+  finally
+    FreeAndNil(Validador);
+  end;
+  if Resolucion.Encontrado then
+  begin
+    FCodigoArticulo := Resolucion.CodigoArticulo;
+    FCodigoSku := Resolucion.CodigoSku;
+    CargarDatosArticulo;
+  end
+  else if Resolucion.Mensaje <> '' then
+    FDatos.Mensaje := Resolucion.Mensaje
+  else
+    FDatos.Mensaje := 'No se encontró el artículo "' +
+      FCodigoArticulo + '".';
+end;
+
+procedure TAplicacionArticuloDevolucion.ResolverArticulo;
+begin
+  FCodigoSku := '';
+  FDatos.Clear;
+  if EsCodigoArticuloExacto(FCodigoArticulo) then
+    CargarDatosArticulo
+  else
+    ResolverEntradaSku;
+end;
+
+procedure TAplicacionArticuloDevolucion.AplicarCamposArticulo;
+var
+  ModeloProveedor: string;
+begin
+  FIdConjuntoPivot := ResolverConjuntoPivotArticulo(
+    FDatos.CodigoArticulo);
+  ModeloProveedor := ModeloProveedorArticulo(
+    FDatos.CodigoArticulo, FCodigoProveedor);
+  if ModeloProveedor = '' then
+    ModeloProveedor := FDatos.UltimoCoste.RefProveedor;
+  PonerString('CODIGO_ART_DEVCLIN', FDatos.CodigoArticulo);
+  PonerString('CODIGO_UNIDAD_DEVCLIN', FDatos.CodigoSku);
+  PonerString('REF_PRV_DEVCLIN', ModeloProveedor);
+  PonerString('CODIGO_FAM_DEVCLIN', FDatos.CodigoFamilia);
+  PonerString(
+    'DESCRIPCION_ARTICULO_DEVCLIN', FDatos.DescripcionArticulo);
+  PonerString(
+    'TIPO_CANTIDAD_ARTICULO_DEVCLIN', FDatos.TipoCantidad);
+  PonerString('TIPO_IVA_ARTICULO_DEVCLIN', FDatos.TipoIVA);
+  PonerFloat(
+    'PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN',
+    FDatos.UltimoCoste.PrecioUltCompra);
+  if FCodigoAlmacen <> '' then
+    PonerString('CODIGO_ALMACEN_DEVCLIN', FCodigoAlmacen);
+  if FIdConjuntoPivot > 0 then
+    PonerInteger('ID_AC_PIVOT_DEVCLIN', FIdConjuntoPivot)
+  else
+    LimpiarCampo('ID_AC_PIVOT_DEVCLIN');
+end;
+
+procedure TAplicacionArticuloDevolucion.AplicarCantidades;
+begin
+  FCantidad := 0;
+  if FDatos.RequiereSku and (FIdConjuntoPivot > 0) then
+  begin
+    PonerFloat('CANTIDAD_DEVCLIN', 0);
+    PonerFloat('TOTAL_UNIDADES_DEVCLIN', 0);
+  end
+  else
+  begin
+    if FDataSet.FindField('CANTIDAD_DEVCLIN') <> nil then
+      FCantidad := FDataSet.FieldByName('CANTIDAD_DEVCLIN').AsFloat;
+    if FCantidad = 0 then
+    begin
+      FCantidad := 1;
+      PonerFloat('CANTIDAD_DEVCLIN', FCantidad);
+    end;
+    if FDatos.CodigoSku <> '' then
+      PonerFloat('TOTAL_UNIDADES_DEVCLIN', FCantidad);
+  end;
+  PonerFloat(
+    'TOTAL_DEVCLIN',
+    FCantidad * FDatos.UltimoCoste.PrecioUltCompra);
+end;
+
+procedure TAplicacionArticuloDevolucion.ActualizarInterfaz;
+begin
+  if FDatos.RequiereSku and (FDatos.CodigoSku = '') and
+     ((FFormulario.FPivote = nil) or
+      (not FFormulario.FPivote.Activo)) then
+    EnfocarSku(True);
+  FFormulario.RefrescarVisibilidadTallas;
+  if FFormulario.FMostrarAtributos then
+    FFormulario.CargarCaptionsAtributosLineaActiva;
+  // El pivote horizontal necesita la línea materializada.
+  if Assigned(FFormulario.FPivote) and
+     FFormulario.FPivote.Activo and
+     (FDataSet.State in dsEditModes) then
+    FDataSet.Post;
+end;
+
+procedure TAplicacionArticuloDevolucion.AplicarDatos;
+begin
+  AplicarCamposArticulo;
+  AplicarCantidades;
+  if FDatos.RequiereSku and (FIdConjuntoPivot > 0) then
+    FFormulario.PrepararColorPendienteArticuloDevolucion(
+      FDatos.CodigoArticulo, FIdConjuntoPivot);
+  ActualizarInterfaz;
+end;
+
+procedure TAplicacionArticuloDevolucion.Ejecutar;
+begin
+  if (FCodigoArticulo <> '') and
+     Assigned(FFormulario.dmmDevolucionesCompra) and
+     (not FFormulario.FAplicandoArticulo) then
+  begin
+    FFormulario.AsegurarCabeceraPersistidaParaLineas;
+    FDataSet := FFormulario.dmmDevolucionesCompra.
+      unqryDevolucionesCompraLineas;
+    if Assigned(FDataSet) and FDataSet.Active then
+    begin
+      FFormulario.FAplicandoArticulo := True;
+      try
+        PrepararEdicion;
+        ResolverArticulo;
+        if FDatos.Encontrado then
+          AplicarDatos
+        else if FDatos.Mensaje <> '' then
+          MessageDlg(FDatos.Mensaje, mtWarning, [mbOk], 0);
+      finally
+        FFormulario.FAplicandoArticulo := False;
+      end;
+    end;
+  end;
+end;
+
 procedure TfrmMtoDevolucionesCompra.AplicarArticuloDevolucion(
   const ACodigoArt: string);
 var
-  ds       : TDataSet;
-  Validador: TArticulosValidador;
-  Resolucion: TArtResolucionEntrada;
-  Resolver : TArticulosResolver;
-  Datos    : TArticuloDatos;
-  qry      : TUniQuery;
-  sArt     : string;
-  sSku      : string;
-  sPrv     : string;
-  sAlm     : string;
-  sModeloPrv: string;
-  dFecha   : TDateTime;
-  iAcPivot : Integer;
-  rCantidad: Double;
-
-  function CampoCabeceraString(const ACampo: string): string;
-  var
-    Campo: TField;
-  begin
-    Result := '';
-    if Assigned(dsTablaG) and Assigned(dsTablaG.DataSet) then
-    begin
-      Campo := dsTablaG.DataSet.FindField(ACampo);
-      if Campo <> nil then
-        Result := Trim(Campo.AsString);
-    end;
-  end;
-
-  function FechaCabecera: TDateTime;
-  var
-    Campo: TField;
-  begin
-    Result := Date;
-    if Assigned(dsTablaG) and Assigned(dsTablaG.DataSet) then
-    begin
-      Campo := dsTablaG.DataSet.FindField('FECHA_DEVC');
-      if (Campo <> nil) and (not Campo.IsNull) then
-        Result := Campo.AsDateTime;
-    end;
-  end;
-
-  function ResolverConjuntoPivotArticulo(const ACodigoArticulo: string): Integer;
-  begin
-    Result := 0;
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := ConexionPrincipal;
-      qry.SQL.Text :=
-        'SELECT aca.ID_AC_ACA ' +
-        '  FROM fza_articulos_conjuntos_asign aca ' +
-        ' WHERE aca.CODIGO_ART_ACA = :art ' +
-        '   AND aca.ID_VA_ACA <> ''CO'' ' +
-        ' ORDER BY aca.ID_VA_ACA ' +
-        ' LIMIT 1';
-      qry.ParamByName('art').AsString := ACodigoArticulo;
-      qry.Open;
-      if not qry.IsEmpty then
-        Result := qry.FieldByName('ID_AC_ACA').AsInteger;
-    finally
-      FreeAndNil(qry);
-    end;
-  end;
-
-  function ModeloProveedorArticulo(const ACodigoArticulo,
-                                        ACodigoProveedor: string): string;
-  begin
-    Result := '';
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := ConexionPrincipal;
-      qry.SQL.Text :=
-        'SELECT ap.REF_PROVEEDOR_AP ' +
-        '  FROM fza_articulos_proveedores ap ' +
-        ' WHERE ap.CODIGO_ART_AP = :art ' +
-        '   AND COALESCE(TRIM(ap.REF_PROVEEDOR_AP), '''') <> '''' ' +
-        ' ORDER BY CASE WHEN ap.CODIGO_PRV_AP = :prv THEN 0 ELSE 1 END, ' +
-        '          CASE ap.ESPROVEEDORPRINCIPAL_AP WHEN ''S'' THEN 0 ' +
-        '               ELSE 1 END, ' +
-        '          ap.FECHA_VALIDEZ_AP DESC, ap.CODIGO_PRV_AP ' +
-        ' LIMIT 1';
-      qry.ParamByName('art').AsString := ACodigoArticulo;
-      qry.ParamByName('prv').AsString := ACodigoProveedor;
-      qry.Open;
-      if not qry.IsEmpty then
-        Result := qry.FieldByName('REF_PROVEEDOR_AP').AsString;
-    finally
-      FreeAndNil(qry);
-    end;
-  end;
-
-  function EsCodigoArticuloExacto(const ACodigo: string): Boolean;
-  var
-    qArt: TUniQuery;
-  begin
-    Result := False;
-    if Trim(ACodigo) <> '' then
-    begin
-      qArt := TUniQuery.Create(nil);
-      try
-        qArt.Connection := ConexionPrincipal;
-        qArt.SQL.Text :=
-          'SELECT 1 ' +
-          '  FROM fza_articulos ' +
-          ' WHERE CODIGO_ART_ART = :art ' +
-          ' LIMIT 1';
-        qArt.ParamByName('art').AsString := Trim(ACodigo);
-        qArt.Open;
-        Result := not qArt.IsEmpty;
-      finally
-        FreeAndNil(qArt);
-      end;
-    end;
-  end;
-
-  procedure PonerString(const ACampo, AValor: string);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.AsString := AValor;
-  end;
-
-  procedure PonerFloat(const ACampo: string; AValor: Double);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.AsFloat := AValor;
-  end;
-
-  procedure PonerInteger(const ACampo: string; AValor: Integer);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.AsInteger := AValor;
-  end;
-
-  procedure LimpiarCampo(const ACampo: string);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.Clear;
-  end;
-
-  procedure EnfocarSku(AAbrirBusqueda: Boolean);
-  var
-    colSku: TcxGridDBColumn;
-  begin
-    colSku := tvLineasDevolucion.GetColumnByFieldName('CODIGO_UNIDAD_DEVCLIN');
-    if colSku <> nil then
-    begin
-      colSku.Visible := True;
-      TThread.ForceQueue(nil,
-        procedure
-        begin
-          tvLineasDevolucion.Controller.FocusedColumn := colSku;
-          tvLineasDevolucion.Controller.EditingController.ShowEdit;
-          if AAbrirBusqueda then
-            colLineaDevcCODIGO_UNIDADPropertiesButtonClick(nil, 0);
-        end);
-    end;
-  end;
-
+  Aplicacion: TAplicacionArticuloDevolucion;
 begin
-  sArt := Trim(ACodigoArt);
-  if (sArt <> '') and Assigned(dmmDevolucionesCompra) and
-     (not FAplicandoArticulo) then
-  begin
-    AsegurarCabeceraPersistidaParaLineas;
-    ds := dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
-    if Assigned(ds) and ds.Active then
-    begin
-      FAplicandoArticulo := True;
-      try
-        if ds.IsEmpty then
-          ds.Append;
-        if not (ds.State in dsEditModes) then
-          ds.Edit;
-        sPrv := CampoCabeceraString('CODIGO_PRV_DEVC');
-        sAlm := CampoCabeceraString('CODIGO_ALM_DEVC');
-        dFecha := FechaCabecera;
-        sSku := '';
-        Datos.Clear;
-        if EsCodigoArticuloExacto(sArt) then
-        begin
-          Resolver := TArticulosResolver.Create(
-            ConexionPrincipal,
-            ParametrosCaja);
-          try
-            Datos := Resolver.ResolverDatos(sArt, '', '', dFecha, sAlm,
-                                            sPrv);
-            if Datos.Encontrado and Datos.RequiereSku then
-              Datos.UltimoCoste := Resolver.ResolverUltimoCoste(
-                Datos.CodigoArticulo, sPrv, '');
-          finally
-            FreeAndNil(Resolver);
-          end;
-        end
-        else
-        begin
-          Validador := TArticulosValidador.Create(ConexionPrincipal);
-          try
-            Resolucion := Validador.Resolver(sArt);
-          finally
-            FreeAndNil(Validador);
-          end;
-          if Resolucion.Encontrado then
-          begin
-            sArt := Resolucion.CodigoArticulo;
-            sSku := Resolucion.CodigoSku;
-            Resolver := TArticulosResolver.Create(
-              ConexionPrincipal,
-              ParametrosCaja);
-            try
-              Datos := Resolver.ResolverDatos(sArt, sSku, '', dFecha, sAlm,
-                                              sPrv);
-              if Datos.Encontrado and Datos.RequiereSku then
-                Datos.UltimoCoste := Resolver.ResolverUltimoCoste(
-                  Datos.CodigoArticulo, sPrv, '');
-            finally
-              FreeAndNil(Resolver);
-            end;
-          end
-          else
-          begin
-            if Resolucion.Mensaje <> '' then
-              Datos.Mensaje := Resolucion.Mensaje
-            else
-              Datos.Mensaje := 'No se encontró el artículo "' + sArt + '".';
-          end;
-        end;
-        if Datos.Encontrado then
-        begin
-          iAcPivot := ResolverConjuntoPivotArticulo(Datos.CodigoArticulo);
-          sModeloPrv := ModeloProveedorArticulo(Datos.CodigoArticulo, sPrv);
-          if sModeloPrv = '' then
-            sModeloPrv := Datos.UltimoCoste.RefProveedor;
-          PonerString('CODIGO_ART_DEVCLIN', Datos.CodigoArticulo);
-          PonerString('CODIGO_UNIDAD_DEVCLIN', Datos.CodigoSku);
-          PonerString('REF_PRV_DEVCLIN', sModeloPrv);
-          PonerString('CODIGO_FAM_DEVCLIN', Datos.CodigoFamilia);
-          PonerString('DESCRIPCION_ARTICULO_DEVCLIN',
-                      Datos.DescripcionArticulo);
-          PonerString('TIPO_CANTIDAD_ARTICULO_DEVCLIN',
-                      Datos.TipoCantidad);
-          PonerString('TIPO_IVA_ARTICULO_DEVCLIN', Datos.TipoIVA);
-          PonerFloat('PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN',
-                     Datos.UltimoCoste.PrecioUltCompra);
-          if sAlm <> '' then
-            PonerString('CODIGO_ALMACEN_DEVCLIN', sAlm);
-          if iAcPivot > 0 then
-            PonerInteger('ID_AC_PIVOT_DEVCLIN', iAcPivot)
-          else
-            LimpiarCampo('ID_AC_PIVOT_DEVCLIN');
-          rCantidad := 0;
-          if Datos.RequiereSku and (iAcPivot > 0) then
-          begin
-            PonerFloat('CANTIDAD_DEVCLIN', 0);
-            PonerFloat('TOTAL_UNIDADES_DEVCLIN', 0);
-          end
-          else
-          begin
-            if ds.FindField('CANTIDAD_DEVCLIN') <> nil then
-              rCantidad := ds.FieldByName('CANTIDAD_DEVCLIN').AsFloat;
-            if rCantidad = 0 then
-            begin
-              rCantidad := 1;
-              PonerFloat('CANTIDAD_DEVCLIN', rCantidad);
-            end;
-            if Datos.CodigoSku <> '' then
-              PonerFloat('TOTAL_UNIDADES_DEVCLIN', rCantidad);
-          end;
-          PonerFloat('TOTAL_DEVCLIN',
-                     rCantidad * Datos.UltimoCoste.PrecioUltCompra);
-          if Datos.RequiereSku and (iAcPivot > 0) then
-            PrepararColorPendienteArticuloDevolucion(Datos.CodigoArticulo,
-                                                     iAcPivot);
-          // Pivote de compras antiguo RETIRADO: sin auto-activacion
-          // por preferencia ESPIVOTE. El modo de entrada (tallas
-          // horizontal / SKU / desglose) lo gobierna el contrato
-          // ColumnSKUcxGrid via F1.
-          if Datos.RequiereSku and (Datos.CodigoSku = '') and
-             ((FPivote = nil) or (not FPivote.Activo)) then
-            EnfocarSku(True);
-          RefrescarVisibilidadTallas;
-          if FMostrarAtributos then
-            CargarCaptionsAtributosLineaActiva;
-          // En horizontal el pivote necesita la linea ya materializada para
-          // crear/actualizar el SKU al teclear en la talla siguiente.
-          if Assigned(FPivote) and FPivote.Activo and
-             (ds.State in dsEditModes) then
-            ds.Post;
-        end
-        else if Datos.Mensaje <> '' then
-          MessageDlg(Datos.Mensaje, mtWarning, [mbOk], 0);
-      finally
-        FAplicandoArticulo := False;
-      end;
-    end;
+  Aplicacion := TAplicacionArticuloDevolucion.Create(Self, ACodigoArt);
+  try
+    Aplicacion.Ejecutar;
+  finally
+    FreeAndNil(Aplicacion);
   end;
 end;
 

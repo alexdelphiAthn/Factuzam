@@ -190,6 +190,15 @@
         <DCCReference Include="src\Lib\inLibRegistroPantallas.pas"/>
         <DCCReference Include="src\Lib\inLibVentanaEmbebidaIntf.pas"/>
         <DCCReference Include="src\Lib\inLibUnitForm.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgComun.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgConfiguracion.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgArticulos.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgVentas.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgCompras.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgFacturas.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgCaja.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgIntegraciones.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgVerifactu.pas"/>
         <DCCReference Include="src\Lib\inLibMsg.pas"/>
         <DCCReference Include="src\Lib\inLibNet.pas"/>
         <DCCReference Include="src\Lib\inLibScriptDB.pas"/>
@@ -220,6 +229,10 @@
         <DCCReference Include="src\Lib\inLibFiltrosGuardadosIntf.pas"/>
         <DCCReference Include="src\Lib\inLibPerfilesUsuarioIntf.pas"/>
         <DCCReference Include="src\Lib\inLibPerfilesUsuarioValores.pas"/>
+        <DCCReference Include="src\Lib\inLibCatalogoSqlIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibCatalogoSqlValidacion.pas"/>
+        <DCCReference Include="src\Lib\inLibCatalogoSqlPerfiles.pas"/>
+        <DCCReference Include="src\Lib\inLibCatalogoSqlAdmin.pas"/>
         <DCCReference Include="src\Lib\inLibTraduccionesIntf.pas"/>
         <DCCReference Include="src\Lib\inLibTraducciones.pas"/>
         <DCCReference Include="src\Lib\inLibParametrosIntf.pas"/>
@@ -241,6 +254,7 @@
         <DCCReference Include="src\Lib\inLibGestorGuiasGridMto.pas"/>
         <DCCReference Include="src\Lib\inLibGestorTareasMto.pas"/>
         <DCCReference Include="src\Lib\inLibGestorArticulosMto.pas"/>
+        <DCCReference Include="src\Lib\inLibGestorCopiaLineasCompra.pas"/>
         <DCCReference Include="src\Lib\inLibLicenciaAplicacion.pas"/>
         <DCCReference Include="src\Core\inMtoFrmBase.pas">
             <Form>frmBase</Form>
@@ -973,6 +987,7 @@
             <Form>dmComprasSesiones</Form>
             <DesignClass>TdmComprasSesiones</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataComprasSesionesRepositorio.pas"/>
         <DCCReference Include="src\Forms\inMtoComprasPlantillas.pas">
             <Form>frmMtoComprasPlantillas</Form>
         </DCCReference>
@@ -992,6 +1007,7 @@
             <Form>frmModalCrearAlbaranSesion</Form>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibComprasSesiones.pas"/>
+        <DCCReference Include="src\Lib\inLibComprasSesionesIntf.pas"/>
         <DCCReference Include="src\Lib\inLibComprasSesionesReglas.pas"/>
         <DCCReference Include="src\Lib\inLibGridTallasInline.pas"/>
         <DCCReference Include="src\Lib\inLibColumnasDocumento.pas"/>

@@ -81,6 +81,7 @@
         <DCCReference Include="..\src\Lib\inLibGestorGuiasGridMto.pas"/>
         <DCCReference Include="..\src\Lib\inLibGestorTareasMto.pas"/>
         <DCCReference Include="..\src\Lib\inLibGestorArticulosMto.pas"/>
+        <DCCReference Include="..\src\Lib\inLibGestorCopiaLineasCompra.pas"/>
         <DCCReference Include="..\src\Lib\inLibDiag.pas"/>
         <DCCReference Include="..\src\Lib\inLibCadenas.pas"/>
         <DCCReference Include="..\src\Lib\inLibCifrado.pas"/>
@@ -110,6 +111,10 @@
         <DCCReference Include="..\src\Caja\Lib\inLibCajaRectificacion.pas"/>
         <DCCReference Include="..\src\Caja\Lib\inLibCajaCierreVenta.pas"/>
         <DCCReference Include="..\src\Lib\inLibComprasSesionesReglas.pas"/>
+        <DCCReference Include="..\src\Lib\inLibCatalogoSqlIntf.pas"/>
+        <DCCReference Include="..\src\Lib\inLibCatalogoSqlValidacion.pas"/>
+        <DCCReference Include="..\src\Lib\inLibCatalogoSqlPerfiles.pas"/>
+        <DCCReference Include="..\src\Lib\inLibCatalogoSqlAdmin.pas"/>
         <DCCReference Include="..\src\Lib\inLibPerfilesUsuarioValores.pas"/>
         <DCCReference Include="..\src\Lib\inLibExcepcionesAplicacionIntf.pas"/>
         <DCCReference Include="PruebasAtributosPaleta.pas"/>
@@ -120,6 +125,7 @@
         <DCCReference Include="PruebasGestorGuiasGridMto.pas"/>
         <DCCReference Include="PruebasGestorTareasMto.pas"/>
         <DCCReference Include="PruebasGestorArticulosMto.pas"/>
+        <DCCReference Include="PruebasGestorCopiaLineasCompra.pas"/>
         <DCCReference Include="PruebasDiagnosticoMetadata.pas"/>
         <DCCReference Include="PruebasCadenas.pas"/>
         <DCCReference Include="PruebasCifrado.pas"/>
@@ -130,6 +136,7 @@
         <DCCReference Include="PruebasDatasets.pas"/>
         <DCCReference Include="PruebasValoresAutomaticos.pas"/>
         <DCCReference Include="PruebasBusquedasCompra.pas"/>
+        <DCCReference Include="PruebasCatalogoSql.pas"/>
         <DCCReference Include="PruebasValidacionTallasCompra.pas"/>
         <DCCReference Include="PruebasPresentacionDocumento.pas"/>
         <DCCReference Include="PruebasNavegacionDocumento.pas"/>

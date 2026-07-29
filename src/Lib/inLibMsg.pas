@@ -3,3172 +3,8510 @@
 {  Módulo:       inLibMsg                                                      }
 {    Tipo:       Librería                                                      }
 { Versión:       1.0.0                                                         }
-{   Fecha:       11/05/2026                                                    }
+{   Fecha:       29/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Mensajes de UI reutilizables.                                             }
-{    Constantes de texto para avisos y errores comunes.                        }
+{    Fachada temporal de compatibilidad para los catálogos de mensajes.        }
+{    No añadir recursos nuevos; caduca al migrar el último consumidor.         }
 {******************************************************************************}
 unit inLibMsg;
 
 interface
-var
-  SClassRttiNotFnd:string = 'Clase %s no encontrada en rtti. ' +
-                            'Hay un error al crear el formulario';
-  SLocateNotFnd:string = 'El dato o datos %s no se han encontrado en %s';
-  SResWinFNotFnd:string = '%s no encontrada en las tabla del sistema' +
-                            ' fza_winforms';
-  SCliToTbl:string = 'Cliente: %s pasado correctamente a la tabla de ' +
-                     'clientes';
-  SEmpToTbl:string = 'Empresa: %s pasada correctamente a la tabla de '+
-                     'empresas';
-  SErrorDecryptPassBBDD:string = 'Fallo en la lectura y desencriptación' +
-                                  ' de password de la Base de Datos.';
-  SErrorDecryptPass:string = 'Fallo en la lectura y desencriptación' +
-                                  ' de password.';
-  SErrorAuthPass:string = 'La contraseña de usuario no es correcta. ';
-  SErrorPassMatch:string = 'El password que ha introducido no coincide.';
-  SErrorPassMatchBBDD:string = 'El password de la BBDD no coincide.';
-  SEnterPassBBDD:string = 'Introduzca el password actual de la BBDD';
-  SScriptSuccess:string = 'El script se ejecutó exitosamente.';
-  SFailLoadScriptBBDD:string = 'No existe script de creación de BD, ' +
-                               'instalación fallida';
-  SCreateSuccBBDD:string = 'La Base de Datos se creó exitosamente';
-  SErrorCreateBBDD:string = 'No existe una base de datos llamada %s, '  +
-                            '¿desea crearla? ';
-  SBBDDUpdateTo:string = 'La Base de Datos se actualizó a ';
-  SNotExistsUpBBDDFile:string = 'No existe script de actualización %s,'+
-                       ' instalación fallida';
-  SAdviceUpdateBBDD:string = 'Es necesario actualizar la BBDD' +
-                            ' con nuevos cambios,' + sLineBreak +
-                            ' ¿desea proceder con el procedimiento' +
-                            ' de actualización?';
-  SPasswordBBDDChanged:string = 'Password de la BBDD cambiado '+
-                                'correctamente.' + sLineBreak +
-                                'Anote el password: "%s" en un lugar'+
-                                ' seguro para evitar problemas.';
-  SWantDefChgBBDD:String= '¿Desea cambiar el password por defecto ' +
-                          'de la Base de Datos?';
-  SAdvMsg:String = 'Mensaje Advertencia';
-  SNoConnBBDD:String = 'No hay conexión con la bbdd';
-  SConnSuccBBDD:String = 'La conexión se estableció exitosamente.';
-  SGetPassBBDD:string = 'Escriba password de la BBDD';
-  SConnFailBBDD:string = 'Conexión fallida. Usuario, password, ' +
-                           'host, puerto o Nombre de la BBDD no es válido.';
-  SErrorSentenciaScript:string =
-    'Ocurrió un error ejecutando la siguiente sentencia:' + sLineBreak +
-    '%s' + sLineBreak + sLineBreak +
-    'Detalle del error: %s' + sLineBreak + sLineBreak +
-    '¿Deseas ignorar el error y continuar con el script?';
-  SSolicitudPassBBDD:string = 'Introduzca password de la BBDD';
-  SSolicitudNuevoPassBBDD:string =
-    'Introduzca el nuevo password de la BBDD';
-  SScriptEjecutado:string = 'El script se ejecutó exitosamente';
-  SScriptNoEjecutado:string = 'El script no fue ejecutado';
-  SErrorConexionServidorBBDD:string =
-    'No se pudo conectar al servidor MySQL/MariaDB:' + sLineBreak +
-    '%s' + sLineBreak + sLineBreak +
-    'Revise la configuración pulsando "Configurar BBDD".';
-  SErrorEstructuraBBDD:string =
-    '%s' + sLineBreak + sLineBreak +
-    'Puede usar "Subir script" para crear/actualizar la base de datos, ' +
-    'o "Recuperar copia" para restaurar un backup.';
-  SErrorConexionBBDD:string =
-    'No se pudo conectar a la base de datos "%s":' + sLineBreak + '%s';
-  SErrorInicioAutomatico:string =
-    'No se pudo completar el inicio automático:' + sLineBreak +
-    '%s' + sLineBreak + sLineBreak +
-    'Introduzca sus credenciales manualmente.';
-  SLicenciaEstablecida:string =
-    'Licencia establecida.' + sLineBreak + sLineBreak +
-    'Código: %s' + sLineBreak +
-    'NIF de empresa: %d' + sLineBreak +
-    'INI: %s' + sLineBreak + sLineBreak + '%s';
-  SLicenciaNoEstablecidaSinNif:string =
-    'No se ha establecido licencia.' + sLineBreak + sLineBreak +
-    'No hay NIF de empresa configurado.' + sLineBreak +
-    'Mientras no haya NIF de empresa, no se exigirá licencia.';
-  SErrorEstablecerLicencia:string =
-    'No se pudo establecer la licencia.' + sLineBreak + sLineBreak + '%s';
-  SModoDemo:string = 'Modo DEMO: limitado a %d facturas al día.';
-  SCancelacionSolicitada:string =
-    'La cancelación ya está solicitada. Espere a que termine la sentencia ' +
-    'actual.';
-  SPreguntaCancelarOperacion:string =
-    'Hay una operación en curso moviendo datos.' + sLineBreak +
-    sLineBreak + '¿Desea abandonar la operación en curso?';
-  SOperacionCancelada:string = 'Operación cancelada.';
-  SCopiaSeguridadGuardada:string =
-    'La copia se guardó exitosamente';
-  SErrorCrearCopiaSeguridad:string =
-    'No se pudo crear la copia de seguridad.' + sLineBreak + '%s';
-  SRestauracionCancelada:string =
-    'Operación cancelada. La base de datos puede haber quedado ' +
-    'parcialmente restaurada.';
-  SErrorRestaurarCopiaSeguridad:string =
-    'Hubo problemas al restaurar la copia.' + sLineBreak + '%s';
-  SErrorContrasenaCopiaVacia:string =
-    'La contraseña de la copia no puede estar vacía.';
-  SErrorTipoRestauracionNoPermitido:string =
-    'Los usuarios no administradores sólo pueden restaurar copias o ' +
-    'scripts cifrados (*.crypt).';
-  SPreguntaReemplazarFichero:string =
-    '¿Desea reemplazar el fichero existente?';
-  SCopiaSeguridadCancelada:string = 'La copia se canceló';
-  SCargaScriptCancelada:string = 'Se canceló la carga del script.';
-  SUsuarioNoExiste:string = 'El nombre de usuario no existe';
-  // Core
-  SDescripcionParametroIdioma:string =
-    'Idioma de la interfaz: es-ES, en-GB o qps-ploc para pruebas';
-  SErrorContextoSesionFormularioNoConfigurado:string =
-    'No se ha configurado el contexto de sesión del formulario.';
-  SErrorServicioAuditoriaDatosNoConfigurado:string =
-    'No se ha configurado el servicio de auditoría de datos.';
-  SErrorProveedorEdicionParametrosNoConfigurado:string =
-    'No se ha configurado el proveedor de edición de parámetros.';
-  SErrorParametrosAplicacionEditablesNoConfigurados:string =
-    'No se han configurado los parámetros de aplicación editables.';
-  SInfoParametrosGuardados:string =
-    'Se guardaron %d parámetros para: %s';
-  SAvisoParametrosRestringidosIgnorados:string =
-    'Se ignoraron %d parámetros restringidos. ' +
-    'Solo un usuario administrador puede cambiarlos.';
-  SAvisoParametrosRestringidosNoGuardados:string =
-    'No se guardaron %d parámetros restringidos. ' +
-    'Solo un usuario administrador puede cambiarlos.';
-  SInfoSinCambiosParametros:string =
-    'No se detectaron cambios para guardar.';
-  SInfoLayoutGuardado:string = 'Layout guardado.';
-  SPreguntaSalirSinGuardar:string =
-    '¿Seguro que desea salir sin guardar?';
-  SAvisoSinUsuariosParametrosGuardados:string =
-    'No hay usuarios con parámetros guardados para este formulario.';
-  STituloCambiarUsuario:string = 'Cambiar usuario';
-  SSolicitudCambiarUsuario:string =
-    'Usuarios disponibles:' + sLineBreak + '%s' + sLineBreak +
-    sLineBreak + 'Introduce el nombre de usuario:';
-  SErrorUsuarioNoEncontrado:string = 'Usuario no encontrado: %s';
-  SErrorEnviarTicketImpresora:string =
-    'No se pudo enviar el ticket a la impresora "%s".' + sLineBreak +
-    '%s' + sLineBreak + 'Se abrirá la vista previa.';
-  SAvisoSinComandosESCPOSImpresora:string =
-    'No hay comandos ESC/POS para enviar a la impresora.';
-  SInfoTicketEnviadoImpresora:string =
-    'Ticket enviado correctamente a: %s';
-  SErrorImprimir:string = 'Error al imprimir: %s';
-  SAvisoSinComandosESCPOSPDF:string =
-    'No hay comandos ESC/POS para generar el PDF.';
-  SInfoPDFGuardado:string = 'PDF guardado en: %s';
-  SInfoPNGGuardado:string = 'PNG guardado en: %s';
-  SErrorContextoInicioSesionNoProporcionado:string =
-    'No se ha proporcionado el contexto de inicio de sesión.';
-  SErrorParametrosSinEstadoLicencia:string =
-    'Los parámetros no admiten el estado de licencia.';
-  SErrorParametrosAplicacionSinContratoEdicion:string =
-    'Los parámetros de aplicación no ofrecen el contrato de edición.';
-  SErrorParametrosCajaSinContratoEdicion:string =
-    'Los parámetros de caja no ofrecen el contrato de edición.';
-  SErrorServicioConexionesNoDisponible:string =
-    'No está disponible el servicio de conexiones.';
-  SCertificadoQuedaMenosUnDia:string = 'queda menos de 1 día';
-  SCertificadoQuedaUnDia:string = 'queda 1 día';
-  SCertificadoQuedanDias:string = 'quedan %d días';
-  SAvisoCertificadoCaducado:string =
-    'certificado electrónico caducado el %s.';
-  SAvisoCertificadoProximoCaducar:string =
-    'certificado electrónico caduca el %s (%s).';
-  SAvisoCertificadosCaducidad:string =
-    'Atención: hay certificados electrónicos próximos a caducar o ya ' +
-    'caducados.' + sLineBreak + sLineBreak + '%s' + sLineBreak +
-    'Revise la ficha de empresa y renueve el certificado.';
-  SAvisoCargaPermisosRestringidos:string =
-    'No se pudieron cargar los permisos.' + sLineBreak +
-    'El acceso se ha restringido por seguridad.' + sLineBreak +
-    'Revise el registro de la aplicación en:' + sLineBreak + '%s';
-  SInfoCopiaSeguridadGuardada:string =
-    'La copia se guardó exitosamente.';
-  SAvisoRestauracionCancelada:string =
-    'Operación cancelada. La base de datos puede haber quedado ' +
-    'parcialmente modificada.';
-  SErrorEjecutarScript:string =
-    'Hubo problemas al ejecutar el script.' + sLineBreak + '%s';
-  SPreguntaSalirAplicacion:string =
-    '¿Quiere salir de la aplicación Fzam?';
-  SPreguntaCopiaSeguridadAntesDDL:string =
-    'ATENCIÓN: El script contiene sentencias DDL (modifican la estructura ' +
-    'de la base de datos).' + sLineBreak +
-    'En MySQL/MariaDB, estos cambios provocan un guardado automático y ' +
-    'NO son reversibles en caso de error.' + sLineBreak + sLineBreak +
-    '¿Deseas realizar una copia de seguridad antes de continuar?';
-  SPreguntaCopiaAntesRestaurarCifrada:string =
-    'La copia cifrada puede reemplazar datos y estructura de la base de ' +
-    'datos.' + sLineBreak + sLineBreak +
-    '¿Deseas realizar una copia de seguridad antes de continuar?';
-  SInfoScriptCancelado:string =
-    'Operación cancelada. El script no se ejecutará.';
-  SErrorAbrirDireccion:string =
-    'No se ha podido abrir la dirección: %s';
-  // DataModules A-C
-  SAvisoAlbaranFacturado:string =
-    'No se puede borrar el albaran: ya esta facturado. ' +
-    'Borra o deshaz primero la factura vinculada.';
-  SPreguntaBorrarAlbaran:string =
-    '¿Borrar el albaran %s / %s?' + sLineBreak +
-    'Se eliminaran sus lineas y se revertiran los movimientos de stock.';
-  SAvisoAlmacenSalidaAlbaranObligatorio:string =
-    'Debe seleccionar el almacén de salida del albarán.';
-  SErrorLineaAlbaranSinArticulo:string =
-    'La línea del albarán no tiene artículo; no se puede guardar.';
-  SErrorCabeceraAlbaranSinGrabar:string =
-    'Graba la cabecera del albaran antes de guardar lineas.';
-  SErrorAsignarLineaAlbaran:string =
-    'No se pudo asignar número de línea: la cabecera %s/%s no existe en ' +
-    'la base de datos.';
-  SErrorContadorAlbaran:string =
-    'No se pudo obtener un numero de albaran valido. Revise el contador ' +
-    'AV de la serie %s y empresa %s.';
-  SAvisoAlmacenDestinoAlbaranCompraObligatorio:string =
-    'Debe seleccionar el almacén destino del albarán de compra.';
-  SAvisoAlbaranCompraFacturado:string =
-    'No se puede borrar el albaran de compra: ya esta facturado. Borra o ' +
-    'deshaz primero la factura de compra vinculada.';
-  SPreguntaBorrarAlbaranCompra:string =
-    '¿Borrar el albaran de compra %s / %s?' + sLineBreak +
-    'Se eliminaran sus lineas y se revertiran los movimientos de stock.';
-  SErrorContadorAlbaranCompra:string =
-    'No se pudo obtener un numero de albaran de compra valido. Revise el ' +
-    'contador AB de la serie %s y empresa %s.';
-  SErrorCodigoSkuCodigoBarrasObligatorio:string =
-    'Indique el código de SKU al añadir un nuevo código de barras. Para ' +
-    'crear un SKU nuevo use la pestaña SKUs.';
-  SErrorCampoCodigoBarrasAusente:string =
-    'Falta el campo CODIGO_BARRAS_CB.';
-  SErrorCodigoSkuObligatorio:string = 'Indique el código del SKU.';
-  SErrorFilaCodigoBarrasInexistente:string =
-    'Esta fila no representa un código de barras existente. No hay nada ' +
-    'que eliminar.';
-  SErrorProveedorPrincipalArticulo:string =
-    '%s ya tiene un proveedor principal asociado a este artículo.';
-  SErrorDescripcionArticulo:string =
-    '%s no es un valor válido para el campo Descripción de Artículos';
-  SPreguntaDesactivarTarifaSinPrecio:string =
-    'El precio de salida pasa a 0. ¿Desea desactivar la tarifa?';
-  SPreguntaActivarTarifaConPrecio:string =
-    'El precio de salida es mayor que 0. ¿Desea activar la tarifa?';
-  SErrorTarifaFechasConcurrentes:string =
-    'No se pueden grabar dos precios para una tarifa activa en fechas ' +
-    'concurrentes para el artículo/SKU %s';
-  SErrorAtributoBasicoObligatorio:string =
-    'Indica el atributo (CO para color, TAL para talla, etc.).';
-  SErrorCodigoAtributoBasicoObligatorio:string =
-    'El código del atributo básico es obligatorio.';
-  SErrorNombreAtributoBasicoObligatorio:string =
-    'El nombre del atributo básico es obligatorio.';
-  SErrorValorColeccionAtributosObligatorio:string =
-    'Selecciona un valor para añadirlo a la colección.';
-  SPreguntaBorrarClienteConFacturas:string =
-    'El cliente tiene facturas emitidas,  ¿Desea realmente borrar el ' +
-    'registro?';
-  SErrorRazonSocialCliente:string =
-    '%s no es un valor válido para el campo Razón Social de Cliente';
-  SErrorCambiarFormatoSesion:string =
-    'No se puede cambiar el formato distribuido de una sesion ya creada. ' +
-    'Crea una sesion nueva con el modo deseado.';
-  SErrorEmpresaSesionObligatoria:string =
-    'Selecciona una empresa antes de grabar la sesion.';
-  SErrorSerieSesionObligatoria:string =
-    'Teclea una serie antes de grabar la sesion (p.ej. %s-SE-1).';
-  SErrorContadorSesion:string =
-    'No se pudo obtener el siguiente numero. Revisa que exista una fila ' +
-    'en fza_contadores para (TIPO_DOC=SE, EMPRESA=%s, SERIE=%s) o que el ' +
-    'SP PRC_GET_NEXT_CONT_FACT_SERIE este disponible.';
-  SErrorCodigoSerieEmpresa:string =
-    'No se pudo obtener CODIGO_SERIE_EMPSER del contador ES via ' +
-    'PRC_GET_NEXT_CONT.';
-  SAvisoColacionSesion:string =
-    'No se pudo fijar la colación de la sesión: %s';
-  SAvisoTimeoutServidor:string =
-    'No se pudo establecer el timeout del servidor: %s';
-  SErrorBBDDDuplicado:string =
-    'Ya existe un registro con ese valor (entrada duplicada).';
-  SErrorBBDDCamposObligatorios:string =
-    'Hay campos obligatorios sin rellenar.';
-  SErrorBBDDCampoDesconocido:string =
-    'Campo desconocido en la consulta SQL: %s';
-  SErrorBBDDTablaNoExiste:string =
-    'La tabla consultada no existe en la base de datos: %s';
-  SErrorBBDDSinPermisos:string =
-    'No tiene permisos suficientes para realizar esta acción en la base ' +
-    'de datos.';
-  SErrorBBDDClaveForaneaNoExiste:string =
-    'El valor no existe en la tabla relacionada (clave foránea).';
-  SErrorBBDDRegistroDependiente:string =
-    'No se puede eliminar: existen registros que dependen de este.';
-  SErrorBBDDDatoDemasiadoLargo:string =
-    'El dato introducido es demasiado largo para el campo.';
-  SErrorBBDDCredencialesIncorrectas:string =
-    'Acceso denegado: usuario o contraseña incorrectos.';
-  SErrorBBDDConexionServidor:string =
-    'No se puede conectar al servidor MySQL. Comprueba la red y el puerto.';
-  SErrorBBDDConexionPerdida:string =
-    'La conexión con el servidor MySQL se ha perdido.';
-  SErrorBBDDConexionPerdidaConsulta:string =
-    'Se perdió la conexión durante la ejecución de la consulta.';
-  SErrorBBDDTimeoutBloqueo:string =
-    'El servidor está ocupado (Tiempo de espera de bloqueo). Inténtalo de ' +
-    'nuevo.';
-  SErrorBBDDDeadlock:string =
-    'Se ha producido un bloqueo cruzado (Deadlock). Inténtalo de nuevo.';
-  SErrorBBDDTablaYaExiste:string =
-    'La tabla o vista ya existe en la base de datos %s';
-  SErrorBBDDProcedimientoYaExiste:string =
-    'El procedimiento o función ya existe en la base de datos.' +
-    sLineBreak + 'Detalle del servidor: %s';
-  SErrorBBDDGenerico:string =
-    'Error en base de datos [%d]:' + sLineBreak + '%s';
-  SDetalleErrorMySQL:string = sLineBreak + '(MySQL %d: %s)';
-  SErrorAbrirConsultaOpe:string =
-    '[ConsultaOpe] Error abriendo %s: %s';
-  // DataModules D-F
-  SErrorAlmacenSalidaDevolucionCompra:string =
-    'Debe seleccionar el almacen de salida de la devolucion.';
-  SAvisoDevolucionCompraFacturada:string =
-    'No se puede borrar la devolucion de compra: ya esta facturada. Borra ' +
-    'o deshaz primero la factura de compra vinculada.';
-  SPreguntaBorrarDevolucionCompra:string =
-    '¿Borrar la devolucion de compra %s / %s?' + sLineBreak +
-    'Se eliminaran sus lineas y se revertiran los movimientos de stock.';
-  SErrorCabeceraDevolucionCompraSinGrabar:string =
-    'Graba la cabecera de la devolucion antes de guardar lineas.';
-  SErrorContadorDevolucionCompra:string =
-    'No se pudo obtener un numero de devolucion de compra valido. Revise ' +
-    'el contador DC de la serie %s y empresa %s.';
-  SErrorTipoDestinoDocumentoTrabajo:string =
-    'El tipo de destino debe ser USUARIO o GRUPO.';
-  SErrorDestinoCompartidoNoExiste:string =
-    'El usuario o grupo indicado no existe.';
-  SErrorDestinoCompartirObligatorio:string =
-    'Indique el usuario o grupo con el que comparte.';
-  SErrorCompartirDocumentoTrabajoSoloPropietario:string =
-    'Solo el propietario puede compartir el Documento de Trabajo.';
-  SErrorCabeceraDocumentoTrabajoSinGrabar:string =
-    'Grabe primero la cabecera del Documento de Trabajo.';
-  SErrorCompartirDocumentoTrabajoConsigoMismo:string =
-    'No es necesario compartir el documento consigo mismo.';
-  SErrorBorrarDocumentoTrabajoSoloPropietario:string =
-    'Solo el propietario puede borrar un Documento de Trabajo.';
-  SErrorCambiarPropietarioDocumentoTrabajo:string =
-    'El propietario del Documento de Trabajo no se puede cambiar.';
-  SErrorTituloDocumentoTrabajoObligatorio:string =
-    'Indique el titulo del Documento de Trabajo.';
-  SErrorBorrarLineasDocumentoTrabajoSoloPropietario:string =
-    'Solo el propietario puede borrar lineas del Documento de Trabajo.';
-  SErrorEditarLineasDocumentoTrabajoSoloPropietario:string =
-    'Solo el propietario puede editar lineas del Documento de Trabajo.';
-  SErrorArticuloLineaDocumentoTrabajoObligatorio:string =
-    'Indique el articulo de la linea.';
-  SErrorSkuLineaDocumentoTrabajoObligatorio:string =
-    'Indique el SKU/unidad de la linea.';
-  SErrorDejarCompartirDocumentoTrabajoSoloPropietario:string =
-    'Solo el propietario puede dejar de compartir el Documento de Trabajo.';
-  SErrorDestinoCompartidoObligatorio:string =
-    'Indique el usuario o grupo con el que se comparte.';
-  SErrorBorrarEfectoCompraRemesado:string =
-    'No se puede borrar el efecto: pertenece a una remesa. Quítalo desde ' +
-    'Remesas de pago.';
-  SErrorBorrarEfectoCompraPagado:string =
-    'No se puede borrar el efecto: tiene pago o conciliación registrada.';
-  SErrorFusionarEfectosCompraEstado:string =
-    'Solo se pueden fusionar efectos pendientes, sin pagos, sin remesa y ' +
-    'sin conciliación previa.';
-  SErrorFusionarEfectosCompraOrigen:string =
-    'Solo se pueden fusionar efectos de la misma empresa y proveedor.';
-  SErrorFusionarEfectosCompraSinPendiente:string =
-    'Los efectos seleccionados no tienen importe pendiente.';
-  SErrorBorrarEfectoVentaRemesado:string =
-    'No se puede borrar el efecto: pertenece a una remesa. Quítalo desde ' +
-    'Remesas de cobro.';
-  SErrorBorrarEfectoVentaCobrado:string =
-    'No se puede borrar el efecto: tiene cobro o conciliación registrada.';
-  SErrorFusionarEfectosVentaEstado:string =
-    'Solo se pueden fusionar efectos pendientes, sin cobros, sin remesa y ' +
-    'sin conciliación previa.';
-  SErrorFusionarEfectosVentaOrigen:string =
-    'Solo se pueden fusionar efectos de la misma empresa y cliente.';
-  SErrorFusionarEfectosVentaSinPendiente:string =
-    'Los efectos seleccionados no tienen importe pendiente.';
-  SPreguntaCambioCriticoEmpresa:string =
-    'Atención: %s una empresa puede anular la licencia del programa o ' +
-    'invalidar el sistema Verifactu existente.' + sLineBreak + sLineBreak +
-    'Revise que los datos fiscales, certificados y la instalación SIF ' +
-    'siguen siendo correctos.' + sLineBreak + sLineBreak +
-    '¿Desea continuar?';
-  SErrorPorcentajeRetencionEmpresa:string =
-    '%d no es un valor válido  para %% de Retención';
-  SErrorRetencionesEmpresaConcurrentes:string =
-    'No se pueden grabar dos porcentajes  activos en la misma fecha para ' +
-    'la empresa %s';
-  SErrorSerieEmpresa:string =
-    '%s no es un valor válido  para serie por Empresa ';
-  SErrorIbanEmpresa:string =
-    'IBAN no válido para el banco de la empresa: %s';
-  SPreguntaBorrarEmpresaConFacturas:string =
-    'La empresa tiene facturas emitidas,  ¿Desea realmente borrar el ' +
-    'registro?';
-  SErrorRazonSocialEmpresa:string =
-    '%s no es un valor de registro válido para el campo Razón Social de ' +
-    'Empresa';
-  SErrorCodigoEmpresa:string =
-    '%s no es un valor de registro válido para el campo Código de Empresa';
-  SErrorOperacionIntracomunitariaClienteNoUE:string =
-    'La operacion "%s" es intracomunitaria, pero el cliente no es de la UE ' +
-    '(pais %s). Corrija el tipo de operacion o el pais del cliente.';
-  SErrorOperacionExportacionClienteNoExtranjero:string =
-    'La operacion "%s" es exportacion fuera de la UE, pero el cliente es ' +
-    'comunitario o nacional. Corrija el tipo o el pais del cliente.';
-  SErrorOperacionSinIvaConCuota:string =
-    'La operacion no repercute IVA (intracomunitaria, ISP o exportacion), ' +
-    'pero la factura tiene IVA (%s). Revise el IVA o el tipo de operacion.';
-  SErrorNifIvaClienteExtranjero:string =
-    'El cliente es extranjero (pais %s) y Verifactu exige su NIF-IVA. ' +
-    'Indique el NIF del cliente.';
-  SErrorCalcularBorradorDetalle:string =
-    'Error al calcular borrador: %s';
-  SErrorCalculoBorrador:string =
-    'Error en cálculo de borrador: %s';
-  SErrorTipoIvaFactura:string = 'Tipo de Iva incorrecto';
-  SErrorBorrarBorradorFase:string =
-    'El borrador está en fase %s: ya se ha lanzado a Verifactu y no puede ' +
-    'borrarse. Use Anular registro fiscal o emita una rectificativa.';
-  SPreguntaBorrarFactura:string =
-    '¿Borrar la factura %s / %s?' + sLineBreak +
-    'Se eliminaran sus lineas, recibos/efectos y movimientos de stock.';
-  SErrorBorrarBorradorEfectosCobrados:string =
-    'El borrador tiene efectos de cobro cobrados, conciliados o remesados. ' +
-    'No puede borrarse.';
-  SErrorInsertarLineasCabeceraFactura:string =
-    'No se puede insertar líneas sin grabar primero la cabecera: %s';
-  SErrorBorradorSinGrabarParaLineas:string =
-    'Debe grabar primero el borrador antes de añadir líneas';
-  SErrorSerieFacturaOtraEmpresa:string =
-    'Esta serie es usada por otra empresa. Debe cambiar la serie ';
-  SErrorRazonSocialClienteBorrador:string =
-    'Debe escribir la razón social del cliente del borrador';
-  SErrorRazonSocialEmpresaBorrador:string =
-    'Debe escribir la razón social de la empresa del borrador';
-  SErrorSerieBorradorObligatoria:string =
-    'Debe seleccionar una serie del borrador';
-  SErrorPaisClienteEmpresaBorrador:string =
-    'Debe seleccionar un pais para cliente y empresa.';
-  SErrorFechaBorradorObligatoria:string =
-    'Debe indicar la fecha del borrador.';
-  SErrorNifClienteFactura:string =
-    'El NIF/CIF/NIE del cliente no es valido: %s';
-  SErrorNifEmpresaFactura:string =
-    'El NIF/CIF/NIE de la empresa no es valido: %s';
-  SErrorFechaFacturaAnteriorSerie:string =
-    'La fecha %s es anterior al ultimo borrador de la serie (%s). La ' +
-    'numeracion debe seguir orden cronologico.';
-  SAvisoFechaBorradorFutura:string =
-    'Aviso: la fecha del borrador es posterior a hoy.';
-  SErrorCabeceraBorradorSinGrabar:string =
-    'No se ha grabado la cabecera del borrador';
-  SErrorAsignarNumeroFactura:string =
-    'No se ha podido asignar numero a la factura (serie %s). Revise el ' +
-    'contador de la serie.';
-  SAvisoHuecoNumeracionFactura:string =
-    'Aviso: hay un salto en la numeracion de la serie %s. La ley exige ' +
-    'numeracion correlativa: el numero o numeros que falten deben cubrirse.';
-  SErrorCerrarFacturaCompraSinLineas:string =
-    'No se puede cerrar la factura: no tiene lineas con cantidad mayor que ' +
-    '0. Añade lineas antes de cerrar.';
-  SErrorBorrarFacturaCompraEfectosPagados:string =
-    'No se puede borrar la factura: tiene efectos pagados, remesados o ' +
-    'conciliados.';
-  SPreguntaBorrarFacturaCompra:string =
-    '¿Borrar la factura de compra %s / %s?' + sLineBreak +
-    'Se eliminaran sus lineas y efectos, y se desmarcaran los albaranes ' +
-    'vinculados.';
-  SErrorCabeceraFacturaCompraSinGrabar:string =
-    'Graba la cabecera de la factura antes de guardar lineas.';
-  SErrorContadorFacturaCompra:string =
-    'No se pudo obtener un numero de factura de compra valido. Revise el ' +
-    'contador FP de la serie %s y empresa %s.';
-  SAvisoPropiedadFamiliaDuplicada:string = 'Propiedad Duplicada';
-  SErrorNombreFamilia:string =
-    '%s no es un valor válido para el campo Nombre de Familias';
-  SErrorFamiliaPadreIgualHija:string =
-    '%s no puede ser padre e hijo a la vez. Revise campo Familia Padre';
-  SErrorServicioConexionesDatosNoConfigurado:string =
-    'No se ha configurado el servicio de conexiones de datos.';
-  SErrorContextoSesionFiltrosNoConfigurado:string =
-    'No se ha configurado el contexto de sesión.';
-  SErrorCodigoFacturaeFormaPago:string =
-    '%s no es un codigo Facturae valido para el campo Codigo Facturae de ' +
-    'Formas de Pago. Use 01..19.';
-  SErrorDescripcionFormaPago:string =
-    '%s no es un valor válido para el campo Descripción de Formas de Pago';
-  // DataModules G-M
-  SErrorContextoSesionModuloDatosNoConfigurado:string =
-    'No se ha configurado el contexto de sesión del módulo de datos.';
-  SErrorSerieInventarioObligatoria:string =
-    'No se puede grabar el inventario sin una serie. Selecciona una serie ' +
-    'en la cabecera (campo SERIE), o configura una serie por defecto de ' +
-    'tipo IN para la empresa en fza_empresas_series.';
-  SErrorContadorLineasInventarioNoInstalado:string =
-    'No se puede reservar la linea del inventario: falta la columna ' +
-    'fza_inventarios.CONTADOR_LINEAS_INV. Ejecuta el script DESARROLLOS EN ' +
-    'CURSO\inventarios_contador_lineas.sql.';
-  SErrorCabeceraInventarioSinGrabarParaReserva:string =
-    'No se puede reservar la linea: graba primero la cabecera del ' +
-    'inventario para tener empresa, almacen, serie y numero definitivos.';
-  SErrorCabeceraInventarioNoEncontrada:string =
-    'No se ha encontrado la cabecera del inventario para reservar la ' +
-    'siguiente linea.';
-  SErrorActualizarContadorLineasInventario:string =
-    'No se ha podido actualizar el contador de lineas del inventario.';
-  SErrorEmpresaCabeceraInventarioObligatoria:string =
-    'La cabecera del inventario no tiene empresa. Selecciona una empresa ' +
-    'antes de anadir lineas.';
-  SErrorAlmacenCabeceraInventarioObligatorio:string =
-    'La cabecera del inventario no tiene almacen. Selecciona un almacen ' +
-    'antes de anadir lineas.';
-  SErrorSerieCabeceraInventarioObligatoria:string =
-    'La cabecera del inventario no tiene serie. Vuelve a la pestana ' +
-    'Cabecera, selecciona una serie y vuelve a intentar grabar la linea.';
-  SErrorNumeroCabeceraInventarioObligatorio:string =
-    'La cabecera del inventario no tiene numero. Graba primero la cabecera ' +
-    'para que el sistema asigne el numero.';
-  SErrorAtributoLineaInventarioObligatorio:string =
-    'La línea %s del artículo %s requiere %d atributos y el atributo nº %d ' +
-    'está sin rellenar. Completa todos los selectores (Color, Talla, …) o ' +
-    'elimina la línea.';
-  SPreguntaCrearSkuInventario:string =
-    'El SKU "%s" no existe en la base de datos.' + sLineBreak + sLineBreak +
-    '¿Quieres crearlo automáticamente con los atributos seleccionados y ' +
-    'guardar la línea?' + sLineBreak + sLineBreak +
-    'Sí: se crea el SKU (fza_articulos_skus + fza_atributos_sku) y se ' +
-    'graba la línea.' + sLineBreak +
-    'No: no se graba. Cambia los atributos a una combinación válida o ' +
-    'pulsa "- Eliminar línea".';
-  SErrorSkuInventarioNoExiste:string =
-    'SKU "%s" no existe. La línea no se ha grabado. Cambia los atributos o ' +
-    'elimina la línea.';
-  SErrorEliminarLineasInventarioNoAbierto:string =
-    'No se pueden eliminar líneas: el inventario no está ABIERTO';
-  SErrorAnadirLineaCabeceraInventario:string =
-    'No se puede añadir una línea: la cabecera del inventario no se ha ' +
-    'podido grabar.' + sLineBreak + '%s' + sLineBreak +
-    'Completa los datos obligatorios de la cabecera y vuelve a intentarlo.';
-  SErrorRecalcularInventarioNoAbierto:string =
-    'Solo se puede recalcular un inventario en estado ABIERTO';
-  SErrorAplicarInventarioNoAbierto:string =
-    'Solo se puede aplicar un inventario en estado ABIERTO';
-  SErrorAplicarInventarioSinLineas:string =
-    'No se puede aplicar un inventario sin líneas. Añade al menos una línea ' +
-    'con diferencia de cantidad o de coste antes de regularizar.';
-  SErrorEliminarRegularizacionInventarioNoAplicado:string =
-    'Solo se puede eliminar la regularización de un inventario APLICADO';
-  SErrorCargarArticulosInventarioNoAbierto:string =
-    'Solo se pueden cargar artículos en un inventario ABIERTO';
-  SErrorCompletarInventarioNoAbierto:string =
-    'Solo se puede completar un inventario ABIERTO';
-  SErrorArticuloLineaInventarioObligatorio:string =
-    'Debe indicar un artículo (la línea actual está vacía).';
-  SErrorAnadirSkusInventarioNoAbierto:string =
-    'Solo se pueden añadir SKUs en un inventario ABIERTO';
-  SErrorValorAtributoSkuInventarioNoEncontrado:string =
-    'No se encontró el valor "%s" en el atributo nº %d del artículo %s. ' +
-    'No se ha podido crear el SKU %s.';
-  SErrorCodigoIva:string =
-    '%s no es un valor de registro válido para el campo Código de IVA';
-  SErrorGrupoIvaNoExiste:string =
-    '%s no es un valor válido o no existe para grupo de IVAS';
-  SErrorRangoFechasIva:string =
-    'Error de Rango en las fechas. Error en la fecha.O se han establecido ' +
-    'dos periodos activos en el mismo periodo para la zona %s';
-  SErrorDescripcionGrupoIva:string =
-    '%s no es un valor de registro válido para el campo Descripción de ' +
-    'Grupos de IVA';
-  SErrorCodigoGrupoIva:string =
-    '%s no es un valor de registro válido para el campo Código de Grupos ' +
-    'de IVA';
-  SErrorDosGruposIvaPredeterminados:string =
-    'No es posible marcar dos grupos de IVA como Grupo de IVA por Defecto';
-  SAvisoEdicionMovimientoAlmacen:string =
-    'No se permite %s movimientos de almacén manualmente.' + sLineBreak +
-    'Usa el proceso correspondiente (albarán, factura, traspaso, ' +
-    'regularización de inventario...).';
-  // Resto de DataModules
-  SPreguntaBorrarPedidoVenta:string =
-    '¿Borrar el pedido de venta %s / %s?' + sLineBreak +
-    'Se eliminaran sus lineas y se descontara el pendiente de servir en ' +
-    'stock.';
-  SErrorLineaPedidoSinArticulo:string =
-    'La línea del pedido no tiene artículo; no se puede guardar.';
-  SErrorCabeceraPedidoSinGrabar:string =
-    'Graba la cabecera del pedido antes de guardar lineas.';
-  SErrorAsignarLineaPedido:string =
-    'No se pudo asignar número de línea: la cabecera %s/%s no existe en la ' +
-    'base de datos.';
-  SAvisoAlmacenSalidaPedidoObligatorio:string =
-    'Debe seleccionar el almacén de salida del pedido.';
-  SAvisoClientePedidoObligatorio:string =
-    'Debe seleccionar un cliente antes de guardar el pedido.';
-  SAvisoClientePedidoNoExiste:string =
-    'El cliente %s no existe. Seleccione un cliente válido antes de guardar ' +
-    'el pedido.';
-  SAvisoAlmacenDestinoPedidoCompraObligatorio:string =
-    'Debe seleccionar el almacén destino del pedido de compra.';
-  SPreguntaBorrarPedidoCompra:string =
-    '¿Borrar el pedido de compra %s / %s?' + sLineBreak +
-    'Se eliminaran sus lineas y pendientes de recibir.';
-  SErrorContadorPedidoCompra:string =
-    'No se pudo obtener un numero de pedido de compra valido. Revise el ' +
-    'contador PC de la serie %s y empresa %s.';
-  SErrorContextoSesionPerfilesNoConfigurado:string =
-    'No se ha configurado el contexto de sesión.';
-  SErrorProveedorKitsNoSeleccionado:string =
-    'Selecciona un proveedor antes de crear kits.';
-  SErrorProveedorKitsSinGrabar:string =
-    'Graba el proveedor antes de crear kits.';
-  SErrorCodigoKitProveedorObligatorio:string =
-    'El kit necesita un código (p. ej. CURVA-STD).';
-  SErrorNombreKitProveedorObligatorio:string =
-    'El kit necesita un nombre.';
-  SErrorKitProveedorNoSeleccionadoParaTallas:string =
-    'Crea o selecciona un kit antes de añadir tallas.';
-  SErrorTallaDestinoKitProveedorObligatoria:string =
-    'La fila del kit necesita la talla destino (p. ej. 38, M).';
-  SErrorKitProveedorNoSeleccionado:string =
-    'Selecciona o crea un kit primero.';
-  SErrorSistemaTallasKitProveedorObligatorio:string =
-    'El kit no tiene sistema de tallas. Asigna uno en la columna "Sistema ' +
-    'tallas" para poder generar sus tallas.';
-  SErrorCodigoAutomaticoProveedor:string =
-    'No se pudo generar el código automático del proveedor.';
-  SErrorOrdenAutomaticoProveedor:string =
-    'No se pudo generar el orden automático del proveedor.';
-  SErrorRemesaVentaNoSeleccionada:string = 'Selecciona una remesa.';
-  SErrorRemesaVentaNoEncontrada:string =
-    'No se encuentra la remesa de venta.';
-  SErrorRemesaVentaSinEfectosPendientes:string =
-    'La remesa no tiene efectos pendientes.';
-  SErrorGuardarCodigoAcreedorSepa:string =
-    'No se pudo guardar el código acreedor SEPA.';
-  SErrorGuardarMandatoSepaCliente:string =
-    'No se pudo guardar el mandato SEPA del cliente %s.';
-  SErrorNombreSesionCambioTarifaObligatorio:string =
-    'El nombre de la sesion es obligatorio.';
-  SErrorTarifaDestinoObligatoria:string =
-    'La tarifa destino es obligatoria.';
-  SErrorNombreUsuario:string =
-    '%s no es un valor de registro válido para el campo usuario';
-  SErrorUsuarioCoincideGrupo:string =
-    'El usuario %s coincide con un grupo del sistema';
-  SErrorCodigoAtributoVariacionObligatorio:string =
-    'El código del atributo es obligatorio.';
-  // Lib A-D
-  SErrorConexionPrincipalTrabajoNoDisponible:string =
-    'No hay conexión principal para crear una conexión de trabajo.';
-  SErrorPrefijoEanSesionLargo:string =
-    'PREFIJO_EAN_SES demasiado largo: %s';
-  SErrorColorBasicoMaterializacionNoExiste:string =
-    'No existe el color básico CODIGO_ATB=%s. Créalo en Mto Atributos ' +
-    'Básicos antes de materializar.';
-  SErrorAlmacenSesionParaAlbaranCompra:string =
-    'Falta CODIGO_ALM_SES en la cabecera de la sesion para generar el ' +
-    'albaran de compra.';
-  SErrorAlmacenSesionParaPedidoCompra:string =
-    'Falta CODIGO_ALM_SES en la cabecera de la sesion para generar el ' +
-    'pedido de compra.';
-  SErrorAlmacenSesionParaPendienteRecibir:string =
-    'Falta CODIGO_ALM_SES en la cabecera de la sesion para generar el ' +
-    'pedido pendiente de recibir.';
-  SAvisoSelectorConjuntoFilaNoImplementado:string =
-    'El selector de valores del conjunto fila aun no esta implementado.' +
-    sLineBreak + sLineBreak +
-    'Mientras tanto, en la cabecera deja vacio el campo "Conjunto fila" ' +
-    'para teclear los colores libremente.';
-  STituloNuevaFilaCompra:string = 'Nueva fila';
-  SSolicitudNombreFilaCompra:string =
-    'Nombre de la fila (color del proveedor):';
-  SAvisoConjuntoPivotCompraObligatorio:string =
-    'Selecciona primero un "Conjunto pivot" en la cabecera de la sesion ' +
-    'para poder anadirle un valor (talla).';
-  SErrorConjuntoPivotCompraNoExiste:string =
-    'El conjunto pivot no existe en la BBDD.';
-  STituloAnadirValorPivotCompra:string =
-    'Anadir talla / valor pivot';
-  SSolicitudNombreValorPivotCompra:string =
-    'Nombre del valor (ej: XXL, 47):';
-  SSolicitudOrdenValorPivotCompra:string =
-    'Orden (los SKUs se ordenan por este numero; usa pasos de 10).';
-  SErrorDistribuidorTallasNoRegistrado:string =
-    'No se ha registrado el distribuidor de tallas por almacén.';
-  SErrorInvarianteUnidadesTallas:string =
-    'La conversión de tallas alteraría las unidades del documento (%s: ' +
-    'antes %.2f, después %.2f). Se deshacen los cambios.';
-  SErrorAlmacenDistribucionTallasNoDisponible:string =
-    'Formato distribuido: se necesita un almacén por defecto y no hay ' +
-    'almacenes activos definidos.';
-  SErrorArticuloSkuNoEncontrado:string =
-    'Artículo/SKU no encontrado: %s';
-  SAvisoArticuloSinAtributos:string =
-    'El artículo no tiene atributos definidos: %s';
-  SErrorFactoriaTallasHorizontalObligatoria:string =
-    'El modo de tallas horizontal requiere su factoria especifica';
-  SErrorOperacionCanceladaUsuario:string =
-    'Operación cancelada por el usuario.';
-  SErrorRestauracionEstructuraIncompleta:string =
-    'La restauración terminó, pero la estructura mínima no está completa.' +
-    sLineBreak + '%s';
-  SErrorNombreBBDDDestinoVacio:string =
-    'El nombre de la BBDD de destino está vacío.';
-  SErrorFicheroCopiaNoExiste:string =
-    'No existe el fichero de copia: %s';
-  SErrorDesencriptarCopia:string =
-    'No se pudo desencriptar la copia. Revise la contraseña o seleccione ' +
-    'un fichero SQL sin cifrar.';
-  SErrorAlbaranCompraMovimientosNoEncontrado:string =
-    'Albaran de compra %s/%s no encontrado para generar movimientos.';
-  SErrorAlbaranCompraMovimientosYaGenerados:string =
-    'El albaran %s/%s ya tiene movimientos generados. Revierte antes de ' +
-    'volver a generar.';
-  SErrorAlbaranCompraSinCantidadParaMovimientos:string =
-    'El albaran %s/%s no tiene ninguna linea o celda con cantidad > 0 para ' +
-    'generar movimientos.';
-  SErrorDivisaNoEncontrada:string =
-    'Divisa "%s" no encontrada en el resultado';
-  SErrorHttpDivisas:string = 'HTTP %d: %s';
-  SErrorRedDivisas:string = 'Error de red: %s';
-  SErrorJsonDivisas:string = 'Respuesta JSON inválida';
-  SErrorPruebaPilaJcl:string =
-    'Prueba forzada con /teststack [%s]: JCL stack trace activo';
-  SErrorDevolucionCompraMovimientosNoEncontrada:string =
-    'Devolucion de compra %s/%s no encontrada para generar movimientos.';
-  SErrorDevolucionCompraMovimientosYaGenerados:string =
-    'La devolucion %s/%s ya tiene movimientos generados. Revierte antes ' +
-    'de volver a generar.';
-  SErrorDevolucionCompraSinCantidadParaMovimientos:string =
-    'La devolucion %s/%s no tiene ninguna linea o celda con cantidad > 0 ' +
-    'para generar movimientos.';
-  SErrorEmpresaSinAlmacenActivo:string =
-    'La empresa %s no tiene ningún almacén activo disponible.';
-  SErrorAlmacenDepositosEmpresaNoEncontrado:string =
-    'No se ha encontrado un almacén de depósitos (TIPO_USO_ALM = ' +
-    '''DEPÓSITO'') activo para la empresa %s.';
-  SErrorLimitePeticionesCripto:string =
-    'Rate limit alcanzado (429). Espera un momento.';
-  SErrorHttpCripto:string = 'HTTP %d: %s';
-  SErrorRedCripto:string = 'Error de red: %s';
-  SErrorJsonCripto:string = 'Respuesta JSON inválida';
-  SPreguntaCrearDocumentoTrabajo:string =
-    'Si = crear un Documento de Trabajo nuevo.' + sLineBreak +
-    'No = agregar a uno abierto existente.';
-  STituloAgregarDocumentoTrabajo:string =
-    'Agregar a Documento de Trabajo';
-  STituloNuevoDocumentoTrabajo:string =
-    'Nuevo Documento de Trabajo';
-  SSolicitudTituloDocumentoTrabajo:string = 'Titulo';
-  SErrorArticuloDocumentoTrabajoNoActivo:string =
-    'No hay articulo activo para agregar.';
-  SErrorArticuloDocumentoTrabajoVariosSkus:string =
-    'El articulo tiene varios SKUs. Selecciona una unidad concreta.';
-  SInfoUnidadAgregadaDocumentoTrabajo:string =
-    'Unidad agregada al Documento de Trabajo.';
-  STituloDocumentoTrabajo:string = 'Documento de Trabajo';
-  SErrorArticuloNoExiste:string =
-    'No existe el artículo "%s"';
-  SErrorEntradaArticuloVacia:string = 'Entrada vacía.';
-  SErrorCodigoBarrasNoEncontrado:string =
-    'No se encontró "%s" como código de barras.';
-  SErrorArticuloEntradaNoEncontrado:string =
-    'No se encontró "%s" como artículo, SKU, código de barras ni modelo de ' +
-    'proveedor.';
-  SAvisoArticuloRequiereSku:string =
-    'El artículo "%s" tiene SKUs (talla/color). Indica un SKU concreto ' +
-    'antes de continuar.';
-  SErrorArticuloVariacionSinSkusActivos:string =
-    'El artículo "%s" no tiene tallas/colores (SKU) activos para vender.';
-  SErrorArticuloSinSkusActivos:string =
-    'El artículo "%s" no tiene ninguna unidad (SKU) activa para vender.';
-  SErrorSkuNoPerteneceArticulo:string =
-    'El SKU "%s" no pertenece a "%s" o no está activo.';
-  SErrorSesionCompraNoActiva:string = 'No hay sesion activa.';
-  SErrorLineaArticuloSesionNoSeleccionada:string =
-    'Selecciona o crea una linea de articulo primero.';
-  SErrorLineaSesionSinNumero:string =
-    'La linea aun no tiene numero. Graba la sesion primero.';
-  SErrorSistemaTallasLineaSesionObligatorio:string =
-    'La linea no tiene sistema de tallas. Asignale uno en la columna ' +
-    '"Sistema tallas" antes de aplicar el kit.';
-  SErrorKitProveedorNoExiste:string =
-    'El kit %s no existe para el proveedor %s.';
-  SErrorKitSinSistemaTallas:string =
-    'El kit %s no tiene sistema de tallas. Asignaselo en Proveedores, ' +
-    'pestaña Compras, para poder comprobar que coincide con el de la linea.';
-  SErrorTallajeKitNoCoincide:string =
-    'El tallaje del kit no coincide con el de la linea: kit = "%s", linea ' +
-    '= "%s". Cambia el sistema de tallas de la linea o elige un kit de su ' +
-    'mismo tallaje.';
-  SErrorGestorTallasNoInicializado:string =
-    'Gestor de tallas no inicializado.';
-  SErrorKitSinTallasDefinidas:string =
-    'El kit %s no tiene tallas definidas. Completalo en Proveedores, ' +
-    'pestaña Compras.';
-  SAvisoTallasKitSinCorrespondencia:string =
-    'Tallas del kit sin correspondencia en el sistema de la linea (no ' +
-    'aplicadas): %s';
-  SErrorTallasKitSinCorrespondencia:string =
-    'Ninguna talla del kit casa con el sistema de tallas de la linea.';
-  SErrorSesionIncidenciasSinDetalle:string =
-    'Hay incidencias sin detalle.';
-  SErrorDataModuleSesionNoInicializado:string =
-    'DataModule no inicializado.';
-  SErrorSesionNoCerradaParaRevertir:string =
-    'La sesion no esta CERRADA, no hay nada que revertir.';
-  SErrorRestauracionNoFinalizada:string =
-    'La restauración no finalizó correctamente.';
-  SErrorCodigoArticuloResolverObligatorio:string =
-    'Falta código de artículo.';
-  SErrorArticuloResolverNoExiste:string =
-    'No existe el artículo "%s".';
-  SAvisoArticuloResolverRequiereSku:string =
-    'El artículo "%s" tiene SKUs. Indica uno para obtener precio definitivo.';
-  STextoLineaIncidenciaSesion:string = 'Linea %d';
-  STextoCabeceraIncidenciaSesion:string = 'Cabecera';
-  SFormatoIncidenciaSesion:string = '[%s] %s: %s';
-  SErrorSesionInactivaIncidencia:string =
-    '[CABECERA] No hay sesion activa.';
-  STipoIncidenciaCabecera:string = 'CABECERA';
-  SErrorEmpresaSesionFaltante:string =
-    'Falta CODIGO_EMP_SES (Empresa).';
-  SErrorProveedorSesionFaltante:string =
-    'Falta CODIGO_PRV_SES (Proveedor).';
-  SErrorAlmacenSesionFaltante:string =
-    'ESGENERA_ALBARAN=S pero no hay CODIGO_ALM_SES (Almacen).';
-  SErrorSesionSinLineas:string = 'La sesion no tiene lineas.';
-  STipoIncidenciaDuplicadoInterno:string = 'DUP_INTRA';
-  SErrorCodigoDuplicadoInternoSesion:string =
-    'Codigo %s repetido dentro de la sesion (primera vez en linea %d). ' +
-    'Marca esta linea como REUSAR o cambia el codigo.';
-  STipoIncidenciaDuplicado:string = 'DUPLICADO';
-  SErrorCodigoDuplicadoSesion:string =
-    'Codigo %s ya existe en fza_articulos%s. Decide REUSAR o RENOMBRAR.';
-  STextoArticuloInactivoSesion:string = ' (inactivo)';
-  STipoIncidenciaCodigo:string = 'CODIGO';
-  SErrorLineaSesionSinCodigo:string =
-    'La linea no tiene CODIGO_ART_TENTATIVO_SESLIN.';
-  STipoIncidenciaDescripcion:string = 'DESCRIPCION';
-  SErrorLineaSesionSinDescripcion:string =
-    'Linea sin descripcion (codigo %s).';
-  STipoIncidenciaCantidades:string = 'CANTIDADES';
-  SErrorLineaMatrizSinCantidades:string =
-    'Linea MATRIZ sin cantidades por talla (codigo %s - %s).';
-  STipoIncidenciaSistemaTallas:string = 'SISTEMA_TALLAS';
-  SErrorLineaMatrizSinSistemaTallas:string =
-    'Linea MATRIZ sin sistema de tallas (codigo %s).';
-  // Lib E-H
-  SErrorCodigoEanMinimo7Digitos:string =
-    'El código debe tener al menos 7 dígitos para calcular el control.';
-  SErrorCodigoBarrasNoNumerico:string =
-    'El código de barras contiene caracteres no numéricos.';
-  SErrorCodigoEanMinimo12Digitos:string =
-    'El código debe tener al menos 12 dígitos para calcular el control.';
-  SErrorFacturaeFaltaCampo:string = '- Falta %s.';
-  STextoNifParteFacturae:string = 'NIF de %s';
-  STextoRazonSocialParteFacturae:string = 'razon social de %s';
-  STextoDireccionParteFacturae:string = 'direccion de %s';
-  STextoCodigoPostalParteFacturae:string = 'codigo postal de %s';
-  STextoPoblacionParteFacturae:string = 'poblacion de %s';
-  STextoProvinciaParteFacturae:string = 'provincia de %s';
-  SErrorDocumentoFiscalParteFacturae:string = '- %s (%s).';
-  SErrorFaltaCodigoDir3Facturae:string =
-    '- Falta el codigo DIR3 de %s.';
-  SErrorCodigoDir3LargoFacturae:string =
-    '- El codigo DIR3 de %s supera 10 caracteres.';
-  STextoEmpresaEmisoraFacturae:string = 'empresa emisora';
-  STextoClienteFacturae:string = 'cliente';
-  STextoOficinaContableFacturae:string = 'la oficina contable';
-  STextoOrganoGestorFacturae:string = 'el organo gestor';
-  STextoUnidadTramitadoraFacturae:string = 'la unidad tramitadora';
-  SErrorNombrePersonaFisicaFacturae:string =
-    '- El cliente tiene NIF/NIE de persona física. Rellene el nombre en ' +
-    'Parámetros eDoc.';
-  SErrorApellidosPersonaFisicaFacturae:string =
-    '- El cliente tiene NIF/NIE de persona física. Rellene los apellidos en ' +
-    'Parámetros eDoc.';
-  SErrorCodigoPagoFacturaeInvalido:string =
-    '- El codigo Facturae de la forma de pago debe estar entre 01 y 19.';
-  SErrorFacturaeNoExiste:string =
-    '- No existe la factura seleccionada.';
-  SErrorFacturaeTipoVentaInvalido:string =
-    '- El eDoc solo se emite desde venta mayor NORMAL.';
-  SErrorFacturaeNoConsolidada:string =
-    '- La factura debe estar consolidada antes de emitir eDoc.';
-  SErrorFacturaeFechaOficialFaltante:string =
-    '- Falta la fecha oficial de la factura.';
-  SErrorLineaFacturaeSinDescripcion:string =
-    '- La linea %s no tiene descripcion.';
-  SErrorLineaFacturaeCantidadCero:string =
-    '- La linea %s tiene cantidad cero.';
-  SErrorFacturaeSinLineas:string = '- La factura no tiene lineas.';
-  SErrorBasesFacturaeNoCuadran:string =
-    '- La suma de bases de lineas no cuadra con cabecera.';
-  SErrorTotalesFacturaeNoCuadran:string =
-    '- Los totales de cabecera no cuadran.';
-  SErrorEmitirFacturae:string =
-    'No se puede emitir eDoc Facturae:' + sLineBreak + '%s';
-  SErrorCertificadoFacturaeNoConfigurado:string =
-    'La empresa de la factura no tiene certificado configurado para firmar ' +
-    'eDoc Facturae.';
-  SErrorConexionFacturaeNoDisponible:string =
-    'No hay conexion de base de datos para emitir eDoc.';
-  SErrorFicheroSalidaFacturaeNoIndicado:string =
-    'No se ha indicado el fichero de salida eDoc.';
-  SErrorPorcentajeIvaFueraRango:string =
-    'El porcentaje de IVA debe estar entre 0 y 100';
-  SErrorPrecioFacturaNegativo:string =
-    'Los precios no pueden ser negativos';
-  SErrorRespuestaHttpFactuzamApi:string = 'Respuesta HTTP %d';
-  SErrorFactuzamApiNoConfigurada:string =
-    'La API de Factuzam no está configurada.';
-  SInfoEventoFactuzamApiRecibido:string =
-    'Evento recibido correctamente.';
-  SInfoConsultaFactuzamApiRealizada:string =
-    'Consulta realizada correctamente.';
-  SInfoDocumentoFactuzamApiGuardado:string =
-    'Documento guardado en %s';
-  SInfoDocumentoFactuzamApiDescargado:string =
-    'Documento descargado.';
-  SErrorImportarImagenCodec:string =
-    'No se puede importar %s en este equipo: falta el codec "%s".' +
-    sLineBreak + sLineBreak +
-    'Instálalo gratis desde Microsoft Store y reintenta.' +
-    sLineBreak + sLineBreak +
-    'Alternativa: guarda la imagen en PNG o JPG y vuelve a subirla.' +
-    sLineBreak + sLineBreak +
-    'Error original: %s';
-  SErrorGuardarFotoSinCodigoArticulo:string =
-    'No se puede guardar foto sin codigo de articulo.';
-  SErrorFicheroOrigenFotoNoExiste:string =
-    'El fichero origen no existe: %s';
-  SErrorDirectorioFotosNoConfigurado:string =
-    'El parametro appDirFotos no esta configurado.';
-  SErrorFotoNoRegistradaParaRotar:string =
-    'No hay foto registrada para rotar.';
-  SErrorFotoSesionSinSerie:string =
-    'Foto de sesion: falta SERIE_SES.';
-  SErrorFotoSesionSinNumero:string =
-    'Foto de sesion: falta NUMERO_SES.';
-  SErrorFotoSesionLineaInvalida:string =
-    'Foto de sesion: LINEA debe ser > 0.';
-  STextoParametroUrlFotosNube:string =
-    '  - URL general del servicio web';
-  STextoParametroTokenFotosNube:string =
-    '  - API key / token de la instalación';
-  STextoParametroReferenciaFotosNube:string =
-    '  - Referencia global de la instalación';
-  STextoParametroCarpetaFotosNube:string =
-    '  - Carpeta de fotos (appDirFotos)';
-  SErrorParametrosFotosNubeFaltantes:string =
-    'Configura primero estos parámetros (Parámetros de la aplicación -> ' +
-    'Servicios web):' + sLineBreak + '%s';
-  SErrorServidorFotosNubeHttp:string =
-    'El servidor respondió con código %d.';
-  SErrorConexionServidorFotosNube:string =
-    'No se pudo conectar con el servidor de fotos: %s';
-  SErrorAbrirImpresoraTicket:string =
-    'No se pudo abrir la impresora: %s';
-  SErrorIniciarDocumentoImpresora:string =
-    'Error al iniciar documento';
-  SErrorEscribirImpresora:string =
-    'Error al escribir en impresora';
-  SErrorEjecutorBusquedasNoRegistrado:string =
-    'No se ha registrado el ejecutor de búsquedas genéricas.';
-  SErrorOperacionCajaNoEncontrada:string =
-    'No se ha encontrado la operación en la caja especificada.';
-  SErrorValoresAtributoNoDefinidos:string =
-    'No hay valores definidos para este atributo.';
-  SErrorColorCompraNoSeleccionado:string = 'Selecciona un color.';
-  SErrorConexionResolverColorCompra:string =
-    'No hay conexión para resolver el color.';
-  SErrorColorBasicoCompraNoExiste:string =
-    'No existe el color básico "%s".';
-  SErrorResolverColorCompra:string =
-    'No se pudo resolver el color "%s".';
-  SErrorArticuloSinSistemaTallasPivote:string =
-    '- Articulo SIN sistema de tallas: %s';
-  SErrorSistemaTallasSuperaMaximoPivote:string =
-    '- Articulo %s: sistema "%s" con %d tallas (maximo %d).';
-  SErrorSkuFueraSistemaTallasPivote:string =
-    '- SKU %s (art %s): talla "%s" fuera del sistema asignado.';
-  SErrorActivarPivoteTallas:string =
-    'No se puede activar el modo pivote por tallas:' +
-    sLineBreak + sLineBreak + '%s' + sLineBreak +
-    'Se mantiene la vista plana (linea por SKU).';
-  SErrorActivarTallasHorizontalesParaColor:string =
-    'Activa las tallas en horizontal antes de elegir color.';
-  SErrorLineaActivaColorNoDisponible:string =
-    'No hay una línea activa para cambiar el color.';
-  SErrorColorCompraConCantidades:string =
-    'El color se elige antes de introducir cantidades. Crea una línea de ' +
-    'color nueva para no mezclar tallas.';
-  SErrorConsultaLineasCompraNoAbierta:string =
-    'No está abierta la consulta de líneas.';
-  SErrorLineaActivaColorNoEncontrada:string =
-    'No se encontró la línea activa para cambiar el color.';
-  SErrorLineaActivaCompraSinArticulo:string =
-    'La línea activa no tiene artículo.';
-  SPreguntaEliminarLineaTallasVenta:string =
-    '¿Está seguro de que desea eliminar esta línea (todas sus tallas)?';
-  SErrorArticuloSkuNoEncontradoSinDetalle:string =
-    'Artículo/SKU no encontrado.';
-  SPreguntaEliminarLineaSkuCantidadCero:string =
-    'La cantidad queda a cero. ¿Borrar la línea del SKU?';
-  SInfoLineaPedidoTallaNoExiste:string =
-    'No existe línea de pedido para esa talla.';
-  SAvisoSistemaTallasSuperaMaximo:string =
-    'El sistema de tallas seleccionado tiene %d valores; el maximo admitido ' +
-    'es %d. Elige un sistema con menos tallas o reduce el conjunto antes de ' +
-    'usarlo aqui.';
-  SErrorHojaCalculoNoActiva:string =
-    'No hay hoja activa: llama a NuevaHoja antes de escribir.';
-  SErrorControlHojaCalculoObligatorio:string =
-    'NuevaHoja requiere un control TdxSpreadSheet.';
-  SErrorGuardarHojaCalculoControlObligatorio:string =
-    'Guardar requiere un control TdxSpreadSheet, no una vista suelta.';
-  // Lib I-P
-  SErrorIbanInvalido:string = 'IBAN Inválido';
-  SErrorPaisIbanInvalido:string = 'País del IBAN Inválido';
-  SErrorDigitoControlIbanInvalido:string =
-    'Dígito Control del IBAN Inválido';
-  SErrorLongitudCuentaBancariaInvalida:string =
-    'Longitud de Número de Cuenta incorrecta';
-  SErrorCuentaBancariaInvalida:string =
-    'Número de Cuenta incorrecto';
-  SErrorDigitoControlCuentaBancaria:string =
-    'DC Incorrecto, es %s y debería ser %s';
-  SErrorPaisIbanInvalidoTipos:string =
-    'Pais del IBAN Inválido';
-  SErrorDigitoControlIbanInvalidoTipos:string =
-    'Digito Control del IBAN Inválido';
-  STextoParametroUrlInventarioNube:string =
-    '  - URL general del servicio web';
-  STextoParametroTokenInventarioNube:string =
-    '  - API key / token de la instalación';
-  STextoParametroReferenciaInventarioNube:string =
-    '  - Referencia global de la instalación';
-  SErrorParametrosInventarioNubeFaltantes:string =
-    'Configura primero estos parámetros (Parámetros de la aplicación -> ' +
-    'Servicios web):' + sLineBreak + '%s';
-  SErrorServidorInventarioNubeHttp:string =
-    'El servidor respondió con código %d.';
-  SErrorConexionServidorInventarioNube:string =
-    'No se pudo conectar con el servidor: %s';
-  SErrorInventarioNubeSinIdRecuento:string =
-    'El servidor no devolvió id_recuento';
-  SErrorDialogoPermisosLayoutNoRegistrado:string =
-    'No se ha registrado el diálogo de permisos de layout.';
-  STextoResetearLayout:string = 'Resetear Layout';
-  SInfoLayoutReseteado:string =
-    'Layout reseteado.' + sLineBreak +
-    'Se aplicará la próxima vez que abra el formulario.';
-  SErrorLimiteDemoFacturas:string =
-    'Límite DEMO.' + sLineBreak + sLineBreak +
-    'Ya se han emitido %d facturas el día %s.' + sLineBreak +
-    'El límite de la copia DEMO es %d facturas al día.';
-  SErrorNifEmpresaLicenciaNoConfigurado:string =
-    'No hay NIF de empresa configurado.';
-  SInfoLicenciaSinNifEmpresa:string =
-    'No hay NIF de empresa; no se exige licencia.';
-  SErrorLicenciaNoEncontrada:string =
-    'No se encontró licencia de aplicación.';
-  SInfoLicenciaValida:string =
-    'Licencia de aplicación válida.';
-  SErrorLicenciaNifsNoCoinciden:string =
-    'La licencia de aplicación no coincide con los NIF de empresa ' +
-    'configurados.';
-  SErrorAccesoFicheroLog:string =
-    'No se puede acceder a %s. Faltan permisos.';
-  SErrorCrearMutexLog:string = 'Error al crear mutex: %s';
-  SErrorParametrosAplicacionNoProporcionados:string =
-    'No se han proporcionado los parámetros de aplicación.';
-  SErrorRespuestaFormateadorSqlVacia:string =
-    'Respuesta vacía del servicio de formateo SQL';
-  SErrorRespuestaFormateadorSqlInesperada:string =
-    'Respuesta JSON inesperada del formateador SQL';
-  SErrorServicioPerfilesNoProporcionado:string =
-    'No se ha proporcionado el servicio de perfiles de usuario.';
-  SErrorCargarPerfilParametros:string =
-    'No se pudo cargar el perfil de parámetros "%s".';
-  SErrorPedidoCompraSinPendientesAlmacen:string =
-    'No hay lineas pendientes de recibir para el almacen "%s" en el pedido ' +
-    '%s/%s.';
-  SErrorAlmacenPedidoCompraNoSeleccionado:string =
-    'Debes seleccionar un almacen.';
-  SErrorPedidoCompraSinCantidadesRecibir:string =
-    'No hay cantidades "A recibir" tecleadas para el almacen "%s" en el ' +
-    'pedido %s/%s.';
-  SErrorContadorAlbaranCompraNoDisponible:string =
-    'No se pudo obtener un numero de albaran del contador "AB".';
-  SErrorCrearLineasAlbaranCompra:string =
-    'No se pudo crear ninguna linea del albaran (lineas origen no ' +
-    'encontradas o sin pendiente de recibir).';
-  SInfoAlbaranCompraCreado:string =
-    'Albaran %s/%s creado correctamente (%d lineas).';
-  SErrorAlbaranCompraDestinoNoSeleccionado:string =
-    'Debes seleccionar el albaran de destino.';
-  SInfoLineasIncorporadasAlbaranCompra:string =
-    'Lineas incorporadas al albaran %s/%s.';
-  SErrorIncorporarLineasAlbaranCompra:string =
-    'No se pudo incorporar ninguna linea (lineas origen no encontradas o ' +
-    'sin pendiente de recibir).';
-  SInfoLineasIncorporadasAlbaranCompraConCantidad:string =
-    'Lineas incorporadas al albaran %s/%s (%d lineas).';
-  SErrorConexionPermisosNoDisponible:string =
-    'No hay conexión disponible para cargar los permisos.';
-  SErrorPreviewExcelNoRegistrado:string =
-    'No se ha registrado el previsualizador de hojas de cálculo.';
-  SErrorPreviewTicketNoRegistrado:string =
-    'No se ha registrado el previsualizador de tickets.';
-  // Lib Q-Z
-  SErrorRespuestaNtpNoValida:string =
-    'sin respuesta NTP valida';
-  SInfoRelojFiscalCorrecto:string =
-    'Reloj fiscal correcto. Servidor=%s, diferencia=%d s.';
-  SErrorRelojSistemaFueraMargenLegal:string =
-    'Reloj del sistema fuera de margen legal. Servidor=%s, ' +
-    'diferencia=%d s, margen=%d s.';
-  SErrorComprobarRelojFiscalNtp:string =
-    'No se pudo comprobar el reloj fiscal contra NTP.';
-  SErrorContextoSinIban:string = '%s sin IBAN.';
-  SErrorContextoIbanNoValido:string =
-    '%s con IBAN no válido: %s';
-  SErrorNifEmpresaAcreedorSepaNoValido:string =
-    'NIF de empresa no válido para acreedor SEPA: %s';
-  SErrorClienteSinMandatoSepa:string =
-    'Cliente %s sin mandato SEPA.';
-  STextoBancoCobroRemesa:string = 'Banco de cobro de la remesa';
-  SErrorConexionGenerarRemesaSepa:string =
-    'No hay conexión para generar la remesa SEPA.';
-  SErrorArchivoSalidaSepaNoIndicado:string =
-    'Indica el archivo de salida SEPA.';
-  SErrorRemesaSinFechaCobro:string =
-    'La remesa no tiene fecha de cobro.';
-  SErrorBancoCobroRemesaNoEncontrado:string =
-    'No se encuentra el banco de cobro de la remesa.';
-  SErrorBancoCobroSinCodigoAcreedorSepa:string =
-    'El banco de cobro no tiene código acreedor SEPA.';
-  SErrorCodigoAcreedorSepaNoValido:string =
-    'Código acreedor SEPA no válido: %s';
-  SErrorEfectoSinNombreCliente:string =
-    'Efecto sin nombre de cliente.';
-  STextoClienteSepa:string = 'Cliente %s';
-  SErrorClienteSinFechaFirmaMandatoSepa:string =
-    'Cliente %s sin fecha de firma del mandato SEPA.';
-  SErrorRecalcularTotalesFactura:string =
-    'Error al recalcular totales de la factura: %s';
-  SErrorGenerarContadorAutomatico:string =
-    'Error al generar contador automático: %s';
-  SErrorConexionBbddConExcepcion:string =
-    '%s%s Mensaje: %s';
-  SErrorNumeroCuentaInvalido:string =
-    'Número de Cuenta Inválido';
-  SErrorNifNoValido:string = ' NIF No Válido';
-  SErrorLetraDniIncorrecta:string =
-    'Letra DNI Incorrecta. Correcta %s';
-  SErrorServicioPerfilesUsuarioNoConfigurado:string =
-    'No se ha configurado el servicio de perfiles de usuario.';
-  SErrorCrearSeleccionarDocumentoAntesLineas:string =
-    'Crea o selecciona %s antes de añadir lineas.';
-  SErrorCrearSeleccionarDocumentoAntesTallas:string =
-    'Crea o selecciona %s antes de activar tallas.';
-  SErrorArticuloCursoSinSistemaTallas:string =
-    'El articulo en curso no tiene sistema de tallas asignado.';
-  SErrorAltaSeleccionarArticuloConTallas:string =
-    'En alta, selecciona primero un articulo con sistema de tallas.';
-  SErrorArticuloSinSistemaTallasCompra:string =
-    '- Articulo sin sistema de tallas: %s';
-  SErrorActivarTallasHorizontalesCompra:string =
-    'No se puede activar tallas en horizontal:' +
-    sLineBreak + sLineBreak + '%s' + sLineBreak +
-    'Asigna un sistema de tallas o elimina la linea.';
-  SErrorEncolarVentaWebservice:string =
-    'No se pudo encolar la venta %s\%s para el webservice.';
-  SErrorFacturaWebserviceNoExiste:string =
-    'No existe la factura %s\%s para enviarla al webservice.';
-  SErrorExportarNoVerifactuSinCertificado:string =
-    'No se puede exportar NO VERI*FACTU legal: el modo NO VERI*FACTU ' +
-    'exige firma electrónica con certificado oficial.';
-  SErrorExportarNoVerifactuSinColumnasEventos:string =
-    'No se puede exportar NO VERI*FACTU legal: faltan columnas de firma ' +
-    'en fza_verifactu_eventos.';
-  SErrorExportarNoVerifactuSinColumnasFacturacion:string =
-    'No se puede exportar NO VERI*FACTU legal: faltan columnas de firma ' +
-    'en fza_facturas_consolidaciones.';
-  SErrorExportarNoVerifactuRegistrosSinFirma:string =
-    'No se puede exportar NO VERI*FACTU legal: %d evento(s) y %d ' +
-    'registro(s) de facturación no tienen firma XAdES y datos de ' +
-    'certificado.';
-  SErrorConexionExportarNoVerifactu:string =
-    'No hay conexion para exportar NO VERI*FACTU.';
-  SErrorArchivoBaseExportacionNoIndicado:string =
-    'No se ha indicado archivo base de exportacion.';
-  STextoTipoError:string = 'ERROR';
-  STextoTipoAviso:string = 'AVISO';
-  SFormatoDetalleVerificacion:string = '%s: %s';
-  SErrorModoExportacionNoCoincide:string =
-    '%s: ModoVerifactu no coincide con el otro fichero.';
-  SErrorXmlFirmadoNoLegible:string =
-    '%s: el XML firmado no se puede leer.';
-  SErrorFirmaEventoRaizIncorrecta:string =
-    '%s: la firma de evento debe envolver RegistroEvento.';
-  SErrorEventoFirmadoNoEncontrado:string =
-    '%s: falta el nodo Evento firmado.';
-  SErrorFirmaFacturaRaizIncorrecta:string =
-    '%s: la firma debe envolver RegistroAlta o RegistroAnulacion.';
-  SErrorFirmaXadesNodoAeatIncorrecto:string =
-    '%s: la firma XAdES no esta en el nodo exigido por AEAT.';
-  SErrorFirmaXadesSinCertificado:string =
-    '%s: falta certificado X509 en KeyInfo.';
-  SErrorFirmaXadesSinSignedInfo:string =
-    '%s: falta SignedInfo.';
-  SErrorCanonicalizacionFirmaAeat:string =
-    '%s: CanonicalizationMethod no coincide con AEAT.';
-  SErrorMetodoFirmaNoRsaSha256:string =
-    '%s: SignatureMethod debe ser RSA-SHA256.';
-  SErrorReferenciasSignedInfo:string =
-    '%s: SignedInfo debe tener referencia al documento y a ' +
-    'SignedProperties.';
-  SErrorReferenciaDocumentoFirmado:string =
-    '%s: falta Reference URI vacio al registro firmado.';
-  SErrorTransformacionFirmaEnveloped:string =
-    '%s: falta transform enveloped-signature.';
-  SErrorDigestRegistroNoSha256:string =
-    '%s: digest del registro debe ser SHA-256.';
-  SErrorReferenciaSignedProperties:string =
-    '%s: falta Reference a SignedProperties.';
-  SErrorCanonicalizacionSignedProperties:string =
-    '%s: SignedProperties no usa canonicalizacion AEAT.';
-  SErrorDigestSignedPropertiesNoSha256:string =
-    '%s: digest de SignedProperties debe ser SHA-256.';
-  SErrorQualifyingPropertiesXades:string =
-    '%s: falta QualifyingProperties XAdES.';
-  SErrorSignedPropertiesXades:string =
-    '%s: falta SignedProperties XAdES.';
-  SErrorSigningCertificateXades:string =
-    '%s: falta SigningCertificate.';
-  SErrorPoliticaFirmaAge:string =
-    '%s: falta politica de firma AGE.';
-  SErrorIdentificadorPoliticaAge:string =
-    '%s: identificador de politica AGE incorrecto.';
-  SErrorDigestPoliticaAgeNoSha1:string =
-    '%s: digest de politica AGE debe ser SHA-1.';
-  SErrorDigestValuePoliticaAge:string =
-    '%s: DigestValue de politica AGE incorrecto.';
-  SErrorUrlPoliticaAge:string =
-    '%s: URL de politica AGE incorrecta.';
-  SFormatoEtiquetaEvento:string = 'Evento %s';
-  SErrorEventoHashPropioNoSha256:string =
-    'Evento %s: HashPropio no es SHA-256 hexadecimal.';
-  SAvisoEventoPrimerHashAnteriorNoCero:string =
-    'Evento %s: primer HashAnterior no es cero.';
-  SErrorEventoHashAnteriorNoCoincide:string =
-    'Evento %s: HashAnterior no coincide con el evento anterior.';
-  SErrorEventoSinRegistroXmlFirmado:string =
-    'Evento %s: falta RegistroXmlFirmado.';
-  SErrorEventoHuellaNoCoincide:string =
-    'Evento %s: HuellaEvento no coincide con HashPropio.';
-  SErrorEventoFirmaGuardadaSinFirmaXml:string =
-    'Evento %s: hay FirmaXades pero el XML no contiene firma.';
-  SErrorEventoSinFirmaXades:string =
-    'Evento %s: falta FirmaXades legal.';
-  SErrorEventoSignatureValueNoCoincide:string =
-    'Evento %s: SignatureValue no coincide con FirmaXades.';
-  SErrorEventoFirmaDigitalNoCoincide:string =
-    'Evento %s: FirmaDigital no coincide con FirmaXades.';
-  STextoRegistroFacturaIndice:string = 'registro %d';
-  SFormatoEtiquetaFactura:string = 'Factura %s';
-  SAvisoFacturaSinPeticionCompletaXml:string =
-    'Factura %s: no incluye PeticionCompletaXml.';
-  SErrorFacturaHashPeticionNoCoincide:string =
-    'Factura %s: HashPeticionBase64 no coincide.';
-  SErrorFacturaSinRegistroXmlFirmado:string =
-    'Factura %s: falta RegistroXmlFirmado.';
-  SErrorFacturaHashRegistroNoCoincide:string =
-    'Factura %s: HashRegistroXmlBase64 no coincide.';
-  SErrorFacturaGuardadaSinFirmaXml:string =
-    'Factura %s: hay firma guardada pero el XML no firma.';
-  SErrorFacturaSinFirmaDigitalXades:string =
-    'Factura %s: falta FirmaDigitalXades legal.';
-  SErrorFacturaSignatureValueNoCoincide:string =
-    'Factura %s: SignatureValue no coincide.';
-  STextoEventos:string = 'Eventos';
-  STextoFacturacion:string = 'Facturacion';
-  SErrorFicheroEventosNoExiste:string =
-    'No existe el fichero de eventos: %s';
-  SErrorFicheroEventosRaizIncorrecta:string =
-    'El fichero de eventos no tiene la raiz esperada.';
-  SErrorFicheroEventosVacio:string =
-    'El fichero de eventos no contiene eventos.';
-  SErrorFicheroFacturacionNoExiste:string =
-    'No existe el fichero de facturacion: %s';
-  SErrorFicheroFacturacionRaizIncorrecta:string =
-    'El fichero de facturacion no tiene la raiz esperada.';
-  SErrorFicheroFacturacionVacio:string =
-    'El fichero de facturacion no contiene registros.';
-  SErrorVerificarEventos:string =
-    'No se pudo verificar eventos: %s';
-  SErrorVerificarFacturacion:string =
-    'No se pudo verificar facturacion: %s';
-  SInfoVerificacionCorrecta:string = 'Verificacion correcta.';
-  SFormatoModoActual:string = '%s (modo actual)';
-  SResumenVerificacionNoVerifactu:string =
-    'Modo: %s' + sLineBreak +
-    'Eventos: %d' + sLineBreak +
-    'Registros de facturacion: %d' + sLineBreak +
-    'Errores: %d' + sLineBreak +
-    'Avisos: %d';
-  SDepuracionComponenteNoTcxLabel:string =
-    '%s is not TcxLabel';
-  SDepuracionComponenteNoTcxTabSheet:string =
-    '%s is not tcxTabSheet ';
-  SDepuracionComponenteNoTcxDbCheckBox:string =
-    '%s is not TcxDBCheckBox';
-  SDepuracionComponenteNoTcxButton:string =
-    '%s is not TcxButton';
-  SDepuracionComponenteNoTcxGroupBox:string =
-    '%s is not TcxGroupBox';
-  SDepuracionComponenteNoTcxDbRadioGroup:string =
-    '%s is not TcxDBRadioGroup';
-  SDepuracionComponenteNoSpeedButton:string =
-    '%s is not TSpeedButton';
-  SDepuracionComponenteNoTcxRadioButton:string =
-    '%s is not TcxRadioButton';
-  SErrorImagenNoExiste:string = 'La imagen no existe';
-  SErrorAbrirProveedorCriptografico:string =
-    'No se pudo abrir el proveedor criptografico.';
-  SErrorCrearHashCriptografico:string =
-    'No se pudo crear el hash criptografico.';
-  SErrorCalcularHash:string = 'No se pudo calcular el hash.';
-  SErrorObtenerTamanoHash:string =
-    'No se pudo obtener el tamano del hash.';
-  SErrorObtenerValorHash:string =
-    'No se pudo obtener el valor del hash.';
-  SErrorOperacionCriptografica:string =
-    '%s. Codigo: %s. %s';
-  SErrorProveedorCertificadoSinSha256:string =
-    'El proveedor criptografico del certificado no admite SHA-256 para ' +
-    'firma RSA. No se puede generar XAdES rsa-sha256 con ese certificado ' +
-    'tal como esta instalado. Reinstala o importa el certificado con un ' +
-    'proveedor compatible con SHA-256, como Microsoft Enhanced RSA and ' +
-    'AES Cryptographic Provider o Microsoft Software Key Storage ' +
-    'Provider. %s';
-  STextoCertificadoTodaviaNoValido:string =
-    'todavia no es valido';
-  STextoCertificadoCaducado:string = 'esta caducado';
-  SErrorCertificadoNoVigente:string =
-    'El certificado configurado %s. Vigencia: %s - %s. Seleccione un ' +
-    'certificado vigente en la ficha de empresa.';
-  SErrorCertificadoVigenteNoEncontrado:string =
-    'No se encontro en el almacen personal de Windows un certificado ' +
-    'vigente que coincida con el numero de serie o titular configurado.';
-  SErrorCertificadoEmpresaNoConfigurado:string =
-    'No hay un certificado configurado en la ficha de la empresa.';
-  SErrorCrearHashSha256Firma:string =
-    'No se pudo crear el hash SHA-256 para firmar';
-  SErrorCargarDatosFirma:string =
-    'No se pudieron cargar los datos a firmar';
-  SErrorCalcularTamanoFirmaSha256:string =
-    'No se pudo calcular el tamano de la firma SHA-256';
-  SErrorFirmarSha256:string = 'No se pudo firmar con SHA-256';
-  SErrorCalcularTamanoFirmaNCrypt:string =
-    'NCryptSignHash fallo al calcular el tamano de la firma. Codigo: %d';
-  SErrorFirmaNCrypt:string =
-    'NCryptSignHash fallo al firmar. Codigo: %d';
-  SErrorAbrirClavePrivadaCertificado:string =
-    'No se pudo abrir la clave privada del certificado';
-  SErrorXmlMalFormadoCanonicalizar:string =
-    'XML mal formado al canonicalizar.';
-  SErrorElementoRaizXmlNoEncontrado:string =
-    'No se encontro el elemento raiz del XML.';
-  SErrorNombreNodoRaizNoDeterminado:string =
-    'No se pudo determinar el nombre del nodo raiz.';
-  SErrorCierreAperturaRaizNoEncontrado:string =
-    'No se encontro el cierre de la apertura raiz.';
-  SErrorCierreNodoRaizNoEncontrado:string =
-    'No se encontro el cierre del nodo raiz %s.';
-  SErrorCierreNodoNoEncontrado:string =
-    'No se encontro el cierre del nodo %s.';
-  // Verifactu
-  SErrorNifProductorEventoVerifactuInvalido:string =
-    'Parámetro appVerifactuSifNif vacío o no válido: "%s".';
-  SErrorEmpresaEventosVerifactuNoConfigurada:string =
-    'No hay empresa configurada para registrar eventos Verifactu.';
-  SErrorNifEmisorEventoNoVerifactuInvalido:string =
-    'NIF de la empresa emisora vacío o no válido para firmar eventos ' +
-    'NO VERI*FACTU: "%s".';
-  SErrorFacturaRequisitosFiscalesNoExiste:string =
-    'No existe la factura %s\%s para validar sus requisitos fiscales.';
-  SErrorEmpresaSinNifEmisionFiscal:string =
-    'La empresa %s no tiene un NIF válido para la emisión fiscal.';
-  SErrorNifProductorVerifactuInvalido:string =
-    'El parámetro appVerifactuSifNif no contiene un NIF de productor ' +
-    'válido.';
-  SErrorCertificadoFiscalEmpresaNoUtilizable:string =
-    'La empresa %s no dispone de un certificado fiscal utilizable: %s';
-  SErrorFirmaCertificadoNoVerifactuDesactivada:string =
-    'El modo NO VERI*FACTU exige activar la firma con certificado en ' +
-    'appVerifactuFirmaCertificado.';
-  SErrorCertificadoEventosNoVerifactuNoConfigurado:string =
-    'No hay certificado configurado en Empresas para firmar eventos ' +
-    'NO VERI*FACTU.';
-  SErrorFirmarEventoNoVerifactu:string =
-    'No se pudo firmar el evento NO VERI*FACTU: %s';
-  SErrorRelojEventoNoVerifactu:string =
-    'No se pudo validar el reloj del evento NO VERI*FACTU: %s';
-  SErrorColumnasFirmaFacturacionNoDisponibles:string =
-    'Faltan columnas de firma en fza_facturas_consolidaciones. Aplique ' +
-    'el script DESARROLLOS EN CURSO\verifactu_registros_firmados.sql.';
-  STextoRegistroFacturacionNoVerifactu:string =
-    'Registro de facturación NO VERI*FACTU';
-  SErrorFirmaRegistroNoVerifactuObligatoria:string =
-    'El modo NO VERI*FACTU exige firmar el registro de facturación con ' +
-    'certificado oficial.';
-  SErrorNifProductorSoftwareVerifactuInvalido:string =
-    'Parámetro appVerifactuSifNif (NIF del productor del software) vacío ' +
-    'o no válido: "%s". Rellenarlo en Parámetros de aplicación, categoría ' +
-    'Verifactu.';
-  SErrorFacturaExtranjeraSinNifIva:string =
-    'La factura %s %s\%s a cliente extranjero requiere el NIF-IVA del ' +
-    'destinatario.';
-  SErrorFacturaSinNifClienteValido:string =
-    'La factura %s %s\%s requiere un NIF de cliente válido y tiene "%s"';
-  SErrorNifEmisorVerifactuInvalido:string =
-    'NIF de la empresa emisora vacío o no válido para Verifactu: "%s". ' +
-    'Revisar la ficha de la empresa (NIF de 9 caracteres, sin guiones).';
-  SErrorFacturaRegistroFiscalNoEncontrada:string =
-    'Factura %s\%s no encontrada para el registro fiscal';
-  SAvisoQrPngNoGenerado:string =
-    '(QR PNG no generado: %s) ';
-  SErrorFacturaEnvioVerifactuNoEncontrada:string =
-    'Factura %s\%s no encontrada para el envío Verifactu';
-  SErrorRespuestaServicioInesperada:string =
-    'Respuesta inesperada del servicio';
-  SErrorRespuestaHttpAeat:string = 'AEAT HTTP %d: %s';
-  SErrorRespuestaRegistroAeat:string = 'AEAT [%s] %s';
-  SErrorEstadoEnvioAeat:string = 'EstadoEnvio: %s';
-  SErrorServicioInstalacionHttp:string =
-    'El servicio respondió con HTTP %d.';
-  SErrorReferenciaGlobalInstalacionFaltante:string =
-    'Falta la referencia global de la instalación.';
-  SErrorApiKeyInstalacionFaltante:string =
-    'Falta la API key de la instalación.';
-  SErrorServicioJsonInvalido:string =
-    'El servicio no devolvió JSON válido.';
-  SErrorServicioSinNumeroInstalacion:string =
-    'El servicio no devolvió NumeroInstalacion.';
-  SErrorServicioSinDatosDeclaracion:string =
-    'El servicio no devolvió los datos de la declaración responsable.';
-  SErrorDeclaracionVersionNoSolicitada:string =
-    'La declaración recibida no corresponde a la versión solicitada.';
-  SErrorDeclaracionSifIncorrecto:string =
-    'La declaración recibida no corresponde al SIF FZ.';
-  SErrorDeclaracionDescargadaVacia:string =
-    'La declaración descargada está vacía.';
-  SErrorPaginaPublicaHttp:string =
-    'La página pública respondió con HTTP %d.';
-  SErrorDeclaracionWebserviceOtraVersion:string =
-    'El webservice devolvió una declaración de otra versión.';
-  SErrorDeclaracionPaginaPublicaOtraVersion:string =
-    'La página pública corresponde a otra versión.';
-  SErrorDeclaracionResponsableNoDisponible:string =
-    'No hay una declaración responsable disponible para la versión %s. ' +
-    'Webservice: %s. Caché: %s. Página pública: %s';
-  SErrorEmpresaInstalacionSifNoConfigurada:string =
-    'No hay empresa configurada para solicitar el número de instalación ' +
-    'SIF.';
-  SErrorEmpresaSinRazonSocial:string =
-    'La empresa no tiene razón social.';
-  SErrorNifEmpresaInstalacionInvalido:string =
-    'El NIF de la empresa no es válido: "%s".';
-  SErrorEmpresaSinNumeroInstalacionSif:string =
-    'La empresa %s (%s) no tiene número de instalación SIF. Genéralo desde ' +
-    'Archivo > Empresas.';
-  SErrorNumeroInstalacionSifIncorrecto:string =
-    'El número de instalación SIF de la empresa %s no corresponde al SIF ' +
-    'FZ.';
-  SErrorNumeroInstalacionSinVersion:string =
-    'El número de instalación SIF de la empresa %s no tiene versión ' +
-    'asociada. Genéralo de nuevo desde Archivo > Empresas.';
-  SErrorVersionNumeroInstalacionIncorrecta:string =
-    'El número de instalación SIF de la empresa %s fue generado para la ' +
-    'versión %s y la versión actual es %s. Genéralo de nuevo desde ' +
-    'Archivo > Empresas.';
-  SInfoExportacionNoVerifactuGenerada:string =
-    'Exportacion NO VERI*FACTU generada:' + sLineBreak +
-    '%s' + sLineBreak +
-    '%s' + sLineBreak + sLineBreak +
-    'Eventos: %d' + sLineBreak +
-    'Registros de facturacion: %d' + sLineBreak +
-    'Firmas: registros internos XAdES';
-  SInfoVerificacionNoVerifactuCorrecta:string =
-    'Verificacion NO VERI*FACTU correcta.' + sLineBreak +
-    '%s' + sLineBreak + sLineBreak +
-    'Informe:' + sLineBreak + '%s';
-  SErrorVerificacionNoVerifactu:string =
-    'Verificacion NO VERI*FACTU con errores.' + sLineBreak +
-    '%s' + sLineBreak + sLineBreak +
-    'Informe:' + sLineBreak + '%s';
-  // Forms A-B
-  SPreguntaAbrirSeriesAlbaranVenta:string =
-    'No hay series de albaranes de venta mayor (tipo AV) para la empresa ' +
-    '"%s".' + sLineBreak +
-    'Se dan de alta en Empresas -> Series. ¿Abrir el mantenimiento de ' +
-    'Empresas ahora?';
-  SErrorAlbaranVentaNoAbierto:string =
-    'No está abierto el albarán de venta.';
-  SErrorArticuloNoSeleccionadoBuscarSkusAlbaranVenta:string =
-    'Selecciona un artículo antes de buscar sus SKUs.';
-  SPreguntaGrabarAlbaranVentaSinSku:string =
-    'Las líneas %s tienen artículos con variaciones sin SKU asignado. ' +
-    '¿Grabar de todas formas?';
-  SErrorAlbaranVentaNoInicializado:string =
-    'No esta inicializado el albaran.';
-  SErrorCrearSeleccionarAlbaranAntesLineas:string =
-    'Crea o selecciona un albaran antes de anadir lineas.';
-  SPreguntaEliminarLineaAlbaranVenta:string =
-    '¿Está seguro de que desea eliminar esta línea?';
-  SErrorAlbaranVentaSinLineas:string =
-    'El albarán no tiene líneas.';
-  SAvisoSeleccionarLineasBorradorAlbaran:string =
-    'Seleccione las líneas para crear borrador en la rejilla ' +
-    '(Ctrl+click para selección múltiple).';
-  SAvisoLineasAlbaranConBorrador:string =
-    'Las líneas seleccionadas ya tienen borrador.';
-  SPreguntaGenerarBorradorLineasAlbaran:string =
-    '¿Generar borrador con %d línea(s) del albarán?';
-  SInfoBorradorFacturaCreado:string =
-    'Borrador creado: %s / %s';
-  SErrorCrearBorradorFactura:string =
-    'No se pudo crear el borrador.';
-  SPreguntaGenerarBorradorTodoAlbaran:string =
-    '¿Crear borrador con todas las líneas pendientes del albarán?';
-  SAvisoAlbaranSinPedidoVenta:string =
-    'Este albaran no procede de ningun pedido de venta.';
-  SAvisoAlbaranSinBorrador:string =
-    'Este albaran no tiene borrador creado.';
-  SErrorProveedorNoSeleccionadoBuscarArticulos:string =
-    'Selecciona un proveedor antes de buscar artículos.';
-  SErrorAlbaranCompraNoAbierto:string =
-    'No está abierto el albarán de compra.';
-  SErrorArticuloNoSeleccionadoBuscarSkusAlbaranCompra:string =
-    'Selecciona un artículo antes de buscar sus SKUs.';
-  SErrorAlbaranCompraNoInicializado:string =
-    'No esta inicializado el albaran de compra.';
-  STextoAlbaranCompra:string = 'un albaran';
-  SPreguntaAbrirSeriesAlbaranCompra:string =
-    'No hay series de albaranes de compra (tipo AB) para la empresa "%s".' +
-    sLineBreak +
-    'Se dan de alta en Empresas -> Series. ¿Abrir el mantenimiento de ' +
-    'Empresas ahora?';
-  SErrorAlbaranCompraSinImpresionActivo:string =
-    'No hay albaran de compra activo que imprimir.';
-  SErrorAlbaranCompraNoActivo:string =
-    'No hay albaran de compra activo.';
-  SPreguntaGrabarAlbaranCompraSinSku:string =
-    'Las líneas %s tienen artículos con variaciones sin SKU asignado. ' +
-    '¿Grabar de todas formas?';
-  SErrorAlbaranCompraNecesarioElegirEmpresa:string =
-    'Crea o selecciona un albarán de compra antes de elegir la empresa.';
-  SErrorAlbaranCompraNecesarioElegirProveedor:string =
-    'Crea o selecciona un albarán de compra antes de elegir el proveedor.';
-  SErrorArticuloNoSeleccionadoElegirColor:string =
-    'Selecciona un artículo antes de elegir color.';
-  SErrorArticuloSinColoresBasicosActivos:string =
-    'El artículo "%s" no tiene colores básicos activos en sus SKUs.';
-  SAvisoAlbaranCompraSinPedido:string =
-    'Este albaran no procede de ningun pedido de compra.';
-  SAvisoAlbaranCompraSinFactura:string =
-    'Este albaran no tiene factura de compra creada.';
-  SPreguntaEliminarLineaAlbaranCompra:string =
-    'Esta seguro de que desea eliminar esta linea?';
-  SErrorArticuloSinTipoVariacion:string =
-    'El artículo debe tener asignado un "Tipo de variación" y estar ' +
-    'guardado para poder generar SKUs.';
-  SErrorPrecioTarifaNoSeleccionado:string =
-    'Selecciona primero un precio de tarifa.';
-  SErrorPrecioTarifaNoGuardado:string =
-    'Esta fila aún no tiene precio guardado en la tarifa. Pulsa primero ' +
-    '"Añadir precio" para crear el registro.';
-  SAvisoRevisionArticulo:string = 'Revisión requerida: %s';
-  SErrorGuardarPropiedadesArticulo:string =
-    'Error al guardar propiedades: %s';
-  SErrorGuardarVariacionesArticulo:string =
-    'Error al guardar variaciones: %s';
-  SPreguntaReconstruirStock:string =
-    '¿Desea reconstruir la tabla de stock a partir de los movimientos de ' +
-    'almacén? Esta operación borrará el stock actual y lo regenerará.';
-  STituloReconstruirStock:string = 'Reconstruir Stock';
-  SErrorReconstruirStock:string =
-    'Error al reconstruir el stock: %s';
-  SInfoStockReconstruido:string = 'Stock reconstruido.';
-  SErrorArticuloNoSeleccionadoImprimirEtiquetas:string =
-    'Seleccione primero un artículo para imprimir sus etiquetas.';
-  SErrorArticuloNoSeleccionadoGenerarCodigos:string =
-    'Seleccione o guarde un artículo antes de generar códigos de barras.';
-  SErrorArticuloSinSkusActivosGenerarCodigos:string =
-    'El artículo no tiene SKUs activos.';
-  SPreguntaGenerarCodigosBarras:string =
-    '¿Generar códigos de barras pendientes?' + sLineBreak + sLineBreak +
-    'Para cada SKU activo:' + sLineBreak +
-    '  · Si no tiene principal: se genera un EAN-13 interno (prefijo ' +
-    '"%s").' + sLineBreak +
-    '  · Si tiene principal pero no fila vacía: se crea una fila vacía ' +
-    'para el código del fabricante (a rellenar manualmente).' + sLineBreak +
-    '  · Si ya tiene ambos, se respeta.' + sLineBreak + sLineBreak +
-    'Pulse Sí para continuar.';
-  SInfoGeneracionCodigosBarras:string =
-    'Generación finalizada.' + sLineBreak +
-    '- EAN-13 internos creados: %d' + sLineBreak +
-    '- Filas vacías de fabricante creadas: %d' + sLineBreak +
-    '- SKUs ya completos (saltados): %d' + sLineBreak +
-    '- Placeholders _FAB_ obsoletos eliminados: %d';
-  SErrorArticuloNoSeleccionadoVerificarCodigos:string =
-    'Seleccione o guarde un artículo antes de verificar.';
-  SErrorDetalleCodigoBarrasInvalido:string =
-    '  %s  (SKU %s, Tipo %s, Long %d)';
-  SInfoVerificacionCodigosBarrasCorrecta:string =
-    'Verificación OK.' + sLineBreak +
-    '- EAN-13 válidos: %d' + sLineBreak +
-    '- EAN-8  válidos: %d' + sLineBreak +
-    '- Pendientes (placeholder/vacío): %d';
-  SAvisoVerificacionCodigosBarras:string =
-    'Verificación con incidencias.' + sLineBreak +
-    '- EAN-13 válidos: %d' + sLineBreak +
-    '- EAN-8  válidos: %d' + sLineBreak +
-    '- NO válidos: %d' + sLineBreak +
-    '- Pendientes: %d' + sLineBreak +
-    'Códigos no válidos:%s';
-  SInfoPrecargaArticuloGuardada:string = 'Precarga guardada.';
-  STextoAtributoBasicoSinValor:string = '(sin valor)';
-  SPreguntaCrearAtributoBasicoSku:string =
-    'Este SKU todavia no tiene un atributo basico asignado para este valor.' +
-    sLineBreak + sLineBreak +
-    'Si       -> Crear basico GLOBAL "%s"' + sLineBreak +
-    '            (compartido con otros articulos que usen ese valor)' +
-    sLineBreak + sLineBreak +
-    'No       -> Crear basico AD-HOC "%s"' + sLineBreak +
-    '            (exclusivo de este articulo)' + sLineBreak + sLineBreak +
-    'Cancelar -> No crear nada por ahora.';
-  STituloCrearAtributoBasico:string =
-    'Como crear el atributo basico';
-  SErrorSkuColorNoSeleccionado:string =
-    'Seleccione un SKU con color para activar o desactivar todos los SKU ' +
-    'de ese color.';
-  STextoActivarSkusColor:string = 'activar';
-  STextoDesactivarSkusColor:string = 'desactivar';
-  SPreguntaCambiarActivoSkusColor:string =
-    'Va a %s TODOS los SKU del color "%s" de este articulo. Continuar?';
-  STextoSkusColorActivados:string = 'activado';
-  STextoSkusColorDesactivados:string = 'desactivado';
-  SInfoSkusColorActualizados:string =
-    '%d SKU del color "%s" se han %s.';
-  SErrorColorPaletaBusquedaInvalido:string =
-    'Indique un color de paleta válido por código, nombre o HEX (#RRGGBB).';
-  // Forms C
-  SErrorOperacionSinBorrador:string =
-    'La operación seleccionada no tiene borrador.';
-  SErrorBorradorNoCerradoFiscalmente:string =
-    'El borrador %s\%s aún no está cerrado fiscalmente: no se puede anular.';
-  SPreguntaAnularFiscalmenteBorrador:string =
-    '¿Anular fiscalmente el borrador %s\%s?';
-  SPreguntaBorrarMovimientosTicketAnulado:string =
-    '¿Desea borrar también los movimientos de almacén asociados al ticket ' +
-    '%s\%s?' + sLineBreak +
-    'Se revertirá el stock de sus líneas.';
-  SPreguntaMovimientosRectificativaSustitutiva:string =
-    '¿Qué desea hacer con los movimientos de almacén de la factura ' +
-    'original %s\%s?' + sLineBreak + sLineBreak +
-    'Eliminar originales: se revierte su stock y se generan los ' +
-    'movimientos de la nueva rectificativa.' + sLineBreak +
-    'Mantener originales: se conserva el stock actual y la nueva ' +
-    'rectificativa no genera movimientos adicionales.';
-  SInfoAnulacionVerifactuEncolada:string =
-    'Anulación encolada: el hilo Verifactu la enviará en el próximo ciclo.';
-  SInfoAnulacionNoVerifactuRegistrada:string =
-    'Anulación registrada y firmada en NO VERI*FACTU.';
-  SInfoAnulacionSinVerifactuRegistrada:string =
-    'Anulación registrada en modo SIN VERIFACTU.';
-  SErrorFacturarTicketRequiereSimplificado:string =
-    'Solo se crea un borrador normal desde un borrador SIMPLIFICADO ' +
-    '(ticket).';
-  SInfoBorradorSustitucionTicketCreado:string =
-    'Creado el borrador %s\%s en sustitución del ticket %s\%s en modo ' +
-    'fiscal %s (F3).';
-  SErrorRectificarRectificativa:string =
-    'No se puede rectificar una rectificativa.';
-  SPreguntaRectificarBorrador:string =
-    'Seleccione cómo rectificar el borrador %s\%s.' + sLineBreak +
-    'Por diferencias carga las cantidades en negativo; sustitutiva las ' +
-    'carga en positivo.';
-  SErrorOperacionCorreoNoEncontrada:string =
-    'No se ha encontrado la operación seleccionada.';
-  STituloEnviarDocumentacion:string = 'Enviar documentación';
-  SSolicitudCorreoElectronico:string = 'Correo electrónico:';
-  SErrorCorreoElectronicoObligatorio:string =
-    'Indique una dirección de correo electrónico.';
-  SErrorEnviarCorreoOperacion:string =
-    'No se ha podido enviar el correo.' + sLineBreak + '%s';
-  SErrorOperacionSinTicket:string =
-    'Esta operación no tiene ticket asociado.';
-  SPreguntaBorrarPropiedadPlantillaCompra:string =
-    '¿Borrar la propiedad?';
-  SPreguntaBorrarKitPlantillaCompra:string = '¿Borrar el kit?';
-  SInfoIbanValidado:string = 'IBAN Validado OK';
-  SErrorCabeceraSesionAntesLineas:string =
-    'Crea y graba la cabecera de la sesion antes de anadir lineas.';
-  SErrorSesionSinDocumentosCreados:string =
-    'La sesion no tiene documentos creados.';
-  SErrorMantenimientoTipoDocumentoNoDisponible:string =
-    'No hay mantenimiento disponible para el tipo de documento "%s".';
-  SPreguntaAbrirSeriesSesionCompra:string =
-    'No hay series de sesiones de compra (tipo SE) para la empresa "%s".' +
-    sLineBreak +
-    'Se dan de alta en Empresas -> Series. ¿Abrir el mantenimiento de ' +
-    'Empresas ahora?';
-  SErrorLineaSesionDescargarFotosNoSeleccionada:string =
-    'Selecciona o crea una linea antes de descargar fotos.';
-  SErrorLineaSesionSinCodigoArticulo:string =
-    'La linea activa no tiene codigo de articulo.';
-  SErrorDescargarFotosArticulo:string =
-    'No se pudieron descargar las fotos del articulo %s:' + sLineBreak +
-    '%s';
-  SInfoFotosArticuloDescargadas:string =
-    'Descargadas %d foto(s) del articulo %s.';
-  SErrorSesionElegirProveedorNoSeleccionada:string =
-    'Crea o selecciona una sesion antes de elegir el proveedor.';
-  SErrorProveedorSesionSinKits:string =
-    'El proveedor de la sesion no tiene kits definidos. Se crean en ' +
-    'Proveedores, pestaña Compras.';
-  SErrorKitProveedorDesplegableNoSeleccionado:string =
-    'Elige un kit del proveedor en el desplegable.';
-  SPreguntaBorrarLineaSesionCompra:string =
-    'Borrar la linea seleccionada?';
-  SErrorLineaSesionAsignarFotoNoSeleccionada:string =
-    'Selecciona o crea una linea antes de asignar foto.';
-  SInfoFotoLineaSesionAsignada:string =
-    'Foto asignada a la linea %d.';
-  SErrorAsignarFotoSesion:string = 'No se pudo asignar la foto.';
-  SErrorGuardarFotoSesion:string = 'Error guardando foto: %s';
-  SErrorSesionYaMaterializada:string =
-    'La sesion ya esta cerrada. No se puede materializar dos veces.';
-  SInfoDuplicadosSesionMarcadosReusar:string =
-    'Se han detectado y marcado %d linea(s) como REUSAR de codigos ' +
-    'repetidos dentro de esta sesion (variantes color/SKU del mismo ' +
-    'articulo). La materializacion crea el articulo una sola vez.';
-  SInfoSesionMaterializadaSinDocumentos:string =
-    'Sesion materializada (sin documentos).';
-  SErrorSesionNoCerradaParaReversion:string =
-    'La sesion no esta CERRADA. Solo se pueden revertir sesiones ' +
-    'materializadas.';
-  SPreguntaRevertirSesionCompra:string =
-    'Se borraran los movimientos de almacen creados por esta sesion y ' +
-    'volvera a BORRADOR.' + sLineBreak + sLineBreak +
-    'Los articulos / SKUs / codigos de barras se conservan ' +
-    '(re-materializar es idempotente).' + sLineBreak + sLineBreak +
-    'Continuar?';
-  SInfoSesionRevertida:string = 'Sesion revertida. Estado: BORRADOR.';
-  SErrorRevertirSesionCompra:string =
-    'No se pudo revertir la sesion:' + sLineBreak + '%s';
-  SErrorSesionActivaImprimirNoDisponible:string =
-    'No hay sesion activa que imprimir.';
-  SErrorSistemasTallasSesionNoDisponibles:string =
-    'No hay sistemas de tallas activos en fza_atributos_conjuntos ' +
-    '(ID_VA_AC=''TAL'').';
-  SErrorCambiarSistemaTallasModeloExistente:string =
-    'El sistema de tallas no se puede cambiar en un modelo que ya existe: ' +
-    'queda fijado al del articulo. Solo puedes anadir colores o tallas ' +
-    'nuevos.';
-  SErrorLineaSesionAsignarFamiliaNoSeleccionada:string =
-    'Anade una linea (o ponte sobre una) para asignarle familia.';
-  SErrorColoresBasicosSesionNoDisponibles:string =
-    'No hay colores basicos cargados en fza_atributos_basicos para ' +
-    'ID_VA=''CO''.';
-  // Forms D-E
-  SInfoEfectoConciliado:string = 'Efecto conciliado.';
-  SErrorConciliarEfecto:string = 'No se pudo conciliar el efecto.';
-  SErrorEfectoNoSeleccionado:string =
-    'Selecciona un efecto en la rejilla.';
-  SErrorCarteraEfectosNoAbierta:string =
-    'No hay cartera de efectos abierta.';
-  SErrorEfectosCompraFusionInsuficientes:string =
-    'Selecciona dos o más efectos impagados.';
-  SErrorEfectosVentaFusionInsuficientes:string =
-    'Selecciona dos o más efectos imcobrados.';
-  SPreguntaFusionarEfectos:string =
-    '¿Fusionar los efectos seleccionados en un único efecto pendiente?';
-  SInfoEfectosConciliados:string = 'Efectos conciliados en %s.';
-  SErrorFusionarEfectos:string =
-    'No se pudieron fusionar los efectos.';
-  SErrorContadorSerieEmpresa:string =
-    'No se pudo obtener el siguiente codigo del contador "ES" para la ' +
-    'nueva serie.';
-  SErrorEmpresaCrearSeriesNoSeleccionada:string =
-    'Selecciona una empresa antes de crear sus series.';
-  SInfoSeriesEmpresaCreadas:string =
-    'Creadas %d series. Omitidas %d ya existentes.';
-  SErrorEmpresaNoSeleccionada:string = 'No hay empresa seleccionada.';
-  SInfoInstalacionSifEmpresaDisponible:string =
-    'Número de instalación SIF disponible para %s:' + sLineBreak + '%s';
-  SErrorDocumentoTrabajoNoSeleccionadoListado:string =
-    'Seleccione un Documento de Trabajo antes de sacar el listado.';
-  SErrorDocumentoTrabajoSinGrabarListado:string =
-    'Grabe el Documento de Trabajo antes de sacar el listado.';
-  SErrorDocumentoTrabajoSinLineasListado:string =
-    'El Documento de Trabajo no tiene líneas para el listado.';
-  SErrorDocumentoTrabajoNoSeleccionadoCargar:string =
-    'Seleccione un Documento de Trabajo antes de cargar.';
-  SErrorCargarDocumentoTrabajoNoPropietario:string =
-    'Solo el propietario puede cargar articulos en el documento.';
-  SErrorDocumentoTrabajoSinGrabarCargar:string =
-    'Grabe el Documento de Trabajo antes de cargar.';
-  SErrorDocumentoTrabajoNoSeleccionadoCompartir:string =
-    'Seleccione un Documento de Trabajo antes de compartir.';
-  SInfoDocumentoTrabajoCompartido:string = 'Documento compartido.';
-  SInfoDocumentoTrabajoYaCompartido:string =
-    'El Documento de Trabajo ya estaba compartido.';
-  SErrorDocumentoTrabajoSinGrabarImprimirEtiquetas:string =
-    'Grabe el Documento de Trabajo antes de imprimir etiquetas.';
-  SErrorDocumentoTrabajoNoSeleccionadoImprimirEtiquetas:string =
-    'Seleccione un Documento de Trabajo antes de imprimir etiquetas.';
-  SErrorDocumentoTrabajoNoSeleccionadoEnviar:string =
-    'Seleccione un Documento de Trabajo antes de enviar.';
-  SErrorDocumentoTrabajoSinGrabarEnviar:string =
-    'Grabe el Documento de Trabajo antes de enviar.';
-  SErrorDocumentoTrabajoSinLineasEnviar:string =
-    'El Documento de Trabajo no tiene lineas que enviar.';
-  SErrorContadorAlbaranDocumentoTrabajo:string =
-    'El contador de albaranes no ha devuelto numero para la serie %s.';
-  SInfoAlbaranDocumentoTrabajoCreado:string =
-    'Albarán de venta %s/%s creado ABIERTO con %d líneas.' + sLineBreak +
-    'Asigna cliente, tarifa y precios en el Mto de albaranes.';
-  SErrorVentaTpvNoAbiertaDocumentoTrabajo:string =
-    'La venta TPV no está abierta.' + sLineBreak +
-    'Abre Caja > Ventas y repite "Enviar a... > Venta TPV" para volcar ' +
-    'los SKUs en la operación en curso.';
-  SInfoLineasDocumentoTrabajoVolcadasTpv:string =
-    '%d líneas volcadas a la venta TPV.';
-  SAvisoLineasDocumentoTrabajoNoVolcadasTpv:string =
-    '%d líneas volcadas a la venta TPV; %d no se han podido resolver ' +
-    '(artículo inexistente o descatalogado).';
-  SErrorContadorInventarioDocumentoTrabajo:string =
-    'El contador de inventarios no ha devuelto numero para la serie %s.';
-  SInfoInventarioDocumentoTrabajoCreado:string =
-    'Inventario %s/%s creado en almacén %s con %d líneas del documento.' +
-    sLineBreak +
-    'Abre Inventarios y usa "Recalcular teórico/PMP" para fijar teóricos ' +
-    'y costes.';
-  SInfoCambioTarifasDocumentoTrabajoCreado:string =
-    'Sesión de cambio de tarifas %d creada en BORRADOR con los artículos ' +
-    'del documento.' + sLineBreak +
-    'Abre "Cambios de tarifa" para elegir tarifas, regla de cálculo y ' +
-    'aplicar.';
-  SPreguntaAbrirSeriesDevolucionCompra:string =
-    'No hay series de devoluciones a proveedor (tipo DC) para la empresa ' +
-    '"%s".' + sLineBreak +
-    'Se dan de alta en Empresas -> Series. ¿Abrir el mantenimiento de ' +
-    'Empresas ahora?';
-  SErrorLineaColorDevolucionNoEncontrada:string =
-    'No se ha encontrado ninguna linea de ese color.';
-  SErrorDevolucionCompraSinImpresionActiva:string =
-    'No hay devolucion de compra activo que imprimir.';
-  SErrorDevolucionCompraNoActiva:string =
-    'No hay devolucion de compra activo.';
-  SErrorProveedorDevolucionFilaNoSeleccionado:string =
-    'Selecciona un proveedor antes de devolver la fila.';
-  SErrorAlmacenDevolucionFilaNoSeleccionado:string =
-    'Selecciona el almacen de salida antes de devolver el stock.';
-  SErrorFilaDevolucionStockNoSeleccionada:string =
-    'Selecciona una fila antes de devolver su stock.';
-  SErrorArticuloDevolucionFilaNoSeleccionado:string =
-    'Selecciona un articulo en la fila antes de devolver su stock.';
-  SErrorColorDevolucionFilaNoSeleccionado:string =
-    'Selecciona el color de la fila antes de devolver su stock.';
-  SErrorStockDevolucionFilaNoDisponible:string =
-    'No hay stock positivo para el articulo/color de la fila en el almacen ' +
-    'de salida.';
-  SPreguntaPrepararStockFilaDevolucion:string =
-    'Esto sustituira las cantidades de la fila actual por el stock positivo ' +
-    'de ese articulo/color en el almacen de salida. Continuar?';
-  SInfoStockFilaDevolucionPreparado:string =
-    'Se han preparado %d lineas de la fila con el stock actual.';
-  SPreguntaGrabarDevolucionCompraSinSku:string =
-    'Las líneas %s tienen artículos con variaciones sin SKU asignado. ' +
-    '¿Grabar de todas formas?';
-  SErrorProveedorNoSeleccionadoBuscarArticulosDevolucion:string =
-    'Selecciona un proveedor antes de buscar articulos.';
-  SErrorDevolucionCompraNoAbierta:string =
-    'No está abierta la devolución de compra.';
-  SErrorArticuloNoSeleccionadoBuscarSkusDevolucion:string =
-    'Selecciona un artículo antes de buscar sus SKUs.';
-  SErrorDevolucionCompraElegirEmpresaNoSeleccionada:string =
-    'Crea o selecciona una devolución de compra antes de elegir la empresa.';
-  SErrorDevolucionCompraElegirProveedorNoSeleccionada:string =
-    'Crea o selecciona una devolución de compra antes de elegir el ' +
-    'proveedor.';
-  SPreguntaEliminarLineaDevolucionCompra:string =
-    'Esta seguro de que desea eliminar esta linea?';
-  // Forms F
-  SErrorFotoArticuloNoActivoDescargar:string =
-    'No hay articulo activo para descargar fotos.';
-  SErrorFotoArticuloNoActivo:string = 'No hay artículo activo.';
-  SErrorGuardarFotoArticulo:string =
-    'No se pudo guardar la foto: %s';
-  SErrorFotoSkuNoActivo:string =
-    'No hay SKU activo. Usa "Cambiar foto del artículo".';
-  SErrorNivelAtributosFotoNoSeleccionado:string =
-    'No hay nivel de atributos seleccionado en el combo.';
-  SPreguntaEliminarFotoActual:string = '¿Eliminar la foto actual?';
-  SAvisoLimiteRegistrosFacturaSimplificada:string =
-    'La selección cargaría %s registros, demasiados para mostrarlos de una ' +
-    'vez.' + sLineBreak +
-    'Acota los filtros (años / almacenes) y vuelve a intentarlo.';
-  SErrorBorradorVentaMayorNoSeleccionado:string =
-    'Seleccione un borrador de venta mayor.';
-  SErrorGuardarAntesEmitirEdoc:string =
-    'Guarde los cambios antes de emitir el eDoc.';
-  SErrorPersonaFisicaEdocSinDatos:string =
-    'El cliente tiene NIF/NIE de persona física.' + sLineBreak +
-    'Rellene nombre y apellidos en Parámetros eDoc antes de emitir.';
-  SInfoEdocEmitido:string =
-    'eDoc emitido correctamente:' + sLineBreak + '%s';
-  SPreguntaAbrirSeriesFacturaCompra:string =
-    'No hay series de facturas de compra (tipo FP) para la empresa "%s".' +
-    sLineBreak +
-    'Se dan de alta en Empresas -> Series. ¿Abrir el mantenimiento de ' +
-    'Empresas ahora?';
-  SErrorProveedorNoSeleccionadoBuscarArticulosFacturaCompra:string =
-    'Selecciona un proveedor antes de buscar artículos.';
-  SErrorFacturaCompraNoAbierta:string =
-    'No está abierta la factura de compra.';
-  SErrorArticuloNoSeleccionadoBuscarSkusFacturaCompra:string =
-    'Selecciona un artículo antes de buscar sus SKUs.';
-  SErrorFacturaCompraSinImpresionActiva:string =
-    'No hay factura de compra activa que imprimir.';
-  SAvisoEtiquetasBorradorCompraPendientes:string =
-    'Etiquetas de borrador de compra: pendiente (hito de informes).';
-  SPreguntaGrabarFacturaCompraSinSku:string =
-    'Las líneas %s tienen artículos con variaciones sin SKU asignado. ' +
-    '¿Grabar de todas formas?';
-  SErrorFacturaCompraNoInicializada:string =
-    'No esta inicializada la factura de compra.';
-  SErrorFacturaCompraElegirProveedorNoSeleccionada:string =
-    'Crea o selecciona una factura de compra antes de elegir el proveedor.';
-  SInfoGeneracionEfectosPagoCancelada:string =
-    'Generación de efectos cancelada.';
-  SInfoEfectosPagoGenerados:string =
-    'Generados %d efecto(s) de pago.';
-  SAvisoEfectosPagoNoGenerados:string =
-    'No se generaron efectos. Revisa que el borrador tenga forma de pago y ' +
-    'total, y que no tenga ya efectos pagados o remesados.';
-  SErrorGenerarEfectosPagoSinBorrador:string =
-    'No hay borrador activo (o hubo un error al generar).';
-  SErrorEfectoCompraNoSeleccionado:string =
-    'Selecciona un efecto en la rejilla de la pestana Efectos.';
-  SPreguntaEliminarLineaFacturaCompra:string =
-    'Esta seguro de que desea eliminar esta linea?';
-  SInfoImpresionEfectosCobroEnRemesas:string =
-    'La impresión de efectos de cobro se gestiona desde Remesas de Cobro.';
-  SPreguntaReemplazarCobros:string =
-    'Hay %s creados, ¿desea reemplazarlos?';
-  STituloMensajeAdvertencia:string = 'Mensaje Advertencia';
-  SInfoGeneracionCobrosCancelada:string =
-    'Generación de %s cancelada.';
-  SInfoEfectosCobroGenerados:string =
-    'Generados %d efecto(s) de cobro.';
-  SAvisoEfectosCobroNoGenerados:string =
-    'No se generaron efectos. Revisa que el borrador tenga forma de pago y ' +
-    'total, y que no tenga efectos cobrados o remesados.';
-  SErrorGenerarEfectosCobroSinBorrador:string =
-    'No hay borrador activo o no se pudieron generar efectos.';
-  SAvisoBorradorPendienteImpresionFiscal:string =
-    'El borrador está pendiente: use el botón Consolidar antes de ' +
-    'imprimirlo en este modo fiscal.';
-  SErrorGuardarFacturaAntesImprimir:string =
-    'No se pudo guardar la factura antes de imprimir: %s';
-  SInfoEfectoMarcadoDevuelto:string =
-    'Efecto marcado como devuelto.';
-  SErrorMarcarEfectoDevuelto:string =
-    'No se pudo marcar el efecto como devuelto.';
-  SInfoEfectoMarcadoPendiente:string =
-    'Efecto marcado como pendiente.';
-  SErrorMarcarEfectoPendiente:string =
-    'No se pudo marcar el efecto como pendiente.';
-  SErrorEfectoSinImportePendiente:string =
-    'El efecto seleccionado no tiene importe pendiente.';
-  SErrorTarifaSeleccionadaNoEncontrada:string =
-    'No se encontró la tarifa seleccionada';
-  SErrorBorradorListaNoSeleccionado:string =
-    'Seleccione un borrador en la lista.';
-  SErrorBorradorNoCerradoAccionFiscal:string =
-    'El borrador %s\%s aún no está cerrado fiscalmente: no se puede %s.';
-  SPreguntaAccionFiscalBorrador:string =
-    '¿%s fiscalmente el borrador %s\%s?';
-  SInfoAccionFiscalEncolada:string =
-    '%s encolada: el hilo Verifactu la enviará en el próximo ciclo. Puede ' +
-    'seguirla en la columna "Cola Verifactu" y en Verifactu - Cola de ' +
-    'Envíos.';
-  SInfoAccionFiscalNoVerifactu:string =
-    '%s registrada y firmada en NO VERI*FACTU.';
-  SInfoAccionFiscalSinVerifactu:string =
-    '%s registrada en modo SIN VERIFACTU.';
-  SErrorBorradorYaLanzadoFiscalmente:string =
-    'El borrador %s\%s ya se lanzó fiscalmente (fase %s).';
-  SErrorBorradorSinLineasLanzar:string =
-    'El borrador no tiene líneas: no se puede lanzar.';
-  SErrorBorradorNormalSinNif:string =
-    'Un borrador NORMAL necesita el NIF del cliente para el registro ' +
-    'fiscal. Complete los datos del cliente.';
-  SPreguntaLanzarBorradorFiscal:string =
-    '¿Lanzar fiscalmente el borrador %s\%s? Dejará de estar en borrador y ' +
-    'de ser editable.';
-  SInfoBorradorVerifactuPendiente:string =
-    'Borrador %s\%s en VERIFACTU_PENDIENTE: el QR ya puede imprimirse y ' +
-    'el envío a la AEAT queda en la cola Verifactu.';
-  SInfoBorradorNoVerifactuRegistrado:string =
-    'Borrador %s\%s registrado y firmado en NO VERI*FACTU.';
-  SInfoBorradorSinVerifactuEmitido:string =
-    'Borrador %s\%s emitido en modo SIN VERIFACTU.';
-  SErrorBorradorConsolidadoNoReabrible:string =
-    'El borrador %s\%s ya está consolidado en la AEAT: no puede volver a ' +
-    'borrador. Use Anular fiscal o emita una rectificativa.';
-  SInfoBorradorYaEnBorrador:string =
-    'El borrador ya está en BORRADOR.';
-  SPreguntaDevolverBorrador:string =
-    '¿Devolver a BORRADOR el documento %s\%s y anular su envío pendiente ' +
-    'a la AEAT?';
-  SErrorAltaAeatAceptadaNoReabrible:string =
-    'El alta ya fue aceptada por la AEAT: no se puede volver a borrador. ' +
-    'Use Anular fiscal o emita una rectificativa.';
-  SErrorBorradorEnProcesoNoReabrible:string =
-    'El hilo Verifactu está enviando este borrador ahora mismo. Espere unos ' +
-    'segundos y vuelva a intentarlo.';
-  SInfoBorradorReabierto:string =
-    'Borrador %s\%s de nuevo en BORRADOR. Corrija los datos (si el error ' +
-    'es de la empresa, arréglelo en Empresas y use "Dar de Alta o ' +
-    'Actualizar Empresa" en la pestaña Datos Empresa Emisora para ' +
-    'refrescar la copia del borrador) y pulse Consolidar para relanzarla.';
-  SPreguntaGrabarFacturaVentaSinSku:string =
-    'Las líneas %s tienen artículos con variaciones sin SKU asignado. ' +
-    '¿Grabar de todas formas?';
-  SErrorCompletarDatosBorrador:string =
-    'Debe completar los datos del borrador: %s';
-  // Forms G-I
-  SErrorContadorAutomaticoBusqueda:string =
-    'No se pudo obtener el contador automático.';
-  SInfoRegistroBusquedaCreado:string =
-    'Registro %s creado correctamente.';
-  SErrorInsertarRegistroBusqueda:string =
-    'Error al insertar (se ha cancelado la operación): %s';
-  SInfoTextoNoEncontrado:string = 'Texto no encontrado.';
-  STituloBusquedaGlobal:string = 'Búsqueda Global';
-  SSolicitudTextoBusquedaGlobal:string =
-    'Introduce el texto a buscar en todos los procesos:';
-  SInfoProcesosBusquedaNoEncontrados:string =
-    'No se encontraron procesos que contengan: %s';
-  SPreguntaIgnorarErrorScript:string =
-    'Ocurrió un error ejecutando el script.' + sLineBreak +
-    'Detalle del error: %s' + sLineBreak + sLineBreak +
-    '¿Desea ignorar el error y continuar con el script?';
-  SErrorMetadatoSinScript:string =
-    'No hay estructura o script disponible para este metadato.';
-  SErrorDatosCopiarNoDisponibles:string = 'No hay datos que copiar.';
-  SPreguntaCopiarFilasPortapapeles:string =
-    'Vas a copiar %d filas al portapapeles. ¿Continuar?';
-  SPreguntaIgnorarErrorComandoScript:string =
-    'Ocurrió un error ejecutando %s.' + sLineBreak +
-    'Detalle: %s' + sLineBreak + sLineBreak +
-    '¿Desea ignorar el error y continuar con el script?';
-  SErrorEjecucionProceso:string = 'Error en ejecución: %s';
-  SErrorComandoSqlProceso:string = 'Error en comando SQL: %s';
-  SErrorConexionTrabajoNoDisponible:string =
-    'No está disponible la conexión de trabajo.';
-  SInfoDatosGuardados:string = 'Datos guardados correctamente';
-  SErrorGrabarDatos:string = 'Error al grabar: %s';
-  SPreguntaGrabarCambiosPendientes:string =
-    'Hay datos no grabados. ¿Desea grabar los cambios?';
-  STituloMensajeAdvertenciaGen:string = 'Mensaje de Advertencia';
-  SInfoCambiosGrabados:string = 'Cambios grabados';
-  SInfoCambiosCancelados:string = 'Cambios revertidos/cancelados';
-  SErrorConexionPrincipalNoDisponible:string =
-    'No está disponible la conexión principal.';
-  SErrorPermisoInsertarRegistro:string =
-    'No tienes permiso para insertar registros en esta pantalla.';
-  SErrorPermisoModificarRegistro:string =
-    'No tienes permiso para modificar registros en esta pantalla.';
-  SErrorPermisoGuardarRegistro:string =
-    'No tienes permiso para guardar este registro.';
-  SErrorPermisoBorrarRegistro:string =
-    'No tienes permiso para borrar registros en esta pantalla.';
-  SPreguntaEliminarRegistro:string =
-    '¿Estás seguro de que deseas eliminar este registro?';
-  STituloConfirmarEliminacion:string = 'Confirmar eliminación';
-  SPreguntaEliminarRegistroConHijos:string =
-    'Hay %d %s vinculados a este registro.' + sLineBreak + sLineBreak +
-    'No se recomienda eliminarlo: se rompera la relacion con' + sLineBreak +
-    'los registros hijos.' + sLineBreak + sLineBreak +
-    '¿Deseas eliminarlo de todas formas?';
-  SAvisoDesactivarRegistroConHijos:string =
-    'Hay %d %s vinculados a este registro.' + sLineBreak + sLineBreak +
-    'No se recomienda eliminarlo. Te sugerimos DESACTIVARLO' + sLineBreak +
-    'para conservar el historico.';
-  SAvisoDesactivarRegistroSinHijos:string =
-    'Este registro puede DESACTIVARSE en lugar de eliminarse' + sLineBreak +
-    'para conservar el historico.';
-  SDescripcionHijosGenerica:string = 'registros asociados';
-  STextoOpcionesBorradoRegistro:string =
-    sLineBreak + sLineBreak +
-    'Sí       = Desactivar (recomendado)' + sLineBreak +
-    'No       = Eliminar definitivamente' + sLineBreak +
-    'Cancelar = No hacer nada';
-  SErrorFiltroSinCondiciones:string =
-    'El filtro seleccionado no tiene condiciones guardadas.';
-  SErrorFiltroActualVacio:string =
-    'No hay ningun filtro aplicado en la lista para guardar.';
-  SPreguntaSobrescribirFiltro:string =
-    'Ya existe un filtro propio con ese nombre. Desea sobrescribirlo?';
-  STituloSobrescribirFiltro:string = 'Sobrescribir filtro';
-  SInfoFiltroSobrescrito:string = 'Filtro sobrescrito correctamente.';
-  SInfoFiltroGuardado:string = 'Filtro guardado correctamente.';
-  SErrorArticuloInventarioNoExiste:string = 'El artículo no existe';
-  SErrorLineasInventarioNoAbiertas:string =
-    'No hay líneas de inventario abiertas.';
-  SErrorLineaInventarioNoEditable:string =
-    'No se ha podido poner la línea en edición.';
-  SErrorArticuloInventarioNoEncontrado:string =
-    'No se ha encontrado ningún artículo con ese código, SKU o código de ' +
-    'barras';
-  SErrorArticuloInventarioTipoSinStock:string =
-    'El artículo %s es de tipo "%s" y no controla stock; no se puede ' +
-    'inventariar.';
-  SErrorArticuloInventarioAtributosSinSku:string =
-    'El artículo %s tiene atributos. En modo SKU introduce un SKU completo ' +
-    'o activa "Ver atributos en columnas".';
-  SInfoLineasCsvInventarioLeidas:string =
-    'Leidas %d lineas del CSV.';
-  SErrorMigracionRecuentoInventariosNoAplicada:string =
-    'La base de datos no tiene aplicada la migración de recuento remoto de ' +
-    'inventarios. Ejecuta el script DESARROLLOS EN ' +
-    'CURSO\recuento_inventarios_factuzam.sql.';
-  SErrorGrabarCabeceraInventarioAutomaticamente:string =
-    'No se ha podido grabar automaticamente la cabecera del inventario:' +
-    sLineBreak + '%s' + sLineBreak + sLineBreak +
-    'Completa los datos en la pestana Cabecera y vuelve a intentar anadir ' +
-    'la linea.';
-  SErrorGrabarCabeceraInventarioAutomaticamenteDetalle:string =
-    'No se ha podido grabar automáticamente la cabecera del inventario:' +
-    sLineBreak + '%s' + sLineBreak + sLineBreak +
-    'Completa los datos en la pestaña Cabecera y vuelve a entrar en ' +
-    'Detalle.';
-  SErrorInventarioNoAbiertoEditar:string =
-    'El inventario no está ABIERTO. No se puede editar.';
-  SPreguntaRecalcularInventario:string =
-    'Esto recalculará las cantidades teóricas y precios medios de todas ' +
-    'las líneas a partir del Kardex actual.' + sLineBreak + sLineBreak +
-    '¿Continuar?';
-  SInfoRecalculoInventario:string =
-    'Recálculo completado correctamente.';
-  SPreguntaAplicarInventario:string =
-    'Esto aplicará el inventario y generará movimientos de regularización' +
-    sLineBreak +
-    'en el Kardex. La operación NO se podrá deshacer fácilmente.' +
-    sLineBreak + sLineBreak +
-    '¿Aplicar el inventario?';
-  SErrorAplicarInventario:string =
-    'No se puede aplicar el inventario:' + sLineBreak + '%s';
-  SErrorAplicacionInventario:string =
-    'Error al aplicar el inventario:' + sLineBreak + '%s';
-  SErrorRefrescarInventarioAplicado:string =
-    'El inventario se aplico, pero fallo el refresco:' + sLineBreak + '%s';
-  SInfoInventarioAplicado:string = 'Inventario aplicado correctamente.';
-  SErrorInventarioNoSeleccionadoAnadirLineas:string =
-    'No hay ningún inventario seleccionado todavía. Crea uno o selecciónalo ' +
-    'en la lista antes de añadir líneas.';
-  SErrorAnadirLineasInventarioEstado:string =
-    'No se pueden añadir líneas: el inventario está en estado "%s" (solo ' +
-    'se pueden editar inventarios ABIERTOS).';
-  SErrorLineaInventarioNoSeleccionadaParaSkus:string =
-    'Sitúate sobre una línea con artículo para añadir sus SKUs.';
-  SErrorLineaInventarioSinArticulo:string =
-    'La línea actual no tiene artículo asignado.';
-  SErrorAnadirSkusInventario:string =
-    'Error al añadir SKUs: %s';
-  SInfoSinSkusAnadidosInventario:string =
-    'No se ha añadido ningún SKU. El artículo %s no tiene movimientos en ' +
-    'este almacén o todos sus SKUs ya están en el inventario.';
-  SInfoSkusAnadidosInventario:string =
-    'Añadidos %d SKUs del artículo %s.';
-  SPreguntaEliminarLineaInventario:string =
-    '¿Eliminar la línea seleccionada?';
-  SErrorEliminarRegularizacionInventarioEstado:string =
-    'Solo puedes eliminar la regularización de un inventario APLICADO.';
-  SPreguntaEliminarRegularizacionInventario:string =
-    'Esto BORRARÁ todos los movimientos generados por este inventario,' +
-    sLineBreak +
-    'devolverá el inventario al estado ABIERTO y recalculará el Kardex.' +
-    sLineBreak + sLineBreak +
-    '¿Continuar?';
-  SInfoRegularizacionInventarioEliminada:string =
-    'Regularización eliminada. El inventario vuelve a estar ABIERTO.';
-  SErrorInventarioNoActivo:string = 'No hay inventario activo.';
-  SErrorInventarioDebeEstarAbierto:string =
-    'El inventario debe estar ABIERTO.';
-  SErrorFamiliaInventarioNoSeleccionada:string =
-    'Selecciona primero una familia.';
-  SPreguntaCargarFamiliaInventario:string =
-    '¿Cargar todos los SKUs de la familia "%s" al inventario?';
-  SErrorProveedorInventarioNoSeleccionado:string =
-    'Selecciona primero un proveedor.';
-  SPreguntaCargarProveedorInventario:string =
-    '¿Cargar todos los SKUs del proveedor "%s" al inventario?';
-  SPreguntaCompletarInventario:string =
-    'Esto añadirá al inventario todos los SKUs con stock que NO ' +
-    sLineBreak +
-    'estén ya en el inventario, con cantidad física = 0.' + sLineBreak +
-    sLineBreak +
-    'Útil para detectar artículos que faltó contar.' + sLineBreak +
-    sLineBreak + '¿Continuar?';
-  SPreguntaCargarTodoInventario:string =
-    'Esto cargará TODOS los SKUs con stock al inventario, ' + sLineBreak +
-    'con cantidad física = teórica. ¿Continuar?';
-  SErrorInventarioNoSeleccionado:string =
-    'Selecciona primero un inventario.';
-  SPreguntaGuardarInventarioEnEdicion:string =
-    'El inventario esta en edicion. Guardar antes?';
-  SPreguntaRecalcularTrasCargarBloqueInventario:string =
-    'Se anadieron %d lineas (%d articulos distintos).' + sLineBreak +
-    '?Quieres calcular ahora las cantidades teoricas y PMP?';
-  SErrorArchivoImportacionInventarioNoExiste:string =
-    'El archivo no existe.';
-  SErrorImportacionInventarioSinDatos:string =
-    'No se encontraron datos para importar.';
-  SInfoImportacionInventario:string =
-    '%s' + sLineBreak + '%d actualizados, %d nuevos insertados.';
-  SErrorEnviarRecuentoInventarioNoAbierto:string =
-    'Solo se puede enviar a recuento un inventario ABIERTO.';
-  SPreguntaEnviarRecuentoInventario:string =
-    'Se enviará este inventario al servidor para recontarlo con la app. ' +
-    '¿Continuar?';
-  SInfoInventarioEnviadoRecuento:string =
-    'Inventario enviado a recuento (referencia %d).';
-  SErrorEnviarRecuentoInventario:string = 'No se pudo enviar: %s';
-  SErrorInventarioNoEnviadoRecuento:string =
-    'Este inventario no se ha enviado a recuento todavía.';
-  SErrorRecogerRecuentoInventarioNoAbierto:string =
-    'Solo se puede recoger sobre un inventario ABIERTO.';
-  SInfoRecuentoInventarioRecogido:string =
-    'Recuento recogido: %d lecturas, %d SKUs. Revisa las físicas y APLICA ' +
-    'cuando quieras.';
-  SErrorRecogerRecuentoInventario:string = 'No se pudo recoger: %s';
-  // Forms J-P
-  SAvisoLimiteRegistrosMovimientosAlmacen:string =
-    'La selección cargaría %s registros, demasiados para mostrarlos de una ' +
-    'vez.' + sLineBreak +
-    'Acota los filtros (años / almacenes) y vuelve a intentarlo.';
-  SPreguntaAbrirSeriesPedidoVenta:string =
-    'No hay series de pedidos de venta mayor (tipo PE) para la empresa ' +
-    '"%s".' + sLineBreak +
-    'Se dan de alta en Empresas -> Series. ¿Abrir el mantenimiento de ' +
-    'Empresas ahora?';
-  SErrorPedidoVentaNoAbierto:string =
-    'No está abierto el pedido de venta.';
-  SErrorArticuloNoSeleccionadoBuscarSkusPedidoVenta:string =
-    'Selecciona un artículo antes de buscar sus SKUs.';
-  SPreguntaGrabarPedidoVentaSinSku:string =
-    'Las líneas %s tienen artículos con variaciones sin SKU asignado. ' +
-    '¿Grabar de todas formas?';
-  SErrorClienteNoSeleccionadoPedidoVenta:string =
-    'Debe seleccionar un cliente antes de añadir líneas.';
-  SErrorClientePedidoVentaNoExiste:string =
-    'El cliente %s no existe. Seleccione un cliente válido antes de añadir ' +
-    'líneas.';
-  SErrorPedidoVentaNoInicializado:string =
-    'No esta inicializado el pedido.';
-  SErrorCrearSeleccionarPedidoAntesLineas:string =
-    'Crea o selecciona un pedido antes de anadir lineas.';
-  SPreguntaEliminarLineaPedidoVentaConTallas:string =
-    '¿Está seguro de que desea eliminar esta línea (todas sus tallas)?';
-  SPreguntaEliminarLineaPedidoVenta:string =
-    '¿Está seguro de que desea eliminar esta línea?';
-  SPreguntaMarcarLineasPendientesAlbaranar:string =
-    'Marcar todas las líneas pendientes para albaranar?';
-  SErrorPedidoVentaSinLineas:string = 'El pedido no tiene líneas';
-  SPreguntaCrearAlbaranPedidoVentaSinSku:string =
-    'Las líneas %s tienen artículos con variaciones sin SKU asignado y no ' +
-    'moverán stock. ¿Crear el albarán de todas formas?';
-  SErrorPedidoVentaSinCantidadAlbaranar:string =
-    'No hay líneas con cantidad a albaranar para crear el albarán.';
-  SErrorAnadirAlbaranDesdePedidoVenta:string =
-    'No se pudo anadir al albaran.';
-  SErrorCrearAlbaranDesdePedidoVenta:string =
-    'No se pudo crear el albaran.';
-  SErrorProveedorNoSeleccionadoBuscarArticulosPedidoCompra:string =
-    'Selecciona un proveedor antes de buscar artículos.';
-  SErrorPedidoCompraNoAbierto:string =
-    'No está abierto el pedido de compra.';
-  SErrorArticuloNoSeleccionadoBuscarSkusPedidoCompra:string =
-    'Selecciona un artículo antes de buscar sus SKUs.';
-  SErrorPedidoCompraNoInicializado:string =
-    'No esta inicializado el pedido de compra.';
-  STextoPedidoCompra:string = 'un pedido';
-  SErrorExpandirRecibidosNoActivo:string =
-    'Activa "Expandir recibidos" antes de usar este atajo.';
-  SInfoTallasPendientesRecibirNoDisponibles:string =
-    'No hay tallas pendientes de recibir en la fila activa.';
-  SInfoPedidoCompraSinPendientesRecibir:string =
-    'No hay nada pendiente de recibir en el pedido.';
-  SPreguntaGrabarPedidoCompraSinSku:string =
-    'Las líneas %s tienen artículos con variaciones sin SKU asignado. ' +
-    '¿Grabar de todas formas?';
-  SErrorPedidoCompraNecesarioElegirEmpresa:string =
-    'Crea o selecciona un pedido de compra antes de elegir la empresa.';
-  SErrorPedidoCompraNecesarioElegirProveedor:string =
-    'Crea o selecciona un pedido de compra antes de elegir el proveedor.';
-  SErrorTallasHorizontalesNecesariasElegirColor:string =
-    'Activa las tallas en horizontal antes de elegir color.';
-  SErrorArticuloNoSeleccionadoElegirColorPedidoCompra:string =
-    'Selecciona un artículo antes de elegir color.';
-  SErrorArticuloPedidoCompraSinColoresBasicos:string =
-    'El artículo "%s" no tiene colores básicos activos en sus SKUs.';
-  SPreguntaEliminarLineaPedidoCompra:string =
-    'Esta seguro de que desea eliminar esta linea?';
-  SPreguntaAbrirSeriesPedidoCompra:string =
-    'No hay series de pedidos de compra (tipo PC) para la empresa "%s".' +
-    sLineBreak +
-    'Se dan de alta en Empresas -> Series. ¿Abrir el mantenimiento de ' +
-    'Empresas ahora?';
-  SErrorPedidoCompraNoActivo:string =
-    'No hay pedido de compra activo.';
-  SErrorPedidoCompraNoActivoCrearAlbaran:string =
-    'No hay pedido activo del que crear albaran.';
-  SErrorCrearAlbaranDesdePedidoCompra:string =
-    'Error al crear el albaran: %s';
-  SErrorNodoPermisosNoSeleccionado:string =
-    'Selecciona primero un nodo del arbol.';
-  SErrorOrigenDestinoPermisosNoSeleccionados:string =
-    'Selecciona un origen y un destino.';
-  SErrorOrigenDestinoPermisosIguales:string =
-    'El origen y el destino no pueden ser el mismo.';
-  SInfoModoReemplazarPermisos:string =
-    'Se reemplazaran todos los permisos del destino.';
-  SInfoModoCombinarPermisos:string =
-    'Se agregaran o actualizaran los permisos en el destino.';
-  SInfoAlcancePermisosMenu:string =
-    'Alcance: solo permisos de menu.';
-  SInfoAlcanceTodosPermisos:string =
-    'Alcance: todos los permisos.';
-  SPreguntaCopiarPermisos:string =
-    'Copiar permisos de "%s" a "%s"?' + sLineBreak +
-    '%s' + sLineBreak + '%s';
-  SInfoPermisosCopiados:string =
-    '%d permisos copiados de "%s" a "%s".';
-  SPreguntaBorrarKitProveedor:string =
-    '¿Borrar el kit seleccionado y todas sus tallas?';
-  // Forms Q-Z
-  SErrorRemesaCompraNoSeleccionada:string = 'Selecciona una remesa.';
-  SErrorEliminarRemesaCompraConCargo:string =
-    'No se puede eliminar una remesa con cargo realizado.';
-  SPreguntaEliminarRemesaCompra:string =
-    '¿Eliminar la remesa seleccionada? Los efectos volveran a quedar ' +
-    'pendientes de remesar.';
-  SInfoRemesaCompraEliminada:string = 'Remesa eliminada.';
-  SErrorEliminarRemesaCompra:string =
-    'No se pudo eliminar la remesa.';
-  SErrorAnadirEfectosRemesaCompraConCargo:string =
-    'No se pueden añadir efectos a una remesa con cargo realizado.';
-  SErrorEfectosRemesaCompraNoCargados:string =
-    'No hay efectos cargados.';
-  SErrorEfectoRemesaCompraNoSeleccionado:string =
-    'Selecciona un efecto de la remesa.';
-  SErrorQuitarEfectosRemesaCompraConCargo:string =
-    'No se pueden quitar efectos de una remesa con cargo realizado.';
-  SPreguntaQuitarEfectoRemesaCompra:string =
-    '¿Quitar el efecto seleccionado de la remesa?';
-  SInfoEfectoRemesaCompraQuitado:string =
-    'Efecto quitado de la remesa.';
-  SErrorQuitarEfectoRemesaCompra:string =
-    'No se pudo quitar el efecto.';
-  SErrorBancoPagoRemesaNoAsignado:string =
-    'Asigna primero el banco de pago de la remesa.';
-  SErrorEfectoRemesaCompraSinPendiente:string =
-    'El efecto seleccionado no tiene importe pendiente.';
-  STextoEfectoPendienteRemesaCompra:string =
-    'Efecto %d - pendiente %.2f';
-  SInfoEfectoRemesaCompraConciliado:string = 'Efecto conciliado.';
-  SErrorConciliarEfectoRemesaCompra:string =
-    'No se pudo conciliar el efecto.';
-  SErrorRemesaCompraSinImportePendiente:string =
-    'La remesa no tiene importe pendiente.';
-  STextoRemesaCompraPendiente:string = 'Remesa pendiente %.2f';
-  SInfoEfectosRemesaCompraConciliados:string =
-    'Conciliados %d efecto(s).';
-  SErrorConciliarRemesaCompra:string =
-    'No se pudo conciliar la remesa.';
-  SErrorBancoPagoNoSeleccionado:string =
-    'Selecciona un banco de pago.';
-  SInfoBancoPagoRemesaAsignado:string =
-    'Banco de pago asignado.';
-  SErrorAsignarBancoPagoRemesa:string =
-    'No se pudo asignar el banco de pago.';
-  STituloFechaCargoRemesa:string = 'Fecha de cargo';
-  SSolicitudFechaCargoRemesa:string = 'Fecha de cargo:';
-  SInfoFechaCargoRemesaActualizada:string =
-    'Fecha de cargo actualizada.';
-  SErrorActualizarFechaCargoRemesa:string =
-    'No se pudo actualizar la fecha de cargo.';
-  SErrorFechaCargoRemesaNoValida:string = 'Fecha no válida.';
-  SErrorEliminarRemesaVentaConCobro:string =
-    'No se puede eliminar una remesa con cobro realizado.';
-  SPreguntaEliminarRemesaVenta:string =
-    '¿Eliminar la remesa seleccionada? Los efectos volveran a quedar ' +
-    'pendientes de remesar.';
-  SInfoRemesaVentaEliminada:string = 'Remesa eliminada.';
-  SErrorEliminarRemesaVenta:string =
-    'No se pudo eliminar la remesa.';
-  SErrorAnadirEfectosRemesaVentaConCobro:string =
-    'No se pueden añadir efectos a una remesa con cobro realizado.';
-  SErrorEfectosRemesaVentaNoCargados:string =
-    'No hay efectos cargados.';
-  SErrorEfectoRemesaVentaNoSeleccionado:string =
-    'Selecciona un efecto de la remesa.';
-  SErrorQuitarEfectosRemesaVentaConCobro:string =
-    'No se pueden quitar efectos de una remesa con cobro realizado.';
-  SPreguntaQuitarEfectoRemesaVenta:string =
-    '¿Quitar el efecto seleccionado de la remesa?';
-  SInfoEfectoRemesaVentaQuitado:string =
-    'Efecto quitado de la remesa.';
-  SErrorQuitarEfectoRemesaVenta:string =
-    'No se pudo quitar el efecto.';
-  SErrorBancoCobroRemesaNoAsignado:string =
-    'Asigna primero el banco de cobro de la remesa.';
-  SErrorEfectoRemesaVentaSinPendiente:string =
-    'El efecto seleccionado no tiene importe pendiente.';
-  STextoEfectoPendienteRemesaVenta:string =
-    'Efecto %d - pendiente %.2f';
-  SInfoEfectoRemesaVentaConciliado:string = 'Efecto conciliado.';
-  SErrorConciliarEfectoRemesaVenta:string =
-    'No se pudo conciliar el efecto.';
-  SErrorRemesaVentaSinImportePendiente:string =
-    'La remesa no tiene importe pendiente.';
-  STextoRemesaVentaPendiente:string = 'Remesa pendiente %.2f';
-  SInfoEfectosRemesaVentaConciliados:string =
-    'Conciliados %d efecto(s).';
-  SErrorConciliarRemesaVenta:string =
-    'No se pudo conciliar la remesa.';
-  SErrorBancoCobroNoSeleccionado:string =
-    'Selecciona un banco de cobro.';
-  SInfoBancoCobroRemesaAsignado:string =
-    'Banco de cobro asignado.';
-  SErrorAsignarBancoCobroRemesa:string =
-    'No se pudo asignar el banco de cobro.';
-  STituloFechaCobroRemesa:string = 'Fecha de cobro';
-  SSolicitudFechaCobroRemesa:string = 'Fecha de cobro:';
-  SInfoFechaCobroRemesaActualizada:string =
-    'Fecha de cobro actualizada.';
-  SErrorActualizarFechaCobroRemesa:string =
-    'No se pudo actualizar la fecha de cobro.';
-  SErrorFechaCobroRemesaNoValida:string = 'Fecha no válida.';
-  SInfoOrdenSepaRemesaVentaGenerada:string =
-    'Orden SEPA generada con %d cobro(s).';
-  SErrorGenerarOrdenSepaRemesaVenta:string =
-    'No se pudo generar la orden SEPA: %s';
-  SErrorCodigoBarrasStockNoEncontrado:string =
-    'Código de barras no encontrado: %s';
-  SErrorEntradaStockNoEncontrada:string =
-    'No se encontró "%s" como artículo, SKU, código de barras ni referencia ' +
-    'de proveedor.';
-  SErrorSkuCeldaStockNoEncontrado:string =
-    'No se ha encontrado un SKU activo para la celda seleccionada.';
-  SErrorCeldaStockVariosSkus:string =
-    'La celda seleccionada coincide con varios SKUs. Acote color, talla o ' +
-    'almacen antes de agregarla.';
-  SErrorArticuloStockNoSeleccionadoOperaciones:string =
-    'Seleccione primero un artículo.';
-  SErrorCeldaTallaStockNoSeleccionada:string =
-    'Seleccione una celda de talla.';
-  SErrorColumnaTallaStockNoSeleccionada:string =
-    'Seleccione una columna de talla.';
-  SErrorFilaStockNoIdentificada:string =
-    'No se ha podido identificar la fila seleccionada.';
-  SErrorColorStockNoUnico:string =
-    'Seleccione un único color o cambie a la vista Por colores.';
-  SErrorTallaStockVariosSkus:string =
-    'La talla seleccionada corresponde a varios SKU. Seleccione un único ' +
-    'color o use la vista Por colores.';
-  STituloOperacionesCajaStock:string = 'Operaciones de caja';
-  SErrorArticuloStockNoSeleccionadoDocumento:string =
-    'Seleccione primero un articulo.';
-  SErrorEstadoStockNoEsExistencias:string =
-    'Cambie el estado a Existencias para agregar stock disponible.';
-  SErrorCeldaStockNoSeleccionada:string =
-    'Seleccione una celda de stock.';
-  SErrorCeldaCantidadStockNoSeleccionada:string =
-    'Seleccione una celda de cantidad.';
-  SErrorFilaExistenciasStockNoSeleccionada:string =
-    'Seleccione la fila de Existencias para agregar stock disponible.';
-  SErrorColumnaStockDocumentoNoSeleccionada:string =
-    'Seleccione una columna de talla o una columna Total sin tallas.';
-  SErrorGrupoFilaStockNoLeido:string =
-    'No se ha podido leer el grupo de la fila.';
-  SErrorAlmacenStockNoUnico:string =
-    'Seleccione un solo almacen para agregar una unidad concreta.';
-  SErrorColorStockUnidadNoUnico:string =
-    'Seleccione un solo color para agregar una unidad concreta.';
-  STituloConsultaStock:string = 'Consulta de stock';
-  SErrorArticuloStockNoSeleccionadoFotos:string =
-    'Seleccione primero un artículo.';
-  SInfoArticulosRelacionadosStockNoDisponibles:string =
-    'No hay otros artículos con stock para este filtrado.';
-  SErrorTarifaNoSeleccionada:string =
-    'Selecciona primero una tarifa.';
-  SPreguntaGuardarTarifaAntesContinuar:string =
-    'La tarifa actual esta en edicion. Guardar antes de continuar?';
-  SErrorSesionTarifaNoSeleccionada:string =
-    'Selecciona o crea primero una sesion.';
-  SInfoLineasSesionTarifaRecalculadas:string =
-    '%d lineas recalculadas.';
-  SErrorCalcularSesionTarifa:string =
-    'No se pudo calcular la sesion: %s';
-  SPreguntaAplicarSesionTarifa:string =
-    '%d lineas recalculadas. Aplicar las lineas marcadas a la tarifa ' +
-    'destino?';
-  SErrorAplicarSesionTarifa:string =
-    'No se pudo aplicar la sesion: %s';
-  SInfoLineasSesionTarifaAplicadas:string =
-    '%d lineas aplicadas.';
-  // Modals A-F
-  SPreguntaLimpiarFiltrosAddBlock:string =
-    'Limpiar todos los filtros?';
-  SErrorAlmacenesSoloStockAddBlock:string =
-    'Has activado "Solo con stock" pero no hay almacenes seleccionados en ' +
-    'la pestana Almacenes.';
-  SPreguntaPrevisualizarAddBlock:string =
-    'No has previsualizado. Previsualizar ahora?';
-  SInfoArticulosYaCargadosAddBlock:string =
-    'Todos los articulos del filtro ya estan cargados. Nada que insertar.';
-  SPreguntaConfirmarAddBlock:string =
-    'Se van a insertar %d articulos. Continuar?';
-  SInfoArticulosAnadidosAddBlock:string =
-    '%d articulos anadidos correctamente.';
-  SErrorDestinoDocumentoTrabajoAddBlock:string =
-    'No se ha recibido el Documento de Trabajo destino.';
-  SErrorAlmacenesDocumentoTrabajoAddBlock:string =
-    'Seleccione al menos un almacen para cargar articulos.';
-  SPreguntaConfirmarDocumentoTrabajoAddBlock:string =
-    'Se van a cargar %d articulos en el Documento de Trabajo "%s".' +
-    sLineBreak +
-    'Se anadira una linea por cada SKU con stock positivo en los almacenes ' +
-    'seleccionados.' + sLineBreak +
-    'La cantidad operativa de cada linea sera 1.' + sLineBreak +
-    sLineBreak + 'Continuar?';
-  SInfoLineasDocumentoTrabajoAddBlock:string =
-    '%d lineas anadidas al Documento de Trabajo.';
-  SErrorInsertarLineasDocumentoTrabajoAddBlock:string =
-    'Error al insertar lineas del documento: ';
-  SErrorDestinoInventarioAddBlock:string =
-    'No se ha recibido la clave del inventario destino.';
-  SPreguntaConfirmarInventarioAddBlock:string =
-    'Se van a anadir %d articulos al inventario %s/%s/%s/%s.' + sLineBreak +
-    'Cada articulo generara una linea por cada SKU con stock>0.' + sLineBreak +
-    'Las cantidades teoricas se calcularan despues con "Recalcular ' +
-    'teorico/PMP".' + sLineBreak + sLineBreak + 'Continuar?';
-  SInfoLineasInventarioAddBlock:string =
-    '%d lineas anadidas al inventario.' + sLineBreak +
-    'Recuerda pulsar "Recalcular teorico/PMP" para rellenar las cantidades.';
-  SErrorInsertarLineasInventarioAddBlock:string =
-    'Error al insertar lineas de inventario: ';
-  SErrorTarifaDestinoAddBlockNoSeleccionada:string =
-    'Selecciona la tarifa destino antes de previsualizar.';
-  SErrorTarifaOrigenAddBlockNoSeleccionada:string =
-    'Selecciona la tarifa origen para copiar precios.';
-  SErrorTarifasAddBlockCoincidentes:string =
-    'La tarifa origen no puede ser la misma que la tarifa destino.';
-  SErrorMultiploAjusteAddBlockNoValido:string =
-    'El multiplo del ajuste debe ser mayor que 0.';
-  SPreguntaConfirmarTarifaAddBlock:string =
-    'Se van a insertar %d articulos en la tarifa "%s". Continuar?';
-  SInfoArticulosTarifaAddBlockAnadidos:string =
-    '%d articulos anadidos a la tarifa correctamente.';
-  SErrorInsertarTarifaAddBlock:string =
-    'Error al insertar: ';
-  SPreguntaQuitarPropiedadArticulo:string =
-    '¿Quitar la propiedad "%s" de este artículo?';
-  SErrorArticuloNoGuardadoValoresColor:string =
-    'Primero guarde el artículo antes de fijar valores por color.';
-  SErrorArticuloNoGuardadoAnadirPropiedades:string =
-    'Primero guarde el artículo antes de añadir propiedades.';
-  SErrorPropiedadObligatoriaFamilia:string =
-    'La propiedad "%s" es obligatoria para esta familia.';
-  SErrorPrecioCosteMargenNoValido:string =
-    'El precio de coste debe ser mayor que cero.';
-  SErrorMargenNoValido:string =
-    'El margen debe ser mayor que cero.';
-  SErrorAjusteMargenNoValido:string =
-    'El ajuste no puede ser negativo.';
-  SErrorGuardarCambiosMargen:string =
-    'No se han podido guardar los cambios: ';
-  SErrorProveedorPrincipalCosteNoAsignado:string =
-    'El artículo no tiene un proveedor marcado como principal. Asigna uno ' +
-    'en la pestaña Proveedores antes de guardar el coste.';
-  SErrorEmpresaEfectosRemesaNoIndicada:string =
-    'Indica la empresa.';
-  SInfoEfectosPendientesRemesaNoEncontrados:string =
-    'No hay efectos pendientes sin remesar para esa empresa.';
-  SErrorEfectosRemesaNoSeleccionados:string =
-    'Marca al menos un efecto (Ctrl/Mayus+clic).';
-  SErrorRemesaExistenteNoSeleccionada:string =
-    'Elige la remesa existente.';
-  SInfoEfectosCargadosRemesa:string =
-    'Cargados %d efecto(s) en la remesa %s / %s.' + sLineBreak +
-    'Omitidos (ya remesados o %s): %d.';
-  SPreguntaConfirmarCargaSesionTarifa:string =
-    'Se van a cargar %d articulos en la sesion. Continuar?';
-  SInfoArticulosCargadosSesionTarifa:string =
-    '%d articulos cargados en la sesion.';
-  SErrorCargarSesionTarifa:string =
-    'Error al cargar la sesion: ';
-  SErrorTipoDocumentoSesionNoSeleccionado:string =
-    'Marca al menos uno: Albaran y/o Pedido.';
-  SErrorSerieAlbaranSesionNoIndicada:string =
-    'Indica la serie del albaran.';
-  SErrorSeriePedidoSesionNoIndicada:string =
-    'Indica la serie del pedido.';
-  SErrorAlmacenDestinoSesionNoIndicado:string =
-    'Indica un almacen destino.';
-  SErrorCertificadoNoSeleccionado:string =
-    'Seleccione un certificado.';
-  SErrorEmpleadoEntradaCambioNoIndicado:string =
-    'Introduzca el empleado que realiza la operación.';
-  SErrorImporteEntradaCambioNoValido:string =
-    'Introduzca un importe mayor que cero.';
-  STituloAvisoEntradaCambio:string =
-    'Aviso';
-  SErrorDestinoEnvioIncompleto:string =
-    'Almacén, serie y número son obligatorios.';
-  SErrorTarifaEtiquetasNoSeleccionada:string =
-    'Seleccione una tarifa antes de imprimir.';
-  SInfoLayoutEtiquetasGuardado:string =
-    'Layout guardado.';
-  SErrorEmpresaProveedorFacturacionNoIndicados:string =
-    'Indica empresa y proveedor.';
-  SInfoAlbaranesPendientesProveedorNoEncontrados:string =
-    'No hay albaranes pendientes de crear borrador para ese proveedor.';
-  SPreguntaFacturarTodosAlbaranesListados:string =
-    'No has marcado albaranes (Ctrl/Mayus+clic para elegir).' + sLineBreak +
-    'Crear borrador con TODOS los listados?';
-  SErrorBorradorAlbaranesExistenteNoSeleccionado:string =
-    'Elige el borrador existente al que incorporar los albaranes.';
-  SInfoAlbaranesGeneradosEnBorrador:string =
-    'Generados %d albaran(es) en el borrador %s / %s.' + sLineBreak +
-    'Omitidos (ya asociados o incompatibles): %d.';
-  SErrorDataModuleAlbaranesNoAsignado:string =
-    'No hay datamodule de albaranes asignado.';
-  SErrorAlbaranesNoSeleccionados:string =
-    'No hay albaranes seleccionados.';
-  SInfoBorradoresGenerados:string =
-    'Proceso finalizado. Borradores generados: %d.';
-  SErrorClienteBorradorNoSeleccionado:string =
-    'Seleccione el cliente del borrador.';
-  SErrorSerieBorradorNoSeleccionada:string =
-    'Seleccione la serie del borrador.';
-  SErrorFechaBorradorNoIndicada:string =
-    'Indique la fecha del borrador.';
-  SErrorClienteFacturarTicketNoExiste:string =
-    'El cliente seleccionado no existe.';
-  SErrorRazonSocialFacturarTicketObligatoria:string =
-    'La F3 necesita la razon social del cliente.';
-  SErrorDocumentoFiscalFacturarTicketNoValido:string =
-    'El NIF/CIF/NIE del cliente no es valido: ';
-  SErrorCrearBorradorFacturarTicket:string =
-    'No se pudo crear el borrador: ticket o cliente no encontrados.';
-  SPreguntaSuperarLimiteCargaArticulos:string =
-    'Aún se cargarán %d artículos, por encima del límite recomendado de %d.' +
-    sLineBreak + 'La carga puede tardar. ¿Continuar igualmente?';
-  // Modals G-M
-  SErrorDimensionesSkuNoDefinidas:string =
-    'No hay dimensiones definidas para este tipo de variación.';
-  SErrorValoresSkuNoSeleccionados:string =
-    'No has marcado ningún valor para generar SKUs.';
-  SErrorValoresDimensionesSkuIncompletos:string =
-    'Debes marcar al menos un valor en cada dimensión del artículo.' +
-    sLineBreak + 'Falta marcar valores en: %s';
-  SInfoCombinacionesSkuGeneradas:string =
-    '¡Combinaciones generadas con éxito!';
-  STituloAnadirValorSku:string =
-    'Añadir nuevo valor';
-  SSolicitudNombreValorSku:string =
-    'Introduce el nombre del nuevo atributo (Ej: XXL, Turquesa):';
-  SSolicitudOrdenNuevoValorSku:string =
-    'Introduce el ORDEN (Ej: 10, 20, 30...).' + sLineBreak + sLineBreak +
-    'ATENCIÓN: El orden asignado será global y afectará a todos los ' +
-    'artículos que usen este valor en el futuro.';
-  SPreguntaGuardarValorSkuGlobal:string =
-    'Va a utilizar el valor "%s".' + sLineBreak + sLineBreak +
-    '¿Desea guardarlo de forma permanente en el conjunto global "%s" para ' +
-    'que aparezca disponible siempre para otros artículos?' + sLineBreak +
-    sLineBreak + '[SÍ] -> Añadir al conjunto global' + sLineBreak +
-    '[NO] -> Usar SOLO ESTA VEZ para generar el SKU (no se guarda en el ' +
-    'conjunto)';
-  SPreguntaUsarValorSkuTemporal:string =
-    'El artículo no tiene un conjunto global asignado.' + sLineBreak +
-    sLineBreak + 'El valor "%s" se utilizará SOLO ESTA VEZ para generar el ' +
-    'SKU de este artículo, pero no se guardará en ninguna lista de ' +
-    'conjuntos.' + sLineBreak + sLineBreak + '¿Desea continuar?';
-  STituloCambiarOrdenValorSku:string =
-    'Cambiar orden del valor';
-  SSolicitudOrdenValorSku:string =
-    'Orden de "%s" (número entero, los más bajos van primero y prevalence ' +
-    'el orden del sistema):';
-  SErrorOrdenValorSkuNoValido:string =
-    'Por favor, introduce un número entero válido, (mayor o igual a 0).';
-  SPreguntaCambiarOrdenValorSkuGlobal:string =
-    'Este valor proviene de un sistema de colores o atributos (%s).' +
-    sLineBreak + sLineBreak +
-    'ATENCIÓN: Este cambio implica un cambio que puede afectar a otros ' +
-    'artículos que compartan este sistema.' + sLineBreak + sLineBreak +
-    '¿Desea continuar?';
-  STituloCambiarOrdenAtributoSku:string =
-    'Cambiar orden';
-  SSolicitudOrdenAtributoSku:string =
-    'Orden de "%s" dentro del SKU (número entero, los más bajos van ' +
-    'primero):';
-  SErrorOrdenAtributoSkuNoValido:string =
-    'Introduce un número entero mayor que 0.';
-  SPreguntaEditarCamposExtraInforme:string =
-    '¿Desea añadir o editar campos extra del informe provenientes de otras ' +
-    'tablas o vistas externas?';
-  SErrorPrivilegiosBorrarFormato:string =
-    'No tiene privilegios suficientes para borrar el formato de %s. ' +
-    'Consulte con el Administrador';
-  SPreguntaBorrarFormato:string =
-    '¿Está seguro de borrar el formato?';
-  SPreguntaReemplazarInforme:string =
-    'El informe ya existe. ¿Desea reemplazar el informe?';
-  STituloAdvertenciaInforme:string =
-    'Mensaje Advertencia';
-  SErrorContrasenasNoCoinciden:string =
-    'Las contraseñas no coinciden';
-  SErrorFiltroNoSeleccionado:string =
-    'Seleccione un filtro de la lista.';
-  SErrorFiltroSinCondicionesAplicar:string =
-    'El filtro no tiene condiciones para aplicar.';
-  SErrorFiltroSinCondicionesGuardar:string =
-    'El filtro no tiene condiciones para guardar.';
-  SInfoCambiosFiltroGuardados:string =
-    'Cambios del filtro guardados correctamente.';
-  SErrorPantallaSinFiltroAplicado:string =
-    'La pantalla no tiene ningún filtro aplicado.';
-  SPreguntaReemplazarFiltro:string =
-    'Filtro guardado actualmente:' + sLineBreak + '%s' + sLineBreak +
-    sLineBreak + 'Se reemplazará por el filtro actual de la pantalla:' +
-    sLineBreak + '%s' + sLineBreak + sLineBreak + '¿Desea continuar?';
-  STituloReemplazarFiltro:string =
-    'Reemplazar filtro';
-  SInfoFiltroReemplazado:string =
-    'Filtro reemplazado correctamente.';
-  SErrorFiltroPropioDuplicado:string =
-    'Ya existe un filtro propio con ese nombre. Indique un nombre diferente.';
-  SInfoCopiaFiltroGuardada:string =
-    'Copia del filtro guardada correctamente.';
-  SPreguntaBorrarFiltro:string =
-    '¿Borrar el filtro seleccionado?';
-  STituloConfirmarBorradoFiltro:string =
-    'Confirmar borrado';
-  SInfoFiltroCompartidoGrupo:string =
-    'Filtro compartido con tu grupo (%s).';
-  SInfoFiltroCompartidoTodos:string =
-    'Filtro compartido con todos los usuarios.';
-  SErrorNombreFiltroNoIndicado:string =
-    'Indique un nombre para el filtro.';
-  SErrorCodigoGuiaNoIndicado:string =
-    'Escribe un código para la guía.';
-  SErrorTablaExternaGuiaNoSeleccionada:string =
-    'Selecciona una tabla externa.';
-  SErrorCampoMasterGuiaNoSeleccionado:string =
-    'Selecciona el campo master.';
-  SErrorCampoDetailGuiaNoSeleccionado:string =
-    'Selecciona el campo detail (de la tabla).';
-  SInfoGuiaAnadida:string =
-    'Guía "%s" añadida: %s.%s → %s';
-  SInfoGuiasEliminarNoEncontradas:string =
-    'No hay guías para eliminar.';
-  SPreguntaEliminarGuia:string =
-    '¿Eliminar la guía "%s"?';
-  SErrorFacturaCompraExportarNoPreparada:string =
-    'No hay factura de compra preparada para exportar.';
-  SErrorDataModulePedidosNoAsignado:string =
-    'No hay datamodule de pedidos asignado.';
-  SInfoImportacionPedidosFinalizada:string =
-    'Importación finalizada. Pedidos importados: %d. Errores: %d.';
-  // Modals N-Z
-  SErrorConexionOperacionesCajaSkuNoDisponible:string =
-    'No hay una conexión disponible para la consulta.';
-  SErrorImporteConciliadoNoValido:string =
-    'El importe conciliado debe ser mayor que 0.';
-  SErrorImporteConciliadoSuperaPendiente:string =
-    'El importe no puede superar el pendiente.';
-  SErrorNombreFormatoWizardNoIndicado:string =
-    'Indique un nombre para el formato.';
-  SErrorNombreFormatoWizardNoModificado:string =
-    'Escriba un nombre nuevo para el formato.';
-  SErrorDatasetMasterWizardNoSeleccionado:string =
-    '1) Selecciona el dataset master (cabecera o detalle) en la lista de la ' +
-    'izquierda.';
-  SErrorCamposMasterWizardNoSeleccionados:string =
-    '2) Marca al menos un campo del master (Master fields).';
-  SErrorTablaExternaWizardNoSeleccionada:string =
-    '3) Selecciona la tabla o vista externa que quieres ligar.';
-  SErrorCamposTablaExternaWizardNoSeleccionados:string =
-    '4) Selecciona el campo (o campos) de la tabla externa que se cruzan con ' +
-    'el master. Para seleccionar varios usa Ctrl o Mayus; el orden de ' +
-    'seleccion determina el pareo con los Master fields (k=1,2,...).';
-  SErrorPrepararImpresionDeclaracionResponsable:string =
-    'No se pudo preparar el documento de impresión.';
-  SErrorImprimirDeclaracionResponsable:string =
-    'No se pudo imprimir la declaración responsable:' + sLineBreak;
-  SInfoNumeroInstalacionSifDisponible:string =
-    'Número de instalación SIF disponible: ';
-  SErrorGenerarNumeroInstalacionSif:string =
-    'No se pudo generar el número de instalación SIF:' + sLineBreak;
-  SErrorSerieDocumentoNoIndicada:string =
-    'Introduzca la serie.';
-  SErrorFechaInicioDocumentoNoIndicada:string =
-    'Introduzca la fecha de inicio.';
-  SErrorFechaFinDocumentoNoIndicada:string =
-    'Introduzca la fecha de fin.';
-  SErrorRangoFechasDocumentoNoValido:string =
-    'La fecha de fin no puede ser anterior al inicio.';
-  SInfoEmpresaSinCuentasBancarias:string =
-    'La empresa no tiene cuentas bancarias activas. El documento se ' +
-    'generará sin banco de empresa asignado.';
-  SErrorAlmacenPedidoNoSeleccionado:string =
-    'Selecciona un almacen.';
-  SInfoAlbaranesIncorporarNoDisponibles:string =
-    'No hay albaranes a los que incorporar; crea uno nuevo.';
-  SErrorSerieAlbaranPedidoNoIndicada:string =
-    'Indica la serie del albaran.';
-  SInfoLogGuardado:string =
-    'Log guardado en %s';
-  SErrorAlmacenAlbaranNoSeleccionado:string =
-    'Selecciona un almacen.';
-  SErrorAlbaranDestinoNoSeleccionado:string =
-    'Selecciona el albaran al que anadir las lineas.';
-  SErrorCodigoAcreedorSepaNoIndicado:string =
-    'Indica el código acreedor SEPA.';
-  SErrorLongitudCodigoAcreedorSepa:string =
-    'El código acreedor SEPA no puede superar 35 caracteres.';
-  SErrorFormatoCodigoAcreedorSepaNoValido:string =
-    'Código acreedor SEPA no válido. En España debe tener formato ESkkZZZ ' +
-    'seguido del NIF.';
-  SErrorSecuenciaSepaNoValida:string =
-    'Secuencia SEPA no válida.';
-  SErrorClientesSinMandatoSepa:string =
-    'Hay clientes sin mandato SEPA.';
-  SErrorMandatosSepaLongitudNoValida:string =
-    'Hay mandatos SEPA de más de 35 caracteres.';
-  SErrorClientesSinFechaFirmaMandatoSepa:string =
-    'Hay clientes sin fecha de firma del mandato SEPA.';
-  // Caja: DataModules y Lib
-  SErrorCodigoFormaPagoCajaObligatorio:string =
-    'El Código de la Forma de Pago es obligatorio';
-  SErrorDescripcionFormaPagoCajaObligatoria:string =
-    'La Descripción de la Forma de Pago es obligatoria';
-  SErrorParametrosAplicacionCajaNoConfigurados:string =
-    'No se han configurado los parámetros de aplicación.';
-  SErrorParametrosModuloCajaNoConfigurados:string =
-    'No se han configurado los parámetros del módulo de caja.';
-  SErrorContextoSesionCajaNoConfigurado:string =
-    'No se ha configurado el contexto de sesión del módulo de caja.';
-  SErrorOperacionCajaSinLineas:string =
-    'No se puede grabar una operación sin líneas.';
-  SErrorRazonSocialClienteFacturaCajaObligatoria:string =
-    'La factura normal necesita la razon social del cliente.';
-  SErrorDocumentoFiscalClienteCajaNoValido:string =
-    'El NIF/CIF/NIE del cliente no es valido: ';
-  SErrorDocumentoFiscalEmpresaCajaNoValido:string =
-    'El NIF/CIF/NIE de la empresa no es valido: ';
-  SErrorFechaTicketSerieNoValida:string =
-    'No se puede grabar el ticket en la serie "%s".' + sLineBreak +
-    'El último ticket de esa serie tiene fecha %s, posterior a la fecha de ' +
-    'caja %s.' + sLineBreak +
-    'Cambie la serie para emitir un ticket con esta fecha.';
-  SErrorCuadreCobroParcialCaja:string =
-    'No se pudo cuadrar tras cobro parcial.';
-  SErrorFacturaRectificativaCajaSinOriginal:string =
-    'La rectificativa no tiene factura original asociada.';
-  SErrorGuardarTicketCaja:string =
-    'Error al guardar el ticket. No se ha registrado la operación.' +
-    sLineBreak + 'Motivo: %s';
-  SErrorCuadrarFacturaCaja:string =
-    'Error al cuadrar la factura: %s';
-  SErrorRedimirValeCaja:string =
-    'No se pudo redimir el vale "%s". Filas afectadas: %d. Posibles causas: ' +
-    'el vale no existe, ya fue redimido, esta caducado o anulado.';
-  SErrorContextoSesionTraspasoNoConfigurado:string =
-    'No se ha configurado el contexto de sesión del módulo de traspasos.';
-  SErrorSkuTraspasoIncompleto:string =
-    'El artículo "%s" no tiene el SKU completo (elige color/talla). SKU: "%s"';
-  SErrorArticuloSkuTraspasoNoCoincide:string =
-    'La línea del artículo "%s" no corresponde al SKU "%s" (artículo real ' +
-    '"%s"). Borra la línea y vuelve a introducirlo.';
-  SErrorStockTraspasoInsuficiente:string =
-    'No hay stock suficiente en el almacén origen (%s):' + sLineBreak + '%s';
-  SErrorLineasTraspasoNoDisponibles:string =
-    'No hay líneas que traspasar.';
-  SErrorAlmacenDestinoTraspasoNoSeleccionado:string =
-    'Selecciona el almacén destino.';
-  SErrorAlmacenesTraspasoCoincidentes:string =
-    'Origen y destino no pueden ser el mismo almacén.';
-  SErrorLineasSolicitudTraspasoNoDisponibles:string =
-    'No hay líneas que solicitar.';
-  SErrorAlmacenOrigenSolicitudNoSeleccionado:string =
-    'Selecciona el almacén al que solicitas.';
-  SErrorSolicitudTraspasoMismoAlmacen:string =
-    'No puedes solicitarte a ti mismo.';
-  SErrorSolicitudTraspasoNoCargada:string =
-    'No hay solicitud cargada que denegar.';
-  SErrorPermisoAbrirCajon:string =
-    'No tiene permiso para abrir el cajón.';
-  SErrorImpresoraTicketsCajaNoConfigurada:string =
-    'No hay impresora de tickets configurada en parámetros ' +
-    '(vgerDefPrinter); no se puede abrir el cajón.';
-  SErrorContextoImpresoraCajaNoProporcionado:string =
-    'No se ha proporcionado el contexto para la impresora de caja.';
-  // Caja: Forms A-M
-  SErrorReferenciaPagoCajaNoIndicada:string =
-    'Debe introducir la referencia del pago.';
-  SErrorFactorCambioCajaNoValido:string =
-    'El factor de cambio debe ser mayor que cero.';
-  SErrorHashBlockchainCajaNoIndicado:string =
-    'Debe introducir el hash de la transacción blockchain.';
-  SErrorValeCajaNoSeleccionado:string =
-    'No hay ningún vale seleccionado.';
-  SErrorPinValeCajaNoIndicado:string =
-    'Introduzca el PIN de seguridad del vale para poder canjearlo.';
-  SErrorPinValeCajaIncorrecto:string =
-    'El PIN de seguridad no es correcto.' + sLineBreak +
-    'Verifique el código que aparece en el vale físico.';
-  SErrorProveedorParametrosCajaNoConfigurado:string =
-    'No se ha configurado el proveedor de edición de parámetros.';
-  SErrorParametrosCajaEditablesNoConfigurados:string =
-    'No se han configurado los parámetros de caja editables.';
-  SInfoLayoutCajaGuardado:string =
-    'Layout guardado.';
-  SInfoParametrosCajaGuardados:string =
-    'Se han guardado %d parámetros correctamente para: %s';
-  SInfoParametrosCajaSinCambios:string =
-    'No se han detectado cambios para guardar.';
-  SPreguntaSalirParametrosCajaSinGuardar:string =
-    '¿Está seguro de que desea salir sin guardar?';
-  SInfoUsuariosParametrosCajaNoEncontrados:string =
-    'No hay usuarios con parámetros guardados para este formulario.';
-  STituloCambiarUsuarioParametrosCaja:string =
-    'Cambiar usuario';
-  SSolicitudCambiarUsuarioParametrosCaja:string =
-    'Usuarios disponibles:' + sLineBreak + '%s' + sLineBreak + sLineBreak +
-    'Introduce el nombre de usuario:';
-  SErrorUsuarioParametrosCajaNoEncontrado:string =
-    'Usuario no encontrado: %s';
-  SInfoPrecargaCajaGuardada:string =
-    'Precarga guardada.';
-  SErrorAsignarUbicacionCaja:string =
-    'Error al asignar Empresa Almacén Caja';
-  STituloHoraCaja:string =
-    'Hora de caja';
-  SSolicitudHoraCaja:string =
-    'Hora (HH:MM)';
-  SErrorHoraCajaNoValida:string =
-    'Hora no válida. Use HH:MM.';
-  SErrorUbicacionCajaBuscarOperacionesNoAsignada:string =
-    'No hay empresa/almacén/caja asignados. Selecciona una caja antes de ' +
-    'buscar operaciones.';
-  SErrorUbicacionCajaArqueoNoAsignada:string =
-    'No hay empresa/almacén/caja asignados. Selecciona una caja antes de ' +
-    'hacer arqueo.';
-  SErrorUbicacionCajaTraspasoNoAsignada:string =
-    'No hay empresa/almacén/caja asignados. Selecciona una caja antes de ' +
-    'hacer traspasos.';
-  SErrorRectificacionCajaNoAdmiteBorrador:string =
-    'Una rectificación se cierra como ticket rectificativo, no como ' +
-    'borrador normal.';
-  SErrorClienteBorradorCajaNoAsignado:string =
-    'Asigne un cliente a la operación para emitir borrador.';
-  SErrorNifClienteBorradorCajaNoIndicado:string =
-    'El cliente no tiene NIF: complételo en su ficha para poder emitir ' +
-    'borrador normal.';
-  SErrorFechaSerieEmisionCajaNoValida:string =
-    'No se puede emitir en la serie "%s".' + sLineBreak +
-    'El último ticket de esa serie tiene fecha %s, posterior a la fecha ' +
-    '%s.' + sLineBreak + 'Elija otra serie para emitir con esta fecha.';
-  SAvisoHuecosNumeracionSerieCaja:string =
-    'La serie "%s" tiene huecos en la numeración: faltan %d números entre ' +
-    'el %d y el %d.' + sLineBreak +
-    'Recuerde que la numeración debe ser correlativa según la ley.';
-  SErrorNumeroBorradorCajaNoValido:string =
-    'El número de borrador indicado no es válido.';
-  SErrorNumeroBorradorCajaExistente:string =
-    'El número %d ya existe en la serie "%s".';
-  SErrorNumeroBorradorCajaNoEsHueco:string =
-    'El número %d no es un hueco de la serie "%s": los huecos están entre ' +
-    'el %d y el %d.';
-  STituloEnviarDocumentacionCaja:string =
-    'Enviar documentación';
-  SSolicitudCorreoDocumentacionCaja:string =
-    'Correo electrónico:';
-  SErrorCorreoDocumentacionCajaNoIndicado:string =
-    'Indique una dirección de correo electrónico.';
-  SErrorCreditoClienteCajaNoPermitido:string =
-    'Operación denegada: Este cliente no tiene crédito permitido.';
-  SErrorImporteCreditoCajaNoPendiente:string =
-    'No hay importe pendiente para pasar a crédito.';
-  SAvisoLimiteOperacionesCaja:string =
-    'La selección cargaría %s registros, demasiados para mostrarlos de una ' +
-    'vez.' + sLineBreak +
-    'Acota los filtros (años / almacenes) y vuelve a intentarlo.';
-  SErrorOperacionCajaExportarNoSeleccionada:string =
-    'No hay ninguna operación seleccionada para exportar.';
-  SErrorSkuVentaCajaNoExiste:string =
-    'El SKU "%s" no existe en fza_articulos_skus. No se puede vender.';
-  SErrorSkuVentaCajaNoActivo:string =
-    'El SKU "%s" no está activo. No se puede vender.';
-  SErrorArticuloVentaCajaSinStock:string =
-    'Artículo sin stock. Compruebe stock en almacén.';
-  SErrorVendedorCajaNoAsignado:string =
-    'Da de alta el vendedor antes de leer artículos.';
-  SErrorCodigoBarrasVentaCajaNoEncontrado:string =
-    'Código de barras no encontrado: %s';
-  SErrorLineaDepositoCajaNoCancelable:string =
-    'No se puede cancelar o eliminar una línea vinculada a un depósito.';
-  SErrorArticuloVentaCajaNoEncontrado:string =
-    'Artículo no encontrado';
-  SPreguntaCancelarVentaCaja:string =
-    'Hay líneas en la venta actual.' + sLineBreak +
-    '¿Desea CANCELAR LA VENTA y salir?';
-  SErrorLineaDepositoCajaNoEliminable:string =
-    'No se puede eliminar una línea vinculada a un depósito.' + sLineBreak +
-    'Cambie la cantidad a negativo si necesita revertirla.';
-  SPreguntaBorrarVentaCaja:string =
-    'Hay una venta en curso.' + sLineBreak +
-    '¿Desea BORRAR LA VENTA y salir?';
-  SInfoValeCajaEntregar:string =
-    'Entregue el vale al cliente: %s';
-  SErrorCorreoOperacionCajaNoEnviado:string =
-    'La operación se ha guardado correctamente, pero no se ha podido enviar ' +
-    'el correo.' + sLineBreak + '%s';
-  SErrorTipoRectificativaCajaNoIndicado:string =
-    'Debe indicar el tipo de rectificativa.';
-  SErrorBorradorRectificarCajaNoEncontrado:string =
-    'No se encontró el borrador %s\%s a rectificar.';
-  SErrorClienteDepositosCajaNoSeleccionado:string =
-    'Debe seleccionar un cliente para cargar sus depósitos.';
-  SErrorValoresAtributoCajaNoDefinidos:string =
-    'No hay valores definidos para este atributo.';
-  SPreguntaEliminarOperacionCajaPendiente:string =
-    'La Operación %d tiene artículos pendientes.' + sLineBreak +
-    '¿Desea ELIMINARLA y cerrar?';
-  SErrorArticuloCajaNoEncontradoDescatalogado:string =
-    'ARTÍCULO NO ENCONTRADO O DESCATALOGADO';
-  SErrorCantidadArticuloDepositoCajaNoValida:string =
-    'En artículos de depósito solo está permitido cambiar el signo de la ' +
-    'cantidad.';
-  SErrorCodigoClienteCajaNoExiste:string =
-    'El código de cliente no existe.';
-  SErrorEmpleadoCajaNoEncontrado:string =
-    'No se encontró ningún empleado válido.';
-  // Caja: Forms N-Z
-  SErrorSolicitudesTraspasoPendientesNoEncontradas:string =
-    'No hay solicitudes pendientes de atender.';
-  SErrorCargarSolicitudTraspaso:string =
-    'No se pudo cargar la solicitud.';
-  SErrorSolicitudTraspasoCerrarNoCargada:string =
-    'Trae primero una solicitud (F8) para cerrarla.';
-  SPreguntaCerrarSolicitudTraspaso:string =
-    '¿Cerrar la solicitud dejando las líneas sin servir como no atendidas?';
-  SInfoSolicitudTraspasoCerrada:string =
-    'Solicitud cerrada.';
-  SErrorDenegarSolicitudTraspasoModoNoValido:string =
-    'Denegar solo aplica al atender una solicitud.';
-  SErrorSolicitudTraspasoDenegarNoCargada:string =
-    'Trae primero una solicitud (F8) para denegarla.';
-  STituloDenegarSolicitudTraspaso:string =
-    'Denegar petición';
-  SSolicitudMotivoRechazoTraspaso:string =
-    'Motivo del rechazo (lo verá quien la pidió):';
-  SErrorMotivoDenegacionTraspasoNoIndicado:string =
-    'Debes indicar un motivo para denegar.';
-  SInfoPeticionTraspasoDenegada:string =
-    'Petición denegada (DENEGADO TOTAL).';
-  SInfoSolicitudTraspasoEnviada:string =
-    'Solicitud %s/%s enviada.';
-  SErrorEmpleadoTraspasoNoIndicado:string =
-    'Indica el empleado responsable del traspaso.';
-  SErrorEmpleadoTraspasoNoEncontrado:string =
-    'Empleado no encontrado: %s';
-  SErrorSolicitudTraspasoAtenderNoCargada:string =
-    'Carga primero una solicitud (botón Cargar solicitud).';
-  SErrorMotivoLineasTraspasoNoIndicado:string =
-    'Indica el motivo en las líneas que deniegas (las que sirves a 0).';
-  SInfoSolicitudTraspasoAtendida:string =
-    'Solicitud atendida. Traspaso %s grabado.';
-  SPreguntaDenegarPeticionTraspasoCompleta:string =
-    'No has marcado nada para servir. ¿Denegar toda la petición?';
-  SInfoTraspasoGrabado:string =
-    'Traspaso %s grabado correctamente.';
-  // Caja: Modals
-  SErrorEmpleadoGastoCajaNoIndicado:string =
-    'Introduzca el empleado que realiza la operación.';
-  SErrorImporteGastoCajaNoValido:string =
-    'Introduzca un importe mayor que cero.';
-  STituloAvisoCaja:string =
-    'Aviso';
-  SErrorArqueoCajaNoSeleccionado:string =
-    'Seleccione un arqueo del listado.';
-  SErrorPermisoResumenArqueoCaja:string =
-    'No tiene permiso para consultar el resumen del arqueo.';
-  SInfoOperacionesFacturadasArqueoCajaNoEncontradas:string =
-    'No hay operaciones facturadas en el rango seleccionado.';
-  STituloTiraCaja:string =
-    'Tira de Caja';
-  SErrorVendedorArqueoCajaNoIndicado:string =
-    'Debe indicar el número de empleado de caja del vendedor que realiza el ' +
-    'cierre.';
-  STituloVendedorArqueoCajaObligatorio:string =
-    'Vendedor obligatorio';
-  SErrorVendedorArqueoCajaNoValido:string =
-    'El número de empleado indicado no existe o no está activo.';
-  STituloVendedorArqueoCajaNoValido:string =
-    'Vendedor no válido';
-  SErrorArqueoCajaDuplicado:string =
-    'Ya existe un cierre que solapa este rango y caja. No se permite doble ' +
-    'cierre.';
-  STituloArqueoCajaDuplicado:string =
-    'Arqueo duplicado';
-  SErrorRecuentoArqueoCajaNoDisponible:string =
-    'No hay datos de recuento. Pulse Recalcular primero.';
-  SPreguntaGrabarArqueoCaja:string =
-    'Se va a grabar el arqueo con los importes recontados.' + sLineBreak +
-    'Periodo: %s - %s' + sLineBreak +
-    'Las operaciones del rango quedarán marcadas.' + sLineBreak +
-    sLineBreak + '¿Desea continuar?';
-  STituloConfirmarArqueoCaja:string =
-    'Confirmar Arqueo';
+
+function SClassRttiNotFnd: string;
+function SLocateNotFnd: string;
+function SResWinFNotFnd: string;
+function SCliToTbl: string;
+function SEmpToTbl: string;
+function SErrorDecryptPassBBDD: string;
+function SErrorDecryptPass: string;
+function SErrorAuthPass: string;
+function SErrorPassMatch: string;
+function SErrorPassMatchBBDD: string;
+function SEnterPassBBDD: string;
+function SScriptSuccess: string;
+function SFailLoadScriptBBDD: string;
+function SCreateSuccBBDD: string;
+function SErrorCreateBBDD: string;
+function SBBDDUpdateTo: string;
+function SNotExistsUpBBDDFile: string;
+function SAdviceUpdateBBDD: string;
+function SPasswordBBDDChanged: string;
+function SWantDefChgBBDD: string;
+function SAdvMsg: string;
+function SNoConnBBDD: string;
+function SConnSuccBBDD: string;
+function SGetPassBBDD: string;
+function SConnFailBBDD: string;
+function SErrorSentenciaScript: string;
+function SSolicitudPassBBDD: string;
+function SSolicitudNuevoPassBBDD: string;
+function SScriptEjecutado: string;
+function SScriptNoEjecutado: string;
+function SErrorConexionServidorBBDD: string;
+function SErrorEstructuraBBDD: string;
+function SErrorConexionBBDD: string;
+function SErrorInicioAutomatico: string;
+function SLicenciaEstablecida: string;
+function SLicenciaNoEstablecidaSinNif: string;
+function SErrorEstablecerLicencia: string;
+function SModoDemo: string;
+function SCancelacionSolicitada: string;
+function SPreguntaCancelarOperacion: string;
+function SOperacionCancelada: string;
+function SCopiaSeguridadGuardada: string;
+function SErrorCrearCopiaSeguridad: string;
+function SRestauracionCancelada: string;
+function SErrorRestaurarCopiaSeguridad: string;
+function SErrorContrasenaCopiaVacia: string;
+function SErrorTipoRestauracionNoPermitido: string;
+function SPreguntaReemplazarFichero: string;
+function SCopiaSeguridadCancelada: string;
+function SCargaScriptCancelada: string;
+function SUsuarioNoExiste: string;
+function SDescripcionParametroIdioma: string;
+function SErrorContextoSesionFormularioNoConfigurado: string;
+function SErrorServicioAuditoriaDatosNoConfigurado: string;
+function SErrorProveedorEdicionParametrosNoConfigurado: string;
+function SErrorParametrosAplicacionEditablesNoConfigurados: string;
+function SInfoParametrosGuardados: string;
+function SAvisoParametrosRestringidosIgnorados: string;
+function SAvisoParametrosRestringidosNoGuardados: string;
+function SInfoSinCambiosParametros: string;
+function SInfoLayoutGuardado: string;
+function SPreguntaSalirSinGuardar: string;
+function SAvisoSinUsuariosParametrosGuardados: string;
+function STituloCambiarUsuario: string;
+function SSolicitudCambiarUsuario: string;
+function SErrorUsuarioNoEncontrado: string;
+function SErrorEnviarTicketImpresora: string;
+function SAvisoSinComandosESCPOSImpresora: string;
+function SInfoTicketEnviadoImpresora: string;
+function SErrorImprimir: string;
+function SAvisoSinComandosESCPOSPDF: string;
+function SInfoPDFGuardado: string;
+function SInfoPNGGuardado: string;
+function SErrorContextoInicioSesionNoProporcionado: string;
+function SErrorParametrosSinEstadoLicencia: string;
+function SErrorParametrosAplicacionSinContratoEdicion: string;
+function SErrorParametrosCajaSinContratoEdicion: string;
+function SErrorServicioConexionesNoDisponible: string;
+function SCertificadoQuedaMenosUnDia: string;
+function SCertificadoQuedaUnDia: string;
+function SCertificadoQuedanDias: string;
+function SAvisoCertificadoCaducado: string;
+function SAvisoCertificadoProximoCaducar: string;
+function SAvisoCertificadosCaducidad: string;
+function SAvisoCargaPermisosRestringidos: string;
+function SInfoCopiaSeguridadGuardada: string;
+function SAvisoRestauracionCancelada: string;
+function SErrorEjecutarScript: string;
+function SPreguntaSalirAplicacion: string;
+function SPreguntaCopiaSeguridadAntesDDL: string;
+function SPreguntaCopiaAntesRestaurarCifrada: string;
+function SInfoScriptCancelado: string;
+function SErrorAbrirDireccion: string;
+function SAvisoAlbaranFacturado: string;
+function SPreguntaBorrarAlbaran: string;
+function SAvisoAlmacenSalidaAlbaranObligatorio: string;
+function SErrorLineaAlbaranSinArticulo: string;
+function SErrorCabeceraAlbaranSinGrabar: string;
+function SErrorAsignarLineaAlbaran: string;
+function SErrorContadorAlbaran: string;
+function SAvisoAlmacenDestinoAlbaranCompraObligatorio: string;
+function SAvisoAlbaranCompraFacturado: string;
+function SPreguntaBorrarAlbaranCompra: string;
+function SErrorContadorAlbaranCompra: string;
+function SErrorCodigoSkuCodigoBarrasObligatorio: string;
+function SErrorCampoCodigoBarrasAusente: string;
+function SErrorCodigoSkuObligatorio: string;
+function SErrorFilaCodigoBarrasInexistente: string;
+function SErrorProveedorPrincipalArticulo: string;
+function SErrorDescripcionArticulo: string;
+function SPreguntaDesactivarTarifaSinPrecio: string;
+function SPreguntaActivarTarifaConPrecio: string;
+function SErrorTarifaFechasConcurrentes: string;
+function SErrorAtributoBasicoObligatorio: string;
+function SErrorCodigoAtributoBasicoObligatorio: string;
+function SErrorNombreAtributoBasicoObligatorio: string;
+function SErrorValorColeccionAtributosObligatorio: string;
+function SPreguntaBorrarClienteConFacturas: string;
+function SErrorRazonSocialCliente: string;
+function SErrorCambiarFormatoSesion: string;
+function SErrorEmpresaSesionObligatoria: string;
+function SErrorSerieSesionObligatoria: string;
+function SErrorContadorSesion: string;
+function SErrorCodigoSerieEmpresa: string;
+function SAvisoColacionSesion: string;
+function SAvisoTimeoutServidor: string;
+function SErrorBBDDDuplicado: string;
+function SErrorBBDDCamposObligatorios: string;
+function SErrorBBDDCampoDesconocido: string;
+function SErrorBBDDTablaNoExiste: string;
+function SErrorBBDDSinPermisos: string;
+function SErrorBBDDClaveForaneaNoExiste: string;
+function SErrorBBDDRegistroDependiente: string;
+function SErrorBBDDDatoDemasiadoLargo: string;
+function SErrorBBDDCredencialesIncorrectas: string;
+function SErrorBBDDConexionServidor: string;
+function SErrorBBDDConexionPerdida: string;
+function SErrorBBDDConexionPerdidaConsulta: string;
+function SErrorBBDDTimeoutBloqueo: string;
+function SErrorBBDDDeadlock: string;
+function SErrorBBDDTablaYaExiste: string;
+function SErrorBBDDProcedimientoYaExiste: string;
+function SErrorBBDDGenerico: string;
+function SDetalleErrorMySQL: string;
+function SErrorAbrirConsultaOpe: string;
+function SErrorAlmacenSalidaDevolucionCompra: string;
+function SAvisoDevolucionCompraFacturada: string;
+function SPreguntaBorrarDevolucionCompra: string;
+function SErrorCabeceraDevolucionCompraSinGrabar: string;
+function SErrorContadorDevolucionCompra: string;
+function SErrorTipoDestinoDocumentoTrabajo: string;
+function SErrorDestinoCompartidoNoExiste: string;
+function SErrorDestinoCompartirObligatorio: string;
+function SErrorCompartirDocumentoTrabajoSoloPropietario: string;
+function SErrorCabeceraDocumentoTrabajoSinGrabar: string;
+function SErrorCompartirDocumentoTrabajoConsigoMismo: string;
+function SErrorBorrarDocumentoTrabajoSoloPropietario: string;
+function SErrorCambiarPropietarioDocumentoTrabajo: string;
+function SErrorTituloDocumentoTrabajoObligatorio: string;
+function SErrorBorrarLineasDocumentoTrabajoSoloPropietario: string;
+function SErrorEditarLineasDocumentoTrabajoSoloPropietario: string;
+function SErrorArticuloLineaDocumentoTrabajoObligatorio: string;
+function SErrorSkuLineaDocumentoTrabajoObligatorio: string;
+function SErrorDejarCompartirDocumentoTrabajoSoloPropietario: string;
+function SErrorDestinoCompartidoObligatorio: string;
+function SErrorBorrarEfectoCompraRemesado: string;
+function SErrorBorrarEfectoCompraPagado: string;
+function SErrorFusionarEfectosCompraEstado: string;
+function SErrorFusionarEfectosCompraOrigen: string;
+function SErrorFusionarEfectosCompraSinPendiente: string;
+function SErrorBorrarEfectoVentaRemesado: string;
+function SErrorBorrarEfectoVentaCobrado: string;
+function SErrorFusionarEfectosVentaEstado: string;
+function SErrorFusionarEfectosVentaOrigen: string;
+function SErrorFusionarEfectosVentaSinPendiente: string;
+function SPreguntaCambioCriticoEmpresa: string;
+function SErrorPorcentajeRetencionEmpresa: string;
+function SErrorRetencionesEmpresaConcurrentes: string;
+function SErrorSerieEmpresa: string;
+function SErrorIbanEmpresa: string;
+function SPreguntaBorrarEmpresaConFacturas: string;
+function SErrorRazonSocialEmpresa: string;
+function SErrorCodigoEmpresa: string;
+function SErrorOperacionIntracomunitariaClienteNoUE: string;
+function SErrorOperacionExportacionClienteNoExtranjero: string;
+function SErrorOperacionSinIvaConCuota: string;
+function SErrorNifIvaClienteExtranjero: string;
+function SErrorCalcularBorradorDetalle: string;
+function SErrorCalculoBorrador: string;
+function SErrorTipoIvaFactura: string;
+function SErrorBorrarBorradorFase: string;
+function SPreguntaBorrarFactura: string;
+function SErrorBorrarBorradorEfectosCobrados: string;
+function SErrorInsertarLineasCabeceraFactura: string;
+function SErrorBorradorSinGrabarParaLineas: string;
+function SErrorSerieFacturaOtraEmpresa: string;
+function SErrorRazonSocialClienteBorrador: string;
+function SErrorRazonSocialEmpresaBorrador: string;
+function SErrorSerieBorradorObligatoria: string;
+function SErrorPaisClienteEmpresaBorrador: string;
+function SErrorFechaBorradorObligatoria: string;
+function SErrorNifClienteFactura: string;
+function SErrorNifEmpresaFactura: string;
+function SErrorFechaFacturaAnteriorSerie: string;
+function SAvisoFechaBorradorFutura: string;
+function SErrorCabeceraBorradorSinGrabar: string;
+function SErrorAsignarNumeroFactura: string;
+function SAvisoHuecoNumeracionFactura: string;
+function SErrorCerrarFacturaCompraSinLineas: string;
+function SErrorBorrarFacturaCompraEfectosPagados: string;
+function SPreguntaBorrarFacturaCompra: string;
+function SErrorCabeceraFacturaCompraSinGrabar: string;
+function SErrorContadorFacturaCompra: string;
+function SAvisoPropiedadFamiliaDuplicada: string;
+function SErrorNombreFamilia: string;
+function SErrorFamiliaPadreIgualHija: string;
+function SErrorServicioConexionesDatosNoConfigurado: string;
+function SErrorContextoSesionFiltrosNoConfigurado: string;
+function SErrorCodigoFacturaeFormaPago: string;
+function SErrorDescripcionFormaPago: string;
+function SErrorContextoSesionModuloDatosNoConfigurado: string;
+function SErrorSerieInventarioObligatoria: string;
+function SErrorContadorLineasInventarioNoInstalado: string;
+function SErrorCabeceraInventarioSinGrabarParaReserva: string;
+function SErrorCabeceraInventarioNoEncontrada: string;
+function SErrorActualizarContadorLineasInventario: string;
+function SErrorEmpresaCabeceraInventarioObligatoria: string;
+function SErrorAlmacenCabeceraInventarioObligatorio: string;
+function SErrorSerieCabeceraInventarioObligatoria: string;
+function SErrorNumeroCabeceraInventarioObligatorio: string;
+function SErrorAtributoLineaInventarioObligatorio: string;
+function SPreguntaCrearSkuInventario: string;
+function SErrorSkuInventarioNoExiste: string;
+function SErrorEliminarLineasInventarioNoAbierto: string;
+function SErrorAnadirLineaCabeceraInventario: string;
+function SErrorRecalcularInventarioNoAbierto: string;
+function SErrorAplicarInventarioNoAbierto: string;
+function SErrorAplicarInventarioSinLineas: string;
+function SErrorEliminarRegularizacionInventarioNoAplicado: string;
+function SErrorCargarArticulosInventarioNoAbierto: string;
+function SErrorCompletarInventarioNoAbierto: string;
+function SErrorArticuloLineaInventarioObligatorio: string;
+function SErrorAnadirSkusInventarioNoAbierto: string;
+function SErrorValorAtributoSkuInventarioNoEncontrado: string;
+function SErrorCodigoIva: string;
+function SErrorGrupoIvaNoExiste: string;
+function SErrorRangoFechasIva: string;
+function SErrorDescripcionGrupoIva: string;
+function SErrorCodigoGrupoIva: string;
+function SErrorDosGruposIvaPredeterminados: string;
+function SAvisoEdicionMovimientoAlmacen: string;
+function SPreguntaBorrarPedidoVenta: string;
+function SErrorLineaPedidoSinArticulo: string;
+function SErrorCabeceraPedidoSinGrabar: string;
+function SErrorAsignarLineaPedido: string;
+function SAvisoAlmacenSalidaPedidoObligatorio: string;
+function SAvisoClientePedidoObligatorio: string;
+function SAvisoClientePedidoNoExiste: string;
+function SAvisoAlmacenDestinoPedidoCompraObligatorio: string;
+function SPreguntaBorrarPedidoCompra: string;
+function SErrorContadorPedidoCompra: string;
+function SErrorContextoSesionPerfilesNoConfigurado: string;
+function SErrorProveedorKitsNoSeleccionado: string;
+function SErrorProveedorKitsSinGrabar: string;
+function SErrorCodigoKitProveedorObligatorio: string;
+function SErrorNombreKitProveedorObligatorio: string;
+function SErrorKitProveedorNoSeleccionadoParaTallas: string;
+function SErrorTallaDestinoKitProveedorObligatoria: string;
+function SErrorKitProveedorNoSeleccionado: string;
+function SErrorSistemaTallasKitProveedorObligatorio: string;
+function SErrorCodigoAutomaticoProveedor: string;
+function SErrorOrdenAutomaticoProveedor: string;
+function SErrorRemesaVentaNoSeleccionada: string;
+function SErrorRemesaVentaNoEncontrada: string;
+function SErrorRemesaVentaSinEfectosPendientes: string;
+function SErrorGuardarCodigoAcreedorSepa: string;
+function SErrorGuardarMandatoSepaCliente: string;
+function SErrorNombreSesionCambioTarifaObligatorio: string;
+function SErrorTarifaDestinoObligatoria: string;
+function SErrorNombreUsuario: string;
+function SErrorUsuarioCoincideGrupo: string;
+function SErrorCodigoAtributoVariacionObligatorio: string;
+function SErrorConexionPrincipalTrabajoNoDisponible: string;
+function SErrorPrefijoEanSesionLargo: string;
+function SErrorColorBasicoMaterializacionNoExiste: string;
+function SErrorAlmacenSesionParaAlbaranCompra: string;
+function SErrorAlmacenSesionParaPedidoCompra: string;
+function SErrorAlmacenSesionParaPendienteRecibir: string;
+function SAvisoSelectorConjuntoFilaNoImplementado: string;
+function STituloNuevaFilaCompra: string;
+function SSolicitudNombreFilaCompra: string;
+function SAvisoConjuntoPivotCompraObligatorio: string;
+function SErrorConjuntoPivotCompraNoExiste: string;
+function STituloAnadirValorPivotCompra: string;
+function SSolicitudNombreValorPivotCompra: string;
+function SSolicitudOrdenValorPivotCompra: string;
+function SErrorDistribuidorTallasNoRegistrado: string;
+function SErrorInvarianteUnidadesTallas: string;
+function SErrorAlmacenDistribucionTallasNoDisponible: string;
+function SErrorArticuloSkuNoEncontrado: string;
+function SAvisoArticuloSinAtributos: string;
+function SErrorFactoriaTallasHorizontalObligatoria: string;
+function SErrorOperacionCanceladaUsuario: string;
+function SErrorRestauracionEstructuraIncompleta: string;
+function SErrorNombreBBDDDestinoVacio: string;
+function SErrorFicheroCopiaNoExiste: string;
+function SErrorDesencriptarCopia: string;
+function SErrorAlbaranCompraMovimientosNoEncontrado: string;
+function SErrorAlbaranCompraMovimientosYaGenerados: string;
+function SErrorAlbaranCompraSinCantidadParaMovimientos: string;
+function SErrorDivisaNoEncontrada: string;
+function SErrorHttpDivisas: string;
+function SErrorRedDivisas: string;
+function SErrorJsonDivisas: string;
+function SErrorPruebaPilaJcl: string;
+function SErrorDevolucionCompraMovimientosNoEncontrada: string;
+function SErrorDevolucionCompraMovimientosYaGenerados: string;
+function SErrorDevolucionCompraSinCantidadParaMovimientos: string;
+function SErrorEmpresaSinAlmacenActivo: string;
+function SErrorAlmacenDepositosEmpresaNoEncontrado: string;
+function SErrorLimitePeticionesCripto: string;
+function SErrorHttpCripto: string;
+function SErrorRedCripto: string;
+function SErrorJsonCripto: string;
+function SPreguntaCrearDocumentoTrabajo: string;
+function STituloAgregarDocumentoTrabajo: string;
+function STituloNuevoDocumentoTrabajo: string;
+function SSolicitudTituloDocumentoTrabajo: string;
+function SErrorArticuloDocumentoTrabajoNoActivo: string;
+function SErrorArticuloDocumentoTrabajoVariosSkus: string;
+function SInfoUnidadAgregadaDocumentoTrabajo: string;
+function STituloDocumentoTrabajo: string;
+function SErrorArticuloNoExiste: string;
+function SErrorEntradaArticuloVacia: string;
+function SErrorCodigoBarrasNoEncontrado: string;
+function SErrorArticuloEntradaNoEncontrado: string;
+function SAvisoArticuloRequiereSku: string;
+function SErrorArticuloVariacionSinSkusActivos: string;
+function SErrorArticuloSinSkusActivos: string;
+function SErrorSkuNoPerteneceArticulo: string;
+function SErrorSesionCompraNoActiva: string;
+function SErrorLineaArticuloSesionNoSeleccionada: string;
+function SErrorLineaSesionSinNumero: string;
+function SErrorSistemaTallasLineaSesionObligatorio: string;
+function SErrorKitProveedorNoExiste: string;
+function SErrorKitSinSistemaTallas: string;
+function SErrorTallajeKitNoCoincide: string;
+function SErrorGestorTallasNoInicializado: string;
+function SErrorKitSinTallasDefinidas: string;
+function SAvisoTallasKitSinCorrespondencia: string;
+function SErrorTallasKitSinCorrespondencia: string;
+function SErrorSesionIncidenciasSinDetalle: string;
+function SErrorDataModuleSesionNoInicializado: string;
+function SErrorSesionNoCerradaParaRevertir: string;
+function SErrorRestauracionNoFinalizada: string;
+function SErrorCodigoArticuloResolverObligatorio: string;
+function SErrorArticuloResolverNoExiste: string;
+function SAvisoArticuloResolverRequiereSku: string;
+function STextoLineaIncidenciaSesion: string;
+function STextoCabeceraIncidenciaSesion: string;
+function SFormatoIncidenciaSesion: string;
+function SErrorSesionInactivaIncidencia: string;
+function STipoIncidenciaCabecera: string;
+function SErrorEmpresaSesionFaltante: string;
+function SErrorProveedorSesionFaltante: string;
+function SErrorAlmacenSesionFaltante: string;
+function SErrorSesionSinLineas: string;
+function STipoIncidenciaDuplicadoInterno: string;
+function SErrorCodigoDuplicadoInternoSesion: string;
+function STipoIncidenciaDuplicado: string;
+function SErrorCodigoDuplicadoSesion: string;
+function STextoArticuloInactivoSesion: string;
+function STipoIncidenciaCodigo: string;
+function SErrorLineaSesionSinCodigo: string;
+function STipoIncidenciaDescripcion: string;
+function SErrorLineaSesionSinDescripcion: string;
+function STipoIncidenciaCantidades: string;
+function SErrorLineaMatrizSinCantidades: string;
+function STipoIncidenciaSistemaTallas: string;
+function SErrorLineaMatrizSinSistemaTallas: string;
+function SErrorCodigoEanMinimo7Digitos: string;
+function SErrorCodigoBarrasNoNumerico: string;
+function SErrorCodigoEanMinimo12Digitos: string;
+function SErrorFacturaeFaltaCampo: string;
+function STextoNifParteFacturae: string;
+function STextoRazonSocialParteFacturae: string;
+function STextoDireccionParteFacturae: string;
+function STextoCodigoPostalParteFacturae: string;
+function STextoPoblacionParteFacturae: string;
+function STextoProvinciaParteFacturae: string;
+function SErrorDocumentoFiscalParteFacturae: string;
+function SErrorFaltaCodigoDir3Facturae: string;
+function SErrorCodigoDir3LargoFacturae: string;
+function STextoEmpresaEmisoraFacturae: string;
+function STextoClienteFacturae: string;
+function STextoOficinaContableFacturae: string;
+function STextoOrganoGestorFacturae: string;
+function STextoUnidadTramitadoraFacturae: string;
+function SErrorNombrePersonaFisicaFacturae: string;
+function SErrorApellidosPersonaFisicaFacturae: string;
+function SErrorCodigoPagoFacturaeInvalido: string;
+function SErrorFacturaeNoExiste: string;
+function SErrorFacturaeTipoVentaInvalido: string;
+function SErrorFacturaeNoConsolidada: string;
+function SErrorFacturaeFechaOficialFaltante: string;
+function SErrorLineaFacturaeSinDescripcion: string;
+function SErrorLineaFacturaeCantidadCero: string;
+function SErrorFacturaeSinLineas: string;
+function SErrorBasesFacturaeNoCuadran: string;
+function SErrorTotalesFacturaeNoCuadran: string;
+function SErrorEmitirFacturae: string;
+function SErrorCertificadoFacturaeNoConfigurado: string;
+function SErrorConexionFacturaeNoDisponible: string;
+function SErrorFicheroSalidaFacturaeNoIndicado: string;
+function SErrorPorcentajeIvaFueraRango: string;
+function SErrorPrecioFacturaNegativo: string;
+function SErrorRespuestaHttpFactuzamApi: string;
+function SErrorFactuzamApiNoConfigurada: string;
+function SInfoEventoFactuzamApiRecibido: string;
+function SInfoConsultaFactuzamApiRealizada: string;
+function SInfoDocumentoFactuzamApiGuardado: string;
+function SInfoDocumentoFactuzamApiDescargado: string;
+function SErrorImportarImagenCodec: string;
+function SErrorGuardarFotoSinCodigoArticulo: string;
+function SErrorFicheroOrigenFotoNoExiste: string;
+function SErrorDirectorioFotosNoConfigurado: string;
+function SErrorFotoNoRegistradaParaRotar: string;
+function SErrorFotoSesionSinSerie: string;
+function SErrorFotoSesionSinNumero: string;
+function SErrorFotoSesionLineaInvalida: string;
+function STextoParametroUrlFotosNube: string;
+function STextoParametroTokenFotosNube: string;
+function STextoParametroReferenciaFotosNube: string;
+function STextoParametroCarpetaFotosNube: string;
+function SErrorParametrosFotosNubeFaltantes: string;
+function SErrorServidorFotosNubeHttp: string;
+function SErrorConexionServidorFotosNube: string;
+function SErrorAbrirImpresoraTicket: string;
+function SErrorIniciarDocumentoImpresora: string;
+function SErrorEscribirImpresora: string;
+function SErrorEjecutorBusquedasNoRegistrado: string;
+function SErrorOperacionCajaNoEncontrada: string;
+function SErrorValoresAtributoNoDefinidos: string;
+function SErrorColorCompraNoSeleccionado: string;
+function SErrorConexionResolverColorCompra: string;
+function SErrorColorBasicoCompraNoExiste: string;
+function SErrorResolverColorCompra: string;
+function SErrorArticuloSinSistemaTallasPivote: string;
+function SErrorSistemaTallasSuperaMaximoPivote: string;
+function SErrorSkuFueraSistemaTallasPivote: string;
+function SErrorActivarPivoteTallas: string;
+function SErrorActivarTallasHorizontalesParaColor: string;
+function SErrorLineaActivaColorNoDisponible: string;
+function SErrorColorCompraConCantidades: string;
+function SErrorConsultaLineasCompraNoAbierta: string;
+function SErrorLineaActivaColorNoEncontrada: string;
+function SErrorLineaActivaCompraSinArticulo: string;
+function SPreguntaEliminarLineaTallasVenta: string;
+function SErrorArticuloSkuNoEncontradoSinDetalle: string;
+function SPreguntaEliminarLineaSkuCantidadCero: string;
+function SInfoLineaPedidoTallaNoExiste: string;
+function SAvisoSistemaTallasSuperaMaximo: string;
+function SErrorHojaCalculoNoActiva: string;
+function SErrorControlHojaCalculoObligatorio: string;
+function SErrorGuardarHojaCalculoControlObligatorio: string;
+function SErrorIbanInvalido: string;
+function SErrorPaisIbanInvalido: string;
+function SErrorDigitoControlIbanInvalido: string;
+function SErrorLongitudCuentaBancariaInvalida: string;
+function SErrorCuentaBancariaInvalida: string;
+function SErrorDigitoControlCuentaBancaria: string;
+function SErrorPaisIbanInvalidoTipos: string;
+function SErrorDigitoControlIbanInvalidoTipos: string;
+function STextoParametroUrlInventarioNube: string;
+function STextoParametroTokenInventarioNube: string;
+function STextoParametroReferenciaInventarioNube: string;
+function SErrorParametrosInventarioNubeFaltantes: string;
+function SErrorServidorInventarioNubeHttp: string;
+function SErrorConexionServidorInventarioNube: string;
+function SErrorInventarioNubeSinIdRecuento: string;
+function SErrorDialogoPermisosLayoutNoRegistrado: string;
+function STextoResetearLayout: string;
+function SInfoLayoutReseteado: string;
+function SErrorLimiteDemoFacturas: string;
+function SErrorNifEmpresaLicenciaNoConfigurado: string;
+function SInfoLicenciaSinNifEmpresa: string;
+function SErrorLicenciaNoEncontrada: string;
+function SInfoLicenciaValida: string;
+function SErrorLicenciaNifsNoCoinciden: string;
+function SErrorAccesoFicheroLog: string;
+function SErrorCrearMutexLog: string;
+function SErrorParametrosAplicacionNoProporcionados: string;
+function SErrorRespuestaFormateadorSqlVacia: string;
+function SErrorRespuestaFormateadorSqlInesperada: string;
+function SErrorServicioPerfilesNoProporcionado: string;
+function SErrorCargarPerfilParametros: string;
+function SErrorPedidoCompraSinPendientesAlmacen: string;
+function SErrorAlmacenPedidoCompraNoSeleccionado: string;
+function SErrorPedidoCompraSinCantidadesRecibir: string;
+function SErrorContadorAlbaranCompraNoDisponible: string;
+function SErrorCrearLineasAlbaranCompra: string;
+function SInfoAlbaranCompraCreado: string;
+function SErrorAlbaranCompraDestinoNoSeleccionado: string;
+function SInfoLineasIncorporadasAlbaranCompra: string;
+function SErrorIncorporarLineasAlbaranCompra: string;
+function SInfoLineasIncorporadasAlbaranCompraConCantidad: string;
+function SErrorConexionPermisosNoDisponible: string;
+function SErrorPreviewExcelNoRegistrado: string;
+function SErrorPreviewTicketNoRegistrado: string;
+function SErrorRespuestaNtpNoValida: string;
+function SInfoRelojFiscalCorrecto: string;
+function SErrorRelojSistemaFueraMargenLegal: string;
+function SErrorComprobarRelojFiscalNtp: string;
+function SErrorContextoSinIban: string;
+function SErrorContextoIbanNoValido: string;
+function SErrorNifEmpresaAcreedorSepaNoValido: string;
+function SErrorClienteSinMandatoSepa: string;
+function STextoBancoCobroRemesa: string;
+function SErrorConexionGenerarRemesaSepa: string;
+function SErrorArchivoSalidaSepaNoIndicado: string;
+function SErrorRemesaSinFechaCobro: string;
+function SErrorBancoCobroRemesaNoEncontrado: string;
+function SErrorBancoCobroSinCodigoAcreedorSepa: string;
+function SErrorCodigoAcreedorSepaNoValido: string;
+function SErrorEfectoSinNombreCliente: string;
+function STextoClienteSepa: string;
+function SErrorClienteSinFechaFirmaMandatoSepa: string;
+function SErrorRecalcularTotalesFactura: string;
+function SErrorGenerarContadorAutomatico: string;
+function SErrorConexionBbddConExcepcion: string;
+function SErrorNumeroCuentaInvalido: string;
+function SErrorNifNoValido: string;
+function SErrorLetraDniIncorrecta: string;
+function SErrorServicioPerfilesUsuarioNoConfigurado: string;
+function SErrorCrearSeleccionarDocumentoAntesLineas: string;
+function SErrorCrearSeleccionarDocumentoAntesTallas: string;
+function SErrorArticuloCursoSinSistemaTallas: string;
+function SErrorAltaSeleccionarArticuloConTallas: string;
+function SErrorArticuloSinSistemaTallasCompra: string;
+function SErrorActivarTallasHorizontalesCompra: string;
+function SErrorEncolarVentaWebservice: string;
+function SErrorFacturaWebserviceNoExiste: string;
+function SErrorExportarNoVerifactuSinCertificado: string;
+function SErrorExportarNoVerifactuSinColumnasEventos: string;
+function SErrorExportarNoVerifactuSinColumnasFacturacion: string;
+function SErrorExportarNoVerifactuRegistrosSinFirma: string;
+function SErrorConexionExportarNoVerifactu: string;
+function SErrorArchivoBaseExportacionNoIndicado: string;
+function STextoTipoError: string;
+function STextoTipoAviso: string;
+function SFormatoDetalleVerificacion: string;
+function SErrorModoExportacionNoCoincide: string;
+function SErrorXmlFirmadoNoLegible: string;
+function SErrorFirmaEventoRaizIncorrecta: string;
+function SErrorEventoFirmadoNoEncontrado: string;
+function SErrorFirmaFacturaRaizIncorrecta: string;
+function SErrorFirmaXadesNodoAeatIncorrecto: string;
+function SErrorFirmaXadesSinCertificado: string;
+function SErrorFirmaXadesSinSignedInfo: string;
+function SErrorCanonicalizacionFirmaAeat: string;
+function SErrorMetodoFirmaNoRsaSha256: string;
+function SErrorReferenciasSignedInfo: string;
+function SErrorReferenciaDocumentoFirmado: string;
+function SErrorTransformacionFirmaEnveloped: string;
+function SErrorDigestRegistroNoSha256: string;
+function SErrorReferenciaSignedProperties: string;
+function SErrorCanonicalizacionSignedProperties: string;
+function SErrorDigestSignedPropertiesNoSha256: string;
+function SErrorQualifyingPropertiesXades: string;
+function SErrorSignedPropertiesXades: string;
+function SErrorSigningCertificateXades: string;
+function SErrorPoliticaFirmaAge: string;
+function SErrorIdentificadorPoliticaAge: string;
+function SErrorDigestPoliticaAgeNoSha1: string;
+function SErrorDigestValuePoliticaAge: string;
+function SErrorUrlPoliticaAge: string;
+function SFormatoEtiquetaEvento: string;
+function SErrorEventoHashPropioNoSha256: string;
+function SAvisoEventoPrimerHashAnteriorNoCero: string;
+function SErrorEventoHashAnteriorNoCoincide: string;
+function SErrorEventoSinRegistroXmlFirmado: string;
+function SErrorEventoHuellaNoCoincide: string;
+function SErrorEventoFirmaGuardadaSinFirmaXml: string;
+function SErrorEventoSinFirmaXades: string;
+function SErrorEventoSignatureValueNoCoincide: string;
+function SErrorEventoFirmaDigitalNoCoincide: string;
+function STextoRegistroFacturaIndice: string;
+function SFormatoEtiquetaFactura: string;
+function SAvisoFacturaSinPeticionCompletaXml: string;
+function SErrorFacturaHashPeticionNoCoincide: string;
+function SErrorFacturaSinRegistroXmlFirmado: string;
+function SErrorFacturaHashRegistroNoCoincide: string;
+function SErrorFacturaGuardadaSinFirmaXml: string;
+function SErrorFacturaSinFirmaDigitalXades: string;
+function SErrorFacturaSignatureValueNoCoincide: string;
+function STextoEventos: string;
+function STextoFacturacion: string;
+function SErrorFicheroEventosNoExiste: string;
+function SErrorFicheroEventosRaizIncorrecta: string;
+function SErrorFicheroEventosVacio: string;
+function SErrorFicheroFacturacionNoExiste: string;
+function SErrorFicheroFacturacionRaizIncorrecta: string;
+function SErrorFicheroFacturacionVacio: string;
+function SErrorVerificarEventos: string;
+function SErrorVerificarFacturacion: string;
+function SInfoVerificacionCorrecta: string;
+function SFormatoModoActual: string;
+function SResumenVerificacionNoVerifactu: string;
+function SDepuracionComponenteNoTcxLabel: string;
+function SDepuracionComponenteNoTcxTabSheet: string;
+function SDepuracionComponenteNoTcxDbCheckBox: string;
+function SDepuracionComponenteNoTcxButton: string;
+function SDepuracionComponenteNoTcxGroupBox: string;
+function SDepuracionComponenteNoTcxDbRadioGroup: string;
+function SDepuracionComponenteNoSpeedButton: string;
+function SDepuracionComponenteNoTcxRadioButton: string;
+function SErrorImagenNoExiste: string;
+function SErrorAbrirProveedorCriptografico: string;
+function SErrorCrearHashCriptografico: string;
+function SErrorCalcularHash: string;
+function SErrorObtenerTamanoHash: string;
+function SErrorObtenerValorHash: string;
+function SErrorOperacionCriptografica: string;
+function SErrorProveedorCertificadoSinSha256: string;
+function STextoCertificadoTodaviaNoValido: string;
+function STextoCertificadoCaducado: string;
+function SErrorCertificadoNoVigente: string;
+function SErrorCertificadoVigenteNoEncontrado: string;
+function SErrorCertificadoEmpresaNoConfigurado: string;
+function SErrorCrearHashSha256Firma: string;
+function SErrorCargarDatosFirma: string;
+function SErrorCalcularTamanoFirmaSha256: string;
+function SErrorFirmarSha256: string;
+function SErrorCalcularTamanoFirmaNCrypt: string;
+function SErrorFirmaNCrypt: string;
+function SErrorAbrirClavePrivadaCertificado: string;
+function SErrorXmlMalFormadoCanonicalizar: string;
+function SErrorElementoRaizXmlNoEncontrado: string;
+function SErrorNombreNodoRaizNoDeterminado: string;
+function SErrorCierreAperturaRaizNoEncontrado: string;
+function SErrorCierreNodoRaizNoEncontrado: string;
+function SErrorCierreNodoNoEncontrado: string;
+function SErrorNifProductorEventoVerifactuInvalido: string;
+function SErrorEmpresaEventosVerifactuNoConfigurada: string;
+function SErrorNifEmisorEventoNoVerifactuInvalido: string;
+function SErrorFacturaRequisitosFiscalesNoExiste: string;
+function SErrorEmpresaSinNifEmisionFiscal: string;
+function SErrorNifProductorVerifactuInvalido: string;
+function SErrorCertificadoFiscalEmpresaNoUtilizable: string;
+function SErrorFirmaCertificadoNoVerifactuDesactivada: string;
+function SErrorCertificadoEventosNoVerifactuNoConfigurado: string;
+function SErrorFirmarEventoNoVerifactu: string;
+function SErrorRelojEventoNoVerifactu: string;
+function SErrorColumnasFirmaFacturacionNoDisponibles: string;
+function STextoRegistroFacturacionNoVerifactu: string;
+function SErrorFirmaRegistroNoVerifactuObligatoria: string;
+function SErrorNifProductorSoftwareVerifactuInvalido: string;
+function SErrorFacturaExtranjeraSinNifIva: string;
+function SErrorFacturaSinNifClienteValido: string;
+function SErrorNifEmisorVerifactuInvalido: string;
+function SErrorFacturaRegistroFiscalNoEncontrada: string;
+function SAvisoQrPngNoGenerado: string;
+function SErrorFacturaEnvioVerifactuNoEncontrada: string;
+function SErrorRespuestaServicioInesperada: string;
+function SErrorRespuestaHttpAeat: string;
+function SErrorRespuestaRegistroAeat: string;
+function SErrorEstadoEnvioAeat: string;
+function SErrorServicioInstalacionHttp: string;
+function SErrorReferenciaGlobalInstalacionFaltante: string;
+function SErrorApiKeyInstalacionFaltante: string;
+function SErrorServicioJsonInvalido: string;
+function SErrorServicioSinNumeroInstalacion: string;
+function SErrorServicioSinDatosDeclaracion: string;
+function SErrorDeclaracionVersionNoSolicitada: string;
+function SErrorDeclaracionSifIncorrecto: string;
+function SErrorDeclaracionDescargadaVacia: string;
+function SErrorPaginaPublicaHttp: string;
+function SErrorDeclaracionWebserviceOtraVersion: string;
+function SErrorDeclaracionPaginaPublicaOtraVersion: string;
+function SErrorDeclaracionResponsableNoDisponible: string;
+function SErrorEmpresaInstalacionSifNoConfigurada: string;
+function SErrorEmpresaSinRazonSocial: string;
+function SErrorNifEmpresaInstalacionInvalido: string;
+function SErrorEmpresaSinNumeroInstalacionSif: string;
+function SErrorNumeroInstalacionSifIncorrecto: string;
+function SErrorNumeroInstalacionSinVersion: string;
+function SErrorVersionNumeroInstalacionIncorrecta: string;
+function SInfoExportacionNoVerifactuGenerada: string;
+function SInfoVerificacionNoVerifactuCorrecta: string;
+function SErrorVerificacionNoVerifactu: string;
+function SPreguntaAbrirSeriesAlbaranVenta: string;
+function SErrorAlbaranVentaNoAbierto: string;
+function SErrorArticuloNoSeleccionadoBuscarSkusAlbaranVenta: string;
+function SPreguntaGrabarAlbaranVentaSinSku: string;
+function SErrorAlbaranVentaNoInicializado: string;
+function SErrorCrearSeleccionarAlbaranAntesLineas: string;
+function SPreguntaEliminarLineaAlbaranVenta: string;
+function SErrorAlbaranVentaSinLineas: string;
+function SAvisoSeleccionarLineasBorradorAlbaran: string;
+function SAvisoLineasAlbaranConBorrador: string;
+function SPreguntaGenerarBorradorLineasAlbaran: string;
+function SInfoBorradorFacturaCreado: string;
+function SErrorCrearBorradorFactura: string;
+function SPreguntaGenerarBorradorTodoAlbaran: string;
+function SAvisoAlbaranSinPedidoVenta: string;
+function SAvisoAlbaranSinBorrador: string;
+function SErrorProveedorNoSeleccionadoBuscarArticulos: string;
+function SErrorAlbaranCompraNoAbierto: string;
+function SErrorArticuloNoSeleccionadoBuscarSkusAlbaranCompra: string;
+function SErrorAlbaranCompraNoInicializado: string;
+function STextoAlbaranCompra: string;
+function SPreguntaAbrirSeriesAlbaranCompra: string;
+function SErrorAlbaranCompraSinImpresionActivo: string;
+function SErrorAlbaranCompraNoActivo: string;
+function SPreguntaGrabarAlbaranCompraSinSku: string;
+function SErrorAlbaranCompraNecesarioElegirEmpresa: string;
+function SErrorAlbaranCompraNecesarioElegirProveedor: string;
+function SErrorArticuloNoSeleccionadoElegirColor: string;
+function SErrorArticuloSinColoresBasicosActivos: string;
+function SAvisoAlbaranCompraSinPedido: string;
+function SAvisoAlbaranCompraSinFactura: string;
+function SPreguntaEliminarLineaAlbaranCompra: string;
+function SErrorArticuloSinTipoVariacion: string;
+function SErrorPrecioTarifaNoSeleccionado: string;
+function SErrorPrecioTarifaNoGuardado: string;
+function SAvisoRevisionArticulo: string;
+function SErrorGuardarPropiedadesArticulo: string;
+function SErrorGuardarVariacionesArticulo: string;
+function SPreguntaReconstruirStock: string;
+function STituloReconstruirStock: string;
+function SErrorReconstruirStock: string;
+function SInfoStockReconstruido: string;
+function SErrorArticuloNoSeleccionadoImprimirEtiquetas: string;
+function SErrorArticuloNoSeleccionadoGenerarCodigos: string;
+function SErrorArticuloSinSkusActivosGenerarCodigos: string;
+function SPreguntaGenerarCodigosBarras: string;
+function SInfoGeneracionCodigosBarras: string;
+function SErrorArticuloNoSeleccionadoVerificarCodigos: string;
+function SErrorDetalleCodigoBarrasInvalido: string;
+function SInfoVerificacionCodigosBarrasCorrecta: string;
+function SAvisoVerificacionCodigosBarras: string;
+function SInfoPrecargaArticuloGuardada: string;
+function STextoAtributoBasicoSinValor: string;
+function SPreguntaCrearAtributoBasicoSku: string;
+function STituloCrearAtributoBasico: string;
+function SErrorSkuColorNoSeleccionado: string;
+function STextoActivarSkusColor: string;
+function STextoDesactivarSkusColor: string;
+function SPreguntaCambiarActivoSkusColor: string;
+function STextoSkusColorActivados: string;
+function STextoSkusColorDesactivados: string;
+function SInfoSkusColorActualizados: string;
+function SErrorColorPaletaBusquedaInvalido: string;
+function SErrorOperacionSinBorrador: string;
+function SErrorBorradorNoCerradoFiscalmente: string;
+function SPreguntaAnularFiscalmenteBorrador: string;
+function SPreguntaBorrarMovimientosTicketAnulado: string;
+function SPreguntaMovimientosRectificativaSustitutiva: string;
+function SInfoAnulacionVerifactuEncolada: string;
+function SInfoAnulacionNoVerifactuRegistrada: string;
+function SInfoAnulacionSinVerifactuRegistrada: string;
+function SErrorFacturarTicketRequiereSimplificado: string;
+function SInfoBorradorSustitucionTicketCreado: string;
+function SErrorRectificarRectificativa: string;
+function SPreguntaRectificarBorrador: string;
+function SErrorOperacionCorreoNoEncontrada: string;
+function STituloEnviarDocumentacion: string;
+function SSolicitudCorreoElectronico: string;
+function SErrorCorreoElectronicoObligatorio: string;
+function SErrorEnviarCorreoOperacion: string;
+function SErrorOperacionSinTicket: string;
+function SPreguntaBorrarPropiedadPlantillaCompra: string;
+function SPreguntaBorrarKitPlantillaCompra: string;
+function SInfoIbanValidado: string;
+function SErrorCabeceraSesionAntesLineas: string;
+function SErrorSesionSinDocumentosCreados: string;
+function SErrorMantenimientoTipoDocumentoNoDisponible: string;
+function SPreguntaAbrirSeriesSesionCompra: string;
+function SErrorLineaSesionDescargarFotosNoSeleccionada: string;
+function SErrorLineaSesionSinCodigoArticulo: string;
+function SErrorDescargarFotosArticulo: string;
+function SInfoFotosArticuloDescargadas: string;
+function SErrorSesionElegirProveedorNoSeleccionada: string;
+function SErrorProveedorSesionSinKits: string;
+function SErrorKitProveedorDesplegableNoSeleccionado: string;
+function SPreguntaBorrarLineaSesionCompra: string;
+function SErrorLineaSesionAsignarFotoNoSeleccionada: string;
+function SInfoFotoLineaSesionAsignada: string;
+function SErrorAsignarFotoSesion: string;
+function SErrorGuardarFotoSesion: string;
+function SErrorSesionYaMaterializada: string;
+function SInfoDuplicadosSesionMarcadosReusar: string;
+function SInfoSesionMaterializadaSinDocumentos: string;
+function SErrorSesionNoCerradaParaReversion: string;
+function SPreguntaRevertirSesionCompra: string;
+function SInfoSesionRevertida: string;
+function SErrorRevertirSesionCompra: string;
+function SErrorSesionActivaImprimirNoDisponible: string;
+function SErrorSistemasTallasSesionNoDisponibles: string;
+function SErrorCambiarSistemaTallasModeloExistente: string;
+function SErrorLineaSesionAsignarFamiliaNoSeleccionada: string;
+function SErrorColoresBasicosSesionNoDisponibles: string;
+function SInfoEfectoConciliado: string;
+function SErrorConciliarEfecto: string;
+function SErrorEfectoNoSeleccionado: string;
+function SErrorCarteraEfectosNoAbierta: string;
+function SErrorEfectosCompraFusionInsuficientes: string;
+function SErrorEfectosVentaFusionInsuficientes: string;
+function SPreguntaFusionarEfectos: string;
+function SInfoEfectosConciliados: string;
+function SErrorFusionarEfectos: string;
+function SErrorContadorSerieEmpresa: string;
+function SErrorEmpresaCrearSeriesNoSeleccionada: string;
+function SInfoSeriesEmpresaCreadas: string;
+function SErrorEmpresaNoSeleccionada: string;
+function SInfoInstalacionSifEmpresaDisponible: string;
+function SErrorDocumentoTrabajoNoSeleccionadoListado: string;
+function SErrorDocumentoTrabajoSinGrabarListado: string;
+function SErrorDocumentoTrabajoSinLineasListado: string;
+function SErrorDocumentoTrabajoNoSeleccionadoCargar: string;
+function SErrorCargarDocumentoTrabajoNoPropietario: string;
+function SErrorDocumentoTrabajoSinGrabarCargar: string;
+function SErrorDocumentoTrabajoNoSeleccionadoCompartir: string;
+function SInfoDocumentoTrabajoCompartido: string;
+function SInfoDocumentoTrabajoYaCompartido: string;
+function SErrorDocumentoTrabajoSinGrabarImprimirEtiquetas: string;
+function SErrorDocumentoTrabajoNoSeleccionadoImprimirEtiquetas: string;
+function SErrorDocumentoTrabajoNoSeleccionadoEnviar: string;
+function SErrorDocumentoTrabajoSinGrabarEnviar: string;
+function SErrorDocumentoTrabajoSinLineasEnviar: string;
+function SErrorContadorAlbaranDocumentoTrabajo: string;
+function SInfoAlbaranDocumentoTrabajoCreado: string;
+function SErrorVentaTpvNoAbiertaDocumentoTrabajo: string;
+function SInfoLineasDocumentoTrabajoVolcadasTpv: string;
+function SAvisoLineasDocumentoTrabajoNoVolcadasTpv: string;
+function SErrorContadorInventarioDocumentoTrabajo: string;
+function SInfoInventarioDocumentoTrabajoCreado: string;
+function SInfoCambioTarifasDocumentoTrabajoCreado: string;
+function SPreguntaAbrirSeriesDevolucionCompra: string;
+function SErrorLineaColorDevolucionNoEncontrada: string;
+function SErrorDevolucionCompraSinImpresionActiva: string;
+function SErrorDevolucionCompraNoActiva: string;
+function SErrorProveedorDevolucionFilaNoSeleccionado: string;
+function SErrorAlmacenDevolucionFilaNoSeleccionado: string;
+function SErrorFilaDevolucionStockNoSeleccionada: string;
+function SErrorArticuloDevolucionFilaNoSeleccionado: string;
+function SErrorColorDevolucionFilaNoSeleccionado: string;
+function SErrorStockDevolucionFilaNoDisponible: string;
+function SPreguntaPrepararStockFilaDevolucion: string;
+function SInfoStockFilaDevolucionPreparado: string;
+function SPreguntaGrabarDevolucionCompraSinSku: string;
+function SErrorProveedorNoSeleccionadoBuscarArticulosDevolucion: string;
+function SErrorDevolucionCompraNoAbierta: string;
+function SErrorArticuloNoSeleccionadoBuscarSkusDevolucion: string;
+function SErrorDevolucionCompraElegirEmpresaNoSeleccionada: string;
+function SErrorDevolucionCompraElegirProveedorNoSeleccionada: string;
+function SPreguntaEliminarLineaDevolucionCompra: string;
+function SErrorFotoArticuloNoActivoDescargar: string;
+function SErrorFotoArticuloNoActivo: string;
+function SErrorGuardarFotoArticulo: string;
+function SErrorFotoSkuNoActivo: string;
+function SErrorNivelAtributosFotoNoSeleccionado: string;
+function SPreguntaEliminarFotoActual: string;
+function SAvisoLimiteRegistrosFacturaSimplificada: string;
+function SErrorBorradorVentaMayorNoSeleccionado: string;
+function SErrorGuardarAntesEmitirEdoc: string;
+function SErrorPersonaFisicaEdocSinDatos: string;
+function SInfoEdocEmitido: string;
+function SPreguntaAbrirSeriesFacturaCompra: string;
+function SErrorProveedorNoSeleccionadoBuscarArticulosFacturaCompra: string;
+function SErrorFacturaCompraNoAbierta: string;
+function SErrorArticuloNoSeleccionadoBuscarSkusFacturaCompra: string;
+function SErrorFacturaCompraSinImpresionActiva: string;
+function SAvisoEtiquetasBorradorCompraPendientes: string;
+function SPreguntaGrabarFacturaCompraSinSku: string;
+function SErrorFacturaCompraNoInicializada: string;
+function SErrorFacturaCompraElegirProveedorNoSeleccionada: string;
+function SInfoGeneracionEfectosPagoCancelada: string;
+function SInfoEfectosPagoGenerados: string;
+function SAvisoEfectosPagoNoGenerados: string;
+function SErrorGenerarEfectosPagoSinBorrador: string;
+function SErrorEfectoCompraNoSeleccionado: string;
+function SPreguntaEliminarLineaFacturaCompra: string;
+function SInfoImpresionEfectosCobroEnRemesas: string;
+function SPreguntaReemplazarCobros: string;
+function STituloMensajeAdvertencia: string;
+function SInfoGeneracionCobrosCancelada: string;
+function SInfoEfectosCobroGenerados: string;
+function SAvisoEfectosCobroNoGenerados: string;
+function SErrorGenerarEfectosCobroSinBorrador: string;
+function SAvisoBorradorPendienteImpresionFiscal: string;
+function SErrorGuardarFacturaAntesImprimir: string;
+function SInfoEfectoMarcadoDevuelto: string;
+function SErrorMarcarEfectoDevuelto: string;
+function SInfoEfectoMarcadoPendiente: string;
+function SErrorMarcarEfectoPendiente: string;
+function SErrorEfectoSinImportePendiente: string;
+function SErrorTarifaSeleccionadaNoEncontrada: string;
+function SErrorBorradorListaNoSeleccionado: string;
+function SErrorBorradorNoCerradoAccionFiscal: string;
+function SPreguntaAccionFiscalBorrador: string;
+function SInfoAccionFiscalEncolada: string;
+function SInfoAccionFiscalNoVerifactu: string;
+function SInfoAccionFiscalSinVerifactu: string;
+function SErrorBorradorYaLanzadoFiscalmente: string;
+function SErrorBorradorSinLineasLanzar: string;
+function SErrorBorradorNormalSinNif: string;
+function SPreguntaLanzarBorradorFiscal: string;
+function SInfoBorradorVerifactuPendiente: string;
+function SInfoBorradorNoVerifactuRegistrado: string;
+function SInfoBorradorSinVerifactuEmitido: string;
+function SErrorBorradorConsolidadoNoReabrible: string;
+function SInfoBorradorYaEnBorrador: string;
+function SPreguntaDevolverBorrador: string;
+function SErrorAltaAeatAceptadaNoReabrible: string;
+function SErrorBorradorEnProcesoNoReabrible: string;
+function SInfoBorradorReabierto: string;
+function SPreguntaGrabarFacturaVentaSinSku: string;
+function SErrorCompletarDatosBorrador: string;
+function SErrorContadorAutomaticoBusqueda: string;
+function SInfoRegistroBusquedaCreado: string;
+function SErrorInsertarRegistroBusqueda: string;
+function SInfoTextoNoEncontrado: string;
+function STituloBusquedaGlobal: string;
+function SSolicitudTextoBusquedaGlobal: string;
+function SInfoProcesosBusquedaNoEncontrados: string;
+function SPreguntaIgnorarErrorScript: string;
+function SErrorMetadatoSinScript: string;
+function SErrorDatosCopiarNoDisponibles: string;
+function SPreguntaCopiarFilasPortapapeles: string;
+function SPreguntaIgnorarErrorComandoScript: string;
+function SErrorEjecucionProceso: string;
+function SErrorComandoSqlProceso: string;
+function SErrorConexionTrabajoNoDisponible: string;
+function SInfoDatosGuardados: string;
+function SErrorGrabarDatos: string;
+function SPreguntaGrabarCambiosPendientes: string;
+function STituloMensajeAdvertenciaGen: string;
+function SInfoCambiosGrabados: string;
+function SInfoCambiosCancelados: string;
+function SErrorConexionPrincipalNoDisponible: string;
+function SErrorPermisoInsertarRegistro: string;
+function SErrorPermisoModificarRegistro: string;
+function SErrorPermisoGuardarRegistro: string;
+function SErrorPermisoBorrarRegistro: string;
+function SPreguntaEliminarRegistro: string;
+function STituloConfirmarEliminacion: string;
+function SPreguntaEliminarRegistroConHijos: string;
+function SAvisoDesactivarRegistroConHijos: string;
+function SAvisoDesactivarRegistroSinHijos: string;
+function SDescripcionHijosGenerica: string;
+function STextoOpcionesBorradoRegistro: string;
+function SErrorFiltroSinCondiciones: string;
+function SErrorFiltroActualVacio: string;
+function SPreguntaSobrescribirFiltro: string;
+function STituloSobrescribirFiltro: string;
+function SInfoFiltroSobrescrito: string;
+function SInfoFiltroGuardado: string;
+function SErrorArticuloInventarioNoExiste: string;
+function SErrorLineasInventarioNoAbiertas: string;
+function SErrorLineaInventarioNoEditable: string;
+function SErrorArticuloInventarioNoEncontrado: string;
+function SErrorArticuloInventarioTipoSinStock: string;
+function SErrorArticuloInventarioAtributosSinSku: string;
+function SInfoLineasCsvInventarioLeidas: string;
+function SErrorMigracionRecuentoInventariosNoAplicada: string;
+function SErrorGrabarCabeceraInventarioAutomaticamente: string;
+function SErrorGrabarCabeceraInventarioAutomaticamenteDetalle: string;
+function SErrorInventarioNoAbiertoEditar: string;
+function SPreguntaRecalcularInventario: string;
+function SInfoRecalculoInventario: string;
+function SPreguntaAplicarInventario: string;
+function SErrorAplicarInventario: string;
+function SErrorAplicacionInventario: string;
+function SErrorRefrescarInventarioAplicado: string;
+function SInfoInventarioAplicado: string;
+function SErrorInventarioNoSeleccionadoAnadirLineas: string;
+function SErrorAnadirLineasInventarioEstado: string;
+function SErrorLineaInventarioNoSeleccionadaParaSkus: string;
+function SErrorLineaInventarioSinArticulo: string;
+function SErrorAnadirSkusInventario: string;
+function SInfoSinSkusAnadidosInventario: string;
+function SInfoSkusAnadidosInventario: string;
+function SPreguntaEliminarLineaInventario: string;
+function SErrorEliminarRegularizacionInventarioEstado: string;
+function SPreguntaEliminarRegularizacionInventario: string;
+function SInfoRegularizacionInventarioEliminada: string;
+function SErrorInventarioNoActivo: string;
+function SErrorInventarioDebeEstarAbierto: string;
+function SErrorFamiliaInventarioNoSeleccionada: string;
+function SPreguntaCargarFamiliaInventario: string;
+function SErrorProveedorInventarioNoSeleccionado: string;
+function SPreguntaCargarProveedorInventario: string;
+function SPreguntaCompletarInventario: string;
+function SPreguntaCargarTodoInventario: string;
+function SErrorInventarioNoSeleccionado: string;
+function SPreguntaGuardarInventarioEnEdicion: string;
+function SPreguntaRecalcularTrasCargarBloqueInventario: string;
+function SErrorArchivoImportacionInventarioNoExiste: string;
+function SErrorImportacionInventarioSinDatos: string;
+function SInfoImportacionInventario: string;
+function SErrorEnviarRecuentoInventarioNoAbierto: string;
+function SPreguntaEnviarRecuentoInventario: string;
+function SInfoInventarioEnviadoRecuento: string;
+function SErrorEnviarRecuentoInventario: string;
+function SErrorInventarioNoEnviadoRecuento: string;
+function SErrorRecogerRecuentoInventarioNoAbierto: string;
+function SInfoRecuentoInventarioRecogido: string;
+function SErrorRecogerRecuentoInventario: string;
+function SAvisoLimiteRegistrosMovimientosAlmacen: string;
+function SPreguntaAbrirSeriesPedidoVenta: string;
+function SErrorPedidoVentaNoAbierto: string;
+function SErrorArticuloNoSeleccionadoBuscarSkusPedidoVenta: string;
+function SPreguntaGrabarPedidoVentaSinSku: string;
+function SErrorClienteNoSeleccionadoPedidoVenta: string;
+function SErrorClientePedidoVentaNoExiste: string;
+function SErrorPedidoVentaNoInicializado: string;
+function SErrorCrearSeleccionarPedidoAntesLineas: string;
+function SPreguntaEliminarLineaPedidoVentaConTallas: string;
+function SPreguntaEliminarLineaPedidoVenta: string;
+function SPreguntaMarcarLineasPendientesAlbaranar: string;
+function SErrorPedidoVentaSinLineas: string;
+function SPreguntaCrearAlbaranPedidoVentaSinSku: string;
+function SErrorPedidoVentaSinCantidadAlbaranar: string;
+function SErrorAnadirAlbaranDesdePedidoVenta: string;
+function SErrorCrearAlbaranDesdePedidoVenta: string;
+function SErrorProveedorNoSeleccionadoBuscarArticulosPedidoCompra: string;
+function SErrorPedidoCompraNoAbierto: string;
+function SErrorArticuloNoSeleccionadoBuscarSkusPedidoCompra: string;
+function SErrorPedidoCompraNoInicializado: string;
+function STextoPedidoCompra: string;
+function SErrorExpandirRecibidosNoActivo: string;
+function SInfoTallasPendientesRecibirNoDisponibles: string;
+function SInfoPedidoCompraSinPendientesRecibir: string;
+function SPreguntaGrabarPedidoCompraSinSku: string;
+function SErrorPedidoCompraNecesarioElegirEmpresa: string;
+function SErrorPedidoCompraNecesarioElegirProveedor: string;
+function SErrorTallasHorizontalesNecesariasElegirColor: string;
+function SErrorArticuloNoSeleccionadoElegirColorPedidoCompra: string;
+function SErrorArticuloPedidoCompraSinColoresBasicos: string;
+function SPreguntaEliminarLineaPedidoCompra: string;
+function SPreguntaAbrirSeriesPedidoCompra: string;
+function SErrorPedidoCompraNoActivo: string;
+function SErrorPedidoCompraNoActivoCrearAlbaran: string;
+function SErrorCrearAlbaranDesdePedidoCompra: string;
+function SErrorNodoPermisosNoSeleccionado: string;
+function SErrorOrigenDestinoPermisosNoSeleccionados: string;
+function SErrorOrigenDestinoPermisosIguales: string;
+function SInfoModoReemplazarPermisos: string;
+function SInfoModoCombinarPermisos: string;
+function SInfoAlcancePermisosMenu: string;
+function SInfoAlcanceTodosPermisos: string;
+function SPreguntaCopiarPermisos: string;
+function SInfoPermisosCopiados: string;
+function SPreguntaBorrarKitProveedor: string;
+function SErrorRemesaCompraNoSeleccionada: string;
+function SErrorEliminarRemesaCompraConCargo: string;
+function SPreguntaEliminarRemesaCompra: string;
+function SInfoRemesaCompraEliminada: string;
+function SErrorEliminarRemesaCompra: string;
+function SErrorAnadirEfectosRemesaCompraConCargo: string;
+function SErrorEfectosRemesaCompraNoCargados: string;
+function SErrorEfectoRemesaCompraNoSeleccionado: string;
+function SErrorQuitarEfectosRemesaCompraConCargo: string;
+function SPreguntaQuitarEfectoRemesaCompra: string;
+function SInfoEfectoRemesaCompraQuitado: string;
+function SErrorQuitarEfectoRemesaCompra: string;
+function SErrorBancoPagoRemesaNoAsignado: string;
+function SErrorEfectoRemesaCompraSinPendiente: string;
+function STextoEfectoPendienteRemesaCompra: string;
+function SInfoEfectoRemesaCompraConciliado: string;
+function SErrorConciliarEfectoRemesaCompra: string;
+function SErrorRemesaCompraSinImportePendiente: string;
+function STextoRemesaCompraPendiente: string;
+function SInfoEfectosRemesaCompraConciliados: string;
+function SErrorConciliarRemesaCompra: string;
+function SErrorBancoPagoNoSeleccionado: string;
+function SInfoBancoPagoRemesaAsignado: string;
+function SErrorAsignarBancoPagoRemesa: string;
+function STituloFechaCargoRemesa: string;
+function SSolicitudFechaCargoRemesa: string;
+function SInfoFechaCargoRemesaActualizada: string;
+function SErrorActualizarFechaCargoRemesa: string;
+function SErrorFechaCargoRemesaNoValida: string;
+function SErrorEliminarRemesaVentaConCobro: string;
+function SPreguntaEliminarRemesaVenta: string;
+function SInfoRemesaVentaEliminada: string;
+function SErrorEliminarRemesaVenta: string;
+function SErrorAnadirEfectosRemesaVentaConCobro: string;
+function SErrorEfectosRemesaVentaNoCargados: string;
+function SErrorEfectoRemesaVentaNoSeleccionado: string;
+function SErrorQuitarEfectosRemesaVentaConCobro: string;
+function SPreguntaQuitarEfectoRemesaVenta: string;
+function SInfoEfectoRemesaVentaQuitado: string;
+function SErrorQuitarEfectoRemesaVenta: string;
+function SErrorBancoCobroRemesaNoAsignado: string;
+function SErrorEfectoRemesaVentaSinPendiente: string;
+function STextoEfectoPendienteRemesaVenta: string;
+function SInfoEfectoRemesaVentaConciliado: string;
+function SErrorConciliarEfectoRemesaVenta: string;
+function SErrorRemesaVentaSinImportePendiente: string;
+function STextoRemesaVentaPendiente: string;
+function SInfoEfectosRemesaVentaConciliados: string;
+function SErrorConciliarRemesaVenta: string;
+function SErrorBancoCobroNoSeleccionado: string;
+function SInfoBancoCobroRemesaAsignado: string;
+function SErrorAsignarBancoCobroRemesa: string;
+function STituloFechaCobroRemesa: string;
+function SSolicitudFechaCobroRemesa: string;
+function SInfoFechaCobroRemesaActualizada: string;
+function SErrorActualizarFechaCobroRemesa: string;
+function SErrorFechaCobroRemesaNoValida: string;
+function SInfoOrdenSepaRemesaVentaGenerada: string;
+function SErrorGenerarOrdenSepaRemesaVenta: string;
+function SErrorCodigoBarrasStockNoEncontrado: string;
+function SErrorEntradaStockNoEncontrada: string;
+function SErrorSkuCeldaStockNoEncontrado: string;
+function SErrorCeldaStockVariosSkus: string;
+function SErrorArticuloStockNoSeleccionadoOperaciones: string;
+function SErrorCeldaTallaStockNoSeleccionada: string;
+function SErrorColumnaTallaStockNoSeleccionada: string;
+function SErrorFilaStockNoIdentificada: string;
+function SErrorColorStockNoUnico: string;
+function SErrorTallaStockVariosSkus: string;
+function STituloOperacionesCajaStock: string;
+function SErrorArticuloStockNoSeleccionadoDocumento: string;
+function SErrorEstadoStockNoEsExistencias: string;
+function SErrorCeldaStockNoSeleccionada: string;
+function SErrorCeldaCantidadStockNoSeleccionada: string;
+function SErrorFilaExistenciasStockNoSeleccionada: string;
+function SErrorColumnaStockDocumentoNoSeleccionada: string;
+function SErrorGrupoFilaStockNoLeido: string;
+function SErrorAlmacenStockNoUnico: string;
+function SErrorColorStockUnidadNoUnico: string;
+function STituloConsultaStock: string;
+function SErrorArticuloStockNoSeleccionadoFotos: string;
+function SInfoArticulosRelacionadosStockNoDisponibles: string;
+function SErrorTarifaNoSeleccionada: string;
+function SPreguntaGuardarTarifaAntesContinuar: string;
+function SErrorSesionTarifaNoSeleccionada: string;
+function SInfoLineasSesionTarifaRecalculadas: string;
+function SErrorCalcularSesionTarifa: string;
+function SPreguntaAplicarSesionTarifa: string;
+function SErrorAplicarSesionTarifa: string;
+function SInfoLineasSesionTarifaAplicadas: string;
+function SPreguntaLimpiarFiltrosAddBlock: string;
+function SErrorAlmacenesSoloStockAddBlock: string;
+function SPreguntaPrevisualizarAddBlock: string;
+function SInfoArticulosYaCargadosAddBlock: string;
+function SPreguntaConfirmarAddBlock: string;
+function SInfoArticulosAnadidosAddBlock: string;
+function SErrorDestinoDocumentoTrabajoAddBlock: string;
+function SErrorAlmacenesDocumentoTrabajoAddBlock: string;
+function SPreguntaConfirmarDocumentoTrabajoAddBlock: string;
+function SInfoLineasDocumentoTrabajoAddBlock: string;
+function SErrorInsertarLineasDocumentoTrabajoAddBlock: string;
+function SErrorDestinoInventarioAddBlock: string;
+function SPreguntaConfirmarInventarioAddBlock: string;
+function SInfoLineasInventarioAddBlock: string;
+function SErrorInsertarLineasInventarioAddBlock: string;
+function SErrorTarifaDestinoAddBlockNoSeleccionada: string;
+function SErrorTarifaOrigenAddBlockNoSeleccionada: string;
+function SErrorTarifasAddBlockCoincidentes: string;
+function SErrorMultiploAjusteAddBlockNoValido: string;
+function SPreguntaConfirmarTarifaAddBlock: string;
+function SInfoArticulosTarifaAddBlockAnadidos: string;
+function SErrorInsertarTarifaAddBlock: string;
+function SPreguntaQuitarPropiedadArticulo: string;
+function SErrorArticuloNoGuardadoValoresColor: string;
+function SErrorArticuloNoGuardadoAnadirPropiedades: string;
+function SErrorPropiedadObligatoriaFamilia: string;
+function SErrorPrecioCosteMargenNoValido: string;
+function SErrorMargenNoValido: string;
+function SErrorAjusteMargenNoValido: string;
+function SErrorGuardarCambiosMargen: string;
+function SErrorProveedorPrincipalCosteNoAsignado: string;
+function SErrorEmpresaEfectosRemesaNoIndicada: string;
+function SInfoEfectosPendientesRemesaNoEncontrados: string;
+function SErrorEfectosRemesaNoSeleccionados: string;
+function SErrorRemesaExistenteNoSeleccionada: string;
+function SInfoEfectosCargadosRemesa: string;
+function SPreguntaConfirmarCargaSesionTarifa: string;
+function SInfoArticulosCargadosSesionTarifa: string;
+function SErrorCargarSesionTarifa: string;
+function SErrorTipoDocumentoSesionNoSeleccionado: string;
+function SErrorSerieAlbaranSesionNoIndicada: string;
+function SErrorSeriePedidoSesionNoIndicada: string;
+function SErrorAlmacenDestinoSesionNoIndicado: string;
+function SErrorCertificadoNoSeleccionado: string;
+function SErrorEmpleadoEntradaCambioNoIndicado: string;
+function SErrorImporteEntradaCambioNoValido: string;
+function STituloAvisoEntradaCambio: string;
+function SErrorDestinoEnvioIncompleto: string;
+function SErrorTarifaEtiquetasNoSeleccionada: string;
+function SInfoLayoutEtiquetasGuardado: string;
+function SErrorEmpresaProveedorFacturacionNoIndicados: string;
+function SInfoAlbaranesPendientesProveedorNoEncontrados: string;
+function SPreguntaFacturarTodosAlbaranesListados: string;
+function SErrorBorradorAlbaranesExistenteNoSeleccionado: string;
+function SInfoAlbaranesGeneradosEnBorrador: string;
+function SErrorDataModuleAlbaranesNoAsignado: string;
+function SErrorAlbaranesNoSeleccionados: string;
+function SInfoBorradoresGenerados: string;
+function SErrorClienteBorradorNoSeleccionado: string;
+function SErrorSerieBorradorNoSeleccionada: string;
+function SErrorFechaBorradorNoIndicada: string;
+function SErrorClienteFacturarTicketNoExiste: string;
+function SErrorRazonSocialFacturarTicketObligatoria: string;
+function SErrorDocumentoFiscalFacturarTicketNoValido: string;
+function SErrorCrearBorradorFacturarTicket: string;
+function SPreguntaSuperarLimiteCargaArticulos: string;
+function SErrorDimensionesSkuNoDefinidas: string;
+function SErrorValoresSkuNoSeleccionados: string;
+function SErrorValoresDimensionesSkuIncompletos: string;
+function SInfoCombinacionesSkuGeneradas: string;
+function STituloAnadirValorSku: string;
+function SSolicitudNombreValorSku: string;
+function SSolicitudOrdenNuevoValorSku: string;
+function SPreguntaGuardarValorSkuGlobal: string;
+function SPreguntaUsarValorSkuTemporal: string;
+function STituloCambiarOrdenValorSku: string;
+function SSolicitudOrdenValorSku: string;
+function SErrorOrdenValorSkuNoValido: string;
+function SPreguntaCambiarOrdenValorSkuGlobal: string;
+function STituloCambiarOrdenAtributoSku: string;
+function SSolicitudOrdenAtributoSku: string;
+function SErrorOrdenAtributoSkuNoValido: string;
+function SPreguntaEditarCamposExtraInforme: string;
+function SErrorPrivilegiosBorrarFormato: string;
+function SPreguntaBorrarFormato: string;
+function SPreguntaReemplazarInforme: string;
+function STituloAdvertenciaInforme: string;
+function SErrorContrasenasNoCoinciden: string;
+function SErrorFiltroNoSeleccionado: string;
+function SErrorFiltroSinCondicionesAplicar: string;
+function SErrorFiltroSinCondicionesGuardar: string;
+function SInfoCambiosFiltroGuardados: string;
+function SErrorPantallaSinFiltroAplicado: string;
+function SPreguntaReemplazarFiltro: string;
+function STituloReemplazarFiltro: string;
+function SInfoFiltroReemplazado: string;
+function SErrorFiltroPropioDuplicado: string;
+function SInfoCopiaFiltroGuardada: string;
+function SPreguntaBorrarFiltro: string;
+function STituloConfirmarBorradoFiltro: string;
+function SInfoFiltroCompartidoGrupo: string;
+function SInfoFiltroCompartidoTodos: string;
+function SErrorNombreFiltroNoIndicado: string;
+function SErrorCodigoGuiaNoIndicado: string;
+function SErrorTablaExternaGuiaNoSeleccionada: string;
+function SErrorCampoMasterGuiaNoSeleccionado: string;
+function SErrorCampoDetailGuiaNoSeleccionado: string;
+function SInfoGuiaAnadida: string;
+function SInfoGuiasEliminarNoEncontradas: string;
+function SPreguntaEliminarGuia: string;
+function SErrorFacturaCompraExportarNoPreparada: string;
+function SErrorDataModulePedidosNoAsignado: string;
+function SInfoImportacionPedidosFinalizada: string;
+function SErrorConexionOperacionesCajaSkuNoDisponible: string;
+function SErrorImporteConciliadoNoValido: string;
+function SErrorImporteConciliadoSuperaPendiente: string;
+function SErrorNombreFormatoWizardNoIndicado: string;
+function SErrorNombreFormatoWizardNoModificado: string;
+function SErrorDatasetMasterWizardNoSeleccionado: string;
+function SErrorCamposMasterWizardNoSeleccionados: string;
+function SErrorTablaExternaWizardNoSeleccionada: string;
+function SErrorCamposTablaExternaWizardNoSeleccionados: string;
+function SErrorPrepararImpresionDeclaracionResponsable: string;
+function SErrorImprimirDeclaracionResponsable: string;
+function SInfoNumeroInstalacionSifDisponible: string;
+function SErrorGenerarNumeroInstalacionSif: string;
+function SErrorSerieDocumentoNoIndicada: string;
+function SErrorFechaInicioDocumentoNoIndicada: string;
+function SErrorFechaFinDocumentoNoIndicada: string;
+function SErrorRangoFechasDocumentoNoValido: string;
+function SInfoEmpresaSinCuentasBancarias: string;
+function SErrorAlmacenPedidoNoSeleccionado: string;
+function SInfoAlbaranesIncorporarNoDisponibles: string;
+function SErrorSerieAlbaranPedidoNoIndicada: string;
+function SInfoLogGuardado: string;
+function SErrorAlmacenAlbaranNoSeleccionado: string;
+function SErrorAlbaranDestinoNoSeleccionado: string;
+function SErrorCodigoAcreedorSepaNoIndicado: string;
+function SErrorLongitudCodigoAcreedorSepa: string;
+function SErrorFormatoCodigoAcreedorSepaNoValido: string;
+function SErrorSecuenciaSepaNoValida: string;
+function SErrorClientesSinMandatoSepa: string;
+function SErrorMandatosSepaLongitudNoValida: string;
+function SErrorClientesSinFechaFirmaMandatoSepa: string;
+function SErrorCodigoFormaPagoCajaObligatorio: string;
+function SErrorDescripcionFormaPagoCajaObligatoria: string;
+function SErrorParametrosAplicacionCajaNoConfigurados: string;
+function SErrorParametrosModuloCajaNoConfigurados: string;
+function SErrorContextoSesionCajaNoConfigurado: string;
+function SErrorOperacionCajaSinLineas: string;
+function SErrorRazonSocialClienteFacturaCajaObligatoria: string;
+function SErrorDocumentoFiscalClienteCajaNoValido: string;
+function SErrorDocumentoFiscalEmpresaCajaNoValido: string;
+function SErrorFechaTicketSerieNoValida: string;
+function SErrorCuadreCobroParcialCaja: string;
+function SErrorFacturaRectificativaCajaSinOriginal: string;
+function SErrorGuardarTicketCaja: string;
+function SErrorCuadrarFacturaCaja: string;
+function SErrorRedimirValeCaja: string;
+function SErrorContextoSesionTraspasoNoConfigurado: string;
+function SErrorSkuTraspasoIncompleto: string;
+function SErrorArticuloSkuTraspasoNoCoincide: string;
+function SErrorStockTraspasoInsuficiente: string;
+function SErrorLineasTraspasoNoDisponibles: string;
+function SErrorAlmacenDestinoTraspasoNoSeleccionado: string;
+function SErrorAlmacenesTraspasoCoincidentes: string;
+function SErrorLineasSolicitudTraspasoNoDisponibles: string;
+function SErrorAlmacenOrigenSolicitudNoSeleccionado: string;
+function SErrorSolicitudTraspasoMismoAlmacen: string;
+function SErrorSolicitudTraspasoNoCargada: string;
+function SErrorPermisoAbrirCajon: string;
+function SErrorImpresoraTicketsCajaNoConfigurada: string;
+function SErrorContextoImpresoraCajaNoProporcionado: string;
+function SErrorReferenciaPagoCajaNoIndicada: string;
+function SErrorFactorCambioCajaNoValido: string;
+function SErrorHashBlockchainCajaNoIndicado: string;
+function SErrorValeCajaNoSeleccionado: string;
+function SErrorPinValeCajaNoIndicado: string;
+function SErrorPinValeCajaIncorrecto: string;
+function SErrorProveedorParametrosCajaNoConfigurado: string;
+function SErrorParametrosCajaEditablesNoConfigurados: string;
+function SInfoLayoutCajaGuardado: string;
+function SInfoParametrosCajaGuardados: string;
+function SInfoParametrosCajaSinCambios: string;
+function SPreguntaSalirParametrosCajaSinGuardar: string;
+function SInfoUsuariosParametrosCajaNoEncontrados: string;
+function STituloCambiarUsuarioParametrosCaja: string;
+function SSolicitudCambiarUsuarioParametrosCaja: string;
+function SErrorUsuarioParametrosCajaNoEncontrado: string;
+function SInfoPrecargaCajaGuardada: string;
+function SErrorAsignarUbicacionCaja: string;
+function STituloHoraCaja: string;
+function SSolicitudHoraCaja: string;
+function SErrorHoraCajaNoValida: string;
+function SErrorUbicacionCajaBuscarOperacionesNoAsignada: string;
+function SErrorUbicacionCajaArqueoNoAsignada: string;
+function SErrorUbicacionCajaTraspasoNoAsignada: string;
+function SErrorRectificacionCajaNoAdmiteBorrador: string;
+function SErrorClienteBorradorCajaNoAsignado: string;
+function SErrorNifClienteBorradorCajaNoIndicado: string;
+function SErrorFechaSerieEmisionCajaNoValida: string;
+function SAvisoHuecosNumeracionSerieCaja: string;
+function SErrorNumeroBorradorCajaNoValido: string;
+function SErrorNumeroBorradorCajaExistente: string;
+function SErrorNumeroBorradorCajaNoEsHueco: string;
+function STituloEnviarDocumentacionCaja: string;
+function SSolicitudCorreoDocumentacionCaja: string;
+function SErrorCorreoDocumentacionCajaNoIndicado: string;
+function SErrorCreditoClienteCajaNoPermitido: string;
+function SErrorImporteCreditoCajaNoPendiente: string;
+function SAvisoLimiteOperacionesCaja: string;
+function SErrorOperacionCajaExportarNoSeleccionada: string;
+function SErrorSkuVentaCajaNoExiste: string;
+function SErrorSkuVentaCajaNoActivo: string;
+function SErrorArticuloVentaCajaSinStock: string;
+function SErrorVendedorCajaNoAsignado: string;
+function SErrorCodigoBarrasVentaCajaNoEncontrado: string;
+function SErrorLineaDepositoCajaNoCancelable: string;
+function SErrorArticuloVentaCajaNoEncontrado: string;
+function SPreguntaCancelarVentaCaja: string;
+function SErrorLineaDepositoCajaNoEliminable: string;
+function SPreguntaBorrarVentaCaja: string;
+function SInfoValeCajaEntregar: string;
+function SErrorCorreoOperacionCajaNoEnviado: string;
+function SErrorTipoRectificativaCajaNoIndicado: string;
+function SErrorBorradorRectificarCajaNoEncontrado: string;
+function SErrorClienteDepositosCajaNoSeleccionado: string;
+function SErrorValoresAtributoCajaNoDefinidos: string;
+function SPreguntaEliminarOperacionCajaPendiente: string;
+function SErrorArticuloCajaNoEncontradoDescatalogado: string;
+function SErrorCantidadArticuloDepositoCajaNoValida: string;
+function SErrorCodigoClienteCajaNoExiste: string;
+function SErrorEmpleadoCajaNoEncontrado: string;
+function SErrorSolicitudesTraspasoPendientesNoEncontradas: string;
+function SErrorCargarSolicitudTraspaso: string;
+function SErrorSolicitudTraspasoCerrarNoCargada: string;
+function SPreguntaCerrarSolicitudTraspaso: string;
+function SInfoSolicitudTraspasoCerrada: string;
+function SErrorDenegarSolicitudTraspasoModoNoValido: string;
+function SErrorSolicitudTraspasoDenegarNoCargada: string;
+function STituloDenegarSolicitudTraspaso: string;
+function SSolicitudMotivoRechazoTraspaso: string;
+function SErrorMotivoDenegacionTraspasoNoIndicado: string;
+function SInfoPeticionTraspasoDenegada: string;
+function SInfoSolicitudTraspasoEnviada: string;
+function SErrorEmpleadoTraspasoNoIndicado: string;
+function SErrorEmpleadoTraspasoNoEncontrado: string;
+function SErrorSolicitudTraspasoAtenderNoCargada: string;
+function SErrorMotivoLineasTraspasoNoIndicado: string;
+function SInfoSolicitudTraspasoAtendida: string;
+function SPreguntaDenegarPeticionTraspasoCompleta: string;
+function SInfoTraspasoGrabado: string;
+function SErrorEmpleadoGastoCajaNoIndicado: string;
+function SErrorImporteGastoCajaNoValido: string;
+function STituloAvisoCaja: string;
+function SErrorArqueoCajaNoSeleccionado: string;
+function SErrorPermisoResumenArqueoCaja: string;
+function SInfoOperacionesFacturadasArqueoCajaNoEncontradas: string;
+function STituloTiraCaja: string;
+function SErrorVendedorArqueoCajaNoIndicado: string;
+function STituloVendedorArqueoCajaObligatorio: string;
+function SErrorVendedorArqueoCajaNoValido: string;
+function STituloVendedorArqueoCajaNoValido: string;
+function SErrorArqueoCajaDuplicado: string;
+function STituloArqueoCajaDuplicado: string;
+function SErrorRecuentoArqueoCajaNoDisponible: string;
+function SPreguntaGrabarArqueoCaja: string;
+function STituloConfirmarArqueoCaja: string;
+
 implementation
 
+uses
+  inLibMsgComun,
+  inLibMsgConfiguracion,
+  inLibMsgArticulos,
+  inLibMsgVentas,
+  inLibMsgCompras,
+  inLibMsgFacturas,
+  inLibMsgCaja,
+  inLibMsgIntegraciones,
+  inLibMsgVerifactu;
+
+function SClassRttiNotFnd: string;
+begin
+  Result :=
+    inLibMsgComun.SClassRttiNotFnd;
+end;
+function SLocateNotFnd: string;
+begin
+  Result :=
+    inLibMsgComun.SLocateNotFnd;
+end;
+function SResWinFNotFnd: string;
+begin
+  Result :=
+    inLibMsgComun.SResWinFNotFnd;
+end;
+function SCliToTbl: string;
+begin
+  Result :=
+    inLibMsgFacturas.SCliToTbl;
+end;
+function SEmpToTbl: string;
+begin
+  Result :=
+    inLibMsgFacturas.SEmpToTbl;
+end;
+function SErrorDecryptPassBBDD: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorDecryptPassBBDD;
+end;
+function SErrorDecryptPass: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorDecryptPass;
+end;
+function SErrorAuthPass: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorAuthPass;
+end;
+function SErrorPassMatch: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorPassMatch;
+end;
+function SErrorPassMatchBBDD: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorPassMatchBBDD;
+end;
+function SEnterPassBBDD: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SEnterPassBBDD;
+end;
+function SScriptSuccess: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SScriptSuccess;
+end;
+function SFailLoadScriptBBDD: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SFailLoadScriptBBDD;
+end;
+function SCreateSuccBBDD: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SCreateSuccBBDD;
+end;
+function SErrorCreateBBDD: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorCreateBBDD;
+end;
+function SBBDDUpdateTo: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SBBDDUpdateTo;
+end;
+function SNotExistsUpBBDDFile: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SNotExistsUpBBDDFile;
+end;
+function SAdviceUpdateBBDD: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SAdviceUpdateBBDD;
+end;
+function SPasswordBBDDChanged: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SPasswordBBDDChanged;
+end;
+function SWantDefChgBBDD: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SWantDefChgBBDD;
+end;
+function SAdvMsg: string;
+begin
+  Result :=
+    inLibMsgComun.SAdvMsg;
+end;
+function SNoConnBBDD: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SNoConnBBDD;
+end;
+function SConnSuccBBDD: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SConnSuccBBDD;
+end;
+function SGetPassBBDD: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SGetPassBBDD;
+end;
+function SConnFailBBDD: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SConnFailBBDD;
+end;
+function SErrorSentenciaScript: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorSentenciaScript;
+end;
+function SSolicitudPassBBDD: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SSolicitudPassBBDD;
+end;
+function SSolicitudNuevoPassBBDD: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SSolicitudNuevoPassBBDD;
+end;
+function SScriptEjecutado: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SScriptEjecutado;
+end;
+function SScriptNoEjecutado: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SScriptNoEjecutado;
+end;
+function SErrorConexionServidorBBDD: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorConexionServidorBBDD;
+end;
+function SErrorEstructuraBBDD: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorEstructuraBBDD;
+end;
+function SErrorConexionBBDD: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorConexionBBDD;
+end;
+function SErrorInicioAutomatico: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorInicioAutomatico;
+end;
+function SLicenciaEstablecida: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SLicenciaEstablecida;
+end;
+function SLicenciaNoEstablecidaSinNif: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SLicenciaNoEstablecidaSinNif;
+end;
+function SErrorEstablecerLicencia: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorEstablecerLicencia;
+end;
+function SModoDemo: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SModoDemo;
+end;
+function SCancelacionSolicitada: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SCancelacionSolicitada;
+end;
+function SPreguntaCancelarOperacion: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SPreguntaCancelarOperacion;
+end;
+function SOperacionCancelada: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SOperacionCancelada;
+end;
+function SCopiaSeguridadGuardada: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SCopiaSeguridadGuardada;
+end;
+function SErrorCrearCopiaSeguridad: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorCrearCopiaSeguridad;
+end;
+function SRestauracionCancelada: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SRestauracionCancelada;
+end;
+function SErrorRestaurarCopiaSeguridad: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorRestaurarCopiaSeguridad;
+end;
+function SErrorContrasenaCopiaVacia: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorContrasenaCopiaVacia;
+end;
+function SErrorTipoRestauracionNoPermitido: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorTipoRestauracionNoPermitido;
+end;
+function SPreguntaReemplazarFichero: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SPreguntaReemplazarFichero;
+end;
+function SCopiaSeguridadCancelada: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SCopiaSeguridadCancelada;
+end;
+function SCargaScriptCancelada: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SCargaScriptCancelada;
+end;
+function SUsuarioNoExiste: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SUsuarioNoExiste;
+end;
+function SDescripcionParametroIdioma: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SDescripcionParametroIdioma;
+end;
+function SErrorContextoSesionFormularioNoConfigurado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorContextoSesionFormularioNoConfigurado;
+end;
+function SErrorServicioAuditoriaDatosNoConfigurado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorServicioAuditoriaDatosNoConfigurado;
+end;
+function SErrorProveedorEdicionParametrosNoConfigurado: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorProveedorEdicionParametrosNoConfigurado;
+end;
+function SErrorParametrosAplicacionEditablesNoConfigurados: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorParametrosAplicacionEditablesNoConfigurados;
+end;
+function SInfoParametrosGuardados: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SInfoParametrosGuardados;
+end;
+function SAvisoParametrosRestringidosIgnorados: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SAvisoParametrosRestringidosIgnorados;
+end;
+function SAvisoParametrosRestringidosNoGuardados: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SAvisoParametrosRestringidosNoGuardados;
+end;
+function SInfoSinCambiosParametros: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SInfoSinCambiosParametros;
+end;
+function SInfoLayoutGuardado: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SInfoLayoutGuardado;
+end;
+function SPreguntaSalirSinGuardar: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SPreguntaSalirSinGuardar;
+end;
+function SAvisoSinUsuariosParametrosGuardados: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SAvisoSinUsuariosParametrosGuardados;
+end;
+function STituloCambiarUsuario: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.STituloCambiarUsuario;
+end;
+function SSolicitudCambiarUsuario: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SSolicitudCambiarUsuario;
+end;
+function SErrorUsuarioNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorUsuarioNoEncontrado;
+end;
+function SErrorEnviarTicketImpresora: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorEnviarTicketImpresora;
+end;
+function SAvisoSinComandosESCPOSImpresora: string;
+begin
+  Result :=
+    inLibMsgComun.SAvisoSinComandosESCPOSImpresora;
+end;
+function SInfoTicketEnviadoImpresora: string;
+begin
+  Result :=
+    inLibMsgFacturas.SInfoTicketEnviadoImpresora;
+end;
+function SErrorImprimir: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorImprimir;
+end;
+function SAvisoSinComandosESCPOSPDF: string;
+begin
+  Result :=
+    inLibMsgComun.SAvisoSinComandosESCPOSPDF;
+end;
+function SInfoPDFGuardado: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoPDFGuardado;
+end;
+function SInfoPNGGuardado: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoPNGGuardado;
+end;
+function SErrorContextoInicioSesionNoProporcionado: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorContextoInicioSesionNoProporcionado;
+end;
+function SErrorParametrosSinEstadoLicencia: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorParametrosSinEstadoLicencia;
+end;
+function SErrorParametrosAplicacionSinContratoEdicion: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorParametrosAplicacionSinContratoEdicion;
+end;
+function SErrorParametrosCajaSinContratoEdicion: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorParametrosCajaSinContratoEdicion;
+end;
+function SErrorServicioConexionesNoDisponible: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorServicioConexionesNoDisponible;
+end;
+function SCertificadoQuedaMenosUnDia: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SCertificadoQuedaMenosUnDia;
+end;
+function SCertificadoQuedaUnDia: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SCertificadoQuedaUnDia;
+end;
+function SCertificadoQuedanDias: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SCertificadoQuedanDias;
+end;
+function SAvisoCertificadoCaducado: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SAvisoCertificadoCaducado;
+end;
+function SAvisoCertificadoProximoCaducar: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SAvisoCertificadoProximoCaducar;
+end;
+function SAvisoCertificadosCaducidad: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SAvisoCertificadosCaducidad;
+end;
+function SAvisoCargaPermisosRestringidos: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SAvisoCargaPermisosRestringidos;
+end;
+function SInfoCopiaSeguridadGuardada: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SInfoCopiaSeguridadGuardada;
+end;
+function SAvisoRestauracionCancelada: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SAvisoRestauracionCancelada;
+end;
+function SErrorEjecutarScript: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorEjecutarScript;
+end;
+function SPreguntaSalirAplicacion: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SPreguntaSalirAplicacion;
+end;
+function SPreguntaCopiaSeguridadAntesDDL: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SPreguntaCopiaSeguridadAntesDDL;
+end;
+function SPreguntaCopiaAntesRestaurarCifrada: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SPreguntaCopiaAntesRestaurarCifrada;
+end;
+function SInfoScriptCancelado: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SInfoScriptCancelado;
+end;
+function SErrorAbrirDireccion: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorAbrirDireccion;
+end;
+function SAvisoAlbaranFacturado: string;
+begin
+  Result :=
+    inLibMsgFacturas.SAvisoAlbaranFacturado;
+end;
+function SPreguntaBorrarAlbaran: string;
+begin
+  Result :=
+    inLibMsgVentas.SPreguntaBorrarAlbaran;
+end;
+function SAvisoAlmacenSalidaAlbaranObligatorio: string;
+begin
+  Result :=
+    inLibMsgVentas.SAvisoAlmacenSalidaAlbaranObligatorio;
+end;
+function SErrorLineaAlbaranSinArticulo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorLineaAlbaranSinArticulo;
+end;
+function SErrorCabeceraAlbaranSinGrabar: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorCabeceraAlbaranSinGrabar;
+end;
+function SErrorAsignarLineaAlbaran: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorAsignarLineaAlbaran;
+end;
+function SErrorContadorAlbaran: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorContadorAlbaran;
+end;
+function SAvisoAlmacenDestinoAlbaranCompraObligatorio: string;
+begin
+  Result :=
+    inLibMsgCompras.SAvisoAlmacenDestinoAlbaranCompraObligatorio;
+end;
+function SAvisoAlbaranCompraFacturado: string;
+begin
+  Result :=
+    inLibMsgCompras.SAvisoAlbaranCompraFacturado;
+end;
+function SPreguntaBorrarAlbaranCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaBorrarAlbaranCompra;
+end;
+function SErrorContadorAlbaranCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorContadorAlbaranCompra;
+end;
+function SErrorCodigoSkuCodigoBarrasObligatorio: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorCodigoSkuCodigoBarrasObligatorio;
+end;
+function SErrorCampoCodigoBarrasAusente: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorCampoCodigoBarrasAusente;
+end;
+function SErrorCodigoSkuObligatorio: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorCodigoSkuObligatorio;
+end;
+function SErrorFilaCodigoBarrasInexistente: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorFilaCodigoBarrasInexistente;
+end;
+function SErrorProveedorPrincipalArticulo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorProveedorPrincipalArticulo;
+end;
+function SErrorDescripcionArticulo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorDescripcionArticulo;
+end;
+function SPreguntaDesactivarTarifaSinPrecio: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaDesactivarTarifaSinPrecio;
+end;
+function SPreguntaActivarTarifaConPrecio: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaActivarTarifaConPrecio;
+end;
+function SErrorTarifaFechasConcurrentes: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorTarifaFechasConcurrentes;
+end;
+function SErrorAtributoBasicoObligatorio: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorAtributoBasicoObligatorio;
+end;
+function SErrorCodigoAtributoBasicoObligatorio: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorCodigoAtributoBasicoObligatorio;
+end;
+function SErrorNombreAtributoBasicoObligatorio: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorNombreAtributoBasicoObligatorio;
+end;
+function SErrorValorColeccionAtributosObligatorio: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorValorColeccionAtributosObligatorio;
+end;
+function SPreguntaBorrarClienteConFacturas: string;
+begin
+  Result :=
+    inLibMsgFacturas.SPreguntaBorrarClienteConFacturas;
+end;
+function SErrorRazonSocialCliente: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorRazonSocialCliente;
+end;
+function SErrorCambiarFormatoSesion: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorCambiarFormatoSesion;
+end;
+function SErrorEmpresaSesionObligatoria: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorEmpresaSesionObligatoria;
+end;
+function SErrorSerieSesionObligatoria: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorSerieSesionObligatoria;
+end;
+function SErrorContadorSesion: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorContadorSesion;
+end;
+function SErrorCodigoSerieEmpresa: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorCodigoSerieEmpresa;
+end;
+function SAvisoColacionSesion: string;
+begin
+  Result :=
+    inLibMsgComun.SAvisoColacionSesion;
+end;
+function SAvisoTimeoutServidor: string;
+begin
+  Result :=
+    inLibMsgComun.SAvisoTimeoutServidor;
+end;
+function SErrorBBDDDuplicado: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorBBDDDuplicado;
+end;
+function SErrorBBDDCamposObligatorios: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorBBDDCamposObligatorios;
+end;
+function SErrorBBDDCampoDesconocido: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorBBDDCampoDesconocido;
+end;
+function SErrorBBDDTablaNoExiste: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorBBDDTablaNoExiste;
+end;
+function SErrorBBDDSinPermisos: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorBBDDSinPermisos;
+end;
+function SErrorBBDDClaveForaneaNoExiste: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorBBDDClaveForaneaNoExiste;
+end;
+function SErrorBBDDRegistroDependiente: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorBBDDRegistroDependiente;
+end;
+function SErrorBBDDDatoDemasiadoLargo: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorBBDDDatoDemasiadoLargo;
+end;
+function SErrorBBDDCredencialesIncorrectas: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorBBDDCredencialesIncorrectas;
+end;
+function SErrorBBDDConexionServidor: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorBBDDConexionServidor;
+end;
+function SErrorBBDDConexionPerdida: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorBBDDConexionPerdida;
+end;
+function SErrorBBDDConexionPerdidaConsulta: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorBBDDConexionPerdidaConsulta;
+end;
+function SErrorBBDDTimeoutBloqueo: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorBBDDTimeoutBloqueo;
+end;
+function SErrorBBDDDeadlock: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorBBDDDeadlock;
+end;
+function SErrorBBDDTablaYaExiste: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorBBDDTablaYaExiste;
+end;
+function SErrorBBDDProcedimientoYaExiste: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorBBDDProcedimientoYaExiste;
+end;
+function SErrorBBDDGenerico: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorBBDDGenerico;
+end;
+function SDetalleErrorMySQL: string;
+begin
+  Result :=
+    inLibMsgComun.SDetalleErrorMySQL;
+end;
+function SErrorAbrirConsultaOpe: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorAbrirConsultaOpe;
+end;
+function SErrorAlmacenSalidaDevolucionCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorAlmacenSalidaDevolucionCompra;
+end;
+function SAvisoDevolucionCompraFacturada: string;
+begin
+  Result :=
+    inLibMsgCompras.SAvisoDevolucionCompraFacturada;
+end;
+function SPreguntaBorrarDevolucionCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaBorrarDevolucionCompra;
+end;
+function SErrorCabeceraDevolucionCompraSinGrabar: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorCabeceraDevolucionCompraSinGrabar;
+end;
+function SErrorContadorDevolucionCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorContadorDevolucionCompra;
+end;
+function SErrorTipoDestinoDocumentoTrabajo: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorTipoDestinoDocumentoTrabajo;
+end;
+function SErrorDestinoCompartidoNoExiste: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorDestinoCompartidoNoExiste;
+end;
+function SErrorDestinoCompartirObligatorio: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorDestinoCompartirObligatorio;
+end;
+function SErrorCompartirDocumentoTrabajoSoloPropietario: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorCompartirDocumentoTrabajoSoloPropietario;
+end;
+function SErrorCabeceraDocumentoTrabajoSinGrabar: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorCabeceraDocumentoTrabajoSinGrabar;
+end;
+function SErrorCompartirDocumentoTrabajoConsigoMismo: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorCompartirDocumentoTrabajoConsigoMismo;
+end;
+function SErrorBorrarDocumentoTrabajoSoloPropietario: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorBorrarDocumentoTrabajoSoloPropietario;
+end;
+function SErrorCambiarPropietarioDocumentoTrabajo: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorCambiarPropietarioDocumentoTrabajo;
+end;
+function SErrorTituloDocumentoTrabajoObligatorio: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorTituloDocumentoTrabajoObligatorio;
+end;
+function SErrorBorrarLineasDocumentoTrabajoSoloPropietario: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorBorrarLineasDocumentoTrabajoSoloPropietario;
+end;
+function SErrorEditarLineasDocumentoTrabajoSoloPropietario: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorEditarLineasDocumentoTrabajoSoloPropietario;
+end;
+function SErrorArticuloLineaDocumentoTrabajoObligatorio: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloLineaDocumentoTrabajoObligatorio;
+end;
+function SErrorSkuLineaDocumentoTrabajoObligatorio: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorSkuLineaDocumentoTrabajoObligatorio;
+end;
+function SErrorDejarCompartirDocumentoTrabajoSoloPropietario: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorDejarCompartirDocumentoTrabajoSoloPropietario;
+end;
+function SErrorDestinoCompartidoObligatorio: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorDestinoCompartidoObligatorio;
+end;
+function SErrorBorrarEfectoCompraRemesado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorBorrarEfectoCompraRemesado;
+end;
+function SErrorBorrarEfectoCompraPagado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorBorrarEfectoCompraPagado;
+end;
+function SErrorFusionarEfectosCompraEstado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorFusionarEfectosCompraEstado;
+end;
+function SErrorFusionarEfectosCompraOrigen: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorFusionarEfectosCompraOrigen;
+end;
+function SErrorFusionarEfectosCompraSinPendiente: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorFusionarEfectosCompraSinPendiente;
+end;
+function SErrorBorrarEfectoVentaRemesado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorBorrarEfectoVentaRemesado;
+end;
+function SErrorBorrarEfectoVentaCobrado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorBorrarEfectoVentaCobrado;
+end;
+function SErrorFusionarEfectosVentaEstado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorFusionarEfectosVentaEstado;
+end;
+function SErrorFusionarEfectosVentaOrigen: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorFusionarEfectosVentaOrigen;
+end;
+function SErrorFusionarEfectosVentaSinPendiente: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorFusionarEfectosVentaSinPendiente;
+end;
+function SPreguntaCambioCriticoEmpresa: string;
+begin
+  Result :=
+    inLibMsgComun.SPreguntaCambioCriticoEmpresa;
+end;
+function SErrorPorcentajeRetencionEmpresa: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorPorcentajeRetencionEmpresa;
+end;
+function SErrorRetencionesEmpresaConcurrentes: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorRetencionesEmpresaConcurrentes;
+end;
+function SErrorSerieEmpresa: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorSerieEmpresa;
+end;
+function SErrorIbanEmpresa: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorIbanEmpresa;
+end;
+function SPreguntaBorrarEmpresaConFacturas: string;
+begin
+  Result :=
+    inLibMsgFacturas.SPreguntaBorrarEmpresaConFacturas;
+end;
+function SErrorRazonSocialEmpresa: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorRazonSocialEmpresa;
+end;
+function SErrorCodigoEmpresa: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorCodigoEmpresa;
+end;
+function SErrorOperacionIntracomunitariaClienteNoUE: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorOperacionIntracomunitariaClienteNoUE;
+end;
+function SErrorOperacionExportacionClienteNoExtranjero: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorOperacionExportacionClienteNoExtranjero;
+end;
+function SErrorOperacionSinIvaConCuota: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorOperacionSinIvaConCuota;
+end;
+function SErrorNifIvaClienteExtranjero: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorNifIvaClienteExtranjero;
+end;
+function SErrorCalcularBorradorDetalle: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorCalcularBorradorDetalle;
+end;
+function SErrorCalculoBorrador: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorCalculoBorrador;
+end;
+function SErrorTipoIvaFactura: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorTipoIvaFactura;
+end;
+function SErrorBorrarBorradorFase: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorBorrarBorradorFase;
+end;
+function SPreguntaBorrarFactura: string;
+begin
+  Result :=
+    inLibMsgFacturas.SPreguntaBorrarFactura;
+end;
+function SErrorBorrarBorradorEfectosCobrados: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorBorrarBorradorEfectosCobrados;
+end;
+function SErrorInsertarLineasCabeceraFactura: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorInsertarLineasCabeceraFactura;
+end;
+function SErrorBorradorSinGrabarParaLineas: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorBorradorSinGrabarParaLineas;
+end;
+function SErrorSerieFacturaOtraEmpresa: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorSerieFacturaOtraEmpresa;
+end;
+function SErrorRazonSocialClienteBorrador: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorRazonSocialClienteBorrador;
+end;
+function SErrorRazonSocialEmpresaBorrador: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorRazonSocialEmpresaBorrador;
+end;
+function SErrorSerieBorradorObligatoria: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorSerieBorradorObligatoria;
+end;
+function SErrorPaisClienteEmpresaBorrador: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorPaisClienteEmpresaBorrador;
+end;
+function SErrorFechaBorradorObligatoria: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFechaBorradorObligatoria;
+end;
+function SErrorNifClienteFactura: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorNifClienteFactura;
+end;
+function SErrorNifEmpresaFactura: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorNifEmpresaFactura;
+end;
+function SErrorFechaFacturaAnteriorSerie: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFechaFacturaAnteriorSerie;
+end;
+function SAvisoFechaBorradorFutura: string;
+begin
+  Result :=
+    inLibMsgFacturas.SAvisoFechaBorradorFutura;
+end;
+function SErrorCabeceraBorradorSinGrabar: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorCabeceraBorradorSinGrabar;
+end;
+function SErrorAsignarNumeroFactura: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorAsignarNumeroFactura;
+end;
+function SAvisoHuecoNumeracionFactura: string;
+begin
+  Result :=
+    inLibMsgFacturas.SAvisoHuecoNumeracionFactura;
+end;
+function SErrorCerrarFacturaCompraSinLineas: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorCerrarFacturaCompraSinLineas;
+end;
+function SErrorBorrarFacturaCompraEfectosPagados: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorBorrarFacturaCompraEfectosPagados;
+end;
+function SPreguntaBorrarFacturaCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaBorrarFacturaCompra;
+end;
+function SErrorCabeceraFacturaCompraSinGrabar: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorCabeceraFacturaCompraSinGrabar;
+end;
+function SErrorContadorFacturaCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorContadorFacturaCompra;
+end;
+function SAvisoPropiedadFamiliaDuplicada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SAvisoPropiedadFamiliaDuplicada;
+end;
+function SErrorNombreFamilia: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorNombreFamilia;
+end;
+function SErrorFamiliaPadreIgualHija: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorFamiliaPadreIgualHija;
+end;
+function SErrorServicioConexionesDatosNoConfigurado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorServicioConexionesDatosNoConfigurado;
+end;
+function SErrorContextoSesionFiltrosNoConfigurado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorContextoSesionFiltrosNoConfigurado;
+end;
+function SErrorCodigoFacturaeFormaPago: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorCodigoFacturaeFormaPago;
+end;
+function SErrorDescripcionFormaPago: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorDescripcionFormaPago;
+end;
+function SErrorContextoSesionModuloDatosNoConfigurado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorContextoSesionModuloDatosNoConfigurado;
+end;
+function SErrorSerieInventarioObligatoria: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorSerieInventarioObligatoria;
+end;
+function SErrorContadorLineasInventarioNoInstalado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorContadorLineasInventarioNoInstalado;
+end;
+function SErrorCabeceraInventarioSinGrabarParaReserva: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorCabeceraInventarioSinGrabarParaReserva;
+end;
+function SErrorCabeceraInventarioNoEncontrada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorCabeceraInventarioNoEncontrada;
+end;
+function SErrorActualizarContadorLineasInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorActualizarContadorLineasInventario;
+end;
+function SErrorEmpresaCabeceraInventarioObligatoria: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorEmpresaCabeceraInventarioObligatoria;
+end;
+function SErrorAlmacenCabeceraInventarioObligatorio: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorAlmacenCabeceraInventarioObligatorio;
+end;
+function SErrorSerieCabeceraInventarioObligatoria: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorSerieCabeceraInventarioObligatoria;
+end;
+function SErrorNumeroCabeceraInventarioObligatorio: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorNumeroCabeceraInventarioObligatorio;
+end;
+function SErrorAtributoLineaInventarioObligatorio: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorAtributoLineaInventarioObligatorio;
+end;
+function SPreguntaCrearSkuInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaCrearSkuInventario;
+end;
+function SErrorSkuInventarioNoExiste: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorSkuInventarioNoExiste;
+end;
+function SErrorEliminarLineasInventarioNoAbierto: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorEliminarLineasInventarioNoAbierto;
+end;
+function SErrorAnadirLineaCabeceraInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorAnadirLineaCabeceraInventario;
+end;
+function SErrorRecalcularInventarioNoAbierto: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorRecalcularInventarioNoAbierto;
+end;
+function SErrorAplicarInventarioNoAbierto: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorAplicarInventarioNoAbierto;
+end;
+function SErrorAplicarInventarioSinLineas: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorAplicarInventarioSinLineas;
+end;
+function SErrorEliminarRegularizacionInventarioNoAplicado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorEliminarRegularizacionInventarioNoAplicado;
+end;
+function SErrorCargarArticulosInventarioNoAbierto: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorCargarArticulosInventarioNoAbierto;
+end;
+function SErrorCompletarInventarioNoAbierto: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorCompletarInventarioNoAbierto;
+end;
+function SErrorArticuloLineaInventarioObligatorio: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloLineaInventarioObligatorio;
+end;
+function SErrorAnadirSkusInventarioNoAbierto: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorAnadirSkusInventarioNoAbierto;
+end;
+function SErrorValorAtributoSkuInventarioNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorValorAtributoSkuInventarioNoEncontrado;
+end;
+function SErrorCodigoIva: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorCodigoIva;
+end;
+function SErrorGrupoIvaNoExiste: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorGrupoIvaNoExiste;
+end;
+function SErrorRangoFechasIva: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorRangoFechasIva;
+end;
+function SErrorDescripcionGrupoIva: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorDescripcionGrupoIva;
+end;
+function SErrorCodigoGrupoIva: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorCodigoGrupoIva;
+end;
+function SErrorDosGruposIvaPredeterminados: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorDosGruposIvaPredeterminados;
+end;
+function SAvisoEdicionMovimientoAlmacen: string;
+begin
+  Result :=
+    inLibMsgArticulos.SAvisoEdicionMovimientoAlmacen;
+end;
+function SPreguntaBorrarPedidoVenta: string;
+begin
+  Result :=
+    inLibMsgVentas.SPreguntaBorrarPedidoVenta;
+end;
+function SErrorLineaPedidoSinArticulo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorLineaPedidoSinArticulo;
+end;
+function SErrorCabeceraPedidoSinGrabar: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorCabeceraPedidoSinGrabar;
+end;
+function SErrorAsignarLineaPedido: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorAsignarLineaPedido;
+end;
+function SAvisoAlmacenSalidaPedidoObligatorio: string;
+begin
+  Result :=
+    inLibMsgVentas.SAvisoAlmacenSalidaPedidoObligatorio;
+end;
+function SAvisoClientePedidoObligatorio: string;
+begin
+  Result :=
+    inLibMsgVentas.SAvisoClientePedidoObligatorio;
+end;
+function SAvisoClientePedidoNoExiste: string;
+begin
+  Result :=
+    inLibMsgVentas.SAvisoClientePedidoNoExiste;
+end;
+function SAvisoAlmacenDestinoPedidoCompraObligatorio: string;
+begin
+  Result :=
+    inLibMsgCompras.SAvisoAlmacenDestinoPedidoCompraObligatorio;
+end;
+function SPreguntaBorrarPedidoCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaBorrarPedidoCompra;
+end;
+function SErrorContadorPedidoCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorContadorPedidoCompra;
+end;
+function SErrorContextoSesionPerfilesNoConfigurado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorContextoSesionPerfilesNoConfigurado;
+end;
+function SErrorProveedorKitsNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorProveedorKitsNoSeleccionado;
+end;
+function SErrorProveedorKitsSinGrabar: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorProveedorKitsSinGrabar;
+end;
+function SErrorCodigoKitProveedorObligatorio: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorCodigoKitProveedorObligatorio;
+end;
+function SErrorNombreKitProveedorObligatorio: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorNombreKitProveedorObligatorio;
+end;
+function SErrorKitProveedorNoSeleccionadoParaTallas: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorKitProveedorNoSeleccionadoParaTallas;
+end;
+function SErrorTallaDestinoKitProveedorObligatoria: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorTallaDestinoKitProveedorObligatoria;
+end;
+function SErrorKitProveedorNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorKitProveedorNoSeleccionado;
+end;
+function SErrorSistemaTallasKitProveedorObligatorio: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorSistemaTallasKitProveedorObligatorio;
+end;
+function SErrorCodigoAutomaticoProveedor: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorCodigoAutomaticoProveedor;
+end;
+function SErrorOrdenAutomaticoProveedor: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorOrdenAutomaticoProveedor;
+end;
+function SErrorRemesaVentaNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorRemesaVentaNoSeleccionada;
+end;
+function SErrorRemesaVentaNoEncontrada: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorRemesaVentaNoEncontrada;
+end;
+function SErrorRemesaVentaSinEfectosPendientes: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorRemesaVentaSinEfectosPendientes;
+end;
+function SErrorGuardarCodigoAcreedorSepa: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorGuardarCodigoAcreedorSepa;
+end;
+function SErrorGuardarMandatoSepaCliente: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorGuardarMandatoSepaCliente;
+end;
+function SErrorNombreSesionCambioTarifaObligatorio: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorNombreSesionCambioTarifaObligatorio;
+end;
+function SErrorTarifaDestinoObligatoria: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorTarifaDestinoObligatoria;
+end;
+function SErrorNombreUsuario: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorNombreUsuario;
+end;
+function SErrorUsuarioCoincideGrupo: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorUsuarioCoincideGrupo;
+end;
+function SErrorCodigoAtributoVariacionObligatorio: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorCodigoAtributoVariacionObligatorio;
+end;
+function SErrorConexionPrincipalTrabajoNoDisponible: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorConexionPrincipalTrabajoNoDisponible;
+end;
+function SErrorPrefijoEanSesionLargo: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorPrefijoEanSesionLargo;
+end;
+function SErrorColorBasicoMaterializacionNoExiste: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorColorBasicoMaterializacionNoExiste;
+end;
+function SErrorAlmacenSesionParaAlbaranCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorAlmacenSesionParaAlbaranCompra;
+end;
+function SErrorAlmacenSesionParaPedidoCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorAlmacenSesionParaPedidoCompra;
+end;
+function SErrorAlmacenSesionParaPendienteRecibir: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorAlmacenSesionParaPendienteRecibir;
+end;
+function SAvisoSelectorConjuntoFilaNoImplementado: string;
+begin
+  Result :=
+    inLibMsgCompras.SAvisoSelectorConjuntoFilaNoImplementado;
+end;
+function STituloNuevaFilaCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.STituloNuevaFilaCompra;
+end;
+function SSolicitudNombreFilaCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SSolicitudNombreFilaCompra;
+end;
+function SAvisoConjuntoPivotCompraObligatorio: string;
+begin
+  Result :=
+    inLibMsgCompras.SAvisoConjuntoPivotCompraObligatorio;
+end;
+function SErrorConjuntoPivotCompraNoExiste: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorConjuntoPivotCompraNoExiste;
+end;
+function STituloAnadirValorPivotCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.STituloAnadirValorPivotCompra;
+end;
+function SSolicitudNombreValorPivotCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SSolicitudNombreValorPivotCompra;
+end;
+function SSolicitudOrdenValorPivotCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SSolicitudOrdenValorPivotCompra;
+end;
+function SErrorDistribuidorTallasNoRegistrado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorDistribuidorTallasNoRegistrado;
+end;
+function SErrorInvarianteUnidadesTallas: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorInvarianteUnidadesTallas;
+end;
+function SErrorAlmacenDistribucionTallasNoDisponible: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorAlmacenDistribucionTallasNoDisponible;
+end;
+function SErrorArticuloSkuNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloSkuNoEncontrado;
+end;
+function SAvisoArticuloSinAtributos: string;
+begin
+  Result :=
+    inLibMsgArticulos.SAvisoArticuloSinAtributos;
+end;
+function SErrorFactoriaTallasHorizontalObligatoria: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorFactoriaTallasHorizontalObligatoria;
+end;
+function SErrorOperacionCanceladaUsuario: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorOperacionCanceladaUsuario;
+end;
+function SErrorRestauracionEstructuraIncompleta: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorRestauracionEstructuraIncompleta;
+end;
+function SErrorNombreBBDDDestinoVacio: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorNombreBBDDDestinoVacio;
+end;
+function SErrorFicheroCopiaNoExiste: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorFicheroCopiaNoExiste;
+end;
+function SErrorDesencriptarCopia: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorDesencriptarCopia;
+end;
+function SErrorAlbaranCompraMovimientosNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorAlbaranCompraMovimientosNoEncontrado;
+end;
+function SErrorAlbaranCompraMovimientosYaGenerados: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorAlbaranCompraMovimientosYaGenerados;
+end;
+function SErrorAlbaranCompraSinCantidadParaMovimientos: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorAlbaranCompraSinCantidadParaMovimientos;
+end;
+function SErrorDivisaNoEncontrada: string;
+begin
+  Result :=
+    inLibMsgIntegraciones.SErrorDivisaNoEncontrada;
+end;
+function SErrorHttpDivisas: string;
+begin
+  Result :=
+    inLibMsgIntegraciones.SErrorHttpDivisas;
+end;
+function SErrorRedDivisas: string;
+begin
+  Result :=
+    inLibMsgIntegraciones.SErrorRedDivisas;
+end;
+function SErrorJsonDivisas: string;
+begin
+  Result :=
+    inLibMsgIntegraciones.SErrorJsonDivisas;
+end;
+function SErrorPruebaPilaJcl: string;
+begin
+  Result :=
+    inLibMsgIntegraciones.SErrorPruebaPilaJcl;
+end;
+function SErrorDevolucionCompraMovimientosNoEncontrada: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorDevolucionCompraMovimientosNoEncontrada;
+end;
+function SErrorDevolucionCompraMovimientosYaGenerados: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorDevolucionCompraMovimientosYaGenerados;
+end;
+function SErrorDevolucionCompraSinCantidadParaMovimientos: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorDevolucionCompraSinCantidadParaMovimientos;
+end;
+function SErrorEmpresaSinAlmacenActivo: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorEmpresaSinAlmacenActivo;
+end;
+function SErrorAlmacenDepositosEmpresaNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorAlmacenDepositosEmpresaNoEncontrado;
+end;
+function SErrorLimitePeticionesCripto: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorLimitePeticionesCripto;
+end;
+function SErrorHttpCripto: string;
+begin
+  Result :=
+    inLibMsgIntegraciones.SErrorHttpCripto;
+end;
+function SErrorRedCripto: string;
+begin
+  Result :=
+    inLibMsgIntegraciones.SErrorRedCripto;
+end;
+function SErrorJsonCripto: string;
+begin
+  Result :=
+    inLibMsgIntegraciones.SErrorJsonCripto;
+end;
+function SPreguntaCrearDocumentoTrabajo: string;
+begin
+  Result :=
+    inLibMsgVentas.SPreguntaCrearDocumentoTrabajo;
+end;
+function STituloAgregarDocumentoTrabajo: string;
+begin
+  Result :=
+    inLibMsgVentas.STituloAgregarDocumentoTrabajo;
+end;
+function STituloNuevoDocumentoTrabajo: string;
+begin
+  Result :=
+    inLibMsgVentas.STituloNuevoDocumentoTrabajo;
+end;
+function SSolicitudTituloDocumentoTrabajo: string;
+begin
+  Result :=
+    inLibMsgVentas.SSolicitudTituloDocumentoTrabajo;
+end;
+function SErrorArticuloDocumentoTrabajoNoActivo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloDocumentoTrabajoNoActivo;
+end;
+function SErrorArticuloDocumentoTrabajoVariosSkus: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloDocumentoTrabajoVariosSkus;
+end;
+function SInfoUnidadAgregadaDocumentoTrabajo: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoUnidadAgregadaDocumentoTrabajo;
+end;
+function STituloDocumentoTrabajo: string;
+begin
+  Result :=
+    inLibMsgVentas.STituloDocumentoTrabajo;
+end;
+function SErrorArticuloNoExiste: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloNoExiste;
+end;
+function SErrorEntradaArticuloVacia: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorEntradaArticuloVacia;
+end;
+function SErrorCodigoBarrasNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorCodigoBarrasNoEncontrado;
+end;
+function SErrorArticuloEntradaNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloEntradaNoEncontrado;
+end;
+function SAvisoArticuloRequiereSku: string;
+begin
+  Result :=
+    inLibMsgArticulos.SAvisoArticuloRequiereSku;
+end;
+function SErrorArticuloVariacionSinSkusActivos: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloVariacionSinSkusActivos;
+end;
+function SErrorArticuloSinSkusActivos: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloSinSkusActivos;
+end;
+function SErrorSkuNoPerteneceArticulo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorSkuNoPerteneceArticulo;
+end;
+function SErrorSesionCompraNoActiva: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorSesionCompraNoActiva;
+end;
+function SErrorLineaArticuloSesionNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorLineaArticuloSesionNoSeleccionada;
+end;
+function SErrorLineaSesionSinNumero: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorLineaSesionSinNumero;
+end;
+function SErrorSistemaTallasLineaSesionObligatorio: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorSistemaTallasLineaSesionObligatorio;
+end;
+function SErrorKitProveedorNoExiste: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorKitProveedorNoExiste;
+end;
+function SErrorKitSinSistemaTallas: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorKitSinSistemaTallas;
+end;
+function SErrorTallajeKitNoCoincide: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorTallajeKitNoCoincide;
+end;
+function SErrorGestorTallasNoInicializado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorGestorTallasNoInicializado;
+end;
+function SErrorKitSinTallasDefinidas: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorKitSinTallasDefinidas;
+end;
+function SAvisoTallasKitSinCorrespondencia: string;
+begin
+  Result :=
+    inLibMsgCompras.SAvisoTallasKitSinCorrespondencia;
+end;
+function SErrorTallasKitSinCorrespondencia: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorTallasKitSinCorrespondencia;
+end;
+function SErrorSesionIncidenciasSinDetalle: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorSesionIncidenciasSinDetalle;
+end;
+function SErrorDataModuleSesionNoInicializado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorDataModuleSesionNoInicializado;
+end;
+function SErrorSesionNoCerradaParaRevertir: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorSesionNoCerradaParaRevertir;
+end;
+function SErrorRestauracionNoFinalizada: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorRestauracionNoFinalizada;
+end;
+function SErrorCodigoArticuloResolverObligatorio: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorCodigoArticuloResolverObligatorio;
+end;
+function SErrorArticuloResolverNoExiste: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloResolverNoExiste;
+end;
+function SAvisoArticuloResolverRequiereSku: string;
+begin
+  Result :=
+    inLibMsgArticulos.SAvisoArticuloResolverRequiereSku;
+end;
+function STextoLineaIncidenciaSesion: string;
+begin
+  Result :=
+    inLibMsgCompras.STextoLineaIncidenciaSesion;
+end;
+function STextoCabeceraIncidenciaSesion: string;
+begin
+  Result :=
+    inLibMsgCompras.STextoCabeceraIncidenciaSesion;
+end;
+function SFormatoIncidenciaSesion: string;
+begin
+  Result :=
+    inLibMsgCompras.SFormatoIncidenciaSesion;
+end;
+function SErrorSesionInactivaIncidencia: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorSesionInactivaIncidencia;
+end;
+function STipoIncidenciaCabecera: string;
+begin
+  Result :=
+    inLibMsgCompras.STipoIncidenciaCabecera;
+end;
+function SErrorEmpresaSesionFaltante: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorEmpresaSesionFaltante;
+end;
+function SErrorProveedorSesionFaltante: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorProveedorSesionFaltante;
+end;
+function SErrorAlmacenSesionFaltante: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorAlmacenSesionFaltante;
+end;
+function SErrorSesionSinLineas: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorSesionSinLineas;
+end;
+function STipoIncidenciaDuplicadoInterno: string;
+begin
+  Result :=
+    inLibMsgCompras.STipoIncidenciaDuplicadoInterno;
+end;
+function SErrorCodigoDuplicadoInternoSesion: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorCodigoDuplicadoInternoSesion;
+end;
+function STipoIncidenciaDuplicado: string;
+begin
+  Result :=
+    inLibMsgCompras.STipoIncidenciaDuplicado;
+end;
+function SErrorCodigoDuplicadoSesion: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorCodigoDuplicadoSesion;
+end;
+function STextoArticuloInactivoSesion: string;
+begin
+  Result :=
+    inLibMsgArticulos.STextoArticuloInactivoSesion;
+end;
+function STipoIncidenciaCodigo: string;
+begin
+  Result :=
+    inLibMsgCompras.STipoIncidenciaCodigo;
+end;
+function SErrorLineaSesionSinCodigo: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorLineaSesionSinCodigo;
+end;
+function STipoIncidenciaDescripcion: string;
+begin
+  Result :=
+    inLibMsgCompras.STipoIncidenciaDescripcion;
+end;
+function SErrorLineaSesionSinDescripcion: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorLineaSesionSinDescripcion;
+end;
+function STipoIncidenciaCantidades: string;
+begin
+  Result :=
+    inLibMsgCompras.STipoIncidenciaCantidades;
+end;
+function SErrorLineaMatrizSinCantidades: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorLineaMatrizSinCantidades;
+end;
+function STipoIncidenciaSistemaTallas: string;
+begin
+  Result :=
+    inLibMsgCompras.STipoIncidenciaSistemaTallas;
+end;
+function SErrorLineaMatrizSinSistemaTallas: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorLineaMatrizSinSistemaTallas;
+end;
+function SErrorCodigoEanMinimo7Digitos: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorCodigoEanMinimo7Digitos;
+end;
+function SErrorCodigoBarrasNoNumerico: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorCodigoBarrasNoNumerico;
+end;
+function SErrorCodigoEanMinimo12Digitos: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorCodigoEanMinimo12Digitos;
+end;
+function SErrorFacturaeFaltaCampo: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFacturaeFaltaCampo;
+end;
+function STextoNifParteFacturae: string;
+begin
+  Result :=
+    inLibMsgFacturas.STextoNifParteFacturae;
+end;
+function STextoRazonSocialParteFacturae: string;
+begin
+  Result :=
+    inLibMsgFacturas.STextoRazonSocialParteFacturae;
+end;
+function STextoDireccionParteFacturae: string;
+begin
+  Result :=
+    inLibMsgFacturas.STextoDireccionParteFacturae;
+end;
+function STextoCodigoPostalParteFacturae: string;
+begin
+  Result :=
+    inLibMsgFacturas.STextoCodigoPostalParteFacturae;
+end;
+function STextoPoblacionParteFacturae: string;
+begin
+  Result :=
+    inLibMsgFacturas.STextoPoblacionParteFacturae;
+end;
+function STextoProvinciaParteFacturae: string;
+begin
+  Result :=
+    inLibMsgFacturas.STextoProvinciaParteFacturae;
+end;
+function SErrorDocumentoFiscalParteFacturae: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorDocumentoFiscalParteFacturae;
+end;
+function SErrorFaltaCodigoDir3Facturae: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFaltaCodigoDir3Facturae;
+end;
+function SErrorCodigoDir3LargoFacturae: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorCodigoDir3LargoFacturae;
+end;
+function STextoEmpresaEmisoraFacturae: string;
+begin
+  Result :=
+    inLibMsgFacturas.STextoEmpresaEmisoraFacturae;
+end;
+function STextoClienteFacturae: string;
+begin
+  Result :=
+    inLibMsgFacturas.STextoClienteFacturae;
+end;
+function STextoOficinaContableFacturae: string;
+begin
+  Result :=
+    inLibMsgFacturas.STextoOficinaContableFacturae;
+end;
+function STextoOrganoGestorFacturae: string;
+begin
+  Result :=
+    inLibMsgFacturas.STextoOrganoGestorFacturae;
+end;
+function STextoUnidadTramitadoraFacturae: string;
+begin
+  Result :=
+    inLibMsgFacturas.STextoUnidadTramitadoraFacturae;
+end;
+function SErrorNombrePersonaFisicaFacturae: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorNombrePersonaFisicaFacturae;
+end;
+function SErrorApellidosPersonaFisicaFacturae: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorApellidosPersonaFisicaFacturae;
+end;
+function SErrorCodigoPagoFacturaeInvalido: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorCodigoPagoFacturaeInvalido;
+end;
+function SErrorFacturaeNoExiste: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFacturaeNoExiste;
+end;
+function SErrorFacturaeTipoVentaInvalido: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFacturaeTipoVentaInvalido;
+end;
+function SErrorFacturaeNoConsolidada: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFacturaeNoConsolidada;
+end;
+function SErrorFacturaeFechaOficialFaltante: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFacturaeFechaOficialFaltante;
+end;
+function SErrorLineaFacturaeSinDescripcion: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorLineaFacturaeSinDescripcion;
+end;
+function SErrorLineaFacturaeCantidadCero: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorLineaFacturaeCantidadCero;
+end;
+function SErrorFacturaeSinLineas: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFacturaeSinLineas;
+end;
+function SErrorBasesFacturaeNoCuadran: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorBasesFacturaeNoCuadran;
+end;
+function SErrorTotalesFacturaeNoCuadran: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorTotalesFacturaeNoCuadran;
+end;
+function SErrorEmitirFacturae: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorEmitirFacturae;
+end;
+function SErrorCertificadoFacturaeNoConfigurado: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorCertificadoFacturaeNoConfigurado;
+end;
+function SErrorConexionFacturaeNoDisponible: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorConexionFacturaeNoDisponible;
+end;
+function SErrorFicheroSalidaFacturaeNoIndicado: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFicheroSalidaFacturaeNoIndicado;
+end;
+function SErrorPorcentajeIvaFueraRango: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorPorcentajeIvaFueraRango;
+end;
+function SErrorPrecioFacturaNegativo: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorPrecioFacturaNegativo;
+end;
+function SErrorRespuestaHttpFactuzamApi: string;
+begin
+  Result :=
+    inLibMsgIntegraciones.SErrorRespuestaHttpFactuzamApi;
+end;
+function SErrorFactuzamApiNoConfigurada: string;
+begin
+  Result :=
+    inLibMsgIntegraciones.SErrorFactuzamApiNoConfigurada;
+end;
+function SInfoEventoFactuzamApiRecibido: string;
+begin
+  Result :=
+    inLibMsgIntegraciones.SInfoEventoFactuzamApiRecibido;
+end;
+function SInfoConsultaFactuzamApiRealizada: string;
+begin
+  Result :=
+    inLibMsgIntegraciones.SInfoConsultaFactuzamApiRealizada;
+end;
+function SInfoDocumentoFactuzamApiGuardado: string;
+begin
+  Result :=
+    inLibMsgIntegraciones.SInfoDocumentoFactuzamApiGuardado;
+end;
+function SInfoDocumentoFactuzamApiDescargado: string;
+begin
+  Result :=
+    inLibMsgIntegraciones.SInfoDocumentoFactuzamApiDescargado;
+end;
+function SErrorImportarImagenCodec: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorImportarImagenCodec;
+end;
+function SErrorGuardarFotoSinCodigoArticulo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorGuardarFotoSinCodigoArticulo;
+end;
+function SErrorFicheroOrigenFotoNoExiste: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorFicheroOrigenFotoNoExiste;
+end;
+function SErrorDirectorioFotosNoConfigurado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorDirectorioFotosNoConfigurado;
+end;
+function SErrorFotoNoRegistradaParaRotar: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorFotoNoRegistradaParaRotar;
+end;
+function SErrorFotoSesionSinSerie: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorFotoSesionSinSerie;
+end;
+function SErrorFotoSesionSinNumero: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorFotoSesionSinNumero;
+end;
+function SErrorFotoSesionLineaInvalida: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorFotoSesionLineaInvalida;
+end;
+function STextoParametroUrlFotosNube: string;
+begin
+  Result :=
+    inLibMsgArticulos.STextoParametroUrlFotosNube;
+end;
+function STextoParametroTokenFotosNube: string;
+begin
+  Result :=
+    inLibMsgArticulos.STextoParametroTokenFotosNube;
+end;
+function STextoParametroReferenciaFotosNube: string;
+begin
+  Result :=
+    inLibMsgArticulos.STextoParametroReferenciaFotosNube;
+end;
+function STextoParametroCarpetaFotosNube: string;
+begin
+  Result :=
+    inLibMsgArticulos.STextoParametroCarpetaFotosNube;
+end;
+function SErrorParametrosFotosNubeFaltantes: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorParametrosFotosNubeFaltantes;
+end;
+function SErrorServidorFotosNubeHttp: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorServidorFotosNubeHttp;
+end;
+function SErrorConexionServidorFotosNube: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorConexionServidorFotosNube;
+end;
+function SErrorAbrirImpresoraTicket: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorAbrirImpresoraTicket;
+end;
+function SErrorIniciarDocumentoImpresora: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorIniciarDocumentoImpresora;
+end;
+function SErrorEscribirImpresora: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorEscribirImpresora;
+end;
+function SErrorEjecutorBusquedasNoRegistrado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorEjecutorBusquedasNoRegistrado;
+end;
+function SErrorOperacionCajaNoEncontrada: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorOperacionCajaNoEncontrada;
+end;
+function SErrorValoresAtributoNoDefinidos: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorValoresAtributoNoDefinidos;
+end;
+function SErrorColorCompraNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorColorCompraNoSeleccionado;
+end;
+function SErrorConexionResolverColorCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorConexionResolverColorCompra;
+end;
+function SErrorColorBasicoCompraNoExiste: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorColorBasicoCompraNoExiste;
+end;
+function SErrorResolverColorCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorResolverColorCompra;
+end;
+function SErrorArticuloSinSistemaTallasPivote: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloSinSistemaTallasPivote;
+end;
+function SErrorSistemaTallasSuperaMaximoPivote: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorSistemaTallasSuperaMaximoPivote;
+end;
+function SErrorSkuFueraSistemaTallasPivote: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorSkuFueraSistemaTallasPivote;
+end;
+function SErrorActivarPivoteTallas: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorActivarPivoteTallas;
+end;
+function SErrorActivarTallasHorizontalesParaColor: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorActivarTallasHorizontalesParaColor;
+end;
+function SErrorLineaActivaColorNoDisponible: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorLineaActivaColorNoDisponible;
+end;
+function SErrorColorCompraConCantidades: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorColorCompraConCantidades;
+end;
+function SErrorConsultaLineasCompraNoAbierta: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorConsultaLineasCompraNoAbierta;
+end;
+function SErrorLineaActivaColorNoEncontrada: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorLineaActivaColorNoEncontrada;
+end;
+function SErrorLineaActivaCompraSinArticulo: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorLineaActivaCompraSinArticulo;
+end;
+function SPreguntaEliminarLineaTallasVenta: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaEliminarLineaTallasVenta;
+end;
+function SErrorArticuloSkuNoEncontradoSinDetalle: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloSkuNoEncontradoSinDetalle;
+end;
+function SPreguntaEliminarLineaSkuCantidadCero: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaEliminarLineaSkuCantidadCero;
+end;
+function SInfoLineaPedidoTallaNoExiste: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoLineaPedidoTallaNoExiste;
+end;
+function SAvisoSistemaTallasSuperaMaximo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SAvisoSistemaTallasSuperaMaximo;
+end;
+function SErrorHojaCalculoNoActiva: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorHojaCalculoNoActiva;
+end;
+function SErrorControlHojaCalculoObligatorio: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorControlHojaCalculoObligatorio;
+end;
+function SErrorGuardarHojaCalculoControlObligatorio: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorGuardarHojaCalculoControlObligatorio;
+end;
+function SErrorIbanInvalido: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorIbanInvalido;
+end;
+function SErrorPaisIbanInvalido: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorPaisIbanInvalido;
+end;
+function SErrorDigitoControlIbanInvalido: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorDigitoControlIbanInvalido;
+end;
+function SErrorLongitudCuentaBancariaInvalida: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorLongitudCuentaBancariaInvalida;
+end;
+function SErrorCuentaBancariaInvalida: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorCuentaBancariaInvalida;
+end;
+function SErrorDigitoControlCuentaBancaria: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorDigitoControlCuentaBancaria;
+end;
+function SErrorPaisIbanInvalidoTipos: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorPaisIbanInvalidoTipos;
+end;
+function SErrorDigitoControlIbanInvalidoTipos: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorDigitoControlIbanInvalidoTipos;
+end;
+function STextoParametroUrlInventarioNube: string;
+begin
+  Result :=
+    inLibMsgArticulos.STextoParametroUrlInventarioNube;
+end;
+function STextoParametroTokenInventarioNube: string;
+begin
+  Result :=
+    inLibMsgArticulos.STextoParametroTokenInventarioNube;
+end;
+function STextoParametroReferenciaInventarioNube: string;
+begin
+  Result :=
+    inLibMsgArticulos.STextoParametroReferenciaInventarioNube;
+end;
+function SErrorParametrosInventarioNubeFaltantes: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorParametrosInventarioNubeFaltantes;
+end;
+function SErrorServidorInventarioNubeHttp: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorServidorInventarioNubeHttp;
+end;
+function SErrorConexionServidorInventarioNube: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorConexionServidorInventarioNube;
+end;
+function SErrorInventarioNubeSinIdRecuento: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorInventarioNubeSinIdRecuento;
+end;
+function SErrorDialogoPermisosLayoutNoRegistrado: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorDialogoPermisosLayoutNoRegistrado;
+end;
+function STextoResetearLayout: string;
+begin
+  Result :=
+    inLibMsgComun.STextoResetearLayout;
+end;
+function SInfoLayoutReseteado: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoLayoutReseteado;
+end;
+function SErrorLimiteDemoFacturas: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorLimiteDemoFacturas;
+end;
+function SErrorNifEmpresaLicenciaNoConfigurado: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorNifEmpresaLicenciaNoConfigurado;
+end;
+function SInfoLicenciaSinNifEmpresa: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SInfoLicenciaSinNifEmpresa;
+end;
+function SErrorLicenciaNoEncontrada: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorLicenciaNoEncontrada;
+end;
+function SInfoLicenciaValida: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SInfoLicenciaValida;
+end;
+function SErrorLicenciaNifsNoCoinciden: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorLicenciaNifsNoCoinciden;
+end;
+function SErrorAccesoFicheroLog: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorAccesoFicheroLog;
+end;
+function SErrorCrearMutexLog: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorCrearMutexLog;
+end;
+function SErrorParametrosAplicacionNoProporcionados: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorParametrosAplicacionNoProporcionados;
+end;
+function SErrorRespuestaFormateadorSqlVacia: string;
+begin
+  Result :=
+    inLibMsgIntegraciones.SErrorRespuestaFormateadorSqlVacia;
+end;
+function SErrorRespuestaFormateadorSqlInesperada: string;
+begin
+  Result :=
+    inLibMsgIntegraciones.SErrorRespuestaFormateadorSqlInesperada;
+end;
+function SErrorServicioPerfilesNoProporcionado: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorServicioPerfilesNoProporcionado;
+end;
+function SErrorCargarPerfilParametros: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorCargarPerfilParametros;
+end;
+function SErrorPedidoCompraSinPendientesAlmacen: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorPedidoCompraSinPendientesAlmacen;
+end;
+function SErrorAlmacenPedidoCompraNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorAlmacenPedidoCompraNoSeleccionado;
+end;
+function SErrorPedidoCompraSinCantidadesRecibir: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorPedidoCompraSinCantidadesRecibir;
+end;
+function SErrorContadorAlbaranCompraNoDisponible: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorContadorAlbaranCompraNoDisponible;
+end;
+function SErrorCrearLineasAlbaranCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorCrearLineasAlbaranCompra;
+end;
+function SInfoAlbaranCompraCreado: string;
+begin
+  Result :=
+    inLibMsgCompras.SInfoAlbaranCompraCreado;
+end;
+function SErrorAlbaranCompraDestinoNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorAlbaranCompraDestinoNoSeleccionado;
+end;
+function SInfoLineasIncorporadasAlbaranCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SInfoLineasIncorporadasAlbaranCompra;
+end;
+function SErrorIncorporarLineasAlbaranCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorIncorporarLineasAlbaranCompra;
+end;
+function SInfoLineasIncorporadasAlbaranCompraConCantidad: string;
+begin
+  Result :=
+    inLibMsgCompras.SInfoLineasIncorporadasAlbaranCompraConCantidad;
+end;
+function SErrorConexionPermisosNoDisponible: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorConexionPermisosNoDisponible;
+end;
+function SErrorPreviewExcelNoRegistrado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorPreviewExcelNoRegistrado;
+end;
+function SErrorPreviewTicketNoRegistrado: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorPreviewTicketNoRegistrado;
+end;
+function SErrorRespuestaNtpNoValida: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorRespuestaNtpNoValida;
+end;
+function SInfoRelojFiscalCorrecto: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SInfoRelojFiscalCorrecto;
+end;
+function SErrorRelojSistemaFueraMargenLegal: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorRelojSistemaFueraMargenLegal;
+end;
+function SErrorComprobarRelojFiscalNtp: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorComprobarRelojFiscalNtp;
+end;
+function SErrorContextoSinIban: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorContextoSinIban;
+end;
+function SErrorContextoIbanNoValido: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorContextoIbanNoValido;
+end;
+function SErrorNifEmpresaAcreedorSepaNoValido: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorNifEmpresaAcreedorSepaNoValido;
+end;
+function SErrorClienteSinMandatoSepa: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorClienteSinMandatoSepa;
+end;
+function STextoBancoCobroRemesa: string;
+begin
+  Result :=
+    inLibMsgVentas.STextoBancoCobroRemesa;
+end;
+function SErrorConexionGenerarRemesaSepa: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorConexionGenerarRemesaSepa;
+end;
+function SErrorArchivoSalidaSepaNoIndicado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorArchivoSalidaSepaNoIndicado;
+end;
+function SErrorRemesaSinFechaCobro: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorRemesaSinFechaCobro;
+end;
+function SErrorBancoCobroRemesaNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorBancoCobroRemesaNoEncontrado;
+end;
+function SErrorBancoCobroSinCodigoAcreedorSepa: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorBancoCobroSinCodigoAcreedorSepa;
+end;
+function SErrorCodigoAcreedorSepaNoValido: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorCodigoAcreedorSepaNoValido;
+end;
+function SErrorEfectoSinNombreCliente: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorEfectoSinNombreCliente;
+end;
+function STextoClienteSepa: string;
+begin
+  Result :=
+    inLibMsgVentas.STextoClienteSepa;
+end;
+function SErrorClienteSinFechaFirmaMandatoSepa: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorClienteSinFechaFirmaMandatoSepa;
+end;
+function SErrorRecalcularTotalesFactura: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorRecalcularTotalesFactura;
+end;
+function SErrorGenerarContadorAutomatico: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorGenerarContadorAutomatico;
+end;
+function SErrorConexionBbddConExcepcion: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorConexionBbddConExcepcion;
+end;
+function SErrorNumeroCuentaInvalido: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorNumeroCuentaInvalido;
+end;
+function SErrorNifNoValido: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorNifNoValido;
+end;
+function SErrorLetraDniIncorrecta: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorLetraDniIncorrecta;
+end;
+function SErrorServicioPerfilesUsuarioNoConfigurado: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorServicioPerfilesUsuarioNoConfigurado;
+end;
+function SErrorCrearSeleccionarDocumentoAntesLineas: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorCrearSeleccionarDocumentoAntesLineas;
+end;
+function SErrorCrearSeleccionarDocumentoAntesTallas: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorCrearSeleccionarDocumentoAntesTallas;
+end;
+function SErrorArticuloCursoSinSistemaTallas: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloCursoSinSistemaTallas;
+end;
+function SErrorAltaSeleccionarArticuloConTallas: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorAltaSeleccionarArticuloConTallas;
+end;
+function SErrorArticuloSinSistemaTallasCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorArticuloSinSistemaTallasCompra;
+end;
+function SErrorActivarTallasHorizontalesCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorActivarTallasHorizontalesCompra;
+end;
+function SErrorEncolarVentaWebservice: string;
+begin
+  Result :=
+    inLibMsgIntegraciones.SErrorEncolarVentaWebservice;
+end;
+function SErrorFacturaWebserviceNoExiste: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFacturaWebserviceNoExiste;
+end;
+function SErrorExportarNoVerifactuSinCertificado: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorExportarNoVerifactuSinCertificado;
+end;
+function SErrorExportarNoVerifactuSinColumnasEventos: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorExportarNoVerifactuSinColumnasEventos;
+end;
+function SErrorExportarNoVerifactuSinColumnasFacturacion: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorExportarNoVerifactuSinColumnasFacturacion;
+end;
+function SErrorExportarNoVerifactuRegistrosSinFirma: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorExportarNoVerifactuRegistrosSinFirma;
+end;
+function SErrorConexionExportarNoVerifactu: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorConexionExportarNoVerifactu;
+end;
+function SErrorArchivoBaseExportacionNoIndicado: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorArchivoBaseExportacionNoIndicado;
+end;
+function STextoTipoError: string;
+begin
+  Result :=
+    inLibMsgVerifactu.STextoTipoError;
+end;
+function STextoTipoAviso: string;
+begin
+  Result :=
+    inLibMsgVerifactu.STextoTipoAviso;
+end;
+function SFormatoDetalleVerificacion: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SFormatoDetalleVerificacion;
+end;
+function SErrorModoExportacionNoCoincide: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorModoExportacionNoCoincide;
+end;
+function SErrorXmlFirmadoNoLegible: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorXmlFirmadoNoLegible;
+end;
+function SErrorFirmaEventoRaizIncorrecta: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorFirmaEventoRaizIncorrecta;
+end;
+function SErrorEventoFirmadoNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorEventoFirmadoNoEncontrado;
+end;
+function SErrorFirmaFacturaRaizIncorrecta: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFirmaFacturaRaizIncorrecta;
+end;
+function SErrorFirmaXadesNodoAeatIncorrecto: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorFirmaXadesNodoAeatIncorrecto;
+end;
+function SErrorFirmaXadesSinCertificado: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorFirmaXadesSinCertificado;
+end;
+function SErrorFirmaXadesSinSignedInfo: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorFirmaXadesSinSignedInfo;
+end;
+function SErrorCanonicalizacionFirmaAeat: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorCanonicalizacionFirmaAeat;
+end;
+function SErrorMetodoFirmaNoRsaSha256: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorMetodoFirmaNoRsaSha256;
+end;
+function SErrorReferenciasSignedInfo: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorReferenciasSignedInfo;
+end;
+function SErrorReferenciaDocumentoFirmado: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorReferenciaDocumentoFirmado;
+end;
+function SErrorTransformacionFirmaEnveloped: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorTransformacionFirmaEnveloped;
+end;
+function SErrorDigestRegistroNoSha256: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorDigestRegistroNoSha256;
+end;
+function SErrorReferenciaSignedProperties: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorReferenciaSignedProperties;
+end;
+function SErrorCanonicalizacionSignedProperties: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorCanonicalizacionSignedProperties;
+end;
+function SErrorDigestSignedPropertiesNoSha256: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorDigestSignedPropertiesNoSha256;
+end;
+function SErrorQualifyingPropertiesXades: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorQualifyingPropertiesXades;
+end;
+function SErrorSignedPropertiesXades: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorSignedPropertiesXades;
+end;
+function SErrorSigningCertificateXades: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorSigningCertificateXades;
+end;
+function SErrorPoliticaFirmaAge: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorPoliticaFirmaAge;
+end;
+function SErrorIdentificadorPoliticaAge: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorIdentificadorPoliticaAge;
+end;
+function SErrorDigestPoliticaAgeNoSha1: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorDigestPoliticaAgeNoSha1;
+end;
+function SErrorDigestValuePoliticaAge: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorDigestValuePoliticaAge;
+end;
+function SErrorUrlPoliticaAge: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorUrlPoliticaAge;
+end;
+function SFormatoEtiquetaEvento: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SFormatoEtiquetaEvento;
+end;
+function SErrorEventoHashPropioNoSha256: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorEventoHashPropioNoSha256;
+end;
+function SAvisoEventoPrimerHashAnteriorNoCero: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SAvisoEventoPrimerHashAnteriorNoCero;
+end;
+function SErrorEventoHashAnteriorNoCoincide: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorEventoHashAnteriorNoCoincide;
+end;
+function SErrorEventoSinRegistroXmlFirmado: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorEventoSinRegistroXmlFirmado;
+end;
+function SErrorEventoHuellaNoCoincide: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorEventoHuellaNoCoincide;
+end;
+function SErrorEventoFirmaGuardadaSinFirmaXml: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorEventoFirmaGuardadaSinFirmaXml;
+end;
+function SErrorEventoSinFirmaXades: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorEventoSinFirmaXades;
+end;
+function SErrorEventoSignatureValueNoCoincide: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorEventoSignatureValueNoCoincide;
+end;
+function SErrorEventoFirmaDigitalNoCoincide: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorEventoFirmaDigitalNoCoincide;
+end;
+function STextoRegistroFacturaIndice: string;
+begin
+  Result :=
+    inLibMsgFacturas.STextoRegistroFacturaIndice;
+end;
+function SFormatoEtiquetaFactura: string;
+begin
+  Result :=
+    inLibMsgFacturas.SFormatoEtiquetaFactura;
+end;
+function SAvisoFacturaSinPeticionCompletaXml: string;
+begin
+  Result :=
+    inLibMsgFacturas.SAvisoFacturaSinPeticionCompletaXml;
+end;
+function SErrorFacturaHashPeticionNoCoincide: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFacturaHashPeticionNoCoincide;
+end;
+function SErrorFacturaSinRegistroXmlFirmado: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFacturaSinRegistroXmlFirmado;
+end;
+function SErrorFacturaHashRegistroNoCoincide: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFacturaHashRegistroNoCoincide;
+end;
+function SErrorFacturaGuardadaSinFirmaXml: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFacturaGuardadaSinFirmaXml;
+end;
+function SErrorFacturaSinFirmaDigitalXades: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorFacturaSinFirmaDigitalXades;
+end;
+function SErrorFacturaSignatureValueNoCoincide: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFacturaSignatureValueNoCoincide;
+end;
+function STextoEventos: string;
+begin
+  Result :=
+    inLibMsgVerifactu.STextoEventos;
+end;
+function STextoFacturacion: string;
+begin
+  Result :=
+    inLibMsgFacturas.STextoFacturacion;
+end;
+function SErrorFicheroEventosNoExiste: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorFicheroEventosNoExiste;
+end;
+function SErrorFicheroEventosRaizIncorrecta: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorFicheroEventosRaizIncorrecta;
+end;
+function SErrorFicheroEventosVacio: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorFicheroEventosVacio;
+end;
+function SErrorFicheroFacturacionNoExiste: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFicheroFacturacionNoExiste;
+end;
+function SErrorFicheroFacturacionRaizIncorrecta: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFicheroFacturacionRaizIncorrecta;
+end;
+function SErrorFicheroFacturacionVacio: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFicheroFacturacionVacio;
+end;
+function SErrorVerificarEventos: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorVerificarEventos;
+end;
+function SErrorVerificarFacturacion: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorVerificarFacturacion;
+end;
+function SInfoVerificacionCorrecta: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SInfoVerificacionCorrecta;
+end;
+function SFormatoModoActual: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SFormatoModoActual;
+end;
+function SResumenVerificacionNoVerifactu: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SResumenVerificacionNoVerifactu;
+end;
+function SDepuracionComponenteNoTcxLabel: string;
+begin
+  Result :=
+    inLibMsgComun.SDepuracionComponenteNoTcxLabel;
+end;
+function SDepuracionComponenteNoTcxTabSheet: string;
+begin
+  Result :=
+    inLibMsgComun.SDepuracionComponenteNoTcxTabSheet;
+end;
+function SDepuracionComponenteNoTcxDbCheckBox: string;
+begin
+  Result :=
+    inLibMsgComun.SDepuracionComponenteNoTcxDbCheckBox;
+end;
+function SDepuracionComponenteNoTcxButton: string;
+begin
+  Result :=
+    inLibMsgComun.SDepuracionComponenteNoTcxButton;
+end;
+function SDepuracionComponenteNoTcxGroupBox: string;
+begin
+  Result :=
+    inLibMsgComun.SDepuracionComponenteNoTcxGroupBox;
+end;
+function SDepuracionComponenteNoTcxDbRadioGroup: string;
+begin
+  Result :=
+    inLibMsgComun.SDepuracionComponenteNoTcxDbRadioGroup;
+end;
+function SDepuracionComponenteNoSpeedButton: string;
+begin
+  Result :=
+    inLibMsgComun.SDepuracionComponenteNoSpeedButton;
+end;
+function SDepuracionComponenteNoTcxRadioButton: string;
+begin
+  Result :=
+    inLibMsgComun.SDepuracionComponenteNoTcxRadioButton;
+end;
+function SErrorImagenNoExiste: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorImagenNoExiste;
+end;
+function SErrorAbrirProveedorCriptografico: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorAbrirProveedorCriptografico;
+end;
+function SErrorCrearHashCriptografico: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorCrearHashCriptografico;
+end;
+function SErrorCalcularHash: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorCalcularHash;
+end;
+function SErrorObtenerTamanoHash: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorObtenerTamanoHash;
+end;
+function SErrorObtenerValorHash: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorObtenerValorHash;
+end;
+function SErrorOperacionCriptografica: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorOperacionCriptografica;
+end;
+function SErrorProveedorCertificadoSinSha256: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorProveedorCertificadoSinSha256;
+end;
+function STextoCertificadoTodaviaNoValido: string;
+begin
+  Result :=
+    inLibMsgVerifactu.STextoCertificadoTodaviaNoValido;
+end;
+function STextoCertificadoCaducado: string;
+begin
+  Result :=
+    inLibMsgVerifactu.STextoCertificadoCaducado;
+end;
+function SErrorCertificadoNoVigente: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorCertificadoNoVigente;
+end;
+function SErrorCertificadoVigenteNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorCertificadoVigenteNoEncontrado;
+end;
+function SErrorCertificadoEmpresaNoConfigurado: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorCertificadoEmpresaNoConfigurado;
+end;
+function SErrorCrearHashSha256Firma: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorCrearHashSha256Firma;
+end;
+function SErrorCargarDatosFirma: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorCargarDatosFirma;
+end;
+function SErrorCalcularTamanoFirmaSha256: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorCalcularTamanoFirmaSha256;
+end;
+function SErrorFirmarSha256: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorFirmarSha256;
+end;
+function SErrorCalcularTamanoFirmaNCrypt: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorCalcularTamanoFirmaNCrypt;
+end;
+function SErrorFirmaNCrypt: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorFirmaNCrypt;
+end;
+function SErrorAbrirClavePrivadaCertificado: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorAbrirClavePrivadaCertificado;
+end;
+function SErrorXmlMalFormadoCanonicalizar: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorXmlMalFormadoCanonicalizar;
+end;
+function SErrorElementoRaizXmlNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorElementoRaizXmlNoEncontrado;
+end;
+function SErrorNombreNodoRaizNoDeterminado: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorNombreNodoRaizNoDeterminado;
+end;
+function SErrorCierreAperturaRaizNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorCierreAperturaRaizNoEncontrado;
+end;
+function SErrorCierreNodoRaizNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorCierreNodoRaizNoEncontrado;
+end;
+function SErrorCierreNodoNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorCierreNodoNoEncontrado;
+end;
+function SErrorNifProductorEventoVerifactuInvalido: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorNifProductorEventoVerifactuInvalido;
+end;
+function SErrorEmpresaEventosVerifactuNoConfigurada: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorEmpresaEventosVerifactuNoConfigurada;
+end;
+function SErrorNifEmisorEventoNoVerifactuInvalido: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorNifEmisorEventoNoVerifactuInvalido;
+end;
+function SErrorFacturaRequisitosFiscalesNoExiste: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFacturaRequisitosFiscalesNoExiste;
+end;
+function SErrorEmpresaSinNifEmisionFiscal: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorEmpresaSinNifEmisionFiscal;
+end;
+function SErrorNifProductorVerifactuInvalido: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorNifProductorVerifactuInvalido;
+end;
+function SErrorCertificadoFiscalEmpresaNoUtilizable: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorCertificadoFiscalEmpresaNoUtilizable;
+end;
+function SErrorFirmaCertificadoNoVerifactuDesactivada: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorFirmaCertificadoNoVerifactuDesactivada;
+end;
+function SErrorCertificadoEventosNoVerifactuNoConfigurado: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorCertificadoEventosNoVerifactuNoConfigurado;
+end;
+function SErrorFirmarEventoNoVerifactu: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorFirmarEventoNoVerifactu;
+end;
+function SErrorRelojEventoNoVerifactu: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorRelojEventoNoVerifactu;
+end;
+function SErrorColumnasFirmaFacturacionNoDisponibles: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorColumnasFirmaFacturacionNoDisponibles;
+end;
+function STextoRegistroFacturacionNoVerifactu: string;
+begin
+  Result :=
+    inLibMsgVerifactu.STextoRegistroFacturacionNoVerifactu;
+end;
+function SErrorFirmaRegistroNoVerifactuObligatoria: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorFirmaRegistroNoVerifactuObligatoria;
+end;
+function SErrorNifProductorSoftwareVerifactuInvalido: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorNifProductorSoftwareVerifactuInvalido;
+end;
+function SErrorFacturaExtranjeraSinNifIva: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFacturaExtranjeraSinNifIva;
+end;
+function SErrorFacturaSinNifClienteValido: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFacturaSinNifClienteValido;
+end;
+function SErrorNifEmisorVerifactuInvalido: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorNifEmisorVerifactuInvalido;
+end;
+function SErrorFacturaRegistroFiscalNoEncontrada: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorFacturaRegistroFiscalNoEncontrada;
+end;
+function SAvisoQrPngNoGenerado: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SAvisoQrPngNoGenerado;
+end;
+function SErrorFacturaEnvioVerifactuNoEncontrada: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorFacturaEnvioVerifactuNoEncontrada;
+end;
+function SErrorRespuestaServicioInesperada: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorRespuestaServicioInesperada;
+end;
+function SErrorRespuestaHttpAeat: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorRespuestaHttpAeat;
+end;
+function SErrorRespuestaRegistroAeat: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorRespuestaRegistroAeat;
+end;
+function SErrorEstadoEnvioAeat: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorEstadoEnvioAeat;
+end;
+function SErrorServicioInstalacionHttp: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorServicioInstalacionHttp;
+end;
+function SErrorReferenciaGlobalInstalacionFaltante: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorReferenciaGlobalInstalacionFaltante;
+end;
+function SErrorApiKeyInstalacionFaltante: string;
+begin
+  Result :=
+    inLibMsgIntegraciones.SErrorApiKeyInstalacionFaltante;
+end;
+function SErrorServicioJsonInvalido: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorServicioJsonInvalido;
+end;
+function SErrorServicioSinNumeroInstalacion: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorServicioSinNumeroInstalacion;
+end;
+function SErrorServicioSinDatosDeclaracion: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorServicioSinDatosDeclaracion;
+end;
+function SErrorDeclaracionVersionNoSolicitada: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorDeclaracionVersionNoSolicitada;
+end;
+function SErrorDeclaracionSifIncorrecto: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorDeclaracionSifIncorrecto;
+end;
+function SErrorDeclaracionDescargadaVacia: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorDeclaracionDescargadaVacia;
+end;
+function SErrorPaginaPublicaHttp: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorPaginaPublicaHttp;
+end;
+function SErrorDeclaracionWebserviceOtraVersion: string;
+begin
+  Result :=
+    inLibMsgIntegraciones.SErrorDeclaracionWebserviceOtraVersion;
+end;
+function SErrorDeclaracionPaginaPublicaOtraVersion: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorDeclaracionPaginaPublicaOtraVersion;
+end;
+function SErrorDeclaracionResponsableNoDisponible: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorDeclaracionResponsableNoDisponible;
+end;
+function SErrorEmpresaInstalacionSifNoConfigurada: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorEmpresaInstalacionSifNoConfigurada;
+end;
+function SErrorEmpresaSinRazonSocial: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorEmpresaSinRazonSocial;
+end;
+function SErrorNifEmpresaInstalacionInvalido: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorNifEmpresaInstalacionInvalido;
+end;
+function SErrorEmpresaSinNumeroInstalacionSif: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorEmpresaSinNumeroInstalacionSif;
+end;
+function SErrorNumeroInstalacionSifIncorrecto: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorNumeroInstalacionSifIncorrecto;
+end;
+function SErrorNumeroInstalacionSinVersion: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorNumeroInstalacionSinVersion;
+end;
+function SErrorVersionNumeroInstalacionIncorrecta: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorVersionNumeroInstalacionIncorrecta;
+end;
+function SInfoExportacionNoVerifactuGenerada: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SInfoExportacionNoVerifactuGenerada;
+end;
+function SInfoVerificacionNoVerifactuCorrecta: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SInfoVerificacionNoVerifactuCorrecta;
+end;
+function SErrorVerificacionNoVerifactu: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorVerificacionNoVerifactu;
+end;
+function SPreguntaAbrirSeriesAlbaranVenta: string;
+begin
+  Result :=
+    inLibMsgVentas.SPreguntaAbrirSeriesAlbaranVenta;
+end;
+function SErrorAlbaranVentaNoAbierto: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorAlbaranVentaNoAbierto;
+end;
+function SErrorArticuloNoSeleccionadoBuscarSkusAlbaranVenta: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloNoSeleccionadoBuscarSkusAlbaranVenta;
+end;
+function SPreguntaGrabarAlbaranVentaSinSku: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaGrabarAlbaranVentaSinSku;
+end;
+function SErrorAlbaranVentaNoInicializado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorAlbaranVentaNoInicializado;
+end;
+function SErrorCrearSeleccionarAlbaranAntesLineas: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorCrearSeleccionarAlbaranAntesLineas;
+end;
+function SPreguntaEliminarLineaAlbaranVenta: string;
+begin
+  Result :=
+    inLibMsgVentas.SPreguntaEliminarLineaAlbaranVenta;
+end;
+function SErrorAlbaranVentaSinLineas: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorAlbaranVentaSinLineas;
+end;
+function SAvisoSeleccionarLineasBorradorAlbaran: string;
+begin
+  Result :=
+    inLibMsgVentas.SAvisoSeleccionarLineasBorradorAlbaran;
+end;
+function SAvisoLineasAlbaranConBorrador: string;
+begin
+  Result :=
+    inLibMsgVentas.SAvisoLineasAlbaranConBorrador;
+end;
+function SPreguntaGenerarBorradorLineasAlbaran: string;
+begin
+  Result :=
+    inLibMsgVentas.SPreguntaGenerarBorradorLineasAlbaran;
+end;
+function SInfoBorradorFacturaCreado: string;
+begin
+  Result :=
+    inLibMsgFacturas.SInfoBorradorFacturaCreado;
+end;
+function SErrorCrearBorradorFactura: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorCrearBorradorFactura;
+end;
+function SPreguntaGenerarBorradorTodoAlbaran: string;
+begin
+  Result :=
+    inLibMsgVentas.SPreguntaGenerarBorradorTodoAlbaran;
+end;
+function SAvisoAlbaranSinPedidoVenta: string;
+begin
+  Result :=
+    inLibMsgVentas.SAvisoAlbaranSinPedidoVenta;
+end;
+function SAvisoAlbaranSinBorrador: string;
+begin
+  Result :=
+    inLibMsgVentas.SAvisoAlbaranSinBorrador;
+end;
+function SErrorProveedorNoSeleccionadoBuscarArticulos: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorProveedorNoSeleccionadoBuscarArticulos;
+end;
+function SErrorAlbaranCompraNoAbierto: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorAlbaranCompraNoAbierto;
+end;
+function SErrorArticuloNoSeleccionadoBuscarSkusAlbaranCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorArticuloNoSeleccionadoBuscarSkusAlbaranCompra;
+end;
+function SErrorAlbaranCompraNoInicializado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorAlbaranCompraNoInicializado;
+end;
+function STextoAlbaranCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.STextoAlbaranCompra;
+end;
+function SPreguntaAbrirSeriesAlbaranCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaAbrirSeriesAlbaranCompra;
+end;
+function SErrorAlbaranCompraSinImpresionActivo: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorAlbaranCompraSinImpresionActivo;
+end;
+function SErrorAlbaranCompraNoActivo: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorAlbaranCompraNoActivo;
+end;
+function SPreguntaGrabarAlbaranCompraSinSku: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaGrabarAlbaranCompraSinSku;
+end;
+function SErrorAlbaranCompraNecesarioElegirEmpresa: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorAlbaranCompraNecesarioElegirEmpresa;
+end;
+function SErrorAlbaranCompraNecesarioElegirProveedor: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorAlbaranCompraNecesarioElegirProveedor;
+end;
+function SErrorArticuloNoSeleccionadoElegirColor: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloNoSeleccionadoElegirColor;
+end;
+function SErrorArticuloSinColoresBasicosActivos: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloSinColoresBasicosActivos;
+end;
+function SAvisoAlbaranCompraSinPedido: string;
+begin
+  Result :=
+    inLibMsgCompras.SAvisoAlbaranCompraSinPedido;
+end;
+function SAvisoAlbaranCompraSinFactura: string;
+begin
+  Result :=
+    inLibMsgCompras.SAvisoAlbaranCompraSinFactura;
+end;
+function SPreguntaEliminarLineaAlbaranCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaEliminarLineaAlbaranCompra;
+end;
+function SErrorArticuloSinTipoVariacion: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloSinTipoVariacion;
+end;
+function SErrorPrecioTarifaNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorPrecioTarifaNoSeleccionado;
+end;
+function SErrorPrecioTarifaNoGuardado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorPrecioTarifaNoGuardado;
+end;
+function SAvisoRevisionArticulo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SAvisoRevisionArticulo;
+end;
+function SErrorGuardarPropiedadesArticulo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorGuardarPropiedadesArticulo;
+end;
+function SErrorGuardarVariacionesArticulo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorGuardarVariacionesArticulo;
+end;
+function SPreguntaReconstruirStock: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaReconstruirStock;
+end;
+function STituloReconstruirStock: string;
+begin
+  Result :=
+    inLibMsgArticulos.STituloReconstruirStock;
+end;
+function SErrorReconstruirStock: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorReconstruirStock;
+end;
+function SInfoStockReconstruido: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoStockReconstruido;
+end;
+function SErrorArticuloNoSeleccionadoImprimirEtiquetas: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloNoSeleccionadoImprimirEtiquetas;
+end;
+function SErrorArticuloNoSeleccionadoGenerarCodigos: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloNoSeleccionadoGenerarCodigos;
+end;
+function SErrorArticuloSinSkusActivosGenerarCodigos: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloSinSkusActivosGenerarCodigos;
+end;
+function SPreguntaGenerarCodigosBarras: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaGenerarCodigosBarras;
+end;
+function SInfoGeneracionCodigosBarras: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoGeneracionCodigosBarras;
+end;
+function SErrorArticuloNoSeleccionadoVerificarCodigos: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloNoSeleccionadoVerificarCodigos;
+end;
+function SErrorDetalleCodigoBarrasInvalido: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorDetalleCodigoBarrasInvalido;
+end;
+function SInfoVerificacionCodigosBarrasCorrecta: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoVerificacionCodigosBarrasCorrecta;
+end;
+function SAvisoVerificacionCodigosBarras: string;
+begin
+  Result :=
+    inLibMsgArticulos.SAvisoVerificacionCodigosBarras;
+end;
+function SInfoPrecargaArticuloGuardada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoPrecargaArticuloGuardada;
+end;
+function STextoAtributoBasicoSinValor: string;
+begin
+  Result :=
+    inLibMsgArticulos.STextoAtributoBasicoSinValor;
+end;
+function SPreguntaCrearAtributoBasicoSku: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaCrearAtributoBasicoSku;
+end;
+function STituloCrearAtributoBasico: string;
+begin
+  Result :=
+    inLibMsgArticulos.STituloCrearAtributoBasico;
+end;
+function SErrorSkuColorNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorSkuColorNoSeleccionado;
+end;
+function STextoActivarSkusColor: string;
+begin
+  Result :=
+    inLibMsgArticulos.STextoActivarSkusColor;
+end;
+function STextoDesactivarSkusColor: string;
+begin
+  Result :=
+    inLibMsgArticulos.STextoDesactivarSkusColor;
+end;
+function SPreguntaCambiarActivoSkusColor: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaCambiarActivoSkusColor;
+end;
+function STextoSkusColorActivados: string;
+begin
+  Result :=
+    inLibMsgArticulos.STextoSkusColorActivados;
+end;
+function STextoSkusColorDesactivados: string;
+begin
+  Result :=
+    inLibMsgArticulos.STextoSkusColorDesactivados;
+end;
+function SInfoSkusColorActualizados: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoSkusColorActualizados;
+end;
+function SErrorColorPaletaBusquedaInvalido: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorColorPaletaBusquedaInvalido;
+end;
+function SErrorOperacionSinBorrador: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorOperacionSinBorrador;
+end;
+function SErrorBorradorNoCerradoFiscalmente: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorBorradorNoCerradoFiscalmente;
+end;
+function SPreguntaAnularFiscalmenteBorrador: string;
+begin
+  Result :=
+    inLibMsgComun.SPreguntaAnularFiscalmenteBorrador;
+end;
+function SPreguntaBorrarMovimientosTicketAnulado: string;
+begin
+  Result :=
+    inLibMsgFacturas.SPreguntaBorrarMovimientosTicketAnulado;
+end;
+function SPreguntaMovimientosRectificativaSustitutiva: string;
+begin
+  Result :=
+    inLibMsgFacturas.SPreguntaMovimientosRectificativaSustitutiva;
+end;
+function SInfoAnulacionVerifactuEncolada: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SInfoAnulacionVerifactuEncolada;
+end;
+function SInfoAnulacionNoVerifactuRegistrada: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SInfoAnulacionNoVerifactuRegistrada;
+end;
+function SInfoAnulacionSinVerifactuRegistrada: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SInfoAnulacionSinVerifactuRegistrada;
+end;
+function SErrorFacturarTicketRequiereSimplificado: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFacturarTicketRequiereSimplificado;
+end;
+function SInfoBorradorSustitucionTicketCreado: string;
+begin
+  Result :=
+    inLibMsgFacturas.SInfoBorradorSustitucionTicketCreado;
+end;
+function SErrorRectificarRectificativa: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorRectificarRectificativa;
+end;
+function SPreguntaRectificarBorrador: string;
+begin
+  Result :=
+    inLibMsgComun.SPreguntaRectificarBorrador;
+end;
+function SErrorOperacionCorreoNoEncontrada: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorOperacionCorreoNoEncontrada;
+end;
+function STituloEnviarDocumentacion: string;
+begin
+  Result :=
+    inLibMsgComun.STituloEnviarDocumentacion;
+end;
+function SSolicitudCorreoElectronico: string;
+begin
+  Result :=
+    inLibMsgComun.SSolicitudCorreoElectronico;
+end;
+function SErrorCorreoElectronicoObligatorio: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorCorreoElectronicoObligatorio;
+end;
+function SErrorEnviarCorreoOperacion: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorEnviarCorreoOperacion;
+end;
+function SErrorOperacionSinTicket: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorOperacionSinTicket;
+end;
+function SPreguntaBorrarPropiedadPlantillaCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaBorrarPropiedadPlantillaCompra;
+end;
+function SPreguntaBorrarKitPlantillaCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaBorrarKitPlantillaCompra;
+end;
+function SInfoIbanValidado: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoIbanValidado;
+end;
+function SErrorCabeceraSesionAntesLineas: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorCabeceraSesionAntesLineas;
+end;
+function SErrorSesionSinDocumentosCreados: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorSesionSinDocumentosCreados;
+end;
+function SErrorMantenimientoTipoDocumentoNoDisponible: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorMantenimientoTipoDocumentoNoDisponible;
+end;
+function SPreguntaAbrirSeriesSesionCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaAbrirSeriesSesionCompra;
+end;
+function SErrorLineaSesionDescargarFotosNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorLineaSesionDescargarFotosNoSeleccionada;
+end;
+function SErrorLineaSesionSinCodigoArticulo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorLineaSesionSinCodigoArticulo;
+end;
+function SErrorDescargarFotosArticulo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorDescargarFotosArticulo;
+end;
+function SInfoFotosArticuloDescargadas: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoFotosArticuloDescargadas;
+end;
+function SErrorSesionElegirProveedorNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorSesionElegirProveedorNoSeleccionada;
+end;
+function SErrorProveedorSesionSinKits: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorProveedorSesionSinKits;
+end;
+function SErrorKitProveedorDesplegableNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorKitProveedorDesplegableNoSeleccionado;
+end;
+function SPreguntaBorrarLineaSesionCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaBorrarLineaSesionCompra;
+end;
+function SErrorLineaSesionAsignarFotoNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorLineaSesionAsignarFotoNoSeleccionada;
+end;
+function SInfoFotoLineaSesionAsignada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoFotoLineaSesionAsignada;
+end;
+function SErrorAsignarFotoSesion: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorAsignarFotoSesion;
+end;
+function SErrorGuardarFotoSesion: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorGuardarFotoSesion;
+end;
+function SErrorSesionYaMaterializada: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorSesionYaMaterializada;
+end;
+function SInfoDuplicadosSesionMarcadosReusar: string;
+begin
+  Result :=
+    inLibMsgCompras.SInfoDuplicadosSesionMarcadosReusar;
+end;
+function SInfoSesionMaterializadaSinDocumentos: string;
+begin
+  Result :=
+    inLibMsgCompras.SInfoSesionMaterializadaSinDocumentos;
+end;
+function SErrorSesionNoCerradaParaReversion: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorSesionNoCerradaParaReversion;
+end;
+function SPreguntaRevertirSesionCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaRevertirSesionCompra;
+end;
+function SInfoSesionRevertida: string;
+begin
+  Result :=
+    inLibMsgCompras.SInfoSesionRevertida;
+end;
+function SErrorRevertirSesionCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorRevertirSesionCompra;
+end;
+function SErrorSesionActivaImprimirNoDisponible: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorSesionActivaImprimirNoDisponible;
+end;
+function SErrorSistemasTallasSesionNoDisponibles: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorSistemasTallasSesionNoDisponibles;
+end;
+function SErrorCambiarSistemaTallasModeloExistente: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorCambiarSistemaTallasModeloExistente;
+end;
+function SErrorLineaSesionAsignarFamiliaNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorLineaSesionAsignarFamiliaNoSeleccionada;
+end;
+function SErrorColoresBasicosSesionNoDisponibles: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorColoresBasicosSesionNoDisponibles;
+end;
+function SInfoEfectoConciliado: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoEfectoConciliado;
+end;
+function SErrorConciliarEfecto: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorConciliarEfecto;
+end;
+function SErrorEfectoNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorEfectoNoSeleccionado;
+end;
+function SErrorCarteraEfectosNoAbierta: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorCarteraEfectosNoAbierta;
+end;
+function SErrorEfectosCompraFusionInsuficientes: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorEfectosCompraFusionInsuficientes;
+end;
+function SErrorEfectosVentaFusionInsuficientes: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorEfectosVentaFusionInsuficientes;
+end;
+function SPreguntaFusionarEfectos: string;
+begin
+  Result :=
+    inLibMsgComun.SPreguntaFusionarEfectos;
+end;
+function SInfoEfectosConciliados: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoEfectosConciliados;
+end;
+function SErrorFusionarEfectos: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorFusionarEfectos;
+end;
+function SErrorContadorSerieEmpresa: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorContadorSerieEmpresa;
+end;
+function SErrorEmpresaCrearSeriesNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorEmpresaCrearSeriesNoSeleccionada;
+end;
+function SInfoSeriesEmpresaCreadas: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoSeriesEmpresaCreadas;
+end;
+function SErrorEmpresaNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorEmpresaNoSeleccionada;
+end;
+function SInfoInstalacionSifEmpresaDisponible: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoInstalacionSifEmpresaDisponible;
+end;
+function SErrorDocumentoTrabajoNoSeleccionadoListado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorDocumentoTrabajoNoSeleccionadoListado;
+end;
+function SErrorDocumentoTrabajoSinGrabarListado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorDocumentoTrabajoSinGrabarListado;
+end;
+function SErrorDocumentoTrabajoSinLineasListado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorDocumentoTrabajoSinLineasListado;
+end;
+function SErrorDocumentoTrabajoNoSeleccionadoCargar: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorDocumentoTrabajoNoSeleccionadoCargar;
+end;
+function SErrorCargarDocumentoTrabajoNoPropietario: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorCargarDocumentoTrabajoNoPropietario;
+end;
+function SErrorDocumentoTrabajoSinGrabarCargar: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorDocumentoTrabajoSinGrabarCargar;
+end;
+function SErrorDocumentoTrabajoNoSeleccionadoCompartir: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorDocumentoTrabajoNoSeleccionadoCompartir;
+end;
+function SInfoDocumentoTrabajoCompartido: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoDocumentoTrabajoCompartido;
+end;
+function SInfoDocumentoTrabajoYaCompartido: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoDocumentoTrabajoYaCompartido;
+end;
+function SErrorDocumentoTrabajoSinGrabarImprimirEtiquetas: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorDocumentoTrabajoSinGrabarImprimirEtiquetas;
+end;
+function SErrorDocumentoTrabajoNoSeleccionadoImprimirEtiquetas: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorDocumentoTrabajoNoSeleccionadoImprimirEtiquetas;
+end;
+function SErrorDocumentoTrabajoNoSeleccionadoEnviar: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorDocumentoTrabajoNoSeleccionadoEnviar;
+end;
+function SErrorDocumentoTrabajoSinGrabarEnviar: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorDocumentoTrabajoSinGrabarEnviar;
+end;
+function SErrorDocumentoTrabajoSinLineasEnviar: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorDocumentoTrabajoSinLineasEnviar;
+end;
+function SErrorContadorAlbaranDocumentoTrabajo: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorContadorAlbaranDocumentoTrabajo;
+end;
+function SInfoAlbaranDocumentoTrabajoCreado: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoAlbaranDocumentoTrabajoCreado;
+end;
+function SErrorVentaTpvNoAbiertaDocumentoTrabajo: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorVentaTpvNoAbiertaDocumentoTrabajo;
+end;
+function SInfoLineasDocumentoTrabajoVolcadasTpv: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoLineasDocumentoTrabajoVolcadasTpv;
+end;
+function SAvisoLineasDocumentoTrabajoNoVolcadasTpv: string;
+begin
+  Result :=
+    inLibMsgVentas.SAvisoLineasDocumentoTrabajoNoVolcadasTpv;
+end;
+function SErrorContadorInventarioDocumentoTrabajo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorContadorInventarioDocumentoTrabajo;
+end;
+function SInfoInventarioDocumentoTrabajoCreado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoInventarioDocumentoTrabajoCreado;
+end;
+function SInfoCambioTarifasDocumentoTrabajoCreado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoCambioTarifasDocumentoTrabajoCreado;
+end;
+function SPreguntaAbrirSeriesDevolucionCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaAbrirSeriesDevolucionCompra;
+end;
+function SErrorLineaColorDevolucionNoEncontrada: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorLineaColorDevolucionNoEncontrada;
+end;
+function SErrorDevolucionCompraSinImpresionActiva: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorDevolucionCompraSinImpresionActiva;
+end;
+function SErrorDevolucionCompraNoActiva: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorDevolucionCompraNoActiva;
+end;
+function SErrorProveedorDevolucionFilaNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorProveedorDevolucionFilaNoSeleccionado;
+end;
+function SErrorAlmacenDevolucionFilaNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorAlmacenDevolucionFilaNoSeleccionado;
+end;
+function SErrorFilaDevolucionStockNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorFilaDevolucionStockNoSeleccionada;
+end;
+function SErrorArticuloDevolucionFilaNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloDevolucionFilaNoSeleccionado;
+end;
+function SErrorColorDevolucionFilaNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorColorDevolucionFilaNoSeleccionado;
+end;
+function SErrorStockDevolucionFilaNoDisponible: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorStockDevolucionFilaNoDisponible;
+end;
+function SPreguntaPrepararStockFilaDevolucion: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaPrepararStockFilaDevolucion;
+end;
+function SInfoStockFilaDevolucionPreparado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoStockFilaDevolucionPreparado;
+end;
+function SPreguntaGrabarDevolucionCompraSinSku: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaGrabarDevolucionCompraSinSku;
+end;
+function SErrorProveedorNoSeleccionadoBuscarArticulosDevolucion: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorProveedorNoSeleccionadoBuscarArticulosDevolucion;
+end;
+function SErrorDevolucionCompraNoAbierta: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorDevolucionCompraNoAbierta;
+end;
+function SErrorArticuloNoSeleccionadoBuscarSkusDevolucion: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloNoSeleccionadoBuscarSkusDevolucion;
+end;
+function SErrorDevolucionCompraElegirEmpresaNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorDevolucionCompraElegirEmpresaNoSeleccionada;
+end;
+function SErrorDevolucionCompraElegirProveedorNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorDevolucionCompraElegirProveedorNoSeleccionada;
+end;
+function SPreguntaEliminarLineaDevolucionCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaEliminarLineaDevolucionCompra;
+end;
+function SErrorFotoArticuloNoActivoDescargar: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorFotoArticuloNoActivoDescargar;
+end;
+function SErrorFotoArticuloNoActivo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorFotoArticuloNoActivo;
+end;
+function SErrorGuardarFotoArticulo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorGuardarFotoArticulo;
+end;
+function SErrorFotoSkuNoActivo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorFotoSkuNoActivo;
+end;
+function SErrorNivelAtributosFotoNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorNivelAtributosFotoNoSeleccionado;
+end;
+function SPreguntaEliminarFotoActual: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaEliminarFotoActual;
+end;
+function SAvisoLimiteRegistrosFacturaSimplificada: string;
+begin
+  Result :=
+    inLibMsgFacturas.SAvisoLimiteRegistrosFacturaSimplificada;
+end;
+function SErrorBorradorVentaMayorNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorBorradorVentaMayorNoSeleccionado;
+end;
+function SErrorGuardarAntesEmitirEdoc: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorGuardarAntesEmitirEdoc;
+end;
+function SErrorPersonaFisicaEdocSinDatos: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorPersonaFisicaEdocSinDatos;
+end;
+function SInfoEdocEmitido: string;
+begin
+  Result :=
+    inLibMsgFacturas.SInfoEdocEmitido;
+end;
+function SPreguntaAbrirSeriesFacturaCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaAbrirSeriesFacturaCompra;
+end;
+function SErrorProveedorNoSeleccionadoBuscarArticulosFacturaCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorProveedorNoSeleccionadoBuscarArticulosFacturaCompra;
+end;
+function SErrorFacturaCompraNoAbierta: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorFacturaCompraNoAbierta;
+end;
+function SErrorArticuloNoSeleccionadoBuscarSkusFacturaCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorArticuloNoSeleccionadoBuscarSkusFacturaCompra;
+end;
+function SErrorFacturaCompraSinImpresionActiva: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorFacturaCompraSinImpresionActiva;
+end;
+function SAvisoEtiquetasBorradorCompraPendientes: string;
+begin
+  Result :=
+    inLibMsgCompras.SAvisoEtiquetasBorradorCompraPendientes;
+end;
+function SPreguntaGrabarFacturaCompraSinSku: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaGrabarFacturaCompraSinSku;
+end;
+function SErrorFacturaCompraNoInicializada: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorFacturaCompraNoInicializada;
+end;
+function SErrorFacturaCompraElegirProveedorNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorFacturaCompraElegirProveedorNoSeleccionada;
+end;
+function SInfoGeneracionEfectosPagoCancelada: string;
+begin
+  Result :=
+    inLibMsgCompras.SInfoGeneracionEfectosPagoCancelada;
+end;
+function SInfoEfectosPagoGenerados: string;
+begin
+  Result :=
+    inLibMsgCompras.SInfoEfectosPagoGenerados;
+end;
+function SAvisoEfectosPagoNoGenerados: string;
+begin
+  Result :=
+    inLibMsgCompras.SAvisoEfectosPagoNoGenerados;
+end;
+function SErrorGenerarEfectosPagoSinBorrador: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorGenerarEfectosPagoSinBorrador;
+end;
+function SErrorEfectoCompraNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorEfectoCompraNoSeleccionado;
+end;
+function SPreguntaEliminarLineaFacturaCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaEliminarLineaFacturaCompra;
+end;
+function SInfoImpresionEfectosCobroEnRemesas: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoImpresionEfectosCobroEnRemesas;
+end;
+function SPreguntaReemplazarCobros: string;
+begin
+  Result :=
+    inLibMsgFacturas.SPreguntaReemplazarCobros;
+end;
+function STituloMensajeAdvertencia: string;
+begin
+  Result :=
+    inLibMsgFacturas.STituloMensajeAdvertencia;
+end;
+function SInfoGeneracionCobrosCancelada: string;
+begin
+  Result :=
+    inLibMsgFacturas.SInfoGeneracionCobrosCancelada;
+end;
+function SInfoEfectosCobroGenerados: string;
+begin
+  Result :=
+    inLibMsgFacturas.SInfoEfectosCobroGenerados;
+end;
+function SAvisoEfectosCobroNoGenerados: string;
+begin
+  Result :=
+    inLibMsgFacturas.SAvisoEfectosCobroNoGenerados;
+end;
+function SErrorGenerarEfectosCobroSinBorrador: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorGenerarEfectosCobroSinBorrador;
+end;
+function SAvisoBorradorPendienteImpresionFiscal: string;
+begin
+  Result :=
+    inLibMsgFacturas.SAvisoBorradorPendienteImpresionFiscal;
+end;
+function SErrorGuardarFacturaAntesImprimir: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorGuardarFacturaAntesImprimir;
+end;
+function SInfoEfectoMarcadoDevuelto: string;
+begin
+  Result :=
+    inLibMsgFacturas.SInfoEfectoMarcadoDevuelto;
+end;
+function SErrorMarcarEfectoDevuelto: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorMarcarEfectoDevuelto;
+end;
+function SInfoEfectoMarcadoPendiente: string;
+begin
+  Result :=
+    inLibMsgFacturas.SInfoEfectoMarcadoPendiente;
+end;
+function SErrorMarcarEfectoPendiente: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorMarcarEfectoPendiente;
+end;
+function SErrorEfectoSinImportePendiente: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorEfectoSinImportePendiente;
+end;
+function SErrorTarifaSeleccionadaNoEncontrada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorTarifaSeleccionadaNoEncontrada;
+end;
+function SErrorBorradorListaNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorBorradorListaNoSeleccionado;
+end;
+function SErrorBorradorNoCerradoAccionFiscal: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorBorradorNoCerradoAccionFiscal;
+end;
+function SPreguntaAccionFiscalBorrador: string;
+begin
+  Result :=
+    inLibMsgFacturas.SPreguntaAccionFiscalBorrador;
+end;
+function SInfoAccionFiscalEncolada: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SInfoAccionFiscalEncolada;
+end;
+function SInfoAccionFiscalNoVerifactu: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SInfoAccionFiscalNoVerifactu;
+end;
+function SInfoAccionFiscalSinVerifactu: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SInfoAccionFiscalSinVerifactu;
+end;
+function SErrorBorradorYaLanzadoFiscalmente: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorBorradorYaLanzadoFiscalmente;
+end;
+function SErrorBorradorSinLineasLanzar: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorBorradorSinLineasLanzar;
+end;
+function SErrorBorradorNormalSinNif: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorBorradorNormalSinNif;
+end;
+function SPreguntaLanzarBorradorFiscal: string;
+begin
+  Result :=
+    inLibMsgFacturas.SPreguntaLanzarBorradorFiscal;
+end;
+function SInfoBorradorVerifactuPendiente: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SInfoBorradorVerifactuPendiente;
+end;
+function SInfoBorradorNoVerifactuRegistrado: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SInfoBorradorNoVerifactuRegistrado;
+end;
+function SInfoBorradorSinVerifactuEmitido: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SInfoBorradorSinVerifactuEmitido;
+end;
+function SErrorBorradorConsolidadoNoReabrible: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorBorradorConsolidadoNoReabrible;
+end;
+function SInfoBorradorYaEnBorrador: string;
+begin
+  Result :=
+    inLibMsgFacturas.SInfoBorradorYaEnBorrador;
+end;
+function SPreguntaDevolverBorrador: string;
+begin
+  Result :=
+    inLibMsgFacturas.SPreguntaDevolverBorrador;
+end;
+function SErrorAltaAeatAceptadaNoReabrible: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorAltaAeatAceptadaNoReabrible;
+end;
+function SErrorBorradorEnProcesoNoReabrible: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorBorradorEnProcesoNoReabrible;
+end;
+function SInfoBorradorReabierto: string;
+begin
+  Result :=
+    inLibMsgFacturas.SInfoBorradorReabierto;
+end;
+function SPreguntaGrabarFacturaVentaSinSku: string;
+begin
+  Result :=
+    inLibMsgFacturas.SPreguntaGrabarFacturaVentaSinSku;
+end;
+function SErrorCompletarDatosBorrador: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorCompletarDatosBorrador;
+end;
+function SErrorContadorAutomaticoBusqueda: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorContadorAutomaticoBusqueda;
+end;
+function SInfoRegistroBusquedaCreado: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoRegistroBusquedaCreado;
+end;
+function SErrorInsertarRegistroBusqueda: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorInsertarRegistroBusqueda;
+end;
+function SInfoTextoNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoTextoNoEncontrado;
+end;
+function STituloBusquedaGlobal: string;
+begin
+  Result :=
+    inLibMsgComun.STituloBusquedaGlobal;
+end;
+function SSolicitudTextoBusquedaGlobal: string;
+begin
+  Result :=
+    inLibMsgComun.SSolicitudTextoBusquedaGlobal;
+end;
+function SInfoProcesosBusquedaNoEncontrados: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoProcesosBusquedaNoEncontrados;
+end;
+function SPreguntaIgnorarErrorScript: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SPreguntaIgnorarErrorScript;
+end;
+function SErrorMetadatoSinScript: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorMetadatoSinScript;
+end;
+function SErrorDatosCopiarNoDisponibles: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorDatosCopiarNoDisponibles;
+end;
+function SPreguntaCopiarFilasPortapapeles: string;
+begin
+  Result :=
+    inLibMsgComun.SPreguntaCopiarFilasPortapapeles;
+end;
+function SPreguntaIgnorarErrorComandoScript: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SPreguntaIgnorarErrorComandoScript;
+end;
+function SErrorEjecucionProceso: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorEjecucionProceso;
+end;
+function SErrorComandoSqlProceso: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorComandoSqlProceso;
+end;
+function SErrorConexionTrabajoNoDisponible: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorConexionTrabajoNoDisponible;
+end;
+function SInfoDatosGuardados: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoDatosGuardados;
+end;
+function SErrorGrabarDatos: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorGrabarDatos;
+end;
+function SPreguntaGrabarCambiosPendientes: string;
+begin
+  Result :=
+    inLibMsgComun.SPreguntaGrabarCambiosPendientes;
+end;
+function STituloMensajeAdvertenciaGen: string;
+begin
+  Result :=
+    inLibMsgComun.STituloMensajeAdvertenciaGen;
+end;
+function SInfoCambiosGrabados: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoCambiosGrabados;
+end;
+function SInfoCambiosCancelados: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoCambiosCancelados;
+end;
+function SErrorConexionPrincipalNoDisponible: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorConexionPrincipalNoDisponible;
+end;
+function SErrorPermisoInsertarRegistro: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorPermisoInsertarRegistro;
+end;
+function SErrorPermisoModificarRegistro: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorPermisoModificarRegistro;
+end;
+function SErrorPermisoGuardarRegistro: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorPermisoGuardarRegistro;
+end;
+function SErrorPermisoBorrarRegistro: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorPermisoBorrarRegistro;
+end;
+function SPreguntaEliminarRegistro: string;
+begin
+  Result :=
+    inLibMsgComun.SPreguntaEliminarRegistro;
+end;
+function STituloConfirmarEliminacion: string;
+begin
+  Result :=
+    inLibMsgComun.STituloConfirmarEliminacion;
+end;
+function SPreguntaEliminarRegistroConHijos: string;
+begin
+  Result :=
+    inLibMsgComun.SPreguntaEliminarRegistroConHijos;
+end;
+function SAvisoDesactivarRegistroConHijos: string;
+begin
+  Result :=
+    inLibMsgComun.SAvisoDesactivarRegistroConHijos;
+end;
+function SAvisoDesactivarRegistroSinHijos: string;
+begin
+  Result :=
+    inLibMsgComun.SAvisoDesactivarRegistroSinHijos;
+end;
+function SDescripcionHijosGenerica: string;
+begin
+  Result :=
+    inLibMsgComun.SDescripcionHijosGenerica;
+end;
+function STextoOpcionesBorradoRegistro: string;
+begin
+  Result :=
+    inLibMsgComun.STextoOpcionesBorradoRegistro;
+end;
+function SErrorFiltroSinCondiciones: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorFiltroSinCondiciones;
+end;
+function SErrorFiltroActualVacio: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorFiltroActualVacio;
+end;
+function SPreguntaSobrescribirFiltro: string;
+begin
+  Result :=
+    inLibMsgComun.SPreguntaSobrescribirFiltro;
+end;
+function STituloSobrescribirFiltro: string;
+begin
+  Result :=
+    inLibMsgComun.STituloSobrescribirFiltro;
+end;
+function SInfoFiltroSobrescrito: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoFiltroSobrescrito;
+end;
+function SInfoFiltroGuardado: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoFiltroGuardado;
+end;
+function SErrorArticuloInventarioNoExiste: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloInventarioNoExiste;
+end;
+function SErrorLineasInventarioNoAbiertas: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorLineasInventarioNoAbiertas;
+end;
+function SErrorLineaInventarioNoEditable: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorLineaInventarioNoEditable;
+end;
+function SErrorArticuloInventarioNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloInventarioNoEncontrado;
+end;
+function SErrorArticuloInventarioTipoSinStock: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloInventarioTipoSinStock;
+end;
+function SErrorArticuloInventarioAtributosSinSku: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloInventarioAtributosSinSku;
+end;
+function SInfoLineasCsvInventarioLeidas: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoLineasCsvInventarioLeidas;
+end;
+function SErrorMigracionRecuentoInventariosNoAplicada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorMigracionRecuentoInventariosNoAplicada;
+end;
+function SErrorGrabarCabeceraInventarioAutomaticamente: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorGrabarCabeceraInventarioAutomaticamente;
+end;
+function SErrorGrabarCabeceraInventarioAutomaticamenteDetalle: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorGrabarCabeceraInventarioAutomaticamenteDetalle;
+end;
+function SErrorInventarioNoAbiertoEditar: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorInventarioNoAbiertoEditar;
+end;
+function SPreguntaRecalcularInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaRecalcularInventario;
+end;
+function SInfoRecalculoInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoRecalculoInventario;
+end;
+function SPreguntaAplicarInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaAplicarInventario;
+end;
+function SErrorAplicarInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorAplicarInventario;
+end;
+function SErrorAplicacionInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorAplicacionInventario;
+end;
+function SErrorRefrescarInventarioAplicado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorRefrescarInventarioAplicado;
+end;
+function SInfoInventarioAplicado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoInventarioAplicado;
+end;
+function SErrorInventarioNoSeleccionadoAnadirLineas: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorInventarioNoSeleccionadoAnadirLineas;
+end;
+function SErrorAnadirLineasInventarioEstado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorAnadirLineasInventarioEstado;
+end;
+function SErrorLineaInventarioNoSeleccionadaParaSkus: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorLineaInventarioNoSeleccionadaParaSkus;
+end;
+function SErrorLineaInventarioSinArticulo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorLineaInventarioSinArticulo;
+end;
+function SErrorAnadirSkusInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorAnadirSkusInventario;
+end;
+function SInfoSinSkusAnadidosInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoSinSkusAnadidosInventario;
+end;
+function SInfoSkusAnadidosInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoSkusAnadidosInventario;
+end;
+function SPreguntaEliminarLineaInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaEliminarLineaInventario;
+end;
+function SErrorEliminarRegularizacionInventarioEstado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorEliminarRegularizacionInventarioEstado;
+end;
+function SPreguntaEliminarRegularizacionInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaEliminarRegularizacionInventario;
+end;
+function SInfoRegularizacionInventarioEliminada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoRegularizacionInventarioEliminada;
+end;
+function SErrorInventarioNoActivo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorInventarioNoActivo;
+end;
+function SErrorInventarioDebeEstarAbierto: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorInventarioDebeEstarAbierto;
+end;
+function SErrorFamiliaInventarioNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorFamiliaInventarioNoSeleccionada;
+end;
+function SPreguntaCargarFamiliaInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaCargarFamiliaInventario;
+end;
+function SErrorProveedorInventarioNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorProveedorInventarioNoSeleccionado;
+end;
+function SPreguntaCargarProveedorInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaCargarProveedorInventario;
+end;
+function SPreguntaCompletarInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaCompletarInventario;
+end;
+function SPreguntaCargarTodoInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaCargarTodoInventario;
+end;
+function SErrorInventarioNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorInventarioNoSeleccionado;
+end;
+function SPreguntaGuardarInventarioEnEdicion: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaGuardarInventarioEnEdicion;
+end;
+function SPreguntaRecalcularTrasCargarBloqueInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaRecalcularTrasCargarBloqueInventario;
+end;
+function SErrorArchivoImportacionInventarioNoExiste: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArchivoImportacionInventarioNoExiste;
+end;
+function SErrorImportacionInventarioSinDatos: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorImportacionInventarioSinDatos;
+end;
+function SInfoImportacionInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoImportacionInventario;
+end;
+function SErrorEnviarRecuentoInventarioNoAbierto: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorEnviarRecuentoInventarioNoAbierto;
+end;
+function SPreguntaEnviarRecuentoInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaEnviarRecuentoInventario;
+end;
+function SInfoInventarioEnviadoRecuento: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoInventarioEnviadoRecuento;
+end;
+function SErrorEnviarRecuentoInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorEnviarRecuentoInventario;
+end;
+function SErrorInventarioNoEnviadoRecuento: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorInventarioNoEnviadoRecuento;
+end;
+function SErrorRecogerRecuentoInventarioNoAbierto: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorRecogerRecuentoInventarioNoAbierto;
+end;
+function SInfoRecuentoInventarioRecogido: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoRecuentoInventarioRecogido;
+end;
+function SErrorRecogerRecuentoInventario: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorRecogerRecuentoInventario;
+end;
+function SAvisoLimiteRegistrosMovimientosAlmacen: string;
+begin
+  Result :=
+    inLibMsgArticulos.SAvisoLimiteRegistrosMovimientosAlmacen;
+end;
+function SPreguntaAbrirSeriesPedidoVenta: string;
+begin
+  Result :=
+    inLibMsgVentas.SPreguntaAbrirSeriesPedidoVenta;
+end;
+function SErrorPedidoVentaNoAbierto: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorPedidoVentaNoAbierto;
+end;
+function SErrorArticuloNoSeleccionadoBuscarSkusPedidoVenta: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloNoSeleccionadoBuscarSkusPedidoVenta;
+end;
+function SPreguntaGrabarPedidoVentaSinSku: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaGrabarPedidoVentaSinSku;
+end;
+function SErrorClienteNoSeleccionadoPedidoVenta: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorClienteNoSeleccionadoPedidoVenta;
+end;
+function SErrorClientePedidoVentaNoExiste: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorClientePedidoVentaNoExiste;
+end;
+function SErrorPedidoVentaNoInicializado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorPedidoVentaNoInicializado;
+end;
+function SErrorCrearSeleccionarPedidoAntesLineas: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorCrearSeleccionarPedidoAntesLineas;
+end;
+function SPreguntaEliminarLineaPedidoVentaConTallas: string;
+begin
+  Result :=
+    inLibMsgVentas.SPreguntaEliminarLineaPedidoVentaConTallas;
+end;
+function SPreguntaEliminarLineaPedidoVenta: string;
+begin
+  Result :=
+    inLibMsgVentas.SPreguntaEliminarLineaPedidoVenta;
+end;
+function SPreguntaMarcarLineasPendientesAlbaranar: string;
+begin
+  Result :=
+    inLibMsgVentas.SPreguntaMarcarLineasPendientesAlbaranar;
+end;
+function SErrorPedidoVentaSinLineas: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorPedidoVentaSinLineas;
+end;
+function SPreguntaCrearAlbaranPedidoVentaSinSku: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaCrearAlbaranPedidoVentaSinSku;
+end;
+function SErrorPedidoVentaSinCantidadAlbaranar: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorPedidoVentaSinCantidadAlbaranar;
+end;
+function SErrorAnadirAlbaranDesdePedidoVenta: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorAnadirAlbaranDesdePedidoVenta;
+end;
+function SErrorCrearAlbaranDesdePedidoVenta: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorCrearAlbaranDesdePedidoVenta;
+end;
+function SErrorProveedorNoSeleccionadoBuscarArticulosPedidoCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorProveedorNoSeleccionadoBuscarArticulosPedidoCompra;
+end;
+function SErrorPedidoCompraNoAbierto: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorPedidoCompraNoAbierto;
+end;
+function SErrorArticuloNoSeleccionadoBuscarSkusPedidoCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorArticuloNoSeleccionadoBuscarSkusPedidoCompra;
+end;
+function SErrorPedidoCompraNoInicializado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorPedidoCompraNoInicializado;
+end;
+function STextoPedidoCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.STextoPedidoCompra;
+end;
+function SErrorExpandirRecibidosNoActivo: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorExpandirRecibidosNoActivo;
+end;
+function SInfoTallasPendientesRecibirNoDisponibles: string;
+begin
+  Result :=
+    inLibMsgCompras.SInfoTallasPendientesRecibirNoDisponibles;
+end;
+function SInfoPedidoCompraSinPendientesRecibir: string;
+begin
+  Result :=
+    inLibMsgCompras.SInfoPedidoCompraSinPendientesRecibir;
+end;
+function SPreguntaGrabarPedidoCompraSinSku: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaGrabarPedidoCompraSinSku;
+end;
+function SErrorPedidoCompraNecesarioElegirEmpresa: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorPedidoCompraNecesarioElegirEmpresa;
+end;
+function SErrorPedidoCompraNecesarioElegirProveedor: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorPedidoCompraNecesarioElegirProveedor;
+end;
+function SErrorTallasHorizontalesNecesariasElegirColor: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorTallasHorizontalesNecesariasElegirColor;
+end;
+function SErrorArticuloNoSeleccionadoElegirColorPedidoCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorArticuloNoSeleccionadoElegirColorPedidoCompra;
+end;
+function SErrorArticuloPedidoCompraSinColoresBasicos: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorArticuloPedidoCompraSinColoresBasicos;
+end;
+function SPreguntaEliminarLineaPedidoCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaEliminarLineaPedidoCompra;
+end;
+function SPreguntaAbrirSeriesPedidoCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaAbrirSeriesPedidoCompra;
+end;
+function SErrorPedidoCompraNoActivo: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorPedidoCompraNoActivo;
+end;
+function SErrorPedidoCompraNoActivoCrearAlbaran: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorPedidoCompraNoActivoCrearAlbaran;
+end;
+function SErrorCrearAlbaranDesdePedidoCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorCrearAlbaranDesdePedidoCompra;
+end;
+function SErrorNodoPermisosNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorNodoPermisosNoSeleccionado;
+end;
+function SErrorOrigenDestinoPermisosNoSeleccionados: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorOrigenDestinoPermisosNoSeleccionados;
+end;
+function SErrorOrigenDestinoPermisosIguales: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorOrigenDestinoPermisosIguales;
+end;
+function SInfoModoReemplazarPermisos: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SInfoModoReemplazarPermisos;
+end;
+function SInfoModoCombinarPermisos: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SInfoModoCombinarPermisos;
+end;
+function SInfoAlcancePermisosMenu: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SInfoAlcancePermisosMenu;
+end;
+function SInfoAlcanceTodosPermisos: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SInfoAlcanceTodosPermisos;
+end;
+function SPreguntaCopiarPermisos: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SPreguntaCopiarPermisos;
+end;
+function SInfoPermisosCopiados: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SInfoPermisosCopiados;
+end;
+function SPreguntaBorrarKitProveedor: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaBorrarKitProveedor;
+end;
+function SErrorRemesaCompraNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorRemesaCompraNoSeleccionada;
+end;
+function SErrorEliminarRemesaCompraConCargo: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorEliminarRemesaCompraConCargo;
+end;
+function SPreguntaEliminarRemesaCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaEliminarRemesaCompra;
+end;
+function SInfoRemesaCompraEliminada: string;
+begin
+  Result :=
+    inLibMsgCompras.SInfoRemesaCompraEliminada;
+end;
+function SErrorEliminarRemesaCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorEliminarRemesaCompra;
+end;
+function SErrorAnadirEfectosRemesaCompraConCargo: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorAnadirEfectosRemesaCompraConCargo;
+end;
+function SErrorEfectosRemesaCompraNoCargados: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorEfectosRemesaCompraNoCargados;
+end;
+function SErrorEfectoRemesaCompraNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorEfectoRemesaCompraNoSeleccionado;
+end;
+function SErrorQuitarEfectosRemesaCompraConCargo: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorQuitarEfectosRemesaCompraConCargo;
+end;
+function SPreguntaQuitarEfectoRemesaCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SPreguntaQuitarEfectoRemesaCompra;
+end;
+function SInfoEfectoRemesaCompraQuitado: string;
+begin
+  Result :=
+    inLibMsgCompras.SInfoEfectoRemesaCompraQuitado;
+end;
+function SErrorQuitarEfectoRemesaCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorQuitarEfectoRemesaCompra;
+end;
+function SErrorBancoPagoRemesaNoAsignado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorBancoPagoRemesaNoAsignado;
+end;
+function SErrorEfectoRemesaCompraSinPendiente: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorEfectoRemesaCompraSinPendiente;
+end;
+function STextoEfectoPendienteRemesaCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.STextoEfectoPendienteRemesaCompra;
+end;
+function SInfoEfectoRemesaCompraConciliado: string;
+begin
+  Result :=
+    inLibMsgCompras.SInfoEfectoRemesaCompraConciliado;
+end;
+function SErrorConciliarEfectoRemesaCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorConciliarEfectoRemesaCompra;
+end;
+function SErrorRemesaCompraSinImportePendiente: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorRemesaCompraSinImportePendiente;
+end;
+function STextoRemesaCompraPendiente: string;
+begin
+  Result :=
+    inLibMsgCompras.STextoRemesaCompraPendiente;
+end;
+function SInfoEfectosRemesaCompraConciliados: string;
+begin
+  Result :=
+    inLibMsgCompras.SInfoEfectosRemesaCompraConciliados;
+end;
+function SErrorConciliarRemesaCompra: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorConciliarRemesaCompra;
+end;
+function SErrorBancoPagoNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorBancoPagoNoSeleccionado;
+end;
+function SInfoBancoPagoRemesaAsignado: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoBancoPagoRemesaAsignado;
+end;
+function SErrorAsignarBancoPagoRemesa: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorAsignarBancoPagoRemesa;
+end;
+function STituloFechaCargoRemesa: string;
+begin
+  Result :=
+    inLibMsgVentas.STituloFechaCargoRemesa;
+end;
+function SSolicitudFechaCargoRemesa: string;
+begin
+  Result :=
+    inLibMsgVentas.SSolicitudFechaCargoRemesa;
+end;
+function SInfoFechaCargoRemesaActualizada: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoFechaCargoRemesaActualizada;
+end;
+function SErrorActualizarFechaCargoRemesa: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorActualizarFechaCargoRemesa;
+end;
+function SErrorFechaCargoRemesaNoValida: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorFechaCargoRemesaNoValida;
+end;
+function SErrorEliminarRemesaVentaConCobro: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorEliminarRemesaVentaConCobro;
+end;
+function SPreguntaEliminarRemesaVenta: string;
+begin
+  Result :=
+    inLibMsgVentas.SPreguntaEliminarRemesaVenta;
+end;
+function SInfoRemesaVentaEliminada: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoRemesaVentaEliminada;
+end;
+function SErrorEliminarRemesaVenta: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorEliminarRemesaVenta;
+end;
+function SErrorAnadirEfectosRemesaVentaConCobro: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorAnadirEfectosRemesaVentaConCobro;
+end;
+function SErrorEfectosRemesaVentaNoCargados: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorEfectosRemesaVentaNoCargados;
+end;
+function SErrorEfectoRemesaVentaNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorEfectoRemesaVentaNoSeleccionado;
+end;
+function SErrorQuitarEfectosRemesaVentaConCobro: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorQuitarEfectosRemesaVentaConCobro;
+end;
+function SPreguntaQuitarEfectoRemesaVenta: string;
+begin
+  Result :=
+    inLibMsgVentas.SPreguntaQuitarEfectoRemesaVenta;
+end;
+function SInfoEfectoRemesaVentaQuitado: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoEfectoRemesaVentaQuitado;
+end;
+function SErrorQuitarEfectoRemesaVenta: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorQuitarEfectoRemesaVenta;
+end;
+function SErrorBancoCobroRemesaNoAsignado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorBancoCobroRemesaNoAsignado;
+end;
+function SErrorEfectoRemesaVentaSinPendiente: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorEfectoRemesaVentaSinPendiente;
+end;
+function STextoEfectoPendienteRemesaVenta: string;
+begin
+  Result :=
+    inLibMsgVentas.STextoEfectoPendienteRemesaVenta;
+end;
+function SInfoEfectoRemesaVentaConciliado: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoEfectoRemesaVentaConciliado;
+end;
+function SErrorConciliarEfectoRemesaVenta: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorConciliarEfectoRemesaVenta;
+end;
+function SErrorRemesaVentaSinImportePendiente: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorRemesaVentaSinImportePendiente;
+end;
+function STextoRemesaVentaPendiente: string;
+begin
+  Result :=
+    inLibMsgVentas.STextoRemesaVentaPendiente;
+end;
+function SInfoEfectosRemesaVentaConciliados: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoEfectosRemesaVentaConciliados;
+end;
+function SErrorConciliarRemesaVenta: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorConciliarRemesaVenta;
+end;
+function SErrorBancoCobroNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorBancoCobroNoSeleccionado;
+end;
+function SInfoBancoCobroRemesaAsignado: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoBancoCobroRemesaAsignado;
+end;
+function SErrorAsignarBancoCobroRemesa: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorAsignarBancoCobroRemesa;
+end;
+function STituloFechaCobroRemesa: string;
+begin
+  Result :=
+    inLibMsgVentas.STituloFechaCobroRemesa;
+end;
+function SSolicitudFechaCobroRemesa: string;
+begin
+  Result :=
+    inLibMsgVentas.SSolicitudFechaCobroRemesa;
+end;
+function SInfoFechaCobroRemesaActualizada: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoFechaCobroRemesaActualizada;
+end;
+function SErrorActualizarFechaCobroRemesa: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorActualizarFechaCobroRemesa;
+end;
+function SErrorFechaCobroRemesaNoValida: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorFechaCobroRemesaNoValida;
+end;
+function SInfoOrdenSepaRemesaVentaGenerada: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoOrdenSepaRemesaVentaGenerada;
+end;
+function SErrorGenerarOrdenSepaRemesaVenta: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorGenerarOrdenSepaRemesaVenta;
+end;
+function SErrorCodigoBarrasStockNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorCodigoBarrasStockNoEncontrado;
+end;
+function SErrorEntradaStockNoEncontrada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorEntradaStockNoEncontrada;
+end;
+function SErrorSkuCeldaStockNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorSkuCeldaStockNoEncontrado;
+end;
+function SErrorCeldaStockVariosSkus: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorCeldaStockVariosSkus;
+end;
+function SErrorArticuloStockNoSeleccionadoOperaciones: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloStockNoSeleccionadoOperaciones;
+end;
+function SErrorCeldaTallaStockNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorCeldaTallaStockNoSeleccionada;
+end;
+function SErrorColumnaTallaStockNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorColumnaTallaStockNoSeleccionada;
+end;
+function SErrorFilaStockNoIdentificada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorFilaStockNoIdentificada;
+end;
+function SErrorColorStockNoUnico: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorColorStockNoUnico;
+end;
+function SErrorTallaStockVariosSkus: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorTallaStockVariosSkus;
+end;
+function STituloOperacionesCajaStock: string;
+begin
+  Result :=
+    inLibMsgCaja.STituloOperacionesCajaStock;
+end;
+function SErrorArticuloStockNoSeleccionadoDocumento: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloStockNoSeleccionadoDocumento;
+end;
+function SErrorEstadoStockNoEsExistencias: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorEstadoStockNoEsExistencias;
+end;
+function SErrorCeldaStockNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorCeldaStockNoSeleccionada;
+end;
+function SErrorCeldaCantidadStockNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorCeldaCantidadStockNoSeleccionada;
+end;
+function SErrorFilaExistenciasStockNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorFilaExistenciasStockNoSeleccionada;
+end;
+function SErrorColumnaStockDocumentoNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorColumnaStockDocumentoNoSeleccionada;
+end;
+function SErrorGrupoFilaStockNoLeido: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorGrupoFilaStockNoLeido;
+end;
+function SErrorAlmacenStockNoUnico: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorAlmacenStockNoUnico;
+end;
+function SErrorColorStockUnidadNoUnico: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorColorStockUnidadNoUnico;
+end;
+function STituloConsultaStock: string;
+begin
+  Result :=
+    inLibMsgArticulos.STituloConsultaStock;
+end;
+function SErrorArticuloStockNoSeleccionadoFotos: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloStockNoSeleccionadoFotos;
+end;
+function SInfoArticulosRelacionadosStockNoDisponibles: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoArticulosRelacionadosStockNoDisponibles;
+end;
+function SErrorTarifaNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorTarifaNoSeleccionada;
+end;
+function SPreguntaGuardarTarifaAntesContinuar: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaGuardarTarifaAntesContinuar;
+end;
+function SErrorSesionTarifaNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorSesionTarifaNoSeleccionada;
+end;
+function SInfoLineasSesionTarifaRecalculadas: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoLineasSesionTarifaRecalculadas;
+end;
+function SErrorCalcularSesionTarifa: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorCalcularSesionTarifa;
+end;
+function SPreguntaAplicarSesionTarifa: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaAplicarSesionTarifa;
+end;
+function SErrorAplicarSesionTarifa: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorAplicarSesionTarifa;
+end;
+function SInfoLineasSesionTarifaAplicadas: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoLineasSesionTarifaAplicadas;
+end;
+function SPreguntaLimpiarFiltrosAddBlock: string;
+begin
+  Result :=
+    inLibMsgComun.SPreguntaLimpiarFiltrosAddBlock;
+end;
+function SErrorAlmacenesSoloStockAddBlock: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorAlmacenesSoloStockAddBlock;
+end;
+function SPreguntaPrevisualizarAddBlock: string;
+begin
+  Result :=
+    inLibMsgComun.SPreguntaPrevisualizarAddBlock;
+end;
+function SInfoArticulosYaCargadosAddBlock: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoArticulosYaCargadosAddBlock;
+end;
+function SPreguntaConfirmarAddBlock: string;
+begin
+  Result :=
+    inLibMsgComun.SPreguntaConfirmarAddBlock;
+end;
+function SInfoArticulosAnadidosAddBlock: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoArticulosAnadidosAddBlock;
+end;
+function SErrorDestinoDocumentoTrabajoAddBlock: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorDestinoDocumentoTrabajoAddBlock;
+end;
+function SErrorAlmacenesDocumentoTrabajoAddBlock: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorAlmacenesDocumentoTrabajoAddBlock;
+end;
+function SPreguntaConfirmarDocumentoTrabajoAddBlock: string;
+begin
+  Result :=
+    inLibMsgVentas.SPreguntaConfirmarDocumentoTrabajoAddBlock;
+end;
+function SInfoLineasDocumentoTrabajoAddBlock: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoLineasDocumentoTrabajoAddBlock;
+end;
+function SErrorInsertarLineasDocumentoTrabajoAddBlock: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorInsertarLineasDocumentoTrabajoAddBlock;
+end;
+function SErrorDestinoInventarioAddBlock: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorDestinoInventarioAddBlock;
+end;
+function SPreguntaConfirmarInventarioAddBlock: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaConfirmarInventarioAddBlock;
+end;
+function SInfoLineasInventarioAddBlock: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoLineasInventarioAddBlock;
+end;
+function SErrorInsertarLineasInventarioAddBlock: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorInsertarLineasInventarioAddBlock;
+end;
+function SErrorTarifaDestinoAddBlockNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorTarifaDestinoAddBlockNoSeleccionada;
+end;
+function SErrorTarifaOrigenAddBlockNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorTarifaOrigenAddBlockNoSeleccionada;
+end;
+function SErrorTarifasAddBlockCoincidentes: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorTarifasAddBlockCoincidentes;
+end;
+function SErrorMultiploAjusteAddBlockNoValido: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorMultiploAjusteAddBlockNoValido;
+end;
+function SPreguntaConfirmarTarifaAddBlock: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaConfirmarTarifaAddBlock;
+end;
+function SInfoArticulosTarifaAddBlockAnadidos: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoArticulosTarifaAddBlockAnadidos;
+end;
+function SErrorInsertarTarifaAddBlock: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorInsertarTarifaAddBlock;
+end;
+function SPreguntaQuitarPropiedadArticulo: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaQuitarPropiedadArticulo;
+end;
+function SErrorArticuloNoGuardadoValoresColor: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloNoGuardadoValoresColor;
+end;
+function SErrorArticuloNoGuardadoAnadirPropiedades: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorArticuloNoGuardadoAnadirPropiedades;
+end;
+function SErrorPropiedadObligatoriaFamilia: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorPropiedadObligatoriaFamilia;
+end;
+function SErrorPrecioCosteMargenNoValido: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorPrecioCosteMargenNoValido;
+end;
+function SErrorMargenNoValido: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorMargenNoValido;
+end;
+function SErrorAjusteMargenNoValido: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorAjusteMargenNoValido;
+end;
+function SErrorGuardarCambiosMargen: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorGuardarCambiosMargen;
+end;
+function SErrorProveedorPrincipalCosteNoAsignado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorProveedorPrincipalCosteNoAsignado;
+end;
+function SErrorEmpresaEfectosRemesaNoIndicada: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorEmpresaEfectosRemesaNoIndicada;
+end;
+function SInfoEfectosPendientesRemesaNoEncontrados: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoEfectosPendientesRemesaNoEncontrados;
+end;
+function SErrorEfectosRemesaNoSeleccionados: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorEfectosRemesaNoSeleccionados;
+end;
+function SErrorRemesaExistenteNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorRemesaExistenteNoSeleccionada;
+end;
+function SInfoEfectosCargadosRemesa: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoEfectosCargadosRemesa;
+end;
+function SPreguntaConfirmarCargaSesionTarifa: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaConfirmarCargaSesionTarifa;
+end;
+function SInfoArticulosCargadosSesionTarifa: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoArticulosCargadosSesionTarifa;
+end;
+function SErrorCargarSesionTarifa: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorCargarSesionTarifa;
+end;
+function SErrorTipoDocumentoSesionNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorTipoDocumentoSesionNoSeleccionado;
+end;
+function SErrorSerieAlbaranSesionNoIndicada: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorSerieAlbaranSesionNoIndicada;
+end;
+function SErrorSeriePedidoSesionNoIndicada: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorSeriePedidoSesionNoIndicada;
+end;
+function SErrorAlmacenDestinoSesionNoIndicado: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorAlmacenDestinoSesionNoIndicado;
+end;
+function SErrorCertificadoNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorCertificadoNoSeleccionado;
+end;
+function SErrorEmpleadoEntradaCambioNoIndicado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorEmpleadoEntradaCambioNoIndicado;
+end;
+function SErrorImporteEntradaCambioNoValido: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorImporteEntradaCambioNoValido;
+end;
+function STituloAvisoEntradaCambio: string;
+begin
+  Result :=
+    inLibMsgComun.STituloAvisoEntradaCambio;
+end;
+function SErrorDestinoEnvioIncompleto: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorDestinoEnvioIncompleto;
+end;
+function SErrorTarifaEtiquetasNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorTarifaEtiquetasNoSeleccionada;
+end;
+function SInfoLayoutEtiquetasGuardado: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoLayoutEtiquetasGuardado;
+end;
+function SErrorEmpresaProveedorFacturacionNoIndicados: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorEmpresaProveedorFacturacionNoIndicados;
+end;
+function SInfoAlbaranesPendientesProveedorNoEncontrados: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoAlbaranesPendientesProveedorNoEncontrados;
+end;
+function SPreguntaFacturarTodosAlbaranesListados: string;
+begin
+  Result :=
+    inLibMsgFacturas.SPreguntaFacturarTodosAlbaranesListados;
+end;
+function SErrorBorradorAlbaranesExistenteNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorBorradorAlbaranesExistenteNoSeleccionado;
+end;
+function SInfoAlbaranesGeneradosEnBorrador: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoAlbaranesGeneradosEnBorrador;
+end;
+function SErrorDataModuleAlbaranesNoAsignado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorDataModuleAlbaranesNoAsignado;
+end;
+function SErrorAlbaranesNoSeleccionados: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorAlbaranesNoSeleccionados;
+end;
+function SInfoBorradoresGenerados: string;
+begin
+  Result :=
+    inLibMsgFacturas.SInfoBorradoresGenerados;
+end;
+function SErrorClienteBorradorNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorClienteBorradorNoSeleccionado;
+end;
+function SErrorSerieBorradorNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorSerieBorradorNoSeleccionada;
+end;
+function SErrorFechaBorradorNoIndicada: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorFechaBorradorNoIndicada;
+end;
+function SErrorClienteFacturarTicketNoExiste: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorClienteFacturarTicketNoExiste;
+end;
+function SErrorRazonSocialFacturarTicketObligatoria: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorRazonSocialFacturarTicketObligatoria;
+end;
+function SErrorDocumentoFiscalFacturarTicketNoValido: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorDocumentoFiscalFacturarTicketNoValido;
+end;
+function SErrorCrearBorradorFacturarTicket: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorCrearBorradorFacturarTicket;
+end;
+function SPreguntaSuperarLimiteCargaArticulos: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaSuperarLimiteCargaArticulos;
+end;
+function SErrorDimensionesSkuNoDefinidas: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorDimensionesSkuNoDefinidas;
+end;
+function SErrorValoresSkuNoSeleccionados: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorValoresSkuNoSeleccionados;
+end;
+function SErrorValoresDimensionesSkuIncompletos: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorValoresDimensionesSkuIncompletos;
+end;
+function SInfoCombinacionesSkuGeneradas: string;
+begin
+  Result :=
+    inLibMsgArticulos.SInfoCombinacionesSkuGeneradas;
+end;
+function STituloAnadirValorSku: string;
+begin
+  Result :=
+    inLibMsgArticulos.STituloAnadirValorSku;
+end;
+function SSolicitudNombreValorSku: string;
+begin
+  Result :=
+    inLibMsgArticulos.SSolicitudNombreValorSku;
+end;
+function SSolicitudOrdenNuevoValorSku: string;
+begin
+  Result :=
+    inLibMsgArticulos.SSolicitudOrdenNuevoValorSku;
+end;
+function SPreguntaGuardarValorSkuGlobal: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaGuardarValorSkuGlobal;
+end;
+function SPreguntaUsarValorSkuTemporal: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaUsarValorSkuTemporal;
+end;
+function STituloCambiarOrdenValorSku: string;
+begin
+  Result :=
+    inLibMsgArticulos.STituloCambiarOrdenValorSku;
+end;
+function SSolicitudOrdenValorSku: string;
+begin
+  Result :=
+    inLibMsgArticulos.SSolicitudOrdenValorSku;
+end;
+function SErrorOrdenValorSkuNoValido: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorOrdenValorSkuNoValido;
+end;
+function SPreguntaCambiarOrdenValorSkuGlobal: string;
+begin
+  Result :=
+    inLibMsgArticulos.SPreguntaCambiarOrdenValorSkuGlobal;
+end;
+function STituloCambiarOrdenAtributoSku: string;
+begin
+  Result :=
+    inLibMsgArticulos.STituloCambiarOrdenAtributoSku;
+end;
+function SSolicitudOrdenAtributoSku: string;
+begin
+  Result :=
+    inLibMsgArticulos.SSolicitudOrdenAtributoSku;
+end;
+function SErrorOrdenAtributoSkuNoValido: string;
+begin
+  Result :=
+    inLibMsgArticulos.SErrorOrdenAtributoSkuNoValido;
+end;
+function SPreguntaEditarCamposExtraInforme: string;
+begin
+  Result :=
+    inLibMsgComun.SPreguntaEditarCamposExtraInforme;
+end;
+function SErrorPrivilegiosBorrarFormato: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorPrivilegiosBorrarFormato;
+end;
+function SPreguntaBorrarFormato: string;
+begin
+  Result :=
+    inLibMsgComun.SPreguntaBorrarFormato;
+end;
+function SPreguntaReemplazarInforme: string;
+begin
+  Result :=
+    inLibMsgComun.SPreguntaReemplazarInforme;
+end;
+function STituloAdvertenciaInforme: string;
+begin
+  Result :=
+    inLibMsgComun.STituloAdvertenciaInforme;
+end;
+function SErrorContrasenasNoCoinciden: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorContrasenasNoCoinciden;
+end;
+function SErrorFiltroNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorFiltroNoSeleccionado;
+end;
+function SErrorFiltroSinCondicionesAplicar: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorFiltroSinCondicionesAplicar;
+end;
+function SErrorFiltroSinCondicionesGuardar: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorFiltroSinCondicionesGuardar;
+end;
+function SInfoCambiosFiltroGuardados: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoCambiosFiltroGuardados;
+end;
+function SErrorPantallaSinFiltroAplicado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorPantallaSinFiltroAplicado;
+end;
+function SPreguntaReemplazarFiltro: string;
+begin
+  Result :=
+    inLibMsgComun.SPreguntaReemplazarFiltro;
+end;
+function STituloReemplazarFiltro: string;
+begin
+  Result :=
+    inLibMsgComun.STituloReemplazarFiltro;
+end;
+function SInfoFiltroReemplazado: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoFiltroReemplazado;
+end;
+function SErrorFiltroPropioDuplicado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorFiltroPropioDuplicado;
+end;
+function SInfoCopiaFiltroGuardada: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoCopiaFiltroGuardada;
+end;
+function SPreguntaBorrarFiltro: string;
+begin
+  Result :=
+    inLibMsgComun.SPreguntaBorrarFiltro;
+end;
+function STituloConfirmarBorradoFiltro: string;
+begin
+  Result :=
+    inLibMsgComun.STituloConfirmarBorradoFiltro;
+end;
+function SInfoFiltroCompartidoGrupo: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoFiltroCompartidoGrupo;
+end;
+function SInfoFiltroCompartidoTodos: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoFiltroCompartidoTodos;
+end;
+function SErrorNombreFiltroNoIndicado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorNombreFiltroNoIndicado;
+end;
+function SErrorCodigoGuiaNoIndicado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorCodigoGuiaNoIndicado;
+end;
+function SErrorTablaExternaGuiaNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorTablaExternaGuiaNoSeleccionada;
+end;
+function SErrorCampoMasterGuiaNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorCampoMasterGuiaNoSeleccionado;
+end;
+function SErrorCampoDetailGuiaNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorCampoDetailGuiaNoSeleccionado;
+end;
+function SInfoGuiaAnadida: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoGuiaAnadida;
+end;
+function SInfoGuiasEliminarNoEncontradas: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoGuiasEliminarNoEncontradas;
+end;
+function SPreguntaEliminarGuia: string;
+begin
+  Result :=
+    inLibMsgComun.SPreguntaEliminarGuia;
+end;
+function SErrorFacturaCompraExportarNoPreparada: string;
+begin
+  Result :=
+    inLibMsgCompras.SErrorFacturaCompraExportarNoPreparada;
+end;
+function SErrorDataModulePedidosNoAsignado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorDataModulePedidosNoAsignado;
+end;
+function SInfoImportacionPedidosFinalizada: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoImportacionPedidosFinalizada;
+end;
+function SErrorConexionOperacionesCajaSkuNoDisponible: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorConexionOperacionesCajaSkuNoDisponible;
+end;
+function SErrorImporteConciliadoNoValido: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorImporteConciliadoNoValido;
+end;
+function SErrorImporteConciliadoSuperaPendiente: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorImporteConciliadoSuperaPendiente;
+end;
+function SErrorNombreFormatoWizardNoIndicado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorNombreFormatoWizardNoIndicado;
+end;
+function SErrorNombreFormatoWizardNoModificado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorNombreFormatoWizardNoModificado;
+end;
+function SErrorDatasetMasterWizardNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorDatasetMasterWizardNoSeleccionado;
+end;
+function SErrorCamposMasterWizardNoSeleccionados: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorCamposMasterWizardNoSeleccionados;
+end;
+function SErrorTablaExternaWizardNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorTablaExternaWizardNoSeleccionada;
+end;
+function SErrorCamposTablaExternaWizardNoSeleccionados: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorCamposTablaExternaWizardNoSeleccionados;
+end;
+function SErrorPrepararImpresionDeclaracionResponsable: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorPrepararImpresionDeclaracionResponsable;
+end;
+function SErrorImprimirDeclaracionResponsable: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorImprimirDeclaracionResponsable;
+end;
+function SInfoNumeroInstalacionSifDisponible: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SInfoNumeroInstalacionSifDisponible;
+end;
+function SErrorGenerarNumeroInstalacionSif: string;
+begin
+  Result :=
+    inLibMsgVerifactu.SErrorGenerarNumeroInstalacionSif;
+end;
+function SErrorSerieDocumentoNoIndicada: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorSerieDocumentoNoIndicada;
+end;
+function SErrorFechaInicioDocumentoNoIndicada: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorFechaInicioDocumentoNoIndicada;
+end;
+function SErrorFechaFinDocumentoNoIndicada: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorFechaFinDocumentoNoIndicada;
+end;
+function SErrorRangoFechasDocumentoNoValido: string;
+begin
+  Result :=
+    inLibMsgComun.SErrorRangoFechasDocumentoNoValido;
+end;
+function SInfoEmpresaSinCuentasBancarias: string;
+begin
+  Result :=
+    inLibMsgComun.SInfoEmpresaSinCuentasBancarias;
+end;
+function SErrorAlmacenPedidoNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorAlmacenPedidoNoSeleccionado;
+end;
+function SInfoAlbaranesIncorporarNoDisponibles: string;
+begin
+  Result :=
+    inLibMsgVentas.SInfoAlbaranesIncorporarNoDisponibles;
+end;
+function SErrorSerieAlbaranPedidoNoIndicada: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorSerieAlbaranPedidoNoIndicada;
+end;
+function SInfoLogGuardado: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SInfoLogGuardado;
+end;
+function SErrorAlmacenAlbaranNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorAlmacenAlbaranNoSeleccionado;
+end;
+function SErrorAlbaranDestinoNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorAlbaranDestinoNoSeleccionado;
+end;
+function SErrorCodigoAcreedorSepaNoIndicado: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorCodigoAcreedorSepaNoIndicado;
+end;
+function SErrorLongitudCodigoAcreedorSepa: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorLongitudCodigoAcreedorSepa;
+end;
+function SErrorFormatoCodigoAcreedorSepaNoValido: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorFormatoCodigoAcreedorSepaNoValido;
+end;
+function SErrorSecuenciaSepaNoValida: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorSecuenciaSepaNoValida;
+end;
+function SErrorClientesSinMandatoSepa: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorClientesSinMandatoSepa;
+end;
+function SErrorMandatosSepaLongitudNoValida: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorMandatosSepaLongitudNoValida;
+end;
+function SErrorClientesSinFechaFirmaMandatoSepa: string;
+begin
+  Result :=
+    inLibMsgVentas.SErrorClientesSinFechaFirmaMandatoSepa;
+end;
+function SErrorCodigoFormaPagoCajaObligatorio: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorCodigoFormaPagoCajaObligatorio;
+end;
+function SErrorDescripcionFormaPagoCajaObligatoria: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorDescripcionFormaPagoCajaObligatoria;
+end;
+function SErrorParametrosAplicacionCajaNoConfigurados: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorParametrosAplicacionCajaNoConfigurados;
+end;
+function SErrorParametrosModuloCajaNoConfigurados: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorParametrosModuloCajaNoConfigurados;
+end;
+function SErrorContextoSesionCajaNoConfigurado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorContextoSesionCajaNoConfigurado;
+end;
+function SErrorOperacionCajaSinLineas: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorOperacionCajaSinLineas;
+end;
+function SErrorRazonSocialClienteFacturaCajaObligatoria: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorRazonSocialClienteFacturaCajaObligatoria;
+end;
+function SErrorDocumentoFiscalClienteCajaNoValido: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorDocumentoFiscalClienteCajaNoValido;
+end;
+function SErrorDocumentoFiscalEmpresaCajaNoValido: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorDocumentoFiscalEmpresaCajaNoValido;
+end;
+function SErrorFechaTicketSerieNoValida: string;
+begin
+  Result :=
+    inLibMsgFacturas.SErrorFechaTicketSerieNoValida;
+end;
+function SErrorCuadreCobroParcialCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorCuadreCobroParcialCaja;
+end;
+function SErrorFacturaRectificativaCajaSinOriginal: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorFacturaRectificativaCajaSinOriginal;
+end;
+function SErrorGuardarTicketCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorGuardarTicketCaja;
+end;
+function SErrorCuadrarFacturaCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorCuadrarFacturaCaja;
+end;
+function SErrorRedimirValeCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorRedimirValeCaja;
+end;
+function SErrorContextoSesionTraspasoNoConfigurado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorContextoSesionTraspasoNoConfigurado;
+end;
+function SErrorSkuTraspasoIncompleto: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorSkuTraspasoIncompleto;
+end;
+function SErrorArticuloSkuTraspasoNoCoincide: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorArticuloSkuTraspasoNoCoincide;
+end;
+function SErrorStockTraspasoInsuficiente: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorStockTraspasoInsuficiente;
+end;
+function SErrorLineasTraspasoNoDisponibles: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorLineasTraspasoNoDisponibles;
+end;
+function SErrorAlmacenDestinoTraspasoNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorAlmacenDestinoTraspasoNoSeleccionado;
+end;
+function SErrorAlmacenesTraspasoCoincidentes: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorAlmacenesTraspasoCoincidentes;
+end;
+function SErrorLineasSolicitudTraspasoNoDisponibles: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorLineasSolicitudTraspasoNoDisponibles;
+end;
+function SErrorAlmacenOrigenSolicitudNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorAlmacenOrigenSolicitudNoSeleccionado;
+end;
+function SErrorSolicitudTraspasoMismoAlmacen: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorSolicitudTraspasoMismoAlmacen;
+end;
+function SErrorSolicitudTraspasoNoCargada: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorSolicitudTraspasoNoCargada;
+end;
+function SErrorPermisoAbrirCajon: string;
+begin
+  Result :=
+    inLibMsgConfiguracion.SErrorPermisoAbrirCajon;
+end;
+function SErrorImpresoraTicketsCajaNoConfigurada: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorImpresoraTicketsCajaNoConfigurada;
+end;
+function SErrorContextoImpresoraCajaNoProporcionado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorContextoImpresoraCajaNoProporcionado;
+end;
+function SErrorReferenciaPagoCajaNoIndicada: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorReferenciaPagoCajaNoIndicada;
+end;
+function SErrorFactorCambioCajaNoValido: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorFactorCambioCajaNoValido;
+end;
+function SErrorHashBlockchainCajaNoIndicado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorHashBlockchainCajaNoIndicado;
+end;
+function SErrorValeCajaNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorValeCajaNoSeleccionado;
+end;
+function SErrorPinValeCajaNoIndicado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorPinValeCajaNoIndicado;
+end;
+function SErrorPinValeCajaIncorrecto: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorPinValeCajaIncorrecto;
+end;
+function SErrorProveedorParametrosCajaNoConfigurado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorProveedorParametrosCajaNoConfigurado;
+end;
+function SErrorParametrosCajaEditablesNoConfigurados: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorParametrosCajaEditablesNoConfigurados;
+end;
+function SInfoLayoutCajaGuardado: string;
+begin
+  Result :=
+    inLibMsgCaja.SInfoLayoutCajaGuardado;
+end;
+function SInfoParametrosCajaGuardados: string;
+begin
+  Result :=
+    inLibMsgCaja.SInfoParametrosCajaGuardados;
+end;
+function SInfoParametrosCajaSinCambios: string;
+begin
+  Result :=
+    inLibMsgCaja.SInfoParametrosCajaSinCambios;
+end;
+function SPreguntaSalirParametrosCajaSinGuardar: string;
+begin
+  Result :=
+    inLibMsgCaja.SPreguntaSalirParametrosCajaSinGuardar;
+end;
+function SInfoUsuariosParametrosCajaNoEncontrados: string;
+begin
+  Result :=
+    inLibMsgCaja.SInfoUsuariosParametrosCajaNoEncontrados;
+end;
+function STituloCambiarUsuarioParametrosCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.STituloCambiarUsuarioParametrosCaja;
+end;
+function SSolicitudCambiarUsuarioParametrosCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.SSolicitudCambiarUsuarioParametrosCaja;
+end;
+function SErrorUsuarioParametrosCajaNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorUsuarioParametrosCajaNoEncontrado;
+end;
+function SInfoPrecargaCajaGuardada: string;
+begin
+  Result :=
+    inLibMsgCaja.SInfoPrecargaCajaGuardada;
+end;
+function SErrorAsignarUbicacionCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorAsignarUbicacionCaja;
+end;
+function STituloHoraCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.STituloHoraCaja;
+end;
+function SSolicitudHoraCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.SSolicitudHoraCaja;
+end;
+function SErrorHoraCajaNoValida: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorHoraCajaNoValida;
+end;
+function SErrorUbicacionCajaBuscarOperacionesNoAsignada: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorUbicacionCajaBuscarOperacionesNoAsignada;
+end;
+function SErrorUbicacionCajaArqueoNoAsignada: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorUbicacionCajaArqueoNoAsignada;
+end;
+function SErrorUbicacionCajaTraspasoNoAsignada: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorUbicacionCajaTraspasoNoAsignada;
+end;
+function SErrorRectificacionCajaNoAdmiteBorrador: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorRectificacionCajaNoAdmiteBorrador;
+end;
+function SErrorClienteBorradorCajaNoAsignado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorClienteBorradorCajaNoAsignado;
+end;
+function SErrorNifClienteBorradorCajaNoIndicado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorNifClienteBorradorCajaNoIndicado;
+end;
+function SErrorFechaSerieEmisionCajaNoValida: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorFechaSerieEmisionCajaNoValida;
+end;
+function SAvisoHuecosNumeracionSerieCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.SAvisoHuecosNumeracionSerieCaja;
+end;
+function SErrorNumeroBorradorCajaNoValido: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorNumeroBorradorCajaNoValido;
+end;
+function SErrorNumeroBorradorCajaExistente: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorNumeroBorradorCajaExistente;
+end;
+function SErrorNumeroBorradorCajaNoEsHueco: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorNumeroBorradorCajaNoEsHueco;
+end;
+function STituloEnviarDocumentacionCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.STituloEnviarDocumentacionCaja;
+end;
+function SSolicitudCorreoDocumentacionCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.SSolicitudCorreoDocumentacionCaja;
+end;
+function SErrorCorreoDocumentacionCajaNoIndicado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorCorreoDocumentacionCajaNoIndicado;
+end;
+function SErrorCreditoClienteCajaNoPermitido: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorCreditoClienteCajaNoPermitido;
+end;
+function SErrorImporteCreditoCajaNoPendiente: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorImporteCreditoCajaNoPendiente;
+end;
+function SAvisoLimiteOperacionesCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.SAvisoLimiteOperacionesCaja;
+end;
+function SErrorOperacionCajaExportarNoSeleccionada: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorOperacionCajaExportarNoSeleccionada;
+end;
+function SErrorSkuVentaCajaNoExiste: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorSkuVentaCajaNoExiste;
+end;
+function SErrorSkuVentaCajaNoActivo: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorSkuVentaCajaNoActivo;
+end;
+function SErrorArticuloVentaCajaSinStock: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorArticuloVentaCajaSinStock;
+end;
+function SErrorVendedorCajaNoAsignado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorVendedorCajaNoAsignado;
+end;
+function SErrorCodigoBarrasVentaCajaNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorCodigoBarrasVentaCajaNoEncontrado;
+end;
+function SErrorLineaDepositoCajaNoCancelable: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorLineaDepositoCajaNoCancelable;
+end;
+function SErrorArticuloVentaCajaNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorArticuloVentaCajaNoEncontrado;
+end;
+function SPreguntaCancelarVentaCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.SPreguntaCancelarVentaCaja;
+end;
+function SErrorLineaDepositoCajaNoEliminable: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorLineaDepositoCajaNoEliminable;
+end;
+function SPreguntaBorrarVentaCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.SPreguntaBorrarVentaCaja;
+end;
+function SInfoValeCajaEntregar: string;
+begin
+  Result :=
+    inLibMsgCaja.SInfoValeCajaEntregar;
+end;
+function SErrorCorreoOperacionCajaNoEnviado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorCorreoOperacionCajaNoEnviado;
+end;
+function SErrorTipoRectificativaCajaNoIndicado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorTipoRectificativaCajaNoIndicado;
+end;
+function SErrorBorradorRectificarCajaNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorBorradorRectificarCajaNoEncontrado;
+end;
+function SErrorClienteDepositosCajaNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorClienteDepositosCajaNoSeleccionado;
+end;
+function SErrorValoresAtributoCajaNoDefinidos: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorValoresAtributoCajaNoDefinidos;
+end;
+function SPreguntaEliminarOperacionCajaPendiente: string;
+begin
+  Result :=
+    inLibMsgCaja.SPreguntaEliminarOperacionCajaPendiente;
+end;
+function SErrorArticuloCajaNoEncontradoDescatalogado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorArticuloCajaNoEncontradoDescatalogado;
+end;
+function SErrorCantidadArticuloDepositoCajaNoValida: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorCantidadArticuloDepositoCajaNoValida;
+end;
+function SErrorCodigoClienteCajaNoExiste: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorCodigoClienteCajaNoExiste;
+end;
+function SErrorEmpleadoCajaNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorEmpleadoCajaNoEncontrado;
+end;
+function SErrorSolicitudesTraspasoPendientesNoEncontradas: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorSolicitudesTraspasoPendientesNoEncontradas;
+end;
+function SErrorCargarSolicitudTraspaso: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorCargarSolicitudTraspaso;
+end;
+function SErrorSolicitudTraspasoCerrarNoCargada: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorSolicitudTraspasoCerrarNoCargada;
+end;
+function SPreguntaCerrarSolicitudTraspaso: string;
+begin
+  Result :=
+    inLibMsgCaja.SPreguntaCerrarSolicitudTraspaso;
+end;
+function SInfoSolicitudTraspasoCerrada: string;
+begin
+  Result :=
+    inLibMsgCaja.SInfoSolicitudTraspasoCerrada;
+end;
+function SErrorDenegarSolicitudTraspasoModoNoValido: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorDenegarSolicitudTraspasoModoNoValido;
+end;
+function SErrorSolicitudTraspasoDenegarNoCargada: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorSolicitudTraspasoDenegarNoCargada;
+end;
+function STituloDenegarSolicitudTraspaso: string;
+begin
+  Result :=
+    inLibMsgCaja.STituloDenegarSolicitudTraspaso;
+end;
+function SSolicitudMotivoRechazoTraspaso: string;
+begin
+  Result :=
+    inLibMsgCaja.SSolicitudMotivoRechazoTraspaso;
+end;
+function SErrorMotivoDenegacionTraspasoNoIndicado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorMotivoDenegacionTraspasoNoIndicado;
+end;
+function SInfoPeticionTraspasoDenegada: string;
+begin
+  Result :=
+    inLibMsgCaja.SInfoPeticionTraspasoDenegada;
+end;
+function SInfoSolicitudTraspasoEnviada: string;
+begin
+  Result :=
+    inLibMsgCaja.SInfoSolicitudTraspasoEnviada;
+end;
+function SErrorEmpleadoTraspasoNoIndicado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorEmpleadoTraspasoNoIndicado;
+end;
+function SErrorEmpleadoTraspasoNoEncontrado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorEmpleadoTraspasoNoEncontrado;
+end;
+function SErrorSolicitudTraspasoAtenderNoCargada: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorSolicitudTraspasoAtenderNoCargada;
+end;
+function SErrorMotivoLineasTraspasoNoIndicado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorMotivoLineasTraspasoNoIndicado;
+end;
+function SInfoSolicitudTraspasoAtendida: string;
+begin
+  Result :=
+    inLibMsgCaja.SInfoSolicitudTraspasoAtendida;
+end;
+function SPreguntaDenegarPeticionTraspasoCompleta: string;
+begin
+  Result :=
+    inLibMsgCaja.SPreguntaDenegarPeticionTraspasoCompleta;
+end;
+function SInfoTraspasoGrabado: string;
+begin
+  Result :=
+    inLibMsgCaja.SInfoTraspasoGrabado;
+end;
+function SErrorEmpleadoGastoCajaNoIndicado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorEmpleadoGastoCajaNoIndicado;
+end;
+function SErrorImporteGastoCajaNoValido: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorImporteGastoCajaNoValido;
+end;
+function STituloAvisoCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.STituloAvisoCaja;
+end;
+function SErrorArqueoCajaNoSeleccionado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorArqueoCajaNoSeleccionado;
+end;
+function SErrorPermisoResumenArqueoCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorPermisoResumenArqueoCaja;
+end;
+function SInfoOperacionesFacturadasArqueoCajaNoEncontradas: string;
+begin
+  Result :=
+    inLibMsgCaja.SInfoOperacionesFacturadasArqueoCajaNoEncontradas;
+end;
+function STituloTiraCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.STituloTiraCaja;
+end;
+function SErrorVendedorArqueoCajaNoIndicado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorVendedorArqueoCajaNoIndicado;
+end;
+function STituloVendedorArqueoCajaObligatorio: string;
+begin
+  Result :=
+    inLibMsgCaja.STituloVendedorArqueoCajaObligatorio;
+end;
+function SErrorVendedorArqueoCajaNoValido: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorVendedorArqueoCajaNoValido;
+end;
+function STituloVendedorArqueoCajaNoValido: string;
+begin
+  Result :=
+    inLibMsgCaja.STituloVendedorArqueoCajaNoValido;
+end;
+function SErrorArqueoCajaDuplicado: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorArqueoCajaDuplicado;
+end;
+function STituloArqueoCajaDuplicado: string;
+begin
+  Result :=
+    inLibMsgCaja.STituloArqueoCajaDuplicado;
+end;
+function SErrorRecuentoArqueoCajaNoDisponible: string;
+begin
+  Result :=
+    inLibMsgCaja.SErrorRecuentoArqueoCajaNoDisponible;
+end;
+function SPreguntaGrabarArqueoCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.SPreguntaGrabarArqueoCaja;
+end;
+function STituloConfirmarArqueoCaja: string;
+begin
+  Result :=
+    inLibMsgCaja.STituloConfirmarArqueoCaja;
+end;
 
 end.

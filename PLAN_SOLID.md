@@ -275,6 +275,11 @@ y desbloquean la compilación incremental.
    `inLibMsgCaja`, `inLibMsgCompras`, `inLibMsgVerifactu`… dejando
    `inLibMsg` como fachada temporal de migración (§14.6) que se elimina
    cuando el último consumidor migre.
+
+   Estado a 29/07/2026: los 1.413 recursos viven ya en nueve catálogos
+   de dominio. `inLibMsg` delega temporalmente en ellos para conservar
+   compatibles los consumidores actuales; queda migrar sus `uses` por
+   tandas y eliminar la fachada.
 3. **Cerrar las 2 infracciones de capa** de `inLibCajaOpeComposicion`:
    declarar `IImpresorVenta` e `IGrabadorVenta` en un `inLib*Intf` y que
    `inMtoCajaImpresorVenta` / `inMtoCajaGrabadorVenta` los implementen y

@@ -181,6 +181,15 @@
         <DCCReference Include="src\Lib\inLibWin.pas"/>
         <DCCReference Include="src\Lib\inLibShowMto.pas"/>
         <DCCReference Include="src\Lib\inLibUnitForm.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgComun.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgConfiguracion.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgArticulos.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgVentas.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgCompras.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgFacturas.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgCaja.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgIntegraciones.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgVerifactu.pas"/>
         <DCCReference Include="src\Lib\inLibMsg.pas"/>
         <DCCReference Include="src\Lib\inLibNet.pas"/>
         <DCCReference Include="src\Lib\inLibScriptDB.pas"/>

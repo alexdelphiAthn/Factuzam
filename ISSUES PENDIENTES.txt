@@ -1,25 +1,31 @@
-(p)- compras 
-(p)en varios tipos de iva, alclarar que es para artículos y 
-(p)meter en proveedores que sea exento (extranjero). 
-(p)descuentos financieros (sólo a nivel económico)
-(p)descuento comercial (imputar descuento artículos)
-(p)EN SESIONES SI METO CANTIDADES NO SALE BIEN, SÓLO SALE CUANDO CAMBIO DE LINEA
-(p)LOS PROVEEDORES TIENEN QUE TENER SISTEMA DE TALLAS POR DEFECTO Y APLICAR EN SESIONES POR DEFECTO 
-(p)EN SESIONES, SI CAMBIO EL SISTEMA DE TALLAS DE UNA LINEA, LAS SIGUIENTES ME SALE POR DEFECTO CON EL QUE YO METÍ.
-(p)EN EL GRID DE SESIONES-PEDIDOS-ALBARANES0 QUIERES QUE SALGA LA TEMPORADA, LAS FECHAS
-EL TOTAL PRENDAS Y EL TOTAL IMPORTE NETO LINEAS Y TOTAL DOCUMENTO, 
-CANTIDADES PEDIDAS - CANTIDADES RECIBIDAS EN PEDIDOS. 
-EN CABECERAS DE PEDIDOS PEDIDO/RECIBID/PTE/ALBARÁN. 
-(p)ETIQUETAS POR PEDIDO
-(p)CUANDO RELLENO MODELO NO ME RELLENA BIEN CODIGO, DESCRIPCIÓN Y TALLAJE, PRECIOS Y CANTIDADES
-(p)EN LA BÚSQUEDA DE CONTROL U NO SALE POR MODELO
-(p)QUE EN LA LINEA DE SESIÓN, SALGA POR DEFECTO EN MODELO Y NO EN ARTÍCULO
-(p)BÚSQUEDA INCREMENTAL POR CÓDIGO DE PROVEEDOR EN COMBO EN VEZ DE BUTTÓN
-(p)LA BÚSQUEDA INCREMENTAL DE MODELO NO FUNCIONA BIEN. 
-(p)SI EN EL MISMO DOCUMENTO, METO EL MISMO MODELO O CÓDIGO DE ARTÍCULO, repita los campos como si estuviera creado. 
-(p)NUMERO DE PRENDAS EN TOTALES
 _____________________________________________________________
 
+PENDIENTE TÉCNICO - FACHADA inLibMsg (29/07/2026)
+Los 1.413 mensajes viven en inLibMsgComun, inLibMsgConfiguracion,
+inLibMsgArticulos, inLibMsgVentas, inLibMsgCompras, inLibMsgFacturas,
+inLibMsgCaja, inLibMsgIntegraciones e inLibMsgVerifactu.
+Migrar los uses por tandas a los catálogos de dominio y eliminar inLibMsg
+cuando no quede ningún consumidor. No añadir mensajes nuevos a la fachada.
 
-GUARDAR FILTROS EN LISTA
+_____________________________________________________________
+
+PENDIENTE TÉCNICO - EXTENDER EL CATÁLOGO SQL POR PERFILES (29/07/2026)
+El piloto está terminado para ObtenerSiguienteLinea y
+ConsultarCantidadesLinea de RepositorioComprasSesiones.
+Cada formulario conserva su interruptor oGetSQLFromDB. Si está a False,
+usa siempre el SQL base; si está a True, consulta el catálogo compartido
+KEY_USUPER=SQL_REPOSITORIOS. Las operaciones se identifican mediante
+SUBKEY_USUPER=SQL__Repositorio__Operacion, por lo que una definición puede
+ser utilizada por varias pantallas sin duplicarla.
+Un fallo al publicar o cargar el perfil, una validación incorrecta o un
+error al ejecutar el SQL personalizado provoca fallback al SQL base. El
+piloto solo permite este reintento automático en lecturas. Para escrituras
+será obligatorio ejecutar el intento dentro de una transacción y hacer
+Rollback antes del fallback.
+Pendiente: extraer progresivamente el resto del SQL literal de inLib* hacia
+repositorios de agregado, añadir sus definiciones y pruebas, y publicar las
+filas ausentes sin sobrescribir personalizaciones existentes.
+Administración y procedimiento documentados en MANUAL_SQL_PERFILES.md.
+Plan de ejecución detallado en
+DESARROLLOS EN CURSO/plan_expansion_catalogo_sql.md.
 

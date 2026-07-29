@@ -71,13 +71,6 @@ type
     LblTotalCol : TcxLabel;
   end;
 
-  TCantidadPivotSesion = record
-    IdValorPivot: Integer;
-    Cantidad: Double;
-  end;
-
-  TCantidadesPivotSesion = array of TCantidadPivotSesion;
-
   TGestorMatrizCompras = class
   private
     FContenedor   : TScrollBox;
@@ -286,13 +279,8 @@ procedure AplicarDuplicadoEnLinea(ADM: TdmComprasSesiones;
 
 function ConsultarCodigosBasicosActivos(AConn: TUniConnection;
   const AIdVariacion: string): TArray<string>;
-function ObtenerSiguienteLineaSesion(AConn: TUniConnection;
-  const ASerie, ANumero: string; ALineaActual: Integer): Integer;
 function ObtenerNombreFamiliaSesion(AConn: TUniConnection;
   const ACodigoFamilia: string): string;
-function ConsultarCantidadesLineaSesion(AConn: TUniConnection;
-  const ASerie, ANumero: string;
-  ALinea: Integer): TCantidadesPivotSesion;
 procedure BorrarCeldasLineaSesion(AConn: TUniConnection;
   const ASerie, ANumero: string; ALinea: Integer);
 procedure CopiarCeldasDistribuidasSesion(AConn: TUniConnection;
@@ -344,32 +332,6 @@ begin
   end;
 end;
 
-function ObtenerSiguienteLineaSesion(AConn: TUniConnection;
-  const ASerie, ANumero: string; ALineaActual: Integer): Integer;
-var
-  Consulta: TUniQuery;
-begin
-  Result := 0;
-  Consulta := TUniQuery.Create(nil);
-  try
-    Consulta.Connection := AConn;
-    Consulta.SQL.Text :=
-      'SELECT MIN(LINEA_SESLIN) AS SIGUIENTE ' +
-      '  FROM fza_compras_sesiones_lineas ' +
-      ' WHERE SERIE_SES_SESLIN = :s ' +
-      '   AND NUMERO_SES_SESLIN = :n ' +
-      '   AND LINEA_SESLIN > :l';
-    Consulta.ParamByName('s').AsString := ASerie;
-    Consulta.ParamByName('n').AsString := ANumero;
-    Consulta.ParamByName('l').AsInteger := ALineaActual;
-    Consulta.Open;
-    if not Consulta.FieldByName('SIGUIENTE').IsNull then
-      Result := Consulta.FieldByName('SIGUIENTE').AsInteger;
-  finally
-    FreeAndNil(Consulta);
-  end;
-end;
-
 function ObtenerNombreFamiliaSesion(AConn: TUniConnection;
   const ACodigoFamilia: string): string;
 var
@@ -386,45 +348,6 @@ begin
     Consulta.Open;
     if not Consulta.IsEmpty then
       Result := Consulta.FieldByName('NOMBRE_FAM_FAM').AsString;
-  finally
-    FreeAndNil(Consulta);
-  end;
-end;
-
-function ConsultarCantidadesLineaSesion(AConn: TUniConnection;
-  const ASerie, ANumero: string;
-  ALinea: Integer): TCantidadesPivotSesion;
-var
-  Consulta: TUniQuery;
-  iIndice: Integer;
-begin
-  Result := nil;
-  Consulta := TUniQuery.Create(nil);
-  try
-    Consulta.Connection := AConn;
-    Consulta.SQL.Text :=
-      'SELECT ID_AV_PIVOT_SESCEL, ' +
-      '       SUM(CANTIDAD_SESCEL) AS TOTAL ' +
-      '  FROM fza_compras_sesiones_celdas ' +
-      ' WHERE SERIE_SES_SESCEL = :s ' +
-      '   AND NUMERO_SES_SESCEL = :n ' +
-      '   AND LINEA_SES_SESCEL = :l ' +
-      ' GROUP BY ID_AV_PIVOT_SESCEL';
-    Consulta.ParamByName('s').AsString := ASerie;
-    Consulta.ParamByName('n').AsString := ANumero;
-    Consulta.ParamByName('l').AsInteger := ALinea;
-    Consulta.Open;
-    SetLength(Result, Consulta.RecordCount);
-    iIndice := 0;
-    while not Consulta.Eof do
-    begin
-      Result[iIndice].IdValorPivot :=
-        Consulta.FieldByName('ID_AV_PIVOT_SESCEL').AsInteger;
-      Result[iIndice].Cantidad :=
-        Consulta.FieldByName('TOTAL').AsFloat;
-      Inc(iIndice);
-      Consulta.Next;
-    end;
   finally
     FreeAndNil(Consulta);
   end;

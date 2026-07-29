@@ -1,0 +1,52 @@
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibMsgIntegraciones                                         }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       29/07/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Mensajes de servicios externos, nube y ventas web.                        }
+{******************************************************************************}
+unit inLibMsgIntegraciones;
+
+interface
+
+resourcestring
+  SErrorDivisaNoEncontrada =
+    'Divisa "%s" no encontrada en el resultado';
+  SErrorHttpDivisas = 'HTTP %d: %s';
+  SErrorRedDivisas = 'Error de red: %s';
+  SErrorJsonDivisas = 'Respuesta JSON inválida';
+  SErrorPruebaPilaJcl =
+    'Prueba forzada con /teststack [%s]: JCL stack trace activo';
+  SErrorHttpCripto = 'HTTP %d: %s';
+  SErrorRedCripto = 'Error de red: %s';
+  SErrorJsonCripto = 'Respuesta JSON inválida';
+  SErrorRespuestaHttpFactuzamApi = 'Respuesta HTTP %d';
+  SErrorFactuzamApiNoConfigurada =
+    'La API de Factuzam no está configurada.';
+  SInfoEventoFactuzamApiRecibido =
+    'Evento recibido correctamente.';
+  SInfoConsultaFactuzamApiRealizada =
+    'Consulta realizada correctamente.';
+  SInfoDocumentoFactuzamApiGuardado =
+    'Documento guardado en %s';
+  SInfoDocumentoFactuzamApiDescargado =
+    'Documento descargado.';
+  SErrorRespuestaFormateadorSqlVacia =
+    'Respuesta vacía del servicio de formateo SQL';
+  SErrorRespuestaFormateadorSqlInesperada =
+    'Respuesta JSON inesperada del formateador SQL';
+  SErrorEncolarVentaWebservice =
+    'No se pudo encolar la venta %s\%s para el webservice.';
+  SErrorApiKeyInstalacionFaltante =
+    'Falta la API key de la instalación.';
+  SErrorDeclaracionWebserviceOtraVersion =
+    'El webservice devolvió una declaración de otra versión.';
+implementation
+
+end.

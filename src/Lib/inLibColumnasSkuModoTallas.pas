@@ -352,6 +352,416 @@ type
     Cant: Double;
   end;
 
+  TDatosLineaExpansion = record
+    Numero: Integer;
+    Encontrada: Boolean;
+    Primera: Boolean;
+    Articulo: string;
+    Descripcion: string;
+    Almacen: string;
+    NombreTalla: string;
+    Valores: TValoresAttrTallas;
+    Nombres: TValoresAttrTallas;
+    OrdenTalla: Integer;
+    Precio: Double;
+  end;
+
+  TDesmontajeTallas = class
+  private
+    FModo: TModoEntradaTallas;
+    FDataset: TDataSet;
+    FCeldas: TList<TCeldaExpansion>;
+    FOrdenTallaPorArticulo: TDictionary<string, Integer>;
+    FNombreTallaPorArticulo: TDictionary<string, string>;
+    FMaximaLinea: Integer;
+    FUnidadesAntes: Double;
+    FEnProcesoPrevio: Boolean;
+    FTransaccionPropia: Boolean;
+    FExpandio: Boolean;
+    function LocalizarLinea(ALinea: Integer): Boolean;
+    procedure PonerLineaNueva(ALinea: Integer);
+    procedure CargarCeldas;
+    procedure CalcularMaximaLinea;
+    procedure CargarDatosLinea(ALinea: Integer;
+      var ADatos: TDatosLineaExpansion);
+    procedure ActualizarPrimeraLinea(const ACelda: TCeldaExpansion;
+      var ADatos: TDatosLineaExpansion; const ASku, AAlmacen: string);
+    procedure CrearLinea(const ACelda: TCeldaExpansion;
+      const ADatos: TDatosLineaExpansion; const ASku, AAlmacen: string);
+    procedure AplicarCelda(const ACelda: TCeldaExpansion;
+      var ADatos: TDatosLineaExpansion);
+    procedure ExpandirCeldas;
+    procedure BorrarCeldas;
+  public
+    constructor Create(AModo: TModoEntradaTallas);
+    destructor Destroy; override;
+    procedure Ejecutar;
+  end;
+
+constructor TDesmontajeTallas.Create(AModo: TModoEntradaTallas);
+begin
+  inherited Create;
+  FModo := AModo;
+  FDataset := FModo.FConfig.Cds;
+  FCeldas := TList<TCeldaExpansion>.Create;
+  FOrdenTallaPorArticulo := TDictionary<string, Integer>.Create;
+  FNombreTallaPorArticulo := TDictionary<string, string>.Create;
+end;
+
+destructor TDesmontajeTallas.Destroy;
+begin
+  FreeAndNil(FNombreTallaPorArticulo);
+  FreeAndNil(FOrdenTallaPorArticulo);
+  FreeAndNil(FCeldas);
+  inherited;
+end;
+
+function TDesmontajeTallas.LocalizarLinea(ALinea: Integer): Boolean;
+begin
+  Result := FDataset.Locate(FModo.FCfgTallas.FieldLinea, ALinea, []);
+  if not Result then
+  begin
+    FDataset.First;
+    while (not FDataset.Eof) and (not Result) do
+    begin
+      if FDataset.FieldByName(
+           FModo.FCfgTallas.FieldLinea).AsInteger = ALinea then
+        Result := True
+      else
+        FDataset.Next;
+    end;
+  end;
+end;
+
+procedure TDesmontajeTallas.PonerLineaNueva(ALinea: Integer);
+var
+  Campo: TField;
+begin
+  Campo := FDataset.FieldByName(FModo.FCfgTallas.FieldLinea);
+  if Campo is TStringField then
+    Campo.AsString := Format('%.*d', [Campo.Size, ALinea])
+  else
+    Campo.AsInteger := ALinea;
+end;
+
+procedure TDesmontajeTallas.CargarCeldas;
+var
+  Consulta: TUniQuery;
+  Celda: TCeldaExpansion;
+begin
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := FModo.FConfig.Conexion;
+    if FModo.FCfgTallas.FieldAlmacenCel <> '' then
+      Consulta.SQL.Text :=
+        'SELECT c.' + FModo.FCfgTallas.FieldLineaCel + ' AS LIN,' +
+        ' c.' + FModo.FCfgTallas.FieldAlmacenCel + ' AS ALMC,' +
+        ' AV.AV AS VALOR,' +
+        ' SUM(c.' + FModo.FCfgTallas.FieldCantidadCel + ') AS CANT' +
+        ' FROM ' + FModo.FCfgTallas.TablaCeldas + ' c' +
+        ' JOIN fza_atributos_valores AV' +
+        '   ON AV.ID_AV = c.' + FModo.FCfgTallas.FieldAvPivotCel +
+        ' WHERE c.' + FModo.FCfgTallas.FieldSerieCel + ' = :s' +
+        FModo.WhereNumero('c.') +
+        FModo.WhereDocExtra +
+        ' GROUP BY c.' + FModo.FCfgTallas.FieldLineaCel + ', c.' +
+        FModo.FCfgTallas.FieldAlmacenCel + ', AV.AV' +
+        ' HAVING SUM(c.' + FModo.FCfgTallas.FieldCantidadCel + ') > 0' +
+        ' ORDER BY LIN, ALMC, VALOR'
+    else
+      Consulta.SQL.Text :=
+        'SELECT c.' + FModo.FCfgTallas.FieldLineaCel + ' AS LIN,' +
+        ' '''' AS ALMC,' +
+        ' AV.AV AS VALOR,' +
+        ' SUM(c.' + FModo.FCfgTallas.FieldCantidadCel + ') AS CANT' +
+        ' FROM ' + FModo.FCfgTallas.TablaCeldas + ' c' +
+        ' JOIN fza_atributos_valores AV' +
+        '   ON AV.ID_AV = c.' + FModo.FCfgTallas.FieldAvPivotCel +
+        ' WHERE c.' + FModo.FCfgTallas.FieldSerieCel + ' = :s' +
+        FModo.WhereNumero('c.') +
+        FModo.WhereDocExtra +
+        ' GROUP BY c.' + FModo.FCfgTallas.FieldLineaCel + ', AV.AV' +
+        ' HAVING SUM(c.' + FModo.FCfgTallas.FieldCantidadCel + ') > 0' +
+        ' ORDER BY LIN, VALOR';
+    Consulta.ParamByName('s').AsString :=
+      FModo.FCfgTallas.SourceMaster.DataSet.FieldByName(
+        FModo.FCfgTallas.FieldSerieMaster).AsString;
+    FModo.ParamNumero(Consulta);
+    FModo.ParamsDocExtra(Consulta);
+    Consulta.Open;
+    while not Consulta.Eof do
+    begin
+      Celda.Linea := Consulta.FieldByName('LIN').AsInteger;
+      Celda.Alm := Trim(Consulta.FieldByName('ALMC').AsString);
+      Celda.ValorTalla := Trim(Consulta.FieldByName('VALOR').AsString);
+      Celda.Cant := Consulta.FieldByName('CANT').AsFloat;
+      FCeldas.Add(Celda);
+      Consulta.Next;
+    end;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+
+procedure TDesmontajeTallas.CalcularMaximaLinea;
+begin
+  FMaximaLinea := 0;
+  FDataset.First;
+  while not FDataset.Eof do
+  begin
+    if FDataset.FieldByName(
+         FModo.FCfgTallas.FieldLinea).AsInteger > FMaximaLinea then
+      FMaximaLinea :=
+        FDataset.FieldByName(FModo.FCfgTallas.FieldLinea).AsInteger;
+    FDataset.Next;
+  end;
+end;
+
+procedure TDesmontajeTallas.CargarDatosLinea(ALinea: Integer;
+  var ADatos: TDatosLineaExpansion);
+var
+  Atributos: TArray<TArticuloAtributo>;
+  Indice: Integer;
+begin
+  ADatos := Default(TDatosLineaExpansion);
+  ADatos.Numero := ALinea;
+  ADatos.Primera := True;
+  ADatos.Encontrada := LocalizarLinea(ALinea);
+  if ADatos.Encontrada then
+  begin
+    ADatos.Articulo := Trim(FDataset.FieldByName(
+      FModo.FConfig.Campos.CodigoArt).AsString);
+    ADatos.Descripcion :=
+      FModo.LeerCampo(FModo.FConfig.Campos.Descripcion);
+    ADatos.Almacen := FModo.LeerCampo(FModo.FConfig.Campos.Almacen);
+    ADatos.Precio := 0;
+    if (FModo.FCfgTallas.FieldPrecioBase <> '') and
+       (FDataset.FindField(FModo.FCfgTallas.FieldPrecioBase) <> nil)
+    then
+      ADatos.Precio := FDataset.FieldByName(
+        FModo.FCfgTallas.FieldPrecioBase).AsFloat;
+    for Indice := 1 to 5 do
+    begin
+      ADatos.Valores[Indice] :=
+        FModo.LeerCampo(FModo.FConfig.Campos.AttrValor[Indice]);
+      ADatos.Nombres[Indice] :=
+        FModo.LeerCampo(FModo.FConfig.Campos.AttrNombre[Indice]);
+    end;
+    if not FOrdenTallaPorArticulo.TryGetValue(
+      ADatos.Articulo, ADatos.OrdenTalla) then
+    begin
+      ADatos.OrdenTalla := -1;
+      ADatos.NombreTalla := '';
+      Atributos := FModo.FLookup.ObtenerAtributos(ADatos.Articulo);
+      for Indice := 0 to High(Atributos) do
+      begin
+        if FModo.EsAtributoTalla(Atributos[Indice]) then
+        begin
+          ADatos.OrdenTalla := Indice;
+          ADatos.NombreTalla := Atributos[Indice].NombreAtributo;
+        end;
+      end;
+      FOrdenTallaPorArticulo.Add(
+        ADatos.Articulo, ADatos.OrdenTalla);
+      FNombreTallaPorArticulo.Add(
+        ADatos.Articulo, ADatos.NombreTalla);
+    end
+    else
+      FNombreTallaPorArticulo.TryGetValue(
+        ADatos.Articulo, ADatos.NombreTalla);
+  end;
+end;
+
+procedure TDesmontajeTallas.ActualizarPrimeraLinea(
+  const ACelda: TCeldaExpansion; var ADatos: TDatosLineaExpansion;
+  const ASku, AAlmacen: string);
+var
+  Indice: Integer;
+  NumeroAtributos: Integer;
+begin
+  if not (FDataset.State in [dsEdit, dsInsert]) then
+    FDataset.Edit;
+  FModo.PonerCampo(FModo.FConfig.Campos.CodigoUnidad, ASku);
+  FModo.PonerCampo(FModo.FConfig.Campos.Almacen, AAlmacen);
+  if (ADatos.OrdenTalla >= 0) and (ADatos.OrdenTalla < 5) then
+  begin
+    FModo.PonerCampo(
+      FModo.FConfig.Campos.AttrValor[ADatos.OrdenTalla + 1],
+      ACelda.ValorTalla);
+    FModo.PonerCampo(
+      FModo.FConfig.Campos.AttrNombre[ADatos.OrdenTalla + 1],
+      ADatos.NombreTalla);
+  end;
+  NumeroAtributos := 0;
+  for Indice := 1 to 5 do
+  begin
+    if ADatos.Nombres[Indice] <> '' then
+      Inc(NumeroAtributos);
+  end;
+  if ADatos.OrdenTalla >= 0 then
+    Inc(NumeroAtributos);
+  FModo.PonerCampo(FModo.FConfig.Campos.NumAtributos,
+    IntToStr(NumeroAtributos));
+  if FDataset.FindField(FModo.FConfig.Campos.Cantidad) <> nil then
+    FDataset.FieldByName(
+      FModo.FConfig.Campos.Cantidad).AsFloat := ACelda.Cant;
+  FDataset.FieldByName(
+    FModo.FCfgTallas.FieldConjuntoPivot).AsInteger := 0;
+  FDataset.Post;
+  ADatos.Primera := False;
+end;
+
+procedure TDesmontajeTallas.CrearLinea(
+  const ACelda: TCeldaExpansion; const ADatos: TDatosLineaExpansion;
+  const ASku, AAlmacen: string);
+var
+  Indice: Integer;
+  NumeroAtributos: Integer;
+begin
+  Inc(FMaximaLinea);
+  FDataset.Append;
+  PonerLineaNueva(FMaximaLinea);
+  FModo.PonerCampo(
+    FModo.FConfig.Campos.CodigoArt, ADatos.Articulo);
+  FModo.PonerCampo(
+    FModo.FConfig.Campos.Descripcion, ADatos.Descripcion);
+  FModo.PonerCampo(FModo.FConfig.Campos.Almacen, AAlmacen);
+  FModo.PonerCampo(FModo.FConfig.Campos.CodigoUnidad, ASku);
+  if (FModo.FCfgTallas.FieldPrecioBase <> '') and
+     (FDataset.FindField(FModo.FCfgTallas.FieldPrecioBase) <> nil)
+  then
+    FDataset.FieldByName(
+      FModo.FCfgTallas.FieldPrecioBase).AsFloat := ADatos.Precio;
+  NumeroAtributos := 0;
+  for Indice := 1 to 5 do
+  begin
+    FModo.PonerCampo(FModo.FConfig.Campos.AttrValor[Indice],
+      ADatos.Valores[Indice]);
+    FModo.PonerCampo(FModo.FConfig.Campos.AttrNombre[Indice],
+      ADatos.Nombres[Indice]);
+    if ADatos.Nombres[Indice] <> '' then
+      Inc(NumeroAtributos);
+  end;
+  if (ADatos.OrdenTalla >= 0) and (ADatos.OrdenTalla < 5) then
+  begin
+    FModo.PonerCampo(
+      FModo.FConfig.Campos.AttrValor[ADatos.OrdenTalla + 1],
+      ACelda.ValorTalla);
+    FModo.PonerCampo(
+      FModo.FConfig.Campos.AttrNombre[ADatos.OrdenTalla + 1],
+      ADatos.NombreTalla);
+  end;
+  if ADatos.OrdenTalla >= 0 then
+    Inc(NumeroAtributos);
+  FModo.PonerCampo(FModo.FConfig.Campos.NumAtributos,
+    IntToStr(NumeroAtributos));
+  if FDataset.FindField(FModo.FConfig.Campos.Cantidad) <> nil then
+    FDataset.FieldByName(
+      FModo.FConfig.Campos.Cantidad).AsFloat := ACelda.Cant;
+  FDataset.FieldByName(
+    FModo.FCfgTallas.FieldConjuntoPivot).AsInteger := 0;
+  FDataset.Post;
+end;
+
+procedure TDesmontajeTallas.AplicarCelda(
+  const ACelda: TCeldaExpansion; var ADatos: TDatosLineaExpansion);
+var
+  Almacen: string;
+  Sku: string;
+begin
+  if ADatos.Encontrada then
+  begin
+    Sku := FModo.ComponerSkuLinea(
+      ADatos.Articulo, ADatos.Valores, ADatos.OrdenTalla,
+      ACelda.ValorTalla);
+    if ACelda.Alm <> '' then
+      Almacen := ACelda.Alm
+    else
+      Almacen := ADatos.Almacen;
+    if ADatos.Primera then
+      ActualizarPrimeraLinea(ACelda, ADatos, Sku, Almacen)
+    else
+      CrearLinea(ACelda, ADatos, Sku, Almacen);
+  end;
+end;
+
+procedure TDesmontajeTallas.ExpandirCeldas;
+var
+  Celda: TCeldaExpansion;
+  Datos: TDatosLineaExpansion;
+  Indice: Integer;
+begin
+  CalcularMaximaLinea;
+  Datos := Default(TDatosLineaExpansion);
+  for Indice := 0 to FCeldas.Count - 1 do
+  begin
+    Celda := FCeldas[Indice];
+    if Celda.Linea <> Datos.Numero then
+      CargarDatosLinea(Celda.Linea, Datos);
+    AplicarCelda(Celda, Datos);
+  end;
+end;
+
+procedure TDesmontajeTallas.BorrarCeldas;
+var
+  Consulta: TUniQuery;
+begin
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := FModo.FConfig.Conexion;
+    Consulta.SQL.Text :=
+      'DELETE FROM ' + FModo.FCfgTallas.TablaCeldas +
+      ' WHERE ' + FModo.FCfgTallas.FieldSerieCel + ' = :s' +
+      FModo.WhereNumero('') +
+      FModo.WhereDocExtra;
+    Consulta.ParamByName('s').AsString :=
+      FModo.FCfgTallas.SourceMaster.DataSet.FieldByName(
+        FModo.FCfgTallas.FieldSerieMaster).AsString;
+    FModo.ParamNumero(Consulta);
+    FModo.ParamsDocExtra(Consulta);
+    Consulta.ExecSQL;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+
+procedure TDesmontajeTallas.Ejecutar;
+begin
+  FEnProcesoPrevio := FModo.FEnProceso;
+  FModo.FEnProceso := True;
+  try
+    FTransaccionPropia := not FModo.FConfig.Conexion.InTransaction;
+    if FTransaccionPropia then
+      FModo.FConfig.Conexion.StartTransaction;
+    try
+      FUnidadesAntes := FModo.UnidadesDocumento;
+      CargarCeldas;
+      if FCeldas.Count > 0 then
+      begin
+        ExpandirCeldas;
+        BorrarCeldas;
+        FModo.LogSes(Format(
+          'ModoTallas.Desmontar: %d celdas expandidas a lineas',
+          [FCeldas.Count]));
+        FExpandio := True;
+      end;
+      FModo.FEnProceso := FEnProcesoPrevio;
+      if FExpandio then
+        FModo.ComprobarInvarianteUnidades(
+          'Desmontar', FUnidadesAntes, FModo.UnidadesDocumento);
+      if FTransaccionPropia then
+        FModo.FConfig.Conexion.Commit;
+    except
+      if FTransaccionPropia then
+        FModo.FConfig.Conexion.Rollback;
+      raise;
+    end;
+  finally
+    FModo.FEnProceso := FEnProcesoPrevio;
+  end;
+  FModo.NotificarPostsSilenciados;
+end;
+
 constructor TModoEntradaTallas.Create(const AConfig: TConfigColumnasSku;
                                       const ACfgTallas: TGridTallasConfig);
 begin
@@ -1726,336 +2136,19 @@ end;
 
 procedure TModoEntradaTallas.Desmontar;
 var
-  ds: TDataSet;
-  EnProcesoPrevio: Boolean;
-  bTxPropia: Boolean;
-  Qry: TUniQuery;
-  Celdas: TList<TCeldaExpansion>;
-  Cel: TCeldaExpansion;
-  OrdPorArt: TDictionary<string, Integer>;
-  NomPorArt: TDictionary<string, string>;
-  Atribs: TArray<TArticuloAtributo>;
-  Vals, Noms: TValoresAttrTallas;
-  sArt, sDesc, sAlm, sAlmCel, sSku, sNomTalla: string;
-  rPrecio, rUdsAntes: Double;
-  i, idx, iMaxLinea, iOrdT, iLineaAct, iAtrs: Integer;
-  bPrimera, bLineaOk, bExpandio: Boolean;
-  // LINEA puede ser int (sesiones) o varchar con relleno (pedidos:
-  // '0010'). El Locate directo con el entero de la celda falla contra
-  // el varchar ('10' <> '0010') y la talla se perdia al des-pivotar
-  // (ademas el paso 4 borraba las celdas igualmente). Se localiza
-  // comparando el valor numerico.
-  function LocalizarLinea(ALinea: Integer): Boolean;
-  begin
-    Result := ds.Locate(FCfgTallas.FieldLinea, ALinea, []);
-    if not Result then
-    begin
-      ds.First;
-      while (not ds.Eof) and (not Result) do
-      begin
-        if ds.FieldByName(FCfgTallas.FieldLinea).AsInteger = ALinea then
-          Result := True
-        else
-          ds.Next;
-      end;
-    end;
-  end;
-  // Escribe la LINEA de una fila nueva respetando el tipo del campo:
-  // con varchar se rellena a la anchura del campo, que es la
-  // convencion de cada documento (LINEA_PEDLIN '0010', LINEA_DTL
-  // '00000010'); con int se asigna tal cual (sesiones).
-  procedure PonerLineaNueva(ALinea: Integer);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FieldByName(FCfgTallas.FieldLinea);
-    if Campo is TStringField then
-      Campo.AsString := Format('%.*d', [Campo.Size, ALinea])
-    else
-      Campo.AsInteger := ALinea;
-  end;
+  Desmontaje: TDesmontajeTallas;
 begin
-  ds := FConfig.Cds;
-  if (ds <> nil) and ds.Active then
+  if (FConfig.Cds <> nil) and FConfig.Cds.Active then
   begin
-    // La expansion postea muchas filas: silenciar el hook AfterPost
-    // mientras dura (se restaura al final).
-    EnProcesoPrevio := FEnProceso;
-    FEnProceso := True;
-    Celdas := TList<TCeldaExpansion>.Create;
-    OrdPorArt := TDictionary<string, Integer>.Create;
-    NomPorArt := TDictionary<string, string>.Create;
-    // Conversion ATOMICA: la expansion postea lineas nuevas y borra
-    // las celdas por SQL directo (paso 4); interrumpida a medias
-    // dejaba celdas sin borrar junto a lineas ya creadas y cada
-    // reentrada re-sumaba las celdas (cantidades duplicadas).
-    bExpandio := False;
-    rPrecio := 0;
-    bTxPropia := not FConfig.Conexion.InTransaction;
-    if bTxPropia then
-      FConfig.Conexion.StartTransaction;
+    Desmontaje := TDesmontajeTallas.Create(Self);
     try
-    try
-      rUdsAntes := UnidadesDocumento;
-      // 1. Celdas con cantidad del documento, con el VALOR de la talla
-      //    resuelto (JOIN a fza_atributos_valores).
-      Qry := TUniQuery.Create(nil);
-      try
-        Qry.Connection := FConfig.Conexion;
-        // Con almacen por celda, el desglose es por talla Y almacen:
-        // la distribucion PERSISTE al salir del modo (una linea por
-        // SKU y almacen). Sin campo de almacen, solo por talla.
-        if FCfgTallas.FieldAlmacenCel <> '' then
-          Qry.SQL.Text :=
-            'SELECT c.' + FCfgTallas.FieldLineaCel + ' AS LIN,' +
-            ' c.' + FCfgTallas.FieldAlmacenCel + ' AS ALMC,' +
-            ' AV.AV AS VALOR,' +
-            ' SUM(c.' + FCfgTallas.FieldCantidadCel + ') AS CANT' +
-            ' FROM ' + FCfgTallas.TablaCeldas + ' c' +
-            ' JOIN fza_atributos_valores AV' +
-            '   ON AV.ID_AV = c.' + FCfgTallas.FieldAvPivotCel +
-            ' WHERE c.' + FCfgTallas.FieldSerieCel + ' = :s' +
-            WhereNumero('c.') +
-            WhereDocExtra +
-            ' GROUP BY c.' + FCfgTallas.FieldLineaCel + ', c.' +
-            FCfgTallas.FieldAlmacenCel + ', AV.AV' +
-            ' HAVING SUM(c.' + FCfgTallas.FieldCantidadCel +
-            ') > 0' +
-            ' ORDER BY LIN, ALMC, VALOR'
-        else
-          Qry.SQL.Text :=
-            'SELECT c.' + FCfgTallas.FieldLineaCel + ' AS LIN,' +
-            ' '''' AS ALMC,' +
-            ' AV.AV AS VALOR,' +
-            ' SUM(c.' + FCfgTallas.FieldCantidadCel + ') AS CANT' +
-            ' FROM ' + FCfgTallas.TablaCeldas + ' c' +
-            ' JOIN fza_atributos_valores AV' +
-            '   ON AV.ID_AV = c.' + FCfgTallas.FieldAvPivotCel +
-            ' WHERE c.' + FCfgTallas.FieldSerieCel + ' = :s' +
-            WhereNumero('c.') +
-            WhereDocExtra +
-            ' GROUP BY c.' + FCfgTallas.FieldLineaCel + ', AV.AV' +
-            ' HAVING SUM(c.' + FCfgTallas.FieldCantidadCel +
-            ') > 0' +
-            ' ORDER BY LIN, VALOR';
-        Qry.ParamByName('s').AsString :=
-          FCfgTallas.SourceMaster.DataSet.FieldByName(
-            FCfgTallas.FieldSerieMaster).AsString;
-        ParamNumero(Qry);
-        ParamsDocExtra(Qry);
-        Qry.Open;
-        while not Qry.Eof do
-        begin
-          Cel.Linea := Qry.FieldByName('LIN').AsInteger;
-          Cel.Alm := Trim(Qry.FieldByName('ALMC').AsString);
-          Cel.ValorTalla := Trim(Qry.FieldByName('VALOR').AsString);
-          Cel.Cant := Qry.FieldByName('CANT').AsFloat;
-          Celdas.Add(Cel);
-          Qry.Next;
-        end;
-      finally
-        FreeAndNil(Qry);
-      end;
-      if Celdas.Count > 0 then
-      begin
-        // 2. Numeracion para las lineas nuevas: max LINEA actual.
-        iMaxLinea := 0;
-        ds.First;
-        while not ds.Eof do
-        begin
-          if ds.FieldByName(
-               FCfgTallas.FieldLinea).AsInteger > iMaxLinea then
-            iMaxLinea :=
-              ds.FieldByName(FCfgTallas.FieldLinea).AsInteger;
-          ds.Next;
-        end;
-        // 3. Por cada grupo de celdas de una linea: la primera celda
-        //    ACTUALIZA la propia linea (SKU con talla + cantidad); el
-        //    resto crea lineas nuevas copiando articulo y atributos.
-        iLineaAct := 0;
-        iOrdT := -1;
-        bPrimera := False;
-        bLineaOk := False;
-        for idx := 0 to Celdas.Count - 1 do
-        begin
-          Cel := Celdas[idx];
-          if Cel.Linea <> iLineaAct then
-          begin
-            iLineaAct := Cel.Linea;
-            bPrimera := True;
-            bLineaOk := LocalizarLinea(Cel.Linea);
-            if bLineaOk then
-            begin
-              sArt := Trim(ds.FieldByName(
-                        FConfig.Campos.CodigoArt).AsString);
-              sDesc := LeerCampo(FConfig.Campos.Descripcion);
-              sAlm := LeerCampo(FConfig.Campos.Almacen);
-              // Precio base de la linea origen: las lineas nuevas de
-              // la expansion lo heredan (sin el, Total linea = 0).
-              rPrecio := 0;
-              if (FCfgTallas.FieldPrecioBase <> '') and
-                 (ds.FindField(FCfgTallas.FieldPrecioBase) <> nil)
-              then
-                rPrecio := ds.FieldByName(
-                  FCfgTallas.FieldPrecioBase).AsFloat;
-              for i := 1 to 5 do
-              begin
-                Vals[i] := LeerCampo(FConfig.Campos.AttrValor[i]);
-                Noms[i] := LeerCampo(FConfig.Campos.AttrNombre[i]);
-              end;
-              if not OrdPorArt.TryGetValue(sArt, iOrdT) then
-              begin
-                iOrdT := -1;
-                sNomTalla := '';
-                Atribs := FLookup.ObtenerAtributos(sArt);
-                for i := 0 to High(Atribs) do
-                  if EsAtributoTalla(Atribs[i]) then
-                  begin
-                    iOrdT := i;
-                    sNomTalla := Atribs[i].NombreAtributo;
-                  end;
-                OrdPorArt.Add(sArt, iOrdT);
-                NomPorArt.Add(sArt, sNomTalla);
-              end
-              else
-                NomPorArt.TryGetValue(sArt, sNomTalla);
-            end;
-          end;
-          if bLineaOk then
-          begin
-            sSku := ComponerSkuLinea(sArt, Vals, iOrdT,
-                                     Cel.ValorTalla);
-            // Almacen de la PARTIDA: el de su celda (formato
-            // distribuido); fallback al de la linea origen. Asi la
-            // distribucion por almacen PERSISTE al salir del modo.
-            if Cel.Alm <> '' then
-              sAlmCel := Cel.Alm
-            else
-              sAlmCel := sAlm;
-            if bPrimera then
-            begin
-              // La propia linea pasa a ser el primer SKU. La talla se
-              // vuelca TAMBIEN a su hueco de atributo: es lo que pinta
-              // la columna Talla del modo desglose.
-              if not (ds.State in [dsEdit, dsInsert]) then
-                ds.Edit;
-              PonerCampo(FConfig.Campos.CodigoUnidad, sSku);
-              PonerCampo(FConfig.Campos.Almacen, sAlmCel);
-              if (iOrdT >= 0) and (iOrdT < 5) then
-              begin
-                PonerCampo(FConfig.Campos.AttrValor[iOrdT + 1],
-                           Cel.ValorTalla);
-                PonerCampo(FConfig.Campos.AttrNombre[iOrdT + 1],
-                           sNomTalla);
-              end;
-              iAtrs := 0;
-              for i := 1 to 5 do
-                if Noms[i] <> '' then
-                  Inc(iAtrs);
-              if iOrdT >= 0 then
-                Inc(iAtrs);
-              PonerCampo(FConfig.Campos.NumAtributos,
-                         IntToStr(iAtrs));
-              if ds.FindField(FConfig.Campos.Cantidad) <> nil then
-                ds.FieldByName(
-                  FConfig.Campos.Cantidad).AsFloat := Cel.Cant;
-              ds.FieldByName(
-                FCfgTallas.FieldConjuntoPivot).AsInteger := 0;
-              ds.Post;
-              bPrimera := False;
-            end
-            else
-            begin
-              // Linea nueva para cada talla adicional con cantidad.
-              Inc(iMaxLinea);
-              ds.Append;
-              PonerLineaNueva(iMaxLinea);
-              PonerCampo(FConfig.Campos.CodigoArt, sArt);
-              PonerCampo(FConfig.Campos.Descripcion, sDesc);
-              PonerCampo(FConfig.Campos.Almacen, sAlmCel);
-              PonerCampo(FConfig.Campos.CodigoUnidad, sSku);
-              if (FCfgTallas.FieldPrecioBase <> '') and
-                 (ds.FindField(FCfgTallas.FieldPrecioBase) <> nil)
-              then
-                ds.FieldByName(
-                  FCfgTallas.FieldPrecioBase).AsFloat := rPrecio;
-              iAtrs := 0;
-              for i := 1 to 5 do
-              begin
-                PonerCampo(FConfig.Campos.AttrValor[i], Vals[i]);
-                PonerCampo(FConfig.Campos.AttrNombre[i], Noms[i]);
-                if Noms[i] <> '' then
-                  Inc(iAtrs);
-              end;
-              // Talla en su hueco de atributo (columna Talla del
-              // desglose), ademas de en el SKU.
-              if (iOrdT >= 0) and (iOrdT < 5) then
-              begin
-                PonerCampo(FConfig.Campos.AttrValor[iOrdT + 1],
-                           Cel.ValorTalla);
-                PonerCampo(FConfig.Campos.AttrNombre[iOrdT + 1],
-                           sNomTalla);
-              end;
-              if iOrdT >= 0 then
-                Inc(iAtrs);
-              PonerCampo(FConfig.Campos.NumAtributos,
-                         IntToStr(iAtrs));
-              if ds.FindField(FConfig.Campos.Cantidad) <> nil then
-                ds.FieldByName(
-                  FConfig.Campos.Cantidad).AsFloat := Cel.Cant;
-              ds.FieldByName(
-                FCfgTallas.FieldConjuntoPivot).AsInteger := 0;
-              ds.Post;
-            end;
-          end;
-        end;
-        // 4. Celdas transferidas: se limpian del documento.
-        Qry := TUniQuery.Create(nil);
-        try
-          Qry.Connection := FConfig.Conexion;
-          Qry.SQL.Text :=
-            'DELETE FROM ' + FCfgTallas.TablaCeldas +
-            ' WHERE ' + FCfgTallas.FieldSerieCel + ' = :s' +
-            WhereNumero('') +
-            WhereDocExtra;
-          Qry.ParamByName('s').AsString :=
-            FCfgTallas.SourceMaster.DataSet.FieldByName(
-              FCfgTallas.FieldSerieMaster).AsString;
-          ParamNumero(Qry);
-          ParamsDocExtra(Qry);
-          Qry.ExecSQL;
-        finally
-          FreeAndNil(Qry);
-        end;
-        LogSes(Format(
-          'ModoTallas.Desmontar: %d celdas expandidas a lineas',
-          [Celdas.Count]));
-        bExpandio := True;
-      end;
+      Desmontaje.Ejecutar;
     finally
-      FEnProceso := EnProcesoPrevio;
-      FreeAndNil(NomPorArt);
-      FreeAndNil(OrdPorArt);
-      FreeAndNil(Celdas);
+      FreeAndNil(Desmontaje);
     end;
-    // El des-pivote no puede perder ni duplicar unidades. Vectores
-    // reales: celdas cuyo ID_AV ya no existe (el JOIN del paso 1 las
-    // omite) o celdas de una linea inexistente — el paso 4 las
-    // borraria igualmente y sus unidades se esfumaban en silencio.
-    if bExpandio then
-      ComprobarInvarianteUnidades('Desmontar', rUdsAntes,
-                                  UnidadesDocumento);
-    if bTxPropia then
-      FConfig.Conexion.Commit;
-    except
-      if bTxPropia then
-        FConfig.Conexion.Rollback;
-      raise;
-    end;
-    // Cierre de la expansion: notificar al host los posts silenciados.
-    NotificarPostsSilenciados;
   end;
 end;
+
 
 procedure TModoEntradaTallas.PonerCampo(const ANombre, AValor: string);
 var

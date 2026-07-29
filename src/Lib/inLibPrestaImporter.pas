@@ -59,6 +59,48 @@ implementation
 uses
   inLibScanDateTime;
 
+type
+  TDestinoDireccionPresta = (ddpEntrega, ddpFacturacion);
+
+  TCargaPedidoPresta = class
+  private
+    FConexion: TPrestaConn;
+    FDocumento: IXMLDocument;
+    FPedido: TOrder;
+    FNodoPedido: IXMLNode;
+    FIdPedido: string;
+    FIdCliente: string;
+    FIdDireccionEntrega: string;
+    FIdDireccionFacturacion: string;
+    FIdTransportista: string;
+    FIdEstadoPedido: string;
+    function SolicitarNodo(const Recurso, Coleccion,
+      Elemento: string): IXMLNode;
+    function LeerImporte(const Nodo: IXMLNode;
+      const Campo: string): Currency;
+    function LeerNif(const Nodo: IXMLNode;
+      const PrimerNombre, SegundoNombre: string): string;
+    procedure CargarPedidoBase(const IdPedido: string);
+    procedure CargarCliente;
+    procedure AsignarDireccion(const Nodo: IXMLNode;
+      const Nif: string; Destino: TDestinoDireccionPresta);
+    procedure CargarProvincia(const IdProvincia: string;
+      Destino: TDestinoDireccionPresta);
+    procedure CargarDireccion(const IdDireccion: string;
+      Destino: TDestinoDireccionPresta);
+    procedure CargarDirecciones;
+    procedure CargarCabeceraEconomica;
+    procedure CargarTransportista;
+    procedure CargarEstadoPedido;
+    procedure CargarLineas;
+    procedure CargarMensajesHilo(const IdHilo: string);
+    procedure CargarMensajes;
+  public
+    constructor Create(Conexion: TPrestaConn);
+    destructor Destroy; override;
+    function Ejecutar(const IdPedido: string): TOrder;
+  end;
+
 { TPrestaConn }
 
 constructor TPrestaConn.Create(const aBaseURL, aApiKey: string);
@@ -122,316 +164,337 @@ begin
   end;
 end;
 
-function TPrestaConn.CargarPedido(const sIdPedido: string): TOrder;
-var
-  XMLDoc: IXMLDocument;
-  xmlNode, xmlNodeOrder, xmlNodeOrders,
-  xmlNodeCustomers, xmlNodeCustomer,
-  xmlNodeAddresses, xmlNodeAddress,
-  xmlNodeStates, xmlNodeState,
-  xmlNodeOrderStates, xmlNodeOrderState,
-  xmlNodeAssociations, xmlNodeRows,
-  xmlNodeCarriers, xmlNodeCarrier,
-  xmlNodeCustomerThreads, xmlNodeCustomerThread,
-  xmlNodeMessages, xmlNodeMessage: IXMLNode;
-  sId, sIdCli, sDirIn, sDirDe, sNom, sApell, sEmail,
-  sidAdress, sFecha, sIdTransportista, sIdEstadoPedido,
-  sTransportista, sEstadoPedido, sFirstname, sLastname,
-  sAddress1, sAddress2, sPostcode, sCity, sPhone,
-  sPhone_mobile, sDni, sCompany, sVat_number,
-  sId_state, sFormaPago,
-  sTotalPedidoSIVA, sTotalPedidoCIVA,
-  sTotalProductosSIVA, sTotalProductosCIVA,
-  sPagadoReal, sTotalPortesSIVA, sTotalPortesCIVA,
-  sReferenciaPedido, sNameState: string;
+{ TCargaPedidoPresta }
+
+constructor TCargaPedidoPresta.Create(Conexion: TPrestaConn);
 begin
-  Result := TOrder.Create;
+  inherited Create;
+  FConexion := Conexion;
+  FDocumento := NewXMLDocument;
+  FPedido := TOrder.Create;
+end;
 
-  // 1) Datos generales del pedido
-  DoRequest('/orders/?display=full&filter[id]=[' + sIdPedido + ']');
-  XMLDoc := newXMLDocument;
-  XMLDoc.LoadFromXML(FResponse.Content);
-  XMLDoc.Active := True;
-  xmlNode := XMLDoc.DocumentElement;
-  xmlNodeOrders := xmlNode.ChildNodes['orders'];
-  xmlNodeOrder  := xmlNodeOrders.ChildNodes['order'];
-  sId := xmlNodeOrder.ChildNodes['id'].Text;
-  sIdCli := xmlNodeOrder.ChildNodes['id_customer'].Text;
-  sDirDe := xmlNodeOrder.ChildNodes['id_address_delivery'].Text;
-  sDirIn := xmlNodeOrder.ChildNodes['id_address_invoice'].Text;
-  Result.idPedido := sId;
+destructor TCargaPedidoPresta.Destroy;
+begin
+  FreeAndNil(FPedido);
+  FDocumento := nil;
+  inherited;
+end;
 
-  // 2) Datos del cliente
-  DoRequest(
-    '/customers/?display=[firstname,lastname,email]&filter[id]=[' + sIdCli
-      + ']');
-  XMLDoc.LoadFromXML(FResponse.Content);
-  XMLDoc.Active := True;
-  xmlNode := XMLDoc.DocumentElement;
-  xmlNodeCustomers := xmlNode.ChildNodes['customers'];
-  xmlNodeCustomer  := xmlNodeCustomers.ChildNodes['customer'];
-  sNom   := xmlNodeCustomer.ChildNodes['firstname'].Text;
-  sApell := xmlNodeCustomer.ChildNodes['lastname'].Text;
-  sEmail := xmlNodeCustomer.ChildNodes['email'].Text;
-  Result.custName := sNom + ' ' + sApell;
-  Result.custMail := sEmail;
+function TCargaPedidoPresta.SolicitarNodo(const Recurso, Coleccion,
+  Elemento: string): IXMLNode;
+var
+  Nodo: IXMLNode;
+begin
+  FConexion.DoRequest(Recurso);
+  FDocumento.LoadFromXML(FConexion.Response.Content);
+  FDocumento.Active := True;
+  Nodo := FDocumento.DocumentElement;
+  Nodo := Nodo.ChildNodes[Coleccion];
+  Result := Nodo.ChildNodes[Elemento];
+end;
 
-  // 3) Dirección de envío
-  DoRequest('/addresses/?display=[id,firstname,lastname,address1,address2,' +
-            'postcode,city,phone,phone_mobile,dni,id_state,company,vat_number]'
-              +
-            '&filter[id]=[' + sDirDe + ']');
-  XMLDoc.LoadFromXML(FResponse.Content);
-  XMLDoc.Active := True;
-  xmlNode := XMLDoc.DocumentElement;
-  xmlNodeAddresses := xmlNode.ChildNodes['addresses'];
-  xmlNodeAddress   := xmlNodeAddresses.ChildNodes['address'];
-  sidAdress     := xmlNodeAddress.ChildNodes['id'].Text;
-  sId_state     := xmlNodeAddress.ChildNodes['id_state'].Text;
-  sFirstname    := xmlNodeAddress.ChildNodes['firstname'].Text;
-  sLastname     := xmlNodeAddress.ChildNodes['lastname'].Text;
-  sAddress1     := xmlNodeAddress.ChildNodes['address1'].Text;
-  sAddress2     := xmlNodeAddress.ChildNodes['address2'].Text;
-  sPostcode     := xmlNodeAddress.ChildNodes['postcode'].Text;
-  sCity         := xmlNodeAddress.ChildNodes['city'].Text;
-  sPhone        := xmlNodeAddress.ChildNodes['phone'].Text;
-  sPhone_mobile := xmlNodeAddress.ChildNodes['phone_mobile'].Text;
-  sDni          := xmlNodeAddress.ChildNodes['dni'].Text;
-  sCompany      := xmlNodeAddress.ChildNodes['company'].Text;
-  if Assigned(xmlNodeAddress.ChildNodes.FindNode('vatnumber')) then
-    sVat_number := xmlNodeAddress.ChildNodes['vatnumber'].Text
-  else if Assigned(xmlNodeAddress.ChildNodes.FindNode('vat_number')) then
-    sVat_number := xmlNodeAddress.ChildNodes['vat_number'].Text
+function TCargaPedidoPresta.LeerImporte(const Nodo: IXMLNode;
+  const Campo: string): Currency;
+var
+  Texto: string;
+begin
+  Texto := Nodo.ChildNodes[Campo].Text;
+  Result := StrToFloatDef(StringReplace(Texto, '.', ',', []), 0);
+end;
+
+function TCargaPedidoPresta.LeerNif(const Nodo: IXMLNode;
+  const PrimerNombre, SegundoNombre: string): string;
+begin
+  if Assigned(Nodo.ChildNodes.FindNode(PrimerNombre)) then
+    Result := Nodo.ChildNodes[PrimerNombre].Text
+  else if Assigned(Nodo.ChildNodes.FindNode(SegundoNombre)) then
+    Result := Nodo.ChildNodes[SegundoNombre].Text
   else
-    sVat_number := '';
-  with Result do
-  begin
-    idAddressDel  := sidAdress;
-    FirstnameDel  := sFirstname;
-    LastNameDel   := sLastname;
-    Address1Del   := sAddress1;
-    Address2Del   := sAddress2;
-    PostcodeDel   := sPostcode;
-    CityDel       := sCity;
-    PhoneDel      := sPhone;
-    Phone_moDel   := sPhone_mobile;
-    DniDel        := sDni;
-    CompanyDel    := sCompany;
-    Vat_numberDel := sVat_number;
-  end;
-  if (sId_state <> '0') and (sId_state <> '') then
-  begin
-    DoRequest('/states/?display=[id,name]&filter[id]=[' + sId_state + ']');
-    XMLDoc.LoadFromXML(FResponse.Content);
-    XMLDoc.Active := True;
-    xmlNode := XMLDoc.DocumentElement;
-    xmlNodeStates := xmlNode.ChildNodes['states'];
-    xmlNodeState  := xmlNodeStates.ChildNodes['state'];
-    sNameState    := xmlNodeState.ChildNodes['name'].Text;
-    Result.NameStateDel := sNameState;
-  end;
+    Result := '';
+end;
 
-  // 4) Dirección de facturación
-  if (sDirIn = sDirDe) then
+procedure TCargaPedidoPresta.CargarPedidoBase(const IdPedido: string);
+begin
+  FNodoPedido := SolicitarNodo(
+    '/orders/?display=full&filter[id]=[' + IdPedido + ']',
+    'orders', 'order');
+  FIdPedido := FNodoPedido.ChildNodes['id'].Text;
+  FIdCliente := FNodoPedido.ChildNodes['id_customer'].Text;
+  FIdDireccionEntrega :=
+    FNodoPedido.ChildNodes['id_address_delivery'].Text;
+  FIdDireccionFacturacion :=
+    FNodoPedido.ChildNodes['id_address_invoice'].Text;
+  FPedido.idPedido := FIdPedido;
+end;
+
+procedure TCargaPedidoPresta.CargarCliente;
+var
+  Nodo: IXMLNode;
+begin
+  Nodo := SolicitarNodo(
+    '/customers/?display=[firstname,lastname,email]&filter[id]=[' +
+    FIdCliente + ']', 'customers', 'customer');
+  FPedido.custName := Nodo.ChildNodes['firstname'].Text + ' ' +
+    Nodo.ChildNodes['lastname'].Text;
+  FPedido.custMail := Nodo.ChildNodes['email'].Text;
+end;
+
+procedure TCargaPedidoPresta.AsignarDireccion(const Nodo: IXMLNode;
+  const Nif: string; Destino: TDestinoDireccionPresta);
+begin
+  if Destino = ddpEntrega then
   begin
-    Result.SameAddress := True;
-    Result.PutAdressDelinbil;
+    FPedido.idAddressDel := Nodo.ChildNodes['id'].Text;
+    FPedido.FirstnameDel := Nodo.ChildNodes['firstname'].Text;
+    FPedido.LastNameDel := Nodo.ChildNodes['lastname'].Text;
+    FPedido.Address1Del := Nodo.ChildNodes['address1'].Text;
+    FPedido.Address2Del := Nodo.ChildNodes['address2'].Text;
+    FPedido.PostcodeDel := Nodo.ChildNodes['postcode'].Text;
+    FPedido.CityDel := Nodo.ChildNodes['city'].Text;
+    FPedido.PhoneDel := Nodo.ChildNodes['phone'].Text;
+    FPedido.Phone_moDel := Nodo.ChildNodes['phone_mobile'].Text;
+    FPedido.DniDel := Nodo.ChildNodes['dni'].Text;
+    FPedido.CompanyDel := Nodo.ChildNodes['company'].Text;
+    FPedido.Vat_numberDel := Nif;
   end
   else
   begin
-    Result.SameAddress := False;
-    DoRequest('/addresses/?display=[id,firstname,lastname,address1,address2,' +
-              'postcode,city,phone,phone_mobile,dni,id_state,company,vat_number]' +
-              '&filter[id]=[' + sDirIn + ']');
-    XMLDoc.LoadFromXML(FResponse.Content);
-    XMLDoc.Active := True;
-    xmlNode := XMLDoc.DocumentElement;
-    xmlNodeAddresses := xmlNode.ChildNodes['addresses'];
-    xmlNodeAddress   := xmlNodeAddresses.ChildNodes['address'];
-    sidAdress     := xmlNodeAddress.ChildNodes['id'].Text;
-    sId_state     := xmlNodeAddress.ChildNodes['id_state'].Text;
-    sFirstname    := xmlNodeAddress.ChildNodes['firstname'].Text;
-    sLastname     := xmlNodeAddress.ChildNodes['lastname'].Text;
-    sAddress1     := xmlNodeAddress.ChildNodes['address1'].Text;
-    sAddress2     := xmlNodeAddress.ChildNodes['address2'].Text;
-    sPostcode     := xmlNodeAddress.ChildNodes['postcode'].Text;
-    sCity         := xmlNodeAddress.ChildNodes['city'].Text;
-    sPhone        := xmlNodeAddress.ChildNodes['phone'].Text;
-    sPhone_mobile := xmlNodeAddress.ChildNodes['phone_mobile'].Text;
-    sDni          := xmlNodeAddress.ChildNodes['dni'].Text;
-    sCompany      := xmlNodeAddress.ChildNodes['company'].Text;
-    if Assigned(xmlNodeAddress.ChildNodes.FindNode('vat_number')) then
-      sVat_number := xmlNodeAddress.ChildNodes['vat_number'].Text
-    else if Assigned(xmlNodeAddress.ChildNodes.FindNode('vatnumber')) then
-      sVat_number := xmlNodeAddress.ChildNodes['vatnumber'].Text
+    FPedido.idAddressBil := Nodo.ChildNodes['id'].Text;
+    FPedido.FirstnameBil := Nodo.ChildNodes['firstname'].Text;
+    FPedido.LastNameBil := Nodo.ChildNodes['lastname'].Text;
+    FPedido.Address1Bil := Nodo.ChildNodes['address1'].Text;
+    FPedido.Address2Bil := Nodo.ChildNodes['address2'].Text;
+    FPedido.PostcodeBil := Nodo.ChildNodes['postcode'].Text;
+    FPedido.CityBil := Nodo.ChildNodes['city'].Text;
+    FPedido.PhoneBil := Nodo.ChildNodes['phone'].Text;
+    FPedido.Phone_moBil := Nodo.ChildNodes['phone_mobile'].Text;
+    FPedido.DniBil := Nodo.ChildNodes['dni'].Text;
+    FPedido.CompanyBil := Nodo.ChildNodes['company'].Text;
+    FPedido.Vat_numberBil := Nif;
+  end;
+end;
+
+procedure TCargaPedidoPresta.CargarProvincia(const IdProvincia: string;
+  Destino: TDestinoDireccionPresta);
+var
+  Nodo: IXMLNode;
+  Nombre: string;
+begin
+  if (IdProvincia <> '0') and (IdProvincia <> '') then
+  begin
+    Nodo := SolicitarNodo(
+      '/states/?display=[id,name]&filter[id]=[' + IdProvincia + ']',
+      'states', 'state');
+    Nombre := Nodo.ChildNodes['name'].Text;
+    if Destino = ddpEntrega then
+      FPedido.NameStateDel := Nombre
     else
-      sVat_number := '';
-    with Result do
-    begin
-      idAddressBil  := sidAdress;
-      FirstnameBil  := sFirstname;
-      LastNameBil   := sLastname;
-      Address1Bil   := sAddress1;
-      Address2Bil   := sAddress2;
-      PostcodeBil   := sPostcode;
-      CityBil       := sCity;
-      PhoneBil      := sPhone;
-      Phone_moBil   := sPhone_mobile;
-      DniBil        := sDni;
-      CompanyBil    := sCompany;
-      Vat_numberBil := sVat_number;
-    end;
-    if (sId_state <> '0') and (sId_state <> '') then
-    begin
-      DoRequest('/states/?display=[id,name]&filter[id]=[' + sId_state + ']');
-      XMLDoc.LoadFromXML(FResponse.Content);
-      XMLDoc.Active := True;
-      xmlNode := XMLDoc.DocumentElement;
-      xmlNodeStates := xmlNode.ChildNodes['states'];
-      xmlNodeState  := xmlNodeStates.ChildNodes['state'];
-      sNameState    := xmlNodeState.ChildNodes['name'].Text;
-      Result.NameStateBil := sNameState;
-    end;
+      FPedido.NameStateBil := Nombre;
   end;
+end;
 
-  // 5) Cabecera económica
-  sIdTransportista    := xmlNodeOrder.ChildNodes['id_carrier'].Text;
-  sIdEstadoPedido     := xmlNodeOrder.ChildNodes['current_state'].Text;
-  sFecha              := xmlNodeOrder.ChildNodes['date_add'].Text;
-  sFormaPago          := xmlNodeOrder.ChildNodes['payment'].Text;
-  sTotalPedidoCIVA    := xmlNodeOrder.ChildNodes['total_paid_tax_incl'].Text;
-  sTotalPedidoSIVA    := xmlNodeOrder.ChildNodes['total_paid_tax_excl'].Text;
-  sPagadoReal         := xmlNodeOrder.ChildNodes['total_paid_real'].Text;
-  sTotalProductosSIVA := xmlNodeOrder.ChildNodes['total_products'].Text;
-  sTotalProductosCIVA := xmlNodeOrder.ChildNodes['total_products_wt'].Text;
-  sTotalPortesCIVA := xmlNodeOrder.ChildNodes['total_shipping_tax_incl'].Text;
-  sTotalPortesSIVA := xmlNodeOrder.ChildNodes['total_shipping_tax_excl'].Text;
-  sReferenciaPedido   := xmlNodeOrder.ChildNodes['reference'].Text;
-  with Result do
+procedure TCargaPedidoPresta.CargarDireccion(const IdDireccion: string;
+  Destino: TDestinoDireccionPresta);
+var
+  Nodo: IXMLNode;
+  IdProvincia: string;
+  Nif: string;
+begin
+  Nodo := SolicitarNodo(
+    '/addresses/?display=[id,firstname,lastname,address1,address2,' +
+    'postcode,city,phone,phone_mobile,dni,id_state,company,vat_number]' +
+    '&filter[id]=[' + IdDireccion + ']', 'addresses', 'address');
+  IdProvincia := Nodo.ChildNodes['id_state'].Text;
+  if Destino = ddpEntrega then
+    Nif := LeerNif(Nodo, 'vatnumber', 'vat_number')
+  else
+    Nif := LeerNif(Nodo, 'vat_number', 'vatnumber');
+  AsignarDireccion(Nodo, Nif, Destino);
+  CargarProvincia(IdProvincia, Destino);
+end;
+
+procedure TCargaPedidoPresta.CargarDirecciones;
+begin
+  CargarDireccion(FIdDireccionEntrega, ddpEntrega);
+  if FIdDireccionFacturacion = FIdDireccionEntrega then
   begin
-    FechaCreacion     := sFecha;
-    FormaPago         := sFormaPago;
-    TotalPedCIVA      :=
-      StrToFloatDef(StringReplace(sTotalPedidoCIVA, '.', ',', []), 0);
-    TotalPedSIVA      :=
-      StrToFloatDef(StringReplace(sTotalPedidoSIVA, '.', ',', []), 0);
-    TotalPagadoReal   := StrToFloatDef(StringReplace(sPagadoReal, '.', ',', []),
-                                       0);
-    TotalProdSIVA     :=
-      StrToFloatDef(StringReplace(sTotalProductosSIVA, '.', ',', []), 0);
-    TotalProdCIVA     :=
-      StrToFloatDef(StringReplace(sTotalProductosCIVA, '.', ',', []), 0);
-    TotalPortesCIVA   :=
-      StrToFloatDef(StringReplace(sTotalPortesCIVA, '.', ',', []), 0);
-    TotalPortesSIVA   :=
-      StrToFloatDef(StringReplace(sTotalPortesSIVA, '.', ',', []), 0);
-    ReferenciaCliente := sReferenciaPedido;
+    FPedido.SameAddress := True;
+    FPedido.PutAdressDelinbil;
+  end
+  else
+  begin
+    FPedido.SameAddress := False;
+    CargarDireccion(FIdDireccionFacturacion, ddpFacturacion);
   end;
+end;
 
-  // 6) Transportista
-  if (sIdTransportista <> '') and (sIdTransportista <> '0') then
+procedure TCargaPedidoPresta.CargarCabeceraEconomica;
+begin
+  FIdTransportista := FNodoPedido.ChildNodes['id_carrier'].Text;
+  FIdEstadoPedido := FNodoPedido.ChildNodes['current_state'].Text;
+  FPedido.FechaCreacion := FNodoPedido.ChildNodes['date_add'].Text;
+  FPedido.FormaPago := FNodoPedido.ChildNodes['payment'].Text;
+  FPedido.TotalPedCIVA :=
+    LeerImporte(FNodoPedido, 'total_paid_tax_incl');
+  FPedido.TotalPedSIVA :=
+    LeerImporte(FNodoPedido, 'total_paid_tax_excl');
+  FPedido.TotalPagadoReal :=
+    LeerImporte(FNodoPedido, 'total_paid_real');
+  FPedido.TotalProdSIVA :=
+    LeerImporte(FNodoPedido, 'total_products');
+  FPedido.TotalProdCIVA :=
+    LeerImporte(FNodoPedido, 'total_products_wt');
+  FPedido.TotalPortesCIVA :=
+    LeerImporte(FNodoPedido, 'total_shipping_tax_incl');
+  FPedido.TotalPortesSIVA :=
+    LeerImporte(FNodoPedido, 'total_shipping_tax_excl');
+  FPedido.ReferenciaCliente := FNodoPedido.ChildNodes['reference'].Text;
+end;
+
+procedure TCargaPedidoPresta.CargarTransportista;
+var
+  Nodo: IXMLNode;
+begin
+  if (FIdTransportista <> '') and (FIdTransportista <> '0') then
   begin
-    DoRequest(
-      '/carriers/?display=[name]&filter[id]=[' + sIdTransportista + ']');
-    XMLDoc.LoadFromXML(FResponse.Content);
-    XMLDoc.Active := True;
-    xmlNode := XMLDoc.DocumentElement;
-    xmlNodeCarriers := xmlNode.ChildNodes['carriers'];
-    xmlNodeCarrier  := xmlNodeCarriers.ChildNodes['carrier'];
-    sTransportista  := xmlNodeCarrier.ChildNodes['name'].Text;
-    Result.Transportista := sTransportista;
+    Nodo := SolicitarNodo(
+      '/carriers/?display=[name]&filter[id]=[' + FIdTransportista + ']',
+      'carriers', 'carrier');
+    FPedido.Transportista := Nodo.ChildNodes['name'].Text;
   end;
+end;
 
-  // 7) Estado del pedido
-  if (sIdEstadoPedido <> '') and (sIdEstadoPedido <> '0') then
+procedure TCargaPedidoPresta.CargarEstadoPedido;
+var
+  Nodo: IXMLNode;
+  NodoNombre: IXMLNode;
+  NodoIdioma: IXMLNode;
+begin
+  if (FIdEstadoPedido <> '') and (FIdEstadoPedido <> '0') then
   begin
-    DoRequest(
-      '/order_states/?display=[name]&filter[id]=[' + sIdEstadoPedido + ']');
-    XMLDoc.LoadFromXML(FResponse.Content);
-    XMLDoc.Active := True;
-    xmlNode := XMLDoc.DocumentElement;
-    xmlNodeOrderStates := xmlNode.ChildNodes['order_states'];
-    xmlNodeOrderState  := xmlNodeOrderStates.ChildNodes['order_state'];
-    xmlNodeOrderState  := xmlNodeOrderState.ChildNodes['name'];
-    xmlNode := xmlNodeOrderState.ChildNodes['language'];
-    if Assigned(xmlNode) then
-      sEstadoPedido := xmlNode.Text
+    Nodo := SolicitarNodo(
+      '/order_states/?display=[name]&filter[id]=[' +
+      FIdEstadoPedido + ']', 'order_states', 'order_state');
+    NodoNombre := Nodo.ChildNodes['name'];
+    NodoIdioma := NodoNombre.ChildNodes['language'];
+    if Assigned(NodoIdioma) then
+      FPedido.EstadoPedido := NodoIdioma.Text
     else
-      sEstadoPedido := xmlNodeOrderState.Text;
-    Result.EstadoPedido := sEstadoPedido;
+      FPedido.EstadoPedido := NodoNombre.Text;
   end;
+end;
 
-  // 8) Líneas
-  xmlNodeAssociations := xmlNodeOrder.ChildNodes['associations'];
-  if Assigned(xmlNodeAssociations) then
+procedure TCargaPedidoPresta.CargarLineas;
+var
+  Nodo: IXMLNode;
+  NodoAsociaciones: IXMLNode;
+  NodoLineas: IXMLNode;
+  Linea: TLineaPed;
+  PrecioConIva: string;
+  PrecioSinIva: string;
+begin
+  NodoAsociaciones := FNodoPedido.ChildNodes['associations'];
+  if Assigned(NodoAsociaciones) then
   begin
-    xmlNodeRows := xmlNodeAssociations.ChildNodes['order_rows'];
-    if Assigned(xmlNodeRows) then
+    NodoLineas := NodoAsociaciones.ChildNodes['order_rows'];
+    if Assigned(NodoLineas) then
     begin
-      xmlNode := xmlNodeRows.ChildNodes['order_row'];
-      while Assigned(xmlNode) and (xmlNode.NodeName = 'order_row') do
+      Nodo := NodoLineas.ChildNodes['order_row'];
+      while Assigned(Nodo) and (Nodo.NodeName = 'order_row') do
       begin
-        var lp: TLineaPed;
-        lp.idLinea     := xmlNode.ChildNodes['id'].Text;
-        lp.idProducto  := xmlNode.ChildNodes['product_id'].Text;
-        lp.sCantidad   := xmlNode.ChildNodes['product_quantity'].Text;
-        lp.sDescripcion := xmlNode.ChildNodes['product_name'].Text;
-        lp.sRefAtrib   := xmlNode.ChildNodes['product_attribute_id'].Text;
-        lp.sRefProd    := xmlNode.ChildNodes['product_reference'].Text;
-        lp.sCodEAN13   := xmlNode.ChildNodes['product_ean13'].Text;
-        var sPCIVA := xmlNode.ChildNodes['unit_price_tax_incl'].Text;
-        var sPSIVA := xmlNode.ChildNodes['unit_price_tax_excl'].Text;
-        lp.cPrecioCIVA := StrToFloatDef(StringReplace(sPCIVA, '.', ',', []), 0);
-        lp.cPrecioSIVA := StrToFloatDef(StringReplace(sPSIVA, '.', ',', []), 0);
-        Result.LineasPedido.Add(lp);
-        xmlNode := xmlNode.NextSibling;
+        Linea.idLinea := Nodo.ChildNodes['id'].Text;
+        Linea.idProducto := Nodo.ChildNodes['product_id'].Text;
+        Linea.sCantidad := Nodo.ChildNodes['product_quantity'].Text;
+        Linea.sDescripcion := Nodo.ChildNodes['product_name'].Text;
+        Linea.sRefAtrib := Nodo.ChildNodes['product_attribute_id'].Text;
+        Linea.sRefProd := Nodo.ChildNodes['product_reference'].Text;
+        Linea.sCodEAN13 := Nodo.ChildNodes['product_ean13'].Text;
+        PrecioConIva := Nodo.ChildNodes['unit_price_tax_incl'].Text;
+        PrecioSinIva := Nodo.ChildNodes['unit_price_tax_excl'].Text;
+        Linea.cPrecioCIVA := StrToFloatDef(
+          StringReplace(PrecioConIva, '.', ',', []), 0);
+        Linea.cPrecioSIVA := StrToFloatDef(
+          StringReplace(PrecioSinIva, '.', ',', []), 0);
+        FPedido.LineasPedido.Add(Linea);
+        Nodo := Nodo.NextSibling;
       end;
     end;
   end;
+end;
 
-  // 9) Mensajes
+procedure TCargaPedidoPresta.CargarMensajesHilo(const IdHilo: string);
+var
+  Nodo: IXMLNode;
+  NodoMensajes: IXMLNode;
+  Mensaje: TMensaje;
+begin
+  NodoMensajes := SolicitarNodo(
+    '/customer_messages/?display=full&filter[id_customer_thread]=[' +
+    IdHilo + ']', 'customer_messages', 'customer_message');
+  Nodo := NodoMensajes;
+  while Assigned(Nodo) and (Nodo.NodeName = 'customer_message') do
+  begin
+    Mensaje.idMensaje := Nodo.ChildNodes['id'].Text;
+    Mensaje.Texto := Nodo.ChildNodes['message'].Text;
+    Mensaje.idEmpleado := Nodo.ChildNodes['id_employee'].Text;
+    Mensaje.InstanteMsg := scandatetimernof(
+      'yyyy-mm-dd hh:nn:ss', Nodo.ChildNodes['date_add'].Text);
+    FPedido.MensajesPedido.LMensajes.Add(Mensaje);
+    Nodo := Nodo.NextSibling;
+  end;
+end;
+
+procedure TCargaPedidoPresta.CargarMensajes;
+var
+  NodoHilo: IXMLNode;
+  NodoHilos: IXMLNode;
+begin
+  FConexion.DoRequest(
+    '/customer_threads/?display=full&filter[id_order]=[' +
+    FIdPedido + ']');
+  FDocumento.LoadFromXML(FConexion.Response.Content);
+  FDocumento.Active := True;
+  NodoHilos := FDocumento.DocumentElement.ChildNodes['customer_threads'];
+  if Assigned(NodoHilos) and
+     Assigned(NodoHilos.ChildNodes.FindNode('customer_thread')) then
+  begin
+    NodoHilo := NodoHilos.ChildNodes['customer_thread'];
+    FPedido.MensajesPedido.Estado :=
+      NodoHilo.ChildNodes['status'].Text;
+    FPedido.MensajesPedido.idCustomer_Threat :=
+      NodoHilo.ChildNodes['id'].Text;
+    CargarMensajesHilo(FPedido.MensajesPedido.idCustomer_Threat);
+  end;
+end;
+
+function TCargaPedidoPresta.Ejecutar(const IdPedido: string): TOrder;
+begin
+  CargarPedidoBase(IdPedido);
+  CargarCliente;
+  CargarDirecciones;
+  CargarCabeceraEconomica;
+  CargarTransportista;
+  CargarEstadoPedido;
+  CargarLineas;
   try
-    DoRequest('/customer_threads/?display=full&filter[id_order]=[' + sId + ']');
-    XMLDoc.LoadFromXML(FResponse.Content);
-    XMLDoc.Active := True;
-    xmlNode := XMLDoc.DocumentElement;
-    xmlNodeCustomerThreads := xmlNode.ChildNodes['customer_threads'];
-    if Assigned(xmlNodeCustomerThreads) and
-       Assigned(xmlNodeCustomerThreads.ChildNodes.FindNode(
-         'customer_thread')) then
-    begin
-      xmlNodeCustomerThread :=
-        xmlNodeCustomerThreads.ChildNodes['customer_thread'];
-      Result.MensajesPedido.Estado :=
-        xmlNodeCustomerThread.ChildNodes['status'].Text;
-      Result.MensajesPedido.idCustomer_Threat :=
-                                xmlNodeCustomerThread.ChildNodes['id'].Text;
-      DoRequest(
-        '/customer_messages/?display=full&filter[id_customer_thread]=[' +
-                Result.MensajesPedido.idCustomer_Threat + ']');
-      XMLDoc.LoadFromXML(FResponse.Content);
-      XMLDoc.Active := True;
-      xmlNode := XMLDoc.DocumentElement;
-      xmlNodeMessages := xmlNode.ChildNodes['customer_messages'];
-      if Assigned(xmlNodeMessages) then
-      begin
-        xmlNodeMessage := xmlNodeMessages.ChildNodes['customer_message'];
-        while Assigned(xmlNodeMessage)
-           and (xmlNodeMessage.NodeName = 'customer_message') do
-        begin
-          var tm: TMensaje;
-          tm.idMensaje   := xmlNodeMessage.ChildNodes['id'].Text;
-          tm.Texto       := xmlNodeMessage.ChildNodes['message'].Text;
-          tm.idEmpleado  := xmlNodeMessage.ChildNodes['id_employee'].Text;
-          tm.InstanteMsg := scandatetimernof('yyyy-mm-dd hh:nn:ss',
-                                  xmlNodeMessage.ChildNodes['date_add'].Text);
-          Result.MensajesPedido.LMensajes.Add(tm);
-          xmlNodeMessage := xmlNodeMessage.NextSibling;
-        end;
-      end;
-    end;
+    CargarMensajes;
   except
-    // Si el pedido no tiene hilos de mensajes, ignoramos.
+    // Los pedidos sin hilos de mensajes son válidos.
+  end;
+  Result := FPedido;
+  FPedido := nil;
+end;
+
+function TPrestaConn.CargarPedido(const sIdPedido: string): TOrder;
+var
+  Carga: TCargaPedidoPresta;
+begin
+  Carga := TCargaPedidoPresta.Create(Self);
+  try
+    Result := Carga.Ejecutar(sIdPedido);
+  finally
+    FreeAndNil(Carga);
   end;
 end;
 
