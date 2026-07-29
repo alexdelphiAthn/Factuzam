@@ -282,6 +282,7 @@ implementation
 uses
   System.Math,
   System.StrUtils,
+  inLibComprasSesionesReglas,
   inLibMsg;
 
 const
@@ -1561,62 +1562,9 @@ end;
 function ResolverCodigoFamilia(AConn: TUniConnection;
                                 const ACodigoTecleado, AUsuario: string;
                                 out ACodigoGenerado: string): Boolean;
-var
-  q       : TUniQuery;
-  iCont   : Integer;
-  iPad    : Integer;
-  sFlag   : string;
-  sNumero : string;
 begin
-  Result := False;
-  ACodigoGenerado := '';
-  if Trim(ACodigoTecleado) = '' then Exit;
-
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := AConn;
-    // 1. Comprobar si lo tecleado coincide con un CODIGO_FAM_FAM activo
-    //    y con contador habilitado.
-    q.SQL.Text :=
-      'SELECT CONTADOR_ART_FAM, ESCONTADOR_ART_FAM, ' +
-      '       IFNULL(PAD_ART_FAM, 5) AS PAD_ART_FAM ' +
-      '  FROM fza_articulos_familias ' +
-      ' WHERE CODIGO_FAM_FAM = :p ' +
-      '   AND ESACTIVO_FAM   = ''S'' ' +
-      ' FOR UPDATE';
-    q.ParamByName('p').AsString := ACodigoTecleado;
-    q.Open;
-    if q.IsEmpty then Exit;
-
-    sFlag := q.FieldByName('ESCONTADOR_ART_FAM').AsString;
-    if sFlag <> 'S' then Exit;     // familia existe pero no autogenera
-
-    iCont := q.FieldByName('CONTADOR_ART_FAM').AsInteger + 1;
-    iPad  := q.FieldByName('PAD_ART_FAM').AsInteger;
-    if iPad < 1 then iPad := 5;
-    q.Close;
-
-    // 2. Componer el codigo
-    sNumero := IntToStr(iCont);
-    while Length(sNumero) < iPad do
-      sNumero := '0' + sNumero;
-    ACodigoGenerado := ACodigoTecleado + sNumero;
-
-    // 3. Persistir el incremento del contador
-    q.SQL.Text :=
-      'UPDATE fza_articulos_familias SET ' +
-      '  CONTADOR_ART_FAM = :c, ' +
-      '  INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u ' +
-      ' WHERE CODIGO_FAM_FAM = :p';
-    q.ParamByName('c').AsInteger := iCont;
-    q.ParamByName('u').AsString  := AUsuario;
-    q.ParamByName('p').AsString  := ACodigoTecleado;
-    q.ExecSQL;
-
-    Result := True;
-  finally
-    FreeAndNil(q);
-  end;
+  Result := inLibComprasSesionesReglas.ResolverCodigoFamilia(
+    AConn, ACodigoTecleado, AUsuario, ACodigoGenerado);
 end;
 
 // ---------------------------------------------------------------------------

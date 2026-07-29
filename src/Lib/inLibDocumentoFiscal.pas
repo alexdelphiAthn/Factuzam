@@ -1,9 +1,9 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibDocumentoFiscal                                          }
 {    Tipo:       Libreria                                                      }
-{ Version:       1.0.0                                                         }
-{   Fecha:       15/06/2026                                                    }
+{ Version:       1.1.0                                                         }
+{   Fecha:       29/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -16,14 +16,8 @@ unit inLibDocumentoFiscal;
 
 interface
 
-type
-  TTipoDocumentoFiscal = (tdfNIF, tdfNIE, tdfCIF, tdfDesconocido);
-
 function LimpiarDocumentoFiscal(const ADocumento: string): string;
 function DocumentoFiscalValido(const ADocumento: string): Boolean;
-function DocumentoFiscalValidoConTipo(const ADocumento: string;
-                                      out ATipo: TTipoDocumentoFiscal):
-                                      Boolean;
 function MensajeDocumentoFiscalInvalido(const ADocumento: string): string;
 function PaisEsEspana(const ACodigoPais, ANombrePais: string): Boolean;
 
@@ -31,6 +25,9 @@ implementation
 
 uses
   System.SysUtils;
+
+type
+  TTipoDocumentoFiscal = (tdfNIF, tdfNIE, tdfCIF, tdfDesconocido);
 
 const
   cLetrasNif = 'TRWAGMYFPDXBNJZSQVHLCKE';

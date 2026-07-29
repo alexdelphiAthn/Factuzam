@@ -9,7 +9,7 @@ $rutaFiltro = Join-Path $raiz 'src\Lib\inLibFiltroUsuario.pas'
 $rutaLayout = Join-Path $raiz 'src\Lib\inLibLayoutForm.pas'
 $rutaPermisos = Join-Path $raiz 'src\Lib\inLibPermisosAdmin.pas'
 $rutaFotos = Join-Path $raiz 'src\Lib\inLibFotos.pas'
-$rutaTb = Join-Path $raiz 'src\Lib\inLibtb.pas'
+$rutaValores = Join-Path $raiz 'src\Lib\inLibValoresAutomaticos.pas'
 $rutaPivote = Join-Path $raiz 'src\Lib\inLibGridPivoteCompra.pas'
 $rutaVentasWs = Join-Path $raiz 'src\Lib\inLibVentasWsCola.pas'
 $rutaVerifactu = Join-Path $raiz 'src\verifactu\inLibVerifactu.pas'
@@ -21,7 +21,7 @@ $filtro = Get-Content -Raw -LiteralPath $rutaFiltro
 $layout = Get-Content -Raw -LiteralPath $rutaLayout
 $permisos = Get-Content -Raw -LiteralPath $rutaPermisos
 $fotos = Get-Content -Raw -LiteralPath $rutaFotos
-$tb = Get-Content -Raw -LiteralPath $rutaTb
+$valores = Get-Content -Raw -LiteralPath $rutaValores
 $pivote = Get-Content -Raw -LiteralPath $rutaPivote
 $ventasWs = Get-Content -Raw -LiteralPath $rutaVentasWs
 $verifactu = Get-Content -Raw -LiteralPath $rutaVerifactu
@@ -67,7 +67,7 @@ $referenciasAdaptador = @(
     -Pattern '(?i)\binLibContextoSesionGlobal\b'
 )
 $consumidoresNoVisuales = $documentos + $filtro + $layout + $permisos +
-  $fotos + $tb + $pivote + $ventasWs + $verifactu + $cola + $envio
+  $fotos + $valores + $pivote + $ventasWs + $verifactu + $cola + $envio
 
 Comprobar ($referenciasGlobales.Count -eq 0) `
   'Los consumidores no leen variables globales de sesión'
@@ -112,10 +112,10 @@ Comprobar (
     ($fotos -notmatch $patronGlobalSesion)
   ) 'La escritura de fotos recibe el usuario explícitamente'
 Comprobar (
-    ($tb -match
+    ($valores -match
       'ObtenerSiguienteContador\(AConexion:\s*TUniConnection;\s*' +
-      'const ATipoDoc,\s*AUsuario:\s*string\)') -and
-    ($tb -match
+      'const ATipoDocumento,\s*AUsuario:\s*string\)') -and
+    ($valores -match
       '''pUSUARIO_MODIF''.*AsString :=\s*AUsuario')
   ) 'La reserva de contadores recibe el usuario explícitamente'
 Comprobar (

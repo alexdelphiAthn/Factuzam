@@ -30,6 +30,9 @@ uses
   inLibCifrado in '..\src\Lib\inLibCifrado.pas',
   inLibConfiguracionIni in
     '..\src\Lib\inLibConfiguracionIni.pas',
+  inLibDocumentoFiscal in
+    '..\src\Lib\inLibDocumentoFiscal.pas',
+  inLibIBAN in '..\src\Lib\inLibIBAN.pas',
   inLibConexionesIntf in
     '..\src\Lib\inLibConexionesIntf.pas',
   inLibConexionesUniDAC in
@@ -37,7 +40,6 @@ uses
   inLibDatasets in '..\src\Lib\inLibDatasets.pas',
   inLibValoresAutomaticos in
     '..\src\Lib\inLibValoresAutomaticos.pas',
-  inLibtb in '..\src\Lib\inLibtb.pas',
   inLibBusquedasCompra in
     '..\src\Lib\inLibBusquedasCompra.pas',
   inLibValidacionDocumento in
@@ -49,6 +51,10 @@ uses
   inLibComprasImpuestos in '..\src\Lib\inLibComprasImpuestos.pas',
   inLibVentasImpuestos in '..\src\Lib\inLibVentasImpuestos.pas',
   inLibRectificativas in '..\src\Lib\inLibRectificativas.pas',
+  inLibComprasSesionesReglas in
+    '..\src\Lib\inLibComprasSesionesReglas.pas',
+  inLibPerfilesUsuarioValores in
+    '..\src\Lib\inLibPerfilesUsuarioValores.pas',
   PruebasAtributosPaleta in 'PruebasAtributosPaleta.pas',
   PruebasColumnasDocumento in 'PruebasColumnasDocumento.pas',
   PruebasFiltroUsuario in 'PruebasFiltroUsuario.pas',
@@ -61,6 +67,8 @@ uses
   PruebasCadenas in 'PruebasCadenas.pas',
   PruebasCifrado in 'PruebasCifrado.pas',
   PruebasConfiguracionIni in 'PruebasConfiguracionIni.pas',
+  PruebasIdentificacionFiscalBancaria in
+    'PruebasIdentificacionFiscalBancaria.pas',
   PruebasConexiones in 'PruebasConexiones.pas',
   PruebasDatasets in 'PruebasDatasets.pas',
   PruebasValoresAutomaticos in
@@ -74,7 +82,8 @@ uses
     'PruebasNavegacionDocumento.pas',
   PruebasImpuestosComun in 'PruebasImpuestosComun.pas',
   PruebasTotalesDocumentos in 'PruebasTotalesDocumentos.pas',
-  PruebasRectificativas in 'PruebasRectificativas.pas';
+  PruebasRectificativas in 'PruebasRectificativas.pas',
+  PruebasReglasCompartidas in 'PruebasReglasCompartidas.pas';
 
 var
   oEjecutor: ITestRunner;

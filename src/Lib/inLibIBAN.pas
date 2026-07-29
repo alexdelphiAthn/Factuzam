@@ -2,527 +2,270 @@
 {                                                                              }
 {  Módulo:       inLibIBAN                                                     }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       11/05/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       29/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Validador y generador de cuentas IBAN.                                    }
-{    Cálculo del dígito de control, validación de CCC y formateo en papel.     }
+{    Validación de IBAN y CCC, generación de IBAN y extracción de sus          }
+{    componentes usados por la aplicación.                                     }
 {******************************************************************************}
 unit inLibIBAN;
-
-{******************************************************************************}
-{* Librería de validación y generación de IBAN                               *}
-{*                                                                            *}
-{* Esta unidad consolida todas las funcionalidades relacionadas con IBAN:    *}
-{* - Validación de IBAN internacional                                        *}
-{* - Validación de CCC español                                               *}
-{* - Generación de dígitos de control                                        *}
-{* - Conversión y formateo de cuentas bancarias                              *}
-{******************************************************************************}
 
 interface
 
 uses
-  System.Classes, System.SysUtils;
+  System.Classes;
 
 type
-  {****************************************************************************}
-  {* TIBAN - Clase principal para trabajar con IBAN                           *}
-  {****************************************************************************}
   TIBAN = class
   public
-    {** Validación **}
-    // Valida un IBAN completo (formato internacional)
-    class function ValidarIBAN(const IBAN: string;
-                               Errores: TStringList = nil): Boolean;
-    // Valida un CCC español (con o sin IBAN)
-    class function ValidarCCC(const CCC: string;
-                              Errores: TStringList = nil): Boolean;
-
-    {** Generación **}
-    // Genera el IBAN completo a partir de país y CCC
-    class function GenerarIBAN(const Pais, CCC: string): string;
-    // Genera el DC (dígito de control) para CCC español
-    class function GenerarDC(const Banco, Cuenta: string): string;
-    // Calcula el dígito de control del IBAN
-    class function CalcularDCIBAN(const Pais, CCC: string): string;
-
-    {** Formateo **}
-    // Formatea IBAN para papel (con espacios): "IBAN ES76 1234 5678..."
-    class function FormatearPapel(const IBAN: string): string;
-    // Formatea IBAN para electrónico (sin espacios): "ES7612345678..."
-    class function FormatearElectronico(const IBAN: string): string;
-
-    {** Extracción de componentes **}
-    // Extrae el país del IBAN: "ES"
-    class function ExtraerPais(const IBAN: string): string;
-    // Extrae el DC del IBAN: "76"
-    class function ExtraerDCIBAN(const IBAN: string): string;
-    // Extrae el CCC del IBAN: "12345678901234567890"
-    class function ExtraerCCC(const IBAN: string): string;
-
-    {** Para CCC español **}
-    // Descompone CCC español: devuelve Banco(8) + DC(2) + Cuenta(10)
-    class function DescomponerCCC(const CCC: string;
-                                  out Banco, DC, Cuenta: string): Boolean;
-  end;
-
-  {******************************************************************************}
-  {* Tipos de registro para información estructurada (compatibilidad)          *}
-  {******************************************************************************}
-
-  { Info Bancaria de la Cuenta. Genérico para UE }
-  TrBancoCuentaInfo = record
-    IBAN: string; // Código del País + Dígito verificador (4 caracteres)
-    CCC: string;  // Código Cuenta Cliente (varía según país)
-
-    function ToFull(Sep: string = ''): string;
-    function ToFormatPapel: string;
-    function ToFormatElect: string;
-
-    constructor Build(const inIBAN, inCCC: string); overload;
-    constructor Build(const inFull: string); overload;
-  end;
-
-  { Info Bancaria del Código del País (IBAN) }
-  TrBancoIBANInfo = record
-    Pais: string;
-    DC: string;
-
-    function ToIBAN: string;
-    function GetDigitoControl(const inCCC: string): string;
-    function IsValid(const inCCC: String; Errores: TStringList = nil): Boolean;
-
-    constructor Build(const inPais, inDC: string); overload;
-    constructor Build(const inIBAN: string); overload;
-  end;
-
-  { Info del CCC = "Código Cuenta Cliente" Española }
-  TrBancoCCCInfoESP = record
-    Entidad: string;
-    Oficina: string;
-    DC: string;
-    Cuenta: string;
-
-    function ToCCC(Sep: string = ''): string;
-    constructor Build(const inEntidad,
-                            inOficina,
-                            inDC,
-                            inCuenta: string); overload;
-    constructor Build(const inCCC: string); overload;
+    class function ValidarIBAN(const AIban: string;
+                               AErrores: TStringList = nil): Boolean;
+    class function ValidarCCC(const ACcc: string;
+                              AErrores: TStringList = nil): Boolean;
+    class function GenerarIBAN(const APais, ACcc: string): string;
+    class function FormatearElectronico(const AIban: string): string;
+    class function ExtraerCCC(const AIban: string): string;
+    class function DescomponerCCC(const ACcc: string;
+                                  out ABanco, ADc, ACuenta: string): Boolean;
   end;
 
 implementation
 
 uses
+  System.SysUtils,
   inLibMsg;
 
-const
-  PREFIJO_PAPEL_IBAN = 'IBAN';
-
-{******************************************************************************}
-{* Funciones auxiliares internas                                              *}
-{******************************************************************************}
-
-// Extrae solo números de una cadena
-function GetNumbersOnly(const value: string): string;
+function SoloAlfanumericos(const AValor: string): string;
 var
+  cCaracter: Char;
   i: Integer;
-  c: Char;
 begin
   Result := '';
-  for i := 1 to Length(value) do
+  for i := 1 to Length(AValor) do
   begin
-    c := value[i];
-    if CharInSet(c, ['0'..'9']) then
-      Result := Result + c;
+    cCaracter := UpCase(AValor[i]);
+    if CharInSet(cCaracter, ['A'..'Z', '0'..'9']) then
+      Result := Result + cCaracter;
   end;
 end;
 
-// Extrae solo caracteres alfanuméricos
-function GetAlphaNumericsOnly(const value: string): string;
+function NormalizarIBAN(const AIban: string): string;
+begin
+  Result := SoloAlfanumericos(AIban);
+  if Copy(Result, 1, 4) = 'IBAN' then
+    Delete(Result, 1, 4);
+end;
+
+function SoloNumeros(const AValor: string): string;
 var
   i: Integer;
-  c: Char;
 begin
   Result := '';
-  for i := 1 to Length(value) do
+  for i := 1 to Length(AValor) do
   begin
-    c := value[i];
-    if CharInSet(c, ['A'..'Z', 'a'..'z', '0'..'9']) then
-      Result := Result + c;
+    if CharInSet(AValor[i], ['0'..'9']) then
+      Result := Result + AValor[i];
   end;
 end;
 
-// Calcula módulo 97 para validación IBAN
-function Mod97(value: String): Integer;
+function EsNumerico(const AValor: string): Boolean;
+begin
+  Result := (AValor <> '') and (SoloNumeros(AValor) = AValor);
+end;
+
+procedure AnadirError(const AMensaje: string; AErrores: TStringList);
+begin
+  if Assigned(AErrores) then
+    AErrores.Add(AMensaje);
+end;
+
+function Modulo97(const AValor: string): Integer;
+var
+  bValido: Boolean;
+  cCaracter: Char;
+  i: Integer;
 begin
   Result := 0;
-  while Length(value) > 0 do
+  bValido := True;
+  i := 1;
+  while (i <= Length(AValor)) and bValido do
   begin
-    Result := StrToIntDef(IntToStr(Result) + Copy(value, 1, 6), 0) mod 97;
-    Delete(value, 1, 6);
+    cCaracter := UpCase(AValor[i]);
+    if CharInSet(cCaracter, ['0'..'9']) then
+      Result := ((Result * 10) + Ord(cCaracter) - Ord('0')) mod 97
+    else if CharInSet(cCaracter, ['A'..'Z']) then
+      Result := ((Result * 100) + Ord(cCaracter) - Ord('A') + 10) mod 97
+    else
+      bValido := False;
+    Inc(i);
   end;
+  if not bValido then
+    Result := -1;
 end;
 
-// Convierte caracteres a dígitos según tabla IBAN (A=10, B=11, etc.)
-function CharToDigitTable(const Value: Char): string;
-const
-  Initial_A: char = 'A';
-var
-  iValue: byte;
+function AjustarDigitoControl(ASuma: Integer): Integer;
 begin
-  Result := Value;
-  if CharInSet(Value, ['A'..'Z']) then
-  begin
-    iValue := (byte(Value) - byte(Initial_A)) + 10;
-    Result := IntToStr(iValue);
-  end;
+  Result := 11 - (ASuma mod 11);
+  if Result = 11 then
+    Result := 0
+  else if Result = 10 then
+    Result := 1;
 end;
 
-// Convierte cadena de país a números según tabla IBAN
-function PaisToIBANTable(const inPais: string): string;
+function CalcularDigitosCCC(const ABanco, ACuenta: string): Integer;
+const
+  cPesosBanco: array[1..8] of Integer = (4, 8, 5, 10, 9, 7, 3, 6);
+  cPesosCuenta: array[1..10] of Integer =
+    (1, 2, 4, 8, 5, 10, 9, 7, 3, 6);
 var
   i: Integer;
-  Pais: string;
+  iPrimerDigito: Integer;
+  iSegundoDigito: Integer;
+  iSuma: Integer;
 begin
-  Result := '';
-  Pais := AnsiUpperCase(inPais);
-  for i := 1 to Length(Pais) do
-    Result := Result + CharToDigitTable(Pais[i]);
+  iSuma := 0;
+  for i := 1 to Length(cPesosBanco) do
+    iSuma := iSuma + StrToInt(ABanco[i]) * cPesosBanco[i];
+  iPrimerDigito := AjustarDigitoControl(iSuma);
+  iSuma := 0;
+  for i := 1 to Length(cPesosCuenta) do
+    iSuma := iSuma + StrToInt(ACuenta[i]) * cPesosCuenta[i];
+  iSegundoDigito := AjustarDigitoControl(iSuma);
+  Result := (iPrimerDigito * 10) + iSegundoDigito;
 end;
 
-// Calcula DC para CCC español
-function CalculaDC(const Banco, Cuenta: string): Integer;
-const
-  Pesos: array[0..9] of integer = (6, 3, 7, 9, 10, 5, 8, 4, 2, 1);
+class function TIBAN.ValidarIBAN(const AIban: string;
+                                 AErrores: TStringList): Boolean;
 var
-  n: byte;
-  iTemp: integer;
+  bDigitoControlValido: Boolean;
+  bLongitudValida: Boolean;
+  bPaisValido: Boolean;
+  sCuenta: string;
+  sDigitoControl: string;
+  sPais: string;
+  sValorModulo: string;
 begin
-  iTemp := 0;
-  for n := 0 to 7 do
-    iTemp := iTemp + StrToInt(Copy(Banco, 8 - n, 1)) * Pesos[n];
-  Result := 11 - iTemp Mod 11;
-  if (Result > 9) then
-    Result := 1 - Result mod 10;
-  iTemp := 0;
-  For n := 0 to 9 do
-    iTemp := iTemp + StrToInt(Copy(Cuenta, 10 - n, 1)) * Pesos[n];
-  iTemp := 11 - iTemp mod 11;
-  if (iTemp > 9) then
-    iTemp := 1 - iTemp mod 10;
-  Result := Result * 10 + iTemp;
-end;
-
-// Añade mensaje a lista si no es nil
-procedure AddError(const msg: string; Lista: TStringList);
-begin
-  if Assigned(Lista) then
-    Lista.Add(msg);
-end;
-
-{******************************************************************************}
-{* TIBAN - Implementación                                                     *}
-{******************************************************************************}
-
-class function TIBAN.ValidarIBAN(const IBAN: string;
-                                 Errores: TStringList): Boolean;
-var
-  Cuenta: TrBancoCuentaInfo;
-  IBANInfo: TrBancoIBANInfo;
-begin
-  Cuenta.Build(IBAN);
-  IBANInfo.Build(Cuenta.IBAN);
-  Result := IBANInfo.IsValid(Cuenta.CCC, Errores);
-end;
-
-class function TIBAN.ValidarCCC(const CCC: string;
-                                Errores: TStringList): Boolean;
-var
-  isValid, isSpanish, isNumeric: Boolean;
-  sBanco, sCta, sDC, sPref: String;
-  iVal, iDC: Integer;
-  CCCClean: string;
-begin
-  CCCClean := GetAlphaNumericsOnly(CCC);
-  isValid := False;
-  isNumeric := False;
-
-  sPref := Copy(CCCClean, 1, 2);
-  isSpanish := ((sPref = 'ES') or (StrToIntDef(sPref, 0) <> 0));
-
-  // IBAN español completo (24 caracteres)
-  if ((Length(CCCClean) = 24) and (isSpanish)) then
-  begin
-    isValid := True;
-    sBanco := Copy(CCCClean, 5, 8);
-    sDC := Copy(CCCClean, 13, 2);
-    sCta := Copy(CCCClean, 15, 10);
-  end
-  // CCC español sin IBAN (20 caracteres)
-  else if (Length(CCCClean) = 20) then
-  begin
-    isValid := True;
-    sBanco := Copy(CCCClean, 1, 8);
-    sDC := Copy(CCCClean, 9, 2);
-    sCta := Copy(CCCClean, 11, 10);
-  end;
-
-  if ((isSpanish) and (not isValid)) then
-  begin
-    AddError(SErrorLongitudCuentaBancariaInvalida, Errores);
-    Exit(False);
-  end;
-
-  if ((isSpanish) and (isValid)) then
-  begin
-    isNumeric := ((TryStrToInt(sBanco, iVal)) and
-                  (TryStrToInt(sDC, iVal)) and
-                  (TryStrToInt(sCta, iVal)));
-  end;
-
-  if ((isValid) and (isSpanish) and (isNumeric)) then
-  begin
-    iDC := CalculaDC(sBanco, sCta);
-    if (iDC <> StrToInt(sDC)) then
-    begin
-      AddError(Format(SErrorDigitoControlCuentaBancaria,
-        [sDC, IntToStr(iDC)]), Errores);
-      Exit(False);
-    end;
-  end
-  else if ((isValid) and (isSpanish) and not(isNumeric)) then
-  begin
-    AddError(SErrorCuentaBancariaInvalida, Errores);
-    Exit(False);
-  end;
-
-  Result := isValid;
-end;
-
-class function TIBAN.GenerarIBAN(const Pais, CCC: string): string;
-var
-  IBANInfo: TrBancoIBANInfo;
-begin
-  IBANInfo.Build(Pais, '00');
-  IBANInfo.DC := IBANInfo.GetDigitoControl(CCC);
-  Result := IBANInfo.ToIBAN + CCC;
-end;
-
-class function TIBAN.GenerarDC(const Banco, Cuenta: string): string;
-var
-  iDC: Integer;
-begin
-  iDC := 0;
-  if ((Length(Cuenta) = 10) and (Length(Banco) = 8)) then
-    iDC := CalculaDC(Banco, Cuenta);
-  Result := Format('%.2d', [iDC]);
-end;
-
-class function TIBAN.CalcularDCIBAN(const Pais, CCC: string): string;
-var
-  IBANInfo: TrBancoIBANInfo;
-begin
-  IBANInfo.Build(Pais, '00');
-  Result := IBANInfo.GetDigitoControl(CCC);
-end;
-
-class function TIBAN.FormatearPapel(const IBAN: string): string;
-var
-  Clean: string;
-begin
-  Clean := GetAlphaNumericsOnly(IBAN);
-  Result := PREFIJO_PAPEL_IBAN + ' ' + Clean;
-end;
-
-class function TIBAN.FormatearElectronico(const IBAN: string): string;
-begin
-  Result := GetAlphaNumericsOnly(IBAN);
-end;
-
-class function TIBAN.ExtraerPais(const IBAN: string): string;
-var
-  Clean: string;
-begin
-  Clean := GetAlphaNumericsOnly(IBAN);
-  Result := Copy(Clean, 1, 2);
-end;
-
-class function TIBAN.ExtraerDCIBAN(const IBAN: string): string;
-var
-  Clean: string;
-begin
-  Clean := GetAlphaNumericsOnly(IBAN);
-  Result := Copy(Clean, 3, 2);
-end;
-
-class function TIBAN.ExtraerCCC(const IBAN: string): string;
-var
-  Clean: string;
-begin
-  Clean := GetAlphaNumericsOnly(IBAN);
-  Result := Copy(Clean, 5, Length(Clean) - 4);
-end;
-
-class function TIBAN.DescomponerCCC(const CCC: string;
-                                    out Banco, DC, Cuenta: string): Boolean;
-var
-  CCCClean: string;
-begin
-  CCCClean := GetNumbersOnly(CCC);
-  Result := Length(CCCClean) = 20;
-
+  sCuenta := NormalizarIBAN(AIban);
+  sPais := Copy(sCuenta, 1, 2);
+  sDigitoControl := Copy(sCuenta, 3, 2);
+  bPaisValido := (Length(sPais) = 2) and
+                 CharInSet(sPais[1], ['A'..'Z']) and
+                 CharInSet(sPais[2], ['A'..'Z']);
+  bDigitoControlValido := (Length(sDigitoControl) = 2) and
+                          EsNumerico(sDigitoControl);
+  bLongitudValida := (Length(sCuenta) >= 15) and
+                     (Length(sCuenta) <= 34);
+  if not bPaisValido then
+    AnadirError(SErrorPaisIbanInvalido, AErrores);
+  if not bDigitoControlValido then
+    AnadirError(SErrorDigitoControlIbanInvalido, AErrores);
+  Result := bPaisValido and bDigitoControlValido and bLongitudValida;
   if Result then
   begin
-    Banco := Copy(CCCClean, 1, 8);
-    DC := Copy(CCCClean, 9, 2);
-    Cuenta := Copy(CCCClean, 11, 10);
+    sValorModulo := Copy(sCuenta, 5, MaxInt) + Copy(sCuenta, 1, 4);
+    Result := Modulo97(sValorModulo) = 1;
+  end;
+  if not Result and bPaisValido and bDigitoControlValido then
+    AnadirError(SErrorIbanInvalido, AErrores);
+end;
+
+class function TIBAN.ValidarCCC(const ACcc: string;
+                                AErrores: TStringList): Boolean;
+var
+  bLongitudValida: Boolean;
+  bNumerico: Boolean;
+  iDigitoCalculado: Integer;
+  iDigitoRecibido: Integer;
+  sBanco: string;
+  sCuenta: string;
+  sCcc: string;
+  sDigitoControl: string;
+begin
+  sCcc := NormalizarIBAN(ACcc);
+  if Copy(sCcc, 1, 2) = 'ES' then
+    sCcc := Copy(sCcc, 5, MaxInt);
+  bLongitudValida := Length(sCcc) = 20;
+  bNumerico := bLongitudValida and EsNumerico(sCcc);
+  if not bLongitudValida then
+    AnadirError(SErrorLongitudCuentaBancariaInvalida, AErrores)
+  else if not bNumerico then
+    AnadirError(SErrorCuentaBancariaInvalida, AErrores);
+  Result := bNumerico;
+  if Result then
+  begin
+    sBanco := Copy(sCcc, 1, 8);
+    sDigitoControl := Copy(sCcc, 9, 2);
+    sCuenta := Copy(sCcc, 11, 10);
+    iDigitoCalculado := CalcularDigitosCCC(sBanco, sCuenta);
+    iDigitoRecibido := StrToInt(sDigitoControl);
+    Result := iDigitoCalculado = iDigitoRecibido;
+    if not Result then
+    begin
+      AnadirError(
+        Format(
+          SErrorDigitoControlCuentaBancaria,
+          [sDigitoControl, Format('%.2d', [iDigitoCalculado])]),
+        AErrores);
+    end;
+  end;
+end;
+
+class function TIBAN.GenerarIBAN(const APais, ACcc: string): string;
+var
+  iDigitoControl: Integer;
+  sCcc: string;
+  sPais: string;
+begin
+  Result := '';
+  sPais := SoloAlfanumericos(APais);
+  sCcc := SoloAlfanumericos(ACcc);
+  if (Length(sPais) = 2) and (sCcc <> '') then
+  begin
+    iDigitoControl := 98 - Modulo97(sCcc + sPais + '00');
+    Result := sPais + Format('%.2d', [iDigitoControl]) + sCcc;
+  end;
+end;
+
+class function TIBAN.FormatearElectronico(const AIban: string): string;
+begin
+  Result := NormalizarIBAN(AIban);
+end;
+
+class function TIBAN.ExtraerCCC(const AIban: string): string;
+var
+  sIban: string;
+begin
+  sIban := NormalizarIBAN(AIban);
+  if Length(sIban) > 4 then
+    Result := Copy(sIban, 5, MaxInt)
+  else
+    Result := '';
+end;
+
+class function TIBAN.DescomponerCCC(const ACcc: string;
+                                    out ABanco, ADc,
+                                    ACuenta: string): Boolean;
+var
+  sCcc: string;
+begin
+  sCcc := SoloNumeros(ACcc);
+  Result := Length(sCcc) = 20;
+  if Result then
+  begin
+    ABanco := Copy(sCcc, 1, 8);
+    ADc := Copy(sCcc, 9, 2);
+    ACuenta := Copy(sCcc, 11, 10);
   end
   else
   begin
-    Banco := '';
-    DC := '';
-    Cuenta := '';
+    ABanco := '';
+    ADc := '';
+    ACuenta := '';
   end;
-end;
-
-{******************************************************************************}
-{* TrBancoCuentaInfo - Implementación                                         *}
-{******************************************************************************}
-
-function TrBancoCuentaInfo.ToFull(Sep: string): string;
-begin
-  Result := Trim(Self.IBAN) + Sep + Trim(Self.CCC);
-end;
-
-function TrBancoCuentaInfo.ToFormatElect: string;
-begin
-  Result := Self.ToFull;
-end;
-
-function TrBancoCuentaInfo.ToFormatPapel: string;
-begin
-  Result := PREFIJO_PAPEL_IBAN + ' ' + Self.ToFull(' ');
-end;
-
-constructor TrBancoCuentaInfo.Build(const inIBAN, inCCC: string);
-begin
-  Self.IBAN := inIBAN;
-  Self.CCC := inCCC;
-end;
-
-constructor TrBancoCuentaInfo.Build(const inFull: string);
-var
-  Value: string;
-begin
-  Value := GetAlphaNumericsOnly(inFull);
-  Value := StringReplace(Value, PREFIJO_PAPEL_IBAN, '', [rfIgnoreCase]);
-
-  Self.IBAN := Copy(Value, 1, 4);
-  Self.CCC := Copy(Value, 5, Length(Value));
-end;
-
-{******************************************************************************}
-{* TrBancoIBANInfo - Implementación                                           *}
-{******************************************************************************}
-
-function TrBancoIBANInfo.ToIBAN: string;
-begin
-  Result := Self.Pais + Self.DC;
-end;
-
-function TrBancoIBANInfo.GetDigitoControl(const inCCC: string): string;
-var
-  AValidar: string;
-  iValue, NewDV: Integer;
-begin
-  // Cadena a validar: CCC + País en tabla + "00"
-  AValidar := Trim(inCCC) + PaisToIBANTable(Self.Pais) + '00';
-
-  iValue := Mod97(AValidar);
-  NewDV := 98 - iValue;
-
-  Result := Format('%.2d', [NewDV]);
-end;
-
-function TrBancoIBANInfo.IsValid(const inCCC: String;
-                                  Errores: TStringList): Boolean;
-var
-  AValidar: string;
-begin
-  // Validar estructura básica
-  Result := True;
-
-  if ((Self.Pais.IsEmpty) or (Self.Pais.Length < 2)) then
-  begin
-    AddError(SErrorPaisIbanInvalido, Errores);
-    Result := False;
-  end;
-
-  if ((Self.DC.IsEmpty) or (Self.DC.Length < 2) or
-      (StrToIntDef(Self.DC, -1) = -1)) then
-  begin
-    AddError(SErrorDigitoControlIbanInvalido, Errores);
-    Result := False;
-  end;
-
-  if not Result then
-    Exit;
-
-  // Validar dígito de control
-  AValidar := Trim(inCCC) + PaisToIBANTable(Self.Pais) + Self.DC;
-  Result := Mod97(AValidar) = 1;
-
-  if not Result then
-    AddError(SErrorIbanInvalido, Errores);
-end;
-
-constructor TrBancoIBANInfo.Build(const inPais, inDC: string);
-begin
-  Self.Pais := inPais;
-  Self.DC := inDC;
-end;
-
-constructor TrBancoIBANInfo.Build(const inIBAN: string);
-begin
-  Self.Pais := Copy(inIBAN, 1, 2);
-  Self.DC := Copy(inIBAN, 3, 2);
-end;
-
-{******************************************************************************}
-{* TrBancoCCCInfoESP - Implementación                                         *}
-{******************************************************************************}
-
-function TrBancoCCCInfoESP.ToCCC(Sep: string): string;
-begin
-  Result := Self.Entidad + Sep + Self.Oficina + Sep +
-            Self.DC + Sep + Self.Cuenta;
-end;
-
-constructor TrBancoCCCInfoESP.Build(const inEntidad, inOficina, inDC,
-                                     inCuenta: string);
-begin
-  Self.Entidad := inEntidad;
-  Self.Oficina := inOficina;
-  Self.DC := inDC;
-  Self.Cuenta := inCuenta;
-end;
-
-constructor TrBancoCCCInfoESP.Build(const inCCC: string);
-var
-  Value: string;
-begin
-  Value := GetNumbersOnly(inCCC);
-
-  Self.Entidad := Copy(Value, 1, 4);
-  Self.Oficina := Copy(Value, 5, 4);
-  Self.DC := Copy(Value, 9, 2);
-  Self.Cuenta := Copy(Value, 11, Length(Value));
 end;
 
 end.

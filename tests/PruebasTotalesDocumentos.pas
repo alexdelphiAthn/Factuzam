@@ -62,6 +62,8 @@ type
     procedure Factura_PosponerCalculoMientrasResuelveReferencia;
     [Test]
     procedure Factura_PosponerCalculoMientrasResuelveSku;
+    [Test]
+    procedure Factura_SinLineasNoIntentaActualizar;
   end;
 
 implementation
@@ -429,6 +431,18 @@ begin
   finally
     FreeAndNil(oTotales);
   end;
+end;
+
+procedure TPruebasTotalesDocumentos.
+  Factura_SinLineasNoIntentaActualizar;
+begin
+  ActualizarLineaFactura(
+    nil,
+    nil,
+    FCabecera,
+    fpreciosal,
+    10);
+  Assert.IsTrue(FCabecera.Active);
 end;
 
 end.

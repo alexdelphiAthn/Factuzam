@@ -788,10 +788,11 @@ begin
   // ltSQL se enciende si CUALQUIERA de los modos relacionados con SQL
   // está activo. El cronómetro de UniSQLMonitor (LogSQLExt) y el dump
   // crudo (LogSQL) comparten el mismo flag.
-  bSQLFinal := bDebugSQL or bLogSQL;
   {$IFDEF DEBUG}
   // En compilaciones DEBUG forzamos siempre el modo SQL
   bSQLFinal := True;
+  {$ELSE}
+  bSQLFinal := bDebugSQL or bLogSQL;
   {$ENDIF}
 
   if bSQLFinal then

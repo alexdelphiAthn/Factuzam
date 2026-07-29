@@ -36,7 +36,6 @@ uses
   dxSkinOffice2010Blue, dxSkinOffice2010Silver, dxSkinOffice2013DarkGray,
   dxSkinOffice2013LightGray, dxSkinOffice2013White, dxSkinOffice2016Colorful,
   dxSkinOffice2016Dark, dxSkinOffice2019Black, dxSkinOffice2019Colorful,
-  inMtoFacturasBase,
   UniDataFacturas,  dxSkinOffice2019DarkGray, dxSkinOffice2019White,
   dxSkinPumpkin, dxSkinSeven,
   dxSkinSevenClassic, dxSkinSharp, dxSkinSharpPlus, dxSkinSilver,
@@ -70,6 +69,7 @@ type
     procedure chkDuplicarClick(Sender: TObject);
   public
     dmFac : TdmFacturas;
+    procedure Preparar(ADM: TdmFacturas);
   end;
 
 implementation
@@ -77,7 +77,6 @@ implementation
 uses
 
   inLibUser,
-  inLibtb,
   inLibVerifactuCola;
 
 {$R *.dfm}
@@ -93,9 +92,10 @@ var
   IsError : Boolean;
 begin
   IsError := False;
-
-  VAR ParentForm := TfrmMtoFacturasBase(Owner);
-  with ParentForm.tdmDataModule as TdmFacturas do
+  if not Assigned(dmFac) then
+    raise EArgumentNilException.Create(
+      'Data module de facturas no asignado.');
+  with dmFac do
   begin
     if chkAbonar.Checked and not IsError then
     begin
@@ -176,20 +176,24 @@ end;
 
 procedure TfrmGenFacRec.FormCreate(Sender: TObject);
 begin
- if Owner is TfrmMtoFacturasBase then
+  dtFecha.Date := Trunc(Now);
+end;
+
+procedure TfrmGenFacRec.Preparar(ADM: TdmFacturas);
+begin
+  if not Assigned(ADM) then
+    raise EArgumentNilException.Create(
+      'Data module de facturas no asignado.');
+  dmFac := ADM;
+  with dmFac do
   begin
-    VAR ParentForm := TfrmMtoFacturasBase(Owner);
-    with ParentForm.tdmDataModule as TdmFacturas do
-    begin
-      if not unqrySeries.Active then
-        unqrySeries.Open;
-      cmbSerieFactura.Properties.ListSource := dsSeries;
-      cmbSerieFactura.Text :=
-              cmbSerieFactura.Properties.ListSource.DataSet.Fields[0].AsString;
-      edtNumFacOrigen.Text := unqryTablaG.FieldByName('NUMERO_FAC').AsString;
-      edtSerieOrigen.Text := unqryTablaG.FieldByName('SERIE_FAC').AsString;
-    end;
-    dtFecha.Date := Trunc(Now);
+    if not unqrySeries.Active then
+      unqrySeries.Open;
+    cmbSerieFactura.Properties.ListSource := dsSeries;
+    cmbSerieFactura.Text :=
+      cmbSerieFactura.Properties.ListSource.DataSet.Fields[0].AsString;
+    edtNumFacOrigen.Text := unqryTablaG.FieldByName('NUMERO_FAC').AsString;
+    edtSerieOrigen.Text := unqryTablaG.FieldByName('SERIE_FAC').AsString;
   end;
 end;
 

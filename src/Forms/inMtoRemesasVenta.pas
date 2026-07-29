@@ -132,7 +132,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal,
+  inLibWin,
   inMtoModalCargarEfectosRemesa, inMtoModalRegistrarPago,
   inMtoModalSepaRemesaVenta, inLibSepaRemesasVenta, inLibMsg;
 

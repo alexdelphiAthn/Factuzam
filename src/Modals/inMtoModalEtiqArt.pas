@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoModalEtiqArt                                             }
 {    Tipo:       Formulario (Modal)                                            }
@@ -27,7 +27,7 @@ uses
   cxButtons, Vcl.ExtCtrls, dxSkinsCore, dxSkinBlue, cxControls, cxContainer,
   cxEdit, cxTextEdit, cxMaskEdit, cxSpinEdit, cxLabel, cxGroupBox,
   cxRadioGroup, cxDropDownEdit, cxDateUtils, cxCalendar, cxListView,
-  cxCheckBox, ComCtrls, UniDataArticulos, inMtoArticulos, inLibLayoutForm,
+  cxCheckBox, ComCtrls, UniDataArticulos, inLibLayoutForm,
   JvComponentBase, JvEnterTab, frxSmartMemo, frLocalization, frLanguageSpanish,
   dxCore, System.Actions, Vcl.ActnList, frxExportBaseImageSettingsDialog,
   frCoreClasses, system.Rtti;

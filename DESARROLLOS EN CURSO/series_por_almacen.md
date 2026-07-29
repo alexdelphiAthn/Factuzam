@@ -24,7 +24,7 @@ pestaña Series (la columna de almacén ya era editable).
 
 ## Comportamiento
 
-### Resolución de serie (inLibtb)
+### Resolución de serie (`inLibValoresAutomaticos`)
 
 - `ObtenerSeriePropiaAlmacen(empresa, tipoDoc, almacén)`: devuelve la
   serie ligada en exclusiva a ese almacén ('' si no tiene).
@@ -58,7 +58,7 @@ pestaña Series (la columna de almacén ya era editable).
 
 ## Ficheros tocados
 
-- `src/Lib/inLibtb.pas`
+- `src/Lib/inLibValoresAutomaticos.pas`
 - `src/Modals/inMtoModalCrearAlbaranSesion.pas` / `.dfm`
 - `src/Modals/inMtoModalSelAlmacenPedido.pas` / `.dfm`
 - `src/Forms/inMtoComprasSesiones.pas`

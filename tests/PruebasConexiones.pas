@@ -34,15 +34,13 @@ type
     procedure PuertoInvalido_UsaPuertoPredeterminado;
     [Test]
     procedure Configuracion_AplicaOpcionesDeProduccion;
-    [Test]
-    procedure Fachada_ConservaLaConfiguracion;
   end;
 
 implementation
 
 uses
   System.SysUtils,
-  inLibConexionesUniDAC, inLibtb;
+  inLibConexionesUniDAC;
 
 procedure TPruebasConexiones.Preparar;
 begin
@@ -137,41 +135,6 @@ begin
     FConexion.Options.LocalFailover);
   Assert.IsTrue(
     FConexion.Options.DisconnectedMode);
-end;
-
-procedure TPruebasConexiones.
-  Fachada_ConservaLaConfiguracion;
-var
-  oFachada: TUniConnection;
-begin
-  oFachada := TUniConnection.Create(nil);
-  try
-    ConfigurarConexionMySQL(
-      FConexion,
-      'usuario',
-      'secreto',
-      'servidor',
-      '3310',
-      'datos');
-    inLibtb.ConstruirConexion(
-      oFachada,
-      'usuario',
-      'secreto',
-      'servidor',
-      '3310',
-      'datos');
-    Assert.AreEqual(
-      FConexion.ConnectString,
-      oFachada.ConnectString);
-    Assert.AreEqual(
-      FConexion.PoolingOptions.MinPoolSize,
-      oFachada.PoolingOptions.MinPoolSize);
-    Assert.AreEqual(
-      FConexion.Options.DisconnectedMode,
-      oFachada.Options.DisconnectedMode);
-  finally
-    FreeAndNil(oFachada);
-  end;
 end;
 
 end.

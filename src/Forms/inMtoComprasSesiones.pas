@@ -566,7 +566,7 @@ uses
   inLibComprasSesiones,
   inMtoModalDistribuidor,
   inMtoModalDocsCreados,
-  inLibShowMto, inMtoPrincipal,
+  inLibShowMto,
   inLibComprasSesionesMaterializar,
   Vcl.Clipbrd,
   inLibAtributosPaleta,
@@ -1312,9 +1312,11 @@ begin
     // ALBC = albaran de compra, PEDC = pedido de compra (ambos con Mto
     // registrado en fza_winforms; la busqueda es SERIE,NUMERO).
     if SameText(sTipo, 'ALBC') then
-      ShowMto(frmMtoPrincipal, 'AlbaranesCompra', sSerie + ',' + sNumero)
+      ShowMto(Application.MainForm, 'AlbaranesCompra',
+        sSerie + ',' + sNumero)
     else if SameText(sTipo, 'PEDC') then
-      ShowMto(frmMtoPrincipal, 'PedidosCompra', sSerie + ',' + sNumero)
+      ShowMto(Application.MainForm, 'PedidosCompra',
+        sSerie + ',' + sNumero)
     else
       ShowMessage(Format(SErrorMantenimientoTipoDocumentoNoDisponible,
                          [sTipo]));
@@ -1342,7 +1344,7 @@ begin
   begin
     if MessageDlg(Format(SPreguntaAbrirSeriesSesionCompra, [sEmpresa]),
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-      ShowMto(frmMtoPrincipal, 'Empresas');
+      ShowMto(Application.MainForm, 'Empresas');
   end;
 end;
 
@@ -1364,14 +1366,14 @@ end;
 procedure TfrmMtoComprasSesiones.actIrAlbaranesCompraExecute(Sender: TObject);
 begin
   // ShortCut Ctrl+Shift+A.
-  ShowMto(frmMtoPrincipal, 'AlbaranesCompra');
+  ShowMto(Application.MainForm, 'AlbaranesCompra');
 end;
 
 procedure TfrmMtoComprasSesiones.actIrPedidosCompraExecute(Sender: TObject);
 begin
   // ShortCut Ctrl+Shift+P. El Mto de pedidos de compra ya existe
   // (CALL_WINF='PedidosCompra' en fza_winforms).
-  ShowMto(frmMtoPrincipal, 'PedidosCompra');
+  ShowMto(Application.MainForm, 'PedidosCompra');
 end;
 
 procedure TfrmMtoComprasSesiones.actIrProveedorExecute(Sender: TObject);
@@ -2631,11 +2633,11 @@ begin
             // Tanto Albaran como Pedido tienen Mto propio. BuscarTabla
             // en inLibShowMto soporta PK compuesta separada por coma.
             if SameText(frmDocs.SeleccionadoTipo, 'Albaran') then
-              ShowMto(frmMtoPrincipal, 'AlbaranesCompra',
+              ShowMto(Application.MainForm, 'AlbaranesCompra',
                       frmDocs.SeleccionadoSerie + ',' +
                       frmDocs.SeleccionadoNumero)
             else if SameText(frmDocs.SeleccionadoTipo, 'Pedido') then
-              ShowMto(frmMtoPrincipal, 'PedidosCompra',
+              ShowMto(Application.MainForm, 'PedidosCompra',
                       frmDocs.SeleccionadoSerie + ',' +
                       frmDocs.SeleccionadoNumero);
           end;

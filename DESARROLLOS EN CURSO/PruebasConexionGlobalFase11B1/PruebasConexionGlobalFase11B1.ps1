@@ -114,7 +114,6 @@ $pendientes = @(
   'src\Lib\inLibShowMto.pas',
   'src\Lib\inLibUnidadesMedida.pas',
   'src\Lib\inLibVentasCalendario.pas',
-  'src\Lib\inLibtb.pas',
   'src\Modals\inMtoModalFacturarTicket.pas',
   'src\Modals\inMtoModalSerieFechaFactura.pas',
   'src\Modals\inMtoModalVerifactuDecl.pas'

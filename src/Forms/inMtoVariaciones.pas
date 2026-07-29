@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoVariaciones                                              }
 {    Tipo:       Formulario (Mto)                                              }
@@ -107,7 +107,7 @@ var
 implementation
 
 uses
-  inLibWin, inLibFotos, inMtoPrincipal;
+  inLibWin, inLibFotos;
 
 {$R *.dfm}
 

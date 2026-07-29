@@ -166,10 +166,7 @@ uses
   inLibFotos,
   inLibUser,
   inLibDevExp,
-  inMtoArticulos,
-  inLibShowMto,
-  inMtoProveedores,
-  inMtoTarifas, inMtoPrincipal;
+  inLibShowMto;
 
 {$R *.dfm}
 

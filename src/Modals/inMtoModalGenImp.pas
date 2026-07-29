@@ -24,7 +24,7 @@ uses
   ExtCtrls, ComCtrls, dxCore, cxDateUtils, cxMaskEdit, cxDropDownEdit,
   cxCalendar, frxDesgn, cxGroupBox, cxRadioGroup, frxExportBaseDialog,
   frxExportXLSX, MemDS, DBAccess, Uni, UniDataConn,
-  inLibGlobalVar, inMtoPrincipal, inMtoModalGenImpEle, cxStyles, dxSkinsForm,
+  inLibGlobalVar, inMtoModalGenImpEle, cxStyles, dxSkinsForm,
   cxClasses, cxLocalization, Vcl.Menus, System.UITypes, JvComponentBase,
   JvEnterTab, dxSkinBasic, dxSkinBlack, dxSkinBlueprint, dxSkinCaramel,
   dxSkinCoffee, dxSkinDarkroom, dxSkinDarkSide, dxSkinDevExpressDarkStyle,
@@ -47,7 +47,7 @@ uses
   frLocalization, frxBarcode,
   frLanguageSpanish, frxSmartMemo;
 type
-  TfrmPrint = class(TfrmBase)
+  TfrmPrint = class(TfrmBase, IEliminadorFormatoImpresion)
     pnl1: TPanel;
     btnPDF: TcxButton;
     btnImprimir: TcxButton;
@@ -115,6 +115,9 @@ type
   public
     procedure CargarFormatos(form:TfrmMtoModalGenImpEle);
     procedure DeleteForm(sElegido:String;form:TfrmMtoModalGenImpEle);
+    procedure EliminarFormatoImpresion(
+      const ANombre: string;
+      ASelector: TObject);
     procedure preparar_consulta; virtual; abstract;
     procedure AfterReportLoaded; virtual;
     // OnBeforePrint del report: encadena la sustitución de fotos
@@ -1162,6 +1165,14 @@ begin
   finally
     FreeAndNil(unqrySol);
   end;
+end;
+
+procedure TfrmPrint.EliminarFormatoImpresion(
+  const ANombre: string;
+  ASelector: TObject);
+begin
+  if ASelector is TfrmMtoModalGenImpEle then
+    DeleteForm(ANombre, TfrmMtoModalGenImpEle(ASelector));
 end;
 
 procedure TfrmPrint.FormClose(Sender: TObject; var Action: TCloseAction);

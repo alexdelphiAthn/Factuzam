@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoCajaFormasPago                                           }
 {    Tipo:       Formulario (Mto)                                              }
@@ -107,7 +107,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal;
+  inLibWin;
 
 {$R *.dfm}
 

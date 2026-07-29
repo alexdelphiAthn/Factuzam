@@ -19,11 +19,11 @@ interface
 uses
    Classes, Windows, Forms, sysutils, jpeg, idhttp, Menus, Controls,
    Vcl.Dialogs, ShellAPI, System.Rtti, System.TypInfo, System.Variants,
-   System.StrUtils, inLibUser, cxLabel, cxPC, cxDBEdit, cxButtons, Uni,
+   System.StrUtils, cxLabel, cxPC, cxDBEdit, cxButtons, Uni,
    cxGroupBox, cxRadioGroup, Vcl.Buttons,
    System.Win.Registry, Winapi.Messages,
    system.math,IdGlobal, IdHash, IdHashMessageDigest, System.IOUtils,
-   inLibPerfilesUsuarioIntf, inLibMsg;
+   inLibPerfilesUsuarioIntf, inLibPerfilesUsuarioValores, inLibMsg;
 
 //  function IsOpenMDI(sName: String; Owner : TComponent):boolean; overload;
 //  function IsOpenMDI(sName: String; Owner : TComponent;

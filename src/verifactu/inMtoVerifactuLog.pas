@@ -69,7 +69,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal, inLibShowMto,
+  inLibWin, inLibShowMto,
   inLibMsg, inLibVerifactuNoVerifactuExport,
   inLibVerifactuNoVerifactuVerify;
 

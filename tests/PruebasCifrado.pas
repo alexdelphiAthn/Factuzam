@@ -9,7 +9,7 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Pruebas de compatibilidad del cifrado AES y su fachada histórica.         }
+{    Pruebas de compatibilidad del cifrado AES persistido.                     }
 {******************************************************************************}
 unit PruebasCifrado;
 
@@ -36,14 +36,12 @@ type
     procedure ClaveYVectorExplicitos_ConservanElFormato;
     [Test]
     procedure ContrasenaDeCopia_ConservaCompatibilidadHistorica;
-    [Test]
-    procedure Fachada_ConservaResultadosHistoricos;
   end;
 
 implementation
 
 uses
-  inLibCifrado, inLibtb;
+  inLibCifrado;
 
 procedure TPruebasCifrado.
   CredencialPersistida_SeDescifraSinCambios;
@@ -143,52 +141,6 @@ begin
     DescifrarAESConContrasena(
       CIFRADO_HISTORICO,
       'clave histórica'));
-end;
-
-procedure TPruebasCifrado.
-  Fachada_ConservaResultadosHistoricos;
-const
-  CLAVE = '0123456789ABCDEF0123456789ABCDEF';
-  VECTOR = 'ABCDEF0123456789';
-begin
-  Assert.AreEqual(
-    CifrarAES('texto de prueba'),
-    inLibtb.EncriptAES('texto de prueba'));
-  Assert.AreEqual(
-    DescifrarAES('2qJFaDfegP/9y6RDno1FRg=='),
-    inLibtb.DecriptAES('2qJFaDfegP/9y6RDno1FRg=='));
-  Assert.AreEqual(
-    CifrarAESConContrasena(
-      'texto de prueba',
-      'clave histórica'),
-    inLibtb.EncriptAESPass(
-      'texto de prueba',
-      'clave histórica'));
-  Assert.AreEqual(
-    DescifrarAESConContrasena(
-      'OVwCB7+S5739/Z2iYHXc3w==',
-      'clave histórica'),
-    inLibtb.DecriptAESPass(
-      'OVwCB7+S5739/Z2iYHXc3w==',
-      'clave histórica'));
-  Assert.AreEqual(
-    CifrarDatosAES(
-      'dato explícito ñ',
-      CLAVE,
-      VECTOR),
-    inLibtb.EncryptData(
-      'dato explícito ñ',
-      CLAVE,
-      VECTOR));
-  Assert.AreEqual(
-    DescifrarDatosAES(
-      'IYQpmvICRbAD7FkFUOu4WkEGgL+Eyeqsnpa7bskLazk=',
-      CLAVE,
-      VECTOR),
-    inLibtb.DecryptData(
-      'IYQpmvICRbAD7FkFUOu4WkEGgL+Eyeqsnpa7bskLazk=',
-      CLAVE,
-      VECTOR));
 end;
 
 initialization

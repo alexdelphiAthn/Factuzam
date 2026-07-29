@@ -122,7 +122,7 @@ var
 implementation
 
 uses
-  System.StrUtils, System.Rtti, inMtoPrincipal, inLibMsg;
+  System.StrUtils, System.Rtti, inLibAnfitrionMtoIntf, inLibMsg;
 
 {$R *.dfm}
 
@@ -354,19 +354,22 @@ end;
 
 procedure TfrmMtoPermisosArbol.ConstruirArbol;
 var
-  frmPrin: TfrmMtoPrincipal;
+  oAnfitrion: IProveedorMenuPantallas;
+  oMenu: TMainMenu;
+  oRegistro: TfzaWinF;
   i: Integer;
 begin
   FtlPermisos.Clear;
   FColocados.Clear;
-  if (Self.Owner is TfrmMtoPrincipal) then
+  if Supports(Self.Owner, IProveedorMenuPantallas, oAnfitrion) then
   begin
-    frmPrin := TfrmMtoPrincipal(Self.Owner);
+    oMenu := oAnfitrion.MenuAplicacion;
+    oRegistro := oAnfitrion.RegistroPantallas;
     FtlPermisos.BeginUpdate;
     try
-      if frmPrin.Menu <> nil then
-        for i := 0 to frmPrin.Menu.Items.Count - 1 do
-          AgregarNodosMenu(nil, frmPrin.Menu.Items[i], frmPrin.oFzaWinf);
+      if (oMenu <> nil) and (oRegistro <> nil) then
+        for i := 0 to oMenu.Items.Count - 1 do
+          AgregarNodosMenu(nil, oMenu.Items[i], oRegistro);
       AgregarCategorias;
     finally
       FtlPermisos.EndUpdate;

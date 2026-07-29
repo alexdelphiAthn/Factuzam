@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inMtoModalImpOperacionesVenta                                 }
 {    Tipo:       Formulario (Modal)                                            }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       28/07/2026                                                    }
+{ Versión:       1.2.0                                                         }
+{   Fecha:       29/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -22,14 +22,17 @@ uses
   Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Data.DB, MemDS, DBAccess, Uni,
   inMtoModalGenImp, cxGraphics, cxLookAndFeels, cxLookAndFeelPainters,
   cxControls, cxContainer, cxEdit, cxTextEdit, cxMaskEdit, cxDropDownEdit,
-  cxCalendar, cxLabel, cxButtons, cxClasses, cxLocalization, dxSkinsForm,
-  dxCore, frxClass, frxDBSet, frxDesgn, frxExportXLSX,
+  cxCalendar, cxLabel, cxButtons, cxClasses, cxLocalization, cxPC,
+  cxCheckListBox, cxCheckBox, dxSkinsForm, dxCore, frxClass, frxDBSet,
+  frxDesgn, frxExportXLSX,
   frxExportBaseDialog, frxExportPDF, frxSmartMemo, frLocalization,
   frLanguageSpanish, frxExportBaseImageSettingsDialog, frCoreClasses,
   JvComponentBase, JvEnterTab, Vcl.Menus, System.Actions, Vcl.ActnList;
 
 type
   TfrmPrintOperacionesVenta = class(TfrmPrint)
+    pcOpciones: TcxPageControl;
+    tsUbicaciones: TcxTabSheet;
     lblFechas: TcxLabel;
     lblDesde: TcxLabel;
     dteDesde: TcxDateEdit;
@@ -42,16 +45,36 @@ type
     edtAlmacen: TcxTextEdit;
     lblCaja: TcxLabel;
     edtCaja: TcxTextEdit;
+    lblUbicaciones: TcxLabel;
+    clbUbicaciones: TcxCheckListBox;
+    btnMarcarTodas: TcxButton;
+    btnDesmarcarTodas: TcxButton;
     unqryVentasPrint: TUniQuery;
     dsVentasPrint: TDataSource;
     fxdsVentas: TfrxDBDataset;
+    procedure btnMarcarTodasClick(Sender: TObject);
+    procedure btnDesmarcarTodasClick(Sender: TObject);
   private
+    FAlmacenesUbicacion: TStringList;
+    FCajasUbicacion: TStringList;
+    FEmpresasUbicacion: TStringList;
     FInicializado: Boolean;
-    function SQLListado: string;
+    FRestringido: Boolean;
+    procedure AsegurarUbicacionSeleccionada;
+    procedure AsignarParametrosUbicaciones(AQuery: TUniQuery);
+    procedure CargarUbicaciones;
+    function HexAColor(const AHex: string; out AColor: TColor): Boolean;
+    function NumeroUbicacionesMarcadas: Integer;
+    function SQLFiltroUbicaciones: string;
+    function SQLListado(const AFiltroUbicaciones: string): string;
   protected
     procedure DoShow; override;
+    procedure ReportBeforePrintConColor(
+      Component: TfrxReportComponent);
   public
+    procedure AfterReportLoaded; override;
     procedure preparar_consulta; override;
+    destructor Destroy; override;
   end;
 
 var
@@ -60,11 +83,174 @@ var
 implementation
 
 uses
-  inLibRectificativas;
+  inLibFiltroUsuario, inLibRectificativas;
 
 {$R *.dfm}
 
 { TfrmPrintOperacionesVenta }
+
+procedure TfrmPrintOperacionesVenta.AsegurarUbicacionSeleccionada;
+var
+  i: Integer;
+begin
+  if not FRestringido then
+  begin
+    if NumeroUbicacionesMarcadas = 0 then
+    begin
+      for i := 0 to clbUbicaciones.Items.Count - 1 do
+      begin
+        if SameText(
+             FEmpresasUbicacion[i],
+             UbicacionSesion.Empresa) and
+           SameText(
+             FAlmacenesUbicacion[i],
+             UbicacionSesion.Almacen) and
+           SameText(
+             FCajasUbicacion[i],
+             UbicacionSesion.Caja) then
+          clbUbicaciones.Items[i].State := cbsChecked;
+      end;
+    end;
+    if (NumeroUbicacionesMarcadas = 0) and
+       (clbUbicaciones.Items.Count > 0) then
+      clbUbicaciones.Items[0].State := cbsChecked;
+  end;
+end;
+
+procedure TfrmPrintOperacionesVenta.AsignarParametrosUbicaciones(
+  AQuery: TUniQuery);
+var
+  i: Integer;
+  nParametro: Integer;
+  nMarcadas: Integer;
+  sSufijo: string;
+begin
+  nMarcadas := NumeroUbicacionesMarcadas;
+  if FRestringido or (nMarcadas = 0) then
+  begin
+    AQuery.ParamByName('pEMPRESA').AsString :=
+      UbicacionSesion.Empresa;
+    AQuery.ParamByName('pALMACEN').AsString :=
+      UbicacionSesion.Almacen;
+    AQuery.ParamByName('pCAJA').AsString :=
+      UbicacionSesion.Caja;
+  end
+  else
+  begin
+    nParametro := 0;
+    for i := 0 to clbUbicaciones.Items.Count - 1 do
+    begin
+      if clbUbicaciones.Items[i].State = cbsChecked then
+      begin
+        sSufijo := IntToStr(nParametro);
+        AQuery.ParamByName('pEMPRESA' + sSufijo).AsString :=
+          FEmpresasUbicacion[i];
+        AQuery.ParamByName('pALMACEN' + sSufijo).AsString :=
+          FAlmacenesUbicacion[i];
+        AQuery.ParamByName('pCAJA' + sSufijo).AsString :=
+          FCajasUbicacion[i];
+        Inc(nParametro);
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmPrintOperacionesVenta.AfterReportLoaded;
+begin
+  inherited;
+  frxrprt1.OnBeforePrint := ReportBeforePrintConColor;
+end;
+
+procedure TfrmPrintOperacionesVenta.btnDesmarcarTodasClick(
+  Sender: TObject);
+var
+  i: Integer;
+begin
+  inherited;
+  for i := 0 to clbUbicaciones.Items.Count - 1 do
+    clbUbicaciones.Items[i].State := cbsUnchecked;
+end;
+
+procedure TfrmPrintOperacionesVenta.btnMarcarTodasClick(Sender: TObject);
+var
+  i: Integer;
+begin
+  inherited;
+  for i := 0 to clbUbicaciones.Items.Count - 1 do
+    clbUbicaciones.Items[i].State := cbsChecked;
+end;
+
+procedure TfrmPrintOperacionesVenta.CargarUbicaciones;
+var
+  item: TcxCheckListBoxItem;
+  qry: TUniQuery;
+  sAlmacen: string;
+  sCaja: string;
+  sEmpresa: string;
+begin
+  if FEmpresasUbicacion = nil then
+    FEmpresasUbicacion := TStringList.Create;
+  if FAlmacenesUbicacion = nil then
+    FAlmacenesUbicacion := TStringList.Create;
+  if FCajasUbicacion = nil then
+    FCajasUbicacion := TStringList.Create;
+  clbUbicaciones.Items.BeginUpdate;
+  try
+    clbUbicaciones.Items.Clear;
+    FEmpresasUbicacion.Clear;
+    FAlmacenesUbicacion.Clear;
+    FCajasUbicacion.Clear;
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := ConexionPrincipal;
+      qry.SQL.Text :=
+        'SELECT Empresa, NombreEmpresa, Almacen, ' +
+        '       `NombreAlmacén`, Caja, NombreCaja ' +
+        '  FROM vi_cajasdef ' +
+        ' ORDER BY Empresa, Almacen, Caja';
+      qry.Open;
+      while not qry.Eof do
+      begin
+        sEmpresa := qry.FieldByName('Empresa').AsString;
+        sAlmacen := qry.FieldByName('Almacen').AsString;
+        sCaja := qry.FieldByName('Caja').AsString;
+        item := clbUbicaciones.Items.Add;
+        item.Text := Format(
+          '%s - %s  |  %s - %s  |  %s - %s',
+          [
+            sEmpresa,
+            qry.FieldByName('NombreEmpresa').AsString,
+            sAlmacen,
+            qry.FieldByName('NombreAlmacén').AsString,
+            sCaja,
+            qry.FieldByName('NombreCaja').AsString
+          ]);
+        item.State := cbsUnchecked;
+        if SameText(sEmpresa, UbicacionSesion.Empresa) and
+           SameText(sAlmacen, UbicacionSesion.Almacen) and
+           SameText(sCaja, UbicacionSesion.Caja) then
+          item.State := cbsChecked;
+        FEmpresasUbicacion.Add(sEmpresa);
+        FAlmacenesUbicacion.Add(sAlmacen);
+        FCajasUbicacion.Add(sCaja);
+        qry.Next;
+      end;
+    finally
+      FreeAndNil(qry);
+    end;
+  finally
+    clbUbicaciones.Items.EndUpdate;
+  end;
+  AsegurarUbicacionSeleccionada;
+end;
+
+destructor TfrmPrintOperacionesVenta.Destroy;
+begin
+  FreeAndNil(FEmpresasUbicacion);
+  FreeAndNil(FAlmacenesUbicacion);
+  FreeAndNil(FCajasUbicacion);
+  inherited;
+end;
 
 procedure TfrmPrintOperacionesVenta.DoShow;
 begin
@@ -76,8 +262,59 @@ begin
     edtEmpresa.Text := UbicacionSesion.Empresa;
     edtAlmacen.Text := UbicacionSesion.Almacen;
     edtCaja.Text := UbicacionSesion.Caja;
+    FRestringido := RestriccionEmpAlmCajaActiva(
+      ContextoSesion,
+      ParametrosApp);
+    pcOpciones.Visible := not FRestringido;
+    tsUbicaciones.TabVisible := not FRestringido;
+    if FRestringido then
+    begin
+      ClientWidth := 341;
+      lblContexto.Caption := 'TPV restringido:';
+    end
+    else
+    begin
+      ClientWidth := 900;
+      pcOpciones.ActivePage := tsUbicaciones;
+      CargarUbicaciones;
+    end;
     FInicializado := True;
   end;
+end;
+
+function TfrmPrintOperacionesVenta.HexAColor(
+  const AHex: string;
+  out AColor: TColor): Boolean;
+var
+  nAzul: Integer;
+  nRojo: Integer;
+  nVerde: Integer;
+  sHex: string;
+begin
+  Result := False;
+  sHex := Trim(AHex);
+  if Copy(sHex, 1, 1) = '#' then
+    Delete(sHex, 1, 1);
+  if Length(sHex) = 6 then
+  begin
+    Result :=
+      TryStrToInt('$' + Copy(sHex, 1, 2), nRojo) and
+      TryStrToInt('$' + Copy(sHex, 3, 2), nVerde) and
+      TryStrToInt('$' + Copy(sHex, 5, 2), nAzul);
+    if Result then
+      AColor := RGB(nRojo, nVerde, nAzul);
+  end;
+end;
+
+function TfrmPrintOperacionesVenta.NumeroUbicacionesMarcadas: Integer;
+var
+  i: Integer;
+begin
+  Result := 0;
+  if clbUbicaciones <> nil then
+    for i := 0 to clbUbicaciones.Items.Count - 1 do
+      if clbUbicaciones.Items[i].State = cbsChecked then
+        Inc(Result);
 end;
 
 procedure TfrmPrintOperacionesVenta.preparar_consulta;
@@ -89,12 +326,11 @@ begin
     dteHasta.Date := Date;
   if dteHasta.Date < dteDesde.Date then
     dteHasta.Date := dteDesde.Date;
+  AsegurarUbicacionSeleccionada;
   unqryVentasPrint.Close;
   unqryVentasPrint.Connection := ConexionPrincipal;
-  unqryVentasPrint.SQL.Text := SQLListado;
-  unqryVentasPrint.ParamByName('pEMPRESA').AsString := edtEmpresa.Text;
-  unqryVentasPrint.ParamByName('pALMACEN').AsString := edtAlmacen.Text;
-  unqryVentasPrint.ParamByName('pCAJA').AsString := edtCaja.Text;
+  unqryVentasPrint.SQL.Text := SQLListado(SQLFiltroUbicaciones);
+  AsignarParametrosUbicaciones(unqryVentasPrint);
   unqryVentasPrint.ParamByName('pDESDE').AsDateTime :=
     Trunc(dteDesde.Date);
   unqryVentasPrint.ParamByName('pHASTA').AsDateTime :=
@@ -103,7 +339,67 @@ begin
   fxdsVentas.UpdateBounds;
 end;
 
-function TfrmPrintOperacionesVenta.SQLListado: string;
+procedure TfrmPrintOperacionesVenta.ReportBeforePrintConColor(
+  Component: TfrxReportComponent);
+var
+  ColorBasico: TColor;
+  MemoColorBasico: TfrxMemoView;
+begin
+  ReportBeforePrintConQR(Component);
+  if (Component <> nil) and
+     SameText(Component.Name, 'MemoColorBasico') and
+     (Component is TfrxMemoView) then
+  begin
+    MemoColorBasico := TfrxMemoView(Component);
+    if HexAColor(
+         unqryVentasPrint.FieldByName(
+           'HEX_COLOR_BASICO').AsString,
+         ColorBasico) then
+      MemoColorBasico.Color := ColorBasico
+    else
+      MemoColorBasico.Color := clWhite;
+  end;
+end;
+
+function TfrmPrintOperacionesVenta.SQLFiltroUbicaciones: string;
+var
+  i: Integer;
+  nParametro: Integer;
+  nMarcadas: Integer;
+  sSufijo: string;
+begin
+  nMarcadas := NumeroUbicacionesMarcadas;
+  if FRestringido or (nMarcadas = 0) then
+  begin
+    Result :=
+      '   AND o.CODIGO_EMP_OPCAJA = :pEMPRESA' + sLineBreak +
+      '   AND o.CODIGO_ALM_OPCAJA = :pALMACEN' + sLineBreak +
+      '   AND o.CODIGO_CAJA_OPCAJA = :pCAJA';
+  end
+  else
+  begin
+    Result := '   AND (';
+    nParametro := 0;
+    for i := 0 to clbUbicaciones.Items.Count - 1 do
+    begin
+      if clbUbicaciones.Items[i].State = cbsChecked then
+      begin
+        if nParametro > 0 then
+          Result := Result + sLineBreak + '        OR ';
+        sSufijo := IntToStr(nParametro);
+        Result := Result +
+          '(o.CODIGO_EMP_OPCAJA = :pEMPRESA' + sSufijo +
+          ' AND o.CODIGO_ALM_OPCAJA = :pALMACEN' + sSufijo +
+          ' AND o.CODIGO_CAJA_OPCAJA = :pCAJA' + sSufijo + ')';
+        Inc(nParametro);
+      end;
+    end;
+    Result := Result + ')';
+  end;
+end;
+
+function TfrmPrintOperacionesVenta.SQLListado(
+  const AFiltroUbicaciones: string): string;
 var
   slSQL: TStringList;
 
@@ -150,6 +446,8 @@ begin
     Anadir('                    ''/'', -1)');
     Anadir('           ELSE ''''');
     Anadir('         END, '''') AS COLOR,');
+    Anadir('       COALESCE(cb.HEX_COLOR_BASICO, '''')');
+    Anadir('         AS HEX_COLOR_BASICO,');
     Anadir('       COALESCE(');
     Anadir('         NULLIF(CASE');
     Anadir('           WHEN UPPER(fl.ATTR1_NOMBRE_FACLIN) LIKE ''%TALLA%''');
@@ -214,6 +512,26 @@ begin
     Anadir('           apx.CODIGO_PRV_AP');
     Anadir('           LIMIT 1))');
     Anadir('  LEFT JOIN (');
+    Anadir('    SELECT sa.CODIGO_UNIDAD_SKU_SA');
+    Anadir('             AS CODIGO_UNIDAD_SKU,');
+    Anadir('           MAX(atb.HEX_ATB) AS HEX_COLOR_BASICO');
+    Anadir('      FROM fza_atributos_sku sa');
+    Anadir('      JOIN fza_articulos_skus sk');
+    Anadir('        ON sk.CODIGO_UNIDAD_SKU =');
+    Anadir('           sa.CODIGO_UNIDAD_SKU_SA');
+    Anadir('      JOIN fza_atributos_valores av');
+    Anadir('        ON av.ID_AV = sa.ID_AV_SA');
+    Anadir('       AND av.ID_VA_AV = ''CO''');
+    Anadir('      JOIN fza_articulos_atributos_basicos aab');
+    Anadir('        ON aab.CODIGO_ART_AAB = sk.CODIGO_ART_SKU');
+    Anadir('       AND aab.ID_AV_AAB = av.ID_AV');
+    Anadir('      JOIN fza_atributos_basicos atb');
+    Anadir('        ON atb.ID_ATB = aab.ID_ATB_AAB');
+    Anadir('     GROUP BY sa.CODIGO_UNIDAD_SKU_SA');
+    Anadir('  ) cb');
+    Anadir('    ON cb.CODIGO_UNIDAD_SKU =');
+    Anadir('       fl.CODIGO_UNIDAD_FACLIN');
+    Anadir('  LEFT JOIN (');
     Anadir('    SELECT p.CODIGO_EMP_PAGO, p.CODIGO_ALM_PAGO,');
     Anadir('           p.CODIGO_CAJA_PAGO, p.NUMERO_OPERACION_PAGO,');
     Anadir('           GROUP_CONCAT(DISTINCT p.CODIGO_FP_CFP');
@@ -232,9 +550,7 @@ begin
     Anadir('   AND pg.NUMERO_OPERACION_PAGO =');
     Anadir('       o.NUMERO_OPERACION_OPCAJA');
     Anadir(' WHERE o.TIPO_OPERACION_OPCAJA = ''VE''');
-    Anadir('   AND o.CODIGO_EMP_OPCAJA = :pEMPRESA');
-    Anadir('   AND o.CODIGO_ALM_OPCAJA = :pALMACEN');
-    Anadir('   AND o.CODIGO_CAJA_OPCAJA = :pCAJA');
+    Anadir(AFiltroUbicaciones);
     Anadir('   AND o.FECHA_OPERACION_OPCAJA >= :pDESDE');
     Anadir('   AND o.FECHA_OPERACION_OPCAJA <');
     Anadir('       DATE_ADD(:pHASTA, INTERVAL 1 DAY)');
@@ -242,7 +558,9 @@ begin
       'o.CODIGO_EMP_OPCAJA',
       'o.SERIE_FAC_OPCAJA',
       'o.NUMERO_FAC_OPCAJA'));
-    Anadir(' ORDER BY FECHA_DIA, o.CODIGO_CAJA_OPCAJA,');
+    Anadir(' ORDER BY FECHA_DIA, o.CODIGO_EMP_OPCAJA,');
+    Anadir('          o.CODIGO_ALM_OPCAJA,');
+    Anadir('          o.CODIGO_CAJA_OPCAJA,');
     Anadir('          o.NUMERO_OPERACION_OPCAJA, fl.LINEA_FACLIN');
     Result := slSQL.Text;
   finally

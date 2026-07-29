@@ -134,18 +134,18 @@ $contratosTicket =
 Comprobar $contratosTicket `
   'Tickets y correo exigen una conexion explicita'
 
-$tablas = Leer 'src\Lib\inLibtb.pas'
+$valoresAutomaticos = Leer 'src\Lib\inLibValoresAutomaticos.pas'
 $busquedas = Leer 'src\Lib\inLibGenBusq.pas'
 $facturas = Leer 'src\Lib\inLibFacturas.pas'
 $contratosGenerales =
-  ($tablas -match
+  ($valoresAutomaticos -match
     'function\s+ObtenerSiguienteContador\(AConexion:\s*TUniConnection;') -and
   ($busquedas -match
     'EjecutarBusqueda\(AConexion:\s*TUniConnection;') -and
   ($facturas -match
     'constructor\s+Create\(AConexion:\s*TUniConnection;')
 Comprobar $contratosGenerales `
-  'Tablas, busquedas y facturacion exigen una conexion explicita'
+  'Contadores, busquedas y facturacion exigen una conexion explicita'
 
 $atributos = Leer 'src\Lib\inLibAtributosPaleta.pas'
 $contratosAtributos =

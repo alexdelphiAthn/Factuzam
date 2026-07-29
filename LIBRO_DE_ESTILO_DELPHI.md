@@ -1,4 +1,4 @@
-# Libro de estilo de programación Delphi de Factuzam
+﻿# Libro de estilo de programación Delphi de Factuzam
 
 Manual práctico para añadir unidades, formularios, data modules, modales y
 librerías auxiliares respetando las convenciones del proyecto.
@@ -29,7 +29,17 @@ este cubre el código Pascal / Delphi que lo consume.
 7. **Todos los dfm se guardan como utf8 con BOM**, y también los pas y dpr.
 8. **Acentos dentro de dfm y pas se ponen nativos áéñ y no como ansi (old legacy)**.
 9. **Los finales de linea siempre son CRLF y no LF**, estamos programando en windows.
-10.**No generar hints ni warnings**, mantener limpia la compilación.
+10. **No generar hints ni warnings**, mantener limpia la compilación.
+11. **Las dependencias apuntan hacia abajo**: formularios y composición pueden
+    conocer contratos, librerías y data modules; estos no conocen formularios.
+12. **Sin estado global mutable nuevo**. Sesión, conexión, parámetros y
+    servicios se reciben mediante interfaces, propiedades heredadas o
+    parámetros explícitos.
+13. **La UI coordina; no contiene el dominio**. Las reglas reutilizables,
+    cálculos y transformaciones viven en unidades `inLib*` cohesivas.
+14. **Todo código extraído debe quedar verificable**. La lógica pura se cubre
+    con DUnitX y el SQL con las pruebas de integración correspondientes.
+
 ---
 
 ## 2. Estructura de directorios
@@ -38,16 +48,21 @@ este cubre el código Pascal / Delphi que lo consume.
 src/
 ├── Core/           Formularios troncales: Logon, Principal, Splash,
 │                   AppParam, CajaParam, PreviewExcel, PreviewTicket,
-│                   y el base inMtoFrmBase
+│                   el base inMtoFrmBase y el catálogo de pantallas
 ├── Forms/          Formularios de mantenimiento (Mtos) y derivados
 ├── Modals/         Formularios modales reutilizables
 ├── DataModules/    Data modules UniDAC (UniData*)
 ├── Lib/            Unidades sin formulario: lógica, utilidades, helpers
+├── Caja/           Subsistema de caja, con sus propias Forms, Modals,
+│                   DataModules y Lib
 ├── Lib3par/        Wrappers de bibliotecas de terceros (recopilatorio)
 ├── vcl/ vcl37/     Forks/parches locales de VCL por versión
 ├── verifactu/      Subsistema Verifactu (AEAT)
 ├── 3rdpartyComp/   Componentes de terceros pinchados en el repo
 └── utilnormbbdd/   Herramienta auxiliar (normalizador de BBDD)
+
+tests/              Proyecto DUnitX y fixtures Pascal
+scripts/            Comprobaciones estructurales y auxiliares de build
 ```
 
 **Regla**: una unidad nueva entra en la carpeta que coincida con su prefijo
@@ -68,7 +83,8 @@ carácter** (incluida la mayúscula/minúscula del primer carácter).
 | `inMtoGen`   | Mantenimiento genérico (base de Mtos)  | `inMtoGen`                                                  |
 | `inMto*`     | Mantenimiento concreto                 | `inMtoClientes`, `inMtoFacturas`, `inMtoArticulos`          |
 | `inMtoModal*`| Modal (diálogo) de un Mto              | `inMtoModalCalcularMargen`, `inMtoModalAddBlockTarifa`      |
-| `inLib*`     | Librería / utilidades sin formulario   | `inLibFacturas`, `inLibIBAN`, `inLibUser`, `inLibGlobalVar` |
+| `inLib*Intf` | Contrato sin implementación ni UI      | `inLibConexionesIntf`, `inLibParametrosIntf`                |
+| `inLib*`     | Librería / servicio sin formulario     | `inLibFacturas`, `inLibIBAN`, `inLibGestorTareasMto`        |
 | `UniData*`   | Data module UniDAC                     | `UniDataClientes`, `UniDataConn`, `UniDataGen`              |
 
 ### 3.2 Reglas para elegir el sufijo del nombre de unidad
@@ -91,6 +107,7 @@ Estas unidades viven en `src/Core/` y nunca llevan prefijo `inMto<dominio>`:
 inMtoSplash        Pantalla de splash inicial
 inMtoLogon         Autenticación + configuración de conexión
 inMtoPrincipal     MDI principal con menú
+inMtoCatalogoPantallas Catálogo compilado de formularios y data modules
 inMtoFrmBase       Base de TODO formulario
 inMtoAppParam      Parametrización global
 inMtoCajaParam     Parametrización del TPV
@@ -106,7 +123,7 @@ inMtoPreviewTicket Vista previa de ticket
 
 | Patrón de clase | Hereda de        | Para...                          |
 |-----------------|------------------|----------------------------------|
-| `TfrmBase`      | `TForm`          | Base raíz (solo localización)    |
+| `TfrmBase`      | `TForm`          | Base visual y servicios heredados|
 | `TfrmMtoGen`    | `TfrmBase`       | Base de todos los mantenimientos |
 | `TfrmMto<X>`    | `TfrmMtoGen`     | Mantenimiento concreto           |
 | `TfrmModal<X>`  | `TfrmBase`       | Modal/diálogo                    |
@@ -114,27 +131,25 @@ inMtoPreviewTicket Vista previa de ticket
 | `TdmBase`       | `TDataModule`    | Base de data modules             |
 | `Tdm<X>`        | `TdmBase`        | Data module concreto             |
 
-### 4.2 Variable global de instancia
+### 4.2 Instancias de formularios y data modules
 
-Sigue la convención de Delphi: variable global con la primera letra en
-minúscula, mismo nombre que la clase sin la `T`.
-
-```pascal
-TfrmMtoClientes = class(TfrmMtoGen) ... end;
-
-var
-  frmMtoClientes: TfrmMtoClientes;
-```
-
-Para data modules el patrón es `dmm<Dominio>` (memoria histórica:
-*data module mantenimiento*):
+No se declaran variables globales nuevas `frmMtoXxx` ni `dmmXxx`. El
+registro de pantallas y el propietario administran la vida del formulario;
+el mantenimiento conserva su data module como campo privado tipado:
 
 ```pascal
-TdmClientes = class(TdmBase) ... end;
-
-var
-  dmmClientes: TdmClientes;
+type
+  TfrmMtoClientes = class(TfrmMtoGen)
+  private
+    FDataModule: TdmClientes;
+  public
+    procedure CrearTablaPrincipal; override;
+  end;
 ```
+
+Las declaraciones globales que aún existan son legado del diseñador. No se
+usan como localizador de servicios, de ventanas abiertas ni de data modules,
+porque fallan con varias instancias de la misma pantalla.
 
 ### 4.3 Tipos auxiliares públicos
 
@@ -151,6 +166,20 @@ TCalcularMargenResult = record ... end;
 
 Excepciones siempre `E<Nombre>`: `EInvalidUser`, `EPassWordCorrupt`.
 
+### 4.4 Orden dentro de una clase
+
+Dentro de cada sección de visibilidad (`private`, `protected`, `public` y
+`published`) se declaran primero todos los campos y después los métodos y
+propiedades. Delphi genera E2169 si aparece un campo detrás de un método:
+
+```pascal
+private
+  FDataModule: TdmClientes;
+  FInicializado: Boolean;
+  procedure ConfigurarDataModule;
+  function PuedeEditar: Boolean;
+```
+
 ---
 
 ## 5. Prefijos de componente (en `.dfm` y como campos de la clase)
@@ -158,6 +187,10 @@ Excepciones siempre `E<Nombre>`: `EInvalidUser`, `EPassWordCorrupt`.
 Todos los componentes visuales o no visuales **llevan prefijo de tipo en
 minúscula**. Si el componente está ligado a un campo de la BBDD, el
 **sufijo del campo va en MAYÚSCULAS** (ver §5.2).
+
+Para controles nuevos se prefieren los equivalentes DevExpress (`TcxMemo`,
+`TcxLabel`, `TcxButton`, etc.) salvo que el formulario heredado o una
+limitación técnica exijan un control VCL distinto.
 
 ### 5.1 Tabla de prefijos canónicos
 
@@ -292,9 +325,10 @@ uses
   JvComponentBase, JvEnterTab,
   Uni, MemDS, DBAccess,
 
-  // 3. Unidades del proyecto (orden: base → libs → otras)
+  // 3. Contratos y unidades del proyecto (base → contratos → libs → datos)
   inMtoFrmBase,
-  inLibGlobalVar, inLibUser,
+  inLibContextoSesionIntf, inLibConexionesIntf,
+  inLibUser,
   UniDataConn;
 ```
 
@@ -306,6 +340,11 @@ limpiando un fichero. Sí merece la pena:
 - Mover a `uses` de `implementation` cualquier dependencia que solo se
   usa en `procedure`/`function`, especialmente para romper referencias
   circulares entre Mtos.
+- Eliminar todo `uses` muerto al tocar una unidad.
+- No esconder una dependencia de capa moviéndola a `implementation`:
+  `inLib*` y `UniData*` tampoco pueden usar `inMto*` desde esa sección.
+- Depender del contrato `inLib*Intf`, no de la implementación concreta,
+  cuando el consumidor solo necesita el servicio.
 
 ### 7.2 Anti-patrón: dejar las skins inflando el `uses`
 
@@ -321,9 +360,20 @@ pero **no añade líneas más** por encima de las que ya hay.
 
 - **2 espacios** por nivel de indentación. Nunca tabuladores.
 - **80 columnas máximo** por línea. Si te pasas, parte (ver §8.2).
-- Una sentencia por línea. Nada de `if x then y else z;` en una línea
-  excepto guardas triviales (`if Assigned(o) then Exit;`).
+- Una sentencia por línea. La condición de `if`, `while` o `for` ocupa
+  una línea y la acción, como mínimo, la siguiente.
 - `begin` en línea propia, alineado con la palabra clave que lo abre.
+- Evitar `Exit` y `Continue`. Estructurar el método con condiciones
+  positivas y bloques acotados.
+
+```pascal
+// Sí
+if Assigned(oConsulta) then
+  oConsulta.Open;
+
+// No
+if Assigned(oConsulta) then oConsulta.Open;
+```
 
 ### 8.2 Cómo partir líneas largas
 
@@ -444,35 +494,45 @@ Excepciones: callbacks generados por el IDE (`btnXxxClick`,
 
 ### 10.1 Formulario de mantenimiento (`TfrmMto<X>`)
 
-Cuatro métodos públicos canónicos heredados o sobreescritos:
+El formulario conserva la presentación y la coordinación de la pantalla.
+No duplica reglas de dominio ni accede a servicios globales. Sobreescribe
+solo los hooks que necesita:
 
 ```pascal
 type
   TfrmMtoClientes = class(TfrmMtoGen)
     // componentes...
+  private
+    FDataModule: TdmClientes;
   public
-    procedure CrearTablaPrincipal; override;  // engancha datasources
-    procedure ResetForm; override;            // vuelve a pestaña por defecto
+    procedure CrearTablaPrincipal; override;
+    procedure ResetForm; override;
   end;
 ```
 
-`CrearTablaPrincipal` siempre:
+`CrearTablaPrincipal` tipa el data module creado por la base y conecta los
+controles propios. `TfrmMtoGen` ya le ha transmitido conexión, servicios y
+el `dsTablaG` mediante `TdmBase.AsignarMaestroCabecera`:
 
 ```pascal
 procedure TfrmMtoClientes.CrearTablaPrincipal;
 begin
   inherited;
-  dmmClientes := tdmDataModule as TdmClientes;
-  tvFacturacion.DataController.DataSource := dmmClientes.dsFacturasClientes;
-  ...
-  Self.pkFieldName := 'CODIGO_CLI_CLI';   // PK lógica para el Mto base
+  FDataModule := tdmDataModule as TdmClientes;
+  tvFacturacion.DataController.DataSource :=
+    FDataModule.dsFacturasClientes;
+  Self.pkFieldName := 'CODIGO_CLI_CLI';
 end;
 ```
 
+Un formulario no añade a `TfrmMtoGen` una responsabilidad que solo usa una
+pantalla. Si la lógica se repite, se extrae a un colaborador cohesivo y el
+formulario conserva únicamente el cableado.
+
 ### 10.2 Formulario modal (`TfrmModal<X>`)
 
-Patrón: **constructor de clase `Ejecutar`** que crea, configura, muestra y
-libera el formulario, devolviendo un record con el resultado:
+Patrón: **punto de entrada de clase `Ejecutar`** que crea, configura, muestra
+y libera el formulario, devolviendo un record con el resultado:
 
 ```pascal
 type
@@ -509,38 +569,60 @@ if res.Aceptado then
 
 Esta variante evita exponer `frmModalXxx.ShowModal` en cada llamador.
 
+El modal recibe por parámetros o por un record de configuración todo lo que
+necesita. Nunca conoce ni hace cast al mantenimiento que lo abrió. Devuelve
+un resultado; no escribe directamente en campos privados del llamador.
+
 ### 10.3 Data module (`Tdm<X>`)
 
 - Hereda de `TdmBase`.
 - Su query principal se llama **siempre** `unqryTablaG`.
-- Asocia las queries a `ConexionPrincipal`, heredada de `TdmBase`.
+- Usa `ConexionPrincipal`, `ContextoSesion`, `ParametrosApp`,
+  `ParametrosCaja` y los demás servicios heredados de `TdmBase`.
+- Recibe el maestro desde el formulario mediante
+  `AsignarMaestroCabecera`; nunca sube al propietario con
+  `GetOwnerForm<TfrmXxx>`.
+- No manipula controles, pestañas, foco ni handlers del formulario. Para
+  solicitar una reacción visual expone un evento, callback o resultado de
+  dominio y el formulario decide cómo representarlo.
 - Métodos de servicio en `PascalCase`: `GetCodigoAutoCliente`,
   `CrearDataSetEtiquetas(iNroEspaciosBlanco: Integer; sCodCli: string)`.
 
 ```pascal
-procedure TdmClientes.DataModuleCreate(Sender: TObject);
+procedure TdmClientes.AsignarMaestroCabecera(
+  ADataSource: TDataSource);
 begin
-  unqryTablaG.Connection := ConexionPrincipal;
-  unqryFacturasClientes.Connection := ConexionPrincipal;
-  ...
+  inherited;
+  unqryFacturasClientes.MasterSource := ADataSource;
+  unqryDepositos.MasterSource := ADataSource;
 end;
 ```
 
-### 10.4 Truco de `ForceReferenceToClass`
+### 10.4 Registro de pantallas y data modules
 
-Para asegurar que el linker no descarta una clase de formulario referida
-solo por nombre (registro dinámico de Mtos), cada Mto incluye:
+Las clases que abre `ShowMto` se registran por referencia compilada en
+`src/Core/inMtoCatalogoPantallas.pas`:
 
 ```pascal
-procedure ForceReferenceToClass(C: TClass); begin end;
-
 initialization
-  ForceReferenceToClass(TfrmMtoClientes);
+  RegistrarPantalla(TfrmMtoClientes);
+  RegistrarDataModule(TdmClientes);
 end.
 ```
 
-Es boilerplate; al crear un Mto nuevo, copia y cambia el nombre de la
-clase.
+La clave se obtiene de `QualifiedClassName`. No se resuelve una clase con
+RTTI a partir de una cadena de BBDD ni se usa `NewInstance` manualmente.
+Al añadir una pantalla:
+
+1. Añadir las unidades al `.dpr` y al `.dproj`.
+2. Añadir ambas clases a `inMtoCatalogoPantallas`.
+3. Añadir o revisar la fila de `fza_winforms`.
+4. Conectar el ítem de menú a `MenuGenericoClick` si solo abre la pantalla.
+5. Comprobar al arrancar que `TfzaWinF.ComprobarRegistradas` no informa de
+   clases ausentes.
+
+`ForceReferenceToClass` es legado y no sustituye el registro. No se añade
+a unidades nuevas.
 
 ---
 
@@ -596,6 +678,10 @@ end;
 **Siempre `FreeAndNil`**, no `Free` a secas. Razón histórica: protege de
 doble liberación si una excepción posterior vuelve a tocar la variable.
 
+La variable se inicializa antes de entrar en ramas que puedan saltarse su
+creación. Las interfaces gestionadas por contador de referencias se liberan
+asignando `nil`; no se les aplica `FreeAndNil`.
+
 ### 12.2 `try / except` solo cuando hay reacción posible
 
 No envolver bloques en `try / except` solo para silenciar errores. Si no
@@ -643,27 +729,207 @@ type
 
 ---
 
-## 14. Constantes globales, variables globales y singletons
+## 14. Arquitectura para hacer crecer el código
 
-- `inLibGlobalVar` conserva únicamente compatibilidad para estado de UI
-  todavía no migrado. No contiene conexión, sesión ni parametrización.
-  No se crean nuevas variables globales: las dependencias nuevas se exponen
-  mediante interfaces o parámetros explícitos.
-- Los parámetros de aplicación y caja se consumen mediante
-  `IParametrosAplicacion` e `IParametrosCaja`, declaradas en
-  `inLibParametrosIntf`.
-- Los formularios y módulos de datos descendientes de `TfrmBase` y
-  `TdmBase` usan sus propiedades `ParametrosApp` y `ParametrosCaja`.
-  La raíz proporciona ambas interfaces mediante `IProveedorParametros`.
-- Las librerías, hilos y clases sin propietario reciben las interfaces de
-  parámetros explícitamente en su constructor, método o punto de arranque.
-  No deben depender de `inLibAppParam` ni `inLibCajaParam`; estas unidades
-  contienen únicamente las implementaciones y sus factorías.
-- Solo los editores de parámetros solicitan `IParametrosEdicion` mediante
-  `IProveedorParametrosEdicion`.
-- Constantes de dominio (porcentajes legales, códigos especiales, claves
-  de parametrización) van en la librería del dominio o en
-  `inLibGlobalVar` si son transversales.
+Esta sección convierte en reglas permanentes las decisiones de la
+refactorización. El objetivo no es solo reducir líneas, sino evitar que
+vuelvan los ciclos, el estado global y las clases con responsabilidades
+incompatibles.
+
+### 14.1 Dirección de dependencias
+
+Las dependencias válidas siguen esta dirección:
+
+```text
+fzam.dpr / Core (composición)
+            |
+            v
+Forms / Modals (presentación y coordinación)
+            |
+            v
+UniData* (persistencia) ---> inLib* (dominio y colaboradores)
+                                  |
+                                  v
+                            inLib*Intf (contratos)
+```
+
+Reglas:
+
+- `inLib*` y `UniData*` no usan ninguna unidad `inMto*`, ni en
+  `interface` ni en `implementation`.
+- Una unidad `inLib*Intf` declara contratos pequeños y tipos estables. No
+  usa formularios, data modules ni implementaciones concretas.
+- Los formularios pueden conocer data modules y librerías. La capa inferior
+  nunca hace cast al formulario ni llama a uno de sus handlers.
+- `inMtoPrincipal` es raíz visual, no una librería transversal. Ninguna
+  utilidad depende de él.
+- Mover un `uses` a `implementation` puede romper un ciclo técnico, pero no
+  corrige una dependencia de capa inválida.
+
+La barrera automática se ejecuta desde la raíz:
+
+```powershell
+.\scripts\comprobar_dependencias_capas.ps1
+```
+
+No se añaden excepciones ni listas blancas.
+
+### 14.2 Composición e interfaces
+
+`fzam.dpr` y `TfrmMtoPrincipal` forman la raíz de composición: crean las
+implementaciones y publican sus contratos. El resto del proyecto consume
+interfaces, no busca singletons ni instancia implementaciones por su cuenta.
+
+- Formularios y data modules descendientes usan los servicios heredados de
+  `TfrmBase` y `TdmBase`: conexiones, contexto, identidad, auditoría,
+  permisos, parámetros, perfiles, filtros y monitor SQL.
+- Un propietario publica un servicio mediante `IProveedorXxx`; las bases lo
+  heredan con `Supports`. Esto propaga dependencias por el árbol de
+  propietarios sin convertirlo en un localizador global.
+- Librerías, hilos y objetos sin propietario reciben los contratos en el
+  constructor o en el método que inicia el trabajo.
+- Los parámetros de interfaz se pasan como `const` cuando no se reasignan.
+- La interfaz y su implementación viven en unidades distintas cuando eso
+  evita que el consumidor arrastre UniDAC, VCL o DevExpress.
+- Las interfaces propias llevan GUID y exponen la operación mínima que el
+  consumidor necesita.
+
+No se depende de `inLibAppParam`, `inLibCajaParam` ni de otra implementación
+concreta cuando basta `IParametrosAplicacion`, `IParametrosCaja` o el
+contrato correspondiente.
+
+### 14.3 Estado compartido
+
+`inLibGlobalVar` contiene solo constantes generales inmutables. No se añade
+estado mutable a esa unidad ni a ninguna otra sección `interface`.
+
+Queda prohibido introducir:
+
+- conexiones, credenciales o identidad de sesión globales;
+- referencias globales a formularios, data modules o controles VCL;
+- callbacks globales y flags globales de ciclo de vida;
+- cachés globales cuyo propietario y liberación no estén definidos.
+
+Las constantes de dominio viven en la librería de su dominio. Una caché o un
+servicio compartido pertenece a un objeto con propietario y ciclo de vida
+explícitos.
+
+### 14.4 Frontera entre UI, datos y dominio
+
+- El formulario muestra, pide confirmación, decide pestaña y mueve el foco.
+- El data module consulta y persiste datos, y aplica eventos de dataset.
+- La librería contiene cálculos, validaciones y transformaciones
+  reutilizables.
+
+Si una capa inferior necesita provocar una reacción visual, expone un
+evento, callback o record de resultado. Si necesita abrir una UI desde una
+API heredada, declara un contrato o ejecutor en `inLib*` y la unidad
+`inMto*` registra la implementación visual.
+
+```pascal
+type
+  TResultadoValidacion = record
+    EsValido: Boolean;
+    Campo: TCampoValidacion;
+    Mensaje: string;
+  end;
+```
+
+El resultado describe el dominio; no contiene `TControl`, `TForm` ni una
+referencia al llamador.
+
+La identidad de una pantalla abierta usa una clave estable del registro
+(`CALL#instancia`), nunca `Caption`, `ClassName` ni texto traducible.
+
+### 14.5 Colaboradores y tamaño
+
+Las clases base no son el destino automático de todo comportamiento común.
+Antes de ampliar `TfrmMtoGen`, `TfrmMtoPrincipal` o una familia de
+documentos se decide si la responsabilidad pertenece a:
+
+- un colaborador `TGestorXxx` con ciclo de vida explícito;
+- una función pura de dominio;
+- una estrategia detrás de una interfaz;
+- un record de configuración más una operación común;
+- un data module o servicio de persistencia.
+
+Un método nuevo debe representar un paso con nombre. Como guía:
+
+- objetivo habitual: hasta 80 líneas;
+- a partir de 120 líneas, revisar si mezcla pasos;
+- no crear ni ampliar métodos por encima de 200 líneas;
+- al tocar un método legado de más de 200 líneas, extraer pasos cohesivos
+  siempre que el alcance lo permita.
+
+La extracción se hace por fascículos pequeños: fijar comportamiento con
+pruebas, extraer una responsabilidad, compilar y solo entonces continuar.
+
+### 14.6 Duplicación y fachadas de migración
+
+Se unifica comportamiento equivalente, no código que solo se parece.
+
+- Si dos flujos difieren en tabla, campos o opciones, usar un record de
+  configuración o una estrategia.
+- Si difieren en modelo, ciclo de vida o reglas, compartir únicamente el
+  núcleo que sea realmente común.
+- Una unidad muy usada puede conservar temporalmente una fachada compatible
+  durante la migración de consumidores.
+- La fachada no recibe lógica nueva. Se elimina cuando el último consumidor
+  usa la unidad de dominio correcta.
+- No se crean nuevas unidades cajón de sastre como la antigua `inLibtb`.
+
+### 14.7 SQL, transacciones y eventos de dataset
+
+- Todo valor externo se envía mediante parámetros UniDAC. Solo se concatenan
+  fragmentos estructurales controlados por código, nunca texto de usuario.
+- Una operación que escribe en varias tablas es atómica. Si recibe una
+  conexión con transacción activa, la respeta; si abre la suya, hace
+  `Commit` o `Rollback` en el mismo nivel.
+- Los eventos `AfterPost`, `BeforePost` y similares no coordinan por sí
+  solos procesos de negocio con varias escrituras. Delegan en una operación
+  explícita que pueda probarse y controlar su transacción.
+- No se silencian excepciones. Se registra contexto cuando aporta valor y se
+  propaga el error, o se devuelve un resultado/aviso que el llamador debe
+  atender.
+- Los reintentos y materializaciones deben ser idempotentes cuando el flujo
+  pueda repetirse tras un fallo.
+
+### 14.8 Tareas en segundo plano
+
+- Un hilo no accede a controles VCL ni a datasets que usa la UI.
+- Cada tarea obtiene su conexión de trabajo mediante
+  `IServicioConexiones`; no comparte la conexión principal.
+- Los datos cruzan la frontera del hilo como valores, records o copias
+  independientes, no como componentes con propietario visual.
+- La actualización visual vuelve al hilo principal mediante el callback
+  previsto por el gestor de tareas.
+- Al cerrar o hacer re-login se cancelan y esperan las tareas antes de
+  invalidar servicios y liberar propietarios.
+
+### 14.9 Pruebas y ritmo de refactorización
+
+`tests/FactuzamTests.dproj` es la red DUnitX del código Pascal:
+
+- Toda función pura, regla extraída o colaborador sin UI añade casos DUnitX.
+- Antes de sustituir lógica duplicada, las pruebas fijan el comportamiento
+  de ambas rutas, incluidos límites y errores conocidos que deban
+  conservarse.
+- Los fixtures crean sus datos y liberan sus recursos; no dependen de una
+  BBDD real salvo que la prueba se marque expresamente como integración.
+- Las baterías Python siguen cubriendo SQL, procedimientos y contratos de
+  datos. Complementan DUnitX; no lo sustituyen.
+- Un refactor no mezcla cambios funcionales ni normalizaciones masivas de
+  formato.
+
+Ejecución básica:
+
+```bat
+msbuild tests\FactuzamTests.dproj /t:Build /p:Config=Debug /p:Platform=Win64
+tests\bin\Win64\Debug\FactuzamTests.exe
+```
+
+Antes de cerrar una refactorización transversal se valida también Release y
+las plataformas Win32/Win64 afectadas.
 
 ---
 
@@ -702,7 +968,8 @@ Estas son convenciones que ya están en el código y que conviene
 8. **Nombres compuestos pegados en mayúsculas** cuando reflejan una columna
    de BBDD: `txtRAZONSOCIAL_CLIENTE` (no `txtRAZON_SOCIAL_CLIENTE`).
 9. **`FreeAndNil` sobre `Free`** — siempre.
-10. **`initialization` con `ForceReferenceToClass`** al final de cada Mto.
+10. **Pantallas registradas en `inMtoCatalogoPantallas`** por referencia de
+    clase, no mediante RTTI construido con cadenas.
 
 ---
 
@@ -718,26 +985,26 @@ Estas son convenciones que ya están en el código y que conviene
 ✗  Líneas de más de 80 columnas
 ✗  Mezclar tabs y espacios (solo espacios)
 ✗  Mensajes de UI en inglés
-✗  Variables globales fuera de inLibGlobalVar
+✗  Estado global mutable, incluso dentro de inLibGlobalVar
+✗  Variables globales frmMtoXxx o dmmXxx en código nuevo
 ✗  Unidades inLib* o UniData* usando unidades inMto*
 ✗  uses circulares — romper moviendo a uses de implementation
 ✗  Nombres de unidad con tilde o eñe en el fichero
 ✗  TForm con código de negocio: la lógica va a inLib*
+✗  Data modules que cambian pestañas, foco o controles visuales
+✗  Modales que conocen al formulario que los abrió
+✗  Resolver clases por RTTI a partir de cadenas de BBDD
+✗  Identificar ventanas por Caption o ClassName
+✗  Añadir handlers de menú que solo llaman a ShowMto
+✗  Métodos nuevos de más de 200 líneas
+✗  SQL con valores de usuario concatenados
+✗  except vacío o que convierte un fallo en éxito silencioso
+✗  Componentes VCL o conexiones compartidas con un hilo trabajador
 ✗  Llamar a inherited al final del handler; va al principio
 ✗  Acceder a campos privados (F*) de otra clase
 ```
 
-La capa inferior no conoce formularios concretos. Si una librería o un data
-module necesita una operación visual, se invierte la dependencia mediante una
-interfaz, un callback explícito o un ejecutor registrado por la capa `inMto*`.
-La comprobación automática se ejecuta desde la raíz del repositorio:
-
-```powershell
-.\scripts\comprobar_dependencias_capas.ps1
-```
-
-El script falla ante cualquier dependencia de este tipo. No se mantienen
-excepciones ni listas blancas.
+La separación de capas y su comprobación automática se describen en §14.1.
 
 ---
 
@@ -749,10 +1016,12 @@ excepciones ni listas blancas.
 2. Hereda de `TfrmMtoGen`.
 3. Crea data module `src/DataModules/UniDataXxx.pas` heredando de
    `TdmBase`, con `unqryTablaG` apuntando a la tabla nueva.
-4. Sobreescribe `CrearTablaPrincipal` y `ResetForm`.
-5. Añade `ForceReferenceToClass(TfrmMtoXxx)` en `initialization`.
-6. Registra el Mto donde corresponda en `inMtoPrincipal` para que el menú
-   lo abra.
+4. Sobreescribe `CrearTablaPrincipal` y solo los hooks necesarios.
+5. Añade ambas unidades al `.dpr` y al `.dproj`.
+6. Registra las dos clases en `inMtoCatalogoPantallas`.
+7. Configura `fza_winforms` y asigna `MenuGenericoClick` al ítem si solo
+   abre la pantalla. No añadas un handler específico a `inMtoPrincipal`.
+8. Añade pruebas para toda regla de dominio nueva.
 
 Esqueleto mínimo:
 
@@ -783,27 +1052,21 @@ uses
 type
   TfrmMtoTarifas = class(TfrmMtoGen)
     // componentes...
+  private
+    FDataModule: TdmTarifas;
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
   end;
 
-var
-  frmMtoTarifas: TfrmMtoTarifas;
-
 implementation
 
-uses
-  inLibGlobalVar;
-
 {$R *.dfm}
-
-procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TfrmMtoTarifas.CrearTablaPrincipal;
 begin
   inherited;
-  dmmTarifas := tdmDataModule as TdmTarifas;
+  FDataModule := tdmDataModule as TdmTarifas;
   Self.pkFieldName := 'CODIGO_TAR';
 end;
 
@@ -813,8 +1076,15 @@ begin
   pcPantalla.ActivePage := tsLista;
 end;
 
+end.
+```
+
+Y en el catálogo:
+
+```pascal
 initialization
-  ForceReferenceToClass(TfrmMtoTarifas);
+  RegistrarPantalla(TfrmMtoTarifas);
+  RegistrarDataModule(TdmTarifas);
 end.
 ```
 
@@ -860,15 +1130,15 @@ class function TfrmModalConfirmarBorrado.Ejecutar(
   AOwner          : TComponent;
   const APregunta : string): TConfirmarBorradoResult;
 var
-  frm: TfrmModalConfirmarBorrado;
+  oFormulario: TfrmModalConfirmarBorrado;
 begin
-  frm := TfrmModalConfirmarBorrado.Create(AOwner);
+  oFormulario := TfrmModalConfirmarBorrado.Create(AOwner);
   try
-    frm.lblPregunta.Caption := APregunta;
-    frm.ShowModal;
-    Result := frm.FResultado;
+    oFormulario.lblPregunta.Caption := APregunta;
+    oFormulario.ShowModal;
+    Result := oFormulario.FResultado;
   finally
-    FreeAndNil(frm);
+    FreeAndNil(oFormulario);
   end;
 end;
 
@@ -898,8 +1168,7 @@ interface
 
 uses
   System.SysUtils, System.Classes,
-  Data.DB, Uni,
-  inLibGlobalVar;
+  Data.DB, Uni;
 
 const
   fcampoX = 'CAMPO_X_TABLA';
@@ -921,10 +1190,11 @@ class function TMiUtilidad.Procesar(AQuery: TUniQuery): TMiResultado;
 begin
   Result.Ok := False;
   Result.Mensaje := '';
-  if not Assigned(AQuery) then
-    Exit;
-  // ... lógica ...
-  Result.Ok := True;
+  if Assigned(AQuery) then
+  begin
+    // ... lógica ...
+    Result.Ok := True;
+  end;
 end;
 
 end.
@@ -1267,7 +1537,8 @@ de `dsLineas.OnDataChange`:
 ```pascal
 procedure TfrmMtoOpeCaja.DsLineasDataChange(Sender: TObject; Field: TField);
 begin
-  if Field = nil then RefrescarFotoStock;   // cambio de registro activo
+  if Field = nil then
+    RefrescarFotoStock;   // cambio de registro activo
 end;
 
 procedure TfrmMtoOpeCaja.RefrescarFotoStock;
@@ -1426,8 +1697,9 @@ Reglas que esto impone al código nuevo:
   `unqryTablaG` (§5.4 y §10.3). Si lo renombras, pierdes el autolog de
   `BeforeInsert` / `BeforePost`.
 - **Queries**: usar `ConexionPrincipal` en formularios y módulos base, o
-  recibir `AConexion: TUniConnection` en librerías (§10.3). No acceder a
-  `dmConn` ni introducir conexiones globales.
+  recibir `AConexion: TUniConnection` / `IServicioConexiones` de forma
+  explícita en librerías (§14.2). No acceder a `dmConn` ni introducir
+  conexiones globales.
 - **Excepciones**: si las dejas subir sin `try/except`, las captura el
   manejador global. Solo envuelve en `try/except` cuando vas a reaccionar
   (§12.2). El comportamiento por defecto es el correcto.
@@ -1717,10 +1989,21 @@ Cuando aparezca un prefijo de columna nuevo en `LIBRO_DE_ESTILO_BBDD.md`
 - [ ] Indentación de 2 espacios, sin tabuladores.
 - [ ] Sin componentes auto-numerados (`Panel2`, `cxGridDBColumn37`).
 - [ ] Hereda de la base correcta (`TfrmMtoGen`, `TfrmBase`, `TdmBase`).
+- [ ] Campos declarados antes que métodos dentro de cada sección de clase.
 - [ ] `FreeAndNil` para todo recurso creado.
 - [ ] Nombres de columna SQL en mayúsculas, tal cual viven en la BBDD.
-- [ ] Si es Mto: `CrearTablaPrincipal` + `ResetForm` sobreescritos.
-- [ ] Si es Mto: `ForceReferenceToClass` en `initialization`.
+- [ ] Sin estado global mutable ni nuevas variables `frmMtoXxx`/`dmmXxx`.
+- [ ] Si es Mto: `CrearTablaPrincipal` y solo los hooks necesarios.
+- [ ] Si es Mto: clases registradas en `inMtoCatalogoPantallas`.
+- [ ] Si abre desde menú: usa `MenuGenericoClick`, salvo lógica adicional.
 - [ ] Si es modal: expone `class function Ejecutar(...)`.
+- [ ] El modal no conoce al formulario llamador.
+- [ ] Ningún `inLib*`/`UniData*` usa una unidad `inMto*`.
+- [ ] SQL parametrizado; transacciones completas en escrituras múltiples.
+- [ ] Sin `except` vacío, `Exit`, `Continue` ni instrucciones en la línea
+      del `if`, `while` o `for`.
+- [ ] Métodos nuevos por debajo de 200 líneas y con una responsabilidad.
+- [ ] Pruebas DUnitX/SQL añadidas o actualizadas cuando corresponda.
+- [ ] `scripts\comprobar_dependencias_capas.ps1` termina correctamente.
 - [ ] Comentarios en español, sin código muerto comentado.
 - [ ] Si tocas la BBDD, el cambio cumple `LIBRO_DE_ESTILO_BBDD.md`.

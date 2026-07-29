@@ -9,7 +9,7 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Pruebas de las utilidades de datasets y de la fachada inLibtb.            }
+{    Pruebas de las utilidades de datasets.                                    }
 {******************************************************************************}
 unit PruebasDatasets;
 
@@ -31,9 +31,9 @@ type
     [TearDown]
     procedure Limpiar;
     [Test]
-    procedure ClaveSimple_FachadaCompatible;
+    procedure ClaveSimple_ConvierteEnAmbosSentidos;
     [Test]
-    procedure ClaveCompuesta_RoundTripCompatible;
+    procedure ClaveCompuesta_RoundTrip;
     [Test]
     procedure ClaveCompuesta_IncompletaRellenaNull;
     [Test]
@@ -41,7 +41,7 @@ type
     [Test]
     procedure ClavePrimaria_UsaProviderFlags;
     [Test]
-    procedure EstadoDatasets_GrabaYCancelaPorFachada;
+    procedure EstadoDatasets_GrabaYCancela;
     [Test]
     procedure PeriodoUnico_UnRegistroEsValido;
     [Test]
@@ -52,7 +52,7 @@ implementation
 
 uses
   System.SysUtils, System.Variants,
-  inLibDatasets, inLibtb;
+  inLibDatasets;
 
 procedure TPruebasDatasets.Preparar;
 begin
@@ -71,27 +71,19 @@ begin
   FreeAndNil(FModulo);
 end;
 
-procedure TPruebasDatasets.ClaveSimple_FachadaCompatible;
+procedure TPruebasDatasets.ClaveSimple_ConvierteEnAmbosSentidos;
 var
-  vFachada: Variant;
   vNueva: Variant;
 begin
   Assert.AreEqual(
     'ABC', inLibDatasets.KeyValuesToStr('ABC'));
-  Assert.AreEqual(
-    inLibDatasets.KeyValuesToStr('ABC'),
-    inLibtb.KeyValuesToStr('ABC'));
   vNueva := inLibDatasets.StrToKeyValues(
     'ABC', 'CODIGO');
-  vFachada := inLibtb.StrToKeyValues(
-    'ABC', 'CODIGO');
   Assert.AreEqual('ABC', VarToStr(vNueva));
-  Assert.AreEqual(
-    VarToStr(vNueva), VarToStr(vFachada));
 end;
 
 procedure TPruebasDatasets.
-  ClaveCompuesta_RoundTripCompatible;
+  ClaveCompuesta_RoundTrip;
 var
   sClave: string;
   vClave: Variant;
@@ -105,8 +97,6 @@ begin
   sClave := inLibDatasets.KeyValuesToStr(
     vValores);
   Assert.AreEqual('EMP|A|15', sClave);
-  Assert.AreEqual(
-    sClave, inLibtb.KeyValuesToStr(vValores));
   vClave := inLibDatasets.StrToKeyValues(
     sClave, 'EMPRESA;SERIE;NUMERO');
   Assert.AreEqual('EMP', VarToStr(vClave[0]));
@@ -135,11 +125,6 @@ begin
     'principal',
     inLibDatasets.ExtraerTablaDeSQL(
       SQL_CON_SUBCONSULTA));
-  Assert.AreEqual(
-    inLibDatasets.ExtraerTablaDeSQL(
-      SQL_CON_SUBCONSULTA),
-    inLibtb.ExtraerTablaDeSQL(
-      SQL_CON_SUBCONSULTA));
 end;
 
 procedure TPruebasDatasets.
@@ -153,14 +138,10 @@ begin
     'ID;SERIE',
     inLibDatasets.ObtenerClavePrimaria(
       FDataSet));
-  Assert.AreEqual(
-    'ID;SERIE',
-    inLibtb.ObtenerClavePrimaria(
-      FDataSet));
 end;
 
 procedure TPruebasDatasets.
-  EstadoDatasets_GrabaYCancelaPorFachada;
+  EstadoDatasets_GrabaYCancela;
 begin
   FDataSet.Edit;
   FDataSet.FieldByName(
@@ -168,7 +149,7 @@ begin
   Assert.IsTrue(
     inLibDatasets.CheckOpenDatasets(
       FModulo));
-  inLibtb.CancelarDatasets(FModulo);
+  inLibDatasets.CancelarDatasets(FModulo);
   Assert.AreEqual(
     'Inicial',
     FDataSet.FieldByName(
@@ -183,7 +164,7 @@ begin
     FDataSet.FieldByName(
       'NOMBRE').AsString);
   Assert.IsFalse(
-    inLibtb.CheckOpenDatasets(FModulo));
+    inLibDatasets.CheckOpenDatasets(FModulo));
 end;
 
 procedure TPruebasDatasets.

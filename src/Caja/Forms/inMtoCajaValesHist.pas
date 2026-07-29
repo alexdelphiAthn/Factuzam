@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoCajaValesHist                                            }
 {    Tipo:       Formulario (Mto)                                              }
@@ -75,7 +75,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal, inLibFiltroUsuario;
+  inLibWin, inLibFiltroUsuario;
 
 {$R *.dfm}
 

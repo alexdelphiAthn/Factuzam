@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoCajaArqueosHist                                          }
 {    Tipo:       Formulario (Mto)                                              }
@@ -72,7 +72,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal, inMtoModalImpArqueos, inLibFiltroUsuario;
+  inLibWin, inMtoModalImpArqueos, inLibFiltroUsuario;
 
 {$R *.dfm}
 

@@ -152,7 +152,7 @@ implementation
 
 uses
   Vcl.Dialogs,
-  inLibLog, inLibtb, inLibMsg,
+  inLibLog, inLibMsg,
   cxGridDBDataDefinitions;
 
 class procedure TSolicitudPermisoLayout.RegistrarEjecutor(
@@ -419,4 +419,3 @@ begin
 end;
 
 end.
-

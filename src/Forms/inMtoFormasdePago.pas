@@ -212,7 +212,7 @@ var
 implementation
 
 uses
-  inLibWin, inLibUser, inLibDevExp, inLibShowMto, inLibFotos, inMtoPrincipal;
+  inLibWin, inLibUser, inLibDevExp, inLibShowMto, inLibFotos;
 
 {$R *.dfm}
 

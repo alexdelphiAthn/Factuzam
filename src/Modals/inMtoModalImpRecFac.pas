@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalImpRecFac                                           }
 {    Tipo:       Formulario (Modal)                                            }
@@ -25,7 +25,6 @@ uses
   Vcl.StdCtrls, cxButtons, Vcl.ExtCtrls, cxControls, cxContainer, cxEdit,
   Vcl.ComCtrls, dxCore, cxDateUtils, cxMaskEdit, cxDropDownEdit, cxCalendar,
   cxRadioGroup, cxGroupBox, cxTextEdit, cxLabel, UniDataFacturas,
-  inMtoFacturasBase,
   cxStyles, dxSkinsForm, cxClasses, cxLocalization, JvComponentBase, JvEnterTab,
   System.Actions, Vcl.ActnList, frxSmartMemo, frLocalization, frLanguageSpanish,
   frxExportBaseImageSettingsDialog, frCoreClasses;

@@ -64,7 +64,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal, inMtoModalRegistrarPago, inLibFiltroUsuario,
+  inLibWin, inMtoModalRegistrarPago, inLibFiltroUsuario,
   inLibMsg;
 
 {$R *.dfm}

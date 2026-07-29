@@ -81,7 +81,7 @@ SELECT L.LINEA_PEDCLIN, L.CODIGO_UNIDAD_PEDCLIN,
 
 
 def obtener_siguiente_contador(cn, tipo_doc, usuario):
-    """Puerto de inLibtb.ObtenerSiguienteContador (PRC_GET_NEXT_CONT)."""
+    """Puerto de ObtenerSiguienteContador de inLibValoresAutomaticos."""
     with cn.cursor() as c:
         c.execute("CALL PRC_GET_NEXT_CONT(%s, %s, @cont)", (tipo_doc, usuario))
         c.execute("SELECT @cont AS c")

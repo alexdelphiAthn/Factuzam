@@ -63,9 +63,16 @@ Genera un informe A4 horizontal con el detalle de las ventas del TPV. El
 formulario propone desde el 1 de enero del año actual hasta hoy y muestra la
 empresa, el almacén y la caja activos de la sesión.
 
-El informe incluye artículo, color, talla, proveedor, modelo, descripción,
-cantidad, bruto, descuento, neto del artículo, ingresos, vendedor, formas de
-pago y documento. Los resultados se ordenan por fecha y operación, con
+Cuando el usuario no está limitado por
+`appRestringirEmpAlmCaja`, aparece la pestaña
+**Empresas / almacenes / cajas**. El TPV activo se marca inicialmente y se
+pueden marcar otras ubicaciones para acumularlas en el mismo informe. Los
+usuarios restringidos no ven esta pestaña y solo consultan su ubicación.
+
+El informe incluye artículo, color (con un recuadro del color básico definido
+en Etiquetas), talla, proveedor, modelo, descripción, cantidad, bruto,
+descuento, neto del artículo, ingresos, vendedor, formas de pago y documento.
+Los resultados se ordenan por fecha y operación, con
 totales por caja y por fecha.
 
 ---

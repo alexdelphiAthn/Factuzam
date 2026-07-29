@@ -182,10 +182,10 @@
         <DCCReference Include="src\Lib\inLibConfiguracionIni.pas"/>
         <DCCReference Include="src\Lib\inLibDatasets.pas"/>
         <DCCReference Include="src\Lib\inLibValoresAutomaticos.pas"/>
-        <DCCReference Include="src\Lib\inLibtb.pas"/>
         <DCCReference Include="src\Lib\inLibUser.pas"/>
         <DCCReference Include="src\Lib\inLibWin.pas"/>
         <DCCReference Include="src\Lib\inLibShowMto.pas"/>
+        <DCCReference Include="src\Lib\inLibAnfitrionMtoIntf.pas"/>
         <DCCReference Include="src\Lib\inLibRegistroPantallas.pas"/>
         <DCCReference Include="src\Lib\inLibVentanaEmbebidaIntf.pas"/>
         <DCCReference Include="src\Lib\inLibUnitForm.pas"/>
@@ -204,6 +204,7 @@
         <DCCReference Include="src\Lib\inLibContextoSesion.pas"/>
         <DCCReference Include="src\Lib\inLibFiltrosGuardadosIntf.pas"/>
         <DCCReference Include="src\Lib\inLibPerfilesUsuarioIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibPerfilesUsuarioValores.pas"/>
         <DCCReference Include="src\Lib\inLibParametrosIntf.pas"/>
         <DCCReference Include="src\Lib\inLibParametrosBase.pas"/>
         <DCCReference Include="src\Lib\inLibConexionesIntf.pas"/>
@@ -589,6 +590,9 @@
             <Form>frmCajaReferenciaPago</Form>
         </DCCReference>
         <DCCReference Include="src\Caja\Lib\inLibFaseCobro.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibCajaVentanasIntf.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibCajaDatosFactura.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibCajaTipos.pas"/>
         <DCCReference Include="src\Lib\inLibCriptoCurr.pas"/>
         <DCCReference Include="src\Lib\inLibDivCurr.pas"/>
         <DCCReference Include="src\Caja\Forms\inMtoCajaSeleccionVale.pas">
@@ -955,6 +959,7 @@
             <Form>frmModalCrearAlbaranSesion</Form>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibComprasSesiones.pas"/>
+        <DCCReference Include="src\Lib\inLibComprasSesionesReglas.pas"/>
         <DCCReference Include="src\Lib\inLibGridTallasInline.pas"/>
         <DCCReference Include="src\Lib\inLibColumnasDocumento.pas"/>
         <DCCReference Include="src\Lib\inLibBusquedasCompra.pas"/>

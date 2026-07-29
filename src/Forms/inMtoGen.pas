@@ -234,6 +234,7 @@ type
 //                                        AList: TPerfilList);
   protected
     property ConexionTrabajo: TUniConnection read GetConexionTrabajo;
+    function ConsultaPerfilesLocal: TUniQuery; virtual;
     procedure AplicarGuiasGrid(AQuery: TUniQuery);
     // Indica si las teclas de navegacion (PgUp, PgDn, Home, End, Ins, F2)
     // deben activar las acciones del TActionList base. Los Mtos con
@@ -382,8 +383,7 @@ implementation
 
 {$R *.dfm}
 
-uses inMtoGenSearch,
-     inLibData,
+uses inLibData,
      inLibConexionesIntf,
      inLibUnitForm,
      inLibShowMto,
@@ -391,7 +391,7 @@ uses inMtoGenSearch,
      inMtoModalGenImpSave,
      inMtoModalGuardarFiltro,
      inMtoModalGestionFiltros,
-     UniDataGen, uGenericIfThen, inMtoPrincipal,
+     inLibAnfitrionMtoIntf, UniDataGen, uGenericIfThen,
      inMtoFotoArticulo, inMtoStockConsulta,
      inMtoModalGridGuias,
      inLibFiltroUsuario,    // restricción por empresa/almacén/caja
@@ -462,6 +462,11 @@ begin
     Result := TUniQuery(dsTablaG.DataSet);
 end;
 
+function TfrmMtoGen.ConsultaPerfilesLocal: TUniQuery;
+begin
+  Result := nil;
+end;
+
 procedure TfrmMtoGen.AplicarGuiasGrid(
   AQuery: TUniQuery);
 begin
@@ -474,7 +479,7 @@ begin
   begin
     FGestorPerfiles.AbrirPerfiles(
       bTabVisible,
-      (Self as TfrmMtoSearch).unqryPerfiles,
+      ConsultaPerfilesLocal,
       '',
       ConexionTrabajo);
   end
@@ -822,12 +827,13 @@ end;
 function TfrmMtoGen.PuedeAccionMto(
   AAccion: TAccionPermisoMto): Boolean;
 var
+  oAnfitrion: IAnfitrionMantenimiento;
   sCall: string;
 begin
   sCall := '';
-  if (Self.Owner is TfrmMtoPrincipal) then
-    sCall := (Self.Owner as TfrmMtoPrincipal).oFzaWinf.CallDeUnit(
-               Self.UnitName + '.' + Self.ClassName);
+  if Supports(Self.Owner, IAnfitrionMantenimiento, oAnfitrion) then
+    sCall := oAnfitrion.ResolverCallPantalla(
+      Self.UnitName + '.' + Self.ClassName);
   if sCall = '' then
     Result := True
   else
@@ -1013,6 +1019,7 @@ end;
 
 procedure TfrmMtoGen.CrearTablaPrincipal;
 var
+  oAnfitrion: IAnfitrionMantenimiento;
   sNameModule: string;
   swTotal, swTramo: TStopwatch;
   msCrearDM, msFConn, msReasignar: Int64;
@@ -1021,12 +1028,10 @@ begin
   msCrearDM := 0; msFConn := 0; msReasignar := 0;
   tdmDataModule := nil;
   sNameModule := '';
-  // Guard con 'is': fuera de fzam (standalone) Owner no es el principal
-  // y el cast lanzaba EInvalidCast en plena creacion del Mto.
-  if (Self.Owner is TfrmMtoPrincipal) then
-    sNameModule :=
-     (Self.Owner as TfrmMtoPrincipal).oFzaWinf.GetDataModuleName(Self.UnitName +
-                                                          '.' + Self.ClassName);
+  // Los proyectos independientes no implementan el contrato anfitrión.
+  if Supports(Self.Owner, IAnfitrionMantenimiento, oAnfitrion) then
+    sNameModule := oAnfitrion.ResolverDataModulePantalla(
+      Self.UnitName + '.' + Self.ClassName);
   if (sNameModule <> '') then
   begin
     swTramo := TStopwatch.StartNew;
@@ -1094,15 +1099,16 @@ end;
 
 procedure TfrmMtoGen.AplicarPermisosPantalla;
 var
+  oAnfitrion: IAnfitrionMantenimiento;
   sCall: string;
 begin
   InstalarGuardianBorrado;
   // CALL de la pantalla (Clientes, Articulos...). Los Mtos sin registro
   // en fza_winforms (p.ej. cajas de busqueda) no tienen CALL: todo activo.
   sCall := '';
-  if (Self.Owner is TfrmMtoPrincipal) then
-    sCall := (Self.Owner as TfrmMtoPrincipal).oFzaWinf.CallDeUnit(
-               Self.UnitName + '.' + Self.ClassName);
+  if Supports(Self.Owner, IAnfitrionMantenimiento, oAnfitrion) then
+    sCall := oAnfitrion.ResolverCallPantalla(
+      Self.UnitName + '.' + Self.ClassName);
   if sCall <> '' then
   begin
     // Consultar/buscar: solo se quita el buscador global. NO se bloquea la
@@ -1548,14 +1554,16 @@ end;
 
 procedure TfrmMtoGen.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
+var
+  oAnfitrion: IAnfitrionMantenimiento;
 begin
   inherited;
   // ESC -> cancelar grids en edicion
   if (Key = VK_ESCAPE) then
   begin
-    // Solo dentro de fzam: standalone no hay principal con pcPrincipal
-    if Owner is TfrmMtoPrincipal then
-      CancelarGrids((Owner as TfrmMtoPrincipal).pcPrincipal);
+    // Los proyectos independientes no implementan el contrato anfitrión.
+    if Supports(Owner, IAnfitrionMantenimiento, oAnfitrion) then
+      oAnfitrion.CancelarEdicionesPantallas;
     Key := 0;
   end;
   // RETURN sin control activo -> simular Tab
@@ -1952,6 +1960,8 @@ begin
 end;
 
 procedure TfrmMtoGen.FormShow(Sender: TObject);
+var
+  oAnfitrion: IAnfitrionMantenimiento;
 begin
   inherited;
   ResetForm;
@@ -1959,8 +1969,8 @@ begin
   // pulso Ctrl+F en otro Mto), la re-vinculamos a este. Si no
   // esta abierta, no la abrimos: que aparezca solo cuando el usuario
   // lo pida con Ctrl+F.
-  if (Self.Owner is TfrmMtoPrincipal) then
-    TfrmMtoPrincipal(Self.Owner).EngancharFotoAlMto(Self);
+  if Supports(Self.Owner, IAnfitrionMantenimiento, oAnfitrion) then
+    oAnfitrion.VincularFotoMantenimiento(Self);
   // Foco inicial en la busqueda global del Mto. Se difiere con ForceQueue
   // porque el Mto se acaba de embeber en su TcxTabSheet (inLibFormManager)
   // y la cadena de foco aun no esta asentada: un SetFocus sincrono aqui no
@@ -2044,11 +2054,12 @@ end;
 procedure TfrmMtoGen.btnCancelarClick(Sender: TObject);
 var
   i: Integer;
+  oAnfitrion: IAnfitrionMantenimiento;
 begin
   inherited;
   // Flujo normal dentro de fzam: cancela el Mto activo del principal.
-  if Owner is TfrmMtoPrincipal then
-    CancelarGrids((Owner as TfrmMtoPrincipal).pcPrincipal)
+  if Supports(Owner, IAnfitrionMantenimiento, oAnfitrion) then
+    oAnfitrion.CancelarEdicionesPantallas
   else
     // Fuera de fzam (pruebas standalone, DESARROLLOS EN CURSO) Owner no
     // es el principal y no hay pcPrincipal al que cancelar:

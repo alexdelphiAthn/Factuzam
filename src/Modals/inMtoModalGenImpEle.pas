@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalGenImpEle                                           }
 {    Tipo:       Formulario (Modal)                                            }
@@ -26,6 +26,13 @@ uses
   cxCheckBox;
 
 type
+  IEliminadorFormatoImpresion = interface
+    ['{93DEAF93-8B9D-460A-A62C-7B56AE62761F}']
+    procedure EliminarFormatoImpresion(
+      const ANombre: string;
+      ASelector: TObject);
+  end;
+
   TfrmMtoModalGenImpEle = class(TfrmBase)
     pnl1: TPanel;
     pnl2: TPanel;
@@ -52,16 +59,19 @@ type
 
 implementation
 
-uses
-  inMtoModalGenImp;
-
 {$R *.dfm}
 
 procedure TfrmMtoModalGenImpEle.btnDeleteFormatoClick(Sender: TObject);
+var
+  oEliminador: IEliminadorFormatoImpresion;
 begin
   inherited;
   sElegido := lstFormatos.Items[lstFormatos.ItemIndex];
-  (Self.Owner as TfrmPrint).DeleteForm(sElegido, Self);
+  if Supports(Self.Owner, IEliminadorFormatoImpresion, oEliminador) then
+    oEliminador.EliminarFormatoImpresion(sElegido, Self)
+  else
+    raise EInvalidCast.Create(
+      'El propietario no permite eliminar formatos de impresión.');
   sFicha := 'D';
 end;
 

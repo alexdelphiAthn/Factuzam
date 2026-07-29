@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoUsuarios                                                 }
 {    Tipo:       Formulario (Mto)                                              }
@@ -78,7 +78,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoModalGenPass, inMtoPrincipal, inMtoModalCajDef;
+  inLibWin, inMtoModalGenPass, inMtoModalCajDef;
 
 {$R *.dfm}
 

@@ -1,6 +1,9 @@
 ﻿inherited frmPrintOperacionesVenta: TfrmPrintOperacionesVenta
   Caption = 'Listado de operaciones de venta'
   ClientHeight = 320
+  ClientWidth = 900
+  ExplicitWidth = 916
+  ExplicitHeight = 359
   TextHeight = 19
   object lblFechas: TcxLabel
     Left = 12
@@ -83,6 +86,60 @@
     Properties.ReadOnly = True
     TabOrder = 5
     Width = 172
+  end
+  object pcOpciones: TcxPageControl
+    Left = 200
+    Top = 0
+    Width = 556
+    Height = 320
+    TabOrder = 13
+    Properties.ActivePage = tsUbicaciones
+    Properties.CustomButtons.Buttons = <>
+    ClientRectBottom = 316
+    ClientRectLeft = 4
+    ClientRectRight = 552
+    ClientRectTop = 28
+    object tsUbicaciones: TcxTabSheet
+      Caption = 'Empresas / almacenes / cajas'
+      object lblUbicaciones: TcxLabel
+        Left = 12
+        Top = 8
+        AutoSize = False
+        Caption =
+          'Marque las ubicaciones que desea acumular en el listado.'
+        TabOrder = 0
+        Transparent = True
+        Height = 23
+        Width = 520
+      end
+      object clbUbicaciones: TcxCheckListBox
+        Left = 12
+        Top = 37
+        Width = 520
+        Height = 202
+        EditValueFormat = cvfStatesString
+        Items = <>
+        TabOrder = 1
+      end
+      object btnMarcarTodas: TcxButton
+        Left = 12
+        Top = 251
+        Width = 130
+        Height = 25
+        Caption = 'Marcar todas'
+        TabOrder = 2
+        OnClick = btnMarcarTodasClick
+      end
+      object btnDesmarcarTodas: TcxButton
+        Left = 154
+        Top = 251
+        Width = 130
+        Height = 25
+        Caption = 'Desmarcar todas'
+        TabOrder = 3
+        OnClick = btnDesmarcarTodasClick
+      end
+    end
   end
   inherited frxrprt1: TfrxReport
     Datasets = <
@@ -433,8 +490,8 @@
           ParentFont = False
         end
         object MemoColor: TfrxMemoView
-          Left = 80.000000000000000000
-          Width = 55.000000000000000000
+          Left = 95.000000000000000000
+          Width = 40.000000000000000000
           Height = 16.000000000000000000
           DataField = 'COLOR'
           DataSet = fxdsVentas
@@ -448,6 +505,15 @@
           Memo.UTF8W = (
             '[Ventas."COLOR"]')
           ParentFont = False
+        end
+        object MemoColorBasico: TfrxMemoView
+          AllowVectorExport = True
+          Left = 81.000000000000000000
+          Top = 2.000000000000000000
+          Width = 11.000000000000000000
+          Height = 11.000000000000000000
+          Color = clWhite
+          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
         end
         object MemoTalla: TfrxMemoView
           Left = 135.000000000000000000
@@ -691,7 +757,7 @@
           Font.Style = [fsBold]
           Frame.Typ = [ftTop]
           Memo.UTF8W = (
-            'TOT.CAJA  [Ventas."CODIGO_CAJA_OPCAJA"]')
+            'TOT.CAJA  [Ventas."CLAVE_CAJA"]')
           ParentFont = False
         end
         object MemoTotalCajaCantidad: TfrxMemoView

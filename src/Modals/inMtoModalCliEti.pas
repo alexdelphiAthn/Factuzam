@@ -24,7 +24,7 @@ uses
   DBAccess, Uni, frxExportXLSX, frxClass, frxExportBaseDialog, frxExportPDF,
   cxClasses, cxLocalization, Vcl.StdCtrls, cxButtons, Vcl.ExtCtrls, dxSkinsCore,
   dxSkinBlue, cxControls, cxContainer, cxEdit, cxTextEdit, cxMaskEdit,
-  cxSpinEdit, cxLabel, cxGroupBox, cxRadioGroup, UniDataClientes, inMtoClientes,
+  cxSpinEdit, cxLabel, cxGroupBox, cxRadioGroup, UniDataClientes,
   JvComponentBase, JvEnterTab, frxSmartMemo, frLocalization, frLanguageSpanish,
   System.Actions, Vcl.ActnList, frxExportBaseImageSettingsDialog, frCoreClasses;
 
@@ -36,8 +36,9 @@ type
     edtCodCli: TcxTextEdit;
     cxLabel1: TcxLabel;
   private
-    { Private declarations }
+    FDataModule: TdmClientes;
   public
+    procedure Preparar(ADataModule: TdmClientes);
     procedure preparar_consulta; override;
   end;
 
@@ -47,8 +48,17 @@ implementation
 
 procedure TfrmPrintCliEti.preparar_consulta;
 begin
-  dmmClientes.CrearDataSetEtiquetas(speDejarBlancos.Value, edtCodCli.text);
+  if not Assigned(FDataModule) then
+    raise EArgumentNilException.Create(
+      'No se ha indicado el módulo de clientes');
+  FDataModule.CrearDataSetEtiquetas(speDejarBlancos.Value, edtCodCli.text);
 end;
 
+procedure TfrmPrintCliEti.Preparar(ADataModule: TdmClientes);
+begin
+  if not Assigned(ADataModule) then
+    raise EArgumentNilException.Create('El módulo de clientes es obligatorio');
+  FDataModule := ADataModule;
+end;
 
 end.

@@ -126,7 +126,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal, inMtoModalCargarEfectosRemesa,
+  inLibWin, inMtoModalCargarEfectosRemesa,
   inMtoModalRegistrarPago, inLibMsg;
 
 {$R *.dfm}

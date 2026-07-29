@@ -29,10 +29,10 @@ uses
   inMtoFrmBase, inLibVentasCalendario, inLibLayoutForm,
   UniDataConsultaOpe, UniDataCaja, dxCore, cxDateUtils, dxCoreGraphics,
   cxCurrencyEdit, cxClasses, cxGridCustomView, JvComponentBase, JvEnterTab,
-  cxLocalization, Vcl.Menus;
+  cxLocalization, Vcl.Menus, inLibCajaTipos, inLibCajaVentanasIntf;
 
 type
-  TfrmConsultaOpe = class(TfrmBase)
+  TfrmConsultaOpe = class(TfrmBase, IConsultaOperacionesCaja)
     pnlFiltros:       TPanel;
     lblFecha:         TcxLabel;
     lblBuscar:        TcxLabel;
@@ -147,6 +147,7 @@ type
     procedure AbrirMovimientoActivo;
     procedure AbrirFacturaActiva;
   public
+    function FormularioConsultaCaja: TCustomForm;
     procedure PrepararValores(const AEmpresa,
                                     AAlmacen,
                                     ACaja: string;
@@ -166,11 +167,11 @@ implementation
 
 {$R *.dfm}
 
-uses inLibtb, inLibGenerarTicketBD, inLibGenerarTicketCaja,
+uses inLibGenerarTicketBD, inLibGenerarTicketCaja,
      inLibLog, inLibFotos, inMtoFotoArticulo,
-     inLibTraspasoTicket, inLibShowMto, inMtoPrincipal, Uni,
+     inLibTraspasoTicket, inLibShowMto, Uni,
      inLibVerifactu, inLibVerifactuCola, inMtoModalFacturarTicket,
-     inMtoCajaOpe, inLibCorreoTickets, inLibAtributosPaleta, inLibMsg;
+     inLibCorreoTickets, inLibAtributosPaleta, inLibMsg;
 
 // -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -201,6 +202,11 @@ begin
   tmrBusqueda.Interval := 400;
   KeyPreview := True;   // para que FormKeyDown capture F5/ESC aunque el foco
                         // este en el grid o en el edit de busqueda
+end;
+
+function TfrmConsultaOpe.FormularioConsultaCaja: TCustomForm;
+begin
+  Result := Self;
 end;
 
 procedure TfrmConsultaOpe.FormDestroy(Sender: TObject);
@@ -338,7 +344,7 @@ begin
   if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
   sArt := ds.FieldByName('CODIGO_ART_MOV').AsString;
   if sArt <> '' then
-    ShowMto(frmMtoPrincipal, 'Articulos', sArt);
+    ShowMto(Application.MainForm, 'Articulos', sArt);
 end;
 
 // Ctrl + M: abre el Mto de Movimientos de Almacen posicionado en el
@@ -353,7 +359,7 @@ begin
   if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
   sNumMov := ds.FieldByName('NUMERO_MOV').AsString;
   if sNumMov <> '' then
-    ShowMto(frmMtoPrincipal, 'MovimientosAlmacen', sNumMov);
+    ShowMto(Application.MainForm, 'MovimientosAlmacen', sNumMov);
 end;
 
 // Ctrl + Shift + F: abre la factura SIMPLIFICADA que se muestra en la
@@ -371,7 +377,7 @@ begin
   sNum := ds.FieldByName('NUMERO_FAC').AsString;
   sSer := ds.FieldByName('SERIE_FAC').AsString;
   if (sNum <> '') and (sSer <> '') then
-    ShowMto(frmMtoPrincipal, 'FacturasSimplif', sNum + ',' + sSer);
+    ShowMto(Application.MainForm, 'FacturasSimplif', sNum + ',' + sSer);
 end;
 
 function TfrmConsultaOpe.FacturaSeleccionada(out ASerie,
@@ -527,8 +533,9 @@ end;
 procedure TfrmConsultaOpe.btnRectificarClick(Sender: TObject);
 var
   Qry:     TUniQuery;
-  FormularioCaja: TfrmMtoOpeCaja;
-  i:       Integer;
+  oAnfitrion: IAnfitrionCajaVentanas;
+  oOperacionCaja: IOperacionCaja;
+  oFormularioCaja: TCustomForm;
   sSerie:  string;
   sNumero: string;
   bSigue:  Boolean;
@@ -574,27 +581,24 @@ begin
     if bSigue then
     begin
       // Ventana de ventas libre, o una nueva si todas están ocupadas
-      FormularioCaja := nil;
-      for i := 0 to Screen.FormCount - 1 do
+      oOperacionCaja := BuscarOperacionCajaVacia;
+      if oOperacionCaja = nil then
       begin
-        if (FormularioCaja = nil) and
-           (Screen.Forms[i] is TfrmMtoOpeCaja) and
-           TfrmMtoOpeCaja(Screen.Forms[i]).OperacionVacia then
-          FormularioCaja := TfrmMtoOpeCaja(Screen.Forms[i]);
-      end;
-      if FormularioCaja = nil then
-      begin
-        FormularioCaja := TfrmMtoOpeCaja.Create(Application, Permisos);
-        FormularioCaja.Caption :=
+        oAnfitrion := ExigirAnfitrionCaja(Application.MainForm);
+        oOperacionCaja :=
+          oAnfitrion.CrearOperacionCaja(Application, Permisos);
+        oFormularioCaja := oOperacionCaja.FormularioCaja;
+        oFormularioCaja.Caption :=
           Format('Operación - (Caja Real %s)', [FCaja]);
-        FormularioCaja.PrepararValores(FEmpresa, FAlmacen, FCaja, Now);
+        oOperacionCaja.PrepararValores(FEmpresa, FAlmacen, FCaja, Now);
       end;
-      FormularioCaja.CargarRectificacion(
+      oFormularioCaja := oOperacionCaja.FormularioCaja;
+      oOperacionCaja.CargarRectificacion(
         sSerie, sNumero, TipoRectificativa, TratamientoMovimientos);
-      FormularioCaja.Show;
-      FormularioCaja.BringToFront;
-      if FormularioCaja.WindowState = wsMinimized then
-        FormularioCaja.WindowState := wsNormal;
+      oFormularioCaja.Show;
+      oFormularioCaja.BringToFront;
+      if oFormularioCaja.WindowState = wsMinimized then
+        oFormularioCaja.WindowState := wsNormal;
     end;
   end;
 end;

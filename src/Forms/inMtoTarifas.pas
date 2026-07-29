@@ -164,9 +164,7 @@ uses
   inLibUser,
   inLibDevExp,
   inLibFotos,
-  inMtoArticulos,
-  inMtoFamilias,
-  inMtoProveedores, inMtoModalAddBlockTarifa, inMtoPrincipal, inLibMsg;
+  inMtoModalAddBlockTarifa, inLibMsg;
 
 {$R *.dfm}
 

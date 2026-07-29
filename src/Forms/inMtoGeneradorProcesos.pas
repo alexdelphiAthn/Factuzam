@@ -260,7 +260,7 @@ uses
   inLibDir,
   inLibMsg,
   Vcl.Clipbrd,
-  ts.Editor.CodeFormatters, inMtoPrincipal;
+  ts.Editor.CodeFormatters;
 
 {$R *.dfm}
 

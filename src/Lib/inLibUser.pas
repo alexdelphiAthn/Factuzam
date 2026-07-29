@@ -67,8 +67,7 @@ procedure GetFormUserProfile(var APerfilDic: TProfileDicc;
 implementation
 
 uses
-  inLibDir, inLibWin, inLibMsg,
-  inLibLog;
+  inLibDir, inLibPerfilesUsuarioValores, inLibMsg;
 
 // Dentro de inLibUser.pas
 procedure GetFormUserProfile(var APerfilDic: TProfileDicc;
@@ -204,18 +203,9 @@ function GetPerfilSubKeyValueDef(var APerfilDic: TPRofileDicc;
   ASubKey: string;
   sSubSubKey: string;
   sValueDef: string): string;
-var
-  oDictValue        : TDictValue;
 begin
-  ASubKey := ASubKey + '_' + sSubSubKey;
-  if APerfilDic.ContainsKey(ASubKey) then
-  begin
-    APerfilDic.TryGetValue(ASubKey,
-      oDictValue);
-    Result := oDictValue.sValue;
-  end
-  else
-    Result := sValueDef;
+  Result := inLibPerfilesUsuarioValores.GetPerfilSubKeyValueDef(
+    APerfilDic, ASubKey, sSubSubKey, sValueDef);
 end;
 
 function GetPerfilValueText(var APerfilDic: TPRofileDicc;
@@ -231,23 +221,9 @@ end;
 function GetPerfilValueTextDef(var APerfilDic: TPRofileDicc;
   ASubKey: string;
   sValueDef: WideString): WideString;
-var
-  oDictValue        : TDictValue;
 begin
-  if ((APerfilDic <> nil) and (APerfilDic.Count > 0)) then
-  begin
-    APerfilDic.TrimExcess;
-    if APerfilDic.ContainsKey(ASubKey) then
-    begin
-      APerfilDic.TryGetValue(ASubKey,
-        oDictValue);
-      Result := oDictValue.sValueText;
-    end
-    else
-      Result := sValueDef;
-  end
-  else
-    Result := sValueDef;
+  Result := inLibPerfilesUsuarioValores.GetPerfilValueTextDef(
+    APerfilDic, ASubKey, sValueDef);
 end;
 
 function GetPerfilValueDef(var APerfilDic: TProfileDicc;

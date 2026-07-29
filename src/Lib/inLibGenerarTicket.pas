@@ -16,8 +16,7 @@ unit inLibGenerarTicket;
 
 interface
 uses
-  System.SysUtils, System.Classes, Data.DB, Uni,
-  UniDataCaja,
+  System.SysUtils, System.Classes, Data.DB, Uni, inLibCajaDatosFactura,
   inLibFTicket,        // Donde está tu TTicketTermico
   inLibFaseCobro,      // Para TDatosFaseCobro
   inLibParametrosIntf;
@@ -201,7 +200,7 @@ begin
   if not DatosCobro.FRequiereFactura then
     Exit;
 //  NombreImpresora := 'DEBUG';
-  Cab := leerCabecera(DatosCobro.TotalesFactura.Cabecera);
+  Cab := LeerCabeceraFactura(DatosCobro.TotalesFactura.Cabecera);
   dtFechaOperacion := AFechaOperacion;
   if dtFechaOperacion = 0 then
     dtFechaOperacion := Now;

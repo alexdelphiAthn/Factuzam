@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inLibFacturas                                                 }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       11/05/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       29/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -85,6 +85,8 @@ const
   ftotbasefac = 'TOTAL_BASES_FAC';
 
 type
+  TActualizarTotalFacturaEvent = procedure(Sender: TObject;
+    ANuevoTotal: Currency) of object;
   TTipoIVA = (tivaNormal, tivaReducido, tivaSuperReducido, tivaExento);
 
   TTotalesIVA = record
@@ -275,14 +277,23 @@ type
     property Cabecera:TDataSet read _unqryFac;
     property Lineas:TDataset read _unqryLineas;
   end;
+  procedure ActualizarLineaFactura(
+    AConexion: TUniConnection;
+    ALineas: TDataSet;
+    ACabecera: TDataSet;
+    const ACampo: string;
+    const AValor: Variant;
+    AAlActualizarTotal: TActualizarTotalFacturaEvent = nil);
   function IfThen(AValue: Boolean;
-                const ATrue: string;
-                AFalse: string = ''): string;
+                 const ATrue: string;
+                 AFalse: string = ''): string;
 
 
 implementation
 
-uses inLibLog, inLibMsg;
+uses
+  System.Variants,
+  inLibLog, inLibMsg;
 
 function IfThen(AValue: Boolean;
                 const ATrue: string;
@@ -292,6 +303,86 @@ begin
     Result := ATrue
   else
     Result := AFalse;
+end;
+
+procedure AplicarTotalEditado(ALinea: TLinFac; ATotal: Currency);
+var
+  nDiferencia: Currency;
+  nTotalBruto: Currency;
+begin
+  nTotalBruto := ALinea.PrecioSal * ALinea.Cant;
+  if (nTotalBruto <> 0) and (ALinea.Cant <> 0) then
+    nDiferencia := (nTotalBruto - ATotal) / ALinea.Cant
+  else
+    nDiferencia := 0;
+  ALinea.Dto := nDiferencia;
+end;
+
+procedure ActualizarLineaFactura(
+  AConexion: TUniConnection;
+  ALineas: TDataSet;
+  ACabecera: TDataSet;
+  const ACampo: string;
+  const AValor: Variant;
+  AAlActualizarTotal: TActualizarTotalFacturaEvent);
+var
+  bPuedeActualizar: Boolean;
+  oLinea: TLinFac;
+  oTotales: TFacturaTotales;
+  nValor: Currency;
+begin
+  bPuedeActualizar := Assigned(ALineas);
+  if bPuedeActualizar then
+    bPuedeActualizar := ALineas.Active and ALineas.CanModify;
+  if bPuedeActualizar then
+  begin
+    if not (ALineas.State in [dsEdit, dsInsert]) then
+      ALineas.Edit;
+    nValor := StrToCurrDef(VarToStr(AValor), 0);
+    oLinea := TLinFac.Create(ALineas, ACabecera, True);
+    try
+      if SameText(ACampo, fpreciosal) then
+        oLinea.PrecioSal := nValor
+      else if SameText(ACampo, fcant) then
+        oLinea.Cant := nValor
+      else if SameText(ACampo, fpordto) then
+        oLinea.PorDto := nValor
+      else if SameText(ACampo, fdto) then
+        oLinea.Dto := nValor
+      else if SameText(ACampo, fpresiva) then
+        oLinea.PreSiva := nValor
+      else if SameText(ACampo, fpreciva) then
+        oLinea.PreCiva := nValor
+      else if SameText(ACampo, ftipiva) then
+        oLinea.TipoIva := VarToStr(AValor)
+      else if SameText(ACampo, ftotciva) or
+              SameText(ACampo, ftotsiva) then
+        AplicarTotalEditado(oLinea, nValor);
+      oLinea.CopyToDataSetLin;
+    finally
+      FreeAndNil(oLinea);
+    end;
+    oTotales := TFacturaTotales.Create(
+      AConexion,
+      ACabecera,
+      ALineas);
+    try
+      if not oTotales.ProcesarFacturaCompleta then
+      begin
+        raise Exception.CreateFmt(
+          SErrorRecalcularTotalesFactura,
+          [oTotales.MensajeError]);
+      end;
+      if Assigned(AAlActualizarTotal) then
+      begin
+        AAlActualizarTotal(
+          nil,
+          oTotales.Totales.TotalLiquido);
+      end;
+    finally
+      FreeAndNil(oTotales);
+    end;
+  end;
 end;
 
 { TLinFac - Implementación completa }

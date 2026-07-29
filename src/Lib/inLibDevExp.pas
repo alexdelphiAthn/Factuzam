@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inLibDevExp                                                   }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       11/05/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       29/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -33,10 +33,8 @@ uses
     inLibPerfilesUsuarioIntf,
     cxCheckBox, cxMemo, cxCurrencyEdit, ExtDlgs, OleServer, AxCtrls,
     OleCtrls, DBOleCtl, cxLookAndFeels, System.Generics.Collections, TypInfo,
-    inLibLog, inLibParametrosIntf, Uni, inLibFormatoExcel;
-type
-  TUpdateTotalEvent = procedure(Sender: TObject;
-                                NuevoTotal: Currency) of object;
+    inLibLog, inLibParametrosIntf, Uni, inLibFormatoExcel,
+    inLibFacturas;
   procedure BusqAllGrid(var AdbTvGen: TcxGridDBTableView;
                         AsDatoBusq: String);
   procedure GrabarGrids(frmMto: TComponent);
@@ -92,7 +90,8 @@ type
                        Sender: TObject;
                        View: TcxGridDBTableView;
                        AcdsLineas, AcdsCabecera: TDataSet;
-                       AOnUpdateTotal: TUpdateTotalEvent = nil);
+                       AOnUpdateTotal:
+                         TActualizarTotalFacturaEvent = nil);
   function GetDBDataController(
     AView: TcxCustomGridTableView): TcxGridDBDataController;
   function GetItemFieldName(AItem: TcxCustomGridTableItem): string;
@@ -106,7 +105,7 @@ type
 implementation
 
   uses inLibWin,
-       inLibtb, inLibDatasets,
+       inLibDatasets,
        inLibDir, uGenericIfThen,
        inLibConfigCampos;
 
@@ -114,7 +113,8 @@ procedure GridRecalc(AConexion: TUniConnection;
                      Sender: TObject;
                      View: TcxGridDBTableView;
                      AcdsLineas, AcdsCabecera: TDataSet;
-                     AOnUpdateTotal: TUpdateTotalEvent = nil);
+                     AOnUpdateTotal:
+                       TActualizarTotalFacturaEvent = nil);
 var
   Edit: TcxCustomEdit;
   Column: TcxGridDBColumn;
@@ -149,11 +149,13 @@ begin
       else
         ValoEditado := 0;
     end;
-    ActualizarLineaFacturaGen(AConexion, AcdsLineas,
-                              AcdsCabecera,
-                              FieldName,
-                              ValoEditado,
-                              AOnUpdateTotal);
+    ActualizarLineaFactura(
+      AConexion,
+      AcdsLineas,
+      AcdsCabecera,
+      FieldName,
+      ValoEditado,
+      AOnUpdateTotal);
   end;
 end;
 

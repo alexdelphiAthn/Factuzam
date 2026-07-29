@@ -71,7 +71,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal, inLibShowMto;
+  inLibWin, inLibShowMto;
 
 {$R *.dfm}
 

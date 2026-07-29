@@ -51,17 +51,18 @@ uses
   System.Threading,
   dxGDIPlusClasses, cxImage, Vcl.Imaging.pngimage,
   inLibContextoSesionIntf, inLibParametrosIntf, inLibShowMto,
-  inLibLicenciaAplicacion;
-
-const
-  WM_FREECONTROL = WM_USER + 1;
+  inLibLicenciaAplicacion, inLibAnfitrionMtoIntf,
+  inLibCajaVentanasIntf, inLibPermisosIntf;
 
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   TfrmMtoPrincipal = class(
     TfrmBase,
     IProveedorParametrosEdicion,
-    IAnfitrionPantallas
+    IAnfitrionPantallas,
+    IAnfitrionMantenimiento,
+    IProveedorMenuPantallas,
+    IAnfitrionCajaVentanas
   )
     mnuCaja: TMenuItem;
     mnuMenuCaja: TMenuItem;
@@ -143,6 +144,18 @@ type
     function GestorVentanas: TEmbeddedFormManager;
     function RegistroPantallas: TfzaWinF;
     procedure PrepararAperturaPantalla;
+    function ResolverCallPantalla(const AUnidadClase: string): string;
+    function ResolverDataModulePantalla(
+      const AUnidadClase: string): string;
+    procedure CancelarEdicionesPantallas;
+    procedure VincularFotoMantenimiento(AMantenimiento: TObject);
+    function MenuAplicacion: TMainMenu;
+    function CrearOperacionCaja(
+      AOwner: TComponent;
+      const APermisos: IPermisosAplicacion): IOperacionCaja;
+    function CrearConsultaOperacionesCaja(
+      AOwner: TComponent;
+      const APermisos: IPermisosAplicacion): IConsultaOperacionesCaja;
   published
     tmr1: TTimer;
     StyleRepository1: TcxStyleRepository;
@@ -314,12 +327,11 @@ implementation
 
 uses inLibUser,
   inLibWin,
-  inLibtb,
+  inLibDevExp,
   inLibGlobalVar,
   inLibInformesGuiasCache,
   inLibConfigCampos,
   inLibPermisos,
-  inLibPermisosIntf,
   inLibPermisosUniDAC,
   inLibConexionesIntf,
   inLibConexionesUniDAC,
@@ -334,6 +346,8 @@ uses inLibUser,
   inMtoSplash,
   inMtoAppParam,
   inMtoCajaMenu,
+  inMtoCajaOpe,
+  inMtoConsultaOpe,
   inMtoCajaParam,
   inMtoBusquedaDatos,
   inMtoModalVerifactuDecl,
@@ -1139,7 +1153,8 @@ begin
       AvisarFalloCargaPermisos(E.ClassName + ': ' + E.Message);
     end;
   end;
-  Log.LogInfo(Format('PrecargaSerie: total=%d ms', [swTotal.ElapsedMilliseconds]));
+  Log.LogInfo(
+    Format('PrecargaSerie: total=%d ms', [swTotal.ElapsedMilliseconds]));
 end;
 
 function TfrmMtoPrincipal.EjecutarCargaWorker(ACarga: TProc<TUniConnection>;
@@ -1509,7 +1524,7 @@ begin
     FileMask := '*.*';
   end;
   saveDialog.FileName := 'copiaseguridad' +
-                            FormatDateTime('_dd_mm_yyyy_HH_nn_ss', Now) + '.sql';
+    FormatDateTime('_dd_mm_yyyy_HH_nn_ss', Now) + '.sql';
   if saveDialog.Execute then
   begin
     MostrarBarraProgreso;
@@ -1555,7 +1570,8 @@ var
 begin
   // Señalar a las tareas de segundo plano que la app se esta cerrando, ANTES
   // de empezar a liberar formularios y conexiones. Asi no arrancan trabajo
-  // nuevo ni tocan formularios en destruccion (ver inMtoGen.EjecutarEnBackground
+  // nuevo ni tocan formularios en destruccion
+  // (ver inMtoGen.EjecutarEnBackground
   // y el destructor de TfrmMtoGen).
   if Supports(
     ContextoSesion,
@@ -2365,6 +2381,64 @@ end;
 function TfrmMtoPrincipal.RegistroPantallas: TfzaWinF;
 begin
   Result := oFzaWinf;
+end;
+
+function TfrmMtoPrincipal.ResolverCallPantalla(
+  const AUnidadClase: string): string;
+begin
+  Result := oFzaWinf.CallDeUnit(AUnidadClase);
+end;
+
+function TfrmMtoPrincipal.ResolverDataModulePantalla(
+  const AUnidadClase: string): string;
+begin
+  Result := oFzaWinf.GetDataModuleName(AUnidadClase);
+end;
+
+procedure TfrmMtoPrincipal.CancelarEdicionesPantallas;
+begin
+  CancelarGrids(pcPrincipal);
+end;
+
+procedure TfrmMtoPrincipal.VincularFotoMantenimiento(
+  AMantenimiento: TObject);
+begin
+  EngancharFotoAlMto(AMantenimiento);
+end;
+
+function TfrmMtoPrincipal.MenuAplicacion: TMainMenu;
+begin
+  Result := Menu;
+end;
+
+function TfrmMtoPrincipal.CrearOperacionCaja(
+  AOwner: TComponent;
+  const APermisos: IPermisosAplicacion): IOperacionCaja;
+var
+  oFormulario: TfrmMtoOpeCaja;
+begin
+  oFormulario := TfrmMtoOpeCaja.Create(AOwner, APermisos);
+  if not Supports(oFormulario, IOperacionCaja, Result) then
+  begin
+    FreeAndNil(oFormulario);
+    raise EInvalidCast.Create(
+      'La ventana de operación no implementa IOperacionCaja.');
+  end;
+end;
+
+function TfrmMtoPrincipal.CrearConsultaOperacionesCaja(
+  AOwner: TComponent;
+  const APermisos: IPermisosAplicacion): IConsultaOperacionesCaja;
+var
+  oFormulario: TfrmConsultaOpe;
+begin
+  oFormulario := TfrmConsultaOpe.Create(AOwner, APermisos);
+  if not Supports(oFormulario, IConsultaOperacionesCaja, Result) then
+  begin
+    FreeAndNil(oFormulario);
+    raise EInvalidCast.Create(
+      'La ventana de consulta no implementa IConsultaOperacionesCaja.');
+  end;
 end;
 
 // Restaurar la ventana principal y apartar el menu de caja antes de

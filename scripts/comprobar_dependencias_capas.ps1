@@ -1,61 +1,169 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+function Quitar-ContenidoNoEjecutable {
+  param([string]$Contenido)
+  $resultado = [regex]::Replace(
+    $Contenido,
+    "'(?:''|[^'])*'",
+    "''")
+  $resultado = [regex]::Replace(
+    $resultado,
+    '(?s)\{.*?\}|\(\*.*?\*\)',
+    ' ')
+  $resultado = [regex]::Replace($resultado, '(?m)//[^\r\n]*', ' ')
+  return $resultado
+}
+
+function Visitar-Unidad {
+  param(
+    [string]$Unidad,
+    [hashtable]$Grafo,
+    [hashtable]$Estado
+  )
+  $Estado.Indices[$Unidad] = $Estado.Indice
+  $Estado.Minimos[$Unidad] = $Estado.Indice
+  $Estado.Indice++
+  $Estado.Pila.Push($Unidad)
+  [void]$Estado.EnPila.Add($Unidad)
+  foreach ($dependencia in $Grafo[$Unidad]) {
+    if (-not $Estado.Indices.ContainsKey($dependencia)) {
+      Visitar-Unidad -Unidad $dependencia -Grafo $Grafo -Estado $Estado
+      $Estado.Minimos[$Unidad] = [Math]::Min(
+        $Estado.Minimos[$Unidad],
+        $Estado.Minimos[$dependencia])
+    }
+    elseif ($Estado.EnPila.Contains($dependencia)) {
+      $Estado.Minimos[$Unidad] = [Math]::Min(
+        $Estado.Minimos[$Unidad],
+        $Estado.Indices[$dependencia])
+    }
+  }
+  if ($Estado.Minimos[$Unidad] -eq $Estado.Indices[$Unidad]) {
+    $componente = [System.Collections.Generic.List[string]]::new()
+    do {
+      $miembro = $Estado.Pila.Pop()
+      [void]$Estado.EnPila.Remove($miembro)
+      $componente.Add($miembro)
+    } while ($miembro -ne $Unidad)
+    $Estado.Componentes.Add($componente.ToArray())
+  }
+}
+
 $raiz = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$rutaSrc = Join-Path $raiz 'src'
-
+$rutaProyecto = Join-Path $raiz 'fzam.dpr'
 $dependenciasPermitidas = @()
-
 $infracciones = [System.Collections.Generic.List[string]]::new()
 $deudaConocida = [System.Collections.Generic.List[string]]::new()
-$archivos = Get-ChildItem -LiteralPath $rutaSrc -Recurse -Filter '*.pas' |
+$unidades = @{}
+$contenidoProyecto = Get-Content -LiteralPath $rutaProyecto -Raw
+$rutasProyecto = foreach ($coincidencia in [regex]::Matches(
+  $contenidoProyecto,
+  "(?is)\b[A-Za-z_][A-Za-z0-9_.]*\s+in\s+'([^']+\.pas)'")) {
+  Join-Path $raiz $coincidencia.Groups[1].Value
+}
+$archivos = $rutasProyecto |
+  Sort-Object -Unique |
+  Where-Object { Test-Path -LiteralPath $_ } |
+  ForEach-Object { Get-Item -LiteralPath $_ } |
   Where-Object {
-    $_.FullName -notlike '*\3rdpartyComp\*'
+    $_.FullName -notlike '*\3rdpartyComp\*' -and
+    $_.FullName -notlike '*\Lib\sqlformatter\*'
   }
 
 foreach ($archivo in $archivos) {
   $contenido = Get-Content -LiteralPath $archivo.FullName -Raw
+  $limpio = Quitar-ContenidoNoEjecutable -Contenido $contenido
   $coincidenciaUnidad = [regex]::Match(
-    $contenido,
+    $limpio,
     '(?im)^\s*unit\s+([A-Za-z_][A-Za-z0-9_.]*)\s*;')
-  $procesarUnidad = $coincidenciaUnidad.Success
-  if ($procesarUnidad) {
-    $unidad = $coincidenciaUnidad.Groups[1].Value
-    $procesarUnidad = (($unidad -match '^(?i)inLib') -or
-                       ($unidad -match '^(?i)UniData'))
+  if ($coincidenciaUnidad.Success) {
+    $nombre = $coincidenciaUnidad.Groups[1].Value
+    $unidades[$nombre.ToLowerInvariant()] = @{
+      Archivo = $archivo.FullName
+      Limpio = $limpio
+      Nombre = $nombre
+    }
   }
-  if ($procesarUnidad) {
-    $limpio = [regex]::Replace(
-      $contenido,
-      '(?s)\{.*?\}|\(\*.*?\*\)',
-      ' ')
-    $limpio = [regex]::Replace($limpio, '(?m)//[^\r\n]*', ' ')
-    $limpio = [regex]::Replace($limpio, "'(?:''|[^'])*'", "''")
-    $dependencias = [System.Collections.Generic.HashSet[string]]::new(
-      [System.StringComparer]::OrdinalIgnoreCase)
-    foreach ($bloqueUses in [regex]::Matches(
-      $limpio,
-      '(?is)\buses\b(.*?);')) {
-      foreach ($dependencia in [regex]::Matches(
-        $bloqueUses.Groups[1].Value,
-        '\b(inMto[A-Za-z0-9_.]*)\b',
-        [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)) {
-        [void]$dependencias.Add($dependencia.Groups[1].Value)
+}
+
+$grafo = @{}
+foreach ($clave in $unidades.Keys) {
+  $grafo[$clave] = [System.Collections.Generic.HashSet[string]]::new(
+    [System.StringComparer]::OrdinalIgnoreCase)
+}
+
+foreach ($clave in $unidades.Keys) {
+  $unidad = $unidades[$clave]
+  $dependencias = [System.Collections.Generic.HashSet[string]]::new(
+    [System.StringComparer]::OrdinalIgnoreCase)
+  foreach ($bloqueUses in [regex]::Matches(
+    $unidad.Limpio,
+    '(?is)\buses\b(.*?);')) {
+    foreach ($coincidencia in [regex]::Matches(
+      $bloqueUses.Groups[1].Value,
+      '\b[A-Za-z_][A-Za-z0-9_.]*\b')) {
+      $dependencia = $coincidencia.Value
+      [void]$dependencias.Add($dependencia)
+      $claveDependencia = $dependencia.ToLowerInvariant()
+      if ($unidades.ContainsKey($claveDependencia)) {
+        [void]$grafo[$clave].Add($claveDependencia)
       }
     }
+  }
+  $esCapaLogica = $unidad.Nombre -match '^(?i)(inLib|UniData)'
+  if ($esCapaLogica) {
     foreach ($dependencia in $dependencias) {
-      $clave = ($unidad + '->' + $dependencia).ToLowerInvariant()
-      $relativa = [System.IO.Path]::GetRelativePath(
-        $raiz,
-        $archivo.FullName)
-      $detalle = $unidad + ' -> ' + $dependencia + ' (' + $relativa + ')'
-      if ($dependenciasPermitidas -contains $clave) {
-        $deudaConocida.Add($detalle)
-      }
-      else {
-        $infracciones.Add($detalle)
+      if ($dependencia -match '^(?i)inMto') {
+        $clavePermitida =
+          ($unidad.Nombre + '->' + $dependencia).ToLowerInvariant()
+        $relativa = [System.IO.Path]::GetRelativePath(
+          $raiz,
+          $unidad.Archivo)
+        $detalle =
+          $unidad.Nombre + ' -> ' + $dependencia + ' (' + $relativa + ')'
+        if ($dependenciasPermitidas -contains $clavePermitida) {
+          $deudaConocida.Add($detalle)
+        }
+        else {
+          $infracciones.Add($detalle)
+        }
       }
     }
+  }
+  if ($unidad.Nombre -ine 'inMtoPrincipal' -and
+      $unidad.Limpio -match '\b(TfrmMtoPrincipal|frmMtoPrincipal)\b') {
+    $relativa = [System.IO.Path]::GetRelativePath(
+      $raiz,
+      $unidad.Archivo)
+    $infracciones.Add(
+      $unidad.Nombre + ' conoce directamente al formulario principal (' +
+      $relativa + ')')
+  }
+}
+
+$estado = @{
+  Componentes = [System.Collections.Generic.List[object]]::new()
+  EnPila = [System.Collections.Generic.HashSet[string]]::new(
+    [System.StringComparer]::OrdinalIgnoreCase)
+  Indice = 0
+  Indices = @{}
+  Minimos = @{}
+  Pila = [System.Collections.Generic.Stack[string]]::new()
+}
+foreach ($unidad in $grafo.Keys) {
+  if (-not $estado.Indices.ContainsKey($unidad)) {
+    Visitar-Unidad -Unidad $unidad -Grafo $grafo -Estado $estado
+  }
+}
+
+$ciclos = [System.Collections.Generic.List[string]]::new()
+foreach ($componente in $estado.Componentes) {
+  if ($componente.Count -gt 1) {
+    $nombres = foreach ($miembro in $componente) {
+      $unidades[$miembro].Nombre
+    }
+    $ciclos.Add(($nombres | Sort-Object) -join ' -> ')
   }
 }
 
@@ -64,10 +172,20 @@ if ($infracciones.Count -gt 0) {
   foreach ($infraccion in $infracciones) {
     Write-Host ('  ' + $infraccion)
   }
+}
+if ($ciclos.Count -gt 0) {
+  Write-Host 'Ciclos de unidades no permitidos:'
+  foreach ($ciclo in $ciclos) {
+    Write-Host ('  ' + $ciclo)
+  }
+}
+if (($infracciones.Count -gt 0) -or ($ciclos.Count -gt 0)) {
   exit 1
 }
 
-Write-Host 'Dependencias de capa: OK.'
+Write-Host (
+  'Dependencias de capa: OK. Unidades analizadas: ' +
+  $unidades.Count + '. Ciclo mayor: 1.')
 if ($deudaConocida.Count -gt 0) {
   Write-Host 'Deuda conocida permitida:'
   foreach ($dependencia in $deudaConocida) {

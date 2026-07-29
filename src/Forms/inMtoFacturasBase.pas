@@ -708,19 +708,13 @@ uses
   inMtoModalImpFac,
   inMtoModalRegistrarPago,
   inMtoModalSeleccionarBanco,
-  inMtoPrincipal,
   inLibUser,
   inLibVerifactu,
   inLibVerifactuCola,
   inLibVentasWsCola,
   inMtoModalFacturarTicket,
-  inMtoArticulos,
-  inMtoEmpresas,
-  inMtoClientes,
-
   inLibLog,
   inLibDir,
-  inLibtb,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku, inLibColumnasDocumento,
   inLibPresentacionDocumento;
@@ -1863,7 +1857,7 @@ begin
   inherited;
    form := TfrmGenFacRec.Create(Self);
    try
-     form.dmFac := dmmFacturas;
+     form.Preparar(dmmFacturas);
      form.ShowModal;
    finally
      FreeAndNil(form);
@@ -3947,7 +3941,7 @@ begin
     // Recalculo de la linea y de los totales fiscales de la cabecera
     // (sin esto TOTAL_FACLIN y TOTAL_FAC_SIVA_FACLIN quedaban a 0 en el
     // INSERT si el usuario abandonaba la fila sin tocar otros campos).
-    ActualizarLineaFacturaGen(ConexionPrincipal, Lin, dmmFacturas.unqryTablaG,
+    ActualizarLineaFactura(ConexionPrincipal, Lin, dmmFacturas.unqryTablaG,
       'PRECIO_SALIDA_FACLIN',
       Lin.FieldByName('PRECIO_SALIDA_FACLIN').Value);
   finally
@@ -4006,7 +4000,7 @@ begin
     if Lin.FindField('CANTIDAD_FACLIN').AsFloat = 0 then
       Lin.FindField('CANTIDAD_FACLIN').AsFloat := 1;
     // Recalculo de la linea y de los totales fiscales de la cabecera.
-    ActualizarLineaFacturaGen(ConexionPrincipal, Lin, dmmFacturas.unqryTablaG,
+    ActualizarLineaFactura(ConexionPrincipal, Lin, dmmFacturas.unqryTablaG,
       'PRECIO_SALIDA_FACLIN',
       Lin.FieldByName('PRECIO_SALIDA_FACLIN').Value);
   finally
@@ -4182,5 +4176,3 @@ end;
 initialization
   ForceReferenceToClass(TfrmMtoFacturasBase);
 end.
-
-

@@ -32,7 +32,7 @@ uses
   cxDBExtLookupComboBox, MemDS, DBAccess, cxEditRepositoryItems, system.UITypes,
   System.Actions, Vcl.ActnList, Vcl.Imaging.PngImage, inLibFotos,
   System.Generics.Collections, System.Diagnostics, cxLocalization,
-  inLibLectorScanner;
+  inLibLectorScanner, inLibCajaTipos, inLibCajaVentanasIntf;
 
 const
   WM_CANCELAR_LINEA = WM_APP + 100;
@@ -59,7 +59,7 @@ const
   // se aplica en un mensaje posterior para que no restaure la columna previa.
   WM_ENFOCAR_ARTICULO_CAJA = WM_APP + 105;
 type
-  TfrmMtoOpeCaja = class(TfrmBase)
+  TfrmMtoOpeCaja = class(TfrmBase, IOperacionCaja)
     pnlUp: TPanel;
     pnlCli: TPanel;
     lblFecha: TcxLabel;
@@ -337,6 +337,7 @@ type
     const MAX_CAJAS = 5;
   public
     procedure ResolverArtSkuStock(out ACodArt, ACodSku: string); override;
+    function FormularioCaja: TCustomForm;
     // Carga EXTERNA ("Enviar a..." de Documentos de Trabajo): anade
     // una linea con el SKU y cantidad indicados usando el mismo flujo
     // que el lector (RellenarDatosArticuloEnDataset). False si el
@@ -367,7 +368,6 @@ implementation
 {$R *.dfm}
 
 uses
-  inMtoCajaMenu,
   inLibGridCantidad,
   inLibUser,
   inLibLog,
@@ -380,12 +380,11 @@ uses
   inLibArticulosValidador, inLibArticulosResolver,
   inLibArticulosAtributosLookup,
   inLibAtributosPaleta,
-  inLibShowMto, inMtoPrincipal,
+  inLibShowMto,
   inMtoStockConsulta,
   inLibCorreoTickets,
   inLibDir,
   System.StrUtils,
-  inMtoConsultaOpe,
   inLibMsg;
 
 procedure TfrmMtoOpeCaja.ActualizarFoco;
@@ -453,8 +452,7 @@ begin
       FUltimoTickReloj := Now;
       ActualizarRelojCaja;
       SincronizarFechaCajaCabecera;
-      if Assigned(frmMtoMenuCaja) then
-        frmMtoMenuCaja.ActualizarFechaCaja(FFecha);
+      NotificarFechaCaja(FFecha);
     end
     else
       ShowMessage(SErrorHoraCajaNoValida);
@@ -465,8 +463,7 @@ begin
     FUltimoTickReloj := Now;
     ActualizarRelojCaja;
     SincronizarFechaCajaCabecera;
-    if Assigned(frmMtoMenuCaja) then
-      frmMtoMenuCaja.ActualizarFechaCaja(FFecha);
+    NotificarFechaCaja(FFecha);
   end;
 end;
 
@@ -2548,7 +2545,9 @@ end;
 
 procedure TfrmMtoOpeCaja.AbrirBuscarModificar;
 var
-  Formulario: TfrmConsultaOpe;
+  oAnfitrion: IAnfitrionCajaVentanas;
+  oConsulta: IConsultaOperacionesCaja;
+  oFormulario: TCustomForm;
 begin
   if (FCodigoEmpresa = '') or
      (FCodigoAlmacen = '') or
@@ -2556,16 +2555,20 @@ begin
     ShowMessage(SErrorUbicacionCajaBuscarOperacionesNoAsignada)
   else
   begin
-    Formulario := TfrmConsultaOpe.Create(Application, Permisos);
+    oAnfitrion := ExigirAnfitrionCaja(Application.MainForm);
+    oConsulta :=
+      oAnfitrion.CrearConsultaOperacionesCaja(Application, Permisos);
+    oFormulario := oConsulta.FormularioConsultaCaja;
     try
-      Formulario.PopupParent := Self;
-      Formulario.PrepararValores(FCodigoEmpresa,
-                                 FCodigoAlmacen,
-                                 FCodigoCaja,
-                                 FFecha);
-      Formulario.Show;
+      oFormulario.PopupParent := Self;
+      oConsulta.PrepararValores(
+        FCodigoEmpresa,
+        FCodigoAlmacen,
+        FCodigoCaja,
+        FFecha);
+      oFormulario.Show;
     except
-      FreeAndNil(Formulario);
+      FreeAndNil(oFormulario);
       raise;
     end;
   end;
@@ -2623,7 +2626,7 @@ begin
      Assigned(DatosCaja.cdsLineas) and
      DatosCaja.cdsLineas.Active then
     sCodArt := DatosCaja.cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString;
-  ShowMto(frmMtoPrincipal, 'Articulos', sCodArt);
+  ShowMto(Application.MainForm, 'Articulos', sCodArt);
 end;
 
 procedure TfrmMtoOpeCaja.RestaurarLayoutCaja;
@@ -3303,7 +3306,6 @@ var
   CodigoValeGenerado: string;
   sMensajeCorreo: string;
   slRutasTicketPdf: TStringList;
-  iFormulario: Integer;
 begin
   if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
   begin
@@ -3485,16 +3487,7 @@ begin
          if FNumeroRectifica <> '' then
          begin
            if FTipoRectificativa = trcSustitutiva then
-           begin
-             for iFormulario := 0 to Screen.FormCount - 1 do
-             begin
-               if Screen.Forms[iFormulario] is TfrmConsultaOpe then
-               begin
-                 TfrmConsultaOpe(
-                   Screen.Forms[iFormulario]).RefrescarOperaciones;
-               end;
-             end;
-           end;
+             RefrescarConsultasOperacionesCaja;
            FSerieRectifica  := '';
            FNumeroRectifica := '';
            FTipoRectificativa := trcNinguna;
@@ -3550,6 +3543,11 @@ begin
       DatosCaja.cdsLineas.Cancel;
     Result := DatosCaja.cdsLineas.IsEmpty;
   end;
+end;
+
+function TfrmMtoOpeCaja.FormularioCaja: TCustomForm;
+begin
+  Result := Self;
 end;
 
 procedure TfrmMtoOpeCaja.CargarRectificacion(

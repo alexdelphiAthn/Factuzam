@@ -199,10 +199,11 @@ Se llama:
 #### 4.3.4 Cálculo de la línea
 
 Los handlers `tvUds…/tvDescuento…/tvPrecioUni…/tvTotalPropertiesEditValueChanged`
-llaman a `GridRecalc` (definido en `inLibtb`) pasando los dos cdsCalc + el
-callback `ActualizarLabelTotal`. Antes de recalcular ponen a 0 los precios
-finales (`PRECIO_VENTA_CIVA_/SIVA_ARTICULO_FACLIN`) para que el motor respete
-descuentos editados a mano.
+llaman a `GridRecalc` (definido en `inLibDevExp`) pasando los dos cdsCalc +
+el callback `ActualizarLabelTotal`. El cálculo de línea y cabecera vive en
+`inLibFacturas.ActualizarLineaFactura`. Antes de recalcular ponen a 0 los
+precios finales (`PRECIO_VENTA_CIVA_/SIVA_ARTICULO_FACLIN`) para que el
+motor respete descuentos editados a mano.
 
 ### 4.4 Cliente y empleado
 

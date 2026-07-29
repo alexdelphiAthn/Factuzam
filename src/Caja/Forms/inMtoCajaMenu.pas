@@ -23,14 +23,16 @@ uses
   cxLookAndFeelPainters, cxContainer, cxEdit, JvExControls, JvAnimatedImage,
   JvGIFCtrl, cxLabel, Vcl.ExtCtrls, math, cxStyles,
   UniProvider, MySQLUniProvider, Data.DB, DBAccess, Uni, Vcl.Menus,
-  Vcl.StdCtrls, cxButtons, inMtoCajaOpe, inMtoTraspasoOpe, UniDataTraspaso,
+  Vcl.StdCtrls, cxButtons, inLibCajaVentanasIntf, inMtoTraspasoOpe,
+  UniDataTraspaso,
   system.IOUtils, system.IniFiles,
   inMtoModalCajDef, JvTFManager, JvTFGlance, JvTFMonths, Vcl.ComCtrls,
   JvExComCtrls, JvMonthCalendar, cxCalendar, CommCtrl,
-  inLibVentasCalendario, System.Actions, Vcl.ActnList, dxGDIPlusClasses, cxImage;
+  inLibVentasCalendario, System.Actions, Vcl.ActnList, dxGDIPlusClasses,
+  cxImage;
 
 type
-  TfrmMtoMenuCaja = class(TfrmBase)
+  TfrmMtoMenuCaja = class(TfrmBase, IReceptorFechaCaja)
     lblF5: TcxLabel;
     lblF10: TcxLabel;
     lblBuscarModificar: TcxLabel;
@@ -176,7 +178,7 @@ implementation
 
 uses
   inLibPermisosIntf,
-  DateUtils, inMtoConsultaOpe, inMtoPrincipal,
+  DateUtils,
   inMtoModalArqueo, inMtoModalEntradaCambio, inMtoModalGastoCaja, inLibMsg;
 
 {$R *.dfm}
@@ -194,30 +196,15 @@ procedure TfrmMtoMenuCaja.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Action := caFree;
   frmMtoMenuCaja := nil;
-  if Assigned(frmMtoPrincipal) and
-     (frmMtoPrincipal.WindowState = wsMinimized) then
-    frmMtoPrincipal.WindowState := wsMaximized;
+  if Assigned(Application.MainForm) and
+     (Application.MainForm.WindowState = wsMinimized) then
+    Application.MainForm.WindowState := wsMaximized;
 end;
 
 procedure TfrmMtoMenuCaja.FormCloseQuery(Sender: TObject;
                                          var CanClose: Boolean);
-var
-  i: Integer;
-  F: TForm;
 begin
-  CanClose := True;
-  for i := Screen.FormCount - 1 downto 0 do
-  begin
-    F := Screen.Forms[i];
-    if F is TfrmMtoOpeCaja then
-    begin
-      if not TfrmMtoOpeCaja(F).IntentarCerrar then
-      begin
-        CanClose := False;
-        Break;
-      end;
-    end;
-  end;
+  CanClose := PuedenCerrarOperacionesCaja;
 end;
 
 procedure TfrmMtoMenuCaja.FormCreate(Sender: TObject);
@@ -379,20 +366,25 @@ end;
 
 procedure TfrmMtoMenuCaja.AbrirBuscarModificar;
 var
-  frm: TfrmConsultaOpe;
+  oAnfitrion: IAnfitrionCajaVentanas;
+  oConsulta: IConsultaOperacionesCaja;
+  oFormulario: TCustomForm;
 begin
   if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
   begin
     ShowMessage(SErrorUbicacionCajaBuscarOperacionesNoAsignada);
     Exit;
   end;
-  frm := TfrmConsultaOpe.Create(Application, Permisos);
+  oAnfitrion := ExigirAnfitrionCaja(Application.MainForm);
+  oConsulta :=
+    oAnfitrion.CrearConsultaOperacionesCaja(Application, Permisos);
+  oFormulario := oConsulta.FormularioConsultaCaja;
   try
-    frm.PopupParent := Self;
-    frm.PrepararValores(FEmpresa, FAlmacen, FCaja, FFechaCaja);
-    frm.Show;
+    oFormulario.PopupParent := Self;
+    oConsulta.PrepararValores(FEmpresa, FAlmacen, FCaja, FFechaCaja);
+    oFormulario.Show;
   except
-    FreeAndNil(frm);
+    FreeAndNil(oFormulario);
     raise;
   end;
 end;
@@ -600,19 +592,23 @@ end;
 // F5 - Ventas
 procedure TfrmMtoMenuCaja.lblVentasClick(Sender: TObject);
 var
-  frmMtoOpeCaja: TfrmMtoOpeCaja;
+  oAnfitrion: IAnfitrionCajaVentanas;
+  oOperacion: IOperacionCaja;
+  oFormulario: TCustomForm;
 begin
-  frmMtoOpeCaja := TfrmMtoOpeCaja.Create(Application, Permisos);
+  oAnfitrion := ExigirAnfitrionCaja(Application.MainForm);
+  oOperacion := oAnfitrion.CrearOperacionCaja(Application, Permisos);
+  oFormulario := oOperacion.FormularioCaja;
   try
-    frmMtoOpeCaja.PopupParent := Self;
-    frmMtoOpeCaja.Tag := 1;
-    frmMtoOpeCaja.Caption := Format('Operación 1 - (Caja Real %s)',
-                                    [Self.FCaja]);
-    frmMtoOpeCaja.PrepararValores(Self.FEmpresa, Self.FAlmacen, Self.FCaja,
-                                  Self.FFechaCaja);
-    frmMtoOpeCaja.Show;
+    oFormulario.PopupParent := Self;
+    oFormulario.Tag := 1;
+    oFormulario.Caption := Format('Operación 1 - (Caja Real %s)',
+                                  [Self.FCaja]);
+    oOperacion.PrepararValores(
+      Self.FEmpresa, Self.FAlmacen, Self.FCaja, Self.FFechaCaja);
+    oFormulario.Show;
   except
-    FreeAndNil(frmMtoOpeCaja);
+    FreeAndNil(oFormulario);
   end;
 end;
 

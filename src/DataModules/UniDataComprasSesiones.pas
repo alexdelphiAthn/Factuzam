@@ -205,8 +205,7 @@ implementation
 uses
   System.Variants,
   inLibValoresAutomaticos,
-  inLibComprasSesiones,
-  inLibComprasSesionesMaterializar,
+  inLibComprasSesionesReglas,
   inLibContadorLineas,
   inLibComprasImpuestos,
   inLibData,
@@ -834,7 +833,8 @@ begin
   // Misma regla que aplica el materializador (SanearColorSku) y la foto.
   if Trim(unqrySesionLin.FieldByName('COLOR_TEXTO_SESLIN').AsString) <> '' then
     unqrySesionLin.FieldByName('COLOR_TEXTO_SESLIN').AsString :=
-      SanearColorSku(unqrySesionLin.FieldByName('COLOR_TEXTO_SESLIN').AsString);
+      inLibComprasSesionesReglas.SanearColorSku(
+        unqrySesionLin.FieldByName('COLOR_TEXTO_SESLIN').AsString);
   // Detección de duplicado
   if unqrySesionLin.FieldByName(
     'CODIGO_ART_TENTATIVO_SESLIN').AsString <> '' then
@@ -845,7 +845,7 @@ begin
   // numero de la serie e incrementar el contador.
   if sTecla <> '' then
   begin
-    if inLibComprasSesiones.ResolverCodigoFamilia(
+    if inLibComprasSesionesReglas.ResolverCodigoFamilia(
          ConexionPrincipal, sTecla, IdentidadSesion.Usuario, sNuevo) then
     begin
       unqrySesionLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString :=

@@ -69,6 +69,7 @@ type
     procedure AddValorDefecto(const aCampo: string; const aValor: Variant);
     function EjecutarAltaGenerica(sCod, sDesc: string):Boolean;
   protected
+    function ConsultaPerfilesLocal: TUniQuery; override;
     function DebeAjustarColumnasAutomaticamente: Boolean; virtual;
   public
     FConfigAlta: TConfigAltaRapida;
@@ -183,6 +184,11 @@ procedure TfrmMtoSearch.AplicarEtiquetas;
 begin
   inherited;
   //AbrirPerfiles(tsPerfil.TabVisible);
+end;
+
+function TfrmMtoSearch.ConsultaPerfilesLocal: TUniQuery;
+begin
+  Result := unqryPerfiles;
 end;
 
 procedure TfrmMtoSearch.btnAceptarClick(Sender: TObject);

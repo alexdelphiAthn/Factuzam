@@ -108,7 +108,7 @@ var
 implementation
 
 uses
-  inLibWin, inLibShowMto, inLibFotos, inMtoPrincipal;
+  inLibWin, inLibShowMto, inLibFotos;
 
 {$R *.dfm}
 

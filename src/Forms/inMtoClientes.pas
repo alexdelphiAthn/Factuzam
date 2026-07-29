@@ -30,7 +30,7 @@ uses
   Vcl.ToolWin, Vcl.ActnMan, Vcl.ActnCtrls, cxTextEdit, Vcl.Buttons, dxBevel,
   cxCurrencyEdit, cxCalendar, cxMaskEdit, cxDropDownEdit, cxDBEdit,
   dxGDIPlusClasses, cxImage, cxCustomListBox, cxCheckListBox, cxDBCheckListBox,
-  cxCheckBox, cxMemo, inLibDevExp, inLibtb, cxBlobEdit, ClipBrd, cxLookupEdit,
+  cxCheckBox, cxMemo, inLibDevExp, cxBlobEdit, ClipBrd, cxLookupEdit,
   cxDBLookupEdit, cxDBLookupComboBox, dxScrollbarAnnotations, dxCore,
   cxSpinEdit,
   cxRadioGroup, cxGridExportLink,  System.UITypes, System.Actions, Vcl.ActnList,
@@ -457,15 +457,11 @@ uses
   inLibUser,
   inLibShowMto,
   inLibFotos,
-  inMtoFacturasBase,
-  inMtoEmpresas,
-  inMtoArticulos,
   inMtoModalCliEti,
   inLibDir,
   inLibIBAN,
   inLibMsg,
   inLibPermisosIntf,
-  inMtoPrincipal,
   Uni;
 
 {$R *.dfm}
@@ -553,6 +549,7 @@ begin
   begin
     formulario := TfrmPrintCliEti.Create(Application);
     try
+      formulario.Preparar(dmmClientes);
       formulario.edtCodCli.Text :=
         dsTablaG.Dataset.FieldByName('CODIGO_CLI_CLI').AsString;
       formulario.ShowModal;

@@ -90,7 +90,7 @@ var
 implementation
 
 uses
-  inLibWin, inLibUser, inMtoPrincipal,
+  inLibWin, inLibUser,
   inMtoModalGenImpSave, inMtoModalImpPagos, inLibFiltroUsuario, inLibMsg;
 
 {$R *.dfm}

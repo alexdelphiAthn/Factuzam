@@ -198,7 +198,7 @@ var
 implementation
 
 uses
-  inLibWin, inLibUser, inLibShowMto, inMtoPrincipal,
+  inLibWin, inLibUser, inLibShowMto,
   inMtoModalGenImpSave, inMtoModalImpOperaciones, inMtoPreviewExcel,
   inLibDevExcel, inLibFotos, inLibFiltroUsuario,
   dxSpreadSheetGraphics, inLibMsg;
@@ -941,9 +941,9 @@ procedure TfrmMtoCajaOperacionesHist.AbrirMantenimiento(
         AClave: string);
 begin
   if Trim(AClave) <> '' then
-    ShowMto(frmMtoPrincipal, ACallWinF, AClave)
+    ShowMto(Application.MainForm, ACallWinF, AClave)
   else
-    ShowMto(frmMtoPrincipal, ACallWinF);
+    ShowMto(Application.MainForm, ACallWinF);
 end;
 
 procedure TfrmMtoCajaOperacionesHist.actIrArticuloExecute(Sender: TObject);

@@ -30,7 +30,7 @@ uses
   Vcl.ActnMan, Vcl.ActnCtrls, cxTextEdit, Vcl.Buttons, dxBevel, cxCurrencyEdit,
   cxCalendar, cxMaskEdit, cxDropDownEdit, cxDBEdit, dxGDIPlusClasses, cxImage,
   cxCustomListBox, cxCheckListBox, cxDBCheckListBox, cxCheckBox, cxMemo,
-  inLibDevExp, inLibtb, cxBlobEdit, ClipBrd, dxScrollbarAnnotations, dxCore,
+  inLibDevExp, cxBlobEdit, ClipBrd, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, System.Actions, Vcl.ActnList, Vcl.PlatformDefaultStyleActnCtrls,
   cxSplitter, cxSpinEdit, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs, cxGroupBox, cxLookupEdit, cxDBLookupEdit,
@@ -249,10 +249,6 @@ uses
   inLibUser,
   inLibShowMto,
   inLibFotos,
-  inMtoPrincipal,
-  inMtoArticulos,
-  inMtoClientes,
-  inMtoFacturasBase,
   inLibMsg;
 
 {$R *.dfm}
@@ -567,4 +563,3 @@ end;
 initialization
   ForceReferenceToClass(TfrmMtoProveedores);
 end.
-

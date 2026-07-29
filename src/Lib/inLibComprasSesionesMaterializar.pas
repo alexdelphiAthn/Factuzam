@@ -90,6 +90,7 @@ uses
   inLibLog,
   inLibEAN13,
   inLibComprasSesiones,
+  inLibComprasSesionesReglas,
   inLibFotos,
   inLibValoresAutomaticos,
   inLibAlbaranesCompraMovimientos,
@@ -346,29 +347,8 @@ end;
 // IMPORTANTE: el servidor de fotos debe nombrar el token COLOR con esta MISMA
 // regla (ver SanearColorFoto en inLibFotosNube) para que la foto case.
 function SanearColorSku(const ATexto: string): string;
-var
-  i        : Integer;
-  sParcial : string;
-  c        : Char;
 begin
-  sParcial := UpperCase(Trim(ATexto));
-  Result := '';
-  for i := 1 to Length(sParcial) do
-  begin
-    c := sParcial[i];
-    if c = ' ' then
-      Result := Result + '-'
-    else if CharInSet(c, ['A'..'Z', '0'..'9', '-', '_']) then
-      Result := Result + c;
-  end;
-  while Pos('--', Result) > 0 do
-    Result := StringReplace(Result, '--', '-', [rfReplaceAll]);
-  while Pos('__', Result) > 0 do
-    Result := StringReplace(Result, '__', '_', [rfReplaceAll]);
-  while (Result <> '') and CharInSet(Result[1], ['-', '_']) do
-    Delete(Result, 1, 1);
-  while (Result <> '') and CharInSet(Result[Length(Result)], ['-', '_']) do
-    Delete(Result, Length(Result), 1);
+  Result := inLibComprasSesionesReglas.SanearColorSku(ATexto);
 end;
 
 // Devuelve el ID_AV que debe llevar el color del SKU. Modelo de negocio: el

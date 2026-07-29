@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalImpFac                                              }
 {    Tipo:       Formulario (Modal)                                            }
@@ -24,7 +24,7 @@ uses
   frxExportBaseDialog, frxExportPDF, Vcl.StdCtrls, cxButtons, Vcl.ExtCtrls,
   cxControls, cxContainer, cxEdit, Vcl.ComCtrls, dxCore, cxDateUtils,
   cxMaskEdit, cxDropDownEdit, cxCalendar, cxRadioGroup, cxGroupBox, cxLabel,
-  cxTextEdit, UniDataFacturas, inMtoFacturasBase, DB, frxExportXLSX, MemDS,
+  cxTextEdit, UniDataFacturas, DB, frxExportXLSX, MemDS,
   DBAccess, Uni, frxDesgn, cxStyles, dxSkinsForm, cxClasses, cxLocalization,
   dxSkinsCore, dxSkinBlue, JvComponentBase, JvEnterTab, dxSkinBasic,
   dxSkinBlack, dxSkinBlueprint, dxSkinCaramel, dxSkinCoffee, dxSkinDarkroom,

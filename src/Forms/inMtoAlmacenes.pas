@@ -119,7 +119,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal;
+  inLibWin;
 
 {$R *.dfm}
 

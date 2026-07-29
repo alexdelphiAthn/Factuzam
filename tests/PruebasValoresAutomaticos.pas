@@ -47,7 +47,7 @@ implementation
 
 uses
   System.SysUtils, System.Classes,
-  inLibValoresAutomaticos, inLibtb;
+  inLibValoresAutomaticos;
 
 const
   MARGEN = 0.0001;
@@ -81,10 +81,6 @@ begin
     inLibValoresAutomaticos.
       ObtenerSeriePropiaAlmacen(
         nil, '', 'AV', 'A1'));
-  Assert.AreEqual(
-    '',
-    inLibtb.ObtenerSeriePropiaAlmacen(
-      nil, 'EMP', 'AV', ''));
 end;
 
 procedure TPruebasValoresAutomaticos.
@@ -94,10 +90,6 @@ begin
     '',
     inLibValoresAutomaticos.ObtenerSerieDefecto(
       nil, '', 'AV'));
-  Assert.AreEqual(
-    '',
-    inLibtb.ObtenerSerieDefecto(
-      nil, 'EMP', ''));
 end;
 
 procedure TPruebasValoresAutomaticos.
@@ -110,10 +102,6 @@ begin
     oElementos.Add('ANTERIOR');
     inLibValoresAutomaticos.CargarSeriesEmpresa(
       nil, '', 'AV', oElementos);
-    Assert.AreEqual(0, oElementos.Count);
-    oElementos.Add('ANTERIOR');
-    inLibtb.CargarSeriesEmpresa(
-      nil, 'EMP', '', oElementos);
     Assert.AreEqual(0, oElementos.Count);
   finally
     FreeAndNil(oElementos);

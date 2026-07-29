@@ -48,7 +48,7 @@ type
 implementation
 
 uses
-  inLibCadenas, inLibtb;
+  inLibCadenas;
 
 procedure TPruebasCadenas.Preparar;
 begin
@@ -73,11 +73,6 @@ begin
     '',
     inLibCadenas.HayCoincidencia(
       'abc', 'XYZ'));
-  Assert.AreEqual(
-    inLibCadenas.HayCoincidencia(
-      'abc', 'zby'),
-    inLibtb.HayCoincidencia(
-      'abc', 'zby'));
 end;
 
 procedure TPruebasCadenas.
@@ -88,11 +83,6 @@ begin
       'ABC123', nil));
   Assert.IsTrue(
     inLibCadenas.SimbolosProhibidos(
-      'ABC/123', nil));
-  Assert.AreEqual(
-    inLibCadenas.SimbolosProhibidos(
-      'ABC/123', nil),
-    inLibtb.SimbolosProhibidos(
       'ABC/123', nil));
 end;
 
@@ -107,9 +97,6 @@ begin
   Assert.IsFalse(
     inLibCadenas.SimbolosProhibidos(
       'ABC/123', FServicio));
-  Assert.IsTrue(
-    inLibtb.SimbolosProhibidos(
-      'ABC@123', FServicio));
 end;
 
 procedure TPruebasCadenas.
@@ -123,32 +110,20 @@ begin
     0,
     inLibCadenas.ContarOcurrenciasAnsi(
       'aaaa', ''));
-  Assert.AreEqual(
-    inLibCadenas.ContarOcurrenciasAnsi(
-      'aaaa', 'aa'),
-    inLibtb.AnsiOccurs(
-      'aaaa', 'aa'));
 end;
 
 procedure TPruebasCadenas.
   Separar_AdmiteSeparadorMultipleYFinalVacio;
 var
-  aFachada: inLibtb.TStringArray;
   aPartes: TArrayCadenas;
 begin
   aPartes := inLibCadenas.SepararAnsi(
-    'uno||dos||', '||');
-  aFachada := inLibtb.AnsiSplit(
     'uno||dos||', '||');
   Assert.AreEqual(
     3, Integer(Length(aPartes)));
   Assert.AreEqual('uno', aPartes[0]);
   Assert.AreEqual('dos', aPartes[1]);
   Assert.AreEqual('', aPartes[2]);
-  Assert.AreEqual(
-    Length(aPartes), Length(aFachada));
-  Assert.AreEqual(
-    aPartes[2], aFachada[2]);
 end;
 
 procedure TPruebasCadenas.

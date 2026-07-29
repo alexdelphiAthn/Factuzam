@@ -354,10 +354,6 @@ uses
   inLibVerifactuInstalacion,
   inLibMsg,
   inLibValoresAutomaticos,
-  inMtoPrincipal,
-  inMtoFacturasBase,
-  inMtoArticulos,
-  inMtoClientes,
   inMtoModalSeriesDocumentos;
 
 {$R *.dfm}

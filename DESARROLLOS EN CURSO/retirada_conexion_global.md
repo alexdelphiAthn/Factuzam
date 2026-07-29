@@ -117,7 +117,7 @@ lo que queda:
 | Compras y sesiones | `inLibComprasSesiones`, `inLibComprasSesionesMaterializar` | 19 |
 | Fotografías | `inLibFotos` | 17 |
 | Tickets e impresión | `inLibGenerarTicketBD`, `inLibGenerarTicket`, `inLibGenerarTicketCaja`, `inLibArqueoTicket`, `inLibCorreoTickets` | 18 |
-| Tablas y series | `inLibtb` | 6 |
+| Tablas y series | `inLibValoresAutomaticos`, `inLibDatasets` | 6 |
 | Facturación | `inLibFacturas`, `inLibFormatoDocumento` | 6 |
 | Resto | `inLibData`, `inLibDocumentosTrabajo`, `inLibGenBusq`, `inLibShowMto`, `inLibInventarioNube`, `inLibUnidadesMedida`, `inLibConfigCampos`, `inLibAppParam`, `inLibCajaParam`, `inLibFaseCobro`, `inLibArticulosValidador`, `inLibVentasCalendario`, `inLibInformesGuiasCache`, `UniDataInventarios` | 19 |
 

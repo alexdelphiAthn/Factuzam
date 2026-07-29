@@ -122,7 +122,7 @@ var
 implementation
 
 uses
-  inLibWin, inLibUser, inMtoPrincipal, inLibShowMto, inLibGridCantidad,
+  inLibWin, inLibUser, inLibShowMto, inLibGridCantidad,
   inLibFiltroUsuario, inLibMsg;
 
 {$R *.dfm}

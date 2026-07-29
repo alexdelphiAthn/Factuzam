@@ -183,7 +183,7 @@ DEALLOCATE PREPARE stmt;
 
 -- ---------------------------------------------------------------------------
 -- 3. Contador global de solicitudes de traspaso (TIPO_DOC = 'TS')
--- Lo consume inLibtb.ObtenerSiguienteContador('TS') (SP PRC_GET_NEXT_CONT).
+-- Lo consume inLibValoresAutomaticos.ObtenerSiguienteContador('TS').
 -- Se siembra solo si no existe ya la fila global ('TS','-','-').
 -- ---------------------------------------------------------------------------
 INSERT INTO `fza_contadores`

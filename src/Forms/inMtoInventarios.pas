@@ -367,7 +367,7 @@ uses
   inLibInventarioNube,
   inMtoPreviewExcel,
   System.Diagnostics,
-  inMtoPrincipal, inMtoModalAddBlockInventario,
+  inMtoModalAddBlockInventario,
   // Factoria del contrato de entrada (prueba ColumnSKUcxGrid).
   inLibColumnasSku, inLibColumnasDocumento;
 

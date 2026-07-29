@@ -72,7 +72,7 @@ var
 implementation
 
 uses
-  inLibWin, inMtoPrincipal, inMtoModalImpDepositos;
+  inLibWin, inMtoModalImpDepositos;
 
 {$R *.dfm}
 
