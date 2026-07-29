@@ -25,8 +25,8 @@
 {       movimientos via inLibAlbaranesCompraMovimientos al cerrar el           }
 {       albaran. Devuelve la serie / numero del albaran generado.              }
 {                                                                              }
-{    Las tres operaciones esperan que el llamador gestione la transaccion;     }
-{    ninguna abre ni cierra StartTransaction.                                  }
+{    Las operaciones de bajo nivel esperan una transaccion del llamador.       }
+{    EjecutarRecepcionPedidoCompra es el caso de uso transaccional para UI.    }
 {******************************************************************************}
 unit inLibPedidosCompra;
 
@@ -36,6 +36,28 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   Data.DB, DBAccess, Uni,
   inLibGridPivoteCompra;
+
+type
+  TParametrosRecepcionPedidoCompra = record
+    SeriePedido: string;
+    NumeroPedido: string;
+    CodigoAlmacen: string;
+    SerieAlbaran: string;
+    SerieAlbaranDestino: string;
+    NumeroAlbaranDestino: string;
+    Usuario: string;
+    ReferenciaProveedor: string;
+    FechaRecepcion: TDateTime;
+    IdPvTemporada: Integer;
+    Incorporar: Boolean;
+    Celdas: TArray<TCeldaARecibir>;
+  end;
+
+  TResultadoRecepcionPedidoCompra = record
+    SerieAlbaran: string;
+    NumeroAlbaran: string;
+    Mensaje: string;
+  end;
 
 // Sincroniza fza_articulos_pdte_recibir con las lineas del pedido:
 // borra todas las filas del pedido y reinserta una por linea con
@@ -125,8 +147,15 @@ function IncorporarAlbaranDesdePedidoConCantidades(AConn: TUniConnection;
                                         ASerieAlbcDestino, ANumAlbcDestino,
                                         AUsuario: string;
                                   AIdPvTemporada: Integer;
-                                  const ACeldas: TArray<TCeldaARecibir>;
-                                  out AMensaje: string): Boolean;
+                                   const ACeldas: TArray<TCeldaARecibir>;
+                                   out AMensaje: string): Boolean;
+
+// Ejecuta la recepcion completa dentro de una unica transaccion. Decide
+// entre crear o incorporar y entre recibir cantidades explicitas o todo
+// lo pendiente del almacen.
+function EjecutarRecepcionPedidoCompra(AConn: TUniConnection;
+  const AParametros: TParametrosRecepcionPedidoCompra;
+  out AResultado: TResultadoRecepcionPedidoCompra): Boolean;
 
 implementation
 
@@ -134,6 +163,95 @@ uses
   inLibValoresAutomaticos,
   inLibAlbaranesCompraMovimientos,
   inLibMsg;
+
+function EjecutarRecepcionPedidoCompra(AConn: TUniConnection;
+  const AParametros: TParametrosRecepcionPedidoCompra;
+  out AResultado: TResultadoRecepcionPedidoCompra): Boolean;
+var
+  bTxOwned: Boolean;
+  bUsarCeldas: Boolean;
+begin
+  Result := False;
+  AResultado.SerieAlbaran := '';
+  AResultado.NumeroAlbaran := '';
+  AResultado.Mensaje := '';
+  bUsarCeldas := Length(AParametros.Celdas) > 0;
+  bTxOwned := not AConn.InTransaction;
+  if bTxOwned then
+    AConn.StartTransaction;
+  try
+    if AParametros.Incorporar then
+    begin
+      AResultado.SerieAlbaran := AParametros.SerieAlbaranDestino;
+      AResultado.NumeroAlbaran := AParametros.NumeroAlbaranDestino;
+      if bUsarCeldas then
+        Result := IncorporarAlbaranDesdePedidoConCantidades(
+          AConn,
+          AParametros.SeriePedido,
+          AParametros.NumeroPedido,
+          AParametros.CodigoAlmacen,
+          AParametros.SerieAlbaranDestino,
+          AParametros.NumeroAlbaranDestino,
+          AParametros.Usuario,
+          AParametros.IdPvTemporada,
+          AParametros.Celdas,
+          AResultado.Mensaje)
+      else
+        Result := IncorporarAlbaranDesdePedido(
+          AConn,
+          AParametros.SeriePedido,
+          AParametros.NumeroPedido,
+          AParametros.CodigoAlmacen,
+          AParametros.SerieAlbaranDestino,
+          AParametros.NumeroAlbaranDestino,
+          AParametros.Usuario,
+          AParametros.IdPvTemporada,
+          AResultado.Mensaje);
+    end
+    else
+    begin
+      AResultado.SerieAlbaran := AParametros.SerieAlbaran;
+      if bUsarCeldas then
+        Result := CrearAlbaranDesdePedidoConCantidades(
+          AConn,
+          AParametros.SeriePedido,
+          AParametros.NumeroPedido,
+          AParametros.CodigoAlmacen,
+          AParametros.SerieAlbaran,
+          AParametros.Usuario,
+          AParametros.ReferenciaProveedor,
+          AParametros.FechaRecepcion,
+          AParametros.IdPvTemporada,
+          AParametros.Celdas,
+          AResultado.NumeroAlbaran,
+          AResultado.Mensaje)
+      else
+        Result := CrearAlbaranDesdePedido(
+          AConn,
+          AParametros.SeriePedido,
+          AParametros.NumeroPedido,
+          AParametros.CodigoAlmacen,
+          AParametros.SerieAlbaran,
+          AParametros.Usuario,
+          AParametros.ReferenciaProveedor,
+          AParametros.FechaRecepcion,
+          AParametros.IdPvTemporada,
+          AResultado.NumeroAlbaran,
+          AResultado.Mensaje);
+    end;
+    if Result then
+    begin
+      if bTxOwned and AConn.InTransaction then
+        AConn.Commit;
+    end
+    else if bTxOwned and AConn.InTransaction then
+      AConn.Rollback;
+  except
+    if bTxOwned and AConn.InTransaction then
+      AConn.Rollback;
+    raise;
+  end;
+end;
 
 // Recalcula ESTADO_PEDC en funcion de la cantidad pendiente total.
 // Reglas:

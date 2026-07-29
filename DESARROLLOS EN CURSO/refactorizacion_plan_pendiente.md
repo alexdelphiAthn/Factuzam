@@ -383,7 +383,15 @@ largos.
 
 ## D4 — trocear los métodos largos (48 por encima de 200 líneas)
 
-Los peores, medidos hoy:
+Estado a 29/07/2026: **D4.1 terminado; 2 de 48 métodos tratados**.
+`MaterializarSesion` baja de 370 a 52 líneas y
+`RevertirMaterializacion` de 424 a 58. Los 19 colaboradores privados
+extraídos están usados y ninguno supera 116 líneas. La unidad productiva
+baja además 29 líneas. La batería DUnitX pasa 163/163 en Debug y Release,
+tanto en Win32 como en Win64. Detalle en
+`refactorizacion_fase6ak_resultados.md`.
+
+Los peores al iniciar D4:
 
 | Líneas | Unidad | Método |
 |---|---|---|
@@ -395,12 +403,11 @@ Los peores, medidos hoy:
 | 373 | `inLibComprasSesionesMaterializar` | `MaterializarSesion` |
 | 351 | `inLibPedidosCompra` | `CrearAlbaranDesdePedidoConCantidades` |
 
-Empezar por `MaterializarSesion`/`RevertirMaterializacion`, que ya tienen
-pruebas de datos (`test_revertir_sesion.py`) y acabamos de tocarlos.
-`CrearAlbaranDesdePedidoConCantidades` también está cubierto ahora
-(`test_albaran_pedido_compra.py`, 38 comprobaciones), así que se puede
-trocear con red. Los tres de Excel son los más largos pero los menos
-delicados: no tocan datos.
+La primera tanda ha troceado ya
+`MaterializarSesion`/`RevertirMaterializacion`. El siguiente objetivo es
+`CrearAlbaranDesdePedidoConCantidades`, cubierto por
+`test_albaran_pedido_compra.py` (38 comprobaciones). Los tres métodos de
+Excel son los más largos, pero los menos delicados: no tocan datos.
 
 ## D5 — unificar los dos motores fiscales de venta
 

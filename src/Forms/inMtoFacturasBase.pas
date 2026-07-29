@@ -1390,43 +1390,20 @@ end;
 procedure TfrmMtoFacturasBase.GuardarPendienteAntesDeImprimir;
 var
   ConnGrabar: TUniConnection;
-  bTransaccionPropia: Boolean;
-
-  procedure PostearSiPendiente(ADataSet: TDataSet);
-  begin
-    if Assigned(ADataSet) and ADataSet.Active and
-       (ADataSet.State in [dsEdit, dsInsert]) then
-    begin
-      if (ADataSet.State = dsInsert) or ADataSet.Modified then
-        ADataSet.Post
-      else
-        ADataSet.Cancel;
-    end;
-  end;
-
 begin
   if Assigned(dmmFacturas) then
   begin
     ConnGrabar := dmmFacturas.unqryTablaG.Connection;
-    bTransaccionPropia := not ConnGrabar.InTransaction;
     try
-      if bTransaccionPropia then
-        ConnGrabar.StartTransaction;
-      if dmmFacturas.unqryTablaG.State = dsInsert then
-        PostearSiPendiente(dmmFacturas.unqryTablaG);
-      PostearSiPendiente(dmmFacturas.unqryLinFac);
-      PostearSiPendiente(dmmFacturas.unqryRecibos);
-      PostearSiPendiente(dmmFacturas.unqryTablaG);
-      if bTransaccionPropia and ConnGrabar.InTransaction then
-        ConnGrabar.Commit;
+      inLibFacturas.GuardarCambiosPendientesFactura(
+        ConnGrabar,
+        dmmFacturas.unqryTablaG,
+        dmmFacturas.unqryLinFac,
+        dmmFacturas.unqryRecibos);
     except
       on E: Exception do
-      begin
-        if bTransaccionPropia and ConnGrabar.InTransaction then
-          ConnGrabar.Rollback;
         raise Exception.Create(Format(SErrorGuardarFacturaAntesImprimir,
                                      [E.Message]));
-      end;
     end;
   end;
 end;
@@ -1516,7 +1493,6 @@ end;
 
 function TfrmMtoFacturasBase.MostrarSkuArticulo(const ACodArt: string): Boolean;
 var
-  q        : TUniQuery;
   bMostrar : Boolean;
 begin
   // Por defecto mostramos (no bloquear): linea sin articulo o fallo de BD.
@@ -1526,27 +1502,8 @@ begin
     if not FArtMostrarSku.TryGetValue(ACodArt, bMostrar) then
     begin
       try
-        q := TUniQuery.Create(nil);
-        try
-          q.Connection := ConexionPrincipal;
-          q.SQL.Text :=
-            'SELECT a.ESVARIACION_ART, ' +
-            '       (SELECT COUNT(*) FROM fza_articulos_skus s ' +
-            '         WHERE s.CODIGO_ART_SKU = a.CODIGO_ART_ART ' +
-            '           AND s.ESACTIVO_SKU  = ''S'') AS NSKU ' +
-            '  FROM fza_articulos a ' +
-            ' WHERE a.CODIGO_ART_ART = :art LIMIT 1';
-          q.ParamByName('art').AsString := ACodArt;
-          q.Open;
-          // Sin fila: el articulo aun no existe (nuevo) -> mostrar SKU.
-          // Con fila: solo si es de variacion (tallas/colores) o tiene
-          // varios SKUs activos a elegir.
-          bMostrar := q.IsEmpty or
-                      (q.FieldByName('ESVARIACION_ART').AsString = 'S') or
-                      (q.FieldByName('NSKU').AsInteger > 1);
-        finally
-          FreeAndNil(q);
-        end;
+        bMostrar := inLibFacturas.ArticuloFacturaDebeMostrarSku(
+          ConexionPrincipal, ACodArt);
         FArtMostrarSku.AddOrSetValue(ACodArt, bMostrar);
       except
         // Ante cualquier fallo de BD mostramos el SKU y no cacheamos, para
@@ -2045,7 +2002,6 @@ end;
 
 function TfrmMtoFacturasBase.ContarHijosActivos: Integer;
 var
-  q: TUniQuery;
   sNum, sSerie: string;
 begin
   Result := 0;
@@ -2054,21 +2010,8 @@ begin
     Exit;
   sNum   := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
   sSerie := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := ConexionPrincipal;
-    q.SQL.Text :=
-      'SELECT COUNT(*) AS N ' +
-      '  FROM fza_facturas_lineas ' +
-      ' WHERE NUMERO_FAC_FACLIN = :pNum ' +
-      '   AND SERIE_FAC_FACLIN  = :pSer';
-    q.ParamByName('pNum').AsString := sNum;
-    q.ParamByName('pSer').AsString := sSerie;
-    q.Open;
-    Result := q.FieldByName('N').AsInteger;
-  finally
-    FreeAndNil(q);
-  end;
+  Result := inLibFacturas.ContarLineasFactura(
+    ConexionPrincipal, sSerie, sNum);
 end;
 
 function TfrmMtoFacturasBase.DescripcionHijos: string;

@@ -507,12 +507,6 @@ type
                 const ANombreFam: string = '');
     procedure ProponerPrecioVenta;
     procedure LogMsg(const S: string);
-    function MaterializarSesionConTx(AFrmSet: TfrmModalCrearAlbaranSesion;
-                                      const AUsuario: string;
-                                      AListaDocs: TStringList;
-                                      out ASerPed, ANumPed,
-                                          ASerAlb, ANumAlb,
-                                          AErr: string): Boolean;
     // Busqueda incremental in-cell de modelos del proveedor (columna
     // "Modelo prov."): crea el desplegable, lo recarga al cambiar de
     // proveedor y resuelve la eleccion como linea REUSAR.
@@ -2422,11 +2416,10 @@ var
   frmSet      : TfrmModalCrearAlbaranSesion;
   iAutoFix    : Integer;
   iIdPvTemp   : Integer;
-  oListaDocs  : TStringList;
   frmDocs     : TfrmModalDocsCreados;
   i           : Integer;
-  sLin        : string;
-  arrPart     : TArray<string>;
+  ParametrosMaterializacion: TParametrosMaterializacionSesion;
+  ResultadoMaterializacion: TResultadoMaterializacionSesion;
 begin
   inherited;
   // Flujo:
@@ -2587,16 +2580,23 @@ begin
                 [Dmm.unqryTablaG.FieldByName('ESGENERA_PEDIDO_SES').AsString,
                  Dmm.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString,
                  frmSet.SerieAlb, frmSet.SeriePed]));
-  oListaDocs := TStringList.Create;
+  ParametrosMaterializacion.Usuario := IdentidadSesion.Usuario;
+  ParametrosMaterializacion.SerieAlbaran := frmSet.SerieAlb;
+  ParametrosMaterializacion.SeriePedido := frmSet.SeriePed;
+  ParametrosMaterializacion.UnDocumentoPorAlmacen :=
+    frmSet.UnDocPorAlmacen;
+  Screen.Cursor := crHourGlass;
   try
-    Screen.Cursor := crHourGlass;
-    try
-      bOK := MaterializarSesionConTx(frmSet, IdentidadSesion.Usuario, oListaDocs,
-                                     sSerPed, sNumPed,
-                                     sSerAlb, sNumAlb, sErr);
-    finally
-      Screen.Cursor := crDefault;
-    end;
+    bOK := EjecutarMaterializacionSesion(
+      Dmm, ParametrosMaterializacion, ResultadoMaterializacion);
+  finally
+    Screen.Cursor := crDefault;
+  end;
+  sSerPed := ResultadoMaterializacion.SeriePedido;
+  sNumPed := ResultadoMaterializacion.NumeroPedido;
+  sSerAlb := ResultadoMaterializacion.SerieAlbaran;
+  sNumAlb := ResultadoMaterializacion.NumeroAlbaran;
+  sErr := ResultadoMaterializacion.MensajeError;
     LogSes(Format('  MaterializarSesion -> bOK=%s, pedido=%s/%s, albaran=%s/%s, err=%s',
                   [BoolToStr(bOK, True), sSerPed, sNumPed, sSerAlb, sNumAlb, sErr]));
     if bOK then
@@ -2612,7 +2612,7 @@ begin
       // modo distribuido salen N albaranes (uno por almacen); en modo
       // clasico solo uno. Sin docs (caso 'sin albaran ni pedido') no
       // abrimos modal: simple ShowMessage.
-      if oListaDocs.Count = 0 then
+      if Length(ResultadoMaterializacion.Documentos) = 0 then
         ShowMessage(SInfoSesionMaterializadaSinDocumentos)
       else
       begin
@@ -2620,13 +2620,12 @@ begin
         // Bloqueamos caFree del ancestro para liberarlo nosotros aqui.
         frmDocs.OnClose := nil;
         try
-          for i := 0 to oListaDocs.Count - 1 do
-          begin
-            sLin := oListaDocs[i];
-            arrPart := sLin.Split(['|']);
-            if Length(arrPart) = 4 then
-              frmDocs.Agregar(arrPart[0], arrPart[1], arrPart[2], arrPart[3]);
-          end;
+          for i := 0 to High(ResultadoMaterializacion.Documentos) do
+            frmDocs.Agregar(
+              ResultadoMaterializacion.Documentos[i].Tipo,
+              ResultadoMaterializacion.Documentos[i].Serie,
+              ResultadoMaterializacion.Documentos[i].Numero,
+              ResultadoMaterializacion.Documentos[i].Almacen);
           frmDocs.ShowModal;
           if frmDocs.Confirmado then
           begin
@@ -2661,9 +2660,6 @@ begin
         FreeAndNil(incidencias);
       end;
     end;
-  finally
-    FreeAndNil(oListaDocs);
-  end;
   LogSes('btnCrearClick FIN');
 end;
 
@@ -3787,153 +3783,6 @@ begin
   begin
     AAllow := False;
     AbrirDistribuidor;
-  end;
-end;
-
-function TfrmMtoComprasSesiones.MaterializarSesionConTx(
-                  AFrmSet: TfrmModalCrearAlbaranSesion;
-                  const AUsuario: string;
-                  AListaDocs: TStringList;
-                  out ASerPed, ANumPed, ASerAlb, ANumAlb, AErr: string): Boolean;
-var
-  oConexion  : TUniConnection;
-  bTxOwned   : Boolean;
-  oQry       : TUniQuery;
-  bGenPed    : Boolean;
-  bGenAlb    : Boolean;
-  bUnPorAlm  : Boolean;
-  bPrimera   : Boolean;
-  sAlm       : string;
-  sEmpresa   : string;
-  sSerieAlbAlm : string;
-  sSeriePedAlm : string;
-  sSerPedTmp : string;
-  sNumPedTmp : string;
-  sSerAlbTmp : string;
-  sNumAlbTmp : string;
-begin
-  // Envolvemos el flujo en una transaccion explicita: si cualquier
-  // iteracion (creacion pedido/albaran, generacion movimientos, marcar
-  // sesion) falla, hacemos rollback completo y la BBDD queda como
-  // antes. Sin esto un fallo a mitad dejaba albaranes huerfanos con
-  // ESTADO_ALBC='ABIERTO' y total 0 (visto en debug).
-  ASerPed   := ''; ANumPed := '';
-  ASerAlb   := ''; ANumAlb := '';
-  AErr      := '';
-  bGenPed   := Dmm.unqryTablaG.FieldByName('ESGENERA_PEDIDO_SES').AsString = 'S';
-  bGenAlb   := Dmm.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString = 'S';
-  bUnPorAlm := AFrmSet.UnDocPorAlmacen;
-  sEmpresa  := Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString;
-  oConexion := ConexionPrincipal;
-  bTxOwned  := not oConexion.InTransaction;
-  if bTxOwned then
-    oConexion.StartTransaction;
-  try
-    if bUnPorAlm then
-    begin
-      // Iteramos los almacenes distintos que aparecen en celdas con
-      // cantidad > 0. MaterializarSesion filtra por cada uno con
-      // AFiltroAlmacen y crea un albaran/pedido independiente por
-      // almacen. La cabecera de sesion queda con el ULTIMO doc (la
-      // lista completa vive en fza_compras_sesiones_documentos).
-      oQry := TUniQuery.Create(nil);
-      try
-        oQry.Connection := oConexion;
-        oQry.SQL.Text :=
-          'SELECT DISTINCT IFNULL(NULLIF(C.CODIGO_ALM_SESCEL, ''''), ' +
-          '                       :alm_cab) AS ALM ' +
-          '  FROM fza_compras_sesiones_celdas C ' +
-          ' WHERE C.SERIE_SES_SESCEL = :s AND C.NUMERO_SES_SESCEL = :n ' +
-          '   AND C.CANTIDAD_SESCEL > 0 ' +
-          ' ORDER BY ALM';
-        oQry.ParamByName('alm_cab').AsString :=
-          Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
-        oQry.ParamByName('s').AsString :=
-          Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-        oQry.ParamByName('n').AsString :=
-          Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-        oQry.Open;
-        bPrimera := True;
-        // Solo la PRIMERA iteracion crea articulos / SKUs / barras /
-        // tarifas; las siguientes pasan ASoloDocumentos=True y solo
-        // crean el pedido/albaran de su almacen. Asi evitamos
-        // re-procesar los mismos articulos N veces (rendimiento +
-        // limpieza, no solo evitar duplicados via INSERT IGNORE).
-        while not oQry.Eof do
-        begin
-          sAlm := oQry.FieldByName('ALM').AsString;
-          // La serie acompanya al almacen: si el almacen lleva serie
-          // propia (fza_empresas_series.CODIGO_ALM_EMPSER) el documento
-          // de ese almacen sale con ella; si no, con la elegida en el
-          // modal (que el usuario pudo cambiar en el combo).
-          sSerieAlbAlm := ObtenerSeriePropiaAlmacen(
-            ConexionPrincipal,
-            sEmpresa,
-            'AB',
-            sAlm);
-          if sSerieAlbAlm = '' then
-            sSerieAlbAlm := AFrmSet.SerieAlb;
-          sSeriePedAlm := ObtenerSeriePropiaAlmacen(
-            ConexionPrincipal,
-            sEmpresa,
-            'PC',
-            sAlm);
-          if sSeriePedAlm = '' then
-            sSeriePedAlm := AFrmSet.SeriePed;
-          if not MaterializarSesion(Dmm, bGenPed, bGenAlb, AUsuario,
-                                     sSerieAlbAlm, sSeriePedAlm,
-                                     sSerPedTmp, sNumPedTmp,
-                                     sSerAlbTmp, sNumAlbTmp, AErr,
-                                     sAlm, not bPrimera) then
-            raise Exception.Create(AErr);
-          bPrimera := False;
-          // Conservamos el primer resultado para retro-compat (callers
-          // que solo miran ASerAlb / ANumAlb). La lista completa va en
-          // AListaDocs.
-          if ASerAlb = '' then begin ASerAlb := sSerAlbTmp; ANumAlb := sNumAlbTmp; end;
-          if ASerPed = '' then begin ASerPed := sSerPedTmp; ANumPed := sNumPedTmp; end;
-          // Acumulamos albaranes y pedidos generados en la lista. Ambos
-          // tipos tienen Mto propio (AlbaranesCompra / PedidosCompra) y
-          // el modal frmDocs sabe dispatchar a uno u otro segun el
-          // primer campo. Antes solo se anyadian albaranes, lo que
-          // hacia que materializar solo pedido mostrase 'sin documentos'.
-          if Assigned(AListaDocs) and bGenAlb and (sSerAlbTmp <> '') then
-            AListaDocs.Add(Format('Albaran|%s|%s|%s',
-                                  [sSerAlbTmp, sNumAlbTmp, sAlm]));
-          if Assigned(AListaDocs) and bGenPed and (sSerPedTmp <> '') then
-            AListaDocs.Add(Format('Pedido|%s|%s|%s',
-                                  [sSerPedTmp, sNumPedTmp, sAlm]));
-          oQry.Next;
-        end;
-      finally
-        FreeAndNil(oQry);
-      end;
-    end
-    else
-    begin
-      if not MaterializarSesion(Dmm, bGenPed, bGenAlb, AUsuario,
-                                 AFrmSet.SerieAlb, AFrmSet.SeriePed,
-                                 ASerPed, ANumPed, ASerAlb, ANumAlb, AErr) then
-        raise Exception.Create(AErr);
-      sAlm := Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString;
-      if Assigned(AListaDocs) and bGenAlb and (ASerAlb <> '') then
-        AListaDocs.Add(Format('Albaran|%s|%s|%s',
-                              [ASerAlb, ANumAlb, sAlm]));
-      if Assigned(AListaDocs) and bGenPed and (ASerPed <> '') then
-        AListaDocs.Add(Format('Pedido|%s|%s|%s',
-                              [ASerPed, ANumPed, sAlm]));
-    end;
-    if bTxOwned then
-      oConexion.Commit;
-    Result := True;
-  except
-    on E: Exception do
-    begin
-      if bTxOwned and oConexion.InTransaction then
-        oConexion.Rollback;
-      if AErr = '' then AErr := E.Message;
-      Result := False;
-    end;
   end;
 end;
 

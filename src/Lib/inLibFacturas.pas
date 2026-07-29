@@ -287,6 +287,15 @@ type
   function IfThen(AValue: Boolean;
                  const ATrue: string;
                  AFalse: string = ''): string;
+  procedure GuardarCambiosPendientesFactura(
+    AConexion: TUniConnection;
+    ACabecera, ALineas, ARecibos: TDataSet);
+  function ArticuloFacturaDebeMostrarSku(
+    AConexion: TUniConnection;
+    const ACodigoArticulo: string): Boolean;
+  function ContarLineasFactura(
+    AConexion: TUniConnection;
+    const ASerie, ANumero: string): Integer;
 
 
 implementation
@@ -294,6 +303,97 @@ implementation
 uses
   System.Variants,
   inLibLog, inLibMsg;
+
+procedure PostearSiPendiente(ADataSet: TDataSet);
+begin
+  if Assigned(ADataSet) and ADataSet.Active and
+     (ADataSet.State in [dsEdit, dsInsert]) then
+  begin
+    if (ADataSet.State = dsInsert) or ADataSet.Modified then
+      ADataSet.Post
+    else
+      ADataSet.Cancel;
+  end;
+end;
+
+procedure GuardarCambiosPendientesFactura(
+  AConexion: TUniConnection;
+  ACabecera, ALineas, ARecibos: TDataSet);
+var
+  bTransaccionPropia: Boolean;
+begin
+  bTransaccionPropia := not AConexion.InTransaction;
+  if bTransaccionPropia then
+    AConexion.StartTransaction;
+  try
+    if Assigned(ACabecera) and
+       (ACabecera.State = dsInsert) then
+      PostearSiPendiente(ACabecera);
+    PostearSiPendiente(ALineas);
+    PostearSiPendiente(ARecibos);
+    PostearSiPendiente(ACabecera);
+    if bTransaccionPropia and AConexion.InTransaction then
+      AConexion.Commit;
+  except
+    if bTransaccionPropia and AConexion.InTransaction then
+      AConexion.Rollback;
+    raise;
+  end;
+end;
+
+function ArticuloFacturaDebeMostrarSku(
+  AConexion: TUniConnection;
+  const ACodigoArticulo: string): Boolean;
+var
+  Consulta: TUniQuery;
+begin
+  Result := True;
+  if ACodigoArticulo <> '' then
+  begin
+    Consulta := TUniQuery.Create(nil);
+    try
+      Consulta.Connection := AConexion;
+      Consulta.SQL.Text :=
+        'SELECT A.ESVARIACION_ART, ' +
+        '       (SELECT COUNT(*) FROM fza_articulos_skus S ' +
+        '         WHERE S.CODIGO_ART_SKU = A.CODIGO_ART_ART ' +
+        '           AND S.ESACTIVO_SKU = ''S'') AS NSKU ' +
+        '  FROM fza_articulos A ' +
+        ' WHERE A.CODIGO_ART_ART = :art ' +
+        ' LIMIT 1';
+      Consulta.ParamByName('art').AsString := ACodigoArticulo;
+      Consulta.Open;
+      Result := Consulta.IsEmpty or
+        (Consulta.FieldByName('ESVARIACION_ART').AsString = 'S') or
+        (Consulta.FieldByName('NSKU').AsInteger > 1);
+    finally
+      FreeAndNil(Consulta);
+    end;
+  end;
+end;
+
+function ContarLineasFactura(
+  AConexion: TUniConnection;
+  const ASerie, ANumero: string): Integer;
+var
+  Consulta: TUniQuery;
+begin
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := AConexion;
+    Consulta.SQL.Text :=
+      'SELECT COUNT(*) AS N ' +
+      '  FROM fza_facturas_lineas ' +
+      ' WHERE NUMERO_FAC_FACLIN = :numero ' +
+      '   AND SERIE_FAC_FACLIN = :serie';
+    Consulta.ParamByName('numero').AsString := ANumero;
+    Consulta.ParamByName('serie').AsString := ASerie;
+    Consulta.Open;
+    Result := Consulta.FieldByName('N').AsInteger;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
 
 function IfThen(AValue: Boolean;
                 const ATrue: string;

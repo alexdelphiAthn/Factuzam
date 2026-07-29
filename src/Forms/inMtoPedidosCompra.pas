@@ -2296,14 +2296,14 @@ end;
 procedure TfrmMtoPedidosCompra.btnCrearAlbaranClick(Sender: TObject);
 var
   form: TfrmModalSelAlmacenPedido;
-  sSerie, sNumero, sNumAlb, sMsg: string;
+  sSerie, sNumero, sMsg: string;
   bOk: Boolean;
-  bTxOwned: Boolean;
   arrCeldas: TArray<TCeldaARecibir>;
-  bUsarCeldas: Boolean;
   recIdx: Integer;
   frmDocs: TfrmModalDocsCreados;
   sSerieDoc, sNumeroDoc: string;
+  ParametrosRecepcion: TParametrosRecepcionPedidoCompra;
+  ResultadoRecepcion: TResultadoRecepcionPedidoCompra;
 begin
   inherited;
   if dmmPedidosCompra = nil then Exit;
@@ -2362,43 +2362,26 @@ begin
       arrCeldas := FPivote.IterarARecibirPorAlmacen(form.CodigoAlmacen)
     else
       arrCeldas := RecogerCeldasARecibirVertical(form.CodigoAlmacen);
-    bUsarCeldas := Length(arrCeldas) > 0;
-    bTxOwned := not ConexionPrincipal.InTransaction;
-    if bTxOwned then ConexionPrincipal.StartTransaction;
+    ParametrosRecepcion.SeriePedido := sSerie;
+    ParametrosRecepcion.NumeroPedido := sNumero;
+    ParametrosRecepcion.CodigoAlmacen := form.CodigoAlmacen;
+    ParametrosRecepcion.SerieAlbaran := form.SerieAlbaran;
+    ParametrosRecepcion.SerieAlbaranDestino :=
+      form.AlbaranSerieDestino;
+    ParametrosRecepcion.NumeroAlbaranDestino :=
+      form.AlbaranNumDestino;
+    ParametrosRecepcion.Usuario := IdentidadSesion.Usuario;
+    ParametrosRecepcion.ReferenciaProveedor := form.RefProveedor;
+    ParametrosRecepcion.FechaRecepcion := form.FechaRecepcion;
+    ParametrosRecepcion.IdPvTemporada := form.IdPvTemporada;
+    ParametrosRecepcion.Incorporar := form.Incorporar;
+    ParametrosRecepcion.Celdas := arrCeldas;
     try
-      if form.Incorporar then
-      begin
-        // Incorporar las lineas a un albaran existente del pedido.
-        if bUsarCeldas then
-          bOk := inLibPedidosCompra.IncorporarAlbaranDesdePedidoConCantidades(
-                  ConexionPrincipal, sSerie, sNumero, form.CodigoAlmacen,
-                  form.AlbaranSerieDestino, form.AlbaranNumDestino, IdentidadSesion.Usuario,
-                  form.IdPvTemporada, arrCeldas, sMsg)
-        else
-          bOk := inLibPedidosCompra.IncorporarAlbaranDesdePedido(
-                  ConexionPrincipal, sSerie, sNumero, form.CodigoAlmacen,
-                  form.AlbaranSerieDestino, form.AlbaranNumDestino, IdentidadSesion.Usuario,
-                  form.IdPvTemporada, sMsg);
-      end
-      else
-      begin
-        // Crear un albaran nuevo (flujo clasico).
-        if bUsarCeldas then
-          bOk := inLibPedidosCompra.CrearAlbaranDesdePedidoConCantidades(
-                  ConexionPrincipal, sSerie, sNumero, form.CodigoAlmacen,
-                  form.SerieAlbaran, IdentidadSesion.Usuario,
-                  form.RefProveedor, form.FechaRecepcion, form.IdPvTemporada,
-                  arrCeldas, sNumAlb, sMsg)
-        else
-          bOk := inLibPedidosCompra.CrearAlbaranDesdePedido(
-                  ConexionPrincipal, sSerie, sNumero, form.CodigoAlmacen,
-                  form.SerieAlbaran, IdentidadSesion.Usuario,
-                  form.RefProveedor, form.FechaRecepcion, form.IdPvTemporada,
-                  sNumAlb, sMsg);
-      end;
+      bOk := inLibPedidosCompra.EjecutarRecepcionPedidoCompra(
+        ConexionPrincipal, ParametrosRecepcion, ResultadoRecepcion);
+      sMsg := ResultadoRecepcion.Mensaje;
       if bOk then
       begin
-        if bTxOwned then ConexionPrincipal.Commit;
         // Limpiar las celdas "A recibir" tecleadas para el almacen
         // procesado, para que el usuario pueda seguir con otro almacen
         // sin tener que borrar manualmente.
@@ -2431,16 +2414,8 @@ begin
         // estilo Sesiones, con boton "Ir a documento" para abrir su
         // ficha. En modo incorporar el destino es el albaran existente
         // (Albaran...Destino); si no, el nuevo (SerieAlbaran / sNumAlb).
-        if form.Incorporar then
-        begin
-          sSerieDoc  := form.AlbaranSerieDestino;
-          sNumeroDoc := form.AlbaranNumDestino;
-        end
-        else
-        begin
-          sSerieDoc  := form.SerieAlbaran;
-          sNumeroDoc := sNumAlb;
-        end;
+        sSerieDoc := ResultadoRecepcion.SerieAlbaran;
+        sNumeroDoc := ResultadoRecepcion.NumeroAlbaran;
         frmDocs := TfrmModalDocsCreados.Create(Self);
         // Bloqueamos el caFree del ancestro (FormClose lo pone) para
         // poder leer Confirmado tras ShowModal y liberarlo nosotros.
@@ -2459,15 +2434,10 @@ begin
         end;
       end
       else
-      begin
-        if bTxOwned then ConexionPrincipal.Rollback;
         MessageDlg(sMsg, mtWarning, [mbOk], 0);
-      end;
     except
       on E: Exception do
       begin
-        if bTxOwned and ConexionPrincipal.InTransaction then
-          ConexionPrincipal.Rollback;
         MessageDlg(Format(SErrorCrearAlbaranDesdePedidoCompra,
                           [E.Message]),
                    mtError, [mbOk], 0);

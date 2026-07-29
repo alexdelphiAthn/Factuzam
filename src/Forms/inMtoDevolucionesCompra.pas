@@ -323,6 +323,7 @@ uses
   inLibAtributosPaleta,
   UniDataArticulos,
   inLibComprasImpuestos,
+  inLibDevolucionesCompraStock,
   inLibMsg,
   inMtoModalImpDevCompra,
   inMtoModalImpDevCompraV,
@@ -1428,27 +1429,15 @@ end;
 
 procedure TfrmMtoDevolucionesCompra.DevolverTodoStock;
 var
-  dsCab       : TDataSet;
-  dsLin       : TDataSet;
-  qAux        : TUniQuery;
-  sSerie      : string;
-  sNumero     : string;
-  sLinea      : string;
-  sArt        : string;
-  sPrv        : string;
-  sAlm        : string;
-  rIvaN       : Double;
-  rIvaR       : Double;
-  rIvaS       : Double;
-  rIvaE       : Double;
-  iLineas     : Integer;
-  iLineaBase  : Integer;
-  iColorAv    : Integer;
-  iStock       : Integer;
-  bTxOwned    : Boolean;
+  dsCab: TDataSet;
+  dsLin: TDataSet;
+  sLinea: string;
+  iLineas: Integer;
   bPivotActivo: Boolean;
+  Estado: TEstadoStockDevolucionCompra;
+  Parametros: TParametrosStockDevolucionCompra;
 
-  function CampoCabeceraString(const ACampo: string): string;
+  function LeerTextoCabecera(const ACampo: string): string;
   var
     Campo: TField;
   begin
@@ -1458,7 +1447,7 @@ var
       Result := Trim(Campo.AsString);
   end;
 
-  function CampoCabeceraFloat(const ACampo: string): Double;
+  function LeerNumeroCabecera(const ACampo: string): Double;
   var
     Campo: TField;
   begin
@@ -1468,238 +1457,25 @@ var
       Result := Campo.AsFloat;
   end;
 
-  function LineaBaseDocumento: Integer;
+  procedure MostrarEstado(AEstado: TEstadoStockDevolucionCompra);
   begin
-    Result := 0;
-    qAux.Close;
-    qAux.SQL.Text :=
-      'SELECT COALESCE(MAX(CAST(NULLIF(LINEA_DEVCLIN, '''') ' +
-      '       AS UNSIGNED)), 0) AS LINEA_BASE ' +
-      '  FROM fza_devoluciones_compra_lineas ' +
-      ' WHERE SERIE_DEVC_DEVCLIN = :serie ' +
-      '   AND NUMERO_DEVC_DEVCLIN = :numero';
-    qAux.ParamByName('serie').AsString := sSerie;
-    qAux.ParamByName('numero').AsString := sNumero;
-    qAux.Open;
-    if not qAux.IsEmpty then
-      Result := qAux.FieldByName('LINEA_BASE').AsInteger;
-    qAux.Close;
-  end;
-
-  function SQLJoinColorLinea: string;
-  begin
-    Result :=
-      '  LEFT JOIN fza_atributos_sku SAC ' +
-      '    ON SAC.CODIGO_UNIDAD_SKU_SA = L.CODIGO_UNIDAD_DEVCLIN ' +
-      '   AND EXISTS (SELECT 1 FROM fza_atributos_valores AV ' +
-      '                WHERE AV.ID_AV = SAC.ID_AV_SA ' +
-      '                  AND AV.ID_VA_AV = ''CO'') ' +
-      '  LEFT JOIN fza_atributos_valores AVC ' +
-      '    ON AVC.ID_AV = SAC.ID_AV_SA ' +
-      '   AND AVC.ID_VA_AV = ''CO'' ';
-  end;
-
-  function SQLCondicionGrupo: string;
-  begin
-    Result :=
-      ' WHERE L.SERIE_DEVC_DEVCLIN = :serie ' +
-      '   AND L.NUMERO_DEVC_DEVCLIN = :numero ' +
-      '   AND L.CODIGO_ART_DEVCLIN = :art ';
-    if iColorAv > 0 then
-      Result := Result +
-        '   AND COALESCE(AVC.ID_AV, 0) = :color_av '
-    else
-      Result := Result +
-        '   AND COALESCE(AVC.ID_AV, 0) = 0 ';
-  end;
-
-  procedure ParametrosGrupo;
-  begin
-    qAux.ParamByName('serie').AsString := sSerie;
-    qAux.ParamByName('numero').AsString := sNumero;
-    qAux.ParamByName('art').AsString := sArt;
-    if iColorAv > 0 then
-      qAux.ParamByName('color_av').AsInteger := iColorAv;
-  end;
-
-  procedure BorrarGrupoFilaActual;
-  begin
-    qAux.Close;
-    qAux.SQL.Text :=
-      'DELETE C ' +
-      '  FROM fza_devoluciones_compra_celdas C ' +
-      '  JOIN fza_devoluciones_compra_lineas L ' +
-      '    ON C.SERIE_DEVC_DEVCCEL = L.SERIE_DEVC_DEVCLIN ' +
-      '   AND C.NUMERO_DEVC_DEVCCEL = L.NUMERO_DEVC_DEVCLIN ' +
-      '   AND CAST(C.LINEA_DEVC_DEVCCEL AS UNSIGNED) ' +
-      '       = CAST(L.LINEA_DEVCLIN AS UNSIGNED) ' +
-      SQLJoinColorLinea +
-      SQLCondicionGrupo;
-    ParametrosGrupo;
-    qAux.ExecSQL;
-    qAux.Close;
-    qAux.SQL.Text :=
-      'DELETE L ' +
-      '  FROM fza_devoluciones_compra_lineas L ' +
-      SQLJoinColorLinea +
-      SQLCondicionGrupo;
-    ParametrosGrupo;
-    qAux.ExecSQL;
-  end;
-
-  function SQLStockDisponibleFila: string;
-  begin
-    Result :=
-      'SELECT COALESCE(SK.CODIGO_ART_SKU, ' +
-      '                STK.CODIGO_UNIDAD_STK) AS ART, ' +
-      '       STK.CODIGO_UNIDAD_STK AS SKU_STOCK, ' +
-      '       SUM(COALESCE(STK.CANTIDAD_STK, 0)) AS CANTIDAD, ' +
-      '       LEFT(MAX(COALESCE(AP.REF_PROVEEDOR_AP, '''')), 100) AS REF_PRV, ' +
-      '       MAX(COALESCE(ACA.ID_AC, 0)) AS ID_AC, ' +
-      '       LEFT(MAX(COALESCE(ART.CODIGO_FAM_ART, '''')), 20) AS CODIGO_FAM, ' +
-      '       LEFT(MAX(COALESCE(NULLIF(FAM.DESCRIPCION_FAM, ''''), ' +
-      '                         FAM.NOMBRE_FAM_FAM, ' +
-      '                         ART.CODIGO_FAM_ART, '''')), 200) AS NOMBRE_FAM, ' +
-      '       LEFT(MAX(COALESCE(ART.DESCRIPCION_ART, '''')), 100) AS DESCRIPCION_ART, ' +
-      '       LEFT(MAX(COALESCE(ART.TIPO_CANTIDAD_ART, ''Uds'')), 20) AS TIPO_CANTIDAD_ART, ' +
-      '       MAX(CASE WHEN UPPER(COALESCE(ART.TIPO_IVA_ART, ''N'')) ' +
-      '                    IN (''N'', ''R'', ''S'', ''E'') ' +
-      '                THEN UPPER(ART.TIPO_IVA_ART) ' +
-      '                ELSE ''N'' END) AS TIPO_IVA_ART, ' +
-      '       MAX(COALESCE(SKUC.PRECIO_ULT_COMPRA_SKUC, ' +
-      '                    AP.PRECIO_ULT_COMPRA_AP, 0)) AS PRECIO_COMPRA, ' +
-      '       MIN(COALESCE(ART.ORDEN_ART, 999999)) AS ORDEN_ART ' +
-      '  FROM fza_articulos_stockactual STK ' +
-      '  LEFT JOIN fza_articulos_skus SK ' +
-      '    ON SK.CODIGO_UNIDAD_SKU = STK.CODIGO_UNIDAD_STK ' +
-      '  JOIN fza_articulos ART ' +
-      '    ON ART.CODIGO_ART_ART = COALESCE(SK.CODIGO_ART_SKU, ' +
-      '                                     STK.CODIGO_UNIDAD_STK) ' +
-      '  JOIN fza_articulos_proveedores AP ' +
-      '    ON AP.CODIGO_ART_AP = ART.CODIGO_ART_ART ' +
-      '   AND AP.CODIGO_PRV_AP = :prv ' +
-      '  LEFT JOIN fza_articulos_skus_costes SKUC ' +
-      '    ON SKUC.CODIGO_UNIDAD_SKU_SKUC = STK.CODIGO_UNIDAD_STK ' +
-      '  LEFT JOIN fza_atributos_sku CO ' +
-      '    ON CO.CODIGO_UNIDAD_SKU_SA = STK.CODIGO_UNIDAD_STK ' +
-      '   AND EXISTS (SELECT 1 FROM fza_atributos_valores AVC0 ' +
-      '                WHERE AVC0.ID_AV = CO.ID_AV_SA ' +
-      '                  AND AVC0.ID_VA_AV = ''CO'') ' +
-      '  LEFT JOIN fza_atributos_valores AVC ' +
-      '    ON AVC.ID_AV = CO.ID_AV_SA ' +
-      '   AND AVC.ID_VA_AV = ''CO'' ' +
-      '  LEFT JOIN fza_articulos_familias FAM ' +
-      '    ON FAM.CODIGO_FAM_FAM = ART.CODIGO_FAM_ART ' +
-      '  LEFT JOIN ( ' +
-      '        SELECT CODIGO_ART_ACA, MIN(ID_AC_ACA) AS ID_AC ' +
-      '          FROM fza_articulos_conjuntos_asign ' +
-      '         WHERE ID_VA_ACA <> ''CO'' ' +
-      '         GROUP BY CODIGO_ART_ACA ' +
-      '       ) ACA ' +
-      '    ON ACA.CODIGO_ART_ACA = ART.CODIGO_ART_ART ' +
-      ' WHERE STK.CODIGO_ALM_STK = :alm ' +
-      '   AND COALESCE(SK.CODIGO_ART_SKU, ' +
-      '                STK.CODIGO_UNIDAD_STK) = :art ' +
-      '   AND COALESCE(ART.ESACTIVO_ART, ''S'') = ''S'' ' +
-      '   AND (SK.CODIGO_UNIDAD_SKU IS NULL ' +
-      '        OR COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'') ' +
-      '   AND ((:color_av > 0 AND COALESCE(AVC.ID_AV, 0) = :color_av) ' +
-      '        OR (:color_av = 0 AND COALESCE(AVC.ID_AV, 0) = 0)) ' +
-      ' GROUP BY COALESCE(SK.CODIGO_ART_SKU, STK.CODIGO_UNIDAD_STK), ' +
-      '          STK.CODIGO_UNIDAD_STK ' +
-      'HAVING SUM(COALESCE(STK.CANTIDAD_STK, 0)) > 0';
-  end;
-
-  procedure ParametrosStock;
-  begin
-    qAux.ParamByName('prv').AsString := sPrv;
-    qAux.ParamByName('alm').AsString := sAlm;
-    qAux.ParamByName('art').AsString := sArt;
-    qAux.ParamByName('color_av').AsInteger := iColorAv;
-  end;
-
-  function ArticuloTieneColores: Boolean;
-  begin
-    qAux.Close;
-    qAux.SQL.Text :=
-      'SELECT 1 ' +
-      '  FROM fza_articulos_skus SK ' +
-      '  JOIN fza_atributos_sku SA ' +
-      '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
-      '  JOIN fza_atributos_valores AV ' +
-      '    ON AV.ID_AV = SA.ID_AV_SA ' +
-      '   AND AV.ID_VA_AV = ''CO'' ' +
-      ' WHERE SK.CODIGO_ART_SKU = :art ' +
-      ' LIMIT 1';
-    qAux.ParamByName('art').AsString := sArt;
-    qAux.Open;
-    Result := not qAux.IsEmpty;
-    qAux.Close;
-  end;
-
-  function ContarStockDisponible: Integer;
-  begin
-    Result := 0;
-    qAux.Close;
-    qAux.SQL.Text :=
-      'SELECT COUNT(*) AS N ' +
-      '  FROM (' + SQLStockDisponibleFila + ') X';
-    ParametrosStock;
-    qAux.Open;
-    if not qAux.IsEmpty then
-      Result := qAux.FieldByName('N').AsInteger;
-    qAux.Close;
-  end;
-
-  procedure InsertarLineasStockFila;
-  begin
-    qAux.Close;
-    qAux.SQL.Text :=
-      'INSERT INTO fza_devoluciones_compra_lineas ( ' +
-      '  NUMERO_DEVC_DEVCLIN, SERIE_DEVC_DEVCLIN, LINEA_DEVCLIN, ' +
-      '  CODIGO_ART_DEVCLIN, CODIGO_UNIDAD_DEVCLIN, REF_PRV_DEVCLIN, ' +
-      '  ID_AC_PIVOT_DEVCLIN, CODIGO_FAM_DEVCLIN, NOMBRE_FAM_DEVCLIN, ' +
-      '  DESCRIPCION_ARTICULO_DEVCLIN, TIPO_CANTIDAD_ARTICULO_DEVCLIN, ' +
-      '  CANTIDAD_DEVCLIN, TOTAL_UNIDADES_DEVCLIN, ' +
-      '  TIPO_IVA_ARTICULO_DEVCLIN, PORCENTAJE_IVA_DEVCLIN, ' +
-      '  PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN, ' +
-      '  PRECIO_COMPRA_CIVA_ARTICULO_DEVCLIN, TOTAL_DEVCLIN, ' +
-      '  CODIGO_ALMACEN_DEVCLIN, ESFACTURADA_DEVCLIN, ' +
-      '  INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-      'SELECT :numero, :serie, ' +
-      '       LPAD(:linea_base + (ROW_NUMBER() OVER (ORDER BY ' +
-      '                                Y.ORDEN_ART, Y.ART, Y.SKU_STOCK) ' +
-      '                                * 10), 4, ''0''), ' +
-      '       Y.ART, Y.SKU_STOCK, Y.REF_PRV, NULLIF(Y.ID_AC, 0), ' +
-      '       Y.CODIGO_FAM, Y.NOMBRE_FAM, Y.DESCRIPCION_ART, ' +
-      '       Y.TIPO_CANTIDAD_ART, Y.CANTIDAD, Y.CANTIDAD, ' +
-      '       Y.TIPO_IVA_ART, Y.PORCENTAJE_IVA, Y.PRECIO_COMPRA, ' +
-      '       Y.PRECIO_COMPRA * (1 + Y.PORCENTAJE_IVA / 100), ' +
-      '       Y.CANTIDAD * Y.PRECIO_COMPRA, :almacen_linea, ''N'', ' +
-      '       NOW(), NOW(), :usuario_alta, :usuario_modif ' +
-      '  FROM ( ' +
-      '        SELECT X.*, ' +
-      '               CASE X.TIPO_IVA_ART ' +
-      '                 WHEN ''R'' THEN :iva_r ' +
-      '                 WHEN ''S'' THEN :iva_s ' +
-      '                 WHEN ''E'' THEN :iva_e ' +
-      '                 ELSE :iva_n END AS PORCENTAJE_IVA ' +
-      '          FROM (' + SQLStockDisponibleFila + ') X ' +
-      '       ) Y ' +
-      ' ORDER BY Y.ORDEN_ART, Y.ART, Y.SKU_STOCK';
-    qAux.ParamByName('serie').AsString := sSerie;
-    qAux.ParamByName('numero').AsString := sNumero;
-    qAux.ParamByName('linea_base').AsInteger := iLineaBase;
-    qAux.ParamByName('almacen_linea').AsString := sAlm;
-    qAux.ParamByName('usuario_alta').AsString := IdentidadSesion.Usuario;
-    qAux.ParamByName('usuario_modif').AsString := IdentidadSesion.Usuario;
-    qAux.ParamByName('iva_n').AsFloat := rIvaN;
-    qAux.ParamByName('iva_r').AsFloat := rIvaR;
-    qAux.ParamByName('iva_s').AsFloat := rIvaS;
-    qAux.ParamByName('iva_e').AsFloat := rIvaE;
-    ParametrosStock;
-    qAux.ExecSQL;
-    iLineas := qAux.RowsAffected;
+    case AEstado of
+      esdcProveedorNoIndicado:
+        MessageDlg(SErrorProveedorDevolucionFilaNoSeleccionado,
+          mtWarning, [mbOk], 0);
+      esdcAlmacenNoIndicado:
+        MessageDlg(SErrorAlmacenDevolucionFilaNoSeleccionado,
+          mtWarning, [mbOk], 0);
+      esdcArticuloNoIndicado:
+        MessageDlg(SErrorArticuloDevolucionFilaNoSeleccionado,
+          mtInformation, [mbOk], 0);
+      esdcRequiereColor:
+        MessageDlg(SErrorColorDevolucionFilaNoSeleccionado,
+          mtInformation, [mbOk], 0);
+      esdcSinStock:
+        MessageDlg(SErrorStockDevolucionFilaNoDisponible,
+          mtInformation, [mbOk], 0);
+    end;
   end;
 
 begin
@@ -1711,95 +1487,74 @@ begin
        (dsLin <> nil) then
     begin
       AsegurarCabeceraPersistidaParaLineas;
-      sSerie := CampoCabeceraString('SERIE_DEVC');
-      sNumero := CampoCabeceraString('NUMERO_DEVC');
-      sPrv := CampoCabeceraString('CODIGO_PRV_DEVC');
-      sAlm := CampoCabeceraString('CODIGO_ALM_DEVC');
-      bPivotActivo := Assigned(FPivote) and FPivote.Activo;
       if dsLin.Active and (dsLin.State in dsEditModes) then
         dsLin.Post;
       sLinea := ValorLineaActiva('LINEA_DEVCLIN');
-      sArt := ValorLineaActiva('CODIGO_ART_DEVCLIN');
-      ObtenerColorPivotLineaActual(sSerie, sNumero, sLinea, iColorAv);
-      rIvaN := CampoCabeceraFloat('PORCENTAJE_IVAN_DEVC');
-      rIvaR := CampoCabeceraFloat('PORCENTAJE_IVAR_DEVC');
-      rIvaS := CampoCabeceraFloat('PORCENTAJE_IVAS_DEVC');
-      rIvaE := CampoCabeceraFloat('PORCENTAJE_IVAE_DEVC');
-      if (sPrv = '') or (sPrv = '0') then
-        MessageDlg(SErrorProveedorDevolucionFilaNoSeleccionado,
-                   mtWarning, [mbOk], 0)
-      else if sAlm = '' then
-        MessageDlg(SErrorAlmacenDevolucionFilaNoSeleccionado,
-                   mtWarning, [mbOk], 0)
-      else if sLinea = '' then
+      if sLinea = '' then
         MessageDlg(SErrorFilaDevolucionStockNoSeleccionada,
-                   mtInformation, [mbOk], 0)
-      else if sArt = '' then
-        MessageDlg(SErrorArticuloDevolucionFilaNoSeleccionado,
-                   mtInformation, [mbOk], 0)
+          mtInformation, [mbOk], 0)
       else
       begin
-        qAux := TUniQuery.Create(nil);
-        try
-          qAux.Connection := ConexionPrincipal;
-          if (iColorAv = 0) and ArticuloTieneColores then
-            MessageDlg(SErrorColorDevolucionFilaNoSeleccionado,
-                       mtInformation, [mbOk], 0)
-          else
-          begin
-            iStock := ContarStockDisponible;
-            if iStock = 0 then
-              MessageDlg(SErrorStockDevolucionFilaNoDisponible,
-                         mtInformation, [mbOk], 0)
-            else if MessageDlg(SPreguntaPrepararStockFilaDevolucion,
-                      mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+        Parametros.Serie := LeerTextoCabecera('SERIE_DEVC');
+        Parametros.Numero := LeerTextoCabecera('NUMERO_DEVC');
+        Parametros.CodigoProveedor :=
+          LeerTextoCabecera('CODIGO_PRV_DEVC');
+        Parametros.CodigoAlmacen :=
+          LeerTextoCabecera('CODIGO_ALM_DEVC');
+        Parametros.CodigoArticulo :=
+          ValorLineaActiva('CODIGO_ART_DEVCLIN');
+        Parametros.Usuario := IdentidadSesion.Usuario;
+        Parametros.IdColor := 0;
+        ObtenerColorPivotLineaActual(
+          Parametros.Serie, Parametros.Numero, sLinea,
+          Parametros.IdColor);
+        Parametros.IvaNormal :=
+          LeerNumeroCabecera('PORCENTAJE_IVAN_DEVC');
+        Parametros.IvaReducido :=
+          LeerNumeroCabecera('PORCENTAJE_IVAR_DEVC');
+        Parametros.IvaSuperreducido :=
+          LeerNumeroCabecera('PORCENTAJE_IVAS_DEVC');
+        Parametros.IvaExento :=
+          LeerNumeroCabecera('PORCENTAJE_IVAE_DEVC');
+        Estado := ConsultarEstadoStockDevolucionCompra(
+          ConexionPrincipal, Parametros);
+        if Estado <> esdcDisponible then
+          MostrarEstado(Estado)
+        else if MessageDlg(SPreguntaPrepararStockFilaDevolucion,
+          mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+        begin
+          bPivotActivo := Assigned(FPivote) and FPivote.Activo;
+          Screen.Cursor := crHourGlass;
+          try
+            if bPivotActivo then
+              FPivote.Desactivar;
+            if dsLin.Active then
+              dsLin.Close;
+            if DevolverTodoStockCompra(
+              ConexionPrincipal, Parametros, iLineas, Estado) then
             begin
-              Screen.Cursor := crHourGlass;
-              try
-                if bPivotActivo then
-                  FPivote.Desactivar;
-                if dsLin.Active then
-                  dsLin.Close;
-                bTxOwned := not ConexionPrincipal.InTransaction;
-                try
-                  if bTxOwned then
-                    ConexionPrincipal.StartTransaction;
-                  BorrarGrupoFilaActual;
-                  iLineaBase := LineaBaseDocumento;
-                  InsertarLineasStockFila;
-                  if bTxOwned and ConexionPrincipal.InTransaction then
-                    ConexionPrincipal.Commit;
-                except
-                  if bTxOwned and ConexionPrincipal.InTransaction then
-                    ConexionPrincipal.Rollback;
-                  raise;
-                end;
-                if not dsLin.Active then
-                  dsLin.Open;
-                dmmDevolucionesCompra.CalcularTotalesDevolucionCompra;
-                if dsCab.State in dsEditModes then
-                  dsCab.Post;
-                RestaurarPivoteHorizontalTrasOperacion(bPivotActivo);
-                MessageDlg(Format(SInfoStockFilaDevolucionPreparado,
-                                  [iLineas]),
-                           mtInformation, [mbOk], 0);
-                finally
-                  Screen.Cursor := crDefault;
-                  if (dsLin <> nil) and (not dsLin.Active) then
-                    dsLin.Open;
-                end;
-            end;
+              if not dsLin.Active then
+                dsLin.Open;
+              dmmDevolucionesCompra.CalcularTotalesDevolucionCompra;
+              if dsCab.State in dsEditModes then
+                dsCab.Post;
+              MessageDlg(
+                Format(SInfoStockFilaDevolucionPreparado, [iLineas]),
+                mtInformation, [mbOk], 0);
+            end
+            else
+              MostrarEstado(Estado);
+          finally
+            Screen.Cursor := crDefault;
+            if not dsLin.Active then
+              dsLin.Open;
+            RestaurarPivoteHorizontalTrasOperacion(bPivotActivo);
           end;
-        finally
-          Screen.Cursor := crDefault;
-          if Assigned(qAux) then
-            FreeAndNil(qAux);
         end;
       end;
     end;
   end;
 end;
-
 procedure TfrmMtoDevolucionesCompra.btnDevolverTodoStockClick(
   Sender: TObject);
 begin
