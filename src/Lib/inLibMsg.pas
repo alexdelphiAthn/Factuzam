@@ -110,12 +110,19 @@ var
     'parcialmente restaurada.';
   SErrorRestaurarCopiaSeguridad:string =
     'Hubo problemas al restaurar la copia.' + sLineBreak + '%s';
+  SErrorContrasenaCopiaVacia:string =
+    'La contraseña de la copia no puede estar vacía.';
+  SErrorTipoRestauracionNoPermitido:string =
+    'Los usuarios no administradores sólo pueden restaurar copias o ' +
+    'scripts cifrados (*.crypt).';
   SPreguntaReemplazarFichero:string =
     '¿Desea reemplazar el fichero existente?';
   SCopiaSeguridadCancelada:string = 'La copia se canceló';
   SCargaScriptCancelada:string = 'Se canceló la carga del script.';
   SUsuarioNoExiste:string = 'El nombre de usuario no existe';
   // Core
+  SDescripcionParametroIdioma:string =
+    'Idioma de la interfaz: es-ES, en-GB o qps-ploc para pruebas';
   SErrorContextoSesionFormularioNoConfigurado:string =
     'No se ha configurado el contexto de sesión del formulario.';
   SErrorServicioAuditoriaDatosNoConfigurado:string =
@@ -195,6 +202,10 @@ var
     'de la base de datos).' + sLineBreak +
     'En MySQL/MariaDB, estos cambios provocan un guardado automático y ' +
     'NO son reversibles en caso de error.' + sLineBreak + sLineBreak +
+    '¿Deseas realizar una copia de seguridad antes de continuar?';
+  SPreguntaCopiaAntesRestaurarCifrada:string =
+    'La copia cifrada puede reemplazar datos y estructura de la base de ' +
+    'datos.' + sLineBreak + sLineBreak +
     '¿Deseas realizar una copia de seguridad antes de continuar?';
   SInfoScriptCancelado:string =
     'Operación cancelada. El script no se ejecutará.';

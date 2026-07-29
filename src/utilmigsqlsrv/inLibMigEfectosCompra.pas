@@ -24,12 +24,12 @@ unit inLibMigEfectosCompra;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarBancosEmpresa(Eng: TMigEngine; var Stats: TMigStats);
-procedure MigrarTiposEfectoCompra(Eng: TMigEngine; var Stats: TMigStats);
-procedure MigrarEfectosCompra(Eng: TMigEngine; var Stats: TMigStats);
-procedure MigrarRemesasCompra(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarBancosEmpresa(const Eng: IContextoMigracion; var Stats: TMigStats);
+procedure MigrarTiposEfectoCompra(const Eng: IContextoMigracion; var Stats: TMigStats);
+procedure MigrarEfectosCompra(const Eng: IContextoMigracion; var Stats: TMigStats);
+procedure MigrarRemesasCompra(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -250,13 +250,13 @@ begin
   Result := Copy(Result, 1, 20);
 end;
 
-procedure BorrarPorUsuario(Eng: TMigEngine; const sTabla: string);
+procedure BorrarPorUsuario(Eng: IContextoMigracion; const sTabla: string);
 var
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text := 'DELETE FROM ' + sTabla + ' WHERE USUARIO_ALTA = :u';
     q.ParamByName('u').AsString := Eng.Usuario;
     q.ExecSQL;
@@ -265,14 +265,14 @@ begin
   end;
 end;
 
-function ColumnaDestinoExiste(Eng: TMigEngine; const sTabla,
+function ColumnaDestinoExiste(Eng: IContextoMigracion; const sTabla,
   sColumna: string): Boolean;
 var
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text :=
       'SELECT COUNT(*) AS N FROM INFORMATION_SCHEMA.COLUMNS ' +
       'WHERE TABLE_SCHEMA = DATABASE() ' +
@@ -287,14 +287,14 @@ begin
   end;
 end;
 
-procedure AsegurarColumnaDestino(Eng: TMigEngine; const sTabla,
+procedure AsegurarColumnaDestino(Eng: IContextoMigracion; const sTabla,
   sColumna, sAlter: string);
 begin
   if not ColumnaDestinoExiste(Eng, sTabla, sColumna) then
-    Eng.ConDst.ExecSQL(sAlter);
+    Eng.Datos.ConexionDestino.ExecSQL(sAlter);
 end;
 
-procedure AsegurarEsquemaEfectosCompra(Eng: TMigEngine);
+procedure AsegurarEsquemaEfectosCompra(Eng: IContextoMigracion);
 begin
   AsegurarColumnaDestino(Eng, 'fza_efectos_compra', 'TIPO_PAGO_EFEC',
     'ALTER TABLE `fza_efectos_compra` ' +
@@ -376,7 +376,7 @@ begin
   end;
 end;
 
-procedure AsegurarFormasPagoLegacy(Eng: TMigEngine);
+procedure AsegurarFormasPagoLegacy(Eng: IContextoMigracion);
 const
   cSqlIns =
     'INSERT INTO fza_formas_pago (CODIGO_FP_FP, ESACTIVO_FORMA_PAGO_FP, ' +
@@ -468,7 +468,7 @@ begin
   qSrc := nil;
   qIns := TUniQuery.Create(nil);
   try
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text := cSqlIns;
     qSrc := NuevoQOrigen(Eng, cSqlTipos);
     try
@@ -498,18 +498,18 @@ begin
     finally
       qSrc.Free;
     end;
-    Eng.Log('  formas pago documentos: catalogo legacy asegurado.');
+    Eng.Registro.Log('  formas pago documentos: catalogo legacy asegurado.');
   finally
     qIns.Free;
   end;
 end;
 
-procedure RecalcularRemesasDesdeEfectos(Eng: TMigEngine);
+procedure RecalcularRemesasDesdeEfectos(Eng: IContextoMigracion);
 var
   sUser: string;
 begin
   sUser := ValorOrNull(Eng.Usuario);
-  Eng.ConDst.ExecSQL(
+  Eng.Datos.ConexionDestino.ExecSQL(
     'UPDATE fza_remesas_compra r ' +
     'LEFT JOIN ( ' +
     '  SELECT SERIE_REMC_EFEC, NUMERO_REMC_EFEC, ' +
@@ -527,7 +527,7 @@ begin
     'WHERE r.USUARIO_ALTA = ' + sUser);
 end;
 
-procedure MigrarBancosEmpresa(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarBancosEmpresa(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cSel =
     'SELECT y.Empresa, y.CuentaBanco, y.OrdenCuenta, ' +
@@ -591,15 +591,15 @@ begin
   sUser := ValorOrNull(Eng.Usuario);
   q := NuevoQOrigen(Eng, cSel);
   q.UniDirectional := True;
-  b := TBulkInsert.Create(Eng.ConDst, 'fza_empresas_bancos', cCols, BATCH);
+  b := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_empresas_bancos', cCols, BATCH);
   try
-    Eng.Log('  bancos empresa: cuentas de cargo usadas en compras...');
-    Eng.SetTotal(Eng.ContarOrigen(cCount));
+    Eng.Registro.Log('  bancos empresa: cuentas de cargo usadas en compras...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(cCount));
     q.Open;
     while not q.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sCodigo := CodigoBancoEmpresa(q.FieldByName('Empresa').AsInteger,
                                     TextoCampo(q, 'CuentaBanco', 15));
       if sCodigo <> '' then
@@ -641,7 +641,7 @@ begin
   AsegurarFormasPagoLegacy(Eng);
 end;
 
-procedure MigrarTiposEfectoCompra(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarTiposEfectoCompra(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cSel =
     'SELECT TipoEfecto, Descripcion FROM dbo.octipefe';
@@ -663,15 +663,15 @@ begin
   sUser := ValorOrNull(Eng.Usuario);
   q := NuevoQOrigen(Eng, cSel);
   q.UniDirectional := True;
-  b := TBulkInsert.Create(Eng.ConDst, 'fza_tipos_efecto', cCols, BATCH);
+  b := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_tipos_efecto', cCols, BATCH);
   try
-    Eng.Log('  tipos efecto compra: catalogo octipefe...');
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.octipefe'));
+    Eng.Registro.Log('  tipos efecto compra: catalogo octipefe...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.octipefe'));
     q.Open;
     while not q.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sDesc := TextoCampo(q, 'Descripcion', 100);
       if EsTextoContado(sDesc) then
       begin
@@ -704,7 +704,7 @@ begin
   end;
 end;
 
-procedure MigrarEfectosCompra(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarEfectosCompra(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cSelEfectos =
     'SELECT e.Empresa, e.Ejercicio, ISNULL(e.Serie, '''') AS Serie, ' +
@@ -855,17 +855,17 @@ begin
   iSiguienteEfecto := 1;
   qEfe := NuevoQOrigen(Eng, cSelEfectos);
   qEfe.UniDirectional := True;
-  bEfe := TBulkInsert.Create(Eng.ConDst, 'fza_efectos_compra',
+  bEfe := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_efectos_compra',
                              cColsEfectos, BATCH);
   try
-    Eng.Log('  efectos compra: vencimientos conciliados (ocefepro)...');
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Registro.Log('  efectos compra: vencimientos conciliados (ocefepro)...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocefepro e WHERE e.TipoDoc = ''FP'''));
     qEfe.Open;
     while not qEfe.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sSerieFac := SerieDocumento(qEfe.FieldByName('Ejercicio').AsInteger,
                                   TextoCampo(qEfe, 'Serie', 2));
       sNumFac := NumeroDocumento(qEfe.FieldByName('NroDoc').AsInteger);
@@ -942,10 +942,10 @@ begin
     bEfe.Free;
     qEfe.Free;
   end;
-  Eng.Log('  efectos compra: efectos parciales divididos sin tabla de pagos.');
+  Eng.Registro.Log('  efectos compra: efectos parciales divididos sin tabla de pagos.');
 end;
 
-procedure MigrarRemesasCompra(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarRemesasCompra(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cSel =
     'SELECT r.Empresa, r.Ejercicio, ISNULL(r.Serie, '''') AS Serie, ' +
@@ -986,15 +986,15 @@ begin
   sUser := ValorOrNull(Eng.Usuario);
   q := NuevoQOrigen(Eng, cSel);
   q.UniDirectional := True;
-  b := TBulkInsert.Create(Eng.ConDst, 'fza_remesas_compra', cCols, BATCH);
+  b := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_remesas_compra', cCols, BATCH);
   try
-    Eng.Log('  remesas compra: cabeceras (ocrempro)...');
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocrempro'));
+    Eng.Registro.Log('  remesas compra: cabeceras (ocrempro)...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.ocrempro'));
     q.Open;
     while not q.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sSerie := SerieDocumento(q.FieldByName('Ejercicio').AsInteger,
                                TextoCampo(q, 'Serie', 2));
       sNumero := NumeroDocumento(q.FieldByName('NroRemesa').AsInteger);
@@ -1029,10 +1029,34 @@ begin
     q.Free;
   end;
   RecalcularRemesasDesdeEfectos(Eng);
-  Eng.Log('  remesas compra: totales recalculados desde efectos enlazados.');
+  Eng.Registro.Log('  remesas compra: totales recalculados desde efectos enlazados.');
 end;
 
 initialization
+  RegistrarMigracion(
+    'bancos_empresa',
+    'Bancos de cargo por empresa (ocbanrem)',
+    'ocbanrem + usos en compras -> fza_empresas_bancos',
+    ['empresas'],
+    MigrarBancosEmpresa);
+  RegistrarMigracion(
+    'tipos_efecto_compra',
+    'Tipos de efecto y formas de pago legacy (octipefe)',
+    'dbo.octipefe -> fza_tipos_efecto + fza_formas_pago',
+    [],
+    MigrarTiposEfectoCompra);
+  RegistrarMigracion(
+    'efectos_compra',
+    'Efectos y pagos de compra (ocefepro/occobpro)',
+    'dbo.ocefepro/occobpro -> fza_efectos_compra + pagos',
+    ['facturas_compra', 'bancos_empresa', 'tipos_efecto_compra'],
+    MigrarEfectosCompra);
+  RegistrarMigracion(
+    'remesas_compra',
+    'Remesas de pago (ocrempro)',
+    'dbo.ocrempro -> fza_remesas_compra',
+    ['efectos_compra'],
+    MigrarRemesasCompra);
   fsEfectos := TFormatSettings.Create('en-US');
 
 end.

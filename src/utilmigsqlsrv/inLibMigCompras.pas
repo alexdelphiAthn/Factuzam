@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibMigCompras                                               }
 {    Tipo:       Librería de migración (sin formulario)                        }
@@ -55,12 +55,12 @@ unit inLibMigCompras;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarPedidosCompra(Eng: TMigEngine; var Stats: TMigStats);
-procedure MigrarAlbaranesCompra(Eng: TMigEngine; var Stats: TMigStats);
-procedure MigrarDevolucionesCompra(Eng: TMigEngine; var Stats: TMigStats);
-procedure MigrarFacturasCompra(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarPedidosCompra(const Eng: IContextoMigracion; var Stats: TMigStats);
+procedure MigrarAlbaranesCompra(const Eng: IContextoMigracion; var Stats: TMigStats);
+procedure MigrarDevolucionesCompra(const Eng: IContextoMigracion; var Stats: TMigStats);
+procedure MigrarFacturasCompra(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -231,12 +231,12 @@ begin
 end;
 
 // Borra las filas creadas por este usuario en una tabla destino (re-ejecutable).
-procedure BorrarPorUsuario(Eng: TMigEngine; const sTabla: string);
+procedure BorrarPorUsuario(Eng: IContextoMigracion; const sTabla: string);
 var q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text   := 'DELETE FROM ' + sTabla + ' WHERE USUARIO_ALTA = :u';
     q.ParamByName('u').AsString := Eng.Usuario;
     q.ExecSQL;
@@ -247,12 +247,12 @@ end;
 
 // Rellena los datos de empresa emisora denormalizados desde fza_empresas.
 // sCab = tabla cabecera; sSuf = sufijo de columna (PEDC / ALBC).
-procedure EnlazarEmpresaCompra(Eng: TMigEngine; const sTabla, sSuf: string);
+procedure EnlazarEmpresaCompra(Eng: IContextoMigracion; const sTabla, sSuf: string);
 var q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text :=
       Format(
       'UPDATE %0:s f ' +
@@ -290,13 +290,13 @@ end;
 // el Mto ofrezca la rejilla de "tallas en horizontal" — igual que hace la
 // materializacion nativa de una sesion de compra, que tambien guarda una
 // linea por SKU (no celdas) con su ID_AC_PIVOT.
-procedure CargarMapaTallaje(Eng: TMigEngine;
+procedure CargarMapaTallaje(Eng: IContextoMigracion;
                             oMap: TDictionary<string, Integer>);
 var q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text :=
       'SELECT CODIGO_ART_ACA, ID_AC_ACA FROM fza_articulos_conjuntos_asign ' +
       'WHERE ID_VA_ACA = ''TAL''';
@@ -327,13 +327,13 @@ end;
 
 // Mapa de valores de la propiedad TEMPORADA: NOMBRE (UPPER) -> ID_PV_ARTPROP,
 // para enlazar la temporada de la cabecera del pedido con su valor de catalogo.
-procedure CargarMapaTemporada(Eng: TMigEngine;
+procedure CargarMapaTemporada(Eng: IContextoMigracion;
                               oMap: TDictionary<string, Integer>);
 var q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text :=
       'SELECT PV, ID_PV_ARTPROP FROM fza_propiedades_valores ' +
       'WHERE ID_PROP_PV = ''TEMPORADA''';
@@ -363,13 +363,13 @@ begin
     Result := 'NULL';
 end;
 
-procedure AsegurarEsquemaAlbaranesCompra(Eng: TMigEngine);
+procedure AsegurarEsquemaAlbaranesCompra(Eng: IContextoMigracion);
 var
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text :=
       'SELECT COUNT(*) AS N FROM INFORMATION_SCHEMA.COLUMNS ' +
       'WHERE TABLE_SCHEMA = DATABASE() ' +
@@ -385,13 +385,13 @@ begin
   end;
 end;
 
-procedure AsegurarEsquemaFacturasCompra(Eng: TMigEngine);
+procedure AsegurarEsquemaFacturasCompra(Eng: IContextoMigracion);
 var
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text :=
       'SELECT COUNT(*) AS N FROM INFORMATION_SCHEMA.COLUMNS ' +
       'WHERE TABLE_SCHEMA = DATABASE() ' +
@@ -406,13 +406,13 @@ begin
   end;
 end;
 
-procedure AsegurarEsquemaDevolucionesCompra(Eng: TMigEngine);
+procedure AsegurarEsquemaDevolucionesCompra(Eng: IContextoMigracion);
 var
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text :=
       'SELECT COUNT(*) AS N FROM INFORMATION_SCHEMA.TABLES ' +
       'WHERE TABLE_SCHEMA = DATABASE() ' +
@@ -479,7 +479,7 @@ end;
 //  1. Pedidos de compra
 // =========================================================================
 
-procedure MigrarPedidosCompra(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarPedidosCompra(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cWhere = 'WHERE p.TipoDoc = ''PP''';
   cSelCab =
@@ -586,25 +586,25 @@ begin
   sUser  := ValorOrNull(Eng.Usuario);
   qCab := nil; qLin := nil; bCab := nil; bLin := nil;
   // --- PASO 1: cabeceras (ocped) ---
-  bCab := TBulkInsert.Create(Eng.ConDst, 'fza_pedidos_compra', cColsCab, BATCH);
+  bCab := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_pedidos_compra', cColsCab, BATCH);
   qCab := NuevoQOrigen(Eng, cSelCab);
   qCab.UniDirectional := True;
   oMapTemp := TDictionary<string, Integer>.Create;
   CargarMapaTemporada(Eng, oMapTemp);
   try
-    Eng.Log('  compras 1/2: cabeceras de pedido (ocped)...');
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Registro.Log('  compras 1/2: cabeceras de pedido (ocped)...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocped p ' + cWhere));
     qCab.Open;
     while not qCab.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en Pedidos de compra...');
+        Eng.Registro.Log('  Cancelacion detectada en Pedidos de compra...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sSerie := Format('%d.%s', [qCab.FieldByName('Ejercicio').AsInteger,
                   Trim(qCab.FieldByName('Serie').AsString)]);
       sNum   := Format('%.6d', [qCab.FieldByName('NroPedido').AsInteger]);
@@ -644,7 +644,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('pedido_compra', sSerie + '/' + sNum, E.Message, '',
+          Eng.Registro.LogError('pedido_compra', sSerie + '/' + sNum, E.Message, '',
             'requiere Empresas/Almacenes migrados');
         end;
       end;
@@ -659,13 +659,13 @@ begin
   // --- PASO 2: líneas (ocpedarp) ---
   oMapTal := TDictionary<string, Integer>.Create;
   CargarMapaTallaje(Eng, oMapTal);
-  bLin := TBulkInsert.Create(Eng.ConDst, 'fza_pedidos_compra_lineas',
+  bLin := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_pedidos_compra_lineas',
                              cColsLin, BATCH);
   qLin := NuevoQOrigen(Eng, cSelLin);
   qLin.UniDirectional := True;
   try
-    Eng.Log('  compras 2/2: lineas de pedido (ocpedarp)...');
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Registro.Log('  compras 2/2: lineas de pedido (ocpedarp)...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocpedarp l ' +
       'INNER JOIN dbo.ocped p ON p.Empresa = l.Empresa ' +
       '   AND p.Ejercicio = l.Ejercicio AND p.Serie = l.Serie ' +
@@ -673,13 +673,13 @@ begin
     qLin.Open;
     while not qLin.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en lineas de pedido...');
+        Eng.Registro.Log('  Cancelacion detectada en lineas de pedido...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sSerie := Format('%d.%s', [qLin.FieldByName('Ejercicio').AsInteger,
                   Trim(qLin.FieldByName('Serie').AsString)]);
       sNum   := Format('%.6d', [qLin.FieldByName('NroPedido').AsInteger]);
@@ -716,7 +716,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('pedido_compra_linea', sSerie + '/' + sNum, E.Message,
+          Eng.Registro.LogError('pedido_compra_linea', sSerie + '/' + sNum, E.Message,
             Format('orden=%d', [qLin.FieldByName('Orden').AsInteger]), '');
         end;
       end;
@@ -728,10 +728,10 @@ begin
     qLin.Free;
     oMapTal.Free;
   end;
-  if not Eng.IsCancelado then
+  if not Eng.Cancelacion.EstaCancelada then
   begin
     EnlazarEmpresaCompra(Eng, 'fza_pedidos_compra', 'PEDC');
-    Eng.Log('  pedidos de compra: datos de empresa emisora rellenados.');
+    Eng.Registro.Log('  pedidos de compra: datos de empresa emisora rellenados.');
   end;
 end;
 
@@ -739,7 +739,7 @@ end;
 //  2. Albaranes de compra (entrada)
 // =========================================================================
 
-procedure MigrarAlbaranesCompra(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarAlbaranesCompra(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cWhere = 'WHERE a.TipoDoc = ''AE''';
   cSelCab =
@@ -852,25 +852,25 @@ begin
   sAhora := DateTimeASQL(Now);
   sUser  := ValorOrNull(Eng.Usuario);
   // --- PASO 1: cabeceras (ocalbpro) ---
-  bCab := TBulkInsert.Create(Eng.ConDst, 'fza_albaranes_compra', cColsCab, BATCH);
+  bCab := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_albaranes_compra', cColsCab, BATCH);
   qCab := NuevoQOrigen(Eng, cSelCab);
   qCab.UniDirectional := True;
   oMapTemp := TDictionary<string, Integer>.Create;
   try
     CargarMapaTemporada(Eng, oMapTemp);
-    Eng.Log('  compras albaran 1/2: cabeceras (ocalbpro)...');
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Registro.Log('  compras albaran 1/2: cabeceras (ocalbpro)...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocalbpro a ' + cWhere));
     qCab.Open;
     while not qCab.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en Albaranes de compra...');
+        Eng.Registro.Log('  Cancelacion detectada en Albaranes de compra...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sSerie := Format('%d.%s', [qCab.FieldByName('Ejercicio').AsInteger,
                   Trim(qCab.FieldByName('Serie').AsString)]);
       sNum   := Format('%.6d', [qCab.FieldByName('NroAlbaran').AsInteger]);
@@ -937,7 +937,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('albaran_compra', sSerie + '/' + sNum, E.Message, '',
+          Eng.Registro.LogError('albaran_compra', sSerie + '/' + sNum, E.Message, '',
             'requiere Empresas/Almacenes migrados');
         end;
       end;
@@ -952,13 +952,13 @@ begin
   // --- PASO 2: líneas (ocalbproarp) ---
   oMapTal := TDictionary<string, Integer>.Create;
   CargarMapaTallaje(Eng, oMapTal);
-  bLin := TBulkInsert.Create(Eng.ConDst, 'fza_albaranes_compra_lineas',
+  bLin := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_albaranes_compra_lineas',
                              cColsLin, BATCH);
   qLin := NuevoQOrigen(Eng, cSelLin);
   qLin.UniDirectional := True;
   try
-    Eng.Log('  compras albaran 2/2: lineas (ocalbproarp)...');
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Registro.Log('  compras albaran 2/2: lineas (ocalbproarp)...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocalbproarp l ' +
       'INNER JOIN dbo.ocalbpro a ON a.Empresa = l.Empresa ' +
       '   AND a.Ejercicio = l.Ejercicio AND a.Serie = l.Serie ' +
@@ -966,13 +966,13 @@ begin
     qLin.Open;
     while not qLin.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en lineas de albaran...');
+        Eng.Registro.Log('  Cancelacion detectada en lineas de albaran...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sSerie := Format('%d.%s', [qLin.FieldByName('Ejercicio').AsInteger,
                   Trim(qLin.FieldByName('Serie').AsString)]);
       sNum   := Format('%.6d', [qLin.FieldByName('NroAlbaran').AsInteger]);
@@ -1035,7 +1035,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('albaran_compra_linea', sSerie + '/' + sNum, E.Message,
+          Eng.Registro.LogError('albaran_compra_linea', sSerie + '/' + sNum, E.Message,
             Format('orden=%d', [qLin.FieldByName('Orden').AsInteger]), '');
         end;
       end;
@@ -1047,10 +1047,10 @@ begin
     qLin.Free;
     oMapTal.Free;
   end;
-  if not Eng.IsCancelado then
+  if not Eng.Cancelacion.EstaCancelada then
   begin
     EnlazarEmpresaCompra(Eng, 'fza_albaranes_compra', 'ALBC');
-    Eng.Log('  albaranes de compra: datos de empresa emisora rellenados.');
+    Eng.Registro.Log('  albaranes de compra: datos de empresa emisora rellenados.');
   end;
 end;
 
@@ -1058,7 +1058,7 @@ end;
 //  3. Devoluciones de compra (proveedor)
 // =========================================================================
 
-procedure MigrarDevolucionesCompra(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarDevolucionesCompra(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cWhere = 'WHERE r.TipoDoc = ''RP''';
   cSelCab =
@@ -1196,24 +1196,24 @@ begin
   sAhora := DateTimeASQL(Now);
   sUser  := ValorOrNull(Eng.Usuario);
   // --- PASO 1: cabeceras (ocreppro) ---
-  bCab := TBulkInsert.Create(Eng.ConDst, 'fza_devoluciones_compra',
+  bCab := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_devoluciones_compra',
                              cColsCab, BATCH);
   qCab := NuevoQOrigen(Eng, cSelCab);
   qCab.UniDirectional := True;
   try
-    Eng.Log('  compras devolucion 1/2: cabeceras (ocreppro)...');
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Registro.Log('  compras devolucion 1/2: cabeceras (ocreppro)...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocreppro r ' + cWhere));
     qCab.Open;
     while not qCab.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en Devoluciones de compra...');
+        Eng.Registro.Log('  Cancelacion detectada en Devoluciones de compra...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sSerie := Format('%d.%s', [qCab.FieldByName('Ejercicio').AsInteger,
                   Trim(qCab.FieldByName('Serie').AsString)]);
       sNum   := Format('%.6d', [qCab.FieldByName('NroRep').AsInteger]);
@@ -1282,7 +1282,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('devolucion_compra', sSerie + '/' + sNum, E.Message,
+          Eng.Registro.LogError('devolucion_compra', sSerie + '/' + sNum, E.Message,
             '', 'requiere Empresas/Almacenes/Proveedores migrados');
         end;
       end;
@@ -1296,13 +1296,13 @@ begin
   // --- PASO 2: líneas (ocrepproart) ---
   oMapTal := TDictionary<string, Integer>.Create;
   CargarMapaTallaje(Eng, oMapTal);
-  bLin := TBulkInsert.Create(Eng.ConDst, 'fza_devoluciones_compra_lineas',
+  bLin := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_devoluciones_compra_lineas',
                              cColsLin, BATCH);
   qLin := NuevoQOrigen(Eng, cSelLin);
   qLin.UniDirectional := True;
   try
-    Eng.Log('  compras devolucion 2/2: lineas (ocrepproart)...');
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Registro.Log('  compras devolucion 2/2: lineas (ocrepproart)...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocrepproart l ' +
       'INNER JOIN dbo.ocreppro h ON h.Empresa = l.Empresa ' +
       '   AND h.Ejercicio = l.Ejercicio AND h.Serie = l.Serie ' +
@@ -1310,13 +1310,13 @@ begin
     qLin.Open;
     while not qLin.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en lineas de devolucion...');
+        Eng.Registro.Log('  Cancelacion detectada en lineas de devolucion...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sSerie := Format('%d.%s', [qLin.FieldByName('Ejercicio').AsInteger,
                   Trim(qLin.FieldByName('Serie').AsString)]);
       sNum   := Format('%.6d', [qLin.FieldByName('NroRep').AsInteger]);
@@ -1393,7 +1393,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('devolucion_compra_linea', sSerie + '/' + sNum,
+          Eng.Registro.LogError('devolucion_compra_linea', sSerie + '/' + sNum,
             E.Message, Format('orden=%d', [qLin.FieldByName('Orden').AsInteger]),
             '');
         end;
@@ -1406,20 +1406,20 @@ begin
     qLin.Free;
     oMapTal.Free;
   end;
-  if not Eng.IsCancelado then
+  if not Eng.Cancelacion.EstaCancelada then
   begin
     EnlazarEmpresaCompra(Eng, 'fza_devoluciones_compra', 'DEVC');
-    Eng.Log('  devoluciones de compra: datos de empresa emisora rellenados.');
+    Eng.Registro.Log('  devoluciones de compra: datos de empresa emisora rellenados.');
   end;
 end;
 
-procedure EnlazarAlbaranesDesdeFacturasCompra(Eng: TMigEngine);
+procedure EnlazarAlbaranesDesdeFacturasCompra(Eng: IContextoMigracion);
 var
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text :=
       'UPDATE fza_albaranes_compra a ' +
       'JOIN fza_facturas_compra_lineas l ' +
@@ -1473,7 +1473,7 @@ end;
 //  4. Facturas de compra
 // =========================================================================
 
-procedure MigrarFacturasCompra(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarFacturasCompra(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cSelCab =
     'SELECT f.Empresa, f.Ejercicio, ISNULL(f.Serie, '''') AS Serie, ' +
@@ -1620,25 +1620,25 @@ begin
   BorrarPorUsuario(Eng, 'fza_facturas_compra');
   sAhora := DateTimeASQL(Now);
   sUser := ValorOrNull(Eng.Usuario);
-  bCab := TBulkInsert.Create(Eng.ConDst, 'fza_facturas_compra', cColsCab,
+  bCab := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_facturas_compra', cColsCab,
                              BATCH);
   qCab := NuevoQOrigen(Eng, cSelCab);
   qCab.UniDirectional := True;
   oMapTemp := TDictionary<string, Integer>.Create;
   try
     CargarMapaTemporada(Eng, oMapTemp);
-    Eng.Log('  compras factura 1/2: cabeceras (ocfacpro)...');
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocfacpro'));
+    Eng.Registro.Log('  compras factura 1/2: cabeceras (ocfacpro)...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.ocfacpro'));
     qCab.Open;
     while not qCab.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en facturas de compra...');
+        Eng.Registro.Log('  Cancelacion detectada en facturas de compra...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sSerie := Format('%d.%s', [qCab.FieldByName('Ejercicio').AsInteger,
                   Trim(qCab.FieldByName('Serie').AsString)]);
       sNum := Format('%.6d', [qCab.FieldByName('NroFactura').AsInteger]);
@@ -1706,7 +1706,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('factura_compra', sSerie + '/' + sNum, E.Message, '',
+          Eng.Registro.LogError('factura_compra', sSerie + '/' + sNum, E.Message, '',
             'requiere Empresas/Proveedores/Almacenes migrados');
         end;
       end;
@@ -1720,23 +1720,23 @@ begin
   end;
   oMapTal := TDictionary<string, Integer>.Create;
   CargarMapaTallaje(Eng, oMapTal);
-  bLin := TBulkInsert.Create(Eng.ConDst, 'fza_facturas_compra_lineas',
+  bLin := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_facturas_compra_lineas',
                              cColsLin, BATCH);
   qLin := NuevoQOrigen(Eng, cSelLin);
   qLin.UniDirectional := True;
   try
-    Eng.Log('  compras factura 2/2: lineas (ocfacproart)...');
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocfacproart'));
+    Eng.Registro.Log('  compras factura 2/2: lineas (ocfacproart)...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.ocfacproart'));
     qLin.Open;
     while not qLin.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en lineas de factura de compra...');
+        Eng.Registro.Log('  Cancelacion detectada en lineas de factura de compra...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sSerie := Format('%d.%s', [qLin.FieldByName('Ejercicio').AsInteger,
                   Trim(qLin.FieldByName('Serie').AsString)]);
       sNum := Format('%.6d', [qLin.FieldByName('NroFactura').AsInteger]);
@@ -1792,29 +1792,53 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('factura_compra_linea', sSerie + '/' + sNum, E.Message,
+          Eng.Registro.LogError('factura_compra_linea', sSerie + '/' + sNum, E.Message,
             Format('orden=%s', [sLinea]), '');
         end;
       end;
       qLin.Next;
     end;
     bLin.FlushPendiente;
-    Eng.Log('  facturas de compra: lineas enviadas a destino = %d.',
+    Eng.Registro.Log('  facturas de compra: lineas enviadas a destino = %d.',
             [bLin.TotalInsertadas]);
   finally
     bLin.Free;
     qLin.Free;
     oMapTal.Free;
   end;
-  if not Eng.IsCancelado then
+  if not Eng.Cancelacion.EstaCancelada then
   begin
     EnlazarEmpresaCompra(Eng, 'fza_facturas_compra', 'FACC');
     EnlazarAlbaranesDesdeFacturasCompra(Eng);
-    Eng.Log('  facturas de compra: empresa, contadores y albaranes enlazados.');
+    Eng.Registro.Log('  facturas de compra: empresa, contadores y albaranes enlazados.');
   end;
 end;
 
 initialization
+  RegistrarMigracion(
+    'pedidos_compra',
+    'Pedidos de compra (ocped)',
+    'dbo.ocped -> fza_pedidos_compra + lineas',
+    ['empresas', 'almacenes', 'proveedores', 'skus'],
+    MigrarPedidosCompra);
+  RegistrarMigracion(
+    'albaranes_compra',
+    'Albaranes de compra (ocalbpro)',
+    'dbo.ocalbpro -> fza_albaranes_compra + lineas',
+    ['empresas', 'almacenes', 'proveedores', 'skus'],
+    MigrarAlbaranesCompra);
+  RegistrarMigracion(
+    'devoluciones_compra',
+    'Devoluciones a proveedor (ocreppro)',
+    'dbo.ocreppro/ocrepproart -> devoluciones compra + lineas',
+    ['empresas', 'almacenes', 'proveedores', 'skus'],
+    MigrarDevolucionesCompra);
+  RegistrarMigracion(
+    'facturas_compra',
+    'Facturas de compra (ocfacpro)',
+    'dbo.ocfacpro/ocfacproart -> facturas compra + lineas',
+    ['pedidos_compra', 'albaranes_compra', 'devoluciones_compra'],
+    MigrarFacturasCompra);
   fsCompras := TFormatSettings.Create('en-US');
 
 end.

@@ -84,6 +84,9 @@
         <DCCReference Include="..\src\Lib\inLibDiag.pas"/>
         <DCCReference Include="..\src\Lib\inLibCadenas.pas"/>
         <DCCReference Include="..\src\Lib\inLibCifrado.pas"/>
+        <DCCReference Include="..\src\Lib\inLibCifradoCopias.pas"/>
+        <DCCReference Include="..\src\Lib\inLibCopiasSeguridadIntf.pas"/>
+        <DCCReference Include="..\src\Lib\inLibCopiasSeguridadReglas.pas"/>
         <DCCReference Include="..\src\Lib\inLibConfiguracionIni.pas"/>
         <DCCReference Include="..\src\Lib\inLibDocumentoFiscal.pas"/>
         <DCCReference Include="..\src\Lib\inLibIBAN.pas"/>
@@ -98,13 +101,17 @@
         <DCCReference Include="..\src\Lib\inLibImpuestosComun.pas"/>
         <DCCReference Include="..\src\Lib\inLibComprasImpuestos.pas"/>
         <DCCReference Include="..\src\Lib\inLibVentasImpuestos.pas"/>
+        <DCCReference Include="..\src\Lib\inLibMotorFiscalVenta.pas"/>
+        <DCCReference Include="..\src\Lib\inLibSqlSeguro.pas"/>
         <DCCReference Include="..\src\Caja\Lib\inLibCajaTipos.pas"/>
         <DCCReference Include="..\src\Caja\Lib\inLibFaseCobro.pas"/>
         <DCCReference Include="..\src\Caja\Lib\inLibCajaVentaIntf.pas"/>
         <DCCReference Include="..\src\Caja\Lib\inLibCajaDescuentos.pas"/>
+        <DCCReference Include="..\src\Caja\Lib\inLibCajaRectificacion.pas"/>
         <DCCReference Include="..\src\Caja\Lib\inLibCajaCierreVenta.pas"/>
         <DCCReference Include="..\src\Lib\inLibComprasSesionesReglas.pas"/>
         <DCCReference Include="..\src\Lib\inLibPerfilesUsuarioValores.pas"/>
+        <DCCReference Include="..\src\Lib\inLibExcepcionesAplicacionIntf.pas"/>
         <DCCReference Include="PruebasAtributosPaleta.pas"/>
         <DCCReference Include="PruebasColumnasDocumento.pas"/>
         <DCCReference Include="PruebasFiltroUsuario.pas"/>
@@ -116,6 +123,7 @@
         <DCCReference Include="PruebasDiagnosticoMetadata.pas"/>
         <DCCReference Include="PruebasCadenas.pas"/>
         <DCCReference Include="PruebasCifrado.pas"/>
+        <DCCReference Include="PruebasCopiasSeguridad.pas"/>
         <DCCReference Include="PruebasConfiguracionIni.pas"/>
         <DCCReference Include="PruebasIdentificacionFiscalBancaria.pas"/>
         <DCCReference Include="PruebasConexiones.pas"/>
@@ -127,9 +135,11 @@
         <DCCReference Include="PruebasNavegacionDocumento.pas"/>
         <DCCReference Include="PruebasImpuestosComun.pas"/>
         <DCCReference Include="PruebasTotalesDocumentos.pas"/>
+        <DCCReference Include="PruebasSqlSeguro.pas"/>
         <DCCReference Include="PruebasReglasCompartidas.pas"/>
         <DCCReference Include="PruebasCajaVenta.pas"/>
         <DCCReference Include="PruebasFacturasServicios.pas"/>
+        <DCCReference Include="PruebasExcepcionesAplicacion.pas"/>
         <DCCReference Include="PruebasEmisionFiscal.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

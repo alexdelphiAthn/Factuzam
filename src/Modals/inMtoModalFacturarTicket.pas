@@ -79,6 +79,7 @@ implementation
 
 uses
   inLibValoresAutomaticos, inLibVerifactu, inLibVerifactuCola,
+  inLibEmisionFiscalIntf, inLibEmisionFiscal,
   inMtoGenSearch, inLibDocumentoFiscal, inLibMsg;
 
 {$R *.dfm}
@@ -227,9 +228,11 @@ procedure TfrmModalFacturarTicket.CrearFacturaNormal(const ASerie: string;
                                                      const ACliente: string;
                                                      AFecha: TDateTime);
 var
-  Qry:     TUniQuery;
-  Usp:     TUniStoredProc;
-  sNumero: string;
+  Qry:       TUniQuery;
+  Usp:       TUniStoredProc;
+  Servicio:  IServicioEmisionFiscal;
+  Solicitud: TSolicitudEmisionFiscal;
+  sNumero:   string;
 begin
   ConexionPrincipal.StartTransaction;
   Usp := TUniStoredProc.Create(nil);
@@ -423,28 +426,18 @@ begin
         raise;
       end;
     end;
-    // Encolar el alta en Verifactu (saldrá como F3 con el bloque
-    // FacturasSustituidas apuntando al ticket)
-    case ModoVerifactu(ParametrosApp) of
-      mvVerifactu:
-        begin
-          TVerifactuCola.EncolarFactura(ParametrosApp, ParametrosCaja, Qry,
-            IdentidadSesion.Usuario, ASerie, sNumero);
-          RegistrarEventoVerifactu(ParametrosApp, ConexionPrincipal,
-            IdentidadSesion.Usuario,
-            cEventoVerifactuEncolado,
-            'Borrador en sustitución del ticket ' + FSerieTicket + '\' +
-            FNumeroTicket + ' encolada', '', ASerie, sNumero);
-        end;
-      mvNoVerifactu:
-        TVerifactuCola.RegistrarFacturaNoVerifactu(ParametrosApp,
-          ParametrosCaja, Qry,
-          IdentidadSesion.Usuario, ASerie, sNumero);
-    else
-      TVerifactuCola.MarcarFacturaSinVerifactu(ParametrosApp,
-        ParametrosCaja, Qry,
-        IdentidadSesion.Usuario, ASerie, sNumero);
-    end;
+    // Alta F3 con FacturasSustituidas apuntando al ticket.
+    Servicio := CrearServicioEmisionFiscal(
+      ParametrosApp,
+      ParametrosCaja,
+      ConexionPrincipal);
+    Solicitud := TSolicitudEmisionFiscal.ParaAlta(
+      ASerie,
+      sNumero,
+      IdentidadSesion.Usuario,
+      'Borrador en sustitución del ticket ' + FSerieTicket + '\' +
+      FNumeroTicket + ' encolada');
+    Servicio.Emitir(Solicitud);
   finally
     FreeAndNil(Qry);
     FreeAndNil(Usp);

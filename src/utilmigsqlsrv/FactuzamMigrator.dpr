@@ -3,6 +3,8 @@ program FactuzamMigrator;
 uses
   Vcl.Forms,
   UMigConn in 'UMigConn.pas' {dmMig: TDataModule},
+  UMigContratos in 'UMigContratos.pas',
+  UMigCatalogo in 'UMigCatalogo.pas',
   UMigEngine in 'UMigEngine.pas',
   inLibMigDumpEsqueleto in 'inLibMigDumpEsqueleto.pas',
   UMigrator in 'UMigrator.pas' {FormMigrator},

@@ -24,13 +24,13 @@
 unit inLibMigArqueos;
 interface
 uses
-  UMigEngine;
-procedure MigrarArqueos(Eng: TMigEngine; var Stats: TMigStats);
+  UMigEngine, UMigCatalogo;
+procedure MigrarArqueos(const Eng: IContextoMigracion; var Stats: TMigStats);
 implementation
 uses
   System.SysUtils,
   Data.DB, Uni;
-procedure MigrarArqueos(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarArqueos(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cSel =
     'SELECT a.Empresa, a.Almacen, a.Caja, a.Fecha, ' +
@@ -123,14 +123,14 @@ begin
   qSrc := NuevoQOrigen(Eng, cSel);
   qSrc.UniDirectional := True;
   try
-    qCab.Connection := Eng.ConDst;   qCab.SQL.Text := cInsCab;
-    qRec.Connection := Eng.ConDst;   qRec.SQL.Text := cInsRec;
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocarqueonew'));
+    qCab.Connection := Eng.Datos.ConexionDestino;   qCab.SQL.Text := cInsCab;
+    qRec.Connection := Eng.Datos.ConexionDestino;   qRec.SQL.Text := cInsRec;
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.ocarqueonew'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       iEmp  := qSrc.FieldByName('Empresa').AsInteger;
       iAlm  := qSrc.FieldByName('Almacen').AsInteger;
       iCaja := qSrc.FieldByName('Caja').AsInteger;
@@ -202,7 +202,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('arqueo', sCod, E.Message, '',
+          Eng.Registro.LogError('arqueo', sCod, E.Message, '',
             'requiere ocarqueonew en el origen');
         end;
       end;
@@ -214,4 +214,13 @@ begin
     qSrc.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'arqueos',
+    'Arqueos / cierres Z (ocarqueonew)',
+    'dbo.ocarqueonew → arqueos y recuentos',
+    ['ventas'],
+    MigrarArqueos);
+
 end.

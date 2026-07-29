@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibMigArticulosPropiedades                                  }
 {    Tipo:       Librería                                                      }
@@ -48,9 +48,9 @@ unit inLibMigArticulosPropiedades;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarArticulosPropiedades(Eng: TMigEngine;
+procedure MigrarArticulosPropiedades(const Eng: IContextoMigracion;
                                       var Stats: TMigStats);
 
 implementation
@@ -73,13 +73,13 @@ begin
   Result := Trim(s) <> '';
 end;
 
-procedure AsegurarPropiedadTemporada(Eng: TMigEngine);
+procedure AsegurarPropiedadTemporada(Eng: IContextoMigracion);
 var
   qIns: TUniQuery;
 begin
   qIns := TUniQuery.Create(nil);
   try
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text   :=
       'INSERT INTO fza_propiedades (' +
         'CODIGO_PROP_ARTPROP, NOMBRE_PROP_PROP, TIPO_VALOR_PROP, ' +
@@ -97,7 +97,7 @@ begin
         'USUARIO_MODIF = :USUARIO_MODIF';
     RellenarAuditoria(qIns, Eng.Usuario);
     qIns.ExecSQL;
-    Eng.Log('  + propiedad TEMPORADA asegurada (LISTA, COLOR, activa)');
+    Eng.Registro.Log('  + propiedad TEMPORADA asegurada (LISTA, COLOR, activa)');
   finally
     FreeAndNil(qIns);
   end;
@@ -105,14 +105,14 @@ end;
 
 // Inserta un valor de propiedad si no existe ya. Devuelve True si
 // inserto.
-function InsertarValorPropiedad(Eng: TMigEngine;
+function InsertarValorPropiedad(Eng: IContextoMigracion;
                                  const sPV: string): Boolean;
 var qChk, qIns: TUniQuery;
 begin
   qChk := TUniQuery.Create(nil);
   qIns := TUniQuery.Create(nil);
   try
-    qChk.Connection := Eng.ConDst;
+    qChk.Connection := Eng.Datos.ConexionDestino;
     qChk.SQL.Text   :=
       'SELECT 1 FROM fza_propiedades_valores ' +
       'WHERE ID_PROP_PV = ''TEMPORADA'' AND PV = :v';
@@ -121,7 +121,7 @@ begin
     if not qChk.IsEmpty then Exit(False);
     qChk.Close;
 
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text   :=
       'INSERT INTO fza_propiedades_valores (' +
         'ID_PROP_PV, PV, ESACTIVO_PV, ' +
@@ -139,12 +139,12 @@ begin
   end;
 end;
 
-function BuscarIdPV(Eng: TMigEngine; const sPV: string): Integer;
+function BuscarIdPV(Eng: IContextoMigracion; const sPV: string): Integer;
 var q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text   :=
       'SELECT ID_PV_ARTPROP FROM fza_propiedades_valores ' +
       'WHERE ID_PROP_PV = ''TEMPORADA'' AND PV = :v LIMIT 1';
@@ -162,13 +162,13 @@ end;
 // Carga el catalogo de valores de TEMPORADA (PV -> ID_PV_ARTPROP) en
 // memoria para resolver la temporada de cada color en O(1), sin un
 // SELECT por fila (ocartcol puede traer decenas de miles de filas).
-procedure CargarMapaPV(Eng: TMigEngine;
+procedure CargarMapaPV(Eng: IContextoMigracion;
                        Mapa: TDictionary<string, Integer>);
 var q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text   :=
       'SELECT PV, ID_PV_ARTPROP FROM fza_propiedades_valores ' +
       'WHERE ID_PROP_PV = ''TEMPORADA''';
@@ -193,7 +193,7 @@ end;
 // coinciden no se escribe nada: la vista efectiva ya hereda la de
 // articulo. El segmento de color se calcula igual que el SKU para que
 // 'ART/COLOR' case con SUBSTRING_INDEX(CODIGO_UNIDAD_SKU, '/', 2).
-procedure AsignarTemporadasPorColor(Eng: TMigEngine;
+procedure AsignarTemporadasPorColor(Eng: IContextoMigracion;
                                     var Stats: TMigStats);
 const
   // ColorSlot identico a inLibMigArticulosSkus / MigrarArticulosColores:
@@ -242,31 +242,31 @@ var
   sFila, sAhora, sUser:  string;
   iIdPV:                 Integer;
 begin
-  Eng.Log('  2a pasada: temporada por color (ocartcol, solo overrides)...');
+  Eng.Registro.Log('  2a pasada: temporada por color (ocartcol, solo overrides)...');
   oPvMap := TDictionary<string, Integer>.Create;
   qSrc   := nil;
   bulk   := nil;
   try
     CargarMapaPV(Eng, oPvMap);
-    Eng.Log('  cache: %d valores de TEMPORADA', [oPvMap.Count]);
+    Eng.Registro.Log('  cache: %d valores de TEMPORADA', [oPvMap.Count]);
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
     qSrc   := NuevoQOrigen(Eng, cSelectSrc);
     // UniDirectional: no cachea en memoria las filas de ocartcol.
     qSrc.UniDirectional := True;
-    bulk   := TBulkInsert.Create(Eng.ConDst, 'fza_articulos_propiedades',
+    bulk   := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_articulos_propiedades',
                                   cColsAP, 5000);
-    Eng.SetTotal(Eng.ContarOrigen(cContar));
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(cContar));
     qSrc.Open;
     while not qSrc.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en temporada-color, saliendo...');
+        Eng.Registro.Log('  Cancelacion detectada en temporada-color, saliendo...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sArt       := Trim(qSrc.FieldByName('Articulo').AsString);
       sCodUnidad := Trim(qSrc.FieldByName('CodUnidad').AsString);
       sPV        := Trim(qSrc.FieldByName('PV').AsString);
@@ -276,7 +276,7 @@ begin
       else if not oPvMap.TryGetValue(sPV, iIdPV) then
       begin
         Inc(Stats.Errores);
-        Eng.LogError('art_prop_color', sArt,
+        Eng.Registro.LogError('art_prop_color', sArt,
           Format('valor TEMPORADA "%s" no encontrado', [sPV]),
           Format('UNIDAD=%s', [sCodUnidad]),
           'el paso de catalogo deberia haberlo creado');
@@ -293,7 +293,7 @@ begin
           on E: Exception do
           begin
             Inc(Stats.Errores);
-            Eng.LogError('art_prop_color', sArt, E.Message,
+            Eng.Registro.LogError('art_prop_color', sArt, E.Message,
               Format('UNIDAD=%s TEMPORADA=%s', [sCodUnidad, sPV]), '');
             raise;
           end;
@@ -313,7 +313,7 @@ end;
 //  Migrador principal
 // =========================================================================
 
-procedure MigrarArticulosPropiedades(Eng: TMigEngine;
+procedure MigrarArticulosPropiedades(const Eng: IContextoMigracion;
                                       var Stats: TMigStats);
 const
   // En el legacy ocartp.Temporada es un codigo corto (0, 1, 10, 11...)
@@ -374,7 +374,7 @@ begin
       if EsTemporadaValida(sTemp) then
       begin
         if InsertarValorPropiedad(Eng, sTemp) then
-          Eng.Log('  + valor TEMPORADA "%s" creado', [sTemp]);
+          Eng.Registro.Log('  + valor TEMPORADA "%s" creado', [sTemp]);
       end;
       qVal.Next;
     end;
@@ -384,12 +384,12 @@ begin
 
   // 2. Asignar la temporada a cada articulo (bulk insert)
   qSrc := NuevoQOrigen(Eng, cSelectAsign);
-  bulk := TBulkInsert.Create(Eng.ConDst, 'fza_articulos_propiedades',
+  bulk := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_articulos_propiedades',
                               cColsAP, 5000);
   try
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocartp WITH (NOLOCK) ' +
       'WHERE LTRIM(RTRIM(Articulo)) <> '''' ' +
       '  AND LTRIM(RTRIM(ISNULL(Temporada, ''''))) <> '''''));
@@ -397,7 +397,7 @@ begin
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sArt  := Trim(qSrc.FieldByName('Articulo').AsString);
       sTemp := Trim(qSrc.FieldByName('PV').AsString);
       if (sArt = '') or (not EsTemporadaValida(sTemp)) then
@@ -410,7 +410,7 @@ begin
       if iIdPV = 0 then
       begin
         Inc(Stats.Errores);
-        Eng.LogError('art_prop', sArt,
+        Eng.Registro.LogError('art_prop', sArt,
           Format('valor TEMPORADA "%s" no encontrado', [sTemp]),
           '', 'el paso de catalogo deberia haberlo creado');
         qSrc.Next;
@@ -425,7 +425,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('art_prop', sArt, E.Message,
+          Eng.Registro.LogError('art_prop', sArt, E.Message,
             Format('TEMPORADA=%s', [sTemp]), '');
           raise;
         end;
@@ -441,5 +441,13 @@ begin
   // Comparte la transaccion del paso (la abre/cierra el motor).
   AsignarTemporadasPorColor(Eng, Stats);
 end;
+
+initialization
+  RegistrarMigracion(
+    'articulos_propiedades',
+    'Propiedad TEMPORADA por artículo y color',
+    'ocartp y ocartcol → propiedades de artículo',
+    ['articulos', 'articulos_colores'],
+    MigrarArticulosPropiedades);
 
 end.

@@ -1,4 +1,4 @@
-object dmCajaOpe: TdmCajaOpe
+﻿object dmCajaOpe: TdmCajaOpe
   OnCreate = DataModuleCreate
   Height = 346
   Width = 791
@@ -527,18 +527,6 @@ object dmCajaOpe: TdmCajaOpe
       'LIMIT 5;')
     Left = 540
     Top = 50
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'ARTICULO'
-        Value = nil
-      end>
-  end
-  object qryStock: TUniQuery
-    SQL.Strings = (
-      'CALL PRC_GET_CAJA_STOCK_PIVOTADO(:ARTICULO)')
-    Left = 534
-    Top = 150
     ParamData = <
       item
         DataType = ftUnknown

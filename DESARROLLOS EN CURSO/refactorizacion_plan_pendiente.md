@@ -383,13 +383,33 @@ largos.
 
 ## D4 — trocear los métodos largos (48 por encima de 200 líneas)
 
-Estado a 29/07/2026: **D4.1 terminado; 2 de 48 métodos tratados**.
-`MaterializarSesion` baja de 370 a 52 líneas y
-`RevertirMaterializacion` de 424 a 58. Los 19 colaboradores privados
-extraídos están usados y ninguno supera 116 líneas. La unidad productiva
-baja además 29 líneas. La batería DUnitX pasa 163/163 en Debug y Release,
-tanto en Win32 como en Win64. Detalle en
-`refactorizacion_fase6ak_resultados.md`.
+Estado a 29/07/2026: **D4.8 terminado; 9 de los 48 objetivos de partida
+tratados**. D4.1 reduce `MaterializarSesion` de 370 a 52 líneas y
+`RevertirMaterializacion` de 424 a 58. D4.2 reduce
+`CrearAlbaranDesdePedidoConCantidades` de 348 a 47 líneas. D4.3 reduce
+`ExportarBalanceTallasExcel` de 436 a 5 líneas. D4.4 reduce
+`ExportarBalanceSinTallasExcel` de 405 a 5 y unifica ambos exportadores
+en `inLibBalanceExcelComun`. D4.5 reduce
+`ExportarFacturaADevExpress` de 388 a 15 líneas; el mayor colaborador
+extraído ocupa 60. D4.6 reduce `TTiraCajaTicket.ExportarExcel` de 438 a
+22 líneas; su mayor colaborador ocupa 40. D4.7 reduce
+`TArqueoPersistencia.GrabarArqueo` de 371 a 21 líneas; su mayor
+colaborador ocupa 53. D4.8 reduce `ImprimirResguardoDeposito` de 339 a
+23 líneas; su mayor colaborador ocupa 45. Los colaboradores extraídos
+tienen consumidor y quedan por debajo de 116 líneas. La batería DUnitX
+compila en las cuatro configuraciones y pasa 219/220 casos. La única
+roja es concurrente y ajena a D4.8:
+`Carga_ExponeValoresYAplicaCaption` aún espera que los perfiles cambien
+el título, mientras el cambio concurrente en `inLibGestorPerfilesMto`
+acaba de desactivar esa responsabilidad. Detalles en
+`refactorizacion_fase6ak_resultados.md` y
+`refactorizacion_fase6al_resultados.md` y
+`refactorizacion_fase6am_resultados.md` y
+`refactorizacion_fase6an_resultados.md` y
+`refactorizacion_fase6ao_resultados.md` y
+`refactorizacion_fase6ap_resultados.md` y
+`refactorizacion_fase6aq_resultados.md` y
+`refactorizacion_fase6ar_resultados.md`.
 
 Los peores al iniciar D4:
 
@@ -403,11 +423,14 @@ Los peores al iniciar D4:
 | 373 | `inLibComprasSesionesMaterializar` | `MaterializarSesion` |
 | 351 | `inLibPedidosCompra` | `CrearAlbaranDesdePedidoConCantidades` |
 
-La primera tanda ha troceado ya
-`MaterializarSesion`/`RevertirMaterializacion`. El siguiente objetivo es
-`CrearAlbaranDesdePedidoConCantidades`, cubierto por
-`test_albaran_pedido_compra.py` (38 comprobaciones). Los tres métodos de
-Excel son los más largos, pero los menos delicados: no tocan datos.
+Las ocho primeras tandas han troceado
+`MaterializarSesion`/`RevertirMaterializacion` y
+`CrearAlbaranDesdePedidoConCantidades` y
+los dos exportadores de balance Excel, el exportador Excel de factura y
+el exportador Excel de la tira de caja, la grabación del arqueo y el
+resguardo de depósitos.
+El siguiente objetivo por tamaño actual es
+`TdmConsultaOpe.DataModuleCreate`, con 333 líneas.
 
 ## D5 — unificar los dos motores fiscales de venta
 

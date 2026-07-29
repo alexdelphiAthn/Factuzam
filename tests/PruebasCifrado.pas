@@ -36,12 +36,19 @@ type
     procedure ClaveYVectorExplicitos_ConservanElFormato;
     [Test]
     procedure ContrasenaDeCopia_ConservaCompatibilidadHistorica;
+    [Test]
+    procedure CopiaActual_ExigeContrasenaCorrecta;
+    [Test]
+    procedure CopiaActual_UsaSalAleatoria;
+    [Test]
+    procedure CopiaHistorica_SigueRestaurandose;
   end;
 
 implementation
 
 uses
-  inLibCifrado;
+  inLibCifrado,
+  inLibCifradoCopias;
 
 procedure TPruebasCifrado.
   CredencialPersistida_SeDescifraSinCambios;
@@ -139,6 +146,62 @@ begin
   Assert.AreEqual(
     'texto de prueba',
     DescifrarAESConContrasena(
+      CIFRADO_HISTORICO,
+      'clave histórica'));
+end;
+
+procedure TPruebasCifrado.
+  CopiaActual_ExigeContrasenaCorrecta;
+const
+  TEXTO = 'CREATE TABLE prueba (ID integer);';
+var
+  bRechazada: Boolean;
+  sCifrado: string;
+begin
+  sCifrado := CifrarCopiaSeguridad(
+    TEXTO,
+    'contraseña correcta');
+  Assert.IsTrue(EsFormatoCifradoActual(sCifrado));
+  Assert.AreEqual(
+    TEXTO,
+    DescifrarCopiaSeguridad(
+      sCifrado,
+      'contraseña correcta'));
+  bRechazada := False;
+  try
+    DescifrarCopiaSeguridad(
+      sCifrado,
+      'contraseña incorrecta');
+  except
+    on ECifradoCopia do
+      bRechazada := True;
+  end;
+  Assert.IsTrue(bRechazada);
+end;
+
+procedure TPruebasCifrado.
+  CopiaActual_UsaSalAleatoria;
+var
+  sPrimera: string;
+  sSegunda: string;
+begin
+  sPrimera := CifrarCopiaSeguridad(
+    'SELECT 1;',
+    'misma contraseña');
+  sSegunda := CifrarCopiaSeguridad(
+    'SELECT 1;',
+    'misma contraseña');
+  Assert.AreNotEqual(sPrimera, sSegunda);
+end;
+
+procedure TPruebasCifrado.
+  CopiaHistorica_SigueRestaurandose;
+const
+  CIFRADO_HISTORICO = 'OVwCB7+S5739/Z2iYHXc3w==';
+begin
+  Assert.AreEqual(
+    'texto de prueba',
+    DescifrarCopiaSeguridad(
       CIFRADO_HISTORICO,
       'clave histórica'));
 end;

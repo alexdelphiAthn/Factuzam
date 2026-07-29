@@ -26,11 +26,11 @@ unit inLibMigVentasMayor;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarPedidosVentaMayor(Eng: TMigEngine; var Stats: TMigStats);
-procedure MigrarAlbaranesVentaMayor(Eng: TMigEngine; var Stats: TMigStats);
-procedure MigrarFacturasVentaMayor(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarPedidosVentaMayor(const Eng: IContextoMigracion; var Stats: TMigStats);
+procedure MigrarAlbaranesVentaMayor(const Eng: IContextoMigracion; var Stats: TMigStats);
+procedure MigrarFacturasVentaMayor(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -326,13 +326,13 @@ begin
     Result := 'MH' + Format('%.10d', [q.FieldByName('NumeroMovArt').AsInteger]);
 end;
 
-procedure BorrarPorUsuario(Eng: TMigEngine; const sTabla: string);
+procedure BorrarPorUsuario(Eng: IContextoMigracion; const sTabla: string);
 var
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text := 'DELETE FROM ' + sTabla + ' WHERE USUARIO_ALTA = :u';
     q.ParamByName('u').AsString := Eng.Usuario;
     q.ExecSQL;
@@ -341,13 +341,13 @@ begin
   end;
 end;
 
-procedure LimpiarFacturasVentaMayor(Eng: TMigEngine);
+procedure LimpiarFacturasVentaMayor(Eng: IContextoMigracion);
 var
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text :=
       'DELETE l FROM fza_facturas_lineas l ' +
       'JOIN fza_facturas f ON f.NUMERO_FAC = l.NUMERO_FAC_FACLIN ' +
@@ -368,14 +368,14 @@ begin
   end;
 end;
 
-procedure EnlazarEmpresaVentaMayor(Eng: TMigEngine; const sTabla,
+procedure EnlazarEmpresaVentaMayor(Eng: IContextoMigracion; const sTabla,
                                    sSuf: string);
 var
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text := Format(
       'UPDATE %0:s d ' +
       'JOIN fza_empresas e ON e.CODIGO_EMP_EMP = d.CODIGO_EMP_%1:s ' +
@@ -396,14 +396,14 @@ begin
   end;
 end;
 
-procedure EnlazarClientesVentaMayor(Eng: TMigEngine; const sTabla,
+procedure EnlazarClientesVentaMayor(Eng: IContextoMigracion; const sTabla,
                                     sSuf: string);
 var
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text := Format(
       'UPDATE %0:s d ' +
       'JOIN fza_clientes c ON c.CODIGO_CLI_CLI = d.CODIGO_CLI_%1:s ' +
@@ -419,14 +419,14 @@ begin
   end;
 end;
 
-procedure AjustarRetencionesVentaMayor(Eng: TMigEngine; const sTabla,
+procedure AjustarRetencionesVentaMayor(Eng: IContextoMigracion; const sTabla,
                                        sSuf: string);
 var
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text := Format(
       'UPDATE %0:s d ' +
       'SET d.ESRETENCIONES_CLIENTE_%1:s = ' +
@@ -441,13 +441,13 @@ begin
   end;
 end;
 
-procedure EnlazarClienteAlbaranVenta(Eng: TMigEngine);
+procedure EnlazarClienteAlbaranVenta(Eng: IContextoMigracion);
 var
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text :=
       'UPDATE fza_albaranes d ' +
       'JOIN fza_clientes c ON c.CODIGO_CLI_CLI = d.CODIGO_CLI_ALB ' +
@@ -471,7 +471,7 @@ end;
 //  1. Pedidos de venta mayor
 // =========================================================================
 
-procedure MigrarPedidosVentaMayor(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarPedidosVentaMayor(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cSelCab =
     'SELECT p.Empresa, p.Ejercicio, ISNULL(p.Serie, '''') AS Serie, ' +
@@ -561,22 +561,22 @@ begin
   BorrarPorUsuario(Eng, 'fza_pedidos');
   sAhora := DateTimeASQL(Now);
   sUser := ValorOrNull(Eng.Usuario);
-  bCab := TBulkInsert.Create(Eng.ConDst, 'fza_pedidos', cColsCab, BATCH);
+  bCab := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_pedidos', cColsCab, BATCH);
   qCab := NuevoQOrigen(Eng, cSelCab);
   qCab.UniDirectional := True;
   try
-    Eng.Log('  venta mayor pedidos 1/2: cabeceras (ocpedcli)...');
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocpedcli'));
+    Eng.Registro.Log('  venta mayor pedidos 1/2: cabeceras (ocpedcli)...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.ocpedcli'));
     qCab.Open;
     while not qCab.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en pedidos de venta mayor...');
+        Eng.Registro.Log('  Cancelacion detectada en pedidos de venta mayor...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sSerie := SerieDocumento(qCab.FieldByName('Ejercicio').AsInteger,
                                 qCab.FieldByName('Serie').AsString);
       sNum := NumeroDocumento(qCab.FieldByName('NroPedido').AsInteger);
@@ -631,7 +631,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('pedido_venta', sSerie + '/' + sNum, E.Message, '',
+          Eng.Registro.LogError('pedido_venta', sSerie + '/' + sNum, E.Message, '',
             'requiere Empresas/Clientes migrados');
         end;
       end;
@@ -642,23 +642,23 @@ begin
     bCab.Free;
     qCab.Free;
   end;
-  bLin := TBulkInsert.Create(Eng.ConDst, 'fza_pedidos_lineas', cColsLin,
+  bLin := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_pedidos_lineas', cColsLin,
                              BATCH);
   qLin := NuevoQOrigen(Eng, cSelLin);
   qLin.UniDirectional := True;
   try
-    Eng.Log('  venta mayor pedidos 2/2: lineas (ocpedcliart)...');
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocpedcliart'));
+    Eng.Registro.Log('  venta mayor pedidos 2/2: lineas (ocpedcliart)...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.ocpedcliart'));
     qLin.Open;
     while not qLin.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en lineas de pedido venta...');
+        Eng.Registro.Log('  Cancelacion detectada en lineas de pedido venta...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sSerie := SerieDocumento(qLin.FieldByName('Ejercicio').AsInteger,
                                 qLin.FieldByName('Serie').AsString);
       sNum := NumeroDocumento(qLin.FieldByName('NroPedido').AsInteger);
@@ -696,7 +696,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('pedido_venta_linea', sSerie + '/' + sNum, E.Message,
+          Eng.Registro.LogError('pedido_venta_linea', sSerie + '/' + sNum, E.Message,
             Format('linea=%s', [sLinea]), '');
         end;
       end;
@@ -707,12 +707,12 @@ begin
     bLin.Free;
     qLin.Free;
   end;
-  if not Eng.IsCancelado then
+  if not Eng.Cancelacion.EstaCancelada then
   begin
     EnlazarEmpresaVentaMayor(Eng, 'fza_pedidos', 'PED');
     EnlazarClientesVentaMayor(Eng, 'fza_pedidos', 'PED');
     AjustarRetencionesVentaMayor(Eng, 'fza_pedidos', 'PED');
-    Eng.Log('  pedidos venta mayor: empresa y flags de cliente rellenados.');
+    Eng.Registro.Log('  pedidos venta mayor: empresa y flags de cliente rellenados.');
   end;
 end;
 
@@ -720,7 +720,7 @@ end;
 //  2. Albaranes de venta mayor
 // =========================================================================
 
-procedure MigrarAlbaranesVentaMayor(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarAlbaranesVentaMayor(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cSelCab =
     'SELECT a.Empresa, a.Ejercicio, ISNULL(a.Serie, '''') AS Serie, a.NroAlbaran, ' +
@@ -815,22 +815,22 @@ begin
   BorrarPorUsuario(Eng, 'fza_albaranes');
   sAhora := DateTimeASQL(Now);
   sUser := ValorOrNull(Eng.Usuario);
-  bCab := TBulkInsert.Create(Eng.ConDst, 'fza_albaranes', cColsCab, BATCH);
+  bCab := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_albaranes', cColsCab, BATCH);
   qCab := NuevoQOrigen(Eng, cSelCab);
   qCab.UniDirectional := True;
   try
-    Eng.Log('  venta mayor albaranes 1/2: cabeceras (ocalbcli)...');
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocalbcli'));
+    Eng.Registro.Log('  venta mayor albaranes 1/2: cabeceras (ocalbcli)...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.ocalbcli'));
     qCab.Open;
     while not qCab.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en albaranes de venta mayor...');
+        Eng.Registro.Log('  Cancelacion detectada en albaranes de venta mayor...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sSerie := SerieDocumento(qCab.FieldByName('Ejercicio').AsInteger,
                                 qCab.FieldByName('Serie').AsString);
       sNum := NumeroDocumento(qCab.FieldByName('NroAlbaran').AsInteger);
@@ -899,7 +899,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('albaran_venta', sSerie + '/' + sNum, E.Message, '',
+          Eng.Registro.LogError('albaran_venta', sSerie + '/' + sNum, E.Message, '',
             'requiere Empresas/Clientes migrados');
         end;
       end;
@@ -910,25 +910,25 @@ begin
     bCab.Free;
     qCab.Free;
   end;
-  bLin := TBulkInsert.Create(Eng.ConDst, 'fza_albaranes_lineas', cColsLin,
+  bLin := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_albaranes_lineas', cColsLin,
                              BATCH);
   qLin := NuevoQOrigen(Eng, cSelLin);
   qLin.UniDirectional := True;
   try
-    Eng.Log('  venta mayor albaranes 2/2: lineas (ocalbcliart)...');
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocalbcliart'));
+    Eng.Registro.Log('  venta mayor albaranes 2/2: lineas (ocalbcliart)...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.ocalbcliart'));
     sDocActual := '';
     iLineaSeq := 0;
     qLin.Open;
     while not qLin.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en lineas de albaran venta...');
+        Eng.Registro.Log('  Cancelacion detectada en lineas de albaran venta...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sSerie := SerieDocumento(qLin.FieldByName('Ejercicio').AsInteger,
                                 qLin.FieldByName('Serie').AsString);
       sNum := NumeroDocumento(qLin.FieldByName('NroAlbaran').AsInteger);
@@ -1001,7 +1001,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('albaran_venta_linea', sSerie + '/' + sNum, E.Message,
+          Eng.Registro.LogError('albaran_venta_linea', sSerie + '/' + sNum, E.Message,
             Format('linea=%s', [sLinea]), '');
         end;
       end;
@@ -1012,11 +1012,11 @@ begin
     bLin.Free;
     qLin.Free;
   end;
-  if not Eng.IsCancelado then
+  if not Eng.Cancelacion.EstaCancelada then
   begin
     EnlazarEmpresaVentaMayor(Eng, 'fza_albaranes', 'ALB');
     EnlazarClienteAlbaranVenta(Eng);
-    Eng.Log('  albaranes venta mayor: empresa y flags de cliente rellenados.');
+    Eng.Registro.Log('  albaranes venta mayor: empresa y flags de cliente rellenados.');
   end;
 end;
 
@@ -1024,7 +1024,7 @@ end;
 //  3. Facturas de venta mayor
 // =========================================================================
 
-procedure MigrarFacturasVentaMayor(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarFacturasVentaMayor(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cSelCab =
     'SELECT f.Empresa, f.Ejercicio, ISNULL(f.Serie, '''') AS Serie, f.NroFactura, ' +
@@ -1112,22 +1112,22 @@ begin
   LimpiarFacturasVentaMayor(Eng);
   sAhora := DateTimeASQL(Now);
   sUser := ValorOrNull(Eng.Usuario);
-  bCab := TBulkInsert.Create(Eng.ConDst, 'fza_facturas', cColsFac, BATCH);
+  bCab := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_facturas', cColsFac, BATCH);
   qCab := NuevoQOrigen(Eng, cSelCab);
   qCab.UniDirectional := True;
   try
-    Eng.Log('  venta mayor facturas 1/2: cabeceras (ocfaccli)...');
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocfaccli'));
+    Eng.Registro.Log('  venta mayor facturas 1/2: cabeceras (ocfaccli)...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.ocfaccli'));
     qCab.Open;
     while not qCab.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en facturas de venta mayor...');
+        Eng.Registro.Log('  Cancelacion detectada en facturas de venta mayor...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sSerie := SerieDocumento(qCab.FieldByName('Ejercicio').AsInteger,
                                 qCab.FieldByName('Serie').AsString);
       sNum := NumeroDocumento(qCab.FieldByName('NroFactura').AsInteger);
@@ -1181,7 +1181,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('factura_venta_mayor', sSerie + '/' + sNum, E.Message,
+          Eng.Registro.LogError('factura_venta_mayor', sSerie + '/' + sNum, E.Message,
             '', 'requiere Empresas/Clientes migrados');
         end;
       end;
@@ -1192,25 +1192,25 @@ begin
     bCab.Free;
     qCab.Free;
   end;
-  bLin := TBulkInsert.Create(Eng.ConDst, 'fza_facturas_lineas', cColsLin,
+  bLin := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_facturas_lineas', cColsLin,
                              BATCH);
   qLin := NuevoQOrigen(Eng, cSelLin);
   qLin.UniDirectional := True;
   try
-    Eng.Log('  venta mayor facturas 2/2: lineas (ocfaccliart)...');
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocfaccliart'));
+    Eng.Registro.Log('  venta mayor facturas 2/2: lineas (ocfaccliart)...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.ocfaccliart'));
     sDocActual := '';
     iLineaSeq := 0;
     qLin.Open;
     while not qLin.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en lineas de factura venta mayor...');
+        Eng.Registro.Log('  Cancelacion detectada en lineas de factura venta mayor...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sSerie := SerieDocumento(qLin.FieldByName('Ejercicio').AsInteger,
                                 qLin.FieldByName('Serie').AsString);
       sNum := NumeroDocumento(qLin.FieldByName('NroFactura').AsInteger);
@@ -1259,7 +1259,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('factura_venta_mayor_linea', sSerie + '/' + sNum,
+          Eng.Registro.LogError('factura_venta_mayor_linea', sSerie + '/' + sNum,
             E.Message, Format('linea=%s', [sLinea]), '');
         end;
       end;
@@ -1276,25 +1276,43 @@ begin
   // guardadas pase lo que pase. El enlace pesado (movimientos) ya no esta
   // aqui: corre en el dominio independiente "Enlace movimientos <-> facturas"
   // al final, para no bloquear la importacion de las facturas.
-  Eng.ConDst.Commit;
-  if not Eng.IsCancelado then
+  Eng.Datos.ConexionDestino.Commit;
+  if not Eng.Cancelacion.EstaCancelada then
   begin
     try
       EnlazarEmpresaVentaMayor(Eng, 'fza_facturas', 'FAC');
       EnlazarClientesVentaMayor(Eng, 'fza_facturas', 'FAC');
       AjustarRetencionesVentaMayor(Eng, 'fza_facturas', 'FAC');
-      Eng.Log('  facturas venta mayor: empresa y cliente enlazados.');
+      Eng.Registro.Log('  facturas venta mayor: empresa y cliente enlazados.');
     except
       on E: Exception do
-        Eng.LogError('facturas_venta_mayor_enlace', '', E.Message, '',
+        Eng.Registro.LogError('facturas_venta_mayor_enlace', '', E.Message, '',
           'enlace post-insercion fallido; las facturas YA estan guardadas');
     end;
   end;
   // Dejamos una transaccion activa para el Commit final del motor.
-  Eng.ConDst.StartTransaction;
+  Eng.Datos.ConexionDestino.StartTransaction;
 end;
 
 initialization
+  RegistrarMigracion(
+    'pedidos_venta',
+    'Pedidos venta mayor (ocpedcli)',
+    'dbo.ocpedcli/ocpedcliart → pedidos y líneas',
+    ['clientes', 'skus'],
+    MigrarPedidosVentaMayor);
+  RegistrarMigracion(
+    'albaranes_venta',
+    'Albaranes venta mayor (ocalbcli)',
+    'dbo.ocalbcli/ocalbcliart → albaranes y líneas',
+    ['clientes', 'skus'],
+    MigrarAlbaranesVentaMayor);
+  RegistrarMigracion(
+    'facturas_venta_mayor',
+    'Facturas venta mayor (ocfaccli)',
+    'dbo.ocfaccli/ocfaccliart → facturas y líneas',
+    ['albaranes_venta', 'facturas'],
+    MigrarFacturasVentaMayor);
   fsVentasMayor := TFormatSettings.Create('en-US');
 
 end.

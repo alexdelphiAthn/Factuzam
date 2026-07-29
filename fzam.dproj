@@ -179,6 +179,7 @@
         <DCCReference Include="src\Lib\inLibDiag.pas"/>
         <DCCReference Include="src\Lib\inLibCadenas.pas"/>
         <DCCReference Include="src\Lib\inLibCifrado.pas"/>
+        <DCCReference Include="src\Lib\inLibCifradoCopias.pas"/>
         <DCCReference Include="src\Lib\inLibConfiguracionIni.pas"/>
         <DCCReference Include="src\Lib\inLibDatasets.pas"/>
         <DCCReference Include="src\Lib\inLibValoresAutomaticos.pas"/>
@@ -195,10 +196,18 @@
         <DCCReference Include="src\Lib\inLibIBAN.pas"/>
         <DCCReference Include="src\Lib\inLibSepaRemesasVenta.pas"/>
         <DCCReference Include="src\Lib\inLibFacturas.pas"/>
+        <DCCReference Include="src\Lib\inLibSqlSeguro.pas"/>
+        <DCCReference Include="src\Lib\inLibMotorFiscalVenta.pas"/>
         <DCCReference Include="src\Lib\inLibFacturasServiciosIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturasRepositorio.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturasValidacionFiscal.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturasCalculo.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturasComposicion.pas"/>
         <DCCReference Include="src\Lib\inLibFacturasBorrado.pas"/>
         <DCCReference Include="src\Lib\inLibFacturasEfectos.pas"/>
         <DCCReference Include="src\Lib\inLibFacturasMovimientos.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturasConsolidacion.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturasReapertura.pas"/>
         <DCCReference Include="src\Lib\inLibFacturaPdfBlob.pas"/>
         <DCCReference Include="src\Lib\inLibFormatoDocumento.pas"/>
         <DCCReference Include="src\Lib\inLibInformesGuiasCache.pas"/>
@@ -206,9 +215,13 @@
         <DCCReference Include="src\Lib\inLibConfigCampos.pas"/>
         <DCCReference Include="src\Lib\inLibContextoSesionIntf.pas"/>
         <DCCReference Include="src\Lib\inLibContextoSesion.pas"/>
+        <DCCReference Include="src\Lib\inLibExcepcionesAplicacionIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibExcepcionesAplicacion.pas"/>
         <DCCReference Include="src\Lib\inLibFiltrosGuardadosIntf.pas"/>
         <DCCReference Include="src\Lib\inLibPerfilesUsuarioIntf.pas"/>
         <DCCReference Include="src\Lib\inLibPerfilesUsuarioValores.pas"/>
+        <DCCReference Include="src\Lib\inLibTraduccionesIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibTraducciones.pas"/>
         <DCCReference Include="src\Lib\inLibParametrosIntf.pas"/>
         <DCCReference Include="src\Lib\inLibParametrosBase.pas"/>
         <DCCReference Include="src\Lib\inLibConexionesIntf.pas"/>
@@ -347,6 +360,7 @@
         <DCCReference Include="src\Modals\inMtoModalGenPass.pas">
             <Form>frmModalGenPass</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalContrasenaCopia.pas"/>
         <DCCReference Include="src\Modals\inMtoModalListadoVentas.pas">
             <Form>frmModalListadoVentas</Form>
         </DCCReference>
@@ -602,6 +616,9 @@
         <DCCReference Include="src\Caja\Lib\inLibCajaVentaIntf.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibCajaStock.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibCajaDescuentos.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibCajaConsultasRepositorio.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibCajaRectificacion.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibCajaOpeComposicion.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibCajaCierreVenta.pas"/>
         <DCCReference Include="src\Lib\inLibCriptoCurr.pas"/>
         <DCCReference Include="src\Lib\inLibDivCurr.pas"/>
@@ -653,6 +670,7 @@
         <DCCReference Include="src\Lib\inLibVentasImpuestos.pas"/>
         <DCCReference Include="src\Lib\inLibInventarioExcel.pas"/>
         <DCCReference Include="src\Lib\inLibDocumentosTrabajoExcel.pas"/>
+        <DCCReference Include="src\Lib\inLibBalanceExcelComun.pas"/>
         <DCCReference Include="src\Lib\inLibBalanceTallasExcel.pas"/>
         <DCCReference Include="src\Lib\inLibBalanceSinTallasExcel.pas"/>
         <DCCReference Include="src\Lib\inLibMovVentasArtExcel.pas"/>
@@ -948,6 +966,9 @@
         </DCCReference>
         <DCCReference Include="src\Lib\inLibDBStructure.pas"/>
         <DCCReference Include="src\Lib\inLibBackupWorker.pas"/>
+        <DCCReference Include="src\Lib\inLibCopiasSeguridadIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibCopiasSeguridadReglas.pas"/>
+        <DCCReference Include="src\Lib\inLibCopiasSeguridad.pas"/>
         <DCCReference Include="src\DataModules\UniDataComprasSesiones.pas">
             <Form>dmComprasSesiones</Form>
             <DesignClass>TdmComprasSesiones</DesignClass>

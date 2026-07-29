@@ -52,7 +52,9 @@ uses
   dxGDIPlusClasses, cxImage, Vcl.Imaging.pngimage,
   inLibContextoSesionIntf, inLibParametrosIntf, inLibShowMto,
   inLibLicenciaAplicacion, inLibAnfitrionMtoIntf,
-  inLibCajaVentanasIntf, inLibPermisosIntf;
+  inLibCajaVentanasIntf, inLibPermisosIntf,
+  inLibCopiasSeguridadIntf,
+  inLibExcepcionesAplicacionIntf;
 
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
@@ -238,7 +240,6 @@ type
   private
     FException: Boolean;
     FSavedNCMValid: Boolean;
-    FExceptionDialogMemo: TcxMemo;
     FEnOperacionLarga: Boolean;
     FProgressBar: TProgressBar;
     FProgressLabel: TcxLabel;
@@ -248,6 +249,8 @@ type
     FFalloCargaPermisosAvisado: Boolean;
     FParametrosAppEdicion: IParametrosEdicion;
     FParametrosCajaEdicion: IParametrosEdicion;
+    FServicioCopiasSeguridad: IServicioCopiasSeguridad;
+    FGestorExcepciones: IGestorExcepcionesAplicacion;
     // Handlers de aplicacion (OnException/OnIdle/OnMessage) registrados via
     // TApplicationEvents: una asignacion directa Application.OnX queda
     // anulada en cuanto cualquier form crea su propio TApplicationEvents
@@ -256,9 +259,6 @@ type
     procedure AbrirUrlAyuda(const AUrl: string);
     procedure AplicarTituloVentana;
     procedure AppException(Sender: TObject; E: Exception);
-    function ConstruirDetalleException(Sender: TObject; E: Exception): string;
-    procedure MostrarDetalleExcepcion(const ATexto: string);
-    procedure CopiarExceptionDialogClick(Sender: TObject);
     procedure AplicarPermisosMenu;
     procedure AvisarFalloCargaPermisos(const ADetalle: string);
     // Precarga de caches de arranque. El modo (serie / paralelo) lo decide
@@ -267,7 +267,13 @@ type
     procedure PrecargarCachesParalelo;
     function EjecutarCargaWorker(ACarga: TProc<TUniConnection>;
                                  out AError: string): Int64;
-    function CopiaSeguridad: Boolean;
+    function SolicitarDestinoCopia(
+      out ARutaFichero, AContrasena: string
+    ): Boolean;
+    function CrearCopiaPreviaScript: Boolean;
+    function SolicitarOrigenRestauracion(
+      out ARutaFichero, AContrasena: string
+    ): Boolean;
     procedure WorkerProgreso(const AEtapa: string;
                               APaso, ATotal: Integer;
                               AFilaGlobal,
@@ -335,6 +341,8 @@ uses inLibUser,
   inLibPermisosUniDAC,
   inLibConexionesIntf,
   inLibConexionesUniDAC,
+  inLibTraduccionesIntf,
+  inLibTraducciones,
   inLibAuditoriaDatosIntf,
   inLibAuditoriaDatos,
   inLibMonitorSQLIntf,
@@ -376,9 +384,9 @@ uses inLibUser,
   inMtoFotoArticulo,
   System.DateUtils,
   System.RegularExpressions,
-  Vcl.StdCtrls,
-  inLibBackupWorker,
-  Vcl.Clipbrd;
+  inLibCopiasSeguridad,
+  inLibExcepcionesAplicacion,
+  inMtoModalContrasenaCopia;
 
 {$R *.dfm}
 
@@ -702,6 +710,9 @@ begin
   AsignarContextoSesion(AContextoSesion);
   IdentidadActual := ContextoSesion.Identidad;
   UbicacionActual := ContextoSesion.Ubicacion;
+  FGestorExcepciones :=
+    CrearGestorExcepcionesAplicacion(
+      ContextoSesion);
   FAppEvents := TApplicationEvents.Create(Self);
   FAppEvents.OnException := AppException;
   FSavedNCMValid := False;
@@ -728,6 +739,9 @@ begin
   end;
   FormManager := TEmbeddedFormManager.Create(Self.pcPrincipal);
   FDmConn     := TdmConn.Create(Self);
+  FServicioCopiasSeguridad := TServicioCopiasSeguridad.Create(
+    ContextoSesion,
+    FDmConn.conUni);
   VisorMonitorSQL := TVisorMonitorSQLMemo.Create(cxMemo1);
   RegistroMonitorSQL := TRegistroMonitorSQLLog.Create(
     inLibLog.Log,
@@ -783,6 +797,11 @@ begin
     raise Exception.Create(SErrorParametrosCajaSinContratoEdicion);
   AsignarParametros(ParametrosAppCreados, ParametrosCajaCreados);
   FDmConn.AsignarParametrosApp(ParametrosAppCreados);
+  AsignarTraducciones(
+    TServicioTraducciones.Create(
+      Conexiones,
+      ParametrosApp.GetString('appIdioma', IDIOMA_ESPANOL)));
+  Traducciones.Aplicar(Self);
   oFotos.AsignarConexion(ConexionPrincipal, ParametrosApp);
   FdmDataFiltros  := TdmFiltros.Create(Self);
   AsignarFiltrosGuardados(FdmDataFiltros);
@@ -1079,43 +1098,80 @@ begin
     ShowMto(Self, 'Tarifas');
 end;
 
-procedure TfrmMtoPrincipal.CopiasdeSeguridad1Click(Sender: TObject);
+function TfrmMtoPrincipal.SolicitarDestinoCopia(
+  out ARutaFichero, AContrasena: string): Boolean;
 var
-  Worker: TBackupWorker;
+  bCifrada: Boolean;
+  sExtension: string;
 begin
+  ARutaFichero := '';
+  AContrasena := '';
+  sExtension := FServicioCopiasSeguridad.ExtensionCreacion;
+  bCifrada := FServicioCopiasSeguridad.ModoCreacion =
+    mpcCifrada;
   saveDialog.Title := 'Guardar copia de seguridad';
-  saveDialog.DefaultExtension := 'sql';
+  saveDialog.DefaultExtension := Copy(
+    sExtension,
+    2,
+    MaxInt);
   saveDialog.DefaultFolder := ParametrosApp.GetPath(
     'appDirCopiasSeguridad');
+  saveDialog.Options := saveDialog.Options +
+    [fdoStrictFileTypes, fdoOverwritePrompt];
   saveDialog.FileTypes.Clear;
   with saveDialog.FileTypes.Add do
   begin
-    DisplayName := 'Archivos SQL';
-    FileMask := '*.sql';
-  end;
-  with saveDialog.FileTypes.Add do
-  begin
-    DisplayName := 'Todos los archivos';
-    FileMask := '*.*';
+    if bCifrada then
+    begin
+      DisplayName := 'Copias cifradas';
+      FileMask := '*.crypt';
+    end
+    else
+    begin
+      DisplayName := 'Archivos SQL';
+      FileMask := '*.sql';
+    end;
   end;
   saveDialog.FileName := 'copiaseguridad' +
-    FormatDateTime('_dd_mm_yyyy_HH_nn_ss', Now) + '.sql';
-  if saveDialog.Execute then
+    FormatDateTime('_dd_mm_yyyy_HH_nn_ss', Now) +
+    sExtension;
+  Result := saveDialog.Execute;
+  if Result then
+  begin
+    ARutaFichero := ChangeFileExt(
+      saveDialog.FileName,
+      sExtension);
+    if bCifrada then
+    begin
+      Result := TfrmModalContrasenaCopia.SolicitarNueva(
+        Self,
+        AContrasena);
+    end;
+  end;
+end;
+
+procedure TfrmMtoPrincipal.CopiasdeSeguridad1Click(Sender: TObject);
+var
+  sContrasena: string;
+  sRutaFichero: string;
+begin
+  if SolicitarDestinoCopia(
+    sRutaFichero,
+    sContrasena) then
   begin
     MostrarBarraProgreso;
-    Worker := TBackupWorker.Create(
-      FDmConn.conUni.Server,
-      FDmConn.conUni.Port,
-      FDmConn.conUni.Database,
-      FDmConn.conUni.Username,
-      FDmConn.conUni.Password,
-      saveDialog.FileName,
-      False, '');
-    Worker.OnProgreso := WorkerProgreso;
-    Worker.OnFinalizar := BackupFinalizar;
-    FCancelaOperacionSolicitada := False;
-    FWorkerOperacion := Worker;
-    Worker.Start;
+    try
+      FCancelaOperacionSolicitada := False;
+      FServicioCopiasSeguridad.IniciarCopia(
+        sRutaFichero,
+        sContrasena,
+        WorkerProgreso,
+        BackupFinalizar,
+        FWorkerOperacion);
+    except
+      OcultarBarraProgreso;
+      raise;
+    end;
   end;
 end;
 
@@ -1503,47 +1559,28 @@ begin
   pnlPPBottom.Visible := False;
 end;
 
-function TfrmMtoPrincipal.CopiaSeguridad: Boolean;
+function TfrmMtoPrincipal.CrearCopiaPreviaScript: Boolean;
 var
+  sContrasena: string;
   sError: string;
+  sRutaFichero: string;
 begin
-  Result := False;
-  saveDialog.Title := 'Guardar copia de seguridad';
-  saveDialog.DefaultExtension := 'sql';
-  saveDialog.DefaultFolder := ParametrosApp.GetPath(
-    'appDirCopiasSeguridad');
-  saveDialog.FileTypes.Clear;
-  with saveDialog.FileTypes.Add do
-  begin
-    DisplayName := 'Archivos SQL';
-    FileMask := '*.sql';
-  end;
-  with saveDialog.FileTypes.Add do
-  begin
-    DisplayName := 'Todos los archivos';
-    FileMask := '*.*';
-  end;
-  saveDialog.FileName := 'copiaseguridad' +
-    FormatDateTime('_dd_mm_yyyy_HH_nn_ss', Now) + '.sql';
-  if saveDialog.Execute then
+  Result := SolicitarDestinoCopia(
+    sRutaFichero,
+    sContrasena);
+  if Result then
   begin
     MostrarBarraProgreso;
     try
-      Result := CrearCopiaSeguridadBD(
-        FDmConn.conUni.Server,
-        FDmConn.conUni.Port,
-        FDmConn.conUni.Database,
-        FDmConn.conUni.Username,
-        FDmConn.conUni.Password,
-        saveDialog.FileName,
-        False,
-        '',
+      Result := FServicioCopiasSeguridad.CrearCopia(
+        sRutaFichero,
+        sContrasena,
         WorkerProgreso,
         sError);
       if Result then
       begin
         inLibLog.Log.LogInfo('Copia de seguridad creada en ' +
-                             saveDialog.FileName);
+          sRutaFichero);
         ShowMessage(SInfoCopiaSeguridadGuardada);
       end
       else
@@ -1592,6 +1629,7 @@ begin
     FAppEvents.OnException := nil;
     FAppEvents.OnMessage := nil;
   end;
+  FGestorExcepciones := nil;
   inherited;
   try
     inLibLog.Log.LogInfo('Cerrando ventana principal');
@@ -1607,6 +1645,7 @@ begin
     oFotos.LiberarServicios;
     if Assigned(FDmConn) then
       FDmConn.AsignarParametrosApp(nil);
+    AsignarTraducciones(nil);
     AsignarParametros(nil, nil);
     FParametrosAppEdicion := nil;
     FParametrosCajaEdicion := nil;
@@ -1874,80 +1913,134 @@ begin
     Result := inherited IsShortCut(Message);
 end;
 
-procedure TfrmMtoPrincipal.mnuEjecutarScriptClick(Sender: TObject);
+function TfrmMtoPrincipal.SolicitarOrigenRestauracion(
+  out ARutaFichero, AContrasena: string): Boolean;
 var
-  SqlTexto: string;
-  FS: TFileStream;
-  Bytes: TBytes;
-  BytesToRead: Int64;
-  Worker: TRestoreWorker;
+  bEsAdministrador: Boolean;
 begin
-  if not mnuEjecutarScript.Visible then
-    Exit;
-  openDialog.Title := 'Cargar script';
+  ARutaFichero := '';
+  AContrasena := '';
+  bEsAdministrador := FServicioCopiasSeguridad.ModoCreacion =
+    mpcTextoPlano;
+  openDialog.Title := 'Restaurar copia o ejecutar script';
   openDialog.FileTypes.Clear;
   with openDialog.FileTypes.Add do
   begin
-    DisplayName := 'Archivos SQL';
-    FileMask := '*.sql';
+    if bEsAdministrador then
+    begin
+      DisplayName := 'Copias SQL o cifradas';
+      FileMask := '*.sql;*.crypt';
+    end
+    else
+    begin
+      DisplayName := 'Copias o scripts cifrados';
+      FileMask := '*.crypt';
+    end;
   end;
-  with openDialog.FileTypes.Add do
-  begin
-    DisplayName := 'Todos los archivos';
-    FileMask := '*.*';
-  end;
-  openDialog.DefaultExtension := 'sql';
+  if bEsAdministrador then
+    openDialog.DefaultExtension := 'sql'
+  else
+    openDialog.DefaultExtension := 'crypt';
   openDialog.DefaultFolder := ParametrosApp.GetPath(
     'appDirCopiasSeguridad');
-  if openDialog.Execute then
+  openDialog.Options := openDialog.Options +
+    [fdoStrictFileTypes, fdoFileMustExist];
+  Result := openDialog.Execute;
+  if Result then
   begin
-    // Leer solo los primeros 64 KB para comprobar DDL sin cargar
-    // todo el fichero en memoria (los backups pueden ser muy grandes).
-    FS := TFileStream.Create(openDialog.FileName,
-                             fmOpenRead or fmShareDenyNone);
-    try
-      BytesToRead := FS.Size;
-      if BytesToRead > 65536 then
-        BytesToRead := 65536;
-      SetLength(Bytes, BytesToRead);
-      FS.ReadBuffer(Bytes, BytesToRead);
-      SqlTexto := TEncoding.UTF8.GetString(Bytes);
-    finally
-      FreeAndNil(FS);
-    end;
-    if ContieneDDL(SqlTexto) then
+    ARutaFichero := openDialog.FileName;
+    Result := FServicioCopiasSeguridad.PuedeRestaurar(
+      ARutaFichero);
+    if not Result then
+      ShowMessage(SErrorTipoRestauracionNoPermitido)
+    else if FServicioCopiasSeguridad.RequiereContrasena(
+      ARutaFichero) then
     begin
-      var Respuesta := MessageDlg(SPreguntaCopiaSeguridadAntesDDL,
-                                  mtWarning,
-                                  [mbYes, mbNo, mbCancel], 0);
-      case Respuesta of
-        mrYes:
-          begin
-            if not CopiaSeguridad then
-            begin
-              ShowMessage(SInfoScriptCancelado);
-              Exit;
-            end;
-          end;
-        mrCancel:
-          Exit;
+      Result := TfrmModalContrasenaCopia.SolicitarExistente(
+        Self,
+        AContrasena);
+    end;
+  end;
+end;
+
+procedure TfrmMtoPrincipal.mnuEjecutarScriptClick(Sender: TObject);
+var
+  aBytes: TBytes;
+  bCifrada: Boolean;
+  bContinuar: Boolean;
+  bRequiereCopia: Boolean;
+  iRespuesta: Integer;
+  iBytesALeer: Int64;
+  oFichero: TFileStream;
+  sContrasena: string;
+  sPreguntaCopia: string;
+  sRutaFichero: string;
+  sSqlTexto: string;
+begin
+  if mnuEjecutarScript.Visible then
+  begin
+    bContinuar := SolicitarOrigenRestauracion(
+      sRutaFichero,
+      sContrasena);
+    if bContinuar then
+    begin
+      bCifrada := FServicioCopiasSeguridad.RequiereContrasena(
+        sRutaFichero);
+      bRequiereCopia := bCifrada;
+      sPreguntaCopia := SPreguntaCopiaAntesRestaurarCifrada;
+      if not bCifrada then
+      begin
+        oFichero := TFileStream.Create(
+          sRutaFichero,
+          fmOpenRead or fmShareDenyNone);
+        try
+          iBytesALeer := oFichero.Size;
+          if iBytesALeer > 65536 then
+            iBytesALeer := 65536;
+          SetLength(aBytes, iBytesALeer);
+          oFichero.ReadBuffer(
+            aBytes,
+            iBytesALeer);
+          sSqlTexto := TEncoding.UTF8.GetString(aBytes);
+        finally
+          FreeAndNil(oFichero);
+        end;
+        bRequiereCopia := ContieneDDL(sSqlTexto);
+        sPreguntaCopia := SPreguntaCopiaSeguridadAntesDDL;
+      end;
+      if bRequiereCopia then
+      begin
+        iRespuesta := MessageDlg(
+          sPreguntaCopia,
+          mtWarning,
+          [mbYes, mbNo, mbCancel],
+          0);
+        case iRespuesta of
+          mrYes:
+            bContinuar := CrearCopiaPreviaScript;
+          mrCancel:
+            bContinuar := False;
+        end;
+        if not bContinuar then
+          ShowMessage(SInfoScriptCancelado);
+      end;
+      if bContinuar then
+      begin
+        MostrarBarraProgreso;
+        try
+          FCancelaOperacionSolicitada := False;
+          FServicioCopiasSeguridad.IniciarRestauracion(
+            sRutaFichero,
+            sContrasena,
+            WorkerProgreso,
+            RestoreFinalizar,
+            FWorkerOperacion);
+        except
+          OcultarBarraProgreso;
+          raise;
+        end;
       end;
     end;
-    // Lanzar ejecución en segundo plano
-    MostrarBarraProgreso;
-    Worker := TRestoreWorker.Create(
-      FDmConn.conUni.Server,
-      FDmConn.conUni.Port,
-      FDmConn.conUni.Database,
-      FDmConn.conUni.Username,
-      FDmConn.conUni.Password,
-      openDialog.FileName,
-      '');
-    Worker.OnProgreso := WorkerProgreso;
-    Worker.OnFinalizar := RestoreFinalizar;
-    FCancelaOperacionSolicitada := False;
-    FWorkerOperacion := Worker;
-    Worker.Start;
   end;
 end;
 
@@ -2477,209 +2570,10 @@ begin
   frmFotoArticulo.SetArticuloSku(sArt, sSku);
 end;
 
-// Captura cualquier excepción no atrapada por bloques try/except en la
-// aplicación. Asignado a Application.OnException desde FormCreate. El
-// objetivo es no perder NINGÚN detalle del fallo: registra todo al log
-// y muestra al usuario un diálogo con la traza completa y un botón
-// para copiarla al portapapeles (para que pueda pegarla en un reporte).
+// Reenvío compatible con TApplicationEvents.OnException.
 procedure TfrmMtoPrincipal.AppException(Sender: TObject; E: Exception);
-var
-  sDetalle: string;
-  bRuidoEditorInplace: Boolean;
 begin
-  // Filtro: EInvalidOperation "no tiene ventana principal" disparado por
-  // el editor inplace del cxGrid sin Parent durante transiciones de celda.
-  // Es ruido benigno: el handle se acaba creando en la siguiente pasada,
-  // el usuario no pierde datos. Solo lo registramos como warning, sin
-  // diálogo modal. Patron mitigado tambien en inMtoCajaOpe e inLibDevExp.
-  bRuidoEditorInplace := (E is EInvalidOperation) and
-                         (Pos('no tiene ventana principal',
-                              E.Message) > 0);
-  if bRuidoEditorInplace then
-  begin
-    try
-      inLibLog.Log.LogWarning('AppException ignorado (editor inplace sin ' +
-                              'Parent): ' + E.Message);
-    except
-    end;
-  end
-  else
-  begin
-    try
-      sDetalle := ConstruirDetalleException(Sender, E);
-      try
-        inLibLog.Log.LogError('AppException ' + E.ClassName + ': ' +
-                              E.Message);
-        inLibLog.Log.LogError('AppException detalle:' + sLineBreak + sDetalle);
-      except
-        // Si el log falla no podemos hacer mucho; seguimos para mostrarlo.
-      end;
-      MostrarDetalleExcepcion(sDetalle);
-    except
-      // Última red de seguridad: si la construcción del detalle o el
-      // diálogo fallan, al menos mostramos lo básico para que el usuario
-      // sepa que algo ha pasado.
-      try
-        Application.ShowException(E);
-      except
-      end;
-    end;
-  end;
-end;
-
-function TfrmMtoPrincipal.ConstruirDetalleException(Sender: TObject;
-                                                   E: Exception): string;
-var
-  sSenderClass, sSenderName: string;
-  pAddr: Pointer;
-  Inner: Exception;
-  iNivel: Integer;
-  IdentidadActual: TIdentidadSesion;
-  UbicacionActual: TUbicacionSesion;
-begin
-  IdentidadActual := ContextoSesion.Identidad;
-  UbicacionActual := ContextoSesion.Ubicacion;
-  if Assigned(Sender) then
-  begin
-    sSenderClass := Sender.ClassName;
-    if (Sender is TComponent) and (TComponent(Sender).Name <> '') then
-      sSenderName := TComponent(Sender).Name
-    else
-      sSenderName := '(sin nombre)';
-  end
-  else
-  begin
-    sSenderClass := '(nil)';
-    sSenderName  := '(nil)';
-  end;
-  pAddr := ExceptAddr;
-  Result :=
-    '=== Detalle del error ===' + sLineBreak +
-    'Aplicación   : ' + oAppName + ' ' + oVersion + sLineBreak +
-    'Fecha / hora : ' + FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now) +
-                                                                  sLineBreak +
-    'Usuario      : ' + IdentidadActual.Usuario + ' (' +
-      IdentidadActual.Grupo + ')' + sLineBreak +
-    'Empresa      : ' + UbicacionActual.Empresa + sLineBreak +
-    'Almacén/Caja : ' + UbicacionActual.Almacen + ' / ' +
-      UbicacionActual.Caja + sLineBreak +
-    'Equipo       : ' + GetComputerName + sLineBreak +
-    sLineBreak +
-    '--- Excepción ---' + sLineBreak +
-    'Clase        : ' + E.ClassName + sLineBreak +
-    'Mensaje      : ' + E.Message + sLineBreak +
-    'Dirección    : $' + IntToHex(NativeUInt(pAddr),
-                                  SizeOf(Pointer) * 2) + sLineBreak +
-    sLineBreak +
-    '--- Sender ---' + sLineBreak +
-    'Clase        : ' + sSenderClass + sLineBreak +
-    'Nombre       : ' + sSenderName + sLineBreak;
-  // Stack trace: solo aparece si hay un proveedor registrado (madExcept,
-  // JCL, EurekaLog…). Si no, será cadena vacía: no es un fallo.
-  if E.StackTrace <> '' then
-    Result := Result + sLineBreak +
-      '--- Stack ---' + sLineBreak + E.StackTrace + sLineBreak;
-  // Excepciones encadenadas (raise … from). Limitamos profundidad
-  // para evitar bucles infinitos por ciclos accidentales.
-  Inner := E.InnerException;
-  iNivel := 1;
-  while Assigned(Inner) and (iNivel <= 5) do
-  begin
-    Result := Result + sLineBreak +
-      Format('--- Inner exception #%d ---', [iNivel]) + sLineBreak +
-      'Clase   : ' + Inner.ClassName + sLineBreak +
-      'Mensaje : ' + Inner.Message + sLineBreak;
-    if Inner.StackTrace <> '' then
-      Result := Result + 'Stack   :' + sLineBreak + Inner.StackTrace +
-                                                                  sLineBreak;
-    Inner := Inner.InnerException;
-    Inc(iNivel);
-  end;
-end;
-
-procedure TfrmMtoPrincipal.MostrarDetalleExcepcion(const ATexto: string);
-var
-  Dialog    : TForm;
-  pnlBotones: TPanel;
-  btnCopiar : TButton;
-  btnCerrar : TButton;
-  lblCabec  : TLabel;
-begin
-  Dialog := TForm.Create(nil);
-  try
-    Dialog.Caption     := 'Se ha producido un error';
-    Dialog.Position    := poScreenCenter;
-    Dialog.Width       := 760;
-    Dialog.Height      := 520;
-    Dialog.BorderStyle := bsSizeable;
-    Dialog.BorderIcons := [biSystemMenu];
-    Dialog.KeyPreview  := True;
-
-    lblCabec := TLabel.Create(Dialog);
-    lblCabec.Parent    := Dialog;
-    lblCabec.Align     := alTop;
-    lblCabec.AutoSize  := False;
-    lblCabec.Height    := 28;
-    lblCabec.Layout    := tlCenter;
-    lblCabec.Caption   := '  Detalle completo del error. Usa "Copiar al ' +
-                          'portapapeles" para pegarlo en un reporte.';
-
-    pnlBotones := TPanel.Create(Dialog);
-    pnlBotones.Parent      := Dialog;
-    pnlBotones.Align       := alBottom;
-    pnlBotones.Height      := 48;
-    pnlBotones.BevelOuter  := bvNone;
-
-    btnCerrar := TButton.Create(Dialog);
-    btnCerrar.Parent       := pnlBotones;
-    btnCerrar.Caption      := 'Cerrar';
-    btnCerrar.Width        := 100;
-    btnCerrar.Height       := 32;
-    btnCerrar.Top          := 8;
-    btnCerrar.Anchors      := [akRight, akTop];
-    btnCerrar.Left         := pnlBotones.ClientWidth - btnCerrar.Width - 12;
-    btnCerrar.ModalResult  := mrOk;
-    btnCerrar.Default      := True;
-    btnCerrar.Cancel       := True;
-
-    btnCopiar := TButton.Create(Dialog);
-    btnCopiar.Parent       := pnlBotones;
-    btnCopiar.Caption      := 'Copiar al portapapeles';
-    btnCopiar.Width        := 190;
-    btnCopiar.Height       := 32;
-    btnCopiar.Top          := 8;
-    btnCopiar.Anchors      := [akRight, akTop];
-    btnCopiar.Left         := btnCerrar.Left - btnCopiar.Width - 8;
-    btnCopiar.OnClick      := CopiarExceptionDialogClick;
-
-    FExceptionDialogMemo := TcxMemo.Create(Dialog);
-    FExceptionDialogMemo.Parent     := Dialog;
-    FExceptionDialogMemo.Align      := alClient;
-    FExceptionDialogMemo.Properties.ReadOnly   := True;
-    FExceptionDialogMemo.Properties.ScrollBars := ssBoth;
-    FExceptionDialogMemo.Properties.WordWrap   := False;
-    FExceptionDialogMemo.Style.Font.Name  := 'Consolas';
-    FExceptionDialogMemo.Style.Font.Size  := 9;
-    FExceptionDialogMemo.Text       := ATexto;
-
-    Dialog.ActiveControl := btnCerrar;
-    Dialog.ShowModal;
-  finally
-    FExceptionDialogMemo := nil;
-    FreeAndNil(Dialog);
-  end;
-end;
-
-procedure TfrmMtoPrincipal.CopiarExceptionDialogClick(Sender: TObject);
-begin
-  if Assigned(FExceptionDialogMemo) then
-  try
-    Clipboard.AsText := FExceptionDialogMemo.Text;
-  except
-    on E: Exception do
-      inLibLog.Log.LogWarning('No se pudo copiar al portapapeles: ' +
-                                                                   E.Message);
-  end;
+  FGestorExcepciones.Gestionar(Sender, E);
 end;
 
 end.

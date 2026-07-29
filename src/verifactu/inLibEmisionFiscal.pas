@@ -161,6 +161,8 @@ begin
       Result := MensajeOperacion(ASolicitud);
     fefConsolidacion:
       Result := MensajeConsolidacion(ASolicitud);
+    fefAlta:
+      Result := '';
   else
     raise EArgumentOutOfRangeException.Create(
       'Flujo de emisión fiscal no soportado.');
@@ -180,7 +182,8 @@ begin
   finally
     FreeAndNil(Qry);
   end;
-  RegistrarEvento(ASolicitud);
+  if ASolicitud.RegistrarEvento then
+    RegistrarEvento(ASolicitud);
   Result.Modo := Modo;
   Result.Mensaje := CrearMensaje(ASolicitud);
 end;

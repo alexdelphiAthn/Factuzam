@@ -17,12 +17,7 @@ unit inLibFacturaExcel;
 interface
 
 uses
-   Uni, DB, System.SysUtils, System.Classes,
-   dxSpreadSheet, dxSpreadSheetCore, cxGraphics, vcl.Graphics,
-  dxSpreadSheetTypes, dxSpreadSheetGraphics, dxCoreGraphics, dxShellDialogs,
-  dxSpreadSheetStyles, dxSpreadSheetContainers, dxHashUtils,
-  dxGDIPlusClasses, dxSmartImage, inLibDevExcel, inLibVerifactu,
-  inLibParametrosIntf;
+  Uni, DB, dxSpreadSheet, inLibParametrosIntf;
 
 procedure ExportarFacturaADevExpress(
   const AParametrosApp: IParametrosAplicacion;
@@ -33,391 +28,547 @@ procedure ExportarFacturaADevExpress(
 implementation
 
 uses
-  inLibFormatoDocumento;
+  System.SysUtils, System.Classes, Vcl.Graphics, cxGraphics,
+  dxSpreadSheetCore, dxSpreadSheetTypes, dxSpreadSheetGraphics,
+  dxCoreGraphics, dxShellDialogs, dxSpreadSheetStyles,
+  dxSpreadSheetContainers, dxHashUtils, dxGDIPlusClasses, dxSmartImage,
+  inLibDevExcel, inLibVerifactu, inLibFormatoDocumento;
 
-procedure ExportarFacturaADevExpress(
-  const AParametrosApp: IParametrosAplicacion;
-  AConexion: TUniConnection;
-  ASheetControl: TdxSpreadSheet; const QMaster, QLineas: TDataSet);
 const
-  // Columnas Visibles
-  COL_DESC   = 0; // A: Descripción / Base Imponible (en tabla inferior)
-  COL_CANT   = 1; // B: CANTIDAD / Tipo IVA (en tabla inferior)
-  COL_PRECIO = 2; // C: Precio / Cuota IVA (en tabla inferior)
-  COL_PIVA   = 3; // D: % IVA / % RE (en tabla inferior)
-  COL_TOTAL  = 4; // E: Total Línea / Total RE (en tabla inferior)
-  // Columnas Técnicas (Ocultas)
-  COL_BASEI  = 5; // F: Base Imponible real de cada línea
-  COL_TIPO_L = 6; // G: Tipo de IVA Letra (N, R, S, E)
-const
-  COL_QR = 7; // H: QR tributario Verifactu (a la derecha de la cabecera)
-var
-  Sheet: TdxSpreadSheetTableView;
-  iRow: Integer;
-  PorcenREN, PorcenRER, PorcenRESR, PorcenREE: Double;
-  TieneRE : Boolean;
-  sDocumento, sDocumentoHoja: string;
-  sTitulo : string;
+  COL_DESC = 0;
+  COL_CANT = 1;
+  COL_PRECIO = 2;
+  COL_PIVA = 3;
+  COL_TOTAL = 4;
+  COL_BASEI = 5;
+  COL_TIPO_L = 6;
+  COL_QR = 7;
 
-  // QR tributario fiscal arriba a la derecha (mismas reglas que el
-  // ticket y el A4: URL de cotejo/remisión calculada en local). En modo
-  // SIN o si falta algún dato, no pone nada.
-  procedure IncrustarQRVerifactu;
-  var
-    aPng:    TBytes;
-    oStream: TBytesStream;
-    img:     TdxSmartImage;
-    Pic:     TdxSpreadSheetPictureContainer;
-    sUrl:    string;
+type
+  TExportadorFacturaDevExpress = class
+  private
+    FParametrosApp: IParametrosAplicacion;
+    FConexion: TUniConnection;
+    FControl: TdxSpreadSheet;
+    FMaster: TDataSet;
+    FLineas: TDataSet;
+    FHoja: TdxSpreadSheetTableView;
+    FFila: Integer;
+    FDocumento: string;
+    FImpuestosIncluidos: Boolean;
+    FTieneRecargo: Boolean;
+    function CampoTexto(const ANombre: string): string;
+    function CampoNumero(const ANombre: string): Double;
+    function TituloFactura: string;
+    function PuedeIncrustarQR: Boolean;
+    function Rango(AFilaInicial, AFilaFinal, AColumna: Integer): string;
+    procedure ConfigurarNombreHoja;
+    procedure AgregarImagenQR(const APng: TBytes);
+    procedure IncrustarQRVerifactu;
+    procedure EscribirInterviniente(AColumna, AAncho: Integer;
+      const ATitulo, ACampoRazonSocial, ACampoNif, ACampoDireccion,
+      ACampoCodigoPostal, ACampoPoblacion: string);
+    procedure EscribirCabecera;
+    procedure EscribirCabeceraLineas;
+    procedure EscribirLinea;
+    procedure EscribirLineas(out AFilaInicial, AFilaFinal: Integer);
+    procedure EscribirCabeceraImpuestos;
+    procedure PintarImpuesto(const ATipoLetra: string;
+      APctIVA, APctRE: Double; const ARangoTipos, ARangoBases: string);
+    procedure PintarImpuestoSiProcede(const ACampoBase, ACampoPorcentaje,
+      ATipoLetra, ARangoTipos, ARangoBases: string; APctRE: Double);
+    procedure CargarRecargos(out APctN, APctR, APctS, APctE: Double);
+    procedure EscribirTablaImpuestos(AFilaInicial, AFilaFinal: Integer;
+      out AFilaInicioTabla, AFilaFinTabla: Integer);
+    procedure EscribirResumen(AFilaInicioTabla, AFilaFinTabla: Integer);
+    procedure EscribirFormaPago;
+    procedure ConfigurarColumnas;
+  public
+    constructor Create(const AParametrosApp: IParametrosAplicacion;
+      AConexion: TUniConnection; AControl: TdxSpreadSheet;
+      const AMaster, ALineas: TDataSet);
+    procedure Ejecutar;
+  end;
+
+constructor TExportadorFacturaDevExpress.Create(
+  const AParametrosApp: IParametrosAplicacion; AConexion: TUniConnection;
+  AControl: TdxSpreadSheet; const AMaster, ALineas: TDataSet);
+begin
+  inherited Create;
+  FParametrosApp := AParametrosApp;
+  FConexion := AConexion;
+  FControl := AControl;
+  FMaster := AMaster;
+  FLineas := ALineas;
+end;
+
+function TExportadorFacturaDevExpress.CampoTexto(
+  const ANombre: string): string;
+begin
+  Result := FMaster.FieldByName(ANombre).AsString;
+end;
+
+function TExportadorFacturaDevExpress.CampoNumero(
+  const ANombre: string): Double;
+begin
+  Result := FMaster.FieldByName(ANombre).AsFloat;
+end;
+
+function TExportadorFacturaDevExpress.TituloFactura: string;
+begin
+  Result := 'FACTURA';
+  if FMaster.FindField('TIPO_FAC') <> nil then
   begin
-    // El QR es opcional: cualquier fallo aquí NO debe tumbar la
-    // exportación de la factura a Excel.
-    if SinVerifactuActivo(AParametrosApp) or
-       (QMaster.FindField('NIF_EMPRESA_FAC') = nil) or
-       (QMaster.FindField('SERIE_FAC') = nil) or
-       (QMaster.FindField('NUMERO_FAC') = nil) or
-       (QMaster.FindField('FECHA_FAC') = nil) or
-       (QMaster.FindField('TOTAL_LIQUIDO_FAC') = nil) or
-       (Trim(QMaster.FieldByName('NUMERO_FAC').AsString) = '') then
-      Exit;
-    sUrl := ConstruirUrlQR(AParametrosApp,
-              QMaster.FieldByName('NIF_EMPRESA_FAC').AsString,
-              QMaster.FieldByName('SERIE_FAC').AsString,
-              QMaster.FieldByName('NUMERO_FAC').AsString,
-              QMaster.FieldByName('FECHA_FAC').AsDateTime,
-              QMaster.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency);
-    aPng := GenerarQRPngVerifactu(sUrl);
-    if Length(aPng) = 0 then
-      Exit;
-    img     := nil;
-    oStream := nil;
+    if SameText(CampoTexto('TIPO_FAC'), 'SIMPLIFICADA') then
+      Result := 'FACTURA SIMPLIFICADA'
+    else if SameText(CampoTexto('TIPO_FAC'), 'RECTIFICATIVA') then
+      Result := 'FACTURA RECTIFICATIVA';
+  end;
+end;
+
+function TExportadorFacturaDevExpress.PuedeIncrustarQR: Boolean;
+begin
+  Result := not SinVerifactuActivo(FParametrosApp);
+  if Result then
+    Result := FMaster.FindField('NIF_EMPRESA_FAC') <> nil;
+  if Result then
+    Result := FMaster.FindField('SERIE_FAC') <> nil;
+  if Result then
+    Result := FMaster.FindField('NUMERO_FAC') <> nil;
+  if Result then
+    Result := FMaster.FindField('FECHA_FAC') <> nil;
+  if Result then
+    Result := FMaster.FindField('TOTAL_LIQUIDO_FAC') <> nil;
+  if Result then
+    Result := Trim(CampoTexto('NUMERO_FAC')) <> '';
+end;
+
+function TExportadorFacturaDevExpress.Rango(
+  AFilaInicial, AFilaFinal, AColumna: Integer): string;
+begin
+  Result := GetRef(AFilaInicial, AColumna, True) + ':' +
+    GetRef(AFilaFinal, AColumna, True);
+end;
+
+procedure TExportadorFacturaDevExpress.ConfigurarNombreHoja;
+const
+  CARACTERES_NO_VALIDOS = '\/:*?[]';
+var
+  cCaracter: Char;
+  sNombreHoja: string;
+begin
+  FDocumento := FormatearDocumentoDataSet(FConexion, FMaster,
+    'SERIE_FAC', 'NUMERO_FAC');
+  if FDocumento <> '' then
+  begin
+    sNombreHoja := FDocumento;
+    for cCaracter in CARACTERES_NO_VALIDOS do
+      sNombreHoja := StringReplace(sNombreHoja, string(cCaracter), '_',
+        [rfReplaceAll]);
+    FHoja.Caption := Copy('Factura ' + sNombreHoja, 1, 31);
+  end;
+end;
+
+procedure TExportadorFacturaDevExpress.AgregarImagenQR(const APng: TBytes);
+var
+  oImagen: TdxSmartImage;
+  oContenedor: TdxSpreadSheetPictureContainer;
+  oStream: TBytesStream;
+begin
+  oImagen := TdxSmartImage.Create;
+  try
+    oStream := TBytesStream.Create(APng);
     try
-      try
-        img     := TdxSmartImage.Create;
-        oStream := TBytesStream.Create(aPng);
-        oStream.Position := 0;
-        img.LoadFromStream(oStream);
-        if (img.Width > 0) and (img.Height > 0) then
+      oStream.Position := 0;
+      oImagen.LoadFromStream(oStream);
+      if (oImagen.Width > 0) and (oImagen.Height > 0) then
+      begin
+        oContenedor := FHoja.Containers.Add(
+          TdxSpreadSheetPictureContainer) as TdxSpreadSheetPictureContainer;
+        if oContenedor <> nil then
         begin
-          Pic := Sheet.Containers.Add(TdxSpreadSheetPictureContainer)
-                   as TdxSpreadSheetPictureContainer;
-          if Pic <> nil then
-          begin
-            Pic.Picture.Image := img; // el contenedor copia la imagen
-            Pic.AnchorType := catTwoCell;
-            Pic.AnchorPoint1.Cell := Sheet.CreateCell(1, COL_QR);
-            Pic.AnchorPoint2.Cell := Sheet.CreateCell(7, COL_QR + 1);
-            // Columna H ancha para que el QR quede ~cuadrado
-            Sheet.Columns[COL_QR].Size := 120;
-          end;
+          oContenedor.Picture.Image := oImagen;
+          oContenedor.AnchorType := catTwoCell;
+          oContenedor.AnchorPoint1.Cell := FHoja.CreateCell(1, COL_QR);
+          oContenedor.AnchorPoint2.Cell := FHoja.CreateCell(7, COL_QR + 1);
+          FHoja.Columns[COL_QR].Size := 120;
         end;
-      except
-        // QR opcional: si falla la incrustación, la factura sale sin QR
       end;
     finally
       FreeAndNil(oStream);
-      FreeAndNil(img);
     end;
-  end;
-
-  procedure PintarImpuesto(TipoLetra: string; PctIVA, PctRE: Double;
-                           RangoTL, RangoBR: String);
-  var
-    RefBase: string;
-  begin
-     Inc(iRow);
-     WFormula(Sheet, iRow, COL_DESC,
-              '=SUMIF(' + RangoTL + ';"' + TipoLetra + '";' + RangoBR + ')',
-              '#,##0.00" €"');
-     RefBase := GetRef(iRow, COL_DESC);
-     W(Sheet, iRow, COL_CANT, PctIVA, False, ssahCenter);
-     if Frac(PctIVA) = 0 then
-       Sheet.Cells[iRow, COL_CANT].Style.DataFormat.FormatCode := '0"%"'
-     else
-       Sheet.Cells[iRow, COL_CANT].Style.DataFormat.FormatCode := '0.##"%"';
-     WFormula(Sheet, iRow, COL_PRECIO,
-              '=' + RefBase + '*' + FloatToStr(PctIVA) + '/100',
-              '#,##0.00" €"');
-     if PctRE > 0 then
-     begin
-       W(Sheet, iRow, COL_PIVA, PctRE, False, ssahCenter);
-       Sheet.Cells[iRow, COL_PIVA].Style.DataFormat.FormatCode := '0.##"%"';
-       WFormula(Sheet, iRow, COL_TOTAL, '=' + RefBase + '*' +
-                GetRef(iRow, COL_PIVA) + '/100',
-                '#,##0.00" €"');
-     end
-     else
-     begin
-       W(Sheet, iRow, COL_PIVA, '', False, ssahCenter);
-       W(Sheet, iRow, COL_TOTAL, '', False, ssahCenter);
-     end;
-  end;
-
-begin
-  ASheetControl.ClearAll;
-  TieneRE := QMaster.FieldByName('ESIVA_RECARGO_CLIENTE_FAC').AsString = 'S';
-  Sheet := ASheetControl.AddSheet('Factura',
-                            TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
-  Sheet.BeginUpdate;
-  try
-  sDocumento := FormatearDocumentoDataSet(AConexion, QMaster,
-    'SERIE_FAC', 'NUMERO_FAC');
-  if sDocumento <> '' then
-  begin
-    sDocumentoHoja := StringReplace(sDocumento, '\', '_', [rfReplaceAll]);
-    sDocumentoHoja := StringReplace(sDocumentoHoja, '/', '_', [rfReplaceAll]);
-    sDocumentoHoja := StringReplace(sDocumentoHoja, ':', '_', [rfReplaceAll]);
-    sDocumentoHoja := StringReplace(sDocumentoHoja, '*', '_', [rfReplaceAll]);
-    sDocumentoHoja := StringReplace(sDocumentoHoja, '?', '_', [rfReplaceAll]);
-    sDocumentoHoja := StringReplace(sDocumentoHoja, '[', '_', [rfReplaceAll]);
-    sDocumentoHoja := StringReplace(sDocumentoHoja, ']', '_', [rfReplaceAll]);
-    Sheet.Caption := Copy('Factura ' + sDocumentoHoja, 1, 31);
-  end;
-  var ImpuestosIncluidos :=
-      (QMaster.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString = 'S');
-  // Título según el tipo de factura del registro
-  sTitulo := 'FACTURA';
-  if QMaster.FindField('TIPO_FAC') <> nil then
-  begin
-    if SameText(QMaster.FieldByName('TIPO_FAC').AsString,
-                'SIMPLIFICADA') then
-      sTitulo := 'FACTURA SIMPLIFICADA'
-    else if SameText(QMaster.FieldByName('TIPO_FAC').AsString,
-                     'RECTIFICATIVA') then
-      sTitulo := 'FACTURA RECTIFICATIVA';
-  end;
-  W(Sheet, 1, COL_DESC, sTitulo, True);
-  Sheet.Cells[1, COL_DESC].Style.Font.Size := 18;
-  IncrustarQRVerifactu;
-  W(Sheet, 1, COL_TOTAL, 'Fecha: ' +
-               QMaster.FieldByName('FECHA_FAC').AsString, False, ssahRight);
-  W(Sheet, 2, COL_TOTAL, 'Número: ' + sDocumento, True, ssahRight);
-  W(Sheet, 4, COL_DESC, 'EMISOR', True); // Negrita
-  W(Sheet, 5, COL_DESC, QMaster.FieldByName(
-                                       'RAZON_SOCIAL_EMPRESA_FAC').AsString);
-  Merge(Sheet, 5, COL_DESC, 3, 1);
-  W(Sheet, 6, COL_DESC, 'NIF: ' + QMaster.FieldByName(
-                                               'NIF_EMPRESA_FAC').AsString);
-  Merge(Sheet, 6, COL_DESC, 3, 1);
-  W(Sheet, 7, COL_DESC, QMaster.FieldByName(
-                                        'DIRECCION1_EMPRESA_FAC').AsString);
-  Merge(Sheet, 7, COL_DESC, 3, 1);
-  W(Sheet,
-    8,
-    COL_DESC,
-    QMaster.FieldByName('CODIGO_POSTAL_EMPRESA_FAC').AsString
-            +  ' ' + QMaster.FieldByName('POBLACION_EMPRESA_FAC').AsString);
-  Merge(Sheet, 8, COL_DESC, 3, 1);
-  W(Sheet, 4, COL_PIVA, 'RECEPTOR', True); // Negrita
-  W(Sheet, 5, COL_PIVA, QMaster.FieldByName(
-                                       'RAZON_SOCIAL_CLIENTE_FAC').AsString);
-  Merge(Sheet, 5, COL_PIVA, 2, 1);
-  W(Sheet, 6, COL_PIVA, 'NIF: ' + QMaster.FieldByName(
-                                               'NIF_CLIENTE_FAC').AsString);
-  Merge(Sheet, 6, COL_PIVA, 2, 1);
-  W(Sheet, 7, COL_PIVA, QMaster.FieldByName(
-                                        'DIRECCION1_CLIENTE_FAC').AsString);
-  Merge(Sheet, 7, COL_PIVA, 2, 1);
-  W(Sheet, 8, COL_PIVA,
-    QMaster.FieldByName('CODIGO_POSTAL_CLIENTE_FAC').AsString + ' ' +
-    QMaster.FieldByName('POBLACION_CLIENTE_FAC').AsString);
-  Merge(Sheet, 8, COL_PIVA, 2, 1);
-  iRow := 11;
-  W(Sheet, iRow, COL_DESC,   'Descripción', True);
-  W(Sheet, iRow, COL_CANT,   'Cantidad',    True, ssahRight);
-  W(Sheet, iRow, COL_PRECIO, 'Precio',      True, ssahRight);
-  W(Sheet, iRow, COL_PIVA,   '% IVA',       True, ssahRight);
-  W(Sheet, iRow, COL_TOTAL,  'Total',       True, ssahRight);
-  // Bordes cabecera
-  for var c := COL_DESC to COL_TOTAL do
-    if Sheet.Cells[iRow, c] <> nil then
-      Sheet.Cells[iRow, c].Style.Borders[bBottom].Style := sscbsThin;
-  var FilaInicioLineas := iRow + 1;
-  QLineas.DisableControls;
-  try
-  QLineas.First;
-  while not QLineas.Eof do
-  begin
-    Inc(iRow);
-    // Col A: Descripción
-    with Sheet.CreateCell(iRow, COL_DESC) do
-    begin
-      AsString :=
-             QLineas.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString;
-      Style.WordWrap := True;
-      Style.AlignVert := ssavTop;
-    end;
-    W(Sheet, iRow, COL_CANT,
-      QLineas.FieldByName('CANTIDAD_FACLIN').AsFloat, False, ssahRight);
-    Sheet.Cells[iRow, COL_CANT].Style.AlignVert := ssavTop;
-    W(Sheet, iRow, COL_PRECIO,
-        QLineas.FieldByName('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat,
-        False, ssahRight);
-    Sheet.Cells[iRow, COL_PRECIO].Style.AlignVert := ssavTop;
-    W(Sheet, iRow, COL_PIVA,
-      QLineas.FieldByName('PORCENTAJE_IVA_FACLIN').AsFloat,
-      False, ssahRight);
-    Sheet.Cells[iRow, COL_PIVA].Style.AlignVert := ssavTop;
-    if Sheet.Cells[iRow, COL_PIVA] <> nil then
-       Sheet.Cells[iRow, COL_PIVA].Style.DataFormat.FormatCode := '0.##"%"';
-    WFormula(Sheet, iRow, COL_TOTAL,
-             '=' + GetRef(iRow, COL_CANT) + '*' + GetRef(iRow, COL_PRECIO),
-             '#,##0.00" €"');
-    Sheet.Cells[iRow, COL_TOTAL].Style.AlignVert := ssavTop;
-    if ImpuestosIncluidos then
-       WFormula(Sheet, iRow, COL_BASEI, '=' + GetRef(iRow, COL_TOTAL) +
-                                      '/(1+' + GetRef(iRow, COL_PIVA) + '/100)')
-    else
-       WFormula(Sheet, iRow, COL_BASEI, '=' + GetRef(iRow, COL_TOTAL));
-    W(Sheet, iRow, COL_TIPO_L, QLineas.FieldByName(
-                 'TIPO_IVA_ARTICULO_FACLIN').AsString, False, ssahCenter);
-    QLineas.Next;
-  end;
   finally
-    QLineas.EnableControls;
+    FreeAndNil(oImagen);
   end;
+end;
 
-  var FilaFinLineas := iRow;
-  Inc(iRow, 3);
-  var RowInicioTabla := iRow;
-
-  // RANGOS PARA LOS SUMIF (Usando las constantes de columnas ocultas)
-  var RangoBasesReales := GetRef(FilaInicioLineas, COL_BASEI, True) + ':' +
-                          GetRef(FilaFinLineas, COL_BASEI, True);
-  var RangoTiposLetra  := GetRef(FilaInicioLineas, COL_TIPO_L, True) + ':' +
-                          GetRef(FilaFinLineas, COL_TIPO_L, True);
-
-  // --- TABLA DETALLADA DE IMPUESTOS ---
-  W(Sheet, iRow, COL_DESC,   'Base Imponible', True, ssahRight);
-  W(Sheet, iRow, COL_CANT,   'Tipo IVA',       True, ssahRight);
-  W(Sheet, iRow, COL_PRECIO, 'Cuota IVA',      True, ssahRight);
-  if TieneRE then
+procedure TExportadorFacturaDevExpress.IncrustarQRVerifactu;
+var
+  aPng: TBytes;
+  sUrl: string;
+begin
+  if PuedeIncrustarQR then
   begin
-    W(Sheet, iRow, COL_PIVA,  '% RE',    True, ssahRight);
-    W(Sheet, iRow, COL_TOTAL, 'Total RE', True, ssahRight);
+    sUrl := ConstruirUrlQR(FParametrosApp,
+      CampoTexto('NIF_EMPRESA_FAC'),
+      CampoTexto('SERIE_FAC'),
+      CampoTexto('NUMERO_FAC'),
+      FMaster.FieldByName('FECHA_FAC').AsDateTime,
+      FMaster.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency);
+    aPng := GenerarQRPngVerifactu(sUrl);
+    if Length(aPng) > 0 then
+    begin
+      try
+        AgregarImagenQR(aPng);
+      except
+        // El QR opcional no impide exportar la factura.
+      end;
+    end;
+  end;
+end;
+
+procedure TExportadorFacturaDevExpress.EscribirInterviniente(
+  AColumna, AAncho: Integer; const ATitulo, ACampoRazonSocial,
+  ACampoNif, ACampoDireccion, ACampoCodigoPostal,
+  ACampoPoblacion: string);
+begin
+  W(FHoja, 4, AColumna, ATitulo, True);
+  W(FHoja, 5, AColumna, CampoTexto(ACampoRazonSocial));
+  Merge(FHoja, 5, AColumna, AAncho, 1);
+  W(FHoja, 6, AColumna, 'NIF: ' + CampoTexto(ACampoNif));
+  Merge(FHoja, 6, AColumna, AAncho, 1);
+  W(FHoja, 7, AColumna, CampoTexto(ACampoDireccion));
+  Merge(FHoja, 7, AColumna, AAncho, 1);
+  W(FHoja, 8, AColumna, CampoTexto(ACampoCodigoPostal) + ' ' +
+    CampoTexto(ACampoPoblacion));
+  Merge(FHoja, 8, AColumna, AAncho, 1);
+end;
+
+procedure TExportadorFacturaDevExpress.EscribirCabecera;
+begin
+  ConfigurarNombreHoja;
+  W(FHoja, 1, COL_DESC, TituloFactura, True);
+  FHoja.Cells[1, COL_DESC].Style.Font.Size := 18;
+  IncrustarQRVerifactu;
+  W(FHoja, 1, COL_TOTAL, 'Fecha: ' + CampoTexto('FECHA_FAC'),
+    False, ssahRight);
+  W(FHoja, 2, COL_TOTAL, 'Número: ' + FDocumento, True, ssahRight);
+  EscribirInterviniente(COL_DESC, 3, 'EMISOR',
+    'RAZON_SOCIAL_EMPRESA_FAC', 'NIF_EMPRESA_FAC',
+    'DIRECCION1_EMPRESA_FAC', 'CODIGO_POSTAL_EMPRESA_FAC',
+    'POBLACION_EMPRESA_FAC');
+  EscribirInterviniente(COL_PIVA, 2, 'RECEPTOR',
+    'RAZON_SOCIAL_CLIENTE_FAC', 'NIF_CLIENTE_FAC',
+    'DIRECCION1_CLIENTE_FAC', 'CODIGO_POSTAL_CLIENTE_FAC',
+    'POBLACION_CLIENTE_FAC');
+end;
+
+procedure TExportadorFacturaDevExpress.EscribirCabeceraLineas;
+var
+  iColumna: Integer;
+begin
+  FFila := 11;
+  W(FHoja, FFila, COL_DESC, 'Descripción', True);
+  W(FHoja, FFila, COL_CANT, 'Cantidad', True, ssahRight);
+  W(FHoja, FFila, COL_PRECIO, 'Precio', True, ssahRight);
+  W(FHoja, FFila, COL_PIVA, '% IVA', True, ssahRight);
+  W(FHoja, FFila, COL_TOTAL, 'Total', True, ssahRight);
+  for iColumna := COL_DESC to COL_TOTAL do
+    if FHoja.Cells[FFila, iColumna] <> nil then
+      FHoja.Cells[FFila, iColumna].Style.Borders[bBottom].Style :=
+        sscbsThin;
+end;
+
+procedure TExportadorFacturaDevExpress.EscribirLinea;
+begin
+  Inc(FFila);
+  with FHoja.CreateCell(FFila, COL_DESC) do
+  begin
+    AsString := FLineas.FieldByName(
+      'DESCRIPCION_ARTICULO_FACLIN').AsString;
+    Style.WordWrap := True;
+    Style.AlignVert := ssavTop;
+  end;
+  W(FHoja, FFila, COL_CANT,
+    FLineas.FieldByName('CANTIDAD_FACLIN').AsFloat, False, ssahRight);
+  FHoja.Cells[FFila, COL_CANT].Style.AlignVert := ssavTop;
+  W(FHoja, FFila, COL_PRECIO,
+    FLineas.FieldByName('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat,
+    False, ssahRight);
+  FHoja.Cells[FFila, COL_PRECIO].Style.AlignVert := ssavTop;
+  W(FHoja, FFila, COL_PIVA,
+    FLineas.FieldByName('PORCENTAJE_IVA_FACLIN').AsFloat,
+    False, ssahRight);
+  FHoja.Cells[FFila, COL_PIVA].Style.AlignVert := ssavTop;
+  if FHoja.Cells[FFila, COL_PIVA] <> nil then
+    FHoja.Cells[FFila, COL_PIVA].Style.DataFormat.FormatCode := '0.##"%"';
+  WFormula(FHoja, FFila, COL_TOTAL,
+    '=' + GetRef(FFila, COL_CANT) + '*' + GetRef(FFila, COL_PRECIO),
+    '#,##0.00" €"');
+  FHoja.Cells[FFila, COL_TOTAL].Style.AlignVert := ssavTop;
+  if FImpuestosIncluidos then
+    WFormula(FHoja, FFila, COL_BASEI, '=' + GetRef(FFila, COL_TOTAL) +
+      '/(1+' + GetRef(FFila, COL_PIVA) + '/100)')
+  else
+    WFormula(FHoja, FFila, COL_BASEI, '=' + GetRef(FFila, COL_TOTAL));
+  W(FHoja, FFila, COL_TIPO_L,
+    FLineas.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString,
+    False, ssahCenter);
+end;
+
+procedure TExportadorFacturaDevExpress.EscribirLineas(
+  out AFilaInicial, AFilaFinal: Integer);
+begin
+  EscribirCabeceraLineas;
+  AFilaInicial := FFila + 1;
+  FLineas.DisableControls;
+  try
+    FLineas.First;
+    while not FLineas.Eof do
+    begin
+      EscribirLinea;
+      FLineas.Next;
+    end;
+  finally
+    FLineas.EnableControls;
+  end;
+  AFilaFinal := FFila;
+end;
+
+procedure TExportadorFacturaDevExpress.EscribirCabeceraImpuestos;
+var
+  iColumna: Integer;
+begin
+  W(FHoja, FFila, COL_DESC, 'Base Imponible', True, ssahRight);
+  W(FHoja, FFila, COL_CANT, 'Tipo IVA', True, ssahRight);
+  W(FHoja, FFila, COL_PRECIO, 'Cuota IVA', True, ssahRight);
+  if FTieneRecargo then
+  begin
+    W(FHoja, FFila, COL_PIVA, '% RE', True, ssahRight);
+    W(FHoja, FFila, COL_TOTAL, 'Total RE', True, ssahRight);
   end
   else
   begin
-    // Limpiar o dejar vacío si no hay RE
-    W(Sheet, iRow, COL_PIVA,  '', False);
-    W(Sheet, iRow, COL_TOTAL, '', False);
+    W(FHoja, FFila, COL_PIVA, '', False);
+    W(FHoja, FFila, COL_TOTAL, '', False);
   end;
+  for iColumna := COL_DESC to COL_TOTAL do
+    if FHoja.Cells[FFila, iColumna] <> nil then
+      FHoja.Cells[FFila, iColumna].Style.Borders[bBottom].Style :=
+        sscbsThin;
+end;
 
-  for var b := 0 to 4 do
-    if Sheet.Cells[iRow, b] <> nil then
-       Sheet.Cells[iRow, b].Style.Borders[bBottom].Style := sscbsThin;
-  if TieneRE then
+procedure TExportadorFacturaDevExpress.PintarImpuesto(
+  const ATipoLetra: string; APctIVA, APctRE: Double;
+  const ARangoTipos, ARangoBases: string);
+var
+  sRefBase: string;
+begin
+  Inc(FFila);
+  WFormula(FHoja, FFila, COL_DESC,
+    '=SUMIF(' + ARangoTipos + ';"' + ATipoLetra + '";' +
+    ARangoBases + ')', '#,##0.00" €"');
+  sRefBase := GetRef(FFila, COL_DESC);
+  W(FHoja, FFila, COL_CANT, APctIVA, False, ssahCenter);
+  if Frac(APctIVA) = 0 then
+    FHoja.Cells[FFila, COL_CANT].Style.DataFormat.FormatCode := '0"%"'
+  else
+    FHoja.Cells[FFila, COL_CANT].Style.DataFormat.FormatCode := '0.##"%"';
+  WFormula(FHoja, FFila, COL_PRECIO,
+    '=' + sRefBase + '*' + FloatToStr(APctIVA) + '/100',
+    '#,##0.00" €"');
+  if APctRE > 0 then
   begin
-    PorcenREN := QMaster.FieldByName('PORCENTAJE_REN_FAC').AsFloat;
-    PorcenRER := QMaster.FieldByName('PORCENTAJE_RER_FAC').AsFloat;
-    PorcenRESR := QMaster.FieldByName('PORCENTAJE_RES_FAC').AsFloat;
-    PorcenREE := QMaster.FieldByName('PORCENTAJE_REE_FAC').AsFloat;
+    W(FHoja, FFila, COL_PIVA, APctRE, False, ssahCenter);
+    FHoja.Cells[FFila, COL_PIVA].Style.DataFormat.FormatCode := '0.##"%"';
+    WFormula(FHoja, FFila, COL_TOTAL, '=' + sRefBase + '*' +
+      GetRef(FFila, COL_PIVA) + '/100', '#,##0.00" €"');
   end
   else
   begin
-    PorcenREN := 0;
-    PorcenRER := 0;
-    PorcenRESR := 0;
-    PorcenREE := 0;
+    W(FHoja, FFila, COL_PIVA, '', False, ssahCenter);
+    W(FHoja, FFila, COL_TOTAL, '', False, ssahCenter);
   end;
-  if QMaster.FieldByName('TOTAL_BASEI_IVAN_FAC').AsFloat > 0 then
-      PintarImpuesto('N', QMaster.FieldByName('PORCENTAJE_IVAN_FAC').AsFloat,
-                      PorcenREN,
-                      RangoTiposLetra, RangoBasesReales);
-  if QMaster.FieldByName('TOTAL_BASEI_IVAR_FAC').AsFloat > 0 then
-      PintarImpuesto('R', QMaster.FieldByName('PORCENTAJE_IVAR_FAC').AsFloat,
-                      PorcenRER,
-                      RangoTiposLetra, RangoBasesReales);
-  if QMaster.FieldByName('TOTAL_BASEI_IVAS_FAC').AsFloat > 0 then
-      PintarImpuesto('S', QMaster.FieldByName('PORCENTAJE_IVAS_FAC').AsFloat,
-                      PorcenRESR,
-                      RangoTiposLetra, RangoBasesReales);
-  if QMaster.FieldByName('TOTAL_BASEI_IVAE_FAC').AsFloat > 0 then
-      PintarImpuesto('E', QMaster.FieldByName('PORCENTAJE_IVAE_FAC').AsFloat,
-                      PorcenREE,
-                      RangoTiposLetra, RangoBasesReales);
-  var RowFinTabla := iRow;
+end;
 
-  // --- RESUMEN FINAL ---
-  Inc(iRow, 2);
+procedure TExportadorFacturaDevExpress.PintarImpuestoSiProcede(
+  const ACampoBase, ACampoPorcentaje, ATipoLetra, ARangoTipos,
+  ARangoBases: string; APctRE: Double);
+begin
+  if CampoNumero(ACampoBase) > 0 then
+    PintarImpuesto(ATipoLetra, CampoNumero(ACampoPorcentaje),
+      APctRE, ARangoTipos, ARangoBases);
+end;
 
-  // 1. TOTAL BASE IMPONIBLE
-  W(Sheet, iRow, COL_PIVA, 'Total Base Imponible:', True, ssahRight);
-  with Sheet.CreateCell(iRow, COL_TOTAL) do
+procedure TExportadorFacturaDevExpress.CargarRecargos(
+  out APctN, APctR, APctS, APctE: Double);
+begin
+  APctN := 0;
+  APctR := 0;
+  APctS := 0;
+  APctE := 0;
+  if FTieneRecargo then
   begin
-    SetText('=SUM(' + GetRef(RowInicioTabla + 1, COL_DESC) + ':' +
-                                     GetRef(RowFinTabla, COL_DESC) + ')', True);
+    APctN := CampoNumero('PORCENTAJE_REN_FAC');
+    APctR := CampoNumero('PORCENTAJE_RER_FAC');
+    APctS := CampoNumero('PORCENTAJE_RES_FAC');
+    APctE := CampoNumero('PORCENTAJE_REE_FAC');
+  end;
+end;
+
+procedure TExportadorFacturaDevExpress.EscribirTablaImpuestos(
+  AFilaInicial, AFilaFinal: Integer;
+  out AFilaInicioTabla, AFilaFinTabla: Integer);
+var
+  dPctN, dPctR, dPctS, dPctE: Double;
+  sRangoBases, sRangoTipos: string;
+begin
+  Inc(FFila, 3);
+  AFilaInicioTabla := FFila;
+  sRangoBases := Rango(AFilaInicial, AFilaFinal, COL_BASEI);
+  sRangoTipos := Rango(AFilaInicial, AFilaFinal, COL_TIPO_L);
+  EscribirCabeceraImpuestos;
+  CargarRecargos(dPctN, dPctR, dPctS, dPctE);
+  PintarImpuestoSiProcede('TOTAL_BASEI_IVAN_FAC',
+    'PORCENTAJE_IVAN_FAC', 'N', sRangoTipos, sRangoBases, dPctN);
+  PintarImpuestoSiProcede('TOTAL_BASEI_IVAR_FAC',
+    'PORCENTAJE_IVAR_FAC', 'R', sRangoTipos, sRangoBases, dPctR);
+  PintarImpuestoSiProcede('TOTAL_BASEI_IVAS_FAC',
+    'PORCENTAJE_IVAS_FAC', 'S', sRangoTipos, sRangoBases, dPctS);
+  PintarImpuestoSiProcede('TOTAL_BASEI_IVAE_FAC',
+    'PORCENTAJE_IVAE_FAC', 'E', sRangoTipos, sRangoBases, dPctE);
+  AFilaFinTabla := FFila;
+end;
+
+procedure TExportadorFacturaDevExpress.EscribirResumen(
+  AFilaInicioTabla, AFilaFinTabla: Integer);
+var
+  sFormula: string;
+  sRefImpuestos, sRefRetenciones, sRefTotalBase: string;
+begin
+  Inc(FFila, 2);
+  W(FHoja, FFila, COL_PIVA, 'Total Base Imponible:', True, ssahRight);
+  with FHoja.CreateCell(FFila, COL_TOTAL) do
+  begin
+    SetText('=SUM(' + GetRef(AFilaInicioTabla + 1, COL_DESC) + ':' +
+      GetRef(AFilaFinTabla, COL_DESC) + ')', True);
     Style.DataFormat.FormatCode := '#,##0.00" €"';
     Style.AlignHorz := ssahRight;
   end;
-  var RefTotalBase := GetRef(iRow, COL_TOTAL);
-  Inc(iRow);
-  W(Sheet, iRow, COL_PIVA, 'Total Impuestos (IVA+RE):', True, ssahRight);
-  with Sheet.CreateCell(iRow, COL_TOTAL) do
+  sRefTotalBase := GetRef(FFila, COL_TOTAL);
+  Inc(FFila);
+  W(FHoja, FFila, COL_PIVA, 'Total Impuestos (IVA+RE):',
+    True, ssahRight);
+  with FHoja.CreateCell(FFila, COL_TOTAL) do
   begin
-    SetText('=SUM(' + GetRef(RowInicioTabla + 1, COL_PRECIO) + ':' +
-                                        GetRef(RowFinTabla, COL_PRECIO) + ')+' +
-            'SUM(' + GetRef(RowInicioTabla + 1, COL_TOTAL) + ':' +
-                                    GetRef(RowFinTabla, COL_TOTAL) + ')', True);
+    SetText('=SUM(' + GetRef(AFilaInicioTabla + 1, COL_PRECIO) + ':' +
+      GetRef(AFilaFinTabla, COL_PRECIO) + ')+' +
+      'SUM(' + GetRef(AFilaInicioTabla + 1, COL_TOTAL) + ':' +
+      GetRef(AFilaFinTabla, COL_TOTAL) + ')', True);
     Style.DataFormat.FormatCode := '#,##0.00" €"';
     Style.AlignHorz := ssahRight;
   end;
-  var RefTotalImpuestos := GetRef(iRow, COL_TOTAL);
-  var RefRetenciones := '';
-  if Abs(QMaster.FieldByName('TOTAL_RETENCION_FAC').AsFloat) > 0.001 then
+  sRefImpuestos := GetRef(FFila, COL_TOTAL);
+  sRefRetenciones := '';
+  if Abs(CampoNumero('TOTAL_RETENCION_FAC')) > 0.001 then
   begin
-     Inc(iRow);
-     W(Sheet, iRow, COL_BASEI, QMaster.FieldByName(
-                   'PORCENTAJE_RETENCION_FAC').AsFloat);
-     WFormula(Sheet, iRow, COL_PIVA, '="Retención IRPF ("&' +
-                                            GetRef(iRow, COL_BASEI) + '&"%):"');
-     with Sheet.CreateCell(iRow, COL_TOTAL) do
-     begin
-       SetText('=-(' + RefTotalBase + '*' +
-                                       GetRef(iRow, COL_BASEI) + '/100)', True);
-       Style.Font.Color := clRed;
-       Style.AlignHorz := ssahRight;
-       Style.DataFormat.FormatCode := '#,##0.00" €"';
-     end;
-     RefRetenciones := GetRef(iRow, COL_TOTAL);
+    Inc(FFila);
+    W(FHoja, FFila, COL_BASEI, CampoNumero('PORCENTAJE_RETENCION_FAC'));
+    WFormula(FHoja, FFila, COL_PIVA, '="Retención IRPF ("&' +
+      GetRef(FFila, COL_BASEI) + '&"%):"');
+    with FHoja.CreateCell(FFila, COL_TOTAL) do
+    begin
+      SetText('=-(' + sRefTotalBase + '*' +
+        GetRef(FFila, COL_BASEI) + '/100)', True);
+      Style.Font.Color := clRed;
+      Style.AlignHorz := ssahRight;
+      Style.DataFormat.FormatCode := '#,##0.00" €"';
+    end;
+    sRefRetenciones := GetRef(FFila, COL_TOTAL);
   end;
-  Inc(iRow);
-  W(Sheet, iRow, COL_PIVA, 'TOTAL A PAGAR:', True, ssahRight);
-  with Sheet.CreateCell(iRow, COL_TOTAL) do
+  Inc(FFila);
+  W(FHoja, FFila, COL_PIVA, 'TOTAL A PAGAR:', True, ssahRight);
+  with FHoja.CreateCell(FFila, COL_TOTAL) do
   begin
-    var FormulaStr := '=' + RefTotalBase + '+' + RefTotalImpuestos;
-    if RefRetenciones <> '' then
-                                FormulaStr := FormulaStr + '+' + RefRetenciones;
-    SetText(FormulaStr, True);
+    sFormula := '=' + sRefTotalBase + '+' + sRefImpuestos;
+    if sRefRetenciones <> '' then
+      sFormula := sFormula + '+' + sRefRetenciones;
+    SetText(sFormula, True);
     Style.Font.Style := [fsBold];
     Style.Font.Size := 14;
     Style.DataFormat.FormatCode := '#,##0.00" €"';
     Style.AlignHorz := ssahRight;
   end;
-  Inc(iRow, 2);
-  with Sheet.CreateCell(iRow, COL_DESC) do
+end;
+
+procedure TExportadorFacturaDevExpress.EscribirFormaPago;
+begin
+  Inc(FFila, 2);
+  with FHoja.CreateCell(FFila, COL_DESC) do
   begin
     AsString := 'Forma de Pago:';
     Style.Font.Style := [fsBold];
     Style.AlignVert := ssavCenter;
   end;
-  with Sheet.CreateCell(iRow, COL_CANT) do
+  with FHoja.CreateCell(FFila, COL_CANT) do
   begin
-    AsString := QMaster.FieldByName('FORMA_PAGO_FAC').AsString;
+    AsString := CampoTexto('FORMA_PAGO_FAC');
     Style.AlignVert := ssavCenter;
     Style.AlignHorz := ssahLeft;
     Style.WordWrap := False;
   end;
-  Merge(Sheet, iRow, COL_CANT, 4, 1);
-  Sheet.Columns[COL_DESC].Size := 280;
-  Sheet.Columns[COL_CANT].Size := 60;
-  Sheet.Columns[COL_PRECIO].Size := 80;
-  Sheet.Columns[COL_PIVA].Size := 180;
-  Sheet.Columns[COL_TOTAL].Size := 110;
-  Sheet.Columns[COL_BASEI].Visible := False;
-  Sheet.Columns[COL_TIPO_L].Visible := False;
+  Merge(FHoja, FFila, COL_CANT, 4, 1);
+end;
+
+procedure TExportadorFacturaDevExpress.ConfigurarColumnas;
+begin
+  FHoja.Columns[COL_DESC].Size := 280;
+  FHoja.Columns[COL_CANT].Size := 60;
+  FHoja.Columns[COL_PRECIO].Size := 80;
+  FHoja.Columns[COL_PIVA].Size := 180;
+  FHoja.Columns[COL_TOTAL].Size := 110;
+  FHoja.Columns[COL_BASEI].Visible := False;
+  FHoja.Columns[COL_TIPO_L].Visible := False;
+end;
+
+procedure TExportadorFacturaDevExpress.Ejecutar;
+var
+  iFilaFinLineas, iFilaFinTabla: Integer;
+  iFilaInicioLineas, iFilaInicioTabla: Integer;
+begin
+  FControl.ClearAll;
+  FTieneRecargo := CampoTexto('ESIVA_RECARGO_CLIENTE_FAC') = 'S';
+  FImpuestosIncluidos :=
+    CampoTexto('ESIMP_INCL_TARIFA_CLIENTE_FAC') = 'S';
+  FHoja := FControl.AddSheet('Factura',
+    TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
+  FHoja.BeginUpdate;
+  try
+    EscribirCabecera;
+    EscribirLineas(iFilaInicioLineas, iFilaFinLineas);
+    EscribirTablaImpuestos(iFilaInicioLineas, iFilaFinLineas,
+      iFilaInicioTabla, iFilaFinTabla);
+    EscribirResumen(iFilaInicioTabla, iFilaFinTabla);
+    EscribirFormaPago;
+    ConfigurarColumnas;
   finally
-    Sheet.EndUpdate;
+    FHoja.EndUpdate;
+  end;
+end;
+
+procedure ExportarFacturaADevExpress(
+  const AParametrosApp: IParametrosAplicacion;
+  AConexion: TUniConnection;
+  ASheetControl: TdxSpreadSheet; const QMaster, QLineas: TDataSet);
+var
+  oExportador: TExportadorFacturaDevExpress;
+begin
+  oExportador := TExportadorFacturaDevExpress.Create(
+    AParametrosApp, AConexion, ASheetControl, QMaster, QLineas);
+  try
+    oExportador.Ejecutar;
+  finally
+    FreeAndNil(oExportador);
   end;
 end;
 

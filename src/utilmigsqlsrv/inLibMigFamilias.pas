@@ -46,9 +46,9 @@ unit inLibMigFamilias;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarFamilias(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarFamilias(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -93,7 +93,7 @@ begin
     Result := 'S';
 end;
 
-procedure MigrarFamilias(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarFamilias(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cInsertDst =
     'INSERT INTO fza_articulos_familias (' +
@@ -120,7 +120,7 @@ var
 begin
   // Longitud mas comun del codigo de articulo numerico: con ella deducimos el
   // ancho del contador por familia (PAD_ART_FAM = len(articulo) - len(familia)).
-  iArtLen := Eng.ContarOrigen(
+  iArtLen := Eng.Datos.ContarOrigen(
     'SELECT TOP 1 LEN(LTRIM(RTRIM(Articulo))) FROM dbo.ocartp WITH (NOLOCK) ' +
     'WHERE LTRIM(RTRIM(Articulo)) <> '''' ' +
     '  AND LTRIM(RTRIM(Articulo)) NOT LIKE ''%[^0-9]%'' ' +
@@ -167,7 +167,7 @@ begin
       end;
       qSrc.Next;
     end;
-    Eng.SetTotal(oFams.Count);
+    Eng.Progreso.EstablecerTotal(oFams.Count);
     // 2) Padre por prefijo y marcar quien tiene hijos (para saber las hojas).
     for i := 0 to oFams.Count - 1 do
     begin
@@ -181,9 +181,9 @@ begin
       end;
     end;
     // 3) Insertar.
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text   := cInsertDst;
-    qChk.Connection := Eng.ConDst;
+    qChk.Connection := Eng.Datos.ConexionDestino;
     qChk.SQL.Text   :=
       'SELECT 1 FROM fza_articulos_familias WHERE CODIGO_FAM_FAM = :c';
     iOrden   := 10;
@@ -191,7 +191,7 @@ begin
     for i := 0 to oFams.Count - 1 do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       fam := oFams[i];
       // Hoja = no es prefijo (padre) de ninguna otra: crea articulos.
       bEsHoja := not oTieneHijos.ContainsKey(fam.Cod);
@@ -200,7 +200,7 @@ begin
       if not qChk.IsEmpty then
       begin
         Inc(Stats.Saltadas);
-        Eng.Log('  - familia "%s" ya existe, se omite', [fam.Cod]);
+        Eng.Registro.Log('  - familia "%s" ya existe, se omite', [fam.Cod]);
       end
       else
       begin
@@ -251,7 +251,7 @@ begin
           on E: Exception do
           begin
             Inc(Stats.Errores);
-            Eng.Log('  ! error insertando familia "%s": %s',
+            Eng.Registro.Log('  ! error insertando familia "%s": %s',
                     [fam.Cod, E.Message]);
             raise;
           end;
@@ -268,5 +268,13 @@ begin
     oFams.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'familias',
+    'Familias de artículo',
+    'dbo.ocniv (Nivel 2+4) → fza_articulos_familias',
+    [],
+    MigrarFamilias);
 
 end.

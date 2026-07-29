@@ -235,6 +235,9 @@ type
     FRepartidorDescuento: IRepartidorDescuento;
     FImpresorVenta: IImpresorVenta;
     FServicioCierreVenta: IServicioCierreVenta;
+    FRepositorioConsultas: IRepositorioConsultasCaja;
+    FServicioRectificacion: IServicioRectificacionCaja;
+    FConsultaStock: IResultadoConsultaCaja;
     procedure GuardarLayoutCaja;
     procedure RestaurarLayoutCaja;
     procedure AbrirBuscarModificar;
@@ -386,8 +389,8 @@ uses
   inLibShowMto,
   inMtoStockConsulta,
   inLibCorreoTickets,
-  inLibCajaStock, inLibCajaDescuentos, inLibCajaCierreVenta,
-  inMtoCajaImpresorVenta, inMtoCajaGrabadorVenta,
+  inLibCajaDescuentos,
+  inLibCajaOpeComposicion,
   System.StrUtils,
   inLibMsg;
 
@@ -611,67 +614,85 @@ end;
 
 procedure TfrmMtoOpeCaja.ConsultarStock(const CodigoInput: string);
 var
-  View   : TcxGridDBTableView;
-  I      : Integer;
-  Mapa   : TDictionary<string, string>;
+  View: TcxGridDBTableView;
+  DataSetStock: TDataSet;
+  I: Integer;
+  Mapa: TDictionary<string, string>;
   sCodigoArticulo: string;
   sCodigoConsulta: string;
 begin
   sCodigoConsulta := Trim(CodigoInput);
-  if sCodigoConsulta = '' then Exit;
-  if ParametrosCaja.GetBool('vgerStockTodosColores', False) and
-     (Pos('/', sCodigoConsulta) > 0) and
-     Assigned(DatosCaja) and DatosCaja.cdsLineas.Active then
+  if sCodigoConsulta <> '' then
   begin
-    // El artículo padre devuelve una fila diferenciada por color y almacén.
-    sCodigoArticulo := Trim(DatosCaja.cdsLineas.FieldByName(
-      'CODIGO_ART_FACLIN').AsString);
-    if sCodigoArticulo <> '' then
-      sCodigoConsulta := sCodigoArticulo;
-  end;
-  View := dbtvStock;
-  View.BeginUpdate;
-  try
-    with DatosCaja.qryStock do
+    if ParametrosCaja.GetBool(
+         'vgerStockTodosColores',
+         False) and
+       (Pos('/', sCodigoConsulta) > 0) and
+       Assigned(DatosCaja) and
+       DatosCaja.cdsLineas.Active then
     begin
-      Close;
+      // El padre devuelve una fila por color y almacén.
+      sCodigoArticulo :=
+        Trim(
+          DatosCaja.cdsLineas.FieldByName(
+            'CODIGO_ART_FACLIN').AsString);
+      if sCodigoArticulo <> '' then
+      begin
+        sCodigoConsulta := sCodigoArticulo;
+      end;
+    end;
+    dsStock.DataSet := nil;
+    FConsultaStock :=
+      FRepositorioConsultas.ConsultarStock(
+        sCodigoConsulta);
+    DataSetStock := FConsultaStock.DataSet;
+    dsStock.DataSet := DataSetStock;
+    View := dbtvStock;
+    View.BeginUpdate;
+    try
       View.ClearItems;
-      Connection := ConexionPrincipal;
-      ParamByName('ARTICULO').AsString := sCodigoConsulta;
-      Open;
-      if not IsEmpty then
+      if not DataSetStock.IsEmpty then
       begin
         View.DataController.CreateAllItems;
         for I := 0 to View.ColumnCount - 1 do
         begin
           if (I = 0) or (I = 1) then
+          begin
             View.Columns[I].HeaderAlignmentHorz := taLeftJustify
+          end
           else
+          begin
             View.Columns[I].HeaderAlignmentHorz := taRightJustify;
+          end;
         end;
       end;
-    end;
-  finally
-    View.EndUpdate;
-  end;
-  if DatosCaja.qryStock.Active and not DatosCaja.qryStock.IsEmpty then
-  begin
-    View.BeginUpdate;
-    try
-      try
-        View.ApplyBestFit;
-      except
-      end;
-      // ApplyBestFit solo mide texto: si la celda de la PRIMERA columna
-      // (Codigo, donde dibujamos el swatch en dbtvStockCustomDrawCell)
-      // tiene match en la paleta basica, le sumamos ANCHO_SWATCH_PX para
-      // que el cuadradito no recorte el codigo. El resto de columnas
-      // (talla pivotada, total) no llevan swatch -> no las tocamos.
-      Mapa := ObtenerMapaAtributosGlobal(ConexionPrincipal);
-      if (Mapa <> nil) and (Mapa.Count > 0) and (View.ColumnCount > 0) then
-        AjustarAnchoColumnaParaSwatch(ConexionPrincipal,View.Columns[0], Mapa);
     finally
       View.EndUpdate;
+    end;
+    if DataSetStock.Active and
+       (not DataSetStock.IsEmpty) then
+    begin
+      View.BeginUpdate;
+      try
+        try
+          View.ApplyBestFit;
+        except
+        end;
+        // ApplyBestFit no reserva el ancho del indicador de color.
+        Mapa := ObtenerMapaAtributosGlobal(
+          ConexionPrincipal);
+        if Assigned(Mapa) and
+           (Mapa.Count > 0) and
+           (View.ColumnCount > 0) then
+        begin
+          AjustarAnchoColumnaParaSwatch(
+            ConexionPrincipal,
+            View.Columns[0],
+            Mapa);
+        end;
+      finally
+        View.EndUpdate;
+      end;
     end;
   end;
 end;
@@ -2723,6 +2744,7 @@ var
   sNomCliente: string;
   sCodigo: string;
   Totales: TFacturaTotales;
+  Cliente: TClienteCaja;
 begin
   // Durante un escaneo no validamos el cliente: el foco se mueve a la rejilla
   // y el campo pudo quedar con la rafaga; lo da por bueno y no molesta.
@@ -2814,108 +2836,101 @@ begin
   end
   else
   begin
-    var unqry := TUniQuery.Create(nil);
-    try
-      unqry.Connection := ConexionPrincipal;
-      unqry.SQL.Text := 'SELECT RAZON_SOCIAL_CLI, ' +
-                        '       NIF_CLI, MOVIL_CLI, EMAIL_CLI, ' +
-                        '       DIRECCION1_CLI, DIRECCION2_CLI, ' +
-                        '       POBLACION_CLI, PROVINCIA_CLI, ' +
-                        '       CODIGO_POSTAL_CLI, CODIGO_PAI_CLI, ' +
-                        '       NOMBRE_PAI_CLI, ESIVA_RECARGO_CLI, ' +
-                        '       CODIGO_OFICINA_CONTABLE_CLI, ' +
-                        '       CODIGO_ORGANO_GESTOR_CLI, ' +
-                        '       CODIGO_UNIDAD_TRAMITADORA_CLI, ' +
-                        '       ESIVA_EXENTO_CLI, ' +
-                        '       ESREGIMENESPECIALAGRICOLA_CLI, ' +
-                        '       ESRETENCIONES_CLI, ' +
-                        '       ESINTRACOMUNITARIO_CLI, CODIGO_FP_CLI, ' +
-                        '       TARIFA_ARTICULO_CLI, ' +
-                        '       ESPERMITE_DEUDA_CLI ' +
-                        '  FROM fza_clientes ' +
-                        ' WHERE CODIGO_CLI_CLI = :COD';
-      unqry.ParamByName('COD').AsString := sCodigo;
-      unqry.Open;
-      if not unqry.IsEmpty then
+    if FRepositorioConsultas.ObtenerCliente(
+         sCodigo,
+         Cliente) then
+    begin
+      DatosCaja.cdsCabecera.Edit;
+      DatosCaja.cdsCabecera.FieldByName(
+        'CODIGO_CLI_FAC').AsString :=
+        Cliente.Codigo;
+      sNomCliente := Cliente.RazonSocial;
+      DatosCaja.cdsCabecera.FieldByName(
+        'RAZON_SOCIAL_CLIENTE_FAC').AsString :=
+        Cliente.RazonSocial;
+      DatosCaja.cdsCabecera.FieldByName(
+        'NIF_CLIENTE_FAC').AsString :=
+        Cliente.Nif;
+      DatosCaja.cdsCabecera.FieldByName(
+        'MOVIL_CLIENTE_FAC').AsString :=
+        Cliente.Movil;
+      DatosCaja.cdsCabecera.FieldByName(
+        'EMAIL_CLIENTE_FAC').AsString :=
+        Cliente.Email;
+      DatosCaja.cdsCabecera.FieldByName(
+        'DIRECCION1_CLIENTE_FAC').AsString :=
+        Cliente.Direccion1;
+      DatosCaja.cdsCabecera.FieldByName(
+        'DIRECCION2_CLIENTE_FAC').AsString :=
+        Cliente.Direccion2;
+      DatosCaja.cdsCabecera.FieldByName(
+        'POBLACION_CLIENTE_FAC').AsString :=
+        Cliente.Poblacion;
+      DatosCaja.cdsCabecera.FieldByName(
+        'PROVINCIA_CLIENTE_FAC').AsString :=
+        Cliente.Provincia;
+      DatosCaja.cdsCabecera.FieldByName(
+        'CODIGO_POSTAL_CLIENTE_FAC').AsString :=
+        Cliente.CodigoPostal;
+      DatosCaja.cdsCabecera.FieldByName(
+        'CODIGO_PAI_CLIENTE_FAC').AsString :=
+        Cliente.CodigoPais;
+      DatosCaja.cdsCabecera.FieldByName(
+        'NOMBRE_PAI_CLIENTE_FAC').AsString :=
+        Cliente.NombrePais;
+      DatosCaja.cdsCabecera.FieldByName(
+        'CODIGO_OFICINA_CONTABLE_FAC').AsString :=
+        Cliente.CodigoOficinaContable;
+      DatosCaja.cdsCabecera.FieldByName(
+        'CODIGO_ORGANO_GESTOR_FAC').AsString :=
+        Cliente.CodigoOrganoGestor;
+      DatosCaja.cdsCabecera.FieldByName(
+        'CODIGO_UNIDAD_TRAMITADORA_FAC').AsString :=
+        Cliente.CodigoUnidadTramitadora;
+      DatosCaja.cdsCabecera.FieldByName(
+        'ESIVA_RECARGO_CLIENTE_FAC').AsString :=
+        Cliente.EsIvaRecargo;
+      DatosCaja.cdsCabecera.FieldByName(
+        'ESIVA_EXENTO_CLIENTE_FAC').AsString :=
+        Cliente.EsIvaExento;
+      DatosCaja.cdsCabecera.FieldByName(
+        'ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC').AsString :=
+        Cliente.EsRegimenEspecialAgricola;
+      DatosCaja.cdsCabecera.FieldByName(
+        'ESRETENCIONES_CLIENTE_FAC').AsString :=
+        Cliente.EsRetenciones;
+      DatosCaja.cdsCabecera.FieldByName(
+        'ESINTRACOMUNITARIO_CLIENTE_FAC').AsString :=
+        Cliente.EsIntracomunitario;
+      if Trim(Cliente.CodigoFormaPago) <> '' then
       begin
-        DatosCaja.cdsCabecera.Edit;
-        DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString := sCodigo;
-        sNomCliente := unqry.FieldByName('RAZON_SOCIAL_CLI').AsString;
         DatosCaja.cdsCabecera.FieldByName(
-          'RAZON_SOCIAL_CLIENTE_FAC').AsString := sNomCliente;
-        DatosCaja.cdsCabecera.FieldByName('NIF_CLIENTE_FAC').AsString :=
-          unqry.FieldByName('NIF_CLI').AsString;
-        DatosCaja.cdsCabecera.FieldByName('MOVIL_CLIENTE_FAC').AsString :=
-          unqry.FieldByName('MOVIL_CLI').AsString;
-        DatosCaja.cdsCabecera.FieldByName('EMAIL_CLIENTE_FAC').AsString :=
-          unqry.FieldByName('EMAIL_CLI').AsString;
-        DatosCaja.cdsCabecera.FieldByName(
-          'DIRECCION1_CLIENTE_FAC').AsString :=
-          unqry.FieldByName('DIRECCION1_CLI').AsString;
-        DatosCaja.cdsCabecera.FieldByName(
-          'DIRECCION2_CLIENTE_FAC').AsString :=
-          unqry.FieldByName('DIRECCION2_CLI').AsString;
-        DatosCaja.cdsCabecera.FieldByName('POBLACION_CLIENTE_FAC').AsString :=
-          unqry.FieldByName('POBLACION_CLI').AsString;
-        DatosCaja.cdsCabecera.FieldByName('PROVINCIA_CLIENTE_FAC').AsString :=
-          unqry.FieldByName('PROVINCIA_CLI').AsString;
-        DatosCaja.cdsCabecera.FieldByName(
-          'CODIGO_POSTAL_CLIENTE_FAC').AsString :=
-          unqry.FieldByName('CODIGO_POSTAL_CLI').AsString;
-        DatosCaja.cdsCabecera.FieldByName(
-          'CODIGO_PAI_CLIENTE_FAC').AsString :=
-          unqry.FieldByName('CODIGO_PAI_CLI').AsString;
-        DatosCaja.cdsCabecera.FieldByName(
-          'NOMBRE_PAI_CLIENTE_FAC').AsString :=
-          unqry.FieldByName('NOMBRE_PAI_CLI').AsString;
-        DatosCaja.cdsCabecera.FieldByName(
-          'CODIGO_OFICINA_CONTABLE_FAC').AsString :=
-          unqry.FieldByName('CODIGO_OFICINA_CONTABLE_CLI').AsString;
-        DatosCaja.cdsCabecera.FieldByName(
-          'CODIGO_ORGANO_GESTOR_FAC').AsString :=
-          unqry.FieldByName('CODIGO_ORGANO_GESTOR_CLI').AsString;
-        DatosCaja.cdsCabecera.FieldByName(
-          'CODIGO_UNIDAD_TRAMITADORA_FAC').AsString :=
-          unqry.FieldByName('CODIGO_UNIDAD_TRAMITADORA_CLI').AsString;
-        DatosCaja.cdsCabecera.FieldByName(
-          'ESIVA_RECARGO_CLIENTE_FAC').AsString :=
-          unqry.FieldByName('ESIVA_RECARGO_CLI').AsString;
-        DatosCaja.cdsCabecera.FieldByName(
-          'ESIVA_EXENTO_CLIENTE_FAC').AsString :=
-          unqry.FieldByName('ESIVA_EXENTO_CLI').AsString;
-        DatosCaja.cdsCabecera.FieldByName(
-          'ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC').AsString :=
-          unqry.FieldByName('ESREGIMENESPECIALAGRICOLA_CLI').AsString;
-        DatosCaja.cdsCabecera.FieldByName(
-          'ESRETENCIONES_CLIENTE_FAC').AsString :=
-          unqry.FieldByName('ESRETENCIONES_CLI').AsString;
-        DatosCaja.cdsCabecera.FieldByName(
-          'ESINTRACOMUNITARIO_CLIENTE_FAC').AsString :=
-          unqry.FieldByName('ESINTRACOMUNITARIO_CLI').AsString;
-        if Trim(unqry.FieldByName('CODIGO_FP_CLI').AsString) <> '' then
-          DatosCaja.cdsCabecera.FieldByName('FORMA_PAGO_FAC').AsString :=
-            unqry.FieldByName('CODIGO_FP_CLI').AsString;
-        DatosCaja.cdsCabecera.FieldByName(
-          'TARIFA_ARTICULO_CLIENTE_FAC').AsString := unqry.FieldByName(
-            'TARIFA_ARTICULO_CLI').AsString;
-        lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName(
-          'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-        // Si es un cliente con depósitos, los cargamos
-        if SameText(unqry.FieldByName('ESPERMITE_DEUDA_CLI').AsString, 'S') then
-        begin
-          tvLineasOpe.BeginUpdate;
-          FActualizandoDepositos := True;
-          try
-            if ParametrosCaja.GetBool('vgerAutoLoadDepositos', False) then
-              DatosCaja.CargarDepositosCliente(sCodigo);
-          finally
-            tvLineasOpe.EndUpdate;
-            FActualizandoDepositos := False;
+          'FORMA_PAGO_FAC').AsString :=
+          Cliente.CodigoFormaPago;
+      end;
+      DatosCaja.cdsCabecera.FieldByName(
+        'TARIFA_ARTICULO_CLIENTE_FAC').AsString :=
+        Cliente.TarifaArticulo;
+      lblTarifa.Caption :=
+        Cliente.TarifaArticulo;
+      // Si es un cliente con depósitos, los cargamos.
+      if SameText(Cliente.EsPermiteDeuda, 'S') then
+      begin
+        tvLineasOpe.BeginUpdate;
+        FActualizandoDepositos := True;
+        try
+          if ParametrosCaja.GetBool(
+               'vgerAutoLoadDepositos',
+               False) then
+          begin
+            DatosCaja.CargarDepositosCliente(
+              sCodigo);
           end;
+        finally
+          tvLineasOpe.EndUpdate;
+          FActualizandoDepositos := False;
         end;
       end;
-    finally
-      FreeAndNil(unqry);
     end;
     if sNomCliente = '' then
     begin
@@ -2992,42 +3007,27 @@ end;
 procedure TfrmMtoOpeCaja.BuscarClientes;
 var
   formulario: TfrmMtoSearch;
-  unqryClientes: TUniQuery;
+  Consulta: IResultadoConsultaCaja;
 begin
-  unqryClientes := TUniQuery.Create(nil);
+  Consulta := FRepositorioConsultas.ConsultarClientes;
+  formulario := TfrmMtoSearch.Create(nil);
   try
-    unqryClientes.Connection := ConexionPrincipal;
-unqryClientes.SQL.Text := 'SELECT CODIGO_CLI_CLI as `Código`, ' +
-                          '   RAZON_SOCIAL_CLI as `Razón Social`, ' +
-                          '   NIF_CLI as `NIF Cliente`, ' +
-                          '   MOVIL_CLI as `Teléfono Cliente`, ' +
-                          '   ESPERMITE_DEUDA_CLI as `Cuenta Crédito`, ' +
-                       '   TOTAL_LIMITE_CREDITO_CLI as `Límite Crédito`, ' +
-                          '   TOTAL_DEUDA_CLI as `Deuda Usada` ' +
-                          '  FROM fza_clientes ' +
-                          ' WHERE ESACTIVO_CLI = ' + QuotedStr('S') +
-                          ' ORDER BY RAZON_SOCIAL_CLI';
-    formulario := TfrmMtoSearch.Create(nil);
-    try
-      formulario.Name := 'frmMtoCliSearch';
-      formulario.Caption := 'Búsqueda de Clientes';
-      formulario.dsTablaG.DataSet := unqryClientes;
-      unqryClientes.Open;
-      formulario.ProcesarPerfiles;
-      formulario.ShowModal;
-      if formulario.sFicha = 'S' then
+    formulario.Name := 'frmMtoCliSearch';
+    formulario.Caption := 'Búsqueda de Clientes';
+    formulario.dsTablaG.DataSet := Consulta.DataSet;
+    formulario.ProcesarPerfiles;
+    formulario.ShowModal;
+    if formulario.sFicha = 'S' then
+    begin
+      btnCodigoCliente.Text :=
+        Consulta.DataSet.FieldByName('Código').AsString;
+      if btnCodigoCliente.ValidateEdit(True) then
       begin
-        btnCodigoCliente.Text := unqryClientes.FieldByName('Código').AsString;
-        if btnCodigoCliente.ValidateEdit(True) then
-        begin
-          cxgrdLineasOpe.SetFocus;
-        end;
+        cxgrdLineasOpe.SetFocus;
       end;
-    finally
-      FreeAndNil(formulario);
     end;
   finally
-    FreeAndNil(unqryClientes);
+    FreeAndNil(formulario);
   end;
 end;
 
@@ -3048,52 +3048,43 @@ procedure TfrmMtoOpeCaja.btnCodigoEmpleadoPropertiesValidate(Sender: TObject;
 var
   sNomEmpleado: string;
   sCodigo: string;
-  qry: TUniQuery;
+  Empleado: TEmpleadoCaja;
+  Encontrado: Boolean;
 begin
   // Durante un escaneo no validamos el empleado (mismo motivo que en cliente).
   if FProcesandoLecturaScanner then
   begin
     Error := False;
-    Exit;
   end;
-  sCodigo := VarToStr(DisplayValue);
-  if (Trim(sCodigo) <> '') and DatosCaja.BuscarYMostrarNombre('EMPLEADOS',
-    sCodigo,
-    sNomEmpleado) then
+  if not FProcesandoLecturaScanner then
   begin
-    Error := False;
-    lblNombreEmpleado.Caption := sNomEmpleado;
-    DatosCaja.cdsCabecera.Edit;
-    DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString := sCodigo;
-    ErrorText := '';
-    DisplayValue := sCodigo;
-    Exit;
-  end;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text := 'SELECT CODIGO_EMPL, DIMINUTIVO_TICKET_EMPL ' +
-                    '  FROM fza_empleados ' +
-                    ' WHERE ESACTIVO_EMPL = ''S'' ' +
-                    '   AND CODIGO_EMPL IS NOT NULL ';
-    if Trim(sCodigo) <> '' then
+    sCodigo := VarToStr(DisplayValue);
+    Encontrado :=
+      (Trim(sCodigo) <> '') and
+      DatosCaja.BuscarYMostrarNombre(
+        'EMPLEADOS',
+        sCodigo,
+        sNomEmpleado);
+    if Encontrado then
     begin
-      qry.SQL.Add(
-        'AND (CODIGO_EMPL LIKE :TOKEN OR DIMINUTIVO_TICKET_EMPL LIKE ' +
-        ':TOKEN) ');
-      qry.ParamByName('TOKEN').AsString := '%' + sCodigo + '%';
+      Empleado.Codigo := sCodigo;
+      Empleado.Nombre := sNomEmpleado;
     end;
-    qry.SQL.Add('ORDER BY CODIGO_EMPL ASC LIMIT 1');
-    qry.Open;
-    if not qry.IsEmpty then
+    if not Encontrado then
     begin
-      sCodigo := qry.FieldByName('CODIGO_EMPL').AsString;
-      sNomEmpleado := qry.FieldByName('DIMINUTIVO_TICKET_EMPL').AsString;
-      DisplayValue := sCodigo;
-      lblNombreEmpleado.Caption := sNomEmpleado;
+      Encontrado :=
+        FRepositorioConsultas.BuscarEmpleado(
+          sCodigo,
+          Empleado);
+    end;
+    if Encontrado then
+    begin
+      DisplayValue := Empleado.Codigo;
+      lblNombreEmpleado.Caption := Empleado.Nombre;
       DatosCaja.cdsCabecera.Edit;
-      DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString :=
-        sCodigo;
+      DatosCaja.cdsCabecera.FieldByName(
+        'CODIGO_CAJERO_FAC').AsString :=
+        Empleado.Codigo;
       Error := False;
       ErrorText := '';
     end
@@ -3103,8 +3094,6 @@ begin
       ErrorText := SErrorEmpleadoCajaNoEncontrado;
       lblNombreEmpleado.Caption := '';
     end;
-  finally
-    FreeAndNil(qry);
   end;
 //  tvLineasOpe.ApplyBestFit(nil, True, False);
 end;
@@ -3336,111 +3325,34 @@ procedure TfrmMtoOpeCaja.CargarRectificacion(
   ATratamientoMovimientos:
     TTratamientoMovimientosRectificativa);
 var
-  Qry:     TUniQuery;
-  i:       Integer;
-  oCampo:  TField;
-  oDestino: TField;
-  dSigno: Double;
-  sTipoRectificativa: string;
+  Resultado: TResultadoRectificacionCaja;
 begin
-  case ATipoRectificativa of
-    trcDiferencias:
-      begin
-        dSigno := -1;
-        sTipoRectificativa := 'POR DIFERENCIAS';
-      end;
-    trcSustitutiva:
-      begin
-        dSigno := 1;
-        sTipoRectificativa := 'SUSTITUTIVA';
-      end;
-  else
-    raise Exception.Create(SErrorTipoRectificativaCajaNoIndicado);
-  end;
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := ConexionPrincipal;
-    // Cliente del ticket original a la cabecera de la operación
-    Qry.SQL.Text :=
-      ' SELECT * FROM fza_facturas ' +
-      ' WHERE SERIE_FAC  = :SERIE ' +
-      '   AND NUMERO_FAC = :NUMERO';
-    Qry.ParamByName('SERIE').AsString  := ASerie;
-    Qry.ParamByName('NUMERO').AsString := ANumero;
-    Qry.Open;
-    if Qry.IsEmpty then
-      raise Exception.Create(Format(SErrorBorradorRectificarCajaNoEncontrado,
-        [ASerie, ANumero]));
-    if not (DatosCaja.cdsCabecera.State in [dsEdit, dsInsert]) then
-      DatosCaja.cdsCabecera.Edit;
-    for i := 0 to Qry.FieldCount - 1 do
-    begin
-      oCampo   := Qry.Fields[i];
-      oDestino := DatosCaja.cdsCabecera.FindField(oCampo.FieldName);
-      if (oDestino <> nil) and
-         (Pos('CLIENTE', oCampo.FieldName) > 0) then
-        oDestino.Value := oCampo.Value;
-    end;
-    DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString :=
-      Qry.FieldByName('CODIGO_CLI_FAC').AsString;
-    DatosCaja.cdsCabecera.Post;
-    // El cajero puede quitar o ajustar las líneas que no se rectifican.
-    // Por diferencias se presentan en negativo; sustitutiva, en positivo.
-    Qry.Close;
-    Qry.SQL.Text :=
-      ' SELECT * FROM fza_facturas_lineas ' +
-      ' WHERE SERIE_FAC_FACLIN  = :SERIE ' +
-      '   AND NUMERO_FAC_FACLIN = :NUMERO ' +
-      ' ORDER BY LINEA_FACLIN';
-    Qry.ParamByName('SERIE').AsString  := ASerie;
-    Qry.ParamByName('NUMERO').AsString := ANumero;
-    Qry.Open;
-    DatosCaja.cdsLineas.DisableControls;
-    try
-      while not Qry.Eof do
-      begin
-        DatosCaja.cdsLineas.Append;
-        for i := 0 to Qry.FieldCount - 1 do
-        begin
-          oCampo   := Qry.Fields[i];
-          oDestino := DatosCaja.cdsLineas.FindField(oCampo.FieldName);
-          if (oDestino <> nil) and (not oCampo.IsNull) then
-            oDestino.Value := oCampo.Value;
-        end;
-        // Fuerza el signo solicitado aunque el original contenga ajustes.
-        if DatosCaja.cdsLineas.FindField('CANTIDAD_FACLIN') <> nil then
-          DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat :=
-            dSigno * Abs(Qry.FieldByName('CANTIDAD_FACLIN').AsFloat);
-        if (DatosCaja.cdsLineas.FindField('TOTAL_FACLIN') <> nil) and
-           (Qry.FindField('TOTAL_FACLIN') <> nil) then
-          DatosCaja.cdsLineas.FieldByName('TOTAL_FACLIN').AsCurrency :=
-            dSigno * Abs(Qry.FieldByName('TOTAL_FACLIN').AsCurrency);
-        if (DatosCaja.cdsLineas.FindField(
-              'TOTAL_FAC_SIVA_FACLIN') <> nil) and
-           (Qry.FindField('TOTAL_FAC_SIVA_FACLIN') <> nil) then
-          DatosCaja.cdsLineas.FieldByName(
-            'TOTAL_FAC_SIVA_FACLIN').AsCurrency :=
-            dSigno * Abs(
-              Qry.FieldByName('TOTAL_FAC_SIVA_FACLIN').AsCurrency);
-        DatosCaja.cdsLineas.Post;
-        Qry.Next;
-      end;
-    finally
-      DatosCaja.cdsLineas.EnableControls;
-    end;
-  finally
-    FreeAndNil(Qry);
-  end;
-  FSerieRectifica  := ASerie;
-  FNumeroRectifica := ANumero;
-  FTipoRectificativa := ATipoRectificativa;
-  FTratamientoMovRectificativa := ATratamientoMovimientos;
+  Resultado := FServicioRectificacion.Cargar(
+    ASerie,
+    ANumero,
+    ATipoRectificativa,
+    ATratamientoMovimientos,
+    DatosCaja.cdsCabecera,
+    DatosCaja.cdsLineas);
+  FSerieRectifica := Resultado.Serie;
+  FNumeroRectifica := Resultado.Numero;
+  FTipoRectificativa := Resultado.Tipo;
+  FTratamientoMovRectificativa :=
+    Resultado.TratamientoMovimientos;
   if FCaptionPrevio = '' then
+  begin
     FCaptionPrevio := Caption;
-  Caption := FCaptionPrevio + '  —  RECTIFICATIVA ' + sTipoRectificativa +
-    ' de ' + ASerie + '\' + ANumero;
+  end;
+  Caption :=
+    FCaptionPrevio +
+    '  —  RECTIFICATIVA ' +
+    Resultado.DescripcionTipo +
+    ' de ' +
+    Resultado.Serie +
+    '\' +
+    Resultado.Numero;
   lblTipoRectificativa.Caption := 'RECTIFICATIVA' + sLineBreak +
-    sTipoRectificativa;
+    Resultado.DescripcionTipo;
   lblTipoRectificativa.Visible := True;
 end;
 
@@ -3568,41 +3480,28 @@ end;
 
 procedure TfrmMtoOpeCaja.BuscarEmpleados;
 var
-  formulario : TfrmMtoSearch;
-  unqryEmpleados:TUniQuery;
+  formulario: TfrmMtoSearch;
+  Consulta: IResultadoConsultaCaja;
 begin
-  unqryEmpleados := TUniQuery.Create(nil);
+  Consulta := FRepositorioConsultas.ConsultarEmpleados;
+  formulario := TfrmMtoSearch.Create(nil);
   try
-    unqryEmpleados.Connection := ConexionPrincipal;
-    unqryEmpleados.SQL.Text := 'SELECT CODIGO_EMPL ' +
-                                                    'as `Código de Empleado`,' +
-                               '       DIMINUTIVO_TICKET_EMPL ' +
-                                                     'as `Nombre de Empleado`' +
-                               '  FROM fza_empleados ' +
-                               ' WHERE ESACTIVO_EMPL =' +QuotedStr('S') +
-                               '   AND CODIGO_EMPL IS NOT NULL' +
-                               ' ORDER BY CODIGO_EMPL ';
-    formulario := TfrmMtoSearch.Create(nil);
-    try
-      formulario.Name := 'frmMtoEmpCajSearch';
-      formulario.Caption := 'Búsqueda de Empleados en Caja';
-      formulario.dsTablaG.DataSet := unqryEmpleados;
-      unqryEmpleados.Open;
-      formulario.ProcesarPerfiles;
-      formulario.ShowModal;
-      if formulario.sFicha = 'S' then
+    formulario.Name := 'frmMtoEmpCajSearch';
+    formulario.Caption := 'Búsqueda de Empleados en Caja';
+    formulario.dsTablaG.DataSet := Consulta.DataSet;
+    formulario.ProcesarPerfiles;
+    formulario.ShowModal;
+    if formulario.sFicha = 'S' then
+    begin
+      btnCodigoEmpleado.Text :=
+        Consulta.DataSet.Fields[0].AsString;
+      if btnCodigoEmpleado.ValidateEdit(True) then
       begin
-        btnCodigoEmpleado.Text := unqryEmpleados.Fields[0].AsString;
-        if btnCodigoEmpleado.ValidateEdit(True) then
-        begin
-          btnCodigoCliente.SetFocus;
-        end;
+        btnCodigoCliente.SetFocus;
       end;
-    finally
-      FreeAndNil(formulario);
     end;
   finally
-    FreeAndNil(unqryEmpleados);
+    FreeAndNil(formulario);
   end;
 end;
 
@@ -3613,6 +3512,10 @@ end;
 
 procedure TfrmMtoOpeCaja.FormDestroy(Sender: TObject);
 begin
+  dsStock.DataSet := nil;
+  FConsultaStock := nil;
+  FServicioRectificacion := nil;
+  FRepositorioConsultas := nil;
   FServicioCierreVenta := nil;
   FImpresorVenta := nil;
   FRepartidorDescuento := nil;
@@ -3698,6 +3601,8 @@ begin
 end;
 
 procedure TfrmMtoOpeCaja.FormCreate(Sender: TObject);
+var
+  Servicios: TServiciosOperacionCaja;
 begin
   inherited;
   // Detector del lector de codigo de barras (modo restaurar, con anti-eco para
@@ -3718,24 +3623,28 @@ begin
   // tvArticuloPropertiesValidate.
   DatosCaja := TdmCajaOpe.Create(Self, ConexionPrincipal, ParametrosApp,
     ParametrosCaja);
-  FPoliticaStockVenta := TPoliticaStockVenta.Create(
-    ConexionPrincipal,
-    ParametrosCaja);
-  FRepartidorDescuento := TRepartidorDescuento.Create;
-  FImpresorVenta := TImpresorVentaVcl.Create(
+  Servicios := CrearServiciosOperacionCaja(
     Self,
     ParametrosApp,
     ConexionPrincipal,
     ParametrosCaja,
-    Permisos);
-  FServicioCierreVenta := TServicioCierreVenta.Create(
-    TGrabadorVentaCaja.Create(DatosCaja),
-    FImpresorVenta,
-    ParametrosCaja,
+    Permisos,
     ContextoSesion,
-    ConexionPrincipal);
+    DatosCaja);
+  FRepositorioConsultas :=
+    Servicios.RepositorioConsultas;
+  FServicioRectificacion :=
+    Servicios.ServicioRectificacion;
+  FPoliticaStockVenta :=
+    Servicios.PoliticaStock;
+  FRepartidorDescuento :=
+    Servicios.RepartidorDescuento;
+  FImpresorVenta :=
+    Servicios.Impresor;
+  FServicioCierreVenta :=
+    Servicios.ServicioCierre;
   dsLineas.DataSet := DatosCaja.cdsLineas;
-  dsStock.DataSet := DatosCaja.qryStock;
+  dsStock.DataSet := nil;
   dsLineas.OnDataChange := DsLineasDataChange;
   ConstruirColumnasDinamicas;
   // Cantidad con decimales segun la unidad de cada linea (telas por metros...).

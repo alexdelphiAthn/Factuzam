@@ -19,16 +19,12 @@ interface
 
 uses
   System.Classes, System.SysUtils, System.Diagnostics,
-  Backup.Engine, Backup.Types, DAScript, Uni;
+  Backup.Engine, Backup.Types, DAScript, Uni,
+  inLibCopiasSeguridadIntf;
 
 type
-  TWorkerProgresoEvent = procedure(const AEtapa: string;
-                                    APaso, ATotal: Integer;
-                                    AFilaGlobal,
-                                    AFilasGlobalTotal: Integer) of object;
-  TWorkerFinalizarEvent = procedure(AExito: Boolean;
-                                     const AError: string;
-                                     ALogBuffer: TStringList) of object;
+  TWorkerProgresoEvent = TProgresoCopiaSeguridadEvent;
+  TWorkerFinalizarEvent = TFinalizarCopiaSeguridadEvent;
 
   TBackupWorker = class(TThread)
   private
@@ -39,7 +35,7 @@ type
     FPassword: string;
     FRutaFichero: string;
     FEncriptar: Boolean;
-    FPassEncriptar: AnsiString;
+    FPassEncriptar: string;
     FExito: Boolean;
     FError: string;
     FProgresoEtapa: string;
@@ -61,7 +57,7 @@ type
                        const ADatabase, AUser, APassword: string;
                        const ARutaFichero: string;
                        AEncriptar: Boolean;
-                       const APassEncriptar: AnsiString);
+                       const APassEncriptar: string);
     property OnProgreso: TWorkerProgresoEvent
       read FOnProgreso write FOnProgreso;
     property OnFinalizar: TWorkerFinalizarEvent
@@ -77,7 +73,7 @@ type
     FPassword: string;
     FRutaFichero: string;
     FDesencriptar: Boolean;
-    FPassDesencriptar: AnsiString;
+    FPassDesencriptar: string;
     FExito: Boolean;
     FError: string;
     FLogBuffer: TStringList;
@@ -112,7 +108,7 @@ type
     constructor Create(const AHost: string; APort: Integer;
                        const ADatabase, AUser, APassword: string;
                        const ARutaFichero: string;
-                       const APassDesencriptar: AnsiString;
+                       const APassDesencriptar: string;
                        ADesencriptar: Boolean = False);
     property OnProgreso: TWorkerProgresoEvent
       read FOnProgreso write FOnProgreso;
@@ -124,7 +120,7 @@ function CrearCopiaSeguridadBD(const AHost: string; APort: Integer;
                                const ADatabase, AUser, APassword: string;
                                const ARutaFichero: string;
                                AEncriptar: Boolean;
-                               const APassEncriptar: AnsiString;
+                               const APassEncriptar: string;
                                AOnProgreso: TWorkerProgresoEvent;
                                out AError: string): Boolean;
 
@@ -136,14 +132,14 @@ uses
   MySQLUniProvider, UniScript,
   System.StrUtils,
   inLibDBStructure,
-  inLibCifrado,
+  inLibCifradoCopias,
   inLibMsg;
 
 function CrearCopiaSeguridadBD(const AHost: string; APort: Integer;
                                const ADatabase, AUser, APassword: string;
                                const ARutaFichero: string;
                                AEncriptar: Boolean;
-                               const APassEncriptar: AnsiString;
+                               const APassEncriptar: string;
                                AOnProgreso: TWorkerProgresoEvent;
                                out AError: string): Boolean;
 var
@@ -202,7 +198,7 @@ begin
             s := Writer.GetScript;
             s := StringReplace(s, 'DEFINER=`root`@`localhost`', '',
                                [rfReplaceAll, rfIgnoreCase]);
-            s := CifrarAESConContrasena(
+            s := CifrarCopiaSeguridad(
               s,
               APassEncriptar);
             MyText := TStringList.Create;
@@ -240,7 +236,7 @@ end;
 
 constructor TBackupWorker.Create(const AHost: string; APort: Integer;
   const ADatabase, AUser, APassword, ARutaFichero: string;
-  AEncriptar: Boolean; const APassEncriptar: AnsiString);
+  AEncriptar: Boolean; const APassEncriptar: string);
 begin
   inherited Create(True);
   FreeOnTerminate := True;
@@ -307,7 +303,7 @@ end;
 
 constructor TRestoreWorker.Create(const AHost: string; APort: Integer;
   const ADatabase, AUser, APassword, ARutaFichero: string;
-  const APassDesencriptar: AnsiString; ADesencriptar: Boolean);
+  const APassDesencriptar: string; ADesencriptar: Boolean);
 begin
   inherited Create(True);
   FreeOnTerminate := True;
@@ -836,7 +832,7 @@ begin
               MyText := TStringList.Create;
               try
                 MyText.LoadFromFile(FRutaFichero);
-                s := DescifrarAESConContrasena(
+                s := DescifrarCopiaSeguridad(
                   MyText.Text,
                   FPassDesencriptar);
               finally

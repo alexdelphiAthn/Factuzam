@@ -38,9 +38,9 @@ unit inLibMigArticulosSkus;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarArticulosSkus(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarArticulosSkus(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -117,13 +117,13 @@ end;
 //  Carga de catalogos / existentes en memoria (UNA sola query cada uno)
 // =========================================================================
 
-procedure CargarMapaAV(Eng: TMigEngine; const sIdVa: string;
+procedure CargarMapaAV(Eng: IContextoMigracion; const sIdVa: string;
                        Mapa: TDictionary<string, Integer>);
 var q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     // ORDER BY ID_AV DESC + AddOrSetValue (gana la ultima fila) => el
     // MIN(ID_AV) queda como canonico, igual que BuscarIdAV. Asi el tag de
     // talla del SKU coincide con el detalle del conjunto aunque el catalogo
@@ -146,13 +146,13 @@ begin
   end;
 end;
 
-procedure CargarStringSet(Eng: TMigEngine; const sSql: string;
+procedure CargarStringSet(Eng: IContextoMigracion; const sSql: string;
                           Conjunto: TDictionary<string, Boolean>);
 var q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text   := sSql;
     q.Open;
     while not q.Eof do
@@ -169,7 +169,7 @@ end;
 //  Migrador principal
 // =========================================================================
 
-procedure MigrarArticulosSkus(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarArticulosSkus(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   // El origen son DOS fuentes UNIDAS:
   //   - ocartbap: filas con barcode. Estas SI generan codigo de
@@ -254,7 +254,7 @@ var
   sAhora, sUser, sFila, sKey:    string;
   sPrincipal:                    string;
 begin
-  Eng.Log('  cargando caches en memoria...');
+  Eng.Registro.Log('  cargando caches en memoria...');
   oColoresMap     := TDictionary<string, Integer>.Create;
   oTallasMap      := TDictionary<string, Integer>.Create;
   oSkusVistos     := TDictionary<string, Boolean>.Create;
@@ -268,7 +268,7 @@ begin
     // Pre-cargar catalogos: una query por cada uno, milisegundos.
     CargarMapaAV(Eng, 'CO',  oColoresMap);
     CargarMapaAV(Eng, 'TAL', oTallasMap);
-    Eng.Log('  catalogo: %d colores y %d tallas en cache',
+    Eng.Registro.Log('  catalogo: %d colores y %d tallas en cache',
             [oColoresMap.Count, oTallasMap.Count]);
 
     // Pre-cargar entradas ya existentes para idempotencia O(1).
@@ -282,7 +282,7 @@ begin
       'SELECT CONCAT(CODIGO_UNIDAD_SKU_SA, ''|'', ID_AV_SA) ' +
       'FROM fza_atributos_sku',
       oSkuAtbVistos);
-    Eng.Log('  destino: %d SKUs, %d barcodes y %d enlaces ya en BBDD',
+    Eng.Registro.Log('  destino: %d SKUs, %d barcodes y %d enlaces ya en BBDD',
             [oSkusVistos.Count, oBarcodesVistos.Count,
              oSkuAtbVistos.Count]);
 
@@ -290,17 +290,17 @@ begin
     sUser  := ValorOrNull(Eng.Usuario);
 
     qSrc       := NuevoQOrigen(Eng, cSelectSrc);
-    bulkSkus   := TBulkInsert.Create(Eng.ConDst,
+    bulkSkus   := TBulkInsert.Create(Eng.Datos.ConexionDestino,
                                       'fza_articulos_skus',
                                       cColsSkus,  BATCH_SIZE);
-    bulkAtbSku := TBulkInsert.Create(Eng.ConDst,
+    bulkAtbSku := TBulkInsert.Create(Eng.Datos.ConexionDestino,
                                       'fza_atributos_sku',
                                       cColsAtbSku, BATCH_SIZE);
-    bulkCB     := TBulkInsert.Create(Eng.ConDst,
+    bulkCB     := TBulkInsert.Create(Eng.Datos.ConexionDestino,
                                       'fza_codigos_barras',
                                       cColsBarras, BATCH_SIZE);
 
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM ( ' +
       '  SELECT 1 AS N FROM dbo.ocartbap ' +
       '  WHERE LTRIM(RTRIM(Articulo))     <> '''' ' +
@@ -314,13 +314,13 @@ begin
     begin
       // Chequeo de cancelacion cada 1000 filas para no impactar
       // rendimiento (TInterlocked es barato pero acumula).
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en SKUs, saliendo...');
+        Eng.Registro.Log('  Cancelacion detectada en SKUs, saliendo...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sArt       := Trim(qSrc.FieldByName('Articulo').AsString);
       sColorRaw  := Trim(qSrc.FieldByName('Color').AsString);
       sTalla     := Trim(qSrc.FieldByName('Talla').AsString);
@@ -428,5 +428,13 @@ begin
     oColoresMap.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'skus',
+    'SKUs y códigos de barras',
+    'dbo.ocartbap → SKUs, atributos y códigos de barras',
+    ['articulos', 'colores_maestros', 'tallas_maestras'],
+    MigrarArticulosSkus);
 
 end.

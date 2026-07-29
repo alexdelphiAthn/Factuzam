@@ -36,9 +36,9 @@ unit inLibMigArticulosTarifas;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarArticulosTarifas(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarArticulosTarifas(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -92,7 +92,7 @@ end;
 // como nombre y un codigo sanitizado como CODIGO_TAR_ARTTAR. Tambien
 // rellena oMapaTarifas[iTarifa] -> sCodigoCanonico para que el bucle
 // principal sepa que codigo usar al insertar precios.
-procedure AsegurarTarifasDestino(Eng: TMigEngine);
+procedure AsegurarTarifasDestino(Eng: IContextoMigracion);
 const
   cSelectOctar =
     'SELECT Tarifa, Descripcion, IvaIncluido, Estado ' +
@@ -110,10 +110,10 @@ begin
   qChk := TUniQuery.Create(nil);
   qIns := TUniQuery.Create(nil);
   try
-    qChk.Connection := Eng.ConDst;
+    qChk.Connection := Eng.Datos.ConexionDestino;
     qChk.SQL.Text   :=
       'SELECT 1 FROM fza_tarifas WHERE CODIGO_TAR_ARTTAR = :c';
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text   :=
       'INSERT INTO fza_tarifas (' +
         'CODIGO_TAR_ARTTAR, ESACTIVO_ARTTAR, ORDEN_TAR, ' +
@@ -151,7 +151,7 @@ begin
         qIns.ParamByName('ii').AsString := sIvaIncl;
         RellenarAuditoria(qIns, Eng.Usuario);
         qIns.ExecSQL;
-        Eng.Log('  + tarifa %d "%s" -> codigo "%s" creada',
+        Eng.Registro.Log('  + tarifa %d "%s" -> codigo "%s" creada',
                 [iTarifa, sDescripcion, sCodigo]);
         Inc(iOrden, 10);
       end;
@@ -182,7 +182,7 @@ begin
       TFormatSettings.Create('en-US'));  // punto decimal
 end;
 
-procedure MigrarArticulosTarifas(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarArticulosTarifas(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   // En el legacy ocarttap tiene filas por (Articulo, Color, Tarifa).
   // En la mayoria de articulos el precio es igual para todos los
@@ -296,7 +296,7 @@ begin
   AsegurarTarifasDestino(Eng);
 
   qSrc := NuevoQOrigen(Eng, cSelectSrc + cOrden);
-  bulk := TBulkInsert.Create(Eng.ConDst, 'fza_articulos_tarifas',
+  bulk := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_articulos_tarifas',
                               cCols, 5000);
   try
     sAhora := DateTimeASQL(Now);
@@ -310,13 +310,13 @@ begin
     // SQL Server NO admite WITH dentro de un subquery, asi que el
     // CTE queda fuera y solo el cuerpo (UNION ALL) va dentro del
     // SELECT COUNT(*) FROM (...).
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       cCTE + 'SELECT COUNT(*) FROM (' + cBody + ') AS Q'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sArt       := Trim(qSrc.FieldByName('Articulo').AsString);
       iTarifa    := qSrc.FieldByName('Tarifa').AsInteger;
       sDescColor := Trim(qSrc.FieldByName('DescColor').AsString);
@@ -391,7 +391,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('art_tarifa', sArt, E.Message,
+          Eng.Registro.LogError('art_tarifa', sArt, E.Message,
             Format('tar=%s precio=%g gran=%s color=%s',
                    [sCodTar, fSalida, sGran, sDescColor]), '');
           raise;
@@ -407,6 +407,12 @@ begin
 end;
 
 initialization
+  RegistrarMigracion(
+    'articulos_tarifas',
+    'Precios PVP por artículo',
+    'dbo.ocarttap → fza_articulos_tarifas',
+    ['articulos'],
+    MigrarArticulosTarifas);
   oMapaTarifas := TDictionary<Integer, string>.Create;
 finalization
   oMapaTarifas.Free;

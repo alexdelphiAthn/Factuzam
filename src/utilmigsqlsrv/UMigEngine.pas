@@ -10,8 +10,7 @@
 {    de orquestar la ejecución, el log y el reporting de progreso.             }
 {                                                                              }
 {    Convenciones:                                                             }
-{      - Una migración = un TMigProc que recibe el motor y devuelve cuántas    }
-{        filas leyó / insertó / falló.                                         }
+{      - Una migración implementa IMigracion y recibe IContextoMigracion.      }
 {      - El motor escribe en MariaDB siempre en una transacción por dominio.   }
 {        Si revienta una fila se hace rollback completo.                       }
 {      - Las cuatro columnas de auditoría (INSTANTE_ALTA/MODIF, USUARIO_*)     }
@@ -24,34 +23,15 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
-  Data.DB, Uni;
+  Data.DB, Uni, UMigContratos;
 
 type
-  TMigLogProc = reference to procedure(const sMensaje: string);
-
-  // (sDominio, iRow, iTotal). iTotal=-1 cuando aun no se sabe (al
-  // arrancar la migracion); luego se actualiza con el COUNT(*).
-  TMigProgressProc = reference to procedure(const sDominio: string;
-                                            iRow, iTotal: Integer);
-
-  TMigStats = record
-    Leidas:     Integer;
-    Insertadas: Integer;
-    Saltadas:   Integer;
-    Errores:    Integer;
-  end;
-
-  TMigEngine = class;
-
-  TMigProc = reference to procedure(Eng: TMigEngine; var Stats: TMigStats);
-
-  TMigItem = class
-  public
-    Codigo:      string;  // identificador interno
-    Nombre:      string;  // visible en UI
-    Descripcion: string;
-    Proc:        TMigProc;
-  end;
+  TMigLogProc = UMigContratos.TMigLogProc;
+  TMigProgressProc = UMigContratos.TMigProgressProc;
+  TMigStats = UMigContratos.TMigStats;
+  TMigProc = UMigContratos.TMigProc;
+  IContextoMigracion = UMigContratos.IContextoMigracion;
+  IMigracion = UMigContratos.IMigracion;
 
   TMigEngine = class
   private
@@ -71,7 +51,7 @@ type
     // numéricas del origen dbo.ocalm. La UI rellena este mapa antes de
     // lanzar los dominios que clasifican caja, almacenes y movimientos.
     FAlmacenesDeposito: TStringList;
-    FItems:          TObjectList<TMigItem>;
+    FItems:          TList<IMigracion>;
     FItemsCompartidos: Boolean;  // True si FItems no nos pertenece
     FCurrentDominio:      string;
     FCurrentTotal:        Integer;
@@ -82,6 +62,7 @@ type
     FMaster:              TMigEngine;
     procedure DoLog(const sMensaje: string);
     procedure DoProgress;
+    function CrearContexto: IContextoMigracion;
   public
     constructor Create(ConSrv, ConDst: TUniConnection);
     // Constructor "clon" para hilos de trabajo. Reutiliza la lista de
@@ -106,9 +87,10 @@ type
     function TieneAlmacenDeposito(iEmpresa: Integer): Boolean;
     function EsAlmacenDeposito(iEmpresa, iAlmacen: Integer): Boolean;
 
-    procedure Registrar(const sCodigo, sNombre, sDescripcion: string;
-                        Proc: TMigProc);
-    function  Items: TObjectList<TMigItem>;
+    function Items: TList<IMigracion>;
+    function NivelDe(const sCodigo: string): Integer;
+    function NivelMaximo: Integer;
+    function EsIndependiente(const sCodigo: string): Boolean;
 
     procedure Ejecutar(const sCodigo: string; var Stats: TMigStats);
 
@@ -205,12 +187,15 @@ function DateTimeASQL(const dt: TDateTime): string;
 // Busca un valor en fza_atributos_valores por (ID_VA, AV). Devuelve
 // ID_AV o 0 si no existe. Usado para enlazar SKUs con sus colores y
 // tallas en fza_atributos_sku.
-function BuscarIdAV(Eng: TMigEngine; const sIdVa, sAv: string): Integer;
+function BuscarIdAV(
+  const Eng: IContextoMigracion;
+  const sIdVa, sAv: string): Integer;
 
 // Busca un atributo basico canonico por (ID_VA_ATB, CODIGO_ATB).
 // Devuelve ID_ATB o 0.
-function BuscarIdATB(Eng: TMigEngine; const sIdVa,
-                     sCodAtb: string): Integer;
+function BuscarIdATB(
+  const Eng: IContextoMigracion;
+  const sIdVa, sCodAtb: string): Integer;
 
 // Convierte texto a codigo canonico mayusculas+_ (sin acentos ni
 // caracteres especiales). Usado para CODIGO_ATB y para el nombre de
@@ -222,7 +207,8 @@ function NormalizarCodigo(const s: string): string;
 
 // Detecta versiones antiguas de SQL Server para que los mappers eviten
 // consultas pesadas que algunos drivers TDS no transmiten de forma fiable.
-function EsSqlServer2014OAnterior(Eng: TMigEngine): Boolean;
+function EsSqlServer2014OAnterior(
+  const Eng: IContextoMigracion): Boolean;
 
 // Convierte 'S' / 'N' del origen a booleano destino. Si el origen es null o
 // vacío, devuelve sFalse ('N' por defecto).
@@ -231,16 +217,21 @@ function BoolSN(const sValor: string; const sTrue: string = 'S';
 
 // Crea un TUniQuery preparado contra el origen y lo devuelve. Quien llame
 // es responsable de liberarlo.
-function NuevoQOrigen(Eng: TMigEngine; const sSQL: string): TUniQuery;
+function NuevoQOrigen(
+  const Eng: IContextoMigracion;
+  const sSQL: string): TUniQuery;
 
 // Ejecuta un INSERT contra destino. Lanza si falla.
-procedure EjecutarSQL(Eng: TMigEngine; const sSQL: string);
+procedure EjecutarSQL(
+  const Eng: IContextoMigracion;
+  const sSQL: string);
 
 // Crea un indice en el destino si aun no existe (idempotente, via
 // INFORMATION_SCHEMA.STATISTICS). Util para acelerar los UPDATE masivos
 // de post-proceso y evitar bloqueos largos ("Lock wait timeout").
-procedure AsegurarIndice(Eng: TMigEngine; const sTabla, sIndice,
-                         sColumnas: string);
+procedure AsegurarIndice(
+  const Eng: IContextoMigracion;
+  const sTabla, sIndice, sColumnas: string);
 
 // Helpers para columnas de auditoría
 procedure RellenarAuditoria(Q: TUniQuery; const sUsuario: string);
@@ -248,18 +239,199 @@ procedure RellenarAuditoria(Q: TUniQuery; const sUsuario: string);
 implementation
 
 uses
-  System.StrUtils, System.SyncObjs;
+  System.StrUtils, System.SyncObjs, UMigCatalogo;
+
+type
+  TContextoMigracion = class(
+    TInterfacedObject,
+    IContextoMigracion,
+    IDatosMigracion,
+    IRegistroMigracion,
+    IProgresoMigracion,
+    ICancelacionMigracion,
+    IFotosMigracion,
+    IAlmacenesMigracion)
+  private
+    FEngine: TMigEngine;
+  public
+    constructor Create(AEngine: TMigEngine);
+    function Datos: IDatosMigracion;
+    function Registro: IRegistroMigracion;
+    function Progreso: IProgresoMigracion;
+    function Cancelacion: ICancelacionMigracion;
+    function Fotos: IFotosMigracion;
+    function Almacenes: IAlmacenesMigracion;
+    function Usuario: string;
+    function ConexionOrigen: TUniConnection;
+    function ConexionDestino: TUniConnection;
+    function ContarOrigen(const sSelectCount: string): Integer;
+    procedure Log(const sMensaje: string); overload;
+    procedure Log(
+      const sFormato: string;
+      const aArgs: array of const); overload;
+    procedure LogSalto(
+      const sDominio, sCodigo, sMotivo: string;
+      const sDescOrigen: string = '';
+      const sDescDestino: string = '');
+    procedure LogError(
+      const sDominio, sCodigo, sError: string;
+      const sDescOrigen: string = '';
+      const sPista: string = '');
+    procedure EstablecerTotal(iTotal: Integer);
+    procedure Avanzar(iCount: Integer = 1);
+    function EstaCancelada: Boolean;
+    function DirectorioOrigen: string;
+    function DirectorioDestino: string;
+    function NumeroHilos: Integer;
+    function TieneDeposito(iEmpresa: Integer): Boolean;
+    function EsDeposito(iEmpresa, iAlmacen: Integer): Boolean;
+  end;
 
 // =========================================================================
 //  TMigEngine
 // =========================================================================
+
+constructor TContextoMigracion.Create(AEngine: TMigEngine);
+begin
+  inherited Create;
+  FEngine := AEngine;
+end;
+
+function TContextoMigracion.Datos: IDatosMigracion;
+begin
+  Result := Self;
+end;
+
+function TContextoMigracion.Registro: IRegistroMigracion;
+begin
+  Result := Self;
+end;
+
+function TContextoMigracion.Progreso: IProgresoMigracion;
+begin
+  Result := Self;
+end;
+
+function TContextoMigracion.Cancelacion: ICancelacionMigracion;
+begin
+  Result := Self;
+end;
+
+function TContextoMigracion.Fotos: IFotosMigracion;
+begin
+  Result := Self;
+end;
+
+function TContextoMigracion.Almacenes: IAlmacenesMigracion;
+begin
+  Result := Self;
+end;
+
+function TContextoMigracion.Usuario: string;
+begin
+  Result := FEngine.Usuario;
+end;
+
+function TContextoMigracion.ConexionOrigen: TUniConnection;
+begin
+  Result := FEngine.ConSrv;
+end;
+
+function TContextoMigracion.ConexionDestino: TUniConnection;
+begin
+  Result := FEngine.ConDst;
+end;
+
+function TContextoMigracion.ContarOrigen(
+  const sSelectCount: string): Integer;
+begin
+  Result := FEngine.ContarOrigen(sSelectCount);
+end;
+
+procedure TContextoMigracion.Log(const sMensaje: string);
+begin
+  FEngine.Log(sMensaje);
+end;
+
+procedure TContextoMigracion.Log(
+  const sFormato: string;
+  const aArgs: array of const);
+begin
+  FEngine.Log(sFormato, aArgs);
+end;
+
+procedure TContextoMigracion.LogSalto(
+  const sDominio, sCodigo, sMotivo: string;
+  const sDescOrigen, sDescDestino: string);
+begin
+  FEngine.LogSalto(
+    sDominio,
+    sCodigo,
+    sMotivo,
+    sDescOrigen,
+    sDescDestino);
+end;
+
+procedure TContextoMigracion.LogError(
+  const sDominio, sCodigo, sError: string;
+  const sDescOrigen, sPista: string);
+begin
+  FEngine.LogError(
+    sDominio,
+    sCodigo,
+    sError,
+    sDescOrigen,
+    sPista);
+end;
+
+procedure TContextoMigracion.EstablecerTotal(iTotal: Integer);
+begin
+  FEngine.SetTotal(iTotal);
+end;
+
+procedure TContextoMigracion.Avanzar(iCount: Integer);
+begin
+  FEngine.IncRow(iCount);
+end;
+
+function TContextoMigracion.EstaCancelada: Boolean;
+begin
+  Result := FEngine.IsCancelado;
+end;
+
+function TContextoMigracion.DirectorioOrigen: string;
+begin
+  Result := FEngine.DirFotosOrigen;
+end;
+
+function TContextoMigracion.DirectorioDestino: string;
+begin
+  Result := FEngine.DirFotosDestino;
+end;
+
+function TContextoMigracion.NumeroHilos: Integer;
+begin
+  Result := FEngine.HilosFotos;
+end;
+
+function TContextoMigracion.TieneDeposito(
+  iEmpresa: Integer): Boolean;
+begin
+  Result := FEngine.TieneAlmacenDeposito(iEmpresa);
+end;
+
+function TContextoMigracion.EsDeposito(
+  iEmpresa, iAlmacen: Integer): Boolean;
+begin
+  Result := FEngine.EsAlmacenDeposito(iEmpresa, iAlmacen);
+end;
 
 constructor TMigEngine.Create(ConSrv, ConDst: TUniConnection);
 begin
   inherited Create;
   FConSrv              := ConSrv;
   FConDst              := ConDst;
-  FItems               := TObjectList<TMigItem>.Create(True);
+  FItems               := CrearCatalogoMigraciones;
   FAlmacenesDeposito    := TStringList.Create;
   FItemsCompartidos    := False;
   FUsuario             := 'MIGRADOR';
@@ -471,76 +643,84 @@ begin
   DoLog(s);
 end;
 
-procedure TMigEngine.Registrar(const sCodigo, sNombre, sDescripcion: string;
-                               Proc: TMigProc);
-var
-  oItem: TMigItem;
-begin
-  oItem             := TMigItem.Create;
-  oItem.Codigo      := sCodigo;
-  oItem.Nombre      := sNombre;
-  oItem.Descripcion := sDescripcion;
-  oItem.Proc        := Proc;
-  FItems.Add(oItem);
-end;
-
-function TMigEngine.Items: TObjectList<TMigItem>;
+function TMigEngine.Items: TList<IMigracion>;
 begin
   Result := FItems;
 end;
 
+function TMigEngine.NivelDe(const sCodigo: string): Integer;
+begin
+  Result := NivelMigracion(FItems, sCodigo);
+end;
+
+function TMigEngine.NivelMaximo: Integer;
+begin
+  Result := NivelMaximoMigraciones(FItems);
+end;
+
+function TMigEngine.EsIndependiente(
+  const sCodigo: string): Boolean;
+var
+  Migracion: IMigracion;
+begin
+  Migracion := BuscarMigracion(FItems, sCodigo);
+  Result := Assigned(Migracion) and Migracion.EsIndependiente;
+end;
+
+function TMigEngine.CrearContexto: IContextoMigracion;
+begin
+  Result := TContextoMigracion.Create(Self);
+end;
+
 procedure TMigEngine.Ejecutar(const sCodigo: string; var Stats: TMigStats);
 var
-  i: Integer;
-  oItem: TMigItem;
+  Migracion: IMigracion;
+  Contexto: IContextoMigracion;
 begin
   Stats := Default(TMigStats);
-  for i := 0 to FItems.Count - 1 do
+  Migracion := BuscarMigracion(FItems, sCodigo);
+  if Assigned(Migracion) then
   begin
-    if SameText(FItems[i].Codigo, sCodigo) then
-    begin
-      oItem := FItems[i];
-      FCurrentDominio := oItem.Nombre;
-      FCurrentTotal   := -1;
-      FCurrentRow     := 0;
-      DoProgress;  // notifica a la UI "arranca dominio X"
-      Log('--- %s ---', [oItem.Nombre]);
-      FConDst.StartTransaction;
-      try
-        oItem.Proc(Self, Stats);
-        // Empujar la barra al 100% al terminar OK. Algunos mappers cuentan
-        // (COUNT) mas filas de las que su SELECT real devuelve (p.ej. un JOIN
-        // que descarta filas huerfanas), y sin esto FCurrentRow nunca alcanza
-        // FCurrentTotal: la barra se queda < 100% y el dominio parece colgado
-        // aunque haya terminado bien.
-        if not IsCancelado then
+    FCurrentDominio := Migracion.Nombre;
+    FCurrentTotal := -1;
+    FCurrentRow := 0;
+    DoProgress;
+    Log('--- %s ---', [Migracion.Nombre]);
+    FConDst.StartTransaction;
+    try
+      Contexto := CrearContexto;
+      Migracion.Ejecutar(Contexto, Stats);
+      if not IsCancelado then
+      begin
+        if FCurrentTotal > 0 then
+          FCurrentRow := FCurrentTotal
+        else
         begin
-          if FCurrentTotal > 0 then
-            FCurrentRow := FCurrentTotal
-          else
-          begin
-            FCurrentTotal := 0;
-            FCurrentRow := 0;
-          end;
-          DoProgress;
+          FCurrentTotal := 0;
+          FCurrentRow := 0;
         end;
-        FConDst.Commit;
-        Log('%s: %d leidas, %d insertadas, %d saltadas, %d errores.',
-            [oItem.Nombre, Stats.Leidas, Stats.Insertadas,
-             Stats.Saltadas, Stats.Errores]);
-      except
-        on E: Exception do
-        begin
-          FConDst.Rollback;
-          Log('ERROR en %s: %s', [oItem.Nombre, E.Message]);
-          raise;
-        end;
+        DoProgress;
       end;
-      Exit;
+      FConDst.Commit;
+      Log(
+        '%s: %d leidas, %d insertadas, %d saltadas, %d errores.',
+        [Migracion.Nombre, Stats.Leidas, Stats.Insertadas,
+         Stats.Saltadas, Stats.Errores]);
+    except
+      on E: Exception do
+      begin
+        FConDst.Rollback;
+        Log('ERROR en %s: %s', [Migracion.Nombre, E.Message]);
+        raise;
+      end;
     end;
   end;
-  raise Exception.CreateFmt('No existe migración registrada con código "%s"',
-                            [sCodigo]);
+  if not Assigned(Migracion) then
+  begin
+    raise Exception.CreateFmt(
+      'No existe migración registrada con código "%s"',
+      [sCodigo]);
+  end;
 end;
 
 // =========================================================================
@@ -669,12 +849,14 @@ end;
 //  Lookups
 // =========================================================================
 
-function BuscarIdAV(Eng: TMigEngine; const sIdVa, sAv: string): Integer;
+function BuscarIdAV(
+  const Eng: IContextoMigracion;
+  const sIdVa, sAv: string): Integer;
 var qLook: TUniQuery;
 begin
   qLook := TUniQuery.Create(nil);
   try
-    qLook.Connection := Eng.ConDst;
+    qLook.Connection := Eng.Datos.ConexionDestino;
     qLook.SQL.Text   :=
       // ORDER BY ID_AV: con valores duplicados (mismo ID_VA+AV, p.ej. tallas
       // del lote "limpio" y del "deducido") elige SIEMPRE el MIN(ID_AV) como
@@ -694,13 +876,14 @@ begin
   end;
 end;
 
-function BuscarIdATB(Eng: TMigEngine; const sIdVa,
-                     sCodAtb: string): Integer;
+function BuscarIdATB(
+  const Eng: IContextoMigracion;
+  const sIdVa, sCodAtb: string): Integer;
 var qLook: TUniQuery;
 begin
   qLook := TUniQuery.Create(nil);
   try
-    qLook.Connection := Eng.ConDst;
+    qLook.Connection := Eng.Datos.ConexionDestino;
     qLook.SQL.Text   :=
       'SELECT ID_ATB FROM fza_atributos_basicos ' +
       'WHERE ID_VA_ATB = :v AND CODIGO_ATB = :c LIMIT 1';
@@ -737,7 +920,8 @@ begin
   Result := UpperCase(Trim(s));
 end;
 
-function EsSqlServer2014OAnterior(Eng: TMigEngine): Boolean;
+function EsSqlServer2014OAnterior(
+  const Eng: IContextoMigracion): Boolean;
 var
   Q: TUniQuery;
   iVersionMayor: Integer;
@@ -768,25 +952,30 @@ begin
     Result := sFalse;
 end;
 
-function NuevoQOrigen(Eng: TMigEngine; const sSQL: string): TUniQuery;
+function NuevoQOrigen(
+  const Eng: IContextoMigracion;
+  const sSQL: string): TUniQuery;
 begin
   Result            := TUniQuery.Create(nil);
-  Result.Connection := Eng.ConSrv;
+  Result.Connection := Eng.Datos.ConexionOrigen;
   Result.SQL.Text   := sSQL;
 end;
 
-procedure EjecutarSQL(Eng: TMigEngine; const sSQL: string);
+procedure EjecutarSQL(
+  const Eng: IContextoMigracion;
+  const sSQL: string);
 begin
-  Eng.ConDst.ExecSQL(sSQL);
+  Eng.Datos.ConexionDestino.ExecSQL(sSQL);
 end;
 
-procedure AsegurarIndice(Eng: TMigEngine; const sTabla, sIndice,
-                         sColumnas: string);
+procedure AsegurarIndice(
+  const Eng: IContextoMigracion;
+  const sTabla, sIndice, sColumnas: string);
 var q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text :=
       'SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS ' +
       'WHERE TABLE_SCHEMA = DATABASE() ' +
@@ -799,9 +988,14 @@ begin
       q.Close;
       // DDL en MySQL hace commit implicito; el llamante debe invocarlo
       // FUERA de una transaccion en curso (en autocommit).
-      Eng.ConDst.ExecSQL(Format('ALTER TABLE `%s` ADD INDEX `%s` (%s)',
-        [sTabla, sIndice, sColumnas]));
-      Eng.Log(Format('  indice %s creado en %s.', [sIndice, sTabla]));
+      Eng.Datos.ConexionDestino.ExecSQL(
+        Format(
+          'ALTER TABLE `%s` ADD INDEX `%s` (%s)',
+          [sTabla, sIndice, sColumnas]));
+      Eng.Registro.Log(
+        Format(
+          '  indice %s creado en %s.',
+          [sIndice, sTabla]));
     end;
   finally
     q.Free;

@@ -723,7 +723,10 @@ uses
   inLibUser,
   inLibVerifactu,
   inLibEmisionFiscal,
-  inLibVentasWsCola,
+  inLibFacturasMovimientos,
+  inLibFacturasConsolidacion,
+  inLibFacturasReapertura,
+  inLibFacturasComposicion,
   inMtoModalFacturarTicket,
   inLibLog,
   inLibDir,
@@ -2079,6 +2082,8 @@ begin
   inherited;
   dmmFacturas := TdmFacturas(AsegurarDataModuleDocumento(
     Self, tdmDataModule, TdmFacturas));
+  dmmFacturas.ConfigurarServicios(
+    CrearServiciosFactura(ConexionPrincipal));
   dmmFacturas.OnResultadoOperacion := MostrarResultadoOperacion;
   dmmFacturas.OnResultadoBorrado := MostrarResultadoBorrado;
   dmmFacturas.OnAdvertencia := MostrarAdvertenciaFactura;
@@ -2273,14 +2278,16 @@ end;
 
 procedure TfrmMtoFacturasBase.btnConsolidarClick(Sender: TObject);
 var
+  bConsolidada: Boolean;
   sSerie: string;
   sNumero: string;
-  sFase: string;
-  Solicitud: TSolicitudEmisionFiscal;
-  Resultado: TResultadoEmisionFiscal;
+  Resultado: TResultadoConsolidacionFactura;
+  Validacion: TResultadoOperacionFactura;
+  Servicio: IServicioConsolidacionFactura;
+  ServicioEmision: IServicioEmisionFiscal;
+  ServicioMovimientos: IServicioMovimientosFactura;
 begin
-  // Lanzamiento manual de una factura en borrador. La fase final depende
-  // del modo fiscal: SIN, VERIFACTU o NO_VERIFACTU.
+  bConsolidada := False;
   if (dsTablaG.DataSet = nil) or
      (not dsTablaG.DataSet.Active) or
      dsTablaG.DataSet.IsEmpty then
@@ -2290,43 +2297,52 @@ begin
   end;
   sSerie  := dsTablaG.DataSet.FieldByName(fseriefac).AsString;
   sNumero := dsTablaG.DataSet.FieldByName(fnrofac).AsString;
-  sFase   := dsTablaG.DataSet.FieldByName(ffasefac).AsString;
-  if (sFase <> '') and (not SameText(sFase, 'BORRADOR')) then
-    ShowMessage(Format(SErrorBorradorYaLanzadoFiscalmente,
-                       [sSerie, sNumero, sFase]))
-  else if ContarHijosActivos = 0 then
-    ShowMessage(SErrorBorradorSinLineasLanzar)
-  else if SameText(dsTablaG.DataSet.FieldByName(ftipofac).AsString,
-                   'NORMAL') and
-          (Trim(dsTablaG.DataSet.FieldByName(
-                  'NIF_CLIENTE_FAC').AsString) = '') then
-    ShowMessage(SErrorBorradorNormalSinNif)
+  ServicioEmision := CrearServicioEmisionFiscal(
+    ParametrosApp,
+    ParametrosCaja,
+    ConexionPrincipal);
+  ServicioMovimientos :=
+    TServicioMovimientosFactura.Create(ConexionPrincipal);
+  Servicio := CrearServicioConsolidacionFactura(
+    ConexionPrincipal,
+    ServicioEmision,
+    ServicioMovimientos);
+  Validacion := Servicio.Validar(sSerie, sNumero);
+  if not Validacion.Exito then
+    ShowMessage(Validacion.Mensaje)
   else if MessageDlg(Format(SPreguntaLanzarBorradorFiscal,
                            [sSerie, sNumero]), mtConfirmation,
                      [mbYes, mbNo], 0) =
           mrYes then
   begin
-    Solicitud := TSolicitudEmisionFiscal.ParaConsolidacion(
-      sSerie,
-      sNumero,
-      IdentidadSesion.Usuario);
-    Resultado := EmitirFiscalmente(Solicitud);
-    dsTablaG.DataSet.Refresh;
-    // Archivado del PDF recien lanzado en fza_facturas.PDF_FAC. En modo
-    // VERIFACTU la fase es VERIFACTU_PENDIENTE pero el QR tributario ya
-    // es imprimible; una reimpresion posterior refresca el blob.
-    GenerarPdfFacturaConsolidada(sSerie, sNumero);
-    ShowMessage(Resultado.Mensaje);
+    try
+      Resultado := Servicio.Consolidar(
+        sSerie,
+        sNumero,
+        IdentidadSesion.Usuario);
+      bConsolidada := True;
+    except
+      on E: EConsolidacionFactura do
+        ShowMessage(E.Message);
+    end;
+    if bConsolidada then
+    begin
+      dsTablaG.DataSet.Refresh;
+      if dmmFacturas.unqryMovimientosFac.Active then
+        dmmFacturas.unqryMovimientosFac.Refresh;
+      // El PDF archivado es presentación y queda fuera del caso de uso.
+      GenerarPdfFacturaConsolidada(sSerie, sNumero);
+      ShowMessage(Resultado.MensajeFiscal);
+    end;
   end;
 end;
 
 procedure TfrmMtoFacturasBase.btnVolverBorradorClick(Sender: TObject);
 var
-  Qry:     TUniQuery;
-  sSerie:  string;
+  sSerie: string;
   sNumero: string;
-  sFase:   string;
-  sEstado: string;
+  Validacion: TResultadoOperacionFactura;
+  Servicio: IServicioReaperturaBorrador;
 begin
   // Deshace un lanzamiento que la AEAT aún NO ha aceptado (p. ej. NIF
   // erróneo detectado tras Consolidar): aparca la fila ALTA de la cola
@@ -2343,99 +2359,28 @@ begin
   end;
   sSerie  := dsTablaG.DataSet.FieldByName(fseriefac).AsString;
   sNumero := dsTablaG.DataSet.FieldByName(fnrofac).AsString;
-  sFase   := dsTablaG.DataSet.FieldByName(ffasefac).AsString;
-  if dsTablaG.DataSet.FieldByName(fescon).AsString = 'S' then
-    ShowMessage(Format(SErrorBorradorConsolidadoNoReabrible,
-                       [sSerie, sNumero]))
-  else if (sFase = '') or SameText(sFase, 'BORRADOR') then
-    ShowMessage(SInfoBorradorYaEnBorrador)
+  Servicio := CrearServicioReaperturaBorrador(
+    ParametrosApp,
+    ParametrosCaja,
+    ConexionPrincipal);
+  Validacion := Servicio.Validar(sSerie, sNumero);
+  if not Validacion.Exito then
+    ShowMessage(Validacion.Mensaje)
   else if MessageDlg(Format(SPreguntaDevolverBorrador, [sSerie, sNumero]),
                      mtConfirmation, [mbYes, mbNo], 0) =
           mrYes then
   begin
-    Qry := TUniQuery.Create(nil);
     try
-      ConexionPrincipal.StartTransaction;
-      try
-        Qry.Connection := ConexionPrincipal;
-        // Bloquear la fila ALTA de la cola: si el hilo la está
-        // enviando (PROCESANDO) o ya la envió (ENVIADA) no se puede
-        // deshacer
-        Qry.SQL.Text :=
-          ' SELECT ESTADO_VFCOLA ' +
-          '   FROM fza_verifactu_cola ' +
-          '  WHERE SERIE_FAC_VFCOLA  = :SERIE ' +
-          '    AND NUMERO_FAC_VFCOLA = :NUMERO ' +
-          '    AND TIPO_OPERACION_VFCOLA = ''ALTA'' ' +
-          '  FOR UPDATE';
-        Qry.ParamByName('SERIE').AsString  := sSerie;
-        Qry.ParamByName('NUMERO').AsString := sNumero;
-        Qry.Open;
-        if Qry.IsEmpty then
-          sEstado := ''
-        else
-          sEstado := Qry.FieldByName('ESTADO_VFCOLA').AsString;
-        Qry.Close;
-        if SameText(sEstado, 'ENVIADA') then
-          raise Exception.Create(SErrorAltaAeatAceptadaNoReabrible);
-        if SameText(sEstado, 'PROCESANDO') then
-          raise Exception.Create(SErrorBorradorEnProcesoNoReabrible);
-        if sEstado <> '' then
-        begin
-          // Aparcar: ERROR con intentos al tope para que el hilo no
-          // la reprocese. Un Consolidar posterior la reactiva
-          // (ON DUPLICATE la devuelve a PENDIENTE con intentos a 0).
-          Qry.SQL.Text :=
-            ' UPDATE fza_verifactu_cola ' +
-            '    SET ESTADO_VFCOLA = ''ERROR'', ' +
-            '        CONTADOR_INTENTOS_VFCOLA = 999999, ' +
-            '        MENSAJE_ERROR_VFCOLA = ''Lanzamiento anulado ' +
-            'por el usuario: borrador devuelto a BORRADOR'', ' +
-            '        INSTANTE_MODIF = NOW(), ' +
-            '        USUARIO_MODIF  = :USUARIO ' +
-            '  WHERE SERIE_FAC_VFCOLA  = :SERIE ' +
-            '    AND NUMERO_FAC_VFCOLA = :NUMERO ' +
-            '    AND TIPO_OPERACION_VFCOLA = ''ALTA''';
-          Qry.ParamByName('SERIE').AsString   := sSerie;
-          Qry.ParamByName('NUMERO').AsString  := sNumero;
-          Qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
-          Qry.Execute;
-        end;
-        Qry.SQL.Text :=
-          ' UPDATE fza_facturas ' +
-          '    SET FASE_FAC = ''BORRADOR'', ' +
-          '        INSTANTE_MODIF = NOW(), ' +
-          '        USUARIO_MODIF  = :USUARIO ' +
-          '  WHERE SERIE_FAC  = :SERIE ' +
-          '    AND NUMERO_FAC = :NUMERO ' +
-          '    AND ESCONSOLIDADA_FAC <> ''S''';
-        Qry.ParamByName('SERIE').AsString   := sSerie;
-        Qry.ParamByName('NUMERO').AsString  := sNumero;
-        Qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
-        Qry.Execute;
-        ConexionPrincipal.Commit;
-      except
-        on E: Exception do
-        begin
-          ConexionPrincipal.Rollback;
-          ShowMessage(E.Message);
-          Abort;
-        end;
-      end;
-    finally
-      FreeAndNil(Qry);
+      Servicio.Reabrir(
+        sSerie,
+        sNumero,
+        IdentidadSesion.Usuario);
+      dsTablaG.DataSet.Refresh;
+      ShowMessage(Format(SInfoBorradorReabierto, [sSerie, sNumero]));
+    except
+      on E: EReaperturaBorrador do
+        ShowMessage(E.Message);
     end;
-    RegistrarEventoVerifactu(ParametrosApp, ConexionPrincipal,
-      IdentidadSesion.Usuario,
-      cEventoVerifactuInfo,
-      'Lanzamiento anulado: borrador devuelto a BORRADOR', '',
-      sSerie, sNumero);
-    TVentasWsCola.RegistrarEventoSeguro(
-      ParametrosCaja,
-      ConexionPrincipal,
-      IdentidadSesion.Usuario, 'VENTA_REABIERTA', sSerie, sNumero);
-    dsTablaG.DataSet.Refresh;
-    ShowMessage(Format(SInfoBorradorReabierto, [sSerie, sNumero]));
   end;
 end;
 
@@ -3040,26 +2985,13 @@ begin
                         [sLineasSinSku]),
                  mtWarning, [mbYes, mbNo], 0) <> mrYes) then
     Exit;
-  with dmmFacturas do
-  begin
-    if ((unqryTablaG.State = dsInsert) or
-        (unqryTablaG.State = dsEdit)) then
-    begin
-      unqryTablaG.Post;
-      //unqryTablaG.Refresh;
-    end;
-    if ((dsLinFac.Dataset.State = dsInsert) or
-        (dsLinFac.Dataset.State = dsEdit)) then
-    begin
-      dsLinFac.Dataset.Post;
-    end;
-    if ((dsRecibos.Dataset.State = dsInsert) or
-        (dsRecibos.Dataset.State = dsEdit)) then
-    begin
-      dsRecibos.Dataset.Post;
-      dsRecibos.Dataset.Refresh;
-    end;
-  end;
+  inLibFacturas.GuardarCambiosPendientesFactura(
+    dmmFacturas.unqryTablaG.Connection,
+    dmmFacturas.unqryTablaG,
+    dmmFacturas.dsLinFac.DataSet,
+    dmmFacturas.dsRecibos.DataSet);
+  if dmmFacturas.dsRecibos.DataSet.Active then
+    dmmFacturas.dsRecibos.DataSet.Refresh;
 end;
 
 procedure TfrmMtoFacturasBase.tvLineasFacturaKeyDown(Sender: TObject;
@@ -3197,7 +3129,10 @@ begin
     GridRecalc(ConexionPrincipal, Sender,
                tvLineasFactura,
                dmmFacturas.unqryLinFac,
-               dmmFacturas.unqryTablaG);
+               dmmFacturas.unqryTablaG,
+               nil,
+               arfSoloLinea);
+    dmmFacturas.MarcarRecalculoFacturaPendiente;
   except
     on E: EInvalidOperation do
       // Editor inplace de cxGrid sin Parent durante transicion de celda.

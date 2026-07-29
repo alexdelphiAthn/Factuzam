@@ -43,7 +43,7 @@ uses
   inLibAuditoriaDatosIntf, inLibMonitorSQLIntf,
   inLibContextoSesionIntf, inLibFiltrosGuardadosIntf,
   inLibPerfilesUsuarioIntf, inLibParametrosIntf,
-  inLibInformesGuiasCache;
+  inLibInformesGuiasCache, inLibTraduccionesIntf;
 
 type
   TEnterAsTabEstado = record
@@ -61,7 +61,8 @@ type
     IProveedorFiltrosGuardados,
     IProveedorPerfilesUsuario,
     IProveedorParametros,
-    IProveedorInformesGuiasCache
+    IProveedorInformesGuiasCache,
+    IProveedorTraducciones
   )
     Localizer1: TcxLocalizer;
     jvntrstb1: TJvEnterAsTab;
@@ -77,6 +78,7 @@ type
     FParametrosApp: IParametrosAplicacion;
     FParametrosCaja: IParametrosCaja;
     FInformesGuiasCache: IInformesGuiasCache;
+    FTraducciones: IServicioTraducciones;
     FEnterAsTabEstados: array of TEnterAsTabEstado;
     FEnterAsTabTemporalActivo: Boolean;
     function GetPermisos: IPermisosAplicacion;
@@ -91,6 +93,7 @@ type
     function GetParametrosApp: IParametrosAplicacion;
     function GetParametrosCaja: IParametrosCaja;
     function GetInformesGuiasCache: IInformesGuiasCache;
+    function GetTraducciones: IServicioTraducciones;
     function GetConexionPrincipal: TUniConnection;
     procedure HeredarConexiones(AOwner: TComponent);
     procedure HeredarAuditoriaDatos(AOwner: TComponent);
@@ -100,6 +103,7 @@ type
     procedure HeredarPerfilesUsuario(AOwner: TComponent);
     procedure HeredarParametros(AOwner: TComponent);
     procedure HeredarInformesGuiasCache(AOwner: TComponent);
+    procedure HeredarTraducciones(AOwner: TComponent);
     procedure GuardarEnterAsTabDe(AOwner: TComponent);
     function EnterAsTabGuardado(AComp: TJvEnterAsTab): Boolean;
   protected
@@ -136,6 +140,8 @@ type
       const AParametrosCaja: IParametrosCaja);
     procedure AsignarInformesGuiasCache(
       const AInformesGuiasCache: IInformesGuiasCache);
+    procedure AsignarTraducciones(
+      const ATraducciones: IServicioTraducciones);
     // Articulo/sku del registro/linea en foco, para la consulta de stock
     // global (Ctrl+U, capturado en inMtoPrincipal). Por defecto vacio; los
     // formularios con articulo activo lo sobreescriben.
@@ -158,6 +164,8 @@ type
     property ParametrosCaja: IParametrosCaja read GetParametrosCaja;
     property InformesGuiasCache: IInformesGuiasCache
       read GetInformesGuiasCache;
+    property Traducciones: IServicioTraducciones
+      read GetTraducciones;
     property ConexionPrincipal: TUniConnection read GetConexionPrincipal;
   end;
 
@@ -190,6 +198,7 @@ begin
   HeredarPerfilesUsuario(AOwner);
   HeredarParametros(AOwner);
   HeredarInformesGuiasCache(AOwner);
+  HeredarTraducciones(AOwner);
   inherited Create(AOwner);
 end;
 
@@ -206,6 +215,7 @@ begin
   HeredarPerfilesUsuario(AOwner);
   HeredarParametros(AOwner);
   HeredarInformesGuiasCache(AOwner);
+  HeredarTraducciones(AOwner);
   inherited Create(AOwner);
 end;
 
@@ -358,6 +368,23 @@ begin
     FInformesGuiasCache := Proveedor.InformesGuiasCache;
 end;
 
+procedure TfrmBase.HeredarTraducciones(AOwner: TComponent);
+var
+  Proveedor: IProveedorTraducciones;
+begin
+  FTraducciones := nil;
+  if Supports(AOwner, IProveedorTraducciones, Proveedor) then
+    FTraducciones := Proveedor.Traducciones;
+  if not Assigned(FTraducciones) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorTraducciones,
+       Proveedor) then
+    FTraducciones := Proveedor.Traducciones;
+end;
+
 procedure TfrmBase.AsignarPermisos(
   const APermisos: IPermisosAplicacion);
 begin
@@ -412,6 +439,12 @@ procedure TfrmBase.AsignarInformesGuiasCache(
   const AInformesGuiasCache: IInformesGuiasCache);
 begin
   FInformesGuiasCache := AInformesGuiasCache;
+end;
+
+procedure TfrmBase.AsignarTraducciones(
+  const ATraducciones: IServicioTraducciones);
+begin
+  FTraducciones := ATraducciones;
 end;
 
 function TfrmBase.GetPermisos: IPermisosAplicacion;
@@ -478,6 +511,11 @@ begin
   Result := FInformesGuiasCache;
 end;
 
+function TfrmBase.GetTraducciones: IServicioTraducciones;
+begin
+  Result := FTraducciones;
+end;
+
 function TfrmBase.GetConexionPrincipal: TUniConnection;
 begin
   Result := nil;
@@ -513,6 +551,8 @@ begin
   for i := 0 to ComponentCount - 1 do
     if Components[i] is TcxLabel then
       TcxLabel(Components[i]).Transparent := True;
+  if Assigned(FTraducciones) then
+    FTraducciones.Aplicar(Self);
 end;
 
 function TfrmBase.EnterAsTabGuardado(AComp: TJvEnterAsTab): Boolean;

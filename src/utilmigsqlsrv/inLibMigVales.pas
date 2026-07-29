@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibMigVales                                                 }
 {    Tipo:       Librería de migración (sin formulario)                        }
@@ -22,13 +22,13 @@
 unit inLibMigVales;
 interface
 uses
-  UMigEngine;
-procedure MigrarVales(Eng: TMigEngine; var Stats: TMigStats);
+  UMigEngine, UMigCatalogo;
+procedure MigrarVales(const Eng: IContextoMigracion; var Stats: TMigStats);
 implementation
 uses
   System.SysUtils,
   Data.DB, Uni;
-procedure MigrarVales(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarVales(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cSel =
     'SELECT v.Empresa, v.Almacen, v.Caja, v.Operacion, v.Fecha, ' +
@@ -120,12 +120,12 @@ begin
   qSrc := NuevoQOrigen(Eng, cSel);
   qSrc.UniDirectional := True;
   try
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text   := cIns;
-    qPago.Connection := Eng.ConDst;
+    qPago.Connection := Eng.Datos.ConexionDestino;
     // Rehacer los apuntes de vales de este migrador permite corregir las
     // filas antiguas, que se grababan con serie vacia antes que las ventas.
-    qLimpiarPago.Connection := Eng.ConDst;
+    qLimpiarPago.Connection := Eng.Datos.ConexionDestino;
     qLimpiarPago.SQL.Text :=
       'DELETE p FROM fza_caja_pagos p ' +
       'INNER JOIN fza_caja_vales v ON v.CODIGO_VL = p.REFERENCIA_FACPAG ' +
@@ -139,13 +139,13 @@ begin
     qPago.ParamByName('um').AsString := Eng.Usuario;
     qPago.ExecSQL;
     qPago.SQL.Text := cInsPago;
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.occajvale WHERE ISNULL(ValeEmitido, 0) <> 0'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       iEmp  := qSrc.FieldByName('Empresa').AsInteger;
       iAlm  := qSrc.FieldByName('Almacen').AsInteger;
       iCaja := qSrc.FieldByName('Caja').AsInteger;
@@ -219,7 +219,7 @@ begin
         begin
           bValeGrabado := False;
           Inc(Stats.Errores);
-          Eng.LogError('vale', sCod, E.Message, '',
+          Eng.Registro.LogError('vale', sCod, E.Message, '',
             'requiere occajvale en el origen');
         end;
       end;
@@ -240,7 +240,7 @@ begin
           on E: Exception do
           begin
             Inc(Stats.Errores);
-            Eng.LogError('pago_vale', sCod, E.Message, '',
+            Eng.Registro.LogError('pago_vale', sCod, E.Message, '',
               'requiere la forma de pago VALE en el destino');
           end;
         end;
@@ -254,4 +254,13 @@ begin
     qSrc.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'vales',
+    'Vales de tienda (occajvale)',
+    'dbo.occajvale → vales y apuntes de pago',
+    ['ventas'],
+    MigrarVales);
+
 end.

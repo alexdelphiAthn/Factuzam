@@ -68,6 +68,9 @@ uses
 
 implementation
 
+var
+  PerfilesLiteralesActivos: Boolean = False;
+
 function SanitizeFileName(const AFileName: string;
                           const AReplacement: Char = '_'): string;
 const
@@ -380,7 +383,8 @@ var sName, sCompName:string;
     oCon:TComponent;
 begin
   sName := oControl.Name;
-  for i := 0 to oControl.ComponentCount - 1 do
+  if PerfilesLiteralesActivos then
+    for i := 0 to oControl.ComponentCount - 1 do
   begin
     oCon := oControl.Components[i];
     sCompName := oCon.Name;
@@ -602,7 +606,8 @@ var
   sValue, sCompName, sName:string;
 begin
   sName := oControl.Name;
-  for i := 0 to oControl.ComponentCount - 1 do
+  if PerfilesLiteralesActivos then
+    for i := 0 to oControl.ComponentCount - 1 do
   begin
     sCompName := oControl.Components[i].Name;
     if (StartsText('lbl', sCompName) Or

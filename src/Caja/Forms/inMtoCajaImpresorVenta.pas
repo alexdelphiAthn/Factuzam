@@ -49,7 +49,7 @@ implementation
 uses
   System.SysUtils, Vcl.Forms, UniDataFacturas, inMtoModalImpFac,
   inLibGenerarTicket, inLibGenerarTicketBD, inLibGenerarTicketCaja,
-  inLibDir;
+  inLibDir, inLibFacturasComposicion;
 
 constructor TImpresorVentaVcl.Create(
   APropietario: TComponent;
@@ -74,6 +74,8 @@ var
   sRutaPdf: string;
 begin
   DatosFactura := TdmFacturas.Create(FPropietario);
+  DatosFactura.ConfigurarServicios(
+    CrearServiciosFactura(FConexion));
   Formulario := nil;
   try
     Formulario := TfrmPrintFac.Create(Application);

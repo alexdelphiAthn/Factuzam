@@ -32,13 +32,19 @@ type
     procedure Descuento_ReparteYCuadraElUltimoCentimo;
     [Test]
     procedure Cierre_GrabaAntesDeImprimir;
+    [Test]
+    procedure Rectificacion_DiferenciasCopiaClienteYNiegaLineas;
+    [Test]
+    procedure Rectificacion_SustitutivaMantieneLineasPositivas;
   end;
 
 implementation
 
 uses
-  System.Classes, inLibCajaTipos, inLibCajaVentaIntf,
-  inLibCajaDescuentos, inLibCajaCierreVenta;
+  System.Classes, Data.DB, Datasnap.DBClient,
+  inLibCajaTipos, inLibCajaVentaIntf,
+  inLibCajaDescuentos, inLibCajaCierreVenta,
+  inLibCajaRectificacion;
 
 type
   TGrabadorVentaFalso = class(
@@ -76,6 +82,151 @@ type
     property GrabadoAntesDeImprimir: Boolean
       read FGrabadoAntesDeImprimir;
   end;
+  TResultadoConsultaCajaFalso = class(
+    TInterfacedObject,
+    IResultadoConsultaCaja)
+  private
+    FDataSet: TDataSet;
+  public
+    constructor Create(ADataSet: TDataSet);
+    destructor Destroy; override;
+    function DataSet: TDataSet;
+  end;
+  TRepositorioConsultasCajaFalso = class(
+    TInterfacedObject,
+    IRepositorioConsultasCaja)
+  private
+    function CrearCabecera: TClientDataSet;
+    function CrearLineas: TClientDataSet;
+  public
+    function ConsultarStock(
+      const ACodigoArticulo: string): IResultadoConsultaCaja;
+    function ConsultarClientes: IResultadoConsultaCaja;
+    function ConsultarEmpleados: IResultadoConsultaCaja;
+    function BuscarEmpleado(
+      const ATexto: string;
+      out AEmpleado: TEmpleadoCaja): Boolean;
+    function ObtenerCliente(
+      const ACodigo: string;
+      out ACliente: TClienteCaja): Boolean;
+    function ConsultarCabeceraFactura(
+      const ASerie, ANumero: string): IResultadoConsultaCaja;
+    function ConsultarLineasFactura(
+      const ASerie, ANumero: string): IResultadoConsultaCaja;
+  end;
+
+constructor TResultadoConsultaCajaFalso.Create(
+  ADataSet: TDataSet);
+begin
+  inherited Create;
+  FDataSet := ADataSet;
+end;
+
+destructor TResultadoConsultaCajaFalso.Destroy;
+begin
+  FDataSet.Free;
+  inherited;
+end;
+
+function TResultadoConsultaCajaFalso.DataSet: TDataSet;
+begin
+  Result := FDataSet;
+end;
+
+function TRepositorioConsultasCajaFalso.CrearCabecera:
+  TClientDataSet;
+begin
+  Result := TClientDataSet.Create(nil);
+  Result.FieldDefs.Add(
+    'CODIGO_CLI_FAC',
+    ftString,
+    20);
+  Result.FieldDefs.Add(
+    'RAZON_SOCIAL_CLIENTE_FAC',
+    ftString,
+    100);
+  Result.CreateDataSet;
+  Result.Append;
+  Result.FieldByName('CODIGO_CLI_FAC').AsString := 'C1';
+  Result.FieldByName(
+    'RAZON_SOCIAL_CLIENTE_FAC').AsString :=
+    'Cliente original';
+  Result.Post;
+end;
+
+function TRepositorioConsultasCajaFalso.CrearLineas:
+  TClientDataSet;
+begin
+  Result := TClientDataSet.Create(nil);
+  Result.FieldDefs.Add(
+    'LINEA_FACLIN',
+    ftInteger);
+  Result.FieldDefs.Add(
+    'CANTIDAD_FACLIN',
+    ftFloat);
+  Result.FieldDefs.Add(
+    'TOTAL_FACLIN',
+    ftCurrency);
+  Result.FieldDefs.Add(
+    'TOTAL_FAC_SIVA_FACLIN',
+    ftCurrency);
+  Result.CreateDataSet;
+  Result.Append;
+  Result.FieldByName('LINEA_FACLIN').AsInteger := 1;
+  Result.FieldByName('CANTIDAD_FACLIN').AsFloat := 2;
+  Result.FieldByName('TOTAL_FACLIN').AsCurrency := 24.2;
+  Result.FieldByName(
+    'TOTAL_FAC_SIVA_FACLIN').AsCurrency := 20;
+  Result.Post;
+end;
+
+function TRepositorioConsultasCajaFalso.ConsultarStock(
+  const ACodigoArticulo: string): IResultadoConsultaCaja;
+begin
+  Result := nil;
+end;
+
+function TRepositorioConsultasCajaFalso.ConsultarClientes:
+  IResultadoConsultaCaja;
+begin
+  Result := nil;
+end;
+
+function TRepositorioConsultasCajaFalso.ConsultarEmpleados:
+  IResultadoConsultaCaja;
+begin
+  Result := nil;
+end;
+
+function TRepositorioConsultasCajaFalso.BuscarEmpleado(
+  const ATexto: string;
+  out AEmpleado: TEmpleadoCaja): Boolean;
+begin
+  AEmpleado := Default(TEmpleadoCaja);
+  Result := False;
+end;
+
+function TRepositorioConsultasCajaFalso.ObtenerCliente(
+  const ACodigo: string;
+  out ACliente: TClienteCaja): Boolean;
+begin
+  ACliente := Default(TClienteCaja);
+  Result := False;
+end;
+
+function TRepositorioConsultasCajaFalso.ConsultarCabeceraFactura(
+  const ASerie, ANumero: string): IResultadoConsultaCaja;
+begin
+  Result := TResultadoConsultaCajaFalso.Create(
+    CrearCabecera);
+end;
+
+function TRepositorioConsultasCajaFalso.ConsultarLineasFactura(
+  const ASerie, ANumero: string): IResultadoConsultaCaja;
+begin
+  Result := TResultadoConsultaCajaFalso.Create(
+    CrearLineas);
+end;
 
 function TGrabadorVentaFalso.GrabarVenta(
   const ASolicitud: TSolicitudGrabacionVenta;
@@ -127,6 +278,36 @@ procedure TImpresorVentaFalso.GenerarPdfRespaldo(
   const ASolicitud: TSolicitudImpresionVenta;
   ARutasPdf: TStrings);
 begin
+end;
+
+procedure CrearDatosRectificacionDestino(
+  out ACabecera, ALineas: TClientDataSet);
+begin
+  ACabecera := TClientDataSet.Create(nil);
+  ALineas := TClientDataSet.Create(nil);
+  ACabecera.FieldDefs.Add(
+    'CODIGO_CLI_FAC',
+    ftString,
+    20);
+  ACabecera.FieldDefs.Add(
+    'RAZON_SOCIAL_CLIENTE_FAC',
+    ftString,
+    100);
+  ACabecera.CreateDataSet;
+  ACabecera.Append;
+  ALineas.FieldDefs.Add(
+    'LINEA_FACLIN',
+    ftInteger);
+  ALineas.FieldDefs.Add(
+    'CANTIDAD_FACLIN',
+    ftFloat);
+  ALineas.FieldDefs.Add(
+    'TOTAL_FACLIN',
+    ftCurrency);
+  ALineas.FieldDefs.Add(
+    'TOTAL_FAC_SIVA_FACLIN',
+    ftCurrency);
+  ALineas.CreateDataSet;
 end;
 
 procedure TPruebasCajaVenta.Stock_SkuInexistenteBloquea;
@@ -223,6 +404,97 @@ begin
   Assert.AreEqual('VALE-1', Resultado.CodigoValeGenerado);
   Assert.IsTrue(ImpresorObjeto.Impreso);
   Assert.IsTrue(ImpresorObjeto.GrabadoAntesDeImprimir);
+end;
+
+procedure TPruebasCajaVenta.
+  Rectificacion_DiferenciasCopiaClienteYNiegaLineas;
+var
+  Repositorio: IRepositorioConsultasCaja;
+  Servicio: IServicioRectificacionCaja;
+  Cabecera: TClientDataSet;
+  Lineas: TClientDataSet;
+  Resultado: TResultadoRectificacionCaja;
+begin
+  Repositorio := TRepositorioConsultasCajaFalso.Create;
+  Servicio := TServicioRectificacionCaja.Create(
+    Repositorio);
+  CrearDatosRectificacionDestino(
+    Cabecera,
+    Lineas);
+  try
+    Resultado := Servicio.Cargar(
+      'T',
+      '1',
+      trcDiferencias,
+      tmrMantenerOriginales,
+      Cabecera,
+      Lineas);
+    Assert.AreEqual(
+      'C1',
+      Cabecera.FieldByName(
+        'CODIGO_CLI_FAC').AsString);
+    Assert.AreEqual(
+      'Cliente original',
+      Cabecera.FieldByName(
+        'RAZON_SOCIAL_CLIENTE_FAC').AsString);
+    Assert.AreEqual(
+      -2.0,
+      Lineas.FieldByName(
+        'CANTIDAD_FACLIN').AsFloat,
+      0.0001);
+    Assert.AreEqual(
+      -24.2,
+      Double(
+        Lineas.FieldByName(
+          'TOTAL_FACLIN').AsCurrency),
+      0.0001);
+    Assert.AreEqual(
+      'POR DIFERENCIAS',
+      Resultado.DescripcionTipo);
+  finally
+    Cabecera.Free;
+    Lineas.Free;
+  end;
+end;
+
+procedure TPruebasCajaVenta.
+  Rectificacion_SustitutivaMantieneLineasPositivas;
+var
+  Repositorio: IRepositorioConsultasCaja;
+  Servicio: IServicioRectificacionCaja;
+  Cabecera: TClientDataSet;
+  Lineas: TClientDataSet;
+  Resultado: TResultadoRectificacionCaja;
+begin
+  Repositorio := TRepositorioConsultasCajaFalso.Create;
+  Servicio := TServicioRectificacionCaja.Create(
+    Repositorio);
+  CrearDatosRectificacionDestino(
+    Cabecera,
+    Lineas);
+  try
+    Resultado := Servicio.Cargar(
+      'T',
+      '1',
+      trcSustitutiva,
+      tmrReemplazarOriginales,
+      Cabecera,
+      Lineas);
+    Assert.AreEqual(
+      2.0,
+      Lineas.FieldByName(
+        'CANTIDAD_FACLIN').AsFloat,
+      0.0001);
+    Assert.AreEqual(
+      'SUSTITUTIVA',
+      Resultado.DescripcionTipo);
+    Assert.IsTrue(
+      Resultado.TratamientoMovimientos =
+        tmrReemplazarOriginales);
+  finally
+    Cabecera.Free;
+    Lineas.Free;
+  end;
 end;
 
 end.

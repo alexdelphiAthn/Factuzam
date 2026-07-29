@@ -14,9 +14,9 @@ unit inLibMigEmpleados;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarEmpleados(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarEmpleados(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -120,7 +120,7 @@ begin
     DeducirActivo(QOrigen.FieldByName('Estado').AsString);
 end;
 
-procedure MigrarEmpleados(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarEmpleados(const Eng: IContextoMigracion; var Stats: TMigStats);
 var
   qOrigen, qInsertar, qActualizar, qExiste, qLimpiar: TUniQuery;
   sCodigo: string;
@@ -131,26 +131,26 @@ begin
   qExiste := TUniQuery.Create(nil);
   qLimpiar := TUniQuery.Create(nil);
   try
-    qInsertar.Connection := Eng.ConDst;
+    qInsertar.Connection := Eng.Datos.ConexionDestino;
     qInsertar.SQL.Text := cInsert;
-    qActualizar.Connection := Eng.ConDst;
+    qActualizar.Connection := Eng.Datos.ConexionDestino;
     qActualizar.SQL.Text := cUpdate;
-    qExiste.Connection := Eng.ConDst;
+    qExiste.Connection := Eng.Datos.ConexionDestino;
     qExiste.SQL.Text :=
       'SELECT 1 FROM fza_empleados WHERE CODIGO_EMPL = :codigo';
     // Elimina filas creadas por versiones anteriores del dominio, incluida
     // la empresa que se insertaba erroneamente como empleado.
-    qLimpiar.Connection := Eng.ConDst;
+    qLimpiar.Connection := Eng.Datos.ConexionDestino;
     qLimpiar.SQL.Text :=
       'DELETE FROM fza_empleados WHERE USUARIO_ALTA = :usuario';
     qLimpiar.ParamByName('usuario').AsString := Eng.Usuario;
     qLimpiar.ExecSQL;
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocven'));
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.ocven'));
     qOrigen.Open;
     while not qOrigen.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sCodigo := IntToStr(qOrigen.FieldByName('Vendedor').AsInteger);
       qExiste.Close;
       qExiste.ParamByName('codigo').AsString := sCodigo;
@@ -179,5 +179,13 @@ begin
     qOrigen.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'empleados',
+    'Empleados / vendedores (ocven)',
+    'dbo.ocven → fza_empleados (Abreviatura → diminutivo de caja)',
+    [],
+    MigrarEmpleados);
 
 end.

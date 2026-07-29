@@ -63,6 +63,84 @@ type
     const AError: EValidacionFactura) of object;
   TConfirmarBorradoFacturaEvent = function(
     const ASerie, ANumero: string): Boolean of object;
+  TOperacionFiscalFactura = record
+    Ambito: string;
+    RepercuteIva: Boolean;
+  end;
+  TSolicitudValidacionFiscalFactura = record
+    TipoOperacion: string;
+    CodigoPaisCliente: string;
+    NifCliente: string;
+    TotalImpuestos: Currency;
+  end;
+  TSolicitudClienteFactura = record
+    Codigo: string;
+    RazonSocial: string;
+    Nif: string;
+    Movil: string;
+    Email: string;
+    Direccion1: string;
+    Direccion2: string;
+    Poblacion: string;
+    Provincia: string;
+    CodigoPostal: string;
+    NombrePais: string;
+    CodigoPais: string;
+    EsIntracomunitario: string;
+    EsIvaExento: string;
+    EsRetenciones: string;
+    EsIvaRecargo: string;
+    EsRegimenEspecialAgricola: string;
+    TarifaArticulo: string;
+    Usuario: string;
+  end;
+  TSolicitudEmpresaFactura = record
+    Codigo: string;
+    RazonSocial: string;
+    Nif: string;
+    Movil: string;
+    Email: string;
+    Direccion1: string;
+    Direccion2: string;
+    Poblacion: string;
+    Provincia: string;
+    CodigoPostal: string;
+    NombrePais: string;
+    CodigoPais: string;
+    EsRetenciones: string;
+    EsIvaRecargo: string;
+    EsRegimenEspecialAgricola: string;
+    GrupoZonaIva: string;
+    Usuario: string;
+  end;
+  IRepositorioFacturas = interface
+    ['{748A48DF-2A59-460B-856F-C9DE43B74610}']
+    function ExisteSerieOtraEmpresa(
+      const ASerie, AEmpresa, ATipoDocumento: string): Boolean;
+    function EsPaisUE(const ACodigoPais: string): Boolean;
+    function ObtenerOperacionFiscal(
+      const ACodigo: string;
+      out AOperacion: TOperacionFiscalFactura): Boolean;
+    function UltimaFechaSerie(
+      const ASerie, AEmpresa, ANumero: string): TDateTime;
+    function HayHuecoNumeracion(
+      const ASerie, AEmpresa, ANumero: string): Boolean;
+    procedure GuardarCliente(
+      const ASolicitud: TSolicitudClienteFactura);
+    procedure GuardarEmpresa(
+      const ASolicitud: TSolicitudEmpresaFactura);
+  end;
+  IValidadorFiscalFactura = interface
+    ['{D50746A1-8404-4EB8-93E3-3581AA88C70C}']
+    procedure Validar(
+      const ASolicitud: TSolicitudValidacionFiscalFactura);
+  end;
+  ICalculadorFactura = interface
+    ['{F46FD8F3-17D1-4B2B-8A02-EFEF44116281}']
+    function Calcular(
+      ACabecera, ALineas: TDataSet;
+      APermiteRecalcular: Boolean): TResultadoOperacionFactura;
+  end;
   IServicioBorradoFactura = interface
     ['{35C1550C-F905-4185-BCCB-6B63C81A51A1}']
     function Validar(
@@ -108,11 +186,54 @@ type
     function GenerarSalidas(
       const ASolicitud: TSolicitudMovimientosFactura): Integer;
   end;
+  TResultadoConsolidacionFactura = record
+    MensajeFiscal: string;
+    MovimientosGenerados: Integer;
+  end;
+  EConsolidacionFactura = class(Exception);
+  EReaperturaBorrador = class(Exception);
+  IServicioConsolidacionFactura = interface
+    ['{754DE5B5-EC92-467B-960B-8A26BD1DEB90}']
+    function Validar(
+      const ASerie, ANumero: string
+    ): TResultadoOperacionFactura;
+    function Consolidar(
+      const ASerie, ANumero, AUsuario: string
+    ): TResultadoConsolidacionFactura;
+  end;
+  IServicioReaperturaBorrador = interface
+    ['{0DD45285-573E-4ECA-A983-B12571EDDEB4}']
+    function Validar(
+      const ASerie, ANumero: string
+    ): TResultadoOperacionFactura;
+    procedure Reabrir(
+      const ASerie, ANumero, AUsuario: string);
+  end;
+  TServiciosFactura = record
+    Repositorio: IRepositorioFacturas;
+    ValidadorFiscal: IValidadorFiscalFactura;
+    Calculador: ICalculadorFactura;
+    Borrado: IServicioBorradoFactura;
+    Efectos: IServicioEfectosFactura;
+  end;
 
 function EvaluarBorradoFactura(
   const AFase: string;
   ATieneEfectosCobrados: Boolean
 ): TResultadoBorradoFactura;
+function EvaluarConsolidacionFactura(
+  const ASerie, ANumero, AFase, ATipoFactura,
+  ANifCliente: string;
+  ANumeroLineas: Integer
+): TResultadoOperacionFactura;
+function FacturaDebeGenerarMovimientos(
+  const ATipoFactura: string;
+  AMueveStock: Boolean
+): Boolean;
+function EvaluarReaperturaBorrador(
+  const ASerie, ANumero, AFase, AEstadoCola: string;
+  AConsolidada: Boolean
+): TResultadoOperacionFactura;
 
 implementation
 
@@ -174,6 +295,79 @@ begin
   else
   begin
     Result := TResultadoBorradoFactura.Permitir;
+  end;
+end;
+
+function EvaluarConsolidacionFactura(
+  const ASerie, ANumero, AFase, ATipoFactura,
+  ANifCliente: string;
+  ANumeroLineas: Integer
+): TResultadoOperacionFactura;
+begin
+  if (Trim(AFase) <> '') and
+     (not SameText(AFase, 'BORRADOR')) then
+  begin
+    Result := TResultadoOperacionFactura.Error(
+      Format(
+        SErrorBorradorYaLanzadoFiscalmente,
+        [ASerie, ANumero, AFase]));
+  end
+  else if ANumeroLineas = 0 then
+  begin
+    Result := TResultadoOperacionFactura.Error(
+      SErrorBorradorSinLineasLanzar);
+  end
+  else if SameText(ATipoFactura, 'NORMAL') and
+          (Trim(ANifCliente) = '') then
+  begin
+    Result := TResultadoOperacionFactura.Error(
+      SErrorBorradorNormalSinNif);
+  end
+  else
+  begin
+    Result := TResultadoOperacionFactura.Correcto;
+  end;
+end;
+
+function FacturaDebeGenerarMovimientos(
+  const ATipoFactura: string;
+  AMueveStock: Boolean
+): Boolean;
+begin
+  Result := SameText(ATipoFactura, 'SIMPLIFICADA') or
+    (SameText(ATipoFactura, 'NORMAL') and AMueveStock);
+end;
+
+function EvaluarReaperturaBorrador(
+  const ASerie, ANumero, AFase, AEstadoCola: string;
+  AConsolidada: Boolean
+): TResultadoOperacionFactura;
+begin
+  if AConsolidada then
+  begin
+    Result := TResultadoOperacionFactura.Error(
+      Format(
+        SErrorBorradorConsolidadoNoReabrible,
+        [ASerie, ANumero]));
+  end
+  else if (Trim(AFase) = '') or SameText(AFase, 'BORRADOR') then
+  begin
+    Result := TResultadoOperacionFactura.Error(
+      SInfoBorradorYaEnBorrador);
+  end
+  else if SameText(AEstadoCola, 'ENVIADA') then
+  begin
+    Result := TResultadoOperacionFactura.Error(
+      SErrorAltaAeatAceptadaNoReabrible);
+  end
+  else if SameText(AEstadoCola, 'PROCESANDO') then
+  begin
+    Result := TResultadoOperacionFactura.Error(
+      SErrorBorradorEnProcesoNoReabrible);
+  end
+  else
+  begin
+    Result := TResultadoOperacionFactura.Correcto;
   end;
 end;
 

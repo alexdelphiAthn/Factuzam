@@ -30,13 +30,13 @@ unit inLibMigAtributos;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
 // Migrador maestro: colores (dbo.occolor → fza_atributos_valores + basicos)
-procedure MigrarColoresMaestros(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarColoresMaestros(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 // Migrador maestro: tallas (DISTINCT de dbo.ocarttal → fza_atributos_valores)
-procedure MigrarTallasMaestras(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarTallasMaestras(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -62,7 +62,7 @@ begin
 end;
 
 // Asegura que existe la variación 'TC' y sus dos atributos.
-procedure AsegurarVariacionTC(Eng: TMigEngine);
+procedure AsegurarVariacionTC(Eng: IContextoMigracion);
 var qIns: TUniQuery;
 begin
   // Race-safe: INSERT IGNORE en lugar de SELECT+INSERT, porque
@@ -72,7 +72,7 @@ begin
   // pasan el SELECT simultaneamente.
   qIns := TUniQuery.Create(nil);
   try
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
 
     // fza_variaciones: 'TC'
     qIns.SQL.Text :=
@@ -84,7 +84,7 @@ begin
               ':USUARIO_MODIF)';
     RellenarAuditoria(qIns, Eng.Usuario);
     qIns.ExecSQL;
-    if qIns.RowsAffected > 0 then Eng.Log('  + creada variacion TC');
+    if qIns.RowsAffected > 0 then Eng.Registro.Log('  + creada variacion TC');
 
     // fza_variaciones_atributos: ('TC','CO') y ('TC','TAL')
     qIns.SQL.Text :=
@@ -92,14 +92,14 @@ begin
         'ID_VAR_VA, ID_ATB_VA, NOMBRE_VA, ORDEN_VA, NOMBRE_VISIBLE_VA) ' +
       'VALUES (''TC'', ''CO'', ''Color'', 1, ''Paleta'')';
     qIns.ExecSQL;
-    if qIns.RowsAffected > 0 then Eng.Log('  + creado eje variacion TC/CO');
+    if qIns.RowsAffected > 0 then Eng.Registro.Log('  + creado eje variacion TC/CO');
 
     qIns.SQL.Text :=
       'INSERT IGNORE INTO fza_variaciones_atributos (' +
         'ID_VAR_VA, ID_ATB_VA, NOMBRE_VA, ORDEN_VA, NOMBRE_VISIBLE_VA) ' +
       'VALUES (''TC'', ''TAL'', ''Talla'', 2, ''Sistema de tallas'')';
     qIns.ExecSQL;
-    if qIns.RowsAffected > 0 then Eng.Log('  + creado eje variacion TC/TAL');
+    if qIns.RowsAffected > 0 then Eng.Registro.Log('  + creado eje variacion TC/TAL');
   finally
     qIns.Free;
   end;
@@ -107,14 +107,14 @@ end;
 
 // Inserta una fila en fza_atributos_valores si no existe la pareja
 // (ID_VA_AV, AV). Devuelve True si insertó, False si ya existía.
-function InsertarValorAtributo(Eng: TMigEngine; const sIdVa, sAv,
+function InsertarValorAtributo(Eng: IContextoMigracion; const sIdVa, sAv,
                                 sDescripcion: string; iOrden: Integer): Boolean;
 var qChk, qIns: TUniQuery;
 begin
   qChk := TUniQuery.Create(nil);
   qIns := TUniQuery.Create(nil);
   try
-    qChk.Connection := Eng.ConDst;
+    qChk.Connection := Eng.Datos.ConexionDestino;
     qChk.SQL.Text   :=
       'SELECT 1 FROM fza_atributos_valores ' +
       'WHERE ID_VA_AV = :v AND AV = :av';
@@ -124,7 +124,7 @@ begin
     if not qChk.IsEmpty then Exit(False);
     qChk.Close;
 
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text   :=
       'INSERT INTO fza_atributos_valores (' +
         'ID_VA_AV, AV, ORDEN_AV, DESCRIPCION_AV, ESACTIVO_AV, ' +
@@ -148,7 +148,7 @@ end;
 
 // Inserta una fila en fza_atributos_basicos si no existe la pareja
 // (ID_VA_ATB, CODIGO_ATB).
-procedure InsertarAtributoBasico(Eng: TMigEngine;
+procedure InsertarAtributoBasico(Eng: IContextoMigracion;
                                   const sIdVa, sCodigo, sNombre,
                                   sDescripcion, sHex: string; iOrden: Integer);
 var
@@ -157,14 +157,14 @@ begin
   qChk := TUniQuery.Create(nil);
   qIns := TUniQuery.Create(nil);
   try
-    qChk.Connection := Eng.ConDst;
+    qChk.Connection := Eng.Datos.ConexionDestino;
     qChk.SQL.Text   :=
       'SELECT ID_ATB, HEX_ATB FROM fza_atributos_basicos ' +
       'WHERE ID_VA_ATB = :v AND CODIGO_ATB = :c';
     qChk.ParamByName('v').AsString := sIdVa;
     qChk.ParamByName('c').AsString := sCodigo;
     qChk.Open;
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     if qChk.IsEmpty then
     begin
       qIns.SQL.Text :=
@@ -235,7 +235,7 @@ end;
 //  Migrador COLORES MAESTROS
 // =========================================================================
 
-procedure MigrarColoresMaestros(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarColoresMaestros(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cSelectSrc =
     'SELECT ColorBasico, Descripcion, ColorPaleta, Estado ' +
@@ -254,13 +254,13 @@ begin
 
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   try
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.occolor'));
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.occolor'));
     qSrc.Open;
     iOrden := 10;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sCodOrigen := Trim(qSrc.FieldByName('ColorBasico').AsString);
       sDesc      := Trim(qSrc.FieldByName('Descripcion').AsString);
       if qSrc.FieldByName('ColorPaleta').IsNull then
@@ -320,10 +320,10 @@ begin
   // e insertamos los nuevos en LOTE. Antes se hacia un SELECT de comprobacion
   // por cada color (miles): tardaba minutos y, con la transaccion abierta,
   // bloqueaba el resto de la migracion (Lock wait timeout en tallas).
-  Eng.Log('  segunda pasada: codigos de proveedor de ocartcol...');
+  Eng.Registro.Log('  segunda pasada: codigos de proveedor de ocartcol...');
   oColExist := TDictionary<string, Boolean>.Create;
   qExist    := TUniQuery.Create(nil);
-  bulkCol   := TBulkInsert.Create(Eng.ConDst, 'fza_atributos_valores',
+  bulkCol   := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_atributos_valores',
     'ID_VA_AV, AV, ORDEN_AV, DESCRIPCION_AV, ESACTIVO_AV, ' +
     'FACTOR_CONVERSION_AV, INSTANTE_ALTA, INSTANTE_MODIF, ' +
     'USUARIO_ALTA, USUARIO_MODIF', 500);
@@ -336,7 +336,7 @@ begin
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
     // Set O(1) con los colores ya existentes (incluye los de la 1a pasada).
-    qExist.Connection := Eng.ConDst;
+    qExist.Connection := Eng.Datos.ConexionDestino;
     qExist.SQL.Text   :=
       'SELECT AV FROM fza_atributos_valores WHERE ID_VA_AV = ''CO''';
     qExist.Open;
@@ -377,7 +377,7 @@ end;
 //  Migrador TALLAS MAESTRAS (DISTINCT de ocarttal.Talla)
 // =========================================================================
 
-procedure MigrarTallasMaestras(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarTallasMaestras(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   // UNION de DOS fuentes:
   //   - ocarttal: tallas que algun articulo tiene asignadas
@@ -426,13 +426,13 @@ begin
 
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   try
-    Eng.SetTotal(Eng.ContarOrigen(cCount));
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(cCount));
     qSrc.Open;
     iOrden := 10;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sTalla := Trim(qSrc.FieldByName('Talla').AsString);
       if sTalla = '' then
       begin
@@ -461,5 +461,19 @@ begin
     qSrc.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'colores_maestros',
+    'Catálogo colores',
+    'dbo.occolor → atributos de color',
+    [],
+    MigrarColoresMaestros);
+  RegistrarMigracion(
+    'tallas_maestras',
+    'Catálogo tallas',
+    'DISTINCT dbo.ocarttal → atributos de talla',
+    [],
+    MigrarTallasMaestras);
 
 end.

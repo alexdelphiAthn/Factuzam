@@ -45,9 +45,9 @@ unit inLibMigClientes;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarClientes(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarClientes(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -55,7 +55,7 @@ uses
   System.SysUtils,
   Data.DB, Uni;
 
-procedure MigrarClientes(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarClientes(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   // Observacion es text en SQL Server; CAST a varchar para evitar problemas
   // con CHARINDEX y largos. 4000 bytes deberia bastar para una nota.
@@ -127,9 +127,9 @@ begin
   qIns := TUniQuery.Create(nil);
   qChk := TUniQuery.Create(nil);
   try
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text   := cInsertDst;
-    qChk.Connection := Eng.ConDst;
+    qChk.Connection := Eng.Datos.ConexionDestino;
     // En el chk traemos la RAZON_SOCIAL_CLI para poder enseñar en el
     // log que dato hay en destino vs el del origen y ayudar a decidir
     // si la colision es un duplicado real o ruido del seed demo.
@@ -146,12 +146,12 @@ begin
     EjecutarSQL(Eng, 'DELETE FROM fza_clientes WHERE USUARIO_ALTA = ' +
       ValorOrNull(Eng.Usuario));
 
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.occli'));
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.occli'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sCod   := Trim(qSrc.FieldByName('Cliente').AsString);
       sRazon := Trim(qSrc.FieldByName('RazonSocial').AsString);
       if sRazon = '' then
@@ -159,7 +159,7 @@ begin
       if sCod = '' then
       begin
         Inc(Stats.Saltadas);
-        Eng.LogSalto('cliente', '<vacio>',
+        Eng.Registro.LogSalto('cliente', '<vacio>',
           'codigo de cliente vacio en origen (registro descartado)',
           sRazon);
         qSrc.Next;
@@ -175,7 +175,7 @@ begin
       begin
         sRazonDst := Trim(qChk.FieldByName('RAZON_SOCIAL_CLI').AsString);
         Inc(Stats.Saltadas);
-        Eng.LogSalto('cliente', sCod,
+        Eng.Registro.LogSalto('cliente', sCod,
           'PK ya existe en destino, se conserva destino',
           sRazon, sRazonDst);
         qChk.Close;
@@ -262,7 +262,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('cliente', sCod, E.Message, sRazon,
+          Eng.Registro.LogError('cliente', sCod, E.Message, sRazon,
             'si dice "Data too long for column CODIGO_CLI_*", ' +
             'ejecuta DESARROLLOS EN CURSO/widen_codigo_cli.sql');
           raise;
@@ -276,5 +276,13 @@ begin
     qSrc.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'clientes',
+    'Clientes',
+    'dbo.occli → fza_clientes',
+    ['empresas', 'tipos_efecto_compra'],
+    MigrarClientes);
 
 end.

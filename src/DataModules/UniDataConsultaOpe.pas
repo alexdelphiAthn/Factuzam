@@ -81,6 +81,12 @@ type
     // OnEditValueChanged y luego FormShow llama tambien a RecargarMaestro:
     // antes salian 2-3 cargas identicas.
     FUltimaClaveMaestro: string;
+    procedure ConectarConsultas;
+    procedure ConfigurarConsultaMaestro;
+    procedure ConfigurarConsultasCaja;
+    procedure ConfigurarConsultasMovimientoCliente;
+    procedure ConfigurarConsultasDepositoFactura;
+    procedure AbrirSeguro(q: TUniQuery; const sNombre: string);
   public
     constructor Create(
       AOwner: TComponent;
@@ -110,8 +116,6 @@ type
     // True si la operacion seleccionada es un traspaso (TR misma empresa /
     // TA entre empresas). Usado para reimprimir su ticket especifico.
     function  EsTraspaso: Boolean;
-  private
-    procedure AbrirSeguro(q: TUniQuery; const sNombre: string);
   end;
 
 var
@@ -134,8 +138,7 @@ begin
   inherited Create(AOwner);
 end;
 
-// -----------------------------------------------------------------------------
-procedure TdmConsultaOpe.DataModuleCreate(Sender: TObject);
+procedure TdmConsultaOpe.ConectarConsultas;
 begin
   qryMaestro.Connection     := FConexion;
   qryOperacion.Connection   := FConexion;
@@ -146,12 +149,11 @@ begin
   qryDepositos.Connection   := FConexion;
   qryFactura.Connection     := FConexion;
   qryFacturaLin.Connection  := FConexion;
+end;
 
-  // ------------------------------------------------------------------
-  //  Grid MAESTRO: una fila por NUMERO_OPERACION_OPCAJA del dia.
-  //  Agrupa los distintos tipos de operacion (VENTA, DEV, CB, ...) de
-  //  una misma numeracion en una sola fila visible.
-  // ------------------------------------------------------------------
+procedure TdmConsultaOpe.ConfigurarConsultaMaestro;
+begin
+  // Una fila por numero, agrupando todos sus tipos de operacion.
   qryMaestro.SQL.Text :=
     'SELECT o.CODIGO_EMP_OPCAJA, '                                    +
     '       o.CODIGO_ALM_OPCAJA, '                                    +
@@ -230,11 +232,11 @@ begin
     // desempatamos por numero de operacion en numerico, no como texto.
     ' ORDER BY FECHA_OP, '                                                 +
     '          CAST(o.NUMERO_OPERACION_OPCAJA AS UNSIGNED) ';
+end;
 
-  // ------------------------------------------------------------------
-  //  Pestaña OPERACION: filas crudas de fza_caja_operaciones.
-  //  Una misma numeracion puede tener varias filas (VENTA + DEV + CB).
-  // ------------------------------------------------------------------
+procedure TdmConsultaOpe.ConfigurarConsultasCaja;
+begin
+  // Filas crudas: una numeracion puede tener VENTA, DEV y CB.
   qryOperacion.SQL.Text :=
     'SELECT FECHA_OPERACION_OPCAJA, '                                     +
     '       TIPO_OPERACION_OPCAJA, '                                      +
@@ -252,10 +254,7 @@ begin
     '   AND NUMERO_OPERACION_OPCAJA = :PNUMOP '                           +
     ' ORDER BY FECHA_OPERACION_OPCAJA, TIPO_OPERACION_OPCAJA ';
 
-  // ------------------------------------------------------------------
-  //  Pestaña PAGOS: solo lineas de fza_caja_pagos.
-  //  Los vales (emitidos / redimidos) van en su propia pestaña.
-  // ------------------------------------------------------------------
+  // Los vales emitidos o redimidos no se mezclan con los pagos.
   qryPagos.SQL.Text :=
     'SELECT p.CODIGO_EMP_PAGO, '                                      +
     '       p.CODIGO_ALM_PAGO, '                                      +
@@ -284,12 +283,7 @@ begin
     '   AND p.NUMERO_OPERACION_PAGO  = :PNUMOP '                      +
     ' ORDER BY p.NUMERO_LINEA_PAGO ';
 
-  // ------------------------------------------------------------------
-  //  Pestaña VALES: vales emitidos y redimidos en esta operacion.
-  //  ROL_VL = 'EMI' (emitido aqui) | 'RED' (redimido aqui).
-  //  Si un vale se emite y se redime en la misma operacion (raro pero
-  //  posible), aparecera dos veces, una por rol -- es lo correcto.
-  // ------------------------------------------------------------------
+  // Un vale emitido y redimido en la misma operacion aparece por cada rol.
   qryVales.SQL.Text :=
     '(SELECT ''EMI''                AS ROL_VL, '                      +
     '        v.CODIGO_VL, '                                           +
@@ -325,10 +319,10 @@ begin
     '    AND v.CODIGO_CAJA_RED_VL       = :PCAJA '                    +
     '    AND v.NUMERO_OPERACION_RED_VL  = :PNUMOP) '                  +
     'ORDER BY ROL_VL, CODIGO_VL ';
+end;
 
-  // ------------------------------------------------------------------
-  //  Pestaña MOVIMIENTOS: filas de fza_caja_movimientos (stock/kardex).
-  // ------------------------------------------------------------------
+procedure TdmConsultaOpe.ConfigurarConsultasMovimientoCliente;
+begin
   qryMovimientos.SQL.Text :=
     'SELECT m.NUMERO_MOV, '                                               +
     '       m.TIPO_DOC_MOV, '                                             +
@@ -365,9 +359,6 @@ begin
     '   AND m.NUMERO_OPERACION_DOC_MOV    = :PNUMOP '                     +
     ' ORDER BY m.NUMERO_MOV, m.LINEA_MOV ';
 
-  // ------------------------------------------------------------------
-  //  Pestaña CLIENTE: ficha del cliente asociado a la operacion.
-  // ------------------------------------------------------------------
   qryCliente.SQL.Text :=
     'SELECT c.CODIGO_CLI_CLI, '                                           +
     '       c.RAZON_SOCIAL_CLI, '                                      +
@@ -381,14 +372,11 @@ begin
     '       c.TOTAL_DEUDA_CLI '                                       +
     '  FROM fza_clientes c '                                              +
     ' WHERE c.CODIGO_CLI_CLI = :PCLI ';
+end;
 
-  // ------------------------------------------------------------------
-  //  Pestaña DEPOSITOS: depositos tocados por esta operacion.
-  //  La vista fza_caja_depositos_view devuelve hasta 3 filas por
-  //  deposito (ALTA, CANCELACION, COBRO_INICIAL/COBRO_PARCIAL).
-  //  Aqui las colapsamos a UNA sola fila por ID_DEPOSITO_DEP, y en
-  //  ROL_EN_OPERACION concatenamos los roles que toco esta operacion.
-  // ------------------------------------------------------------------
+procedure TdmConsultaOpe.ConfigurarConsultasDepositoFactura;
+begin
+  // La vista puede dar tres roles; se colapsan por deposito.
   qryDepositos.SQL.Text :=
     'SELECT d.ID_DEPOSITO_DEP, '                                      +
     '       MAX(d.CODIGO_CLI_DEP)            AS CODIGO_CLI_DEP, '     +
@@ -419,9 +407,6 @@ begin
     ' GROUP BY d.ID_DEPOSITO_DEP '                                    +
     ' ORDER BY d.ID_DEPOSITO_DEP ';
 
-  // ------------------------------------------------------------------
-  //  Pestaña FACTURA (cabecera).
-  // ------------------------------------------------------------------
   qryFactura.SQL.Text :=
     'SELECT f.SERIE_FAC, '                                            +
     '       f.NUMERO_FAC, '                                              +
@@ -447,9 +432,6 @@ begin
     '         AND f.NUMERO_OPERACION_FAC = :PNUMOP) '                 +
     '       ) ';
 
-  // ------------------------------------------------------------------
-  //  Pestaña FACTURA (lineas).
-  // ------------------------------------------------------------------
   qryFacturaLin.SQL.Text :=
     'SELECT l.LINEA_FACLIN, '                                      +
     '       l.CODIGO_ART_FACLIN, '                            +
@@ -467,6 +449,15 @@ begin
     ' WHERE l.SERIE_FAC_FACLIN            = :PSERIE '                  +
     '   AND l.NUMERO_FAC_FACLIN              = :PNROFAC '                 +
     ' ORDER BY l.LINEA_FACLIN ';
+end;
+
+procedure TdmConsultaOpe.DataModuleCreate(Sender: TObject);
+begin
+  ConectarConsultas;
+  ConfigurarConsultaMaestro;
+  ConfigurarConsultasCaja;
+  ConfigurarConsultasMovimientoCliente;
+  ConfigurarConsultasDepositoFactura;
 end;
 
 procedure TdmConsultaOpe.CerrarPestanasHijas;

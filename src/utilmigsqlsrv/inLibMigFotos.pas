@@ -11,7 +11,7 @@
 {    El legacy guarda la ruta SIN la carpeta raíz, p.ej.                       }
 {    `\temp.34\85san francisco\3834.jpg`; la raíz real (normalmente            }
 {    `C:\fotos`) se indica en la UI del migrador y llega en                    }
-{    Eng.DirFotosOrigen. El destino (Eng.DirFotosDestino) es la carpeta        }
+{    Eng.Fotos.DirectorioOrigen. El destino (Eng.Fotos.DirectorioDestino) es la carpeta        }
 {    `appDirFotos` del Factuzam destino, p.ej. `$(PUBLICO)\Factuzam\fotos`     }
 {    ya expandida a ruta absoluta por la UI.                                   }
 {                                                                              }
@@ -29,7 +29,7 @@
 {      NOMBRE_FOT_FOT    = saneado(ARTICULO/COLORSLOT) + '_001'                }
 {                                                                              }
 {    Paralelismo: la conversión de imagen (decodificar + 3 PNG) corre en       }
-{    un pool propio de hilos (Eng.HilosFotos, 2-5 recomendado). Los hilos      }
+{    un pool propio de hilos (Eng.Fotos.NumeroHilos, 2-5 recomendado). Los hilos      }
 {    solo tocan ficheros y encolan las filas de INSERT; el hilo del            }
 {    dominio (dueño de las conexiones UniDAC, que no admiten uso               }
 {    concurrente) las drena hacia el TBulkInsert y lleva el progreso.          }
@@ -54,9 +54,9 @@ unit inLibMigFotos;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarFotos(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarFotos(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -104,7 +104,7 @@ type
   // hacia el TBulkInsert (la conexion UniDAC no admite concurrencia).
   TImportadorFotos = class
   private
-    FEng:        TMigEngine;
+    FEng:        IContextoMigracion;
     FGrupos:     TObjectList<TFotoGrupo>;
     FDir300:     string;
     FDir600:     string;
@@ -126,7 +126,7 @@ type
                                const AClave: TFotoClave);
     procedure EncolarFila(const AClave: TFotoClave);
   public
-    constructor Create(Eng: TMigEngine;
+    constructor Create(Eng: IContextoMigracion;
                        AGrupos: TObjectList<TFotoGrupo>;
                        const ADir300, ADir600, ADirReal,
                              AAhoraSQL, AUserSQL: string);
@@ -468,7 +468,7 @@ end;
 //  TImportadorFotos (pool de conversion)
 // =========================================================================
 
-constructor TImportadorFotos.Create(Eng: TMigEngine;
+constructor TImportadorFotos.Create(Eng: IContextoMigracion;
                                     AGrupos: TObjectList<TFotoGrupo>;
                                     const ADir300, ADir600, ADirReal,
                                           AAhoraSQL, AUserSQL: string);
@@ -605,7 +605,7 @@ begin
       oClave := AGrupo.Claves[k];
       TInterlocked.Increment(FSaltadas);
       TInterlocked.Increment(FProcesadas);
-      FEng.LogSalto('Fotos', oClave.CodUnidad,
+      FEng.Registro.LogSalto('Fotos', oClave.CodUnidad,
                     'fichero no encontrado', AGrupo.Fichero);
     end;
   end
@@ -634,7 +634,7 @@ begin
         on E: Exception do
         begin
           TInterlocked.Increment(FErrores);
-          FEng.LogError('Fotos', oClave.CodUnidad, E.Message,
+          FEng.Registro.LogError('Fotos', oClave.CodUnidad, E.Message,
                         AGrupo.Fichero);
         end;
       end;
@@ -653,7 +653,7 @@ begin
   try
     iIdx := TInterlocked.Increment(FSiguiente);
     while (iIdx < FGrupos.Count) and
-          (not FEng.IsCancelado) and (not Parado) do
+          (not FEng.Cancelacion.EstaCancelada) and (not Parado) do
     begin
       ProcesarGrupo(FGrupos[iIdx]);
       iIdx := TInterlocked.Increment(FSiguiente);
@@ -668,7 +668,7 @@ end;
 //  Migrador principal
 // =========================================================================
 
-procedure MigrarFotos(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarFotos(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   // ColorSlot identico al de inLibMigArticulosSkus: codigo interno de
   // ocartcol.Color. Asi CODIGO_UNIDAD_FOT casa como
@@ -735,7 +735,7 @@ var
   sUser:       string;
 begin
   // ---- Validacion de carpetas y configuracion --------------------------
-  sRaiz := ExcludeTrailingPathDelimiter(Trim(Eng.DirFotosOrigen));
+  sRaiz := ExcludeTrailingPathDelimiter(Trim(Eng.Fotos.DirectorioOrigen));
   if sRaiz = '' then
     raise Exception.Create(
       'Falta la carpeta raiz de las fotos legacy (p.ej. C:\fotos). ' +
@@ -743,7 +743,7 @@ begin
   if not TDirectory.Exists(sRaiz) then
     raise Exception.CreateFmt(
       'La carpeta raiz de fotos legacy no existe: %s', [sRaiz]);
-  sDestino := ExcludeTrailingPathDelimiter(Trim(Eng.DirFotosDestino));
+  sDestino := ExcludeTrailingPathDelimiter(Trim(Eng.Fotos.DirectorioDestino));
   if sDestino = '' then
     raise Exception.Create(
       'Falta la carpeta destino de fotos (appDirFotos), p.ej. ' +
@@ -759,13 +759,13 @@ begin
     raise Exception.CreateFmt(
       'No se pudieron crear las subcarpetas 300/600/real en: %s',
       [sDestino]);
-  iNumHilos := Eng.HilosFotos;
+  iNumHilos := Eng.Fotos.NumeroHilos;
   if iNumHilos < 1 then
     iNumHilos := 1;
   if iNumHilos > cMaxHilosFotos then
     iNumHilos := cMaxHilosFotos;
-  Eng.Log('  raiz legacy: %s', [sRaiz]);
-  Eng.Log('  destino fotos: %s', [sDestino]);
+  Eng.Registro.Log('  raiz legacy: %s', [sRaiz]);
+  Eng.Registro.Log('  destino fotos: %s', [sDestino]);
 
   oExistentes := TDictionary<string, Boolean>.Create;
   oReutilizadas := TList<TFotoClave>.Create;
@@ -784,12 +784,12 @@ begin
     CargarIndicePng(sDir300, oNombres300);
     CargarIndicePng(sDir600, oNombres600);
     CargarIndicePng(sDirReal, oNombresReal);
-    Eng.Log('  destino disco: %d PNG en 300, %d en 600 y %d en real',
+    Eng.Registro.Log('  destino disco: %d PNG en 300, %d en 600 y %d en real',
             [oNombres300.Count, oNombres600.Count, oNombresReal.Count]);
     // Pre-cargar las fotos ya registradas en destino (idempotencia O(1)).
     qDst := TUniQuery.Create(nil);
     try
-      qDst.Connection := Eng.ConDst;
+      qDst.Connection := Eng.Datos.ConexionDestino;
       qDst.SQL.Text   :=
         'SELECT CONCAT(CODIGO_ART_FOT, ''|'', CODIGO_UNIDAD_FOT) ' +
         'FROM fza_articulos_fotos';
@@ -802,7 +802,7 @@ begin
     finally
       qDst.Free;
     end;
-    Eng.Log('  destino: %d fotos ya registradas', [oExistentes.Count]);
+    Eng.Registro.Log('  destino: %d fotos ya registradas', [oExistentes.Count]);
 
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
@@ -812,13 +812,13 @@ begin
     // despues entre los hilos del pool.
     iPend := 0;
     qSrc  := NuevoQOrigen(Eng, cSelectSrc);
-    Eng.SetTotal(Eng.ContarOrigen(cSelectCount));
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(cSelectCount));
     qSrc.Open;
     while not qSrc.Eof do
     begin
-      if Eng.IsCancelado then
+      if Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en fotos, saliendo...');
+        Eng.Registro.Log('  Cancelacion detectada en fotos, saliendo...');
         Break;
       end;
       Inc(Stats.Leidas);
@@ -833,7 +833,7 @@ begin
       begin
         // Ya importada en una corrida previa: cuenta como hecha.
         Inc(Stats.Saltadas);
-        Eng.IncRow;
+        Eng.Progreso.Avanzar;
       end
       else
       begin
@@ -855,7 +855,7 @@ begin
           // La BBDD se ha rehecho pero los PNG siguen migrados: recuperar la
           // asociacion sin leer ni convertir otra vez el fichero legacy.
           oReutilizadas.Add(oClave);
-          Eng.IncRow;
+          Eng.Progreso.Avanzar;
         end
         else
         begin
@@ -872,13 +872,13 @@ begin
       end;
       qSrc.Next;
     end;
-    Eng.Log('  reutilizadas: %d fotos ya completas en disco',
+    Eng.Registro.Log('  reutilizadas: %d fotos ya completas en disco',
             [oReutilizadas.Count]);
-    Eng.Log('  pendientes: %d fotos en %d ficheros; %d hilos de ' +
+    Eng.Registro.Log('  pendientes: %d fotos en %d ficheros; %d hilos de ' +
             'conversion', [iPend, oGrupos.Count, iNumHilos]);
 
     // ---- Fase 2: pool de hilos convirtiendo; este hilo drena a BBDD ----
-    bulk := TBulkInsert.Create(Eng.ConDst, 'fza_articulos_fotos',
+    bulk := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_articulos_fotos',
                                cColsFotos, 500);
     for i := 0 to oReutilizadas.Count - 1 do
       bulk.Add(ConstruirFilaFoto(oReutilizadas[i], sAhora, sUser));
@@ -909,12 +909,12 @@ begin
         iAhora := oImp.Procesadas;
         if iAhora > iUltProg then
         begin
-          Eng.IncRow(iAhora - iUltProg);
+          Eng.Progreso.Avanzar(iAhora - iUltProg);
           iUltProg := iAhora;
         end;
         if (iAhora div 250) > (iUltLog div 250) then
         begin
-          Eng.Log('  fotos: %d procesadas (%d generadas, %d saltadas, ' +
+          Eng.Registro.Log('  fotos: %d procesadas (%d generadas, %d saltadas, ' +
                   '%d errores)',
                   [iAhora, oImp.Generadas,
                    Stats.Saltadas + oImp.Saltadas, oImp.Errores]);
@@ -952,5 +952,14 @@ begin
     oExistentes.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'fotos',
+    'Fotos por color (ocartcol)',
+    'ocartcol.ArchivoFoto -> PNG 300/600/real + articulos_fotos',
+    [],
+    MigrarFotos,
+    True);
 
 end.

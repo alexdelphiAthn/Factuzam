@@ -111,6 +111,8 @@ type
     // puramente descriptivo que NO debe disparar la logica fiscal ni
     // la sincronizacion de movimientos (cascada por linea al navegar).
     FDesempaquetandoAtributos: Boolean;
+    procedure ProcesarCabeceraPosteada;
+    procedure ProcesarLineasPosteadas;
     procedure NegarMovimientosFacturaDesdeAlbaran(const ASerie,
                                                   ANumero: string);
     procedure AsignarNumeroLineaAlbaran(DataSet: TDataSet);
@@ -133,7 +135,8 @@ implementation
 uses
   inLibValoresAutomaticos, inLibLog, System.Diagnostics,
   System.UITypes, Vcl.Dialogs, inLibArticulosValidador,
-  inLibVentasImpuestos, inLibContadorLineas, inLibData, inLibMsg;
+  inLibVentasImpuestos, inLibContadorLineas, inLibData, inLibMsg,
+  inLibSqlSeguro;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -179,6 +182,7 @@ const
 function SqlInsertAlbaran: string;
 var
   i: Integer;
+  sColumnaSql: string;
   sCols, sVals: string;
 begin
   sCols := '';
@@ -190,7 +194,10 @@ begin
       sCols := sCols + ', ';
       sVals := sVals + ', ';
     end;
-    sCols := sCols + COLUMNAS_ALBARAN[i];
+    sColumnaSql := DelimitarIdentificadorSql(
+      COLUMNAS_ALBARAN[i],
+      COLUMNAS_ALBARAN);
+    sCols := sCols + sColumnaSql;
     sVals := sVals + ':' + COLUMNAS_ALBARAN[i];
   end;
   Result := 'INSERT INTO fza_albaranes (' + sCols + ') VALUES (' +
@@ -201,6 +208,7 @@ end;
 function SqlUpdateAlbaran: string;
 var
   i: Integer;
+  sColumnaSql: string;
   sSet: string;
 begin
   sSet := '';
@@ -208,7 +216,10 @@ begin
   begin
     if i > Low(COLUMNAS_ALBARAN) then
       sSet := sSet + ', ';
-    sSet := sSet + COLUMNAS_ALBARAN[i] + ' = :' + COLUMNAS_ALBARAN[i];
+    sColumnaSql := DelimitarIdentificadorSql(
+      COLUMNAS_ALBARAN[i],
+      COLUMNAS_ALBARAN);
+    sSet := sSet + sColumnaSql + ' = :' + COLUMNAS_ALBARAN[i];
   end;
   Result := 'UPDATE fza_albaranes SET ' + sSet +
             ' WHERE NUMERO_ALB = :Old_NUMERO_ALB' +
@@ -396,8 +407,7 @@ end;
 procedure TdmAlbaranes.unqryTablaGAfterPost(DataSet: TDataSet);
 begin
   inherited;
-  SincronizarAlmacenLineasCabecera;
-  SincronizarMovimientosSalida;
+  ProcesarCabeceraPosteada;
 end;
 
 procedure TdmAlbaranes.unqryTablaGBeforeDelete(DataSet: TDataSet);
@@ -855,19 +865,14 @@ end;
 procedure TdmAlbaranes.unqryAlbaranesLineasAfterPost(DataSet: TDataSet);
 begin
   inherited;
-  // Los posts del desempaquetado ATTR no alteran importes ni stock:
-  // saltar totales y sincronizacion de movimientos.
-  if FDesempaquetandoAtributos then
-    Exit;
-  CalcularTotalesAlbaran;
-  SincronizarMovimientosSalida;
+  if not FDesempaquetandoAtributos then
+    ProcesarLineasPosteadas;
 end;
 
 procedure TdmAlbaranes.unqryAlbaranesLineasAfterDelete(DataSet: TDataSet);
 begin
   inherited;
-  CalcularTotalesAlbaran;
-  SincronizarMovimientosSalida;
+  ProcesarLineasPosteadas;
 end;
 
 function TdmAlbaranes.TotalPrendasAlbaran: Double;
@@ -1152,6 +1157,44 @@ begin
         GenerarMovimientosSalida;
       end;
     end;
+  end;
+end;
+
+procedure TdmAlbaranes.ProcesarCabeceraPosteada;
+var
+  bTransaccionPropia: Boolean;
+begin
+  bTransaccionPropia := not ConexionPrincipal.InTransaction;
+  if bTransaccionPropia then
+    ConexionPrincipal.StartTransaction;
+  try
+    SincronizarAlmacenLineasCabecera;
+    SincronizarMovimientosSalida;
+    if bTransaccionPropia and ConexionPrincipal.InTransaction then
+      ConexionPrincipal.Commit;
+  except
+    if bTransaccionPropia and ConexionPrincipal.InTransaction then
+      ConexionPrincipal.Rollback;
+    raise;
+  end;
+end;
+
+procedure TdmAlbaranes.ProcesarLineasPosteadas;
+var
+  bTransaccionPropia: Boolean;
+begin
+  bTransaccionPropia := not ConexionPrincipal.InTransaction;
+  if bTransaccionPropia then
+    ConexionPrincipal.StartTransaction;
+  try
+    CalcularTotalesAlbaran;
+    SincronizarMovimientosSalida;
+    if bTransaccionPropia and ConexionPrincipal.InTransaction then
+      ConexionPrincipal.Commit;
+  except
+    if bTransaccionPropia and ConexionPrincipal.InTransaction then
+      ConexionPrincipal.Rollback;
+    raise;
   end;
 end;
 

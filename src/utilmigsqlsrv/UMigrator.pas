@@ -131,7 +131,6 @@ type
     FOrigenAlmacenesDeposito: string;
     procedure AnexarLinea(const sRuta, sTexto: string);
     procedure Log(const sMsg: string);
-    procedure RegistrarMigraciones;
     procedure RecargarListado;
     procedure CargarConfig;
     procedure GuardarConfig;
@@ -160,32 +159,6 @@ implementation
 uses
   UMigConn,
   inLibMigDumpEsqueleto,
-  inLibMigEmpresas,
-  inLibMigEmpleados,
-  inLibMigAlmacenes,
-  inLibMigClientes,
-  inLibMigProveedores,
-  inLibMigFamilias,
-  inLibMigAtributos,
-  inLibMigArticulos,
-  inLibMigArticulosAtributos,
-  inLibMigArticulosSkus,
-  inLibMigInventarios,
-  inLibMigMovimientos,
-  inLibMigVentas,
-  inLibMigFacturas,
-  inLibMigVentasMayor,
-  inLibMigVales,
-  inLibMigArqueos,
-  inLibMigTallajes,
-  inLibMigArticulosTallajes,
-  inLibMigArticulosProveedores,
-  inLibMigArticulosPropiedades,
-  inLibMigArticulosTarifas,
-  inLibMigEntorno,
-  inLibMigCompras,
-  inLibMigEfectosCompra,
-  inLibMigFotos,
   inLibPathTokens;
 
 type
@@ -234,7 +207,6 @@ begin
         end);
     end;
   FLineasProgreso := TStringList.Create;
-  RegistrarMigraciones;
   RecargarListado;
   CargarConfig;
   Log('Migrator listo. Configure las conexiones y pruebe conectividad.');
@@ -322,180 +294,10 @@ end;
 //  Registro de migraciones disponibles
 // =========================================================================
 
-procedure TFormMigrator.RegistrarMigraciones;
-begin
-  // El ORDEN importa: el listado se ejecuta de arriba a abajo y las
-  // dependencias (articulos necesita familias, skus necesitan
-  // articulos, etc.) deben respetarse.
-  // NOTA: grupos de IVA y tipos de IVA NO se migran. Las formas de pago
-  // base ya existen en destino; tipos_efecto_compra asegura ademas los
-  // codigos legacy usados por clientes/proveedores/documentos.
-  FEngine.Registrar('empresas', 'Empresas',
-    'dbo.ocemp → fza_empresas',
-    MigrarEmpresas);
-  FEngine.Registrar('empleados', 'Empleados / vendedores (ocven)',
-    'dbo.ocven → fza_empleados (Abreviatura → diminutivo de caja)',
-    MigrarEmpleados);
-  FEngine.Registrar('almacenes', 'Almacenes',
-    'dbo.ocalm → fza_almacenes (requiere empresas)',
-    MigrarAlmacenes);
-  FEngine.Registrar('clientes', 'Clientes',
-    'dbo.occli → fza_clientes',
-    MigrarClientes);
-  FEngine.Registrar('proveedores', 'Proveedores',
-    'dbo.ocpro → fza_proveedores (NOMBRE_PRV; CODIGO_FP_PRV si existe)',
-    MigrarProveedores);
-  FEngine.Registrar('familias', 'Familias de artículo',
-    'dbo.ocniv (Nivel 2+4) → fza_articulos_familias',
-    MigrarFamilias);
-  FEngine.Registrar('colores_maestros', 'Catálogo colores',
-    'dbo.occolor → fza_atributos_valores + fza_atributos_basicos (CO)',
-    MigrarColoresMaestros);
-  FEngine.Registrar('tallas_maestras', 'Catálogo tallas',
-    'DISTINCT dbo.ocarttal → fza_atributos_valores + basicos (TAL)',
-    MigrarTallasMaestras);
-  FEngine.Registrar('articulos', 'Artículos',
-    'dbo.ocartp → fza_articulos (requiere familias)',
-    MigrarArticulos);
-  FEngine.Registrar('articulos_colores', 'Colores por artículo',
-    'dbo.ocartcol → fza_articulos_atributos_basicos (CO)',
-    MigrarArticulosColores);
-  FEngine.Registrar('articulos_tallas', 'Tallas por artículo',
-    'dbo.ocarttal → fza_articulos_atributos_basicos (TAL)',
-    MigrarArticulosTallas);
-  FEngine.Registrar('tallajes', 'Sistemas de tallas (tallajes)',
-    'dbo.ocgrptal + ocgrptalnor → fza_atributos_conjuntos + det',
-    MigrarTallajes);
-  FEngine.Registrar('articulos_tallajes_asign',
-    'Asignar sistema de tallas a artículo',
-    'ocartp.NroTallaje → fza_articulos_conjuntos_asign',
-    MigrarArticulosTallajes);
-  FEngine.Registrar('skus', 'SKUs y códigos de barras',
-    'dbo.ocartbap → fza_articulos_skus + fza_atributos_sku + ' +
-    'fza_codigos_barras',
-    MigrarArticulosSkus);
-  FEngine.Registrar('inventarios', 'Inventario inicial (stock)',
-    'dbo.ocartacp → fza_inventarios + movs regularizacion (IN) + stock',
-    MigrarInventarios);
-  // Inventarios REALES del legacy (recuentos): documentos ocinv/ocinvarp →
-  // fza_inventarios + lineas. Sus movimientos de regularizacion ya los trae
-  // 'movimientos' (estan en ocmovarp), enlazados por Serie + Numero. Es
-  // COMPLEMENTARIO (no alternativo): puedes correrlo junto a movimientos.
-  FEngine.Registrar('inventarios_legacy', 'Inventarios legacy (recuentos)',
-    'dbo.ocinv/ocinvarp → fza_inventarios + fza_inventarios_lineas',
-    MigrarInventariosLegacy);
-  // ALTERNATIVA a "Inventario inicial": migra el histórico de movimientos
-  // y reconstruye el stock desde él. Ejecuta una u otra, no ambas.
-  FEngine.Registrar('movimientos', 'Movimientos histórico (stock)',
-    'dbo.ocmovarp → fza_movimientos_almacen + reconstruye stockactual',
-    MigrarMovimientos);
-  FEngine.Registrar('ventas', 'Ventas / Caja (occaj)',
-    'dbo.occaj → fza_caja_operaciones + fza_caja_pagos + ' +
-    'fza_depositos_cliente (almacén depósito→DE, cobro→adelanto)',
-    MigrarVentas);
-  FEngine.Registrar('pedidos_venta', 'Pedidos venta mayor (ocpedcli)',
-    'dbo.ocpedcli/ocpedcliart → fza_pedidos + fza_pedidos_lineas',
-    MigrarPedidosVentaMayor);
-  FEngine.Registrar('albaranes_venta', 'Albaranes venta mayor (ocalbcli)',
-    'dbo.ocalbcli/ocalbcliart → fza_albaranes + fza_albaranes_lineas',
-    MigrarAlbaranesVentaMayor);
-  FEngine.Registrar('facturas', 'Facturas de venta (occajarp)',
-    'dbo.occaj/occajarp → fza_facturas + fza_facturas_lineas',
-    MigrarFacturas);
-  FEngine.Registrar('facturas_venta_mayor',
-    'Facturas venta mayor (ocfaccli)',
-    'dbo.ocfaccli/ocfaccliart → fza_facturas + fza_facturas_lineas',
-    MigrarFacturasVentaMayor);
-  // Enlace pesado movimiento->factura (REF_MOV) en su PROPIO dominio, que
-  // corre el ULTIMO: las facturas se importan sin esperar a este UPDATE
-  // masivo sobre fza_movimientos_almacen. Es cancelable e idempotente.
-  FEngine.Registrar('enlace_mov_facturas',
-    'Enlace movimientos <-> facturas',
-    'fza_facturas_lineas → fza_movimientos_almacen (pestaña Movimientos)',
-    MigrarEnlaceMovimientosFacturas);
-  FEngine.Registrar('vales', 'Vales de tienda (occajvale)',
-    'dbo.occajvale → fza_caja_vales + apunte VALE en fza_caja_pagos',
-    MigrarVales);
-  FEngine.Registrar('arqueos', 'Arqueos / cierres Z (ocarqueonew)',
-    'dbo.ocarqueonew → fza_caja_arqueos + fza_caja_arqueos_recuento',
-    MigrarArqueos);
-  FEngine.Registrar('articulos_proveedores',
-    'Proveedor y modelo por artículo',
-    'ocartp.Proveedor + Modelo → fza_articulos_proveedores',
-    MigrarArticulosProveedores);
-  FEngine.Registrar('articulos_propiedades',
-    'Propiedad TEMPORADA por artículo y color',
-    'ocartp.Temporada (artículo) + ocartcol.Temporada (color, solo ' +
-    'overrides) → fza_propiedades + valores + fza_articulos_propiedades',
-    MigrarArticulosPropiedades);
-  FEngine.Registrar('articulos_tarifas',
-    'Precios PVP por artículo',
-    'dbo.ocarttap → fza_articulos_tarifas',
-    MigrarArticulosTarifas);
-  // Ajuste del entorno: numeración, series y cajas para dejar la instalación
-  // lista para operar (ver inLibMigEntorno / migracion_entorno.md).
-  FEngine.Registrar('entorno_contadores', 'Contadores (occtador)',
-    'dbo.occtador → fza_contadores (numeración de documentos y globales)',
-    MigrarEntornoContadores);
-  FEngine.Registrar('ajuste_contadores',
-    'Ajustar contadores desde datos importados',
-    'tablas MariaDB importadas → fza_contadores (MAX + 1)',
-    MigrarAjusteContadores);
-  FEngine.Registrar('entorno_contadores_familia',
-    'Contador por familia (ocnivnro)',
-    'dbo.ocnivnro → fza_articulos_familias.CONTADOR_ART_FAM',
-    MigrarEntornoContadoresFamilia);
-  FEngine.Registrar('entorno_cajas', 'Cajas de almacén (occajas)',
-    'dbo.occajas → fza_almacenes_cajas',
-    MigrarEntornoCajas);
-  FEngine.Registrar('entorno_series', 'Series actuales por empresa',
-    'occtador (ejercicio/serie actual) + tipos Factuzam → ' +
-    'fza_empresas_series',
-    MigrarEntornoSeries);
-  FEngine.Registrar('bancos_empresa',
-    'Bancos de cargo por empresa (ocbanrem)',
-    'ocbanrem + usos en compras → fza_empresas_bancos',
-    MigrarBancosEmpresa);
-  FEngine.Registrar('tipos_efecto_compra',
-    'Tipos de efecto y formas de pago legacy (octipefe)',
-    'dbo.octipefe → fza_tipos_efecto + fza_formas_pago',
-    MigrarTiposEfectoCompra);
-  // Compras: pedidos, albaranes, devoluciones y facturas (modelo plano,
-  // sin celdas; ver inLibMigCompras / migracion_compras.md).
-  FEngine.Registrar('pedidos_compra', 'Pedidos de compra (ocped)',
-    'dbo.ocped → fza_pedidos_compra + lineas',
-    MigrarPedidosCompra);
-  FEngine.Registrar('albaranes_compra', 'Albaranes de compra (ocalbpro)',
-    'dbo.ocalbpro → fza_albaranes_compra + lineas',
-    MigrarAlbaranesCompra);
-  FEngine.Registrar('devoluciones_compra',
-    'Devoluciones a proveedor (ocreppro)',
-    'dbo.ocreppro/ocrepproart → fza_devoluciones_compra + lineas',
-    MigrarDevolucionesCompra);
-  FEngine.Registrar('facturas_compra', 'Facturas de compra (ocfacpro)',
-    'dbo.ocfacpro/ocfacproart → fza_facturas_compra + lineas',
-    MigrarFacturasCompra);
-  FEngine.Registrar('efectos_compra',
-    'Efectos y pagos de compra (ocefepro/occobpro)',
-    'dbo.ocefepro/occobpro → fza_efectos_compra + pagos',
-    MigrarEfectosCompra);
-  FEngine.Registrar('remesas_compra', 'Remesas de pago (ocrempro)',
-    'dbo.ocrempro → fza_remesas_compra',
-    MigrarRemesasCompra);
-  // Fotos legacy por color: ocartcol.ArchivoFoto guarda la ruta SIN la
-  // carpeta raiz; raiz, destino y pool se configuran en los campos
-  // "Raiz fotos legacy" / "Destino fotos" / "Hilos fotos". NO entra en
-  // las waves: corre en un hilo independiente, en paralelo a toda la
-  // migracion de datos (vease EjecutarMigracionesBackground).
-  FEngine.Registrar('fotos', 'Fotos por color (ocartcol)',
-    'dbo.ocartcol.ArchivoFoto → PNG 300/600/real + fza_articulos_fotos',
-    MigrarFotos);
-end;
-
 procedure TFormMigrator.RecargarListado;
 var
   i: Integer;
-  oItem: TMigItem;
+  oItem: IMigracion;
 begin
   listMigs.Items.BeginUpdate;
   try
@@ -1327,77 +1129,6 @@ begin
   end;
 end;
 
-// Tabla de dependencias entre dominios (DAG simplificado a waves):
-// los dominios de la misma wave corren en paralelo entre si. Las
-// waves se procesan secuencialmente, no pasamos a la siguiente
-// hasta que termina la anterior. Asi respetamos:
-//   - empresas antes que almacenes
-//   - familias antes que articulos
-//   - tallas_maestras antes que tallajes y antes que articulos_tallas
-//   - articulos antes que articulos_colores/tallas/skus
-//   - skus + almacenes antes que inventarios
-function WaveDeDominio(const sCodigo: string): Integer;
-begin
-  if (sCodigo = 'empresas')         or
-     (sCodigo = 'empleados')        or
-     (sCodigo = 'proveedores')      or
-     (sCodigo = 'tipos_efecto_compra') or
-     (sCodigo = 'familias')         or
-     (sCodigo = 'colores_maestros') or
-     (sCodigo = 'tallas_maestras') then
-    Result := 0
-  else if (sCodigo = 'almacenes')   or
-     (sCodigo = 'clientes')    or
-     (sCodigo = 'articulos')   or
-     (sCodigo = 'tallajes')    or
-     (sCodigo = 'bancos_empresa') or
-     (sCodigo = 'entorno_contadores')         or
-     (sCodigo = 'entorno_contadores_familia') then
-    Result := 1
-  else if (sCodigo = 'articulos_colores')        or
-     (sCodigo = 'articulos_tallas')         or
-     (sCodigo = 'articulos_tallajes_asign') or
-     (sCodigo = 'articulos_proveedores')    or
-     (sCodigo = 'articulos_propiedades')    or
-     (sCodigo = 'articulos_tarifas')        or
-     (sCodigo = 'entorno_cajas')            or
-     (sCodigo = 'entorno_series')           or
-     (sCodigo = 'skus')                     then
-    Result := 2
-  // Compras (pedidos/albaranes/devoluciones) solo necesitan empresas, almacenes,
-  // proveedores y SKUs (waves 0-2); no dependen de movimientos ni facturas.
-  // NOTA: 'fotos' no aparece aqui: corre en un hilo independiente de
-  // las waves (se lanza aparte en EjecutarMigracionesBackground).
-  else if (sCodigo = 'inventarios') or
-     (sCodigo = 'movimientos')      or
-     (sCodigo = 'ventas')           or
-     (sCodigo = 'pedidos_venta')    or
-     (sCodigo = 'albaranes_venta')  or
-     (sCodigo = 'pedidos_compra')   or
-     (sCodigo = 'albaranes_compra') or
-     (sCodigo = 'devoluciones_compra') then
-    Result := 3
-  // Facturas va despues de movimientos. Vales va despues de ventas porque
-  // anyade el apunte negativo tras las lineas de pago de la operacion.
-  else if (sCodigo = 'facturas') or
-          (sCodigo = 'vales') then
-    Result := 4
-  else if (sCodigo = 'facturas_venta_mayor') or
-          (sCodigo = 'facturas_compra') then
-    Result := 5
-  else if (sCodigo = 'efectos_compra') then
-    Result := 6
-  else if (sCodigo = 'remesas_compra') then
-    Result := 7
-  // El enlace movimiento->factura va EL ULTIMO: necesita facturas (waves 4-5)
-  // y movimientos (wave 3) ya migrados, y es el paso mas pesado.
-  else if (sCodigo = 'enlace_mov_facturas') then
-    Result := 8
-  // Default: wave 0 (conservador, sin deps conocidas)
-  else
-    Result := 0;
-end;
-
 procedure TFormMigrator.EjecutarMigracionesBackground;
 var
   aCodigos:           TArray<string>;
@@ -1433,34 +1164,35 @@ begin
       iMaxHilos:                   Integer;
       aDeWave:                     TArray<string>;
       aTasksWave:                  TArray<IOmniTaskControl>;
+      aTasksIndependientes:        TArray<IOmniTaskControl>;
       iTotL, iTotI, iTotS, iTotE:  Integer;
       sWaveCsv:                    string;
       semSlots:                    TSemaphore;
-      oTaskFotos:                  IOmniTaskControl;
       LocalSrvAjuste:              TUniConnection;
       LocalDstAjuste:              TUniConnection;
       LocalEngAjuste:              TMigEngine;
+      LocalStatsAjuste:            TMigStats;
       iTablasAnalizadas:           Integer;
     begin
       iTotL := 0; iTotI := 0; iTotS := 0; iTotE := 0;
       iMaxHilos := task.Param['MaxHilos'].AsInteger;
       if iMaxHilos < 1 then iMaxHilos := 1;
 
-      // El dominio 'fotos' NO entra en las waves: se lanza aqui en un
-      // hilo INDEPENDIENTE que corre en paralelo a toda la migracion
-      // de datos (solo depende de ocartcol y del sistema de ficheros;
-      // las FKs del esquema destino son logicas). Dentro del dominio,
-      // la conversion usa su propio pool (FEngine.HilosFotos). El
-      // coordinador lo espera tras la ultima wave.
-      oTaskFotos := nil;
+      // Las migraciones independientes corren en paralelo al DAG.
+      SetLength(aTasksIndependientes, 0);
       for iLoc := 0 to High(aCodigos) do
-        if aCodigos[iLoc] = 'fotos' then
+        if FEngine.EsIndependiente(aCodigos[iLoc]) then
         begin
-          FEngine.Log('=== Fotos: hilo independiente, en paralelo a ' +
-                      'las waves de datos ===');
-          oTaskFotos := CreateTask(
+          FEngine.Log(Format(
+            '=== %s: hilo independiente, en paralelo al DAG ===',
+            [aCodigos[iLoc]]));
+          SetLength(
+            aTasksIndependientes,
+            Length(aTasksIndependientes) + 1);
+          aTasksIndependientes[High(aTasksIndependientes)] := CreateTask(
             procedure(const t: IOmniTask)
             var
+              sCodigo:    string;
               LocalSrv:   TUniConnection;
               LocalDst:   TUniConnection;
               LocalEng:   TMigEngine;
@@ -1468,6 +1200,7 @@ begin
               bComInit:   Boolean;
             begin
               if t.CancellationToken.IsSignalled then Exit;
+              sCodigo := t.Param['Codigo'].AsString;
               bComInit := Succeeded(CoInitializeEx(nil,
                                                     COINIT_MULTITHREADED));
               LocalSrv := nil;
@@ -1481,7 +1214,7 @@ begin
                 LocalEng := TMigEngine.CreateClone(LocalSrv, LocalDst,
                                                      FEngine);
                 try
-                  LocalEng.Ejecutar('fotos', LocalStats);
+                  LocalEng.Ejecutar(sCodigo, LocalStats);
                   TInterlocked.Add(iTotL, LocalStats.Leidas);
                   TInterlocked.Add(iTotI, LocalStats.Insertadas);
                   TInterlocked.Add(iTotS, LocalStats.Saltadas);
@@ -1491,7 +1224,7 @@ begin
                   begin
                     TInterlocked.Increment(iTotE);
                     FEngine.Log(Format('FALLO TOTAL en %s: %s',
-                                       ['fotos', E.Message]));
+                                       [sCodigo, E.Message]));
                   end;
                 end;
               finally
@@ -1509,20 +1242,21 @@ begin
                 if bComInit then CoUninitialize;
               end;
             end)
+            .SetParameter('Codigo', aCodigos[iLoc])
             .CancelWith(task.CancellationToken)
             .Unobserved
             .Run;
         end;
 
-      for iWave := 0 to 8 do
+      for iWave := 0 to FEngine.NivelMaximo do
       begin
         if task.CancellationToken.IsSignalled then Break;
 
-        // Filtrar codigos de esta wave ('fotos' va por su hilo aparte)
+        // Filtrar codigos del nivel actual del grafo.
         SetLength(aDeWave, 0);
         for iLoc := 0 to High(aCodigos) do
-          if (aCodigos[iLoc] <> 'fotos')
-          and (WaveDeDominio(aCodigos[iLoc]) = iWave) then
+          if (not FEngine.EsIndependiente(aCodigos[iLoc]))
+          and (FEngine.NivelDe(aCodigos[iLoc]) = iWave) then
           begin
             SetLength(aDeWave, Length(aDeWave) + 1);
             aDeWave[High(aDeWave)] := aCodigos[iLoc];
@@ -1637,10 +1371,9 @@ begin
         end;
       end;
 
-      // Esperar al hilo independiente de fotos antes del resumen
-      // final (suele ser el ultimo en acabar si hay muchas imagenes).
-      if Assigned(oTaskFotos) then
-        oTaskFotos.WaitFor(INFINITE);
+      // Esperar todas las migraciones independientes antes del resumen.
+      for iLoc := 0 to High(aTasksIndependientes) do
+        aTasksIndependientes[iLoc].WaitFor(INFINITE);
 
       // Los contadores se ajustan al final, cuando todos los documentos
       // seleccionados ya estan confirmados en la base de datos destino.
@@ -1656,14 +1389,9 @@ begin
           LocalDstAjuste.Open;
           LocalEngAjuste := TMigEngine.CreateClone(LocalSrvAjuste,
             LocalDstAjuste, FEngine);
-          LocalDstAjuste.StartTransaction;
-          try
-            AjustarContadoresDestino(LocalEngAjuste);
-            LocalDstAjuste.Commit;
-          except
-            LocalDstAjuste.Rollback;
-            raise;
-          end;
+          LocalEngAjuste.Ejecutar(
+            'ajuste_contadores',
+            LocalStatsAjuste);
         except
           on E: Exception do
           begin

@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibMigVentas                                                }
 {    Tipo:       Librería de migración (sin formulario)                        }
@@ -64,9 +64,9 @@ unit inLibMigVentas;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarVentas(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarVentas(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -182,7 +182,7 @@ end;
 // Asegura las formas de pago de caja que usa la migracion: 'EFE' (Efectivo) y
 // una 'TARJ<n>' por cada TipoTarjeta distinto del legacy. La descripcion se
 // toma de octarcre.Nombre, que guarda nombres como Visa, MasterCard o banco.
-procedure AsegurarFormasPagoCaja(Eng: TMigEngine);
+procedure AsegurarFormasPagoCaja(Eng: IContextoMigracion);
 const
   cInsFP =
     'INSERT IGNORE INTO fza_caja_formas_pago ' +
@@ -247,9 +247,9 @@ begin
   qDst := TUniQuery.Create(nil);
   qUpd := TUniQuery.Create(nil);
   try
-    qDst.Connection := Eng.ConDst;
+    qDst.Connection := Eng.Datos.ConexionDestino;
     qDst.SQL.Text   := cInsFP;
-    qUpd.Connection := Eng.ConDst;
+    qUpd.Connection := Eng.Datos.ConexionDestino;
     qUpd.SQL.Text   := cUpdDescGenerica;
     // Efectivo: da cambio y abre cajon. Orden 1 (primer boton en F12).
     InsertarFP('EFE', 'Efectivo', 'S', 'S', 1);
@@ -282,7 +282,7 @@ begin
 end;
 // Asegura que exista la forma de pago 'VALE' (vales de tienda migrados).
 // Idempotente vía INSERT IGNORE.
-procedure AsegurarFormaPagoVale(Eng: TMigEngine);
+procedure AsegurarFormaPagoVale(Eng: IContextoMigracion);
 const
   cSql =
     'INSERT IGNORE INTO fza_caja_formas_pago ' +
@@ -298,7 +298,7 @@ var
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text   := cSql;
     q.ParamByName('ua').AsString := Eng.Usuario;
     q.ParamByName('um').AsString := Eng.Usuario;
@@ -311,13 +311,13 @@ end;
 // Borra lo migrado por este usuario en las 3 tablas de caja para que la
 // migración sea re-ejecutable (no hay clave de negocio única: ID_OPCAJA es
 // autonumérico, así que no sirve INSERT IGNORE para idempotencia).
-procedure LimpiarMigracionPrevia(Eng: TMigEngine);
+procedure LimpiarMigracionPrevia(Eng: IContextoMigracion);
 var
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     // Los apuntes negativos con referencia pertenecen a la migracion de
     // vales. Se conservan si se repite solo Ventas/Caja.
     q.SQL.Text :=
@@ -347,7 +347,7 @@ end;
 // Devuelve el ID del PRIMER depósito (para enlazarlo a la operación DE), o
 // '' si la operación no tiene líneas de artículo aprovechables. El INSERT se
 // hace sobre qDep (preparado por el llamante con cInsDep).
-function CrearDepositosAlbaran(Eng: TMigEngine;
+function CrearDepositosAlbaran(Eng: IContextoMigracion;
                                const iEmp, iAlm, iCaja, iOpe: Integer;
                                const sEmp, sAlm, sCli, sCaja, sNum: string;
                                const dtCrea: TDateTime;
@@ -408,7 +408,7 @@ begin
   iUltima := -1;
   qLin := TUniQuery.Create(nil);
   try
-    qLin.Connection := Eng.ConSrv;
+    qLin.Connection := Eng.Datos.ConexionOrigen;
     qLin.SQL.Text   := cLineas;
     qLin.ParamByName('e').AsInteger := iEmp;
     qLin.ParamByName('a').AsInteger := iAlm;
@@ -505,7 +505,7 @@ end;
 // Acumula un cobro a cuenta en el anticipo del depósito y lo cierra si el
 // anticipo alcanza el precio de venta. MySQL evalúa los SET de izquierda a
 // derecha, así que el IF de ESTADO ya ve el IMPORTE_ANTICIPO_DEP actualizado.
-procedure AcumularAnticipo(Eng: TMigEngine; const sIdDep: string;
+procedure AcumularAnticipo(Eng: IContextoMigracion; const sIdDep: string;
                            const fImporte: Double);
 const
   cUpd =
@@ -523,7 +523,7 @@ var
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text   := cUpd;
     q.ParamByName('amt').AsFloat := fImporte;
     q.ParamByName('id').AsString := sIdDep;
@@ -539,7 +539,7 @@ end;
 // operación). Devuelve el ID del PRIMER depósito tocado (para enlazar el CB).
 // Primero leemos los depósitos a memoria y luego actualizamos, para no tener
 // un cursor abierto mientras lanzamos los UPDATE sobre la misma conexión.
-function AplicarCobroADepositos(Eng: TMigEngine; const sCli: string;
+function AplicarCobroADepositos(Eng: IContextoMigracion; const sCli: string;
                                 const fImporte: Double): string;
 const
   cSel =
@@ -562,7 +562,7 @@ begin
   n := 0;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text   := cSel;
     q.ParamByName('c').AsString := sCli;
     q.ParamByName('u').AsString := Eng.Usuario;
@@ -607,7 +607,7 @@ end;
 // operacion de cobro actual. El cobro se reparte solo entre esos depositos y
 // devuelve el importe sobrante para que el llamante aplique el reparto FIFO
 // habitual cuando no exista vinculacion suficiente.
-function AplicarCobroVinculadoOrigen(Eng: TMigEngine;
+function AplicarCobroVinculadoOrigen(Eng: IContextoMigracion;
                                      const iEmp, iAlm, iCaja, iOpe: Integer;
                                      const fImporte: Double;
                                      var sCli: string;
@@ -645,13 +645,13 @@ begin
   qSrc := TUniQuery.Create(nil);
   qDst := TUniQuery.Create(nil);
   try
-    qSrc.Connection := Eng.ConSrv;
+    qSrc.Connection := Eng.Datos.ConexionOrigen;
     qSrc.SQL.Text := cSelOrigen;
     qSrc.ParamByName('e').AsInteger := iEmp;
     qSrc.ParamByName('a').AsInteger := iAlm;
     qSrc.ParamByName('c').AsInteger := iCaja;
     qSrc.ParamByName('o').AsInteger := iOpe;
-    qDst.Connection := Eng.ConDst;
+    qDst.Connection := Eng.Datos.ConexionDestino;
     qDst.SQL.Text := cSelDestino;
     qSrc.Open;
     while not qSrc.Eof do
@@ -702,13 +702,13 @@ end;
 // altas incluidas en una operacion DE de importe no positivo. Se ejecuta
 // despues de aplicar los CB y netear devoluciones para conservar el anticipo
 // real y evitar que una liquidacion historica vuelva a formar parte de deuda.
-procedure CerrarDepositosLiquidadosOrigen(Eng: TMigEngine);
+procedure CerrarDepositosLiquidadosOrigen(Eng: IContextoMigracion);
 var
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text :=
       'UPDATE fza_depositos_cliente d ' +
       'JOIN tmp_mig_depositos_liquidados l ' +
@@ -717,7 +717,7 @@ begin
       'WHERE d.USUARIO_ALTA = :u';
     q.ParamByName('u').AsString := Eng.Usuario;
     q.ExecSQL;
-    Eng.Log('  depositos: %d lineas liquidadas en OdaCash cerradas.',
+    Eng.Registro.Log('  depositos: %d lineas liquidadas en OdaCash cerradas.',
       [q.RowsAffected]);
   finally
     q.Free;
@@ -730,7 +730,7 @@ end;
 // cuadran. Idempotente (re-ejecutar no encuentra devoluciones PENDIENTE).
 // ORDEN: primero cerramos los +1 (mientras las -1 siguen PENDIENTE para poder
 // contarlas) y luego las -1 (incluidas las huerfanas sin +1).
-procedure NetearDevolucionesDeposito(Eng: TMigEngine);
+procedure NetearDevolucionesDeposito(Eng: IContextoMigracion);
 var
   sU: string;
 begin
@@ -767,14 +767,14 @@ begin
     'SET ESTADO_DEP = ''CERRADO'', INSTANTE_MODIF = NOW() ' +
     'WHERE CANTIDAD_PENDIENTE_DEP < 0 AND ESTADO_DEP = ''PENDIENTE'' ' +
     '  AND USUARIO_ALTA = ' + sU);
-  Eng.Log('  depositos: devoluciones (-1) neteadas con su prestamo (FIFO).');
+  Eng.Registro.Log('  depositos: devoluciones (-1) neteadas con su prestamo (FIFO).');
 end;
 
 // Calcula la deuda actual de cada cliente = suma de (importe - anticipo) de
 // sus prestamos PENDIENTE (positivos) y la guarda en TOTAL_DEUDA_CLI.
 // Va DESPUES del neteo y del cierre de liquidaciones. Requiere que el dominio
 // 'clientes' ya este migrado; si no, no actualiza nada (join vacio).
-procedure ActualizarDeudaClientes(Eng: TMigEngine);
+procedure ActualizarDeudaClientes(Eng: IContextoMigracion);
 var
   sU: string;
 begin
@@ -794,14 +794,14 @@ begin
     ') d ON d.CODIGO_CLI_DEP = c.CODIGO_CLI_CLI ' +
     'SET c.TOTAL_DEUDA_CLI = COALESCE(d.deuda, 0), c.INSTANTE_MODIF = NOW() ' +
     'WHERE c.USUARIO_ALTA = ' + sU);
-  Eng.Log('  clientes: deuda actual (prestamos abiertos) actualizada.');
+  Eng.Registro.Log('  clientes: deuda actual (prestamos abiertos) actualizada.');
 end;
 
 // =========================================================================
 //  Migrador principal
 // =========================================================================
 
-procedure MigrarVentas(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarVentas(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cSelectSrc =
     'SELECT c.Empresa, c.Almacen, c.Caja, c.Operacion, ' +
@@ -918,22 +918,22 @@ begin
   qDep  := TUniQuery.Create(nil);
   qLiquidado := TUniQuery.Create(nil);
   try
-    qOp.Connection   := Eng.ConDst;   qOp.SQL.Text   := cInsOp;
-    qPago.Connection := Eng.ConDst;   qPago.SQL.Text := cInsPago;
-    qDep.Connection  := Eng.ConDst;   qDep.SQL.Text  := cInsDep;
-    qLiquidado.Connection := Eng.ConDst;
+    qOp.Connection   := Eng.Datos.ConexionDestino;   qOp.SQL.Text   := cInsOp;
+    qPago.Connection := Eng.Datos.ConexionDestino;   qPago.SQL.Text := cInsPago;
+    qDep.Connection  := Eng.Datos.ConexionDestino;   qDep.SQL.Text  := cInsDep;
+    qLiquidado.Connection := Eng.Datos.ConexionDestino;
     qLiquidado.SQL.Text := cInsLiquidado;
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.occaj'));
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.occaj'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en Ventas, saliendo...');
+        Eng.Registro.Log('  Cancelacion detectada en Ventas, saliendo...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       iEmp  := qSrc.FieldByName('Empresa').AsInteger;
       iAlm  := qSrc.FieldByName('Almacen').AsInteger;
       iCaja := qSrc.FieldByName('Caja').AsInteger;
@@ -953,8 +953,8 @@ begin
         sUltimaCaja := sCajaKey;
         sUltimoCli  := '';
       end;
-      if Eng.TieneAlmacenDeposito(iEmp) then
-        EsAlmacenDeposito := Eng.EsAlmacenDeposito(iEmp, iAlm)
+      if Eng.Almacenes.TieneDeposito(iEmp) then
+        EsAlmacenDeposito := Eng.Almacenes.EsDeposito(iEmp, iAlm)
       else
         EsAlmacenDeposito :=
           (BoolSN(qSrc.FieldByName('EsDepositoAlm').AsString) = 'S') or
@@ -1070,7 +1070,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('venta', sEmp + '/' + sCaja + '/' + sNum,
+          Eng.Registro.LogError('venta', sEmp + '/' + sCaja + '/' + sNum,
             E.Message, Format('tipo=%s', [sTipoOp]),
             'la operacion requiere que el almacen ya este migrado');
           raise;
@@ -1102,5 +1102,13 @@ begin
     qSrc.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'ventas',
+    'Ventas / Caja (occaj)',
+    'dbo.occaj → operaciones, pagos y depósitos',
+    ['almacenes', 'clientes', 'skus'],
+    MigrarVentas);
 
 end.

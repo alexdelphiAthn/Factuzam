@@ -28,9 +28,9 @@ unit inLibMigEmpresas;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarEmpresas(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarEmpresas(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -38,7 +38,7 @@ uses
   System.SysUtils,
   Data.DB, Uni;
 
-procedure MigrarEmpresas(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarEmpresas(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cSelectSrc =
     'SELECT Empresa, RazonSocial, Nombre, NIF, ' +
@@ -79,19 +79,19 @@ begin
   qIns := TUniQuery.Create(nil);
   qChk := TUniQuery.Create(nil);
   try
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text   := cInsertDst;
-    qChk.Connection := Eng.ConDst;
+    qChk.Connection := Eng.Datos.ConexionDestino;
     qChk.SQL.Text   :=
       'SELECT RAZON_SOCIAL_EMP FROM fza_empresas ' +
       'WHERE CODIGO_EMP_EMP = :c';
 
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocemp'));
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.ocemp'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sCod   := IntToStr(qSrc.FieldByName('Empresa').AsInteger);
       sRazon := Trim(qSrc.FieldByName('RazonSocial').AsString);
       if sRazon = '' then
@@ -106,7 +106,7 @@ begin
       begin
         sRazonDst := Trim(qChk.FieldByName('RAZON_SOCIAL_EMP').AsString);
         Inc(Stats.Saltadas);
-        Eng.LogSalto('empresa', sCod,
+        Eng.Registro.LogSalto('empresa', sCod,
           'PK ya existe (probable seed AGRICULTOR de ' +
           'factuzam_original.sql), se conserva destino',
           sRazon, sRazonDst);
@@ -152,7 +152,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.Log('  ! error insertando empresa "%s": %s',
+          Eng.Registro.Log('  ! error insertando empresa "%s": %s',
                   [sCod, E.Message]);
           raise;
         end;
@@ -165,5 +165,13 @@ begin
     qSrc.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'empresas',
+    'Empresas',
+    'dbo.ocemp → fza_empresas',
+    [],
+    MigrarEmpresas);
 
 end.

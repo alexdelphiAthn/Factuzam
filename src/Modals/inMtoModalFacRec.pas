@@ -77,7 +77,9 @@ implementation
 uses
 
   inLibUser,
-  inLibVerifactuCola;
+  inLibVerifactuCola,
+  inLibEmisionFiscalIntf,
+  inLibEmisionFiscal;
 
 {$R *.dfm}
 
@@ -90,6 +92,7 @@ procedure TfrmGenFacRec.btnGenerarClick(Sender: TObject);
 var
   SavedCursor : TCursor;
   IsError : Boolean;
+  Servicio: IServicioEmisionFiscal;
 begin
   IsError := False;
   if not Assigned(dmFac) then
@@ -124,8 +127,12 @@ begin
              edtNumFacAbono.Text := ParamByName('pidnumfacturaabono').AsString;
              // Rectificativa Verifactu: marcar tipo, enlazar con la
              // original y encolar el registro R1/R5
+             Servicio := CrearServicioEmisionFiscal(
+               ParametrosApp,
+               ParametrosCaja,
+               ConexionPrincipal);
              TVerifactuCola.EncolarRectificativa(ParametrosApp,
-               ParametrosCaja, ConexionPrincipal,
+               ParametrosCaja, ConexionPrincipal, Servicio,
                IdentidadSesion.Usuario,
                edtSerieOrigen.Text, edtNumFacOrigen.Text,
                edtSerieFacAbono.Text, edtNumFacAbono.Text, 'I');

@@ -76,7 +76,6 @@ type
     dsCabecera:TDataSource;
     dsLineas:TDataSource;
     qryDefinicionArticulo: TUniQuery;
-    qryStock: TUniQuery;
     qryVales: TUniQuery;
     procedure DataModuleCreate(Sender: TObject);
     procedure cdsLineasBeforePost(DataSet: TDataSet);
@@ -375,6 +374,8 @@ uses inLibValoresAutomaticos,
      inLibFacturas,
      inLibVerifactu,
      inLibVerifactuCola,
+     inLibEmisionFiscalIntf,
+     inLibEmisionFiscal,
      inLibGenerarTicketBD,
      inLibDocumentoFiscal,
      inLibLicenciaAplicacion,
@@ -387,6 +388,7 @@ type
   TGrabacionFacturaCaja = class
   private
     FDataModule: TdmCajaOpe;
+    FServicioEmisionFiscal: IServicioEmisionFiscal;
     FDatosCobro: TDatosFaseCobro;
     FQuery: TUniQuery;
     FCabecera: TDatosCabeceraFactura;
@@ -1147,6 +1149,10 @@ constructor TGrabacionFacturaCaja.Create(
 begin
   inherited Create;
   FDataModule := ADataModule;
+  FServicioEmisionFiscal := CrearServicioEmisionFiscal(
+    FDataModule.FParametrosApp,
+    FDataModule.FParametrosCaja,
+    FDataModule.FConexion);
   FDatosCobro := ADatosCobro;
   FEmpresa := AEmpresa;
   FAlmacen := AAlmacen;
@@ -1165,6 +1171,7 @@ end;
 
 destructor TGrabacionFacturaCaja.Destroy;
 begin
+  FServicioEmisionFiscal := nil;
   FreeAndNil(FQuery);
   inherited;
 end;
@@ -1670,6 +1677,8 @@ begin
 end;
 
 procedure TGrabacionFacturaCaja.RegistrarFiscalmente;
+var
+  Solicitud: TSolicitudEmisionFiscal;
 begin
   if FRequiereFactura then
   begin
@@ -1683,6 +1692,7 @@ begin
         FDataModule.FParametrosApp,
         FDataModule.FParametrosCaja,
         FDataModule.FConexion,
+        FServicioEmisionFiscal,
         FDataModule.IdentidadSesion.Usuario,
         FSerieRectificada, FNumeroRectificado,
         FSerieGenerada, FNumeroFactura,
@@ -1691,26 +1701,13 @@ begin
     end
     else
     begin
-      case ModoVerifactu(FDataModule.FParametrosApp) of
-        mvVerifactu:
-          TVerifactuCola.EncolarFactura(
-            FDataModule.FParametrosApp,
-            FDataModule.FParametrosCaja, FQuery,
-            FDataModule.IdentidadSesion.Usuario,
-            FSerieGenerada, FNumeroFactura);
-        mvNoVerifactu:
-          TVerifactuCola.RegistrarFacturaNoVerifactu(
-            FDataModule.FParametrosApp,
-            FDataModule.FParametrosCaja, FQuery,
-            FDataModule.IdentidadSesion.Usuario,
-            FSerieGenerada, FNumeroFactura);
-      else
-        TVerifactuCola.MarcarFacturaSinVerifactu(
-          FDataModule.FParametrosApp,
-          FDataModule.FParametrosCaja, FQuery,
-          FDataModule.IdentidadSesion.Usuario,
-          FSerieGenerada, FNumeroFactura);
-      end;
+      Solicitud := TSolicitudEmisionFiscal.ParaAlta(
+        FSerieGenerada,
+        FNumeroFactura,
+        FDataModule.IdentidadSesion.Usuario,
+        '',
+        False);
+      FServicioEmisionFiscal.Emitir(Solicitud);
     end;
   end;
 end;
@@ -2593,7 +2590,6 @@ procedure TdmCajaOpe.DataModuleCreate(Sender: TObject);
 begin
   qryDefinicionArticulo.Connection := FConexion;
   qryVales.Connection := FConexion;
-  qryStock.Connection := FConexion;
   ConfigurarEstructuraCabecera;
   ConfigurarEstructuraLineas;
 end;

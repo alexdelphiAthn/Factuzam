@@ -1,4 +1,4 @@
-inherited frmMtoOpeCaja: TfrmMtoOpeCaja
+﻿inherited frmMtoOpeCaja: TfrmMtoOpeCaja
   Caption = 'Operaci'#243'n de Caja'
   ClientHeight = 413
   ClientWidth = 1355
@@ -763,7 +763,6 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
     Top = 432
   end
   object dsStock: TDataSource
-    DataSet = dmCajaOpe.qryStock
     Left = 960
     Top = 432
   end

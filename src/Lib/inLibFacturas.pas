@@ -18,7 +18,7 @@ interface
 
 uses
   Uni, System.StrUtils, System.SysUtils, System.Classes, Data.DB, System.Math,
-  Datasnap.DBClient, Datasnap.Provider;
+  Datasnap.DBClient, Datasnap.Provider, inLibMotorFiscalVenta;
 
 const
   fnrofaclin = 'NUMERO_FAC_FACLIN';
@@ -156,6 +156,10 @@ type
 
   TFacturaTotales = class;
 
+  TAlcanceRecalculoFactura = (
+    arfSoloLinea,
+    arfLineaYDocumento);
+
   TLinFac = class
   private
     _unqryLin: TDataset;
@@ -177,6 +181,24 @@ type
     _dPorIvaS: currency;
     _dPorIvaE: currency;
     _sMensajeError: string;
+    FCampoNumeroLinea: TField;
+    FCampoCantidad: TField;
+    FCampoImpuestosIncluidos: TField;
+    FCampoTipoIva: TField;
+    FCampoPorcentajeIva: TField;
+    FCampoPrecioSalida: TField;
+    FCampoPorcentajeDto: TField;
+    FCampoPrecioDto: TField;
+    FCampoPrecioSinIva: TField;
+    FCampoPrecioConIva: TField;
+    FCampoTotalConIva: TField;
+    FCampoTotalSinIva: TField;
+    function CampoCurrencyDistinto(
+      ACampo: TField; AValor: Currency): Boolean;
+    function CampoStringDistinto(
+      ACampo: TField; const AValor: string): Boolean;
+    function NecesitaActualizarDataSetLin: Boolean;
+    procedure CachearCamposLinea;
     function GetPrecioSal: Currency;
     procedure SetPrecioSal(const Value: Currency);
     function GetPorDto: Currency;
@@ -241,16 +263,22 @@ type
     _codigoIVA: string;
     _mensajeError: string;
     _LineaenEdicion:TLinFac;
+    _lineasMotorFiscal: TLineasMotorFiscalVenta;
     function LineaActualPendienteDeResolver: Boolean;
+    function ClienteTieneDatosFiscales: Boolean;
+    function CrearConfiguracionMotorFiscal:
+      TConfiguracionMotorFiscalVenta;
     procedure InicializarTotales;
     procedure InicializarConfiguracion;
     procedure LeerDatosFactura;
     procedure LeerPorcentajesDesdeFactura;
     procedure AplicarReglas;
     procedure RecorrerYCalcularLineasConClientDataSet;
-    procedure AcumularTotalesPorTipoIVA(ALinea: TLinFac);
+    procedure AcumularTotalesPorTipoIVA(
+      ALinea: TLinFac; AIndice: Integer);
+    procedure AplicarResultadoMotorFiscal(
+      const AResultado: TResultadoMotorFiscalVenta);
     procedure CalcularTotalesGenerales;
-    procedure CalcularRetenciones;
     procedure ValidarConfiguracion;
     procedure VerificarYCompletarDatosEmpresa;
     procedure CargarConfiguracionIVA(sGrupoZona: string);
@@ -272,11 +300,17 @@ type
     property Totales: TTotalesFactura read _totales;
     property Configuracion: TConfiguracionFactura read _configuracion;
     property Porcentajes: TPorcentajesImpuestos read _porcentajes;
-    property PorcentajeRetencion: Currency read _dPorRetencion write _dPorRetencion;
+    property PorcentajeRetencion: Currency
+      read _dPorRetencion write _dPorRetencion;
     property MensajeError: string read _mensajeError;
     property Cabecera:TDataSet read _unqryFac;
     property Lineas:TDataset read _unqryLineas;
   end;
+  function RecalcularLineaFactura(
+    ALineas: TDataSet;
+    ACabecera: TDataSet;
+    const ACampo: string;
+    const AValor: Variant): Boolean;
   procedure ActualizarLineaFactura(
     AConexion: TUniConnection;
     ALineas: TDataSet;
@@ -418,23 +452,19 @@ begin
   ALinea.Dto := nDiferencia;
 end;
 
-procedure ActualizarLineaFactura(
-  AConexion: TUniConnection;
+function RecalcularLineaFactura(
   ALineas: TDataSet;
   ACabecera: TDataSet;
   const ACampo: string;
-  const AValor: Variant;
-  AAlActualizarTotal: TActualizarTotalFacturaEvent);
+  const AValor: Variant): Boolean;
 var
-  bPuedeActualizar: Boolean;
   oLinea: TLinFac;
-  oTotales: TFacturaTotales;
   nValor: Currency;
 begin
-  bPuedeActualizar := Assigned(ALineas);
-  if bPuedeActualizar then
-    bPuedeActualizar := ALineas.Active and ALineas.CanModify;
-  if bPuedeActualizar then
+  Result := Assigned(ALineas);
+  if Result then
+    Result := ALineas.Active and ALineas.CanModify;
+  if Result then
   begin
     if not (ALineas.State in [dsEdit, dsInsert]) then
       ALineas.Edit;
@@ -462,6 +492,25 @@ begin
     finally
       FreeAndNil(oLinea);
     end;
+  end;
+end;
+
+procedure ActualizarLineaFactura(
+  AConexion: TUniConnection;
+  ALineas: TDataSet;
+  ACabecera: TDataSet;
+  const ACampo: string;
+  const AValor: Variant;
+  AAlActualizarTotal: TActualizarTotalFacturaEvent);
+var
+  oTotales: TFacturaTotales;
+begin
+  if RecalcularLineaFactura(
+       ALineas,
+       ACabecera,
+       ACampo,
+       AValor) then
+  begin
     oTotales := TFacturaTotales.Create(
       AConexion,
       ACabecera,
@@ -490,7 +539,7 @@ end;
 constructor TLinFac.Create(AUnqryLin: TDataset);
 begin
   inherited Create;
-  _unqryLin := AUnqryLin;
+  SetInit(AUnqryLin);
   Self.CopyToObjectLin;
 end;
 
@@ -498,7 +547,7 @@ constructor TLinFac.Create(AUnqryLin, AUnqryFac: TDataset;
                            bCalcularFactura:boolean = false);
 begin
   inherited Create;
-  _unqryLin := AUnqryLin;
+  SetInit(AUnqryLin);
   _unqryFac := AUnqryFac;
   _sMensajeError := '';
   Self.CopyToObjectLin;
@@ -578,23 +627,50 @@ end;
 
 procedure TLinFac.CopyToDataSetLin;
 begin
-  if not Assigned(_unqryLin) then
-    Exit;
-  with _unqryLin do
+  if Assigned(_unqryLin) and NecesitaActualizarDataSetLin then
   begin
-    if State = dsBrowse then Edit;
-    FieldByName(fcant).AsFloat := _dCant;
-    FieldByName(fpreciosal).AsFloat := _dPrecioSal;
-    FieldByName(fPorDto).AsFloat := _dPorDto;
-    FieldByName(fDto).AsFloat := _dDto;
-    FieldByName(fImpcl).AsString := _sImpcl;
-    FieldByName(fTipIVa).AsString := _sTipIva;
-    FieldByName(fPorIva).AsFloat := _dPorIVa;
-    FieldByName(fPreSiva).AsFloat := _dPreSiva;
-    FieldByName(fPreCiva).AsFloat := _dPreCiva;
-    FieldByName(fTotCiva).AsFloat := _dTotCiva;
-    FieldByName(fTotSiva).AsFloat := _dTotSiva;
+    if _unqryLin.State = dsBrowse then
+      _unqryLin.Edit;
+    FCampoCantidad.AsCurrency := _dCant;
+    FCampoPrecioSalida.AsCurrency := _dPrecioSal;
+    FCampoPorcentajeDto.AsCurrency := _dPorDto;
+    FCampoPrecioDto.AsCurrency := _dDto;
+    FCampoImpuestosIncluidos.AsString := _sImpcl;
+    FCampoTipoIva.AsString := _sTipIva;
+    FCampoPorcentajeIva.AsCurrency := _dPorIVa;
+    FCampoPrecioSinIva.AsCurrency := _dPreSiva;
+    FCampoPrecioConIva.AsCurrency := _dPreCiva;
+    FCampoTotalConIva.AsCurrency := _dTotCiva;
+    FCampoTotalSinIva.AsCurrency := _dTotSiva;
   end;
+end;
+
+function TLinFac.CampoCurrencyDistinto(
+  ACampo: TField; AValor: Currency): Boolean;
+begin
+  Result := ACampo.IsNull or (ACampo.AsCurrency <> AValor);
+end;
+
+function TLinFac.CampoStringDistinto(
+  ACampo: TField; const AValor: string): Boolean;
+begin
+  Result := ACampo.IsNull or (ACampo.AsString <> AValor);
+end;
+
+function TLinFac.NecesitaActualizarDataSetLin: Boolean;
+begin
+  Result :=
+    CampoCurrencyDistinto(FCampoCantidad, _dCant) or
+    CampoCurrencyDistinto(FCampoPrecioSalida, _dPrecioSal) or
+    CampoCurrencyDistinto(FCampoPorcentajeDto, _dPorDto) or
+    CampoCurrencyDistinto(FCampoPrecioDto, _dDto) or
+    CampoStringDistinto(FCampoImpuestosIncluidos, _sImpcl) or
+    CampoStringDistinto(FCampoTipoIva, _sTipIva) or
+    CampoCurrencyDistinto(FCampoPorcentajeIva, _dPorIVa) or
+    CampoCurrencyDistinto(FCampoPrecioSinIva, _dPreSiva) or
+    CampoCurrencyDistinto(FCampoPrecioConIva, _dPreCiva) or
+    CampoCurrencyDistinto(FCampoTotalConIva, _dTotCiva) or
+    CampoCurrencyDistinto(FCampoTotalSinIva, _dTotSiva);
 end;
 
 procedure TLinFac.CopyToDataSetFac;
@@ -604,24 +680,21 @@ end;
 
 procedure TLinFac.CopyToObjectLin;
 begin
-  with _unqryLin do
-  begin
-    _sNumLin := FieldByName(fnrolin).AsString;
-    _dCant := FieldByName(fcant).AsFloat;
-    if FieldByName(fImpcl).AsString = '' then
-      _sImpcl := 'S'
-    else
-      _sImpcl := FieldByName(fImpcl).AsString;
-    _sTipIVA := FieldByName(fTipIva).AsString;
-    _dPorIVa := FieldByName(fPorIva).AsFloat;
-    _dPrecioSal := FieldByName(fpreciosal).AsFloat;
-    _dPorDto := FieldByName(fPorDto).AsFloat;
-    _dDto := FieldByName(fDto).AsFloat;
-    _dPreSiva := FieldByName(fPreSiva).AsFloat;
-    _dPreCiva := FieldByName(fPreCiva).AsFloat;
-    _dTotCiva := FieldByName(fTotCiva).AsFloat;
-    _dTotSiva := FieldByName(fTotSiva).AsFloat;
-  end;
+  _sNumLin := FCampoNumeroLinea.AsString;
+  _dCant := FCampoCantidad.AsCurrency;
+  if FCampoImpuestosIncluidos.AsString = '' then
+    _sImpcl := 'S'
+  else
+    _sImpcl := FCampoImpuestosIncluidos.AsString;
+  _sTipIVA := FCampoTipoIva.AsString;
+  _dPorIVa := FCampoPorcentajeIva.AsCurrency;
+  _dPrecioSal := FCampoPrecioSalida.AsCurrency;
+  _dPorDto := FCampoPorcentajeDto.AsCurrency;
+  _dDto := FCampoPrecioDto.AsCurrency;
+  _dPreSiva := FCampoPrecioSinIva.AsCurrency;
+  _dPreCiva := FCampoPrecioConIva.AsCurrency;
+  _dTotCiva := FCampoTotalConIva.AsCurrency;
+  _dTotSiva := FCampoTotalSinIva.AsCurrency;
 end;
 
 procedure TLinFac.CopyToObjectFac;
@@ -639,6 +712,23 @@ end;
 procedure TLinFac.SetInit(AUnqryLin: TDataset);
 begin
   _unqryLin := AUnqryLin;
+  CachearCamposLinea;
+end;
+
+procedure TLinFac.CachearCamposLinea;
+begin
+  FCampoNumeroLinea := _unqryLin.FieldByName(fnrolin);
+  FCampoCantidad := _unqryLin.FieldByName(fcant);
+  FCampoImpuestosIncluidos := _unqryLin.FieldByName(fimpcl);
+  FCampoTipoIva := _unqryLin.FieldByName(ftipiva);
+  FCampoPorcentajeIva := _unqryLin.FieldByName(fporiva);
+  FCampoPrecioSalida := _unqryLin.FieldByName(fpreciosal);
+  FCampoPorcentajeDto := _unqryLin.FieldByName(fpordto);
+  FCampoPrecioDto := _unqryLin.FieldByName(fdto);
+  FCampoPrecioSinIva := _unqryLin.FieldByName(fpresiva);
+  FCampoPrecioConIva := _unqryLin.FieldByName(fpreciva);
+  FCampoTotalConIva := _unqryLin.FieldByName(ftotciva);
+  FCampoTotalSinIva := _unqryLin.FieldByName(ftotsiva);
 end;
 
 // Getters y Setters
@@ -857,6 +947,8 @@ end;
 procedure TFacturaTotales.InicializarTotales;
 begin
   FillChar(_totales, SizeOf(_totales), 0);
+  SetLength(_lineasMotorFiscal, 0);
+  FTieneLineasNegativas := False;
 end;
 
 procedure TFacturaTotales.InicializarConfiguracion;
@@ -1107,6 +1199,60 @@ begin
   end;
 end;
 
+function TFacturaTotales.ClienteTieneDatosFiscales: Boolean;
+var
+  Direccion: string;
+  Nif: string;
+  RazonSocial: string;
+begin
+  Nif := Trim(
+    _unqryFac.FieldByName('NIF_CLIENTE_FAC').AsString);
+  RazonSocial := Trim(
+    _unqryFac.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString);
+  Direccion := Trim(
+    _unqryFac.FieldByName('DIRECCION1_CLIENTE_FAC').AsString);
+  Result :=
+    (Nif <> '') and
+    (RazonSocial <> '') and
+    (Direccion <> '');
+end;
+
+function TFacturaTotales.CrearConfiguracionMotorFiscal:
+  TConfiguracionMotorFiscalVenta;
+var
+  PuedeAplicarRetencion: Boolean;
+begin
+  FillChar(Result, SizeOf(Result), 0);
+  Result.RedondearPorLinea := True;
+  Result.CalcularIvaIncluidoPorDiferencia := True;
+  Result.AplicaRecargo :=
+    _configuracion.AplicaRecargo and
+    _configuracion.IVARecargo;
+  Result.EsFacturaSimplificada :=
+    _configuracion.EsFacturaSimplificada;
+  Result.ClienteConDatosFiscales :=
+    ClienteTieneDatosFiscales;
+  Result.RetencionIncluyeImpuestos :=
+    _configuracion.IRPFImpuestoIncluido;
+  PuedeAplicarRetencion :=
+    _configuracion.AplicaRetencionesCliente and
+    _configuracion.AplicaRetencionesEmpresa and
+    not (
+      _configuracion.EsVentaActivoFijo and
+      _configuracion.EsRegimenAgricolaEmpresa);
+  Result.AplicaRetencion := PuedeAplicarRetencion;
+  if _configuracion.EsVentaActivoFijo and
+     _configuracion.EsRegimenAgricolaEmpresa then
+    _dPorRetencion := 0;
+  if PuedeAplicarRetencion and
+     not Result.EsFacturaSimplificada and
+     Result.ClienteConDatosFiscales and
+     (_dPorRetencion = 0) then
+    _dPorRetencion :=
+      BuscarPorcenRetencion(_codigoEmpresa);
+  Result.PorcentajeRetencion := _dPorRetencion;
+end;
+
 function TFacturaTotales.ProcesarFacturaCompleta: Boolean;
 begin
   _mensajeError := '';
@@ -1144,150 +1290,101 @@ begin
   end;
 end;
 
-procedure TFacturaTotales.AcumularTotalesPorTipoIVA(ALinea: TLinFac);
+procedure TFacturaTotales.AcumularTotalesPorTipoIVA(
+  ALinea: TLinFac; AIndice: Integer);
 var
-  porcentajeIVA, porcentajeRE: Currency;
-  baseImponible, importeIVA, importeRE: Currency;
-  totalLineaCIVA: Currency;
+  LineaMotor: TLineaMotorFiscalVenta;
 begin
-  // 1. Calcular base imponible y total de la línea forzando el redondeo a 2
-  // decimales
-  baseImponible := SimpleRoundTo(ALinea.TotSiva, -2);
-  totalLineaCIVA := SimpleRoundTo(ALinea.TotCiva, -2);
-  // Obtener porcentajes según el tipo de IVA
-  porcentajeIVA := ObtenerPorcentajePorTipo(ALinea.TipoIva);
-  porcentajeRE := ObtenerPorcentajeREPorTipo(ALinea.TipoIva);
-  // 2. Calcular importes aplicando la regla contable de diferencia si tiene IVA
-  // incluido
-  if SameText(ALinea.Impcl, 'S') then
-  begin
-    importeIVA := totalLineaCIVA - baseImponible;
-    importeRE := SimpleRoundTo(baseImponible * (porcentajeRE / 100), -2);
-  end
-  else
-  begin
-    importeIVA := SimpleRoundTo(baseImponible * (porcentajeIVA / 100), -2);
-    importeRE := SimpleRoundTo(baseImponible * (porcentajeRE / 100), -2);
-  end;
-  if ALinea._dCant < 0 then
-    Self.FTieneLineasNegativas := True;
-  _totales.TotalCantidades := _totales.TotalCantidades + ALinea.Cant;
-  _totales.TotalBruto := _totales.TotalBruto + (ALinea.PrecioSal * ALinea.Cant);
-  _totales.TotalDescuentosLineas := _totales.TotalDescuentosLineas +
-                                    (ALinea.Dto * ALinea.Cant);
-  case IndexStr(ALinea.TipoIva, ['N', 'R', 'S', 'E']) of
-    0: // IVA Normal
-      begin
-        _totales.IVAN.BaseImponible :=
-          _totales.IVAN.BaseImponible + baseImponible;
-        _totales.IVAN.PorcentajeIVA := porcentajeIVA;
-        _totales.IVAN.PorcentajeRE := porcentajeRE;
-        _totales.IVAN.ImporteIVA := _totales.IVAN.ImporteIVA + importeIVA;
-        _totales.IVAN.ImporteRE := _totales.IVAN.ImporteRE + importeRE;
-      end;
-    1: // IVA Reducido
-      begin
-        _totales.IVAR.BaseImponible :=
-          _totales.IVAR.BaseImponible + baseImponible;
-        _totales.IVAR.PorcentajeIVA := porcentajeIVA;
-        _totales.IVAR.PorcentajeRE := porcentajeRE;
-        _totales.IVAR.ImporteIVA := _totales.IVAR.ImporteIVA + importeIVA;
-        _totales.IVAR.ImporteRE := _totales.IVAR.ImporteRE + importeRE;
-      end;
-    2: // IVA SuperReducido
-      begin
-        _totales.IVAS.BaseImponible :=
-          _totales.IVAS.BaseImponible + baseImponible;
-        _totales.IVAS.PorcentajeIVA := porcentajeIVA;
-        _totales.IVAS.PorcentajeRE := porcentajeRE;
-        _totales.IVAS.ImporteIVA := _totales.IVAS.ImporteIVA + importeIVA;
-        _totales.IVAS.ImporteRE := _totales.IVAS.ImporteRE + importeRE;
-      end;
-    3: // IVA Exento
-      begin
-        _totales.IVAE.BaseImponible :=
-          _totales.IVAE.BaseImponible + baseImponible;
-        _totales.IVAE.PorcentajeIVA := porcentajeIVA;
-        _totales.IVAE.PorcentajeRE := porcentajeRE;
-        _totales.IVAE.ImporteIVA := _totales.IVAE.ImporteIVA + importeIVA;
-        _totales.IVAE.ImporteRE := _totales.IVAE.ImporteRE + importeRE;
-      end;
-  end;
+  FillChar(LineaMotor, SizeOf(LineaMotor), 0);
+  LineaMotor.TipoIva := ALinea.TipoIva;
+  LineaMotor.Base := ALinea.TotSiva;
+  LineaMotor.TotalConIva := ALinea.TotCiva;
+  LineaMotor.PorcentajeIva :=
+    ObtenerPorcentajePorTipo(ALinea.TipoIva);
+  LineaMotor.PorcentajeRecargo :=
+    ObtenerPorcentajeREPorTipo(ALinea.TipoIva);
+  LineaMotor.Bruto := ALinea.PrecioSal * ALinea.Cant;
+  LineaMotor.Descuento := ALinea.Dto * ALinea.Cant;
+  LineaMotor.Cantidad := ALinea.Cant;
+  LineaMotor.ImpuestosIncluidos :=
+    SameText(ALinea.Impcl, 'S');
+  _lineasMotorFiscal[AIndice] := LineaMotor;
+end;
+
+procedure TFacturaTotales.AplicarResultadoMotorFiscal(
+  const AResultado: TResultadoMotorFiscalVenta);
+begin
+  _totales.IVAN.BaseImponible := AResultado.Normal.Base;
+  _totales.IVAN.PorcentajeIVA := AResultado.Normal.PorcentajeIva;
+  _totales.IVAN.ImporteIVA := AResultado.Normal.ImporteIva;
+  _totales.IVAN.PorcentajeRE :=
+    AResultado.Normal.PorcentajeRecargo;
+  _totales.IVAN.ImporteRE := AResultado.Normal.ImporteRecargo;
+  _totales.IVAR.BaseImponible := AResultado.Reducido.Base;
+  _totales.IVAR.PorcentajeIVA := AResultado.Reducido.PorcentajeIva;
+  _totales.IVAR.ImporteIVA := AResultado.Reducido.ImporteIva;
+  _totales.IVAR.PorcentajeRE :=
+    AResultado.Reducido.PorcentajeRecargo;
+  _totales.IVAR.ImporteRE := AResultado.Reducido.ImporteRecargo;
+  _totales.IVAS.BaseImponible := AResultado.SuperReducido.Base;
+  _totales.IVAS.PorcentajeIVA :=
+    AResultado.SuperReducido.PorcentajeIva;
+  _totales.IVAS.ImporteIVA :=
+    AResultado.SuperReducido.ImporteIva;
+  _totales.IVAS.PorcentajeRE :=
+    AResultado.SuperReducido.PorcentajeRecargo;
+  _totales.IVAS.ImporteRE :=
+    AResultado.SuperReducido.ImporteRecargo;
+  _totales.IVAE.BaseImponible := AResultado.Exento.Base;
+  _totales.IVAE.PorcentajeIVA := AResultado.Exento.PorcentajeIva;
+  _totales.IVAE.ImporteIVA := AResultado.Exento.ImporteIva;
+  _totales.IVAE.PorcentajeRE :=
+    AResultado.Exento.PorcentajeRecargo;
+  _totales.IVAE.ImporteRE := AResultado.Exento.ImporteRecargo;
+  _totales.BaseNormal := AResultado.Normal.Base;
+  _totales.BaseReducida := AResultado.Reducido.Base;
+  _totales.BaseSuper := AResultado.SuperReducido.Base;
+  _totales.BaseExenta := AResultado.Exento.Base;
+  _totales.CuotaIVANormal := AResultado.Normal.ImporteIva;
+  _totales.CuotaIVAReducida := AResultado.Reducido.ImporteIva;
+  _totales.CuotaIVASuper := AResultado.SuperReducido.ImporteIva;
+  _totales.CuotaIVAExenta := AResultado.Exento.ImporteIva;
+  _totales.CuotaRENormal := AResultado.Normal.ImporteRecargo;
+  _totales.CuotaREReducida := AResultado.Reducido.ImporteRecargo;
+  _totales.CuotaRESuper :=
+    AResultado.SuperReducido.ImporteRecargo;
+  _totales.CuotaREExenta := AResultado.Exento.ImporteRecargo;
+  _totales.TotalBases := AResultado.TotalBases;
+  _totales.TotalIVANormal := AResultado.Normal.ImporteIva;
+  _totales.TotalIVAReducido := AResultado.Reducido.ImporteIva;
+  _totales.TotalIVASuperReducido :=
+    AResultado.SuperReducido.ImporteIva;
+  _totales.TotalIVAExento := AResultado.Exento.ImporteIva;
+  _totales.TotalREcargo := AResultado.TotalRecargo;
+  _totales.TotalImpuestos := AResultado.TotalImpuestos;
+  _totales.TotalRetencion := AResultado.TotalRetencion;
+  _totales.TotalLiquido := AResultado.TotalLiquido;
+  _totales.TotalBruto := AResultado.TotalBruto;
+  _totales.TotalDescuentosLineas :=
+    AResultado.TotalDescuentos;
+  _totales.TotalCantidades := AResultado.TotalCantidades;
+  FTieneLineasNegativas := AResultado.TieneImportesNegativos;
 end;
 
 procedure TFacturaTotales.CalcularTotalesGenerales;
-begin
-  _totales.TotalBases := _totales.IVAN.BaseImponible +
-                         _totales.IVAR.BaseImponible +
-                         _totales.IVAS.BaseImponible +
-                         _totales.IVAE.BaseImponible;
-  _totales.TotalIVANormal := _totales.IVAN.ImporteIVA;
-  _totales.TotalIVAReducido := _totales.IVAR.ImporteIVA;
-  _totales.TotalIVASuperReducido := _totales.IVAS.ImporteIVA;
-  _totales.TotalIVAExento := _totales.IVAE.ImporteIVA;
-  _totales.TotalREcargo := _totales.IVAN.ImporteRE + _totales.IVAR.ImporteRE +
-                          _totales.IVAS.ImporteRE + _totales.IVAE.ImporteRE;
-  _totales.TotalImpuestos := _totales.TotalIVANormal +
-                             _totales.TotalIVAReducido +
-                             _totales.TotalIVASuperReducido +
-                             _totales.TotalIVAExento +
-                             _totales.TotalREcargo;
-end;
-
-procedure TFacturaTotales.CalcularRetenciones;
 var
-  baseCalculo: Currency;
-  sNif, sRazon, sDir: string;
-  tieneDatosMinimos: Boolean;
+  ConfiguracionMotor: TConfiguracionMotorFiscalVenta;
+  ResultadoMotor: TResultadoMotorFiscalVenta;
 begin
-  if _configuracion.EsFacturaSimplificada then
-  begin
-    _totales.TotalRetencion := 0;
-    Exit;
-  end;
-  sNif   := Trim(_unqryFac.FieldByName('NIF_CLIENTE_FAC').AsString);
-  sRazon := Trim(_unqryFac.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString);
-  sDir   := Trim(_unqryFac.FieldByName('DIRECCION1_CLIENTE_FAC').AsString);
-  tieneDatosMinimos := (sNif <> '') and (sRazon <> '') and (sDir <> '');
-  if not tieneDatosMinimos then
-  begin
-    _totales.TotalRetencion := 0;
-    // _mensajeError := 'Cliente no cualificado: faltan datos fiscales.
-    //                   IRPF no aplicado.';
-    Exit;
-  end;
-  if not (_configuracion.AplicaRetencionesCliente and
-          _configuracion.AplicaRetencionesEmpresa) then
-  begin
-    _totales.TotalRetencion := 0;
-    Exit;
-  end;
-  if (_configuracion.EsVentaActivoFijo and
-      _configuracion.EsRegimenAgricolaEmpresa) then
-  begin
-    _dPorRetencion := 0;
-    _totales.TotalRetencion := 0;
-    Exit;
-  end;
-  if (_dPorRetencion = 0) and (_configuracion.AplicaRetencionesCliente and
-          _configuracion.AplicaRetencionesEmpresa) then
-  begin
-    _dPorRetencion := BuscarPorcenRetencion(_codigoEmpresa);
-  end;
-  if _configuracion.IRPFImpuestoIncluido then
-    baseCalculo := _totales.TotalBases + _totales.TotalImpuestos
-  else
-    baseCalculo := _totales.TotalBases;
-  _totales.TotalRetencion := baseCalculo * (_dPorRetencion / 100);
+  ConfiguracionMotor := CrearConfiguracionMotorFiscal;
+  ResultadoMotor := CalcularTotalesMotorFiscalVenta(
+    _lineasMotorFiscal, ConfiguracionMotor);
+  AplicarResultadoMotorFiscal(ResultadoMotor);
 end;
 
 procedure TFacturaTotales.CalcularTotalesFactura;
 begin
   CalcularTotalesGenerales;
-  CalcularRetenciones;
-  _totales.TotalLiquido := _totales.TotalBases +
-                           _totales.TotalImpuestos -
-                           _totales.TotalRetencion;
 end;
 
 procedure TFacturaTotales.ActualizarTotalesEnDataSet;
@@ -1363,8 +1460,9 @@ end;
 
 procedure TFacturaTotales.RecorrerYCalcularLineasConClientDataSet;
 var
-  lineaActual: TLinFac;
   bookmark: TBookmark;
+  iIndiceMotor: Integer;
+  lineaActual: TLinFac;
   WasInsert, WasEdit, WasEmptyInsert: Boolean;
 begin
   if not Assigned(_unqryLineas) or not _unqryLineas.Active then
@@ -1398,18 +1496,27 @@ begin
     // ======================================================================
     bookmark := _unqryLineas.GetBookmark;
     _unqryLineas.First;
-    while not _unqryLineas.Eof do
-    begin
-      lineaActual := TLinFac.Create(_unqryLineas, _unqryFac, False);
-      if _configuracion.IVAExento then
-        lineaActual.TipoIva := 'E';
-      lineaActual.PorIva := ObtenerPorcentajePorTipo(lineaActual.TipoIva);
-      lineaActual.CalcularLinea;
-      AcumularTotalesPorTipoIVA(lineaActual);
-      lineaActual.CopyToDataSetLin;
+    SetLength(_lineasMotorFiscal, _unqryLineas.RecordCount);
+    iIndiceMotor := 0;
+    lineaActual := TLinFac.Create(_unqryLineas, _unqryFac, False);
+    try
+      while not _unqryLineas.Eof do
+      begin
+        lineaActual.CopyToObjectLin;
+        if _configuracion.IVAExento then
+          lineaActual.TipoIva := 'E';
+        lineaActual.PorIva :=
+          ObtenerPorcentajePorTipo(lineaActual.TipoIva);
+        lineaActual.CalcularLinea;
+        AcumularTotalesPorTipoIVA(lineaActual, iIndiceMotor);
+        lineaActual.CopyToDataSetLin;
+        Inc(iIndiceMotor);
+        _unqryLineas.Next;
+      end;
+    finally
       FreeAndNil(lineaActual);
-      _unqryLineas.Next;
     end;
+    SetLength(_lineasMotorFiscal, iIndiceMotor);
     if _unqryLineas.BookmarkValid(bookmark) then
     begin
       _unqryLineas.GotoBookmark(bookmark);

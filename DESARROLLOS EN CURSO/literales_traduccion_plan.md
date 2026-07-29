@@ -157,18 +157,34 @@ general para traducir los textos propios guardados en los DFM.
 
 Antes de tocar los DFM:
 
-- [ ] Elegir el origen de traducciones: recursos, fichero por idioma o BBDD.
-- [ ] Definir una clave estable que no dependa del texto español.
-- [ ] Implementar la aplicación de idioma desde `TfrmBase`.
-- [ ] Añadir idioma configurado y fallback a español.
-- [ ] Preparar un pseudoidioma que alargue textos para detectar recortes.
+- [x] Elegir el origen de traducciones: BBDD (`fza_traducciones`).
+- [x] Definir una clave estable que no dependa del texto español.
+- [x] Implementar la aplicación de idioma desde `TfrmBase`.
+- [x] Añadir idioma configurado y fallback a español.
+- [x] Preparar un pseudoidioma que alargue textos para detectar recortes.
 - [ ] Verificar formularios heredados y controles DevExpress.
+
+La clave de una propiedad sigue el formato:
+
+`<unidad>.<clase raíz>[.<componente>].<propiedad>`
+
+Ejemplo:
+
+`inMtoLogon.TfrmLogon.lblUsuario.Caption`
+
+Las propiedades iniciales son `Caption`, `Hint`, `Title` y `DisplayName`.
+El servicio conserva el texto del DFM cuando no encuentra la clave. Las
+unidades que no heredan de `TfrmBase` pueden recibir `IServicioTraducciones`
+o llamar a `AplicarTraducciones` pasando el componente y su propietario.
+
+El parámetro `appIdioma` selecciona el idioma. El valor predeterminado es
+`es-ES` y `qps-ploc` activa el pseudoidioma.
 
 Inventario para seguimiento:
 
 | Tanda | Alcance | Propiedades aproximadas | Estado |
 |---|---|---:|---|
-| D01 | Infraestructura y selector de idioma | No aplica | PENDIENTE |
+| D01 | Infraestructura y selector de idioma | No aplica | COMPILADO |
 | D02 | Core | 126 | PENDIENTE |
 | D03 | Forms A-B | 512 | PENDIENTE |
 | D04 | Forms C | 540 | PENDIENTE |
@@ -281,6 +297,7 @@ test; si solo compila, el estado permanece en `COMPILADO`.
 | 28/07/2026 | M22 | Win32 Debug OK | 67 revisados; 0 directos | No ejecutado | Un hint previo |
 | 28/07/2026 | M23 | Win32 Debug OK | 22 revisados; 0 directos | No ejecutado | Un hint previo |
 | 28/07/2026 | M24 | Win32 Debug OK | 19 revisados; 0 directos | No ejecutado | Un hint previo |
+| 29/07/2026 | D01 | Win32 Debug OK | OK | No | Visual pendiente |
 
 ## Criterio de finalización
 

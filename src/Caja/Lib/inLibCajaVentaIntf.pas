@@ -16,7 +16,7 @@ unit inLibCajaVentaIntf;
 interface
 
 uses
-  System.Classes, inLibCajaTipos, inLibFaseCobro;
+  System.Classes, Data.DB, inLibCajaTipos, inLibFaseCobro;
 
 type
   TMotivoStockVenta = (
@@ -36,6 +36,74 @@ type
     Permitida: Boolean;
     Motivo: TMotivoStockVenta;
     Mensaje: string;
+  end;
+  IResultadoConsultaCaja = interface
+    ['{2D060C54-6A4E-472E-B970-27777230D9E2}']
+    function DataSet: TDataSet;
+  end;
+  TEmpleadoCaja = record
+    Codigo: string;
+    Nombre: string;
+  end;
+  TClienteCaja = record
+    Codigo: string;
+    RazonSocial: string;
+    Nif: string;
+    Movil: string;
+    Email: string;
+    Direccion1: string;
+    Direccion2: string;
+    Poblacion: string;
+    Provincia: string;
+    CodigoPostal: string;
+    CodigoPais: string;
+    NombrePais: string;
+    EsIvaRecargo: string;
+    CodigoOficinaContable: string;
+    CodigoOrganoGestor: string;
+    CodigoUnidadTramitadora: string;
+    EsIvaExento: string;
+    EsRegimenEspecialAgricola: string;
+    EsRetenciones: string;
+    EsIntracomunitario: string;
+    CodigoFormaPago: string;
+    TarifaArticulo: string;
+    EsPermiteDeuda: string;
+  end;
+  IRepositorioConsultasCaja = interface
+    ['{16818A0B-0B01-4D6B-A8CD-9C94923930EA}']
+    function ConsultarStock(
+      const ACodigoArticulo: string): IResultadoConsultaCaja;
+    function ConsultarClientes: IResultadoConsultaCaja;
+    function ConsultarEmpleados: IResultadoConsultaCaja;
+    function BuscarEmpleado(
+      const ATexto: string;
+      out AEmpleado: TEmpleadoCaja): Boolean;
+    function ObtenerCliente(
+      const ACodigo: string;
+      out ACliente: TClienteCaja): Boolean;
+    function ConsultarCabeceraFactura(
+      const ASerie, ANumero: string): IResultadoConsultaCaja;
+    function ConsultarLineasFactura(
+      const ASerie, ANumero: string): IResultadoConsultaCaja;
+  end;
+  TResultadoRectificacionCaja = record
+    Serie: string;
+    Numero: string;
+    Tipo: TTipoRectificativaCaja;
+    TratamientoMovimientos:
+      TTratamientoMovimientosRectificativa;
+    DescripcionTipo: string;
+  end;
+  IServicioRectificacionCaja = interface
+    ['{E38D33D2-273C-4F5A-B40A-BEF6A91B5364}']
+    function Cargar(
+      const ASerie, ANumero: string;
+      ATipo: TTipoRectificativaCaja;
+      ATratamientoMovimientos:
+        TTratamientoMovimientosRectificativa;
+      ACabecera, ALineas: TDataSet
+    ): TResultadoRectificacionCaja;
   end;
   IPoliticaStockVenta = interface
     ['{D2A29706-51CA-48BA-B1AA-BCA539E8D89F}']
@@ -120,6 +188,14 @@ type
     function Ejecutar(
       const ASolicitud: TSolicitudCierreVenta
     ): TResultadoCierreVenta;
+  end;
+  TServiciosOperacionCaja = record
+    RepositorioConsultas: IRepositorioConsultasCaja;
+    ServicioRectificacion: IServicioRectificacionCaja;
+    PoliticaStock: IPoliticaStockVenta;
+    RepartidorDescuento: IRepartidorDescuento;
+    Impresor: IImpresorVenta;
+    ServicioCierre: IServicioCierreVenta;
   end;
 
 function EvaluarPoliticaStockVenta(

@@ -28,6 +28,12 @@ uses
   inLibDiag in '..\src\Lib\inLibDiag.pas',
   inLibCadenas in '..\src\Lib\inLibCadenas.pas',
   inLibCifrado in '..\src\Lib\inLibCifrado.pas',
+  inLibCifradoCopias in
+    '..\src\Lib\inLibCifradoCopias.pas',
+  inLibCopiasSeguridadIntf in
+    '..\src\Lib\inLibCopiasSeguridadIntf.pas',
+  inLibCopiasSeguridadReglas in
+    '..\src\Lib\inLibCopiasSeguridadReglas.pas',
   inLibConfiguracionIni in
     '..\src\Lib\inLibConfiguracionIni.pas',
   inLibDocumentoFiscal in
@@ -50,17 +56,24 @@ uses
   inLibImpuestosComun in '..\src\Lib\inLibImpuestosComun.pas',
   inLibComprasImpuestos in '..\src\Lib\inLibComprasImpuestos.pas',
   inLibVentasImpuestos in '..\src\Lib\inLibVentasImpuestos.pas',
+  inLibMotorFiscalVenta in
+    '..\src\Lib\inLibMotorFiscalVenta.pas',
+  inLibSqlSeguro in '..\src\Lib\inLibSqlSeguro.pas',
   inLibRectificativas in '..\src\Lib\inLibRectificativas.pas',
   inLibArticulosFiltro in '..\src\Lib\inLibArticulosFiltro.pas',
   inLibCajaTipos in '..\src\Caja\Lib\inLibCajaTipos.pas',
   inLibFaseCobro in '..\src\Caja\Lib\inLibFaseCobro.pas',
   inLibCajaVentaIntf in '..\src\Caja\Lib\inLibCajaVentaIntf.pas',
   inLibCajaDescuentos in '..\src\Caja\Lib\inLibCajaDescuentos.pas',
+  inLibCajaRectificacion in
+    '..\src\Caja\Lib\inLibCajaRectificacion.pas',
   inLibCajaCierreVenta in '..\src\Caja\Lib\inLibCajaCierreVenta.pas',
   inLibComprasSesionesReglas in
     '..\src\Lib\inLibComprasSesionesReglas.pas',
   inLibPerfilesUsuarioValores in
     '..\src\Lib\inLibPerfilesUsuarioValores.pas',
+  inLibExcepcionesAplicacionIntf in
+    '..\src\Lib\inLibExcepcionesAplicacionIntf.pas',
   PruebasAtributosPaleta in 'PruebasAtributosPaleta.pas',
   PruebasColumnasDocumento in 'PruebasColumnasDocumento.pas',
   PruebasFiltroUsuario in 'PruebasFiltroUsuario.pas',
@@ -72,6 +85,7 @@ uses
   PruebasDiagnosticoMetadata in 'PruebasDiagnosticoMetadata.pas',
   PruebasCadenas in 'PruebasCadenas.pas',
   PruebasCifrado in 'PruebasCifrado.pas',
+  PruebasCopiasSeguridad in 'PruebasCopiasSeguridad.pas',
   PruebasConfiguracionIni in 'PruebasConfiguracionIni.pas',
   PruebasIdentificacionFiscalBancaria in
     'PruebasIdentificacionFiscalBancaria.pas',
@@ -88,10 +102,13 @@ uses
     'PruebasNavegacionDocumento.pas',
   PruebasImpuestosComun in 'PruebasImpuestosComun.pas',
   PruebasTotalesDocumentos in 'PruebasTotalesDocumentos.pas',
+  PruebasSqlSeguro in 'PruebasSqlSeguro.pas',
   PruebasRectificativas in 'PruebasRectificativas.pas',
   PruebasReglasCompartidas in 'PruebasReglasCompartidas.pas',
   PruebasCajaVenta in 'PruebasCajaVenta.pas',
   PruebasFacturasServicios in 'PruebasFacturasServicios.pas',
+  PruebasExcepcionesAplicacion in
+    'PruebasExcepcionesAplicacion.pas',
   PruebasEmisionFiscal in 'PruebasEmisionFiscal.pas';
 
 var

@@ -40,9 +40,9 @@ unit inLibMigProveedores;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarProveedores(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarProveedores(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -50,14 +50,14 @@ uses
   System.SysUtils,
   Data.DB, Uni;
 
-function ColumnaDestinoExiste(Eng: TMigEngine; const sTabla,
+function ColumnaDestinoExiste(Eng: IContextoMigracion; const sTabla,
   sColumna: string): Boolean;
 var
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text :=
       'SELECT COUNT(*) AS N ' +
       '  FROM INFORMATION_SCHEMA.COLUMNS ' +
@@ -91,7 +91,7 @@ begin
   end;
 end;
 
-procedure MigrarProveedores(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarProveedores(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cSelectSrc =
     'SELECT Proveedor, Nombre, RazonSocial, NIF, ' +
@@ -157,7 +157,7 @@ begin
   qIns := TUniQuery.Create(nil);
   qChk := TUniQuery.Create(nil);
   try
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     bTieneCodigoFp := ColumnaDestinoExiste(Eng, 'fza_proveedores',
                                            'CODIGO_FP_PRV');
     if bTieneCodigoFp then
@@ -165,20 +165,20 @@ begin
     else
     begin
       qIns.SQL.Text := cInsertDstBase;
-      Eng.Log('  proveedores: CODIGO_FP_PRV no existe; se omite la forma ' +
+      Eng.Registro.Log('  proveedores: CODIGO_FP_PRV no existe; se omite la forma ' +
               'de pago por defecto. Ejecuta proveedores_pagos_defecto.sql.');
     end;
-    qChk.Connection := Eng.ConDst;
+    qChk.Connection := Eng.Datos.ConexionDestino;
     qChk.SQL.Text   :=
       'SELECT RAZON_SOCIAL_PRV FROM fza_proveedores ' +
       'WHERE CODIGO_PRV_PRV = :c';
 
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocpro'));
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.ocpro'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sCod    := IntToStr(qSrc.FieldByName('Proveedor').AsInteger);
       sNombre := Trim(qSrc.FieldByName('Nombre').AsString);
       sRazon  := Trim(qSrc.FieldByName('RazonSocial').AsString);
@@ -193,7 +193,7 @@ begin
       begin
         sRazonDst := Trim(qChk.FieldByName('RAZON_SOCIAL_PRV').AsString);
         Inc(Stats.Saltadas);
-        Eng.LogSalto('proveedor', sCod,
+        Eng.Registro.LogSalto('proveedor', sCod,
           'PK ya existe (cuidado: seed Northwind 3-23 colisiona con ' +
           'codigos reales del legacy), se conserva destino',
           sRazon, sRazonDst);
@@ -257,7 +257,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.Log('  ! error insertando proveedor "%s": %s',
+          Eng.Registro.Log('  ! error insertando proveedor "%s": %s',
                   [sCod, E.Message]);
           raise;
         end;
@@ -270,5 +270,13 @@ begin
     qSrc.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'proveedores',
+    'Proveedores',
+    'dbo.ocpro → fza_proveedores',
+    ['tipos_efecto_compra'],
+    MigrarProveedores);
 
 end.

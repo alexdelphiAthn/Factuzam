@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibArqueoPersistencia                                       }
 {    Tipo:       Librería                                                      }
@@ -59,6 +59,178 @@ implementation
 uses
   System.DateUtils;
 
+const
+  SQL_INSERTAR_ARQUEO =
+    'INSERT INTO fza_caja_arqueos (' +
+    '  CODIGO_ARQ,' +
+    '  CODIGO_EMP_ARQ,' +
+    '  CODIGO_ALM_ARQ,' +
+    '  CODIGO_CAJA_ARQ,' +
+    '  FECHA_DESDE_ARQ,' +
+    '  FECHA_HASTA_ARQ,' +
+    '  FASE_ARQ,' +
+    '  CODIGO_EMPLEADO_ARQ,' +
+    '  CANTIDAD_VENTAS_ARQ,' +
+    '  CANTIDAD_OPERACIONES_ARQ,' +
+    '  TOTAL_BRUTO_LINEAS_ARQ,' +
+    '  TOTAL_DESCUENTOS_LINEAS_ARQ,' +
+    '  TOTAL_BRUTO_OPERACIONES_ARQ,' +
+    '  TOTAL_DESCUENTOS_OPERACIONES_ARQ,' +
+    '  TOTAL_NETO_ARQ,' +
+    '  TOTAL_VALES_RECOGIDOS_ARQ,' +
+    '  TOTAL_VALES_EMITIDOS_ARQ,' +
+    '  TOTAL_COBROS_CLIENTES_ARQ,' +
+    '  TOTAL_PENDIENTE_COBRO_ARQ,' +
+    '  TOTAL_INGRESOS_CAJA_ARQ,' +
+    '  TOTAL_EFECTIVO_INGRESOS_ARQ,' +
+    '  TOTAL_EFECTIVO_ENTRADAS_ARQ,' +
+    '  TOTAL_EFECTIVO_SALIDAS_ARQ,' +
+    '  TOTAL_EFECTIVO_ANTERIOR_ARQ,' +
+    '  TOTAL_EFECTIVO_CAJA_ARQ,' +
+    '  TOTAL_OTROS_INGRESOS_ARQ,' +
+    '  TOTAL_SALDO_RECONTAR_ARQ,' +
+    '  OBSERVACIONES_ARQ,' +
+    '  INSTANTE_ALTA,' +
+    '  USUARIO_ALTA,' +
+    '  USUARIO_MODIF' +
+    ') VALUES (' +
+    '  :pCODIGO,' +
+    '  :pEMP,' +
+    '  :pALM,' +
+    '  :pCAJA,' +
+    '  :pFDESDE,' +
+    '  :pFHASTA,' +
+    '  ''CERRADO'',' +
+    '  :pEMPLEADO,' +
+    '  :pCNT_VENTAS,' +
+    '  :pCNT_OPE,' +
+    '  :pBRUTO_LIN,' +
+    '  :pDESC_LIN,' +
+    '  :pBRUTO_OPE,' +
+    '  :pDESC_OPE,' +
+    '  :pNETO,' +
+    '  :pVALES_REC,' +
+    '  :pVALES_EMI,' +
+    '  :pCOBROS_CLI,' +
+    '  :pPEND_COB,' +
+    '  :pING_CAJA,' +
+    '  :pEFT_ING,' +
+    '  :pEFT_ENT,' +
+    '  :pEFT_SAL,' +
+    '  :pEFT_ANT,' +
+    '  :pEFT_CAJA,' +
+    '  :pOTROS_ING,' +
+    '  :pSALDO_REC,' +
+    '  :pOBS,' +
+    '  NOW(),' +
+    '  :pUSUARIO,' +
+    '  :pUSUARIO2' +
+    ')';
+  SQL_COLUMNAS_OPCIONALES =
+    'SELECT COLUMN_NAME' +
+    '  FROM INFORMATION_SCHEMA.COLUMNS' +
+    ' WHERE TABLE_SCHEMA = DATABASE()' +
+    '   AND TABLE_NAME   = ''fza_caja_arqueos''' +
+    '   AND COLUMN_NAME IN (' +
+    '     ''TOTAL_PRESTAMOS_ARQ'',' +
+    '     ''TOTAL_VENTAS_NORMALES_ARQ'',' +
+    '     ''TOTAL_VENTAS_PRESTAMOS_ARQ'',' +
+    '     ''TOTAL_DEVOLUCIONES_ARQ'',' +
+    '     ''TOTAL_VENTAS_ARQ'',' +
+    '     ''TOTAL_RECUENTO_ARQ'',' +
+    '     ''DIFERENCIA_TOTAL_ARQ'',' +
+    '     ''EFECTIVO_DEJADO_CAJA_ARQ'',' +
+    '     ''DESGLOSE_BILLETES_ARQ'',' +
+    '     ''IMPORTE_RETIRADA_ARQ'',' +
+    '     ''CONCEPTO_RETIRADA_ARQ'')';
+  SQL_INSERTAR_RECUENTO =
+    'INSERT INTO fza_caja_arqueos_recuento (' +
+    '  CODIGO_ARQ_ARQR,' +
+    '  CODIGO_FP_CFP_ARQR,' +
+    '  DESCRIPCION_FP_ARQR,' +
+    '  ESCAJON_ARQR,' +
+    '  IMPORTE_SISTEMA_ARQR,' +
+    '  IMPORTE_RECUENTO_ARQR,' +
+    '  DIFERENCIA_ARQR,' +
+    '  INSTANTE_ALTA,' +
+    '  USUARIO_ALTA,' +
+    '  USUARIO_MODIF' +
+    ') VALUES (' +
+    '  :pARQ,' +
+    '  :pFP,' +
+    '  :pDESC,' +
+    '  :pCAJON,' +
+    '  :pSIST,' +
+    '  :pREC,' +
+    '  :pDIF,' +
+    '  NOW(),' +
+    '  :pUSUARIO,' +
+    '  :pUSUARIO2' +
+    ')';
+  SQL_MARCAR_OPERACIONES =
+    'UPDATE fza_caja_operaciones' +
+    '   SET CODIGO_ARQUEO_OPCAJA = :pARQ' +
+    ' WHERE CODIGO_EMP_OPCAJA    = :pEMP' +
+    '   AND CODIGO_ALM_OPCAJA    = :pALM' +
+    '   AND CODIGO_CAJA_OPCAJA   = :pCAJA' +
+    '   AND FECHA_OPERACION_OPCAJA >= :pFDESDE' +
+    '   AND FECHA_OPERACION_OPCAJA <= :pFHASTA' +
+    '   AND (CODIGO_ARQUEO_OPCAJA IS NULL' +
+    '        OR CODIGO_ARQUEO_OPCAJA = '''')';
+  SQL_INSERTAR_RETIRADA =
+    'INSERT INTO fza_caja_operaciones (' +
+    '  CODIGO_EMP_OPCAJA, CODIGO_ALM_OPCAJA,' +
+    '  CODIGO_CAJA_OPCAJA, NUMERO_OPERACION_OPCAJA,' +
+    '  TIPO_OPERACION_OPCAJA, IMPORTE_TOTAL_OPCAJA,' +
+    '  FECHA_OPERACION_OPCAJA, FECHA_OP_DIA_OPCAJA,' +
+    '  CODIGO_EMPLEADO_OPCAJA,' +
+    '  CONCEPTO_GASTO_INGRESO_OPCAJA,' +
+    '  ESTADO_DEVOLUCION_OPCAJA,' +
+    '  CODIGO_ARQUEO_OPCAJA,' +
+    '  USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA' +
+    ') VALUES (' +
+    '  :EMP, :ALM, :CAJA, :NUMOP,' +
+    '  ''GC'', :IMP, NOW(), CURRENT_DATE,' +
+    '  :USR, :CONCEPTO, ''N'', :ARQ,' +
+    '  :USR2, :USR3, NOW())';
+
+type
+  TGrabacionArqueo = class
+  private
+    FConexion: TUniConnection;
+    FArqueo: TArqueoCaja;
+    FLineasRecuento: TArray<TArqueoRecuentoLinea>;
+    FTotalRecuento: Currency;
+    FDiferenciaTotal: Currency;
+    FEfectivoDejado: Currency;
+    FImporteRetirada: Currency;
+    FConceptoRetirada: string;
+    FDesgloseBilletes: string;
+    FObservaciones: string;
+    FCodigoEmpleado: string;
+    FUsuario: string;
+    FCodigoArqueo: string;
+    FNumeroRetirada: string;
+    function CrearConsulta(const ASql: string): TUniQuery;
+    function ConstruirSetOpcional: string;
+    procedure ReservarNumeroRetirada;
+    procedure InsertarCabecera;
+    procedure AsignarParametrosOpcionales(AQuery: TUniQuery);
+    procedure ActualizarColumnasOpcionales;
+    procedure InsertarLineasRecuento;
+    procedure MarcarOperaciones;
+    procedure InsertarRetirada;
+  public
+    constructor Create(AConexion: TUniConnection;
+      const AArqueo: TArqueoCaja;
+      const ALineasRecuento: TArray<TArqueoRecuentoLinea>;
+      ATotalRecuento, ADiferenciaTotal, AEfectivoDejado,
+      AImporteRetirada: Currency;
+      const AConceptoRetirada, ADesgloseBilletes, AObservaciones,
+      ACodigoEmpleado, AUsuario: string);
+    procedure Ejecutar;
+  end;
+
 { --------------------------------------------------------------------------- }
 {   Genera CODIGO_ARQ: YYYYMMDD-NN global del día                             }
 { --------------------------------------------------------------------------- }
@@ -95,375 +267,321 @@ end;
 { --------------------------------------------------------------------------- }
 {   Graba cabecera + detalle del recuento en una transacción                  }
 { --------------------------------------------------------------------------- }
-class procedure TArqueoPersistencia.GrabarArqueo(
-  AConn: TUniConnection;
+constructor TGrabacionArqueo.Create(AConexion: TUniConnection;
   const AArqueo: TArqueoCaja;
   const ALineasRecuento: TArray<TArqueoRecuentoLinea>;
-  ATotalRecuento: Currency;
-  ADiferenciaTotal: Currency;
-  AEfectivoDejado: Currency;
+  ATotalRecuento, ADiferenciaTotal, AEfectivoDejado,
   AImporteRetirada: Currency;
-  const AConceptoRetirada: string;
-  const ADesgloseBilletes: string;
-  const AObservaciones: string;
-  const ACodigoEmpleado: string;
-  const AUsuario: string);
-var
-  sCodigo: string;
-  sSetOpcional: string;
-  Query: TUniQuery;
-  i: Integer;
-  SpNum: TUniStoredProc;
-  sNumOpRetirada: string;
+  const AConceptoRetirada, ADesgloseBilletes, AObservaciones,
+  ACodigoEmpleado, AUsuario: string);
 begin
-  sCodigo := GenerarCodigoArqueo(AConn,
-    AArqueo.Empresa, AArqueo.Almacen, AArqueo.Caja,
-    AArqueo.FechaDesde);
-  // Si hay retirada, reservamos su numero de operacion con el contador
-  // centralizado (PRC_GET_NEXT_OP_CAJA, serie 'OV') igual que el resto de
-  // operaciones de caja: asi es correlativo y formateado (8 digitos) y no
-  // colisiona. Se hace ANTES de StartTransaction porque el SP gestiona su
-  // propia transaccion (START TRANSACTION / COMMIT) y llamarlo dentro
-  // provocaria un commit implicito. Si el cierre se revierte despues, el
-  // unico efecto es un hueco en la numeracion, como en cualquier operacion
-  // anulada.
-  sNumOpRetirada := '';
-  if AImporteRetirada > 0 then
+  inherited Create;
+  FConexion := AConexion;
+  FArqueo := AArqueo;
+  FLineasRecuento := ALineasRecuento;
+  FTotalRecuento := ATotalRecuento;
+  FDiferenciaTotal := ADiferenciaTotal;
+  FEfectivoDejado := AEfectivoDejado;
+  FImporteRetirada := AImporteRetirada;
+  FConceptoRetirada := AConceptoRetirada;
+  FDesgloseBilletes := ADesgloseBilletes;
+  FObservaciones := AObservaciones;
+  FCodigoEmpleado := ACodigoEmpleado;
+  FUsuario := AUsuario;
+end;
+
+function TGrabacionArqueo.CrearConsulta(const ASql: string): TUniQuery;
+begin
+  Result := TUniQuery.Create(nil);
+  try
+    Result.Connection := FConexion;
+    Result.SQL.Text := ASql;
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
+end;
+
+procedure TGrabacionArqueo.ReservarNumeroRetirada;
+var
+  oNumerador: TUniStoredProc;
+begin
+  FNumeroRetirada := '';
+  if FImporteRetirada > 0 then
   begin
-    SpNum := TUniStoredProc.Create(nil);
+    oNumerador := TUniStoredProc.Create(nil);
     try
-      SpNum.Connection := AConn;
-      SpNum.StoredProcName := 'PRC_GET_NEXT_OP_CAJA';
-      SpNum.Params.CreateParam(ftString, 'pEmpresa', ptInput).AsString :=
-        AArqueo.Empresa;
-      SpNum.Params.CreateParam(ftString, 'pAlmacen', ptInput).AsString :=
-        AArqueo.Almacen;
-      SpNum.Params.CreateParam(ftString, 'pCaja', ptInput).AsString :=
-        AArqueo.Caja;
-      SpNum.Params.CreateParam(ftString, 'pUsuario', ptInput).AsString :=
-        AUsuario;
-      SpNum.Params.CreateParam(ftString, 'pSerie', ptOutput).Size := 12;
-      SpNum.Params.CreateParam(ftString, 'pcont', ptOutput).Size := 20;
-      SpNum.Prepare;
-      SpNum.Execute;
-      sNumOpRetirada := SpNum.ParamByName('pcont').AsString;
+      oNumerador.Connection := FConexion;
+      oNumerador.StoredProcName := 'PRC_GET_NEXT_OP_CAJA';
+      oNumerador.Params.CreateParam(
+        ftString, 'pEmpresa', ptInput).AsString := FArqueo.Empresa;
+      oNumerador.Params.CreateParam(
+        ftString, 'pAlmacen', ptInput).AsString := FArqueo.Almacen;
+      oNumerador.Params.CreateParam(
+        ftString, 'pCaja', ptInput).AsString := FArqueo.Caja;
+      oNumerador.Params.CreateParam(
+        ftString, 'pUsuario', ptInput).AsString := FUsuario;
+      oNumerador.Params.CreateParam(
+        ftString, 'pSerie', ptOutput).Size := 12;
+      oNumerador.Params.CreateParam(
+        ftString, 'pcont', ptOutput).Size := 20;
+      oNumerador.Prepare;
+      oNumerador.Execute;
+      FNumeroRetirada := oNumerador.ParamByName('pcont').AsString;
     finally
-      FreeAndNil(SpNum);
+      FreeAndNil(oNumerador);
     end;
   end;
-  AConn.StartTransaction;
+end;
+
+procedure TGrabacionArqueo.InsertarCabecera;
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := CrearConsulta(SQL_INSERTAR_ARQUEO);
   try
-    { -- Cabecera: solo columnas del esquema base (factuzam_original)
-         + las que añade arqueo_recuento.sql (ya ejecutado). Columnas
-         nuevas como TOTAL_PRESTAMOS_ARQ se graban aparte si existen. }
-    Query := TUniQuery.Create(nil);
-    try
-      Query.Connection := AConn;
-      { Solo columnas que existen en factuzam_original.sql (esquema
-        base). Las columnas añadidas por migración van en un UPDATE
-        aparte para no fallar si la migración no se ejecutó aún. }
-      Query.SQL.Text :=
-        'INSERT INTO fza_caja_arqueos (' +
-        '  CODIGO_ARQ,' +
-        '  CODIGO_EMP_ARQ,' +
-        '  CODIGO_ALM_ARQ,' +
-        '  CODIGO_CAJA_ARQ,' +
-        '  FECHA_DESDE_ARQ,' +
-        '  FECHA_HASTA_ARQ,' +
-        '  FASE_ARQ,' +
-        '  CODIGO_EMPLEADO_ARQ,' +
-        '  CANTIDAD_VENTAS_ARQ,' +
-        '  CANTIDAD_OPERACIONES_ARQ,' +
-        '  TOTAL_BRUTO_LINEAS_ARQ,' +
-        '  TOTAL_DESCUENTOS_LINEAS_ARQ,' +
-        '  TOTAL_BRUTO_OPERACIONES_ARQ,' +
-        '  TOTAL_DESCUENTOS_OPERACIONES_ARQ,' +
-        '  TOTAL_NETO_ARQ,' +
-        '  TOTAL_VALES_RECOGIDOS_ARQ,' +
-        '  TOTAL_VALES_EMITIDOS_ARQ,' +
-        '  TOTAL_COBROS_CLIENTES_ARQ,' +
-        '  TOTAL_PENDIENTE_COBRO_ARQ,' +
-        '  TOTAL_INGRESOS_CAJA_ARQ,' +
-        '  TOTAL_EFECTIVO_INGRESOS_ARQ,' +
-        '  TOTAL_EFECTIVO_ENTRADAS_ARQ,' +
-        '  TOTAL_EFECTIVO_SALIDAS_ARQ,' +
-        '  TOTAL_EFECTIVO_ANTERIOR_ARQ,' +
-        '  TOTAL_EFECTIVO_CAJA_ARQ,' +
-        '  TOTAL_OTROS_INGRESOS_ARQ,' +
-        '  TOTAL_SALDO_RECONTAR_ARQ,' +
-        '  OBSERVACIONES_ARQ,' +
-        '  INSTANTE_ALTA,' +
-        '  USUARIO_ALTA,' +
-        '  USUARIO_MODIF' +
-        ') VALUES (' +
-        '  :pCODIGO,' +
-        '  :pEMP,' +
-        '  :pALM,' +
-        '  :pCAJA,' +
-        '  :pFDESDE,' +
-        '  :pFHASTA,' +
-        '  ''CERRADO'',' +
-        '  :pEMPLEADO,' +
-        '  :pCNT_VENTAS,' +
-        '  :pCNT_OPE,' +
-        '  :pBRUTO_LIN,' +
-        '  :pDESC_LIN,' +
-        '  :pBRUTO_OPE,' +
-        '  :pDESC_OPE,' +
-        '  :pNETO,' +
-        '  :pVALES_REC,' +
-        '  :pVALES_EMI,' +
-        '  :pCOBROS_CLI,' +
-        '  :pPEND_COB,' +
-        '  :pING_CAJA,' +
-        '  :pEFT_ING,' +
-        '  :pEFT_ENT,' +
-        '  :pEFT_SAL,' +
-        '  :pEFT_ANT,' +
-        '  :pEFT_CAJA,' +
-        '  :pOTROS_ING,' +
-        '  :pSALDO_REC,' +
-        '  :pOBS,' +
-        '  NOW(),' +
-        '  :pUSUARIO,' +
-        '  :pUSUARIO2' +
-        ')';
-      Query.ParamByName('pCODIGO').AsString     := sCodigo;
-      Query.ParamByName('pEMP').AsString         := AArqueo.Empresa;
-      Query.ParamByName('pALM').AsString         := AArqueo.Almacen;
-      Query.ParamByName('pCAJA').AsString        := AArqueo.Caja;
-      Query.ParamByName('pFDESDE').AsDateTime    := AArqueo.FechaDesde;
-      Query.ParamByName('pFHASTA').AsDateTime    := AArqueo.FechaHasta;
-      Query.ParamByName('pEMPLEADO').AsString    := ACodigoEmpleado;
-      Query.ParamByName('pCNT_VENTAS').AsInteger := AArqueo.CantidadVentas;
-      Query.ParamByName('pCNT_OPE').AsInteger    := AArqueo.CantidadOperaciones;
-      Query.ParamByName('pBRUTO_LIN').AsCurrency := AArqueo.BrutoLineas;
-      Query.ParamByName('pDESC_LIN').AsCurrency  := AArqueo.DescuentosLineas;
-      Query.ParamByName('pBRUTO_OPE').AsCurrency := AArqueo.BrutoOperaciones;
-      Query.ParamByName('pDESC_OPE').AsCurrency  := AArqueo.DescuentosOperaciones;
-      Query.ParamByName('pNETO').AsCurrency      := AArqueo.Neto;
-      Query.ParamByName('pVALES_REC').AsCurrency := AArqueo.ValesRecogidos;
-      Query.ParamByName('pVALES_EMI').AsCurrency := AArqueo.ValesEmitidos;
-      Query.ParamByName('pCOBROS_CLI').AsCurrency := AArqueo.CobrosClientes;
-      Query.ParamByName('pPEND_COB').AsCurrency  := AArqueo.PendienteCobro;
-      Query.ParamByName('pING_CAJA').AsCurrency  := AArqueo.IngresosCaja;
-      Query.ParamByName('pEFT_ING').AsCurrency   := AArqueo.EfectivoIngresos;
-      Query.ParamByName('pEFT_ENT').AsCurrency   := AArqueo.EfectivoEntradas;
-      Query.ParamByName('pEFT_SAL').AsCurrency   := AArqueo.EfectivoSalidas;
-      Query.ParamByName('pEFT_ANT').AsCurrency   := AArqueo.EfectivoAnterior;
-      Query.ParamByName('pEFT_CAJA').AsCurrency  := AArqueo.EfectivoCaja;
-      Query.ParamByName('pOTROS_ING').AsCurrency := AArqueo.OtrosIngresos;
-      Query.ParamByName('pSALDO_REC').AsCurrency := AArqueo.SaldoRecontar;
-      Query.ParamByName('pOBS').AsString         := AObservaciones;
-      Query.ParamByName('pUSUARIO').AsString     := AUsuario;
-      Query.ParamByName('pUSUARIO2').AsString    := AUsuario;
-      Query.Execute;
-    finally
-      FreeAndNil(Query);
-    end;
-    { -- Columnas opcionales (añadidas por arqueo_recuento.sql) ----------- }
-    { Construir UPDATE dinámico solo con las columnas que existen.
-      UniDAC propaga errores SQL a través de OnError antes de que un
-      except local los capture, así que no podemos usar try/except. }
-    Query := TUniQuery.Create(nil);
-    try
-      Query.Connection := AConn;
-      Query.SQL.Text :=
-        'SELECT COLUMN_NAME' +
-        '  FROM INFORMATION_SCHEMA.COLUMNS' +
-        ' WHERE TABLE_SCHEMA = DATABASE()' +
-        '   AND TABLE_NAME   = ''fza_caja_arqueos''' +
-        '   AND COLUMN_NAME IN (' +
-        '     ''TOTAL_PRESTAMOS_ARQ'',' +
-        '     ''TOTAL_VENTAS_NORMALES_ARQ'',' +
-        '     ''TOTAL_VENTAS_PRESTAMOS_ARQ'',' +
-        '     ''TOTAL_DEVOLUCIONES_ARQ'',' +
-        '     ''TOTAL_VENTAS_ARQ'',' +
-        '     ''TOTAL_RECUENTO_ARQ'',' +
-        '     ''DIFERENCIA_TOTAL_ARQ'',' +
-        '     ''EFECTIVO_DEJADO_CAJA_ARQ'',' +
-        '     ''DESGLOSE_BILLETES_ARQ'',' +
-        '     ''IMPORTE_RETIRADA_ARQ'',' +
-        '     ''CONCEPTO_RETIRADA_ARQ'')';
-      Query.Open;
-      if not Query.Eof then
-      begin
-        { Hay columnas opcionales: montar SET dinámico }
-        sSetOpcional := '';
-        while not Query.Eof do
-        begin
-          if sSetOpcional <> '' then
-            sSetOpcional := sSetOpcional + ', ';
-          sSetOpcional := sSetOpcional +
-            Query.FieldByName('COLUMN_NAME').AsString +
-            ' = :p' +
-            Query.FieldByName('COLUMN_NAME').AsString;
-          Query.Next;
-        end;
-      end;
-    finally
-      FreeAndNil(Query);
-    end;
-    if sSetOpcional <> '' then
+    oConsulta.ParamByName('pCODIGO').AsString := FCodigoArqueo;
+    oConsulta.ParamByName('pEMP').AsString := FArqueo.Empresa;
+    oConsulta.ParamByName('pALM').AsString := FArqueo.Almacen;
+    oConsulta.ParamByName('pCAJA').AsString := FArqueo.Caja;
+    oConsulta.ParamByName('pFDESDE').AsDateTime := FArqueo.FechaDesde;
+    oConsulta.ParamByName('pFHASTA').AsDateTime := FArqueo.FechaHasta;
+    oConsulta.ParamByName('pEMPLEADO').AsString := FCodigoEmpleado;
+    oConsulta.ParamByName('pCNT_VENTAS').AsInteger :=
+      FArqueo.CantidadVentas;
+    oConsulta.ParamByName('pCNT_OPE').AsInteger :=
+      FArqueo.CantidadOperaciones;
+    oConsulta.ParamByName('pBRUTO_LIN').AsCurrency := FArqueo.BrutoLineas;
+    oConsulta.ParamByName('pDESC_LIN').AsCurrency :=
+      FArqueo.DescuentosLineas;
+    oConsulta.ParamByName('pBRUTO_OPE').AsCurrency :=
+      FArqueo.BrutoOperaciones;
+    oConsulta.ParamByName('pDESC_OPE').AsCurrency :=
+      FArqueo.DescuentosOperaciones;
+    oConsulta.ParamByName('pNETO').AsCurrency := FArqueo.Neto;
+    oConsulta.ParamByName('pVALES_REC').AsCurrency :=
+      FArqueo.ValesRecogidos;
+    oConsulta.ParamByName('pVALES_EMI').AsCurrency :=
+      FArqueo.ValesEmitidos;
+    oConsulta.ParamByName('pCOBROS_CLI').AsCurrency :=
+      FArqueo.CobrosClientes;
+    oConsulta.ParamByName('pPEND_COB').AsCurrency :=
+      FArqueo.PendienteCobro;
+    oConsulta.ParamByName('pING_CAJA').AsCurrency := FArqueo.IngresosCaja;
+    oConsulta.ParamByName('pEFT_ING').AsCurrency :=
+      FArqueo.EfectivoIngresos;
+    oConsulta.ParamByName('pEFT_ENT').AsCurrency :=
+      FArqueo.EfectivoEntradas;
+    oConsulta.ParamByName('pEFT_SAL').AsCurrency :=
+      FArqueo.EfectivoSalidas;
+    oConsulta.ParamByName('pEFT_ANT').AsCurrency :=
+      FArqueo.EfectivoAnterior;
+    oConsulta.ParamByName('pEFT_CAJA').AsCurrency := FArqueo.EfectivoCaja;
+    oConsulta.ParamByName('pOTROS_ING').AsCurrency := FArqueo.OtrosIngresos;
+    oConsulta.ParamByName('pSALDO_REC').AsCurrency := FArqueo.SaldoRecontar;
+    oConsulta.ParamByName('pOBS').AsString := FObservaciones;
+    oConsulta.ParamByName('pUSUARIO').AsString := FUsuario;
+    oConsulta.ParamByName('pUSUARIO2').AsString := FUsuario;
+    oConsulta.Execute;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TGrabacionArqueo.ConstruirSetOpcional: string;
+var
+  oConsulta: TUniQuery;
+  sColumna: string;
+begin
+  Result := '';
+  oConsulta := CrearConsulta(SQL_COLUMNAS_OPCIONALES);
+  try
+    oConsulta.Open;
+    while not oConsulta.Eof do
     begin
-      Query := TUniQuery.Create(nil);
-      try
-        Query.Connection := AConn;
-        Query.SQL.Text :=
-          'UPDATE fza_caja_arqueos SET ' + sSetOpcional +
-          ' WHERE CODIGO_ARQ = :pCODIGO';
-        Query.ParamByName('pCODIGO').AsString := sCodigo;
-        if Query.FindParam('pTOTAL_PRESTAMOS_ARQ') <> nil then
-          Query.ParamByName('pTOTAL_PRESTAMOS_ARQ').AsCurrency :=
-            AArqueo.Prestamos;
-        if Query.FindParam('pTOTAL_VENTAS_NORMALES_ARQ') <> nil then
-          Query.ParamByName('pTOTAL_VENTAS_NORMALES_ARQ').AsCurrency :=
-            AArqueo.VentasNormales;
-        if Query.FindParam('pTOTAL_VENTAS_PRESTAMOS_ARQ') <> nil then
-          Query.ParamByName('pTOTAL_VENTAS_PRESTAMOS_ARQ').AsCurrency :=
-            AArqueo.VentasPrestamos;
-        if Query.FindParam('pTOTAL_DEVOLUCIONES_ARQ') <> nil then
-          Query.ParamByName('pTOTAL_DEVOLUCIONES_ARQ').AsCurrency :=
-            AArqueo.Devoluciones;
-        if Query.FindParam('pTOTAL_VENTAS_ARQ') <> nil then
-          Query.ParamByName('pTOTAL_VENTAS_ARQ').AsCurrency :=
-            AArqueo.TotalVentas;
-        if Query.FindParam('pTOTAL_RECUENTO_ARQ') <> nil then
-          Query.ParamByName('pTOTAL_RECUENTO_ARQ').AsCurrency :=
-            ATotalRecuento;
-        if Query.FindParam('pDIFERENCIA_TOTAL_ARQ') <> nil then
-          Query.ParamByName('pDIFERENCIA_TOTAL_ARQ').AsCurrency :=
-            ADiferenciaTotal;
-        if Query.FindParam('pEFECTIVO_DEJADO_CAJA_ARQ') <> nil then
-          Query.ParamByName('pEFECTIVO_DEJADO_CAJA_ARQ').AsCurrency :=
-            AEfectivoDejado;
-        if Query.FindParam('pDESGLOSE_BILLETES_ARQ') <> nil then
-          Query.ParamByName('pDESGLOSE_BILLETES_ARQ').AsString :=
-            ADesgloseBilletes;
-        if Query.FindParam('pIMPORTE_RETIRADA_ARQ') <> nil then
-          Query.ParamByName('pIMPORTE_RETIRADA_ARQ').AsCurrency :=
-            AImporteRetirada;
-        if Query.FindParam('pCONCEPTO_RETIRADA_ARQ') <> nil then
-          Query.ParamByName('pCONCEPTO_RETIRADA_ARQ').AsString :=
-            AConceptoRetirada;
-        Query.Execute;
-      finally
-        FreeAndNil(Query);
-      end;
+      if Result <> '' then
+        Result := Result + ', ';
+      sColumna := oConsulta.FieldByName('COLUMN_NAME').AsString;
+      Result := Result + sColumna + ' = :p' + sColumna;
+      oConsulta.Next;
     end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
 
-    { -- Detalle por forma de pago ------------------------------------------ }
-    for i := 0 to High(ALineasRecuento) do
-    begin
-      Query := TUniQuery.Create(nil);
-      try
-        Query.Connection := AConn;
-        Query.SQL.Text :=
-          'INSERT INTO fza_caja_arqueos_recuento (' +
-          '  CODIGO_ARQ_ARQR,' +
-          '  CODIGO_FP_CFP_ARQR,' +
-          '  DESCRIPCION_FP_ARQR,' +
-          '  ESCAJON_ARQR,' +
-          '  IMPORTE_SISTEMA_ARQR,' +
-          '  IMPORTE_RECUENTO_ARQR,' +
-          '  DIFERENCIA_ARQR,' +
-          '  INSTANTE_ALTA,' +
-          '  USUARIO_ALTA,' +
-          '  USUARIO_MODIF' +
-          ') VALUES (' +
-          '  :pARQ,' +
-          '  :pFP,' +
-          '  :pDESC,' +
-          '  :pCAJON,' +
-          '  :pSIST,' +
-          '  :pREC,' +
-          '  :pDIF,' +
-          '  NOW(),' +
-          '  :pUSUARIO,' +
-          '  :pUSUARIO2' +
-          ')';
-        Query.ParamByName('pARQ').AsString     := sCodigo;
-        Query.ParamByName('pFP').AsString      := ALineasRecuento[i].CodigoFP;
-        Query.ParamByName('pDESC').AsString    := ALineasRecuento[i].Descripcion;
-        Query.ParamByName('pCAJON').AsString   := ALineasRecuento[i].EsCajon;
-        Query.ParamByName('pSIST').AsCurrency  := ALineasRecuento[i].Sistema;
-        Query.ParamByName('pREC').AsCurrency   := ALineasRecuento[i].Recuento;
-        Query.ParamByName('pDIF').AsCurrency   := ALineasRecuento[i].Diferencia;
-        Query.ParamByName('pUSUARIO').AsString := AUsuario;
-        Query.ParamByName('pUSUARIO2').AsString := AUsuario;
-        Query.Execute;
-      finally
-        FreeAndNil(Query);
-      end;
-    end;
+procedure TGrabacionArqueo.AsignarParametrosOpcionales(
+  AQuery: TUniQuery);
+begin
+  if AQuery.FindParam('pTOTAL_PRESTAMOS_ARQ') <> nil then
+    AQuery.ParamByName('pTOTAL_PRESTAMOS_ARQ').AsCurrency :=
+      FArqueo.Prestamos;
+  if AQuery.FindParam('pTOTAL_VENTAS_NORMALES_ARQ') <> nil then
+    AQuery.ParamByName('pTOTAL_VENTAS_NORMALES_ARQ').AsCurrency :=
+      FArqueo.VentasNormales;
+  if AQuery.FindParam('pTOTAL_VENTAS_PRESTAMOS_ARQ') <> nil then
+    AQuery.ParamByName('pTOTAL_VENTAS_PRESTAMOS_ARQ').AsCurrency :=
+      FArqueo.VentasPrestamos;
+  if AQuery.FindParam('pTOTAL_DEVOLUCIONES_ARQ') <> nil then
+    AQuery.ParamByName('pTOTAL_DEVOLUCIONES_ARQ').AsCurrency :=
+      FArqueo.Devoluciones;
+  if AQuery.FindParam('pTOTAL_VENTAS_ARQ') <> nil then
+    AQuery.ParamByName('pTOTAL_VENTAS_ARQ').AsCurrency :=
+      FArqueo.TotalVentas;
+  if AQuery.FindParam('pTOTAL_RECUENTO_ARQ') <> nil then
+    AQuery.ParamByName('pTOTAL_RECUENTO_ARQ').AsCurrency :=
+      FTotalRecuento;
+  if AQuery.FindParam('pDIFERENCIA_TOTAL_ARQ') <> nil then
+    AQuery.ParamByName('pDIFERENCIA_TOTAL_ARQ').AsCurrency :=
+      FDiferenciaTotal;
+  if AQuery.FindParam('pEFECTIVO_DEJADO_CAJA_ARQ') <> nil then
+    AQuery.ParamByName('pEFECTIVO_DEJADO_CAJA_ARQ').AsCurrency :=
+      FEfectivoDejado;
+  if AQuery.FindParam('pDESGLOSE_BILLETES_ARQ') <> nil then
+    AQuery.ParamByName('pDESGLOSE_BILLETES_ARQ').AsString :=
+      FDesgloseBilletes;
+  if AQuery.FindParam('pIMPORTE_RETIRADA_ARQ') <> nil then
+    AQuery.ParamByName('pIMPORTE_RETIRADA_ARQ').AsCurrency :=
+      FImporteRetirada;
+  if AQuery.FindParam('pCONCEPTO_RETIRADA_ARQ') <> nil then
+    AQuery.ParamByName('pCONCEPTO_RETIRADA_ARQ').AsString :=
+      FConceptoRetirada;
+end;
 
-    { -- Marca las operaciones del rango con el código de arqueo ------------ }
-    Query := TUniQuery.Create(nil);
+procedure TGrabacionArqueo.ActualizarColumnasOpcionales;
+var
+  oConsulta: TUniQuery;
+  sSet: string;
+begin
+  sSet := ConstruirSetOpcional;
+  if sSet <> '' then
+  begin
+    oConsulta := CrearConsulta(
+      'UPDATE fza_caja_arqueos SET ' + sSet +
+      ' WHERE CODIGO_ARQ = :pCODIGO');
     try
-      Query.Connection := AConn;
-      Query.SQL.Text :=
-        'UPDATE fza_caja_operaciones' +
-        '   SET CODIGO_ARQUEO_OPCAJA = :pARQ' +
-        ' WHERE CODIGO_EMP_OPCAJA    = :pEMP' +
-        '   AND CODIGO_ALM_OPCAJA    = :pALM' +
-        '   AND CODIGO_CAJA_OPCAJA   = :pCAJA' +
-        '   AND FECHA_OPERACION_OPCAJA >= :pFDESDE' +
-        '   AND FECHA_OPERACION_OPCAJA <= :pFHASTA' +
-        '   AND (CODIGO_ARQUEO_OPCAJA IS NULL' +
-        '        OR CODIGO_ARQUEO_OPCAJA = '''')';
-      Query.ParamByName('pARQ').AsString      := sCodigo;
-      Query.ParamByName('pEMP').AsString      := AArqueo.Empresa;
-      Query.ParamByName('pALM').AsString      := AArqueo.Almacen;
-      Query.ParamByName('pCAJA').AsString     := AArqueo.Caja;
-      Query.ParamByName('pFDESDE').AsDateTime := AArqueo.FechaDesde;
-      Query.ParamByName('pFHASTA').AsDateTime := AArqueo.FechaHasta;
-      Query.Execute;
+      oConsulta.ParamByName('pCODIGO').AsString := FCodigoArqueo;
+      AsignarParametrosOpcionales(oConsulta);
+      oConsulta.Execute;
     finally
-      FreeAndNil(Query);
+      FreeAndNil(oConsulta);
     end;
+  end;
+end;
 
-    { -- Retirada: crear operación GC si hay importe ---------------------- }
-    if AImporteRetirada > 0 then
-    begin
-      Query := TUniQuery.Create(nil);
-      try
-        Query.Connection := AConn;
-        Query.SQL.Text :=
-          'INSERT INTO fza_caja_operaciones (' +
-          '  CODIGO_EMP_OPCAJA, CODIGO_ALM_OPCAJA,' +
-          '  CODIGO_CAJA_OPCAJA, NUMERO_OPERACION_OPCAJA,' +
-          '  TIPO_OPERACION_OPCAJA, IMPORTE_TOTAL_OPCAJA,' +
-          '  FECHA_OPERACION_OPCAJA, FECHA_OP_DIA_OPCAJA,' +
-          '  CODIGO_EMPLEADO_OPCAJA,' +
-          '  CONCEPTO_GASTO_INGRESO_OPCAJA,' +
-          '  ESTADO_DEVOLUCION_OPCAJA,' +
-          '  CODIGO_ARQUEO_OPCAJA,' +
-          '  USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA' +
-          ') VALUES (' +
-          '  :EMP, :ALM, :CAJA, :NUMOP,' +
-          '  ''GC'', :IMP, NOW(), CURRENT_DATE,' +
-          '  :USR, :CONCEPTO, ''N'', :ARQ,' +
-          '  :USR2, :USR3, NOW())';
-        Query.ParamByName('EMP').AsString   := AArqueo.Empresa;
-        Query.ParamByName('ALM').AsString   := AArqueo.Almacen;
-        Query.ParamByName('CAJA').AsString  := AArqueo.Caja;
-        Query.ParamByName('NUMOP').AsString := sNumOpRetirada;
-        Query.ParamByName('IMP').AsCurrency := AImporteRetirada;
-        Query.ParamByName('USR').AsString   := AUsuario;
-        Query.ParamByName('CONCEPTO').AsString := AConceptoRetirada;
-        Query.ParamByName('ARQ').AsString   := sCodigo;
-        Query.ParamByName('USR2').AsString  := AUsuario;
-        Query.ParamByName('USR3').AsString  := AUsuario;
-        Query.Execute;
-      finally
-        FreeAndNil(Query);
-      end;
+procedure TGrabacionArqueo.InsertarLineasRecuento;
+var
+  iLinea: Integer;
+  oConsulta: TUniQuery;
+begin
+  for iLinea := 0 to High(FLineasRecuento) do
+  begin
+    oConsulta := CrearConsulta(SQL_INSERTAR_RECUENTO);
+    try
+      oConsulta.ParamByName('pARQ').AsString := FCodigoArqueo;
+      oConsulta.ParamByName('pFP').AsString :=
+        FLineasRecuento[iLinea].CodigoFP;
+      oConsulta.ParamByName('pDESC').AsString :=
+        FLineasRecuento[iLinea].Descripcion;
+      oConsulta.ParamByName('pCAJON').AsString :=
+        FLineasRecuento[iLinea].EsCajon;
+      oConsulta.ParamByName('pSIST').AsCurrency :=
+        FLineasRecuento[iLinea].Sistema;
+      oConsulta.ParamByName('pREC').AsCurrency :=
+        FLineasRecuento[iLinea].Recuento;
+      oConsulta.ParamByName('pDIF').AsCurrency :=
+        FLineasRecuento[iLinea].Diferencia;
+      oConsulta.ParamByName('pUSUARIO').AsString := FUsuario;
+      oConsulta.ParamByName('pUSUARIO2').AsString := FUsuario;
+      oConsulta.Execute;
+    finally
+      FreeAndNil(oConsulta);
     end;
+  end;
+end;
 
-    AConn.Commit;
+procedure TGrabacionArqueo.MarcarOperaciones;
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := CrearConsulta(SQL_MARCAR_OPERACIONES);
+  try
+    oConsulta.ParamByName('pARQ').AsString := FCodigoArqueo;
+    oConsulta.ParamByName('pEMP').AsString := FArqueo.Empresa;
+    oConsulta.ParamByName('pALM').AsString := FArqueo.Almacen;
+    oConsulta.ParamByName('pCAJA').AsString := FArqueo.Caja;
+    oConsulta.ParamByName('pFDESDE').AsDateTime := FArqueo.FechaDesde;
+    oConsulta.ParamByName('pFHASTA').AsDateTime := FArqueo.FechaHasta;
+    oConsulta.Execute;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure TGrabacionArqueo.InsertarRetirada;
+var
+  oConsulta: TUniQuery;
+begin
+  if FImporteRetirada > 0 then
+  begin
+    oConsulta := CrearConsulta(SQL_INSERTAR_RETIRADA);
+    try
+      oConsulta.ParamByName('EMP').AsString := FArqueo.Empresa;
+      oConsulta.ParamByName('ALM').AsString := FArqueo.Almacen;
+      oConsulta.ParamByName('CAJA').AsString := FArqueo.Caja;
+      oConsulta.ParamByName('NUMOP').AsString := FNumeroRetirada;
+      oConsulta.ParamByName('IMP').AsCurrency := FImporteRetirada;
+      oConsulta.ParamByName('USR').AsString := FUsuario;
+      oConsulta.ParamByName('CONCEPTO').AsString := FConceptoRetirada;
+      oConsulta.ParamByName('ARQ').AsString := FCodigoArqueo;
+      oConsulta.ParamByName('USR2').AsString := FUsuario;
+      oConsulta.ParamByName('USR3').AsString := FUsuario;
+      oConsulta.Execute;
+    finally
+      FreeAndNil(oConsulta);
+    end;
+  end;
+end;
+
+procedure TGrabacionArqueo.Ejecutar;
+begin
+  FCodigoArqueo := TArqueoPersistencia.GenerarCodigoArqueo(
+    FConexion, FArqueo.Empresa, FArqueo.Almacen, FArqueo.Caja,
+    FArqueo.FechaDesde);
+  ReservarNumeroRetirada;
+  FConexion.StartTransaction;
+  try
+    InsertarCabecera;
+    ActualizarColumnasOpcionales;
+    InsertarLineasRecuento;
+    MarcarOperaciones;
+    InsertarRetirada;
+    FConexion.Commit;
   except
-    AConn.Rollback;
+    FConexion.Rollback;
     raise;
+  end;
+end;
+
+class procedure TArqueoPersistencia.GrabarArqueo(
+  AConn: TUniConnection; const AArqueo: TArqueoCaja;
+  const ALineasRecuento: TArray<TArqueoRecuentoLinea>;
+  ATotalRecuento, ADiferenciaTotal, AEfectivoDejado,
+  AImporteRetirada: Currency;
+  const AConceptoRetirada, ADesgloseBilletes, AObservaciones,
+  ACodigoEmpleado, AUsuario: string);
+var
+  oGrabacion: TGrabacionArqueo;
+begin
+  oGrabacion := TGrabacionArqueo.Create(
+    AConn, AArqueo, ALineasRecuento, ATotalRecuento,
+    ADiferenciaTotal, AEfectivoDejado, AImporteRetirada,
+    AConceptoRetirada, ADesgloseBilletes, AObservaciones,
+    ACodigoEmpleado, AUsuario);
+  try
+    oGrabacion.Ejecutar;
+  finally
+    FreeAndNil(oGrabacion);
   end;
 end;
 

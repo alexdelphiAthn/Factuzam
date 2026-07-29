@@ -31,6 +31,10 @@ type
     [Test]
     procedure Solicitud_OperacionConservaDatos;
     [Test]
+    procedure Solicitud_OperacionPermiteDescripcion;
+    [Test]
+    procedure Solicitud_AltaPermiteOmitirEvento;
+    [Test]
     procedure Solicitud_ConsolidacionUsaAlta;
   end;
 
@@ -90,7 +94,40 @@ begin
   Assert.AreEqual('ANULACION', Solicitud.TipoOperacion);
   Assert.AreEqual('Anulación', Solicitud.Accion);
   Assert.IsFalse(Solicitud.BorrarMovimientos);
+  Assert.IsTrue(Solicitud.RegistrarEvento);
   Assert.IsNotEmpty(Solicitud.DescripcionEvento);
+end;
+
+procedure TPruebasEmisionFiscal.Solicitud_OperacionPermiteDescripcion;
+var
+  Solicitud: TSolicitudEmisionFiscal;
+begin
+  Solicitud := TSolicitudEmisionFiscal.ParaOperacion(
+    'F',
+    '42',
+    'USUARIO',
+    'ANULACION',
+    'Anulación',
+    True,
+    'Anulación desde caja');
+  Assert.AreEqual(
+    'Anulación desde caja',
+    Solicitud.DescripcionEvento);
+end;
+
+procedure TPruebasEmisionFiscal.Solicitud_AltaPermiteOmitirEvento;
+var
+  Solicitud: TSolicitudEmisionFiscal;
+begin
+  Solicitud := TSolicitudEmisionFiscal.ParaAlta(
+    'F',
+    '42',
+    'USUARIO',
+    '',
+    False);
+  Assert.AreEqual(fefAlta, Solicitud.Flujo);
+  Assert.AreEqual('ALTA', Solicitud.TipoOperacion);
+  Assert.IsFalse(Solicitud.RegistrarEvento);
 end;
 
 procedure TPruebasEmisionFiscal.Solicitud_ConsolidacionUsaAlta;
@@ -104,6 +141,7 @@ begin
   Assert.AreEqual(fefConsolidacion, Solicitud.Flujo);
   Assert.AreEqual('ALTA', Solicitud.TipoOperacion);
   Assert.IsTrue(Solicitud.BorrarMovimientos);
+  Assert.IsTrue(Solicitud.RegistrarEvento);
   Assert.IsNotEmpty(Solicitud.DescripcionEvento);
 end;
 

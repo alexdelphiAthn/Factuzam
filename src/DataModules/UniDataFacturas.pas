@@ -41,7 +41,6 @@ type
     unqryLinFac: TUniQuery;
     unstrdprcCrearFacturaAbono: TUniStoredProc;
     unstrdprcDuplicarFactura: TUniStoredProc;
-    unstrdprcCrearCliente: TUniStoredProc;
     unstrdprcGetDataArticulo: TUniStoredProc;
     unstrdprcGetDataCliente: TUniStoredProc;
     dsFormasPago: TDataSource;
@@ -57,7 +56,6 @@ type
     unqryIvas: TUniQuery;
     dsIvas: TDataSource;
     unqryEmpDataFac: TUniQuery;
-    unstdCrearEmpresa: TUniStoredProc;
     dsTarifas: TDataSource;
     unqryTarifas: TUniQuery;
     unstdGetContadorLinea: TUniStoredProc;
@@ -103,14 +101,19 @@ type
 private
     // Guarda de re-entrancia del BeforePost de la cabecera.
     FValidandoPost: Boolean;
+    // Evita que los Post internos del motor disparen otro cálculo completo.
+    FCalculandoFactura: Boolean;
+    // Agrupa los cambios del editor y recalcula el documento una vez al Post.
+    FRecalculoFacturaPendiente: Boolean;
     // True mientras DesempaquetarAtributosLineas postea lineas: cambio
     // puramente descriptivo que NO debe disparar numeracion, creacion
     // de articulos ni recalculos (cascada por linea al navegar).
     FDesempaquetandoAtributos: Boolean;
+    FRepositorio: IRepositorioFacturas;
+    FValidadorFiscal: IValidadorFiscalFactura;
+    FCalculador: ICalculadorFactura;
     FServicioBorrado: IServicioBorradoFactura;
     FServicioEfectos: IServicioEfectosFactura;
-    FServicioMovimientos: IServicioMovimientosFactura;
-    FConexionServicios: TUniConnection;
     FAdvertenciasPendientes: TStringList;
     FOnResultadoOperacion: TResultadoOperacionFacturaEvent;
     FOnResultadoBorrado: TResultadoBorradoFacturaEvent;
@@ -131,9 +134,6 @@ private
     // (pestañas Verifactu y Movimientos vacías).
     procedure RellenarParamsDesdeMaestro(AQry: TUniQuery);
     // Helpers de validacion de coherencia en el BeforePost de la cabecera.
-    function EsPaisUE(const ACodPais: string): Boolean;
-    function ObtenerOperVfactu(const ACodigo: string; out AAmbito: string;
-                               out ARepercute: Boolean): Boolean;
     function UltimaFechaSerie(const ASerie, AEmpresa,
                               ANumero: string): TDateTime;
     function HayHuecoNumeracion(const ASerie, AEmpresa,
@@ -142,7 +142,7 @@ private
     // Cuerpo real del BeforePost de la cabecera. Lo invoca el wrapper
     // unqryFacBeforePost dentro de la guarda de re-entrancia.
     procedure ValidarCabeceraBeforePost(DataSet: TDataSet);
-    procedure AsegurarServiciosFactura;
+    procedure RequerirServiciosFactura;
     procedure NotificarResultadoOperacion(
       const AResultado: TResultadoOperacionFactura);
     procedure NotificarResultadoBorrado(
@@ -153,6 +153,7 @@ private
     procedure NotificarAdvertenciasPendientes;
     procedure GuardarParametrosEDocFactura(ADataSet: TDataSet);
     procedure GuardarOpcionMovimientosFactura(ADataSet: TDataSet);
+    procedure ProcesarFacturaPosteada(ADataSet: TDataSet);
     function FacturaPermiteRecalcularLineas: Boolean;
     // True si el borrador genera movimientos de stock al consolidar:
     // SIMPLIFICADA siempre; NORMAL solo con el check ESMUEVE_STOCK_FAC.
@@ -167,6 +168,8 @@ private
     procedure QuitarCampoComplejoCabecera(ALista: TStrings;
                                           const ACampo: string);
 public
+    procedure ConfigurarServicios(
+      const AServicios: TServiciosFactura);
     procedure GetCodigoAutoFactura;
     // Numero total de prendas (suma CANTIDAD_FACLIN de todas las lineas).
     // Se muestra en la pestana Totales; no se persiste en BBDD.
@@ -186,6 +189,7 @@ public
     procedure CopiarEmpresaaFactura(DataSet:TDataSet);
     procedure CopiarClienteaFactura(DataSet:TDataSet);
     procedure CopiarArticuloaLinea(DataSet:TDataSet);
+    procedure MarcarRecalculoFacturaPendiente;
     function FormaPagoDefault:String;
     function TarifaDefault:string;
     function BuscarCliente(s: string):Boolean;
@@ -229,12 +233,6 @@ public
       const ATipo, AReferencia: string): Integer;
     function CambiarEstadoEfectoVenta(const AEstado: string): Boolean;
 
-    // Genera movimientos de salida de stock para todas las líneas de la
-    // factura cargada (sólo se llama automáticamente en facturas
-    // simplificadas, pero se puede invocar manualmente). Idempotente: salta
-    // líneas que ya tengan un movimiento registrado para el documento
-    // (TIPO_DOC_MOV='FC' + serie/número/línea).
-    function GenerarMovimientosSalidaFactura: Integer;
     // Cablea los detalles (lineas, recibos, efectos, consolidacion,
     // errores, movimientos) al datasource de cabecera que aporta el
     // form. Antes DataModuleCreate lo tomaba del form directamente.
@@ -272,38 +270,39 @@ uses
   inLibLicenciaAplicacion,
   inLibVentasImpuestos,
   inLibContadorLineas,
-  inLibFacturasBorrado,
-  inLibFacturasEfectos,
-  inLibFacturasMovimientos,
-  inLibMsg;
+  inLibMsg,
+  inLibSqlSeguro;
 
 {$R *.dfm}
 
+const
+  CAMPOS_COMPLEJOS_CABECERA: array[0..1] of string = (
+    'DOCUMENTO_FAC',
+    'XML_FAC'
+  );
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
-procedure TdmFacturas.AsegurarServiciosFactura;
+procedure TdmFacturas.ConfigurarServicios(
+  const AServicios: TServiciosFactura);
 begin
-  if FConexionServicios <> ConexionPrincipal then
+  FRepositorio := AServicios.Repositorio;
+  FValidadorFiscal := AServicios.ValidadorFiscal;
+  FCalculador := AServicios.Calculador;
+  FServicioBorrado := AServicios.Borrado;
+  FServicioEfectos := AServicios.Efectos;
+end;
+
+procedure TdmFacturas.RequerirServiciosFactura;
+begin
+  if (not Assigned(FRepositorio)) or
+     (not Assigned(FValidadorFiscal)) or
+     (not Assigned(FCalculador)) or
+     (not Assigned(FServicioBorrado)) or
+     (not Assigned(FServicioEfectos)) then
   begin
-    FServicioBorrado := nil;
-    FServicioEfectos := nil;
-    FServicioMovimientos := nil;
-    FConexionServicios := ConexionPrincipal;
-  end;
-  if not Assigned(FServicioBorrado) then
-  begin
-    FServicioBorrado :=
-      TServicioBorradoFactura.Create(ConexionPrincipal);
-  end;
-  if not Assigned(FServicioEfectos) then
-  begin
-    FServicioEfectos :=
-      TServicioEfectosFactura.Create(ConexionPrincipal);
-  end;
-  if not Assigned(FServicioMovimientos) then
-  begin
-    FServicioMovimientos :=
-      TServicioMovimientosFactura.Create(ConexionPrincipal);
+    raise Exception.Create(
+      'Los servicios de factura no están configurados');
   end;
 end;
 
@@ -351,212 +350,58 @@ end;
 function  TdmFacturas.ExisteSerieEmpresa(sSerie,
                                          sEmpresa,
                                          sTipoDoc:string): Boolean;
-var
-  unqrySol:TUniQuery;
-  sResul : String;
 begin
-  sResul := '';
-  unqrySol := TUniQuery.Create(nil);
-  with unqrySol do
-  begin
-    Connection := ConexionPrincipal;
-    SQL.Text :=   'SELECT EMPRESA_CON ' +
-                  '  FROM fza_contadores ' +
-                  ' WHERE SERIE_CON = :Serie ' +
-                  '   AND TIPO_DOC_CON = :TipoDoc ' +
-                  '   AND EMPRESA_CON <> :Empresa ' +
-                  '   AND EMPRESA_CON <> '+QuotedStr('-');
-    ParamByName('Serie').AsString := sSerie;
-    ParamByName('TipoDoc').AsString := sTipoDoc;
-    ParamByName('Empresa').AsString := sEmpresa;
-    Open;
-    if RecordCount <> 0 then
-    begin
-      sResul := FieldByName('EMPRESA_CON').AsString;
-      Result := (sResul = '') or (not(SameText(sResul, sEmpresa)));
-    end
-    else
-      Result := False;
-    Close;
-    FreeAndNil(unqrySol);
-  end;
+  RequerirServiciosFactura;
+  Result := FRepositorio.ExisteSerieOtraEmpresa(
+    sSerie,
+    sEmpresa,
+    sTipoDoc);
 end;
-// Devuelve True si el pais (codigo numerico, p.ej. 724) es miembro de la UE
-function TdmFacturas.EsPaisUE(const ACodPais: string): Boolean;
-var
-  q: TUniQuery;
-begin
-  Result := False;
-  if Trim(ACodPais) <> '' then
-  begin
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := ConexionPrincipal;
-      q.SQL.Text := 'SELECT ESMIEMBRO_UE_PAI FROM fza_paises ' +
-                    ' WHERE CODIGO_PAI_PAI = :pais';
-      q.ParamByName('pais').AsString := Trim(ACodPais);
-      q.Open;
-      Result := (not q.IsEmpty) and
-                SameText(Trim(q.FieldByName('ESMIEMBRO_UE_PAI').AsString), 'S');
-      q.Close;
-    finally
-      FreeAndNil(q);
-    end;
-  end;
-end;
-// Lee del catalogo el ambito exigido y si la operacion repercute IVA.
-// Devuelve True si el codigo existe en el catalogo.
-function TdmFacturas.ObtenerOperVfactu(const ACodigo: string;
-  out AAmbito: string; out ARepercute: Boolean): Boolean;
-var
-  q: TUniQuery;
-begin
-  Result := False;
-  AAmbito := '';
-  ARepercute := True;
-  if Trim(ACodigo) <> '' then
-  begin
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := ConexionPrincipal;
-      q.SQL.Text := 'SELECT AMBITO_VFO, ESREPERCUTE_IVA_VFO ' +
-                    ' FROM fza_verifactu_operaciones WHERE CODIGO_VFO = :cod';
-      q.ParamByName('cod').AsString := Trim(ACodigo);
-      q.Open;
-      if not q.IsEmpty then
-      begin
-        AAmbito    := Trim(q.FieldByName('AMBITO_VFO').AsString);
-        ARepercute := not SameText(
-          Trim(q.FieldByName('ESREPERCUTE_IVA_VFO').AsString), 'N');
-        Result := True;
-      end;
-      q.Close;
-    finally
-      FreeAndNil(q);
-    end;
-  end;
-end;
+
 // Fecha de la ultima factura ya emitida (no borrador) de la misma serie y
 // empresa, excluyendo la actual. 0 si no hay ninguna.
 function TdmFacturas.UltimaFechaSerie(const ASerie, AEmpresa,
   ANumero: string): TDateTime;
-var
-  q: TUniQuery;
 begin
-  Result := 0;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := ConexionPrincipal;
-    q.SQL.Text := 'SELECT MAX(FECHA_FAC) AS ULTIMA FROM fza_facturas ' +
-                  ' WHERE SERIE_FAC = :serie AND CODIGO_EMP_FAC = :emp ' +
-                  '   AND NUMERO_FAC <> :num AND FECHA_FAC IS NOT NULL ' +
-                  '   AND FASE_FAC <> ''BORRADOR''';
-    q.ParamByName('serie').AsString := ASerie;
-    q.ParamByName('emp').AsString   := AEmpresa;
-    q.ParamByName('num').AsString   := ANumero;
-    q.Open;
-    if (not q.IsEmpty) and (not q.FieldByName('ULTIMA').IsNull) then
-      Result := q.FieldByName('ULTIMA').AsDateTime;
-    q.Close;
-  finally
-    FreeAndNil(q);
-  end;
+  RequerirServiciosFactura;
+  Result := FRepositorio.UltimaFechaSerie(
+    ASerie,
+    AEmpresa,
+    ANumero);
 end;
+
 // True si entre la ultima factura de la serie y la actual queda un hueco de
 // numeracion (la ley exige numeracion correlativa, ese numero debe cubrirse).
 function TdmFacturas.HayHuecoNumeracion(const ASerie, AEmpresa,
   ANumero: string): Boolean;
-var
-  q:         TUniQuery;
-  iAsignado: Int64;
-  iMax:      Int64;
 begin
-  Result := False;
-  iAsignado := StrToInt64Def(Trim(ANumero), 0);
-  if iAsignado > 1 then
-  begin
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := ConexionPrincipal;
-      q.SQL.Text := 'SELECT MAX(CAST(NUMERO_FAC AS UNSIGNED)) AS MAXNUM ' +
-                    ' FROM fza_facturas WHERE SERIE_FAC = :serie ' +
-                    '   AND CODIGO_EMP_FAC = :emp ' +
-                    '   AND CAST(NUMERO_FAC AS UNSIGNED) < :asig';
-      q.ParamByName('serie').AsString  := ASerie;
-      q.ParamByName('emp').AsString    := AEmpresa;
-      q.ParamByName('asig').AsLargeInt := iAsignado;
-      q.Open;
-      if (not q.IsEmpty) and (not q.FieldByName('MAXNUM').IsNull) then
-      begin
-        iMax   := q.FieldByName('MAXNUM').AsLargeInt;
-        Result := (iAsignado - iMax) > 1;
-      end;
-      q.Close;
-    finally
-      FreeAndNil(q);
-    end;
-  end;
+  RequerirServiciosFactura;
+  Result := FRepositorio.HayHuecoNumeracion(
+    ASerie,
+    AEmpresa,
+    ANumero);
 end;
+
 // Detecta incoherencias flagrantes entre el tipo de operacion Verifactu,
 // el pais del cliente y el IVA de la factura.
 procedure TdmFacturas.ValidarOperacionVfactu;
 var
-  sTipo, sAmbito, sPais, sNif: string;
-  bRepercute, bUE, bExtr:      Boolean;
-  dCuota:                      Currency;
+  Solicitud: TSolicitudValidacionFiscalFactura;
 begin
-  with unqryTablaG do
-  begin
-    sTipo  := Trim(FieldByName('TIPO_OPER_VFACTU_FAC').AsString);
-    sPais  := Trim(FieldByName('CODIGO_PAI_CLIENTE_FAC').AsString);
-    sNif   := Trim(FieldByName('NIF_CLIENTE_FAC').AsString);
-    dCuota := FieldByName('TOTAL_IMPUESTOS_FAC').AsCurrency;
-    bUE    := EsPaisUE(sPais);
-    bExtr  := (sPais <> '') and (sPais <> '724') and
-              (not SameText(sPais, 'ES'));
-    sAmbito    := '';
-    bRepercute := True;
-    if sTipo <> '' then
-      ObtenerOperVfactu(sTipo, sAmbito, bRepercute);
-    // Sin tipo y cliente fuera de la UE: el envio lo trata como exportacion
-    // (sin IVA repercutido) de forma automatica.
-    if (sTipo = '') and bExtr and (not bUE) then
-      bRepercute := False;
-    if SameText(sAmbito, 'UE') and
-       (not bUE) then
-    begin
-      raise EValidacionFactura.Create(
-        Format(
-          SErrorOperacionIntracomunitariaClienteNoUE,
-          [sTipo, sPais]),
-        cvfPais);
-    end;
-    if SameText(sAmbito, 'EXTRA_UE') and
-       (bUE or (not bExtr)) then
-    begin
-      raise EValidacionFactura.Create(
-        Format(
-          SErrorOperacionExportacionClienteNoExtranjero,
-          [sTipo]),
-        cvfPais);
-    end;
-    if (not bRepercute) and
-       (Abs(dCuota) > 0.01) then
-    begin
-      raise EValidacionFactura.Create(
-        Format(
-          SErrorOperacionSinIvaConCuota,
-          [FormatFloat('#,##0.00', dCuota)]),
-        cvfOperacionFiscal);
-    end;
-    if bExtr and
-       (sNif = '') then
-    begin
-      raise EValidacionFactura.Create(
-        Format(SErrorNifIvaClienteExtranjero, [sPais]),
-        cvfNifCliente);
-    end;
-  end;
+  RequerirServiciosFactura;
+  Solicitud.TipoOperacion :=
+    unqryTablaG.FieldByName(
+      'TIPO_OPER_VFACTU_FAC').AsString;
+  Solicitud.CodigoPaisCliente :=
+    unqryTablaG.FieldByName(
+      'CODIGO_PAI_CLIENTE_FAC').AsString;
+  Solicitud.NifCliente :=
+    unqryTablaG.FieldByName(
+      'NIF_CLIENTE_FAC').AsString;
+  Solicitud.TotalImpuestos :=
+    unqryTablaG.FieldByName(
+      'TOTAL_IMPUESTOS_FAC').AsCurrency;
+  FValidadorFiscal.Validar(Solicitud);
 end;
 
 function TdmFacturas.GetSubtipoSerieEmpresa(sSerie,
@@ -749,45 +594,33 @@ end;
 
 function TdmFacturas.CalcularFactura: TResultadoOperacionFactura;
 var
-  facTotales: TFacturaTotales;
   bReadOnlyLineas: Boolean;
 begin
   Result := TResultadoOperacionFactura.Correcto;
-  // Usar TFacturaTotales en lugar del procedimiento almacenado
-  if Assigned(unqryTablaG) and unqryTablaG.Active and
-     Assigned(unqryLinFac) and unqryLinFac.Active and
-     FacturaPermiteRecalcularLineas then
+  if not FCalculandoFactura then
   begin
-    bReadOnlyLineas := unqryLinFac.ReadOnly;
+    RequerirServiciosFactura;
+    FCalculandoFactura := True;
     try
-      if bReadOnlyLineas then
-        unqryLinFac.ReadOnly := False;
-      try
-        facTotales := TFacturaTotales.Create(ConexionPrincipal, unqryTablaG,
-          unqryLinFac);
+      if Assigned(unqryTablaG) and unqryTablaG.Active and
+         Assigned(unqryLinFac) and unqryLinFac.Active then
+      begin
+        bReadOnlyLineas := unqryLinFac.ReadOnly;
         try
-          if not facTotales.ProcesarFacturaCompleta then
+          if bReadOnlyLineas then
           begin
-            if facTotales.MensajeError <> '' then
-            begin
-              Result := TResultadoOperacionFactura.Error(
-                Format(
-                  SErrorCalcularBorradorDetalle,
-                  [facTotales.MensajeError]));
-            end;
+            unqryLinFac.ReadOnly := False;
           end;
+          Result := FCalculador.Calcular(
+            unqryTablaG,
+            unqryLinFac,
+            FacturaPermiteRecalcularLineas);
         finally
-          FreeAndNil(facTotales);
-        end;
-      except
-        on E: Exception do
-        begin
-          Result := TResultadoOperacionFactura.Error(
-            Format(SErrorCalculoBorrador, [E.Message]));
+          unqryLinFac.ReadOnly := bReadOnlyLineas;
         end;
       end;
     finally
-      unqryLinFac.ReadOnly := bReadOnlyLineas;
+      FCalculandoFactura := False;
     end;
   end;
 end;
@@ -822,6 +655,11 @@ begin
       FreeAndNil(unqrySol);
     end;
   end;
+end;
+
+procedure TdmFacturas.MarcarRecalculoFacturaPendiente;
+begin
+  FRecalculoFacturaPendiente := True;
 end;
 
 procedure TdmFacturas.CopiarArticuloaLinea(DataSet: TDataSet);
@@ -1058,97 +896,119 @@ begin
 end;
 
 procedure TdmFacturas.CrearCliente;
+var
+  Solicitud: TSolicitudClienteFactura;
 begin
-    with unstrdprcCrearCliente do
-    begin
-      ParamByName('pCODIGO_CLIENTE').AsString :=
-                    unqryTablaG.FieldByName('CODIGO_CLI_FAC').AsString;
-      ParamByName('pRAZONSOCIAL_CLIENTE').AsString :=
-                unqryTablaG.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString;
-      ParamByName('pNIF_CLIENTE').AsString :=
-                        unqryTablaG.FieldByName('NIF_CLIENTE_FAC').AsString;
-      ParamByName('pMOVIL_CLIENTE').AsString :=
-                      unqryTablaG.FieldByName('MOVIL_CLIENTE_FAC').AsString;
-      ParamByName('pEMAIL_CLIENTE').AsString :=
-                      unqryTablaG.FieldByName('EMAIL_CLIENTE_FAC').AsString;
-      ParamByName('pDIRECCION1_CLIENTE').AsString :=
-                 unqryTablaG.FieldByName('DIRECCION1_CLIENTE_FAC').AsString;
-      ParamByName('pDIRECCION2_CLIENTE').AsString :=
-                 unqryTablaG.FieldByName('DIRECCION2_CLIENTE_FAC').AsString;
-      ParamByName('pPOBLACION_CLIENTE').AsString :=
-                  unqryTablaG.FieldByName('POBLACION_CLIENTE_FAC').AsString;
-      ParamByName('pPROVINCIA_CLIENTE').AsString :=
-                  unqryTablaG.FieldByName('PROVINCIA_CLIENTE_FAC').AsString;
-      ParamByName('pCPOSTAL_CLIENTE').AsString :=
-                    unqryTablaG.FieldByName(
-                      'CODIGO_POSTAL_CLIENTE_FAC').AsString;
-      ParamByName('pPAIS_CLIENTE').AsString :=
-                unqryTablaG.FieldByName('NOMBRE_PAI_CLIENTE_FAC').AsString;
-      ParamByName('pCOD_PAIS_CLIENTE').AsString :=
-                unqryTablaG.FieldByName('CODIGO_PAI_CLIENTE_FAC').AsString;
-      ParamByName('pESINTRACOMUNITARIO_CLIENTE').AsString :=
-         unqryTablaG.FieldByName('ESINTRACOMUNITARIO_CLIENTE_FAC').AsString;
-      ParamByName('pESIVA_EXENTO_CLIENTE').AsString :=
-               unqryTablaG.FieldByName('ESIVA_EXENTO_CLIENTE_FAC').AsString;
-      ParamByName('pESRETENCIONES_CLIENTE').AsString :=
-              unqryTablaG.FieldByName('ESRETENCIONES_CLIENTE_FAC').AsString;
-      ParamByName('pESIVA_RECARGO_CLIENTE').AsString :=
-              unqryTablaG.FieldByName('ESIVA_RECARGO_CLIENTE_FAC').AsString;
-      ParamByName('pESREGIMENESPECIALAGRICOLA_CLIENTE').AsString :=
-                                                        unqryTablaG.FieldByName(
-                          'ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC').AsString;
-      ParamByName('pTARIFA_ARTICULO_CLIENTE').AsString :=
-            unqryTablaG.FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-      ParamByName('pUSUARIO').AsString := IdentidadSesion.Usuario;
-    end;
-    unstrdprcCrearCliente.ExecProc;
+  RequerirServiciosFactura;
+  Solicitud.Codigo :=
+    unqryTablaG.FieldByName('CODIGO_CLI_FAC').AsString;
+  Solicitud.RazonSocial :=
+    unqryTablaG.FieldByName(
+      'RAZON_SOCIAL_CLIENTE_FAC').AsString;
+  Solicitud.Nif :=
+    unqryTablaG.FieldByName('NIF_CLIENTE_FAC').AsString;
+  Solicitud.Movil :=
+    unqryTablaG.FieldByName('MOVIL_CLIENTE_FAC').AsString;
+  Solicitud.Email :=
+    unqryTablaG.FieldByName('EMAIL_CLIENTE_FAC').AsString;
+  Solicitud.Direccion1 :=
+    unqryTablaG.FieldByName(
+      'DIRECCION1_CLIENTE_FAC').AsString;
+  Solicitud.Direccion2 :=
+    unqryTablaG.FieldByName(
+      'DIRECCION2_CLIENTE_FAC').AsString;
+  Solicitud.Poblacion :=
+    unqryTablaG.FieldByName(
+      'POBLACION_CLIENTE_FAC').AsString;
+  Solicitud.Provincia :=
+    unqryTablaG.FieldByName(
+      'PROVINCIA_CLIENTE_FAC').AsString;
+  Solicitud.CodigoPostal :=
+    unqryTablaG.FieldByName(
+      'CODIGO_POSTAL_CLIENTE_FAC').AsString;
+  Solicitud.NombrePais :=
+    unqryTablaG.FieldByName(
+      'NOMBRE_PAI_CLIENTE_FAC').AsString;
+  Solicitud.CodigoPais :=
+    unqryTablaG.FieldByName(
+      'CODIGO_PAI_CLIENTE_FAC').AsString;
+  Solicitud.EsIntracomunitario :=
+    unqryTablaG.FieldByName(
+      'ESINTRACOMUNITARIO_CLIENTE_FAC').AsString;
+  Solicitud.EsIvaExento :=
+    unqryTablaG.FieldByName(
+      'ESIVA_EXENTO_CLIENTE_FAC').AsString;
+  Solicitud.EsRetenciones :=
+    unqryTablaG.FieldByName(
+      'ESRETENCIONES_CLIENTE_FAC').AsString;
+  Solicitud.EsIvaRecargo :=
+    unqryTablaG.FieldByName(
+      'ESIVA_RECARGO_CLIENTE_FAC').AsString;
+  Solicitud.EsRegimenEspecialAgricola :=
+    unqryTablaG.FieldByName(
+      'ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC').AsString;
+  Solicitud.TarifaArticulo :=
+    unqryTablaG.FieldByName(
+      'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
+  Solicitud.Usuario := IdentidadSesion.Usuario;
+  FRepositorio.GuardarCliente(Solicitud);
 end;
 
 procedure TdmFacturas.CrearEmpresa;
+var
+  Solicitud: TSolicitudEmpresaFactura;
 begin
-    with unstdCrearEmpresa do
-    begin
-      ParamByName('pCODIGO_EMPRESA').AsString :=
-                     unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString;
-      ParamByName('pRAZONSOCIAL_EMPRESA').AsString :=
-                unqryTablaG.FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsString;
-      ParamByName('pNIF_EMPRESA').AsString :=
-                        unqryTablaG.FieldByName('NIF_EMPRESA_FAC').AsString;
-      ParamByName('pMOVIL_EMPRESA').AsString :=
-                      unqryTablaG.FieldByName('MOVIL_EMPRESA_FAC').AsString;
-      ParamByName('pEMAIL_EMPRESA').AsString :=
-                      unqryTablaG.FieldByName('EMAIL_EMPRESA_FAC').AsString;
-      ParamByName('pDIRECCION1_EMPRESA').AsString :=
-                 unqryTablaG.FieldByName('DIRECCION1_EMPRESA_FAC').AsString;
-      ParamByName('pDIRECCION2_EMPRESA').AsString :=
-                 unqryTablaG.FieldByName('DIRECCION2_EMPRESA_FAC').AsString;
-      ParamByName('pPOBLACION_EMPRESA').AsString :=
-                  unqryTablaG.FieldByName('POBLACION_EMPRESA_FAC').AsString;
-      ParamByName('pPROVINCIA_EMPRESA').AsString :=
-                  unqryTablaG.FieldByName('PROVINCIA_EMPRESA_FAC').AsString;
-      ParamByName('pCPOSTAL_EMPRESA').AsString :=
-                    unqryTablaG.FieldByName(
-                      'CODIGO_POSTAL_EMPRESA_FAC').AsString;
-      ParamByName('pPAIS_EMPRESA').AsString :=
-                unqryTablaG.FieldByName('NOMBRE_PAI_EMPRESA_FAC').AsString;
-      ParamByName('pCODPAIS_EMPRESA').AsString :=
-                unqryTablaG.FieldByName('CODIGO_PAI_EMPRESA_FAC').AsString;
-      ParamByName('pRETENCIONES_EMPRESA').AsString :=
-              unqryTablaG.FieldByName('ESRETENCIONES_EMPRESA_FAC').AsString;
-      ParamByName('pREGIMENESPECIALAGRICOLA_EMPRESA').AsString :=
-  unqryTablaG.FieldByName('ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC').AsString;
-      ParamByName('pGRUPO_ZONA_IVA_EMPRESA').AsString :=
-             unqryTablaG.FieldByName('GRUPO_ZONA_IVA_EMPRESA_FAC').AsString;
-      ParamByName('pUSUARIO').AsString := IdentidadSesion.Usuario;
-    end;
-    unstdCrearEmpresa.ExecProc;
+  RequerirServiciosFactura;
+  Solicitud.Codigo :=
+    unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString;
+  Solicitud.RazonSocial :=
+    unqryTablaG.FieldByName(
+      'RAZON_SOCIAL_EMPRESA_FAC').AsString;
+  Solicitud.Nif :=
+    unqryTablaG.FieldByName('NIF_EMPRESA_FAC').AsString;
+  Solicitud.Movil :=
+    unqryTablaG.FieldByName('MOVIL_EMPRESA_FAC').AsString;
+  Solicitud.Email :=
+    unqryTablaG.FieldByName('EMAIL_EMPRESA_FAC').AsString;
+  Solicitud.Direccion1 :=
+    unqryTablaG.FieldByName(
+      'DIRECCION1_EMPRESA_FAC').AsString;
+  Solicitud.Direccion2 :=
+    unqryTablaG.FieldByName(
+      'DIRECCION2_EMPRESA_FAC').AsString;
+  Solicitud.Poblacion :=
+    unqryTablaG.FieldByName(
+      'POBLACION_EMPRESA_FAC').AsString;
+  Solicitud.Provincia :=
+    unqryTablaG.FieldByName(
+      'PROVINCIA_EMPRESA_FAC').AsString;
+  Solicitud.CodigoPostal :=
+    unqryTablaG.FieldByName(
+      'CODIGO_POSTAL_EMPRESA_FAC').AsString;
+  Solicitud.NombrePais :=
+    unqryTablaG.FieldByName(
+      'NOMBRE_PAI_EMPRESA_FAC').AsString;
+  Solicitud.CodigoPais :=
+    unqryTablaG.FieldByName(
+      'CODIGO_PAI_EMPRESA_FAC').AsString;
+  Solicitud.EsRetenciones :=
+    unqryTablaG.FieldByName(
+      'ESRETENCIONES_EMPRESA_FAC').AsString;
+  Solicitud.EsIvaRecargo := '';
+  Solicitud.EsRegimenEspecialAgricola :=
+    unqryTablaG.FieldByName(
+      'ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC').AsString;
+  Solicitud.GrupoZonaIva :=
+    unqryTablaG.FieldByName(
+      'GRUPO_ZONA_IVA_EMPRESA_FAC').AsString;
+  Solicitud.Usuario := IdentidadSesion.Usuario;
+  FRepositorio.GuardarEmpresa(Solicitud);
 end;
 
 procedure TdmFacturas.DataModuleCreate(Sender: TObject);
 begin
   inherited;
   FAdvertenciasPendientes := TStringList.Create;
-  FConexionServicios := nil;
   unqryPerfiles.Connection := ConexionPrincipal;
   unqryTablaG.Connection := ConexionPrincipal;
   unqryTablaG.KeyFields := 'NUMERO_FAC;SERIE_FAC';
@@ -1278,8 +1138,6 @@ begin
   unqryCliDataFac.Connection := ConexionPrincipal;
   unqryArtDataLinFac.Connection := ConexionPrincipal;
   unqryTarifas.Connection := ConexionPrincipal;
-  unstrdprcCrearCliente.Connection := ConexionPrincipal;
-  unstdCrearEmpresa.Connection := ConexionPrincipal;
   unstdCrearArticuloLin.Connection := ConexionPrincipal;
   unqryFormaPago.Connection := ConexionPrincipal;
   unstrdprcGetContadorFactura.Connection := ConexionPrincipal;
@@ -1327,19 +1185,23 @@ end;
 procedure TdmFacturas.QuitarCampoComplejoCabecera(ALista: TStrings;
                                                   const ACampo: string);
 var
+  sCampoSql: string;
   sSQL: string;
 begin
   if ALista <> nil then
   begin
+    sCampoSql := DelimitarIdentificadorSql(
+      ACampo,
+      CAMPOS_COMPLEJOS_CABECERA);
     sSQL := ALista.Text;
     sSQL := StringReplace(sSQL,
-      ', `' + ACampo + '` = :`' + ACampo + '`',
+      ', ' + sCampoSql + ' = :' + sCampoSql,
       '', [rfReplaceAll, rfIgnoreCase]);
     sSQL := StringReplace(sSQL,
-      ', `' + ACampo + '`',
+      ', ' + sCampoSql,
       '', [rfReplaceAll, rfIgnoreCase]);
     sSQL := StringReplace(sSQL,
-      ', :`' + ACampo + '`',
+      ', :' + sCampoSql,
       '', [rfReplaceAll, rfIgnoreCase]);
     ALista.Text := sSQL;
   end;
@@ -1394,6 +1256,8 @@ end;
 
 procedure TdmFacturas.PrepararCabeceraSinCamposComplejos;
 var
+  ColumnasPermitidas: TStringList;
+  i: Integer;
   qCampos: TUniQuery;
   sCampo: string;
   sCampos: string;
@@ -1401,6 +1265,7 @@ begin
   sCampos := '';
   if ConexionPrincipal <> nil then
   begin
+    ColumnasPermitidas := TStringList.Create;
     qCampos := TUniQuery.Create(nil);
     try
       qCampos.Connection := ConexionPrincipal;
@@ -1409,17 +1274,27 @@ begin
       while not qCampos.Eof do
       begin
         sCampo := qCampos.FieldByName('Field').AsString;
-        if (not SameText(sCampo, 'DOCUMENTO_FAC')) and
-           (not SameText(sCampo, 'XML_FAC')) then
+        ColumnasPermitidas.Add(sCampo);
+        qCampos.Next;
+      end;
+      i := 0;
+      while i < ColumnasPermitidas.Count do
+      begin
+        sCampo := ColumnasPermitidas[i];
+        if (not SameText(sCampo, CAMPOS_COMPLEJOS_CABECERA[0])) and
+           (not SameText(sCampo, CAMPOS_COMPLEJOS_CABECERA[1])) then
         begin
           if sCampos <> '' then
             sCampos := sCampos + ', ';
-          sCampos := sCampos + '`' + sCampo + '`';
+          sCampos := sCampos + DelimitarIdentificadorSql(
+            sCampo,
+            ColumnasPermitidas);
         end;
-        qCampos.Next;
+        Inc(i);
       end;
     finally
       FreeAndNil(qCampos);
+      FreeAndNil(ColumnasPermitidas);
     end;
     if sCampos <> '' then
       unqryTablaG.SQL.Text :=
@@ -1447,24 +1322,10 @@ procedure TdmFacturas.AbrirDetalles;
 const
   TAG = 'Facturas.AbrirDetalles';
 
-  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
-  var
-    swQ: TStopwatch;
+  procedure AbrirSiCerrada(qry: TUniQuery);
   begin
-    if qry.Active then Exit;
-    swQ := TStopwatch.StartNew;
-    try
+    if not qry.Active then
       qry.Open;
-      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-    except
-      on E: Exception do
-      begin
-        inLibLog.Log.LogPerf(TAG,
-          Nombre + ' ERROR=' + E.Message,
-          swQ.ElapsedMilliseconds);
-        raise;
-      end;
-    end;
   end;
 
 var
@@ -1475,16 +1336,16 @@ begin
   // Lookups y pestaña por defecto. Las queries lazy (Recibos,
   // Consolidacion, Errores, MovimientosFac) se abren al activar su
   // sub-pestaña via AsegurarXxxAbierta.
-  AbrirConTiempo(unqryIvasTipos,      'unqryIvasTipos');
+  AbrirSiCerrada(unqryIvasTipos);
   RefrescarAlmacenes('');
-  AbrirConTiempo(unqryLinFac,         'unqryLinFac');
-  AbrirConTiempo(unqrySeries,         'unqrySeries');
-  AbrirConTiempo(unqryIvas,           'unqryIvas');
-  AbrirConTiempo(unqryFormaPago,      'unqryFormaPago');
-  AbrirConTiempo(unqryVerifactuOpe,   'unqryVerifactuOpe');
-  AbrirConTiempo(unqryTarifas,        'unqryTarifas');
-  AbrirConTiempo(unqryPaisesCli,      'unqryPaisesCli');
-  AbrirConTiempo(unqryPaisesEmp,      'unqryPaisesEmp');
+  AbrirSiCerrada(unqryLinFac);
+  AbrirSiCerrada(unqrySeries);
+  AbrirSiCerrada(unqryIvas);
+  AbrirSiCerrada(unqryFormaPago);
+  AbrirSiCerrada(unqryVerifactuOpe);
+  AbrirSiCerrada(unqryTarifas);
+  AbrirSiCerrada(unqryPaisesCli);
+  AbrirSiCerrada(unqryPaisesEmp);
   inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
@@ -1584,7 +1445,7 @@ end;
 procedure TdmFacturas.EstamparBancoRecibos(const ASerie, ANumero,
                                            ACodEmpban, AIban: string);
 begin
-  AsegurarServiciosFactura;
+  RequerirServiciosFactura;
   FServicioEfectos.EstamparBancoRecibos(
     ASerie,
     ANumero,
@@ -1595,7 +1456,7 @@ end;
 function TdmFacturas.GetBancoDefectoCliente(
   const ACodigoCli: string): string;
 begin
-  AsegurarServiciosFactura;
+  RequerirServiciosFactura;
   Result := FServicioEfectos.BancoDefectoCliente(ACodigoCli);
 end;
 
@@ -1614,7 +1475,7 @@ begin
       NotificarResultadoOperacion(ResultadoCalculo);
       unqryTablaG.Post;
     end;
-    AsegurarServiciosFactura;
+    RequerirServiciosFactura;
     Result := FServicioEfectos.Generar(
       unqryTablaG.FieldByName('SERIE_FAC').AsString,
       unqryTablaG.FieldByName('NUMERO_FAC').AsString,
@@ -1637,7 +1498,7 @@ begin
   if (unqryTablaG <> nil) and unqryTablaG.Active and
      (not unqryTablaG.IsEmpty) then
   begin
-    AsegurarServiciosFactura;
+    RequerirServiciosFactura;
     Result := FServicioEfectos.RegistrarCobro(
       unqryTablaG.FieldByName('SERIE_FAC').AsString,
       unqryTablaG.FieldByName('NUMERO_FAC').AsString,
@@ -1662,7 +1523,7 @@ begin
   if (unqryEfectosVenta <> nil) and unqryEfectosVenta.Active and
      (not unqryEfectosVenta.IsEmpty) then
   begin
-    AsegurarServiciosFactura;
+    RequerirServiciosFactura;
     Result := FServicioEfectos.CambiarEstado(
       unqryEfectosVenta.FieldByName('SERIE_FAC_EFV').AsString,
       unqryEfectosVenta.FieldByName('NUMERO_FAC_EFV').AsString,
@@ -1736,9 +1597,11 @@ end;
 
 procedure TdmFacturas.DataModuleDestroy(Sender: TObject);
 begin
+  FRepositorio := nil;
+  FValidadorFiscal := nil;
+  FCalculador := nil;
   FServicioBorrado := nil;
   FServicioEfectos := nil;
-  FServicioMovimientos := nil;
   FreeAndNil(FAdvertenciasPendientes);
   unqryLinFac.Close;
   unqryIvas.Close;
@@ -1791,18 +1654,21 @@ var
   qryIVAAG : TUniQuery;
   sResul:String;
 begin
+  sResul := '';
   qryIVAAG := TUniQuery.Create(Self);
-  with qryIVAAG do
-  begin
-    Connection := ConexionPrincipal;
+  try
+    with qryIVAAG do
+    begin
+      Connection := ConexionPrincipal;
         SQL.Text := 'SELECT IVA_IVAGRP ' +
                     '  FROM vi_ivas_empresa ' +
-                    ' WHERE ESIVAAGRICOLA_IVA_IVAGRP = ' + QuotedStr('S') +
+                    ' WHERE ESIVAAGRICOLA_IVA_IVAGRP = :pAGRICOLA ' +
                     '   AND CODIGO_EMP_EMP = :pEMPRESA ' +
 							     	'	  AND FECHA_DESDE_IVA <= :pFECHA '     +
 							      '	  AND (FECHA_HASTA_IVA IS NULL  '   +
 							     	'	      OR FECHA_HASTA_IVA > :pFECHA)'+
                     ' LIMIT 1;'  ;
+        ParamByName('pAGRICOLA').AsString := 'S';
         ParamByName('pFECHA').AsDateTime :=
                             unqryTablaG.FieldByName('FECHA_FAC').AsDateTime;
         ParamByName('pEMPRESA').AsString :=
@@ -1815,18 +1681,22 @@ begin
         Close;
         SQL.Text := 'SELECT IVA_IVAGRP ' +
                     '  FROM vi_ivas_empresa ' +
-                    ' WHERE ESIVAAGRICOLA_IVA_IVAGRP = ' + QuotedStr('S') +
-                    '   AND ESDEFAULT_IVA_IVAGRP = ' + QuotedStr('S') +
+                    ' WHERE ESIVAAGRICOLA_IVA_IVAGRP = :pAGRICOLA ' +
+                    '   AND ESDEFAULT_IVA_IVAGRP = :pDEFAULT ' +
 							      '  	AND FECHA_DESDE_IVA <= :pFECHA '     +
 							      '		AND ( FECHA_HASTA_IVA IS NULL  '   +
 								    '		       OR FECHA_HASTA_IVA > :pFECHA)'+
                     ' LIMIT 1;'  ;
+        ParamByName('pAGRICOLA').AsString := 'S';
+        ParamByName('pDEFAULT').AsString := 'S';
         ParamByName('pFECHA').AsDateTime :=
                             unqryTablaG.FieldByName('FECHA_FAC').AsDateTime;
        Open;
        sResul := Fields[0].AsString;
+      end;
+      Close;
     end;
-    Close;
+  finally
     FreeAndNil(qryIVAAG);
   end;
   Result := sResul;
@@ -2094,45 +1964,52 @@ end;
 
 function TdmFacturas.FacturaGeneraMovimientos: Boolean;
 var
+  bMueveStock: Boolean;
   sTipo: string;
 begin
-  // Las SIMPLIFICADAS (tickets directos) siempre mueven stock; las
-  // NORMALES solo si el usuario marco el check ESMUEVE_STOCK_FAC
-  // (venta directa al mayor sin albaran).
   Result := False;
   if unqryTablaG.Active and
      (unqryTablaG.FindField('TIPO_FAC') <> nil) then
   begin
     sTipo := unqryTablaG.FieldByName('TIPO_FAC').AsString;
-    if SameText(sTipo, 'SIMPLIFICADA') then
-      Result := True
-    else if SameText(sTipo, 'NORMAL') and
-            (unqryTablaG.FindField('ESMUEVE_STOCK_FAC') <> nil) then
-      Result := SameText(
-        unqryTablaG.FieldByName('ESMUEVE_STOCK_FAC').AsString, 'S');
+    bMueveStock := False;
+    if unqryTablaG.FindField('ESMUEVE_STOCK_FAC') <> nil then
+    begin
+      bMueveStock := SameText(
+        unqryTablaG.FieldByName('ESMUEVE_STOCK_FAC').AsString,
+        'S');
+    end;
+    Result := FacturaDebeGenerarMovimientos(
+      sTipo,
+      bMueveStock);
   end;
 end;
 
 procedure TdmFacturas.unqryFacAfterPost(DataSet: TDataSet);
-var
-  bGeneraMovs: Boolean;
 begin
   inherited;
+  ProcesarFacturaPosteada(DataSet);
+end;
+
+procedure TdmFacturas.ProcesarFacturaPosteada(ADataSet: TDataSet);
+var
+  bTransaccionPropia: Boolean;
+begin
+  bTransaccionPropia := not ConexionPrincipal.InTransaction;
+  if bTransaccionPropia then
+    ConexionPrincipal.StartTransaction;
   try
-    // SQLInsert/SQLUpdate del DFM son anteriores a esta columna; se persiste
-    // expresamente para que el valor del check no se pierda al grabar.
-    GuardarOpcionMovimientosFactura(DataSet);
-    NotificarResultadoOperacion(CalcularFactura);
-    GuardarParametrosEDocFactura(DataSet);
-    // SIMPLIFICADAS siempre mueven stock. Las NORMALES solo si el usuario
-    // marco ESMUEVE_STOCK_FAC. El servicio garantiza la idempotencia.
-    if unqryTablaG.Active and
-       (unqryTablaG.FindField('TIPO_FAC') <> nil) and
-       (Trim(unqryTablaG.FieldByName('NUMERO_FAC').AsString) <> '') then
-    begin
-      bGeneraMovs := FacturaGeneraMovimientos;
-      if bGeneraMovs then
-        GenerarMovimientosSalidaFactura;
+    try
+      // El DFM es anterior a estos campos; se persisten expresamente.
+      GuardarOpcionMovimientosFactura(ADataSet);
+      NotificarResultadoOperacion(CalcularFactura);
+      GuardarParametrosEDocFactura(ADataSet);
+      if bTransaccionPropia and ConexionPrincipal.InTransaction then
+        ConexionPrincipal.Commit;
+    except
+      if bTransaccionPropia and ConexionPrincipal.InTransaction then
+        ConexionPrincipal.Rollback;
+      raise;
     end;
   finally
     NotificarAdvertenciasPendientes;
@@ -2239,7 +2116,7 @@ begin
   Fase := '';
   if DataSet.FindField(ffasefac) <> nil then
     Fase := DataSet.FieldByName(ffasefac).AsString;
-  AsegurarServiciosFactura;
+  RequerirServiciosFactura;
   Resultado := FServicioBorrado.Validar(Serie, Numero, Fase);
   if not Resultado.Permitido then
   begin
@@ -2370,7 +2247,8 @@ begin
   // importes: salir sin efectos de negocio.
   if FDesempaquetandoAtributos then
     Exit;
-  if (SameText(unqryTablaG.FieldByName(fcreart).AsString, 'S')) then
+  if not FCalculandoFactura and
+     SameText(unqryTablaG.FieldByName(fcreart).AsString, 'S') then
   begin
     with  unstdCrearArticuloLin do
     begin
@@ -2421,7 +2299,11 @@ begin
       ExecProc;
     end;
   end;
-  //CalcularFactura;
+  if not FCalculandoFactura and FRecalculoFacturaPendiente then
+  begin
+    FRecalculoFacturaPendiente := False;
+    NotificarResultadoOperacion(CalcularFactura);
+  end;
 end;
 
 procedure TdmFacturas.unqryFacBeforePost(DataSet: TDataSet);
@@ -2619,45 +2501,6 @@ begin
           True);
       end;
       ActualizarAuditoria(DataSet);
-    end;
-  end;
-end;
-
-function TdmFacturas.GenerarMovimientosSalidaFactura: Integer;
-var
-  Solicitud: TSolicitudMovimientosFactura;
-begin
-  Result := 0;
-  if unqryTablaG.Active and
-     (Trim(unqryTablaG.FieldByName('NUMERO_FAC').AsString) <> '') then
-  begin
-    Solicitud.Serie :=
-      unqryTablaG.FieldByName('SERIE_FAC').AsString;
-    Solicitud.Numero :=
-      unqryTablaG.FieldByName('NUMERO_FAC').AsString;
-    Solicitud.Empresa :=
-      unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString;
-    Solicitud.Cliente :=
-      unqryTablaG.FieldByName('CODIGO_CLI_FAC').AsString;
-    Solicitud.Caja := '';
-    if unqryTablaG.FindField('CODIGO_CAJA_FAC') <> nil then
-    begin
-      Solicitud.Caja :=
-        unqryTablaG.FieldByName('CODIGO_CAJA_FAC').AsString;
-    end;
-    Solicitud.NumeroOperacion := '';
-    if unqryTablaG.FindField('NUMERO_OPERACION_FAC') <> nil then
-    begin
-      Solicitud.NumeroOperacion :=
-        unqryTablaG.FieldByName('NUMERO_OPERACION_FAC').AsString;
-    end;
-    Solicitud.Usuario := IdentidadSesion.Usuario;
-    AsegurarServiciosFactura;
-    Result := FServicioMovimientos.GenerarSalidas(Solicitud);
-    if unqryMovimientosFac.Active then
-    begin
-      unqryMovimientosFac.Close;
-      unqryMovimientosFac.Open;
     end;
   end;
 end;

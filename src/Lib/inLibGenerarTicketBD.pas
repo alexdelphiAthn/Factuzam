@@ -80,6 +80,399 @@ begin
     Result := StringOfChar(APadChar, ALength - CurrentLength) + AValue;
 end;
 
+const
+  SQL_EMPRESA_RESGUARDO =
+    'SELECT RAZON_SOCIAL_EMP ' +
+    '  FROM fza_empresas ' +
+    ' WHERE CODIGO_EMP_EMP = :EMP';
+  SQL_FECHA_RESGUARDO =
+    'SELECT FECHA_OPERACION_OPCAJA ' +
+    '  FROM fza_caja_operaciones ' +
+    ' WHERE CODIGO_EMP_OPCAJA = :EMP ' +
+    '   AND CODIGO_ALM_OPCAJA = :ALM ' +
+    '   AND CODIGO_CAJA_OPCAJA = :CAJ ' +
+    '   AND NUMERO_OPERACION_OPCAJA = :OPE';
+  SQL_NUEVOS_DEPOSITOS_RESGUARDO =
+    '   SELECT d.CODIGO_UNIDAD_DEP, ' +
+    '          a.DESCRIPCION_ART, ' +
+    '          d.CODIGO_CLI_DEP, ' +
+    '          (d.PRECIO_VENTA_DEP * ' +
+    '           d.CANTIDAD_PENDIENTE_DEP) AS TOTAL_PVP ' +
+    '     FROM fza_depositos_cliente d ' +
+    'LEFT JOIN fza_articulos a ' +
+    '       ON a.CODIGO_ART_ART = d.CODIGO_ART_DEP' +
+    '    WHERE d.CODIGO_EMP_DEP = :EMP ' +
+    '      AND d.CODIGO_ALM_DEP = :ALM ' +
+    '      AND d.CODIGO_CAJA_DEP = :CAJ ' +
+    '      AND d.NUMERO_OPERACION_DEP = :OPE';
+  SQL_ENTREGAS_RESGUARDO =
+    '   SELECT o.TIPO_OPERACION_OPCAJA, ' +
+    '          o.IMPORTE_TOTAL_OPCAJA, ' +
+    '          a.DESCRIPCION_ART ' +
+    '     FROM fza_caja_operaciones o ' +
+    'LEFT JOIN fza_depositos_cliente d ON d.ID_DEPOSITO_DEP = ' +
+    'o.ID_DEPOSITO_OPCAJA ' +
+    'LEFT JOIN fza_articulos a ON a.CODIGO_ART_ART = d.CODIGO_ART_DEP ' +
+    '    WHERE o.CODIGO_EMP_OPCAJA = :EMP ' +
+    '      AND o.CODIGO_ALM_OPCAJA = :ALM ' +
+    '      AND o.CODIGO_CAJA_OPCAJA = :CAJ ' +
+    '      AND o.NUMERO_OPERACION_OPCAJA = :OPE ' +
+    '      AND o.TIPO_OPERACION_OPCAJA IN (''CB'', ''DE'') ' +
+    '      AND o.IMPORTE_TOTAL_OPCAJA > 0';
+  SQL_DEVOLUCION_ECONOMICA_RESGUARDO =
+    'SELECT TIPO_OPERACION_OPCAJA, IMPORTE_TOTAL_OPCAJA ' +
+    'FROM fza_caja_operaciones ' +
+    'WHERE CODIGO_EMP_OPCAJA = :EMP ' +
+    '  AND CODIGO_ALM_OPCAJA = :ALM ' +
+    '  AND CODIGO_CAJA_OPCAJA = :CAJ ' +
+    '  AND NUMERO_OPERACION_OPCAJA = :OPE ' +
+    '  AND TIPO_OPERACION_OPCAJA IN (''DV'')';
+  SQL_DEPOSITOS_DEVUELTOS_RESGUARDO =
+    '   SELECT d.CODIGO_UNIDAD_DEP, ' +
+    '          a.DESCRIPCION_ART, ' +
+    '          d.CODIGO_CLI_DEP, ' +
+    '          (d.PRECIO_VENTA_DEP * ' +
+    '           d.CANTIDAD_PENDIENTE_DEP) AS TOTAL_PVP ' +
+    '     FROM fza_depositos_cliente d ' +
+    'LEFT JOIN fza_articulos a ' +
+    '       ON a.CODIGO_ART_ART = d.CODIGO_ART_DEP' +
+    '    WHERE d.EMPRESA_CANCEL_DEP = :EMP ' +
+    '      AND d.ALMACEN_CANCEL_DEP = :ALM ' +
+    '      AND d.CAJA_CANCEL_DEP = :CAJ ' +
+    '      AND d.NUMERO_OPERACION_CANCEL_DEP = :OPE';
+  SQL_TOTAL_PAGADO_RESGUARDO =
+    'SELECT SUM(IMPORTE_ENTREGADO_PAGO - ' +
+    '           IMPORTE_CAMBIO_PAGO) AS TOTAL ' +
+    '  FROM fza_caja_pagos ' +
+    ' WHERE CODIGO_EMP_PAGO = :EMP ' +
+    '   AND CODIGO_ALM_PAGO = :ALM ' +
+    '   AND CODIGO_CAJA_PAGO = :CAJ ' +
+    '   AND NUMERO_OPERACION_PAGO = :OPE';
+
+type
+  TGeneradorResguardoDeposito = class
+  private
+    FConexion: TUniConnection;
+    FCodigoEmpresa: string;
+    FCodigoAlmacen: string;
+    FCodigoCaja: string;
+    FOperacion: string;
+    FNombreImpresora: string;
+    FRutasPDF: TStrings;
+    FSoloPDF: Boolean;
+    FConsulta: TUniQuery;
+    FTicket: TTicketTermico;
+    FNombreEmpresa: string;
+    FFechaOperacion: TDateTime;
+    FTotalNuevos: Currency;
+    FTotalEntregas: Currency;
+    FTotalDevoluciones: Currency;
+    FTotalDevueltos: Currency;
+    procedure AsignarParametro(const ANombre, AValor: string);
+    procedure AbrirConsulta(const ASql: string);
+    procedure CargarCabecera;
+    procedure EscribirTituloSeccion(const ATitulo: string);
+    procedure EscribirCabecera;
+    procedure EscribirDepositos(const ATitulo: string;
+      ASaltarAntes: Boolean; var ATotal: Currency);
+    procedure EscribirEntregas;
+    procedure EscribirDevolucionEconomica;
+    procedure EscribirResumen;
+    procedure GenerarSalida;
+    function HayMovimientos: Boolean;
+    function TotalPagadoCaja: Currency;
+  public
+    constructor Create(AConexion: TUniConnection;
+      const ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja,
+      AOperacion, ANombreImpresora: string; ARutasPDF: TStrings;
+      ASoloPDF: Boolean);
+    destructor Destroy; override;
+    procedure Ejecutar;
+  end;
+
+constructor TGeneradorResguardoDeposito.Create(AConexion: TUniConnection;
+  const ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja, AOperacion,
+  ANombreImpresora: string; ARutasPDF: TStrings; ASoloPDF: Boolean);
+begin
+  inherited Create;
+  FConexion := AConexion;
+  FCodigoEmpresa := ACodigoEmpresa;
+  FCodigoAlmacen := ACodigoAlmacen;
+  FCodigoCaja := ACodigoCaja;
+  FOperacion := AOperacion;
+  FNombreImpresora := ANombreImpresora;
+  FRutasPDF := ARutasPDF;
+  FSoloPDF := ASoloPDF;
+  FConsulta := TUniQuery.Create(nil);
+  FConsulta.Connection := FConexion;
+  FTicket := TTicketTermico.Create(FNombreImpresora);
+end;
+
+destructor TGeneradorResguardoDeposito.Destroy;
+begin
+  FreeAndNil(FTicket);
+  FreeAndNil(FConsulta);
+  inherited;
+end;
+
+procedure TGeneradorResguardoDeposito.AsignarParametro(
+  const ANombre, AValor: string);
+var
+  Parametro: TParam;
+begin
+  Parametro := FConsulta.Params.FindParam(ANombre);
+  if Parametro <> nil then
+    Parametro.AsString := AValor;
+end;
+
+procedure TGeneradorResguardoDeposito.AbrirConsulta(const ASql: string);
+begin
+  FConsulta.Close;
+  FConsulta.SQL.Text := ASql;
+  AsignarParametro('EMP', FCodigoEmpresa);
+  AsignarParametro('ALM', FCodigoAlmacen);
+  AsignarParametro('CAJ', FCodigoCaja);
+  AsignarParametro('OPE', FOperacion);
+  FConsulta.Open;
+end;
+
+procedure TGeneradorResguardoDeposito.CargarCabecera;
+begin
+  FFechaOperacion := 0;
+  AbrirConsulta(SQL_EMPRESA_RESGUARDO);
+  if not FConsulta.IsEmpty then
+    FNombreEmpresa :=
+      FConsulta.FieldByName('RAZON_SOCIAL_EMP').AsString;
+  AbrirConsulta(SQL_FECHA_RESGUARDO);
+  if not FConsulta.IsEmpty then
+    FFechaOperacion :=
+      FConsulta.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime;
+end;
+
+procedure TGeneradorResguardoDeposito.EscribirTituloSeccion(
+  const ATitulo: string);
+begin
+  FTicket.LineaSeparadora('=');
+  FTicket.Alinear(alCentro);
+  FTicket.Negrita(True);
+  FTicket.EscribirLinea(ATitulo);
+  FTicket.Negrita(False);
+  FTicket.LineaSeparadora('-');
+  FTicket.Alinear(alIzquierda);
+end;
+
+procedure TGeneradorResguardoDeposito.EscribirCabecera;
+var
+  CodigoCliente: string;
+begin
+  CodigoCliente := '';
+  if not FConsulta.IsEmpty then
+    CodigoCliente :=
+      FConsulta.FieldByName('CODIGO_CLI_DEP').AsString;
+  FTicket.Inicializar;
+  FTicket.Alinear(alCentro);
+  FTicket.Negrita(True);
+  if FNombreEmpresa <> '' then
+    FTicket.EscribirLinea(FNombreEmpresa);
+  FTicket.SaltarLineas(1);
+  FTicket.EscribirLinea('*** RESUMEN DE LA OPERACIÓN ***');
+  FTicket.EscribirLinea('DEPÓSITOS Y ENTREGAS');
+  FTicket.Negrita(False);
+  FTicket.SaltarLineas(1);
+  FTicket.Alinear(alIzquierda);
+  FTicket.TextoColumnas('CÓDIGO CLIENTE:', CodigoCliente);
+  FTicket.TextoColumnas('FECHA:',
+    FormatDateTime('dd/mm/yyyy hh:nn', FFechaOperacion));
+  FTicket.TextoColumnas('Nº OPERACIÓN:', FOperacion);
+  FTicket.SaltarLineas(1);
+end;
+
+procedure TGeneradorResguardoDeposito.EscribirDepositos(
+  const ATitulo: string; ASaltarAntes: Boolean; var ATotal: Currency);
+var
+  Descripcion: string;
+  Sku: string;
+  Pvp: Currency;
+begin
+  if not FConsulta.IsEmpty then
+  begin
+    if ASaltarAntes then
+      FTicket.SaltarLineas(1);
+    EscribirTituloSeccion(ATitulo);
+    while not FConsulta.Eof do
+    begin
+      Descripcion := FConsulta.FieldByName('DESCRIPCION_ART').AsString;
+      Sku := FConsulta.FieldByName('CODIGO_UNIDAD_DEP').AsString;
+      Pvp := FConsulta.FieldByName('TOTAL_PVP').AsCurrency;
+      ATotal := ATotal + Pvp;
+      if Descripcion <> '' then
+        FTicket.EscribirLinea(Copy(Descripcion, 1, 40));
+      FTicket.EscribirLinea(Sku);
+      FTicket.Alinear(alDerecha);
+      FTicket.EscribirLinea('Valor Artículo: ' +
+        FormatFloat('#,##0.00', Pvp) + ' €');
+      FTicket.Alinear(alIzquierda);
+      FConsulta.Next;
+    end;
+    FTicket.SaltarLineas(1);
+  end;
+end;
+
+procedure TGeneradorResguardoDeposito.EscribirEntregas;
+var
+  TipoOperacion: string;
+  NombreArticulo: string;
+  Concepto: string;
+  Importe: Currency;
+begin
+  AbrirConsulta(SQL_ENTREGAS_RESGUARDO);
+  if not FConsulta.IsEmpty then
+  begin
+    EscribirTituloSeccion('ENTREGAS A CUENTA');
+    while not FConsulta.Eof do
+    begin
+      TipoOperacion :=
+        FConsulta.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
+      Importe :=
+        FConsulta.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
+      NombreArticulo :=
+        FConsulta.FieldByName('DESCRIPCION_ART').AsString;
+      FTotalEntregas := FTotalEntregas + Importe;
+      Concepto := '';
+      if Trim(NombreArticulo) <> '' then
+      begin
+        if TipoOperacion = 'CB' then
+          Concepto := 'A cuenta: ' + NombreArticulo
+        else if TipoOperacion = 'DE' then
+          Concepto := 'A cta. inicial: ' + NombreArticulo;
+      end
+      else
+      begin
+        if TipoOperacion = 'CB' then
+          Concepto := 'A cuenta para artículo pendiente'
+        else if TipoOperacion = 'DE' then
+          Concepto := 'A cuenta inicial';
+      end;
+      FTicket.EscribirLinea(Copy(Concepto, 1, 40));
+      FTicket.Alinear(alDerecha);
+      FTicket.EscribirLinea(
+        FormatFloat('#,##0.00', Importe) + ' €');
+      FTicket.Alinear(alIzquierda);
+      FConsulta.Next;
+    end;
+    FTicket.SaltarLineas(1);
+  end;
+end;
+
+procedure TGeneradorResguardoDeposito.EscribirDevolucionEconomica;
+var
+  Concepto: string;
+  Importe: Currency;
+begin
+  AbrirConsulta(SQL_DEVOLUCION_ECONOMICA_RESGUARDO);
+  if not FConsulta.IsEmpty then
+  begin
+    EscribirTituloSeccion('DEVOLUCIÓN ECONÓMICA');
+    while not FConsulta.Eof do
+    begin
+      Concepto :=
+        FConsulta.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
+      Importe :=
+        FConsulta.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
+      FTotalDevoluciones := FTotalDevoluciones + Importe;
+      FTicket.EscribirLinea(Copy(Concepto, 1, 40));
+      FTicket.Alinear(alDerecha);
+      FTicket.EscribirLinea(
+        FormatFloat('#,##0.00', Importe) + ' €');
+      FTicket.Alinear(alIzquierda);
+      FConsulta.Next;
+    end;
+  end;
+end;
+
+function TGeneradorResguardoDeposito.HayMovimientos: Boolean;
+begin
+  Result :=
+    (FTotalNuevos <> 0) or
+    (FTotalEntregas <> 0) or
+    (FTotalDevoluciones <> 0) or
+    (FTotalDevueltos <> 0);
+end;
+
+function TGeneradorResguardoDeposito.TotalPagadoCaja: Currency;
+begin
+  Result := 0;
+  AbrirConsulta(SQL_TOTAL_PAGADO_RESGUARDO);
+  if not FConsulta.IsEmpty then
+    Result := FConsulta.FieldByName('TOTAL').AsCurrency;
+end;
+
+procedure TGeneradorResguardoDeposito.EscribirResumen;
+var
+  TotalPagado: Currency;
+begin
+  TotalPagado := TotalPagadoCaja;
+  FTicket.LineaSeparadora('=');
+  FTicket.SaltarLineas(1);
+  FTicket.Alinear(alDerecha);
+  if FTotalNuevos > 0 then
+    FTicket.EscribirLinea('TOTAL NUEVOS DEPÓSITOS: ' +
+      FormatFloat('#,##0.00', FTotalNuevos) + ' €');
+  if FTotalDevueltos <> 0 then
+    FTicket.EscribirLinea('TOTAL DEPÓSITOS DEVUELTOS: ' +
+      FormatFloat('#,##0.00', FTotalDevueltos) + ' €');
+  FTicket.EscribirLinea('ANTICIPOS ENTREGADOS AHORA: ' +
+    FormatFloat('#,##0.00', FTotalEntregas) + ' €');
+  if FTotalDevoluciones < 0 then
+    FTicket.EscribirLinea('DEVUELTO EN ESTA OPERACIÓN: ' +
+      FormatFloat('#,##0.00', FTotalDevoluciones) + ' €');
+  FTicket.SaltarLineas(1);
+  FTicket.Negrita(True);
+  FTicket.EscribirLinea('TOTAL PAGADO (TICKET + DEPÓSITOS): ' +
+    FormatFloat('#,##0.00', TotalPagado) + ' €');
+  FTicket.Negrita(False);
+  FTicket.SaltarLineas(2);
+  FTicket.Alinear(alCentro);
+  FTicket.EscribirLinea('Conforme, el cliente');
+  FTicket.SaltarLineas(4);
+  FTicket.LineaSeparadora('_');
+  EscribirPieTicketCaja(FConexion, FTicket, FCodigoEmpresa);
+  FTicket.CortarPapel;
+end;
+
+procedure TGeneradorResguardoDeposito.GenerarSalida;
+var
+  ComandosESC: string;
+  RutaFicheroPDF: string;
+begin
+  ComandosESC := FTicket.ObtenerComandos;
+  RutaFicheroPDF := GetUserFolderTickets + 'ResguardoDep_' +
+    FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
+  ImprimirOPrevisualizarTicket(FTicket, ComandosESC, RutaFicheroPDF,
+    FNombreImpresora, FSoloPDF);
+  if (FRutasPDF <> nil) and FileExists(RutaFicheroPDF) then
+    FRutasPDF.Add(RutaFicheroPDF);
+end;
+
+procedure TGeneradorResguardoDeposito.Ejecutar;
+begin
+  CargarCabecera;
+  AbrirConsulta(SQL_NUEVOS_DEPOSITOS_RESGUARDO);
+  EscribirCabecera;
+  EscribirDepositos('MOVIMIENTO DE DEPÓSITOS/PRÉSTAMOS',
+    False, FTotalNuevos);
+  EscribirEntregas;
+  EscribirDevolucionEconomica;
+  AbrirConsulta(SQL_DEPOSITOS_DEVUELTOS_RESGUARDO);
+  EscribirDepositos('DEVOLUCIÓN DE ARTÍCULOS',
+    True, FTotalDevueltos);
+  if HayMovimientos then
+  begin
+    EscribirResumen;
+    GenerarSalida;
+  end;
+end;
+
 procedure ImprimirResguardoDeposito(AConexion: TUniConnection;
                                     const ACodigoEmpresa,
                                           ACodigoAlmacen,
@@ -89,334 +482,18 @@ procedure ImprimirResguardoDeposito(AConexion: TUniConnection;
                                     ARutasPDF: TStrings = nil;
                                     ASoloPDF: Boolean = False);
 var
-  QrySec, QryEmp: TUniQuery;
-  Ticket: TTicketTermico;
-  ComandosESC, RutaFicheroPDF: string;
-  TotalNuevos,
-  TotalEntregas,
-  TotalDevoluciones,
-  TotalDevueltos,
-  TotalPagadoCaja: Currency;
-  FechaOperacion: TDateTime;
+  Generador: TGeneradorResguardoDeposito;
 begin
-  FechaOperacion := 0;
-  if Trim(AOperacion) = '' then
-    Exit;
-  QrySec := TUniQuery.Create(nil);
-  QryEmp := TUniQuery.Create(nil);
-  try
-    QrySec.Connection := AConexion;
-    QryEmp.Connection := AConexion;
-    // 1. Datos de la empresa para la cabecera
-    QryEmp.SQL.Text := 'SELECT RAZON_SOCIAL_EMP ' +
-                       '  FROM fza_empresas ' +
-                       ' WHERE CODIGO_EMP_EMP = :EMP';
-    QryEmp.ParamByName('EMP').AsString := ACodigoEmpresa;
-    QryEmp.Open;
-    QrySec.SQL.Text := 'SELECT FECHA_OPERACION_OPCAJA ' +
-                       '  FROM fza_caja_operaciones ' +
-                       ' WHERE CODIGO_EMP_OPCAJA = :EMP ' +
-                       '   AND CODIGO_ALM_OPCAJA = :ALM ' +
-                       '   AND CODIGO_CAJA_OPCAJA = :CAJ ' +
-                       '   AND NUMERO_OPERACION_OPCAJA = :OPE';
-    QrySec.ParamByName('EMP').AsString := ACodigoEmpresa;
-    QrySec.ParamByName('ALM').AsString := ACodigoAlmacen;
-    QrySec.ParamByName('CAJ').AsString := ACodigoCaja;
-    QrySec.ParamByName('OPE').AsString := AOperacion;
-    QrySec.Open;
-    if not QrySec.IsEmpty then
-      FechaOperacion := QrySec.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime;
-    QrySec.Close;
-    QrySec.SQL.Text :=
-      '   SELECT d.CODIGO_UNIDAD_DEP, ' +
-      '          a.DESCRIPCION_ART, ' +
-      '          d.CODIGO_CLI_DEP, ' +
-      '          (d.PRECIO_VENTA_DEP * ' +
-      '           d.CANTIDAD_PENDIENTE_DEP) AS TOTAL_PVP ' +
-      '     FROM fza_depositos_cliente d ' +
-      'LEFT JOIN fza_articulos a ' +
-      '       ON a.CODIGO_ART_ART = d.CODIGO_ART_DEP' +
-      '    WHERE d.CODIGO_EMP_DEP = :EMP ' +
-      '      AND d.CODIGO_ALM_DEP = :ALM ' +
-      '      AND d.CODIGO_CAJA_DEP = :CAJ ' +
-      '      AND d.NUMERO_OPERACION_DEP = :OPE';
-    QrySec.ParamByName('EMP').AsString := ACodigoEmpresa;
-    QrySec.ParamByName('ALM').AsString := ACodigoAlmacen;
-    QrySec.ParamByName('CAJ').AsString := ACodigoCaja;
-    QrySec.ParamByName('OPE').AsString := AOperacion;
-    QrySec.Open;
-    Ticket := TTicketTermico.Create(ANombreImpresora);
+  if Trim(AOperacion) <> '' then
+  begin
+    Generador := TGeneradorResguardoDeposito.Create(
+      AConexion, ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja,
+      AOperacion, ANombreImpresora, ARutasPDF, ASoloPDF);
     try
-      Ticket.Inicializar;
-      Ticket.Alinear(alCentro);
-      Ticket.Negrita(True);
-      if not QryEmp.IsEmpty then
-        Ticket.EscribirLinea(QryEmp.FieldByName(
-                                               'RAZON_SOCIAL_EMP').AsString);
-      Ticket.SaltarLineas(1);
-      Ticket.EscribirLinea('*** RESUMEN DE LA OPERACIÓN ***');
-      Ticket.EscribirLinea('DEPÓSITOS Y ENTREGAS');
-      Ticket.Negrita(False);
-      Ticket.SaltarLineas(1);
-      Ticket.Alinear(alIzquierda);
-      Ticket.TextoColumnas('CÓDIGO CLIENTE:',
-                           QrySec.FieldByName('CODIGO_CLI_DEP').AsString);
-      Ticket.TextoColumnas('FECHA:', FormatDateTime('dd/mm/yyyy hh:nn',
-                           FechaOperacion));
-      Ticket.TextoColumnas('Nº OPERACIÓN:', AOperacion);
-      Ticket.SaltarLineas(1);
-      TotalNuevos := 0;
-      TotalEntregas := 0;
-      TotalDevoluciones := 0;
-      TotalDevueltos := 0;
-      // =======================================================================
-      // SECCIÓN 1: NUEVOS DEPÓSITOS
-      // =======================================================================
-      if not QrySec.IsEmpty then
-      begin
-        Ticket.LineaSeparadora('=');
-        Ticket.Alinear(alCentro);
-        Ticket.Negrita(True);
-        Ticket.EscribirLinea('MOVIMIENTO DE DEPÓSITOS/PRÉSTAMOS');
-        Ticket.Negrita(False);
-        Ticket.LineaSeparadora('-');
-        Ticket.Alinear(alIzquierda);
-        while not QrySec.Eof do
-        begin
-          var Desc := QrySec.FieldByName('DESCRIPCION_ART').AsString;
-          var Sku := QrySec.FieldByName('CODIGO_UNIDAD_DEP').AsString;
-          var Pvp := QrySec.FieldByName('TOTAL_PVP').AsCurrency;
-          TotalNuevos := TotalNuevos + Pvp;
-          if Desc <> '' then
-            Ticket.EscribirLinea(Copy(Desc, 1, 40));
-          Ticket.EscribirLinea(Sku);
-          Ticket.Alinear(alDerecha);
-          Ticket.EscribirLinea('Valor Artículo: ' +
-                                           FormatFloat('#,##0.00', Pvp) + ' €');
-          Ticket.Alinear(alIzquierda);
-          QrySec.Next;
-        end;
-        Ticket.SaltarLineas(1);
-      end;
-      // =======================================================================
-      // SECCIÓN 2: ENTREGAS A CUENTA
-      // =======================================================================
-      QrySec.Close;
-      QrySec.SQL.Text :=
-        '   SELECT o.TIPO_OPERACION_OPCAJA, ' +
-        '          o.IMPORTE_TOTAL_OPCAJA, ' +
-        '          a.DESCRIPCION_ART ' +
-        '     FROM fza_caja_operaciones o ' +
-        'LEFT JOIN fza_depositos_cliente d ON d.ID_DEPOSITO_DEP = ' +
-        'o.ID_DEPOSITO_OPCAJA ' +
-        'LEFT JOIN fza_articulos a ON a.CODIGO_ART_ART = d.CODIGO_ART_DEP ' +
-        '    WHERE o.CODIGO_EMP_OPCAJA = :EMP ' +
-        '      AND o.CODIGO_ALM_OPCAJA = :ALM ' +
-        '      AND o.CODIGO_CAJA_OPCAJA = :CAJ ' +
-        '      AND o.NUMERO_OPERACION_OPCAJA = :OPE ' +
-        '      AND o.TIPO_OPERACION_OPCAJA IN (''CB'', ''DE'') ' +
-        '      AND o.IMPORTE_TOTAL_OPCAJA > 0';
-      QrySec.ParamByName('EMP').AsString := ACodigoEmpresa;
-      QrySec.ParamByName('ALM').AsString := ACodigoAlmacen;
-      QrySec.ParamByName('CAJ').AsString := ACodigoCaja;
-      QrySec.ParamByName('OPE').AsString := AOperacion;
-      QrySec.Open;
-      if not QrySec.IsEmpty then
-      begin
-        Ticket.LineaSeparadora('=');
-        Ticket.Alinear(alCentro);
-        Ticket.Negrita(True);
-        Ticket.EscribirLinea('ENTREGAS A CUENTA');
-        Ticket.Negrita(False);
-        Ticket.LineaSeparadora('-');
-        Ticket.Alinear(alIzquierda);
-        while not QrySec.Eof do
-        begin
-          var TipoOp  := QrySec.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
-          var Importe := QrySec.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
-          var NombreArticulo := QrySec.FieldByName('DESCRIPCION_ART').AsString;
-          TotalEntregas := TotalEntregas + Importe;
-          var Concepto := '';
-          // Si conseguimos leer el nombre del artículo, lo mostramos
-          if Trim(NombreArticulo) <> '' then
-          begin
-            if TipoOp = 'CB' then
-              Concepto := 'A cuenta: ' + NombreArticulo
-            else if TipoOp = 'DE' then
-              Concepto := 'A cta. inicial: ' + NombreArticulo;
-          end
-          else
-          // Textos por defecto si por algún motivo no encuentra el artículo
-          begin
-            if TipoOp = 'CB' then
-              Concepto := 'A cuenta para artículo pendiente'
-            else if TipoOp = 'DE' then
-              Concepto := 'A cuenta inicial';
-          end;
-          Ticket.EscribirLinea(Copy(Concepto, 1, 40));
-          Ticket.Alinear(alDerecha);
-          Ticket.EscribirLinea(FormatFloat('#,##0.00', Importe) + ' €');
-          Ticket.Alinear(alIzquierda);
-          QrySec.Next;
-        end;
-        Ticket.SaltarLineas(1);
-      end;
-      // =======================================================================
-      // SECCIÓN 3: DEVOLUCIONES
-      // =======================================================================
-      var qryDev := TUniQuery.Create(nil);
-      qryDev.Connection := qrySec.Connection;
-      qryDev.sql.Text := '   SELECT d.CODIGO_UNIDAD_DEP, ' +
-                          '          a.DESCRIPCION_ART, ' +
-                          '          d.CODIGO_CLI_DEP, ' +
-                          '          (d.PRECIO_VENTA_DEP * ' +
-                          '           d.CANTIDAD_PENDIENTE_DEP) AS TOTAL ' +
-                          '     FROM fza_depositos_cliente d ' +
-                          'LEFT JOIN fza_articulos a ' +
-                         '       ON a.CODIGO_ART_ART = d.CODIGO_ART_DEP' +
-                          '    WHERE d.EMPRESA_CANCEL_DEP = :EMP ' +
-                          '      AND d.ALMACEN_CANCEL_DEP = :ALM ' +
-                          '      AND d.CAJA_CANCEL_DEP = :CAJ ' +
-                          '      AND d.NUMERO_OPERACION_CANCEL_DEP = :OPE';
-      qryDev.ParamByName('EMP').AsString := ACodigoEmpresa;
-      qryDev.ParamByName('ALM').AsString := ACodigoAlmacen;
-      qryDev.ParamByName('CAJ').AsString := ACodigoCaja;
-      qryDev.ParamByName('OPE').AsString := AOperacion;
-      qryDev.Open;
-      QrySec.SQL.Text :=
-        'SELECT TIPO_OPERACION_OPCAJA, IMPORTE_TOTAL_OPCAJA ' +
-        'FROM fza_caja_operaciones ' +
-        'WHERE CODIGO_EMP_OPCAJA = :EMP ' +
-        '  AND CODIGO_ALM_OPCAJA = :ALM ' +
-        '  AND CODIGO_CAJA_OPCAJA = :CAJ ' +
-        '  AND NUMERO_OPERACION_OPCAJA = :OPE ' +
-        '  AND TIPO_OPERACION_OPCAJA IN (''DV'')';
-      QrySec.ParamByName('EMP').AsString := ACodigoEmpresa;
-      QrySec.ParamByName('ALM').AsString := ACodigoAlmacen;
-      QrySec.ParamByName('CAJ').AsString := ACodigoCaja;
-      QrySec.ParamByName('OPE').AsString := AOperacion;
-      QrySec.Open;
-
-      if not QrySec.IsEmpty then
-      begin
-        Ticket.LineaSeparadora('=');
-        Ticket.Alinear(alCentro);
-        Ticket.Negrita(True);
-        Ticket.EscribirLinea('DEVOLUCIÓN ECONÓMICA');
-        Ticket.Negrita(False);
-        Ticket.LineaSeparadora('-');
-        Ticket.Alinear(alIzquierda);
-        while not QrySec.Eof do
-        begin
-          var Concepto := QrySec.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
-          var Importe := QrySec.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
-          TotalDevoluciones := TotalDevoluciones + Importe;
-          Ticket.EscribirLinea(Copy(Concepto, 1, 40));
-          Ticket.Alinear(alDerecha);
-          Ticket.EscribirLinea(FormatFloat('#,##0.00', Importe) + ' €');
-          Ticket.Alinear(alIzquierda);
-          QrySec.Next;
-        end;
-      end;
-      if (TotalNuevos = 0) and (TotalEntregas = 0) and
-         (TotalDevueltos = 0) and (TotalDevoluciones = 0) then
-        Exit;
-      if not QryDev.IsEmpty then
-      begin
-        Ticket.SaltarLineas(1);
-        Ticket.LineaSeparadora('=');
-        Ticket.Alinear(alCentro);
-        Ticket.Negrita(True);
-        Ticket.EscribirLinea('DEVOLUCIÓN DE ARTÍCULOS');
-        Ticket.Negrita(False);
-        Ticket.LineaSeparadora('-');
-        Ticket.Alinear(alIzquierda);
-        while not QryDev.Eof do
-        begin
-          var Desc := QryDev.FieldByName('DESCRIPCION_ART').AsString;
-          var Sku := QryDev.FieldByName('CODIGO_UNIDAD_DEP').AsString;
-          var Pvp := QryDev.FieldByName('TOTAL_PVP').AsCurrency;
-          TotalDevueltos := TotalDevueltos + Pvp;
-          if Desc <> '' then
-            Ticket.EscribirLinea(Copy(Desc, 1, 40));
-          Ticket.EscribirLinea(Sku);
-          Ticket.Alinear(alDerecha);
-          Ticket.EscribirLinea('Valor Artículo: ' +
-                                           FormatFloat('#,##0.00', Pvp) + ' €');
-          Ticket.Alinear(alIzquierda);
-          QryDev.Next;
-        end;
-        Ticket.SaltarLineas(1);
-      end;
-      FreeAndNil(qryDev);
-      // =======================================================================
-      // CIFRA FINAL DE LA OPERACIÓN
-      // =======================================================================
-      // Calculamos TODO el efectivo real cobrado consultando los pagos
-      TotalPagadoCaja := 0;
-      var qryPagos := TUniQuery.Create(nil);
-      try
-        qryPagos.Connection := QrySec.Connection;
-        qryPagos.SQL.Text := 'SELECT SUM(IMPORTE_ENTREGADO_PAGO - ' +
-                             '           IMPORTE_CAMBIO_PAGO) AS TOTAL ' +
-                             '  FROM fza_caja_pagos ' +
-                             ' WHERE CODIGO_EMP_PAGO = :EMP ' +
-                             '   AND CODIGO_ALM_PAGO = :ALM ' +
-                             '   AND CODIGO_CAJA_PAGO = :CAJ ' +
-                             '   AND NUMERO_OPERACION_PAGO = :OPE';
-        qryPagos.ParamByName('EMP').AsString := ACodigoEmpresa;
-        qryPagos.ParamByName('ALM').AsString := ACodigoAlmacen;
-        qryPagos.ParamByName('CAJ').AsString := ACodigoCaja;
-        qryPagos.ParamByName('OPE').AsString := AOperacion;
-        qryPagos.Open;
-        if not qryPagos.IsEmpty then
-          TotalPagadoCaja := qryPagos.FieldByName('TOTAL').AsCurrency;
-      finally
-        FreeAndNil(qryPagos);
-      end;
-      Ticket.LineaSeparadora('=');
-      Ticket.SaltarLineas(1);
-      Ticket.Alinear(alDerecha);
-      if TotalNuevos > 0 then
-        Ticket.EscribirLinea('TOTAL NUEVOS DEPÓSITOS: ' +
-                                   FormatFloat('#,##0.00', TotalNuevos) + ' €');
-      if TotalDevueltos <> 0 then
-        Ticket.EscribirLinea('TOTAL DEPÓSITOS DEVUELTOS: ' +
-                                FormatFloat('#,##0.00', TotalDevueltos) + ' €');
-      Ticket.EscribirLinea('ANTICIPOS ENTREGADOS AHORA: ' +
-                                 FormatFloat('#,##0.00', TotalEntregas) + ' €');
-      if TotalDevoluciones < 0 then
-        Ticket.EscribirLinea('DEVUELTO EN ESTA OPERACIÓN: ' +
-                             FormatFloat('#,##0.00', TotalDevoluciones) + ' €');
-      Ticket.SaltarLineas(1);
-      Ticket.Negrita(True);
-      // IMPRIMIMOS EL TOTAL REAL COBRADO (Los 150 €)
-      Ticket.EscribirLinea('TOTAL PAGADO (TICKET + DEPÓSITOS): ' +
-                               FormatFloat('#,##0.00', TotalPagadoCaja) + ' €');
-      Ticket.Negrita(False);
-      Ticket.SaltarLineas(2);
-      Ticket.Alinear(alCentro);
-      Ticket.EscribirLinea('Conforme, el cliente');
-      Ticket.SaltarLineas(4);
-      Ticket.LineaSeparadora('_');
-      EscribirPieTicketCaja(AConexion, Ticket, ACodigoEmpresa);
-      Ticket.CortarPapel;
-      // =======================================================================
-      // IMPRESIÓN / VISUALIZACIÓN
-      // =======================================================================
-      ComandosESC := Ticket.ObtenerComandos;
-      RutaFicheroPDF := GetUserFolderTickets + 'ResguardoDep_' +
-                            FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-      ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaFicheroPDF,
-                                   ANombreImpresora, ASoloPDF);
-      if (ARutasPDF <> nil) and FileExists(RutaFicheroPDF) then
-        ARutasPDF.Add(RutaFicheroPDF);
+      Generador.Ejecutar;
     finally
-      FreeAndNil(Ticket);
+      FreeAndNil(Generador);
     end;
-  finally
-    FreeAndNil(QrySec);
-    FreeAndNil(QryEmp);
   end;
 end;
 

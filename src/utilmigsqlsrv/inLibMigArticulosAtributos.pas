@@ -41,13 +41,13 @@ unit inLibMigArticulosAtributos;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
 // Asigna los colores que cada artículo tiene en el legacy.
-procedure MigrarArticulosColores(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarArticulosColores(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 // Asigna las tallas que cada artículo tiene en el legacy.
-procedure MigrarArticulosTallas(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarArticulosTallas(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -62,13 +62,13 @@ const
 //  Helpers locales: caches
 // =========================================================================
 
-procedure CargarMapaAV(Eng: TMigEngine; const sIdVa: string;
+procedure CargarMapaAV(Eng: IContextoMigracion; const sIdVa: string;
                        Mapa: TDictionary<string, Integer>);
 var q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     // ORDER BY ID_AV DESC + AddOrSetValue (gana la ultima fila) => MIN(ID_AV)
     // canonico, igual que BuscarIdAV / los SKUs, para que con AV duplicados
     // todos los paths apunten al mismo valor.
@@ -90,13 +90,13 @@ begin
   end;
 end;
 
-procedure CargarMapaATB(Eng: TMigEngine; const sIdVa: string;
+procedure CargarMapaATB(Eng: IContextoMigracion; const sIdVa: string;
                         Mapa: TDictionary<string, Integer>);
 var q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text   :=
       'SELECT CODIGO_ATB, ID_ATB FROM fza_atributos_basicos ' +
       'WHERE ID_VA_ATB = :v';
@@ -114,14 +114,14 @@ begin
   end;
 end;
 
-procedure CargarAsignacionesVistas(Eng: TMigEngine;
+procedure CargarAsignacionesVistas(Eng: IContextoMigracion;
                                     Conjunto: TDictionary<string,
                                                            Boolean>);
 var q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text   :=
       'SELECT CONCAT(CODIGO_ART_AAB, ''|'', ID_AV_AAB) ' +
       'FROM fza_articulos_atributos_basicos';
@@ -138,7 +138,7 @@ end;
 
 // Inserta una fila en fza_articulos_atributos_basicos si no existe.
 // Devuelve True si insertó.
-function InsertarAsignacion(Eng: TMigEngine;
+function InsertarAsignacion(Eng: IContextoMigracion;
                              const sCodArt: string; iIdAv, iIdAtb: Integer;
                              const sUsuario: string): Boolean;
 var qChk, qIns: TUniQuery;
@@ -146,7 +146,7 @@ begin
   qChk := TUniQuery.Create(nil);
   qIns := TUniQuery.Create(nil);
   try
-    qChk.Connection := Eng.ConDst;
+    qChk.Connection := Eng.Datos.ConexionDestino;
     qChk.SQL.Text   :=
       'SELECT 1 FROM fza_articulos_atributos_basicos ' +
       'WHERE CODIGO_ART_AAB = :a AND ID_AV_AAB = :v';
@@ -156,7 +156,7 @@ begin
     if not qChk.IsEmpty then Exit(False);
     qChk.Close;
 
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text   :=
       'INSERT INTO fza_articulos_atributos_basicos (' +
         'CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, ' +
@@ -184,7 +184,7 @@ end;
 //  MigrarArticulosColores  (ocartcol → fza_articulos_atributos_basicos)
 // =========================================================================
 
-procedure MigrarArticulosColores(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarArticulosColores(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   // El valor del SKU es el codigo interno de ocartcol.Color. La descripcion
   // y el color basico son especificos de cada articulo: un mismo codigo de
@@ -230,7 +230,7 @@ var
   sFila, sAhora, sIdAtb, sUser:    string;
   iIdAv, iIdAtb:                   Integer;
 begin
-  Eng.Log('  cargando caches en memoria...');
+  Eng.Registro.Log('  cargando caches en memoria...');
   oAvMap      := TDictionary<string, Integer>.Create;
   oAtbMap     := TDictionary<string, Integer>.Create;
   qSrc        := nil;
@@ -238,7 +238,7 @@ begin
   try
     CargarMapaAV (Eng, 'CO', oAvMap);
     CargarMapaATB(Eng, 'CO', oAtbMap);
-    Eng.Log('  cache: %d colores AV y %d basicos',
+    Eng.Registro.Log('  cache: %d colores AV y %d basicos',
             [oAvMap.Count, oAtbMap.Count]);
 
     sAhora := DateTimeASQL(Now);
@@ -248,22 +248,22 @@ begin
     // hacia delante). Reduce la presion de memoria que, en paralelo con los
     // otros mappers pesados, puede provocar AccessViolation en el .exe 32b.
     qSrc.UniDirectional := True;
-    bulk   := TBulkInsert.Create(Eng.ConDst,
+    bulk   := TBulkInsert.Create(Eng.Datos.ConexionDestino,
                                   'fza_articulos_atributos_basicos',
                                   cCols, BATCH_SIZE, cUpsert);
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocartcol ' +
       'WHERE LTRIM(RTRIM(Articulo)) <> '''''));
     qSrc.Open;
     while not qSrc.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada, saliendo del mapper...');
+        Eng.Registro.Log('  Cancelacion detectada, saliendo del mapper...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sArt              := Trim(qSrc.FieldByName('Articulo').AsString);
       sValorColor       := Trim(qSrc.FieldByName('ValorColor').AsString);
       sDescripcionColor := Trim(qSrc.FieldByName('DescripcionColor').AsString);
@@ -279,7 +279,7 @@ begin
       if not oAvMap.TryGetValue(sAV, iIdAv) then
       begin
         Inc(Stats.Errores);
-        Eng.Log('  ! color "%s" no esta en fza_atributos_valores ' +
+        Eng.Registro.Log('  ! color "%s" no esta en fza_atributos_valores ' +
                 '(articulo %s)', [sAV, sArt]);
         qSrc.Next;
         Continue;
@@ -304,7 +304,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.Log('  ! error bulk color "%s" art "%s": %s',
+          Eng.Registro.Log('  ! error bulk color "%s" art "%s": %s',
                   [sAV, sArt, E.Message]);
           raise;
         end;
@@ -324,7 +324,7 @@ end;
 //  MigrarArticulosTallas  (ocarttal → fza_articulos_atributos_basicos)
 // =========================================================================
 
-procedure MigrarArticulosTallas(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarArticulosTallas(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cSelectSrc =
     'SELECT Articulo, Talla ' +
@@ -345,7 +345,7 @@ var
   sKey:                         string;
   iIdAv, iIdAtb:                Integer;
 begin
-  Eng.Log('  cargando caches en memoria...');
+  Eng.Registro.Log('  cargando caches en memoria...');
   oAvMap      := TDictionary<string, Integer>.Create;
   oAtbMap     := TDictionary<string, Integer>.Create;
   oAsigVistas := TDictionary<string, Boolean>.Create;
@@ -355,7 +355,7 @@ begin
     CargarMapaAV (Eng, 'TAL', oAvMap);
     CargarMapaATB(Eng, 'TAL', oAtbMap);
     CargarAsignacionesVistas(Eng, oAsigVistas);
-    Eng.Log('  cache: %d tallas AV, %d basicos, %d asignaciones',
+    Eng.Registro.Log('  cache: %d tallas AV, %d basicos, %d asignaciones',
             [oAvMap.Count, oAtbMap.Count, oAsigVistas.Count]);
 
     sAhora := DateTimeASQL(Now);
@@ -365,23 +365,23 @@ begin
     // hacia delante). Reduce la presion de memoria que, en paralelo con los
     // otros mappers pesados, puede provocar AccessViolation en el .exe 32b.
     qSrc.UniDirectional := True;
-    bulk   := TBulkInsert.Create(Eng.ConDst,
+    bulk   := TBulkInsert.Create(Eng.Datos.ConexionDestino,
                                   'fza_articulos_atributos_basicos',
                                   cCols, BATCH_SIZE);
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocarttal ' +
       'WHERE LTRIM(RTRIM(Articulo)) <> '''' ' +
       '  AND LTRIM(RTRIM(Talla))    <> '''''));
     qSrc.Open;
     while not qSrc.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada, saliendo del mapper...');
+        Eng.Registro.Log('  Cancelacion detectada, saliendo del mapper...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sArt   := Trim(qSrc.FieldByName('Articulo').AsString);
       sTalla := Trim(qSrc.FieldByName('Talla').AsString);
       if (sArt = '') or (sTalla = '') then
@@ -395,7 +395,7 @@ begin
       if not oAvMap.TryGetValue(sAV, iIdAv) then
       begin
         Inc(Stats.Errores);
-        Eng.Log('  ! talla "%s" no esta en fza_atributos_valores ' +
+        Eng.Registro.Log('  ! talla "%s" no esta en fza_atributos_valores ' +
                 '(articulo %s)', [sAV, sArt]);
         qSrc.Next;
         Continue;
@@ -426,7 +426,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.Log('  ! error en bulk talla "%s" art "%s": %s',
+          Eng.Registro.Log('  ! error en bulk talla "%s" art "%s": %s',
                   [sAV, sArt, E.Message]);
           raise;
         end;
@@ -442,5 +442,19 @@ begin
     oAvMap.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'articulos_colores',
+    'Colores por artículo',
+    'dbo.ocartcol → atributos básicos de artículo',
+    ['articulos', 'colores_maestros'],
+    MigrarArticulosColores);
+  RegistrarMigracion(
+    'articulos_tallas',
+    'Tallas por artículo',
+    'dbo.ocarttal → atributos básicos de artículo',
+    ['articulos', 'tallas_maestras'],
+    MigrarArticulosTallas);
 
 end.

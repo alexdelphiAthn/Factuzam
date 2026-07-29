@@ -21,7 +21,8 @@ uses
 type
   TFlujoEmisionFiscal = (
     fefOperacion,
-    fefConsolidacion);
+    fefConsolidacion,
+    fefAlta);
   TSolicitudEmisionFiscal = record
     Serie: string;
     Numero: string;
@@ -30,11 +31,18 @@ type
     Accion: string;
     DescripcionEvento: string;
     BorrarMovimientos: Boolean;
+    RegistrarEvento: Boolean;
     Flujo: TFlujoEmisionFiscal;
     class function ParaOperacion(
       const ASerie, ANumero, AUsuario,
       ATipoOperacion, AAccion: string;
-      ABorrarMovimientos: Boolean
+      ABorrarMovimientos: Boolean;
+      const ADescripcionEvento: string = ''
+    ): TSolicitudEmisionFiscal; static;
+    class function ParaAlta(
+      const ASerie, ANumero, AUsuario,
+      ADescripcionEvento: string;
+      ARegistrarEvento: Boolean = True
     ): TSolicitudEmisionFiscal; static;
     class function ParaConsolidacion(
       const ASerie, ANumero, AUsuario: string
@@ -57,7 +65,8 @@ implementation
 class function TSolicitudEmisionFiscal.ParaOperacion(
   const ASerie, ANumero, AUsuario,
   ATipoOperacion, AAccion: string;
-  ABorrarMovimientos: Boolean
+  ABorrarMovimientos: Boolean;
+  const ADescripcionEvento: string
 ): TSolicitudEmisionFiscal;
 begin
   Result.Serie := ASerie;
@@ -65,14 +74,20 @@ begin
   Result.Usuario := AUsuario;
   Result.TipoOperacion := ATipoOperacion;
   Result.Accion := AAccion;
-  Result.DescripcionEvento :=
-    AAccion + ' encolada desde Borradores';
+  if ADescripcionEvento <> '' then
+    Result.DescripcionEvento := ADescripcionEvento
+  else
+    Result.DescripcionEvento :=
+      AAccion + ' encolada desde Borradores';
   Result.BorrarMovimientos := ABorrarMovimientos;
+  Result.RegistrarEvento := True;
   Result.Flujo := fefOperacion;
 end;
 
-class function TSolicitudEmisionFiscal.ParaConsolidacion(
-  const ASerie, ANumero, AUsuario: string
+class function TSolicitudEmisionFiscal.ParaAlta(
+  const ASerie, ANumero, AUsuario,
+  ADescripcionEvento: string;
+  ARegistrarEvento: Boolean
 ): TSolicitudEmisionFiscal;
 begin
   Result.Serie := ASerie;
@@ -80,9 +95,21 @@ begin
   Result.Usuario := AUsuario;
   Result.TipoOperacion := 'ALTA';
   Result.Accion := '';
-  Result.DescripcionEvento :=
-    'Lanzamiento manual (Consolidar) desde Borradores';
+  Result.DescripcionEvento := ADescripcionEvento;
   Result.BorrarMovimientos := True;
+  Result.RegistrarEvento := ARegistrarEvento;
+  Result.Flujo := fefAlta;
+end;
+
+class function TSolicitudEmisionFiscal.ParaConsolidacion(
+  const ASerie, ANumero, AUsuario: string
+): TSolicitudEmisionFiscal;
+begin
+  Result := ParaAlta(
+    ASerie,
+    ANumero,
+    AUsuario,
+    'Lanzamiento manual (Consolidar) desde Borradores');
   Result.Flujo := fefConsolidacion;
 end;
 

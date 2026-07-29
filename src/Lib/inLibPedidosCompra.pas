@@ -978,17 +978,18 @@ function ProcesarCeldasRecepcionPedido(
   AConexion: TUniConnection;
   const ASeriePedido, ANumeroPedido, ACodigoAlmacen,
     ASerieAlbaran, ANumeroAlbaran, AUsuario: string;
-  const ACeldas: TArray<TCeldaARecibir>;
-  var ALineaAlbaran: Integer): Integer;
+  const ACeldas: TArray<TCeldaARecibir>): Integer;
 var
   QueryOrigen: TUniQuery;
   QueryDestino: TUniQuery;
   PendientePorLinea: TDictionary<string, Double>;
   Celda: TCeldaARecibir;
   Cantidad: Double;
+  NumeroLineaAlbaran: Integer;
   LineaAlbaran: string;
 begin
   Result := 0;
+  NumeroLineaAlbaran := 0;
   QueryOrigen := TUniQuery.Create(nil);
   QueryDestino := TUniQuery.Create(nil);
   PendientePorLinea := TDictionary<string, Double>.Create;
@@ -1008,8 +1009,8 @@ begin
           QueryOrigen, PendientePorLinea, Celda);
         if Cantidad > 0 then
         begin
-          Inc(ALineaAlbaran, 10);
-          LineaAlbaran := Format('%.4d', [ALineaAlbaran]);
+          Inc(NumeroLineaAlbaran, 10);
+          LineaAlbaran := Format('%.4d', [NumeroLineaAlbaran]);
           InsertarLineaAlbaranPedido(
             QueryDestino, QueryOrigen, ASeriePedido,
             ANumeroPedido, ASerieAlbaran, ANumeroAlbaran,
@@ -1140,7 +1141,6 @@ function CrearAlbaranDesdePedidoConCantidades(AConn: TUniConnection;
                                   out ANumAlbc: string;
                                   out AMensaje: string): Boolean;
 var
-  iLineaAlbc: Integer;
   iLineasCreadas: Integer;
 begin
   Result := False;
@@ -1156,11 +1156,9 @@ begin
       AConn, ASeriePedc, ANumPedc, ACodigoAlm,
       ASerieAlbc, ANumAlbc, ARefPrv, AUsuario,
       AFechaRecepcion, AIdPvTemporada);
-    iLineaAlbc := 0;
     iLineasCreadas := ProcesarCeldasRecepcionPedido(
       AConn, ASeriePedc, ANumPedc, ACodigoAlm,
-      ASerieAlbc, ANumAlbc, AUsuario, ACeldas,
-      iLineaAlbc);
+      ASerieAlbc, ANumAlbc, AUsuario, ACeldas);
     if iLineasCreadas = 0 then
     begin
       AMensaje := SErrorCrearLineasAlbaranCompra;

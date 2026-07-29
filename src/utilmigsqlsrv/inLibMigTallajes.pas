@@ -37,9 +37,9 @@ unit inLibMigTallajes;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarTallajes(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarTallajes(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -49,12 +49,12 @@ uses
 
 // Lee el ID_AC de fza_atributos_conjuntos para (NOMBRE_AC,
 // ID_VAR_AC='TC', ID_VA_AC='TAL'). Devuelve 0 si no existe.
-function BuscarIdAC(Eng: TMigEngine; const sNombre: string): Integer;
+function BuscarIdAC(Eng: IContextoMigracion; const sNombre: string): Integer;
 var q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text   :=
       'SELECT ID_AC FROM fza_atributos_conjuntos ' +
       'WHERE NOMBRE_AC = :n AND ID_VAR_AC = ''TC'' ' +
@@ -70,13 +70,13 @@ begin
   end;
 end;
 
-procedure InsertarCabecera(Eng: TMigEngine; const sNombre,
+procedure InsertarCabecera(Eng: IContextoMigracion; const sNombre,
                             sCorto: string);
 var qIns: TUniQuery;
 begin
   qIns := TUniQuery.Create(nil);
   try
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text   :=
       'INSERT INTO fza_atributos_conjuntos (' +
         'NOMBRE_AC, NOMBRE_CORTO_AC, ID_VAR_AC, ID_VA_AC, ' +
@@ -94,14 +94,14 @@ begin
   end;
 end;
 
-procedure InsertarDetalle(Eng: TMigEngine; iIdAc, iIdAv, iIdAtb,
+procedure InsertarDetalle(Eng: IContextoMigracion; iIdAc, iIdAv, iIdAtb,
                            iOrden: Integer);
 var qChk, qIns: TUniQuery;
 begin
   qChk := TUniQuery.Create(nil);
   qIns := TUniQuery.Create(nil);
   try
-    qChk.Connection := Eng.ConDst;
+    qChk.Connection := Eng.Datos.ConexionDestino;
     qChk.SQL.Text   :=
       'SELECT 1 FROM fza_atributos_conjuntos_det ' +
       'WHERE ID_AC_ACD = :c AND ID_AV_ACD = :v';
@@ -111,7 +111,7 @@ begin
     if not qChk.IsEmpty then Exit;
     qChk.Close;
 
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text   :=
       'INSERT INTO fza_atributos_conjuntos_det (' +
         'ID_AC_ACD, ID_AV_ACD, ORDEN_ACD, ID_ATB_ACD, ' +
@@ -134,7 +134,7 @@ begin
   end;
 end;
 
-procedure MigrarTallajes(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarTallajes(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   // Un JOIN entre ocgrptal (cabecera) y ocgrptalnor (detalle
   // normalizado). Ordenamos por NroTallaje y Columna para procesar
@@ -157,7 +157,7 @@ var
 begin
   qSrc := NuevoQOrigen(Eng, cSelectSrc);
   try
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocgrptal t ' +
       'LEFT JOIN dbo.ocgrptalnor n ON n.NroTallaje = t.NroTallaje'));
     qSrc.Open;
@@ -166,7 +166,7 @@ begin
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       iNroTallaje := qSrc.FieldByName('NroTallaje').AsInteger;
 
       // Cambio de tallaje → procesar cabecera nueva
@@ -189,7 +189,7 @@ begin
             on E: Exception do
             begin
               Inc(Stats.Errores);
-              Eng.LogError('tallaje', IntToStr(iNroTallaje),
+              Eng.Registro.LogError('tallaje', IntToStr(iNroTallaje),
                            E.Message, sNombreFmt, '');
               iIdAc := 0;
             end;
@@ -198,7 +198,7 @@ begin
         else
         begin
           Inc(Stats.Saltadas);
-          Eng.LogSalto('tallaje', IntToStr(iNroTallaje),
+          Eng.Registro.LogSalto('tallaje', IntToStr(iNroTallaje),
             'conjunto ya existe, anado solo los detalles que falten',
             sNombreFmt, '');
         end;
@@ -215,7 +215,7 @@ begin
           if iIdAv = 0 then
           begin
             Inc(Stats.Errores);
-            Eng.LogError('tallaje_det', sTalla,
+            Eng.Registro.LogError('tallaje_det', sTalla,
               'no esta en fza_atributos_valores',
               Format('NroTallaje=%d col=%d', [iNroTallaje, iCol]),
               'corre antes el catalogo de tallas');
@@ -230,7 +230,7 @@ begin
               on E: Exception do
               begin
                 Inc(Stats.Errores);
-                Eng.LogError('tallaje_det', sTalla, E.Message,
+                Eng.Registro.LogError('tallaje_det', sTalla, E.Message,
                   Format('NroTallaje=%d ID_AC=%d', [iNroTallaje, iIdAc]),
                   '');
               end;
@@ -245,5 +245,13 @@ begin
     qSrc.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'tallajes',
+    'Sistemas de tallas (tallajes)',
+    'dbo.ocgrptal + ocgrptalnor → conjuntos de atributos',
+    ['tallas_maestras'],
+    MigrarTallajes);
 
 end.

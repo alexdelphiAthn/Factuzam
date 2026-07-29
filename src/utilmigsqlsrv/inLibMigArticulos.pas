@@ -25,9 +25,9 @@ unit inLibMigArticulos;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarArticulos(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarArticulos(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -35,7 +35,7 @@ uses
   System.SysUtils,
   Data.DB, Uni;
 
-procedure MigrarArticulos(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarArticulos(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cSelectSrc =
     'SELECT Articulo, DescripcionCorta, DescripcionLarga, Familia, ' +
@@ -82,23 +82,23 @@ begin
   qIns := TUniQuery.Create(nil);
   qChk := TUniQuery.Create(nil);
   try
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text   := cInsertDst;
-    qChk.Connection := Eng.ConDst;
+    qChk.Connection := Eng.Datos.ConexionDestino;
     qChk.SQL.Text   :=
       'SELECT 1 FROM fza_articulos WHERE CODIGO_ART_ART = :c';
 
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocartp'));
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.ocartp'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sCod := Trim(qSrc.FieldByName('Articulo').AsString);
       if sCod = '' then
       begin
         Inc(Stats.Saltadas);
-        Eng.Log('  - articulo con codigo vacio, se omite');
+        Eng.Registro.Log('  - articulo con codigo vacio, se omite');
         qSrc.Next;
         Continue;
       end;
@@ -109,7 +109,7 @@ begin
       if not qChk.IsEmpty then
       begin
         Inc(Stats.Saltadas);
-        Eng.Log('  - articulo "%s" ya existe, se omite', [sCod]);
+        Eng.Registro.Log('  - articulo "%s" ya existe, se omite', [sCod]);
         qChk.Close;
         qSrc.Next;
         Continue;
@@ -163,7 +163,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.Log('  ! error insertando articulo "%s": %s',
+          Eng.Registro.Log('  ! error insertando articulo "%s": %s',
                   [sCod, E.Message]);
           raise;
         end;
@@ -176,5 +176,13 @@ begin
     qSrc.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'articulos',
+    'Artículos',
+    'dbo.ocartp → fza_articulos',
+    ['familias'],
+    MigrarArticulos);
 
 end.

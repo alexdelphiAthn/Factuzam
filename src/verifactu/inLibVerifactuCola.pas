@@ -19,7 +19,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, Uni, inLibConexionesIntf,
-  inLibParametrosIntf, inLibContextoSesionIntf;
+  inLibParametrosIntf, inLibContextoSesionIntf,
+  inLibEmisionFiscalIntf;
 
 type
   TVerifactuCola = class
@@ -80,6 +81,8 @@ type
                                          const AParametrosCaja:
                                          IParametrosCaja;
                                          AConn: TUniConnection;
+                                         const AServicioEmision:
+                                         IServicioEmisionFiscal;
                                          const AUsuario: string;
                                          const ASerieOriginal,
                                          ANumeroOriginal,
@@ -603,6 +606,7 @@ class procedure TVerifactuCola.EncolarRectificativa(
   const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja;
   AConn: TUniConnection;
+  const AServicioEmision: IServicioEmisionFiscal;
   const AUsuario: string;
   const ASerieOriginal, ANumeroOriginal, ASerieRect, ANumeroRect: string;
   const ATipoRectificativa: string;
@@ -611,7 +615,10 @@ var
   Qry: TUniQuery;
   sComentario: string;
   sTipoRectificativa: string;
+  Solicitud: TSolicitudEmisionFiscal;
 begin
+  if not Assigned(AServicioEmision) then
+    raise EArgumentNilException.Create('AServicioEmision');
   sTipoRectificativa := UpperCase(Trim(ATipoRectificativa));
   if (sTipoRectificativa <> 'I') and
      (sTipoRectificativa <> 'S') then
@@ -686,24 +693,14 @@ begin
       begin
         BorrarMovimientosFactura(Qry, ASerieOriginal, ANumeroOriginal);
       end;
-      case ModoVerifactu(AParametrosApp) of
-        mvVerifactu:
-          begin
-            EncolarFactura(AParametrosApp, AParametrosCaja, Qry,
-              AUsuario, ASerieRect, ANumeroRect);
-            RegistrarEventoVerifactu(AParametrosApp, AConn, AUsuario,
-              cEventoVerifactuEncolado,
-              'Rectificativa de ' + ASerieOriginal + '\' + ANumeroOriginal +
-              ' tipo ' + sTipoRectificativa +
-              ' encolada desde Facturas', '', ASerieRect, ANumeroRect);
-          end;
-        mvNoVerifactu:
-          RegistrarFacturaNoVerifactu(AParametrosApp, AParametrosCaja,
-            Qry, AUsuario, ASerieRect, ANumeroRect);
-      else
-        MarcarFacturaSinVerifactu(AParametrosApp, AParametrosCaja,
-          Qry, AUsuario, ASerieRect, ANumeroRect);
-      end;
+      Solicitud := TSolicitudEmisionFiscal.ParaAlta(
+        ASerieRect,
+        ANumeroRect,
+        AUsuario,
+        'Rectificativa de ' + ASerieOriginal + '\' + ANumeroOriginal +
+        ' tipo ' + sTipoRectificativa +
+        ' encolada desde Facturas');
+      AServicioEmision.Emitir(Solicitud);
       // El webservice conserva el histórico, pero deja la original fuera
       // de las ventas activas cuando la rectificación es sustitutiva.
       if sTipoRectificativa = 'S' then

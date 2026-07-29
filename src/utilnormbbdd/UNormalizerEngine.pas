@@ -292,6 +292,7 @@ begin
   AddSuf('fza_tarifas_cambios_lineas',          'TARCLIN');
   AddSuf('fza_tipos_documentos',                'TD');
   AddSuf('fza_tipos_efecto',                    'TEFE');
+  AddSuf('fza_traducciones',                    'TRAD');
   AddSuf('fza_traspasos_solicitudes',           'TRSOL');
   AddSuf('fza_traspasos_solicitudes_lineas',    'TRSOLLIN');
   AddSuf('fza_unidades_medida',                 'UNIMED');
@@ -362,6 +363,7 @@ begin
   AddOwn('fza_tarifas_cambios',                ['TARIFA','CAMBIO']);
   AddOwn('fza_tarifas_cambios_lineas',
          ['TARIFA','CAMBIO','LINEA']);
+  AddOwn('fza_traducciones',                    ['TRADUCCION']);
   AddOwn('fza_articulos_proveedores',          ['PROVEEDOR']);
   AddOwn('fza_articulos_skus_costes',          ['COSTE']);
   AddOwn('fza_articulos_vinculos',             ['VINCULO']);

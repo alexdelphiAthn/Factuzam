@@ -91,7 +91,10 @@ uses
                        View: TcxGridDBTableView;
                        AcdsLineas, AcdsCabecera: TDataSet;
                        AOnUpdateTotal:
-                         TActualizarTotalFacturaEvent = nil);
+                         TActualizarTotalFacturaEvent = nil;
+                       AAlcance:
+                         TAlcanceRecalculoFactura =
+                           arfLineaYDocumento);
   function GetDBDataController(
     AView: TcxCustomGridTableView): TcxGridDBDataController;
   function GetItemFieldName(AItem: TcxCustomGridTableItem): string;
@@ -114,7 +117,10 @@ procedure GridRecalc(AConexion: TUniConnection;
                      View: TcxGridDBTableView;
                      AcdsLineas, AcdsCabecera: TDataSet;
                      AOnUpdateTotal:
-                       TActualizarTotalFacturaEvent = nil);
+                       TActualizarTotalFacturaEvent = nil;
+                     AAlcance:
+                       TAlcanceRecalculoFactura =
+                         arfLineaYDocumento);
 var
   Edit: TcxCustomEdit;
   Column: TcxGridDBColumn;
@@ -149,13 +155,24 @@ begin
       else
         ValoEditado := 0;
     end;
-    ActualizarLineaFactura(
-      AConexion,
-      AcdsLineas,
-      AcdsCabecera,
-      FieldName,
-      ValoEditado,
-      AOnUpdateTotal);
+    if AAlcance = arfSoloLinea then
+    begin
+      RecalcularLineaFactura(
+        AcdsLineas,
+        AcdsCabecera,
+        FieldName,
+        ValoEditado);
+    end
+    else
+    begin
+      ActualizarLineaFactura(
+        AConexion,
+        AcdsLineas,
+        AcdsCabecera,
+        FieldName,
+        ValoEditado,
+        AOnUpdateTotal);
+    end;
   end;
 end;
 

@@ -37,14 +37,14 @@ unit inLibMigEntorno;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarEntornoCajas(Eng: TMigEngine; var Stats: TMigStats);
-procedure MigrarEntornoSeries(Eng: TMigEngine; var Stats: TMigStats);
-procedure MigrarEntornoContadores(Eng: TMigEngine; var Stats: TMigStats);
-procedure MigrarEntornoContadoresFamilia(Eng: TMigEngine; var Stats: TMigStats);
-procedure AjustarContadoresDestino(Eng: TMigEngine);
-procedure MigrarAjusteContadores(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarEntornoCajas(const Eng: IContextoMigracion; var Stats: TMigStats);
+procedure MigrarEntornoSeries(const Eng: IContextoMigracion; var Stats: TMigStats);
+procedure MigrarEntornoContadores(const Eng: IContextoMigracion; var Stats: TMigStats);
+procedure MigrarEntornoContadoresFamilia(const Eng: IContextoMigracion; var Stats: TMigStats);
+procedure AjustarContadoresDestino(Eng: IContextoMigracion);
+procedure MigrarAjusteContadores(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -56,7 +56,7 @@ uses
 //  1. Cajas de almacén  (dbo.occajas → fza_almacenes_cajas)
 // =========================================================================
 
-procedure MigrarEntornoCajas(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarEntornoCajas(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   // Una fila por caja física (incluida la caja 99 "central/virtual"). El
   // nombre del almacén lo da ocalm.Abreviatura, igual que en el resto de la
@@ -80,14 +80,14 @@ begin
   qSrc := NuevoQOrigen(Eng, cSelect);
   qIns := TUniQuery.Create(nil);
   try
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text   := cInsert;
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.occajas'));
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.occajas'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sAlm := UpperCase(Trim(qSrc.FieldByName('AbrevAlm').AsString));
       if sAlm = '' then
         sAlm := IntToStr(qSrc.FieldByName('Almacen').AsInteger);
@@ -105,7 +105,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('caja', sAlm + '/' + sCaja, E.Message, '',
+          Eng.Registro.LogError('caja', sAlm + '/' + sCaja, E.Message, '',
             'la caja requiere que el almacen ya este migrado');
         end;
       end;
@@ -121,7 +121,7 @@ end;
 //  2. Series actuales por empresa
 // =========================================================================
 
-procedure MigrarEntornoSeries(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarEntornoSeries(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   // La serie vigente se deduce de los contadores del ultimo ejercicio. Si
   // hubiera varias, se toma la usada por mas tipos documentales. ocseract no
@@ -236,7 +236,7 @@ var
   procedure CrearSerieActual;
   begin
     Inc(Stats.Leidas);
-    Eng.IncRow;
+    Eng.Progreso.Avanzar;
     qExiste.Close;
     qExiste.ParamByName('emp').AsString := sEmp;
     qExiste.ParamByName('tipo').AsString := sTipo;
@@ -271,13 +271,13 @@ begin
   qContador := TUniQuery.Create(nil);
   oTipos := TStringList.Create;
   try
-    qTipos.Connection := Eng.ConDst;
+    qTipos.Connection := Eng.Datos.ConexionDestino;
     qTipos.SQL.Text := cSelectTipos;
-    qExiste.Connection := Eng.ConDst;
+    qExiste.Connection := Eng.Datos.ConexionDestino;
     qExiste.SQL.Text := cSelectExiste;
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text := cInsert;
-    qContador.Connection := Eng.ConDst;
+    qContador.Connection := Eng.Datos.ConexionDestino;
     qTipos.Open;
     while not qTipos.Eof do
     begin
@@ -289,7 +289,7 @@ begin
     qSrc.Last;
     iTotalEmpresa := qSrc.RecordCount;
     qSrc.First;
-    Eng.SetTotal(iTotalEmpresa * (oTipos.Count + 3));
+    Eng.Progreso.EstablecerTotal(iTotalEmpresa * (oTipos.Count + 3));
     PrepararContadorSeries;
     while not qSrc.Eof do
     begin
@@ -352,13 +352,13 @@ end;
 // Borra los contadores creados por una corrida previa de este usuario, para
 // que el dominio sea re-ejecutable (no usa INSERT IGNORE porque queremos
 // REFRESCAR el valor del contador, no conservar el viejo).
-procedure LimpiarContadoresPrevios(Eng: TMigEngine);
+procedure LimpiarContadoresPrevios(Eng: IContextoMigracion);
 var
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text   := 'DELETE FROM fza_contadores WHERE USUARIO_ALTA = :u';
     q.ParamByName('u').AsString := Eng.Usuario;
     q.ExecSQL;
@@ -367,7 +367,7 @@ begin
   end;
 end;
 
-procedure MigrarEntornoContadores(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarEntornoContadores(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   // Agrupamos por (TipoDoc, Empresa, Ejercicio, Serie) tomando el contador
   // MÁXIMO: así consolidamos las dimensiones almacén/caja que el destino no
@@ -403,9 +403,9 @@ begin
   qSrc := NuevoQOrigen(Eng, cSelect);
   qIns := TUniQuery.Create(nil);
   try
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text   := cInsert;
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM (SELECT TipoDoc, Empresa, Ejercicio, Serie ' +
       'FROM dbo.occtador WHERE LTRIM(RTRIM(Serie)) <> '''' ' +
       '  AND LTRIM(RTRIM(TipoDoc)) <> '''' ' +
@@ -414,7 +414,7 @@ begin
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sTipoLeg   := Trim(qSrc.FieldByName('TipoDoc').AsString);
       sTipo      := MapearTipoContador(sTipoLeg);
       sSerieLeg  := Trim(qSrc.FieldByName('Serie').AsString);
@@ -459,7 +459,7 @@ begin
           on E: Exception do
           begin
             Inc(Stats.Errores);
-            Eng.LogError('contador', sTipo + '/' + sSerieCon, E.Message,
+            Eng.Registro.LogError('contador', sTipo + '/' + sSerieCon, E.Message,
               '', '');
           end;
         end;
@@ -467,7 +467,7 @@ begin
       qSrc.Next;
     end;
     if oOmitidos.Count > 0 then
-      Eng.Log('  contadores: %d tipos legacy omitidos (fuera de catalogo): %s',
+      Eng.Registro.Log('  contadores: %d tipos legacy omitidos (fuera de catalogo): %s',
               [oOmitidos.Count, oOmitidos.CommaText]);
   finally
     qIns.Free;
@@ -479,7 +479,7 @@ end;
 // Recalcula el siguiente numero desde los documentos ya importados. Nunca
 // reduce un contador existente: permite repetir el ajuste sin pisar numeros
 // que la aplicacion haya reservado despues de la migracion.
-procedure AjustarContadoresDestino(Eng: TMigEngine);
+procedure AjustarContadoresDestino(Eng: IContextoMigracion);
 var
   q: TUniQuery;
 
@@ -588,7 +588,7 @@ var
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     AjustarContadorOperaciones;
     AjustarContadorDocumentos('FC', 'fza_facturas', 'CODIGO_EMP_FAC',
       'SERIE_FAC', 'NUMERO_FAC', 6);
@@ -612,26 +612,26 @@ begin
     AjustarContadorGlobal('PO', 'fza_proveedores', 'ORDEN_PRV', 3);
     AjustarContadorGlobal('EM', 'fza_empresas', 'CODIGO_EMP_EMP', 3);
     AjustarContadorGlobal('EO', 'fza_empresas', 'ORDEN_EMP', 3);
-    Eng.Log('  contadores ajustados desde los documentos ya importados.');
+    Eng.Registro.Log('  contadores ajustados desde los documentos ya importados.');
   finally
     q.Free;
   end;
 end;
 
-procedure MigrarAjusteContadores(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarAjusteContadores(const Eng: IContextoMigracion; var Stats: TMigStats);
 begin
-  Eng.SetTotal(1);
+  Eng.Progreso.EstablecerTotal(1);
   AjustarContadoresDestino(Eng);
   Inc(Stats.Leidas);
   Inc(Stats.Insertadas);
-  Eng.IncRow;
+  Eng.Progreso.Avanzar;
 end;
 
 // =========================================================================
 //  4. Contador por familia  (dbo.ocnivnro → fza_articulos_familias)
 // =========================================================================
 
-procedure MigrarEntornoContadoresFamilia(Eng: TMigEngine;
+procedure MigrarEntornoContadoresFamilia(const Eng: IContextoMigracion;
                                          var Stats: TMigStats);
 const
   // ocnivnro.Codigo = familia hoja; ocnivnro.Contador = último número de
@@ -656,16 +656,16 @@ begin
   qSrc := NuevoQOrigen(Eng, cSelect);
   qUpd := TUniQuery.Create(nil);
   try
-    qUpd.Connection := Eng.ConDst;
+    qUpd.Connection := Eng.Datos.ConexionDestino;
     qUpd.SQL.Text   := cUpdate;
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM (SELECT DISTINCT LTRIM(RTRIM(Codigo)) AS C ' +
       'FROM dbo.ocnivnro WHERE LTRIM(RTRIM(Codigo)) <> '''') t'));
     qSrc.Open;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sCod := Trim(qSrc.FieldByName('Codigo').AsString);
       iCon := qSrc.FieldByName('MaxCon').AsLargeInt;
       qUpd.ParamByName('con').AsLargeInt := iCon;
@@ -682,7 +682,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('contador_familia', sCod, E.Message, '',
+          Eng.Registro.LogError('contador_familia', sCod, E.Message, '',
             'requiere que las Familias ya esten migradas');
         end;
       end;
@@ -693,5 +693,37 @@ begin
     qSrc.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'entorno_contadores',
+    'Contadores (occtador)',
+    'dbo.occtador -> fza_contadores',
+    ['empresas'],
+    MigrarEntornoContadores);
+  RegistrarMigracion(
+    'ajuste_contadores',
+    'Ajustar contadores desde datos importados',
+    'tablas MariaDB importadas -> fza_contadores',
+    ['enlace_mov_facturas'],
+    MigrarAjusteContadores);
+  RegistrarMigracion(
+    'entorno_contadores_familia',
+    'Contador por familia (ocnivnro)',
+    'dbo.ocnivnro -> fza_articulos_familias.CONTADOR_ART_FAM',
+    ['familias'],
+    MigrarEntornoContadoresFamilia);
+  RegistrarMigracion(
+    'entorno_cajas',
+    'Cajas de almacen (occajas)',
+    'dbo.occajas -> fza_almacenes_cajas',
+    ['almacenes'],
+    MigrarEntornoCajas);
+  RegistrarMigracion(
+    'entorno_series',
+    'Series actuales por empresa',
+    'occtador + tipos Factuzam -> fza_empresas_series',
+    ['empresas', 'entorno_contadores'],
+    MigrarEntornoSeries);
 
 end.

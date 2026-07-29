@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibMigAlmacenes                                             }
 {    Tipo:       Librería de migración (sin formulario)                        }
@@ -34,9 +34,9 @@ unit inLibMigAlmacenes;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarAlmacenes(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarAlmacenes(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -67,7 +67,7 @@ begin
     Result := 'ESTANDAR';
 end;
 
-procedure MigrarAlmacenes(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarAlmacenes(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cSelectSrc =
     'SELECT Empresa, Almacen, Nombre, Abreviatura, Activo, ' +
@@ -102,25 +102,25 @@ begin
   qChk := TUniQuery.Create(nil);
   qUpd := TUniQuery.Create(nil);
   try
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text   := cInsertDst;
-    qChk.Connection := Eng.ConDst;
+    qChk.Connection := Eng.Datos.ConexionDestino;
     qChk.SQL.Text   :=
       'SELECT TIPO_USO_ALM FROM fza_almacenes ' +
       'WHERE CODIGO_ALM_ALM = :c';
-    qUpd.Connection := Eng.ConDst;
+    qUpd.Connection := Eng.Datos.ConexionDestino;
     qUpd.SQL.Text :=
       'UPDATE fza_almacenes SET TIPO_USO_ALM = :tipo, ' +
       'INSTANTE_MODIF = NOW(), USUARIO_MODIF = :usuario ' +
       'WHERE CODIGO_ALM_ALM = :codigo';
 
-    Eng.SetTotal(Eng.ContarOrigen('SELECT COUNT(*) FROM dbo.ocalm'));
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen('SELECT COUNT(*) FROM dbo.ocalm'));
     qSrc.Open;
     iOrden := 10;
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       iEmpresa := qSrc.FieldByName('Empresa').AsInteger;
       iAlmacen := qSrc.FieldByName('Almacen').AsInteger;
       // CODIGO_ALM_ALM: usamos la Abreviatura del legacy (MARTA, MERE,
@@ -130,8 +130,8 @@ begin
       sCod := UpperCase(Trim(qSrc.FieldByName('Abreviatura').AsString));
       if sCod = '' then
         sCod := IntToStr(iAlmacen);
-      if Eng.TieneAlmacenDeposito(iEmpresa) then
-        EsDeposito := Eng.EsAlmacenDeposito(iEmpresa, iAlmacen)
+      if Eng.Almacenes.TieneDeposito(iEmpresa) then
+        EsDeposito := Eng.Almacenes.EsDeposito(iEmpresa, iAlmacen)
       else
         EsDeposito :=
           (BoolSN(qSrc.FieldByName('Deposito').AsString) = 'S') or
@@ -151,9 +151,9 @@ begin
         // almacén de depósitos por empresa.
         if (not SameText(sTipoUsoExistente, sTipoUso)) and
            (EsDeposito or
-           (Eng.TieneAlmacenDeposito(iEmpresa) and
+           (Eng.Almacenes.TieneDeposito(iEmpresa) and
             SameText(sTipoUsoExistente, 'DEPOSITO')) or
-           (Eng.TieneAlmacenDeposito(iEmpresa) and
+           (Eng.Almacenes.TieneDeposito(iEmpresa) and
             SameText(sTipoUsoExistente, 'DEPÓSITO'))) then
         begin
           qUpd.ParamByName('tipo').AsString := sTipoUso;
@@ -162,7 +162,7 @@ begin
           qUpd.ExecSQL;
         end;
         Inc(Stats.Saltadas);
-        Eng.Log('  - almacen "%s" ya existe, se omite', [sCod]);
+        Eng.Registro.Log('  - almacen "%s" ya existe, se omite', [sCod]);
         qSrc.Next;
         Continue;
       end;
@@ -208,7 +208,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.Log('  ! error insertando almacen "%s": %s',
+          Eng.Registro.Log('  ! error insertando almacen "%s": %s',
                   [sCod, E.Message]);
           raise;
         end;
@@ -222,5 +222,13 @@ begin
     qSrc.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'almacenes',
+    'Almacenes',
+    'dbo.ocalm → fza_almacenes',
+    ['empresas'],
+    MigrarAlmacenes);
 
 end.

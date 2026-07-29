@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibMigMovimientos                                           }
 {    Tipo:       Librería de migración (sin formulario)                        }
@@ -66,15 +66,15 @@ unit inLibMigMovimientos;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarMovimientos(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarMovimientos(const Eng: IContextoMigracion; var Stats: TMigStats);
 // Reconstruye fza_articulos_stockactual agregando TODOS los movimientos
 // activos (cantidad neta + acumuladores por subtipo + PMP del ultimo). Se
 // exporta para que el inventario inicial — que ahora genera sus propios
 // movimientos de regularizacion 'IV' — cuadre el stock con el mismo
 // criterio sin duplicar el SQL.
-procedure ReconstruirStockDesdeMovimientos(Eng: TMigEngine);
+procedure ReconstruirStockDesdeMovimientos(Eng: IContextoMigracion);
 
 implementation
 
@@ -259,7 +259,7 @@ end;
 // de movimientos. Cantidad y acumuladores por agregación; el PMP actual se
 // toma del último movimiento de cada SKU (PMP legacy conservado). Dos
 // sentencias set-based, sin tablas temporales, idempotentes.
-procedure ReconstruirStockDesdeMovimientos(Eng: TMigEngine);
+procedure ReconstruirStockDesdeMovimientos(Eng: IContextoMigracion);
 const
   // 1) Cantidad neta + acumuladores por subtipo. La clasificación replica
   //    la de PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT para que stockactual quede
@@ -343,20 +343,20 @@ begin
   // Dos sentencias set-based sobre TODO el histórico activo (1,6M+ filas):
   // pueden tardar. Logueamos cada fase para que se vea el avance aunque la
   // barra de filas ya esté al 100%.
-  Eng.Log('  stockactual 1/2: agregando cantidades y acumuladores ' +
+  Eng.Registro.Log('  stockactual 1/2: agregando cantidades y acumuladores ' +
           'por SKU/almacen...');
   EjecutarSQL(Eng, cAgregado);
-  Eng.Log('  stockactual 2/2: fijando PMP del ultimo movimiento de ' +
+  Eng.Registro.Log('  stockactual 2/2: fijando PMP del ultimo movimiento de ' +
           'cada SKU...');
   EjecutarSQL(Eng, cPmpUltimo);
-  Eng.Log('  stockactual reconstruido (cantidad + acumuladores + PMP).');
+  Eng.Registro.Log('  stockactual reconstruido (cantidad + acumuladores + PMP).');
 end;
 
 // =========================================================================
 //  Migrador principal
 // =========================================================================
 
-procedure MigrarMovimientos(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarMovimientos(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   // Resolvemos el slot de color con el codigo interno de ocartcol, igual
   // que SKUs/Inventarios, y la abreviatura de almacén origen y
@@ -555,16 +555,16 @@ begin
   // borramos lo que crea ESTA migracion (prefijo 'MH'), para que los cambios
   // de cada pasada (sentido E/S, enlace de caja...) se apliquen de verdad sin
   // tener que vaciar la tabla a mano. No toca los 'MV' que genere la app.
-  Eng.Log('  movimientos: limpiando volcado historico anterior (MH*)...');
+  Eng.Registro.Log('  movimientos: limpiando volcado historico anterior (MH*)...');
   // Trabajamos en autocommit (fuera de la transaccion del dominio): borrar
   // ~1,9M filas en una sola transaccion mantenia un bloqueo enorme y chocaba
   // con "Lock wait timeout". Si la tabla SOLO tiene volcado de migracion (MH*),
   // TRUNCATE es instantaneo; si hay movimientos de la app (no-MH) se conservan
   // borrando solo los MH por lotes.
-  Eng.ConDst.Commit;
+  Eng.Datos.ConexionDestino.Commit;
   qDel := TUniQuery.Create(nil);
   try
-    qDel.Connection := Eng.ConDst;
+    qDel.Connection := Eng.Datos.ConexionDestino;
     qDel.SQL.Text :=
       'SELECT COUNT(*) FROM fza_movimientos_almacen ' +
       'WHERE NUMERO_MOV NOT LIKE ''MH%''';
@@ -573,12 +573,12 @@ begin
     qDel.Close;
     if iNoMH = 0 then
     begin
-      Eng.Log('  movimientos: tabla solo con volcado MH -> TRUNCATE.');
-      Eng.ConDst.ExecSQL('TRUNCATE TABLE fza_movimientos_almacen');
+      Eng.Registro.Log('  movimientos: tabla solo con volcado MH -> TRUNCATE.');
+      Eng.Datos.ConexionDestino.ExecSQL('TRUNCATE TABLE fza_movimientos_almacen');
     end
     else
     begin
-      Eng.Log(Format('  movimientos: %d filas no-MH se conservan; ' +
+      Eng.Registro.Log(Format('  movimientos: %d filas no-MH se conservan; ' +
         'borrando MH por lotes...', [iNoMH]));
       qDel.SQL.Text :=
         'DELETE FROM fza_movimientos_almacen ' +
@@ -586,19 +586,19 @@ begin
       repeat
         qDel.ExecSQL;
         iBorr := qDel.RowsAffected;
-      until (iBorr <= 0) or Eng.IsCancelado;
+      until (iBorr <= 0) or Eng.Cancelacion.EstaCancelada;
     end;
   finally
     qDel.Free;
   end;
   // Reabrimos transaccion: el bulk insert siguiente va en la del dominio y el
   // motor hace el Commit final.
-  Eng.ConDst.StartTransaction;
+  Eng.Datos.ConexionDestino.StartTransaction;
   if EsSqlServer2014OAnterior(Eng) then
   begin
-    Eng.Log('  SQL Server 2014: consulta compatible en orden de Numero, ' +
+    Eng.Registro.Log('  SQL Server 2014: consulta compatible en orden de Numero, ' +
             'sin CTEs ni ROW_NUMBER.');
-    Eng.Log('  El coste usa PrecioMedioSIva del movimiento y no se ' +
+    Eng.Registro.Log('  El coste usa PrecioMedioSIva del movimiento y no se ' +
             'enlaza la operacion de caja.');
     sSelectSrcUsado := cSelectSrcCompat;
   end
@@ -608,12 +608,12 @@ begin
   // Streaming: ocmovarp puede tener cientos de miles de filas; no las
   // cacheamos en memoria (lectura hacia delante).
   qSrc.UniDirectional := True;
-  bulk := TBulkInsert.Create(Eng.ConDst, 'fza_movimientos_almacen',
+  bulk := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_movimientos_almacen',
                              cCols, BATCH_SIZE);
   try
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocmovarp ' +
       'WHERE LTRIM(RTRIM(Articulo)) <> '''''));
     qSrc.Open;
@@ -621,13 +621,13 @@ begin
     begin
       // Chequeo de cancelación periódico (volúmenes potencialmente
       // grandes: el histórico puede tener cientos de miles de filas).
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en Movimientos, saliendo...');
+        Eng.Registro.Log('  Cancelacion detectada en Movimientos, saliendo...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sArt       := Trim(qSrc.FieldByName('Articulo').AsString);
       sDescColor := Trim(qSrc.FieldByName('DescColor').AsString);
       sDesc      := Trim(qSrc.FieldByName('DescArt').AsString);
@@ -639,9 +639,9 @@ begin
                       fUnidades, fCantidad);
       sTipoDoc   := MapearTipoDoc(qSrc.FieldByName('TipoDoc').AsString,
                                   sTipoMov);
-      if Eng.TieneAlmacenDeposito(
+      if Eng.Almacenes.TieneDeposito(
            qSrc.FieldByName('Empresa').AsInteger) then
-        EsAlmacenDeposito := Eng.EsAlmacenDeposito(
+        EsAlmacenDeposito := Eng.Almacenes.EsDeposito(
           qSrc.FieldByName('Empresa').AsInteger,
           qSrc.FieldByName('Almacen').AsInteger)
       else
@@ -897,7 +897,7 @@ begin
           on E: Exception do
           begin
             Inc(Stats.Errores);
-            Eng.LogError('movimiento', sCodUnidad, E.Message,
+            Eng.Registro.LogError('movimiento', sCodUnidad, E.Message,
               Format('emp=%s alm=%s num=%d',
                 [sEmp, sAlm, qSrc.FieldByName('Numero').AsInteger]),
               'el movimiento requiere que el SKU y el almacen ya esten ' +
@@ -910,7 +910,7 @@ begin
     end;
     bulk.FlushPendiente;
     // Stock activo: reconstruimos stockactual desde el histórico volcado.
-    if not Eng.IsCancelado then
+    if not Eng.Cancelacion.EstaCancelada then
       ReconstruirStockDesdeMovimientos(Eng);
   finally
     bulk.Free;
@@ -919,5 +919,13 @@ begin
     oValor.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'movimientos',
+    'Movimientos histórico (stock)',
+    'dbo.ocmovarp → movimientos y reconstrucción de stock',
+    ['almacenes', 'skus'],
+    MigrarMovimientos);
 
 end.

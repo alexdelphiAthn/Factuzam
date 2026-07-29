@@ -92,8 +92,7 @@ implementation
 
 uses
   System.SysUtils, System.Generics.Collections, Data.DBCommon,
-  Vcl.Controls, cxGridDBTableView, inLibDevExp, inLibUser, inLibWin,
-  inLibMsg;
+  Vcl.Controls, cxGridDBTableView, inLibDevExp, inLibUser, inLibMsg;
 
 constructor TGestorPerfilesMto.Create(
   AFormulario: TCustomForm;
@@ -214,11 +213,7 @@ begin
   finally
     FreeAndNil(oGrids);
   end;
-  FFormulario.Caption := Valor(
-    'Caption', FFormulario.Caption);
-  if SameText(
-    Trim(Valor('oRenameComponents', 'False')), 'True') then
-    SetLabelForm(FFormulario, FPerfil);
+  // Los perfiles ya no sustituyen textos. La traducción usará su catálogo.
 end;
 
 procedure TGestorPerfilesMto.CargarPerfilesComunes(
@@ -248,8 +243,7 @@ end;
 
 procedure TGestorPerfilesMto.CargarCaptions;
 begin
-  inLibWin.CargarCaptions(
-    FFormulario, FFormulario.Owner, FServicio);
+  // Desactivado: los captions no se guardan en perfiles de usuario.
 end;
 
 procedure TGestorPerfilesMto.CargarColumnas;

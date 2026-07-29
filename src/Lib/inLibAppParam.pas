@@ -51,7 +51,7 @@ function CrearParametrosAplicacion(
 implementation
 
 uses
-  System.SysUtils, inLibPathTokens, inLibLog;
+  System.SysUtils, inLibPathTokens, inLibLog, inLibMsg;
 
 { TParametrosAplicacion }
 
@@ -172,6 +172,8 @@ begin
     'Tema de interfaz (DevExpress)', tpString, 'Office2019Colorful');
   RegistrarParametro('Apariencia', 'appPaleta',
     'Paleta de color del tema', tpString, 'Default');
+  RegistrarParametro('Apariencia', 'appIdioma',
+    SDescripcionParametroIdioma, tpString, 'es-ES');
 
   // --- Consulta de Stock ---
   // Aplica a la pestaña 8_Stock de la ficha de artículo y a la consulta de

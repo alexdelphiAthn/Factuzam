@@ -1524,6 +1524,7 @@ begin
     Self, cxGrdDBTabPrin, edtBusqGlobal, tmrBusqGlobal,
     pmFiltros, FiltrosGuardados, SolicitarDatosFiltro,
     EjecutarGestionFiltros);
+  btnCargarCaptions.Enabled := False;
   Self.HandleNeeded; //da problemas
   nvNavegador.Buttons.OnButtonClick := NavegadorButtonClick;
   inliblog.Log.LogInfo('Ventana de mantenimiento: ' +

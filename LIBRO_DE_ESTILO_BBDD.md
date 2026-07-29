@@ -129,6 +129,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_tarifas_cambios_lineas`         | `TARCLIN` |
 | `fza_tipos_documentos`               | `TD`      |
 | `fza_tipos_efecto`                   | `TEFE`    |
+| `fza_traducciones`                   | `TRAD`    |
 | `fza_traspasos_solicitudes`          | `TRSOL`   |
 | `fza_traspasos_solicitudes_lineas`   | `TRSOLLIN`|
 | `fza_unidades_medida`                | `UNIMED`  |

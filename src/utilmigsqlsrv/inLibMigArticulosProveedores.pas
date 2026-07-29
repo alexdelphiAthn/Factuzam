@@ -26,9 +26,9 @@ unit inLibMigArticulosProveedores;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarArticulosProveedores(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarArticulosProveedores(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -36,7 +36,7 @@ uses
   System.SysUtils,
   Data.DB, Uni;
 
-procedure MigrarArticulosProveedores(Eng: TMigEngine;
+procedure MigrarArticulosProveedores(const Eng: IContextoMigracion;
                                       var Stats: TMigStats);
 const
   // Enriquecemos con el ULTIMO precio de compra y su fecha. ANTES
@@ -100,18 +100,18 @@ var
 begin
   if EsSqlServer2014OAnterior(Eng) then
   begin
-    Eng.Log('  SQL Server 2014: consulta compatible sin ROW_NUMBER; ' +
+    Eng.Registro.Log('  SQL Server 2014: consulta compatible sin ROW_NUMBER; ' +
             'precio/fecha de ultima compra quedaran vacios.');
     qSrc := NuevoQOrigen(Eng, cSelectSrcCompat);
   end
   else
     qSrc := NuevoQOrigen(Eng, cSelectSrc);
-  bulk := TBulkInsert.Create(Eng.ConDst, 'fza_articulos_proveedores',
+  bulk := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_articulos_proveedores',
                               cCols, 5000);
   try
     sAhora := DateTimeASQL(Now);
     sUser  := ValorOrNull(Eng.Usuario);
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocartp WITH (NOLOCK) ' +
       'WHERE Proveedor IS NOT NULL AND Proveedor > 0 ' +
       '  AND LTRIM(RTRIM(Articulo)) <> '''''));
@@ -119,7 +119,7 @@ begin
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sArt    := Trim(qSrc.FieldByName('Articulo').AsString);
       sProv   := IntToStr(qSrc.FieldByName('Proveedor').AsInteger);
       sModelo := Trim(qSrc.FieldByName('Modelo').AsString);
@@ -167,7 +167,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('art_prv', sArt, E.Message,
+          Eng.Registro.LogError('art_prv', sArt, E.Message,
             Format('prv=%s modelo=%s', [sProv, sModelo]), '');
           raise;
         end;
@@ -180,5 +180,13 @@ begin
     qSrc.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'articulos_proveedores',
+    'Proveedor y modelo por artículo',
+    'ocartp.Proveedor + Modelo → fza_articulos_proveedores',
+    ['articulos', 'proveedores'],
+    MigrarArticulosProveedores);
 
 end.

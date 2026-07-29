@@ -30,6 +30,7 @@ uses
   inLibDiag in 'src\Lib\inLibDiag.pas',
   inLibCadenas in 'src\Lib\inLibCadenas.pas',
   inLibCifrado in 'src\Lib\inLibCifrado.pas',
+  inLibCifradoCopias in 'src\Lib\inLibCifradoCopias.pas',
   inLibConfiguracionIni in 'src\Lib\inLibConfiguracionIni.pas',
   inLibDatasets in 'src\Lib\inLibDatasets.pas',
   inLibValoresAutomaticos in 'src\Lib\inLibValoresAutomaticos.pas',
@@ -47,12 +48,26 @@ uses
   inLibIBAN in 'src\Lib\inLibIBAN.pas',
   inLibSepaRemesasVenta in 'src\Lib\inLibSepaRemesasVenta.pas',
   inLibFacturas in 'src\Lib\inLibFacturas.pas',
+  inLibSqlSeguro in 'src\Lib\inLibSqlSeguro.pas',
+  inLibMotorFiscalVenta in 'src\Lib\inLibMotorFiscalVenta.pas',
   inLibFacturasServiciosIntf in
     'src\Lib\inLibFacturasServiciosIntf.pas',
+  inLibFacturasRepositorio in
+    'src\Lib\inLibFacturasRepositorio.pas',
+  inLibFacturasValidacionFiscal in
+    'src\Lib\inLibFacturasValidacionFiscal.pas',
+  inLibFacturasCalculo in
+    'src\Lib\inLibFacturasCalculo.pas',
+  inLibFacturasComposicion in
+    'src\Lib\inLibFacturasComposicion.pas',
   inLibFacturasBorrado in 'src\Lib\inLibFacturasBorrado.pas',
   inLibFacturasEfectos in 'src\Lib\inLibFacturasEfectos.pas',
   inLibFacturasMovimientos in
     'src\Lib\inLibFacturasMovimientos.pas',
+  inLibFacturasConsolidacion in
+    'src\Lib\inLibFacturasConsolidacion.pas',
+  inLibFacturasReapertura in
+    'src\Lib\inLibFacturasReapertura.pas',
   inLibDevolucionesCompraStock in 'src\Lib\inLibDevolucionesCompraStock.pas',
   inLibFacturaPdfBlob in 'src\Lib\inLibFacturaPdfBlob.pas',
   inLibFormatoDocumento in 'src\Lib\inLibFormatoDocumento.pas',
@@ -61,9 +76,15 @@ uses
   inLibConfigCampos in 'src\Lib\inLibConfigCampos.pas',
   inLibContextoSesionIntf in 'src\Lib\inLibContextoSesionIntf.pas',
   inLibContextoSesion in 'src\Lib\inLibContextoSesion.pas',
+  inLibExcepcionesAplicacionIntf in
+    'src\Lib\inLibExcepcionesAplicacionIntf.pas',
+  inLibExcepcionesAplicacion in
+    'src\Lib\inLibExcepcionesAplicacion.pas',
   inLibFiltrosGuardadosIntf in 'src\Lib\inLibFiltrosGuardadosIntf.pas',
   inLibPerfilesUsuarioIntf in 'src\Lib\inLibPerfilesUsuarioIntf.pas',
   inLibPerfilesUsuarioValores in 'src\Lib\inLibPerfilesUsuarioValores.pas',
+  inLibTraduccionesIntf in 'src\Lib\inLibTraduccionesIntf.pas',
+  inLibTraducciones in 'src\Lib\inLibTraducciones.pas',
   inLibParametrosIntf in 'src\Lib\inLibParametrosIntf.pas',
   inLibParametrosBase in 'src\Lib\inLibParametrosBase.pas',
   inLibConexionesIntf in 'src\Lib\inLibConexionesIntf.pas',
@@ -125,6 +146,8 @@ uses
   inMtoModalGridGuias in 'src\Modals\inMtoModalGridGuias.pas' {frmModalGridGuias},
   inMtoModalWizardEditar in 'src\Modals\inMtoModalWizardEditar.pas' {frmModalWizardEditar},
   inMtoModalGenPass in 'src\Modals\inMtoModalGenPass.pas' {frmModalGenPass},
+  inMtoModalContrasenaCopia in
+    'src\Modals\inMtoModalContrasenaCopia.pas',
   inMtoModalListadoVentas in
     'src\Modals\inMtoModalListadoVentas.pas' {frmModalListadoVentas},
   inMtoModalImpFac in 'src\Modals\inMtoModalImpFac.pas' {frmPrintFac},
@@ -221,6 +244,12 @@ uses
   inLibCajaVentaIntf in 'src\Caja\Lib\inLibCajaVentaIntf.pas',
   inLibCajaStock in 'src\Caja\Lib\inLibCajaStock.pas',
   inLibCajaDescuentos in 'src\Caja\Lib\inLibCajaDescuentos.pas',
+  inLibCajaConsultasRepositorio in
+    'src\Caja\Lib\inLibCajaConsultasRepositorio.pas',
+  inLibCajaRectificacion in
+    'src\Caja\Lib\inLibCajaRectificacion.pas',
+  inLibCajaOpeComposicion in
+    'src\Caja\Lib\inLibCajaOpeComposicion.pas',
   inLibCajaCierreVenta in 'src\Caja\Lib\inLibCajaCierreVenta.pas',
   inLibCriptoCurr in 'src\Lib\inLibCriptoCurr.pas',
   inLibDivCurr in 'src\Lib\inLibDivCurr.pas',
@@ -249,6 +278,7 @@ uses
   inLibVentasImpuestos in 'src\Lib\inLibVentasImpuestos.pas',
   inLibInventarioExcel in 'src\Lib\inLibInventarioExcel.pas',
   inLibDocumentosTrabajoExcel in 'src\Lib\inLibDocumentosTrabajoExcel.pas',
+  inLibBalanceExcelComun in 'src\Lib\inLibBalanceExcelComun.pas',
   inLibBalanceTallasExcel in 'src\Lib\inLibBalanceTallasExcel.pas',
   inLibBalanceSinTallasExcel in 'src\Lib\inLibBalanceSinTallasExcel.pas',
   inLibMovVentasArtExcel in 'src\Lib\inLibMovVentasArtExcel.pas',
@@ -384,6 +414,11 @@ uses
   inMtoModalEnviarDestino in 'src\Modals\inMtoModalEnviarDestino.pas' {frmModalEnviarDestino},
   inLibDBStructure in 'src\Lib\inLibDBStructure.pas',
   inLibBackupWorker in 'src\Lib\inLibBackupWorker.pas',
+  inLibCopiasSeguridadIntf in
+    'src\Lib\inLibCopiasSeguridadIntf.pas',
+  inLibCopiasSeguridadReglas in
+    'src\Lib\inLibCopiasSeguridadReglas.pas',
+  inLibCopiasSeguridad in 'src\Lib\inLibCopiasSeguridad.pas',
   UniDataComprasSesiones in 'src\DataModules\UniDataComprasSesiones.pas' {dmComprasSesiones: TdmComprasSesiones},
   inMtoComprasPlantillas in 'src\Forms\inMtoComprasPlantillas.pas' {frmMtoComprasPlantillas},
   inMtoModalSesionMaterializar in 'src\Modals\inMtoModalSesionMaterializar.pas' {frmModalSesionMaterializar},

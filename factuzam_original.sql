@@ -1,5 +1,5 @@
 ﻿-- ========================================
--- Backup generado: 28/07/2026 19:47:59
+-- Backup generado: 29/07/2026 17:14:28
 -- Base de datos: Factuzam
 -- ========================================
 
@@ -6169,7 +6169,7 @@ INSERT INTO `fza_contadores` (`TIPO_DOC_CON`, `EMPRESA_CON`, `SERIE_CON`, `CON`,
   ('FO', '-', '-', 7, 3, 'S', 'S', '2025-04-17 09:34:57', '2023-07-07 13:54:00', 'Administrador', 'Administrador'),
   ('FP', '-', '-', 1, 6, 'S', 'S', '2026-06-11 07:20:03', '2026-06-11 07:12:23', 'SISTEMA', 'SISTEMA'),
   ('GO', '-', '-', 5, 3, 'S', 'S', '2023-12-08 22:33:27', '2023-11-08 21:12:56', 'Administrador', 'Administrador'),
-  ('GP', '-', '-', 560, 3, 'S', 'S', '2026-07-28 19:47:49', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
+  ('GP', '-', '-', 561, 3, 'S', 'S', '2026-07-29 17:14:12', '2023-04-27 12:30:24', 'Administrador', 'Administrador'),
   ('IG', '-', '-', 4, 3, 'S', 'S', '2023-11-17 12:36:00', '2023-01-19 10:41:29', 'Administrador', 'Administrador'),
   ('IN', '012', 'A1', 28, 2, 'S', 'S', '2026-07-07 08:17:26', '2026-05-05 13:54:16', 'Administrador', 'Administrador'),
   ('IV', '-', '-', 18, 3, 'S', 'S', '2023-11-17 12:36:55', '2021-06-10 20:11:25', 'Administrador', 'Administrador'),
@@ -22440,8 +22440,77 @@ SET @sSql := IF(@sExisteCol = 0,
 PREPARE stmt FROM @sSql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
-', '2026-07-28 19:47:49', '2026-07-28 19:47:49', 'Administrador', 'Administrador');
--- 89 registros exportados
+', '2026-07-28 19:47:49', '2026-07-28 19:47:49', 'Administrador', 'Administrador'),
+  ('560', 'traducciones', '-- =============================================================================
+-- Catálogo de traducciones de Factuzam
+-- =============================================================================
+-- Mantiene las traducciones separadas de los perfiles de usuario. CLAVE_TRAD
+-- identifica de forma estable un mensaje o una propiedad visual; IDIOMA_TRAD
+-- usa una etiqueta de idioma como es-ES o en-GB.
+--
+-- Idempotente: comprueba por separado la tabla y sus índices.
+-- =============================================================================
+SET @sExisteTabla := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.TABLES
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_traducciones''
+);
+SET @sSql := IF(@sExisteTabla = 0,
+  ''CREATE TABLE `fza_traducciones` (
+     `ID_TRAD` bigint unsigned NOT NULL AUTO_INCREMENT,
+     `CLAVE_TRAD` varchar(255) NOT NULL,
+     `IDIOMA_TRAD` varchar(20) NOT NULL,
+     `TEXTO_TRAD` text NOT NULL,
+     `CONTEXTO_TRAD` varchar(500) DEFAULT NULL,
+     `ESACTIVO_TRAD` varchar(1) NOT NULL DEFAULT ''''S'''',
+     `INSTANTE_ALTA` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     `USUARIO_ALTA` varchar(50) NOT NULL,
+     `INSTANTE_MODIF` datetime DEFAULT NULL,
+     `USUARIO_MODIF` varchar(50) DEFAULT NULL,
+     PRIMARY KEY (`ID_TRAD`)
+   ) ENGINE=InnoDB
+     DEFAULT CHARSET=utf8mb4
+     COLLATE=utf8mb4_spanish_ci'',
+  ''SELECT ''''fza_traducciones ya existe, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteIndice := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_traducciones''
+     AND INDEX_NAME = ''UQ_TRAD_CLAVE_IDIOMA''
+);
+SET @sSql := IF(@sExisteIndice = 0,
+  ''ALTER TABLE `fza_traducciones`
+     ADD UNIQUE INDEX `UQ_TRAD_CLAVE_IDIOMA`
+       (`CLAVE_TRAD`, `IDIOMA_TRAD`)'',
+  ''SELECT ''''UQ_TRAD_CLAVE_IDIOMA ya existe, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteIndice := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = ''fza_traducciones''
+     AND INDEX_NAME = ''IDX_TRAD_IDIOMA_ACTIVO''
+);
+SET @sSql := IF(@sExisteIndice = 0,
+  ''ALTER TABLE `fza_traducciones`
+     ADD INDEX `IDX_TRAD_IDIOMA_ACTIVO`
+       (`IDIOMA_TRAD`, `ESACTIVO_TRAD`)'',
+  ''SELECT ''''IDX_TRAD_IDIOMA_ACTIVO ya existe, se omite'''' AS info''
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+', '2026-07-29 17:14:12', '2026-07-29 17:14:12', 'Administrador', 'Administrador');
+-- 90 registros exportados
 
 
 -- Tabla: fza_informes_guias
@@ -26190,6 +26259,26 @@ INSERT INTO `fza_tipos_efecto` (`CODIGO_TEFE`, `DESCRIPCION_TEFE`, `ESDOMICILIAD
 -- 5 registros exportados
 
 
+-- Tabla: fza_traducciones
+
+DROP TABLE IF EXISTS `fza_traducciones`;
+CREATE TABLE `fza_traducciones` (
+  `ID_TRAD` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `CLAVE_TRAD` varchar(255) NOT NULL,
+  `IDIOMA_TRAD` varchar(20) NOT NULL,
+  `TEXTO_TRAD` text NOT NULL,
+  `CONTEXTO_TRAD` varchar(500) NULL DEFAULT NULL,
+  `ESACTIVO_TRAD` varchar(1) NOT NULL DEFAULT 'S',
+  `INSTANTE_ALTA` datetime NOT NULL DEFAULT current_timestamp(),
+  `USUARIO_ALTA` varchar(50) NOT NULL,
+  `INSTANTE_MODIF` datetime NULL DEFAULT NULL,
+  `USUARIO_MODIF` varchar(50) NULL DEFAULT NULL,
+  PRIMARY KEY (`ID_TRAD`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+ALTER TABLE `fza_traducciones` ADD INDEX `IDX_TRAD_IDIOMA_ACTIVO` (`IDIOMA_TRAD`, `ESACTIVO_TRAD`);
+ALTER TABLE `fza_traducciones` ADD UNIQUE INDEX `UQ_TRAD_CLAVE_IDIOMA` (`CLAVE_TRAD`, `IDIOMA_TRAD`);
+
+
 -- Tabla: fza_traspasos_solicitudes
 
 DROP TABLE IF EXISTS `fza_traspasos_solicitudes`;
@@ -26305,7 +26394,7 @@ CREATE TABLE `fza_usuarios` (
 
 -- Datos de fza_usuarios
 INSERT INTO `fza_usuarios` (`USUARIO_USU`, `PASSWORD_USU`, `GRUPO_USU`, `ESACTIVO_USU`, `EMPRESA_DEFECTO_USU`, `ULTIMO_LOGIN_USU`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`, `ALMACEN_DEFECTO_USU`, `CAJA_DEFECTO_USU`) VALUES
-  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-28 19:46:53', '2026-07-28 19:46:53', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
+  ('Administrador', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Administradores', 'S', '012', '2026-07-29 17:13:58', '2026-07-29 17:13:58', '2021-05-14 19:54:29', 'Administrador', 'Administrador', 'GEN', '1'),
   ('Alfredo', '4F8239A5B05A0E22D3DD4D7853808AF3', 'Vendedores', 'S', '012', '2026-07-02 18:49:30', '2026-07-02 18:49:30', '2026-06-02 17:45:16', 'Administrador', 'Administrador', 'GEN', '1'),
   ('QATEST', '6E797DC797D26129DAE46F17A7255650', 'QA_PRUEBAS', 'S', NULL, '2026-07-24 19:49:59', '2026-07-24 19:49:59', '2026-07-23 17:18:45', 'Administrador', 'Administrador', NULL, NULL);
 -- 3 registros exportados
@@ -45619,4 +45708,4 @@ DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;
 COMMIT;
 
--- Backup completado: 28/07/2026 19:48:01
+-- Backup completado: 29/07/2026 17:14:30

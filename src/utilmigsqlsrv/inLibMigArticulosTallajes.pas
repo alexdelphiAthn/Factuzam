@@ -31,9 +31,9 @@ unit inLibMigArticulosTallajes;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarArticulosTallajes(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarArticulosTallajes(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -43,12 +43,12 @@ uses
 
 // Resuelve el ID_AC del conjunto que migramos para un NroTallaje
 // concreto. Devuelve 0 si no se ha migrado el tallaje.
-function ResolverConjunto(Eng: TMigEngine; iNroTallaje: Integer): Integer;
+function ResolverConjunto(Eng: IContextoMigracion; iNroTallaje: Integer): Integer;
 var q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     // Buscamos por prefijo "T<NroTallaje> -" que es como
     // inLibMigTallajes nombra los conjuntos.
     q.SQL.Text :=
@@ -67,7 +67,7 @@ begin
   end;
 end;
 
-procedure MigrarArticulosTallajes(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarArticulosTallajes(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cSelectSrc =
     'SELECT Articulo, NroTallaje ' +
@@ -85,12 +85,12 @@ begin
   qChk := TUniQuery.Create(nil);
   qIns := TUniQuery.Create(nil);
   try
-    qChk.Connection := Eng.ConDst;
+    qChk.Connection := Eng.Datos.ConexionDestino;
     qChk.SQL.Text   :=
       'SELECT 1 FROM fza_articulos_conjuntos_asign ' +
       'WHERE CODIGO_ART_ACA = :a AND ID_VA_ACA = ''TAL''';
 
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text   :=
       'INSERT INTO fza_articulos_conjuntos_asign (' +
         'CODIGO_ART_ACA, ID_AC_ACA, ID_VA_ACA, ORDEN_ACA, ' +
@@ -100,7 +100,7 @@ begin
               ':INSTANTE_ALTA, :INSTANTE_MODIF, :USUARIO_ALTA, ' +
               ':USUARIO_MODIF)';
 
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocartp ' +
       'WHERE NroTallaje IS NOT NULL AND NroTallaje > 0 ' +
       '  AND LTRIM(RTRIM(Articulo)) <> '''''));
@@ -108,7 +108,7 @@ begin
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       sArt        := Trim(qSrc.FieldByName('Articulo').AsString);
       iNroTallaje := qSrc.FieldByName('NroTallaje').AsInteger;
 
@@ -116,7 +116,7 @@ begin
       if iIdAc = 0 then
       begin
         Inc(Stats.Errores);
-        Eng.LogError('art_tallaje', sArt,
+        Eng.Registro.LogError('art_tallaje', sArt,
           Format('NroTallaje %d no migrado en ' +
                  'fza_atributos_conjuntos', [iNroTallaje]),
           '', 'corre antes Tallajes (ocgrptal)');
@@ -146,7 +146,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('art_tallaje', sArt, E.Message,
+          Eng.Registro.LogError('art_tallaje', sArt, E.Message,
             Format('NroTallaje=%d ID_AC=%d', [iNroTallaje, iIdAc]), '');
         end;
       end;
@@ -158,5 +158,13 @@ begin
     qSrc.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'articulos_tallajes_asign',
+    'Asignar sistema de tallas a artículo',
+    'ocartp.NroTallaje → fza_articulos_conjuntos_asign',
+    ['articulos', 'tallajes'],
+    MigrarArticulosTallajes);
 
 end.

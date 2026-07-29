@@ -170,7 +170,8 @@ implementation
 uses inLibGenerarTicketBD, inLibGenerarTicketCaja,
      inLibLog, inLibFotos, inMtoFotoArticulo,
      inLibTraspasoTicket, inLibShowMto, Uni,
-     inLibVerifactu, inLibVerifactuCola, inMtoModalFacturarTicket,
+     inLibVerifactu, inMtoModalFacturarTicket,
+     inLibEmisionFiscalIntf, inLibEmisionFiscal,
      inLibCorreoTickets, inLibAtributosPaleta, inLibMsg;
 
 // -----------------------------------------------------------------------------
@@ -406,6 +407,9 @@ var
   sNumero:              string;
   bBorrarMovimientos:   Boolean;
   EsFacturaSimplificada: Boolean;
+  Resultado: TResultadoEmisionFiscal;
+  Servicio: IServicioEmisionFiscal;
+  Solicitud: TSolicitudEmisionFiscal;
 begin
   //Anulación Verifactu (RegistroAnulacion) de la factura del ticket
   bBorrarMovimientos := True;
@@ -440,37 +444,20 @@ begin
             [mbYes, mbNo], 0) = mrYes;
         end;
         Qry.Close;
-        case ModoVerifactu(ParametrosApp) of
-          mvVerifactu:
-            begin
-              TVerifactuCola.EncolarFactura(ParametrosApp, ParametrosCaja,
-                Qry,
-                IdentidadSesion.Usuario, sSerie, sNumero, 'ANULACION',
-                bBorrarMovimientos);
-              RegistrarEventoVerifactu(ParametrosApp, ConexionPrincipal,
-                IdentidadSesion.Usuario,
-                cEventoVerifactuEncolado,
-                'Anulación encolada desde Buscar operaciones', '',
-                sSerie, sNumero);
-              ShowMessage(SInfoAnulacionVerifactuEncolada);
-            end;
-          mvNoVerifactu:
-            begin
-              TVerifactuCola.RegistrarFacturaNoVerifactu(ParametrosApp,
-                ParametrosCaja, Qry,
-                IdentidadSesion.Usuario, sSerie, sNumero, 'ANULACION',
-                bBorrarMovimientos);
-              ShowMessage(SInfoAnulacionNoVerifactuRegistrada);
-            end;
-        else
-          begin
-            TVerifactuCola.MarcarFacturaSinVerifactu(ParametrosApp,
-              ParametrosCaja, Qry,
-              IdentidadSesion.Usuario, sSerie, sNumero, 'ANULACION',
-              bBorrarMovimientos);
-            ShowMessage(SInfoAnulacionSinVerifactuRegistrada);
-          end;
-        end;
+        Servicio := CrearServicioEmisionFiscal(
+          ParametrosApp,
+          ParametrosCaja,
+          ConexionPrincipal);
+        Solicitud := TSolicitudEmisionFiscal.ParaOperacion(
+          sSerie,
+          sNumero,
+          IdentidadSesion.Usuario,
+          'ANULACION',
+          'Anulación',
+          bBorrarMovimientos,
+          'Anulación encolada desde Buscar operaciones');
+        Resultado := Servicio.Emitir(Solicitud);
+        ShowMessage(Resultado.Mensaje);
       end;
     finally
       FreeAndNil(Qry);

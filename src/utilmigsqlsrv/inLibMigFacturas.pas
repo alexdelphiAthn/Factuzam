@@ -36,14 +36,14 @@ unit inLibMigFacturas;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarFacturas(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarFacturas(const Eng: IContextoMigracion; var Stats: TMigStats);
 // Enlace masivo movimiento->factura (REF_MOV) como dominio APARTE: se saco
 // de los dominios de facturas para que NO bloquee la importacion de las
 // facturas. Cubre simplificadas y normales en un solo UPDATE. Corre el
-// ultimo (ver WaveDeDominio); si se cancela, las facturas ya estan.
-procedure MigrarEnlaceMovimientosFacturas(Eng: TMigEngine;
+// ultimo en su grafo de dependencias; si se cancela, las facturas ya estan.
+procedure MigrarEnlaceMovimientosFacturas(const Eng: IContextoMigracion;
                                           var Stats: TMigStats);
 
 implementation
@@ -92,13 +92,13 @@ begin
   Result := (s = '') or (s = '0');
 end;
 
-procedure LimpiarMigracionPrevia(Eng: TMigEngine);
+procedure LimpiarMigracionPrevia(Eng: IContextoMigracion);
 var
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     q.SQL.Text :=
       'DELETE l FROM fza_facturas_lineas l ' +
       'JOIN fza_facturas f ON f.NUMERO_FAC = l.NUMERO_FAC_FACLIN ' +
@@ -238,13 +238,13 @@ end;
 //  movimientos). Corren al final, ya con cabeceras, lineas y movimientos
 //  presentes (por eso facturas va en una wave posterior a movimientos).
 // =========================================================================
-procedure EnlazarFacturas(Eng: TMigEngine);
+procedure EnlazarFacturas(Eng: IContextoMigracion);
 var
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := Eng.ConDst;
+    q.Connection := Eng.Datos.ConexionDestino;
     // 1) Datos de la EMPRESA EMISORA denormalizados en la cabecera (estaban
     //    vacios) + flags por defecto a 'N' (fecha entrega, descripcion
     //    ampliada, crear articulos). LEFT JOIN: si la empresa no se migro,
@@ -270,7 +270,7 @@ begin
       'WHERE f.USUARIO_ALTA = :u';
     q.ParamByName('u').AsString := Eng.Usuario;
     q.ExecSQL;
-    Eng.Log('  facturas: datos de empresa emisora y flags (N) rellenados.');
+    Eng.Registro.Log('  facturas: datos de empresa emisora y flags (N) rellenados.');
     // 1b) Datos del CLIENTE denormalizados en la cabecera (razon social,
     //     NIF, contacto y direccion), desde fza_clientes. JOIN (no LEFT):
     //     las facturas a publico/anonimo (cliente '0' o inexistente) no
@@ -291,7 +291,7 @@ begin
       'WHERE f.USUARIO_ALTA = :u';
     q.ParamByName('u').AsString := Eng.Usuario;
     q.ExecSQL;
-    Eng.Log('  facturas: datos de cliente rellenados.');
+    Eng.Registro.Log('  facturas: datos de cliente rellenados.');
     // El enlace MOVIMIENTO -> FACTURA (UPDATE masivo sobre
     // fza_movimientos_almacen) ya NO se hace aqui: vive en el dominio
     // independiente MigrarEnlaceMovimientosFacturas, que corre el ultimo para
@@ -305,7 +305,7 @@ end;
 //  Migrador principal
 // =========================================================================
 
-procedure MigrarFacturas(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarFacturas(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cWhere =
     'WHERE c.TipoDoc = ''VE'' AND ISNULL(c.Tipo, '''') <> ''C''';
@@ -433,23 +433,23 @@ begin
   // una por operación, sin agrupar) de líneas (occajarp, cada una
   // independiente) ningún cursor ordena y la barra avanza desde la fila 1.
   // --- PASO 1: cabeceras (occaj → fza_facturas) ---
-  bulkFac := TBulkInsert.Create(Eng.ConDst, 'fza_facturas', cColsFac, 2000);
+  bulkFac := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_facturas', cColsFac, 2000);
   qCab := NuevoQOrigen(Eng, cSelCab);
   qCab.UniDirectional := True;
   try
-    Eng.Log('  facturas 1/2: cabeceras (occaj)...');
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Registro.Log('  facturas 1/2: cabeceras (occaj)...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.occaj c ' + cWhere));
     qCab.Open;
     while not qCab.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en Facturas (cabeceras)...');
+        Eng.Registro.Log('  Cancelacion detectada en Facturas (cabeceras)...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       iEmp  := qCab.FieldByName('Empresa').AsInteger;
       iAlm  := qCab.FieldByName('Almacen').AsInteger;
       iCaja := qCab.FieldByName('Caja').AsInteger;
@@ -514,7 +514,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('factura', sSerieFac + '/' + sNumFac, E.Message,
+          Eng.Registro.LogError('factura', sSerieFac + '/' + sNumFac, E.Message,
             '', 'requiere Almacenes/Clientes migrados');
         end;
       end;
@@ -526,13 +526,13 @@ begin
     qCab.Free;
   end;
   // --- PASO 2: líneas (occajarp → fza_facturas_lineas) ---
-  bulkLin := TBulkInsert.Create(Eng.ConDst, 'fza_facturas_lineas',
+  bulkLin := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_facturas_lineas',
                                 cColsLin, 2000);
   qLin := NuevoQOrigen(Eng, cSelLin);
   qLin.UniDirectional := True;
   try
-    Eng.Log('  facturas 2/2: lineas (occajarp)...');
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Registro.Log('  facturas 2/2: lineas (occajarp)...');
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.occajarp l ' +
       'INNER JOIN dbo.occaj c ON c.Empresa = l.Empresa ' +
       '                      AND c.Almacen = l.Almacen ' +
@@ -541,13 +541,13 @@ begin
     qLin.Open;
     while not qLin.Eof do
     begin
-      if (Stats.Leidas mod 1000 = 0) and Eng.IsCancelado then
+      if (Stats.Leidas mod 1000 = 0) and Eng.Cancelacion.EstaCancelada then
       begin
-        Eng.Log('  Cancelacion detectada en Facturas (lineas)...');
+        Eng.Registro.Log('  Cancelacion detectada en Facturas (lineas)...');
         Break;
       end;
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       iEmp  := qLin.FieldByName('Empresa').AsInteger;
       iAlm  := qLin.FieldByName('Almacen').AsInteger;
       iCaja := qLin.FieldByName('Caja').AsInteger;
@@ -611,7 +611,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('factura_linea', sSerieFac + '/' + sNumFac,
+          Eng.Registro.LogError('factura_linea', sSerieFac + '/' + sNumFac,
             E.Message, Format('linea=%d',
               [qLin.FieldByName('NroLinea').AsInteger]), '');
         end;
@@ -628,19 +628,19 @@ begin
   // dejaba fza_facturas VACIA; con el commit previo las facturas quedan
   // guardadas pase lo que pase. El enlace pesado (movimientos) ya no esta
   // aqui: corre en su propio dominio al final.
-  Eng.ConDst.Commit;
-  if not Eng.IsCancelado then
+  Eng.Datos.ConexionDestino.Commit;
+  if not Eng.Cancelacion.EstaCancelada then
   begin
     try
       EnlazarFacturas(Eng);
     except
       on E: Exception do
-        Eng.LogError('facturas_enlace', '', E.Message, '',
+        Eng.Registro.LogError('facturas_enlace', '', E.Message, '',
           'enlace post-insercion fallido; las facturas YA estan guardadas');
     end;
   end;
   // Dejamos una transaccion activa para el Commit final del motor.
-  Eng.ConDst.StartTransaction;
+  Eng.Datos.ConexionDestino.StartTransaction;
 end;
 
 // =========================================================================
@@ -656,14 +656,14 @@ end;
 //  (cualquier linea migrada con NUMERO_MOV_FACLIN). Es idempotente y
 //  cancelable: si se interrumpe, las facturas YA estan importadas y este
 //  enlace se puede relanzar solo.
-procedure MigrarEnlaceMovimientosFacturas(Eng: TMigEngine;
+procedure MigrarEnlaceMovimientosFacturas(const Eng: IContextoMigracion;
                                           var Stats: TMigStats);
 var
   q: TUniQuery;
 begin
   // Salimos de la transaccion del dominio: trabajamos en autocommit para no
   // mantener un bloqueo gigante durante todo el UPDATE.
-  Eng.ConDst.Commit;
+  Eng.Datos.ConexionDestino.Commit;
   try
     // Indice que permite conducir desde la linea (pocas filas) y resolver el
     // movimiento por su PK (NUMERO_MOV), en vez de escanear toda la tabla de
@@ -672,7 +672,7 @@ begin
       '`NUMERO_MOV_FACLIN`');
     q := TUniQuery.Create(nil);
     try
-      q.Connection := Eng.ConDst;
+      q.Connection := Eng.Datos.ConexionDestino;
       // SOLO SIMPLIFICADAS: en el ticket la venta ES la factura, asi que el
       // movimiento le pertenece. En venta mayor NO se toca, porque el stock se
       // mueve en el ALBARAN (su pestana usa TIPO_DOC_REF_MOV='AV'); reasignarlo
@@ -688,7 +688,7 @@ begin
       // para no alterar el calculo de stock.
       // Se rellenan tambien las columnas *_DOC_REF_MOV (trazabilidad / rejilla
       // de movimientos del articulo). STRAIGHT_JOIN conduce desde la linea.
-      Eng.Log('  enlazando movimientos con su factura simplificada...');
+      Eng.Registro.Log('  enlazando movimientos con su factura simplificada...');
       q.SQL.Text :=
         'UPDATE fza_facturas_lineas l ' +
         'STRAIGHT_JOIN fza_facturas f ' +
@@ -710,7 +710,7 @@ begin
       q.ParamByName('u').AsString := Eng.Usuario;
       q.ExecSQL;
       Inc(Stats.Insertadas);
-      Eng.Log('  movimientos de simplificadas enlazados a su factura.');
+      Eng.Registro.Log('  movimientos de simplificadas enlazados a su factura.');
     finally
       q.Free;
     end;
@@ -718,13 +718,28 @@ begin
     on E: Exception do
     begin
       Inc(Stats.Errores);
-      Eng.LogError('enlace_mov_facturas', '', E.Message, '',
+      Eng.Registro.LogError('enlace_mov_facturas', '', E.Message, '',
         'las facturas YA estan importadas; este enlace es idempotente y se '
         + 'puede relanzar solo');
     end;
   end;
   // Dejamos una transaccion activa para el Commit final del motor.
-  Eng.ConDst.StartTransaction;
+  Eng.Datos.ConexionDestino.StartTransaction;
 end;
+
+initialization
+  RegistrarMigracion(
+    'facturas',
+    'Facturas de venta (occajarp)',
+    'dbo.occaj/occajarp → facturas y líneas',
+    ['ventas', 'movimientos'],
+    MigrarFacturas);
+  RegistrarMigracion(
+    'enlace_mov_facturas',
+    'Enlace movimientos <-> facturas',
+    'líneas de factura → movimientos de almacén',
+    ['facturas', 'facturas_venta_mayor', 'remesas_compra',
+     'vales', 'arqueos'],
+    MigrarEnlaceMovimientosFacturas);
 
 end.

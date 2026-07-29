@@ -946,7 +946,7 @@ begin
         FPasswordConexion,
         saveDialog.FileName,
         True,
-        AnsiString(FPasswordConexion));
+        FPasswordConexion);
       Worker.OnProgreso := WorkerProgreso;
       Worker.OnFinalizar := BackupFinalizar;
       FCancelaOperacionSolicitada := False;
@@ -966,7 +966,7 @@ var
   unqryTestBD       : TUniQuery;
   Worker            : TRestoreWorker;
   bDesencriptar     : Boolean;
-  sPassDesencriptar : AnsiString;
+  sPassDesencriptar : string;
 begin
   bDesencriptar := False;
   sPassDesencriptar := '';
@@ -1007,7 +1007,7 @@ begin
     if SameText(ExtractFileExt(openDialog.FileName), '.crypt') then
     begin
       bDesencriptar := True;
-      sPassDesencriptar := AnsiString(FPasswordConexion);
+      sPassDesencriptar := FPasswordConexion;
     end;
     MostrarBarraProgreso('Preparando restauración...');
     Worker := TRestoreWorker.Create(

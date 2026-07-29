@@ -45,15 +45,15 @@ unit inLibMigInventarios;
 interface
 
 uses
-  UMigEngine;
+  UMigEngine, UMigCatalogo;
 
-procedure MigrarInventarios(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarInventarios(const Eng: IContextoMigracion; var Stats: TMigStats);
 // Migra los inventarios/recuentos REALES del legacy (dbo.ocinv + ocinvarp)
 // como documentos en fza_inventarios + lineas. Sus movimientos de
 // regularizacion NO se generan aqui: ya estan en ocmovarp y los trae el
 // dominio 'movimientos', enlazados por Serie + Numero. Complementario, no
 // alternativo, al inventario inicial sintetico de arriba.
-procedure MigrarInventariosLegacy(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarInventariosLegacy(const Eng: IContextoMigracion; var Stats: TMigStats);
 
 implementation
 
@@ -93,7 +93,7 @@ end;
 
 // Inserta una cabecera de inventario si no existe ya. Devuelve True si
 // la insertó.
-function InsertarCabecera(Eng: TMigEngine; const sEmp, sAlm,
+function InsertarCabecera(Eng: IContextoMigracion; const sEmp, sAlm,
                           sSerie, sNumero: string;
                           fTotalDif: Double): Boolean;
 var qChk, qIns: TUniQuery;
@@ -101,7 +101,7 @@ begin
   qChk := TUniQuery.Create(nil);
   qIns := TUniQuery.Create(nil);
   try
-    qChk.Connection := Eng.ConDst;
+    qChk.Connection := Eng.Datos.ConexionDestino;
     qChk.SQL.Text   :=
       'SELECT 1 FROM fza_inventarios ' +
       'WHERE CODIGO_EMP_INV = :e AND CODIGO_ALM_INV = :a ' +
@@ -114,7 +114,7 @@ begin
     if not qChk.IsEmpty then Exit(False);
     qChk.Close;
 
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text   :=
       'INSERT INTO fza_inventarios (' +
         'CODIGO_EMP_INV, CODIGO_ALM_INV, SERIE_INV, NUMERO_INV, ' +
@@ -143,7 +143,7 @@ begin
   end;
 end;
 
-procedure InsertarLinea(Eng: TMigEngine; const sEmp, sAlm, sSerie,
+procedure InsertarLinea(Eng: IContextoMigracion; const sEmp, sAlm, sSerie,
                         sNumero, sLinea, sCodArt, sCodUnidad,
                         sDesc: string;
                         fCantidad, fPrecioMedio: Double);
@@ -151,7 +151,7 @@ var qIns: TUniQuery;
 begin
   qIns := TUniQuery.Create(nil);
   try
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text   :=
       'INSERT INTO fza_inventarios_lineas (' +
         'CODIGO_EMP_INVLIN, CODIGO_ALM_INVLIN, SERIE_INV_INVLIN, ' +
@@ -187,7 +187,7 @@ end;
 //  Migrador principal
 // =========================================================================
 
-procedure MigrarInventarios(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarInventarios(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   // Resolvemos el codigo interno de color via ocartcol. Filtramos las
   // filas con stock 0 para mantener el inventario reducido; los SKUs con
@@ -269,10 +269,10 @@ begin
   EjecutarSQL(Eng, 'DELETE FROM fza_movimientos_almacen ' +
     'WHERE NUMERO_MOV LIKE ''IV-MIG%''');
   qSrc    := NuevoQOrigen(Eng, cSelectSrc);
-  bulkMov := TBulkInsert.Create(Eng.ConDst, 'fza_movimientos_almacen',
+  bulkMov := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_movimientos_almacen',
                                 cColsMov, BATCH_MOV);
   try
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocartacp ' +
       'WHERE UnidadesStock IS NOT NULL AND UnidadesStock <> 0 ' +
       '  AND LTRIM(RTRIM(Articulo)) <> '''''));
@@ -286,7 +286,7 @@ begin
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       iEmp       := qSrc.FieldByName('Empresa').AsInteger;
       iAlm       := qSrc.FieldByName('Almacen').AsInteger;
       sArt       := Trim(qSrc.FieldByName('Articulo').AsString);
@@ -318,7 +318,7 @@ begin
         // previa).
         if not bCabecera then
         begin
-          Eng.LogSalto('inventario', sEmp + '/' + sAlm,
+          Eng.Registro.LogSalto('inventario', sEmp + '/' + sAlm,
             'cabecera ya existe, se omite todo el almacen',
             '', sNumero);
         end;
@@ -373,7 +373,7 @@ begin
         on E: Exception do
         begin
           Inc(Stats.Errores);
-          Eng.LogError('inventario_linea', sCodUnidad, E.Message,
+          Eng.Registro.LogError('inventario_linea', sCodUnidad, E.Message,
             Format('emp=%s alm=%s linea=%.8d cantidad=%g',
                    [sEmp, sAlm, iLinea, fCantidad]),
             'la linea requiere que el almacen y el SKU ya esten ' +
@@ -387,7 +387,7 @@ begin
     // regularizaciones 'IV' recien creadas), igual que hace 'movimientos'.
     // OJO: inventarios y movimientos son ALTERNATIVOS — si corres ambos el
     // stock se duplica (cada uno reconstruye desde TODO el historico activo).
-    if not Eng.IsCancelado then
+    if not Eng.Cancelacion.EstaCancelada then
       ReconstruirStockDesdeMovimientos(Eng);
   finally
     bulkMov.Free;
@@ -405,7 +405,7 @@ end;
 
 // Inserta la cabecera del inventario legacy si no existe. Devuelve True si
 // la inserto (False = ya existia, se omite el inventario entero).
-function InsertarCabeceraLegacy(Eng: TMigEngine; const sEmp, sAlm, sSerie,
+function InsertarCabeceraLegacy(Eng: IContextoMigracion; const sEmp, sAlm, sSerie,
                                 sNumero, sDesc: string;
                                 dFecha: TDateTime): Boolean;
 var qChk, qIns: TUniQuery;
@@ -413,7 +413,7 @@ begin
   qChk := TUniQuery.Create(nil);
   qIns := TUniQuery.Create(nil);
   try
-    qChk.Connection := Eng.ConDst;
+    qChk.Connection := Eng.Datos.ConexionDestino;
     qChk.SQL.Text   :=
       'SELECT 1 FROM fza_inventarios ' +
       'WHERE CODIGO_EMP_INV = :e AND CODIGO_ALM_INV = :a ' +
@@ -427,7 +427,7 @@ begin
     qChk.Close;
     if Result then
     begin
-      qIns.Connection := Eng.ConDst;
+      qIns.Connection := Eng.Datos.ConexionDestino;
       qIns.SQL.Text   :=
         'INSERT INTO fza_inventarios (' +
           'CODIGO_EMP_INV, CODIGO_ALM_INV, SERIE_INV, NUMERO_INV, ' +
@@ -452,7 +452,7 @@ begin
   end;
 end;
 
-procedure InsertarLineaLegacy(Eng: TMigEngine; const sEmp, sAlm, sSerie,
+procedure InsertarLineaLegacy(Eng: IContextoMigracion; const sEmp, sAlm, sSerie,
                               sNumero, sLinea, sCodArt, sCodUnidad,
                               sDesc: string;
                               fTeorica, fFisica, fDif, fPre,
@@ -461,7 +461,7 @@ var qIns: TUniQuery;
 begin
   qIns := TUniQuery.Create(nil);
   try
-    qIns.Connection := Eng.ConDst;
+    qIns.Connection := Eng.Datos.ConexionDestino;
     qIns.SQL.Text   :=
       'INSERT INTO fza_inventarios_lineas (' +
         'CODIGO_EMP_INVLIN, CODIGO_ALM_INVLIN, SERIE_INV_INVLIN, ' +
@@ -496,7 +496,7 @@ begin
   end;
 end;
 
-procedure MigrarInventariosLegacy(Eng: TMigEngine; var Stats: TMigStats);
+procedure MigrarInventariosLegacy(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   // Cabecera (ocinv) + lineas (ocinvarp). Unidades = stock teorico al
   // recuento; UnidadesNuevas = recuento fisico. Resolvemos el color con el
@@ -557,7 +557,7 @@ begin
     // a ocinv descarta lineas huerfanas (ocinvarp sin cabecera ocinv). Si
     // contaramos solo ocinvarp, el total saldria mayor que las filas reales
     // y la barra nunca llegaria al 100% (pareceria colgado al final).
-    Eng.SetTotal(Eng.ContarOrigen(
+    Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocinvarp arp ' +
       'JOIN dbo.ocinv inv ON inv.Empresa = arp.Empresa ' +
       '                  AND inv.Ejercicio = arp.Ejercicio ' +
@@ -571,7 +571,7 @@ begin
     while not qSrc.Eof do
     begin
       Inc(Stats.Leidas);
-      Eng.IncRow;
+      Eng.Progreso.Avanzar;
       iEmp       := qSrc.FieldByName('Empresa').AsInteger;
       sSerie     := Trim(qSrc.FieldByName('Serie').AsString);
       iNro       := qSrc.FieldByName('NroInventario').AsInteger;
@@ -606,7 +606,7 @@ begin
         bCab := InsertarCabeceraLegacy(Eng, sEmp, sAlm, sSerie, sNumero,
                                        sObs, dFecha);
         if not bCab then
-          Eng.LogSalto('inventario_legacy',
+          Eng.Registro.LogSalto('inventario_legacy',
             sEmp + '/' + sSerie + '/' + sNumero,
             'cabecera ya existe, se omite el inventario', '', sNumero);
       end;
@@ -624,7 +624,7 @@ begin
           on E: Exception do
           begin
             Inc(Stats.Errores);
-            Eng.LogError('inventario_legacy_linea', sCodUnidad, E.Message,
+            Eng.Registro.LogError('inventario_legacy_linea', sCodUnidad, E.Message,
               Format('emp=%s serie=%s nro=%s', [sEmp, sSerie, sNumero]),
               'la linea requiere que el almacen y el SKU ya esten ' +
               'migrados — corre antes Almacenes y SKUs');
@@ -639,5 +639,19 @@ begin
     qSrc.Free;
   end;
 end;
+
+initialization
+  RegistrarMigracion(
+    'inventarios',
+    'Inventario inicial (stock)',
+    'dbo.ocartacp → inventario, movimientos y stock',
+    ['almacenes', 'skus'],
+    MigrarInventarios);
+  RegistrarMigracion(
+    'inventarios_legacy',
+    'Inventarios legacy (recuentos)',
+    'dbo.ocinv/ocinvarp → inventarios y líneas',
+    ['almacenes', 'skus'],
+    MigrarInventariosLegacy);
 
 end.
