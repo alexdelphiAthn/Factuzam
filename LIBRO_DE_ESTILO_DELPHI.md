@@ -757,6 +757,20 @@ Reglas:
 
 - `inLib*` y `UniData*` no usan ninguna unidad `inMto*`, ni en
   `interface` ni en `implementation`.
+- **`inLib*` no usa ninguna unidad `UniData*`.** La flecha del diagrama
+  va en un solo sentido: la persistencia depende del dominio, nunca al
+  revés. Una librería que necesita datos recibe un contrato
+  `inLib*Intf` por constructor o por parámetro; no instancia un
+  repositorio ni sabe que existe UniDAC.
+- Quien construye los repositorios es la raíz de composición: `fzam.dpr`,
+  `TfrmMtoPrincipal`, `TfrmBase` y `TdmBase`. Una unidad `inLib*` puede
+  ser **factoría** —ensamblar piezas de dominio— pero recibe los
+  adaptadores de persistencia ya construidos. Si una factoría necesita
+  `uses UniData*`, está haciendo de raíz de composición y no le
+  corresponde.
+- Una fachada `inLib*` que solo re-exporta tipos de una unidad
+  `UniData*` no es una capa: es un préstamo de nombre. Los tipos viven
+  en `inLib*Intf` y los consumidores los toman de ahí.
 - Una unidad `inLib*Intf` declara contratos pequeños y tipos estables. No
   usa formularios, data modules ni implementaciones concretas.
 - Los formularios pueden conocer data modules y librerías. La capa inferior
@@ -771,6 +785,9 @@ La barrera automática se ejecuta desde la raíz:
 ```powershell
 .\scripts\comprobar_dependencias_capas.ps1
 ```
+
+El script vigila **las dos direcciones**: `inLib*`/`UniData*` → `inMto*`
+y `inLib*` → `UniData*`. Ambos topes están en 0 y solo pueden bajar.
 
 No se añaden excepciones ni listas blancas.
 
@@ -988,6 +1005,9 @@ Estas son convenciones que ya están en el código y que conviene
 ✗  Estado global mutable, incluso dentro de inLibGlobalVar
 ✗  Variables globales frmMtoXxx o dmmXxx en código nuevo
 ✗  Unidades inLib* o UniData* usando unidades inMto*
+✗  Unidades inLib* usando unidades UniData*
+✗  Librerías que instancian un repositorio en vez de recibirlo
+✗  Fachadas inLib* que solo re-exportan tipos de UniData*
 ✗  uses circulares — romper moviendo a uses de implementation
 ✗  Nombres de unidad con tilde o eñe en el fichero
 ✗  TForm con código de negocio: la lógica va a inLib*

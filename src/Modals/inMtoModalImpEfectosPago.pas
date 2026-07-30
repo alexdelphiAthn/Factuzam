@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalImpEfectosPago                                      }
 {    Tipo:       Formulario (Modal)                                            }
@@ -78,6 +78,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsgFacturas;
+
 { TfrmPrintEfectosPago }
 
 function TfrmPrintEfectosPago.FiltrosUsados: TFiltrosReport;
@@ -120,10 +123,11 @@ begin
     FrgTipoFecha.Top := 12;
     FrgTipoFecha.Width := 155;
     FrgTipoFecha.Height := 94;
-    FrgTipoFecha.Caption := ' Fecha ';
-    FrgTipoFecha.Properties.Items.Add.Caption := 'Documento';
-    FrgTipoFecha.Properties.Items.Add.Caption := 'Valor';
-    FrgTipoFecha.Properties.Items.Add.Caption := 'Vencimiento';
+    FrgTipoFecha.Caption := SCaptionGrupoFecha;
+    FrgTipoFecha.Properties.Items.Add.Caption := SCaptionFechaDocumento;
+    FrgTipoFecha.Properties.Items.Add.Caption := SCaptionFechaValor;
+    FrgTipoFecha.Properties.Items.Add.Caption :=
+    SCaptionFechaVencimiento;
     FrgTipoFecha.ItemIndex := 2;
     FrgSituacion := TcxRadioGroup.Create(Self);
     FrgSituacion.Parent := TabFechas;
@@ -131,18 +135,20 @@ begin
     FrgSituacion.Top := 12;
     FrgSituacion.Width := 150;
     FrgSituacion.Height := 122;
-    FrgSituacion.Caption := ' Situación ';
-    FrgSituacion.Properties.Items.Add.Caption := 'Pagados';
-    FrgSituacion.Properties.Items.Add.Caption := 'Impagados';
-    FrgSituacion.Properties.Items.Add.Caption := 'Pendientes';
-    FrgSituacion.Properties.Items.Add.Caption := 'Todos';
+    FrgSituacion.Caption := SCaptionGrupoSituacion;
+    FrgSituacion.Properties.Items.Add.Caption := SCaptionSituacionPagados;
+    FrgSituacion.Properties.Items.Add.Caption :=
+    SCaptionSituacionImpagados;
+    FrgSituacion.Properties.Items.Add.Caption :=
+    SCaptionSituacionPendientes;
+    FrgSituacion.Properties.Items.Add.Caption := SCaptionSituacionTodos;
     FrgSituacion.ItemIndex := 3;
     lblDesde := TcxLabel.Create(Self);
     lblDesde.Parent := TabFechas;
     lblDesde.Transparent := True;
     lblDesde.Left := 16;
     lblDesde.Top := 132;
-    lblDesde.Caption := 'Nº efecto desde:';
+    lblDesde.Caption := SCaptionNumEfectoDesde;
     FtxtNumeroDesde := TcxTextEdit.Create(Self);
     FtxtNumeroDesde.Parent := TabFechas;
     FtxtNumeroDesde.Left := 16;
@@ -153,7 +159,7 @@ begin
     lblHasta.Transparent := True;
     lblHasta.Left := 190;
     lblHasta.Top := 132;
-    lblHasta.Caption := 'Nº efecto hasta:';
+    lblHasta.Caption := SCaptionNumEfectoHasta;
     FtxtNumeroHasta := TcxTextEdit.Create(Self);
     FtxtNumeroHasta.Parent := TabFechas;
     FtxtNumeroHasta.Left := 190;
@@ -164,7 +170,7 @@ begin
     FchkSoloTotales.Left := 355;
     FchkSoloTotales.Top := 154;
     FchkSoloTotales.Width := 170;
-    FchkSoloTotales.Caption := 'Mostrar sólo totales';
+    FchkSoloTotales.Caption := SCaptionMostrarSoloTotales;
   end;
   FclbTotales := CrearTabChecklist('Totales');
   CargarTotales;

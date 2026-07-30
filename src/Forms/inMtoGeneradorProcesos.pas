@@ -469,21 +469,21 @@ begin
 
   // Botón Deshacer
   Item := TMenuItem.Create(FPopMenuEditores);
-  Item.Caption := '&Deshacer';
+  Item.Caption := SCaptionMenuDeshacer;
   Item.ShortCut := TextToShortCut('Ctrl+Z');
   Item.OnClick := ActionDeshacerExecute; // Apunta al método de la acción
   FPopMenuEditores.Items.Add(Item);
 
   // Botón Rehacer
   Item := TMenuItem.Create(FPopMenuEditores);
-  Item.Caption := '&Rehacer';
+  Item.Caption := SCaptionMenuRehacer;
   Item.ShortCut := TextToShortCut('Shift+Ctrl+Z');
   Item.OnClick := ActionRehacerExecute; // Apunta al método de la acción
   FPopMenuEditores.Items.Add(Item);
 
   // Botón Borrar Línea
   Item := TMenuItem.Create(FPopMenuEditores);
-  Item.Caption := '&Borrar Línea';
+  Item.Caption := SCaptionMenuBorrarLinea;
   Item.ShortCut := TextToShortCut('Ctrl+Y');
   Item.OnClick := ActionBorrarLineaExecute; // Apunta al método de la acción
   FPopMenuEditores.Items.Add(Item);
@@ -495,21 +495,21 @@ begin
 
 // Botón Cortar
   Item := TMenuItem.Create(FPopMenuEditores);
-  Item.Caption := 'Cor&tar';
+  Item.Caption := SCaptionMenuCortar;
   Item.ShortCut := TextToShortCut('Ctrl+X');
   Item.OnClick := ActionCortarExecute;
   FPopMenuEditores.Items.Add(Item);
 
   // Botón Copiar
   Item := TMenuItem.Create(FPopMenuEditores);
-  Item.Caption := '&Copiar';
+  Item.Caption := SCaptionMenuCopiar;
   Item.ShortCut := TextToShortCut('Ctrl+C');
   Item.OnClick := ActionCopiarExecute;
   FPopMenuEditores.Items.Add(Item);
 
   // Botón Pegar
   Item := TMenuItem.Create(FPopMenuEditores);
-  Item.Caption := '&Pegar';
+  Item.Caption := SCaptionMenuPegar;
   Item.ShortCut := TextToShortCut('Ctrl+V');
   Item.OnClick := ActionPegarExecute;
   FPopMenuEditores.Items.Add(Item);
@@ -733,11 +733,9 @@ begin
   inherited;
   dlgAbrir := TOpenDialog.Create(Self);
   try
-    dlgAbrir.Title      := 'Abrir Script SQL';
+    dlgAbrir.Title      := STituloAbrirScriptSql;
     dlgAbrir.InitialDir := GetSpecialFolderPath(CSIDL_MYDOCUMENTS);
-    dlgAbrir.Filter     := 'Scripts SQL (*.sql)|*.sql|' +
-                           'Archivos de texto (*.txt)|*.txt|' +
-                           'Todos los archivos (*.*)|*.*';
+    dlgAbrir.Filter     := SCaptionFiltroScriptsSql;
     dlgAbrir.DefaultExt := 'sql';
     dlgAbrir.Options    := dlgAbrir.Options + [ofFileMustExist];
     if not dlgAbrir.Execute then
@@ -928,7 +926,7 @@ begin
   btnCopiar := TcxButton.Create(Result);
   btnCopiar.Parent := pnlLateral;
   btnCopiar.SetBounds(6, 8, 106, 34);
-  btnCopiar.Caption := 'Copiar datos';
+  btnCopiar.Caption := SCaptionCopiarDatos;
   // El Tag guarda la vista que copiara el manejador compartido
   btnCopiar.Tag := NativeInt(tvDatos);
   btnCopiar.OnClick := btnCopiarDatosDinClick;

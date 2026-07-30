@@ -16,7 +16,7 @@ unit inLibFacturasBorrado;
 interface
 
 uses
-  Uni, inLibFacturasServiciosIntf;
+  Uni, inLibFacturasServiciosIntf, inLibVerifactuColaIntf;
 
 type
   TServicioBorradoFactura = class(
@@ -24,6 +24,7 @@ type
     IServicioBorradoFactura)
   private
     FConexion: TUniConnection;
+    FServicioVerifactuCola: IServicioVerifactuCola;
     FTransaccionPropia: Boolean;
     function TablaEfectosExiste: Boolean;
     function TieneEfectosCobrados(
@@ -37,7 +38,9 @@ type
     procedure BorrarMovimientos(
       const ASerie, ANumero: string);
   public
-    constructor Create(AConexion: TUniConnection);
+    constructor Create(
+      AConexion: TUniConnection;
+      const AServicioVerifactuCola: IServicioVerifactuCola);
     destructor Destroy; override;
     function Validar(
       const ASerie, ANumero, AFase: string
@@ -55,10 +58,14 @@ uses
   System.SysUtils, inLibVerifactuCola;
 
 constructor TServicioBorradoFactura.Create(
-  AConexion: TUniConnection);
+  AConexion: TUniConnection;
+  const AServicioVerifactuCola: IServicioVerifactuCola);
 begin
+  if not Assigned(AServicioVerifactuCola) then
+    raise EArgumentNilException.Create('AServicioVerifactuCola');
   inherited Create;
   FConexion := AConexion;
+  FServicioVerifactuCola := AServicioVerifactuCola;
   FTransaccionPropia := False;
 end;
 
@@ -201,19 +208,11 @@ end;
 
 procedure TServicioBorradoFactura.BorrarMovimientos(
   const ASerie, ANumero: string);
-var
-  Qry: TUniQuery;
 begin
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := FConexion;
-    TVerifactuCola.BorrarMovimientosFactura(
-      Qry,
-      ASerie,
-      ANumero);
-  finally
-    FreeAndNil(Qry);
-  end;
+  TVerifactuCola.BorrarMovimientosFactura(
+    FServicioVerifactuCola,
+    ASerie,
+    ANumero);
 end;
 
 function TServicioBorradoFactura.Preparar(

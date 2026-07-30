@@ -6,7 +6,9 @@ uses
   UParametrosPrueba in 'UParametrosPrueba.pas',
   inLibParametrosIntf in '..\Lib\inLibParametrosIntf.pas',
   inLibFactuzamApi in '..\Lib\inLibFactuzamApi.pas',
-  inLibVentasWsJson in '..\Lib\inLibVentasWsJson.pas';
+  inLibVentasWsJsonIntf in '..\Lib\inLibVentasWsJsonIntf.pas',
+  inLibVentasWsJson in '..\Lib\inLibVentasWsJson.pas',
+  UniDataVentasWsJson in '..\DataModules\UniDataVentasWsJson.pas';
 
 begin
   Application.Initialize;

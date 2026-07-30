@@ -26,6 +26,7 @@ function CrearGestorExcepcionesAplicacion(
 implementation
 
 uses
+  inLibMsgComun,
   Winapi.Windows,
   System.SysUtils,
   Vcl.Forms,
@@ -153,7 +154,7 @@ var
 begin
   Dialogo := TForm.Create(nil);
   try
-    Dialogo.Caption := 'Se ha producido un error';
+    Dialogo.Caption := STituloErrorProducido;
     Dialogo.Position := poScreenCenter;
     Dialogo.Width := 760;
     Dialogo.Height := 520;
@@ -166,9 +167,7 @@ begin
     Cabecera.AutoSize := False;
     Cabecera.Height := 28;
     Cabecera.Layout := tlCenter;
-    Cabecera.Caption :=
-      '  Detalle completo del error. Usa "Copiar al ' +
-      'portapapeles" para pegarlo en un reporte.';
+    Cabecera.Caption := SCaptionDetalleErrorCabecera;
     PanelBotones := TPanel.Create(Dialogo);
     PanelBotones.Parent := Dialogo;
     PanelBotones.Align := alBottom;
@@ -176,7 +175,7 @@ begin
     PanelBotones.BevelOuter := bvNone;
     BotonCerrar := TButton.Create(Dialogo);
     BotonCerrar.Parent := PanelBotones;
-    BotonCerrar.Caption := 'Cerrar';
+    BotonCerrar.Caption := SCaptionCerrar;
     BotonCerrar.Width := 100;
     BotonCerrar.Height := 32;
     BotonCerrar.Top := 8;
@@ -190,7 +189,7 @@ begin
     BotonCerrar.Cancel := True;
     BotonCopiar := TButton.Create(Dialogo);
     BotonCopiar.Parent := PanelBotones;
-    BotonCopiar.Caption := 'Copiar al portapapeles';
+    BotonCopiar.Caption := SCaptionCopiarPortapapeles;
     BotonCopiar.Width := 190;
     BotonCopiar.Height := 32;
     BotonCopiar.Top := 8;

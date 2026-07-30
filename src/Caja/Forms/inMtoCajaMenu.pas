@@ -282,7 +282,7 @@ begin
     end
     else
     begin
-      lblEmpresa.Caption := Format('Empresa %s - Almacén %s - Caja %s',
+      lblEmpresa.Caption := Format(SCaptionEmpresaAlmacenCaja,
                                    [FEmpresa, FAlmacen, FCaja]);
       FVentasCal.Reconfigurar(FEmpresa, FAlmacen, FCaja);
     end;
@@ -447,7 +447,7 @@ begin
       FEmpresa := frm.qrySeleccion.FieldByName('Empresa').AsString;
       FAlmacen := frm.qrySeleccion.FieldByName('Almacen').AsString;
       FCaja    := frm.qrySeleccion.FieldByName('Caja').AsString;
-      lblEmpresa.Caption := Format('Empresa %s - Almacén %s - Caja %s',
+      lblEmpresa.Caption := Format(SCaptionEmpresaAlmacenCaja,
                                    [FEmpresa, FAlmacen, FCaja]);
       RecargarCalendario;
     end
@@ -641,8 +641,8 @@ begin
   try
     oFormulario.PopupParent := Self;
     oFormulario.Tag := 1;
-    oFormulario.Caption := Format('Operación 1 - (Caja Real %s)',
-                                  [Self.FCaja]);
+    oFormulario.Caption := Format(STituloOperacionNCajaReal,
+                                  [1, Self.FCaja]);
     oOperacion.PrepararValores(
       Self.FEmpresa, Self.FAlmacen, Self.FCaja, Self.FFechaCaja);
     oFormulario.Show;
@@ -838,7 +838,7 @@ begin
     frmTraspaso := TfrmMtoOpeTraspaso.Create(Application, Permisos);
     try
       frmTraspaso.PopupParent := Self;
-      frmTraspaso.Caption := Format('Traspasos - (Almacén %s · Caja %s)',
+      frmTraspaso.Caption := Format(STituloTraspasosAlmacenCaja,
                                     [Self.FAlmacen, Self.FCaja]);
       frmTraspaso.PrepararValores(mtTraspaso, Self.FEmpresa, Self.FAlmacen,
                                   Self.FCaja, Self.FFechaCaja);

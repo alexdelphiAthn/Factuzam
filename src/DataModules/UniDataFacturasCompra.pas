@@ -147,7 +147,8 @@ uses
   System.Diagnostics, System.UITypes, Vcl.Dialogs,
   inLibComprasImpuestos,
   inLibData,
-  inLibArticulosValidador,
+  inLibArticulosValidadorIntf,
+  UniDataArticulosValidadorRepositorio,
   inLibMsgCompras;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}

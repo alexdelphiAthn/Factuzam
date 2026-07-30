@@ -18,10 +18,8 @@ unit inLibVerifactu;
 interface
 
 uses
-  System.SysUtils, Uni, frxClass, Data.DB, inLibParametrosIntf;
-
-type
-  TModoVerifactu = (mvSinVerifactu, mvVerifactu, mvNoVerifactu);
+  System.SysUtils, Uni, frxClass, Data.DB, inLibParametrosIntf,
+  inLibVerifactuTipos;
 
 const
   cModoVerifactuSin = 'SIN';

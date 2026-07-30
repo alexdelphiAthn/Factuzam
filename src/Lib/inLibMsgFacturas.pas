@@ -312,6 +312,77 @@ resourcestring
     'El último ticket de esa serie tiene fecha %s, posterior a la fecha de ' +
     'caja %s.' + sLineBreak +
     'Cambie la serie para emitir un ticket con esta fecha.';
+  // R03 - Diálogos de rectificativa en consulta de operaciones
+  STituloTipoRectificativa = 'Tipo de rectificativa';
+  SCaptionPorDiferencias = 'Por diferencias';
+  SCaptionSustitutiva = 'Sustitutiva';
+  STituloMovimientosAlmacen = 'Movimientos de almacén';
+  SCaptionEliminarOriginales = 'Eliminar originales';
+  SCaptionMantenerOriginales = 'Mantener originales';
+  // R05 - Terminología efectos/recibos y pestañas de borrador
+  SCaptionTabEfectos = '&3_Efectos';
+  SCaptionGenerarEfectos = 'Generar efectos';
+  SCaptionImprimirEfecto = 'Imprimir efecto';
+  SCaptionEfectoPendiente = '&Pendiente';
+  SCaptionEfectoCobrado = '&Cobrado';
+  SCaptionEfectoDevuelto = '&Devuelto';
+  SCaptionColNroBorradorEfecto = 'Nro Borrador Efecto';
+  SCaptionColSerieBorradorEfecto = 'Serie Borrador Efecto';
+  SCaptionColEfecto = 'Efecto';
+  SCaptionColTotalEfecto = 'Total efecto';
+  SCaptionColEstadoEfecto = 'Estado efecto';
+  SCaptionColFechaEmisionEfecto = 'Fecha emisión efecto';
+  SCaptionColFechaCobroEfecto = 'Fecha cobro';
+  SCaptionColReferenciaEfecto = 'Referencia';
+  SCaptionTabRecibos = '&3_Recibos';
+  SCaptionGenerarRecibos = 'Generar &Recibo/s';
+  SCaptionImprimirRecibo = 'Imprimir &Recibo';
+  SCaptionReciboEmitido = '&Emitido';
+  SCaptionReciboPagado = '&Pagado';
+  SCaptionReciboDevuelto = '&Devuelto';
+  SCaptionColNroBorradorRecibo = 'Nro Borrador Recibo';
+  SCaptionColSerieBorradorRecibo = 'Serie Borrador Recibo';
+  SCaptionColNroPlazo = 'Nro Plazo';
+  SCaptionColTotalRecibo = 'Total Recibo';
+  SCaptionColEstadoRecibo = 'Estado Recibo';
+  SCaptionColFechaExpedicionRecibo = 'Fecha Expedición Recibo';
+  SCaptionColFechaPagoRecibo = 'Fecha Pago Recibo';
+  SCaptionColLocalidadExpedicionRecibo = 'Localidad Expedición';
+  SCaptionTabLineasBorradorClasico = '&1_Lineas de Borrador [Clásico]';
+  SCaptionTabLineasBorradorSku = '&1_Lineas de Borrador [SKU]';
+  SCaptionTabLineasBorradorDesglose =
+    '&1_Lineas de Borrador [Desglose]';
+  SCaptionTabLineasBorradorTallasHoriz =
+    '&1_Lineas de Borrador [Tallas horiz.]';
+  STituloEmitirEDoc = 'Emitir eDoc';
+  SCaptionFiltroFacturae =
+    'Facturae firmado (*.xsig)|*.xsig|XML (*.xml)|*.xml';
+  SCaptionCargandoBorradores = 'Cargando borradores...';
+  SCaptionCargandoBorradoresProgreso = 'Cargando borradores: %s / %s';
+  // R09 - Facturación de albaranes por fechas
+  SCaptionCreandoBorradoresAlbaranes =
+    'Creando borradores de %d albaranes...';
+  SCaptionGeneradosBorradores = 'Generados %d borradores';
+  // R10 - Informe de efectos de pago
+  SCaptionGrupoFecha = ' Fecha ';
+  SCaptionFechaDocumento = 'Documento';
+  SCaptionFechaValor = 'Valor';
+  SCaptionFechaVencimiento = 'Vencimiento';
+  SCaptionGrupoSituacion = ' Situación ';
+  SCaptionSituacionPagados = 'Pagados';
+  SCaptionSituacionImpagados = 'Impagados';
+  SCaptionSituacionPendientes = 'Pendientes';
+  SCaptionSituacionTodos = 'Todos';
+  SCaptionNumEfectoDesde = 'Nº efecto desde:';
+  SCaptionNumEfectoHasta = 'Nº efecto hasta:';
+  SCaptionMostrarSoloTotales = 'Mostrar sólo totales';
+  // R11 - Selección de banco de empresa
+  SCaptionCuentaEmpresaPagoEfectos =
+    'Cuenta de la empresa para el PAGO (cargo) de los efectos:';
+  SCaptionCuentaEmpresaCobroRecibos =
+    'Cuenta de la empresa para el COBRO (ingreso) de los recibos:';
+  // R15 - Exportación de factura a Excel
+  SCaptionHojaFactura = 'Factura %s';
 implementation
 
 end.

@@ -1,4 +1,4 @@
-unit inMtoModalSesionDuplicado;
+﻿unit inMtoModalSesionDuplicado;
 
 {
   Modal de resolución de duplicado de código de artículo en una sesión.
@@ -67,6 +67,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsgCompras;
+
 procedure TfrmModalSesionDuplicado.FormCreate(Sender: TObject);
 begin
   inherited;
@@ -76,7 +79,8 @@ end;
 procedure TfrmModalSesionDuplicado.FormShow(Sender: TObject);
 begin
   inherited;
-  lblCodigoExistente.Caption := 'C'#243'digo existente: ' + FCodigoArt;
+  lblCodigoExistente.Caption := Format(SCaptionCodigoExistente,
+                                       [FCodigoArt]);
   lblDescripcionExistente.Caption := FDescripcion;
   txtCodigo.Text := FCodigoArt;
   rgAccion.ItemIndex := 0; // REUSAR por defecto

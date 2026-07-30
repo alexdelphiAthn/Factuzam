@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalGestionFiltros                                      }
 {    Tipo:       Formulario (Modal)                                            }
@@ -432,14 +432,11 @@ begin
   FControlFiltro.Enabled := bHayFiltro;
   if bHayFiltro and (not bEsPropio) then
   begin
-    lblCondiciones.Caption :=
-      'Condiciones del filtro compartido. Puede editarlas y guardar ' +
-      'una copia propia:';
+    lblCondiciones.Caption := SCaptionCondicionesFiltroCompartido;
   end
   else
   begin
-    lblCondiciones.Caption :=
-      'Condiciones del filtro seleccionado (puede editarlas):';
+    lblCondiciones.Caption := SCaptionCondicionesFiltroSeleccionado;
   end;
 end;
 

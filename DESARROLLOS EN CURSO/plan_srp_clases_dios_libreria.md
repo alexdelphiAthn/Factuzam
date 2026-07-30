@@ -1,4 +1,4 @@
-# Anexo SRP — Descomposición de las clases-dios de librería
+﻿# Anexo SRP — Descomposición de las clases-dios de librería
 
 Fecha de la línea base: 30/07/2026.
 
@@ -9,9 +9,9 @@ de ejecución: no sustituye a
 [`LIBRO_DE_ESTILO_DELPHI.md`](../LIBRO_DE_ESTILO_DELPHI.md) §14.4,
 §14.5, §14.7 y §14.9.
 
-Estado: **PLANIFICADO**. El piloto de compras descrito en §2 es trabajo
-preparatorio; ningún fascículo de este anexo se considera cerrado sin la
-evidencia exigida en §10.
+Estado: **EN CURSO**. L0 está completado; el piloto de compras descrito
+en §2 es trabajo preparatorio y C1-C7 puede avanzar en paralelo. Ningún
+fascículo se considera cerrado sin la evidencia exigida en §10.
 
 ---
 
@@ -181,9 +181,9 @@ dependencia son obligatorios.
 
 ## 5. Trinquetes
 
-### 5.1 Instrumentación inicial
+### 5.1 Instrumentación inicial — COMPLETADA
 
-El primer fascículo amplía
+L0 amplía
 `scripts/comprobar_tamano_clases.ps1`:
 
 1. añade límites individuales para `TGridPivoteVenta` y
@@ -204,8 +204,16 @@ Límites iniciales:
 | `TGridPivoteVenta` | 2.971 | 86 | 49 |
 | `TModoEntradaTallas` | 2.481 | 71 | 29 |
 
+Sustituciones aplicadas por los fascículos cerrados: C1-C7 reemplaza la
+entrada de `UniDataComprasSesionesMaterializar` por sus once unidades;
+T1-T6 reemplaza la de `TModoEntradaTallas` por sus diez clases (la mayor,
+`TPresentacionModoTallas`, en 725/38/17).
+
 Después de cada fascículo se sustituye el límite por la nueva medida.
 No se conserva margen y ninguna dimensión puede volver a subir.
+
+Resultado y pruebas negativas:
+[`refactorizacion_srp_librerias_l0_resultados.md`](refactorizacion_srp_librerias_l0_resultados.md).
 
 ### 5.2 Objetivos de salida
 
@@ -229,12 +237,14 @@ alcanzarse en un único cambio.
 
 Orden vinculante:
 
-1. **L0 — instrumentación.**
-2. **C1-C7 — materialización de compras.** Cruza SRP y DIP, y desbloquea
-   el adelgazamiento de `TfrmMtoComprasSesiones`.
+1. **L0 — instrumentación. COMPLETADA.**
+2. **C1-C7 — materialización de compras. COMPLETADA.** Cruza SRP y DIP,
+   y desbloquea el adelgazamiento de `TfrmMtoComprasSesiones`.
 3. **V1-V5 — pivote de venta.** Es la clase que marca el máximo global
    de 49 campos y tiene seis formularios consumidores directos.
-4. **T1-T6 — modo tallas.**
+4. **T1-T6 — modo tallas. IMPLEMENTADA, pendiente de compilar.**
+   Adelantada a V1-V5 por petición expresa: son focos independientes y
+   ningún cambio entra en `inLibGridPivoteVenta`.
 
 No se abre un segundo foco mientras el fascículo anterior no compile,
 no pase sus pruebas y no haya reducido su trinquete.
@@ -247,6 +257,14 @@ monolito.
 ---
 
 ## 7. Fascículos de materialización de compras
+
+Estado a 30/07/2026: **C1-C7 implementados y verificados**. El
+materializador de dominio ya no conoce UniDAC, datasets ni data modules;
+la transacción se inyecta y se reutiliza si ya estaba activa; artículos,
+albaranes, pedidos, estado y reversión viven en unidades separadas. El
+detalle, la salida del trinquete y el plan explícito de reducción neta
+están en
+[`refactorizacion_srp_librerias_c1_c7_resultados.md`](refactorizacion_srp_librerias_c1_c7_resultados.md).
 
 ### C1 — Caracterización del caso de uso
 
@@ -350,6 +368,13 @@ Al cerrar:
 
 ## 8. Fascículos de `TGridPivoteVenta`
 
+Estado a 30/07/2026: **V1-V5 implementados; compilación, DUnitX y
+pruebas funcionales pendientes**. `TGridPivoteVenta` queda en 944
+líneas, 40 métodos y 10 campos (objetivo §5.2 ya alcanzado) y
+`inLibGridPivoteVenta` contiene cero SQL. El detalle, la salida del
+trinquete y el plan de reducción neta están en
+[`refactorizacion_srp_librerias_v1_v5_resultados.md`](refactorizacion_srp_librerias_v1_v5_resultados.md).
+
 ### V1 — Caracterización del pivote
 
 Fijar con pruebas:
@@ -418,6 +443,16 @@ Pruebas funcionales mínimas:
 ---
 
 ## 9. Fascículos de `TModoEntradaTallas`
+
+Estado a 30/07/2026: **T1-T6 implementados, pendientes de compilar**.
+`TModoEntradaTallas` pasa de 2.481/71/29 a 498/30/12 y
+`inLibColumnasSkuModoTallas` de 3.009 a 549 líneas, con cero SQL. El
+detalle, la salida del trinquete, los cambios de comportamiento y la
+lista de evidencia todavía pendiente están en
+[`refactorizacion_srp_librerias_t1_t6_resultados.md`](refactorizacion_srp_librerias_t1_t6_resultados.md).
+
+Este foco se adelantó a V1-V5 por petición expresa; son independientes
+y V1-V5 sigue sin abrirse.
 
 ### T1 — Caracterización de invariantes
 

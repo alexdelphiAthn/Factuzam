@@ -30,10 +30,13 @@ type
     FIdioma: string;
     FIdiomaBase: string;
     FTextos: TDictionary<string, string>;
+    FTextosInforme: TDictionary<string, string>;
     FCacheCargada: Boolean;
     function GetIdioma: string;
     function NormalizarIdioma(const AIdioma: string): string;
     function PseudoTraducir(const ATexto: string): string;
+    function PseudoTraducirInforme(
+      const ATexto: string): string;
     function TraducirPropiedadJerarquia(
       ARaiz: TComponent;
       const ARuta, APropiedad, ATextoPredeterminado: string): string;
@@ -64,26 +67,35 @@ type
     destructor Destroy; override;
     procedure EstablecerIdioma(const AIdioma: string);
     procedure Recargar;
+    function ExisteTraduccion(
+      const AClave: string): Boolean;
     function Traducir(
       const AClave, ATextoPredeterminado: string): string;
+    function TraducirTextoInforme(
+      const ATexto: string): string;
     procedure Aplicar(AComponente: TComponent);
   end;
 
 function ClaveTraduccionComponente(
   ARaiz, AComponente: TComponent;
   const APropiedad: string): string;
+function NormalizarIdiomaAplicacion(
+  const AIdioma: string): string;
 function ObtenerIdiomaConfigurado(
   AConexion: TUniConnection;
   const AUsuario: string): string;
 function ResolverServicioTraducciones(
   AOwner: TComponent): IServicioTraducciones;
+procedure ActivarTraduccionResourcestrings(
+  const ATraducciones: IServicioTraducciones);
 procedure AplicarTraducciones(
   AComponente, AOwner: TComponent);
 
 implementation
 
 uses
-  System.SysUtils, System.TypInfo, Vcl.Forms, inLibLog;
+  System.Character, System.SysUtils, System.TypInfo, Vcl.Forms, inLibLog,
+  inLibRegistroResourcestringTraducciones;
 
 const
   PROPIEDADES_TRADUCIBLES: array[0..3] of string = (
@@ -93,6 +105,124 @@ const
     'DisplayName'
   );
 
+type
+  TFuncionCargaResourcestring = function(
+    ARecurso: PResStringRec): string;
+
+var
+  BloqueoResourcestrings: TCriticalSection;
+  ClavesResourcestrings: TDictionary<NativeUInt, string>;
+  FuncionCargaResourcestringAnterior: TFuncionCargaResourcestring;
+  ServicioResourcestrings: IServicioTraducciones;
+  TraduccionResourcestringsActiva: Boolean;
+
+threadvar
+  TraduciendoResourcestring: Boolean;
+
+function CargarResourcestringPredeterminado(
+  ARecurso: PResStringRec): string;
+begin
+  Result := '';
+  if Assigned(FuncionCargaResourcestringAnterior) then
+    Result := FuncionCargaResourcestringAnterior(ARecurso)
+  else if Assigned(ARecurso) and
+          (ARecurso.Identifier >= 64 * 1024) then
+    Result := PChar(ARecurso.Identifier);
+end;
+
+function CargarResourcestringTraducido(
+  ARecurso: PResStringRec): string;
+var
+  Clave: string;
+  Servicio: IServicioTraducciones;
+begin
+  Result := CargarResourcestringPredeterminado(ARecurso);
+  if not TraduciendoResourcestring and
+     Assigned(ARecurso) and
+     Assigned(ClavesResourcestrings) and
+     ClavesResourcestrings.TryGetValue(
+       NativeUInt(ARecurso),
+       Clave) then
+  begin
+    Servicio := nil;
+    BloqueoResourcestrings.Acquire;
+    try
+      Servicio := ServicioResourcestrings;
+    finally
+      BloqueoResourcestrings.Release;
+    end;
+    if Assigned(Servicio) then
+    begin
+      TraduciendoResourcestring := True;
+      try
+        Result := Servicio.Traducir(
+          Clave,
+          Result);
+      finally
+        TraduciendoResourcestring := False;
+      end;
+    end;
+  end;
+end;
+
+procedure PrepararRegistroResourcestrings;
+begin
+  if not Assigned(ClavesResourcestrings) then
+  begin
+    ClavesResourcestrings :=
+      TDictionary<NativeUInt, string>.Create;
+    EnumerarResourcestringsTraduccion(
+      procedure(
+        const AClave, AContexto: string;
+        ARecurso: PResStringRec)
+      begin
+        ClavesResourcestrings.AddOrSetValue(
+          NativeUInt(ARecurso),
+          AClave);
+      end);
+  end;
+end;
+
+procedure ActivarTraduccionResourcestrings(
+  const ATraducciones: IServicioTraducciones);
+begin
+  if Assigned(ATraducciones) then
+  begin
+    BloqueoResourcestrings.Acquire;
+    try
+      PrepararRegistroResourcestrings;
+      ServicioResourcestrings := ATraducciones;
+      if not TraduccionResourcestringsActiva then
+      begin
+        FuncionCargaResourcestringAnterior :=
+          System.LoadResStringFunc;
+        System.LoadResStringFunc :=
+          CargarResourcestringTraducido;
+        TraduccionResourcestringsActiva := True;
+      end;
+    finally
+      BloqueoResourcestrings.Release;
+    end;
+  end;
+end;
+
+procedure DesactivarTraduccionResourcestrings;
+begin
+  if Assigned(BloqueoResourcestrings) then
+  begin
+    BloqueoResourcestrings.Acquire;
+    try
+      if TraduccionResourcestringsActiva then
+        System.LoadResStringFunc :=
+          FuncionCargaResourcestringAnterior;
+      TraduccionResourcestringsActiva := False;
+      ServicioResourcestrings := nil;
+    finally
+      BloqueoResourcestrings.Release;
+    end;
+  end;
+end;
+
 constructor TServicioTraducciones.Create(
   const AConexiones: IServicioConexiones;
   const AIdioma, AIdiomaBase: string);
@@ -100,6 +230,7 @@ begin
   inherited Create;
   FBloqueo := TCriticalSection.Create;
   FTextos := TDictionary<string, string>.Create;
+  FTextosInforme := TDictionary<string, string>.Create;
   FConexiones := AConexiones;
   FIdiomaBase := NormalizarIdioma(AIdiomaBase);
   FIdioma := NormalizarIdioma(AIdioma);
@@ -110,6 +241,7 @@ destructor TServicioTraducciones.Destroy;
 begin
   FConexiones := nil;
   FreeAndNil(FTextos);
+  FreeAndNil(FTextosInforme);
   FreeAndNil(FBloqueo);
   inherited;
 end;
@@ -121,6 +253,18 @@ begin
   if Result = '' then
     Result := IDIOMA_ESPANOL;
   Result := StringReplace(Result, '_', '-', [rfReplaceAll]);
+end;
+
+function NormalizarIdiomaAplicacion(
+  const AIdioma: string): string;
+begin
+  Result := StringReplace(
+    Trim(AIdioma),
+    '_',
+    '-',
+    [rfReplaceAll]);
+  if Result = '' then
+    Result := IDIOMA_ESPANOL;
 end;
 
 function TServicioTraducciones.GetIdioma: string;
@@ -145,6 +289,7 @@ begin
     begin
       FIdioma := IdiomaNormalizado;
       FTextos.Clear;
+      FTextosInforme.Clear;
       FCacheCargada := False;
     end;
   finally
@@ -157,6 +302,7 @@ begin
   FBloqueo.Acquire;
   try
     FTextos.Clear;
+    FTextosInforme.Clear;
     FCacheCargada := False;
   finally
     FBloqueo.Release;
@@ -173,6 +319,7 @@ begin
       on E: Exception do
       begin
         FTextos.Clear;
+        FTextosInforme.Clear;
         FCacheCargada := True;
         if Log() <> nil then
           Log.LogWarning(
@@ -188,8 +335,10 @@ var
   Conexion: TUniConnection;
   Consulta: TUniQuery;
   Clave: string;
+  TextoBase: string;
 begin
   FTextos.Clear;
+  FTextosInforme.Clear;
   FCacheCargada := True;
   Conexion := nil;
   Consulta := nil;
@@ -220,6 +369,40 @@ begin
             Consulta.FieldByName('TEXTO_TRAD').AsString);
         Consulta.Next;
       end;
+      if not SameText(FIdioma, FIdiomaBase) then
+      begin
+        // Mapa texto base -> texto traducido de los informes
+        // FastReport. Lo usan los formatos personalizados, que
+        // no tienen clave propia (D22-B).
+        Consulta.Close;
+        Consulta.SQL.Text :=
+          'SELECT B.TEXTO_TRAD AS TEXTO_BASE, ' +
+          '       T.TEXTO_TRAD AS TEXTO_IDIOMA ' +
+          '  FROM fza_traducciones B ' +
+          '  JOIN fza_traducciones T ' +
+          '    ON T.CLAVE_TRAD = B.CLAVE_TRAD ' +
+          '   AND T.IDIOMA_TRAD = :idioma ' +
+          '   AND T.ESACTIVO_TRAD = ''S'' ' +
+          ' WHERE B.IDIOMA_TRAD = :idioma_base ' +
+          '   AND B.ESACTIVO_TRAD = ''S'' ' +
+          '   AND B.CLAVE_TRAD LIKE ''FastReport.%'' ' +
+          ' ORDER BY B.CLAVE_TRAD';
+        Consulta.ParamByName('idioma').AsString := FIdioma;
+        Consulta.ParamByName('idioma_base').AsString :=
+          FIdiomaBase;
+        Consulta.Open;
+        while not Consulta.Eof do
+        begin
+          TextoBase :=
+            Consulta.FieldByName('TEXTO_BASE').AsString;
+          if (TextoBase <> '') and
+             not FTextosInforme.ContainsKey(TextoBase) then
+            FTextosInforme.Add(
+              TextoBase,
+              Consulta.FieldByName('TEXTO_IDIOMA').AsString);
+          Consulta.Next;
+        end;
+      end;
       if Log() <> nil then
         Log.LogInfo(
           Format(
@@ -249,6 +432,70 @@ begin
   end;
 end;
 
+function TieneTextoVisibleInforme(
+  const ATexto: string): Boolean;
+var
+  i: Integer;
+  Nivel: Integer;
+begin
+  // Letras fuera de corchetes: las expresiones [..] del memo
+  // no cuentan como texto visible traducible.
+  Result := False;
+  Nivel := 0;
+  for i := 1 to Length(ATexto) do
+  begin
+    if ATexto[i] = '[' then
+      Inc(Nivel)
+    else if ATexto[i] = ']' then
+    begin
+      if Nivel > 0 then
+        Dec(Nivel);
+    end
+    else if (Nivel = 0) and
+            ATexto[i].IsLetter then
+      Result := True;
+  end;
+end;
+
+function TServicioTraducciones.PseudoTraducirInforme(
+  const ATexto: string): string;
+var
+  Relleno: Integer;
+begin
+  // Sin el marcador '[!! ... !!]': FastReport interpretaría los
+  // corchetes como una expresión del memo. Solo se alarga.
+  Result := ATexto;
+  if (ATexto <> '') and
+     (ATexto[Length(ATexto)] <> '~') and
+     TieneTextoVisibleInforme(ATexto) then
+  begin
+    Relleno := Length(ATexto) div 3;
+    if Relleno < 4 then
+      Relleno := 4;
+    if Relleno > 20 then
+      Relleno := 20;
+    Result := ATexto + ' ' + StringOfChar('~', Relleno);
+  end;
+end;
+
+function TServicioTraducciones.ExisteTraduccion(
+  const AClave: string): Boolean;
+begin
+  FBloqueo.Acquire;
+  try
+    if SameText(FIdioma, IDIOMA_PSEUDO) then
+      Result := True
+    else
+    begin
+      AsegurarCache;
+      Result := FTextos.ContainsKey(
+        LowerCase(Trim(AClave)));
+    end;
+  finally
+    FBloqueo.Release;
+  end;
+end;
+
 function TServicioTraducciones.Traducir(
   const AClave, ATextoPredeterminado: string): string;
 begin
@@ -263,6 +510,26 @@ begin
       FTextos.TryGetValue(LowerCase(Trim(AClave)), Result);
       if Result = '' then
         Result := ATextoPredeterminado;
+    end;
+  finally
+    FBloqueo.Release;
+  end;
+end;
+
+function TServicioTraducciones.TraducirTextoInforme(
+  const ATexto: string): string;
+begin
+  Result := ATexto;
+  FBloqueo.Acquire;
+  try
+    if SameText(FIdioma, IDIOMA_PSEUDO) then
+      Result := PseudoTraducirInforme(ATexto)
+    else if not SameText(FIdioma, FIdiomaBase) then
+    begin
+      AsegurarCache;
+      if not FTextosInforme.TryGetValue(ATexto, Result) or
+         (Result = '') then
+        Result := ATexto;
     end;
   finally
     FBloqueo.Release;
@@ -525,7 +792,7 @@ begin
           Idioma := Trim(
             Consulta.FieldByName('VALUE_USUPER').AsString);
           if Idioma <> '' then
-            Result := Idioma;
+            Result := NormalizarIdiomaAplicacion(Idioma);
         end;
       except
         on E: Exception do
@@ -576,5 +843,17 @@ begin
   if Assigned(Servicio) then
     Servicio.Aplicar(AComponente);
 end;
+
+initialization
+  BloqueoResourcestrings := TCriticalSection.Create;
+  ClavesResourcestrings := nil;
+  FuncionCargaResourcestringAnterior := nil;
+  ServicioResourcestrings := nil;
+  TraduccionResourcestringsActiva := False;
+
+finalization
+  DesactivarTraduccionResourcestrings;
+  FreeAndNil(ClavesResourcestrings);
+  FreeAndNil(BloqueoResourcestrings);
 
 end.

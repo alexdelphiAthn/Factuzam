@@ -295,7 +295,8 @@ implementation
 
 uses inLibPermisosIntf, inLibLog,
      inMtoModalArqueosHistCaja,
-     inLibTiraCajaTicket, inMtoModalTiraCaja, inLibVerifactu,
+     inLibTiraCajaTicket, inLibTiraCajaTicketIntf,
+     inMtoModalTiraCaja, inLibVerifactu,
      inLibRectificativas, inLibMsgCaja;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -487,6 +488,7 @@ end;
 procedure TfrmModalArqueo.actTiraCajaExecute(Sender: TObject);
 var
   Series, SeleccionSeries: TArray<string>;
+  oRepositorio: IRepositorioTiraCajaTicket;
   bQR, bVerifactu, bCronologico, bExcel: Boolean;
   bIncluirTraspasos: Boolean;
   bIncluirIngresos: Boolean;
@@ -497,10 +499,16 @@ begin
   inherited;
   if (FConn = nil) or (not FConn.Connected) then
     Exit;
+  oRepositorio := CrearRepositorioTiraCajaTicket(
+    FConn);
   // Series facturadas en el rango; si no hay ninguna, no hay tira que sacar.
-  Series := TTiraCajaTicket.ObtenerSeries(FConn, FEmpresa, FAlmacen, FCaja,
-                                          FechaDesdeSeleccionada,
-                                          FechaHastaSeleccionada);
+  Series := TTiraCajaTicket.ObtenerSeries(
+    oRepositorio,
+    FEmpresa,
+    FAlmacen,
+    FCaja,
+    FechaDesdeSeleccionada,
+    FechaHastaSeleccionada);
   if Length(Series) = 0 then
   begin
     Application.MessageBox(
@@ -525,25 +533,39 @@ begin
   Screen.Cursor := crHourGlass;
   try
     if bExcel then
-      TTiraCajaTicket.ExportarExcel(Self, FConn, FEmpresa, FAlmacen, FCaja,
-                                    FechaDesdeSeleccionada,
-                                    FechaHastaSeleccionada,
-                                    SeleccionSeries, bCronologico,
-                                    bIncluirTraspasos, bIncluirIngresos,
-                                    bIncluirGastos, bIncluirCredito,
-                                    bVerCoste)
+      TTiraCajaTicket.ExportarExcel(
+        Self,
+        oRepositorio,
+        FEmpresa,
+        FAlmacen,
+        FCaja,
+        FechaDesdeSeleccionada,
+        FechaHastaSeleccionada,
+        SeleccionSeries,
+        bCronologico,
+        bIncluirTraspasos,
+        bIncluirIngresos,
+        bIncluirGastos,
+        bIncluirCredito,
+        bVerCoste)
     else
-      TTiraCajaTicket.Imprimir(ParametrosApp, FConn, FEmpresa, FAlmacen,
-                               FCaja,
-                               FechaDesdeSeleccionada,
-                               FechaHastaSeleccionada,
-                               SeleccionSeries,
-                               bQR,
-                               ParametrosCaja.ImpresoraCaja,
-                               bCronologico,
-                               bIncluirTraspasos, bIncluirIngresos,
-                               bIncluirGastos, bIncluirCredito,
-                               bVerCoste);
+      TTiraCajaTicket.Imprimir(
+        ParametrosApp,
+        oRepositorio,
+        FEmpresa,
+        FAlmacen,
+        FCaja,
+        FechaDesdeSeleccionada,
+        FechaHastaSeleccionada,
+        SeleccionSeries,
+        bQR,
+        ParametrosCaja.ImpresoraCaja,
+        bCronologico,
+        bIncluirTraspasos,
+        bIncluirIngresos,
+        bIncluirGastos,
+        bIncluirCredito,
+        bVerCoste);
   finally
     Screen.Cursor := crDefault;
   end;
@@ -888,12 +910,12 @@ var
 begin
   { Resto día anterior }
   lblAnteriorImporte.Caption :=
-    FormatFloat(',0.00', AArqueo.EfectivoAnterior) + ' EUR';
+    Format(SCaptionImporteEur,
+           [FormatFloat(',0.00', AArqueo.EfectivoAnterior)]);
   { Desglose del efectivo }
   lblDesgloseEfectivo.Caption :=
     Format(
-      'Efectivo sist. = ventas (%s) + entradas (%s) ' +
-      #8722' gastos (%s) + anterior (%s)',
+      SCaptionDesgloseEfectivo,
       [FormatFloat(',0.00', AArqueo.EfectivoIngresos),
        FormatFloat(',0.00', AArqueo.EfectivoEntradas),
        FormatFloat(',0.00', AArqueo.EfectivoSalidas),
@@ -1017,7 +1039,7 @@ begin
   if dDejo < 0 then
     dDejo := 0;
   lblDejoImporte.Caption :=
-    FormatFloat(',0.00', dDejo) + ' EUR';
+    Format(SCaptionImporteEur, [FormatFloat(',0.00', dDejo)]);
 end;
 
 procedure TfrmModalArqueo.tvRecuentoImportePropertiesEditValueChanged(

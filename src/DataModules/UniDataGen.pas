@@ -19,13 +19,14 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.TypInfo, Data.DB, MemDS, DBAccess,
-  Uni, inLibUser, inLibWin, inLibLog, inLibAuditoriaDatosIntf,
-  inLibConexionesIntf, inLibContextoSesionIntf,
+  Uni, inLibUser, inLibWin, inLibLog, inLibAnfitrionDatosIntf,
+  inLibAuditoriaDatosIntf, inLibConexionesIntf, inLibContextoSesionIntf,
   inLibPerfilesUsuarioIntf, inLibParametrosIntf;
 
 type
   TdmBase = class(
     TDataModule,
+    IAnfitrionDatosDocumento,
     IProveedorAuditoriaDatos,
     IProveedorConexiones,
     IProveedorContextoSesion,
@@ -105,6 +106,10 @@ type
     // no sube a buscarlo con GetOwnerForm. Cada TdmXxx sobreescribe
     // para cablear los MasterSource de sus detalles.
     procedure AsignarMaestroCabecera(ADataSource: TDataSource); virtual;
+    // Tabla principal del documento, expuesta por el contrato
+    // IAnfitrionDatosDocumento para que inLib* cablee sin conocer
+    // TdmBase.
+    function ObtenerTablaPrincipal: TDataSet;
     // Aviso al insertar en la tabla principal: el form suscrito activa
     // su pestania de ficha (antes el DM tocaba pcPantalla del form).
     property OnActivarFicha: TNotifyEvent
@@ -140,6 +145,16 @@ type
     FCurrentForm: TComponent;
     FoPerfilDic: TProfileDicc;
   end;
+
+  // Referencia de clase del data module de documento; los formularios
+  // la pasan a AsegurarDataModuleDocumento (movida desde
+  // inLibColumnasDocumento en la Fase 2b).
+  TClaseDataModuleDocumento = class of TdmBase;
+
+// Reutiliza o crea el data module del documento validando su clase.
+function AsegurarDataModuleDocumento(
+  APropietario: TComponent; var ADataModule: TObject;
+  AClaseDataModule: TClaseDataModuleDocumento): TdmBase;
 
 //var
 //  dmBase: TdmBase;
@@ -528,6 +543,34 @@ begin
     Log.LogEvento(Self.UnitName, DataSet.Name, 'BeforePost',
                   'state=' + GetEnumName(TypeInfo(TDataSetState),
                                           Ord(DataSet.State)));
+end;
+
+function TdmBase.ObtenerTablaPrincipal: TDataSet;
+begin
+  Result := unqryTablaG;
+end;
+
+function AsegurarDataModuleDocumento(
+  APropietario: TComponent; var ADataModule: TObject;
+  AClaseDataModule: TClaseDataModuleDocumento): TdmBase;
+begin
+  if not Assigned(AClaseDataModule) then
+    raise EArgumentNilException.Create(
+      'No se ha indicado la clase del data module.');
+  if Assigned(ADataModule) then
+  begin
+    if ADataModule.ClassType.InheritsFrom(AClaseDataModule) then
+      Result := TdmBase(ADataModule)
+    else
+      raise EInvalidCast.CreateFmt(
+        'El data module %s no es de la clase %s.',
+        [ADataModule.ClassName, AClaseDataModule.ClassName]);
+  end
+  else
+  begin
+    Result := AClaseDataModule.Create(APropietario);
+    ADataModule := Result;
+  end;
 end;
 
 end.

@@ -10,8 +10,8 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Esta unidad proporciona la lógica necesaria para presentar la pantalla    }
-{    de Previsualización de Hoja de Cálculo. Tiene una tradución propia.       }
-{    que es inLibdxSpreadSheetStrs_ESP, ejecutando ApplySpanishTranslation;    }
+{    de previsualización de hoja de cálculo. Sus textos se resuelven mediante  }
+{    el catálogo central de traducciones.                                      }
 {******************************************************************************}
 unit inMtoPreviewExcel;
 
@@ -60,7 +60,7 @@ type
 implementation
 
 uses
-  inLibdxSpreadSheetStrs_ESP, inLibFormatoExcel, inLibPreviewExcel;
+  inLibFormatoExcel, inLibPreviewExcel, inLibMsgComun;
 
 type
   TSesionPreviewExcelMto = class(TSesionPreviewExcel)
@@ -154,7 +154,7 @@ begin
   // DevExpress. Nombre y carpeta se toman de DialogoGuardar / parámetros.
   oDialogo := TFileSaveDialog.Create(nil);
   try
-    oDialogo.Title := 'Guardar Excel';
+    oDialogo.Title := STituloGuardarExcel;
     if DialogoGuardar.InitialDir <> '' then
       oDialogo.DefaultFolder := DialogoGuardar.InitialDir
     else if Assigned(ParametrosApp) then
@@ -162,7 +162,7 @@ begin
     oDialogo.DefaultExtension := sExt;
     with oDialogo.FileTypes.Add do
     begin
-      DisplayName := 'Archivo ' + sExt;
+      DisplayName := Format(SCaptionFiltroArchivo, [sExt]);
       FileMask := '*.' + sExt;
     end;
     oDialogo.FileName := DialogoGuardar.FileName;
@@ -176,7 +176,6 @@ end;
 procedure TfrmMtoPreviewExcel.FormCreate(Sender: TObject);
 begin
   inherited;
-  ApplySpanishTranslation;
 end;
 
 procedure TfrmMtoPreviewExcel.FormShow(Sender: TObject);

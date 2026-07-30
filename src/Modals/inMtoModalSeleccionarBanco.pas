@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalSeleccionarBanco                                    }
 {    Tipo:       Formulario (Modal)                                            }
@@ -88,7 +88,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsgComun;
+  inLibMsgComun, inLibMsgFacturas;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -147,14 +147,12 @@ begin
   if FUso = ubePago then
   begin
     sColDef := 'ESDEFECTO_PAGO_EMPBAN';
-    lblInfo.Caption := 'Cuenta de la empresa para el PAGO (cargo) de los ' +
-                       'efectos:';
+    lblInfo.Caption := SCaptionCuentaEmpresaPagoEfectos;
   end
   else
   begin
     sColDef := 'ESDEFECTO_COBRO_EMPBAN';
-    lblInfo.Caption := 'Cuenta de la empresa para el COBRO (ingreso) de los ' +
-                       'recibos:';
+    lblInfo.Caption := SCaptionCuentaEmpresaCobroRecibos;
   end;
   FQry.Close;
   FQry.Connection := FConn;

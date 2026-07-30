@@ -2,36 +2,40 @@
 {                                                                              }
 {  Módulo:       inLibFacturasComposicion                                      }
 {    Tipo:       Factoría                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       29/07/2026                                                    }
+{ Versión:       2.0.0                                                         }
+{   Fecha:       30/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Construye los servicios de factura en el límite de composición.           }
+{    Ensambla los servicios de factura a partir de piezas de dominio.         }
+{                                                                              }
+{    Los tres adaptadores de persistencia (repositorio de facturas,           }
+{    resolutor de artículos y cola VERI*FACTU) llegan YA CONSTRUIDOS          }
+{    desde la raíz de composición: esta unidad no conoce UniData*, que        }
+{    es la dirección prohibida por LIBRO_DE_ESTILO_DELPHI.md 14.1.            }
 {******************************************************************************}
 unit inLibFacturasComposicion;
 
 interface
 
 uses
-  Uni, inLibCatalogoSqlIntf,
+  Uni,
+  inLibArticulosResolverIntf,
   inLibFacturasServiciosIntf,
-  inLibParametrosIntf;
+  inLibVerifactuColaIntf;
 
 function CrearServiciosFactura(
   AConexion: TUniConnection;
-  const AParametrosCaja: IParametrosCaja;
-  const ACatalogoSql: ICatalogoSql = nil;
-  const AIncidenciasSql: IRegistroIncidenciasSql = nil
+  const ARepositorio: IRepositorioFacturas;
+  const AArticulosResolver: IArticulosResolver;
+  const AVerifactuCola: IServicioVerifactuCola
 ): TServiciosFactura;
 
 implementation
 
 uses
-  UniDataFacturasRepositorio,
-  UniDataArticulosResolverRepositorio,
   inLibFacturasValidacionFiscal,
   inLibFacturasCalculo,
   inLibFacturasBorrado,
@@ -39,28 +43,19 @@ uses
 
 function CrearServiciosFactura(
   AConexion: TUniConnection;
-  const AParametrosCaja: IParametrosCaja;
-  const ACatalogoSql: ICatalogoSql;
-  const AIncidenciasSql: IRegistroIncidenciasSql
+  const ARepositorio: IRepositorioFacturas;
+  const AArticulosResolver: IArticulosResolver;
+  const AVerifactuCola: IServicioVerifactuCola
 ): TServiciosFactura;
-var
-  oRepositorio: IRepositorioFacturas;
 begin
-  oRepositorio := TRepositorioFacturas.Create(
-    AConexion,
-    ACatalogoSql,
-    AIncidenciasSql);
-  Result.Repositorio := oRepositorio;
-  Result.ArticulosResolver :=
-    TRepositorioArticulosResolver.Create(
-      AConexion,
-      AParametrosCaja,
-      ACatalogoSql,
-      AIncidenciasSql);
+  Result.Repositorio := ARepositorio;
+  Result.ArticulosResolver := AArticulosResolver;
   Result.ValidadorFiscal :=
-    TValidadorFiscalFactura.Create(oRepositorio);
+    TValidadorFiscalFactura.Create(ARepositorio);
   Result.Calculador := TCalculadorFactura.Create(AConexion);
-  Result.Borrado := TServicioBorradoFactura.Create(AConexion);
+  Result.Borrado := TServicioBorradoFactura.Create(
+    AConexion,
+    AVerifactuCola);
   Result.Efectos := TServicioEfectosFactura.Create(AConexion);
 end;
 

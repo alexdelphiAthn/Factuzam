@@ -20,6 +20,8 @@ uses
 
 const
   IDIOMA_ESPANOL = 'es-ES';
+  IDIOMA_INGLES = 'en-GB';
+  IDIOMA_CATALAN = 'ca-ES';
   IDIOMA_PSEUDO = 'qps-ploc';
 
 type
@@ -28,8 +30,12 @@ type
     function GetIdioma: string;
     procedure EstablecerIdioma(const AIdioma: string);
     procedure Recargar;
+    function ExisteTraduccion(
+      const AClave: string): Boolean;
     function Traducir(
       const AClave, ATextoPredeterminado: string): string;
+    function TraducirTextoInforme(
+      const ATexto: string): string;
     procedure Aplicar(AComponente: TComponent);
     property Idioma: string read GetIdioma;
   end;

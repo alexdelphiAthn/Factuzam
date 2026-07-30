@@ -34,8 +34,8 @@ uses
   cxTextEdit,
   cxDropDownEdit, cxEditRepositoryItems, cxDBExtLookupComboBox, cxGrid,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
-  inLibColumnasSkuIntf, inLibArticulosValidador,
-  inLibArticulosAtributosLookup, inLibAtributosPaleta;
+  inLibColumnasSkuIntf, inLibArticulosValidadorIntf,
+  inLibArticulosAtributosIntf, inLibAtributosPaleta;
 
 type
   TModoEntradaSku = class(TInterfacedObject, IModoEntradaGrid)
@@ -160,8 +160,7 @@ begin
   FAlmacenStock := AConfig.AlmacenStock;
   FLookup := AConfig.LookupAtributos;
   if not Assigned(FLookup) then
-    FLookup := CrearLookupAtributosArticulosBase(
-      AConfig.Conexion);
+    raise Exception.Create(SErrorLookupAtributosNoInyectado);
   FTimerBusq := TTimer.Create(nil);
   FTimerBusq.Enabled := False;
   FTimerBusq.Interval := 350;
@@ -287,7 +286,7 @@ begin
   try
     FConfig.View.ClearItems;
     FColSku := FConfig.View.CreateColumn;
-    FColSku.Caption := 'SKU (Art/Color/Talla)';
+    FColSku.Caption := SCaptionColSkuArtColorTalla;
     FColSku.DataBinding.FieldName := FConfig.Campos.CodigoUnidad;
     FColSku.Width := 260;
     FColSku.OnGetProperties := SkuGetProperties;
@@ -337,7 +336,7 @@ begin
   FBusqView.OptionsSelection.CellSelect := False;
   FBusqView.OptionsBehavior.IncSearch := False;
   FBusqColSku := FBusqView.CreateColumn;
-  FBusqColSku.Caption := 'SKU';
+  FBusqColSku.Caption := SCaptionColSku;
   FBusqColSku.DataBinding.FieldName := 'SKU';
   FBusqColSku.Width := 220;
   FBusqColInput := FBusqView.CreateColumn;
@@ -908,8 +907,7 @@ begin
   begin
     Val := FConfig.ValidadorArticulos;
     if not Assigned(Val) then
-      Val := CrearValidadorArticulosBase(
-        FConfig.Conexion);
+      raise Exception.Create(SErrorValidadorArticulosNoInyectado);
     try
       R := Val.Resolver(sEntrada);
     finally

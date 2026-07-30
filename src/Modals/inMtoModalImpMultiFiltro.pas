@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalImpMultiFiltro                                      }
 {    Tipo:       Formulario base (Modal de impresión)                          }
@@ -171,7 +171,7 @@ implementation
 {$R *.dfm}
 
 uses
-  System.DateUtils;
+  System.DateUtils, inLibMsgComun;
 
 { TFiltroChecklist }
 
@@ -260,11 +260,11 @@ var
 begin
   FtsFechas := TcxTabSheet.Create(FpcFiltros);
   FtsFechas.PageControl := FpcFiltros;
-  FtsFechas.Caption := 'Fechas';
+  FtsFechas.Caption := SCaptionTabFechas;
   lblD := TcxLabel.Create(Self);
   lblD.Parent      := FtsFechas;
   lblD.Transparent := True;
-  lblD.Caption     := 'Fecha inicio:';
+  lblD.Caption     := SCaptionFechaInicio;
   lblD.Left := 16;
   lblD.Top  := 16;
   FdteDesde := TcxDateEdit.Create(Self);
@@ -275,7 +275,7 @@ begin
   lblH := TcxLabel.Create(Self);
   lblH.Parent      := FtsFechas;
   lblH.Transparent := True;
-  lblH.Caption     := 'Fecha fin:';
+  lblH.Caption     := SCaptionFechaFin;
   lblH.Left := 16;
   lblH.Top  := 70;
   FdteHasta := TcxDateEdit.Create(Self);
@@ -301,7 +301,7 @@ begin
   edt := TcxTextEdit.Create(Self);
   edt.Parent := ts;
   edt.Align  := alTop;
-  edt.Hint     := 'Escriba y pulse Intro para filtrar (sin marcar nada = todos)';
+  edt.Hint     := SHintEscribaIntroFiltrar;
   edt.ShowHint := True;
   // OnEditValueChanged (evento confirmado en cx): filtra al postear el texto
   // (Intro / salir del cuadro). Para filtrar en cada tecla habría que usar
@@ -335,8 +335,7 @@ begin
   lbl.Parent      := ts;
   lbl.Align       := alTop;
   lbl.Transparent := True;
-  lbl.Caption :=
-    'Marque los valores a incluir. Si no marca ninguno, salen todos.';
+  lbl.Caption := SCaptionMarqueValoresIncluir;
   Result := TcxCheckListBox.Create(Self);
   Result.Parent := ts;
   Result.Align  := alClient;
@@ -562,9 +561,7 @@ begin
   lbl.Parent      := ts;
   lbl.Align       := alTop;
   lbl.Transparent := True;
-  lbl.Caption :=
-    'Marque por qu' + #233 + ' agrupar y ordene los niveles con Subir/Bajar ' +
-    '(el primero es el grupo m' + #225 + 's externo). Sin marcar = sin agrupar.';
+  lbl.Caption := SCaptionMarqueAgrupacion;
   pnl := TPanel.Create(Self);
   pnl.Parent     := ts;
   pnl.Align      := alRight;
@@ -575,14 +572,14 @@ begin
   btnSubir.Left    := 10;
   btnSubir.Top     := 10;
   btnSubir.Width   := 80;
-  btnSubir.Caption := 'Subir';
+  btnSubir.Caption := SCaptionSubir;
   btnSubir.OnClick := AgrupSubirClick;
   btnBajar := TcxButton.Create(Self);
   btnBajar.Parent  := pnl;
   btnBajar.Left    := 10;
   btnBajar.Top     := 42;
   btnBajar.Width   := 80;
-  btnBajar.Caption := 'Bajar';
+  btnBajar.Caption := SCaptionBajar;
   btnBajar.OnClick := AgrupBajarClick;
   if AConNivelFamilia then
   begin
@@ -591,7 +588,7 @@ begin
     lblNivel.Transparent := True;
     lblNivel.Left        := 10;
     lblNivel.Top         := 86;
-    lblNivel.Caption     := 'Nivel familia:';
+    lblNivel.Caption     := SCaptionNivelFamilia;
     FseNivelFam := TcxSpinEdit.Create(Self);
     FseNivelFam.Parent             := pnl;
     FseNivelFam.Left               := 10;
@@ -600,9 +597,7 @@ begin
     FseNivelFam.Properties.MinValue := 0;
     FseNivelFam.Properties.MaxValue := 20;
     FseNivelFam.Value              := 1;
-    FseNivelFam.Hint :=
-      'Al agrupar por familia: 0 = familia del art' + #237 +
-      'culo; 1 = familia ra' + #237 + 'z; 2, 3... niveles intermedios.';
+    FseNivelFam.Hint := SHintNivelFamilia;
     FseNivelFam.ShowHint := True;
   end;
   FclbAgrup := TcxCheckListBox.Create(Self);
@@ -740,7 +735,7 @@ var
 begin
   ts := TcxTabSheet.Create(FpcFiltros);
   ts.PageControl := FpcFiltros;
-  ts.Caption := 'Familias';
+  ts.Caption := SCaptionTabFamilias;
   // Cabecera fija con la ayuda y el buscador (panel para fijar el orden).
   pnlTop := TPanel.Create(Self);
   pnlTop.Parent     := ts;
@@ -752,15 +747,13 @@ begin
   lbl.Transparent := True;
   lbl.Left        := 4;
   lbl.Top         := 4;
-  lbl.Caption     :=
-    'Doble clic o barra espaciadora marca/desmarca. Marcar una ' +
-    'familia incluye sus subfamilias. Sin marcar = todas.';
+  lbl.Caption     := SCaptionDobleClicMarcaFamilia;
   FedtFamilias := TcxTextEdit.Create(Self);
   FedtFamilias.Parent   := pnlTop;
   FedtFamilias.Left     := 4;
   FedtFamilias.Top      := 28;
   FedtFamilias.Width    := 420;
-  FedtFamilias.Hint     := 'Escriba para buscar una familia';
+  FedtFamilias.Hint     := SHintBuscarFamilia;
   FedtFamilias.ShowHint := True;
   FedtFamilias.Properties.OnEditValueChanged := FamiliasSearchChange;
   FtlFamilias := TcxTreeList.Create(Self);

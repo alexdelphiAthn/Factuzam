@@ -779,7 +779,8 @@ begin
   btn.Height  := ALTO_FILA;
   btn.Caption := '×';
   btn.Tag     := ASlotIdx;
-  btn.Hint    := 'Quitar propiedad ' + FSlots[ASlotIdx].NombrePropiedad;
+  btn.Hint    := Format(SHintQuitarPropiedad,
+                        [FSlots[ASlotIdx].NombrePropiedad]);
   btn.ShowHint:= True;
   btn.OnClick := BtnEliminarClick;
 end;
@@ -820,11 +821,12 @@ begin
   btn.Width  := 110;
   btn.Height := ALTO_FILA;
   if S.Nivel = 'SKU' then
-    btn.Caption := 'Por color/SKU…'
+    btn.Caption := SCaptionPorColorSku
   else
-    btn.Caption := 'Por color…';
+    btn.Caption := SCaptionPorColor;
   btn.Tag      := ASlotIdx;
-  btn.Hint     := 'Fijar ' + S.NombrePropiedad + ' por color/SKU';
+  btn.Hint     := Format(SHintFijarPropiedadPorColorSku,
+                         [S.NombrePropiedad]);
   btn.ShowHint := True;
   btn.OnClick  := BtnPorUnidadClick;
 end;
@@ -1288,7 +1290,7 @@ begin
     lblVacio.Parent      := FScroll;
     lblVacio.Left        := MARGEN_H;
     lblVacio.Top         := MARGEN_V;
-    lblVacio.Caption     := 'El artículo no tiene colores/SKU definidos aún.';
+    lblVacio.Caption     := SCaptionSinColoresSkuDefinidos;
     lblVacio.Transparent := True;
   end;
   Top := MARGEN_V;

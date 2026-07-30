@@ -80,6 +80,7 @@ implementation
 uses
   inLibValoresAutomaticos, inLibVerifactu, inLibVerifactuCola,
   inLibEmisionFiscalIntf, inLibEmisionFiscal,
+  UniDataVerifactuColaRepositorio,
   inMtoGenSearch, inLibDocumentoFiscal, inLibMsgComun,
   inLibMsgFacturas, inLibMsgVentas;
 
@@ -156,7 +157,7 @@ begin
     formulario := TfrmMtoSearch.Create(nil);
     try
       formulario.Name := 'frmMtoCliSearch';
-      formulario.Caption := 'Búsqueda de Clientes';
+      formulario.Caption := STituloBusquedaClientes;
       formulario.dsTablaG.DataSet := unqryClientes;
       unqryClientes.Open;
       formulario.ProcesarPerfiles;
@@ -417,7 +418,8 @@ begin
         ASerie, sNumero);
       // Histórico N:1 de relaciones (la F3 sustituye al ticket)
       TVerifactuCola.RegistrarRelacionFactura(
-        ConexionPrincipal, IdentidadSesion.Usuario, ASerie, sNumero,
+        CrearServicioVerifactuColaUniDAC(ConexionPrincipal),
+        IdentidadSesion.Usuario, ASerie, sNumero,
         FSerieTicket, FNumeroTicket, 'SUSTITUYE');
       ConexionPrincipal.Commit;
     except
@@ -431,7 +433,8 @@ begin
     Servicio := CrearServicioEmisionFiscal(
       ParametrosApp,
       ParametrosCaja,
-      ConexionPrincipal);
+      ConexionPrincipal,
+      CrearServicioVerifactuColaUniDAC(ConexionPrincipal));
     Solicitud := TSolicitudEmisionFiscal.ParaAlta(
       ASerie,
       sNumero,

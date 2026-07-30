@@ -137,8 +137,8 @@ begin
   sNumero := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
   oDialogo := TSaveDialog.Create(Self);
   try
-    oDialogo.Title := 'Emitir eDoc';
-    oDialogo.Filter := 'Facturae firmado (*.xsig)|*.xsig|XML (*.xml)|*.xml';
+    oDialogo.Title := STituloEmitirEDoc;
+    oDialogo.Filter := SCaptionFiltroFacturae;
     oDialogo.DefaultExt := 'xsig';
     oDialogo.FileName := NombreArchivoFacturae(sSerie, sNumero);
     if oDialogo.Execute then

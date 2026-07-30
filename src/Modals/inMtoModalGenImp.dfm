@@ -2,7 +2,7 @@ inherited frmPrint: TfrmPrint
   Left = 506
   Top = 279
   HorzScrollBar.Visible = False
-  BorderStyle = bsSingle
+  BorderStyle = bsSizeable
   Caption = 'Imprimir'
   ClientHeight = 240
   ClientWidth = 341

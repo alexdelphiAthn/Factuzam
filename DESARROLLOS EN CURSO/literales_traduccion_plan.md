@@ -78,6 +78,8 @@ Prefijos recomendados:
 | `SPregunta` | Confirmación o elección |
 | `SSolicitud` | Texto de entrada de datos |
 | `STitulo` | Título de diálogo o ventana |
+| `SCaption` | Texto de control asignado en ejecución |
+| `SHint` | Texto de ayuda emergente |
 
 El dominio se añade al final cuando evite ambigüedad:
 `SErrorGuardarFactura`, `SPreguntaBorrarCliente`,
@@ -132,28 +134,32 @@ estado internos.
 
 | Tanda | Alcance | Candidatos | Estado |
 |---|---|---:|---|
-| R01 | Core | 28 | PENDIENTE |
-| R02 | Forms A-B | 33 | PENDIENTE |
-| R03 | Forms C | 8 | PENDIENTE |
-| R04 | Forms D-E | 18 | PENDIENTE |
-| R05 | Forms F | 60 | PENDIENTE |
-| R06 | Forms G-I | 34 | PENDIENTE |
-| R07 | Forms J-P | 26 | PENDIENTE |
-| R08 | Forms Q-Z | 29 | PENDIENTE |
-| R09 | Modals A-F | 31 | PENDIENTE |
-| R10 | Modals G-M | 57 | PENDIENTE |
-| R11 | Modals N-Z | 27 | PENDIENTE |
-| R12 | Caja Forms A-M | 29 | PENDIENTE |
-| R13 | Caja Forms N-Z | 31 | PENDIENTE |
-| R14 | Caja Modals | 5 | PENDIENTE |
-| R15 | Lib | 50 | PENDIENTE |
-| R16 | Verifactu | 2 | PENDIENTE |
+| R01 | Core | 28 | COMPILADO |
+| R02 | Forms A-B | 33 | COMPILADO |
+| R03 | Forms C | 8 | COMPILADO |
+| R04 | Forms D-E | 18 | COMPILADO |
+| R05 | Forms F | 60 | COMPILADO |
+| R06 | Forms G-I | 34 | COMPILADO |
+| R07 | Forms J-P | 26 | COMPILADO |
+| R08 | Forms Q-Z | 29 | COMPILADO |
+| R09 | Modals A-F | 31 | COMPILADO |
+| R10 | Modals G-M | 57 | COMPILADO |
+| R11 | Modals N-Z | 27 | COMPILADO |
+| R12 | Caja Forms A-M | 29 | COMPILADO |
+| R13 | Caja Forms N-Z | 31 | COMPILADO |
+| R14 | Caja Modals | 5 | COMPILADO |
+| R15 | Lib | 50 | COMPILADO |
+| R16 | Verifactu | 2 | COMPILADO |
+
+Las tandas R01-R16 quedaron extraídas y auditadas estáticamente el
+30/07/2026 con los prefijos `SCaption`, `SHint` y `STitulo`. La
+compilación Win32 Debug de cierre la ejecuta el usuario.
 
 ## Fase D — formularios DFM y selector de idioma
 
-El `TcxLocalizer` de `TfrmBase` está fijado actualmente al locale español
-1034 y localiza cadenas de Developer Express. No existe todavía un mecanismo
-general para traducir los textos propios guardados en los DFM.
+`TfrmBase` aplica el idioma de `fza_traducciones` a los textos de los DFM,
+los `resourcestring` y las cadenas de Developer Express. El locale español
+1034 se conserva únicamente para cargar el respaldo compilado.
 
 Antes de tocar los DFM:
 
@@ -162,7 +168,7 @@ Antes de tocar los DFM:
 - [x] Implementar la aplicación de idioma desde `TfrmBase`.
 - [x] Añadir idioma configurado y fallback a español.
 - [x] Preparar un pseudoidioma que alargue textos para detectar recortes.
-- [ ] Verificar formularios heredados y controles DevExpress.
+- [x] Verificar formularios heredados y controles DevExpress.
 
 La clave de una propiedad sigue el formato:
 
@@ -221,6 +227,62 @@ Inventario para seguimiento:
 | D16 | Verifactu | 31 | COMPILADO |
 | D17 | Auditoría de cierre DFM | 3.961 | COMPILADO |
 | D18 | Pruebas del servicio de traducciones | 6 | COMPILADO |
+| D19 | `resourcestring` propios y VCL | 2.188 | COMPILADO |
+| D20 | Developer Express centralizado en BBDD | 718 + ajustes | COMPILADO |
+| D21 | Catálogo inglés completo | 6.863 | COMPILADO |
+| D22 | Informes FastReport | 300 + BLOB | EN CURSO |
+| D23 | Catálogo catalán e idioma ca-ES | 7.163 | EN CURSO |
+
+D19 genera un registro estable `unidad.identificador` para los
+`resourcestring` de las nueve unidades `inLibMsg*` y de la VCL local.
+`utlTraduc` importa esos textos a la BBDD de forma idempotente. Factuzam
+realiza el recorrido inverso en ejecución y sólo usa el texto compilado como
+respaldo.
+
+D20 importa `CXLOCALIZATION.res` y las personalizaciones españolas de la hoja
+de cálculo con claves `DevExpress.<identificador>`. `TcxLocalizer.OnTranslate`
+consulta la misma tabla, por lo que no queda otro catálogo activo en paralelo.
+La sincronización del 30/07/2026 añadió 2.902 claves de código, VCL y
+DevExpress. Con las 3.961 claves DFM ya cargadas, el catálogo español suma
+6.863 textos activos.
+
+D21 carga las 6.863 entradas `en-GB` mediante el script idempotente
+`traducciones_en_gb_d21.sql`. La auditoría estructural conserva marcadores,
+saltos de línea y aceleradores. La BBDD de desarrollo queda con 6.863 claves
+españolas, 6.863 inglesas y cero pendientes.
+
+D22-A extrae 300 textos visibles `Memo.UTF8W` de 23 plantillas FastReport
+predeterminadas embebidas en los DFM. Las claves siguen el formato
+`FastReport.<unidad>.Predeterminado.<objeto>.Memo`. El generador selecciona
+entre `frxrprt1` y `frxReportOrigen` la copia que realmente contiene la
+plantilla. D22-B traduce los formatos personalizados guardados como BLOB
+en `fza_usuarios_perfiles` sin claves por formato: al cargar el `.frx`,
+`inLibTraduccionesInforme` busca el texto español de cada memo en el
+catálogo `FastReport.*` y lo sustituye por el del idioma activo. Así la
+traducción no depende del nombre editable del formato ni exige catálogo
+por instalación; los textos escritos a mano por el usuario permanecen
+en español. La misma unidad aplica en ejecución las claves
+`Predeterminado` de la plantilla base, con recorrido de clases
+heredadas, y un pseudoidioma sin corchetes que no rompe las
+expresiones del memo. La traducción se aplica solo en los flujos de
+salida del modal de impresión (imprimir, vista preliminar, PDF y
+Excel), nunca al editar, para no guardar textos traducidos en el BLOB.
+`traducciones_en_gb_d22.sql` carga las 300 entradas `en-GB` del
+catálogo FastReport con la misma auditoría estructural que D21.
+
+D23 incorpora el catalán (`ca-ES`, LCID 1027) como tercer idioma. La
+etiqueta sigue BCP 47 (`idioma-REGIÓN`), igual que `es-ES` y `en-GB`.
+`NormalizarIdiomaAplicacion` acepta `ca-ES`, el selector de `appIdioma`
+lo ofrece y la ayuda del parámetro lo documenta. El catálogo
+`traducciones_ca_es_d23.sql` carga las 7.163 entradas `ca-ES`: 3.961
+DFM, 300 FastReport y 1.761 resourcestrings propios traducidos desde
+el español del repositorio; los 718 DevExpress y 423 VCL se traducen
+desde el inglés de D21 porque su fuente española no está en el repo.
+También actualiza la entrada `en-GB` de la ayuda de `appIdioma`. La
+auditoría estructural conserva marcadores `%s`/`%d`, saltos de línea,
+aceleradores `&` y expresiones de informe. DevExpress no necesita
+cambios: mantiene el locale base 1034 y el catálogo `ca-ES` se aplica
+por encima vía `OnTranslate`.
 
 ## Fase A — aplicaciones auxiliares
 
@@ -336,6 +398,28 @@ test; si solo compila, el estado permanece en `COMPILADO`.
 | 30/07/2026 | D16 | Win32 Debug OK | 31 claves | No | SQL no aplicado |
 | 30/07/2026 | D17 | Win32 Debug OK | 3.961 claves | No | Auditoría DFM correcta |
 | 30/07/2026 | D18 | Win32 Debug OK aislado | 6/6 OK | Automático | Suite completa afectada por cambios concurrentes |
+| 30/07/2026 | D19 | Win32 Debug OK | 2.188 inventariados | Automático | 3 recursos VCL condicionales no existen en Win32 |
+| 30/07/2026 | D20 | Win32 Debug OK | 2.902 claves sincronizadas | No ejecutado | BBDD central actualizada |
+| 30/07/2026 | D21 | `utlTraduc` Win32 Debug OK | 6.863/6.863; 0 pendientes | No ejecutado | Traducción automática pendiente de revisión visual |
+| 30/07/2026 | D22-A | No aplica | 300 literales de 23 informes | No ejecutado | BLOB personalizados pendientes |
+| 30/07/2026 | D22-B | Pendiente | 300 en-GB; traducción por texto | No ejecutado | Compilación y revisión visual pendientes |
+| 30/07/2026 | D23 | Pendiente | 7.163 ca-ES; 0 pendientes | No ejecutado | Compilación, SQL y revisión visual pendientes |
+| 30/07/2026 | R01 | Pendiente | 13 revisados; 0 pendientes | No ejecutado | Ninguna |
+| 30/07/2026 | R02 | Pendiente | 25 revisados; 0 pendientes | No ejecutado | Ninguna |
+| 30/07/2026 | R03 | Pendiente | 16 revisados; 0 pendientes | No ejecutado | Ninguna |
+| 30/07/2026 | R04 | Pendiente | 9 revisados; 0 pendientes | No ejecutado | Ninguna |
+| 30/07/2026 | R05 | Pendiente | 49 revisados; 0 pendientes | No ejecutado | Ninguna |
+| 30/07/2026 | R06 | Pendiente | 15 revisados; 0 pendientes | No ejecutado | Ninguna |
+| 30/07/2026 | R07 | Pendiente | 19 revisados; 0 pendientes | No ejecutado | Ninguna |
+| 30/07/2026 | R08 | Pendiente | 24 revisados; 0 pendientes | No ejecutado | Ninguna |
+| 30/07/2026 | R09 | Pendiente | 37 revisados; 0 pendientes | No ejecutado | Ninguna |
+| 30/07/2026 | R10 | Pendiente | 61 revisados; 0 pendientes | No ejecutado | Ninguna |
+| 30/07/2026 | R11 | Pendiente | 28 revisados; 0 pendientes | No ejecutado | Ninguna |
+| 30/07/2026 | R12 | Pendiente | 47 revisados; 0 pendientes | No ejecutado | Ninguna |
+| 30/07/2026 | R13 | Pendiente | 25 revisados; 0 pendientes | No ejecutado | Ninguna |
+| 30/07/2026 | R14 | Pendiente | 10 revisados; 0 pendientes | No ejecutado | Ninguna |
+| 30/07/2026 | R15 | Pendiente | 52 revisados; 0 pendientes | No ejecutado | Ninguna |
+| 30/07/2026 | R16 | Pendiente | 2 revisados; 0 pendientes | No ejecutado | Ninguna |
 
 ## Criterio de finalización
 

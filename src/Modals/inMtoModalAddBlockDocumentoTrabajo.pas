@@ -89,7 +89,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibUser, inLibMsgVentas;
+  inLibUser, inLibMsgComun, inLibMsgVentas;
 
 class function TfrmModalAddBlockDocumentoTrabajo.Ejecutar(
   AOwner: TComponent; AConn: TUniConnection; AIdDtr: Int64;
@@ -105,7 +105,7 @@ begin
     frm.Inicializar(AConn);
     frm.PreseleccionarAlmacen;
     frm.lblDocumentoInfo.Caption :=
-      Format('Documento destino: %d - %s', [AIdDtr, ATitulo]);
+      Format(SCaptionDocumentoDestino, [AIdDtr, ATitulo]);
     frm.ShowModal;
     Result := frm.FResultadoDoc;
   finally
@@ -117,9 +117,9 @@ procedure TfrmModalAddBlockDocumentoTrabajo.FormCreate(Sender: TObject);
 begin
   inherited;
   AjustarAPantalla;
-  Self.Caption := 'Anadir Bloque - Documento de Trabajo';
-  btnAceptar.Caption := '&Aceptar (F12)';
-  btnCancelar.Caption := '&Cancelar (ESC)';
+  Self.Caption := STituloAnadirBloqueDTR;
+  btnAceptar.Caption := SCaptionAceptarF12;
+  btnCancelar.Caption := SCaptionCancelarEsc;
   chkSoloConStock.Checked := True;
   chkSoloConStock.Enabled := False;
   FResultadoDoc.Aceptado := False;

@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoModalWizardEditar                                        }
 {    Tipo:       Formulario (Modal - Wizard)                                   }
@@ -341,7 +341,7 @@ procedure TfrmModalWizardEditar.pgGuiasShow(Sender: TObject);
 begin
   // Cabecera del paso 2 con el formato elegido.
   lblTituloGuias.Caption :=
-    Format(string('Gu'#237'as ligadas al formato "%s"  ('#39'%s'#39')'),
+    Format(SCaptionGuiasLigadasFormato,
            [sFormato, sScope]);
   // Aseguro conexion en los TUniQuery del wizard.
   unqryGuias.Connection         := ConexionPrincipal;

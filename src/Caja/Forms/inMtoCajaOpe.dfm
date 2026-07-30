@@ -372,6 +372,7 @@
           Font.Style = [fsUnderline]
           Font.Quality = fqClearTypeNatural
           ParentFont = False
+          OnClick = btnF61Click
         end
         object btnF7: TcxButton
           Left = 510
@@ -484,7 +485,7 @@
         object lblBusqTick: TcxLabel
           Left = 411
           Top = 71
-          Caption = 'B'#250'sq Tick'
+          Caption = 'Devoluci'#243'n'
           TabOrder = 13
           Transparent = True
         end

@@ -16,7 +16,7 @@
 unit UniDataArticulosValidadorRepositorio;
 
 {
-  Unidad: inLibArticulosValidador
+  Unidad: inLibArticulosValidadorIntf
   Descripción:
     Resuelve una cadena introducida por el usuario (caja, pedidos, albaranes,
     facturas, inventarios, movimientos de almacén, etiquetado, etc.) hasta el
@@ -35,7 +35,7 @@ unit UniDataArticulosValidadorRepositorio;
     librería marca RequiereSku = True y NO selecciona SKU por su cuenta.
     El llamante debe pedir el SKU al usuario (selector talla/color, etc.)
     y volver a llamar con el SKU explícito (o pasarlo a inLibArticulosResolver
-    directamente), apoyándose en `inLibArticulosAtributosLookup` para construir
+    directamente), apoyándose en `inLibArticulosAtributosIntf` para construir
     los desplegables con los valores posibles.
 
   Uso típico:

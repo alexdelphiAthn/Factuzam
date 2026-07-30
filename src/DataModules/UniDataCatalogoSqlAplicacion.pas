@@ -36,6 +36,7 @@ uses
   inLibCatalogoSqlPerfiles,
   inLibCatalogoSqlAdmin,
   inLibLog,
+  UniDataComprasSesionesMaterializacionRepositorio,
   UniDataComprasSesionesRepositorio,
   UniDataFacturasRepositorio,
   UniDataCajaConsultasRepositorio,
@@ -44,7 +45,9 @@ uses
   UniDataArticulosAtributosRepositorio,
   UniDataTraspasoTicketRepositorio,
   UniDataArqueoRepositorio,
-  UniDataArqueoTicketRepositorio;
+  UniDataArqueoTicketRepositorio,
+  UniDataTiraCajaTicketRepositorio,
+  UniDataTicketsCajaRepositorio;
 
 resourcestring
   SErrorCatalogoSqlAplicacion =
@@ -59,6 +62,9 @@ begin
   oRegistro := TRegistroDefinicionesSql.Create;
   oRegistro.AgregarRango(
     TRepositorioComprasSesiones.DefinicionesSql);
+  oRegistro.AgregarRango(
+    TRepositorioLecturasMaterializacionComprasSesiones.
+      DefinicionesSql);
   oRegistro.AgregarRango(
     TRepositorioFacturas.DefinicionesSql);
   oRegistro.AgregarRango(
@@ -75,6 +81,10 @@ begin
     TRepositorioArqueoCaja.DefinicionesSql);
   oRegistro.AgregarRango(
     TRepositorioArqueoTicket.DefinicionesSql);
+  oRegistro.AgregarRango(
+    TRepositorioTiraCajaTicket.DefinicionesSql);
+  oRegistro.AgregarRango(
+    TRepositorioTicketsCaja.DefinicionesSql);
   Result := oRegistro;
 end;
 

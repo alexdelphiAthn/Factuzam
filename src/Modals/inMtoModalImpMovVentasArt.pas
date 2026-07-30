@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalImpMovVentasArt                                     }
 {    Tipo:       Formulario (Modal)                                            }
@@ -74,6 +74,7 @@ implementation
 
 uses
   System.StrUtils, inMtoPreviewExcel, inLibMovVentasArtExcel,
+  inLibMsgVentas,
   inLibHojaCalculoDevEx, dxSpreadSheet, inLibFotos;
 
 { TfrmPrintMovVentasArt }
@@ -114,7 +115,7 @@ begin
     FchkIniCompras.Left      := 220;
     FchkIniCompras.Top       := 16;
     FchkIniCompras.Width     := 210;
-    FchkIniCompras.Caption   := 'Filtrar por inicio de compras';
+    FchkIniCompras.Caption   := SCaptionFiltrarInicioCompras;
     FchkIniCompras.Properties.OnEditValueChanged := chkIniComprasChange;
     FdteIniCompras := TcxDateEdit.Create(Self);
     FdteIniCompras.Parent  := TabFechas;
@@ -130,7 +131,7 @@ begin
     FchkSoloVentas.Left    := 220;
     FchkSoloVentas.Top     := 72;
     FchkSoloVentas.Width   := 210;
-    FchkSoloVentas.Caption := 'Solo artículos con ventas';
+    FchkSoloVentas.Caption := SCaptionSoloArticulosConVentas;
   end;
   // Pestaña "Agrupaciones": almacén/proveedor/familia/temporada reordenables
   // + spin de nivel de familia (igual que el balance de almacén).

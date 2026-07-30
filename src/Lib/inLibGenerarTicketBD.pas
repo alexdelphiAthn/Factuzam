@@ -1,4 +1,4 @@
-﻿{******************************************************************************}
+{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibGenerarTicketBD                                          }
 {    Tipo:       Librería                                                      }
@@ -9,172 +9,112 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Generación de tickets recuperando los datos desde la BBDD.                }
-{    Imprime ticket de venta, resguardo de depósito y recordatorios al cliente.}
+{    Genera tickets desde read models sin conocer UniDAC ni el esquema SQL.    }
 {******************************************************************************}
 unit inLibGenerarTicketBD;
 
 interface
 
 uses
-  System.SysUtils,
-  System.Classes,
-  Data.DB,
-  Uni,
-  inLibFTicket,        // Donde está tu TTicketTermico
-  inLibData,
-  inLibUnidadesMedida, // Decimales por unidad en la cantidad
-  inLibDir,            // Para GetUserFolderTickets
-  inLibParametrosIntf;
+  System.SysUtils, System.Classes, inLibFTicket,
+  inLibUnidadesMedida, inLibDir, inLibParametrosIntf,
+  inLibTicketsCajaIntf;
 
-  /// <summary>
-  /// Genera un resguardo no fiscal con las prendas que el cliente
-  ///tiene apartadas.
-  /// </summary>
-  procedure ImprimirResguardoDeposito(AConexion: TUniConnection;
-                                      const ACodigoEmpresa,
-                                            ACodigoAlmacen,
-                                            ACodigoCaja,
-                                            AOperacion: string;
-                                      const ANombreImpresora: string = 'DEBUG';
-                                      ARutasPDF: TStrings = nil;
-                                      ASoloPDF: Boolean = False);
-  /// <summary>
-  /// Genera e imprime un ticket recuperando todos los datos
-  /// directamente de la Base de Datos.
-  /// </summary>
-  procedure ImprimirTicketDesdeBD(
-                                  const AParametrosApp:
-                                  IParametrosAplicacion;
-                                  AConexion: TUniConnection;
-                                  const ACodigoEmpresa,
-                                        ACodigoAlmacen,
-                                        ACodigoCaja,
-                                        ANumeroOperacion: string;
-                                  const ANombreImpresora: string = 'DEBUG';
-                                  ARutasPDF: TStrings = nil;
-                                  ASoloPDF: Boolean = False);
-  procedure ImprimirRecordatorio(AConexion: TUniConnection;
-                                 const ACodigoEmpresa: string;
-                                 CodigoCliente:string;
-                                 NombreImpresora:string='DEBUG';
-                                 ARutasPDF: TStrings = nil;
-                                 ASoloPDF: Boolean = False);
+procedure ImprimirResguardoDeposito(
+  const ARepositorio: IRepositorioTicketsCaja;
+  const ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja,
+  AOperacion: string;
+  const ANombreImpresora: string = 'DEBUG';
+  ARutasPDF: TStrings = nil;
+  ASoloPDF: Boolean = False);
+procedure ImprimirTicketDesdeBD(
+  const AParametrosApp: IParametrosAplicacion;
+  const ARepositorio: IRepositorioTicketsCaja;
+  const ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja,
+  ANumeroOperacion: string;
+  const ANombreImpresora: string = 'DEBUG';
+  ARutasPDF: TStrings = nil;
+  ASoloPDF: Boolean = False;
+  AImprimirCodigoBarras: Boolean = False);
+procedure ImprimirRecordatorio(
+  const ARepositorio: IRepositorioTicketsCaja;
+  const ACodigoEmpresa, ACodigoCliente: string;
+  const ANombreImpresora: string = 'DEBUG';
+  ARutasPDF: TStrings = nil;
+  ASoloPDF: Boolean = False);
+
 implementation
 
 uses
-  inLibVerifactu, inLibFormatoDocumento, inLibGenerarTicket,
+  inLibVerifactu, inLibFormatoDocumento,
   inLibPreviewTicket, inLibMsgCaja;
 
-// Función auxiliar para rellenar con ceros (LPAD)
-function LPAD(const AValue: string;
-              ALength: Integer;
-              const APadChar: Char = '0'): string;
+function LPAD(
+  const AValue: string;
+  ALength: Integer;
+  const APadChar: Char = '0'): string;
 var
-  CurrentLength: Integer;
+  iLongitudActual: Integer;
 begin
-  CurrentLength := Length(AValue);
-  if CurrentLength >= ALength then
+  iLongitudActual := Length(AValue);
+  if iLongitudActual >= ALength then
     Result := AValue
   else
-    Result := StringOfChar(APadChar, ALength - CurrentLength) + AValue;
+    Result := StringOfChar(APadChar, ALength - iLongitudActual) + AValue;
 end;
 
-const
-  SQL_EMPRESA_RESGUARDO =
-    'SELECT RAZON_SOCIAL_EMP ' +
-    '  FROM fza_empresas ' +
-    ' WHERE CODIGO_EMP_EMP = :EMP';
-  SQL_FECHA_RESGUARDO =
-    'SELECT FECHA_OPERACION_OPCAJA ' +
-    '  FROM fza_caja_operaciones ' +
-    ' WHERE CODIGO_EMP_OPCAJA = :EMP ' +
-    '   AND CODIGO_ALM_OPCAJA = :ALM ' +
-    '   AND CODIGO_CAJA_OPCAJA = :CAJ ' +
-    '   AND NUMERO_OPERACION_OPCAJA = :OPE';
-  SQL_NUEVOS_DEPOSITOS_RESGUARDO =
-    '   SELECT d.CODIGO_UNIDAD_DEP, ' +
-    '          a.DESCRIPCION_ART, ' +
-    '          d.CODIGO_CLI_DEP, ' +
-    '          (d.PRECIO_VENTA_DEP * ' +
-    '           d.CANTIDAD_PENDIENTE_DEP) AS TOTAL_PVP ' +
-    '     FROM fza_depositos_cliente d ' +
-    'LEFT JOIN fza_articulos a ' +
-    '       ON a.CODIGO_ART_ART = d.CODIGO_ART_DEP' +
-    '    WHERE d.CODIGO_EMP_DEP = :EMP ' +
-    '      AND d.CODIGO_ALM_DEP = :ALM ' +
-    '      AND d.CODIGO_CAJA_DEP = :CAJ ' +
-    '      AND d.NUMERO_OPERACION_DEP = :OPE';
-  SQL_ENTREGAS_RESGUARDO =
-    '   SELECT o.TIPO_OPERACION_OPCAJA, ' +
-    '          o.IMPORTE_TOTAL_OPCAJA, ' +
-    '          a.DESCRIPCION_ART ' +
-    '     FROM fza_caja_operaciones o ' +
-    'LEFT JOIN fza_depositos_cliente d ON d.ID_DEPOSITO_DEP = ' +
-    'o.ID_DEPOSITO_OPCAJA ' +
-    'LEFT JOIN fza_articulos a ON a.CODIGO_ART_ART = d.CODIGO_ART_DEP ' +
-    '    WHERE o.CODIGO_EMP_OPCAJA = :EMP ' +
-    '      AND o.CODIGO_ALM_OPCAJA = :ALM ' +
-    '      AND o.CODIGO_CAJA_OPCAJA = :CAJ ' +
-    '      AND o.NUMERO_OPERACION_OPCAJA = :OPE ' +
-    '      AND o.TIPO_OPERACION_OPCAJA IN (''CB'', ''DE'') ' +
-    '      AND o.IMPORTE_TOTAL_OPCAJA > 0';
-  SQL_DEVOLUCION_ECONOMICA_RESGUARDO =
-    'SELECT TIPO_OPERACION_OPCAJA, IMPORTE_TOTAL_OPCAJA ' +
-    'FROM fza_caja_operaciones ' +
-    'WHERE CODIGO_EMP_OPCAJA = :EMP ' +
-    '  AND CODIGO_ALM_OPCAJA = :ALM ' +
-    '  AND CODIGO_CAJA_OPCAJA = :CAJ ' +
-    '  AND NUMERO_OPERACION_OPCAJA = :OPE ' +
-    '  AND TIPO_OPERACION_OPCAJA IN (''DV'')';
-  SQL_DEPOSITOS_DEVUELTOS_RESGUARDO =
-    '   SELECT d.CODIGO_UNIDAD_DEP, ' +
-    '          a.DESCRIPCION_ART, ' +
-    '          d.CODIGO_CLI_DEP, ' +
-    '          (d.PRECIO_VENTA_DEP * ' +
-    '           d.CANTIDAD_PENDIENTE_DEP) AS TOTAL_PVP ' +
-    '     FROM fza_depositos_cliente d ' +
-    'LEFT JOIN fza_articulos a ' +
-    '       ON a.CODIGO_ART_ART = d.CODIGO_ART_DEP' +
-    '    WHERE d.EMPRESA_CANCEL_DEP = :EMP ' +
-    '      AND d.ALMACEN_CANCEL_DEP = :ALM ' +
-    '      AND d.CAJA_CANCEL_DEP = :CAJ ' +
-    '      AND d.NUMERO_OPERACION_CANCEL_DEP = :OPE';
-  SQL_TOTAL_PAGADO_RESGUARDO =
-    'SELECT SUM(IMPORTE_ENTREGADO_PAGO - ' +
-    '           IMPORTE_CAMBIO_PAGO) AS TOTAL ' +
-    '  FROM fza_caja_pagos ' +
-    ' WHERE CODIGO_EMP_PAGO = :EMP ' +
-    '   AND CODIGO_ALM_PAGO = :ALM ' +
-    '   AND CODIGO_CAJA_PAGO = :CAJ ' +
-    '   AND NUMERO_OPERACION_PAGO = :OPE';
+procedure EscribirPieTicket(
+  ATicket: TTicketTermico;
+  const ALineas: TArray<string>);
+var
+  bHaEscrito: Boolean;
+  i: Integer;
+  sLinea: string;
+begin
+  bHaEscrito := False;
+  if ATicket <> nil then
+  begin
+    for i := 0 to High(ALineas) do
+    begin
+      sLinea := Copy(Trim(ALineas[i]), 1, 42);
+      if sLinea <> '' then
+      begin
+        if not bHaEscrito then
+        begin
+          ATicket.SaltarLineas(1);
+          ATicket.Alinear(alCentro);
+          bHaEscrito := True;
+        end;
+        ATicket.EscribirLinea(sLinea);
+      end;
+    end;
+  end;
+end;
 
 type
   TGeneradorResguardoDeposito = class
   private
-    FConexion: TUniConnection;
-    FCodigoEmpresa: string;
-    FCodigoAlmacen: string;
-    FCodigoCaja: string;
-    FOperacion: string;
+    FRepositorio: IRepositorioTicketsCaja;
+    FContexto: TContextoOperacionTicketCaja;
     FNombreImpresora: string;
     FRutasPDF: TStrings;
     FSoloPDF: Boolean;
-    FConsulta: TUniQuery;
     FTicket: TTicketTermico;
     FNombreEmpresa: string;
     FFechaOperacion: TDateTime;
+    FNuevosDepositos: TArray<TDepositoResguardoTicketCaja>;
     FTotalNuevos: Currency;
     FTotalEntregas: Currency;
     FTotalDevoluciones: Currency;
     FTotalDevueltos: Currency;
-    procedure AsignarParametro(const ANombre, AValor: string);
-    procedure AbrirConsulta(const ASql: string);
     procedure CargarCabecera;
     procedure EscribirTituloSeccion(const ATitulo: string);
     procedure EscribirCabecera;
-    procedure EscribirDepositos(const ATitulo: string;
-      ASaltarAntes: Boolean; var ATotal: Currency);
+    procedure EscribirDepositos(
+      const ATitulo: string;
+      ASaltarAntes: Boolean;
+      const ADepositos: TArray<TDepositoResguardoTicketCaja>;
+      var ATotal: Currency);
     procedure EscribirEntregas;
     procedure EscribirDevolucionEconomica;
     procedure EscribirResumen;
@@ -182,71 +122,55 @@ type
     function HayMovimientos: Boolean;
     function TotalPagadoCaja: Currency;
   public
-    constructor Create(AConexion: TUniConnection;
+    constructor Create(
+      const ARepositorio: IRepositorioTicketsCaja;
       const ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja,
-      AOperacion, ANombreImpresora: string; ARutasPDF: TStrings;
+      AOperacion, ANombreImpresora: string;
+      ARutasPDF: TStrings;
       ASoloPDF: Boolean);
     destructor Destroy; override;
     procedure Ejecutar;
   end;
 
-constructor TGeneradorResguardoDeposito.Create(AConexion: TUniConnection;
-  const ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja, AOperacion,
-  ANombreImpresora: string; ARutasPDF: TStrings; ASoloPDF: Boolean);
+constructor TGeneradorResguardoDeposito.Create(
+  const ARepositorio: IRepositorioTicketsCaja;
+  const ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja,
+  AOperacion, ANombreImpresora: string;
+  ARutasPDF: TStrings;
+  ASoloPDF: Boolean);
 begin
   inherited Create;
-  FConexion := AConexion;
-  FCodigoEmpresa := ACodigoEmpresa;
-  FCodigoAlmacen := ACodigoAlmacen;
-  FCodigoCaja := ACodigoCaja;
-  FOperacion := AOperacion;
+  FRepositorio := ARepositorio;
+  FContexto.Empresa := ACodigoEmpresa;
+  FContexto.Almacen := ACodigoAlmacen;
+  FContexto.Caja := ACodigoCaja;
+  FContexto.Operacion := AOperacion;
   FNombreImpresora := ANombreImpresora;
   FRutasPDF := ARutasPDF;
   FSoloPDF := ASoloPDF;
-  FConsulta := TUniQuery.Create(nil);
-  FConsulta.Connection := FConexion;
   FTicket := TTicketTermico.Create(FNombreImpresora);
 end;
 
 destructor TGeneradorResguardoDeposito.Destroy;
 begin
   FreeAndNil(FTicket);
-  FreeAndNil(FConsulta);
+  FRepositorio := nil;
   inherited;
 end;
 
-procedure TGeneradorResguardoDeposito.AsignarParametro(
-  const ANombre, AValor: string);
-var
-  Parametro: TParam;
-begin
-  Parametro := FConsulta.Params.FindParam(ANombre);
-  if Parametro <> nil then
-    Parametro.AsString := AValor;
-end;
-
-procedure TGeneradorResguardoDeposito.AbrirConsulta(const ASql: string);
-begin
-  FConsulta.Close;
-  FConsulta.SQL.Text := ASql;
-  AsignarParametro('EMP', FCodigoEmpresa);
-  AsignarParametro('ALM', FCodigoAlmacen);
-  AsignarParametro('CAJ', FCodigoCaja);
-  AsignarParametro('OPE', FOperacion);
-  FConsulta.Open;
-end;
-
 procedure TGeneradorResguardoDeposito.CargarCabecera;
+var
+  oEmpresa: TEmpresaResguardoTicketCaja;
+  oFecha: TFechaResguardoTicketCaja;
 begin
   FFechaOperacion := 0;
-  AbrirConsulta(SQL_EMPRESA_RESGUARDO);
-  if not FConsulta.IsEmpty then
-    FNombreEmpresa :=
-      FConsulta.FieldByName('RAZON_SOCIAL_EMP').AsString;
-  AbrirConsulta(SQL_FECHA_RESGUARDO);
-  if not FConsulta.IsEmpty then
-    FFechaOperacion :=
-      FConsulta.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime;
+  oEmpresa := FRepositorio.ObtenerEmpresaResguardo(
+    FContexto.Empresa);
+  if oEmpresa.Encontrada then
+    FNombreEmpresa := oEmpresa.RazonSocial;
+  oFecha := FRepositorio.ObtenerFechaResguardo(FContexto);
+  if oFecha.Encontrada then
+    FFechaOperacion := oFecha.FechaOperacion;
 end;
 
 procedure TGeneradorResguardoDeposito.EscribirTituloSeccion(
@@ -263,12 +187,11 @@ end;
 
 procedure TGeneradorResguardoDeposito.EscribirCabecera;
 var
-  CodigoCliente: string;
+  sCodigoCliente: string;
 begin
-  CodigoCliente := '';
-  if not FConsulta.IsEmpty then
-    CodigoCliente :=
-      FConsulta.FieldByName('CODIGO_CLI_DEP').AsString;
+  sCodigoCliente := '';
+  if Length(FNuevosDepositos) > 0 then
+    sCodigoCliente := FNuevosDepositos[0].CodigoCliente;
   FTicket.Inicializar;
   FTicket.Alinear(alCentro);
   FTicket.Negrita(True);
@@ -280,39 +203,39 @@ begin
   FTicket.Negrita(False);
   FTicket.SaltarLineas(1);
   FTicket.Alinear(alIzquierda);
-  FTicket.TextoColumnas('CÓDIGO CLIENTE:', CodigoCliente);
-  FTicket.TextoColumnas('FECHA:',
+  FTicket.TextoColumnas('CÓDIGO CLIENTE:', sCodigoCliente);
+  FTicket.TextoColumnas(
+    'FECHA:',
     FormatDateTime('dd/mm/yyyy hh:nn', FFechaOperacion));
-  FTicket.TextoColumnas('Nº OPERACIÓN:', FOperacion);
+  FTicket.TextoColumnas('Nº OPERACIÓN:', FContexto.Operacion);
   FTicket.SaltarLineas(1);
 end;
 
 procedure TGeneradorResguardoDeposito.EscribirDepositos(
-  const ATitulo: string; ASaltarAntes: Boolean; var ATotal: Currency);
+  const ATitulo: string;
+  ASaltarAntes: Boolean;
+  const ADepositos: TArray<TDepositoResguardoTicketCaja>;
+  var ATotal: Currency);
 var
-  Descripcion: string;
-  Sku: string;
-  Pvp: Currency;
+  i: Integer;
 begin
-  if not FConsulta.IsEmpty then
+  if Length(ADepositos) > 0 then
   begin
     if ASaltarAntes then
       FTicket.SaltarLineas(1);
     EscribirTituloSeccion(ATitulo);
-    while not FConsulta.Eof do
+    for i := 0 to High(ADepositos) do
     begin
-      Descripcion := FConsulta.FieldByName('DESCRIPCION_ART').AsString;
-      Sku := FConsulta.FieldByName('CODIGO_UNIDAD_DEP').AsString;
-      Pvp := FConsulta.FieldByName('TOTAL_PVP').AsCurrency;
-      ATotal := ATotal + Pvp;
-      if Descripcion <> '' then
-        FTicket.EscribirLinea(Copy(Descripcion, 1, 40));
-      FTicket.EscribirLinea(Sku);
+      ATotal := ATotal + ADepositos[i].TotalPvp;
+      if ADepositos[i].Descripcion <> '' then
+        FTicket.EscribirLinea(
+          Copy(ADepositos[i].Descripcion, 1, 40));
+      FTicket.EscribirLinea(ADepositos[i].CodigoUnidad);
       FTicket.Alinear(alDerecha);
-      FTicket.EscribirLinea('Valor Artículo: ' +
-        FormatFloat('#,##0.00', Pvp) + ' €');
+      FTicket.EscribirLinea(
+        'Valor Artículo: ' +
+        FormatFloat('#,##0.00', ADepositos[i].TotalPvp) + ' €');
       FTicket.Alinear(alIzquierda);
-      FConsulta.Next;
     end;
     FTicket.SaltarLineas(1);
   end;
@@ -320,45 +243,38 @@ end;
 
 procedure TGeneradorResguardoDeposito.EscribirEntregas;
 var
-  TipoOperacion: string;
-  NombreArticulo: string;
-  Concepto: string;
-  Importe: Currency;
+  i: Integer;
+  sConcepto: string;
+  oEntregas: TArray<TEntregaResguardoTicketCaja>;
 begin
-  AbrirConsulta(SQL_ENTREGAS_RESGUARDO);
-  if not FConsulta.IsEmpty then
+  oEntregas := FRepositorio.ListarEntregasResguardo(FContexto);
+  if Length(oEntregas) > 0 then
   begin
     EscribirTituloSeccion('ENTREGAS A CUENTA');
-    while not FConsulta.Eof do
+    for i := 0 to High(oEntregas) do
     begin
-      TipoOperacion :=
-        FConsulta.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
-      Importe :=
-        FConsulta.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
-      NombreArticulo :=
-        FConsulta.FieldByName('DESCRIPCION_ART').AsString;
-      FTotalEntregas := FTotalEntregas + Importe;
-      Concepto := '';
-      if Trim(NombreArticulo) <> '' then
+      FTotalEntregas := FTotalEntregas + oEntregas[i].Importe;
+      sConcepto := '';
+      if Trim(oEntregas[i].DescripcionArticulo) <> '' then
       begin
-        if TipoOperacion = 'CB' then
-          Concepto := 'A cuenta: ' + NombreArticulo
-        else if TipoOperacion = 'DE' then
-          Concepto := 'A cta. inicial: ' + NombreArticulo;
+        if oEntregas[i].TipoOperacion = 'CB' then
+          sConcepto := 'A cuenta: ' + oEntregas[i].DescripcionArticulo
+        else if oEntregas[i].TipoOperacion = 'DE' then
+          sConcepto := 'A cta. inicial: ' +
+            oEntregas[i].DescripcionArticulo;
       end
       else
       begin
-        if TipoOperacion = 'CB' then
-          Concepto := 'A cuenta para artículo pendiente'
-        else if TipoOperacion = 'DE' then
-          Concepto := 'A cuenta inicial';
+        if oEntregas[i].TipoOperacion = 'CB' then
+          sConcepto := 'A cuenta para artículo pendiente'
+        else if oEntregas[i].TipoOperacion = 'DE' then
+          sConcepto := 'A cuenta inicial';
       end;
-      FTicket.EscribirLinea(Copy(Concepto, 1, 40));
+      FTicket.EscribirLinea(Copy(sConcepto, 1, 40));
       FTicket.Alinear(alDerecha);
       FTicket.EscribirLinea(
-        FormatFloat('#,##0.00', Importe) + ' €');
+        FormatFloat('#,##0.00', oEntregas[i].Importe) + ' €');
       FTicket.Alinear(alIzquierda);
-      FConsulta.Next;
     end;
     FTicket.SaltarLineas(1);
   end;
@@ -366,26 +282,24 @@ end;
 
 procedure TGeneradorResguardoDeposito.EscribirDevolucionEconomica;
 var
-  Concepto: string;
-  Importe: Currency;
+  i: Integer;
+  oDevoluciones: TArray<TDevolucionEconomicaTicketCaja>;
 begin
-  AbrirConsulta(SQL_DEVOLUCION_ECONOMICA_RESGUARDO);
-  if not FConsulta.IsEmpty then
+  oDevoluciones :=
+    FRepositorio.ListarDevolucionesEconomicasResguardo(FContexto);
+  if Length(oDevoluciones) > 0 then
   begin
     EscribirTituloSeccion('DEVOLUCIÓN ECONÓMICA');
-    while not FConsulta.Eof do
+    for i := 0 to High(oDevoluciones) do
     begin
-      Concepto :=
-        FConsulta.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
-      Importe :=
-        FConsulta.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
-      FTotalDevoluciones := FTotalDevoluciones + Importe;
-      FTicket.EscribirLinea(Copy(Concepto, 1, 40));
+      FTotalDevoluciones :=
+        FTotalDevoluciones + oDevoluciones[i].Importe;
+      FTicket.EscribirLinea(
+        Copy(oDevoluciones[i].TipoOperacion, 1, 40));
       FTicket.Alinear(alDerecha);
       FTicket.EscribirLinea(
-        FormatFloat('#,##0.00', Importe) + ' €');
+        FormatFloat('#,##0.00', oDevoluciones[i].Importe) + ' €');
       FTicket.Alinear(alIzquierda);
-      FConsulta.Next;
     end;
   end;
 end;
@@ -401,71 +315,90 @@ end;
 
 function TGeneradorResguardoDeposito.TotalPagadoCaja: Currency;
 begin
-  Result := 0;
-  AbrirConsulta(SQL_TOTAL_PAGADO_RESGUARDO);
-  if not FConsulta.IsEmpty then
-    Result := FConsulta.FieldByName('TOTAL').AsCurrency;
+  Result := FRepositorio.ObtenerTotalPagadoResguardo(FContexto);
 end;
 
 procedure TGeneradorResguardoDeposito.EscribirResumen;
 var
-  TotalPagado: Currency;
+  dTotalPagado: Currency;
 begin
-  TotalPagado := TotalPagadoCaja;
+  dTotalPagado := TotalPagadoCaja;
   FTicket.LineaSeparadora('=');
   FTicket.SaltarLineas(1);
   FTicket.Alinear(alDerecha);
   if FTotalNuevos > 0 then
-    FTicket.EscribirLinea('TOTAL NUEVOS DEPÓSITOS: ' +
+    FTicket.EscribirLinea(
+      'TOTAL NUEVOS DEPÓSITOS: ' +
       FormatFloat('#,##0.00', FTotalNuevos) + ' €');
   if FTotalDevueltos <> 0 then
-    FTicket.EscribirLinea('TOTAL DEPÓSITOS DEVUELTOS: ' +
+    FTicket.EscribirLinea(
+      'TOTAL DEPÓSITOS DEVUELTOS: ' +
       FormatFloat('#,##0.00', FTotalDevueltos) + ' €');
-  FTicket.EscribirLinea('ANTICIPOS ENTREGADOS AHORA: ' +
+  FTicket.EscribirLinea(
+    'ANTICIPOS ENTREGADOS AHORA: ' +
     FormatFloat('#,##0.00', FTotalEntregas) + ' €');
   if FTotalDevoluciones < 0 then
-    FTicket.EscribirLinea('DEVUELTO EN ESTA OPERACIÓN: ' +
+    FTicket.EscribirLinea(
+      'DEVUELTO EN ESTA OPERACIÓN: ' +
       FormatFloat('#,##0.00', FTotalDevoluciones) + ' €');
   FTicket.SaltarLineas(1);
   FTicket.Negrita(True);
-  FTicket.EscribirLinea('TOTAL PAGADO (TICKET + DEPÓSITOS): ' +
-    FormatFloat('#,##0.00', TotalPagado) + ' €');
+  FTicket.EscribirLinea(
+    'TOTAL PAGADO (TICKET + DEPÓSITOS): ' +
+    FormatFloat('#,##0.00', dTotalPagado) + ' €');
   FTicket.Negrita(False);
   FTicket.SaltarLineas(2);
   FTicket.Alinear(alCentro);
   FTicket.EscribirLinea('Conforme, el cliente');
   FTicket.SaltarLineas(4);
   FTicket.LineaSeparadora('_');
-  EscribirPieTicketCaja(FConexion, FTicket, FCodigoEmpresa);
+  EscribirPieTicket(
+    FTicket,
+    FRepositorio.ListarPieTicket(FContexto.Empresa));
   FTicket.CortarPapel;
 end;
 
 procedure TGeneradorResguardoDeposito.GenerarSalida;
 var
-  ComandosESC: string;
-  RutaFicheroPDF: string;
+  sComandosEsc: string;
+  sRutaFicheroPdf: string;
 begin
-  ComandosESC := FTicket.ObtenerComandos;
-  RutaFicheroPDF := GetUserFolderTickets + 'ResguardoDep_' +
+  sComandosEsc := FTicket.ObtenerComandos;
+  sRutaFicheroPdf :=
+    GetUserFolderTickets + 'ResguardoDep_' +
     FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-  ImprimirOPrevisualizarTicket(FTicket, ComandosESC, RutaFicheroPDF,
-    FNombreImpresora, FSoloPDF);
-  if (FRutasPDF <> nil) and FileExists(RutaFicheroPDF) then
-    FRutasPDF.Add(RutaFicheroPDF);
+  ImprimirOPrevisualizarTicket(
+    FTicket,
+    sComandosEsc,
+    sRutaFicheroPdf,
+    FNombreImpresora,
+    FSoloPDF);
+  if (FRutasPDF <> nil) and FileExists(sRutaFicheroPdf) then
+    FRutasPDF.Add(sRutaFicheroPdf);
 end;
 
 procedure TGeneradorResguardoDeposito.Ejecutar;
+var
+  oDepositosDevueltos: TArray<TDepositoResguardoTicketCaja>;
 begin
   CargarCabecera;
-  AbrirConsulta(SQL_NUEVOS_DEPOSITOS_RESGUARDO);
+  FNuevosDepositos :=
+    FRepositorio.ListarNuevosDepositosResguardo(FContexto);
   EscribirCabecera;
-  EscribirDepositos('MOVIMIENTO DE DEPÓSITOS/PRÉSTAMOS',
-    False, FTotalNuevos);
+  EscribirDepositos(
+    'MOVIMIENTO DE DEPÓSITOS/PRÉSTAMOS',
+    False,
+    FNuevosDepositos,
+    FTotalNuevos);
   EscribirEntregas;
   EscribirDevolucionEconomica;
-  AbrirConsulta(SQL_DEPOSITOS_DEVUELTOS_RESGUARDO);
-  EscribirDepositos('DEVOLUCIÓN DE ARTÍCULOS',
-    True, FTotalDevueltos);
+  oDepositosDevueltos :=
+    FRepositorio.ListarDepositosDevueltosResguardo(FContexto);
+  EscribirDepositos(
+    'DEVOLUCIÓN DE ARTÍCULOS',
+    True,
+    oDepositosDevueltos,
+    FTotalDevueltos);
   if HayMovimientos then
   begin
     EscribirResumen;
@@ -473,547 +406,444 @@ begin
   end;
 end;
 
-procedure ImprimirResguardoDeposito(AConexion: TUniConnection;
-                                    const ACodigoEmpresa,
-                                          ACodigoAlmacen,
-                                          ACodigoCaja,
-                                          AOperacion: string;
-                                    const ANombreImpresora: string = 'DEBUG';
-                                    ARutasPDF: TStrings = nil;
-                                    ASoloPDF: Boolean = False);
+procedure ImprimirResguardoDeposito(
+  const ARepositorio: IRepositorioTicketsCaja;
+  const ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja,
+  AOperacion: string;
+  const ANombreImpresora: string;
+  ARutasPDF: TStrings;
+  ASoloPDF: Boolean);
 var
-  Generador: TGeneradorResguardoDeposito;
+  oGenerador: TGeneradorResguardoDeposito;
 begin
-  if Trim(AOperacion) <> '' then
+  if (Trim(AOperacion) <> '') and Assigned(ARepositorio) then
   begin
-    Generador := TGeneradorResguardoDeposito.Create(
-      AConexion, ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja,
-      AOperacion, ANombreImpresora, ARutasPDF, ASoloPDF);
+    oGenerador := TGeneradorResguardoDeposito.Create(
+      ARepositorio,
+      ACodigoEmpresa,
+      ACodigoAlmacen,
+      ACodigoCaja,
+      AOperacion,
+      ANombreImpresora,
+      ARutasPDF,
+      ASoloPDF);
     try
-      Generador.Ejecutar;
+      oGenerador.Ejecutar;
     finally
-      FreeAndNil(Generador);
+      FreeAndNil(oGenerador);
     end;
   end;
 end;
 
 procedure ImprimirTicketDesdeBD(
-                                const AParametrosApp:
-                                IParametrosAplicacion;
-                                AConexion: TUniConnection;
-                                const ACodigoEmpresa,
-                                      ACodigoAlmacen,
-                                      ACodigoCaja,
-                                      ANumeroOperacion: string;
-                                const ANombreImpresora: string = 'DEBUG';
-                                ARutasPDF: TStrings = nil;
-                                ASoloPDF: Boolean = False);
+  const AParametrosApp: IParametrosAplicacion;
+  const ARepositorio: IRepositorioTicketsCaja;
+  const ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja,
+  ANumeroOperacion: string;
+  const ANombreImpresora: string;
+  ARutasPDF: TStrings;
+  ASoloPDF: Boolean;
+  AImprimirCodigoBarras: Boolean);
 var
-  QryCab, QryLin, QryPagos: TUniQuery;
-  Ticket: TTicketTermico;
-  ComandosESC, RutaFicheroPDF: string;
-  QRTexto: string;
-  DocumentoFac, SerieFac, NroFac: string;
-  FechaOperacion: TDateTime;
+  bTieneFactura: Boolean;
+  dFechaOperacion: TDateTime;
+  dTotalCambio: Currency;
+  i: Integer;
+  sArt: string;
+  sCodigoBarras: string;
+  sComandosEsc: string;
+  sDocumentoFac: string;
+  sQrTexto: string;
+  sRutaFicheroPdf: string;
+  sUds: string;
+  sUnidad: string;
+  oCabecera: TCabeceraTicketCaja;
+  oContexto: TContextoOperacionTicketCaja;
+  oLineas: TArray<TLineaTicketCaja>;
+  oPagos: TArray<TPagoTicketCaja>;
+  oTicket: TTicketTermico;
+  oVales: TArray<TValeTicketCaja>;
 begin
-  QryCab   := TUniQuery.Create(nil);
-  QryLin   := TUniQuery.Create(nil);
-  QryPagos := TUniQuery.Create(nil);
-
+  if not Assigned(ARepositorio) then
+    raise Exception.Create(SErrorOperacionCajaNoEncontrada);
+  oContexto.Empresa := ACodigoEmpresa;
+  oContexto.Almacen := ACodigoAlmacen;
+  oContexto.Caja := ACodigoCaja;
+  oContexto.Operacion := ANumeroOperacion;
+  oCabecera := ARepositorio.ObtenerCabeceraTicket(oContexto);
+  if not oCabecera.Encontrada then
+    raise Exception.Create(SErrorOperacionCajaNoEncontrada);
+  dFechaOperacion := oCabecera.FechaOperacion;
+  if (Frac(dFechaOperacion) = 0) and
+     (oCabecera.InstanteAlta <> 0) then
+    dFechaOperacion :=
+      Trunc(dFechaOperacion) + Frac(oCabecera.InstanteAlta);
+  bTieneFactura :=
+    (oCabecera.SerieFactura <> '') and
+    (oCabecera.NumeroFactura <> '');
+  sDocumentoFac := FormatearDocumento(
+    oCabecera.FormatoDocumento,
+    oCabecera.SerieFactura,
+    oCabecera.NumeroFactura);
+  sQrTexto := '';
+  if (not SinVerifactuActivo(AParametrosApp)) and bTieneFactura then
+    sQrTexto := ConstruirUrlQR(
+      AParametrosApp,
+      oCabecera.NifEmpresaFactura,
+      oCabecera.SerieFactura,
+      oCabecera.NumeroFactura,
+      oCabecera.FechaFactura,
+      oCabecera.TotalLiquido);
+  oTicket := TTicketTermico.Create(ANombreImpresora);
   try
-    QryCab.Connection   := AConexion;
-    QryLin.Connection   := AConexion;
-    QryPagos.Connection := AConexion;
-
-    // 1. OBTENER CABECERA DE OPERACIÓN Y FACTURA
-    QryCab.SQL.Text :=
-      'SELECT o.TIPO_OPERACION_OPCAJA, ' +
-      '       o.FECHA_OPERACION_OPCAJA, ' +
-      '       o.INSTANTE_ALTA AS INSTANTE_ALTA_OPCAJA, ' +
-      '       o.CODIGO_EMPLEADO_OPCAJA, ' +
-      '       o.CODIGO_CLI_OPCAJA, ' +
-      '       o.CONCEPTO_GASTO_INGRESO_OPCAJA, ' +
-      '       o.IMPORTE_TOTAL_OPCAJA, ' +
-      '       f.* ' +
-      '  FROM fza_caja_operaciones o ' +
-      '  LEFT JOIN fza_facturas f ' +
-      '         ON f.SERIE_FAC = o.SERIE_FAC_OPCAJA ' +
-      '        AND f.NUMERO_FAC   = o.NUMERO_FAC_OPCAJA ' +
-      ' WHERE o.CODIGO_EMP_OPCAJA   = :EMP ' +
-      '   AND o.CODIGO_ALM_OPCAJA   = :ALM ' +
-      '   AND o.CODIGO_CAJA_OPCAJA      = :CAJA ' +
-      '   AND o.NUMERO_OPERACION_OPCAJA = :OP';
-    QryCab.ParamByName('EMP').AsString  := ACodigoEmpresa;
-    QryCab.ParamByName('ALM').AsString  := ACodigoAlmacen;
-    QryCab.ParamByName('CAJA').AsString := ACodigoCaja;
-    QryCab.ParamByName('OP').AsString   := ANumeroOperacion;
-    QryCab.Open;
-    if QryCab.IsEmpty then
-      raise Exception.Create(SErrorOperacionCajaNoEncontrada);
-    FechaOperacion :=
-      QryCab.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime;
-    if (Frac(FechaOperacion) = 0) and
-       (not QryCab.FieldByName('INSTANTE_ALTA_OPCAJA').IsNull) then
-      FechaOperacion := Trunc(FechaOperacion) + Frac(
-        QryCab.FieldByName('INSTANTE_ALTA_OPCAJA').AsDateTime);
-    SerieFac := QryCab.FieldByName('SERIE_FAC').AsString;
-    NroFac   := QryCab.FieldByName('NUMERO_FAC').AsString;
-    DocumentoFac := FormatearDocumentoEmpresa(AConexion, ACodigoEmpresa,
-      SerieFac, NroFac);
-    // 2. INICIALIZAR IMPRESORA
-    // QR tributario fiscal en la reimpresión: misma URL de cotejo/remisión
-    // que en el ticket original (se genera en local desde la factura)
-    QRTexto := '';
-    if (not SinVerifactuActivo(AParametrosApp)) and (SerieFac <> '') and
-       (NroFac <> '') then
-      QRTexto := ConstruirUrlQR(AParametrosApp,
-                   QryCab.FieldByName('NIF_EMPRESA_FAC').AsString,
-                   SerieFac,
-                   NroFac,
-                   QryCab.FieldByName('FECHA_FAC').AsDateTime,
-                   QryCab.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency);
-    Ticket := TTicketTermico.Create(ANombreImpresora);
-    try
-      Ticket.Inicializar;
-
-      // === QR TRIBUTARIO AL PRINCIPIO (modo fiscal activo) ===
-      if QRTexto <> '' then
+    oTicket.Inicializar;
+    if sQrTexto <> '' then
+    begin
+      oTicket.Alinear(alCentro);
+      oTicket.SaltarLineas(1);
+      oTicket.EscribirLinea('QR tributario:');
+      oTicket.ImprimirQRNativo(sQrTexto, 6, 49);
+      if VerifactuActivo(AParametrosApp) then
       begin
-        Ticket.Alinear(alCentro);
-        Ticket.SaltarLineas(1);
-        Ticket.EscribirLinea('QR tributario:');
-        // Nivel de corrección M (49) exigido por la AEAT para el QR
-        Ticket.ImprimirQRNativo(QRTexto, 6, 49);
-        if VerifactuActivo(AParametrosApp) then
-        begin
-          Ticket.Alinear(alCentro);
-          Ticket.EscribirLinea('VERI*FACTU - Factura verificable');
-          Ticket.EscribirLinea('en la sede electrónica de la AEAT');
-        end;
-        Ticket.Alinear(alIzquierda);
+        oTicket.Alinear(alCentro);
+        oTicket.EscribirLinea('VERI*FACTU - Factura verificable');
+        oTicket.EscribirLinea('en la sede electrónica de la AEAT');
       end;
-
-      Ticket.SaltarLineas(1);
-      Ticket.Negrita(True);
-
-      if (SerieFac <> '') and (NroFac <> '') then
-        Ticket.EscribirLinea('FACTURA SIMPLIFICADA Nro. ' + DocumentoFac)
-      else
-        Ticket.EscribirLinea('TICKET DE OPERACIÓN Nro. ' + ANumeroOperacion);
-
-      Ticket.Negrita(False);
-      Ticket.SaltarLineas(1);
-
-      // === DATOS DE LA EMPRESA ===
-      Ticket.Alinear(alCentro);
-      Ticket.EscribirLinea(QryCab.FieldByName(
-                                       'RAZON_SOCIAL_EMPRESA_FAC').AsString);
-      Ticket.EscribirLinea(QryCab.FieldByName(
-                                        'DIRECCION1_EMPRESA_FAC').AsString);
-      Ticket.EscribirLinea(QryCab.FieldByName(
-                                     'CODIGO_POSTAL_EMPRESA_FAC').AsString + ' ' +
-                           QryCab.FieldByName(
-                                         'POBLACION_EMPRESA_FAC').AsString);
-      Ticket.EscribirLinea('CIF/NIF: ' +
-                            QryCab.FieldByName('NIF_EMPRESA_FAC').AsString);
-      if Trim(QryCab.FieldByName('MOVIL_EMPRESA_FAC').AsString) <> '' then
-        Ticket.EscribirLinea('TELÉFONO: ' +
-                          QryCab.FieldByName('MOVIL_EMPRESA_FAC').AsString);
-
-      Ticket.SaltarLineas(1);
-
-      // === DATOS DE LA OPERACIÓN ===
-      Ticket.Alinear(alIzquierda);
-      Ticket.TextoColumnas('OPERACIÓN NRO.', ANumeroOperacion);
-      Ticket.SaltarLineas(1);
-      Ticket.TextoColumnas(FormatDateTime('dd/mm/yyyy hh:nn',
-                       FechaOperacion),
-                                             LPAD(ACodigoEmpresa, 3) + ' Tda.' +
-                          LPAD(ACodigoAlmacen, 3) + '-' + LPAD(ACodigoCaja, 2));
-
-      // === ARTÍCULOS (Solo si hay factura vinculada) ===
-      if (SerieFac <> '') and (NroFac <> '') then
-      begin
-        Ticket.LineaSeparadora('-');
-        Ticket.EscribirLinea('Artículo/Sku                Uds    Total');
-        Ticket.LineaSeparadora('-');
-
-        QryLin.SQL.Text := 'SELECT * FROM fza_facturas_lineas ' +
-                           ' WHERE SERIE_FAC_FACLIN = :SERIE ' +
-                           '   AND NUMERO_FAC_FACLIN = :NRO ' +
-                           ' ORDER BY LINEA_FACLIN';
-        QryLin.ParamByName('SERIE').AsString := SerieFac;
-        QryLin.ParamByName('NRO').AsString   := NroFac;
-        QryLin.Open;
-        while not QryLin.Eof do
-        begin
-          var sArt := Format('%-26s', [Copy(QryLin.FieldByName(
-                              'CODIGO_UNIDAD_FACLIN').AsString, 1, 26)]);
-          var sUni := '';
-          if QryLin.FindField('TIPO_CANTIDAD_ARTICULO_FACLIN') <> nil then
-            sUni := QryLin.FieldByName('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString;
-          var sUds := Format('%4s', [oUnidades.Formatear(QryLin.FieldByName(
-                                           'CANTIDAD_FACLIN').AsFloat, sUni)]);
-          var sPre := FormatFloat('#,##0.00',
-                   QryLin.FieldByName('TOTAL_FACLIN').AsCurrency) + ' €';
-          Ticket.TextoColumnas(sArt + sUds, sPre);
-          Ticket.EscribirLinea(Copy(QryLin.FieldByName(
-                        'DESCRIPCION_ARTICULO_FACLIN').AsString, 1, 42));
-          QryLin.Next;
-        end;
-        QryLin.Close;
-        Ticket.LineaSeparadora('-');
-        Ticket.SaltarLineas(1);
-        // === TOTALES ===
-        Ticket.Alinear(alIzquierda);
-        Ticket.Negrita(True);
-        var Liquido    := QryCab.FieldByName(
-                                            'TOTAL_LIQUIDO_FAC').AsCurrency;
-        Ticket.TextoColumnas('A PAGAR',
-                                       FormatFloat('#,##0.00', Liquido) + ' €');
-        Ticket.Negrita(False);
-      end;
-      // === FORMAS DE PAGO ===
-      Ticket.Alinear(alIzquierda);
-      Ticket.Negrita(True);
-      QryPagos.SQL.Text := 'SELECT CODIGO_FP_CFP, ' +
-                           '       IMPORTE_ENTREGADO_PAGO, ' +
-                           '       IMPORTE_CAMBIO_PAGO ' +
-                           '  FROM fza_caja_pagos ' +
-                           ' WHERE CODIGO_EMP_PAGO = :EMP ' +
-                           '   AND CODIGO_ALM_PAGO = :ALM ' +
-                           '   AND CODIGO_CAJA_PAGO = :CAJA ' +
-                           '   AND NUMERO_OPERACION_PAGO = :OP ' +
-                           ' ORDER BY NUMERO_LINEA_PAGO';
-      QryPagos.ParamByName('EMP').AsString  := ACodigoEmpresa;
-      QryPagos.ParamByName('ALM').AsString  := ACodigoAlmacen;
-      QryPagos.ParamByName('CAJA').AsString := ACodigoCaja;
-      QryPagos.ParamByName('OP').AsString   := ANumeroOperacion;
-      QryPagos.Open;
-      var TotalCambio: Currency := 0;
-      while not QryPagos.Eof do
-      begin
-        var FPName := QryPagos.FieldByName('CODIGO_FP_CFP').AsString;
-        var FPAmount := QryPagos.FieldByName(
-                                           'IMPORTE_ENTREGADO_PAGO').AsCurrency;
-        TotalCambio := TotalCambio + QryPagos.FieldByName(
-                                              'IMPORTE_CAMBIO_PAGO').AsCurrency;
-        if FPAmount <> 0 then
-          Ticket.TextoColumnas(UpperCase(FPName),
-                                      FormatFloat('#,##0.00', FPAmount) + ' €');
-        QryPagos.Next;
-      end;
-      QryPagos.Close;
-      if TotalCambio > 0 then
-        Ticket.TextoColumnas('CAMBIO EFECTIVO',
-                                   FormatFloat('#,##0.00', TotalCambio) + ' €');
-      Ticket.Negrita(False);
-      // === VALE(S) EMITIDO(S) ===
-      // En la reimpresion no hay datos en memoria: se leen de
-      // fza_caja_vales por la operacion, para mostrar importe y codigo
-      // igual que en el ticket de venta.
-      QryPagos.SQL.Text := 'SELECT CODIGO_VL, IMPORTE_NOMINAL_VL ' +
-                           '  FROM fza_caja_vales ' +
-                           ' WHERE CODIGO_EMP_EMI_VL  = :EMP ' +
-                           '   AND CODIGO_ALM_EMI_VL  = :ALM ' +
-                           '   AND CODIGO_CAJA_EMI_VL = :CAJA ' +
-                           '   AND NUMERO_OPERACION_EMI_VL = :OP ' +
-                           ' ORDER BY CODIGO_VL';
-      QryPagos.ParamByName('EMP').AsString  := ACodigoEmpresa;
-      QryPagos.ParamByName('ALM').AsString  := ACodigoAlmacen;
-      QryPagos.ParamByName('CAJA').AsString := ACodigoCaja;
-      QryPagos.ParamByName('OP').AsString   := ANumeroOperacion;
-      QryPagos.Open;
-      while not QryPagos.Eof do
-      begin
-        var CodVale := QryPagos.FieldByName('CODIGO_VL').AsString;
-        Ticket.SaltarLineas(1);
-        Ticket.Negrita(True);
-        Ticket.TextoColumnas('VALE EMITIDO A SU FAVOR',
-          FormatFloat('#,##0.00',
-            QryPagos.FieldByName('IMPORTE_NOMINAL_VL').AsCurrency) + ' €');
-        if Length('CÓDIGO VALE EMITIDO: ' + CodVale) <= 42 then
-          Ticket.TextoColumnas('CÓDIGO VALE EMITIDO: ', CodVale)
-        else
-        begin
-          Ticket.EscribirLinea('CÓDIGO VALE EMITIDO:');
-          Ticket.EscribirLinea(CodVale);
-        end;
-        Ticket.Negrita(False);
-        QryPagos.Next;
-      end;
-      QryPagos.Close;
-      Ticket.SaltarLineas(1);
-      // === DESGLOSE DE IMPUESTOS (Si hay factura) ===
-      if (SerieFac <> '') and (NroFac <> '') then
-      begin
-        if QryCab.FieldByName('TOTAL_IVAN_FAC').AsCurrency > 0 then
-        begin
-          Ticket.TextoColumnas('BASE IMPONIBLE', FormatFloat('#,##0.00',
-             QryCab.FieldByName('TOTAL_BASEI_IVAN_FAC').AsCurrency) + ' €');
-          Ticket.TextoColumnas(Format('TOTAL IVA(%.0f%%)',
-                           [QryCab.FieldByName('PORCENTAJE_IVAN_FAC').AsFloat]),
-                            FormatFloat('#,##0.00',
-                   QryCab.FieldByName('TOTAL_IVAN_FAC').AsCurrency) + ' €');
-        end;
-        if QryCab.FieldByName('TOTAL_IVAR_FAC').AsCurrency > 0 then
-        begin
-          Ticket.TextoColumnas('BASE IMPONIBLE RED.', FormatFloat('#,##0.00',
-             QryCab.FieldByName('TOTAL_BASEI_IVAR_FAC').AsCurrency) + ' €');
-          Ticket.TextoColumnas(Format('TOTAL IVA(%.0f%%)',
-                           [QryCab.FieldByName('PORCENTAJE_IVAR_FAC').AsFloat]),
-                            FormatFloat('#,##0.00', QryCab.FieldByName(
-                                      'TOTAL_IVAR_FAC').AsCurrency) + ' €');
-        end;
-      end;
-      // === PIE DE TICKET ===
-      Ticket.SaltarLineas(2);
-      Ticket.Alinear(alCentro);
-      // Mostramos el diminutivo de ticket del vendedor (fza_empleados) en
-      // lugar de su codigo, igual que en la impresion de la venta.
-      Ticket.EscribirLinea('LE ATENDIÓ: ' +
-        ObtenerDiminutivoVendedor(AConexion,
-          QryCab.FieldByName('CODIGO_EMPLEADO_OPCAJA').AsString));
-      Ticket.EscribirLinea('IVA INCLUIDO');
-      Ticket.EscribirLinea('GRACIAS POR SU VISITA');
-      // Textos legales (si están rellenos en la DB)
-      if Trim(QryCab.FieldByName(
-                     'TEXTO_LEGAL_EMPRESA_FAC').AsString) <> '' then
-      begin
-        Ticket.SaltarLineas(1);
-        Ticket.EscribirLinea(QryCab.FieldByName(
-                               'TEXTO_LEGAL_EMPRESA_FAC').AsString);
-      end;
-      EscribirPieTicketCaja(AConexion, Ticket, ACodigoEmpresa);
-      var CodigoCliente := qryCab.FieldByName('CODIGO_CLI_FAC').AsString;
-//      ImprimirRecordatorio(CodigoCliente);
-      Ticket.CortarPapel;
-      Ticket.AbrirCajon;
-      // === PROCESO DE IMPRESIÓN / PREVIEW ===
-      ComandosESC := Ticket.ObtenerComandos;
-      RutaFicheroPDF := GetUserFolderTickets + 'TicketBD_' +
-                            FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-      ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaFicheroPDF,
-                                   ANombreImpresora, ASoloPDF);
-      if (ARutasPDF <> nil) and FileExists(RutaFicheroPDF) then
-        ARutasPDF.Add(RutaFicheroPDF);
-    finally
-      FreeAndNil(Ticket);
+      oTicket.Alinear(alIzquierda);
     end;
+    oTicket.SaltarLineas(1);
+    oTicket.Negrita(True);
+    if bTieneFactura then
+      oTicket.EscribirLinea(
+        'FACTURA SIMPLIFICADA Nro. ' + sDocumentoFac)
+    else
+      oTicket.EscribirLinea(
+        'TICKET DE OPERACIÓN Nro. ' + ANumeroOperacion);
+    oTicket.Negrita(False);
+    oTicket.SaltarLineas(1);
+    oTicket.Alinear(alCentro);
+    oTicket.EscribirLinea(oCabecera.RazonSocialEmpresa);
+    oTicket.EscribirLinea(oCabecera.DireccionEmpresa);
+    oTicket.EscribirLinea(
+      oCabecera.CodigoPostalEmpresa + ' ' +
+      oCabecera.PoblacionEmpresa);
+    oTicket.EscribirLinea(
+      'CIF/NIF: ' + oCabecera.NifEmpresaFactura);
+    if Trim(oCabecera.MovilEmpresa) <> '' then
+      oTicket.EscribirLinea(
+        'TELÉFONO: ' + oCabecera.MovilEmpresa);
+    oTicket.SaltarLineas(1);
+    oTicket.Alinear(alIzquierda);
+    oTicket.TextoColumnas('OPERACIÓN NRO.', ANumeroOperacion);
+    oTicket.SaltarLineas(1);
+    oTicket.TextoColumnas(
+      FormatDateTime('dd/mm/yyyy hh:nn', dFechaOperacion),
+      LPAD(ACodigoEmpresa, 3) + ' Tda.' +
+      LPAD(ACodigoAlmacen, 3) + '-' +
+      LPAD(ACodigoCaja, 2));
+    if bTieneFactura then
+    begin
+      oTicket.LineaSeparadora('-');
+      oTicket.EscribirLinea(
+        'Artículo/Sku                Uds    Total');
+      oTicket.LineaSeparadora('-');
+      oLineas := ARepositorio.ListarLineasTicket(
+        oCabecera.SerieFactura,
+        oCabecera.NumeroFactura);
+      for i := 0 to High(oLineas) do
+      begin
+        sArt := Format(
+          '%-26s',
+          [Copy(oLineas[i].CodigoUnidad, 1, 26)]);
+        sUnidad := oLineas[i].TipoCantidad;
+        sUds := Format(
+          '%4s',
+          [oUnidades.Formatear(
+            oLineas[i].Cantidad,
+            sUnidad)]);
+        oTicket.TextoColumnas(
+          sArt + sUds,
+          FormatFloat('#,##0.00', oLineas[i].Total) + ' €');
+        oTicket.EscribirLinea(
+          Copy(oLineas[i].Descripcion, 1, 42));
+      end;
+      oTicket.LineaSeparadora('-');
+      oTicket.SaltarLineas(1);
+      oTicket.Alinear(alIzquierda);
+      oTicket.Negrita(True);
+      oTicket.TextoColumnas(
+        'A PAGAR',
+        FormatFloat('#,##0.00', oCabecera.TotalLiquido) + ' €');
+      oTicket.Negrita(False);
+    end;
+    oTicket.Alinear(alIzquierda);
+    oTicket.Negrita(True);
+    dTotalCambio := 0;
+    oPagos := ARepositorio.ListarPagosTicket(oContexto);
+    for i := 0 to High(oPagos) do
+    begin
+      dTotalCambio := dTotalCambio + oPagos[i].ImporteCambio;
+      if oPagos[i].ImporteEntregado <> 0 then
+        oTicket.TextoColumnas(
+          UpperCase(oPagos[i].CodigoFormaPago),
+          FormatFloat(
+            '#,##0.00',
+            oPagos[i].ImporteEntregado) + ' €');
+    end;
+    if dTotalCambio > 0 then
+      oTicket.TextoColumnas(
+        'CAMBIO EFECTIVO',
+        FormatFloat('#,##0.00', dTotalCambio) + ' €');
+    oTicket.Negrita(False);
+    oVales := ARepositorio.ListarValesTicket(oContexto);
+    for i := 0 to High(oVales) do
+    begin
+      oTicket.SaltarLineas(1);
+      oTicket.Negrita(True);
+      oTicket.TextoColumnas(
+        'VALE EMITIDO A SU FAVOR',
+        FormatFloat('#,##0.00', oVales[i].ImporteNominal) + ' €');
+      if Length('CÓDIGO VALE EMITIDO: ' + oVales[i].Codigo) <= 42 then
+        oTicket.TextoColumnas(
+          'CÓDIGO VALE EMITIDO: ',
+          oVales[i].Codigo)
+      else
+      begin
+        oTicket.EscribirLinea('CÓDIGO VALE EMITIDO:');
+        oTicket.EscribirLinea(oVales[i].Codigo);
+      end;
+      oTicket.Negrita(False);
+    end;
+    oTicket.SaltarLineas(1);
+    if bTieneFactura then
+    begin
+      if oCabecera.TotalIvaNormal > 0 then
+      begin
+        oTicket.TextoColumnas(
+          'BASE IMPONIBLE',
+          FormatFloat('#,##0.00', oCabecera.BaseIvaNormal) + ' €');
+        oTicket.TextoColumnas(
+          Format(
+            'TOTAL IVA(%.0f%%)',
+            [oCabecera.PorcentajeIvaNormal]),
+          FormatFloat('#,##0.00', oCabecera.TotalIvaNormal) + ' €');
+      end;
+      if oCabecera.TotalIvaReducido > 0 then
+      begin
+        oTicket.TextoColumnas(
+          'BASE IMPONIBLE RED.',
+          FormatFloat('#,##0.00', oCabecera.BaseIvaReducido) + ' €');
+        oTicket.TextoColumnas(
+          Format(
+            'TOTAL IVA(%.0f%%)',
+            [oCabecera.PorcentajeIvaReducido]),
+          FormatFloat('#,##0.00', oCabecera.TotalIvaReducido) + ' €');
+      end;
+    end;
+    oTicket.SaltarLineas(2);
+    oTicket.Alinear(alCentro);
+    oTicket.EscribirLinea(
+      'LE ATENDIÓ: ' + oCabecera.DiminutivoVendedor);
+    oTicket.EscribirLinea('IVA INCLUIDO');
+    oTicket.EscribirLinea('GRACIAS POR SU VISITA');
+    if Trim(oCabecera.TextoLegalEmpresa) <> '' then
+    begin
+      oTicket.SaltarLineas(1);
+      oTicket.EscribirLinea(oCabecera.TextoLegalEmpresa);
+    end;
+    EscribirPieTicket(
+      oTicket,
+      ARepositorio.ListarPieTicket(ACodigoEmpresa));
+    // Código de barras EAN-13 del ticket (parámetro de caja) para
+    // localizarlo al escanear en devoluciones (F4)
+    if AImprimirCodigoBarras and bTieneFactura then
+    begin
+      sCodigoBarras := ARepositorio.ObtenerCodigoBarrasTicket(
+        oCabecera.SerieFactura, oCabecera.NumeroFactura);
+      if sCodigoBarras <> '' then
+      begin
+        oTicket.SaltarLineas(1);
+        oTicket.ImprimirEAN13Nativo(sCodigoBarras);
+      end;
+    end;
+    oTicket.CortarPapel;
+    oTicket.AbrirCajon;
+    sComandosEsc := oTicket.ObtenerComandos;
+    sRutaFicheroPdf :=
+      GetUserFolderTickets + 'TicketBD_' +
+      FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
+    ImprimirOPrevisualizarTicket(
+      oTicket,
+      sComandosEsc,
+      sRutaFicheroPdf,
+      ANombreImpresora,
+      ASoloPDF);
+    if (ARutasPDF <> nil) and FileExists(sRutaFicheroPdf) then
+      ARutasPDF.Add(sRutaFicheroPdf);
   finally
-    FreeAndNil(QryCab);
-    FreeAndNil(QryLin);
-    FreeAndNil(QryPagos);
+    FreeAndNil(oTicket);
   end;
 end;
 
-procedure ImprimirRecordatorio(AConexion: TUniConnection;
-                               const ACodigoEmpresa: string;
-                               CodigoCliente:   string;
-                               NombreImpresora: string = 'DEBUG';
-                               ARutasPDF: TStrings = nil;
-                               ASoloPDF: Boolean = False);
+procedure ImprimirRecordatorio(
+  const ARepositorio: IRepositorioTicketsCaja;
+  const ACodigoEmpresa, ACodigoCliente: string;
+  const ANombreImpresora: string;
+  ARutasPDF: TStrings;
+  ASoloPDF: Boolean);
 var
-  Ticket: TTicketTermico;
-  TotalPendienteCliente: Currency;
-  CodEmp, RazonEmp: string;
-  HayDatos: boolean;
+  dCantidad: Double;
+  dPendiente: Currency;
+  dTotalDeposito: Currency;
+  dTotalPendienteCliente: Currency;
+  i: Integer;
+  j: Integer;
+  sComandosEsc: string;
+  sConcepto: string;
+  sOrigen: string;
+  sOrigenDeposito: string;
+  sRutaFicheroPdf: string;
+  oAnticipos: TArray<TAnticipoRecordatorioTicketCaja>;
+  oDepositos: TArray<TDepositoPendienteTicketCaja>;
+  oEmpresa: TEmpresaRecordatorioTicketCaja;
+  oTicket: TTicketTermico;
 begin
-  if Trim(CodigoCliente) = '' then
-    Exit;
-  Ticket := TTicketTermico.Create(NombreImpresora);
-  try
-    Ticket.Inicializar;
-    Ticket.Alinear(alCentro);
-    Ticket.Negrita(True);
-    Ticket.SaltarLineas(3);
-
-    // ── Datos de la empresa del contexto ─────────────────────────────────
-    var QryEmp := TUniQuery.Create(nil);
-    try
-      QryEmp.Connection := AConexion;
-      QryEmp.SQL.Text :=
-        'SELECT CODIGO_EMP_EMP, RAZON_SOCIAL_EMP ' +
-        '  FROM fza_empresas ' +
-        ' WHERE CODIGO_EMP_EMP = :EMP';
-      QryEmp.ParamByName('EMP').AsString := ACodigoEmpresa;
-      QryEmp.Open;
-      if not QryEmp.IsEmpty then
-      begin
-        CodEmp   := QryEmp.FieldByName('CODIGO_EMP_EMP').AsString;
-        RazonEmp := QryEmp.FieldByName('RAZON_SOCIAL_EMP').AsString;
-      end;
-    finally
-      FreeAndNil(QryEmp);
-    end;
-
-    // ── Depósitos pendientes del cliente con sus cobros ───────────────────
-    var QryAnticipo := TUniQuery.Create(nil);
-    try
-      QryAnticipo.Connection := AConexion;
-      QryAnticipo.SQL.Text :=
-          'SELECT o.TIPO_OPERACION_OPCAJA, ' +
-          '       o.IMPORTE_TOTAL_OPCAJA, ' +
-          '       o.FECHA_OPERACION_OPCAJA, ' +
-          '       o.CODIGO_EMP_OPCAJA, ' +
-          '       o.CODIGO_ALM_OPCAJA, ' +
-          '       o.CODIGO_CAJA_OPCAJA ' +
-          '  FROM fza_caja_operaciones o ' +
-          ' WHERE o.TIPO_OPERACION_OPCAJA IN (''CB'', ''DE'') ' +
-          '   AND o.IMPORTE_TOTAL_OPCAJA   > 0 ' +
-          '   AND o.ID_DEPOSITO_OPCAJA     = :IDDEP ' +
-          ' ORDER BY o.FECHA_OPERACION_OPCAJA';
-      var QryDep := TUniQuery.Create(nil);
+  if (Trim(ACodigoCliente) <> '') and Assigned(ARepositorio) then
+  begin
+    oDepositos :=
+      ARepositorio.ListarDepositosPendientesRecordatorio(
+        ACodigoCliente);
+    if Length(oDepositos) > 0 then
+    begin
+      oEmpresa :=
+        ARepositorio.ObtenerEmpresaRecordatorio(ACodigoEmpresa);
+      oTicket := TTicketTermico.Create(ANombreImpresora);
       try
-        QryDep.Connection := AConexion;
-        QryDep.SQL.Text :=
-          'SELECT dep.ID_DEPOSITO_DEP, ' +
-          '       dep.CODIGO_UNIDAD_DEP, ' +
-          '       dep.CODIGO_EMP_DEP, ' +
-          '       dep.CODIGO_ALM_DEP, ' +
-          '       dep.CODIGO_CAJA_DEP, ' +
-          '       a.DESCRIPCION_ART, ' +
-          '       dep.PRECIO_VENTA_DEP, ' +
-          '       dep.FECHA_CREACION_DEP, ' +
-          '       dep.IMPORTE_ANTICIPO_DEP, ' +
-          '       dep.CANTIDAD_PENDIENTE_DEP, ' +
-          '       cli.CODIGO_CLI_CLI, ' +
-          '       cli.RAZON_SOCIAL_CLI ' +
-          '  FROM fza_depositos_cliente dep ' +
-          '  LEFT JOIN fza_articulos a ' +
-          '    ON a.CODIGO_ART_ART = dep.CODIGO_ART_DEP ' +
-          '  LEFT JOIN fza_clientes cli ' +
-          '    ON cli.CODIGO_CLI_CLI = dep.CODIGO_CLI_DEP ' +
-          ' WHERE dep.CODIGO_CLI_DEP = :CLI ' +
-          '   AND dep.ESTADO_DEP         = ''PENDIENTE'' ' +
-          ' ORDER BY dep.FECHA_CREACION_DEP';
-        QryDep.ParamByName('CLI').AsString := CodigoCliente;
-        QryDep.Open;
-        HayDatos := not QryDep.IsEmpty;
-        if not QryDep.IsEmpty then
+        oTicket.Inicializar;
+        oTicket.Alinear(alCentro);
+        oTicket.Negrita(True);
+        oTicket.SaltarLineas(3);
+        oTicket.EscribirLinea(
+          'ESTADO DE SU CUENTA ENTREGAS/DEPÓSITOS');
+        oTicket.EscribirLinea(
+          FormatDateTime(
+            'dddd, d "de" mmmm "de" yyyy, hh:nn',
+            Now));
+        oTicket.Negrita(False);
+        oTicket.LineaSeparadora('-');
+        oTicket.Alinear(alIzquierda);
+        oTicket.Negrita(True);
+        oTicket.EscribirLinea('EMPRESA:');
+        oTicket.Negrita(False);
+        oTicket.EscribirLinea(
+          Format(
+            '%-4s %s',
+            [oEmpresa.Codigo, Copy(oEmpresa.RazonSocial, 1, 36)]));
+        oTicket.Negrita(True);
+        oTicket.EscribirLinea('CLIENTE:');
+        oTicket.Negrita(False);
+        oTicket.EscribirLinea(
+          Format(
+            '%-4s %s',
+            [oDepositos[0].CodigoCliente,
+             Copy(oDepositos[0].RazonSocialCliente, 1, 36)]));
+        oTicket.LineaSeparadora('-');
+        oTicket.EscribirLinea(
+          Format(
+            '%-14s %13s %13s',
+            ['Fecha/Hora', 'Total', 'Pendiente']));
+        oTicket.LineaSeparadora('-');
+        dTotalPendienteCliente := 0;
+        for i := 0 to High(oDepositos) do
         begin
-          var CodCli   := QryDep.FieldByName('CODIGO_CLI_CLI').AsString;
-          var RazonCli := QryDep.FieldByName('RAZON_SOCIAL_CLI').AsString;
-
-          Ticket.Alinear(alCentro);
-          Ticket.Negrita(True);
-          Ticket.EscribirLinea('ESTADO DE SU CUENTA ENTREGAS/DEPÓSITOS');
-          Ticket.EscribirLinea(
-                     FormatDateTime('dddd, d "de" mmmm "de" yyyy, hh:nn', Now));
-          Ticket.Negrita(False);
-          Ticket.LineaSeparadora('-');
-          Ticket.Alinear(alIzquierda);
-          Ticket.Negrita(True);
-          Ticket.EscribirLinea('EMPRESA:');
-          Ticket.Negrita(False);
-          Ticket.EscribirLinea(Format('%-4s %s',
-                                      [CodEmp, Copy(RazonEmp, 1, 36)]));
-          Ticket.Negrita(True);
-          Ticket.EscribirLinea('CLIENTE:');
-          Ticket.Negrita(False);
-          Ticket.EscribirLinea(Format('%-4s %s',
-                                      [CodCli, Copy(RazonCli, 1, 36)]));
-          Ticket.LineaSeparadora('-');
-          Ticket.EscribirLinea(Format('%-14s %13s %13s',
-                                      ['Fecha/Hora', 'Total', 'Pendiente']));
-          Ticket.LineaSeparadora('-');
-          TotalPendienteCliente := 0;
-          while not QryDep.Eof do
+          dCantidad := oDepositos[i].CantidadPendiente;
+          if dCantidad = 0 then
+            dCantidad := 1;
+          dTotalDeposito :=
+            oDepositos[i].PrecioVenta * dCantidad;
+          dPendiente :=
+            dTotalDeposito - oDepositos[i].ImporteAnticipo;
+          dTotalPendienteCliente :=
+            dTotalPendienteCliente + dPendiente;
+          sOrigenDeposito := oDepositos[i].Empresa;
+          if oDepositos[i].Almacen <> '' then
+            sOrigenDeposito :=
+              sOrigenDeposito + '/' + oDepositos[i].Almacen;
+          if oDepositos[i].Caja <> '' then
+            sOrigenDeposito :=
+              sOrigenDeposito + '/' + oDepositos[i].Caja;
+          oTicket.Alinear(alIzquierda);
+          oTicket.EscribirLinea(
+            Format(
+              '%-14s %13s %13s',
+              [FormatDateTime(
+                 'dd/mm/yy HH:nn',
+                 oDepositos[i].FechaCreacion),
+               FormatFloat('#,##0.00 €', dTotalDeposito),
+               FormatFloat('#,##0.00 €', dPendiente)]));
+          oTicket.EscribirLinea(
+            '  ' + Copy(oDepositos[i].CodigoUnidad, 1, 40));
+          oTicket.EscribirLinea(
+            '  ' + Copy(oDepositos[i].Descripcion, 1, 40));
+          oTicket.EscribirLinea(
+            '  RETIRADO EN (' + sOrigenDeposito + ')');
+          oAnticipos :=
+            ARepositorio.ListarAnticiposRecordatorio(
+              oDepositos[i].IdDeposito);
+          for j := 0 to High(oAnticipos) do
           begin
-            var IdDep    := QryDep.FieldByName('ID_DEPOSITO_DEP').AsString;
-            var FechaHora := FormatDateTime('dd/mm/yy HH:nn',
-                             QryDep.FieldByName(
-                               'FECHA_CREACION_DEP').AsDateTime);
-            var SkuDep   := QryDep.FieldByName('CODIGO_UNIDAD_DEP').AsString;
-            var Precio   := QryDep.FieldByName('PRECIO_VENTA_DEP').AsCurrency;
-            var Cantidad :=
-              QryDep.FieldByName('CANTIDAD_PENDIENTE_DEP').AsFloat;
-            if Cantidad = 0 then Cantidad := 1;
-            var TotalDep  := Precio * Cantidad;
-            var Anticipo  :=
-              QryDep.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
-            var Pendiente := TotalDep - Anticipo;
-            TotalPendienteCliente := TotalPendienteCliente + Pendiente;
-            var EmpDep := QryDep.FieldByName('CODIGO_EMP_DEP').AsString;
-            var AlmDep := QryDep.FieldByName('CODIGO_ALM_DEP').AsString;
-            var CajDep := QryDep.FieldByName('CODIGO_CAJA_DEP').AsString;
-            var OrigenDep := EmpDep;
-            if AlmDep <> '' then OrigenDep := OrigenDep + '/' + AlmDep;
-            if CajDep <> '' then OrigenDep := OrigenDep + '/' + CajDep;
-            // Cabecera del depósito
-            Ticket.Alinear(alIzquierda);
-            Ticket.EscribirLinea(Format('%-14s %13s %13s', [
-              FechaHora,
-              FormatFloat('#,##0.00 €', TotalDep),
-              FormatFloat('#,##0.00 €', Pendiente)
-            ]));
-            Ticket.EscribirLinea('  ' + Copy(SkuDep, 1, 40));
-            Ticket.EscribirLinea('  ' + Copy(
-              QryDep.FieldByName('DESCRIPCION_ART').AsString, 1, 40));
-            Ticket.EscribirLinea('  RETIRADO EN (' + OrigenDep + ')');
-            QryAnticipo.Close;
-            QryAnticipo.ParamByName('IDDEP').AsString := IdDep;
-            QryAnticipo.Open;
-            while not QryAnticipo.Eof do
-            begin
-              var TipoOp   :=
-                QryAnticipo.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
-              var Importe  :=
-                QryAnticipo.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
-              var FechaOpe :=
-                QryAnticipo.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime;
-              var EmpOpe   :=
-                QryAnticipo.FieldByName('CODIGO_EMP_OPCAJA').AsString;
-              var AlmOpe   :=
-                QryAnticipo.FieldByName('CODIGO_ALM_OPCAJA').AsString;
-              var CajOpe   :=
-                QryAnticipo.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
-              var Concepto := '';
-              if TipoOp = 'DE' then
-                Concepto := '  > Entrega inicial'
-              else if TipoOp = 'CB' then
-                Concepto := '  > A cuenta';
-              var Origen := EmpOpe;
-              if AlmOpe <> '' then Origen := Origen + '/' + AlmOpe;
-              if CajOpe <> '' then Origen := Origen + '/' + CajOpe;
-              Ticket.Alinear(alIzquierda);
-              Ticket.EscribirLinea(Concepto + '  ' +
-                     FormatDateTime('dd/mm/yy HH:nn', FechaOpe));
-              Ticket.EscribirLinea(Format('   %-10s %13s',
-                     ['(' + Origen + ')',
-                      '-' + FormatFloat('#,##0.00',
-                                        Importe
-                      ) + ' €']));              Ticket.Alinear(alDerecha);
-              QryAnticipo.Next;
-            end;
-            Ticket.SaltarLineas(1);
-            QryDep.Next;
+            sConcepto := '';
+            if oAnticipos[j].TipoOperacion = 'DE' then
+              sConcepto := '  > Entrega inicial'
+            else if oAnticipos[j].TipoOperacion = 'CB' then
+              sConcepto := '  > A cuenta';
+            sOrigen := oAnticipos[j].Empresa;
+            if oAnticipos[j].Almacen <> '' then
+              sOrigen := sOrigen + '/' + oAnticipos[j].Almacen;
+            if oAnticipos[j].Caja <> '' then
+              sOrigen := sOrigen + '/' + oAnticipos[j].Caja;
+            oTicket.Alinear(alIzquierda);
+            oTicket.EscribirLinea(
+              sConcepto + '  ' +
+              FormatDateTime(
+                'dd/mm/yy HH:nn',
+                oAnticipos[j].FechaOperacion));
+            oTicket.EscribirLinea(
+              Format(
+                '   %-10s %13s',
+                ['(' + sOrigen + ')',
+                 '-' + FormatFloat(
+                   '#,##0.00',
+                   oAnticipos[j].Importe) + ' €']));
+            oTicket.Alinear(alDerecha);
           end;
-          Ticket.Alinear(alIzquierda);
-          Ticket.LineaSeparadora('-');
-          Ticket.Negrita(True);
-          Ticket.TextoColumnas('TOTAL PDTE. DE PAGO:',
-                         FormatFloat('#,##0.00', TotalPendienteCliente) + ' €');
-          Ticket.Negrita(False);
+          oTicket.SaltarLineas(1);
         end;
+        oTicket.Alinear(alIzquierda);
+        oTicket.LineaSeparadora('-');
+        oTicket.Negrita(True);
+        oTicket.TextoColumnas(
+          'TOTAL PDTE. DE PAGO:',
+          FormatFloat(
+            '#,##0.00',
+            dTotalPendienteCliente) + ' €');
+        oTicket.Negrita(False);
+        sComandosEsc := oTicket.ObtenerComandos;
+        sRutaFicheroPdf :=
+          GetUserFolderTickets + 'Recordatorio_' +
+          FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
+        ImprimirOPrevisualizarTicket(
+          oTicket,
+          sComandosEsc,
+          sRutaFicheroPdf,
+          ANombreImpresora,
+          ASoloPDF);
+        if (ARutasPDF <> nil) and FileExists(sRutaFicheroPdf) then
+          ARutasPDF.Add(sRutaFicheroPdf);
       finally
-        FreeAndNil(QryDep);
+        FreeAndNil(oTicket);
       end;
-    finally
-      FreeAndNil(QryAnticipo);
     end;
-    if not HayDatos then
-      Exit;
-    // ── Generar PDF y mostrar / imprimir ─────────────────────────────────
-    var ComandosESC    := Ticket.ObtenerComandos;
-    var RutaFicheroPDF := GetUserFolderTickets + 'Recordatorio_' +
-                          FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-    ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaFicheroPDF,
-                                 NombreImpresora, ASoloPDF);
-    if (ARutasPDF <> nil) and FileExists(RutaFicheroPDF) then
-      ARutasPDF.Add(RutaFicheroPDF);
-  finally
-    FreeAndNil(Ticket);
   end;
 end;
 

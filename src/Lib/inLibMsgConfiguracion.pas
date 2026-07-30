@@ -111,7 +111,8 @@ resourcestring
   SCargaScriptCancelada = 'Se canceló la carga del script.';
   SUsuarioNoExiste = 'El nombre de usuario no existe';
   SDescripcionParametroIdioma =
-    'Idioma de la interfaz: es-ES, en-GB o qps-ploc para pruebas';
+    'Idioma de la interfaz (p. ej. es-ES, en-GB o ca-ES; ' +
+    'qps-ploc para pruebas)';
   SErrorProveedorEdicionParametrosNoConfigurado =
     'No se ha configurado el proveedor de edición de parámetros.';
   SErrorParametrosAplicacionEditablesNoConfigurados =
@@ -309,6 +310,45 @@ resourcestring
     'Log guardado en %s';
   SErrorPermisoAbrirCajon =
     'No tiene permiso para abrir el cajón.';
+  // R01 - Diálogos de copias de seguridad y scripts
+  STituloCargarScript = 'Cargar script';
+  STituloGuardarCopiaSeguridad = 'Guardar copia de seguridad';
+  STituloCargarCopiaSeguridad = 'Cargar copia de seguridad';
+  STituloRestaurarCopiaEjecutarScript =
+    'Restaurar copia o ejecutar script';
+  SCaptionFiltroCopiasSqlEncriptadas = 'Copias SQL o encriptadas';
+  SCaptionFiltroCopiasCifradas = 'Copias cifradas';
+  SCaptionFiltroArchivosSql = 'Archivos SQL';
+  SCaptionFiltroCopiasSqlCifradas = 'Copias SQL o cifradas';
+  SCaptionFiltroCopiasScriptsCifrados =
+    'Copias o scripts cifrados';
+  SCaptionPreparandoCopiaSeguridad =
+    'Preparando copia de seguridad...';
+  SCaptionPreparandoRestauracion = 'Preparando restauración...';
+  // R06 - Generador de procesos
+  STituloAbrirScriptSql = 'Abrir Script SQL';
+  SCaptionFiltroScriptsSql =
+    'Scripts SQL (*.sql)|*.sql|Archivos de texto (*.txt)|*.txt|' +
+    'Todos los archivos (*.*)|*.*';
+  // R07 - Árbol de permisos
+  SCaptionModoCombinarPermisos = 'Combinar (agregar y actualizar)';
+  SCaptionModoReemplazarPermisos = 'Reemplazar todos los del destino';
+  SCaptionAvisoSujetoAdministrador =
+    'Aviso: este sujeto es administrador; en ejecucion tiene TODOS los ' +
+    'permisos, se marque lo que se marque aqui.';
+  // R09 - Contraseña de copias de seguridad
+  STituloProtegerCopiaSeguridad = 'Proteger copia de seguridad';
+  SCaptionCopiaSeCifrara =
+    'La copia se cifrará. Guarde esta contraseña: será necesaria ' +
+    'para restaurarla.';
+  STituloAbrirCopiaCifrada = 'Abrir copia cifrada';
+  SCaptionIntroduzcaContrasenaCopia =
+    'Introduzca la contraseña con la que se protegió la copia.';
+  // R11 - Log de scripts
+  STituloGuardarLogComo = 'Guardar log como...';
+  SCaptionFiltroArchivosSqlTexto =
+    'Archivos SQL (*.sql)|*.sql|Archivos de texto (*.txt)|*.txt|' +
+    'Todos los archivos (*.*)|*.*';
 implementation
 
 end.

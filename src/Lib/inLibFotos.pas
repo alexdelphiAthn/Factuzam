@@ -55,7 +55,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.ExtCtrls, Vcl.Imaging.PngImage,
   Vcl.Imaging.Jpeg, Vcl.Imaging.GIFImg,
   Data.DB, DBAccess, Uni,
-  frxClass, frxDBSet, inLibParametrosIntf;
+  frxClass, frxDBSet, inLibParametrosIntf, inLibArticulosValidadorIntf;
 
 const
   // Columnas de fza_articulos_fotos
@@ -106,6 +106,9 @@ type
   private
     FConexion: TUniConnection;
     FParametrosApp: IParametrosAplicacion;
+    // Resolutor de codigos de barras inyectado por la raiz de
+    // composicion: la libreria no construye repositorios UniData*.
+    FValidador: IArticulosValidador;
     // Caché de precarga a nivel artículo (código artículo -> foto resuelta).
     // Cuando está activa, Resolver(art, '') la consulta en vez de ir a BBDD,
     // evitando el N+1 en informes con muchas fotos. La llena PrecargarFotosLote
@@ -134,8 +137,10 @@ type
   public
     procedure AsignarConexion(
       AConexion: TUniConnection;
-      const AParametrosApp: IParametrosAplicacion);
+      const AParametrosApp: IParametrosAplicacion;
+      const AValidador: IArticulosValidador = nil);
     procedure LiberarServicios;
+    property Validador: IArticulosValidador read FValidador;
     /// Ruta del fichero para una foto resuelta, en la resolucion pedida.
     /// Devuelve '' si AInfo.Encontrada = False o si el fichero no existe.
     function RutaFoto(const AInfo: TFotoInfo;
@@ -305,7 +310,6 @@ function oFotos: TFotosArticulos;
 implementation
 
 uses
-  inLibArticulosValidador,
   Winapi.GDIPOBJ, Winapi.GDIPAPI,
   inLibMsgArticulos;
 
@@ -351,18 +355,21 @@ end;
 
 procedure TFotosArticulos.AsignarConexion(
   AConexion: TUniConnection;
-  const AParametrosApp: IParametrosAplicacion);
+  const AParametrosApp: IParametrosAplicacion;
+  const AValidador: IArticulosValidador);
 begin
   if not Assigned(AParametrosApp) then
     raise EArgumentNilException.Create('AParametrosApp');
   FConexion := AConexion;
   FParametrosApp := AParametrosApp;
+  FValidador := AValidador;
 end;
 
 procedure TFotosArticulos.LiberarServicios;
 begin
   FConexion := nil;
   FParametrosApp := nil;
+  FValidador := nil;
 end;
 
 { ----------------------------------------------------------------- }
@@ -1317,8 +1324,9 @@ begin
     end;
     if sCodigo <> '' then
     begin
-      validador := CrearValidadorArticulosBase(
-        oFotos.Conexion);
+      validador := oFotos.Validador;
+      if not Assigned(validador) then
+        Exit;
       try
         res := validador.ResolverCodigoBarras(sCodigo);
         if res.Encontrado and (res.CodigoSku <> '') and

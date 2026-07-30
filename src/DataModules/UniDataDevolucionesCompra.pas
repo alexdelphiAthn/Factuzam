@@ -129,7 +129,8 @@ uses
   inLibContadorLineas,
   inLibComprasImpuestos,
   inLibData,
-  inLibArticulosValidador,
+  inLibArticulosValidadorIntf,
+  UniDataArticulosValidadorRepositorio,
   inLibMsgCompras;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}

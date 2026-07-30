@@ -16,20 +16,22 @@ unit inLibEmisionFiscal;
 interface
 
 uses
-  Uni, inLibParametrosIntf, inLibVerifactu,
-  inLibEmisionFiscalIntf;
+  Uni, inLibParametrosIntf, inLibVerifactu, inLibVerifactuTipos,
+  inLibEmisionFiscalIntf, inLibVerifactuColaIntf;
 
 function CrearServicioEmisionFiscal(
   const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja;
-  AConexion: TUniConnection
+  AConexion: TUniConnection;
+  const AServicioCola: IServicioVerifactuCola = nil
 ): IServicioEmisionFiscal;
 
 function CrearServicioEmisionFiscalPorModo(
   AModo: TModoVerifactu;
   const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja;
-  AConexion: TUniConnection
+  AConexion: TUniConnection;
+  const AServicioCola: IServicioVerifactuCola = nil
 ): IServicioEmisionFiscal;
 
 implementation
@@ -52,11 +54,11 @@ type
     FParametrosApp: IParametrosAplicacion;
     FParametrosCaja: IParametrosCaja;
     FConexion: TUniConnection;
+    FServicioCola: IServicioVerifactuCola;
     function CrearMensaje(
       const ASolicitud: TSolicitudEmisionFiscal): string;
   protected
     procedure Ejecutar(
-      AQry: TUniQuery;
       const ASolicitud: TSolicitudEmisionFiscal); virtual; abstract;
     procedure RegistrarEvento(
       const ASolicitud: TSolicitudEmisionFiscal); virtual;
@@ -72,11 +74,14 @@ type
       read FParametrosCaja;
     property Conexion: TUniConnection
       read FConexion;
+    property ServicioCola: IServicioVerifactuCola
+      read FServicioCola;
   public
     constructor Create(
       const AParametrosApp: IParametrosAplicacion;
       const AParametrosCaja: IParametrosCaja;
-      AConexion: TUniConnection);
+      AConexion: TUniConnection;
+      const AServicioCola: IServicioVerifactuCola);
     function Emitir(
       const ASolicitud: TSolicitudEmisionFiscal
     ): TResultadoEmisionFiscal;
@@ -86,7 +91,6 @@ type
     TEstrategiaEmisionFiscalBase)
   protected
     procedure Ejecutar(
-      AQry: TUniQuery;
       const ASolicitud: TSolicitudEmisionFiscal); override;
     procedure RegistrarEvento(
       const ASolicitud: TSolicitudEmisionFiscal); override;
@@ -101,7 +105,6 @@ type
     TEstrategiaEmisionFiscalBase)
   protected
     procedure Ejecutar(
-      AQry: TUniQuery;
       const ASolicitud: TSolicitudEmisionFiscal); override;
     function MensajeOperacion(
       const ASolicitud: TSolicitudEmisionFiscal): string; override;
@@ -114,7 +117,6 @@ type
     TEstrategiaEmisionFiscalBase)
   protected
     procedure Ejecutar(
-      AQry: TUniQuery;
       const ASolicitud: TSolicitudEmisionFiscal); override;
     function MensajeOperacion(
       const ASolicitud: TSolicitudEmisionFiscal): string; override;
@@ -140,12 +142,14 @@ type
 constructor TEstrategiaEmisionFiscalBase.Create(
   const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja;
-  AConexion: TUniConnection);
+  AConexion: TUniConnection;
+  const AServicioCola: IServicioVerifactuCola);
 begin
   inherited Create;
   FParametrosApp := AParametrosApp;
   FParametrosCaja := AParametrosCaja;
   FConexion := AConexion;
+  FServicioCola := AServicioCola;
 end;
 
 procedure TEstrategiaEmisionFiscalBase.RegistrarEvento(
@@ -172,16 +176,8 @@ end;
 function TEstrategiaEmisionFiscalBase.Emitir(
   const ASolicitud: TSolicitudEmisionFiscal
 ): TResultadoEmisionFiscal;
-var
-  Qry: TUniQuery;
 begin
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := FConexion;
-    Ejecutar(Qry, ASolicitud);
-  finally
-    FreeAndNil(Qry);
-  end;
+  Ejecutar(ASolicitud);
   if ASolicitud.RegistrarEvento then
     RegistrarEvento(ASolicitud);
   Result.Modo := Modo;
@@ -189,13 +185,12 @@ begin
 end;
 
 procedure TEstrategiaEmisionVerifactu.Ejecutar(
-  AQry: TUniQuery;
   const ASolicitud: TSolicitudEmisionFiscal);
 begin
   TVerifactuCola.EncolarFactura(
     ParametrosApp,
     ParametrosCaja,
-    AQry,
+    ServicioCola,
     ASolicitud.Usuario,
     ASolicitud.Serie,
     ASolicitud.Numero,
@@ -239,13 +234,12 @@ begin
 end;
 
 procedure TEstrategiaEmisionNoVerifactu.Ejecutar(
-  AQry: TUniQuery;
   const ASolicitud: TSolicitudEmisionFiscal);
 begin
   TVerifactuCola.RegistrarFacturaNoVerifactu(
     ParametrosApp,
     ParametrosCaja,
-    AQry,
+    ServicioCola,
     ASolicitud.Usuario,
     ASolicitud.Serie,
     ASolicitud.Numero,
@@ -275,13 +269,12 @@ begin
 end;
 
 procedure TEstrategiaEmisionSinVerifactu.Ejecutar(
-  AQry: TUniQuery;
   const ASolicitud: TSolicitudEmisionFiscal);
 begin
   TVerifactuCola.MarcarFacturaSinVerifactu(
     ParametrosApp,
     ParametrosCaja,
-    AQry,
+    ServicioCola,
     ASolicitud.Usuario,
     ASolicitud.Serie,
     ASolicitud.Numero,
@@ -333,7 +326,8 @@ function CrearServicioEmisionFiscalPorModo(
   AModo: TModoVerifactu;
   const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja;
-  AConexion: TUniConnection
+  AConexion: TUniConnection;
+  const AServicioCola: IServicioVerifactuCola
 ): IServicioEmisionFiscal;
 var
   Estrategia: IEstrategiaEmisionFiscal;
@@ -343,17 +337,20 @@ begin
       Estrategia := TEstrategiaEmisionVerifactu.Create(
         AParametrosApp,
         AParametrosCaja,
-        AConexion);
+        AConexion,
+        AServicioCola);
     mvNoVerifactu:
       Estrategia := TEstrategiaEmisionNoVerifactu.Create(
         AParametrosApp,
         AParametrosCaja,
-        AConexion);
+        AConexion,
+        AServicioCola);
     mvSinVerifactu:
       Estrategia := TEstrategiaEmisionSinVerifactu.Create(
         AParametrosApp,
         AParametrosCaja,
-        AConexion);
+        AConexion,
+        AServicioCola);
   else
     raise EArgumentOutOfRangeException.Create(
       'Modo de emisión fiscal no soportado.');
@@ -364,14 +361,16 @@ end;
 function CrearServicioEmisionFiscal(
   const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja;
-  AConexion: TUniConnection
+  AConexion: TUniConnection;
+  const AServicioCola: IServicioVerifactuCola
 ): IServicioEmisionFiscal;
 begin
   Result := CrearServicioEmisionFiscalPorModo(
     ModoVerifactu(AParametrosApp),
     AParametrosApp,
     AParametrosCaja,
-    AConexion);
+    AConexion,
+    AServicioCola);
 end;
 
 end.

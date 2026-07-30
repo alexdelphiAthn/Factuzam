@@ -2,14 +2,18 @@
 {                                                                              }
 {  Módulo:       inLibCajaOpeComposicion                                       }
 {    Tipo:       Factoría                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       29/07/2026                                                    }
+{ Versión:       2.0.0                                                         }
+{   Fecha:       30/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Construye los servicios utilizados por la ventana de operación de caja.  }
+{    Ensambla los servicios de la ventana de operación de caja.              }
+{                                                                              }
+{    El repositorio de consultas llega YA CONSTRUIDO desde la raíz de         }
+{    composición: esta unidad no conoce UniData*, que es la dirección         }
+{    prohibida por LIBRO_DE_ESTILO_DELPHI.md 14.1.                            }
 {******************************************************************************}
 unit inLibCajaOpeComposicion;
 
@@ -17,7 +21,7 @@ interface
 
 uses
   Uni, inLibParametrosIntf,
-  inLibContextoSesionIntf, inLibCatalogoSqlIntf,
+  inLibContextoSesionIntf,
   inLibCajaVentaIntf;
 
 function CrearServiciosOperacionCaja(
@@ -26,8 +30,7 @@ function CrearServiciosOperacionCaja(
   const AContextoSesion: IContextoSesionAplicacion;
   const AImpresor: IImpresorVenta;
   const AGrabador: IGrabadorVentaCaja;
-  const ACatalogoSql: ICatalogoSql = nil;
-  const AIncidenciasSql: IRegistroIncidenciasSql = nil
+  const ARepositorioConsultas: IRepositorioConsultasCaja
 ): TServiciosOperacionCaja;
 
 implementation
@@ -35,7 +38,6 @@ implementation
 uses
   inLibCajaStock,
   inLibCajaDescuentos,
-  UniDataCajaConsultasRepositorio,
   inLibCajaRectificacion,
   inLibCajaCierreVenta;
 
@@ -45,15 +47,10 @@ function CrearServiciosOperacionCaja(
   const AContextoSesion: IContextoSesionAplicacion;
   const AImpresor: IImpresorVenta;
   const AGrabador: IGrabadorVentaCaja;
-  const ACatalogoSql: ICatalogoSql;
-  const AIncidenciasSql: IRegistroIncidenciasSql
+  const ARepositorioConsultas: IRepositorioConsultasCaja
 ): TServiciosOperacionCaja;
 begin
-  Result.RepositorioConsultas :=
-    TRepositorioConsultasCaja.Create(
-      AConexion,
-      ACatalogoSql,
-      AIncidenciasSql);
+  Result.RepositorioConsultas := ARepositorioConsultas;
   Result.ServicioRectificacion :=
     TServicioRectificacionCaja.Create(
       Result.RepositorioConsultas);

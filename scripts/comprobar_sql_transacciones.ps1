@@ -8,7 +8,12 @@ $ErrorActionPreference = 'Stop'
 $archivosCriticos = @(
   'src\DataModules\UniDataFacturas.pas',
   'src\DataModules\UniDataAlbaranes.pas',
-  'src\DataModules\UniDataComprasSesionesMaterializar.pas',
+  'src\DataModules\UniDataComprasSesionesAlbaranes.pas',
+  'src\DataModules\UniDataComprasSesionesArticulos.pas',
+  'src\DataModules\UniDataComprasSesionesDocumentosComun.pas',
+  'src\DataModules\UniDataComprasSesionesEstado.pas',
+  'src\DataModules\UniDataComprasSesionesPedidos.pas',
+  'src\DataModules\UniDataComprasSesionesReversion.pas',
   'src\Caja\DataModules\UniDataCaja.pas',
   'src\Lib\inLibFacturasMovimientos.pas'
 )
@@ -121,7 +126,7 @@ $asignacionesVariablesPermitidas = @{
     'IdentificadorListaBlanca'
   'src\DataModules\UniDataAlbaranes.pas|sSql' =
     'LiteralFijo'
-  'src\DataModules\UniDataComprasSesionesMaterializar.pas|ASql' =
+  'src\DataModules\UniDataComprasSesionesReversion.pas|ASql' =
     'LiteralFijo'
   'src\Caja\DataModules\UniDataCaja.pas|SQLStr' =
     'LiteralFijo'
@@ -250,14 +255,22 @@ foreach ($objetivo in $listasBlancas) {
 
 $coordinadores = @(
   @{
-    Ruta = 'src\DataModules\UniDataComprasSesionesMaterializar.pas'
-    Metodo = 'MaterializarSesion'
-    Marcas = @('StartTransaction', 'Commit', 'Rollback')
+    Ruta = 'src\Lib\inLibComprasSesionesMaterializar.pas'
+    Metodo = 'TMaterializadorComprasSesiones.Ejecutar'
+    Marcas = @(
+      'FUnidadTrabajo.Iniciar',
+      'FUnidadTrabajo.Confirmar',
+      'FUnidadTrabajo.Revertir'
+    )
   },
   @{
-    Ruta = 'src\DataModules\UniDataComprasSesionesMaterializar.pas'
-    Metodo = 'RevertirMaterializacion'
-    Marcas = @('StartTransaction', 'Commit', 'Rollback')
+    Ruta = 'src\Lib\inLibComprasSesionesMaterializar.pas'
+    Metodo = 'TRevertidorComprasSesiones.Ejecutar'
+    Marcas = @(
+      'FUnidadTrabajo.Iniciar',
+      'FUnidadTrabajo.Confirmar',
+      'FUnidadTrabajo.Revertir'
+    )
   },
   @{
     Ruta = 'src\DataModules\UniDataFacturas.pas'

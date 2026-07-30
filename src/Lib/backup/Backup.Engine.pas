@@ -44,10 +44,14 @@ type
                        Options: TBackupOptions;
                        IncludeTables, ExcludeTables: TStringList);
     procedure GenerateBackup;
-    property OnProgress: TBackupProgressEvent read FOnProgress write FOnProgress;
+    property OnProgress: TBackupProgressEvent
+      read FOnProgress write FOnProgress;
   end;
 
 implementation
+
+const
+  MAX_BYTES_LOTE_EXTENDIDO = 1024 * 1024;
 
 constructor TDBBackupEngine.Create(Provider: IDBMetadataProvider;
                                    Writer: IScriptWriter;
@@ -242,27 +246,45 @@ var
   ValueRows: TStringList;  // Acumula los VALUE(...) de cada fila
   RowsInBatch: Integer;
   BatchSize: Integer;
-
+  iBytesFila: Integer;
+  iBytesLote: Integer;
+  iFrecuenciaProgreso: Integer;
+  sParteCampos: string;
+  sValoresFila: string;
   // Escribe el INSERT acumulado y vacía el buffer
   procedure FlushExtendedInsert;
   var
     j: Integer;
-    SQL: string;
+    oSQL: TStringBuilder;
   begin
-    if ValueRows.Count = 0 then Exit;
-    SQL := FieldList + sLineBreak;
-    for j := 0 to ValueRows.Count - 1 do
+    if ValueRows.Count > 0 then
     begin
-      if j < ValueRows.Count - 1 then
-        SQL := SQL + '  (' + ValueRows[j] + '),' + sLineBreak
-      else
-        SQL := SQL + '  (' + ValueRows[j] + ');';
+      oSQL := TStringBuilder.Create(
+        Length(FieldList) + iBytesLote + (ValueRows.Count * 8));
+      try
+        oSQL.Append(FieldList);
+        oSQL.Append(sLineBreak);
+        for j := 0 to ValueRows.Count - 1 do
+        begin
+          oSQL.Append('  (');
+          oSQL.Append(ValueRows[j]);
+          if j < ValueRows.Count - 1 then
+          begin
+            oSQL.Append('),');
+            oSQL.Append(sLineBreak);
+          end
+          else
+            oSQL.Append(');');
+        end;
+        FWriter.AddCommand(oSQL.ToString);
+      finally
+        FreeAndNil(oSQL);
+      end;
+      ValueRows.Clear;
+      RowsInBatch := 0;
+      iBytesLote := 0;
     end;
-    FWriter.AddCommand(SQL);
-    ValueRows.Clear;
-    RowsInBatch := 0;
   end;
-
 begin
   // Verificar si tiene columna de autoincremento
   TableInfo := FProvider.GetTableStructure(TableName);
@@ -288,8 +310,12 @@ begin
     // Notificar inicio con total de filas (si el dataset lo soporta)
     DoProgress(TableName + ' (datos)', 0, Data.RecordCount);
     RowsInBatch := 0;
+    iBytesLote := 0;
     FieldList   := '';
     BatchSize   := FOptions.ExtendedInsertRows; // 0 = sin límite
+    iFrecuenciaProgreso := Data.RecordCount div 100;
+    if iFrecuenciaProgreso < 1 then
+      iFrecuenciaProgreso := 1;
     if not Data.IsEmpty then
     begin
       FWriter.AddComment(Format('Datos de %s', [TableName]));
@@ -300,8 +326,6 @@ begin
       begin
         Inc(RowCount);
         Inc(FFilasProcesadas);
-        if (RowCount mod 5000) = 0 then
-          DoProgress(TableName, RowCount, Data.RecordCount);
         Fields.Clear;
         Values.Clear;
         for i := 0 to Data.FieldCount - 1 do
@@ -311,30 +335,33 @@ begin
         end;
         if FOptions.ExtendedInsert then
         begin
-          // ── Modo extended: acumular filas ──────────────────────────────
-          // Construir la cabecera una sola vez (los campos no cambian)
+          // Construir la cabecera una sola vez
           if FieldList = '' then
           begin
-            var FieldPart := '';
+            sParteCampos := '';
             for i := 0 to Fields.Count - 1 do
             begin
-              if i > 0 then FieldPart := FieldPart + ', ';
-              FieldPart := FieldPart + Fields[i];
+              if i > 0 then
+                sParteCampos := sParteCampos + ', ';
+              sParteCampos := sParteCampos + Fields[i];
             end;
             FieldList := 'INSERT INTO ' + FHelpers.QuoteIdentifier(TableName) +
-                         ' (' + FieldPart + ') VALUES';
+                         ' (' + sParteCampos + ') VALUES';
           end;
-          // Construir la parte VALUES de esta fila
-          var RowValues := '';
+          sValoresFila := '';
           for i := 0 to Values.Count - 1 do
           begin
-            if i > 0 then RowValues := RowValues + ', ';
-            RowValues := RowValues + Values[i];
+            if i > 0 then
+              sValoresFila := sValoresFila + ', ';
+            sValoresFila := sValoresFila + Values[i];
           end;
-          ValueRows.Add(RowValues);
+          iBytesFila := TEncoding.UTF8.GetByteCount(sValoresFila);
+          if (iBytesLote > 0) and
+             ((iBytesLote + iBytesFila) > MAX_BYTES_LOTE_EXTENDIDO) then
+            FlushExtendedInsert;
+          ValueRows.Add(sValoresFila);
           Inc(RowsInBatch);
-
-          // Si llegamos al límite de batch, volcar y resetear
+          Inc(iBytesLote, iBytesFila);
           if (BatchSize > 0) and (RowsInBatch >= BatchSize) then
             FlushExtendedInsert;
         end
@@ -345,8 +372,9 @@ begin
             FHelpers.GenerateInsertSQL(TableName, Fields, Values, HasIdentity));
         end;
         Data.Next;
+        if ((RowCount mod iFrecuenciaProgreso) = 0) or Data.Eof then
+          DoProgress(TableName + ' (datos)', RowCount, Data.RecordCount);
       end;
-      // Volcar las filas que queden pendientes en el buffer
       if FOptions.ExtendedInsert then
         FlushExtendedInsert;
       DoProgress(TableName + ' OK', RowCount, RowCount);

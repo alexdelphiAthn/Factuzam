@@ -43,10 +43,18 @@ resourcestring
     'Respuesta JSON inesperada del formateador SQL';
   SErrorEncolarVentaWebservice =
     'No se pudo encolar la venta %s\%s para el webservice.';
+  SErrorVentasWsJsonNoRegistrado =
+    'El serializador JSON de ventas no está registrado.';
   SErrorApiKeyInstalacionFaltante =
     'Falta la API key de la instalación.';
   SErrorDeclaracionWebserviceOtraVersion =
     'El webservice devolvió una declaración de otra versión.';
+  // R10 - Importación de pedidos PrestaShop
+  SCaptionConectandoPrestaShop = 'Conectando con PrestaShop...';
+  SCaptionRecuperadosPedidos = 'Recuperados %d pedidos';
+  SCaptionNoRecuperadosPedidos = 'No se pudieron recuperar pedidos';
+  SCaptionImportandoPedido = 'Importando %s...';
+  SCaptionErrorImportandoPedido = 'Error en %s: %s';
 implementation
 
 end.

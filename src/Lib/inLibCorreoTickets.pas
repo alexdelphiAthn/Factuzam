@@ -18,7 +18,7 @@ interface
 
 uses
   System.SysUtils, Uni, inLibParametrosIntf,
-  inLibTraspasoTicketIntf;
+  inLibTraspasoTicketIntf, inLibTicketsCajaIntf;
 
 type
   TDatosCorreoOperacion = record
@@ -41,6 +41,7 @@ function ObtenerDatosCorreoOperacion(AConexion: TUniConnection;
 function EnviarDocumentacionOperacion(
   const AParametrosApp: IParametrosAplicacion;
   const ARepositorioTraspaso: IRepositorioTraspasoTicket;
+  const ARepositorioTicketsCaja: IRepositorioTicketsCaja;
   AConexion: TUniConnection;
   const AEmpresa, AAlmacen, ACaja, ANumeroOperacion, AEmail: string;
   out AMensaje: string): Boolean;
@@ -189,6 +190,7 @@ end;
 procedure GenerarDocumentos(
   const AParametrosApp: IParametrosAplicacion;
   const ARepositorioTraspaso: IRepositorioTraspasoTicket;
+  const ARepositorioTicketsCaja: IRepositorioTicketsCaja;
   AConexion: TUniConnection;
   const AEmpresa, AAlmacen, ACaja,
   ANumeroOperacion: string; const ADatos: TDatosCorreoOperacion;
@@ -207,18 +209,37 @@ begin
   else
   begin
     if ADatos.TieneFactura then
-      ImprimirTicketDesdeBD(AParametrosApp, AConexion, AEmpresa, AAlmacen,
+      ImprimirTicketDesdeBD(
+        AParametrosApp,
+        ARepositorioTicketsCaja,
+        AEmpresa,
+        AAlmacen,
         ACaja,
-        ANumeroOperacion, 'DEBUG', ARutasPDF, True);
+        ANumeroOperacion,
+        'DEBUG',
+        ARutasPDF,
+        True);
     if ADatos.TieneDepositos then
-      ImprimirResguardoDeposito(AConexion, AEmpresa, AAlmacen, ACaja,
-        ANumeroOperacion, 'DEBUG', ARutasPDF, True);
+      ImprimirResguardoDeposito(
+        ARepositorioTicketsCaja,
+        AEmpresa,
+        AAlmacen,
+        ACaja,
+        ANumeroOperacion,
+        'DEBUG',
+        ARutasPDF,
+        True);
     if ADatos.EsOperacionCaja then
       ImprimirTicketOperacionCaja(AConexion, AEmpresa, AAlmacen, ACaja,
         ANumeroOperacion, 'DEBUG', ARutasPDF, True);
     if (ARutasPDF.Count > 0) and (Trim(ADatos.CodigoCliente) <> '') then
-      ImprimirRecordatorio(AConexion, AEmpresa, ADatos.CodigoCliente, 'DEBUG',
-        ARutasPDF, True);
+      ImprimirRecordatorio(
+        ARepositorioTicketsCaja,
+        AEmpresa,
+        ADatos.CodigoCliente,
+        'DEBUG',
+        ARutasPDF,
+        True);
   end;
 end;
 
@@ -263,6 +284,7 @@ end;
 function EnviarDocumentacionOperacion(
   const AParametrosApp: IParametrosAplicacion;
   const ARepositorioTraspaso: IRepositorioTraspasoTicket;
+  const ARepositorioTicketsCaja: IRepositorioTicketsCaja;
   AConexion: TUniConnection;
   const AEmpresa, AAlmacen, ACaja, ANumeroOperacion, AEmail: string;
   out AMensaje: string): Boolean;
@@ -294,6 +316,7 @@ begin
             GenerarDocumentos(
               AParametrosApp,
               ARepositorioTraspaso,
+              ARepositorioTicketsCaja,
               AConexion,
               AEmpresa,
               AAlmacen,

@@ -21,7 +21,7 @@ uses
   Datasnap.DBClient, Uni, MemDS, DBAccess, system.Math, UniDataGen,
   system.StrUtils, inLibFaseCobro, Windows,
   inLibCajaDatosFactura, inLibCajaTipos, inLibContextoSesionIntf,
-  inLibParametrosIntf;
+  inLibParametrosIntf, inLibTicketsCajaIntf;
 
 type
   TTipoRectificativaCaja = inLibCajaTipos.TTipoRectificativaCaja;
@@ -97,6 +97,7 @@ type
     FUltSerieFacGrabada:  string;
     FUltNumeroFacGrabada: string;
     FContextoSesion: IContextoSesionAplicacion;
+    FRepositorioTicketsCaja: IRepositorioTicketsCaja;
     function GetIdentidadSesion: TIdentidadSesion;
     procedure InsertarMovimientoAlmacen(
                           QryTrx:     TUniQuery;
@@ -258,6 +259,8 @@ type
       const AParametrosCaja: IParametrosCaja); reintroduce;
     procedure AsignarContextoSesion(
       const AContextoSesion: IContextoSesionAplicacion);
+    procedure AsignarRepositorioTicketsCaja(
+      const ARepositorio: IRepositorioTicketsCaja);
     property IdentidadSesion: TIdentidadSesion read GetIdentidadSesion;
     procedure CargarDepositosCliente(const ACodigoCliente: string);
     function GenerarSkuFinal(ArticuloBase: string): string;
@@ -294,7 +297,16 @@ type
                                      const ANumeroRectificado: string = '';
                                      ATratamientoMovimientos:
                                        TTratamientoMovimientosRectificativa =
-                                         tmrMantenerOriginales):
+                                         tmrMantenerOriginales;
+                                     const AMotivoDevolucion: string = '';
+                                     const ASerieOrigenDevolucion:
+                                       string = '';
+                                     const ANumeroOrigenDevolucion:
+                                       string = '';
+                                     const AEmpresaOrigenDevolucion:
+                                       string = '';
+                                     const AAlmacenOrigenDevolucion:
+                                       string = ''):
                                        Boolean;
     property OnUpdateTotal: TOnUpdateTotalEvent read FOnUpdateTotal
                                                 write FOnUpdateTotal;
@@ -373,15 +385,23 @@ uses inLibValoresAutomaticos,
      inLibVerifactuCola,
      inLibEmisionFiscalIntf,
      inLibEmisionFiscal,
+     UniDataVerifactuColaRepositorio,
      inLibGenerarTicketBD,
+     UniDataTicketsCajaRepositorio,
      inLibDocumentoFiscal,
      inLibLicenciaAplicacion,
      inLibRectificativas,
+     inLibEAN13,
      inLibMsgCaja, inLibMsgFacturas;
 
 {$R *.dfm}
 
 type
+  TLineaTraspasoDevolucion = record
+    Sku: string;
+    Articulo: string;
+    Cantidad: Double;
+  end;
   TGrabacionFacturaCaja = class
   private
     FDataModule: TdmCajaOpe;
@@ -416,6 +436,13 @@ type
     FTotalVentasNormales: Currency;
     FTotalDevolucionesNormales: Currency;
     FNumeroLineaPago: Integer;
+    // Devoluciones: motivo, ticket de origen y traspaso automático
+    FMotivoDevolucion: string;
+    FSerieOrigenDevolucion: string;
+    FNumeroOrigenDevolucion: string;
+    FEmpresaOrigenDevolucion: string;
+    FAlmacenOrigenDevolucion: string;
+    FLineasTraspasoDev: TArray<TLineaTraspasoDevolucion>;
     procedure CargarContexto;
     function OperacionTieneNovedad: Boolean;
     procedure AtenderOperacionSinNovedad;
@@ -446,6 +473,15 @@ type
     procedure ImprimirDocumentosDeposito;
     procedure LimpiarLineasSinImporte;
     procedure RevertirTransaccion;
+    function EsDevolucionOtraTienda: Boolean;
+    procedure GenerarCodigoBarrasTicket;
+    procedure RegistrarLineaTraspasoDevolucion(
+      const ALinea: TDatosLineaFactura);
+    function ObtenerSerieDocumentoTraspaso(
+      const AEmpresa, AAlmacen, ATipoDoc: string): string;
+    function ObtenerCosteMedioSkuAlmacen(
+      const ASku, AAlmacen: string): Currency;
+    procedure GenerarTraspasoAutomaticoDevolucion;
   public
     constructor Create(
       ADataModule: TdmCajaOpe;
@@ -457,7 +493,12 @@ type
       ATipoRectificativa: TTipoRectificativaCaja;
       const ASerieRectificada, ANumeroRectificado: string;
       ATratamientoMovimientos:
-        TTratamientoMovimientosRectificativa);
+        TTratamientoMovimientosRectificativa;
+      const AMotivoDevolucion: string = '';
+      const ASerieOrigenDevolucion: string = '';
+      const ANumeroOrigenDevolucion: string = '';
+      const AEmpresaOrigenDevolucion: string = '';
+      const AAlmacenOrigenDevolucion: string = '');
     destructor Destroy; override;
     function Ejecutar(
       out ANumeroGenerado, AValeGenerado: string): Boolean;
@@ -478,6 +519,8 @@ begin
   FConexion := AConexion;
   FParametrosApp := AParametrosApp;
   FParametrosCaja := AParametrosCaja;
+  FRepositorioTicketsCaja :=
+    TRepositorioTicketsCaja.Create(AConexion);
   FContextoSesion := nil;
   if Supports(AOwner, IProveedorContextoSesion, ProveedorContexto) then
     FContextoSesion := ProveedorContexto.ContextoSesion;
@@ -488,6 +531,13 @@ procedure TdmCajaOpe.AsignarContextoSesion(
   const AContextoSesion: IContextoSesionAplicacion);
 begin
   FContextoSesion := AContextoSesion;
+end;
+
+procedure TdmCajaOpe.AsignarRepositorioTicketsCaja(
+  const ARepositorio: IRepositorioTicketsCaja);
+begin
+  if Assigned(ARepositorio) then
+    FRepositorioTicketsCaja := ARepositorio;
 end;
 
 function TdmCajaOpe.GetIdentidadSesion: TIdentidadSesion;
@@ -1142,14 +1192,20 @@ constructor TGrabacionFacturaCaja.Create(
   ATipoRectificativa: TTipoRectificativaCaja;
   const ASerieRectificada, ANumeroRectificado: string;
   ATratamientoMovimientos:
-    TTratamientoMovimientosRectificativa);
+    TTratamientoMovimientosRectificativa;
+  const AMotivoDevolucion: string = '';
+  const ASerieOrigenDevolucion: string = '';
+  const ANumeroOrigenDevolucion: string = '';
+  const AEmpresaOrigenDevolucion: string = '';
+  const AAlmacenOrigenDevolucion: string = '');
 begin
   inherited Create;
   FDataModule := ADataModule;
   FServicioEmisionFiscal := CrearServicioEmisionFiscal(
     FDataModule.FParametrosApp,
     FDataModule.FParametrosCaja,
-    FDataModule.FConexion);
+    FDataModule.FConexion,
+    CrearServicioVerifactuColaUniDAC(FDataModule.FConexion));
   FDatosCobro := ADatosCobro;
   FEmpresa := AEmpresa;
   FAlmacen := AAlmacen;
@@ -1164,6 +1220,12 @@ begin
   FSerieRectificada := ASerieRectificada;
   FNumeroRectificado := ANumeroRectificado;
   FTratamientoMovimientos := ATratamientoMovimientos;
+  FMotivoDevolucion := AMotivoDevolucion;
+  FSerieOrigenDevolucion := ASerieOrigenDevolucion;
+  FNumeroOrigenDevolucion := ANumeroOrigenDevolucion;
+  FEmpresaOrigenDevolucion := AEmpresaOrigenDevolucion;
+  FAlmacenOrigenDevolucion := AAlmacenOrigenDevolucion;
+  SetLength(FLineasTraspasoDev, 0);
 end;
 
 destructor TGrabacionFacturaCaja.Destroy;
@@ -1250,7 +1312,7 @@ end;
 procedure TGrabacionFacturaCaja.AtenderOperacionSinNovedad;
 begin
   ImprimirRecordatorio(
-    FDataModule.FConexion,
+    FDataModule.FRepositorioTicketsCaja,
     FDataModule.FContextoSesion.Ubicacion.Empresa,
     FCabecera.CodigoCliente,
     FDataModule.FParametrosCaja.ImpresoraCaja);
@@ -1427,6 +1489,7 @@ begin
       FCabecera.TotalLiquido, FCabecera.FormaPago,
       FCabecera.Comentarios, '', '', FAlmacen, FCaja, FUsuario,
       FNumeroOperacion, FUsuario);
+    GenerarCodigoBarrasTicket;
     FDataModule.FUltSerieFacGrabada := FSerieGenerada;
     FDataModule.FUltNumeroFacGrabada := FNumeroFactura;
   end
@@ -1527,6 +1590,7 @@ procedure TGrabacionFacturaCaja.ProcesarVenta(
   const ALinea: TDatosLineaFactura);
 var
   sAlmacenOrigen: string;
+  sEmpresaMovimiento: string;
   sTipoMovimiento: string;
   sNumeroMovimiento: string;
   sIdDeposito: string;
@@ -1575,6 +1639,20 @@ begin
     sTipoMovimiento := 'E'
   else
     sTipoMovimiento := 'S';
+  // Devolución de ticket de OTRA tienda: la entrada de stock se hace en
+  // el almacén de origen del ticket y luego el traspaso automático la
+  // lleva al almacén actual (GenerarTraspasoAutomaticoDevolucion).
+  sEmpresaMovimiento := FEmpresa;
+  if (ALinea.Cantidad < 0) and
+     (ALinea.TipoArticulo = 'ESTANDAR') and
+     FGenerarMovimientos and
+     EsDevolucionOtraTienda then
+  begin
+    sAlmacenOrigen := FAlmacenOrigenDevolucion;
+    if Trim(FEmpresaOrigenDevolucion) <> '' then
+      sEmpresaMovimiento := FEmpresaOrigenDevolucion;
+    RegistrarLineaTraspasoDevolucion(ALinea);
+  end;
   if FRequiereFactura and (Abs(ALinea.TotalCIva) > 0.001) then
     FDataModule.InsertarLineaFactura(
       FQuery, FSerieGenerada, FNumeroFactura, ALinea.Linea,
@@ -1591,7 +1669,7 @@ begin
      FGenerarMovimientos then
     FDataModule.InsertarMovimientoAlmacen(
       FQuery, 'VE', FSerieGenerada, FNumeroFactura,
-      ALinea.Linea, FEmpresa, sAlmacenOrigen, FCaja, '',
+      ALinea.Linea, sEmpresaMovimiento, sAlmacenOrigen, FCaja, '',
       sTipoMovimiento, ALinea.Sku, ALinea.Cantidad, 0,
       FUsuario, FAlmacen, FNumeroOperacion,
       FCabecera.CodigoCliente, ALinea.Articulo,
@@ -1646,6 +1724,9 @@ begin
 end;
 
 procedure TGrabacionFacturaCaja.RegistrarTotalesVenta;
+var
+  sSerieRefDevolucion: string;
+  sNumeroRefDevolucion: string;
 begin
   if FRequiereFactura then
   begin
@@ -1663,12 +1744,22 @@ begin
     begin
       if FTipoRectificativa = trcNinguna then
         FConceptoOperacion := 'Devolución de Venta';
+      // Referencia al ticket de origen: la rectificada si la hay y,
+      // si no, el origen elegido en el selector de devoluciones.
+      sSerieRefDevolucion := FSerieRectificada;
+      sNumeroRefDevolucion := FNumeroRectificado;
+      if Trim(sSerieRefDevolucion) = '' then
+      begin
+        sSerieRefDevolucion := FSerieOrigenDevolucion;
+        sNumeroRefDevolucion := FNumeroOrigenDevolucion;
+      end;
       FDataModule.InsertarOperacionCaja(
         FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
         'DV', -FTotalDevolucionesNormales, FUsuario,
         FFechaOperacion, FNumeroFactura, FSerieGenerada,
         FCabecera.CodigoCliente, FConceptoOperacion,
-        FSerieRectificada, FNumeroRectificado);
+        sSerieRefDevolucion, sNumeroRefDevolucion,
+        FMotivoDevolucion);
     end;
   end;
 end;
@@ -1688,7 +1779,7 @@ begin
       TVerifactuCola.EncolarRectificativa(
         FDataModule.FParametrosApp,
         FDataModule.FParametrosCaja,
-        FDataModule.FConexion,
+        CrearServicioVerifactuColaUniDAC(FDataModule.FConexion),
         FServicioEmisionFiscal,
         FDataModule.IdentidadSesion.Usuario,
         FSerieRectificada, FNumeroRectificado,
@@ -1879,11 +1970,14 @@ begin
   if HayDepositosPendientes and (FNumeroOperacion <> '') then
   begin
     ImprimirResguardoDeposito(
-      FDataModule.FConexion, FEmpresa, FAlmacen, FCaja,
+      FDataModule.FRepositorioTicketsCaja,
+      FEmpresa,
+      FAlmacen,
+      FCaja,
       FNumeroOperacion,
       FDataModule.FParametrosCaja.ImpresoraCaja);
     ImprimirRecordatorio(
-      FDataModule.FConexion,
+      FDataModule.FRepositorioTicketsCaja,
       FDataModule.FContextoSesion.Ubicacion.Empresa,
       FCabecera.CodigoCliente,
       FDataModule.FParametrosCaja.ImpresoraCaja);
@@ -1933,6 +2027,7 @@ begin
       ProcesarLineas;
       SincronizarContadorLineas;
       RegistrarTotalesVenta;
+      GenerarTraspasoAutomaticoDevolucion;
       RegistrarFiscalmente;
       RegistrarFormasPago;
       RegistrarValesRecogidos;
@@ -1959,6 +2054,225 @@ begin
   AValeGenerado := FValeGenerado;
 end;
 
+function TGrabacionFacturaCaja.EsDevolucionOtraTienda: Boolean;
+begin
+  Result :=
+    (Trim(FAlmacenOrigenDevolucion) <> '') and
+    (not SameText(FAlmacenOrigenDevolucion, FAlmacen));
+end;
+
+procedure TGrabacionFacturaCaja.GenerarCodigoBarrasTicket;
+const
+  cPrefijoTicket = '29';
+  cDigitosContador = 10;
+var
+  sContador: string;
+  sBase: string;
+begin
+  // EAN-13 del ticket: prefijo 29 (uso interno de tienda) + contador
+  // global 'TK' de 10 dígitos + dígito de control. Mismo patrón que los
+  // códigos de artículo (prefijo 21, contador 'BA'). Si la columna aún
+  // no existe (script codigo_barras_ticket.sql sin aplicar), se omite.
+  FQuery.SQL.Text :=
+    'SELECT COUNT(*) AS N ' +
+    '  FROM INFORMATION_SCHEMA.COLUMNS ' +
+    ' WHERE TABLE_SCHEMA = DATABASE() ' +
+    '   AND TABLE_NAME = ''fza_facturas'' ' +
+    '   AND COLUMN_NAME = ''CODIGO_BARRAS_FAC''';
+  FQuery.Open;
+  if FQuery.FieldByName('N').AsInteger > 0 then
+  begin
+    FQuery.Close;
+    sContador := ObtenerSiguienteContador(
+      FDataModule.FConexion, 'TK', FUsuario);
+    if Length(sContador) > cDigitosContador then
+      sContador := Copy(
+        sContador,
+        Length(sContador) - cDigitosContador + 1,
+        cDigitosContador)
+    else
+      sContador := StringOfChar(
+        '0', cDigitosContador - Length(sContador)) + sContador;
+    sBase := cPrefijoTicket + sContador;
+    FQuery.SQL.Text :=
+      'UPDATE fza_facturas ' +
+      '   SET CODIGO_BARRAS_FAC = :CODIGO ' +
+      ' WHERE SERIE_FAC = :SERIE ' +
+      '   AND NUMERO_FAC = :NUMERO';
+    FQuery.ParamByName('CODIGO').AsString :=
+      sBase + CalcularDigitoEAN13(sBase);
+    FQuery.ParamByName('SERIE').AsString := FSerieGenerada;
+    FQuery.ParamByName('NUMERO').AsString := FNumeroFactura;
+    FQuery.Execute;
+  end
+  else
+    FQuery.Close;
+end;
+
+procedure TGrabacionFacturaCaja.RegistrarLineaTraspasoDevolucion(
+  const ALinea: TDatosLineaFactura);
+var
+  iIndice: Integer;
+begin
+  iIndice := Length(FLineasTraspasoDev);
+  SetLength(FLineasTraspasoDev, iIndice + 1);
+  FLineasTraspasoDev[iIndice].Sku := ALinea.Sku;
+  FLineasTraspasoDev[iIndice].Articulo := ALinea.Articulo;
+  FLineasTraspasoDev[iIndice].Cantidad := Abs(ALinea.Cantidad);
+end;
+
+function TGrabacionFacturaCaja.ObtenerSerieDocumentoTraspaso(
+  const AEmpresa, AAlmacen, ATipoDoc: string): string;
+var
+  Qry: TUniQuery;
+begin
+  // Serie configurada para el tipo de documento (prefiere la de la
+  // caja / almacén); fallback: el propio tipo de documento. Espejo de
+  // TdmTraspaso.ObtenerSerieDocumento.
+  Result := ATipoDoc;
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := FDataModule.FConexion;
+    Qry.SQL.Text :=
+      'SELECT EMPSER FROM fza_empresas_series' +
+      ' WHERE CODIGO_EMP_EMPSER = :EMP AND TIPO_DOC_EMPSER = :TIPO' +
+      '   AND (CODIGO_ALM_EMPSER = :ALM OR CODIGO_ALM_EMPSER IS NULL' +
+      '        OR CODIGO_ALM_EMPSER = '''')' +
+      '   AND (CODIGO_CAJA_EMPSER = :CAJA OR CODIGO_CAJA_EMPSER IS NULL' +
+      '        OR CODIGO_CAJA_EMPSER = '''')' +
+      ' ORDER BY (CODIGO_CAJA_EMPSER = :CAJA) DESC,' +
+      '          (CODIGO_ALM_EMPSER = :ALM) DESC LIMIT 1';
+    Qry.ParamByName('EMP').AsString := AEmpresa;
+    Qry.ParamByName('TIPO').AsString := ATipoDoc;
+    Qry.ParamByName('ALM').AsString := AAlmacen;
+    Qry.ParamByName('CAJA').AsString := FCaja;
+    Qry.Open;
+    if not Qry.IsEmpty then
+      Result := Qry.FieldByName('EMPSER').AsString;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
+function TGrabacionFacturaCaja.ObtenerCosteMedioSkuAlmacen(
+  const ASku, AAlmacen: string): Currency;
+var
+  Qry: TUniQuery;
+begin
+  // PMP almacenado del SKU en el almacén (espejo de
+  // TdmTraspaso.ObtenerCosteMedio): media ponderada por cantidad y, si
+  // no hay stock pero hay PMP guardado, se toma ese (MAX).
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := FDataModule.FConexion;
+    Qry.SQL.Text :=
+      'SELECT CASE WHEN SUM(CANTIDAD_STK) > 0' +
+      '            THEN SUM(PRECIO_MEDIO_STK * CANTIDAD_STK)' +
+      '                 / SUM(CANTIDAD_STK)' +
+      '            ELSE MAX(PRECIO_MEDIO_STK) END AS PMP ' +
+      '  FROM fza_articulos_stockactual ' +
+      ' WHERE CODIGO_ALM_STK = :ALM AND CODIGO_UNIDAD_STK = :SKU';
+    Qry.ParamByName('ALM').AsString := AAlmacen;
+    Qry.ParamByName('SKU').AsString := ASku;
+    Qry.Open;
+    Result := Qry.FieldByName('PMP').AsCurrency;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
+procedure TGrabacionFacturaCaja.GenerarTraspasoAutomaticoDevolucion;
+var
+  oStoredProc: TUniStoredProc;
+  sTipoDoc: string;
+  sSerieDoc: string;
+  sNumeroDoc: string;
+  sNumOperacion: string;
+  sLinea: string;
+  sEmpresaOrigen: string;
+  sEmpContra: string;
+  cCoste: Currency;
+  cTotal: Currency;
+  i: Integer;
+  iLinea: Integer;
+begin
+  // Devolución de un ticket de OTRA tienda: la entrada de la devolución
+  // se hizo en el almacén de origen (ProcesarVenta) y aquí se genera el
+  // traspaso automático origen -> almacén actual, dentro de la misma
+  // transacción, para que el stock quede donde está físicamente.
+  if (Length(FLineasTraspasoDev) > 0) and EsDevolucionOtraTienda then
+  begin
+    sEmpresaOrigen := Trim(FEmpresaOrigenDevolucion);
+    if sEmpresaOrigen = '' then
+      sEmpresaOrigen := FEmpresa;
+    // TR = misma empresa; TA = entre empresas distintas
+    if SameText(sEmpresaOrigen, FEmpresa) then
+    begin
+      sTipoDoc := 'TR';
+      sEmpContra := '';
+    end
+    else
+    begin
+      sTipoDoc := 'TA';
+      sEmpContra := FEmpresa;
+    end;
+    sSerieDoc := ObtenerSerieDocumentoTraspaso(
+      sEmpresaOrigen, FAlmacenOrigenDevolucion, sTipoDoc);
+    oStoredProc := TUniStoredProc.Create(nil);
+    try
+      oStoredProc.Connection := FDataModule.FConexion;
+      oStoredProc.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
+      oStoredProc.Prepare;
+      oStoredProc.ParamByName('pserie').AsString := sSerieDoc;
+      oStoredProc.ParamByName('pTipoDoc').AsString := sTipoDoc;
+      oStoredProc.ParamByName(
+        'pEMPRESA_CONTADOR').AsString := sEmpresaOrigen;
+      oStoredProc.ParamByName('pUSUARIOMODIF').AsString := FUsuario;
+      oStoredProc.Execute;
+      sNumeroDoc := oStoredProc.ParamByName('pcont').AsString;
+    finally
+      FreeAndNil(oStoredProc);
+    end;
+    sNumOperacion := FDataModule.SiguienteOpCaja(
+      sEmpresaOrigen, FAlmacenOrigenDevolucion, FCaja, FUsuario);
+    cTotal := 0;
+    iLinea := 0;
+    for i := 0 to High(FLineasTraspasoDev) do
+    begin
+      iLinea := iLinea + 10;
+      sLinea := Format('%.4d', [iLinea]);
+      cCoste := ObtenerCosteMedioSkuAlmacen(
+        FLineasTraspasoDev[i].Sku, FAlmacenOrigenDevolucion);
+      // Salida del almacén de origen del ticket hacia el actual
+      FDataModule.InsertarMovimientoAlmacen(
+        FQuery, sTipoDoc, sSerieDoc, sNumeroDoc, sLinea,
+        sEmpresaOrigen, FAlmacenOrigenDevolucion, FCaja, FAlmacen,
+        'S', FLineasTraspasoDev[i].Sku,
+        FLineasTraspasoDev[i].Cantidad, cCoste, FUsuario,
+        FAlmacenOrigenDevolucion, sNumOperacion, '',
+        FLineasTraspasoDev[i].Articulo, FFechaOperacion);
+      // Entrada en el almacén donde se hace la devolución
+      FDataModule.InsertarMovimientoAlmacen(
+        FQuery, sTipoDoc, sSerieDoc, sNumeroDoc, sLinea,
+        FEmpresa, FAlmacen, FCaja, FAlmacenOrigenDevolucion,
+        'E', FLineasTraspasoDev[i].Sku,
+        FLineasTraspasoDev[i].Cantidad, cCoste, FUsuario,
+        FAlmacenOrigenDevolucion, sNumOperacion, '',
+        FLineasTraspasoDev[i].Articulo, FFechaOperacion);
+      cTotal := cTotal + cCoste * FLineasTraspasoDev[i].Cantidad;
+    end;
+    // Operación del traspaso: registrada en el origen con contra el
+    // almacén actual (misma convención que el traspaso manual F3)
+    FDataModule.InsertarOperacionCaja(
+      FQuery, sEmpresaOrigen, FAlmacenOrigenDevolucion, FCaja,
+      sNumOperacion, sTipoDoc, cTotal, FUsuario, FFechaOperacion,
+      sNumeroDoc, sSerieDoc, '',
+      'Traspaso automático por devolución a ' + FAlmacen,
+      FSerieOrigenDevolucion, FNumeroOrigenDevolucion, '',
+      sEmpContra, FAlmacen, 'S');
+  end;
+end;
+
 function TdmCajaOpe.GrabarFacturaSimplificada(
   const AEmpresa, AAlmacen, ACaja, ASerieElegida: string;
   DatosCobro: TDatosFaseCobro;
@@ -1975,7 +2289,12 @@ function TdmCajaOpe.GrabarFacturaSimplificada(
   const ANumeroRectificado: string = '';
   ATratamientoMovimientos:
     TTratamientoMovimientosRectificativa =
-      tmrMantenerOriginales): Boolean;
+      tmrMantenerOriginales;
+  const AMotivoDevolucion: string = '';
+  const ASerieOrigenDevolucion: string = '';
+  const ANumeroOrigenDevolucion: string = '';
+  const AEmpresaOrigenDevolucion: string = '';
+  const AAlmacenOrigenDevolucion: string = ''): Boolean;
 var
   Grabacion: TGrabacionFacturaCaja;
 begin
@@ -1984,7 +2303,10 @@ begin
     ASerieElegida, SerieGenerada, ATipoFactura,
     AFechaFactura, AFechaOperacion, ANumeroManual,
     ATipoRectificativa, ASerieRectificada,
-    ANumeroRectificado, ATratamientoMovimientos);
+    ANumeroRectificado, ATratamientoMovimientos,
+    AMotivoDevolucion, ASerieOrigenDevolucion,
+    ANumeroOrigenDevolucion, AEmpresaOrigenDevolucion,
+    AAlmacenOrigenDevolucion);
   try
     Result := Grabacion.Ejecutar(
       NumeroGenerado, ValeGenerado);

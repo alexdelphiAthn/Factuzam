@@ -134,7 +134,8 @@ implementation
 
 uses
   inLibValoresAutomaticos, inLibLog, System.Diagnostics,
-  System.UITypes, Vcl.Dialogs, inLibArticulosValidador,
+  System.UITypes, Vcl.Dialogs, inLibArticulosValidadorIntf,
+  UniDataArticulosValidadorRepositorio,
   inLibVentasImpuestos, inLibContadorLineas, inLibData,
   inLibMsgArticulos, inLibMsgFacturas, inLibMsgVentas,
   inLibSqlSeguro;

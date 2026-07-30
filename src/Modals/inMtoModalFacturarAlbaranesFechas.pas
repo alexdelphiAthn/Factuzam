@@ -96,7 +96,7 @@ procedure TfrmModalFacturarAlbaranesFechas.btnBuscarClick(Sender: TObject);
 begin
   Screen.Cursor := crHourGlass;
   try
-    lblEstado.Caption := 'Buscando albaranes...';
+    lblEstado.Caption := SCaptionBuscandoAlbaranes;
     Application.ProcessMessages;
     qBuscar.Close;
     qBuscar.SQL.Text :=
@@ -113,7 +113,7 @@ begin
     qBuscar.ParamByName('pHASTA').AsDateTime  := dteHasta.Date;
     qBuscar.Open;
     CargarGrid;
-    lblEstado.Caption := Format('Albaranes encontrados: %d',
+    lblEstado.Caption := Format(SCaptionAlbaranesEncontrados,
                                 [tvAlbaranes.DataController.RecordCount]);
   finally
     Screen.Cursor := crDefault;
@@ -194,12 +194,13 @@ begin
     end;
     Screen.Cursor := crHourGlass;
     try
-      lblEstado.Caption := Format('Creando borradores de %d albaranes...',
+      lblEstado.Caption := Format(SCaptionCreandoBorradoresAlbaranes,
                                   [lst.Count]);
       Application.ProcessMessages;
       generadas := dmmAlbaranes.FacturarAlbaranesLista(lst,
                                                        chkAgruparPorCliente.Checked);
-      lblEstado.Caption := Format('Generados %d borradores', [generadas]);
+      lblEstado.Caption := Format(SCaptionGeneradosBorradores,
+                                  [generadas]);
       ShowMessageFmt(SInfoBorradoresGenerados,
                      [generadas]);
       btnBuscarClick(nil);

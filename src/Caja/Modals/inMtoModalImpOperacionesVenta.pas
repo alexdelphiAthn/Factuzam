@@ -80,7 +80,7 @@ type
 implementation
 
 uses
-  inLibFiltroUsuario, inLibRectificativas;
+  inLibFiltroUsuario, inLibRectificativas, inLibMsgCaja;
 
 {$R *.dfm}
 
@@ -267,7 +267,7 @@ begin
     if FRestringido then
     begin
       ClientWidth := 341;
-      lblContexto.Caption := 'TPV restringido:';
+      lblContexto.Caption := SCaptionTpvRestringido;
     end
     else
     begin

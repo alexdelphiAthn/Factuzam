@@ -23,7 +23,8 @@ uses
   UniDataGen, inLibUser,
   frxClass, frxDBSet,
   inLibPresta, frCoreClasses,
-  inLibArticulosValidador;
+  inLibArticulosValidadorIntf,
+  UniDataArticulosValidadorRepositorio;
 
 type
   TdmPedidos = class(TdmBase)
@@ -1967,7 +1968,7 @@ begin
   // Resolver/crear cliente y articulos ANTES de la tx: los contadores
   // (PRC_GET_NEXT_CONT) hacen COMMIT propio y romperian la tx del pedido.
   sCodigoCli := ResolverCodigoCliente(aOrder);
-  oValidador := CrearValidadorArticulosBase(
+  oValidador := TRepositorioArticulosValidador.Create(
     ConexionPrincipal);
   SetLength(aCodArt, aOrder.LineasPedido.Count);
   for i := 0 to aOrder.LineasPedido.Count - 1 do

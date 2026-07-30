@@ -144,7 +144,8 @@ uses
   inLibAlbaranesCompraMovimientos,
   inLibComprasImpuestos,
   inLibData,
-  inLibArticulosValidador,
+  inLibArticulosValidadorIntf,
+  UniDataArticulosValidadorRepositorio,
   inLibMsgCompras, inLibMsgVentas;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}

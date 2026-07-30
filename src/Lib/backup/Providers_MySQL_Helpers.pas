@@ -14,13 +14,16 @@ type
     function TriggersAreEqual(const Trg1, Trg2: TTriggerInfo): Boolean;
     override;
     function GenerateCreateTableSQL(const Table: TTableInfo;
-                                    const Indexes: TArray<TIndexInfo>): string; override;
+                                    const Indexes: TArray<TIndexInfo>): string;
+                                    override;
     function GenerateAddColumnSQL(const TableName:string;
-                                  const ColumnInfo:TColumnInfo): string; override;
+                                  const ColumnInfo:TColumnInfo): string;
+                                  override;
     function GenerateDropColumnSQL(const TableName, ColumnName:string): string;
     override;
     function GenerateModifyColumnSQL(const TableName:string;
-                                     const ColumnInfo:TColumnInfo): string; override;
+                                     const ColumnInfo:TColumnInfo): string;
+                                     override;
     function GenerateUpdateSQL(const TableName: string;
                                   const SetClause,
                                   WhereClause: string): string; override;
@@ -40,7 +43,8 @@ type
     override;
     function GenerateInsertSQL(const TableName: string;
                            Fields, Values: TStringList;
-                           const HasIdentity: Boolean = False): string; override;
+                           const HasIdentity: Boolean = False): string;
+                           override;
     // MySQL no usa sequences clasicas (depende de AUTO_INCREMENT). Estos
     // helpers existen por compatibilidad con motores con sequences (Oracle,
     // PostgreSQL); el backup MySQL los devuelve vacios.
@@ -56,57 +60,55 @@ function TMySQLHelpers.ValueToSQL(const Field: TField): string;
   function BytesToHex(const Bytes: TBytes): string;
   var
     i: Integer;
+    oHex: TStringBuilder;
   begin
-    Result := '';
-    for i := Low(Bytes) to High(Bytes) do
-      Result := Result + IntToHex(Bytes[i], 2);
+    oHex := TStringBuilder.Create(Length(Bytes) * 2);
+    try
+      for i := Low(Bytes) to High(Bytes) do
+        oHex.Append(IntToHex(Bytes[i], 2));
+      Result := oHex.ToString;
+    finally
+      FreeAndNil(oHex);
+    end;
   end;
 var
   InvariantFmt: TFormatSettings;
+  sTextoSeguro: string;
 begin
   if Field.IsNull then
-    Exit('NULL');
-
-  // Configuración invariante: punto decimal, sin separador de miles
-  InvariantFmt := TFormatSettings.Invariant;
-
-  case Field.DataType of
-    ftString, ftWideString, ftMemo, ftWideMemo, ftFmtMemo:
-      begin
-        // 2. Escapa la barra invertida primero
-        var SafeStr := StringReplace(Field.AsString, '\', '\\', [rfReplaceAll]);
-
-        // 3. QuotedStr se encarga de las comillas simples
-        Result := QuotedStr(SafeStr);
-      end;
-    ftDate, ftTime, ftDateTime, ftTimeStamp:
-      Result := QuotedStr(FormatDateTime('yyyy-mm-dd hh:nn:ss',
-                                         Field.AsDateTime));
-
-    ftBoolean:
-      Result := IntToStr(Ord(Field.AsBoolean));
-
-    ftBlob, ftGraphic, ftVarBytes, ftBytes:
-      Result := '0x' + BytesToHex(Field.AsBytes);
-
-    ftSmallint, ftInteger, ftWord, ftLargeint, ftAutoInc:
-      Result := Field.AsString;  // Los enteros no tienen separador decimal
-
-    ftFloat, ftCurrency, ftBCD, ftFMTBcd, ftExtended, ftSingle:
-      // Usar FloatToStr con formato invariante garantiza punto decimal
-      Result := FloatToStr(Field.AsFloat, InvariantFmt);
-
-    else
-      // Para cualquier otro tipo numérico no contemplado arriba,
-      // intentamos con AsFloat primero; si falla, caemos a AsString
-      // y reemplazamos la coma por punto como red de seguridad.
-      begin
-        try
-          Result := FloatToStr(Field.AsFloat, InvariantFmt);
-        except
-          Result := StringReplace(Field.AsString, ',', '.', [rfReplaceAll]);
+    Result := 'NULL'
+  else
+  begin
+    // Configuración invariante: punto decimal, sin separador de miles
+    InvariantFmt := TFormatSettings.Invariant;
+    case Field.DataType of
+      ftString, ftWideString, ftMemo, ftWideMemo, ftFmtMemo:
+        begin
+          sTextoSeguro := StringReplace(Field.AsString, '\', '\\',
+                                        [rfReplaceAll]);
+          Result := QuotedStr(sTextoSeguro);
         end;
-      end;
+      ftDate, ftTime, ftDateTime, ftTimeStamp:
+        Result := QuotedStr(FormatDateTime('yyyy-mm-dd hh:nn:ss',
+                                           Field.AsDateTime));
+      ftBoolean:
+        Result := IntToStr(Ord(Field.AsBoolean));
+      ftBlob, ftGraphic, ftVarBytes, ftBytes:
+        Result := '0x' + BytesToHex(Field.AsBytes);
+      ftSmallint, ftInteger, ftWord, ftLargeint, ftAutoInc:
+        Result := Field.AsString;
+      ftFloat, ftCurrency, ftBCD, ftFMTBcd, ftExtended, ftSingle:
+        Result := FloatToStr(Field.AsFloat, InvariantFmt);
+      else
+        begin
+          try
+            Result := FloatToStr(Field.AsFloat, InvariantFmt);
+          except
+            Result := StringReplace(Field.AsString, ',', '.',
+                                    [rfReplaceAll]);
+          end;
+        end;
+    end;
   end;
 end;
 

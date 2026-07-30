@@ -63,7 +63,12 @@ begin
     ASolicitud.TipoRectificativa,
     ASolicitud.SerieRectificada,
     ASolicitud.NumeroRectificado,
-    ASolicitud.TratamientoMovimientos);
+    ASolicitud.TratamientoMovimientos,
+    ASolicitud.MotivoDevolucion,
+    ASolicitud.SerieOrigenDevolucion,
+    ASolicitud.NumeroOrigenDevolucion,
+    ASolicitud.EmpresaOrigenDevolucion,
+    ASolicitud.AlmacenOrigenDevolucion);
 end;
 
 function TGrabadorVentaCaja.UltimaSerieFacturaGrabada: string;

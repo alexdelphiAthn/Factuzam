@@ -34,6 +34,12 @@ type
     procedure Idioma_NormalizaVacioYGuionBajo;
     [Test]
     procedure Clave_UsaClaseConcretaYNombreComponente;
+    [Test]
+    procedure TextoInforme_PseudoidiomaSinCorchetes;
+    [Test]
+    procedure TextoInforme_SinCatalogoConservaTexto;
+    [Test]
+    procedure Idioma_PreservaEtiquetasCatalogadas;
   end;
 
 implementation
@@ -172,6 +178,9 @@ begin
     Servicio := TServicioTraducciones.Create(
       nil,
       'en-GB');
+    Assert.IsFalse(
+      Servicio.ExisteTraduccion(
+        'Prueba.Clave.Caption'));
     Assert.AreEqual(
       'Original',
       Servicio.Traducir(
@@ -233,6 +242,58 @@ begin
   finally
     FreeAndNil(Raiz);
   end;
+end;
+
+procedure TPruebasTraducciones.
+  TextoInforme_PseudoidiomaSinCorchetes;
+var
+  Servicio: IServicioTraducciones;
+begin
+  Servicio := TServicioTraducciones.Create(
+    nil,
+    IDIOMA_PSEUDO);
+  Assert.AreEqual(
+    'Factura ~~~~',
+    Servicio.TraducirTextoInforme('Factura'));
+  // Un memo formado solo por expresiones no se alarga.
+  Assert.AreEqual(
+    '[Ventas."TOTAL"]',
+    Servicio.TraducirTextoInforme('[Ventas."TOTAL"]'));
+  // Una segunda pasada no duplica el relleno.
+  Assert.AreEqual(
+    'Factura ~~~~',
+    Servicio.TraducirTextoInforme(
+      Servicio.TraducirTextoInforme('Factura')));
+end;
+
+procedure TPruebasTraducciones.
+  TextoInforme_SinCatalogoConservaTexto;
+var
+  Servicio: IServicioTraducciones;
+begin
+  Servicio := TServicioTraducciones.Create(
+    nil,
+    'en-GB');
+  Assert.AreEqual(
+    'Factura',
+    Servicio.TraducirTextoInforme('Factura'));
+end;
+
+procedure TPruebasTraducciones.
+  Idioma_PreservaEtiquetasCatalogadas;
+begin
+  Assert.AreEqual(
+    IDIOMA_CATALAN,
+    NormalizarIdiomaAplicacion('ca_ES'));
+  Assert.AreEqual(
+    IDIOMA_INGLES,
+    NormalizarIdiomaAplicacion('en-GB'));
+  Assert.AreEqual(
+    'fr-FR',
+    NormalizarIdiomaAplicacion('fr-FR'));
+  Assert.AreEqual(
+    IDIOMA_PSEUDO,
+    NormalizarIdiomaAplicacion(IDIOMA_PSEUDO));
 end;
 
 end.

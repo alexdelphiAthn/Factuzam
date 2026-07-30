@@ -21,7 +21,7 @@
 {      - Flags: generar pedido, generar albaran.                               }
 {                                                                              }
 {    Devuelve los valores elegidos para que el form llamante invoque a         }
-{    inLibComprasSesionesMaterializar.MaterializarSesion con ellos.            }
+{    TServicioComprasSesiones.EjecutarMaterializacion con ellos.               }
 {    Patron analogo al modal Duplicar/Abonar Factura.                          }
 {******************************************************************************}
 unit inMtoModalCrearAlbaranSesion;

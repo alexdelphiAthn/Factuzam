@@ -132,16 +132,16 @@ $objetivos = @(
     Nombre = 'GuardarRegistroNoVerifactu'
   },
   @{
-    Ruta = 'src\DataModules\UniDataComprasSesionesMaterializar.pas'
-    Nombre = 'MaterializarSesion'
+    Ruta = 'src\Lib\inLibComprasSesionesMaterializar.pas'
+    Nombre = 'TMaterializadorComprasSesiones.Ejecutar'
   },
   @{
-    Ruta = 'src\DataModules\UniDataComprasSesionesMaterializar.pas'
-    Nombre = 'RevertirMaterializacion'
+    Ruta = 'src\Lib\inLibComprasSesionesMaterializar.pas'
+    Nombre = 'TRevertidorComprasSesiones.Ejecutar'
   },
   @{
-    Ruta = 'src\Lib\inLibPedidosCompra.pas'
-    Nombre = 'CrearAlbaranDesdePedidoConCantidades'
+    Ruta = 'src\DataModules\UniDataPedidosCompraOperaciones.pas'
+    Nombre = 'CrearAlbaranDesdePedidoConCantidadesInterno'
   },
   @{
     Ruta = 'src\Lib\inLibBalanceTallasExcel.pas'
@@ -428,12 +428,9 @@ $rutaTiraCaja =
 $contenidoTiraCaja =
   Get-Content -LiteralPath $rutaTiraCaja -Raw
 $ayudantesTiraCaja = @(
-  'TextoOperacion',
   'ReferenciaDocumento',
   'FechaOperacion',
   'TextoSeries',
-  'CrearConsultaDetalle',
-  'AsignarParametrosDetalle',
   'EscribirMoneda',
   'EscribirCabecera',
   'VolcarVenta',
@@ -474,11 +471,14 @@ if ($contenidoTiraCaja -notmatch
     '(?s)TExportadorTiraCajaExcel\.Ejecutar.*?' +
     'BeginUpdate.*?EndUpdate' -or
     $contenidoTiraCaja -notmatch
-    '(?s)ProcesarOperaciones.*?SQLOperaciones.*?' +
-    'AsignarParamsOperaciones' -or
+    '(?s)ProcesarOperaciones.*?ListarOperaciones' -or
     $contenidoTiraCaja -notmatch
-    '(?s)CrearConsultaDetalle.*?AsignarParametrosDetalle.*?Open') {
-  throw 'La tira Excel no conserva el lote o sus consultas compartidas.'
+    '(?s)VolcarVenta.*?ListarLineasVenta' -or
+    $contenidoTiraCaja -notmatch
+    '(?s)VolcarTraspaso.*?ListarLineasTraspaso' -or
+    $contenidoTiraCaja -notmatch
+    '(?s)VolcarDeposito.*?ListarDepositos') {
+  throw 'La tira Excel no conserva el lote o sus read models compartidos.'
 }
 $contratosTiraCaja = @(
   'TIRA DE CAJA · CAJA',
@@ -489,8 +489,8 @@ $contratosTiraCaja = @(
   'SUBTOTAL TRASPASOS (coste)',
   'SUBTOTAL DEPOSITOS',
   'Crédito (depósito)',
-  'IMPORTE_ANTICIPO_DEP',
-  'PRECIO_COSTE_UNITARIO_MOV'
+  'ImporteAnticipo',
+  'PrecioCosteUnitario'
 )
 foreach ($contrato in $contratosTiraCaja) {
   if (-not $contenidoTiraCaja.Contains($contrato)) {
@@ -575,8 +575,6 @@ $rutaGenerarTicketBD =
 $contenidoGenerarTicketBD =
   Get-Content -LiteralPath $rutaGenerarTicketBD -Raw
 $ayudantesResguardoDeposito = @(
-  'AsignarParametro',
-  'AbrirConsulta',
   'CargarCabecera',
   'EscribirTituloSeccion',
   'EscribirCabecera',
@@ -614,24 +612,26 @@ foreach ($nombre in $ayudantesResguardoDeposito) {
 }
 if ($contenidoGenerarTicketBD -notmatch
     '(?s)TGeneradorResguardoDeposito\.Ejecutar.*?' +
-    'CargarCabecera.*?SQL_NUEVOS_DEPOSITOS_RESGUARDO.*?' +
+    'CargarCabecera.*?ListarNuevosDepositosResguardo.*?' +
     'EscribirCabecera.*?EscribirDepositos.*?EscribirEntregas.*?' +
     'EscribirDevolucionEconomica.*?' +
-    'SQL_DEPOSITOS_DEVUELTOS_RESGUARDO.*?EscribirDepositos.*?' +
+    'ListarDepositosDevueltosResguardo.*?EscribirDepositos.*?' +
     'EscribirResumen.*?GenerarSalida') {
   throw 'El resguardo no conserva el orden de sus secciones y salida.'
 }
 $contratosResguardoDeposito = @(
-  'fza_depositos_cliente',
-  'fza_caja_operaciones',
-  'fza_caja_pagos',
-  'AS TOTAL_PVP',
+  'IRepositorioTicketsCaja',
+  'ListarNuevosDepositosResguardo',
+  'ListarEntregasResguardo',
+  'ListarDevolucionesEconomicasResguardo',
+  'ListarDepositosDevueltosResguardo',
+  'ObtenerTotalPagadoResguardo',
+  'ListarPieTicket',
   'MOVIMIENTO DE DEPÓSITOS/PRÉSTAMOS',
   'ENTREGAS A CUENTA',
   'DEVOLUCIÓN ECONÓMICA',
   'DEVOLUCIÓN DE ARTÍCULOS',
   'TOTAL PAGADO (TICKET + DEPÓSITOS):',
-  'EscribirPieTicketCaja',
   'ImprimirOPrevisualizarTicket',
   'ARutasPDF.Add'
 )
@@ -639,6 +639,44 @@ foreach ($contrato in $contratosResguardoDeposito) {
   if (-not $contenidoGenerarTicketBD.Contains($contrato)) {
     throw "El resguardo no conserva el contrato: $contrato."
   }
+}
+if ($contenidoGenerarTicketBD -match
+    '(?i)\b(TUniConnection|TUniQuery|SELECT|INSERT|UPDATE|DELETE|CALL)\b') {
+  throw 'inLibGenerarTicketBD no puede volver a conocer UniDAC ni SQL.'
+}
+$rutaFormularioConsultaOpe =
+  Join-Path $Raiz 'src\Forms\inMtoConsultaOpe.pas'
+$contenidoFormularioConsultaOpe =
+  Get-Content -LiteralPath $rutaFormularioConsultaOpe -Raw
+if ($contenidoFormularioConsultaOpe -notmatch
+    '(?s)EnviarDocumentacionOperacion\(.*?' +
+    'CrearRepositorioTraspasoTicket.*?' +
+    'CrearRepositorioTicketsCaja.*?ConexionPrincipal' -or
+    $contenidoFormularioConsultaOpe -notmatch
+    '(?s)ImprimirTicketDesdeBD\(.*?' +
+    'CrearRepositorioTicketsCaja' -or
+    $contenidoFormularioConsultaOpe -notmatch
+    '(?s)ImprimirResguardoDeposito\(.*?' +
+    'CrearRepositorioTicketsCaja' -or
+    $contenidoFormularioConsultaOpe -notmatch
+    '(?s)ImprimirRecordatorio\(.*?' +
+    'CrearRepositorioTicketsCaja') {
+  throw 'La consulta de operaciones no conserva el repositorio de tickets.'
+}
+$rutaFormularioCajaOpe =
+  Join-Path $Raiz 'src\Caja\Forms\inMtoCajaOpe.pas'
+$contenidoFormularioCajaOpe =
+  Get-Content -LiteralPath $rutaFormularioCajaOpe -Raw
+if ($contenidoFormularioCajaOpe -notmatch
+    '(?s)TRepositorioTicketsCaja\.Create\(.*?' +
+    'AsignarRepositorioTicketsCaja\(.*?' +
+    'TImpresorVentaVcl\.Create\(.*?' +
+    'oRepositorioTicketsCaja\)' -or
+    $contenidoFormularioCajaOpe -notmatch
+    '(?s)EnviarDocumentacionOperacion\(.*?' +
+    'CrearRepositorioTraspasoTicket.*?' +
+    'CrearRepositorioTicketsCaja.*?ConexionPrincipal') {
+  throw 'La caja no conserva la composición del repositorio de tickets.'
 }
 
 $rutaConsultaOpe =

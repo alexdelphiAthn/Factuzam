@@ -198,7 +198,7 @@ uses
   inLibWin, inLibUser, inLibShowMto,
   inMtoModalGenImpSave, inMtoModalImpOperaciones, inMtoPreviewExcel,
   inLibDevExcel, inLibFotos, inLibFiltroUsuario,
-  dxSpreadSheetGraphics, inLibMsgCaja;
+  dxSpreadSheetGraphics, inLibMsgCaja, inLibMsgComun;
 
 {$R *.dfm}
 
@@ -293,7 +293,7 @@ begin
   // articulos); se despliega al pulsar la cabecera.
   pnlContFiltrosCaja.Visible := False;
   pnlFiltrosCaja.Height := 22;
-  btnToggleFiltrosCaja.Caption := #9654'  Filtros de carga';
+  btnToggleFiltrosCaja.Caption := SCaptionFiltrosCargaContraido;
   // Poblar combos, leer preferencias y dejar el SQL filtrado preparado. NO
   // abrimos aqui: la query esta Active=False en su .dfm y la apertura con
   // barra de progreso se hace en ResetForm, ya con el form visible.
@@ -769,7 +769,7 @@ begin
   else
     FbarProgreso.Max := 1;
   FbarProgreso.Position := 0;
-  FlblProgreso.Caption := 'Cargando operaciones...';
+  FlblProgreso.Caption := SCaptionCargandoOperaciones;
   FPnlProgreso.Left := (Self.ClientWidth - FPnlProgreso.Width) div 2;
   FPnlProgreso.Top := (Self.ClientHeight - FPnlProgreso.Height) div 2;
   FPnlProgreso.BringToFront;
@@ -786,9 +786,9 @@ begin
       FbarProgreso.Position := APos
     else
       FbarProgreso.Position := FbarProgreso.Max;
-    FlblProgreso.Caption := 'Cargando operaciones: ' +
-                            FormatFloat('#,##0', APos) + ' / ' +
-                            FormatFloat('#,##0', AMax);
+    FlblProgreso.Caption := Format(SCaptionCargandoOperacionesProgreso,
+                                   [FormatFloat('#,##0', APos),
+                                    FormatFloat('#,##0', AMax)]);
     Application.ProcessMessages;
   end;
 end;
@@ -816,10 +816,9 @@ end;
 
 procedure TfrmMtoCajaOperacionesHist.CrearAccionesFicha;
 begin
-  actIrFacturaSimplif.Caption := 'Ir a borrador';
-  actIrFacturaSimplif.Hint := 'Ir a borrador (' +
-                              ShortCutToText(actIrFacturaSimplif.ShortCut) +
-                              ')';
+  actIrFacturaSimplif.Caption := SCaptionIrABorrador;
+  actIrFacturaSimplif.Hint := Format(SHintIrABorrador,
+    [ShortCutToText(actIrFacturaSimplif.ShortCut)]);
   FactIrArticulo := CrearAccionFicha('actHistIrArticulo',
                                      'Ir a artículo',
                                      'Ctrl+A',
@@ -1604,7 +1603,7 @@ begin
 
     FtsDetalleFactura := TcxTabSheet.Create(Self);
     FtsDetalleFactura.PageControl := FpcDetalleCaja;
-    FtsDetalleFactura.Caption := 'Borrador';
+    FtsDetalleFactura.Caption := SCaptionTabBorrador;
     CrearBarraAcciones(FtsDetalleFactura,
       [actIrFacturaSimplif, FactIrCliente, FactIrArticulo,
        FactExportarOperacionExcel]);
@@ -1749,12 +1748,12 @@ begin
   if pnlContFiltrosCaja.Visible then
   begin
     pnlFiltrosCaja.Height := ALTO_CABECERA + ALTO_CONTENIDO;
-    btnToggleFiltrosCaja.Caption := #9660'  Filtros de carga';
+    btnToggleFiltrosCaja.Caption := SCaptionFiltrosCargaExpandido;
   end
   else
   begin
     pnlFiltrosCaja.Height := ALTO_CABECERA;
-    btnToggleFiltrosCaja.Caption := #9654'  Filtros de carga';
+    btnToggleFiltrosCaja.Caption := SCaptionFiltrosCargaContraido;
   end;
 end;
 
@@ -1835,7 +1834,7 @@ begin
     dmmCajaOperacionesHist.unqryTablaG.SQL.Text := ConstruirSqlOperaciones;
   pnlContFiltrosCaja.Visible := False;
   pnlFiltrosCaja.Height := 22;
-  btnToggleFiltrosCaja.Caption := #9654'  Filtros de carga';
+  btnToggleFiltrosCaja.Caption := SCaptionFiltrosCargaContraido;
   inherited;
 end;
 

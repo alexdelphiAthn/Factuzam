@@ -103,7 +103,7 @@ type
 
   // Valores disponibles (colores, tallas, ...) de un articulo, para que
   // cualquier consumidor los muestre sin duplicar SQL. Implementado sobre
-  // inLibArticulosAtributosLookup (desarrollo ya hecho).
+  // inLibArticulosAtributosIntf (desarrollo ya hecho).
   IProveedorValoresSku = interface
     ['{B4A7C9E1-3D52-4F60-8A17-59C2E6D0B833}']
     // Nombres de los atributos de variacion (Color, Talla, ...) en orden.

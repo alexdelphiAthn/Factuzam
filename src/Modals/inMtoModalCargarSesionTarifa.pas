@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalCargarSesionTarifa                                  }
 {    Tipo:       Formulario (Modal)                                            }
@@ -73,7 +73,7 @@ begin
     frm.FCodigoTarOrig := ACodigoTarOrig;
     frm.FCodigoTarDest := ACodigoTarDest;
     frm.FResultado.Aceptado := False;
-    frm.Caption := 'Cargar articulos en sesion de tarifas';
+    frm.Caption := STituloCargarArticulosSesionTarifas;
     frm.Inicializar(AConn);
     frm.ShowModal;
     Result := frm.FResultado;

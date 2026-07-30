@@ -169,8 +169,9 @@ uses inLibGenerarTicketBD, inLibGenerarTicketCaja,
      inLibTraspasoTicket, inLibShowMto, Uni,
      inLibVerifactu, inMtoModalFacturarTicket,
      inLibEmisionFiscalIntf, inLibEmisionFiscal,
+     UniDataVerifactuColaRepositorio,
   inLibCorreoTickets, inLibAtributosPaleta, inLibMsgComun,
-  inLibMsgConfiguracion, inLibMsgFacturas;
+  inLibMsgCaja, inLibMsgConfiguracion, inLibMsgFacturas;
 
 // -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -448,7 +449,8 @@ begin
         Servicio := CrearServicioEmisionFiscal(
           ParametrosApp,
           ParametrosCaja,
-          ConexionPrincipal);
+          ConexionPrincipal,
+          CrearServicioVerifactuColaUniDAC(ConexionPrincipal));
         Solicitud := TSolicitudEmisionFiscal.ParaOperacion(
           sSerie,
           sNumero,
@@ -577,7 +579,7 @@ begin
           oAnfitrion.CrearOperacionCaja(Application, Permisos);
         oFormularioCaja := oOperacionCaja.FormularioCaja;
         oFormularioCaja.Caption :=
-          Format('Operación - (Caja Real %s)', [FCaja]);
+          Format(STituloOperacionCajaReal, [FCaja]);
         oOperacionCaja.PrepararValores(FEmpresa, FAlmacen, FCaja, Now);
       end;
       oFormularioCaja := oOperacionCaja.FormularioCaja;
@@ -610,7 +612,7 @@ begin
     Format(SPreguntaRectificarBorrador, [ASerie, ANumero]),
     mtConfirmation, [mbYes, mbNo, mbCancel]);
   try
-    oDialogo.Caption := 'Tipo de rectificativa';
+    oDialogo.Caption := STituloTipoRectificativa;
     if oDialogo.ClientWidth < 440 then
       oDialogo.ClientWidth := 440;
     iBotones := 0;
@@ -629,11 +631,11 @@ begin
         oBoton := TButton(oDialogo.Components[i]);
         case oBoton.ModalResult of
           mrYes:
-            oBoton.Caption := 'Por diferencias';
+            oBoton.Caption := SCaptionPorDiferencias;
           mrNo:
-            oBoton.Caption := 'Sustitutiva';
+            oBoton.Caption := SCaptionSustitutiva;
           mrCancel:
-            oBoton.Caption := 'Cancelar';
+            oBoton.Caption := SCaptionCancelar;
         end;
         oBoton.SetBounds(iIzquierda, oBoton.Top, AnchoBoton, oBoton.Height);
         Inc(iIzquierda, AnchoBoton + SeparacionBotones);
@@ -676,7 +678,7 @@ begin
       [ASerie, ANumero]),
     mtConfirmation, [mbYes, mbNo, mbCancel]);
   try
-    oDialogo.Caption := 'Movimientos de almacén';
+    oDialogo.Caption := STituloMovimientosAlmacen;
     if oDialogo.ClientWidth < 520 then
       oDialogo.ClientWidth := 520;
     iBotones := 0;
@@ -695,11 +697,11 @@ begin
         oBoton := TButton(oDialogo.Components[i]);
         case oBoton.ModalResult of
           mrYes:
-            oBoton.Caption := 'Eliminar originales';
+            oBoton.Caption := SCaptionEliminarOriginales;
           mrNo:
-            oBoton.Caption := 'Mantener originales';
+            oBoton.Caption := SCaptionMantenerOriginales;
           mrCancel:
-            oBoton.Caption := 'Cancelar';
+            oBoton.Caption := SCaptionCancelar;
         end;
         oBoton.SetBounds(iIzquierda, oBoton.Top, AnchoBoton, oBoton.Height);
         Inc(iIzquierda, AnchoBoton + SeparacionBotones);
@@ -1015,6 +1017,7 @@ begin
           if EnviarDocumentacionOperacion(
             ParametrosApp,
             CrearRepositorioTraspasoTicket,
+            CrearRepositorioTicketsCaja,
             ConexionPrincipal,
             sEmp,
             sAlm,
@@ -1057,12 +1060,22 @@ begin
     else
     begin
       if FdmConsulta.TieneFactura then
-        ImprimirTicketDesdeBD(ParametrosApp, ConexionPrincipal, sEmp, sAlm,
-          sCaja, sNumOp,
-                              ANombreImpresora);
+        ImprimirTicketDesdeBD(
+          ParametrosApp,
+          CrearRepositorioTicketsCaja,
+          sEmp,
+          sAlm,
+          sCaja,
+          sNumOp,
+          ANombreImpresora);
       if FdmConsulta.TieneDepositos then
-        ImprimirResguardoDeposito(ConexionPrincipal, sEmp, sAlm, sCaja, sNumOp,
-                                  ANombreImpresora);
+        ImprimirResguardoDeposito(
+          CrearRepositorioTicketsCaja,
+          sEmp,
+          sAlm,
+          sCaja,
+          sNumOp,
+          ANombreImpresora);
       if FdmConsulta.EsOperacionCaja then
         ImprimirTicketOperacionCaja(ConexionPrincipal, sEmp, sAlm, sCaja,
                                     sNumOp,
@@ -1073,7 +1086,7 @@ begin
         ShowMessage(SErrorOperacionSinTicket)
       else if Trim(sCliente) <> '' then
         ImprimirRecordatorio(
-          ConexionPrincipal,
+          CrearRepositorioTicketsCaja,
           UbicacionSesion.Empresa,
           sCliente,
           ANombreImpresora);

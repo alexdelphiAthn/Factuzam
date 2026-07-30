@@ -129,11 +129,9 @@ var
 begin
   dlg := TSaveDialog.Create(Self);
   try
-    dlg.Title := 'Guardar log como...';
+    dlg.Title := STituloGuardarLogComo;
     dlg.DefaultExt := 'sql';
-    dlg.Filter := 'Archivos SQL (*.sql)|*.sql|' +
-                  'Archivos de texto (*.txt)|*.txt|' +
-                  'Todos los archivos (*.*)|*.*';
+    dlg.Filter := SCaptionFiltroArchivosSqlTexto;
     dlg.FileName := 'log_script_' +
                      FormatDateTime('yyyy_mm_dd_HH_nn_ss', Now);
     if dlg.Execute then

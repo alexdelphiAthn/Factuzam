@@ -12,10 +12,10 @@ repositorio decide si utiliza:
 1. El SQL base incluido y probado con el ejecutable.
 2. Una personalización activa guardada en `fza_usuarios_perfiles`.
 
-El catálogo actual contiene 66 operaciones de nueve repositorios:
+El catálogo actual contiene 120 operaciones de doce repositorios:
 
-- 63 lecturas que admiten perfil y fallback al SQL base;
-- una comprobación técnica de esquema que usa siempre el SQL base;
+- 116 lecturas que admiten perfil y fallback al SQL base;
+- dos comprobaciones técnicas de esquema que usan siempre el SQL base;
 - dos escrituras de Facturas registradas como `pesSoloBase`.
 
 El patrón se extenderá por fascículos al resto de repositorios.
@@ -34,6 +34,8 @@ El patrón se extenderá por fascículos al resto de repositorios.
 | `UniDataCatalogoSqlValidacion` | Comprueba en ejecución los campos realmente devueltos por UniDAC |
 | `inLibComprasSesionesIntf` | Contrato del repositorio de sesiones |
 | `UniDataComprasSesionesRepositorio` | Implementación UniDAC y fallback |
+| `inLibComprasSesionesMaterializacionIntf` | Contrato sin BBDD de las lecturas técnicas de materialización |
+| `UniDataComprasSesionesMaterializacionRepositorio` | Implementación UniDAC de materialización y reversión con fallback |
 | `UniDataFacturasRepositorio` | Implementación UniDAC del contrato de Facturas |
 | `UniDataCajaConsultasRepositorio` | Implementación UniDAC de las consultas de Caja |
 | `inLibArticulosResolverIntf` | Contrato de resultados del resolver de artículos |
@@ -48,6 +50,10 @@ El patrón se extenderá por fascículos al resto de repositorios.
 | `UniDataArqueoRepositorio` | Implementación UniDAC del read model principal de arqueo |
 | `inLibArqueoTicketIntf` | Contrato de resúmenes, cabecera e históricos de arqueo |
 | `UniDataArqueoTicketRepositorio` | Implementación UniDAC de las lecturas de presentación del arqueo |
+| `inLibTiraCajaTicketIntf` | Contrato de operaciones y detalles de la tira de Caja |
+| `UniDataTiraCajaTicketRepositorio` | Implementación UniDAC de las lecturas compartidas por ticket y Excel |
+| `inLibTicketsCajaIntf` | Contrato de reimpresión, resguardos y recordatorios de Caja |
+| `UniDataTicketsCajaRepositorio` | Implementación UniDAC de las lecturas de documentos de Caja |
 | `UniDataCatalogoSqlAplicacion` | Composición única de todas las definiciones publicadas |
 
 Cada definición declara además una política:
@@ -78,6 +84,9 @@ Cada operación tiene una `SUBKEY_USUPER` estable:
 ```text
 SQL__RepositorioComprasSesiones__ObtenerSiguienteLinea
 SQL__RepositorioComprasSesiones__ConsultarCantidadesLinea
+SQL__RepositorioComprasSesiones__ResolverDuplicadoPorCodigo
+SQL__RepositorioMaterializacionComprasSesiones__ConsultarLineasArticulos
+SQL__RepositorioMaterializacionComprasSesiones__ConsultarLineasDocumento
 SQL__RepositorioFacturas__ExisteSerieOtraEmpresa
 SQL__RepositorioConsultasCaja__ConsultarStock
 SQL__RepositorioArticulosResolver__ResolverPrecio
@@ -86,6 +95,8 @@ SQL__RepositorioArticulosAtributos__ObtenerAtributos
 SQL__RepositorioTraspasoTicket__ObtenerStock
 SQL__RepositorioArqueoCaja__CalcularOperaciones
 SQL__RepositorioArqueoTicket__ListarResumenSeccion
+SQL__RepositorioTiraCajaTicket__ListarOperaciones
+SQL__RepositorioTicketsCaja__ObtenerCabeceraTicket
 ```
 
 La subclave identifica `Repositorio + Operación`, no el nombre físico de
@@ -165,7 +176,7 @@ DESARROLLOS EN CURSO/perfiles_sql_compras_sesiones.sql
 
 El script es idempotente y no sobrescribe filas existentes. Para el
 catálogo completo debe utilizarse `PublicarCatalogo` desde la aplicación;
-así se publican las 63 lecturas vigentes y se respetan las
+así se publican las 116 lecturas sustituibles vigentes y se respetan las
 personalizaciones existentes.
 
 ## 5. Modificar una consulta
@@ -187,6 +198,52 @@ Procedimiento recomendado:
 |---|---|---|
 | `ObtenerSiguienteLinea` | `:s`, `:n`, `:l` | `SIGUIENTE` |
 | `ConsultarCantidadesLinea` | `:s`, `:n`, `:l` | `ID_AV_PIVOT_SESCEL`, `TOTAL` |
+| `ConsultarCodigosBasicosActivos` | `:va` | `CODIGO_ATB` |
+| `ConsultarKitProveedor` | `:ac`, `:prv`, `:kit` | `ID_AC_TALLAS_PRVKIT`, `NOMBRE_TALLAS_KIT`, `NOMBRE_TALLAS_LIN` |
+| `ConsultarDetallesKitProveedor` | `:prv`, `:kit` | `VALOR_DESTINO_PRVKITD`, `CANTIDAD_PRVKITD` |
+| `ObtenerNombreFamilia` | `:codigo` | `NOMBRE_FAM_FAM` |
+| `ResolverDuplicadoPorCodigo` | `:art`, `:prv` | artículo, familia, tipo, variación, trazabilidad, ejes, último coste y referencia declarados por el contrato |
+| `ResolverDuplicadoPorReferencia` | `:prv`, `:ref`, `:artpref` | los mismos campos que `ResolverDuplicadoPorCodigo` |
+| `ResolverDuplicadoIntraSesion` | `:serie`, `:numero`, `:linea`, `:modelo`, `:codigo` | datos de la línea origen, ejes, costes, PVP, color y margen declarados por el contrato |
+| `ObtenerPvpArticulo` | `:art`, `:tar` | `PRECIO_FINAL_ARTTAR` |
+| `ValidarSesionConLineas` | `:s`, `:n` | `N` |
+| `ValidarDuplicadosInternos` | `:s`, `:n` | `LINEA_SESLIN`, `CODIGO_ART_TENTATIVO_SESLIN`, `PRIMERA`, `N` |
+| `ValidarDuplicadosExternos` | `:s`, `:n` | `LINEA_SESLIN`, `CODIGO_ART_TENTATIVO_SESLIN`, `DESCRIPCION_SESLIN`, `ESACTIVO_ART` |
+| `ValidarLineasSinCodigo` | `:s`, `:n` | `LINEA_SESLIN` |
+| `ValidarLineasSinDescripcion` | `:s`, `:n` | `LINEA_SESLIN`, `CODIGO_ART_TENTATIVO_SESLIN` |
+| `ValidarMatricesSinCantidades` | `:s`, `:n` | `LINEA_SESLIN`, `CODIGO_ART_TENTATIVO_SESLIN`, `DESCRIPCION_SESLIN` |
+| `ValidarMatricesSinTallaje` | `:s`, `:n` | `LINEA_SESLIN`, `CODIGO_ART_TENTATIVO_SESLIN` |
+
+`ResolverCodigoFamilia` no aparece en esta tabla porque bloquea y actualiza
+el contador de familia. Sigue siendo SQL base y no admite perfil de lectura.
+
+### RepositorioMaterializacionComprasSesiones
+
+| Operación | Parámetros obligatorios | Campos de salida |
+|---|---|---|
+| `ObtenerSiguienteSecuenciaEan` | `:pl`, `:lq`, `:pat` | `N` |
+| `ObtenerIdColorBasico` | `:cod` | `ID_ATB` |
+| `BuscarValorColor` | `:v` | `ID_AV`, `ID_ATB_AV` |
+| `ObtenerColorLinea` | `:s`, `:n`, `:l` | `COLOR_TEXTO_SESLIN`, `CODIGO_ATB_COLOR_SESLIN` |
+| `ConsultarSkusSesion` | `:s`, `:n`, `:l` | fila, valor pivote, cantidad, textos e identificador de fila declarados por el contrato |
+| `ExisteEan13Sku` | `:sku` | `N` |
+| `ExisteProveedorPrincipalDistinto` | `:art`, `:prv` | `N` |
+| `ObtenerCodigoUnicoTarifa` | `:art`, `:tar` | `CODIGO_UNICO_ARTTAR` |
+| `ResolverCodigoSkuConFila` | `:art`, `:pivot`, `:fila` | `CODIGO_UNIDAD_SKU` |
+| `ResolverCodigoSkuSinFila` | `:art`, `:pivot` | `CODIGO_UNIDAD_SKU` |
+| `ConsultarLineasArticulos` | `:s`, `:n` | línea, acción, códigos de artículo, tipo, referencia, PVP y coste declarados por el contrato |
+| `ConsultarLineasDocumento` | `:alm_cab`, `:falm`, `:s`, `:n` | artículo, atributos, almacén, cantidad, precio y datos descriptivos declarados por el contrato |
+| `ConsultarAlmacenes` | `:alm_cab`, `:s`, `:n` | `ALM` |
+| `ConsultarPendientesRecibir` | `:alm_cab`, `:s`, `:n` | línea, atributos, cantidad, almacén, artículo, acción, precio y tipo declarados por el contrato |
+| `ExisteTabla` | `:t` | `N` |
+| `ConsultarMovimientosHuerfanos` | `:emp`, `:alm` | `NUMERO_MOV` |
+
+Estas operaciones se comparten entre la creación de artículos, pedidos,
+albaranes y la reversión. Cambiar una subclave afecta a todos esos flujos
+cuando la pantalla de sesiones tiene `oGetSQLFromDB=True`. Una excepción
+al ejecutar el SQL personalizado registra la incidencia y repite la
+lectura con el SQL base; las escrituras de la unidad de trabajo no son
+personalizables en esta fase.
 
 ### RepositorioFacturas
 
@@ -347,6 +404,65 @@ records del contrato. No conoce UniDAC ni nombres de tabla. La impresión,
 la reimpresión normal y la reimpresión del cierre reciben los repositorios
 creados por la pantalla.
 
+### RepositorioTiraCajaTicket
+
+| Operación | Parámetros obligatorios | Campos de salida mínimos |
+|---|---|---|
+| `ObtenerEmpresa` | `:pEMPRESA` | razón social, NIF y dirección postal |
+| `ListarLineasVenta` | empresa, almacén, caja y operación | SKU, descripción, cantidad y total |
+| `ListarFormasPago` | empresa, almacén, caja y operación | código, descripción, entregado y cambio |
+| `ListarLineasTraspaso` | empresa, almacén, caja y operación | SKU, descripción, cantidad y coste unitario |
+| `ListarDepositos` | empresa, almacén, caja y operación | cliente, SKU, descripción, precio, cantidad y anticipo |
+| `ListarOperaciones` | empresa, almacén, caja, rango, series, cinco interruptores de inclusión y orden | documento, fecha, importes, formato y grupo |
+| `ListarSeries` | empresa, almacén, caja y rango | `SERIE` |
+
+Las diez construcciones originales se consolidan en siete definiciones:
+impresión y Excel comparten las tres consultas de detalle y el read model
+maestro. `ListarOperaciones` mantiene una firma SQL estable. Las series se
+envían en `:pSERIES` y los bloques opcionales y el orden se controlan con
+parámetros `S`/`N`, de modo que la clave de perfil no cambia según las
+opciones elegidas por el usuario.
+
+La pantalla de arqueo crea un único repositorio y lo utiliza para listar
+series, imprimir y exportar. Las tres rutas respetan el
+`oGetSQLFromDB` de esa pantalla. `inLibTiraCajaTicket` solo compone la
+salida térmica o Excel: no conoce UniDAC, tablas ni campos físicos.
+
+### RepositorioTicketsCaja
+
+| Operación | Parámetros obligatorios | Campos de salida mínimos |
+|---|---|---|
+| `ObtenerEmpresaResguardo` | `:EMP` | razón social |
+| `ObtenerFechaResguardo` | `:EMP`, `:ALM`, `:CAJA`, `:OP` | fecha de operación |
+| `ListarNuevosDepositosResguardo` | contexto de operación | SKU, descripción, cliente y PVP |
+| `ListarEntregasResguardo` | contexto de operación | tipo, importe y descripción |
+| `ListarDevolucionesEconomicasResguardo` | contexto de operación | tipo e importe |
+| `ListarDepositosDevueltosResguardo` | contexto de operación | SKU, descripción, cliente y PVP |
+| `ObtenerTotalPagadoResguardo` | contexto de operación | `TOTAL` |
+| `ObtenerCabeceraTicket` | contexto de operación | operación, factura, empresa, impuestos, formato y vendedor |
+| `ListarLineasTicket` | `:SERIE`, `:NRO` | SKU, unidad, cantidad, total y descripción |
+| `ListarPagosTicket` | contexto de operación | forma de pago, entregado y cambio |
+| `ListarValesTicket` | contexto de operación | código e importe nominal |
+| `ObtenerEmpresaRecordatorio` | `:EMP` | código y razón social |
+| `ListarAnticiposRecordatorio` | `:IDDEP` | tipo, importe, fecha y ubicación |
+| `ListarDepositosPendientesRecordatorio` | `:CLI` | depósito, artículo, cliente, importes y ubicación |
+| `ListarPieTicket` | `:EMP` | las cuatro líneas configurables |
+
+Estas quince operaciones son lecturas personalizables. La operación
+`ComprobarPieTicketDisponible` consulta `INFORMATION_SCHEMA` y permanece
+`pesSoloBase`: protege instalaciones antiguas, no se publica ni se puede
+editar desde perfiles.
+
+`inLibGenerarTicketBD` conserva únicamente la composición térmica y PDF.
+No recibe una conexión, no conoce UniDAC ni contiene SQL. La consulta de
+cabecera incorpora el formato del documento y el diminutivo del vendedor,
+evitando lecturas ocultas fuera del repositorio.
+
+Reimpresión, correo y TPV reciben el repositorio creado con el
+`oGetSQLFromDB` de su pantalla. Si la misma operación la usan varias
+pantallas, todas comparten la `SUBKEY_USUPER`; solo aplicarán el perfil las
+pantallas cuyo interruptor esté activo.
+
 ## 6. Validación y fallback
 
 Antes de usar una personalización, el catálogo comprueba:
@@ -409,6 +525,12 @@ RepositorioComprasSesiones/
   ObtenerSiguienteLinea.perfil.sql
   ConsultarCantidadesLinea.base.sql
   ConsultarCantidadesLinea.perfil.sql
+RepositorioMaterializacionComprasSesiones/
+  ConsultarLineasArticulos.base.sql
+  ConsultarLineasArticulos.perfil.sql
+  ConsultarLineasDocumento.base.sql
+  ConsultarLineasDocumento.perfil.sql
+  ...
 RepositorioFacturas/
   ExisteSerieOtraEmpresa.base.sql
   ExisteSerieOtraEmpresa.perfil.sql
@@ -445,6 +567,18 @@ RepositorioArqueoTicket/
   ListarResumenSeccion.perfil.sql
   ObtenerCierreHistorico.base.sql
   ObtenerCierreHistorico.perfil.sql
+  ...
+RepositorioTiraCajaTicket/
+  ListarOperaciones.base.sql
+  ListarOperaciones.perfil.sql
+  ListarLineasVenta.base.sql
+  ListarLineasVenta.perfil.sql
+  ...
+RepositorioTicketsCaja/
+  ObtenerCabeceraTicket.base.sql
+  ObtenerCabeceraTicket.perfil.sql
+  ListarDepositosPendientesRecordatorio.base.sql
+  ListarDepositosPendientesRecordatorio.perfil.sql
   ...
 ```
 

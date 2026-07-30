@@ -146,7 +146,7 @@ uses
   inLibCajaVentanasIntf,
   // Listado del documento con una foto de 300 x 300 por línea.
   inMtoPreviewExcel, inLibDocumentosTrabajoExcel, inLibWin, inLibLog,
-  inLibMsgArticulos, inLibMsgVentas;
+  inLibMsgArticulos, inLibMsgComun, inLibMsgVentas;
 
 {$R *.dfm}
 
@@ -313,11 +313,12 @@ begin
   FModoEntrada.Construir;
   CrearColumnasHostDTR;
   case DetectarModoColumnasSku(Cfg) of
-    mcsSku: tsLineasDTR.Caption := 'Líneas [SKU]';
-    mcsTallasInline: tsLineasDTR.Caption := 'Líneas [Tallas horiz.]';
+    mcsSku: tsLineasDTR.Caption := SCaptionLineasSku;
+    mcsTallasInline:
+      tsLineasDTR.Caption := SCaptionLineasTallasHoriz;
   else
     begin
-      tsLineasDTR.Caption := 'Líneas [Desglose]';
+      tsLineasDTR.Caption := SCaptionLineasDesglose;
       MostrarColumnasAtributoGlobalesDTR;
     end;
   end;
@@ -653,8 +654,7 @@ begin
           formulario := TfrmPrintEtiqArt.Create(Application);
           try
             formulario.DM := dmArt;
-            formulario.Caption :=
-              'Impresion de Etiquetas de Documento de Trabajo';
+            formulario.Caption := STituloImpresionEtiquetasDTR;
             formulario.TextoOrigenExterno := sTitulo;
             formulario.CargarAlmacenesExterno := CargarAlmacenesEtiquetasDTR;
             formulario.CrearDataSetExterno := CrearDataSetEtiquetasDTR;

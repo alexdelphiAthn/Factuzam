@@ -94,6 +94,11 @@ type
     // queda igual que como vino tras el cierre del modal.
     FSqlOriginales: TStringList;
     FUltimaRutaPdf: string;
+    // D22: True si frxrprt1 contiene un formato personalizado
+    // cargado del BLOB; False si contiene la plantilla base.
+    FInformeEsPersonalizado: Boolean;
+    // D22: evita traducir dos veces el informe ya cargado.
+    FInformeTraducido: Boolean;
     // Lee el .frx serializado en VALUE_BLOB_USUPER de la fila identificada
     // por (Self.Name, aDescripcion) — una vez localizada en unqryPerfiles
     // por Locate. La query principal ya no trae el BLOB (cientos de KB)
@@ -109,6 +114,10 @@ type
                                   aDescripcion: string;
                                   aStream: TStream;
                                   aInsertar: Boolean);
+    // D22: traduce los textos visibles del informe cargado antes
+    // de PrepareReport. No se invoca en el flujo de edicion para
+    // no guardar textos traducidos en el BLOB del formato.
+    procedure TraducirInformeActual;
   protected
     procedure PdfExportado(const ARuta: string); virtual;
     property FormatoElegido: string read sElegido;
@@ -162,7 +171,7 @@ uses
   inMtoModalGenImpSave, inLibUser, inLibPathTokens,
   System.Generics.Collections, System.Rtti, inLibFotos, inLibVerifactu,
   inMtoModalInformesGuias, inMtoModalWizardEditar, inLibLog,
-  inLibInformesGuiasCache, inLibMsgComun;
+  inLibInformesGuiasCache, inLibMsgComun, inLibTraduccionesInforme;
 
 {$R *.dfm}
 
@@ -786,15 +795,26 @@ begin
           memStream := TMemoryStream.Create;
           try
             if LeerBlobFormato(sElegido, memStream) then
-              frxrprt1.LoadFromStream(memStream)
+            begin
+              frxrprt1.LoadFromStream(memStream);
+              FInformeEsPersonalizado := True;
+            end
             else
+            begin
               frxrprt1.AssignAll(frxReportOrigen);
+              FInformeEsPersonalizado := False;
+            end;
+            FInformeTraducido := False;
           finally
             FreeAndNil(memStream);
           end;
         end
         else
+        begin
           frxrprt1.AssignAll(frxReportOrigen);
+          FInformeEsPersonalizado := False;
+          FInformeTraducido := False;
+        end;
 
         // Re-enlazar datasets despues de cargar/asignar el report.
         AfterReportLoaded;
@@ -842,6 +862,7 @@ begin
     AfterReportLoaded;
     AbrirGuiasRuntime(True);
     OnGuiasAplicadas;
+    TraducirInformeActual;
     try
       frxrprt1.PrepareReport(True);
       frxlsxprtExcel.DefaultPath := ParametrosApp.GetPath('appDirExcel');
@@ -863,6 +884,7 @@ begin
     AfterReportLoaded;
     AbrirGuiasRuntime(True);
     OnGuiasAplicadas;
+    TraducirInformeActual;
     try
       frxrprt1.PrepareReport(True);
       frxrprt1.Print;
@@ -888,6 +910,7 @@ begin
     AfterReportLoaded;
     AbrirGuiasRuntime(True);
     OnGuiasAplicadas;
+    TraducirInformeActual;
     try
       frxrprt1.PrepareReport(True);
       frxpdfxprtPedWeb.DefaultPath := ParametrosApp.GetPath('appDirPDF');
@@ -913,6 +936,7 @@ begin
     AfterReportLoaded;
     AbrirGuiasRuntime(True);
     OnGuiasAplicadas;
+    TraducirInformeActual;
     bMostrarDialogo := frxpdfxprtPedWeb.ShowDialog;
     sDirectorioPrevio := frxpdfxprtPedWeb.DefaultPath;
     sFicheroPrevio := frxpdfxprtPedWeb.FileName;
@@ -944,6 +968,7 @@ begin
     AfterReportLoaded;
     AbrirGuiasRuntime(True);
     OnGuiasAplicadas;
+    TraducirInformeActual;
     try
       // Los demas botones (Imprimir/PDF/Excel/Editar) hacen
       // PrepareReport(True) antes; Vista Preliminar tenia ShowReport
@@ -1116,9 +1141,16 @@ begin
         // metadatos por performance); LeerBlobFormato hace el unico
         // round-trip necesario para esta seleccion.
         if LeerBlobFormato(sDescripcion, memStream) then
-          frxrprt1.LoadFromStream(memStream)
+        begin
+          frxrprt1.LoadFromStream(memStream);
+          FInformeEsPersonalizado := True;
+        end
         else
+        begin
           frxrprt1.AssignAll(frxReportOrigen);
+          FInformeEsPersonalizado := False;
+        end;
+        FInformeTraducido := False;
       finally
         FreeAndNil(memStream);
       end;
@@ -1126,6 +1158,8 @@ begin
     else if (sFichaAccion = 'O') then
     begin
       frxrprt1.AssignAll(frxReportOrigen);
+      FInformeEsPersonalizado := False;
+      FInformeTraducido := False;
     end;
   end;
 end;
@@ -1275,9 +1309,29 @@ begin
   end;
 end;
 
+procedure TfrmPrint.TraducirInformeActual;
+begin
+  if not FInformeTraducido then
+  begin
+    TraducirInformeFastReport(
+      frxrprt1,
+      Self,
+      Traducciones,
+      FInformeEsPersonalizado);
+    FInformeTraducido := True;
+  end;
+end;
+
 procedure TfrmPrint.FormCreate(Sender: TObject);
 begin
   inherited;
+  if Width > Screen.WorkAreaWidth then
+    Width := Screen.WorkAreaWidth;
+  if Height > Screen.WorkAreaHeight then
+    Height := Screen.WorkAreaHeight;
+  pnl1.Visible := True;
+  pnl1.Align := alRight;
+  pnl1.BringToFront;
   Self.Position := poScreenCenter;
   unqryPerfiles.ParamByName('FormName').AsString := Self.Name;
   unqryPerfiles.ParamByName('Usuario').AsString := IdentidadSesion.Usuario;

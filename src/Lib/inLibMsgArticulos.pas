@@ -138,6 +138,15 @@ resourcestring
     'El código del atributo es obligatorio.';
   SErrorDistribuidorTallasNoRegistrado =
     'No se ha registrado el distribuidor de tallas por almacén.';
+  SErrorPersistenciaTallasNoRegistrada =
+    'No se ha registrado la persistencia del modo de tallas.';
+  // La libreria ya no construye repositorios: la raiz de composicion
+  // (TfrmBase.CrearValidadorArticulos / CrearLookupAtributosArticulos)
+  // debe rellenar la configuracion antes de crear el modo de entrada.
+  SErrorValidadorArticulosNoInyectado =
+    'No se ha inyectado el validador de artículos en la configuración.';
+  SErrorLookupAtributosNoInyectado =
+    'No se ha inyectado el lookup de atributos en la configuración.';
   SErrorInvarianteUnidadesTallas =
     'La conversión de tallas alteraría las unidades del documento (%s: ' +
     'antes %.2f, después %.2f). Se deshacen los cambios.';
@@ -722,6 +731,98 @@ resourcestring
     'primero):';
   SErrorOrdenAtributoSkuNoValido =
     'Introduce un número entero mayor que 0.';
+  // R02 - Textos de controles de artículos en ejecución
+  STituloSeleccionTarifasArticulo =
+    'Seleccione Tarifas a incorporar al artículo';
+  SCaptionAnadirPropiedad = '+ Añadir propiedad';
+  SCaptionTipoVariacion = 'Tipo de variación: ';
+  SCaptionNombreOrden = '%s, orden %s';
+  // R05 - Visor de fotos de artículo
+  SCaptionControlesExpandido = '▲ Controles';
+  SCaptionControlesContraido = '▼ Controles';
+  SCaptionFotoDelSku = 'Foto del SKU: %s';
+  SCaptionFotoHeredadaGrupo = 'Foto heredada del grupo: %s';
+  SCaptionFotoHeredadaArticulo = 'Foto heredada del artículo: %s';
+  SCaptionSinFotoPara = 'Sin foto para %s%s';
+  // R06 - Inventarios
+  SCaptionTabDetalleInventarioSku =
+    '&1. Detalle del inventario [SKU]';
+  SCaptionTabDetalleInventarioDesglose =
+    '&1. Detalle del inventario [Desglose]';
+  SCaptionAtributoN = 'Atributo %d';
+  // R08 - Consulta de stock y tarifas
+  SCaptionModoSimplificado = 'Simplificado';
+  SCaptionModoDesglosado = 'Desglosado';
+  SHintCoincidenciasPara = 'Coincidencias para %s';
+  SHintArticuloAnterior = 'Artículo anterior';
+  SHintArticuloSiguiente = 'Artículo siguiente';
+  SCaptionFotosMismaFamilia = 'Fotos misma familia';
+  SCaptionFotosMismoProveedor = 'Fotos mismo proveedor';
+  SCaptionFotosMismaTemporada = 'Fotos misma temporada';
+  SCaptionColoresTallas = 'Colores: %s' + sLineBreak + 'Tallas: %s';
+  SCaptionColColor = 'Color';
+  SCaptionColAlmacen = 'Almacén';
+  SCaptionColEstado = 'Estado';
+  SCaptionColTotal = 'Total';
+  SCaptionSesionesCambiosTarifa = 'Sesiones cambios tarifa';
+  SCaptionRedondearHaciaArriba = 'Redondear hacia arriba';
+  SCaptionCargarArticulos = 'Cargar articulos';
+  SCaptionCalcularLineas = 'Calcular lineas';
+  SCaptionAplicarTarifa = 'Aplicar tarifa';
+  SCaptionRefrescar = 'Refrescar';
+  SCaptionTabLineasTarifa = 'Lineas';
+  // R09 - Modales de artículos, bloques y filtros
+  SCaptionCeroArticulos = '0 articulos';
+  SCaptionNumSeleccionados = '(%d sel.)';
+  SCaptionSinAlmacenesSeleccionados = 'No hay almacenes seleccionados';
+  SCaptionAlmacenesSeleccionados = '%d almacen(es) seleccionados';
+  SCaptionArticulosCoincidenFiltro =
+    '%d articulos coinciden con el filtro';
+  SCaptionInventarioDestino = 'Inventario destino: %s / %s / %s / %s';
+  STituloAnadirBloqueInventario =
+    'A~adir Bloque - Carga masiva en Inventario';
+  STituloAnadirBloqueTarifa = 'A~adir Bloque - Carga masiva en Tarifa';
+  SHintQuitarPropiedad = 'Quitar propiedad %s';
+  SCaptionPorColorSku = 'Por color/SKU…';
+  SCaptionPorColor = 'Por color…';
+  SHintFijarPropiedadPorColorSku = 'Fijar %s por color/SKU';
+  SCaptionSinColoresSkuDefinidos =
+    'El artículo no tiene colores/SKU definidos aún.';
+  STituloCargarArticulosSesionTarifas =
+    'Cargar articulos en sesion de tarifas';
+  SCaptionDistribucionKit = 'Distribucion almacen / talla  -  Kit %s';
+  SCaptionColKit = 'Kit %s';
+  SCaptionDocumentoEtiqueta = 'Documento:';
+  SCaptionCalcularNumero = 'Calcular nº';
+  SCaptionSeCargaranArticulos =
+    'Se cargarán %d artículos (límite %d).';
+  SCaptionDemasiadosArticulosFiltro =
+    'Hay demasiados artículos para cargarlos de golpe (más de %d). ' +
+    'Marque temporada y/o proveedor para acotar la carga; pulse ' +
+    '"Calcular nº" para ver cuántos quedarían. "Aceptar" carga la ' +
+    'selección; "Cancelar" carga el filtro por defecto.';
+  // R10 - Informes de balance
+  SCaptionGrupoModo = ' Modo ';
+  SCaptionModoEntreFechas = 'Entre fechas';
+  SCaptionModoPorAcumulados = 'Por acumulados';
+  SCaptionGrupoDetalle = ' Detalle ';
+  // R15 - Librerías de grids y columnas
+  SCaptionTipoVariacionDetalle = 'Tipo de variación: %s — %s';
+  SCaptionColSkuArtColorTalla = 'SKU (Art/Color/Talla)';
+  SCaptionColSku = 'SKU';
+  SCaptionColArticulo = 'Artículo';
+  SCaptionColArticuloSku = 'Artículo / SKU';
+  SCaptionColTipoCantidad = 'Tipo';
+  SCaptionColCantidad = 'Cantidad';
+  SCaptionColTallaN = 'Talla %d';
+  SCaptionColDescripcion = 'Descripción';
+  SCaptionColCodigoBarras = 'Cód. barras';
+  SCaptionColRefProveedor = 'Ref. prov.';
+  SCaptionColStock = 'Stock';
+  // R07 - Movimientos de almacén
+  SCaptionCargandoMovimientos = 'Cargando movimientos...';
+  SCaptionCargandoMovimientosProgreso =
+    'Cargando movimientos: %s / %s';
 implementation
 
 end.

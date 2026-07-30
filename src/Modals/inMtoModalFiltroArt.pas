@@ -79,7 +79,7 @@ type
 implementation
 
 uses
-  inLibMsgArticulos;
+  inLibMsgArticulos, inLibMsgComun;
 
 constructor TfrmModalFiltroArt.Create(AOwner: TComponent);
 begin
@@ -161,7 +161,7 @@ begin
   FbtnCalcular.Left    := MARGEN + 220;
   FbtnCalcular.Top     := topBotones;
   FbtnCalcular.Width   := 150;
-  FbtnCalcular.Caption := 'Calcular nº';
+  FbtnCalcular.Caption := SCaptionCalcularNumero;
   FbtnCalcular.OnClick := CalcularClick;
   // Panel inferior con Aceptar / Cancelar
   pnlBot := TPanel.Create(Self);
@@ -171,7 +171,7 @@ begin
   pnlBot.BevelOuter := bvNone;
   FbtnAceptar := TcxButton.Create(Self);
   FbtnAceptar.Parent  := pnlBot;
-  FbtnAceptar.Caption := 'Aceptar';
+  FbtnAceptar.Caption := SCaptionAceptar;
   FbtnAceptar.Width   := 110;
   FbtnAceptar.Height  := 28;
   FbtnAceptar.Top     := 8;
@@ -180,7 +180,7 @@ begin
   FbtnAceptar.OnClick := AceptarClick;
   FbtnCancelar := TcxButton.Create(Self);
   FbtnCancelar.Parent     := pnlBot;
-  FbtnCancelar.Caption    := 'Cancelar';
+  FbtnCancelar.Caption    := SCaptionCancelar;
   FbtnCancelar.Width      := 110;
   FbtnCancelar.Height     := 28;
   FbtnCancelar.Top        := 8;
@@ -300,7 +300,7 @@ begin
   finally
     Screen.Cursor := crDefault;
   end;
-  FlblResultado.Caption := Format('Se cargarán %d artículos (límite %d).',
+  FlblResultado.Caption := Format(SCaptionSeCargaranArticulos,
                                   [n, FUmbral]);
   if n > FUmbral then
     FlblResultado.Style.TextColor := clRed
@@ -359,10 +359,7 @@ begin
     frm.FContar := AContar;
     frm.FFamCsv := APreFamCsv;
     frm.FlblCabecera.Caption :=
-      'Hay demasiados artículos para cargarlos de golpe (más de ' +
-      IntToStr(AUmbral) + '). Marque temporada y/o proveedor para acotar la ' +
-      'carga; pulse "Calcular nº" para ver cuántos quedarían. "Aceptar" carga ' +
-      'la selección; "Cancelar" carga el filtro por defecto.';
+      Format(SCaptionDemasiadosArticulosFiltro, [AUmbral]);
     frm.CargarTemporadas(APreTempCsv);
     frm.CargarProveedores(APrePrvCsv);
     frm.ActualizarResultado;

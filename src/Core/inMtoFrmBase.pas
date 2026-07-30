@@ -9,9 +9,8 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Este formulario es el formulario base para todos los demás. Tiene la      }
-{    traducción al Español de Developer Express. Sólo sirve a propósito de     }
-{    herencia para generar otros formularios                                   }
+{    Formulario base que distribuye servicios y aplica el idioma central a     }
+{    controles propios, resourcestring y recursos de Developer Express.       }
 {******************************************************************************}
 unit inMtoFrmBase;
 
@@ -47,7 +46,8 @@ uses
   inLibCatalogoSqlIntf, inLibArticulosResolverIntf,
   inLibArticulosValidadorIntf, inLibArticulosAtributosIntf,
   inLibTraspasoTicketIntf, inLibArqueoIntf,
-  inLibArqueoTicketIntf;
+  inLibArqueoTicketIntf, inLibTiraCajaTicketIntf,
+  inLibTicketsCajaIntf;
 
 type
   TEnterAsTabEstado = record
@@ -102,6 +102,8 @@ type
     function GetInformesGuiasCache: IInformesGuiasCache;
     function GetTraducciones: IServicioTraducciones;
     function GetConexionPrincipal: TUniConnection;
+    function NormalizarSegmentoClaveTraduccion(
+      const ATexto: string): string;
     procedure HeredarConexiones(AOwner: TComponent);
     procedure HeredarAuditoriaDatos(AOwner: TComponent);
     procedure HeredarMonitorSQL(AOwner: TComponent);
@@ -113,6 +115,11 @@ type
     procedure HeredarTraducciones(AOwner: TComponent);
     procedure GuardarEnterAsTabDe(AOwner: TComponent);
     procedure AsegurarCatalogoSqlAplicacion;
+    procedure AplicarIdiomaDevExpress;
+    procedure TraducirDevExpress(
+      const AResStringName: string;
+      var AResStringValue: string;
+      var AHandled: Boolean);
     function EnterAsTabGuardado(AComp: TJvEnterAsTab): Boolean;
   protected
     // Hooks de log avanzado a nivel de formulario. Se loguean solo si
@@ -136,6 +143,15 @@ type
       AConexion: TUniConnection = nil): IRepositorioArqueoCaja;
     function CrearRepositorioArqueoTicket(
       AConexion: TUniConnection = nil): IRepositorioArqueoTicket;
+    function CrearRepositorioTiraCajaTicket(
+      AConexion: TUniConnection = nil): IRepositorioTiraCajaTicket;
+    function CrearRepositorioTicketsCaja(
+      AConexion: TUniConnection = nil): IRepositorioTicketsCaja;
+    function TraducirCategoriaParametro(
+      const AUnidad, ACategoria: string): string;
+    function TraducirDescripcionParametro(
+      const AUnidad: string;
+      const AParametro: TParamInfo): string;
     function CatalogoSqlAplicacion: ICatalogoSql;
     function IncidenciasSqlAplicacion:
       IRegistroIncidenciasSql;
@@ -196,14 +212,16 @@ type
 implementation
 
 uses
-  inLibLog, inLibMsgComun,
+  inLibLog, inLibMsgComun, inLibTraducciones,
   UniDataCatalogoSqlAplicacion,
   UniDataArticulosResolverRepositorio,
   UniDataArticulosValidadorRepositorio,
   UniDataArticulosAtributosRepositorio,
   UniDataTraspasoTicketRepositorio,
   UniDataArqueoRepositorio,
-  UniDataArqueoTicketRepositorio;
+  UniDataArqueoTicketRepositorio,
+  UniDataTiraCajaTicketRepositorio,
+  UniDataTicketsCajaRepositorio;
 
 {$R *.dfm}
 {$R CXLOCALIZATION.res}
@@ -389,6 +407,109 @@ begin
     oConexion,
     FCatalogoSql,
     FIncidenciasSql);
+end;
+
+function TfrmBase.CrearRepositorioTiraCajaTicket(
+  AConexion: TUniConnection): IRepositorioTiraCajaTicket;
+var
+  oConexion: TUniConnection;
+begin
+  AsegurarCatalogoSqlAplicacion;
+  oConexion := AConexion;
+  if not Assigned(oConexion) then
+    oConexion := ConexionPrincipal;
+  Result := TRepositorioTiraCajaTicket.Create(
+    oConexion,
+    FCatalogoSql,
+    FIncidenciasSql);
+end;
+
+function TfrmBase.CrearRepositorioTicketsCaja(
+  AConexion: TUniConnection): IRepositorioTicketsCaja;
+var
+  oConexion: TUniConnection;
+begin
+  AsegurarCatalogoSqlAplicacion;
+  oConexion := AConexion;
+  if not Assigned(oConexion) then
+    oConexion := ConexionPrincipal;
+  Result := TRepositorioTicketsCaja.Create(
+    oConexion,
+    FCatalogoSql,
+    FIncidenciasSql);
+end;
+
+function TfrmBase.NormalizarSegmentoClaveTraduccion(
+  const ATexto: string): string;
+var
+  Caracter: Char;
+  i: Integer;
+begin
+  Result := '';
+  for i := 1 to Length(ATexto) do
+  begin
+    Caracter := ATexto[i];
+    case Caracter of
+      'á', 'à', 'ä', 'â':
+        Caracter := 'a';
+      'é', 'è', 'ë', 'ê':
+        Caracter := 'e';
+      'í', 'ì', 'ï', 'î':
+        Caracter := 'i';
+      'ó', 'ò', 'ö', 'ô':
+        Caracter := 'o';
+      'ú', 'ù', 'ü', 'û':
+        Caracter := 'u';
+      'Á', 'À', 'Ä', 'Â':
+        Caracter := 'A';
+      'É', 'È', 'Ë', 'Ê':
+        Caracter := 'E';
+      'Í', 'Ì', 'Ï', 'Î':
+        Caracter := 'I';
+      'Ó', 'Ò', 'Ö', 'Ô':
+        Caracter := 'O';
+      'Ú', 'Ù', 'Ü', 'Û':
+        Caracter := 'U';
+    end;
+    if CharInSet(
+      Caracter,
+      ['A'..'Z', 'a'..'z', '0'..'9']) then
+      Result := Result + Caracter;
+  end;
+end;
+
+function TfrmBase.TraducirCategoriaParametro(
+  const AUnidad, ACategoria: string): string;
+var
+  Clave: string;
+begin
+  Result := ACategoria;
+  if Assigned(FTraducciones) and
+     (ACategoria <> '') then
+  begin
+    Clave := AUnidad + '.Parametros.Categoria.' +
+             NormalizarSegmentoClaveTraduccion(ACategoria);
+    Result := FTraducciones.Traducir(
+      Clave,
+      ACategoria);
+  end;
+end;
+
+function TfrmBase.TraducirDescripcionParametro(
+  const AUnidad: string;
+  const AParametro: TParamInfo): string;
+var
+  Clave: string;
+begin
+  Result := AParametro.Descripcion;
+  if Assigned(FTraducciones) then
+  begin
+    Clave := AUnidad + '.Parametros.' +
+             AParametro.Nombre + '.Descripcion';
+    Result := FTraducciones.Traducir(
+      Clave,
+      AParametro.Descripcion);
+  end;
 end;
 
 procedure TfrmBase.HeredarConexiones(AOwner: TComponent);
@@ -620,6 +741,10 @@ procedure TfrmBase.AsignarTraducciones(
   const ATraducciones: IServicioTraducciones);
 begin
   FTraducciones := ATraducciones;
+  if Assigned(FTraducciones) then
+    ActivarTraduccionResourcestrings(FTraducciones);
+  if Assigned(Localizer1) then
+    AplicarIdiomaDevExpress;
 end;
 
 function TfrmBase.GetPermisos: IPermisosAplicacion;
@@ -718,8 +843,7 @@ var
 begin
   KeyPreview := True;
   FEnterAsTabTemporalActivo := False;
-  Localizer1.Locale := 1034;
-  Localizer1.Active := True;
+  AplicarIdiomaDevExpress;
   // Etiquetas TcxLabel transparentes (sin fondo solido) en toda la jerarquia
   // que herede de TfrmBase. Centralizado aqui para no repetirlo pantalla a
   // pantalla y cubrir tambien los labels que se anadan en el futuro.
@@ -728,6 +852,41 @@ begin
       TcxLabel(Components[i]).Transparent := True;
   if Assigned(FTraducciones) then
     FTraducciones.Aplicar(Self);
+end;
+
+procedure TfrmBase.AplicarIdiomaDevExpress;
+begin
+  Localizer1.OnTranslate := TraducirDevExpress;
+  if not Localizer1.Active then
+    Localizer1.Active := True;
+  if Assigned(FTraducciones) and
+     SameText(FTraducciones.Idioma, IDIOMA_INGLES) then
+    Localizer1.LanguageIndex := -1
+  else
+    Localizer1.Locale := 1034;
+  Localizer1.Translate;
+end;
+
+procedure TfrmBase.TraducirDevExpress(
+  const AResStringName: string;
+  var AResStringValue: string;
+  var AHandled: Boolean);
+var
+  Clave: string;
+begin
+  AHandled := False;
+  if Assigned(FTraducciones) and
+     (AResStringName <> '') then
+  begin
+    Clave := 'DevExpress.' + AResStringName;
+    if FTraducciones.ExisteTraduccion(Clave) then
+    begin
+      AResStringValue := FTraducciones.Traducir(
+        Clave,
+        AResStringValue);
+      AHandled := True;
+    end;
+  end;
 end;
 
 function TfrmBase.EnterAsTabGuardado(AComp: TJvEnterAsTab): Boolean;

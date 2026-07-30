@@ -346,6 +346,7 @@ uses inLibUser,
   inLibMonitorSQLLog,
   inLibLog,
   inLibMsgCaja,
+  inLibMsgComun,
   inLibMsgConfiguracion,
   inLibDir,
   inMtoSplash,
@@ -375,6 +376,7 @@ uses inLibUser,
   inLibVerifactu,
   inLibVerifactuInstalacion,
   inLibVerifactuCola,
+  UniDataVerifactuColaProcesador,
   inLibVentasWsCola,
   inLibCertificates,
   inMtoGen,
@@ -801,7 +803,10 @@ begin
   Traducciones.Aplicar(Self);
   if FSplashInicio is TfrmSplash then
     Traducciones.Aplicar(TfrmSplash(FSplashInicio));
-  oFotos.AsignarConexion(ConexionPrincipal, ParametrosApp);
+  oFotos.AsignarConexion(
+    ConexionPrincipal,
+    ParametrosApp,
+    CrearValidadorArticulos(ConexionPrincipal));
   FdmDataFiltros  := TdmFiltros.Create(Self);
   AsignarFiltrosGuardados(FdmDataFiltros);
   oFzaWinf := TfzaWinF.Create(Self);
@@ -841,11 +846,12 @@ begin
   // Hilo de la cola Verifactu: arranca siempre; cada ciclo consulta el
   // parámetro appVerifactuActivo, así puede activarse sin reiniciar
   TVerifactuCola.IniciarHilo(
-    Conexiones,
-    ContextoSesion,
-    ParametrosApp,
-    ParametrosCaja,
-    IdentidadSesion.Usuario);
+    CrearProcesadorVerifactuColaUniDAC(
+      Conexiones,
+      ContextoSesion,
+      ParametrosApp,
+      ParametrosCaja,
+      IdentidadSesion.Usuario));
   TVentasWsCola.IniciarHilo(
     Conexiones,
     ContextoSesion,
@@ -941,7 +947,7 @@ begin
   FLogoBgNombre := oNombre;
   oVer := TcxLabel.Create(Self);
   oVer.Parent  := pcPrincipal;
-  oVer.Caption := 'Versión ' + oVersion;
+  oVer.Caption := Format(SCaptionVersion, [oVersion]);
   oVer.AutoSize := False;
   oVer.Style.Font.Name   := 'Lucida Sans';
   oVer.Style.Font.Height := -14;
@@ -1112,7 +1118,7 @@ begin
   sExtension := FServicioCopiasSeguridad.ExtensionCreacion;
   bCifrada := FServicioCopiasSeguridad.ModoCreacion =
     mpcCifrada;
-  saveDialog.Title := 'Guardar copia de seguridad';
+  saveDialog.Title := STituloGuardarCopiaSeguridad;
   saveDialog.DefaultExtension := Copy(
     sExtension,
     2,
@@ -1126,12 +1132,12 @@ begin
   begin
     if bCifrada then
     begin
-      DisplayName := 'Copias cifradas';
+      DisplayName := SCaptionFiltroCopiasCifradas;
       FileMask := '*.crypt';
     end
     else
     begin
-      DisplayName := 'Archivos SQL';
+      DisplayName := SCaptionFiltroArchivosSql;
       FileMask := '*.sql';
     end;
   end;
@@ -1510,7 +1516,7 @@ begin
         FWorkerOperacion.Terminate;
       if FProgressLabel <> nil then
       begin
-        FProgressLabel.Caption := 'Cancelando operación...';
+        FProgressLabel.Caption := SCaptionCancelandoOperacion;
         FProgressLabel.Update;
       end;
     end;
@@ -1545,7 +1551,7 @@ begin
   FProgressBar.Visible := True;
   pnlPPBottom.Visible := True;
   FProgressBar.Position := 0;
-  FProgressLabel.Caption := 'Preparando...';
+  FProgressLabel.Caption := SCaptionPreparando;
   FProgressBar.Update;
   FProgressLabel.Update;
 end;
@@ -1923,18 +1929,18 @@ begin
   AContrasena := '';
   bEsAdministrador := FServicioCopiasSeguridad.ModoCreacion =
     mpcTextoPlano;
-  openDialog.Title := 'Restaurar copia o ejecutar script';
+  openDialog.Title := STituloRestaurarCopiaEjecutarScript;
   openDialog.FileTypes.Clear;
   with openDialog.FileTypes.Add do
   begin
     if bEsAdministrador then
     begin
-      DisplayName := 'Copias SQL o cifradas';
+      DisplayName := SCaptionFiltroCopiasSqlCifradas;
       FileMask := '*.sql;*.crypt';
     end
     else
     begin
-      DisplayName := 'Copias o scripts cifrados';
+      DisplayName := SCaptionFiltroCopiasScriptsCifrados;
       FileMask := '*.crypt';
     end;
   end;

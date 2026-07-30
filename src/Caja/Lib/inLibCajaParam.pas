@@ -248,6 +248,11 @@ begin
                      'Formato de impresión predeterminado',
                      tpString,
                      '');
+  RegistrarParametro('Impresión',
+                     'vgerImprimirCodBarrasTicket',
+                     'Imprimir código de barras EAN13 del ticket',
+                     tpBoolean,
+                     'False');
 
   // --- Empleado ---
   RegistrarParametro('Empleado',

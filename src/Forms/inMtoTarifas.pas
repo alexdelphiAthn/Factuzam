@@ -281,7 +281,7 @@ begin
     FBtnSesionesCambios.Left := btnAddBlock.Left;
     FBtnSesionesCambios.Width := cAnchoBotonSesiones;
     FBtnSesionesCambios.Height := btnAddBlock.Height + cMargenBotonera;
-    FBtnSesionesCambios.Caption := 'Sesiones cambios tarifa';
+    FBtnSesionesCambios.Caption := SCaptionSesionesCambiosTarifa;
     FBtnSesionesCambios.OnClick := btnSesionesCambiosClick;
   end;
   if pnlBotonera.Width < FBtnSesionesCambios.Left +

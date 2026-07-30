@@ -17,7 +17,7 @@ interface
 
 uses
   System.Classes, Uni, inLibParametrosIntf, inLibPermisosIntf,
-  inLibCajaTipos, inLibCajaVentaIntf;
+  inLibCajaTipos, inLibCajaVentaIntf, inLibTicketsCajaIntf;
 
 type
   TImpresorVentaVcl = class(TInterfacedObject, IImpresorVenta)
@@ -27,6 +27,7 @@ type
     FConexion: TUniConnection;
     FParametrosCaja: IParametrosCaja;
     FPermisos: IPermisosAplicacion;
+    FRepositorioTicketsCaja: IRepositorioTicketsCaja;
     procedure ImprimirFacturaA4(
       const ASerie, ANumero: string);
   public
@@ -35,7 +36,8 @@ type
       const AParametrosApp: IParametrosAplicacion;
       AConexion: TUniConnection;
       const AParametrosCaja: IParametrosCaja;
-      const APermisos: IPermisosAplicacion);
+      const APermisos: IPermisosAplicacion;
+      const ARepositorioTicketsCaja: IRepositorioTicketsCaja);
     procedure Imprimir(
       const ASolicitud: TSolicitudImpresionVenta;
       ARutasPdf: TStrings);
@@ -49,14 +51,20 @@ implementation
 uses
   System.SysUtils, Vcl.Forms, UniDataFacturas, inMtoModalImpFac,
   inLibGenerarTicket, inLibGenerarTicketBD, inLibGenerarTicketCaja,
-  inLibDir, inLibFacturasComposicion;
+  inLibDir, inLibFacturasComposicion,
+  // Raiz de composicion de este servicio: los adaptadores UniData* se
+  // construyen aqui y se inyectan en la factoria de dominio.
+  UniDataFacturasRepositorio,
+  UniDataArticulosResolverRepositorio,
+  UniDataVerifactuColaRepositorio;
 
 constructor TImpresorVentaVcl.Create(
   APropietario: TComponent;
   const AParametrosApp: IParametrosAplicacion;
   AConexion: TUniConnection;
   const AParametrosCaja: IParametrosCaja;
-  const APermisos: IPermisosAplicacion);
+  const APermisos: IPermisosAplicacion;
+  const ARepositorioTicketsCaja: IRepositorioTicketsCaja);
 begin
   inherited Create;
   FPropietario := APropietario;
@@ -64,6 +72,7 @@ begin
   FConexion := AConexion;
   FParametrosCaja := AParametrosCaja;
   FPermisos := APermisos;
+  FRepositorioTicketsCaja := ARepositorioTicketsCaja;
 end;
 
 procedure TImpresorVentaVcl.ImprimirFacturaA4(
@@ -77,7 +86,11 @@ begin
   DatosFactura.ConfigurarServicios(
     CrearServiciosFactura(
       FConexion,
-      FParametrosCaja));
+      TRepositorioFacturas.Create(FConexion),
+      TRepositorioArticulosResolver.Create(
+        FConexion,
+        FParametrosCaja),
+      CrearServicioVerifactuColaUniDAC(FConexion)));
   Formulario := nil;
   try
     Formulario := TfrmPrintFac.Create(Application);
@@ -115,7 +128,9 @@ begin
           FParametrosCaja.ImpresoraCaja,
           False,
           ASolicitud.FechaOperacion,
-          ARutasPdf);
+          ARutasPdf,
+          FParametrosCaja.GetBool(
+            'vgerImprimirCodBarrasTicket', False));
       end;
     tiFactura:
       begin
@@ -135,7 +150,10 @@ begin
           ASolicitud.DatosCobro,
           FParametrosCaja.ImpresoraCaja,
           True,
-          ASolicitud.FechaOperacion);
+          ASolicitud.FechaOperacion,
+          nil,
+          FParametrosCaja.GetBool(
+            'vgerImprimirCodBarrasTicket', False));
         ImprimirT(
           FParametrosApp,
           FConexion,
@@ -147,7 +165,9 @@ begin
           FParametrosCaja.ImpresoraCaja,
           False,
           ASolicitud.FechaOperacion,
-          ARutasPdf);
+          ARutasPdf,
+          FParametrosCaja.GetBool(
+            'vgerImprimirCodBarrasTicket', False));
       end;
     tiSinTicket:
       begin
@@ -162,14 +182,16 @@ procedure TImpresorVentaVcl.GenerarPdfRespaldo(
 begin
   ImprimirTicketDesdeBD(
     FParametrosApp,
-    FConexion,
+    FRepositorioTicketsCaja,
     ASolicitud.CodigoEmpresa,
     ASolicitud.CodigoAlmacen,
     ASolicitud.CodigoCaja,
     ASolicitud.NumeroOperacion,
     'DEBUG',
     ARutasPdf,
-    True);
+    True,
+    FParametrosCaja.GetBool(
+      'vgerImprimirCodBarrasTicket', False));
 end;
 
 end.

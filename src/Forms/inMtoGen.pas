@@ -1471,19 +1471,19 @@ begin
   begin
     if (dsTablaG.DataSet.State = dsInsert) then
     begin
-      lblEditMode.Caption := 'Insertando';
+      lblEditMode.Caption := SCaptionEstadoInsertando;
     end;
     if (dsTablaG.DataSet.State = dsEdit) then
     begin
-      lblEditMode.Caption := 'Editando';
+      lblEditMode.Caption := SCaptionEstadoEditando;
     end;
     if (dsTablaG.DataSet.State = dsBrowse) then
     begin
-      lblEditMode.Caption := 'Navegando';
+      lblEditMode.Caption := SCaptionEstadoNavegando;
     end;
       if (dsTablaG.DataSet.State = dsInactive) then
     begin
-      lblEditMode.Caption := 'Inactivo';
+      lblEditMode.Caption := SCaptionEstadoInactivo;
     end;
   end;
 end;

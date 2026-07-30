@@ -86,6 +86,13 @@ type
       const ASerie, ANumero: string): IResultadoConsultaCaja;
     function ConsultarLineasFactura(
       const ASerie, ANumero: string): IResultadoConsultaCaja;
+    function ConsultarFacturaPorCodigoBarras(
+      const ACodigoBarras: string): IResultadoConsultaCaja;
+    function ConsultarFacturaPorOperacion(
+      const AEmpresa, AAlmacen, ACaja,
+      ANumeroOperacion: string): IResultadoConsultaCaja;
+    function ConsultarVentasOrigenSku(
+      const ASku, AEmpresa: string): IResultadoConsultaCaja;
   end;
   TResultadoRectificacionCaja = record
     Serie: string;
@@ -161,6 +168,13 @@ type
     NumeroRectificado: string;
     TratamientoMovimientos:
       TTratamientoMovimientosRectificativa;
+    // Devoluciones: motivo y ticket de origen (para referencia en la
+    // operación DV y traspaso automático si es de otra tienda)
+    MotivoDevolucion: string;
+    SerieOrigenDevolucion: string;
+    NumeroOrigenDevolucion: string;
+    EmpresaOrigenDevolucion: string;
+    AlmacenOrigenDevolucion: string;
     DatosCobro: TDatosFaseCobro;
   end;
   IGrabadorVentaCaja = interface

@@ -59,6 +59,10 @@ const
   // El grid termina de crear la fila después del cambio de dataset. El foco
   // se aplica en un mensaje posterior para que no restaure la columna previa.
   WM_ENFOCAR_ARTICULO_CAJA = WM_APP + 105;
+  // Devolución sin código: al validar una cantidad negativa se difiere el
+  // selector de venta de origen (modal) fuera del OnValidate del editor,
+  // por las mismas razones que los mensajes de atributos de arriba.
+  WM_PREGUNTAR_VENTA_ORIGEN = WM_APP + 106;
 type
   TfrmMtoOpeCaja = class(TfrmBase, IOperacionCaja)
     pnlUp: TPanel;
@@ -207,6 +211,7 @@ type
     procedure btnF2Click(Sender: TObject);
     procedure actCargarCtaExecute(Sender: TObject);
     procedure btnF10Click(Sender: TObject);
+    procedure btnF61Click(Sender: TObject);
     procedure actBuscarModificarExecute(Sender: TObject);
     procedure cxGrid1DBTableView1FocusedRecordChanged(
       Sender: TcxCustomGridTableView; APrevFocusedRecord,
@@ -239,9 +244,28 @@ type
     FServicioRectificacion: IServicioRectificacionCaja;
     FConsultaStock: IResultadoConsultaCaja;
     FIncidenciasSql: IRegistroIncidenciasSql;
+    // Devoluciones: motivo (se pide al cobrar si hay líneas en negativo)
+    // y ticket de origen (F4 o selector de venta sin código). Si el
+    // origen es de otra tienda, la grabación genera el traspaso
+    // automático hacia el almacén actual.
+    FMotivoDevolucion: string;
+    FSerieOrigenDev: string;
+    FNumeroOrigenDev: string;
+    FEmpresaOrigenDev: string;
+    FAlmacenOrigenDev: string;
+    FSkuPendienteVentaOrigen: string;
+    FPreguntandoVentaOrigen: Boolean;
     procedure GuardarLayoutCaja;
     procedure RestaurarLayoutCaja;
     procedure AbrirBuscarModificar;
+    procedure CargarDevolucionPorTicket;
+    procedure CargarDevolucionOtraEmpresa(
+      const ASerie, ANumero, AAlmacen: string);
+    procedure WMPreguntarVentaOrigen(var Msg: TMessage);
+                                       message WM_PREGUNTAR_VENTA_ORIGEN;
+    function HayLineasNegativas: Boolean;
+    function PedirMotivoDevolucionSiProcede: Boolean;
+    procedure LimpiarEstadoDevolucion;
     procedure CargarDepositosF2;
     procedure ActualizarRelojCaja;
     procedure SincronizarFechaCajaCabecera;
@@ -381,23 +405,31 @@ uses
   inMtoCajaFaseCobro, inLibDevExp, inLibValoresAutomaticos,
   inLibFacturas, inLibGenBusq,
   inMtoModalGenImpSave, inLibLayoutForm,
-  inLibArticulosValidador, inLibArticulosResolverIntf,
-  inLibArticulosAtributosLookup,
+  inLibArticulosValidadorIntf, inLibArticulosResolverIntf,
+  inLibArticulosAtributosIntf,
   inLibAtributosPaleta,
   inLibShowMto,
   inMtoStockConsulta,
   inLibCorreoTickets,
   inLibCajaDescuentos,
   inLibCajaOpeComposicion,
+  // Raiz de composicion de la ventana de caja: el adaptador UniData* se
+  // construye aqui y se inyecta en la factoria de dominio.
+  UniDataCajaConsultasRepositorio,
   inMtoCajaImpresorVenta,
   inMtoCajaGrabadorVenta,
+  inMtoModalDevolucionTicket,
+  inMtoModalSeleccionVentaOrigen,
+  inMtoModalMotivoDevolucion,
   inLibParametrosIntf,
   inLibPermisosIntf,
   inLibContextoSesionIntf,
   inLibPerfilesUsuarioIntf,
+  inLibTicketsCajaIntf,
   UniDataCatalogoSqlAplicacion,
+  UniDataTicketsCajaRepositorio,
   System.StrUtils,
-  inLibMsgCaja;
+  inLibMsgCaja, inLibMsgVentas;
 
 function CrearServiciosOperacionCajaVcl(
   APropietario: TComponent;
@@ -416,6 +448,7 @@ var
   oCatalogoSql: ICatalogoSql;
   oGrabador: IGrabadorVentaCaja;
   oImpresor: IImpresorVenta;
+  oRepositorioTicketsCaja: IRepositorioTicketsCaja;
 begin
   bCatalogoSqlActivo := False;
   if Assigned(APerfilesUsuario) then
@@ -430,12 +463,19 @@ begin
     bCatalogoSqlActivo,
     oCatalogoSql,
     AIncidenciasSql);
+  oRepositorioTicketsCaja := TRepositorioTicketsCaja.Create(
+    AConexion,
+    oCatalogoSql,
+    AIncidenciasSql);
+  ADatosCaja.AsignarRepositorioTicketsCaja(
+    oRepositorioTicketsCaja);
   oImpresor := TImpresorVentaVcl.Create(
     APropietario,
     AParametrosApp,
     AConexion,
     AParametrosCaja,
-    APermisos);
+    APermisos,
+    oRepositorioTicketsCaja);
   oGrabador := TGrabadorVentaCaja.Create(ADatosCaja);
   Result := CrearServiciosOperacionCaja(
     AConexion,
@@ -443,8 +483,10 @@ begin
     AContextoSesion,
     oImpresor,
     oGrabador,
-    oCatalogoSql,
-    AIncidenciasSql);
+    TRepositorioConsultasCaja.Create(
+      AConexion,
+      oCatalogoSql,
+      AIncidenciasSql));
 end;
 
 procedure InicializarServiciosOperacionCajaVcl(
@@ -692,9 +734,9 @@ begin
     end;
   end;
   dbtvStock.ClearItems;
-  lblNombreCliente.Caption := 'VENTA CONTADO';
+  lblNombreCliente.Caption := SCaptionVentaContado;
   btnCodigoCliente.Text := '';
-  lblTotal.Caption := 'Total 0,00 €';
+  lblTotal.Caption := SCaptionTotalCero;
   ActualizarRelojCaja;
   if Self.Visible then
     ActualizarFoco;
@@ -1562,6 +1604,28 @@ begin
         DatosCaja.cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency :=
           DatosCaja.cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency;
       end;
+    end;
+  end;
+  // Devolución sin código de barras: al validar una cantidad negativa
+  // en una línea normal se propone (diferido, fuera del OnValidate) el
+  // selector de ventas que contienen ese SKU para elegir el origen.
+  if (VieneDeDep <> 'S') and (VieneDeDep <> 'A') then
+  begin
+    NuevaCant := StrToFloatDef(VarToStrDef(DisplayValue, '0'), 0);
+    if (NuevaCant < 0) and
+       (FNumeroRectifica = '') and
+       (Trim(FSerieOrigenDev) = '') and
+       (not FPreguntandoVentaOrigen) then
+    begin
+      FSkuPendienteVentaOrigen := Trim(
+        DatosCaja.cdsLineas.FieldByName(
+          'CODIGO_UNIDAD_FACLIN').AsString);
+      if FSkuPendienteVentaOrigen = '' then
+        FSkuPendienteVentaOrigen := Trim(
+          DatosCaja.cdsLineas.FieldByName(
+            'CODIGO_ART_FACLIN').AsString);
+      if FSkuPendienteVentaOrigen <> '' then
+        PostMessage(Handle, WM_PREGUNTAR_VENTA_ORIGEN, 0, 0);
     end;
   end;
 end;
@@ -2613,6 +2677,199 @@ begin
   end;
 end;
 
+procedure TfrmMtoOpeCaja.btnF61Click(Sender: TObject);
+begin
+  CargarDevolucionPorTicket;
+end;
+
+procedure TfrmMtoOpeCaja.CargarDevolucionPorTicket;
+var
+  Seleccion: TTicketDevolucionSeleccionado;
+begin
+  // F4: localizar el ticket de origen (escaneo del EAN-13, operación o
+  // documento) y cargar sus artículos en negativo. El usuario borra las
+  // líneas que no se devuelvan.
+  if not OperacionVacia then
+    ShowMessage(SErrorDevolucionTicketOperacionEnCurso)
+  else
+  begin
+    if TfrmModalDevolucionTicket.Ejecutar(
+         Self,
+         FRepositorioConsultas,
+         FCodigoEmpresa,
+         FCodigoAlmacen,
+         FCodigoCaja,
+         Seleccion) then
+    begin
+      FSerieOrigenDev := Seleccion.Serie;
+      FNumeroOrigenDev := Seleccion.Numero;
+      FEmpresaOrigenDev := Seleccion.Empresa;
+      FAlmacenOrigenDev := Seleccion.Almacen;
+      if SameText(Seleccion.Empresa, FCodigoEmpresa) then
+        CargarRectificacion(
+          Seleccion.Serie,
+          Seleccion.Numero,
+          trcDiferencias,
+          tmrMantenerOriginales)
+      else
+      begin
+        ShowMessage(SAvisoDevolucionTicketOtraEmpresa);
+        CargarDevolucionOtraEmpresa(
+          Seleccion.Serie, Seleccion.Numero, Seleccion.Almacen);
+      end;
+      GridRecalc(ConexionPrincipal, nil,
+                 tvLineasOpe,
+                 DatosCaja.cdsLineas,
+                 DatosCaja.cdsCabecera,
+                 ActualizarLabelTotal);
+      AsegurarLineaNueva;
+    end;
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.CargarDevolucionOtraEmpresa(
+  const ASerie, ANumero, AAlmacen: string);
+begin
+  // Carga las líneas del ticket en negativo SIN marcar rectificativa
+  // fiscal (el ticket es de otra empresa): la operación DV queda
+  // referenciada al ticket de origen por SERIE/NUMERO_REF_ORIGEN.
+  FServicioRectificacion.Cargar(
+    ASerie,
+    ANumero,
+    trcDiferencias,
+    tmrMantenerOriginales,
+    DatosCaja.cdsCabecera,
+    DatosCaja.cdsLineas);
+  if FCaptionPrevio = '' then
+    FCaptionPrevio := Caption;
+  Caption := FCaptionPrevio + Format(
+    SCaptionDevolucionTicketDe, [ASerie, ANumero, AAlmacen]);
+end;
+
+procedure TfrmMtoOpeCaja.WMPreguntarVentaOrigen(var Msg: TMessage);
+var
+  Seleccion: TVentaOrigenSeleccionada;
+  sSku: string;
+begin
+  // Devolución sin código de barras: al meter una prenda en negativo se
+  // proponen las ventas que la contienen para elegir el ticket de
+  // origen. Cancelar es válido: la devolución queda sin origen (DV).
+  sSku := FSkuPendienteVentaOrigen;
+  FSkuPendienteVentaOrigen := '';
+  if (sSku <> '') and
+     (FNumeroRectifica = '') and
+     (Trim(FSerieOrigenDev) = '') and
+     (not FPreguntandoVentaOrigen) then
+  begin
+    FPreguntandoVentaOrigen := True;
+    try
+      if TfrmModalSeleccionVentaOrigen.Ejecutar(
+           Self,
+           FRepositorioConsultas,
+           sSku,
+           FCodigoEmpresa,
+           Seleccion) then
+      begin
+        FSerieOrigenDev := Seleccion.Serie;
+        FNumeroOrigenDev := Seleccion.Numero;
+        FEmpresaOrigenDev := Seleccion.Empresa;
+        FAlmacenOrigenDev := Seleccion.Almacen;
+        if SameText(Seleccion.Empresa, FCodigoEmpresa) then
+        begin
+          // Rectificativa por diferencias del ticket elegido: solo se
+          // marca la referencia; las líneas las decide el usuario.
+          FSerieRectifica := Seleccion.Serie;
+          FNumeroRectifica := Seleccion.Numero;
+          FTipoRectificativa := trcDiferencias;
+          FTratamientoMovRectificativa := tmrMantenerOriginales;
+          if FCaptionPrevio = '' then
+            FCaptionPrevio := Caption;
+          Caption := FCaptionPrevio +
+            '  —  RECTIFICATIVA POR DIFERENCIAS de ' +
+            Seleccion.Serie + '\' + Seleccion.Numero;
+          lblTipoRectificativa.Caption := Format(
+            SCaptionRectificativaTipo, ['POR DIFERENCIAS']);
+          lblTipoRectificativa.Visible := True;
+        end
+        else
+        begin
+          if FCaptionPrevio = '' then
+            FCaptionPrevio := Caption;
+          Caption := FCaptionPrevio + Format(
+            SCaptionDevolucionTicketDe,
+            [Seleccion.Serie, Seleccion.Numero, Seleccion.Almacen]);
+        end;
+      end;
+    finally
+      FPreguntandoVentaOrigen := False;
+    end;
+  end;
+end;
+
+function TfrmMtoOpeCaja.HayLineasNegativas: Boolean;
+var
+  Marcador: TBookmark;
+  sVieneDeDep: string;
+begin
+  // Devolución de venta: líneas en negativo que no sean cancelaciones
+  // de depósito (esas llevan su propio circuito)
+  Result := False;
+  if Assigned(DatosCaja) and DatosCaja.cdsLineas.Active then
+  begin
+    DatosCaja.cdsLineas.DisableControls;
+    try
+      Marcador := DatosCaja.cdsLineas.GetBookmark;
+      try
+        DatosCaja.cdsLineas.First;
+        while (not DatosCaja.cdsLineas.Eof) and (not Result) do
+        begin
+          sVieneDeDep := Trim(
+            DatosCaja.cdsLineas.FieldByName(
+              'VIENE_DE_DEPOSITO').AsString);
+          if (DatosCaja.cdsLineas.FieldByName(
+                'CANTIDAD_FACLIN').AsFloat < 0) and
+             (sVieneDeDep <> 'S') and
+             (sVieneDeDep <> 'A') then
+            Result := True
+          else
+            DatosCaja.cdsLineas.Next;
+        end;
+        if DatosCaja.cdsLineas.BookmarkValid(Marcador) then
+          DatosCaja.cdsLineas.GotoBookmark(Marcador);
+      finally
+        DatosCaja.cdsLineas.FreeBookmark(Marcador);
+      end;
+    finally
+      DatosCaja.cdsLineas.EnableControls;
+    end;
+  end;
+end;
+
+function TfrmMtoOpeCaja.PedirMotivoDevolucionSiProcede: Boolean;
+var
+  sMotivo: string;
+begin
+  // Motivo obligatorio (una vez por operación) si hay devolución
+  Result := True;
+  if HayLineasNegativas and (Trim(FMotivoDevolucion) = '') then
+  begin
+    if TfrmModalMotivoDevolucion.Ejecutar(Self, sMotivo) then
+      FMotivoDevolucion := sMotivo
+    else
+      Result := False;
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.LimpiarEstadoDevolucion;
+begin
+  FMotivoDevolucion := '';
+  FSerieOrigenDev := '';
+  FNumeroOrigenDev := '';
+  FEmpresaOrigenDev := '';
+  FAlmacenOrigenDev := '';
+  FSkuPendienteVentaOrigen := '';
+end;
+
 procedure TfrmMtoOpeCaja.btnF10Click(Sender: TObject);
 begin
   AbrirBuscarModificar;
@@ -2800,7 +3057,7 @@ end;
 procedure TfrmMtoOpeCaja.ActualizarLabelTotal(Sender: TObject;
   NuevoTotal: Currency);
 begin
-  lblTotal.Caption := Format('Total %m', [NuevoTotal]);
+  lblTotal.Caption := Format(SCaptionTotalImporte, [NuevoTotal]);
 end;
 
 procedure TfrmMtoOpeCaja.RecalcularLineasDesdeDM;
@@ -2891,7 +3148,7 @@ begin
 
   if Trim(sCodigo) = '' then
   begin
-    lblNombreCliente.Caption := 'VENTA CONTADO';
+    lblNombreCliente.Caption := SCaptionVentaContado;
     DatosCaja.cdsCabecera.Edit;
     DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString := '';
     DatosCaja.cdsCabecera.FieldByName(
@@ -3104,7 +3361,7 @@ begin
   formulario := TfrmMtoSearch.Create(nil);
   try
     formulario.Name := 'frmMtoCliSearch';
-    formulario.Caption := 'Búsqueda de Clientes';
+    formulario.Caption := STituloBusquedaClientes;
     formulario.dsTablaG.DataSet := Consulta.DataSet;
     formulario.ProcesarPerfiles;
     formulario.ShowModal;
@@ -3236,6 +3493,14 @@ begin
     if FCaptionPrevio <> '' then
       Caption := FCaptionPrevio;
   end;
+  // Devolución con origen sin rectificativa (otra empresa): restaurar
+  // el título y limpiar SIEMPRE el estado de devolución (motivo y
+  // ticket de origen) tras grabar.
+  if (FNumeroRectifica = '') and
+     (Trim(FSerieOrigenDev) <> '') and
+     (FCaptionPrevio <> '') then
+    Caption := FCaptionPrevio;
+  LimpiarEstadoDevolucion;
   if AResultado.CodigoValeGenerado <> '' then
   begin
     ShowMessage(Format(
@@ -3249,6 +3514,7 @@ begin
       if EnviarDocumentacionOperacion(
         ParametrosApp,
         CrearRepositorioTraspasoTicket,
+        CrearRepositorioTicketsCaja,
         ConexionPrincipal,
         FCodigoEmpresa,
         FCodigoAlmacen,
@@ -3309,6 +3575,9 @@ begin
   SincronizarFechaCajaCabecera;
   frmFaseCobro := nil;
   ObjTotales := nil;
+  // Con líneas en negativo se pide el motivo de la devolución antes de
+  // pasar al cobro; si el usuario cancela, no se abre la fase de cobro.
+  if PedirMotivoDevolucionSiProcede then
   try
     ObjTotales := TFacturaTotales.Create(
       ConexionPrincipal,
@@ -3378,6 +3647,14 @@ begin
       Solicitud.Grabacion.NumeroRectificado := FNumeroRectifica;
       Solicitud.Grabacion.TratamientoMovimientos :=
         FTratamientoMovRectificativa;
+      Solicitud.Grabacion.MotivoDevolucion := FMotivoDevolucion;
+      Solicitud.Grabacion.SerieOrigenDevolucion := FSerieOrigenDev;
+      Solicitud.Grabacion.NumeroOrigenDevolucion :=
+        FNumeroOrigenDev;
+      Solicitud.Grabacion.EmpresaOrigenDevolucion :=
+        FEmpresaOrigenDev;
+      Solicitud.Grabacion.AlmacenOrigenDevolucion :=
+        FAlmacenOrigenDev;
       Solicitud.Grabacion.DatosCobro := frmFaseCobro.DatosCobro;
       Resultado := FServicioCierreVenta.Ejecutar(Solicitud);
       if Resultado.Grabada then
@@ -3443,8 +3720,8 @@ begin
     Resultado.Serie +
     '\' +
     Resultado.Numero;
-  lblTipoRectificativa.Caption := 'RECTIFICATIVA' + sLineBreak +
-    Resultado.DescripcionTipo;
+  lblTipoRectificativa.Caption := Format(SCaptionRectificativaTipo,
+    [Resultado.DescripcionTipo]);
   lblTipoRectificativa.Visible := True;
 end;
 
@@ -3559,7 +3836,7 @@ begin
     TargetForm := TfrmMtoOpeCaja.Create(Application, Permisos);
     TargetForm.PopupParent := Self.PopupParent;
     TargetForm.Tag := NextIndex;
-    TargetForm.Caption := Format('Operación %d - (Caja Real %s)',
+    TargetForm.Caption := Format(STituloOperacionNCajaReal,
                                  [NextIndex, Self.FCodigoCaja]);
     TargetForm.PrepararValores(Self.FCodigoEmpresa,
                                Self.FCodigoAlmacen,
@@ -3579,7 +3856,7 @@ begin
   formulario := TfrmMtoSearch.Create(nil);
   try
     formulario.Name := 'frmMtoEmpCajSearch';
-    formulario.Caption := 'Búsqueda de Empleados en Caja';
+    formulario.Caption := STituloBusquedaEmpleadosCaja;
     formulario.dsTablaG.DataSet := Consulta.DataSet;
     formulario.ProcesarPerfiles;
     formulario.ShowModal;
@@ -3763,6 +4040,12 @@ begin
   FLector.KeyDown(Key, Shift);
   if (Key = VK_F5) then
     btnF5.Click;
+  // F4 -> devolución escaneando / localizando el ticket de origen
+  if (Key = VK_F4) then
+  begin
+    btnF61.Click;
+    Key := 0;
+  end;
   // Ctrl+F12 -> resetear layout
   if (Key = VK_F12) and (ssCtrl in Shift) and not (ssAlt in Shift) then
   begin

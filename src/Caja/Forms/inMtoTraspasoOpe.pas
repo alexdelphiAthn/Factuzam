@@ -30,7 +30,7 @@ uses
   cxGridCustomTableView, cxGridCustomView, cxGridTableView, cxGridDBTableView,
   cxGrid, cxSplitter, Vcl.Imaging.PngImage, System.Generics.Collections,
   Data.DB, Datasnap.DBClient, Uni, UniDataTraspaso,
-  inLibTraspasoTicket, inLibGridArticulos, inLibArticulosValidador,
+  inLibTraspasoTicket, inLibGridArticulos, inLibArticulosValidadorIntf,
   inLibPermisosIntf, inLibGenBusq, inLibFotos, inLibAtributosPaleta,
   Vcl.Menus, dxCoreGraphics, JvComponentBase, JvEnterTab,
   cxLocalization, inLibLectorScanner, cxStyles, cxDBData, cxCustomData,
@@ -151,7 +151,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibLog, inLibMsgCaja;
+  inLibLog, inLibMsgCaja, inLibMsgComun;
 
 procedure TfrmMtoOpeTraspaso.FormCreate(Sender: TObject);
 begin
@@ -242,18 +242,18 @@ begin
   FGridCtrl.Construir;
   // Columnas propias del traspaso.
   Col := FView.CreateColumn;
-  Col.Caption := 'Descripción';
+  Col.Caption := SCaptionColDescripcionTraspaso;
   Col.DataBinding.FieldName := 'DESCRIPCION';
   Col.Options.Editing := False;
   Col.Width := 200;
   Col := FView.CreateColumn;
-  Col.Caption := 'Uds';
+  Col.Caption := SCaptionColUdsTraspaso;
   Col.DataBinding.FieldName := 'CANTIDAD';
   Col.Width := 50;
   // Al atender pasa a ser "lo que sirvo" (editable); 0 = denegar esa linea.
   FColUds := Col;
   Col := FView.CreateColumn;
-  Col.Caption := 'Coste';
+  Col.Caption := SCaptionColCosteTraspaso;
   Col.DataBinding.FieldName := 'PRECIO_COSTE';
   Col.Options.Editing := False;
   Col.Width := 70;
@@ -261,21 +261,21 @@ begin
   // guardando en el movimiento; solo se oculta de la vista).
   Col.Visible := FVerCoste;
   Col := FView.CreateColumn;
-  Col.Caption := 'Stock org';
+  Col.Caption := SCaptionColStockOrigenTraspaso;
   Col.DataBinding.FieldName := 'STOCK_ORIGEN';
   Col.Options.Editing := False;
   Col.Width := 70;
   // Columnas que solo se usan al ATENDER (ocultas en traspaso/solicitar; las
   // muestra AplicarModo): lo pedido (referencia) y el motivo si se deniega.
   Col := FView.CreateColumn;
-  Col.Caption := 'Pedidas';
+  Col.Caption := SCaptionColPedidasTraspaso;
   Col.DataBinding.FieldName := 'CANTIDAD_PEDIDA';
   Col.Options.Editing := False;
   Col.Width := 60;
   Col.Visible := False;
   FColPedidas := Col;
   Col := FView.CreateColumn;
-  Col.Caption := 'Motivo rechazo';
+  Col.Caption := SCaptionColMotivoRechazoTraspaso;
   Col.DataBinding.FieldName := 'MOTIVO';
   Col.Width := 180;
   Col.Visible := False;
@@ -588,30 +588,30 @@ begin
   if Assigned(FColUds) then
   begin
     if AModo = mtAtender then
-      FColUds.Caption := 'Sirvo'
+      FColUds.Caption := SCaptionColSirvoTraspaso
     else
-      FColUds.Caption := 'Uds';
+      FColUds.Caption := SCaptionColUdsTraspaso;
   end;
   // Captions con tilde en literal: este .pas va en UTF-8 con BOM (igual que
   // inMtoCajaMenu.pas) para que el compilador las lea bien.
   case AModo of
     mtTraspaso:
     begin
-      lblOrigen.Caption := 'ALMACÉN ORIGEN';
-      lblDestino.Caption := 'ALMACÉN DESTINO';
-      btnF12.Caption := 'F12 Con ticket';
+      lblOrigen.Caption := SCaptionAlmacenOrigen;
+      lblDestino.Caption := SCaptionAlmacenDestino;
+      btnF12.Caption := SCaptionF12ConTicket;
     end;
     mtSolicitar:
     begin
-      lblOrigen.Caption := 'ALMACÉN DESTINO';
-      lblDestino.Caption := 'ALMACÉN ORIGEN';
-      btnF12.Caption := 'F12 Enviar solicitud';
+      lblOrigen.Caption := SCaptionAlmacenDestino;
+      lblDestino.Caption := SCaptionAlmacenOrigen;
+      btnF12.Caption := SCaptionF12EnviarSolicitud;
     end;
     mtAtender:
     begin
-      lblOrigen.Caption := 'ALMACÉN ORIGEN';
-      lblDestino.Caption := 'ALMACÉN DESTINO';
-      btnF12.Caption := 'F12 Servir con ticket';
+      lblOrigen.Caption := SCaptionAlmacenOrigen;
+      lblDestino.Caption := SCaptionAlmacenDestino;
+      btnF12.Caption := SCaptionF12ServirConTicket;
     end;
   end;
   CargarCombo;
@@ -863,7 +863,7 @@ begin
   end;
   // Sin permiso de ver coste, no se muestra el importe (revela coste).
   if FVerCoste then
-    lblTotal.Caption := Format('Importe traspaso: %m', [cTotal])
+    lblTotal.Caption := Format(SCaptionImporteTraspaso, [cTotal])
   else
     lblTotal.Caption := '';
 end;
@@ -902,7 +902,7 @@ begin
     begin
       Dlg := TForm.CreateNew(Self);
       try
-        Dlg.Caption := 'Solicitudes pendientes de atender';
+        Dlg.Caption := STituloSolicitudesPendientesAtender;
         Dlg.Position := poOwnerFormCenter;
         Dlg.BorderStyle := bsDialog;
         Dlg.ClientWidth := 760;
@@ -932,38 +932,38 @@ begin
         begin
           sFld := View.Columns[i].DataBinding.FieldName;
           if SameText(sFld, 'NUMERO_TRSOL') then
-            View.Columns[i].Caption := 'Número'
+            View.Columns[i].Caption := SCaptionColNumeroSolicitud
           else if SameText(sFld, 'SERIE_TRSOL') then
-            View.Columns[i].Caption := 'Serie'
+            View.Columns[i].Caption := SCaptionColSerieSolicitud
           else if SameText(sFld, 'FECHA_TRSOL') then
-            View.Columns[i].Caption := 'Fecha'
+            View.Columns[i].Caption := SCaptionColFechaSolicitud
           else if SameText(sFld, 'CODIGO_ALM_DESTINO_TRSOL') then
-            View.Columns[i].Caption := 'Pide (almacén)'
+            View.Columns[i].Caption := SCaptionColPideAlmacen
           else if SameText(sFld, 'ESTADO_TRSOL') then
-            View.Columns[i].Caption := 'Estado'
+            View.Columns[i].Caption := SCaptionColEstadoSolicitud
           else if SameText(sFld, 'LINEAS_PEND_TRSOL') then
-            View.Columns[i].Caption := 'Líneas';
+            View.Columns[i].Caption := SCaptionColLineasSolicitud;
         end;
         btnAt := TButton.Create(Dlg);
         btnAt.Parent := pnlBot;
         btnAt.SetBounds(14, 12, 160, 36);
-        btnAt.Caption := 'Atender';
+        btnAt.Caption := SCaptionAtender;
         btnAt.ModalResult := mrYes;
         btnAt.Default := True;
         btnNo := TButton.Create(Dlg);
         btnNo.Parent := pnlBot;
         btnNo.SetBounds(186, 12, 160, 36);
-        btnNo.Caption := 'No atender';
+        btnNo.Caption := SCaptionNoAtender;
         btnNo.ModalResult := mrNo;
         btnImp := TButton.Create(Dlg);
         btnImp.Parent := pnlBot;
         btnImp.SetBounds(358, 12, 160, 36);
-        btnImp.Caption := 'Imprimir';
+        btnImp.Caption := SCaptionImprimir;
         btnImp.OnClick := ModalImprimirClick;
         btnSalir := TButton.Create(Dlg);
         btnSalir.Parent := pnlBot;
         btnSalir.SetBounds(606, 12, 140, 36);
-        btnSalir.Caption := 'Salir';
+        btnSalir.Caption := SCaptionSalir;
         btnSalir.Cancel := True;
         btnSalir.ModalResult := mrCancel;
         Dlg.ActiveControl := Grid;
@@ -1168,7 +1168,7 @@ begin
   else if FDatos.ValidarEmpleado(Trim(txtEmpleado.Text), sCod, sNom) then
     lblEmpleadoNombre.Caption := sNom
   else
-    lblEmpleadoNombre.Caption := '(no encontrado)';
+    lblEmpleadoNombre.Caption := SCaptionEmpleadoNoEncontrado;
 end;
 
 procedure TfrmMtoOpeTraspaso.txtEmpleadoButtonClick(Sender: TObject;

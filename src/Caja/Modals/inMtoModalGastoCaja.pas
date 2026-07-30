@@ -84,7 +84,7 @@ implementation
 
 uses
   UniDataCaja, inLibGenerarTicketCaja,
-  inMtoGenSearch, Data.DB, inLibMsgCaja;
+  inMtoGenSearch, Data.DB, inLibMsgCaja, inLibMsgComun;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -133,7 +133,7 @@ begin
     frm.btnEmpleado.Text := frm.IdentidadSesion.Usuario;
     frm.ValidarEmpleado;
     frm.txtImporte.Value := Double(AImporte);
-    frm.lblTitulo.Caption := 'Retirar sobrante del recuento';
+    frm.lblTitulo.Caption := SCaptionRetirarSobranteRecuento;
     if frm.ShowModal = mrOk then
       Result := True;
   finally
@@ -178,7 +178,7 @@ begin
       ' ORDER BY CODIGO_EMPL';
     formulario := TfrmMtoSearch.Create(nil);
     try
-      formulario.Caption := 'Búsqueda de Empleados';
+      formulario.Caption := STituloBusquedaEmpleados;
       formulario.dsTablaG.DataSet := unqry;
       unqry.Open;
       formulario.ProcesarPerfiles;

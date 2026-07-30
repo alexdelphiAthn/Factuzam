@@ -120,7 +120,7 @@ implementation
 
 uses
   inLibValoresAutomaticos, inLibFormatoDocumento,
-  inLibMsgVentas;
+  inLibMsgCompras, inLibMsgVentas;
 
 {$R *.dfm}
 
@@ -152,9 +152,9 @@ end;
 procedure TfrmModalSelAlmacenPedido.FormShow(Sender: TObject);
 begin
   inherited;
-  lblPedido.Caption := 'Crear albarán desde pedido ' +
-    FormatearDocumentoEmpresa(ConexionPrincipal, CodigoEmpresa, SeriePedc,
-      NumPedc);
+  lblPedido.Caption := Format(SCaptionCrearAlbaranDesdePedidoCompra,
+    [FormatearDocumentoEmpresa(ConexionPrincipal, CodigoEmpresa, SeriePedc,
+      NumPedc)]);
   CargarAlmacenes;
   ConfigurarLookupTemporada;
   // Defaults. El combo de serie ofrece las series 'AB' de la empresa.

@@ -87,6 +87,13 @@ porque incorpora además una reducción concurrente de 106 casos en Compras.
 El inventario queda en
 `DESARROLLOS EN CURSO/inventario_sql_dominio_sql2_3b2.csv`.
 
+SQL-2.3c extrae las diez construcciones de `inLibTiraCajaTicket`, que se
+consolidan en siete operaciones. El techo baja a 331 casos en 66 unidades.
+SQL-2.3d extrae las catorce construcciones de `inLibGenerarTicketBD` y
+añade al contrato las dos lecturas ocultas del pie de ticket. El techo baja
+a 317 casos en 65 unidades y el inventario queda en
+`DESARROLLOS EN CURSO/inventario_sql_dominio_sql2_3d.csv`.
+
 Los veinte focos mayores suman 354 casos, un 67 % del total. No deben
 abordarse primero solo por tamaño: varios contienen materializaciones y
 escrituras de alto riesgo.
@@ -474,7 +481,23 @@ ni contiene SQL. El resumen por sección usa una consulta única con
 `:pNIVELES` y la comparten el formulario y el ticket. El detalle está en
 `DESARROLLOS EN CURSO/refactorizacion_fase_sql2_3b2_resultados.md`.
 
-SQL-2.3c debe continuar con las diez lecturas de `inLibTiraCajaTicket`.
+Estado de SQL-2.3c a 30/07/2026: implementación terminada.
+`IRepositorioTiraCajaTicket` abstrae cabecera, operaciones, series y
+detalles. Las diez construcciones anteriores convergen en siete consultas
+catalogadas porque impresión y Excel comparten los tres detalles y el read
+model maestro. `inLibTiraCajaTicket` ya no conoce UniDAC ni contiene SQL.
+El detalle está en
+`DESARROLLOS EN CURSO/refactorizacion_fase_sql2_3c_resultados.md`.
+
+Estado de SQL-2.3d a 30/07/2026: implementación terminada.
+`IRepositorioTicketsCaja` abstrae las reimpresiones, los resguardos de
+depósito y los recordatorios. Las catorce construcciones directas de
+`inLibGenerarTicketBD` pasan al repositorio, junto con la lectura del pie y
+su comprobación técnica de compatibilidad. La librería ya no conoce UniDAC
+ni contiene SQL. El detalle está en
+`DESARROLLOS EN CURSO/refactorizacion_fase_sql2_3d_resultados.md`.
+
+SQL-2.4 debe continuar con lecturas pequeñas de Facturas y exportaciones.
 Las escrituras de cierre y persistencia permanecen fuera de alcance.
 
 ### Fase SQL-3 — lecturas dentro de unidades mixtas
@@ -501,6 +524,34 @@ Criterio de salida:
 - ninguna lectura nueva se añade al legado;
 - las lecturas extraídas pueden probarse con repositorios falsos;
 - las escrituras restantes están inventariadas por transacción.
+
+Estado de SQL-3.1a a 30/07/2026: primera sub-tanda terminada.
+`IRepositorioLecturasComprasSesiones` separa el contrato de consulta del
+contrato mixto compatible. Seis construcciones de lectura salen de
+`UniDataComprasSesionesOperaciones` y el repositorio registra ocho
+operaciones con perfil y fallback contando las dos ya existentes. Las
+escrituras de edición, materialización y reversión están inventariadas en
+`DESARROLLOS EN CURSO/inventario_escrituras_sql3_compras_sesiones.md`.
+Quedan para SQL-3.1b las lecturas de kits y validación; los adaptadores
+internos de materialización se reservan para SQL-3.1c.
+
+Estado de SQL-3.1b a 30/07/2026: implementación terminada. Las dos
+lecturas de kits y las siete reglas SQL del validador detallado pasan al
+contrato y al repositorio de lecturas. El adaptador de operaciones conserva
+solo escrituras; sus `SELECT` restantes están anidados en sentencias de
+escritura. `RepositorioComprasSesiones` registra 17 lecturas con perfil y
+fallback. SQL-3.1c continuará con las lecturas internas de materialización
+y reversión.
+
+Estado de SQL-3.1c a 30/07/2026: implementación terminada. Las diecisiete
+construcciones de lectura de los adaptadores internos convergen en
+dieciséis operaciones de
+`RepositorioMaterializacionComprasSesiones`; `BuscarValorColor` se
+reutiliza después del alta. Artículos, documentos, estado, pedidos,
+albaranes y reversión conservan las escrituras, pero delegan todas las
+lecturas mediante `ILecturasMaterializacionComprasSesiones`. El catálogo
+alcanza 120 definiciones, de las que 116 admiten perfil con fallback.
+Las escrituras continúan inventariadas y fuera de perfiles.
 
 ### Fase SQL-4 — escrituras simples y acotadas
 

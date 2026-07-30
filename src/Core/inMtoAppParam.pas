@@ -93,6 +93,8 @@ type
     // Handlers de listas desplegables
     procedure GetImpresorasInformesList(Sender: TJvCustomInspectorItem;
                                         Strings: TStrings);
+    procedure GetIdiomasList(Sender: TJvCustomInspectorItem;
+                             Strings: TStrings);
     procedure GetTemasList(Sender: TJvCustomInspectorItem;
                            Strings: TStrings);
     procedure GetPaletasList(Sender: TJvCustomInspectorItem;
@@ -118,7 +120,7 @@ uses
    dxSkinsDefaultPainters, dxSkinsForm,
   FileCtrl, inLibPathTokens,               // SelectDirectory
    inLibLayoutForm, inLibVerifactu, inLibFactuzamApi,
-   inLibMsgConfiguracion;
+   inLibMsgConfiguracion, inLibTraduccionesIntf;
 
 procedure RegistrarCambioConfiguracionVerifactuSeguro(
   const AParametrosApp: IParametrosAplicacion;
@@ -256,6 +258,7 @@ var
   Param: TParamInfo;
   CatItem : TJvInspectorCustomCategoryItem;
   ItemCombo: TJvCustomInspectorItem;
+  DescripcionTraducida: string;
   pBool   : PBoolean;
   pInt    : PInteger;
   pStr    : PString;
@@ -271,7 +274,14 @@ begin
       // Categoría vacía = parámetro histórico cargado solo como respaldo.
       if Param.Categoria <> '' then
       begin
-        CatItem := ObtenerCategoria(Param.Categoria);
+        CatItem := ObtenerCategoria(
+          TraducirCategoriaParametro(
+            'inMtoAppParam',
+            Param.Categoria));
+        DescripcionTraducida :=
+          TraducirDescripcionParametro(
+            'inMtoAppParam',
+            Param);
         case Param.Tipo of
         tpBoolean:
           begin
@@ -281,7 +291,7 @@ begin
                       (Param.ValorPorDefecto = '1');
             with TJvInspectorVarData.New(CatItem, Param.Nombre,
                                          TypeInfo(Boolean), pBool) do
-              DisplayName := Param.Descripcion;
+              DisplayName := DescripcionTraducida;
           end;
 
         tpInteger:
@@ -291,7 +301,7 @@ begin
             pInt^ := StrToIntDef(Param.ValorPorDefecto, 0);
             with TJvInspectorVarData.New(CatItem, Param.Nombre,
                                          TypeInfo(Integer), pInt) do
-              DisplayName := Param.Descripcion;
+              DisplayName := DescripcionTraducida;
           end;
 
         tpString:
@@ -301,7 +311,7 @@ begin
             pStr^     := Param.ValorPorDefecto;
             ItemCombo := TJvInspectorVarData.New(CatItem, Param.Nombre,
                                                  TypeInfo(string), pStr);
-            ItemCombo.DisplayName := Param.Descripcion;
+            ItemCombo.DisplayName := DescripcionTraducida;
 
             if SameText(Param.Nombre, 'appImpresoraInformes') then
             begin
@@ -319,6 +329,11 @@ begin
               ItemCombo.Flags := ItemCombo.Flags +
                                  [iifValueList, iifAllowNonListValues];
               ItemCombo.OnGetValueList := GetPaletasList;
+            end
+            else if SameText(Param.Nombre, 'appIdioma') then
+            begin
+              ItemCombo.Flags := ItemCombo.Flags + [iifValueList];
+              ItemCombo.OnGetValueList := GetIdiomasList;
             end
             else if SameText(Param.Nombre, 'appTemporadaDefecto') then
             begin
@@ -390,6 +405,40 @@ begin
   Strings.Add('');
   for i := 0 to Printer.Printers.Count - 1 do
     Strings.Add(Printer.Printers[i]);
+end;
+
+procedure TfrmMtoAppParam.GetIdiomasList(
+  Sender: TJvCustomInspectorItem;
+  Strings: TStrings);
+var
+  Idioma: string;
+  qry: TUniQuery;
+begin
+  Strings.Clear;
+  Strings.Add(IDIOMA_ESPANOL);
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := ConexionPrincipal;
+    qry.SQL.Text :=
+      'SELECT DISTINCT IDIOMA_TRAD ' +
+      '  FROM fza_traducciones ' +
+      ' WHERE ESACTIVO_TRAD = ''S'' ' +
+      ' ORDER BY IDIOMA_TRAD';
+    qry.Open;
+    while not qry.Eof do
+    begin
+      Idioma := Trim(
+        qry.FieldByName('IDIOMA_TRAD').AsString);
+      if (Idioma <> '') and
+         (Strings.IndexOf(Idioma) < 0) then
+        Strings.Add(Idioma);
+      qry.Next;
+    end;
+  finally
+    FreeAndNil(qry);
+  end;
+  if Strings.IndexOf(IDIOMA_PSEUDO) < 0 then
+    Strings.Add(IDIOMA_PSEUDO);
 end;
 
 procedure TfrmMtoAppParam.GetTemasList(

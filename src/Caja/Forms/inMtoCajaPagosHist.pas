@@ -89,7 +89,7 @@ implementation
 uses
   inLibWin, inLibUser,
   inMtoModalGenImpSave, inMtoModalImpPagos, inLibFiltroUsuario,
-  inLibMsgCaja;
+  inLibMsgCaja, inLibMsgComun;
 
 {$R *.dfm}
 
@@ -122,7 +122,7 @@ begin
                  'SERIE_OPERACION_PAGO;NUMERO_OPERACION_PAGO;NUMERO_LINEA_PAGO';
   pnlContFiltrosCaja.Visible := False;
   pnlFiltrosCaja.Height := 22;
-  btnToggleFiltrosCaja.Caption := #9654'  Filtros de carga';
+  btnToggleFiltrosCaja.Caption := SCaptionFiltrosCargaContraido;
   CargarAnyosFiltro;
   LeerFiltrosPerfil;
   if Assigned(dmmCajaPagosHist) and
@@ -315,12 +315,12 @@ begin
   if pnlContFiltrosCaja.Visible then
   begin
     pnlFiltrosCaja.Height := ALTO_CABECERA + ALTO_CONTENIDO;
-    btnToggleFiltrosCaja.Caption := #9660'  Filtros de carga';
+    btnToggleFiltrosCaja.Caption := SCaptionFiltrosCargaExpandido;
   end
   else
   begin
     pnlFiltrosCaja.Height := ALTO_CABECERA;
-    btnToggleFiltrosCaja.Caption := #9654'  Filtros de carga';
+    btnToggleFiltrosCaja.Caption := SCaptionFiltrosCargaContraido;
   end;
 end;
 
@@ -395,7 +395,7 @@ begin
   end;
   pnlContFiltrosCaja.Visible := False;
   pnlFiltrosCaja.Height := 22;
-  btnToggleFiltrosCaja.Caption := #9654'  Filtros de carga';
+  btnToggleFiltrosCaja.Caption := SCaptionFiltrosCargaContraido;
   inherited;
 end;
 

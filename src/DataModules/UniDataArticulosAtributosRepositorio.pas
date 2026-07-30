@@ -15,7 +15,7 @@
 unit UniDataArticulosAtributosRepositorio;
 
 {
-  Unidad: inLibArticulosAtributosLookup
+  Unidad: inLibArticulosAtributosIntf
   Descripción:
     Devuelve, para un código de artículo, los atributos de variación
     (color/talla/temporada/...) y las propiedades estructuradas

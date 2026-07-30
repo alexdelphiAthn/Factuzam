@@ -45,7 +45,7 @@ implementation
 
 uses
   Vcl.CheckLst, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Controls, Vcl.Dialogs,
-  inLibLog, UniDataConn;
+  inLibLog, inLibMsgComun;
 
 // ============================================================================
 // Enriquecimiento de query con LEFT JOIN
@@ -237,7 +237,7 @@ begin
     Exit;
   frm := TForm.Create(AOwner);
   try
-    frm.Caption := 'Seleccionar columnas a incorporar';
+    frm.Caption := STituloSeleccionarColumnas;
     frm.Width := 420;
     frm.Height := 460;
     frm.Position := poMainFormCenter;
@@ -256,7 +256,7 @@ begin
       clb.Items.Add(ACamposNuevos[i]);
     btnOK := TButton.Create(pnl);
     btnOK.Parent := pnl;
-    btnOK.Caption := 'Aceptar';
+    btnOK.Caption := SCaptionAceptar;
     btnOK.ModalResult := mrOk;
     btnOK.Left := 160;
     btnOK.Top := 8;
@@ -264,7 +264,7 @@ begin
     btnOK.Height := 30;
     btnCancel := TButton.Create(pnl);
     btnCancel.Parent := pnl;
-    btnCancel.Caption := 'Cancelar';
+    btnCancel.Caption := SCaptionCancelar;
     btnCancel.ModalResult := mrCancel;
     btnCancel.Left := 290;
     btnCancel.Top := 8;

@@ -7,6 +7,10 @@ uses
   System.SysUtils,
   Datasnap.DBClient,
   MidasLib,
+  // Registro explicito del proveedor MySQL para las pruebas de
+  // conexiones: antes llegaba por arrastre de un uses retirado
+  // en la Fase 2b (inLibGridColumnChooser -> UniDataConn).
+  MySQLUniProvider,
   DUnitX.Loggers.Console,
   DUnitX.TestFramework,
   inLibAtributosPaleta in
@@ -88,12 +92,34 @@ uses
     '..\src\Lib\inLibCatalogoSqlEjecucion.pas',
   inLibComprasSesionesIntf in
     '..\src\Lib\inLibComprasSesionesIntf.pas',
+  inLibComprasSesionesCreacion in
+    '..\src\Lib\inLibComprasSesionesCreacion.pas',
+  inLibComprasSesionesMaterializacionIntf in
+    '..\src\Lib\inLibComprasSesionesMaterializacionIntf.pas',
   inLibComprasSesiones in
     '..\src\Lib\inLibComprasSesiones.pas',
   inLibComprasSesionesMaterializar in
     '..\src\Lib\inLibComprasSesionesMaterializar.pas',
   UniDataComprasSesionesRepositorio in
     '..\src\DataModules\UniDataComprasSesionesRepositorio.pas',
+  UniDataComprasSesionesUnidadTrabajo in
+    '..\src\DataModules\UniDataComprasSesionesUnidadTrabajo.pas',
+  UniDataVerifactuColaRepositorio in
+    '..\src\verifactu\UniDataVerifactuColaRepositorio.pas',
+  UniDataVerifactuColaProcesador in
+    '..\src\verifactu\UniDataVerifactuColaProcesador.pas',
+  UniDataVerifactuColaResultados in
+    '..\src\verifactu\UniDataVerifactuColaResultados.pas',
+  UniDataVerifactuColaOperaciones in
+    '..\src\verifactu\UniDataVerifactuColaOperaciones.pas',
+  UniDataAlbaranesCompraMovimientos in
+    '..\src\DataModules\UniDataAlbaranesCompraMovimientos.pas',
+  UniDataDevolucionesCompraMovimientos in
+    '..\src\DataModules\UniDataDevolucionesCompraMovimientos.pas',
+  UniDataPedidosCompraOperaciones in
+    '..\src\DataModules\UniDataPedidosCompraOperaciones.pas',
+  UniDataVentasWsJson in
+    '..\src\DataModules\UniDataVentasWsJson.pas',
   UniDataCatalogoSqlValidacion in
     '..\src\DataModules\UniDataCatalogoSqlValidacion.pas',
   UniDataFacturasRepositorio in
@@ -124,6 +150,14 @@ uses
     '..\src\Caja\Lib\inLibArqueoTicketIntf.pas',
   UniDataArqueoTicketRepositorio in
     '..\src\Caja\DataModules\UniDataArqueoTicketRepositorio.pas',
+  inLibTiraCajaTicketIntf in
+    '..\src\Caja\Lib\inLibTiraCajaTicketIntf.pas',
+  UniDataTiraCajaTicketRepositorio in
+    '..\src\Caja\DataModules\UniDataTiraCajaTicketRepositorio.pas',
+  inLibTicketsCajaIntf in
+    '..\src\Caja\Lib\inLibTicketsCajaIntf.pas',
+  UniDataTicketsCajaRepositorio in
+    '..\src\Caja\DataModules\UniDataTicketsCajaRepositorio.pas',
   UniDataCatalogoSqlAplicacion in
     '..\src\DataModules\UniDataCatalogoSqlAplicacion.pas',
   inLibPerfilesUsuarioValores in
@@ -134,6 +168,12 @@ uses
   inLibTraduccionesIntf in
     '..\src\Lib\inLibTraduccionesIntf.pas',
   inLibTraducciones in '..\src\Lib\inLibTraducciones.pas',
+  inLibPivoteVentaCalculo in
+    '..\src\Lib\inLibPivoteVentaCalculo.pas',
+  inLibPivoteVentaIntf in
+    '..\src\Lib\inLibPivoteVentaIntf.pas',
+  inLibPivoteVentaModelo in
+    '..\src\Lib\inLibPivoteVentaModelo.pas',
   PruebasAtributosPaleta in 'PruebasAtributosPaleta.pas',
   PruebasColumnasDocumento in 'PruebasColumnasDocumento.pas',
   PruebasFiltroUsuario in 'PruebasFiltroUsuario.pas',
@@ -169,10 +209,18 @@ uses
     'PruebasArqueoCatalogo.pas',
   PruebasArqueoTicketCatalogo in
     'PruebasArqueoTicketCatalogo.pas',
+  PruebasTiraCajaTicketCatalogo in
+    'PruebasTiraCajaTicketCatalogo.pas',
+  PruebasTicketsCajaCatalogo in
+    'PruebasTicketsCajaCatalogo.pas',
   DoblesComprasSesiones in
     'DoblesComprasSesiones.pas',
   PruebasComprasSesionesRepositorio in
     'PruebasComprasSesionesRepositorio.pas',
+  PruebasComprasSesionesCreacion in
+    'PruebasComprasSesionesCreacion.pas',
+  DoblesPivoteVenta in 'DoblesPivoteVenta.pas',
+  PruebasPivoteVenta in 'PruebasPivoteVenta.pas',
   PruebasValidacionTallasCompra in
     'PruebasValidacionTallasCompra.pas',
   PruebasPresentacionDocumento in
@@ -189,6 +237,14 @@ uses
   PruebasExcepcionesAplicacion in
     'PruebasExcepcionesAplicacion.pas',
   PruebasEmisionFiscal in 'PruebasEmisionFiscal.pas',
+  PruebasAlbaranesCompraMovimientos in
+    'PruebasAlbaranesCompraMovimientos.pas',
+  PruebasDevolucionesCompraMovimientos in
+    'PruebasDevolucionesCompraMovimientos.pas',
+  PruebasPedidosCompra in 'PruebasPedidosCompra.pas',
+  PruebasVentasWsJson in 'PruebasVentasWsJson.pas',
+  PruebasVerifactuColaRepositorio in
+    'PruebasVerifactuColaRepositorio.pas',
   PruebasJsonSeguro in 'PruebasJsonSeguro.pas',
   PruebasTraducciones in 'PruebasTraducciones.pas';
 

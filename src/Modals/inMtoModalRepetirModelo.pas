@@ -64,6 +64,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsgCompras;
+
 procedure TfrmModalRepetirModelo.FormCreate(Sender: TObject);
 begin
   inherited;
@@ -82,7 +85,7 @@ procedure TfrmModalRepetirModelo.PrepararMensaje(const AModelo: string;
   ALineaOrigen: Integer);
 begin
   lblMensaje.Caption := Format(
-    'El modelo %s ya está en la línea %d de esta sesión. ¿Qué quieres hacer?',
+    SCaptionModeloYaEnLinea,
     [AModelo, ALineaOrigen]);
 end;
 

@@ -28,14 +28,14 @@ unit UniDataArticulosResolverRepositorio;
       • Precio medio ponderado (PMP) por almacén o ponderado entre todos.
 
     El parseo de la entrada del usuario (artículo / SKU / código de barras /
-    modelo de proveedor) se hace en `inLibArticulosValidador`. Las opciones
-    de atributos y propiedades en `inLibArticulosAtributosLookup`. Esta unit
+    modelo de proveedor) se hace en `inLibArticulosValidadorIntf`. Las opciones
+    de atributos y propiedades en `inLibArticulosAtributosIntf`. Esta unit
     sólo trabaja con códigos ya canónicos.
 
   Política sobre artículos con SKUs:
     • Si el artículo tiene >1 SKU activo y el llamante no pasa SKU,
       `ResolverDatos` devuelve Encontrado=False y Mensaje pidiendo SKU. El
-      llamante debe seleccionarlo (apoyándose en `inLibArticulosAtributosLookup`
+      llamante debe seleccionarlo (apoyándose en `inLibArticulosAtributosIntf`
       para mostrar talla/color) y volver a llamar.
     • Si el artículo tiene 1 sólo SKU activo (servicios y artículos sin
       variación: SKU autocreado con el mismo código del artículo), se

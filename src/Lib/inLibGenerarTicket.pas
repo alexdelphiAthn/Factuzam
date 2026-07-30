@@ -31,7 +31,8 @@ uses
                             NombreImpresora:string = 'DEBUG';
                             ASinPrecios: Boolean = False;
                             AFechaOperacion: TDateTime = 0;
-                            ARutasPDF: TStrings = nil);
+                            ARutasPDF: TStrings = nil;
+                            AImprimirCodigoBarras: Boolean = False);
 
   // Diminutivo de ticket del empleado (fza_empleados) a partir de su
   // codigo. Si no se resuelve, devuelve el propio codigo recibido.
@@ -163,6 +164,48 @@ begin
   end;
 end;
 
+// EAN-13 del ticket desde fza_facturas ('' si la factura no lo tiene o
+// si la columna aún no existe: script codigo_barras_ticket.sql sin
+// aplicar).
+function ObtenerCodigoBarrasTicketBD(AConexion: TUniConnection;
+  const ASerie, ANumero: string): string;
+var
+  qry: TUniQuery;
+begin
+  Result := '';
+  if (Trim(ASerie) <> '') and (Trim(ANumero) <> '') then
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := AConexion;
+      qry.SQL.Text :=
+        'SELECT COUNT(*) AS N ' +
+        '  FROM INFORMATION_SCHEMA.COLUMNS ' +
+        ' WHERE TABLE_SCHEMA = DATABASE() ' +
+        '   AND TABLE_NAME = ''fza_facturas'' ' +
+        '   AND COLUMN_NAME = ''CODIGO_BARRAS_FAC''';
+      qry.Open;
+      if qry.FieldByName('N').AsInteger > 0 then
+      begin
+        qry.Close;
+        qry.SQL.Text :=
+          'SELECT CODIGO_BARRAS_FAC ' +
+          '  FROM fza_facturas ' +
+          ' WHERE SERIE_FAC = :SERIE ' +
+          '   AND NUMERO_FAC = :NUMERO';
+        qry.ParamByName('SERIE').AsString := ASerie;
+        qry.ParamByName('NUMERO').AsString := ANumero;
+        qry.Open;
+        if not qry.IsEmpty then
+          Result := Trim(
+            qry.FieldByName('CODIGO_BARRAS_FAC').AsString);
+      end;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
+end;
+
 procedure ImprimirT(const AParametrosApp: IParametrosAplicacion;
                     AConexion: TUniConnection;
                     const ACodigoEmpresa,
@@ -173,13 +216,15 @@ procedure ImprimirT(const AParametrosApp: IParametrosAplicacion;
                           NombreImpresora:string = 'DEBUG';
                           ASinPrecios: Boolean = False;
                           AFechaOperacion: TDateTime = 0;
-                          ARutasPDF: TStrings = nil);
+                          ARutasPDF: TStrings = nil;
+                          AImprimirCodigoBarras: Boolean = False);
 var
   Ticket: TTicketTermico;
   Cab: TDatosCabeceraFactura;
   dLin: TDataSet;
   QRTexto: string;
   ComandosESC, RutaFicheroPDF: string;
+  sCodigoBarras: string;
   sDocumento: string;
   dtFechaOperacion: TDateTime;
 
@@ -386,6 +431,23 @@ begin
       Ticket.EscribirLinea('IVA INCLUIDO');
     Ticket.EscribirLinea('GRACIAS POR SU VISITA');
     EscribirPieTicketCaja(AConexion, Ticket, ACodigoEmpresa);
+    // Código de barras EAN-13 del ticket (parámetro de caja): permite
+    // localizar el ticket al escanearlo en devoluciones (F4). También
+    // en el ticket regalo, que sirve para cambios y devoluciones.
+    if AImprimirCodigoBarras then
+    begin
+      sCodigoBarras := ObtenerCodigoBarrasTicketBD(
+        AConexion,
+        DatosCobro.TotalesFactura.Cabecera.FieldByName(
+          'SERIE_FAC').AsString,
+        DatosCobro.TotalesFactura.Cabecera.FieldByName(
+          'NUMERO_FAC').AsString);
+      if sCodigoBarras <> '' then
+      begin
+        Ticket.SaltarLineas(1);
+        Ticket.ImprimirEAN13Nativo(sCodigoBarras);
+      end;
+    end;
     Ticket.SaltarLineas(1);
     Ticket.EscribirLinea('');
     Ticket.SaltarLineas(3);

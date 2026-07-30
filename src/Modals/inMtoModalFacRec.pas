@@ -78,8 +78,10 @@ uses
 
   inLibUser,
   inLibVerifactuCola,
+  inLibVerifactuColaIntf,
   inLibEmisionFiscalIntf,
-  inLibEmisionFiscal;
+  inLibEmisionFiscal,
+  UniDataVerifactuColaRepositorio;
 
 {$R *.dfm}
 
@@ -93,6 +95,7 @@ var
   SavedCursor : TCursor;
   IsError : Boolean;
   Servicio: IServicioEmisionFiscal;
+  ServicioCola: IServicioVerifactuCola;
 begin
   IsError := False;
   if not Assigned(dmFac) then
@@ -127,12 +130,15 @@ begin
              edtNumFacAbono.Text := ParamByName('pidnumfacturaabono').AsString;
              // Rectificativa Verifactu: marcar tipo, enlazar con la
              // original y encolar el registro R1/R5
+             ServicioCola := CrearServicioVerifactuColaUniDAC(
+               ConexionPrincipal);
              Servicio := CrearServicioEmisionFiscal(
                ParametrosApp,
                ParametrosCaja,
-               ConexionPrincipal);
+               ConexionPrincipal,
+               ServicioCola);
              TVerifactuCola.EncolarRectificativa(ParametrosApp,
-               ParametrosCaja, ConexionPrincipal, Servicio,
+               ParametrosCaja, ServicioCola, Servicio,
                IdentidadSesion.Usuario,
                edtSerieOrigen.Text, edtNumFacOrigen.Text,
                edtSerieFacAbono.Text, edtNumFacAbono.Text, 'I');

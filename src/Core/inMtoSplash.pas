@@ -49,7 +49,7 @@ implementation
 
 uses
   inLibGlobalVar, inLibDir, inLibLog, inLibImagen,
-  inLibTraducciones;
+  inLibTraducciones, inLibMsgComun;
 
 {$R *.dfm}
 
@@ -181,7 +181,7 @@ begin
   // splash y about.
   FlblVersion := TcxLabel.Create(Self);
   FlblVersion.Parent  := Panel1;
-  FlblVersion.Caption := 'Versión ' + oVersion;
+  FlblVersion.Caption := Format(SCaptionVersion, [oVersion]);
   FlblVersion.AutoSize := False;
   FlblVersion.SetBounds(0, 316, Panel1.Width, 18);
   FlblVersion.Properties.Alignment.Horz := taCenter;

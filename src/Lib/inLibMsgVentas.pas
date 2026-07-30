@@ -388,6 +388,45 @@ resourcestring
     'Hay mandatos SEPA de más de 35 caracteres.';
   SErrorClientesSinFechaFirmaMandatoSepa =
     'Hay clientes sin fecha de firma del mandato SEPA.';
+  // R04 - Documentos de trabajo
+  STituloImpresionEtiquetasDTR =
+    'Impresion de Etiquetas de Documento de Trabajo';
+  // R07 - Pedidos de venta
+  SCaptionTabLineasPedidoTallas3Filas =
+    '&1_Líneas [Tallas horiz. 3 filas]';
+  SCaptionTabTotalesPedido = '&2_Totales';
+  SCaptionTabLineasPedidoSku = '&1_Líneas [SKU]';
+  SCaptionTabLineasPedidoDesglose = '&1_Líneas [Desglose]';
+  SCaptionLineasAnadidasAlbaranPedido =
+    'Lineas anadidas al albaran desde el pedido %s/%s';
+  SCaptionAlbaranCreadoPedido =
+    'Albaran creado desde el pedido %s/%s';
+  // R08 - Remesas de venta
+  SCaptionCrearRemesa = 'Crear remesa';
+  // R09 - Modales de venta y documentos de trabajo
+  SCaptionDocumentoDestino = 'Documento destino: %d - %s';
+  STituloAnadirBloqueDTR = 'Anadir Bloque - Documento de Trabajo';
+  SCaptionBuscandoAlbaranes = 'Buscando albaranes...';
+  SCaptionAlbaranesEncontrados = 'Albaranes encontrados: %d';
+  STituloBusquedaClientes = 'Búsqueda de Clientes';
+  // R10 - Informes y listados de ventas
+  SCaptionFiltrarInicioCompras = 'Filtrar por inicio de compras';
+  SCaptionSoloArticulosConVentas = 'Solo artículos con ventas';
+  SCaptionSoloEmitidas = 'Solo emitidas';
+  SCaptionLineasCargadas = '%d líneas cargadas';
+  SCaptionPrimeraVentaVacia = 'Primera venta: -';
+  SCaptionUltimaVentaVacia = 'Última venta: -';
+  SCaptionPrimeraVenta = 'Primera venta: %s';
+  SCaptionUltimaVenta = 'Última venta: %s';
+  // R11 - Modales de venta: almacén y SEPA
+  SCaptionCrearAlbaranDesdePedido = 'Crear albarán desde pedido %s';
+  SCaptionCodigoAcreedor = 'Código acreedor';
+  SCaptionSecuencia = 'Secuencia';
+  SCaptionMandatosPorCliente = 'Mandatos por cliente';
+  SCaptionColCodigoMandato = 'Código';
+  SCaptionColClienteMandato = 'Cliente';
+  SCaptionColMandato = 'Mandato';
+  SCaptionColFechaFirmaMandato = 'Fecha firma';
 implementation
 
 end.

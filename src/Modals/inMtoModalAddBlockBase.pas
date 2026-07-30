@@ -771,7 +771,7 @@ begin
   for i := 0 to chkLstAlmacenes.Items.Count - 1 do
     chkLstAlmacenes.Items[i].Checked := False;
   if FSqlPreview.Active then FSqlPreview.Close;
-  lblPreviewInfo.Caption := '0 articulos';
+  lblPreviewInfo.Caption := SCaptionCeroArticulos;
   ActualizarContadores;
 end;
 
@@ -779,24 +779,25 @@ procedure TfrmModalAddBlockBase.ActualizarContadores;
 var
   i, n: Integer;
 begin
-  lblSelFamilias.Caption :=
-    Format('(%d sel.)', [Length(RecogerCodigosFamiliaSeleccionados)]);
-  lblSelProveedores.Caption :=
-    Format('(%d sel.)', [Length(RecogerCodigosProveedoresSeleccionados)]);
-  lblSelPropiedades.Caption :=
-    Format('(%d sel.)', [Length(RecogerIdsValorPropiedadSeleccionados)]);
+  lblSelFamilias.Caption := Format(SCaptionNumSeleccionados,
+    [Length(RecogerCodigosFamiliaSeleccionados)]);
+  lblSelProveedores.Caption := Format(SCaptionNumSeleccionados,
+    [Length(RecogerCodigosProveedoresSeleccionados)]);
+  lblSelPropiedades.Caption := Format(SCaptionNumSeleccionados,
+    [Length(RecogerIdsValorPropiedadSeleccionados)]);
 
   n := 0;
   for i := 0 to chkLstAlmacenes.Items.Count - 1 do
     if chkLstAlmacenes.Items[i].Checked then Inc(n);
-  lblSelAlmacenes.Caption := Format('(%d sel.)', [n]);
+  lblSelAlmacenes.Caption := Format(SCaptionNumSeleccionados, [n]);
 
   if chkSoloConStock.Checked then
   begin
     if n = 0 then
-      lblStockAviso.Caption := 'No hay almacenes seleccionados'
+      lblStockAviso.Caption := SCaptionSinAlmacenesSeleccionados
     else
-      lblStockAviso.Caption := Format('%d almacen(es) seleccionados', [n]);
+      lblStockAviso.Caption :=
+        Format(SCaptionAlmacenesSeleccionados, [n]);
   end
   else
     lblStockAviso.Caption := '';
@@ -1228,7 +1229,8 @@ begin
     ConfigurarPreviewExtra;
 
     lblPreviewInfo.Caption :=
-      Format('%d articulos coinciden con el filtro', [FSqlPreview.RecordCount]);
+      Format(SCaptionArticulosCoincidenFiltro,
+             [FSqlPreview.RecordCount]);
   finally
     Screen.Cursor := crDefault;
   end;

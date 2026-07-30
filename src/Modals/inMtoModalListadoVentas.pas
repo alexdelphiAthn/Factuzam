@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoModalListadoVentas                                       }
 {    Tipo:       Formulario (Modal)                                            }
@@ -95,7 +95,8 @@ implementation
 
 uses
   System.Diagnostics, inLibDevExp, inLibFotos, inLibLog,
-  inLibDocumentosTrabajo, inMtoFotoArticulo, inLibRectificativas;
+  inLibDocumentosTrabajo, inMtoFotoArticulo, inLibRectificativas,
+  inLibMsgComun, inLibMsgVentas;
 
 {$R *.dfm}
 
@@ -150,7 +151,7 @@ begin
   btnExcel.Top := 8;
   btnExcel.Width := 130;
   btnExcel.Height := 30;
-  btnExcel.Caption := 'Exportar Excel';
+  btnExcel.Caption := SCaptionExportarExcel;
   btnExcel.Anchors := [akTop, akRight];
   btnExcel.OnClick := btnExcelClick;
   btnSalir := TcxButton.Create(Self);
@@ -159,7 +160,7 @@ begin
   btnSalir.Top := 8;
   btnSalir.Width := 130;
   btnSalir.Height := 30;
-  btnSalir.Caption := 'Salir';
+  btnSalir.Caption := SCaptionSalir;
   btnSalir.Anchors := [akTop, akRight];
   btnSalir.OnClick := btnSalirClick;
 end;
@@ -175,7 +176,7 @@ begin
   lblDesde.Parent := pnlFiltros;
   lblDesde.Left := 12;
   lblDesde.Top := 10;
-  lblDesde.Caption := 'Desde';
+  lblDesde.Caption := SCaptionDesde;
   lblDesde.Transparent := True;
   dteDesde := TcxDateEdit.Create(Self);
   dteDesde.Parent := pnlFiltros;
@@ -187,7 +188,7 @@ begin
   lblHasta.Parent := pnlFiltros;
   lblHasta.Left := 136;
   lblHasta.Top := 10;
-  lblHasta.Caption := 'Hasta';
+  lblHasta.Caption := SCaptionHasta;
   lblHasta.Transparent := True;
   dteHasta := TcxDateEdit.Create(Self);
   dteHasta.Parent := pnlFiltros;
@@ -199,7 +200,7 @@ begin
   lblFamilia.Parent := pnlFiltros;
   lblFamilia.Left := 268;
   lblFamilia.Top := 10;
-  lblFamilia.Caption := 'Familia';
+  lblFamilia.Caption := SCaptionFamilia;
   lblFamilia.Transparent := True;
   cbbFamilia := TcxComboBox.Create(Self);
   cbbFamilia.Parent := pnlFiltros;
@@ -211,7 +212,7 @@ begin
   lblProveedor.Parent := pnlFiltros;
   lblProveedor.Left := 500;
   lblProveedor.Top := 10;
-  lblProveedor.Caption := 'Proveedor';
+  lblProveedor.Caption := SCaptionProveedor;
   lblProveedor.Transparent := True;
   cbbProveedor := TcxComboBox.Create(Self);
   cbbProveedor.Parent := pnlFiltros;
@@ -223,7 +224,7 @@ begin
   lblTemporada.Parent := pnlFiltros;
   lblTemporada.Left := 762;
   lblTemporada.Top := 10;
-  lblTemporada.Caption := 'Temporada';
+  lblTemporada.Caption := SCaptionTemporada;
   lblTemporada.Transparent := True;
   cbbTemporada := TcxComboBox.Create(Self);
   cbbTemporada.Parent := pnlFiltros;
@@ -236,7 +237,7 @@ begin
   chkSoloConsolidadas.Left := 944;
   chkSoloConsolidadas.Top := 32;
   chkSoloConsolidadas.Width := 130;
-  chkSoloConsolidadas.Caption := 'Solo emitidas';
+  chkSoloConsolidadas.Caption := SCaptionSoloEmitidas;
   chkSoloConsolidadas.Checked := True;
   btnBuscar := TcxButton.Create(Self);
   btnBuscar.Parent := pnlFiltros;
@@ -244,7 +245,7 @@ begin
   btnBuscar.Top := 30;
   btnBuscar.Width := 82;
   btnBuscar.Height := 28;
-  btnBuscar.Caption := 'Buscar';
+  btnBuscar.Caption := SCaptionBuscar;
   btnBuscar.Anchors := [akTop, akRight];
   btnBuscar.OnClick := btnBuscarClick;
 end;
@@ -276,7 +277,7 @@ begin
   pmVentas := TPopupMenu.Create(Self);
   pmVentas.OnPopup := pmVentasPopup;
   miAgregarDocumento := TMenuItem.Create(pmVentas);
-  miAgregarDocumento.Caption := 'Añadir a Documento de Trabajo...';
+  miAgregarDocumento.Caption := SCaptionAnadirDocumentoTrabajo;
   miAgregarDocumento.OnClick := miAgregarDocumentoClick;
   pmVentas.Items.Add(miAgregarDocumento);
   cxgrdVentas.PopupMenu := pmVentas;
@@ -469,10 +470,10 @@ var
   dPrimeraVenta: TDateTime;
   dUltimaVenta: TDateTime;
 begin
-  lblInfo.Caption := Format('%d líneas cargadas',
+  lblInfo.Caption := Format(SCaptionLineasCargadas,
                             [unqryVentas.RecordCount]);
-  lblPrimeraVenta.Caption := 'Primera venta: -';
-  lblUltimaVenta.Caption := 'Última venta: -';
+  lblPrimeraVenta.Caption := SCaptionPrimeraVentaVacia;
+  lblUltimaVenta.Caption := SCaptionUltimaVentaVacia;
   if not unqryVentas.IsEmpty then
   begin
     unqryVentas.DisableControls;
@@ -485,10 +486,10 @@ begin
     finally
       unqryVentas.EnableControls;
     end;
-    lblPrimeraVenta.Caption := 'Primera venta: ' +
-      FormatDateTime('dd/mm/yyyy', dPrimeraVenta);
-    lblUltimaVenta.Caption := 'Última venta: ' +
-      FormatDateTime('dd/mm/yyyy', dUltimaVenta);
+    lblPrimeraVenta.Caption := Format(SCaptionPrimeraVenta,
+      [FormatDateTime('dd/mm/yyyy', dPrimeraVenta)]);
+    lblUltimaVenta.Caption := Format(SCaptionUltimaVenta,
+      [FormatDateTime('dd/mm/yyyy', dUltimaVenta)]);
   end;
 end;
 

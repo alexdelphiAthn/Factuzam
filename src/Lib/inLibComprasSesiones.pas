@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibComprasSesiones                                          }
 {    Tipo:       Librería                                                      }
@@ -17,15 +17,25 @@ interface
 
 uses
   System.Classes,
-  inLibComprasSesionesIntf;
+  inLibComprasSesionesIntf,
+  inLibComprasSesionesMaterializacionIntf,
+  inLibComprasSesionesMaterializar;
 
 type
   TServicioComprasSesiones = class
   private
     FRepositorio: IRepositorioComprasSesiones;
+    FMaterializador: TMaterializadorComprasSesiones;
+    FRevertidor: TRevertidorComprasSesiones;
   public
     constructor Create(
-      const ARepositorio: IRepositorioComprasSesiones);
+      const ARepositorio: IRepositorioComprasSesiones;
+      const APersistenciaMaterializacion:
+        IPersistenciaMaterializacionComprasSesiones;
+      const APersistenciaReversion:
+        IPersistenciaReversionComprasSesiones;
+      const AUnidadTrabajo: IUnidadTrabajoMaterializacion);
+    destructor Destroy; override;
     procedure AplicarDuplicadoEnLinea(
       const AResultado: TResolverDuplicadoSesion);
     procedure BorrarCeldasLinea(
@@ -39,6 +49,12 @@ type
       ALinea: Integer): TCantidadesPivotSesion;
     function ConsultarCodigosBasicosActivos(
       const AIdVariacion: string): TArray<string>;
+    function ConsultarKitProveedor(
+      const ACodigoProveedor, ACodigoKit: string;
+      AIdAcLinea: Integer): TKitProveedorSesion;
+    function ConsultarDetallesKitProveedor(
+      const ACodigoProveedor, ACodigoKit: string):
+      TDetallesKitProveedorSesion;
     function ObtenerSiguienteLinea(
       const ASerie, ANumero: string;
       ALineaActual: Integer): Integer;
@@ -78,12 +94,30 @@ uses
   System.Math, System.SysUtils;
 
 constructor TServicioComprasSesiones.Create(
-  const ARepositorio: IRepositorioComprasSesiones);
+  const ARepositorio: IRepositorioComprasSesiones;
+  const APersistenciaMaterializacion:
+    IPersistenciaMaterializacionComprasSesiones;
+  const APersistenciaReversion:
+    IPersistenciaReversionComprasSesiones;
+  const AUnidadTrabajo: IUnidadTrabajoMaterializacion);
 begin
   inherited Create;
   if not Assigned(ARepositorio) then
     raise EArgumentNilException.Create('ARepositorio');
   FRepositorio := ARepositorio;
+  FMaterializador := TMaterializadorComprasSesiones.Create(
+    APersistenciaMaterializacion,
+    AUnidadTrabajo);
+  FRevertidor := TRevertidorComprasSesiones.Create(
+    APersistenciaReversion,
+    AUnidadTrabajo);
+end;
+
+destructor TServicioComprasSesiones.Destroy;
+begin
+  FreeAndNil(FRevertidor);
+  FreeAndNil(FMaterializador);
+  inherited Destroy;
 end;
 
 procedure TServicioComprasSesiones.AplicarDuplicadoEnLinea(
@@ -130,6 +164,26 @@ function TServicioComprasSesiones.ConsultarCodigosBasicosActivos(
 begin
   Result := FRepositorio.ConsultarCodigosBasicosActivos(
     Trim(AIdVariacion));
+end;
+
+function TServicioComprasSesiones.ConsultarKitProveedor(
+  const ACodigoProveedor, ACodigoKit: string;
+  AIdAcLinea: Integer): TKitProveedorSesion;
+begin
+  Result := FRepositorio.ConsultarKitProveedor(
+    Trim(ACodigoProveedor),
+    Trim(ACodigoKit),
+    AIdAcLinea);
+end;
+
+function TServicioComprasSesiones.
+  ConsultarDetallesKitProveedor(
+  const ACodigoProveedor, ACodigoKit: string):
+  TDetallesKitProveedorSesion;
+begin
+  Result := FRepositorio.ConsultarDetallesKitProveedor(
+    Trim(ACodigoProveedor),
+    Trim(ACodigoKit));
 end;
 
 function TServicioComprasSesiones.ObtenerSiguienteLinea(
@@ -214,7 +268,7 @@ function TServicioComprasSesiones.EjecutarMaterializacion(
   const AParametros: TParametrosMaterializacionSesion;
   out AResultado: TResultadoMaterializacionSesion): Boolean;
 begin
-  Result := FRepositorio.EjecutarMaterializacion(
+  Result := FMaterializador.Ejecutar(
     AParametros,
     AResultado);
 end;
@@ -223,7 +277,7 @@ function TServicioComprasSesiones.RevertirMaterializacion(
   const AUsuario: string;
   out AMensajeError: string): Boolean;
 begin
-  Result := FRepositorio.RevertirMaterializacion(
+  Result := FRevertidor.Ejecutar(
     Trim(AUsuario),
     AMensajeError);
 end;

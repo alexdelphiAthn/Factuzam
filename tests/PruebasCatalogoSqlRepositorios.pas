@@ -27,6 +27,10 @@ type
     [Test]
     procedure Caja_RegistraLecturasIncluidoProcedimiento;
     [Test]
+    procedure ComprasSesiones_RegistraDiecisieteLecturas;
+    [Test]
+    procedure MaterializacionCompras_RegistraDieciseisLecturas;
+    [Test]
     procedure Facturas_PerfilSinCampoObligatorioVuelveBase;
     [Test]
     procedure Caja_PerfilConAliasIncompletosVuelveBase;
@@ -49,7 +53,9 @@ uses
   UniDataCatalogoSqlValidacion,
   UniDataCatalogoSqlAplicacion,
   UniDataFacturasRepositorio,
-  UniDataCajaConsultasRepositorio;
+  UniDataCajaConsultasRepositorio,
+  UniDataComprasSesionesMaterializacionRepositorio,
+  UniDataComprasSesionesRepositorio;
 
 function BuscarDefinicion(
   const ADefiniciones: TDefinicionesSql;
@@ -161,6 +167,57 @@ begin
       Inc(iProcedimientos);
   end;
   Assert.AreEqual(1, iProcedimientos);
+end;
+
+procedure TPruebasCatalogoSqlRepositorios.
+  ComprasSesiones_RegistraDiecisieteLecturas;
+var
+  iIndice: Integer;
+  oDefiniciones: TDefinicionesSql;
+  oValidacion: TResultadoValidacionSql;
+begin
+  oDefiniciones :=
+    TRepositorioComprasSesiones.DefinicionesSql;
+  Assert.AreEqual(
+    17,
+    Integer(Length(oDefiniciones)));
+  for iIndice := 0 to High(oDefiniciones) do
+  begin
+    oValidacion := ValidarDefinicionSql(
+      oDefiniciones[iIndice]);
+    Assert.IsTrue(
+      oValidacion.EsValido,
+      oValidacion.Mensaje);
+    Assert.AreEqual(
+      Ord(pesPerfilLecturaConFallback),
+      Ord(oDefiniciones[iIndice].Politica));
+  end;
+end;
+
+procedure TPruebasCatalogoSqlRepositorios.
+  MaterializacionCompras_RegistraDieciseisLecturas;
+var
+  iIndice: Integer;
+  oDefiniciones: TDefinicionesSql;
+  oValidacion: TResultadoValidacionSql;
+begin
+  oDefiniciones :=
+    TRepositorioLecturasMaterializacionComprasSesiones.
+      DefinicionesSql;
+  Assert.AreEqual(
+    16,
+    Integer(Length(oDefiniciones)));
+  for iIndice := 0 to High(oDefiniciones) do
+  begin
+    oValidacion := ValidarDefinicionSql(
+      oDefiniciones[iIndice]);
+    Assert.IsTrue(
+      oValidacion.EsValido,
+      oValidacion.Mensaje);
+    Assert.AreEqual(
+      Ord(pesPerfilLecturaConFallback),
+      Ord(oDefiniciones[iIndice].Politica));
+  end;
 end;
 
 procedure TPruebasCatalogoSqlRepositorios.
@@ -285,7 +342,7 @@ begin
   oRegistro :=
     CrearRegistroDefinicionesSqlAplicacion;
   Assert.AreEqual(
-    66,
+    120,
     oRegistro.Cantidad);
   oDefinicion := BuscarDefinicion(
     TRepositorioConsultasCaja.DefinicionesSql,

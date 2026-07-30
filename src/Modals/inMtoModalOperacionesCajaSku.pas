@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalOperacionesCajaSku                                  }
 {    Tipo:       Formulario (Modal)                                            }
@@ -263,11 +263,12 @@ begin
   end;
   if iOperaciones = 1 then
   begin
-    lblResultado.Caption := '1 operación';
+    lblResultado.Caption := SCaptionUnaOperacion;
   end
   else
   begin
-    lblResultado.Caption := Format('%d operaciones', [iOperaciones]);
+    lblResultado.Caption := Format(SCaptionNumOperaciones,
+                                   [iOperaciones]);
   end;
 end;
 

@@ -56,7 +56,7 @@ implementation
 
 uses
   System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.ComCtrls,
-  Vcl.Graphics, inLibLog;
+  Vcl.Graphics, inLibLog, inLibMsgComun;
 
 type
   IEstadoTareasMto = interface
@@ -155,8 +155,7 @@ begin
   oTexto.Anchors := [akLeft, akTop, akRight];
   oTexto.Alignment := taCenter;
   oTexto.Layout := tlCenter;
-  oTexto.Caption :=
-    'Cargando datos, espera por favor...';
+  oTexto.Caption := SCaptionCargandoDatosEspere;
   oTexto.Font.Style := [fsBold];
   oTexto.Font.Size := 11;
   oTexto.Font.Color := clNavy;

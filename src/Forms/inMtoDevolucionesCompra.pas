@@ -311,9 +311,10 @@ uses
   System.StrUtils,
   inLibFiltroUsuario,
   inLibArticulosResolverIntf,
-  inLibArticulosValidador,
+  inLibArticulosValidadorIntf,
+  UniDataArticulosValidadorRepositorio,
   inLibGridCantidad,
-  inLibColumnasDocumento,
+  inLibColumnasDocumento, UniDataGen,
   inLibBusquedasCompra,
   inLibValidacionDocumento,
   inLibPresentacionDocumento,
@@ -327,7 +328,9 @@ uses
   inMtoModalEtiqDev, inLibShowMto, inLibGenBusq,
   inLibValoresAutomaticos,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
-  inLibColumnasSku;
+  inLibColumnasSku,
+  // Composicion del puerto de persistencia del pivote (V2).
+  UniDataPivoteVenta;
 
 {$R *.dfm}
 
@@ -1867,6 +1870,8 @@ begin
     CfgPV.BandaUnica := True;
     // La columna Total del host pasa a UNIDADES del grupo en pivote.
     CfgPV.FieldTotalUdsGrupo := 'TOTAL_DEVCLIN';
+    CfgPV.Repositorio :=
+      CrearRepositorioPivoteVenta(CfgPV.Conexion, CfgPV.Usuario);
     CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
     CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
     FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);

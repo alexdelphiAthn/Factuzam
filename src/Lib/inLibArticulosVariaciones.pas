@@ -127,7 +127,7 @@ function ArticuloTieneSkuActivo(
 implementation
 
 uses
-  System.StrUtils;
+  System.StrUtils, inLibMsgArticulos;
 
 const
   ALTO_FILA     = 26;
@@ -481,8 +481,8 @@ begin
   lbl.Parent  := FPanelAtributos;
   lbl.Left    := MARGEN_H;
   lbl.Top     := MARGEN_V;
-  lbl.Caption := 'Tipo de variación: ' + FTipoVariacion + ' — ' +
-                                                               FNombreVariacion;
+  lbl.Caption := Format(SCaptionTipoVariacionDetalle,
+                        [FTipoVariacion, FNombreVariacion]);
   lbl.Style.Font.Style := [fsBold];
   lbl.Transparent := True;
   //lbl.AutoSize := True;

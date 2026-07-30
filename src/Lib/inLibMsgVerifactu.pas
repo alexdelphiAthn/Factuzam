@@ -320,6 +320,22 @@ resourcestring
     'Número de instalación SIF disponible: ';
   SErrorGenerarNumeroInstalacionSif =
     'No se pudo generar el número de instalación SIF:' + sLineBreak;
+  // R11 - Declaración e instalación SIF
+  SCaptionNumeroPendiente = '(pendiente)';
+  SCaptionInstalacionSifTitulo =
+    'Número de instalación SIF - %s (%s)';
+  SCaptionInstalacionNumeroVersion = 'Número: %s | Versión: %s';
+  SCaptionInstalacionSif = 'Número de instalación SIF';
+  SCaptionSinEmpresaConfigurada = 'No hay empresa configurada.';
+  SCaptionErrorLeerEmpresas = 'No se pudo leer fza_empresas.';
+  SCaptionSolicitandoNumeroServicio =
+    'Solicitando número al servicio...';
+  SCaptionNumeroDisponibleGuardado = 'Número disponible y guardado.';
+  // R16 - Log y exportación NO VERI*FACTU
+  STituloGuardarExportacionNoVerifactu =
+    'Guardar exportacion NO VERI*FACTU';
+  STituloVerificarFicherosNoVerifactu =
+    'Verificar ficheros NO VERI*FACTU';
 implementation
 
 end.

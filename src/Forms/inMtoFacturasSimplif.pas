@@ -91,7 +91,7 @@ type
 implementation
 
 uses
-  inLibUser, inLibFiltroUsuario, inLibMsgFacturas;
+  inLibUser, inLibFiltroUsuario, inLibMsgComun, inLibMsgFacturas;
 
 {$R *.dfm}
 
@@ -123,7 +123,7 @@ begin
   // Persiana de filtros de carga: arranca colapsada (igual que articulos).
   pnlContFiltros.Visible := False;
   pnlFiltros.Height := 22;
-  btnToggleFiltros.Caption := #9654'  Filtros de carga';
+  btnToggleFiltros.Caption := SCaptionFiltrosCargaContraido;
   // Poblar combos, leer preferencias y dejar el SQL filtrado preparado. La
   // apertura con barra de progreso se hace en ResetForm, ya con el form
   // visible. La conexion ya esta asignada tras 'inherited'.
@@ -493,7 +493,7 @@ begin
   else
     FbarProgreso.Max := 1;
   FbarProgreso.Position := 0;
-  FlblProgreso.Caption := 'Cargando borradores...';
+  FlblProgreso.Caption := SCaptionCargandoBorradores;
   FPnlProgreso.Left := (Self.ClientWidth - FPnlProgreso.Width) div 2;
   FPnlProgreso.Top := (Self.ClientHeight - FPnlProgreso.Height) div 2;
   FPnlProgreso.BringToFront;
@@ -510,9 +510,9 @@ begin
       FbarProgreso.Position := APos
     else
       FbarProgreso.Position := FbarProgreso.Max;
-    FlblProgreso.Caption := 'Cargando borradores: ' +
-                            FormatFloat('#,##0', APos) + ' / ' +
-                            FormatFloat('#,##0', AMax);
+    FlblProgreso.Caption := Format(SCaptionCargandoBorradoresProgreso,
+                                   [FormatFloat('#,##0', APos),
+                                    FormatFloat('#,##0', AMax)]);
     FPnlProgreso.Update;
   end;
 end;
@@ -532,12 +532,12 @@ begin
   if pnlContFiltros.Visible then
   begin
     pnlFiltros.Height := ALTO_CABECERA + ALTO_CONTENIDO;
-    btnToggleFiltros.Caption := #9660'  Filtros de carga';
+    btnToggleFiltros.Caption := SCaptionFiltrosCargaExpandido;
   end
   else
   begin
     pnlFiltros.Height := ALTO_CABECERA;
-    btnToggleFiltros.Caption := #9654'  Filtros de carga';
+    btnToggleFiltros.Caption := SCaptionFiltrosCargaContraido;
   end;
 end;
 
@@ -575,7 +575,7 @@ begin
     dmmFacturas.unqryTablaG.SQL.Text := ConstruirSqlFacturas;
   pnlContFiltros.Visible := False;
   pnlFiltros.Height := 22;
-  btnToggleFiltros.Caption := #9654'  Filtros de carga';
+  btnToggleFiltros.Caption := SCaptionFiltrosCargaContraido;
   inherited;
 end;
 

@@ -16,7 +16,7 @@ unit inLibEmisionFiscalIntf;
 interface
 
 uses
-  inLibVerifactu;
+  inLibVerifactuTipos;
 
 type
   TFlujoEmisionFiscal = (

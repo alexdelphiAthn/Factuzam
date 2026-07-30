@@ -53,6 +53,10 @@ function Visitar-Unidad {
 $raiz = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $rutaProyecto = Join-Path $raiz 'fzam.dpr'
 $dependenciasPermitidas = @()
+$maximoUsosLibADatos = 0
+$usosLibADatos = [System.Collections.Generic.List[string]]::new()
+$unidadesLibADatos = [System.Collections.Generic.HashSet[string]]::new(
+  [System.StringComparer]::OrdinalIgnoreCase)
 $infracciones = [System.Collections.Generic.List[string]]::new()
 $deudaConocida = [System.Collections.Generic.List[string]]::new()
 $unidades = @{}
@@ -131,6 +135,18 @@ foreach ($clave in $unidades.Keys) {
       }
     }
   }
+  if ($unidad.Nombre -match '^(?i)inLib') {
+    foreach ($dependencia in $dependencias) {
+      if ($dependencia -match '^(?i)UniData') {
+        $relativa = [System.IO.Path]::GetRelativePath(
+          $raiz,
+          $unidad.Archivo)
+        $usosLibADatos.Add(
+          $unidad.Nombre + ' -> ' + $dependencia + ' (' + $relativa + ')')
+        [void]$unidadesLibADatos.Add($unidad.Nombre)
+      }
+    }
+  }
   if ($unidad.Nombre -ine 'inMtoPrincipal' -and
       $unidad.Limpio -match '\b(TfrmMtoPrincipal|frmMtoPrincipal)\b') {
     $relativa = [System.IO.Path]::GetRelativePath(
@@ -179,13 +195,28 @@ if ($ciclos.Count -gt 0) {
     Write-Host ('  ' + $ciclo)
   }
 }
-if (($infracciones.Count -gt 0) -or ($ciclos.Count -gt 0)) {
+if ($usosLibADatos.Count -gt 0) {
+  Write-Host 'Deuda inLib* -> UniData* (Opcion A, objetivo 0):'
+  foreach ($uso in ($usosLibADatos | Sort-Object)) {
+    Write-Host ('  ' + $uso)
+  }
+}
+$excesoLibADatos = $usosLibADatos.Count -gt $maximoUsosLibADatos
+if ($excesoLibADatos) {
+  Write-Host (
+    'Dependencias inLib* -> UniData*: ' + $usosLibADatos.Count +
+    '; maximo permitido: ' + $maximoUsosLibADatos + '.')
+}
+if (($infracciones.Count -gt 0) -or ($ciclos.Count -gt 0) -or
+    $excesoLibADatos) {
   exit 1
 }
 
 Write-Host (
   'Dependencias de capa: OK. Unidades analizadas: ' +
-  $unidades.Count + '. Ciclo mayor: 1.')
+  $unidades.Count + '. Ciclo mayor: 1. Usos inLib*->UniData*: ' +
+  $usosLibADatos.Count + '/' + $maximoUsosLibADatos +
+  ' en ' + $unidadesLibADatos.Count + ' unidades.')
 if ($deudaConocida.Count -gt 0) {
   Write-Host 'Deuda conocida permitida:'
   foreach ($dependencia in $deudaConocida) {

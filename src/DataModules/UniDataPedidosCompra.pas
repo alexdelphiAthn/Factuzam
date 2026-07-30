@@ -131,7 +131,8 @@ uses
   inLibPedidosCompra,
   inLibComprasImpuestos,
   inLibData,
-  inLibArticulosValidador,
+  inLibArticulosValidadorIntf,
+  UniDataArticulosValidadorRepositorio,
   UniDataArticulos,
   inLibMsgCompras, inLibMsgVentas;
 

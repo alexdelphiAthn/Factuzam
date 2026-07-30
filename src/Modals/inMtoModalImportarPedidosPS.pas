@@ -71,7 +71,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsgVentas;
+  inLibMsgIntegraciones, inLibMsgVentas;
 
 procedure TfrmModalImportarPedidosPS.FormCreate(Sender: TObject);
 begin
@@ -92,15 +92,16 @@ procedure TfrmModalImportarPedidosPS.btnConectarClick(Sender: TObject);
 begin
   Screen.Cursor := crHourGlass;
   try
-    lblEstado.Caption := 'Conectando con PrestaShop...';
+    lblEstado.Caption := SCaptionConectandoPrestaShop;
     Application.ProcessMessages;
     if ListarPedidosResumen(edtBaseURL.Text, edtApiKey.Text, FResumen) then
     begin
       CargarGridDesdeResumen;
-      lblEstado.Caption := Format('Recuperados %d pedidos', [FResumen.Count]);
+      lblEstado.Caption := Format(SCaptionRecuperadosPedidos,
+                                  [FResumen.Count]);
     end
     else
-      lblEstado.Caption := 'No se pudieron recuperar pedidos';
+      lblEstado.Caption := SCaptionNoRecuperadosPedidos;
   finally
     Screen.Cursor := crDefault;
   end;
@@ -153,7 +154,7 @@ begin
       sIdPS := FResumen[i].IdPedido;
       if dmPedidos.ExistePedidoPrestaShop(sIdPS) then
         Continue;
-      lblEstado.Caption := Format('Importando %s...', [sIdPS]);
+      lblEstado.Caption := Format(SCaptionImportandoPedido, [sIdPS]);
       Application.ProcessMessages;
       try
         ord := conn.CargarPedido(sIdPS);
@@ -170,7 +171,8 @@ begin
         on E: Exception do
         begin
           Inc(errores);
-          lblEstado.Caption := Format('Error en %s: %s', [sIdPS, E.Message]);
+          lblEstado.Caption := Format(SCaptionErrorImportandoPedido,
+                                      [sIdPS, E.Message]);
         end;
       end;
     end;

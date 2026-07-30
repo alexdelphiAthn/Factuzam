@@ -200,12 +200,12 @@ end;
 
 procedure TfrmMtoCajaSeleccionVale.ConfigurarGrid;
 begin
-  colCodigo.Caption        := 'Código Vale';
-  colEstado.Caption        := 'Estado';
-  colImporte.Caption       := 'Importe';
-  colFechaEmision.Caption  := 'Fecha emisión';
-  colCaducidad.Caption     := 'Caducidad';
-  colObservaciones.Caption := 'Observaciones';
+  colCodigo.Caption        := SCaptionColCodigoVale;
+  colEstado.Caption        := SCaptionColEstadoVale;
+  colImporte.Caption       := SCaptionColImporteVale;
+  colFechaEmision.Caption  := SCaptionColFechaEmisionVale;
+  colCaducidad.Caption     := SCaptionColCaducidadVale;
+  colObservaciones.Caption := SCaptionColObservacionesVale;
   colImporte.PropertiesClassName := 'TcxCurrencyEditProperties';
 end;
 

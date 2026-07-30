@@ -394,9 +394,10 @@ uses
   inLibLog,
   inLibValoresAutomaticos,
   inLibArticulosResolverIntf,
-  inLibArticulosValidador,
+  inLibArticulosValidadorIntf,
+  UniDataArticulosValidadorRepositorio,
   inLibGridCantidad,
-  inLibColumnasDocumento,
+  inLibColumnasDocumento, UniDataGen,
   inLibBusquedasCompra,
   inLibValidacionDocumento,
   inLibPresentacionDocumento,
@@ -404,7 +405,9 @@ uses
   inMtoModalSelAlmacenPedido, inMtoModalDocsCreados, inMtoModalEtiqPed,
   inLibShowMto, inLibGenBusq, UniDataArticulos,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
-  inLibColumnasSku, inLibMsgCompras;
+  inLibColumnasSku, inLibMsgCompras,
+  // Composicion del puerto de persistencia del pivote (V2).
+  UniDataPivoteVenta;
 
 {$R *.dfm}
 
@@ -2511,6 +2514,8 @@ begin
     CfgPV.FieldCantidadAAlbaranar := 'CANTIDAD_A_RECIBIR_PEDCLIN';
     CfgPV.BandaUnica := False;
     CfgPV.TextoBandaAAlbaranar := 'A recibir';
+    CfgPV.Repositorio :=
+      CrearRepositorioPivoteVenta(CfgPV.Conexion, CfgPV.Usuario);
     CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
     CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
     FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);

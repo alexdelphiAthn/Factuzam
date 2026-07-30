@@ -141,7 +141,7 @@ begin
     Abort;
   oDialogo := TSaveDialog.Create(Self);
   try
-    oDialogo.Title := 'Guardar exportacion NO VERI*FACTU';
+    oDialogo.Title := STituloGuardarExportacionNoVerifactu;
     oDialogo.InitialDir := TPath.GetDocumentsPath;
     oDialogo.Filter := 'Archivo XML|*.xml';
     oDialogo.DefaultExt := 'xml';
@@ -174,7 +174,7 @@ begin
   inherited;
   oDialogo := TOpenDialog.Create(Self);
   try
-    oDialogo.Title := 'Verificar ficheros NO VERI*FACTU';
+    oDialogo.Title := STituloVerificarFicherosNoVerifactu;
     oDialogo.InitialDir := TPath.GetDocumentsPath;
     oDialogo.Filter := 'Archivos XML|*.xml|Todos los archivos|*.*';
     if oDialogo.Execute then

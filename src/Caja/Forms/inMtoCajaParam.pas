@@ -248,6 +248,7 @@ var
   Param: TParamInfo;
   CatItem: TJvInspectorCustomCategoryItem;
   ItemCombo: TJvCustomInspectorItem;
+  DescripcionTraducida: string;
   pBool: PBoolean; pInt: PInteger; pStr: PString;
 begin
   LimpiarMemoria;
@@ -259,7 +260,14 @@ begin
     // La instantánea evita exponer el diccionario interno al editor.
     for Param in Parametros do
     begin
-      CatItem := ObtenerCategoria(Param.Categoria);
+      CatItem := ObtenerCategoria(
+        TraducirCategoriaParametro(
+          'inMtoCajaParam',
+          Param.Categoria));
+      DescripcionTraducida :=
+        TraducirDescripcionParametro(
+          'inMtoCajaParam',
+          Param);
 
       case Param.Tipo of
         tpBoolean:
@@ -272,7 +280,7 @@ begin
                                          Param.Nombre,
                                          TypeInfo(Boolean),
                                          pBool) do
-              DisplayName := Param.Descripcion;
+              DisplayName := DescripcionTraducida;
           end;
         tpInteger:
           begin
@@ -283,7 +291,7 @@ begin
                                          Param.Nombre,
                                          TypeInfo(Integer),
                                          pInt) do
-              DisplayName := Param.Descripcion;
+              DisplayName := DescripcionTraducida;
           end;
         tpString:
           begin
@@ -294,7 +302,7 @@ begin
                                                  Param.Nombre,
                                                  TypeInfo(string),
                                                  pStr);
-            ItemCombo.DisplayName := Param.Descripcion;
+            ItemCombo.DisplayName := DescripcionTraducida;
             if SameText(Param.Nombre, 'vgerTipoImpresion') then
             begin
               ItemCombo.Flags := ItemCombo.Flags + [iifValueList];

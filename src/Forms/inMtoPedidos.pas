@@ -315,13 +315,16 @@ uses
   inMtoModalImportarPedidosPS, inLibGridCantidad,
   inMtoModalSelAlmacenAlbaran, inMtoModalDocsCreados, inLibGenBusq,
   inLibShowMto, inLibFiltroUsuario, Uni, inLibArticulosResolverIntf,
-  inLibArticulosValidador, inLibVentasImpuestos,
+  inLibArticulosValidadorIntf,
+  UniDataArticulosValidadorRepositorio, inLibVentasImpuestos,
   inLibValoresAutomaticos,
   inLibGridTallasInline,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
-  inLibColumnasSku, inLibColumnasDocumento,
+  inLibColumnasSku, inLibColumnasDocumento, UniDataGen,
   inLibValidacionDocumento, inLibPresentacionDocumento, inLibLog,
-  inLibMsgArticulos, inLibMsgVentas;
+  inLibMsgArticulos, inLibMsgVentas,
+  // Composicion del puerto de persistencia del pivote (V2).
+  UniDataPivoteVenta;
 
 {$R *.dfm}
 
@@ -1404,6 +1407,8 @@ begin
     CfgPV.FieldAlmacen := 'CODIGO_ALMACEN_PEDLIN';
     CfgPV.FieldAlmacenMaster := 'CODIGO_ALM_PED';
     CfgPV.MaxColumnas := 20;
+    CfgPV.Repositorio :=
+      CrearRepositorioPivoteVenta(CfgPV.Conexion, CfgPV.Usuario);
     CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
     CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
     FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);

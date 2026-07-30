@@ -113,6 +113,13 @@ type
       const ASerie, ANumero: string): IResultadoConsultaCaja;
     function ConsultarLineasFactura(
       const ASerie, ANumero: string): IResultadoConsultaCaja;
+    function ConsultarFacturaPorCodigoBarras(
+      const ACodigoBarras: string): IResultadoConsultaCaja;
+    function ConsultarFacturaPorOperacion(
+      const AEmpresa, AAlmacen, ACaja,
+      ANumeroOperacion: string): IResultadoConsultaCaja;
+    function ConsultarVentasOrigenSku(
+      const ASku, AEmpresa: string): IResultadoConsultaCaja;
   end;
 
 constructor TResultadoConsultaCajaFalso.Create(
@@ -226,6 +233,30 @@ function TRepositorioConsultasCajaFalso.ConsultarLineasFactura(
 begin
   Result := TResultadoConsultaCajaFalso.Create(
     CrearLineas);
+end;
+
+function TRepositorioConsultasCajaFalso.
+  ConsultarFacturaPorCodigoBarras(
+  const ACodigoBarras: string): IResultadoConsultaCaja;
+begin
+  Result := TResultadoConsultaCajaFalso.Create(
+    CrearCabecera);
+end;
+
+function TRepositorioConsultasCajaFalso.
+  ConsultarFacturaPorOperacion(
+  const AEmpresa, AAlmacen, ACaja,
+  ANumeroOperacion: string): IResultadoConsultaCaja;
+begin
+  Result := TResultadoConsultaCajaFalso.Create(
+    CrearCabecera);
+end;
+
+function TRepositorioConsultasCajaFalso.ConsultarVentasOrigenSku(
+  const ASku, AEmpresa: string): IResultadoConsultaCaja;
+begin
+  Result := TResultadoConsultaCajaFalso.Create(
+    CrearCabecera);
 end;
 
 function TGrabadorVentaFalso.GrabarVenta(

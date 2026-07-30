@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalVerifactuDecl                                       }
 {    Tipo:       Formulario (Modal)                                            }
@@ -206,15 +206,15 @@ begin
       end;
       if sNumero = '' then
       begin
-        sNumero := '(pendiente)';
+        sNumero := SCaptionNumeroPendiente;
       end;
       if sVersion = '' then
       begin
-        sVersion := '(pendiente)';
+        sVersion := SCaptionNumeroPendiente;
       end;
       if sCodigoSif = '' then
       begin
-        sCodigoSif := '(pendiente)';
+        sCodigoSif := SCaptionNumeroPendiente;
       end;
       sFilas := sFilas +
         '<tr>' +
@@ -326,12 +326,13 @@ begin
     begin
       sNumero := oEstado.Numero;
       if sNumero = '' then
-        sNumero := '(pendiente)';
+        sNumero := SCaptionNumeroPendiente;
       lblInstalacionTitulo.Caption :=
-        'Número de instalación SIF - ' + oEstado.RazonSocial +
-        ' (' + oEstado.Nif + ')';
+        Format(SCaptionInstalacionSifTitulo,
+               [oEstado.RazonSocial, oEstado.Nif]);
       lblInstalacionNumero.Caption :=
-        'Número: ' + sNumero + ' | Versión: ' + oEstado.Version;
+        Format(SCaptionInstalacionNumeroVersion,
+               [sNumero, oEstado.Version]);
       lblInstalacionEstado.Caption := oEstado.Mensaje;
       btnGenerarInstalacion.Enabled := not oEstado.EsValido;
       if oEstado.EsValido then
@@ -340,12 +341,13 @@ begin
         lblInstalacionEstado.Style.TextColor := clMaroon;
       if Trim(oEstado.Version) = '' then
         lblInstalacionNumero.Caption :=
-          'Número: ' + sNumero + ' | Versión: (pendiente)';
+          Format(SCaptionInstalacionNumeroVersion,
+                 [sNumero, SCaptionNumeroPendiente]);
     end
     else
     begin
-      lblInstalacionTitulo.Caption := 'Número de instalación SIF';
-      lblInstalacionNumero.Caption := 'No hay empresa configurada.';
+      lblInstalacionTitulo.Caption := SCaptionInstalacionSif;
+      lblInstalacionNumero.Caption := SCaptionSinEmpresaConfigurada;
       lblInstalacionEstado.Caption := '';
       lblInstalacionEstado.Style.TextColor := clMaroon;
       btnGenerarInstalacion.Enabled := False;
@@ -353,8 +355,8 @@ begin
   except
     on E: Exception do
     begin
-      lblInstalacionTitulo.Caption := 'Número de instalación SIF';
-      lblInstalacionNumero.Caption := 'No se pudo leer fza_empresas.';
+      lblInstalacionTitulo.Caption := SCaptionInstalacionSif;
+      lblInstalacionNumero.Caption := SCaptionErrorLeerEmpresas;
       lblInstalacionEstado.Caption := E.Message;
       lblInstalacionEstado.Style.TextColor := clMaroon;
       btnGenerarInstalacion.Enabled := False;
@@ -405,14 +407,14 @@ var
   oEstado: TEstadoInstalacionSif;
 begin
   btnGenerarInstalacion.Enabled := False;
-  lblInstalacionEstado.Caption := 'Solicitando número al servicio...';
+  lblInstalacionEstado.Caption := SCaptionSolicitandoNumeroServicio;
   Application.ProcessMessages;
   try
     oEstado := GenerarInstalacionSifEmpresa(
       ParametrosApp,
       ConexionPrincipal,
       IdentidadSesion.Usuario, '');
-    lblInstalacionEstado.Caption := 'Número disponible y guardado.';
+    lblInstalacionEstado.Caption := SCaptionNumeroDisponibleGuardado;
     ShowMessage(SInfoNumeroInstalacionSifDisponible + oEstado.Numero);
   except
     on E: Exception do

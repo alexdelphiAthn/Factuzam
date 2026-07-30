@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalAddBlockTarifa                                      }
 {    Tipo:       Formulario (Modal)                                            }
@@ -160,7 +160,7 @@ end;
 procedure TfrmModalAddBlockTarifa.FormCreate(Sender: TObject);
 begin
   inherited;
-  Self.Caption := 'A~adir Bloque - Carga masiva en Tarifa';
+  Self.Caption := STituloAnadirBloqueTarifa;
 
   // Defaults especificos
   dtFechaDesde.Date           := Date;

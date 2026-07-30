@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalSepaRemesaVenta                                    }
 {    Tipo:       Modal                                                          }
@@ -51,7 +51,7 @@ type
 implementation
 
 uses
-  Vcl.Dialogs, inLibMsgVentas;
+  Vcl.Dialogs, inLibMsgComun, inLibMsgVentas;
 
 function LimpiarValorSepa(const AValor: string): string;
 begin
@@ -105,7 +105,7 @@ begin
   lblAcreedor.Parent := Self;
   lblAcreedor.Left := 16;
   lblAcreedor.Top := 14;
-  lblAcreedor.Caption := 'Código acreedor';
+  lblAcreedor.Caption := SCaptionCodigoAcreedor;
   FEdtCodigoAcreedor := TcxTextEdit.Create(Self);
   FEdtCodigoAcreedor.Parent := Self;
   FEdtCodigoAcreedor.Left := 16;
@@ -116,7 +116,7 @@ begin
   lblSecuencia.Parent := Self;
   lblSecuencia.Left := 360;
   lblSecuencia.Top := 14;
-  lblSecuencia.Caption := 'Secuencia';
+  lblSecuencia.Caption := SCaptionSecuencia;
   FCbbTipoSecuencia := TcxComboBox.Create(Self);
   FCbbTipoSecuencia.Parent := Self;
   FCbbTipoSecuencia.Left := 360;
@@ -131,7 +131,7 @@ begin
   lblClientes.Parent := Self;
   lblClientes.Left := 16;
   lblClientes.Top := 82;
-  lblClientes.Caption := 'Mandatos por cliente';
+  lblClientes.Caption := SCaptionMandatosPorCliente;
   FGrid := TcxGrid.Create(Self);
   FGrid.Parent := Self;
   FGrid.Left := 16;
@@ -157,7 +157,7 @@ begin
   btnCancelar.Top := 10;
   btnCancelar.Width := 90;
   btnCancelar.Height := 34;
-  btnCancelar.Caption := 'Cancelar';
+  btnCancelar.Caption := SCaptionCancelar;
   btnCancelar.ModalResult := mrCancel;
   btnAceptar := TcxButton.Create(Self);
   btnAceptar.Parent := pnlBotones;
@@ -165,7 +165,7 @@ begin
   btnAceptar.Top := 10;
   btnAceptar.Width := 90;
   btnAceptar.Height := 34;
-  btnAceptar.Caption := 'Aceptar';
+  btnAceptar.Caption := SCaptionAceptar;
   btnAceptar.OnClick := btnAceptarClick;
 end;
 
@@ -174,21 +174,21 @@ var
   oCol: TcxGridDBColumn;
 begin
   oCol := FTvClientes.CreateColumn;
-  oCol.Caption := 'Código';
+  oCol.Caption := SCaptionColCodigoMandato;
   oCol.DataBinding.FieldName := 'CODIGO_CLI';
   oCol.Options.Editing := False;
   oCol.Width := 90;
   oCol := FTvClientes.CreateColumn;
-  oCol.Caption := 'Cliente';
+  oCol.Caption := SCaptionColClienteMandato;
   oCol.DataBinding.FieldName := 'NOMBRE_CLI';
   oCol.Options.Editing := False;
   oCol.Width := 300;
   oCol := FTvClientes.CreateColumn;
-  oCol.Caption := 'Mandato';
+  oCol.Caption := SCaptionColMandato;
   oCol.DataBinding.FieldName := 'ID_MANDATO';
   oCol.Width := 220;
   oCol := FTvClientes.CreateColumn;
-  oCol.Caption := 'Fecha firma';
+  oCol.Caption := SCaptionColFechaFirmaMandato;
   oCol.DataBinding.FieldName := 'FECHA_FIRMA';
   oCol.PropertiesClassName := 'TcxDateEditProperties';
   oCol.Width := 120;

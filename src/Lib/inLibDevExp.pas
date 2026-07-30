@@ -108,6 +108,7 @@ uses
 implementation
 
   uses inLibWin,
+       inLibMsgComun,
        inLibDatasets,
        inLibDir, uGenericIfThen,
        inLibConfigCampos;
@@ -190,7 +191,7 @@ begin
   sExt := ExtensionFormato(oFormato);
   saveDialog := TFileSaveDialog.Create(nil);
   try
-    saveDialog.Title := 'Guardar listado a Excel';
+    saveDialog.Title := STituloGuardarListadoExcel;
     saveDialog.DefaultFolder := AParametrosApp.GetPath('appDirExcel');
     saveDialog.DefaultExtension := sExt;
     with saveDialog.FileTypes.Add do

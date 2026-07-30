@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalImpBalanceTallas                                    }
 {    Tipo:       Formulario (Modal)                                            }
@@ -73,7 +73,7 @@ implementation
 {$R *.dfm}
 
 uses
-  System.StrUtils, inMtoPreviewExcel,
+  System.StrUtils, inMtoPreviewExcel, inLibMsgArticulos,
   inLibBalanceTallasExcel,
   dxSpreadSheet, inLibFotos;
 
@@ -113,9 +113,9 @@ begin
     FrgModo.Top     := 12;
     FrgModo.Width   := 210;
     FrgModo.Height  := 80;
-    FrgModo.Caption := ' Modo ';
-    FrgModo.Properties.Items.Add.Caption := 'Entre fechas';
-    FrgModo.Properties.Items.Add.Caption := 'Por acumulados';
+    FrgModo.Caption := SCaptionGrupoModo;
+    FrgModo.Properties.Items.Add.Caption := SCaptionModoEntreFechas;
+    FrgModo.Properties.Items.Add.Caption := SCaptionModoPorAcumulados;
     FrgModo.ItemIndex := 0;
     FrgModo.Properties.OnEditValueChanged := rgConfigChange;
     FrgDetalle := TcxRadioGroup.Create(Self);
@@ -124,9 +124,9 @@ begin
     FrgDetalle.Top     := 100;
     FrgDetalle.Width   := 210;
     FrgDetalle.Height  := 80;
-    FrgDetalle.Caption := ' Detalle ';
-    FrgDetalle.Properties.Items.Add.Caption := 'Simplificado';
-    FrgDetalle.Properties.Items.Add.Caption := 'Desglosado';
+    FrgDetalle.Caption := SCaptionGrupoDetalle;
+    FrgDetalle.Properties.Items.Add.Caption := SCaptionModoSimplificado;
+    FrgDetalle.Properties.Items.Add.Caption := SCaptionModoDesglosado;
     FrgDetalle.ItemIndex := 0;
     FrgDetalle.Properties.OnEditValueChanged := rgConfigChange;
   end;

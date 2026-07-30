@@ -29,6 +29,7 @@ implementation
 
 uses
   System.SysUtils, System.Classes, Vcl.Graphics, cxGraphics,
+  inLibMsgFacturas,
   dxSpreadSheetCore, dxSpreadSheetTypes, dxSpreadSheetGraphics,
   dxCoreGraphics, dxShellDialogs, dxSpreadSheetStyles,
   dxSpreadSheetContainers, dxHashUtils, dxGDIPlusClasses, dxSmartImage,
@@ -165,7 +166,8 @@ begin
     for cCaracter in CARACTERES_NO_VALIDOS do
       sNombreHoja := StringReplace(sNombreHoja, string(cCaracter), '_',
         [rfReplaceAll]);
-    FHoja.Caption := Copy('Factura ' + sNombreHoja, 1, 31);
+    FHoja.Caption := Copy(Format(SCaptionHojaFactura,
+                                 [sNombreHoja]), 1, 31);
   end;
 end;
 

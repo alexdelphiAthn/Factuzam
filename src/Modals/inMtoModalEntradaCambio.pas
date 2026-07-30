@@ -139,7 +139,7 @@ begin
       ' ORDER BY CODIGO_EMPL';
     formulario := TfrmMtoSearch.Create(nil);
     try
-      formulario.Caption := 'Búsqueda de Empleados';
+      formulario.Caption := STituloBusquedaEmpleados;
       formulario.dsTablaG.DataSet := unqry;
       unqry.Open;
       formulario.ProcesarPerfiles;

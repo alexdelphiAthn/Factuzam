@@ -296,6 +296,106 @@ resourcestring
     sLineBreak + '¿Desea continuar?';
   STituloConfirmarArqueoCaja =
     'Confirmar Arqueo';
+  // R03 - Título de operación de caja real
+  STituloOperacionCajaReal = 'Operación - (Caja Real %s)';
+  // R11 - Operaciones de caja por SKU
+  SCaptionUnaOperacion = '1 operación';
+  SCaptionNumOperaciones = '%d operaciones';
+  // R12 - Formularios de caja en ejecución
+  SCaptionPendienteDevolver = 'Pendiente de devolver';
+  SHintSinDescuentoGlobalDeposito =
+    'No se puede aplicar descuento global con líneas de depósito';
+  SCaptionPendienteCobro = 'Pendiente de cobro';
+  SCaptionEmpresaAlmacenCaja = 'Empresa %s - Almacén %s - Caja %s';
+  STituloOperacionNCajaReal = 'Operación %d - (Caja Real %s)';
+  STituloTraspasosAlmacenCaja = 'Traspasos - (Almacén %s · Caja %s)';
+  SCaptionVentaContado = 'VENTA CONTADO';
+  SCaptionTotalCero = 'Total 0,00 €';
+  SCaptionTotalImporte = 'Total %m';
+  SCaptionRectificativaTipo = 'RECTIFICATIVA' + sLineBreak + '%s';
+  STituloBusquedaEmpleadosCaja = 'Búsqueda de Empleados en Caja';
+  SCaptionCargandoOperaciones = 'Cargando operaciones...';
+  SCaptionCargandoOperacionesProgreso =
+    'Cargando operaciones: %s / %s';
+  SCaptionIrABorrador = 'Ir a borrador';
+  SHintIrABorrador = 'Ir a borrador (%s)';
+  SCaptionTabBorrador = 'Borrador';
+  SCaptionEquivalenciaEurDivisa = '1 EUR = %.9n %s';
+  SCaptionEquivalenciaDivisaEur = '1 %s = %.2n EUR';
+  SCaptionColCodigoVale = 'Código Vale';
+  SCaptionColEstadoVale = 'Estado';
+  SCaptionColImporteVale = 'Importe';
+  SCaptionColFechaEmisionVale = 'Fecha emisión';
+  SCaptionColCaducidadVale = 'Caducidad';
+  SCaptionColObservacionesVale = 'Observaciones';
+  // R13 - Traspasos entre almacenes
+  SCaptionColDescripcionTraspaso = 'Descripción';
+  SCaptionColUdsTraspaso = 'Uds';
+  SCaptionColCosteTraspaso = 'Coste';
+  SCaptionColStockOrigenTraspaso = 'Stock org';
+  SCaptionColPedidasTraspaso = 'Pedidas';
+  SCaptionColMotivoRechazoTraspaso = 'Motivo rechazo';
+  SCaptionColSirvoTraspaso = 'Sirvo';
+  SCaptionAlmacenOrigen = 'ALMACÉN ORIGEN';
+  SCaptionAlmacenDestino = 'ALMACÉN DESTINO';
+  SCaptionF12ConTicket = 'F12 Con ticket';
+  SCaptionF12EnviarSolicitud = 'F12 Enviar solicitud';
+  SCaptionF12ServirConTicket = 'F12 Servir con ticket';
+  SCaptionImporteTraspaso = 'Importe traspaso: %m';
+  STituloSolicitudesPendientesAtender =
+    'Solicitudes pendientes de atender';
+  SCaptionColNumeroSolicitud = 'Número';
+  SCaptionColSerieSolicitud = 'Serie';
+  SCaptionColFechaSolicitud = 'Fecha';
+  SCaptionColPideAlmacen = 'Pide (almacén)';
+  SCaptionColEstadoSolicitud = 'Estado';
+  SCaptionColLineasSolicitud = 'Líneas';
+  SCaptionAtender = 'Atender';
+  SCaptionNoAtender = 'No atender';
+  SCaptionImprimir = 'Imprimir';
+  SCaptionEmpleadoNoEncontrado = '(no encontrado)';
+  // R14 - Modales de caja: arqueo, gastos y tira
+  SCaptionImporteEur = '%s EUR';
+  SCaptionDesgloseEfectivo =
+    'Efectivo sist. = ventas (%s) + entradas (%s) ' +
+    #8722' gastos (%s) + anterior (%s)';
+  STituloHistoricoArqueosCaja = 'Histórico de Arqueos · Caja %s';
+  SCaptionRetirarSobranteRecuento = 'Retirar sobrante del recuento';
+  SCaptionTpvRestringido = 'TPV restringido:';
+  STituloTiraCajaNumero = 'Tira de Caja · Caja %s';
+  SCaptionTodasLasSeries = '(todas las series)';
+  SCaptionImprimirQrNoDisponible =
+    'Imprimir QR Verifactu (no disponible)';
+  // R15 - Devoluciones por ticket (F4), motivo y traspaso automático
+  SErrorMotivoDevolucionCajaObligatorio =
+    'Indique el motivo de la devolución.';
+  SErrorTicketDevolucionCajaNoEncontrado =
+    'No se ha encontrado ningún ticket con esos datos.';
+  SErrorTicketDevolucionCajaEsRectificativa =
+    'El documento localizado es una rectificativa. ' +
+    'Localice el ticket de venta original.';
+  SErrorTicketDevolucionCajaDatosOperacion =
+    'Indique empresa, almacén, caja y número de operación.';
+  SErrorTicketDevolucionCajaDatosDocumento =
+    'Indique la serie y el número del documento.';
+  SErrorTicketDevolucionCajaSinSeleccion =
+    'Localice primero un ticket válido.';
+  SInfoTicketDevolucionCajaLocalizado =
+    'Ticket %s\%s — %s — Tienda %s — Total %s €';
+  SInfoVentasOrigenSkuCaja =
+    'Ventas de los últimos 12 meses que contienen "%s". ' +
+    'Elija el ticket de origen o cancele para devolver sin origen.';
+  SErrorVentaOrigenCajaSinSeleccion =
+    'Seleccione una venta de la lista o cancele.';
+  SErrorDevolucionTicketOperacionEnCurso =
+    'Termine o cancele la operación en curso antes de cargar ' +
+    'una devolución por ticket.';
+  SAvisoDevolucionTicketOtraEmpresa =
+    'El ticket es de otra empresa: la devolución se grabará como ' +
+    'devolución con referencia al ticket de origen, sin ' +
+    'rectificativa fiscal.';
+  SCaptionDevolucionTicketDe =
+    '  —  DEVOLUCIÓN de %s\%s (Tienda %s)';
 implementation
 
 end.

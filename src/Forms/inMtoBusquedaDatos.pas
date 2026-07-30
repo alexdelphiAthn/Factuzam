@@ -219,7 +219,7 @@ begin
   if Assigned(FPopupGrid) then
   begin
     miAgregar := TMenuItem.Create(FPopupGrid);
-    miAgregar.Caption := 'Añadir a Documento de Trabajo...';
+    miAgregar.Caption := SCaptionAnadirDocumentoTrabajo;
     miAgregar.Enabled := ResolverLineaDocumentoTrabajo(linea, sMensaje);
     miAgregar.OnClick := MenuAgregarDocumentoClick;
     FPopupGrid.Items.Insert(0, miAgregar);
@@ -256,7 +256,7 @@ end;
 procedure TfrmMtoBusquedaDatos.FormShow(Sender: TObject);
 begin
   inherited;
-  lblResultados.Caption := 'Seleccione los filtros y pulse Buscar';
+  lblResultados.Caption := SCaptionSeleccioneFiltrosBuscar;
   FTimerPrecarga.Enabled := True;
 end;
 
@@ -407,7 +407,7 @@ begin
   edtBusqGlobal.Clear;
   cxGrdDBTabPrin.DataController.Filter.Clear;
   unqryResultados.Close;
-  lblResultados.Caption := 'Seleccione los filtros y pulse Buscar';
+  lblResultados.Caption := SCaptionSeleccioneFiltrosBuscar;
 end;
 
 procedure TfrmMtoBusquedaDatos.cbbCampoPropertiesChange(Sender: TObject);
@@ -490,19 +490,19 @@ begin
   chkDistinguirMayusculas.Enabled := not bProximidad;
   if bProximidad then
   begin
-    lblValor.Caption := 'Color objetivo';
+    lblValor.Caption := SCaptionColorObjetivo;
     edtValor.Properties.Nullstring :=
       'Código, nombre, HEX o botón para elegir color';
   end
   else if cbbCampo.ItemIndex = CAMPO_COLOR_BASICO then
   begin
-    lblValor.Caption := 'Color básico';
+    lblValor.Caption := SCaptionColorBasico;
     edtValor.Properties.Nullstring :=
       'Código, nombre o HEX del color básico';
   end
   else
   begin
-    lblValor.Caption := 'Texto a buscar';
+    lblValor.Caption := SCaptionTextoABuscar;
     edtValor.Properties.Nullstring :=
       'Introduzca el valor y pulse Entrar';
   end;
@@ -577,13 +577,13 @@ begin
   begin
     pnlCriterios.Height := FAltoCriterios;
     btnOcultar.Top := 78;
-    btnOcultar.Caption := 'Ocultar criterios';
+    btnOcultar.Caption := SCaptionOcultarCriterios;
   end
   else
   begin
     pnlCriterios.Height := 30;
     btnOcultar.Top := 3;
-    btnOcultar.Caption := 'Mostrar criterios';
+    btnOcultar.Caption := SCaptionMostrarCriterios;
   end;
 end;
 
@@ -1105,13 +1105,12 @@ var
   iFilas: Integer;
 begin
   iFilas := unqryResultados.RecordCount;
-  lblResultados.Caption := Format('%s SKU encontrados',
-                                  [FormatFloat('#,##0', iFilas)]);
   if iFilas >= ObtenerLimite then
-  begin
-    lblResultados.Caption := lblResultados.Caption +
-      ' (límite alcanzado; concrete la búsqueda)';
-  end;
+    lblResultados.Caption := Format(SCaptionSkuEncontradosLimite,
+                                    [FormatFloat('#,##0', iFilas)])
+  else
+    lblResultados.Caption := Format(SCaptionSkuEncontrados,
+                                    [FormatFloat('#,##0', iFilas)]);
 end;
 
 procedure TfrmMtoBusquedaDatos.CrearTablaPrincipal;

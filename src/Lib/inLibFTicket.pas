@@ -57,6 +57,8 @@ type
     procedure ImprimirQRNativo(const ATexto: string;
                                ATamanoModulo: Integer = 8;
                                ANivelError: Integer = 48);
+    procedure ImprimirEAN13Nativo(const ACodigo: string;
+                                  AAltura: Integer = 80);
     property NombreImpresora: string read FNombreImpresora
                                      write FNombreImpresora;
   end;
@@ -109,6 +111,28 @@ begin
   FComandos.Append(#29#40#107#3#0#49#81#48);
   FComandos.Append(#13#10);
   Alinear(alIzquierda);
+end;
+
+procedure TTicketTermico.ImprimirEAN13Nativo(const ACodigo: string;
+                                             AAltura: Integer = 80);
+var
+  sDigitos: string;
+begin
+  // EAN-13 nativo (GS k formato B, m=67). Se envían los 13 dígitos con el
+  // dígito de control ya calculado; el HRI se imprime debajo (GS H 2).
+  sDigitos := Trim(ACodigo);
+  if Length(sDigitos) = 13 then
+  begin
+    Alinear(alCentro);
+    FComandos.Append(GS + 'h' + Chr(AAltura));   // altura en puntos
+    FComandos.Append(GS + 'w' + #2);             // ancho de módulo
+    FComandos.Append(GS + 'H' + #2);             // HRI debajo del código
+    FComandos.Append(GS + 'f' + #0);             // fuente HRI A
+    FComandos.Append(GS + 'k' + #67 +
+                     Chr(Length(sDigitos)) + sDigitos);
+    FComandos.Append(#13#10);
+    Alinear(alIzquierda);
+  end;
 end;
 
 constructor TTicketTermico.Create(const ANombreImpresora: string);

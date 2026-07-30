@@ -121,7 +121,7 @@ begin
       end;
 
     frm.lblInventarioInfo.Caption :=
-      Format('Inventario destino: %s / %s / %s / %s',
+      Format(SCaptionInventarioDestino,
              [AEmpresa, AAlmacen, ASerie, ANro]);
 
     frm.ShowModal;
@@ -134,7 +134,7 @@ end;
 procedure TfrmModalAddBlockInventario.FormCreate(Sender: TObject);
 begin
   inherited;
-  Self.Caption := 'A~adir Bloque - Carga masiva en Inventario';
+  Self.Caption := STituloAnadirBloqueInventario;
 
   // En inventario el stock importa siempre — lo activamos por defecto
   chkSoloConStock.Checked := True;

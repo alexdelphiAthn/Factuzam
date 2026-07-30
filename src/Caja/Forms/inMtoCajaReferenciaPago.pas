@@ -264,9 +264,9 @@ begin
   sDivisa := Copy(txtDivisa.Text, 1, 3);
   if edtFactorCambio.Value > 0 then
   begin
-    lblEquivale.Caption  := Format('1 EUR = %.9n %s',
+    lblEquivale.Caption  := Format(SCaptionEquivalenciaEurDivisa,
                                    [edtFactorCambio.Value, sDivisa]);
-    lblEquivale2.Caption := Format('1 %s = %.2n EUR',
+    lblEquivale2.Caption := Format(SCaptionEquivalenciaDivisaEur,
                                 [sDivisa, 1 / edtFactorCambio.Value]);
   end;
   FDatosResultado.FactorCambio  := edtFactorCambio.Value;
@@ -361,8 +361,9 @@ begin
     edtImporteDivisa.Value := ImporteCalculado;
   edtImporteEuros.Value := edtImporteDivisa.Value * (1/FactorCalculado);
   var sDivisa := Copy(txtDivisa.Text, 1, 3);
-  lblEquivale.Caption  := Format('1 EUR = %.9n %s', [FactorCalculado, sDivisa]);
-  lblEquivale2.Caption := Format('1 %s = %.2n EUR',
+  lblEquivale.Caption  := Format(SCaptionEquivalenciaEurDivisa,
+                                 [FactorCalculado, sDivisa]);
+  lblEquivale2.Caption := Format(SCaptionEquivalenciaDivisaEur,
                                  [sDivisa, 1 / FactorCalculado]);
   FDatosResultado.FactorCambio  := FactorCalculado;
   FDatosResultado.ImporteDivisa := edtImporteDivisa.Value;

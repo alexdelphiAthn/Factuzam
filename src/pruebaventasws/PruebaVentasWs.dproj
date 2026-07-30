@@ -45,7 +45,9 @@
     <DCCReference Include="UParametrosPrueba.pas"/>
     <DCCReference Include="..\Lib\inLibParametrosIntf.pas"/>
     <DCCReference Include="..\Lib\inLibFactuzamApi.pas"/>
+    <DCCReference Include="..\Lib\inLibVentasWsJsonIntf.pas"/>
     <DCCReference Include="..\Lib\inLibVentasWsJson.pas"/>
+    <DCCReference Include="..\DataModules\UniDataVentasWsJson.pas"/>
     <BuildConfiguration Include="Base">
       <Key>Base</Key>
     </BuildConfiguration>

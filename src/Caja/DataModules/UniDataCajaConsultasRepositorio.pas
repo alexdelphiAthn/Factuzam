@@ -56,6 +56,16 @@ type
     function EjecutarConsultarLineasFactura(
       const ASql, ASerie, ANumero: string):
       IResultadoConsultaCaja;
+    function EjecutarConsultarFacturaPorCodigoBarras(
+      const ASql, ACodigoBarras: string):
+      IResultadoConsultaCaja;
+    function EjecutarConsultarFacturaPorOperacion(
+      const ASql, AEmpresa, AAlmacen, ACaja,
+      ANumeroOperacion: string):
+      IResultadoConsultaCaja;
+    function EjecutarConsultarVentasOrigenSku(
+      const ASql, ASku, AEmpresa: string):
+      IResultadoConsultaCaja;
   public
     constructor Create(
       AConexion: TUniConnection;
@@ -77,6 +87,13 @@ type
       const ASerie, ANumero: string): IResultadoConsultaCaja;
     function ConsultarLineasFactura(
       const ASerie, ANumero: string): IResultadoConsultaCaja;
+    function ConsultarFacturaPorCodigoBarras(
+      const ACodigoBarras: string): IResultadoConsultaCaja;
+    function ConsultarFacturaPorOperacion(
+      const AEmpresa, AAlmacen, ACaja,
+      ANumeroOperacion: string): IResultadoConsultaCaja;
+    function ConsultarVentasOrigenSku(
+      const ASku, AEmpresa: string): IResultadoConsultaCaja;
   end;
 
 implementation
@@ -135,6 +152,36 @@ const
     'WHERE SERIE_FAC_FACLIN = :SERIE ' +
     'AND NUMERO_FAC_FACLIN = :NUMERO ' +
     'ORDER BY LINEA_FACLIN';
+  SQL_CONSULTAR_FACTURA_COD_BARRAS =
+    'SELECT SERIE_FAC, NUMERO_FAC, TIPO_FAC, FECHA_FAC, ' +
+    'CODIGO_EMP_FAC, CODIGO_ALM_FAC, CODIGO_CAJA_FAC, ' +
+    'NUMERO_OPERACION_FAC, TOTAL_LIQUIDO_FAC, INSTANTE_ALTA ' +
+    'FROM fza_facturas ' +
+    'WHERE CODIGO_BARRAS_FAC = :CODIGO';
+  SQL_CONSULTAR_FACTURA_OPERACION =
+    'SELECT SERIE_FAC, NUMERO_FAC, TIPO_FAC, FECHA_FAC, ' +
+    'CODIGO_EMP_FAC, CODIGO_ALM_FAC, CODIGO_CAJA_FAC, ' +
+    'NUMERO_OPERACION_FAC, TOTAL_LIQUIDO_FAC, INSTANTE_ALTA ' +
+    'FROM fza_facturas ' +
+    'WHERE CODIGO_EMP_FAC = :EMP ' +
+    'AND CODIGO_ALM_FAC = :ALM ' +
+    'AND CODIGO_CAJA_FAC = :CAJA ' +
+    'AND NUMERO_OPERACION_FAC = :OPERACION';
+  SQL_CONSULTAR_VENTAS_ORIGEN_SKU =
+    'SELECT f.SERIE_FAC, f.NUMERO_FAC, f.TIPO_FAC, ' +
+    'f.INSTANTE_ALTA, f.CODIGO_EMP_FAC, f.CODIGO_ALM_FAC, ' +
+    'f.CODIGO_CAJA_FAC, f.NUMERO_OPERACION_FAC, ' +
+    'f.TOTAL_LIQUIDO_FAC, l.CANTIDAD_FACLIN, l.TOTAL_FACLIN ' +
+    'FROM fza_facturas_lineas l ' +
+    'JOIN fza_facturas f ON f.SERIE_FAC = l.SERIE_FAC_FACLIN ' +
+    'AND f.NUMERO_FAC = l.NUMERO_FAC_FACLIN ' +
+    'WHERE l.CODIGO_UNIDAD_FACLIN = :SKU ' +
+    'AND f.CODIGO_EMP_FAC = :EMP ' +
+    'AND l.CANTIDAD_FACLIN > 0 ' +
+    'AND COALESCE(f.TIPO_FAC, ''NORMAL'') <> ''RECTIFICATIVA'' ' +
+    'AND f.FECHA_FAC >= (CURDATE() - INTERVAL 12 MONTH) ' +
+    'ORDER BY f.INSTANTE_ALTA DESC ' +
+    'LIMIT 200';
 
 function DefinicionConsultarStock: TDefinicionSql;
 begin
@@ -229,6 +276,42 @@ begin
     pesPerfilLecturaConFallback);
 end;
 
+function DefinicionConsultarFacturaPorCodigoBarras: TDefinicionSql;
+begin
+  Result := CrearDefinicionSql(
+    'RepositorioConsultasCaja',
+    'ConsultarFacturaPorCodigoBarras',
+    SQL_CONSULTAR_FACTURA_COD_BARRAS,
+    'CODIGO',
+    'SERIE_FAC,NUMERO_FAC,CODIGO_EMP_FAC,CODIGO_ALM_FAC',
+    tssSelect,
+    pesPerfilLecturaConFallback);
+end;
+
+function DefinicionConsultarFacturaPorOperacion: TDefinicionSql;
+begin
+  Result := CrearDefinicionSql(
+    'RepositorioConsultasCaja',
+    'ConsultarFacturaPorOperacion',
+    SQL_CONSULTAR_FACTURA_OPERACION,
+    'EMP,ALM,CAJA,OPERACION',
+    'SERIE_FAC,NUMERO_FAC,CODIGO_EMP_FAC,CODIGO_ALM_FAC',
+    tssSelect,
+    pesPerfilLecturaConFallback);
+end;
+
+function DefinicionConsultarVentasOrigenSku: TDefinicionSql;
+begin
+  Result := CrearDefinicionSql(
+    'RepositorioConsultasCaja',
+    'ConsultarVentasOrigenSku',
+    SQL_CONSULTAR_VENTAS_ORIGEN_SKU,
+    'SKU,EMP',
+    'SERIE_FAC,NUMERO_FAC,CODIGO_ALM_FAC,INSTANTE_ALTA',
+    tssSelect,
+    pesPerfilLecturaConFallback);
+end;
+
 constructor TConsultaCaja.Create(ADataSet: TDataSet);
 begin
   inherited Create;
@@ -260,7 +343,7 @@ end;
 class function TRepositorioConsultasCaja.DefinicionesSql:
   TDefinicionesSql;
 begin
-  SetLength(Result, 7);
+  SetLength(Result, 10);
   Result[0] := DefinicionConsultarStock;
   Result[1] := DefinicionConsultarClientes;
   Result[2] := DefinicionConsultarEmpleados;
@@ -268,6 +351,9 @@ begin
   Result[4] := DefinicionObtenerCliente;
   Result[5] := DefinicionConsultarCabeceraFactura;
   Result[6] := DefinicionConsultarLineasFactura;
+  Result[7] := DefinicionConsultarFacturaPorCodigoBarras;
+  Result[8] := DefinicionConsultarFacturaPorOperacion;
+  Result[9] := DefinicionConsultarVentasOrigenSku;
 end;
 
 function TRepositorioConsultasCaja.EjecutarConsulta(
@@ -629,6 +715,149 @@ begin
         ASql,
         ASerie,
         ANumero);
+    end,
+    FIncidenciasSql);
+  Result := oResultado;
+end;
+
+function TRepositorioConsultasCaja.
+  EjecutarConsultarFacturaPorCodigoBarras(
+  const ASql, ACodigoBarras: string):
+  IResultadoConsultaCaja;
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := ASql;
+    oConsulta.ParamByName('CODIGO').AsString := ACodigoBarras;
+    oConsulta.Open;
+    ValidarCamposResultadoSql(
+      DefinicionConsultarFacturaPorCodigoBarras,
+      oConsulta);
+    Result := TConsultaCaja.Create(oConsulta);
+    oConsulta := nil;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioConsultasCaja.
+  EjecutarConsultarFacturaPorOperacion(
+  const ASql, AEmpresa, AAlmacen, ACaja,
+  ANumeroOperacion: string):
+  IResultadoConsultaCaja;
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := ASql;
+    oConsulta.ParamByName('EMP').AsString := AEmpresa;
+    oConsulta.ParamByName('ALM').AsString := AAlmacen;
+    oConsulta.ParamByName('CAJA').AsString := ACaja;
+    oConsulta.ParamByName('OPERACION').AsString :=
+      ANumeroOperacion;
+    oConsulta.Open;
+    ValidarCamposResultadoSql(
+      DefinicionConsultarFacturaPorOperacion,
+      oConsulta);
+    Result := TConsultaCaja.Create(oConsulta);
+    oConsulta := nil;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioConsultasCaja.
+  EjecutarConsultarVentasOrigenSku(
+  const ASql, ASku, AEmpresa: string):
+  IResultadoConsultaCaja;
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := ASql;
+    oConsulta.ParamByName('SKU').AsString := ASku;
+    oConsulta.ParamByName('EMP').AsString := AEmpresa;
+    oConsulta.Open;
+    ValidarCamposResultadoSql(
+      DefinicionConsultarVentasOrigenSku,
+      oConsulta);
+    Result := TConsultaCaja.Create(oConsulta);
+    oConsulta := nil;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioConsultasCaja.ConsultarFacturaPorCodigoBarras(
+  const ACodigoBarras: string): IResultadoConsultaCaja;
+var
+  oDefinicion: TDefinicionSql;
+  oResultado: IResultadoConsultaCaja;
+begin
+  oDefinicion := DefinicionConsultarFacturaPorCodigoBarras;
+  oResultado := nil;
+  EjecutarLecturaSqlConFallback(
+    oDefinicion,
+    FCatalogoSql,
+    procedure(const ASql: string)
+    begin
+      oResultado := EjecutarConsultarFacturaPorCodigoBarras(
+        ASql,
+        ACodigoBarras);
+    end,
+    FIncidenciasSql);
+  Result := oResultado;
+end;
+
+function TRepositorioConsultasCaja.ConsultarFacturaPorOperacion(
+  const AEmpresa, AAlmacen, ACaja,
+  ANumeroOperacion: string): IResultadoConsultaCaja;
+var
+  oDefinicion: TDefinicionSql;
+  oResultado: IResultadoConsultaCaja;
+begin
+  oDefinicion := DefinicionConsultarFacturaPorOperacion;
+  oResultado := nil;
+  EjecutarLecturaSqlConFallback(
+    oDefinicion,
+    FCatalogoSql,
+    procedure(const ASql: string)
+    begin
+      oResultado := EjecutarConsultarFacturaPorOperacion(
+        ASql,
+        AEmpresa,
+        AAlmacen,
+        ACaja,
+        ANumeroOperacion);
+    end,
+    FIncidenciasSql);
+  Result := oResultado;
+end;
+
+function TRepositorioConsultasCaja.ConsultarVentasOrigenSku(
+  const ASku, AEmpresa: string): IResultadoConsultaCaja;
+var
+  oDefinicion: TDefinicionSql;
+  oResultado: IResultadoConsultaCaja;
+begin
+  oDefinicion := DefinicionConsultarVentasOrigenSku;
+  oResultado := nil;
+  EjecutarLecturaSqlConFallback(
+    oDefinicion,
+    FCatalogoSql,
+    procedure(const ASql: string)
+    begin
+      oResultado := EjecutarConsultarVentasOrigenSku(
+        ASql,
+        ASku,
+        AEmpresa);
     end,
     FIncidenciasSql);
   Result := oResultado;

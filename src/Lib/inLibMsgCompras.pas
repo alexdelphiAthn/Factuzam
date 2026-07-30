@@ -151,6 +151,14 @@ resourcestring
   SErrorAlbaranCompraSinCantidadParaMovimientos =
     'El albaran %s/%s no tiene ninguna linea o celda con cantidad > 0 para ' +
     'generar movimientos.';
+  SErrorMovimientosAlbaranCompraNoRegistrados =
+    'La persistencia de movimientos de albaranes de compra no esta ' +
+    'registrada.';
+  SErrorPedidosCompraNoRegistrados =
+    'La persistencia de pedidos de compra no esta registrada.';
+  SErrorMovimientosDevolucionCompraNoRegistrados =
+    'La persistencia de movimientos de devoluciones de compra no esta ' +
+    'registrada.';
   SErrorDevolucionCompraMovimientosNoEncontrada =
     'Devolucion de compra %s/%s no encontrada para generar movimientos.';
   SErrorDevolucionCompraMovimientosYaGenerados =
@@ -516,6 +524,36 @@ resourcestring
     'Indica un almacen destino.';
   SErrorFacturaCompraExportarNoPreparada =
     'No hay factura de compra preparada para exportar.';
+  // R02 - Pestaña de líneas de documentos de compra
+  SCaptionTabLineasCompra = '&1_Líneas';
+  // Conserva el espacio final: distingue el modo sin construir
+  SCaptionTabLineasCompraSinConstruir = '&1_Líneas ';
+  // R03 - Sesiones de compra: foto provisional y modal de modelo
+  SCaptionSeleccioneLineaSesion =
+    'Seleccione una línea de la sesión.';
+  SCaptionLineaFotoDetalle = 'Línea %d · %s · %s';
+  SCaptionLineaSinFotoProvisional =
+    'Línea %d · sin foto provisional';
+  SCaptionDestinoArticulo = 'artículo';
+  SCaptionDestinoSku = 'SKU %s';
+  SCaptionModeloCompra = 'Modelo';
+  SCaptionCodigoCompra = 'Codigo';
+  // R05 - Pestaña de líneas de documentos de compra sin acelerador
+  SCaptionTabLineasDocCompra = 'Líneas';
+  // Conserva el espacio final: distingue el modo sin construir
+  SCaptionTabLineasDocCompraSinConstruir = 'Líneas ';
+  // R07 - Pedidos de compra
+  SCaptionContextoTallaPedido =
+    'Talla %s    Pedido: %.0f    Recibido: %.0f';
+  SCaptionAlbaranCreadoPedidoCompra =
+    'Albaran creado desde el pedido %s/%s';
+  // R11 - Modales de sesiones de compra y recepción
+  SCaptionModeloYaEnLinea =
+    'El modelo %s ya está en la línea %d de esta sesión. ' +
+    '¿Qué quieres hacer?';
+  SCaptionCrearAlbaranDesdePedidoCompra =
+    'Crear albarán desde pedido %s';
+  SCaptionCodigoExistente = 'Código existente: %s';
 implementation
 
 end.

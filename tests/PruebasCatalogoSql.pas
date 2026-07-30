@@ -530,7 +530,7 @@ begin
   oRegistro :=
     CrearRegistroDefinicionesSqlAplicacion;
   oDefiniciones := oRegistro.ObtenerDefiniciones;
-  Assert.AreEqual(66, oRegistro.Cantidad);
+  Assert.AreEqual(120, oRegistro.Cantidad);
   Assert.AreEqual(
     'SQL__RepositorioComprasSesiones__ObtenerSiguienteLinea',
     ClavePerfilSql(oDefiniciones[0]));

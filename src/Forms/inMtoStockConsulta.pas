@@ -294,9 +294,9 @@ uses
   System.StrUtils,
   inLibAtributosPaleta,
   inLibGenBusq, inLibUser,
-  inLibArticulosValidador,
+  inLibArticulosValidadorIntf,
   inMtoModalOperacionesCajaSku, inLibMsgArticulos, inLibMsgCaja,
-  inLibMsgVentas;
+  inLibMsgComun, inLibMsgVentas;
 
 {$R *.dfm}
 
@@ -456,7 +456,7 @@ begin
   FPopMenuStock := TPopupMenu.Create(Self);
   FPopMenuStock.OnPopup := PopMenuStockPopup;
   FMenuAgregarDoc := TMenuItem.Create(FPopMenuStock);
-  FMenuAgregarDoc.Caption := 'Agregar a Documento de Trabajo...';
+  FMenuAgregarDoc.Caption := SCaptionAgregarDocumentoTrabajo;
   FMenuAgregarDoc.OnClick := MenuAgregarDocClick;
   FPopMenuStock.Items.Add(FMenuAgregarDoc);
   grdStock.PopupMenu := FPopMenuStock;
@@ -465,14 +465,14 @@ begin
   FEstadosCombo := TList<TEstadoStock>.Create;
   FrbSimplificado := TcxRadioButton.Create(Self);
   FrbSimplificado.Parent := pnlFiltros;
-  FrbSimplificado.Caption := 'Simplificado';
+  FrbSimplificado.Caption := SCaptionModoSimplificado;
   FrbSimplificado.SetBounds(cbbEstado.Left + cbbEstado.Width + 16,
                             cbbEstado.Top, 110, 18);
   FrbSimplificado.GroupIndex := 1;
   FrbSimplificado.OnClick := rbModoClick;
   FrbDesglosado := TcxRadioButton.Create(Self);
   FrbDesglosado.Parent := pnlFiltros;
-  FrbDesglosado.Caption := 'Desglosado';
+  FrbDesglosado.Caption := SCaptionModoDesglosado;
   FrbDesglosado.SetBounds(FrbSimplificado.Left + FrbSimplificado.Width + 4,
                           cbbEstado.Top, 110, 18);
   FrbDesglosado.GroupIndex := 1;
@@ -841,7 +841,7 @@ begin
       iFilas := 15;
     FCbbCoincidencias.Properties.DropDownRows := iFilas;
     FCbbCoincidencias.ItemIndex := -1;
-    FCbbCoincidencias.Hint := 'Coincidencias para ' + AEntrada;
+    FCbbCoincidencias.Hint := Format(SHintCoincidenciasPara, [AEntrada]);
     FCbbCoincidencias.Visible := True;
     FCbbCoincidencias.BringToFront;
     if FCbbCoincidencias.CanFocus then
@@ -1828,7 +1828,7 @@ begin
   FBtnHistAnterior := TcxButton.Create(Self);
   FBtnHistAnterior.Parent := pnlCabecera;
   FBtnHistAnterior.Caption := '<';
-  FBtnHistAnterior.Hint := 'Artículo anterior';
+  FBtnHistAnterior.Hint := SHintArticuloAnterior;
   FBtnHistAnterior.ShowHint := True;
   FBtnHistAnterior.SetBounds(btnArt.Left + btnArt.Width + 8,
                              btnArt.Top, 28, btnArt.Height);
@@ -1836,7 +1836,7 @@ begin
   FBtnHistSiguiente := TcxButton.Create(Self);
   FBtnHistSiguiente.Parent := pnlCabecera;
   FBtnHistSiguiente.Caption := '>';
-  FBtnHistSiguiente.Hint := 'Artículo siguiente';
+  FBtnHistSiguiente.Hint := SHintArticuloSiguiente;
   FBtnHistSiguiente.ShowHint := True;
   FBtnHistSiguiente.SetBounds(FBtnHistAnterior.Left +
                               FBtnHistAnterior.Width + 4,
@@ -1929,11 +1929,11 @@ begin
     ts.PageControl := pcVistas;
     case dim of
       dfFamilia:
-        ts.Caption := 'Fotos misma familia';
+        ts.Caption := SCaptionFotosMismaFamilia;
       dfProveedor:
-        ts.Caption := 'Fotos mismo proveedor';
+        ts.Caption := SCaptionFotosMismoProveedor;
       dfTemporada:
-        ts.Caption := 'Fotos misma temporada';
+        ts.Caption := SCaptionFotosMismaTemporada;
     end;
     FTsFotos[dim] := ts;
     FFotosCargadas[dim] := False;
@@ -2369,8 +2369,8 @@ begin
   lblStock.Parent := pnl;
   lblStock.SetBounds(8, 168, CAncho - 16, 62);
   lblStock.AutoSize := False;
-  lblStock.Caption := 'Colores: ' + sColores + sLineBreak +
-                      'Tallas: ' + sTallas;
+  lblStock.Caption := Format(SCaptionColoresTallas,
+                             [sColores, sTallas]);
   lblStock.Font.Height := -11;
   lblStock.Font.Color := clWindowText;
   lblStock.WordWrap := True;
@@ -2988,8 +2988,10 @@ begin
   // color basico a la izquierda del texto, via inLibAtributosPaleta.
   // En modo Por Almacen, se muestra el codigo del almacen plano.
   FColGrupo := tvStock.CreateColumn;
-  if AEsColor then FColGrupo.Caption := 'Color'
-  else             FColGrupo.Caption := 'Almacén';
+  if AEsColor then
+    FColGrupo.Caption := SCaptionColColor
+  else
+    FColGrupo.Caption := SCaptionColAlmacen;
   FColGrupo.DataBinding.FieldName := 'GRUPO';
   if AEsColor then
     FColGrupo.Width := 150  // espacio extra para el cuadradito
@@ -3005,7 +3007,7 @@ begin
   if FEsModoTodo then
   begin
     FColEstado := tvStock.CreateColumn;
-    FColEstado.Caption := 'Estado';
+    FColEstado.Caption := SCaptionColEstado;
     FColEstado.DataBinding.FieldName := 'ESTADO_NUM';
     FColEstado.OnGetDisplayText := ColEstadoGetDisplayText;
     FColEstado.Width := 110;
@@ -3037,7 +3039,7 @@ begin
 
   // Total al final.
   colTotal := tvStock.CreateColumn;
-  colTotal.Caption := 'Total';
+  colTotal.Caption := SCaptionColTotal;
   colTotal.DataBinding.FieldName := 'TOTAL';
   colTotal.PropertiesClassName := 'TcxCurrencyEditProperties';
   TcxCurrencyEditProperties(colTotal.Properties).DisplayFormat := '#,##0.##;-#,##0.##;0';

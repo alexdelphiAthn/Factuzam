@@ -322,9 +322,9 @@ end;
 procedure TfrmFotoArticulo.AjustarBotonToggle;
 begin
   if pnlControles.Visible then
-    btnToggle.Caption := '▲ Controles'
+    btnToggle.Caption := SCaptionControlesExpandido
   else
-    btnToggle.Caption := '▼ Controles';
+    btnToggle.Caption := SCaptionControlesContraido;
 end;
 
 procedure TfrmFotoArticulo.btnToggleClick(Sender: TObject);
@@ -419,14 +419,15 @@ begin
   FCodigoSku := ACodSku;
   FUltimaInfo := oFotos.Resolver(ACodArt, ACodSku);
   case FUltimaInfo.Origen of
-    foSku        : lblOrigen.Caption := 'Foto del SKU: ' + ACodSku;
-    foSkuPrefijo : lblOrigen.Caption := 'Foto heredada del grupo: ' +
-                                        FUltimaInfo.ClaveResuelta;
-    foArticulo   : lblOrigen.Caption := 'Foto heredada del artículo: ' +
-                                        ACodArt;
-    foSinFoto    : lblOrigen.Caption := 'Sin foto para ' + ACodArt +
-                                        IfThen(ACodSku <> '',
-                                               ' / ' + ACodSku, '');
+    foSku        : lblOrigen.Caption :=
+      Format(SCaptionFotoDelSku, [ACodSku]);
+    foSkuPrefijo : lblOrigen.Caption :=
+      Format(SCaptionFotoHeredadaGrupo, [FUltimaInfo.ClaveResuelta]);
+    foArticulo   : lblOrigen.Caption :=
+      Format(SCaptionFotoHeredadaArticulo, [ACodArt]);
+    foSinFoto    : lblOrigen.Caption :=
+      Format(SCaptionSinFotoPara,
+             [ACodArt, IfThen(ACodSku <> '', ' / ' + ACodSku, '')]);
   end;
   // Reflejamos en el caption (titulo de la ventana) solo el codigo del
   // articulo o SKU activo: tanto el contexto como el icono de la

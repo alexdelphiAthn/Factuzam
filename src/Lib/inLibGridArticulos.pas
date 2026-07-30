@@ -12,8 +12,8 @@
 {    Controladora reutilizable de la operativa de entrada de articulos en un   }
 {    grid (cxGridDBTableView + cds): columna de articulo (teclear/escanear +   }
 {    buscar), columnas dinamicas de atributos (talla/color) como desplegables, }
-{    resolucion via inLibArticulosValidador, valores via                       }
-{    inLibArticulosAtributosLookup, generacion del SKU y consolidacion.        }
+{    resolucion via inLibArticulosValidadorIntf, valores via              }
+{    inLibArticulosAtributosIntf, generacion del SKU y consolidacion.     }
 {                                                                              }
 {    La misma logica que el grid de ventas de inMtoCajaOpe, pero desacoplada   }
 {    por nombres de campo (TCamposGridArt) para que la usen varios grids       }
@@ -35,7 +35,8 @@ uses
   cxEdit, cxTextEdit, cxButtonEdit, cxDropDownEdit,
   cxEditRepositoryItems, cxDBExtLookupComboBox, cxGrid,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
-  inLibArticulosValidador, inLibArticulosAtributosLookup, inLibAtributosPaleta,
+  inLibArticulosValidadorIntf, inLibArticulosAtributosIntf,
+  inLibAtributosPaleta,
   inLibContextoSesionIntf;
 
 type
@@ -258,12 +259,10 @@ begin
   FCampos := ACampos;
   FValidador := AValidador;
   if not Assigned(FValidador) then
-    FValidador := CrearValidadorArticulosBase(
-      AConn);
+    raise Exception.Create(SErrorValidadorArticulosNoInyectado);
   FLookup := ALookup;
   if not Assigned(FLookup) then
-    FLookup := CrearLookupAtributosArticulosBase(
-      AConn);
+    raise Exception.Create(SErrorLookupAtributosNoInyectado);
   FOrdenPopupPend := 0;
   FTimerPopup := TTimer.Create(nil);
   FTimerPopup.Enabled := False;
@@ -469,7 +468,7 @@ end;
 procedure TGridArticulosLineas.CrearColumnaArticulo;
 begin
   FColArticulo := FView.CreateColumn;
-  FColArticulo.Caption := 'Artículo / SKU';
+  FColArticulo.Caption := SCaptionColArticuloSku;
   FColArticulo.DataBinding.FieldName := FCampos.CodigoArt;
   FColArticulo.Width := 220;
   FColArticulo.PropertiesClass := TcxButtonEditProperties;
@@ -523,7 +522,7 @@ begin
   FBusqView.OptionsSelection.CellSelect := False;
   FBusqView.OptionsBehavior.IncSearch := False;
   FBusqColSku := FBusqView.CreateColumn;
-  FBusqColSku.Caption := 'SKU';
+  FBusqColSku.Caption := SCaptionColSku;
   FBusqColSku.DataBinding.FieldName := 'SKU';
   FBusqColSku.Width := 200;
   FBusqColInput := FBusqView.CreateColumn;

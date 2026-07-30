@@ -136,7 +136,8 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibLog, inLibColumnasSkuModoTallas;
+  inLibLog, inLibDistribuidorTallas, inLibMsgArticulos,
+  inLibMsgComun;
 
 type
   TEjecutorDistribuidorTallasMto = class(TEjecutorDistribuidorTallas)
@@ -278,7 +279,7 @@ begin
   if FCodigoKit <> '' then
   begin
     CargarKit;
-    lblTitulo.Caption := 'Distribucion almacen / talla  -  Kit ' + FCodigoKit;
+    lblTitulo.Caption := Format(SCaptionDistribucionKit, [FCodigoKit]);
     btnKitTodos.Visible := True;
   end;
   PrepararEstructura;
@@ -334,19 +335,19 @@ begin
   begin
     with tvCuadr.CreateColumn do
     begin
-      Caption := 'Kit ' + FCodigoKit;
+      Caption := Format(SCaptionColKit, [FCodigoKit]);
       PropertiesClass := TcxButtonEditProperties;
       with TcxButtonEditProperties(Properties) do
       begin
         ReadOnly := True;
         Buttons[0].Kind    := bkText;
-        Buttons[0].Caption := 'Aplicar';
+        Buttons[0].Caption := SCaptionAplicar;
         Buttons[0].Default := False;
         Buttons[0].Width   := 78;
         with Buttons.Add do
         begin
           Kind    := bkText;
-          Caption := 'Limpiar';
+          Caption := SCaptionLimpiar;
           Width   := 78;
         end;
         OnButtonClick := ColKitPropertiesButtonClick;

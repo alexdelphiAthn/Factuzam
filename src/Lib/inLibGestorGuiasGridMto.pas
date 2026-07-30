@@ -355,7 +355,7 @@ begin
             sTabla, oSubmenu) then
           begin
             oSubmenu := TMenuItem.Create(FMenu);
-            oSubmenu.Caption := 'Guía: ' + sTabla;
+            oSubmenu.Caption := Format(SCaptionGuiaTabla, [sTabla]);
             oSubmenus.Add(sTabla, oSubmenu);
           end;
           oSubmenu.Add(oItem);
@@ -373,11 +373,11 @@ begin
     FreeAndNil(oSubmenus);
   end;
   oAccion := TMenuItem.Create(FMenu);
-  oAccion.Caption := 'Renombrar columna...';
+  oAccion.Caption := SCaptionRenombrarColumna;
   oAccion.OnClick := RenombrarClick;
   FMenu.Items.Add(oAccion);
   oAccion := TMenuItem.Create(FMenu);
-  oAccion.Caption := 'Nueva guía...';
+  oAccion.Caption := SCaptionNuevaGuia;
   oAccion.OnClick := NuevaGuiaClick;
   FMenu.Items.Add(oAccion);
 end;
@@ -412,7 +412,7 @@ begin
   oEditores := TStringList.Create;
   oFormulario := TForm.Create(FFormulario);
   try
-    oFormulario.Caption := 'Renombrar columnas';
+    oFormulario.Caption := STituloRenombrarColumnas;
     oFormulario.Width := 620;
     oFormulario.Position := poMainFormCenter;
     oFormulario.BorderStyle := bsDialog;
@@ -451,7 +451,7 @@ begin
     oPanelBotones.BevelOuter := bvNone;
     oBotonAceptar := TButton.Create(oPanelBotones);
     oBotonAceptar.Parent := oPanelBotones;
-    oBotonAceptar.Caption := 'Aplicar';
+    oBotonAceptar.Caption := SCaptionAplicar;
     oBotonAceptar.ModalResult := mrOk;
     oBotonAceptar.Left := 370;
     oBotonAceptar.Top := 8;
@@ -459,7 +459,7 @@ begin
     oBotonAceptar.Height := 30;
     oBotonCancelar := TButton.Create(oPanelBotones);
     oBotonCancelar.Parent := oPanelBotones;
-    oBotonCancelar.Caption := 'Cancelar';
+    oBotonCancelar.Caption := SCaptionCancelar;
     oBotonCancelar.ModalResult := mrCancel;
     oBotonCancelar.Left := 490;
     oBotonCancelar.Top := 8;

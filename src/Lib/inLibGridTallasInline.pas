@@ -498,7 +498,7 @@ begin
     if FCfg.ColumnasTallas[i] = nil then Continue;
     FCfg.ColumnasTallas[i].Visible := (i < iMax);
     if i < iMax then
-      FCfg.ColumnasTallas[i].Caption := 'Talla ' + IntToStr(i + 1);
+      FCfg.ColumnasTallas[i].Caption := Format(SCaptionColTallaN, [i + 1]);
   end;
 end;
 
@@ -525,7 +525,7 @@ begin
     if i < Length(arr) then
       FCfg.ColumnasTallas[i].Caption := arr[i].Valor
     else
-      FCfg.ColumnasTallas[i].Caption := 'Talla ' + IntToStr(i + 1);
+      FCfg.ColumnasTallas[i].Caption := Format(SCaptionColTallaN, [i + 1]);
   end;
 end;
 

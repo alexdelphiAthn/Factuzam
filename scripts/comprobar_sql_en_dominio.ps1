@@ -1,9 +1,9 @@
 param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoSentenciasSql = 341,
+  [int]$MaximoSentenciasSql = 223,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoUnidadesConSql = 67,
+  [int]$MaximoUnidadesConSql = 59,
   [switch]$MostrarTodos,
   [string]$RutaInventario = ''
 )
@@ -236,9 +236,17 @@ $directorios = @(
   (Join-Path $Raiz 'src\Lib'),
   (Join-Path $Raiz 'src\Caja\Lib')
 )
+$rutasAdicionalesVigiladas = @(
+  (Join-Path $Raiz 'src\verifactu\inLibVerifactuCola.pas')
+)
 foreach ($directorio in $directorios) {
   if (-not (Test-Path -LiteralPath $directorio -PathType Container)) {
     throw "No se encontro el directorio de dominio: $directorio."
+  }
+}
+foreach ($rutaAdicional in $rutasAdicionalesVigiladas) {
+  if (-not (Test-Path -LiteralPath $rutaAdicional -PathType Leaf)) {
+    throw "No se encontro la unidad de dominio vigilada: $rutaAdicional."
   }
 }
 $archivos = @(
@@ -248,6 +256,7 @@ $archivos = @(
       $_.FullName -notlike '*\Lib\backup\*' -and
       $_.FullName -notlike '*\Lib\sqlformatter\*'
     }
+  Get-Item -LiteralPath $rutasAdicionalesVigiladas
 )
 $mediciones = [System.Collections.Generic.List[object]]::new()
 foreach ($archivo in $archivos) {

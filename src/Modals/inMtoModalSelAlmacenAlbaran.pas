@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoModalSelAlmacenAlbaran                                   }
 {    Tipo:       Formulario (Modal)                                            }
@@ -161,9 +161,9 @@ end;
 procedure TfrmModalSelAlmacenAlbaran.FormShow(Sender: TObject);
 begin
   inherited;
-  lblPedido.Caption := 'Crear albarán desde pedido ' +
-    FormatearDocumentoEmpresa(ConexionPrincipal, FCodigoEmpresa, FSeriePed,
-      FNumPed);
+  lblPedido.Caption := Format(SCaptionCrearAlbaranDesdePedido,
+    [FormatearDocumentoEmpresa(ConexionPrincipal, FCodigoEmpresa, FSeriePed,
+      FNumPed)]);
   CargarAlmacenes;
   CargarAlbaranesPedido;
   // Defecto: almacen comun de las lineas a entregar. Si viene vacio

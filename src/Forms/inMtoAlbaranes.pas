@@ -288,11 +288,12 @@ implementation
 uses
   inMtoModalFacturarAlbaranesFechas, inLibGridCantidad,
   inLibGenBusq, inLibShowMto, inLibFiltroUsuario, Uni,
-  inLibArticulosResolverIntf, inLibArticulosValidador, inLibVentasImpuestos,
+  inLibArticulosResolverIntf, inLibArticulosValidadorIntf,
+  UniDataArticulosValidadorRepositorio, inLibVentasImpuestos,
   inLibValoresAutomaticos, inLibUser, inLibColumnasSku,
-  inLibColumnasDocumento,
+  inLibColumnasDocumento, UniDataGen,
   inLibValidacionDocumento, inLibPresentacionDocumento,
-  inLibMsgArticulos, inLibMsgFacturas, inLibMsgVentas;
+  inLibMsgArticulos, inLibMsgComun, inLibMsgFacturas, inLibMsgVentas;
 
 {$R *.dfm}
 
@@ -743,12 +744,12 @@ begin
     FModoEntradaSel, [], '');
   CrearColumnasHostAlbaran;
   case DetectarModoColumnasSku(Cfg) of
-    mcsSku: tsLineasAlbaran.Caption := 'Líneas [SKU]';
+    mcsSku: tsLineasAlbaran.Caption := SCaptionLineasSku;
     mcsTallasInline:
-      tsLineasAlbaran.Caption := 'Líneas [Tallas horiz.]';
+      tsLineasAlbaran.Caption := SCaptionLineasTallasHoriz;
   else
     begin
-      tsLineasAlbaran.Caption := 'Líneas [Desglose]';
+      tsLineasAlbaran.Caption := SCaptionLineasDesglose;
       MostrarColumnasAtributoGlobalesAlb;
     end;
   end;

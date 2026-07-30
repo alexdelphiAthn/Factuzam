@@ -399,7 +399,9 @@ begin
   // Aviso (no bloqueante): comprueba que la numeracion de la serie no tenga
   // huecos (que cada numero tenga su anterior). Si faltan numeros no se
   // cumple la correlatividad legal; aqui solo se recuerda al usuario.
-  if Trim(ASerie) <> '' then
+  // El parametro de caja vgerAvisoHuecosNumeracion permite silenciarlo.
+  if (Trim(ASerie) <> '') and
+     ParametrosCaja.GetBool('vgerAvisoHuecosNumeracion', True) then
   begin
     Qry := TUniQuery.Create(nil);
     try
@@ -1036,7 +1038,7 @@ begin
   txtPorcenDtoGlobal.Enabled := False;
   txtValeEmitido.Properties.ReadOnly := False;
   txtValeEmitido.Style.Color := clWindow;
-  lblPendienteCobroAlt.Caption := 'Pendiente de devolver';
+  lblPendienteCobroAlt.Caption := SCaptionPendienteDevolver;
 end;
 
 procedure TfrmMtoCajaFaseCobro.ConfigurarModoCobroNormal;
@@ -1047,8 +1049,7 @@ begin
     txtPorcenDtoGlobal.Enabled := False;
     txtPorcenDtoGlobal.Value   := 0;
     // Opcional: tooltip explicativo
-    txtPorcenDtoGlobal.Hint    :=
-      'No se puede aplicar descuento global con líneas de depósito';
+    txtPorcenDtoGlobal.Hint    := SHintSinDescuentoGlobalDeposito;
     txtPorcenDtoGlobal.ShowHint := True;
   end
   else
@@ -1057,7 +1058,7 @@ begin
 
   txtValeEmitido.Properties.ReadOnly := True;
   txtValeEmitido.Style.Color := clWhite;
-  lblPendienteCobroAlt.Caption := 'Pendiente de cobro';
+  lblPendienteCobroAlt.Caption := SCaptionPendienteCobro;
 end;
 
 procedure TfrmMtoCajaFaseCobro.txtValeEmitidoPropertiesEditValueChanged(

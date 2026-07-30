@@ -362,6 +362,114 @@ resourcestring
   SInfoEmpresaSinCuentasBancarias =
     'La empresa no tiene cuentas bancarias activas. El documento se ' +
     'generará sin banco de empresa asignado.';
+  // R01 - Textos de controles e indicadores en ejecución
+  SCaptionCancelandoOperacion = 'Cancelando operación...';
+  SCaptionPreparando = 'Preparando...';
+  SCaptionVersion = 'Versión %s';
+  STituloGuardarExcel = 'Guardar Excel';
+  SCaptionFiltroTodosArchivos = 'Todos los archivos';
+  SCaptionFiltroArchivo = 'Archivo %s';
+  // R02 - Búsqueda de datos y pestañas de líneas
+  SCaptionLineasSku = 'Líneas [SKU]';
+  SCaptionLineasTallasHoriz = 'Líneas [Tallas horiz.]';
+  SCaptionLineasDesglose = 'Líneas [Desglose]';
+  SCaptionAnadirDocumentoTrabajo = 'Añadir a Documento de Trabajo...';
+  SCaptionSeleccioneFiltrosBuscar =
+    'Seleccione los filtros y pulse Buscar';
+  SCaptionColorObjetivo = 'Color objetivo';
+  SCaptionColorBasico = 'Color básico';
+  SCaptionTextoABuscar = 'Texto a buscar';
+  SCaptionOcultarCriterios = 'Ocultar criterios';
+  SCaptionMostrarCriterios = 'Mostrar criterios';
+  SCaptionSkuEncontrados = '%s SKU encontrados';
+  SCaptionSkuEncontradosLimite =
+    '%s SKU encontrados (límite alcanzado; concrete la búsqueda)';
+  SCaptionFiltrosCargaContraido = #9654'  Filtros de carga';
+  SCaptionFiltrosCargaExpandido = #9660'  Filtros de carga';
+  // R03 - Botones genéricos de diálogo
+  SCaptionCancelar = 'Cancelar';
+  // R06 - Estado de edición y menú de editores
+  SCaptionEstadoInsertando = 'Insertando';
+  SCaptionEstadoEditando = 'Editando';
+  SCaptionEstadoNavegando = 'Navegando';
+  SCaptionEstadoInactivo = 'Inactivo';
+  SCaptionMenuDeshacer = '&Deshacer';
+  SCaptionMenuRehacer = '&Rehacer';
+  SCaptionMenuBorrarLinea = '&Borrar Línea';
+  SCaptionMenuCortar = 'Cor&tar';
+  SCaptionMenuCopiar = '&Copiar';
+  SCaptionMenuPegar = '&Pegar';
+  SCaptionCopiarDatos = 'Copiar datos';
+  // R08 - Menú contextual de stock
+  SCaptionAgregarDocumentoTrabajo =
+    'Agregar a Documento de Trabajo...';
+  // R09 - Botones y títulos genéricos de modales
+  SCaptionAceptarF12 = '&Aceptar (F12)';
+  SCaptionCancelarEsc = '&Cancelar (ESC)';
+  SCaptionAceptar = 'Aceptar';
+  SCaptionAplicar = 'Aplicar';
+  SCaptionLimpiar = 'Limpiar';
+  STituloBusquedaEmpleados = 'Búsqueda de Empleados';
+  // R10 - Filtros de informes y listados
+  SCaptionCondicionesFiltroCompartido =
+    'Condiciones del filtro compartido. Puede editarlas y guardar ' +
+    'una copia propia:';
+  SCaptionCondicionesFiltroSeleccionado =
+    'Condiciones del filtro seleccionado (puede editarlas):';
+  SCaptionTabFechas = 'Fechas';
+  SCaptionFechaInicio = 'Fecha inicio:';
+  SCaptionFechaFin = 'Fecha fin:';
+  SHintEscribaIntroFiltrar =
+    'Escriba y pulse Intro para filtrar (sin marcar nada = todos)';
+  SCaptionMarqueValoresIncluir =
+    'Marque los valores a incluir. Si no marca ninguno, salen todos.';
+  SCaptionMarqueAgrupacion =
+    'Marque por qu' + #233 + ' agrupar y ordene los niveles con ' +
+    'Subir/Bajar (el primero es el grupo m' + #225 + 's externo). ' +
+    'Sin marcar = sin agrupar.';
+  SCaptionSubir = 'Subir';
+  SCaptionBajar = 'Bajar';
+  SCaptionNivelFamilia = 'Nivel familia:';
+  SHintNivelFamilia =
+    'Al agrupar por familia: 0 = familia del art' + #237 +
+    'culo; 1 = familia ra' + #237 + 'z; 2, 3... niveles intermedios.';
+  SCaptionTabFamilias = 'Familias';
+  SCaptionDobleClicMarcaFamilia =
+    'Doble clic o barra espaciadora marca/desmarca. Marcar una ' +
+    'familia incluye sus subfamilias. Sin marcar = todas.';
+  SHintBuscarFamilia = 'Escriba para buscar una familia';
+  SCaptionExportarExcel = 'Exportar Excel';
+  SCaptionSalir = 'Salir';
+  SCaptionDesde = 'Desde';
+  SCaptionHasta = 'Hasta';
+  SCaptionFamilia = 'Familia';
+  SCaptionProveedor = 'Proveedor';
+  SCaptionTemporada = 'Temporada';
+  SCaptionBuscar = 'Buscar';
+  // R11 - Wizard de guías
+  SCaptionGuiasLigadasFormato =
+    'Guías ligadas al formato "%s"  (''%s'')';
+  // R15 - Librerías de interfaz genérica
+  SCaptionTabModoDesglose = '%s [Desglose]';
+  SCaptionTabModoSku = '%s [SKU]';
+  SCaptionTabModoTallasHorizBandas = '%s [Tallas horiz. bandas]';
+  SCaptionTabModoTallasHoriz = '%s [Tallas horiz.]';
+  STituloGuardarListadoExcel = 'Guardar listado a Excel';
+  STituloErrorProducido = 'Se ha producido un error';
+  SCaptionDetalleErrorCabecera =
+    '  Detalle completo del error. Usa "Copiar al ' +
+    'portapapeles" para pegarlo en un reporte.';
+  SCaptionCerrar = 'Cerrar';
+  SCaptionCopiarPortapapeles = 'Copiar al portapapeles';
+  SCaptionSinFiltrosGuardados = '(Sin filtros guardados)';
+  SCaptionGuardarFiltroActual = 'Guardar filtro actual...';
+  SCaptionGestionarCompartirFiltros = 'Gestionar y compartir filtros...';
+  SCaptionGuiaTabla = 'Guía: %s';
+  SCaptionRenombrarColumna = 'Renombrar columna...';
+  SCaptionNuevaGuia = 'Nueva guía...';
+  STituloRenombrarColumnas = 'Renombrar columnas';
+  SCaptionCargandoDatosEspere = 'Cargando datos, espera por favor...';
+  STituloSeleccionarColumnas = 'Seleccionar columnas a incorporar';
 implementation
 
 end.

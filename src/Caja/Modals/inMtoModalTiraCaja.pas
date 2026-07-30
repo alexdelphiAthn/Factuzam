@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalTiraCaja                                            }
 {    Tipo:       Formulario (Modal)                                            }
@@ -74,6 +74,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibMsgCaja;
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmModalTiraCaja }
@@ -107,7 +110,7 @@ begin
   Frm := TfrmModalTiraCaja.Create(AOwner);
   try
     Frm.FVerifactu := AVerifactu;
-    Frm.lblTitulo.Caption := Format('Tira de Caja · Caja %s', [ACaja]);
+    Frm.lblTitulo.Caption := Format(STituloTiraCajaNumero, [ACaja]);
     // Una entrada por serie; sin marcar ninguna se entienden todas. El índice
     // de cada item coincide con el de ASeries para mapear marcado -> serie.
     Frm.ccbSerie.Properties.Items.Clear;
@@ -116,7 +119,7 @@ begin
       Item := Frm.ccbSerie.Properties.Items.Add;
       Item.Description := ASeries[i];
     end;
-    Frm.ccbSerie.Properties.EmptySelectionText := '(todas las series)';
+    Frm.ccbSerie.Properties.EmptySelectionText := SCaptionTodasLasSeries;
     // Los ítems recién añadidos salen desmarcados (ninguna serie = todas).
     // Agrupamiento: por tipo de documento (índice 0) o cronológico (índice 1).
     Frm.cbAgrupamiento.Properties.Items.Clear;
@@ -127,7 +130,7 @@ begin
     Frm.chkQR.Enabled := AVerifactu;
     Frm.chkQR.Checked := AVerifactu;
     if not AVerifactu then
-      Frm.chkQR.Caption := 'Imprimir QR Verifactu (no disponible)';
+      Frm.chkQR.Caption := SCaptionImprimirQrNoDisponible;
     // Bloques opcionales: desmarcados por defecto, son ampliaciones de la tira.
     Frm.chkTraspasos.Checked := False;
     Frm.chkIngresos.Checked  := False;

@@ -134,7 +134,7 @@ end;
 procedure TfrmModalArqueosHistCaja.FormShow(Sender: TObject);
 begin
   inherited;
-  lblTitulo.Caption := Format('Histórico de Arqueos · Caja %s', [FCaja]);
+  lblTitulo.Caption := Format(STituloHistoricoArqueosCaja, [FCaja]);
   CargarArqueos;
   // Ajustar el ancho de las columnas al contenido al presentar la pantalla.
   dbtvArqueos.ApplyBestFit;

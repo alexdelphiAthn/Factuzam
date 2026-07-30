@@ -713,7 +713,8 @@ uses
   inLibShowMto,
   inLibFacturas,
   inLibGridCantidad,
-  inLibArticulosValidador,
+  inLibArticulosValidadorIntf,
+  UniDataArticulosValidadorRepositorio,
   inLibArticulosResolverIntf,
   inMtoGenSearch,
   inMtoModalFacRec,
@@ -723,7 +724,10 @@ uses
   inMtoModalSeleccionarBanco,
   inLibUser,
   inLibVerifactu,
+  inLibVerifactuTipos,
   inLibEmisionFiscal,
+  UniDataVerifactuColaRepositorio,
+  UniDataFacturasRepositorio,
   inLibFacturasMovimientos,
   inLibFacturasConsolidacion,
   inLibFacturasReapertura,
@@ -732,8 +736,10 @@ uses
   inLibLog,
   inLibDir,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
-  inLibColumnasSku, inLibColumnasDocumento,
-  inLibPresentacionDocumento;
+  inLibColumnasSku, inLibColumnasDocumento, UniDataGen,
+  inLibPresentacionDocumento,
+  // Composicion del puerto de persistencia del pivote (V2).
+  UniDataPivoteVenta;
 
 {$R *.dfm}
 
@@ -1015,49 +1021,51 @@ procedure TfrmMtoFacturasBase.AplicarTerminologiaCobros;
 begin
   if EsVentaMayorNormal then
   begin
-    tsRecibos.Caption := '&3_Efectos';
-    btnGenerarRecibos.Caption := 'Generar efectos';
-    btnGenerarRecibos2.Caption := 'Generar efectos';
-    btnImprimirRecibo.Caption := 'Imprimir efecto';
+    tsRecibos.Caption := SCaptionTabEfectos;
+    btnGenerarRecibos.Caption := SCaptionGenerarEfectos;
+    btnGenerarRecibos2.Caption := SCaptionGenerarEfectos;
+    btnImprimirRecibo.Caption := SCaptionImprimirEfecto;
     btnImprimirRecibo.Visible := False;
-    btnReciboEmitido.Caption := '&Pendiente';
-    btnReciboPagado.Caption := '&Cobrado';
-    btnReciboDevuelto.Caption := '&Devuelto';
+    btnReciboEmitido.Caption := SCaptionEfectoPendiente;
+    btnReciboPagado.Caption := SCaptionEfectoCobrado;
+    btnReciboDevuelto.Caption := SCaptionEfectoDevuelto;
     cxgrdbclmnRecibosNRO_FACTURA_RECIBO.Caption :=
-      'Nro Borrador Efecto';
+      SCaptionColNroBorradorEfecto;
     cxgrdbclmnRecibosSERIE_FACTURA_RECIBO.Caption :=
-      'Serie Borrador Efecto';
-    cxgrdbclmnRecibosNRO_PLAZO_RECIBO.Caption := 'Efecto';
-    cxgrdbclmnRecibosEUROS_RECIBO.Caption := 'Total efecto';
-    cxgrdbclmnRecibosESTADO_RECIBO.Caption := 'Estado efecto';
+      SCaptionColSerieBorradorEfecto;
+    cxgrdbclmnRecibosNRO_PLAZO_RECIBO.Caption := SCaptionColEfecto;
+    cxgrdbclmnRecibosEUROS_RECIBO.Caption := SCaptionColTotalEfecto;
+    cxgrdbclmnRecibosESTADO_RECIBO.Caption := SCaptionColEstadoEfecto;
     cxgrdbclmnRecibosFECHA_EXPEDICION_RECIBO.Caption :=
-      'Fecha emisión efecto';
-    cxgrdbclmnRecibosFECHA_PAGO_RECIBO.Caption := 'Fecha cobro';
+      SCaptionColFechaEmisionEfecto;
+    cxgrdbclmnRecibosFECHA_PAGO_RECIBO.Caption :=
+      SCaptionColFechaCobroEfecto;
     cxgrdbclmnRecibosLOCALIDAD_EXPEDICION_RECIBO.Caption :=
-      'Referencia';
+      SCaptionColReferenciaEfecto;
   end
   else
   begin
-    tsRecibos.Caption := '&3_Recibos';
-    btnGenerarRecibos.Caption := 'Generar &Recibo/s';
-    btnGenerarRecibos2.Caption := 'Generar &Recibo/s';
-    btnImprimirRecibo.Caption := 'Imprimir &Recibo';
+    tsRecibos.Caption := SCaptionTabRecibos;
+    btnGenerarRecibos.Caption := SCaptionGenerarRecibos;
+    btnGenerarRecibos2.Caption := SCaptionGenerarRecibos;
+    btnImprimirRecibo.Caption := SCaptionImprimirRecibo;
     btnImprimirRecibo.Visible := True;
-    btnReciboEmitido.Caption := '&Emitido';
-    btnReciboPagado.Caption := '&Pagado';
-    btnReciboDevuelto.Caption := '&Devuelto';
+    btnReciboEmitido.Caption := SCaptionReciboEmitido;
+    btnReciboPagado.Caption := SCaptionReciboPagado;
+    btnReciboDevuelto.Caption := SCaptionReciboDevuelto;
     cxgrdbclmnRecibosNRO_FACTURA_RECIBO.Caption :=
-      'Nro Borrador Recibo';
+      SCaptionColNroBorradorRecibo;
     cxgrdbclmnRecibosSERIE_FACTURA_RECIBO.Caption :=
-      'Serie Borrador Recibo';
-    cxgrdbclmnRecibosNRO_PLAZO_RECIBO.Caption := 'Nro Plazo';
-    cxgrdbclmnRecibosEUROS_RECIBO.Caption := 'Total Recibo';
-    cxgrdbclmnRecibosESTADO_RECIBO.Caption := 'Estado Recibo';
+      SCaptionColSerieBorradorRecibo;
+    cxgrdbclmnRecibosNRO_PLAZO_RECIBO.Caption := SCaptionColNroPlazo;
+    cxgrdbclmnRecibosEUROS_RECIBO.Caption := SCaptionColTotalRecibo;
+    cxgrdbclmnRecibosESTADO_RECIBO.Caption := SCaptionColEstadoRecibo;
     cxgrdbclmnRecibosFECHA_EXPEDICION_RECIBO.Caption :=
-      'Fecha Expedición Recibo';
-    cxgrdbclmnRecibosFECHA_PAGO_RECIBO.Caption := 'Fecha Pago Recibo';
+      SCaptionColFechaExpedicionRecibo;
+    cxgrdbclmnRecibosFECHA_PAGO_RECIBO.Caption :=
+      SCaptionColFechaPagoRecibo;
     cxgrdbclmnRecibosLOCALIDAD_EXPEDICION_RECIBO.Caption :=
-      'Localidad Expedición';
+      SCaptionColLocalidadExpedicionRecibo;
   end;
 end;
 
@@ -2088,9 +2096,12 @@ begin
   dmmFacturas.ConfigurarServicios(
     CrearServiciosFactura(
       ConexionPrincipal,
-      ParametrosCaja,
-      CatalogoSqlAplicacion,
-      IncidenciasSqlAplicacion));
+      TRepositorioFacturas.Create(
+        ConexionPrincipal,
+        CatalogoSqlAplicacion,
+        IncidenciasSqlAplicacion),
+      CrearResolverArticulos(ConexionPrincipal),
+      CrearServicioVerifactuColaUniDAC(ConexionPrincipal)));
   dmmFacturas.OnResultadoOperacion := MostrarResultadoOperacion;
   dmmFacturas.OnResultadoBorrado := MostrarResultadoBorrado;
   dmmFacturas.OnAdvertencia := MostrarAdvertenciaFactura;
@@ -2233,7 +2244,7 @@ begin
   Servicio := CrearServicioEmisionFiscal(
     ParametrosApp,
     ParametrosCaja,
-    ConexionPrincipal);
+    ConexionPrincipal, CrearServicioVerifactuColaUniDAC(ConexionPrincipal));
   Result := Servicio.Emitir(ASolicitud);
 end;
 
@@ -2307,7 +2318,7 @@ begin
   ServicioEmision := CrearServicioEmisionFiscal(
     ParametrosApp,
     ParametrosCaja,
-    ConexionPrincipal);
+    ConexionPrincipal, CrearServicioVerifactuColaUniDAC(ConexionPrincipal));
   ServicioMovimientos :=
     TServicioMovimientosFactura.Create(ConexionPrincipal);
   Servicio := CrearServicioConsolidacionFactura(
@@ -3327,7 +3338,7 @@ begin
       tvLineasFactura.OnInitEdit := tvLineasFacturaInitEdit;
       tvLineasFactura.OnEditKeyDown := tvLineasFacturaEditKeyDown;
       tvLineasFactura.OnEditing := tvLineasFacturaEditing;
-      tsLineasFactura.Caption := '&1_Lineas de Borrador [Clásico]';
+      tsLineasFactura.Caption := SCaptionTabLineasBorradorClasico;
     end
     else
     begin
@@ -3377,6 +3388,8 @@ begin
         CfgPV.FieldAlmacenMaster := '';
         CfgPV.MaxColumnas := 20;
         CfgPV.BandaUnica := True;
+        CfgPV.Repositorio := CrearRepositorioPivoteVenta(
+                               CfgPV.Conexion, CfgPV.Usuario);
         CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
         CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
         FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);
@@ -3394,12 +3407,13 @@ begin
       CrearColumnasHostFactura(False);
       case DetectarModoColumnasSku(Cfg) of
         mcsSku:
-          tsLineasFactura.Caption := '&1_Lineas de Borrador [SKU]';
+          tsLineasFactura.Caption := SCaptionTabLineasBorradorSku;
         mcsTallasHorPed:
           PivoteVentaBandaCambiada(bpvPedida);
       else
         begin
-          tsLineasFactura.Caption := '&1_Lineas de Borrador [Desglose]';
+          tsLineasFactura.Caption :=
+            SCaptionTabLineasBorradorDesglose;
           MostrarColumnasAtributoGlobalesFac;
         end;
       end;
@@ -4075,7 +4089,7 @@ end;
 procedure TfrmMtoFacturasBase.PivoteVentaBandaCambiada(
   ABanda: TBandaPivoteVenta);
 begin
-  tsLineasFactura.Caption := '&1_Lineas de Borrador [Tallas horiz.]';
+  tsLineasFactura.Caption := SCaptionTabLineasBorradorTallasHoriz;
 end;
 
 procedure TfrmMtoFacturasBase.PcDetailChange(Sender: TObject);

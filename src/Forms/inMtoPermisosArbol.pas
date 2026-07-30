@@ -196,9 +196,9 @@ begin
   // Modo de copia del bloque de transferencia.
   rgModo.Properties.Items.Clear;
   itm := rgModo.Properties.Items.Add;
-  itm.Caption := 'Combinar (agregar y actualizar)';
+  itm.Caption := SCaptionModoCombinarPermisos;
   itm := rgModo.Properties.Items.Add;
-  itm.Caption := 'Reemplazar todos los del destino';
+  itm.Caption := SCaptionModoReemplazarPermisos;
   rgModo.ItemIndex := 0;
   // Eventos de los controles del .dfm (asignados en codigo).
   cbbSujeto.Properties.OnChange := cbbSujetoChange;
@@ -454,9 +454,7 @@ begin
   else
     FExpGrupo := nil;
   if FSujetoActual.EsAdmin then
-    lblAvisoAdmin.Caption :=
-      'Aviso: este sujeto es administrador; en ejecucion tiene TODOS los ' +
-      'permisos, se marque lo que se marque aqui.'
+    lblAvisoAdmin.Caption := SCaptionAvisoSujetoAdministrador
   else
     lblAvisoAdmin.Caption := '';
   RefrescarValores;

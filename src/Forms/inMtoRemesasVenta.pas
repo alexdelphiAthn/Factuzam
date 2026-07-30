@@ -165,12 +165,12 @@ begin
   cbbBancoCobroRemesa.Properties.KeyFieldNames := 'CODIGO_EMPBAN';
   cbbBancoCobroRemesa.Properties.ListFieldNames := 'BANCO_VIEW_EMPBAN';
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
-  actInsertarRegistro.Caption := 'Crear remesa';
+  actInsertarRegistro.Caption := SCaptionCrearRemesa;
   actInsertarRegistro.OnExecute := actCrearRemesaExecute;
   // La tabla principal es la vista vi_remesas_venta (JOIN, solo lectura): el
   // DELETE estandar del dataset falla, asi que el borrado se hace a mano.
   actEliminarRegistro.OnExecute := actEliminarRemesaExecute;
-  nvNavegador.Buttons.Insert.Hint := 'Crear remesa';
+  nvNavegador.Buttons.Insert.Hint := SCaptionCrearRemesa;
   nvNavegador.Buttons.OnButtonClick := nvNavegadorButtonsButtonClick;
   pkFieldName := 'NUMERO_REMV;SERIE_REMV';
 end;

@@ -120,7 +120,7 @@ implementation
 
 uses
   inLibWin, inLibUser, inLibShowMto, inLibGridCantidad,
-  inLibFiltroUsuario, inLibMsgArticulos;
+  inLibFiltroUsuario, inLibMsgArticulos, inLibMsgComun;
 
 {$R *.dfm}
 
@@ -170,7 +170,7 @@ begin
   // articulos); se despliega al pulsar la cabecera.
   pnlContFiltros.Visible := False;
   pnlFiltros.Height := 22;
-  btnToggleFiltros.Caption := #9654'  Filtros de carga';
+  btnToggleFiltros.Caption := SCaptionFiltrosCargaContraido;
   // Poblar combos, leer preferencias y dejar el SQL filtrado preparado. NO
   // abrimos aqui: la query esta Active=False en su .dfm y la apertura con
   // barra de progreso se hace en ResetForm, ya con el form visible.
@@ -538,7 +538,7 @@ begin
   else
     FbarProgreso.Max := 1;
   FbarProgreso.Position := 0;
-  FlblProgreso.Caption := 'Cargando movimientos...';
+  FlblProgreso.Caption := SCaptionCargandoMovimientos;
   FPnlProgreso.Left := (Self.ClientWidth - FPnlProgreso.Width) div 2;
   FPnlProgreso.Top := (Self.ClientHeight - FPnlProgreso.Height) div 2;
   FPnlProgreso.BringToFront;
@@ -555,9 +555,9 @@ begin
       FbarProgreso.Position := APos
     else
       FbarProgreso.Position := FbarProgreso.Max;
-    FlblProgreso.Caption := 'Cargando movimientos: ' +
-                            FormatFloat('#,##0', APos) + ' / ' +
-                            FormatFloat('#,##0', AMax);
+    FlblProgreso.Caption := Format(SCaptionCargandoMovimientosProgreso,
+                                   [FormatFloat('#,##0', APos),
+                                    FormatFloat('#,##0', AMax)]);
     Application.ProcessMessages;
   end;
 end;
@@ -577,12 +577,12 @@ begin
   if pnlContFiltros.Visible then
   begin
     pnlFiltros.Height := ALTO_CABECERA + ALTO_CONTENIDO;
-    btnToggleFiltros.Caption := #9660'  Filtros de carga';
+    btnToggleFiltros.Caption := SCaptionFiltrosCargaExpandido;
   end
   else
   begin
     pnlFiltros.Height := ALTO_CABECERA;
-    btnToggleFiltros.Caption := #9654'  Filtros de carga';
+    btnToggleFiltros.Caption := SCaptionFiltrosCargaContraido;
   end;
 end;
 
@@ -621,7 +621,7 @@ begin
     dmmMovimientosAlmacen.unqryTablaG.SQL.Text := ConstruirSqlMovimientos;
   pnlContFiltros.Visible := False;
   pnlFiltros.Height := 22;
-  btnToggleFiltros.Caption := #9654'  Filtros de carga';
+  btnToggleFiltros.Caption := SCaptionFiltrosCargaContraido;
   inherited;
 end;
 

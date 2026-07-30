@@ -256,7 +256,7 @@ procedure TfrmPrintEtiqArt.AplicarOrigenExterno;
 begin
   if Trim(FTextoOrigenExterno) <> '' then
   begin
-    cxlblArticulo.Caption := 'Documento:';
+    cxlblArticulo.Caption := SCaptionDocumentoEtiqueta;
     edtCodArt.Text := FTextoOrigenExterno;
     chkSoloEsteArt.Checked := False;
     chkSoloEsteArt.Visible := False;

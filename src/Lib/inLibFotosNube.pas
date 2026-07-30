@@ -310,7 +310,7 @@ var
   sParcial : string;
   c        : Char;
 begin
-  // Misma regla que SanearColorSku (inLibComprasSesionesMaterializar) y que
+  // Misma regla que SanearColorSku (inLibComprasSesionesReglas) y que
   // debe usar el servidor de fotos al nombrar el token COLOR: mayusculas;
   // espacios -> '-'; se conservan letras, digitos, '-' y '_'; el resto de
   // simbolos (/, %, EUR, ...) se descarta. Asi el color del SKU y el de la

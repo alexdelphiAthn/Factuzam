@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibComprasSesionesIntf                                      }
 {    Tipo:       Contrato                                                      }
@@ -21,6 +21,18 @@ type
     Cantidad: Double;
   end;
   TCantidadesPivotSesion = array of TCantidadPivotSesion;
+  TDetalleKitProveedorSesion = record
+    ValorDestino: string;
+    Cantidad: Double;
+  end;
+  TDetallesKitProveedorSesion =
+    array of TDetalleKitProveedorSesion;
+  TKitProveedorSesion = record
+    Encontrado: Boolean;
+    IdAcTallas: Integer;
+    NombreTallasKit: string;
+    NombreTallasLinea: string;
+  end;
   TIncidenciasSesionCompra = array of string;
   TResolverDuplicadoSesion = record
     Encontrado: Boolean;
@@ -68,16 +80,8 @@ type
     MensajeError: string;
     Documentos: TDocumentosMaterializados;
   end;
-  IRepositorioComprasSesiones = interface
-    ['{85E32940-2F4B-4FF5-B802-9169FD111B88}']
-    procedure AplicarDuplicadoEnLinea(
-      const AResultado: TResolverDuplicadoSesion);
-    procedure BorrarCeldasLinea(
-      const ASerie, ANumero: string;
-      ALinea: Integer);
-    procedure CopiarCeldasDistribuidas(
-      const ASerie, ANumero, AAlmacenCabecera, AUsuario: string;
-      ALineaOrigen, ALineaDestino: Integer);
+  IRepositorioLecturasComprasSesiones = interface
+    ['{90D265B3-773A-46DD-A4D7-738BFF0CF277}']
     function ObtenerSiguienteLinea(
       const ASerie, ANumero: string;
       ALineaActual: Integer): Integer;
@@ -86,11 +90,14 @@ type
       ALinea: Integer): TCantidadesPivotSesion;
     function ConsultarCodigosBasicosActivos(
       const AIdVariacion: string): TArray<string>;
+    function ConsultarKitProveedor(
+      const ACodigoProveedor, ACodigoKit: string;
+      AIdAcLinea: Integer): TKitProveedorSesion;
+    function ConsultarDetallesKitProveedor(
+      const ACodigoProveedor, ACodigoKit: string):
+      TDetallesKitProveedorSesion;
     function ObtenerNombreFamilia(
       const ACodigoFamilia: string): string;
-    function ResolverCodigoFamilia(
-      const ACodigoTecleado, AUsuario: string;
-      out ACodigoGenerado: string): Boolean;
     function ResolverDuplicado(
       const ACodigoBuscado, ACodigoProveedor: string;
       ASoloRefProveedor: Boolean;
@@ -101,16 +108,25 @@ type
       ALineaActual: Integer;
       const AModelo, ACodigoArticulo: string):
       TResolverDuplicadoSesion;
-    function NormalizarDuplicadosIntraSesion(
-      const AUsuario, ASerie, ANumero: string): Integer;
     function ValidarSesionDetallado:
       TIncidenciasSesionCompra;
-    function EjecutarMaterializacion(
-      const AParametros: TParametrosMaterializacionSesion;
-      out AResultado: TResultadoMaterializacionSesion): Boolean;
-    function RevertirMaterializacion(
-      const AUsuario: string;
-      out AMensajeError: string): Boolean;
+  end;
+  IRepositorioComprasSesiones = interface(
+    IRepositorioLecturasComprasSesiones)
+    ['{85E32940-2F4B-4FF5-B802-9169FD111B88}']
+    procedure AplicarDuplicadoEnLinea(
+      const AResultado: TResolverDuplicadoSesion);
+    procedure BorrarCeldasLinea(
+      const ASerie, ANumero: string;
+      ALinea: Integer);
+    procedure CopiarCeldasDistribuidas(
+      const ASerie, ANumero, AAlmacenCabecera, AUsuario: string;
+      ALineaOrigen, ALineaDestino: Integer);
+    function ResolverCodigoFamilia(
+      const ACodigoTecleado, AUsuario: string;
+      out ACodigoGenerado: string): Boolean;
+    function NormalizarDuplicadosIntraSesion(
+      const AUsuario, ASerie, ANumero: string): Integer;
   end;
 
 implementation

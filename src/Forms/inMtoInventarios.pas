@@ -355,8 +355,8 @@ uses
   inLibDevExp,
   inLibGenBusq,
 
-  inLibArticulosValidador,
-  inLibArticulosAtributosLookup,
+  inLibArticulosValidadorIntf,
+  inLibArticulosAtributosIntf,
   inLibAtributosPaleta,
   inLibLog,
   inLibMsgArticulos,
@@ -366,7 +366,7 @@ uses
   System.Diagnostics,
   inMtoModalAddBlockInventario,
   // Factoria del contrato de entrada (prueba ColumnSKUcxGrid).
-  inLibColumnasSku, inLibColumnasDocumento;
+  inLibColumnasSku, inLibColumnasDocumento, UniDataGen;
 
 {$R *.dfm}
 
@@ -884,9 +884,9 @@ begin
   tvLineas.OnEditing := tvLineasEditing;
   // Mantener el acelerador del caption original ('&1. Detalle...').
   if DetectarModoColumnasSku(Cfg) = mcsSku then
-    tsDetalle.Caption := '&1. Detalle del inventario [SKU]'
+    tsDetalle.Caption := SCaptionTabDetalleInventarioSku
   else
-    tsDetalle.Caption := '&1. Detalle del inventario [Desglose]';
+    tsDetalle.Caption := SCaptionTabDetalleInventarioDesglose;
   // Conversion terminada: el guardian de BeforePost vuelve a aplicar.
   dmmInventarios.ModoPivoteActivo := False;
   // Diagnostico temporal: estado al terminar de construir.
@@ -1188,7 +1188,7 @@ begin
             if i <= Nombres.Count then
               Col.Caption := Nombres[i - 1]
             else
-              Col.Caption := 'Atributo ' + IntToStr(i);
+              Col.Caption := Format(SCaptionAtributoN, [i]);
             Col.Visible := True;
             Col.Options.Editing := True;
           end
@@ -1791,7 +1791,7 @@ var
   Vals   : TArray<TArticuloAtributoValor>;
   i      : Integer;
 begin
-  // La consulta vive ahora en inLibArticulosAtributosLookup, que ordena
+  // La consulta vive ahora en inLibArticulosAtributosIntf, que ordena
   // por ORDEN_AV (S=10, M=20, L=30, ...). Antes ordenaba alfabetico, lo
   // que mostraba L,M,S,XL,XXXL en el dropdown.
   SetLength(AAvs, 0);

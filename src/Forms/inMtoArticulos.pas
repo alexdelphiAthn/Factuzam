@@ -588,7 +588,7 @@ uses
   inLibAtributosPaleta,
   inLibLog,             // Log.LogPerf para cronometros del AfterScroll
   System.Diagnostics,   // TStopwatch
-  inLibMsgArticulos;
+  inLibMsgArticulos, inLibMsgComun;
 
 {$R *.dfm}
 
@@ -1536,7 +1536,7 @@ begin
   formulario := TfrmMtoModalArtTar.Create(Self.Owner);
   try
     formulario.Name := 'frmMtoModalArtTar';
-    formulario.Caption := 'Seleccione Tarifas a incorporar al artículo';
+    formulario.Caption := STituloSeleccionTarifasArticulo;
     dmmArticulos.FillTarifas(formulario.lstTarifas);
     formulario.ShowModal;
     if formulario.sFicha = 'S' then
@@ -1706,7 +1706,7 @@ begin
   // diseño; al arrancar el form la colapsamos.
   pnlContFiltrosArt.Visible := False;
   pnlFiltrosArt.Height := 22;
-  btnToggleFiltrosArt.Caption := #9654'  Filtros de carga';
+  btnToggleFiltrosArt.Caption := SCaptionFiltrosCargaContraido;
   CargarTemporadasFiltro;
   LeerFiltrosPerfil;
   // Filtros de sesion del dialogo de precarga (proveedor/familia): arrancan
@@ -1944,7 +1944,7 @@ begin
   end;
   pnlContFiltrosArt.Visible := False;
   pnlFiltrosArt.Height := 22;
-  btnToggleFiltrosArt.Caption := #9654'  Filtros de carga';
+  btnToggleFiltrosArt.Caption := SCaptionFiltrosCargaContraido;
   inherited;
 end;
 
@@ -1968,12 +1968,12 @@ begin
   if pnlContFiltrosArt.Visible then
   begin
     pnlFiltrosArt.Height := ALTO_CABECERA + ALTO_CONTENIDO;
-    btnToggleFiltrosArt.Caption := #9660'  Filtros de carga';
+    btnToggleFiltrosArt.Caption := SCaptionFiltrosCargaExpandido;
   end
   else
   begin
     pnlFiltrosArt.Height := ALTO_CABECERA;
-    btnToggleFiltrosArt.Caption := #9654'  Filtros de carga';
+    btnToggleFiltrosArt.Caption := SCaptionFiltrosCargaContraido;
   end;
 end;
 
@@ -2073,7 +2073,7 @@ begin
 
   FBtnAddProp := TcxButton.Create(Self);
   FBtnAddProp.Parent  := pnlTop;
-  FBtnAddProp.Caption := '+ Añadir propiedad';
+  FBtnAddProp.Caption := SCaptionAnadirPropiedad;
   FBtnAddProp.Left    := 8;
   FBtnAddProp.Top     := 4;
   FBtnAddProp.Width   := 200;
@@ -2115,7 +2115,7 @@ begin
   lbl.Transparent := True;
   lbl.Left    := 8;
   lbl.Top     := 10;
-  lbl.Caption := 'Tipo de variación: ';
+  lbl.Caption := SCaptionTipoVariacion;
   lbl.AutoSize:= True;
 
   // Combo enlazado al campo TIPO_VARIACION_ART del dataset principal

@@ -129,7 +129,7 @@ begin
       if oLista.Count = 0 then
       begin
         oItem := TMenuItem.Create(FMenu);
-        oItem.Caption := '(Sin filtros guardados)';
+        oItem.Caption := SCaptionSinFiltrosGuardados;
         oItem.Enabled := False;
         FMenu.Items.Add(oItem);
       end
@@ -156,11 +156,11 @@ begin
   oSeparador.Caption := '-';
   FMenu.Items.Add(oSeparador);
   oItem := TMenuItem.Create(FMenu);
-  oItem.Caption := 'Guardar filtro actual...';
+  oItem.Caption := SCaptionGuardarFiltroActual;
   oItem.OnClick := GuardarFiltroActualClick;
   FMenu.Items.Add(oItem);
   oItem := TMenuItem.Create(FMenu);
-  oItem.Caption := 'Gestionar y compartir filtros...';
+  oItem.Caption := SCaptionGestionarCompartirFiltros;
   oItem.OnClick := GestionarFiltrosClick;
   FMenu.Items.Add(oItem);
 end;

@@ -105,7 +105,7 @@ type
 implementation
 
 uses
-  inLibWin, inLibShowMto, inLibFotos;
+  inLibWin, inLibShowMto, inLibFotos, inLibMsgArticulos;
 
 {$R *.dfm}
 
@@ -224,7 +224,7 @@ begin
     lblIdVaDesc.Caption := VarToStr(LNombre)
   else
     lblIdVaDesc.Caption :=
-                  Format('%s, orden %s', [VarToStr(LNombre), VarToStr(LOrden)]);
+      Format(SCaptionNombreOrden, [VarToStr(LNombre), VarToStr(LOrden)]);
 end;
 
 procedure TfrmMtoAtributosConjuntos.dsTablaGStateChange(Sender: TObject);

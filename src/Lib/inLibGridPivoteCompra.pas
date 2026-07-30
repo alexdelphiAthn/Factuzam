@@ -1115,7 +1115,7 @@ begin
   if not bVisible then
   begin
     FCfg.ColumnasTallas[0].Visible := True;
-    FCfg.ColumnasTallas[0].Caption := 'Cantidad';
+    FCfg.ColumnasTallas[0].Caption := SCaptionColCantidad;
   end;
 end;
 

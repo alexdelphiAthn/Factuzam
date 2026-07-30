@@ -41,7 +41,8 @@ type
 implementation
 
 uses
-  inLibVerifactu, inLibEmisionFiscalIntf, inLibEmisionFiscal;
+  inLibVerifactu, inLibVerifactuTipos,
+  inLibEmisionFiscalIntf, inLibEmisionFiscal;
 
 procedure TPruebasEmisionFiscal.Factoria_SeleccionaVerifactu;
 var

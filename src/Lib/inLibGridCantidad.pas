@@ -31,7 +31,7 @@ implementation
 uses
   System.Classes, System.SysUtils, System.Variants, System.Math, Data.DB,
   Vcl.ExtCtrls, cxGridCustomTableView, cxGridTableView, cxSpinEdit,
-  inLibUnidadesMedida;
+  inLibUnidadesMedida, inLibMsgArticulos;
 
 type
   TVisibilidadTipoCantidad = class;
@@ -185,7 +185,7 @@ begin
     if bEspecial then
     begin
       if Trim(FColUnidad.Caption) = '' then
-        FColUnidad.Caption := 'Tipo';
+        FColUnidad.Caption := SCaptionColTipoCantidad;
       if FColUnidad.Width < 80 then
         FColUnidad.Width := 90;
     end;

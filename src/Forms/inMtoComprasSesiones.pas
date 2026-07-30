@@ -69,6 +69,7 @@ uses
   inLibGestorCopiaLineasCompra,
   inLibComprasSesiones,
   inLibComprasSesionesIntf,
+  inLibComprasSesionesCreacion,
   UniDataComprasSesiones, cxBlobEdit, dxShellDialogs, cxRadioGroup, Vcl.Buttons,
   dxDateRanges, cxSplitter;
 
@@ -574,7 +575,7 @@ uses
   inLibContextoSesionIntf,
   inLibLog,
   UniDataComprasSesionesOperaciones,
-  UniDataComprasSesionesRepositorio;
+  UniDataComprasSesionesComposicion;
 
 const
   fIdVaColor = 'CO';
@@ -697,7 +698,7 @@ var
 begin
   imgFotoProvisional.Picture.Assign(nil);
   lblFotoProvisionalAsignacion.Caption :=
-    'Seleccione una línea de la sesión.';
+    SCaptionSeleccioneLineaSesion;
   sSerie := '';
   sNumero := '';
   sCodArt := '';
@@ -739,11 +740,11 @@ begin
     begin
       sRuta := inLibFotos.oFotos.RutaFoto(info, frPx300);
       if sUnidad = '' then
-        sDestino := 'artículo'
+        sDestino := SCaptionDestinoArticulo
       else
-        sDestino := 'SKU ' + sUnidad;
+        sDestino := Format(SCaptionDestinoSku, [sUnidad]);
       lblFotoProvisionalAsignacion.Caption := Format(
-        'Línea %d · %s · %s',
+        SCaptionLineaFotoDetalle,
         [iLinea, sCodArt, sDestino]);
       if sRuta <> '' then
       begin
@@ -758,7 +759,7 @@ begin
     end
     else
       lblFotoProvisionalAsignacion.Caption := Format(
-        'Línea %d · sin foto provisional',
+        SCaptionLineaSinFotoProvisional,
         [iLinea]);
   end;
 end;
@@ -813,9 +814,9 @@ begin
   if tdmDataModule = nil then Exit;
   dmm := tdmDataModule as TdmComprasSesiones;
   FreeAndNil(FServicioComprasSesiones);
-  FServicioComprasSesiones := TServicioComprasSesiones.Create(
-    TRepositorioComprasSesiones.Create(ConexionPrincipal, Dmm,
-      CatalogoSqlAplicacion, IncidenciasSqlAplicacion));
+  FServicioComprasSesiones := CrearServicioComprasSesiones(
+    ConexionPrincipal, Dmm, CatalogoSqlAplicacion,
+    IncidenciasSqlAplicacion);
   FreeAndNil(FGestorCopiaLineas);
   FGestorCopiaLineas := TGestorCopiaLineasCompra.Create(
     Dmm.unqryTablaG,
@@ -1658,7 +1659,11 @@ begin
                             'ESFORMATO_DISTRIBUIDO_SES').AsString = 'S') then
   begin
     if UniDataComprasSesionesOperaciones.ValidarKitSobreLineaActual(
-      Dmm, sPrv, ACodigoKit, sResumen) then
+      Dmm,
+      FServicioComprasSesiones,
+      sPrv,
+      ACodigoKit,
+      sResumen) then
     begin
       LogSes(Format('AplicarKit %s -> distribuidor (formato distribuido)',
                     [ACodigoKit]));
@@ -1671,7 +1676,12 @@ begin
   // y repinta la fila igual que tras teclear a mano (totales + no-bound).
   else if
     UniDataComprasSesionesOperaciones.AplicarKitProveedorALinea(
-      Dmm, FGestorTallas, sPrv, ACodigoKit, sResumen) then
+      Dmm,
+      FGestorTallas,
+      FServicioComprasSesiones,
+      sPrv,
+      ACodigoKit,
+      sResumen) then
   begin
     iLinea := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
     if Assigned(FGestorTallas) then
@@ -1991,11 +2001,11 @@ begin
   FModeloView.OptionsSelection.CellSelect := False;
   FModeloView.OptionsBehavior.IncSearch := False;
   FModeloColRef := FModeloView.CreateColumn;
-  FModeloColRef.Caption := 'Modelo';
+  FModeloColRef.Caption := SCaptionModeloCompra;
   FModeloColRef.DataBinding.FieldName := 'REFPRV';
   FModeloColRef.Width := 130;
   FModeloColCodArt := FModeloView.CreateColumn;
-  FModeloColCodArt.Caption := 'Codigo';
+  FModeloColCodArt.Caption := SCaptionCodigoCompra;
   FModeloColCodArt.DataBinding.FieldName := 'CODART';
   FModeloColCodArt.Width := 110;
   with FModeloView.CreateColumn do
@@ -2400,43 +2410,48 @@ end;
 procedure TfrmMtoComprasSesiones.btnCrearClick(Sender: TObject);
 var
   bOK    : Boolean;
-  sSerPed, sNumPed, sSerAlb, sNumAlb, sErr: string;
+  sErr   : string;
   incidencias : TStringList;
   frmInc      : TfrmModalIncidencias;
   frmSet      : TfrmModalCrearAlbaranSesion;
   iAutoFix    : Integer;
-  iIdPvTemp   : Integer;
   frmDocs     : TfrmModalDocsCreados;
   i           : Integer;
+  Estado      : TEstadoSesionCreacion;
+  Defectos    : TDefectosDialogoCreacion;
+  Elegidos    : TAjustesCreacionElegidos;
+  Cabecera    : TCabeceraSesionActualizada;
   ParametrosMaterializacion: TParametrosMaterializacionSesion;
   ResultadoMaterializacion: TResultadoMaterializacionSesion;
 begin
   inherited;
   // Flujo:
-  //   1. Postear cualquier edicion en curso.
-  //   2. ValidarSesionDetallado: si hay incidencias, mostrar modal con la
-  //      lista y abortar.
-  //   3. Modal de settings (serie / fecha / almacen / tarifa / temporada
-  //      / flags). Si Salir, abortar.
-  //   4. MaterializarSesion con los settings elegidos.
+  //   1. Guardas y post de la edicion en curso.
+  //   2. ValidarSesionDetallado: si hay incidencias, modal y abortar.
+  //   3. Modal de settings con los defectos que calcula el dominio.
+  //   4. Materializar con los settings elegidos.
+  // Las decisiones (bloqueo, defectos, mapeo) viven en
+  // inLibComprasSesionesCreacion y se prueban sin VCL ni BBDD.
   LogSes('btnCrearClick INICIO');
-  if Dmm.unqryTablaG.IsEmpty then
-  begin
-    LogSes('  cabecera vacia, salida');
-    ShowMessage(SErrorSesionCompraNoActiva);
-    Exit;
+  Estado := LeerEstadoSesionCreacion(Dmm.unqryTablaG);
+  case EvaluarBloqueoCreacionSesion(Estado) of
+    mbcSinCabecera:
+      begin
+        LogSes('  cabecera vacia, salida');
+        ShowMessage(SErrorSesionCompraNoActiva);
+        Exit;
+      end;
+    mbcYaMaterializada:
+      begin
+        LogSes('  sesion ya CERRADA, abortar');
+        ShowMessage(SErrorSesionYaMaterializada);
+        Exit;
+      end;
   end;
   LogSes(Format('  sesion=%s/%s, estado=%s, lineas master.CONTADOR=%d',
-                [Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
-                 Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString,
-                 Dmm.unqryTablaG.FieldByName('ESTADO_SES').AsString,
-                 Dmm.unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger]));
-  if Dmm.unqryTablaG.FieldByName('ESTADO_SES').AsString = 'CERRADA' then
-  begin
-    LogSes('  sesion ya CERRADA, abortar');
-    ShowMessage(SErrorSesionYaMaterializada);
-    Exit;
-  end;
+                [Estado.Serie, Estado.Numero, Estado.Estado,
+                 Dmm.unqryTablaG.FieldByName(
+                   'CONTADOR_LINEAS_SES').AsInteger]));
   if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
   begin
     LogSes('  master.Post pendiente');
@@ -2453,17 +2468,14 @@ begin
   // resolver, la materializacion reventaria con Duplicate entry en
   // fza_articulos (PK CODIGO_ART_ART). Las marcamos automaticamente
   // como REUSAR (la primera por LINEA crea el articulo, las demas son
-  // variantes — color/SKU — del mismo articulo). El boton "+ color
-  // (mismo articulo)" ya lo deja marcado desde su creacion; esto es
-  // para sesiones que ya tenian duplicados sin marcar.
+  // variantes — color/SKU — del mismo articulo).
   iAutoFix := FServicioComprasSesiones.NormalizarDuplicadosIntraSesion(
-    IdentidadSesion.Usuario,
-      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
-      Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString);
+    IdentidadSesion.Usuario, Estado.Serie, Estado.Numero);
   if iAutoFix > 0 then
   begin
-    LogSes(Format('  NormalizarDuplicadosIntraSesion: %d linea(s) marcadas REUSAR',
-                  [iAutoFix]));
+    LogSes(Format(
+      '  NormalizarDuplicadosIntraSesion: %d linea(s) marcadas REUSAR',
+      [iAutoFix]));
     ShowMessage(Format(SInfoDuplicadosSesionMarcadosReusar, [iAutoFix]));
     Dmm.unqrySesionLin.Refresh;
   end;
@@ -2472,16 +2484,15 @@ begin
   LogSes('  ValidarSesionDetallado');
   incidencias := TStringList.Create;
   try
-    if not FServicioComprasSesiones.ValidarSesionDetallado(incidencias) then
+    if not FServicioComprasSesiones.ValidarSesionDetallado(
+             incidencias) then
     begin
       frmInc := TfrmModalIncidencias.Create(Self);
-      try
-        frmInc.SetIncidencias(
-          'Hay incidencias que impiden materializar la sesion:', incidencias);
-        frmInc.ShowModal;
-      finally
-        // FormClose pone Action := caFree, no liberamos a mano.
-      end;
+      frmInc.SetIncidencias(
+        'Hay incidencias que impiden materializar la sesion:',
+        incidencias);
+      frmInc.ShowModal;
+      // FormClose pone Action := caFree, no liberamos a mano.
       Exit;
     end;
   finally
@@ -2489,92 +2500,55 @@ begin
   end;
 
   // ---- 3. Modal de settings ----
-  iIdPvTemp := 0;
-  if not Dmm.unqryTablaG.FieldByName('ID_PV_TEMPORADA_SES').IsNull then
-    iIdPvTemp :=
-      Dmm.unqryTablaG.FieldByName('ID_PV_TEMPORADA_SES').AsInteger;
-
+  Defectos := CalcularDefectosDialogoCreacion(
+    Estado,
+    ObtenerSerieDefecto(ConexionPrincipal, Estado.Empresa, 'AB'),
+    ObtenerSerieDefecto(ConexionPrincipal, Estado.Empresa, 'PC'));
   frmSet := TfrmModalCrearAlbaranSesion.Create(Self);
-  try
-    frmSet.ConfigurarLookups(Dmm.dsAlmacenes, Dmm.dsTarifas,
-                              Dmm.dsTemporadas);
-    // Combos de serie: todas las series de la empresa por tipo de
-    // documento. El modal propone la serie que lleve el almacen
-    // elegido (CODIGO_ALM_EMPSER) y re-propone al cambiar de almacen.
-    frmSet.CargarSeries(
-      Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString);
-    // Series por defecto (fallback si el almacen no lleva serie propia
-    // ni la empresa una generica): buscar en Empresas->Series por tipo
-    var sSerieAlbDef := ObtenerSerieDefecto(
-      ConexionPrincipal,
-      Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString,
-      'AB');
-    if sSerieAlbDef = '' then
-      sSerieAlbDef := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    var sSeriePedDef := ObtenerSerieDefecto(
-      ConexionPrincipal,
-      Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString,
-      'PC');
-    if sSeriePedDef = '' then
-      sSeriePedDef := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    frmSet.SetDefecto(
-      sSerieAlbDef,
-      sSeriePedDef,
-      Date,
-      Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString,
-      Dmm.unqryTablaG.FieldByName('CODIGO_TAR_SES').AsString,
-      iIdPvTemp,
-      Dmm.unqryTablaG.FieldByName('ESGENERA_PEDIDO_SES').AsString = 'S',
-      // Por defecto generamos albaran si la cabecera trae almacen
-      // (escenario tipico de muestrarios).
-      (Dmm.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString = 'S')
-        or (Trim(Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString)
-            <> ''),
-      Dmm.unqryTablaG.FieldByName('REF_PRV_SES').AsString);
-    // Mostrar la opcion 'agrupar / un doc por almacen' solo cuando la
-    // cabecera tenga el formato distribuido activo. En modo clasico no
-    // tiene sentido — solo hay un almacen efectivo.
-    frmSet.MostrarOpcionAgrupacion(
-      Dmm.unqryTablaG.FieldByName('ESFORMATO_DISTRIBUIDO_SES').AsString = 'S');
-    frmSet.ShowModal;
-    if not frmSet.Confirmado then Exit;
+  frmSet.ConfigurarLookups(Dmm.dsAlmacenes, Dmm.dsTarifas,
+                            Dmm.dsTemporadas);
+  // Combos de serie: todas las series de la empresa por tipo de
+  // documento. El modal propone la serie que lleve el almacen elegido
+  // (CODIGO_ALM_EMPSER) y re-propone al cambiar de almacen.
+  frmSet.CargarSeries(Estado.Empresa);
+  frmSet.SetDefecto(
+    Defectos.SerieAlbaran,
+    Defectos.SeriePedido,
+    Date,
+    Defectos.Almacen,
+    Defectos.Tarifa,
+    Defectos.Temporada,
+    Defectos.GeneraPedido,
+    Defectos.GeneraAlbaran,
+    Defectos.RefProveedor);
+  frmSet.MostrarOpcionAgrupacion(Defectos.MostrarOpcionAgrupacion);
+  frmSet.ShowModal;
+  if not frmSet.Confirmado then Exit;
+  Elegidos.SerieAlbaran := frmSet.SerieAlb;
+  Elegidos.SeriePedido := frmSet.SeriePed;
+  Elegidos.Almacen := frmSet.Almacen;
+  Elegidos.Tarifa := frmSet.Tarifa;
+  Elegidos.Temporada := frmSet.Temporada;
+  Elegidos.GeneraPedido := frmSet.GenPedido;
+  Elegidos.GeneraAlbaran := frmSet.GenAlbaran;
+  Elegidos.RefProveedor := frmSet.RefPrv;
+  Elegidos.UnDocumentoPorAlmacen := frmSet.UnDocPorAlmacen;
+  // FormClose libera el modal.
 
-    // Aplicar a la cabecera los settings elegidos para que la
-    // materializacion los vea: almacen, tarifa, temporada, flags. Las
-    // series elegidas (albaran / pedido) viajan como parametros a
-    // MaterializarSesion, no se persisten en la cabecera porque pueden
-    // ser distintas en cada materializacion.
-    Dmm.unqryTablaG.Edit;
-    Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString := frmSet.Almacen;
-    Dmm.unqryTablaG.FieldByName('CODIGO_TAR_SES').AsString := frmSet.Tarifa;
-    if frmSet.Temporada > 0 then
-      Dmm.unqryTablaG.FieldByName('ID_PV_TEMPORADA_SES').AsInteger :=
-                                                          frmSet.Temporada
-    else
-      Dmm.unqryTablaG.FieldByName('ID_PV_TEMPORADA_SES').Clear;
-    Dmm.unqryTablaG.FieldByName('ESGENERA_PEDIDO_SES').AsString :=
-                            IfThen(frmSet.GenPedido, 'S', 'N');
-    Dmm.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString :=
-                            IfThen(frmSet.GenAlbaran, 'S', 'N');
-    // Ref. del documento del proveedor: viaja a REF_PROVEEDOR_ALBC en la
-    // cabecera del albaran (via InsertarAlbaranCompraCabecera, que ya lee
-    // S.REF_PRV_SES). Lo persistimos antes de materializar.
-    Dmm.unqryTablaG.FieldByName('REF_PRV_SES').AsString := frmSet.RefPrv;
-    Dmm.unqryTablaG.Post;
-  finally
-    // FormClose libera el modal
-  end;
+  // Aplicar a la cabecera los settings elegidos para que la
+  // materializacion los vea. Las series NO se persisten: viajan como
+  // parametros porque pueden cambiar en cada materializacion.
+  Cabecera := ComponerCabeceraActualizada(Elegidos);
+  EscribirCabeceraSesionCreacion(Dmm.unqryTablaG, Cabecera);
 
   // ---- 4. Materializar ----
-  LogSes(Format('  MaterializarSesion(genPed=%s, genAlb=%s, serieAlb=%s, seriePed=%s)',
-                [Dmm.unqryTablaG.FieldByName('ESGENERA_PEDIDO_SES').AsString,
-                 Dmm.unqryTablaG.FieldByName('ESGENERA_ALBARAN_SES').AsString,
-                 frmSet.SerieAlb, frmSet.SeriePed]));
-  ParametrosMaterializacion.Usuario := IdentidadSesion.Usuario;
-  ParametrosMaterializacion.SerieAlbaran := frmSet.SerieAlb;
-  ParametrosMaterializacion.SeriePedido := frmSet.SeriePed;
-  ParametrosMaterializacion.UnDocumentoPorAlmacen :=
-    frmSet.UnDocPorAlmacen;
+  LogSes(Format(
+    '  MaterializarSesion(genPed=%s, genAlb=%s, sAlb=%s, sPed=%s)',
+    [BoolToStr(Elegidos.GeneraPedido, True),
+     BoolToStr(Elegidos.GeneraAlbaran, True),
+     Elegidos.SerieAlbaran, Elegidos.SeriePedido]));
+  ParametrosMaterializacion := ComponerParametrosMaterializacion(
+    IdentidadSesion.Usuario, Elegidos);
   Screen.Cursor := crHourGlass;
   try
     bOK := FServicioComprasSesiones.EjecutarMaterializacion(
@@ -2582,76 +2556,77 @@ begin
   finally
     Screen.Cursor := crDefault;
   end;
-  sSerPed := ResultadoMaterializacion.SeriePedido;
-  sNumPed := ResultadoMaterializacion.NumeroPedido;
-  sSerAlb := ResultadoMaterializacion.SerieAlbaran;
-  sNumAlb := ResultadoMaterializacion.NumeroAlbaran;
   sErr := ResultadoMaterializacion.MensajeError;
-    LogSes(Format('  MaterializarSesion -> bOK=%s, pedido=%s/%s, albaran=%s/%s, err=%s',
-                  [BoolToStr(bOK, True), sSerPed, sNumPed, sSerAlb, sNumAlb, sErr]));
-    if bOK then
-    begin
-      LogSes('  master.Refresh');
-      Dmm.unqryTablaG.Refresh;
-      if Dmm.unqrySesDocs.Active then
-        Dmm.unqrySesDocs.Refresh
-      else
-        Dmm.unqrySesDocs.Open;
-      RefrescarFotosProvisionales;
-      // Mostrar todos los docs creados con boton "Ir a documento". En
-      // modo distribuido salen N albaranes (uno por almacen); en modo
-      // clasico solo uno. Sin docs (caso 'sin albaran ni pedido') no
-      // abrimos modal: simple ShowMessage.
-      if Length(ResultadoMaterializacion.Documentos) = 0 then
-        ShowMessage(SInfoSesionMaterializadaSinDocumentos)
-      else
-      begin
-        frmDocs := TfrmModalDocsCreados.Create(Self);
-        // Bloqueamos caFree del ancestro para liberarlo nosotros aqui.
-        frmDocs.OnClose := nil;
-        try
-          for i := 0 to High(ResultadoMaterializacion.Documentos) do
-            frmDocs.Agregar(
-              ResultadoMaterializacion.Documentos[i].Tipo,
-              ResultadoMaterializacion.Documentos[i].Serie,
-              ResultadoMaterializacion.Documentos[i].Numero,
-              ResultadoMaterializacion.Documentos[i].Almacen);
-          frmDocs.ShowModal;
-          if frmDocs.Confirmado then
-          begin
-            // Tanto Albaran como Pedido tienen Mto propio. BuscarTabla
-            // en inLibShowMto soporta PK compuesta separada por coma.
-            if SameText(frmDocs.SeleccionadoTipo, 'Albaran') then
-              ShowMto(Application.MainForm, 'AlbaranesCompra',
-                      frmDocs.SeleccionadoSerie + ',' +
-                      frmDocs.SeleccionadoNumero)
-            else if SameText(frmDocs.SeleccionadoTipo, 'Pedido') then
-              ShowMto(Application.MainForm, 'PedidosCompra',
-                      frmDocs.SeleccionadoSerie + ',' +
-                      frmDocs.SeleccionadoNumero);
-          end;
-        finally
-          FreeAndNil(frmDocs);
-        end;
-      end;
-    end
+  LogSes(Format(
+    '  Materializar -> bOK=%s, ped=%s/%s, alb=%s/%s, err=%s',
+    [BoolToStr(bOK, True),
+     ResultadoMaterializacion.SeriePedido,
+     ResultadoMaterializacion.NumeroPedido,
+     ResultadoMaterializacion.SerieAlbaran,
+     ResultadoMaterializacion.NumeroAlbaran, sErr]));
+  if bOK then
+  begin
+    LogSes('  master.Refresh');
+    Dmm.unqryTablaG.Refresh;
+    if Dmm.unqrySesDocs.Active then
+      Dmm.unqrySesDocs.Refresh
+    else
+      Dmm.unqrySesDocs.Open;
+    RefrescarFotosProvisionales;
+    // Mostrar todos los docs creados con boton "Ir a documento". En
+    // modo distribuido salen N albaranes (uno por almacen); en modo
+    // clasico solo uno. Sin docs no abrimos modal.
+    if Length(ResultadoMaterializacion.Documentos) = 0 then
+      ShowMessage(SInfoSesionMaterializadaSinDocumentos)
     else
     begin
-      // Mostrar el error de materializacion tambien en modal de
-      // incidencias para que se vea bien aunque sea largo.
-      incidencias := TStringList.Create;
+      frmDocs := TfrmModalDocsCreados.Create(Self);
+      // Bloqueamos caFree del ancestro para liberarlo nosotros aqui.
+      frmDocs.OnClose := nil;
       try
-        incidencias.Add('[MATERIALIZAR] ' + sErr);
-        frmInc := TfrmModalIncidencias.Create(Self);
-        frmInc.SetIncidencias(
-          'No se pudo materializar la sesion:', incidencias);
-        frmInc.ShowModal;
+        for i := 0 to High(ResultadoMaterializacion.Documentos) do
+          frmDocs.Agregar(
+            ResultadoMaterializacion.Documentos[i].Tipo,
+            ResultadoMaterializacion.Documentos[i].Serie,
+            ResultadoMaterializacion.Documentos[i].Numero,
+            ResultadoMaterializacion.Documentos[i].Almacen);
+        frmDocs.ShowModal;
+        if frmDocs.Confirmado then
+        begin
+          // Albaran y Pedido tienen Mto propio. BuscarTabla en
+          // inLibShowMto soporta PK compuesta separada por coma.
+          if SameText(frmDocs.SeleccionadoTipo, 'Albaran') then
+            ShowMto(Application.MainForm, 'AlbaranesCompra',
+                    frmDocs.SeleccionadoSerie + ',' +
+                    frmDocs.SeleccionadoNumero)
+          else if SameText(frmDocs.SeleccionadoTipo, 'Pedido') then
+            ShowMto(Application.MainForm, 'PedidosCompra',
+                    frmDocs.SeleccionadoSerie + ',' +
+                    frmDocs.SeleccionadoNumero);
+        end;
       finally
-        FreeAndNil(incidencias);
+        FreeAndNil(frmDocs);
       end;
     end;
+  end
+  else
+  begin
+    // El error tambien en modal de incidencias: se lee mejor aunque
+    // sea largo.
+    incidencias := TStringList.Create;
+    try
+      incidencias.Add('[MATERIALIZAR] ' + sErr);
+      frmInc := TfrmModalIncidencias.Create(Self);
+      frmInc.SetIncidencias(
+        'No se pudo materializar la sesion:', incidencias);
+      frmInc.ShowModal;
+    finally
+      FreeAndNil(incidencias);
+    end;
+  end;
   LogSes('btnCrearClick FIN');
 end;
+
 
 procedure TfrmMtoComprasSesiones.btnRevertirClick(Sender: TObject);
 var

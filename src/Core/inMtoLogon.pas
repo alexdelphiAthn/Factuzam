@@ -123,7 +123,7 @@ type
     procedure BloquearPantallaOperacion;
     procedure DesbloquearPantallaOperacion;
     procedure RecolocarBarraProgreso;
-    procedure MostrarBarraProgreso(const ATextoInicial: string = 'Preparando...');
+    procedure MostrarBarraProgreso(const ATextoInicial: string = '');
     procedure OcultarBarraProgreso;
     function PorcentajeProgreso(AValor, ATotal: Integer): Integer;
     function TextoProgreso(const AEtapa: string;
@@ -244,7 +244,7 @@ begin
      end;
   end;
 
-  opendialog.Title := 'Cargar script';
+  opendialog.Title := STituloCargarScript;
   opendialog.DefaultExtension := 'sql';
   openDialog.DefaultFolder := GetUserDeskFolder;
 
@@ -763,7 +763,10 @@ begin
   FProgressLabel.Visible := True;
   FProgressBar.Visible := True;
   FProgressBar.Position := 0;
-  FProgressLabel.Caption := ATextoInicial;
+  if ATextoInicial = '' then
+    FProgressLabel.Caption := SCaptionPreparando
+  else
+    FProgressLabel.Caption := ATextoInicial;
   FProgressLabel.Hint := FProgressLabel.Caption;
   FProgressPanel.BringToFront;
   FProgressBar.Update;
@@ -831,7 +834,7 @@ begin
         FWorkerOperacion.Terminate;
       if FProgressLabel <> nil then
       begin
-        FProgressLabel.Caption := 'Cancelando operación...';
+        FProgressLabel.Caption := SCaptionCancelandoOperacion;
         FProgressLabel.Hint := FProgressLabel.Caption;
         FProgressLabel.Update;
       end;
@@ -936,7 +939,7 @@ begin
     edtPortBD.Text,
     edtNomBD.Text);
   iButtonSel := 0;
-  saveDialog.Title := 'Guardar copia de seguridad';
+  saveDialog.Title := STituloGuardarCopiaSeguridad;
   saveDialog.DefaultFolder := GetCurrentDir;
   saveDialog.DefaultExtension := '.crypt';
   savedialog.FileName := 'copiaseguridad_' + FPasswordConexionEncriptado +
@@ -950,7 +953,7 @@ begin
     end;
     if ((iButtonSel = mrYes) or (not FileExists(saveDialog.FileName))) then
     begin
-      MostrarBarraProgreso('Preparando copia de seguridad...');
+      MostrarBarraProgreso(SCaptionPreparandoCopiaSeguridad);
       Worker := TBackupWorker.Create(
         edtHostName.Text,
         StrToIntDef(edtPortBD.Text, 3306),
@@ -1001,16 +1004,16 @@ begin
     unqryTestBD.Close;
     FreeAndNil(unqryTestBD);
   end;
-  opendialog.Title := 'Cargar copia de seguridad';
+  opendialog.Title := STituloCargarCopiaSeguridad;
   opendialog.FileTypes.Clear;
   with opendialog.FileTypes.Add do
   begin
-    DisplayName := 'Copias SQL o encriptadas';
+    DisplayName := SCaptionFiltroCopiasSqlEncriptadas;
     FileMask := '*.sql;*.crypt';
   end;
   with opendialog.FileTypes.Add do
   begin
-    DisplayName := 'Todos los archivos';
+    DisplayName := SCaptionFiltroTodosArchivos;
     FileMask := '*.*';
   end;
   opendialog.DefaultExtension := 'sql';
@@ -1022,7 +1025,7 @@ begin
       bDesencriptar := True;
       sPassDesencriptar := FPasswordConexion;
     end;
-    MostrarBarraProgreso('Preparando restauración...');
+    MostrarBarraProgreso(SCaptionPreparandoRestauracion);
     Worker := TRestoreWorker.Create(
       edtHostName.Text,
       StrToIntDef(edtPortBD.Text, 3306),

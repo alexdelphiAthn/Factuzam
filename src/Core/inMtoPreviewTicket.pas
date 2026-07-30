@@ -52,6 +52,8 @@ type
     FQRTexto: string;
     FQRTamanoModulo: Integer;
     FQRNivelError: Integer;
+    FBarcodeAltura: Integer;
+    FBarcodeHriDebajo: Boolean;
     FRenderMetafile: Boolean;
     procedure ReiniciarEstadoTicket;
     procedure InicializarPapel(AAlto: Integer);
@@ -65,6 +67,7 @@ type
     procedure AjustarFuente;
     function ObtenerAltoLinea: Integer;
     procedure DibujarQRCode;
+    procedure DibujarEAN13(const ADigitos: string);
 
   public
     FComandos: string;
@@ -138,6 +141,8 @@ begin
   FQRTexto := '';
   FQRTamanoModulo := 8;
   FQRNivelError := 48;
+  FBarcodeAltura := 80;
+  FBarcodeHriDebajo := True;
 end;
 
 procedure TFormVisualizador.InicializarPapel(AAlto: Integer);
@@ -420,6 +425,106 @@ begin
   end;
 end;
 
+procedure TFormVisualizador.DibujarEAN13(const ADigitos: string);
+const
+  // Codificación estándar EAN-13: patrones L y G de 7 módulos por dígito.
+  // El patrón R es el complemento bit a bit del L.
+  PATRON_L: array[0..9] of string = (
+    '0001101', '0011001', '0010011', '0111101', '0100011',
+    '0110001', '0101111', '0111011', '0110111', '0001011');
+  PATRON_G: array[0..9] of string = (
+    '0100111', '0110011', '0011011', '0100001', '0011101',
+    '0111001', '0000101', '0010001', '0001001', '0010111');
+  // Paridad L/G de los 6 dígitos izquierdos según el primer dígito
+  PARIDAD: array[0..9] of string = (
+    'LLLLLL', 'LLGLGG', 'LLGGLG', 'LLGGGL', 'LGLLGG',
+    'LGGLLG', 'LGGGLL', 'LGLGLG', 'LGLGGL', 'LGGLGL');
+  ESCALA_MODULO = 4; // píxeles por módulo: 95 módulos -> 380 px
+var
+  sModulos, sParidad, sPatron: string;
+  bValido: Boolean;
+  iDigito, i, j, x: Integer;
+  iAncho, iAlto, iAltoHri, iStartX: Integer;
+begin
+  // Solo dígitos y longitud 13; si no, se ignora (igual que la impresora)
+  bValido := Length(ADigitos) = 13;
+  for i := 1 to Length(ADigitos) do
+    if not CharInSet(ADigitos[i], ['0'..'9']) then
+      bValido := False;
+  if bValido then
+  begin
+    // Componer los 95 módulos: guarda 101 + 6 dígitos L/G + 01010 +
+    // 6 dígitos R + guarda 101
+    sParidad := PARIDAD[Ord(ADigitos[1]) - Ord('0')];
+    sModulos := '101';
+    for i := 2 to 7 do
+    begin
+      iDigito := Ord(ADigitos[i]) - Ord('0');
+      if sParidad[i - 1] = 'L' then
+        sPatron := PATRON_L[iDigito]
+      else
+        sPatron := PATRON_G[iDigito];
+      sModulos := sModulos + sPatron;
+    end;
+    sModulos := sModulos + '01010';
+    for i := 8 to 13 do
+    begin
+      iDigito := Ord(ADigitos[i]) - Ord('0');
+      sPatron := PATRON_L[iDigito];
+      for j := 1 to Length(sPatron) do
+        if sPatron[j] = '0' then
+          sPatron[j] := '1'
+        else
+          sPatron[j] := '0';
+      sModulos := sModulos + sPatron;
+    end;
+    sModulos := sModulos + '101';
+    iAncho := Length(sModulos) * ESCALA_MODULO;
+    iAlto := FBarcodeAltura;
+    iAltoHri := 0;
+    if FBarcodeHriDebajo then
+      iAltoHri := 22;
+    case FAlineacion of
+      1:
+        iStartX := (ANCHO_PAPEL_PIXELS - iAncho) div 2;
+      2:
+        iStartX := ANCHO_PAPEL_PIXELS - iAncho - MARGEN_PIXELS;
+    else
+      iStartX := MARGEN_PIXELS;
+    end;
+    if iStartX < 0 then
+      iStartX := 0;
+    AsegurarAltoPapel(FCurrentY + iAlto + iAltoHri + MARGEN_PAPEL_FINAL);
+    FCanvas.Brush.Color := clBlack;
+    FCanvas.Brush.Style := bsSolid;
+    for i := 1 to Length(sModulos) do
+    begin
+      if sModulos[i] = '1' then
+      begin
+        x := iStartX + (i - 1) * ESCALA_MODULO;
+        FCanvas.FillRect(
+          Rect(x, FCurrentY, x + ESCALA_MODULO, FCurrentY + iAlto));
+      end;
+    end;
+    FCurrentY := FCurrentY + iAlto;
+    if FBarcodeHriDebajo then
+    begin
+      FCanvas.Brush.Style := bsClear;
+      FCanvas.Font.Name := 'Courier New';
+      FCanvas.Font.Size := 9;
+      FCanvas.Font.Style := [];
+      FCanvas.Font.Color := clBlack;
+      FCanvas.TextOut(
+        iStartX + (iAncho - FCanvas.TextWidth(ADigitos)) div 2,
+        FCurrentY + 2,
+        ADigitos);
+      FCanvas.Brush.Style := bsSolid;
+      FCanvas.Brush.Color := clWhite;
+      FCurrentY := FCurrentY + iAltoHri;
+    end;
+  end;
+end;
+
 procedure TFormVisualizador.ImprimirImagenRaster(const Datos: string;
                                                  Ancho, Alto: Integer);
 var
@@ -610,6 +715,52 @@ begin
             'B': // Modo blanco/negro invertido
               begin
                 FInverso := LeerByte <> 0;
+              end;
+            'h': // Altura del código de barras 1D
+              begin
+                FBarcodeAltura := LeerByte;
+              end;
+            'w': // Ancho de módulo del código de barras (visual fijo)
+              begin
+                LeerByte;
+              end;
+            'H': // Posición del HRI (2 o 50 = debajo)
+              begin
+                var PosHri := LeerByte;
+                FBarcodeHriDebajo := (PosHri = 2) or (PosHri = 50);
+              end;
+            'f': // Fuente del HRI (se ignora en el visual)
+              begin
+                LeerByte;
+              end;
+            'k': // Código de barras 1D (EAN13 en formatos A=2 y B=67)
+              begin
+                var M := LeerByte;
+                var DatosBarcode := '';
+                if M <= 6 then
+                begin
+                  // Formato A: datos terminados en NUL
+                  var B := LeerByte;
+                  while (B <> 0) and (i <= Length(Comandos)) do
+                  begin
+                    DatosBarcode := DatosBarcode + Char(B);
+                    B := LeerByte;
+                  end;
+                end
+                else
+                begin
+                  // Formato B: byte de longitud + datos
+                  var N := LeerByte;
+                  for var j := 1 to N do
+                    DatosBarcode := DatosBarcode + Char(LeerByte);
+                end;
+                if BufferTexto <> '' then
+                begin
+                  ImprimirTexto(BufferTexto);
+                  BufferTexto := '';
+                end;
+                if (M = 2) or (M = 67) then
+                  DibujarEAN13(DatosBarcode);
               end;
              '(': // Comandos función (incluye QR)
               begin

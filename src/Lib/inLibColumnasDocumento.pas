@@ -24,7 +24,7 @@ uses
   System.Classes, Vcl.Forms, Data.DB, Uni, cxEdit,
   cxGridCustomTableView, cxGridDBTableView, inLibContextoSesionIntf,
   inLibColumnasSkuIntf, inLibGridTallasInline, inLibGridPivoteCompra,
-  inLibGridPivoteVenta, UniDataGen;
+  inLibGridPivoteVenta, inLibAnfitrionDatosIntf;
 
 type
   TConfigPivoteDocumentoCompra = record
@@ -57,8 +57,6 @@ type
   TConjuntoModosColumnasSku = set of TModoColumnasSku;
 
   TAccionDocumento = procedure of object;
-
-  TClaseDataModuleDocumento = class of TdmBase;
 
 procedure CrearColumnasTallasDocumento(
   AVista: TcxGridDBTableView; const APrefijoNombre: string;
@@ -126,11 +124,8 @@ procedure ResolverArtSkuActivoDocumento(
 function DataSourcesParaFotoDocumento(
   ACabecera: TDataSource; AVista: TcxGridDBTableView):
   TArray<TDataSource>;
-function AsegurarDataModuleDocumento(
-  APropietario: TComponent; var ADataModule: TObject;
-  AClaseDataModule: TClaseDataModuleDocumento): TdmBase;
 procedure ConfigurarTablaPrincipalDocumento(
-  ADataModule: TdmBase; ACabecera: TDataSource;
+  const AAnfitrion: IAnfitrionDatosDocumento; ACabecera: TDataSource;
   AVistaLineas: TcxGridDBTableView; ASourceLineas: TDataSource;
   const AConsultasDetalle: array of TUniQuery;
   var AClavePrincipal: string; const AClave: string);
@@ -186,7 +181,8 @@ implementation
 
 uses
   System.SysUtils, Winapi.Windows, cxDataStorage, cxButtonEdit,
-  cxCurrencyEdit, inLibLog, inLibFotos;
+  cxCurrencyEdit, inLibLog, inLibFotos, inLibMsgArticulos,
+  inLibMsgComun;
 
 procedure CrearColumnasTallasDocumento(
   AVista: TcxGridDBTableView; const APrefijoNombre: string;
@@ -368,7 +364,7 @@ begin
   begin
     Result := AVista.CreateColumn;
     Result.Name := ANombre;
-    Result.Caption := 'Color';
+    Result.Caption := SCaptionColColor;
     Result.Width := AAncho;
     Result.Visible := False;
     Result.Options.Editing := True;
@@ -548,41 +544,18 @@ begin
     Result := [ACabecera];
 end;
 
-function AsegurarDataModuleDocumento(
-  APropietario: TComponent; var ADataModule: TObject;
-  AClaseDataModule: TClaseDataModuleDocumento): TdmBase;
-begin
-  if not Assigned(AClaseDataModule) then
-    raise EArgumentNilException.Create(
-      'No se ha indicado la clase del data module.');
-  if Assigned(ADataModule) then
-  begin
-    if ADataModule.ClassType.InheritsFrom(AClaseDataModule) then
-      Result := TdmBase(ADataModule)
-    else
-      raise EInvalidCast.CreateFmt(
-        'El data module %s no es de la clase %s.',
-        [ADataModule.ClassName, AClaseDataModule.ClassName]);
-  end
-  else
-  begin
-    Result := AClaseDataModule.Create(APropietario);
-    ADataModule := Result;
-  end;
-end;
-
 procedure ConfigurarTablaPrincipalDocumento(
-  ADataModule: TdmBase; ACabecera: TDataSource;
+  const AAnfitrion: IAnfitrionDatosDocumento; ACabecera: TDataSource;
   AVistaLineas: TcxGridDBTableView; ASourceLineas: TDataSource;
   const AConsultasDetalle: array of TUniQuery;
   var AClavePrincipal: string; const AClave: string);
 var
   iIndice: Integer;
 begin
-  if Assigned(ADataModule) and Assigned(ACabecera) then
+  if Assigned(AAnfitrion) and Assigned(ACabecera) then
   begin
-    ACabecera.DataSet := ADataModule.unqryTablaG;
-    ADataModule.AsignarMaestroCabecera(ACabecera);
+    ACabecera.DataSet := AAnfitrion.ObtenerTablaPrincipal;
+    AAnfitrion.AsignarMaestroCabecera(ACabecera);
   end;
   if Assigned(AVistaLineas) then
     AVistaLineas.DataController.DataSource := ASourceLineas;
@@ -727,18 +700,19 @@ begin
   Result := ACaptionSinConstruir;
   if AConstruido then
   begin
-    Result := ACaptionBase + ' [Desglose]';
+    Result := Format(SCaptionTabModoDesglose, [ACaptionBase]);
     if AModo = mcsSku then
-      Result := ACaptionBase + ' [SKU]'
+      Result := Format(SCaptionTabModoSku, [ACaptionBase])
     else if AModo = mcsTallasHorPed then
     begin
       if AUsaBandasSeparadas then
-        Result := ACaptionBase + ' [Tallas horiz. bandas]'
+        Result := Format(SCaptionTabModoTallasHorizBandas,
+                         [ACaptionBase])
       else
-        Result := ACaptionBase + ' [Tallas horiz.]';
+        Result := Format(SCaptionTabModoTallasHoriz, [ACaptionBase]);
     end
     else if AUsaBandasSeparadas and (AModo = mcsTallasInline) then
-      Result := ACaptionBase + ' [Tallas horiz.]';
+      Result := Format(SCaptionTabModoTallasHoriz, [ACaptionBase]);
   end;
 end;
 
@@ -750,7 +724,7 @@ begin
   for iIndice := Low(AColumnas) to High(AColumnas) do
     if Assigned(AColumnas[iIndice]) then
       AColumnas[iIndice].Caption :=
-        'Atributo ' + IntToStr(iIndice + 1);
+        Format(SCaptionAtributoN, [iIndice + 1]);
 end;
 
 procedure AplicarNombresAtributosDocumento(

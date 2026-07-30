@@ -83,16 +83,13 @@ begin
   edtConfirmacion.Visible := AConfirmar;
   if AConfirmar then
   begin
-    Caption := 'Proteger copia de seguridad';
-    lblExplicacion.Caption :=
-      'La copia se cifrará. Guarde esta contraseña: será necesaria ' +
-      'para restaurarla.';
+    Caption := STituloProtegerCopiaSeguridad;
+    lblExplicacion.Caption := SCaptionCopiaSeCifrara;
   end
   else
   begin
-    Caption := 'Abrir copia cifrada';
-    lblExplicacion.Caption :=
-      'Introduzca la contraseña con la que se protegió la copia.';
+    Caption := STituloAbrirCopiaCifrada;
+    lblExplicacion.Caption := SCaptionIntroduzcaContrasenaCopia;
   end;
 end;
 
