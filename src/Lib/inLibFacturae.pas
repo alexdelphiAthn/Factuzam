@@ -39,7 +39,7 @@ implementation
 
 uses
   System.Classes, System.IOUtils, System.Math, System.StrUtils, Data.DB,
-  DBAccess, inLibDocumentoFiscal, inLibXades, inLibMsg;
+  DBAccess, inLibDocumentoFiscal, inLibXades, inLibMsgFacturas;
 
 const
   cNsFacturae =

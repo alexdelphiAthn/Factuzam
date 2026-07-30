@@ -27,7 +27,7 @@ function CrearServicioConsolidacionFactura(
 implementation
 
 uses
-  System.SysUtils, Data.DB, inLibMsg;
+  System.SysUtils, Data.DB, inLibMsgFacturas;
 
 type
   TDatosConsolidacionFactura = record

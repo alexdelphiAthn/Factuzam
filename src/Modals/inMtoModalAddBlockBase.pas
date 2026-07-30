@@ -279,7 +279,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibUser, inLibMsg;
+  inLibUser, inLibMsgArticulos, inLibMsgComun;
 
 // ============================================================================
 //   API publica del hijo

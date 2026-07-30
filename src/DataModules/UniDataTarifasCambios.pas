@@ -49,15 +49,12 @@ type
     function  AplicarSesionActual(out AMensaje: string): Integer;
   end;
 
-var
-  dmTarifasCambios: TdmTarifasCambios;
-
 implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 uses
-  inLibUser, inLibMsg;
+  inLibUser, inLibMsgArticulos;
 
 {$R *.dfm}
 

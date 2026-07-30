@@ -65,7 +65,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsg;
+  inLibMsgArticulos;
 
 procedure TfrmPrintEtiqPed.FormCreate(Sender: TObject);
 begin

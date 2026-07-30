@@ -325,10 +325,6 @@ type
     procedure FormResize(Sender: TObject);
   end;
 
-var
-  frmMtoPrincipal: TfrmMtoPrincipal;
-  bIsConnected: Boolean;
-
 implementation
 
 uses inLibUser,
@@ -349,7 +345,8 @@ uses inLibUser,
   inLibMonitorSQLUniDAC,
   inLibMonitorSQLLog,
   inLibLog,
-  inLibMsg,
+  inLibMsgCaja,
+  inLibMsgConfiguracion,
   inLibDir,
   inMtoSplash,
   inMtoAppParam,
@@ -802,6 +799,8 @@ begin
       Conexiones,
       ParametrosApp.GetString('appIdioma', IDIOMA_ESPANOL)));
   Traducciones.Aplicar(Self);
+  if FSplashInicio is TfrmSplash then
+    Traducciones.Aplicar(TfrmSplash(FSplashInicio));
   oFotos.AsignarConexion(ConexionPrincipal, ParametrosApp);
   FdmDataFiltros  := TdmFiltros.Create(Self);
   AsignarFiltrosGuardados(FdmDataFiltros);
@@ -1005,6 +1004,10 @@ begin
     TfrmSplash(FSplashInicio).Close;
   except
     // Si el form ya estaba liberado por algun motivo, lo ignoramos.
+    on E: Exception do
+      inLibLog.Log.LogWarning(
+        'Principal: cierre del splash de inicio fallo: ' +
+        E.Message);
   end;
   FreeAndNil(FSplashInicio);
 end;
@@ -1190,8 +1193,7 @@ begin
   AsignarInformesGuiasCache(
     TInformesGuiasCache.Create(ConexionPrincipal));
   InformesGuiasCache.Precargar;
-  FreeAndNil(oConfigCampos);
-  oConfigCampos := TConfigCamposCache.Create(ConexionPrincipal);
+  InicializarConfigCampos(ConexionPrincipal);
   oConfigCampos.Precargar;
   IdentidadActual := ContextoSesion.Identidad;
   Identidad := TIdentidadPermisos.Crear(
@@ -1273,8 +1275,7 @@ begin
   errPermisos := '';
   AsignarInformesGuiasCache(
     TInformesGuiasCache.Create(ConexionPrincipal));
-  FreeAndNil(oConfigCampos);
-  oConfigCampos  := TConfigCamposCache.Create(ConexionPrincipal);
+  InicializarConfigCampos(ConexionPrincipal);
   // Cada tarea escribe solo en SUS variables (sin estado compartido) y captura
   // su excepcion (no se propaga al WaitForAll). El log es thread-safe (mutex).
   t1 := TTask.Run(
@@ -1672,7 +1673,7 @@ begin
     AsignarConexiones(nil);
     // Caches de la sesión: liberarlas evita la fuga en re-login.
     AsignarInformesGuiasCache(nil);
-    FreeAndNil(oConfigCampos);
+    LiberarConfigCampos;
     FreeAndNil(FDmConn);
   finally
     inLibLog.Log.LogInfo('Ventana principal Cerrada');
@@ -1735,7 +1736,7 @@ begin
     // F9: abrir el cajon portamonedas desde cualquier ventana del programa
     // (caja, mantenimientos o el propio principal) si hay impresora de
     // tickets asignada. Sin impresora solo responde con la sesion de caja
-    // abierta (frmMtoMenuCaja vivo), para avisar de la falta de
+    // abierta, para avisar de la falta de
     // configuracion. F9 sola, sin Ctrl/Alt/Mayus.
     if (Msg.wParam = WPARAM(VK_ESCAPE)) and FEnOperacionLarga then
     begin
@@ -1752,7 +1753,7 @@ begin
     end
     else if (Msg.wParam = WPARAM(VK_F9)) and
        (ImpresoraCajaAsignada(ParametrosCaja) or
-        Assigned(frmMtoMenuCaja)) and
+        MenuCajaAbierto) and
        (GetKeyState(VK_CONTROL) >= 0) and (GetKeyState(VK_MENU) >= 0) and
        (GetKeyState(VK_SHIFT) >= 0) then
     begin
@@ -1796,7 +1797,7 @@ begin
   if (Message.CharCode = VK_F9) and
      (HiWord(Message.KeyData) and KF_REPEAT = 0) and
      (ImpresoraCajaAsignada(ParametrosCaja) or
-      Assigned(frmMtoMenuCaja)) and
+      MenuCajaAbierto) and
      (GetKeyState(VK_CONTROL) >= 0) and (GetKeyState(VK_MENU) >= 0) and
      (GetKeyState(VK_SHIFT) >= 0) then
   begin
@@ -2048,19 +2049,20 @@ procedure TfrmMtoPrincipal.tmr1Timer(Sender: TObject);
 var
   ADateStr          : string;
   ATimeStr          : string;
+  bConectado        : Boolean;
 begin
-  bIsConnected := False;
+  bConectado := False;
   ADateStr := DateToStr(Now);
   ATimeStr := FormatDateTime('hh:mm', Now);
   if FDmConn <> nil then
     if FDmConn.conUni.Connected then
     begin
-      bIsConnected := True;
+      bConectado := True;
       jvStatusBar1.Panels[4].Text := '' + ADateStr + ' ' + ATimeStr + ' Conn';
     end
     else
-      bIsConnected := False;
-  if (FDmConn = nil) or (not bIsConnected) then
+      bConectado := False;
+  if (FDmConn = nil) or (not bConectado) then
   begin
     jvStatusBar1.Panels[4].Text := '' + ADateStr + ' ' + ATimeStr + 'NO Conn';
     inLibLog.Log.LogError('Se ha perdido la conexión con la BBDD');
@@ -2126,17 +2128,7 @@ procedure TfrmMtoPrincipal.mnuMenuCajaClick(Sender: TObject);
 begin
   inherited;
   if not mnuMenuCaja.Visible then Exit;
-  if Assigned(frmMtoMenuCaja) then
-  begin
-    if frmMtoMenuCaja.WindowState = wsMinimized then
-      frmMtoMenuCaja.WindowState := wsNormal;
-    frmMtoMenuCaja.BringToFront;
-  end
-  else
-  begin
-    frmMtoMenuCaja := TfrmMtoMenuCaja.Create(Application, Permisos);
-    frmMtoMenuCaja.Show;
-  end;
+  MostrarMenuCaja(Permisos);
   Self.WindowState := wsMinimized;
 end;
 
@@ -2441,23 +2433,25 @@ end;
 // usuario la abre manualmente con Ctrl+F cuando quiera.
 procedure TfrmMtoPrincipal.pcPrincipalChange(Sender: TObject);
 var
+  FormularioFoto: TfrmFotoArticulo;
   ts: TcxTabSheet;
 begin
   ActualizarFondoLogo;
+  FormularioFoto := FotoFlotanteActual;
   if pcPrincipal.ActivePageIndex < 0 then
   begin
-    if Assigned(frmFotoArticulo) and frmFotoArticulo.Visible then
+    if (FormularioFoto <> nil) and FormularioFoto.Visible then
     begin
-      frmFotoArticulo.VincularDataSources([], nil);
-      frmFotoArticulo.SetArticuloSku('', '');
+      FormularioFoto.VincularDataSources([], nil);
+      FormularioFoto.SetArticuloSku('', '');
     end;
     Exit;
   end;
   ts := pcPrincipal.Pages[pcPrincipal.ActivePageIndex] as TcxTabSheet;
   if (ts.ControlCount = 0) or not (ts.Controls[0] is TfrmMtoGen) then
   begin
-    if Assigned(frmFotoArticulo) and frmFotoArticulo.Visible then
-      frmFotoArticulo.VincularDataSources([], nil);
+    if (FormularioFoto <> nil) and FormularioFoto.Visible then
+      FormularioFoto.VincularDataSources([], nil);
     Exit;
   end;
   EngancharFotoAlMto(ts.Controls[0]);
@@ -2553,21 +2547,23 @@ end;
 
 procedure TfrmMtoPrincipal.EngancharFotoAlMto(AMto: TObject);
 var
-  frmActivo : TfrmMtoGen;
-  sArt, sSku: string;
+  FormularioFoto: TfrmFotoArticulo;
+  frmActivo     : TfrmMtoGen;
+  sArt, sSku    : string;
 begin
   // Solo re-vincula si la flotante YA esta abierta (el usuario la
   // abrio con Ctrl+F en algun Mto y al cambiar a otro queremos
   // que siga el contexto). NO la abrimos automaticamente: el usuario
   // decide cuando aparece.
-  if not Assigned(frmFotoArticulo) then Exit;
-  if not frmFotoArticulo.Visible then Exit;
+  FormularioFoto := FotoFlotanteActual;
+  if FormularioFoto = nil then Exit;
+  if not FormularioFoto.Visible then Exit;
   if not (AMto is TfrmMtoGen) then Exit;
   frmActivo := TfrmMtoGen(AMto);
   frmActivo.ResolverArtSkuActivo(sArt, sSku);
-  frmFotoArticulo.VincularDataSources(frmActivo.DataSourcesParaFoto,
-                                      frmActivo.ResolverArtSkuActivo);
-  frmFotoArticulo.SetArticuloSku(sArt, sSku);
+  FormularioFoto.VincularDataSources(frmActivo.DataSourcesParaFoto,
+                                     frmActivo.ResolverArtSkuActivo);
+  FormularioFoto.SetArticuloSku(sArt, sSku);
 end;
 
 // Reenvío compatible con TApplicationEvents.OnException.

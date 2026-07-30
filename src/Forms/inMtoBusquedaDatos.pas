@@ -120,13 +120,10 @@ type
     procedure CrearTablaPrincipal; override;
   end;
 
-var
-  frmMtoBusquedaDatos: TfrmMtoBusquedaDatos;
-
 implementation
 
 uses
-  inLibLog, inLibShowMto, inLibAtributosPaleta, inLibMsg;
+  inLibLog, inLibShowMto, inLibAtributosPaleta, inLibMsgComun;
 
 {$R *.dfm}
 
@@ -241,7 +238,8 @@ begin
   begin
     try
       AgregarUnidadADocumentoTrabajo(Self, ConexionPrincipal,
-        ContextoSesion, ParametrosCaja, linea);
+        ContextoSesion, ParametrosCaja, linea,
+        CrearResolverArticulos(ConexionPrincipal));
     except
       on E: Exception do
       begin

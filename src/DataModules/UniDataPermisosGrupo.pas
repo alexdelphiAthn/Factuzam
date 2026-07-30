@@ -23,9 +23,6 @@ type
   TdmPermisosGrupo = class(TdmBase)
   end;
 
-var
-  dmPermisosGrupo: TdmPermisosGrupo;
-
 implementation
 
 {$R *.dfm}

@@ -66,7 +66,7 @@ implementation
 uses
   System.SysUtils,
   Vcl.Dialogs,
-  inLibMsg;
+  inLibMsgConfiguracion;
 
 procedure TfrmModalContrasenaCopia.FormCreate(Sender: TObject);
 begin

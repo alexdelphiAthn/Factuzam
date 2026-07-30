@@ -75,7 +75,8 @@ implementation
 
 uses
   System.Classes, System.DateUtils, System.Hash, System.NetEncoding,
-  System.StrUtils, System.TimeSpan, Winapi.Windows, inLibMsg;
+  System.StrUtils, System.TimeSpan, Winapi.Windows,
+  inLibMsgVerifactu;
 
 const
   cCrypt32 = 'crypt32.dll';

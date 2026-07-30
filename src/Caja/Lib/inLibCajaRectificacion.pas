@@ -44,7 +44,7 @@ type
 implementation
 
 uses
-  System.SysUtils, inLibMsg;
+  System.SysUtils, inLibMsgCaja;
 
 constructor TServicioRectificacionCaja.Create(
   const ARepositorio: IRepositorioConsultasCaja);

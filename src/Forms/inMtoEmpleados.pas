@@ -77,9 +77,6 @@ type
     procedure ResetForm; override;
   end;
 
-var
-  frmMtoEmpleados: TfrmMtoEmpleados;
-
 implementation
 
 {$R *.dfm}

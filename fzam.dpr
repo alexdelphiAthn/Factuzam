@@ -50,7 +50,6 @@ uses
   inLibMsgCaja in 'src\Lib\inLibMsgCaja.pas',
   inLibMsgIntegraciones in 'src\Lib\inLibMsgIntegraciones.pas',
   inLibMsgVerifactu in 'src\Lib\inLibMsgVerifactu.pas',
-  inLibMsg in 'src\Lib\inLibMsg.pas',
   inLibRectificativas in 'src\Lib\inLibRectificativas.pas',
   inLibNet in 'src\Lib\inLibNet.pas',
   inLibScriptDB in 'src\Lib\inLibScriptDB.pas',
@@ -61,6 +60,10 @@ uses
   inLibMotorFiscalVenta in 'src\Lib\inLibMotorFiscalVenta.pas',
   inLibFacturasServiciosIntf in
     'src\Lib\inLibFacturasServiciosIntf.pas',
+  UniDataCatalogoSqlValidacion in
+    'src\DataModules\UniDataCatalogoSqlValidacion.pas',
+  UniDataFacturasRepositorio in
+    'src\DataModules\UniDataFacturasRepositorio.pas',
   inLibFacturasRepositorio in
     'src\Lib\inLibFacturasRepositorio.pas',
   inLibFacturasValidacionFiscal in
@@ -98,6 +101,11 @@ uses
   inLibCatalogoSqlPerfiles in
     'src\Lib\inLibCatalogoSqlPerfiles.pas',
   inLibCatalogoSqlAdmin in 'src\Lib\inLibCatalogoSqlAdmin.pas',
+  inLibCatalogoSqlRegistro in 'src\Lib\inLibCatalogoSqlRegistro.pas',
+  inLibCatalogoSqlIncidencias in
+    'src\Lib\inLibCatalogoSqlIncidencias.pas',
+  inLibCatalogoSqlEjecucion in
+    'src\Lib\inLibCatalogoSqlEjecucion.pas',
   inLibTraduccionesIntf in 'src\Lib\inLibTraduccionesIntf.pas',
   inLibTraducciones in 'src\Lib\inLibTraducciones.pas',
   inLibParametrosIntf in 'src\Lib\inLibParametrosIntf.pas',
@@ -233,6 +241,10 @@ uses
   UniDataCaja in 'src\Caja\DataModules\UniDataCaja.pas' {dmCajaOpe},
   inMtoTraspasoOpe in 'src\Caja\Forms\inMtoTraspasoOpe.pas' {frmMtoOpeTraspaso},
   UniDataTraspaso in 'src\Caja\DataModules\UniDataTraspaso.pas' {dmTraspaso: TDataModule},
+  inLibTraspasoTicketIntf in
+    'src\Caja\Lib\inLibTraspasoTicketIntf.pas',
+  UniDataTraspasoTicketRepositorio in
+    'src\Caja\DataModules\UniDataTraspasoTicketRepositorio.pas',
   inLibTraspasoTicket in 'src\Caja\Lib\inLibTraspasoTicket.pas',
   inLibGridArticulos in 'src\Lib\inLibGridArticulos.pas',
   inLibColumnasSkuIntf in 'src\Lib\inLibColumnasSkuIntf.pas',
@@ -261,6 +273,8 @@ uses
   inLibCajaVentaIntf in 'src\Caja\Lib\inLibCajaVentaIntf.pas',
   inLibCajaStock in 'src\Caja\Lib\inLibCajaStock.pas',
   inLibCajaDescuentos in 'src\Caja\Lib\inLibCajaDescuentos.pas',
+  UniDataCajaConsultasRepositorio in
+    'src\Caja\DataModules\UniDataCajaConsultasRepositorio.pas',
   inLibCajaConsultasRepositorio in
     'src\Caja\Lib\inLibCajaConsultasRepositorio.pas',
   inLibCajaRectificacion in
@@ -269,10 +283,18 @@ uses
     'src\Caja\Lib\inLibCajaOpeComposicion.pas',
   inLibCajaCierreVenta in 'src\Caja\Lib\inLibCajaCierreVenta.pas',
   inLibCriptoCurr in 'src\Lib\inLibCriptoCurr.pas',
+  inLibJsonSeguro in 'src\Lib\inLibJsonSeguro.pas',
   inLibDivCurr in 'src\Lib\inLibDivCurr.pas',
   inMtoCajaSeleccionVale in 'src\Caja\Forms\inMtoCajaSeleccionVale.pas' {frmMtoCajaSeleccionVale},
   inMtoCajaParam in 'src\Caja\Forms\inMtoCajaParam.pas' {frmMtoCajaParam},
   inLibCajaParam in 'src\Caja\Lib\inLibCajaParam.pas',
+  inLibArqueoIntf in 'src\Caja\Lib\inLibArqueoIntf.pas',
+  UniDataArqueoRepositorio in
+    'src\Caja\DataModules\UniDataArqueoRepositorio.pas',
+  inLibArqueoTicketIntf in
+    'src\Caja\Lib\inLibArqueoTicketIntf.pas',
+  UniDataArqueoTicketRepositorio in
+    'src\Caja\DataModules\UniDataArqueoTicketRepositorio.pas',
   inLibArqueo in 'src\Caja\Lib\inLibArqueo.pas',
   inLibArqueoTicket in 'src\Caja\Lib\inLibArqueoTicket.pas',
   inLibArqueoPersistencia in 'src\Caja\Lib\inLibArqueoPersistencia.pas',
@@ -439,6 +461,12 @@ uses
   UniDataComprasSesiones in 'src\DataModules\UniDataComprasSesiones.pas' {dmComprasSesiones: TdmComprasSesiones},
   UniDataComprasSesionesRepositorio in
     'src\DataModules\UniDataComprasSesionesRepositorio.pas',
+  UniDataComprasSesionesOperaciones in
+    'src\DataModules\UniDataComprasSesionesOperaciones.pas',
+  UniDataComprasSesionesMaterializar in
+    'src\DataModules\UniDataComprasSesionesMaterializar.pas',
+  UniDataCatalogoSqlAplicacion in
+    'src\DataModules\UniDataCatalogoSqlAplicacion.pas',
   inMtoComprasPlantillas in 'src\Forms\inMtoComprasPlantillas.pas' {frmMtoComprasPlantillas},
   inMtoModalSesionMaterializar in 'src\Modals\inMtoModalSesionMaterializar.pas' {frmModalSesionMaterializar},
   inMtoModalSesionDuplicado in 'src\Modals\inMtoModalSesionDuplicado.pas' {frmModalSesionDuplicado},
@@ -460,11 +488,24 @@ uses
   inLibDevolucionesCompraMovimientos in 'src\Lib\inLibDevolucionesCompraMovimientos.pas',
   inLibContadorLineas in 'src\Lib\inLibContadorLineas.pas',
   inMtoModalAltaRapida in 'src\Modals\inMtoModalAltaRapida.pas' {frmMtoModalAltaRapida},
+  inLibArticulosValidadorIntf in
+    'src\Lib\inLibArticulosValidadorIntf.pas',
+  UniDataArticulosValidadorRepositorio in
+    'src\DataModules\UniDataArticulosValidadorRepositorio.pas',
   inLibArticulosValidador in 'src\Lib\inLibArticulosValidador.pas',
+  inLibArticulosResolverIntf in
+    'src\Lib\inLibArticulosResolverIntf.pas',
+  UniDataArticulosResolverRepositorio in
+    'src\DataModules\UniDataArticulosResolverRepositorio.pas',
   inLibArticulosResolver in 'src\Lib\inLibArticulosResolver.pas',
   inMtoModalAddPreciosTar in 'src\Modals\inMtoModalAddPreciosTar.pas' {frmMtoModalAddPreciosTar},
   inMtoModalCalcularMargen in 'src\Modals\inMtoModalCalcularMargen.pas' {frmModalCalcularMargen},
-  inLibArticulosAtributosLookup in 'src\Lib\inLibArticulosAtributosLookup.pas',
+  inLibArticulosAtributosIntf in
+    'src\Lib\inLibArticulosAtributosIntf.pas',
+  UniDataArticulosAtributosRepositorio in
+    'src\DataModules\UniDataArticulosAtributosRepositorio.pas',
+  inLibArticulosAtributosLookup in
+    'src\Lib\inLibArticulosAtributosLookup.pas',
   inLibAtributosPaleta in 'src\Lib\inLibAtributosPaleta.pas',
   inMtoModalScriptLog in 'src\Modals\inMtoModalScriptLog.pas' {frmMtoModalScriptLog},
   inLibPresta in 'src\Lib\inLibPresta.pas',
@@ -534,6 +575,7 @@ end;
 begin
   var ContextoSesionInicial: IContextoSesionAplicacion;
   var GestorContextoCierre: IGestorContextoSesion;
+  var Principal: TfrmMtoPrincipal;
   var ResultadoLicenciaInicial: TResultadoLicenciaAplicacion;
 //  {$IFDEF DEBUG}
 //      ReportMemoryLeaksOnShutdown := True;
@@ -560,8 +602,8 @@ begin
     Application.DefaultFont.Height := -15;
     Screen.MenuFont.Name := 'Lucida Sans';
     Screen.MenuFont.Size := 11;
-    Application.CreateForm(TfrmMtoPrincipal, frmMtoPrincipal);
-    frmMtoPrincipal.InicializarAplicacion(
+    Application.CreateForm(TfrmMtoPrincipal, Principal);
+    Principal.InicializarAplicacion(
       ContextoSesionInicial,
       ResultadoLicenciaInicial);
     // Diagnóstico: con /teststack se encola una excepción de prueba
@@ -589,7 +631,7 @@ begin
     // Se cierra el log de forma explicita (su finalization ya no correra)
     // y se termina el proceso sin ejecutar las finalizaciones restantes.
     inLibLog.Log.LogInfo('Salida del proceso');
-    FreeAndNil(inLibLog.Log);
+    inLibLog.LiberarLog;
     ExitProcess(0);
   end;
 end.

@@ -67,7 +67,8 @@ implementation
 
 uses
   System.Classes, System.JSON, System.NetEncoding,
-  System.Net.HttpClient, System.Net.URLClient, inLibMsg;
+  System.Net.HttpClient, System.Net.URLClient,
+  inLibMsgIntegraciones;
 
 { Crea el cliente HTTP con los tiempos de espera y la credencial ya
   puestos. Todas las llamadas de la API comparten esta configuración. }

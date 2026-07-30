@@ -209,7 +209,7 @@ uses
   inLibContadorLineas,
   inLibComprasImpuestos,
   inLibData,
-  inLibMsg;
+  inLibMsgCompras;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 

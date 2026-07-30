@@ -100,15 +100,13 @@ type
                              var ADatosRef: TDatosReferencia;
                              ARellenarDesdeEuros: Boolean = False): Boolean;
   end;
-var
-  frmCajaReferenciaPago: TfrmCajaReferenciaPago;
-
 implementation
 
 {$R *.dfm}
 
 uses
-  System.Math, Vcl.Themes, inLibDivCurr, inLibCriptoCurr, inLibMsg;
+  System.Math, Vcl.Themes, inLibDivCurr, inLibCriptoCurr,
+  inLibMsgCaja;
 
 { TfrmCajaReferenciaPago }
 

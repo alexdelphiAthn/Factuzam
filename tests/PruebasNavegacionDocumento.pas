@@ -26,12 +26,15 @@ type
     procedure Codigo_ValidaDataSetYRecorta;
     [Test]
     procedure Clave_ExigeSerieYNumero;
+    [Test]
+    procedure ShowMto_SinAnfitrionFallaRuidosamente;
   end;
 
 implementation
 
 uses
-  Data.DB, Datasnap.DBClient, inLibShowMto;
+  System.Classes, Data.DB, Datasnap.DBClient,
+  inLibAnfitrionMtoIntf, inLibShowMto;
 
 procedure TPruebasNavegacionDocumento.
   Codigo_ValidaDataSetYRecorta;
@@ -72,6 +75,27 @@ begin
       oDataSet, 'SERIE', 'NUMERO'));
   finally
     oDataSet.Free;
+  end;
+end;
+
+procedure TPruebasNavegacionDocumento.
+  ShowMto_SinAnfitrionFallaRuidosamente;
+var
+  oDuenyo: TComponent;
+begin
+  // Antes, abrir una pantalla con un Owner que no fuera el anfitrion
+  // era un Exit mudo (rama silenciosa, PLAN_SOLID 3.3). Ahora el
+  // descubrimiento falla ruidosamente con EServicioNoDisponible.
+  oDuenyo := TComponent.Create(nil);
+  try
+    Assert.WillRaise(
+      procedure
+      begin
+        ShowMto(oDuenyo, 'Articulos');
+      end,
+      EServicioNoDisponible);
+  finally
+    oDuenyo.Free;
   end;
 end;
 

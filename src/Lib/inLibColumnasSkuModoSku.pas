@@ -42,7 +42,7 @@ type
   private
     FConfig: TConfigColumnasSku;
     FColSku: TcxGridDBColumn;
-    FLookup: TArticulosAtributosLookup;
+    FLookup: IArticulosAtributosLookup;
     FOnResuelto: TSkuResueltoEvent;
     FOnEntrarEdicion: TNotifyEvent;
     FOnSalirEdicion: TNotifyEvent;
@@ -146,7 +146,7 @@ type
 implementation
 
 uses
-  inLibMsg;
+  inLibLog, inLibMsgArticulos;
 
 type
   // Acceso a OnEnter/OnExit (protegidos en TWinControl) de los editores
@@ -158,7 +158,10 @@ begin
   inherited Create;
   FConfig := AConfig;
   FAlmacenStock := AConfig.AlmacenStock;
-  FLookup := TArticulosAtributosLookup.Create(AConfig.Conexion);
+  FLookup := AConfig.LookupAtributos;
+  if not Assigned(FLookup) then
+    FLookup := CrearLookupAtributosArticulosBase(
+      AConfig.Conexion);
   FTimerBusq := TTimer.Create(nil);
   FTimerBusq.Enabled := False;
   FTimerBusq.Interval := 350;
@@ -187,7 +190,7 @@ begin
   FreeAndNil(FBusqRepo);
   FreeAndNil(FBusqDs);
   FreeAndNil(FBusqQry);
-  FreeAndNil(FLookup);
+  FLookup := nil;
   inherited;
 end;
 
@@ -768,7 +771,10 @@ begin
           FConfig.View.Controller.EditingController.HideEdit(False);
         except
           on E: EInvalidOperation do
-            ;
+            // Ruido del editor inplace; queda constancia en el log.
+            inLibLog.Log.LogWarning(
+              'ModoSku.TimerResolve: HideEdit ignorado: ' +
+              E.Message);
         end;
       // Resuelto: restaura el EnterAsTab (si el foco vuelve a la
       // celda del combo, InitEdit lo desactiva de nuevo).
@@ -790,7 +796,9 @@ begin
       FConfig.View.Controller.EditingController.ShowEdit;
     except
       on E: EInvalidOperation do
-        ;
+        // Ruido del editor inplace; queda constancia en el log.
+        inLibLog.Log.LogWarning(
+          'ModoSku.MostrarEditor: ShowEdit ignorado: ' + E.Message);
     end;
   end;
 end;
@@ -890,7 +898,7 @@ end;
 
 function TModoEntradaSku.ResolverEntrada(const AEntrada: string): Boolean;
 var
-  Val: TArticulosValidador;
+  Val: IArticulosValidador;
   R: TArtResolucionEntrada;
   sEntrada, sSku: string;
 begin
@@ -898,11 +906,14 @@ begin
   sEntrada := LimpiarEntrada(AEntrada);
   if sEntrada <> '' then
   begin
-    Val := TArticulosValidador.Create(FConfig.Conexion);
+    Val := FConfig.ValidadorArticulos;
+    if not Assigned(Val) then
+      Val := CrearValidadorArticulosBase(
+        FConfig.Conexion);
     try
       R := Val.Resolver(sEntrada);
     finally
-      FreeAndNil(Val);
+      Val := nil;
     end;
     if R.Encontrado then
     begin

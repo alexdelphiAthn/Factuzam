@@ -75,7 +75,9 @@ var
 begin
   DatosFactura := TdmFacturas.Create(FPropietario);
   DatosFactura.ConfigurarServicios(
-    CrearServiciosFactura(FConexion));
+    CrearServiciosFactura(
+      FConexion,
+      FParametrosCaja));
   Formulario := nil;
   try
     Formulario := TfrmPrintFac.Create(Application);

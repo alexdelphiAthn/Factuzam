@@ -65,13 +65,20 @@ type
                                           write FDecimalesPorDefecto;
   end;
 
-var
-  oUnidades: TUnidadesMedida;
+function oUnidades: TUnidadesMedida;
 
 implementation
 
 uses
   inLibLog;
+
+var
+  FUnidades: TUnidadesMedida;
+
+function oUnidades: TUnidadesMedida;
+begin
+  Result := FUnidades;
+end;
 
 { TUnidadesMedida }
 
@@ -136,7 +143,7 @@ begin
       // la cache queda vacia y se usan los decimales por defecto.
       on E: Exception do
       begin
-        if Log <> nil then
+        if Log() <> nil then
           Log.LogWarning('inLibUnidadesMedida.Cargar: ' + E.Message);
       end;
     end;
@@ -211,9 +218,9 @@ begin
 end;
 
 initialization
-  oUnidades := TUnidadesMedida.Create;
+  FUnidades := TUnidadesMedida.Create;
 
 finalization
-  FreeAndNil(oUnidades);
+  FreeAndNil(FUnidades);
 
 end.

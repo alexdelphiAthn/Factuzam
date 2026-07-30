@@ -77,7 +77,9 @@ begin
     AConfig.View,
     AConfig.Cds,
     Campos,
-    AConfig.ContextoSesion);
+    AConfig.ContextoSesion,
+    AConfig.ValidadorArticulos,
+    AConfig.LookupAtributos);
   FGrid.OnResuelto := GridResuelto;
   FGrid.AlmacenStock := AConfig.AlmacenStock;
   FGrid.AceptarNoCatalogo := AConfig.AceptarNoCatalogo;

@@ -60,7 +60,7 @@ procedure RevertirMovimientosDesdeAlbaranCompra(AConn: TUniConnection;
 implementation
 
 uses
-  inLibValoresAutomaticos, inLibMsg;
+  inLibValoresAutomaticos, inLibMsgCompras;
 
 // Carga los datos minimos del albaran necesarios para construir los
 // movimientos: empresa (para el parametro p_CODIGO_EMPRESA_MOV) y

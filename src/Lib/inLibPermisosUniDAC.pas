@@ -32,7 +32,7 @@ implementation
 
 uses
   System.SysUtils, System.Generics.Collections,
-  inLibPermisos, inLibMsg;
+  inLibPermisos, inLibMsgConfiguracion;
 
 class function TCargadorPermisosUniDAC.Cargar(
   AConexion: TUniConnection;

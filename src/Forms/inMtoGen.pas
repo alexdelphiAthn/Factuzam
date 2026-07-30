@@ -30,7 +30,8 @@ uses
   cxGridTableView, cxGridDBTableView, cxGridDBDataDefinitions, cxGrid, dxmdaset,
   cxTextEdit, dxBevel,
   inLibDevExp, cxGridExportLink, inLibUser, System.UITypes, System.Types,
-  inLibPerfilesUsuarioIntf, Uni, inLibDir, inLibDatasets,
+  inLibPerfilesUsuarioIntf, inLibAnfitrionMtoIntf, Uni, inLibDir,
+  inLibDatasets,
   Data.DBCommon, inLibWin,
   UniDataConn, cxBlobEdit, dxCore, dxScrollbarAnnotations, cxRadioGroup,
   Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs, dxSkinBlue,
@@ -171,6 +172,10 @@ type
     // Se libera en Destroy DESPUES del data module para que los Close
     // implicitos de las queries no queden colgando.
     FConn: TUniConnection;
+    // Anfitrion de mantenimiento (el principal). Se descubre UNA vez en
+    // FormCreate (patron 5.3 del PLAN_SOLID); fuera de fzam queda a nil
+    // y la pantalla degrada como siempre.
+    FAnfitrionMto: IAnfitrionMantenimiento;
     FSqlBaseBusquedaExterna: string;
     // Hooks del dataset principal original (en el data module).
     FBeforeInsertOrig: TDataSetNotifyEvent;
@@ -376,8 +381,6 @@ type
   public
     destructor Destroy; override;
   end;
-var
-  frmMtoGen: TfrmMtoGen;
 
 implementation
 
@@ -391,14 +394,14 @@ uses inLibData,
      inMtoModalGenImpSave,
      inMtoModalGuardarFiltro,
      inMtoModalGestionFiltros,
-     inLibAnfitrionMtoIntf, UniDataGen, uGenericIfThen,
+     UniDataGen, uGenericIfThen,
      inMtoFotoArticulo, inMtoStockConsulta,
      inMtoModalGridGuias,
      inLibFiltroUsuario,    // restricción por empresa/almacén/caja
      SQLBuilder4D, SQLBuilder4D.Parser, SQLBuilder4D.Parser.GaSQLParser,
      System.Diagnostics,    // TStopwatch para cronometrar carga inicial
      System.TypInfo, inLibDiag,
-     inLibMsg;
+  inLibMsgComun, inLibMsgConfiguracion;
 
 function TfrmMtoGen.GetConexionTrabajo: TUniConnection;
 begin
@@ -422,14 +425,20 @@ begin
 end;
 
 function TfrmMtoGen.FotoArticuloVisible: Boolean;
+var
+  FormularioFoto: TfrmFotoArticulo;
 begin
-  Result := Assigned(frmFotoArticulo) and frmFotoArticulo.Visible;
+  FormularioFoto := FotoFlotanteActual;
+  Result := (FormularioFoto <> nil) and FormularioFoto.Visible;
 end;
 
 procedure TfrmMtoGen.OcultarFotoArticulo;
+var
+  FormularioFoto: TfrmFotoArticulo;
 begin
-  if Assigned(frmFotoArticulo) then
-    frmFotoArticulo.Hide;
+  FormularioFoto := FotoFlotanteActual;
+  if FormularioFoto <> nil then
+    FormularioFoto.Hide;
 end;
 
 procedure TfrmMtoGen.MostrarFotoArticulo(const ACodArt, ACodSku: string);
@@ -439,9 +448,12 @@ end;
 
 procedure TfrmMtoGen.VincularFotoArticulo(
   const ADataSources: TArray<TDataSource>);
+var
+  FormularioFoto: TfrmFotoArticulo;
 begin
-  if Assigned(frmFotoArticulo) then
-    frmFotoArticulo.VincularDataSources(ADataSources,
+  FormularioFoto := FotoFlotanteActual;
+  if FormularioFoto <> nil then
+    FormularioFoto.VincularDataSources(ADataSources,
       ResolverArtSkuActivo);
 end;
 
@@ -827,12 +839,11 @@ end;
 function TfrmMtoGen.PuedeAccionMto(
   AAccion: TAccionPermisoMto): Boolean;
 var
-  oAnfitrion: IAnfitrionMantenimiento;
   sCall: string;
 begin
   sCall := '';
-  if Supports(Self.Owner, IAnfitrionMantenimiento, oAnfitrion) then
-    sCall := oAnfitrion.ResolverCallPantalla(
+  if Assigned(FAnfitrionMto) then
+    sCall := FAnfitrionMto.ResolverCallPantalla(
       Self.UnitName + '.' + Self.ClassName);
   if sCall = '' then
     Result := True
@@ -1019,7 +1030,6 @@ end;
 
 procedure TfrmMtoGen.CrearTablaPrincipal;
 var
-  oAnfitrion: IAnfitrionMantenimiento;
   sNameModule: string;
   swTotal, swTramo: TStopwatch;
   msCrearDM, msFConn, msReasignar: Int64;
@@ -1029,8 +1039,8 @@ begin
   tdmDataModule := nil;
   sNameModule := '';
   // Los proyectos independientes no implementan el contrato anfitrión.
-  if Supports(Self.Owner, IAnfitrionMantenimiento, oAnfitrion) then
-    sNameModule := oAnfitrion.ResolverDataModulePantalla(
+  if Assigned(FAnfitrionMto) then
+    sNameModule := FAnfitrionMto.ResolverDataModulePantalla(
       Self.UnitName + '.' + Self.ClassName);
   if (sNameModule <> '') then
   begin
@@ -1099,15 +1109,14 @@ end;
 
 procedure TfrmMtoGen.AplicarPermisosPantalla;
 var
-  oAnfitrion: IAnfitrionMantenimiento;
   sCall: string;
 begin
   InstalarGuardianBorrado;
   // CALL de la pantalla (Clientes, Articulos...). Los Mtos sin registro
   // en fza_winforms (p.ej. cajas de busqueda) no tienen CALL: todo activo.
   sCall := '';
-  if Supports(Self.Owner, IAnfitrionMantenimiento, oAnfitrion) then
-    sCall := oAnfitrion.ResolverCallPantalla(
+  if Assigned(FAnfitrionMto) then
+    sCall := FAnfitrionMto.ResolverCallPantalla(
       Self.UnitName + '.' + Self.ClassName);
   if sCall <> '' then
   begin
@@ -1443,12 +1452,15 @@ begin
     except
       // Disconnect en pool no deberia fallar, pero si lo hace no queremos
       // que el destructor lance.
+      on E: Exception do
+        if inliblog.Log() <> nil then
+          inliblog.Log.LogWarning(
+            'MtoGen.Destroy: Disconnect fallo: ' + E.Message);
     end;
     FreeAndNil(FConn);
   end;
   inliblog.Log.LogInfo('Ventana de mantenimiento: ' +
                                                    Self.Caption + ' Cerrada');
-  frmMtoGen := nil;
   inherited;
 end;
 
@@ -1505,6 +1517,11 @@ var
 begin
   swTotal := TStopwatch.StartNew;
   inherited;
+  // Descubrir el anfitrion UNA vez; el resto de metodos usa el campo.
+  // Fuera de fzam (pruebas, proyectos independientes) no existe.
+  if not Supports(Self.Owner, IAnfitrionMantenimiento, FAnfitrionMto) then
+    inliblog.Log.LogInfo(
+      'Sin anfitrion de mantenimiento (standalone): ' + Self.ClassName);
   FGestorTareas := TGestorTareasMto.Create(
     Self, AplicacionCerrando);
   FGestorArticulos := TGestorArticulosMto.Create(
@@ -1555,16 +1572,14 @@ end;
 
 procedure TfrmMtoGen.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
-var
-  oAnfitrion: IAnfitrionMantenimiento;
 begin
   inherited;
   // ESC -> cancelar grids en edicion
   if (Key = VK_ESCAPE) then
   begin
-    // Los proyectos independientes no implementan el contrato anfitrión.
-    if Supports(Owner, IAnfitrionMantenimiento, oAnfitrion) then
-      oAnfitrion.CancelarEdicionesPantallas;
+    // Fuera de fzam no hay anfitrion: nada global que cancelar.
+    if Assigned(FAnfitrionMto) then
+      FAnfitrionMto.CancelarEdicionesPantallas;
     Key := 0;
   end;
   // RETURN sin control activo -> simular Tab
@@ -1961,8 +1976,6 @@ begin
 end;
 
 procedure TfrmMtoGen.FormShow(Sender: TObject);
-var
-  oAnfitrion: IAnfitrionMantenimiento;
 begin
   inherited;
   ResetForm;
@@ -1970,8 +1983,8 @@ begin
   // pulso Ctrl+F en otro Mto), la re-vinculamos a este. Si no
   // esta abierta, no la abrimos: que aparezca solo cuando el usuario
   // lo pida con Ctrl+F.
-  if Supports(Self.Owner, IAnfitrionMantenimiento, oAnfitrion) then
-    oAnfitrion.VincularFotoMantenimiento(Self);
+  if Assigned(FAnfitrionMto) then
+    FAnfitrionMto.VincularFotoMantenimiento(Self);
   // Foco inicial en la busqueda global del Mto. Se difiere con ForceQueue
   // porque el Mto se acaba de embeber en su TcxTabSheet (inLibFormManager)
   // y la cadena de foco aun no esta asentada: un SetFocus sincrono aqui no
@@ -2055,12 +2068,11 @@ end;
 procedure TfrmMtoGen.btnCancelarClick(Sender: TObject);
 var
   i: Integer;
-  oAnfitrion: IAnfitrionMantenimiento;
 begin
   inherited;
   // Flujo normal dentro de fzam: cancela el Mto activo del principal.
-  if Supports(Owner, IAnfitrionMantenimiento, oAnfitrion) then
-    oAnfitrion.CancelarEdicionesPantallas
+  if Assigned(FAnfitrionMto) then
+    FAnfitrionMto.CancelarEdicionesPantallas
   else
     // Fuera de fzam (pruebas standalone, DESARROLLOS EN CURSO) Owner no
     // es el principal y no hay pcPrincipal al que cancelar:

@@ -1,4 +1,4 @@
-object frmModalArqueosHistCaja: TfrmModalArqueosHistCaja
+inherited frmModalArqueosHistCaja: TfrmModalArqueosHistCaja
   Left = 0
   Top = 0
   BorderStyle = bsDialog

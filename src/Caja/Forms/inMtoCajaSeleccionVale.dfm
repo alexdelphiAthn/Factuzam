@@ -1,4 +1,4 @@
-object frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
+inherited frmMtoCajaSeleccionVale: TfrmMtoCajaSeleccionVale
   Left = 0
   Top = 0
   Caption = 'Seleccionar Vale'

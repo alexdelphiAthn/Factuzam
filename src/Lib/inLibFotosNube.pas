@@ -74,7 +74,7 @@ uses
   System.IOUtils, System.StrUtils, System.JSON,
   System.Net.HttpClient, System.Net.URLClient, System.NetEncoding,
   System.Zip,
-  inLibFactuzamApi, inLibMsg;
+  inLibFactuzamApi, inLibMsgArticulos;
 
 const
   cParDirFotos = 'appDirFotos';

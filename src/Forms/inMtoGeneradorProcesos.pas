@@ -245,10 +245,6 @@ type
     procedure btnCopiarDatosDinClick(Sender: TObject);
   end;
 
-var
-  frmMtoGeneradorProcesos: TfrmMtoGeneradorProcesos;
-  IsColumnMode: Boolean;
-
 implementation
 
 uses
@@ -258,7 +254,7 @@ uses
   inLibDevExp,
 
   inLibDir,
-  inLibMsg,
+  inLibMsgComun, inLibMsgConfiguracion,
   Vcl.Clipbrd,
   ts.Editor.CodeFormatters;
 
@@ -1445,7 +1441,6 @@ begin
   // Asegúrate de que las opciones predeterminadas estén configuradas
   // correctamente
 //  dbsyndtTexto.Options := dbsyndtTexto.Options - [eoAltSetsColumnMode];
-  IsColumnMode := False;
   DBSynEdit1.EndUpdate;
   syndtEstructura.EndUpdate;
 end;

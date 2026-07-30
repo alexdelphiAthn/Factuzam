@@ -81,16 +81,14 @@ procedure ImprimirOPrevisualizarTicket(ATicket: TTicketTermico;
                                              ANombreImpresora: string;
                                        ASoloPDF: Boolean = False);
 
-var
-  FormVisualizador:TFormVisualizador;
-
 implementation
 
 {$R *.dfm}
 
 uses
   SynPdf, inLibDir, Vcl.Imaging.PngImage, Vcl.Printers, System.IOUtils,
-  System.UITypes, inLibPreviewTicket, inLibMsg;
+  System.UITypes, inLibPreviewTicket, inLibMsgComun,
+  inLibMsgFacturas, inLibTraducciones;
 
 type
   TEjecutorPreviewTicketMto = class(TEjecutorPreviewTicket)
@@ -476,6 +474,7 @@ begin
   FRenderMetafile := False;
   InicializarPapel(ALTO_PAPEL_INICIAL);
   ReiniciarEstadoTicket;
+  AplicarTraducciones(Self, Application.MainForm);
 end;
 
 procedure TFormVisualizador.FormDestroy(Sender: TObject);

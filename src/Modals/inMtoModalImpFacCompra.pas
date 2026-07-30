@@ -55,7 +55,7 @@ type
 implementation
 
 uses
-  inMtoPreviewExcel, inLibDocCompraExcel, inLibMsg;
+  inMtoPreviewExcel, inLibDocCompraExcel, inLibMsgCompras;
 
 {$R *.dfm}
 

@@ -48,7 +48,7 @@ type
 implementation
 
 uses
-  inLibMsg;
+  inLibMsgComun;
 
 class procedure TPreviewExcel.RegistrarProveedor(
   AClase: TClaseProveedorPreviewExcel);

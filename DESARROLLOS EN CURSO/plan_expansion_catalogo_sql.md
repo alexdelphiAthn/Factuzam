@@ -50,8 +50,42 @@ verbos que valida. También mezcla:
 - operaciones técnicas de copia, diagnóstico o estructura;
 - palabras SQL que no siempre representan una sentencia ejecutada.
 
-La primera fase fijará una línea base corregida. Hasta entonces, los 528
-casos sirven como límite superior y como detector de regresiones.
+SQL-0 ha fijado una línea base corregida de 513 casos en 77 unidades. El
+inventario reproducible está en
+`DESARROLLOS EN CURSO/inventario_sql_dominio_sql0.csv`. Los 528 casos
+anteriores se conservan como medición histórica sin depurar.
+
+SQL-1 reduce esa línea a 499 casos en 75 unidades. Su inventario está en
+`DESARROLLOS EN CURSO/inventario_sql_dominio_sql1.csv` y pasa a ser el
+techo monotónico del analizador.
+
+SQL-2.1 extrae las diez lecturas de `inLibArticulosResolver` y reduce el
+techo a 489 casos en 74 unidades. El inventario queda en
+`DESARROLLOS EN CURSO/inventario_sql_dominio_sql2_1.csv`.
+
+SQL-2.2 extrae las catorce lecturas de validación y atributos de artículos.
+El techo baja a 475 casos en 72 unidades y el inventario queda en
+`DESARROLLOS EN CURSO/inventario_sql_dominio_sql2_2.csv`.
+
+SQL-2.3a extrae las seis construcciones de lectura del ticket de
+traspasos. Las dos consultas de stock duplicadas convergen en una sola
+operación, por lo que el registro incorpora cinco definiciones. El techo
+baja a 469 casos en 71 unidades y el inventario queda en
+`DESARROLLOS EN CURSO/inventario_sql_dominio_sql2_3a.csv`.
+
+SQL-2.3b1 extrae las diez lecturas ejecutadas por el cálculo principal de
+arqueo. Nueve admiten perfil y fallback; la comprobación técnica de esquema
+permanece `pesSoloBase`. El techo baja a 459 casos en 71 unidades y el
+inventario queda en
+`DESARROLLOS EN CURSO/inventario_sql_dominio_sql2_3b1.csv`.
+
+SQL-2.3b2 extrae los dos resúmenes que quedaban en `inLibArqueo` y las
+nueve construcciones literales de `inLibArqueoTicket`. El catálogo incorpora
+once lecturas. La contribución directa de la fase es una reducción de 12
+casos y dos unidades. El árbol compartido queda en 341 casos y 67 unidades
+porque incorpora además una reducción concurrente de 106 casos en Compras.
+El inventario queda en
+`DESARROLLOS EN CURSO/inventario_sql_dominio_sql2_3b2.csv`.
 
 Los veinte focos mayores suman 354 casos, un 67 % del total. No deben
 abordarse primero solo por tamaño: varios contienen materializaciones y
@@ -336,6 +370,10 @@ Criterio de salida:
 - ningún formulario necesita conocer la lista global;
 - fallback de lectura probado sin BBDD real.
 
+Estado a 30/07/2026: implementación terminada. La línea base corregida,
+el detalle de los entregables y la validación ejecutada están documentados
+en `DESARROLLOS EN CURSO/refactorizacion_fase_sql0_resultados.md`.
+
 ### Fase SQL-1 — normalizar los repositorios existentes
 
 Alcance:
@@ -361,6 +399,14 @@ Criterio de salida:
 - ninguna pantalla duplica SQL;
 - Facturas y Caja tienen pruebas equivalentes al piloto;
 - las fachadas no reciben lógica nueva.
+
+Estado a 30/07/2026: fase terminada. El registro contiene 16 definiciones:
+14 lecturas personalizables con fallback y dos escrituras de Facturas
+`pesSoloBase`. Las implementaciones concretas se han movido a
+`DataModules`; las antiguas unidades `inLib*Repositorio` son fachadas de
+compatibilidad sin SQL. La línea base queda en 499 construcciones y 75
+unidades. El detalle está en
+`DESARROLLOS EN CURSO/refactorizacion_fase_sql1_resultados.md`.
 
 ### Fase SQL-2 — unidades exclusivamente de lectura
 
@@ -388,6 +434,48 @@ Criterio de salida de cada fascículo:
 - con `oGetSQLFromDB=False` no se carga `SQL_REPOSITORIOS`;
 - parámetros y campos de salida probados;
 - métrica reducida y cuatro configuraciones compiladas.
+
+Estado de SQL-2.1 a 30/07/2026: implementación terminada. El contrato
+`IArticulosResolver` no expone UniDAC y la implementación concreta vive
+en `UniDataArticulosResolverRepositorio`. Sus diez lecturas están
+registradas con perfil y fallback. El formulario base compone el catálogo
+de forma perezosa usando el interruptor de la pantalla consumidora. El
+detalle está en
+`DESARROLLOS EN CURSO/refactorizacion_fase_sql2_1_resultados.md`.
+
+Estado de SQL-2.2 a 30/07/2026: implementación terminada. Los contratos
+`IArticulosValidador` e `IArticulosAtributosLookup` no exponen UniDAC.
+Sus implementaciones concretas registran siete lecturas cada una. Los
+formularios inyectan ambos contratos en los modos de SKU, desglose, tallas
+y pivote, conservando el interruptor de la pantalla consumidora. El
+detalle está en
+`DESARROLLOS EN CURSO/refactorizacion_fase_sql2_2_resultados.md`.
+
+Estado de SQL-2.3a a 30/07/2026: implementación terminada.
+`IRepositorioTraspasoTicket` abstrae solicitudes, líneas, stock y
+reimpresión histórica. `inLibTraspasoTicket` conserva la composición del
+ticket, pero ya no conoce UniDAC ni contiene SQL. Sus cinco operaciones
+usan el catálogo de la pantalla consumidora y fallback al SQL base. El
+detalle está en
+`DESARROLLOS EN CURSO/refactorizacion_fase_sql2_3a_resultados.md`.
+
+Estado de SQL-2.3b1 a 30/07/2026: implementación terminada.
+`IRepositorioArqueoCaja` abstrae el read model principal del arqueo. La
+implementación `UniDataArqueoRepositorio` registra nueve lecturas con
+perfil y fallback y una comprobación técnica `pesSoloBase`. El formulario,
+el ticket y la reimpresión histórica reciben el repositorio creado por la
+pantalla consumidora. El detalle está en
+`DESARROLLOS EN CURSO/refactorizacion_fase_sql2_3b1_resultados.md`.
+
+Estado de SQL-2.3b2 a 30/07/2026: implementación terminada.
+`IRepositorioArqueoTicket` abstrae cabecera, contadores, devoluciones,
+resúmenes y reimpresión histórica. `inLibArqueoTicket` ya no conoce UniDAC
+ni contiene SQL. El resumen por sección usa una consulta única con
+`:pNIVELES` y la comparten el formulario y el ticket. El detalle está en
+`DESARROLLOS EN CURSO/refactorizacion_fase_sql2_3b2_resultados.md`.
+
+SQL-2.3c debe continuar con las diez lecturas de `inLibTiraCajaTicket`.
+Las escrituras de cierre y persistencia permanecen fuera de alcance.
 
 ### Fase SQL-3 — lecturas dentro de unidades mixtas
 
@@ -650,7 +738,7 @@ Después de cada fascículo se registrará:
 | Pruebas DUnitX nuevas | Al menos una por comportamiento extraído |
 | Compilaciones afectadas | Debug/Release, Win32/Win64 |
 
-La reducción se mide sobre la línea base corregida de SQL-0. No se dará por
+La reducción se mide sobre el último techo monotónico cerrado. No se dará por
 terminada una fase porque el SQL haya cambiado de fichero: debe haber
 salido de la capa de dominio y quedar detrás del contrato.
 
@@ -658,18 +746,11 @@ salido de la capa de dominio y quedar detrás del contrato.
 
 Orden inmediato:
 
-1. SQL-0.1: política, campos de salida y pruebas.
-2. SQL-0.2: registro central y claves duplicadas.
-3. SQL-0.3: publicación, revisión y exportación completa.
-4. SQL-0.4: métrica corregida y línea base.
-5. SQL-1.1: catalogar lecturas de `IRepositorioFacturas`.
-6. SQL-1.2: catalogar lecturas de `IRepositorioConsultasCaja`.
-7. SQL-1.3: retirar las implementaciones concretas de `src/Lib`.
-8. SQL-2.1: consultas de `inLibArticulosResolver`.
-9. SQL-2.2: atributos y validaciones de artículo.
-10. SQL-2.3: consultas de arqueo y ticket.
+1. SQL-2.3b: consultas de arqueo y tira de caja.
+2. SQL-2.4: consultas pequeñas de Facturas y exportaciones.
+3. SQL-2.5: consultas transversales de una sola responsabilidad.
 
-Este orden valida primero la plataforma con repositorios que ya tienen
-contrato. Después ataca lecturas con alto retorno y riesgo bajo. Las
+SQL-0 y SQL-1 ya han validado la plataforma y los repositorios existentes.
+El siguiente paso ataca lecturas con alto retorno y riesgo bajo. Las
 materializaciones de compra no empiezan hasta que la política transaccional
 y sus pruebas estén disponibles.

@@ -66,7 +66,8 @@ type
     FCampos: TCamposGridArt;
     FColArticulo: TcxGridDBColumn;
     FColAtributo: array[1..5] of TcxGridDBColumn;
-    FLookup: TArticulosAtributosLookup;
+    FValidador: IArticulosValidador;
+    FLookup: IArticulosAtributosLookup;
     FOnResuelto: TArtResueltoEvent;
     // Aviso al host al entrar/salir de un editor in-place del grid.
     // Pensados para Desactivar/RestaurarEnterAsTabTemporal (TfrmBase):
@@ -203,7 +204,9 @@ type
   public
     constructor Create(AConn: TUniConnection; AView: TcxGridDBTableView;
       ACds: TDataSet; const ACampos: TCamposGridArt;
-      const AContextoSesion: IContextoSesionAplicacion);
+      const AContextoSesion: IContextoSesionAplicacion;
+      const AValidador: IArticulosValidador = nil;
+      const ALookup: IArticulosAtributosLookup = nil);
     destructor Destroy; override;
     // Crea la columna de articulo + las 5 columnas de atributo y engancha el
     // OnInitEdit del View. El host anade sus columnas DESPUES sobre el View.
@@ -233,7 +236,7 @@ type
 implementation
 
 uses
-  inLibGenBusq, inLibMsg;
+  inLibGenBusq, inLibLog, inLibMsgArticulos;
 
 type
   // Acceso a OnExit (protegido en TWinControl) de los editores in-place
@@ -243,7 +246,9 @@ type
 constructor TGridArticulosLineas.Create(AConn: TUniConnection;
   AView: TcxGridDBTableView; ACds: TDataSet;
   const ACampos: TCamposGridArt;
-  const AContextoSesion: IContextoSesionAplicacion);
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AValidador: IArticulosValidador;
+  const ALookup: IArticulosAtributosLookup);
 begin
   inherited Create;
   FConn := AConn;
@@ -251,7 +256,14 @@ begin
   FView := AView;
   FCds := ACds;
   FCampos := ACampos;
-  FLookup := TArticulosAtributosLookup.Create(AConn);
+  FValidador := AValidador;
+  if not Assigned(FValidador) then
+    FValidador := CrearValidadorArticulosBase(
+      AConn);
+  FLookup := ALookup;
+  if not Assigned(FLookup) then
+    FLookup := CrearLookupAtributosArticulosBase(
+      AConn);
   FOrdenPopupPend := 0;
   FTimerPopup := TTimer.Create(nil);
   FTimerPopup.Enabled := False;
@@ -295,7 +307,8 @@ begin
   FreeAndNil(FBusqRepo);
   FreeAndNil(FBusqDs);
   FreeAndNil(FBusqQry);
-  FreeAndNil(FLookup);
+  FValidador := nil;
+  FLookup := nil;
   inherited;
 end;
 
@@ -1011,7 +1024,10 @@ begin
         FView.Controller.EditingController.HideEdit(False);
       except
         on E: EInvalidOperation do
-          ;
+          // Ruido del editor inplace; queda constancia en el log.
+          inLibLog.Log.LogWarning(
+            'GridArticulos.TimerResolve: HideEdit ignorado: ' +
+            E.Message);
       end;
     // Resuelto: restaura el EnterAsTab del host (si el foco cae en
     // otra celda de la controladora, su InitEdit lo desactiva).
@@ -1037,7 +1053,10 @@ begin
       FView.Controller.EditingController.ShowEdit;
     except
       on E: EInvalidOperation do
-        ;
+        // Ruido del editor inplace; queda constancia en el log.
+        inLibLog.Log.LogWarning(
+          'GridArticulos.MostrarEditorArticulo: ShowEdit ignorado: ' +
+          E.Message);
     end;
   end;
 end;
@@ -1129,7 +1148,10 @@ begin
             FView.Controller.EditingController.HideEdit(False);
           except
             on E: EInvalidOperation do
-              ;
+              // Ruido del editor inplace; queda en el log.
+              inLibLog.Log.LogWarning(
+                'GridArticulos.ArticuloButtonClick: HideEdit ' +
+                'ignorado: ' + E.Message);
           end;
     end;
   finally
@@ -1337,7 +1359,6 @@ end;
 
 function TGridArticulosLineas.ResolverEntrada(const AEntrada: string): Boolean;
 var
-  Val: TArticulosValidador;
   R: TArtResolucionEntrada;
   sCodArt, sSku, sDesc, sEntrada: string;
   bCompleto: Boolean;
@@ -1348,12 +1369,7 @@ begin
   sEntrada := LimpiarEntradaScan(AEntrada);
   if sEntrada = '' then
     Exit;
-  Val := TArticulosValidador.Create(FConn);
-  try
-    R := Val.Resolver(sEntrada);
-  finally
-    FreeAndNil(Val);
-  end;
+  R := FValidador.Resolver(sEntrada);
   if not R.Encontrado then
   begin
     // Codigo fuera de catalogo: si el documento lo admite, se acepta
@@ -1545,6 +1561,10 @@ begin
         FView.Controller.EditingController.ShowEdit;
       except
         // Si aun no puede parentarse el editor, seguimos: se auto-centrara.
+        on E: Exception do
+          inLibLog.Log.LogWarning(
+            'GridArticulos.AbrirPaletaOrden: ShowEdit ignorado: ' +
+            E.Message);
       end;
     // Posicion bajo el editor in-place; si aun no esta parentado, auto-centrar
     // (evita EInvalidOperation en ClientToScreen).

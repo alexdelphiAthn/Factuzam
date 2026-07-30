@@ -146,15 +146,12 @@ type
                               ACaja: string; AFecha: TDateTime);
   end;
 
-var
-  frmMtoOpeTraspaso: TfrmMtoOpeTraspaso;
-
 implementation
 
 {$R *.dfm}
 
 uses
-  inLibMsg;
+  inLibLog, inLibMsgCaja;
 
 procedure TfrmMtoOpeTraspaso.FormCreate(Sender: TObject);
 begin
@@ -238,7 +235,9 @@ begin
     FView,
     FDatos.cdsLineas,
     Campos,
-    ContextoSesion);
+    ContextoSesion,
+    CrearValidadorArticulos(ConexionPrincipal),
+    CrearLookupAtributosArticulos(ConexionPrincipal));
   FGridCtrl.OnResuelto := GridResuelto;
   FGridCtrl.Construir;
   // Columnas propias del traspaso.
@@ -352,6 +351,10 @@ begin
           FStockView.ApplyBestFit;
         except
           // ApplyBestFit puede fallar si no hay columnas; lo ignoramos.
+          on E: Exception do
+            inLibLog.Log.LogWarning(
+              'TraspasoOpe: ApplyBestFit del stock ignorado: ' +
+              E.Message);
         end;
         // La primera columna (codigo CODART/COLOR) lleva swatch de color: le
         // sumamos el ancho del cuadradito para que no recorte el texto.
@@ -1025,7 +1028,7 @@ begin
     sSer := FQModalSolic.FieldByName('SERIE_TRSOL').AsString;
     if sNum <> '' then
       TTraspasoTicket.ImprimirSolicitud(
-        ConexionPrincipal,
+        CrearRepositorioTraspasoTicket,
         sNum,
         sSer,
         ParametrosCaja.ImpresoraCaja);
@@ -1141,7 +1144,9 @@ begin
         begin
           ShowMessage(Format(SInfoSolicitudTraspasoEnviada, [sSer, sNum]));
           // Ticket de la solicitud: cada SKU con stock origen / destino.
-          TTraspasoTicket.ImprimirSolicitud(ConexionPrincipal, sNum, sSer,
+          TTraspasoTicket.ImprimirSolicitud(
+                                            CrearRepositorioTraspasoTicket,
+                                            sNum, sSer,
                                             ParametrosCaja.ImpresoraCaja);
           AplicarModo(mtSolicitar);
         end;
@@ -1295,7 +1300,7 @@ begin
             ShowMessage(Format(SInfoSolicitudTraspasoAtendida, [sNumOp]));
             if AConTicket then
               TTraspasoTicket.ImprimirTraspaso(
-                ConexionPrincipal,
+                CrearRepositorioTraspasoTicket,
                 sNumOp,
                 sOrigen,
                 sDestino,
@@ -1325,7 +1330,7 @@ begin
         ShowMessage(Format(SInfoTraspasoGrabado, [sNumOp]));
         if AConTicket then
           TTraspasoTicket.ImprimirTraspaso(
-            ConexionPrincipal,
+            CrearRepositorioTraspasoTicket,
             sNumOp,
             sOrigen,
             sDestino,

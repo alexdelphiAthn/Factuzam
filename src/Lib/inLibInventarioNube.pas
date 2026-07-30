@@ -51,7 +51,7 @@ uses
   System.JSON, System.Generics.Collections, System.NetEncoding,
   System.Net.HttpClient, System.Net.URLClient,
   Data.DB,
-  inLibFactuzamApi, inLibMsg;
+  inLibFactuzamApi, inLibMsgArticulos;
 
 // ============================================================================
 //   Configuración y transporte

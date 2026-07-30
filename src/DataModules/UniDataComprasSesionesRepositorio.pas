@@ -2,21 +2,22 @@
 {                                                                              }
 {  Módulo:       UniDataComprasSesionesRepositorio                             }
 {    Tipo:       Repositorio                                                   }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       29/07/2026                                                    }
+{ Versión:       2.0.0                                                         }
+{   Fecha:       30/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Persistencia UniDAC de sesiones de compra con SQL configurable.           }
+{    Repositorio UniDAC y composición de los adaptadores de compras.           }
 {******************************************************************************}
 unit UniDataComprasSesionesRepositorio;
 
 interface
 
 uses
-  Uni, inLibCatalogoSqlIntf, inLibComprasSesionesIntf;
+  Uni, inLibCatalogoSqlIntf, inLibComprasSesionesIntf,
+  UniDataComprasSesiones;
 
 type
   TRepositorioComprasSesiones = class(
@@ -24,36 +25,74 @@ type
     IRepositorioComprasSesiones)
   private
     FConexion: TUniConnection;
+    FDataModule: TdmComprasSesiones;
     FCatalogoSql: ICatalogoSql;
+    FIncidenciasSql: IRegistroIncidenciasSql;
+    procedure AsegurarDataModule;
     function EjecutarObtenerSiguienteLinea(
       const ASql, ASerie, ANumero: string;
       ALineaActual: Integer): Integer;
     function EjecutarConsultarCantidadesLinea(
       const ASql, ASerie, ANumero: string;
       ALinea: Integer): TCantidadesPivotSesion;
-    function ResolverSql(
-      const ADefinicion: TDefinicionSql): TSqlResuelto;
-    procedure RegistrarFallback(
-      const ADefinicion: TDefinicionSql;
-      const AError: string);
   public
     constructor Create(
       AConexion: TUniConnection;
-      const ACatalogoSql: ICatalogoSql);
+      ADataModule: TdmComprasSesiones;
+      const ACatalogoSql: ICatalogoSql;
+      const AIncidenciasSql: IRegistroIncidenciasSql = nil);
     class function DefinicionesSql:
       TDefinicionesSql; static;
+    procedure AplicarDuplicadoEnLinea(
+      const AResultado: TResolverDuplicadoSesion);
+    procedure BorrarCeldasLinea(
+      const ASerie, ANumero: string;
+      ALinea: Integer);
+    procedure CopiarCeldasDistribuidas(
+      const ASerie, ANumero, AAlmacenCabecera, AUsuario: string;
+      ALineaOrigen, ALineaDestino: Integer);
     function ObtenerSiguienteLinea(
       const ASerie, ANumero: string;
       ALineaActual: Integer): Integer;
     function ConsultarCantidadesLinea(
       const ASerie, ANumero: string;
       ALinea: Integer): TCantidadesPivotSesion;
+    function ConsultarCodigosBasicosActivos(
+      const AIdVariacion: string): TArray<string>;
+    function ObtenerNombreFamilia(
+      const ACodigoFamilia: string): string;
+    function ResolverCodigoFamilia(
+      const ACodigoTecleado, AUsuario: string;
+      out ACodigoGenerado: string): Boolean;
+    function ResolverDuplicado(
+      const ACodigoBuscado, ACodigoProveedor: string;
+      ASoloRefProveedor: Boolean;
+      const ACodigoArticuloPreferido: string):
+      TResolverDuplicadoSesion;
+    function ResolverDuplicadoIntraSesion(
+      const ASerie, ANumero: string;
+      ALineaActual: Integer;
+      const AModelo, ACodigoArticulo: string):
+      TResolverDuplicadoSesion;
+    function NormalizarDuplicadosIntraSesion(
+      const AUsuario, ASerie, ANumero: string): Integer;
+    function ValidarSesionDetallado:
+      TIncidenciasSesionCompra;
+    function EjecutarMaterializacion(
+      const AParametros: TParametrosMaterializacionSesion;
+      out AResultado: TResultadoMaterializacionSesion): Boolean;
+    function RevertirMaterializacion(
+      const AUsuario: string;
+      out AMensajeError: string): Boolean;
   end;
 
 implementation
 
 uses
-  System.SysUtils, inLibLog;
+  System.Classes, System.SysUtils,
+  inLibCatalogoSqlEjecucion,
+  UniDataComprasSesionesMaterializar,
+  UniDataComprasSesionesOperaciones;
 
 const
   SQL_SIGUIENTE_LINEA =
@@ -78,7 +117,9 @@ begin
     'ObtenerSiguienteLinea',
     SQL_SIGUIENTE_LINEA,
     's,n,l',
-    tssSelect);
+    'SIGUIENTE',
+    tssSelect,
+    pesPerfilLecturaConFallback);
 end;
 
 function DefinicionCantidadesLinea: TDefinicionSql;
@@ -88,16 +129,29 @@ begin
     'ConsultarCantidadesLinea',
     SQL_CANTIDADES_LINEA,
     's,n,l',
-    tssSelect);
+    'ID_AV_PIVOT_SESCEL,TOTAL',
+    tssSelect,
+    pesPerfilLecturaConFallback);
 end;
 
 constructor TRepositorioComprasSesiones.Create(
   AConexion: TUniConnection;
-  const ACatalogoSql: ICatalogoSql);
+  ADataModule: TdmComprasSesiones;
+  const ACatalogoSql: ICatalogoSql;
+  const AIncidenciasSql: IRegistroIncidenciasSql);
 begin
   inherited Create;
   FConexion := AConexion;
+  FDataModule := ADataModule;
   FCatalogoSql := ACatalogoSql;
+  FIncidenciasSql := AIncidenciasSql;
+end;
+
+procedure TRepositorioComprasSesiones.AsegurarDataModule;
+begin
+  if not Assigned(FDataModule) then
+    raise EInvalidOperation.Create(
+      'El repositorio requiere el contexto de la sesión de compra');
 end;
 
 class function TRepositorioComprasSesiones.DefinicionesSql:
@@ -108,25 +162,155 @@ begin
   Result[1] := DefinicionCantidadesLinea;
 end;
 
-function TRepositorioComprasSesiones.ResolverSql(
-  const ADefinicion: TDefinicionSql): TSqlResuelto;
+procedure TRepositorioComprasSesiones.AplicarDuplicadoEnLinea(
+  const AResultado: TResolverDuplicadoSesion);
 begin
-  Result := ResolverSqlBase(ADefinicion);
-  if Assigned(FCatalogoSql) then
-    Result := FCatalogoSql.Resolver(ADefinicion);
-  if Result.MotivoSqlBase <> '' then
-    Log.LogError(Format(
-      'SQL de perfil descartado. Clave=%s. Se usa SQL base. Motivo=%s',
-      [Result.ClavePerfil, Result.MotivoSqlBase]));
+  AsegurarDataModule;
+  UniDataComprasSesionesOperaciones.AplicarDuplicadoEnLinea(
+    FDataModule,
+    AResultado);
 end;
 
-procedure TRepositorioComprasSesiones.RegistrarFallback(
-  const ADefinicion: TDefinicionSql;
-  const AError: string);
+procedure TRepositorioComprasSesiones.BorrarCeldasLinea(
+  const ASerie, ANumero: string;
+  ALinea: Integer);
 begin
-  Log.LogError(Format(
-    'SQL de perfil fallido. Clave=%s. Se reintenta con SQL base. Error=%s',
-    [ClavePerfilSql(ADefinicion), AError]));
+  UniDataComprasSesionesOperaciones.BorrarCeldasLineaSesion(
+    FConexion,
+    ASerie,
+    ANumero,
+    ALinea);
+end;
+
+procedure TRepositorioComprasSesiones.CopiarCeldasDistribuidas(
+  const ASerie, ANumero, AAlmacenCabecera, AUsuario: string;
+  ALineaOrigen, ALineaDestino: Integer);
+begin
+  UniDataComprasSesionesOperaciones.CopiarCeldasDistribuidasSesion(
+    FConexion,
+    ASerie,
+    ANumero,
+    AAlmacenCabecera,
+    AUsuario,
+    ALineaOrigen,
+    ALineaDestino);
+end;
+
+function TRepositorioComprasSesiones.ConsultarCodigosBasicosActivos(
+  const AIdVariacion: string): TArray<string>;
+begin
+  Result :=
+    UniDataComprasSesionesOperaciones.ConsultarCodigosBasicosActivos(
+      FConexion,
+      AIdVariacion);
+end;
+
+function TRepositorioComprasSesiones.ObtenerNombreFamilia(
+  const ACodigoFamilia: string): string;
+begin
+  Result :=
+    UniDataComprasSesionesOperaciones.ObtenerNombreFamiliaSesion(
+      FConexion,
+      ACodigoFamilia);
+end;
+
+function TRepositorioComprasSesiones.ResolverCodigoFamilia(
+  const ACodigoTecleado, AUsuario: string;
+  out ACodigoGenerado: string): Boolean;
+begin
+  Result :=
+    UniDataComprasSesionesOperaciones.ResolverCodigoFamilia(
+      FConexion,
+      ACodigoTecleado,
+      AUsuario,
+      ACodigoGenerado);
+end;
+
+function TRepositorioComprasSesiones.ResolverDuplicado(
+  const ACodigoBuscado, ACodigoProveedor: string;
+  ASoloRefProveedor: Boolean;
+  const ACodigoArticuloPreferido: string):
+  TResolverDuplicadoSesion;
+begin
+  Result :=
+    UniDataComprasSesionesOperaciones.ResolverDuplicadoSesion(
+      FConexion,
+      ACodigoBuscado,
+      ACodigoProveedor,
+      ASoloRefProveedor,
+      ACodigoArticuloPreferido);
+end;
+
+function TRepositorioComprasSesiones.ResolverDuplicadoIntraSesion(
+  const ASerie, ANumero: string;
+  ALineaActual: Integer;
+  const AModelo, ACodigoArticulo: string):
+  TResolverDuplicadoSesion;
+begin
+  Result :=
+    UniDataComprasSesionesOperaciones.ResolverDuplicadoIntraSesion(
+      FConexion,
+      ASerie,
+      ANumero,
+      ALineaActual,
+      AModelo,
+      ACodigoArticulo);
+end;
+
+function TRepositorioComprasSesiones.NormalizarDuplicadosIntraSesion(
+  const AUsuario, ASerie, ANumero: string): Integer;
+begin
+  Result :=
+    UniDataComprasSesionesOperaciones.NormalizarDuplicadosIntraSesion(
+      FConexion,
+      AUsuario,
+      ASerie,
+      ANumero);
+end;
+
+function TRepositorioComprasSesiones.ValidarSesionDetallado:
+  TIncidenciasSesionCompra;
+var
+  iIncidencia: Integer;
+  oIncidencias: TStringList;
+begin
+  AsegurarDataModule;
+  Result := nil;
+  oIncidencias := TStringList.Create;
+  try
+    UniDataComprasSesionesOperaciones.ValidarSesionDetallado(
+      FDataModule,
+      oIncidencias);
+    SetLength(Result, oIncidencias.Count);
+    for iIncidencia := 0 to oIncidencias.Count - 1 do
+      Result[iIncidencia] := oIncidencias[iIncidencia];
+  finally
+    FreeAndNil(oIncidencias);
+  end;
+end;
+
+function TRepositorioComprasSesiones.EjecutarMaterializacion(
+  const AParametros: TParametrosMaterializacionSesion;
+  out AResultado: TResultadoMaterializacionSesion): Boolean;
+begin
+  AsegurarDataModule;
+  Result :=
+    UniDataComprasSesionesMaterializar.EjecutarMaterializacionSesion(
+      FDataModule,
+      AParametros,
+      AResultado);
+end;
+
+function TRepositorioComprasSesiones.RevertirMaterializacion(
+  const AUsuario: string;
+  out AMensajeError: string): Boolean;
+begin
+  AsegurarDataModule;
+  Result :=
+    UniDataComprasSesionesMaterializar.RevertirMaterializacion(
+      FDataModule,
+      AUsuario,
+      AMensajeError);
 end;
 
 function TRepositorioComprasSesiones.EjecutarObtenerSiguienteLinea(
@@ -190,59 +374,47 @@ function TRepositorioComprasSesiones.ObtenerSiguienteLinea(
   ALineaActual: Integer): Integer;
 var
   oDefinicion: TDefinicionSql;
-  oSql: TSqlResuelto;
+  iSiguiente: Integer;
 begin
   oDefinicion := DefinicionSiguienteLinea;
-  oSql := ResolverSql(oDefinicion);
-  try
-    Result := EjecutarObtenerSiguienteLinea(
-      oSql.Texto, ASerie, ANumero, ALineaActual);
-  except
-    on E: Exception do
+  iSiguiente := 0;
+  EjecutarLecturaSqlConFallback(
+    oDefinicion,
+    FCatalogoSql,
+    procedure(const ASql: string)
     begin
-      if oSql.Origen = osPerfil then
-      begin
-        RegistrarFallback(oDefinicion, E.Message);
-        Result := EjecutarObtenerSiguienteLinea(
-          oDefinicion.SqlBase,
-          ASerie,
-          ANumero,
-          ALineaActual);
-      end
-      else
-        raise;
-    end;
-  end;
+      iSiguiente := EjecutarObtenerSiguienteLinea(
+        ASql,
+        ASerie,
+        ANumero,
+        ALineaActual);
+    end,
+    FIncidenciasSql);
+  Result := iSiguiente;
 end;
 
 function TRepositorioComprasSesiones.ConsultarCantidadesLinea(
   const ASerie, ANumero: string;
   ALinea: Integer): TCantidadesPivotSesion;
 var
+  oCantidades: TCantidadesPivotSesion;
   oDefinicion: TDefinicionSql;
-  oSql: TSqlResuelto;
 begin
   oDefinicion := DefinicionCantidadesLinea;
-  oSql := ResolverSql(oDefinicion);
-  try
-    Result := EjecutarConsultarCantidadesLinea(
-      oSql.Texto, ASerie, ANumero, ALinea);
-  except
-    on E: Exception do
+  oCantidades := nil;
+  EjecutarLecturaSqlConFallback(
+    oDefinicion,
+    FCatalogoSql,
+    procedure(const ASql: string)
     begin
-      if oSql.Origen = osPerfil then
-      begin
-        RegistrarFallback(oDefinicion, E.Message);
-        Result := EjecutarConsultarCantidadesLinea(
-          oDefinicion.SqlBase,
-          ASerie,
-          ANumero,
-          ALinea);
-      end
-      else
-        raise;
-    end;
-  end;
+      oCantidades := EjecutarConsultarCantidadesLinea(
+        ASql,
+        ASerie,
+        ANumero,
+        ALinea);
+    end,
+    FIncidenciasSql);
+  Result := oCantidades;
 end;
 
 end.

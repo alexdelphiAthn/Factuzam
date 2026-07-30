@@ -116,7 +116,7 @@ implementation
 
 uses
   System.NetEncoding, inLibContextoSesionIntf, inLibGenBusq,
-  inMtoModalGuardarFiltro, inLibMsg;
+  inMtoModalGuardarFiltro, inLibMsgComun;
 
 type
   TcxFilterControlAcceso = class(TcxFilterControl)

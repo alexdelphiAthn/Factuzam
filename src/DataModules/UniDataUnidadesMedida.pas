@@ -60,7 +60,7 @@ begin
   inherited;
   // Tras alta/modificacion refrescamos la cache para que los nuevos decimales
   // se apliquen en documentos e informes sin reiniciar el programa.
-  if oUnidades <> nil then
+  if oUnidades() <> nil then
     oUnidades.Cargar;
 end;
 

@@ -159,7 +159,8 @@ implementation
 {$R *.dfm}
 
 uses
-  UniDataConn, inLibUser, inLibGlobalVar, inLibMsg;
+  UniDataConn, inLibUser, inLibGlobalVar, inLibLog,
+  inLibMsgComun;
 
 const
   ITEM_NUEVO = '<< Nuevo formato >>';
@@ -214,6 +215,10 @@ begin
   except
     // Si la version de TJvWizard difiere y estas propiedades no
     // existen, no es critico: el wizard sigue funcionando.
+    on E: Exception do
+      inLibLog.Log.LogWarning(
+        'WizardEditar: cabeceras del asistente no aplicadas: ' +
+        E.Message);
   end;
   // Botones visibles y habilitados por pagina. VisibleButtons oculta
   // los botones que no aparezcan en el set, por eso no hace falta
@@ -540,6 +545,11 @@ begin
         lstCampos.Items.Add.Text := qryTmp.Fields[j].FieldName;
       Result := qryTmp.FieldCount > 0;
     except
+      // El llamador cae al plan B (parseo del SQL) con Result=False.
+      on E: Exception do
+        inLibLog.Log.LogWarning(
+          'WizardEditar: apertura temporal de la guia fallo: ' +
+          E.Message);
     end;
   finally
     if qryTmp <> nil then FreeAndNil(qryTmp);

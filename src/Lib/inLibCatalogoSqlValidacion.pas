@@ -21,6 +21,8 @@ uses
 function ValidarSql(
   const ADefinicion: TDefinicionSql;
   const ASql: string): TResultadoValidacionSql;
+function ValidarDefinicionSql(
+  const ADefinicion: TDefinicionSql): TResultadoValidacionSql;
 function CalcularHuellaSql(const ASql: string): string;
 
 implementation
@@ -188,6 +190,150 @@ begin
   end;
 end;
 
+function PosicionPalabraNivelCero(
+  const ATexto, APalabra: string): Integer;
+var
+  iFin: Integer;
+  iIndice: Integer;
+  iNivel: Integer;
+  sTexto: string;
+  sToken: string;
+begin
+  Result := 0;
+  sTexto := UpperCase(TextoSinLiterales(ATexto));
+  iIndice := 1;
+  iNivel := 0;
+  while (iIndice <= Length(sTexto)) and
+        (Result = 0) do
+  begin
+    if sTexto[iIndice] = '(' then
+    begin
+      Inc(iNivel);
+      Inc(iIndice);
+    end
+    else if sTexto[iIndice] = ')' then
+    begin
+      if iNivel > 0 then
+        Dec(iNivel);
+      Inc(iIndice);
+    end
+    else if EsInicioIdentificador(sTexto[iIndice]) then
+    begin
+      iFin := iIndice;
+      while (iFin <= Length(sTexto)) and
+            EsCaracterIdentificador(sTexto[iFin]) do
+        Inc(iFin);
+      sToken := Copy(
+        sTexto, iIndice, iFin - iIndice);
+      if (iNivel = 0) and
+         (sToken = UpperCase(APalabra)) then
+        Result := iIndice;
+      iIndice := iFin;
+    end
+    else
+      Inc(iIndice);
+  end;
+end;
+
+function EsNombreCampoSimple(
+  const ACampo: string): Boolean;
+var
+  iIndice: Integer;
+begin
+  Result := Trim(ACampo) <> '';
+  iIndice := 1;
+  while Result and
+        (iIndice <= Length(ACampo)) do
+  begin
+    Result := EsCaracterIdentificador(
+      ACampo[iIndice]);
+    Inc(iIndice);
+  end;
+end;
+
+function SeleccionaTodosLosCampos(
+  const ASeleccion: string): Boolean;
+var
+  iIndice: Integer;
+begin
+  Result := False;
+  iIndice := PosicionPalabraNivelCero(
+    ASeleccion,
+    'SELECT');
+  if iIndice > 0 then
+  begin
+    Inc(iIndice, Length('SELECT'));
+    while (iIndice <= Length(ASeleccion)) and
+          CharInSet(
+            ASeleccion[iIndice],
+            [#9, #10, #13, ' ']) do
+      Inc(iIndice);
+    Result := (iIndice <= Length(ASeleccion)) and
+      (ASeleccion[iIndice] = '*');
+  end;
+end;
+
+function ContieneCampoResultado(
+  const ASeleccion, ACampo: string): Boolean;
+begin
+  if EsNombreCampoSimple(ACampo) then
+    Result := ContienePalabra(
+      ASeleccion,
+      UpperCase(ACampo))
+  else
+    Result := Pos(
+      UpperCase(Trim(ACampo)),
+      UpperCase(ASeleccion)) > 0;
+end;
+
+function ValidarCamposResultado(
+  const ADefinicion: TDefinicionSql;
+  const ASql: string;
+  out AMensaje: string): Boolean;
+var
+  iCampo: Integer;
+  iDesde: Integer;
+  oCampos: TStringList;
+  oFaltantes: TStringList;
+  sSeleccion: string;
+begin
+  Result := True;
+  AMensaje := '';
+  if (ADefinicion.TipoSentencia = tssSelect) and
+     (Trim(ADefinicion.CamposResultado) <> '') then
+  begin
+    sSeleccion := TextoSinLiterales(ASql);
+    iDesde := PosicionPalabraNivelCero(
+      sSeleccion, 'FROM');
+    if iDesde > 0 then
+      sSeleccion := Copy(
+        sSeleccion, 1, iDesde - 1);
+    if not SeleccionaTodosLosCampos(sSeleccion) then
+    begin
+      oCampos := ParametrosEsperados(
+        ADefinicion.CamposResultado);
+      oFaltantes := TStringList.Create;
+      try
+        for iCampo := 0 to oCampos.Count - 1 do
+        begin
+          if not ContieneCampoResultado(
+            sSeleccion,
+            oCampos[iCampo]) then
+            oFaltantes.Add(oCampos[iCampo]);
+        end;
+        Result := oFaltantes.Count = 0;
+        if not Result then
+          AMensaje := Format(
+            'Campos de salida obligatorios ausentes [%s].',
+            [oFaltantes.CommaText]);
+      finally
+        FreeAndNil(oFaltantes);
+        FreeAndNil(oCampos);
+      end;
+    end;
+  end;
+end;
+
 function TieneVariasSentencias(const ASql: string): Boolean;
 var
   sTexto: string;
@@ -225,6 +371,7 @@ function ValidarSql(
 var
   oEsperados: TStringList;
   oEncontrados: TStringList;
+  sMensajeCampos: string;
   sTipoEsperado: string;
 begin
   Result.EsValido := False;
@@ -252,7 +399,14 @@ begin
       oEncontrados := ExtraerParametros(ASql);
       try
         if ListasIguales(oEsperados, oEncontrados) then
-          Result.EsValido := True
+        begin
+          Result.EsValido := ValidarCamposResultado(
+            ADefinicion,
+            ASql,
+            sMensajeCampos);
+          if not Result.EsValido then
+            Result.Mensaje := sMensajeCampos;
+        end
         else
           Result.Mensaje := Format(
             'Parámetros esperados [%s], encontrados [%s].',
@@ -263,6 +417,43 @@ begin
       end;
     end;
   end;
+end;
+
+function ValidarDefinicionSql(
+  const ADefinicion: TDefinicionSql): TResultadoValidacionSql;
+begin
+  Result.EsValido := False;
+  Result.Mensaje := '';
+  Result.Huella := CalcularHuellaSql(
+    ADefinicion.SqlBase);
+  if Trim(ADefinicion.Repositorio) = '' then
+    Result.Mensaje := 'El repositorio de la definición está vacío.'
+  else if Trim(ADefinicion.Operacion) = '' then
+    Result.Mensaje := 'La operación de la definición está vacía.'
+  else if ADefinicion.Version <= 0 then
+    Result.Mensaje := 'La versión de la definición debe ser mayor que cero.'
+  else if ((ADefinicion.TipoSentencia = tssSelect) or
+           (ADefinicion.Politica =
+            pesPerfilLecturaConFallback)) and
+          (Trim(ADefinicion.CamposResultado) = '') then
+    Result.Mensaje :=
+      'Una lectura debe declarar sus campos de salida obligatorios.'
+  else if (ADefinicion.Politica =
+           pesPerfilLecturaConFallback) and
+          (not (ADefinicion.TipoSentencia in
+            [tssSelect, tssCall])) then
+    Result.Mensaje :=
+      'La política de lectura con fallback solo admite consultas ' +
+      'o procedimientos que devuelvan datos.'
+  else if (ADefinicion.Politica =
+           pesPerfilEscrituraTransaccional) and
+          (ADefinicion.TipoSentencia = tssSelect) then
+    Result.Mensaje :=
+      'Una lectura no puede usar la política de escritura transaccional.'
+  else
+    Result := ValidarSql(
+      ADefinicion,
+      ADefinicion.SqlBase);
 end;
 
 end.

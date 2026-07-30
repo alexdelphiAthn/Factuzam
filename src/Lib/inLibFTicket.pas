@@ -67,7 +67,7 @@ type
 implementation
 
 uses
-  Winapi.Windows, inLibMsg;
+  Winapi.Windows, inLibMsgFacturas;
 
 const
   ESC = #27;

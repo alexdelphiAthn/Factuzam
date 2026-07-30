@@ -175,7 +175,8 @@ uses
   Vcl.Imaging.pngimage,
   DelphiZXIngQRCode, frxDBSet,
   inLibGlobalVar, inLibFotos, inLibXades,
-  inLibMsg, inLibRelojFiscal, inLibVerifactuInstalacion;
+  inLibMsgFacturas, inLibMsgVerifactu,
+  inLibRelojFiscal, inLibVerifactuInstalacion;
 
 const
   cNsEventosSif =

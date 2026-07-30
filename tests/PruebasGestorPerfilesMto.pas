@@ -90,7 +90,7 @@ type
     [TearDown]
     procedure Limpiar;
     [Test]
-    procedure Carga_ExponeValoresYAplicaCaption;
+    procedure Carga_ExponeValoresYSinSustituirCaption;
     [Test]
     procedure PerfilesComunes_GrabaSeisValores;
     [Test]
@@ -269,7 +269,7 @@ begin
 end;
 
 procedure TPruebasGestorPerfilesMto.
-  Carga_ExponeValoresYAplicaCaption;
+  Carga_ExponeValoresYSinSustituirCaption;
 begin
   FServicioObjeto.DefinirValor(
     'Caption', 'Perfil activo');
@@ -283,7 +283,7 @@ begin
     'Predeterminado',
     FGestor.Valor('NoExiste', 'Predeterminado'));
   FGestor.AplicarEtiquetas;
-  Assert.AreEqual('Perfil activo', FFormulario.Caption);
+  Assert.AreEqual('Original', FFormulario.Caption);
   Assert.AreEqual('Tabla de diseño', FEtiqueta.Caption);
 end;
 

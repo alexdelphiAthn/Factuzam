@@ -123,7 +123,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsg;
+  inLibMsgArticulos;
 
 // ============================================================================
 //   API publica

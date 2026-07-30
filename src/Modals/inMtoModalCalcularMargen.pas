@@ -102,7 +102,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsg;
+  inLibMsgArticulos;
 
 // ============================================================================
 //   API pública

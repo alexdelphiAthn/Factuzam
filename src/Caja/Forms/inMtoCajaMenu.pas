@@ -29,7 +29,7 @@ uses
   inMtoModalCajDef, JvTFManager, JvTFGlance, JvTFMonths, Vcl.ComCtrls,
   JvExComCtrls, JvMonthCalendar, cxCalendar, CommCtrl,
   inLibVentasCalendario, System.Actions, Vcl.ActnList, dxGDIPlusClasses,
-  cxImage;
+  cxImage, inLibPermisosIntf;
 
 type
   TfrmMtoMenuCaja = class(TfrmBase, IReceptorFechaCaja)
@@ -171,19 +171,58 @@ type
     property FechaCaja: TDateTime read FFechaCaja;
   end;
 
-var
-  frmMtoMenuCaja: TfrmMtoMenuCaja;
+function MenuCajaAbierto: Boolean;
+procedure MostrarMenuCaja(
+  const APermisos: IPermisosAplicacion);
 
 implementation
 
 uses
-  inLibPermisosIntf,
   DateUtils,
-  inMtoModalArqueo, inMtoModalEntradaCambio, inMtoModalGastoCaja, inLibMsg;
+  inMtoModalArqueo, inMtoModalEntradaCambio, inMtoModalGastoCaja,
+  inLibMsgCaja;
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+function BuscarMenuCaja: TfrmMtoMenuCaja;
+var
+  Componente: TComponent;
+begin
+  Componente := Application.FindComponent('frmMtoMenuCaja');
+  if (Componente is TfrmMtoMenuCaja) and
+     not (csDestroying in Componente.ComponentState) then
+    Result := TfrmMtoMenuCaja(Componente)
+  else
+    Result := nil;
+end;
+
+function MenuCajaAbierto: Boolean;
+begin
+  Result := BuscarMenuCaja <> nil;
+end;
+
+procedure MostrarMenuCaja(
+  const APermisos: IPermisosAplicacion);
+var
+  Formulario: TfrmMtoMenuCaja;
+begin
+  Formulario := BuscarMenuCaja;
+  if Formulario = nil then
+  begin
+    Formulario := TfrmMtoMenuCaja.Create(
+      Application,
+      APermisos);
+    Formulario.Show;
+  end
+  else
+  begin
+    if Formulario.WindowState = wsMinimized then
+      Formulario.WindowState := wsNormal;
+    Formulario.BringToFront;
+  end;
+end;
 
 procedure TfrmMtoMenuCaja.CreateParams(var Params: TCreateParams);
 begin
@@ -195,7 +234,6 @@ end;
 procedure TfrmMtoMenuCaja.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Action := caFree;
-  frmMtoMenuCaja := nil;
   if Assigned(Application.MainForm) and
      (Application.MainForm.WindowState = wsMinimized) then
     Application.MainForm.WindowState := wsMaximized;
@@ -209,6 +247,7 @@ end;
 
 procedure TfrmMtoMenuCaja.FormCreate(Sender: TObject);
 begin
+  inherited;
   Self.Position := poScreenCenter;
   // forzar mes actual (evita fecha cacheada en DFM)
   calMes.Date := Date;

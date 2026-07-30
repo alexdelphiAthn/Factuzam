@@ -40,7 +40,7 @@ type
 implementation
 
 uses
-  System.SysUtils, inLibMsg;
+  System.SysUtils, inLibMsgCaja;
 
 constructor TPoliticaStockVenta.Create(
   AConexion: TUniConnection;

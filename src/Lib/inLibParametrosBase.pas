@@ -87,7 +87,7 @@ type
 implementation
 
 uses
-  inLibMsg;
+  inLibMsgConfiguracion;
 
 { TParametroDef }
 

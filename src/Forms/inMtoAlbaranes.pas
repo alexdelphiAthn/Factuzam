@@ -283,18 +283,16 @@ type
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
-var
-  frmMtoAlbaranes: TfrmMtoAlbaranes;
-
 implementation
 
 uses
   inMtoModalFacturarAlbaranesFechas, inLibGridCantidad,
   inLibGenBusq, inLibShowMto, inLibFiltroUsuario, Uni,
-  inLibArticulosResolver, inLibArticulosValidador, inLibVentasImpuestos,
+  inLibArticulosResolverIntf, inLibArticulosValidador, inLibVentasImpuestos,
   inLibValoresAutomaticos, inLibUser, inLibColumnasSku,
   inLibColumnasDocumento,
-  inLibValidacionDocumento, inLibPresentacionDocumento, inLibMsg;
+  inLibValidacionDocumento, inLibPresentacionDocumento,
+  inLibMsgArticulos, inLibMsgFacturas, inLibMsgVentas;
 
 {$R *.dfm}
 
@@ -458,8 +456,8 @@ end;
 procedure TfrmMtoAlbaranes.AplicarArticuloAlbaran(const ACodigoArt: string);
 var
   ds         : TDataSet;
-  Validador  : TArticulosValidador;
-  Resolver   : TArticulosResolver;
+  Validador  : IArticulosValidador;
+  Resolver   : IArticulosResolver;
   Resolucion : TArtResolucionEntrada;
   Datos      : TArticuloDatos;
   Precio     : TArticuloPrecio;
@@ -535,11 +533,10 @@ begin
         if not dmmAlbaranes.unqryTablaG.FieldByName('FECHA_ALB').IsNull then
           dFecha := dmmAlbaranes.unqryTablaG.
                       FieldByName('FECHA_ALB').AsDateTime;
-        Validador := TArticulosValidador.Create(
+        Validador := CrearValidadorArticulos(
                        dmmAlbaranes.unqryTablaG.Connection);
-        Resolver := TArticulosResolver.Create(
-                      dmmAlbaranes.unqryTablaG.Connection,
-                      ParametrosCaja);
+        Resolver := CrearResolverArticulos(
+          dmmAlbaranes.unqryTablaG.Connection);
         Resolucion := Validador.Resolver(sInput);
         if Resolucion.Encontrado then
         begin
@@ -607,8 +604,8 @@ begin
         else if Resolucion.Mensaje <> '' then
           MessageDlg(Resolucion.Mensaje, mtWarning, [mbOk], 0);
       finally
-        FreeAndNil(Resolver);
-        FreeAndNil(Validador);
+        Resolver := nil;
+        Validador := nil;
         FAplicandoArticulo := False;
       end;
     end;
@@ -635,7 +632,7 @@ end;
 function TfrmMtoAlbaranes.PrecioSkuTallasAlb(const ACodigoArticulo,
   ACodigoSku: string): Double;
 var
-  Resolver: TArticulosResolver;
+  Resolver: IArticulosResolver;
   Datos: TArticuloDatos;
   Precio: TArticuloPrecio;
   sTarifa: string;
@@ -651,9 +648,8 @@ begin
     if not dmmAlbaranes.unqryTablaG.FieldByName('FECHA_ALB').IsNull then
       dFecha := dmmAlbaranes.unqryTablaG.
                   FieldByName('FECHA_ALB').AsDateTime;
-    Resolver := TArticulosResolver.Create(
-                  dmmAlbaranes.unqryTablaG.Connection,
-                  ParametrosCaja);
+    Resolver := CrearResolverArticulos(
+      dmmAlbaranes.unqryTablaG.Connection);
     try
       Datos := Resolver.ResolverDatos(ACodigoArticulo, ACodigoSku,
                                       sTarifa, dFecha);
@@ -668,7 +664,7 @@ begin
           Result := Precio.PrecioFinal * (1 + rPorIva / 100);
       end;
     finally
-      FreeAndNil(Resolver);
+      Resolver := nil;
     end;
   end;
 end;
@@ -703,6 +699,10 @@ begin
     tvLineasAlbaran, ds, FModoEntradaSel,
     dmmAlbaranes.unqryTablaG.FieldByName(
       'CODIGO_ALM_ALB').AsString, 'ALBLIN');
+  Cfg.ValidadorArticulos :=
+    CrearValidadorArticulos(Cfg.Conexion);
+  Cfg.LookupAtributos :=
+    CrearLookupAtributosArticulos(Cfg.Conexion);
   // Precio por SKU para la consolidacion del modo tallas: lineas con
   // precio distinto no fusionan.
   Cfg.ObtenerPrecioSku := PrecioSkuTallasAlb;
@@ -1074,7 +1074,8 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
   sLineasSinSku := LineasSinSkuRequerido(
-    dmmAlbaranes.unqryTablaG.Connection,
+    CrearValidadorArticulos(
+      dmmAlbaranes.unqryTablaG.Connection),
     dmmAlbaranes.unqryAlbaranesLineas, 'ALBLIN');
   if (sLineasSinSku = '') or
      (MessageDlg(Format(SPreguntaGrabarAlbaranVentaSinSku,

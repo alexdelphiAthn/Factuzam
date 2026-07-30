@@ -16,29 +16,49 @@ unit inLibFacturasComposicion;
 interface
 
 uses
-  Uni, inLibFacturasServiciosIntf;
+  Uni, inLibCatalogoSqlIntf,
+  inLibFacturasServiciosIntf,
+  inLibParametrosIntf;
 
 function CrearServiciosFactura(
-  AConexion: TUniConnection): TServiciosFactura;
+  AConexion: TUniConnection;
+  const AParametrosCaja: IParametrosCaja;
+  const ACatalogoSql: ICatalogoSql = nil;
+  const AIncidenciasSql: IRegistroIncidenciasSql = nil
+): TServiciosFactura;
 
 implementation
 
 uses
-  inLibFacturasRepositorio,
+  UniDataFacturasRepositorio,
+  UniDataArticulosResolverRepositorio,
   inLibFacturasValidacionFiscal,
   inLibFacturasCalculo,
   inLibFacturasBorrado,
   inLibFacturasEfectos;
 
 function CrearServiciosFactura(
-  AConexion: TUniConnection): TServiciosFactura;
+  AConexion: TUniConnection;
+  const AParametrosCaja: IParametrosCaja;
+  const ACatalogoSql: ICatalogoSql;
+  const AIncidenciasSql: IRegistroIncidenciasSql
+): TServiciosFactura;
 var
-  Repositorio: IRepositorioFacturas;
+  oRepositorio: IRepositorioFacturas;
 begin
-  Repositorio := TRepositorioFacturas.Create(AConexion);
-  Result.Repositorio := Repositorio;
+  oRepositorio := TRepositorioFacturas.Create(
+    AConexion,
+    ACatalogoSql,
+    AIncidenciasSql);
+  Result.Repositorio := oRepositorio;
+  Result.ArticulosResolver :=
+    TRepositorioArticulosResolver.Create(
+      AConexion,
+      AParametrosCaja,
+      ACatalogoSql,
+      AIncidenciasSql);
   Result.ValidadorFiscal :=
-    TValidadorFiscalFactura.Create(Repositorio);
+    TValidadorFiscalFactura.Create(oRepositorio);
   Result.Calculador := TCalculadorFactura.Create(AConexion);
   Result.Borrado := TServicioBorradoFactura.Create(AConexion);
   Result.Efectos := TServicioEfectosFactura.Create(AConexion);

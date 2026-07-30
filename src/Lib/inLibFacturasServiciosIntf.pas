@@ -16,7 +16,8 @@ unit inLibFacturasServiciosIntf;
 interface
 
 uses
-  System.SysUtils, Data.DB;
+  System.SysUtils, Data.DB,
+  inLibArticulosResolverIntf;
 
 type
   TCampoValidacionFac = (
@@ -211,6 +212,7 @@ type
   end;
   TServiciosFactura = record
     Repositorio: IRepositorioFacturas;
+    ArticulosResolver: IArticulosResolver;
     ValidadorFiscal: IValidadorFiscalFactura;
     Calculador: ICalculadorFactura;
     Borrado: IServicioBorradoFactura;
@@ -238,7 +240,7 @@ function EvaluarReaperturaBorrador(
 implementation
 
 uses
-  inLibMsg;
+  inLibMsgFacturas;
 
 class function TResultadoOperacionFactura.Correcto:
   TResultadoOperacionFactura;

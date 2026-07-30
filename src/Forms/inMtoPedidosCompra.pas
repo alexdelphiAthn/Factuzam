@@ -384,9 +384,6 @@ type
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
-var
-  frmMtoPedidosCompra: TfrmMtoPedidosCompra;
-
 implementation
 
 uses
@@ -396,7 +393,7 @@ uses
   inLibPedidosCompra,
   inLibLog,
   inLibValoresAutomaticos,
-  inLibArticulosResolver,
+  inLibArticulosResolverIntf,
   inLibArticulosValidador,
   inLibGridCantidad,
   inLibColumnasDocumento,
@@ -407,7 +404,7 @@ uses
   inMtoModalSelAlmacenPedido, inMtoModalDocsCreados, inMtoModalEtiqPed,
   inLibShowMto, inLibGenBusq, UniDataArticulos,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
-  inLibColumnasSku, inLibMsg;
+  inLibColumnasSku, inLibMsgCompras;
 
 {$R *.dfm}
 
@@ -512,8 +509,8 @@ procedure TfrmMtoPedidosCompra.AplicarArticuloPedidoCompra(
   const ACodigoArt: string);
 var
   ds         : TDataSet;
-  Validador  : TArticulosValidador;
-  Resolver   : TArticulosResolver;
+  Validador  : IArticulosValidador;
+  Resolver   : IArticulosResolver;
   Resolucion : TArtResolucionEntrada;
   Datos      : TArticuloDatos;
   qry        : TUniQuery;
@@ -670,11 +667,10 @@ begin
         sPrv := CampoCabeceraString('CODIGO_PRV_PEDC');
         sAlm := CampoCabeceraString('CODIGO_ALM_PEDC');
         dFecha := FechaCabecera;
-        Validador := TArticulosValidador.Create(
+        Validador := CrearValidadorArticulos(
                        dmmPedidosCompra.unqryTablaG.Connection);
-        Resolver := TArticulosResolver.Create(
-                      dmmPedidosCompra.unqryTablaG.Connection,
-                      ParametrosCaja);
+        Resolver := CrearResolverArticulos(
+          dmmPedidosCompra.unqryTablaG.Connection);
         Resolucion := Validador.Resolver(sInput);
         if Resolucion.Encontrado then
         begin
@@ -761,8 +757,8 @@ begin
         else if Resolucion.Mensaje <> '' then
           MessageDlg(Resolucion.Mensaje, mtWarning, [mbOk], 0);
       finally
-        FreeAndNil(Resolver);
-        FreeAndNil(Validador);
+        Resolver := nil;
+        Validador := nil;
         FAplicandoArticulo := False;
       end;
     end;
@@ -886,6 +882,11 @@ begin
         FModoEntrada.Desmontar;
       except
         // Teardown defensivo en cierre.
+        on E: Exception do
+          if inLibLog.Log() <> nil then
+            inLibLog.Log.LogWarning(
+              'PedidosCompra.FormDestroy: Desmontar fallo: ' +
+              E.Message);
       end;
     finally
       if Assigned(dmmPedidosCompra) then
@@ -1327,12 +1328,13 @@ procedure TfrmMtoPedidosCompra.btnGrabarClick(Sender: TObject);
 var
   sLineasSinSku: string;
 begin
-  if inLibLog.Log <> nil then
+  if inLibLog.Log() <> nil then
     inLibLog.Log.LogInfo('PedidosCompra.btnGrabarClick: INICIO');
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
   sLineasSinSku := LineasSinSkuRequerido(
-    dmmPedidosCompra.unqryTablaG.Connection,
+    CrearValidadorArticulos(
+      dmmPedidosCompra.unqryTablaG.Connection),
     dmmPedidosCompra.unqryPedidosCompraLineas, 'PEDCLIN');
   if (sLineasSinSku <> '') and
      (MessageDlg(Format(SPreguntaGrabarPedidoCompraSinSku,
@@ -2490,6 +2492,10 @@ begin
     ContextoSesion, tvLineasPedido, ds, FModoEntradaSel,
     Trim(dmmPedidosCompra.unqryTablaG.
       FieldByName('CODIGO_ALM_PEDC').AsString), 'PEDCLIN');
+  Cfg.ValidadorArticulos :=
+    CrearValidadorArticulos(Cfg.Conexion);
+  Cfg.LookupAtributos :=
+    CrearLookupAtributosArticulos(Cfg.Conexion);
   if FModoEntradaSel = mcsTallasHorPed then
   begin
     CfgPV := CrearConfigPivoteBandasDocumentoCompra(

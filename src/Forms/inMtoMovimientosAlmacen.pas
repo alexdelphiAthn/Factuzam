@@ -116,14 +116,11 @@ type
     procedure AplicarLayoutInstanciaBusqueda; override;
   end;
 
-var
-  frmMtoMovimientosAlmacen: TfrmMtoMovimientosAlmacen;
-
 implementation
 
 uses
   inLibWin, inLibUser, inLibShowMto, inLibGridCantidad,
-  inLibFiltroUsuario, inLibMsg;
+  inLibFiltroUsuario, inLibMsgArticulos;
 
 {$R *.dfm}
 

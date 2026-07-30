@@ -35,7 +35,7 @@ implementation
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 uses
-  inLibMsg;
+  inLibMsgCaja;
 
 {$R *.dfm}
 

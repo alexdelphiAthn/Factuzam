@@ -73,7 +73,7 @@ implementation
 
 uses
   UniDataCaja, inLibGenerarTicketCaja,
-  inMtoGenSearch, Data.DB, inLibMsg;
+  inMtoGenSearch, Data.DB, inLibMsgComun;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 

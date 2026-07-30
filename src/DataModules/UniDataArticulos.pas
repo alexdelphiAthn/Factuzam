@@ -144,7 +144,7 @@ uses
 
   System.Diagnostics,
   inLibCadenas, inLibDatasets, inLibValoresAutomaticos,
-  inLibMsg;
+  inLibMsgArticulos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -1386,6 +1386,11 @@ begin
       except
         // BBDD sin las tablas, permisos... ignoramos: la banda saldra
         // blanca, pero la impresion sigue adelante.
+        on E: Exception do
+          if Log() <> nil then
+            Log.LogWarning(
+              'EtiquetasArt: mapa de colores HEX no disponible: ' +
+              E.Message);
       end;
     finally
       qryHex.Free;
@@ -1463,7 +1468,7 @@ begin
           sDiag := sDiag + cdsEtiquetasArt.FieldDefs[k].Name + ':' +
                    IntToStr(Ord(cdsEtiquetasArt.FieldDefs[k].DataType)) +
                    '(' + IntToStr(cdsEtiquetasArt.FieldDefs[k].Size) + ') ';
-        if Assigned(Log) then
+        if Log() <> nil then
           Log.LogError('PoblarCdsEtiquetasArt: CreateDataSet fallo (' +
                        E.Message + '). Esquema: ' + sDiag);
         for k := 0 to cdsEtiquetasArt.FieldDefs.Count - 1 do

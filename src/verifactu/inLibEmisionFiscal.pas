@@ -35,7 +35,7 @@ function CrearServicioEmisionFiscalPorModo(
 implementation
 
 uses
-  System.SysUtils, inLibVerifactuCola, inLibMsg;
+  System.SysUtils, inLibVerifactuCola, inLibMsgVerifactu;
 
 type
   IEstrategiaEmisionFiscal = interface

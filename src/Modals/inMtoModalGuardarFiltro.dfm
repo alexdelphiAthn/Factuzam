@@ -1,4 +1,4 @@
-object frmModalGuardarFiltro: TfrmModalGuardarFiltro
+﻿inherited frmModalGuardarFiltro: TfrmModalGuardarFiltro
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu]

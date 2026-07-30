@@ -83,7 +83,7 @@ uses
   System.TimeSpan, System.NetEncoding, System.Net.HttpClient,
   System.Net.URLClient, Data.DB,
   inLibGlobalVar, inLibVerifactu, inLibVerifactuInstalacion,
-  inLibMsg, inLibXades;
+  inLibMsgFacturas, inLibMsgVerifactu, inLibXades;
 
 const
   // Endpoints oficiales del servicio SOAP de Verifactu. Con certificado

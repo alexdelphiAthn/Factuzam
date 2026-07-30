@@ -251,6 +251,11 @@ type
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
+    // Capacidades del modo actual (solo el pivote de tallas las
+    // implementa). Se descubren UNA vez al montar el modo (patron 5.3)
+    // y se limpian en cada teardown ANTES de soltar FModoEntrada.
+    FPivoteAlbaranar: IPivoteVentaAlbaranar;
+    FPivoteBorrarGrupo: IPivoteVentaBorrarGrupo;
     procedure AsegurarModoEntradaLineas(AMostrarEditor: Boolean);
     procedure ConstruirModoEntrada;
     procedure CrearColumnasHostPedido;
@@ -304,21 +309,19 @@ type
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
-var
-  frmMtoPedidos: TfrmMtoPedidos;
-
 implementation
 
 uses
   inMtoModalImportarPedidosPS, inLibGridCantidad,
   inMtoModalSelAlmacenAlbaran, inMtoModalDocsCreados, inLibGenBusq,
-  inLibShowMto, inLibFiltroUsuario, Uni, inLibArticulosResolver,
+  inLibShowMto, inLibFiltroUsuario, Uni, inLibArticulosResolverIntf,
   inLibArticulosValidador, inLibVentasImpuestos,
   inLibValoresAutomaticos,
   inLibGridTallasInline,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku, inLibColumnasDocumento,
-  inLibValidacionDocumento, inLibPresentacionDocumento, inLibMsg;
+  inLibValidacionDocumento, inLibPresentacionDocumento, inLibLog,
+  inLibMsgArticulos, inLibMsgVentas;
 
 {$R *.dfm}
 
@@ -338,7 +341,14 @@ begin
     except
       // Teardown defensivo en cierre: nada que hacer si el grid ya
       // esta a medio destruir.
+      on E: Exception do
+        if inLibLog.Log() <> nil then
+          inLibLog.Log.LogWarning(
+            'Pedidos.Destroy: Desmontar fallo: ' + E.Message);
     end;
+    // Las capacidades sostienen la misma instancia: soltar tambien.
+    FPivoteAlbaranar := nil;
+    FPivoteBorrarGrupo := nil;
     FModoEntrada := nil;
   end;
   inherited;
@@ -501,8 +511,8 @@ end;
 procedure TfrmMtoPedidos.AplicarArticuloPedido(const ACodigoArt: string);
 var
   ds         : TDataSet;
-  Validador  : TArticulosValidador;
-  Resolver   : TArticulosResolver;
+  Validador  : IArticulosValidador;
+  Resolver   : IArticulosResolver;
   Resolucion : TArtResolucionEntrada;
   Datos      : TArticuloDatos;
   Precio     : TArticuloPrecio;
@@ -569,11 +579,10 @@ begin
         if not dmmPedidos.unqryTablaG.FieldByName('FECHA_PED').IsNull then
           dFecha := dmmPedidos.unqryTablaG.
                       FieldByName('FECHA_PED').AsDateTime;
-        Validador := TArticulosValidador.Create(
+        Validador := CrearValidadorArticulos(
                        dmmPedidos.unqryTablaG.Connection);
-        Resolver := TArticulosResolver.Create(
-                      dmmPedidos.unqryTablaG.Connection,
-                      ParametrosCaja);
+        Resolver := CrearResolverArticulos(
+          dmmPedidos.unqryTablaG.Connection);
         Resolucion := Validador.Resolver(sInput);
         if Resolucion.Encontrado then
         begin
@@ -633,8 +642,8 @@ begin
         else if Resolucion.Mensaje <> '' then
           MessageDlg(Resolucion.Mensaje, mtWarning, [mbOk], 0);
       finally
-        FreeAndNil(Resolver);
-        FreeAndNil(Validador);
+        Resolver := nil;
+        Validador := nil;
         FAplicandoArticulo := False;
       end;
     end;
@@ -651,7 +660,7 @@ end;
 function TfrmMtoPedidos.PrecioSkuTallas(const ACodigoArticulo,
   ACodigoSku: string): Double;
 var
-  Resolver: TArticulosResolver;
+  Resolver: IArticulosResolver;
   Datos: TArticuloDatos;
   Precio: TArticuloPrecio;
   sTarifa: string;
@@ -667,9 +676,8 @@ begin
     if not dmmPedidos.unqryTablaG.FieldByName('FECHA_PED').IsNull then
       dFecha := dmmPedidos.unqryTablaG.
                   FieldByName('FECHA_PED').AsDateTime;
-    Resolver := TArticulosResolver.Create(
-                  dmmPedidos.unqryTablaG.Connection,
-                  ParametrosCaja);
+    Resolver := CrearResolverArticulos(
+      dmmPedidos.unqryTablaG.Connection);
     try
       Datos := Resolver.ResolverDatos(ACodigoArticulo, ACodigoSku,
                                       sTarifa, dFecha);
@@ -685,7 +693,7 @@ begin
           Result := Precio.PrecioFinal * (1 + rPorIva / 100);
       end;
     finally
-      FreeAndNil(Resolver);
+      Resolver := nil;
     end;
   end;
 end;
@@ -855,7 +863,8 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (quedan sin precio y no moveran stock al albaranar).
   sLineasSinSku := LineasSinSkuRequerido(
-    dmmPedidos.unqryTablaG.Connection,
+    CrearValidadorArticulos(
+      dmmPedidos.unqryTablaG.Connection),
     dmmPedidos.unqryPedidosLineas, 'PEDLIN');
   if (sLineasSinSku = '') or
      (MessageDlg(Format(SPreguntaGrabarPedidoVentaSinSku,
@@ -1296,26 +1305,38 @@ begin
         tvPedidosLineas.Controller.EditingController.HideEdit(False);
       except
         on E: Exception do
-          ;
+          // Teardown defensivo; queda constancia en el log.
+          inLibLog.Log.LogWarning(
+            'Pedidos.ConstruirModoEntrada: HideEdit ignorado: ' +
+            E.Message);
       end;
     try
       tvPedidosLineas.Controller.FocusedItem := nil;
     except
       on E: Exception do
-        ;
+        // Teardown defensivo; queda constancia en el log.
+        inLibLog.Log.LogWarning(
+          'Pedidos.ConstruirModoEntrada: soltar FocusedItem ' +
+          'fallo: ' + E.Message);
     end;
     if FModoEntrada <> nil then
       try
         FModoEntrada.Desmontar;
       except
         on E: Exception do
-          ;
+          // Teardown defensivo; queda constancia en el log.
+          inLibLog.Log.LogWarning(
+            'Pedidos.ConstruirModoEntrada: Desmontar fallo: ' +
+            E.Message);
       end;
     try
       tvPedidosLineas.DataController.DataSource := nil;
     except
       on E: Exception do
-        ;
+        // Teardown defensivo; queda constancia en el log.
+        inLibLog.Log.LogWarning(
+          'Pedidos.ConstruirModoEntrada: soltar DataSource ' +
+          'fallo: ' + E.Message);
     end;
     if ds.State in dsEditModes then
       ds.Cancel;
@@ -1329,6 +1350,9 @@ begin
     // Se eliminan ANTES: el repintado que provoca DesempaquetarAtributos-
     // Lineas llamaria a un modo muerto (AV en ArtGetProperties 07/07/26).
     tvPedidosLineas.ClearItems;
+    // Las capacidades sostienen la misma instancia: soltar ANTES.
+    FPivoteAlbaranar := nil;
+    FPivoteBorrarGrupo := nil;
     FModoEntrada := nil;
   finally
     try
@@ -1336,7 +1360,10 @@ begin
         dmmPedidos.dsPedidosLineas;
     except
       on E: Exception do
-        ;
+        // Sin DataSource el grid queda vacio: hay que saberlo.
+        inLibLog.Log.LogWarning(
+          'Pedidos.ConstruirModoEntrada: restaurar DataSource ' +
+          'fallo: ' + E.Message);
     end;
     tvPedidosLineas.EndUpdate;
   end;
@@ -1349,6 +1376,10 @@ begin
     tvPedidosLineas, ds, FModoEntradaSel,
     dmmPedidos.unqryTablaG.FieldByName(
       'CODIGO_ALM_PED').AsString, 'PEDLIN');
+  Cfg.ValidadorArticulos :=
+    CrearValidadorArticulos(Cfg.Conexion);
+  Cfg.LookupAtributos :=
+    CrearLookupAtributosArticulos(Cfg.Conexion);
   // Precio por SKU para la consolidacion del modo tallas: lineas con
   // precio distinto no fusionan.
   Cfg.ObtenerPrecioSku := PrecioSkuTallas;
@@ -1379,6 +1410,10 @@ begin
   end
   else
     FModoEntrada := CrearModoEntradaGrid(Cfg);
+  // Capacidades opcionales del modo recien montado: Supports las deja
+  // a nil si el modo no las implementa (solo el pivote las tiene).
+  Supports(FModoEntrada, IPivoteVentaAlbaranar, FPivoteAlbaranar);
+  Supports(FModoEntrada, IPivoteVentaBorrarGrupo, FPivoteBorrarGrupo);
   // El flag ANTES del Construir: si aborta a medias, nadie debe tocar
   // las columnas del dfm, muertas en el ClearItems.
   FColsModoConstruido := True;
@@ -1511,8 +1546,6 @@ begin
 end;
 
 procedure TfrmMtoPedidos.btnBorrarLineaClick(Sender: TObject);
-var
-  BorradorGrupo: IPivoteVentaBorrarGrupo;
 begin
   inherited;
   // En modo tallas horizontales la fila del grid es un GRUPO
@@ -1520,11 +1553,11 @@ begin
   // borrarlas TODAS via el pivote. Borrar solo el registro actual del
   // dataset dejaba vivas las demas tallas y la linea "reaparecia" al
   // refrescar (bug 09/07/26).
-  if Supports(FModoEntrada, IPivoteVentaBorrarGrupo, BorradorGrupo) then
+  if Assigned(FPivoteBorrarGrupo) then
   begin
     if MessageDlg(SPreguntaEliminarLineaPedidoVentaConTallas,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-      BorradorGrupo.BorrarGrupoActual;
+      FPivoteBorrarGrupo.BorrarGrupoActual;
   end
   else if MessageDlg(SPreguntaEliminarLineaPedidoVenta,
                 mtConfirmation,
@@ -1536,13 +1569,12 @@ end;
 procedure TfrmMtoPedidos.RellenarLineasAlEntregarTodo;
 var
   ds: TDataSet;
-  ModoAlbaranar: IPivoteVentaAlbaranar;
   fCant, fEntr, fAAlbaranar: Double;
   bFiltrado: Boolean;
   sLineaFoco: string;
 begin
-  if Supports(FModoEntrada, IPivoteVentaAlbaranar, ModoAlbaranar) then
-    ModoAlbaranar.MarcarTodoAAlbaranar
+  if Assigned(FPivoteAlbaranar) then
+    FPivoteAlbaranar.MarcarTodoAAlbaranar
   else
   begin
     ds := dmmPedidos.unqryPedidosLineas;
@@ -1607,7 +1639,6 @@ var
   ds: TDataSet;
   lst: TList<TPair<string, Currency>>;
   par: TPair<string, Currency>;
-  ModoAlbaranar: IPivoteVentaAlbaranar;
   fEntrPend, fEntregadaReal: Double;
   sNumeroAlb, sSerieAlb: string;
   sEmpresa, sSerie, sNumero, sAlm, sAlmComun, sAlmDefecto: string;
@@ -1632,7 +1663,10 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado no
   // pueden mover stock (los movimientos las saltan).
   sLineasSinSku := LineasSinSkuRequerido(
-    dmmPedidos.unqryTablaG.Connection, ds, 'PEDLIN');
+    CrearValidadorArticulos(
+      dmmPedidos.unqryTablaG.Connection),
+    ds,
+    'PEDLIN');
   if (sLineasSinSku <> '') and
      (MessageDlg(Format(SPreguntaCrearAlbaranPedidoVentaSinSku,
                         [sLineasSinSku]),
@@ -1645,10 +1679,9 @@ begin
     EsAlmacenUnico := True;
     bAlmInit       := False;
     sAlmComun      := '';
-    bUsaPivoteAlbaranar :=
-      Supports(FModoEntrada, IPivoteVentaAlbaranar, ModoAlbaranar);
+    bUsaPivoteAlbaranar := Assigned(FPivoteAlbaranar);
     if bUsaPivoteAlbaranar then
-      ModoAlbaranar.VolcarAAlbaranar(lst, sAlmComun, EsAlmacenUnico)
+      FPivoteAlbaranar.VolcarAAlbaranar(lst, sAlmComun, EsAlmacenUnico)
     else
     begin
       bFiltrado := ds.Filtered;
@@ -1727,7 +1760,7 @@ begin
         if bOk then
         begin
           if bUsaPivoteAlbaranar then
-            ModoAlbaranar.LimpiarAAlbaranar
+            FPivoteAlbaranar.LimpiarAAlbaranar
           else if ds.FindField('CANTIDAD_A_ALBARANAR_PEDLIN') <> nil then
           begin
             bFiltrado := ds.Filtered;

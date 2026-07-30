@@ -94,8 +94,9 @@ type
       const AMonitorSQL: IServicioMonitorSQL);
     property InstanceID: string read FInstanceID;
   end;
-var
-  Log: TLog;
+
+function Log: TLog;
+procedure LiberarLog;
 
 // Aplica los flags de depuración al log y al monitor SQL inyectado.
 // Es idempotente y se invoca al cargar o recargar los parámetros.
@@ -106,7 +107,7 @@ implementation
 
 uses
   System.DateUtils, System.Generics.Defaults, inLibWin,
-  inLibGlobalVar, inLibMsg;
+  inLibGlobalVar, inLibMsgComun, inLibMsgConfiguracion;
 
 type
   TLogFileInfo = record
@@ -114,6 +115,19 @@ type
     FechaLog: TDateTime;
     FechaOrden: TDateTime;
   end;
+
+var
+  FLog: TLog;
+
+function Log: TLog;
+begin
+  Result := FLog;
+end;
+
+procedure LiberarLog;
+begin
+  FreeAndNil(FLog);
+end;
 
 function CompararInfoLog(const AIzquierda, ADerecha: TLogFileInfo): Integer;
 begin
@@ -825,7 +839,7 @@ begin
 end;
 
 initialization
-  Log := TLog.Create;
+  FLog := TLog.Create;
 finalization
-  FreeAndNil(Log);
+  LiberarLog;
 end.

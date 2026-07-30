@@ -75,7 +75,8 @@ var
 begin
   Result := ResolverSqlBase(ADefinicion);
   sClave := ClavePerfilSql(ADefinicion);
-  if Assigned(FPerfil) and
+  if (ADefinicion.Politica <> pesSoloBase) and
+     Assigned(FPerfil) and
      FPerfil.TryGetValue(sClave, oValor) and
      PerfilActivo(oValor.sValue) then
   begin
@@ -88,6 +89,7 @@ begin
       Result.ClavePerfil := sClave;
       Result.MotivoSqlBase := '';
       Result.Origen := osPerfil;
+      Result.Politica := ADefinicion.Politica;
     end
     else
       Result := ResolverSqlBase(

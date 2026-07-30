@@ -62,7 +62,7 @@ type
 implementation
 
 uses
-  SysUtils, inLibMsg;
+  SysUtils, inLibMsgComun;
 
 class procedure TBusquedaUtils.RegistrarEjecutor(
   AClase: TClaseEjecutorBusqueda);

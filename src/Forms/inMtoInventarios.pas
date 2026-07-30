@@ -345,9 +345,6 @@ type
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
-var
-  frmMtoInventarios: TfrmMtoInventarios;
-
 implementation
 
 uses
@@ -362,7 +359,7 @@ uses
   inLibArticulosAtributosLookup,
   inLibAtributosPaleta,
   inLibLog,
-  inLibMsg,
+  inLibMsgArticulos,
   inLibInventarioExcel, inLibHojaCalculoDevEx,
   inLibInventarioNube,
   inMtoPreviewExcel,
@@ -849,6 +846,10 @@ begin
     dmmInventarios.cdsLineas, FModoEntradaSel,
     dsTablaG.DataSet.FieldByName(
       'CODIGO_ALM_INV').AsString, 'INVLIN');
+  Cfg.ValidadorArticulos :=
+    CrearValidadorArticulos(Cfg.Conexion);
+  Cfg.LookupAtributos :=
+    CrearLookupAtributosArticulos(Cfg.Conexion);
   Cfg.Campos.Cantidad := 'CANTIDAD_FISICA_INVLIN';
   // El almacen es de CABECERA en inventario: sin columna de linea.
   Cfg.Campos.Almacen := '';
@@ -1427,7 +1428,7 @@ end;
 
 procedure TfrmMtoInventarios.RellenarAtributosDesdeSku(const Sku: string);
 var
-  Lookup  : TArticulosAtributosLookup;
+  Lookup  : IArticulosAtributosLookup;
   Valores : TArray<TArticuloAtributoValor>;
   V       : TArticuloAtributoValor;
   i       : Integer;
@@ -1442,7 +1443,7 @@ begin
   swTotal := TStopwatch.StartNew;
 
   swCreate := TStopwatch.StartNew;
-  Lookup := TArticulosAtributosLookup.Create(ConexionPrincipal);
+  Lookup := CrearLookupAtributosArticulos(ConexionPrincipal);
   msCreate := swCreate.ElapsedMilliseconds;
   try
     swObtener := TStopwatch.StartNew;
@@ -1460,7 +1461,7 @@ begin
     end;
     msSet := swSet.ElapsedMilliseconds;
   finally
-    FreeAndNil(Lookup);
+    Lookup := nil;
   end;
 
   inLibLog.Log.LogPerf('RellenarAtributosDesdeSku',
@@ -1786,7 +1787,7 @@ end;
 procedure TfrmMtoInventarios.CargarAvsValidos(const ACodArt: string;
   AOrden: Integer; var AAvs: TArray<string>);
 var
-  Lookup : TArticulosAtributosLookup;
+  Lookup : IArticulosAtributosLookup;
   Vals   : TArray<TArticuloAtributoValor>;
   i      : Integer;
 begin
@@ -1796,11 +1797,11 @@ begin
   SetLength(AAvs, 0);
   if Trim(ACodArt) = '' then Exit;
   if (AOrden < 1) or (AOrden > 5) then Exit;
-  Lookup := TArticulosAtributosLookup.Create(ConexionPrincipal);
+  Lookup := CrearLookupAtributosArticulos(ConexionPrincipal);
   try
     Vals := Lookup.ObtenerAvsEnSkus(ACodArt, AOrden);
   finally
-    FreeAndNil(Lookup);
+    Lookup := nil;
   end;
   SetLength(AAvs, Length(Vals));
   for i := 0 to High(Vals) do
@@ -2179,7 +2180,7 @@ procedure TfrmMtoInventarios.ResolverInputArticulo(const AInput: string;
                                                   out ATipoArt: string;
                                                   out AEncontrado: Boolean);
 var
-  Validador  : TArticulosValidador;
+  Validador  : IArticulosValidador;
   Resolucion : TArtResolucionEntrada;
 begin
   ACodigoPadre := '';
@@ -2189,7 +2190,7 @@ begin
   AEncontrado  := False;
   if Trim(AInput) = '' then Exit;
 
-  Validador := TArticulosValidador.Create(ConexionPrincipal);
+  Validador := CrearValidadorArticulos(ConexionPrincipal);
   try
     Resolucion := Validador.Resolver(AInput);
     if not Resolucion.Encontrado then Exit;
@@ -2199,7 +2200,7 @@ begin
     ATipoArt     := Resolucion.TipoArticulo;
     AEncontrado  := True;
   finally
-    FreeAndNil(Validador);
+    Validador := nil;
   end;
 end;
 

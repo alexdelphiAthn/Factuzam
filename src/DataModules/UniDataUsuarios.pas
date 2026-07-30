@@ -39,7 +39,7 @@ type
 implementation
 
 uses
-  inLibCadenas, inLibMsg;
+  inLibCadenas, inLibMsgConfiguracion;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 

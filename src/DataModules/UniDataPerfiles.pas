@@ -95,13 +95,10 @@ type
       read GetIdentidadSesion;
   end;
 
-var
-  dmPerfiles: TdmPerfiles;
-
 implementation
 
 uses
-  Vcl.Forms, inLibLog, System.SysConst, inLibMsg;
+  Vcl.Forms, inLibLog, System.SysConst, inLibMsgComun;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 

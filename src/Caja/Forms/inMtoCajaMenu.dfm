@@ -1,4 +1,4 @@
-object frmMtoMenuCaja: TfrmMtoMenuCaja
+inherited frmMtoMenuCaja: TfrmMtoMenuCaja
   Left = 0
   Top = 0
   BorderStyle = bsSingle

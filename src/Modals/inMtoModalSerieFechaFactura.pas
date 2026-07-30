@@ -57,7 +57,7 @@ type
 implementation
 
 uses
-  inLibValoresAutomaticos, inLibMsg;
+  inLibValoresAutomaticos, inLibMsgComun;
 
 {$R *.dfm}
 

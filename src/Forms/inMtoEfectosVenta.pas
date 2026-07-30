@@ -58,14 +58,11 @@ type
     function SqlRestriccionUsuario: string; override;
   end;
 
-var
-  frmMtoEfectosVenta: TfrmMtoEfectosVenta;
-
 implementation
 
 uses
   inLibWin, inMtoModalRegistrarPago, inLibFiltroUsuario,
-  inLibMsg;
+  inLibMsgComun, inLibMsgVentas;
 
 {$R *.dfm}
 

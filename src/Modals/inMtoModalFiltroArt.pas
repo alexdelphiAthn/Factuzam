@@ -79,7 +79,7 @@ type
 implementation
 
 uses
-  inLibMsg;
+  inLibMsgArticulos;
 
 constructor TfrmModalFiltroArt.Create(AOwner: TComponent);
 begin

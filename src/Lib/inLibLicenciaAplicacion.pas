@@ -64,7 +64,8 @@ implementation
 
 uses
   DB, MemDS, DBAccess, IniFiles, Math, System.Hash,
-  inLibConfiguracionIni, inLibDir, inLibMsg;
+  inLibConfiguracionIni, inLibDir, inLibMsgConfiguracion,
+  inLibMsgFacturas;
 
 class function TResultadoLicenciaAplicacion.CrearNoComprobada:
   TResultadoLicenciaAplicacion;

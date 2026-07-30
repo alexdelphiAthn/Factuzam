@@ -46,9 +46,6 @@ type
     procedure ResetForm; override;
   end;
 
-var
-  frmMtoPermisos: TfrmMtoPermisos;
-
 implementation
 
 uses

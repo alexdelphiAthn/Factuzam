@@ -94,13 +94,10 @@ type
     procedure ResetForm; override;
   end;
 
-var
-  frmMtoTarifasCambios: TfrmMtoTarifasCambios;
-
 implementation
 
 uses
-  inMtoModalCargarSesionTarifa, inLibMsg;
+  inMtoModalCargarSesionTarifa, inLibMsgArticulos;
 
 {$R *.dfm}
 

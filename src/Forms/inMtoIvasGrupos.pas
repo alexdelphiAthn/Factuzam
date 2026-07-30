@@ -50,9 +50,6 @@ type
     procedure ResetForm; override;
 end;
 
-var
-  frmMtoIvasGrupos: TfrmMtoIvasGrupos;
-
 implementation
 
 uses

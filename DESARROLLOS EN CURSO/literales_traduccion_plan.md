@@ -180,26 +180,47 @@ o llamar a `AplicarTraducciones` pasando el componente y su propietario.
 El parámetro `appIdioma` selecciona el idioma. El valor predeterminado es
 `es-ES` y `qps-ploc` activa el pseudoidioma.
 
+Los catálogos de DFM se generan con
+`generar_traducciones_dfm.ps1`. El generador omite textos vacíos y
+separadores de menú, y produce un `INSERT ... ON DUPLICATE KEY UPDATE`
+idempotente. Las propiedades publicadas dentro de colecciones se identifican
+por su ruta e índice, por ejemplo
+`control.Properties.ListColumns[0].Caption`.
+En formularios heredados, el servicio busca primero la clave de la clase
+concreta y después las de sus ancestros. Así se reutiliza el catálogo del
+DFM base sin duplicarlo para cada descendiente.
+
+D17 cierra la cobertura con `verificar_traducciones_dfm.ps1`. La prueba
+reconstruye las claves de todos los DFM incluidos en `fzam.dproj` y las
+compara con los catálogos D02-D16. No genera otro SQL porque duplicaría
+entradas ya catalogadas.
+
+D18 prueba el servicio con DUnitX: pseudoidioma, idempotencia, fallback,
+normalización del idioma, claves de clases heredadas y colecciones
+DevExpress.
+
 Inventario para seguimiento:
 
 | Tanda | Alcance | Propiedades aproximadas | Estado |
 |---|---|---:|---|
 | D01 | Infraestructura y selector de idioma | No aplica | COMPILADO |
-| D02 | Core | 126 | PENDIENTE |
-| D03 | Forms A-B | 512 | PENDIENTE |
-| D04 | Forms C | 540 | PENDIENTE |
-| D05 | Forms D-E | 346 | PENDIENTE |
-| D06 | Forms F | 540 | PENDIENTE |
-| D07 | Forms G-I | 196 | PENDIENTE |
-| D08 | Forms J-P | 408 | PENDIENTE |
-| D09 | Forms Q-Z | 212 | PENDIENTE |
-| D10 | Modals A-F | 265 | PENDIENTE |
-| D11 | Modals G-M | 143 | PENDIENTE |
-| D12 | Modals N-Z | 131 | PENDIENTE |
-| D13 | Caja Forms A-M | 279 | PENDIENTE |
-| D14 | Caja Forms N-Z | 10 | PENDIENTE |
-| D15 | Caja Modals | 168 | PENDIENTE |
-| D16 | Verifactu | 31 | PENDIENTE |
+| D02 | Core | 126 | COMPILADO |
+| D03 | Forms A-B | 515 | COMPILADO |
+| D04 | Forms C | 553 | COMPILADO |
+| D05 | Forms D-E | 346 | COMPILADO |
+| D06 | Forms F | 544 | COMPILADO |
+| D07 | Forms G-I | 200 | COMPILADO |
+| D08 | Forms J-P | 408 | COMPILADO |
+| D09 | Forms Q-Z | 215 | COMPILADO |
+| D10 | Modals A-F | 270 | COMPILADO |
+| D11 | Modals G-M | 143 | COMPILADO |
+| D12 | Modals N-Z | 143 | COMPILADO |
+| D13 | Caja Forms A-M | 282 | COMPILADO |
+| D14 | Caja Forms N-Z | 10 | COMPILADO |
+| D15 | Caja Modals | 175 | COMPILADO |
+| D16 | Verifactu | 31 | COMPILADO |
+| D17 | Auditoría de cierre DFM | 3.961 | COMPILADO |
+| D18 | Pruebas del servicio de traducciones | 6 | COMPILADO |
 
 ## Fase A — aplicaciones auxiliares
 
@@ -298,6 +319,23 @@ test; si solo compila, el estado permanece en `COMPILADO`.
 | 28/07/2026 | M23 | Win32 Debug OK | 22 revisados; 0 directos | No ejecutado | Un hint previo |
 | 28/07/2026 | M24 | Win32 Debug OK | 19 revisados; 0 directos | No ejecutado | Un hint previo |
 | 29/07/2026 | D01 | Win32 Debug OK | OK | No | Visual pendiente |
+| 30/07/2026 | D02 | Win32 Debug OK | 126 claves | No | SQL no aplicado |
+| 30/07/2026 | D03 | Win32/Win64 Debug OK | 515 claves | No | SQL no aplicado |
+| 30/07/2026 | D04 | Win32/Win64 Debug OK | 553 claves | No | SQL no aplicado |
+| 30/07/2026 | D05 | Win32/Win64 Debug OK | 346 claves | No | SQL no aplicado |
+| 30/07/2026 | D06 | Win32/Win64 Debug OK | 544 claves | No | SQL no aplicado |
+| 30/07/2026 | D07 | Win32 Debug OK | 200 claves | No | SQL no aplicado |
+| 30/07/2026 | D08 | Win32 Debug OK | 408 claves | No | SQL no aplicado |
+| 30/07/2026 | D09 | Win32 Debug OK | 215 claves | No | SQL no aplicado |
+| 30/07/2026 | D10 | Win32 Debug OK | 270 claves | No | SQL no aplicado |
+| 30/07/2026 | D11 | Win32 Debug OK | 143 claves | No | SQL no aplicado |
+| 30/07/2026 | D12 | Win32 Debug OK | 143 claves | No | SQL no aplicado |
+| 30/07/2026 | D13 | Win32 Debug OK | 282 claves | No | SQL no aplicado |
+| 30/07/2026 | D14 | Win32 Debug OK | 10 claves | No | SQL no aplicado |
+| 30/07/2026 | D15 | Win32 Debug OK | 175 claves | No | SQL no aplicado |
+| 30/07/2026 | D16 | Win32 Debug OK | 31 claves | No | SQL no aplicado |
+| 30/07/2026 | D17 | Win32 Debug OK | 3.961 claves | No | Auditoría DFM correcta |
+| 30/07/2026 | D18 | Win32 Debug OK aislado | 6/6 OK | Automático | Suite completa afectada por cambios concurrentes |
 
 ## Criterio de finalización
 

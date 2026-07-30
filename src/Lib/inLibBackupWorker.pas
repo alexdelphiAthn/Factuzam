@@ -133,7 +133,7 @@ uses
   System.StrUtils,
   inLibDBStructure,
   inLibCifradoCopias,
-  inLibMsg;
+  inLibMsgConfiguracion;
 
 function CrearCopiaSeguridadBD(const AHost: string; APort: Integer;
                                const ADatabase, AUser, APassword: string;

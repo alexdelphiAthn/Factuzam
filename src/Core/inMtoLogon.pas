@@ -114,6 +114,7 @@ type
     FPasswordConexionEncriptado: string;
     FResultadoInicioSesion: TResultadoInicioSesion;
     FResultadoLicencia: TResultadoLicenciaAplicacion;
+    procedure AplicarTraduccionesPantalla;
     procedure CambiarPass(f:TUniConnection);
     procedure UniScript1Error(Sender: TObject; E: Exception; SQL: string;
                               var Action: TErrorAction);
@@ -155,8 +156,6 @@ type
     property ResultadoLicencia: TResultadoLicenciaAplicacion
       read FResultadoLicencia;
   end;
-var
-  frmLogon          : TfrmLogon;
 
 implementation
 
@@ -164,7 +163,9 @@ uses  inLibWin,
       inLibCifrado,
       inLibConfiguracionIni,
       inLibConexionesUniDAC,
-      inLibMsg,
+      inLibTraducciones,
+      inLibMsgComun,
+      inLibMsgConfiguracion,
       inLibDir,
       inLibLog,
       Backup.Engine,
@@ -179,6 +180,17 @@ uses  inLibWin,
       inLibBackupWorker;
 
 {$R *.dfm}
+
+procedure TfrmLogon.AplicarTraduccionesPantalla;
+begin
+  AsignarTraducciones(
+    TServicioTraducciones.Create(
+      TServicioConexionesUniDAC.Create(ucConexion),
+      ObtenerIdiomaConfigurado(
+        ucConexion,
+        edtUser.Text)));
+  Traducciones.Aplicar(Self);
+end;
 
 procedure TfrmLogon.UniScript1Error(Sender: TObject;
                                     E: Exception;
@@ -388,6 +400,7 @@ begin
     end;
   end;
 
+  AplicarTraduccionesPantalla;
   if not ProcesarLicenciaAplicacion then
     Exit;
 
@@ -1401,6 +1414,7 @@ end;
 procedure TfrmLogon.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   SetIniValues;
+  AsignarTraducciones(nil);
   if (ucConexion.Connected = true) then
     ucConexion.Disconnect;
   ucConexion.Pooling := false;

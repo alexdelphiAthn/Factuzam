@@ -90,7 +90,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibUser, inLibMsg;
+  inLibUser, inLibMsgArticulos;
 
 class function TfrmModalAddBlockInventario.Ejecutar(AOwner: TComponent;
   AConn: TUniConnection;

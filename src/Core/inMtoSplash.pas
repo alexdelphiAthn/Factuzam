@@ -44,13 +44,12 @@ type
   public
     { Public declarations }
   end;
-var
-  frmSplash: TfrmSplash;
 
 implementation
 
 uses
-  inLibGlobalVar, inLibDir, inLibLog, inLibImagen;
+  inLibGlobalVar, inLibDir, inLibLog, inLibImagen,
+  inLibTraducciones;
 
 {$R *.dfm}
 
@@ -118,6 +117,10 @@ begin
       end;
     except
       // Recurso no presente (build sin fondo.res); seguimos a disco.
+      on E: Exception do
+        inLibLog.Log.LogInfo(
+          'Splash: recurso FONDO no disponible (' + E.Message +
+          '); se intenta cargar de disco.');
     end;
     if not bCargado then
     begin
@@ -186,6 +189,7 @@ begin
   FlblVersion.Style.Font.Height := -12;
   FlblVersion.Style.Font.Style  := [];
   FlblVersion.Transparent := True;
+  AplicarTraducciones(Self, Owner);
 end;
 
 initialization

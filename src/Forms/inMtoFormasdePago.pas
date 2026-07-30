@@ -206,9 +206,6 @@ type
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
-var
-  frmMtoFormasdePago: TfrmMtoFormasdePago;
-
 implementation
 
 uses

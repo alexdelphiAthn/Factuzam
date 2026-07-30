@@ -17,7 +17,7 @@ interface
 
 uses
   System.Classes, System.Generics.Collections, System.SyncObjs,
-  inLibConexionesIntf, inLibTraduccionesIntf;
+  Uni, inLibConexionesIntf, inLibTraduccionesIntf;
 
 type
   TServicioTraducciones = class(
@@ -34,13 +34,28 @@ type
     function GetIdioma: string;
     function NormalizarIdioma(const AIdioma: string): string;
     function PseudoTraducir(const ATexto: string): string;
+    function TraducirPropiedadJerarquia(
+      ARaiz: TComponent;
+      const ARuta, APropiedad, ATextoPredeterminado: string): string;
     procedure AsegurarCache;
     procedure CargarCache;
     procedure AplicarComponente(
-      ARaiz, AComponente: TComponent);
-    procedure AplicarPropiedad(
       ARaiz, AComponente: TComponent;
-      const APropiedad: string);
+      AVisitados: TDictionary<TObject, Byte>);
+    procedure AplicarColeccion(
+      ARaiz: TComponent;
+      AColeccion: TCollection;
+      const ARuta: string;
+      AVisitados: TDictionary<TObject, Byte>);
+    procedure AplicarObjeto(
+      ARaiz: TComponent;
+      AObjeto: TObject;
+      const ARuta: string;
+      AVisitados: TDictionary<TObject, Byte>);
+    procedure AplicarPropiedadObjeto(
+      ARaiz: TComponent;
+      AObjeto: TObject;
+      const ARuta, APropiedad: string);
   public
     constructor Create(
       const AConexiones: IServicioConexiones;
@@ -57,6 +72,9 @@ type
 function ClaveTraduccionComponente(
   ARaiz, AComponente: TComponent;
   const APropiedad: string): string;
+function ObtenerIdiomaConfigurado(
+  AConexion: TUniConnection;
+  const AUsuario: string): string;
 function ResolverServicioTraducciones(
   AOwner: TComponent): IServicioTraducciones;
 procedure AplicarTraducciones(
@@ -65,7 +83,7 @@ procedure AplicarTraducciones(
 implementation
 
 uses
-  System.SysUtils, System.TypInfo, Uni, Vcl.Forms, inLibLog;
+  System.SysUtils, System.TypInfo, Vcl.Forms, inLibLog;
 
 const
   PROPIEDADES_TRADUCIBLES: array[0..3] of string = (
@@ -156,7 +174,7 @@ begin
       begin
         FTextos.Clear;
         FCacheCargada := True;
-        if Assigned(Log) then
+        if Log() <> nil then
           Log.LogWarning(
             'No se pudo cargar el catálogo de traducciones: ' +
             E.ClassName + ': ' + E.Message);
@@ -202,7 +220,7 @@ begin
             Consulta.FieldByName('TEXTO_TRAD').AsString);
         Consulta.Next;
       end;
-      if Assigned(Log) then
+      if Log() <> nil then
         Log.LogInfo(
           Format(
             'Catálogo de traducciones cargado: idioma=%s, textos=%d',
@@ -251,68 +269,213 @@ begin
   end;
 end;
 
-procedure TServicioTraducciones.AplicarPropiedad(
-  ARaiz, AComponente: TComponent;
-  const APropiedad: string);
+function TServicioTraducciones.TraducirPropiedadJerarquia(
+  ARaiz: TComponent;
+  const ARuta, APropiedad, ATextoPredeterminado: string): string;
 var
   Clave: string;
+  ClaseRaiz: TClass;
+  Encontrado: Boolean;
+begin
+  Result := ATextoPredeterminado;
+  FBloqueo.Acquire;
+  try
+    if SameText(FIdioma, IDIOMA_PSEUDO) then
+      Result := PseudoTraducir(ATextoPredeterminado)
+    else
+    begin
+      AsegurarCache;
+      Encontrado := False;
+      ClaseRaiz := ARaiz.ClassType;
+      while Assigned(ClaseRaiz) and
+            ClaseRaiz.InheritsFrom(TComponent) and
+            not Encontrado do
+      begin
+        Clave := ClaseRaiz.UnitName + '.' + ClaseRaiz.ClassName;
+        if ARuta <> '' then
+          Clave := Clave + '.' + ARuta;
+        Clave := Clave + '.' + APropiedad;
+        Encontrado := FTextos.TryGetValue(
+          LowerCase(Trim(Clave)),
+          Result);
+        if not Encontrado then
+          ClaseRaiz := ClaseRaiz.ClassParent;
+      end;
+      if not Encontrado or
+         (Result = '') then
+        Result := ATextoPredeterminado;
+    end;
+  finally
+    FBloqueo.Release;
+  end;
+end;
+
+procedure TServicioTraducciones.AplicarPropiedadObjeto(
+  ARaiz: TComponent;
+  AObjeto: TObject;
+  const ARuta, APropiedad: string);
+var
   InfoPropiedad: PPropInfo;
   TextoOriginal: string;
   TextoTraducido: string;
 begin
   InfoPropiedad := GetPropInfo(
-    AComponente.ClassInfo,
+    AObjeto.ClassInfo,
     APropiedad);
   if Assigned(InfoPropiedad) and
      Assigned(InfoPropiedad.SetProc) and
      (InfoPropiedad.PropType^.Kind in
        [tkString, tkLString, tkWString, tkUString]) then
   begin
-    Clave := ClaveTraduccionComponente(
-      ARaiz,
-      AComponente,
-      APropiedad);
     TextoOriginal := GetStrProp(
-      AComponente,
+      AObjeto,
       InfoPropiedad);
-    TextoTraducido := Traducir(
-      Clave,
+    TextoTraducido := TraducirPropiedadJerarquia(
+      ARaiz,
+      ARuta,
+      APropiedad,
       TextoOriginal);
     if TextoTraducido <> TextoOriginal then
       SetStrProp(
-        AComponente,
+        AObjeto,
         InfoPropiedad,
         TextoTraducido);
   end;
 end;
 
-procedure TServicioTraducciones.AplicarComponente(
-  ARaiz, AComponente: TComponent);
+procedure TServicioTraducciones.AplicarColeccion(
+  ARaiz: TComponent;
+  AColeccion: TCollection;
+  const ARuta: string;
+  AVisitados: TDictionary<TObject, Byte>);
 var
   i: Integer;
+begin
+  for i := 0 to AColeccion.Count - 1 do
+    AplicarObjeto(
+      ARaiz,
+      AColeccion.Items[i],
+      ARuta + '[' + IntToStr(i) + ']',
+      AVisitados);
+end;
+
+procedure TServicioTraducciones.AplicarObjeto(
+  ARaiz: TComponent;
+  AObjeto: TObject;
+  const ARuta: string;
+  AVisitados: TDictionary<TObject, Byte>);
+var
+  i: Integer;
+  InfoPropiedad: PPropInfo;
+  ListaPropiedades: PPropList;
+  NumeroPropiedades: Integer;
+  ObjetoPropiedad: TObject;
   Propiedad: string;
+  RutaPropiedad: string;
+begin
+  if Assigned(AObjeto) and
+     not AVisitados.ContainsKey(AObjeto) then
+  begin
+    AVisitados.Add(AObjeto, 0);
+    for Propiedad in PROPIEDADES_TRADUCIBLES do
+      AplicarPropiedadObjeto(
+        ARaiz,
+        AObjeto,
+        ARuta,
+        Propiedad);
+    NumeroPropiedades := GetPropList(
+      AObjeto.ClassInfo,
+      [tkClass],
+      nil);
+    if NumeroPropiedades > 0 then
+    begin
+      GetMem(
+        ListaPropiedades,
+        NumeroPropiedades * SizeOf(Pointer));
+      try
+        GetPropList(
+          AObjeto.ClassInfo,
+          [tkClass],
+          ListaPropiedades);
+        for i := 0 to NumeroPropiedades - 1 do
+        begin
+          InfoPropiedad := ListaPropiedades^[i];
+          if Assigned(InfoPropiedad.GetProc) then
+          begin
+            ObjetoPropiedad := GetObjectProp(
+              AObjeto,
+              InfoPropiedad);
+            RutaPropiedad := ARuta;
+            if RutaPropiedad <> '' then
+              RutaPropiedad := RutaPropiedad + '.';
+            RutaPropiedad := RutaPropiedad +
+              string(InfoPropiedad.Name);
+            if ObjetoPropiedad is TCollection then
+              AplicarColeccion(
+                ARaiz,
+                TCollection(ObjetoPropiedad),
+                RutaPropiedad,
+                AVisitados)
+            else if (ObjetoPropiedad is TPersistent) and
+                    not (ObjetoPropiedad is TComponent) then
+              AplicarObjeto(
+                ARaiz,
+                ObjetoPropiedad,
+                RutaPropiedad,
+                AVisitados);
+          end;
+        end;
+      finally
+        FreeMem(ListaPropiedades);
+      end;
+    end;
+  end;
+end;
+
+procedure TServicioTraducciones.AplicarComponente(
+  ARaiz, AComponente: TComponent;
+  AVisitados: TDictionary<TObject, Byte>);
+var
+  i: Integer;
+  Ruta: string;
 begin
   if (AComponente = ARaiz) or
      (AComponente.Name <> '') then
-    for Propiedad in PROPIEDADES_TRADUCIBLES do
-      AplicarPropiedad(
-        ARaiz,
-        AComponente,
-        Propiedad);
+  begin
+    Ruta := AComponente.Name;
+    if AComponente = ARaiz then
+      Ruta := '';
+    AplicarObjeto(
+      ARaiz,
+      AComponente,
+      Ruta,
+      AVisitados);
+  end;
   for i := 0 to AComponente.ComponentCount - 1 do
     AplicarComponente(
       ARaiz,
-      AComponente.Components[i]);
+      AComponente.Components[i],
+      AVisitados);
 end;
 
 procedure TServicioTraducciones.Aplicar(
   AComponente: TComponent);
+var
+  Visitados: TDictionary<TObject, Byte>;
 begin
   if Assigned(AComponente) and
      not (csDesigning in AComponente.ComponentState) then
-    AplicarComponente(
-      AComponente,
-      AComponente);
+  begin
+    Visitados := TDictionary<TObject, Byte>.Create;
+    try
+      AplicarComponente(
+        AComponente,
+        AComponente,
+        Visitados);
+    finally
+      FreeAndNil(Visitados);
+    end;
+  end;
 end;
 
 function ClaveTraduccionComponente(
@@ -323,6 +486,58 @@ begin
   if AComponente <> ARaiz then
     Result := Result + '.' + AComponente.Name;
   Result := Result + '.' + APropiedad;
+end;
+
+function ObtenerIdiomaConfigurado(
+  AConexion: TUniConnection;
+  const AUsuario: string): string;
+var
+  Consulta: TUniQuery;
+  Idioma: string;
+begin
+  Result := IDIOMA_ESPANOL;
+  if Assigned(AConexion) and AConexion.Connected then
+  begin
+    Consulta := TUniQuery.Create(nil);
+    try
+      try
+        Consulta.Connection := AConexion;
+        Consulta.SQL.Text :=
+          'SELECT P.VALUE_USUPER ' +
+          '  FROM fza_usuarios_perfiles P ' +
+          '  LEFT JOIN fza_usuarios U ' +
+          '    ON U.USUARIO_USU = :usuario ' +
+          ' WHERE P.KEY_USUPER = ''frmMtoAppParam'' ' +
+          '   AND P.SUBKEY_USUPER = ''appIdioma'' ' +
+          '   AND P.USUARIO_GRUPO_USUPER IN ' +
+          '       (:usuario, U.GRUPO_USU, :todos) ' +
+          ' ORDER BY CASE P.USUARIO_GRUPO_USUPER ' +
+          '            WHEN :usuario THEN 1 ' +
+          '            WHEN U.GRUPO_USU THEN 2 ' +
+          '            ELSE 3 ' +
+          '          END ' +
+          ' LIMIT 1';
+        Consulta.ParamByName('usuario').AsString := AUsuario;
+        Consulta.ParamByName('todos').AsString := 'Todos';
+        Consulta.Open;
+        if not Consulta.Eof then
+        begin
+          Idioma := Trim(
+            Consulta.FieldByName('VALUE_USUPER').AsString);
+          if Idioma <> '' then
+            Result := Idioma;
+        end;
+      except
+        on E: Exception do
+          if Log() <> nil then
+            Log.LogWarning(
+              'No se pudo resolver el idioma configurado: ' +
+              E.ClassName + ': ' + E.Message);
+      end;
+    finally
+      FreeAndNil(Consulta);
+    end;
+  end;
 end;
 
 function ResolverServicioTraducciones(

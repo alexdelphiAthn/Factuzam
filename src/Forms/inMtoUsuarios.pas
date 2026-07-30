@@ -72,9 +72,6 @@ type
     procedure ResetForm; override;
   end;
 
-var
-  frmMtoUsuarios: TfrmMtoUsuarios;
-
 implementation
 
 uses

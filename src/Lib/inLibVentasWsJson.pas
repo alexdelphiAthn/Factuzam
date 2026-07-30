@@ -46,7 +46,7 @@ uses
   System.Classes, System.DateUtils, System.NetEncoding,
   System.Hash, System.IOUtils,
   Data.DB,
-  inLibFactuzamApi, inLibMsg;
+  inLibFactuzamApi, inLibMsgFacturas;
 
 function LeerCampoBinario(ACampo: TField): TBytes;
 var

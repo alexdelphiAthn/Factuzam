@@ -34,7 +34,7 @@ type
 implementation
 
 uses
-  System.SysUtils, inLibMsg;
+  System.SysUtils, inLibMsgFacturas, inLibMsgVentas;
 
 constructor TValidadorFiscalFactura.Create(
   const ARepositorio: IRepositorioFacturas);

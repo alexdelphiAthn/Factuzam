@@ -23,7 +23,7 @@ implementation
 uses  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
       System.Classes, System.Math, Vcl.Graphics,
       Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls,
-      IdHTTP, IdSSLOpenSSL, System.JSON, inLibMsg;
+  IdHTTP, IdSSLOpenSSL, System.JSON, inLibMsgIntegraciones;
 
 function FormatSqlOnlineSqlformatOrg(sSQL: String): String;
 var

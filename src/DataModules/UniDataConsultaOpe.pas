@@ -118,14 +118,11 @@ type
     function  EsTraspaso: Boolean;
   end;
 
-var
-  dmConsultaOpe: TdmConsultaOpe;
-
 implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibLog, inLibMsg, inLibRectificativas;
+uses inLibLog, inLibMsgComun, inLibRectificativas;
 
 {$R *.dfm}
 

@@ -57,7 +57,7 @@ implementation
 
 uses
   System.SysUtils, System.StrUtils, System.TypInfo,
-  inLibLog, inLibMsg;
+  inLibLog, inLibMsgIntegraciones;
 
 // Cada capa concatena su nombre a la traza para que el compilador
 // no pueda colapsar la llamada (tail call) ni inlinearla. Así

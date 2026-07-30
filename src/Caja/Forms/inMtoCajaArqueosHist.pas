@@ -66,9 +66,6 @@ type
     procedure ResetForm; override;
   end;
 
-var
-  frmMtoCajaArqueosHist: TfrmMtoCajaArqueosHist;
-
 implementation
 
 uses

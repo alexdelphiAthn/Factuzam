@@ -166,9 +166,6 @@ type
     function FechaHasta    : TDateTime;
   end;
 
-var
-  frmPrintMultiFiltro: TfrmPrintMultiFiltro;
-
 implementation
 
 {$R *.dfm}

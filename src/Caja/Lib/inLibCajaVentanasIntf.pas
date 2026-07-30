@@ -24,6 +24,9 @@ type
     function FormularioCaja: TCustomForm;
     function IntentarCerrar: Boolean;
     function OperacionVacia: Boolean;
+    function CargarSkuExterno(
+      const ASku: string;
+      ACant: Double): Boolean;
     procedure PrepararValores(
       AEmpresa, AAlmacen, ACaja: string;
       AFecha: TDateTime);
@@ -61,6 +64,7 @@ type
 function ExigirAnfitrionCaja(
   AObjeto: TObject): IAnfitrionCajaVentanas;
 function BuscarOperacionCajaVacia: IOperacionCaja;
+function BuscarOperacionCajaVisible: IOperacionCaja;
 function PuedenCerrarOperacionesCaja: Boolean;
 procedure RefrescarConsultasOperacionesCaja;
 procedure NotificarFechaCaja(AFecha: TDateTime);
@@ -93,6 +97,21 @@ begin
     if (Result = nil) and
        Supports(Screen.Forms[i], IOperacionCaja, oOperacion) and
        oOperacion.OperacionVacia then
+      Result := oOperacion;
+  end;
+end;
+
+function BuscarOperacionCajaVisible: IOperacionCaja;
+var
+  i: Integer;
+  oOperacion: IOperacionCaja;
+begin
+  Result := nil;
+  for i := 0 to Screen.FormCount - 1 do
+  begin
+    if (Result = nil) and
+       Supports(Screen.Forms[i], IOperacionCaja, oOperacion) and
+       oOperacion.FormularioCaja.Visible then
       Result := oOperacion;
   end;
 end;

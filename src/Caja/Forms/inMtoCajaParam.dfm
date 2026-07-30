@@ -1,4 +1,4 @@
-object frmMtoCajaParam: TfrmMtoCajaParam
+inherited frmMtoCajaParam: TfrmMtoCajaParam
   Left = 0
   Top = 0
   Caption = 'Par'#225'metros de Caja'

@@ -74,7 +74,8 @@ uses
   inLibValoresAutomaticos,
   inLibLog,
   System.Diagnostics,
-  inLibMsg;
+  inLibMsgArticulos, inLibMsgComun, inLibMsgFacturas,
+  inLibMsgVentas;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 

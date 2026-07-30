@@ -22,7 +22,7 @@ uses
    DBClient, Provider, frxClass, frxDBSet, inLibUser,
    System.StrUtils, Windows, System.Variants,
    MemDS, DBAccess, Uni,
-   UniDataGen, frCoreClasses, inLibArticulosResolver,
+   UniDataGen, frCoreClasses, inLibArticulosResolverIntf,
    inLibFacturasServiciosIntf;
 
 type
@@ -110,6 +110,7 @@ private
     // de articulos ni recalculos (cascada por linea al navegar).
     FDesempaquetandoAtributos: Boolean;
     FRepositorio: IRepositorioFacturas;
+    FArticulosResolver: IArticulosResolver;
     FValidadorFiscal: IValidadorFiscalFactura;
     FCalculador: ICalculadorFactura;
     FServicioBorrado: IServicioBorradoFactura;
@@ -270,7 +271,7 @@ uses
   inLibLicenciaAplicacion,
   inLibVentasImpuestos,
   inLibContadorLineas,
-  inLibMsg,
+  inLibMsgFacturas, inLibMsgVentas,
   inLibSqlSeguro;
 
 {$R *.dfm}
@@ -287,6 +288,7 @@ procedure TdmFacturas.ConfigurarServicios(
   const AServicios: TServiciosFactura);
 begin
   FRepositorio := AServicios.Repositorio;
+  FArticulosResolver := AServicios.ArticulosResolver;
   FValidadorFiscal := AServicios.ValidadorFiscal;
   FCalculador := AServicios.Calculador;
   FServicioBorrado := AServicios.Borrado;
@@ -296,6 +298,7 @@ end;
 procedure TdmFacturas.RequerirServiciosFactura;
 begin
   if (not Assigned(FRepositorio)) or
+     (not Assigned(FArticulosResolver)) or
      (not Assigned(FValidadorFiscal)) or
      (not Assigned(FCalculador)) or
      (not Assigned(FServicioBorrado)) or
@@ -715,10 +718,10 @@ begin
      // Ventana de aplicacion del descuento (cabecera de tarifa): si la fecha
      // de la factura cae fuera de la ventana, se cobra precio de salida y se
      // anula el descuento de la linea. Sin ventana -> el descuento se aplica.
-     bDtoVig := DescuentoTarifaVigente(
-                  unqryTablaG.Connection as TUniConnection,
-                  unqryTablaG.FindField('TARIFA_ARTICULO_CLIENTE_FAC').AsString,
-                  unqryTablaG.FindField('FECHA_FAC').AsDateTime);
+     bDtoVig := FArticulosResolver.DescuentoTarifaVigente(
+       unqryTablaG.FindField(
+         'TARIFA_ARTICULO_CLIENTE_FAC').AsString,
+       unqryTablaG.FindField('FECHA_FAC').AsDateTime);
      if bDtoVig then
      begin
        FindField('PORCENTAJE_DTO_FACLIN').AsString :=

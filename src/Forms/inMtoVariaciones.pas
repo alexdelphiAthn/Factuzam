@@ -101,9 +101,6 @@ type
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
-var
-  frmMtoVariaciones: TfrmMtoVariaciones;
-
 implementation
 
 uses

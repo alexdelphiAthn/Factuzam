@@ -33,7 +33,7 @@ uses
   System.Actions, Vcl.ActnList, Vcl.Imaging.PngImage, inLibFotos,
   System.Generics.Collections, System.Diagnostics, cxLocalization,
   inLibLectorScanner, inLibCajaTipos, inLibCajaVentanasIntf,
-  inLibCajaVentaIntf;
+  inLibCajaVentaIntf, inLibCatalogoSqlIntf;
 
 const
   WM_CANCELAR_LINEA = WM_APP + 100;
@@ -238,6 +238,7 @@ type
     FRepositorioConsultas: IRepositorioConsultasCaja;
     FServicioRectificacion: IServicioRectificacionCaja;
     FConsultaStock: IResultadoConsultaCaja;
+    FIncidenciasSql: IRegistroIncidenciasSql;
     procedure GuardarLayoutCaja;
     procedure RestaurarLayoutCaja;
     procedure AbrirBuscarModificar;
@@ -369,9 +370,6 @@ type
                                        write FNumeroCajaActual;
   end;
 
-var
-  frmMtoOpeCaja: TfrmMtoOpeCaja;
-
 implementation
 
 {$R *.dfm}
@@ -383,7 +381,7 @@ uses
   inMtoCajaFaseCobro, inLibDevExp, inLibValoresAutomaticos,
   inLibFacturas, inLibGenBusq,
   inMtoModalGenImpSave, inLibLayoutForm,
-  inLibArticulosValidador, inLibArticulosResolver,
+  inLibArticulosValidador, inLibArticulosResolverIntf,
   inLibArticulosAtributosLookup,
   inLibAtributosPaleta,
   inLibShowMto,
@@ -391,8 +389,98 @@ uses
   inLibCorreoTickets,
   inLibCajaDescuentos,
   inLibCajaOpeComposicion,
+  inMtoCajaImpresorVenta,
+  inMtoCajaGrabadorVenta,
+  inLibParametrosIntf,
+  inLibPermisosIntf,
+  inLibContextoSesionIntf,
+  inLibPerfilesUsuarioIntf,
+  UniDataCatalogoSqlAplicacion,
   System.StrUtils,
-  inLibMsg;
+  inLibMsgCaja;
+
+function CrearServiciosOperacionCajaVcl(
+  APropietario: TComponent;
+  const AParametrosApp: IParametrosAplicacion;
+  AConexion: TUniConnection;
+  const AParametrosCaja: IParametrosCaja;
+  const APermisos: IPermisosAplicacion;
+  const AContextoSesion: IContextoSesionAplicacion;
+  const APerfilesUsuario: IPerfilesUsuario;
+  const ANombreFormulario: string;
+  ADatosCaja: TdmCajaOpe;
+  out AIncidenciasSql: IRegistroIncidenciasSql
+): TServiciosOperacionCaja;
+var
+  bCatalogoSqlActivo: Boolean;
+  oCatalogoSql: ICatalogoSql;
+  oGrabador: IGrabadorVentaCaja;
+  oImpresor: IImpresorVenta;
+begin
+  bCatalogoSqlActivo := False;
+  if Assigned(APerfilesUsuario) then
+    bCatalogoSqlActivo := SameText(
+      APerfilesUsuario.ObtenerValorPerfil(
+        ANombreFormulario,
+        'oGetSQLFromDB',
+        'False'),
+      'True');
+  CrearCatalogoSqlAplicacion(
+    APerfilesUsuario,
+    bCatalogoSqlActivo,
+    oCatalogoSql,
+    AIncidenciasSql);
+  oImpresor := TImpresorVentaVcl.Create(
+    APropietario,
+    AParametrosApp,
+    AConexion,
+    AParametrosCaja,
+    APermisos);
+  oGrabador := TGrabadorVentaCaja.Create(ADatosCaja);
+  Result := CrearServiciosOperacionCaja(
+    AConexion,
+    AParametrosCaja,
+    AContextoSesion,
+    oImpresor,
+    oGrabador,
+    oCatalogoSql,
+    AIncidenciasSql);
+end;
+
+procedure InicializarServiciosOperacionCajaVcl(
+  AFormulario: TfrmMtoOpeCaja);
+var
+  oServicios: TServiciosOperacionCaja;
+begin
+  AFormulario.DatosCaja := TdmCajaOpe.Create(
+    AFormulario,
+    AFormulario.ConexionPrincipal,
+    AFormulario.ParametrosApp,
+    AFormulario.ParametrosCaja);
+  oServicios := CrearServiciosOperacionCajaVcl(
+    AFormulario,
+    AFormulario.ParametrosApp,
+    AFormulario.ConexionPrincipal,
+    AFormulario.ParametrosCaja,
+    AFormulario.Permisos,
+    AFormulario.ContextoSesion,
+    AFormulario.PerfilesUsuario,
+    AFormulario.Name,
+    AFormulario.DatosCaja,
+    AFormulario.FIncidenciasSql);
+  AFormulario.FRepositorioConsultas :=
+    oServicios.RepositorioConsultas;
+  AFormulario.FServicioRectificacion :=
+    oServicios.ServicioRectificacion;
+  AFormulario.FPoliticaStockVenta :=
+    oServicios.PoliticaStock;
+  AFormulario.FRepartidorDescuento :=
+    oServicios.RepartidorDescuento;
+  AFormulario.FImpresorVenta :=
+    oServicios.Impresor;
+  AFormulario.FServicioCierreVenta :=
+    oServicios.ServicioCierre;
+end;
 
 procedure TfrmMtoOpeCaja.ActualizarFoco;
 begin
@@ -677,6 +765,11 @@ begin
         try
           View.ApplyBestFit;
         except
+          // BestFit es cosmetico: no bloquea la carga del stock.
+          on E: Exception do
+            inLibLog.Log.LogWarning(
+              'CajaOpe: ApplyBestFit del stock ignorado: ' +
+              E.Message);
         end;
         // ApplyBestFit no reserva el ancho del indicador de color.
         Mapa := ObtenerMapaAtributosGlobal(
@@ -835,7 +928,7 @@ end;
 // Unica precondicion: el vendedor (cajero) debe estar dado de alta.
 procedure TfrmMtoOpeCaja.ProcesarLecturaScanner(const ACodigo: string);
 var
-  Validador  : TArticulosValidador;
+  Validador  : IArticulosValidador;
   Resolucion : TArtResolucionEntrada;
   sSku       : string;
 begin
@@ -864,11 +957,11 @@ begin
       // crear/rellenar ninguna linea. Asi decidimos si hay que consolidar (el
       // SKU ya esta en el ticket) sin haber grabado todavia una linea de
       // trabajo, que es justo lo que generaba el duplicado.
-      Validador := TArticulosValidador.Create(ConexionPrincipal);
+      Validador := CrearValidadorArticulos(ConexionPrincipal);
       try
         Resolucion := Validador.ResolverCodigoBarras(ACodigo);
       finally
-        FreeAndNil(Validador);
+        Validador := nil;
       end;
       sSku := Resolucion.CodigoSku;
       if not Resolucion.Encontrado then
@@ -1476,8 +1569,8 @@ end;
 function TfrmMtoOpeCaja.RellenarDatosArticuloEnDataset(Codigo: string): Boolean;
 var
   CodigoLimpio  : string;
-  Validador     : TArticulosValidador;
-  Resolver      : TArticulosResolver;
+  Validador     : IArticulosValidador;
+  Resolver      : IArticulosResolver;
   Resolucion    : TArtResolucionEntrada;
   Datos         : TArticuloDatos;
   CodTarifa     : string;
@@ -1487,10 +1580,9 @@ begin
   FMotivoRechazoArticulo := '';
   CodigoLimpio := UpperCase(Trim(Codigo));
   if CodigoLimpio = '' then Exit;
-  Validador := TArticulosValidador.Create(ConexionPrincipal);
-  Resolver := TArticulosResolver.Create(
-    ConexionPrincipal,
-    ParametrosCaja);
+  Validador := CrearValidadorArticulos(ConexionPrincipal);
+  Resolver := CrearResolverArticulos(
+    ConexionPrincipal);
   try
     // Si la entrada viene de la pistola (STX...ETX), resolvemos UNICAMENTE
     // contra codigos de barras; en cualquier otro caso, busqueda unificada.
@@ -1585,8 +1677,8 @@ begin
       GridRecalc(ConexionPrincipal,nil, tvLineasOpe, DatosCaja.cdsLineas,
                  DatosCaja.cdsCabecera, ActualizarLabelTotal);
   finally
-    FreeAndNil(Validador);
-    FreeAndNil(Resolver);
+    Validador := nil;
+    Resolver := nil;
   end;
 end;
 
@@ -1615,7 +1707,7 @@ end;
 
 procedure TfrmMtoOpeCaja.RecalcularPrecioDesdeSku(sSKU: string);
 var
-  Resolver     : TArticulosResolver;
+  Resolver     : IArticulosResolver;
   Precio       : TArticuloPrecio;
   CodTarifa    : string;
   CodArt       : string;
@@ -1627,9 +1719,8 @@ begin
   FechaFactura := DatosCaja.cdsCabecera.FieldByName('FECHA_FAC').AsDateTime;
   CodArt       := DatosCaja.cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString;
 
-  Resolver := TArticulosResolver.Create(
-    ConexionPrincipal,
-    ParametrosCaja);
+  Resolver := CrearResolverArticulos(
+    ConexionPrincipal);
   try
     Precio := Resolver.ResolverPrecio(CodArt, sSKU, CodTarifa, FechaFactura);
     if not Precio.TieneRegistro then Exit;
@@ -1653,19 +1744,19 @@ begin
     GridRecalc(ConexionPrincipal,nil, tvLineasOpe, DatosCaja.cdsLineas,
                DatosCaja.cdsCabecera, ActualizarLabelTotal);
   finally
-    FreeAndNil(Resolver);
+    Resolver := nil;
   end;
 end;
 
 procedure TfrmMtoOpeCaja.RellenarAtributosDesdeSku(Sku: string);
 var
-  Lookup  : TArticulosAtributosLookup;
+  Lookup  : IArticulosAtributosLookup;
   Valores : TArray<TArticuloAtributoValor>;
   V       : TArticuloAtributoValor;
   i       : Integer;
 begin
   if Trim(Sku) = '' then Exit;
-  Lookup := TArticulosAtributosLookup.Create(ConexionPrincipal);
+  Lookup := CrearLookupAtributosArticulos(ConexionPrincipal);
   try
     Valores := Lookup.ObtenerAtributosDeSku(Sku);
     if Length(Valores) = 0 then
@@ -1685,7 +1776,7 @@ begin
                                                                        := V.Valor;
     end;
   finally
-    FreeAndNil(Lookup);
+    Lookup := nil;
   end;
 end;
 
@@ -3157,6 +3248,7 @@ begin
     try
       if EnviarDocumentacionOperacion(
         ParametrosApp,
+        CrearRepositorioTraspasoTicket,
         ConexionPrincipal,
         FCodigoEmpresa,
         FCodigoAlmacen,
@@ -3516,6 +3608,7 @@ begin
   FConsultaStock := nil;
   FServicioRectificacion := nil;
   FRepositorioConsultas := nil;
+  FIncidenciasSql := nil;
   FServicioCierreVenta := nil;
   FImpresorVenta := nil;
   FRepartidorDescuento := nil;
@@ -3601,8 +3694,6 @@ begin
 end;
 
 procedure TfrmMtoOpeCaja.FormCreate(Sender: TObject);
-var
-  Servicios: TServiciosOperacionCaja;
 begin
   inherited;
   // Detector del lector de codigo de barras (modo restaurar, con anti-eco para
@@ -3621,28 +3712,7 @@ begin
   // FswArtAPopup es un record (TStopwatch) — se inicializa a cero por
   // defecto, IsRunning sera False hasta que se arranque en
   // tvArticuloPropertiesValidate.
-  DatosCaja := TdmCajaOpe.Create(Self, ConexionPrincipal, ParametrosApp,
-    ParametrosCaja);
-  Servicios := CrearServiciosOperacionCaja(
-    Self,
-    ParametrosApp,
-    ConexionPrincipal,
-    ParametrosCaja,
-    Permisos,
-    ContextoSesion,
-    DatosCaja);
-  FRepositorioConsultas :=
-    Servicios.RepositorioConsultas;
-  FServicioRectificacion :=
-    Servicios.ServicioRectificacion;
-  FPoliticaStockVenta :=
-    Servicios.PoliticaStock;
-  FRepartidorDescuento :=
-    Servicios.RepartidorDescuento;
-  FImpresorVenta :=
-    Servicios.Impresor;
-  FServicioCierreVenta :=
-    Servicios.ServicioCierre;
+  InicializarServiciosOperacionCajaVcl(Self);
   dsLineas.DataSet := DatosCaja.cdsLineas;
   dsStock.DataSet := nil;
   dsLineas.OnDataChange := DsLineasDataChange;
@@ -3785,7 +3855,7 @@ end;
 procedure TfrmMtoOpeCaja.CargarAvsValidos(const ACodArt: string;
   AOrden: Integer; var AAvs: TArray<string>);
 var
-  Lookup : TArticulosAtributosLookup;
+  Lookup : IArticulosAtributosLookup;
   Vals   : TArray<TArticuloAtributoValor>;
   i      : Integer;
 begin
@@ -3796,11 +3866,11 @@ begin
   SetLength(AAvs, 0);
   if Trim(ACodArt) = '' then Exit;
   if (AOrden < 1) or (AOrden > 5) then Exit;
-  Lookup := TArticulosAtributosLookup.Create(ConexionPrincipal);
+  Lookup := CrearLookupAtributosArticulos(ConexionPrincipal);
   try
     Vals := Lookup.ObtenerAvsEnSkus(ACodArt, AOrden);
   finally
-    FreeAndNil(Lookup);
+    Lookup := nil;
   end;
   SetLength(AAvs, Length(Vals));
   for i := 0 to High(Vals) do
@@ -4018,7 +4088,9 @@ begin
         // Defensivo: si cxGrid desparenta el editor entre el HasParent
         // de arriba y el set EditValue, seguimos sin pintar — el data
         // link ya tiene el valor via RegistrarValorAtributo.
-        ;
+        inLibLog.Log.LogWarning(
+          'CajaOpe: EditValue del editor inplace ignorado: ' +
+          E.Message);
     end;
   end;
 

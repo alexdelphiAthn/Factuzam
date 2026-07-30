@@ -87,7 +87,7 @@ type
     FConfig: TConfigColumnasSku;
     FCfgTallas: TGridTallasConfig;
     FGestor: TGestorGridTallas;
-    FLookup: TArticulosAtributosLookup;
+    FLookup: IArticulosAtributosLookup;
     FColArticulo: TcxGridDBColumn;
     // Columnas de atributos NO talla (color, temporada...).
     FColAtributo: array[1..5] of TcxGridDBColumn;
@@ -322,7 +322,7 @@ type
 implementation
 
 uses
-  inLibMsg;
+  inLibLog, inLibMsgArticulos;
 
 class procedure TDistribuidorTallas.RegistrarEjecutor(
   AClase: TClaseEjecutorDistribuidorTallas);
@@ -768,7 +768,10 @@ begin
   inherited Create;
   FConfig := AConfig;
   FCfgTallas := ACfgTallas;
-  FLookup := TArticulosAtributosLookup.Create(AConfig.Conexion);
+  FLookup := AConfig.LookupAtributos;
+  if not Assigned(FLookup) then
+    FLookup := CrearLookupAtributosArticulosBase(
+      AConfig.Conexion);
   FTimerResolve := TTimer.Create(nil);
   FTimerResolve.Enabled := False;
   FTimerResolve.Interval := 1;
@@ -821,7 +824,7 @@ begin
   FreeAndNil(FBusqDs);
   FreeAndNil(FBusqQry);
   FreeAndNil(FGestor);
-  FreeAndNil(FLookup);
+  FLookup := nil;
   inherited;
 end;
 
@@ -1730,7 +1733,10 @@ begin
           FConfig.View.Controller.EditingController.HideEdit(False);
         except
           on E: EInvalidOperation do
-            ;
+            // Ruido del editor inplace; queda constancia en el log.
+            inLibLog.Log.LogWarning(
+              'ModoTallas.TimerResolve: HideEdit ignorado: ' +
+              E.Message);
         end;
       // Resuelto y editor cerrado: se restaura el EnterAsTab (si el
       // foco vuelve a la celda del combo, InitEdit lo desactiva).
@@ -2850,7 +2856,9 @@ begin
       FConfig.View.Controller.EditingController.ShowEdit;
     except
       on E: EInvalidOperation do
-        ;
+        // Ruido del editor inplace; queda constancia en el log.
+        inLibLog.Log.LogWarning(
+          'ModoTallas.MostrarEditor: ShowEdit ignorado: ' + E.Message);
     end;
   end;
 end;
@@ -2858,7 +2866,7 @@ end;
 function TModoEntradaTallas.ResolverEntrada(
   const AEntrada: string): Boolean;
 var
-  Val: TArticulosValidador;
+  Val: IArticulosValidador;
   R: TArtResolucionEntrada;
   Vals, Noms: TValoresAttrTallas;
   Partes: TArray<string>;
@@ -2871,11 +2879,14 @@ begin
   FUltimaConTalla := False;
   if Trim(AEntrada) <> '' then
   begin
-    Val := TArticulosValidador.Create(FConfig.Conexion);
+    Val := FConfig.ValidadorArticulos;
+    if not Assigned(Val) then
+      Val := CrearValidadorArticulosBase(
+        FConfig.Conexion);
     try
       R := Val.Resolver(Trim(AEntrada));
     finally
-      FreeAndNil(Val);
+      Val := nil;
     end;
     LogSes(Format('ModoTallas.Resolver: "%s" encontrado=%s sku="%s"',
                   [Trim(AEntrada), BoolToStr(R.Encontrado, True),

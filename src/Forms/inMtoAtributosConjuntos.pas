@@ -102,9 +102,6 @@ type
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
-var
-  frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos;
-
 implementation
 
 uses

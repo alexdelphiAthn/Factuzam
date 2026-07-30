@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoModalEnviarDestino                                       }
 {    Tipo:       Modal                                                         }
@@ -24,10 +24,10 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Uni,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxContainer, cxEdit, cxLabel, cxTextEdit, cxMaskEdit, cxDropDownEdit,
-  cxButtons;
+  cxButtons, inMtoFrmBase;
 
 type
-  TfrmModalEnviarDestino = class(TForm)
+  TfrmModalEnviarDestino = class(TfrmBase)
     lblAlmacen: TcxLabel;
     cbbAlmacen: TcxComboBox;
     lblSerie: TcxLabel;
@@ -51,7 +51,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsg;
+  inLibMsgComun;
 
 class function TfrmModalEnviarDestino.Ejecutar(AOwner: TComponent;
   AConn: TUniConnection; const ATitulo, AEmpresa,

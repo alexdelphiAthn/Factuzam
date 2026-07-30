@@ -300,15 +300,22 @@ type
     procedure Refrescar;
   end;
 
-var
-  oFotos: TFotosArticulos;
+function oFotos: TFotosArticulos;
 
 implementation
 
 uses
   inLibArticulosValidador,
   Winapi.GDIPOBJ, Winapi.GDIPAPI,
-  inLibMsg;
+  inLibMsgArticulos;
+
+var
+  FFotos: TFotosArticulos;
+
+function oFotos: TFotosArticulos;
+begin
+  Result := FFotos;
+end;
 
 { TFotoInfo }
 
@@ -1291,7 +1298,7 @@ var
   i        : Integer;
   f        : TField;
   sCodigo  : string;
-  validador: TArticulosValidador;
+  validador: IArticulosValidador;
   res      : TArtResolucionEntrada;
 begin
   if (ACodSku = '') and (ADataSet <> nil) and ADataSet.Active and
@@ -1310,7 +1317,8 @@ begin
     end;
     if sCodigo <> '' then
     begin
-      validador := TArticulosValidador.Create(oFotos.Conexion);
+      validador := CrearValidadorArticulosBase(
+        oFotos.Conexion);
       try
         res := validador.ResolverCodigoBarras(sCodigo);
         if res.Encontrado and (res.CodigoSku <> '') and
@@ -1320,7 +1328,7 @@ begin
           ACodSku := res.CodigoSku;
         end;
       finally
-        FreeAndNil(validador);
+        validador := nil;
       end;
     end;
   end;
@@ -1955,9 +1963,9 @@ begin
 end;
 
 initialization
-  oFotos := TFotosArticulos.Create;
+  FFotos := TFotosArticulos.Create;
 
 finalization
-  FreeAndNil(oFotos);
+  FreeAndNil(FFotos);
 
 end.

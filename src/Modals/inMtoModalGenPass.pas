@@ -51,7 +51,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsg;
+  inLibMsgConfiguracion;
 
 procedure TfrmModalGenPass.btnCancelarClick(Sender: TObject);
 begin

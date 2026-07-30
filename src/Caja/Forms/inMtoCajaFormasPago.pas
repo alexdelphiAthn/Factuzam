@@ -101,9 +101,6 @@ type
     procedure ResetForm; override;
   end;
 
-var
-  frmMtoCajaFormasPago: TfrmMtoCajaFormasPago;
-
 implementation
 
 uses

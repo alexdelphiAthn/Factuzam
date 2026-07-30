@@ -44,9 +44,6 @@ type
     { Public declarations }
   end;
 
-var
-  frmMtoModalArtTar: TfrmMtoModalArtTar;
-
 implementation
 
 {$R *.dfm}

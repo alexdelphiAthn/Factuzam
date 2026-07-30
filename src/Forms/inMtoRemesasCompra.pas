@@ -120,14 +120,11 @@ type
     procedure ResetForm; override;
   end;
 
-var
-  frmMtoRemesasCompra: TfrmMtoRemesasCompra;
-
 implementation
 
 uses
   inLibWin, inMtoModalCargarEfectosRemesa,
-  inMtoModalRegistrarPago, inLibMsg;
+  inMtoModalRegistrarPago, inLibMsgCompras, inLibMsgVentas;
 
 {$R *.dfm}
 

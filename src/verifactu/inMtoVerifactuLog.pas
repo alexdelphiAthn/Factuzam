@@ -63,14 +63,11 @@ type
     procedure ResetForm; override;
   end;
 
-var
-  frmMtoVerifactuLog: TfrmMtoVerifactuLog;
-
 implementation
 
 uses
   inLibWin, inLibShowMto,
-  inLibMsg, inLibVerifactuNoVerifactuExport,
+  inLibMsgVerifactu, inLibVerifactuNoVerifactuExport,
   inLibVerifactuNoVerifactuVerify;
 
 {$R *.dfm}

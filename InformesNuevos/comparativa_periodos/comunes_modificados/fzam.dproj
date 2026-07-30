@@ -190,7 +190,6 @@
         <DCCReference Include="src\Lib\inLibMsgCaja.pas"/>
         <DCCReference Include="src\Lib\inLibMsgIntegraciones.pas"/>
         <DCCReference Include="src\Lib\inLibMsgVerifactu.pas"/>
-        <DCCReference Include="src\Lib\inLibMsg.pas"/>
         <DCCReference Include="src\Lib\inLibNet.pas"/>
         <DCCReference Include="src\Lib\inLibScriptDB.pas"/>
         <DCCReference Include="src\Lib\inLibIBAN.pas"/>

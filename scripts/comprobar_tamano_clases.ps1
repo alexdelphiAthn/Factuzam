@@ -5,7 +5,33 @@ param(
   [ValidateRange(0, [int]::MaxValue)]
   [int]$MaximoMetodosPorClase = 133,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoCamposPorClase = 49
+  [int]$MaximoCamposPorClase = 49,
+  [hashtable]$LimitesClases = @{
+    TfrmMtoComprasSesiones = @{
+      Lineas = 3663
+      Metodos = 99
+    }
+    TfrmMtoFacturasBase = @{
+      Lineas = 4000
+      Metodos = 133
+    }
+    TfrmMtoOpeCaja = @{
+      Lineas = 4060
+      Metodos = 104
+    }
+    TfrmMtoArticulos = @{
+      Lineas = 3406
+      Metodos = 97
+    }
+    TfrmStockConsulta = @{
+      Lineas = 3139
+      Metodos = 81
+    }
+    TfrmMtoInventarios = @{
+      Lineas = 3069
+      Metodos = 77
+    }
+  }
 )
 
 Set-StrictMode -Version Latest
@@ -187,6 +213,49 @@ Write-Output (
 ).TrimEnd()
 
 $errores = [System.Collections.Generic.List[string]]::new()
+$medicionesObjetivo = [System.Collections.Generic.List[object]]::new()
+foreach ($nombreClase in @($LimitesClases.Keys | Sort-Object)) {
+  $limite = $LimitesClases[$nombreClase]
+  $clasesEncontradas = @(
+    $mediciones |
+      Where-Object { $_.Clase -eq $nombreClase }
+  )
+  if ($clasesEncontradas.Count -ne 1) {
+    $errores.Add(
+      "Clase vigilada ${nombreClase}: encontradas " +
+      "$($clasesEncontradas.Count); se esperaba una.")
+  }
+  else {
+    $claseEncontrada = $clasesEncontradas[0]
+    $medicionesObjetivo.Add([pscustomobject]@{
+      Clase = $claseEncontrada.Clase
+      Lineas = $claseEncontrada.Lineas
+      MaximoLineas = [int]$limite.Lineas
+      Metodos = $claseEncontrada.Metodos
+      MaximoMetodos = [int]$limite.Metodos
+    })
+    if ($claseEncontrada.Lineas -gt [int]$limite.Lineas) {
+      $errores.Add(
+        "Lineas de ${nombreClase}: $($claseEncontrada.Lineas); " +
+        "maximo permitido: $($limite.Lineas).")
+    }
+    if ($claseEncontrada.Metodos -gt [int]$limite.Metodos) {
+      $errores.Add(
+        "Metodos de ${nombreClase}: $($claseEncontrada.Metodos); " +
+        "maximo permitido: $($limite.Metodos).")
+    }
+  }
+}
+Write-Output ''
+Write-Output 'Clases-dios vigiladas:'
+Write-Output (
+  $medicionesObjetivo |
+    Format-Table `
+      Clase, Lineas, MaximoLineas, Metodos, MaximoMetodos `
+      -AutoSize |
+    Out-String
+).TrimEnd()
+
 $maximoLineas = ($mediciones | Measure-Object Lineas -Maximum).Maximum
 $maximoMetodos = ($mediciones | Measure-Object Metodos -Maximum).Maximum
 $maximoCampos = ($mediciones | Measure-Object Campos -Maximum).Maximum

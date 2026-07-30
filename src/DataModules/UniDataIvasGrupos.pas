@@ -34,7 +34,7 @@ type
 implementation
 
 uses
-  inLibMsg;
+  inLibMsgComun;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 

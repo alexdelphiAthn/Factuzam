@@ -32,7 +32,7 @@ uses
   dxSpreadSheetCore, dxSpreadSheetTypes, dxSpreadSheetGraphics,
   dxCoreGraphics, dxShellDialogs, dxSpreadSheetStyles,
   dxSpreadSheetContainers, dxHashUtils, dxGDIPlusClasses, dxSmartImage,
-  inLibDevExcel, inLibVerifactu, inLibFormatoDocumento;
+  inLibDevExcel, inLibVerifactu, inLibFormatoDocumento, inLibLog;
 
 const
   COL_DESC = 0;
@@ -222,6 +222,9 @@ begin
         AgregarImagenQR(aPng);
       except
         // El QR opcional no impide exportar la factura.
+        on E: Exception do
+          inLibLog.Log.LogWarning(
+            'FacturaExcel: QR Verifactu omitido: ' + E.Message);
       end;
     end;
   end;

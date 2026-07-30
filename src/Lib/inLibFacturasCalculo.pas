@@ -34,7 +34,7 @@ type
 implementation
 
 uses
-  System.SysUtils, inLibFacturas, inLibMsg;
+  System.SysUtils, inLibFacturas, inLibMsgFacturas;
 
 constructor TCalculadorFactura.Create(AConexion: TUniConnection);
 begin

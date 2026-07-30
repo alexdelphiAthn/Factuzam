@@ -72,9 +72,6 @@ type
     procedure preparar_consulta; override;
   end;
 
-var
-  frmPrintOperaciones: TfrmPrintOperaciones;
-
 implementation
 
 {$R *.dfm}

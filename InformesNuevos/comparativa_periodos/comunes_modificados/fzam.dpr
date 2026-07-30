@@ -37,7 +37,6 @@ uses
   inLibMsgCaja in 'src\Lib\inLibMsgCaja.pas',
   inLibMsgIntegraciones in 'src\Lib\inLibMsgIntegraciones.pas',
   inLibMsgVerifactu in 'src\Lib\inLibMsgVerifactu.pas',
-  inLibMsg in 'src\Lib\inLibMsg.pas',
   inLibNet in 'src\Lib\inLibNet.pas',
   inLibScriptDB in 'src\Lib\inLibScriptDB.pas',
   inLibIBAN in 'src\Lib\inLibIBAN.pas',

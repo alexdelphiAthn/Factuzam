@@ -14,9 +14,7 @@
 {    cabecera con empresa, contadores, líneas, operaciones, cobros, efectivo,  }
 {    devoluciones y resúmenes por sección, empleado y forma de pago.           }
 {                                                                              }
-{    Uso:                                                                      }
-{      TArqueoTicket.Imprimir(AConexion, sEmp, sAlm, sCaja, dDesde,
-        dHasta, 'P1'); }
+{    Recibe contratos de cálculo y lectura; no accede directamente a BBDD.    }
 {                                                                              }
 {    Si la impresora es 'DEBUG' abre el preview (TFormVisualizador) en vez de  }
 {    mandar a la impresora física.                                             }
@@ -27,8 +25,8 @@ interface
 
 uses
   System.SysUtils, System.Classes,
-  Data.DB, Uni,
-  inLibArqueo,
+  inLibArqueoIntf,
+  inLibArqueoTicketIntf,
   inLibArqueoPersistencia,
   inLibFTicket,
   inLibPreviewTicket,
@@ -42,35 +40,46 @@ type
     class function FmtImp(AValor: Currency): string;
     class function FmtPorc(APorc: Currency): string;
     class procedure EscribirCabeceraEmpresa(ATicket: TTicketTermico;
-                                            AConn: TUniConnection;
+                                            const ARepositorio:
+                                            IRepositorioArqueoTicket;
                                             const AEmpresa: string);
     class procedure EscribirContadores(ATicket: TTicketTermico;
-                                       AConn: TUniConnection;
+                                       const ARepositorio:
+                                       IRepositorioArqueoTicket;
                                        const AArqueo: TArqueoCaja);
     class procedure EscribirTotales(ATicket: TTicketTermico;
                                     const AArqueo: TArqueoCaja);
     class procedure EscribirDevolucionesPorFP(ATicket: TTicketTermico;
-                                              AConn: TUniConnection;
+                                              const ARepositorio:
+                                              IRepositorioArqueoTicket;
                                               const AArqueo: TArqueoCaja);
     class procedure EscribirResumenSeccion(ATicket: TTicketTermico;
-                                           AConn: TUniConnection;
+                                           const ARepositorio:
+                                           IRepositorioArqueoTicket;
                                            const AParametrosCaja:
                                            IParametrosCaja;
                                            const AArqueo: TArqueoCaja);
     class procedure EscribirResumenTemporada(ATicket: TTicketTermico;
-                                             AConn: TUniConnection;
+                                             const ARepositorio:
+                                             IRepositorioArqueoTicket;
                                              const AArqueo: TArqueoCaja);
     class procedure EscribirResumenEmpleado(ATicket: TTicketTermico;
-                                            AConn: TUniConnection;
+                                            const ARepositorio:
+                                            IRepositorioArqueoTicket;
                                             const AArqueo: TArqueoCaja);
     class procedure EscribirResumenFormaPago(ATicket: TTicketTermico;
-                                             AConn: TUniConnection;
+                                             const ARepositorio:
+                                             IRepositorioArqueoTicket;
                                              const AArqueo: TArqueoCaja);
     class procedure EscribirResumenSerie(ATicket: TTicketTermico;
-                                         AConn: TUniConnection;
+                                         const ARepositorio:
+                                         IRepositorioArqueoTicket;
                                          const AArqueo: TArqueoCaja);
   public
-    class procedure Imprimir(AConn: TUniConnection;
+    class procedure Imprimir(const ARepositorioArqueo:
+                             IRepositorioArqueoCaja;
+                             const ARepositorioTicket:
+                             IRepositorioArqueoTicket;
                              const AParametrosCaja: IParametrosCaja;
                              const AEmpresa: string;
                              const AAlmacen: string;
@@ -80,7 +89,7 @@ type
                              const ANombreImpresora: string = 'DEBUG';
                              ADuplicado: Boolean = False);
     class procedure ImprimirCierre(
-      AConn: TUniConnection;
+      const ARepositorioTicket: IRepositorioArqueoTicket;
       const AContextoSesion: IContextoSesionAplicacion;
       const AArqueo: TArqueoCaja;
       const ALineas: TArray<TArqueoRecuentoLinea>;
@@ -99,7 +108,8 @@ type
     // grabado en fza_caja_arqueos. Recalcula la tira en vivo (las operaciones
     // del rango son inmutables tras el cierre) y la marca como DUPLICADO.
     class procedure ImprimirDesdeHistorico(
-      AConn: TUniConnection;
+      const ARepositorioArqueo: IRepositorioArqueoCaja;
+      const ARepositorioTicket: IRepositorioArqueoTicket;
       const AParametrosCaja: IParametrosCaja;
       const AEmpresa, AAlmacen, ACaja: string;
       const ACodigoArqueo: string;
@@ -107,7 +117,7 @@ type
     // Reimpresión (duplicado) del justificante de cierre reconstruido desde
     // fza_caja_arqueos + fza_caja_arqueos_recuento (sin recalcular nada).
     class procedure ImprimirCierreDesdeHistorico(
-      AConn: TUniConnection;
+      const ARepositorioTicket: IRepositorioArqueoTicket;
       const AContextoSesion: IContextoSesionAplicacion;
       const AEmpresa, AAlmacen, ACaja: string;
       const ACodigoArqueo: string;
@@ -115,9 +125,6 @@ type
   end;
 
 implementation
-
-uses
-  inLibRectificativas;
 
 // =============================================================================
 //   Helpers de formato
@@ -139,36 +146,25 @@ end;
 // =============================================================================
 
 class procedure TArqueoTicket.EscribirCabeceraEmpresa(ATicket: TTicketTermico;
-                                                     AConn: TUniConnection;
+                                                     const ARepositorio:
+                                                     IRepositorioArqueoTicket;
                                                      const AEmpresa: string);
 var
-  Q: TUniQuery;
+  oEmpresa: TEmpresaArqueoTicket;
 begin
-  Q := TUniQuery.Create(nil);
-  try
-    Q.Connection := AConn;
-    Q.SQL.Text :=
-      ' SELECT RAZON_SOCIAL_EMP, NIF_EMP, DIRECCION1_EMP,                  ' +
-      '        CODIGO_POSTAL_EMP, POBLACION_EMP, PROVINCIA_EMP             ' +
-      '   FROM fza_empresas                                                ' +
-      '  WHERE CODIGO_EMP_EMP = :pEMPRESA                                  ';
-    Q.ParamByName('pEMPRESA').AsString := AEmpresa;
-    Q.Open;
-    if not Q.IsEmpty then
-    begin
-      ATicket.Alinear(alCentro);
-      ATicket.Negrita(True);
-      ATicket.EscribirLinea(Q.FieldByName('RAZON_SOCIAL_EMP').AsString);
-      ATicket.Negrita(False);
-      ATicket.EscribirLinea(Q.FieldByName('DIRECCION1_EMP').AsString);
-      ATicket.EscribirLinea(
-        Trim(Q.FieldByName('CODIGO_POSTAL_EMP').AsString + ' ' +
-             Q.FieldByName('POBLACION_EMP').AsString));
-      ATicket.EscribirLinea(Q.FieldByName('PROVINCIA_EMP').AsString);
-      ATicket.EscribirLinea('CIF: ' + Q.FieldByName('NIF_EMP').AsString);
-    end;
-  finally
-    FreeAndNil(Q);
+  oEmpresa := ARepositorio.ObtenerEmpresa(
+    AEmpresa);
+  if oEmpresa.Encontrada then
+  begin
+    ATicket.Alinear(alCentro);
+    ATicket.Negrita(True);
+    ATicket.EscribirLinea(oEmpresa.RazonSocial);
+    ATicket.Negrita(False);
+    ATicket.EscribirLinea(oEmpresa.Direccion);
+    ATicket.EscribirLinea(
+      Trim(oEmpresa.CodigoPostal + ' ' + oEmpresa.Poblacion));
+    ATicket.EscribirLinea(oEmpresa.Provincia);
+    ATicket.EscribirLinea('CIF: ' + oEmpresa.Nif);
   end;
 end;
 
@@ -177,58 +173,32 @@ end;
 // =============================================================================
 
 class procedure TArqueoTicket.EscribirContadores(ATicket: TTicketTermico;
-                                                AConn: TUniConnection;
+                                                const ARepositorio:
+                                                IRepositorioArqueoTicket;
                                                 const AArqueo: TArqueoCaja);
 var
-  Q: TUniQuery;
+  oContadores: TContadoresArqueoTicket;
 begin
-  Q := TUniQuery.Create(nil);
-  try
-    Q.Connection := AConn;
-    Q.SQL.Text :=
-      ' SELECT                                                              ' +
-      '   COALESCE(MIN(o.NUMERO_OPERACION_OPCAJA), '''')      AS PRIMERA,   ' +
-      '   COALESCE(MAX(o.NUMERO_OPERACION_OPCAJA), '''')      AS ULTIMA,    ' +
-      '   COALESCE(SUM(l.CANTIDAD_FACLIN), 0)                 AS UDS        ' +
-      '   FROM fza_caja_operaciones o                                       ' +
-      '   LEFT JOIN fza_facturas_lineas l                                   ' +
-      '     ON l.CODIGO_EMP_FACLIN        = o.CODIGO_EMP_OPCAJA             ' +
-      '    AND l.CODIGO_ALM_FACLIN        = o.CODIGO_ALM_OPCAJA             ' +
-      '    AND l.CODIGO_CAJA_FACLIN       = o.CODIGO_CAJA_OPCAJA            ' +
-      '    AND l.NUMERO_OPERACION_FACLIN  = o.NUMERO_OPERACION_OPCAJA       ' +
-      '  WHERE o.TIPO_OPERACION_OPCAJA   = ''VE''                           ' +
-      '    AND o.CODIGO_EMP_OPCAJA       = :pEMPRESA                        ' +
-      '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                        ' +
-      '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
-      '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                          ' +
-      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA' +
-      SQLExcluirSimplificadaSustituida(
-        'o.CODIGO_EMP_OPCAJA',
-        'o.SERIE_FAC_OPCAJA',
-        'o.NUMERO_FAC_OPCAJA');
-    Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
-    Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;
-    Q.ParamByName('pCAJA').AsString    := AArqueo.Caja;
-    Q.ParamByName('pFDESDE').AsDateTime    := AArqueo.FechaDesde;
-    Q.ParamByName('pFHASTA').AsDateTime    := AArqueo.FechaHasta;
-    Q.Open;
-    ATicket.Alinear(alIzquierda);
-    if not Q.IsEmpty then
-    begin
-      ATicket.TextoColumnas('Primera operación:',
-                            Q.FieldByName('PRIMERA').AsString);
-      ATicket.TextoColumnas('Última operación:',
-                            Q.FieldByName('ULTIMA').AsString);
-    end;
-    ATicket.LineaSeparadora('-');
-    ATicket.TextoColumnas('OPERACIONES',
-                          IntToStr(AArqueo.CantidadVentas));
-    if not Q.IsEmpty then
-      ATicket.TextoColumnas('UNIDADES VTA.',
-                            FmtImp(Q.FieldByName('UDS').AsCurrency));
-  finally
-    FreeAndNil(Q);
+  oContadores := ARepositorio.ObtenerContadores(
+    AArqueo);
+  ATicket.Alinear(alIzquierda);
+  if oContadores.Encontrado then
+  begin
+    ATicket.TextoColumnas(
+      'Primera operación:',
+      oContadores.PrimeraOperacion);
+    ATicket.TextoColumnas(
+      'Última operación:',
+      oContadores.UltimaOperacion);
   end;
+  ATicket.LineaSeparadora('-');
+  ATicket.TextoColumnas(
+    'OPERACIONES',
+    IntToStr(AArqueo.CantidadVentas));
+  if oContadores.Encontrado then
+    ATicket.TextoColumnas(
+      'UNIDADES VTA.',
+      FmtImp(oContadores.Unidades));
 end;
 
 // =============================================================================
@@ -287,56 +257,30 @@ begin
 end;
 
 class procedure TArqueoTicket.EscribirDevolucionesPorFP(ATicket: TTicketTermico;
-                                                       AConn: TUniConnection;
+                                                       const ARepositorio:
+                                                       IRepositorioArqueoTicket;
                                                        const AArqueo: TArqueoCaja);
 var
-  Q: TUniQuery;
+  aLineas: TArray<TDevolucionFormaPagoArqueo>;
+  iLinea: Integer;
 begin
-  if AArqueo.Devoluciones = 0 then Exit;
-  Q := TUniQuery.Create(nil);
-  try
-    Q.Connection := AConn;
-    Q.SQL.Text :=
-      ' SELECT                                                              ' +
-      '   p.CODIGO_FP_CFP                          AS FP,                   ' +
-      '   ABS(COALESCE(SUM(p.IMPORTE_ENTREGADO_PAGO), 0)) AS IMPORTE        ' +
-      '   FROM fza_caja_pagos        p                                      ' +
-      '   JOIN fza_caja_operaciones  o                                      ' +
-      '     ON o.CODIGO_EMP_OPCAJA       = p.CODIGO_EMP_PAGO                ' +
-      '    AND o.CODIGO_ALM_OPCAJA       = p.CODIGO_ALM_PAGO                ' +
-      '    AND o.CODIGO_CAJA_OPCAJA      = p.CODIGO_CAJA_PAGO               ' +
-      '    AND o.NUMERO_OPERACION_OPCAJA = p.NUMERO_OPERACION_PAGO          ' +
-      '  WHERE p.CODIGO_EMP_PAGO      = :pEMPRESA                           ' +
-      '    AND p.CODIGO_ALM_PAGO      = :pALMACEN                           ' +
-      '    AND p.CODIGO_CAJA_PAGO     = :pCAJA                              ' +
-      '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                          ' +
-      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                          ' +
-      '    AND o.TIPO_OPERACION_OPCAJA = ''DV''                             ' +
-      SQLExcluirSimplificadaSustituida(
-        'o.CODIGO_EMP_OPCAJA',
-        'o.SERIE_FAC_OPCAJA',
-        'o.NUMERO_FAC_OPCAJA') +
-      '  GROUP BY p.CODIGO_FP_CFP                                           ' +
-      '  ORDER BY p.CODIGO_FP_CFP                                           ';
-    Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
-    Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;
-    Q.ParamByName('pCAJA').AsString    := AArqueo.Caja;
-    Q.ParamByName('pFDESDE').AsDateTime    := AArqueo.FechaDesde;
-    Q.ParamByName('pFHASTA').AsDateTime    := AArqueo.FechaHasta;
-    Q.Open;
+  if AArqueo.Devoluciones <> 0 then
+  begin
+    aLineas := ARepositorio.ListarDevolucionesPorFormaPago(
+      AArqueo);
     ATicket.SaltarLineas(1);
     ATicket.Negrita(True);
     ATicket.EscribirLinea('DEVOLUCIONES CLIENTES');
     ATicket.Negrita(False);
     ATicket.TextoColumnas('  NETO ARTÍCULOS', FmtImp(AArqueo.Devoluciones));
-    while not Q.Eof do
+    iLinea := 0;
+    while iLinea < Length(aLineas) do
     begin
-      ATicket.TextoColumnas('    ' + Q.FieldByName('FP').AsString,
-                            FmtImp(Q.FieldByName('IMPORTE').AsCurrency));
-      Q.Next;
+      ATicket.TextoColumnas(
+        '    ' + aLineas[iLinea].FormaPago,
+        FmtImp(aLineas[iLinea].Importe));
+      Inc(iLinea);
     end;
-  finally
-    FreeAndNil(Q);
   end;
 end;
 
@@ -345,261 +289,167 @@ end;
 // =============================================================================
 
 class procedure TArqueoTicket.EscribirResumenSeccion(ATicket: TTicketTermico;
-                                                    AConn: TUniConnection;
+                                                    const ARepositorio:
+                                                    IRepositorioArqueoTicket;
                                                     const AParametrosCaja:
                                                     IParametrosCaja;
                                                     const AArqueo: TArqueoCaja);
 var
-  Q: TUniQuery;
+  aLineas: TArray<TResumenSeccionArqueo>;
   dTotal: Currency;
   dPorc: Currency;
   sFamilia: string;
   sImporte: string;
   sPorc: string;
   iAnchoFamilia: Integer;
+  iLinea: Integer;
 begin
-  if AArqueo.Neto = 0 then Exit;
-  dTotal := AArqueo.Neto;
-  Q := TUniQuery.Create(nil);
-  try
-    Q.Connection := AConn;
-    // Niveles de familia a desglosar según Parámetros de Caja.
-    Q.SQL.Text := TArqueoCalculadora.SQLResumenSeccion(
+  if AArqueo.Neto <> 0 then
+  begin
+    dTotal := AArqueo.Neto;
+    aLineas := ARepositorio.ListarResumenSeccion(
+      AArqueo,
       AParametrosCaja.NivelesFamiliaArqueo);
-    Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
-    Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;
-    Q.ParamByName('pCAJA').AsString    := AArqueo.Caja;
-    Q.ParamByName('pFDESDE').AsDateTime    := AArqueo.FechaDesde;
-    Q.ParamByName('pFHASTA').AsDateTime    := AArqueo.FechaHasta;
-    Q.Open;
-    if Q.IsEmpty then Exit;
-    ATicket.SaltarLineas(1);
-    ATicket.Negrita(True);
-    ATicket.EscribirLinea('RESUMEN NETO POR SECCIÓN');
-    ATicket.Negrita(False);
-    while not Q.Eof do
+    if Length(aLineas) > 0 then
     begin
-      if dTotal <> 0 then
-        dPorc := (Q.FieldByName('NETO').AsCurrency / dTotal) * 100
-      else
-        dPorc := 0;
-      sFamilia := Q.FieldByName('FAMILIA').AsString;
-      sPorc := FmtPorc(dPorc);
-      sImporte := FmtImp(Q.FieldByName('NETO').AsCurrency);
-      // Reserva un espacio antes del porcentaje y dos antes del importe.
-      iAnchoFamilia := N_CHAR_LIN - Length(sPorc) - Length(sImporte) - 3;
-      if Length(sFamilia) > iAnchoFamilia then
+      ATicket.SaltarLineas(1);
+      ATicket.Negrita(True);
+      ATicket.EscribirLinea('RESUMEN NETO POR SECCIÓN');
+      ATicket.Negrita(False);
+      iLinea := 0;
+      while iLinea < Length(aLineas) do
       begin
-        if iAnchoFamilia > 3 then
-          sFamilia := Copy(sFamilia, 1, iAnchoFamilia - 3) + '...'
-        else
-          sFamilia := Copy(sFamilia, 1, iAnchoFamilia);
+        dPorc := (aLineas[iLinea].Neto / dTotal) * 100;
+        sFamilia := aLineas[iLinea].Familia;
+        sPorc := FmtPorc(dPorc);
+        sImporte := FmtImp(aLineas[iLinea].Neto);
+        iAnchoFamilia :=
+          N_CHAR_LIN - Length(sPorc) - Length(sImporte) - 3;
+        if Length(sFamilia) > iAnchoFamilia then
+        begin
+          if iAnchoFamilia > 3 then
+            sFamilia := Copy(
+              sFamilia,
+              1,
+              iAnchoFamilia - 3) + '...'
+          else
+            sFamilia := Copy(sFamilia, 1, iAnchoFamilia);
+        end;
+        ATicket.TextoColumnas(
+          sFamilia + ' ' + sPorc,
+          sImporte);
+        Inc(iLinea);
       end;
-      ATicket.TextoColumnas(sFamilia + ' ' + sPorc, sImporte);
-      Q.Next;
     end;
-  finally
-    FreeAndNil(Q);
   end;
 end;
 
 class procedure TArqueoTicket.EscribirResumenTemporada(
   ATicket: TTicketTermico;
-  AConn: TUniConnection;
+  const ARepositorio: IRepositorioArqueoTicket;
   const AArqueo: TArqueoCaja);
 var
-  Q: TUniQuery;
+  aLineas: TArray<TResumenTemporadaArqueo>;
+  iLinea: Integer;
 begin
-  Q := TUniQuery.Create(nil);
-  try
-    Q.Connection := AConn;
-    Q.SQL.Text := TArqueoCalculadora.SQLResumenTemporada;
-    Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
-    Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;
-    Q.ParamByName('pCAJA').AsString := AArqueo.Caja;
-    Q.ParamByName('pFDESDE').AsDateTime := AArqueo.FechaDesde;
-    Q.ParamByName('pFHASTA').AsDateTime := AArqueo.FechaHasta;
-    Q.Open;
-    if not Q.IsEmpty then
+  aLineas := ARepositorio.ListarResumenTemporada(
+    AArqueo);
+  if Length(aLineas) > 0 then
+  begin
+    ATicket.SaltarLineas(1);
+    ATicket.Negrita(True);
+    ATicket.EscribirLinea('RESUMEN VENTAS POR TEMPORADA');
+    ATicket.Negrita(False);
+    iLinea := 0;
+    while iLinea < Length(aLineas) do
     begin
-      ATicket.SaltarLineas(1);
-      ATicket.Negrita(True);
-      ATicket.EscribirLinea('RESUMEN VENTAS POR TEMPORADA');
-      ATicket.Negrita(False);
-      while not Q.Eof do
-      begin
-        ATicket.TextoColumnas(
-          Format('%-20s %s uds',
-                 [Copy(Q.FieldByName('TEMPORADA').AsString, 1, 20),
-                  FormatFloat('0.##', Q.FieldByName('UDS').AsFloat)]),
-          FmtImp(Q.FieldByName('NETO').AsCurrency));
-        Q.Next;
-      end;
+      ATicket.TextoColumnas(
+        Format(
+          '%-20s %s uds',
+          [Copy(aLineas[iLinea].Temporada, 1, 20),
+           FormatFloat('0.##', aLineas[iLinea].Unidades)]),
+        FmtImp(aLineas[iLinea].Neto));
+      Inc(iLinea);
     end;
-  finally
-    FreeAndNil(Q);
   end;
 end;
 
 class procedure TArqueoTicket.EscribirResumenEmpleado(ATicket: TTicketTermico;
-                                                     AConn: TUniConnection;
+                                                     const ARepositorio:
+                                                     IRepositorioArqueoTicket;
                                                      const AArqueo: TArqueoCaja);
 var
-  Q: TUniQuery;
+  aLineas: TArray<TResumenEmpleadoArqueo>;
+  iLinea: Integer;
 begin
-  Q := TUniQuery.Create(nil);
-  try
-    Q.Connection := AConn;
-    Q.SQL.Text :=
-      ' SELECT                                                              ' +
-      '   COALESCE(e.DIMINUTIVO_TICKET_EMPL,                                ' +
-      '            o.CODIGO_EMPLEADO_OPCAJA, ''?'') AS EMPLEADO,            ' +
-      '   COUNT(DISTINCT o.NUMERO_OPERACION_OPCAJA)  AS OPS,                ' +
-      '   COALESCE(SUM(o.IMPORTE_TOTAL_OPCAJA), 0)   AS NETO                ' +
-      '   FROM fza_caja_operaciones o                                       ' +
-      '   LEFT JOIN fza_empleados e                                         ' +
-      '     ON e.CODIGO_EMPL = o.CODIGO_EMPLEADO_OPCAJA                     ' +
-      '  WHERE o.TIPO_OPERACION_OPCAJA   = ''VE''                           ' +
-      '    AND o.CODIGO_EMP_OPCAJA       = :pEMPRESA                        ' +
-      '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                        ' +
-      '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
-      '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                          ' +
-      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                          ' +
-      SQLExcluirSimplificadaSustituida(
-        'o.CODIGO_EMP_OPCAJA',
-        'o.SERIE_FAC_OPCAJA',
-        'o.NUMERO_FAC_OPCAJA') +
-      '  GROUP BY o.CODIGO_EMPLEADO_OPCAJA, e.DIMINUTIVO_TICKET_EMPL        ' +
-      '  ORDER BY NETO DESC                                                 ';
-    Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
-    Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;
-    Q.ParamByName('pCAJA').AsString    := AArqueo.Caja;
-    Q.ParamByName('pFDESDE').AsDateTime    := AArqueo.FechaDesde;
-    Q.ParamByName('pFHASTA').AsDateTime    := AArqueo.FechaHasta;
-    Q.Open;
-    if Q.IsEmpty then Exit;
+  aLineas := ARepositorio.ListarResumenEmpleado(
+    AArqueo);
+  if Length(aLineas) > 0 then
+  begin
     ATicket.SaltarLineas(1);
     ATicket.Negrita(True);
     ATicket.EscribirLinea('RESUMEN VENTAS POR EMPLEADO');
     ATicket.Negrita(False);
-    while not Q.Eof do
+    iLinea := 0;
+    while iLinea < Length(aLineas) do
     begin
       ATicket.TextoColumnas(
-        Format('%-12s  %3d ops',
-               [Q.FieldByName('EMPLEADO').AsString,
-                Q.FieldByName('OPS').AsInteger]),
-        FmtImp(Q.FieldByName('NETO').AsCurrency));
-      Q.Next;
+        Format(
+          '%-12s  %3d ops',
+          [aLineas[iLinea].Empleado,
+           aLineas[iLinea].Operaciones]),
+        FmtImp(aLineas[iLinea].Neto));
+      Inc(iLinea);
     end;
-  finally
-    FreeAndNil(Q);
   end;
 end;
 
 class procedure TArqueoTicket.EscribirResumenFormaPago(ATicket: TTicketTermico;
-                                                      AConn: TUniConnection;
+                                                      const ARepositorio:
+                                                      IRepositorioArqueoTicket;
                                                       const AArqueo: TArqueoCaja);
 var
-  Q: TUniQuery;
+  aLineas: TArray<TResumenFormaPagoArqueo>;
+  iLinea: Integer;
 begin
-  Q := TUniQuery.Create(nil);
-  try
-    Q.Connection := AConn;
-    Q.SQL.Text :=
-      ' SELECT                                                              ' +
-      '   p.CODIGO_FP_CFP                                  AS FP,           ' +
-      '   COALESCE(fp.DESCRIPCION_FORMA_PAGO_CFP,                           ' +
-      '            p.CODIGO_FP_CFP)                        AS DESCR,        ' +
-      '   COUNT(*)                                         AS UDS,          ' +
-      '   COALESCE(SUM(p.IMPORTE_ENTREGADO_PAGO), 0)       AS IMP           ' +
-      '   FROM fza_caja_pagos        p                                      ' +
-      '   JOIN fza_caja_operaciones  o                                      ' +
-      '     ON o.CODIGO_EMP_OPCAJA       = p.CODIGO_EMP_PAGO                ' +
-      '    AND o.CODIGO_ALM_OPCAJA       = p.CODIGO_ALM_PAGO                ' +
-      '    AND o.CODIGO_CAJA_OPCAJA      = p.CODIGO_CAJA_PAGO               ' +
-      '    AND o.NUMERO_OPERACION_OPCAJA = p.NUMERO_OPERACION_PAGO          ' +
-      '   LEFT JOIN fza_caja_formas_pago fp                                 ' +
-      '     ON fp.CODIGO_FP_CFP = p.CODIGO_FP_CFP                           ' +
-      '  WHERE p.CODIGO_EMP_PAGO      = :pEMPRESA                           ' +
-      '    AND p.CODIGO_ALM_PAGO      = :pALMACEN                           ' +
-      '    AND p.CODIGO_CAJA_PAGO     = :pCAJA                              ' +
-      '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                          ' +
-      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                          ' +
-      SQLExcluirSimplificadaSustituida(
-        'o.CODIGO_EMP_OPCAJA',
-        'o.SERIE_FAC_OPCAJA',
-        'o.NUMERO_FAC_OPCAJA') +
-      '  GROUP BY p.CODIGO_FP_CFP, fp.DESCRIPCION_FORMA_PAGO_CFP            ' +
-      '  ORDER BY IMP DESC                                                  ';
-    Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
-    Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;
-    Q.ParamByName('pCAJA').AsString    := AArqueo.Caja;
-    Q.ParamByName('pFDESDE').AsDateTime    := AArqueo.FechaDesde;
-    Q.ParamByName('pFHASTA').AsDateTime    := AArqueo.FechaHasta;
-    Q.Open;
-    if Q.IsEmpty then Exit;
+  aLineas := ARepositorio.ListarResumenFormaPago(
+    AArqueo);
+  if Length(aLineas) > 0 then
+  begin
     ATicket.SaltarLineas(1);
     ATicket.Negrita(True);
     ATicket.EscribirLinea('RESUMEN POR FORMA DE PAGO');
     ATicket.Negrita(False);
-    while not Q.Eof do
+    iLinea := 0;
+    while iLinea < Length(aLineas) do
     begin
       ATicket.TextoColumnas(
-        Format('%-12s  %3d uds', [Q.FieldByName('DESCR').AsString,
-                                  Q.FieldByName('UDS').AsInteger]),
-        FmtImp(Q.FieldByName('IMP').AsCurrency));
-      Q.Next;
+        Format(
+          '%-12s  %3d uds',
+          [aLineas[iLinea].Descripcion,
+           aLineas[iLinea].Unidades]),
+        FmtImp(aLineas[iLinea].Importe));
+      Inc(iLinea);
     end;
-  finally
-    FreeAndNil(Q);
   end;
 end;
 
 class procedure TArqueoTicket.EscribirResumenSerie(ATicket: TTicketTermico;
-                                                  AConn: TUniConnection;
+                                                  const ARepositorio:
+                                                  IRepositorioArqueoTicket;
                                                   const AArqueo: TArqueoCaja);
 var
-  Q: TUniQuery;
+  aLineas: TArray<TResumenSerieArqueo>;
   dBase, dCuota, dTotal, dPorc: Currency;
+  iLinea: Integer;
 begin
   // Una fila por serie. % IVA se calcula como tipo efectivo
   // (cuota / base * 100). Si la serie mezcla varios tipos de IVA la cifra
   // del % es la media ponderada, no un tipo concreto.
-  Q := TUniQuery.Create(nil);
-  try
-    Q.Connection := AConn;
-    Q.SQL.Text :=
-      ' SELECT                                                              ' +
-      '   f.SERIE_FAC                              AS SERIE,                ' +
-      '   COALESCE(SUM(f.TOTAL_BASES_FAC), 0)      AS BASE,                 ' +
-      '   COALESCE(SUM(f.TOTAL_IMPUESTOS_FAC), 0)  AS CUOTA,                ' +
-      '   COALESCE(SUM(f.TOTAL_LIQUIDO_FAC), 0)    AS TOTAL                 ' +
-      '   FROM fza_caja_operaciones o                                       ' +
-      '   JOIN fza_facturas f                                               ' +
-      '     ON f.CODIGO_EMP_FAC  = o.CODIGO_EMP_OPCAJA                      ' +
-      '    AND f.CODIGO_ALM_FAC  = o.CODIGO_ALM_OPCAJA                      ' +
-      '    AND f.CODIGO_CAJA_FAC = o.CODIGO_CAJA_OPCAJA                     ' +
-      '    AND f.SERIE_FAC       = o.SERIE_FAC_OPCAJA                       ' +
-      '    AND f.NUMERO_FAC      = o.NUMERO_FAC_OPCAJA                      ' +
-      '  WHERE o.TIPO_OPERACION_OPCAJA = ''VE''                             ' +
-      '    AND o.CODIGO_EMP_OPCAJA     = :pEMPRESA                          ' +
-      '    AND o.CODIGO_ALM_OPCAJA     = :pALMACEN                          ' +
-      '    AND o.CODIGO_CAJA_OPCAJA    = :pCAJA                             ' +
-      '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                          ' +
-      '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                          ' +
-      SQLExcluirSimplificadaSustituida(
-        'o.CODIGO_EMP_OPCAJA',
-        'o.SERIE_FAC_OPCAJA',
-        'o.NUMERO_FAC_OPCAJA') +
-      '  GROUP BY f.SERIE_FAC                                               ' +
-      '  ORDER BY f.SERIE_FAC                                               ';
-    Q.ParamByName('pEMPRESA').AsString := AArqueo.Empresa;
-    Q.ParamByName('pALMACEN').AsString := AArqueo.Almacen;
-    Q.ParamByName('pCAJA').AsString    := AArqueo.Caja;
-    Q.ParamByName('pFDESDE').AsDateTime    := AArqueo.FechaDesde;
-    Q.ParamByName('pFHASTA').AsDateTime    := AArqueo.FechaHasta;
-    Q.Open;
-    if Q.IsEmpty then Exit;
+  aLineas := ARepositorio.ListarResumenSerie(
+    AArqueo);
+  if Length(aLineas) > 0 then
+  begin
     ATicket.SaltarLineas(1);
     ATicket.Negrita(True);
     ATicket.EscribirLinea('RESUMEN VENTAS POR SERIE');
@@ -610,26 +460,25 @@ begin
     // la derecha, así no se pegan. 7+9+1+5+1+9+1+9 = 42.
     ATicket.EscribirLinea(Format('%-7s%9s %5s %9s %9s',
                                  ['SE', 'BASE IMP', '%IVA', 'CUOTA', 'TOTAL']));
-    while not Q.Eof do
+    iLinea := 0;
+    while iLinea < Length(aLineas) do
     begin
-      dBase  := Q.FieldByName('BASE').AsCurrency;
-      dCuota := Q.FieldByName('CUOTA').AsCurrency;
-      dTotal := Q.FieldByName('TOTAL').AsCurrency;
+      dBase := aLineas[iLinea].Base;
+      dCuota := aLineas[iLinea].Cuota;
+      dTotal := aLineas[iLinea].Total;
       if dBase <> 0 then
         dPorc := (dCuota / dBase) * 100
       else
         dPorc := 0;
       ATicket.EscribirLinea(
         Format('%-7s%9s %5s %9s %9s',
-               [Copy(Q.FieldByName('SERIE').AsString, 1, 7),
-                FmtImp(dBase),
+               [Copy(aLineas[iLinea].Serie, 1, 7),
+                 FmtImp(dBase),
                 FormatFloat('0.00', dPorc),
                 FmtImp(dCuota),
                 FmtImp(dTotal)]));
-      Q.Next;
+      Inc(iLinea);
     end;
-  finally
-    FreeAndNil(Q);
   end;
 end;
 
@@ -637,7 +486,11 @@ end;
 //   API pública
 // =============================================================================
 
-class procedure TArqueoTicket.Imprimir(AConn: TUniConnection;
+class procedure TArqueoTicket.Imprimir(
+                                      const ARepositorioArqueo:
+                                      IRepositorioArqueoCaja;
+                                      const ARepositorioTicket:
+                                      IRepositorioArqueoTicket;
                                       const AParametrosCaja:
                                       IParametrosCaja;
                                       const AEmpresa: string;
@@ -652,17 +505,22 @@ var
   Ticket: TTicketTermico;
   ComandosESC, RutaPDF: string;
 begin
-  if (AConn = nil) or (not AConn.Connected) then Exit;
-
-  Arqueo := TArqueoCalculadora.Calcular(AConn, AEmpresa, AAlmacen, ACaja,
-                                        AFechaDesde, AFechaHasta);
+  Arqueo := ARepositorioArqueo.Calcular(
+    AEmpresa,
+    AAlmacen,
+    ACaja,
+    AFechaDesde,
+    AFechaHasta);
 
   Ticket := TTicketTermico.Create(ANombreImpresora);
   try
     Ticket.Inicializar;
 
     // Cabecera de empresa
-    EscribirCabeceraEmpresa(Ticket, AConn, AEmpresa);
+    EscribirCabeceraEmpresa(
+      Ticket,
+      ARepositorioTicket,
+      AEmpresa);
 
     // Título del arqueo
     Ticket.SaltarLineas(1);
@@ -685,20 +543,42 @@ begin
     Ticket.SaltarLineas(1);
 
     // Contadores
-    EscribirContadores(Ticket, AConn, Arqueo);
+    EscribirContadores(
+      Ticket,
+      ARepositorioTicket,
+      Arqueo);
 
     // Totales
     EscribirTotales(Ticket, Arqueo);
 
     // Devoluciones desglosadas por forma de pago
-    EscribirDevolucionesPorFP(Ticket, AConn, Arqueo);
+    EscribirDevolucionesPorFP(
+      Ticket,
+      ARepositorioTicket,
+      Arqueo);
 
     // Resúmenes
-    EscribirResumenSeccion(Ticket, AConn, AParametrosCaja, Arqueo);
-    EscribirResumenTemporada(Ticket, AConn, Arqueo);
-    EscribirResumenEmpleado(Ticket, AConn, Arqueo);
-    EscribirResumenFormaPago(Ticket, AConn, Arqueo);
-    EscribirResumenSerie(Ticket, AConn, Arqueo);
+    EscribirResumenSeccion(
+      Ticket,
+      ARepositorioTicket,
+      AParametrosCaja,
+      Arqueo);
+    EscribirResumenTemporada(
+      Ticket,
+      ARepositorioTicket,
+      Arqueo);
+    EscribirResumenEmpleado(
+      Ticket,
+      ARepositorioTicket,
+      Arqueo);
+    EscribirResumenFormaPago(
+      Ticket,
+      ARepositorioTicket,
+      Arqueo);
+    EscribirResumenSerie(
+      Ticket,
+      ARepositorioTicket,
+      Arqueo);
 
     // Pie
     Ticket.SaltarLineas(1);
@@ -724,7 +604,7 @@ end;
 // =============================================================================
 
 class procedure TArqueoTicket.ImprimirCierre(
-  AConn: TUniConnection;
+  const ARepositorioTicket: IRepositorioArqueoTicket;
   const AContextoSesion: IContextoSesionAplicacion;
   const AArqueo: TArqueoCaja;
   const ALineas: TArray<TArqueoRecuentoLinea>;
@@ -750,7 +630,10 @@ begin
   Ticket := TTicketTermico.Create(ANombreImpresora);
   try
     Ticket.Inicializar;
-    EscribirCabeceraEmpresa(Ticket, AConn, AArqueo.Empresa);
+    EscribirCabeceraEmpresa(
+      Ticket,
+      ARepositorioTicket,
+      AArqueo.Empresa);
     { Título }
     Ticket.SaltarLineas(1);
     Ticket.Alinear(alCentro);
@@ -896,190 +779,99 @@ end;
 // =============================================================================
 
 class procedure TArqueoTicket.ImprimirDesdeHistorico(
-  AConn: TUniConnection;
+  const ARepositorioArqueo: IRepositorioArqueoCaja;
+  const ARepositorioTicket: IRepositorioArqueoTicket;
   const AParametrosCaja: IParametrosCaja;
   const AEmpresa, AAlmacen, ACaja: string;
   const ACodigoArqueo: string;
   const ANombreImpresora: string = 'DEBUG');
 var
-  Q: TUniQuery;
-  sEmp, sAlm, sCaja: string;
-  dDesde, dHasta: TDate;
-  bOk: Boolean;
+  dFechaHasta: TDate;
+  oRango: TRangoHistoricoArqueo;
 begin
-  if (AConn = nil) or (not AConn.Connected) then Exit;
-  bOk    := False;
-  dDesde := 0;
-  dHasta := 0;
-  Q := TUniQuery.Create(nil);
-  try
-    Q.Connection := AConn;
-    Q.SQL.Text :=
-      ' SELECT CODIGO_EMP_ARQ, CODIGO_ALM_ARQ, CODIGO_CAJA_ARQ,             ' +
-      '        FECHA_DESDE_ARQ, FECHA_HASTA_ARQ                             ' +
-      '   FROM fza_caja_arqueos                                            ' +
-      '  WHERE CODIGO_ARQ      = :pARQ                                      ' +
-      '    AND CODIGO_EMP_ARQ  = :pEMP                                      ' +
-      '    AND CODIGO_ALM_ARQ  = :pALM                                      ' +
-      '    AND CODIGO_CAJA_ARQ = :pCAJA                                     ';
-    Q.ParamByName('pARQ').AsString := ACodigoArqueo;
-    Q.ParamByName('pEMP').AsString := AEmpresa;
-    Q.ParamByName('pALM').AsString := AAlmacen;
-    Q.ParamByName('pCAJA').AsString := ACaja;
-    Q.Open;
-    if not Q.IsEmpty then
-    begin
-      sEmp   := Q.FieldByName('CODIGO_EMP_ARQ').AsString;
-      sAlm   := Q.FieldByName('CODIGO_ALM_ARQ').AsString;
-      sCaja  := Q.FieldByName('CODIGO_CAJA_ARQ').AsString;
-      dDesde := Q.FieldByName('FECHA_DESDE_ARQ').AsDateTime;
-      dHasta := Q.FieldByName('FECHA_HASTA_ARQ').AsDateTime;
-      bOk    := True;
-    end;
-  finally
-    FreeAndNil(Q);
-  end;
+  oRango := ARepositorioTicket.ObtenerRangoHistorico(
+    AEmpresa,
+    AAlmacen,
+    ACaja,
+    ACodigoArqueo);
   // Los cierres antiguos guardaban fechas sin hora. Se mantienen como dia
   // completo; los nuevos cierres por horas conservan su datetime exacto.
-  if bOk then
+  if oRango.Encontrado then
   begin
-    if (Frac(dDesde) = 0) and (Frac(dHasta) = 0) then
-      dHasta := dHasta + EncodeTime(23, 59, 59, 0);
-    Imprimir(AConn, AParametrosCaja, sEmp, sAlm, sCaja,
-             dDesde, dHasta,
-             ANombreImpresora, True);
+    dFechaHasta := oRango.FechaHasta;
+    if (Frac(oRango.FechaDesde) = 0) and
+       (Frac(dFechaHasta) = 0) then
+      dFechaHasta := dFechaHasta + EncodeTime(23, 59, 59, 0);
+    Imprimir(
+      ARepositorioArqueo,
+      ARepositorioTicket,
+      AParametrosCaja,
+      oRango.Empresa,
+      oRango.Almacen,
+      oRango.Caja,
+      oRango.FechaDesde,
+      dFechaHasta,
+      ANombreImpresora,
+      True);
   end;
 end;
 
 class procedure TArqueoTicket.ImprimirCierreDesdeHistorico(
-  AConn: TUniConnection;
+  const ARepositorioTicket: IRepositorioArqueoTicket;
   const AContextoSesion: IContextoSesionAplicacion;
   const AEmpresa, AAlmacen, ACaja: string;
   const ACodigoArqueo: string;
   const ANombreImpresora: string = 'DEBUG');
 var
-  Q: TUniQuery;
-  Arqueo: TArqueoCaja;
-  Lineas: TArray<TArqueoRecuentoLinea>;
-  dTotalSistema, dTotalRecuento, dDiferencia: Currency;
-  dRetirada, dEfectivoDejado: Currency;
-  sConcepto, sDesglose, sObs: string;
-  sVendedor, sNombreVendedor: string;
-  bOk: Boolean;
+  aLineas: TArray<TArqueoRecuentoLinea>;
+  iLinea: Integer;
+  oCierre: TCierreHistoricoArqueo;
 begin
-  if (AConn = nil) or (not AConn.Connected) then Exit;
-  bOk := False;
-  dTotalSistema   := 0;
-  dTotalRecuento  := 0;
-  dDiferencia     := 0;
-  dRetirada       := 0;
-  dEfectivoDejado := 0;
-  // Cabecera del arqueo: solo se rellenan los campos que usa ImprimirCierre.
-  Q := TUniQuery.Create(nil);
-  try
-    Q.Connection := AConn;
-    Q.SQL.Text :=
-      ' SELECT a.*,                                                       ' +
-      '        COALESCE(e.NOMBRE_EMPL, e.DIMINUTIVO_TICKET_EMPL,          ' +
-      '                 '''') AS NOMBRE_VENDEDOR                          ' +
-      '   FROM fza_caja_arqueos a                                         ' +
-      '   LEFT JOIN fza_empleados e                                       ' +
-      '     ON e.CODIGO_EMPL = a.CODIGO_EMPLEADO_ARQ                      ' +
-      '  WHERE a.CODIGO_ARQ      = :pARQ                                  ' +
-      '    AND a.CODIGO_EMP_ARQ  = :pEMP                                  ' +
-      '    AND a.CODIGO_ALM_ARQ  = :pALM                                  ' +
-      '    AND a.CODIGO_CAJA_ARQ = :pCAJA                                 ';
-    Q.ParamByName('pARQ').AsString := ACodigoArqueo;
-    Q.ParamByName('pEMP').AsString := AEmpresa;
-    Q.ParamByName('pALM').AsString := AAlmacen;
-    Q.ParamByName('pCAJA').AsString := ACaja;
-    Q.Open;
-    if not Q.IsEmpty then
-    begin
-      Arqueo.Empresa        := Q.FieldByName('CODIGO_EMP_ARQ').AsString;
-      Arqueo.Almacen        := Q.FieldByName('CODIGO_ALM_ARQ').AsString;
-      Arqueo.Caja           := Q.FieldByName('CODIGO_CAJA_ARQ').AsString;
-      Arqueo.FechaDesde     := Q.FieldByName('FECHA_DESDE_ARQ').AsDateTime;
-      Arqueo.FechaHasta     := Q.FieldByName('FECHA_HASTA_ARQ').AsDateTime;
-      Arqueo.CantidadVentas := Q.FieldByName('CANTIDAD_VENTAS_ARQ').AsInteger;
-      Arqueo.EfectivoIngresos :=
-        Q.FieldByName('TOTAL_EFECTIVO_INGRESOS_ARQ').AsCurrency;
-      Arqueo.EfectivoEntradas :=
-        Q.FieldByName('TOTAL_EFECTIVO_ENTRADAS_ARQ').AsCurrency;
-      Arqueo.EfectivoSalidas  :=
-        Q.FieldByName('TOTAL_EFECTIVO_SALIDAS_ARQ').AsCurrency;
-      Arqueo.EfectivoAnterior :=
-        Q.FieldByName('TOTAL_EFECTIVO_ANTERIOR_ARQ').AsCurrency;
-      Arqueo.EfectivoCaja     :=
-        Q.FieldByName('TOTAL_EFECTIVO_CAJA_ARQ').AsCurrency;
-      sObs := Q.FieldByName('OBSERVACIONES_ARQ').AsString;
-      // Vendedor estampado al cerrar; arqueos antiguos pueden no llevarlo
-      sVendedor       := Trim(Q.FieldByName('CODIGO_EMPLEADO_ARQ').AsString);
-      sNombreVendedor := Trim(Q.FieldByName('NOMBRE_VENDEDOR').AsString);
-      if (sVendedor <> '') and (sNombreVendedor <> '') then
-        sVendedor := sVendedor + ' - ' + sNombreVendedor;
-      // Columnas añadidas por arqueo_recuento.sql: leer contra FindField por
-      // si la BBDD todavía no tiene la migración del cierre Z aplicada.
-      if Q.FindField('TOTAL_RECUENTO_ARQ') <> nil then
-        dTotalRecuento := Q.FieldByName('TOTAL_RECUENTO_ARQ').AsCurrency;
-      if Q.FindField('DIFERENCIA_TOTAL_ARQ') <> nil then
-        dDiferencia := Q.FieldByName('DIFERENCIA_TOTAL_ARQ').AsCurrency;
-      dTotalSistema := dTotalRecuento - dDiferencia;
-      if Q.FindField('IMPORTE_RETIRADA_ARQ') <> nil then
-        dRetirada := Q.FieldByName('IMPORTE_RETIRADA_ARQ').AsCurrency;
-      if Q.FindField('CONCEPTO_RETIRADA_ARQ') <> nil then
-        sConcepto := Q.FieldByName('CONCEPTO_RETIRADA_ARQ').AsString;
-      if Q.FindField('EFECTIVO_DEJADO_CAJA_ARQ') <> nil then
-        dEfectivoDejado := Q.FieldByName('EFECTIVO_DEJADO_CAJA_ARQ').AsCurrency;
-      if Q.FindField('DESGLOSE_BILLETES_ARQ') <> nil then
-        sDesglose := Q.FieldByName('DESGLOSE_BILLETES_ARQ').AsString;
-      if (Frac(Arqueo.FechaDesde) = 0) and
-         (Frac(Arqueo.FechaHasta) = 0) then
-        Arqueo.FechaHasta :=
-          Arqueo.FechaHasta + EncodeTime(23, 59, 59, 0);
-      bOk := True;
-    end;
-  finally
-    FreeAndNil(Q);
-  end;
-  if bOk then
+  oCierre := ARepositorioTicket.ObtenerCierreHistorico(
+    AEmpresa,
+    AAlmacen,
+    ACaja,
+    ACodigoArqueo);
+  if oCierre.Encontrado then
   begin
-    // Detalle por forma de pago grabado en el cierre.
-    Q := TUniQuery.Create(nil);
-    try
-      Q.Connection := AConn;
-      Q.SQL.Text :=
-        ' SELECT CODIGO_FP_CFP_ARQR, DESCRIPCION_FP_ARQR, ESCAJON_ARQR,     ' +
-        '        IMPORTE_SISTEMA_ARQR, IMPORTE_RECUENTO_ARQR, DIFERENCIA_ARQR' +
-        '   FROM fza_caja_arqueos_recuento                                  ' +
-        '  WHERE CODIGO_ARQ_ARQR = :pARQ                                    ' +
-        '  ORDER BY ESCAJON_ARQR DESC, CODIGO_FP_CFP_ARQR                   ';
-      Q.ParamByName('pARQ').AsString := ACodigoArqueo;
-      Q.Open;
-      while not Q.Eof do
-      begin
-        SetLength(Lineas, Length(Lineas) + 1);
-        Lineas[High(Lineas)].CodigoFP    :=
-          Q.FieldByName('CODIGO_FP_CFP_ARQR').AsString;
-        Lineas[High(Lineas)].Descripcion :=
-          Q.FieldByName('DESCRIPCION_FP_ARQR').AsString;
-        Lineas[High(Lineas)].EsCajon     :=
-          Q.FieldByName('ESCAJON_ARQR').AsString;
-        Lineas[High(Lineas)].Sistema     :=
-          Q.FieldByName('IMPORTE_SISTEMA_ARQR').AsCurrency;
-        Lineas[High(Lineas)].Recuento    :=
-          Q.FieldByName('IMPORTE_RECUENTO_ARQR').AsCurrency;
-        Lineas[High(Lineas)].Diferencia  :=
-          Q.FieldByName('DIFERENCIA_ARQR').AsCurrency;
-        Q.Next;
-      end;
-    finally
-      FreeAndNil(Q);
+    if (Frac(oCierre.Arqueo.FechaDesde) = 0) and
+       (Frac(oCierre.Arqueo.FechaHasta) = 0) then
+      oCierre.Arqueo.FechaHasta :=
+        oCierre.Arqueo.FechaHasta + EncodeTime(23, 59, 59, 0);
+    SetLength(aLineas, Length(oCierre.Lineas));
+    iLinea := 0;
+    while iLinea < Length(oCierre.Lineas) do
+    begin
+      aLineas[iLinea].CodigoFP :=
+        oCierre.Lineas[iLinea].CodigoFormaPago;
+      aLineas[iLinea].Descripcion :=
+        oCierre.Lineas[iLinea].Descripcion;
+      aLineas[iLinea].EsCajon :=
+        oCierre.Lineas[iLinea].EsCajon;
+      aLineas[iLinea].Sistema :=
+        oCierre.Lineas[iLinea].Sistema;
+      aLineas[iLinea].Recuento :=
+        oCierre.Lineas[iLinea].Recuento;
+      aLineas[iLinea].Diferencia :=
+        oCierre.Lineas[iLinea].Diferencia;
+      Inc(iLinea);
     end;
-    ImprimirCierre(AConn, AContextoSesion, Arqueo, Lineas,
-                   dTotalSistema, dTotalRecuento, dDiferencia,
-                   dRetirada, sConcepto, dEfectivoDejado,
-                   sDesglose, sObs, sVendedor, ANombreImpresora, True);
+    ImprimirCierre(
+      ARepositorioTicket,
+      AContextoSesion,
+      oCierre.Arqueo,
+      aLineas,
+      oCierre.TotalSistema,
+      oCierre.TotalRecuento,
+      oCierre.Diferencia,
+      oCierre.Retirada,
+      oCierre.ConceptoRetirada,
+      oCierre.EfectivoDejado,
+      oCierre.DesgloseBilletes,
+      oCierre.Observaciones,
+      oCierre.Vendedor,
+      ANombreImpresora,
+      True);
   end;
 end;
 

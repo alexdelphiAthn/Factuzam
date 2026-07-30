@@ -49,9 +49,6 @@ type
     procedure ResetForm; override;
   end;
 
-var
-  frmMtoPropiedadesValores: TfrmMtoPropiedadesValores;
-
 implementation
 
 uses

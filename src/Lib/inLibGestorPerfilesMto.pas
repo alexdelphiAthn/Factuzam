@@ -92,7 +92,8 @@ implementation
 
 uses
   System.SysUtils, System.Generics.Collections, Data.DBCommon,
-  Vcl.Controls, cxGridDBTableView, inLibDevExp, inLibUser, inLibMsg;
+  Vcl.Controls, cxGridDBTableView, inLibDevExp, inLibUser,
+  inLibMsgComun, inLibMsgConfiguracion;
 
 constructor TGestorPerfilesMto.Create(
   AFormulario: TCustomForm;

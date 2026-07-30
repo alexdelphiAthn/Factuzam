@@ -68,9 +68,6 @@ type
     procedure AfterReportLoaded; override;
   end;
 
-var
-  frmPrintMovVentasArt: TfrmPrintMovVentasArt;
-
 implementation
 
 {$R *.dfm}

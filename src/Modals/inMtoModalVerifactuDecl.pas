@@ -55,7 +55,7 @@ uses
   System.IOUtils,
   Data.DB, Uni,
   inLibGlobalVar, inLibVerifactuInstalacion, inLibParametrosIntf,
-  inLibMsg;
+  inLibMsgVerifactu;
 
 {$R *.dfm}
 

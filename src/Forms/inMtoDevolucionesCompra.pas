@@ -305,15 +305,12 @@ type
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
-var
-  frmMtoDevolucionesCompra: TfrmMtoDevolucionesCompra;
-
 implementation
 
 uses
   System.StrUtils,
   inLibFiltroUsuario,
-  inLibArticulosResolver,
+  inLibArticulosResolverIntf,
   inLibArticulosValidador,
   inLibGridCantidad,
   inLibColumnasDocumento,
@@ -324,7 +321,7 @@ uses
   UniDataArticulos,
   inLibComprasImpuestos,
   inLibDevolucionesCompraStock,
-  inLibMsg,
+  inLibMsgArticulos, inLibMsgCompras,
   inMtoModalImpDevCompra,
   inMtoModalImpDevCompraV,
   inMtoModalEtiqDev, inLibShowMto, inLibGenBusq,
@@ -1635,7 +1632,8 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
   sLineasSinSku := LineasSinSkuRequerido(
-    dmmDevolucionesCompra.unqryTablaG.Connection,
+    CrearValidadorArticulos(
+      dmmDevolucionesCompra.unqryTablaG.Connection),
     dmmDevolucionesCompra.unqryDevolucionesCompraLineas, 'DEVCLIN');
   if (sLineasSinSku <> '') and
      (MessageDlg(Format(SPreguntaGrabarDevolucionCompraSinSku,
@@ -1852,6 +1850,10 @@ begin
     ContextoSesion, tvLineasDevolucion, ds, FModoEntradaSel,
     Trim(dmmDevolucionesCompra.unqryTablaG.
       FieldByName('CODIGO_ALM_DEVC').AsString), 'DEVCLIN');
+  Cfg.ValidadorArticulos :=
+    CrearValidadorArticulos(Cfg.Conexion);
+  Cfg.LookupAtributos :=
+    CrearLookupAtributosArticulos(Cfg.Conexion);
   if FModoEntradaSel = mcsTallasHorPed then
   begin
     CfgPV := CrearConfigPivoteBandasDocumentoCompra(
@@ -2305,11 +2307,10 @@ end;
 
 procedure TAplicacionArticuloDevolucion.CargarDatosArticulo;
 var
-  Resolver: TArticulosResolver;
+  Resolver: IArticulosResolver;
 begin
-  Resolver := TArticulosResolver.Create(
-    FFormulario.ConexionPrincipal,
-    FFormulario.ParametrosCaja);
+  Resolver := FFormulario.CrearResolverArticulos(
+    FFormulario.ConexionPrincipal);
   try
     FDatos := Resolver.ResolverDatos(
       FCodigoArticulo, FCodigoSku, '', FFecha,
@@ -2318,21 +2319,21 @@ begin
       FDatos.UltimoCoste := Resolver.ResolverUltimoCoste(
         FDatos.CodigoArticulo, FCodigoProveedor, '');
   finally
-    FreeAndNil(Resolver);
+    Resolver := nil;
   end;
 end;
 
 procedure TAplicacionArticuloDevolucion.ResolverEntradaSku;
 var
-  Validador: TArticulosValidador;
+  Validador: IArticulosValidador;
   Resolucion: TArtResolucionEntrada;
 begin
-  Validador := TArticulosValidador.Create(
+  Validador := FFormulario.CrearValidadorArticulos(
     FFormulario.ConexionPrincipal);
   try
     Resolucion := Validador.Resolver(FCodigoArticulo);
   finally
-    FreeAndNil(Validador);
+    Validador := nil;
   end;
   if Resolucion.Encontrado then
   begin

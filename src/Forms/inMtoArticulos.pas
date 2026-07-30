@@ -566,9 +566,6 @@ type
     dmmArticulos: TdmArticulos;
   end;
 
-var
-  frmMtoArticulos: TfrmMtoArticulos;
-
 implementation
 
 uses
@@ -591,7 +588,7 @@ uses
   inLibAtributosPaleta,
   inLibLog,             // Log.LogPerf para cronometros del AfterScroll
   System.Diagnostics,   // TStopwatch
-  inLibMsg;
+  inLibMsgArticulos;
 
 {$R *.dfm}
 

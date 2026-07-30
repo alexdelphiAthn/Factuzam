@@ -80,10 +80,60 @@ uses
     '..\src\Lib\inLibCatalogoSqlPerfiles.pas',
   inLibCatalogoSqlAdmin in
     '..\src\Lib\inLibCatalogoSqlAdmin.pas',
+  inLibCatalogoSqlRegistro in
+    '..\src\Lib\inLibCatalogoSqlRegistro.pas',
+  inLibCatalogoSqlIncidencias in
+    '..\src\Lib\inLibCatalogoSqlIncidencias.pas',
+  inLibCatalogoSqlEjecucion in
+    '..\src\Lib\inLibCatalogoSqlEjecucion.pas',
+  inLibComprasSesionesIntf in
+    '..\src\Lib\inLibComprasSesionesIntf.pas',
+  inLibComprasSesiones in
+    '..\src\Lib\inLibComprasSesiones.pas',
+  inLibComprasSesionesMaterializar in
+    '..\src\Lib\inLibComprasSesionesMaterializar.pas',
+  UniDataComprasSesionesRepositorio in
+    '..\src\DataModules\UniDataComprasSesionesRepositorio.pas',
+  UniDataCatalogoSqlValidacion in
+    '..\src\DataModules\UniDataCatalogoSqlValidacion.pas',
+  UniDataFacturasRepositorio in
+    '..\src\DataModules\UniDataFacturasRepositorio.pas',
+  UniDataCajaConsultasRepositorio in
+    '..\src\Caja\DataModules\UniDataCajaConsultasRepositorio.pas',
+  inLibArticulosResolverIntf in
+    '..\src\Lib\inLibArticulosResolverIntf.pas',
+  UniDataArticulosResolverRepositorio in
+    '..\src\DataModules\UniDataArticulosResolverRepositorio.pas',
+  inLibArticulosValidadorIntf in
+    '..\src\Lib\inLibArticulosValidadorIntf.pas',
+  UniDataArticulosValidadorRepositorio in
+    '..\src\DataModules\UniDataArticulosValidadorRepositorio.pas',
+  inLibArticulosAtributosIntf in
+    '..\src\Lib\inLibArticulosAtributosIntf.pas',
+  UniDataArticulosAtributosRepositorio in
+    '..\src\DataModules\UniDataArticulosAtributosRepositorio.pas',
+  inLibTraspasoTicketIntf in
+    '..\src\Caja\Lib\inLibTraspasoTicketIntf.pas',
+  UniDataTraspasoTicketRepositorio in
+    '..\src\Caja\DataModules\UniDataTraspasoTicketRepositorio.pas',
+  inLibArqueoIntf in
+    '..\src\Caja\Lib\inLibArqueoIntf.pas',
+  UniDataArqueoRepositorio in
+    '..\src\Caja\DataModules\UniDataArqueoRepositorio.pas',
+  inLibArqueoTicketIntf in
+    '..\src\Caja\Lib\inLibArqueoTicketIntf.pas',
+  UniDataArqueoTicketRepositorio in
+    '..\src\Caja\DataModules\UniDataArqueoTicketRepositorio.pas',
+  UniDataCatalogoSqlAplicacion in
+    '..\src\DataModules\UniDataCatalogoSqlAplicacion.pas',
   inLibPerfilesUsuarioValores in
     '..\src\Lib\inLibPerfilesUsuarioValores.pas',
   inLibExcepcionesAplicacionIntf in
     '..\src\Lib\inLibExcepcionesAplicacionIntf.pas',
+  inLibJsonSeguro in '..\src\Lib\inLibJsonSeguro.pas',
+  inLibTraduccionesIntf in
+    '..\src\Lib\inLibTraduccionesIntf.pas',
+  inLibTraducciones in '..\src\Lib\inLibTraducciones.pas',
   PruebasAtributosPaleta in 'PruebasAtributosPaleta.pas',
   PruebasColumnasDocumento in 'PruebasColumnasDocumento.pas',
   PruebasFiltroUsuario in 'PruebasFiltroUsuario.pas',
@@ -107,6 +157,22 @@ uses
     'PruebasValoresAutomaticos.pas',
   PruebasBusquedasCompra in 'PruebasBusquedasCompra.pas',
   PruebasCatalogoSql in 'PruebasCatalogoSql.pas',
+  PruebasCatalogoSqlRepositorios in
+    'PruebasCatalogoSqlRepositorios.pas',
+  PruebasArticulosResolverCatalogo in
+    'PruebasArticulosResolverCatalogo.pas',
+  PruebasArticulosCatalogoSql22 in
+    'PruebasArticulosCatalogoSql22.pas',
+  PruebasTraspasoTicketCatalogo in
+    'PruebasTraspasoTicketCatalogo.pas',
+  PruebasArqueoCatalogo in
+    'PruebasArqueoCatalogo.pas',
+  PruebasArqueoTicketCatalogo in
+    'PruebasArqueoTicketCatalogo.pas',
+  DoblesComprasSesiones in
+    'DoblesComprasSesiones.pas',
+  PruebasComprasSesionesRepositorio in
+    'PruebasComprasSesionesRepositorio.pas',
   PruebasValidacionTallasCompra in
     'PruebasValidacionTallasCompra.pas',
   PruebasPresentacionDocumento in
@@ -122,7 +188,9 @@ uses
   PruebasFacturasServicios in 'PruebasFacturasServicios.pas',
   PruebasExcepcionesAplicacion in
     'PruebasExcepcionesAplicacion.pas',
-  PruebasEmisionFiscal in 'PruebasEmisionFiscal.pas';
+  PruebasEmisionFiscal in 'PruebasEmisionFiscal.pas',
+  PruebasJsonSeguro in 'PruebasJsonSeguro.pas',
+  PruebasTraducciones in 'PruebasTraducciones.pas';
 
 var
   oEjecutor: ITestRunner;

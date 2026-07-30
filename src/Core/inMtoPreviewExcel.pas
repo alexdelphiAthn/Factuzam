@@ -57,9 +57,6 @@ type
     { Public declarations }
   end;
 
-var
-  frmMtoPreviewExcel: TfrmMtoPreviewExcel;
-
 implementation
 
 uses

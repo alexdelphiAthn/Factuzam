@@ -65,9 +65,6 @@ type
     procedure ResetForm; override;
   end;
 
-var
-  frmMtoVerifactuCola: TfrmMtoVerifactuCola;
-
 implementation
 
 uses

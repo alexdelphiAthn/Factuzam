@@ -100,7 +100,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsg;
+  inLibMsgArticulos;
 
 
 procedure TfrmMtoModalGenerarSKUS.GenerarCombinaciones(Nivel: Integer;

@@ -389,8 +389,12 @@ begin
       if sc <> 0 then
         aList.Add(sc);
     except
-      // Si hay un texto mal formado en la BD,
-      //lo ignoramos para no romper el programa
+      // Si hay un texto mal formado en la BD, lo ignoramos para no
+      // romper el programa, pero queda constancia en el log.
+      on E: Exception do
+        inLibLog.Log.LogWarning(
+          'Atajo "' + ofzaForm.ShortCut + '" invalido: ' +
+          E.Message);
     end;
   end;
   Result := aList;

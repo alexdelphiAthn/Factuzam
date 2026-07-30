@@ -1,4 +1,4 @@
-﻿object frmMtoModalAltaRapida: TfrmMtoModalAltaRapida
+﻿inherited frmMtoModalAltaRapida: TfrmMtoModalAltaRapida
   Left = 0
   Top = 0
   BorderStyle = bsDialog

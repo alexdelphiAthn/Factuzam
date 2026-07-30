@@ -275,15 +275,12 @@ type
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
-var
-  frmMtoFacturasCompra: TfrmMtoFacturasCompra;
-
 implementation
 
 uses
   System.StrUtils,
   inLibFiltroUsuario,
-  inLibArticulosResolver,
+  inLibArticulosResolverIntf,
   inLibArticulosValidador,
   inLibGridCantidad,
   inLibColumnasDocumento,
@@ -292,7 +289,7 @@ uses
   inLibPresentacionDocumento,
   inLibComprasImpuestos,
   inLibAtributosPaleta,
-  inLibMsg,
+  inLibMsgArticulos, inLibMsgCompras, inLibMsgComun,
   UniDataArticulos,
   inMtoModalImpFacCompra,
   inMtoModalImpFacCompraV,
@@ -739,7 +736,8 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
   sLineasSinSku := LineasSinSkuRequerido(
-    dmmFacturasCompra.unqryTablaG.Connection,
+    CrearValidadorArticulos(
+      dmmFacturasCompra.unqryTablaG.Connection),
     dmmFacturasCompra.unqryFacturasCompraLineas, 'FACCLIN');
   if (sLineasSinSku <> '') and
      (MessageDlg(Format(SPreguntaGrabarFacturaCompraSinSku,
@@ -913,6 +911,10 @@ begin
     ContextoSesion, tvLineasFactura, ds, FModoEntradaSel,
     Trim(dmmFacturasCompra.unqryTablaG.
       FieldByName('CODIGO_ALM_FACC').AsString), 'FACCLIN');
+  Cfg.ValidadorArticulos :=
+    CrearValidadorArticulos(Cfg.Conexion);
+  Cfg.LookupAtributos :=
+    CrearLookupAtributosArticulos(Cfg.Conexion);
   if FModoEntradaSel = mcsTallasHorPed then
   begin
     CfgPV := CrearConfigPivoteBandasDocumentoCompra(
@@ -1087,8 +1089,8 @@ procedure TfrmMtoFacturasCompra.AplicarArticuloFacturaCompra(
   const ACodigoArt: string);
 var
   ds         : TDataSet;
-  Validador  : TArticulosValidador;
-  Resolver   : TArticulosResolver;
+  Validador  : IArticulosValidador;
+  Resolver   : IArticulosResolver;
   Resolucion : TArtResolucionEntrada;
   Datos      : TArticuloDatos;
   qry        : TUniQuery;
@@ -1245,11 +1247,10 @@ begin
         sPrv := CampoCabeceraString('CODIGO_PRV_FACC');
         sAlm := CampoCabeceraString('CODIGO_ALM_FACC');
         dFecha := FechaCabecera;
-        Validador := TArticulosValidador.Create(
+        Validador := CrearValidadorArticulos(
                        dmmFacturasCompra.unqryTablaG.Connection);
-        Resolver := TArticulosResolver.Create(
-                      dmmFacturasCompra.unqryTablaG.Connection,
-                      ParametrosCaja);
+        Resolver := CrearResolverArticulos(
+          dmmFacturasCompra.unqryTablaG.Connection);
         Resolucion := Validador.Resolver(sInput);
         if Resolucion.Encontrado then
         begin
@@ -1329,8 +1330,8 @@ begin
         else if Resolucion.Mensaje <> '' then
           MessageDlg(Resolucion.Mensaje, mtWarning, [mbOk], 0);
       finally
-        FreeAndNil(Resolver);
-        FreeAndNil(Validador);
+        Resolver := nil;
+        Validador := nil;
         FAplicandoArticulo := False;
       end;
     end;

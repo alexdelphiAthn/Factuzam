@@ -1,4 +1,4 @@
-object frmModalTiraCaja: TfrmModalTiraCaja
+inherited frmModalTiraCaja: TfrmModalTiraCaja
   Left = 0
   Top = 0
   BorderStyle = bsDialog

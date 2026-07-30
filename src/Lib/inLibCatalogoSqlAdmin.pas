@@ -20,6 +20,7 @@ uses
 
 type
   TEstadoPerfilSql = (
+    epsSoloBase,
     epsFalta,
     epsDesactivado,
     epsBase,
@@ -27,10 +28,19 @@ type
     epsInvalido);
   TRevisionPerfilSql = record
     ClavePerfil: string;
+    Repositorio: string;
+    Operacion: string;
+    SqlBase: string;
+    SqlPerfil: string;
+    ValorPerfil: string;
+    UltimaCausaFallback: string;
     Estado: TEstadoPerfilSql;
     Mensaje: string;
     HuellaBase: string;
     HuellaPerfil: string;
+    Politica: TPoliticaEjecucionSql;
+    Version: Integer;
+    TienePerfil: Boolean;
   end;
   TRevisionesPerfilSql = array of TRevisionPerfilSql;
   TAdministradorSqlPerfiles = class
@@ -40,19 +50,36 @@ type
       const AClavePerfil: string): TProfileDicc;
     function PerfilActivo(const AValor: string): Boolean;
     function NombreSeguro(const ATexto: string): string;
+    function NombreEstado(
+      AEstado: TEstadoPerfilSql): string;
   public
     constructor Create(
       const APerfiles: IPerfilesUsuario);
     procedure PublicarFaltantes(
       const AClavePerfil: string;
       const ADefiniciones: TDefinicionesSql);
+    procedure PublicarCatalogo(
+      const ARegistro: IRegistroDefinicionesSql);
     function Revisar(
       const AClavePerfil: string;
-      const ADefiniciones: TDefinicionesSql
+      const ADefiniciones: TDefinicionesSql;
+      const AIncidencias: IRegistroIncidenciasSql = nil
+    ): TRevisionesPerfilSql;
+    function RevisarCatalogo(
+      const ARegistro: IRegistroDefinicionesSql;
+      const AIncidencias: IRegistroIncidenciasSql = nil
     ): TRevisionesPerfilSql;
     procedure Exportar(
       const ARuta: string;
-      const ADefiniciones: TDefinicionesSql);
+      const ADefiniciones: TDefinicionesSql); overload;
+    procedure Exportar(
+      const ARuta, AClavePerfil: string;
+      const ADefiniciones: TDefinicionesSql;
+      const AIncidencias: IRegistroIncidenciasSql = nil); overload;
+    procedure ExportarCatalogo(
+      const ARuta: string;
+      const ARegistro: IRegistroDefinicionesSql;
+      const AIncidencias: IRegistroIncidenciasSql = nil);
   end;
 
 implementation
@@ -64,6 +91,8 @@ uses
 resourcestring
   SErrorPerfilesSqlNoConfigurados =
     'El servicio de perfiles no está configurado.';
+  SErrorRegistroSqlNoConfigurado =
+    'El registro de definiciones SQL no está configurado.';
 
 constructor TAdministradorSqlPerfiles.Create(
   const APerfiles: IPerfilesUsuario);
@@ -114,12 +143,34 @@ begin
   end;
 end;
 
+function TAdministradorSqlPerfiles.NombreEstado(
+  AEstado: TEstadoPerfilSql): string;
+begin
+  case AEstado of
+    epsSoloBase:
+      Result := 'SOLO_BASE';
+    epsFalta:
+      Result := 'FALTA';
+    epsDesactivado:
+      Result := 'DESACTIVADO';
+    epsBase:
+      Result := 'BASE';
+    epsPersonalizado:
+      Result := 'PERSONALIZADO';
+    epsInvalido:
+      Result := 'INVALIDO';
+  else
+    Result := '';
+  end;
+end;
+
 procedure TAdministradorSqlPerfiles.PublicarFaltantes(
   const AClavePerfil: string;
   const ADefiniciones: TDefinicionesSql);
 var
   iIndice: Integer;
   oPerfil: TProfileDicc;
+  oValor: TDictValue;
   sClaveSql: string;
   sVersion: string;
 begin
@@ -129,7 +180,9 @@ begin
     begin
       sClaveSql := ClavePerfilSql(
         ADefiniciones[iIndice]);
-      if not oPerfil.ContainsKey(sClaveSql) then
+      if (ADefiniciones[iIndice].Politica <>
+          pesSoloBase) and
+         (not oPerfil.ContainsKey(sClaveSql)) then
       begin
         sVersion := Format(
           'S;V=%d;BASE=%s',
@@ -142,6 +195,12 @@ begin
           sClaveSql,
           sVersion,
           ADefiniciones[iIndice].SqlBase);
+        oValor.sValue := sVersion;
+        oValor.sValueText :=
+          ADefiniciones[iIndice].SqlBase;
+        oPerfil.AddOrSetValue(
+          sClaveSql,
+          oValor);
       end;
     end;
   finally
@@ -149,9 +208,21 @@ begin
   end;
 end;
 
+procedure TAdministradorSqlPerfiles.PublicarCatalogo(
+  const ARegistro: IRegistroDefinicionesSql);
+begin
+  if not Assigned(ARegistro) then
+    raise Exception.Create(
+      SErrorRegistroSqlNoConfigurado);
+  PublicarFaltantes(
+    CLAVE_PERFIL_CATALOGO_SQL,
+    ARegistro.ObtenerDefiniciones);
+end;
+
 function TAdministradorSqlPerfiles.Revisar(
   const AClavePerfil: string;
-  const ADefiniciones: TDefinicionesSql
+  const ADefiniciones: TDefinicionesSql;
+  const AIncidencias: IRegistroIncidenciasSql
 ): TRevisionesPerfilSql;
 var
   iIndice: Integer;
@@ -169,17 +240,46 @@ begin
       sClaveSql := ClavePerfilSql(
         ADefiniciones[iIndice]);
       Result[iIndice].ClavePerfil := sClaveSql;
+      Result[iIndice].Repositorio :=
+        ADefiniciones[iIndice].Repositorio;
+      Result[iIndice].Operacion :=
+        ADefiniciones[iIndice].Operacion;
+      Result[iIndice].SqlBase :=
+        ADefiniciones[iIndice].SqlBase;
+      Result[iIndice].SqlPerfil := '';
+      Result[iIndice].ValorPerfil := '';
+      Result[iIndice].UltimaCausaFallback := '';
       Result[iIndice].HuellaBase := CalcularHuellaSql(
         ADefiniciones[iIndice].SqlBase);
       Result[iIndice].HuellaPerfil := '';
       Result[iIndice].Mensaje := '';
-      Result[iIndice].Estado := epsFalta;
+      Result[iIndice].Politica :=
+        ADefiniciones[iIndice].Politica;
+      Result[iIndice].Version :=
+        ADefiniciones[iIndice].Version;
+      Result[iIndice].TienePerfil := False;
+      if ADefiniciones[iIndice].Politica =
+         pesSoloBase then
+        Result[iIndice].Estado := epsSoloBase
+      else
+        Result[iIndice].Estado := epsFalta;
+      if Assigned(AIncidencias) then
+        Result[iIndice].UltimaCausaFallback :=
+          AIncidencias.ObtenerUltimaCausa(
+            sClaveSql);
       if oPerfil.TryGetValue(sClaveSql, oValor) then
       begin
+        Result[iIndice].TienePerfil := True;
+        Result[iIndice].ValorPerfil :=
+          oValor.sValue;
         sSqlPerfil := string(oValor.sValueText);
+        Result[iIndice].SqlPerfil := sSqlPerfil;
         Result[iIndice].HuellaPerfil :=
           CalcularHuellaSql(sSqlPerfil);
-        if not PerfilActivo(oValor.sValue) then
+        if ADefiniciones[iIndice].Politica =
+           pesSoloBase then
+          Result[iIndice].Estado := epsSoloBase
+        else if not PerfilActivo(oValor.sValue) then
           Result[iIndice].Estado := epsDesactivado
         else
         begin
@@ -205,18 +305,53 @@ begin
   end;
 end;
 
+function TAdministradorSqlPerfiles.RevisarCatalogo(
+  const ARegistro: IRegistroDefinicionesSql;
+  const AIncidencias: IRegistroIncidenciasSql
+): TRevisionesPerfilSql;
+begin
+  if not Assigned(ARegistro) then
+    raise Exception.Create(
+      SErrorRegistroSqlNoConfigurado);
+  Result := Revisar(
+    CLAVE_PERFIL_CATALOGO_SQL,
+    ARegistro.ObtenerDefiniciones,
+    AIncidencias);
+end;
+
 procedure TAdministradorSqlPerfiles.Exportar(
   const ARuta: string;
   const ADefiniciones: TDefinicionesSql);
+begin
+  Exportar(
+    ARuta,
+    CLAVE_PERFIL_CATALOGO_SQL,
+    ADefiniciones,
+    nil);
+end;
+
+procedure TAdministradorSqlPerfiles.Exportar(
+  const ARuta, AClavePerfil: string;
+  const ADefiniciones: TDefinicionesSql;
+  const AIncidencias: IRegistroIncidenciasSql);
 var
   iIndice: Integer;
   oIndice: TStringList;
+  oRevisiones: TRevisionesPerfilSql;
   sDirectorioRepositorio: string;
   sFichero: string;
+  sMensaje: string;
 begin
   ForceDirectories(ARuta);
+  oRevisiones := Revisar(
+    AClavePerfil,
+    ADefiniciones,
+    AIncidencias);
   oIndice := TStringList.Create;
   try
+    oIndice.Add(
+      'CLAVE | ESTADO | POLITICA | VERSION | ' +
+      'HUELLA_BASE | HUELLA_PERFIL | MENSAJE | ULTIMO_FALLBACK');
     for iIndice := 0 to High(ADefiniciones) do
     begin
       sDirectorioRepositorio := TPath.Combine(
@@ -227,17 +362,39 @@ begin
       sFichero := TPath.Combine(
         sDirectorioRepositorio,
         NombreSeguro(
-          ADefiniciones[iIndice].Operacion) + '.sql');
+          ADefiniciones[iIndice].Operacion) + '.base.sql');
       TFile.WriteAllText(
         sFichero,
         ADefiniciones[iIndice].SqlBase,
         TEncoding.UTF8);
+      if oRevisiones[iIndice].TienePerfil then
+      begin
+        sFichero := TPath.Combine(
+          sDirectorioRepositorio,
+          NombreSeguro(
+            ADefiniciones[iIndice].Operacion) + '.perfil.sql');
+        TFile.WriteAllText(
+          sFichero,
+          oRevisiones[iIndice].SqlPerfil,
+          TEncoding.UTF8);
+      end;
+      sMensaje := StringReplace(
+        oRevisiones[iIndice].Mensaje,
+        sLineBreak,
+        ' ',
+        [rfReplaceAll]);
       oIndice.Add(Format(
-        '%s | V%d | %s',
+        '%s | %s | %s | V%d | %s | %s | %s | %s',
         [ClavePerfilSql(ADefiniciones[iIndice]),
+         NombreEstado(oRevisiones[iIndice].Estado),
+         NombrePoliticaEjecucionSql(
+           ADefiniciones[iIndice].Politica),
          ADefiniciones[iIndice].Version,
          CalcularHuellaSql(
-           ADefiniciones[iIndice].SqlBase)]));
+           ADefiniciones[iIndice].SqlBase),
+         oRevisiones[iIndice].HuellaPerfil,
+         sMensaje,
+         oRevisiones[iIndice].UltimaCausaFallback]));
     end;
     oIndice.SaveToFile(
       TPath.Combine(ARuta, 'catalogo_sql.txt'),
@@ -245,6 +402,21 @@ begin
   finally
     FreeAndNil(oIndice);
   end;
+end;
+
+procedure TAdministradorSqlPerfiles.ExportarCatalogo(
+  const ARuta: string;
+  const ARegistro: IRegistroDefinicionesSql;
+  const AIncidencias: IRegistroIncidenciasSql);
+begin
+  if not Assigned(ARegistro) then
+    raise Exception.Create(
+      SErrorRegistroSqlNoConfigurado);
+  Exportar(
+    ARuta,
+    CLAVE_PERFIL_CATALOGO_SQL,
+    ARegistro.ObtenerDefiniciones,
+    AIncidencias);
 end;
 
 end.

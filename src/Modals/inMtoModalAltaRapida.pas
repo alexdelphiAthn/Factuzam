@@ -21,10 +21,11 @@ uses
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.StdCtrls, Vcl.ExtCtrls,
   cxGraphics, cxLookAndFeels, cxLookAndFeelPainters, cxControls, cxContainer,
-  cxEdit, cxLabel, cxTextEdit, cxButtons, cxClasses, Vcl.Menus;
+  cxEdit, cxLabel, cxTextEdit, cxButtons, cxClasses, Vcl.Menus,
+  inMtoFrmBase;
 
 type
-  TfrmMtoModalAltaRapida = class(TForm)
+  TfrmMtoModalAltaRapida = class(TfrmBase)
     ScrollBox: TScrollBox;
     pnlBotones: TPanel;
     btnOk: TcxButton;

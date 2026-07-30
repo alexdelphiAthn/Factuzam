@@ -60,12 +60,12 @@ uses
   inLibColumnasSkuModoSku,
   inLibColumnasSkuModoDesglose,
   inLibColumnasSkuModoTallas,
-  inLibMsg;
+  inLibMsgArticulos;
 
 type
   TProveedorValoresSku = class(TInterfacedObject, IProveedorValoresSku)
   private
-    FLookup: TArticulosAtributosLookup;
+    FLookup: IArticulosAtributosLookup;
   public
     constructor Create(AConexion: TUniConnection);
     destructor Destroy; override;
@@ -78,12 +78,13 @@ type
 constructor TProveedorValoresSku.Create(AConexion: TUniConnection);
 begin
   inherited Create;
-  FLookup := TArticulosAtributosLookup.Create(AConexion);
+  FLookup := CrearLookupAtributosArticulosBase(
+    AConexion);
 end;
 
 destructor TProveedorValoresSku.Destroy;
 begin
-  FreeAndNil(FLookup);
+  FLookup := nil;
   inherited;
 end;
 

@@ -102,13 +102,10 @@ type
                            ): TSelAlmacenAlbaranResult;
   end;
 
-var
-  frmModalSelAlmacenAlbaran: TfrmModalSelAlmacenAlbaran;
-
 implementation
 
 uses
-  inLibFormatoDocumento, inLibMsg;
+  inLibFormatoDocumento, inLibMsgVentas;
 
 {$R *.dfm}
 

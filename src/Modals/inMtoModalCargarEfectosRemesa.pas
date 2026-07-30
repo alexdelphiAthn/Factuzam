@@ -122,7 +122,7 @@ function ConfigRemesaVenta: TConfigRemesa;
 implementation
 
 uses
-  inLibUser, inLibGenBusq, inLibMsg;
+  inLibUser, inLibGenBusq, inLibMsgVentas;
 
 {$R *.dfm}
 

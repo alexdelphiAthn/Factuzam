@@ -49,9 +49,6 @@ type
     { Public declarations }
   end;
 
-var
-  frmPrintRecFac: TfrmPrintRecFac;
-
 implementation
 
 uses

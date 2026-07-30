@@ -89,7 +89,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsg;
+  inLibMsgCaja;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -182,12 +182,14 @@ begin
   Screen.Cursor := crHourGlass;
   try
     TArqueoTicket.ImprimirDesdeHistorico(
-      FConn,
+      CrearRepositorioArqueoCaja(FConn),
+      CrearRepositorioArqueoTicket(FConn),
       ParametrosCaja,
       FEmpresa,
       FAlmacen,
       FCaja,
-                                         sCod, ParametrosCaja.ImpresoraCaja);
+      sCod,
+      ParametrosCaja.ImpresoraCaja);
   finally
     Screen.Cursor := crDefault;
   end;
@@ -205,8 +207,14 @@ begin
   end;
   Screen.Cursor := crHourGlass;
   try
-    TArqueoTicket.ImprimirCierreDesdeHistorico(FConn, ContextoSesion,
-      FEmpresa, FAlmacen, FCaja, sCod, ParametrosCaja.ImpresoraCaja);
+    TArqueoTicket.ImprimirCierreDesdeHistorico(
+      CrearRepositorioArqueoTicket(FConn),
+      ContextoSesion,
+      FEmpresa,
+      FAlmacen,
+      FCaja,
+      sCod,
+      ParametrosCaja.ImpresoraCaja);
   finally
     Screen.Cursor := crDefault;
   end;

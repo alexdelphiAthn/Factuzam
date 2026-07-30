@@ -173,7 +173,7 @@ function FrankfurterConvert(AAmount: Double;
 implementation
 
 uses
-  inLibMsg;
+  inLibMsgIntegraciones;
 
 { TFrankfurterResult }
 

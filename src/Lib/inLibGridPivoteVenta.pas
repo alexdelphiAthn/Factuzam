@@ -100,7 +100,8 @@ implementation
 
 uses
   inLibArticulosAtributosLookup, inLibArticulosValidador,
-  inLibAtributosPaleta, inLibGenBusq, inLibLog, inLibMsg;
+  inLibAtributosPaleta, inLibGenBusq, inLibLog,
+  inLibMsgArticulos, inLibMsgVentas;
 
 const
   ID_AV_SIN_TALLA = 0;
@@ -742,6 +743,11 @@ begin
     except
       // Cierre defensivo: si DevExpress ya ha destruido el provider,
       // no hay nada que restaurar y no debemos impedir cerrar la ficha.
+      on E: Exception do
+        if Log() <> nil then
+          Log.LogWarning(
+            'GridPivoteVenta.RestaurarVistaTemporal fallo: ' +
+            E.Message);
     end;
     FVistaDesviada := False;
   end;
@@ -833,13 +839,13 @@ begin
             // temporal y "desaparecian" (facturas '010', 09/07/26).
             bAnadida := LocalizarLineaReal(Ds, iLineaBase);
             // Traza de diagnostico (fase de integracion).
-            if Log <> nil then
+            if Log() <> nil then
               Log.LogInfo(Format(
                 'PivVenta.Vista: vista=%d base=%d encontrada=%s',
                 [iLineaVista, iLineaBase, BoolToStr(bAnadida, True)]));
             if bAnadida then
               CopiarLineaVista(Ds, iLineaVista)
-            else if Log <> nil then
+            else if Log() <> nil then
               // Error DOCUMENTADO: una fila del pivote se pierde. Sin
               // este aviso la linea "desaparecia" en silencio.
               Log.LogWarning(Format(
@@ -915,7 +921,10 @@ begin
       FConfig.View.Controller.EditingController.ShowEdit;
     except
       on E: EInvalidOperation do
-        ;
+        // Ruido del editor inplace; queda constancia en el log.
+        Log.LogWarning(
+          'GridPivoteVenta.MostrarEditor: ShowEdit ignorado: ' +
+          E.Message);
     end;
     if not FConfig.View.Controller.EditingController.IsEditing then
       ArticuloButtonClick(nil, 0);
@@ -1256,7 +1265,7 @@ begin
       // Re-registrar SIEMPRE: CrearGestor recrea el gestor con la
       // cache vacia en cada Construir del modo.
       FGestor.RegistrarConjuntoVirtual(Result, Arr);
-      if Log <> nil then
+      if Log() <> nil then
         Log.LogInfo(Format(
           'PivVenta.Cache: conjunto VIRTUAL %d (%d tallas) para ' +
           'art=%s sin conjunto global que las cubra.',
@@ -1345,7 +1354,7 @@ begin
             iLineaRepr := iLinea;
             DictRepr.Add(sKey, iLineaRepr);
             // Traza de diagnostico (fase de integracion).
-            if Log <> nil then
+            if Log() <> nil then
               Log.LogInfo(Format(
                 'PivVenta.Cache: repr=%d art=%s tallaAv=%d sku=%s',
                 [iLineaRepr, sArt, Info.TallaAv, sSku]));
@@ -1436,7 +1445,7 @@ begin
           iAc := ConjuntoVirtualParaGrupo(ParTallas.Key, ParTallas.Value);
         if iAc <> 0 then
           FPivotIdAc.AddOrSetValue(ParTallas.Key, iAc)
-        else if (ParTallas.Value.Count > 0) and (Log <> nil) then
+        else if (ParTallas.Value.Count > 0) and (Log() <> nil) then
         begin
           // Error DOCUMENTADO: sin conjunto (ni real ni virtual) que
           // cubra las tallas del grupo, sus celdas no tienen columna
@@ -1894,7 +1903,7 @@ begin
     // Traza de diagnostico (fase de integracion): si el CDS de la
     // vista tiene mas filas de las que el grid publica, hay un filtro
     // o una sincronizacion comiendose filas a nivel de view.
-    if Log <> nil then
+    if Log() <> nil then
       Log.LogInfo(Format(
         'PivVenta.Publicar: filasVista=%d filasGrid=%d filtroView="%s"',
         [FCdsVista.RecordCount,
@@ -2148,7 +2157,10 @@ begin
             Sender.Controller.EditingController.ShowEdit;
           except
             on E: EInvalidOperation do
-              ;
+              // Ruido del editor inplace; queda en el log.
+              Log.LogWarning(
+                'GridPivoteVenta.GestionarEnterAAlbaranar: ' +
+                'ShowEdit ignorado: ' + E.Message);
           end;
         end;
       end;
@@ -2369,7 +2381,10 @@ begin
             FConfig.View.Controller.EditingController.HideEdit(False);
           except
             on E: EInvalidOperation do
-              ;
+              // Ruido del editor inplace; queda en el log.
+              Log.LogWarning(
+                'GridPivoteVenta.ArticuloButtonClick: HideEdit ' +
+                'ignorado: ' + E.Message);
           end;
       end;
     finally
@@ -2938,7 +2953,7 @@ end;
 
 function TGridPivoteVenta.ElegirSkuConPaleta(const ACodArt: string): string;
 var
-  Lookup: TArticulosAtributosLookup;
+  Lookup: IArticulosAtributosLookup;
   Atribs: TArray<TArticuloAtributo>;
   Avs: TArray<TArticuloAtributoValor>;
   AvsStr: TArray<string>;
@@ -2951,7 +2966,10 @@ begin
   // un selector por atributo (Color, Talla, ...); si el articulo solo
   // referencia un AV en sus SKUs, se fija solo sin preguntar.
   Result := '';
-  Lookup := TArticulosAtributosLookup.Create(FCfg.Conexion);
+  Lookup := FConfig.LookupAtributos;
+  if not Assigned(Lookup) then
+    Lookup := CrearLookupAtributosArticulosBase(
+      FCfg.Conexion);
   try
     Atribs := Lookup.ObtenerAtributos(ACodArt);
     if Length(Atribs) = 0 then
@@ -2994,13 +3012,13 @@ begin
         Result := '';
     end;
   finally
-    FreeAndNil(Lookup);
+    Lookup := nil;
   end;
 end;
 
 function TGridPivoteVenta.ResolverEntrada(const AEntrada: string): Boolean;
 var
-  Validador: TArticulosValidador;
+  Validador: IArticulosValidador;
   Res: TArtResolucionEntrada;
   sSku, sLinea: string;
   rPrecio: Double;
@@ -3012,11 +3030,14 @@ begin
   FEntradaCancelada := False;
   if Trim(AEntrada) <> '' then
   begin
-    Validador := TArticulosValidador.Create(FCfg.Conexion);
+    Validador := FConfig.ValidadorArticulos;
+    if not Assigned(Validador) then
+      Validador := CrearValidadorArticulosBase(
+        FCfg.Conexion);
     try
       Res := Validador.Resolver(Trim(AEntrada));
     finally
-      FreeAndNil(Validador);
+      Validador := nil;
     end;
     if Res.Encontrado then
     begin

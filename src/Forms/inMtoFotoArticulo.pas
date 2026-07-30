@@ -132,21 +132,31 @@ type
     property CodigoSku: string read FCodigoSku;
   end;
 
-var
-  frmFotoArticulo: TfrmFotoArticulo;
-
 /// Atajo: abre `frmFotoArticulo` (lo crea si no existe) y carga el par
 /// pasado. Si el formulario ya estaba abierto, lo refresca y lo trae al
 /// frente. Llamar desde el handler de Ctrl+F de los Mtos.
+function FotoFlotanteActual: TfrmFotoArticulo;
 procedure MostrarFotoFlotante(AOwner: TComponent;
-                              const ACodArt, ACodSku: string);
+                               const ACodArt, ACodSku: string);
 
 implementation
 
 uses
-  inLibMsg;
+  inLibMsgArticulos;
 
 {$R *.dfm}
+
+function FotoFlotanteActual: TfrmFotoArticulo;
+var
+  Componente: TComponent;
+begin
+  Componente := Application.FindComponent('frmFotoArticulo');
+  if (Componente is TfrmFotoArticulo) and
+     not (csDestroying in Componente.ComponentState) then
+    Result := TfrmFotoArticulo(Componente)
+  else
+    Result := nil;
+end;
 
 procedure TfrmFotoArticulo.FormCreate(Sender: TObject);
 var
@@ -198,9 +208,13 @@ begin
   // foto (sale en blanco). Diferimos un repintado a cuando el layout cuaje.
   TThread.ForceQueue(nil,
     procedure
+    var
+      Formulario: TfrmFotoArticulo;
     begin
-      if Assigned(frmFotoArticulo) and frmFotoArticulo.Visible then
-        frmFotoArticulo.PintarFotoGDIPlus;
+      Formulario := FotoFlotanteActual;
+      if (Formulario <> nil) and
+         Formulario.Visible then
+        Formulario.PintarFotoGDIPlus;
     end);
 end;
 
@@ -241,12 +255,6 @@ begin
   FCodigoArt   := '';
   FCodigoSku   := '';
   FUltimaInfo.Clear;
-  // Si la instancia que se destruye es la singleton global, anulamos
-  // la variable para que el siguiente Ctrl+F cree una limpia.
-  // (FormClose tambien lo hace, pero si el Owner libera el form sin
-  // pasar por OnClose -- p.ej. al cerrar la app -- caemos aqui igual.)
-  if Self = frmFotoArticulo then
-    frmFotoArticulo := nil;
   inherited;
 end;
 
@@ -255,15 +263,7 @@ procedure TfrmFotoArticulo.FormClose(Sender: TObject;
 begin
   inherited;
   DesengancharDataChange;
-  if Self <> frmFotoArticulo then
-    Action := caFree
-  else
-  begin
-    // Cerramos pero conservamos la referencia: el siguiente Ctrl+F
-    // crea una nueva instancia limpia.
-    Action := caFree;
-    frmFotoArticulo := nil;
-  end;
+  Action := caFree;
 end;
 
 procedure TfrmFotoArticulo.FormKeyDown(Sender: TObject; var Key: Word;
@@ -776,33 +776,35 @@ begin
 end;
 
 procedure MostrarFotoFlotante(AOwner: TComponent;
-                              const ACodArt, ACodSku: string);
+                               const ACodArt, ACodSku: string);
 var
+  Formulario: TfrmFotoArticulo;
   hwndPrev: HWND;
 begin
   // Capturamos el foreground window ANTES de mostrar la flotante,
   // asi podemos devolverle el foco despues (clave para que el Mto
   // no pierda el teclado cuando la ventana se auto-abre).
   hwndPrev := GetForegroundWindow;
-  if frmFotoArticulo = nil then
+  Formulario := FotoFlotanteActual;
+  if Formulario = nil then
     // Owner = Application, no el Mto que llama: la pantalla sobrevive
     // a cierres de Mtos y se libera de forma ordenada al terminar la
     // app (de lo contrario quedan colgando los hooks y los strings
     // del combo + FUltimaInfo cuando el Mto se libera primero).
-    frmFotoArticulo := TfrmFotoArticulo.Create(Application);
-  frmFotoArticulo.SetArticuloSku(ACodArt, ACodSku);
-  if not frmFotoArticulo.Visible then
+    Formulario := TfrmFotoArticulo.Create(Application);
+  Formulario.SetArticuloSku(ACodArt, ACodSku);
+  if not Formulario.Visible then
   begin
     // Restaurar tamaño/posición guardados ANTES de mostrar, de forma fiable
     // (sin depender de que OnShow dispare con SW_SHOWNOACTIVATE).
-    frmFotoArticulo.RestaurarGeometriaGuardada;
+    Formulario.RestaurarGeometriaGuardada;
     // SW_SHOWNOACTIVATE: muestra la ventana SIN activarla. A
     // diferencia de TForm.Show (que termina llamando SetActiveWindow
     // y roba el teclado al Mto), aqui la flotante aparece encima por
     // ser fsStayOnTop pero el foco se queda en quien lo tenia.
     // Sincronizamos Visible a mano porque ShowWindow no lo hace.
-    ShowWindow(frmFotoArticulo.Handle, SW_SHOWNOACTIVATE);
-    frmFotoArticulo.Visible := True;
+    ShowWindow(Formulario.Handle, SW_SHOWNOACTIVATE);
+    Formulario.Visible := True;
   end;
   // Belt-and-braces: si por algun motivo el foreground cambio
   // (algunas combinaciones Windows/VCL activan igual), lo devolvemos.
@@ -810,19 +812,9 @@ begin
   // combo, radio), la activacion es normal: WM_MOUSEACTIVATE default
   // -> MA_ACTIVATE y los controles funcionan.
   if (hwndPrev <> 0) and IsWindow(hwndPrev) and
-     (hwndPrev <> frmFotoArticulo.Handle) and
-     (GetForegroundWindow = frmFotoArticulo.Handle) then
+     (hwndPrev <> Formulario.Handle) and
+     (GetForegroundWindow = Formulario.Handle) then
     SetForegroundWindow(hwndPrev);
 end;
-
-initialization
-  frmFotoArticulo := nil;
-
-finalization
-  // Red de seguridad: si la instancia singleton sigue viva al cerrar
-  // la app (p.ej. el owner aun no la libero), la liberamos aqui para
-  // que ningun string asociado quede huerfano en el reporte de leaks.
-  if Assigned(frmFotoArticulo) then
-    FreeAndNil(frmFotoArticulo);
 
 end.

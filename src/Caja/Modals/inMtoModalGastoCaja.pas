@@ -84,7 +84,7 @@ implementation
 
 uses
   UniDataCaja, inLibGenerarTicketCaja,
-  inMtoGenSearch, Data.DB, inLibMsg;
+  inMtoGenSearch, Data.DB, inLibMsgCaja;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 

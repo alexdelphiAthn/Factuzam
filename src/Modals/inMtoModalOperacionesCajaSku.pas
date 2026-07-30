@@ -80,7 +80,7 @@ type
 implementation
 
 uses
-  inLibShowMto, inLibMsg;
+  inLibShowMto, inLibMsgCaja;
 
 {$R *.dfm}
 

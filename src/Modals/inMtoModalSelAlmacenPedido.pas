@@ -119,7 +119,8 @@ type
 implementation
 
 uses
-  inLibValoresAutomaticos, inLibFormatoDocumento, inLibMsg;
+  inLibValoresAutomaticos, inLibFormatoDocumento,
+  inLibMsgVentas;
 
 {$R *.dfm}
 

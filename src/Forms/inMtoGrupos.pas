@@ -55,9 +55,6 @@ type
     procedure ResetForm; override;
   end;
 
-var
-  frmMtoGrupos: TfrmMtoGrupos;
-
 implementation
 
 uses

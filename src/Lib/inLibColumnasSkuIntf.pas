@@ -28,7 +28,8 @@ interface
 
 uses
   System.Classes, Data.DB, Uni, cxGridDBTableView,
-  inLibContextoSesionIntf;
+  inLibContextoSesionIntf, inLibArticulosValidadorIntf,
+  inLibArticulosAtributosIntf;
 
 type
   // Modo de entrada de articulos en el grid del documento.
@@ -72,6 +73,8 @@ type
   TConfigColumnasSku = record
     Conexion: TUniConnection;
     ContextoSesion: IContextoSesionAplicacion;
+    ValidadorArticulos: IArticulosValidador;
+    LookupAtributos: IArticulosAtributosLookup;
     View: TcxGridDBTableView;
     Cds: TDataSet;
     Campos: TCamposColumnasSku;

@@ -192,16 +192,13 @@ type
     procedure AplicarLayoutInstanciaBusqueda; override;
   end;
 
-var
-  frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist;
-
 implementation
 
 uses
   inLibWin, inLibUser, inLibShowMto,
   inMtoModalGenImpSave, inMtoModalImpOperaciones, inMtoPreviewExcel,
   inLibDevExcel, inLibFotos, inLibFiltroUsuario,
-  dxSpreadSheetGraphics, inLibMsg;
+  dxSpreadSheetGraphics, inLibMsgCaja;
 
 {$R *.dfm}
 

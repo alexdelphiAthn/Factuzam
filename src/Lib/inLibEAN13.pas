@@ -34,7 +34,7 @@ function EsEAN13Valido(const ACodigo: string): Boolean;
 implementation
 
 uses
-  inLibMsg;
+  inLibMsgArticulos, inLibMsgComun;
 
 function CalcularDigitoEAN8(const ACodigo7: string): Char;
 var

@@ -79,7 +79,8 @@ function PuedeActivarTallasHorizontalCompra(
 implementation
 
 uses
-  System.Classes, System.SysUtils, inLibMsg;
+  System.Classes, System.SysUtils, inLibMsgArticulos,
+  inLibMsgCompras, inLibMsgComun;
 
 function CrearConfiguracionPersistenciaDocumento(
   const AMensajeCabeceraNoDisponible, APrefijoCabecera,

@@ -90,7 +90,8 @@ implementation
 
 uses
   System.SysUtils, System.Generics.Collections, Vcl.Controls,
-  Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Graphics, inLibLog, inLibMsg;
+  Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Graphics, inLibLog,
+  inLibMsgComun;
 
 constructor TGestorGuiasGridMto.Create(
   AFormulario: TForm;

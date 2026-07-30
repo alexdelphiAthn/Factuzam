@@ -75,9 +75,6 @@ type
     dmFac: TdmFacturas;
   end;
 
-var
-  frmPrintFac: TfrmPrintFac;
-
 implementation
 
 {$R *.dfm}

@@ -25,7 +25,7 @@ uses
   Vcl.Dialogs,
   Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ActnList, System.Actions, Vcl.Menus,
   System.DateUtils,
-  Data.DB, MemDS, DBAccess,
+  Data.DB, Datasnap.DBClient, MemDS, DBAccess,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters, cxStyles,
   cxClasses, cxContainer, cxEdit, cxLabel, cxTextEdit, cxButtons,
   cxMaskEdit, cxDropDownEdit, cxCalendar, cxPC, cxNavigator, cxDBData,
@@ -33,7 +33,8 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid,
   Uni,
-  inMtoFrmBase, inLibArqueo, inLibArqueoTicket, inLibArqueoPersistencia,
+  inMtoFrmBase, inLibArqueo, inLibArqueoTicket,
+  inLibArqueoTicketIntf, inLibArqueoPersistencia,
   Vcl.ComCtrls, dxCore,
   cxDateUtils, cxCurrencyEdit, cxRadioGroup,
   JvComponentBase, JvEnterTab, cxLocalization, cxGroupBox;
@@ -260,6 +261,7 @@ type
     FArqueoActual : TArqueoCaja;
     FArqueoTarjetasPermitido: Boolean;
     FPuedeVerResumen: Boolean;
+    FResumenFamilias: TClientDataSet;
     function  FechaEditada(AEdit: TcxDateEdit): TDateTime;
     function  FechaDesdeSeleccionada: TDateTime;
     function  FechaHastaSeleccionada: TDateTime;
@@ -267,6 +269,7 @@ type
     procedure Recalcular;
     procedure ConfigurarResumenes;
     procedure RefrescarResumenes;
+    procedure CargarResumenFamilias;
     procedure AbrirQryConParams(Q: TUniQuery);
     function  FormatImporte(AValor: Currency): string;
     procedure CargarRecuento(const AArqueo: TArqueoCaja);
@@ -293,7 +296,7 @@ implementation
 uses inLibPermisosIntf, inLibLog,
      inMtoModalArqueosHistCaja,
      inLibTiraCajaTicket, inMtoModalTiraCaja, inLibVerifactu,
-     inLibRectificativas, inLibMsg;
+     inLibRectificativas, inLibMsgCaja;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -443,11 +446,16 @@ begin
   begin
     Screen.Cursor := crHourGlass;
     try
-      TArqueoTicket.Imprimir(FConn, ParametrosCaja,
-                             FEmpresa, FAlmacen, FCaja,
-                             FechaDesdeSeleccionada,
-                             FechaHastaSeleccionada,
-                             ParametrosCaja.ImpresoraCaja);
+      TArqueoTicket.Imprimir(
+        CrearRepositorioArqueoCaja(FConn),
+        CrearRepositorioArqueoTicket(FConn),
+        ParametrosCaja,
+        FEmpresa,
+        FAlmacen,
+        FCaja,
+        FechaDesdeSeleccionada,
+        FechaHastaSeleccionada,
+        ParametrosCaja.ImpresoraCaja);
     finally
       Screen.Cursor := crDefault;
     end;
@@ -576,12 +584,12 @@ procedure TfrmModalArqueo.Recalcular;
 begin
   Screen.Cursor := crHourGlass;
   try
-    FArqueoActual := TArqueoCalculadora.Calcular(FConn,
-                                                   FEmpresa,
-                                                   FAlmacen,
-                                                   FCaja,
-                                                   FechaDesdeSeleccionada,
-                                                   FechaHastaSeleccionada);
+    FArqueoActual := CrearRepositorioArqueoCaja(FConn).Calcular(
+      FEmpresa,
+      FAlmacen,
+      FCaja,
+      FechaDesdeSeleccionada,
+      FechaHastaSeleccionada);
     RellenarPantalla(FArqueoActual);
     CargarRecuento(FArqueoActual);
     RefrescarResumenes;
@@ -645,13 +653,21 @@ begin
     '  GROUP BY p.CODIGO_FP_CFP                                           ' +
     '  ORDER BY p.CODIGO_FP_CFP                                           ';
 
-  // Familia: ruta jerárquica raíz→hoja recortada a los primeros N niveles
-  // configurados en Parámetros de Caja (vgerArqueoNivelesFamilia). N=1 deja
-  // solo la sección raíz; N=2 sección-familia; N=3 +subfamilia… La consulta
-  // la construye TArqueoCalculadora.SQLResumenSeccion (compartida con el
-  // ticket impreso).
-  qryResFam.SQL.Text := TArqueoCalculadora.SQLResumenSeccion(
-    ParametrosCaja.NivelesFamiliaArqueo);
+  // Familia: dataset en memoria alimentado por el repositorio compartido
+  // con el ticket. La profundidad se envía mediante :pNIVELES.
+  FResumenFamilias := TClientDataSet.Create(Self);
+  FResumenFamilias.FieldDefs.Add(
+    'FAMILIA',
+    ftString,
+    255);
+  FResumenFamilias.FieldDefs.Add(
+    'UDS',
+    ftInteger);
+  FResumenFamilias.FieldDefs.Add(
+    'NETO',
+    ftCurrency);
+  FResumenFamilias.CreateDataSet;
+  dsResFam.DataSet := FResumenFamilias;
 
   // IVA (pestaña Más datos): 4 filas, una por tipo de IVA (Normal, Reducido,
   // Super Reducido, Exento). Se toman simplificadas y rectificativas para
@@ -784,6 +800,34 @@ begin
   Q.Open;
 end;
 
+procedure TfrmModalArqueo.CargarResumenFamilias;
+var
+  aLineas: TArray<TResumenSeccionArqueo>;
+  iLinea: Integer;
+begin
+  aLineas := CrearRepositorioArqueoTicket(
+    FConn).ListarResumenSeccion(
+      FArqueoActual,
+      ParametrosCaja.NivelesFamiliaArqueo);
+  FResumenFamilias.DisableControls;
+  try
+    FResumenFamilias.EmptyDataSet;
+    iLinea := 0;
+    while iLinea < Length(aLineas) do
+    begin
+      FResumenFamilias.AppendRecord(
+        [aLineas[iLinea].Familia,
+         aLineas[iLinea].Unidades,
+         aLineas[iLinea].Neto]);
+      Inc(iLinea);
+    end;
+    if not FResumenFamilias.IsEmpty then
+      FResumenFamilias.First;
+  finally
+    FResumenFamilias.EnableControls;
+  end;
+end;
+
 procedure TfrmModalArqueo.RefrescarResumenes;
 begin
   if FPuedeVerResumen and
@@ -792,7 +836,7 @@ begin
   begin
     AbrirQryConParams(qryResEmpleado);
     AbrirQryConParams(qryResFP);
-    AbrirQryConParams(qryResFam);
+    CargarResumenFamilias;
     AbrirQryConParams(qryResProp);
     AbrirQryConParams(qryResIVA);
   end;
@@ -1261,7 +1305,7 @@ begin
   end;
   { Justificante del cierre }
   TArqueoTicket.ImprimirCierre(
-    FConn,
+    CrearRepositorioArqueoTicket(FConn),
     ContextoSesion,
     FArqueoActual,
     Lineas,

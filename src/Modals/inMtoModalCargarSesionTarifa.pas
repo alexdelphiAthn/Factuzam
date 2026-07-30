@@ -59,7 +59,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsg;
+  inLibMsgArticulos;
 
 class function TfrmModalCargarSesionTarifa.Ejecutar(AOwner: TComponent;
   AConn: TUniConnection; ACodigoTarc: Integer;

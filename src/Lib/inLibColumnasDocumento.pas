@@ -252,7 +252,11 @@ begin
         AVista.Controller.EditingController.HideEdit(False);
       except
         on E: EInvalidOperation do
-          ;
+          // Ruido del editor inplace durante el desmontaje.
+          if inLibLog.Log() <> nil then
+            inLibLog.Log.LogWarning(
+              'DesmontarModoEntradaDocumento: HideEdit ignorado: ' +
+              E.Message);
       end;
   end;
   if Assigned(ADataSet) and (ADataSet.State in dsEditModes) then
@@ -309,7 +313,7 @@ begin
     begin
       if AModoSeleccionado in AModosDegradables then
       begin
-        if inLibLog.Log <> nil then
+        if inLibLog.Log() <> nil then
           inLibLog.Log.LogError(
             AContextoLog +
             ': fallo construyendo tallas horizontal, ' +
@@ -382,6 +386,11 @@ begin
       AModoEntrada.Desmontar;
     except
       // El cierre no debe quedar bloqueado por un desmontaje parcial.
+      on E: Exception do
+        if inLibLog.Log() <> nil then
+          inLibLog.Log.LogWarning(
+            'LiberarModoYGestoresDocumento: Desmontar fallo: ' +
+            E.Message);
     end;
     AModoEntrada := nil;
   end;

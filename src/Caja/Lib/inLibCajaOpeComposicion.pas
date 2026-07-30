@@ -16,18 +16,18 @@ unit inLibCajaOpeComposicion;
 interface
 
 uses
-  System.Classes, Uni, UniDataCaja,
-  inLibParametrosIntf, inLibPermisosIntf,
-  inLibContextoSesionIntf, inLibCajaVentaIntf;
+  Uni, inLibParametrosIntf,
+  inLibContextoSesionIntf, inLibCatalogoSqlIntf,
+  inLibCajaVentaIntf;
 
 function CrearServiciosOperacionCaja(
-  APropietario: TComponent;
-  const AParametrosApp: IParametrosAplicacion;
   AConexion: TUniConnection;
   const AParametrosCaja: IParametrosCaja;
-  const APermisos: IPermisosAplicacion;
   const AContextoSesion: IContextoSesionAplicacion;
-  ADatosCaja: TdmCajaOpe
+  const AImpresor: IImpresorVenta;
+  const AGrabador: IGrabadorVentaCaja;
+  const ACatalogoSql: ICatalogoSql = nil;
+  const AIncidenciasSql: IRegistroIncidenciasSql = nil
 ): TServiciosOperacionCaja;
 
 implementation
@@ -35,25 +35,25 @@ implementation
 uses
   inLibCajaStock,
   inLibCajaDescuentos,
-  inLibCajaConsultasRepositorio,
+  UniDataCajaConsultasRepositorio,
   inLibCajaRectificacion,
-  inLibCajaCierreVenta,
-  inMtoCajaImpresorVenta,
-  inMtoCajaGrabadorVenta;
+  inLibCajaCierreVenta;
 
 function CrearServiciosOperacionCaja(
-  APropietario: TComponent;
-  const AParametrosApp: IParametrosAplicacion;
   AConexion: TUniConnection;
   const AParametrosCaja: IParametrosCaja;
-  const APermisos: IPermisosAplicacion;
   const AContextoSesion: IContextoSesionAplicacion;
-  ADatosCaja: TdmCajaOpe
+  const AImpresor: IImpresorVenta;
+  const AGrabador: IGrabadorVentaCaja;
+  const ACatalogoSql: ICatalogoSql;
+  const AIncidenciasSql: IRegistroIncidenciasSql
 ): TServiciosOperacionCaja;
 begin
   Result.RepositorioConsultas :=
     TRepositorioConsultasCaja.Create(
-      AConexion);
+      AConexion,
+      ACatalogoSql,
+      AIncidenciasSql);
   Result.ServicioRectificacion :=
     TServicioRectificacionCaja.Create(
       Result.RepositorioConsultas);
@@ -63,16 +63,10 @@ begin
       AParametrosCaja);
   Result.RepartidorDescuento :=
     TRepartidorDescuento.Create;
-  Result.Impresor :=
-    TImpresorVentaVcl.Create(
-      APropietario,
-      AParametrosApp,
-      AConexion,
-      AParametrosCaja,
-      APermisos);
+  Result.Impresor := AImpresor;
   Result.ServicioCierre :=
     TServicioCierreVenta.Create(
-      TGrabadorVentaCaja.Create(ADatosCaja),
+      AGrabador,
       Result.Impresor,
       AParametrosCaja,
       AContextoSesion,

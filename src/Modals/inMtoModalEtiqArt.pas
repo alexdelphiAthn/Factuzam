@@ -88,7 +88,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsg;
+  inLibMsgArticulos;
 
 procedure TfrmPrintEtiqArt.AfterReportLoaded;
 var

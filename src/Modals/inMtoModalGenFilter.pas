@@ -80,9 +80,6 @@ type
     sFicha:string;
   end;
 
-var
-  frmModalGenFilter: TfrmModalGenFilter;
-
 implementation
 
 {$R *.dfm}

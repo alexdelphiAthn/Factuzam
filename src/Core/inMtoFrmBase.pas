@@ -43,7 +43,11 @@ uses
   inLibAuditoriaDatosIntf, inLibMonitorSQLIntf,
   inLibContextoSesionIntf, inLibFiltrosGuardadosIntf,
   inLibPerfilesUsuarioIntf, inLibParametrosIntf,
-  inLibInformesGuiasCache, inLibTraduccionesIntf;
+  inLibInformesGuiasCache, inLibTraduccionesIntf,
+  inLibCatalogoSqlIntf, inLibArticulosResolverIntf,
+  inLibArticulosValidadorIntf, inLibArticulosAtributosIntf,
+  inLibTraspasoTicketIntf, inLibArqueoIntf,
+  inLibArqueoTicketIntf;
 
 type
   TEnterAsTabEstado = record
@@ -79,6 +83,9 @@ type
     FParametrosCaja: IParametrosCaja;
     FInformesGuiasCache: IInformesGuiasCache;
     FTraducciones: IServicioTraducciones;
+    FCatalogoSql: ICatalogoSql;
+    FIncidenciasSql: IRegistroIncidenciasSql;
+    FCatalogoSqlInicializado: Boolean;
     FEnterAsTabEstados: array of TEnterAsTabEstado;
     FEnterAsTabTemporalActivo: Boolean;
     function GetPermisos: IPermisosAplicacion;
@@ -105,6 +112,7 @@ type
     procedure HeredarInformesGuiasCache(AOwner: TComponent);
     procedure HeredarTraducciones(AOwner: TComponent);
     procedure GuardarEnterAsTabDe(AOwner: TComponent);
+    procedure AsegurarCatalogoSqlAplicacion;
     function EnterAsTabGuardado(AComp: TJvEnterAsTab): Boolean;
   protected
     // Hooks de log avanzado a nivel de formulario. Se loguean solo si
@@ -116,12 +124,28 @@ type
     procedure RestaurarEnterAsTabTemporal(Sender: TObject);
     procedure ActualizarAuditoria(DataSet: TDataSet);
     procedure CerrarMonitorSQLPendiente;
+    function CrearResolverArticulos(
+      AConexion: TUniConnection = nil): IArticulosResolver;
+    function CrearValidadorArticulos(
+      AConexion: TUniConnection = nil): IArticulosValidador;
+    function CrearLookupAtributosArticulos(
+      AConexion: TUniConnection = nil): IArticulosAtributosLookup;
+    function CrearRepositorioTraspasoTicket(
+      AConexion: TUniConnection = nil): IRepositorioTraspasoTicket;
+    function CrearRepositorioArqueoCaja(
+      AConexion: TUniConnection = nil): IRepositorioArqueoCaja;
+    function CrearRepositorioArqueoTicket(
+      AConexion: TUniConnection = nil): IRepositorioArqueoTicket;
+    function CatalogoSqlAplicacion: ICatalogoSql;
+    function IncidenciasSqlAplicacion:
+      IRegistroIncidenciasSql;
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); overload; override;
     constructor Create(AOwner: TComponent;
                        const APermisos: IPermisosAplicacion); reintroduce;
                        overload;
+    destructor Destroy; override;
     procedure AsignarPermisos(const APermisos: IPermisosAplicacion);
     procedure AsignarConexiones(
       const AConexiones: IServicioConexiones);
@@ -169,13 +193,17 @@ type
     property ConexionPrincipal: TUniConnection read GetConexionPrincipal;
   end;
 
-var
-  frmBase: TfrmBase;
-
 implementation
 
 uses
-  inLibLog, inLibMsg;
+  inLibLog, inLibMsgComun,
+  UniDataCatalogoSqlAplicacion,
+  UniDataArticulosResolverRepositorio,
+  UniDataArticulosValidadorRepositorio,
+  UniDataArticulosAtributosRepositorio,
+  UniDataTraspasoTicketRepositorio,
+  UniDataArqueoRepositorio,
+  UniDataArqueoTicketRepositorio;
 
 {$R *.dfm}
 {$R CXLOCALIZATION.res}
@@ -217,6 +245,150 @@ begin
   HeredarInformesGuiasCache(AOwner);
   HeredarTraducciones(AOwner);
   inherited Create(AOwner);
+end;
+
+destructor TfrmBase.Destroy;
+begin
+  FCatalogoSql := nil;
+  FIncidenciasSql := nil;
+  inherited;
+end;
+
+procedure TfrmBase.AsegurarCatalogoSqlAplicacion;
+var
+  bActivo: Boolean;
+begin
+  if not FCatalogoSqlInicializado then
+  begin
+    bActivo := False;
+    if Assigned(FPerfilesUsuario) then
+    begin
+      try
+        bActivo := SameText(
+          FPerfilesUsuario.ObtenerValorPerfil(
+            Self.Name,
+            'oGetSQLFromDB',
+            'False'),
+          'True');
+      except
+        on E: Exception do
+          if Log() <> nil then
+            Log.LogWarning(
+              'No se pudo leer oGetSQLFromDB de ' +
+              Self.Name + ': ' + E.Message);
+      end;
+    end;
+    CrearCatalogoSqlAplicacion(
+      FPerfilesUsuario,
+      bActivo,
+      FCatalogoSql,
+      FIncidenciasSql);
+    FCatalogoSqlInicializado := True;
+  end;
+end;
+
+function TfrmBase.CatalogoSqlAplicacion: ICatalogoSql;
+begin
+  AsegurarCatalogoSqlAplicacion;
+  Result := FCatalogoSql;
+end;
+
+function TfrmBase.IncidenciasSqlAplicacion:
+  IRegistroIncidenciasSql;
+begin
+  AsegurarCatalogoSqlAplicacion;
+  Result := FIncidenciasSql;
+end;
+
+function TfrmBase.CrearResolverArticulos(
+  AConexion: TUniConnection): IArticulosResolver;
+var
+  oConexion: TUniConnection;
+begin
+  AsegurarCatalogoSqlAplicacion;
+  oConexion := AConexion;
+  if not Assigned(oConexion) then
+    oConexion := ConexionPrincipal;
+  Result := TRepositorioArticulosResolver.Create(
+    oConexion,
+    FParametrosCaja,
+    FCatalogoSql,
+    FIncidenciasSql);
+end;
+
+function TfrmBase.CrearValidadorArticulos(
+  AConexion: TUniConnection): IArticulosValidador;
+var
+  oConexion: TUniConnection;
+begin
+  AsegurarCatalogoSqlAplicacion;
+  oConexion := AConexion;
+  if not Assigned(oConexion) then
+    oConexion := ConexionPrincipal;
+  Result := TRepositorioArticulosValidador.Create(
+    oConexion,
+    FCatalogoSql,
+    FIncidenciasSql);
+end;
+
+function TfrmBase.CrearLookupAtributosArticulos(
+  AConexion: TUniConnection): IArticulosAtributosLookup;
+var
+  oConexion: TUniConnection;
+begin
+  AsegurarCatalogoSqlAplicacion;
+  oConexion := AConexion;
+  if not Assigned(oConexion) then
+    oConexion := ConexionPrincipal;
+  Result := TRepositorioArticulosAtributos.Create(
+    oConexion,
+    FCatalogoSql,
+    FIncidenciasSql);
+end;
+
+function TfrmBase.CrearRepositorioTraspasoTicket(
+  AConexion: TUniConnection): IRepositorioTraspasoTicket;
+var
+  oConexion: TUniConnection;
+begin
+  AsegurarCatalogoSqlAplicacion;
+  oConexion := AConexion;
+  if not Assigned(oConexion) then
+    oConexion := ConexionPrincipal;
+  Result := TRepositorioTraspasoTicket.Create(
+    oConexion,
+    FCatalogoSql,
+    FIncidenciasSql);
+end;
+
+function TfrmBase.CrearRepositorioArqueoCaja(
+  AConexion: TUniConnection): IRepositorioArqueoCaja;
+var
+  oConexion: TUniConnection;
+begin
+  AsegurarCatalogoSqlAplicacion;
+  oConexion := AConexion;
+  if not Assigned(oConexion) then
+    oConexion := ConexionPrincipal;
+  Result := TRepositorioArqueoCaja.Create(
+    oConexion,
+    FCatalogoSql,
+    FIncidenciasSql);
+end;
+
+function TfrmBase.CrearRepositorioArqueoTicket(
+  AConexion: TUniConnection): IRepositorioArqueoTicket;
+var
+  oConexion: TUniConnection;
+begin
+  AsegurarCatalogoSqlAplicacion;
+  oConexion := AConexion;
+  if not Assigned(oConexion) then
+    oConexion := ConexionPrincipal;
+  Result := TRepositorioArqueoTicket.Create(
+    oConexion,
+    FCatalogoSql,
+    FIncidenciasSql);
 end;
 
 procedure TfrmBase.HeredarConexiones(AOwner: TComponent);
@@ -425,6 +597,9 @@ procedure TfrmBase.AsignarPerfilesUsuario(
   const APerfilesUsuario: IPerfilesUsuario);
 begin
   FPerfilesUsuario := APerfilesUsuario;
+  FCatalogoSql := nil;
+  FIncidenciasSql := nil;
+  FCatalogoSqlInicializado := False;
 end;
 
 procedure TfrmBase.AsignarParametros(
@@ -621,13 +796,13 @@ end;
 procedure TfrmBase.DoShow;
 begin
   inherited;
-  if (Log <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
+  if (Log() <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
     Log.LogEvento(Self.UnitName, Self.ClassName, 'Show', Self.Name);
 end;
 
 procedure TfrmBase.DoClose(var Action: TCloseAction);
 begin
-  if (Log <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
+  if (Log() <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
     Log.LogEvento(Self.UnitName, Self.ClassName, 'Close', Self.Name);
   inherited;
 end;

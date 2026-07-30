@@ -81,9 +81,6 @@ type
     procedure ResetForm; override;
   end;
 
-var
-  frmMtoAtributosBasicos: TfrmMtoAtributosBasicos;
-
 implementation
 
 uses

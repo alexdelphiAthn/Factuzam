@@ -67,6 +67,7 @@ uses
   inMtoModalCrearAlbaranSesion,
   inLibGridTallasInline,
   inLibGestorCopiaLineasCompra,
+  inLibComprasSesiones,
   inLibComprasSesionesIntf,
   UniDataComprasSesiones, cxBlobEdit, dxShellDialogs, cxRadioGroup, Vcl.Buttons,
   dxDateRanges, cxSplitter;
@@ -430,7 +431,7 @@ type
     FBmpSwatch    : TBitmap;
     Dmm: TdmComprasSesiones;
     FGestorCopiaLineas: TGestorCopiaLineasCompra;
-    FRepositorioComprasSesiones: IRepositorioComprasSesiones;
+    FServicioComprasSesiones: TServicioComprasSesiones;
     // --- Busqueda incremental in-cell de la columna "Modelo prov." ---
     // Desplegable (ExtLookupComboBox) que lista los modelos
     // (REF_PROVEEDOR_AP) ya existentes del proveedor de la cabecera cuyo
@@ -547,9 +548,6 @@ type
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
-var
-  frmMtoComprasSesiones: TfrmMtoComprasSesiones;
-
 implementation
 
 uses
@@ -557,11 +555,9 @@ uses
   inLibUser,
   inLibFiltroUsuario,
   inLibGenBusq,
-  inLibComprasSesiones,
   inMtoModalDistribuidor,
   inMtoModalDocsCreados,
   inLibShowMto,
-  inLibComprasSesionesMaterializar,
   Vcl.Clipbrd,
   inLibAtributosPaleta,
   inLibFotos,
@@ -573,14 +569,11 @@ uses
   inLibFotosNube,
   Vcl.Imaging.pngimage,
   inLibComprasImpuestos,
-  inLibMsg,
+  inLibMsgArticulos, inLibMsgCompras,
   inLibPresentacionDocumento,
   inLibContextoSesionIntf,
-  inLibCatalogoSqlIntf,
-  inLibCatalogoSqlPerfiles,
-  inLibCatalogoSqlAdmin,
-  inLibPerfilesUsuarioIntf,
   inLibLog,
+  UniDataComprasSesionesOperaciones,
   UniDataComprasSesionesRepositorio;
 
 const
@@ -735,7 +728,7 @@ begin
     end;
   end;
   if (sSerie <> '') and (sNumero <> '') and (iLinea > 0) and
-     Assigned(inLibFotos.oFotos) then
+     Assigned(inLibFotos.oFotos()) then
   begin
     info := inLibFotos.oFotos.ResolverSesion(
       sSerie,
@@ -815,53 +808,14 @@ begin
 end;
 
 procedure TfrmMtoComprasSesiones.CrearTablaPrincipal;
-var
-  oAdministradorSql: TAdministradorSqlPerfiles;
-  oCatalogoSql: ICatalogoSql;
-  oPerfilSql: TProfileDicc;
 begin
   inherited;
   if tdmDataModule = nil then Exit;
   dmm := tdmDataModule as TdmComprasSesiones;
-  oPerfilSql := nil;
-  if Assigned(Dmm.FoPerfilDic) and
-     Assigned(PerfilesUsuario) then
-  begin
-    try
-      oAdministradorSql := TAdministradorSqlPerfiles.Create(
-        PerfilesUsuario);
-      try
-        oAdministradorSql.PublicarFaltantes(
-          CLAVE_PERFIL_CATALOGO_SQL,
-          TRepositorioComprasSesiones.DefinicionesSql);
-      finally
-        FreeAndNil(oAdministradorSql);
-      end;
-      PerfilesUsuario.CargarPerfilFormulario(
-        CLAVE_PERFIL_CATALOGO_SQL,
-        PERFIL_TODOS,
-        PERFIL_TODOS,
-        oPerfilSql);
-    except
-      on E: Exception do
-      begin
-        FreeAndNil(oPerfilSql);
-        Log.LogError(Format(
-          'No se pudo cargar el catálogo SQL compartido. ' +
-          'Se usará el SQL base. Error=%s',
-          [E.Message]));
-      end;
-    end;
-  end;
-  try
-    oCatalogoSql := TCatalogoSqlPerfiles.Create(
-      oPerfilSql);
-  finally
-    FreeAndNil(oPerfilSql);
-  end;
-  FRepositorioComprasSesiones :=
-    TRepositorioComprasSesiones.Create(
-      ConexionPrincipal, oCatalogoSql);
+  FreeAndNil(FServicioComprasSesiones);
+  FServicioComprasSesiones := TServicioComprasSesiones.Create(
+    TRepositorioComprasSesiones.Create(ConexionPrincipal, Dmm,
+      CatalogoSqlAplicacion, IncidenciasSqlAplicacion));
   FreeAndNil(FGestorCopiaLineas);
   FGestorCopiaLineas := TGestorCopiaLineasCompra.Create(
     Dmm.unqryTablaG,
@@ -1148,8 +1102,7 @@ begin
   if iLinea <= 0 then
     Exit;
   LogSes(Format('BeforeDelete: limpiando SESCEL linea=%d', [iLinea]));
-  BorrarCeldasLineaSesion(
-    ConexionPrincipal,
+  FServicioComprasSesiones.BorrarCeldasLinea(
     Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
     Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString,
     iLinea);
@@ -1500,6 +1453,11 @@ begin
       if FQryConjuntosTallas.Active then FQryConjuntosTallas.Close;
     except
       // Si la conexion ya cayo no podemos hacer nada util aqui.
+      on E: Exception do
+        if inLibLog.Log() <> nil then
+          inLibLog.Log.LogWarning(
+            'ComprasSesiones.FormDestroy: cierre de query fallo: ' +
+            E.Message);
     end;
     FQryConjuntosTallas.Connection := nil;
     FreeAndNil(FQryConjuntosTallas);
@@ -1508,7 +1466,7 @@ begin
   if Supports(ContextoSesion, IGestorContextoSesion, GestorContexto) then
     GestorContexto.AsignarLogSesion(nil);
   FreeAndNil(FNombresConjunto);
-  FRepositorioComprasSesiones := nil;
+  FreeAndNil(FServicioComprasSesiones);
   FreeAndNil(FGestorCopiaLineas);
   FreeAndNil(FGestorTallas);
   FreeAndNil(FBmpSwatch);
@@ -1526,8 +1484,9 @@ end;
 
 procedure TfrmMtoComprasSesiones.CargarBasicosColor;
 begin
-  FBasicosColor := ConsultarCodigosBasicosActivos(
-    ConexionPrincipal, fIdVaColor);
+  FBasicosColor :=
+    FServicioComprasSesiones.ConsultarCodigosBasicosActivos(
+      fIdVaColor);
 end;
 
 // ===========================================================================
@@ -1698,7 +1657,8 @@ begin
      (Dmm.unqryTablaG.FieldByName(
                             'ESFORMATO_DISTRIBUIDO_SES').AsString = 'S') then
   begin
-    if ValidarKitSobreLineaActual(Dmm, sPrv, ACodigoKit, sResumen) then
+    if UniDataComprasSesionesOperaciones.ValidarKitSobreLineaActual(
+      Dmm, sPrv, ACodigoKit, sResumen) then
     begin
       LogSes(Format('AplicarKit %s -> distribuidor (formato distribuido)',
                     [ACodigoKit]));
@@ -1709,8 +1669,9 @@ begin
   end
   // Formato simple: vuelca las cantidades del kit sobre la linea con foco
   // y repinta la fila igual que tras teclear a mano (totales + no-bound).
-  else if AplicarKitProveedorALinea(Dmm, FGestorTallas, sPrv, ACodigoKit,
-                                    sResumen) then
+  else if
+    UniDataComprasSesionesOperaciones.AplicarKitProveedorALinea(
+      Dmm, FGestorTallas, sPrv, ACodigoKit, sResumen) then
   begin
     iLinea := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
     if Assigned(FGestorTallas) then
@@ -2239,13 +2200,13 @@ begin
   sSerie := Trim(Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString);
   sNumero := Trim(Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString);
   iLinea := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
-  rDup := ResolverDuplicadoIntraSesion(ConexionPrincipal, sSerie, sNumero,
-                                       iLinea, AModelo, ACodigoArt);
+  rDup := FServicioComprasSesiones.ResolverDuplicadoIntraSesion(
+    sSerie, sNumero, iLinea, AModelo, ACodigoArt);
   if not rDup.Encontrado then
     Exit;
   if not (Dmm.unqrySesionLin.State in [dsEdit, dsInsert]) then
     Dmm.unqrySesionLin.Edit;
-  AplicarDuplicadoEnLinea(Dmm, rDup);
+  FServicioComprasSesiones.AplicarDuplicadoEnLinea(rDup);
   if rDup.IdAcPivot > 0 then
     Dmm.TallajeDefectoActual := rDup.IdAcPivot;
   if Assigned(FGestorTallas) then
@@ -2304,18 +2265,21 @@ begin
         tvLineas.Controller.EditingController.HideEdit(True);
       except
         on E: EInvalidOperation do
-          ;
+          // Ruido del editor inplace; queda constancia en el log.
+          inLibLog.Log.LogWarning(
+            'ComprasSesiones.ModeloTimerResolve: HideEdit ' +
+            'ignorado: ' + E.Message);
       end;
     Exit;
   end;
-  rDup := ResolverDuplicadoSesion(ConexionPrincipal, sRef, sPrv,
-                                  True, sCodArt);
+  rDup := FServicioComprasSesiones.ResolverDuplicado(
+    sRef, sPrv, True, sCodArt);
   if not rDup.Encontrado then
     Exit;
   if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
   // El modelo tecleado se conserva como REF de la linea (rama REF no la toca).
   ds.FieldByName('REF_PRV_SESLIN').AsString := sRef;
-  AplicarDuplicadoEnLinea(Dmm, rDup);
+  FServicioComprasSesiones.AplicarDuplicadoEnLinea(rDup);
   if Assigned(FGestorTallas) then
   begin
     FGestorTallas.RecalcularMaxColumnas;
@@ -2327,7 +2291,10 @@ begin
       tvLineas.Controller.EditingController.HideEdit(True);
     except
       on E: EInvalidOperation do
-        ;
+        // Ruido del editor inplace; queda constancia en el log.
+        inLibLog.Log.LogWarning(
+          'ComprasSesiones.ModeloTimerResolve: HideEdit ' +
+          'ignorado: ' + E.Message);
     end;
 end;
 
@@ -2489,10 +2456,10 @@ begin
   // variantes — color/SKU — del mismo articulo). El boton "+ color
   // (mismo articulo)" ya lo deja marcado desde su creacion; esto es
   // para sesiones que ya tenian duplicados sin marcar.
-  iAutoFix := NormalizarDuplicadosIntraSesion(
-                ConexionPrincipal, IdentidadSesion.Usuario,
-                Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
-                Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString);
+  iAutoFix := FServicioComprasSesiones.NormalizarDuplicadosIntraSesion(
+    IdentidadSesion.Usuario,
+      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
+      Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString);
   if iAutoFix > 0 then
   begin
     LogSes(Format('  NormalizarDuplicadosIntraSesion: %d linea(s) marcadas REUSAR',
@@ -2505,7 +2472,7 @@ begin
   LogSes('  ValidarSesionDetallado');
   incidencias := TStringList.Create;
   try
-    if not ValidarSesionDetallado(Dmm, incidencias) then
+    if not FServicioComprasSesiones.ValidarSesionDetallado(incidencias) then
     begin
       frmInc := TfrmModalIncidencias.Create(Self);
       try
@@ -2610,8 +2577,8 @@ begin
     frmSet.UnDocPorAlmacen;
   Screen.Cursor := crHourGlass;
   try
-    bOK := EjecutarMaterializacionSesion(
-      Dmm, ParametrosMaterializacion, ResultadoMaterializacion);
+    bOK := FServicioComprasSesiones.EjecutarMaterializacion(
+      ParametrosMaterializacion, ResultadoMaterializacion);
   finally
     Screen.Cursor := crDefault;
   end;
@@ -2714,7 +2681,8 @@ begin
   LogSes('  RevertirMaterializacion');
   Screen.Cursor := crHourGlass;
   try
-    if RevertirMaterializacion(Dmm, IdentidadSesion.Usuario, sErr) then
+    if FServicioComprasSesiones.RevertirMaterializacion(
+      IdentidadSesion.Usuario, sErr) then
     begin
       LogSes('  reversion OK, master.Refresh');
       ShowMessage(SInfoSesionRevertida);
@@ -2890,12 +2858,12 @@ begin
       ALineaOrigen, ALineaDestino)
   else
   begin
-    if Assigned(FRepositorioComprasSesiones) then
+    if Assigned(FServicioComprasSesiones) then
     begin
-      BorrarCeldasLineaSesion(
-        ConexionPrincipal, sSerie, sNumero, ALineaDestino);
+      FServicioComprasSesiones.BorrarCeldasLinea(
+        sSerie, sNumero, ALineaDestino);
       Cantidades :=
-        FRepositorioComprasSesiones.ConsultarCantidadesLinea(
+        FServicioComprasSesiones.ConsultarCantidadesLinea(
           sSerie, sNumero, ALineaOrigen);
       for Cantidad in Cantidades do
       begin
@@ -2916,10 +2884,10 @@ begin
   Result := 0;
   if Assigned(Dmm) and
      Assigned(Dmm.unqryTablaG) and
-     Assigned(FRepositorioComprasSesiones) and
+     Assigned(FServicioComprasSesiones) and
      (not Dmm.unqryTablaG.IsEmpty) then
     Result :=
-      FRepositorioComprasSesiones.ObtenerSiguienteLinea(
+      FServicioComprasSesiones.ObtenerSiguienteLinea(
         Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
         Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString,
         ALineaOrigen);
@@ -2999,7 +2967,10 @@ begin
         tvLineas.Controller.EditingController.HideEdit(True);
       except
         on E: EInvalidOperation do
-          ;
+          // Ruido del editor inplace; queda constancia en el log.
+          inLibLog.Log.LogWarning(
+            'ComprasSesiones.DupModalTimer: HideEdit ignorado: ' +
+            E.Message);
       end;
     sOpcion := 'N';
     frm := TfrmModalRepetirModelo.Create(Self);
@@ -3294,10 +3265,11 @@ begin
   sPrv := '';
   if not Dmm.unqryTablaG.IsEmpty then
     sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
-  rDup := ResolverDuplicadoSesion(ConexionPrincipal, sNuevo, sPrv);
+  rDup := FServicioComprasSesiones.ResolverDuplicado(
+    sNuevo, sPrv);
   if rDup.Encontrado then
   begin
-    AplicarDuplicadoEnLinea(Dmm, rDup);
+    FServicioComprasSesiones.AplicarDuplicadoEnLinea(rDup);
     if Assigned(FGestorTallas) then
     begin
       FGestorTallas.RecalcularMaxColumnas;
@@ -3349,11 +3321,8 @@ begin
   // ResolverCodigoFamilia incrementa el contador como efecto colateral si
   // resuelve: solo se llama una vez por edicion de celda. Si devuelve False
   // no consume nada y dejamos el codigo manual sin tocar.
-  if not ResolverCodigoFamilia(
-    ConexionPrincipal,
-    sTecleado,
-    IdentidadSesion.Usuario,
-                               sExpandido) then
+  if not FServicioComprasSesiones.ResolverCodigoFamilia(
+    sTecleado, IdentidadSesion.Usuario, sExpandido) then
     Exit;
 
   if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
@@ -3365,8 +3334,8 @@ begin
   // comportamiento que ExpandirCodigoFamiliaActiva por simetria con F3
   // / tipeo en la columna Familia).
   if ds.FieldByName('DESCRIPCION_SESLIN').AsString <> '' then Exit;
-  sNombre := ObtenerNombreFamiliaSesion(
-    ConexionPrincipal, sTecleado);
+  sNombre := FServicioComprasSesiones.ObtenerNombreFamilia(
+    sTecleado);
   if sNombre <> '' then
     ds.FieldByName('DESCRIPCION_SESLIN').AsString := sNombre;
 end;
@@ -3402,10 +3371,11 @@ begin
     Exit;
 
   // Buscamos por REF_PROVEEDOR del proveedor de la cabecera. Si match,// marcamos REUSAR (la helper rellena el resto de campos de la linea).
-  rDup := ResolverDuplicadoSesion(ConexionPrincipal, sRef, sPrv, True);
+  rDup := FServicioComprasSesiones.ResolverDuplicado(
+    sRef, sPrv, True);
   if not rDup.Encontrado then
     Exit;
-  AplicarDuplicadoEnLinea(Dmm, rDup);
+  FServicioComprasSesiones.AplicarDuplicadoEnLinea(rDup);
   if Assigned(FGestorTallas) then
   begin
     FGestorTallas.RecalcularMaxColumnas;
@@ -3431,11 +3401,8 @@ begin
   if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
   ds.FieldByName('CODIGO_FAM_SESLIN').AsString := ACodigoFam;
   sTentativo := ACodigoFam;
-  if ResolverCodigoFamilia(
-    ConexionPrincipal,
-    ACodigoFam,
-    IdentidadSesion.Usuario,
-                           sExpandido) then
+  if FServicioComprasSesiones.ResolverCodigoFamilia(
+    ACodigoFam, IdentidadSesion.Usuario, sExpandido) then
     sTentativo := sExpandido;
   ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString := sTentativo;
 
@@ -3447,8 +3414,8 @@ begin
   begin
     sNombre := ANombreFam;
     if sNombre = '' then
-      sNombre := ObtenerNombreFamiliaSesion(
-        ConexionPrincipal, ACodigoFam);
+      sNombre := FServicioComprasSesiones.ObtenerNombreFamilia(
+        ACodigoFam);
     if sNombre <> '' then
       ds.FieldByName('DESCRIPCION_SESLIN').AsString := sNombre;
   end;
@@ -3659,8 +3626,7 @@ end;
 procedure TfrmMtoComprasSesiones.CopiarCeldasDistribuidasOtroColor(
   ALineaOrigen, ALineaDestino: Integer);
 begin
-  CopiarCeldasDistribuidasSesion(
-    ConexionPrincipal,
+  FServicioComprasSesiones.CopiarCeldasDistribuidas(
     Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
     Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString,
     Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString,

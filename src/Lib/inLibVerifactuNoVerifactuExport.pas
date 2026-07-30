@@ -41,7 +41,8 @@ implementation
 
 uses
   System.Classes, System.IOUtils, System.Hash, System.NetEncoding, Data.DB,
-  DBAccess, inLibGlobalVar, inLibMsg, inLibVerifactu;
+  DBAccess, inLibGlobalVar, inLibLog, inLibMsgVerifactu,
+  inLibVerifactu;
 
 const
   cNsFactuzamNoVerifactu = 'urn:factuzam:no-verifactu:v1';
@@ -237,6 +238,9 @@ begin
     on E: Exception do
     begin
       // La incidencia principal ya queda en el error que se muestra.
+      inLibLog.Log.LogError(
+        'No se pudo registrar el evento NO VERI*FACTU: ' +
+        E.Message);
     end;
   end;
 end;

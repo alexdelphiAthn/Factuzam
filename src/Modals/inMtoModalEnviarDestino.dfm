@@ -1,4 +1,4 @@
-object frmModalEnviarDestino: TfrmModalEnviarDestino
+﻿inherited frmModalEnviarDestino: TfrmModalEnviarDestino
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu]

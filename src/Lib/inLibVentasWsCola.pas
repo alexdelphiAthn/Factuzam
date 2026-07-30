@@ -66,7 +66,7 @@ implementation
 
 uses
   Winapi.Windows, Data.DB, System.Hash, System.IOUtils,
-  inLibGlobalVar, inLibLog, inLibMsg,
+  inLibGlobalVar, inLibLog, inLibMsgIntegraciones,
   inLibVentasWsJson, inLibFactuzamApi;
 
 type

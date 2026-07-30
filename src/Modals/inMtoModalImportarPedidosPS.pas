@@ -28,10 +28,11 @@ uses
   cxDropDownEdit, cxListBox, cxCheckListBox, cxNavigator,
   cxPropertiesStore, dxSkinsForm,
   System.Generics.Collections,
-  UniDataPedidos, inLibPresta, inLibPrestaImporter, Vcl.Menus;
+  UniDataPedidos, inLibPresta, inLibPrestaImporter, Vcl.Menus,
+  inMtoFrmBase;
 
 type
-  TfrmModalImportarPedidosPS = class(TForm)
+  TfrmModalImportarPedidosPS = class(TfrmBase)
     pnlTop: TPanel;
     pnlMid:  TPanel;
     pnlBottom: TPanel;
@@ -70,10 +71,11 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsg;
+  inLibMsgVentas;
 
 procedure TfrmModalImportarPedidosPS.FormCreate(Sender: TObject);
 begin
+  inherited;
   FResumen := TPrestaPedidoResumenList.Create;
   // Valores por defecto recuperables desde el servicio de parámetros.
   edtBaseURL.Text := 'http://localhost/api';

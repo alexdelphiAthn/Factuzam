@@ -60,7 +60,8 @@ type
 implementation
 
  uses
-      inLibMsg,
+      inLibAnfitrionMtoIntf,
+  inLibMsgComun,
       inLibLog,
       inLibRegistroPantallas,
       inLibVentanaEmbebidaIntf;
@@ -131,6 +132,21 @@ begin
   end;
 end;
 
+resourcestring
+  SErrorAnfitrionPantallasNoDisponible =
+    'El propietario no proporciona el servicio de apertura de ' +
+    'pantallas (IAnfitrionPantallas).';
+
+// Descubre el anfitrion o falla ruidosamente (PLAN_SOLID Fase 4):
+// abrir una pantalla sin anfitrion era antes un no-op silencioso.
+function ExigirAnfitrionPantallas(
+  AOwner: TComponent): IAnfitrionPantallas;
+begin
+  if not Supports(AOwner, IAnfitrionPantallas, Result) then
+    raise EServicioNoDisponible.Create(
+      SErrorAnfitrionPantallasNoDisponible);
+end;
+
 procedure ShowMto(AOwner: TComponent;
                   ACall: String;
                   ABusq:string = '');
@@ -147,7 +163,7 @@ var
   NewCaption: string;
   bBusquedaTemporal: Boolean;
 begin
-  if not Supports(AOwner, IAnfitrionPantallas, oAnfitrion) then Exit;
+  oAnfitrion := ExigirAnfitrionPantallas(AOwner);
   oAnfitrion.PrepararAperturaPantalla;
   oGestor := oAnfitrion.GestorVentanas;
   ofzaF := oAnfitrion.RegistroPantallas.GetElement(ACall);

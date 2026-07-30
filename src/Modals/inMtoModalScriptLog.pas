@@ -20,10 +20,11 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.UITypes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
-  SynEdit, SynEditHighlighter, SynHighlighterSQL;
+  SynEdit, SynEditHighlighter, SynHighlighterSQL,
+  inMtoFrmBase;
 
 type
-  TfrmMtoModalScriptLog = class(TForm)
+  TfrmMtoModalScriptLog = class(TfrmBase)
     pnlBotonera: TPanel;
     btnGuardarComo: TButton;
     LogMemo: TSynEdit;
@@ -52,10 +53,11 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsg;
+  inLibMsgConfiguracion;
 
 procedure TfrmMtoModalScriptLog.FormCreate(Sender: TObject);
 begin
+  inherited;
   KeyPreview := True;
   FOperacionEnCurso := False;
   LogMemo.Highlighter := LogHigSQL;

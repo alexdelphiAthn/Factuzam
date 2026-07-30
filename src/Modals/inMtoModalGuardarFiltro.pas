@@ -56,7 +56,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsg;
+  inLibMsgComun;
 
 procedure ForceReferenceToClass(C: TClass);
 begin

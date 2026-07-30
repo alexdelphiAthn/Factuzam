@@ -57,7 +57,7 @@ type
 implementation
 
 uses
-  inLibFacturae, inLibMsg;
+  inLibFacturae, inLibMsgFacturas;
 
 {$R *.dfm}
 

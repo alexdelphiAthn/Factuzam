@@ -155,10 +155,6 @@ type
 const
   pkFieldName = 'CODIGO_FAM_FAM';
 
-var
-  frmMtoFamilias: TfrmMtoFamilias;
-
-
 implementation
 
 uses

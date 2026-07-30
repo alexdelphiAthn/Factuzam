@@ -81,13 +81,10 @@ type
     { Public declarations }
   end;
 
-var
-  frmMtoSearch: TfrmMtoSearch;
-
 implementation
 
 uses
-  inLibGenBusq, inLibMsg;
+  inLibGenBusq, inLibMsgComun;
 
 type
   TEjecutorBusquedaMto = class(TEjecutorBusqueda)
@@ -253,7 +250,8 @@ begin
   // columnas a mano y no pasa por esa ruta (va ligada a oApplyWidth), asi que
   // lo aplicamos aqui explicitamente. Tras ApplyBestFit para que el ancho
   // configurado prevalezca.
-  if Assigned(oConfigCampos) and oConfigCampos.Cargada then
+  if (oConfigCampos() <> nil) and
+     oConfigCampos.Cargada then
     for i := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
     begin
       col := cxGrdDBTabPrin.Columns[i] as TcxGridDBColumn;

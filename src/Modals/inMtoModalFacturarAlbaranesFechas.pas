@@ -75,7 +75,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsg;
+  inLibMsgFacturas, inLibMsgVentas;
 
 procedure TfrmModalFacturarAlbaranesFechas.FormCreate(Sender: TObject);
 begin

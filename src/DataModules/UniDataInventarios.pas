@@ -236,7 +236,7 @@ uses
   inLibLog,             // Log.LogInfo para metricas
   inLibData,
   UniDataConn,
-  inLibMsg;
+  inLibMsgArticulos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 

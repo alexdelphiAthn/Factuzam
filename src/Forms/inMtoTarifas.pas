@@ -153,9 +153,6 @@ type
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
-var
-  frmMtoTarifas: TfrmMtoTarifas;
-
 implementation
 
 uses
@@ -164,7 +161,7 @@ uses
   inLibUser,
   inLibDevExp,
   inLibFotos,
-  inMtoModalAddBlockTarifa, inLibMsg;
+  inMtoModalAddBlockTarifa, inLibMsgArticulos;
 
 {$R *.dfm}
 

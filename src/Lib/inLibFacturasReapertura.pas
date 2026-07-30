@@ -27,7 +27,7 @@ function CrearServicioReaperturaBorrador(
 implementation
 
 uses
-  System.SysUtils, Data.DB, inLibMsg, inLibVerifactu,
+  System.SysUtils, Data.DB, inLibMsgFacturas, inLibVerifactu,
   inLibVentasWsCola;
 
 type

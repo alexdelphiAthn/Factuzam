@@ -56,13 +56,33 @@ type
     property Cargada: Boolean read FCargada;
   end;
 
-var
-  oConfigCampos: TConfigCamposCache;
+function oConfigCampos: TConfigCamposCache;
+procedure InicializarConfigCampos(AConexion: TUniConnection);
+procedure LiberarConfigCampos;
 
 implementation
 
 uses
   inLibLog;
+
+var
+  FConfigCampos: TConfigCamposCache;
+
+function oConfigCampos: TConfigCamposCache;
+begin
+  Result := FConfigCampos;
+end;
+
+procedure LiberarConfigCampos;
+begin
+  FreeAndNil(FConfigCampos);
+end;
+
+procedure InicializarConfigCampos(AConexion: TUniConnection);
+begin
+  LiberarConfigCampos;
+  FConfigCampos := TConfigCamposCache.Create(AConexion);
+end;
 
 constructor TConfigCamposCache.Create(AConexion: TUniConnection);
 begin
@@ -195,5 +215,10 @@ begin
   if FPorCampo.TryGetValue(LowerCase(aCampo), item) then
     Result := item.AnchoColumna;
 end;
+
+initialization
+
+finalization
+  LiberarConfigCampos;
 
 end.

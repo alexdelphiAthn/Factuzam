@@ -40,7 +40,7 @@ function BuscarTabla(AQuery: TUniQuery;
 implementation
 
 uses
-  inLibMsg;
+  inLibMsgComun;
 
 function BuscarTabla(AQuery: TUniQuery;
                      const AClavePrimaria,

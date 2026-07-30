@@ -160,9 +160,6 @@ type
       AState: TCustomDrawState; AFont: TFont; var ABackgroundColor: TColor);
   end;
 
-var
-  frmConsultaOpe: TfrmConsultaOpe;
-
 implementation
 
 {$R *.dfm}
@@ -172,7 +169,8 @@ uses inLibGenerarTicketBD, inLibGenerarTicketCaja,
      inLibTraspasoTicket, inLibShowMto, Uni,
      inLibVerifactu, inMtoModalFacturarTicket,
      inLibEmisionFiscalIntf, inLibEmisionFiscal,
-     inLibCorreoTickets, inLibAtributosPaleta, inLibMsg;
+  inLibCorreoTickets, inLibAtributosPaleta, inLibMsgComun,
+  inLibMsgConfiguracion, inLibMsgFacturas;
 
 // -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -263,8 +261,9 @@ begin
 end;
 
 procedure TfrmConsultaOpe.FormKeyDown(Sender: TObject; var Key: Word;
-                                                       Shift: TShiftState);
+  Shift: TShiftState);
 var
+  FormularioFoto: TfrmFotoArticulo;
   sArt, sSku: string;
 begin
   // Ctrl + Shift + F -> ficha de la factura (normal o simplificada) que se
@@ -297,17 +296,19 @@ begin
   if (Key = Ord('F')) and (ssCtrl in Shift) and not (ssShift in Shift) and
      not (ssAlt in Shift) then
   begin
-    if Assigned(frmFotoArticulo) and frmFotoArticulo.Visible then
-      frmFotoArticulo.Hide
+    FormularioFoto := FotoFlotanteActual;
+    if (FormularioFoto <> nil) and FormularioFoto.Visible then
+      FormularioFoto.Hide
     else
     begin
       ResolverArtSkuDeFacLin(sArt, sSku);
       if sArt <> '' then
       begin
         MostrarFotoFlotante(Self, sArt, sSku);
-        if Assigned(frmFotoArticulo) then
-          frmFotoArticulo.VincularMtoPadre(FdmConsulta.dsFacturaLin,
-                                           ResolverArtSkuDeFacLin);
+        FormularioFoto := FotoFlotanteActual;
+        if FormularioFoto <> nil then
+          FormularioFoto.VincularMtoPadre(FdmConsulta.dsFacturaLin,
+                                          ResolverArtSkuDeFacLin);
       end;
     end;
     Key := 0;
@@ -1013,6 +1014,7 @@ begin
         try
           if EnviarDocumentacionOperacion(
             ParametrosApp,
+            CrearRepositorioTraspasoTicket,
             ConexionPrincipal,
             sEmp,
             sAlm,
@@ -1047,7 +1049,9 @@ begin
     sCliente := FdmConsulta.qryMaestro.FieldByName('CLIENTE').AsString;
     // Los traspasos usan su ticket específico con stock origen/destino.
     if FdmConsulta.EsTraspaso then
-      TTraspasoTicket.ImprimirTraspasoDesdeBD(ConexionPrincipal, sEmp,
+      TTraspasoTicket.ImprimirTraspasoDesdeBD(
+                                              CrearRepositorioTraspasoTicket,
+                                              sEmp,
                                               sAlm, sCaja, sNumOp,
                                               ANombreImpresora)
     else

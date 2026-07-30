@@ -54,15 +54,12 @@ type
     { Public declarations }
   end;
 
-var
-  frmMtoModalEmpCer: TfrmMtoModalEmpCer;
-
 implementation
 
 {$R *.dfm}
 
 uses
-  inLibMsg;
+  inLibMsgComun;
 
 procedure TfrmMtoModalEmpCer.btnAceptarClick(Sender: TObject);
 begin

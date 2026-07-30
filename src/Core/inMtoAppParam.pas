@@ -108,9 +108,6 @@ type
 //                               Index: Integer);
   end;
 
-var
-  frmMtoAppParam: TfrmMtoAppParam;
-
 implementation
 
 {$R *.dfm}
@@ -120,7 +117,8 @@ uses
    dxSkinsLookAndFeelPainter,
    dxSkinsDefaultPainters, dxSkinsForm,
   FileCtrl, inLibPathTokens,               // SelectDirectory
-  inLibLayoutForm, inLibVerifactu, inLibFactuzamApi, inLibMsg;
+   inLibLayoutForm, inLibVerifactu, inLibFactuzamApi,
+   inLibMsgConfiguracion;
 
 procedure RegistrarCambioConfiguracionVerifactuSeguro(
   const AParametrosApp: IParametrosAplicacion;
@@ -683,6 +681,11 @@ begin
               ValorStr := '0';
             ItemData.DisplayValue := ValorStr;
           except
+            // El resto de parametros se sigue aplicando.
+            on E: Exception do
+              inLibLog.Log.LogWarning(
+                'AppParam: no se pudo aplicar el parametro "' +
+                SubKey + '": ' + E.Message);
           end;
         end;
         qry.Next;

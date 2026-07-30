@@ -145,7 +145,7 @@ uses
   inLibComprasImpuestos,
   inLibData,
   inLibArticulosValidador,
-  inLibMsg;
+  inLibMsgCompras, inLibMsgVentas;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 

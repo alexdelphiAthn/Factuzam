@@ -77,7 +77,8 @@ implementation
 
 uses
   Winapi.Windows, System.SysUtils, System.Variants, System.NetEncoding,
-  System.Types, Vcl.Forms, Vcl.Dialogs, cxFilter, inLibDevExp, inLibMsg;
+  System.Types, Vcl.Forms, Vcl.Dialogs, cxFilter, inLibDevExp,
+  inLibMsgComun;
 
 constructor TGestorFiltrosMto.Create(
   APropietario: TComponent;

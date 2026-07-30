@@ -209,7 +209,7 @@ implementation
 {$R *.dfm}
 
 uses inMtoCajaSeleccionVale, inMtoModalSerieFechaFactura,
-     UniDataCaja, inLibDocumentoFiscal, inLibCorreoTickets, inLibMsg;
+     UniDataCaja, inLibDocumentoFiscal, inLibCorreoTickets, inLibMsgCaja;
 
 procedure TfrmMtoCajaFaseCobro.CargarComboSeries;
 var

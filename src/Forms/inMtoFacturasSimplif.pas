@@ -91,7 +91,7 @@ type
 implementation
 
 uses
-  inLibUser, inLibFiltroUsuario, inLibMsg;
+  inLibUser, inLibFiltroUsuario, inLibMsgFacturas;
 
 {$R *.dfm}
 

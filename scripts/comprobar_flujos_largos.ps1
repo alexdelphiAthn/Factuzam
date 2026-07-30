@@ -132,11 +132,11 @@ $objetivos = @(
     Nombre = 'GuardarRegistroNoVerifactu'
   },
   @{
-    Ruta = 'src\Lib\inLibComprasSesionesMaterializar.pas'
+    Ruta = 'src\DataModules\UniDataComprasSesionesMaterializar.pas'
     Nombre = 'MaterializarSesion'
   },
   @{
-    Ruta = 'src\Lib\inLibComprasSesionesMaterializar.pas'
+    Ruta = 'src\DataModules\UniDataComprasSesionesMaterializar.pas'
     Nombre = 'RevertirMaterializacion'
   },
   @{

@@ -43,9 +43,6 @@ type
       const AReceptor: IReceptorEventosMonitorSQL);
   end;
 
-var
-  dmConn: TdmConn;
-
 implementation
 
 uses inLibDir,
@@ -54,7 +51,7 @@ uses inLibDir,
      inLibConexionesUniDAC,
      inLibWin,
      inLibLog,
-     inLibMsg;
+  inLibMsgComun, inLibMsgConfiguracion;
 
 {$R *.dfm}
 

@@ -52,7 +52,7 @@ type
 implementation
 
 uses
-  System.SysUtils, Vcl.Dialogs, inLibMsg;
+  System.SysUtils, Vcl.Dialogs, inLibMsgConfiguracion;
 
 procedure ConfigurarCredencialesMySQL(
   AConexion: TUniConnection;

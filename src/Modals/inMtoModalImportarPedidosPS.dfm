@@ -1,4 +1,4 @@
-﻿object frmModalImportarPedidosPS: TfrmModalImportarPedidosPS
+﻿inherited frmModalImportarPedidosPS: TfrmModalImportarPedidosPS
   Left = 0
   Top = 0
   BorderStyle = bsDialog

@@ -113,7 +113,8 @@ type
     // Localiza el articulo de una linea PS por EAN13/referencia; si no existe
     // crea articulo sin variacion + SKU + codigo de barras y devuelve el
     // CODIGO_ART_ART. Devuelve '' solo si no hay datos para crearlo.
-    function ResolverCodigoArticulo(oValidador: TArticulosValidador;
+    function ResolverCodigoArticulo(
+      const oValidador: IArticulosValidador;
                                     const lp: TLineaPed): string;
 
     procedure OpenTables;
@@ -145,7 +146,7 @@ implementation
 uses
   inLibValoresAutomaticos, inLibLog, System.Diagnostics, System.UITypes,
   Vcl.Dialogs, inLibVentasImpuestos, inLibContadorLineas, JclDebug,
-  inLibData, inLibMsg;
+  inLibData, inLibMsgArticulos, inLibMsgVentas;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -631,7 +632,8 @@ var
   Pila: TJclStackInfoList;
   Lineas: TStringList;
 begin
-  if (iVolcadosPilaLineaVacia < 3) and Assigned(Log) then
+  if (iVolcadosPilaLineaVacia < 3) and
+     (Log() <> nil) then
   begin
     Inc(iVolcadosPilaLineaVacia);
     Lineas := TStringList.Create;
@@ -1831,7 +1833,8 @@ begin
   end;
 end;
 
-function TdmPedidos.ResolverCodigoArticulo(oValidador: TArticulosValidador;
+function TdmPedidos.ResolverCodigoArticulo(
+  const oValidador: IArticulosValidador;
   const lp: TLineaPed): string;
 var
   res: TArtResolucionEntrada;
@@ -1923,7 +1926,7 @@ var
   lp: TLineaPed;
   tm: TMensaje;
   bTxOwned: Boolean;
-  oValidador: TArticulosValidador;
+  oValidador: IArticulosValidador;
   aCodArt: TArray<string>;
 begin
   Result := False;
@@ -1964,14 +1967,14 @@ begin
   // Resolver/crear cliente y articulos ANTES de la tx: los contadores
   // (PRC_GET_NEXT_CONT) hacen COMMIT propio y romperian la tx del pedido.
   sCodigoCli := ResolverCodigoCliente(aOrder);
-  oValidador := TArticulosValidador.Create(ConexionPrincipal);
-  try
-    SetLength(aCodArt, aOrder.LineasPedido.Count);
-    for i := 0 to aOrder.LineasPedido.Count - 1 do
-      aCodArt[i] := ResolverCodigoArticulo(oValidador, aOrder.LineasPedido[i]);
-  finally
-    FreeAndNil(oValidador);
-  end;
+  oValidador := CrearValidadorArticulosBase(
+    ConexionPrincipal);
+  SetLength(aCodArt, aOrder.LineasPedido.Count);
+  for i := 0 to aOrder.LineasPedido.Count - 1 do
+    aCodArt[i] := ResolverCodigoArticulo(
+      oValidador,
+      aOrder.LineasPedido[i]);
+  oValidador := nil;
 
   qIns := TUniQuery.Create(nil);
   qLin := TUniQuery.Create(nil);
@@ -2112,6 +2115,11 @@ begin
           qMsg.Execute;
         except
           // Si el mensaje ya existe (hilo PK), saltar
+          on E: Exception do
+            if Log() <> nil then
+              Log.LogInfo(
+                'ImportarPedidoPrestaShop: mensaje ' + tm.idMensaje +
+                ' omitido: ' + E.Message);
         end;
       end;
       if bTxOwned then

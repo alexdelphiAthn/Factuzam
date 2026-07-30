@@ -1,9 +1,9 @@
 param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoVariablesGlobales = 103,
+  [int]$MaximoVariablesGlobales = 0,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoExceptVacios = 58
+  [int]$MaximoExceptVacios = 0
 )
 
 Set-StrictMode -Version Latest
@@ -155,12 +155,9 @@ foreach ($archivo in $archivos) {
     })
   }
 }
-$totalGlobales = (
-  $mediciones |
-    Measure-Object Globales -Sum
-).Sum
-if ($null -eq $totalGlobales) {
-  $totalGlobales = 0
+$totalGlobales = 0
+foreach ($medicion in $mediciones) {
+  $totalGlobales += $medicion.Globales
 }
 
 Write-Output 'Variables globales por unidad:'

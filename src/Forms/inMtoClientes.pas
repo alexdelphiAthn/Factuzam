@@ -436,6 +436,8 @@ type
     procedure cxButton4Click(Sender: TObject);
     // Carga perezosa de sub-pestañas detail (Historia, Prestamos).
     procedure PcPestanasChange(Sender: TObject);
+  private
+    FDmmClientes: TDMClientes;
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -445,10 +447,6 @@ type
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
-
-var
-  dmmClientes: TDMClientes;
-  frmMtoClientes: TfrmMtoClientes;
 
 implementation
 
@@ -460,7 +458,7 @@ uses
   inMtoModalCliEti,
   inLibDir,
   inLibIBAN,
-  inLibMsg,
+  inLibMsgVentas,
   inLibPermisosIntf,
   Uni;
 
@@ -495,9 +493,9 @@ end;
 
 function TfrmMtoClientes.DataSourcesParaFoto: TArray<TDataSource>;
 begin
-  if Assigned(dmmClientes) then
-    Result := [dsTablaG, dmmClientes.dsFacturasLineasClientes,
-               dmmClientes.dsDepositos]
+  if Assigned(FDmmClientes) then
+    Result := [dsTablaG, FDmmClientes.dsFacturasLineasClientes,
+               FDmmClientes.dsDepositos]
   else
     Result := [dsTablaG];
 end;
@@ -549,7 +547,7 @@ begin
   begin
     formulario := TfrmPrintCliEti.Create(Application);
     try
-      formulario.Preparar(dmmClientes);
+      formulario.Preparar(FDmmClientes);
       formulario.edtCodCli.Text :=
         dsTablaG.Dataset.FieldByName('CODIGO_CLI_CLI').AsString;
       formulario.ShowModal;
@@ -619,12 +617,12 @@ begin
   inherited;
   if PuedeAccionMto(apmInsertar) then
   begin
-    if ((dmmClientes.unqryTablaG.State = dsInsert) or
-        (dmmClientes.unqryTablaG.State = dsEdit)) then
+    if ((FDmmClientes.unqryTablaG.State = dsInsert) or
+        (FDmmClientes.unqryTablaG.State = dsEdit)) then
     begin
-      dmmClientes.unqryTablaG.Post;
+      FDmmClientes.unqryTablaG.Post;
     end;
-    dmmClientes.unqryTablaG.Insert;
+    FDmmClientes.unqryTablaG.Insert;
     pcPantalla.Properties.ActivePage := tsFicha;
     tsFicha.SetFocus;
     pcPestanas.Properties.ActivePage := tsDomicilioFiscal;
@@ -685,15 +683,15 @@ end;
 procedure TfrmMtoClientes.CrearTablaPrincipal;
 begin
   inherited;
-  dmmClientes := tdmDataModule as TdmClientes;
-  tvFacturacion.DataController.DataSource := dmmClientes.dsFacturasClientes;
+  FDmmClientes := tdmDataModule as TdmClientes;
+  tvFacturacion.DataController.DataSource := FDmmClientes.dsFacturasClientes;
   tvLineasFacturacion.DataController.DataSource :=
-                                           dmmClientes.dsFacturasLineasClientes;
-  tvDepositosCliente.DataController.DataSource := dmmClientes.dsDepositos;
-  cbbFORMAPAGO.Properties.ListSource := dmmClientes.dsFormasPago;
-  cbbBancoCobroCli.Properties.ListSource := dmmClientes.dsEmpresasBancos;
-  cbbTARIFA.Properties.ListSource := dmmClientes.dsTarifas;
-  cbbPaises.Properties.ListSource := dmmClientes.dsPaises;
+    FDmmClientes.dsFacturasLineasClientes;
+  tvDepositosCliente.DataController.DataSource := FDmmClientes.dsDepositos;
+  cbbFORMAPAGO.Properties.ListSource := FDmmClientes.dsFormasPago;
+  cbbBancoCobroCli.Properties.ListSource := FDmmClientes.dsEmpresasBancos;
+  cbbTARIFA.Properties.ListSource := FDmmClientes.dsTarifas;
+  cbbPaises.Properties.ListSource := FDmmClientes.dsPaises;
   pcPestanas.ActivePage := tsDomicilioFiscal;
   Self.pkFieldName := 'CODIGO_CLI_CLI';
   // Carga perezosa de sub-pestañas detail (default = tsDomicilioFiscal,// que no usa query detail). Historia/Depositos se abren solo cuando
@@ -707,11 +705,11 @@ end;
 
 procedure TfrmMtoClientes.PcPestanasChange(Sender: TObject);
 begin
-  if not Assigned(dmmClientes) then Exit;
+  if not Assigned(FDmmClientes) then Exit;
   if pcPestanas.ActivePage = tsHistoriaFacturacion then
-    dmmClientes.AsegurarHistoriaFacturacionAbierta
+    FDmmClientes.AsegurarHistoriaFacturacionAbierta
   else if pcPestanas.ActivePage = tsPrestamos then
-    dmmClientes.AsegurarDepositosAbierta;
+    FDmmClientes.AsegurarDepositosAbierta;
 end;
 
 procedure TfrmMtoClientes.cxButton4Click(Sender: TObject);
@@ -794,7 +792,7 @@ begin
   if (dsTablaG.State = dsInsert) or (dsTablaG.State = dsEdit) then
   begin
     dsTablaG.DataSet.FieldByName('NOMBRE_PAI_CLI').AsString :=
-                         dmmClientes.unqryPaises.FieldByName('NOMBRE').AsString;
+                        FDmmClientes.unqryPaises.FieldByName('NOMBRE').AsString;
   end;
 end;
 

@@ -76,13 +76,10 @@ type
       read GetIdentidadSesion;
   end;
 
-var
-  dmFiltros: TdmFiltros;
-
 implementation
 
 uses
-  Vcl.Forms, inLibMsg;
+  Vcl.Forms, inLibMsgComun;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 

@@ -338,9 +338,6 @@ type
     procedure PcPestanaChange(Sender: TObject);
   end;
 
-var
-  frmMtoEmpresas: TfrmMtoEmpresas;
-
 implementation
 
 uses
@@ -352,7 +349,7 @@ uses
   inLibIBAN,
   inLibFotos,
   inLibVerifactuInstalacion,
-  inLibMsg,
+  inLibMsgComun, inLibMsgVentas,
   inLibValoresAutomaticos,
   inMtoModalSeriesDocumentos;
 

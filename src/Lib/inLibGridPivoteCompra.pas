@@ -299,7 +299,7 @@ const
 implementation
 
 uses
-  inLibLog, inLibMsg;
+  inLibLog, inLibMsgArticulos, inLibMsgCompras;
 
 constructor TGridPivoteCompra.Create(const ACfg: TGridPivoteCompraConfig);
 begin
@@ -2094,7 +2094,11 @@ begin
     FCfg.Grid.Controller.EditingController.HideEdit(True);
   except
     on E: EInvalidOperation do
-      ;
+      // Ruido del editor inplace al aceptar el valor.
+      if inLibLog.Log() <> nil then
+        inLibLog.Log.LogWarning(
+          'GridPivoteCompra.CapturarEditorActivo: HideEdit ' +
+          'ignorado: ' + E.Message);
   end;
 end;
 
@@ -2342,7 +2346,7 @@ begin
       FCfg.ContextoSesion.Identidad.Usuario;
     q.ExecSQL;
     Result := Trim(ASku) <> '';
-    if (Result) and (inLibLog.Log <> nil) then
+    if (Result) and (inLibLog.Log() <> nil) then
       inLibLog.Log.LogInfo(Format(
         'PivoteCompra.ResolverSku: creado/asegurado sku=%s',
         [ASku]));
@@ -2402,7 +2406,7 @@ begin
   sLineaBase := Format('%.4d', [iLineaRepr]);
   if not ResolverSkuCelda(AKey, sSku) then
   begin
-    if inLibLog.Log <> nil then
+    if inLibLog.Log() <> nil then
       inLibLog.Log.LogInfo(Format(
         'PivoteCompra.CrearLinea: sin SKU key=%d', [AKey]));
     Exit;
@@ -2415,7 +2419,7 @@ begin
     sAlm := '';
   if not FCfg.SourceLineas.Locate(FCfg.FieldLinea, sLineaBase, []) then
   begin
-    if inLibLog.Log <> nil then
+    if inLibLog.Log() <> nil then
       inLibLog.Log.LogInfo(Format(
         'PivoteCompra.CrearLinea: sin linea base=%s', [sLineaBase]));
     Exit;
@@ -2476,7 +2480,7 @@ begin
     else
       FPivotTotalPedido.Add(iLineaRepr, ACantidad);
     Result := ALineaReal <> '';
-    if (Result) and (inLibLog.Log <> nil) then
+    if (Result) and (inLibLog.Log() <> nil) then
       inLibLog.Log.LogInfo(Format(
         'PivoteCompra.CrearLinea: key=%d linea=%s sku=%s cantidad=%g',
         [AKey, ALineaReal, sSku, ACantidad]));
@@ -2496,7 +2500,7 @@ var
   bCambiado  : Boolean;
 begin
   Result := 0;
-  if inLibLog.Log <> nil then
+  if inLibLog.Log() <> nil then
     inLibLog.Log.LogInfo('PivoteCompra.PersistirPendiente: INICIO');
   if FGuardandoCantidad then
     Exit;
@@ -2504,7 +2508,7 @@ begin
   if FExpandido then Exit;
   CapturarEditorActivo;
   CapturarValoresVisibles;
-  if inLibLog.Log <> nil then
+  if inLibLog.Log() <> nil then
     inLibLog.Log.LogInfo(Format(
       'PivoteCompra.PersistirPendiente: pendientes=%d',
       [FCantidadesPendientes.Count]));
@@ -2530,13 +2534,13 @@ begin
         if CrearLineaRealDesdeCelda(par.Key, rCantidad, sLineaReal) then
           Inc(Result)
         else
-          if inLibLog.Log <> nil then
+          if inLibLog.Log() <> nil then
             inLibLog.Log.LogInfo(Format(
               'PivoteCompra.PersistirPendiente: sin linea real key=%d',
               [par.Key]));
         Continue;
       end;
-      if inLibLog.Log <> nil then
+      if inLibLog.Log() <> nil then
         inLibLog.Log.LogInfo(Format(
           'PivoteCompra.PersistirPendiente: linea=%s cantidad=%g',
           [sLineaReal, rCantidad]));
@@ -2572,7 +2576,7 @@ begin
         end;
       end
       else
-        if inLibLog.Log <> nil then
+        if inLibLog.Log() <> nil then
           inLibLog.Log.LogInfo(Format(
             'PivoteCompra.PersistirPendiente: no localizada linea=%s',
             [sLineaReal]));
@@ -2585,7 +2589,7 @@ begin
       FCfg.SourceLineas.Locate(FCfg.FieldLinea, sLineaFoco, []);
     FCfg.SourceLineas.EnableControls;
     FGuardandoCantidad := False;
-    if inLibLog.Log <> nil then
+    if inLibLog.Log() <> nil then
       inLibLog.Log.LogInfo(Format(
         'PivoteCompra.PersistirPendiente: FIN guardadas=%d',
         [Result]));

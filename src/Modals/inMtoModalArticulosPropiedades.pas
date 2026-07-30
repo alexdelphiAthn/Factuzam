@@ -164,7 +164,7 @@ type
 
 implementation
 
-uses uGenericIfThen, inLibMsg;
+uses uGenericIfThen, inLibMsgArticulos;
 
 const
   ALTO_FILA      = 26;

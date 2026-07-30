@@ -705,7 +705,8 @@ implementation
 
 uses
   inLibWin,
-  inLibMsg,
+  inLibMsgArticulos, inLibMsgComun, inLibMsgFacturas,
+  inLibMsgVentas,
   inLibImpuestosComun,
   inLibFiltroUsuario,
   inLibGenBusq,
@@ -713,7 +714,7 @@ uses
   inLibFacturas,
   inLibGridCantidad,
   inLibArticulosValidador,
-  inLibArticulosResolver,
+  inLibArticulosResolverIntf,
   inMtoGenSearch,
   inMtoModalFacRec,
   inMtoModalImpRecFac,
@@ -800,6 +801,10 @@ begin
     except
       // Teardown defensivo en cierre: nada que hacer si el grid ya
       // esta a medio destruir.
+      on E: Exception do
+        if inLibLog.Log() <> nil then
+          inLibLog.Log.LogWarning(
+            'FacturasBase.Destroy: Desmontar fallo: ' + E.Message);
     end;
     FModoEntrada := nil;
   end;
@@ -1651,7 +1656,7 @@ procedure TfrmMtoFacturasBase.ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesInitPopup(
   Sender: TObject);
 var
   Combo    : TcxComboBox;
-  Resolver : TArticulosResolver;
+  Resolver : IArticulosResolver;
   Skus     : TArray<TArticuloSkuItem>;
   Item     : TArticuloSkuItem;
   CodArt   : string;
@@ -1669,15 +1674,14 @@ begin
   try
     Combo.Properties.Items.Clear;
     if CodArt = '' then Exit;
-    Resolver := TArticulosResolver.Create(
-      ConexionPrincipal,
-      ParametrosCaja);
+    Resolver := CrearResolverArticulos(
+      ConexionPrincipal);
     try
       Skus := Resolver.ListarSkus(CodArt);
       for Item in Skus do
         Combo.Properties.Items.Add(Item.CodigoSku);
     finally
-      FreeAndNil(Resolver);
+      Resolver := nil;
     end;
   finally
     Combo.Properties.Items.EndUpdate;
@@ -1697,8 +1701,8 @@ procedure TfrmMtoFacturasBase.ConsolidarSkuLinea(Sender: TObject);
 var
   e          : TcxCustomEdit;
   Lin        : TDataSet;
-  Validador  : TArticulosValidador;
-  Resolver   : TArticulosResolver;
+  Validador  : IArticulosValidador;
+  Resolver   : IArticulosResolver;
   Resolucion : TArtResolucionEntrada;
   Datos      : TArticuloDatos;
   Precio     : TArticuloPrecio;
@@ -1741,10 +1745,9 @@ begin
                                        'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
     FechaFac  := dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
 
-    Validador := TArticulosValidador.Create(ConexionPrincipal);
-    Resolver := TArticulosResolver.Create(
-      ConexionPrincipal,
-      ParametrosCaja);
+    Validador := CrearValidadorArticulos(ConexionPrincipal);
+    Resolver := CrearResolverArticulos(
+      ConexionPrincipal);
     Resolucion := Validador.Resolver(CodSku);
     if Resolucion.Encontrado and (Resolucion.CodigoSku <> '') then
     begin
@@ -1809,8 +1812,8 @@ begin
         PrecioConIvaDesdeSinIva(Precio.PrecioFinal, fPorcen);
     end;
   finally
-    FreeAndNil(Validador);
-    FreeAndNil(Resolver);
+    Validador := nil;
+    Resolver := nil;
     FConsolidandoSku := False;
   end;
 end;
@@ -2083,7 +2086,11 @@ begin
   dmmFacturas := TdmFacturas(AsegurarDataModuleDocumento(
     Self, tdmDataModule, TdmFacturas));
   dmmFacturas.ConfigurarServicios(
-    CrearServiciosFactura(ConexionPrincipal));
+    CrearServiciosFactura(
+      ConexionPrincipal,
+      ParametrosCaja,
+      CatalogoSqlAplicacion,
+      IncidenciasSqlAplicacion));
   dmmFacturas.OnResultadoOperacion := MostrarResultadoOperacion;
   dmmFacturas.OnResultadoBorrado := MostrarResultadoBorrado;
   dmmFacturas.OnAdvertencia := MostrarAdvertenciaFactura;
@@ -2805,8 +2812,8 @@ procedure TfrmMtoFacturasBase.
 var
   e          : TcxCustomEdit;
   sInput     : string;
-  Validador  : TArticulosValidador;
-  Resolver   : TArticulosResolver;
+  Validador  : IArticulosValidador;
+  Resolver   : IArticulosResolver;
   Resolucion : TArtResolucionEntrada;
   Datos      : TArticuloDatos;
   DatosSku   : TArticuloDatos;
@@ -2833,10 +2840,9 @@ begin
                                        'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
   FechaFac  := dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
 
-  Validador := TArticulosValidador.Create(ConexionPrincipal);
-  Resolver := TArticulosResolver.Create(
-    ConexionPrincipal,
-    ParametrosCaja);
+  Validador := CrearValidadorArticulos(ConexionPrincipal);
+  Resolver := CrearResolverArticulos(
+    ConexionPrincipal);
   try
     Resolucion := Validador.Resolver(sInput);
     if not Resolucion.Encontrado then Exit;
@@ -2966,8 +2972,8 @@ begin
     // otros campos, sin esto los totales quedaban a 0 en el INSERT.
     RecalcLineaFacturaSegura(Sender);
   finally
-    FreeAndNil(Validador);
-    FreeAndNil(Resolver);
+    Validador := nil;
+    Resolver := nil;
   end;
 end;
 
@@ -2978,7 +2984,8 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
   sLineasSinSku := LineasSinSkuRequerido(
-    dmmFacturas.unqryTablaG.Connection,
+    CrearValidadorArticulos(
+      dmmFacturas.unqryTablaG.Connection),
     dmmFacturas.unqryLinFac, 'FACLIN');
   if (sLineasSinSku <> '') and
      (MessageDlg(Format(SPreguntaGrabarFacturaVentaSinSku,
@@ -3024,9 +3031,10 @@ begin
     end;
   except
     on E: EInvalidOperation do
-      // Tragamos solo el caso del editor inplace sin Parent. El handler
-      // global AppException ya filtra y registra como warning.
-      ;
+      // Solo el caso del editor inplace sin Parent; queda en el log.
+      inLibLog.Log.LogWarning(
+        'FacturasBase.tvLineasFacturaKeyDown: EInvalidOperation ' +
+        'ignorada: ' + E.Message);
   end;
 end;
 
@@ -3137,9 +3145,10 @@ begin
     on E: EInvalidOperation do
       // Editor inplace de cxGrid sin Parent durante transicion de celda.
       // GridRecalc ya valida Edit.Parent, pero el FocusedColumn / refresh
-      // posterior puede disparar el mismo error en carrera. AppException
-      // lo registrara como warning si llega tan arriba.
-      ;
+      // posterior puede disparar el mismo error en carrera.
+      inLibLog.Log.LogWarning(
+        'FacturasBase.RecalcLineaFacturaSegura: EInvalidOperation ' +
+        'ignorada: ' + E.Message);
   end;
 end;
 
@@ -3329,6 +3338,10 @@ begin
       Cfg := CrearConfigColumnasSkuDocumento(
         dmmFacturas.unqryTablaG.Connection, ContextoSesion,
         tvLineasFactura, ds, FModoEntradaSel, '', 'FACLIN');
+      Cfg.ValidadorArticulos :=
+        CrearValidadorArticulos(Cfg.Conexion);
+      Cfg.LookupAtributos :=
+        CrearLookupAtributosArticulos(Cfg.Conexion);
       if dmmFacturas.unqryTablaG.FindField(
         'CODIGO_ALM_FAC') <> nil then
         Cfg.AlmacenStock := Trim(
@@ -3694,8 +3707,8 @@ procedure TfrmMtoFacturasBase.AplicarArticuloFactura(
   const AEntrada: string);
 var
   Lin: TDataSet;
-  Validador: TArticulosValidador;
-  Resolver: TArticulosResolver;
+  Validador: IArticulosValidador;
+  Resolver: IArticulosResolver;
   Resolucion: TArtResolucionEntrada;
   Datos: TArticuloDatos;
   Precio: TArticuloPrecio;
@@ -3724,10 +3737,9 @@ begin
     if not dmmFacturas.unqryTablaG.FindField('FECHA_FAC').IsNull then
       FechaFac := dmmFacturas.unqryTablaG.
                     FindField('FECHA_FAC').AsDateTime;
-    Validador := TArticulosValidador.Create(ConexionPrincipal);
-    Resolver := TArticulosResolver.Create(
-      ConexionPrincipal,
-      ParametrosCaja);
+    Validador := CrearValidadorArticulos(ConexionPrincipal);
+    Resolver := CrearResolverArticulos(
+      ConexionPrincipal);
     Resolucion := Validador.Resolver(Trim(AEntrada));
     if not Resolucion.Encontrado then
       Exit;
@@ -3798,8 +3810,8 @@ begin
       'PRECIO_SALIDA_FACLIN',
       Lin.FieldByName('PRECIO_SALIDA_FACLIN').Value);
   finally
-    FreeAndNil(Resolver);
-    FreeAndNil(Validador);
+    Resolver := nil;
+    Validador := nil;
     FConsolidandoSku := False;
   end;
 end;
@@ -4016,7 +4028,7 @@ end;
 function TfrmMtoFacturasBase.PrecioSkuTallas(const ACodigoArticulo,
   ACodigoSku: string): Double;
 var
-  Resolver: TArticulosResolver;
+  Resolver: IArticulosResolver;
   Datos: TArticuloDatos;
   Precio: TArticuloPrecio;
   sTarifa: string;
@@ -4032,9 +4044,8 @@ begin
     if not dmmFacturas.unqryTablaG.FieldByName('FECHA_FAC').IsNull then
       dFecha := dmmFacturas.unqryTablaG.
                   FieldByName('FECHA_FAC').AsDateTime;
-    Resolver := TArticulosResolver.Create(
-                  dmmFacturas.unqryTablaG.Connection,
-                  ParametrosCaja);
+    Resolver := CrearResolverArticulos(
+      dmmFacturas.unqryTablaG.Connection);
     try
       Datos := Resolver.ResolverDatos(ACodigoArticulo, ACodigoSku,
                                       sTarifa, dFecha);
@@ -4050,7 +4061,7 @@ begin
           Result := PrecioConIvaDesdeSinIva(Precio.PrecioFinal, rPorIva);
       end;
     finally
-      FreeAndNil(Resolver);
+      Resolver := nil;
     end;
   end;
 end;

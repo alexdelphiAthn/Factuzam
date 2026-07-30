@@ -91,9 +91,6 @@ type
     procedure ResolverArtSkuStock(out ACodArt, ACodSku: string); override;
   end;
 
-var
-  frmModalListadoVentas: TfrmModalListadoVentas;
-
 implementation
 
 uses
@@ -524,7 +521,8 @@ procedure TfrmModalListadoVentas.miAgregarDocumentoClick(Sender: TObject);
 begin
   try
     AgregarArticuloActivoADocumentoTrabajo(Self, ConexionPrincipal,
-      ContextoSesion, ParametrosCaja, ResolverArtSkuStock);
+      ContextoSesion, ParametrosCaja, ResolverArtSkuStock,
+      CrearResolverArticulos(ConexionPrincipal));
   except
     on E: Exception do
       MessageDlg(E.Message, mtError, [mbOK], 0);
@@ -545,20 +543,23 @@ end;
 
 procedure TfrmModalListadoVentas.MostrarFotoArticuloActivo;
 var
+  FormularioFoto: TfrmFotoArticulo;
   sArt: string;
   sSku: string;
 begin
-  if Assigned(frmFotoArticulo) and frmFotoArticulo.Visible then
-    frmFotoArticulo.Hide
+  FormularioFoto := FotoFlotanteActual;
+  if (FormularioFoto <> nil) and FormularioFoto.Visible then
+    FormularioFoto.Hide
   else
   begin
     ResolverArtSkuStock(sArt, sSku);
     if sArt <> '' then
     begin
       MostrarFotoFlotante(Self, sArt, sSku);
-      if Assigned(frmFotoArticulo) then
-        frmFotoArticulo.VincularDataSources([dsVentas],
-                                            ResolverArtSkuStock);
+      FormularioFoto := FotoFlotanteActual;
+      if FormularioFoto <> nil then
+        FormularioFoto.VincularDataSources([dsVentas],
+                                           ResolverArtSkuStock);
     end;
   end;
 end;

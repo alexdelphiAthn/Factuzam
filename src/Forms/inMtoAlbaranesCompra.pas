@@ -292,9 +292,6 @@ type
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
-var
-  frmMtoAlbaranesCompra: TfrmMtoAlbaranesCompra;
-
 implementation
 
 uses
@@ -302,7 +299,7 @@ uses
   inLibFiltroUsuario,
   inLibLog,
   inLibValoresAutomaticos,
-  inLibArticulosResolver,
+  inLibArticulosResolverIntf,
   inLibArticulosValidador,
   inLibGridCantidad,
   inLibColumnasDocumento,
@@ -311,7 +308,7 @@ uses
   inLibPresentacionDocumento,
   inLibComprasImpuestos,
   inLibAtributosPaleta,
-  inLibMsg,
+  inLibMsgArticulos, inLibMsgCompras,
   UniDataArticulos,
   inMtoModalImpAlbCompra,
   inMtoModalImpAlbCompraV,
@@ -429,8 +426,8 @@ procedure TfrmMtoAlbaranesCompra.AplicarArticuloAlbaranCompra(
   const ACodigoArt: string);
 var
   ds         : TDataSet;
-  Validador  : TArticulosValidador;
-  Resolver   : TArticulosResolver;
+  Validador  : IArticulosValidador;
+  Resolver   : IArticulosResolver;
   Resolucion : TArtResolucionEntrada;
   Datos      : TArticuloDatos;
   qry        : TUniQuery;
@@ -587,11 +584,10 @@ begin
         sPrv := CampoCabeceraString('CODIGO_PRV_ALBC');
         sAlm := CampoCabeceraString('CODIGO_ALM_ALBC');
         dFecha := FechaCabecera;
-        Validador := TArticulosValidador.Create(
+        Validador := CrearValidadorArticulos(
                        dmmAlbaranesCompra.unqryTablaG.Connection);
-        Resolver := TArticulosResolver.Create(
-                      dmmAlbaranesCompra.unqryTablaG.Connection,
-                      ParametrosCaja);
+        Resolver := CrearResolverArticulos(
+          dmmAlbaranesCompra.unqryTablaG.Connection);
         Resolucion := Validador.Resolver(sInput);
         if Resolucion.Encontrado then
         begin
@@ -660,8 +656,8 @@ begin
         else if Resolucion.Mensaje <> '' then
           MessageDlg(Resolucion.Mensaje, mtWarning, [mbOk], 0);
       finally
-        FreeAndNil(Resolver);
-        FreeAndNil(Validador);
+        Resolver := nil;
+        Validador := nil;
         FAplicandoArticulo := False;
       end;
     end;
@@ -1057,12 +1053,13 @@ procedure TfrmMtoAlbaranesCompra.btnGrabarClick(Sender: TObject);
 var
   sLineasSinSku: string;
 begin
-  if inLibLog.Log <> nil then
+  if inLibLog.Log() <> nil then
     inLibLog.Log.LogInfo('AlbaranesCompra.btnGrabarClick: INICIO');
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
   sLineasSinSku := LineasSinSkuRequerido(
-    dmmAlbaranesCompra.unqryTablaG.Connection,
+    CrearValidadorArticulos(
+      dmmAlbaranesCompra.unqryTablaG.Connection),
     dmmAlbaranesCompra.unqryAlbaranesCompraLineas, 'ALBCLIN');
   if (sLineasSinSku <> '') and
      (MessageDlg(Format(SPreguntaGrabarAlbaranCompraSinSku,
@@ -1240,6 +1237,10 @@ begin
     ContextoSesion, tvLineasAlbaran, ds, FModoEntradaSel,
     Trim(dmmAlbaranesCompra.unqryTablaG.
       FieldByName('CODIGO_ALM_ALBC').AsString), 'ALBCLIN');
+  Cfg.ValidadorArticulos :=
+    CrearValidadorArticulos(Cfg.Conexion);
+  Cfg.LookupAtributos :=
+    CrearLookupAtributosArticulos(Cfg.Conexion);
   if FModoEntradaSel = mcsTallasHorPed then
   begin
     CfgPV := CrearConfigPivoteBandasDocumentoCompra(

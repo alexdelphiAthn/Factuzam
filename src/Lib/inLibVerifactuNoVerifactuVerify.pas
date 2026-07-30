@@ -51,7 +51,8 @@ implementation
 
 uses
   System.Classes, System.Hash, System.IOUtils, System.NetEncoding,
-  System.StrUtils, Xml.XMLDoc, Xml.XMLIntf, inLibMsg, inLibVerifactu;
+  System.StrUtils, Xml.XMLDoc, Xml.XMLIntf, inLibMsgFacturas,
+  inLibMsgVerifactu, inLibVerifactu;
 
 const
   cAlgC14n = 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315';

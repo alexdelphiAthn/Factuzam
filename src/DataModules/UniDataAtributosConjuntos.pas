@@ -50,7 +50,7 @@ type
 implementation
 
 uses
-  inLibLog, System.Diagnostics, inLibMsg;
+  inLibLog, System.Diagnostics, inLibMsgArticulos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 

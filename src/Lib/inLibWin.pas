@@ -23,7 +23,8 @@ uses
    cxGroupBox, cxRadioGroup, Vcl.Buttons,
    System.Win.Registry, Winapi.Messages,
    system.math,IdGlobal, IdHash, IdHashMessageDigest, System.IOUtils,
-   inLibPerfilesUsuarioIntf, inLibPerfilesUsuarioValores, inLibMsg;
+  inLibPerfilesUsuarioIntf, inLibPerfilesUsuarioValores,
+  inLibMsgComun;
 
 //  function IsOpenMDI(sName: String; Owner : TComponent):boolean; overload;
 //  function IsOpenMDI(sName: String; Owner : TComponent;

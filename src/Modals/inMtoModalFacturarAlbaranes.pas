@@ -98,7 +98,8 @@ type
 implementation
 
 uses
-  inLibUser, inLibGenBusq, inLibFormatoDocumento, inLibMsg;
+  inLibUser, inLibGenBusq, inLibFormatoDocumento,
+  inLibMsgFacturas, inLibMsgVentas;
 
 {$R *.dfm}
 

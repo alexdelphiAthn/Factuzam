@@ -47,9 +47,6 @@ type
     procedure ResetForm; override;
   end;
 
-var
-  frmMtoPaises: TfrmMtoPaises;
-
 implementation
 
 uses

@@ -57,9 +57,6 @@ type
     procedure AfterReportLoaded; override;
   end;
 
-var
-  frmPrintDocsProveedor: TfrmPrintDocsProveedor;
-
 implementation
 
 {$R *.dfm}

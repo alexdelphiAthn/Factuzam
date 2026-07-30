@@ -26,6 +26,7 @@ function CrearGestorExcepcionesAplicacion(
 implementation
 
 uses
+  Winapi.Windows,
   System.SysUtils,
   Vcl.Forms,
   Vcl.Controls,
@@ -87,6 +88,11 @@ begin
         '(editor inplace sin Parent): ' +
         E.Message);
     except
+      // Ultimo recurso: si el log falla, que lo vea DebugView.
+      on EFalloLog: Exception do
+        OutputDebugString(PChar(
+          'Factuzam: fallo al registrar AppException: ' +
+          EFalloLog.Message));
     end;
   end
   else
@@ -115,12 +121,22 @@ begin
           sLineBreak +
           Detalle);
       except
+        // Ultimo recurso: si el log falla, que lo vea DebugView.
+        on EFalloLog: Exception do
+          OutputDebugString(PChar(
+            'Factuzam: fallo al registrar AppException: ' +
+            EFalloLog.Message));
       end;
       MostrarDetalle(Detalle);
     except
       try
         Application.ShowException(E);
       except
+        // Ultimo recurso: ni el dialogo estandar pudo mostrarse.
+        on EFalloUI: Exception do
+          OutputDebugString(PChar(
+            'Factuzam: fallo al mostrar AppException: ' +
+            EFalloUI.Message));
       end;
     end;
   end;

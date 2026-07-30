@@ -252,7 +252,7 @@ implementation
 uses
   System.Math, System.Types,
   Vcl.Graphics, Vcl.StdCtrls, Vcl.ExtCtrls,
-  inLibMsg;
+  inLibMsgArticulos;
 
 { TGestorGridTallas }
 

@@ -68,9 +68,6 @@ type
     procedure AfterReportLoaded; override;
   end;
 
-var
-  frmPrintBalanceTallas: TfrmPrintBalanceTallas;
-
 implementation
 
 {$R *.dfm}

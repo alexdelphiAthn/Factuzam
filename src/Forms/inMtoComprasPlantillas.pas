@@ -120,13 +120,10 @@ type
     procedure ResetForm; override;
   end;
 
-var
-  frmMtoComprasPlantillas: TfrmMtoComprasPlantillas;
-
 implementation
 
 uses
-  inLibWin, inLibUser, inLibMsg;
+  inLibWin, inLibUser, inLibMsgCompras;
 
 {$R *.dfm}
 

@@ -361,9 +361,6 @@ type
   function LeerCabecera(cdsCabecera:TDataset): TDatosCabeceraFactura;
   function LeerLineaActual(cdsLineas:TDataset): TDatosLineaFactura;
 
-var
-  dmCajaOpe: TdmCajaOpe;
-
 implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -380,7 +377,7 @@ uses inLibValoresAutomaticos,
      inLibDocumentoFiscal,
      inLibLicenciaAplicacion,
      inLibRectificativas,
-     inLibMsg;
+     inLibMsgCaja, inLibMsgFacturas;
 
 {$R *.dfm}
 

@@ -37,7 +37,7 @@ implementation
 
 uses
   System.SysUtils,
-  inLibMsg;
+  inLibMsgComun;
 
 function SoloAlfanumericos(const AValor: string): string;
 var

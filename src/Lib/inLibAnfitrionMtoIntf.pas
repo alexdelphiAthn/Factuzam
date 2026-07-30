@@ -16,12 +16,16 @@ unit inLibAnfitrionMtoIntf;
 interface
 
 uses
-  Winapi.Messages, Vcl.Menus, inLibUnitForm;
+  System.SysUtils, Winapi.Messages, Vcl.Menus, inLibUnitForm;
 
 const
   WM_FREECONTROL = WM_USER + 1;
 
 type
+  // Un servicio del anfitrion que debia estar no esta disponible. El
+  // descubrimiento falla ruidosamente (PLAN_SOLID, Fase 4, patron 5.3).
+  EServicioNoDisponible = class(Exception);
+
   IAnfitrionMantenimiento = interface
     ['{545F7B3D-D158-49C2-BC88-537B85F68A13}']
     function ResolverCallPantalla(const AUnidadClase: string): string;

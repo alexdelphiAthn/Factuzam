@@ -129,15 +129,12 @@ type
                              out ACodigo, ANombre: string): Boolean;
   end;
 
-var
-  dmTraspaso: TdmTraspaso;
-
 implementation
 
 {$R *.dfm}
 
 uses
-  inLibMsg;
+  inLibMsgCaja;
 
 constructor TdmTraspaso.Create(
   AOwner: TComponent;

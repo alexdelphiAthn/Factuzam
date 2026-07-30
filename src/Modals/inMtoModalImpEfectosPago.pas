@@ -74,9 +74,6 @@ type
     procedure AfterReportLoaded; override;
   end;
 
-var
-  frmPrintEfectosPago: TfrmPrintEfectosPago;
-
 implementation
 
 {$R *.dfm}

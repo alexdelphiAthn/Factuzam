@@ -80,7 +80,8 @@ implementation
 uses
   inLibCadenas, inLibDatasets, inLibValoresAutomaticos, inLibLog,
   System.Diagnostics,
-  inLibFormatoDocumento, inLibIBAN, inLibMsg;
+  inLibFormatoDocumento, inLibIBAN, inLibMsgComun,
+  inLibMsgFacturas;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 

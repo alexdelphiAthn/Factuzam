@@ -39,7 +39,7 @@ procedure AplicarValoresPorDefecto(AConexion: TUniConnection;
 implementation
 
 uses
-  System.SysUtils, Vcl.Dialogs, inLibMsg;
+  System.SysUtils, Vcl.Dialogs, inLibMsgComun;
 
 const
   SQL_VIGENCIA_SERIE =

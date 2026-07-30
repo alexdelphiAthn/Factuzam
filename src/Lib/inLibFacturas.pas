@@ -336,7 +336,7 @@ implementation
 
 uses
   System.Variants,
-  inLibLog, inLibMsg;
+  inLibLog, inLibMsgFacturas;
 
 procedure PostearSiPendiente(ADataSet: TDataSet);
 begin
@@ -1281,7 +1281,7 @@ begin
       begin
         _mensajeError := E.Message;
         // Se registra la causa original; el llamante decide si aborta
-        if Assigned(Log) then
+        if Log() <> nil then
           Log.LogError('TFacturaTotales.ProcesarFacturaCompleta (' +
                        E.ClassName + '): ' + E.Message);
         Result := False;

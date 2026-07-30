@@ -10,22 +10,55 @@ cuando no quede ningún consumidor. No añadir mensajes nuevos a la fachada.
 _____________________________________________________________
 
 PENDIENTE TÉCNICO - EXTENDER EL CATÁLOGO SQL POR PERFILES (29/07/2026)
-El piloto está terminado para ObtenerSiguienteLinea y
-ConsultarCantidadesLinea de RepositorioComprasSesiones.
+Las fases SQL-0, SQL-1, SQL-2.1, SQL-2.2, SQL-2.3a, SQL-2.3b1 y
+SQL-2.3b2 están terminadas. El registro contiene 66 definiciones de nueve
+repositorios: 63 lecturas personalizables con fallback, una comprobación
+técnica de esquema y dos escrituras de Facturas que permanecen pesSoloBase.
+Las implementaciones concretas están en DataModules. Los antiguos
+inLibArticulosResolver, inLibArticulosValidador e
+inLibArticulosAtributosLookup son fachadas sin SQL.
+inLibTraspasoTicket conserva la composición visual del ticket, pero depende
+de IRepositorioTraspasoTicket y ya no conoce UniDAC ni contiene SQL.
+inLibArqueo es una fachada de alias sin SQL. El cálculo principal depende de
+IRepositorioArqueoCaja; su implementación UniDAC registra nueve lecturas
+personalizables y una comprobación de esquema pesSoloBase.
+inLibArqueoTicket conserva únicamente la composición térmica y depende de
+IRepositorioArqueoTicket. Sus once lecturas de cabecera, resúmenes e
+históricos son personalizables con fallback. El resumen por sección comparte
+una consulta estable parametrizada por :pNIVELES entre pantalla y ticket.
 Cada formulario conserva su interruptor oGetSQLFromDB. Si está a False,
 usa siempre el SQL base; si está a True, consulta el catálogo compartido
 KEY_USUPER=SQL_REPOSITORIOS. Las operaciones se identifican mediante
 SUBKEY_USUPER=SQL__Repositorio__Operacion, por lo que una definición puede
 ser utilizada por varias pantallas sin duplicarla.
 Un fallo al publicar o cargar el perfil, una validación incorrecta o un
-error al ejecutar el SQL personalizado provoca fallback al SQL base. El
-piloto solo permite este reintento automático en lecturas. Para escrituras
-será obligatorio ejecutar el intento dentro de una transacción y hacer
-Rollback antes del fallback.
-Pendiente: extraer progresivamente el resto del SQL literal de inLib* hacia
-repositorios de agregado, añadir sus definiciones y pruebas, y publicar las
-filas ausentes sin sobrescribir personalizaciones existentes.
+error al ejecutar el SQL personalizado o la ausencia de campos reales en
+el dataset provoca fallback al SQL base. El reintento automático solo se
+permite en lecturas. Para escrituras será obligatorio ejecutar el intento
+dentro de una transacción y hacer Rollback antes del fallback.
+La línea base conjunta tras SQL-2.3b2 es 341 construcciones en 67 unidades y
+queda
+protegida por scripts/comprobar_sql_en_dominio.ps1. El inventario completo
+está en DESARROLLOS EN CURSO/inventario_sql_dominio_sql2_3b2.csv.
+SQL-2.3b2 elimina directamente 12 construcciones y dos unidades. La línea
+conjunta incluye además las 106 construcciones retiradas por la tanda
+concurrente de Compras.
+Pendiente desde SQL-2.3c: continuar con las diez lecturas de
+inLibTiraCajaTicket. No abordar escrituras de cierre hasta fijar límites
+transaccionales y pruebas de rollback.
 Administración y procedimiento documentados en MANUAL_SQL_PERFILES.md.
 Plan de ejecución detallado en
 DESARROLLOS EN CURSO/plan_expansion_catalogo_sql.md.
+Resultado de SQL-1 documentado en
+DESARROLLOS EN CURSO/refactorizacion_fase_sql1_resultados.md.
+Resultado de SQL-2.1 documentado en
+DESARROLLOS EN CURSO/refactorizacion_fase_sql2_1_resultados.md.
+Resultado de SQL-2.2 documentado en
+DESARROLLOS EN CURSO/refactorizacion_fase_sql2_2_resultados.md.
+Resultado de SQL-2.3a documentado en
+DESARROLLOS EN CURSO/refactorizacion_fase_sql2_3a_resultados.md.
+Resultado de SQL-2.3b1 documentado en
+DESARROLLOS EN CURSO/refactorizacion_fase_sql2_3b1_resultados.md.
+Resultado de SQL-2.3b2 documentado en
+DESARROLLOS EN CURSO/refactorizacion_fase_sql2_3b2_resultados.md.
 

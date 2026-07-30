@@ -51,7 +51,8 @@ function CrearParametrosAplicacion(
 implementation
 
 uses
-  System.SysUtils, inLibPathTokens, inLibLog, inLibMsg;
+  System.SysUtils, inLibPathTokens, inLibLog,
+  inLibMsgConfiguracion;
 
 { TParametrosAplicacion }
 

@@ -114,7 +114,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsg;
+  inLibMsgCaja;
 
 { TfrmMtoCajaSeleccionVale }
 

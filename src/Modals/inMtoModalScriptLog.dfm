@@ -1,4 +1,4 @@
-﻿object frmMtoModalScriptLog: TfrmMtoModalScriptLog
+﻿inherited frmMtoModalScriptLog: TfrmMtoModalScriptLog
   Left = 0
   Top = 0
   Caption = 'Progreso de Ejecuci'#243'n del Script'

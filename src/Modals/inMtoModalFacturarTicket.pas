@@ -80,7 +80,8 @@ implementation
 uses
   inLibValoresAutomaticos, inLibVerifactu, inLibVerifactuCola,
   inLibEmisionFiscalIntf, inLibEmisionFiscal,
-  inMtoGenSearch, inLibDocumentoFiscal, inLibMsg;
+  inMtoGenSearch, inLibDocumentoFiscal, inLibMsgComun,
+  inLibMsgFacturas, inLibMsgVentas;
 
 {$R *.dfm}
 

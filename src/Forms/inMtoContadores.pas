@@ -70,9 +70,6 @@ type
     procedure ResetForm; override;
   end;
 
-var
-  frmMtoContadores: TfrmMtoContadores;
-
 implementation
 
 uses

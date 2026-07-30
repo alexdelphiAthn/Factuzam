@@ -64,7 +64,7 @@ implementation
 
 uses
   inLibVerifactu, inLibFormatoDocumento, inLibGenerarTicket,
-  inLibPreviewTicket, inLibMsg;
+  inLibPreviewTicket, inLibMsgCaja;
 
 // Función auxiliar para rellenar con ceros (LPAD)
 function LPAD(const AValue: string;

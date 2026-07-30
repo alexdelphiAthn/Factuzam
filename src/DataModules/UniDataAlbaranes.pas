@@ -135,7 +135,8 @@ implementation
 uses
   inLibValoresAutomaticos, inLibLog, System.Diagnostics,
   System.UITypes, Vcl.Dialogs, inLibArticulosValidador,
-  inLibVentasImpuestos, inLibContadorLineas, inLibData, inLibMsg,
+  inLibVentasImpuestos, inLibContadorLineas, inLibData,
+  inLibMsgArticulos, inLibMsgFacturas, inLibMsgVentas,
   inLibSqlSeguro;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}

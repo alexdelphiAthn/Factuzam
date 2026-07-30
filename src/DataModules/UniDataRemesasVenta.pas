@@ -58,7 +58,7 @@ type
 implementation
 
 uses
-  inLibMsg;
+  inLibMsgVentas;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 

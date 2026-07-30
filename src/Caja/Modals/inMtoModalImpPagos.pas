@@ -81,9 +81,6 @@ type
     procedure preparar_consulta; override;
   end;
 
-var
-  frmPrintPagos: TfrmPrintPagos;
-
 implementation
 
 {$R *.dfm}

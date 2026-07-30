@@ -8,7 +8,7 @@ $ErrorActionPreference = 'Stop'
 $archivosCriticos = @(
   'src\DataModules\UniDataFacturas.pas',
   'src\DataModules\UniDataAlbaranes.pas',
-  'src\Lib\inLibComprasSesionesMaterializar.pas',
+  'src\DataModules\UniDataComprasSesionesMaterializar.pas',
   'src\Caja\DataModules\UniDataCaja.pas',
   'src\Lib\inLibFacturasMovimientos.pas'
 )
@@ -121,7 +121,7 @@ $asignacionesVariablesPermitidas = @{
     'IdentificadorListaBlanca'
   'src\DataModules\UniDataAlbaranes.pas|sSql' =
     'LiteralFijo'
-  'src\Lib\inLibComprasSesionesMaterializar.pas|ASql' =
+  'src\DataModules\UniDataComprasSesionesMaterializar.pas|ASql' =
     'LiteralFijo'
   'src\Caja\DataModules\UniDataCaja.pas|SQLStr' =
     'LiteralFijo'
@@ -250,12 +250,12 @@ foreach ($objetivo in $listasBlancas) {
 
 $coordinadores = @(
   @{
-    Ruta = 'src\Lib\inLibComprasSesionesMaterializar.pas'
+    Ruta = 'src\DataModules\UniDataComprasSesionesMaterializar.pas'
     Metodo = 'MaterializarSesion'
     Marcas = @('StartTransaction', 'Commit', 'Rollback')
   },
   @{
-    Ruta = 'src\Lib\inLibComprasSesionesMaterializar.pas'
+    Ruta = 'src\DataModules\UniDataComprasSesionesMaterializar.pas'
     Metodo = 'RevertirMaterializacion'
     Marcas = @('StartTransaction', 'Commit', 'Rollback')
   },
@@ -265,12 +265,12 @@ $coordinadores = @(
     Marcas = @('StartTransaction', 'Commit', 'Rollback')
   },
   @{
-    Ruta = 'src\Forms\inMtoFacturasBase.pas'
-    Metodo = 'TfrmMtoFacturasBase.btnConsolidarClick'
+    Ruta = 'src\Lib\inLibFacturasConsolidacion.pas'
+    Metodo = 'TServicioConsolidacionFactura.Consolidar'
     Marcas = @(
       'StartTransaction',
-      'EmitirFiscalmente',
-      'GenerarMovimientosSalidaFactura',
+      'FServicioEmision.Emitir',
+      'FServicioMovimientos.GenerarSalidas',
       'Commit',
       'Rollback'
     )
@@ -309,7 +309,8 @@ foreach ($objetivo in $coordinadores) {
   }
   else {
     foreach ($marca in $objetivo.Marcas) {
-      if ($metodo -notmatch "\b$marca\b") {
+      $patronMarca = [regex]::Escape($marca)
+      if ($metodo -notmatch "\b$patronMarca\b") {
         Agregar-Infraccion `
           -Ruta $objetivo.Ruta `
           -Linea 1 `
@@ -335,6 +336,11 @@ $eventosDelgados = @(
     Ruta = 'src\DataModules\UniDataAlbaranes.pas'
     Metodo = 'TdmAlbaranes.unqryAlbaranesLineasAfterPost'
     Delegado = 'ProcesarLineasPosteadas'
+  },
+  @{
+    Ruta = 'src\Forms\inMtoFacturasBase.pas'
+    Metodo = 'TfrmMtoFacturasBase.btnConsolidarClick'
+    Delegado = 'Servicio.Consolidar'
   }
 )
 foreach ($objetivo in $eventosDelgados) {
@@ -343,8 +349,9 @@ foreach ($objetivo in $eventosDelgados) {
   $metodo = Obtener-BloqueMetodo `
     -Contenido $contenido `
     -Nombre $objetivo.Metodo
+  $patronDelegado = [regex]::Escape($objetivo.Delegado)
   if (($null -eq $metodo) -or
-      ($metodo -notmatch "\b$($objetivo.Delegado)\b")) {
+      ($metodo -notmatch "\b$patronDelegado\b")) {
     Agregar-Infraccion `
       -Ruta $objetivo.Ruta `
       -Linea 1 `

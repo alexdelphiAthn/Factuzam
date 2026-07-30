@@ -31,7 +31,7 @@ uses
   cxRadioGroup, cxDropDownEdit, cxPC, cxInplaceContainer, cxTL, cxTLData,
   dxSkinsCore, dxSkinsDefaultPainters, dxSkinsForm, dxScrollbarAnnotations,
   dxCore, dxDateRanges,
-  inMtoGen, inLibUnitForm, inLibPermisosAdmin;
+  inMtoGen, inLibUnitForm, inLibPermisosAdmin, inLibAnfitrionMtoIntf;
 
 type
   TfrmMtoPermisosArbol = class(TfrmMtoGen)
@@ -73,6 +73,9 @@ type
     FExpTodos     : TDictionary<string, string>;
     FColocados    : TDictionary<string, Boolean>;
     FInicializando: Boolean;
+    // Proveedor del menu/registro (el principal). Descubierto UNA vez
+    // en CrearTablaPrincipal; sin el, esta pantalla no tiene sentido.
+    FProveedorMenu: IProveedorMenuPantallas;
     procedure ConstruirInterfaz;
     procedure ConstruirArbol;
     procedure AgregarNodosMenu(AParent: TcxTreeListNode; AItem: TMenuItem;
@@ -116,13 +119,15 @@ type
     destructor Destroy; override;
   end;
 
-var
-  frmMtoPermisosArbol: TfrmMtoPermisosArbol;
-
 implementation
 
 uses
-  System.StrUtils, System.Rtti, inLibAnfitrionMtoIntf, inLibMsg;
+  System.StrUtils, System.Rtti, inLibMsgConfiguracion;
+
+resourcestring
+  SErrorPermisosSinProveedorMenu =
+    'La pantalla de permisos requiere el proveedor de menú del ' +
+    'principal (IProveedorMenuPantallas).';
 
 {$R *.dfm}
 
@@ -354,26 +359,23 @@ end;
 
 procedure TfrmMtoPermisosArbol.ConstruirArbol;
 var
-  oAnfitrion: IProveedorMenuPantallas;
   oMenu: TMainMenu;
   oRegistro: TfzaWinF;
   i: Integer;
 begin
   FtlPermisos.Clear;
   FColocados.Clear;
-  if Supports(Self.Owner, IProveedorMenuPantallas, oAnfitrion) then
-  begin
-    oMenu := oAnfitrion.MenuAplicacion;
-    oRegistro := oAnfitrion.RegistroPantallas;
-    FtlPermisos.BeginUpdate;
-    try
-      if (oMenu <> nil) and (oRegistro <> nil) then
-        for i := 0 to oMenu.Items.Count - 1 do
-          AgregarNodosMenu(nil, oMenu.Items[i], oRegistro);
-      AgregarCategorias;
-    finally
-      FtlPermisos.EndUpdate;
-    end;
+  // FProveedorMenu se exige en CrearTablaPrincipal: aqui ya esta.
+  oMenu := FProveedorMenu.MenuAplicacion;
+  oRegistro := FProveedorMenu.RegistroPantallas;
+  FtlPermisos.BeginUpdate;
+  try
+    if (oMenu <> nil) and (oRegistro <> nil) then
+      for i := 0 to oMenu.Items.Count - 1 do
+        AgregarNodosMenu(nil, oMenu.Items[i], oRegistro);
+    AgregarCategorias;
+  finally
+    FtlPermisos.EndUpdate;
   end;
 end;
 
@@ -824,6 +826,11 @@ end;
 procedure TfrmMtoPermisosArbol.CrearTablaPrincipal;
 begin
   inherited;
+  // Descubrir el proveedor UNA vez (patron 5.3). Antes, sin proveedor,
+  // el arbol quedaba vacio en silencio: ahora falla ruidosamente.
+  if not Supports(Self.Owner, IProveedorMenuPantallas,
+                  FProveedorMenu) then
+    raise EServicioNoDisponible.Create(SErrorPermisosSinProveedorMenu);
   FInicializando := True;
   try
     ConstruirInterfaz;

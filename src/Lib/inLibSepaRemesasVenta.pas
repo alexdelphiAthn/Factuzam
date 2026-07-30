@@ -51,7 +51,8 @@ function CodigoAcreedorSepaValido(const AValor: string): Boolean;
 implementation
 
 uses
-  inLibDocumentoFiscal, inLibIBAN, inLibMsg, uDJMSepa1914XML;
+  inLibDocumentoFiscal, inLibIBAN, inLibMsgVentas,
+  uDJMSepa1914XML;
 
 function SoloAlfanumerico(const AValor: string): string;
 var

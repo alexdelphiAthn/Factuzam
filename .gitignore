@@ -4,6 +4,7 @@
 *.map
 *.drc
 *.msi
+*.rsm
 *.dll
 *.bpl
 *.dcp

@@ -46,7 +46,7 @@ implementation
 uses
   Data.DB, DBAccess, Vcl.Dialogs,
   inLibFTicket, inLibPreviewTicket, inLibDir,
-  inLibGenerarTicket, inLibMsg;
+  inLibGenerarTicket, inLibMsgCaja, inLibMsgConfiguracion;
 
 procedure ImprimirTicketOperacionCaja(
   AConexion: TUniConnection;

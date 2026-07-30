@@ -283,9 +283,6 @@ type
     procedure SetArticuloSku(const ACodArt, ACodSku: string);
   end;
 
-var
-  frmStockConsulta: TfrmStockConsulta;
-
 /// Abre (o trae al frente) la consulta de stock con el (articulo, sku)
 /// indicado. Mismo patron que inMtoFotoArticulo.MostrarFotoFlotante.
 procedure MostrarStockConsulta(const ACodArt, ACodSku: string);
@@ -298,7 +295,8 @@ uses
   inLibAtributosPaleta,
   inLibGenBusq, inLibUser,
   inLibArticulosValidador,
-  inMtoModalOperacionesCajaSku, inLibMsg;
+  inMtoModalOperacionesCajaSku, inLibMsgArticulos, inLibMsgCaja,
+  inLibMsgVentas;
 
 {$R *.dfm}
 
@@ -360,25 +358,43 @@ end;
 // ---------------------------------------------------------------------------
 //  Funcion publica de apertura
 // ---------------------------------------------------------------------------
-procedure MostrarStockConsulta(const ACodArt, ACodSku: string);
+function BuscarStockConsulta: TfrmStockConsulta;
+var
+  Componente: TComponent;
 begin
-  if frmStockConsulta = nil then
-    frmStockConsulta := TfrmStockConsulta.Create(Application);
-  frmStockConsulta.SetArticuloSku(ACodArt, ACodSku);
-  if frmStockConsulta.WindowState = wsMinimized then
-    frmStockConsulta.WindowState := wsMaximized;
+  Componente := Application.FindComponent('frmStockConsulta');
+  if (Componente is TfrmStockConsulta) and
+     not (csDestroying in Componente.ComponentState) then
+    Result := TfrmStockConsulta(Componente)
+  else
+    Result := nil;
+end;
+
+procedure MostrarStockConsulta(const ACodArt, ACodSku: string);
+var
+  Formulario: TfrmStockConsulta;
+begin
+  Formulario := BuscarStockConsulta;
+  if Formulario = nil then
+    Formulario := TfrmStockConsulta.Create(Application);
+  Formulario.SetArticuloSku(ACodArt, ACodSku);
+  if Formulario.WindowState = wsMinimized then
+    Formulario.WindowState := wsMaximized;
   // Mostrar CON foco para que ESC cierre la ventana sin tener que pinchar
   // antes. Antes se mostraba con SW_SHOWNOACTIVATE y devolvia el foco a la
   // ventana anterior, lo que dejaba la consulta imposible de cerrar con ESC.
-  frmStockConsulta.Visible := True;
-  frmStockConsulta.BringToFront;
-  SetForegroundWindow(frmStockConsulta.Handle);
+  Formulario.Visible := True;
+  Formulario.BringToFront;
+  SetForegroundWindow(Formulario.Handle);
 end;
 
 procedure DesvincularPerfilesStockConsulta;
+var
+  Formulario: TfrmStockConsulta;
 begin
-  if Assigned(frmStockConsulta) then
-    frmStockConsulta.AsignarPerfilesUsuario(nil);
+  Formulario := BuscarStockConsulta;
+  if Formulario <> nil then
+    Formulario.AsignarPerfilesUsuario(nil);
 end;
 
 procedure TfrmStockConsulta.FormCreate(Sender: TObject);
@@ -726,14 +742,14 @@ end;
 // codigo de barras leido).
 procedure TfrmStockConsulta.AplicarLecturaCodigoBarras(const ACodigo: string);
 var
-  Validador  : TArticulosValidador;
+  Validador  : IArticulosValidador;
   Resolucion : TArtResolucionEntrada;
 begin
-  Validador := TArticulosValidador.Create(ConexionPrincipal);
+  Validador := CrearValidadorArticulos(ConexionPrincipal);
   try
     Resolucion := Validador.ResolverCodigoBarras(ACodigo);
   finally
-    FreeAndNil(Validador);
+    Validador := nil;
   end;
   if Resolucion.Encontrado then
     SetArticuloSku(Resolucion.CodigoArticulo, Resolucion.CodigoSku)
@@ -1006,7 +1022,9 @@ begin
         ConexionPrincipal,
         ContextoSesion,
         ParametrosCaja,
-        linea);
+        linea,
+        CrearResolverArticulos(
+          ConexionPrincipal));
     except
       on E: Exception do
       begin
@@ -3341,8 +3359,5 @@ begin
     RecargarConsulta;
   end;
 end;
-
-initialization
-  frmStockConsulta := nil;
 
 end.

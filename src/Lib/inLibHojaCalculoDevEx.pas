@@ -96,7 +96,7 @@ function CrearLectorDevEx(
 implementation
 
 uses
-  inLibMsg;
+  inLibMsgComun;
 
 class procedure TEscritorHojaCalculoDevEx.MezclarDx(
   const ATabla: TdxSpreadSheetTableView;

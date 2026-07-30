@@ -162,7 +162,7 @@ implementation
 uses
   inLibValoresAutomaticos,
   inLibAlbaranesCompraMovimientos,
-  inLibMsg;
+  inLibMsgCompras;
 
 function EjecutarRecepcionPedidoCompra(AConn: TUniConnection;
   const AParametros: TParametrosRecepcionPedidoCompra;

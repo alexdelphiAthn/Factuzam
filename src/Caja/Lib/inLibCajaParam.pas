@@ -53,7 +53,7 @@ function CrearParametrosCaja(
 implementation
 
 uses
-  System.SysUtils, inLibBuscarImpresora, inLibMsg;
+  System.SysUtils, inLibBuscarImpresora, inLibMsgCaja;
 
 { TParametrosCaja }
 

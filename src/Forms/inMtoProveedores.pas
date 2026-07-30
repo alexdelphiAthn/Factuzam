@@ -225,6 +225,7 @@ type
     procedure cxdbtxtdt16PropertiesChange(Sender: TObject);
     procedure cbbPaisPrvPropertiesChange(Sender: TObject);
   private
+    FDmmProveedores: TDMProveedores;
     { Private declarations }
     // Carga perezosa de sub-pestañas detail (Articulos, Ventas).
     procedure PcPestanasChange(Sender: TObject);
@@ -238,10 +239,6 @@ type
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
-var
-  dmmProveedores: TDMProveedores;
-  frmMtoProveedores: TfrmMtoProveedores;
-
 implementation
 
 uses
@@ -249,7 +246,7 @@ uses
   inLibUser,
   inLibShowMto,
   inLibFotos,
-  inLibMsg;
+  inLibMsgCompras;
 
 {$R *.dfm}
 
@@ -285,9 +282,9 @@ end;
 // siga al cursor en cualquiera de las dos pestanas.
 function TfrmMtoProveedores.DataSourcesParaFoto: TArray<TDataSource>;
 begin
-  if Assigned(dmmProveedores) then
-    Result := [dsTablaG, dmmProveedores.dsArticulos,
-               dmmProveedores.dsLinFacturasArticulos]
+  if Assigned(FDmmProveedores) then
+    Result := [dsTablaG, FDmmProveedores.dsArticulos,
+               FDmmProveedores.dsLinFacturasArticulos]
   else
     Result := [dsTablaG];
 end;
@@ -295,7 +292,7 @@ end;
 procedure TfrmMtoProveedores.btnIraArticuloClick(Sender: TObject);
 begin
   inherited;
-  with dmmProveedores do
+  with FDmmProveedores do
   begin
     if ((pcPestanas.ActivePage = tsArticulos)) then
       ShowMto(Self.Owner,
@@ -314,7 +311,7 @@ begin
   inherited;
   ShowMto(Self.Owner,
           'Clientes',
-          dmmProveedores.unqryLinFacturasArticulos.FieldByName(
+          FDmmProveedores.unqryLinFacturasArticulos.FieldByName(
                                             'CODIGO_CLI_FAC').AsString);
 end;
 
@@ -335,12 +332,12 @@ end;
 procedure TfrmMtoProveedores.btnNuevoProveedorClick(Sender: TObject);
 begin
   inherited;
-  if ( (dmmProveedores.unqryTablaG.State = dsInsert) or
-       (dmmProveedores.unqryTablaG.State = dsEdit)) then
+  if ( (FDmmProveedores.unqryTablaG.State = dsInsert) or
+       (FDmmProveedores.unqryTablaG.State = dsEdit)) then
   begin
-    dmmProveedores.unqryTablaG.Post;
+    FDmmProveedores.unqryTablaG.Post;
   end;
-  dmmProveedores.unqryTablaG.Insert;
+  FDmmProveedores.unqryTablaG.Insert;
   tsFicha.SetFocus;
   pcPestanas.ActivePageIndex := tsDomicilioFiscal.PageIndex;
   txtRAZONSOCIAL_PROVEEDOR.SetFocus;
@@ -396,29 +393,30 @@ end;
 procedure TfrmMtoProveedores.CrearTablaPrincipal;
 begin
   inherited;
-  dmmProveedores := tdmDataModule as TdmProveedores;
-  tvArticulos.DataController.DataSource := dmmProveedores.dsArticulos;
-  tvLinFac.DataController.DataSource := dmmProveedores.dsLinFacturasArticulos;
+  FDmmProveedores := tdmDataModule as TdmProveedores;
+  tvArticulos.DataController.DataSource := FDmmProveedores.dsArticulos;
+  tvLinFac.DataController.DataSource :=
+    FDmmProveedores.dsLinFacturasArticulos;
   // Pestaña Compras: kits de cantidades por talla. Cada kit lleva su
   // sistema de tallas (lookup sobre conjuntos TAL). Mismo patron runtime
   // que Articulos/Ventas.
-  tvKits.DataController.DataSource    := dmmProveedores.dsKits;
-  tvKitsDet.DataController.DataSource := dmmProveedores.dsKitsDet;
+  tvKits.DataController.DataSource    := FDmmProveedores.dsKits;
+  tvKitsDet.DataController.DataSource := FDmmProveedores.dsKitsDet;
   TcxLookupComboBoxProperties(dbcKitSistema.Properties).ListSource :=
-    dmmProveedores.dsConjuntosTallas;
+    FDmmProveedores.dsConjuntosTallas;
   // Sistema de tallas por defecto del proveedor (cabecera): se copia a la
   // sesion de compra al elegir este proveedor (ver CopiarDefectosProveedor
   // en inMtoComprasSesiones). Mismo lookup que el de los kits.
   TcxLookupComboBoxProperties(cbbSistemaTallasPrv.Properties).ListSource :=
-    dmmProveedores.dsConjuntosTallas;
+    FDmmProveedores.dsConjuntosTallas;
   // Pestaña Pagos: combos de forma de pago y banco de empresa por defecto.
   TcxLookupComboBoxProperties(cbbFormaPagoPrv.Properties).ListSource :=
-    dmmProveedores.dsFormasPago;
+    FDmmProveedores.dsFormasPago;
   TcxLookupComboBoxProperties(cbbEmpBanPrv.Properties).ListSource :=
-    dmmProveedores.dsEmpresasBancos;
+    FDmmProveedores.dsEmpresasBancos;
   // Pais del domicilio fiscal: combo sobre fza_paises (vi_paises).
   TcxLookupComboBoxProperties(cbbPaisPrv.Properties).ListSource :=
-    dmmProveedores.dsPaises;
+    FDmmProveedores.dsPaises;
   // El Enter del formulario mueve el foco al siguiente control
   // (tvEnterAsTab): dentro de un combo desplegado eso impide seleccionar
   // con Enter. Lo desactivamos mientras el combo tiene foco o esta abierto.
@@ -436,15 +434,15 @@ end;
 
 procedure TfrmMtoProveedores.PcPestanasChange(Sender: TObject);
 begin
-  if not Assigned(dmmProveedores) then Exit;
+  if not Assigned(FDmmProveedores) then Exit;
   if pcPestanas.ActivePage = tsArticulos then
-    dmmProveedores.AsegurarArticulosAbierta
+    FDmmProveedores.AsegurarArticulosAbierta
   else if pcPestanas.ActivePage = tsVentas then
-    dmmProveedores.AsegurarVentasAbierta
+    FDmmProveedores.AsegurarVentasAbierta
   else if pcPestanas.ActivePage = tsCompras then
-    dmmProveedores.AsegurarComprasAbierta
+    FDmmProveedores.AsegurarComprasAbierta
   else if pcPestanas.ActivePage = tsPagos then
-    dmmProveedores.AsegurarPagosAbierta;
+    FDmmProveedores.AsegurarPagosAbierta;
 end;
 
 // ===========================================================================
@@ -454,7 +452,7 @@ end;
 procedure TfrmMtoProveedores.btnAddKitClick(Sender: TObject);
 begin
   inherited;
-  dmmProveedores.unqryKits.Insert;
+  FDmmProveedores.unqryKits.Insert;
   cxgrdKits.SetFocus;
   tvKits.Controller.FocusedColumn := dbcKitCodigo;
   if tvKits.Controller.EditingController <> nil then
@@ -464,13 +462,13 @@ end;
 procedure TfrmMtoProveedores.btnDelKitClick(Sender: TObject);
 begin
   inherited;
-  if dmmProveedores.unqryKits.State = dsInsert then
-    dmmProveedores.unqryKits.Cancel
-  else if not dmmProveedores.unqryKits.IsEmpty then
+  if FDmmProveedores.unqryKits.State = dsInsert then
+    FDmmProveedores.unqryKits.Cancel
+  else if not FDmmProveedores.unqryKits.IsEmpty then
   begin
     if MessageDlg(SPreguntaBorrarKitProveedor,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-      dmmProveedores.unqryKits.Delete;
+      FDmmProveedores.unqryKits.Delete;
   end;
 end;
 
@@ -478,13 +476,13 @@ procedure TfrmMtoProveedores.btnGenerarTallasKitClick(Sender: TObject);
 begin
   inherited;
   // Una fila de detalle por cada talla del sistema del kit (cantidad 0).
-  dmmProveedores.GenerarTallasKitActual;
+  FDmmProveedores.GenerarTallasKitActual;
 end;
 
 procedure TfrmMtoProveedores.btnAddKitDetClick(Sender: TObject);
 begin
   inherited;
-  dmmProveedores.unqryKitsDet.Insert;
+  FDmmProveedores.unqryKitsDet.Insert;
   cxgrdKitsDet.SetFocus;
   tvKitsDet.Controller.FocusedColumn := dbcKitDetValor;
   if tvKitsDet.Controller.EditingController <> nil then
@@ -494,10 +492,10 @@ end;
 procedure TfrmMtoProveedores.btnDelKitDetClick(Sender: TObject);
 begin
   inherited;
-  if dmmProveedores.unqryKitsDet.State = dsInsert then
-    dmmProveedores.unqryKitsDet.Cancel
-  else if not dmmProveedores.unqryKitsDet.IsEmpty then
-    dmmProveedores.unqryKitsDet.Delete;
+  if FDmmProveedores.unqryKitsDet.State = dsInsert then
+    FDmmProveedores.unqryKitsDet.Cancel
+  else if not FDmmProveedores.unqryKitsDet.IsEmpty then
+    FDmmProveedores.unqryKitsDet.Delete;
 end;
 
 procedure TfrmMtoProveedores.cxdbtxtdt16PropertiesChange(Sender: TObject);
@@ -505,16 +503,16 @@ var
   ePais: TcxCustomEdit;
 begin
   inherited;
-  if Assigned(dmmProveedores) and
+  if Assigned(FDmmProveedores) and
      ((dsTablaG.State = dsInsert) or (dsTablaG.State = dsEdit)) then
   begin
     ePais := Sender as TcxCustomEdit;
-    dmmProveedores.ActualizarIvaExentoIntracomunitarioPorPais(
+    FDmmProveedores.ActualizarIvaExentoIntracomunitarioPorPais(
       VarToStr(ePais.EditingValue));
   end;
 end;
 
-// Al elegir un pais en el combo, cbbPaisPrv posiciona dmmProveedores.
+// Al elegir un pais en el combo, cbbPaisPrv posiciona FDmmProveedores.
 // unqryPaises en la fila elegida: aprovechamos esa fila para refrescar
 // PAIS_PRV (nombre denormalizado, oculto en cxdbtxtdt16) y el IVA exento
 // intracomunitario, igual que hacia el texto libre antes del combo.
@@ -523,13 +521,13 @@ var
   eCombo: TcxCustomEdit;
 begin
   inherited;
-  if Assigned(dmmProveedores) and
+  if Assigned(FDmmProveedores) and
      ((dsTablaG.State = dsInsert) or (dsTablaG.State = dsEdit)) then
   begin
     eCombo := Sender as TcxCustomEdit;
     dsTablaG.DataSet.FieldByName('PAIS_PRV').AsString :=
-      dmmProveedores.unqryPaises.FieldByName('NOMBRE').AsString;
-    dmmProveedores.ActualizarIvaExentoIntracomunitarioPorPais(
+      FDmmProveedores.unqryPaises.FieldByName('NOMBRE').AsString;
+    FDmmProveedores.ActualizarIvaExentoIntracomunitarioPorPais(
       VarToStr(eCombo.EditingValue));
   end;
 end;

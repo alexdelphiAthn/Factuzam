@@ -84,14 +84,12 @@ type
     procedure AplicarLayoutInstanciaBusqueda; override;
   end;
 
-var
-  frmMtoCajaPagosHist: TfrmMtoCajaPagosHist;
-
 implementation
 
 uses
   inLibWin, inLibUser,
-  inMtoModalGenImpSave, inMtoModalImpPagos, inLibFiltroUsuario, inLibMsg;
+  inMtoModalGenImpSave, inMtoModalImpPagos, inLibFiltroUsuario,
+  inLibMsgCaja;
 
 {$R *.dfm}
 

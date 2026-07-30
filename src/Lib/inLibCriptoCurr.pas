@@ -186,7 +186,6 @@ type
     function  SafeInt(AObj: TJSONObject; const AKey: string): Integer;
     function  SafeStr(AObj: TJSONObject; const AKey: string): string;
     function  UnixToDateTime(AUnix: Int64): TDateTime;
-    function  ParseISO8601(const AStr: string): TDateTime;
 
   public
     constructor Create(const AApiKey: string = '';
@@ -271,7 +270,8 @@ procedure TestBinance;
 implementation
 
 uses
-  inLibMsg;
+  inLibJsonSeguro, inLibMsgConfiguracion,
+  inLibMsgIntegraciones;
 
 function GetPriceBinance(const SymbolPair: string): Double;
 var
@@ -415,29 +415,15 @@ end;
 
 function TCoinGeckoAPI.SafeDouble(AObj: TJSONObject;
                                   const AKey: string): Double;
-var
-  V: TJSONValue;
 begin
-  Result := 0;
-  if Assigned(AObj) then
-  begin
-    V := AObj.GetValue(AKey);
-    if Assigned(V) and not (V is TJSONNull) then
-      try Result := V.AsType<Double> except end;
-  end;
+  // Conversion explicita con defecto: sin try/except mudos.
+  Result := JsonDoubleODefecto(AObj, AKey, 0);
 end;
 
 function TCoinGeckoAPI.SafeInt(AObj: TJSONObject; const AKey: string): Integer;
-var
-  V: TJSONValue;
 begin
-  Result := 0;
-  if Assigned(AObj) then
-  begin
-    V := AObj.GetValue(AKey);
-    if Assigned(V) and not (V is TJSONNull) then
-      try Result := V.AsType<Integer> except end;
-  end;
+  // Conversion explicita con defecto: sin try/except mudos.
+  Result := JsonEnteroODefecto(AObj, AKey, 0);
 end;
 
 function TCoinGeckoAPI.SafeStr(AObj: TJSONObject; const AKey: string): string;
@@ -456,16 +442,6 @@ end;
 function TCoinGeckoAPI.UnixToDateTime(AUnix: Int64): TDateTime;
 begin
   Result := UnixToDateTime(AUnix);
-end;
-
-function TCoinGeckoAPI.ParseISO8601(const AStr: string): TDateTime;
-begin
-  // Formato: '2021-12-25T14:30:00.000Z'
-  try
-    Result := ISO8601ToDate(AStr, False);
-  except
-    Result := 0;
-  end;
 end;
 
 // ── Métodos públicos ───────────────────────────────────────
@@ -644,11 +620,14 @@ begin
       Market.ATH               := SafeDouble(Obj, 'ath');
       Market.ATL               := SafeDouble(Obj, 'atl');
 
-      try
-        Market.ATHDate := ISO8601ToDate(SafeStr(Obj, 'ath_date'), False);
-        Market.ATLDate := ISO8601ToDate(SafeStr(Obj, 'atl_date'), False);
-        Market.LastUpdated := ParseISO8601(SafeStr(Obj, 'last_updated'));
-      except end;
+      // Fechas opcionales: si el ISO no parsea quedan a 0 y el
+      // mercado se conserva igualmente.
+      Market.ATHDate := JsonFechaIsoODefecto(
+        SafeStr(Obj, 'ath_date'), 0);
+      Market.ATLDate := JsonFechaIsoODefecto(
+        SafeStr(Obj, 'atl_date'), 0);
+      Market.LastUpdated := JsonFechaIsoODefecto(
+        SafeStr(Obj, 'last_updated'), 0);
 
       List.Add(Market);
     end;
@@ -673,6 +652,7 @@ var
   DescObj     : TJSONObject;
   ScoresObj   : TJSONObject;
   Pair        : TJSONPair;
+  rValor      : Double;
 begin
   FillChar(Result, SizeOf(Result), 0);
   Result.CurrentPrices := TDictionary<string, Double>.Create;
@@ -731,26 +711,24 @@ begin
       MktCap    := MarketData.GetValue<TJSONObject>('market_cap');
       TotVol    := MarketData.GetValue<TJSONObject>('total_volume');
 
+      // Divisas con valor no numerico se omiten; el resto sigue.
       if Assigned(CurrentPr) then
         for Pair in CurrentPr do
-          try
+          if Pair.JsonValue.TryGetValue<Double>(rValor) then
             Result.CurrentPrices.AddOrSetValue(Pair.JsonString.Value,
-                                               Pair.JsonValue.AsType<Double>);
-          except end;
+                                               rValor);
 
       if Assigned(MktCap) then
         for Pair in MktCap do
-          try
+          if Pair.JsonValue.TryGetValue<Double>(rValor) then
             Result.MarketCaps.AddOrSetValue(Pair.JsonString.Value,
-                                            Pair.JsonValue.AsType<Double>);
-          except end;
+                                            rValor);
 
       if Assigned(TotVol) then
         for Pair in TotVol do
-          try
+          if Pair.JsonValue.TryGetValue<Double>(rValor) then
             Result.TotalVolumes.AddOrSetValue(Pair.JsonString.Value,
-                                              Pair.JsonValue.AsType<Double>);
-          except end;
+                                              rValor);
     end;
   finally
     FreeAndNil(JSON);

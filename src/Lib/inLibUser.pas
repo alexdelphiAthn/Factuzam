@@ -67,7 +67,7 @@ procedure GetFormUserProfile(var APerfilDic: TProfileDicc;
 implementation
 
 uses
-  inLibDir, inLibPerfilesUsuarioValores, inLibMsg;
+  inLibDir, inLibPerfilesUsuarioValores, inLibMsgConfiguracion;
 
 // Dentro de inLibUser.pas
 procedure GetFormUserProfile(var APerfilDic: TProfileDicc;

@@ -133,7 +133,7 @@ uses
   inLibData,
   inLibArticulosValidador,
   UniDataArticulos,
-  inLibMsg;
+  inLibMsgCompras, inLibMsgVentas;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 

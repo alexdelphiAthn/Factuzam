@@ -71,7 +71,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsg;
+  inLibMsgArticulos;
 
 procedure TfrmPrintEtiqAlb.FormCreate(Sender: TObject);
 begin

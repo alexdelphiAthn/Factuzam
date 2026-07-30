@@ -44,7 +44,7 @@ type
 implementation
 
 uses
-  inLibLog, System.Diagnostics, inLibMsg;
+  inLibLog, System.Diagnostics, inLibMsgComun, inLibMsgFacturas;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 

@@ -37,7 +37,7 @@ implementation
 
 uses
   System.Classes, System.DateUtils, System.StrUtils,
-  IdSNTP, inLibMsg;
+  IdSNTP, inLibMsgVerifactu;
 
 const
   cServidoresNtpDefecto = 'time.google.com,time.windows.com,pool.ntp.org';

@@ -69,7 +69,8 @@ uses
   System.Classes, System.IOUtils, System.JSON, System.Net.HttpClient,
   System.Net.URLClient,
   Data.DB,
-  inLibGlobalVar, inLibLog, inLibFactuzamApi, inLibMsg;
+  inLibGlobalVar, inLibLog, inLibFactuzamApi,
+  inLibMsgIntegraciones, inLibMsgVerifactu;
 
 const
   cUrlServicios = 'https://webservice.veryverifactu.com/api/v1/';

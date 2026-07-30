@@ -89,7 +89,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibUser, inLibMsg;
+  inLibUser, inLibMsgVentas;
 
 class function TfrmModalAddBlockDocumentoTrabajo.Ejecutar(
   AOwner: TComponent; AConn: TUniConnection; AIdDtr: Int64;

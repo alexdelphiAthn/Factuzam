@@ -55,15 +55,12 @@ type
                             out AFechaHasta: TDateTime): Boolean;
   end;
 
-var
-  frmModalSeriesDocumentos: TfrmModalSeriesDocumentos;
-
 implementation
 
 {$R *.dfm}
 
 uses
-  inLibMsg;
+  inLibMsgComun;
 
 procedure ForceReferenceToClass(C: TClass);
 begin

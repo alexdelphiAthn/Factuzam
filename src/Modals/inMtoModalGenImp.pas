@@ -162,7 +162,7 @@ uses
   inMtoModalGenImpSave, inLibUser, inLibPathTokens,
   System.Generics.Collections, System.Rtti, inLibFotos, inLibVerifactu,
   inMtoModalInformesGuias, inMtoModalWizardEditar, inLibLog,
-  inLibInformesGuiasCache, inLibMsg;
+  inLibInformesGuiasCache, inLibMsgComun;
 
 {$R *.dfm}
 
@@ -494,6 +494,10 @@ begin
           try
             dsMaster.FieldAliases.Clear;
           except
+            // Con alias viejos el disenyador mostrara la lista antigua.
+            on E: Exception do
+              inLibLog.Log.LogWarning(
+                'GenImp: FieldAliases.Clear fallo: ' + E.Message);
           end;
           // FastReport cachea internamente los Fields de TfrxDBDataset:
           // al diseñar despues de un cambio de SQL los campos nuevos no
@@ -516,6 +520,10 @@ begin
             // Si la version de FastReport no acepta el truco, no es
             // critico: solo significa que el usuario tendra que pulsar
             // Update Fields manualmente.
+            on E: Exception do
+              inLibLog.Log.LogWarning(
+                'GenImp: reenganche del dataset FastReport fallo: ' +
+                E.Message);
           end;
         finally
           FreeAndNil(setCamposMaster);

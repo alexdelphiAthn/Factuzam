@@ -17,7 +17,8 @@ unit inLibCorreoTickets;
 interface
 
 uses
-  System.SysUtils, Uni, inLibParametrosIntf;
+  System.SysUtils, Uni, inLibParametrosIntf,
+  inLibTraspasoTicketIntf;
 
 type
   TDatosCorreoOperacion = record
@@ -39,6 +40,7 @@ function ObtenerDatosCorreoOperacion(AConexion: TUniConnection;
   ANumeroOperacion: string): TDatosCorreoOperacion;
 function EnviarDocumentacionOperacion(
   const AParametrosApp: IParametrosAplicacion;
+  const ARepositorioTraspaso: IRepositorioTraspasoTicket;
   AConexion: TUniConnection;
   const AEmpresa, AAlmacen, ACaja, ANumeroOperacion, AEmail: string;
   out AMensaje: string): Boolean;
@@ -186,14 +188,22 @@ end;
 
 procedure GenerarDocumentos(
   const AParametrosApp: IParametrosAplicacion;
+  const ARepositorioTraspaso: IRepositorioTraspasoTicket;
   AConexion: TUniConnection;
   const AEmpresa, AAlmacen, ACaja,
   ANumeroOperacion: string; const ADatos: TDatosCorreoOperacion;
   ARutasPDF: TStrings);
 begin
   if ADatos.EsTraspaso then
-    TTraspasoTicket.ImprimirTraspasoDesdeBD(AConexion, AEmpresa, AAlmacen,
-      ACaja, ANumeroOperacion, 'DEBUG', ARutasPDF, True)
+    TTraspasoTicket.ImprimirTraspasoDesdeBD(
+      ARepositorioTraspaso,
+      AEmpresa,
+      AAlmacen,
+      ACaja,
+      ANumeroOperacion,
+      'DEBUG',
+      ARutasPDF,
+      True)
   else
   begin
     if ADatos.TieneFactura then
@@ -252,6 +262,7 @@ end;
 
 function EnviarDocumentacionOperacion(
   const AParametrosApp: IParametrosAplicacion;
+  const ARepositorioTraspaso: IRepositorioTraspasoTicket;
   AConexion: TUniConnection;
   const AEmpresa, AAlmacen, ACaja, ANumeroOperacion, AEmail: string;
   out AMensaje: string): Boolean;
@@ -280,9 +291,16 @@ begin
         RutasPDF := TStringList.Create;
         try
           try
-            GenerarDocumentos(AParametrosApp, AConexion, AEmpresa,
-              AAlmacen, ACaja,
-              ANumeroOperacion, Datos, RutasPDF);
+            GenerarDocumentos(
+              AParametrosApp,
+              ARepositorioTraspaso,
+              AConexion,
+              AEmpresa,
+              AAlmacen,
+              ACaja,
+              ANumeroOperacion,
+              Datos,
+              RutasPDF);
             if RutasPDF.Count = 0 then
               AMensaje := 'La operación no tiene documentación asociada.'
             else
@@ -301,7 +319,7 @@ begin
             on E: Exception do
             begin
               AMensaje := 'No se pudo enviar la documentación: ' + E.Message;
-              if Assigned(Log) then
+              if Log() <> nil then
                 Log.LogError('Correo de operación ' + ANumeroOperacion +
                   ': ' + E.Message);
             end;

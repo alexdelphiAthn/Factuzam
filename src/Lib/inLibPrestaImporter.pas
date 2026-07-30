@@ -57,7 +57,7 @@ function ListarPedidosResumen(const aBaseURL, aApiKey:string;
 implementation
 
 uses
-  inLibScanDateTime;
+  inLibLog, inLibScanDateTime;
 
 type
   TDestinoDireccionPresta = (ddpEntrega, ddpFacturacion);
@@ -481,6 +481,10 @@ begin
     CargarMensajes;
   except
     // Los pedidos sin hilos de mensajes son válidos.
+    on E: Exception do
+      inLibLog.Log.LogWarning(
+        'PrestaImporter: mensajes del pedido ' + IdPedido +
+        ' omitidos: ' + E.Message);
   end;
   Result := FPedido;
   FPedido := nil;
@@ -534,9 +538,11 @@ begin
           FreeAndNil(Ord);
         end;
       except
+        // Saltar pedidos individuales con error sin abortar el lote.
         on E: Exception do
-          // Saltar pedidos individuales con error sin abortar el lote
-          ;
+          inLibLog.Log.LogError(
+            'PrestaImporter: pedido ' + arr[i] + ' omitido: ' +
+            E.Message);
       end;
     end;
     Result := True;

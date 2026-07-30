@@ -1,4 +1,4 @@
-object frmCajaReferenciaPago: TfrmCajaReferenciaPago
+inherited frmCajaReferenciaPago: TfrmCajaReferenciaPago
   Left = 0
   Top = 0
   BorderStyle = bsDialog

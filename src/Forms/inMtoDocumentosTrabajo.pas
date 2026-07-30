@@ -133,9 +133,6 @@ type
     function DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
-var
-  frmMtoDocumentosTrabajo: TfrmMtoDocumentosTrabajo;
-
 implementation
 
 uses
@@ -145,10 +142,11 @@ uses
   inLibColumnasSku,
   // Modal de destino (almacen/serie/numero) del "Enviar a...".
   inMtoModalEnviarDestino,
-  // Venta TPV abierta (frmMtoOpeCaja) para el volcado de SKUs.
-  inMtoCajaOpe,
+  // Contrato de la operación TPV abierta para el volcado de SKUs.
+  inLibCajaVentanasIntf,
   // Listado del documento con una foto de 300 x 300 por línea.
-  inMtoPreviewExcel, inLibDocumentosTrabajoExcel, inLibWin, inLibMsg;
+  inMtoPreviewExcel, inLibDocumentosTrabajoExcel, inLibWin, inLibLog,
+  inLibMsgArticulos, inLibMsgVentas;
 
 {$R *.dfm}
 
@@ -226,7 +224,10 @@ begin
       tvLineasDTR.Controller.EditingController.HideEdit(False);
     except
       on E: EInvalidOperation do
-        ;
+        // Ruido del editor inplace; queda constancia en el log.
+        inLibLog.Log.LogWarning(
+          'DocumentosTrabajo.ConstruirModoEntrada: HideEdit ' +
+          'ignorado: ' + E.Message);
     end;
   if ds.State in [dsEdit, dsInsert] then
     ds.Cancel;
@@ -250,6 +251,10 @@ begin
   Cfg := Default(TConfigColumnasSku);
   Cfg.Conexion := dmmDocumentosTrabajo.unqryTablaG.Connection;
   Cfg.ContextoSesion := ContextoSesion;
+  Cfg.ValidadorArticulos :=
+    CrearValidadorArticulos(Cfg.Conexion);
+  Cfg.LookupAtributos :=
+    CrearLookupAtributosArticulos(Cfg.Conexion);
   Cfg.View := tvLineasDTR;
   Cfg.Cds := ds;
   Cfg.Modo := FModoEntradaSel;
@@ -817,13 +822,15 @@ var
   ds: TDataSet;
   Bm: TBookmark;
   iOk, iMal: Integer;
+  oOperacionCaja: IOperacionCaja;
 begin
   idDtr := PrepararEnvio;
   if idDtr <= 0 then
     Exit;
   // La venta TPV debe estar ABIERTA: el volcado usa su propio flujo
   // de resolucion (precios/tarifa/IVA de la operacion en curso).
-  if (frmMtoOpeCaja = nil) or (not frmMtoOpeCaja.Visible) then
+  oOperacionCaja := BuscarOperacionCajaVisible;
+  if oOperacionCaja = nil then
   begin
     ShowMessage(SErrorVentaTpvNoAbiertaDocumentoTrabajo);
     Exit;
@@ -837,7 +844,7 @@ begin
     ds.First;
     while not ds.Eof do
     begin
-      if frmMtoOpeCaja.CargarSkuExterno(
+      if oOperacionCaja.CargarSkuExterno(
            ds.FieldByName('CODIGO_UNIDAD_DTL').AsString,
            ds.FieldByName('CANTIDAD_DTL').AsFloat) then
         Inc(iOk)
@@ -851,7 +858,7 @@ begin
     ds.EnableControls;
     ds.FreeBookmark(Bm);
   end;
-  frmMtoOpeCaja.BringToFront;
+  oOperacionCaja.FormularioCaja.BringToFront;
   if iMal = 0 then
     ShowMessage(Format(SInfoLineasDocumentoTrabajoVolcadasTpv, [iOk]))
   else

@@ -68,9 +68,6 @@ type
     procedure ResetForm; override;
 end;
 
-var
-  frmMtoIvas: TfrmMtoIvas;
-
 implementation
 
 uses

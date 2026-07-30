@@ -125,7 +125,7 @@ type
 implementation
 
 uses
-  inLibValoresAutomaticos, inLibMsg;
+  inLibValoresAutomaticos, inLibMsgCompras, inLibMsgVentas;
 
 {$R *.dfm}
 

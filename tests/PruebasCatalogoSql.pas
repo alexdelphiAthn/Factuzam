@@ -32,17 +32,41 @@ type
     procedure SentenciaPeligrosa_NoEsValida;
     [Test]
     procedure Administrador_PublicaSoloLasConsultasQueFaltan;
+    [Test]
+    procedure PoliticaSoloBase_IgnoraPersonalizacion;
+    [Test]
+    procedure CamposResultadoAusentes_DevuelveSqlBase;
+    [Test]
+    procedure PoliticaEscritura_AdmitePersonalizacion;
+    [Test]
+    procedure Registro_RechazaClavesDuplicadas;
+    [Test]
+    procedure Registro_RechazaPoliticaIncompatible;
+    [Test]
+    procedure RegistroAplicacion_IncluyePiloto;
+    [Test]
+    procedure FallbackLectura_ReintentaSqlBaseSinBbdd;
+    [Test]
+    procedure FallbackLectura_PropagaFalloDelSqlBase;
+    [Test]
+    procedure Administrador_RevisaMetadatosEIncidencia;
+    [Test]
+    procedure Administrador_ExportaSqlBaseYPerfil;
   end;
 
 implementation
 
 uses
-  System.SysUtils, System.Generics.Collections,
+  System.SysUtils, System.Generics.Collections, System.IOUtils,
   inLibCatalogoSqlIntf,
   inLibCatalogoSqlValidacion,
   inLibCatalogoSqlPerfiles,
   inLibCatalogoSqlAdmin,
-  inLibPerfilesUsuarioIntf;
+  inLibCatalogoSqlRegistro,
+  inLibCatalogoSqlIncidencias,
+  inLibCatalogoSqlEjecucion,
+  inLibPerfilesUsuarioIntf,
+  UniDataCatalogoSqlAplicacion;
 
 type
   TPerfilesUsuarioFalso = class(
@@ -88,14 +112,54 @@ type
   end;
 
 function DefinicionConsulta(
-  const AOperacion: string): TDefinicionSql;
+  const AOperacion: string;
+  APolitica: TPoliticaEjecucionSql =
+    pesPerfilLecturaConFallback): TDefinicionSql;
 begin
   Result := CrearDefinicionSql(
     'RepositorioPrueba',
     AOperacion,
     'SELECT VALOR FROM TABLA WHERE A = :a AND B = :b',
     'a,b',
-    tssSelect);
+    'VALOR',
+    tssSelect,
+    APolitica);
+end;
+
+function DefinicionEscritura(
+  const AOperacion: string;
+  APolitica: TPoliticaEjecucionSql =
+    pesPerfilEscrituraTransaccional): TDefinicionSql;
+begin
+  Result := CrearDefinicionSql(
+    'RepositorioPrueba',
+    AOperacion,
+    'UPDATE TABLA SET VALOR = :v WHERE A = :a',
+    'v,a',
+    '',
+    tssUpdate,
+    APolitica);
+end;
+
+function CrearCatalogoConPerfil(
+  const ADefinicion: TDefinicionSql;
+  const ASql: string): ICatalogoSql;
+var
+  oPerfil: TProfileDicc;
+  oValor: TDictValue;
+begin
+  oValor.sValue := 'S;V=2';
+  oValor.sValueText := ASql;
+  oPerfil := TProfileDicc.Create;
+  try
+    oPerfil.Add(
+      ClavePerfilSql(ADefinicion),
+      oValor);
+    Result := TCatalogoSqlPerfiles.Create(
+      oPerfil);
+  finally
+    FreeAndNil(oPerfil);
+  end;
 end;
 
 constructor TPerfilesUsuarioFalso.Create;
@@ -338,6 +402,321 @@ begin
         ClavePerfilSql(oDefinicionNueva)));
   finally
     FreeAndNil(oAdministrador);
+  end;
+end;
+
+procedure TPruebasCatalogoSql.
+  PoliticaSoloBase_IgnoraPersonalizacion;
+var
+  oCatalogo: ICatalogoSql;
+  oDefinicion: TDefinicionSql;
+  oResultado: TSqlResuelto;
+begin
+  oDefinicion := DefinicionConsulta(
+    'SoloBase',
+    pesSoloBase);
+  oCatalogo := CrearCatalogoConPerfil(
+    oDefinicion,
+    'SELECT VALOR FROM VISTA WHERE A = :a AND B = :b');
+  oResultado := oCatalogo.Resolver(
+    oDefinicion);
+  Assert.AreEqual(
+    Ord(osBase),
+    Ord(oResultado.Origen));
+  Assert.AreEqual(
+    oDefinicion.SqlBase,
+    oResultado.Texto);
+end;
+
+procedure TPruebasCatalogoSql.
+  CamposResultadoAusentes_DevuelveSqlBase;
+var
+  oCatalogo: ICatalogoSql;
+  oDefinicion: TDefinicionSql;
+  oResultado: TSqlResuelto;
+begin
+  oDefinicion := DefinicionConsulta(
+    'CamposObligatorios');
+  oCatalogo := CrearCatalogoConPerfil(
+    oDefinicion,
+    'SELECT OTRO FROM VISTA WHERE A = :a AND B = :b');
+  oResultado := oCatalogo.Resolver(
+    oDefinicion);
+  Assert.AreEqual(
+    Ord(osBase),
+    Ord(oResultado.Origen));
+  Assert.IsTrue(
+    Pos('Campos de salida', oResultado.MotivoSqlBase) > 0);
+end;
+
+procedure TPruebasCatalogoSql.
+  PoliticaEscritura_AdmitePersonalizacion;
+var
+  oCatalogo: ICatalogoSql;
+  oDefinicion: TDefinicionSql;
+  oResultado: TSqlResuelto;
+  sSqlPerfil: string;
+begin
+  oDefinicion := DefinicionEscritura(
+    'Actualizar');
+  sSqlPerfil :=
+    'UPDATE OTRA_TABLA SET VALOR = :v WHERE A = :a';
+  oCatalogo := CrearCatalogoConPerfil(
+    oDefinicion,
+    sSqlPerfil);
+  oResultado := oCatalogo.Resolver(
+    oDefinicion);
+  Assert.AreEqual(
+    Ord(osPerfil),
+    Ord(oResultado.Origen));
+  Assert.AreEqual(
+    sSqlPerfil,
+    oResultado.Texto);
+  Assert.AreEqual(
+    Ord(pesPerfilEscrituraTransaccional),
+    Ord(oResultado.Politica));
+end;
+
+procedure TPruebasCatalogoSql.
+  Registro_RechazaClavesDuplicadas;
+var
+  oDefinicion: TDefinicionSql;
+  oRegistro: TRegistroDefinicionesSql;
+begin
+  oDefinicion := DefinicionConsulta(
+    'Duplicada');
+  oRegistro := TRegistroDefinicionesSql.Create;
+  try
+    oRegistro.Agregar(oDefinicion);
+    Assert.WillRaise(
+      procedure
+      begin
+        oRegistro.Agregar(oDefinicion);
+      end,
+      ERegistroDefinicionesSql);
+  finally
+    FreeAndNil(oRegistro);
+  end;
+end;
+
+procedure TPruebasCatalogoSql.
+  Registro_RechazaPoliticaIncompatible;
+var
+  oDefinicion: TDefinicionSql;
+  oRegistro: TRegistroDefinicionesSql;
+begin
+  oDefinicion := DefinicionEscritura(
+    'PoliticaInvalida',
+    pesPerfilLecturaConFallback);
+  oRegistro := TRegistroDefinicionesSql.Create;
+  try
+    Assert.WillRaise(
+      procedure
+      begin
+        oRegistro.Agregar(oDefinicion);
+      end,
+      ERegistroDefinicionesSql);
+  finally
+    FreeAndNil(oRegistro);
+  end;
+end;
+
+procedure TPruebasCatalogoSql.
+  RegistroAplicacion_IncluyePiloto;
+var
+  oDefiniciones: TDefinicionesSql;
+  oRegistro: IRegistroDefinicionesSql;
+begin
+  oRegistro :=
+    CrearRegistroDefinicionesSqlAplicacion;
+  oDefiniciones := oRegistro.ObtenerDefiniciones;
+  Assert.AreEqual(66, oRegistro.Cantidad);
+  Assert.AreEqual(
+    'SQL__RepositorioComprasSesiones__ObtenerSiguienteLinea',
+    ClavePerfilSql(oDefiniciones[0]));
+  Assert.AreEqual(
+    'SQL__RepositorioComprasSesiones__ConsultarCantidadesLinea',
+    ClavePerfilSql(oDefiniciones[1]));
+end;
+
+procedure TPruebasCatalogoSql.
+  FallbackLectura_ReintentaSqlBaseSinBbdd;
+var
+  iIntentos: Integer;
+  oCatalogo: ICatalogoSql;
+  oDefinicion: TDefinicionSql;
+  oIncidencias: IRegistroIncidenciasSql;
+begin
+  iIntentos := 0;
+  oDefinicion := DefinicionConsulta(
+    'Fallback');
+  oCatalogo := CrearCatalogoConPerfil(
+    oDefinicion,
+    'SELECT VALOR FROM VISTA WHERE A = :a AND B = :b');
+  oIncidencias := TRegistroIncidenciasSql.Create;
+  EjecutarLecturaSqlConFallback(
+    oDefinicion,
+    oCatalogo,
+    procedure(const ASql: string)
+    begin
+      Inc(iIntentos);
+      if ASql <> oDefinicion.SqlBase then
+        raise Exception.Create(
+          'Fallo simulado del perfil.');
+    end,
+    oIncidencias);
+  Assert.AreEqual(2, iIntentos);
+  Assert.AreEqual(
+    'Fallo simulado del perfil.',
+    oIncidencias.ObtenerUltimaCausa(
+      ClavePerfilSql(oDefinicion)));
+end;
+
+procedure TPruebasCatalogoSql.
+  FallbackLectura_PropagaFalloDelSqlBase;
+var
+  iIntentos: Integer;
+  oCatalogo: ICatalogoSql;
+  oDefinicion: TDefinicionSql;
+begin
+  iIntentos := 0;
+  oDefinicion := DefinicionConsulta(
+    'FallaTodo');
+  oCatalogo := CrearCatalogoConPerfil(
+    oDefinicion,
+    'SELECT VALOR FROM VISTA WHERE A = :a AND B = :b');
+  Assert.WillRaise(
+    procedure
+    begin
+      EjecutarLecturaSqlConFallback(
+        oDefinicion,
+        oCatalogo,
+        procedure(const ASql: string)
+        begin
+          Inc(iIntentos);
+          raise Exception.Create(
+            'Fallo simulado.');
+        end);
+    end,
+    Exception);
+  Assert.AreEqual(2, iIntentos);
+end;
+
+procedure TPruebasCatalogoSql.
+  Administrador_RevisaMetadatosEIncidencia;
+var
+  oAdministrador: TAdministradorSqlPerfiles;
+  oDefinicion: TDefinicionSql;
+  oDefiniciones: TDefinicionesSql;
+  oIncidencias: IRegistroIncidenciasSql;
+  oPerfiles: IPerfilesUsuario;
+  oPerfilesObjeto: TPerfilesUsuarioFalso;
+  oRevisiones: TRevisionesPerfilSql;
+  sSqlPerfil: string;
+begin
+  oDefinicion := DefinicionConsulta(
+    'Revisar');
+  SetLength(oDefiniciones, 1);
+  oDefiniciones[0] := oDefinicion;
+  sSqlPerfil :=
+    'SELECT VALOR FROM VISTA WHERE A = :a AND B = :b';
+  oPerfilesObjeto := TPerfilesUsuarioFalso.Create;
+  oPerfiles := oPerfilesObjeto;
+  oPerfilesObjeto.Definir(
+    ClavePerfilSql(oDefinicion),
+    'S;V=2',
+    sSqlPerfil);
+  oIncidencias := TRegistroIncidenciasSql.Create;
+  oIncidencias.Registrar(
+    ClavePerfilSql(oDefinicion),
+    'Incidencia anterior');
+  oAdministrador := TAdministradorSqlPerfiles.Create(
+    oPerfiles);
+  try
+    oRevisiones := oAdministrador.Revisar(
+      CLAVE_PERFIL_CATALOGO_SQL,
+      oDefiniciones,
+      oIncidencias);
+    Assert.AreEqual(
+      1,
+      Integer(Length(oRevisiones)));
+    Assert.AreEqual(
+      Ord(epsPersonalizado),
+      Ord(oRevisiones[0].Estado));
+    Assert.AreEqual(
+      oDefinicion.SqlBase,
+      oRevisiones[0].SqlBase);
+    Assert.AreEqual(
+      sSqlPerfil,
+      oRevisiones[0].SqlPerfil);
+    Assert.AreEqual(
+      oDefinicion.Version,
+      oRevisiones[0].Version);
+    Assert.AreEqual(
+      'Incidencia anterior',
+      oRevisiones[0].UltimaCausaFallback);
+  finally
+    FreeAndNil(oAdministrador);
+  end;
+end;
+
+procedure TPruebasCatalogoSql.
+  Administrador_ExportaSqlBaseYPerfil;
+var
+  oAdministrador: TAdministradorSqlPerfiles;
+  oDefinicion: TDefinicionSql;
+  oDefiniciones: TDefinicionesSql;
+  oPerfiles: IPerfilesUsuario;
+  oPerfilesObjeto: TPerfilesUsuarioFalso;
+  sDirectorio: string;
+  sIndice: string;
+  sSqlPerfil: string;
+begin
+  oDefinicion := DefinicionConsulta(
+    'Exportar');
+  SetLength(oDefiniciones, 1);
+  oDefiniciones[0] := oDefinicion;
+  sSqlPerfil :=
+    'SELECT VALOR FROM VISTA WHERE A = :a AND B = :b';
+  oPerfilesObjeto := TPerfilesUsuarioFalso.Create;
+  oPerfiles := oPerfilesObjeto;
+  oPerfilesObjeto.Definir(
+    ClavePerfilSql(oDefinicion),
+    'S;V=2',
+    sSqlPerfil);
+  sDirectorio := TPath.Combine(
+    TPath.GetTempPath,
+    TPath.GetRandomFileName);
+  TDirectory.CreateDirectory(sDirectorio);
+  oAdministrador := TAdministradorSqlPerfiles.Create(
+    oPerfiles);
+  try
+    oAdministrador.Exportar(
+      sDirectorio,
+      CLAVE_PERFIL_CATALOGO_SQL,
+      oDefiniciones);
+    Assert.IsTrue(TFile.Exists(
+      TPath.Combine(
+        sDirectorio,
+        'RepositorioPrueba\Exportar.base.sql')));
+    Assert.IsTrue(TFile.Exists(
+      TPath.Combine(
+        sDirectorio,
+        'RepositorioPrueba\Exportar.perfil.sql')));
+    sIndice := TFile.ReadAllText(
+      TPath.Combine(
+        sDirectorio,
+        'catalogo_sql.txt'));
+    Assert.IsTrue(
+      Pos('PERSONALIZADO', sIndice) > 0);
+    Assert.IsTrue(
+      Pos('PERFIL_LECTURA_FALLBACK', sIndice) > 0);
+  finally
+    FreeAndNil(oAdministrador);
+    if TDirectory.Exists(sDirectorio) then
+      TDirectory.Delete(
+        sDirectorio,
+        True);
   end;
 end;
 

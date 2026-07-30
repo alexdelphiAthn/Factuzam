@@ -66,9 +66,6 @@ type
     procedure ResetForm; override;
   end;
 
-var
-  frmMtoDepositosCliente: TfrmMtoDepositosCliente;
-
 implementation
 
 uses

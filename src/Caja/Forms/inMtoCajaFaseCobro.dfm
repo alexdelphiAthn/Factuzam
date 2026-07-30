@@ -1,4 +1,4 @@
-object frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
+inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
   Left = 0
   Top = 0
   BorderIcons = []

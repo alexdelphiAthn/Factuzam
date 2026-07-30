@@ -97,15 +97,12 @@ type
                              Strings: TStrings);
   end;
 
-var
-  frmMtoCajaParam: TfrmMtoCajaParam;
-
 implementation
 
 {$R *.dfm}
 
 uses
-  StrUtils, inLibLayoutForm, inLibMsg;
+  StrUtils, inLibLayoutForm, inLibLog, inLibMsgCaja;
 
 // ----------------------------------------------------------------------
 // GESTIÓN DE MEMORIA Y CICLO DE VIDA
@@ -422,6 +419,11 @@ begin
               ValorStr := '0';
             ItemData.DisplayValue := ValorStr;
           except
+            // El resto de parametros del perfil se sigue aplicando.
+            on E: Exception do
+              inLibLog.Log.LogWarning(
+                'CajaParam: no se pudo aplicar el parametro "' +
+                SubKey + '": ' + E.Message);
           end;
         end;
         qry.Next;

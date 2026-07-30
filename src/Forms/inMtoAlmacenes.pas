@@ -113,9 +113,6 @@ type
     procedure ResetForm; override;
   end;
 
-var
-  frmMtoAlmacenes: TfrmMtoAlmacenes;
-
 implementation
 
 uses

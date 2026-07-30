@@ -51,7 +51,7 @@ procedure ImprimirOPrevisualizarTicket(ATicket: TTicketTermico;
 implementation
 
 uses
-  inLibMsg;
+  inLibMsgFacturas;
 
 class procedure TPreviewTicket.RegistrarEjecutor(
   AClase: TClaseEjecutorPreviewTicket);

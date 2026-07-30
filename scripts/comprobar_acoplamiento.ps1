@@ -3,7 +3,9 @@ param(
   [ValidateRange(0, [int]::MaxValue)]
   [int]$MaximoFanOut = 101,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoFanInConCuerpo = 197
+  [int]$MaximoFanInConCuerpo = 84,
+  [ValidateRange(0, [int]::MaxValue)]
+  [int]$MaximoFanInInLibMsg = 0
 )
 
 Set-StrictMode -Version Latest
@@ -183,6 +185,12 @@ $fanInMayor = (
   $medicionesFanIn |
     Measure-Object FanIn -Maximum
 ).Maximum
+$claveInLibMsg = 'inlibmsg'
+$fanInInLibMsg = if ($fanIn.ContainsKey($claveInLibMsg)) {
+  $fanIn[$claveInLibMsg]
+} else {
+  0
+}
 $errores = [System.Collections.Generic.List[string]]::new()
 if ($fanOutMayor -gt $MaximoFanOut) {
   $errores.Add(
@@ -193,6 +201,11 @@ if ($fanInMayor -gt $MaximoFanInConCuerpo) {
     "Fan-in maximo con cuerpo: $fanInMayor; maximo permitido: " +
     "$MaximoFanInConCuerpo.")
 }
+if ($fanInInLibMsg -gt $MaximoFanInInLibMsg) {
+  $errores.Add(
+    "Fan-in de inLibMsg: $fanInInLibMsg; maximo permitido: " +
+    "$MaximoFanInInLibMsg.")
+}
 if ($errores.Count -gt 0) {
   $errores | ForEach-Object { Write-Error $_ }
   exit 1
@@ -200,4 +213,5 @@ if ($errores.Count -gt 0) {
 Write-Output (
   'Acoplamiento: OK. Unidades analizadas: ' +
   "$($unidades.Count). Fan-out maximo: $fanOutMayor. " +
-  "Fan-in maximo con cuerpo: $fanInMayor.")
+  "Fan-in maximo con cuerpo: $fanInMayor. " +
+  "Fan-in de inLibMsg: $fanInInLibMsg.")

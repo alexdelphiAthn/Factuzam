@@ -112,7 +112,7 @@ implementation
 
 uses
   Winapi.Windows, Data.DB,
-  inLibLog, inLibMsg,
+  inLibLog, inLibMsgFacturas, inLibMsgVerifactu,
   inLibVerifactu, inLibVerifactuEnvio, inLibRelojFiscal,
   inLibVentasWsCola;
 

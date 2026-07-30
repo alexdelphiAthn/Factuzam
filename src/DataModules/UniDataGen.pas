@@ -149,7 +149,7 @@ implementation
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 uses
-  Vcl.Forms, inLibData, inLibMsg;
+  Vcl.Forms, inLibData, inLibMsgComun;
 
 {$R *.dfm}
 
@@ -498,7 +498,7 @@ end;
 procedure TdmBase.unqryPerfilesBeforePost(DataSet: TDataSet);
 begin
   ActualizarAuditoria(DataSet);
-  if (Log <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
+  if (Log() <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
     Log.LogEvento(Self.UnitName, DataSet.Name, 'BeforePost',
                   'state=' + GetEnumName(TypeInfo(TDataSetState),
                                           Ord(DataSet.State)));
@@ -516,7 +516,7 @@ begin
   // El DM ya no toca la UI: avisa y el form activa su pestania Ficha.
   if Assigned(FOnActivarFicha) then
     FOnActivarFicha(Self);
-  if (Log <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
+  if (Log() <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
     Log.LogEvento(Self.UnitName, DataSet.Name, 'BeforeInsert', '');
 end;
 
@@ -524,7 +524,7 @@ procedure TdmBase.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   AjustarEmpresasAlmacenesDocumento(unqryTablaG.Connection, DataSet);
   ActualizarAuditoria(DataSet);
-  if (Log <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
+  if (Log() <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
     Log.LogEvento(Self.UnitName, DataSet.Name, 'BeforePost',
                   'state=' + GetEnumName(TypeInfo(TDataSetState),
                                           Ord(DataSet.State)));

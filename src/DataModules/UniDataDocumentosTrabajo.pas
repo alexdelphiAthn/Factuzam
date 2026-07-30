@@ -74,16 +74,13 @@ type
     procedure DesempaquetarAtributosLineas;
   end;
 
-var
-  dmDocumentosTrabajo: TdmDocumentosTrabajo;
-
 implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 uses
   System.Generics.Collections, System.Variants,
-  UniDataArticulos, inLibMsg;
+  UniDataArticulos, inLibMsgArticulos, inLibMsgVentas;
 
 {$R *.dfm}
 
