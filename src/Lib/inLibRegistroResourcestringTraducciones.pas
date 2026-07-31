@@ -6661,6 +6661,12 @@ begin
       SDescripcionParametroIdioma);
   ARegistrar(
     'inLibMsgConfiguracion.' +
+    'SErrorSeleccionIdiomaNoAplicado',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorSeleccionIdiomaNoAplicado);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
     'SErrorProveedorEdicionParametrosNoConfigurado',
     'src/Lib/inLibMsgConfiguracion.pas',
     @inLibMsgConfiguracion.
@@ -7325,6 +7331,18 @@ begin
     'src/Lib/inLibMsgConfiguracion.pas',
     @inLibMsgConfiguracion.
       SCaptionFiltroArchivosSqlTexto);
+  ARegistrar(
+    'inLibMsgFacturas.' +
+    'SErrorLecturasFacturasNoRegistradas',
+    'src/Lib/inLibMsgFacturas.pas',
+    @inLibMsgFacturas.
+      SErrorLecturasFacturasNoRegistradas);
+  ARegistrar(
+    'inLibMsgFacturas.' +
+    'SErrorRepositorioFacturaeNoRegistrado',
+    'src/Lib/inLibMsgFacturas.pas',
+    @inLibMsgFacturas.
+      SErrorRepositorioFacturaeNoRegistrado);
   ARegistrar(
     'inLibMsgFacturas.' +
     'SCliToTbl',
@@ -8496,6 +8514,12 @@ begin
     @inLibMsgFacturas.
       SCaptionHojaFactura);
   ARegistrar(
+    'inLibMsgFacturas.' +
+    'SErrorPersistenciaFacturasNoRegistrada',
+    'src/Lib/inLibMsgFacturas.pas',
+    @inLibMsgFacturas.
+      SErrorPersistenciaFacturasNoRegistrada);
+  ARegistrar(
     'inLibMsgIntegraciones.' +
     'SErrorDivisaNoEncontrada',
     'src/Lib/inLibMsgIntegraciones.pas',
@@ -8581,6 +8605,84 @@ begin
       SInfoDocumentoFactuzamApiDescargado);
   ARegistrar(
     'inLibMsgIntegraciones.' +
+    'SErrorDescargaTraduccion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorDescargaTraduccion);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorPaqueteTraduccionInvalido',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorPaqueteTraduccionInvalido);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorConexionTraduccionNoDisponible',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorConexionTraduccionNoDisponible);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorTraduccionTransaccionActiva',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorTraduccionTransaccionActiva);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorTraduccionSinFilas',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorTraduccionSinFilas);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SProgresoTraduccionPreparando',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SProgresoTraduccionPreparando);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SProgresoTraduccionDescargando',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SProgresoTraduccionDescargando);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SProgresoTraduccionValidando',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SProgresoTraduccionValidando);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SProgresoTraduccionEjecutando',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SProgresoTraduccionEjecutando);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SProgresoTraduccionComprobando',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SProgresoTraduccionComprobando);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SProgresoTraduccionDisponible',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SProgresoTraduccionDisponible);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SProgresoTraduccionAplicando',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SProgresoTraduccionAplicando);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SProgresoTraduccionCompletada',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SProgresoTraduccionCompletada);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
     'SErrorRespuestaFormateadorSqlVacia',
     'src/Lib/inLibMsgIntegraciones.pas',
     @inLibMsgIntegraciones.
@@ -8603,6 +8705,12 @@ begin
     'src/Lib/inLibMsgIntegraciones.pas',
     @inLibMsgIntegraciones.
       SErrorVentasWsJsonNoRegistrado);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorVentasWsColaNoRegistrada',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorVentasWsColaNoRegistrada);
   ARegistrar(
     'inLibMsgIntegraciones.' +
     'SErrorApiKeyInstalacionFaltante',
@@ -10973,6 +11081,18 @@ begin
     'src/Lib/inLibMsgVentas.pas',
     @inLibMsgVentas.
       SCaptionColFechaFirmaMandato);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorVentasCalendarioNoRegistrado',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorVentasCalendarioNoRegistrado);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SErrorRepositorioExportacionNoVerifactuNoRegistrado',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SErrorRepositorioExportacionNoVerifactuNoRegistrado);
   ARegistrar(
     'inLibMsgVerifactu.' +
     'SErrorRespuestaNtpNoValida',

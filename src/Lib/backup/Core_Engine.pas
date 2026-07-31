@@ -3,7 +3,7 @@
 interface
 
 uses Backup.Types, System.Classes, Core_Interfaces,
-     Generics.Collections, Providers_MySQL_Helpers, Data.DB, System.StrUtils;
+     Generics.Collections, Data.DB, System.StrUtils;
 
 type
   TRes = class
@@ -52,11 +52,12 @@ type
 
   TDBComparerEngine = class
   private
-    FSourceDB: IDBMetadataProvider;
-    FTargetDB: IDBMetadataProvider;
+    // Vistas de lectura de cada lado y helpers SQL segregados (§14.2)
+    FOrigen: TServiciosLecturaBBDD;
+    FDestino: TServiciosLecturaBBDD;
     FWriter: IScriptWriter;
     FOptions: TComparerOptions;
-    FHelpers: IDBHelpers;
+    FSql: TServiciosSqlBBDD;
     procedure CompareTableStructure(const TableName: string);
     procedure CompareTableIndexes(const TableName: string);
     procedure CompareTables;
@@ -70,9 +71,10 @@ type
     function BuildWhereClause(const PKCols: TStringList;
                               DataSet: TDataSet): string;
   public
-    constructor Create(Source, Target: IDBMetadataProvider;
+    constructor Create(const AOrigen,
+                       ADestino: TServiciosLecturaBBDD;
                        Writer: IScriptWriter;
-                       Helpers: IDBHelpers;
+                       const ASql: TServiciosSqlBBDD;
                        Options: TComparerOptions);
     procedure GenerateScript;
   end;
@@ -82,16 +84,17 @@ implementation
 uses
   System.SysUtils;
 
-constructor TDBComparerEngine.Create(Source, Target: IDBMetadataProvider;
+constructor TDBComparerEngine.Create(const AOrigen,
+                                     ADestino: TServiciosLecturaBBDD;
                                      Writer: IScriptWriter;
-                                     Helpers: IDBHelpers;
+                                     const ASql: TServiciosSqlBBDD;
                                      Options: TComparerOptions);
 begin
-  FSourceDB := Source;
-  FTargetDB := Target;
+  FOrigen := AOrigen;
+  FDestino := ADestino;
   FWriter := Writer;
   FOptions := Options;
-  FHelpers := Helpers;
+  FSql := ASql;
 end;
 
 procedure TDBComparerEngine.CreateNewTable(const TableName: string);
@@ -103,15 +106,15 @@ var
 begin
   FWriter.AddComment(TRes.MsgNewTable + TableName);
   // 1. Obtener la estructura y los índices desde el Origen
-  Table := FSourceDB.GetTableStructure(TableName);
-  Indexes := FSourceDB.GetTableIndexes(TableName);
+  Table := FOrigen.Esquema.GetTableStructure(TableName);
+  Indexes := FOrigen.Esquema.GetTableIndexes(TableName);
   try
     // -----------------------------------------------------------------------
     // CORRECCIÓN: Delegar al Provider (MySQL, Firebird, etc)
     // -----------------------------------------------------------------------
     // En lugar de construir el string manualmente aquí, llamamos a la interfaz.
     // Esto ejecutará TMySQLHelpers.GenerateCreateTableSQL
-    FWriter.AddCommand(FHelpers.GenerateCreateTableSQL(Table, Indexes));
+    FWriter.AddCommand(FSql.Creacion.GenerateCreateTableSQL(Table, Indexes));
     // -----------------------------------------------------------------------
     // 3. Crear índices secundarios (No Primary Key)
     // -----------------------------------------------------------------------
@@ -124,7 +127,8 @@ begin
       if not Idx.IsPrimary then
       begin
         FWriter.AddComment(TRes.MsgAddIndex + TableName + '.' + Idx.IndexName);
-        FWriter.AddCommand(FHelpers.GenerateIndexDefinition(TableName, Idx));
+        FWriter.AddCommand(
+          FSql.Creacion.GenerateIndexDefinition(TableName, Idx));
       end;
     end;
   finally
@@ -156,8 +160,8 @@ var
   i: Integer;
   SkipTable: Boolean;
 begin
-  SourceTables := FSourceDB.GetTables;
-  TargetTables := FTargetDB.GetTables;
+  SourceTables := FOrigen.Esquema.GetTables;
+  TargetTables := FDestino.Esquema.GetTables;
   try
     // 1. Tablas eliminadas (si no está --nodelete)
     if not FOptions.NoDelete then
@@ -167,7 +171,8 @@ begin
         if SourceTables.IndexOf(TargetTables[i]) = -1 then
         begin
           FWriter.AddComment(TRes.MsgTableDeleted + TargetTables[i]);
-          FWriter.AddCommand(FHelpers.GenerateDropTableSQL(TargetTables[i]));
+          FWriter.AddCommand(
+            FSql.Eliminacion.GenerateDropTableSQL(TargetTables[i]));
         end;
       end;
     end;
@@ -246,8 +251,8 @@ var
   end;
 
 begin
-  Table1 := FSourceDB.GetTableStructure(TableName);
-  Table2 := FTargetDB.GetTableStructure(TableName);
+  Table1 := FOrigen.Esquema.GetTableStructure(TableName);
+  Table2 := FDestino.Esquema.GetTableStructure(TableName);
   try
     // ---------------------------------------------------------
     // 1. Recorrer Origen (Table1) para buscar NUEVAS o MODIFICADAS
@@ -262,18 +267,20 @@ begin
         FWriter.AddComment(TRes.MsgAddColumn + TableName + '.' +
                            Col1.ColumnName);
         // El Helper se encarga del dialecto SQL (ADD COLUMN vs ADD ...)
-        FWriter.AddCommand(FHelpers.GenerateAddColumnSQL(TableName, Col1));
+        FWriter.AddCommand(
+          FSql.Modificacion.GenerateAddColumnSQL(TableName, Col1));
       end
       else
       begin
         // CASO B: La columna existe -> COMPARAR
         Col2 := Table2.Columns[FoundIdx];
         // Usamos la lógica universal del Helper abstracto
-        if not FHelpers.ColumnsAreEqual(Col1, Col2) then
+        if not FSql.Comparador.ColumnsAreEqual(Col1, Col2) then
         begin
           FWriter.AddComment(TRes.MsgModColumn + TableName + '.' +
                               Col1.ColumnName);
-          FWriter.AddCommand(FHelpers.GenerateModifyColumnSQL(TableName, Col1));
+          FWriter.AddCommand(
+            FSql.Modificacion.GenerateModifyColumnSQL(TableName, Col1));
         end;
       end;
     end;
@@ -292,7 +299,7 @@ begin
           FWriter.AddComment(TRes.MsgDelColumn + TableName + '.' +
                              Col2.ColumnName);
           // El Helper sabe cómo borrar (DROP COLUMN)
-          FWriter.AddCommand(FHelpers.GenerateDropColumnSQL(TableName,
+          FWriter.AddCommand(FSql.Eliminacion.GenerateDropColumnSQL(TableName,
                                                             Col2.ColumnName));
         end;
       end;
@@ -315,8 +322,8 @@ var
   TriggerDef: string;
 begin
   // Obtener los arrays de triggers (Records)
-  SourceTriggers := FSourceDB.GetTriggers;
-  TargetTriggers := FTargetDB.GetTriggers;
+  SourceTriggers := FOrigen.Objetos.GetTriggers;
+  TargetTriggers := FDestino.Objetos.GetTriggers;
   FWriter.AddComment(TRes.MsgHeaderTrig);
   FWriter.AddCommand('');
   // 1. TRIGGERS ELIMINADOS (Existen en Destino, pero no en Origen)
@@ -338,7 +345,7 @@ begin
       if not Found then
       begin
         FWriter.AddComment(TRes.MsgTriggerDel + TargetTriggers[i].TriggerName);
-        FWriter.AddCommand(FHelpers.GenerateDropTrigger(
+        FWriter.AddCommand(FSql.Eliminacion.GenerateDropTrigger(
           TargetTriggers[i].TriggerName));
       end;
     end;
@@ -355,16 +362,16 @@ begin
       begin
         Found := True;
         // Si existen en ambos, comparamos su contenido usando el Helper
-        if not FHelpers.TriggersAreEqual(SourceTriggers[i],
+        if not FSql.Comparador.TriggersAreEqual(SourceTriggers[i],
                                          TargetTriggers[j]) then
         begin
           FWriter.AddComment(
             TRes.MsgTriggerMod + SourceTriggers[i].TriggerName);
           // Para modificar un trigger, generalmente se borra y se crea de nuevo
-          FWriter.AddCommand(FHelpers.GenerateDropTrigger(
+          FWriter.AddCommand(FSql.Eliminacion.GenerateDropTrigger(
                                                 SourceTriggers[i].TriggerName));
           // Obtenemos el SQL completo del trigger desde la BD origen
-          TriggerDef := FSourceDB.GetTriggerDefinition(
+          TriggerDef := FOrigen.Objetos.GetTriggerDefinition(
                                                  SourceTriggers[i].TriggerName);
           // OJO: En algunos clientes MySQL se necesita 'DELIMITER $$',
           // pero UniDAC/ScriptWriter suelen manejar comandos individuales.
@@ -379,7 +386,7 @@ begin
     if not Found then
     begin
       FWriter.AddComment(TRes.MsgTriggerNew + SourceTriggers[i].TriggerName);
-      TriggerDef := FSourceDB.GetTriggerDefinition(
+      TriggerDef := FOrigen.Objetos.GetTriggerDefinition(
                                                  SourceTriggers[i].TriggerName);
       FWriter.AddCommand(TriggerDef);
     end;
@@ -391,17 +398,17 @@ var
   SourceViews: TStringList;
   i: Integer;
 begin
-  SourceViews := FSourceDB.GetViews;
+  SourceViews := FOrigen.Objetos.GetViews;
   try
     FWriter.AddComment(TRes.MsgHeaderViews);
     FWriter.AddCommand('');
     for i := SourceViews.Count - 1 downto 0 do
-      FWriter.AddCommand(FHelpers.GenerateDropView(SourceViews[i]));
+      FWriter.AddCommand(FSql.Eliminacion.GenerateDropView(SourceViews[i]));
     FWriter.AddCommand('');
     for i := 0 to SourceViews.Count - 1 do
     begin
       FWriter.AddComment(TRes.MsgRecreateView + SourceViews[i]);
-      FWriter.AddCommand(FSourceDB.GetViewDefinition(SourceViews[i]));
+      FWriter.AddCommand(FOrigen.Objetos.GetViewDefinition(SourceViews[i]));
     end;
   finally
     SourceViews.Free;
@@ -417,7 +424,7 @@ var
   i: Integer;
 begin
   FWriter.AddComment(TRes.MsgCopyAllData + TableName);
-  SourceData := FSourceDB.GetData(TableName);
+  SourceData := FOrigen.Datos.GetData(TableName);
   Fields := TStringList.Create;
   Values := TStringList.Create;
   try
@@ -431,11 +438,13 @@ begin
       Values.Clear;
       for i := 0 to SourceData.FieldCount - 1 do
       begin
-        Fields.Add(FHelpers.QuoteIdentifier(SourceData.Fields[i].FieldName));
-        Values.Add(FHelpers.ValueToSQL(SourceData.Fields[i]));
+        Fields.Add(
+          FSql.Valores.QuoteIdentifier(SourceData.Fields[i].FieldName));
+        Values.Add(FSql.Valores.ValueToSQL(SourceData.Fields[i]));
       end;
       // Usamos INSERT IGNORE o similar si fuera necesario, aquí INSERT estándar
-      FWriter.AddCommand(FHelpers.GenerateInsertSQL(TableName, Fields, Values));
+      FWriter.AddCommand(
+        FSql.Valores.GenerateInsertSQL(TableName, Fields, Values));
       SourceData.Next;
     end;
   finally
@@ -458,7 +467,7 @@ var
   HasIdentity: Boolean; // Variable para detectar autoincrementales
 begin
   // 1. Obtener estructura para detectar PKs e IDENTIDAD
-  TableStruct := FSourceDB.GetTableStructure(TableName);
+  TableStruct := FOrigen.Esquema.GetTableStructure(TableName);
   PKCols := TStringList.Create;
   try
     HasIdentity := False;
@@ -488,7 +497,7 @@ begin
     // =========================================================================
     // FASE A: Recorrer ORIGEN -> Insertar o Actualizar en DESTINO
     // =========================================================================
-    SourceData := FSourceDB.GetData(TableName);
+    SourceData := FOrigen.Datos.GetData(TableName);
     Fields := TStringList.Create;
     Values := TStringList.Create;
     try
@@ -496,7 +505,7 @@ begin
       begin
         WhereClause := BuildWhereClause(PKCols, SourceData);
         // Buscamos el registro en destino
-        TargetData := FTargetDB.GetData(TableName, WhereClause);
+        TargetData := FDestino.Datos.GetData(TableName, WhereClause);
         try
           if TargetData.IsEmpty then
           begin
@@ -505,15 +514,15 @@ begin
              Values.Clear;
              for i := 0 to SourceData.FieldCount - 1 do
              begin
-               Fields.Add(FHelpers.QuoteIdentifier(
+               Fields.Add(FSql.Valores.QuoteIdentifier(
                  SourceData.Fields[i].FieldName));
-               Values.Add(FHelpers.ValueToSQL(SourceData.Fields[i]));
+               Values.Add(FSql.Valores.ValueToSQL(SourceData.Fields[i]));
              end;
              FWriter.AddComment(Format(TRes.MsgInsertNew,[WhereClause]));
              // Pasamos 'HasIdentity' para que el Helper de SQL Server sepa si
              // debe
              // envolver el INSERT con SET IDENTITY_INSERT ON/OFF
-             FWriter.AddCommand(FHelpers.GenerateInsertSQL(TableName,
+             FWriter.AddCommand(FSql.Valores.GenerateInsertSQL(TableName,
                                                            Fields,
                                                            Values,
                                                            HasIdentity));
@@ -534,24 +543,25 @@ begin
               begin
                  // Comparación simple de cadenas (ValueToSQL normaliza
                  // formatos)
-                 if FHelpers.ValueToSQL(SourceData.Fields[i]) <>
-                    FHelpers.ValueToSQL(TargetData.FieldByName(
+                 if FSql.Valores.ValueToSQL(SourceData.Fields[i]) <>
+                    FSql.Valores.ValueToSQL(TargetData.FieldByName(
                       SourceData.Fields[i].FieldName)) then
                  begin
                    if (SetClause <> '') then
                      SetClause := SetClause + ', ';
                    SetClause := SetClause +
-                                FHelpers.QuoteIdentifier(
+                                FSql.Valores.QuoteIdentifier(
                                   SourceData.Fields[i].FieldName) +
-                                ' = '
-                                  + FHelpers.ValueToSQL(SourceData.Fields[i]);
+                                ' = ' +
+                                FSql.Valores.ValueToSQL(
+                                  SourceData.Fields[i]);
                  end;
               end;
             end;
             if SetClause <> '' then
             begin
               FWriter.AddComment(Format(TRes.MsgUpdateDiff, [WhereClause]));
-              FWriter.AddCommand(FHelpers.GenerateUpdateSQL(TableName,
+              FWriter.AddCommand(FSql.Modificacion.GenerateUpdateSQL(TableName,
                                                             SetClause,
                                                             WhereClause));
             end;
@@ -573,19 +583,19 @@ begin
     if not FOptions.NoDelete then
     begin
       // Traemos toda la tabla de destino para ver qué sobra
-      TargetData := FTargetDB.GetData(TableName);
+      TargetData := FDestino.Datos.GetData(TableName);
       try
         while not TargetData.Eof do
         begin
           WhereClause := BuildWhereClause(PKCols, TargetData);
           // Verificamos si este registro de destino existe en origen
-          TempSource := FSourceDB.GetData(TableName, WhereClause);
+          TempSource := FOrigen.Datos.GetData(TableName, WhereClause);
           try
             if TempSource.IsEmpty then
             begin
               // --- CASO 3: DELETE (Sobra en destino) ---
               FWriter.AddComment(Format(TRes.MsgDeleteObs, [WhereClause]));
-              FWriter.AddCommand(FHelpers.GenerateDeleteSQL(TableName,
+              FWriter.AddCommand(FSql.Modificacion.GenerateDeleteSQL(TableName,
                                                             WhereClause));
             end;
           finally
@@ -614,8 +624,8 @@ begin
   begin
     if i > 0 then Result := Result + ' AND ';
     Field := DataSet.FieldByName(PKCols[i]);
-    Result := Result + FHelpers.QuoteIdentifier(PKCols[i]) + ' = ' +
-              FHelpers.ValueToSQL(Field);
+    Result := Result + FSql.Valores.QuoteIdentifier(PKCols[i]) + ' = ' +
+              FSql.Valores.ValueToSQL(Field);
   end;
 end;
 
@@ -624,15 +634,16 @@ var
   SourceProcs: TStringList;
   i: Integer;
 begin
-  SourceProcs := FSourceDB.GetProcedures;
+  SourceProcs := FOrigen.Objetos.GetProcedures;
   try
     FWriter.AddComment(TRes.MsgHeaderProcs);
     for i := 0 to SourceProcs.Count - 1 do
     begin
       FWriter.AddComment(TRes.MsgRecreateProc + SourceProcs[i]);
-      FWriter.AddCommand(FHelpers.GenerateDropProcedure(SourceProcs[i]));
-      var strProc := FSourceDB.GetProcedureDefinition(SourceProcs[i]);
-      FWriter.AddCommand(FHelpers.GenerateCreateProcedureSQL(strProc));
+      FWriter.AddCommand(
+        FSql.Eliminacion.GenerateDropProcedure(SourceProcs[i]));
+      var strProc := FOrigen.Objetos.GetProcedureDefinition(SourceProcs[i]);
+      FWriter.AddCommand(FSql.Creacion.GenerateCreateProcedureSQL(strProc));
     end;
   finally
     SourceProcs.Free;
@@ -644,16 +655,16 @@ var
   SourceFuncs: TStringList;
   i: Integer;
 begin
-  SourceFuncs := FSourceDB.GetFunctions;
+  SourceFuncs := FOrigen.Objetos.GetFunctions;
   try
     FWriter.AddComment(TRes.MsgHeaderFunc);
     for i := 0 to SourceFuncs.Count - 1 do
     begin
       FWriter.AddComment(TRes.MsgRecreateFunc + SourceFuncs[i]);
       // Borrar y crear
-      FWriter.AddCommand(FHelpers.GenerateDropFunction(SourceFuncs[i]));
-      var strFunc := FSourceDB.GetFunctionDefinition(SourceFuncs[i]);
-      FWriter.AddCommand(FHelpers.GenerateCreateFunctionSQL(strFunc));
+      FWriter.AddCommand(FSql.Eliminacion.GenerateDropFunction(SourceFuncs[i]));
+      var strFunc := FOrigen.Objetos.GetFunctionDefinition(SourceFuncs[i]);
+      FWriter.AddCommand(FSql.Creacion.GenerateCreateFunctionSQL(strFunc));
     end;
   finally
     SourceFuncs.Free;
@@ -665,8 +676,8 @@ var
   SourceIndexes, TargetIndexes: TArray<TIndexInfo>;
   Found: Boolean;
 begin
-  SourceIndexes := FSourceDB.GetTableIndexes(TableName);
-  TargetIndexes := FTargetDB.GetTableIndexes(TableName);
+  SourceIndexes := FOrigen.Esquema.GetTableIndexes(TableName);
+  TargetIndexes := FDestino.Esquema.GetTableIndexes(TableName);
   // 1. Eliminar índices que ya no existen
   if not FOptions.NoDelete then
   begin
@@ -688,7 +699,7 @@ begin
       begin
         FWriter.AddComment(TRes.MsgDelIndex + TableName + '.' +
                           TargetIndexes[i].IndexName);
-        FWriter.AddCommand(FHelpers.GenerateDropIndexSQL(TableName,
+        FWriter.AddCommand(FSql.Eliminacion.GenerateDropIndexSQL(TableName,
                                                    TargetIndexes[i].IndexName));
       end;
     end;
@@ -703,14 +714,15 @@ begin
       begin
         Found := True;
         // Si son diferentes, recrear
-        if not FHelpers.IndexesAreEqual(SourceIndexes[i], TargetIndexes[j]) then
+        if not FSql.Comparador.IndexesAreEqual(SourceIndexes[i],
+                                               TargetIndexes[j]) then
         begin
           FWriter.AddComment(TRes.MsgModIndex + TableName + '.' +
                             SourceIndexes[i].IndexName);
-          FWriter.AddCommand(FHelpers.GenerateDropIndexSQL(TableName,
-                                                             SourceIndexes[i].IndexName));
-          FWriter.AddCommand(FHelpers.GenerateIndexDefinition(TableName,
-                                                              SourceIndexes[i]));
+          FWriter.AddCommand(FSql.Eliminacion.GenerateDropIndexSQL(
+            TableName, SourceIndexes[i].IndexName));
+          FWriter.AddCommand(FSql.Creacion.GenerateIndexDefinition(
+            TableName, SourceIndexes[i]));
         end;
         Break;
       end;
@@ -720,7 +732,7 @@ begin
     begin
       FWriter.AddComment(TRes.MsgAddIndex + TableName + '.' +
                         SourceIndexes[i].IndexName);
-      FWriter.AddCommand(FHelpers.GenerateIndexDefinition(TableName,
+      FWriter.AddCommand(FSql.Creacion.GenerateIndexDefinition(TableName,
                                                           SourceIndexes[i]));
     end;
   end;

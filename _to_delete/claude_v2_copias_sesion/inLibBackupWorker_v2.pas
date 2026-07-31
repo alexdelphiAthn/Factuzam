@@ -127,7 +127,7 @@ function CrearCopiaSeguridadBD(const AHost: string; APort: Integer;
 implementation
 
 uses
-  Core_Interfaces,
+  Core_Interfaces, Core_Helpers,
   Providers_MySQL, Providers_MySQL_Helpers, ScriptWriters,
   MySQLUniProvider, UniScript,
   System.StrUtils,
@@ -167,8 +167,8 @@ function CrearCopiaSeguridadBD(const AHost: string; APort: Integer;
 var
   Conn: TUniConnection;
   Options: TBackupOptions;
-  Lecturas: TServiciosLecturaBBDD;
-  Sql: TServiciosSqlBBDD;
+  Provider: IDBMetadataProvider;
+  Helpers: IDBHelpers;
   Writer: IScriptWriter;
   Engine: TDBBackupEngine;
   IncludeTables: TStringList;
@@ -207,13 +207,13 @@ begin
       try
         DataFilters.Values['fza_traducciones'] :=
           FiltroDatosTraducciones(Conn);
-        Lecturas := CrearServiciosLecturaMySQL(Conn, ADatabase);
-        Sql := CrearServiciosSqlMySQL;
+        Provider := TMySQLMetadataProvider.Create(Conn, ADatabase);
+        Helpers := TMySQLHelpers.Create;
         if AEncriptar then
           Writer := TScriptWriter.Create('')
         else
           Writer := TScriptWriter.Create(ARutaFichero);
-        Engine := TDBBackupEngine.Create(Lecturas, Writer, Sql,
+        Engine := TDBBackupEngine.Create(Provider, Writer, Helpers,
                                          Options,
                                          IncludeTables, ExcludeTables,
                                          DataFilters);

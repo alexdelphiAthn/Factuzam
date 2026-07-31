@@ -22,18 +22,59 @@ CONTEXTOS_FUENTE_INGLES = {
     "CXLOCALIZATION.res",
     "src/vcl37/Vcl.Consts.pas",
 }
-CLAVES_REVISADAS = {
-    "inMtoPrincipal.TfrmMtoPrincipal.Archivo1.Caption",
-    "inMtoPrincipal.TfrmMtoPrincipal.mnuEmpresas.Caption",
-    "inMtoPrincipal.TfrmMtoPrincipal.mnuClientes.Caption",
-    "inMtoPrincipal.TfrmMtoPrincipal.mnuArticulos.Caption",
-    "inMtoPrincipal.TfrmMtoPrincipal.Salir1.Caption",
-    "inMtoPrincipal.TfrmMtoPrincipal.Compras1.Caption",
-    "inMtoPrincipal.TfrmMtoPrincipal.Ventas1.Caption",
-    "inMtoPrincipal.TfrmMtoPrincipal.mnuCaja.Caption",
-    "inMtoPrincipal.TfrmMtoPrincipal.mnuAlmacen.Caption",
-    "inMtoPrincipal.TfrmMtoPrincipal.Utilidades1.Caption",
-    "inMtoPrincipal.TfrmMtoPrincipal.Ayuda1.Caption",
+TRADUCCIONES_REVISADAS = {
+    "inMtoPrincipal.TfrmMtoPrincipal.Archivo1.Caption": "文件",
+    "inMtoPrincipal.TfrmMtoPrincipal.mnuEmpresas.Caption": "公司",
+    "inMtoPrincipal.TfrmMtoPrincipal.mnuClientes.Caption": "客户",
+    "inMtoPrincipal.TfrmMtoPrincipal.mnuArticulos.Caption": "商品",
+    "inMtoPrincipal.TfrmMtoPrincipal.Salir1.Caption": "退出",
+    "inMtoPrincipal.TfrmMtoPrincipal.Compras1.Caption": "采购",
+    "inMtoPrincipal.TfrmMtoPrincipal.Ventas1.Caption": "批发销售",
+    "inMtoPrincipal.TfrmMtoPrincipal.mnuCaja.Caption": "销售终端",
+    "inMtoPrincipal.TfrmMtoPrincipal.mnuAlmacen.Caption": "仓库",
+    "inMtoPrincipal.TfrmMtoPrincipal.Utilidades1.Caption": "其他",
+    "inMtoPrincipal.TfrmMtoPrincipal.Ayuda1.Caption": "帮助",
+    "DevExpress.scxDuration": "持续时间(&U):",
+    "Vcl.Consts.SDrivesCap": "驱动器(&R):",
+    "inMtoInventarios.TfrmMtoInventarios.tsCabecera.Caption": (
+        "3.其他(&3)"
+    ),
+    "inLibMsgComun.SCaptionTabModoTallasHoriz": (
+        "%0:s [横向尺码]"
+    ),
+    "inLibMsgComun.SCaptionTabModoTallasHorizBandas": (
+        "%0:s [横向尺码分组]"
+    ),
+}
+GLOSARIO_ES_EN = {
+    "recargo de equivalencia": "equivalence surcharge",
+    "formas de pago": "payment methods",
+    "punto de venta": "point of sale",
+    "albaranes": "delivery notes",
+    "albarán": "delivery note",
+    "artículos": "products",
+    "artículo": "product",
+    "proveedores": "suppliers",
+    "proveedor": "supplier",
+    "facturas": "invoices",
+    "factura": "invoice",
+    "clientes": "customers",
+    "cliente": "customer",
+    "pedidos": "orders",
+    "pedido": "order",
+    "compras": "purchases",
+    "compra": "purchase",
+    "ventas": "sales",
+    "venta": "sale",
+    "tallas": "sizes",
+    "talla": "size",
+    "almacén": "warehouse",
+    "familias": "product families",
+    "familia": "product family",
+    "tarifas": "price lists",
+    "tarifa": "price list",
+    "arqueo": "cash count",
+    "caja": "cash register",
 }
 
 PATRON_FORMATO = re.compile(
@@ -340,9 +381,28 @@ def necesita_traduccion(texto: str) -> bool:
     return any(caracter.isalpha() for caracter in texto)
 
 
+def traduccion_glosario(texto: str) -> str | None:
+    terminos = sorted(
+        GLOSARIO_ES_EN.items(),
+        key=lambda elemento: len(elemento[0]),
+        reverse=True,
+    )
+    for espanol, ingles in terminos:
+        patron = re.compile(
+            rf"^{re.escape(espanol)}([:;,.!?]?)$",
+            re.IGNORECASE,
+        )
+        coincidencia = patron.match(texto)
+        if coincidencia:
+            if texto[0].isupper():
+                ingles = ingles[0].upper() + ingles[1:]
+            return ingles + coincidencia.group(1)
+    return None
+
+
 def traducir_lineas(
     preparadas: list[LineaPreparada],
-) -> dict[tuple[str, str], str]:
+) -> dict[int, str]:
     fragmentos: dict[tuple[str, str], str] = {}
     for preparada in preparadas:
         for protegido, segmento in preparada.segmentos:
@@ -367,12 +427,19 @@ def traducir_lineas(
         flush=True,
     )
     textos_ingles: dict[tuple[str, str], str] = {}
-    if espanolas:
+    espanolas_modelo: list[tuple[str, str]] = []
+    for clave in espanolas:
+        directa = traduccion_glosario(fragmentos[clave])
+        if directa is None:
+            espanolas_modelo.append(clave)
+        else:
+            textos_ingles[clave] = directa
+    if espanolas_modelo:
         traductor_es = TraductorLote("es", "en")
         traducidas = traductor_es.traducir(
-            [fragmentos[clave] for clave in espanolas]
+            [fragmentos[clave] for clave in espanolas_modelo]
         )
-        for clave, traducida in zip(espanolas, traducidas):
+        for clave, traducida in zip(espanolas_modelo, traducidas):
             textos_ingles[clave] = traducida
     pendientes_zh = inglesas + espanolas
     entradas_zh = [
@@ -391,10 +458,9 @@ def traducir_lineas(
     for clave, texto in fragmentos.items():
         if clave not in resultado:
             resultado[clave] = texto
-    lineas: dict[tuple[str, str], str] = {}
+    lineas: dict[int, str] = {}
     for preparada in preparadas:
-        clave = (preparada.idioma, preparada.original)
-        lineas[clave] = reconstruir_linea(
+        lineas[id(preparada)] = reconstruir_linea(
             preparada,
             resultado,
         )
@@ -457,7 +523,7 @@ def generar_catalogo(
     for recurso in recursos:
         if recurso.texto_zh and (
             not regenerar_existentes
-            or recurso.clave in CLAVES_REVISADAS
+            or recurso.clave in TRADUCCIONES_REVISADAS
         ):
             continue
         ingles_compatible = (
@@ -485,9 +551,13 @@ def generar_catalogo(
             texto_zh = "".join(
                 parte
                 if isinstance(parte, str)
-                else traducciones[(parte.idioma, parte.original)]
+                else traducciones[id(parte)]
                 for parte in partes
             )
+        texto_zh = TRADUCCIONES_REVISADAS.get(
+            recurso.clave,
+            texto_zh,
+        )
         catalogo.append(
             (recurso.clave, texto_zh, recurso.contexto)
         )
@@ -518,9 +588,9 @@ def escribir_sql(
         lineas.extend(
             [
                 "INSERT INTO fza_traducciones (",
-                "  CLAVE_TRAD, IDIOMA_TRAD, TEXTO_TRAD, ",
-                "  CONTEXTO_TRAD, ESACTIVO_TRAD, ",
-                "  INSTANTE_ALTA, USUARIO_ALTA",
+                "  CLAVE_TRAD, IDIOMA_TRAD, TEXTO_TRAD,",
+                "  CONTEXTO_TRAD, ESACTIVO_TRAD,",
+                "  ESDESCARGADA_TRAD, INSTANTE_ALTA, USUARIO_ALTA",
                 ") VALUES",
             ]
         )
@@ -529,10 +599,10 @@ def escribir_sql(
             lineas.extend(
                 [
                     f"  ({valor_hexadecimal(clave)},",
-                    f"   '{IDIOMA_DESTINO}', ",
+                    f"   '{IDIOMA_DESTINO}',",
                     f"   {valor_hexadecimal(texto)},",
                     f"   {valor_hexadecimal(contexto)},",
-                    "   'S', CURRENT_TIMESTAMP, ",
+                    "   'S', 'S', CURRENT_TIMESTAMP,",
                     f"   '{USUARIO_GENERACION}'){separador}",
                 ]
             )
@@ -542,6 +612,7 @@ def escribir_sql(
                 "  TEXTO_TRAD = VALUES(TEXTO_TRAD),",
                 "  CONTEXTO_TRAD = VALUES(CONTEXTO_TRAD),",
                 "  ESACTIVO_TRAD = 'S',",
+                "  ESDESCARGADA_TRAD = 'S',",
                 "  INSTANTE_MODIF = CURRENT_TIMESTAMP,",
                 "  USUARIO_MODIF = VALUES(USUARIO_ALTA);",
             ]
@@ -567,13 +638,14 @@ def aplicar_catalogo(conexion, catalogo) -> None:
     sentencia = """
 INSERT INTO fza_traducciones (
   CLAVE_TRAD, IDIOMA_TRAD, TEXTO_TRAD, CONTEXTO_TRAD,
-  ESACTIVO_TRAD, INSTANTE_ALTA, USUARIO_ALTA
+  ESACTIVO_TRAD, ESDESCARGADA_TRAD, INSTANTE_ALTA, USUARIO_ALTA
 ) VALUES (
-  %s, %s, %s, %s, 'S', CURRENT_TIMESTAMP, %s
+  %s, %s, %s, %s, 'S', 'S', CURRENT_TIMESTAMP, %s
 ) ON DUPLICATE KEY UPDATE
   TEXTO_TRAD = VALUES(TEXTO_TRAD),
   CONTEXTO_TRAD = VALUES(CONTEXTO_TRAD),
   ESACTIVO_TRAD = 'S',
+  ESDESCARGADA_TRAD = 'S',
   INSTANTE_MODIF = CURRENT_TIMESTAMP,
   USUARIO_MODIF = VALUES(USUARIO_ALTA)
 """

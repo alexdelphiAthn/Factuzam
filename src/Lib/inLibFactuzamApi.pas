@@ -32,6 +32,8 @@ type
 
   TClienteFactuzamApi = class
   private
+    class function ComponerUrlBase(
+      const AUrlBase, ARuta: string): string; static;
     class function LeerRespuesta(const AContenido: string;
       AEstadoHttp: Integer;
       const AMensajeOk: string): TResultadoFactuzamApi; static;
@@ -61,6 +63,9 @@ type
       const AParametrosApp: IParametrosAplicacion;
       const ARuta, AConsulta, ARutaDestino: string):
       TResultadoFactuzamApi; static;
+    class function DescargarArchivoAutenticado(
+      const AUrlBase, AToken, ARuta, AConsulta,
+      ARutaDestino: string): TResultadoFactuzamApi; static;
   end;
 
 implementation
@@ -97,11 +102,17 @@ end;
 class function TClienteFactuzamApi.ComponerUrl(
   const AParametrosApp: IParametrosAplicacion;
   const ARuta: string): string;
+begin
+  Result := ComponerUrlBase(UrlBase(AParametrosApp), ARuta);
+end;
+
+class function TClienteFactuzamApi.ComponerUrlBase(
+  const AUrlBase, ARuta: string): string;
 var
   sBase: string;
   sRuta: string;
 begin
-  sBase := UrlBase(AParametrosApp);
+  sBase := Trim(AUrlBase);
   if (sBase <> '') and (sBase[Length(sBase)] <> '/') then
     sBase := sBase + '/';
   sRuta := Trim(ARuta);
@@ -296,6 +307,18 @@ end;
 class function TClienteFactuzamApi.DescargarArchivo(
   const AParametrosApp: IParametrosAplicacion;
   const ARuta, AConsulta, ARutaDestino: string): TResultadoFactuzamApi;
+begin
+  Result := DescargarArchivoAutenticado(
+    UrlBase(AParametrosApp),
+    Token(AParametrosApp),
+    ARuta,
+    AConsulta,
+    ARutaDestino);
+end;
+
+class function TClienteFactuzamApi.DescargarArchivoAutenticado(
+  const AUrlBase, AToken, ARuta, AConsulta,
+  ARutaDestino: string): TResultadoFactuzamApi;
 var
   oDestino: TFileStream;
   oHttp: THTTPClient;
@@ -307,14 +330,14 @@ begin
   Result.EstadoHttp := 0;
   Result.IdPeticion := '';
   Result.Mensaje := '';
-  if not Configurada(AParametrosApp) then
+  if (Trim(AUrlBase) = '') or (Trim(AToken) = '') then
     Result.Mensaje := SErrorFactuzamApiNoConfigurada
   else
   begin
-    sUrl := ComponerUrl(AParametrosApp, ARuta);
+    sUrl := ComponerUrlBase(AUrlBase, ARuta);
     if Trim(AConsulta) <> '' then
       sUrl := sUrl + '?' + Trim(AConsulta);
-    oHttp := CrearClienteHttp(Token(AParametrosApp));
+    oHttp := CrearClienteHttp(AToken);
     try
       oMemoria := TMemoryStream.Create;
       try

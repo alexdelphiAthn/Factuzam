@@ -296,6 +296,15 @@ de filtros; y lectura/escritura/caché de perfiles. Los registros
 sin volver a descubrir capacidades. `IAnfitrionMantenimiento` permanece
 delgado.
 
+Los dos contratos anchos del subsistema de copias (metadatos, 17
+miembros; helpers SQL, 28) están igualmente separados por consumidor en
+`Core_Interfaces`: lectura de esquema/objetos/datos e inyección conjunta
+mediante `TServiciosLecturaBBDD` y `TServiciosSqlBBDD`. El resguardo
+`comprobar_interfaces_segregadas.ps1` examina ahora todas las unidades
+activas de primera parte —no solo `*Intf.pas`— con tope de 10 miembros
+por interfaz y lista de contratos retirados; sus casos viven en
+`PruebasTrinquetesEstilo.ps1`.
+
 ### 3.7 Higiene residual — barato, cerrarlo pronto
 
 - **Fachada `inLibMsg`**: 60 consumidores pendientes de migrar a los
@@ -604,6 +613,7 @@ Ninguna cifra puede subir. El script correspondiente falla el build.
 | Rutinas de unit procedural vigilada      | 75       | 3    | ≤ 30     |
 | Métodos > 200 líneas                     | 38       | 3    | ≤ 10     |
 | `Supports()` fuera de lista blanca       | 0        | ✔    | 0        |
+| Interfaces propias > 10 miembros         | 0        | ✔    | 0        |
 | Fan-in de `inLibMsg`                     | 60       | 6    | 0 (unidad eliminada) |
 | Fan-in con cuerpo                        | 84       | 6    | solo baja|
 | Fan-out máximo por unidad                | 101      | 6    | ≤ 40     |

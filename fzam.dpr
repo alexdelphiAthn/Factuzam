@@ -424,6 +424,8 @@ uses
   inLibGenerarTicketBD in 'src\Lib\inLibGenerarTicketBD.pas',
   inLibCorreoTickets in 'src\Lib\inLibCorreoTickets.pas',
   inLibFactuzamApi in 'src\Lib\inLibFactuzamApi.pas',
+  inLibTraduccionesDescarga in
+    'src\Lib\inLibTraduccionesDescarga.pas',
   inLibVentasWsJsonIntf in 'src\Lib\inLibVentasWsJsonIntf.pas',
   inLibVentasWsJson in 'src\Lib\inLibVentasWsJson.pas',
   UniDataVentasWsJson in 'src\DataModules\UniDataVentasWsJson.pas',
@@ -467,6 +469,8 @@ uses
   inMtoVerifactuLog in 'src\verifactu\inMtoVerifactuLog.pas' {frmMtoVerifactuLog},
   UniDataVerifactuLog in 'src\verifactu\UniDataVerifactuLog.pas' {dmVerifactuLog: TDataModule},
   inMtoModalVerifactuDecl in 'src\Modals\inMtoModalVerifactuDecl.pas' {frmModalVerifactuDecl},
+  inMtoModalDescargaTraduccion in
+    'src\Modals\inMtoModalDescargaTraduccion.pas' {frmModalDescargaTraduccion},
   inMtoModalFacturarTicket in 'src\Modals\inMtoModalFacturarTicket.pas' {frmModalFacturarTicket},
   inMtoModalSerieFechaFactura in 'src\Modals\inMtoModalSerieFechaFactura.pas' {frmModalSerieFechaFactura},
   inLibData in 'src\Lib\inLibData.pas',
@@ -767,8 +771,7 @@ begin
         GestorContextoCierre
       ) then
         GestorContextoCierre.MarcarCierreAplicacion;
-      if Assigned(Principal) then
-        Principal.DetenerVentasWsCola;
+      // Principal ya puede estar liberado por FormClose (caFree).
       TVerifactuCola.DetenerHilo;
     end;
     // Salida garantizada del proceso. Una tarea huerfana bloqueada contra

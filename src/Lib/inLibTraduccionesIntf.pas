@@ -22,6 +22,7 @@ const
   IDIOMA_ESPANOL = 'es-ES';
   IDIOMA_INGLES = 'en-GB';
   IDIOMA_CATALAN = 'ca-ES';
+  IDIOMA_CHINO_SIMPLIFICADO = 'zh-CN';
   IDIOMA_PSEUDO = 'qps-ploc';
 
 type

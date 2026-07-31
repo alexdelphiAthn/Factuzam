@@ -12,6 +12,8 @@ $rutaEstilo = Join-Path $RaizRepositorio `
   'scripts\comprobar_estilo_codigo.ps1'
 $rutaMetodos = Join-Path $RaizRepositorio `
   'scripts\comprobar_metodos_largos.ps1'
+$rutaInterfaces = Join-Path $RaizRepositorio `
+  'scripts\comprobar_interfaces_segregadas.ps1'
 $utf8ConBom = [System.Text.UTF8Encoding]::new($true)
 [System.Text.Encoding]::RegisterProvider(
   [System.Text.CodePagesEncodingProvider]::Instance)
@@ -253,6 +255,33 @@ function Agregar-CasosEstilo {
     -Codificacion $windows1252
 }
 
+function Agregar-CasosInterfaces {
+  param([string]$Raiz)
+  # Unidad activa que NO es *Intf.pas: el resguardo tambien la examina
+  $miembrosJustos = 1..10 |
+    ForEach-Object { "    procedure Operacion$_;" }
+  $miembrosDeMas = 1..11 |
+    ForEach-Object { "    function Consulta$_: Integer;" }
+  $lineas = @(
+    'unit CasosInterfaces;',
+    'interface',
+    'type',
+    '  IContratoJusto = interface',
+    "    ['{6E9C1D3A-0000-4000-8000-000000000001}']"
+  ) + $miembrosJustos + @(
+    '  end;',
+    '  IContratoAncho = interface',
+    "    ['{6E9C1D3A-0000-4000-8000-000000000002}']"
+  ) + $miembrosDeMas + @(
+    '  end;',
+    'implementation',
+    'end.'
+  )
+  Escribir-ArchivoPrueba `
+    -Ruta (Join-Path $Raiz 'src\CasosInterfaces.pas') `
+    -Contenido ($lineas -join "`r`n")
+}
+
 function Borrar-RaizPrueba {
   param([string]$Ruta)
   $temporal = [System.IO.Path]::GetFullPath(
@@ -272,7 +301,7 @@ function Borrar-RaizPrueba {
 }
 
 Registrar-Prueba 'sintaxis y formato de los scripts' {
-  foreach ($ruta in @($rutaEstilo, $rutaMetodos)) {
+  foreach ($ruta in @($rutaEstilo, $rutaMetodos, $rutaInterfaces)) {
     $tokens = $null
     $errores = $null
     $null = [System.Management.Automation.Language.Parser]::ParseFile(
@@ -306,7 +335,7 @@ if (-not $OmitirLineaBase) {
         'Estilo de codigo: OK.',
         'Exit: 1349.',
         'Continue: 107.',
-        'Lineas anchas: 577.',
+        'Lineas anchas: 575.',
         'Lineas con tabulador: 0.'
       )
   }
@@ -317,10 +346,20 @@ if (-not $OmitirLineaBase) {
       -Codigo 0 `
       -Textos @(
         'Metodos largos: OK.',
-        'Analizados: 7332.',
+        'Analizados: 7335.',
         'De mas de 120 lineas: 124.',
         'Mas largo: 312 lineas',
         'Rutinas generadas fuera del limite: 2.'
+      )
+  }
+  Registrar-Prueba 'linea base real de interfaces' {
+    $resultado = Ejecutar-Script -Ruta $rutaInterfaces
+    Confirmar-Resultado `
+      -Resultado $resultado `
+      -Codigo 0 `
+      -Textos @(
+        'Interfaces segregadas: OK.',
+        'contratos retirados: 9.'
       )
   }
 }
@@ -475,6 +514,67 @@ try {
 }
 finally {
   Borrar-RaizPrueba -Ruta $raizMetodos
+}
+
+$raizInterfaces = Nueva-RaizPrueba
+try {
+  Agregar-CasosInterfaces -Raiz $raizInterfaces
+  Registrar-Prueba 'interfaces: ancha detectada fuera de *Intf.pas' {
+    $resultado = Ejecutar-Script `
+      -Ruta $rutaInterfaces `
+      -Argumentos @('-Raiz', $raizInterfaces)
+    Confirmar-Resultado `
+      -Resultado $resultado `
+      -Codigo 1 `
+      -Textos @('IContratoAncho tiene 11 miembros')
+  }
+  Registrar-Prueba 'interfaces: limite exacto permitido' {
+    $resultado = Ejecutar-Script `
+      -Ruta $rutaInterfaces `
+      -Argumentos @('-Raiz', $raizInterfaces, '-MaximoMiembros', '11')
+    Confirmar-Resultado `
+      -Resultado $resultado `
+      -Codigo 0 `
+      -Textos @(
+        'Interfaces segregadas: OK.',
+        'Unidades analizadas: 1;'
+      )
+  }
+}
+finally {
+  Borrar-RaizPrueba -Ruta $raizInterfaces
+}
+
+$raizRetirados = Nueva-RaizPrueba
+try {
+  $contenidoRetirado = @(
+    'unit CasosRetirados;',
+    'interface',
+    'type',
+    '  TUsoRetirado = class',
+    '    FContrato: IDBHelpers;',
+    '  end;',
+    'implementation',
+    'end.'
+  ) -join "`r`n"
+  Escribir-ArchivoPrueba `
+    -Ruta (Join-Path $raizRetirados 'src\CasosRetirados.pas') `
+    -Contenido $contenidoRetirado
+  Registrar-Prueba 'interfaces: contrato retirado reaparecido' {
+    $resultado = Ejecutar-Script `
+      -Ruta $rutaInterfaces `
+      -Argumentos @('-Raiz', $raizRetirados)
+    Confirmar-Resultado `
+      -Resultado $resultado `
+      -Codigo 1 `
+      -Textos @(
+        'Han reaparecido contratos retirados',
+        'CasosRetirados.pas: IDBHelpers'
+      )
+  }
+}
+finally {
+  Borrar-RaizPrueba -Ruta $raizRetirados
 }
 
 $raizSinGenerados = Nueva-RaizPrueba

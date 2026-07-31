@@ -5,7 +5,14 @@ uses
   Backup.Types, System.SysUtils, System.StrUtils,
   Data.DB, system.Classes, Core_Interfaces;
 type
-  TDBHelpers = class(TInterfacedObject, IDBHelpers)
+  // Base común de los helpers SQL: implementa los contratos segregados
+  // de Core_Interfaces; cada consumidor recibe solo la vista que usa
+  TDBHelpers = class(TInterfacedObject,
+                     IComparadorEsquemaBBDD,
+                     IGeneradorSqlValores,
+                     IGeneradorSqlCreacion,
+                     IGeneradorSqlEliminacion,
+                     IGeneradorSqlModificacion)
   public
     // Métodos comunes que SÍ son universales
     function ColumnsAreEqual(const Col1, Col2: TColumnInfo): Boolean;
@@ -55,6 +62,8 @@ type
     abstract;
     function GenerateCreateTriggerSQL(const Body: string): string; virtual;
     abstract;
+    // Secuencias: sin consumidor hoy y fuera de contrato; se conservan
+    // como métodos de clase para motores con sequences
     function GenerateCreateSequence(const SeqName: string): string; virtual;
     abstract;
     function GenerateDropSequence(const SeqName: string): string; virtual;

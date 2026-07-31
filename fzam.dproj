@@ -783,6 +783,7 @@
         <DCCReference Include="src\Lib\inLibGenerarTicketBD.pas"/>
         <DCCReference Include="src\Lib\inLibCorreoTickets.pas"/>
         <DCCReference Include="src\Lib\inLibFactuzamApi.pas"/>
+        <DCCReference Include="src\Lib\inLibTraduccionesDescarga.pas"/>
         <DCCReference Include="src\Lib\inLibVentasWsJsonIntf.pas"/>
         <DCCReference Include="src\Lib\inLibVentasWsJson.pas"/>
         <DCCReference Include="src\DataModules\UniDataVentasWsJson.pas"/>
@@ -826,6 +827,9 @@
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalVerifactuDecl.pas">
             <Form>frmModalVerifactuDecl</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalDescargaTraduccion.pas">
+            <Form>frmModalDescargaTraduccion</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalFacturarTicket.pas">
             <Form>frmModalFacturarTicket</Form>

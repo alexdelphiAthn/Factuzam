@@ -3,35 +3,58 @@ declare(strict_types=1);
 
 require dirname(__DIR__) . '/privado/traducciones.php';
 
-$idioma = normalizar_idioma_traduccion('zh-cn');
-$traduccion = obtener_traduccion($idioma);
-$archivos = archivos_traduccion($traduccion);
-$paquete = crear_paquete_traduccion($traduccion, $archivos);
-$zip = new ZipArchive();
-$valido = $idioma === 'zh-CN' &&
-    count($archivos) === 1 &&
-    $zip->open($paquete['ruta']) === true;
-$manifiesto = $valido
-    ? json_decode((string)$zip->getFromName('manifiesto.json'), true)
-    : null;
-$contenidoSql = $valido
-    ? $zip->getFromName('001_menu_principal.sql')
-    : false;
-$archivoManifiesto = is_array($manifiesto)
-    ? ($manifiesto['archivos'][0] ?? null)
-    : null;
-$valido = $valido && is_array($manifiesto) &&
-    in_array('descargar:traducciones', CFG_AMBITOS_PERMITIDOS, true) &&
-    ($manifiesto['version_contrato'] ?? 0) === 1 &&
-    ($manifiesto['idioma'] ?? '') === 'zh-CN' &&
-    count($manifiesto['archivos'] ?? []) === 1 &&
-    is_array($archivoManifiesto) && is_string($contenidoSql) &&
-    ($archivoManifiesto['tamano'] ?? -1) === strlen($contenidoSql) &&
-    ($archivoManifiesto['sha256'] ?? '') === hash('sha256', $contenidoSql);
-$zip->close();
-@unlink($paquete['ruta']);
+$esperados = [
+    'en-GB' => ['version' => 1, 'archivos' => 2],
+    'ca-ES' => ['version' => 1, 'archivos' => 2],
+    'zh-CN' => ['version' => 3, 'archivos' => 3]
+];
+$valido = in_array(
+    'descargar:traducciones',
+    CFG_AMBITOS_PERMITIDOS,
+    true
+);
+foreach ($esperados as $idiomaEsperado => $esperado) {
+    $idioma = normalizar_idioma_traduccion(strtolower($idiomaEsperado));
+    $traduccion = obtener_traduccion($idioma);
+    $archivos = archivos_traduccion($traduccion);
+    $paquete = crear_paquete_traduccion($traduccion, $archivos);
+    $zip = new ZipArchive();
+    $abierto = $zip->open($paquete['ruta']) === true;
+    $valido = $valido &&
+        $idioma === $idiomaEsperado &&
+        count($archivos) === $esperado['archivos'] &&
+        $abierto;
+    $manifiesto = $abierto
+        ? json_decode((string)$zip->getFromName('manifiesto.json'), true)
+        : null;
+    $valido = $valido && is_array($manifiesto) &&
+        ($manifiesto['version_contrato'] ?? 0) === 1 &&
+        ($manifiesto['idioma'] ?? '') === $idiomaEsperado &&
+        ($manifiesto['version'] ?? 0) === $esperado['version'] &&
+        count($manifiesto['archivos'] ?? []) === count($archivos);
+    foreach ($archivos as $indice => $archivo) {
+        $archivoManifiesto = $manifiesto['archivos'][$indice] ?? null;
+        $contenidoSql = $zip->getFromName($archivo['nombre']);
+        $valido = $valido && is_array($archivoManifiesto) &&
+            is_string($contenidoSql) &&
+            ($archivoManifiesto['nombre'] ?? '') === $archivo['nombre'] &&
+            ($archivoManifiesto['tamano'] ?? -1) ===
+                strlen($contenidoSql) &&
+            ($archivoManifiesto['sha256'] ?? '') ===
+                hash('sha256', $contenidoSql);
+    }
+    $indiceCatalogo = $esperado['archivos'] - 1;
+    $valido = $valido &&
+        ($archivos[0]['nombre'] ?? '') ===
+            '000_preparar_descarga.sql' &&
+        ($archivos[$indiceCatalogo]['tamano'] ?? 0) > 1000000;
+    if ($abierto) {
+        $zip->close();
+    }
+    @unlink($paquete['ruta']);
+}
 if (!$valido) {
-    fwrite(STDERR, "ERROR: el paquete de traducción no es válido.\n");
+    fwrite(STDERR, "ERROR: hay un paquete de traducción no válido.\n");
     exit(1);
 }
-fwrite(STDOUT, "OK: paquete zh-CN y manifiesto válidos.\n");
+fwrite(STDOUT, "OK: paquetes y manifiestos de traducción válidos.\n");

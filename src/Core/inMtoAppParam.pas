@@ -69,9 +69,15 @@ type
     FStrs             : TList<PString>;
     FValoresOriginales: TDictionary<string, string>;
     FParametrosEdicion: IParametrosEdicion;
+    FCargandoParametros: Boolean;
+    FIdiomaInspectorAnterior: string;
+    FProcesandoIdioma: Boolean;
     procedure InspectorItemEdit(Sender: TJvCustomInspector;
                                 Item: TJvCustomInspectorItem;
                                 var DisplayStr: string);
+    procedure InspectorItemValueChanged(
+      Sender: TObject;
+      Item: TJvCustomInspectorItem);
     procedure CapturarValoresOriginales;
     function  HayCambiosPendientes: Boolean;
     procedure LimpiarMemoria;
@@ -89,6 +95,10 @@ type
     procedure ConstruirInspector;
     procedure GuardarLayout;
     procedure RestaurarLayout;
+    procedure AplicarIdiomaInterfaz(const AIdioma: string);
+    function EsIdiomaDescargable(const AIdioma: string): Boolean;
+    function ValorParametroInspector(
+      const ANombre, ADefecto: string): string;
 
     // Handlers de listas desplegables
     procedure GetImpresorasInformesList(Sender: TJvCustomInspectorItem;
@@ -120,7 +130,8 @@ uses
    dxSkinsDefaultPainters, dxSkinsForm,
   FileCtrl, inLibPathTokens,               // SelectDirectory
    inLibLayoutForm, inLibVerifactu, inLibFactuzamApi,
-   inLibMsgConfiguracion, inLibTraduccionesIntf;
+   inLibMsgConfiguracion, inLibTraducciones, inLibTraduccionesIntf,
+   inLibTraduccionesDescarga, inMtoModalDescargaTraduccion;
 
 procedure RegistrarCambioConfiguracionVerifactuSeguro(
   const AParametrosApp: IParametrosAplicacion;
@@ -174,6 +185,8 @@ begin
   FStrs              := TList<PString>.Create;
   FValoresOriginales := TDictionary<string, string>.Create;
   JvInspector1.OnItemEdit := InspectorItemEdit;
+  JvInspector1.OnItemValueChanged := InspectorItemValueChanged;
+  FIdiomaInspectorAnterior := IDIOMA_ESPANOL;
 //  JvInspector1.OnEditButtonClick := InspectorEditButtonClick;
 end;
 
@@ -416,6 +429,9 @@ var
 begin
   Strings.Clear;
   Strings.Add(IDIOMA_ESPANOL);
+  Strings.Add(IDIOMA_INGLES);
+  Strings.Add(IDIOMA_CATALAN);
+  Strings.Add(IDIOMA_CHINO_SIMPLIFICADO);
   qry := TUniQuery.Create(nil);
   try
     qry.Connection := ConexionPrincipal;
@@ -439,6 +455,120 @@ begin
   end;
   if Strings.IndexOf(IDIOMA_PSEUDO) < 0 then
     Strings.Add(IDIOMA_PSEUDO);
+end;
+
+function TfrmMtoAppParam.EsIdiomaDescargable(
+  const AIdioma: string): Boolean;
+begin
+  Result :=
+    SameText(AIdioma, IDIOMA_INGLES) or
+    SameText(AIdioma, IDIOMA_CATALAN) or
+    SameText(AIdioma, IDIOMA_CHINO_SIMPLIFICADO);
+end;
+
+function TfrmMtoAppParam.ValorParametroInspector(
+  const ANombre, ADefecto: string): string;
+var
+  oItem: TJvCustomInspectorItem;
+begin
+  Result := ADefecto;
+  oItem := BuscarItemPorNombre(JvInspector1.Root, ANombre);
+  if Assigned(oItem) and Assigned(oItem.Data) then
+    Result := oItem.Data.AsString;
+end;
+
+procedure TfrmMtoAppParam.AplicarIdiomaInterfaz(
+  const AIdioma: string);
+var
+  iFormulario: Integer;
+begin
+  if Assigned(Traducciones) then
+  begin
+    Traducciones.EstablecerIdioma(AIdioma);
+    Traducciones.Recargar;
+    for iFormulario := 0 to Screen.FormCount - 1 do
+    begin
+      if Screen.Forms[iFormulario] is TfrmBase then
+        TfrmBase(Screen.Forms[iFormulario]).AplicarTraduccionActual;
+    end;
+  end;
+end;
+
+procedure TfrmMtoAppParam.InspectorItemValueChanged(
+  Sender: TObject;
+  Item: TJvCustomInspectorItem);
+var
+  bAplicado: Boolean;
+  bDescargar: Boolean;
+  sError: string;
+  sIdioma: string;
+  sToken: string;
+  sUrlBase: string;
+begin
+  if (not FCargandoParametros) and
+     (not FProcesandoIdioma) and
+     Assigned(Item) and
+     Assigned(Item.Data) and
+     SameText(Item.Name, 'appIdioma') then
+  begin
+    sIdioma := NormalizarIdiomaAplicacion(Item.Data.AsString);
+    if not SameText(sIdioma, FIdiomaInspectorAnterior) then
+    begin
+      FProcesandoIdioma := True;
+      try
+        bAplicado := True;
+        sError := '';
+        try
+          if EsIdiomaDescargable(sIdioma) then
+          begin
+            bDescargar :=
+              not TInstaladorTraducciones.DisponibleLocalmente(
+                    ConexionPrincipal,
+                    sIdioma);
+            sUrlBase := Trim(
+              ValorParametroInspector(
+                'appApiUrl',
+                cUrlFactuzamApiDefecto));
+            if sUrlBase = '' then
+              sUrlBase := cUrlFactuzamApiDefecto;
+            sToken := Trim(
+              ValorParametroInspector('appApiToken', ''));
+            bAplicado := TfrmModalDescargaTraduccion.Ejecutar(
+              Self,
+              ConexionPrincipal,
+              sUrlBase,
+              sToken,
+              sIdioma,
+              bDescargar,
+              AplicarIdiomaInterfaz,
+              sError);
+          end
+          else
+            AplicarIdiomaInterfaz(sIdioma);
+        except
+          on E: Exception do
+          begin
+            bAplicado := False;
+            sError := E.Message;
+            Log.LogError(
+              'Aplicación del idioma ' + sIdioma + ': ' + E.Message);
+          end;
+        end;
+        if bAplicado then
+          FIdiomaInspectorAnterior := sIdioma
+        else
+        begin
+          Item.DisplayValue := FIdiomaInspectorAnterior;
+          ShowMessage(
+            Format(
+              SErrorSeleccionIdiomaNoAplicado,
+              [sIdioma, sError]));
+        end;
+      finally
+        FProcesandoIdioma := False;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmMtoAppParam.GetTemasList(
@@ -675,84 +805,91 @@ var
   end;
 
 begin
-  ResetearADefectos;
-  Grid.Refresh;
-  sUrlFotos := cUrlFactuzamApiDefecto;
-  sTokenFotos := '';
-  sReferenciaFotos := '';
-  sUrlRecuentos := '';
-  sTokenRecuentos := '';
-  sReferenciaRecuentos := '';
-  bUrlComun := False;
-  bTokenComun := False;
-  bReferenciaComun := False;
-
-  qry := TUniQuery.Create(nil);
+  FCargandoParametros := True;
   try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text   :=
-      'CALL PRC_GETPERFILFORMULARIO(:p_usuario, :p_grupo, :p_formulario)';
-    qry.ParamByName('p_usuario').AsString    := pUsuario;
-    qry.ParamByName('p_grupo').AsString      := pGrupo;
-    qry.ParamByName('p_formulario').AsString := 'frmMtoAppParam';
-    qry.Open;
+    ResetearADefectos;
+    Grid.Refresh;
+    sUrlFotos := cUrlFactuzamApiDefecto;
+    sTokenFotos := '';
+    sReferenciaFotos := '';
+    sUrlRecuentos := '';
+    sTokenRecuentos := '';
+    sReferenciaRecuentos := '';
+    bUrlComun := False;
+    bTokenComun := False;
+    bReferenciaComun := False;
 
-    Grid.BeginUpdate;
+    qry := TUniQuery.Create(nil);
     try
-      while not qry.Eof do
-      begin
-        SubKey   := qry.FieldByName('SUBKEY_USUPER').AsString;
-        ValorStr := qry.FieldByName('VALUE_USUPER').AsString;
-        if SameText(SubKey, 'appApiUrl') then
-          bUrlComun := Trim(ValorStr) <> ''
-        else if SameText(SubKey, 'appApiToken') then
-          bTokenComun := Trim(ValorStr) <> ''
-        else if SameText(SubKey, 'appApiReferencia') then
-          bReferenciaComun := Trim(ValorStr) <> ''
-        else if SameText(SubKey, 'appFotosUrlDescarga') then
-          sUrlFotos := ValorStr
-        else if SameText(SubKey, 'appFotosApiKey') then
-          sTokenFotos := ValorStr
-        else if SameText(SubKey, 'appFotosCarpetaCliente') then
-          sReferenciaFotos := ValorStr
-        else if SameText(SubKey, 'appRecuentoUrl') then
-          sUrlRecuentos := ValorStr
-        else if SameText(SubKey, 'appRecuentoApiKey') then
-          sTokenRecuentos := ValorStr
-        else if SameText(SubKey, 'appRecuentoCarpetaCliente') then
-          sReferenciaRecuentos := ValorStr;
-        ItemData := BuscarItemPorNombre(Grid.Root, SubKey);
-        if (ItemData <> nil) and (ItemData.Data <> nil) then
+      qry.Connection := ConexionPrincipal;
+      qry.SQL.Text   :=
+        'CALL PRC_GETPERFILFORMULARIO(:p_usuario, :p_grupo, :p_formulario)';
+      qry.ParamByName('p_usuario').AsString    := pUsuario;
+      qry.ParamByName('p_grupo').AsString      := pGrupo;
+      qry.ParamByName('p_formulario').AsString := 'frmMtoAppParam';
+      qry.Open;
+
+      Grid.BeginUpdate;
+      try
+        while not qry.Eof do
         begin
-          try
-            if (ValorStr = '') and
-               (ItemData.Data.TypeInfo.Kind in [tkInteger, tkFloat]) then
-              ValorStr := '0';
-            ItemData.DisplayValue := ValorStr;
-          except
-            // El resto de parametros se sigue aplicando.
-            on E: Exception do
-              inLibLog.Log.LogWarning(
-                'AppParam: no se pudo aplicar el parametro "' +
-                SubKey + '": ' + E.Message);
+          SubKey   := qry.FieldByName('SUBKEY_USUPER').AsString;
+          ValorStr := qry.FieldByName('VALUE_USUPER').AsString;
+          if SameText(SubKey, 'appApiUrl') then
+            bUrlComun := Trim(ValorStr) <> ''
+          else if SameText(SubKey, 'appApiToken') then
+            bTokenComun := Trim(ValorStr) <> ''
+          else if SameText(SubKey, 'appApiReferencia') then
+            bReferenciaComun := Trim(ValorStr) <> ''
+          else if SameText(SubKey, 'appFotosUrlDescarga') then
+            sUrlFotos := ValorStr
+          else if SameText(SubKey, 'appFotosApiKey') then
+            sTokenFotos := ValorStr
+          else if SameText(SubKey, 'appFotosCarpetaCliente') then
+            sReferenciaFotos := ValorStr
+          else if SameText(SubKey, 'appRecuentoUrl') then
+            sUrlRecuentos := ValorStr
+          else if SameText(SubKey, 'appRecuentoApiKey') then
+            sTokenRecuentos := ValorStr
+          else if SameText(SubKey, 'appRecuentoCarpetaCliente') then
+            sReferenciaRecuentos := ValorStr;
+          ItemData := BuscarItemPorNombre(Grid.Root, SubKey);
+          if (ItemData <> nil) and (ItemData.Data <> nil) then
+          begin
+            try
+              if (ValorStr = '') and
+                 (ItemData.Data.TypeInfo.Kind in [tkInteger, tkFloat]) then
+                ValorStr := '0';
+              ItemData.DisplayValue := ValorStr;
+            except
+              // El resto de parametros se sigue aplicando.
+              on E: Exception do
+                inLibLog.Log.LogWarning(
+                  'AppParam: no se pudo aplicar el parametro "' +
+                  SubKey + '": ' + E.Message);
+            end;
           end;
+          qry.Next;
         end;
-        qry.Next;
+        if (Trim(sUrlFotos) = '') and (Trim(sUrlRecuentos) = '') then
+          sUrlFotos := cUrlFactuzamApiDefecto;
+        AplicarValorHistorico('appApiUrl', sUrlFotos, sUrlRecuentos,
+          bUrlComun);
+        AplicarValorHistorico('appApiToken', sTokenFotos, sTokenRecuentos,
+          bTokenComun);
+        AplicarValorHistorico('appApiReferencia', sReferenciaFotos,
+          sReferenciaRecuentos, bReferenciaComun);
+      finally
+        Grid.EndUpdate;
       end;
-      if (Trim(sUrlFotos) = '') and (Trim(sUrlRecuentos) = '') then
-        sUrlFotos := cUrlFactuzamApiDefecto;
-      AplicarValorHistorico('appApiUrl', sUrlFotos, sUrlRecuentos,
-        bUrlComun);
-      AplicarValorHistorico('appApiToken', sTokenFotos, sTokenRecuentos,
-        bTokenComun);
-      AplicarValorHistorico('appApiReferencia', sReferenciaFotos,
-        sReferenciaRecuentos, bReferenciaComun);
+      CapturarValoresOriginales;
     finally
-      Grid.EndUpdate;
+      FreeAndNil(qry);
     end;
-    CapturarValoresOriginales;
+    FIdiomaInspectorAnterior := NormalizarIdiomaAplicacion(
+      ValorParametroInspector('appIdioma', IDIOMA_ESPANOL));
   finally
-    FreeAndNil(qry);
+    FCargandoParametros := False;
   end;
 end;
 

@@ -37,6 +37,32 @@ resourcestring
     'Documento guardado en %s';
   SInfoDocumentoFactuzamApiDescargado =
     'Documento descargado.';
+  SErrorDescargaTraduccion =
+    'No se pudo descargar la traducción: %s';
+  SErrorPaqueteTraduccionInvalido =
+    'El paquete de traducción no es válido: %s';
+  SErrorConexionTraduccionNoDisponible =
+    'No está disponible la conexión para instalar la traducción.';
+  SErrorTraduccionTransaccionActiva =
+    'No se puede instalar la traducción mientras hay una transacción activa.';
+  SErrorTraduccionSinFilas =
+    'El paquete no ha instalado ninguna traducción para %s.';
+  SProgresoTraduccionPreparando =
+    'Preparando la descarga de %s...';
+  SProgresoTraduccionDescargando =
+    'Descargando el paquete de traducción...';
+  SProgresoTraduccionValidando =
+    'Validando el manifiesto y las huellas SHA-256...';
+  SProgresoTraduccionEjecutando =
+    'Ejecutando %s (%d de %d)...';
+  SProgresoTraduccionComprobando =
+    'Comprobando el catálogo instalado...';
+  SProgresoTraduccionDisponible =
+    'La traducción ya está descargada y disponible.';
+  SProgresoTraduccionAplicando =
+    'Aplicando la traducción a la interfaz...';
+  SProgresoTraduccionCompletada =
+    'Traducción descargada y aplicada correctamente.';
   SErrorRespuestaFormateadorSqlVacia =
     'Respuesta vacía del servicio de formateo SQL';
   SErrorRespuestaFormateadorSqlInesperada =

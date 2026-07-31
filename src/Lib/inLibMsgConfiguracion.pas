@@ -111,8 +111,10 @@ resourcestring
   SCargaScriptCancelada = 'Se canceló la carga del script.';
   SUsuarioNoExiste = 'El nombre de usuario no existe';
   SDescripcionParametroIdioma =
-    'Idioma de la interfaz (p. ej. es-ES, en-GB o ca-ES; ' +
+    'Idioma de la interfaz (es-ES, en-GB, ca-ES o zh-CN; ' +
     'qps-ploc para pruebas)';
+  SErrorSeleccionIdiomaNoAplicado =
+    'No se pudo aplicar el idioma %s:' + sLineBreak + '%s';
   SErrorProveedorEdicionParametrosNoConfigurado =
     'No se ha configurado el proveedor de edición de parámetros.';
   SErrorParametrosAplicacionEditablesNoConfigurados =

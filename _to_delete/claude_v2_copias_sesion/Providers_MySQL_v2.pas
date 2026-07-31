@@ -10,12 +10,7 @@ uses
 const
     SCHEMADB = 'information_schema';
 type
-  // Proveedor MySQL de metadatos: implementa los contratos de lectura
-  // segregados de Core_Interfaces
-  TMySQLMetadataProvider = class(TInterfacedObject,
-                                 ILectorEsquemaBBDD,
-                                 ILectorObjetosBBDD,
-                                 ILectorDatosBBDD)
+  TMySQLMetadataProvider = class(TInterfacedObject, IDBMetadataProvider)
   private
     FConn: TUniConnection;
     FDBName: string;
@@ -37,11 +32,11 @@ type
                        User,
                        Password: string); overload;
     destructor Destroy; override;
-    // Métodos de conexión (propios del proveedor, fuera de contrato)
+    // Métodos de conexión
     procedure Connect;
     procedure Disconnect;
     function GetDatabaseName: string;
-    // Implementación de los contratos de lectura
+    // Implementación de la interfaz
     function GetTables: TStringList;
     function GetTableStructure(const TableName: string): TTableInfo;
     function GetTableIndexes(const TableName: string): TArray<TIndexInfo>;
@@ -51,7 +46,6 @@ type
     function GetViewDefinition(const ViewName:string):string;
     function GetProcedures:TStringList;
     function GetFunctions:TStringList;
-    // Sin consumidor hoy y fuera de contrato (MySQL no tiene secuencias)
     function GetSequences:TSTringList;
     function GetProcedureDefinition(const ProcedureName:string):string;
     function GetFunctionDefinition(const FunctionName:string):string;
@@ -63,25 +57,7 @@ type
     function StripDefiner(const SQL: string): string;
   end;
 
-// Raíz de composición: entrega juntas las vistas del proveedor MySQL
-function CrearServiciosLecturaMySQL(AConn: TUniConnection;
-                                    const ANombreBBDD: string):
-                                    TServiciosLecturaBBDD;
-
 implementation
-
-function CrearServiciosLecturaMySQL(AConn: TUniConnection;
-                                    const ANombreBBDD: string):
-                                    TServiciosLecturaBBDD;
-var
-  oProveedor: TMySQLMetadataProvider;
-begin
-  oProveedor := TMySQLMetadataProvider.Create(AConn, ANombreBBDD);
-  // Tras la primera asignación el objeto vive por conteo de referencias
-  Result.Esquema := oProveedor;
-  Result.Objetos := oProveedor;
-  Result.Datos := oProveedor;
-end;
 
 { TMySQLMetadataProvider }
 

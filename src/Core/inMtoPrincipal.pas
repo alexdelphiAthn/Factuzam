@@ -320,6 +320,7 @@ type
     FLogoBgImage:   TObject;
     FLogoBgNombre:  TObject;
     FLogoBgVersion: TObject;
+    destructor Destroy; override;
     procedure InicializarAplicacion(
       const AContextoSesion: IContextoSesionAplicacion;
       const AResultadoLicencia: TResultadoLicenciaAplicacion);
@@ -1635,6 +1636,15 @@ begin
   // FormPaint(Sender);
 end;
 
+destructor TfrmMtoPrincipal.Destroy;
+begin
+  inherited;
+  if Assigned(FServicioFotos) then
+    FServicioFotos.LiberarServicios;
+  FreeAndNil(FServicioFotos);
+  FreeAndNil(FServicioUnidades);
+end;
+
 procedure TfrmMtoPrincipal.FormClose(Sender: TObject; var Action: TCloseAction);
 var
   GestorContexto: IGestorContextoSesion;
@@ -1676,12 +1686,8 @@ begin
                                                                      E.Message);
     end;
     FreeAndNil(oFzaWinf);
-    if Assigned(FServicioFotos) then
-      FServicioFotos.LiberarServicios;
     AsignarFotosArticulos(nil);
-    FreeAndNil(FServicioFotos);
     AsignarUnidadesMedida(nil);
-    FreeAndNil(FServicioUnidades);
     if Assigned(FDmConn) then
       FDmConn.AsignarParametrosApp(nil);
     AsignarTraducciones(nil);

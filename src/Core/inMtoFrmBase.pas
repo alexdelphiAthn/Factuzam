@@ -222,6 +222,7 @@ type
       const AInformesGuiasCache: IInformesGuiasCache);
     procedure AsignarTraducciones(
       const ATraducciones: IServicioTraducciones);
+    procedure AplicarTraduccionActual;
     procedure AsignarFotosArticulos(AFotos: TFotosArticulos);
     procedure AsignarUnidadesMedida(AUnidades: TUnidadesMedida);
     procedure AsignarServiciosVisuales(
@@ -986,6 +987,16 @@ begin
     ActivarTraduccionResourcestrings(FTraducciones);
   if Assigned(Localizer1) then
     AplicarIdiomaDevExpress;
+end;
+
+procedure TfrmBase.AplicarTraduccionActual;
+begin
+  if Assigned(FTraducciones) then
+  begin
+    ActivarTraduccionResourcestrings(FTraducciones);
+    AplicarIdiomaDevExpress;
+    FTraducciones.Aplicar(Self);
+  end;
 end;
 
 function TfrmBase.GetPermisos: IPermisosAplicacion;

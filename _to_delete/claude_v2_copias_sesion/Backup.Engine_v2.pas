@@ -3,8 +3,8 @@
 interface
 
 uses
-  Core_Interfaces, Backup.Types, System.Classes,
-  Data.DB, System.SysUtils, system.StrUtils;
+  Core_Interfaces, Backup.Types, System.Classes, Core_Helpers,
+  Data.DB, System.SysUtils, Core_Engine, system.StrUtils;
 
 type
   // AEtapa: nombre de tabla o etapa actual
@@ -18,12 +18,9 @@ type
 
   TDBBackupEngine = class
   private
-    // El volcado solo conserva las vistas segregadas que usa (§14.2)
-    FLecturas: TServiciosLecturaBBDD;
+    FProvider: IDBMetadataProvider;
     FWriter: IScriptWriter;
-    FValores: IGeneradorSqlValores;
-    FCreacion: IGeneradorSqlCreacion;
-    FEliminacion: IGeneradorSqlEliminacion;
+    FHelpers: IDBHelpers;
     FOptions: TBackupOptions;
     FIncludeTables: TStringList;
     FExcludeTables: TStringList;
@@ -42,9 +39,9 @@ type
     procedure DoProgress(const AEtapa: string; APaso, ATotal: Integer);
     procedure ContarFilasTotal;
   public
-    constructor Create(const ALecturas: TServiciosLecturaBBDD;
+    constructor Create(Provider: IDBMetadataProvider;
                        Writer: IScriptWriter;
-                       const ASql: TServiciosSqlBBDD;
+                       Helpers: IDBHelpers;
                        Options: TBackupOptions;
                        IncludeTables, ExcludeTables: TStringList;
                        DataFilters: TStringList = nil);
@@ -58,19 +55,16 @@ implementation
 const
   MAX_BYTES_LOTE_EXTENDIDO = 1024 * 1024;
 
-constructor TDBBackupEngine.Create(const ALecturas: TServiciosLecturaBBDD;
+constructor TDBBackupEngine.Create(Provider: IDBMetadataProvider;
                                    Writer: IScriptWriter;
-                                   const ASql: TServiciosSqlBBDD;
+                                   Helpers: IDBHelpers;
                                    Options: TBackupOptions;
                                    IncludeTables, ExcludeTables: TStringList;
                                    DataFilters: TStringList = nil);
 begin
-  FLecturas := ALecturas;
+  FProvider := Provider;
   FWriter := Writer;
-  // De los helpers SQL, el volcado no usa comparación ni modificación
-  FValores := ASql.Valores;
-  FCreacion := ASql.Creacion;
-  FEliminacion := ASql.Eliminacion;
+  FHelpers := Helpers;
   FOptions := Options;
   FIncludeTables := IncludeTables;
   FExcludeTables := ExcludeTables;
@@ -92,7 +86,7 @@ var
   sFilter: string;
 begin
   FFilasGlobalTotal := 0;
-  Tables := FLecturas.Esquema.GetTables;
+  Tables := FProvider.GetTables;
   try
     for i := 0 to Tables.Count - 1 do
     begin
@@ -102,7 +96,7 @@ begin
         if Assigned(FDataFilters) then
           sFilter := FDataFilters.Values[Tables[i]];
         FFilasGlobalTotal := FFilasGlobalTotal +
-          FLecturas.Datos.GetRowCount(Tables[i], sFilter);
+          FProvider.GetRowCount(Tables[i], sFilter);
       end;
     end;
   finally
@@ -131,7 +125,7 @@ begin
     ContarFilasTotal;
   FWriter.AddComment('========================================');
   FWriter.AddComment('Backup generado: ' + DateTimeToStr(Now));
-  FWriter.AddComment('Base de datos: ' + FLecturas.Esquema.GetDatabaseName);
+  FWriter.AddComment('Base de datos: ' + FProvider.GetDatabaseName);
   FWriter.AddComment('========================================');
   FWriter.AddCommand('');
   FWriter.AddCommand('SET NAMES utf8mb4 COLLATE utf8mb4_spanish_ci;');
@@ -192,7 +186,7 @@ begin
   FWriter.AddComment('========================================');
   FWriter.AddCommand('');
   
-  Tables := FLecturas.Esquema.GetTables;
+  Tables := FProvider.GetTables;
   try
     for i := 0 to Tables.Count - 1 do
     begin
@@ -221,21 +215,21 @@ begin
   if FOptions.DropTablesFirst then
   begin
     FWriter.AddCommand(Format('DROP TABLE IF EXISTS %s;', 
-                              [FValores.QuoteIdentifier(TableName)]));
+                              [FHelpers.QuoteIdentifier(TableName)]));
   end;
   
   // Obtener estructura
-  TableInfo := FLecturas.Esquema.GetTableStructure(TableName);
-  Indexes := FLecturas.Esquema.GetTableIndexes(TableName);
+  TableInfo := FProvider.GetTableStructure(TableName);
+  Indexes := FProvider.GetTableIndexes(TableName);
   try
     // Crear tabla
-    FWriter.AddCommand(FCreacion.GenerateCreateTableSQL(TableInfo, Indexes));
+    FWriter.AddCommand(FHelpers.GenerateCreateTableSQL(TableInfo, Indexes));
     
     // Crear índices secundarios (los que no son PK)
     for Idx in Indexes do
     begin
       if not Idx.IsPrimary then
-        FWriter.AddCommand(FCreacion.GenerateIndexDefinition(TableName, Idx));
+        FWriter.AddCommand(FHelpers.GenerateIndexDefinition(TableName, Idx));
     end;
     
     FWriter.AddCommand('');
@@ -304,7 +298,7 @@ var
   end;
 begin
   // Verificar si tiene columna de autoincremento
-  TableInfo := FLecturas.Esquema.GetTableStructure(TableName);
+  TableInfo := FProvider.GetTableStructure(TableName);
   try
     HasIdentity := False;
     for i := 0 to TableInfo.Columns.Count - 1 do
@@ -321,7 +315,7 @@ begin
   sFilter := '';
   if Assigned(FDataFilters) then
     sFilter := FDataFilters.Values[TableName];
-  Data := FLecturas.Datos.GetData(TableName, sFilter);
+  Data := FProvider.GetData(TableName, sFilter);
   Fields  := TStringList.Create;
   Values  := TStringList.Create;
   ValueRows := TStringList.Create;
@@ -341,7 +335,7 @@ begin
       FWriter.AddComment(Format('Datos de %s', [TableName]));
       if HasIdentity then
         FWriter.AddCommand(Format('/*!40000 ALTER TABLE %s DISABLE KEYS */;',
-                                  [FValores.QuoteIdentifier(TableName)]));
+                                  [FHelpers.QuoteIdentifier(TableName)]));
       while not Data.Eof do
       begin
         Inc(RowCount);
@@ -350,8 +344,8 @@ begin
         Values.Clear;
         for i := 0 to Data.FieldCount - 1 do
         begin
-          Fields.Add(FValores.QuoteIdentifier(Data.Fields[i].FieldName));
-          Values.Add(FValores.ValueToSQL(Data.Fields[i]));
+          Fields.Add(FHelpers.QuoteIdentifier(Data.Fields[i].FieldName));
+          Values.Add(FHelpers.ValueToSQL(Data.Fields[i]));
         end;
         if FOptions.ExtendedInsert then
         begin
@@ -365,7 +359,7 @@ begin
                 sParteCampos := sParteCampos + ', ';
               sParteCampos := sParteCampos + Fields[i];
             end;
-            FieldList := 'INSERT INTO ' + FValores.QuoteIdentifier(TableName) +
+            FieldList := 'INSERT INTO ' + FHelpers.QuoteIdentifier(TableName) +
                          ' (' + sParteCampos + ') VALUES';
           end;
           sValoresFila := '';
@@ -389,7 +383,7 @@ begin
         begin
           // ── Modo clásico: un INSERT por fila ───────────────────────────
           FWriter.AddCommand(
-            FValores.GenerateInsertSQL(TableName, Fields, Values, HasIdentity));
+            FHelpers.GenerateInsertSQL(TableName, Fields, Values, HasIdentity));
         end;
         Data.Next;
         if ((RowCount mod iFrecuenciaProgreso) = 0) or Data.Eof then
@@ -400,7 +394,7 @@ begin
       DoProgress(TableName + ' OK', RowCount, RowCount);
       if HasIdentity then
         FWriter.AddCommand(Format('/*!40000 ALTER TABLE %s ENABLE KEYS */;',
-                                  [FValores.QuoteIdentifier(TableName)]));
+                                  [FHelpers.QuoteIdentifier(TableName)]));
       FWriter.AddComment(Format('%d registros exportados', [RowCount]));
       FWriter.AddCommand('');
     end;
@@ -418,7 +412,7 @@ var
   i: Integer;
   ViewDef: string;
 begin
-  Views := FLecturas.Objetos.GetViews;
+  Views := FProvider.GetViews;
   try
     if Views.Count = 0 then
       Exit;
@@ -431,14 +425,14 @@ begin
     
     FWriter.AddComment('Limpieza de vistas');
     for i := Views.Count - 1 downto 0 do
-      FWriter.AddCommand(FEliminacion.GenerateDropView(Views[i]));
+      FWriter.AddCommand(FHelpers.GenerateDropView(Views[i]));
     FWriter.AddCommand('');
     for i := 0 to Views.Count - 1 do
     begin
       FWriter.AddComment('Vista: ' + Views[i]);
       // Obtener definición y crear
-      ViewDef := FLecturas.Objetos.GetViewDefinition(Views[i]);
-      FWriter.AddCommand(FCreacion.GenerateCreateViewSQL(ViewDef));
+      ViewDef := FProvider.GetViewDefinition(Views[i]);
+      FWriter.AddCommand(FHelpers.GenerateCreateViewSQL(ViewDef));
       FWriter.AddCommand('');
     end;
   finally
@@ -452,7 +446,7 @@ var
   i: Integer;
   TriggerDef: string;
 begin
-  Triggers := FLecturas.Objetos.GetTriggers;
+  Triggers := FProvider.GetTriggers;
 
   // Al ser un Array Dinámico, usamos Length() en lugar de .Count
   if Length(Triggers) = 0 then
@@ -470,13 +464,11 @@ begin
     FWriter.AddComment('Trigger: ' + Triggers[i].TriggerName);
 
     // Drop trigger si existe (accediendo a .TriggerName)
-    FWriter.AddCommand(
-      FEliminacion.GenerateDropTrigger(Triggers[i].TriggerName));
+    FWriter.AddCommand(FHelpers.GenerateDropTrigger(Triggers[i].TriggerName));
 
     // Obtener definición y crear
-    TriggerDef := FLecturas.Objetos.GetTriggerDefinition(
-      Triggers[i].TriggerName);
-    FWriter.AddCommand(FCreacion.GenerateCreateTriggerSQL(TriggerDef));
+    TriggerDef := FProvider.GetTriggerDefinition(Triggers[i].TriggerName);
+    FWriter.AddCommand(FHelpers.GenerateCreateTriggerSQL(TriggerDef));
     FWriter.AddCommand('');
   end;
 end;
@@ -487,7 +479,7 @@ var
   i: Integer;
   ProcDef: string;
 begin
-  Procedures := FLecturas.Objetos.GetProcedures;
+  Procedures := FProvider.GetProcedures;
   try
     if Procedures.Count = 0 then
       Exit;
@@ -503,11 +495,11 @@ begin
       FWriter.AddComment('Procedimiento: ' + Procedures[i]);
       
       // Drop procedure si existe
-      FWriter.AddCommand(FEliminacion.GenerateDropProcedure(Procedures[i]));
+      FWriter.AddCommand(FHelpers.GenerateDropProcedure(Procedures[i]));
       
       // Obtener definición y crear
-      ProcDef := FLecturas.Objetos.GetProcedureDefinition(Procedures[i]);
-      FWriter.AddCommand(FCreacion.GenerateCreateProcedureSQL(ProcDef));
+      ProcDef := FProvider.GetProcedureDefinition(Procedures[i]);
+      FWriter.AddCommand(FHelpers.GenerateCreateProcedureSQL(ProcDef));
       FWriter.AddCommand('');
     end;
   finally
@@ -521,7 +513,7 @@ var
   i: Integer;
   FuncDef: string;
 begin
-  Functions := FLecturas.Objetos.GetFunctions;
+  Functions := FProvider.GetFunctions;
   try
     if Functions.Count = 0 then
       Exit;
@@ -537,11 +529,11 @@ begin
       FWriter.AddComment('Función: ' + Functions[i]);
       
       // Drop function si existe
-      FWriter.AddCommand(FEliminacion.GenerateDropFunction(Functions[i]));
+      FWriter.AddCommand(FHelpers.GenerateDropFunction(Functions[i]));
       
       // Obtener definición y crear
-      FuncDef := FLecturas.Objetos.GetFunctionDefinition(Functions[i]);
-      FWriter.AddCommand(FCreacion.GenerateCreateFunctionSQL(FuncDef));
+      FuncDef := FProvider.GetFunctionDefinition(Functions[i]);
+      FWriter.AddCommand(FHelpers.GenerateCreateFunctionSQL(FuncDef));
       FWriter.AddCommand('');
     end;
   finally

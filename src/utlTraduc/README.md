@@ -53,7 +53,58 @@ desde las llamadas `RegistrarParametro` mediante:
 
 El selector de destino carga los idiomas activos de la BBDD al conectar. El
 combo admite también escribir una etiqueta nueva, por ejemplo `fr-FR`, para
-crear otro idioma sin modificar `utlTraduc`.
+crear otro idioma sin modificar `utlTraduc`. `zh-CN` se ofrece siempre para
+permitir crear y revisar el chino incluso cuando la BBDD todavía no contiene
+ninguna traducción de ese idioma.
+
+## Catálogo chino simplificado
+
+El catálogo automático `zh-CN` se genera con:
+
+```powershell
+$segura = Read-Host 'Contraseña MariaDB' -AsSecureString
+$env:FACTUZAM_DB_PASSWORD = [Net.NetworkCredential]::new('', $segura).Password
+try {
+  python '.\DESARROLLOS EN CURSO\generar_traducciones_zh_cn.py' --aplicar
+} finally {
+  Remove-Item Env:FACTUZAM_DB_PASSWORD
+}
+```
+
+El generador requiere `argostranslate`, `ctranslate2` y `pymysql`, además de
+los modelos locales `es -> en` y `en -> zh`. No envía los textos a servicios
+externos ni guarda la contraseña. Produce el SQL idempotente
+`DESARROLLOS EN CURSO/traducciones_zh_cn_d25.sql`.
+
+Los marcadores de `Format`, las expresiones de FastReport, rutas, URL y
+atajos se protegen antes de traducir. Cuando el chino necesita cambiar el
+orden de los argumentos se escriben índices explícitos, por ejemplo
+`%1:d ... %0:s`. `utlTraduc` valida por índice y tipo para aceptar ese orden
+sin perder la seguridad de `Format`.
+
+La traducción automática queda pendiente de revisión visual. Los cambios
+manuales realizados desde `utlTraduc` se conservan en ejecuciones normales;
+`--regenerar-existentes` solo debe usarse para reconstruir el catálogo.
+
+## Traducciones descargables y copias de seguridad
+
+Las traducciones que llegan desde el webservice se identifican mediante
+`ESDESCARGADA_TRAD = 'S'`. La migración idempotente
+`DESARROLLOS EN CURSO/traducciones_descargadas_d26.sql` añade esta marca.
+Las copias de seguridad incluyen únicamente los idiomas descargados; el
+español base y los catálogos de trabajo no se duplican en el backup.
+
+Los catálogos existentes se exportan sin credenciales incrustadas mediante
+`DESARROLLOS EN CURSO/exportar_traduccion_descarga.py`. Los paquetes
+publicados actualmente son `en-GB`, `ca-ES` y `zh-CN`.
+
+En los parámetros de Factuzam estos tres idiomas se ofrecen aunque todavía
+no existan en la BBDD. Al elegir uno se abre un diálogo que informa del
+avance: descarga el ZIP autenticado, valida el manifiesto, el orden, el
+tamaño y la huella SHA-256 de cada SQL, ejecuta el paquete y aplica el idioma
+a los formularios abiertos. Si la traducción ya estaba descargada, el mismo
+diálogo la aplica sin volver a pedir el ZIP. Ante un error se conserva el
+idioma anterior; el botón Guardar persiste la selección después de aplicarla.
 
 Los rótulos de tickets térmicos viven en
 `src/Lib/inLibMsgTickets.pas`. Se importan con `Sincronizar español` igual que

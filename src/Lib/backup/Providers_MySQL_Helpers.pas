@@ -1,8 +1,8 @@
 ﻿unit Providers_MySQL_Helpers;
 
 interface
-uses Core_Helpers, Backup.Types, System.SysUtils, System.StrUtils,
-  System.Classes, Data.DB, Uni;
+uses Core_Helpers, Core_Interfaces, Backup.Types, System.SysUtils,
+  System.StrUtils, System.Classes, Data.DB, Uni;
 type
   TMySQLHelpers = class(TDBHelpers)
   public
@@ -52,7 +52,23 @@ type
     function GenerateDropSequence(const SeqName: string): string; override;
   end;
 
+// Raíz de composición: entrega juntas las vistas del helper MySQL
+function CrearServiciosSqlMySQL: TServiciosSqlBBDD;
+
 implementation
+
+function CrearServiciosSqlMySQL: TServiciosSqlBBDD;
+var
+  oHelpers: TMySQLHelpers;
+begin
+  oHelpers := TMySQLHelpers.Create;
+  // Tras la primera asignación el objeto vive por conteo de referencias
+  Result.Comparador := oHelpers;
+  Result.Valores := oHelpers;
+  Result.Creacion := oHelpers;
+  Result.Eliminacion := oHelpers;
+  Result.Modificacion := oHelpers;
+end;
 
 // Añadir en uses: Data.DB, System.SysUtils, System.Classes, System.StrUtils
 

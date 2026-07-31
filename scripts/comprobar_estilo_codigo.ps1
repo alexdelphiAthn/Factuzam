@@ -7,7 +7,7 @@ param(
   [ValidateRange(0, [int]::MaxValue)]
   [int]$MaximoContinue = 107,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoLineasAnchas = 577,
+  [int]$MaximoLineasAnchas = 575,
   [ValidateRange(0, [int]::MaxValue)]
   [int]$MaximoLineasConTabulador = 0,
   [switch]$MostrarTodos

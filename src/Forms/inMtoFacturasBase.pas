@@ -3507,13 +3507,15 @@ end;
 procedure TfrmMtoFacturasBase.dsTablaGDataChange(
   Sender: TObject; Field: TField);
 begin
-  FControlador.dsTablaGDataChange(Sender, Field);
+  if Assigned(FControlador) then
+    FControlador.dsTablaGDataChange(Sender, Field);
 end;
 
 procedure TfrmMtoFacturasBase.dsTablaGStateChange(Sender: TObject);
 begin
   inherited;
-  FControlador.dsTablaGStateChange(Sender);
+  if Assigned(FControlador) then
+    FControlador.dsTablaGStateChange(Sender);
 end;
 
 procedure TfrmMtoFacturasBase.EjecutarOperacionFiscal(
