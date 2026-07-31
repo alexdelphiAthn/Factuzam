@@ -738,7 +738,7 @@ $contratosConsultaOpe = @(
   'fza_caja_depositos_view',
   'fza_facturas',
   'fza_facturas_lineas',
-  'SQLExcluirSimplificadaSustituida'
+  'SQLExcluirVentaRetirada'
 )
 foreach ($contrato in $contratosConsultaOpe) {
   if (-not $contenidoConsultaOpe.Contains($contrato)) {
