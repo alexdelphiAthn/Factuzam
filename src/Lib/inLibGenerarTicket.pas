@@ -50,7 +50,7 @@ implementation
 
 uses
   inLibDir, inLibVerifactu, inLibFormatoDocumento,
-  inLibMsgTickets;
+  inLibMsgTickets, inLibTraducciones;
 
 const
   CAMPOS_PIE_TICKET_CAJA: array[0..3] of string = (
@@ -231,6 +231,7 @@ var
   sCodigoBarras: string;
   sDocumento: string;
   dtFechaOperacion: TDateTime;
+  oProteccionIdioma: IInterface;
 
   function LPAD(const AValue: string;
                 ALength: Integer;
@@ -268,6 +269,7 @@ begin
                                                      'NUMERO_FAC').AsString,
                  Cab.Fecha,
                  Cab.TotalLiquido);
+  oProteccionIdioma := ProtegerDocumentoVentaEspanol;
   Ticket := TTicketTermico.Create(NombreImpresora);
   try
     Ticket.Inicializar;

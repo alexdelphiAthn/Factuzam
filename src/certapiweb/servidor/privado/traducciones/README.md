@@ -22,11 +22,12 @@ El primer archivo debe ser siempre `000_preparar_descarga.sql`; el cliente lo
 comprueba antes de ejecutar el paquete. Los SQL posteriores contienen los
 datos y se ejecutan dentro de una transacción.
 
-`zh-CN` versión 3 prepara primero la marca de descarga, ejecuta la prueba
-revisada del menú principal y termina con `002_catalogo_completo.sql`, que
-contiene las 7.470 claves activas generadas desde `utlTraduc`. Las filas se
-marcan como descargadas para que la copia de seguridad pueda distinguirlas.
-El catálogo automático queda pendiente de revisión visual.
+`zh-CN` versión 4 prepara primero la marca de descarga, ejecuta la prueba
+revisada del menú principal, carga `002_catalogo_completo.sql`, con las 7.470
+claves activas generadas desde `utlTraduc`, y aplica al final la revisión
+visual de caja de `003_ajustes_interfaz_caja.sql`. Las filas se marcan como
+descargadas para que la copia de seguridad pueda distinguirlas. El catálogo
+automático restante queda pendiente de revisión visual.
 
 `en-GB` versión 1 contiene las 6.961 filas inglesas y `ca-ES` versión 1
 contiene las 7.442 filas catalanas exportadas desde la BBDD. Ambos paquetes

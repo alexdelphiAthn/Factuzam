@@ -64,6 +64,7 @@ type
     procedure rbActualClick(Sender: TObject);
     procedure btnExcelClick(Sender: TObject);
   protected
+    function TraducirContenidoInforme: Boolean; override;
     procedure PdfExportado(const ARuta: string); override;
   public
     class procedure ArchivarFacturaConsolidada(
@@ -89,6 +90,12 @@ uses
   UniDataFacturasOperaciones, UniDataVentasWsCola;
 
 { TfrmPrintFac }
+
+function TfrmPrintFac.TraducirContenidoInforme: Boolean;
+begin
+  // Las facturas de venta son documentos fiscales para el mercado español.
+  Result := False;
+end;
 
 class procedure TfrmPrintFac.ArchivarFacturaConsolidada(
   ADataModule: TdmFacturas;

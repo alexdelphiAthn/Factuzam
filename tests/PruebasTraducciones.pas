@@ -40,6 +40,8 @@ type
     procedure TextoInforme_SinCatalogoConservaTexto;
     [Test]
     procedure Idioma_PreservaEtiquetasCatalogadas;
+    [Test]
+    procedure AtajosPuros_NoSeTraducen;
   end;
 
 implementation
@@ -294,6 +296,34 @@ begin
   Assert.AreEqual(
     IDIOMA_PSEUDO,
     NormalizarIdiomaAplicacion(IDIOMA_PSEUDO));
+end;
+
+procedure TPruebasTraducciones.AtajosPuros_NoSeTraducen;
+var
+  Componente: TComponenteTextoPrueba;
+  Raiz: TRaizHeredadaPrueba;
+  Servicio: IServicioTraducciones;
+begin
+  Raiz := TRaizHeredadaPrueba.Create(nil);
+  try
+    Raiz.Caption := 'F12';
+    Componente := TComponenteTextoPrueba.Create(Raiz);
+    Componente.Name := 'Atajo';
+    Componente.Caption := 'ESC';
+    Servicio := TServicioTraducciones.Create(
+      nil,
+      IDIOMA_PSEUDO);
+    Servicio.Aplicar(Raiz);
+    Assert.AreEqual(
+      'F12',
+      Raiz.Caption);
+    Assert.AreEqual(
+      'ESC',
+      Componente.Caption);
+  finally
+    Servicio := nil;
+    FreeAndNil(Raiz);
+  end;
 end;
 
 end.

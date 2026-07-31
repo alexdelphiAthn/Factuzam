@@ -88,6 +88,7 @@ function ResolverServicioTraducciones(
   AOwner: TComponent): IServicioTraducciones;
 procedure ActivarTraduccionResourcestrings(
   const ATraducciones: IServicioTraducciones);
+function ProtegerDocumentoVentaEspanol: IInterface;
 procedure AplicarTraducciones(
   AComponente, AOwner: TComponent);
 
@@ -105,9 +106,35 @@ const
     'DisplayName'
   );
 
+function EsAtajoTecladoPuro(const ATexto: string): Boolean;
+var
+  iFuncion: Integer;
+  sTexto: string;
+begin
+  sTexto := UpperCase(Trim(ATexto));
+  Result :=
+    (sTexto = 'ESC') or
+    (sTexto = 'ESCAPE');
+  if (not Result) and
+     (Length(sTexto) >= 2) and
+     (sTexto[1] = 'F') then
+  begin
+    Result :=
+      TryStrToInt(Copy(sTexto, 2, MaxInt), iFuncion) and
+      (iFuncion >= 1) and
+      (iFuncion <= 12);
+  end;
+end;
+
 type
   TFuncionCargaResourcestring = function(
     ARecurso: PResStringRec): string;
+
+  TProteccionDocumentoVentaEspanol = class(TInterfacedObject)
+  public
+    constructor Create;
+    destructor Destroy; override;
+  end;
 
 var
   BloqueoResourcestrings: TCriticalSection;
@@ -118,6 +145,20 @@ var
 
 threadvar
   TraduciendoResourcestring: Boolean;
+  NivelDocumentoVentaEspanol: Integer;
+
+constructor TProteccionDocumentoVentaEspanol.Create;
+begin
+  inherited Create;
+  Inc(NivelDocumentoVentaEspanol);
+end;
+
+destructor TProteccionDocumentoVentaEspanol.Destroy;
+begin
+  if NivelDocumentoVentaEspanol > 0 then
+    Dec(NivelDocumentoVentaEspanol);
+  inherited Destroy;
+end;
 
 function CargarResourcestringPredeterminado(
   ARecurso: PResStringRec): string;
@@ -137,7 +178,8 @@ var
   Servicio: IServicioTraducciones;
 begin
   Result := CargarResourcestringPredeterminado(ARecurso);
-  if not TraduciendoResourcestring and
+  if (NivelDocumentoVentaEspanol = 0) and
+     not TraduciendoResourcestring and
      Assigned(ARecurso) and
      Assigned(ClavesResourcestrings) and
      ClavesResourcestrings.TryGetValue(
@@ -265,6 +307,11 @@ begin
     [rfReplaceAll]);
   if Result = '' then
     Result := IDIOMA_ESPANOL;
+end;
+
+function ProtegerDocumentoVentaEspanol: IInterface;
+begin
+  Result := TProteccionDocumentoVentaEspanol.Create;
 end;
 
 function TServicioTraducciones.GetIdioma: string;
@@ -597,11 +644,15 @@ begin
     TextoOriginal := GetStrProp(
       AObjeto,
       InfoPropiedad);
-    TextoTraducido := TraducirPropiedadJerarquia(
-      ARaiz,
-      ARuta,
-      APropiedad,
-      TextoOriginal);
+    TextoTraducido := TextoOriginal;
+    if not (
+         SameText(APropiedad, 'Caption') and
+         EsAtajoTecladoPuro(TextoOriginal)) then
+      TextoTraducido := TraducirPropiedadJerarquia(
+        ARaiz,
+        ARuta,
+        APropiedad,
+        TextoOriginal);
     if TextoTraducido <> TextoOriginal then
       SetStrProp(
         AObjeto,

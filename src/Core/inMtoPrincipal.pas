@@ -21,7 +21,7 @@ uses
   Winapi.Windows, Winapi.Messages, Winapi.ShellAPI, System.SysUtils,
   System.Variants,
   System.Classes, Vcl.Graphics, System.Generics.Collections, Vcl.ActnList,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, cxGraphics,
   cxControls, cxLookAndFeels, cxLookAndFeelPainters, dxCore, cxContainer,
   cxEdit, dxSkinsForm, cxStyles, cxClasses, Vcl.ExtCtrls, cxLabel,
   Vcl.Menus, cxPC, cxTextEdit, cxMemo, inMtoFrmBase, UniDataConn,
@@ -1780,7 +1780,10 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.AppMessage(var Msg: TMsg; var Handled: Boolean);
+var
+  oControlActivo: TWinControl;
 begin
+  oControlActivo := Screen.ActiveControl;
   // Solo pulsaciones de tecla y descartando la autorrepeticion (bit 30).
   if (Msg.message = WM_KEYDOWN) and ((Msg.lParam and $40000000) = 0) then
   begin
@@ -1809,6 +1812,21 @@ begin
        (GetKeyState(VK_SHIFT) >= 0) then
     begin
       AbrirCajonSinVenta(Permisos, ParametrosCaja);
+      Handled := True;
+    end
+    // Ctrl+A conserva Seleccionar todo cuando el foco esta en un editor.
+    else if (Msg.wParam = WPARAM(Ord('A'))) and
+            (GetKeyState(VK_CONTROL) < 0) and
+            (GetKeyState(VK_MENU) >= 0) and
+            (GetKeyState(VK_SHIFT) >= 0) and
+            Assigned(oControlActivo) and
+            ((oControlActivo is TcxCustomTextEdit) or
+             (oControlActivo is TCustomEdit)) then
+    begin
+      if oControlActivo is TcxCustomTextEdit then
+        TcxCustomTextEdit(oControlActivo).SelectAll
+      else
+        TCustomEdit(oControlActivo).SelectAll;
       Handled := True;
     end
     // Ctrl+E: consulta de articulos similares desde cualquier ventana.

@@ -119,6 +119,7 @@ type
     // no guardar textos traducidos en el BLOB del formato.
     procedure TraducirInformeActual;
   protected
+    function TraducirContenidoInforme: Boolean; virtual;
     procedure PdfExportado(const ARuta: string); virtual;
     property FormatoElegido: string read sElegido;
   public
@@ -1316,13 +1317,21 @@ procedure TfrmPrint.TraducirInformeActual;
 begin
   if not FInformeTraducido then
   begin
-    TraducirInformeFastReport(
-      frxrprt1,
-      Self,
-      Traducciones,
-      FInformeEsPersonalizado);
+    if TraducirContenidoInforme then
+    begin
+      TraducirInformeFastReport(
+        frxrprt1,
+        Self,
+        Traducciones,
+        FInformeEsPersonalizado);
+    end;
     FInformeTraducido := True;
   end;
+end;
+
+function TfrmPrint.TraducirContenidoInforme: Boolean;
+begin
+  Result := True;
 end;
 
 procedure TfrmPrint.FormCreate(Sender: TObject);

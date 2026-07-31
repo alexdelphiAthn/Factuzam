@@ -499,7 +499,6 @@ procedure TfrmMtoAppParam.InspectorItemValueChanged(
   Item: TJvCustomInspectorItem);
 var
   bAplicado: Boolean;
-  bDescargar: Boolean;
   sError: string;
   sIdioma: string;
   sToken: string;
@@ -521,10 +520,6 @@ begin
         try
           if EsIdiomaDescargable(sIdioma) then
           begin
-            bDescargar :=
-              not TInstaladorTraducciones.DisponibleLocalmente(
-                    ConexionPrincipal,
-                    sIdioma);
             sUrlBase := Trim(
               ValorParametroInspector(
                 'appApiUrl',
@@ -539,7 +534,7 @@ begin
               sUrlBase,
               sToken,
               sIdioma,
-              bDescargar,
+              True,
               AplicarIdiomaInterfaz,
               sError);
           end

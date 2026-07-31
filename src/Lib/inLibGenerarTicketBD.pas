@@ -51,7 +51,7 @@ implementation
 
 uses
   inLibVerifactu, inLibFormatoDocumento,
-  inLibMsgCaja, inLibMsgTickets;
+  inLibMsgCaja, inLibMsgTickets, inLibTraducciones;
 
 function LPAD(
   const AValue: string;
@@ -487,6 +487,7 @@ var
   oContexto: TContextoOperacionTicketCaja;
   oLineas: TArray<TLineaTicketCaja>;
   oPagos: TArray<TPagoTicketCaja>;
+  oProteccionIdioma: IInterface;
   oTicket: TTicketTermico;
   oVales: TArray<TValeTicketCaja>;
 begin
@@ -520,6 +521,7 @@ begin
       oCabecera.NumeroFactura,
       oCabecera.FechaFactura,
       oCabecera.TotalLiquido);
+  oProteccionIdioma := ProtegerDocumentoVentaEspanol;
   oTicket := TTicketTermico.Create(ANombreImpresora);
   try
     oTicket.Inicializar;

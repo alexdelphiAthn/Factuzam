@@ -6,7 +6,7 @@ require dirname(__DIR__) . '/privado/traducciones.php';
 $esperados = [
     'en-GB' => ['version' => 1, 'archivos' => 2],
     'ca-ES' => ['version' => 1, 'archivos' => 2],
-    'zh-CN' => ['version' => 3, 'archivos' => 3]
+    'zh-CN' => ['version' => 4, 'archivos' => 4]
 ];
 $valido = in_array(
     'descargar:traducciones',
@@ -43,7 +43,9 @@ foreach ($esperados as $idiomaEsperado => $esperado) {
             ($archivoManifiesto['sha256'] ?? '') ===
                 hash('sha256', $contenidoSql);
     }
-    $indiceCatalogo = $esperado['archivos'] - 1;
+    $indiceCatalogo = $idiomaEsperado === 'zh-CN'
+        ? 2
+        : $esperado['archivos'] - 1;
     $valido = $valido &&
         ($archivos[0]['nombre'] ?? '') ===
             '000_preparar_descarga.sql' &&
