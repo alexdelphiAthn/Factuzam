@@ -28,15 +28,12 @@ type
     procedure MostrarSku_DelegaArticuloYResultado;
     [Test]
     procedure ContarLineas_DelegaDocumentoYResultado;
-    [Test]
-    procedure FabricaAusente_FallaDeFormaRuidosa;
   end;
 
 implementation
 
 uses
-  System.SysUtils, Data.DB, Uni, inLibFacturasLecturasIntf,
-  UniDataFacturasLecturas, inLibFacturas;
+  Data.DB, inLibFacturasLecturasIntf, inLibFacturas;
 
 type
   TRepositorioLecturasFacturaFalso = class(
@@ -63,14 +60,14 @@ type
   end;
 
 var
+  oRepositorioFalso: IRepositorioLecturasFactura;
   sArticuloRecibido: string;
   sNumeroRecibido: string;
   sSerieRecibida: string;
 
-function CrearRepositorioLecturasFacturaFalso(
-  AConexion: TUniConnection): IRepositorioLecturasFactura;
+procedure PrepararRepositorioFalso;
 begin
-  Result := TRepositorioLecturasFacturaFalso.Create;
+  oRepositorioFalso := TRepositorioLecturasFacturaFalso.Create;
 end;
 
 function TRepositorioLecturasFacturaFalso.ArticuloDebeMostrarSku(
@@ -123,8 +120,7 @@ end;
 
 procedure TPruebasFacturasLecturas.Liberar;
 begin
-  TFabricaRepositorioLecturasFactura.Registrar(
-    CrearRepositorioLecturasFacturaUniDAC);
+  oRepositorioFalso := nil;
   sArticuloRecibido := '';
   sNumeroRecibido := '';
   sSerieRecibida := '';
@@ -132,32 +128,20 @@ end;
 
 procedure TPruebasFacturasLecturas.MostrarSku_DelegaArticuloYResultado;
 begin
-  TFabricaRepositorioLecturasFactura.Registrar(
-    CrearRepositorioLecturasFacturaFalso);
-  Assert.IsFalse(ArticuloFacturaDebeMostrarSku(nil, 'ART-001'));
+  PrepararRepositorioFalso;
+  Assert.IsFalse(ArticuloFacturaDebeMostrarSku(
+    oRepositorioFalso, 'ART-001'));
   Assert.AreEqual('ART-001', sArticuloRecibido);
 end;
 
 procedure TPruebasFacturasLecturas.
   ContarLineas_DelegaDocumentoYResultado;
 begin
-  TFabricaRepositorioLecturasFactura.Registrar(
-    CrearRepositorioLecturasFacturaFalso);
-  Assert.AreEqual(7, ContarLineasFactura(nil, 'A', '42'));
+  PrepararRepositorioFalso;
+  Assert.AreEqual(7, ContarLineasFactura(
+    oRepositorioFalso, 'A', '42'));
   Assert.AreEqual('A', sSerieRecibida);
   Assert.AreEqual('42', sNumeroRecibido);
-end;
-
-procedure TPruebasFacturasLecturas.
-  FabricaAusente_FallaDeFormaRuidosa;
-begin
-  TFabricaRepositorioLecturasFactura.Registrar(nil);
-  Assert.WillRaise(
-    procedure
-    begin
-      ContarLineasFactura(nil, 'A', '42');
-    end,
-    Exception);
 end;
 
 initialization

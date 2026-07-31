@@ -10,7 +10,7 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Caracteriza la fachada de movimientos de devoluciones de compra           }
-{    mediante una fábrica falsa, sin BBDD.                                     }
+{    mediante una dependencia falsa inyectada, sin BBDD.                      }
 {******************************************************************************}
 unit PruebasDevolucionesCompraMovimientos;
 
@@ -26,19 +26,16 @@ type
     [TearDown]
     procedure Liberar;
     [Test]
-    procedure Generar_DelegaEnElServicioRegistrado;
+    procedure Generar_DelegaEnElServicioInyectado;
     [Test]
-    procedure Revertir_DelegaEnElServicioRegistrado;
-    [Test]
-    procedure FabricaAusente_FallaDeFormaRuidosa;
+    procedure Revertir_DelegaEnElServicioInyectado;
   end;
 
 implementation
 
 uses
-  System.SysUtils, Uni, inLibDevolucionesCompraMovimientosIntf,
-  inLibDevolucionesCompraMovimientos,
-  UniDataDevolucionesCompraMovimientos;
+  inLibDevolucionesCompraMovimientosIntf,
+  inLibDevolucionesCompraMovimientos;
 
 type
   TOperacionMovimientosFalsa = (
@@ -81,34 +78,24 @@ begin
   Usuario := AUsuario;
 end;
 
-function FabricaFalsa(
-  AConexion: TUniConnection): IMovimientosDevolucionCompra;
-begin
-  Result := oServicioFalso;
-end;
-
-procedure PrepararFabricaFalsa;
+procedure PrepararServicioFalso;
 begin
   oFalso := TMovimientosDevolucionCompraFalso.Create;
   oServicioFalso := oFalso;
-  TFabricaMovimientosDevolucionCompra.Registrar(FabricaFalsa);
 end;
 
 procedure TPruebasDevolucionesCompraMovimientos.Liberar;
 begin
-  // Restaura la implementación UniDAC real registrada por el adaptador.
-  TFabricaMovimientosDevolucionCompra.Registrar(
-    CrearMovimientosDevolucionCompraUniDAC);
   oServicioFalso := nil;
   oFalso := nil;
 end;
 
 procedure TPruebasDevolucionesCompraMovimientos.
-  Generar_DelegaEnElServicioRegistrado;
+  Generar_DelegaEnElServicioInyectado;
 begin
-  PrepararFabricaFalsa;
+  PrepararServicioFalso;
   GenerarMovimientosDesdeDevolucionCompra(
-    nil,
+    oServicioFalso,
     'DC',
     '77',
     'PRUEBAS');
@@ -119,11 +106,11 @@ begin
 end;
 
 procedure TPruebasDevolucionesCompraMovimientos.
-  Revertir_DelegaEnElServicioRegistrado;
+  Revertir_DelegaEnElServicioInyectado;
 begin
-  PrepararFabricaFalsa;
+  PrepararServicioFalso;
   RevertirMovimientosDesdeDevolucionCompra(
-    nil,
+    oServicioFalso,
     'DC',
     '78',
     'PRUEBAS');
@@ -131,22 +118,6 @@ begin
   Assert.AreEqual('DC', oFalso.Serie);
   Assert.AreEqual('78', oFalso.Numero);
   Assert.AreEqual('PRUEBAS', oFalso.Usuario);
-end;
-
-procedure TPruebasDevolucionesCompraMovimientos.
-  FabricaAusente_FallaDeFormaRuidosa;
-begin
-  TFabricaMovimientosDevolucionCompra.Registrar(nil);
-  Assert.WillRaise(
-    procedure
-    begin
-      GenerarMovimientosDesdeDevolucionCompra(
-        nil,
-        'DC',
-        '79',
-        'PRUEBAS');
-    end,
-    Exception);
 end;
 
 initialization

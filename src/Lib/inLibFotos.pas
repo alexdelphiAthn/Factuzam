@@ -10,7 +10,7 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Gestion de fotos por articulo y SKU.                                      }
-{    La persistencia SQL se recibe mediante IRepositorioFotos.                 }
+{    La persistencia SQL se recibe mediante TRepositoriosFotos.                }
 {    Guardado, redimensionado (300/600/real) y resolucion con fallback         }
 {    SKU -> articulo, analogo al de tarifas.                                   }
 {    Sustitucion de TfrxPictureView foto300/foto600/fotoReal en FastReports.   }
@@ -102,8 +102,7 @@ type
     procedure Clear;
   end;
 
-  /// Acceso al sistema de fotos. Vive como singleton `oFotos` igual que
-  /// `ParametrosApp`. La conexión se asigna desde la raíz de composición.
+  /// Servicio de fotos configurado desde la raíz de composición.
   TFotosArticulos = class
   private
     FConexion: TUniConnection;
@@ -111,8 +110,8 @@ type
     // Resolutor de codigos de barras inyectado por la raiz de
     // composicion: la libreria no construye repositorios UniData*.
     FValidador: IArticulosValidador;
-    // Persistencia inyectada por la fábrica registrada en la composición.
-    FRepositorio: IRepositorioFotos;
+    // Persistencia inyectada por la composición.
+    FRepositorio: TRepositoriosFotos;
     // Caché de precarga a nivel artículo (código artículo -> foto resuelta).
     // Cuando está activa, Resolver(art, '') la consulta en vez de ir a BBDD,
     // evitando el N+1 en informes con muchas fotos. La llena PrecargarFotosLote
@@ -142,7 +141,8 @@ type
     procedure AsignarConexion(
       AConexion: TUniConnection;
       const AParametrosApp: IParametrosAplicacion;
-      const AValidador: IArticulosValidador = nil);
+      const AValidador: IArticulosValidador;
+      const ARepositorio: TRepositoriosFotos);
     procedure LiberarServicios;
     property Validador: IArticulosValidador read FValidador;
     /// Ruta del fichero para una foto resuelta, en la resolucion pedida.
@@ -238,6 +238,12 @@ type
     procedure HandlerReportBeforePrint(Component: TfrxReportComponent);
     property Conexion: TUniConnection read FConexion;
   end;
+  IProveedorFotosArticulos = interface
+    ['{1F76441D-366B-4D67-81CF-CB4107B824F7}']
+    function GetFotosArticulos: TFotosArticulos;
+    property FotosArticulos: TFotosArticulos
+      read GetFotosArticulos;
+  end;
 
 /// Engancha el evento Delphi `Report.OnBeforePrint` para que en cada
 /// iteracion del informe FastReport refresque los TfrxPictureView
@@ -249,7 +255,9 @@ type
 /// que toca y no con la del primer registro. Si el par no se puede
 /// inferir (no hay banda con dataset, o no estan los campos), la
 /// imagen se limpia (queda en blanco).
-procedure EngancharFotosEnReport(Report: TfrxReport);
+procedure EngancharFotosEnReport(
+  AFotos: TFotosArticulos;
+  Report: TfrxReport);
 
 /// Localiza la banda padre de un componente del informe y devuelve su
 /// TDataSet (con fallback al primer dataset del report). Tambien la usa
@@ -278,8 +286,10 @@ function GenerarPrefijosSku(const ACodSku: string): TArray<string>;
 ///   - `SustituirFotoEnPicture` (sobre el dataset de la banda padre)
 ///   - `TFotoEmbebida.OnDataChange` (sobre el dataset hookeado)
 /// Si el dataset es nil, no esta activo o esta vacio devuelve '' / ''.
-procedure LeerArtSkuDeDataSet(ADataSet: TDataSet;
-                              out ACodArt, ACodSku: string);
+procedure LeerArtSkuDeDataSet(
+  ADataSet: TDataSet;
+  out ACodArt, ACodSku: string;
+  AFotos: TFotosArticulos = nil);
 
 type
   /// Helper para poner una foto embebida en un Mto. Engancha el
@@ -290,18 +300,23 @@ type
   ///
   /// Patron de uso en un Mto:
   ///   - DFM: TPanel + TcxSplitter + TImage (Align = alClient)
-  ///   - FormCreate: FFoto := TFotoEmbebida.Create(imgFoto, dsLineas);
+  ///   - FormCreate: FFoto := TFotoEmbebida.Create(
+  ///       FotosArticulos, imgFoto, dsLineas);
   ///   - FormDestroy: FreeAndNil(FFoto);
   ///   - Layout persist: GuardarAnchoPanel / RestaurarAnchoPanel sobre
   ///     el panel contenedor (vease inLibLayoutForm).
   TFotoEmbebida = class
   private
+    FFotos: TFotosArticulos;
     FImage          : TImage;
     FDataSource     : TDataSource;
     FPrevDataChange : TDataChangeEvent;
     procedure OnDataChange(Sender: TObject; Field: TField);
   public
-    constructor Create(AImage: TImage; ADataSource: TDataSource);
+    constructor Create(
+      AFotos: TFotosArticulos;
+      AImage: TImage;
+      ADataSource: TDataSource);
     destructor  Destroy; override;
     /// Recarga la foto a 300 px del articulo / SKU activo. Lo llama
     /// el hook OnDataChange en cada cambio de registro, pero tambien
@@ -309,22 +324,12 @@ type
     procedure Refrescar;
   end;
 
-function oFotos: TFotosArticulos;
-
 implementation
 
 uses
 
   Winapi.GDIPOBJ, Winapi.GDIPAPI,
   inLibMsgArticulos;
-
-var
-  FFotos: TFotosArticulos;
-
-function oFotos: TFotosArticulos;
-begin
-  Result := FFotos;
-end;
 
 { TFotoInfo }
 
@@ -361,11 +366,16 @@ end;
 procedure TFotosArticulos.AsignarConexion(
   AConexion: TUniConnection;
   const AParametrosApp: IParametrosAplicacion;
-  const AValidador: IArticulosValidador);
+  const AValidador: IArticulosValidador;
+  const ARepositorio: TRepositoriosFotos);
 begin
   if not Assigned(AParametrosApp) then
     raise EArgumentNilException.Create('AParametrosApp');
-  FRepositorio := TFabricaRepositorioFotos.Crear(AConexion);
+  if (not Assigned(ARepositorio.Consulta)) or
+     (not Assigned(ARepositorio.Edicion)) or
+     (not Assigned(ARepositorio.Sesion)) then
+    raise EArgumentNilException.Create('ARepositorio');
+  FRepositorio := ARepositorio;
   FConexion := AConexion;
   FParametrosApp := AParametrosApp;
   FValidador := AValidador;
@@ -373,7 +383,7 @@ end;
 
 procedure TFotosArticulos.LiberarServicios;
 begin
-  FRepositorio := nil;
+  FRepositorio := Default(TRepositoriosFotos);
   FConexion := nil;
   FParametrosApp := nil;
   FValidador := nil;
@@ -496,7 +506,7 @@ begin
     prefijos := GenerarPrefijosSku(ACodSku);
     if Length(prefijos) > 0 then
     begin
-      q := FRepositorio.BuscarFotoPorUnidades(ACodArt, prefijos);
+      q := FRepositorio.Consulta.BuscarFotoPorUnidades(ACodArt, prefijos);
       if not q.Eof then
       begin
         sClave := q.FieldByName(fcodunidadfot).AsString;
@@ -514,7 +524,7 @@ begin
     end;
 
     // 2. Fallback: foto del articulo (CODIGO_UNIDAD_FOT = '')
-    q := FRepositorio.BuscarFotoArticulo(ACodArt);
+    q := FRepositorio.Consulta.BuscarFotoArticulo(ACodArt);
     if not q.Eof then
     begin
       Result.Encontrada      := True;
@@ -529,7 +539,7 @@ begin
     if (ACodSku = '') and not Result.Encontrada then
     begin
       FreeAndNil(q);
-      q := FRepositorio.BuscarPrimeraFotoUnidad(ACodArt);
+      q := FRepositorio.Consulta.BuscarPrimeraFotoUnidad(ACodArt);
       if not q.Eof then
       begin
         Result.Encontrada      := True;
@@ -595,7 +605,7 @@ begin
   begin
     q := nil;
     try
-      q := FRepositorio.BuscarFotosArticulos(ACodigos);
+      q := FRepositorio.Consulta.BuscarFotosArticulos(ACodigos);
       sArtCur  := '';
       cnt      := 0;
       artFound := False;
@@ -1010,7 +1020,7 @@ begin
   iIndice         := 1;
   q := nil;
   try
-    q := FRepositorio.BuscarFotoEditable(ACodArt, ACodSku);
+    q := FRepositorio.Edicion.BuscarFotoEditable(ACodArt, ACodSku);
     bExiste := not q.Eof;
     if bExiste then
     begin
@@ -1046,7 +1056,7 @@ begin
   // 3. Upsert en fza_articulos_fotos
   q := nil;
   try
-    q := FRepositorio.BuscarFotoEditable(ACodArt, ACodSku);
+    q := FRepositorio.Edicion.BuscarFotoEditable(ACodArt, ACodSku);
     bExiste := not q.Eof;
     if bExiste then q.Edit else q.Insert;
     q.FieldByName(fcodartfot).AsString    := ACodArt;
@@ -1130,7 +1140,7 @@ begin
   if FileExists(rutaReal) then RenameFile(rutaReal, rutaRealNuevo);
 
   // Actualizamos la fila correspondiente.
-  FRepositorio.ActualizarNombreFoto(
+  FRepositorio.Edicion.ActualizarNombreFoto(
     ACodArt, info.ClaveResuelta, sNombreNuevo, AUsuario);
 
   Result.Encontrada      := True;
@@ -1152,9 +1162,9 @@ var
 begin
   // Localizamos el nombre del fichero asociado a la fila exacta antes
   // de borrar el registro.
-  sNombre := FRepositorio.BuscarNombreFoto(ACodArt, ACodUnidad);
+  sNombre := FRepositorio.Edicion.BuscarNombreFoto(ACodArt, ACodUnidad);
   BorrarFicherosDeNombre(sNombre);
-  FRepositorio.EliminarFoto(ACodArt, ACodUnidad);
+  FRepositorio.Edicion.EliminarFoto(ACodArt, ACodUnidad);
 end;
 
 { ----------------------------------------------------------------- }
@@ -1196,8 +1206,10 @@ const
   cAliasCodBarras: array[0..0] of string = (
     'CODBAR_ART_PEDLIN');
 
-procedure CompletarSkuDesdeCodigoBarras(ADataSet: TDataSet;
-                                        var ACodArt, ACodSku: string);
+procedure CompletarSkuDesdeCodigoBarras(
+  AFotos: TFotosArticulos;
+  ADataSet: TDataSet;
+  var ACodArt, ACodSku: string);
 var
   i        : Integer;
   f        : TField;
@@ -1205,8 +1217,9 @@ var
   validador: IArticulosValidador;
   res      : TArtResolucionEntrada;
 begin
-  if (ACodSku = '') and (ADataSet <> nil) and ADataSet.Active and
-     (oFotos.Conexion <> nil) then
+  if Assigned(AFotos) and (ACodSku = '') and
+     (ADataSet <> nil) and ADataSet.Active and
+     (AFotos.Conexion <> nil) then
   begin
     sCodigo := '';
     for i := Low(cAliasCodBarras) to High(cAliasCodBarras) do
@@ -1221,7 +1234,7 @@ begin
     end;
     if sCodigo <> '' then
     begin
-      validador := oFotos.Validador;
+      validador := AFotos.Validador;
       if not Assigned(validador) then
         Exit;
       try
@@ -1239,8 +1252,10 @@ begin
   end;
 end;
 
-procedure LeerArtSkuDeDataSet(ADataSet: TDataSet;
-                              out ACodArt, ACodSku: string);
+procedure LeerArtSkuDeDataSet(
+  ADataSet: TDataSet;
+  out ACodArt, ACodSku: string;
+  AFotos: TFotosArticulos);
 var
   i: Integer;
   f: TField;
@@ -1267,7 +1282,8 @@ begin
       Break;
     end;
   end;
-  CompletarSkuDesdeCodigoBarras(ADataSet, ACodArt, ACodSku);
+  CompletarSkuDesdeCodigoBarras(
+    AFotos, ADataSet, ACodArt, ACodSku);
 end;
 
 // Localiza la banda padre del componente y devuelve el TDataSet asociado
@@ -1308,8 +1324,10 @@ begin
         Exit(TfrxDBDataset(oReport.Datasets[i].DataSet).DataSet);
 end;
 
-procedure SustituirFotoEnPicture(APic: TfrxPictureView;
-                                 AResolucion: TFotoResolucion);
+procedure SustituirFotoEnPicture(
+  AFotos: TFotosArticulos;
+  APic: TfrxPictureView;
+  AResolucion: TFotoResolucion);
 var
   oDataSet: TDataSet;
   sArt    : string;
@@ -1324,14 +1342,14 @@ begin
     APic.Picture.Assign(nil);
     Exit;
   end;
-  LeerArtSkuDeDataSet(oDataSet, sArt, sSku);
+  LeerArtSkuDeDataSet(oDataSet, sArt, sSku, AFotos);
   if sArt = '' then
   begin
     APic.Picture.Assign(nil);
     Exit;
   end;
-  info  := oFotos.Resolver(sArt, sSku);
-  sRuta := oFotos.RutaFoto(info, AResolucion);
+  info  := AFotos.Resolver(sArt, sSku);
+  sRuta := AFotos.RutaFoto(info, AResolucion);
   if sRuta = '' then
   begin
     APic.Picture.Assign(nil);
@@ -1384,23 +1402,29 @@ begin
     bMatch := False;
   if not bMatch then
     Exit;
-  SustituirFotoEnPicture(pic, res);
+  SustituirFotoEnPicture(Self, pic, res);
 end;
 
-procedure EngancharFotosEnReport(Report: TfrxReport);
+procedure EngancharFotosEnReport(
+  AFotos: TFotosArticulos;
+  Report: TfrxReport);
 begin
-  if Report = nil then
+  if (Report = nil) or (AFotos = nil) then
     Exit;
-  Report.OnBeforePrint := oFotos.HandlerReportBeforePrint;
+  Report.OnBeforePrint := AFotos.HandlerReportBeforePrint;
 end;
 
 // ============================================================================
 //   TFotoEmbebida — foto pegada a un grid de Mto
 // ============================================================================
 
-constructor TFotoEmbebida.Create(AImage: TImage; ADataSource: TDataSource);
+constructor TFotoEmbebida.Create(
+  AFotos: TFotosArticulos;
+  AImage: TImage;
+  ADataSource: TDataSource);
 begin
   inherited Create;
+  FFotos := AFotos;
   FImage      := AImage;
   FDataSource := ADataSource;
   if Assigned(FDataSource) then
@@ -1422,7 +1446,8 @@ procedure TFotoEmbebida.OnDataChange(Sender: TObject; Field: TField);
 begin
   if Assigned(FPrevDataChange) then
     FPrevDataChange(Sender, Field);
-  if Field = nil then Refrescar;
+  if Field = nil then
+    Refrescar;
 end;
 
 procedure TFotoEmbebida.Refrescar;
@@ -1434,11 +1459,11 @@ var
 begin
   if not Assigned(FImage) then Exit;
   FImage.Picture.Assign(nil);
-  if not Assigned(FDataSource) then Exit;
-  LeerArtSkuDeDataSet(FDataSource.DataSet, sArt, sSku);
+  if not Assigned(FDataSource) or not Assigned(FFotos) then Exit;
+  LeerArtSkuDeDataSet(FDataSource.DataSet, sArt, sSku, FFotos);
   if sArt = '' then Exit;
-  info  := oFotos.Resolver(sArt, sSku);
-  sRuta := oFotos.RutaFoto(info, frPx300);
+  info  := FFotos.Resolver(sArt, sSku);
+  sRuta := FFotos.RutaFoto(info, frPx300);
   if sRuta = '' then Exit;
   png := TPngImage.Create;
   try
@@ -1526,7 +1551,7 @@ begin
   iIndice := 1;
   q := nil;
   try
-    q := FRepositorio.BuscarFotoSesion(
+    q := FRepositorio.Sesion.BuscarFotoSesion(
       ASerieSes, ANumeroSes, ALinea, ACodUnidad);
     bExiste := not q.Eof;
     if bExiste then
@@ -1554,7 +1579,7 @@ begin
     FreeAndNil(oGraphic);
   end;
 
-  FRepositorio.GuardarFotoSesion(
+  FRepositorio.Sesion.GuardarFotoSesion(
     ASerieSes,
     ANumeroSes,
     ALinea,
@@ -1592,7 +1617,7 @@ begin
   q := nil;
   try
     // 1. Match exacto por SKU (o cadena vacia = padre)
-    q := FRepositorio.BuscarFotoSesion(
+    q := FRepositorio.Sesion.BuscarFotoSesion(
       ASerieSes, ANumeroSes, ALinea, ACodUnidad);
     if not q.Eof then
     begin
@@ -1618,7 +1643,7 @@ begin
       for i := 0 to High(prefijos) do
       begin
         if prefijos[i] = ACodUnidad then Continue;
-        q := FRepositorio.BuscarFotoSesion(
+        q := FRepositorio.Sesion.BuscarFotoSesion(
           ASerieSes, ANumeroSes, ALinea, prefijos[i]);
         if not q.Eof then
         begin
@@ -1640,7 +1665,7 @@ begin
     // 3. Fallback a foto de la linea (CODIGO_UNIDAD_CSF = '')
     if ACodUnidad <> '' then
     begin
-      q := FRepositorio.BuscarFotoSesion(
+      q := FRepositorio.Sesion.BuscarFotoSesion(
         ASerieSes, ANumeroSes, ALinea, '');
       if not q.Eof then
       begin
@@ -1672,7 +1697,7 @@ begin
   sNombreBase := '';
   q := nil;
   try
-    q := FRepositorio.BuscarFotoSesion(
+    q := FRepositorio.Sesion.BuscarFotoSesion(
       ASerieSes, ANumeroSes, ALinea, ACodUnidad);
     if not q.Eof then
       sNombreBase := q.FieldByName('NOMBRE_FOT_CSF').AsString;
@@ -1681,7 +1706,7 @@ begin
   end;
   if sNombreBase <> '' then
   begin
-    FRepositorio.EliminarFotoSesion(
+    FRepositorio.Sesion.EliminarFotoSesion(
       ASerieSes, ANumeroSes, ALinea, ACodUnidad);
     BorrarFicherosDeNombre(sNombreBase);
   end;
@@ -1702,7 +1727,7 @@ begin
   qSrc := nil;
   qIns := nil;
   try
-    qSrc := FRepositorio.BuscarFotosSesionLinea(
+    qSrc := FRepositorio.Sesion.BuscarFotosSesionLinea(
       ASerieSes, ANumeroSes, ALinea);
     while not qSrc.Eof do
     begin
@@ -1714,7 +1739,8 @@ begin
       // Indice siguiente segun lo que ya haya en fza_articulos_fotos
       // para no machacar fotos previas del mismo articulo+unidad.
       iIndice := 1;
-      qIns := FRepositorio.BuscarFotoEditable(ACodigoArt, sCodUnidad);
+      qIns := FRepositorio.Edicion.BuscarFotoEditable(
+        ACodigoArt, sCodUnidad);
       if not qIns.Eof then
         iIndice := ExtraerIndice(
           qIns.FieldByName('NOMBRE_FOT_FOT').AsString) + 1;
@@ -1736,7 +1762,7 @@ begin
                    SubdirDe(frPx300) + sNombreNuevo + '.png');
 
       // Upsert en fza_articulos_fotos
-      FRepositorio.GuardarFotoMigrada(
+      FRepositorio.Sesion.GuardarFotoMigrada(
         ACodigoArt,
         sCodUnidad,
         sNombreNuevo,
@@ -1746,18 +1772,12 @@ begin
     end;
     qSrc.Close;
     // Borrar de un golpe todas las filas migradas
-    FRepositorio.EliminarFotosSesionLinea(
+    FRepositorio.Sesion.EliminarFotosSesionLinea(
       ASerieSes, ANumeroSes, ALinea);
   finally
     FreeAndNil(qSrc);
     FreeAndNil(qIns);
   end;
 end;
-
-initialization
-  FFotos := TFotosArticulos.Create;
-
-finalization
-  FreeAndNil(FFotos);
 
 end.

@@ -17,7 +17,8 @@ interface
 
 uses
   System.Classes, Uni, inLibParametrosIntf, inLibPermisosIntf,
-  inLibCajaTipos, inLibCajaVentaIntf, inLibTicketsCajaIntf;
+  inLibCajaTipos, inLibCajaVentaIntf, inLibTicketsCajaIntf,
+  inLibUnidadesMedida, inLibPreviewTicket;
 
 type
   TImpresorVentaVcl = class(TInterfacedObject, IImpresorVenta)
@@ -27,7 +28,9 @@ type
     FConexion: TUniConnection;
     FParametrosCaja: IParametrosCaja;
     FPermisos: IPermisosAplicacion;
-    FRepositorioTicketsCaja: IRepositorioTicketsCaja;
+    FRepositorioTicketsCaja: IRepositorioTicketsVentaCaja;
+    FUnidadesMedida: TUnidadesMedida;
+    FPreviewTicket: IPreviewTicket;
     procedure ImprimirFacturaA4(
       const ASerie, ANumero: string);
   public
@@ -37,7 +40,9 @@ type
       AConexion: TUniConnection;
       const AParametrosCaja: IParametrosCaja;
       const APermisos: IPermisosAplicacion;
-      const ARepositorioTicketsCaja: IRepositorioTicketsCaja);
+      const ARepositorioTicketsCaja: IRepositorioTicketsVentaCaja;
+      AUnidades: TUnidadesMedida;
+      const APreviewTicket: IPreviewTicket);
     procedure Imprimir(
       const ASolicitud: TSolicitudImpresionVenta;
       ARutasPdf: TStrings);
@@ -55,6 +60,8 @@ uses
   // Raiz de composicion de este servicio: los adaptadores UniData* se
   // construyen aqui y se inyectan en la factoria de dominio.
   UniDataFacturasRepositorio,
+  UniDataFacturasLecturas,
+  UniDataFacturasOperaciones,
   UniDataArticulosResolverRepositorio,
   UniDataVerifactuColaRepositorio;
 
@@ -64,7 +71,9 @@ constructor TImpresorVentaVcl.Create(
   AConexion: TUniConnection;
   const AParametrosCaja: IParametrosCaja;
   const APermisos: IPermisosAplicacion;
-  const ARepositorioTicketsCaja: IRepositorioTicketsCaja);
+  const ARepositorioTicketsCaja: IRepositorioTicketsVentaCaja;
+  AUnidades: TUnidadesMedida;
+  const APreviewTicket: IPreviewTicket);
 begin
   inherited Create;
   FPropietario := APropietario;
@@ -73,6 +82,8 @@ begin
   FParametrosCaja := AParametrosCaja;
   FPermisos := APermisos;
   FRepositorioTicketsCaja := ARepositorioTicketsCaja;
+  FUnidadesMedida := AUnidades;
+  FPreviewTicket := APreviewTicket;
 end;
 
 procedure TImpresorVentaVcl.ImprimirFacturaA4(
@@ -87,6 +98,8 @@ begin
     CrearServiciosFactura(
       FConexion,
       TRepositorioFacturas.Create(FConexion),
+      CrearRepositorioLecturasFacturaUniDAC(FConexion),
+      CrearPersistenciaFacturasUniDAC(FConexion),
       TRepositorioArticulosResolver.Create(
         FConexion,
         FParametrosCaja),
@@ -119,6 +132,8 @@ begin
       begin
         ImprimirT(
           FParametrosApp,
+          FPreviewTicket,
+          FUnidadesMedida,
           FConexion,
           ASolicitud.CodigoEmpresa,
           ASolicitud.CodigoAlmacen,
@@ -142,6 +157,8 @@ begin
       begin
         ImprimirT(
           FParametrosApp,
+          FPreviewTicket,
+          FUnidadesMedida,
           FConexion,
           ASolicitud.CodigoEmpresa,
           ASolicitud.CodigoAlmacen,
@@ -156,6 +173,8 @@ begin
             'vgerImprimirCodBarrasTicket', False));
         ImprimirT(
           FParametrosApp,
+          FPreviewTicket,
+          FUnidadesMedida,
           FConexion,
           ASolicitud.CodigoEmpresa,
           ASolicitud.CodigoAlmacen,
@@ -182,6 +201,8 @@ procedure TImpresorVentaVcl.GenerarPdfRespaldo(
 begin
   ImprimirTicketDesdeBD(
     FParametrosApp,
+    FPreviewTicket,
+    FUnidadesMedida,
     FRepositorioTicketsCaja,
     ASolicitud.CodigoEmpresa,
     ASolicitud.CodigoAlmacen,

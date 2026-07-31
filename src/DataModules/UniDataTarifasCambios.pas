@@ -17,6 +17,7 @@ unit UniDataTarifasCambios;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, System.Math,
   Data.DB, MemDS, DBAccess, Uni,
   UniDataGen;
@@ -568,5 +569,6 @@ begin
 end;
 
 initialization
+  RegistrarDataModule(TdmTarifasCambios);
   ForceReferenceToClass(TdmTarifasCambios);
 end.

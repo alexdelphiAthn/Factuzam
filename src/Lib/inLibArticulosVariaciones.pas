@@ -19,7 +19,7 @@ uses
   System.Generics.Collections,
   Vcl.Forms,
   cxDropDownEdit, cxCheckBox,
-  Uni, inLibArticulosVariacionesIntf;
+  inLibArticulosVariacionesIntf;
 
 type
   TSlotVariacion = record
@@ -45,7 +45,7 @@ type
   public
     constructor Create(
       APanelAtributos: TScrollBox;
-      AConexion: TUniConnection;
+      const AArticulosVariaciones: IArticulosVariaciones;
       const AUsuario: string);
     destructor Destroy; override;
     procedure CargarVariaciones(const CodigoArticulo: string);
@@ -56,24 +56,24 @@ type
   end;
 
 procedure AsegurarSkuArticuloSinVariaciones(
-  AConexion: TUniConnection;
+  const AArticulosVariaciones: IArticulosVariaciones;
   const ACodigoArticulo, AUsuario: string);
 procedure AsegurarSkuArticuloActivo(
-  AConexion: TUniConnection;
+  const AArticulosVariaciones: IArticulosVariaciones;
   const ACodigoArticulo, AUsuario: string);
 function ArticuloTieneSkuActivo(
-  AConexion: TUniConnection;
+  const AArticulosVariaciones: IArticulosVariaciones;
   const ACodigoArticulo: string): Boolean;
 
 implementation
 
 constructor TGestorVariaciones.Create(
   APanelAtributos: TScrollBox;
-  AConexion: TUniConnection;
+  const AArticulosVariaciones: IArticulosVariaciones;
   const AUsuario: string);
 begin
   inherited Create;
-  FServicio := TFabricaArticulosVariaciones.Crear(AConexion).CrearGestor(
+  FServicio := AArticulosVariaciones.CrearGestor(
     APanelAtributos, AUsuario);
 end;
 
@@ -110,26 +110,26 @@ begin
 end;
 
 procedure AsegurarSkuArticuloSinVariaciones(
-  AConexion: TUniConnection;
+  const AArticulosVariaciones: IArticulosVariaciones;
   const ACodigoArticulo, AUsuario: string);
 begin
-  TFabricaArticulosVariaciones.Crear(AConexion).AsegurarSkuSinVariaciones(
+  AArticulosVariaciones.AsegurarSkuSinVariaciones(
     ACodigoArticulo, AUsuario);
 end;
 
 procedure AsegurarSkuArticuloActivo(
-  AConexion: TUniConnection;
+  const AArticulosVariaciones: IArticulosVariaciones;
   const ACodigoArticulo, AUsuario: string);
 begin
-  TFabricaArticulosVariaciones.Crear(AConexion).AsegurarSkuActivo(
+  AArticulosVariaciones.AsegurarSkuActivo(
     ACodigoArticulo, AUsuario);
 end;
 
 function ArticuloTieneSkuActivo(
-  AConexion: TUniConnection;
+  const AArticulosVariaciones: IArticulosVariaciones;
   const ACodigoArticulo: string): Boolean;
 begin
-  Result := TFabricaArticulosVariaciones.Crear(AConexion).TieneSkuActivo(
+  Result := AArticulosVariaciones.TieneSkuActivo(
     ACodigoArticulo);
 end;
 

@@ -55,6 +55,46 @@ Categorías habituales:
 > conocimiento de causa; ante la duda, consulta con quien implantó la
 > aplicación.
 
+### Idioma y traducciones
+
+En la categoría **Apariencia**, el parámetro **Idioma de la interfaz**
+(`appIdioma`) selecciona el idioma de Factuzam. La lista contiene
+`es-ES`, los idiomas activos instalados en la base de datos —por ejemplo
+`en-GB` y `ca-ES`— y `qps-ploc`, reservado para pruebas de maquetación.
+
+Para cambiarlo:
+
+1. Selecciona el usuario, grupo o alcance al que se aplicará el parámetro.
+2. Abre **Apariencia ▸ Idioma de la interfaz**.
+3. Elige el idioma y pulsa **Grabar**.
+4. Cierra y vuelve a abrir Factuzam para aplicar el cambio completo.
+
+El idioma afecta a formularios, menús, mensajes, controles Developer
+Express, tickets e informes FastReport que tengan traducción. Si falta una
+clave, un idioma no está activo o no se puede consultar la base de datos,
+se conserva el texto español compilado como respaldo; la pantalla nunca
+queda vacía por una traducción ausente.
+
+> `qps-ploc` alarga y marca los textos para que desarrollo detecte rótulos
+> cortados. No es un idioma para trabajar en producción.
+
+#### Administración del catálogo
+
+Las traducciones viven en el catálogo central `fza_traducciones`. La
+utilidad independiente **Editor de traducciones** (`utlTraduc`) permite al
+administrador:
+
+1. Conectar usando el INI de Factuzam.
+2. Sincronizar los textos españoles conocidos por el ejecutable.
+3. Elegir un idioma y mostrar todas las claves o solo las pendientes.
+4. Editar y guardar las traducciones, conservando marcadores como `%s` y
+   `%d`.
+
+El editor también admite una etiqueta nueva, como `fr-FR`, sin modificar
+el ejecutable. Los cambios se guardan de forma transaccional y auditada.
+Los textos escritos manualmente por el usuario dentro de un formato de
+informe personalizado no se traducen automáticamente.
+
 ---
 
 ## Grupos de IVA

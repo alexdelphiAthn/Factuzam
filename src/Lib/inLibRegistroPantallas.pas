@@ -9,12 +9,10 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Registro central de clases de pantallas y data modules. Sustituye a la   }
-{    resolución por RTTI (ctx.FindType sobre el texto de fza_winforms): las   }
-{    clases se registran por código (inMtoCatalogoPantallas) y se resuelven   }
-{    por su nombre cualificado 'Unidad.TClase'. Un nombre mal escrito en la   }
-{    BBDD deja de ser un fallo en runtime: se detecta al arrancar con         }
-{    TfzaWinF.ComprobarRegistradas.                                           }
+{    Registro compartido de clases de pantallas y data modules. Cada unidad   }
+{    registra su propia clase durante la inicialización y la resolución se    }
+{    realiza por el nombre cualificado 'Unidad.TClase'. Un nombre incorrecto  }
+{    en la BBDD se detecta al arrancar con TfzaWinF.ComprobarRegistradas.      }
 {******************************************************************************}
 unit inLibRegistroPantallas;
 

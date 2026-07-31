@@ -643,7 +643,7 @@ var
 begin
   FLineas.Append;
   FLineas.FieldByName('CODIGO_ART_FACLIN').AsString := '5050003';
-  oTotales := TFacturaTotales.Create(nil, FCabecera, FLineas);
+  oTotales := TFacturaTotales.Create(nil, nil, FCabecera, FLineas);
   try
     Assert.IsTrue(oTotales.ProcesarFacturaCompleta);
     Assert.AreEqual(Integer(dsInsert), Integer(FLineas.State));
@@ -665,7 +665,7 @@ begin
     'GAFAS UNISEX LINEA RECTA';
   FLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString := '5050003';
   FLineas.FieldByName('NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger := 2;
-  oTotales := TFacturaTotales.Create(nil, FCabecera, FLineas);
+  oTotales := TFacturaTotales.Create(nil, nil, FCabecera, FLineas);
   try
     Assert.IsTrue(oTotales.ProcesarFacturaCompleta);
     Assert.AreEqual(Integer(dsInsert), Integer(FLineas.State));
@@ -680,6 +680,7 @@ procedure TPruebasTotalesDocumentos.
   Factura_SinLineasNoIntentaActualizar;
 begin
   ActualizarLineaFactura(
+    nil,
     nil,
     nil,
     FCabecera,
@@ -718,7 +719,7 @@ begin
   AgregarLineaFactura('N', 21, 1, 100);
   AgregarLineaFactura('R', 10, 1, 50);
   AgregarLineaFactura('E', 0, 1, 25);
-  Totales := TFacturaTotales.Create(nil, FCabecera, FLineas);
+  Totales := TFacturaTotales.Create(nil, nil, FCabecera, FLineas);
   try
     Assert.IsTrue(Totales.ProcesarFacturaCompleta);
     Assert.AreEqual(
@@ -746,7 +747,7 @@ begin
   PonerTextoCabecera('ESRETENCIONES_EMPRESA_FAC', 'S');
   PonerFloatCabecera('PORCENTAJE_RETENCION_FAC', 15);
   AgregarLineaFactura('N', 21, 1, 100);
-  Totales := TFacturaTotales.Create(nil, FCabecera, FLineas);
+  Totales := TFacturaTotales.Create(nil, nil, FCabecera, FLineas);
   try
     Assert.IsTrue(Totales.ProcesarFacturaCompleta);
     Assert.AreEqual(
@@ -771,7 +772,7 @@ begin
   PonerTextoCabecera('ESRETENCIONES_EMPRESA_FAC', 'S');
   PonerFloatCabecera('PORCENTAJE_RETENCION_FAC', 15);
   AgregarLineaFactura('N', 21, 1, 100);
-  Totales := TFacturaTotales.Create(nil, FCabecera, FLineas);
+  Totales := TFacturaTotales.Create(nil, nil, FCabecera, FLineas);
   try
     Assert.IsTrue(Totales.ProcesarFacturaCompleta);
     Assert.AreEqual(
@@ -792,7 +793,7 @@ var
 begin
   PonerTextoCabecera('TIPO_FAC', 'RECTIFICATIVA');
   AgregarLineaFactura('N', 21, -1, 100);
-  Totales := TFacturaTotales.Create(nil, FCabecera, FLineas);
+  Totales := TFacturaTotales.Create(nil, nil, FCabecera, FLineas);
   try
     Assert.IsTrue(Totales.ProcesarFacturaCompleta);
     Assert.IsTrue(Totales.FTieneLineasNegativas);
@@ -813,7 +814,7 @@ var
   Totales: TFacturaTotales;
 begin
   AgregarLineaFactura('N', 21, 1, 0, 'S', 100);
-  Totales := TFacturaTotales.Create(nil, FCabecera, FLineas);
+  Totales := TFacturaTotales.Create(nil, nil, FCabecera, FLineas);
   try
     Assert.IsTrue(Totales.ProcesarFacturaCompleta);
     Assert.AreEqual(
@@ -834,7 +835,7 @@ var
 begin
   AgregarLineaFactura('N', 21, 1, 10);
   AgregarLineaFactura('R', 10, 1, 20);
-  oTotales := TFacturaTotales.Create(nil, FCabecera, FLineas);
+  oTotales := TFacturaTotales.Create(nil, nil, FCabecera, FLineas);
   try
     Assert.IsTrue(oTotales.ProcesarFacturaCompleta);
   finally
@@ -842,7 +843,7 @@ begin
   end;
   FNumeroPostsLineas := 0;
   FLineas.AfterPost := ContarPostLinea;
-  oTotales := TFacturaTotales.Create(nil, FCabecera, FLineas);
+  oTotales := TFacturaTotales.Create(nil, nil, FCabecera, FLineas);
   try
     Assert.IsTrue(oTotales.ProcesarFacturaCompleta);
   finally
@@ -858,7 +859,7 @@ var
 begin
   AgregarLineaFactura('N', 21, 1, 100);
   AgregarLineaFactura('R', 10, 1, 50);
-  oTotales := TFacturaTotales.Create(nil, FCabecera, FLineas);
+  oTotales := TFacturaTotales.Create(nil, nil, FCabecera, FLineas);
   try
     Assert.IsTrue(oTotales.ProcesarFacturaCompleta);
   finally
@@ -867,7 +868,7 @@ begin
   PonerFloatCabecera('PORCENTAJE_IVAN_FAC', 22);
   FNumeroPostsLineas := 0;
   FLineas.AfterPost := ContarPostLinea;
-  oTotales := TFacturaTotales.Create(nil, FCabecera, FLineas);
+  oTotales := TFacturaTotales.Create(nil, nil, FCabecera, FLineas);
   try
     Assert.IsTrue(oTotales.ProcesarFacturaCompleta);
   finally

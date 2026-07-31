@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataCajaFormasPago                                         }
 {    Tipo:       Data Module                                                   }
@@ -17,6 +17,7 @@ unit UniDataCajaFormasPago;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
   inLibUser, UniDataConn;
 
@@ -70,5 +71,6 @@ begin
 end;
 
 initialization
+  RegistrarDataModule(TdmCajaFormasPago);
   ForceReferenceToClass(TdmCajaFormasPago);
 end.

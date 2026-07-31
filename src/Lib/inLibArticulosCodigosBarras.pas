@@ -9,7 +9,7 @@
 interface
 
 uses
-  Uni;
+  Uni, inLibArticulosVariacionesIntf;
 
 type
   TResultadoCodigosBarrasArticulo = record
@@ -21,6 +21,7 @@ type
 
 function GenerarCodigosBarrasArticulo(
   AConexion: TUniConnection;
+  const AArticulosVariaciones: IArticulosVariaciones;
   const ACodigoArticulo, AUsuario: string;
   out AResultado: TResultadoCodigosBarrasArticulo): Boolean;
 
@@ -107,6 +108,7 @@ end;
 
 function GenerarCodigosBarrasArticulo(
   AConexion: TUniConnection;
+  const AArticulosVariaciones: IArticulosVariaciones;
   const ACodigoArticulo, AUsuario: string;
   out AResultado: TResultadoCodigosBarrasArticulo): Boolean;
 var
@@ -128,7 +130,7 @@ begin
       AConexion.StartTransaction;
     try
       AsegurarSkuArticuloActivo(
-        AConexion, ACodigoArticulo, AUsuario);
+        AArticulosVariaciones, ACodigoArticulo, AUsuario);
       ConsultaSkus := TUniQuery.Create(nil);
       ConsultaCambio := TUniQuery.Create(nil);
       try

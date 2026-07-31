@@ -18,6 +18,7 @@ unit UniDataProveedores;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
   Uni, inLibUser, UniDataConn;
 
@@ -493,5 +494,6 @@ begin
 end;
 
 initialization
+  RegistrarDataModule(TdmProveedores);
   ForceReferenceToClass(TdmProveedores);
 end.

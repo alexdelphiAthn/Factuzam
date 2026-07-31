@@ -23,7 +23,7 @@ unit inLibCajaVentaOperacion;
 interface
 
 uses
-  Data.DB,
+  Data.DB, Datasnap.DBClient,
   inLibArticulosAtributosIntf;
 
 type
@@ -37,6 +37,18 @@ type
 // Cierra la linea pendiente: la insercion sin articulo se cancela; la
 // que tiene articulo, y cualquier edicion, se graban.
 procedure CerrarLineaPendiente(ALineas: TDataSet);
+
+// Descarta el delta y los registros de la venta anterior. Las lineas
+// quedan vacias y la cabecera preparada en insercion para la venta nueva.
+procedure ReiniciarDatosOperacionVenta(
+  ALineas, ACabecera: TCustomClientDataSet);
+
+// Escribe los valores de negocio que identifican una nueva venta de caja.
+// Los valores automaticos se aplican antes desde la composicion VCL.
+procedure EscribirCabeceraBaseOperacionVenta(
+  ACabecera: TDataSet;
+  const AEmpresa, ATarifa: string;
+  const AFecha: TDateTime);
 
 // Retira la linea rechazada por una validacion de SKU: la insercion se
 // cancela; la edicion se cancela y la fila se borra.
@@ -100,6 +112,40 @@ begin
     else
       ALineas.Post;
   end;
+end;
+
+procedure ReiniciarDatosOperacionVenta(
+  ALineas, ACabecera: TCustomClientDataSet);
+begin
+  if Assigned(ALineas) and ALineas.Active then
+  begin
+    ALineas.DisableControls;
+    try
+      ALineas.CancelUpdates;
+      if ALineas.RecordCount > 0 then
+        ALineas.EmptyDataSet;
+    finally
+      ALineas.EnableControls;
+    end;
+  end;
+  if Assigned(ACabecera) and ACabecera.Active then
+  begin
+    ACabecera.CancelUpdates;
+    ACabecera.EmptyDataSet;
+    ACabecera.Append;
+  end;
+end;
+
+procedure EscribirCabeceraBaseOperacionVenta(
+  ACabecera: TDataSet;
+  const AEmpresa, ATarifa: string;
+  const AFecha: TDateTime);
+begin
+  ACabecera.FieldByName('CODIGO_EMP_FAC').AsString := AEmpresa;
+  ACabecera.FieldByName('FECHA_FAC').AsDateTime := AFecha;
+  ACabecera.FieldByName('TIPO_FAC').AsString := 'SIMPLIFICADA';
+  ACabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString :=
+    ATarifa;
 end;
 
 procedure EliminarLineaVentaPorValidacion(ALineas: TDataSet);

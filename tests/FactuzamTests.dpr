@@ -71,6 +71,8 @@ uses
   inLibFacturasConsolidacionPresentacion in
     '..\src\Lib\inLibFacturasConsolidacionPresentacion.pas',
   inLibShowMto in '..\src\Lib\inLibShowMto.pas',
+  inLibRegistroPantallas in
+    '..\src\Lib\inLibRegistroPantallas.pas',
   inLibImpuestosComun in '..\src\Lib\inLibImpuestosComun.pas',
   inLibComprasImpuestos in '..\src\Lib\inLibComprasImpuestos.pas',
   inLibVentasImpuestos in '..\src\Lib\inLibVentasImpuestos.pas',
@@ -81,8 +83,14 @@ uses
   inLibArticulosFiltro in '..\src\Lib\inLibArticulosFiltro.pas',
   inLibArticulosAltaTarifas in
     '..\src\Lib\inLibArticulosAltaTarifas.pas',
+  inLibArticulosAtributosBasicos in
+    '..\src\Lib\inLibArticulosAtributosBasicos.pas',
   inLibStockCeldaDocumento in
     '..\src\Lib\inLibStockCeldaDocumento.pas',
+  inLibStockConsultaInfo in
+    '..\src\Lib\inLibStockConsultaInfo.pas',
+  inLibInventariosEntrada in
+    '..\src\Lib\inLibInventariosEntrada.pas',
   inLibCajaTipos in '..\src\Caja\Lib\inLibCajaTipos.pas',
   inLibFaseCobro in '..\src\Caja\Lib\inLibFaseCobro.pas',
   inLibCajaVentaIntf in '..\src\Caja\Lib\inLibCajaVentaIntf.pas',
@@ -238,8 +246,14 @@ uses
     'PruebasArticulosCatalogoSql22.pas',
   PruebasArticulosAltaTarifas in
     'PruebasArticulosAltaTarifas.pas',
+  PruebasArticulosAtributosBasicos in
+    'PruebasArticulosAtributosBasicos.pas',
   PruebasStockCeldaDocumento in
     'PruebasStockCeldaDocumento.pas',
+  PruebasStockConsultaInfo in
+    'PruebasStockConsultaInfo.pas',
+  PruebasInventariosEntrada in
+    'PruebasInventariosEntrada.pas',
   PruebasCajaVentaCliente in
     'PruebasCajaVentaCliente.pas',
   PruebasCajaVentaOperacion in
@@ -305,7 +319,8 @@ uses
   PruebasExportacionNoVerifactuPersistencia in
     'PruebasExportacionNoVerifactuPersistencia.pas',
   PruebasJsonSeguro in 'PruebasJsonSeguro.pas',
-  PruebasTraducciones in 'PruebasTraducciones.pas';
+  PruebasTraducciones in 'PruebasTraducciones.pas',
+  PruebasRegistroPantallas in 'PruebasRegistroPantallas.pas';
 
 var
   oEjecutor: ITestRunner;

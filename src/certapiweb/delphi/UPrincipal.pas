@@ -99,7 +99,8 @@ begin
     'sif:instalacion' + sLineBreak +
     'recuentos:leer' + sLineBreak +
     'recuentos:escribir' + sLineBreak +
-    'correo:enviar';
+    'correo:enviar' + sLineBreak +
+    'descargar:traducciones';
   CargarIdentidad;
 end;
 

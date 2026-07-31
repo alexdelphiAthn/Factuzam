@@ -168,7 +168,7 @@ procedure TPruebasComprasSesionesRepositorio.
 var
   aAlmacenes: TArray<string>;
   oDoble: TLecturasMaterializacionComprasSesionesMemoria;
-  oLecturas: ILecturasMaterializacionComprasSesiones;
+  oLecturas: ILecturasEstadoMaterializacion;
 begin
   oDoble :=
     TLecturasMaterializacionComprasSesionesMemoria.Create;

@@ -685,8 +685,4 @@ begin
   Result := TArticulosVariacionesUniDAC.Create(AConexion);
 end;
 
-initialization
-  TFabricaArticulosVariaciones.Registrar(
-    CrearArticulosVariacionesUniDAC);
-
 end.

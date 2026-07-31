@@ -125,47 +125,53 @@ type
     function Seleccionar(const ANombreAtributo: string;
       const AValores: TArray<string>; out AValor: string): Boolean;
   end;
-  // Puerto de persistencia del modo tallas: la tabla de celdas, los
-  // conjuntos de atributos, los almacenes y la unidad de trabajo. Las
-  // operaciones se nombran por caso de uso; no se expone SQL.
-  IPersistenciaModoTallas = interface
-    ['{4A1E8C33-5D07-4B96-8E45-2C6F90B7A1D2}']
-    function ConsultarTotalesPorLinea: TArray<TTotalLineaTallas>;
-    function ConsultarCeldasDocumento: TArray<TCeldaTallas>;
-    function ConsultarCeldasLinea(ALinea: Integer): TArray<TCeldaTallas>;
-    function LineaTieneCeldas(ALinea: Integer): Boolean;
-    procedure SumarEnCelda(ALinea, AIdAv: Integer; ACantidad: Double;
-      const AAlmacen: string);
-    procedure MoverCeldasALinea(AOrigen, ADestino: Integer);
-    function MigrarCeldasFormato(ADistribuido: Boolean;
-      const AAlmacenDefecto: string): Integer;
-    procedure BorrarCeldasDocumento;
+  // Puertos de persistencia segregados por consumidor. El adaptador
+  // UniDAC implementa todos, pero cada caso de uso solo recibe lo que usa.
+  IPersistenciaModeloTallas = interface
+    ['{78A7F401-A818-46D3-8777-01268F85A315}']
     function BuscarConjuntoParaAvs(
       const AIdsValores: TArray<Integer>): Integer;
     function ConjuntoCubreAvs(AIdConjunto: Integer;
       const AIdsValores: TArray<Integer>): Boolean;
-    function PrimerAlmacenEstandar: string;
+  end;
+  IPersistenciaRederivacionTallas = interface
+    ['{10CB888B-A7BF-4097-B060-64BD9444AFF9}']
+    function LineaTieneCeldas(ALinea: Integer): Boolean;
+    procedure SumarEnCelda(ALinea, AIdAv: Integer; ACantidad: Double;
+      const AAlmacen: string);
+    procedure MoverCeldasALinea(AOrigen, ADestino: Integer);
+  end;
+  IPersistenciaDesmontajeTallas = interface
+    ['{9D74530D-14D4-4C27-9106-AB3FE846C079}']
+    function ConsultarTotalesPorLinea: TArray<TTotalLineaTallas>;
+    function ConsultarCeldasDocumento: TArray<TCeldaTallas>;
+    procedure BorrarCeldasDocumento;
     function EnTransaccion: Boolean;
     procedure IniciarTransaccion;
     procedure ConfirmarTransaccion;
     procedure RevertirTransaccion;
   end;
-  // Puerto de acceso a las lineas del documento. Lo implementa un
-  // adaptador sobre el cds; el caso de uso de des-pivote no toca
-  // controles ni datasets.
-  ILineasDocumentoTallas = interface
-    ['{7F3C2A55-91B4-4C08-A6D3-58E0B4F27C61}']
+  IPersistenciaEntradaTallas = interface
+    ['{4FC41EBE-080E-488A-9EB4-0AFDAD21C1D1}']
+    function ConsultarTotalesPorLinea: TArray<TTotalLineaTallas>;
+    procedure SumarEnCelda(ALinea, AIdAv: Integer; ACantidad: Double;
+      const AAlmacen: string);
+    function MigrarCeldasFormato(ADistribuido: Boolean;
+      const AAlmacenDefecto: string): Integer;
+    function EnTransaccion: Boolean;
+    procedure IniciarTransaccion;
+    procedure ConfirmarTransaccion;
+    procedure RevertirTransaccion;
+  end;
+  IPersistenciaPresentacionTallas = interface
+    ['{819C35F2-B1D2-43C0-B2A6-5BC9B46710C4}']
+    function ConsultarTotalesPorLinea: TArray<TTotalLineaTallas>;
+    function PrimerAlmacenEstandar: string;
+  end;
+  // Puertos de lineas segregados por los cuatro consumidores reales.
+  ILineasRederivacionTallas = interface
+    ['{F2D70385-D065-409A-B0DA-B5D604F41A86}']
     function HayLineas: Boolean;
-    function MaximaLinea: Integer;
-    function LeerDatosLinea(ALinea: Integer): TDatosLineaExpansion;
-    function CantidadesPorLinea: TArray<TCantidadLineaTallas>;
-    procedure ActualizarLineaExpandida(const ACelda: TCeldaTallas;
-      const ADatos: TDatosLineaExpansion; const ASku, AAlmacen: string);
-    procedure CrearLineaExpandida(ANuevaLinea: Integer;
-      const ACelda: TCeldaTallas; const ADatos: TDatosLineaExpansion;
-      const ASku, AAlmacen: string);
-    // Recorrido por posicion para la rederivacion. Tras borrar la linea
-    // activa NO se avanza: la posicion ya apunta a otra linea.
     function ContarLineas: Integer;
     procedure PosicionarEn(APosicion: Integer);
     function LeerLineaActual: TLineaDocumentoTallas;
@@ -174,7 +180,24 @@ type
     procedure IrAlPrimero;
     procedure SuspenderRefrescoVisual;
     procedure ReanudarRefrescoVisual;
-    // Resolucion de una entrada: consolidacion y alta de la linea.
+  end;
+  ILineasDesmontajeTallas = interface
+    ['{02E7EB94-80DF-4FB5-83A0-F9B7FE2D0624}']
+    function MaximaLinea: Integer;
+    function LeerDatosLinea(ALinea: Integer): TDatosLineaExpansion;
+    function CantidadesPorLinea: TArray<TCantidadLineaTallas>;
+    procedure ActualizarLineaExpandida(const ACelda: TCeldaTallas;
+      const ADatos: TDatosLineaExpansion; const ASku, AAlmacen: string);
+    procedure CrearLineaExpandida(ANuevaLinea: Integer;
+      const ACelda: TCeldaTallas; const ADatos: TDatosLineaExpansion;
+      const ASku, AAlmacen: string);
+    procedure IniciarProceso;
+    procedure TerminarProceso;
+    procedure NotificarPostsSilenciados;
+  end;
+  ILineasEntradaTallas = interface
+    ['{F0C556A0-F7A6-4B06-B0AD-CB6A51F1A70D}']
+    function CantidadesPorLinea: TArray<TCantidadLineaTallas>;
     procedure CancelarEdicionPendiente;
     procedure ConfirmarEdicionPendiente;
     function LocalizarLineaConsolidable(ADistribuido: Boolean;
@@ -184,15 +207,32 @@ type
     procedure AltaLineaResuelta(const ADatos: TAltaLineaTallas);
     function NumeroLineaActual: Integer;
     function AlmacenLineaActual(const ADefecto: string): string;
+    procedure IniciarProceso;
+  end;
+  ILineasPresentacionTallas = interface
+    ['{4E497321-9EB7-47BA-A26B-1184DF5F4E92}']
+    procedure ConfirmarEdicionPendiente;
+    function NumeroLineaActual: Integer;
     function ConjuntoPivotActual: Integer;
     procedure IrALineaEnBlanco;
-    // Vuelca a cada linea PIVOTADA el total de sus celdas y el total de
-    // linea derivado del precio base.
     procedure RefrescarTotales(
       const ATotales: TArray<TTotalLineaTallas>);
-    procedure IniciarProceso;
+    procedure IrAlPrimero;
     procedure TerminarProceso;
     procedure NotificarPostsSilenciados;
+  end;
+  TServiciosPersistenciaModoTallas = record
+    Modelo: IPersistenciaModeloTallas;
+    Rederivacion: IPersistenciaRederivacionTallas;
+    Desmontaje: IPersistenciaDesmontajeTallas;
+    Entrada: IPersistenciaEntradaTallas;
+    Presentacion: IPersistenciaPresentacionTallas;
+  end;
+  TServiciosLineasDocumentoTallas = record
+    Rederivacion: ILineasRederivacionTallas;
+    Desmontaje: ILineasDesmontajeTallas;
+    Entrada: ILineasEntradaTallas;
+    Presentacion: ILineasPresentacionTallas;
   end;
   // Desplegable de busqueda incremental de SKUs. Devuelve un TDataSet
   // porque el lookup de DevExpress necesita un origen vivo; el SQL vive
@@ -225,51 +265,9 @@ type
     IdFilaFijo: Integer;
   end;
   TFabricaPersistenciaTallas = function(
-    const ACfg: TConfigPersistenciaTallas): IPersistenciaModoTallas;
+    const ACfg: TConfigPersistenciaTallas): TServiciosPersistenciaModoTallas;
   TFabricaBusquedaTallas = function(
     AConexion: TUniConnection): IBusquedaSkusTallas;
-  // Registro de la implementacion de persistencia. La unidad UniData*
-  // se registra en su initialization; el dominio no la conoce.
-  TFabricaModoTallas = class
-  private
-    class var FPersistencia: TFabricaPersistenciaTallas;
-    class var FBusqueda: TFabricaBusquedaTallas;
-  public
-    class procedure Registrar(APersistencia: TFabricaPersistenciaTallas;
-      ABusqueda: TFabricaBusquedaTallas);
-    class function CrearPersistencia(
-      const ACfg: TConfigPersistenciaTallas): IPersistenciaModoTallas;
-    class function CrearBusqueda(
-      AConexion: TUniConnection): IBusquedaSkusTallas;
-  end;
 
 implementation
-
-uses
-  inLibMsgArticulos;
-
-class procedure TFabricaModoTallas.Registrar(
-  APersistencia: TFabricaPersistenciaTallas;
-  ABusqueda: TFabricaBusquedaTallas);
-begin
-  FPersistencia := APersistencia;
-  FBusqueda := ABusqueda;
-end;
-
-class function TFabricaModoTallas.CrearPersistencia(
-  const ACfg: TConfigPersistenciaTallas): IPersistenciaModoTallas;
-begin
-  if not Assigned(FPersistencia) then
-    raise Exception.Create(SErrorPersistenciaTallasNoRegistrada);
-  Result := FPersistencia(ACfg);
-end;
-
-class function TFabricaModoTallas.CrearBusqueda(
-  AConexion: TUniConnection): IBusquedaSkusTallas;
-begin
-  if not Assigned(FBusqueda) then
-    raise Exception.Create(SErrorPersistenciaTallasNoRegistrada);
-  Result := FBusqueda(AConexion);
-end;
-
 end.

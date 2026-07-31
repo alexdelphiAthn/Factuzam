@@ -19,7 +19,7 @@ uses
   Uni, inLibGridPivoteCompraPersistenciaIntf;
 
 function CrearRepositorioGridPivoteCompraUniDAC(
-  AConexion: TUniConnection): IRepositorioGridPivoteCompra;
+  AConexion: TUniConnection): TRepositoriosGridPivoteCompra;
 
 implementation
 
@@ -29,7 +29,11 @@ uses
 type
   TRepositorioGridPivoteCompraUniDAC = class(
     TInterfacedObject,
-    IRepositorioGridPivoteCompra)
+    IConfiguracionGridPivoteCompra,
+    IRepositorioColoresPivoteCompra,
+    IRepositorioValidacionPivoteCompra,
+    IRepositorioLineasPivoteCompra,
+    IRepositorioSkusPivoteCompra)
   private
     FConexion: TUniConnection;
     FTablaLineas: string;
@@ -582,13 +586,17 @@ begin
 end;
 
 function CrearRepositorioGridPivoteCompraUniDAC(
-  AConexion: TUniConnection): IRepositorioGridPivoteCompra;
+  AConexion: TUniConnection): TRepositoriosGridPivoteCompra;
+var
+  Repositorio: TRepositorioGridPivoteCompraUniDAC;
 begin
-  Result := TRepositorioGridPivoteCompraUniDAC.Create(AConexion);
+  Result := Default(TRepositoriosGridPivoteCompra);
+  Repositorio := TRepositorioGridPivoteCompraUniDAC.Create(AConexion);
+  Result.Configuracion := Repositorio;
+  Result.Colores := Repositorio;
+  Result.Validacion := Repositorio;
+  Result.Lineas := Repositorio;
+  Result.Skus := Repositorio;
 end;
-
-initialization
-  TFabricaRepositorioGridPivoteCompra.Registrar(
-    CrearRepositorioGridPivoteCompraUniDAC);
 
 end.

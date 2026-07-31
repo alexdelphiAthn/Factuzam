@@ -17,6 +17,7 @@ unit UniDataIvasGrupos;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
    inLibUser, inLibCadenas, inLibValoresAutomaticos;
 
@@ -119,5 +120,6 @@ begin
 end;
 
 initialization
+  RegistrarDataModule(TdmIvasGrupos);
   ForceReferenceToClass(TdmIvasGrupos);
 end.

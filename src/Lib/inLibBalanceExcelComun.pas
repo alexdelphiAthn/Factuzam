@@ -17,13 +17,14 @@ unit inLibBalanceExcelComun;
 interface
 
 uses
-  Data.DB, dxSpreadSheet;
+  Data.DB, dxSpreadSheet, inLibFotos;
 
 type
   TTipoBalanceExcel = (tbeConTallas, tbeSinTallas);
 
 procedure ExportarBalanceExcel(AControl: TdxSpreadSheet;
-  const ADatos: TDataSet; ATipo: TTipoBalanceExcel);
+  const ADatos: TDataSet; AFotos: TFotosArticulos;
+  ATipo: TTipoBalanceExcel);
 
 implementation
 
@@ -31,7 +32,7 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   Vcl.Graphics, cxGraphics, dxSpreadSheetCore, dxSpreadSheetTypes,
   dxSpreadSheetContainers, dxSpreadSheetGraphics, dxSpreadSheetStyles,
-  dxHashUtils, dxGDIPlusClasses, inLibDevExcel, inLibFotos;
+  dxHashUtils, dxGDIPlusClasses, inLibDevExcel;
 
 type
   TBandaTotal = class
@@ -98,6 +99,7 @@ type
     FArticuloActual: string;
     FBandas: TObjectDictionary<string, TBandaTotal>;
     FOrdenBandas: TStringList;
+    FServicioFotos: TFotosArticulos;
     FFotos: TDictionary<string, TFotoInfo>;
     FGrupoCodigos: array[1..N_NIVELES] of string;
     FGrupoEtiquetas: array[1..N_NIVELES] of string;
@@ -131,7 +133,7 @@ type
     procedure ConfigurarColumnas;
   public
     constructor Create(AControl: TdxSpreadSheet; const ADatos: TDataSet;
-      ATipo: TTipoBalanceExcel);
+      AFotos: TFotosArticulos; ATipo: TTipoBalanceExcel);
     destructor Destroy; override;
     procedure Ejecutar;
   end;
@@ -149,13 +151,15 @@ begin
 end;
 
 constructor TExportadorBalanceExcel.Create(AControl: TdxSpreadSheet;
-  const ADatos: TDataSet; ATipo: TTipoBalanceExcel);
+  const ADatos: TDataSet; AFotos: TFotosArticulos;
+  ATipo: TTipoBalanceExcel);
 var
   iNivel: Integer;
 begin
   inherited Create;
   FControl := AControl;
   FDatos := ADatos;
+  FServicioFotos := AFotos;
   FEsConTallas := ATipo = tbeConTallas;
   if FEsConTallas then
   begin
@@ -298,7 +302,7 @@ begin
   if (FFotos <> nil) and FFotos.TryGetValue(ACodigoArticulo, oInfo) and
      oInfo.Encontrada then
   begin
-    sRuta := oFotos.RutaFoto(oInfo, frPx300);
+    sRuta := FServicioFotos.RutaFoto(oInfo, frPx300);
     if (sRuta <> '') and FileExists(sRuta) then
     begin
       oImagen := TdxSmartImage.Create;
@@ -421,7 +425,8 @@ procedure TExportadorBalanceExcel.PrecargarFotos;
 var
   oCodigos: TStringList;
 begin
-  if (FDatos <> nil) and FDatos.Active and (not FDatos.IsEmpty) then
+  if Assigned(FServicioFotos) and (FDatos <> nil) and FDatos.Active and
+     (not FDatos.IsEmpty) then
   begin
     oCodigos := TStringList.Create;
     try
@@ -438,7 +443,8 @@ begin
       finally
         FDatos.EnableControls;
       end;
-      FFotos := oFotos.ResolverArticulosLote(oCodigos.ToStringArray);
+      FFotos := FServicioFotos.ResolverArticulosLote(
+        oCodigos.ToStringArray);
     finally
       FreeAndNil(oCodigos);
     end;
@@ -653,11 +659,13 @@ begin
 end;
 
 procedure ExportarBalanceExcel(AControl: TdxSpreadSheet;
-  const ADatos: TDataSet; ATipo: TTipoBalanceExcel);
+  const ADatos: TDataSet; AFotos: TFotosArticulos;
+  ATipo: TTipoBalanceExcel);
 var
   oExportador: TExportadorBalanceExcel;
 begin
-  oExportador := TExportadorBalanceExcel.Create(AControl, ADatos, ATipo);
+  oExportador := TExportadorBalanceExcel.Create(
+    AControl, ADatos, AFotos, ATipo);
   try
     oExportador.Ejecutar;
   finally

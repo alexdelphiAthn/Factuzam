@@ -80,7 +80,7 @@ type
 implementation
 
 uses
-  inLibFiltroUsuario, inLibRectificativas, inLibMsgCaja;
+  inLibFiltroUsuario, UniDataRectificativasSql, inLibMsgCaja;
 
 {$R *.dfm}
 

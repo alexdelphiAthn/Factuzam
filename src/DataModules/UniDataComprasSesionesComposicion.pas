@@ -17,6 +17,7 @@ interface
 
 uses
   Uni,
+  inLibFotos,
   inLibCatalogoSqlIntf,
   inLibComprasSesiones,
   UniDataComprasSesiones;
@@ -24,6 +25,7 @@ uses
 function CrearServicioComprasSesiones(
   AConexion: TUniConnection;
   ADataModule: TdmComprasSesiones;
+  AFotos: TFotosArticulos;
   const ACatalogoSql: ICatalogoSql;
   const AIncidenciasSql: IRegistroIncidenciasSql):
   TServicioComprasSesiones;
@@ -41,12 +43,15 @@ uses
 function CrearServicioComprasSesiones(
   AConexion: TUniConnection;
   ADataModule: TdmComprasSesiones;
+  AFotos: TFotosArticulos;
   const ACatalogoSql: ICatalogoSql;
   const AIncidenciasSql: IRegistroIncidenciasSql):
   TServicioComprasSesiones;
 var
+  oAdaptadorLecturas:
+    TRepositorioLecturasMaterializacionComprasSesiones;
   oLecturasMaterializacion:
-    ILecturasMaterializacionComprasSesiones;
+    TServiciosLecturasMaterializacion;
   oMaterializacion:
     IPersistenciaMaterializacionComprasSesiones;
   oRepositorioSesiones:
@@ -63,13 +68,22 @@ begin
       ACatalogoSql,
       AIncidenciasSql);
   oLecturasMaterializacion :=
+    Default(TServiciosLecturasMaterializacion);
+  oAdaptadorLecturas :=
     TRepositorioLecturasMaterializacionComprasSesiones.Create(
-      AConexion,
-      ACatalogoSql,
-      AIncidenciasSql);
+      AConexion, ACatalogoSql, AIncidenciasSql);
+  oLecturasMaterializacion.Articulos := oAdaptadorLecturas;
+  oLecturasMaterializacion.Albaranes.Articulos := oAdaptadorLecturas;
+  oLecturasMaterializacion.Albaranes.Documentos := oAdaptadorLecturas;
+  oLecturasMaterializacion.Estado := oAdaptadorLecturas;
+  oLecturasMaterializacion.Pedidos.Articulos := oAdaptadorLecturas;
+  oLecturasMaterializacion.Pedidos.Documentos := oAdaptadorLecturas;
+  oLecturasMaterializacion.Pedidos.Pendientes := oAdaptadorLecturas;
+  oLecturasMaterializacion.Reversion := oAdaptadorLecturas;
   oMaterializacion :=
     TPersistenciaMaterializacionComprasSesiones.Create(
       ADataModule,
+      AFotos,
       oLecturasMaterializacion,
       oRepositorioSesiones);
   oReversion := oMaterializacion as

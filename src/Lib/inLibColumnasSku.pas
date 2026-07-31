@@ -24,7 +24,8 @@ interface
 
 uses
   System.SysUtils, Data.DB, Uni,
-  inLibColumnasSkuIntf, inLibGridTallasInline, inLibGridPivoteVenta;
+  inLibColumnasSkuIntf, inLibGridTallasInline, inLibGridPivoteVenta,
+  inLibModoTallasIntf;
 
 // Modo efectivo a partir de la configuracion (resuelve mcsAuto).
 function DetectarModoColumnasSku(const AConfig: TConfigColumnasSku)
@@ -38,7 +39,11 @@ function CrearModoEntradaGrid(const AConfig: TConfigColumnasSku)
 // TGridTallasConfig del documento (tabla de celdas, campos de pivote).
 // El adaptador completa Conexion, Grid y ColumnasTallas.
 function CrearModoEntradaGridTallas(const AConfig: TConfigColumnasSku;
-                                    const ACfgTallas: TGridTallasConfig)
+                                    const ACfgTallas: TGridTallasConfig;
+                                    AFabricaPersistencia:
+                                      TFabricaPersistenciaTallas;
+                                    AFabricaBusqueda:
+                                      TFabricaBusquedaTallas)
                                                      : IModoEntradaGrid;
 
 // Modo tallas horizontal de pedidos de venta: no usa tabla de celdas.
@@ -87,14 +92,19 @@ begin
 end;
 
 function CrearModoEntradaGridTallas(const AConfig: TConfigColumnasSku;
-                                    const ACfgTallas: TGridTallasConfig)
+                                    const ACfgTallas: TGridTallasConfig;
+                                    AFabricaPersistencia:
+                                      TFabricaPersistenciaTallas;
+                                    AFabricaBusqueda:
+                                      TFabricaBusquedaTallas)
                                                      : IModoEntradaGrid;
 var
   Cfg: TConfigColumnasSku;
 begin
   Cfg := AConfig;
   Cfg.Modo := mcsTallasInline;
-  Result := TModoEntradaTallas.Create(Cfg, ACfgTallas);
+  Result := TModoEntradaTallas.Create(
+    Cfg, ACfgTallas, AFabricaPersistencia, AFabricaBusqueda);
 end;
 
 function CrearModoEntradaGridPivoteVenta(

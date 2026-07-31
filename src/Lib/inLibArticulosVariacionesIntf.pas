@@ -9,14 +9,14 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Puerto de variaciones y SKU de artículos con fábrica registrable.         }
+{    Puerto de variaciones y SKU de artículos.                                }
 {******************************************************************************}
 unit inLibArticulosVariacionesIntf;
 
 interface
 
 uses
-  Vcl.Forms, Uni;
+  Vcl.Forms;
 
 type
   IGestorArticulosVariaciones = interface
@@ -39,35 +39,6 @@ type
       APanelAtributos: TScrollBox;
       const AUsuario: string): IGestorArticulosVariaciones;
   end;
-  TFabricaCrearArticulosVariaciones = function(
-    AConexion: TUniConnection): IArticulosVariaciones;
-  TFabricaArticulosVariaciones = class
-  private
-    class var FFabrica: TFabricaCrearArticulosVariaciones;
-  public
-    class procedure Registrar(
-      AFabrica: TFabricaCrearArticulosVariaciones);
-    class function Crear(
-      AConexion: TUniConnection): IArticulosVariaciones;
-  end;
 
 implementation
-
-uses
-  System.SysUtils, inLibMsgArticulos;
-
-class procedure TFabricaArticulosVariaciones.Registrar(
-  AFabrica: TFabricaCrearArticulosVariaciones);
-begin
-  FFabrica := AFabrica;
-end;
-
-class function TFabricaArticulosVariaciones.Crear(
-  AConexion: TUniConnection): IArticulosVariaciones;
-begin
-  if not Assigned(FFabrica) then
-    raise Exception.Create(SErrorArticulosVariacionesNoRegistradas);
-  Result := FFabrica(AConexion);
-end;
-
 end.

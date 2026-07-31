@@ -3,25 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>05 · Menú Caja — Manual de Factuzam</title>
+<title>05 · Menú TPV — Manual de Factuzam</title>
 <link rel="stylesheet" href="estilo.css">
 </head>
 <body>
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
-<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li class="activo"><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li></ul>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li class="activo"><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li></ul>
 </nav>
 <main>
 <article>
-<h1 id="05-menu-caja">05 · Menú Caja</h1>
+<h1 id="05-menu-tpv">05 · Menú TPV</h1>
 <p><a href="index.html">◀ Volver al índice</a></p>
-<p>El menú <strong>Caja</strong> es el <strong>punto de venta (TPV)</strong> para la venta al detalle en
+<p>El menú <strong>TPV</strong> es el punto de venta para la venta al detalle en
 tienda: cobrar a clientes de mostrador, emitir tickets/facturas
 simplificadas, gestionar el efectivo de la caja y cuadrarla (arqueo).</p>
 <p>Estructura del menú:</p>
-<pre><code>Caja
+<pre><code>TPV
 ├── Menú de Caja
+├── Listados
+│   └── Listado de operaciones de venta
 ├── Parámetros de Caja
 ├── Formas de Pago Caja
 ├── Depósitos de Clientes
@@ -32,7 +34,7 @@ simplificadas, gestionar el efectivo de la caja y cuadrarla (arqueo).</p>
 └── Borradores Simplificados</code></pre>
 <h2 id="como-se-trabaja-una-jornada-de-caja">Cómo se trabaja una jornada de caja</h2>
 <p>Una jornada normal de tienda sigue este orden:</p>
-<ol><li>Entrar en <strong>Caja ▸ Menú de Caja</strong> y seleccionar la empresa, el almacén y la caja física del puesto.</li><li>Revisar la <strong>Fecha de Caja</strong>. Si se está registrando una jornada atrasada, cambiarla antes de hacer ventas.</li><li>Registrar la <strong>Entrada de Cambio (F6)</strong> si se mete efectivo inicial o un refuerzo de monedas/billetes.</li><li>Vender desde <strong>Ventas (F5)</strong>, cobrar con <strong>F12</strong> y emitir el ticket o el borrador que corresponda.</li><li>Registrar gastos, retiradas, traspasos y devoluciones durante el día.</li><li>Al cierre, abrir <strong>Arqueo (F11)</strong>, contar efectivo y otras formas de pago, grabar el arqueo e imprimir el justificante.</li></ol>
+<ol><li>Entrar en <strong>TPV ▸ Menú de Caja</strong> y seleccionar la empresa, el almacén y la caja física del puesto.</li><li>Revisar la <strong>Fecha de Caja</strong>. Si se está registrando una jornada atrasada, cambiarla antes de hacer ventas.</li><li>Registrar la <strong>Entrada de Cambio (F6)</strong> si se mete efectivo inicial o un refuerzo de monedas/billetes.</li><li>Vender desde <strong>Ventas (F5)</strong>, cobrar con <strong>F12</strong> y emitir el ticket o el borrador que corresponda.</li><li>Registrar gastos, retiradas, traspasos y devoluciones durante el día.</li><li>Al cierre, abrir <strong>Arqueo (F11)</strong>, contar efectivo y otras formas de pago, grabar el arqueo e imprimir el justificante.</li></ol>
 <p>La caja separa tres cosas que conviene no mezclar:</p>
 <table>
 <thead><tr>
@@ -49,6 +51,23 @@ simplificadas, gestionar el efectivo de la caja y cuadrarla (arqueo).</p>
 <blockquote><p>Para evitar descuadres, una operación de venta no se considera terminada
 hasta que la fase de cobro se valida. Volver con <strong>Esc</strong> desde cobro deja el
 ticket abierto y no graba nada.</p></blockquote>
+<hr>
+<h2 id="listados">Listados</h2>
+<h3 id="listado-de-operaciones-de-venta">Listado de operaciones de venta</h3>
+<p><strong>Ruta:</strong> <em>TPV ▸ Listados ▸ Listado de operaciones de venta</em></p>
+<p>Genera un informe A4 horizontal con el detalle de las ventas del TPV. El
+formulario propone desde el 1 de enero del año actual hasta hoy y muestra la
+empresa, el almacén y la caja activos de la sesión.</p>
+<p>Cuando el usuario no está limitado por
+<code>appRestringirEmpAlmCaja</code>, aparece la pestaña
+<strong>Empresas / almacenes / cajas</strong>. El TPV activo se marca inicialmente y se
+pueden marcar otras ubicaciones para acumularlas en el mismo informe. Los
+usuarios restringidos no ven esta pestaña y solo consultan su ubicación.</p>
+<p>El informe incluye artículo, color (con un recuadro del color básico definido
+en Etiquetas), talla, proveedor, modelo, descripción, cantidad, bruto,
+descuento, neto del artículo, ingresos, vendedor, formas de pago y documento.
+Los resultados se ordenan por fecha y operación, con
+totales por caja y por fecha.</p>
 <hr>
 <h2 id="menu-de-caja">Menú de Caja</h2>
 <p><strong>Atajo de menú:</strong> <code>[F5]</code></p>
@@ -364,13 +383,39 @@ cobró, si hubo vale, si movió stock y qué documento fiscal quedó asociado.</
 </tr></thead>
 <tbody>
 <tr><td><strong>Reimprimir</strong></td><td>Saca el duplicado por la impresora de tickets configurada en parámetros.</td></tr>
-<tr><td><strong>Reimprimir otros</strong></td><td>Abre la vista previa del ticket, desde la que se puede elegir otra impresora.</td></tr>
+<tr><td><strong>Previsualizar</strong></td><td>Abre la vista previa del ticket, desde la que se puede elegir otra impresora.</td></tr>
+<tr><td><strong>e-mail</strong></td><td>Envía por correo la documentación de la operación seleccionada.</td></tr>
+<tr><td><strong>Rectificar</strong></td><td>Abre una nueva operación para corregir el ticket por diferencias o mediante una rectificativa sustitutiva.</td></tr>
+<tr><td><strong>Anular registro fiscal</strong></td><td>Solicita la anulación fiscal de un documento consolidado.</td></tr>
+<tr><td><strong>Convertir en normal</strong></td><td>Convierte una factura simplificada en factura normal nominativa.</td></tr>
 <tr><td><strong>F5</strong></td><td>Recarga la consulta del día.</td></tr>
 <tr><td><strong>Esc</strong></td><td>Cierra la búsqueda y vuelve al menú de caja.</td></tr>
 </tbody>
 </table>
 <blockquote><p>Requiere tener una <strong>caja seleccionada</strong> (empresa/almacén/caja); si no,
 la aplicación pide seleccionarla antes de buscar.</p></blockquote>
+<h4 id="rectificar-un-ticket-por-diferencias-o-sustitutiva">Rectificar un ticket: por diferencias o sustitutiva</h4>
+<p>Una venta ya consolidada no se modifica directamente. Para corregirla:</p>
+<ol><li>Entra en <strong>Menú de Caja ▸ Buscar / Modificar (F10)</strong>.</li><li>Localiza la operación y comprueba el ticket en las pestañas de detalle.</li><li>Pulsa <strong>Rectificar</strong>.</li><li>Elige <strong>Por diferencias</strong> o <strong>Sustitutiva</strong>.</li><li>Revisa la nueva operación que abre Factuzam, corrige sus líneas y finaliza el cobro con <code>[F12]</code>.</li></ol>
+<table>
+<thead><tr>
+<th>Modalidad</th>
+<th>Cómo se presenta</th>
+<th>Cuándo usarla</th>
+<th>Efecto en ventas y stock</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Por diferencias</strong></td><td>Carga las líneas originales en <strong>negativo</strong>. Puedes dejar solo las cantidades o conceptos que deban corregirse.</td><td>Devolución total/parcial, descuento omitido o diferencia concreta.</td><td>Conserva la venta original y añade la corrección. Las cantidades negativas compensan importes y movimientos de stock.</td></tr>
+<tr><td><strong>Sustitutiva</strong></td><td>Carga el contenido en <strong>positivo</strong> para dejar la versión completa y correcta.</td><td>Cuando conviene reemplazar íntegramente el ticket por otro corregido.</td><td>La original queda sustituida y deja de computar como venta activa; la nueva aporta los importes y movimientos corregidos.</td></tr>
+</tbody>
+</table>
+<p>Al cerrar la operación, Factuzam usa una <strong>serie rectificativa</strong>, enlaza el
+nuevo documento con el original y lo registra o encola según el modo fiscal.
+No se puede volver a rectificar un documento que ya es rectificativo.</p>
+<blockquote><p><strong>Convertir en normal</strong> es un flujo distinto: se utiliza cuando el cliente
+pide una factura nominativa de su ticket, no para corregir importes. Para
+las diferencias fiscales entre estas acciones, consulta
+<a href="11-verifactu.html#5-acciones-fiscales-sobre-una-factura-emitida">Acciones fiscales sobre una factura emitida</a>.</p></blockquote>
 <hr>
 <h3 id="arqueo-f11">Arqueo (F11)</h3>
 <p>El <strong>arqueo</strong> es el cierre y cuadre de la caja: calcula lo que <strong>debería
@@ -821,7 +866,7 @@ para casos en los que el ticket ya se cerró.</p></blockquote>
 <hr>
 <p><a href="04-menu-ventas-mayor.html">◀ Menú Ventas Mayor</a> · <a href="index.html">Índice</a> · <a href="06-menu-almacen.html">Siguiente ▶ Menú Almacén</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 22/07/2026</footer>
+<footer>Manual de Factuzam · generado el 31/07/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

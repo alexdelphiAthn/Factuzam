@@ -171,10 +171,34 @@ género contra el albarán del proveedor.
 
 ### 7. Fotos de la sesión
 
-Las fotos asignadas en una sesión todavía no materializada se guardan de
-forma temporal. Al materializar, se migran automáticamente al artículo o
-SKU creado. El botón **Bajar fotos** usa los parámetros de la categoría
-**Fotos** para descargar imágenes del servidor y asociarlas a la línea.
+La pantalla permite fotografiar y reconocer el género **antes de que el
+artículo exista en el catálogo**. Selecciona una línea y usa una de estas
+acciones:
+
+- **+ Foto** — elige una imagen local (`PNG`, `JPG`, `JPEG`, `WEBP`,
+  `AVIF` o `BMP`) y la asocia a la línea activa.
+- **Bajar fotos** — descarga las imágenes disponibles en el servidor y
+  guarda como foto provisional una imagen representativa de la línea.
+
+La pestaña **Fotos provisionales** permite revisar las imágenes de la
+sesión. La lista muestra la línea, el código de artículo tentativo, el
+modelo de proveedor, la descripción, el color, la asignación y el fichero;
+al cambiar de fila se actualizan la vista previa y el texto que indica a
+qué artículo o SKU se asignará.
+
+Mientras la sesión está abierta, las fotos se conservan como
+**provisionales** y quedan ligadas a su serie, número y línea. Al
+materializar:
+
+1. Se crea o reutiliza el artículo y sus SKUs.
+2. La foto provisional se migra al artículo o SKU definitivo.
+3. Se renombran las copias de 300 px, 600 px y resolución real.
+4. Si el artículo ya tenía fotos, la nueva se añade con el siguiente
+   índice disponible, sin sobrescribirlas.
+
+> Comprueba la vista previa antes de materializar. Después, la imagen se
+> gestiona como cualquier otra foto del catálogo mediante
+> `[Ctrl]+[F]` (ver [Foto flotante del artículo / SKU](01-conceptos-comunes.md#foto-flotante-del-articulo-sku)).
 
 ---
 

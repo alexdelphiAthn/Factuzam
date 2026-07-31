@@ -9,7 +9,7 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Verifica la fábrica de lecturas para la exportación NO VERI*FACTU.        }
+{    Verifica la fabrica explicita de la exportacion NO VERI*FACTU.            }
 {******************************************************************************}
 unit PruebasExportacionNoVerifactuPersistencia;
 
@@ -22,19 +22,14 @@ type
   [TestFixture]
   TPruebasExportacionNoVerifactuPersistencia = class
   public
-    [TearDown]
-    procedure Liberar;
     [Test]
-    procedure FabricaRegistrada_SeInvocaSinConexionReal;
-    [Test]
-    procedure FabricaAusente_FallaDeFormaRuidosa;
+    procedure FabricaExplicita_SeInvocaSinConexionReal;
   end;
 
 implementation
 
 uses
-  System.SysUtils, Uni, inLibVerifactuNoVerifactuExportIntf,
-  UniDataVerifactuNoVerifactuExport;
+  Uni, inLibVerifactuNoVerifactuExportIntf;
 
 var
   bFabricaInvocada: Boolean;
@@ -46,37 +41,15 @@ begin
   Result := nil;
 end;
 
-procedure TPruebasExportacionNoVerifactuPersistencia.Liberar;
-begin
-  TFabricaRepositorioExportacionNoVerifactu.Registrar(
-    CrearRepositorioExportacionNoVerifactuUniDAC);
-  bFabricaInvocada := False;
-end;
-
 procedure TPruebasExportacionNoVerifactuPersistencia.
-  FabricaRegistrada_SeInvocaSinConexionReal;
+  FabricaExplicita_SeInvocaSinConexionReal;
 var
   Repositorio: IRepositorioExportacionNoVerifactu;
 begin
   bFabricaInvocada := False;
-  TFabricaRepositorioExportacionNoVerifactu.Registrar(
-    CrearRepositorioExportacionNoVerifactuFalso);
-  Repositorio :=
-    TFabricaRepositorioExportacionNoVerifactu.Crear(nil);
+  Repositorio := CrearRepositorioExportacionNoVerifactuFalso(nil);
   Assert.IsTrue(bFabricaInvocada);
   Assert.IsFalse(Assigned(Repositorio));
-end;
-
-procedure TPruebasExportacionNoVerifactuPersistencia.
-  FabricaAusente_FallaDeFormaRuidosa;
-begin
-  TFabricaRepositorioExportacionNoVerifactu.Registrar(nil);
-  Assert.WillRaise(
-    procedure
-    begin
-      TFabricaRepositorioExportacionNoVerifactu.Crear(nil);
-    end,
-    Exception);
 end;
 
 initialization

@@ -9,15 +9,14 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Puerto de las operaciones de recepción de pedidos de compra y su          }
-{    fábrica registrable.                                                      }
+{    Puerto de las operaciones de recepción de pedidos de compra.             }
 {******************************************************************************}
 unit inLibPedidosCompraIntf;
 
 interface
 
 uses
-  Uni, inLibGridPivoteCompra;
+  inLibGridPivoteCompra;
 
 type
   TParametrosRecepcionPedidoCompra = record
@@ -76,36 +75,6 @@ type
       const AParametros: TParametrosRecepcionPedidoCompra;
       out AResultado: TResultadoRecepcionPedidoCompra): Boolean;
   end;
-  TFabricaCrearPedidosCompra = function(
-    AConexion: TUniConnection): IPedidosCompra;
-  // El adaptador UniData* registra la persistencia en su initialization.
-  TFabricaPedidosCompra = class
-  private
-    class var FFabrica: TFabricaCrearPedidosCompra;
-  public
-    class procedure Registrar(
-      AFabrica: TFabricaCrearPedidosCompra);
-    class function Crear(
-      AConexion: TUniConnection): IPedidosCompra;
-  end;
 
 implementation
-
-uses
-  System.SysUtils, inLibMsgCompras;
-
-class procedure TFabricaPedidosCompra.Registrar(
-  AFabrica: TFabricaCrearPedidosCompra);
-begin
-  FFabrica := AFabrica;
-end;
-
-class function TFabricaPedidosCompra.Crear(
-  AConexion: TUniConnection): IPedidosCompra;
-begin
-  if not Assigned(FFabrica) then
-    raise Exception.Create(SErrorPedidosCompraNoRegistrados);
-  Result := FFabrica(AConexion);
-end;
-
 end.

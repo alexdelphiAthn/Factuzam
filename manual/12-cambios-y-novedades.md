@@ -13,6 +13,11 @@ un mapa rápido de cambios.
 
 | Novedad | Dónde verlo |
 |---------|-------------|
+| Interfaz traducible desde un catálogo central, selector por parámetro, respaldo en español y editor independiente de traducciones. | [Otros ▸ Idioma y traducciones](07-menu-otros.md#idioma-y-traducciones) |
+| Rectificación de tickets **por diferencias** o mediante documento **sustitutivo**, con trazabilidad fiscal y tratamiento coherente de ventas y stock. | [Caja ▸ Rectificar un ticket](05-menu-caja.md#rectificar-un-ticket-por-diferencias-o-sustitutiva) |
+| Sesiones de compra con **foto provisional**, vista previa y migración automática de la imagen al artículo o SKU materializado. | [Compras ▸ Fotos de la sesión](03-menu-compras.md#7-fotos-de-la-sesion) |
+| Aplicación móvil **VentasFzam** para consultar ventas del día, fotografías, coste, margen y descuentos sin modificar datos. | [Aplicaciones móviles ▸ VentasFzam](13-aplicaciones-moviles.md#ventasfzam-ventas-del-dia-en-el-movil) |
+| Arquitectura por capas, aplicación progresiva de SOLID y catálogo de consultas SQL revisables y configurables con validación y fallback. | [Arquitectura y desarrollo](14-arquitectura-y-desarrollo.md) |
 | **Listado de operaciones de venta del TPV** por fechas, con color básico visual y selección acumulativa de empresas/almacenes/cajas cuando el usuario no está restringido. | [TPV ▸ Listados](05-menu-caja.md#listados) |
 | **Documentos de Trabajo**: listas de artículos/SKUs para compartir, imprimir etiquetas y enviar a albarán, TPV, inventario o cambio de tarifas. | [Almacén ▸ Documentos de Trabajo](06-menu-almacen.md#documentos-de-trabajo) |
 | **Búsqueda de datos de artículos** con `[Ctrl]+[E]` desde cualquier ventana: por talla, color, proximidad de paleta, stock y perfiles guardados. | [Conceptos comunes ▸ Búsqueda de datos](01-conceptos-comunes.md#busqueda-de-datos-de-articulos-ctrle) |
@@ -52,7 +57,7 @@ normales del manual.
 
 | Función incorporada | Dónde verlo |
 |---------------------|-------------|
-| Sesiones de compra con aplicación de kits, pestaña proveedor y fotos de sesión. | [Sesiones de compra](03-menu-compras.md#sesiones-crear-articulos-y-un-pedido-o-un-albaran) |
+| Sesiones de compra con aplicación de kits y pestaña proveedor. | [Sesiones de compra](03-menu-compras.md#sesiones-crear-articulos-y-un-pedido-o-un-albaran) |
 | Pedidos con control de cantidades **A recibir** e incorporación a albarán existente. | [Pedidos de compra](03-menu-compras.md#pedidos) |
 | Marca informativa **Depósito** en albaranes de compra. | [Albaranes de compra](03-menu-compras.md#albaranes) |
 | Devoluciones a proveedor como documento propio con salida de stock. | [Devoluciones a Proveedor](03-menu-compras.md#devoluciones-a-proveedor) |
@@ -95,4 +100,4 @@ normales del manual.
 
 ---
 
-[◀ Verifactu](11-verifactu.md) · [Índice](README.md)
+[◀ Verifactu](11-verifactu.md) · [Índice](README.md) · [Siguiente ▶ Aplicaciones móviles](13-aplicaciones-moviles.md)

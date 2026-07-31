@@ -37,7 +37,7 @@ function CalcularEstadoReintentoVerifactu(
 implementation
 uses
   System.SysUtils, System.Classes, Data.DB, inLibVerifactu,
-  inLibRelojFiscal, inLibVentasWsCola;
+  inLibRelojFiscal, inLibVentasWsCola, UniDataVentasWsCola;
 function CalcularEsperaReintentoVerifactu(AIntentos: Integer): Integer;
 begin
   if AIntentos > 5 then
@@ -251,7 +251,10 @@ begin
     'Registro de facturación (' + ATipoOperacion + ') aceptado por la ' +
     'AEAT (' + AResultado.EstadoRegistro + ')',
     'CSV: ' + AResultado.RequestId, ASerie, ANumero);
-  TVentasWsCola.RegistrarEventoSeguro(AParametrosCaja, AConexion, AUsuario,
+  TVentasWsCola.RegistrarEventoSeguro(
+    AParametrosCaja,
+    CrearRepositorioVentasWsColaUniDAC(AConexion),
+    AUsuario,
     'FISCAL_ACTUALIZADO', ASerie, ANumero);
 end;
 class procedure TResultadosVerifactuColaUniDAC.GuardarEnvioError(
@@ -310,7 +313,10 @@ begin
     cEventoVerifactuEnvioError,
     'Error de envío Verifactu (intento ' + IntToStr(AIntentos + 1) +
     '): ' + AMensaje, '', ASerie, ANumero);
-  TVentasWsCola.RegistrarEventoSeguro(AParametrosCaja, AConexion, AUsuario,
+  TVentasWsCola.RegistrarEventoSeguro(
+    AParametrosCaja,
+    CrearRepositorioVentasWsColaUniDAC(AConexion),
+    AUsuario,
     'FISCAL_ACTUALIZADO', ASerie, ANumero);
 end;
 end.

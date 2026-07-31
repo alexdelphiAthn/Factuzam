@@ -426,6 +426,7 @@ begin
     Impresor,
     nil,
     nil,
+    nil,
     nil);
   Solicitud := Default(TSolicitudCierreVenta);
   Solicitud.TipoImpresion := tiConTicket;

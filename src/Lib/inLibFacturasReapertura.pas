@@ -2,41 +2,39 @@
 {                                                                              }
 {  Módulo:       inLibFacturasReapertura                                       }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       29/07/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       31/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
 {    Reabre un borrador fiscal pendiente y aparca su alta en la cola.          }
+{    La persistencia entra por IRepositorioReaperturaFactura.                  }
 {******************************************************************************}
 unit inLibFacturasReapertura;
 
 interface
 
 uses
-  Uni, inLibParametrosIntf, inLibFacturasServiciosIntf;
+  Uni, inLibParametrosIntf, inLibFacturasServiciosIntf,
+  inLibFacturasPersistenciaIntf, inLibVentasWsColaIntf;
 
 function CrearServicioReaperturaBorrador(
   const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja;
-  AConexion: TUniConnection
+  AConexion: TUniConnection;
+  const ARepositorio: IRepositorioReaperturaFactura;
+  const ARepositorioVentasWs: IRepositorioVentasWsCola
 ): IServicioReaperturaBorrador;
 
 implementation
 
 uses
-  System.SysUtils, Data.DB, inLibMsgFacturas, inLibVerifactu,
-  inLibVentasWsCola;
+  System.SysUtils, inLibMsgFacturas,
+  inLibVerifactu, inLibVentasWsCola;
 
 type
-  TDatosReaperturaBorrador = record
-    Encontrada: Boolean;
-    Consolidada: Boolean;
-    Fase: string;
-    EstadoCola: string;
-  end;
   TServicioReaperturaBorrador = class(
     TInterfacedObject,
     IServicioReaperturaBorrador)
@@ -44,24 +42,21 @@ type
     FParametrosApp: IParametrosAplicacion;
     FParametrosCaja: IParametrosCaja;
     FConexion: TUniConnection;
-    function CargarDatos(
-      const ASerie, ANumero: string;
-      ABloquear: Boolean): TDatosReaperturaBorrador;
+    FRepositorio: IRepositorioReaperturaFactura;
+    FRepositorioVentasWs: IRepositorioVentasWsCola;
     function Evaluar(
       const ASerie, ANumero: string;
-      const ADatos: TDatosReaperturaBorrador
+      const ADatos: TDatosFacturaReapertura
     ): TResultadoOperacionFactura;
-    procedure AparcarAlta(
-      const ASerie, ANumero, AUsuario: string);
-    procedure ActualizarFactura(
-      const ASerie, ANumero, AUsuario: string);
     procedure RegistrarEventos(
       const ASerie, ANumero, AUsuario: string);
   public
     constructor Create(
       const AParametrosApp: IParametrosAplicacion;
       const AParametrosCaja: IParametrosCaja;
-      AConexion: TUniConnection);
+      AConexion: TUniConnection;
+      const ARepositorio: IRepositorioReaperturaFactura;
+      const ARepositorioVentasWs: IRepositorioVentasWsCola);
     function Validar(
       const ASerie, ANumero: string
     ): TResultadoOperacionFactura;
@@ -72,75 +67,25 @@ type
 constructor TServicioReaperturaBorrador.Create(
   const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja;
-  AConexion: TUniConnection);
+  AConexion: TUniConnection;
+  const ARepositorio: IRepositorioReaperturaFactura;
+  const ARepositorioVentasWs: IRepositorioVentasWsCola);
 begin
   inherited Create;
   if not Assigned(AConexion) then
     raise EArgumentNilException.Create('AConexion');
+  if not Assigned(ARepositorio) then
+    raise EArgumentNilException.Create('ARepositorio');
   FParametrosApp := AParametrosApp;
   FParametrosCaja := AParametrosCaja;
   FConexion := AConexion;
-end;
-
-function TServicioReaperturaBorrador.CargarDatos(
-  const ASerie, ANumero: string;
-  ABloquear: Boolean): TDatosReaperturaBorrador;
-var
-  Qry: TUniQuery;
-begin
-  Result := Default(TDatosReaperturaBorrador);
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := FConexion;
-    Qry.SQL.Text :=
-      'SELECT FASE_FAC, ESCONSOLIDADA_FAC ' +
-      '  FROM fza_facturas ' +
-      ' WHERE SERIE_FAC = :serie ' +
-      '   AND NUMERO_FAC = :numero';
-    if ABloquear then
-      Qry.SQL.Add(' FOR UPDATE');
-    Qry.ParamByName('serie').AsString := ASerie;
-    Qry.ParamByName('numero').AsString := ANumero;
-    Qry.Open;
-    Result.Encontrada := not Qry.IsEmpty;
-    if Result.Encontrada then
-    begin
-      Result.Fase := Qry.FieldByName('FASE_FAC').AsString;
-      Result.Consolidada := SameText(
-        Qry.FieldByName('ESCONSOLIDADA_FAC').AsString,
-        'S');
-    end;
-    Qry.Close;
-    if Result.Encontrada and
-       (not Result.Consolidada) and
-       (Trim(Result.Fase) <> '') and
-       (not SameText(Result.Fase, 'BORRADOR')) then
-    begin
-      Qry.SQL.Text :=
-        'SELECT ESTADO_VFCOLA ' +
-        '  FROM fza_verifactu_cola ' +
-        ' WHERE SERIE_FAC_VFCOLA = :serie ' +
-        '   AND NUMERO_FAC_VFCOLA = :numero ' +
-        '   AND TIPO_OPERACION_VFCOLA = ''ALTA''';
-      if ABloquear then
-        Qry.SQL.Add(' FOR UPDATE');
-      Qry.ParamByName('serie').AsString := ASerie;
-      Qry.ParamByName('numero').AsString := ANumero;
-      Qry.Open;
-      if not Qry.IsEmpty then
-      begin
-        Result.EstadoCola :=
-          Qry.FieldByName('ESTADO_VFCOLA').AsString;
-      end;
-    end;
-  finally
-    FreeAndNil(Qry);
-  end;
+  FRepositorio := ARepositorio;
+  FRepositorioVentasWs := ARepositorioVentasWs;
 end;
 
 function TServicioReaperturaBorrador.Evaluar(
   const ASerie, ANumero: string;
-  const ADatos: TDatosReaperturaBorrador
+  const ADatos: TDatosFacturaReapertura
 ): TResultadoOperacionFactura;
 begin
   if not ADatos.Encontrada then
@@ -159,59 +104,6 @@ begin
   end;
 end;
 
-procedure TServicioReaperturaBorrador.AparcarAlta(
-  const ASerie, ANumero, AUsuario: string);
-var
-  Qry: TUniQuery;
-begin
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := FConexion;
-    Qry.SQL.Text :=
-      'UPDATE fza_verifactu_cola ' +
-      '   SET ESTADO_VFCOLA = ''ERROR'', ' +
-      '       CONTADOR_INTENTOS_VFCOLA = 999999, ' +
-      '       MENSAJE_ERROR_VFCOLA = ''Lanzamiento anulado ' +
-      'por el usuario: borrador devuelto a BORRADOR'', ' +
-      '       INSTANTE_MODIF = NOW(), ' +
-      '       USUARIO_MODIF = :usuario ' +
-      ' WHERE SERIE_FAC_VFCOLA = :serie ' +
-      '   AND NUMERO_FAC_VFCOLA = :numero ' +
-      '   AND TIPO_OPERACION_VFCOLA = ''ALTA''';
-    Qry.ParamByName('serie').AsString := ASerie;
-    Qry.ParamByName('numero').AsString := ANumero;
-    Qry.ParamByName('usuario').AsString := AUsuario;
-    Qry.Execute;
-  finally
-    FreeAndNil(Qry);
-  end;
-end;
-
-procedure TServicioReaperturaBorrador.ActualizarFactura(
-  const ASerie, ANumero, AUsuario: string);
-var
-  Qry: TUniQuery;
-begin
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := FConexion;
-    Qry.SQL.Text :=
-      'UPDATE fza_facturas ' +
-      '   SET FASE_FAC = ''BORRADOR'', ' +
-      '       INSTANTE_MODIF = NOW(), ' +
-      '       USUARIO_MODIF = :usuario ' +
-      ' WHERE SERIE_FAC = :serie ' +
-      '   AND NUMERO_FAC = :numero ' +
-      '   AND ESCONSOLIDADA_FAC <> ''S''';
-    Qry.ParamByName('serie').AsString := ASerie;
-    Qry.ParamByName('numero').AsString := ANumero;
-    Qry.ParamByName('usuario').AsString := AUsuario;
-    Qry.Execute;
-  finally
-    FreeAndNil(Qry);
-  end;
-end;
-
 procedure TServicioReaperturaBorrador.RegistrarEventos(
   const ASerie, ANumero, AUsuario: string);
 begin
@@ -226,7 +118,7 @@ begin
     ANumero);
   TVentasWsCola.RegistrarEventoSeguro(
     FParametrosCaja,
-    FConexion,
+    FRepositorioVentasWs,
     AUsuario,
     'VENTA_REABIERTA',
     ASerie,
@@ -237,16 +129,16 @@ function TServicioReaperturaBorrador.Validar(
   const ASerie, ANumero: string
 ): TResultadoOperacionFactura;
 var
-  Datos: TDatosReaperturaBorrador;
+  Datos: TDatosFacturaReapertura;
 begin
-  Datos := CargarDatos(ASerie, ANumero, False);
+  Datos := FRepositorio.CargarDatosReapertura(ASerie, ANumero, False);
   Result := Evaluar(ASerie, ANumero, Datos);
 end;
 
 procedure TServicioReaperturaBorrador.Reabrir(
   const ASerie, ANumero, AUsuario: string);
 var
-  Datos: TDatosReaperturaBorrador;
+  Datos: TDatosFacturaReapertura;
   ResultadoValidacion: TResultadoOperacionFactura;
   TransaccionPropia: Boolean;
 begin
@@ -254,7 +146,7 @@ begin
   if TransaccionPropia then
     FConexion.StartTransaction;
   try
-    Datos := CargarDatos(ASerie, ANumero, True);
+    Datos := FRepositorio.CargarDatosReapertura(ASerie, ANumero, True);
     ResultadoValidacion := Evaluar(ASerie, ANumero, Datos);
     if not ResultadoValidacion.Exito then
     begin
@@ -262,8 +154,8 @@ begin
         ResultadoValidacion.Mensaje);
     end;
     if Datos.EstadoCola <> '' then
-      AparcarAlta(ASerie, ANumero, AUsuario);
-    ActualizarFactura(ASerie, ANumero, AUsuario);
+      FRepositorio.AparcarAltaEnCola(ASerie, ANumero, AUsuario);
+    FRepositorio.MarcarComoBorrador(ASerie, ANumero, AUsuario);
     if TransaccionPropia and FConexion.InTransaction then
       FConexion.Commit;
   except
@@ -277,13 +169,17 @@ end;
 function CrearServicioReaperturaBorrador(
   const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja;
-  AConexion: TUniConnection
+  AConexion: TUniConnection;
+  const ARepositorio: IRepositorioReaperturaFactura;
+  const ARepositorioVentasWs: IRepositorioVentasWsCola
 ): IServicioReaperturaBorrador;
 begin
   Result := TServicioReaperturaBorrador.Create(
     AParametrosApp,
     AParametrosCaja,
-    AConexion);
+    AConexion,
+    ARepositorio,
+    ARepositorioVentasWs);
 end;
 
 end.

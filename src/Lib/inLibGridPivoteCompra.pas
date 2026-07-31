@@ -162,7 +162,7 @@ type
     FOrigColIndexCol     : Integer;
     FOrigColIndexColProv : Integer;
     FAlturaFilaOriginal  : Integer;
-    FRepositorio         : IRepositorioGridPivoteCompra;
+    FRepositorio         : TRepositoriosGridPivoteCompra;
     procedure FilterRecord(DataSet: TDataSet; var Accept: Boolean);
     function  GetSerieNumeroActivos(out ASerie, ANumero: string): Boolean;
     function  GetLineaActiva(out ALinea: Integer;
@@ -182,7 +182,9 @@ type
                 ACantidad: Double; out ALineaReal: string): Boolean;
     procedure LogSes(const ATexto: string);
   public
-    constructor Create(const ACfg: TGridPivoteCompraConfig);
+    constructor Create(
+      const ACfg: TGridPivoteCompraConfig;
+      const ARepositorio: TRepositoriosGridPivoteCompra);
     destructor Destroy; override;
     function ValidarPivotePosible(var AMensaje: string): Boolean;
     procedure Activar;
@@ -303,12 +305,14 @@ implementation
 uses
   inLibLog, inLibMsgArticulos, inLibMsgCompras;
 
-constructor TGridPivoteCompra.Create(const ACfg: TGridPivoteCompraConfig);
+constructor TGridPivoteCompra.Create(
+  const ACfg: TGridPivoteCompraConfig;
+  const ARepositorio: TRepositoriosGridPivoteCompra);
 begin
   inherited Create;
   FCfg := ACfg;
-  FRepositorio := TFabricaRepositorioGridPivoteCompra.Crear(ACfg.Conexion);
-  FRepositorio.Configurar(
+  FRepositorio := ARepositorio;
+  FRepositorio.Configuracion.Configurar(
     ACfg.TablaLineas,
     ACfg.FieldSerieLin,
     ACfg.FieldNumeroLin,
@@ -380,7 +384,7 @@ begin
   FreeAndNil(FPivotSkuPrefijo);
   FreeAndNil(FPivotVarSku);
   FreeAndNil(FPivotSinTalla);
-  FRepositorio := nil;
+  FRepositorio := Default(TRepositoriosGridPivoteCompra);
   inherited;
 end;
 
@@ -445,7 +449,7 @@ begin
     AMensaje := SErrorConexionResolverColorCompra
   else
   begin
-    if not FRepositorio.BuscarColorBasico(
+    if not FRepositorio.Colores.BuscarColorBasico(
       sCodigo,
       iIdAtb,
       ANombreColor) then
@@ -453,19 +457,19 @@ begin
     else
     begin
       AValorAv := sCodigo;
-      if FRepositorio.BuscarValorColor(
+      if FRepositorio.Colores.BuscarValorColor(
         AValorAv,
         AIdAv,
         bTieneBasico) then
       begin
         if (not bTieneBasico) and (iIdAtb > 0) then
-          FRepositorio.VincularValorColor(
+          FRepositorio.Colores.VincularValorColor(
             AIdAv,
             iIdAtb,
             FCfg.ContextoSesion.Identidad.Usuario);
       end
       else
-        AIdAv := FRepositorio.InsertarValorColor(
+        AIdAv := FRepositorio.Colores.InsertarValorColor(
           AValorAv,
           ANombreColor,
           FCfg.ContextoSesion.Identidad.Usuario,
@@ -491,7 +495,8 @@ begin
     incidencias := TStringList.Create;
     q := nil;
     try
-      q := FRepositorio.BuscarArticulosSinSistema(sSerie, sNumero);
+      q := FRepositorio.Validacion.BuscarArticulosSinSistema(
+        sSerie, sNumero);
       while not q.Eof do
       begin
         incidencias.Add(Format(SErrorArticuloSinSistemaTallasPivote,
@@ -499,7 +504,8 @@ begin
         q.Next;
       end;
       FreeAndNil(q);
-      q := FRepositorio.BuscarSistemasConExceso(sSerie, sNumero);
+      q := FRepositorio.Validacion.BuscarSistemasConExceso(
+        sSerie, sNumero);
       while not q.Eof do
       begin
         incidencias.Add(Format(SErrorSistemaTallasSuperaMaximoPivote,
@@ -510,7 +516,8 @@ begin
         q.Next;
       end;
       FreeAndNil(q);
-      q := FRepositorio.BuscarSkusFueraSistema(sSerie, sNumero);
+      q := FRepositorio.Validacion.BuscarSkusFueraSistema(
+        sSerie, sNumero);
       while not q.Eof do
       begin
         incidencias.Add(Format(SErrorSkuFueraSistemaTallasPivote,
@@ -847,7 +854,7 @@ begin
   dictRepr := TDictionary<string,Integer>.Create;
   q := nil;
   try
-    q := FRepositorio.BuscarLineasPivote(sSerie, sNumero);
+    q := FRepositorio.Lineas.BuscarLineasPivote(sSerie, sNumero);
     while not q.Eof do
     begin
       iLinea    := q.FieldByName('LINEA').AsInteger;
@@ -2091,7 +2098,7 @@ begin
     Exit;
   if not FPivotColorAv.TryGetValue(iLineaRepr, iColorAv) then
     iColorAv := 0;
-  ASku := FRepositorio.BuscarSku(sArt, iTallaAv, iColorAv);
+  ASku := FRepositorio.Skus.BuscarSku(sArt, iTallaAv, iColorAv);
   Result := Trim(ASku) <> '';
   if Result then
     Exit;
@@ -2099,7 +2106,7 @@ begin
   FPivotSkuPrefijo.TryGetValue(iLineaRepr, sPrefijo);
   if sPrefijo = '' then
     sPrefijo := sArt;
-  sTalla := FRepositorio.BuscarValorAtributo(iTallaAv);
+  sTalla := FRepositorio.Skus.BuscarValorAtributo(iTallaAv);
   if Trim(sTalla) = '' then
     Exit;
   ASku := sPrefijo + '/' + sTalla;
@@ -2107,7 +2114,7 @@ begin
   FPivotVarSku.TryGetValue(iLineaRepr, sVarSku);
   if sVarSku = '' then
     sVarSku := 'TC';
-  FRepositorio.AsegurarSkuConAtributos(
+  FRepositorio.Skus.AsegurarSkuConAtributos(
     ASku,
     sArt,
     sVarSku,
@@ -2555,11 +2562,11 @@ begin
           sVarSku := '';
           FPivotVarSku.TryGetValue(iLinea, sVarSku);
           if sVarSku = '' then
-            sVarSku := FRepositorio.BuscarTipoVariacion(sArt);
+            sVarSku := FRepositorio.Skus.BuscarTipoVariacion(sArt);
           if sVarSku = '' then
             sVarSku := 'TC';
           sSkuColor := sArt + '/' + sValorAv;
-          FRepositorio.AsegurarSkuColor(
+          FRepositorio.Skus.AsegurarSkuColor(
             sSkuColor,
             sArt,
             sVarSku,

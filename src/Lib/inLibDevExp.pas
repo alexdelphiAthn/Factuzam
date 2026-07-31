@@ -34,7 +34,7 @@ uses
     cxCheckBox, cxMemo, cxCurrencyEdit, ExtDlgs, OleServer, AxCtrls,
     OleCtrls, DBOleCtl, cxLookAndFeels, System.Generics.Collections, TypInfo,
     inLibLog, inLibParametrosIntf, Uni, inLibFormatoExcel,
-    inLibFacturas;
+    inLibFacturas, inLibFacturasLecturasIntf;
   procedure BusqAllGrid(var AdbTvGen: TcxGridDBTableView;
                         AsDatoBusq: String);
   procedure GrabarGrids(frmMto: TComponent);
@@ -89,6 +89,8 @@ uses
                           AsNomFile: string);
   procedure BusqEnTodoElGrid(AGrid: TcxGrid; AsDatoBusq: String);
   procedure GridRecalc(AConexion: TUniConnection;
+                       const ARepositorioLecturas:
+                         IRepositorioLecturasFactura;
                        Sender: TObject;
                        View: TcxGridDBTableView;
                        AcdsLineas, AcdsCabecera: TDataSet;
@@ -116,6 +118,8 @@ implementation
        inLibConfigCampos;
 
 procedure GridRecalc(AConexion: TUniConnection;
+                     const ARepositorioLecturas:
+                       IRepositorioLecturasFactura;
                      Sender: TObject;
                      View: TcxGridDBTableView;
                      AcdsLineas, AcdsCabecera: TDataSet;
@@ -170,6 +174,7 @@ begin
     begin
       ActualizarLineaFactura(
         AConexion,
+        ARepositorioLecturas,
         AcdsLineas,
         AcdsCabecera,
         FieldName,
@@ -518,7 +523,7 @@ begin
      (not CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave)) then
   begin
     Log.LogWarning(Format('RestaurarFocoGrid: vista=%s clave="%s" ' +
-      'no disponible en la SELECT activa',
+      'no disponible en la consulta activa',
       [AcxgrdtvVista.Name, sCamposClave]));
     oDBDataCtrl.KeyFieldNames := '';
     sCamposClave := '';
@@ -610,7 +615,7 @@ begin
      (not CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave)) then
   begin
     Log.LogWarning(Format('CollectSettingsColumnProfile: vista=%s ' +
-      'clave="%s" no disponible en la SELECT activa',
+      'clave="%s" no disponible en la consulta activa',
       [AcxgrdtvVista.Name, sCamposClave]));
     oDBDataCtrl.KeyFieldNames := '';
     sCamposClave := '';

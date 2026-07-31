@@ -17,25 +17,27 @@ unit inLibBusquedasCompra;
 interface
 
 uses
-  Data.DB, Uni, Vcl.Forms;
+  Data.DB, Uni, Vcl.Forms, inLibGenBusq;
 
 function SqlBusquedaArticulosProveedorCompra: string;
 function SqlBusquedaSkuCompra: string;
 function ValorTextoDataSetCompra(ADataSet: TDataSet;
   const ACampo: string): string;
 function BuscarArticuloProveedorCompra(
-  AConexion: TUniConnection; const ACodigoProveedor, ACaption,
+  AConexion: TUniConnection; const ABusquedaVisual: IBusquedaVisual;
+  const ACodigoProveedor, ACaption,
   ANombreFormulario: string;
   AFormularioPadre: TCustomForm): string;
 function BuscarSkuArticuloCompra(
-  AConexion: TUniConnection; const ACodigoArticulo, ACaption,
+  AConexion: TUniConnection; const ABusquedaVisual: IBusquedaVisual;
+  const ACodigoArticulo, ACaption,
   ANombreFormulario: string;
   AFormularioPadre: TCustomForm): string;
 
 implementation
 
 uses
-  System.SysUtils, inLibGenBusq;
+  System.SysUtils;
 
 function SqlBusquedaArticulosProveedorCompra: string;
 begin
@@ -99,7 +101,8 @@ begin
 end;
 
 function BuscarArticuloProveedorCompra(
-  AConexion: TUniConnection; const ACodigoProveedor, ACaption,
+  AConexion: TUniConnection; const ABusquedaVisual: IBusquedaVisual;
+  const ACodigoProveedor, ACaption,
   ANombreFormulario: string;
   AFormularioPadre: TCustomForm): string;
 var
@@ -115,7 +118,7 @@ begin
       oConsulta.Connection := AConexion;
       oConsulta.SQL.Text := SqlBusquedaArticulosProveedorCompra;
       oConsulta.ParamByName('prv').AsString := sProveedor;
-      if TBusquedaUtils.EjecutarBusqueda(
+      if ABusquedaVisual.EjecutarBusqueda(
         AConexion, ACaption, oConsulta, ANombreFormulario,
         AFormularioPadre) and
          Assigned(oConsulta.FindField('CODIGO_ART_ART')) then
@@ -128,7 +131,8 @@ begin
 end;
 
 function BuscarSkuArticuloCompra(
-  AConexion: TUniConnection; const ACodigoArticulo, ACaption,
+  AConexion: TUniConnection; const ABusquedaVisual: IBusquedaVisual;
+  const ACodigoArticulo, ACaption,
   ANombreFormulario: string;
   AFormularioPadre: TCustomForm): string;
 var
@@ -144,7 +148,7 @@ begin
       oConsulta.Connection := AConexion;
       oConsulta.SQL.Text := SqlBusquedaSkuCompra;
       oConsulta.ParamByName('art').AsString := sArticulo;
-      if TBusquedaUtils.EjecutarBusqueda(
+      if ABusquedaVisual.EjecutarBusqueda(
         AConexion, ACaption, oConsulta, ANombreFormulario,
         AFormularioPadre) and
          Assigned(oConsulta.FindField('CODIGO_UNIDAD_SKU')) then

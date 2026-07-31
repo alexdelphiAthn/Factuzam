@@ -208,6 +208,7 @@ sif:instalacion
 recuentos:leer
 recuentos:escribir
 ventas:escribir
+descargar:traducciones
 ```
 
 Factuzam enviará la credencial de forma homogénea:

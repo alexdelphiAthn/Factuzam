@@ -17,22 +17,24 @@ interface
 
 uses
   Uni,
+  inLibFotos,
   inLibComprasSesionesMaterializacionIntf,
   UniDataComprasSesiones;
 
 function SanearColorSku(const ATexto: string): string;
 function ResolverIdAvColorLinea(
   AConn: TUniConnection;
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  const ALecturas: ILecturasArticulosMaterializacion;
   const AColorTexto, ACodigoAtbColor, AUsuario: string;
   out AValor: string): Integer;
 function ResolverCodigoSku(
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  const ALecturas: ILecturasArticulosMaterializacion;
   const ACodigoArt: string;
   AIdAvPivot, AIdAvFila: Integer): string;
 procedure MaterializarArticulosSesion(
   ADM: TdmComprasSesiones;
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  AFotos: TFotosArticulos;
+  const ALecturas: ILecturasArticulosMaterializacion;
   const AUsuario: string);
 
 implementation
@@ -42,12 +44,11 @@ uses
   Data.DB, DBAccess,
   inLibEAN13,
   inLibComprasSesionesReglas,
-  inLibFotos,
   inLibValoresAutomaticos,
   inLibMsgCompras;
 function GenerarEAN13Local(
                            const ALecturas:
-                           ILecturasMaterializacionComprasSesiones;
+                           ILecturasArticulosMaterializacion;
                            const APrefijo: string): string;
 var
   sPref   : string;
@@ -253,7 +254,7 @@ end;
 // NOTA: dos proveedores con texto distinto para el mismo color basico
 // generan AV/SKU distintos (identidad por proveedor, decision de negocio).
 function ResolverIdColorBasico(
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  const ALecturas: ILecturasArticulosMaterializacion;
   const ACodigoAtbColor: string): Integer;
 begin
   Result := 0;
@@ -268,7 +269,7 @@ begin
 end;
 
 function BuscarValorColor(
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  const ALecturas: ILecturasArticulosMaterializacion;
   const AValor: string;
   out ATieneColorBasico: Boolean): Integer;
 var
@@ -294,7 +295,7 @@ end;
 
 function CrearValorColor(
   AQuery: TUniQuery;
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  const ALecturas: ILecturasArticulosMaterializacion;
   const AValor, ADescripcion, AUsuario: string;
   AIdColorBasico: Integer): Integer;
 var
@@ -328,7 +329,7 @@ end;
 
 function ResolverIdAvColorLinea(AConn: TUniConnection;
                                  const ALecturas:
-                                 ILecturasMaterializacionComprasSesiones;
+                                 ILecturasArticulosMaterializacion;
                                  const AColorTexto, ACodigoAtbColor,
                                        AUsuario: string;
                                  out AValor: string): Integer;
@@ -397,7 +398,7 @@ end;
 
 function CargarColorLineaSku(
   AConn: TUniConnection;
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  const ALecturas: ILecturasArticulosMaterializacion;
   const ASerieSesion, ANumeroSesion, AUsuario: string;
   ALinea: Integer;
   out AValorColor: string): Integer;
@@ -503,7 +504,7 @@ begin
 end;
 
 procedure AsegurarEan13Sku(
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  const ALecturas: ILecturasArticulosMaterializacion;
   AQuery: TUniQuery;
   const ACodigoSku, APrefijoEan, AUsuario: string);
 var
@@ -527,7 +528,7 @@ begin
 end;
 
 procedure ProcesarSkuSesion(
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  const ALecturas: ILecturasArticulosMaterializacion;
   const ASku: TSkuSesionMaterializacion;
   AOperacion: TUniQuery;
   const ACodigoArticulo, AUsuario, APrefijoEan,
@@ -569,7 +570,7 @@ end;
 
 procedure InsertarSkusYBarras(AConn: TUniConnection;
                               const ALecturas:
-                              ILecturasMaterializacionComprasSesiones;
+                              ILecturasArticulosMaterializacion;
                               const ASerieSes, ANumSes, ACodigoArt,
                                     AUsuario, APrefijoEAN: string;
                               ALinea: Integer;
@@ -606,7 +607,7 @@ end;
 
 procedure UpsertArticuloProveedor(AConn: TUniConnection;
                                   const ALecturas:
-                                  ILecturasMaterializacionComprasSesiones;
+                                  ILecturasArticulosMaterializacion;
                                   const ACodigoArt, ACodigoPrv,
                                         ARefPrv, AUsuario: string;
                                   APrecio: Double);
@@ -684,7 +685,7 @@ end;
 // hereda al SKU si no hay override.
 procedure UpsertArticuloTarifa(AConn: TUniConnection;
                                const ALecturas:
-                               ILecturasMaterializacionComprasSesiones;
+                               ILecturasArticulosMaterializacion;
                                const ACodigoArt, ACodigoTar,
                                      AUsuario: string;
                                APrecioVenta: Double);
@@ -751,7 +752,7 @@ end;
 // crearlo o saltarse el movimiento).
 function ResolverCodigoSku(
                             const ALecturas:
-                            ILecturasMaterializacionComprasSesiones;
+                            ILecturasArticulosMaterializacion;
                             const ACodigoArt: string;
                             AIdAvPivot, AIdAvFila: Integer): string;
 begin
@@ -771,7 +772,8 @@ end;
 
 procedure MaterializarArticulosSesion(
   ADM: TdmComprasSesiones;
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  AFotos: TFotosArticulos;
+  const ALecturas: ILecturasArticulosMaterializacion;
   const AUsuario: string);
 var
   oLineas: TLineasArticuloMaterializacion;
@@ -873,12 +875,15 @@ begin
         AUsuario,
         rPrecioVta);
     end;
-    inLibFotos.oFotos.MigrarFotosSesion(
-      sSerieSesion,
-      sNumeroSesion,
-      iLin,
-      sCodigoArt,
-      AUsuario);
+    if Assigned(AFotos) then
+    begin
+      AFotos.MigrarFotosSesion(
+        sSerieSesion,
+        sNumeroSesion,
+        iLin,
+        sCodigoArt,
+        AUsuario);
+    end;
   end;
 end;
 

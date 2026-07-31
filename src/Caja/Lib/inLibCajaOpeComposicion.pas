@@ -22,7 +22,8 @@ interface
 uses
   Uni, inLibParametrosIntf,
   inLibContextoSesionIntf,
-  inLibCajaVentaIntf;
+  inLibCajaVentaIntf,
+  inLibFacturasPersistenciaIntf, inLibVentasWsColaIntf;
 
 function CrearServiciosOperacionCaja(
   AConexion: TUniConnection;
@@ -30,7 +31,9 @@ function CrearServiciosOperacionCaja(
   const AContextoSesion: IContextoSesionAplicacion;
   const AImpresor: IImpresorVenta;
   const AGrabador: IGrabadorVentaCaja;
-  const ARepositorioConsultas: IRepositorioConsultasCaja
+  const ARepositorioConsultas: IRepositorioConsultasCaja;
+  const ARepositorioPdf: IRepositorioPdfFactura;
+  const ARepositorioVentasWs: IRepositorioVentasWsCola
 ): TServiciosOperacionCaja;
 
 implementation
@@ -47,7 +50,9 @@ function CrearServiciosOperacionCaja(
   const AContextoSesion: IContextoSesionAplicacion;
   const AImpresor: IImpresorVenta;
   const AGrabador: IGrabadorVentaCaja;
-  const ARepositorioConsultas: IRepositorioConsultasCaja
+  const ARepositorioConsultas: IRepositorioConsultasCaja;
+  const ARepositorioPdf: IRepositorioPdfFactura;
+  const ARepositorioVentasWs: IRepositorioVentasWsCola
 ): TServiciosOperacionCaja;
 begin
   Result.RepositorioConsultas := ARepositorioConsultas;
@@ -67,7 +72,8 @@ begin
       Result.Impresor,
       AParametrosCaja,
       AContextoSesion,
-      AConexion);
+      ARepositorioPdf,
+      ARepositorioVentasWs);
 end;
 
 end.

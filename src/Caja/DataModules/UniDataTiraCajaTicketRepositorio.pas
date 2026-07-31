@@ -75,7 +75,7 @@ implementation
 
 uses
   System.Generics.Collections, System.StrUtils,
-  inLibRectificativas,
+  UniDataRectificativasSql,
   inLibCatalogoSqlEjecucion,
   UniDataCatalogoSqlValidacion;
 

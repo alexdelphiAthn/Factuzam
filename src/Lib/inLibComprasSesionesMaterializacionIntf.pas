@@ -99,8 +99,9 @@ type
     procedure ConfirmarTransaccion;
     procedure RevertirTransaccion;
   end;
-  ILecturasMaterializacionComprasSesiones = interface
-    ['{7B5E18B7-ED6F-45D8-993B-E70859791730}']
+  // Lecturas segregadas por los consumidores de la materializacion.
+  ILecturasArticulosMaterializacion = interface
+    ['{823D7E9F-C5CB-4132-9B95-FCE88EDB9F94}']
     function ObtenerSiguienteSecuenciaEan(
       const APrefijo: string;
       ALongitudSecuencia: Integer): Int64;
@@ -128,21 +129,49 @@ type
     function ConsultarLineasArticulos(
       const ASerie, ANumero: string):
       TLineasArticuloMaterializacion;
+  end;
+  ILecturasDocumentosMaterializacion = interface
+    ['{4C218CB4-28AF-4490-9619-99B879A91EED}']
     function ConsultarLineasDocumento(
       const ASerie, ANumero, AAlmacenCabecera,
       AFiltroAlmacen: string):
       TLineasDocumentoCompraMaterializacion;
+  end;
+  ILecturasEstadoMaterializacion = interface
+    ['{B94239E4-389A-4B5D-BFA9-FC84144DE85F}']
     function ConsultarAlmacenes(
       const ASerie, ANumero,
       AAlmacenCabecera: string): TArray<string>;
+  end;
+  ILecturasPendientesMaterializacion = interface
+    ['{31A6E4AB-9BB3-4020-9900-716551021E9C}']
     function ConsultarPendientesRecibir(
       const ASerie, ANumero,
       AAlmacenCabecera: string):
       TPendientesRecibirMaterializacion;
+  end;
+  ILecturasReversionMaterializacion = interface
+    ['{7D71F35B-BB96-4BE5-A1A8-24E3BF47C820}']
     function ExisteTabla(
       const ATabla: string): Boolean;
     function ConsultarMovimientosHuerfanos(
       const AEmpresa, AAlmacen: string): TArray<string>;
+  end;
+  TLecturasAlbaranesMaterializacion = record
+    Articulos: ILecturasArticulosMaterializacion;
+    Documentos: ILecturasDocumentosMaterializacion;
+  end;
+  TLecturasPedidosMaterializacion = record
+    Articulos: ILecturasArticulosMaterializacion;
+    Documentos: ILecturasDocumentosMaterializacion;
+    Pendientes: ILecturasPendientesMaterializacion;
+  end;
+  TServiciosLecturasMaterializacion = record
+    Articulos: ILecturasArticulosMaterializacion;
+    Albaranes: TLecturasAlbaranesMaterializacion;
+    Estado: ILecturasEstadoMaterializacion;
+    Pedidos: TLecturasPedidosMaterializacion;
+    Reversion: ILecturasReversionMaterializacion;
   end;
   IPersistenciaMaterializacionComprasSesiones = interface
     ['{673F12BB-E724-4C8D-918F-F15380DF44A0}']

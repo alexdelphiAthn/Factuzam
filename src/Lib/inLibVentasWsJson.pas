@@ -17,7 +17,7 @@ unit inLibVentasWsJson;
 interface
 
 uses
-  Uni, inLibParametrosIntf;
+  inLibParametrosIntf, inLibVentasWsJsonIntf;
 
 type
   TVentasWsJson = class
@@ -25,7 +25,7 @@ type
     class function ConstruirEvento(
       const AParametrosApp: IParametrosAplicacion;
       const AVersionApp: string;
-      AConn: TUniConnection;
+      const AVentasWsJson: IVentasWsJson;
       AIdCola: Int64;
       const AIdEvento, ATipoEvento, AEmpresa,
         ASerie, ANumero: string): string; static;
@@ -33,20 +33,17 @@ type
 
 implementation
 
-uses
-  inLibVentasWsJsonIntf;
-
 class function TVentasWsJson.ConstruirEvento(
   const AParametrosApp: IParametrosAplicacion;
   const AVersionApp: string;
-  AConn: TUniConnection;
+  const AVentasWsJson: IVentasWsJson;
   AIdCola: Int64;
   const AIdEvento, ATipoEvento, AEmpresa,
     ASerie, ANumero: string): string;
 begin
-  Result := TFabricaVentasWsJson.Crear(AConn).ConstruirEvento(
-    AParametrosApp, AVersionApp, AIdCola, AIdEvento,
-    ATipoEvento, AEmpresa, ASerie, ANumero);
+  Result := AVentasWsJson.ConstruirEvento(
+    AParametrosApp, AVersionApp, AIdCola, AIdEvento, ATipoEvento,
+    AEmpresa, ASerie, ANumero);
 end;
 
 end.

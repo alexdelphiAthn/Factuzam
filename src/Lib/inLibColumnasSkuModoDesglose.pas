@@ -72,6 +72,7 @@ begin
     AConfig.Cds,
     Campos,
     AConfig.ContextoSesion,
+    AConfig.BusquedaVisual,
     AConfig.ValidadorArticulos,
     AConfig.LookupAtributos);
   FGrid.OnResuelto := GridResuelto;

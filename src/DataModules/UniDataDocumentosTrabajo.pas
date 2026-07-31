@@ -16,6 +16,7 @@ unit UniDataDocumentosTrabajo;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, Vcl.ComCtrls, cxListView,
   Data.DB, MemDS, DBAccess, Uni,
   UniDataGen;
@@ -1092,5 +1093,6 @@ begin
 end;
 
 initialization
+  RegistrarDataModule(TdmDocumentosTrabajo);
   ForceReferenceToClass(TdmDocumentosTrabajo);
 end.

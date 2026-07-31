@@ -17,6 +17,7 @@ unit UniDataVerifactuCola;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
   inLibUser, UniDataConn;
 
@@ -37,5 +38,6 @@ implementation
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 initialization
+  RegistrarDataModule(TdmVerifactuCola);
   ForceReferenceToClass(TdmVerifactuCola);
 end.

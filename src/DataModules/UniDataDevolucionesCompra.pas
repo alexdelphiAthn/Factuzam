@@ -19,6 +19,7 @@ unit UniDataDevolucionesCompra;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, System.Variants,
   System.Generics.Collections,
   Vcl.ComCtrls, cxListView,
@@ -126,6 +127,7 @@ uses
   inLibLog, inLibValoresAutomaticos,
   System.Diagnostics, System.UITypes, Vcl.Dialogs,
   inLibDevolucionesCompraMovimientos,
+  UniDataDevolucionesCompraMovimientos,
   inLibContadorLineas,
   inLibComprasImpuestos,
   inLibData,
@@ -389,7 +391,8 @@ begin
     end;
     inLibDevolucionesCompraMovimientos.
       RevertirMovimientosDesdeDevolucionCompra(
-        unqryTablaG.Connection, sSerie, sNumero, IdentidadSesion.Usuario);
+        CrearMovimientosDevolucionCompraUniDAC(unqryTablaG.Connection),
+        sSerie, sNumero, IdentidadSesion.Usuario);
     q.SQL.Text :=
       'DELETE FROM fza_devoluciones_compra_celdas ' +
       ' WHERE SERIE_DEVC_DEVCCEL  = :s ' +
@@ -673,11 +676,13 @@ begin
     begin
       inLibDevolucionesCompraMovimientos.
         RevertirMovimientosDesdeDevolucionCompra(
-          unqryTablaG.Connection, sSerie, sNumero, IdentidadSesion.Usuario);
+          CrearMovimientosDevolucionCompraUniDAC(unqryTablaG.Connection),
+          sSerie, sNumero, IdentidadSesion.Usuario);
       if HayLineasMovimiento(sSerie, sNumero) then
         inLibDevolucionesCompraMovimientos.
           GenerarMovimientosDesdeDevolucionCompra(
-            unqryTablaG.Connection, sSerie, sNumero, IdentidadSesion.Usuario);
+            CrearMovimientosDevolucionCompraUniDAC(unqryTablaG.Connection),
+            sSerie, sNumero, IdentidadSesion.Usuario);
       RefrescarMovimientosProveedor;
     end;
   end;
@@ -949,4 +954,6 @@ begin
   end;
 end;
 
+initialization
+  RegistrarDataModule(TdmDevolucionesCompra);
 end.

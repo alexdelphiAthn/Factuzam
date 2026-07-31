@@ -47,7 +47,9 @@ uses
   inLibArticulosValidadorIntf, inLibArticulosAtributosIntf,
   inLibTraspasoTicketIntf, inLibArqueoIntf,
   inLibArqueoTicketIntf, inLibTiraCajaTicketIntf,
-  inLibTicketsCajaIntf;
+  inLibTicketsCajaIntf, inLibFotos, inLibUnidadesMedida,
+  inLibGenBusq, inLibDistribuidorTallas, inLibLayoutForm,
+  inLibPreviewTicket, inLibPreviewExcel;
 
 type
   TEnterAsTabEstado = record
@@ -66,7 +68,14 @@ type
     IProveedorPerfilesUsuario,
     IProveedorParametros,
     IProveedorInformesGuiasCache,
-    IProveedorTraducciones
+    IProveedorTraducciones,
+    IProveedorFotosArticulos,
+    IProveedorUnidadesMedida,
+    IProveedorBusquedaVisual,
+    IProveedorDistribuidorTallasVisual,
+    IProveedorSolicitudPermisoLayout,
+    IProveedorPreviewTicket,
+    IContenedorProveedorPreviewExcel
   )
     Localizer1: TcxLocalizer;
     jvntrstb1: TJvEnterAsTab;
@@ -87,6 +96,13 @@ type
     FParametrosCaja: IParametrosCaja;
     FInformesGuiasCache: IInformesGuiasCache;
     FTraducciones: IServicioTraducciones;
+    FFotosArticulos: TFotosArticulos;
+    FUnidadesMedida: TUnidadesMedida;
+    FBusquedaVisual: IBusquedaVisual;
+    FDistribuidorTallasVisual: IDistribuidorTallasVisual;
+    FSolicitudPermisoLayout: ISolicitudPermisoLayout;
+    FPreviewTicket: IPreviewTicket;
+    FProveedorPreviewExcel: IProveedorPreviewExcel;
     FCatalogoSql: ICatalogoSql;
     FIncidenciasSql: IRegistroIncidenciasSql;
     FCatalogoSqlInicializado: Boolean;
@@ -111,6 +127,13 @@ type
     function GetParametrosCaja: IParametrosCaja;
     function GetInformesGuiasCache: IInformesGuiasCache;
     function GetTraducciones: IServicioTraducciones;
+    function GetFotosArticulos: TFotosArticulos;
+    function GetUnidadesMedida: TUnidadesMedida;
+    function GetBusquedaVisual: IBusquedaVisual;
+    function GetDistribuidorTallasVisual: IDistribuidorTallasVisual;
+    function GetSolicitudPermisoLayout: ISolicitudPermisoLayout;
+    function GetPreviewTicket: IPreviewTicket;
+    function GetProveedorPreviewExcel: IProveedorPreviewExcel;
     function GetConexionPrincipal: TUniConnection;
     function NormalizarSegmentoClaveTraduccion(
       const ATexto: string): string;
@@ -123,6 +146,13 @@ type
     procedure HeredarParametros(AOwner: TComponent);
     procedure HeredarInformesGuiasCache(AOwner: TComponent);
     procedure HeredarTraducciones(AOwner: TComponent);
+    procedure HeredarFotosArticulos(AOwner: TComponent);
+    procedure HeredarUnidadesMedida(AOwner: TComponent);
+    procedure HeredarBusquedaVisual(AOwner: TComponent);
+    procedure HeredarDistribuidorTallasVisual(AOwner: TComponent);
+    procedure HeredarSolicitudPermisoLayout(AOwner: TComponent);
+    procedure HeredarPreviewTicket(AOwner: TComponent);
+    procedure HeredarProveedorPreviewExcel(AOwner: TComponent);
     procedure GuardarEnterAsTabDe(AOwner: TComponent);
     procedure AsegurarCatalogoSqlAplicacion;
     procedure AplicarIdiomaDevExpress;
@@ -156,7 +186,7 @@ type
     function CrearRepositorioTiraCajaTicket(
       AConexion: TUniConnection = nil): IRepositorioTiraCajaTicket;
     function CrearRepositorioTicketsCaja(
-      AConexion: TUniConnection = nil): IRepositorioTicketsCaja;
+      AConexion: TUniConnection = nil): TRepositoriosTicketsCaja;
     function TraducirCategoriaParametro(
       const AUnidad, ACategoria: string): string;
     function TraducirDescripcionParametro(
@@ -192,6 +222,14 @@ type
       const AInformesGuiasCache: IInformesGuiasCache);
     procedure AsignarTraducciones(
       const ATraducciones: IServicioTraducciones);
+    procedure AsignarFotosArticulos(AFotos: TFotosArticulos);
+    procedure AsignarUnidadesMedida(AUnidades: TUnidadesMedida);
+    procedure AsignarServiciosVisuales(
+      const ABusqueda: IBusquedaVisual;
+      const ADistribuidorTallas: IDistribuidorTallasVisual;
+      const ASolicitudPermisoLayout: ISolicitudPermisoLayout;
+      const APreviewTicket: IPreviewTicket;
+      const AProveedorPreviewExcel: IProveedorPreviewExcel);
     // Articulo/sku del registro/linea en foco, para la consulta de stock
     // global (Ctrl+U, capturado en inMtoPrincipal). Por defecto vacio; los
     // formularios con articulo activo lo sobreescriben.
@@ -225,6 +263,19 @@ type
       read GetInformesGuiasCache;
     property Traducciones: IServicioTraducciones
       read GetTraducciones;
+    property FotosArticulos: TFotosArticulos
+      read GetFotosArticulos;
+    property UnidadesMedida: TUnidadesMedida
+      read GetUnidadesMedida;
+    property BusquedaVisual: IBusquedaVisual
+      read GetBusquedaVisual;
+    property DistribuidorTallasVisual: IDistribuidorTallasVisual
+      read GetDistribuidorTallasVisual;
+    property SolicitudPermisoLayout: ISolicitudPermisoLayout
+      read GetSolicitudPermisoLayout;
+    property PreviewTicket: IPreviewTicket read GetPreviewTicket;
+    property ProveedorPreviewExcel: IProveedorPreviewExcel
+      read GetProveedorPreviewExcel;
     property ConexionPrincipal: TUniConnection read GetConexionPrincipal;
   end;
 
@@ -264,6 +315,13 @@ begin
   HeredarParametros(AOwner);
   HeredarInformesGuiasCache(AOwner);
   HeredarTraducciones(AOwner);
+  HeredarFotosArticulos(AOwner);
+  HeredarUnidadesMedida(AOwner);
+  HeredarBusquedaVisual(AOwner);
+  HeredarDistribuidorTallasVisual(AOwner);
+  HeredarSolicitudPermisoLayout(AOwner);
+  HeredarPreviewTicket(AOwner);
+  HeredarProveedorPreviewExcel(AOwner);
   inherited Create(AOwner);
 end;
 
@@ -281,6 +339,13 @@ begin
   HeredarParametros(AOwner);
   HeredarInformesGuiasCache(AOwner);
   HeredarTraducciones(AOwner);
+  HeredarFotosArticulos(AOwner);
+  HeredarUnidadesMedida(AOwner);
+  HeredarBusquedaVisual(AOwner);
+  HeredarDistribuidorTallasVisual(AOwner);
+  HeredarSolicitudPermisoLayout(AOwner);
+  HeredarPreviewTicket(AOwner);
+  HeredarProveedorPreviewExcel(AOwner);
   inherited Create(AOwner);
 end;
 
@@ -288,6 +353,13 @@ destructor TfrmBase.Destroy;
 begin
   FCatalogoSql := nil;
   FIncidenciasSql := nil;
+  FFotosArticulos := nil;
+  FUnidadesMedida := nil;
+  FBusquedaVisual := nil;
+  FDistribuidorTallasVisual := nil;
+  FSolicitudPermisoLayout := nil;
+  FPreviewTicket := nil;
+  FProveedorPreviewExcel := nil;
   inherited;
 end;
 
@@ -445,7 +517,7 @@ begin
 end;
 
 function TfrmBase.CrearRepositorioTicketsCaja(
-  AConexion: TUniConnection): IRepositorioTicketsCaja;
+  AConexion: TUniConnection): TRepositoriosTicketsCaja;
 var
   oConexion: TUniConnection;
 begin
@@ -453,7 +525,7 @@ begin
   oConexion := AConexion;
   if not Assigned(oConexion) then
     oConexion := ConexionPrincipal;
-  Result := TRepositorioTicketsCaja.Create(
+  Result := CrearRepositoriosTicketsCaja(
     oConexion,
     FCatalogoSql,
     FIncidenciasSql);
@@ -724,6 +796,125 @@ begin
     FTraducciones := Proveedor.Traducciones;
 end;
 
+procedure TfrmBase.HeredarFotosArticulos(AOwner: TComponent);
+var
+  Proveedor: IProveedorFotosArticulos;
+begin
+  FFotosArticulos := nil;
+  if Supports(AOwner, IProveedorFotosArticulos, Proveedor) then
+    FFotosArticulos := Proveedor.FotosArticulos;
+  if not Assigned(FFotosArticulos) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorFotosArticulos,
+       Proveedor) then
+    FFotosArticulos := Proveedor.FotosArticulos;
+end;
+
+procedure TfrmBase.HeredarUnidadesMedida(AOwner: TComponent);
+var
+  Proveedor: IProveedorUnidadesMedida;
+begin
+  FUnidadesMedida := nil;
+  if Supports(AOwner, IProveedorUnidadesMedida, Proveedor) then
+    FUnidadesMedida := Proveedor.UnidadesMedida;
+  if not Assigned(FUnidadesMedida) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorUnidadesMedida,
+       Proveedor) then
+    FUnidadesMedida := Proveedor.UnidadesMedida;
+end;
+
+procedure TfrmBase.HeredarBusquedaVisual(AOwner: TComponent);
+var
+  Proveedor: IProveedorBusquedaVisual;
+begin
+  FBusquedaVisual := nil;
+  if Supports(AOwner, IProveedorBusquedaVisual, Proveedor) then
+    FBusquedaVisual := Proveedor.BusquedaVisual;
+  if not Assigned(FBusquedaVisual) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorBusquedaVisual,
+       Proveedor) then
+    FBusquedaVisual := Proveedor.BusquedaVisual;
+end;
+
+procedure TfrmBase.HeredarDistribuidorTallasVisual(AOwner: TComponent);
+var
+  Proveedor: IProveedorDistribuidorTallasVisual;
+begin
+  FDistribuidorTallasVisual := nil;
+  if Supports(AOwner, IProveedorDistribuidorTallasVisual, Proveedor) then
+    FDistribuidorTallasVisual := Proveedor.DistribuidorTallasVisual;
+  if not Assigned(FDistribuidorTallasVisual) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorDistribuidorTallasVisual,
+       Proveedor) then
+    FDistribuidorTallasVisual := Proveedor.DistribuidorTallasVisual;
+end;
+
+procedure TfrmBase.HeredarSolicitudPermisoLayout(AOwner: TComponent);
+var
+  Proveedor: IProveedorSolicitudPermisoLayout;
+begin
+  FSolicitudPermisoLayout := nil;
+  if Supports(AOwner, IProveedorSolicitudPermisoLayout, Proveedor) then
+    FSolicitudPermisoLayout := Proveedor.SolicitudPermisoLayout;
+  if not Assigned(FSolicitudPermisoLayout) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorSolicitudPermisoLayout,
+       Proveedor) then
+    FSolicitudPermisoLayout := Proveedor.SolicitudPermisoLayout;
+end;
+
+procedure TfrmBase.HeredarPreviewTicket(AOwner: TComponent);
+var
+  Proveedor: IProveedorPreviewTicket;
+begin
+  FPreviewTicket := nil;
+  if Supports(AOwner, IProveedorPreviewTicket, Proveedor) then
+    FPreviewTicket := Proveedor.PreviewTicket;
+  if not Assigned(FPreviewTicket) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorPreviewTicket,
+       Proveedor) then
+    FPreviewTicket := Proveedor.PreviewTicket;
+end;
+
+procedure TfrmBase.HeredarProveedorPreviewExcel(AOwner: TComponent);
+var
+  Contenedor: IContenedorProveedorPreviewExcel;
+begin
+  FProveedorPreviewExcel := nil;
+  if Supports(AOwner, IContenedorProveedorPreviewExcel, Contenedor) then
+    FProveedorPreviewExcel := Contenedor.ProveedorPreviewExcel;
+  if not Assigned(FProveedorPreviewExcel) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IContenedorProveedorPreviewExcel,
+       Contenedor) then
+    FProveedorPreviewExcel := Contenedor.ProveedorPreviewExcel;
+end;
+
 procedure TfrmBase.AsignarPermisos(
   const APermisos: IPermisosAplicacion);
 begin
@@ -841,6 +1032,31 @@ begin
   Result := FFiltrosLectura;
 end;
 
+procedure TfrmBase.AsignarFotosArticulos(AFotos: TFotosArticulos);
+begin
+  FFotosArticulos := AFotos;
+end;
+
+procedure TfrmBase.AsignarUnidadesMedida(
+  AUnidades: TUnidadesMedida);
+begin
+  FUnidadesMedida := AUnidades;
+end;
+
+procedure TfrmBase.AsignarServiciosVisuales(
+  const ABusqueda: IBusquedaVisual;
+  const ADistribuidorTallas: IDistribuidorTallasVisual;
+  const ASolicitudPermisoLayout: ISolicitudPermisoLayout;
+  const APreviewTicket: IPreviewTicket;
+  const AProveedorPreviewExcel: IProveedorPreviewExcel);
+begin
+  FBusquedaVisual := ABusqueda;
+  FDistribuidorTallasVisual := ADistribuidorTallas;
+  FSolicitudPermisoLayout := ASolicitudPermisoLayout;
+  FPreviewTicket := APreviewTicket;
+  FProveedorPreviewExcel := AProveedorPreviewExcel;
+end;
+
 function TfrmBase.GetFiltrosEscritura: IEscritorFiltrosGuardados;
 begin
   Result := FFiltrosEscritura;
@@ -902,6 +1118,41 @@ end;
 function TfrmBase.GetTraducciones: IServicioTraducciones;
 begin
   Result := FTraducciones;
+end;
+
+function TfrmBase.GetFotosArticulos: TFotosArticulos;
+begin
+  Result := FFotosArticulos;
+end;
+
+function TfrmBase.GetUnidadesMedida: TUnidadesMedida;
+begin
+  Result := FUnidadesMedida;
+end;
+
+function TfrmBase.GetBusquedaVisual: IBusquedaVisual;
+begin
+  Result := FBusquedaVisual;
+end;
+
+function TfrmBase.GetDistribuidorTallasVisual: IDistribuidorTallasVisual;
+begin
+  Result := FDistribuidorTallasVisual;
+end;
+
+function TfrmBase.GetSolicitudPermisoLayout: ISolicitudPermisoLayout;
+begin
+  Result := FSolicitudPermisoLayout;
+end;
+
+function TfrmBase.GetPreviewTicket: IPreviewTicket;
+begin
+  Result := FPreviewTicket;
+end;
+
+function TfrmBase.GetProveedorPreviewExcel: IProveedorPreviewExcel;
+begin
+  Result := FProveedorPreviewExcel;
 end;
 
 function TfrmBase.GetConexionPrincipal: TUniConnection;

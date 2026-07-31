@@ -182,6 +182,7 @@ begin
   Screen.Cursor := crHourGlass;
   try
     TArqueoTicket.ImprimirDesdeHistorico(
+      PreviewTicket,
       CrearRepositorioArqueoCaja(FConn),
       CrearRepositorioArqueoTicket(FConn),
       ParametrosCaja,
@@ -208,6 +209,7 @@ begin
   Screen.Cursor := crHourGlass;
   try
     TArqueoTicket.ImprimirCierreDesdeHistorico(
+      PreviewTicket,
       CrearRepositorioArqueoTicket(FConn),
       ContextoSesion,
       FEmpresa,

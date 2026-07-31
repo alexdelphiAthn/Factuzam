@@ -10,70 +10,42 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Contrato neutral para imprimir o previsualizar tickets.                   }
-{    La capa de formularios registra la implementación visual al arrancar.     }
+{    La implementación visual se recibe desde la raíz de composición.          }
 {******************************************************************************}
 unit inLibPreviewTicket;
 
 interface
 
 uses
-  System.SysUtils,
   inLibFTicket;
 
 type
-  TEjecutorPreviewTicket = class
-  public
-    class procedure Ejecutar(ATicket: TTicketTermico;
-                             const AComandos, ARutaPDF,
-                                   ANombreImpresora: string;
-                             ASoloPDF: Boolean); virtual; abstract;
+  IPreviewTicket = interface
+    ['{29DD4A66-34B6-4AA5-92D3-F2593146D3BE}']
+    procedure Ejecutar(ATicket: TTicketTermico;
+                       const AComandos, ARutaPDF,
+                             ANombreImpresora: string;
+                       ASoloPDF: Boolean);
+  end;
+  IProveedorPreviewTicket = interface
+    ['{6688736E-FA46-4B5D-8D9D-051114636743}']
+    function GetPreviewTicket: IPreviewTicket;
+    property PreviewTicket: IPreviewTicket read GetPreviewTicket;
   end;
 
-  TClaseEjecutorPreviewTicket = class of TEjecutorPreviewTicket;
-
-  TPreviewTicket = class
-  private
-    class var FClaseEjecutor: TClaseEjecutorPreviewTicket;
-  public
-    class procedure RegistrarEjecutor(
-      AClase: TClaseEjecutorPreviewTicket);
-    class procedure Ejecutar(ATicket: TTicketTermico;
-                             const AComandos, ARutaPDF,
-                                   ANombreImpresora: string;
-                             ASoloPDF: Boolean);
-  end;
-
-procedure ImprimirOPrevisualizarTicket(ATicket: TTicketTermico;
+procedure ImprimirOPrevisualizarTicket(const APreview: IPreviewTicket;
+                                       ATicket: TTicketTermico;
                                        const AComandos, ARutaPDF,
                                              ANombreImpresora: string;
                                        ASoloPDF: Boolean = False);
 
 implementation
-
-uses
-  inLibMsgFacturas;
-
-class procedure TPreviewTicket.RegistrarEjecutor(
-  AClase: TClaseEjecutorPreviewTicket);
-begin
-  FClaseEjecutor := AClase;
-end;
-
-class procedure TPreviewTicket.Ejecutar(ATicket: TTicketTermico;
+procedure ImprimirOPrevisualizarTicket(const APreview: IPreviewTicket;
+  ATicket: TTicketTermico;
   const AComandos, ARutaPDF, ANombreImpresora: string;
   ASoloPDF: Boolean);
 begin
-  if not Assigned(FClaseEjecutor) then
-    raise Exception.Create(SErrorPreviewTicketNoRegistrado);
-  FClaseEjecutor.Ejecutar(
-    ATicket, AComandos, ARutaPDF, ANombreImpresora, ASoloPDF);
-end;
-
-procedure ImprimirOPrevisualizarTicket(ATicket: TTicketTermico;
-  const AComandos, ARutaPDF, ANombreImpresora: string;
-  ASoloPDF: Boolean);
-begin
-  TPreviewTicket.Ejecutar(
+  APreview.Ejecutar(
     ATicket, AComandos, ARutaPDF, ANombreImpresora, ASoloPDF);
 end;
 

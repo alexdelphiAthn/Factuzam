@@ -85,7 +85,8 @@ implementation
 uses
   inMtoPreviewExcel, inLibFacturaExcel, inLibVerifactu,
   inLibFormatoDocumento, inLibVentasWsCola, inLibFacturaPdfBlob,
-  inLibDir;
+  inLibDir, inLibFacturasPersistenciaIntf,
+  UniDataFacturasOperaciones, UniDataVentasWsCola;
 
 { TfrmPrintFac }
 
@@ -188,6 +189,7 @@ var
   sNumero: string;
   sFase:   string;
   bLanzada: Boolean;
+  oRepositorioPdf: IRepositorioPdfFactura;
 begin
   inherited;
   if (Trim(ARuta) <> '') and (dmFac <> nil) and
@@ -197,7 +199,7 @@ begin
     sNumero := dmFac.unqryFacPrint.FieldByName('NUMERO_FAC').AsString;
     TVentasWsCola.AdjuntarFacturaPdfSeguro(
       ParametrosCaja,
-      ConexionPrincipal,
+      CrearRepositorioVentasWsColaUniDAC(ConexionPrincipal),
       IdentidadSesion.Usuario,
       sSerie, sNumero, ARuta);
     // Archivado en fza_facturas.PDF_FAC: solo el PDF de UNA factura
@@ -208,8 +210,12 @@ begin
       (dmFac.unqryFacPrint.FieldByName('ESCONSOLIDADA_FAC').AsString = 'S')
       or ((sFase <> '') and (not SameText(sFase, 'BORRADOR')));
     if rbActual.Checked and bLanzada then
-      GuardarPdfFacturaEnBlob(ConexionPrincipal, ContextoSesion,
+    begin
+      oRepositorioPdf :=
+        CrearPersistenciaFacturasUniDAC(ConexionPrincipal).Pdf;
+      GuardarPdfFacturaEnBlob(oRepositorioPdf, ContextoSesion,
         sSerie, sNumero, ARuta, FormatoElegido);
+    end;
   end;
 end;
 

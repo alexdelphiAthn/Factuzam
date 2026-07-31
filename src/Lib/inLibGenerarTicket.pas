@@ -19,9 +19,11 @@ uses
   System.SysUtils, System.Classes, Data.DB, Uni, inLibCajaDatosFactura,
   inLibFTicket,        // Donde está tu TTicketTermico
   inLibFaseCobro,      // Para TDatosFaseCobro
-  inLibParametrosIntf;
+  inLibParametrosIntf, inLibUnidadesMedida, inLibPreviewTicket;
 
   procedure ImprimirT(const AParametrosApp: IParametrosAplicacion;
+                      const APreview: IPreviewTicket;
+                      AUnidades: TUnidadesMedida;
                       AConexion: TUniConnection;
                       const ACodigoEmpresa,
                             ACodigoAlmacen,
@@ -47,8 +49,8 @@ uses
 implementation
 
 uses
-  inLibDir, inLibUnidadesMedida, inLibVerifactu, inLibFormatoDocumento,
-  inLibPreviewTicket, inLibMsgTickets;
+  inLibDir, inLibVerifactu, inLibFormatoDocumento,
+  inLibMsgTickets;
 
 const
   CAMPOS_PIE_TICKET_CAJA: array[0..3] of string = (
@@ -207,6 +209,8 @@ begin
 end;
 
 procedure ImprimirT(const AParametrosApp: IParametrosAplicacion;
+                    const APreview: IPreviewTicket;
+                    AUnidades: TUnidadesMedida;
                     AConexion: TUniConnection;
                     const ACodigoEmpresa,
                           ACodigoAlmacen,
@@ -330,9 +334,14 @@ begin
         var sUni := '';
         if dLin.FindField('TIPO_CANTIDAD_ARTICULO_FACLIN') <> nil then
           sUni := dLin.FieldByName('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString;
-        var sUds := Format('%4s',
-             [oUnidades.Formatear(
-                dLin.FieldByName('CANTIDAD_FACLIN').AsFloat, sUni)]);
+        var sUds := '';
+        if Assigned(AUnidades) then
+          sUds := AUnidades.Formatear(
+            dLin.FieldByName('CANTIDAD_FACLIN').AsFloat, sUni)
+        else
+          sUds := FormatFloat(
+            '0', dLin.FieldByName('CANTIDAD_FACLIN').AsFloat);
+        sUds := Format('%4s', [sUds]);
         var Des := Format('%-38s', [Copy(dLin.FieldByName(
                             'DESCRIPCION_ARTICULO_FACLIN').AsString, 1, 38)]);
         if ASinPrecios then
@@ -476,7 +485,8 @@ begin
     RutaFicheroPDF := GetUserFolderTickets + 'Ticket_' +
                         FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) +
                         sSufijoPDF + '.pdf';
-    ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaFicheroPDF,
+    ImprimirOPrevisualizarTicket(
+      APreview, Ticket, ComandosESC, RutaFicheroPDF,
                                  NombreImpresora);
     if (ARutasPDF <> nil) and FileExists(RutaFicheroPDF) then
       ARutasPDF.Add(RutaFicheroPDF);

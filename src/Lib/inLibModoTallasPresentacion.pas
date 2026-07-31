@@ -34,8 +34,8 @@ type
     FCfgTallas: TGridTallasConfig;
     FGestor: TGestorGridTallas;
     FBuscador: TBuscadorSkusTallas;
-    FLineas: ILineasDocumentoTallas;
-    FPersistencia: IPersistenciaModoTallas;
+    FLineas: ILineasPresentacionTallas;
+    FPersistencia: IPersistenciaPresentacionTallas;
     FColArticulo: TcxGridDBColumn;
     // Columnas de atributos NO talla (color, temporada...).
     FColAtributo: array[1..5] of TcxGridDBColumn;
@@ -100,8 +100,8 @@ type
   public
     constructor Create(const AConfig: TConfigColumnasSku;
       const ACfgTallas: TGridTallasConfig;
-      const ALineas: ILineasDocumentoTallas;
-      const APersistencia: IPersistenciaModoTallas;
+      const ALineas: ILineasPresentacionTallas;
+      const APersistencia: IPersistenciaPresentacionTallas;
       const ABusqueda: IBusquedaSkusTallas; ARegistro: TRegistroTallas);
     destructor Destroy; override;
     // Crea las columnas del modo y engancha los eventos de la vista.
@@ -136,7 +136,7 @@ type
 implementation
 
 uses
-  inLibLog, inLibMsgArticulos;
+  dxCoreGraphics, inLibLog, inLibMsgArticulos;
 
 type
   // Acceso a OnExit (protegido en TWinControl) de los editores
@@ -147,8 +147,8 @@ type
 constructor TPresentacionModoTallas.Create(
   const AConfig: TConfigColumnasSku;
   const ACfgTallas: TGridTallasConfig;
-  const ALineas: ILineasDocumentoTallas;
-  const APersistencia: IPersistenciaModoTallas;
+  const ALineas: ILineasPresentacionTallas;
+  const APersistencia: IPersistenciaPresentacionTallas;
   const ABusqueda: IBusquedaSkusTallas; ARegistro: TRegistroTallas);
 begin
   inherited Create;
@@ -671,7 +671,7 @@ begin
     Parametros.IdConjuntoPivot := iConjunto;
     FDistribAbierto := True;
     try
-      if TDistribuidorTallas.Ejecutar(Parametros) then
+      if FConfig.DistribuidorTallasVisual.Ejecutar(Parametros) then
         RefrescarLineaActual(iLinea);
     finally
       FDistribAbierto := False;

@@ -288,7 +288,7 @@ var
 begin
   inherited;
   // Caja de busqueda modal generica (TfrmMtoSearch via inLibGenBusq).
-  if TBusquedaUtils.EjecutarBusqueda(ConexionPrincipal, 'Buscar empresa',
+  if BusquedaVisual.EjecutarBusqueda(ConexionPrincipal, 'Buscar empresa',
        'SELECT * FROM fza_empresas ORDER BY RAZON_SOCIAL_EMP',
        'CODIGO_EMP_EMP', sVal, 'srchEmpFacAlb', Self) then
     btnEmpresa.Text := sVal;
@@ -300,7 +300,7 @@ var
   sVal: string;
 begin
   inherited;
-  if TBusquedaUtils.EjecutarBusqueda(ConexionPrincipal, 'Buscar proveedor',
+  if BusquedaVisual.EjecutarBusqueda(ConexionPrincipal, 'Buscar proveedor',
        'SELECT * FROM fza_proveedores ORDER BY NOMBRE_PRV',
        'CODIGO_PRV_PRV', sVal, 'srchPrvFacAlb', Self) then
   begin

@@ -22,7 +22,8 @@ uses
   inMtoFrmBase, dxSkinsForm, cxClasses, cxContainer, cxEdit, cxLookAndFeels,
   cxLocalization, cxGraphics, cxControls, cxLookAndFeelPainters, cxLabel,
   cxTextEdit, Vcl.Menus, Vcl.StdCtrls, cxButtons, dxCore, cxMaskEdit,
-  cxDropDownEdit, cxStyles, JvComponentBase, JvEnterTab;
+  cxDropDownEdit, cxStyles, JvComponentBase, JvEnterTab,
+  inLibLayoutForm;
 
 type
   TfrmModalGenImpSave = class(TfrmBase)
@@ -45,21 +46,30 @@ type
     sFicha:string;
   end;
 
+function CrearSolicitudPermisoLayoutMto: ISolicitudPermisoLayout;
+
 implementation
 
 uses
-  inLibGlobalVar, inLibLayoutForm;
+  inLibGlobalVar;
 
 type
-  TEjecutorPermisoLayoutMto = class(TEjecutorPermisoLayout)
+  TSolicitudPermisoLayoutMto = class(
+    TInterfacedObject,
+    ISolicitudPermisoLayout)
   public
-    class function Solicitar(const AFormKey, ADescripcion: string;
-                             out APermisos: string): Boolean; override;
+    function Solicitar(const AFormKey, ADescripcion: string;
+                       out APermisos: string): Boolean;
   end;
 
 {$R *.dfm}
 
-class function TEjecutorPermisoLayoutMto.Solicitar(
+function CrearSolicitudPermisoLayoutMto: ISolicitudPermisoLayout;
+begin
+  Result := TSolicitudPermisoLayoutMto.Create;
+end;
+
+function TSolicitudPermisoLayoutMto.Solicitar(
   const AFormKey, ADescripcion: string;
   out APermisos: string): Boolean;
 var
@@ -124,12 +134,5 @@ begin
     end;
   end;
 end;
-
-initialization
-  TSolicitudPermisoLayout.RegistrarEjecutor(
-    TEjecutorPermisoLayoutMto);
-
-finalization
-  TSolicitudPermisoLayout.RegistrarEjecutor(nil);
 
 end.

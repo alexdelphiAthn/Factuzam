@@ -143,8 +143,8 @@ type
                                     pcbUsage: PDWORD):
                                     BOOL; stdcall; external CRYPT32;
   function CertCloseStore(hCertStore: HCERTSTORE;
-	  					  dwFlags: DWORD): BOOL;
-						  stdcall; external CRYPT32;
+                          dwFlags: DWORD): BOOL;
+                          stdcall; external CRYPT32;
   function CertEnumCertificatesInStore(hCertStore: HCERTSTORE;
                                        pPrevCertContext: PCCERT_CONTEXT):
                                        PCCERT_CONTEXT;

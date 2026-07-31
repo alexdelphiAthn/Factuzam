@@ -21,7 +21,9 @@ uses
 type
   TRepositorioTicketsCaja = class(
     TInterfacedObject,
-    IRepositorioTicketsCaja)
+    IRepositorioResguardosCaja,
+    IRepositorioTicketsVentaCaja,
+    IRepositorioRecordatoriosCaja)
   private
     FConexion: TUniConnection;
     FCatalogoSql: ICatalogoSql;
@@ -81,6 +83,12 @@ type
     function ObtenerCodigoBarrasTicket(
       const ASerie, ANumero: string): string;
   end;
+
+function CrearRepositoriosTicketsCaja(
+  AConexion: TUniConnection;
+  const ACatalogoSql: ICatalogoSql = nil;
+  const AIncidenciasSql: IRegistroIncidenciasSql = nil):
+  TRepositoriosTicketsCaja;
 
 implementation
 
@@ -371,6 +379,22 @@ begin
     'EMP',
     'TEXTO_PIE_TICKET_CAJA_1_EMP,TEXTO_PIE_TICKET_CAJA_2_EMP,' +
     'TEXTO_PIE_TICKET_CAJA_3_EMP,TEXTO_PIE_TICKET_CAJA_4_EMP');
+end;
+
+function CrearRepositoriosTicketsCaja(
+  AConexion: TUniConnection;
+  const ACatalogoSql: ICatalogoSql;
+  const AIncidenciasSql: IRegistroIncidenciasSql):
+  TRepositoriosTicketsCaja;
+var
+  Repositorio: TRepositorioTicketsCaja;
+begin
+  Result := Default(TRepositoriosTicketsCaja);
+  Repositorio := TRepositorioTicketsCaja.Create(
+    AConexion, ACatalogoSql, AIncidenciasSql);
+  Result.Resguardos := Repositorio;
+  Result.Tickets := Repositorio;
+  Result.Recordatorios := Repositorio;
 end;
 
 constructor TRepositorioTicketsCaja.Create(

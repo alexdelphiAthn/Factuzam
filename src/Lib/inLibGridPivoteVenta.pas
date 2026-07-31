@@ -97,7 +97,7 @@ type
     FieldTotalUdsGrupo    : string;
     // Puerto de persistencia del pivote (V2). Lo compone el formulario
     // consumidor con CrearRepositorioPivoteVenta (UniDataPivoteVenta).
-    Repositorio           : IRepositorioPivoteVenta;
+    Repositorios          : TRepositoriosPivoteVenta;
     OnCrearLineaSku       : TCrearLineaPivoteVentaEvent;
     OnBandaCambiada       : TBandaPivoteVentaEvent;
   end;
@@ -123,7 +123,7 @@ type
   private
     FConfig           : TConfigColumnasSku;
     FCfg              : TGridPivoteVentaConfig;
-    FRepositorio      : IRepositorioPivoteVenta;
+    FRepositorio      : IRepositorioEdicionPivoteVenta;
     FModelo           : TModeloPivoteVenta;
     FPresentacion     : TPresentacionPivoteVenta;
     FOnResuelto       : TSkuResueltoEvent;
@@ -221,15 +221,16 @@ begin
   FCfg := ACfgPivote;
   if FCfg.MaxColumnas <= 0 then
     FCfg.MaxColumnas := 20;
-  FRepositorio := FCfg.Repositorio;
-  if (FRepositorio = nil) and (Log() <> nil) then
+  FRepositorio := FCfg.Repositorios.Edicion;
+  if ((FRepositorio = nil) or (FCfg.Repositorios.Modelo = nil)) and
+     (Log() <> nil) then
     // Sin puerto compuesto, el pivote pierde SKU, conjuntos y alta de
     // SKU: el consumidor debe pasar CrearRepositorioPivoteVenta.
     Log.LogWarning(
       'GridPivoteVenta: config sin Repositorio; las resoluciones de ' +
       'SKU y conjuntos quedaran vacias.');
-  FModelo := TModeloPivoteVenta.Create(FRepositorio, FCfg.BandaUnica,
-                                       FCfg.TextoBandaAAlbaranar);
+  FModelo := TModeloPivoteVenta.Create(FCfg.Repositorios.Modelo,
+    FCfg.BandaUnica, FCfg.TextoBandaAAlbaranar);
   oCfgPres := Default(TConfigPresentacionPivoteVenta);
   oCfgPres.Conexion := FCfg.Conexion;
   oCfgPres.View := FConfig.View;

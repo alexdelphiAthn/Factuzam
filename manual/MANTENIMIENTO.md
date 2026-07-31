@@ -32,7 +32,7 @@ página por capítulo, el índice de navegación lateral, la hoja de estilo
 `estilo.css` y una copia de las imágenes de `img/`), sobrescribiendo lo
 anterior.
 
-> Si añades un capítulo nuevo (`11-*.md`), regístralo en la lista `ORDEN`
+> Si añades un capítulo nuevo (`NN-*.md`), regístralo en la lista `ORDEN`
 > de la cabecera de `generar_html.py` para que aparezca en el menú lateral.
 
 ## Capturas de pantalla

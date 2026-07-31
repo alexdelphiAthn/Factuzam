@@ -17,6 +17,7 @@ unit UniDataIvas;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
    inLibUser, vcl.dialogs;
 
@@ -200,5 +201,6 @@ begin
 end;
 
 initialization
+  RegistrarDataModule(TdmIvas);
   ForceReferenceToClass(TdmIvas);
 end.

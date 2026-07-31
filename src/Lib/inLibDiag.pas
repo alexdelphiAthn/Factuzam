@@ -142,8 +142,9 @@ begin
   Result := Format(
     '[DiagnosticarCamposBooleanos] %s: campo "%s" tipado como %s ' +
     'pero por convencion deberia ser varchar(1) S/N. Causa probable: ' +
-    'metadata de vista desactualizada tras ALTER TABLE. ' +
-    'Solucion: DROP VIEW + CREATE VIEW de la vista usada por el grid.',
+    'metadata de vista desactualizada tras modificar la tabla. ' +
+    'Solucion: regenerar (borrar y volver a definir) la vista usada ' +
+    'por el grid.',
     [AContexto, AIncidencia.NombreCampo, sTipo]);
 end;
 

@@ -23,12 +23,16 @@ interface
 uses
   Uni,
   inLibArticulosResolverIntf,
+  inLibFacturasLecturasIntf,
+  inLibFacturasPersistenciaIntf,
   inLibFacturasServiciosIntf,
   inLibVerifactuColaIntf;
 
 function CrearServiciosFactura(
   AConexion: TUniConnection;
   const ARepositorio: IRepositorioFacturas;
+  const ARepositorioLecturas: IRepositorioLecturasFactura;
+  const APersistencia: TPersistenciaFacturas;
   const AArticulosResolver: IArticulosResolver;
   const AVerifactuCola: IServicioVerifactuCola
 ): TServiciosFactura;
@@ -44,6 +48,8 @@ uses
 function CrearServiciosFactura(
   AConexion: TUniConnection;
   const ARepositorio: IRepositorioFacturas;
+  const ARepositorioLecturas: IRepositorioLecturasFactura;
+  const APersistencia: TPersistenciaFacturas;
   const AArticulosResolver: IArticulosResolver;
   const AVerifactuCola: IServicioVerifactuCola
 ): TServiciosFactura;
@@ -52,11 +58,14 @@ begin
   Result.ArticulosResolver := AArticulosResolver;
   Result.ValidadorFiscal :=
     TValidadorFiscalFactura.Create(ARepositorio);
-  Result.Calculador := TCalculadorFactura.Create(AConexion);
+  Result.Calculador := TCalculadorFactura.Create(
+    AConexion, ARepositorioLecturas);
   Result.Borrado := TServicioBorradoFactura.Create(
     AConexion,
+    APersistencia.Borrado,
     AVerifactuCola);
-  Result.Efectos := TServicioEfectosFactura.Create(AConexion);
+  Result.Efectos := TServicioEfectosFactura.Create(
+    APersistencia.Efectos);
 end;
 
 end.

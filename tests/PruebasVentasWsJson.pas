@@ -9,8 +9,8 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Caracteriza la fachada JSON de ventas mediante una fábrica falsa, sin     }
-{    acceso a BBDD.                                                            }
+{    Caracteriza la fachada JSON mediante una dependencia falsa inyectada,    }
+{    sin acceso a BBDD.                                                       }
 {******************************************************************************}
 unit PruebasVentasWsJson;
 
@@ -27,16 +27,13 @@ type
     procedure Liberar;
     [Test]
     procedure ConstruirEvento_DelegaTodosLosParametros;
-    [Test]
-    procedure FabricaAusente_FallaDeFormaRuidosa;
   end;
 
 implementation
 
 uses
-  System.SysUtils, Uni, inLibParametrosIntf,
-  inLibVentasWsJsonIntf, inLibVentasWsJson,
-  UniDataVentasWsJson;
+  inLibParametrosIntf, inLibVentasWsJsonIntf,
+  inLibVentasWsJson;
 
 type
   TVentasWsJsonFalso = class(TInterfacedObject, IVentasWsJson)
@@ -77,22 +74,14 @@ begin
   Result := '{"resultado":"falso"}';
 end;
 
-function FabricaFalsa(
-  AConexion: TUniConnection): IVentasWsJson;
-begin
-  Result := oServicioFalso;
-end;
-
-procedure PrepararFabricaFalsa;
+procedure PrepararServicioFalso;
 begin
   oFalso := TVentasWsJsonFalso.Create;
   oServicioFalso := oFalso;
-  TFabricaVentasWsJson.Registrar(FabricaFalsa);
 end;
 
 procedure TPruebasVentasWsJson.Liberar;
 begin
-  TFabricaVentasWsJson.Registrar(CrearVentasWsJsonUniDAC);
   oServicioFalso := nil;
   oFalso := nil;
 end;
@@ -102,9 +91,9 @@ procedure TPruebasVentasWsJson.
 var
   Json: string;
 begin
-  PrepararFabricaFalsa;
+  PrepararServicioFalso;
   Json := TVentasWsJson.ConstruirEvento(
-    nil, '37.0', nil, 42, 'EV-42', 'VENTA',
+    nil, '37.0', oServicioFalso, 42, 'EV-42', 'VENTA',
     'EMP', 'FS', '1001');
   Assert.AreEqual('{"resultado":"falso"}', Json);
   Assert.AreEqual('37.0', oFalso.VersionApp);
@@ -114,20 +103,6 @@ begin
   Assert.AreEqual('EMP', oFalso.Empresa);
   Assert.AreEqual('FS', oFalso.Serie);
   Assert.AreEqual('1001', oFalso.Numero);
-end;
-
-procedure TPruebasVentasWsJson.
-  FabricaAusente_FallaDeFormaRuidosa;
-begin
-  TFabricaVentasWsJson.Registrar(nil);
-  Assert.WillRaise(
-    procedure
-    begin
-      TVentasWsJson.ConstruirEvento(
-        nil, '37.0', nil, 43, 'EV-43', 'VENTA',
-        'EMP', 'FS', '1002');
-    end,
-    Exception);
 end;
 
 initialization

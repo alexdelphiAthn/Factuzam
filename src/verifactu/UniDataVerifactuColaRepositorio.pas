@@ -30,7 +30,8 @@ implementation
 
 uses
   System.SysUtils, inLibLog, inLibParametrosIntf, inLibEmisionFiscalIntf,
-  inLibVerifactu, inLibVentasWsCola, UniDataVerifactuColaOperaciones;
+  inLibVerifactu, inLibVentasWsCola, UniDataVerifactuColaOperaciones,
+  UniDataVentasWsCola;
 
 type
   TServicioVerifactuColaUniDAC = class(
@@ -174,8 +175,10 @@ begin
     FQry.ParamByName('USUARIO').AsString := AUsuario;
     FQry.Execute;
   end;
-  TVentasWsCola.RegistrarFactura(AParametrosCaja, FQry, AUsuario,
-    ASerie, ANumero, ATipoOperacion);
+  TVentasWsCola.RegistrarFactura(
+    AParametrosCaja,
+    CrearRepositorioVentasWsColaUniDAC(FQry.Connection),
+    FQry, AUsuario, ASerie, ANumero, ATipoOperacion);
 end;
 
 procedure TServicioVerifactuColaUniDAC.RegistrarFacturaNoVerifactu(
@@ -230,8 +233,10 @@ begin
       FQry, ASerie, ANumero);
   Log.LogInfo('Factura ' + ASerie + '\' + ANumero +
     ' emitida en modo SIN VERIFACTU. Operación: ' + ATipoOperacion);
-  TVentasWsCola.RegistrarFactura(AParametrosCaja, FQry, AUsuario,
-    ASerie, ANumero, ATipoOperacion);
+  TVentasWsCola.RegistrarFactura(
+    AParametrosCaja,
+    CrearRepositorioVentasWsColaUniDAC(FQry.Connection),
+    FQry, AUsuario, ASerie, ANumero, ATipoOperacion);
 end;
 
 procedure TServicioVerifactuColaUniDAC.BorrarMovimientosFactura(

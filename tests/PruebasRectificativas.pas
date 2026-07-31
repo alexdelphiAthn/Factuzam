@@ -37,7 +37,7 @@ type
 implementation
 
 uses
-  System.SysUtils, inLibRectificativas;
+  System.SysUtils, inLibRectificativas, UniDataRectificativasSql;
 
 procedure TPruebasRectificativas.
   Filtro_ExcluyeVentasAnuladas;

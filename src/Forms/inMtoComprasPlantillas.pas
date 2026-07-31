@@ -28,6 +28,7 @@ unit inMtoComprasPlantillas;
 interface
 
 uses
+  inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, Vcl.Buttons,
@@ -200,5 +201,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoComprasPlantillas);
   ForceReferenceToClass(TfrmMtoComprasPlantillas);
 end.

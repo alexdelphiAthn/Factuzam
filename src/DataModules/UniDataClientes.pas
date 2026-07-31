@@ -18,6 +18,7 @@ unit UniDataClientes;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
   Uni, inLibUser, UniDataConn, inLibWin, Forms, Windows,
   Datasnap.DBClient, Datasnap.Provider, frxClass, frxDBSet, frCoreClasses;
@@ -368,5 +369,6 @@ begin
   end;
 end;
 initialization
+  RegistrarDataModule(TdmClientes);
   ForceReferenceToClass(TdmClientes);
 end.

@@ -18,7 +18,8 @@ unit inLibFacturae;
 interface
 
 uses
-  System.SysUtils, Uni, inLibContextoSesionIntf;
+  System.SysUtils, inLibContextoSesionIntf,
+  inLibFacturaePersistenciaIntf;
 
 type
   TFacturaeResultado = record
@@ -29,7 +30,7 @@ type
   end;
 
 function NombreArchivoFacturae(const ASerie, ANumero: string): string;
-function EmitirFacturae(AConn: TUniConnection;
+function EmitirFacturae(const ARepositorio: IRepositorioFacturae;
                         const AContextoSesion:
                         IContextoSesionAplicacion;
                         const ASerie, ANumero, AArchivo: string):
@@ -39,8 +40,7 @@ implementation
 
 uses
   System.Classes, System.IOUtils, System.Math, System.StrUtils, Data.DB,
-  inLibDocumentoFiscal, inLibXades, inLibMsgFacturas,
-  inLibFacturaePersistenciaIntf;
+  inLibDocumentoFiscal, inLibXades, inLibMsgFacturas;
 
 const
   cNsFacturae =
@@ -827,7 +827,7 @@ begin
     AXml);
 end;
 
-function EmitirFacturae(AConn: TUniConnection;
+function EmitirFacturae(const ARepositorio: IRepositorioFacturae;
                         const AContextoSesion:
                         IContextoSesionAplicacion;
                         const ASerie, ANumero, AArchivo: string):
@@ -835,7 +835,6 @@ function EmitirFacturae(AConn: TUniConnection;
 var
   QryCab: TDataSet;
   QryLin: TDataSet;
-  Repositorio: IRepositorioFacturae;
   DatosCert: TXadesDatosCertificado;
   Opciones: TXadesOpciones;
   sSerial: string;
@@ -844,18 +843,17 @@ var
   sXmlFirmado: string;
   sCarpeta: string;
 begin
-  if AConn = nil then
+  if not Assigned(ARepositorio) then
     raise Exception.Create(SErrorConexionFacturaeNoDisponible);
   if Trim(AArchivo) = '' then
     raise Exception.Create(SErrorFicheroSalidaFacturaeNoIndicado);
-  Repositorio := TFabricaRepositorioFacturae.Crear(AConn);
   QryCab := nil;
   QryLin := nil;
   try
-    QryCab := Repositorio.BuscarCabecera(ASerie, ANumero);
-    QryLin := Repositorio.BuscarLineas(ASerie, ANumero);
+    QryCab := ARepositorio.BuscarCabecera(ASerie, ANumero);
+    QryLin := ARepositorio.BuscarLineas(ASerie, ANumero);
     ValidarFactura(QryCab, QryLin);
-    CargarCertificadoEmpresa(Repositorio,
+    CargarCertificadoEmpresa(ARepositorio,
       CampoStr(QryCab, 'CODIGO_EMP_FAC'), sSerial, sTitular);
     sXmlBase := ConstruirXmlFacturae(QryCab, QryLin);
     Opciones := OpcionesXadesFacturae(IdFacturaeSeguro(ASerie, ANumero));
@@ -865,7 +863,7 @@ begin
     if (sCarpeta <> '') and (not TDirectory.Exists(sCarpeta)) then
       TDirectory.CreateDirectory(sCarpeta);
     TFile.WriteAllText(AArchivo, sXmlFirmado, TEncoding.UTF8);
-    GuardarXmlFactura(Repositorio, AContextoSesion, ASerie, ANumero,
+    GuardarXmlFactura(ARepositorio, AContextoSesion, ASerie, ANumero,
       sXmlFirmado);
     Result.Archivo := AArchivo;
     Result.NumeroSerieCertificado := DatosCert.NumeroSerie;

@@ -16,7 +16,7 @@ unit inLibFacturasColumnasPresentacion;
 interface
 
 uses
-  Data.DB, cxGridDBTableView;
+  Data.DB, cxGridDBTableView, inLibUnidadesMedida;
 
 type
   TConfiguracionColumnasFactura = record
@@ -28,6 +28,7 @@ type
     CrearArticulos: Boolean;
     DescripcionAmpliada: Boolean;
     MostrarFechaEntrega: Boolean;
+    UnidadesMedida: TUnidadesMedida;
   end;
 
   TColumnasFactura = record
@@ -243,7 +244,10 @@ begin
       90,
       True);
     AColumnas.Cantidad.PropertiesClass := TcxSpinEditProperties;
-    VincularCantidadGrid(AColumnas.Cantidad, AColumnas.TipoCantidad);
+    VincularCantidadGrid(
+      AColumnas.Cantidad,
+      AColumnas.TipoCantidad,
+      AConfiguracion.UnidadesMedida);
   end;
 end;
 

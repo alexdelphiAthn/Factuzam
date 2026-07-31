@@ -18,6 +18,7 @@
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
   frxClass, frxDBSet,
   inLibUser, frCoreClasses;
@@ -1257,4 +1258,6 @@ begin
   unqryGuiasSesionPrint.Open;
 end;
 
+initialization
+  RegistrarDataModule(TdmComprasSesiones);
 end.

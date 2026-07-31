@@ -18,6 +18,7 @@ unit UniDataFacturas;
 interface
 
 uses
+  inLibRegistroPantallas,
   SysUtils, Classes,  DB,
    DBClient, Provider, frxClass, frxDBSet, inLibUser,
    System.StrUtils, Windows, System.Variants,
@@ -1670,9 +1671,9 @@ begin
                     '  FROM vi_ivas_empresa ' +
                     ' WHERE ESIVAAGRICOLA_IVA_IVAGRP = :pAGRICOLA ' +
                     '   AND CODIGO_EMP_EMP = :pEMPRESA ' +
-							     	'	  AND FECHA_DESDE_IVA <= :pFECHA '     +
-							      '	  AND (FECHA_HASTA_IVA IS NULL  '   +
-							     	'	      OR FECHA_HASTA_IVA > :pFECHA)'+
+                    '   AND FECHA_DESDE_IVA <= :pFECHA '     +
+                    '   AND (FECHA_HASTA_IVA IS NULL  '   +
+                    '       OR FECHA_HASTA_IVA > :pFECHA)'+
                     ' LIMIT 1;'  ;
         ParamByName('pAGRICOLA').AsString := 'S';
         ParamByName('pFECHA').AsDateTime :=
@@ -1689,9 +1690,9 @@ begin
                     '  FROM vi_ivas_empresa ' +
                     ' WHERE ESIVAAGRICOLA_IVA_IVAGRP = :pAGRICOLA ' +
                     '   AND ESDEFAULT_IVA_IVAGRP = :pDEFAULT ' +
-							      '  	AND FECHA_DESDE_IVA <= :pFECHA '     +
-							      '		AND ( FECHA_HASTA_IVA IS NULL  '   +
-								    '		       OR FECHA_HASTA_IVA > :pFECHA)'+
+                    '   AND FECHA_DESDE_IVA <= :pFECHA '     +
+                    '   AND ( FECHA_HASTA_IVA IS NULL  '   +
+                    '        OR FECHA_HASTA_IVA > :pFECHA)'+
                     ' LIMIT 1;'  ;
         ParamByName('pAGRICOLA').AsString := 'S';
         ParamByName('pDEFAULT').AsString := 'S';
@@ -2516,5 +2517,6 @@ begin
 end;
 
 initialization
+  RegistrarDataModule(TdmFacturas);
   ForceReferenceToClass(TdmFacturas);
 end.

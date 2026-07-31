@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoPermisos                                                 }
 {    Tipo:       Formulario (Mto)                                              }
@@ -18,6 +18,7 @@ unit inMtoPermisos;
 interface
 
 uses
+  inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, inmtoprincipal,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoGen, dxSkinsCore,
@@ -71,5 +72,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoPermisos);
   ForceReferenceToClass(TfrmMtoPermisos);
 end.

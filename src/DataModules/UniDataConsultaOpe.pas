@@ -122,7 +122,7 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibLog, inLibMsgComun, inLibRectificativas;
+uses inLibLog, inLibMsgComun, UniDataRectificativasSql;
 
 {$R *.dfm}
 

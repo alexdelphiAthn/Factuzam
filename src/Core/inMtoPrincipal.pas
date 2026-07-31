@@ -54,7 +54,8 @@ uses
   inLibLicenciaAplicacion, inLibAnfitrionMtoIntf,
   inLibCajaVentanasIntf, inLibPermisosIntf,
   inLibCopiasSeguridadIntf,
-  inLibExcepcionesAplicacionIntf;
+  inLibExcepcionesAplicacionIntf, inLibVentasWsCola,
+  inLibFotos, inLibUnidadesMedida;
 
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
@@ -251,6 +252,9 @@ type
     FParametrosCajaEdicion: IParametrosEdicion;
     FServicioCopiasSeguridad: IServicioCopiasSeguridad;
     FGestorExcepciones: IGestorExcepcionesAplicacion;
+    FVentasWsCola: TVentasWsCola;
+    FServicioFotos: TFotosArticulos;
+    FServicioUnidades: TUnidadesMedida;
     // Handlers de aplicacion (OnException/OnIdle/OnMessage) registrados via
     // TApplicationEvents: una asignacion directa Application.OnX queda
     // anulada en cuanto cualquier form crea su propio TApplicationEvents
@@ -322,6 +326,7 @@ type
     procedure CerrarSplashInicio(aMinimoMs: Integer);
     procedure CrearLogoFondoBg;
     procedure CentrarLogoFondoBg;
+    procedure DetenerVentasWsCola;
     procedure FormResize(Sender: TObject);
   end;
 
@@ -345,6 +350,8 @@ uses inLibUser,
   inLibMonitorSQLIntf,
   inLibMonitorSQLUniDAC,
   inLibMonitorSQLLog,
+  UniDataFotosRepositorio,
+  UniDataVentasWsJson,
   inLibLog,
   inLibPerfilesUsuarioIntf,
   inLibFiltrosGuardadosIntf,
@@ -374,13 +381,11 @@ uses inLibUser,
   inMtoModalCargarEfectosRemesa,
   inLibCajaParam,
   inLibAppParam,
-  inLibUnidadesMedida,
-  inLibFotos,
   inLibVerifactu,
   inLibVerifactuInstalacion,
   inLibVerifactuCola,
   UniDataVerifactuColaProcesador,
-  inLibVentasWsCola,
+  UniDataVentasWsCola,
   inLibCertificates,
   inMtoGen,
   inMtoFotoArticulo,
@@ -759,7 +764,9 @@ begin
   FDmConn.conUni.Connect;
   AsignarConexiones(
     TServicioConexionesUniDAC.Create(FDmConn.conUni));
-  oUnidades.AsignarConexion(ConexionPrincipal);
+  FServicioUnidades := TUnidadesMedida.Create;
+  AsignarUnidadesMedida(FServicioUnidades);
+  FServicioUnidades.AsignarConexion(ConexionPrincipal);
   AsignarAuditoriaDatos(
     TServicioAuditoriaDatos.Create(ContextoSesion));
   tmr1Timer(nil);
@@ -813,10 +820,13 @@ begin
   Traducciones.Aplicar(Self);
   if FSplashInicio is TfrmSplash then
     Traducciones.Aplicar(TfrmSplash(FSplashInicio));
-  oFotos.AsignarConexion(
+  FServicioFotos := TFotosArticulos.Create;
+  AsignarFotosArticulos(FServicioFotos);
+  FServicioFotos.AsignarConexion(
     ConexionPrincipal,
     ParametrosApp,
-    CrearValidadorArticulos(ConexionPrincipal));
+    CrearValidadorArticulos(ConexionPrincipal),
+    CrearRepositorioFotosUniDAC(ConexionPrincipal));
   FdmDataFiltros  := TdmFiltros.Create(Self);
   AsignarFiltrosGuardados(
     CrearServiciosFiltrosGuardados(
@@ -825,9 +835,9 @@ begin
       FdmDataFiltros));
   oFzaWinf := TfzaWinF.Create(Self);
   oFzaWinf.Charge(ConexionPrincipal);
-  // Toda pantalla de fza_winforms debe tener su clase en el catalogo
-  // (inMtoCatalogoPantallas); si falta alguna queda en el log desde el
-  // arranque en vez de reventar al abrir el menu.
+  // Cada pantalla de fza_winforms se auto-registra en su propia unidad.
+  // Si falta alguna queda en el log desde el arranque en vez de fallar
+  // al abrir el menú.
   oFzaWinf.ComprobarRegistradas;
   try
     SincronizarVersionInstalacionesSif(
@@ -852,7 +862,7 @@ begin
     PrecargarCachesSerie;
   // Cache de unidades de medida: decimales por unidad y factores de
   // conversion. La usan ficha de articulo, lineas de documento e informes.
-  oUnidades.Cargar;
+  UnidadesMedida.Cargar;
   // Trazar la impresora resuelta: si queda '' o 'DEBUG', el F9 global de
   // abrir cajon no se activa fuera de caja (ver ImpresoraCajaAsignada).
   inLibLog.Log.LogInfo('Arranque: impresora de caja resuelta = "' +
@@ -866,10 +876,13 @@ begin
       ParametrosApp,
       ParametrosCaja,
       IdentidadSesion.Usuario));
-  TVentasWsCola.IniciarHilo(
+  FVentasWsCola := TVentasWsCola.Create;
+  FVentasWsCola.IniciarHilo(
     Conexiones,
     ContextoSesion,
     ParametrosApp,
+    CrearRepositorioVentasWsColaUniDAC,
+    CrearVentasWsJsonUniDAC,
     IdentidadSesion.Usuario);
   jvStatusBar1.Panels[1].Text := FDmConn.conUni.Server + ':' +
     IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
@@ -1643,7 +1656,7 @@ begin
     cEventoNoVerifactuFin,
     'Cierre del sistema');
   // Parar el hilo de la cola Verifactu antes de liberar las conexiones
-  TVentasWsCola.DetenerHilo;
+  DetenerVentasWsCola;
   TVerifactuCola.DetenerHilo;
   if Assigned(FAppEvents) then
   begin
@@ -1663,7 +1676,12 @@ begin
                                                                      E.Message);
     end;
     FreeAndNil(oFzaWinf);
-    oFotos.LiberarServicios;
+    if Assigned(FServicioFotos) then
+      FServicioFotos.LiberarServicios;
+    AsignarFotosArticulos(nil);
+    FreeAndNil(FServicioFotos);
+    AsignarUnidadesMedida(nil);
+    FreeAndNil(FServicioUnidades);
     if Assigned(FDmConn) then
       FDmConn.AsignarParametrosApp(nil);
     AsignarTraducciones(nil);
@@ -1701,6 +1719,11 @@ begin
     inLibLog.Log.LogInfo('Ventana principal Cerrada');
     Action := caFree;
   end;
+end;
+
+procedure TfrmMtoPrincipal.DetenerVentasWsCola;
+begin
+  FreeAndNil(FVentasWsCola);
 end;
 
 procedure TfrmMtoPrincipal.FormCloseQuery(Sender: TObject;

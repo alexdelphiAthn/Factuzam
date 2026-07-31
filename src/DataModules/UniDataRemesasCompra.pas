@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataRemesasCompra                                           }
 {    Tipo:       Data Module                                                    }
@@ -16,6 +16,7 @@ unit UniDataRemesasCompra;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, System.Variants, UniDataGen, Data.DB,
   MemDS, DBAccess, Uni, inLibUser, UniDataConn;
 
@@ -592,5 +593,6 @@ begin
 end;
 
 initialization
+  RegistrarDataModule(TdmRemesasCompra);
   ForceReferenceToClass(TdmRemesasCompra);
 end.

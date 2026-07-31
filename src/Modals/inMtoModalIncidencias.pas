@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoModalIncidencias                                         }
 {    Tipo:       Formulario (Modal)                                            }
@@ -38,12 +38,51 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnAceptarClick(Sender: TObject);
   public
+    class procedure Mostrar(
+      AOwner: TComponent;
+      const ATitulo: string;
+      ALineas: TStrings); static;
+    class procedure MostrarMensaje(
+      AOwner: TComponent;
+      const ATitulo, AMensaje: string); static;
     procedure SetIncidencias(const ATitulo: string; ALineas: TStrings);
   end;
 
 implementation
 
 {$R *.dfm}
+
+class procedure TfrmModalIncidencias.Mostrar(
+  AOwner: TComponent;
+  const ATitulo: string;
+  ALineas: TStrings);
+var
+  Formulario: TfrmModalIncidencias;
+begin
+  Formulario := TfrmModalIncidencias.Create(AOwner);
+  Formulario.OnClose := nil;
+  try
+    Formulario.SetIncidencias(ATitulo, ALineas);
+    Formulario.ShowModal;
+  finally
+    FreeAndNil(Formulario);
+  end;
+end;
+
+class procedure TfrmModalIncidencias.MostrarMensaje(
+  AOwner: TComponent;
+  const ATitulo, AMensaje: string);
+var
+  Lineas: TStringList;
+begin
+  Lineas := TStringList.Create;
+  try
+    Lineas.Add(AMensaje);
+    Mostrar(AOwner, ATitulo, Lineas);
+  finally
+    FreeAndNil(Lineas);
+  end;
+end;
 
 procedure TfrmModalIncidencias.FormCreate(Sender: TObject);
 begin

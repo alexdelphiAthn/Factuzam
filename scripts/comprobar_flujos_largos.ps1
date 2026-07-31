@@ -1044,7 +1044,20 @@ $exclusiones = @(
   '\utilnormbbdd\',
   '\pruebas prestashop\'
 )
+# Solo estas rutinas generadas quedan fuera de la deuda escrita a mano.
+$metodosGenerados = @(
+  @{
+    Ruta = 'src\Lib\inLibRegistroResourcestringTraducciones.pas'
+    Nombre = 'EnumerarResourcestringsTraduccion'
+  },
+  @{
+    Ruta = 'src\Lib\inLibRegistroParametrosTraducciones.pas'
+    Nombre = 'EnumerarParametrosTraduccion'
+  }
+)
 $metodosLargos = [System.Collections.Generic.List[object]]::new()
+$metodosGeneradosEncontrados =
+  [System.Collections.Generic.List[object]]::new()
 $archivos = Get-ChildItem -LiteralPath (Join-Path $Raiz 'src') `
   -Recurse -Filter '*.pas' -File
 foreach ($archivo in $archivos) {
@@ -1055,13 +1068,30 @@ foreach ($archivo in $archivos) {
     }
   }
   if (-not $excluido) {
+    $rutaRelativa = $archivo.FullName.Substring($Raiz.Length + 1)
     $metodos = Obtener-MetodosPascal -Ruta $archivo.FullName
     foreach ($metodo in $metodos) {
-      if ($metodo.Lineas -gt 200) {
+      $esGenerado = $false
+      foreach ($metodoGenerado in $metodosGenerados) {
+        if (($rutaRelativa -eq $metodoGenerado.Ruta) -and
+            ($metodo.Nombre -eq $metodoGenerado.Nombre)) {
+          $esGenerado = $true
+        }
+      }
+      if ($esGenerado) {
+        $metodosGeneradosEncontrados.Add($metodo)
+      }
+      elseif ($metodo.Lineas -gt 200) {
         $metodosLargos.Add($metodo)
       }
     }
   }
+}
+if ($metodosGeneradosEncontrados.Count -ne $metodosGenerados.Count) {
+  throw (
+    'No se localizaron todas las rutinas generadas excluidas del limite: ' +
+    "$($metodosGeneradosEncontrados.Count); esperadas: " +
+    "$($metodosGenerados.Count).")
 }
 if ($metodosLargos.Count -gt $MaximoMetodosMayoresDe200) {
   throw (
@@ -1078,3 +1108,6 @@ Write-Output (
 Write-Output (
   'Metodos mayores de 200 lineas: ' + $metodosLargos.Count +
   ". Limite de no regresion: $MaximoMetodosMayoresDe200.")
+Write-Output (
+  'Rutinas generadas fuera del limite: ' +
+  $metodosGeneradosEncontrados.Count + '.')

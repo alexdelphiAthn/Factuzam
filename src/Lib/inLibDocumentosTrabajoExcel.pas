@@ -26,7 +26,8 @@ uses
 
 procedure ExportarDocumentoTrabajoExcel(
   ASheetControl: TdxSpreadSheet;
-  const QCabecera, QLineas: TDataSet);
+  const QCabecera, QLineas: TDataSet;
+  AFotos: TFotosArticulos);
 
 implementation
 
@@ -65,7 +66,8 @@ const
 
 procedure ExportarDocumentoTrabajoExcel(
   ASheetControl: TdxSpreadSheet;
-  const QCabecera, QLineas: TDataSet);
+  const QCabecera, QLineas: TDataSet;
+  AFotos: TFotosArticulos);
 const
   COL_FOTO = 0;
   COL_LINEA = 1;
@@ -127,13 +129,17 @@ var
     iIzquierda: Integer;
     iArriba: Integer;
   begin
+    info := Default(TFotoInfo);
     sClave := ACodArt + #1 + ACodSku;
-    if not oFotosLinea.TryGetValue(sClave, info) then
+    if Assigned(AFotos) and
+       (not oFotosLinea.TryGetValue(sClave, info)) then
     begin
-      info := oFotos.Resolver(ACodArt, ACodSku);
+      info := AFotos.Resolver(ACodArt, ACodSku);
       oFotosLinea.Add(sClave, info);
     end;
-    sRuta := oFotos.RutaFoto(info, frPx300);
+    sRuta := '';
+    if Assigned(AFotos) then
+      sRuta := AFotos.RutaFoto(info, frPx300);
     if (sRuta <> '') and FileExists(sRuta) then
     begin
       img := TdxSmartImage.Create;

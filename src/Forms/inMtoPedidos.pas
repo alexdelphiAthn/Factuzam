@@ -17,6 +17,7 @@ unit inMtoPedidos;
 interface
 
 uses
+  inLibRegistroPantallas,
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, inMtoDocumento, dxSkinsCore, dxSkinBlue,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
@@ -414,7 +415,7 @@ begin
         '        OR FECHA_HASTA_ARTTAR > :fecha)';
       qry.ParamByName('tarifa').AsString := sTarifa;
       qry.ParamByName('fecha').AsDateTime := dFecha;
-      if TBusquedaUtils.EjecutarBusqueda(
+      if BusquedaVisual.EjecutarBusqueda(
         ConexionPrincipal,
         'Búsqueda de Artículos en Líneas de Pedido',
            qry,
@@ -482,7 +483,7 @@ begin
         ' GROUP BY SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU ' +
         ' ORDER BY SK.CODIGO_UNIDAD_SKU';
       qry.ParamByName('art').AsString := sArt;
-      if TBusquedaUtils.EjecutarBusqueda(
+      if BusquedaVisual.EjecutarBusqueda(
         ConexionPrincipal,
         'SKUs del artículo ' + sArt,
            qry,
@@ -713,7 +714,8 @@ begin
   // Cantidad con decimales segun la unidad de cada linea (telas por metros...).
   VincularCantidadGrid(
     tvPedidosLineas.GetColumnByFieldName('CANTIDAD_PEDLIN'),
-    tvPedidosLineas.GetColumnByFieldName('TIPO_CANTIDAD_ARTICULO_PEDLIN'));
+    tvPedidosLineas.GetColumnByFieldName('TIPO_CANTIDAD_ARTICULO_PEDLIN'),
+    UnidadesMedida);
   ConfigurarColumnaBusquedaDocumento(
     tvPedidosLineas, 'CODIGOPRODPS_PEDLIN',
     cxgrdcPedLinSKUPropertiesButtonClick,
@@ -871,7 +873,7 @@ begin
   begin
     FBuscandoDatosCabecera := True;
     try
-      if TBusquedaUtils.EjecutarBusqueda(
+      if BusquedaVisual.EjecutarBusqueda(
         ConexionPrincipal,
         'Búsqueda de Empresas en Pedidos',
            dmmPedidos.unqryEmpDataPedido,
@@ -893,7 +895,7 @@ begin
   begin
     FBuscandoDatosCabecera := True;
     try
-      if TBusquedaUtils.EjecutarBusqueda(
+      if BusquedaVisual.EjecutarBusqueda(
         ConexionPrincipal,
         'Búsqueda de Clientes en Pedidos',
            dmmPedidos.unqryCliDataPedido,
@@ -1359,6 +1361,8 @@ begin
     tvPedidosLineas, ds, FModoEntradaSel,
     dmmPedidos.unqryTablaG.FieldByName(
       'CODIGO_ALM_PED').AsString, 'PEDLIN');
+  Cfg.BusquedaVisual := BusquedaVisual;
+  Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
     CrearValidadorArticulos(Cfg.Conexion);
   Cfg.LookupAtributos :=
@@ -1387,8 +1391,9 @@ begin
     CfgPV.FieldAlmacen := 'CODIGO_ALMACEN_PEDLIN';
     CfgPV.FieldAlmacenMaster := 'CODIGO_ALM_PED';
     CfgPV.MaxColumnas := 20;
-    CfgPV.Repositorio :=
-      CrearRepositorioPivoteVenta(CfgPV.Conexion, CfgPV.Usuario);
+    CfgPV.Repositorios :=
+      CrearRepositorioPivoteVenta(
+        CfgPV.Conexion, CfgPV.Usuario, BusquedaVisual);
     CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
     CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
     FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);
@@ -1464,10 +1469,10 @@ begin
     ColTipo.Visible := False;
     ColTipo.VisibleForCustomization := False;
     // Decimales de la cantidad segun la unidad de la linea (metros...).
-    VincularCantidadGrid(ColCant, ColTipo);
+    VincularCantidadGrid(ColCant, ColTipo, UnidadesMedida);
     ColAAlbaranar := Col('A albaranar', 'CANTIDAD_A_ALBARANAR_PEDLIN',
                          95, True);
-    VincularCantidadGrid(ColAAlbaranar, ColTipo);
+    VincularCantidadGrid(ColAAlbaranar, ColTipo, UnidadesMedida);
     Col('Pendiente', 'CANTIDAD_PENDIENTE_A_ALBARANAR_PEDLIN', 90, False);
   end;
   FormatearMoneda(Col('PVP S/IVA',
@@ -1850,6 +1855,7 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoPedidos);
   ForceReferenceToClass(TfrmMtoPedidos);
 
 end.

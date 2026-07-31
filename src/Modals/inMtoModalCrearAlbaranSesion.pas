@@ -37,7 +37,8 @@ uses
   cxLookAndFeelPainters, Vcl.Menus, cxButtons, cxContainer, cxEdit, cxLabel,
   cxTextEdit, cxCheckBox, cxMaskEdit, cxDropDownEdit, cxCalendar,
   cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox,
-  cxRadioGroup;
+  cxRadioGroup,
+  inLibComprasSesionesCreacion;
 
 type
   TfrmModalCrearAlbaranSesion = class(TfrmBase)
@@ -88,6 +89,12 @@ type
     procedure ActualizarHabilitados;
     procedure ProponerSeriesAlmacen;
   public
+    class function Solicitar(
+      AOwner: TComponent;
+      ADsAlmacenes, ADsTarifas, ADsTemporadas: TDataSource;
+      const AEstado: TEstadoSesionCreacion;
+      const ADefectos: TDefectosDialogoCreacion;
+      out AAjustes: TAjustesCreacionElegidos): Boolean; static;
     /// Conecta los lookups con las queries del DM padre.
     procedure ConfigurarLookups(ADsAlmacenes, ADsTarifas,
                                  ADsTemporadas: TDataSource);
@@ -128,6 +135,54 @@ uses
   inLibValoresAutomaticos, inLibMsgCompras, inLibMsgVentas;
 
 {$R *.dfm}
+
+class function TfrmModalCrearAlbaranSesion.Solicitar(
+  AOwner: TComponent;
+  ADsAlmacenes, ADsTarifas, ADsTemporadas: TDataSource;
+  const AEstado: TEstadoSesionCreacion;
+  const ADefectos: TDefectosDialogoCreacion;
+  out AAjustes: TAjustesCreacionElegidos): Boolean;
+var
+  Formulario: TfrmModalCrearAlbaranSesion;
+begin
+  AAjustes := Default(TAjustesCreacionElegidos);
+  Formulario := TfrmModalCrearAlbaranSesion.Create(AOwner);
+  Formulario.OnClose := nil;
+  try
+    Formulario.ConfigurarLookups(
+      ADsAlmacenes, ADsTarifas, ADsTemporadas);
+    Formulario.CargarSeries(AEstado.Empresa);
+    Formulario.SetDefecto(
+      ADefectos.SerieAlbaran,
+      ADefectos.SeriePedido,
+      Date,
+      ADefectos.Almacen,
+      ADefectos.Tarifa,
+      ADefectos.Temporada,
+      ADefectos.GeneraPedido,
+      ADefectos.GeneraAlbaran,
+      ADefectos.RefProveedor);
+    Formulario.MostrarOpcionAgrupacion(
+      ADefectos.MostrarOpcionAgrupacion);
+    Formulario.ShowModal;
+    Result := Formulario.Confirmado;
+    if Result then
+    begin
+      AAjustes.SerieAlbaran := Formulario.SerieAlb;
+      AAjustes.SeriePedido := Formulario.SeriePed;
+      AAjustes.Almacen := Formulario.Almacen;
+      AAjustes.Tarifa := Formulario.Tarifa;
+      AAjustes.Temporada := Formulario.Temporada;
+      AAjustes.GeneraPedido := Formulario.GenPedido;
+      AAjustes.GeneraAlbaran := Formulario.GenAlbaran;
+      AAjustes.RefProveedor := Formulario.RefPrv;
+      AAjustes.UnDocumentoPorAlmacen :=
+        Formulario.UnDocPorAlmacen;
+    end;
+  finally
+    FreeAndNil(Formulario);
+  end;
+end;
 
 procedure TfrmModalCrearAlbaranSesion.FormCreate(Sender: TObject);
 begin

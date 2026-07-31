@@ -389,6 +389,9 @@ resourcestring
     'Cuenta de la empresa para el COBRO (ingreso) de los recibos:';
   // R15 - Exportación de factura a Excel
   SCaptionHojaFactura = 'Factura %s';
+  // Fase 2 - Persistencia de operaciones de facturas tras contrato
+  SErrorPersistenciaFacturasNoRegistrada =
+    'La persistencia de operaciones de facturas no está registrada.';
 implementation
 
 end.

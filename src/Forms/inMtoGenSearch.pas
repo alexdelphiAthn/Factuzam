@@ -30,7 +30,7 @@ uses
   cxRadioGroup, JvComponentBase, JvEnterTab, dxShellDialogs,
   cxMaskEdit, cxDropDownEdit, inLibValoresAutomaticos,
   inMtoModalAltaRapida, inLibDevExp,
-  inLibConfigCampos;
+  inLibConfigCampos, inLibGenBusq;
 
 type
   TDefCampo = record
@@ -81,32 +81,39 @@ type
     { Public declarations }
   end;
 
+function CrearBusquedaVisualMto: IBusquedaVisual;
+
 implementation
 
 uses
-  inLibGenBusq, inLibMsgComun;
+  inLibMsgComun;
 
 type
-  TEjecutorBusquedaMto = class(TEjecutorBusqueda)
+  TBusquedaVisualMto = class(TInterfacedObject, IBusquedaVisual)
   public
-    class function EjecutarBusqueda(AConexion: TUniConnection;
-                                    const ACaption: string;
-                                    ADataSet: TCustomDADataSet;
-                                    const AName: string;
-                                    AParentForm: TCustomForm = nil):
-                                    Boolean; overload; override;
-    class function EjecutarBusqueda(AConexion: TUniConnection;
-                                    const ACaption, ASql,
-                                          ACampoResultado: string;
-                                    out AValorDevuelto: string;
-                                    const AName: string;
-                                    AParentForm: TCustomForm = nil):
-                                    Boolean; overload; override;
+    function EjecutarBusqueda(AConexion: TUniConnection;
+                              const ACaption: string;
+                              ADataSet: TCustomDADataSet;
+                              const AName: string;
+                              AParentForm: TCustomForm = nil):
+                              Boolean; overload;
+    function EjecutarBusqueda(AConexion: TUniConnection;
+                              const ACaption, ASql,
+                                    ACampoResultado: string;
+                              out AValorDevuelto: string;
+                              const AName: string;
+                              AParentForm: TCustomForm = nil):
+                              Boolean; overload;
   end;
 
 {$R *.dfm}
 
-class function TEjecutorBusquedaMto.EjecutarBusqueda(
+function CrearBusquedaVisualMto: IBusquedaVisual;
+begin
+  Result := TBusquedaVisualMto.Create;
+end;
+
+function TBusquedaVisualMto.EjecutarBusqueda(
   AConexion: TUniConnection; const ACaption: string;
   ADataSet: TCustomDADataSet; const AName: string;
   AParentForm: TCustomForm): Boolean;
@@ -131,7 +138,7 @@ begin
   end;
 end;
 
-class function TEjecutorBusquedaMto.EjecutarBusqueda(
+function TBusquedaVisualMto.EjecutarBusqueda(
   AConexion: TUniConnection; const ACaption, ASql,
   ACampoResultado: string; out AValorDevuelto: string;
   const AName: string; AParentForm: TCustomForm): Boolean;
@@ -546,11 +553,5 @@ begin
   else
     Result := aValor;
 end;
-
-initialization
-  TBusquedaUtils.RegistrarEjecutor(TEjecutorBusquedaMto);
-
-finalization
-  TBusquedaUtils.RegistrarEjecutor(nil);
 
 end.

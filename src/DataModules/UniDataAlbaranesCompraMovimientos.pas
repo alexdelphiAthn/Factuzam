@@ -666,7 +666,4 @@ function CrearMovimientosAlbaranCompraUniDAC(
 begin
   Result := TMovimientosAlbaranCompraUniDAC.Create(AConexion);
 end;
-initialization
-  TFabricaMovimientosAlbaranCompra.Registrar(
-    CrearMovimientosAlbaranCompraUniDAC);
 end.

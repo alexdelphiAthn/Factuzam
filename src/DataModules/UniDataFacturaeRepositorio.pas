@@ -303,8 +303,4 @@ begin
   Result := TRepositorioFacturaeUniDAC.Create(AConexion);
 end;
 
-initialization
-  TFabricaRepositorioFacturae.Registrar(
-    CrearRepositorioFacturaeUniDAC);
-
 end.

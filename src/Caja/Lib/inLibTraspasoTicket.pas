@@ -39,6 +39,7 @@ type
   public
     // Imprime/previsualiza el ticket de una solicitud de traspaso ya grabada.
     class procedure ImprimirSolicitud(
+                                      const APreview: IPreviewTicket;
                                       const ARepositorio:
                                       IRepositorioTraspasoTicket;
                                       const ANumero, ASerie: string;
@@ -47,6 +48,7 @@ type
     // ticket). Recorre las lineas en memoria (ALineas: campos CODIGO_UNIDAD y
     // CANTIDAD) y por cada SKU calcula el stock en origen y en destino.
     class procedure ImprimirTraspaso(
+                                     const APreview: IPreviewTicket;
                                      const ARepositorio:
                                      IRepositorioTraspasoTicket;
                                      const ADocRef, AOrigen, ADestino,
@@ -56,6 +58,7 @@ type
     // operacion de caja y sus lineas (movimientos de salida) de la BBDD. Lo usa
     // el boton Reimprimir de la consulta de operaciones (TR/TA).
     class procedure ImprimirTraspasoDesdeBD(
+                                     const APreview: IPreviewTicket;
                                      const ARepositorio:
                                      IRepositorioTraspasoTicket;
                                      const AEmpresa, AAlmacen, ACaja,
@@ -97,6 +100,7 @@ begin
 end;
 
 class procedure TTraspasoTicket.ImprimirSolicitud(
+                                     const APreview: IPreviewTicket;
                                      const ARepositorio:
                                      IRepositorioTraspasoTicket;
                                      const ANumero, ASerie: string;
@@ -175,7 +179,7 @@ begin
         ComandosESC := Ticket.ObtenerComandos;
         RutaPDF := GetUserFolderTickets + 'SolTraspaso_' + ASerie + '_' +
                    ANumero + '.pdf';
-        ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaPDF,
+        ImprimirOPrevisualizarTicket(APreview, Ticket, ComandosESC, RutaPDF,
                                      sImpresora);
       finally
         FreeAndNil(Ticket);
@@ -185,6 +189,7 @@ begin
 end;
 
 class procedure TTraspasoTicket.ImprimirTraspaso(
+                                   const APreview: IPreviewTicket;
                                    const ARepositorio:
                                    IRepositorioTraspasoTicket;
                                    const ADocRef, AOrigen, ADestino,
@@ -264,7 +269,7 @@ begin
       sRefArch := StringReplace(ADocRef, '/', '_', [rfReplaceAll]);
       sRefArch := StringReplace(sRefArch, '\', '_', [rfReplaceAll]);
       RutaPDF := GetUserFolderTickets + 'Traspaso_' + sRefArch + '.pdf';
-      ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaPDF,
+      ImprimirOPrevisualizarTicket(APreview, Ticket, ComandosESC, RutaPDF,
                                    sImpresora);
     finally
       FreeAndNil(Ticket);
@@ -273,6 +278,7 @@ begin
 end;
 
 class procedure TTraspasoTicket.ImprimirTraspasoDesdeBD(
+                                   const APreview: IPreviewTicket;
                                    const ARepositorio:
                                    IRepositorioTraspasoTicket;
                                    const AEmpresa, AAlmacen, ACaja,
@@ -362,7 +368,7 @@ begin
         sRefArch := StringReplace(sDocRef, '/', '_', [rfReplaceAll]);
         sRefArch := StringReplace(sRefArch, '\', '_', [rfReplaceAll]);
         RutaPDF := GetUserFolderTickets + 'Traspaso_' + sRefArch + '.pdf';
-        ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaPDF,
+        ImprimirOPrevisualizarTicket(APreview, Ticket, ComandosESC, RutaPDF,
                                      sImpresora, ASoloPDF);
         if Assigned(ARutasPDF) and FileExists(RutaPDF) then
           ARutasPDF.Add(RutaPDF);

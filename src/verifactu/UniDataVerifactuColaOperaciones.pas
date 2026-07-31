@@ -61,7 +61,7 @@ implementation
 uses
   System.SysUtils, System.Classes, Data.DB, inLibLog, inLibMsgFacturas,
   inLibMsgVerifactu, inLibVerifactu, inLibVerifactuEnvio, inLibRelojFiscal,
-  inLibVentasWsCola;
+  inLibVentasWsCola, UniDataVentasWsCola;
 function ObtenerEstadoRegistroNoVerifactu(
   const ATipoOperacion: string): string;
 begin
@@ -343,8 +343,10 @@ begin
       cEventoVerifactuInfo,
       'Registro de facturación NO VERI*FACTU registrado', ATipoOperacion,
       ASerie, ANumero);
-    TVentasWsCola.RegistrarFactura(AParametrosCaja, AQryTrx, AUsuario,
-      ASerie, ANumero, ATipoOperacion);
+    TVentasWsCola.RegistrarFactura(
+      AParametrosCaja,
+      CrearRepositorioVentasWsColaUniDAC(AQryTrx.Connection),
+      AQryTrx, AUsuario, ASerie, ANumero, ATipoOperacion);
   except
     on E: Exception do
     begin
@@ -464,8 +466,11 @@ begin
       // de las ventas activas cuando la rectificación es sustitutiva.
       if sTipoRectificativa = 'S' then
       begin
-        TVentasWsCola.RegistrarFactura(AParametrosCaja, Qry, AUsuario,
-          ASerieOriginal, ANumeroOriginal, 'SUSTITUCION');
+        TVentasWsCola.RegistrarFactura(
+          AParametrosCaja,
+          CrearRepositorioVentasWsColaUniDAC(Qry.Connection),
+          Qry, AUsuario, ASerieOriginal, ANumeroOriginal,
+          'SUSTITUCION');
       end;
     finally
       FreeAndNil(Qry);

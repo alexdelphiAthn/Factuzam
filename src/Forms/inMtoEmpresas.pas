@@ -17,6 +17,7 @@ unit inMtoEmpresas;
 interface
 
 uses
+  inLibRegistroPantallas,
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxStyles, dxSkinsCore, dxSkinBlue,
@@ -941,5 +942,6 @@ begin
   end;
 end;
 initialization
+  RegistrarPantalla(TfrmMtoEmpresas);
   ForceReferenceToClass(TfrmMtoEmpresas);
 end.

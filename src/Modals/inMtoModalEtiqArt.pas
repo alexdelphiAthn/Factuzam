@@ -279,7 +279,8 @@ begin
     GuardarLayout;
   // Ctrl+F12 -> resetear layout
   if (Key = VK_F12) and (ssCtrl in Shift) and not (ssAlt in Shift) then
-    ResetearLayout(Self.Name, PerfilesEscritura);
+    ResetearLayout(
+      Self.Name, PerfilesEscritura, SolicitudPermisoLayout);
 end;
 
 procedure TfrmPrintEtiqArt.RestaurarLayout;
@@ -292,7 +293,8 @@ procedure TfrmPrintEtiqArt.GuardarLayout;
 var
   Layout: TLayoutSaver;
 begin
-  Layout := TLayoutSaver.Create(Self.Name, PerfilesEscritura);
+  Layout := TLayoutSaver.Create(
+    Self.Name, PerfilesEscritura, SolicitudPermisoLayout);
   try
     Layout.GuardarGeometria(Self);
     if Layout.PreguntarYGrabar('Personalizacion Impresion Etiquetas Articulo')

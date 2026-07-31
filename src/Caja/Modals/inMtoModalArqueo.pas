@@ -297,7 +297,7 @@ uses inLibPermisosIntf, inLibLog,
      inMtoModalArqueosHistCaja,
      inLibTiraCajaTicket, inLibTiraCajaTicketIntf,
      inMtoModalTiraCaja, inLibVerifactu,
-     inLibRectificativas, inLibMsgCaja;
+     UniDataRectificativasSql, inLibMsgCaja;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -448,6 +448,7 @@ begin
     Screen.Cursor := crHourGlass;
     try
       TArqueoTicket.Imprimir(
+        PreviewTicket,
         CrearRepositorioArqueoCaja(FConn),
         CrearRepositorioArqueoTicket(FConn),
         ParametrosCaja,
@@ -535,6 +536,7 @@ begin
     if bExcel then
       TTiraCajaTicket.ExportarExcel(
         Self,
+        ProveedorPreviewExcel,
         oRepositorio,
         FEmpresa,
         FAlmacen,
@@ -551,6 +553,7 @@ begin
     else
       TTiraCajaTicket.Imprimir(
         ParametrosApp,
+        PreviewTicket,
         oRepositorio,
         FEmpresa,
         FAlmacen,
@@ -1327,6 +1330,7 @@ begin
   end;
   { Justificante del cierre }
   TArqueoTicket.ImprimirCierre(
+    PreviewTicket,
     CrearRepositorioArqueoTicket(FConn),
     ContextoSesion,
     FArqueoActual,

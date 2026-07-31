@@ -134,8 +134,8 @@ type
     RazonSocialCliente: string;
   end;
 
-  IRepositorioTicketsCaja = interface
-    ['{CB27CE3E-B322-4473-B697-79A23C86729D}']
+  IRepositorioResguardosCaja = interface
+    ['{8AF084E2-0C15-46AF-9278-1F86EAB471E4}']
     function ObtenerEmpresaResguardo(
       const AEmpresa: string): TEmpresaResguardoTicketCaja;
     function ObtenerFechaResguardo(
@@ -155,6 +155,11 @@ type
       TArray<TDepositoResguardoTicketCaja>;
     function ObtenerTotalPagadoResguardo(
       const AContexto: TContextoOperacionTicketCaja): Currency;
+    function ListarPieTicket(
+      const AEmpresa: string): TArray<string>;
+  end;
+  IRepositorioTicketsVentaCaja = interface
+    ['{E5D9A3B4-44A3-48AE-8194-A9E05D64B619}']
     function ObtenerCabeceraTicket(
       const AContexto: TContextoOperacionTicketCaja):
       TCabeceraTicketCaja;
@@ -166,6 +171,13 @@ type
     function ListarValesTicket(
       const AContexto: TContextoOperacionTicketCaja):
       TArray<TValeTicketCaja>;
+    function ListarPieTicket(
+      const AEmpresa: string): TArray<string>;
+    function ObtenerCodigoBarrasTicket(
+      const ASerie, ANumero: string): string;
+  end;
+  IRepositorioRecordatoriosCaja = interface
+    ['{C7C5D86D-3905-478B-B54A-FA466317D470}']
     function ObtenerEmpresaRecordatorio(
       const AEmpresa: string): TEmpresaRecordatorioTicketCaja;
     function ListarAnticiposRecordatorio(
@@ -174,10 +186,11 @@ type
     function ListarDepositosPendientesRecordatorio(
       const ACodigoCliente: string):
       TArray<TDepositoPendienteTicketCaja>;
-    function ListarPieTicket(
-      const AEmpresa: string): TArray<string>;
-    function ObtenerCodigoBarrasTicket(
-      const ASerie, ANumero: string): string;
+  end;
+  TRepositoriosTicketsCaja = record
+    Resguardos: IRepositorioResguardosCaja;
+    Tickets: IRepositorioTicketsVentaCaja;
+    Recordatorios: IRepositorioRecordatoriosCaja;
   end;
 
 implementation

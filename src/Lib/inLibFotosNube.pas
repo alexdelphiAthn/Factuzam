@@ -12,7 +12,8 @@
 {    Descarga de fotos de artículo desde el servicio web general.              }
 {    Pide el ZIP con las fotos del artículo, lo descomprime en appDirFotos     }
 {    dejando los PNG sueltos y borra el ZIP temporal. La integración en el     }
-{    sistema de fotos (oFotos.Guardar / GuardarSesion) la hace el formulario   }
+{    persistencia del servicio de fotos (Guardar / GuardarSesion) la hace el  }
+{    formulario.                                                              }
 {    que invoca, según su contexto (sesión de compras o ficha de fotos).       }
 {                                                                              }
 {    Contrato de /fotos/descargar.php:                                         }

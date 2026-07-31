@@ -34,11 +34,9 @@ type
     Valor: string;
   end;
   TValoresTallaPivoteVenta = TArray<TValorTallaPivoteVenta>;
-  // Operaciones con nombre del caso de uso del pivote de venta. El
-  // adaptador parametriza y ejecuta SQL; no decide qué banda corresponde
-  // ni cómo se agrupan las líneas.
-  IRepositorioPivoteVenta = interface
-    ['{1E7D0B7C-52A9-4A45-B7D0-6C41E9AD83F2}']
+  // Lecturas que necesita el modelo para agrupar y resolver lineas.
+  IRepositorioModeloPivoteVenta = interface
+    ['{8E99E961-92C5-42DA-ABCF-DA83B89E6EF2}']
     function ObtenerInfoSku(const ACodigoSku: string)
                             : TInfoSkuPivoteVenta;
     function ResolverSkuDesdeCodigoBarras(
@@ -59,6 +57,10 @@ type
     // Valores de talla concretos por id, por ORDEN_AV.
     function TallasPorIds(const AIdsTalla: TArray<Integer>)
                           : TValoresTallaPivoteVenta;
+  end;
+  // Operaciones que necesita el coordinador al editar una celda.
+  IRepositorioEdicionPivoteVenta = interface
+    ['{D1E844D7-EFBF-4446-814C-7667D1EE40B7}']
     function DescripcionTalla(AIdAvTalla: Integer): string;
     // SKU activo del artículo con esa talla (y color, si > 0).
     function BuscarSkuActivoPorAtributos(
@@ -73,6 +75,10 @@ type
     function ElegirArticuloDesdeBusqueda(const AAlmacenStock: string;
                                          out ACodigoArticulo: string)
                                          : Boolean;
+  end;
+  TRepositoriosPivoteVenta = record
+    Modelo: IRepositorioModeloPivoteVenta;
+    Edicion: IRepositorioEdicionPivoteVenta;
   end;
 
 implementation

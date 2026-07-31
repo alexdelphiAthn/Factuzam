@@ -9,7 +9,7 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Adaptador de ILineasDocumentoTallas sobre el cds del documento. Aísla     }
+{    Adaptador de los puertos de lineas de tallas sobre el cds. Aísla          }
 {    los casos de uso del dataset: recorrido, borrado programático y los       }
 {    hooks AfterPost / AfterScroll que recargan las celdas. La escritura       }
 {    campo a campo vive en TEscrituraLineasTallas.                            }
@@ -66,7 +66,10 @@ type
     property Registro: TRegistroTallas read FRegistro write FRegistro;
   end;
   TLineasDocumentoTallasCds = class(TInterfacedObject,
-                                    ILineasDocumentoTallas)
+                                    ILineasRederivacionTallas,
+                                    ILineasDesmontajeTallas,
+                                    ILineasEntradaTallas,
+                                    ILineasPresentacionTallas)
   private
     FCds: TDataSet;
     FCampos: TCamposLineasTallas;

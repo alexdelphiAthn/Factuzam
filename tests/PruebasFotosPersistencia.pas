@@ -9,7 +9,7 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Verifica el registro de persistencia y los prefijos de fotos sin BBDD.    }
+{    Verifica la composicion segregada y los prefijos de fotos sin BBDD.       }
 {******************************************************************************}
 unit PruebasFotosPersistencia;
 
@@ -22,12 +22,8 @@ type
   [TestFixture]
   TPruebasFotosPersistencia = class
   public
-    [TearDown]
-    procedure Liberar;
     [Test]
-    procedure FabricaRegistrada_SeInvocaSinConexionReal;
-    [Test]
-    procedure FabricaAusente_FallaDeFormaRuidosa;
+    procedure ServiciosVacios_NoAsignanNingunPuerto;
     [Test]
     procedure PrefijosSku_OrdenaDeMasAMenosEspecifico;
   end;
@@ -35,47 +31,17 @@ type
 implementation
 
 uses
-  System.SysUtils, Uni, inLibFotosPersistenciaIntf,
-  UniDataFotosRepositorio, inLibFotos;
-
-var
-  bFabricaInvocada: Boolean;
-
-function FabricaFotosFalsa(
-  AConexion: TUniConnection): IRepositorioFotos;
-begin
-  bFabricaInvocada := True;
-  Result := nil;
-end;
-
-procedure TPruebasFotosPersistencia.Liberar;
-begin
-  TFabricaRepositorioFotos.Registrar(CrearRepositorioFotosUniDAC);
-  bFabricaInvocada := False;
-end;
+  inLibFotosPersistenciaIntf, inLibFotos;
 
 procedure TPruebasFotosPersistencia.
-  FabricaRegistrada_SeInvocaSinConexionReal;
+  ServiciosVacios_NoAsignanNingunPuerto;
 var
-  Repositorio: IRepositorioFotos;
+  Repositorios: TRepositoriosFotos;
 begin
-  bFabricaInvocada := False;
-  TFabricaRepositorioFotos.Registrar(FabricaFotosFalsa);
-  Repositorio := TFabricaRepositorioFotos.Crear(nil);
-  Assert.IsTrue(bFabricaInvocada);
-  Assert.IsFalse(Assigned(Repositorio));
-end;
-
-procedure TPruebasFotosPersistencia.
-  FabricaAusente_FallaDeFormaRuidosa;
-begin
-  TFabricaRepositorioFotos.Registrar(nil);
-  Assert.WillRaise(
-    procedure
-    begin
-      TFabricaRepositorioFotos.Crear(nil);
-    end,
-    Exception);
+  Repositorios := Default(TRepositoriosFotos);
+  Assert.IsFalse(Assigned(Repositorios.Consulta));
+  Assert.IsFalse(Assigned(Repositorios.Edicion));
+  Assert.IsFalse(Assigned(Repositorios.Sesion));
 end;
 
 procedure TPruebasFotosPersistencia.

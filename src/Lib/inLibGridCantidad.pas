@@ -19,19 +19,20 @@ unit inLibGridCantidad;
 interface
 
 uses
-  cxGridDBTableView;
+  cxGridDBTableView, inLibUnidadesMedida;
 
 // Vincula una columna de cantidad a su columna de unidad de medida: la celda
 // mostrara los decimales que correspondan a la unidad de esa fila y el editor
 // admitira decimales. AColUnidad puede ser nil (entonces decimales por defecto).
-procedure VincularCantidadGrid(AColCantidad, AColUnidad: TcxGridDBColumn);
+procedure VincularCantidadGrid(AColCantidad, AColUnidad: TcxGridDBColumn;
+  AUnidades: TUnidadesMedida);
 
 implementation
 
 uses
   System.Classes, System.SysUtils, System.Variants, System.Math, Data.DB,
   Vcl.ExtCtrls, cxGridCustomTableView, cxGridTableView, cxSpinEdit,
-  inLibUnidadesMedida, inLibMsgArticulos;
+  inLibMsgArticulos;
 
 type
   TVisibilidadTipoCantidad = class;
@@ -63,6 +64,7 @@ type
   private
     FColCantidad: TcxGridDBColumn;
     FColUnidad: TcxGridDBColumn;
+    FUnidades: TUnidadesMedida;
     procedure GetDisplayText(Sender: TcxCustomGridTableItem;
       ARecord: TcxCustomGridRecord; var AText: string);
   end;
@@ -212,11 +214,13 @@ begin
       if not (VarIsNull(vUni) or VarIsEmpty(vUni)) then
         sUni := VarToStr(vUni);
     end;
-    AText := oUnidades.Formatear(dVal, sUni);
+    if Assigned(FUnidades) then
+      AText := FUnidades.Formatear(dVal, sUni);
   end;
 end;
 
-procedure VincularCantidadGrid(AColCantidad, AColUnidad: TcxGridDBColumn);
+procedure VincularCantidadGrid(AColCantidad, AColUnidad: TcxGridDBColumn;
+  AUnidades: TUnidadesMedida);
 var
   i: Integer;
   oFmt: TFormatoCantidadGrid;
@@ -232,6 +236,7 @@ begin
     oFmt := TFormatoCantidadGrid.Create(AColCantidad);
     oFmt.FColCantidad := AColCantidad;
     oFmt.FColUnidad := AColUnidad;
+    oFmt.FUnidades := AUnidades;
     AColCantidad.OnGetDisplayText := oFmt.GetDisplayText;
   end;
   if AColUnidad <> nil then

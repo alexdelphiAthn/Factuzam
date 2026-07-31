@@ -16,7 +16,8 @@ unit inLibFacturasCalculo;
 interface
 
 uses
-  Data.DB, Uni, inLibFacturasServiciosIntf;
+  Data.DB, Uni, inLibFacturasServiciosIntf,
+  inLibFacturasLecturasIntf;
 
 type
   TCalculadorFactura = class(
@@ -24,8 +25,11 @@ type
     ICalculadorFactura)
   private
     FConexion: TUniConnection;
+    FRepositorioLecturas: IRepositorioLecturasFactura;
   public
-    constructor Create(AConexion: TUniConnection);
+    constructor Create(
+      AConexion: TUniConnection;
+      const ARepositorioLecturas: IRepositorioLecturasFactura);
     function Calcular(
       ACabecera, ALineas: TDataSet;
       APermiteRecalcular: Boolean): TResultadoOperacionFactura;
@@ -36,10 +40,13 @@ implementation
 uses
   System.SysUtils, inLibFacturas, inLibMsgFacturas;
 
-constructor TCalculadorFactura.Create(AConexion: TUniConnection);
+constructor TCalculadorFactura.Create(
+  AConexion: TUniConnection;
+  const ARepositorioLecturas: IRepositorioLecturasFactura);
 begin
   inherited Create;
   FConexion := AConexion;
+  FRepositorioLecturas := ARepositorioLecturas;
 end;
 
 function TCalculadorFactura.Calcular(
@@ -58,6 +65,7 @@ begin
     try
       Totales := TFacturaTotales.Create(
         FConexion,
+        FRepositorioLecturas,
         ACabecera,
         ALineas);
       try

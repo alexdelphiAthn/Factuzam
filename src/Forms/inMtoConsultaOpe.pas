@@ -167,7 +167,8 @@ uses inLibGenerarTicketBD, inLibGenerarTicketCaja,
      inLibEmisionFiscalIntf, inLibEmisionFiscal,
      UniDataVerifactuColaRepositorio,
   inLibCorreoTickets, inLibAtributosPaleta, inLibMsgComun,
-  inLibMsgCaja, inLibMsgConfiguracion, inLibMsgFacturas;
+  inLibMsgCaja, inLibMsgConfiguracion, inLibMsgFacturas,
+  inLibTicketsCajaIntf, UniDataVentasCalendario;
 
 // -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -182,7 +183,9 @@ begin
   FdmConsulta := TdmConsultaOpe.Create(Self, ConexionPrincipal);
   FLayout := TLayoutLoader.Create(
     Self.Name, ContextoSesion, PerfilesLectura);
-  FVentasCal := TVentasCalendarioCache.Create(ConexionPrincipal);
+  FVentasCal := TVentasCalendarioCache.Create(
+    ConexionPrincipal,
+    CrearRepositorioVentasCalendarioUniDAC(ConexionPrincipal));
   dtpFecha.Properties.OnGetDayState := dtpFechaGetDayState;
   cxViewMaestro.DataController.DataSource := FdmConsulta.dsMaestro;
   cxViewOpe.DataController.DataSource     := FdmConsulta.dsOperacion;
@@ -321,7 +324,8 @@ begin
       if (ssAlt in Shift) and not (ssCtrl in Shift) then
         GuardarLayout
       else if (ssCtrl in Shift) and not (ssAlt in Shift) then
-        ResetearLayout(Self.Name, PerfilesEscritura);
+        ResetearLayout(
+          Self.Name, PerfilesEscritura, SolicitudPermisoLayout);
   end;
 end;
 
@@ -656,8 +660,8 @@ begin
   imgFotoConsulta.Picture.Assign(nil);
   ResolverArtSkuDeFacLin(sArt, sSku);
   if sArt = '' then Exit;
-  info := oFotos.Resolver(sArt, sSku);
-  sRuta := oFotos.RutaFoto(info, frPx300);
+  info := FotosArticulos.Resolver(sArt, sSku);
+  sRuta := FotosArticulos.RutaFoto(info, frPx300);
   if sRuta = '' then Exit;
   png := TPngImage.Create;
   try
@@ -766,7 +770,8 @@ procedure TfrmConsultaOpe.GuardarLayout;
 var
   Layout: TLayoutSaver;
 begin
-  Layout := TLayoutSaver.Create(Self.Name, PerfilesEscritura);
+  Layout := TLayoutSaver.Create(
+    Self.Name, PerfilesEscritura, SolicitudPermisoLayout);
   try
     Layout.GuardarGeometria(Self);
     Layout.GuardarAlturaPanel('PnlMaestroHeight', pnlMaestro);
@@ -935,6 +940,8 @@ begin
         try
           if EnviarDocumentacionOperacion(
             ParametrosApp,
+            PreviewTicket,
+            UnidadesMedida,
             CrearRepositorioTraspasoTicket,
             CrearRepositorioTicketsCaja,
             ConexionPrincipal,
@@ -956,6 +963,7 @@ end;
 procedure TfrmConsultaOpe.ReimprimirOperacion(
   const ANombreImpresora: string);
 var
+  RepositoriosTickets: TRepositoriosTicketsCaja;
   sEmp, sAlm, sCaja, sNumOp, sCliente: string;
 begin
   if not FdmConsulta.qryMaestro.IsEmpty then
@@ -972,16 +980,20 @@ begin
     // Los traspasos usan su ticket específico con stock origen/destino.
     if FdmConsulta.EsTraspaso then
       TTraspasoTicket.ImprimirTraspasoDesdeBD(
+                                              PreviewTicket,
                                               CrearRepositorioTraspasoTicket,
                                               sEmp,
                                               sAlm, sCaja, sNumOp,
                                               ANombreImpresora)
     else
     begin
+      RepositoriosTickets := CrearRepositorioTicketsCaja;
       if FdmConsulta.TieneFactura then
         ImprimirTicketDesdeBD(
           ParametrosApp,
-          CrearRepositorioTicketsCaja,
+          PreviewTicket,
+          UnidadesMedida,
+          RepositoriosTickets.Tickets,
           sEmp,
           sAlm,
           sCaja,
@@ -989,14 +1001,17 @@ begin
           ANombreImpresora);
       if FdmConsulta.TieneDepositos then
         ImprimirResguardoDeposito(
-          CrearRepositorioTicketsCaja,
+          PreviewTicket,
+          RepositoriosTickets.Resguardos,
           sEmp,
           sAlm,
           sCaja,
           sNumOp,
           ANombreImpresora);
       if FdmConsulta.EsOperacionCaja then
-        ImprimirTicketOperacionCaja(ConexionPrincipal, sEmp, sAlm, sCaja,
+        ImprimirTicketOperacionCaja(
+                                    PreviewTicket,
+                                    ConexionPrincipal, sEmp, sAlm, sCaja,
                                     sNumOp,
                                     ANombreImpresora);
       if (not FdmConsulta.TieneFactura)
@@ -1005,7 +1020,8 @@ begin
         ShowMessage(SErrorOperacionSinTicket)
       else if Trim(sCliente) <> '' then
         ImprimirRecordatorio(
-          CrearRepositorioTicketsCaja,
+          PreviewTicket,
+          RepositoriosTickets.Recordatorios,
           UbicacionSesion.Empresa,
           sCliente,
           ANombreImpresora);

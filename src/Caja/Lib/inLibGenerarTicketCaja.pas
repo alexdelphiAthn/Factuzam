@@ -19,9 +19,10 @@ interface
 
 uses
   System.SysUtils, System.Classes, Uni,
-  inLibPermisosIntf, inLibParametrosIntf;
+  inLibPermisosIntf, inLibParametrosIntf, inLibPreviewTicket;
 
 procedure ImprimirTicketOperacionCaja(
+  const APreview: IPreviewTicket;
   AConexion: TUniConnection;
   const AEmpresa, AAlmacen, ACaja, ANumOperacion: string;
   const ANombreImpresora: string = 'DEBUG';
@@ -45,11 +46,12 @@ implementation
 
 uses
   Data.DB, DBAccess, Vcl.Dialogs,
-  inLibFTicket, inLibPreviewTicket, inLibDir,
+  inLibFTicket, inLibDir,
   inLibGenerarTicket, inLibMsgCaja, inLibMsgConfiguracion,
   inLibMsgTickets;
 
 procedure ImprimirTicketOperacionCaja(
+  const APreview: IPreviewTicket;
   AConexion: TUniConnection;
   const AEmpresa, AAlmacen, ACaja, ANumOperacion: string;
   const ANombreImpresora: string;
@@ -139,7 +141,8 @@ begin
     ComandosESC := Ticket.ObtenerComandos;
     RutaFicheroPDF := GetUserFolderTickets + 'ticket_caja_' +
       ANumOperacion + '.pdf';
-    ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaFicheroPDF,
+    ImprimirOPrevisualizarTicket(
+      APreview, Ticket, ComandosESC, RutaFicheroPDF,
                                  ANombreImpresora, ASoloPDF);
     if Assigned(ARutasPDF) and FileExists(RutaFicheroPDF) then
       ARutasPDF.Add(RutaFicheroPDF);

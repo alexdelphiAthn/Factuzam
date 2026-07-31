@@ -10,7 +10,7 @@
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
-<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li class="activo"><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li></ul>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li class="activo"><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li></ul>
 </nav>
 <main>
 <article>
@@ -156,10 +156,22 @@ stock y ha habido ventas posteriores, revisa el stock tras revertir.</p></blockq
 <strong>tallas en columnas</strong> (formato apaisado), útil para repasar la entrada de
 género contra el albarán del proveedor.</p>
 <h3 id="7-fotos-de-la-sesion">7. Fotos de la sesión</h3>
-<p>Las fotos asignadas en una sesión todavía no materializada se guardan de
-forma temporal. Al materializar, se migran automáticamente al artículo o
-SKU creado. El botón <strong>Bajar fotos</strong> usa los parámetros de la categoría
-<strong>Fotos</strong> para descargar imágenes del servidor y asociarlas a la línea.</p>
+<p>La pantalla permite fotografiar y reconocer el género <strong>antes de que el
+artículo exista en el catálogo</strong>. Selecciona una línea y usa una de estas
+acciones:</p>
+<ul><li><strong>+ Foto</strong> — elige una imagen local (<code>PNG</code>, <code>JPG</code>, <code>JPEG</code>, <code>WEBP</code>, <code>AVIF</code> o <code>BMP</code>) y la asocia a la línea activa.</li><li><strong>Bajar fotos</strong> — descarga las imágenes disponibles en el servidor y guarda como foto provisional una imagen representativa de la línea.</li></ul>
+<p>La pestaña <strong>Fotos provisionales</strong> permite revisar las imágenes de la
+sesión. La lista muestra la línea, el código de artículo tentativo, el
+modelo de proveedor, la descripción, el color, la asignación y el fichero;
+al cambiar de fila se actualizan la vista previa y el texto que indica a
+qué artículo o SKU se asignará.</p>
+<p>Mientras la sesión está abierta, las fotos se conservan como
+<strong>provisionales</strong> y quedan ligadas a su serie, número y línea. Al
+materializar:</p>
+<ol><li>Se crea o reutiliza el artículo y sus SKUs.</li><li>La foto provisional se migra al artículo o SKU definitivo.</li><li>Se renombran las copias de 300 px, 600 px y resolución real.</li><li>Si el artículo ya tenía fotos, la nueva se añade con el siguiente índice disponible, sin sobrescribirlas.</li></ol>
+<blockquote><p>Comprueba la vista previa antes de materializar. Después, la imagen se
+gestiona como cualquier otra foto del catálogo mediante
+<code>[Ctrl]+[F]</code> (ver <a href="01-conceptos-comunes.html#foto-flotante-del-articulo-sku">Foto flotante del artículo / SKU</a>).</p></blockquote>
 <hr>
 <h2 id="pedidos">Pedidos</h2>
 <p>Mantenimiento de <strong>Pedidos de Compra</strong>. Registra lo que se ha <strong>encargado</strong>
@@ -295,7 +307,7 @@ Es el complemento de impresión de las pantallas
 <hr>
 <p><a href="02-menu-archivo.html">◀ Menú Archivo</a> · <a href="index.html">Índice</a> · <a href="04-menu-ventas-mayor.html">Siguiente ▶ Menú Ventas Mayor</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 22/07/2026</footer>
+<footer>Manual de Factuzam · generado el 31/07/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

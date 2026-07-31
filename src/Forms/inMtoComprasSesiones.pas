@@ -46,6 +46,7 @@ unit inMtoComprasSesiones;
 interface
 
 uses
+  inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.StrUtils,
   System.Variants, System.types,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
@@ -729,16 +730,16 @@ begin
     end;
   end;
   if (sSerie <> '') and (sNumero <> '') and (iLinea > 0) and
-     Assigned(inLibFotos.oFotos()) then
+     Assigned(FotosArticulos) then
   begin
-    info := inLibFotos.oFotos.ResolverSesion(
+    info := FotosArticulos.ResolverSesion(
       sSerie,
       sNumero,
       iLinea,
       sUnidad);
     if info.Encontrada then
     begin
-      sRuta := inLibFotos.oFotos.RutaFoto(info, frPx300);
+      sRuta := FotosArticulos.RutaFoto(info, frPx300);
       if sUnidad = '' then
         sDestino := SCaptionDestinoArticulo
       else
@@ -815,7 +816,7 @@ begin
   dmm := tdmDataModule as TdmComprasSesiones;
   FreeAndNil(FServicioComprasSesiones);
   FServicioComprasSesiones := CrearServicioComprasSesiones(
-    ConexionPrincipal, Dmm, CatalogoSqlAplicacion,
+    ConexionPrincipal, Dmm, FotosArticulos, CatalogoSqlAplicacion,
     IncidenciasSqlAplicacion);
   FreeAndNil(FGestorCopiaLineas);
   FGestorCopiaLineas := TGestorCopiaLineasCompra.Create(
@@ -1383,7 +1384,8 @@ begin
   // Boton "Bajar fotos": descarga del servidor las fotos del articulo de
   // la linea activa, las descomprime en appDirFotos y borra el ZIP.
   // Integra ademas una foto representativa en la linea de la sesion, igual
-  // que "+ Foto" (oFotos.GuardarSesion con CODIGO_UNIDAD = ''). El atajo
+  // que "+ Foto" (FotosArticulos.GuardarSesion con CODIGO_UNIDAD = '').
+  // El atajo
   // global Ctrl+F abre la foto flotante de esa misma linea.
   if Dmm.unqryTablaG.IsEmpty then
     ShowMessage(SErrorSesionCompraNoActiva)
@@ -1421,7 +1423,8 @@ begin
         sFile := ElegirFotoRepresentativa(archivos);
         if sFile <> '' then
         begin
-          oFotos.GuardarSesion(sSerie, sNumero, iLinea, sCodArt, '',
+          FotosArticulos.GuardarSesion(
+            sSerie, sNumero, iLinea, sCodArt, '',
             sFile, IdentidadSesion.Usuario);
           RefrescarFotosProvisionales;
         end;
@@ -1523,7 +1526,7 @@ begin
   if Dmm.unqryTablaG.IsEmpty then
     MessageDlg(SErrorSesionElegirProveedorNoSeleccionada,
                mtInformation, [mbOk], 0)
-  else if TBusquedaUtils.EjecutarBusqueda(
+  else if BusquedaVisual.EjecutarBusqueda(
     ConexionPrincipal,
     'Busqueda de proveedores',
             'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
@@ -2384,7 +2387,7 @@ begin
     if dlgFoto.Execute then
     begin
       try
-        info := inLibFotos.oFotos.GuardarSesion(
+        info := FotosArticulos.GuardarSesion(
           sSerie,
           sNumero,
           iLinea,
@@ -2412,15 +2415,12 @@ var
   bOK    : Boolean;
   sErr   : string;
   incidencias : TStringList;
-  frmInc      : TfrmModalIncidencias;
-  frmSet      : TfrmModalCrearAlbaranSesion;
   iAutoFix    : Integer;
-  frmDocs     : TfrmModalDocsCreados;
-  i           : Integer;
   Estado      : TEstadoSesionCreacion;
   Defectos    : TDefectosDialogoCreacion;
   Elegidos    : TAjustesCreacionElegidos;
   Cabecera    : TCabeceraSesionActualizada;
+  DocumentoSeleccionado: TDocumentoMaterializado;
   ParametrosMaterializacion: TParametrosMaterializacionSesion;
   ResultadoMaterializacion: TResultadoMaterializacionSesion;
 begin
@@ -2487,12 +2487,10 @@ begin
     if not FServicioComprasSesiones.ValidarSesionDetallado(
              incidencias) then
     begin
-      frmInc := TfrmModalIncidencias.Create(Self);
-      frmInc.SetIncidencias(
+      TfrmModalIncidencias.Mostrar(
+        Self,
         'Hay incidencias que impiden materializar la sesion:',
         incidencias);
-      frmInc.ShowModal;
-      // FormClose pone Action := caFree, no liberamos a mano.
       Exit;
     end;
   finally
@@ -2504,36 +2502,15 @@ begin
     Estado,
     ObtenerSerieDefecto(ConexionPrincipal, Estado.Empresa, 'AB'),
     ObtenerSerieDefecto(ConexionPrincipal, Estado.Empresa, 'PC'));
-  frmSet := TfrmModalCrearAlbaranSesion.Create(Self);
-  frmSet.ConfigurarLookups(Dmm.dsAlmacenes, Dmm.dsTarifas,
-                            Dmm.dsTemporadas);
-  // Combos de serie: todas las series de la empresa por tipo de
-  // documento. El modal propone la serie que lleve el almacen elegido
-  // (CODIGO_ALM_EMPSER) y re-propone al cambiar de almacen.
-  frmSet.CargarSeries(Estado.Empresa);
-  frmSet.SetDefecto(
-    Defectos.SerieAlbaran,
-    Defectos.SeriePedido,
-    Date,
-    Defectos.Almacen,
-    Defectos.Tarifa,
-    Defectos.Temporada,
-    Defectos.GeneraPedido,
-    Defectos.GeneraAlbaran,
-    Defectos.RefProveedor);
-  frmSet.MostrarOpcionAgrupacion(Defectos.MostrarOpcionAgrupacion);
-  frmSet.ShowModal;
-  if not frmSet.Confirmado then Exit;
-  Elegidos.SerieAlbaran := frmSet.SerieAlb;
-  Elegidos.SeriePedido := frmSet.SeriePed;
-  Elegidos.Almacen := frmSet.Almacen;
-  Elegidos.Tarifa := frmSet.Tarifa;
-  Elegidos.Temporada := frmSet.Temporada;
-  Elegidos.GeneraPedido := frmSet.GenPedido;
-  Elegidos.GeneraAlbaran := frmSet.GenAlbaran;
-  Elegidos.RefProveedor := frmSet.RefPrv;
-  Elegidos.UnDocumentoPorAlmacen := frmSet.UnDocPorAlmacen;
-  // FormClose libera el modal.
+  if not TfrmModalCrearAlbaranSesion.Solicitar(
+           Self,
+           Dmm.dsAlmacenes,
+           Dmm.dsTarifas,
+           Dmm.dsTemporadas,
+           Estado,
+           Defectos,
+           Elegidos) then
+    Exit;
 
   // Aplicar a la cabecera los settings elegidos para que la
   // materializacion los vea. Las series NO se persisten: viajan como
@@ -2580,32 +2557,20 @@ begin
       ShowMessage(SInfoSesionMaterializadaSinDocumentos)
     else
     begin
-      frmDocs := TfrmModalDocsCreados.Create(Self);
-      // Bloqueamos caFree del ancestro para liberarlo nosotros aqui.
-      frmDocs.OnClose := nil;
-      try
-        for i := 0 to High(ResultadoMaterializacion.Documentos) do
-          frmDocs.Agregar(
-            ResultadoMaterializacion.Documentos[i].Tipo,
-            ResultadoMaterializacion.Documentos[i].Serie,
-            ResultadoMaterializacion.Documentos[i].Numero,
-            ResultadoMaterializacion.Documentos[i].Almacen);
-        frmDocs.ShowModal;
-        if frmDocs.Confirmado then
-        begin
-          // Albaran y Pedido tienen Mto propio. BuscarTabla en
-          // inLibShowMto soporta PK compuesta separada por coma.
-          if SameText(frmDocs.SeleccionadoTipo, 'Albaran') then
-            ShowMto(Application.MainForm, 'AlbaranesCompra',
-                    frmDocs.SeleccionadoSerie + ',' +
-                    frmDocs.SeleccionadoNumero)
-          else if SameText(frmDocs.SeleccionadoTipo, 'Pedido') then
-            ShowMto(Application.MainForm, 'PedidosCompra',
-                    frmDocs.SeleccionadoSerie + ',' +
-                    frmDocs.SeleccionadoNumero);
-        end;
-      finally
-        FreeAndNil(frmDocs);
+      if TfrmModalDocsCreados.Seleccionar(
+           Self,
+           ResultadoMaterializacion.Documentos,
+           DocumentoSeleccionado) then
+      begin
+        // BuscarTabla admite la PK compuesta separada por coma.
+        if SameText(DocumentoSeleccionado.Tipo, 'Albaran') then
+          ShowMto(Application.MainForm, 'AlbaranesCompra',
+                  DocumentoSeleccionado.Serie + ',' +
+                  DocumentoSeleccionado.Numero)
+        else if SameText(DocumentoSeleccionado.Tipo, 'Pedido') then
+          ShowMto(Application.MainForm, 'PedidosCompra',
+                  DocumentoSeleccionado.Serie + ',' +
+                  DocumentoSeleccionado.Numero);
       end;
     end;
   end
@@ -2613,16 +2578,10 @@ begin
   begin
     // El error tambien en modal de incidencias: se lee mejor aunque
     // sea largo.
-    incidencias := TStringList.Create;
-    try
-      incidencias.Add('[MATERIALIZAR] ' + sErr);
-      frmInc := TfrmModalIncidencias.Create(Self);
-      frmInc.SetIncidencias(
-        'No se pudo materializar la sesion:', incidencias);
-      frmInc.ShowModal;
-    finally
-      FreeAndNil(incidencias);
-    end;
+    TfrmModalIncidencias.MostrarMensaje(
+      Self,
+      'No se pudo materializar la sesion:',
+      '[MATERIALIZAR] ' + sErr);
   end;
   LogSes('btnCrearClick FIN');
 end;
@@ -3752,5 +3711,6 @@ end;
 // engancha automaticamente en InicializarGestorTallas.
 
 initialization
+  RegistrarPantalla(TfrmMtoComprasSesiones);
   ForceReferenceToClass(TfrmMtoComprasSesiones);
 end.

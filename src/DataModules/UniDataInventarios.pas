@@ -18,6 +18,7 @@ unit UniDataInventarios;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, Winapi.Windows, Data.DB, MemDS, DBAccess,
   Uni, Datasnap.DBClient, Datasnap.Provider, UniProvider, MySQLUniProvider,
   UniDataGen, Vcl.Controls, System.UITypes;
@@ -1865,5 +1866,6 @@ end;
 
 
 initialization
+  RegistrarDataModule(TdmInventarios);
   ForceReferenceToClass(TdmInventarios);
 end.

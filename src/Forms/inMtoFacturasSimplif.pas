@@ -21,6 +21,7 @@ unit inMtoFacturasSimplif;
 interface
 
 uses
+  inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.DateUtils, System.UITypes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.ComCtrls,
@@ -593,5 +594,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoFacturasSimplif);
   ForceReferenceToClass(TfrmMtoFacturasSimplif);
 end.

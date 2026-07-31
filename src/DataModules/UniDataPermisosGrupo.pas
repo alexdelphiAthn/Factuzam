@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       UniDataPermisosGrupo                                          }
 {    Tipo:       Data Module                                                   }
@@ -16,6 +16,7 @@ unit UniDataPermisosGrupo;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, Data.DB, MemDS, DBAccess, Uni,
   UniDataGen, inLibUser;
 
@@ -27,4 +28,6 @@ implementation
 
 {$R *.dfm}
 
+initialization
+  RegistrarDataModule(TdmPermisosGrupo);
 end.

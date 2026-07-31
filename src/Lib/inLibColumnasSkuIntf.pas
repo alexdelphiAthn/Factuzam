@@ -29,7 +29,8 @@ interface
 uses
   System.Classes, Data.DB, Uni, cxGridDBTableView,
   inLibContextoSesionIntf, inLibArticulosValidadorIntf,
-  inLibArticulosAtributosIntf;
+  inLibArticulosAtributosIntf, inLibGenBusq,
+  inLibDistribuidorTallas;
 
 type
   // Modo de entrada de articulos en el grid del documento.
@@ -75,6 +76,8 @@ type
     ContextoSesion: IContextoSesionAplicacion;
     ValidadorArticulos: IArticulosValidador;
     LookupAtributos: IArticulosAtributosLookup;
+    BusquedaVisual: IBusquedaVisual;
+    DistribuidorTallasVisual: IDistribuidorTallasVisual;
     View: TcxGridDBTableView;
     Cds: TDataSet;
     Campos: TCamposColumnasSku;

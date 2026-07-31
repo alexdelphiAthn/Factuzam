@@ -57,6 +57,8 @@ uses
   // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
   inLibColumnasSkuIntf, inLibGridPivoteVenta,
   inLibFacturasServiciosIntf, inLibEmisionFiscalIntf,
+  inLibFacturasLecturasIntf,
+  inLibFacturasPersistenciaIntf,
   inLibDocumento, inLibDocumentoIntf,
   inLibFacturasColumnasPresentacion,
   inLibFacturasLineasEdicion;
@@ -614,6 +616,8 @@ type
     FActualizandoLabelPrendas: Boolean;
     FControlador: TControladorFacturas;
     FEditorLineas: TEditorLineasFactura;
+    FRepositorioLecturas: IRepositorioLecturasFactura;
+    FPersistenciaFacturas: TPersistenciaFacturas;
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
@@ -749,6 +753,9 @@ uses
   inLibEmisionFiscal,
   UniDataVerifactuColaRepositorio,
   UniDataFacturasRepositorio,
+  UniDataFacturasLecturas,
+  UniDataFacturasOperaciones,
+  UniDataVentasWsCola,
   inLibFacturasMovimientos,
   inLibFacturasConsolidacion,
   inLibFacturasReapertura,
@@ -1102,7 +1109,7 @@ begin
   if SinVerifactuActivo(ParametrosApp) or
      (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
   begin
-    if TBusquedaUtils.EjecutarBusqueda(
+    if BusquedaVisual.EjecutarBusqueda(
       ConexionPrincipal,
       'Búsqueda de Clientes en Borradores',
                                        dmmFacturas.unqryCliDataFac,
@@ -1147,7 +1154,7 @@ begin
   if SinVerifactuActivo(ParametrosApp) or
      (dmmFacturas.unqryTablaG.FieldByName(fescon).AsString <> 'S') then
   begin
-    if TBusquedaUtils.EjecutarBusqueda(
+    if BusquedaVisual.EjecutarBusqueda(
       ConexionPrincipal,
       'Búsqueda de Empresas en Borradores',
                                        dmmFacturas.unqryEmpDataFac,
@@ -1797,7 +1804,7 @@ begin
   sNum   := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
   sSerie := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
   Result := inLibFacturas.ContarLineasFactura(
-    ConexionPrincipal, sSerie, sNum);
+    FRepositorioLecturas, sSerie, sNum);
 end;
 
 function TfrmMtoFacturasBase.DescripcionHijos: string;
@@ -1858,6 +1865,8 @@ begin
         ConexionPrincipal,
         CatalogoSqlAplicacion,
         IncidenciasSqlAplicacion),
+      FRepositorioLecturas,
+      FPersistenciaFacturas,
       CrearResolverArticulos(ConexionPrincipal),
       CrearServicioVerifactuColaUniDAC(ConexionPrincipal)));
   dmmFacturas.OnResultadoOperacion := MostrarResultadoOperacion;
@@ -1875,7 +1884,8 @@ begin
     dmmFacturas.unqryTablaG,
     dmmFacturas.unqryLinFac,
     CrearValidadorArticulos(ConexionPrincipal),
-    CrearResolverArticulos(ConexionPrincipal));
+    CrearResolverArticulos(ConexionPrincipal),
+    FRepositorioLecturas);
   ConfigurarTablaPrincipalDocumento(
     dmmFacturas, dsTablaG, tvLineasFactura,
     dmmFacturas.dsLinFac, [], pkFieldName,
@@ -1907,7 +1917,8 @@ begin
              TcxLookupComboBoxProperties).ListSource := dmmFacturas.dsIvasTipos;
   // Cantidad con decimales segun la unidad de cada linea (telas por metros...).
   VincularCantidadGrid(ctbCANTIDAD_FACTURA_LINEA,
-                       ctbTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA);
+                       ctbTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA,
+                       UnidadesMedida);
   // Regla del SKU por linea: no se puede ocultar una columna por fila, asi
   // que se vacia su texto (OnGetDataText) y se bloquea su edicion (OnEditing)
   // segun el articulo de cada linea. El cache evita reconsultar fza_articulos
@@ -2073,9 +2084,12 @@ begin
     ParametrosCaja,
     ConexionPrincipal, CrearServicioVerifactuColaUniDAC(ConexionPrincipal));
   ServicioMovimientos :=
-    TServicioMovimientosFactura.Create(ConexionPrincipal);
+    TServicioMovimientosFactura.Create(
+      ConexionPrincipal,
+      FPersistenciaFacturas.Movimientos);
   Servicio := CrearServicioConsolidacionFactura(
     ConexionPrincipal,
+    FPersistenciaFacturas.Consolidacion,
     ServicioEmision,
     ServicioMovimientos);
   Validacion := Servicio.Validar(sSerie, sNumero);
@@ -2147,7 +2161,9 @@ begin
   Servicio := CrearServicioReaperturaBorrador(
     ParametrosApp,
     ParametrosCaja,
-    ConexionPrincipal);
+    ConexionPrincipal,
+    FPersistenciaFacturas.Reapertura,
+    CrearRepositorioVentasWsColaUniDAC(ConexionPrincipal));
   Validacion := Servicio.Validar(sSerie, sNumero);
   if not Validacion.Exito then
     ShowMessage(Validacion.Mensaje)
@@ -2594,7 +2610,7 @@ begin
                                     'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
     dmmFacturas.unqryArtDataLinFac.ParamByName('FECHA_FAC').AsDateTime :=
                   dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
-    if TBusquedaUtils.EjecutarBusqueda(
+    if BusquedaVisual.EjecutarBusqueda(
       ConexionPrincipal,
       'Búsqueda de Artículos en Lineas de ' +
                                                                    'Borradores',
@@ -2803,7 +2819,7 @@ begin
   with FAnfitrion do
   begin
   try
-    GridRecalc(ConexionPrincipal, Sender,
+    GridRecalc(ConexionPrincipal, FRepositorioLecturas, Sender,
                tvLineasFactura,
                dmmFacturas.unqryLinFac,
                dmmFacturas.unqryTablaG,
@@ -3015,6 +3031,8 @@ begin
       Cfg := CrearConfigColumnasSkuDocumento(
         dmmFacturas.unqryTablaG.Connection, ContextoSesion,
         tvLineasFactura, ds, FModoEntradaSel, '', 'FACLIN');
+      Cfg.BusquedaVisual := BusquedaVisual;
+      Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
       Cfg.ValidadorArticulos :=
         CrearValidadorArticulos(Cfg.Conexion);
       Cfg.LookupAtributos :=
@@ -3054,8 +3072,8 @@ begin
         CfgPV.FieldAlmacenMaster := '';
         CfgPV.MaxColumnas := 20;
         CfgPV.BandaUnica := True;
-        CfgPV.Repositorio := CrearRepositorioPivoteVenta(
-                               CfgPV.Conexion, CfgPV.Usuario);
+        CfgPV.Repositorios := CrearRepositorioPivoteVenta(
+          CfgPV.Conexion, CfgPV.Usuario, BusquedaVisual);
         CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
         CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
         FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);
@@ -3116,6 +3134,7 @@ begin
   Configuracion.DescripcionAmpliada :=
     chkDescripcion_ampliada.Checked;
   Configuracion.MostrarFechaEntrega := chkFechaEntrega.Checked;
+  Configuracion.UnidadesMedida := UnidadesMedida;
   Columnas := CrearColumnasFactura(Configuracion);
   ctbLINEA_FACTURA_LINEA := Columnas.Linea;
   ctbCODIGO_ARTICULO_FACTURA_LINEA := Columnas.Articulo;
@@ -3472,6 +3491,12 @@ procedure TfrmMtoFacturasBase.CrearTablaPrincipal;
 begin
   if not Assigned(FControlador) then
     FControlador := TControladorFacturas.Create(Self);
+  if FRepositorioLecturas = nil then
+    FRepositorioLecturas :=
+      CrearRepositorioLecturasFacturaUniDAC(ConexionPrincipal);
+  if FPersistenciaFacturas.Borrado = nil then
+    FPersistenciaFacturas :=
+      CrearPersistenciaFacturasUniDAC(ConexionPrincipal);
   InicializarDocumento(
     CrearConfiguracionDocumento(tdFactura, sdVenta));
   AsignarVistaLineasDocumento(tvLineasFactura);

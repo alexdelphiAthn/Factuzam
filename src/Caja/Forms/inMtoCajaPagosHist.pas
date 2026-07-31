@@ -17,6 +17,7 @@ unit inMtoCajaPagosHist;
 interface
 
 uses
+  inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.DateUtils, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoGen, dxSkinsCore,
@@ -417,5 +418,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoCajaPagosHist);
   ForceReferenceToClass(TfrmMtoCajaPagosHist);
 end.

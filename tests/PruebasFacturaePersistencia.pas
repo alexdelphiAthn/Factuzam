@@ -22,60 +22,23 @@ type
   [TestFixture]
   TPruebasFacturaePersistencia = class
   public
-    [TearDown]
-    procedure Liberar;
     [Test]
-    procedure FabricaRegistrada_SeInvocaSinConexionReal;
-    [Test]
-    procedure FabricaAusente_FallaDeFormaRuidosa;
+    procedure CreadorExplicito_DevuelveRepositorio;
   end;
 
 implementation
 
 uses
-  System.SysUtils, Uni, inLibFacturaePersistenciaIntf,
+  inLibFacturaePersistenciaIntf,
   UniDataFacturaeRepositorio;
 
-var
-  bFabricaInvocada: Boolean;
-
-function CrearRepositorioFacturaeFalso(
-  AConexion: TUniConnection): IRepositorioFacturae;
-begin
-  bFabricaInvocada := True;
-  Result := nil;
-end;
-
-procedure TPruebasFacturaePersistencia.Liberar;
-begin
-  TFabricaRepositorioFacturae.Registrar(
-    CrearRepositorioFacturaeUniDAC);
-  bFabricaInvocada := False;
-end;
-
 procedure TPruebasFacturaePersistencia.
-  FabricaRegistrada_SeInvocaSinConexionReal;
+  CreadorExplicito_DevuelveRepositorio;
 var
   Repositorio: IRepositorioFacturae;
 begin
-  bFabricaInvocada := False;
-  TFabricaRepositorioFacturae.Registrar(
-    CrearRepositorioFacturaeFalso);
-  Repositorio := TFabricaRepositorioFacturae.Crear(nil);
-  Assert.IsTrue(bFabricaInvocada);
-  Assert.IsFalse(Assigned(Repositorio));
-end;
-
-procedure TPruebasFacturaePersistencia.
-  FabricaAusente_FallaDeFormaRuidosa;
-begin
-  TFabricaRepositorioFacturae.Registrar(nil);
-  Assert.WillRaise(
-    procedure
-    begin
-      TFabricaRepositorioFacturae.Crear(nil);
-    end,
-    Exception);
+  Repositorio := CrearRepositorioFacturaeUniDAC(nil);
+  Assert.IsTrue(Assigned(Repositorio));
 end;
 
 initialization

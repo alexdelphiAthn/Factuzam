@@ -264,7 +264,7 @@ procedure ProcesarFactura(ACabecera, ALineas: TClientDataSet);
 var
   oTotales: TFacturaTotales;
 begin
-  oTotales := TFacturaTotales.Create(nil, ACabecera, ALineas);
+  oTotales := TFacturaTotales.Create(nil, nil, ACabecera, ALineas);
   try
     if not oTotales.ProcesarFacturaCompleta then
       raise Exception.Create(oTotales.MensajeError);

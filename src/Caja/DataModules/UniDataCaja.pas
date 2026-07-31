@@ -21,7 +21,7 @@ uses
   Datasnap.DBClient, Uni, MemDS, DBAccess, system.Math, UniDataGen,
   system.StrUtils, inLibFaseCobro, Windows,
   inLibCajaDatosFactura, inLibCajaTipos, inLibContextoSesionIntf,
-  inLibParametrosIntf, inLibTicketsCajaIntf;
+  inLibParametrosIntf, inLibTicketsCajaIntf, inLibPreviewTicket;
 
 type
   TTipoRectificativaCaja = inLibCajaTipos.TTipoRectificativaCaja;
@@ -97,7 +97,8 @@ type
     FUltSerieFacGrabada:  string;
     FUltNumeroFacGrabada: string;
     FContextoSesion: IContextoSesionAplicacion;
-    FRepositorioTicketsCaja: IRepositorioTicketsCaja;
+    FRepositorioTicketsCaja: TRepositoriosTicketsCaja;
+    FPreviewTicket: IPreviewTicket;
     function GetIdentidadSesion: TIdentidadSesion;
     procedure InsertarMovimientoAlmacen(
                           QryTrx:     TUniQuery;
@@ -256,11 +257,12 @@ type
       AOwner: TComponent;
       AConexion: TUniConnection;
       const AParametrosApp: IParametrosAplicacion;
-      const AParametrosCaja: IParametrosCaja); reintroduce;
+      const AParametrosCaja: IParametrosCaja;
+      const APreviewTicket: IPreviewTicket); reintroduce;
     procedure AsignarContextoSesion(
       const AContextoSesion: IContextoSesionAplicacion);
     procedure AsignarRepositorioTicketsCaja(
-      const ARepositorio: IRepositorioTicketsCaja);
+      const ARepositorio: TRepositoriosTicketsCaja);
     property IdentidadSesion: TIdentidadSesion read GetIdentidadSesion;
     procedure CargarDepositosCliente(const ACodigoCliente: string);
     function GenerarSkuFinal(ArticuloBase: string): string;
@@ -388,6 +390,7 @@ uses inLibValoresAutomaticos,
      UniDataVerifactuColaRepositorio,
      inLibGenerarTicketBD,
      UniDataTicketsCajaRepositorio,
+     UniDataFacturasLecturas,
      inLibDocumentoFiscal,
      inLibLicenciaAplicacion,
      inLibRectificativas,
@@ -508,7 +511,8 @@ constructor TdmCajaOpe.Create(
   AOwner: TComponent;
   AConexion: TUniConnection;
   const AParametrosApp: IParametrosAplicacion;
-  const AParametrosCaja: IParametrosCaja);
+  const AParametrosCaja: IParametrosCaja;
+  const APreviewTicket: IPreviewTicket);
 var
   ProveedorContexto: IProveedorContextoSesion;
 begin
@@ -519,8 +523,9 @@ begin
   FConexion := AConexion;
   FParametrosApp := AParametrosApp;
   FParametrosCaja := AParametrosCaja;
+  FPreviewTicket := APreviewTicket;
   FRepositorioTicketsCaja :=
-    TRepositorioTicketsCaja.Create(AConexion);
+    CrearRepositoriosTicketsCaja(AConexion);
   FContextoSesion := nil;
   if Supports(AOwner, IProveedorContextoSesion, ProveedorContexto) then
     FContextoSesion := ProveedorContexto.ContextoSesion;
@@ -534,9 +539,11 @@ begin
 end;
 
 procedure TdmCajaOpe.AsignarRepositorioTicketsCaja(
-  const ARepositorio: IRepositorioTicketsCaja);
+  const ARepositorio: TRepositoriosTicketsCaja);
 begin
-  if Assigned(ARepositorio) then
+  if Assigned(ARepositorio.Tickets) and
+     Assigned(ARepositorio.Resguardos) and
+     Assigned(ARepositorio.Recordatorios) then
     FRepositorioTicketsCaja := ARepositorio;
 end;
 
@@ -1312,7 +1319,8 @@ end;
 procedure TGrabacionFacturaCaja.AtenderOperacionSinNovedad;
 begin
   ImprimirRecordatorio(
-    FDataModule.FRepositorioTicketsCaja,
+    FDataModule.FPreviewTicket,
+    FDataModule.FRepositorioTicketsCaja.Recordatorios,
     FDataModule.FContextoSesion.Ubicacion.Empresa,
     FCabecera.CodigoCliente,
     FDataModule.FParametrosCaja.ImpresoraCaja);
@@ -1970,14 +1978,16 @@ begin
   if HayDepositosPendientes and (FNumeroOperacion <> '') then
   begin
     ImprimirResguardoDeposito(
-      FDataModule.FRepositorioTicketsCaja,
+      FDataModule.FPreviewTicket,
+      FDataModule.FRepositorioTicketsCaja.Resguardos,
       FEmpresa,
       FAlmacen,
       FCaja,
       FNumeroOperacion,
       FDataModule.FParametrosCaja.ImpresoraCaja);
     ImprimirRecordatorio(
-      FDataModule.FRepositorioTicketsCaja,
+      FDataModule.FPreviewTicket,
+      FDataModule.FRepositorioTicketsCaja.Recordatorios,
       FDataModule.FContextoSesion.Ubicacion.Empresa,
       FCabecera.CodigoCliente,
       FDataModule.FParametrosCaja.ImpresoraCaja);
@@ -2335,6 +2345,7 @@ begin
   // Instanciamos tu clase pasándole los datasets de la caja
   CalculadorFiscal := TFacturaTotales.Create(
     FConexion,
+    CrearRepositorioLecturasFacturaUniDAC(FConexion),
     dsCabecera,
     dsLineas);
   try
@@ -2615,7 +2626,7 @@ begin
   for i := 1 to NumAttr do
   begin
     ValorAttr := cdsLineas.FieldByName('ATTR' + IntToStr(i) +
-	                                                         '_VALOR').AsString;
+                                                           '_VALOR').AsString;
     if ValorAttr <> '' then
        SkuBuilder := SkuBuilder + '/' + ValorAttr;
   end;

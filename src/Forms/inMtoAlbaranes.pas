@@ -17,6 +17,7 @@ unit inMtoAlbaranes;
 interface
 
 uses
+  inLibRegistroPantallas,
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, inMtoDocumento, dxSkinsCore, dxSkinBlue,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
@@ -289,6 +290,7 @@ uses
   UniDataArticulosValidadorRepositorio, inLibVentasImpuestos,
   inLibValoresAutomaticos, inLibUser, inLibColumnasSku,
   inLibColumnasDocumento, UniDataGen,
+  UniDataModoTallas,
   inLibValidacionDocumento, inLibPresentacionDocumento,
   inLibMsgArticulos, inLibMsgComun, inLibMsgFacturas, inLibMsgVentas;
 
@@ -356,7 +358,7 @@ begin
         '        OR FECHA_HASTA_ARTTAR > :fecha)';
       qry.ParamByName('tarifa').AsString := sTarifa;
       qry.ParamByName('fecha').AsDateTime := dFecha;
-      if TBusquedaUtils.EjecutarBusqueda(
+      if BusquedaVisual.EjecutarBusqueda(
         ConexionPrincipal,
         'Búsqueda de Artículos en Líneas de Albarán',
            qry,
@@ -425,7 +427,7 @@ begin
         ' GROUP BY SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU ' +
         ' ORDER BY SK.CODIGO_UNIDAD_SKU';
       qry.ParamByName('art').AsString := sArt;
-      if TBusquedaUtils.EjecutarBusqueda(
+      if BusquedaVisual.EjecutarBusqueda(
         ConexionPrincipal,
         'SKUs del artículo ' + sArt,
            qry,
@@ -684,6 +686,8 @@ begin
     tvLineasAlbaran, ds, FModoEntradaSel,
     dmmAlbaranes.unqryTablaG.FieldByName(
       'CODIGO_ALM_ALB').AsString, 'ALBLIN');
+  Cfg.BusquedaVisual := BusquedaVisual;
+  Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
     CrearValidadorArticulos(Cfg.Conexion);
   Cfg.LookupAtributos :=
@@ -716,7 +720,8 @@ begin
     CfgT.FieldAlmacenCel := '';
     CfgT.IdFilaFijo := 1;
     CfgT.MaxColumnas := 20;
-    FModoEntrada := CrearModoEntradaGridTallas(Cfg, CfgT);
+    FModoEntrada := CrearModoEntradaGridTallas(
+      Cfg, CfgT, CrearPersistenciaModoTallas, CrearBusquedaSkusTallas);
   end
   else
     FModoEntrada := CrearModoEntradaGrid(Cfg);
@@ -765,7 +770,7 @@ begin
   ColTipo.Visible := False;
   ColTipo.VisibleForCustomization := False;
   // Decimales de la cantidad segun la unidad de la linea (metros...).
-  VincularCantidadGrid(ColCant, ColTipo);
+  VincularCantidadGrid(ColCant, ColTipo, UnidadesMedida);
   Col('PVP S/IVA', 'PRECIO_VENTA_SIVA_ARTICULO_ALBLIN', 90, True);
   Col('PVP C/IVA', 'PRECIO_VENTA_CIVA_ARTICULO_ALBLIN', 90, True);
   Col('Tarifa', 'CODIGO_TAR_ALBLIN', 70, False);
@@ -1025,7 +1030,9 @@ begin
   // Cantidad con decimales segun la unidad de cada linea (telas por metros...).
   VincularCantidadGrid(
     tvLineasAlbaran.GetColumnByFieldName('CANTIDAD_ALBLIN'),
-    tvLineasAlbaran.GetColumnByFieldName('TIPO_CANTIDAD_ARTICULO_ALBLIN'));
+    tvLineasAlbaran.GetColumnByFieldName(
+      'TIPO_CANTIDAD_ARTICULO_ALBLIN'),
+    UnidadesMedida);
   ConfigurarColumnaBusquedaDocumento(
     tvLineasAlbaran, 'CODIGO_UNIDAD_ALBLIN',
     cxgrdcArtAlbSkuPropertiesButtonClick,
@@ -1080,7 +1087,7 @@ begin
   begin
     FBuscandoDatosCabecera := True;
     try
-      if TBusquedaUtils.EjecutarBusqueda(
+      if BusquedaVisual.EjecutarBusqueda(
         ConexionPrincipal,
         'Búsqueda de Empresas en Albaranes',
            dmmAlbaranes.unqryEmpDataAlb,
@@ -1105,7 +1112,7 @@ begin
   begin
     FBuscandoDatosCabecera := True;
     try
-      if TBusquedaUtils.EjecutarBusqueda(
+      if BusquedaVisual.EjecutarBusqueda(
         ConexionPrincipal,
         'Búsqueda de Clientes en Albaranes',
            dmmAlbaranes.unqryCliDataAlb,
@@ -1546,6 +1553,7 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoAlbaranes);
   ForceReferenceToClass(TfrmMtoAlbaranes);
 
 end.

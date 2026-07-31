@@ -17,7 +17,8 @@ interface
 
 uses
   System.Generics.Collections, Data.DB, Uni,
-  inLibArticulosResolverIntf, inLibArticulosValidadorIntf;
+  inLibArticulosResolverIntf, inLibArticulosValidadorIntf,
+  inLibFacturasLecturasIntf;
 
 type
   TResultadoEdicionLineaFactura = record
@@ -35,6 +36,7 @@ type
     FConexion: TUniConnection;
     FLineas: TDataSet;
     FResolver: IArticulosResolver;
+    FRepositorioLecturas: IRepositorioLecturasFactura;
     FValidador: IArticulosValidador;
     FAplicando: Boolean;
     function AplicarEntradaComun(
@@ -55,7 +57,8 @@ type
       AConexion: TUniConnection;
       ACabecera, ALineas: TDataSet;
       const AValidador: IArticulosValidador;
-      const AResolver: IArticulosResolver);
+      const AResolver: IArticulosResolver;
+      const ARepositorioLecturas: IRepositorioLecturasFactura);
     destructor Destroy; override;
     function AplicarDesdeEditor(
       const AEntrada: string
@@ -81,7 +84,8 @@ constructor TEditorLineasFactura.Create(
   AConexion: TUniConnection;
   ACabecera, ALineas: TDataSet;
   const AValidador: IArticulosValidador;
-  const AResolver: IArticulosResolver);
+  const AResolver: IArticulosResolver;
+  const ARepositorioLecturas: IRepositorioLecturasFactura);
 begin
   inherited Create;
   FConexion := AConexion;
@@ -89,12 +93,14 @@ begin
   FLineas := ALineas;
   FValidador := AValidador;
   FResolver := AResolver;
+  FRepositorioLecturas := ARepositorioLecturas;
   FCacheMostrarSku := TDictionary<string, Boolean>.Create;
 end;
 
 destructor TEditorLineasFactura.Destroy;
 begin
   FResolver := nil;
+  FRepositorioLecturas := nil;
   FValidador := nil;
   FCacheMostrarSku.Free;
   inherited;
@@ -311,6 +317,7 @@ begin
   if Result.Aplicado and Result.RecalcularDesdeEditor then
     ActualizarLineaFactura(
       FConexion,
+      FRepositorioLecturas,
       FLineas,
       FCabecera,
       'PRECIO_SALIDA_FACLIN',
@@ -365,6 +372,7 @@ begin
           FLineas.FieldByName('CANTIDAD_FACLIN').AsFloat := 1;
         ActualizarLineaFactura(
           FConexion,
+          FRepositorioLecturas,
           FLineas,
           FCabecera,
           'PRECIO_SALIDA_FACLIN',
@@ -385,7 +393,7 @@ begin
   begin
     try
       Result := ArticuloFacturaDebeMostrarSku(
-        FConexion,
+        FRepositorioLecturas,
         ACodigoArticulo);
       FCacheMostrarSku.AddOrSetValue(ACodigoArticulo, Result);
     except

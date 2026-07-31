@@ -18,6 +18,7 @@ unit inMtoVerifactuLog;
 interface
 
 uses
+  inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.UITypes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoGen, dxSkinsCore,
@@ -68,7 +69,8 @@ implementation
 uses
   inLibWin, inLibShowMto,
   inLibMsgVerifactu, inLibVerifactuNoVerifactuExport,
-  inLibVerifactuNoVerifactuVerify;
+  inLibVerifactuNoVerifactuVerify,
+  UniDataVerifactuNoVerifactuExport;
 
 {$R *.dfm}
 
@@ -150,6 +152,7 @@ begin
     if oDialogo.Execute then
     begin
       oResultado := ExportarRegistrosNoVerifactu(ParametrosApp,
+        CrearRepositorioExportacionNoVerifactuUniDAC(ConexionPrincipal),
         ConexionPrincipal,
         IdentidadSesion.Usuario, oDialogo.FileName);
       MessageDlg(Format(SInfoExportacionNoVerifactuGenerada,
@@ -204,5 +207,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoVerifactuLog);
   ForceReferenceToClass(TfrmMtoVerifactuLog);
 end.

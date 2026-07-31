@@ -16,12 +16,12 @@ unit inLibFotosPersistenciaIntf;
 interface
 
 uses
-  System.SysUtils, Data.DB, Uni;
+  System.SysUtils, Data.DB;
 
 type
   // Los TDataSet devueltos pertenecen al llamador.
-  IRepositorioFotos = interface
-    ['{C360C9AA-A8C3-4696-90CA-5EEAB982D577}']
+  IRepositorioConsultaFotos = interface
+    ['{B7EF7B91-B01C-4B36-8D89-121B2E2628AF}']
     function BuscarFotoPorUnidades(
       const ACodigoArticulo: string;
       const AUnidades: TArray<string>): TDataSet;
@@ -31,6 +31,9 @@ type
       const ACodigoArticulo: string): TDataSet;
     function BuscarFotosArticulos(
       const ACodigosArticulo: TArray<string>): TDataSet;
+  end;
+  IRepositorioEdicionFotos = interface
+    ['{52F8D4B6-F889-4663-B8FC-1C2E9A3DB102}']
     function BuscarFotoEditable(
       const ACodigoArticulo, ACodigoUnidad: string): TDataSet;
     procedure ActualizarNombreFoto(
@@ -39,6 +42,9 @@ type
       const ACodigoArticulo, ACodigoUnidad: string): string;
     procedure EliminarFoto(
       const ACodigoArticulo, ACodigoUnidad: string);
+  end;
+  IRepositorioSesionFotos = interface
+    ['{9639253C-FB16-4B89-AE95-9B90C33DA476}']
     function BuscarFotoSesion(
       const ASerieSesion, ANumeroSesion: string;
       ALinea: Integer;
@@ -62,35 +68,10 @@ type
       const ASerieSesion, ANumeroSesion: string;
       ALinea: Integer);
   end;
-  TFabricaCrearRepositorioFotos = function(
-    AConexion: TUniConnection): IRepositorioFotos;
-  TFabricaRepositorioFotos = class
-  private
-    class var FFabrica: TFabricaCrearRepositorioFotos;
-  public
-    class procedure Registrar(
-      AFabrica: TFabricaCrearRepositorioFotos);
-    class function Crear(
-      AConexion: TUniConnection): IRepositorioFotos;
+  TRepositoriosFotos = record
+    Consulta: IRepositorioConsultaFotos;
+    Edicion: IRepositorioEdicionFotos;
+    Sesion: IRepositorioSesionFotos;
   end;
-
 implementation
-
-uses
-  inLibMsgArticulos;
-
-class procedure TFabricaRepositorioFotos.Registrar(
-  AFabrica: TFabricaCrearRepositorioFotos);
-begin
-  FFabrica := AFabrica;
-end;
-
-class function TFabricaRepositorioFotos.Crear(
-  AConexion: TUniConnection): IRepositorioFotos;
-begin
-  if not Assigned(FFabrica) then
-    raise Exception.Create(SErrorPersistenciaFotosNoRegistrada);
-  Result := FFabrica(AConexion);
-end;
-
 end.

@@ -27,6 +27,7 @@ unit inMtoPedidosCompra;
 interface
 
 uses
+  inLibRegistroPantallas,
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
   Forms, Dialogs, Uni, System.Generics.Collections, System.Types,
   inMtoDocumento, dxSkinsCore, dxSkinBlue, dxSkinsForm,
@@ -387,6 +388,7 @@ uses
   inLibFiltroUsuario,
   inLibAtributosPaleta,
   inLibPedidosCompra,
+  UniDataPedidosCompraOperaciones,
   inLibLog,
   inLibValoresAutomaticos,
   inLibArticulosResolverIntf,
@@ -403,7 +405,8 @@ uses
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku, inLibMsgCompras,
   // Composicion del puerto de persistencia del pivote (V2).
-  UniDataPivoteVenta;
+  UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio,
+  UniDataModoTallas;
 
 {$R *.dfm}
 
@@ -426,7 +429,7 @@ begin
                  mtInformation, [mbOk], 0)
     else
       Result := BuscarArticuloProveedorCompra(
-        dmmPedidosCompra.unqryTablaG.Connection, sPrv,
+        dmmPedidosCompra.unqryTablaG.Connection, BusquedaVisual, sPrv,
         'Búsqueda de artículos', 'frmMtoDevcArtSearch', Self);
   end;
 end;
@@ -455,7 +458,7 @@ begin
                mtInformation, [mbOk], 0)
   else
     Result := BuscarSkuArticuloCompra(
-      dmmPedidosCompra.unqryTablaG.Connection, sArt,
+      dmmPedidosCompra.unqryTablaG.Connection, BusquedaVisual, sArt,
       'SKUs del artículo ' + sArt,
       'frmMtoPedcSkuSearch', Self);
 end;
@@ -1091,7 +1094,9 @@ begin
       TallaEditValueChangedHook, TallaValidateHook);
     oConfigPivote := CrearConfigPivoteDocumentoCompra(oBase,
       FGestorTallas);
-    FPivote := TGridPivoteCompra.Create(oConfigPivote);
+    FPivote := TGridPivoteCompra.Create(
+      oConfigPivote,
+      CrearRepositorioGridPivoteCompraUniDAC(ConexionPrincipal));
   end;
 end;
 
@@ -1527,7 +1532,7 @@ begin
     if ds.IsEmpty then
       MessageDlg(SErrorPedidoCompraNecesarioElegirEmpresa,
                  mtInformation, [mbOk], 0)
-    else if TBusquedaUtils.EjecutarBusqueda(
+    else if BusquedaVisual.EjecutarBusqueda(
       ConexionPrincipal,
       'Búsqueda de empresas',
               'SELECT * FROM fza_empresas ORDER BY RAZON_SOCIAL_EMP',
@@ -1566,7 +1571,7 @@ begin
     if ds.IsEmpty then
       MessageDlg(SErrorPedidoCompraNecesarioElegirProveedor,
                  mtInformation, [mbOk], 0)
-    else if TBusquedaUtils.EjecutarBusqueda(
+    else if BusquedaVisual.EjecutarBusqueda(
       ConexionPrincipal,
       'Búsqueda de proveedores',
               'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
@@ -2359,7 +2364,8 @@ begin
     ParametrosRecepcion.Celdas := arrCeldas;
     try
       bOk := inLibPedidosCompra.EjecutarRecepcionPedidoCompra(
-        ConexionPrincipal, ParametrosRecepcion, ResultadoRecepcion);
+        CrearPedidosCompraUniDAC(ConexionPrincipal),
+        ParametrosRecepcion, ResultadoRecepcion);
       sMsg := ResultadoRecepcion.Mensaje;
       if bOk then
       begin
@@ -2471,6 +2477,8 @@ begin
     ContextoSesion, tvLineasPedido, ds, FModoEntradaSel,
     Trim(dmmPedidosCompra.unqryTablaG.
       FieldByName('CODIGO_ALM_PEDC').AsString), 'PEDCLIN');
+  Cfg.BusquedaVisual := BusquedaVisual;
+  Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
     CrearValidadorArticulos(Cfg.Conexion);
   Cfg.LookupAtributos :=
@@ -2490,8 +2498,9 @@ begin
     CfgPV.FieldCantidadAAlbaranar := 'CANTIDAD_A_RECIBIR_PEDCLIN';
     CfgPV.BandaUnica := False;
     CfgPV.TextoBandaAAlbaranar := 'A recibir';
-    CfgPV.Repositorio :=
-      CrearRepositorioPivoteVenta(CfgPV.Conexion, CfgPV.Usuario);
+    CfgPV.Repositorios :=
+      CrearRepositorioPivoteVenta(
+        CfgPV.Conexion, CfgPV.Usuario, BusquedaVisual);
     CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
     CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
     FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);
@@ -2525,7 +2534,8 @@ begin
     CfgT.FieldAlmacenCel := '';
     CfgT.IdFilaFijo := 1;
     CfgT.MaxColumnas := CANT_TALLAS_MAX;
-    FModoEntrada := CrearModoEntradaGridTallas(Cfg, CfgT);
+    FModoEntrada := CrearModoEntradaGridTallas(
+      Cfg, CfgT, CrearPersistenciaModoTallas, CrearBusquedaSkusTallas);
   end
   else
     FModoEntrada := CrearModoEntradaGrid(Cfg);
@@ -2604,9 +2614,9 @@ begin
     ColTipoCantidad := CrearColumnaHostDocumento(
       tvLineasPedido, '', 'TIPO_CANTIDAD_ARTICULO_PEDCLIN',
       90, False);
-    VincularCantidadGrid(ColPedida, ColTipoCantidad);
-    VincularCantidadGrid(ColRecibida, ColTipoCantidad);
-    VincularCantidadGrid(ColARecibir, ColTipoCantidad);
+    VincularCantidadGrid(ColPedida, ColTipoCantidad, UnidadesMedida);
+    VincularCantidadGrid(ColRecibida, ColTipoCantidad, UnidadesMedida);
+    VincularCantidadGrid(ColARecibir, ColTipoCantidad, UnidadesMedida);
   end;
   CrearColumnaHostDocumento(tvLineasPedido, 'Precio compra',
     'PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN', 130, True);
@@ -2900,5 +2910,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoPedidosCompra);
   ForceReferenceToClass(TfrmMtoPedidosCompra);
 end.

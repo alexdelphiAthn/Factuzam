@@ -9,7 +9,7 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Verifica el registro del repositorio del pivote sin BBDD. }
+{    Verifica la composicion segregada del pivote sin BBDD.                    }
 {******************************************************************************}
 unit PruebasGridPivoteCompraPersistencia;
 
@@ -22,60 +22,26 @@ type
   [TestFixture]
   TPruebasGridPivoteCompraPersistencia = class
   public
-    [TearDown]
-    procedure Liberar;
     [Test]
-    procedure FabricaRegistrada_SeInvocaSinConexionReal;
-    [Test]
-    procedure FabricaAusente_FallaDeFormaRuidosa;
+    procedure ServiciosVacios_NoAsignanNingunPuerto;
   end;
 
 implementation
 
 uses
-  System.SysUtils, Uni, inLibGridPivoteCompraPersistenciaIntf,
-  UniDataGridPivoteCompraRepositorio;
-
-var
-  bFabricaInvocada: Boolean;
-
-function FabricaGridPivoteCompraFalsa(
-  AConexion: TUniConnection): IRepositorioGridPivoteCompra;
-begin
-  bFabricaInvocada := True;
-  Result := nil;
-end;
-
-procedure TPruebasGridPivoteCompraPersistencia.Liberar;
-begin
-  TFabricaRepositorioGridPivoteCompra.Registrar(
-    CrearRepositorioGridPivoteCompraUniDAC);
-  bFabricaInvocada := False;
-end;
+  inLibGridPivoteCompraPersistenciaIntf;
 
 procedure TPruebasGridPivoteCompraPersistencia.
-  FabricaRegistrada_SeInvocaSinConexionReal;
+  ServiciosVacios_NoAsignanNingunPuerto;
 var
-  Repositorio: IRepositorioGridPivoteCompra;
+  Repositorios: TRepositoriosGridPivoteCompra;
 begin
-  bFabricaInvocada := False;
-  TFabricaRepositorioGridPivoteCompra.Registrar(
-    FabricaGridPivoteCompraFalsa);
-  Repositorio := TFabricaRepositorioGridPivoteCompra.Crear(nil);
-  Assert.IsTrue(bFabricaInvocada);
-  Assert.IsFalse(Assigned(Repositorio));
-end;
-
-procedure TPruebasGridPivoteCompraPersistencia.
-  FabricaAusente_FallaDeFormaRuidosa;
-begin
-  TFabricaRepositorioGridPivoteCompra.Registrar(nil);
-  Assert.WillRaise(
-    procedure
-    begin
-      TFabricaRepositorioGridPivoteCompra.Crear(nil);
-    end,
-    Exception);
+  Repositorios := Default(TRepositoriosGridPivoteCompra);
+  Assert.IsFalse(Assigned(Repositorios.Configuracion));
+  Assert.IsFalse(Assigned(Repositorios.Colores));
+  Assert.IsFalse(Assigned(Repositorios.Validacion));
+  Assert.IsFalse(Assigned(Repositorios.Lineas));
+  Assert.IsFalse(Assigned(Repositorios.Skus));
 end;
 
 initialization

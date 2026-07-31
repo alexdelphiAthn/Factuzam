@@ -23,7 +23,11 @@ uses
 
 type
   TPersistenciaModoTallasUniDAC = class(TInterfacedObject,
-                                        IPersistenciaModoTallas)
+                                        IPersistenciaModeloTallas,
+                                        IPersistenciaRederivacionTallas,
+                                        IPersistenciaDesmontajeTallas,
+                                        IPersistenciaEntradaTallas,
+                                        IPersistenciaPresentacionTallas)
   private
     FCfg: TConfigPersistenciaTallas;
     function NuevaConsulta: TUniQuery;
@@ -81,7 +85,7 @@ type
   end;
 
 function CrearPersistenciaModoTallas(
-  const ACfg: TConfigPersistenciaTallas): IPersistenciaModoTallas;
+  const ACfg: TConfigPersistenciaTallas): TServiciosPersistenciaModoTallas;
 function CrearBusquedaSkusTallas(
   AConexion: TUniConnection): IBusquedaSkusTallas;
 
@@ -806,9 +810,17 @@ begin
 end;
 
 function CrearPersistenciaModoTallas(
-  const ACfg: TConfigPersistenciaTallas): IPersistenciaModoTallas;
+  const ACfg: TConfigPersistenciaTallas): TServiciosPersistenciaModoTallas;
+var
+  Persistencia: TPersistenciaModoTallasUniDAC;
 begin
-  Result := TPersistenciaModoTallasUniDAC.Create(ACfg);
+  Result := Default(TServiciosPersistenciaModoTallas);
+  Persistencia := TPersistenciaModoTallasUniDAC.Create(ACfg);
+  Result.Modelo := Persistencia;
+  Result.Rederivacion := Persistencia;
+  Result.Desmontaje := Persistencia;
+  Result.Entrada := Persistencia;
+  Result.Presentacion := Persistencia;
 end;
 
 function CrearBusquedaSkusTallas(
@@ -816,9 +828,5 @@ function CrearBusquedaSkusTallas(
 begin
   Result := TBusquedaSkusTallasUniDAC.Create(AConexion);
 end;
-
-initialization
-  TFabricaModoTallas.Registrar(CrearPersistenciaModoTallas,
-                               CrearBusquedaSkusTallas);
 
 end.

@@ -25,7 +25,7 @@ type
   TModeloTallas = class
   private
     FLookup: IArticulosAtributosLookup;
-    FPersistencia: IPersistenciaModoTallas;
+    FPersistencia: IPersistenciaModeloTallas;
     FSelector: ISelectorValorAtributo;
     FRegistro: TRegistroTallas;
     procedure Registrar(const ATexto: string);
@@ -34,7 +34,7 @@ type
       ASilencioso: Boolean): string;
   public
     constructor Create(const ALookup: IArticulosAtributosLookup;
-      const APersistencia: IPersistenciaModoTallas;
+      const APersistencia: IPersistenciaModeloTallas;
       const ASelector: ISelectorValorAtributo;
       ARegistro: TRegistroTallas);
     destructor Destroy; override;
@@ -106,7 +106,7 @@ uses
 
 constructor TModeloTallas.Create(
   const ALookup: IArticulosAtributosLookup;
-  const APersistencia: IPersistenciaModoTallas;
+  const APersistencia: IPersistenciaModeloTallas;
   const ASelector: ISelectorValorAtributo;
   ARegistro: TRegistroTallas);
 begin

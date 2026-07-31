@@ -19,13 +19,13 @@ uses
   inLibComprasSesionesMaterializacionIntf;
 
 function ConsultarLineasDocumentoCompra(
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  const ALecturas: ILecturasDocumentosMaterializacion;
   const ASerieSesion, ANumeroSesion, AAlmacenCabecera,
   AFiltroAlmacen: string): TLineasDocumentoCompraMaterializacion;
 
 implementation
 function ConsultarLineasDocumentoCompra(
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  const ALecturas: ILecturasDocumentosMaterializacion;
   const ASerieSesion, ANumeroSesion, AAlmacenCabecera,
   AFiltroAlmacen: string): TLineasDocumentoCompraMaterializacion;
 begin

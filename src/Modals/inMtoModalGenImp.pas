@@ -266,7 +266,7 @@ end;
 
 procedure TfrmPrint.ReportBeforePrintConQR(Component: TfrxReportComponent);
 begin
-  oFotos.HandlerReportBeforePrint(Component);
+  FotosArticulos.HandlerReportBeforePrint(Component);
   // Objetos que SÍ reciben el evento (QR/título en una banda de datos)
   SustituirQRVerifactuEnReport(ParametrosApp, Component);
   SustituirTituloFacturaEnReport(Component);

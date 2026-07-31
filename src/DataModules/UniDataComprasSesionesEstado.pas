@@ -29,7 +29,7 @@ function CargarConfiguracionMaterializacion(
   TConfiguracionMaterializacionSesion;
 function ConsultarAlmacenesMaterializacion(
   ADM: TdmComprasSesiones;
-  const ALecturas: ILecturasMaterializacionComprasSesiones):
+  const ALecturas: ILecturasEstadoMaterializacion):
   TArray<string>;
 function ResolverSerieMaterializacion(
   ADM: TdmComprasSesiones;
@@ -92,7 +92,7 @@ end;
 
 function ConsultarAlmacenesMaterializacion(
   ADM: TdmComprasSesiones;
-  const ALecturas: ILecturasMaterializacionComprasSesiones):
+  const ALecturas: ILecturasEstadoMaterializacion):
   TArray<string>;
 begin
   Result := ALecturas.ConsultarAlmacenes(

@@ -18,6 +18,7 @@ unit UniDataPedidos;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, System.Generics.Collections,
   Data.DB, MemDS, DBAccess, Uni,
   UniDataGen, inLibUser,
@@ -2147,6 +2148,7 @@ begin
 end;
 
 initialization
+  RegistrarDataModule(TdmPedidos);
   ForceReferenceToClass(TdmPedidos);
 
 end.

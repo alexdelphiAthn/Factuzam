@@ -17,7 +17,8 @@ unit inLibVerifactuNoVerifactuExport;
 interface
 
 uses
-  System.SysUtils, Uni, inLibParametrosIntf;
+  System.SysUtils, Uni, inLibParametrosIntf,
+  inLibVerifactuNoVerifactuExportIntf;
 
 type
   TResultadoExportacionNoVerifactu = record
@@ -32,6 +33,8 @@ type
 function ExportarRegistrosNoVerifactu(
                                       const AParametrosApp:
                                       IParametrosAplicacion;
+                                      const ARepositorio:
+                                      IRepositorioExportacionNoVerifactu;
                                       AConn: TUniConnection;
                                       const AUsuario: string;
                                       const AArchivoBase: string):
@@ -41,8 +44,7 @@ implementation
 
 uses
   System.Classes, System.IOUtils, System.Hash, System.NetEncoding, Data.DB,
-  inLibGlobalVar, inLibLog, inLibMsgVerifactu, inLibVerifactu,
-  inLibVerifactuNoVerifactuExportIntf;
+  inLibGlobalVar, inLibLog, inLibMsgVerifactu, inLibVerifactu;
 
 const
   cNsFactuzamNoVerifactu = 'urn:factuzam:no-verifactu:v1';
@@ -411,12 +413,13 @@ end;
 function ExportarRegistrosNoVerifactu(
                                       const AParametrosApp:
                                       IParametrosAplicacion;
+                                      const ARepositorio:
+                                      IRepositorioExportacionNoVerifactu;
                                       AConn: TUniConnection;
                                       const AUsuario: string;
                                       const AArchivoBase: string):
                                       TResultadoExportacionNoVerifactu;
 var
-  Repositorio: IRepositorioExportacionNoVerifactu;
   sXmlEventos: string;
   sXmlFacturacion: string;
 begin
@@ -424,13 +427,11 @@ begin
     raise Exception.Create(SErrorConexionExportarNoVerifactu);
   if Trim(AArchivoBase) = '' then
     raise Exception.Create(SErrorArchivoBaseExportacionNoIndicado);
-  Repositorio :=
-    TFabricaRepositorioExportacionNoVerifactu.Crear(AConn);
   ValidarExportacionLegalNoVerifactu(
     AParametrosApp,
     AConn,
     AUsuario,
-    Repositorio);
+    ARepositorio);
   Result.TitularCertificado := '';
   Result.SerieCertificado := '';
   Result.ArchivoEventos := NombreArchivoConSufijo(AArchivoBase, '_eventos');
@@ -444,11 +445,11 @@ begin
     cEventoNoVerifactuExportEventos,
     'Exportación de registros de eventos NO VERI*FACTU',
     Result.ArchivoEventos);
-  sXmlEventos := ConstruirXmlEventos(AParametrosApp, Repositorio, AUsuario,
+  sXmlEventos := ConstruirXmlEventos(AParametrosApp, ARepositorio, AUsuario,
     Result.Eventos);
   sXmlFacturacion := ConstruirXmlFacturacion(
     AParametrosApp,
-    Repositorio,
+    ARepositorio,
     AUsuario,
     Result.RegistrosFactura);
   GuardarTextoUtf8(Result.ArchivoEventos, sXmlEventos);

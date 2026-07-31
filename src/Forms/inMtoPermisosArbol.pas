@@ -21,6 +21,7 @@ unit inMtoPermisosArbol;
 interface
 
 uses
+  inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.Generics.Collections, System.UITypes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls,
@@ -863,6 +864,7 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoPermisosArbol);
   ForceReferenceToClass(TfrmMtoPermisosArbol);
 
 end.

@@ -9,7 +9,7 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Doble en memoria del puerto IRepositorioPivoteVenta para probar el        }
+{    Doble en memoria de los puertos del pivote de venta para probar el        }
 {    modelo del pivote de venta sin conexión a la BBDD.                        }
 {******************************************************************************}
 unit DoblesPivoteVenta;
@@ -22,7 +22,8 @@ uses
 
 type
   TRepositorioPivoteVentaMemoria = class(TInterfacedObject,
-                                         IRepositorioPivoteVenta)
+                                         IRepositorioModeloPivoteVenta,
+                                         IRepositorioEdicionPivoteVenta)
   public
     InfoPorSku          : TDictionary<string, TInfoSkuPivoteVenta>;
     SkuPorBarras        : TDictionary<string, string>;

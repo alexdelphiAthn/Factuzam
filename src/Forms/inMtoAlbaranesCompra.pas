@@ -24,6 +24,7 @@ unit inMtoAlbaranesCompra;
 interface
 
 uses
+  inLibRegistroPantallas,
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
   Forms, Dialogs, Uni, System.Types,
   inMtoDocumento, dxSkinsCore, dxSkinBlue, dxSkinsForm,
@@ -313,7 +314,7 @@ uses
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku,
   // Composicion del puerto de persistencia del pivote (V2).
-  UniDataPivoteVenta;
+  UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio;
 
 {$R *.dfm}
 
@@ -336,7 +337,7 @@ begin
                  mtInformation, [mbOk], 0)
     else
       Result := BuscarArticuloProveedorCompra(
-        dmmAlbaranesCompra.unqryTablaG.Connection, sPrv,
+        dmmAlbaranesCompra.unqryTablaG.Connection, BusquedaVisual, sPrv,
         'Búsqueda de artículos', 'frmMtoDevcArtSearch', Self);
   end;
 end;
@@ -365,7 +366,7 @@ begin
                mtInformation, [mbOk], 0)
   else
     Result := BuscarSkuArticuloCompra(
-      dmmAlbaranesCompra.unqryTablaG.Connection, sArt,
+      dmmAlbaranesCompra.unqryTablaG.Connection, BusquedaVisual, sArt,
       'SKUs del artículo ' + sArt,
       'frmMtoAlbcSkuSearch', Self);
 end;
@@ -817,7 +818,9 @@ begin
       TallaEditValueChangedHook, TallaValidateHook);
     oConfigPivote := CrearConfigPivoteDocumentoCompra(oBase,
       FGestorTallas);
-    FPivote := TGridPivoteCompra.Create(oConfigPivote);
+    FPivote := TGridPivoteCompra.Create(
+      oConfigPivote,
+      CrearRepositorioGridPivoteCompraUniDAC(ConexionPrincipal));
   end;
 end;
 
@@ -1216,6 +1219,8 @@ begin
     ContextoSesion, tvLineasAlbaran, ds, FModoEntradaSel,
     Trim(dmmAlbaranesCompra.unqryTablaG.
       FieldByName('CODIGO_ALM_ALBC').AsString), 'ALBCLIN');
+  Cfg.BusquedaVisual := BusquedaVisual;
+  Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
     CrearValidadorArticulos(Cfg.Conexion);
   Cfg.LookupAtributos :=
@@ -1233,8 +1238,9 @@ begin
     CfgPV.BandaUnica := True;
     // La columna Total del host pasa a UNIDADES del grupo en pivote.
     CfgPV.FieldTotalUdsGrupo := 'TOTAL_ALBCLIN';
-    CfgPV.Repositorio :=
-      CrearRepositorioPivoteVenta(CfgPV.Conexion, CfgPV.Usuario);
+    CfgPV.Repositorios :=
+      CrearRepositorioPivoteVenta(
+        CfgPV.Conexion, CfgPV.Usuario, BusquedaVisual);
     CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
     CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
     FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);
@@ -1288,7 +1294,7 @@ begin
     tvLineasAlbaran, FModoEntradaSel, 'ALBCLIN');
   if Assigned(Columnas.ColCantidad) then
     VincularCantidadGrid(Columnas.ColCantidad,
-      Columnas.ColTipoCantidad);
+      Columnas.ColTipoCantidad, UnidadesMedida);
 end;
 
 procedure TfrmMtoAlbaranesCompra.ModoEntradaResuelto(const ACodArt, ASku,
@@ -1364,7 +1370,7 @@ begin
     if ds.IsEmpty then
       MessageDlg(SErrorAlbaranCompraNecesarioElegirEmpresa,
                  mtInformation, [mbOk], 0)
-    else if TBusquedaUtils.EjecutarBusqueda(
+    else if BusquedaVisual.EjecutarBusqueda(
       ConexionPrincipal,
       'Búsqueda de empresas',
               'SELECT * FROM fza_empresas ORDER BY RAZON_SOCIAL_EMP',
@@ -1403,7 +1409,7 @@ begin
     if ds.IsEmpty then
       MessageDlg(SErrorAlbaranCompraNecesarioElegirProveedor,
                  mtInformation, [mbOk], 0)
-    else if TBusquedaUtils.EjecutarBusqueda(
+    else if BusquedaVisual.EjecutarBusqueda(
       ConexionPrincipal,
       'Búsqueda de proveedores',
               'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
@@ -1690,5 +1696,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoAlbaranesCompra);
   ForceReferenceToClass(TfrmMtoAlbaranesCompra);
 end.

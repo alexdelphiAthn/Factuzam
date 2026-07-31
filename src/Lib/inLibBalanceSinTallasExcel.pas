@@ -16,10 +16,10 @@ unit inLibBalanceSinTallasExcel;
 interface
 
 uses
-  Data.DB, dxSpreadSheet;
+  Data.DB, dxSpreadSheet, inLibFotos;
 
 procedure ExportarBalanceSinTallasExcel(ASheetControl: TdxSpreadSheet;
-  const QDatos: TDataSet);
+  const QDatos: TDataSet; AFotos: TFotosArticulos);
 
 implementation
 
@@ -27,9 +27,9 @@ uses
   inLibBalanceExcelComun;
 
 procedure ExportarBalanceSinTallasExcel(ASheetControl: TdxSpreadSheet;
-  const QDatos: TDataSet);
+  const QDatos: TDataSet; AFotos: TFotosArticulos);
 begin
-  ExportarBalanceExcel(ASheetControl, QDatos, tbeSinTallas);
+  ExportarBalanceExcel(ASheetControl, QDatos, AFotos, tbeSinTallas);
 end;
 
 end.

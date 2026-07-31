@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataUnidadesMedida                                         }
 {    Tipo:       Data Module                                                   }
@@ -18,6 +18,7 @@ unit UniDataUnidadesMedida;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
   inLibUser, UniDataConn;
 
@@ -60,10 +61,11 @@ begin
   inherited;
   // Tras alta/modificacion refrescamos la cache para que los nuevos decimales
   // se apliquen en documentos e informes sin reiniciar el programa.
-  if oUnidades() <> nil then
-    oUnidades.Cargar;
+  if Assigned(UnidadesMedida) then
+    UnidadesMedida.Cargar;
 end;
 
 initialization
+  RegistrarDataModule(TdmUnidadesMedida);
   ForceReferenceToClass(TdmUnidadesMedida);
 end.

@@ -18,6 +18,7 @@ unit UniDataEmpresas;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
   Uni, inLibUser, Datasnap.Provider,
   Datasnap.DBClient, Forms, Windows, Dateutils;
@@ -707,5 +708,6 @@ end;
 
 
 initialization
+  RegistrarDataModule(TdmEmpresas);
   ForceReferenceToClass(TdmEmpresas);
 end.

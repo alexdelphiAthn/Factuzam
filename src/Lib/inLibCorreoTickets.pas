@@ -18,7 +18,8 @@ interface
 
 uses
   System.SysUtils, Uni, inLibParametrosIntf,
-  inLibTraspasoTicketIntf, inLibTicketsCajaIntf;
+  inLibTraspasoTicketIntf, inLibTicketsCajaIntf,
+  inLibUnidadesMedida, inLibPreviewTicket;
 
 type
   TDatosCorreoOperacion = record
@@ -40,8 +41,10 @@ function ObtenerDatosCorreoOperacion(AConexion: TUniConnection;
   ANumeroOperacion: string): TDatosCorreoOperacion;
 function EnviarDocumentacionOperacion(
   const AParametrosApp: IParametrosAplicacion;
+  const APreviewTicket: IPreviewTicket;
+  AUnidades: TUnidadesMedida;
   const ARepositorioTraspaso: IRepositorioTraspasoTicket;
-  const ARepositorioTicketsCaja: IRepositorioTicketsCaja;
+  const ARepositorioTicketsCaja: TRepositoriosTicketsCaja;
   AConexion: TUniConnection;
   const AEmpresa, AAlmacen, ACaja, ANumeroOperacion, AEmail: string;
   out AMensaje: string): Boolean;
@@ -189,8 +192,10 @@ end;
 
 procedure GenerarDocumentos(
   const AParametrosApp: IParametrosAplicacion;
+  const APreviewTicket: IPreviewTicket;
+  AUnidades: TUnidadesMedida;
   const ARepositorioTraspaso: IRepositorioTraspasoTicket;
-  const ARepositorioTicketsCaja: IRepositorioTicketsCaja;
+  const ARepositorioTicketsCaja: TRepositoriosTicketsCaja;
   AConexion: TUniConnection;
   const AEmpresa, AAlmacen, ACaja,
   ANumeroOperacion: string; const ADatos: TDatosCorreoOperacion;
@@ -198,6 +203,7 @@ procedure GenerarDocumentos(
 begin
   if ADatos.EsTraspaso then
     TTraspasoTicket.ImprimirTraspasoDesdeBD(
+      APreviewTicket,
       ARepositorioTraspaso,
       AEmpresa,
       AAlmacen,
@@ -211,7 +217,9 @@ begin
     if ADatos.TieneFactura then
       ImprimirTicketDesdeBD(
         AParametrosApp,
-        ARepositorioTicketsCaja,
+        APreviewTicket,
+        AUnidades,
+        ARepositorioTicketsCaja.Tickets,
         AEmpresa,
         AAlmacen,
         ACaja,
@@ -221,7 +229,8 @@ begin
         True);
     if ADatos.TieneDepositos then
       ImprimirResguardoDeposito(
-        ARepositorioTicketsCaja,
+        APreviewTicket,
+        ARepositorioTicketsCaja.Resguardos,
         AEmpresa,
         AAlmacen,
         ACaja,
@@ -230,11 +239,13 @@ begin
         ARutasPDF,
         True);
     if ADatos.EsOperacionCaja then
-      ImprimirTicketOperacionCaja(AConexion, AEmpresa, AAlmacen, ACaja,
+      ImprimirTicketOperacionCaja(
+        APreviewTicket, AConexion, AEmpresa, AAlmacen, ACaja,
         ANumeroOperacion, 'DEBUG', ARutasPDF, True);
     if (ARutasPDF.Count > 0) and (Trim(ADatos.CodigoCliente) <> '') then
       ImprimirRecordatorio(
-        ARepositorioTicketsCaja,
+        APreviewTicket,
+        ARepositorioTicketsCaja.Recordatorios,
         AEmpresa,
         ADatos.CodigoCliente,
         'DEBUG',
@@ -283,8 +294,10 @@ end;
 
 function EnviarDocumentacionOperacion(
   const AParametrosApp: IParametrosAplicacion;
+  const APreviewTicket: IPreviewTicket;
+  AUnidades: TUnidadesMedida;
   const ARepositorioTraspaso: IRepositorioTraspasoTicket;
-  const ARepositorioTicketsCaja: IRepositorioTicketsCaja;
+  const ARepositorioTicketsCaja: TRepositoriosTicketsCaja;
   AConexion: TUniConnection;
   const AEmpresa, AAlmacen, ACaja, ANumeroOperacion, AEmail: string;
   out AMensaje: string): Boolean;
@@ -315,6 +328,8 @@ begin
           try
             GenerarDocumentos(
               AParametrosApp,
+              APreviewTicket,
+              AUnidades,
               ARepositorioTraspaso,
               ARepositorioTicketsCaja,
               AConexion,

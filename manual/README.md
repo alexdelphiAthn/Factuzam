@@ -42,6 +42,8 @@ El fichero es `Factuzam_DEMO_1.0.15.202606240020.alpha.exe`.
 | [10 · Migración desde software legacy](10-migracion-legacy.md) | Traslado de datos del ERP anterior (SQL Server) con el Factuzam Migrator. |
 | [11 · Verifactu (AEAT)](11-verifactu.md) | Sistema de facturación verificable: configuración, cola de envío, QR, y acciones fiscales (anular, rectificar, subsanar). |
 | [12 · Cambios y novedades](12-cambios-y-novedades.md) | Resumen de las novedades recientes y dónde se documentan dentro del manual. |
+| [13 · Aplicaciones móviles](13-aplicaciones-moviles.md) | Consulta de ventas diarias desde el móvil y recuento móvil de inventarios. |
+| [14 · Arquitectura y desarrollo](14-arquitectura-y-desarrollo.md) | Estilo de programación, principios SOLID, capas, pruebas y catálogo SQL configurable. |
 
 ---
 

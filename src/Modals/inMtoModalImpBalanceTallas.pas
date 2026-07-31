@@ -275,7 +275,7 @@ begin
   // niveles inactivos (sin esto, FastReport pinta una banda vacía por nivel).
   frxrprt1.OnBeforePrint := ReportBeforePrint;
   // Precarga de fotos a nivel artículo en UNA consulta: el handler de fotos
-  // (oFotos.Resolver) las toma de la caché y no hace un SELECT por artículo
+  // El servicio de fotos las toma de la caché y no hace un SELECT por artículo
   // (antes era un N+1 con muchas fotos).
   PrecargarFotosArticulos;
 end;
@@ -283,7 +283,7 @@ end;
 destructor TfrmPrintBalanceTallas.Destroy;
 begin
   // Vaciar la caché de precarga de fotos (vive durante el modal).
-  oFotos.LimpiarPrecargaFotos;
+  FotosArticulos.LimpiarPrecargaFotos;
   inherited Destroy;
 end;
 
@@ -308,7 +308,7 @@ begin
       finally
         unqryBalancePrint.EnableControls;
       end;
-      oFotos.PrecargarFotosLote(slCod.ToStringArray);
+      FotosArticulos.PrecargarFotosLote(slCod.ToStringArray);
     finally
       FreeAndNil(slCod);
     end;
@@ -322,8 +322,8 @@ var
   nivel: Integer;
 begin
   // 1) Mantener el refresco de la foto del artículo (foto300/600/real) que
-  //    hace el base a través de oFotos.
-  oFotos.HandlerReportBeforePrint(Component);
+  //    hace el formulario base a través del servicio de fotos inyectado.
+  FotosArticulos.HandlerReportBeforePrint(Component);
   // 2) Ocultar las bandas de grupo (cabecera y pie) cuyo nivel no está activo:
   //    el SP devuelve GRUPOn_ETIQ vacío para los niveles no usados. Como los
   //    niveles inactivos van siempre al final (el modal los manda compactados),
@@ -362,7 +362,8 @@ begin
       fPreview.DialogoGuardar.InitialDir :=
         ParametrosApp.GetPath('appDirExcel');
       fPreview.DialogoGuardar.FileName := 'Balance_almacen_tallas';
-      ExportarBalanceTallasExcel(fPreview.dxSpreadSheet1, unqryBalancePrint);
+      ExportarBalanceTallasExcel(
+        fPreview.dxSpreadSheet1, unqryBalancePrint, FotosArticulos);
       fPreview.ShowModal;
     finally
       FreeAndNil(fPreview);

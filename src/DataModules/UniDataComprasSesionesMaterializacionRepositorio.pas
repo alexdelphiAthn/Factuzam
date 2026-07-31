@@ -23,7 +23,11 @@ uses
 type
   TRepositorioLecturasMaterializacionComprasSesiones = class(
     TInterfacedObject,
-    ILecturasMaterializacionComprasSesiones)
+    ILecturasArticulosMaterializacion,
+    ILecturasDocumentosMaterializacion,
+    ILecturasEstadoMaterializacion,
+    ILecturasPendientesMaterializacion,
+    ILecturasReversionMaterializacion)
   private
     FConexion: TUniConnection;
     FCatalogoSql: ICatalogoSql;

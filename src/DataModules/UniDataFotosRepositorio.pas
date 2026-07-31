@@ -19,7 +19,7 @@ uses
   Uni, inLibFotosPersistenciaIntf;
 
 function CrearRepositorioFotosUniDAC(
-  AConexion: TUniConnection): IRepositorioFotos;
+  AConexion: TUniConnection): TRepositoriosFotos;
 
 implementation
 
@@ -29,7 +29,9 @@ uses
 type
   TRepositorioFotosUniDAC = class(
     TInterfacedObject,
-    IRepositorioFotos)
+    IRepositorioConsultaFotos,
+    IRepositorioEdicionFotos,
+    IRepositorioSesionFotos)
   private
     FConexion: TUniConnection;
     function NuevaConsulta: TUniQuery;
@@ -455,12 +457,15 @@ begin
 end;
 
 function CrearRepositorioFotosUniDAC(
-  AConexion: TUniConnection): IRepositorioFotos;
+  AConexion: TUniConnection): TRepositoriosFotos;
+var
+  Repositorio: TRepositorioFotosUniDAC;
 begin
-  Result := TRepositorioFotosUniDAC.Create(AConexion);
+  Result := Default(TRepositoriosFotos);
+  Repositorio := TRepositorioFotosUniDAC.Create(AConexion);
+  Result.Consulta := Repositorio;
+  Result.Edicion := Repositorio;
+  Result.Sesion := Repositorio;
 end;
-
-initialization
-  TFabricaRepositorioFotos.Registrar(CrearRepositorioFotosUniDAC);
 
 end.

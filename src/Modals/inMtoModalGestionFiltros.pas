@@ -691,7 +691,7 @@ begin
       'ORDER BY USUARIO_USU';
     q.ParamByName('USUARIOACTUAL').AsString :=
       IdentidadActual.Usuario;
-    if TBusquedaUtils.EjecutarBusqueda(
+    if BusquedaVisual.EjecutarBusqueda(
       ConexionPrincipal,
       'Compartir filtro con usuario',
       q,
@@ -726,7 +726,7 @@ begin
         'SELECT GRUPO_USUGRP AS GRUPO ' +
         '  FROM fza_usuarios_grupos ' +
         'ORDER BY GRUPO_USUGRP';
-      if TBusquedaUtils.EjecutarBusqueda(
+      if BusquedaVisual.EjecutarBusqueda(
         ConexionPrincipal,
         'Compartir filtro con grupo',
         q,

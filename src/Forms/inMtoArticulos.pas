@@ -17,6 +17,7 @@ unit inMtoArticulos;
 interface
 
 uses
+  inLibRegistroPantallas,
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxStyles, dxSkinsCore, dxSkinBlue,
@@ -585,6 +586,8 @@ uses
   inLibEAN13,
   inLibArticulosCodigosBarras,
   inLibArticulosAltaTarifas,
+  inLibArticulosAtributosBasicos,
+  UniDataArticulosVariaciones,
   inLibArticulosFiltro,
   inLibAtributosPaleta,
   inLibLog,             // Log.LogPerf para cronometros del AfterScroll
@@ -719,13 +722,15 @@ procedure TfrmMtoArticulos.AsegurarSkuArticuloSinVariaciones(
   const aCodArticulo: string);
 begin
   inLibArticulosVariaciones.AsegurarSkuArticuloSinVariaciones(
-    ConexionPrincipal, aCodArticulo, IdentidadSesion.Usuario);
+    CrearArticulosVariacionesUniDAC(ConexionPrincipal),
+    aCodArticulo, IdentidadSesion.Usuario);
 end;
 procedure TfrmMtoArticulos.AsegurarSkuArticulo(
   const aCodArticulo: string);
 begin
   inLibArticulosVariaciones.AsegurarSkuArticuloActivo(
-    ConexionPrincipal, aCodArticulo, IdentidadSesion.Usuario);
+    CrearArticulosVariacionesUniDAC(ConexionPrincipal),
+    aCodArticulo, IdentidadSesion.Usuario);
 end;
 procedure TfrmMtoArticulos.addSkuAllClick(Sender: TObject);
 var
@@ -1375,6 +1380,7 @@ begin
     try
       bGenerado := GenerarCodigosBarrasArticulo(
         ConexionPrincipal,
+        CrearArticulosVariacionesUniDAC(ConexionPrincipal),
         sCodigoArticulo,
         IdentidadSesion.Usuario,
         Resultado);
@@ -1579,7 +1585,7 @@ end;
 
 procedure TfrmMtoArticulos.BuscarProveedores;
 begin
-  if TBusquedaUtils.EjecutarBusqueda(
+  if BusquedaVisual.EjecutarBusqueda(
     ConexionPrincipal,
     'Búsqueda de Proveedores en Articulos',
                                      dmmArticulos.unqryProveedores,
@@ -2091,7 +2097,7 @@ begin
   FGestorVar := TGestorVariaciones.Create(
     FScrollVarAtrib,
 //    FScrollVarSkus,
-    ConexionPrincipal,
+    CrearArticulosVariacionesUniDAC(ConexionPrincipal),
     IdentidadSesion.Usuario
   );
 end;
@@ -3025,11 +3031,10 @@ procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesValidate(
 var
   Texto, IdVaAv, CodArt: string;
   ds                  : TDataSet;
-  qry                 : TUniQuery;
-  IdAtbExistente      : Integer;
   CodigoExistente     : string;
   Ambito              : TAmbitoBasico;
-  CodigoNuevo, NombreNuevo: string;
+  AmbitoCodigo        : TAmbitoCodigoAtributoBasico;
+  CodigoNuevo         : string;
 begin
   Error := False;
   Texto := Trim(VarToStr(DisplayValue));
@@ -3046,32 +3051,8 @@ begin
 
   // 1) Buscar match exacto en fza_atributos_basicos para este tipo de
   //    atributo. Damos prioridad a CODIGO_ATB exacto sobre NOMBRE_ATB.
-  IdAtbExistente  := 0;
-  CodigoExistente := '';
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text :=
-      'SELECT ID_ATB, CODIGO_ATB FROM fza_atributos_basicos '          +
-      ' WHERE ID_VA_ATB = :IDVA '                                      +
-      '   AND ESACTIVO_ATB = ''S'' '                                   +
-      '   AND (CODIGO_ATB = :T OR NOMBRE_ATB = :T) '                   +
-      ' ORDER BY (CODIGO_ATB = :T) DESC '                              +
-      ' LIMIT 1';
-    qry.ParamByName('IDVA').AsString := IdVaAv;
-    qry.ParamByName('T').AsString    := Texto;
-    qry.Open;
-    if not qry.IsEmpty then
-    begin
-      IdAtbExistente  := qry.FieldByName('ID_ATB').AsInteger;
-      CodigoExistente := qry.FieldByName('CODIGO_ATB').AsString;
-    end;
-    qry.Close;
-  finally
-    FreeAndNil(qry);
-  end;
-
-  if IdAtbExistente > 0 then
+  if dmmArticulos.BuscarAtributoBasicoActivo(
+       IdVaAv, Texto, CodigoExistente) then
   begin
     // Ya existe: devolvemos el CODIGO_ATB para que el combo resuelva
     // a su ID_ATB via su mecanismo interno de lookup.
@@ -3088,39 +3069,19 @@ begin
     Exit;
   end;
 
-  // 3) Crear el basico nuevo con el codigo que toque segun el ambito.
-  NombreNuevo := Texto;
+  // 3) Crear el básico nuevo con el código que toque según el ámbito.
   case Ambito of
-    abGlobal: CodigoNuevo := StringReplace(NombreNuevo, ' ', '_',
-                                           [rfReplaceAll]);
-    abAdHoc : CodigoNuevo := Format('AD_%s_%s',
-                                    [CodArt,
-                                     StringReplace(NombreNuevo, ' ', '_',
-                                                   [rfReplaceAll])]);
+    abGlobal:
+      AmbitoCodigo := acabGlobal;
+    abAdHoc:
+      AmbitoCodigo := acabAdHoc;
+  else
+    AmbitoCodigo := acabGlobal;
   end;
-  if Length(CodigoNuevo) > 100 then
-    CodigoNuevo := Copy(CodigoNuevo, 1, 100);
-
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text :=
-      'INSERT INTO fza_atributos_basicos '              +
-      '   (ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB, '         +
-      '    ESACTIVO_ATB, '                              +
-      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) '+
-      'VALUES (:IDVA, :COD, :NOM, ''S'', '              +
-      '        NOW(), :USR, :USR) '                     +
-      'ON DUPLICATE KEY UPDATE '                        +
-      '   USUARIO_MODIF = VALUES(USUARIO_MODIF)';
-    qry.ParamByName('IDVA').AsString := IdVaAv;
-    qry.ParamByName('COD').AsString  := CodigoNuevo;
-    qry.ParamByName('NOM').AsString  := NombreNuevo;
-    qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
-    qry.Execute;
-  finally
-    FreeAndNil(qry);
-  end;
+  CodigoNuevo := ComponerCodigoAtributoBasico(
+    AmbitoCodigo, CodArt, Texto);
+  dmmArticulos.CrearAtributoBasico(
+    IdVaAv, CodigoNuevo, Texto, IdentidadSesion.Usuario);
 
   // 4) Refrescar lookup para que el combo lo encuentre al resolver.
   if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
@@ -3426,5 +3387,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoArticulos);
   ForceReferenceToClass(TfrmMtoArticulos);
 end.

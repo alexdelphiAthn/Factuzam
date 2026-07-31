@@ -45,6 +45,8 @@ resourcestring
     'No se pudo encolar la venta %s\%s para el webservice.';
   SErrorVentasWsJsonNoRegistrado =
     'El serializador JSON de ventas no está registrado.';
+  SErrorVentasWsColaNoRegistrada =
+    'La persistencia de la cola de ventas no está registrada.';
   SErrorApiKeyInstalacionFaltante =
     'Falta la API key de la instalación.';
   SErrorDeclaracionWebserviceOtraVersion =

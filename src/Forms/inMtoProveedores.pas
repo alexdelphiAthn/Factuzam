@@ -17,6 +17,7 @@ unit inMtoProveedores;
 interface
 
 uses
+  inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.UITypes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, inMtoGen,
@@ -559,5 +560,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoProveedores);
   ForceReferenceToClass(TfrmMtoProveedores);
 end.

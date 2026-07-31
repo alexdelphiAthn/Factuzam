@@ -293,6 +293,8 @@ type
   public
     FTieneLineasNegativas:Boolean;
     constructor Create(AConexion: TUniConnection;
+                       const ARepositorioLecturas:
+                         IRepositorioLecturasFactura;
                        AUnqryFac: TDataset;
                        unqryLineas: TDataset;
                        LineaEnEdicion:TLinFac = nil);
@@ -316,6 +318,7 @@ type
     const AValor: Variant): Boolean;
   procedure ActualizarLineaFactura(
     AConexion: TUniConnection;
+    const ARepositorioLecturas: IRepositorioLecturasFactura;
     ALineas: TDataSet;
     ACabecera: TDataSet;
     const ACampo: string;
@@ -328,10 +331,10 @@ type
     AConexion: TUniConnection;
     ACabecera, ALineas, ARecibos: TDataSet);
   function ArticuloFacturaDebeMostrarSku(
-    AConexion: TUniConnection;
+    const ARepositorioLecturas: IRepositorioLecturasFactura;
     const ACodigoArticulo: string): Boolean;
   function ContarLineasFactura(
-    AConexion: TUniConnection;
+    const ARepositorioLecturas: IRepositorioLecturasFactura;
     const ASerie, ANumero: string): Integer;
 
 
@@ -379,23 +382,17 @@ begin
 end;
 
 function ArticuloFacturaDebeMostrarSku(
-  AConexion: TUniConnection;
+  const ARepositorioLecturas: IRepositorioLecturasFactura;
   const ACodigoArticulo: string): Boolean;
-var
-  Repositorio: IRepositorioLecturasFactura;
 begin
-  Repositorio := TFabricaRepositorioLecturasFactura.Crear(AConexion);
-  Result := Repositorio.ArticuloDebeMostrarSku(ACodigoArticulo);
+  Result := ARepositorioLecturas.ArticuloDebeMostrarSku(ACodigoArticulo);
 end;
 
 function ContarLineasFactura(
-  AConexion: TUniConnection;
+  const ARepositorioLecturas: IRepositorioLecturasFactura;
   const ASerie, ANumero: string): Integer;
-var
-  Repositorio: IRepositorioLecturasFactura;
 begin
-  Repositorio := TFabricaRepositorioLecturasFactura.Crear(AConexion);
-  Result := Repositorio.ContarLineas(ASerie, ANumero);
+  Result := ARepositorioLecturas.ContarLineas(ASerie, ANumero);
 end;
 
 function IfThen(AValue: Boolean;
@@ -466,6 +463,7 @@ end;
 
 procedure ActualizarLineaFactura(
   AConexion: TUniConnection;
+  const ARepositorioLecturas: IRepositorioLecturasFactura;
   ALineas: TDataSet;
   ACabecera: TDataSet;
   const ACampo: string;
@@ -482,6 +480,7 @@ begin
   begin
     oTotales := TFacturaTotales.Create(
       AConexion,
+      ARepositorioLecturas,
       ACabecera,
       ALineas);
     try
@@ -892,12 +891,15 @@ end;
 { TFacturaTotales - Implementación completa }
 
 constructor TFacturaTotales.Create(AConexion: TUniConnection;
+                                   const ARepositorioLecturas:
+                                     IRepositorioLecturasFactura;
                                    AUnqryFac: TDataset;
                                    unqryLineas: TDataset;
                                    LineaEnEdicion:TLinFac = nil);
 begin
   inherited Create;
   _conexion := AConexion;
+  FRepositorioLecturas := ARepositorioLecturas;
   _unqryFac := AUnqryFac;
   _unqryLineas := unqryLineas;
   _LineaEnEdicion := LineaEnEdicion;
@@ -916,9 +918,6 @@ end;
 function TFacturaTotales.RepositorioLecturas:
   IRepositorioLecturasFactura;
 begin
-  if not Assigned(FRepositorioLecturas) then
-    FRepositorioLecturas :=
-      TFabricaRepositorioLecturasFactura.Crear(_conexion);
   Result := FRepositorioLecturas;
 end;
 

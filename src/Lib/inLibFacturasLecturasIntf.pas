@@ -16,7 +16,7 @@ unit inLibFacturasLecturasIntf;
 interface
 
 uses
-  Data.DB, Uni;
+  Data.DB;
 
 type
   // Los TDataSet devueltos pertenecen al llamador.
@@ -40,35 +40,6 @@ type
     function BuscarEmpresa(
       const ACodigoEmpresa: string): TDataSet;
   end;
-  TFabricaCrearRepositorioLecturasFactura = function(
-    AConexion: TUniConnection): IRepositorioLecturasFactura;
-  TFabricaRepositorioLecturasFactura = class
-  private
-    class var FFabrica: TFabricaCrearRepositorioLecturasFactura;
-  public
-    class procedure Registrar(
-      AFabrica: TFabricaCrearRepositorioLecturasFactura);
-    class function Crear(
-      AConexion: TUniConnection): IRepositorioLecturasFactura;
-  end;
 
 implementation
-
-uses
-  System.SysUtils, inLibMsgFacturas;
-
-class procedure TFabricaRepositorioLecturasFactura.Registrar(
-  AFabrica: TFabricaCrearRepositorioLecturasFactura);
-begin
-  FFabrica := AFabrica;
-end;
-
-class function TFabricaRepositorioLecturasFactura.Crear(
-  AConexion: TUniConnection): IRepositorioLecturasFactura;
-begin
-  if not Assigned(FFabrica) then
-    raise Exception.Create(SErrorLecturasFacturasNoRegistradas);
-  Result := FFabrica(AConexion);
-end;
-
 end.

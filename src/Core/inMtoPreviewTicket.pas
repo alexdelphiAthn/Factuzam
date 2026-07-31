@@ -18,7 +18,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.ExtCtrls, Vcl.StdCtrls, System.Math, DelphiZXingQRCode, inLibFTicket;
+  Vcl.ExtCtrls, Vcl.StdCtrls, System.Math, DelphiZXingQRCode, inLibFTicket,
+  inLibPreviewTicket;
 type
   TFormVisualizador = class(TForm)
     ScrollBox1: TScrollBox;
@@ -83,6 +84,7 @@ procedure ImprimirOPrevisualizarTicket(ATicket: TTicketTermico;
                                        const AComandos, ARutaPDF,
                                              ANombreImpresora: string;
                                        ASoloPDF: Boolean = False);
+function CrearPreviewTicketMto: IPreviewTicket;
 
 implementation
 
@@ -90,16 +92,16 @@ implementation
 
 uses
   SynPdf, inLibDir, Vcl.Imaging.PngImage, Vcl.Printers, System.IOUtils,
-  System.UITypes, inLibPreviewTicket, inLibMsgComun,
+  System.UITypes, inLibMsgComun,
   inLibMsgFacturas, inLibTraducciones;
 
 type
-  TEjecutorPreviewTicketMto = class(TEjecutorPreviewTicket)
+  TPreviewTicketMto = class(TInterfacedObject, IPreviewTicket)
   public
-    class procedure Ejecutar(ATicket: TTicketTermico;
-                             const AComandos, ARutaPDF,
-                                   ANombreImpresora: string;
-                             ASoloPDF: Boolean); override;
+    procedure Ejecutar(ATicket: TTicketTermico;
+                       const AComandos, ARutaPDF,
+                             ANombreImpresora: string;
+                       ASoloPDF: Boolean);
   end;
 
 const
@@ -120,7 +122,12 @@ const
   MARGEN_CRECIMIENTO_PAPEL = 500;
   ALTO_MINIMO_PREVIEW = 320;
 
-class procedure TEjecutorPreviewTicketMto.Ejecutar(
+function CrearPreviewTicketMto: IPreviewTicket;
+begin
+  Result := TPreviewTicketMto.Create;
+end;
+
+procedure TPreviewTicketMto.Ejecutar(
   ATicket: TTicketTermico; const AComandos, ARutaPDF,
   ANombreImpresora: string; ASoloPDF: Boolean);
 begin
@@ -1201,11 +1208,5 @@ begin
     ShowMessage(Format(SInfoPNGGuardado, [SaveDialog1.FileName]));
   end;
 end;
-
-initialization
-  TPreviewTicket.RegistrarEjecutor(TEjecutorPreviewTicketMto);
-
-finalization
-  TPreviewTicket.RegistrarEjecutor(nil);
 
 end.

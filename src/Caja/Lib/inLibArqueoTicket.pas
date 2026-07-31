@@ -77,7 +77,8 @@ type
                                          IRepositorioArqueoTicket;
                                          const AArqueo: TArqueoCaja);
   public
-    class procedure Imprimir(const ARepositorioArqueo:
+    class procedure Imprimir(const APreview: IPreviewTicket;
+                             const ARepositorioArqueo:
                              IRepositorioArqueoCaja;
                              const ARepositorioTicket:
                              IRepositorioArqueoTicket;
@@ -90,6 +91,7 @@ type
                              const ANombreImpresora: string = 'DEBUG';
                              ADuplicado: Boolean = False);
     class procedure ImprimirCierre(
+      const APreview: IPreviewTicket;
       const ARepositorioTicket: IRepositorioArqueoTicket;
       const AContextoSesion: IContextoSesionAplicacion;
       const AArqueo: TArqueoCaja;
@@ -109,6 +111,7 @@ type
     // grabado en fza_caja_arqueos. Recalcula la tira en vivo (las operaciones
     // del rango son inmutables tras el cierre) y la marca como DUPLICADO.
     class procedure ImprimirDesdeHistorico(
+      const APreview: IPreviewTicket;
       const ARepositorioArqueo: IRepositorioArqueoCaja;
       const ARepositorioTicket: IRepositorioArqueoTicket;
       const AParametrosCaja: IParametrosCaja;
@@ -118,6 +121,7 @@ type
     // Reimpresión (duplicado) del justificante de cierre reconstruido desde
     // fza_caja_arqueos + fza_caja_arqueos_recuento (sin recalcular nada).
     class procedure ImprimirCierreDesdeHistorico(
+      const APreview: IPreviewTicket;
       const ARepositorioTicket: IRepositorioArqueoTicket;
       const AContextoSesion: IContextoSesionAplicacion;
       const AEmpresa, AAlmacen, ACaja: string;
@@ -519,6 +523,7 @@ end;
 // =============================================================================
 
 class procedure TArqueoTicket.Imprimir(
+                                      const APreview: IPreviewTicket;
                                       const ARepositorioArqueo:
                                       IRepositorioArqueoCaja;
                                       const ARepositorioTicket:
@@ -624,7 +629,7 @@ begin
     ComandosESC := Ticket.ObtenerComandos;
     RutaPDF := GetUserFolderTickets + 'Arqueo_' +
                FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-    ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaPDF,
+    ImprimirOPrevisualizarTicket(APreview, Ticket, ComandosESC, RutaPDF,
                                  ANombreImpresora);
   finally
     FreeAndNil(Ticket);
@@ -636,6 +641,7 @@ end;
 // =============================================================================
 
 class procedure TArqueoTicket.ImprimirCierre(
+  const APreview: IPreviewTicket;
   const ARepositorioTicket: IRepositorioArqueoTicket;
   const AContextoSesion: IContextoSesionAplicacion;
   const AArqueo: TArqueoCaja;
@@ -806,7 +812,7 @@ begin
     ComandosESC := Ticket.ObtenerComandos;
     RutaPDF := GetUserFolderTickets + 'Recuento_' +
                FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-    ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaPDF,
+    ImprimirOPrevisualizarTicket(APreview, Ticket, ComandosESC, RutaPDF,
                                  ANombreImpresora);
   finally
     FreeAndNil(Ticket);
@@ -818,6 +824,7 @@ end;
 // =============================================================================
 
 class procedure TArqueoTicket.ImprimirDesdeHistorico(
+  const APreview: IPreviewTicket;
   const ARepositorioArqueo: IRepositorioArqueoCaja;
   const ARepositorioTicket: IRepositorioArqueoTicket;
   const AParametrosCaja: IParametrosCaja;
@@ -842,6 +849,7 @@ begin
        (Frac(dFechaHasta) = 0) then
       dFechaHasta := dFechaHasta + EncodeTime(23, 59, 59, 0);
     Imprimir(
+      APreview,
       ARepositorioArqueo,
       ARepositorioTicket,
       AParametrosCaja,
@@ -856,6 +864,7 @@ begin
 end;
 
 class procedure TArqueoTicket.ImprimirCierreDesdeHistorico(
+  const APreview: IPreviewTicket;
   const ARepositorioTicket: IRepositorioArqueoTicket;
   const AContextoSesion: IContextoSesionAplicacion;
   const AEmpresa, AAlmacen, ACaja: string;
@@ -896,6 +905,7 @@ begin
       Inc(iLinea);
     end;
     ImprimirCierre(
+      APreview,
       ARepositorioTicket,
       AContextoSesion,
       oCierre.Arqueo,

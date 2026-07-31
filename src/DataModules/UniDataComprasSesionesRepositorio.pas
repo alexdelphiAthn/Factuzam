@@ -116,7 +116,7 @@ type
 implementation
 
 uses
-  System.Classes, System.StrUtils, System.SysUtils,
+  System.Classes, System.StrUtils, System.SysUtils, Data.DB,
   inLibCatalogoSqlEjecucion,
   inLibMsgArticulos, inLibMsgCompras,
   UniDataComprasSesionesOperaciones;

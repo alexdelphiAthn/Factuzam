@@ -55,6 +55,7 @@ uses
   inLibRegistroResourcestringTraducciones in
     'src\Lib\inLibRegistroResourcestringTraducciones.pas',
   inLibRectificativas in 'src\Lib\inLibRectificativas.pas',
+  UniDataRectificativasSql in 'src\DataModules\UniDataRectificativasSql.pas',
   inLibNet in 'src\Lib\inLibNet.pas',
   inLibScriptDB in 'src\Lib\inLibScriptDB.pas',
   inLibIBAN in 'src\Lib\inLibIBAN.pas',
@@ -63,6 +64,10 @@ uses
     'src\Lib\inLibFacturasLecturasIntf.pas',
   UniDataFacturasLecturas in
     'src\DataModules\UniDataFacturasLecturas.pas',
+  inLibFacturasPersistenciaIntf in
+    'src\Lib\inLibFacturasPersistenciaIntf.pas',
+  UniDataFacturasOperaciones in
+    'src\DataModules\UniDataFacturasOperaciones.pas',
   inLibFacturas in 'src\Lib\inLibFacturas.pas',
   inLibSqlSeguro in 'src\Lib\inLibSqlSeguro.pas',
   inLibMotorFiscalVenta in 'src\Lib\inLibMotorFiscalVenta.pas',
@@ -156,7 +161,6 @@ uses
   inMtoFrmBase in 'src\Core\inMtoFrmBase.pas' {frmBase},
   inMtoLogon in 'src\Core\inMtoLogon.pas' {frmLogon},
   inMtoPrincipal in 'src\Core\inMtoPrincipal.pas' {frmMtoPrincipal},
-  inMtoCatalogoPantallas in 'src\Core\inMtoCatalogoPantallas.pas',
   inMtoGen in 'src\Forms\inMtoGen.pas' {frmMtoGen},
   inMtoFacturasBase in 'src\Forms\inMtoFacturasBase.pas' {frmMtoFacturasBase},
   inMtoFacturasNormal in 'src\Forms\inMtoFacturasNormal.pas' {frmMtoFacturasNormal},
@@ -392,6 +396,12 @@ uses
   inMtoModalArticulosPropiedades in
     'src\Modals\inMtoModalArticulosPropiedades.pas',
   inLibArticulosVariaciones in 'src\Lib\inLibArticulosVariaciones.pas',
+  inLibArticulosAtributosBasicos in
+    'src\Lib\inLibArticulosAtributosBasicos.pas',
+  inLibStockConsultaInfo in 'src\Lib\inLibStockConsultaInfo.pas',
+  inLibInventariosEntrada in 'src\Lib\inLibInventariosEntrada.pas',
+  UniDataStockConsultaInfo in
+    'src\DataModules\UniDataStockConsultaInfo.pas',
   inLibArticulosVariacionesIntf in
     'src\Lib\inLibArticulosVariacionesIntf.pas',
   UniDataArticulosVariaciones in
@@ -417,6 +427,8 @@ uses
   inLibVentasWsJsonIntf in 'src\Lib\inLibVentasWsJsonIntf.pas',
   inLibVentasWsJson in 'src\Lib\inLibVentasWsJson.pas',
   UniDataVentasWsJson in 'src\DataModules\UniDataVentasWsJson.pas',
+  inLibVentasWsColaIntf in 'src\Lib\inLibVentasWsColaIntf.pas',
+  UniDataVentasWsCola in 'src\DataModules\UniDataVentasWsCola.pas',
   inLibVentasWsCola in 'src\Lib\inLibVentasWsCola.pas',
   inLibXades in 'src\Lib\inLibXades.pas',
   inLibDocumentoFiscal in 'src\Lib\inLibDocumentoFiscal.pas',
@@ -466,6 +478,9 @@ uses
   uGenericIfThen in 'src\Lib\uGenericIfThen.pas',
   UniDataConsultaOpe in 'src\DataModules\UniDataConsultaOpe.pas' {dmConsultaOpe: TDataModule},
   inMtoConsultaOpe in 'src\Forms\inMtoConsultaOpe.pas' {frmConsultaOpe},
+  inLibVentasCalendarioIntf in 'src\Lib\inLibVentasCalendarioIntf.pas',
+  UniDataVentasCalendario in
+    'src\DataModules\UniDataVentasCalendario.pas',
   inLibVentasCalendario in 'src\Lib\inLibVentasCalendario.pas',
   inLibLayoutForm in 'src\Lib\inLibLayoutForm.pas',
   inMtoInventarios in 'src\Forms\inMtoInventarios.pas' {frmMtoInventarios},
@@ -727,6 +742,12 @@ begin
     Screen.MenuFont.Name := 'Lucida Sans';
     Screen.MenuFont.Size := 11;
     Application.CreateForm(TfrmMtoPrincipal, Principal);
+    Principal.AsignarServiciosVisuales(
+      CrearBusquedaVisualMto,
+      CrearDistribuidorTallasVisualMto,
+      CrearSolicitudPermisoLayoutMto,
+      CrearPreviewTicketMto,
+      CrearProveedorPreviewExcelMto);
     Principal.InicializarAplicacion(
       ContextoSesionInicial,
       ResultadoLicenciaInicial);
@@ -746,7 +767,8 @@ begin
         GestorContextoCierre
       ) then
         GestorContextoCierre.MarcarCierreAplicacion;
-      TVentasWsCola.DetenerHilo;
+      if Assigned(Principal) then
+        Principal.DetenerVentasWsCola;
       TVerifactuCola.DetenerHilo;
     end;
     // Salida garantizada del proceso. Una tarea huerfana bloqueada contra

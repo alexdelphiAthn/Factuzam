@@ -16,6 +16,7 @@ unit inMtoCajaMenu;
 
 interface
 uses
+  inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   inMtoFrmBase,
   System.Classes, Vcl.Graphics, Generics.Collections,
@@ -180,7 +181,7 @@ implementation
 uses
   DateUtils,
   inMtoModalArqueo, inMtoModalEntradaCambio, inMtoModalGastoCaja,
-  inLibMsgCaja;
+  inLibMsgCaja, UniDataVentasCalendario;
 
 {$R *.dfm}
 
@@ -266,7 +267,9 @@ begin
     calMes.Enabled := False;
   // Crear el caché ANTES de cualquier cosa que pueda disparar eventos del
   // calendario
-  FVentasCal := TVentasCalendarioCache.Create(ConexionPrincipal);
+  FVentasCal := TVentasCalendarioCache.Create(
+    ConexionPrincipal,
+    CrearRepositorioVentasCalendarioUniDAC(ConexionPrincipal));
 
   if ParametrosCaja.GetBool('vgerShowCajaSelection', True) then
     AbrirSelectorCaja
@@ -900,5 +903,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoMenuCaja);
   ForceReferenceToClass(TfrmMtoMenuCaja);
 end.

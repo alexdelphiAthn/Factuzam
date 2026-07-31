@@ -28,7 +28,7 @@ type
   TPruebasPivoteVenta = class
   private
     FRepositorio: TRepositorioPivoteVentaMemoria;
-    FContrato: IRepositorioPivoteVenta;
+    FContrato: IRepositorioModeloPivoteVenta;
     FModelo: TModeloPivoteVenta;
     function DatosLinea(const AArticulo: string; ALinea: Integer;
                         APrecio: Double; ATallaAv, AColorAv: Integer;

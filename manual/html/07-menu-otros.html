@@ -10,7 +10,7 @@
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
-<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li class="activo"><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li></ul>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li class="activo"><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li></ul>
 </nav>
 <main>
 <article>
@@ -62,6 +62,29 @@ empresa de trabajo, etc.</p>
 <blockquote><p>Son ajustes que afectan a <strong>toda la instalación</strong>. Cámbialos con
 conocimiento de causa; ante la duda, consulta con quien implantó la
 aplicación.</p></blockquote>
+<h3 id="idioma-y-traducciones">Idioma y traducciones</h3>
+<p>En la categoría <strong>Apariencia</strong>, el parámetro <strong>Idioma de la interfaz</strong>
+(<code>appIdioma</code>) selecciona el idioma de Factuzam. La lista contiene
+<code>es-ES</code>, los idiomas activos instalados en la base de datos —por ejemplo
+<code>en-GB</code> y <code>ca-ES</code>— y <code>qps-ploc</code>, reservado para pruebas de maquetación.</p>
+<p>Para cambiarlo:</p>
+<ol><li>Selecciona el usuario, grupo o alcance al que se aplicará el parámetro.</li><li>Abre <strong>Apariencia ▸ Idioma de la interfaz</strong>.</li><li>Elige el idioma y pulsa <strong>Grabar</strong>.</li><li>Cierra y vuelve a abrir Factuzam para aplicar el cambio completo.</li></ol>
+<p>El idioma afecta a formularios, menús, mensajes, controles Developer
+Express, tickets e informes FastReport que tengan traducción. Si falta una
+clave, un idioma no está activo o no se puede consultar la base de datos,
+se conserva el texto español compilado como respaldo; la pantalla nunca
+queda vacía por una traducción ausente.</p>
+<blockquote><p><code>qps-ploc</code> alarga y marca los textos para que desarrollo detecte rótulos
+cortados. No es un idioma para trabajar en producción.</p></blockquote>
+<h4 id="administracion-del-catalogo">Administración del catálogo</h4>
+<p>Las traducciones viven en el catálogo central <code>fza_traducciones</code>. La
+utilidad independiente <strong>Editor de traducciones</strong> (<code>utlTraduc</code>) permite al
+administrador:</p>
+<ol><li>Conectar usando el INI de Factuzam.</li><li>Sincronizar los textos españoles conocidos por el ejecutable.</li><li>Elegir un idioma y mostrar todas las claves o solo las pendientes.</li><li>Editar y guardar las traducciones, conservando marcadores como <code>%s</code> y <code>%d</code>.</li></ol>
+<p>El editor también admite una etiqueta nueva, como <code>fr-FR</code>, sin modificar
+el ejecutable. Los cambios se guardan de forma transaccional y auditada.
+Los textos escritos manualmente por el usuario dentro de un formato de
+informe personalizado no se traducen automáticamente.</p>
 <hr>
 <h2 id="grupos-de-iva">Grupos de IVA</h2>
 <p><strong>Atajo de menú:</strong> <code>[Ctrl]+[O]</code></p>
@@ -216,7 +239,7 @@ ejecuta por selección antes que el script completo.</p></blockquote>
 <hr>
 <p><a href="06-menu-almacen.html">◀ Menú Almacén</a> · <a href="index.html">Índice</a> · <a href="08-menu-ayuda.html">Siguiente ▶ Menú Ayuda</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 22/07/2026</footer>
+<footer>Manual de Factuzam · generado el 31/07/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

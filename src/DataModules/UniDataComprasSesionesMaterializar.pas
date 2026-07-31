@@ -18,6 +18,7 @@ interface
 uses
   inLibComprasSesionesIntf,
   inLibComprasSesionesMaterializacionIntf,
+  inLibFotos,
   UniDataComprasSesiones;
 
 type
@@ -27,12 +28,14 @@ type
     IPersistenciaReversionComprasSesiones)
   private
     FDataModule: TdmComprasSesiones;
-    FLecturas: ILecturasMaterializacionComprasSesiones;
+    FFotos: TFotosArticulos;
+    FLecturas: TServiciosLecturasMaterializacion;
     FRepositorioSesiones: IRepositorioLecturasComprasSesiones;
   public
     constructor Create(
       ADataModule: TdmComprasSesiones;
-      const ALecturas: ILecturasMaterializacionComprasSesiones;
+      AFotos: TFotosArticulos;
+      const ALecturas: TServiciosLecturasMaterializacion;
       const ARepositorioSesiones:
         IRepositorioLecturasComprasSesiones);
     function ValidarMaterializacion(
@@ -74,18 +77,27 @@ uses
 
 constructor TPersistenciaMaterializacionComprasSesiones.Create(
   ADataModule: TdmComprasSesiones;
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  AFotos: TFotosArticulos;
+  const ALecturas: TServiciosLecturasMaterializacion;
   const ARepositorioSesiones:
     IRepositorioLecturasComprasSesiones);
 begin
   inherited Create;
   if not Assigned(ADataModule) then
     raise EArgumentNilException.Create('ADataModule');
-  if not Assigned(ALecturas) then
+  if (not Assigned(ALecturas.Articulos)) or
+     (not Assigned(ALecturas.Albaranes.Articulos)) or
+     (not Assigned(ALecturas.Albaranes.Documentos)) or
+     (not Assigned(ALecturas.Estado)) or
+     (not Assigned(ALecturas.Pedidos.Articulos)) or
+     (not Assigned(ALecturas.Pedidos.Documentos)) or
+     (not Assigned(ALecturas.Pedidos.Pendientes)) or
+     (not Assigned(ALecturas.Reversion)) then
     raise EArgumentNilException.Create('ALecturas');
   if not Assigned(ARepositorioSesiones) then
     raise EArgumentNilException.Create('ARepositorioSesiones');
   FDataModule := ADataModule;
+  FFotos := AFotos;
   FLecturas := ALecturas;
   FRepositorioSesiones := ARepositorioSesiones;
 end;
@@ -113,7 +125,7 @@ function TPersistenciaMaterializacionComprasSesiones.
 begin
   Result := ConsultarAlmacenesMaterializacion(
     FDataModule,
-    FLecturas);
+    FLecturas.Estado);
 end;
 
 function TPersistenciaMaterializacionComprasSesiones.
@@ -135,7 +147,8 @@ procedure TPersistenciaMaterializacionComprasSesiones.
 begin
   MaterializarArticulosSesion(
     FDataModule,
-    FLecturas,
+    FFotos,
+    FLecturas.Articulos,
     AUsuario);
 end;
 
@@ -146,7 +159,7 @@ function TPersistenciaMaterializacionComprasSesiones.
 begin
   Result := MaterializarPedidoSesion(
     FDataModule,
-    FLecturas,
+    FLecturas.Pedidos,
     AUsuario,
     ASerie,
     AAlmacen);
@@ -159,7 +172,7 @@ function TPersistenciaMaterializacionComprasSesiones.
 begin
   Result := MaterializarAlbaranSesion(
     FDataModule,
-    FLecturas,
+    FLecturas.Albaranes,
     AUsuario,
     ASerie,
     AAlmacen);
@@ -202,7 +215,7 @@ procedure TPersistenciaMaterializacionComprasSesiones.
 begin
   EjecutarReversionSesion(
     FDataModule,
-    FLecturas,
+    FLecturas.Reversion,
     AUsuario);
 end;
 

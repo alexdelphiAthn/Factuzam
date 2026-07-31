@@ -9,8 +9,7 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Puerto del serializador JSON de ventas para el webservice y su fábrica    }
-{    registrable.                                                              }
+{    Puerto del serializador JSON de ventas para el webservice.               }
 {******************************************************************************}
 unit inLibVentasWsJsonIntf;
 
@@ -31,34 +30,6 @@ type
   end;
   TFabricaCrearVentasWsJson = function(
     AConexion: TUniConnection): IVentasWsJson;
-  // El adaptador UniData* registra la implementación en initialization.
-  TFabricaVentasWsJson = class
-  private
-    class var FFabrica: TFabricaCrearVentasWsJson;
-  public
-    class procedure Registrar(
-      AFabrica: TFabricaCrearVentasWsJson);
-    class function Crear(
-      AConexion: TUniConnection): IVentasWsJson;
-  end;
 
 implementation
-
-uses
-  System.SysUtils, inLibMsgIntegraciones;
-
-class procedure TFabricaVentasWsJson.Registrar(
-  AFabrica: TFabricaCrearVentasWsJson);
-begin
-  FFabrica := AFabrica;
-end;
-
-class function TFabricaVentasWsJson.Crear(
-  AConexion: TUniConnection): IVentasWsJson;
-begin
-  if not Assigned(FFabrica) then
-    raise Exception.Create(SErrorVentasWsJsonNoRegistrado);
-  Result := FFabrica(AConexion);
-end;
-
 end.

@@ -10,46 +10,42 @@
 {                                                                              }
 {  Descripcion:                                                                }
 {    Fachada sin SQL para generar y revertir movimientos de almacen de         }
-{    devoluciones de compra. El adaptador UniDAC se registra en la fabrica     }
-{    del contrato.                                                             }
+{    devoluciones de compra con la persistencia inyectada.                     }
 {******************************************************************************}
 unit inLibDevolucionesCompraMovimientos;
 
 interface
 
 uses
-  Uni;
+  inLibDevolucionesCompraMovimientosIntf;
 
 // Genera movimientos de salida (TIPO_DOC_MOV='DC', TIPO_MOV='S') para
 // todas las celdas con cantidad > 0 de la devolucion, o para sus lineas.
-procedure GenerarMovimientosDesdeDevolucionCompra(AConn: TUniConnection;
-                                               const ASerieDevc, ANumDevc,
-                                                     AUsuario: string);
+procedure GenerarMovimientosDesdeDevolucionCompra(
+  const AMovimientos: IMovimientosDevolucionCompra;
+  const ASerieDevc, ANumDevc, AUsuario: string);
 
 // Revierte los movimientos de la devolucion y recalcula el stock/PMP de
 // los SKU afectados. Es idempotente si no existen movimientos.
-procedure RevertirMovimientosDesdeDevolucionCompra(AConn: TUniConnection;
-                                                const ASerieDevc, ANumDevc,
-                                                      AUsuario: string);
+procedure RevertirMovimientosDesdeDevolucionCompra(
+  const AMovimientos: IMovimientosDevolucionCompra;
+  const ASerieDevc, ANumDevc, AUsuario: string);
 
 implementation
 
-uses
-  inLibDevolucionesCompraMovimientosIntf;
-
-procedure GenerarMovimientosDesdeDevolucionCompra(AConn: TUniConnection;
-                                               const ASerieDevc, ANumDevc,
-                                                     AUsuario: string);
+procedure GenerarMovimientosDesdeDevolucionCompra(
+  const AMovimientos: IMovimientosDevolucionCompra;
+  const ASerieDevc, ANumDevc, AUsuario: string);
 begin
-  TFabricaMovimientosDevolucionCompra.Crear(AConn).GenerarDesdeDevolucion(
+  AMovimientos.GenerarDesdeDevolucion(
     ASerieDevc, ANumDevc, AUsuario);
 end;
 
-procedure RevertirMovimientosDesdeDevolucionCompra(AConn: TUniConnection;
-                                                const ASerieDevc, ANumDevc,
-                                                      AUsuario: string);
+procedure RevertirMovimientosDesdeDevolucionCompra(
+  const AMovimientos: IMovimientosDevolucionCompra;
+  const ASerieDevc, ANumDevc, AUsuario: string);
 begin
-  TFabricaMovimientosDevolucionCompra.Crear(AConn).RevertirDesdeDevolucion(
+  AMovimientos.RevertirDesdeDevolucion(
     ASerieDevc, ANumDevc, AUsuario);
 end;
 

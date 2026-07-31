@@ -113,7 +113,8 @@ implementation
 uses
   System.SysUtils, System.JSON, System.UITypes, System.IOUtils,
   Vcl.Clipbrd, Vcl.Dialogs, MySQLUniProvider,
-  inLibFactuzamApi, inLibVentasWsJson, UParametrosPrueba;
+  inLibFactuzamApi, inLibVentasWsJson, UParametrosPrueba,
+  UniDataVentasWsJson;
 
 {$R *.dfm}
 
@@ -322,7 +323,7 @@ begin
             TVentasWsJson.ConstruirEvento(
               FParametros,
               cVersionCareta,
-              FConexion,
+              CrearVentasWsJsonUniDAC(FConexion),
               iSecuencia,
               NuevoUuid,
               cbbTipoEvento.Text,

@@ -48,7 +48,7 @@ begin
   Assert.IsTrue(Pos('ap.REF_PROVEEDOR_AP AS REF_PROVEEDOR',
     sSql) > 0);
   Assert.AreEqual('', BuscarArticuloProveedorCompra(
-    nil, 'PRV1', '', '', nil));
+    nil, nil, 'PRV1', '', '', nil));
 end;
 
 procedure TPruebasBusquedasCompra.
@@ -62,7 +62,7 @@ begin
   Assert.IsTrue(Pos('COALESCE(SK.ESACTIVO_SKU', sSql) > 0);
   Assert.IsTrue(Pos('GROUP_CONCAT(AV.AV', sSql) > 0);
   Assert.AreEqual('', BuscarSkuArticuloCompra(
-    nil, 'ART1', '', '', nil));
+    nil, nil, 'ART1', '', '', nil));
 end;
 
 procedure TPruebasBusquedasCompra.

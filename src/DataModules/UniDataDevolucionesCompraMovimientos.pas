@@ -453,8 +453,4 @@ begin
   Result := TMovimientosDevolucionCompraUniDAC.Create(AConexion);
 end;
 
-initialization
-  TFabricaMovimientosDevolucionCompra.Registrar(
-    CrearMovimientosDevolucionCompraUniDAC);
-
 end.

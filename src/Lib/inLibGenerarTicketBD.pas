@@ -18,10 +18,11 @@ interface
 uses
   System.SysUtils, System.Classes, inLibFTicket,
   inLibUnidadesMedida, inLibDir, inLibParametrosIntf,
-  inLibTicketsCajaIntf;
+  inLibTicketsCajaIntf, inLibPreviewTicket;
 
 procedure ImprimirResguardoDeposito(
-  const ARepositorio: IRepositorioTicketsCaja;
+  const APreview: IPreviewTicket;
+  const ARepositorio: IRepositorioResguardosCaja;
   const ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja,
   AOperacion: string;
   const ANombreImpresora: string = 'DEBUG';
@@ -29,7 +30,9 @@ procedure ImprimirResguardoDeposito(
   ASoloPDF: Boolean = False);
 procedure ImprimirTicketDesdeBD(
   const AParametrosApp: IParametrosAplicacion;
-  const ARepositorio: IRepositorioTicketsCaja;
+  const APreview: IPreviewTicket;
+  AUnidades: TUnidadesMedida;
+  const ARepositorio: IRepositorioTicketsVentaCaja;
   const ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja,
   ANumeroOperacion: string;
   const ANombreImpresora: string = 'DEBUG';
@@ -37,7 +40,8 @@ procedure ImprimirTicketDesdeBD(
   ASoloPDF: Boolean = False;
   AImprimirCodigoBarras: Boolean = False);
 procedure ImprimirRecordatorio(
-  const ARepositorio: IRepositorioTicketsCaja;
+  const APreview: IPreviewTicket;
+  const ARepositorio: IRepositorioRecordatoriosCaja;
   const ACodigoEmpresa, ACodigoCliente: string;
   const ANombreImpresora: string = 'DEBUG';
   ARutasPDF: TStrings = nil;
@@ -47,7 +51,7 @@ implementation
 
 uses
   inLibVerifactu, inLibFormatoDocumento,
-  inLibPreviewTicket, inLibMsgCaja, inLibMsgTickets;
+  inLibMsgCaja, inLibMsgTickets;
 
 function LPAD(
   const AValue: string;
@@ -94,7 +98,8 @@ end;
 type
   TGeneradorResguardoDeposito = class
   private
-    FRepositorio: IRepositorioTicketsCaja;
+    FRepositorio: IRepositorioResguardosCaja;
+    FPreview: IPreviewTicket;
     FContexto: TContextoOperacionTicketCaja;
     FNombreImpresora: string;
     FRutasPDF: TStrings;
@@ -123,7 +128,8 @@ type
     function TotalPagadoCaja: Currency;
   public
     constructor Create(
-      const ARepositorio: IRepositorioTicketsCaja;
+      const APreview: IPreviewTicket;
+      const ARepositorio: IRepositorioResguardosCaja;
       const ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja,
       AOperacion, ANombreImpresora: string;
       ARutasPDF: TStrings;
@@ -133,13 +139,15 @@ type
   end;
 
 constructor TGeneradorResguardoDeposito.Create(
-  const ARepositorio: IRepositorioTicketsCaja;
+  const APreview: IPreviewTicket;
+  const ARepositorio: IRepositorioResguardosCaja;
   const ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja,
   AOperacion, ANombreImpresora: string;
   ARutasPDF: TStrings;
   ASoloPDF: Boolean);
 begin
   inherited Create;
+  FPreview := APreview;
   FRepositorio := ARepositorio;
   FContexto.Empresa := ACodigoEmpresa;
   FContexto.Almacen := ACodigoAlmacen;
@@ -381,6 +389,7 @@ begin
     GetUserFolderTickets + 'ResguardoDep_' +
     FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
   ImprimirOPrevisualizarTicket(
+    FPreview,
     FTicket,
     sComandosEsc,
     sRutaFicheroPdf,
@@ -420,7 +429,8 @@ begin
 end;
 
 procedure ImprimirResguardoDeposito(
-  const ARepositorio: IRepositorioTicketsCaja;
+  const APreview: IPreviewTicket;
+  const ARepositorio: IRepositorioResguardosCaja;
   const ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja,
   AOperacion: string;
   const ANombreImpresora: string;
@@ -432,6 +442,7 @@ begin
   if (Trim(AOperacion) <> '') and Assigned(ARepositorio) then
   begin
     oGenerador := TGeneradorResguardoDeposito.Create(
+      APreview,
       ARepositorio,
       ACodigoEmpresa,
       ACodigoAlmacen,
@@ -450,7 +461,9 @@ end;
 
 procedure ImprimirTicketDesdeBD(
   const AParametrosApp: IParametrosAplicacion;
-  const ARepositorio: IRepositorioTicketsCaja;
+  const APreview: IPreviewTicket;
+  AUnidades: TUnidadesMedida;
+  const ARepositorio: IRepositorioTicketsVentaCaja;
   const ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja,
   ANumeroOperacion: string;
   const ANombreImpresora: string;
@@ -580,11 +593,13 @@ begin
           '%-26s',
           [Copy(oLineas[i].CodigoUnidad, 1, 26)]);
         sUnidad := oLineas[i].TipoCantidad;
-        sUds := Format(
-          '%4s',
-          [oUnidades.Formatear(
+        if Assigned(AUnidades) then
+          sUds := AUnidades.Formatear(
             oLineas[i].Cantidad,
-            sUnidad)]);
+            sUnidad)
+        else
+          sUds := FormatFloat('0', oLineas[i].Cantidad);
+        sUds := Format('%4s', [sUds]);
         oTicket.TextoColumnas(
           sArt + sUds,
           FormatFloat('#,##0.00', oLineas[i].Total) + ' €');
@@ -701,6 +716,7 @@ begin
       GetUserFolderTickets + 'TicketBD_' +
       FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
     ImprimirOPrevisualizarTicket(
+      APreview,
       oTicket,
       sComandosEsc,
       sRutaFicheroPdf,
@@ -714,7 +730,8 @@ begin
 end;
 
 procedure ImprimirRecordatorio(
-  const ARepositorio: IRepositorioTicketsCaja;
+  const APreview: IPreviewTicket;
+  const ARepositorio: IRepositorioRecordatoriosCaja;
   const ACodigoEmpresa, ACodigoCliente: string;
   const ANombreImpresora: string;
   ARutasPDF: TStrings;
@@ -862,6 +879,7 @@ begin
           GetUserFolderTickets + 'Recordatorio_' +
           FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
         ImprimirOPrevisualizarTicket(
+          APreview,
           oTicket,
           sComandosEsc,
           sRutaFicheroPdf,

@@ -79,7 +79,7 @@ implementation
 
 uses
   System.Generics.Collections,
-  inLibRectificativas,
+  UniDataRectificativasSql,
   inLibCatalogoSqlEjecucion,
   UniDataCatalogoSqlValidacion;
 

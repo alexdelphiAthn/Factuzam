@@ -16,7 +16,7 @@ unit inLibVerifactuNoVerifactuExportIntf;
 interface
 
 uses
-  Data.DB, Uni;
+  Data.DB;
 
 type
   // Los TDataSet devueltos pertenecen al llamador.
@@ -29,36 +29,6 @@ type
     function BuscarEventos: TDataSet;
     function BuscarFacturacion: TDataSet;
   end;
-  TFabricaCrearRepositorioExportacionNoVerifactu = function(
-    AConexion: TUniConnection): IRepositorioExportacionNoVerifactu;
-  TFabricaRepositorioExportacionNoVerifactu = class
-  private
-    class var FFabrica: TFabricaCrearRepositorioExportacionNoVerifactu;
-  public
-    class procedure Registrar(
-      AFabrica: TFabricaCrearRepositorioExportacionNoVerifactu);
-    class function Crear(
-      AConexion: TUniConnection): IRepositorioExportacionNoVerifactu;
-  end;
 
 implementation
-
-uses
-  System.SysUtils, inLibMsgVerifactu;
-
-class procedure TFabricaRepositorioExportacionNoVerifactu.Registrar(
-  AFabrica: TFabricaCrearRepositorioExportacionNoVerifactu);
-begin
-  FFabrica := AFabrica;
-end;
-
-class function TFabricaRepositorioExportacionNoVerifactu.Crear(
-  AConexion: TUniConnection): IRepositorioExportacionNoVerifactu;
-begin
-  if not Assigned(FFabrica) then
-    raise Exception.Create(
-      SErrorRepositorioExportacionNoVerifactuNoRegistrado);
-  Result := FFabrica(AConexion);
-end;
-
 end.

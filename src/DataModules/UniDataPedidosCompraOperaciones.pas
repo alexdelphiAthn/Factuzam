@@ -29,6 +29,7 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   Data.DB, DBAccess, inLibGridPivoteCompra, inLibValoresAutomaticos,
   inLibAlbaranesCompraMovimientos,
+  UniDataAlbaranesCompraMovimientos,
   inLibMsgCompras;
 
 type
@@ -1065,7 +1066,8 @@ begin
     AConexion, ASerieAlbaran, ANumeroAlbaran, AUsuario);
   inLibAlbaranesCompraMovimientos.
     GenerarMovimientosDesdeAlbaranCompra(
-      AConexion, ASerieAlbaran, ANumeroAlbaran, AUsuario);
+      CrearMovimientosAlbaranCompraUniDAC(AConexion),
+      ASerieAlbaran, ANumeroAlbaran, AUsuario);
   CerrarAlbaranCompra(
     AConexion, ASerieAlbaran, ANumeroAlbaran, AUsuario);
   GenerarPdteRecibirDesdePedidoInterno(
@@ -1194,9 +1196,11 @@ begin
   // 2. Revertir movimientos previos (no-op si no hay) y regenerarlos
   //    para TODAS las lineas (viejas + nuevas).
   inLibAlbaranesCompraMovimientos.RevertirMovimientosDesdeAlbaranCompra(
-    AConn, ASerieAlbc, ANumAlbc, AUsuario);
+    CrearMovimientosAlbaranCompraUniDAC(AConn),
+    ASerieAlbc, ANumAlbc, AUsuario);
   inLibAlbaranesCompraMovimientos.GenerarMovimientosDesdeAlbaranCompra(
-    AConn, ASerieAlbc, ANumAlbc, AUsuario);
+    CrearMovimientosAlbaranCompraUniDAC(AConn),
+    ASerieAlbc, ANumAlbc, AUsuario);
   // 3. Asegurar estado CERRADO.
   qIns := TUniQuery.Create(nil);
   try
@@ -1741,8 +1745,5 @@ function CrearPedidosCompraUniDAC(
 begin
   Result := TPedidosCompraUniDAC.Create(AConexion);
 end;
-
-initialization
-  TFabricaPedidosCompra.Registrar(CrearPedidosCompraUniDAC);
 
 end.

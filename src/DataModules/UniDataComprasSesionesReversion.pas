@@ -24,7 +24,7 @@ function ValidarReversionSesion(
   out AMensajeError: string): Boolean;
 procedure EjecutarReversionSesion(
   ADM: TdmComprasSesiones;
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  const ALecturas: ILecturasReversionMaterializacion;
   const AUsuario: string);
 
 implementation
@@ -63,7 +63,7 @@ end;
 
 procedure ConsultarTablasReversion(
                                    const ALecturas:
-                                   ILecturasMaterializacionComprasSesiones;
+                                   ILecturasReversionMaterializacion;
                                    out ATablas: TTablasReversion);
 begin
   ATablas.TieneDocumentos :=
@@ -158,7 +158,7 @@ end;
 
 procedure BorrarMovimientosHuerfanos(ADM: TdmComprasSesiones;
                                      const ALecturas:
-                                     ILecturasMaterializacionComprasSesiones;
+                                     ILecturasReversionMaterializacion;
                                      AQuery: TUniQuery);
 var
   oMovimientos: TArray<string>;
@@ -269,7 +269,7 @@ end;
 
 procedure EjecutarReversionSesion(
   ADM: TdmComprasSesiones;
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  const ALecturas: ILecturasReversionMaterializacion;
   const AUsuario: string);
 var
   conn: TUniConnection;

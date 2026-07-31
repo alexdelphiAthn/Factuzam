@@ -25,6 +25,7 @@ unit UniDataPedidosCompra;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, System.Variants,
   Data.DB, MemDS, DBAccess, Uni,
   UniDataGen, inLibUser;
@@ -129,6 +130,7 @@ uses
   System.Diagnostics, System.UITypes, System.Generics.Collections,
   Vcl.Dialogs, ComCtrls, cxListView,
   inLibPedidosCompra,
+  UniDataPedidosCompraOperaciones,
   inLibComprasImpuestos,
   inLibData,
   inLibArticulosValidadorIntf,
@@ -618,7 +620,8 @@ begin
     FReorganizacionPendiente := True
   else
     inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
-      ConexionPrincipal, sSerie, sNumero, IdentidadSesion.Usuario);
+      CrearPedidosCompraUniDAC(ConexionPrincipal),
+      sSerie, sNumero, IdentidadSesion.Usuario);
 end;
 
 procedure TdmPedidosCompra.unqryTablaGBeforeDelete(DataSet: TDataSet);
@@ -640,7 +643,7 @@ begin
     Abort;
   end;
   inLibPedidosCompra.BorrarPdteRecibirDesdePedido(
-    ConexionPrincipal, sSerie, sNumero);
+    CrearPedidosCompraUniDAC(ConexionPrincipal), sSerie, sNumero);
   // Borrar lineas asociadas para que no se queden huerfanas (no hay
   // FK con CASCADE).
   with TUniQuery.Create(nil) do
@@ -827,7 +830,8 @@ begin
     FReorganizacionPendiente := True
   else
     inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
-      ConexionPrincipal, sSerie, sNumero, IdentidadSesion.Usuario);
+      CrearPedidosCompraUniDAC(ConexionPrincipal),
+      sSerie, sNumero, IdentidadSesion.Usuario);
 end;
 
 procedure TdmPedidosCompra.unqryPedidosCompraLineasBeforeDelete(
@@ -843,7 +847,8 @@ begin
   sLinea  := unqryPedidosCompraLineas.FieldByName('LINEA_PEDCLIN').AsString;
   if (sSerie = '') or (sNumero = '') then Exit;
   inLibPedidosCompra.BorrarPdteRecibirDesdePedido(
-    ConexionPrincipal, sSerie, sNumero, sLinea);
+    CrearPedidosCompraUniDAC(ConexionPrincipal),
+    sSerie, sNumero, sLinea);
 end;
 
 function TdmPedidosCompra.ObtenerAlmacenesSql(
@@ -1353,7 +1358,8 @@ begin
       sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
       if (sSerie <> '') and (sNumero <> '') then
         inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
-          ConexionPrincipal, sSerie, sNumero, IdentidadSesion.Usuario);
+          CrearPedidosCompraUniDAC(ConexionPrincipal),
+          sSerie, sNumero, IdentidadSesion.Usuario);
     end;
   end;
 end;
@@ -1381,7 +1387,8 @@ begin
     sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
     if (sSerie <> '') and (sNumero <> '') then
       inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
-        ConexionPrincipal, sSerie, sNumero, IdentidadSesion.Usuario);
+        CrearPedidosCompraUniDAC(ConexionPrincipal),
+        sSerie, sNumero, IdentidadSesion.Usuario);
   end;
 end;
 
@@ -1433,4 +1440,6 @@ begin
   end;
 end;
 
+initialization
+  RegistrarDataModule(TdmPedidosCompra);
 end.

@@ -270,7 +270,8 @@ var
   dImporte: Currency;
   sConcepto, sTipo, sEmpleado: string;
 begin
-  dm := TdmCajaOpe.Create(nil, FConn, ParametrosApp, ParametrosCaja);
+  dm := TdmCajaOpe.Create(
+    nil, FConn, ParametrosApp, ParametrosCaja, PreviewTicket);
   try
     dm.AsignarContextoSesion(ContextoSesion);
     dImporte  := Currency(txtImporte.Value);
@@ -307,6 +308,7 @@ begin
       raise;
     end;
     ImprimirTicketOperacionCaja(
+      PreviewTicket,
       ConexionPrincipal,
       FEmpresa,
       FAlmacen,

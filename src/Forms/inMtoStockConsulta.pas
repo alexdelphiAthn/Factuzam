@@ -297,6 +297,8 @@ uses
   inLibArticulosValidadorIntf,
   inLibPerfilesUsuarioIntf,
   inLibStockCeldaDocumento,
+  inLibStockConsultaInfo,
+  UniDataStockConsultaInfo,
   inMtoModalOperacionesCajaSku, inLibMsgArticulos, inLibMsgCaja,
   inLibMsgComun, inLibMsgVentas;
 
@@ -1023,6 +1025,7 @@ begin
       AgregarUnidadADocumentoTrabajo(
         Self,
         ConexionPrincipal,
+        BusquedaVisual,
         ContextoSesion,
         ParametrosCaja,
         linea,
@@ -1759,10 +1762,10 @@ var
 begin
   imgFoto.Picture.Assign(nil);
   if Trim(FCodArt) = '' then Exit;
-  info := inLibFotos.oFotos.Resolver(FCodArt, ACodUnidad);
+  info := FotosArticulos.Resolver(FCodArt, ACodUnidad);
   // En la consulta de stock la foto dispone de una zona amplia: cargar
   // siempre la copia a resolucion real y ajustarla proporcionalmente.
-  ruta := inLibFotos.oFotos.RutaFoto(info, frReal);
+  ruta := FotosArticulos.RutaFoto(info, frReal);
   if ruta = '' then Exit;
   png := TPngImage.Create;
   try
@@ -2196,7 +2199,7 @@ begin
         SetLength(arr, codigos.Count);
         for i := 0 to codigos.Count - 1 do
           arr[i] := codigos[i];
-        fotos := inLibFotos.oFotos.ResolverArticulosLote(arr);
+        fotos := FotosArticulos.ResolverArticulosLote(arr);
         q.First;
         columnas := (FScrFotos.ClientWidth - 12) div 176;
         if columnas < 1 then
@@ -2268,7 +2271,7 @@ begin
   pnl.OnDblClick := TarjetaFotoDblClick;
   sRuta := '';
   if (AFotos <> nil) and AFotos.TryGetValue(sArt, info) then
-    sRuta := inLibFotos.oFotos.RutaFoto(info, frPx300);
+    sRuta := FotosArticulos.RutaFoto(info, frPx300);
   if sRuta <> '' then
   begin
     img := TImage.Create(pnl);
@@ -2350,155 +2353,15 @@ end;
 // especifico — aqui solo mostramos el dato a nivel de articulo.
 procedure TfrmStockConsulta.CargarInfoCabecera;
 var
-  q : TUniQuery;
-  sb: TStringList;
-  sLinea: string;
-  sProps: string;
-  sTipo : string;
-  sValor: string;
+  Info: TInfoCabeceraStock;
 begin
   lblInfo.Caption := '';
-  if Trim(FCodArt) = '' then Exit;
-
-  sb := TStringList.Create;
-  q  := TUniQuery.Create(nil);
-  try
-    q.Connection := ConexionPrincipal;
-
-    // ---- Propiedades del articulo (todas las activas) ----
-    // El valor mostrado depende del tipo: LISTA -> texto del valor en
-    // fza_propiedades_valores; BOOLEANO -> Si/No; resto (TEXTO/NUMERO) ->
-    // VALOR_LIBRE_ARTPROP. Se listan compactas separadas por " · ".
-    q.SQL.Text :=
-      'SELECT P.NOMBRE_PROP_PROP, P.TIPO_VALOR_PROP, ' +
-      '       AP.VALOR_LIBRE_ARTPROP, PV.PV ' +
-      '  FROM fza_articulos_propiedades AP ' +
-      '  JOIN fza_propiedades P ' +
-      '    ON P.CODIGO_PROP_ARTPROP = AP.CODIGO_PROP_ARTPROP ' +
-      '  LEFT JOIN fza_propiedades_valores PV ' +
-      '    ON PV.ID_PV_ARTPROP = AP.ID_PV_ARTPROP ' +
-      ' WHERE AP.CODIGO_ART_ART = :art ' +
-      // Solo nivel articulo; el desglose color/SKU se ve en su modal, no aqui
-      '   AND AP.CODIGO_UNIDAD_ARTPROP = '''' ' +
-      '   AND IFNULL(P.ESACTIVO_PROP, ''S'') = ''S'' ' +
-      ' ORDER BY P.NOMBRE_PROP_PROP';
-    q.ParamByName('art').AsString := FCodArt;
-    q.Open;
-    sProps := '';
-    while not q.Eof do
-    begin
-      sTipo := q.FieldByName('TIPO_VALOR_PROP').AsString;
-      if SameText(sTipo, 'LISTA') then
-        sValor := Trim(q.FieldByName('PV').AsString)
-      else if SameText(sTipo, 'BOOLEANO') then
-        sValor := IfThen(SameText(Trim(
-                    q.FieldByName('VALOR_LIBRE_ARTPROP').AsString), 'S'),
-                    'Sí', 'No')
-      else
-        sValor := Trim(q.FieldByName('VALOR_LIBRE_ARTPROP').AsString);
-      if sValor <> '' then
-      begin
-        if sProps <> '' then
-          sProps := sProps + '   ·   ';
-        sProps := sProps +
-                  q.FieldByName('NOMBRE_PROP_PROP').AsString + ': ' + sValor;
-      end;
-      q.Next;
-    end;
-    q.Close;
-    if sProps <> '' then
-      sb.Add(sProps);
-
-    // ---- Tarifas vigentes del articulo (sin SKU especifico) ----
-    // Por cada tarifa (PVP, VENTA MAYOR…) se coge la fila vigente hoy:
-    // activa, FECHA_DESDE nula o <= hoy y FECHA_HASTA nula o >= hoy. Si hay
-    // varias vigentes para la misma tarifa, gana la de FECHA_DESDE mas
-    // reciente (subconsulta correlada por CODIGO_UNICO_ARTTAR).
-    q.SQL.Text :=
-      'SELECT AT.CODIGO_TAR_ARTTAR, T.NOMBRE_TAR_TAR, ' +
-      '       AT.PRECIO_FINAL_ARTTAR ' +
-      '  FROM fza_articulos_tarifas AT ' +
-      '  LEFT JOIN fza_tarifas T ' +
-      '    ON T.CODIGO_TAR_ARTTAR = AT.CODIGO_TAR_ARTTAR ' +
-      ' WHERE AT.CODIGO_ART_ARTTAR = :art ' +
-      '   AND IFNULL(AT.CODIGO_UNIDAD_ARTTAR, '''') = '''' ' +
-      '   AND AT.ESACTIVO_ARTTAR = ''S'' ' +
-      '   AND (AT.FECHA_DESDE_ARTTAR IS NULL ' +
-      '        OR AT.FECHA_DESDE_ARTTAR <= CURRENT_DATE) ' +
-      '   AND (AT.FECHA_HASTA_ARTTAR IS NULL ' +
-      '        OR AT.FECHA_HASTA_ARTTAR >= CURRENT_DATE) ' +
-      '   AND AT.CODIGO_UNICO_ARTTAR = ( ' +
-      '         SELECT AT2.CODIGO_UNICO_ARTTAR ' +
-      '           FROM fza_articulos_tarifas AT2 ' +
-      '          WHERE AT2.CODIGO_ART_ARTTAR = AT.CODIGO_ART_ARTTAR ' +
-      '            AND IFNULL(AT2.CODIGO_UNIDAD_ARTTAR, '''') = '''' ' +
-      '            AND AT2.CODIGO_TAR_ARTTAR = AT.CODIGO_TAR_ARTTAR ' +
-      '            AND AT2.ESACTIVO_ARTTAR = ''S'' ' +
-      '            AND (AT2.FECHA_DESDE_ARTTAR IS NULL ' +
-      '                 OR AT2.FECHA_DESDE_ARTTAR <= CURRENT_DATE) ' +
-      '            AND (AT2.FECHA_HASTA_ARTTAR IS NULL ' +
-      '                 OR AT2.FECHA_HASTA_ARTTAR >= CURRENT_DATE) ' +
-      '          ORDER BY AT2.FECHA_DESDE_ARTTAR DESC, ' +
-      '                   AT2.CODIGO_UNICO_ARTTAR DESC ' +
-      '          LIMIT 1) ' +
-      ' ORDER BY COALESCE(T.ORDEN_TAR, 999999), T.NOMBRE_TAR_TAR';
-    q.ParamByName('art').AsString := FCodArt;
-    q.Open;
-    if not q.IsEmpty then
-      sb.Add('');
-    while not q.Eof do
-    begin
-      sb.Add(Format('%s%s: %s',
-        [IfThen(SameText(q.FieldByName('CODIGO_TAR_ARTTAR').AsString,
-                ParametrosCaja.TarifaDefecto),
-                'Tarifa por defecto - ', ''),
-         IfThen(Trim(q.FieldByName('NOMBRE_TAR_TAR').AsString) <> '',
-                q.FieldByName('NOMBRE_TAR_TAR').AsString,
-                q.FieldByName('CODIGO_TAR_ARTTAR').AsString),
-         FormatFloat('#,##0.00', q.FieldByName('PRECIO_FINAL_ARTTAR').AsFloat)
-         + ' '#8364]));
-      q.Next;
-    end;
-    q.Close;
-
-    // ---- Proveedores ----
-    q.SQL.Text :=
-      'SELECT AP.CODIGO_PRV_AP, P.RAZON_SOCIAL_PRV, ' +
-      '       AP.REF_PROVEEDOR_AP, AP.PRECIO_ULT_COMPRA_AP, ' +
-      '       AP.ESPROVEEDORPRINCIPAL_AP ' +
-      '  FROM fza_articulos_proveedores AP ' +
-      '  LEFT JOIN fza_proveedores P ' +
-      '    ON P.CODIGO_PRV_PRV = AP.CODIGO_PRV_AP ' +
-      ' WHERE AP.CODIGO_ART_AP = :art ' +
-      ' ORDER BY AP.ESPROVEEDORPRINCIPAL_AP DESC, P.RAZON_SOCIAL_PRV';
-    q.ParamByName('art').AsString := FCodArt;
-    q.Open;
-    if not q.IsEmpty then
-      sb.Add('');
-    while not q.Eof do
-    begin
-      sLinea := Format('%s%s%s',
-        [IfThen(q.FieldByName('ESPROVEEDORPRINCIPAL_AP').AsString = 'S',
-                'Proveedor ppal. - ', 'Proveedor - '),
-         IfThen(Trim(q.FieldByName('RAZON_SOCIAL_PRV').AsString) <> '',
-                q.FieldByName('RAZON_SOCIAL_PRV').AsString,
-                q.FieldByName('CODIGO_PRV_AP').AsString),
-         IfThen(Trim(q.FieldByName('REF_PROVEEDOR_AP').AsString) <> '',
-                ' (ref ' + q.FieldByName('REF_PROVEEDOR_AP').AsString + ')',
-                '')]);
-      // El coste (ultimo precio de compra) solo si hay permiso de verlo.
-      if FVerCoste then
-        sLinea := sLinea + ': ' +
-          FormatFloat('#,##0.00',
-                      q.FieldByName('PRECIO_ULT_COMPRA_AP').AsFloat) + ' '#8364;
-      sb.Add(sLinea);
-      q.Next;
-    end;
-
-    lblInfo.Caption := sb.Text;
-  finally
-    FreeAndNil(q);
-    FreeAndNil(sb);
+  if Trim(FCodArt) <> '' then
+  begin
+    Info := CargarInfoCabeceraStock(
+      ConexionPrincipal, FCodArt);
+    lblInfo.Caption := FormatearInfoCabeceraStock(
+      Info, ParametrosCaja.TarifaDefecto, FVerCoste);
   end;
 end;
 
@@ -3150,7 +3013,7 @@ end;
 // ---------------------------------------------------------------------------
 //  Busqueda de articulos (popup del boton "...")
 // ---------------------------------------------------------------------------
-// Lanza TfrmMtoSearch (via TBusquedaUtils.EjecutarBusqueda) listando los
+// Lanza el buscador visual inyectado listando los
 // articulos activos con columnas Codigo / Descripcion / Familia / Temporada
 // / Proveedor ppal. / PVP. El PVP se calcula con una correlated subquery
 // para garantizar UNA fila por articulo (en vez de unirse a
@@ -3232,7 +3095,7 @@ begin
     ConfigCampo(q.FindField('REF_PROVEEDOR'),   'Ref. proveedor', '');
     ConfigCampo(q.FindField('PRECIO_PVP'),      'PVP',         '#,##0.00 €');
 
-    if TBusquedaUtils.EjecutarBusqueda(
+    if BusquedaVisual.EjecutarBusqueda(
       ConexionPrincipal,
       'Búsqueda de Artículos',
                                        q,

@@ -18,6 +18,7 @@ unit UniDataAtributosConjuntos;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
   inLibUser;
 
@@ -132,5 +133,6 @@ begin
 end;
 
 initialization
+  RegistrarDataModule(TdmAtributosConjuntos);
   ForceReferenceToClass(TdmAtributosConjuntos);
 end.

@@ -12,7 +12,7 @@
 {    Modelo del pivote de venta (fascículo V3 del anexo SRP): propietario      }
 {    de los grupos artículo+color+precio, celdas por talla, bandas,            }
 {    cantidades, conjuntos (reales y virtuales) y volcado a albaranar.         }
-{    Recibe el puerto IRepositorioPivoteVenta; no conoce VCL, DevExpress,      }
+{    Recibe el puerto IRepositorioModeloPivoteVenta; no conoce VCL,            }
 {    UniDAC, TDataSet ni el formulario.                                        }
 {******************************************************************************}
 unit inLibPivoteVentaModelo;
@@ -71,7 +71,7 @@ type
   end;
   TModeloPivoteVenta = class
   private
-    FRepositorio        : IRepositorioPivoteVenta;
+    FRepositorio        : IRepositorioModeloPivoteVenta;
     FBandaUnica         : Boolean;
     FTextoAAlbaranar    : string;
     FLineasVista        : TList<Integer>;
@@ -95,7 +95,7 @@ type
       const ATallas: TArray<Integer>): Integer;
     procedure AjustarAAlbaranarCeldas;
   public
-    constructor Create(const ARepositorio: IRepositorioPivoteVenta;
+    constructor Create(const ARepositorio: IRepositorioModeloPivoteVenta;
                        ABandaUnica: Boolean;
                        const ATextoAAlbaranar: string);
     destructor Destroy; override;
@@ -165,7 +165,7 @@ type
 implementation
 
 constructor TModeloPivoteVenta.Create(
-  const ARepositorio: IRepositorioPivoteVenta; ABandaUnica: Boolean;
+  const ARepositorio: IRepositorioModeloPivoteVenta; ABandaUnica: Boolean;
   const ATextoAAlbaranar: string);
 begin
   inherited Create;

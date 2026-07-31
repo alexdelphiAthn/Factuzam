@@ -35,6 +35,12 @@ type
     [Test]
     procedure Pendiente_EnReposoNoHaceNada;
 
+    // --- reinicio de la operacion ---
+    [Test]
+    procedure Reinicio_VaciaLineasYPreparaCabecera;
+    [Test]
+    procedure Reinicio_EscribeValoresBaseCabecera;
+
     // --- linea rechazada por validacion ---
     [Test]
     procedure Rechazo_InsercionSeCancelaSinBorrar;
@@ -184,6 +190,9 @@ function CrearCabecera: TClientDataSet;
 begin
   Result := TClientDataSet.Create(nil);
   Result.FieldDefs.Add('FECHA_FAC', ftDateTime);
+  Result.FieldDefs.Add('CODIGO_EMP_FAC', ftString, 10);
+  Result.FieldDefs.Add('TIPO_FAC', ftString, 20);
+  Result.FieldDefs.Add('TARIFA_ARTICULO_CLIENTE_FAC', ftString, 10);
   Result.CreateDataSet;
   Result.Append;
   Result.Post;
@@ -254,6 +263,53 @@ begin
     Assert.AreEqual(1, cds.RecordCount);
   finally
     FreeAndNil(cds);
+  end;
+end;
+
+{ --- reinicio de la operacion --- }
+
+procedure TPruebasCajaVentaOperacion.
+  Reinicio_VaciaLineasYPreparaCabecera;
+var
+  Cabecera: TClientDataSet;
+  Lineas: TClientDataSet;
+begin
+  Cabecera := CrearCabecera;
+  Lineas := CrearLineas;
+  try
+    AgregarLinea(Lineas, 'ART1', 'N', 1);
+    ReiniciarDatosOperacionVenta(Lineas, Cabecera);
+    Assert.AreEqual(0, Lineas.RecordCount);
+    Assert.AreEqual(0, Cabecera.RecordCount);
+    Assert.IsTrue(Cabecera.State = dsInsert);
+  finally
+    FreeAndNil(Lineas);
+    FreeAndNil(Cabecera);
+  end;
+end;
+
+procedure TPruebasCajaVentaOperacion.
+  Reinicio_EscribeValoresBaseCabecera;
+var
+  Cabecera: TClientDataSet;
+begin
+  Cabecera := CrearCabecera;
+  try
+    Cabecera.Edit;
+    EscribirCabeceraBaseOperacionVenta(
+      Cabecera, 'E1', 'PVP', EncodeDate(2026, 7, 31));
+    Assert.AreEqual('E1',
+      Cabecera.FieldByName('CODIGO_EMP_FAC').AsString);
+    Assert.AreEqual('SIMPLIFICADA',
+      Cabecera.FieldByName('TIPO_FAC').AsString);
+    Assert.AreEqual('PVP',
+      Cabecera.FieldByName(
+        'TARIFA_ARTICULO_CLIENTE_FAC').AsString);
+    Assert.IsTrue(
+      Cabecera.FieldByName('FECHA_FAC').AsDateTime =
+        EncodeDate(2026, 7, 31));
+  finally
+    FreeAndNil(Cabecera);
   end;
 end;
 

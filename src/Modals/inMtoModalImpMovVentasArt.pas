@@ -212,7 +212,7 @@ end;
 
 destructor TfrmPrintMovVentasArt.Destroy;
 begin
-  oFotos.LimpiarPrecargaFotos;
+  FotosArticulos.LimpiarPrecargaFotos;
   inherited Destroy;
 end;
 
@@ -237,7 +237,7 @@ begin
       finally
         unqryMovVentasPrint.EnableControls;
       end;
-      oFotos.PrecargarFotosLote(slCod.ToStringArray);
+      FotosArticulos.PrecargarFotosLote(slCod.ToStringArray);
     finally
       FreeAndNil(slCod);
     end;
@@ -250,7 +250,7 @@ var
   sNom : string;
   nivel: Integer;
 begin
-  oFotos.HandlerReportBeforePrint(Component);
+  FotosArticulos.HandlerReportBeforePrint(Component);
   if Component is TfrxBand then
   begin
     sNom := Component.Name;

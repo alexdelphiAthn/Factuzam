@@ -60,6 +60,9 @@ uses
 
 {$R *.dfm}
 
+const
+  CIdiomaChinoSimplificado = 'zh-CN';
+
 type
   TEntradaImportacionTraduccion = record
     Texto: string;
@@ -332,6 +335,8 @@ begin
         AIdiomas.Add(Idioma);
       FConsulta.Next;
     end;
+    if AIdiomas.IndexOf(CIdiomaChinoSimplificado) < 0 then
+      AIdiomas.Add(CIdiomaChinoSimplificado);
   finally
     FConsulta.Close;
     AIdiomas.EndUpdate;

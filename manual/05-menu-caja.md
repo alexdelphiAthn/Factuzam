@@ -489,12 +489,41 @@ Acciones habituales:
 | Acción | Uso |
 |--------|-----|
 | **Reimprimir** | Saca el duplicado por la impresora de tickets configurada en parámetros. |
-| **Reimprimir otros** | Abre la vista previa del ticket, desde la que se puede elegir otra impresora. |
+| **Previsualizar** | Abre la vista previa del ticket, desde la que se puede elegir otra impresora. |
+| **e-mail** | Envía por correo la documentación de la operación seleccionada. |
+| **Rectificar** | Abre una nueva operación para corregir el ticket por diferencias o mediante una rectificativa sustitutiva. |
+| **Anular registro fiscal** | Solicita la anulación fiscal de un documento consolidado. |
+| **Convertir en normal** | Convierte una factura simplificada en factura normal nominativa. |
 | **F5** | Recarga la consulta del día. |
 | **Esc** | Cierra la búsqueda y vuelve al menú de caja. |
 
 > Requiere tener una **caja seleccionada** (empresa/almacén/caja); si no,
 > la aplicación pide seleccionarla antes de buscar.
+
+#### Rectificar un ticket: por diferencias o sustitutiva
+
+Una venta ya consolidada no se modifica directamente. Para corregirla:
+
+1. Entra en **Menú de Caja ▸ Buscar / Modificar (F10)**.
+2. Localiza la operación y comprueba el ticket en las pestañas de detalle.
+3. Pulsa **Rectificar**.
+4. Elige **Por diferencias** o **Sustitutiva**.
+5. Revisa la nueva operación que abre Factuzam, corrige sus líneas y
+   finaliza el cobro con `[F12]`.
+
+| Modalidad | Cómo se presenta | Cuándo usarla | Efecto en ventas y stock |
+|-----------|------------------|----------------|--------------------------|
+| **Por diferencias** | Carga las líneas originales en **negativo**. Puedes dejar solo las cantidades o conceptos que deban corregirse. | Devolución total/parcial, descuento omitido o diferencia concreta. | Conserva la venta original y añade la corrección. Las cantidades negativas compensan importes y movimientos de stock. |
+| **Sustitutiva** | Carga el contenido en **positivo** para dejar la versión completa y correcta. | Cuando conviene reemplazar íntegramente el ticket por otro corregido. | La original queda sustituida y deja de computar como venta activa; la nueva aporta los importes y movimientos corregidos. |
+
+Al cerrar la operación, Factuzam usa una **serie rectificativa**, enlaza el
+nuevo documento con el original y lo registra o encola según el modo fiscal.
+No se puede volver a rectificar un documento que ya es rectificativo.
+
+> **Convertir en normal** es un flujo distinto: se utiliza cuando el cliente
+> pide una factura nominativa de su ticket, no para corregir importes. Para
+> las diferencias fiscales entre estas acciones, consulta
+> [Acciones fiscales sobre una factura emitida](11-verifactu.md#5-acciones-fiscales-sobre-una-factura-emitida).
 
 ---
 

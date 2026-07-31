@@ -33,7 +33,8 @@ uses
   System.Actions, Vcl.ActnList, Vcl.Imaging.PngImage, inLibFotos,
   System.Generics.Collections, System.Diagnostics, cxLocalization,
   inLibLectorScanner, inLibCajaTipos, inLibCajaVentanasIntf,
-  inLibCajaVentaIntf, inLibCatalogoSqlIntf;
+  inLibCajaVentaIntf, inLibCatalogoSqlIntf,
+  inLibFacturasLecturasIntf;
 
 const
   WM_CANCELAR_LINEA = WM_APP + 100;
@@ -349,6 +350,7 @@ type
     // Conserva el padre canonico resuelto por OnValidate. El lookup puede
     // dejar temporalmente vacio CODIGO_ART_FACLIN durante PostEditValue.
     FArticuloResueltoEdicion: string;
+    FRepositorioLecturas: IRepositorioLecturasFactura;
   private
     FNumeroCajaActual: Integer;
     // Bitmap reusable para pintar el cuadradito del color actual en el boton
@@ -421,12 +423,19 @@ uses
   inLibTicketsCajaIntf,
   UniDataCatalogoSqlAplicacion,
   UniDataTicketsCajaRepositorio,
+  UniDataFacturasLecturas,
+  UniDataFacturasOperaciones,
+  UniDataVentasWsCola,
+  inLibFacturasPersistenciaIntf,
+  inLibUnidadesMedida, inLibPreviewTicket,
   System.StrUtils,
   inLibMsgCaja, inLibMsgVentas;
 
 function CrearServiciosOperacionCajaVcl(
   APropietario: TComponent;
   const AParametrosApp: IParametrosAplicacion;
+  const APreviewTicket: IPreviewTicket;
+  AUnidades: TUnidadesMedida;
   AConexion: TUniConnection;
   const AParametrosCaja: IParametrosCaja;
   const APermisos: IPermisosAplicacion;
@@ -442,7 +451,8 @@ var
   oCatalogoSql: ICatalogoSql;
   oGrabador: IGrabadorVentaCaja;
   oImpresor: IImpresorVenta;
-  oRepositorioTicketsCaja: IRepositorioTicketsCaja;
+  oPersistenciaFacturas: TPersistenciaFacturas;
+  oRepositorioTicketsCaja: TRepositoriosTicketsCaja;
 begin
   bCatalogoSqlActivo := False;
   if Assigned(APerfilesLectura) then
@@ -458,10 +468,8 @@ begin
     bCatalogoSqlActivo,
     oCatalogoSql,
     AIncidenciasSql);
-  oRepositorioTicketsCaja := TRepositorioTicketsCaja.Create(
-    AConexion,
-    oCatalogoSql,
-    AIncidenciasSql);
+  oRepositorioTicketsCaja := CrearRepositoriosTicketsCaja(
+    AConexion, oCatalogoSql, AIncidenciasSql);
   ADatosCaja.AsignarRepositorioTicketsCaja(
     oRepositorioTicketsCaja);
   oImpresor := TImpresorVentaVcl.Create(
@@ -470,8 +478,11 @@ begin
     AConexion,
     AParametrosCaja,
     APermisos,
-    oRepositorioTicketsCaja);
+    oRepositorioTicketsCaja.Tickets,
+    AUnidades,
+    APreviewTicket);
   oGrabador := TGrabadorVentaCaja.Create(ADatosCaja);
+  oPersistenciaFacturas := CrearPersistenciaFacturasUniDAC(AConexion);
   Result := CrearServiciosOperacionCaja(
     AConexion,
     AParametrosCaja,
@@ -481,7 +492,9 @@ begin
     TRepositorioConsultasCaja.Create(
       AConexion,
       oCatalogoSql,
-      AIncidenciasSql));
+      AIncidenciasSql),
+    oPersistenciaFacturas.Pdf,
+    CrearRepositorioVentasWsColaUniDAC(AConexion));
 end;
 
 procedure InicializarServiciosOperacionCajaVcl(
@@ -493,10 +506,13 @@ begin
     AFormulario,
     AFormulario.ConexionPrincipal,
     AFormulario.ParametrosApp,
-    AFormulario.ParametrosCaja);
+    AFormulario.ParametrosCaja,
+    AFormulario.PreviewTicket);
   oServicios := CrearServiciosOperacionCajaVcl(
     AFormulario,
     AFormulario.ParametrosApp,
+    AFormulario.PreviewTicket,
+    AFormulario.UnidadesMedida,
     AFormulario.ConexionPrincipal,
     AFormulario.ParametrosCaja,
     AFormulario.Permisos,
@@ -603,7 +619,8 @@ begin
   begin
     DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat := ACant;
     DatosCaja.cdsLineas.Post;
-    GridRecalc(ConexionPrincipal,nil, tvLineasOpe, DatosCaja.cdsLineas,
+    GridRecalc(ConexionPrincipal, FRepositorioLecturas, nil,
+               tvLineasOpe, DatosCaja.cdsLineas,
                DatosCaja.cdsCabecera, ActualizarLabelTotal);
     AsegurarLineaNueva;
   end
@@ -644,53 +661,31 @@ begin
     begin
       tvLineasOpe.Controller.EditingController.HideEdit(True);
     end;
-    // 2. Vaciar las líneas de la venta anterior
-    if DatosCaja.cdsLineas.Active then
-    begin
-      DatosCaja.cdsLineas.DisableControls;
-      try
-        // --- CLAVE: Limpia el "Delta" (registros fantasma pendientes) ---
-        DatosCaja.cdsLineas.CancelUpdates;
-
-        if DatosCaja.cdsLineas.RecordCount > 0 then
-          DatosCaja.cdsLineas.EmptyDataSet;
-      finally
-        DatosCaja.cdsLineas.EnableControls;
-      end;
-    end;
+    // 2. Vaciar la venta anterior y preparar la nueva cabecera.
+    ReiniciarDatosOperacionVenta(
+      DatosCaja.cdsLineas, DatosCaja.cdsCabecera);
     tvLineasOpe.DataController.Refresh;
     // Nueva operacion: ocultamos la fecha de deposito y volvemos a la vista
     // normal de columnas (% y Menos visibles, atributos ocultos) hasta que se
     // vuelva a cargar la cuenta del cliente con F2.
     tvFechaOperacion.Visible := False;
     MostrarColumnasCuentaCliente(False);
-    // 3. Vaciar la cabecera anterior y crear un registro nuevo
-    if DatosCaja.cdsCabecera.Active then
-    begin
-      DatosCaja.cdsCabecera.CancelUpdates;
-      DatosCaja.cdsCabecera.EmptyDataSet;
-      DatosCaja.cdsCabecera.Append;
-    end;
     lblNombreCliente.Caption := '';
     btnCodigoCliente.Text := '';
-    // 4. Aplicar valores base
+    // 3. Aplicar valores base.
     DatosCaja.cdsCabecera.FieldByName('FECHA_FAC').AsDateTime := FFecha;
     AplicarValoresPorDefecto(
       ConexionPrincipal,
       DatosCaja.cdsCabecera,
       'fza_facturas');
-    DatosCaja.cdsCabecera.FieldByName('CODIGO_EMP_FAC').AsString :=
-      FCodigoEmpresa;
-    DatosCaja.cdsCabecera.FieldByName('FECHA_FAC').AsDateTime := FFecha;
-    DatosCaja.cdsCabecera.FieldByName('TIPO_FAC').AsString := 'SIMPLIFICADA';
-    // --- 5. EVALUACIÓN DE PARÁMETROS DE INICIO ---
-    // A) Tarifa por defecto (como tenías en FormShow)
-    DatosCaja.cdsCabecera.FieldByName(
-                                  'TARIFA_ARTICULO_CLIENTE_FAC').AsString :=
-                                  ParametrosCaja.GetString('vgerDefTarifa', 'PVP');
+    EscribirCabeceraBaseOperacionVenta(
+      DatosCaja.cdsCabecera,
+      FCodigoEmpresa,
+      ParametrosCaja.GetString('vgerDefTarifa', 'PVP'),
+      FFecha);
     lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName(
                                     'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-    // B) Empleado: Mantenemos el anterior, o buscamos el parámetro por defecto
+    // 4. Mantener el empleado o aplicar el configurado por defecto.
     if EmpleadoAnterior <> '' then
     begin
       DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString :=
@@ -1008,7 +1003,7 @@ begin
             RellenarAtributosDesdeSku(sSku);
           if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
             DatosCaja.cdsLineas.Post;
-          GridRecalc(ConexionPrincipal,nil,
+          GridRecalc(ConexionPrincipal, FRepositorioLecturas, nil,
                      tvLineasOpe,
                      DatosCaja.cdsLineas,
                      DatosCaja.cdsCabecera,
@@ -1048,7 +1043,7 @@ begin
     else if not DatosCaja.cdsLineas.IsEmpty then
       DatosCaja.cdsLineas.Delete;
 
-    GridRecalc(ConexionPrincipal,nil,
+    GridRecalc(ConexionPrincipal, FRepositorioLecturas, nil,
                tvLineasOpe,
                DatosCaja.cdsLineas,
                DatosCaja.cdsCabecera,
@@ -1318,7 +1313,7 @@ begin
     ConfigCampo(unqryBusq.FindField('FECHA_HASTA_ARTTAR'),
                 'Hasta',                 'dd/mm/yyyy');
 
-    if TBusquedaUtils.EjecutarBusqueda(
+    if BusquedaVisual.EjecutarBusqueda(
       ConexionPrincipal,
       'Búsqueda de Artículos en Caja',
                                        unqryBusq,
@@ -1369,7 +1364,7 @@ begin
     if (NumAtributos > 0) and (SkuDetectado = CodigoPadre) then
     begin
       DatosCaja.cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency := 0;
-      GridRecalc(ConexionPrincipal,nil,
+      GridRecalc(ConexionPrincipal, FRepositorioLecturas, nil,
                  tvLineasOpe,
                  DatosCaja.cdsLineas,
                  DatosCaja.cdsCabecera,
@@ -1443,7 +1438,7 @@ begin
       'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
   end;
 
-  GridRecalc(ConexionPrincipal,Sender,
+  GridRecalc(ConexionPrincipal, FRepositorioLecturas, Sender,
              tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
@@ -1462,7 +1457,7 @@ begin
       'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
   end;
 
-  GridRecalc(ConexionPrincipal,Sender,
+  GridRecalc(ConexionPrincipal, FRepositorioLecturas, Sender,
              tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
@@ -1479,7 +1474,7 @@ begin
                      'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
   end;
 
-  GridRecalc(ConexionPrincipal,Sender,
+  GridRecalc(ConexionPrincipal, FRepositorioLecturas, Sender,
              tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
@@ -1488,7 +1483,7 @@ end;
 
 procedure TfrmMtoOpeCaja.tvTotalPropertiesEditValueChanged(Sender: TObject);
 begin
-  GridRecalc(ConexionPrincipal,Sender,
+  GridRecalc(ConexionPrincipal, FRepositorioLecturas, Sender,
              tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
@@ -1497,7 +1492,7 @@ end;
 
 procedure TfrmMtoOpeCaja.tvUdsPropertiesEditValueChanged(Sender: TObject);
 begin
-  GridRecalc(ConexionPrincipal,Sender,
+  GridRecalc(ConexionPrincipal, FRepositorioLecturas, Sender,
              tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
@@ -1687,7 +1682,8 @@ begin
       DatosCaja.cdsLineas.EnableControls;
     end;
     if Result and (not FActualizandoDepositos) then
-      GridRecalc(ConexionPrincipal,nil, tvLineasOpe, DatosCaja.cdsLineas,
+      GridRecalc(ConexionPrincipal, FRepositorioLecturas, nil,
+                 tvLineasOpe, DatosCaja.cdsLineas,
                  DatosCaja.cdsCabecera, ActualizarLabelTotal);
   finally
     Validador := nil;
@@ -1754,7 +1750,8 @@ begin
     DatosCaja.cdsLineas.FieldByName(
                           'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
 
-    GridRecalc(ConexionPrincipal,nil, tvLineasOpe, DatosCaja.cdsLineas,
+    GridRecalc(ConexionPrincipal, FRepositorioLecturas, nil,
+               tvLineasOpe, DatosCaja.cdsLineas,
                DatosCaja.cdsCabecera, ActualizarLabelTotal);
   finally
     Resolver := nil;
@@ -1802,7 +1799,7 @@ begin
           dsLineas.DataSet.DisableControls;
           Clon.Post;
           dsLineas.DataSet.EnableControls;
-          GridRecalc(ConexionPrincipal,nil,
+          GridRecalc(ConexionPrincipal, FRepositorioLecturas, nil,
                      tvLineasOpe,
                      DatosCaja.cdsLineas,
                      DatosCaja.cdsCabecera,
@@ -2644,7 +2641,7 @@ begin
         CargarDevolucionOtraEmpresa(
           Seleccion.Serie, Seleccion.Numero, Seleccion.Almacen);
       end;
-      GridRecalc(ConexionPrincipal, nil,
+      GridRecalc(ConexionPrincipal, FRepositorioLecturas, nil,
                  tvLineasOpe,
                  DatosCaja.cdsLineas,
                  DatosCaja.cdsCabecera,
@@ -2939,6 +2936,7 @@ procedure TfrmMtoOpeCaja.RecalcularLineasDesdeDM;
 begin
   GridRecalc(
     ConexionPrincipal,
+    FRepositorioLecturas,
     nil,
     tvLineasOpe,
     DatosCaja.cdsLineas,
@@ -3042,9 +3040,11 @@ begin
         AsegurarLineaNueva;
         // 3º Como paso final absoluto, pisamos la etiqueta leyendo la
         // memoria contable
-        Totales := TFacturaTotales.Create(ConexionPrincipal,
-                                          DatosCaja.cdsCabecera,
-                                          DatosCaja.cdsLineas);
+        Totales := TFacturaTotales.Create(
+          ConexionPrincipal,
+          FRepositorioLecturas,
+          DatosCaja.cdsCabecera,
+          DatosCaja.cdsLineas);
         try
           Totales.ProcesarFacturaCompleta;
           ActualizarLabelTotal(nil, Totales.Totales.TotalLiquido);
@@ -3230,6 +3230,8 @@ begin
     try
       if EnviarDocumentacionOperacion(
         ParametrosApp,
+        PreviewTicket,
+        UnidadesMedida,
         CrearRepositorioTraspasoTicket,
         CrearRepositorioTicketsCaja,
         ConexionPrincipal,
@@ -3280,6 +3282,7 @@ begin
   try
     ObjTotales := TFacturaTotales.Create(
       ConexionPrincipal,
+      FRepositorioLecturas,
       DatosCaja.cdsCabecera,
       DatosCaja.cdsLineas);
     ObjTotales.ProcesarFacturaCompleta;
@@ -3470,6 +3473,7 @@ begin
   // interna
   Totales := TFacturaTotales.Create(
     ConexionPrincipal,
+    FRepositorioLecturas,
     DatosCaja.cdsCabecera,
     DatosCaja.cdsLineas);
   try
@@ -3568,6 +3572,7 @@ end;
 procedure TfrmMtoOpeCaja.FormDestroy(Sender: TObject);
 begin
   dsStock.DataSet := nil;
+  FRepositorioLecturas := nil;
   FConsultaStock := nil;
   FServicioRectificacion := nil;
   FRepositorioConsultas := nil;
@@ -3597,8 +3602,8 @@ begin
     if sArt <> '' then
     begin
       imgFotoStock.Picture.Assign(nil);
-      info  := oFotos.Resolver(sArt, sSku);
-      sRuta := oFotos.RutaFoto(info, frPx300);
+      info  := FotosArticulos.Resolver(sArt, sSku);
+      sRuta := FotosArticulos.RutaFoto(info, frPx300);
       if sRuta <> '' then
       begin
         png := TPngImage.Create;
@@ -3659,6 +3664,8 @@ end;
 procedure TfrmMtoOpeCaja.FormCreate(Sender: TObject);
 begin
   inherited;
+  FRepositorioLecturas :=
+    CrearRepositorioLecturasFacturaUniDAC(ConexionPrincipal);
   // Detector del lector de codigo de barras (modo restaurar, con anti-eco para
   // la rejilla editable). Los parametros salen de la configuracion de caja.
   FLector := TLectorScanner.Create;
@@ -3681,7 +3688,7 @@ begin
   dsLineas.OnDataChange := DsLineasDataChange;
   ConstruirColumnasDinamicas;
   // Cantidad con decimales segun la unidad de cada linea (telas por metros...).
-  VincularCantidadGrid(tvUds, tvTipoCantidad);
+  VincularCantidadGrid(tvUds, tvTipoCantidad, UnidadesMedida);
   DatosCaja.OnUpdateTotal := ActualizarLabelTotal;
   DatosCaja.OnRellenarArticulo  := RellenarDatosArticuloEnDataset;
   DatosCaja.OnRellenarAtributos := RellenarAtributosDesdeSku;
@@ -3735,7 +3742,8 @@ begin
   // Ctrl+F12 -> resetear layout
   if (Key = VK_F12) and (ssCtrl in Shift) and not (ssAlt in Shift) then
   begin
-    ResetearLayout(Self.Name, PerfilesEscritura);
+    ResetearLayout(
+      Self.Name, PerfilesEscritura, SolicitudPermisoLayout);
     Key := 0;
   end;
 end;
@@ -4118,7 +4126,8 @@ procedure TfrmMtoOpeCaja.GuardarLayoutCaja;
 var
   Layout: TLayoutSaver;
 begin
-  Layout := TLayoutSaver.Create(Self.Name, PerfilesEscritura);
+  Layout := TLayoutSaver.Create(
+    Self.Name, PerfilesEscritura, SolicitudPermisoLayout);
   try
     Layout.GuardarGeometria(Self);
     Layout.GuardarAlturaPanel('StockPanelHeight', pnlBusqueda);

@@ -16,7 +16,7 @@ unit inLibFacturaePersistenciaIntf;
 interface
 
 uses
-  Data.DB, Uni;
+  System.SysUtils, Data.DB, Uni;
 
 type
   // Los TDataSet devueltos pertenecen al llamador.
@@ -32,35 +32,5 @@ type
     procedure GuardarXml(
       const ASerie, ANumero, AUsuario, AXml: string);
   end;
-  TFabricaCrearRepositorioFacturae = function(
-    AConexion: TUniConnection): IRepositorioFacturae;
-  TFabricaRepositorioFacturae = class
-  private
-    class var FFabrica: TFabricaCrearRepositorioFacturae;
-  public
-    class procedure Registrar(
-      AFabrica: TFabricaCrearRepositorioFacturae);
-    class function Crear(
-      AConexion: TUniConnection): IRepositorioFacturae;
-  end;
-
 implementation
-
-uses
-  System.SysUtils, inLibMsgFacturas;
-
-class procedure TFabricaRepositorioFacturae.Registrar(
-  AFabrica: TFabricaCrearRepositorioFacturae);
-begin
-  FFabrica := AFabrica;
-end;
-
-class function TFabricaRepositorioFacturae.Crear(
-  AConexion: TUniConnection): IRepositorioFacturae;
-begin
-  if not Assigned(FFabrica) then
-    raise Exception.Create(SErrorRepositorioFacturaeNoRegistrado);
-  Result := FFabrica(AConexion);
-end;
-
 end.

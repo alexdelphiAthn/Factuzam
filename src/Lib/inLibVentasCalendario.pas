@@ -44,7 +44,8 @@ uses
   Winapi.Windows,
   System.SysUtils, System.Classes, Generics.Collections,
   Vcl.Graphics, Vcl.ComCtrls,
-  Data.DB, Uni, System.UITypes;
+  Uni, System.UITypes,
+  inLibVentasCalendarioIntf;
 
 type
   // ---------------------------------------------------------------------------
@@ -71,6 +72,7 @@ type
   TVentasCalendarioCache = class
   private
     FConn: TUniConnection;
+    FRepositorio: IRepositorioVentasCalendario;
     FEmpresa: string;
     FAlmacen: string;
     FCaja: string;
@@ -85,7 +87,9 @@ type
     function CodigoMes(AYear, AMonth: Word): Integer; inline;
     procedure CargarMes(AYear, AMonth: Word);
   public
-    constructor Create(AConn: TUniConnection);
+    constructor Create(
+      AConn: TUniConnection;
+      const ARepositorio: IRepositorioVentasCalendario);
     destructor  Destroy; override;
     procedure Reconfigurar(const AEmpresa, AAlmacen, ACaja: string);
     procedure InvalidarTodo;
@@ -115,7 +119,7 @@ type
 implementation
 
 uses
-  System.DateUtils, inLibRectificativas;
+  System.DateUtils;
 
 // =============================================================================
 // TVentasDia
@@ -141,10 +145,13 @@ end;
 // TVentasCalendarioCache
 // =============================================================================
 
-constructor TVentasCalendarioCache.Create(AConn: TUniConnection);
+constructor TVentasCalendarioCache.Create(
+  AConn: TUniConnection;
+  const ARepositorio: IRepositorioVentasCalendario);
 begin
   inherited Create;
   FConn          := AConn;
+  FRepositorio   := ARepositorio;
   FDias          := TObjectDictionary<TDate, TVentasDia>.Create([doOwnsValues]);
   FMesesCargados := TList<Integer>.Create;
   // Estilo por defecto: día con ventas en negrita y fondo amarillo crema
@@ -215,7 +222,8 @@ end;
 
 procedure TVentasCalendarioCache.CargarMes(AYear, AMonth: Word);
 var
-  Query: TUniQuery;
+  Dias: TVentasDiasResumen;
+  Resumen: TVentasDiaResumen;
   PrimerDia, UltimoDia: TDate;
   IdMes: Integer;
   VentaDia: TVentasDia;
@@ -226,52 +234,22 @@ begin
   if FMesesCargados.Contains(IdMes) then Exit;
   PrimerDia := EncodeDate(AYear, AMonth, 1);
   UltimoDia := IncMonth(PrimerDia, 1);
-  Query := TUniQuery.Create(nil);
-  try
-    Query.Connection := FConn;
-    Query.SQL.Text :=
-      ' SELECT o.FECHA_OP_DIA_OPCAJA                AS FECHA,         ' +
-      '        COUNT(*)                      AS TOTAL_VENTAS,  ' +
-      '        COALESCE(SUM(CASE                               ' +
-      '                       WHEN o.TIPO_OPERACION_OPCAJA = ''VE'' ' +
-      '                       THEN o.IMPORTE_TOTAL_OPCAJA      ' +
-      '                       ELSE 0                           ' +
-      '                     END), 0)         AS TOTAL_COBRADO  ' +
-      '   FROM fza_caja_operaciones o                          ' +
-      '  WHERE o.FECHA_OP_DIA_OPCAJA         >= :fecha_inicio ' +
-      '    AND o.FECHA_OP_DIA_OPCAJA         <  :fecha_fin    ' +
-      '    AND o.CODIGO_EMP_OPCAJA = :empresa                 ' +
-      '    AND o.CODIGO_ALM_OPCAJA = :almacen                 ' +
-      '    AND o.CODIGO_CAJA_OPCAJA = :caja                   ' +
-      SQLExcluirVentaRetirada(
-        'o.CODIGO_EMP_OPCAJA',
-        'o.SERIE_FAC_OPCAJA',
-        'o.NUMERO_FAC_OPCAJA') +
-      '  GROUP BY o.FECHA_OP_DIA_OPCAJA                       ';
-    Query.ParamByName('fecha_inicio').AsDate  := PrimerDia;
-    Query.ParamByName('fecha_fin').AsDate     := UltimoDia;
-    Query.ParamByName('empresa').AsString     := FEmpresa;
-    Query.ParamByName('almacen').AsString     := FAlmacen;
-    Query.ParamByName('caja').AsString        := FCaja;
-    Query.Open;
-    try
-      while not Query.Eof do
-      begin
-        F := DateOf(Query.FieldByName('FECHA').AsDateTime);
-        VentaDia := TVentasDia.Create(
-                      F,
-                      Query.FieldByName('TOTAL_VENTAS').AsInteger,
-                      Query.FieldByName('TOTAL_COBRADO').AsCurrency);
-        FDias.AddOrSetValue(F, VentaDia);
-        Query.Next;
-      end;
-    finally
-      Query.Close;
-    end;
-    FMesesCargados.Add(IdMes);
-  finally
-    FreeAndNil(Query);
+  Dias := FRepositorio.CargarDiasConVentas(
+    FEmpresa,
+    FAlmacen,
+    FCaja,
+    PrimerDia,
+    UltimoDia);
+  for Resumen in Dias do
+  begin
+    F := DateOf(Resumen.Fecha);
+    VentaDia := TVentasDia.Create(
+                  F,
+                  Resumen.TotalVentas,
+                  Resumen.TotalCobrado);
+    FDias.AddOrSetValue(F, VentaDia);
   end;
+  FMesesCargados.Add(IdMes);
 end;
 
 function TVentasCalendarioCache.HasSales(const AFecha: TDate): Boolean;

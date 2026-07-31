@@ -238,7 +238,7 @@ begin
   begin
     try
       AgregarUnidadADocumentoTrabajo(Self, ConexionPrincipal,
-        ContextoSesion, ParametrosCaja, linea,
+        BusquedaVisual, ContextoSesion, ParametrosCaja, linea,
         CrearResolverArticulos(ConexionPrincipal));
     except
       on E: Exception do

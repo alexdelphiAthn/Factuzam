@@ -337,7 +337,8 @@ procedure TfrmMtoCajaParam.GuardarLayout;
 var
   Layout: TLayoutSaver;
 begin
-  Layout := TLayoutSaver.Create(Self.Name, PerfilesEscritura);
+  Layout := TLayoutSaver.Create(
+    Self.Name, PerfilesEscritura, SolicitudPermisoLayout);
   try
     Layout.GuardarGeometria(Self);
     Layout.GuardarDividerInspector('Divider', JvInspector1);

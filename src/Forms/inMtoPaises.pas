@@ -17,6 +17,7 @@ unit inMtoPaises;
 interface
 
 uses
+  inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoGen, dxSkinsCore,
@@ -71,5 +72,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoPaises);
   ForceReferenceToClass(TfrmMtoPaises);
 end.

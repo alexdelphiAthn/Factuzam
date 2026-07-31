@@ -18,6 +18,7 @@ unit UniDataAtributosBasicos;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
   inLibUser;
 
@@ -91,5 +92,6 @@ begin
 end;
 
 initialization
+  RegistrarDataModule(TdmAtributosBasicos);
   ForceReferenceToClass(TdmAtributosBasicos);
 end.

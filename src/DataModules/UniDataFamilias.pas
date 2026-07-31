@@ -18,6 +18,7 @@ unit UniDataFamilias;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
   Uni, inLibUser, UniDataConn, Windows, Dialogs, Variants;
 
@@ -231,5 +232,6 @@ begin
   end;
 end;
 initialization
+  RegistrarDataModule(TdmFamilias);
   ForceReferenceToClass(TdmFamilias);
 end.

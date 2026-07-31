@@ -37,7 +37,7 @@ uses
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
   inLibArticulosValidadorIntf, inLibArticulosAtributosIntf,
   inLibAtributosPaleta,
-  inLibContextoSesionIntf;
+  inLibContextoSesionIntf, inLibGenBusq;
 
 type
   // Nombres de los campos del cds que usa la controladora. Cada host los
@@ -69,6 +69,7 @@ type
     FColAtributo: array[1..5] of TcxGridDBColumn;
     FValidador: IArticulosValidador;
     FLookup: IArticulosAtributosLookup;
+    FBusquedaVisual: IBusquedaVisual;
     FOnResuelto: TArtResueltoEvent;
     // Aviso al host al entrar/salir de un editor in-place del grid.
     // Pensados para Desactivar/RestaurarEnterAsTabTemporal (TfrmBase):
@@ -206,6 +207,7 @@ type
     constructor Create(AConn: TUniConnection; AView: TcxGridDBTableView;
       ACds: TDataSet; const ACampos: TCamposGridArt;
       const AContextoSesion: IContextoSesionAplicacion;
+      const ABusquedaVisual: IBusquedaVisual;
       const AValidador: IArticulosValidador = nil;
       const ALookup: IArticulosAtributosLookup = nil);
     destructor Destroy; override;
@@ -237,7 +239,7 @@ type
 implementation
 
 uses
-  inLibGenBusq, inLibLog, inLibMsgArticulos;
+  inLibLog, inLibMsgArticulos;
 
 type
   // Acceso a OnExit (protegido en TWinControl) de los editores in-place
@@ -248,12 +250,14 @@ constructor TGridArticulosLineas.Create(AConn: TUniConnection;
   AView: TcxGridDBTableView; ACds: TDataSet;
   const ACampos: TCamposGridArt;
   const AContextoSesion: IContextoSesionAplicacion;
+  const ABusquedaVisual: IBusquedaVisual;
   const AValidador: IArticulosValidador;
   const ALookup: IArticulosAtributosLookup);
 begin
   inherited Create;
   FConn := AConn;
   FContextoSesion := AContextoSesion;
+  FBusquedaVisual := ABusquedaVisual;
   FView := AView;
   FCds := ACds;
   FCampos := ACampos;
@@ -1136,8 +1140,9 @@ begin
       ' ORDER BY STOCK DESC, a.CODIGO_ART_ART';
     Q.ParamByName('ALM').AsString := FAlmacenStock;
     Q.Open;
-    if TBusquedaUtils.EjecutarBusqueda(FConn, 'Búsqueda de artículos', Q,
-                                       'frmMtoArtTraspasoSearch') then
+    if FBusquedaVisual.EjecutarBusqueda(
+      FConn, 'Búsqueda de artículos', Q,
+      'frmMtoArtTraspasoSearch') then
     begin
       sArt := Q.FieldByName('ARTICULO').AsString;
       if ResolverEntrada(sArt) then

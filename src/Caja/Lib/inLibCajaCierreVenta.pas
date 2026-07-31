@@ -16,8 +16,9 @@ unit inLibCajaCierreVenta;
 interface
 
 uses
-  Uni, inLibParametrosIntf, inLibContextoSesionIntf,
-  inLibCajaVentaIntf;
+  inLibParametrosIntf, inLibContextoSesionIntf,
+  inLibCajaVentaIntf, inLibFacturasPersistenciaIntf,
+  inLibVentasWsColaIntf;
 
 type
   TServicioCierreVenta = class(TInterfacedObject, IServicioCierreVenta)
@@ -26,7 +27,8 @@ type
     FImpresor: IImpresorVenta;
     FParametrosCaja: IParametrosCaja;
     FContextoSesion: IContextoSesionAplicacion;
-    FConexion: TUniConnection;
+    FRepositorioPdf: IRepositorioPdfFactura;
+    FRepositorioVentasWs: IRepositorioVentasWsCola;
     procedure ArchivarPdf(
       const ARutaPdf: string);
     function PrepararImpresion(
@@ -39,7 +41,8 @@ type
       const AImpresor: IImpresorVenta;
       const AParametrosCaja: IParametrosCaja;
       const AContextoSesion: IContextoSesionAplicacion;
-      AConexion: TUniConnection);
+      const ARepositorioPdf: IRepositorioPdfFactura;
+      const ARepositorioVentasWs: IRepositorioVentasWsCola);
     function Ejecutar(
       const ASolicitud: TSolicitudCierreVenta
     ): TResultadoCierreVenta;
@@ -56,14 +59,16 @@ constructor TServicioCierreVenta.Create(
   const AImpresor: IImpresorVenta;
   const AParametrosCaja: IParametrosCaja;
   const AContextoSesion: IContextoSesionAplicacion;
-  AConexion: TUniConnection);
+  const ARepositorioPdf: IRepositorioPdfFactura;
+  const ARepositorioVentasWs: IRepositorioVentasWsCola);
 begin
   inherited Create;
   FGrabador := AGrabador;
   FImpresor := AImpresor;
   FParametrosCaja := AParametrosCaja;
   FContextoSesion := AContextoSesion;
-  FConexion := AConexion;
+  FRepositorioPdf := ARepositorioPdf;
+  FRepositorioVentasWs := ARepositorioVentasWs;
 end;
 
 procedure TServicioCierreVenta.ArchivarPdf(
@@ -76,13 +81,13 @@ begin
     sUsuario := FContextoSesion.Identidad.Usuario;
   TVentasWsCola.AdjuntarTicketPdfSeguro(
     FParametrosCaja,
-    FConexion,
+    FRepositorioVentasWs,
     sUsuario,
     FGrabador.UltimaSerieFacturaGrabada,
     FGrabador.UltimoNumeroFacturaGrabada,
     ARutaPdf);
   GuardarPdfFacturaEnBlob(
-    FConexion,
+    FRepositorioPdf,
     FContextoSesion,
     FGrabador.UltimaSerieFacturaGrabada,
     FGrabador.UltimoNumeroFacturaGrabada,

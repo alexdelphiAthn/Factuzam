@@ -245,8 +245,4 @@ begin
   Result := TRepositorioLecturasFacturaUniDAC.Create(AConexion);
 end;
 
-initialization
-  TFabricaRepositorioLecturasFactura.Registrar(
-    CrearRepositorioLecturasFacturaUniDAC);
-
 end.

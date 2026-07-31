@@ -16,6 +16,7 @@ unit inMtoTarifasCambios;
 interface
 
 uses
+  inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.UITypes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Menus, Data.DB,
@@ -614,5 +615,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoTarifasCambios);
   ForceReferenceToClass(TfrmMtoTarifasCambios);
 end.

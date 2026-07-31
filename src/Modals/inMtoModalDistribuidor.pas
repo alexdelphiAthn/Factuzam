@@ -42,7 +42,7 @@ uses
   inMtoModalAceptCancel, inLibGridTallasInline,
   cxCustomData, cxFilter, cxData, cxDataStorage, cxNavigator,
   dxDateRanges, dxScrollbarAnnotations,
-  JvComponentBase, JvEnterTab;
+  JvComponentBase, JvEnterTab, inLibDistribuidorTallas;
 
 type
   TfrmModalDistribuidor = class(TfrmModalAceptCancel)
@@ -131,23 +131,31 @@ type
                                AFila, AAlm, AAv, ACant: string);
   end;
 
+function CrearDistribuidorTallasVisualMto: IDistribuidorTallasVisual;
+
 implementation
 
 {$R *.dfm}
 
 uses
-  inLibLog, inLibDistribuidorTallas, inLibMsgArticulos,
+  inLibLog, inLibMsgArticulos,
   inLibMsgComun;
 
 type
-  TEjecutorDistribuidorTallasMto = class(TEjecutorDistribuidorTallas)
+  TDistribuidorTallasVisualMto = class(
+    TInterfacedObject,
+    IDistribuidorTallasVisual)
   public
-    class function Ejecutar(
+    function Ejecutar(
       const AParametros: TParametrosDistribuidorTallas): Boolean;
-      override;
   end;
 
-class function TEjecutorDistribuidorTallasMto.Ejecutar(
+function CrearDistribuidorTallasVisualMto: IDistribuidorTallasVisual;
+begin
+  Result := TDistribuidorTallasVisualMto.Create;
+end;
+
+function TDistribuidorTallasVisualMto.Ejecutar(
   const AParametros: TParametrosDistribuidorTallas): Boolean;
 var
   oFormulario: TfrmModalDistribuidor;
@@ -743,12 +751,5 @@ begin
   sFicha := 'N';
   PostMessage(Handle, WM_CLOSE, 0, 0);
 end;
-
-initialization
-  TDistribuidorTallas.RegistrarEjecutor(
-    TEjecutorDistribuidorTallasMto);
-
-finalization
-  TDistribuidorTallas.RegistrarEjecutor(nil);
 
 end.

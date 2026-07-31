@@ -20,6 +20,7 @@ unit inMtoAtributosBasicos;
 interface
 
 uses
+  inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   inMtoGen, dxSkinsCore, dxSkinsDefaultPainters, cxGraphics, cxControls,
@@ -191,5 +192,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoAtributosBasicos);
   ForceReferenceToClass(TfrmMtoAtributosBasicos);
 end.

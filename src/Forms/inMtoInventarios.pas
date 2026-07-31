@@ -17,6 +17,7 @@ unit inMtoInventarios;
 interface
 
 uses
+  inLibRegistroPantallas,
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, cxEdit, cxNavigator,
@@ -362,6 +363,7 @@ uses
   inLibMsgArticulos,
   inLibInventarioExcel, inLibHojaCalculoDevEx,
   inLibInventarioNube,
+  inLibInventariosEntrada,
   inMtoPreviewExcel,
   System.Diagnostics,
   inMtoModalAddBlockInventario,
@@ -846,6 +848,8 @@ begin
     dmmInventarios.cdsLineas, FModoEntradaSel,
     dsTablaG.DataSet.FieldByName(
       'CODIGO_ALM_INV').AsString, 'INVLIN');
+  Cfg.BusquedaVisual := BusquedaVisual;
+  Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
     CrearValidadorArticulos(Cfg.Conexion);
   Cfg.LookupAtributos :=
@@ -2073,7 +2077,7 @@ begin
                 'P. venta',              '#,##0.00 €');
     ConfigCampo(unqryBusq.FindField('TIPO_CANTIDAD_ART'),
                 'Tipo cant.',            '');
-    if TBusquedaUtils.EjecutarBusqueda(ConexionPrincipal,
+    if BusquedaVisual.EjecutarBusqueda(ConexionPrincipal,
          'Búsqueda de Artículos',
          unqryBusq,
          'frmMtoArtInvSearch') then
@@ -2162,7 +2166,7 @@ begin
                 'Stock',                 '#,##0.00');
     ConfigCampo(unqryBusq.FindField('PRECIO_MEDIO_STK'),
                 'PMP',                   '#,##0.0000');
-    if TBusquedaUtils.EjecutarBusqueda(ConexionPrincipal,
+    if BusquedaVisual.EjecutarBusqueda(ConexionPrincipal,
          'Búsqueda de SKUs',
          unqryBusq,
          'frmMtoInvSkuSearch',
@@ -2213,6 +2217,7 @@ var
   Encontrado: Boolean;
   CantTeo, PMPAct: Currency;
   NumAtr: Integer;
+  Decision: TDecisionEntradaInventario;
   swTotal, swTramo: TStopwatch;
   msResolver, msSetFieldsCabecera, msActColsDin,
   msSetFieldsSku, msRellenarDatosSku, msSetFieldsImporte,
@@ -2301,10 +2306,8 @@ begin
   // va a ejecutar a continuacion. Antes esa SQL se lanzaba dos veces para
   // el mismo articulo y se comia 12 s (6+6).
   swTramo := TStopwatch.StartNew;
-  dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString          :=
-    CodPadre;
-  dmmInventarios.cdsLineas.FieldByName(
-    'DESCRIPCION_ARTICULO_INVLIN').AsString := Desc;
+  EscribirArticuloLineaInventario(
+    dmmInventarios.cdsLineas, CodPadre, Desc);
   msSetFieldsCabecera := swTramo.ElapsedMilliseconds;
 
   // ActualizarColumnasDinamicas hace el unico hit a vi_atributos_nombres,
@@ -2319,71 +2322,32 @@ begin
   if not AsegurarEdicionLinea then
     Exit;
 
-  if CodSku <> '' then
+  Decision := ResolverEntradaInventario(CodPadre, CodSku, NumAtr);
+  swTramo := TStopwatch.StartNew;
+  dmmInventarios.cdsLineas.FieldByName(
+    'CODIGO_UNIDAD_INVLIN').AsString := Decision.CodigoUnidad;
+  AResolvedValue := Decision.CodigoUnidad;
+  msSetFieldsSku := swTramo.ElapsedMilliseconds;
+  if Decision.CargarStock then
   begin
-    // Match por SKU o codigo de barras: ya tenemos el SKU concreto
     swTramo := TStopwatch.StartNew;
-    dmmInventarios.cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString :=
-      CodSku;
-    AResolvedValue := CodSku;
-    msSetFieldsSku := swTramo.ElapsedMilliseconds;
-
-    swTramo := TStopwatch.StartNew;
-    dmmInventarios.RellenarDatosSku(CodSku, CantTeo, PMPAct);
+    dmmInventarios.RellenarDatosSku(
+      Decision.CodigoUnidad, CantTeo, PMPAct);
     msRellenarDatosSku := swTramo.ElapsedMilliseconds;
-
     swTramo := TStopwatch.StartNew;
-    dmmInventarios.cdsLineas.FieldByName(
-      'CANTIDAD_TEORICA_INVLIN').AsCurrency  := CantTeo;
-    dmmInventarios.cdsLineas.FieldByName(
-      'CANTIDAD_FISICA_INVLIN').AsCurrency   := CantTeo;
-    dmmInventarios.cdsLineas.FieldByName(
-      'PRECIO_MEDIO_INVLIN').AsCurrency      := PMPAct;
-    dmmInventarios.cdsLineas.FieldByName(
-      'PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency:= PMPAct;
+    EscribirStockLineaInventario(
+      dmmInventarios.cdsLineas,
+      Decision.CodigoUnidad,
+      CantTeo,
+      PMPAct);
     dmmInventarios.AsegurarFechaRecuentoLinea;
     msSetFieldsImporte := swTramo.ElapsedMilliseconds;
-
+  end;
+  if Decision.RellenarAtributos then
+  begin
     swTramo := TStopwatch.StartNew;
-    RellenarAtributosDesdeSku(CodSku);
+    RellenarAtributosDesdeSku(Decision.CodigoUnidad);
     msRellenarAtributos := swTramo.ElapsedMilliseconds;
-  end
-  else if NumAtr = 0 then
-  begin
-    // Articulo sin variaciones: SKU = codigo articulo
-    swTramo := TStopwatch.StartNew;
-    dmmInventarios.cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString :=
-      CodPadre;
-    AResolvedValue := CodPadre;
-    msSetFieldsSku := swTramo.ElapsedMilliseconds;
-
-    swTramo := TStopwatch.StartNew;
-    dmmInventarios.RellenarDatosSku(CodPadre, CantTeo, PMPAct);
-    msRellenarDatosSku := swTramo.ElapsedMilliseconds;
-
-    swTramo := TStopwatch.StartNew;
-    dmmInventarios.cdsLineas.FieldByName(
-      'CANTIDAD_TEORICA_INVLIN').AsCurrency  := CantTeo;
-    dmmInventarios.cdsLineas.FieldByName(
-      'CANTIDAD_FISICA_INVLIN').AsCurrency   := CantTeo;
-    dmmInventarios.cdsLineas.FieldByName(
-      'PRECIO_MEDIO_INVLIN').AsCurrency      := PMPAct;
-    dmmInventarios.cdsLineas.FieldByName(
-      'PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency:= PMPAct;
-    dmmInventarios.AsegurarFechaRecuentoLinea;
-    msSetFieldsImporte := swTramo.ElapsedMilliseconds;
-  end
-  else
-  begin
-    // Articulo padre con variaciones: el SKU empieza siendo el codigo del
-    // articulo (sin atributos todavia) para que el usuario tenga referencia
-    // visual de la linea. Cada vez que rellene un atributo, OnAtributoChanged
-    // reconstruira el SKU concatenando los valores.
-    swTramo := TStopwatch.StartNew;
-    dmmInventarios.cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString :=
-      CodPadre;
-    AResolvedValue := CodPadre;
-    msSetFieldsSku := swTramo.ElapsedMilliseconds;
   end;
 
   inLibLog.Log.LogPerf('RellenarLineaDesdeBusqueda',
@@ -3137,6 +3101,7 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoInventarios);
   ForceReferenceToClass(TfrmMtoInventarios);
 
 end.

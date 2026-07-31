@@ -22,7 +22,7 @@ uses
 
 function MaterializarAlbaranSesion(
   ADM: TdmComprasSesiones;
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  const ALecturas: TLecturasAlbaranesMaterializacion;
   const AUsuario, ASerie, AAlmacen: string):
   TDocumentoMaterializado;
 
@@ -32,6 +32,7 @@ uses
   System.SysUtils,
   Data.DB, DBAccess, Uni,
   inLibAlbaranesCompraMovimientos,
+  UniDataAlbaranesCompraMovimientos,
   inLibMsgCompras,
   inLibValoresAutomaticos,
   UniDataComprasSesionesArticulos,
@@ -426,7 +427,7 @@ end;
 procedure InsertarLineasAlbaranCompra(AConn: TUniConnection;
                                        ADM: TdmComprasSesiones;
                                        const ALecturas:
-                                       ILecturasMaterializacionComprasSesiones;
+                                       TLecturasAlbaranesMaterializacion;
                                        const ASerieSes, ANumSes,
                                              ASerieAlbc, ANumAlbc,
                                              AUsuario: string;
@@ -445,7 +446,7 @@ begin
     raise Exception.Create(SErrorAlmacenSesionParaAlbaranCompra);
   iLineaSeq := 0;
   oLineas := ConsultarLineasDocumentoCompra(
-    ALecturas,
+    ALecturas.Documentos,
     ASerieSes,
     ANumSes,
     sCodigoAlmCab,
@@ -466,13 +467,13 @@ begin
     if Trim(oLineas[iIndice].CodigoColor) <> '' then
       iIdAvFila := ResolverIdAvColorLinea(
         AConn,
-        ALecturas,
+        ALecturas.Articulos,
         oLineas[iIndice].ColorTexto,
         oLineas[iIndice].CodigoColor,
         AUsuario,
         sCodigoSku);
     sCodigoSku := ResolverCodigoSku(
-      ALecturas,
+      ALecturas.Articulos,
       sCodigoArt,
       iIdAvPivot,
       iIdAvFila);
@@ -584,7 +585,7 @@ end;
 
 function MaterializarAlbaranSesion(
   ADM: TdmComprasSesiones;
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  const ALecturas: TLecturasAlbaranesMaterializacion;
   const AUsuario, ASerie, AAlmacen: string):
   TDocumentoMaterializado;
 var
@@ -637,7 +638,7 @@ begin
     Result.Numero);
   inLibAlbaranesCompraMovimientos.
     GenerarMovimientosDesdeAlbaranCompra(
-      ADM.ConexionPrincipal,
+      CrearMovimientosAlbaranCompraUniDAC(ADM.ConexionPrincipal),
       Result.Serie,
       Result.Numero,
       AUsuario);

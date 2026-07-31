@@ -1,4 +1,4 @@
-﻿# Libro de estilo de programación Delphi de Factuzam
+# Libro de estilo de programación Delphi de Factuzam
 
 Manual práctico para añadir unidades, formularios, data modules, modales y
 librerías auxiliares respetando las convenciones del proyecto.
@@ -107,7 +107,6 @@ Estas unidades viven en `src/Core/` y nunca llevan prefijo `inMto<dominio>`:
 inMtoSplash        Pantalla de splash inicial
 inMtoLogon         Autenticación + configuración de conexión
 inMtoPrincipal     MDI principal con menú
-inMtoCatalogoPantallas Catálogo compilado de formularios y data modules
 inMtoFrmBase       Base de TODO formulario
 inMtoAppParam      Parametrización global
 inMtoCajaParam     Parametrización del TPV
@@ -600,13 +599,26 @@ end;
 
 ### 10.4 Registro de pantallas y data modules
 
-Las clases que abre `ShowMto` se registran por referencia compilada en
-`src/Core/inMtoCatalogoPantallas.pas`:
+Cada clase que abre `ShowMto` se registra por referencia compilada en la
+propia unidad que declara la clase:
+
+```pascal
+uses
+  inLibRegistroPantallas,
+  ...;
+
+initialization
+  RegistrarPantalla(TfrmMtoClientes);
+
+end.
+```
+
+El data module aplica el mismo patrón en `UniDataClientes.pas`:
 
 ```pascal
 initialization
-  RegistrarPantalla(TfrmMtoClientes);
   RegistrarDataModule(TdmClientes);
+
 end.
 ```
 
@@ -615,11 +627,12 @@ RTTI a partir de una cadena de BBDD ni se usa `NewInstance` manualmente.
 Al añadir una pantalla:
 
 1. Añadir las unidades al `.dpr` y al `.dproj`.
-2. Añadir ambas clases a `inMtoCatalogoPantallas`.
+2. Auto-registrar cada clase en el `initialization` de su propia unidad.
 3. Añadir o revisar la fila de `fza_winforms`.
 4. Conectar el ítem de menú a `MenuGenericoClick` si solo abre la pantalla.
 5. Comprobar al arrancar que `TfzaWinF.ComprobarRegistradas` no informa de
    clases ausentes.
+6. Ejecutar `scripts/comprobar_registro_pantallas.ps1`.
 
 `ForceReferenceToClass` es legado y no sustituye el registro. No se añade
 a unidades nuevas.
@@ -991,8 +1004,8 @@ Estas son convenciones que ya están en el código y que conviene
 8. **Nombres compuestos pegados en mayúsculas** cuando reflejan una columna
    de BBDD: `txtRAZONSOCIAL_CLIENTE` (no `txtRAZON_SOCIAL_CLIENTE`).
 9. **`FreeAndNil` sobre `Free`** — siempre.
-10. **Pantallas registradas en `inMtoCatalogoPantallas`** por referencia de
-    clase, no mediante RTTI construido con cadenas.
+10. **Pantallas auto-registradas en su propia unidad** por referencia de
+    clase, no mediante RTTI construido con cadenas ni catálogos agregadores.
 
 ---
 
@@ -1044,7 +1057,7 @@ La separación de capas y su comprobación automática se describen en §14.1.
    `TdmBase`, con `unqryTablaG` apuntando a la tabla nueva.
 4. Sobreescribe `CrearTablaPrincipal` y solo los hooks necesarios.
 5. Añade ambas unidades al `.dpr` y al `.dproj`.
-6. Registra las dos clases en `inMtoCatalogoPantallas`.
+6. Auto-registra cada clase en el `initialization` de su propia unidad.
 7. Configura `fza_winforms` y asigna `MenuGenericoClick` al ítem si solo
    abre la pantalla. No añadas un handler específico a `inMtoPrincipal`.
 8. Añade pruebas para toda regla de dominio nueva.
@@ -2020,7 +2033,7 @@ Cuando aparezca un prefijo de columna nuevo en `LIBRO_DE_ESTILO_BBDD.md`
 - [ ] Nombres de columna SQL en mayúsculas, tal cual viven en la BBDD.
 - [ ] Sin estado global mutable ni nuevas variables `frmMtoXxx`/`dmmXxx`.
 - [ ] Si es Mto: `CrearTablaPrincipal` y solo los hooks necesarios.
-- [ ] Si es Mto: clases registradas en `inMtoCatalogoPantallas`.
+- [ ] Si es Mto: clases auto-registradas en sus propias unidades.
 - [ ] Si abre desde menú: usa `MenuGenericoClick`, salvo lógica adicional.
 - [ ] Si es modal: expone `class function Ejecutar(...)`.
 - [ ] El modal no conoce al formulario llamador.

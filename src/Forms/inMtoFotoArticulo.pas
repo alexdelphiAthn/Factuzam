@@ -282,7 +282,8 @@ begin
   // Ctrl+F12 -> resetear layout
   if (Key = VK_F12) and (ssCtrl in Shift) and not (ssAlt in Shift) then
   begin
-    ResetearLayout(Self.Name, PerfilesEscritura);
+    ResetearLayout(
+      Self.Name, PerfilesEscritura, SolicitudPermisoLayout);
     Key := 0;
     Exit;
   end;
@@ -298,7 +299,8 @@ procedure TfrmFotoArticulo.GuardarLayout;
 var
   saver: TLayoutSaver;
 begin
-  saver := TLayoutSaver.Create(Self.Name, PerfilesEscritura);
+  saver := TLayoutSaver.Create(
+    Self.Name, PerfilesEscritura, SolicitudPermisoLayout);
   try
     saver.GuardarGeometria(Self);
     saver.GuardarValor('Resolucion', IntToStr(rgResolucion.ItemIndex));
@@ -385,9 +387,10 @@ begin
         // Sentinela COLOR=NONE: si el PNG no es por color, lo guardamos a
         // nivel articulo (CODIGO_UNIDAD = ''); si no, al nivel del combo.
         if Pos('_NONE_', UpperCase(ExtractFileName(sFile))) > 0 then
-          oFotos.Guardar(FCodigoArt, '', sFile, IdentidadSesion.Usuario)
+          FotosArticulos.Guardar(
+            FCodigoArt, '', sFile, IdentidadSesion.Usuario)
         else
-          oFotos.Guardar(FCodigoArt, sClave, sFile,
+          FotosArticulos.Guardar(FCodigoArt, sClave, sFile,
             IdentidadSesion.Usuario);
       end;
       // Re-resolver y refrescar la imagen que se muestra ahora mismo.
@@ -419,7 +422,7 @@ procedure TfrmFotoArticulo.SetArticuloSku(const ACodArt, ACodSku: string);
 begin
   FCodigoArt := ACodArt;
   FCodigoSku := ACodSku;
-  FUltimaInfo := oFotos.Resolver(ACodArt, ACodSku);
+  FUltimaInfo := FotosArticulos.Resolver(ACodArt, ACodSku);
   case FUltimaInfo.Origen of
     foSku        : lblOrigen.Caption :=
       Format(SCaptionFotoDelSku, [ACodSku]);
@@ -513,7 +516,8 @@ begin
   FRutaFotoActual := '';
   imgFoto.Picture.Assign(nil);
   if not FUltimaInfo.Encontrada then Exit;
-  FRutaFotoActual := oFotos.RutaFoto(FUltimaInfo, ResolucionElegida);
+  FRutaFotoActual := FotosArticulos.RutaFoto(
+    FUltimaInfo, ResolucionElegida);
   if FRutaFotoActual = '' then Exit;
   // Las tres copias son PNG. Cargamos via GDI+ y pintamos con remuestreo
   // bicubico de alta calidad (escala a la medida del control sin pixelar).
@@ -598,7 +602,7 @@ begin
   end;
   if not dlgAbrirFoto.Execute then Exit;
   try
-    oFotos.Guardar(FCodigoArt, '', dlgAbrirFoto.FileName,
+    FotosArticulos.Guardar(FCodigoArt, '', dlgAbrirFoto.FileName,
       IdentidadSesion.Usuario);
   except
     on E: Exception do
@@ -628,7 +632,7 @@ begin
   end;
   if not dlgAbrirFoto.Execute then Exit;
   try
-    oFotos.Guardar(FCodigoArt, sClave, dlgAbrirFoto.FileName,
+    FotosArticulos.Guardar(FCodigoArt, sClave, dlgAbrirFoto.FileName,
       IdentidadSesion.Usuario);
   except
     on E: Exception do
@@ -647,7 +651,7 @@ begin
   if MessageDlg(SPreguntaEliminarFotoActual, mtConfirmation,
                 [mbYes, mbNo], 0) <> mrYes then Exit;
   // Borramos exactamente la fila que resolvio (articulo, prefijo o SKU)
-  oFotos.Eliminar(FCodigoArt, FUltimaInfo.ClaveResuelta);
+  FotosArticulos.Eliminar(FCodigoArt, FUltimaInfo.ClaveResuelta);
   SetArticuloSku(FCodigoArt, FCodigoSku);
 end;
 
@@ -655,7 +659,7 @@ procedure TfrmFotoArticulo.btnRotarIzqClick(Sender: TObject);
 begin
   inherited;
   if not FUltimaInfo.Encontrada then Exit;
-  oFotos.Rotar(FCodigoArt, FCodigoSku, False,
+  FotosArticulos.Rotar(FCodigoArt, FCodigoSku, False,
     IdentidadSesion.Usuario);
   SetArticuloSku(FCodigoArt, FCodigoSku);
 end;
@@ -664,7 +668,7 @@ procedure TfrmFotoArticulo.btnRotarDerClick(Sender: TObject);
 begin
   inherited;
   if not FUltimaInfo.Encontrada then Exit;
-  oFotos.Rotar(FCodigoArt, FCodigoSku, True,
+  FotosArticulos.Rotar(FCodigoArt, FCodigoSku, True,
     IdentidadSesion.Usuario);
   SetArticuloSku(FCodigoArt, FCodigoSku);
 end;

@@ -23,6 +23,7 @@ unit UniDataMovimientosAlmacen;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
   inLibUser, UniDataConn, Vcl.Dialogs;
 
@@ -71,5 +72,6 @@ begin
 end;
 
 initialization
+  RegistrarDataModule(TdmMovimientosAlmacen);
   ForceReferenceToClass(TdmMovimientosAlmacen);
 end.

@@ -20,7 +20,7 @@ interface
 uses
   System.SysUtils, System.Classes, Data.DB, DBAccess, Uni,
   inLibContextoSesionIntf, inLibParametrosIntf,
-  inLibArticulosResolverIntf;
+  inLibArticulosResolverIntf, inLibGenBusq;
 
 type
   TResolverDocTrabajoArtSku = procedure(out ACodArt, ACodSku: string) of object;
@@ -41,6 +41,8 @@ type
 
 function AgregarUnidadADocumentoTrabajo(AOwner: TComponent;
                                         AConexion: TUniConnection;
+                                        const ABusquedaVisual:
+                                        IBusquedaVisual;
                                         const AContextoSesion:
                                         IContextoSesionAplicacion;
                                         const AParametrosCaja:
@@ -51,6 +53,8 @@ function AgregarUnidadADocumentoTrabajo(AOwner: TComponent;
                                         Boolean;
 function AgregarArticuloActivoADocumentoTrabajo(AOwner: TComponent;
                                                 AConexion: TUniConnection;
+                                                const ABusquedaVisual:
+                                                IBusquedaVisual;
                                                 const AContextoSesion:
                                                 IContextoSesionAplicacion;
                                                 const AParametrosCaja:
@@ -65,7 +69,7 @@ implementation
 
 uses
   Vcl.Dialogs, Vcl.Forms, Winapi.Windows,
-  inLibGenBusq, inLibMsgArticulos, inLibMsgVentas;
+  inLibMsgArticulos, inLibMsgVentas;
 
 procedure TDocTrabajoLineaOrigen.Clear;
 begin
@@ -131,6 +135,8 @@ end;
 
 function SeleccionarDocumentoTrabajo(AOwner: TComponent;
                                      AConexion: TUniConnection;
+                                     const ABusquedaVisual:
+                                     IBusquedaVisual;
                                      const AContextoSesion:
                                      IContextoSesionAplicacion;
                                      out AIdDtr: Int64): Boolean;
@@ -176,7 +182,7 @@ begin
       '   AND USUARIO_DTR = ' +
       QuotedStr(AContextoSesion.Identidad.Usuario) + ' ' +
       ' ORDER BY INSTANTE_DOCUMENTO_DTR DESC, ID_DTR DESC';
-    if TBusquedaUtils.EjecutarBusqueda(AConexion,
+    if ABusquedaVisual.EjecutarBusqueda(AConexion,
                                        'Documentos de Trabajo abiertos',
                                        sSql, 'ID_DTR', sId,
                                        'frmBuscarDocumentosTrabajo',
@@ -337,6 +343,8 @@ end;
 
 function AgregarUnidadADocumentoTrabajo(AOwner: TComponent;
                                         AConexion: TUniConnection;
+                                        const ABusquedaVisual:
+                                        IBusquedaVisual;
                                         const AContextoSesion:
                                         IContextoSesionAplicacion;
                                         const AParametrosCaja:
@@ -367,8 +375,8 @@ begin
   begin
     rLinea.Origen := 'MANUAL';
   end;
-  if SeleccionarDocumentoTrabajo(AOwner, AConexion, AContextoSesion,
-    iIdDtr) then
+  if SeleccionarDocumentoTrabajo(
+    AOwner, AConexion, ABusquedaVisual, AContextoSesion, iIdDtr) then
   begin
     InsertarLineaDocumentoTrabajo(AConexion, AContextoSesion, iIdDtr,
       rLinea);
@@ -381,6 +389,8 @@ end;
 
 function AgregarArticuloActivoADocumentoTrabajo(AOwner: TComponent;
                                                 AConexion: TUniConnection;
+                                                const ABusquedaVisual:
+                                                IBusquedaVisual;
                                                 const AContextoSesion:
                                                 IContextoSesionAplicacion;
                                                 const AParametrosCaja:
@@ -403,7 +413,7 @@ begin
   rLinea.Cantidad := 1;
   rLinea.Origen := 'MTO';
   Result := AgregarUnidadADocumentoTrabajo(AOwner, AConexion,
-    AContextoSesion, AParametrosCaja, rLinea,
+    ABusquedaVisual, AContextoSesion, AParametrosCaja, rLinea,
     AResolverArticulos);
 end;
 

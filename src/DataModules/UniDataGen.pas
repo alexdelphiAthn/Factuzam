@@ -21,7 +21,8 @@ uses
   System.SysUtils, System.Classes, System.TypInfo, Data.DB, MemDS, DBAccess,
   Uni, inLibUser, inLibWin, inLibLog, inLibAnfitrionDatosIntf,
   inLibAuditoriaDatosIntf, inLibConexionesIntf, inLibContextoSesionIntf,
-  inLibPerfilesUsuarioIntf, inLibParametrosIntf;
+  inLibPerfilesUsuarioIntf, inLibParametrosIntf,
+  inLibFotos, inLibUnidadesMedida;
 
 type
   TdmBase = class(
@@ -31,7 +32,9 @@ type
     IProveedorConexiones,
     IProveedorContextoSesion,
     IProveedorPerfilesUsuario,
-    IProveedorParametros
+    IProveedorParametros,
+    IProveedorFotosArticulos,
+    IProveedorUnidadesMedida
   )
     unqryTablaG: TUniQuery;
     unqryPerfiles: TUniQuery;
@@ -50,6 +53,8 @@ type
     FCachePerfiles: ICachePerfilesUsuario;
     FParametrosApp: IParametrosAplicacion;
     FParametrosCaja: IParametrosCaja;
+    FFotosArticulos: TFotosArticulos;
+    FUnidadesMedida: TUnidadesMedida;
     FOnActivarFicha: TNotifyEvent;
     function GetCurrentForm: TComponent;
     function GetAuditoriaDatos: IServicioAuditoriaDatos;
@@ -61,6 +66,8 @@ type
     function GetServiciosPerfilesUsuario: TServiciosPerfilesUsuario;
     function GetParametrosApp: IParametrosAplicacion;
     function GetParametrosCaja: IParametrosCaja;
+    function GetFotosArticulos: TFotosArticulos;
+    function GetUnidadesMedida: TUnidadesMedida;
     function GetConexionPrincipal: TUniConnection;
     procedure SetCurrentForm(const Value: TComponent);
     procedure HeredarAuditoriaDatos(AOwner: TComponent);
@@ -68,6 +75,8 @@ type
     procedure HeredarContextoSesion(AOwner: TComponent);
     procedure HeredarPerfilesUsuario(AOwner: TComponent);
     procedure HeredarParametros(AOwner: TComponent);
+    procedure HeredarFotosArticulos(AOwner: TComponent);
+    procedure HeredarUnidadesMedida(AOwner: TComponent);
   protected
     // DataSource de la cabecera (dsTablaG del Mto), empujado por el
     // form via AsignarMaestroCabecera.
@@ -92,6 +101,8 @@ type
       read GetPerfilesLectura;
     property ParametrosApp: IParametrosAplicacion read GetParametrosApp;
     property ParametrosCaja: IParametrosCaja read GetParametrosCaja;
+    property FotosArticulos: TFotosArticulos read GetFotosArticulos;
+    property UnidadesMedida: TUnidadesMedida read GetUnidadesMedida;
     property ConexionPrincipal: TUniConnection
       read GetConexionPrincipal;
     procedure AsignarAuditoriaDatos(
@@ -178,6 +189,8 @@ begin
   HeredarContextoSesion(AOwner);
   HeredarPerfilesUsuario(AOwner);
   HeredarParametros(AOwner);
+  HeredarFotosArticulos(AOwner);
+  HeredarUnidadesMedida(AOwner);
   inherited Create(AOwner);
 end;
 
@@ -355,6 +368,40 @@ begin
   Result := FPerfilesLectura;
 end;
 
+procedure TdmBase.HeredarFotosArticulos(AOwner: TComponent);
+var
+  Proveedor: IProveedorFotosArticulos;
+begin
+  FFotosArticulos := nil;
+  if Supports(AOwner, IProveedorFotosArticulos, Proveedor) then
+    FFotosArticulos := Proveedor.FotosArticulos;
+  if not Assigned(FFotosArticulos) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorFotosArticulos,
+       Proveedor) then
+    FFotosArticulos := Proveedor.FotosArticulos;
+end;
+
+procedure TdmBase.HeredarUnidadesMedida(AOwner: TComponent);
+var
+  Proveedor: IProveedorUnidadesMedida;
+begin
+  FUnidadesMedida := nil;
+  if Supports(AOwner, IProveedorUnidadesMedida, Proveedor) then
+    FUnidadesMedida := Proveedor.UnidadesMedida;
+  if not Assigned(FUnidadesMedida) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorUnidadesMedida,
+       Proveedor) then
+    FUnidadesMedida := Proveedor.UnidadesMedida;
+end;
+
 function TdmBase.GetServiciosPerfilesUsuario:
   TServiciosPerfilesUsuario;
 begin
@@ -372,6 +419,16 @@ end;
 function TdmBase.GetParametrosCaja: IParametrosCaja;
 begin
   Result := FParametrosCaja;
+end;
+
+function TdmBase.GetFotosArticulos: TFotosArticulos;
+begin
+  Result := FFotosArticulos;
+end;
+
+function TdmBase.GetUnidadesMedida: TUnidadesMedida;
+begin
+  Result := FUnidadesMedida;
 end;
 
 function TdmBase.GetConexionPrincipal: TUniConnection;

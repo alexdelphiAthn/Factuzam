@@ -22,7 +22,7 @@ uses
 
 function MaterializarPedidoSesion(
   ADM: TdmComprasSesiones;
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  const ALecturas: TLecturasPedidosMaterializacion;
   const AUsuario, ASerie, AAlmacen: string):
   TDocumentoMaterializado;
 
@@ -187,7 +187,7 @@ end;
 procedure InsertarLineasPedidoCompra(AConn: TUniConnection;
                                       ADM: TdmComprasSesiones;
                                       const ALecturas:
-                                      ILecturasMaterializacionComprasSesiones;
+                                      TLecturasPedidosMaterializacion;
                                       const ASerieSes, ANumSes,
                                             ASeriePedc, ANumPedc,
                                             AUsuario: string;
@@ -206,7 +206,7 @@ begin
     raise Exception.Create(SErrorAlmacenSesionParaPedidoCompra);
   iLineaSeq := 0;
   oLineas := ConsultarLineasDocumentoCompra(
-    ALecturas,
+    ALecturas.Documentos,
     ASerieSes,
     ANumSes,
     sCodigoAlmCab,
@@ -227,13 +227,13 @@ begin
     if Trim(oLineas[iIndice].CodigoColor) <> '' then
       iIdAvFila := ResolverIdAvColorLinea(
         AConn,
-        ALecturas,
+        ALecturas.Articulos,
         oLineas[iIndice].ColorTexto,
         oLineas[iIndice].CodigoColor,
         AUsuario,
         sCodigoSku);
     sCodigoSku := ResolverCodigoSku(
-      ALecturas,
+      ALecturas.Articulos,
       sCodigoArt,
       iIdAvPivot,
       iIdAvFila);
@@ -532,7 +532,7 @@ begin
 end;
 
 procedure ProcesarPendienteRecibirSesion(
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  const ALecturas: TLecturasPedidosMaterializacion;
   const APendiente: TPendienteRecibirMaterializacion;
   AOperacion: TUniQuery;
   const ASerieDocumento, ANumeroDocumento,
@@ -551,7 +551,7 @@ begin
       sCodigoArticulo := APendiente.CodigoArticuloTentativo;
     iIdFila := APendiente.IdAvFila;
     sCodigoSku := ResolverCodigoSku(
-      ALecturas,
+      ALecturas.Articulos,
       sCodigoArticulo,
       APendiente.IdAvPivot,
       iIdFila);
@@ -576,7 +576,7 @@ end;
 procedure GenerarPedidoPdteRecibir(AConn: TUniConnection;
                                     ADM: TdmComprasSesiones;
                                     const ALecturas:
-                                    ILecturasMaterializacionComprasSesiones;
+                                    TLecturasPedidosMaterializacion;
                                     const ASerieSes, ANumSes,
                                           ASerieDoc, ANumDoc,
                                           AUsuario: string);
@@ -602,7 +602,7 @@ begin
   if not ADM.unqryTablaG.FieldByName('FECHA_SES').IsNull then
     dFechaPedido :=
       ADM.unqryTablaG.FieldByName('FECHA_SES').AsDateTime;
-  oPendientes := ALecturas.ConsultarPendientesRecibir(
+  oPendientes := ALecturas.Pendientes.ConsultarPendientesRecibir(
     ASerieSes,
     ANumSes,
     sCodigoAlmCab);
@@ -665,7 +665,7 @@ end;
 
 function MaterializarPedidoSesion(
   ADM: TdmComprasSesiones;
-  const ALecturas: ILecturasMaterializacionComprasSesiones;
+  const ALecturas: TLecturasPedidosMaterializacion;
   const AUsuario, ASerie, AAlmacen: string):
   TDocumentoMaterializado;
 var

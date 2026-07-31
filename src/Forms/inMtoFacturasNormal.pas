@@ -19,6 +19,7 @@ unit inMtoFacturasNormal;
 interface
 
 uses
+  inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   inMtoFacturasBase, cxGraphics, cxControls, cxLookAndFeels,
@@ -57,7 +58,7 @@ type
 implementation
 
 uses
-  inLibFacturae, inLibMsgFacturas;
+  inLibFacturae, inLibMsgFacturas, UniDataFacturaeRepositorio;
 
 {$R *.dfm}
 
@@ -143,8 +144,9 @@ begin
     oDialogo.FileName := NombreArchivoFacturae(sSerie, sNumero);
     if oDialogo.Execute then
     begin
-      oResultado := EmitirFacturae(ConexionPrincipal, ContextoSesion,
-        sSerie, sNumero, oDialogo.FileName);
+      oResultado := EmitirFacturae(
+        CrearRepositorioFacturaeUniDAC(ConexionPrincipal),
+        ContextoSesion, sSerie, sNumero, oDialogo.FileName);
       dsTablaG.DataSet.Refresh;
       ShowMessage(Format(SInfoEdocEmitido, [oResultado.Archivo]));
     end;
@@ -164,5 +166,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoFacturasNormal);
   ForceReferenceToClass(TfrmMtoFacturasNormal);
 end.

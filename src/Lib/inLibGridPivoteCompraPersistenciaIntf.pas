@@ -16,18 +16,21 @@ unit inLibGridPivoteCompraPersistenciaIntf;
 interface
 
 uses
-  Data.DB, Uni;
+  Data.DB;
 
 type
   // Los TDataSet devueltos pertenecen al llamador.
-  IRepositorioGridPivoteCompra = interface
-    ['{E4AB84C4-D77E-4A31-8895-815211E2AFAB}']
+  IConfiguracionGridPivoteCompra = interface
+    ['{74BE05D2-B990-46BD-B796-BD73CA1264EA}']
     procedure Configurar(
       const ATablaLineas, ACampoSerie, ACampoNumero, ACampoLinea,
         ACampoArticulo, ACampoSku, ACampoCantidad,
         ACampoCantidadRecibida, ACampoIdConjunto, ACampoAlmacen,
         ACampoColorTexto: string;
       AMaximoColumnas: Integer);
+  end;
+  IRepositorioColoresPivoteCompra = interface
+    ['{EB069B21-D296-40A0-A738-49055F646E96}']
     function BuscarColorBasico(
       const ACodigo: string;
       out AIdBasico: Integer;
@@ -42,14 +45,23 @@ type
     function InsertarValorColor(
       const AValor, ADescripcion, AUsuario: string;
       AIdBasico: Integer): Integer;
+  end;
+  IRepositorioValidacionPivoteCompra = interface
+    ['{3C0BF26B-6DD3-40A2-9210-2B6A895839C4}']
     function BuscarArticulosSinSistema(
       const ASerie, ANumero: string): TDataSet;
     function BuscarSistemasConExceso(
       const ASerie, ANumero: string): TDataSet;
     function BuscarSkusFueraSistema(
       const ASerie, ANumero: string): TDataSet;
+  end;
+  IRepositorioLineasPivoteCompra = interface
+    ['{3B151CF3-A165-4CC1-8A18-48D74F25B1FA}']
     function BuscarLineasPivote(
       const ASerie, ANumero: string): TDataSet;
+  end;
+  IRepositorioSkusPivoteCompra = interface
+    ['{826305E6-26B4-4F76-B26E-3F122470C1C6}']
     function BuscarSku(
       const ACodigoArticulo: string;
       AIdTalla, AIdColor: Integer): string;
@@ -65,36 +77,12 @@ type
         AUsuario: string;
       AIdColor: Integer);
   end;
-  TFabricaCrearRepositorioGridPivoteCompra = function(
-    AConexion: TUniConnection): IRepositorioGridPivoteCompra;
-  TFabricaRepositorioGridPivoteCompra = class
-  private
-    class var FFabrica: TFabricaCrearRepositorioGridPivoteCompra;
-  public
-    class procedure Registrar(
-      AFabrica: TFabricaCrearRepositorioGridPivoteCompra);
-    class function Crear(
-      AConexion: TUniConnection): IRepositorioGridPivoteCompra;
+  TRepositoriosGridPivoteCompra = record
+    Configuracion: IConfiguracionGridPivoteCompra;
+    Colores: IRepositorioColoresPivoteCompra;
+    Validacion: IRepositorioValidacionPivoteCompra;
+    Lineas: IRepositorioLineasPivoteCompra;
+    Skus: IRepositorioSkusPivoteCompra;
   end;
-
 implementation
-
-uses
-  System.SysUtils, inLibMsgCompras;
-
-class procedure TFabricaRepositorioGridPivoteCompra.Registrar(
-  AFabrica: TFabricaCrearRepositorioGridPivoteCompra);
-begin
-  FFabrica := AFabrica;
-end;
-
-class function TFabricaRepositorioGridPivoteCompra.Crear(
-  AConexion: TUniConnection): IRepositorioGridPivoteCompra;
-begin
-  if not Assigned(FFabrica) then
-    raise Exception.Create(
-      SErrorPersistenciaGridPivoteCompraNoRegistrada);
-  Result := FFabrica(AConexion);
-end;
-
 end.

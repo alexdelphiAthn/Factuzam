@@ -236,6 +236,7 @@ begin
     FDatos.cdsLineas,
     Campos,
     ContextoSesion,
+    BusquedaVisual,
     CrearValidadorArticulos(ConexionPrincipal),
     CrearLookupAtributosArticulos(ConexionPrincipal));
   FGridCtrl.OnResuelto := GridResuelto;
@@ -416,8 +417,8 @@ begin
     FFotoImg.Picture.Assign(nil);
     if ACodArt <> '' then
     begin
-      info := oFotos.Resolver(ACodArt, ACodSku);
-      sRuta := oFotos.RutaFoto(info, frPx300);
+      info := FotosArticulos.Resolver(ACodArt, ACodSku);
+      sRuta := FotosArticulos.RutaFoto(info, frPx300);
       if sRuta <> '' then
       begin
         png := TPngImage.Create;
@@ -1028,6 +1029,7 @@ begin
     sSer := FQModalSolic.FieldByName('SERIE_TRSOL').AsString;
     if sNum <> '' then
       TTraspasoTicket.ImprimirSolicitud(
+        PreviewTicket,
         CrearRepositorioTraspasoTicket,
         sNum,
         sSer,
@@ -1121,7 +1123,7 @@ begin
   // solicitudes; los titulos los pone el formateador (fza_config_campos).
   Q := FDatos.QueryMisPeticiones(FAlmacen);
   try
-    TBusquedaUtils.EjecutarBusqueda(ConexionPrincipal,'Mis peticiones', Q,
+    BusquedaVisual.EjecutarBusqueda(ConexionPrincipal,'Mis peticiones', Q,
                                     'frmMtoSolicitudesSearch');
   finally
     FreeAndNil(Q);
@@ -1145,6 +1147,7 @@ begin
           ShowMessage(Format(SInfoSolicitudTraspasoEnviada, [sSer, sNum]));
           // Ticket de la solicitud: cada SKU con stock origen / destino.
           TTraspasoTicket.ImprimirSolicitud(
+                                            PreviewTicket,
                                             CrearRepositorioTraspasoTicket,
                                             sNum, sSer,
                                             ParametrosCaja.ImpresoraCaja);
@@ -1193,7 +1196,7 @@ begin
       ' WHERE ESACTIVO_EMPL = ''S''' +
       '   AND CODIGO_EMPL IS NOT NULL' +
       ' ORDER BY CODIGO_EMPL';
-    if TBusquedaUtils.EjecutarBusqueda(ConexionPrincipal,'Buscar empleado', Q,
+    if BusquedaVisual.EjecutarBusqueda(ConexionPrincipal,'Buscar empleado', Q,
                                        'frmMtoEmpCajSearch') then
     begin
       txtEmpleado.Text := Q.Fields[0].AsString;
@@ -1300,6 +1303,7 @@ begin
             ShowMessage(Format(SInfoSolicitudTraspasoAtendida, [sNumOp]));
             if AConTicket then
               TTraspasoTicket.ImprimirTraspaso(
+                PreviewTicket,
                 CrearRepositorioTraspasoTicket,
                 sNumOp,
                 sOrigen,
@@ -1330,6 +1334,7 @@ begin
         ShowMessage(Format(SInfoTraspasoGrabado, [sNumOp]));
         if AConTicket then
           TTraspasoTicket.ImprimirTraspaso(
+            PreviewTicket,
             CrearRepositorioTraspasoTicket,
             sNumOp,
             sOrigen,

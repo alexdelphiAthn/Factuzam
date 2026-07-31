@@ -16,6 +16,7 @@ unit inMtoRemesasVenta;
 interface
 
 uses
+  inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, System.UITypes, inMtoGen, dxSkinsCore,
@@ -574,5 +575,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoRemesasVenta);
   ForceReferenceToClass(TfrmMtoRemesasVenta);
 end.

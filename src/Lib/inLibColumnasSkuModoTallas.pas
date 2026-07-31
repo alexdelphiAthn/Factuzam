@@ -47,12 +47,14 @@ type
     FConfig: TConfigColumnasSku;
     FCfgTallas: TGridTallasConfig;
     FLookup: IArticulosAtributosLookup;
-    FPersistencia: IPersistenciaModoTallas;
-    FLineas: ILineasDocumentoTallas;
+    FPersistencias: TServiciosPersistenciaModoTallas;
+    FLineas: TServiciosLineasDocumentoTallas;
     // Referencia NO propietaria: el ciclo de vida lo lleva FLineas.
     FLineasCds: TLineasDocumentoTallasCds;
     FModelo: TModeloTallas;
     FPresentacion: TPresentacionModoTallas;
+    FFabricaPersistencia: TFabricaPersistenciaTallas;
+    FFabricaBusqueda: TFabricaBusquedaTallas;
     FOnResuelto: TSkuResueltoEvent;
     FOnEntrarEdicion: TNotifyEvent;
     FOnSalirEdicion: TNotifyEvent;
@@ -83,7 +85,9 @@ type
       const AResolucion: TArtResolucionEntrada);
   public
     constructor Create(const AConfig: TConfigColumnasSku;
-                       const ACfgTallas: TGridTallasConfig);
+                       const ACfgTallas: TGridTallasConfig;
+                       AFabricaPersistencia: TFabricaPersistenciaTallas;
+                       AFabricaBusqueda: TFabricaBusquedaTallas);
     destructor Destroy; override;
     procedure Construir(
       AOnResuelto: TSkuResueltoEvent;
@@ -102,11 +106,15 @@ uses
 
 constructor TModoEntradaTallas.Create(
   const AConfig: TConfigColumnasSku;
-  const ACfgTallas: TGridTallasConfig);
+  const ACfgTallas: TGridTallasConfig;
+  AFabricaPersistencia: TFabricaPersistenciaTallas;
+  AFabricaBusqueda: TFabricaBusquedaTallas);
 begin
   inherited Create;
   FConfig := AConfig;
   FCfgTallas := ACfgTallas;
+  FFabricaPersistencia := AFabricaPersistencia;
+  FFabricaBusqueda := AFabricaBusqueda;
   FLookup := AConfig.LookupAtributos;
   if not Assigned(FLookup) then
     raise Exception.Create(SErrorLookupAtributosNoInyectado);
@@ -125,8 +133,8 @@ begin
   end;
   FreeAndNil(FPresentacion);
   FreeAndNil(FModelo);
-  FLineas := nil;
-  FPersistencia := nil;
+  FLineas := Default(TServiciosLineasDocumentoTallas);
+  FPersistencias := Default(TServiciosPersistenciaModoTallas);
   FLookup := nil;
   inherited;
 end;
@@ -186,17 +194,19 @@ procedure TModoEntradaTallas.CrearColaboradores;
 var
   Busqueda: IBusquedaSkusTallas;
 begin
-  FPersistencia := TFabricaModoTallas.CrearPersistencia(
-    ConfigPersistencia);
-  Busqueda := TFabricaModoTallas.CrearBusqueda(FConfig.Conexion);
+  FPersistencias := FFabricaPersistencia(ConfigPersistencia);
+  Busqueda := FFabricaBusqueda(FConfig.Conexion);
   FLineasCds := TLineasDocumentoTallasCds.Create(FConfig.Cds,
                                                  CamposLineas);
   FLineasCds.Registro := LogSesion;
-  FLineas := FLineasCds;
-  FModelo := TModeloTallas.Create(FLookup, FPersistencia,
+  FLineas.Rederivacion := FLineasCds;
+  FLineas.Desmontaje := FLineasCds;
+  FLineas.Entrada := FLineasCds;
+  FLineas.Presentacion := FLineasCds;
+  FModelo := TModeloTallas.Create(FLookup, FPersistencias.Modelo,
     CrearSelectorAvPaleta(FConfig.Conexion), LogSesion);
   FPresentacion := TPresentacionModoTallas.Create(FConfig, FCfgTallas,
-    FLineas, FPersistencia, Busqueda, LogSesion);
+    FLineas.Presentacion, FPersistencias.Presentacion, Busqueda, LogSesion);
   FPresentacion.OnResolverEntrada := ResolverEntradaDiferida;
   FPresentacion.OnEntrarEdicion := EntrarEdicion;
   FPresentacion.OnSalirEdicion := SalirEdicion;
@@ -218,8 +228,8 @@ end;
 function TModoEntradaTallas.UnidadesDocumento: Double;
 begin
   Result := TModeloTallas.UnidadesDocumento(
-    FPersistencia.ConsultarTotalesPorLinea,
-    FLineas.CantidadesPorLinea);
+    FPersistencias.Entrada.ConsultarTotalesPorLinea,
+    FLineas.Entrada.CantidadesPorLinea);
 end;
 
 procedure TModoEntradaTallas.AtributosEscritos(
@@ -232,9 +242,9 @@ procedure TModoEntradaTallas.RederivarLineasExistentes;
 var
   Rederivacion: TRederivacionTallas;
 begin
-  Rederivacion := TRederivacionTallas.Create(FLineas, FPersistencia,
-    FModelo, FConfig.Distribuido, FPresentacion.AlmacenStock,
-    LogSesion, AtributosEscritos);
+  Rederivacion := TRederivacionTallas.Create(FLineas.Rederivacion,
+    FPersistencias.Rederivacion, FModelo, FConfig.Distribuido,
+    FPresentacion.AlmacenStock, LogSesion, AtributosEscritos);
   try
     Rederivacion.Ejecutar;
   finally
@@ -254,8 +264,8 @@ begin
               'celdas sin almacen no se migran')
   else
   begin
-    iMigradas := FPersistencia.MigrarCeldasFormato(FConfig.Distribuido,
-      Trim(FPresentacion.AlmacenStock));
+    iMigradas := FPersistencias.Entrada.MigrarCeldasFormato(
+      FConfig.Distribuido, Trim(FPresentacion.AlmacenStock));
     if iMigradas > 0 then
       LogSesion(Format('ModoTallas.MigrarCeldas: %d celdas ' +
         'unificadas (distribuido=%s)',
@@ -272,9 +282,9 @@ begin
   // de celdas; interrumpida a medias dejaba celdas ya sumadas con
   // lineas sin fusionar y cada reentrada volvia a sumar (cantidades
   // duplicadas y pedida disparada).
-  bTransaccionPropia := not FPersistencia.EnTransaccion;
+  bTransaccionPropia := not FPersistencias.Entrada.EnTransaccion;
   if bTransaccionPropia then
-    FPersistencia.IniciarTransaccion;
+    FPersistencias.Entrada.IniciarTransaccion;
   try
     rUnidadesAntes := UnidadesDocumento;
     // Lineas heredadas de otros modos / documento reabierto: derivar
@@ -289,10 +299,10 @@ begin
     TModeloTallas.ComprobarInvarianteUnidades('Construir',
       rUnidadesAntes, UnidadesDocumento, LogSesion);
     if bTransaccionPropia then
-      FPersistencia.ConfirmarTransaccion;
+      FPersistencias.Entrada.ConfirmarTransaccion;
   except
     if bTransaccionPropia then
-      FPersistencia.RevertirTransaccion;
+      FPersistencias.Entrada.RevertirTransaccion;
     raise;
   end;
 end;
@@ -310,7 +320,7 @@ begin
   // Hook AfterPost (como sesiones): recarga celdas tras el Post
   // implicito de cambiar de fila. Silenciado hasta acabar la carga
   // diferida para no recargar N veces en la conversion.
-  FLineas.IniciarProceso;
+  FLineas.Entrada.IniciarProceso;
   FLineasCds.EngancharHooks;
   ConvertirDocumento;
   FPresentacion.ProgramarCargaInicial;
@@ -322,8 +332,8 @@ var
 begin
   if (FConfig.Cds <> nil) and FConfig.Cds.Active then
   begin
-    Desmontaje := TDesmontajeTallas.Create(FLineas, FPersistencia,
-                                           FModelo, LogSesion);
+    Desmontaje := TDesmontajeTallas.Create(FLineas.Desmontaje,
+      FPersistencias.Desmontaje, FModelo, LogSesion);
     try
       Desmontaje.Ejecutar;
     finally
@@ -402,10 +412,10 @@ begin
     begin
       idAv := FModelo.IdAvDeTalla(AResolucion.CodigoArticulo,
                                   AAtributos.OrdenTalla, ATalla);
-      iLinea := FLineas.NumeroLineaActual;
+      iLinea := FLineas.Entrada.NumeroLineaActual;
       if idAv > 0 then
       begin
-        FPersistencia.SumarEnCelda(iLinea, idAv, 1, '');
+        FPersistencias.Entrada.SumarEnCelda(iLinea, idAv, 1, '');
         FPresentacion.RefrescarLineaActual(iLinea);
         FUltimaConTalla := True;
       end;
@@ -461,28 +471,28 @@ begin
         [Atributos.ConjuntoTalla, Atributos.OrdenTalla, sTalla]));
       // Almacen destino = el de la linea donde se tecleo. Se captura
       // ANTES del Cancel, que descartaria un cambio a medio editar.
-      sAlmacen := FLineas.AlmacenLineaActual(
+      sAlmacen := FLineas.Entrada.AlmacenLineaActual(
         FPresentacion.AlmacenStock);
       Alta := DatosAlta(Resolucion, Atributos, sAlmacen);
-      FLineas.CancelarEdicionPendiente;
+      FLineas.Entrada.CancelarEdicionPendiente;
       // CONSOLIDACION: una linea por articulo+almacen+atributos no
       // talla Y PRECIO. La fila donde se tecleo (normalmente la vacia)
       // se descarta si ya existe linea para esa combinacion.
-      if FLineas.LocalizarLineaConsolidable(FConfig.Distribuido,
+      if FLineas.Entrada.LocalizarLineaConsolidable(FConfig.Distribuido,
            Resolucion.CodigoArticulo, sAlmacen, Atributos.Valores,
            Alta.TienePrecio, Alta.Precio) then
         LogSesion(Format('ModoTallas.Resolver: consolidada en linea ' +
           '%d alm="%s" precio=%g',
-          [FLineas.NumeroLineaActual, sAlmacen, Alta.Precio]))
+          [FLineas.Entrada.NumeroLineaActual, sAlmacen, Alta.Precio]))
       else
       begin
         LogSesion(Format('ModoTallas.Resolver: linea nueva alm="%s" ' +
           'precio=%g', [sAlmacen, Alta.Precio]));
-        FLineas.AltaLineaResuelta(Alta);
+        FLineas.Entrada.AltaLineaResuelta(Alta);
         FPresentacion.MostrarColumnasAtributo(Atributos.Valores,
                                               Atributos.Nombres);
       end;
-      FLineas.ConfirmarEdicionPendiente;
+      FLineas.Entrada.ConfirmarEdicionPendiente;
       SumarTallaLeida(Resolucion, Atributos, sTalla);
       FPresentacion.ValidarSistemaSeleccionado;
       NotificarResuelto(Resolucion);

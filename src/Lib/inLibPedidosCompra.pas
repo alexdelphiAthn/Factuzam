@@ -19,7 +19,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
-  Data.DB, DBAccess, Uni, inLibGridPivoteCompra,
+  Data.DB, DBAccess, inLibGridPivoteCompra,
   inLibPedidosCompraIntf;
 
 type
@@ -29,16 +29,16 @@ type
     inLibPedidosCompraIntf.TResultadoRecepcionPedidoCompra;
 
 // Sincroniza los pendientes de recibir con el estado actual del pedido.
-procedure GenerarPdteRecibirDesdePedido(AConn: TUniConnection;
+procedure GenerarPdteRecibirDesdePedido(const APedidos: IPedidosCompra;
   const ASeriePedc, ANumPedc, AUsuario: string);
 
 // Borra los pendientes del pedido o únicamente los de una línea.
-procedure BorrarPdteRecibirDesdePedido(AConn: TUniConnection;
+procedure BorrarPdteRecibirDesdePedido(const APedidos: IPedidosCompra;
   const ASeriePedc, ANumPedc: string;
   const ALinea: string = '');
 
 // Crea un albarán con todo lo pendiente del almacén indicado.
-function CrearAlbaranDesdePedido(AConn: TUniConnection;
+function CrearAlbaranDesdePedido(const APedidos: IPedidosCompra;
   const ASeriePedc, ANumPedc, ACodigoAlm, ASerieAlbc,
     AUsuario, ARefPrv: string;
   AFechaRecepcion: TDateTime;
@@ -47,7 +47,7 @@ function CrearAlbaranDesdePedido(AConn: TUniConnection;
 
 // Crea un albarán con las cantidades explícitas de las celdas.
 function CrearAlbaranDesdePedidoConCantidades(
-  AConn: TUniConnection;
+  const APedidos: IPedidosCompra;
   const ASeriePedc, ANumPedc, ACodigoAlm, ASerieAlbc,
     AUsuario, ARefPrv: string;
   AFechaRecepcion: TDateTime;
@@ -56,11 +56,11 @@ function CrearAlbaranDesdePedidoConCantidades(
   out ANumAlbc, AMensaje: string): Boolean;
 
 // Devuelve la cantidad pendiente total del pedido.
-function CalcularPendienteTotal(AConn: TUniConnection;
+function CalcularPendienteTotal(const APedidos: IPedidosCompra;
   const ASeriePedc, ANumPedc: string): Double;
 
 // Incorpora todo lo pendiente a un albarán ya existente.
-function IncorporarAlbaranDesdePedido(AConn: TUniConnection;
+function IncorporarAlbaranDesdePedido(const APedidos: IPedidosCompra;
   const ASeriePedc, ANumPedc, ACodigoAlm,
     ASerieAlbcDestino, ANumAlbcDestino, AUsuario: string;
   AIdPvTemporada: Integer;
@@ -68,7 +68,7 @@ function IncorporarAlbaranDesdePedido(AConn: TUniConnection;
 
 // Incorpora las cantidades explícitas a un albarán ya existente.
 function IncorporarAlbaranDesdePedidoConCantidades(
-  AConn: TUniConnection;
+  const APedidos: IPedidosCompra;
   const ASeriePedc, ANumPedc, ACodigoAlm,
     ASerieAlbcDestino, ANumAlbcDestino, AUsuario: string;
   AIdPvTemporada: Integer;
@@ -76,44 +76,41 @@ function IncorporarAlbaranDesdePedidoConCantidades(
   out AMensaje: string): Boolean;
 
 // Ejecuta la recepción completa dentro de una única transacción.
-function EjecutarRecepcionPedidoCompra(AConn: TUniConnection;
+function EjecutarRecepcionPedidoCompra(const APedidos: IPedidosCompra;
   const AParametros: TParametrosRecepcionPedidoCompra;
   out AResultado: TResultadoRecepcionPedidoCompra): Boolean;
 
 implementation
 
-procedure GenerarPdteRecibirDesdePedido(AConn: TUniConnection;
+procedure GenerarPdteRecibirDesdePedido(const APedidos: IPedidosCompra;
   const ASeriePedc, ANumPedc, AUsuario: string);
 begin
-  TFabricaPedidosCompra.Crear(AConn).
-    GenerarPdteRecibirDesdePedido(
-      ASeriePedc, ANumPedc, AUsuario);
+  APedidos.GenerarPdteRecibirDesdePedido(
+    ASeriePedc, ANumPedc, AUsuario);
 end;
 
-procedure BorrarPdteRecibirDesdePedido(AConn: TUniConnection;
+procedure BorrarPdteRecibirDesdePedido(const APedidos: IPedidosCompra;
   const ASeriePedc, ANumPedc, ALinea: string);
 begin
-  TFabricaPedidosCompra.Crear(AConn).
-    BorrarPdteRecibirDesdePedido(
-      ASeriePedc, ANumPedc, ALinea);
+  APedidos.BorrarPdteRecibirDesdePedido(
+    ASeriePedc, ANumPedc, ALinea);
 end;
 
-function CrearAlbaranDesdePedido(AConn: TUniConnection;
+function CrearAlbaranDesdePedido(const APedidos: IPedidosCompra;
   const ASeriePedc, ANumPedc, ACodigoAlm, ASerieAlbc,
     AUsuario, ARefPrv: string;
   AFechaRecepcion: TDateTime;
   AIdPvTemporada: Integer;
   out ANumAlbc, AMensaje: string): Boolean;
 begin
-  Result := TFabricaPedidosCompra.Crear(AConn).
-    CrearAlbaranDesdePedido(
+  Result := APedidos.CrearAlbaranDesdePedido(
       ASeriePedc, ANumPedc, ACodigoAlm, ASerieAlbc,
       AUsuario, ARefPrv, AFechaRecepcion, AIdPvTemporada,
       ANumAlbc, AMensaje);
 end;
 
 function CrearAlbaranDesdePedidoConCantidades(
-  AConn: TUniConnection;
+  const APedidos: IPedidosCompra;
   const ASeriePedc, ANumPedc, ACodigoAlm, ASerieAlbc,
     AUsuario, ARefPrv: string;
   AFechaRecepcion: TDateTime;
@@ -121,54 +118,50 @@ function CrearAlbaranDesdePedidoConCantidades(
   const ACeldas: TArray<TCeldaARecibir>;
   out ANumAlbc, AMensaje: string): Boolean;
 begin
-  Result := TFabricaPedidosCompra.Crear(AConn).
-    CrearAlbaranDesdePedidoConCantidades(
+  Result := APedidos.CrearAlbaranDesdePedidoConCantidades(
       ASeriePedc, ANumPedc, ACodigoAlm, ASerieAlbc,
       AUsuario, ARefPrv, AFechaRecepcion, AIdPvTemporada,
       ACeldas, ANumAlbc, AMensaje);
 end;
 
-function CalcularPendienteTotal(AConn: TUniConnection;
+function CalcularPendienteTotal(const APedidos: IPedidosCompra;
   const ASeriePedc, ANumPedc: string): Double;
 begin
-  Result := TFabricaPedidosCompra.Crear(AConn).
-    CalcularPendienteTotal(ASeriePedc, ANumPedc);
+  Result := APedidos.CalcularPendienteTotal(ASeriePedc, ANumPedc);
 end;
 
-function IncorporarAlbaranDesdePedido(AConn: TUniConnection;
+function IncorporarAlbaranDesdePedido(const APedidos: IPedidosCompra;
   const ASeriePedc, ANumPedc, ACodigoAlm,
     ASerieAlbcDestino, ANumAlbcDestino, AUsuario: string;
   AIdPvTemporada: Integer;
   out AMensaje: string): Boolean;
 begin
-  Result := TFabricaPedidosCompra.Crear(AConn).
-    IncorporarAlbaranDesdePedido(
+  Result := APedidos.IncorporarAlbaranDesdePedido(
       ASeriePedc, ANumPedc, ACodigoAlm,
       ASerieAlbcDestino, ANumAlbcDestino, AUsuario,
       AIdPvTemporada, AMensaje);
 end;
 
 function IncorporarAlbaranDesdePedidoConCantidades(
-  AConn: TUniConnection;
+  const APedidos: IPedidosCompra;
   const ASeriePedc, ANumPedc, ACodigoAlm,
     ASerieAlbcDestino, ANumAlbcDestino, AUsuario: string;
   AIdPvTemporada: Integer;
   const ACeldas: TArray<TCeldaARecibir>;
   out AMensaje: string): Boolean;
 begin
-  Result := TFabricaPedidosCompra.Crear(AConn).
-    IncorporarAlbaranDesdePedidoConCantidades(
+  Result := APedidos.IncorporarAlbaranDesdePedidoConCantidades(
       ASeriePedc, ANumPedc, ACodigoAlm,
       ASerieAlbcDestino, ANumAlbcDestino, AUsuario,
       AIdPvTemporada, ACeldas, AMensaje);
 end;
 
-function EjecutarRecepcionPedidoCompra(AConn: TUniConnection;
+function EjecutarRecepcionPedidoCompra(const APedidos: IPedidosCompra;
   const AParametros: TParametrosRecepcionPedidoCompra;
   out AResultado: TResultadoRecepcionPedidoCompra): Boolean;
 begin
-  Result := TFabricaPedidosCompra.Crear(AConn).
-    EjecutarRecepcionPedidoCompra(AParametros, AResultado);
+  Result := APedidos.EjecutarRecepcionPedidoCompra(
+    AParametros, AResultado);
 end;
 
 end.

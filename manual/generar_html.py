@@ -39,6 +39,8 @@ ORDEN = [
     ('10-migracion-legacy.md', '10-migracion-legacy.html', '10 · Migración desde legacy'),
     ('11-verifactu.md', '11-verifactu.html', '11 · Verifactu (AEAT)'),
     ('12-cambios-y-novedades.md', '12-cambios-y-novedades.html', '12 · Cambios y novedades'),
+    ('13-aplicaciones-moviles.md', '13-aplicaciones-moviles.html', '13 · Aplicaciones móviles'),
+    ('14-arquitectura-y-desarrollo.md', '14-arquitectura-y-desarrollo.html', '14 · Arquitectura y desarrollo'),
 ]
 MD2HTML = {md: dst for md, dst, _ in ORDEN}
 

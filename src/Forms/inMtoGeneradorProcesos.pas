@@ -17,6 +17,7 @@ unit inMtoGeneradorProcesos;
 interface
 
 uses
+  inLibRegistroPantallas,
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, cxGraphics, cxControls, cxLookAndFeels, Math, strUtils, DAScript,
   cxLookAndFeelPainters, cxStyles, dxSkinsCore, System.Generics.Collections,
@@ -1885,6 +1886,7 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoGeneradorProcesos);
   ForceReferenceToClass(TfrmMtoGeneradorProcesos);
 
 end.

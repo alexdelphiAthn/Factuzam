@@ -62,7 +62,7 @@ type
 implementation
 
 uses
-  System.DateUtils, inLibRectificativas,
+  System.DateUtils, UniDataRectificativasSql,
   inLibCatalogoSqlEjecucion,
   UniDataCatalogoSqlValidacion;
 

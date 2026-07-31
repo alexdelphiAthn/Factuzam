@@ -17,6 +17,7 @@ unit inMtoFormasdePago;
 interface
 
 uses
+  inLibRegistroPantallas,
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxStyles, dxSkinsCore, dxSkinBlue,
@@ -385,5 +386,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoFormasdePago);
   ForceReferenceToClass(TfrmMtoFormasdePago);
 end.

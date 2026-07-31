@@ -17,6 +17,7 @@ unit inMtoDepositosCliente;
 interface
 
 uses
+  inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoGen, dxSkinsCore,
@@ -81,7 +82,8 @@ procedure TfrmMtoDepositosCliente.FormCreate(Sender: TObject);
 begin
   inherited;
   // Foto embebida del articulo / SKU de la fila activa de dsTablaG.
-  FFotoEmb := TFotoEmbebida.Create(imgFotoDep, dsTablaG);
+  FFotoEmb := TFotoEmbebida.Create(
+    FotosArticulos, imgFotoDep, dsTablaG);
 end;
 
 procedure TfrmMtoDepositosCliente.FormDestroy(Sender: TObject);
@@ -120,5 +122,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoDepositosCliente);
   ForceReferenceToClass(TfrmMtoDepositosCliente);
 end.

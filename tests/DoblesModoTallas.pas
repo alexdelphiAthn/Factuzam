@@ -48,7 +48,11 @@ type
   // Persistencia de celdas en memoria. Registra las operaciones para
   // que la prueba compruebe QUE se llamo y con que datos.
   TPersistenciaTallasMemoria = class(TInterfacedObject,
-                                     IPersistenciaModoTallas)
+                                     IPersistenciaModeloTallas,
+                                     IPersistenciaRederivacionTallas,
+                                     IPersistenciaDesmontajeTallas,
+                                     IPersistenciaEntradaTallas,
+                                     IPersistenciaPresentacionTallas)
   private
     FCeldas: TList<TCeldaMemoria>;
     FConjuntoPorAvs: Integer;
@@ -106,7 +110,10 @@ type
   end;
   // Lineas del documento en memoria.
   TLineasTallasMemoria = class(TInterfacedObject,
-                               ILineasDocumentoTallas)
+                               ILineasRederivacionTallas,
+                               ILineasDesmontajeTallas,
+                               ILineasEntradaTallas,
+                               ILineasPresentacionTallas)
   private
     FLineas: TList<TLineaMemoria>;
     FPosicion: Integer;

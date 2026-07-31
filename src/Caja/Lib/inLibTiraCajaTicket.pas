@@ -32,7 +32,8 @@ interface
 uses
   System.SysUtils, System.Classes,
   inLibFTicket, inLibParametrosIntf,
-  inLibTiraCajaTicketIntf;
+  inLibTiraCajaTicketIntf, inLibPreviewExcel,
+  inLibPreviewTicket;
 
 type
   TTiraCajaTicket = class
@@ -102,6 +103,7 @@ type
                                  : TArray<string>;
     class procedure Imprimir(
                              const AParametrosApp: IParametrosAplicacion;
+                             const APreview: IPreviewTicket;
                              const ARepositorio:
                              IRepositorioTiraCajaTicket;
                              const AEmpresa, AAlmacen, ACaja: string;
@@ -118,7 +120,10 @@ type
     // Vuelca las mismas operaciones de la tira a una hoja de cálculo y la abre
     // en el visor de Excel (TfrmMtoPreviewExcel), con detalle por línea y el
     // mismo orden / agrupamiento que la impresión.
-    class procedure ExportarExcel(AOwner: TComponent;
+    class procedure ExportarExcel(
+                                  AOwner: TComponent;
+                                  const AProveedorPreview:
+                                  IProveedorPreviewExcel;
                                   const ARepositorio:
                                   IRepositorioTiraCajaTicket;
                                   const AEmpresa, AAlmacen, ACaja: string;
@@ -138,8 +143,8 @@ uses
   Vcl.Forms,
   dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetGraphics,
   dxSpreadSheetTypes, dxSpreadSheetStyles, dxHashUtils,
-  inLibPreviewTicket, inLibDir, inLibFormatoDocumento, inLibVerifactu,
-  inLibPreviewExcel, inLibDevExcel, inLibRectificativas,
+  inLibDir, inLibFormatoDocumento, inLibVerifactu,
+  inLibDevExcel,
   inLibMsgTickets;
 
 // =============================================================================
@@ -532,6 +537,7 @@ end;
 
 class procedure TTiraCajaTicket.Imprimir(
   const AParametrosApp: IParametrosAplicacion;
+  const APreview: IPreviewTicket;
   const ARepositorio: IRepositorioTiraCajaTicket;
   const AEmpresa, AAlmacen, ACaja: string;
   AFechaDesde, AFechaHasta: TDate;
@@ -813,7 +819,7 @@ begin
     ComandosESC := Ticket.ObtenerComandos;
     RutaPDF := GetUserFolderTickets + 'TiraCaja_' +
                FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-    ImprimirOPrevisualizarTicket(Ticket, ComandosESC, RutaPDF,
+    ImprimirOPrevisualizarTicket(APreview, Ticket, ComandosESC, RutaPDF,
                                  ANombreImpresora);
   finally
     FreeAndNil(Ticket);
@@ -836,6 +842,7 @@ type
   TExportadorTiraCajaExcel = class
   private
     FPropietario: TComponent;
+    FProveedorPreview: IProveedorPreviewExcel;
     FRepositorio: IRepositorioTiraCajaTicket;
     FEmpresa: string;
     FAlmacen: string;
@@ -881,6 +888,7 @@ type
   public
     constructor Create(
       APropietario: TComponent;
+      const AProveedorPreview: IProveedorPreviewExcel;
       const ARepositorio: IRepositorioTiraCajaTicket;
       const AEmpresa, AAlmacen, ACaja: string;
       AFechaDesde, AFechaHasta: TDate; const ASeries: TArray<string>;
@@ -890,6 +898,7 @@ type
   end;
 
 constructor TExportadorTiraCajaExcel.Create(APropietario: TComponent;
+  const AProveedorPreview: IProveedorPreviewExcel;
   const ARepositorio: IRepositorioTiraCajaTicket;
   const AEmpresa, AAlmacen, ACaja: string;
   AFechaDesde, AFechaHasta: TDate; const ASeries: TArray<string>;
@@ -898,6 +907,7 @@ constructor TExportadorTiraCajaExcel.Create(APropietario: TComponent;
 begin
   inherited Create;
   FPropietario := APropietario;
+  FProveedorPreview := AProveedorPreview;
   FRepositorio := ARepositorio;
   FEmpresa := AEmpresa;
   FAlmacen := AAlmacen;
@@ -1246,7 +1256,7 @@ end;
 
 procedure TExportadorTiraCajaExcel.Ejecutar;
 begin
-  FPreview := TPreviewExcel.Crear(FPropietario);
+  FPreview := FProveedorPreview.Crear(FPropietario);
   try
     if FPreview.HojaCalculo.SheetCount = 0 then
       FPreview.HojaCalculo.AddSheet(
@@ -1273,6 +1283,7 @@ begin
 end;
 
 class procedure TTiraCajaTicket.ExportarExcel(AOwner: TComponent;
+  const AProveedorPreview: IProveedorPreviewExcel;
   const ARepositorio: IRepositorioTiraCajaTicket;
   const AEmpresa, AAlmacen, ACaja: string;
   AFechaDesde, AFechaHasta: TDate; const ASeries: TArray<string>;
@@ -1284,6 +1295,7 @@ var
 begin
   oExportador := TExportadorTiraCajaExcel.Create(
     AOwner,
+    AProveedorPreview,
     ARepositorio,
     AEmpresa,
     AAlmacen,

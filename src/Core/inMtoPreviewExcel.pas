@@ -32,7 +32,8 @@ uses
   Vcl.Menus, Vcl.StdCtrls, cxButtons, Vcl.ExtCtrls, dxSpreadSheet,
   JvComponentBase, JvEnterTab, cxClasses, cxLocalization, dxShellDialogs,
   dxSpreadSheetFormulaBar, dxSpreadSheetFunctionsStatistical,
-  dxSpreadSheetFunctionsMath, System.Actions, Vcl.ActnList;
+  dxSpreadSheetFunctionsMath, System.Actions, Vcl.ActnList,
+  inLibPreviewExcel;
 
 type
   TfrmMtoPreviewExcel = class(TfrmBase)
@@ -57,10 +58,12 @@ type
     { Public declarations }
   end;
 
+function CrearProveedorPreviewExcelMto: IProveedorPreviewExcel;
+
 implementation
 
 uses
-  inLibFormatoExcel, inLibPreviewExcel, inLibMsgComun;
+  inLibFormatoExcel, inLibMsgComun;
 
 type
   TSesionPreviewExcelMto = class(TSesionPreviewExcel)
@@ -75,10 +78,11 @@ type
     procedure Mostrar; override;
   end;
 
-  TProveedorPreviewExcelMto = class(TProveedorPreviewExcel)
+  TProveedorPreviewExcelMto = class(
+    TInterfacedObject,
+    IProveedorPreviewExcel)
   public
-    class function Crear(AOwner: TComponent): TSesionPreviewExcel;
-      override;
+    function Crear(AOwner: TComponent): TSesionPreviewExcel;
   end;
 
 {$R *.dfm}
@@ -117,7 +121,12 @@ begin
   FFormulario.ShowModal;
 end;
 
-class function TProveedorPreviewExcelMto.Crear(
+function CrearProveedorPreviewExcelMto: IProveedorPreviewExcel;
+begin
+  Result := TProveedorPreviewExcelMto.Create;
+end;
+
+function TProveedorPreviewExcelMto.Crear(
   AOwner: TComponent): TSesionPreviewExcel;
 begin
   Result := TSesionPreviewExcelMto.Create(AOwner);
@@ -204,11 +213,5 @@ begin
   MaximizarVentana;
   Msg.Result := 0;
 end;
-
-initialization
-  TPreviewExcel.RegistrarProveedor(TProveedorPreviewExcelMto);
-
-finalization
-  TPreviewExcel.RegistrarProveedor(nil);
 
 end.

@@ -88,7 +88,11 @@ type
   end;
   TLecturasMaterializacionComprasSesionesMemoria = class(
     TInterfacedObject,
-    ILecturasMaterializacionComprasSesiones)
+    ILecturasArticulosMaterializacion,
+    ILecturasDocumentosMaterializacion,
+    ILecturasEstadoMaterializacion,
+    ILecturasPendientesMaterializacion,
+    ILecturasReversionMaterializacion)
   private
     FAlmacenes: TArray<string>;
     function ObtenerSiguienteSecuenciaEan(

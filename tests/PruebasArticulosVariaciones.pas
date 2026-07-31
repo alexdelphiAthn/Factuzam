@@ -32,16 +32,13 @@ type
     procedure TieneSkuActivo_DevuelveElResultadoDelServicio;
     [Test]
     procedure Gestor_DelegaOperacionesYPropiedades;
-    [Test]
-    procedure FabricaAusente_FallaDeFormaRuidosa;
   end;
 
 implementation
 
 uses
-  System.SysUtils, Vcl.Forms, Uni,
-  inLibArticulosVariacionesIntf, inLibArticulosVariaciones,
-  UniDataArticulosVariaciones;
+  Vcl.Forms, inLibArticulosVariacionesIntf,
+  inLibArticulosVariaciones;
 
 type
   TOperacionArticulosVariacionesFalsa = (
@@ -150,25 +147,16 @@ begin
   Result := oServicioGestorFalso;
 end;
 
-function FabricaFalsa(
-  AConexion: TUniConnection): IArticulosVariaciones;
-begin
-  Result := oServicioFalso;
-end;
-
-procedure PrepararFabricaFalsa;
+procedure PrepararServicioFalso;
 begin
   oGestorFalso := TGestorArticulosVariacionesFalso.Create;
   oServicioGestorFalso := oGestorFalso;
   oFalso := TArticulosVariacionesFalso.Create;
   oServicioFalso := oFalso;
-  TFabricaArticulosVariaciones.Registrar(FabricaFalsa);
 end;
 
 procedure TPruebasArticulosVariaciones.Liberar;
 begin
-  TFabricaArticulosVariaciones.Registrar(
-    CrearArticulosVariacionesUniDAC);
   oServicioFalso := nil;
   oFalso := nil;
   oServicioGestorFalso := nil;
@@ -178,8 +166,9 @@ end;
 procedure TPruebasArticulosVariaciones.
   AsegurarSinVariaciones_DelegaEnElServicio;
 begin
-  PrepararFabricaFalsa;
-  AsegurarSkuArticuloSinVariaciones(nil, 'ART-1', 'PRUEBAS');
+  PrepararServicioFalso;
+  AsegurarSkuArticuloSinVariaciones(
+    oServicioFalso, 'ART-1', 'PRUEBAS');
   Assert.AreEqual(oavAsegurarSinVariaciones, oFalso.Operacion);
   Assert.AreEqual('ART-1', oFalso.CodigoArticulo);
   Assert.AreEqual('PRUEBAS', oFalso.Usuario);
@@ -188,8 +177,8 @@ end;
 procedure TPruebasArticulosVariaciones.
   AsegurarActivo_DelegaEnElServicio;
 begin
-  PrepararFabricaFalsa;
-  AsegurarSkuArticuloActivo(nil, 'ART-2', 'PRUEBAS');
+  PrepararServicioFalso;
+  AsegurarSkuArticuloActivo(oServicioFalso, 'ART-2', 'PRUEBAS');
   Assert.AreEqual(oavAsegurarActivo, oFalso.Operacion);
   Assert.AreEqual('ART-2', oFalso.CodigoArticulo);
   Assert.AreEqual('PRUEBAS', oFalso.Usuario);
@@ -198,9 +187,9 @@ end;
 procedure TPruebasArticulosVariaciones.
   TieneSkuActivo_DevuelveElResultadoDelServicio;
 begin
-  PrepararFabricaFalsa;
+  PrepararServicioFalso;
   oFalso.ResultadoTieneSku := True;
-  Assert.IsTrue(ArticuloTieneSkuActivo(nil, 'ART-3'));
+  Assert.IsTrue(ArticuloTieneSkuActivo(oServicioFalso, 'ART-3'));
   Assert.AreEqual(oavTieneSkuActivo, oFalso.Operacion);
   Assert.AreEqual('ART-3', oFalso.CodigoArticulo);
 end;
@@ -210,12 +199,13 @@ procedure TPruebasArticulosVariaciones.
 var
   Gestor: TGestorVariaciones;
 begin
-  PrepararFabricaFalsa;
+  PrepararServicioFalso;
   oGestorFalso.CodigoArticulo := 'ART-4';
   oGestorFalso.Modificado := True;
   oGestorFalso.ResultadoGuardar := False;
   oGestorFalso.ResultadoValidar := 'VALIDACION';
-  Gestor := TGestorVariaciones.Create(nil, nil, 'PRUEBAS');
+  Gestor := TGestorVariaciones.Create(
+    nil, oServicioFalso, 'PRUEBAS');
   try
     Gestor.CargarVariaciones('ART-CARGADO');
     Assert.AreEqual(oavCrearGestor, oFalso.Operacion);
@@ -228,18 +218,6 @@ begin
   finally
     Gestor.Free;
   end;
-end;
-
-procedure TPruebasArticulosVariaciones.
-  FabricaAusente_FallaDeFormaRuidosa;
-begin
-  TFabricaArticulosVariaciones.Registrar(nil);
-  Assert.WillRaise(
-    procedure
-    begin
-      ArticuloTieneSkuActivo(nil, 'ART-5');
-    end,
-    Exception);
 end;
 
 initialization

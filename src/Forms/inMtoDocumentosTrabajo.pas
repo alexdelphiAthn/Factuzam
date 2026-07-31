@@ -16,6 +16,7 @@ unit inMtoDocumentosTrabajo;
 interface
 
 uses
+  inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.Types, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs,
@@ -140,6 +141,7 @@ uses
   inMtoModalAddBlockDocumentoTrabajo,
   // Factoria del contrato + IdentidadSesion.Usuario para el gestor de tallas.
   inLibColumnasSku,
+  UniDataModoTallas,
   // Modal de destino (almacen/serie/numero) del "Enviar a...".
   inMtoModalEnviarDestino,
   // Contrato de la operación TPV abierta para el volcado de SKUs.
@@ -251,6 +253,8 @@ begin
   Cfg := Default(TConfigColumnasSku);
   Cfg.Conexion := dmmDocumentosTrabajo.unqryTablaG.Connection;
   Cfg.ContextoSesion := ContextoSesion;
+  Cfg.BusquedaVisual := BusquedaVisual;
+  Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
     CrearValidadorArticulos(Cfg.Conexion);
   Cfg.LookupAtributos :=
@@ -300,7 +304,8 @@ begin
     CfgT.FieldAlmacenCel := '';
     CfgT.IdFilaFijo := 1;
     CfgT.MaxColumnas := 20;
-    FModoEntrada := CrearModoEntradaGridTallas(Cfg, CfgT);
+    FModoEntrada := CrearModoEntradaGridTallas(
+      Cfg, CfgT, CrearPersistenciaModoTallas, CrearBusquedaSkusTallas);
   end
   else
     FModoEntrada := CrearModoEntradaGrid(Cfg);
@@ -495,7 +500,8 @@ begin
             ExportarDocumentoTrabajoExcel(
               fPreview.dxSpreadSheet1,
               dsCabecera,
-              dmmDocumentosTrabajo.unqryLineas);
+              dmmDocumentosTrabajo.unqryLineas,
+              FotosArticulos);
           finally
             Screen.Cursor := crDefault;
           end;
@@ -593,7 +599,7 @@ begin
           '       GRUPO_USUGRP AS DESTINO ' +
           '  FROM fza_usuarios_grupos ' +
           ' ORDER BY TIPO, DESTINO';
-        if TBusquedaUtils.EjecutarBusqueda(
+        if BusquedaVisual.EjecutarBusqueda(
           ConexionPrincipal,
           'Compartir Documento de Trabajo',
                                            q,
@@ -1088,5 +1094,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoDocumentosTrabajo);
   ForceReferenceToClass(TfrmMtoDocumentosTrabajo);
 end.

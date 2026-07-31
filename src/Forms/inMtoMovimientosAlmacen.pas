@@ -19,6 +19,7 @@ unit inMtoMovimientosAlmacen;
 interface
 
 uses
+  inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.DateUtils, System.UITypes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoGen, dxSkinsCore,
@@ -164,7 +165,8 @@ begin
   // Cantidad del movimiento con decimales segun la unidad del articulo.
   VincularCantidadGrid(
     cxGrdDBTabPrin.GetColumnByFieldName('CANTIDAD_MOV'),
-    cxGrdDBTabPrin.GetColumnByFieldName('TIPO_CANTIDAD_ART'));
+    cxGrdDBTabPrin.GetColumnByFieldName('TIPO_CANTIDAD_ART'),
+    UnidadesMedida);
   pkFieldName := 'NUMERO_MOV';
   // Persiana de filtros de carga: arranca colapsada (igual que el Mto de
   // articulos); se despliega al pulsar la cabecera.
@@ -644,5 +646,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoMovimientosAlmacen);
   ForceReferenceToClass(TfrmMtoMovimientosAlmacen);
 end.

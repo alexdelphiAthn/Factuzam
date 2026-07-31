@@ -20,6 +20,7 @@ unit UniDataAlbaranesCompra;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, System.Variants,
   System.Generics.Collections,
   Vcl.ComCtrls, cxListView,
@@ -142,6 +143,7 @@ uses
   inLibLog, inLibValoresAutomaticos, inLibContadorLineas,
   System.Diagnostics, System.UITypes, Vcl.Dialogs,
   inLibAlbaranesCompraMovimientos,
+  UniDataAlbaranesCompraMovimientos,
   inLibComprasImpuestos,
   inLibData,
   inLibArticulosValidadorIntf,
@@ -639,7 +641,8 @@ begin
       Abort;
     end;
     inLibAlbaranesCompraMovimientos.RevertirMovimientosDesdeAlbaranCompra(
-      unqryTablaG.Connection, sSerie, sNumero, IdentidadSesion.Usuario);
+      CrearMovimientosAlbaranCompraUniDAC(unqryTablaG.Connection),
+      sSerie, sNumero, IdentidadSesion.Usuario);
     q.SQL.Text :=
       'DELETE FROM fza_albaranes_compra_celdas ' +
       ' WHERE SERIE_ALBC_ALBCCEL  = :s ' +
@@ -990,10 +993,12 @@ begin
     if (sSerie <> '') and (sNumero <> '') and (sNumero <> '0') then
     begin
       inLibAlbaranesCompraMovimientos.RevertirMovimientosDesdeAlbaranCompra(
-        unqryTablaG.Connection, sSerie, sNumero, IdentidadSesion.Usuario);
+        CrearMovimientosAlbaranCompraUniDAC(unqryTablaG.Connection),
+        sSerie, sNumero, IdentidadSesion.Usuario);
       if HayLineasMovimiento(sSerie, sNumero) then
         inLibAlbaranesCompraMovimientos.GenerarMovimientosDesdeAlbaranCompra(
-          unqryTablaG.Connection, sSerie, sNumero, IdentidadSesion.Usuario);
+          CrearMovimientosAlbaranCompraUniDAC(unqryTablaG.Connection),
+          sSerie, sNumero, IdentidadSesion.Usuario);
       RefrescarMovimientosProveedor;
     end;
   end;
@@ -1232,4 +1237,6 @@ begin
   end;
 end;
 
+initialization
+  RegistrarDataModule(TdmAlbaranesCompra);
 end.

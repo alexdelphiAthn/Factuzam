@@ -64,21 +64,17 @@ type
     property DecimalesPorDefecto: Integer read FDecimalesPorDefecto
                                           write FDecimalesPorDefecto;
   end;
-
-function oUnidades: TUnidadesMedida;
+  IProveedorUnidadesMedida = interface
+    ['{5B714E5F-795D-4DDB-A3C0-6CFB54F535D9}']
+    function GetUnidadesMedida: TUnidadesMedida;
+    property UnidadesMedida: TUnidadesMedida
+      read GetUnidadesMedida;
+  end;
 
 implementation
 
 uses
   inLibLog;
-
-var
-  FUnidades: TUnidadesMedida;
-
-function oUnidades: TUnidadesMedida;
-begin
-  Result := FUnidades;
-end;
 
 { TUnidadesMedida }
 
@@ -216,11 +212,5 @@ begin
   else
     Result := AValor * oOri.FactorBase / oDes.FactorBase;
 end;
-
-initialization
-  FUnidades := TUnidadesMedida.Create;
-
-finalization
-  FreeAndNil(FUnidades);
 
 end.

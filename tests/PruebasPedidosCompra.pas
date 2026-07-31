@@ -9,8 +9,8 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Caracteriza la fachada de pedidos de compra mediante una fábrica          }
-{    falsa, sin acceso a BBDD.                                                 }
+{    Caracteriza la fachada de pedidos mediante una dependencia falsa         }
+{    inyectada, sin acceso a BBDD.                                             }
 {******************************************************************************}
 unit PruebasPedidosCompra;
 
@@ -26,7 +26,7 @@ type
     [TearDown]
     procedure Liberar;
     [Test]
-    procedure Pendientes_DeleganEnElServicioRegistrado;
+    procedure Pendientes_DeleganEnElServicioInyectado;
     [Test]
     procedure Crear_DeleganLasDosVariantes;
     [Test]
@@ -35,16 +35,13 @@ type
     procedure Incorporar_DeleganLasDosVariantes;
     [Test]
     procedure EjecutarRecepcion_DelegaParametrosYResultado;
-    [Test]
-    procedure FabricaAusente_FallaDeFormaRuidosa;
   end;
 
 implementation
 
 uses
-  System.SysUtils, Uni, inLibGridPivoteCompra,
-  inLibPedidosCompraIntf, inLibPedidosCompra,
-  UniDataPedidosCompraOperaciones;
+  System.SysUtils, inLibGridPivoteCompra,
+  inLibPedidosCompraIntf, inLibPedidosCompra;
 
 type
   TOperacionPedidoCompraFalsa = (
@@ -239,36 +236,30 @@ begin
   Result := True;
 end;
 
-function FabricaFalsa(
-  AConexion: TUniConnection): IPedidosCompra;
-begin
-  Result := oServicioFalso;
-end;
-
-procedure PrepararFabricaFalsa;
+procedure PrepararServicioFalso;
 begin
   oFalso := TPedidosCompraFalso.Create;
   oServicioFalso := oFalso;
-  TFabricaPedidosCompra.Registrar(FabricaFalsa);
 end;
 
 procedure TPruebasPedidosCompra.Liberar;
 begin
-  TFabricaPedidosCompra.Registrar(CrearPedidosCompraUniDAC);
   oServicioFalso := nil;
   oFalso := nil;
 end;
 
 procedure TPruebasPedidosCompra.
-  Pendientes_DeleganEnElServicioRegistrado;
+  Pendientes_DeleganEnElServicioInyectado;
 begin
-  PrepararFabricaFalsa;
-  GenerarPdteRecibirDesdePedido(nil, 'PC', '1', 'PRUEBAS');
+  PrepararServicioFalso;
+  GenerarPdteRecibirDesdePedido(
+    oServicioFalso, 'PC', '1', 'PRUEBAS');
   Assert.AreEqual(opcfGenerarPendientes, oFalso.Operacion);
   Assert.AreEqual('PC', oFalso.Serie);
   Assert.AreEqual('1', oFalso.Numero);
   Assert.AreEqual('PRUEBAS', oFalso.Usuario);
-  BorrarPdteRecibirDesdePedido(nil, 'PC', '2', '0010');
+  BorrarPdteRecibirDesdePedido(
+    oServicioFalso, 'PC', '2', '0010');
   Assert.AreEqual(opcfBorrarPendientes, oFalso.Operacion);
   Assert.AreEqual('PC', oFalso.Serie);
   Assert.AreEqual('2', oFalso.Numero);
@@ -281,9 +272,9 @@ var
   Mensaje: string;
   NumeroAlbaran: string;
 begin
-  PrepararFabricaFalsa;
+  PrepararServicioFalso;
   Assert.IsTrue(CrearAlbaranDesdePedido(
-    nil, 'PC', '3', 'A1', 'AC', 'PRUEBAS', 'REF-1',
+    oServicioFalso, 'PC', '3', 'A1', 'AC', 'PRUEBAS', 'REF-1',
     EncodeDate(2026, 7, 30), 17, NumeroAlbaran, Mensaje));
   Assert.AreEqual(opcfCrear, oFalso.Operacion);
   Assert.AreEqual('A1', oFalso.Almacen);
@@ -298,7 +289,7 @@ begin
   Celdas[0].CodigoAlmacen := 'A1';
   Celdas[0].Cantidad := 2;
   Assert.IsTrue(CrearAlbaranDesdePedidoConCantidades(
-    nil, 'PC', '4', 'A1', 'AC', 'PRUEBAS', 'REF-2',
+    oServicioFalso, 'PC', '4', 'A1', 'AC', 'PRUEBAS', 'REF-2',
     EncodeDate(2026, 7, 31), 18, Celdas,
     NumeroAlbaran, Mensaje));
   Assert.AreEqual(opcfCrearConCantidades, oFalso.Operacion);
@@ -310,9 +301,9 @@ end;
 procedure TPruebasPedidosCompra.
   CalcularPendiente_DelegaYDevuelveElResultado;
 begin
-  PrepararFabricaFalsa;
+  PrepararServicioFalso;
   Assert.AreEqual(12.5,
-    CalcularPendienteTotal(nil, 'PC', '5'), 0.000001);
+    CalcularPendienteTotal(oServicioFalso, 'PC', '5'), 0.000001);
   Assert.AreEqual(opcfCalcularPendiente, oFalso.Operacion);
   Assert.AreEqual('PC', oFalso.Serie);
   Assert.AreEqual('5', oFalso.Numero);
@@ -323,9 +314,9 @@ var
   Celdas: TArray<TCeldaARecibir>;
   Mensaje: string;
 begin
-  PrepararFabricaFalsa;
+  PrepararServicioFalso;
   Assert.IsTrue(IncorporarAlbaranDesdePedido(
-    nil, 'PC', '6', 'A2', 'AC', '3001', 'PRUEBAS',
+    oServicioFalso, 'PC', '6', 'A2', 'AC', '3001', 'PRUEBAS',
     19, Mensaje));
   Assert.AreEqual(opcfIncorporar, oFalso.Operacion);
   Assert.AreEqual('AC', oFalso.SerieAlbaran);
@@ -333,7 +324,7 @@ begin
   Assert.AreEqual('INCORPORADO', Mensaje);
   SetLength(Celdas, 2);
   Assert.IsTrue(IncorporarAlbaranDesdePedidoConCantidades(
-    nil, 'PC', '7', 'A2', 'AC', '3002', 'PRUEBAS',
+    oServicioFalso, 'PC', '7', 'A2', 'AC', '3002', 'PRUEBAS',
     20, Celdas, Mensaje));
   Assert.AreEqual(
     opcfIncorporarConCantidades, oFalso.Operacion);
@@ -347,7 +338,7 @@ var
   Parametros: TParametrosRecepcionPedidoCompra;
   Resultado: TResultadoRecepcionPedidoCompra;
 begin
-  PrepararFabricaFalsa;
+  PrepararServicioFalso;
   Parametros.SeriePedido := 'PC';
   Parametros.NumeroPedido := '8';
   Parametros.CodigoAlmacen := 'A3';
@@ -356,7 +347,7 @@ begin
   Parametros.IdPvTemporada := 21;
   SetLength(Parametros.Celdas, 1);
   Assert.IsTrue(EjecutarRecepcionPedidoCompra(
-    nil, Parametros, Resultado));
+    oServicioFalso, Parametros, Resultado));
   Assert.AreEqual(opcfEjecutarRecepcion, oFalso.Operacion);
   Assert.AreEqual('PC', oFalso.Serie);
   Assert.AreEqual('8', oFalso.Numero);
@@ -366,18 +357,6 @@ begin
   Assert.AreEqual('AR', Resultado.SerieAlbaran);
   Assert.AreEqual('2001', Resultado.NumeroAlbaran);
   Assert.AreEqual('RECIBIDO', Resultado.Mensaje);
-end;
-
-procedure TPruebasPedidosCompra.
-  FabricaAusente_FallaDeFormaRuidosa;
-begin
-  TFabricaPedidosCompra.Registrar(nil);
-  Assert.WillRaise(
-    procedure
-    begin
-      CalcularPendienteTotal(nil, 'PC', '9');
-    end,
-    Exception);
 end;
 
 initialization

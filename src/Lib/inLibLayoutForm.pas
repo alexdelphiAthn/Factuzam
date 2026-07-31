@@ -29,7 +29,8 @@ unit inLibLayoutForm;
 //
 //  Uso típico:
 //    Para guardar (Alt+F12):
-//      var Layout := TLayoutSaver.Create(Self.Name, PerfilesEscritura);
+//      var Layout := TLayoutSaver.Create(
+//        Self.Name, PerfilesEscritura, SolicitudPermisoLayout);
 //      try
 //        Layout.GuardarGeometria(Self);
 //        Layout.GuardarAlturaPanel('PanelMaestro', pnlMaestro);
@@ -65,23 +66,16 @@ uses
   inLibPerfilesUsuarioIntf;
 
 type
-  TEjecutorPermisoLayout = class
-  public
-    class function Solicitar(const AFormKey, ADescripcion: string;
-                             out APermisos: string): Boolean;
-                             virtual; abstract;
+  ISolicitudPermisoLayout = interface
+    ['{87097325-DA86-4CA3-91C0-0973F0E2B7AD}']
+    function Solicitar(const AFormKey, ADescripcion: string;
+                       out APermisos: string): Boolean;
   end;
-
-  TClaseEjecutorPermisoLayout = class of TEjecutorPermisoLayout;
-
-  TSolicitudPermisoLayout = class
-  private
-    class var FClaseEjecutor: TClaseEjecutorPermisoLayout;
-  public
-    class procedure RegistrarEjecutor(
-      AClase: TClaseEjecutorPermisoLayout);
-    class function Solicitar(const AFormKey, ADescripcion: string;
-                             out APermisos: string): Boolean;
+  IProveedorSolicitudPermisoLayout = interface
+    ['{6BC3676B-C440-43BB-A3DC-9C44E515324E}']
+    function GetSolicitudPermisoLayout: ISolicitudPermisoLayout;
+    property SolicitudPermisoLayout: ISolicitudPermisoLayout
+      read GetSolicitudPermisoLayout;
   end;
 
   // ---------------------------------------------------------------------------
@@ -124,11 +118,13 @@ type
     FFormKey: string;
     FClaves: TStringList;
     FPerfilesEscritura: IEscritorPerfilesUsuario;
+    FSolicitudPermiso: ISolicitudPermisoLayout;
     procedure SetClave(const AClave, AValor: string);
   public
     constructor Create(
       const AFormKey: string;
-      const APerfilesEscritura: IEscritorPerfilesUsuario);
+      const APerfilesEscritura: IEscritorPerfilesUsuario;
+      const ASolicitudPermiso: ISolicitudPermisoLayout);
     destructor  Destroy; override;
     procedure GuardarGeometria(AForm: TForm);
     procedure GuardarAlturaPanel(const AClave: string; APanel: TPanel);
@@ -146,7 +142,8 @@ type
 // Devuelve True si se borró, False si el usuario canceló.
 function ResetearLayout(
   const AFormKey: string;
-  const APerfilesEscritura: IEscritorPerfilesUsuario): Boolean;
+  const APerfilesEscritura: IEscritorPerfilesUsuario;
+  const ASolicitudPermiso: ISolicitudPermisoLayout): Boolean;
 
 implementation
 
@@ -154,22 +151,6 @@ uses
   Vcl.Dialogs,
   inLibLog, inLibMsgComun, inLibMsgConfiguracion,
   cxGridDBDataDefinitions;
-
-class procedure TSolicitudPermisoLayout.RegistrarEjecutor(
-  AClase: TClaseEjecutorPermisoLayout);
-begin
-  FClaseEjecutor := AClase;
-end;
-
-class function TSolicitudPermisoLayout.Solicitar(
-  const AFormKey, ADescripcion: string;
-  out APermisos: string): Boolean;
-begin
-  if not Assigned(FClaseEjecutor) then
-    raise Exception.Create(SErrorDialogoPermisosLayoutNoRegistrado);
-  Result := FClaseEjecutor.Solicitar(
-    AFormKey, ADescripcion, APermisos);
-end;
 
 // =============================================================================
 // TLayoutLoader
@@ -296,11 +277,13 @@ end;
 
 constructor TLayoutSaver.Create(
   const AFormKey: string;
-  const APerfilesEscritura: IEscritorPerfilesUsuario);
+  const APerfilesEscritura: IEscritorPerfilesUsuario;
+  const ASolicitudPermiso: ISolicitudPermisoLayout);
 begin
   inherited Create;
   FFormKey := AFormKey;
   FPerfilesEscritura := APerfilesEscritura;
+  FSolicitudPermiso := ASolicitudPermiso;
   FClaves  := TStringList.Create;
 end;
 
@@ -376,7 +359,7 @@ begin
   Result := False;
   if FClaves.Count > 0 then
   begin
-    if TSolicitudPermisoLayout.Solicitar(
+    if FSolicitudPermiso.Solicitar(
       FFormKey, ADescripcion, sPermisos) then
     begin
       Lote := TPerfilList.Create;
@@ -404,12 +387,13 @@ end;
 
 function ResetearLayout(
   const AFormKey: string;
-  const APerfilesEscritura: IEscritorPerfilesUsuario): Boolean;
+  const APerfilesEscritura: IEscritorPerfilesUsuario;
+  const ASolicitudPermiso: ISolicitudPermisoLayout): Boolean;
 var
   sPermisos: string;
 begin
   Result := False;
-  if TSolicitudPermisoLayout.Solicitar(
+  if ASolicitudPermiso.Solicitar(
     AFormKey, STextoResetearLayout, sPermisos) then
   begin
     APerfilesEscritura.EliminarPerfil(sPermisos, AFormKey);

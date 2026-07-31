@@ -9,7 +9,7 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Adaptador UniDAC del puerto IRepositorioPivoteVenta (fascículo V2         }
+{    Adaptador UniDAC de los puertos del pivote de venta (fascículo V2         }
 {    del anexo SRP): SKU y atributos, conjuntos de tallas, alta                }
 {    idempotente de SKU y buscador de artículos. Concentra el SQL que          }
 {    antes vivía en inLibGridPivoteVenta; no decide bandas, grupos ni          }
@@ -21,25 +21,27 @@ interface
 
 uses
   Uni,
-  inLibPivoteVentaIntf;
+  inLibPivoteVentaIntf, inLibGenBusq;
 
 // Composición del adaptador para los formularios consumidores.
 function CrearRepositorioPivoteVenta(AConexion: TUniConnection;
-                                     const AUsuario: string)
-                                     : IRepositorioPivoteVenta;
+                                     const AUsuario: string;
+                                     const ABusquedaVisual: IBusquedaVisual)
+                                     : TRepositoriosPivoteVenta;
 
 implementation
 
 uses
-  System.SysUtils,
-  inLibGenBusq;
+  System.SysUtils;
 
 type
   TRepositorioPivoteVentaUniDAC = class(TInterfacedObject,
-                                        IRepositorioPivoteVenta)
+                                        IRepositorioModeloPivoteVenta,
+                                        IRepositorioEdicionPivoteVenta)
   private
     FConexion: TUniConnection;
     FUsuario : string;
+    FBusquedaVisual: IBusquedaVisual;
     function CrearConsulta: TUniQuery;
     function ListaIds(const AIds: TArray<Integer>): string;
     function LeerValoresTalla(AConsulta: TUniQuery;
@@ -47,7 +49,8 @@ type
                               : TValoresTallaPivoteVenta;
   public
     constructor Create(AConexion: TUniConnection;
-                       const AUsuario: string);
+                       const AUsuario: string;
+                       const ABusquedaVisual: IBusquedaVisual);
     function ObtenerInfoSku(const ACodigoSku: string)
                             : TInfoSkuPivoteVenta;
     function ResolverSkuDesdeCodigoBarras(
@@ -75,17 +78,26 @@ type
   end;
 
 function CrearRepositorioPivoteVenta(AConexion: TUniConnection;
-  const AUsuario: string): IRepositorioPivoteVenta;
+  const AUsuario: string;
+  const ABusquedaVisual: IBusquedaVisual): TRepositoriosPivoteVenta;
+var
+  Repositorio: TRepositorioPivoteVentaUniDAC;
 begin
-  Result := TRepositorioPivoteVentaUniDAC.Create(AConexion, AUsuario);
+  Result := Default(TRepositoriosPivoteVenta);
+  Repositorio := TRepositorioPivoteVentaUniDAC.Create(
+    AConexion, AUsuario, ABusquedaVisual);
+  Result.Modelo := Repositorio;
+  Result.Edicion := Repositorio;
 end;
 
 constructor TRepositorioPivoteVentaUniDAC.Create(
-  AConexion: TUniConnection; const AUsuario: string);
+  AConexion: TUniConnection; const AUsuario: string;
+  const ABusquedaVisual: IBusquedaVisual);
 begin
   inherited Create;
   FConexion := AConexion;
   FUsuario := AUsuario;
+  FBusquedaVisual := ABusquedaVisual;
 end;
 
 function TRepositorioPivoteVentaUniDAC.CrearConsulta: TUniQuery;
@@ -496,8 +508,7 @@ begin
         ' ORDER BY STOCK DESC, a.CODIGO_ART_ART';
       oConsulta.ParamByName('ALM').AsString := AAlmacenStock;
       oConsulta.Open;
-      // Ejecutor de búsqueda registrado por la capa visual (§14.4).
-      if TBusquedaUtils.EjecutarBusqueda(FConexion,
+      if FBusquedaVisual.EjecutarBusqueda(FConexion,
                                          'Búsqueda de artículos',
                                          oConsulta,
                                          'frmMtoArtTraspasoSearch') then

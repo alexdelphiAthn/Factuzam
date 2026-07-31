@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{5372F570-A327-4800-98DB-9E38B75C697D}</ProjectGuid>
         <ProjectVersion>20.4</ProjectVersion>
@@ -208,6 +208,9 @@
         <DCCReference Include="src\Lib\inLibSepaRemesasVenta.pas"/>
         <DCCReference Include="src\Lib\inLibFacturasLecturasIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataFacturasLecturas.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturasPersistenciaIntf.pas"/>
+        <DCCReference Include="src\DataModules\UniDataFacturasOperaciones.pas"/>
+        <DCCReference Include="src\DataModules\UniDataRectificativasSql.pas"/>
         <DCCReference Include="src\Lib\inLibFacturas.pas"/>
         <DCCReference Include="src\Lib\inLibSqlSeguro.pas"/>
         <DCCReference Include="src\Lib\inLibMotorFiscalVenta.pas"/>
@@ -283,7 +286,6 @@
         <DCCReference Include="src\Core\inMtoPrincipal.pas">
             <Form>frmMtoPrincipal</Form>
         </DCCReference>
-        <DCCReference Include="src\Core\inMtoCatalogoPantallas.pas"/>
         <DCCReference Include="src\Forms\inMtoGen.pas">
             <Form>frmMtoGen</Form>
         </DCCReference>
@@ -753,6 +755,10 @@
         <DCCReference Include="src\Lib\inLibEAN13.pas"/>
         <DCCReference Include="src\Modals\inMtoModalArticulosPropiedades.pas"/>
         <DCCReference Include="src\Lib\inLibArticulosVariaciones.pas"/>
+        <DCCReference Include="src\Lib\inLibArticulosAtributosBasicos.pas"/>
+        <DCCReference Include="src\Lib\inLibStockConsultaInfo.pas"/>
+        <DCCReference Include="src\Lib\inLibInventariosEntrada.pas"/>
+        <DCCReference Include="src\DataModules\UniDataStockConsultaInfo.pas"/>
         <DCCReference Include="src\Lib\inLibArticulosVariacionesIntf.pas"/>
         <DCCReference Include="src\Lib\inLibArticulosAltaTarifas.pas"/>
         <DCCReference Include="src\Lib\inLibStockCeldaDocumento.pas"/>
@@ -780,6 +786,8 @@
         <DCCReference Include="src\Lib\inLibVentasWsJsonIntf.pas"/>
         <DCCReference Include="src\Lib\inLibVentasWsJson.pas"/>
         <DCCReference Include="src\DataModules\UniDataVentasWsJson.pas"/>
+        <DCCReference Include="src\Lib\inLibVentasWsColaIntf.pas"/>
+        <DCCReference Include="src\DataModules\UniDataVentasWsCola.pas"/>
         <DCCReference Include="src\Lib\inLibVentasWsCola.pas"/>
         <DCCReference Include="src\Lib\inLibXades.pas"/>
         <DCCReference Include="src\Lib\inLibDocumentoFiscal.pas"/>
@@ -841,6 +849,8 @@
         <DCCReference Include="src\Forms\inMtoConsultaOpe.pas">
             <Form>frmConsultaOpe</Form>
         </DCCReference>
+        <DCCReference Include="src\Lib\inLibVentasCalendarioIntf.pas"/>
+        <DCCReference Include="src\DataModules\UniDataVentasCalendario.pas"/>
         <DCCReference Include="src\Lib\inLibVentasCalendario.pas"/>
         <DCCReference Include="src\Lib\inLibLayoutForm.pas"/>
         <DCCReference Include="src\Forms\inMtoInventarios.pas">

@@ -265,7 +265,7 @@ end;
 
 destructor TfrmPrintBalanceSinTallas.Destroy;
 begin
-  oFotos.LimpiarPrecargaFotos;
+  FotosArticulos.LimpiarPrecargaFotos;
   inherited Destroy;
 end;
 
@@ -290,7 +290,7 @@ begin
       finally
         unqryBalancePrint.EnableControls;
       end;
-      oFotos.PrecargarFotosLote(slCod.ToStringArray);
+      FotosArticulos.PrecargarFotosLote(slCod.ToStringArray);
     finally
       FreeAndNil(slCod);
     end;
@@ -303,7 +303,7 @@ var
   sNom : string;
   nivel: Integer;
 begin
-  oFotos.HandlerReportBeforePrint(Component);
+  FotosArticulos.HandlerReportBeforePrint(Component);
   if Component is TfrxBand then
   begin
     sNom := Component.Name;
@@ -334,7 +334,8 @@ begin
       fPreview.DialogoGuardar.InitialDir :=
         ParametrosApp.GetPath('appDirExcel');
       fPreview.DialogoGuardar.FileName := 'Balance_almacen_sin_tallas';
-      ExportarBalanceSinTallasExcel(fPreview.dxSpreadSheet1, unqryBalancePrint);
+      ExportarBalanceSinTallasExcel(
+        fPreview.dxSpreadSheet1, unqryBalancePrint, FotosArticulos);
       fPreview.ShowModal;
     finally
       FreeAndNil(fPreview);

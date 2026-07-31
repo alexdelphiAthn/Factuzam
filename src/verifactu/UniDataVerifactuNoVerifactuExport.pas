@@ -215,8 +215,4 @@ begin
   Result := TRepositorioExportacionNoVerifactuUniDAC.Create(AConexion);
 end;
 
-initialization
-  TFabricaRepositorioExportacionNoVerifactu.Registrar(
-    CrearRepositorioExportacionNoVerifactuUniDAC);
-
 end.

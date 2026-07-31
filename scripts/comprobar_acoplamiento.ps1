@@ -1,7 +1,7 @@
 param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoFanOut = 101,
+  [int]$MaximoFanOut = 78,
   [ValidateRange(0, [int]::MaxValue)]
   [int]$MaximoFanInConCuerpo = 84,
   [ValidateRange(0, [int]::MaxValue)]
@@ -159,6 +159,18 @@ foreach ($clave in $unidades.Keys) {
     })
   }
 }
+# El registro es infraestructura estable: cada pantalla depende de él por
+# diseño. Se informa por separado y no consume el límite de unidades de
+# negocio.
+$infraestructuraFanIn = @(
+  'inlibregistropantallas'
+)
+$medicionesFanInVigiladas = @(
+  $medicionesFanIn |
+    Where-Object {
+      $infraestructuraFanIn -notcontains $_.Unidad.ToLowerInvariant()
+    }
+)
 
 Write-Output 'Mayor fan-out por unidad:'
 Write-Output (
@@ -182,9 +194,10 @@ $fanOutMayor = (
     Measure-Object FanOut -Maximum
 ).Maximum
 $fanInMayor = (
-  $medicionesFanIn |
+  $medicionesFanInVigiladas |
     Measure-Object FanIn -Maximum
 ).Maximum
+$fanInRegistroPantallas = $fanIn['inlibregistropantallas']
 $claveInLibMsg = 'inlibmsg'
 $fanInInLibMsg = if ($fanIn.ContainsKey($claveInLibMsg)) {
   $fanIn[$claveInLibMsg]
@@ -214,4 +227,6 @@ Write-Output (
   'Acoplamiento: OK. Unidades analizadas: ' +
   "$($unidades.Count). Fan-out maximo: $fanOutMayor. " +
   "Fan-in maximo con cuerpo: $fanInMayor. " +
+  'Fan-in de infraestructura de registro: ' +
+  "$fanInRegistroPantallas. " +
   "Fan-in de inLibMsg: $fanInInLibMsg.")

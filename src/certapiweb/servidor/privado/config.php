@@ -21,8 +21,11 @@ const CFG_AMBITOS_PERMITIDOS = [
     'sif:instalacion',
     'recuentos:leer',
     'recuentos:escribir',
-    'correo:enviar'
+    'correo:enviar',
+    'descargar:traducciones'
 ];
 
 const CFG_DESFASE_MAXIMO_SEGUNDOS = 300;
 const CFG_PREFIJO_TOKEN = 'fza_';
+const CFG_TRADUCCIONES_DIRECTORIO = __DIR__ . '/traducciones';
+const CFG_TRADUCCIONES_MAX_BYTES = 20971520;

@@ -427,6 +427,9 @@ resourcestring
   SCaptionColClienteMandato = 'Cliente';
   SCaptionColMandato = 'Mandato';
   SCaptionColFechaFirmaMandato = 'Fecha firma';
+  // Fase 2 - Calendario de ventas tras contrato
+  SErrorVentasCalendarioNoRegistrado =
+    'El repositorio del calendario de ventas no está registrado.';
 implementation
 
 end.

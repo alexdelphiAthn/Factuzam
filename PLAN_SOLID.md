@@ -69,29 +69,32 @@ Donde existe script de trinquete, manda la cifra del script.
 
 | Units usadas | Unidad                    |
 |--------------|---------------------------|
-| 101          | `inMtoCatalogoPantallas`  |
-| 70           | `inMtoPrincipal`          |
-| 39           | `inMtoFacturasBase`       |
-| 36           | `inMtoCajaOpe`            |
-| 33           | `inMtoGen`                |
-| 30           | `inMtoComprasSesiones`    |
+| 78           | `inMtoPrincipal`          |
+| 57           | `inMtoFacturasBase`       |
+| 49           | `inMtoCajaOpe`            |
+| 36           | `inMtoPedidosCompra`      |
+| 35           | `inMtoFacturasCompra`     |
+| 34           | `inMtoAlbaranesCompra` / `inMtoDevolucionesCompra` |
+
+El catálogo central, que tenía fan-out 101, ha sido retirado.
 
 ### 1.2 Acoplamiento aferente (fan-in): units que paralizan la compilación
 
 | Units que la usan | Unidad                |
 |-------------------|-----------------------|
+| 102               | `inLibRegistroPantallas` (infraestructura estable) |
 | 84                | `inLibUser`           |
-| 81                | `inLibLog`            |
-| 60                | `inMtoFrmBase`        |
-| 60                | `inLibMsg` (fachada en retirada) |
-| 52                | `UniDataGen`          |
-| 52                | `inMtoGen`            |
+| 83                | `inLibLog`            |
+| 78                | `inLibMsgComun`       |
+| 70                | `inLibMsgArticulos`   |
+| 63                | `inMtoFrmBase`        |
+| 59                | `UniDataGen`          |
 | 49                | `inLibWin`            |
-| 45                | `inLibParametrosIntf` |
+| 46                | `inMtoGen`            |
 
-`inLibParametrosIntf` es fan-in *sano* (contrato sin cuerpo). Ojo con
-`inLibLog`: ha subido de 67 a 81 porque los fascículos de `except` ahora
-registran contexto. Es el precio correcto de no silenciar errores, pero
+`inLibRegistroPantallas` es infraestructura deliberadamente estable y el
+resguardo lo informa por separado. Los fascículos de `except` registran
+contexto en `inLibLog`. Es el precio correcto de no silenciar errores, pero
 refuerza la necesidad de separar su contrato de su implementación
 (Fase 6).
 
@@ -102,12 +105,13 @@ refuerza la necesidad de separar su contrato de su implementación
 Decisiones tomadas, ejecutadas y verificadas sobre el código. **No
 entran en el plan**; los trinquetes impiden que regresen.
 
-- **Fase 0 — Instrumentación.** Nueve scripts en `scripts/` con tope
-  congelado y salida no-cero: `comprobar_estado_global`,
+- **Fase 0 — Instrumentación.** Scripts en `scripts/` con tope congelado
+  y salida no-cero: `comprobar_estado_global`,
   `comprobar_sql_en_dominio`, `comprobar_tamano_clases`,
   `comprobar_acoplamiento`, `comprobar_dependencias_capas`,
   `comprobar_supports`, `comprobar_flujos_largos`,
-  `comprobar_formularios_delgados`, `comprobar_sql_transacciones`.
+  `comprobar_formularios_delgados`, `comprobar_sql_transacciones` y
+  `comprobar_registro_pantallas`.
 - **Fase 1 — Higiene, completada.**
   - `var` en sección `interface` = 0 (eran 1.516). Los 1.413 mensajes de
     `inLibMsg` son `resourcestring` repartidos en nueve catálogos de
@@ -297,8 +301,8 @@ delgado.
 - **Fachada `inLibMsg`**: 60 consumidores pendientes de migrar a los
   nueve catálogos y eliminarla (anotado en `ISSUES PENDIENTES.txt`).
   8.513 líneas que desaparecen enteras al retirarla.
-- **`inMtoCatalogoPantallas`**: fan-out 101, intacto. Se resuelve en la
-  Fase 6 con auto-registro.
+- **Catálogo central de pantallas**: resuelto. Las 52 pantallas y los 48
+  data modules se auto-registran en su propia unidad.
 - **Fan-in con cuerpo**: `inLibUser` 84, `inLibLog` 81, `inLibWin` 49.
   Separar contrato de implementación (Fase 6).
 
@@ -405,12 +409,12 @@ pruebas funcionales por consumidor.
 
 | # | Unidad                   | Primera responsabilidad | Riesgo |
 |---|--------------------------|-------------------------|--------|
-| 1 | `inMtoComprasSesiones`   | creación/materialización (tras el piloto de Fase 2) | transacciones |
-| 2 | `inMtoFacturasBase`      | fiscalidad, recibos y consolidación | Verifactu |
-| 3 | `inMtoCajaOpe`           | resolución de venta y escáner | caja activa |
-| 4 | `inMtoArticulos`         | altas SKU y atributos básicos | alto reuso |
-| 5 | `inMtoStockConsulta`     | consulta, pivote y tarjetas | presentación |
-| 6 | `inMtoInventarios`       | resolución de entradas y líneas | stock |
+| 1 | `inMtoCajaOpe`           | resolución de venta y escáner | caja activa |
+| 2 | `inMtoComprasSesiones`   | creación/materialización | transacciones |
+| 3 | `inMtoArticulos`         | altas SKU y atributos básicos | alto reuso |
+| 4 | `inMtoStockConsulta`     | consulta, pivote y tarjetas | presentación |
+| 5 | `inMtoInventarios`       | resolución de entradas y líneas | stock |
+| 6 | `inMtoFacturasBase`      | objetivo alcanzado; vigilar regresiones | Verifactu |
 
 **Criterio de salida:** los seis formularios por debajo de 2.000 líneas
 y 120 métodos; los topes individuales solo bajan y se comprueban en la
@@ -463,11 +467,10 @@ copiado.
 
 1. Retirar la fachada `inLibMsg`: migrar los 60 `uses` restantes por
    tandas a los catálogos de dominio y borrar la unidad (8.513 líneas).
-2. `inMtoCatalogoPantallas` (fan-out 101) pasa a auto-registro: cada
-   `inMto*` se registra en su `initialization` sobre
-   `inLibRegistroPantallas`, manteniendo la referencia de clase
-   verificada por el compilador. `ComprobarRegistradas` sigue avisando
-   en el arranque.
+2. **Hecho:** retirado `inMtoCatalogoPantallas` (fan-out 101). Cada
+   `inMto*` y `UniData*` se registra en su `initialization` sobre
+   `inLibRegistroPantallas`, manteniendo la referencia de clase verificada
+   por el compilador. `ComprobarRegistradas` sigue avisando en el arranque.
 3. Trocear los fan-in altos con cuerpo (`inLibUser` 84, `inLibLog` 81,
    `inLibWin` 49): contrato `*Intf` estable separado de la
    implementación.
@@ -710,7 +713,7 @@ La Fase 1 está cerrada: sus reglas se promueven **ya**.
   el resultado se guarda en un campo.
 - Fase 5 → §14.6: configuración + estrategia como vía única para un tipo
   de documento nuevo.
-- Fase 6 → §14.1: auto-registro de pantallas en `initialization`.
+- ~~Fase 6 → §14.1~~: auto-registro de pantallas completado.
 
 Y a §16 (lista negra), según se cierren: `Supports` dentro de un método
 de negocio, SQL literal en `inLib*` nueva, formulario de documento

@@ -140,7 +140,7 @@ begin
   Assert.IsTrue(
     Pos('ftInteger', sMensaje) > 0);
   Assert.IsTrue(
-    Pos('DROP VIEW + CREATE VIEW', sMensaje) > 0);
+    Pos('regenerar (borrar y volver a definir)', sMensaje) > 0);
 end;
 
 end.

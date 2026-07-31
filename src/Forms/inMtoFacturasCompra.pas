@@ -25,6 +25,7 @@ unit inMtoFacturasCompra;
 interface
 
 uses
+  inLibRegistroPantallas,
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
   Forms, Dialogs, Uni, System.Types,
   inMtoDocumento, dxSkinsCore, dxSkinBlue, dxSkinsForm,
@@ -296,7 +297,7 @@ uses
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku,
   // Composicion del puerto de persistencia del pivote (V2).
-  UniDataPivoteVenta;
+  UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio;
 
 {$R *.dfm}
 
@@ -350,7 +351,7 @@ begin
                  mtInformation, [mbOk], 0)
     else
       Result := BuscarArticuloProveedorCompra(
-        dmmFacturasCompra.unqryTablaG.Connection, sPrv,
+        dmmFacturasCompra.unqryTablaG.Connection, BusquedaVisual, sPrv,
         'Búsqueda de artículos', 'frmMtoFaccArtSearch', Self);
   end;
 end;
@@ -379,7 +380,7 @@ begin
                mtInformation, [mbOk], 0)
   else
     Result := BuscarSkuArticuloCompra(
-      dmmFacturasCompra.unqryTablaG.Connection, sArt,
+      dmmFacturasCompra.unqryTablaG.Connection, BusquedaVisual, sArt,
       'SKUs del artículo ' + sArt,
       'frmMtoFaccSkuSearch', Self);
 end;
@@ -531,7 +532,9 @@ begin
       TallaEditValueChangedHook, TallaValidateHook);
     oConfigPivote := CrearConfigPivoteDocumentoCompra(oBase,
       FGestorTallas);
-    FPivote := TGridPivoteCompra.Create(oConfigPivote);
+    FPivote := TGridPivoteCompra.Create(
+      oConfigPivote,
+      CrearRepositorioGridPivoteCompraUniDAC(ConexionPrincipal));
   end;
 end;
 
@@ -894,6 +897,8 @@ begin
     ContextoSesion, tvLineasFactura, ds, FModoEntradaSel,
     Trim(dmmFacturasCompra.unqryTablaG.
       FieldByName('CODIGO_ALM_FACC').AsString), 'FACCLIN');
+  Cfg.BusquedaVisual := BusquedaVisual;
+  Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
     CrearValidadorArticulos(Cfg.Conexion);
   Cfg.LookupAtributos :=
@@ -911,8 +916,9 @@ begin
     CfgPV.BandaUnica := True;
     // La columna Total del host pasa a UNIDADES del grupo en pivote.
     CfgPV.FieldTotalUdsGrupo := 'TOTAL_FACCLIN';
-    CfgPV.Repositorio :=
-      CrearRepositorioPivoteVenta(CfgPV.Conexion, CfgPV.Usuario);
+    CfgPV.Repositorios :=
+      CrearRepositorioPivoteVenta(
+        CfgPV.Conexion, CfgPV.Usuario, BusquedaVisual);
     CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
     CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
     FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);
@@ -963,7 +969,7 @@ begin
     tvLineasFactura, FModoEntradaSel, 'FACCLIN');
   if Assigned(Columnas.ColCantidad) then
     VincularCantidadGrid(Columnas.ColCantidad,
-      Columnas.ColTipoCantidad);
+      Columnas.ColTipoCantidad, UnidadesMedida);
   Columnas.ColPrecioCompra.PropertiesClass :=
     TcxCurrencyEditProperties;
   TcxCurrencyEditProperties(
@@ -1474,7 +1480,7 @@ begin
     if ds.IsEmpty then
       MessageDlg(SErrorFacturaCompraElegirProveedorNoSeleccionada,
                  mtInformation, [mbOk], 0)
-    else if TBusquedaUtils.EjecutarBusqueda(
+    else if BusquedaVisual.EjecutarBusqueda(
       ConexionPrincipal,
       'Búsqueda de proveedores',
               'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
@@ -1593,5 +1599,6 @@ begin
 end;
 
 initialization
+  RegistrarPantalla(TfrmMtoFacturasCompra);
   ForceReferenceToClass(TfrmMtoFacturasCompra);
 end.

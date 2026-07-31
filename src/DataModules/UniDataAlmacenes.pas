@@ -15,6 +15,7 @@
 unit UniDataAlmacenes;
 interface
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
   inLibUser;
 type
@@ -55,5 +56,6 @@ begin
 end;
 
 initialization
+  RegistrarDataModule(TdmAlmacenes);
   ForceReferenceToClass(TdmAlmacenes);
 end.

@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoModalDocsCreados                                         }
 {    Tipo:       Formulario (Modal)                                            }
@@ -31,7 +31,8 @@ uses
   inMtoModalAceptCancel,
   cxCustomData, cxFilter, cxData, cxDataStorage, cxNavigator,
   dxDateRanges, dxScrollbarAnnotations,
-  JvComponentBase, JvEnterTab;
+  JvComponentBase, JvEnterTab,
+  inLibComprasSesionesIntf;
 
 type
   TfrmModalDocsCreados = class(TfrmModalAceptCancel)
@@ -56,6 +57,10 @@ type
     procedure PrepararEstructura;
     function GetConfirmado: Boolean;
   public
+    class function Seleccionar(
+      AOwner: TComponent;
+      const ADocumentos: TDocumentosMaterializados;
+      out ASeleccionado: TDocumentoMaterializado): Boolean; static;
     // Captura la fila seleccionada antes de cerrar si se confirma.
     function CloseQuery: Boolean; override;
     property Confirmado: Boolean read GetConfirmado;
@@ -68,6 +73,39 @@ type
 implementation
 
 {$R *.dfm}
+
+class function TfrmModalDocsCreados.Seleccionar(
+  AOwner: TComponent;
+  const ADocumentos: TDocumentosMaterializados;
+  out ASeleccionado: TDocumentoMaterializado): Boolean;
+var
+  Formulario: TfrmModalDocsCreados;
+  i: Integer;
+begin
+  ASeleccionado := Default(TDocumentoMaterializado);
+  Formulario := TfrmModalDocsCreados.Create(AOwner);
+  Formulario.OnClose := nil;
+  try
+    for i := 0 to High(ADocumentos) do
+    begin
+      Formulario.Agregar(
+        ADocumentos[i].Tipo,
+        ADocumentos[i].Serie,
+        ADocumentos[i].Numero,
+        ADocumentos[i].Almacen);
+    end;
+    Formulario.ShowModal;
+    Result := Formulario.Confirmado;
+    if Result then
+    begin
+      ASeleccionado.Tipo := Formulario.SeleccionadoTipo;
+      ASeleccionado.Serie := Formulario.SeleccionadoSerie;
+      ASeleccionado.Numero := Formulario.SeleccionadoNumero;
+    end;
+  finally
+    FreeAndNil(Formulario);
+  end;
+end;
 
 procedure TfrmModalDocsCreados.FormCreate(Sender: TObject);
 begin

@@ -9,15 +9,15 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Registro del ejecutor visual del distribuidor de tallas. La librería      }
-{    declara el contrato y la unidad inMto* registra su implementación.        }
+{    Contrato visual del distribuidor de tallas. La implementación se recibe  }
+{    desde la raíz de composición.                                             }
 {******************************************************************************}
 unit inLibDistribuidorTallas;
 
 interface
 
 uses
-  System.SysUtils, Uni;
+  Uni;
 
 type
   TParametrosDistribuidorTallas = record
@@ -36,40 +36,18 @@ type
     Linea: Integer;
     IdConjuntoPivot: Integer;
   end;
-  TEjecutorDistribuidorTallas = class
-  public
-    class function Ejecutar(
+  IDistribuidorTallasVisual = interface
+    ['{C3D26E71-0DA6-4E08-B9D3-F001911E7F20}']
+    function Ejecutar(
       const AParametros: TParametrosDistribuidorTallas): Boolean;
-      virtual; abstract;
   end;
-  TClaseEjecutorDistribuidorTallas = class of TEjecutorDistribuidorTallas;
-  TDistribuidorTallas = class
-  private
-    class var FClaseEjecutor: TClaseEjecutorDistribuidorTallas;
-  public
-    class procedure RegistrarEjecutor(
-      AClase: TClaseEjecutorDistribuidorTallas);
-    class function Ejecutar(
-      const AParametros: TParametrosDistribuidorTallas): Boolean;
+  IProveedorDistribuidorTallasVisual = interface
+    ['{5D9579B4-9E65-4CA6-9C40-92792E03F50E}']
+    function GetDistribuidorTallasVisual: IDistribuidorTallasVisual;
+    property DistribuidorTallasVisual: IDistribuidorTallasVisual
+      read GetDistribuidorTallasVisual;
   end;
 
 implementation
-
-uses
-  inLibMsgArticulos;
-
-class procedure TDistribuidorTallas.RegistrarEjecutor(
-  AClase: TClaseEjecutorDistribuidorTallas);
-begin
-  FClaseEjecutor := AClase;
-end;
-
-class function TDistribuidorTallas.Ejecutar(
-  const AParametros: TParametrosDistribuidorTallas): Boolean;
-begin
-  if not Assigned(FClaseEjecutor) then
-    raise Exception.Create(SErrorDistribuidorTallasNoRegistrado);
-  Result := FClaseEjecutor.Ejecutar(AParametros);
-end;
 
 end.

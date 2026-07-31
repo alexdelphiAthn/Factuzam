@@ -27,8 +27,8 @@ type
   // y fusiona las duplicadas en una sola linea pivotada.
   TRederivacionTallas = class
   private
-    FLineas: ILineasDocumentoTallas;
-    FPersistencia: IPersistenciaModoTallas;
+    FLineas: ILineasRederivacionTallas;
+    FPersistencia: IPersistenciaRederivacionTallas;
     FModelo: TModeloTallas;
     FRegistro: TRegistroTallas;
     FOnAtributosEscritos: TAtributosEscritosTallas;
@@ -43,8 +43,8 @@ type
       const AAtributos: TAtributosLineaTallas; AIdAv: Integer;
       const AAlmacenLinea, AAlmacenCelda: string);
   public
-    constructor Create(const ALineas: ILineasDocumentoTallas;
-      const APersistencia: IPersistenciaModoTallas;
+    constructor Create(const ALineas: ILineasRederivacionTallas;
+      const APersistencia: IPersistenciaRederivacionTallas;
       AModelo: TModeloTallas; ADistribuido: Boolean;
       const AAlmacenDefecto: string; ARegistro: TRegistroTallas;
       AOnAtributosEscritos: TAtributosEscritosTallas);
@@ -55,8 +55,8 @@ type
   // linea por SKU (cantidad plana) y se limpian las celdas.
   TDesmontajeTallas = class
   private
-    FLineas: ILineasDocumentoTallas;
-    FPersistencia: IPersistenciaModoTallas;
+    FLineas: ILineasDesmontajeTallas;
+    FPersistencia: IPersistenciaDesmontajeTallas;
     FModelo: TModeloTallas;
     FRegistro: TRegistroTallas;
     FCeldas: TArray<TCeldaTallas>;
@@ -70,8 +70,8 @@ type
     procedure ExpandirCeldas;
     function Expandir: Boolean;
   public
-    constructor Create(const ALineas: ILineasDocumentoTallas;
-      const APersistencia: IPersistenciaModoTallas;
+    constructor Create(const ALineas: ILineasDesmontajeTallas;
+      const APersistencia: IPersistenciaDesmontajeTallas;
       AModelo: TModeloTallas; ARegistro: TRegistroTallas);
     destructor Destroy; override;
     procedure Ejecutar;
@@ -80,8 +80,8 @@ type
 implementation
 
 constructor TRederivacionTallas.Create(
-  const ALineas: ILineasDocumentoTallas;
-  const APersistencia: IPersistenciaModoTallas;
+  const ALineas: ILineasRederivacionTallas;
+  const APersistencia: IPersistenciaRederivacionTallas;
   AModelo: TModeloTallas; ADistribuido: Boolean;
   const AAlmacenDefecto: string; ARegistro: TRegistroTallas;
   AOnAtributosEscritos: TAtributosEscritosTallas);
@@ -247,8 +247,8 @@ begin
 end;
 
 constructor TDesmontajeTallas.Create(
-  const ALineas: ILineasDocumentoTallas;
-  const APersistencia: IPersistenciaModoTallas;
+  const ALineas: ILineasDesmontajeTallas;
+  const APersistencia: IPersistenciaDesmontajeTallas;
   AModelo: TModeloTallas; ARegistro: TRegistroTallas);
 begin
   inherited Create;

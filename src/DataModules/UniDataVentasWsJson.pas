@@ -547,7 +547,4 @@ begin
   Result := TVentasWsJsonUniDAC.Create(AConexion);
 end;
 
-initialization
-  TFabricaVentasWsJson.Registrar(CrearVentasWsJsonUniDAC);
-
 end.

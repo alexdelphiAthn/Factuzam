@@ -474,8 +474,8 @@ begin
 end;
 
 procedure EjecutarRederivacion(
-  const ALineas: ILineasDocumentoTallas;
-  const APersistencia: IPersistenciaModoTallas;
+  const ALineas: ILineasRederivacionTallas;
+  const APersistencia: IPersistenciaRederivacionTallas;
   AModelo: TModeloTallas; ADistribuido: Boolean;
   const AAlmacenDefecto: string);
 var
@@ -490,8 +490,8 @@ begin
   end;
 end;
 
-procedure EjecutarDesmontaje(const ALineas: ILineasDocumentoTallas;
-  const APersistencia: IPersistenciaModoTallas;
+procedure EjecutarDesmontaje(const ALineas: ILineasDesmontajeTallas;
+  const APersistencia: IPersistenciaDesmontajeTallas;
   AModelo: TModeloTallas);
 var
   Desmontaje: TDesmontajeTallas;
@@ -509,7 +509,7 @@ procedure TPruebasModoTallasConversion.
   Rederivar_FusionaDuplicadasYVuelcaLaCantidadALaCelda;
 var
   Lineas: TLineasTallasMemoria;
-  RefLineas: ILineasDocumentoTallas;
+  RefLineas: ILineasRederivacionTallas;
   Persistencia: TPersistenciaTallasMemoria;
   Modelo: TModeloTallas;
 begin
@@ -540,7 +540,7 @@ procedure TPruebasModoTallasConversion.
   Rederivar_ConservaLasUnidadesDelDocumento;
 var
   Lineas: TLineasTallasMemoria;
-  RefLineas: ILineasDocumentoTallas;
+  RefLineas: ILineasRederivacionTallas;
   Persistencia: TPersistenciaTallasMemoria;
   Modelo: TModeloTallas;
   rAntes, rDespues: Double;
@@ -575,7 +575,7 @@ procedure TPruebasModoTallasConversion.
   Rederivar_NoFusionaLineasConPrecioDistinto;
 var
   Lineas: TLineasTallasMemoria;
-  RefLineas: ILineasDocumentoTallas;
+  RefLineas: ILineasRederivacionTallas;
   Persistencia: TPersistenciaTallasMemoria;
   Modelo: TModeloTallas;
 begin
@@ -602,7 +602,7 @@ procedure TPruebasModoTallasConversion.
   Rederivar_FusionaPorAlmacenEnFormatoDistribuido;
 var
   Lineas: TLineasTallasMemoria;
-  RefLineas: ILineasDocumentoTallas;
+  RefLineas: ILineasRederivacionTallas;
   Persistencia: TPersistenciaTallasMemoria;
   Modelo: TModeloTallas;
 begin
@@ -633,7 +633,7 @@ procedure TPruebasModoTallasConversion.
   Rederivar_MueveLasCeldasDeUnaDuplicadaYaConvertida;
 var
   Lineas: TLineasTallasMemoria;
-  RefLineas: ILineasDocumentoTallas;
+  RefLineas: ILineasRederivacionTallas;
   Persistencia: TPersistenciaTallasMemoria;
   Modelo: TModeloTallas;
 begin
@@ -664,7 +664,7 @@ procedure TPruebasModoTallasConversion.
   Rederivar_NoVuelveAVolcarLaCantidadDeUnaLineaConCeldas;
 var
   Lineas: TLineasTallasMemoria;
-  RefLineas: ILineasDocumentoTallas;
+  RefLineas: ILineasRederivacionTallas;
   Persistencia: TPersistenciaTallasMemoria;
   Modelo: TModeloTallas;
 begin
@@ -700,7 +700,7 @@ procedure TPruebasModoTallasConversion.
   Desmontar_ExpandeCadaCeldaAUnaLineaPorSku;
 var
   Lineas: TLineasTallasMemoria;
-  RefLineas: ILineasDocumentoTallas;
+  RefLineas: ILineasDesmontajeTallas;
   Persistencia: TPersistenciaTallasMemoria;
   Modelo: TModeloTallas;
 begin
@@ -731,7 +731,7 @@ procedure TPruebasModoTallasConversion.
   Desmontar_ConservaLasUnidadesDelDocumento;
 var
   Lineas: TLineasTallasMemoria;
-  RefLineas: ILineasDocumentoTallas;
+  RefLineas: ILineasDesmontajeTallas;
   Persistencia: TPersistenciaTallasMemoria;
   Modelo: TModeloTallas;
   rAntes, rDespues: Double;
@@ -762,7 +762,7 @@ procedure TPruebasModoTallasConversion.
   Desmontar_SinCeldasNoTocaLasLineas;
 var
   Lineas: TLineasTallasMemoria;
-  RefLineas: ILineasDocumentoTallas;
+  RefLineas: ILineasDesmontajeTallas;
   Persistencia: TPersistenciaTallasMemoria;
   Modelo: TModeloTallas;
 begin
@@ -787,7 +787,7 @@ procedure TPruebasModoTallasConversion.
   Desmontar_ConfirmaUnaSolaVezYNotificaLosPosts;
 var
   Lineas: TLineasTallasMemoria;
-  RefLineas: ILineasDocumentoTallas;
+  RefLineas: ILineasDesmontajeTallas;
   Persistencia: TPersistenciaTallasMemoria;
   Modelo: TModeloTallas;
 begin
@@ -815,7 +815,7 @@ procedure TPruebasModoTallasConversion.
   Desmontar_RevierteCuandoLaConversionPierdeUnidades;
 var
   Lineas: TLineasTallasMemoria;
-  RefLineas: ILineasDocumentoTallas;
+  RefLineas: ILineasDesmontajeTallas;
   Persistencia: TPersistenciaTallasMemoria;
   Modelo: TModeloTallas;
   bLanzoExcepcion: Boolean;
@@ -848,7 +848,7 @@ procedure TPruebasModoTallasConversion.
   Desmontar_RespetaUnaTransaccionYaActiva;
 var
   Lineas: TLineasTallasMemoria;
-  RefLineas: ILineasDocumentoTallas;
+  RefLineas: ILineasDesmontajeTallas;
   Persistencia: TPersistenciaTallasMemoria;
   Modelo: TModeloTallas;
 begin

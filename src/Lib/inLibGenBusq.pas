@@ -20,76 +20,28 @@ uses
   Forms, Uni, DBAccess;
 
 type
-  TEjecutorBusqueda = class
-  public
-    class function EjecutarBusqueda(AConexion: TUniConnection;
-                                    const ACaption: string;
-                                    ADataSet: TCustomDADataSet;
-                                    const AName: string;
-                                    AParentForm: TCustomForm = nil):
-                                    Boolean; overload; virtual; abstract;
-    class function EjecutarBusqueda(AConexion: TUniConnection;
-                                    const ACaption, ASql,
-                                          ACampoResultado: string;
-                                    out AValorDevuelto: string;
-                                    const AName: string;
-                                    AParentForm: TCustomForm = nil):
-                                    Boolean; overload; virtual; abstract;
+  IBusquedaVisual = interface
+    ['{A1C30774-7AE0-4602-9D1D-93CFCD5BFD20}']
+    function EjecutarBusqueda(AConexion: TUniConnection;
+                              const ACaption: string;
+                              ADataSet: TCustomDADataSet;
+                              const AName: string;
+                              AParentForm: TCustomForm = nil):
+                              Boolean; overload;
+    function EjecutarBusqueda(AConexion: TUniConnection;
+                              const ACaption, ASql,
+                                    ACampoResultado: string;
+                              out AValorDevuelto: string;
+                              const AName: string;
+                              AParentForm: TCustomForm = nil):
+                              Boolean; overload;
   end;
-
-  TClaseEjecutorBusqueda = class of TEjecutorBusqueda;
-
-  TBusquedaUtils = class
-  private
-    class var FClaseEjecutor: TClaseEjecutorBusqueda;
-  public
-    class procedure RegistrarEjecutor(AClase: TClaseEjecutorBusqueda);
-    class function EjecutarBusqueda(AConexion: TUniConnection;
-                                    const ACaption: string;
-                                    ADataSet: TCustomDADataSet;
-                                    const AName: string;
-                                    AParentForm: TCustomForm = nil):
-                                    Boolean; overload;
-    class function EjecutarBusqueda(AConexion: TUniConnection;
-                                    const ACaption, ASql,
-                                          ACampoResultado: string;
-                                    out AValorDevuelto: string;
-                                    const AName: string;
-                                    AParentForm: TCustomForm = nil):
-                                    Boolean; overload;
+  IProveedorBusquedaVisual = interface
+    ['{984001D1-F1CF-4E21-8FC5-0492953A3D69}']
+    function GetBusquedaVisual: IBusquedaVisual;
+    property BusquedaVisual: IBusquedaVisual read GetBusquedaVisual;
   end;
 
 implementation
-
-uses
-  SysUtils, inLibMsgComun;
-
-class procedure TBusquedaUtils.RegistrarEjecutor(
-  AClase: TClaseEjecutorBusqueda);
-begin
-  FClaseEjecutor := AClase;
-end;
-
-class function TBusquedaUtils.EjecutarBusqueda(AConexion: TUniConnection;
-  const ACaption: string; ADataSet: TCustomDADataSet; const AName: string;
-  AParentForm: TCustomForm): Boolean;
-begin
-  if not Assigned(FClaseEjecutor) then
-    raise Exception.Create(SErrorEjecutorBusquedasNoRegistrado);
-  Result := FClaseEjecutor.EjecutarBusqueda(
-    AConexion, ACaption, ADataSet, AName, AParentForm);
-end;
-
-class function TBusquedaUtils.EjecutarBusqueda(AConexion: TUniConnection;
-  const ACaption, ASql, ACampoResultado: string;
-  out AValorDevuelto: string; const AName: string;
-  AParentForm: TCustomForm): Boolean;
-begin
-  if not Assigned(FClaseEjecutor) then
-    raise Exception.Create(SErrorEjecutorBusquedasNoRegistrado);
-  Result := FClaseEjecutor.EjecutarBusqueda(
-    AConexion, ACaption, ASql, ACampoResultado, AValorDevuelto, AName,
-    AParentForm);
-end;
 
 end.

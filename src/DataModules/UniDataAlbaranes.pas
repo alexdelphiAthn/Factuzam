@@ -18,6 +18,7 @@ unit UniDataAlbaranes;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, System.Generics.Collections,
   Data.DB, MemDS, DBAccess, Uni,
   UniDataGen, inLibUser,
@@ -2211,4 +2212,6 @@ begin
   end;
 end;
 
+initialization
+  RegistrarDataModule(TdmAlbaranes);
 end.

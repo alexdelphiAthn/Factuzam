@@ -16,6 +16,7 @@ unit UniDataRemesasVenta;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, System.Variants, UniDataGen, Data.DB,
   MemDS, DBAccess, Uni, inLibUser, UniDataConn, inLibSepaRemesasVenta;
 
@@ -858,6 +859,7 @@ begin
 end;
 
 initialization
+  RegistrarDataModule(TdmRemesasVenta);
   ForceReferenceToClass(TdmRemesasVenta);
 end.
 

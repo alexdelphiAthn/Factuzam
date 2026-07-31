@@ -18,6 +18,7 @@ unit UniDataFacturasCompra;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, System.Variants,
   System.Generics.Collections,
   Vcl.ComCtrls, cxListView,
@@ -1067,4 +1068,6 @@ begin
   end;
 end;
 
+initialization
+  RegistrarDataModule(TdmFacturasCompra);
 end.

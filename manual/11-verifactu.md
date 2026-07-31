@@ -207,10 +207,29 @@ sobre un documento **ya consolidado**:
 | Necesitas… | Acción | Qué hace |
 |------------|--------|----------|
 | Anular una venta inexistente o errónea | **Anular (Verifactu)** | Encola un *registro de anulación*. La factura pasa a **CANCELADA**. |
-| Corregir importes o conceptos | **Rectificar** | Crea una **factura rectificativa** (importes en negativo) ligada a la original, que queda como *RECTIFICADA*. Se puede rectificar varias veces. |
+| Corregir importes o conceptos | **Rectificar** | Crea una **factura rectificativa por diferencias** (corrección en negativo) o **sustitutiva** (documento correcto en positivo), siempre ligada a la original. |
 | El registro se comunicó con errores | **Subsanar (Verifactu)** | Reenvía el registro corregido (*subsanación*), p. ej. tras un «aceptado con errores». |
 | Un cliente pide factura nominativa de su ticket | **Facturar ticket (F3)** | Crea una **factura normal** en sustitución de la simplificada, copiando sus líneas, a nombre del cliente. |
 | El cliente se identifica en el momento de la venta | **Factura (F8)** en la fase de cobro | Graba la venta directamente como **factura normal** (no ticket); exige cliente con NIF e imprime en A4/PDF. |
+
+### Rectificativa por diferencias y sustitutiva
+
+Al rectificar un ticket desde **Buscar operaciones**, Factuzam pregunta la
+modalidad antes de abrir la nueva operación de caja:
+
+| Tipo | Documento nuevo | Resultado práctico |
+|------|-----------------|--------------------|
+| **Por diferencias** | Presenta las líneas en negativo para conservar únicamente la corrección necesaria. | La factura original y la rectificativa forman conjuntamente el resultado final. Es adecuada para devoluciones parciales o diferencias concretas. |
+| **Sustitutiva** | Presenta en positivo el contenido completo que debe quedar como correcto. | La rectificativa sustituye a la original. En listados de venta deja de computar la simplificada original y computa la sustitutiva. |
+
+En ambos casos se conserva la relación entre los documentos, la serie
+rectificativa, el motivo y la trazabilidad fiscal. La modalidad sustitutiva
+reemplaza además los movimientos de almacén de la original por los del
+documento corregido; la modalidad por diferencias mantiene los movimientos
+originales y añade el ajuste con su signo.
+
+El procedimiento paso a paso está en
+[Caja ▸ Rectificar un ticket](05-menu-caja.md#rectificar-un-ticket-por-diferencias-o-sustitutiva).
 
 ![Botones de acciones fiscales en Facturas](img/11-acciones.png)
 
@@ -263,4 +282,4 @@ aplicación lo da por bueno. No hay que hacer nada.
 
 ---
 
-[◀ Migración desde legacy](10-migracion-legacy.md) · [Índice](README.md)
+[◀ Migración desde legacy](10-migracion-legacy.md) · [Índice](README.md) · [Siguiente ▶ Cambios y novedades](12-cambios-y-novedades.md)

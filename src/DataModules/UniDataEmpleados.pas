@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataEmpleados                                              }
 {    Tipo:       Data Module                                                   }
@@ -17,6 +17,7 @@ unit UniDataEmpleados;
 interface
 
 uses
+  inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
   UniDataConn;
 
@@ -50,5 +51,6 @@ begin
 end;
 
 initialization
+  RegistrarDataModule(TdmEmpleados);
   ForceReferenceToClass(TdmEmpleados);
 end.

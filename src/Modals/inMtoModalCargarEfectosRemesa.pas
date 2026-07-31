@@ -253,7 +253,7 @@ var
   sVal: string;
 begin
   inherited;
-  if TBusquedaUtils.EjecutarBusqueda(ConexionPrincipal, 'Buscar empresa',
+  if BusquedaVisual.EjecutarBusqueda(ConexionPrincipal, 'Buscar empresa',
        'SELECT * FROM fza_empresas ORDER BY RAZON_SOCIAL_EMP',
        'CODIGO_EMP_EMP', sVal, 'srchEmpRem', Self) then
     btnEmpresa.Text := sVal;
