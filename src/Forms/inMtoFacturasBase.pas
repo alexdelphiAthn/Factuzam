@@ -2002,7 +2002,6 @@ end;
 procedure TControladorFacturas.EjecutarOperacionFiscal(
   const ATipoOperacion, AAccion: string);
 var
-  BorrarMovimientos: Boolean;
   Contexto: TContextoOperacionFiscalFactura;
   Preparacion: TPreparacionOperacionFiscalFactura;
   Solicitud: TSolicitudEmisionFiscal;
@@ -2032,17 +2031,7 @@ begin
             [mbYes, mbNo],
             0) = mrYes then
   begin
-    BorrarMovimientos := True;
-    if Preparacion.SolicitaDecisionBorrarMovimientos then
-    begin
-      BorrarMovimientos := MessageDlg(
-        Preparacion.PreguntaBorrarMovimientos,
-        mtConfirmation,
-        [mbYes, mbNo], 0) = mrYes;
-    end;
-    Solicitud := CrearSolicitudOperacionFiscalFactura(
-      Contexto,
-      BorrarMovimientos);
+    Solicitud := CrearSolicitudOperacionFiscalFactura(Contexto);
     Servicio := CrearServicioEmisionFiscal(
       ParametrosApp,
       ParametrosCaja,

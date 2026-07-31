@@ -923,6 +923,11 @@ begin
     sBase := TrimRight(FSqlBaseBusquedaExterna);
     while (sBase <> '') and (sBase[Length(sBase)] = ';') do
       sBase := TrimRight(Copy(sBase, 1, Length(sBase) - 1));
+    // Al envolverla, UniDAC ve el alias como primera tabla. Conservamos la
+    // tabla real para que el Post no intente actualizar sub_busqueda.
+    if unqry.UpdatingTable = '' then
+      unqry.UpdatingTable := ExtraerTablaDeSQL(
+        FSqlBaseBusquedaExterna);
     unqry.SQL.Text := 'SELECT * FROM (' + sLineBreak +
       sBase + sLineBreak + ') sub_busqueda WHERE ' + sWhere;
   end;

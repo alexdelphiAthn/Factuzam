@@ -195,7 +195,7 @@ begin
     '   AND o.CODIGO_EMP_OPCAJA = :PEMP '                             +
     '   AND o.CODIGO_ALM_OPCAJA = :PALM '                             +
     '   AND o.CODIGO_CAJA_OPCAJA    = :PCAJA '                            +
-    SQLExcluirSimplificadaSustituida(
+    SQLExcluirVentaRetirada(
       'o.CODIGO_EMP_OPCAJA',
       'o.SERIE_FAC_OPCAJA',
       'o.NUMERO_FAC_OPCAJA') +

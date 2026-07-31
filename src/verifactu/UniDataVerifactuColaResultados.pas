@@ -229,9 +229,8 @@ begin
     Qry.ParamByName('SERIE').AsString   := ASerie;
     Qry.ParamByName('NUMERO').AsString  := ANumero;
     Qry.Execute;
-    // Los movimientos se resuelven al solicitar la anulación, cuando el
-    // usuario decide si desea revertir el stock. No se repite aquí porque
-    // el hilo no conserva esa elección.
+    // Los movimientos se revierten al solicitar la anulación. No se repite
+    // aquí para evitar una segunda actualización del stock.
     // Cola: fila enviada. El mensaje informativo se conserva cuando la
     // AEAT acepta con errores.
     Qry.SQL.Text :=

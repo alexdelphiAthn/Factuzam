@@ -27,13 +27,11 @@ type
     [Test]
     procedure SinConsolidar_DescribeLaAccionPendiente;
     [Test]
-    procedure AnulacionSimplificada_PreguntaPorLosMovimientos;
+    procedure AnulacionSimplificada_ConfirmaLaAnulacion;
     [Test]
-    procedure AnulacionNormal_NoPreguntaPorLosMovimientos;
+    procedure Solicitud_AnulacionRevierteMovimientos;
     [Test]
-    procedure OtraOperacionSimplificada_NoPreguntaPorLosMovimientos;
-    [Test]
-    procedure Solicitud_ConservaContextoYDecisionDeMovimientos;
+    procedure Solicitud_OtraOperacionNoRevierteMovimientos;
   end;
 
 implementation
@@ -84,7 +82,7 @@ begin
 end;
 
 procedure TPruebasFacturasOperacionFiscal.
-  AnulacionSimplificada_PreguntaPorLosMovimientos;
+  AnulacionSimplificada_ConfirmaLaAnulacion;
 var
   Contexto: TContextoOperacionFiscalFactura;
   Preparacion: TPreparacionOperacionFiscalFactura;
@@ -95,56 +93,36 @@ begin
   Preparacion := PrepararOperacionFiscalFactura(Contexto);
   Assert.IsTrue(Preparacion.EsValida);
   Assert.IsNotEmpty(Preparacion.PreguntaConfirmacion);
-  Assert.IsTrue(Preparacion.SolicitaDecisionBorrarMovimientos);
-  Assert.IsTrue(
-    Pos('F\42', Preparacion.PreguntaBorrarMovimientos) > 0);
 end;
 
 procedure TPruebasFacturasOperacionFiscal.
-  AnulacionNormal_NoPreguntaPorLosMovimientos;
-var
-  Contexto: TContextoOperacionFiscalFactura;
-  Preparacion: TPreparacionOperacionFiscalFactura;
-begin
-  Contexto := CrearContextoPrueba;
-  Preparacion := PrepararOperacionFiscalFactura(Contexto);
-  Assert.IsTrue(Preparacion.EsValida);
-  Assert.IsFalse(Preparacion.SolicitaDecisionBorrarMovimientos);
-  Assert.IsEmpty(Preparacion.PreguntaBorrarMovimientos);
-end;
-
-procedure TPruebasFacturasOperacionFiscal.
-  OtraOperacionSimplificada_NoPreguntaPorLosMovimientos;
-var
-  Contexto: TContextoOperacionFiscalFactura;
-  Preparacion: TPreparacionOperacionFiscalFactura;
-begin
-  Contexto := CrearContextoPrueba;
-  Contexto.TipoFactura := 'SIMPLIFICADA';
-  Contexto.TipoOperacion := 'SUBSANACION';
-  Preparacion := PrepararOperacionFiscalFactura(Contexto);
-  Assert.IsTrue(Preparacion.EsValida);
-  Assert.IsFalse(Preparacion.SolicitaDecisionBorrarMovimientos);
-end;
-
-procedure TPruebasFacturasOperacionFiscal.
-  Solicitud_ConservaContextoYDecisionDeMovimientos;
+  Solicitud_AnulacionRevierteMovimientos;
 var
   Contexto: TContextoOperacionFiscalFactura;
   Solicitud: TSolicitudEmisionFiscal;
 begin
   Contexto := CrearContextoPrueba;
-  Solicitud := CrearSolicitudOperacionFiscalFactura(
-    Contexto,
-    False);
+  Solicitud := CrearSolicitudOperacionFiscalFactura(Contexto);
   Assert.AreEqual(fefOperacion, Solicitud.Flujo);
   Assert.AreEqual('F', Solicitud.Serie);
   Assert.AreEqual('42', Solicitud.Numero);
   Assert.AreEqual('PRUEBAS', Solicitud.Usuario);
   Assert.AreEqual('ANULACION', Solicitud.TipoOperacion);
   Assert.AreEqual('Anulación', Solicitud.Accion);
-  Assert.IsFalse(Solicitud.BorrarMovimientos);
+  Assert.IsTrue(Solicitud.BorrarMovimientos);
   Assert.IsTrue(Solicitud.RegistrarEvento);
+end;
+
+procedure TPruebasFacturasOperacionFiscal.
+  Solicitud_OtraOperacionNoRevierteMovimientos;
+var
+  Contexto: TContextoOperacionFiscalFactura;
+  Solicitud: TSolicitudEmisionFiscal;
+begin
+  Contexto := CrearContextoPrueba;
+  Contexto.TipoOperacion := 'SUBSANACION';
+  Solicitud := CrearSolicitudOperacionFiscalFactura(Contexto);
+  Assert.IsFalse(Solicitud.BorrarMovimientos);
 end;
 
 initialization

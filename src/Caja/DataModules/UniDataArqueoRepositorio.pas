@@ -80,7 +80,7 @@ begin
     'AND CODIGO_CAJA_OPCAJA = :pCAJA ' +
     'AND FECHA_OPERACION_OPCAJA >= :pFDESDE ' +
     'AND FECHA_OPERACION_OPCAJA <= :pFHASTA' +
-    SQLExcluirSimplificadaSustituida(
+    SQLExcluirVentaRetirada(
       'o.CODIGO_EMP_OPCAJA',
       'o.SERIE_FAC_OPCAJA',
       'o.NUMERO_FAC_OPCAJA');
@@ -104,7 +104,7 @@ begin
     'AND o.CODIGO_CAJA_OPCAJA = :pCAJA ' +
     'AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE ' +
     'AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA' +
-    SQLExcluirSimplificadaSustituida(
+    SQLExcluirVentaRetirada(
       'o.CODIGO_EMP_OPCAJA',
       'o.SERIE_FAC_OPCAJA',
       'o.NUMERO_FAC_OPCAJA');
@@ -141,7 +141,7 @@ begin
     'AND o.CODIGO_CAJA_OPCAJA = :pCAJA ' +
     'AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE ' +
     'AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA' +
-    SQLExcluirSimplificadaSustituida(
+    SQLExcluirVentaRetirada(
       'o.CODIGO_EMP_OPCAJA',
       'o.SERIE_FAC_OPCAJA',
       'o.NUMERO_FAC_OPCAJA');
@@ -174,7 +174,7 @@ begin
     'AND o.IMPORTE_TOTAL_OPCAJA > 0 ' +
     'AND o.ID_DEPOSITO_OPCAJA IS NOT NULL ' +
     'AND o.ID_DEPOSITO_OPCAJA <> '''' ' +
-    SQLExcluirSimplificadaSustituida(
+    SQLExcluirVentaRetirada(
       'o.CODIGO_EMP_OPCAJA',
       'o.SERIE_FAC_OPCAJA',
       'o.NUMERO_FAC_OPCAJA');
@@ -190,7 +190,7 @@ begin
     'AND v.CODIGO_CAJA_EMI_VL = :pCAJA ' +
     'AND v.FECHA_EMISION_VL >= :pFDESDE ' +
     'AND v.FECHA_EMISION_VL <= :pFHASTA ' +
-    SQLExcluirSimplificadaSustituida(
+    SQLExcluirVentaRetirada(
       'v.CODIGO_EMP_EMI_VL',
       'v.SERIE_FAC_EMI_VL',
       'v.NUMERO_FAC_EMI_VL');
@@ -206,7 +206,7 @@ begin
     'AND v.CODIGO_CAJA_RED_VL = :pCAJA ' +
     'AND v.FECHA_REDENCION_VL >= :pFDESDE ' +
     'AND v.FECHA_REDENCION_VL <= :pFHASTA ' +
-    SQLExcluirSimplificadaSustituida(
+    SQLExcluirVentaRetirada(
       'v.CODIGO_EMP_RED_VL',
       'v.SERIE_FAC_RED_VL',
       'v.NUMERO_FAC_RED_VL');
@@ -233,7 +233,7 @@ begin
     'AND o.NUMERO_OPERACION_OPCAJA = p.NUMERO_OPERACION_PAGO ' +
     'AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE ' +
     'AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA ' +
-    SQLExcluirSimplificadaSustituida(
+    SQLExcluirVentaRetirada(
       'o.CODIGO_EMP_OPCAJA',
       'o.SERIE_FAC_OPCAJA',
       'o.NUMERO_FAC_OPCAJA') +

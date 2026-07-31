@@ -122,10 +122,6 @@ type
     function SeleccionarTipoRectificativa(
       const ASerie, ANumero: string;
       out ATipoRectificativa: TTipoRectificativaCaja): Boolean;
-    function SeleccionarMovimientosRectificativa(
-      const ASerie, ANumero: string;
-      out ATratamiento:
-        TTratamientoMovimientosRectificativa): Boolean;
     procedure RecargarMaestro;
     procedure GuardarLayout;
     procedure RestaurarLayout;
@@ -238,6 +234,8 @@ end;
 
 procedure TfrmConsultaOpe.RefrescarOperaciones;
 begin
+  if Assigned(FVentasCal) then
+    FVentasCal.InvalidarTodo;
   if Assigned(FdmConsulta) then
   begin
     FdmConsulta.InvalidarCacheMaestro;
@@ -405,17 +403,14 @@ end;
 
 procedure TfrmConsultaOpe.btnAnularVerifactuClick(Sender: TObject);
 var
-  Qry:                  TUniQuery;
-  sSerie:               string;
-  sNumero:              string;
-  bBorrarMovimientos:   Boolean;
-  EsFacturaSimplificada: Boolean;
+  Qry: TUniQuery;
+  sSerie: string;
+  sNumero: string;
   Resultado: TResultadoEmisionFiscal;
   Servicio: IServicioEmisionFiscal;
   Solicitud: TSolicitudEmisionFiscal;
 begin
-  //Anulación Verifactu (RegistroAnulacion) de la factura del ticket
-  bBorrarMovimientos := True;
+  // Anulación fiscal y retirada operativa de la venta.
   if not FacturaSeleccionada(sSerie, sNumero) then
     ShowMessage(SErrorOperacionSinBorrador)
   else
@@ -424,7 +419,7 @@ begin
     try
       Qry.Connection := ConexionPrincipal;
       Qry.SQL.Text :=
-        ' SELECT ESCONSOLIDADA_FAC, TIPO_FAC FROM fza_facturas ' +
+        ' SELECT ESCONSOLIDADA_FAC FROM fza_facturas ' +
         ' WHERE SERIE_FAC  = :SERIE ' +
         '   AND NUMERO_FAC = :NUMERO';
       Qry.ParamByName('SERIE').AsString  := sSerie;
@@ -437,15 +432,6 @@ begin
                                [sSerie, sNumero]), mtConfirmation,
                          [mbYes, mbNo], 0) = mrYes then
       begin
-        EsFacturaSimplificada := SameText(
-          Qry.FieldByName('TIPO_FAC').AsString, 'SIMPLIFICADA');
-        if EsFacturaSimplificada then
-        begin
-          bBorrarMovimientos := MessageDlg(
-            Format(SPreguntaBorrarMovimientosTicketAnulado,
-                   [sSerie, sNumero]), mtConfirmation,
-            [mbYes, mbNo], 0) = mrYes;
-        end;
         Qry.Close;
         Servicio := CrearServicioEmisionFiscal(
           ParametrosApp,
@@ -458,10 +444,11 @@ begin
           IdentidadSesion.Usuario,
           'ANULACION',
           'Anulación',
-          bBorrarMovimientos,
+          True,
           'Anulación encolada desde Buscar operaciones');
         Resultado := Servicio.Emitir(Solicitud);
         ShowMessage(Resultado.Mensaje);
+        RefrescarOperaciones;
       end;
     finally
       FreeAndNil(Qry);
@@ -565,10 +552,7 @@ begin
   begin
     TratamientoMovimientos := tmrMantenerOriginales;
     if TipoRectificativa = trcSustitutiva then
-    begin
-      bSigue := SeleccionarMovimientosRectificativa(
-        sSerie, sNumero, TratamientoMovimientos);
-    end;
+      TratamientoMovimientos := tmrReemplazarOriginales;
     if bSigue then
     begin
       // Ventana de ventas libre, o una nueva si todas están ocupadas
@@ -651,72 +635,6 @@ begin
       mrNo:
         begin
           ATipoRectificativa := trcSustitutiva;
-          Result := True;
-        end;
-    end;
-  finally
-    FreeAndNil(oDialogo);
-  end;
-end;
-
-function TfrmConsultaOpe.SeleccionarMovimientosRectificativa(
-  const ASerie, ANumero: string;
-  out ATratamiento: TTratamientoMovimientosRectificativa): Boolean;
-const
-  AnchoBoton = 155;
-  SeparacionBotones = 8;
-var
-  oDialogo: TForm;
-  oBoton: TButton;
-  i: Integer;
-  iBotones: Integer;
-  iIzquierda: Integer;
-begin
-  Result := False;
-  ATratamiento := tmrMantenerOriginales;
-  oDialogo := CreateMessageDialog(
-    Format(SPreguntaMovimientosRectificativaSustitutiva,
-      [ASerie, ANumero]),
-    mtConfirmation, [mbYes, mbNo, mbCancel]);
-  try
-    oDialogo.Caption := STituloMovimientosAlmacen;
-    if oDialogo.ClientWidth < 520 then
-      oDialogo.ClientWidth := 520;
-    iBotones := 0;
-    for i := 0 to oDialogo.ComponentCount - 1 do
-    begin
-      if oDialogo.Components[i] is TButton then
-        Inc(iBotones);
-    end;
-    iIzquierda := (oDialogo.ClientWidth -
-      (iBotones * AnchoBoton) -
-      ((iBotones - 1) * SeparacionBotones)) div 2;
-    for i := 0 to oDialogo.ComponentCount - 1 do
-    begin
-      if oDialogo.Components[i] is TButton then
-      begin
-        oBoton := TButton(oDialogo.Components[i]);
-        case oBoton.ModalResult of
-          mrYes:
-            oBoton.Caption := SCaptionEliminarOriginales;
-          mrNo:
-            oBoton.Caption := SCaptionMantenerOriginales;
-          mrCancel:
-            oBoton.Caption := SCaptionCancelar;
-        end;
-        oBoton.SetBounds(iIzquierda, oBoton.Top, AnchoBoton, oBoton.Height);
-        Inc(iIzquierda, AnchoBoton + SeparacionBotones);
-      end;
-    end;
-    case oDialogo.ShowModal of
-      mrYes:
-        begin
-          ATratamiento := tmrReemplazarOriginales;
-          Result := True;
-        end;
-      mrNo:
-        begin
-          ATratamiento := tmrMantenerOriginales;
           Result := True;
         end;
     end;

@@ -32,16 +32,13 @@ type
     EsValida: Boolean;
     MensajeError: string;
     PreguntaConfirmacion: string;
-    SolicitaDecisionBorrarMovimientos: Boolean;
-    PreguntaBorrarMovimientos: string;
   end;
 
 function PrepararOperacionFiscalFactura(
   const AContexto: TContextoOperacionFiscalFactura
 ): TPreparacionOperacionFiscalFactura;
 function CrearSolicitudOperacionFiscalFactura(
-  const AContexto: TContextoOperacionFiscalFactura;
-  ABorrarMovimientos: Boolean
+  const AContexto: TContextoOperacionFiscalFactura
 ): TSolicitudEmisionFiscal;
 
 implementation
@@ -74,22 +71,11 @@ begin
       [AContexto.Accion,
        AContexto.Serie,
        AContexto.Numero]);
-    Result.SolicitaDecisionBorrarMovimientos :=
-      SameText(AContexto.TipoOperacion, 'ANULACION') and
-      SameText(AContexto.TipoFactura, 'SIMPLIFICADA');
-    if Result.SolicitaDecisionBorrarMovimientos then
-    begin
-      Result.PreguntaBorrarMovimientos := Format(
-        SPreguntaBorrarMovimientosTicketAnulado,
-        [AContexto.Serie,
-         AContexto.Numero]);
-    end;
   end;
 end;
 
 function CrearSolicitudOperacionFiscalFactura(
-  const AContexto: TContextoOperacionFiscalFactura;
-  ABorrarMovimientos: Boolean
+  const AContexto: TContextoOperacionFiscalFactura
 ): TSolicitudEmisionFiscal;
 begin
   Result := TSolicitudEmisionFiscal.ParaOperacion(
@@ -98,7 +84,7 @@ begin
     AContexto.Usuario,
     AContexto.TipoOperacion,
     AContexto.Accion,
-    ABorrarMovimientos);
+    SameText(AContexto.TipoOperacion, 'ANULACION'));
 end;
 
 end.

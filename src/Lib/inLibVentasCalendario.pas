@@ -115,7 +115,7 @@ type
 implementation
 
 uses
-  System.DateUtils;
+  System.DateUtils, inLibRectificativas;
 
 // =============================================================================
 // TVentasDia
@@ -230,20 +230,24 @@ begin
   try
     Query.Connection := FConn;
     Query.SQL.Text :=
-      ' SELECT FECHA_OP_DIA_OPCAJA                  AS FECHA,         ' +
+      ' SELECT o.FECHA_OP_DIA_OPCAJA                AS FECHA,         ' +
       '        COUNT(*)                      AS TOTAL_VENTAS,  ' +
       '        COALESCE(SUM(CASE                               ' +
-      '                       WHEN TIPO_OPERACION_OPCAJA = ''VE'' ' +
-      '                       THEN IMPORTE_TOTAL_OPCAJA        ' +
+      '                       WHEN o.TIPO_OPERACION_OPCAJA = ''VE'' ' +
+      '                       THEN o.IMPORTE_TOTAL_OPCAJA      ' +
       '                       ELSE 0                           ' +
       '                     END), 0)         AS TOTAL_COBRADO  ' +
-      '   FROM fza_caja_operaciones                            ' +
-      '  WHERE FECHA_OP_DIA_OPCAJA           >= :fecha_inicio         ' +
-      '    AND FECHA_OP_DIA_OPCAJA           <  :fecha_fin            ' +
-      '    AND CODIGO_EMP_OPCAJA  =  :empresa              ' +
-      '    AND CODIGO_ALM_OPCAJA  =  :almacen              ' +
-      '    AND CODIGO_CAJA_OPCAJA     =  :caja                 ' +
-      '  GROUP BY FECHA_OP_DIA_OPCAJA                                 ';
+      '   FROM fza_caja_operaciones o                          ' +
+      '  WHERE o.FECHA_OP_DIA_OPCAJA         >= :fecha_inicio ' +
+      '    AND o.FECHA_OP_DIA_OPCAJA         <  :fecha_fin    ' +
+      '    AND o.CODIGO_EMP_OPCAJA = :empresa                 ' +
+      '    AND o.CODIGO_ALM_OPCAJA = :almacen                 ' +
+      '    AND o.CODIGO_CAJA_OPCAJA = :caja                   ' +
+      SQLExcluirVentaRetirada(
+        'o.CODIGO_EMP_OPCAJA',
+        'o.SERIE_FAC_OPCAJA',
+        'o.NUMERO_FAC_OPCAJA') +
+      '  GROUP BY o.FECHA_OP_DIA_OPCAJA                       ';
     Query.ParamByName('fecha_inicio').AsDate  := PrimerDia;
     Query.ParamByName('fecha_fin').AsDate     := UltimoDia;
     Query.ParamByName('empresa').AsString     := FEmpresa;

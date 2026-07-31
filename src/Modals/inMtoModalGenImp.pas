@@ -840,6 +840,9 @@ begin
     // las ve en el arbol de datasets del diseñador y los campos extra
     // estan disponibles para arrastrar al .frx).
     AbrirGuiasRuntime(False);
+    // Los informes basados en TClientDataSet deben copiar de nuevo los
+    // campos añadidos a la consulta física antes de abrir el diseñador.
+    OnGuiasAplicadas;
     try
       frxrprt1.PrepareReport(True);
       frxrprt1.DesignReport();

@@ -282,7 +282,7 @@ begin
     AQry, ASerie, ANumero, ATipoOperacion, AResultado);
   MarcarFacturaRegistradaNoVerifactu(
     AQry, AUsuario, ASerie, ANumero, ATipoOperacion);
-  if (ATipoOperacion = 'ANULACION') and ABorrarMovimientos then
+  if ATipoOperacion = 'ANULACION' then
     TOperacionesVerifactuColaUniDAC.BorrarMovimientosFactura(
       AQry, ASerie, ANumero);
 end;
@@ -448,8 +448,7 @@ begin
       // aunque la original se rectifique varias veces
       RegistrarRelacionFactura(AConn, AUsuario, ASerieRect, ANumeroRect,
         ASerieOriginal, ANumeroOriginal, 'RECTIFICA');
-      if (sTipoRectificativa = 'S') and
-         ABorrarMovimientosOriginales then
+      if sTipoRectificativa = 'S' then
       begin
         BorrarMovimientosFactura(Qry, ASerieOriginal, ANumeroOriginal);
       end;

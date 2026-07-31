@@ -149,7 +149,7 @@ begin
   FQry.ParamByName('TIPOOP').AsString  := ATipoOperacion;
   FQry.ParamByName('USUARIO').AsString := AUsuario;
   FQry.Execute;
-  if (ATipoOperacion = 'ANULACION') and ABorrarMovimientos then
+  if ATipoOperacion = 'ANULACION' then
     TOperacionesVerifactuColaUniDAC.BorrarMovimientosFactura(
       FQry, ASerie, ANumero);
   // El lanzamiento saca la factura de BORRADOR en el acto: el QR es
@@ -225,7 +225,7 @@ begin
   FQry.ParamByName('SERIE').AsString := ASerie;
   FQry.ParamByName('NUMERO').AsString := ANumero;
   FQry.Execute;
-  if (ATipoOperacion = 'ANULACION') and ABorrarMovimientos then
+  if ATipoOperacion = 'ANULACION' then
     TOperacionesVerifactuColaUniDAC.BorrarMovimientosFactura(
       FQry, ASerie, ANumero);
   Log.LogInfo('Factura ' + ASerie + '\' + ANumero +

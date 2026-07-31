@@ -551,7 +551,7 @@ begin
     Anadir('   AND o.FECHA_OPERACION_OPCAJA >= :pDESDE');
     Anadir('   AND o.FECHA_OPERACION_OPCAJA <');
     Anadir('       DATE_ADD(:pHASTA, INTERVAL 1 DAY)');
-    Anadir(SQLExcluirSimplificadaSustituida(
+    Anadir(SQLExcluirVentaRetirada(
       'o.CODIGO_EMP_OPCAJA',
       'o.SERIE_FAC_OPCAJA',
       'o.NUMERO_FAC_OPCAJA'));

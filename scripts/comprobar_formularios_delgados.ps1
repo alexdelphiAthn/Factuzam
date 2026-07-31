@@ -23,6 +23,12 @@ $objetivos = @(
   },
   @{
     Ruta = 'src\Forms\inMtoFacturasBase.pas'
+    Clase = 'TControladorFacturas'
+    Metodo = 'GuardarPendienteAntesDeImprimir'
+  },
+  @{
+    Ruta = 'src\Forms\inMtoFacturasBase.pas'
+    Clase = 'TControladorFacturas'
     Metodo = 'MostrarSkuArticulo'
   },
   @{
@@ -55,18 +61,25 @@ foreach ($objetivo in $objetivos) {
   $ruta = Join-Path $Raiz $objetivo.Ruta
   $contenido = Get-Content -LiteralPath $ruta -Raw
   $nombre = [Regex]::Escape($objetivo.Metodo)
+  if ($objetivo.ContainsKey('Clase')) {
+    $clase = [Regex]::Escape($objetivo.Clase)
+    $etiqueta =
+      "$($objetivo.Ruta):$($objetivo.Clase).$($objetivo.Metodo)"
+  }
+  else {
+    $clase = 'Tfrm\w+'
+    $etiqueta = "$($objetivo.Ruta):$($objetivo.Metodo)"
+  }
   $patronMetodo =
-    "(?ms)^(?:procedure|function)\s+Tfrm\w+\.$nombre\b.*?" +
-    "(?=^(?:procedure|function)\s+Tfrm|\z)"
+    "(?ms)^(?:procedure|function)\s+$clase\.$nombre\b.*?" +
+    "(?=^(?:procedure|function|constructor|destructor)" +
+    "\s+T\w+\.|\z)"
   $coincidencia = [Regex]::Match($contenido, $patronMetodo)
   if (-not $coincidencia.Success) {
-    $errores.Add(
-      "No se encontro $($objetivo.Ruta):$($objetivo.Metodo).")
+    $errores.Add("No se encontro $etiqueta.")
   }
   elseif ([Regex]::IsMatch($coincidencia.Value, $patronProhibido)) {
-    $errores.Add(
-      "SQL o transaccion directa en " +
-      "$($objetivo.Ruta):$($objetivo.Metodo).")
+    $errores.Add("SQL o transaccion directa en $etiqueta.")
   }
 }
 

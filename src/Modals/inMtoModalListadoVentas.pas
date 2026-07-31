@@ -706,7 +706,7 @@ begin
     Add('   AND (:pCON = ''N''');
     Add('        OR COALESCE(f.`ESCONSOLIDADA_FAC`, ''N'') = ''S'')');
     Add('   AND COALESCE(f.`FASE_FAC`, '''') <> ''CANCELADA''');
-    Add(SQLExcluirSimplificadaSustituida(
+    Add(SQLExcluirVentaRetirada(
       'f.CODIGO_EMP_FAC', 'f.SERIE_FAC', 'f.NUMERO_FAC'));
     Add('       ) L');
     Add(' WHERE (:pTMP = '''' OR L.`TEMPORADA_ART` = :pTMP)');

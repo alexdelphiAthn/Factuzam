@@ -105,7 +105,7 @@ implementation
 {$R *.dfm}
 
 uses
-  UniDataConn, inLibUser, inLibLog, inLibMsgComun;
+  UniDataConn, inLibUser, inLibMsgComun;
 
 procedure TfrmModalGuiasBase.FormCreate(Sender: TObject);
 begin

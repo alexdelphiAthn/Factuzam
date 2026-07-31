@@ -1,7 +1,7 @@
 param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [int]$MaximoFlujo = 100,
-  [int]$MaximoMetodosMayoresDe200 = 38
+  [int]$MaximoMetodosMayoresDe200 = 33
 )
 
 Set-StrictMode -Version Latest
@@ -128,7 +128,7 @@ $objetivos = @(
     Nombre = 'TdmCajaOpe.GrabarFacturaSimplificada'
   },
   @{
-    Ruta = 'src\verifactu\inLibVerifactuCola.pas'
+    Ruta = 'src\verifactu\UniDataVerifactuColaOperaciones.pas'
     Nombre = 'GuardarRegistroNoVerifactu'
   },
   @{
@@ -212,8 +212,8 @@ foreach ($metodo in $ayudantesCaja) {
   }
 }
 
-$rutaPedidosCompra =
-  Join-Path $Raiz 'src\Lib\inLibPedidosCompra.pas'
+$rutaPedidosCompra = Join-Path $Raiz `
+  'src\DataModules\UniDataPedidosCompraOperaciones.pas'
 $contenidoPedidosCompra =
   Get-Content -LiteralPath $rutaPedidosCompra -Raw
 $ayudantesRecepcion = @(
@@ -248,8 +248,9 @@ foreach ($nombre in $ayudantesRecepcion) {
   }
   if ($metodo[0].Lineas -gt $MaximoFlujo) {
     throw (
-      "inLibPedidosCompra.pas`:$($metodo[0].Linea) $nombre ocupa " +
-      "$($metodo[0].Lineas) lineas; maximo permitido: $MaximoFlujo.")
+      "UniDataPedidosCompraOperaciones.pas`:$($metodo[0].Linea) " +
+      "$nombre ocupa $($metodo[0].Lineas) lineas; " +
+      "maximo permitido: $MaximoFlujo.")
   }
   $referencias = [regex]::Matches(
     $contenidoPedidosCompra,
@@ -627,11 +628,11 @@ $contratosResguardoDeposito = @(
   'ListarDepositosDevueltosResguardo',
   'ObtenerTotalPagadoResguardo',
   'ListarPieTicket',
-  'MOVIMIENTO DE DEPÓSITOS/PRÉSTAMOS',
-  'ENTREGAS A CUENTA',
-  'DEVOLUCIÓN ECONÓMICA',
-  'DEVOLUCIÓN DE ARTÍCULOS',
-  'TOTAL PAGADO (TICKET + DEPÓSITOS):',
+  'STicketMovimientoDepositosPrestamos',
+  'STicketEntregasCuenta',
+  'STicketDevolucionEconomica',
+  'STicketDevolucionArticulos',
+  'STicketTotalPagadoDepositos',
   'ImprimirOPrevisualizarTicket',
   'ARutasPDF.Add'
 )
@@ -757,25 +758,34 @@ $rutaModoTallas =
   Join-Path $Raiz 'src\Lib\inLibColumnasSkuModoTallas.pas'
 $contenidoModoTallas =
   Get-Content -LiteralPath $rutaModoTallas -Raw
+$rutaTallasConversion =
+  Join-Path $Raiz 'src\Lib\inLibModoTallasConversion.pas'
+$contenidoTallasConversion =
+  Get-Content -LiteralPath $rutaTallasConversion -Raw
+$rutaTallasLineas =
+  Join-Path $Raiz 'src\Lib\inLibModoTallasLineas.pas'
+$contenidoTallasLineas =
+  Get-Content -LiteralPath $rutaTallasLineas -Raw
+$rutaTallasPersistencia =
+  Join-Path $Raiz 'src\DataModules\UniDataModoTallas.pas'
+$contenidoTallasPersistencia =
+  Get-Content -LiteralPath $rutaTallasPersistencia -Raw
 $ayudantesDesmontajeTallas = @(
-  'LocalizarLinea',
-  'PonerLineaNueva',
-  'CargarCeldas',
-  'CalcularMaximaLinea',
-  'CargarDatosLinea',
-  'ActualizarPrimeraLinea',
-  'CrearLinea',
+  'UnidadesDocumento',
+  'ResolverTallaArticulo',
   'AplicarCelda',
   'ExpandirCeldas',
-  'BorrarCeldas',
+  'Expandir',
   'Ejecutar'
 )
-$metodosModoTallas =
-  Obtener-MetodosPascal -Ruta $rutaModoTallas
+$metodosTallasConversion =
+  Obtener-MetodosPascal -Ruta $rutaTallasConversion
+$contenidoDesmontaje =
+  $contenidoTallasConversion + $contenidoModoTallas
 foreach ($nombre in $ayudantesDesmontajeTallas) {
   $nombreCompleto = 'TDesmontajeTallas.' + $nombre
   $metodo = @(
-    $metodosModoTallas |
+    $metodosTallasConversion |
       Where-Object { $_.Nombre -eq $nombreCompleto }
   )
   if ($metodo.Count -ne 1) {
@@ -783,49 +793,75 @@ foreach ($nombre in $ayudantesDesmontajeTallas) {
   }
   if ($metodo[0].Lineas -gt $MaximoFlujo) {
     throw (
-      "inLibColumnasSkuModoTallas.pas`:$($metodo[0].Linea) " +
+      "inLibModoTallasConversion.pas`:$($metodo[0].Linea) " +
       "$nombre ocupa $($metodo[0].Lineas) lineas; " +
       "maximo permitido: $MaximoFlujo.")
   }
   $referencias = [regex]::Matches(
-    $contenidoModoTallas,
+    $contenidoDesmontaje,
     "\b$nombre\b").Count
   if ($referencias -lt 3) {
     throw "El ayudante de des-pivote $nombre no tiene consumidor."
   }
 }
-if ($contenidoModoTallas -notmatch
-    '(?s)TDesmontajeTallas\.Ejecutar.*?' +
-    'StartTransaction.*?UnidadesDocumento.*?CargarCeldas.*?' +
-    'ExpandirCeldas.*?BorrarCeldas.*?' +
-    'ComprobarInvarianteUnidades.*?Commit.*?except.*?Rollback') {
+if ($contenidoTallasConversion -notmatch
+    '(?s)TDesmontajeTallas\.Ejecutar.*?EnTransaccion.*?' +
+    'IniciarTransaccion.*?rUnidadesAntes := UnidadesDocumento.*?' +
+    'Expandir.*?ComprobarInvarianteUnidades.*?' +
+    'ConfirmarTransaccion.*?except.*?RevertirTransaccion.*?raise') {
   throw 'El des-pivote no conserva su orden transaccional.'
+}
+if ($contenidoTallasPersistencia -notmatch
+    '(?s)IniciarTransaccion;.*?StartTransaction.*?' +
+    'ConfirmarTransaccion;.*?Commit.*?' +
+    'RevertirTransaccion;.*?Rollback') {
+  throw 'La persistencia de tallas pierde su puente transaccional.'
 }
 if ($contenidoModoTallas -notmatch
     '(?s)TModoEntradaTallas\.Desmontar.*?' +
-    'TDesmontajeTallas\.Create\(Self\).*?Ejecutar.*?' +
+    'TDesmontajeTallas\.Create\(.*?Ejecutar.*?' +
     'FreeAndNil\(Desmontaje\)') {
   throw 'La fachada de des-pivote no coordina su colaborador.'
 }
-$contratosDesmontajeTallas = @(
+$contratosDesmontajeConversion = @(
+  'ModoTallas.Desmontar: %d celdas expandidas a lineas'
+)
+foreach ($contrato in $contratosDesmontajeConversion) {
+  if (-not $contenidoTallasConversion.Contains($contrato)) {
+    throw "El des-pivote no conserva el contrato: $contrato."
+  }
+}
+$contratosDesmontajeLineas = @(
+  'Format(''%.*d''',
+  'ConjuntoPivot).AsInteger := 0'
+)
+foreach ($contrato in $contratosDesmontajeLineas) {
+  if (-not $contenidoTallasLineas.Contains($contrato)) {
+    throw "Las lineas de tallas no conservan el contrato: $contrato."
+  }
+}
+$contratosDesmontajePersistencia = @(
   'JOIN fza_atributos_valores AV',
   'AS ALMC',
   'AS VALOR',
   'AS CANT',
-  'GROUP BY c.',
+  'GROUP BY',
   'HAVING SUM(c.',
   'ORDER BY LIN, ALMC, VALOR',
   'DELETE FROM ',
   'WhereNumero',
-  'WhereDocExtra',
-  'Format(''%.*d''',
-  'FieldConjuntoPivot).AsInteger := 0',
-  'ModoTallas.Desmontar: %d celdas expandidas a lineas'
+  'WhereDocExtra'
 )
-foreach ($contrato in $contratosDesmontajeTallas) {
-  if (-not $contenidoModoTallas.Contains($contrato)) {
-    throw "El des-pivote no conserva el contrato: $contrato."
+foreach ($contrato in $contratosDesmontajePersistencia) {
+  if (-not $contenidoTallasPersistencia.Contains($contrato)) {
+    throw (
+      "La persistencia de tallas no conserva el contrato: $contrato.")
   }
+}
+if ($contenidoModoTallas -match
+    '(?i)\b(TUniConnection|TUniQuery|SELECT|INSERT|UPDATE|' +
+    'DELETE|CALL)\b') {
+  throw 'inLibColumnasSkuModoTallas no puede volver a conocer SQL.'
 }
 
 $rutaPrestaImporter =

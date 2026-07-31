@@ -17,7 +17,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Data.DB, MemDS, DBAccess, Uni,
-  UniDataGen, inLibUser, inLibLog;
+  UniDataGen, inLibUser;
 
 type
   TdmPermisosGrupo = class(TdmBase)

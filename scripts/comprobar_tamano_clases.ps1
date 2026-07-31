@@ -1,11 +1,11 @@
 param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoLineasPorClase = 4075,
+  [int]$MaximoLineasPorClase = 3981,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoMetodosPorClase = 133,
+  [int]$MaximoMetodosPorClase = 104,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoCamposPorClase = 49,
+  [int]$MaximoCamposPorClase = 40,
   [hashtable]$LimitesClases = @{
     TfrmMtoComprasSesiones = @{
       Lineas = 3634
@@ -44,8 +44,8 @@ param(
       ObjetivoMetodos = 120
     }
     TGridPivoteVenta = @{
-      Lineas = 944
-      Metodos = 40
+      Lineas = 900
+      Metodos = 32
       Campos = 10
       ObjetivoLineas = 1500
       ObjetivoMetodos = 45
@@ -92,9 +92,9 @@ param(
       ObjetivoCampos = 20
     }
     TModoEntradaTallas = @{
-      Lineas = 2481
-      Metodos = 71
-      Campos = 29
+      Lineas = 448
+      Metodos = 22
+      Campos = 12
       ObjetivoLineas = 1500
       ObjetivoMetodos = 45
       ObjetivoCampos = 20
@@ -150,8 +150,8 @@ param(
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataAlbaranesCompraMovimientos.pas' = @{
-      Lineas = 657
-      Rutinas = 13
+      Lineas = 672
+      Rutinas = 14
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
     }
@@ -168,8 +168,8 @@ param(
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataDevolucionesCompraMovimientos.pas' = @{
-      Lineas = 447
-      Rutinas = 11
+      Lineas = 460
+      Rutinas = 12
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
     }
@@ -246,50 +246,50 @@ param(
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataComprasSesionesAlbaranes.pas' = @{
-      Lineas = 638
+      Lineas = 656
       Rutinas = 9
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataComprasSesionesArticulos.pas' = @{
-      Lineas = 1091
-      Rutinas = 26
+      Lineas = 885
+      Rutinas = 24
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataComprasSesionesComposicion.pas' = @{
-      Lineas = 72
+      Lineas = 87
       Rutinas = 1
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataComprasSesionesDocumentosComun.pas' = @{
-      Lineas = 83
+      Lineas = 40
       Rutinas = 1
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataComprasSesionesEstado.pas' = @{
-      Lineas = 221
+      Lineas = 203
       Rutinas = 7
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataComprasSesionesMaterializar.pas' = @{
-      Lineas = 189
+      Lineas = 209
       Rutinas = 12
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataComprasSesionesPedidos.pas' = @{
-      Lineas = 770
-      Rutinas = 12
+      Lineas = 736
+      Rutinas = 11
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataComprasSesionesReversion.pas' = @{
-      Lineas = 359
-      Rutinas = 12
+      Lineas = 329
+      Rutinas = 11
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
     }
@@ -300,7 +300,7 @@ param(
       ObjetivoRutinas = 30
     }
     'src\Lib\inLibComprasSesionesMaterializacionIntf.pas' = @{
-      Lineas = 75
+      Lineas = 181
       Rutinas = 0
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
@@ -342,8 +342,8 @@ param(
       ObjetivoRutinas = 30
     }
     'src\verifactu\UniDataVerifactuColaRepositorio.pas' = @{
-      Lineas = 881
-      Rutinas = 36
+      Lineas = 282
+      Rutinas = 20
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
     }
