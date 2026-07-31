@@ -45,7 +45,9 @@ type
     FAuditoriaDatos: IServicioAuditoriaDatos;
     FConexiones: IServicioConexiones;
     FContextoSesion: IContextoSesionAplicacion;
-    FPerfilesUsuario: IPerfilesUsuario;
+    FPerfilesLectura: ILectorPerfilesUsuario;
+    FPerfilesEscritura: IEscritorPerfilesUsuario;
+    FCachePerfiles: ICachePerfilesUsuario;
     FParametrosApp: IParametrosAplicacion;
     FParametrosCaja: IParametrosCaja;
     FOnActivarFicha: TNotifyEvent;
@@ -55,7 +57,8 @@ type
     function GetContextoSesion: IContextoSesionAplicacion;
     function GetIdentidadSesion: TIdentidadSesion;
     function GetUbicacionSesion: TUbicacionSesion;
-    function GetPerfilesUsuario: IPerfilesUsuario;
+    function GetPerfilesLectura: ILectorPerfilesUsuario;
+    function GetServiciosPerfilesUsuario: TServiciosPerfilesUsuario;
     function GetParametrosApp: IParametrosAplicacion;
     function GetParametrosCaja: IParametrosCaja;
     function GetConexionPrincipal: TUniConnection;
@@ -85,8 +88,8 @@ type
       read GetIdentidadSesion;
     property UbicacionSesion: TUbicacionSesion
       read GetUbicacionSesion;
-    property PerfilesUsuario: IPerfilesUsuario
-      read GetPerfilesUsuario;
+    property PerfilesLectura: ILectorPerfilesUsuario
+      read GetPerfilesLectura;
     property ParametrosApp: IParametrosAplicacion read GetParametrosApp;
     property ParametrosCaja: IParametrosCaja read GetParametrosCaja;
     property ConexionPrincipal: TUniConnection
@@ -98,7 +101,7 @@ type
     procedure AsignarContextoSesion(
       const AContextoSesion: IContextoSesionAplicacion);
     procedure AsignarPerfilesUsuario(
-      const APerfilesUsuario: IPerfilesUsuario);
+      const AServicios: TServiciosPerfilesUsuario);
     procedure AsignarParametros(
       const AParametrosApp: IParametrosAplicacion;
       const AParametrosCaja: IParametrosCaja);
@@ -232,18 +235,31 @@ end;
 procedure TdmBase.HeredarPerfilesUsuario(AOwner: TComponent);
 var
   Proveedor: IProveedorPerfilesUsuario;
+  Servicios: TServiciosPerfilesUsuario;
 begin
-  FPerfilesUsuario := nil;
+  FPerfilesLectura := nil;
+  FPerfilesEscritura := nil;
+  FCachePerfiles := nil;
   if Supports(AOwner, IProveedorPerfilesUsuario, Proveedor) then
-    FPerfilesUsuario := Proveedor.PerfilesUsuario;
-  if not Assigned(FPerfilesUsuario) and
+  begin
+    Servicios := Proveedor.ServiciosPerfilesUsuario;
+    FPerfilesLectura := Servicios.Lectura;
+    FPerfilesEscritura := Servicios.Escritura;
+    FCachePerfiles := Servicios.Cache;
+  end;
+  if not Assigned(FPerfilesLectura) and
      Assigned(Application.MainForm) and
      (Application.MainForm <> AOwner) and
      Supports(
        Application.MainForm,
        IProveedorPerfilesUsuario,
        Proveedor) then
-    FPerfilesUsuario := Proveedor.PerfilesUsuario;
+  begin
+    Servicios := Proveedor.ServiciosPerfilesUsuario;
+    FPerfilesLectura := Servicios.Lectura;
+    FPerfilesEscritura := Servicios.Escritura;
+    FCachePerfiles := Servicios.Cache;
+  end;
 end;
 
 procedure TdmBase.HeredarParametros(AOwner: TComponent);
@@ -300,9 +316,11 @@ begin
 end;
 
 procedure TdmBase.AsignarPerfilesUsuario(
-  const APerfilesUsuario: IPerfilesUsuario);
+  const AServicios: TServiciosPerfilesUsuario);
 begin
-  FPerfilesUsuario := APerfilesUsuario;
+  FPerfilesLectura := AServicios.Lectura;
+  FPerfilesEscritura := AServicios.Escritura;
+  FCachePerfiles := AServicios.Cache;
 end;
 
 procedure TdmBase.AsignarParametros(
@@ -332,9 +350,18 @@ begin
   Result := FContextoSesion.Ubicacion;
 end;
 
-function TdmBase.GetPerfilesUsuario: IPerfilesUsuario;
+function TdmBase.GetPerfilesLectura: ILectorPerfilesUsuario;
 begin
-  Result := FPerfilesUsuario;
+  Result := FPerfilesLectura;
+end;
+
+function TdmBase.GetServiciosPerfilesUsuario:
+  TServiciosPerfilesUsuario;
+begin
+  Result := CrearServiciosPerfilesUsuario(
+    FPerfilesLectura,
+    FPerfilesEscritura,
+    FCachePerfiles);
 end;
 
 function TdmBase.GetParametrosApp: IParametrosAplicacion;

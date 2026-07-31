@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inLibMovVentasArtExcel                                        }
 {    Tipo:       Librería                                                      }
-{ Versión:       2.0.0                                                         }
+{ Versión:       3.0.0                                                         }
 {   Fecha:       25/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -16,8 +16,8 @@
 {    las magnitudes base y porcentajes/márgenes recalculados a partir de esas  }
 {    sumas, no sumando porcentajes).                                           }
 {                                                                              }
-{    v2.0 (Fase 2): desacoplado de DevExpress. Escribe a través del puerto     }
-{    IEscritorHojaCalculo; ya no depende de dxSpreadSheet. Ver                 }
+{    v3.0 (Fase 4): recibe por separado escritura y formato; no depende del    }
+{    guardado del libro ni de DevExpress. Ver                                  }
 {    desacoplar_excel_hojacalculo.md.                                          }
 {                                                                              }
 {    Consume el resultado de PRC_GET_MOV_VENTAS_ART (mismo dataset filtrado    }
@@ -30,8 +30,10 @@ interface
 uses
   System.SysUtils, System.Variants, Data.DB, inLibHojaCalculoIntf;
 
-procedure ExportarMovVentasArtExcel(const AEscritor: IEscritorHojaCalculo;
-                                    const QDatos: TDataSet);
+procedure ExportarMovVentasArtExcel(
+  const AEscritor: IEscritorHojaCalculo;
+  const AFormateador: IFormateadorHojaCalculo;
+  const QDatos: TDataSet);
 
 implementation
 
@@ -94,8 +96,10 @@ begin
   VtaEnt := VtaEnt + Q.FieldByName('VENTA_ENT').AsFloat;
 end;
 
-procedure ExportarMovVentasArtExcel(const AEscritor: IEscritorHojaCalculo;
-                                    const QDatos: TDataSet);
+procedure ExportarMovVentasArtExcel(
+  const AEscritor: IEscritorHojaCalculo;
+  const AFormateador: IFormateadorHojaCalculo;
+  const QDatos: TDataSet);
 var
   iRow, c, lvl, nivelCambio: Integer;
   grpCods : array[1..N_NIVELES] of string;
@@ -104,11 +108,26 @@ var
   grpAcum : array[1..N_NIVELES] of TAcum;
   totAcum : TAcum;
 
+  procedure EscValor(
+    ACol: Integer;
+    const AValor: Variant;
+    ANegrita: Boolean = False;
+    AAlineacion: TAlineacionCelda = acIzquierda;
+    const AFormato: string = '');
+  begin
+    AEscritor.Escribir(iRow, ACol, AValor);
+    if ANegrita then
+      AFormateador.Negrita(iRow, ACol);
+    AFormateador.Alinear(iRow, ACol, AAlineacion);
+    if AFormato <> '' then
+      AFormateador.AplicarFormato(iRow, ACol, AFormato);
+  end;
+
   procedure EscNum(ACol: Integer; AVal: Double; const AFmt: string;
                    AOcultarCero: Boolean);
   begin
     if (not AOcultarCero) or (AVal <> 0) then
-      AEscritor.Escribir(iRow, ACol, AVal, False, acDerecha, AFmt);
+      EscValor(ACol, AVal, False, acDerecha, AFmt);
   end;
 
   function CampoStr(const AName: string): string;
@@ -127,25 +146,25 @@ var
   var
     cc: Integer;
   begin
-    AEscritor.Escribir(iRow, COL_ART,      'Art' + #237 + 'culo', True);
-    AEscritor.Escribir(iRow, COL_UNIENT,   'Uni.Ent.', True, acDerecha);
-    AEscritor.Escribir(iRow, COL_IMPENT,   'Imp.Ent.', True, acDerecha);
-    AEscritor.Escribir(iRow, COL_UDSVTA,   'Uds Vta',  True, acDerecha);
-    AEscritor.Escribir(iRow, COL_IMPVTA,   'Imp Venta', True, acDerecha);
-    AEscritor.Escribir(iRow, COL_IMPCOS,   'Imp Coste', True, acDerecha);
-    AEscritor.Escribir(iRow, COL_BENEF,    'Beneficio', True, acDerecha);
-    AEscritor.Escribir(iRow, COL_PCTBNF,   '% Bnf', True, acDerecha);
-    AEscritor.Escribir(iRow, COL_VTAENT,   'Venta-Ent', True, acDerecha);
-    AEscritor.Escribir(iRow, COL_VENTENT,  'VentEnt%', True, acDerecha);
-    AEscritor.Escribir(iRow, COL_MARG1,    'Margen 1', True, acDerecha);
-    AEscritor.Escribir(iRow, COL_MARG2,    'Margen 2', True, acDerecha);
-    AEscritor.Escribir(iRow, COL_PCTVDTO,  '% V.dto', True, acDerecha);
-    AEscritor.Escribir(iRow, COL_PCTVLAST, '% Vlast', True, acDerecha);
+    EscValor(COL_ART, 'Art' + #237 + 'culo', True);
+    EscValor(COL_UNIENT, 'Uni.Ent.', True, acDerecha);
+    EscValor(COL_IMPENT, 'Imp.Ent.', True, acDerecha);
+    EscValor(COL_UDSVTA, 'Uds Vta', True, acDerecha);
+    EscValor(COL_IMPVTA, 'Imp Venta', True, acDerecha);
+    EscValor(COL_IMPCOS, 'Imp Coste', True, acDerecha);
+    EscValor(COL_BENEF, 'Beneficio', True, acDerecha);
+    EscValor(COL_PCTBNF, '% Bnf', True, acDerecha);
+    EscValor(COL_VTAENT, 'Venta-Ent', True, acDerecha);
+    EscValor(COL_VENTENT, 'VentEnt%', True, acDerecha);
+    EscValor(COL_MARG1, 'Margen 1', True, acDerecha);
+    EscValor(COL_MARG2, 'Margen 2', True, acDerecha);
+    EscValor(COL_PCTVDTO, '% V.dto', True, acDerecha);
+    EscValor(COL_PCTVLAST, '% Vlast', True, acDerecha);
     for cc := 0 to COL_MAX do
       if AEscritor.CeldaExiste(iRow, cc) then
       begin
-        AEscritor.FondoCelda(iRow, cc, CL_CABECERA);
-        AEscritor.BordeCelda(iRow, cc, lbInferior, ebFino);
+        AFormateador.FondoCelda(iRow, cc, CL_CABECERA);
+        AFormateador.BordeCelda(iRow, cc, lbInferior, ebFino);
       end;
   end;
 
@@ -155,7 +174,7 @@ var
   var
     cc: Integer;
   begin
-    AEscritor.Escribir(iRow, COL_ART, ALabel, True);
+    EscValor(COL_ART, ALabel, True);
     EscNum(COL_UNIENT, A.UniEnt, FMT_NUM_HZ, False);
     EscNum(COL_IMPENT, A.ImpEnt, FMT_EUR_HZ, False);
     EscNum(COL_UDSVTA, A.UdsVta, FMT_NUM_HZ, False);
@@ -179,9 +198,9 @@ var
     for cc := 0 to COL_MAX do
       if AEscritor.CeldaExiste(iRow, cc) then
       begin
-        AEscritor.Negrita(iRow, cc);
-        AEscritor.FondoCelda(iRow, cc, AColorFondo);
-        AEscritor.BordeCelda(iRow, cc, lbSuperior, ebFino);
+        AFormateador.Negrita(iRow, cc);
+        AFormateador.FondoCelda(iRow, cc, AColorFondo);
+        AFormateador.BordeCelda(iRow, cc, lbSuperior, ebFino);
       end;
     Inc(iRow);
   end;
@@ -193,14 +212,16 @@ var
   begin
     if grpUsado[ANivel] then
     begin
-      AEscritor.Escribir(iRow, 0,
-        StringOfChar(' ', (ANivel - 1) * 2) + grpEtqs[ANivel], True);
-      AEscritor.TamanoFuente(iRow, 0, 12);
+      EscValor(
+        0,
+        StringOfChar(' ', (ANivel - 1) * 2) + grpEtqs[ANivel],
+        True);
+      AFormateador.TamanoFuente(iRow, 0, 12);
       for cc := 0 to COL_MAX do
         if AEscritor.CeldaExiste(iRow, cc) then
         begin
-          AEscritor.FondoCelda(iRow, cc, CL_GRUPO_H);
-          AEscritor.BordeCelda(iRow, cc, lbInferior, ebFino);
+          AFormateador.FondoCelda(iRow, cc, CL_GRUPO_H);
+          AFormateador.BordeCelda(iRow, cc, lbInferior, ebFino);
         end;
       Inc(iRow);
       CabeceraColumnas;
@@ -229,9 +250,11 @@ begin
   AEscritor.IniciarLote;
   try
     iRow := 1;
-    AEscritor.Escribir(iRow, 0,
-      'MOVIMIENTOS DE VENTAS POR ARTICULOS Y FECHAS', True);
-    AEscritor.TamanoFuente(iRow, 0, 14);
+    EscValor(
+      0,
+      'MOVIMIENTOS DE VENTAS POR ARTICULOS Y FECHAS',
+      True);
+    AFormateador.TamanoFuente(iRow, 0, 14);
     Inc(iRow, 2);
     CabeceraColumnas;
     Inc(iRow);
@@ -264,22 +287,75 @@ begin
             end;
           end;
           // Fila de detalle del artículo (código + descripción + magnitudes).
-          AEscritor.Escribir(iRow, COL_ART,
+          EscValor(
+            COL_ART,
             QDatos.FieldByName('CODIGO_ART_ART').AsString + '  ' +
             QDatos.FieldByName('DESCRIPCION_ART').AsString);
-          EscNum(COL_UNIENT,  QDatos.FieldByName('UNI_ENT_TOT').AsFloat, FMT_NUM, True);
-          EscNum(COL_IMPENT,  QDatos.FieldByName('IMP_ENT_TOT').AsFloat, FMT_EUR, True);
-          EscNum(COL_UDSVTA,  QDatos.FieldByName('UDS_VENTA').AsFloat,   FMT_NUM, True);
-          EscNum(COL_IMPVTA,  QDatos.FieldByName('IMP_VENTA').AsFloat,   FMT_EUR, True);
-          EscNum(COL_IMPCOS,  QDatos.FieldByName('IMP_COSTE').AsFloat,   FMT_EUR, True);
-          EscNum(COL_BENEF,   QDatos.FieldByName('BENEFICIO').AsFloat,   FMT_EUR, True);
-          EscNum(COL_PCTBNF,  QDatos.FieldByName('PCT_BNFCO').AsFloat,   FMT_PCT, True);
-          EscNum(COL_VTAENT,  QDatos.FieldByName('VENTA_ENT').AsFloat,   FMT_EUR, True);
-          EscNum(COL_VENTENT, QDatos.FieldByName('VENT_ENT').AsFloat,    FMT_PCT, True);
-          EscNum(COL_MARG1,   QDatos.FieldByName('MARGEN1').AsFloat,     FMT_PCT, True);
-          EscNum(COL_MARG2,   QDatos.FieldByName('MARGEN2').AsFloat,     FMT_PCT, True);
-          EscNum(COL_PCTVDTO, QDatos.FieldByName('PCT_VDTO').AsFloat,    FMT_PCT, True);
-          EscNum(COL_PCTVLAST, QDatos.FieldByName('PCT_VLAST').AsFloat,  FMT_PCT, True);
+          EscNum(
+            COL_UNIENT,
+            QDatos.FieldByName('UNI_ENT_TOT').AsFloat,
+            FMT_NUM,
+            True);
+          EscNum(
+            COL_IMPENT,
+            QDatos.FieldByName('IMP_ENT_TOT').AsFloat,
+            FMT_EUR,
+            True);
+          EscNum(
+            COL_UDSVTA,
+            QDatos.FieldByName('UDS_VENTA').AsFloat,
+            FMT_NUM,
+            True);
+          EscNum(
+            COL_IMPVTA,
+            QDatos.FieldByName('IMP_VENTA').AsFloat,
+            FMT_EUR,
+            True);
+          EscNum(
+            COL_IMPCOS,
+            QDatos.FieldByName('IMP_COSTE').AsFloat,
+            FMT_EUR,
+            True);
+          EscNum(
+            COL_BENEF,
+            QDatos.FieldByName('BENEFICIO').AsFloat,
+            FMT_EUR,
+            True);
+          EscNum(
+            COL_PCTBNF,
+            QDatos.FieldByName('PCT_BNFCO').AsFloat,
+            FMT_PCT,
+            True);
+          EscNum(
+            COL_VTAENT,
+            QDatos.FieldByName('VENTA_ENT').AsFloat,
+            FMT_EUR,
+            True);
+          EscNum(
+            COL_VENTENT,
+            QDatos.FieldByName('VENT_ENT').AsFloat,
+            FMT_PCT,
+            True);
+          EscNum(
+            COL_MARG1,
+            QDatos.FieldByName('MARGEN1').AsFloat,
+            FMT_PCT,
+            True);
+          EscNum(
+            COL_MARG2,
+            QDatos.FieldByName('MARGEN2').AsFloat,
+            FMT_PCT,
+            True);
+          EscNum(
+            COL_PCTVDTO,
+            QDatos.FieldByName('PCT_VDTO').AsFloat,
+            FMT_PCT,
+            True);
+          EscNum(
+            COL_PCTVLAST,
+            QDatos.FieldByName('PCT_VLAST').AsFloat,
+            FMT_PCT,
+            True);
           totAcum.Add(QDatos);
           for lvl := 1 to N_NIVELES do
             if grpUsado[lvl] then
@@ -292,15 +368,15 @@ begin
             EmitirResumenGrupo(lvl);
         // Total general.
         EscribirTotales(totAcum, 'TOTAL GENERAL', CL_GRUPO_H);
-        AEscritor.BordeCelda(iRow - 1, 0, lbInferior, ebFino);
+        AFormateador.BordeCelda(iRow - 1, 0, lbInferior, ebFino);
       finally
         QDatos.EnableControls;
       end;
     end;
     // Anchos de columna.
-    AEscritor.AnchoColumna(COL_ART, 240);
+    AFormateador.AnchoColumna(COL_ART, 240);
     for c := COL_UNIENT to COL_MAX do
-      AEscritor.AnchoColumna(c, 72);
+      AFormateador.AnchoColumna(c, 72);
   finally
     AEscritor.FinalizarLote;
   end;

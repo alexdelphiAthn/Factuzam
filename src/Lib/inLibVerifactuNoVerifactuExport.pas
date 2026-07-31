@@ -41,8 +41,8 @@ implementation
 
 uses
   System.Classes, System.IOUtils, System.Hash, System.NetEncoding, Data.DB,
-  DBAccess, inLibGlobalVar, inLibLog, inLibMsgVerifactu,
-  inLibVerifactu;
+  inLibGlobalVar, inLibLog, inLibMsgVerifactu, inLibVerifactu,
+  inLibVerifactuNoVerifactuExportIntf;
 
 const
   cNsFactuzamNoVerifactu = 'urn:factuzam:no-verifactu:v1';
@@ -133,94 +133,28 @@ begin
   Result := FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz', Now);
 end;
 
-function ColumnasFirmaEventosDisponibles(AConn: TUniConnection): Boolean;
-var
-  Qry: TUniQuery;
+function ColumnasFirmaEventosDisponibles(
+  const ARepositorio: IRepositorioExportacionNoVerifactu): Boolean;
 begin
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := AConn;
-    Qry.SQL.Text :=
-      ' SELECT COUNT(*) AS N ' +
-      ' FROM INFORMATION_SCHEMA.COLUMNS ' +
-      ' WHERE TABLE_SCHEMA = DATABASE() ' +
-      '   AND TABLE_NAME = ''fza_verifactu_eventos'' ' +
-      '   AND COLUMN_NAME IN (''REGISTRO_XML_LOG'', ' +
-      '       ''FIRMA_XADES_LOG'', ''SERIE_CERTIFICADO_LOG'', ' +
-      '       ''TITULAR_CERTIFICADO_LOG'', ''HUELLA_CERTIFICADO_LOG'')';
-    Qry.Open;
-    Result := Qry.FieldByName('N').AsInteger = 5;
-  finally
-    FreeAndNil(Qry);
-  end;
+  Result := ARepositorio.ColumnasFirmaEventosDisponibles;
 end;
 
-function ColumnasFirmaFacturacionDisponibles(AConn: TUniConnection): Boolean;
-var
-  Qry: TUniQuery;
+function ColumnasFirmaFacturacionDisponibles(
+  const ARepositorio: IRepositorioExportacionNoVerifactu): Boolean;
 begin
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := AConn;
-    Qry.SQL.Text :=
-      ' SELECT COUNT(*) AS N ' +
-      ' FROM INFORMATION_SCHEMA.COLUMNS ' +
-      ' WHERE TABLE_SCHEMA = DATABASE() ' +
-      '   AND TABLE_NAME = ''fza_facturas_consolidaciones'' ' +
-      '   AND COLUMN_NAME IN (''REGISTRO_XML_FACCON'', ' +
-      '       ''FIRMA_DIGITAL_FACCON'', ''SERIE_CERTIFICADO_FACCON'', ' +
-      '       ''TITULAR_CERTIFICADO_FACCON'', ' +
-      '       ''HUELLA_CERTIFICADO_FACCON'')';
-    Qry.Open;
-    Result := Qry.FieldByName('N').AsInteger = 5;
-  finally
-    FreeAndNil(Qry);
-  end;
+  Result := ARepositorio.ColumnasFirmaFacturacionDisponibles;
 end;
 
-function ContarEventosSinFirma(AConn: TUniConnection): Integer;
-var
-  Qry: TUniQuery;
+function ContarEventosSinFirma(
+  const ARepositorio: IRepositorioExportacionNoVerifactu): Integer;
 begin
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := AConn;
-    Qry.SQL.Text :=
-      ' SELECT COUNT(*) AS N ' +
-      ' FROM fza_verifactu_eventos ' +
-      ' WHERE IFNULL(REGISTRO_XML_LOG, '''') = '''' ' +
-      '    OR IFNULL(FIRMA_DIGITAL_LOG, '''') = '''' ' +
-      '    OR IFNULL(FIRMA_XADES_LOG, '''') = '''' ' +
-      '    OR IFNULL(SERIE_CERTIFICADO_LOG, '''') = '''' ' +
-      '    OR IFNULL(TITULAR_CERTIFICADO_LOG, '''') = '''' ' +
-      '    OR IFNULL(HUELLA_CERTIFICADO_LOG, '''') = '''' ';
-    Qry.Open;
-    Result := Qry.FieldByName('N').AsInteger;
-  finally
-    FreeAndNil(Qry);
-  end;
+  Result := ARepositorio.ContarEventosSinFirma;
 end;
 
-function ContarFacturasSinFirma(AConn: TUniConnection): Integer;
-var
-  Qry: TUniQuery;
+function ContarFacturasSinFirma(
+  const ARepositorio: IRepositorioExportacionNoVerifactu): Integer;
 begin
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := AConn;
-    Qry.SQL.Text :=
-      ' SELECT COUNT(*) AS N ' +
-      ' FROM fza_facturas_consolidaciones ' +
-      ' WHERE IFNULL(REGISTRO_XML_FACCON, '''') = '''' ' +
-      '    OR IFNULL(FIRMA_DIGITAL_FACCON, '''') = '''' ' +
-      '    OR IFNULL(SERIE_CERTIFICADO_FACCON, '''') = '''' ' +
-      '    OR IFNULL(TITULAR_CERTIFICADO_FACCON, '''') = '''' ' +
-      '    OR IFNULL(HUELLA_CERTIFICADO_FACCON, '''') = '''' ';
-    Qry.Open;
-    Result := Qry.FieldByName('N').AsInteger;
-  finally
-    FreeAndNil(Qry);
-  end;
+  Result := ARepositorio.ContarFacturasSinFirma;
 end;
 
 procedure RegistrarIncidenciaExportacionSeguro(
@@ -246,10 +180,10 @@ begin
 end;
 
 procedure ValidarExportacionLegalNoVerifactu(
-                                             const AParametrosApp:
-                                             IParametrosAplicacion;
-                                             AConn: TUniConnection;
-                                             const AUsuario: string);
+  const AParametrosApp: IParametrosAplicacion;
+  AConn: TUniConnection;
+  const AUsuario: string;
+  const ARepositorio: IRepositorioExportacionNoVerifactu);
 var
   iEventos:  Integer;
   iFacturas: Integer;
@@ -260,14 +194,14 @@ begin
     sError := '';
     if not VerifactuFirmaCertificado(AParametrosApp) then
       sError := SErrorExportarNoVerifactuSinCertificado
-    else if not ColumnasFirmaEventosDisponibles(AConn) then
+    else if not ColumnasFirmaEventosDisponibles(ARepositorio) then
       sError := SErrorExportarNoVerifactuSinColumnasEventos
-    else if not ColumnasFirmaFacturacionDisponibles(AConn) then
+    else if not ColumnasFirmaFacturacionDisponibles(ARepositorio) then
       sError := SErrorExportarNoVerifactuSinColumnasFacturacion
     else
     begin
-      iEventos := ContarEventosSinFirma(AConn);
-      iFacturas := ContarFacturasSinFirma(AConn);
+      iEventos := ContarEventosSinFirma(ARepositorio);
+      iFacturas := ContarFacturasSinFirma(ARepositorio);
       if (iEventos > 0) or (iFacturas > 0) then
         sError := Format(SErrorExportarNoVerifactuRegistrosSinFirma,
           [iEventos, iFacturas]);
@@ -283,29 +217,19 @@ end;
 
 function ConstruirXmlEventos(
                              const AParametrosApp: IParametrosAplicacion;
-                             AConn: TUniConnection;
+                             const ARepositorio:
+                             IRepositorioExportacionNoVerifactu;
                              const AUsuario: string;
                              out ATotal: Integer):
   string;
 var
-  Qry: TUniQuery;
+  Qry: TDataSet;
   Sb: TStringBuilder;
 begin
   ATotal := 0;
   Sb := TStringBuilder.Create;
-  Qry := TUniQuery.Create(nil);
+  Qry := ARepositorio.BuscarEventos;
   try
-    Qry.Connection := AConn;
-    Qry.SQL.Text :=
-      ' SELECT ID_LOG, TIMESTAMP_LOG, TIPO_EVENTO_LOG, USUARIO_LOG, ' +
-      '        VERSION_LOG, DESCRIPCION_LOG, DATOS_ADICIONALES_LOG, ' +
-      '        HASH_ANTERIOR_LOG, HASH_PROPIO_LOG, FIRMA_DIGITAL_LOG, ' +
-      '        SERIE_FAC_LOG, NUMERO_FAC_LOG, REGISTRO_XML_LOG, ' +
-      '        FIRMA_XADES_LOG, SERIE_CERTIFICADO_LOG, ' +
-      '        TITULAR_CERTIFICADO_LOG, HUELLA_CERTIFICADO_LOG ' +
-      ' FROM fza_verifactu_eventos ' +
-      ' ORDER BY ID_LOG';
-    Qry.Open;
     Sb.Append('<?xml version="1.0" encoding="UTF-8"?>');
     Sb.Append('<fz:RegistroEventosNoVerifactu xmlns:fz="');
     Sb.Append(cNsFactuzamNoVerifactu);
@@ -366,44 +290,21 @@ end;
 function ConstruirXmlFacturacion(
                                  const AParametrosApp:
                                  IParametrosAplicacion;
-                                 AConn: TUniConnection;
+                                 const ARepositorio:
+                                 IRepositorioExportacionNoVerifactu;
                                  const AUsuario: string;
                                  out ATotal: Integer):
   string;
 var
-  Qry: TUniQuery;
+  Qry: TDataSet;
   Sb: TStringBuilder;
   sPeticion: string;
   sRegistroXml: string;
 begin
   ATotal := 0;
   Sb := TStringBuilder.Create;
-  Qry := TUniQuery.Create(nil);
+  Qry := ARepositorio.BuscarFacturacion;
   try
-    Qry.Connection := AConn;
-    Qry.SQL.Text :=
-      ' SELECT fc.ID_FACCON, fc.SERIE_FAC_FACCON, fc.NUMERO_FAC_FACCON, ' +
-      '        fc.REQUEST_ID_CONSOLIDACION_FACCON, ' +
-      '        fc.QUEUE_ID_CONSOLIDACION_FACCON, ' +
-      '        fc.QUEUE_ID_CANCEL_FACCON, ' +
-      '        fc.ISSUER_IRS_ID_CONSOLIDACION_FACCON, ' +
-      '        fc.ISSUED_TIME_FACCON, fc.CHAIN_NUMBER_FACCON, ' +
-      '        fc.CHAIN_HASH_FACCON, fc.FECHA_PROCESAMIENTO_FACCON, ' +
-      '        fc.ESTADO_FACCON, fc.PETICION_COMPLETA_FACCON, ' +
-      '        fc.REGISTRO_XML_FACCON, fc.FIRMA_DIGITAL_FACCON, ' +
-      '        fc.SERIE_CERTIFICADO_FACCON, ' +
-      '        fc.TITULAR_CERTIFICADO_FACCON, ' +
-      '        fc.HUELLA_CERTIFICADO_FACCON, ' +
-      '        f.FECHA_FAC, f.TIPO_FAC, f.NIF_EMPRESA_FAC, ' +
-      '        f.RAZON_SOCIAL_EMPRESA_FAC, f.NIF_CLIENTE_FAC, ' +
-      '        f.RAZON_SOCIAL_CLIENTE_FAC, f.TOTAL_LIQUIDO_FAC, ' +
-      '        f.TOTAL_IMPUESTOS_FAC ' +
-      ' FROM fza_facturas_consolidaciones fc ' +
-      ' LEFT JOIN fza_facturas f ' +
-      '        ON f.SERIE_FAC = fc.SERIE_FAC_FACCON ' +
-      '       AND f.NUMERO_FAC = fc.NUMERO_FAC_FACCON ' +
-      ' ORDER BY fc.ID_FACCON';
-    Qry.Open;
     Sb.Append('<?xml version="1.0" encoding="UTF-8"?>');
     Sb.Append('<fz:RegistroFacturacionNoVerifactu xmlns:fz="');
     Sb.Append(cNsFactuzamNoVerifactu);
@@ -515,6 +416,7 @@ function ExportarRegistrosNoVerifactu(
                                       const AArchivoBase: string):
                                       TResultadoExportacionNoVerifactu;
 var
+  Repositorio: IRepositorioExportacionNoVerifactu;
   sXmlEventos: string;
   sXmlFacturacion: string;
 begin
@@ -522,7 +424,13 @@ begin
     raise Exception.Create(SErrorConexionExportarNoVerifactu);
   if Trim(AArchivoBase) = '' then
     raise Exception.Create(SErrorArchivoBaseExportacionNoIndicado);
-  ValidarExportacionLegalNoVerifactu(AParametrosApp, AConn, AUsuario);
+  Repositorio :=
+    TFabricaRepositorioExportacionNoVerifactu.Crear(AConn);
+  ValidarExportacionLegalNoVerifactu(
+    AParametrosApp,
+    AConn,
+    AUsuario,
+    Repositorio);
   Result.TitularCertificado := '';
   Result.SerieCertificado := '';
   Result.ArchivoEventos := NombreArchivoConSufijo(AArchivoBase, '_eventos');
@@ -536,9 +444,12 @@ begin
     cEventoNoVerifactuExportEventos,
     'Exportación de registros de eventos NO VERI*FACTU',
     Result.ArchivoEventos);
-  sXmlEventos := ConstruirXmlEventos(AParametrosApp, AConn, AUsuario,
+  sXmlEventos := ConstruirXmlEventos(AParametrosApp, Repositorio, AUsuario,
     Result.Eventos);
-  sXmlFacturacion := ConstruirXmlFacturacion(AParametrosApp, AConn, AUsuario,
+  sXmlFacturacion := ConstruirXmlFacturacion(
+    AParametrosApp,
+    Repositorio,
+    AUsuario,
     Result.RegistrosFactura);
   GuardarTextoUtf8(Result.ArchivoEventos, sXmlEventos);
   GuardarTextoUtf8(Result.ArchivoFacturacion, sXmlFacturacion);

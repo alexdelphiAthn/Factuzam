@@ -68,7 +68,7 @@ type
 implementation
 
 uses
-  inLibFormatoDocumento;
+  inLibFormatoDocumento, inLibMsgTickets;
 
 class procedure TTraspasoTicket.ImprimirLineaSku(ATicket: TTicketTermico;
                                    const ASku, ADescripcion,
@@ -127,20 +127,20 @@ begin
         Ticket.ConfigurarEspanol;
         Ticket.Alinear(alCentro);
         Ticket.Negrita(True);
-        Ticket.EscribirLinea('SOLICITUD DE TRASPASO');
+        Ticket.EscribirLinea(STicketSolicitudTraspaso);
         Ticket.EscribirLinea(ASerie + '/' + ANumero);
         Ticket.Negrita(False);
         Ticket.SaltarLineas(1);
         Ticket.Alinear(alIzquierda);
-        Ticket.TextoColumnas('Origen:', Cabecera.Origen);
-        Ticket.TextoColumnas('Destino:', Cabecera.Destino);
-        Ticket.TextoColumnas('Empleado:', Cabecera.Empleado);
-        Ticket.TextoColumnas('Estado:', Cabecera.Estado);
+        Ticket.TextoColumnas(STicketOrigen, Cabecera.Origen);
+        Ticket.TextoColumnas(STicketDestino, Cabecera.Destino);
+        Ticket.TextoColumnas(STicketEmpleado, Cabecera.Empleado);
+        Ticket.TextoColumnas(STicketEstado, Cabecera.Estado);
         Ticket.TextoColumnas(
-          'Fecha:',
+          STicketFecha,
           FormatDateTime('dd/mm/yyyy', Cabecera.Fecha));
         Ticket.LineaSeparadora('-');
-        Ticket.EscribirLinea('ARTICULOS');
+        Ticket.EscribirLinea(STicketArticulos);
         Ticket.LineaSeparadora('-');
         // Lineas: por SKU, descripcion del articulo (denormalizada en la
         // propia linea, igual que en los movimientos), cantidad pedida y stock
@@ -158,11 +158,11 @@ begin
           ImprimirLineaSku(Ticket,
             Lineas[iLinea].Sku,
             Lineas[iLinea].Descripcion,
-            '  Unidades pedidas:',
+            STicketUnidadesPedidas,
             Lineas[iLinea].CantidadPedida,
-            '  Stock origen:',
+            STicketStockOrigen,
             Lineas[iLinea].StockOrigen,
-            '  Stock destino:',
+            STicketStockDestino,
             Lineas[iLinea].StockDestino);
           Inc(iLinea);
         end;
@@ -207,17 +207,19 @@ begin
       Ticket.ConfigurarEspanol;
       Ticket.Alinear(alCentro);
       Ticket.Negrita(True);
-      Ticket.EscribirLinea('TRASPASO');
+      Ticket.EscribirLinea(STicketTraspaso);
       Ticket.EscribirLinea(ADocRef);
       Ticket.Negrita(False);
       Ticket.SaltarLineas(1);
       Ticket.Alinear(alIzquierda);
-      Ticket.TextoColumnas('Origen:', AOrigen);
-      Ticket.TextoColumnas('Destino:', ADestino);
-      Ticket.TextoColumnas('Empleado:', AEmpleado);
-      Ticket.TextoColumnas('Fecha:', FormatDateTime('dd/mm/yyyy', Now));
+      Ticket.TextoColumnas(STicketOrigen, AOrigen);
+      Ticket.TextoColumnas(STicketDestino, ADestino);
+      Ticket.TextoColumnas(STicketEmpleado, AEmpleado);
+      Ticket.TextoColumnas(
+        STicketFecha,
+        FormatDateTime('dd/mm/yyyy', Now));
       Ticket.LineaSeparadora('-');
-      Ticket.EscribirLinea('ARTICULOS');
+      Ticket.EscribirLinea(STicketArticulos);
       Ticket.LineaSeparadora('-');
       // Recorre las lineas en memoria sin perder el registro actual. El ticket
       // se imprime DESPUES de grabar, asi que el stock leido ya es el estado
@@ -240,9 +242,9 @@ begin
               sSku);
             ImprimirLineaSku(Ticket, sSku,
               ALineas.FieldByName('DESCRIPCION').AsString,
-              '  Unidades:', dPed,
-              '  Stock origen tras traspaso:', dOrg,
-              '  Stock destino tras traspaso:', dDes);
+              STicketUnidades, dPed,
+              STicketStockOrigenTrasTraspaso, dOrg,
+              STicketStockDestinoTrasTraspaso, dDes);
           end;
           ALineas.Next;
         end;
@@ -312,17 +314,17 @@ begin
         Ticket.ConfigurarEspanol;
         Ticket.Alinear(alCentro);
         Ticket.Negrita(True);
-        Ticket.EscribirLinea('TRASPASO');
+        Ticket.EscribirLinea(STicketTraspaso);
         Ticket.EscribirLinea(sDocRef);
         Ticket.Negrita(False);
         Ticket.SaltarLineas(1);
         Ticket.Alinear(alIzquierda);
-        Ticket.TextoColumnas('Origen:', Cabecera.Origen);
-        Ticket.TextoColumnas('Destino:', Cabecera.Destino);
-        Ticket.TextoColumnas('Empleado:', Cabecera.Empleado);
-        Ticket.TextoColumnas('Operacion:', ANumOperacion);
+        Ticket.TextoColumnas(STicketOrigen, Cabecera.Origen);
+        Ticket.TextoColumnas(STicketDestino, Cabecera.Destino);
+        Ticket.TextoColumnas(STicketEmpleado, Cabecera.Empleado);
+        Ticket.TextoColumnas(STicketOperacion, ANumOperacion);
         Ticket.LineaSeparadora('-');
-        Ticket.EscribirLinea('ARTICULOS');
+        Ticket.EscribirLinea(STicketArticulos);
         Ticket.LineaSeparadora('-');
         // Lineas: movimientos de salida (la salida del origen). La descripcion
         // viene denormalizada en el propio movimiento (DESCRIPCION_ARTICULO_MOV).
@@ -346,9 +348,9 @@ begin
           ImprimirLineaSku(Ticket,
             Lineas[iLinea].Sku,
             Lineas[iLinea].Descripcion,
-            '  Unidades:', dPed,
-            '  Stock origen actual:', dOrg,
-            '  Stock destino actual:', dDes);
+            STicketUnidades, dPed,
+            STicketStockOrigenActual, dOrg,
+            STicketStockDestinoActual, dDes);
           Inc(iLinea);
         end;
         Ticket.LineaSeparadora('-');

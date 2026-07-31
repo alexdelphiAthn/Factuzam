@@ -139,7 +139,8 @@ uses
   dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetGraphics,
   dxSpreadSheetTypes, dxSpreadSheetStyles, dxHashUtils,
   inLibPreviewTicket, inLibDir, inLibFormatoDocumento, inLibVerifactu,
-  inLibPreviewExcel, inLibDevExcel, inLibRectificativas;
+  inLibPreviewExcel, inLibDevExcel, inLibRectificativas,
+  inLibMsgTickets;
 
 // =============================================================================
 //   Helpers de formato
@@ -200,7 +201,8 @@ begin
     ATicket.EscribirLinea(
       Trim(oEmpresa.CodigoPostal + ' ' + oEmpresa.Poblacion));
     ATicket.EscribirLinea(oEmpresa.Provincia);
-    ATicket.EscribirLinea('CIF: ' + oEmpresa.Nif);
+    ATicket.EscribirLinea(
+      Format(STicketCif, [oEmpresa.Nif]));
   end;
 end;
 
@@ -268,7 +270,7 @@ begin
         FmtImp(oFormaPago.ImporteEntregado));
   end;
   if dCambio > 0 then
-    ATicket.TextoColumnas('CAMBIO', FmtImp(dCambio));
+    ATicket.TextoColumnas(STicketCambio, FmtImp(dCambio));
 end;
 
 // =============================================================================
@@ -299,16 +301,25 @@ begin
   // Separador con el nº de factura formateado según la empresa.
   ATicket.Alinear(alIzquierda);
   ATicket.EscribirLinea(
-    CentrarRelleno('Nº Fac.: ' +
-                   FormatearDocumento(
-                     AOperacion.FormatoDocumento,
-                     sSerie,
-                     sNumFac),
-                   '_'));
+    CentrarRelleno(
+      Format(
+        STicketNumeroFactura,
+        [FormatearDocumento(
+           AOperacion.FormatoDocumento,
+           sSerie,
+           sNumFac)]),
+      '_'));
   // Operación, fecha/hora, empresa y Tda.almacén-caja.
-  ATicket.EscribirLinea(Format('%s %s %s Tda.%s-%s',
-    [sOpe, FormatDateTime('dd/mm/yy hh:nn:ss', dFechaOpe),
-     LPad(sEmp, 3), LPad(sAlm, 3), LPad(sCaja, 2)]));
+  ATicket.EscribirLinea(
+    Format(
+      '%s %s %s',
+      [sOpe,
+       FormatDateTime('dd/mm/yy hh:nn:ss', dFechaOpe),
+       Format(
+         STicketFormatoTienda,
+         [LPad(sEmp, 3),
+          LPad(sAlm, 3),
+          LPad(sCaja, 2)])]));
   // Líneas del ticket con su precio.
   EscribirLineasArticulos(
     ATicket,
@@ -319,7 +330,7 @@ begin
     sOpe);
   // Total de la operación y formas de pago.
   ATicket.Negrita(True);
-  ATicket.TextoColumnas('A PAGAR', FmtImp(dLiquido));
+  ATicket.TextoColumnas(STicketAPagar, FmtImp(dLiquido));
   ATicket.Negrita(False);
   EscribirFormasPago(
     ATicket,
@@ -358,7 +369,9 @@ begin
   Result := AOperacion.ImporteTotal;
   sConcepto := Trim(AOperacion.ConceptoGastoIngreso);
   // Fila 1: referencia (nº op + fecha) e importe a la derecha.
-  sRef := 'Op.' + AOperacion.NumeroOperacion + ' ' +
+  sRef := Format(
+    STicketOperacionCorta,
+    [AOperacion.NumeroOperacion]) + ' ' +
     FormatDateTime(
       'dd/mm/yy hh:nn',
       AOperacion.FechaOperacion);
@@ -397,7 +410,7 @@ begin
       sRef,
       AOperacion.NumeroFactura)
   else
-    sRef := 'Op.' + sOpe;
+    sRef := Format(STicketOperacionCorta, [sOpe]);
   ATicket.Negrita(True);
   ATicket.EscribirLinea(sRef + ' ' +
     FormatDateTime('dd/mm/yy hh:nn',
@@ -433,7 +446,7 @@ begin
   if AValorar then
   begin
     ATicket.Negrita(True);
-    ATicket.TextoColumnas('TOTAL TRASPASO (coste)', FmtImp(Result));
+    ATicket.TextoColumnas(STicketTotalTraspasoCoste, FmtImp(Result));
     ATicket.Negrita(False);
   end;
 end;
@@ -458,7 +471,7 @@ begin
   sOpe := AOperacion.NumeroOperacion;
   // Cabecera del depósito: referencia de operación + fecha.
   ATicket.Negrita(True);
-  ATicket.EscribirLinea('Op.' + sOpe + ' ' +
+  ATicket.EscribirLinea(Format(STicketOperacionCorta, [sOpe]) + ' ' +
     FormatDateTime('dd/mm/yy hh:nn',
       AOperacion.FechaOperacion));
   ATicket.Negrita(False);
@@ -480,7 +493,9 @@ begin
     dPendiente := dTotal - dAnticipo;
     ATicket.EscribirLinea(
       Copy(
-        'Cli: ' + Trim(sCli + ' ' + sCliNom),
+        Format(
+          STicketClienteCorto,
+          [Trim(sCli + ' ' + sCliNom)]),
         1,
         N_CHAR_LIN));
     sIzq := FormatFloat('0.##', dCantidad) + 'x ' + sSku;
@@ -491,8 +506,8 @@ begin
     if sDesc <> '' then
       ATicket.EscribirLinea(Copy(sDesc, 1, N_CHAR_LIN));
     if dAnticipo <> 0 then
-      ATicket.TextoColumnas('  Entregado a cuenta', FmtImp(dAnticipo));
-    ATicket.TextoColumnas('  Pendiente', FmtImp(dPendiente));
+      ATicket.TextoColumnas(STicketEntregadoCuenta, FmtImp(dAnticipo));
+    ATicket.TextoColumnas(STicketPendienteSangrado, FmtImp(dPendiente));
     Result := Result + dTotal;
     ACobrado := ACobrado + dAnticipo;
   end;
@@ -545,15 +560,15 @@ var
   function RotuloGrupo(const AG: string): string;
   begin
     if AG = 'TRA' then
-      Result := 'TRASPASO'
+      Result := STicketRotuloTraspaso
     else if AG = 'ING' then
-      Result := 'INGRESO'
+      Result := STicketRotuloIngreso
     else if AG = 'GAS' then
-      Result := 'GASTO'
+      Result := STicketRotuloGasto
     else if AG = 'DEP' then
-      Result := 'DEPOSITO'
+      Result := STicketRotuloDeposito
     else
-      Result := 'VENTA';
+      Result := STicketRotuloVenta;
   end;
 
   // Cabecera de sección (modo por tipo de documento).
@@ -562,15 +577,15 @@ var
     Ticket.Alinear(alCentro);
     Ticket.Negrita(True);
     if AG = 'TRA' then
-      Ticket.EscribirLinea('-TRASPASOS SALIENTES (ORIGEN)-')
+      Ticket.EscribirLinea(STicketTraspasosSalientes)
     else if AG = 'ING' then
-      Ticket.EscribirLinea('-INGRESOS POR CAJA-')
+      Ticket.EscribirLinea(STicketIngresosPorCaja)
     else if AG = 'GAS' then
-      Ticket.EscribirLinea('-GASTOS POR CAJA-')
+      Ticket.EscribirLinea(STicketGastosPorCaja)
     else if AG = 'DEP' then
-      Ticket.EscribirLinea('-VENTAS A CREDITO (DEPOSITOS)-')
+      Ticket.EscribirLinea(STicketVentasCreditoDepositos)
     else
-      Ticket.EscribirLinea('-VENTAS FACTURADAS-');
+      Ticket.EscribirLinea(STicketVentasFacturadas);
     Ticket.Negrita(False);
     Ticket.Alinear(alIzquierda);
   end;
@@ -580,42 +595,42 @@ var
   begin
     if AG = 'TRA' then
     begin
-      Ticket.TextoColumnas('TRASPASOS', IntToStr(nTra));
+      Ticket.TextoColumnas(STicketTraspasos, IntToStr(nTra));
       if bVerCoste then
       begin
         Ticket.Negrita(True);
-        Ticket.TextoColumnas('SUBTOTAL (coste)', FmtImp(totTra));
+        Ticket.TextoColumnas(STicketSubtotalCoste, FmtImp(totTra));
         Ticket.Negrita(False);
       end;
     end
     else if AG = 'ING' then
     begin
-      Ticket.TextoColumnas('INGRESOS', IntToStr(nIng));
+      Ticket.TextoColumnas(STicketIngresos, IntToStr(nIng));
       Ticket.Negrita(True);
-      Ticket.TextoColumnas('SUBTOTAL', FmtImp(totIng));
+      Ticket.TextoColumnas(STicketSubtotal, FmtImp(totIng));
       Ticket.Negrita(False);
     end
     else if AG = 'GAS' then
     begin
-      Ticket.TextoColumnas('GASTOS', IntToStr(nGas));
+      Ticket.TextoColumnas(STicketGastos, IntToStr(nGas));
       Ticket.Negrita(True);
-      Ticket.TextoColumnas('SUBTOTAL', FmtImp(totGas));
+      Ticket.TextoColumnas(STicketSubtotal, FmtImp(totGas));
       Ticket.Negrita(False);
     end
     else if AG = 'DEP' then
     begin
-      Ticket.TextoColumnas('DEPOSITOS', IntToStr(nDep));
+      Ticket.TextoColumnas(STicketDepositos, IntToStr(nDep));
       Ticket.Negrita(True);
-      Ticket.TextoColumnas('SUBTOTAL VENTA', FmtImp(totDepV));
+      Ticket.TextoColumnas(STicketSubtotalVenta, FmtImp(totDepV));
       Ticket.Negrita(False);
       if totDepC <> 0 then
-        Ticket.TextoColumnas('SUBTOTAL COBRADO', FmtImp(totDepC));
+        Ticket.TextoColumnas(STicketSubtotalCobrado, FmtImp(totDepC));
     end
     else
     begin
-      Ticket.TextoColumnas('OPERACIONES', IntToStr(nVen));
+      Ticket.TextoColumnas(STicketOperaciones, IntToStr(nVen));
       Ticket.Negrita(True);
-      Ticket.TextoColumnas('TOTAL VENTAS', FmtImp(totVen));
+      Ticket.TextoColumnas(STicketTotalVentasSinSigno, FmtImp(totVen));
       Ticket.Negrita(False);
     end;
   end;
@@ -695,14 +710,14 @@ begin
     Ticket.SaltarLineas(1);
     Ticket.Alinear(alCentro);
     Ticket.Negrita(True);
-    Ticket.EscribirLinea(Format('-ARQUEO CAJA %s HORA %s-',
+    Ticket.EscribirLinea(Format(STicketArqueoCajaHora,
       [ACaja, FormatDateTime('hh:nn', Now)]));
-    Ticket.EscribirLinea(Format('DEL %s',
+    Ticket.EscribirLinea(Format(STicketDel,
       [FormatDateTime('dd/mm/yy hh:nn', AFechaDesde)]));
-    Ticket.EscribirLinea(Format('AL  %s',
+    Ticket.EscribirLinea(Format(STicketAl,
       [FormatDateTime('dd/mm/yy hh:nn', AFechaHasta)]));
     if Length(ASeries) = 0 then
-      Ticket.EscribirLinea('TODAS LAS SERIES')
+      Ticket.EscribirLinea(STicketTodasSeries)
     else
     begin
       sSerieTxt := '';
@@ -712,12 +727,12 @@ begin
           sSerieTxt := sSerieTxt + ', ';
         sSerieTxt := sSerieTxt + ASeries[i];
       end;
-      Ticket.EscribirLinea('SERIES: ' + sSerieTxt);
+      Ticket.EscribirLinea(Format(STicketSeries, [sSerieTxt]));
     end;
     if ACronologico then
-      Ticket.EscribirLinea('ORDEN: CRONOLOGICO')
+      Ticket.EscribirLinea(STicketOrdenCronologico)
     else
-      Ticket.EscribirLinea('ORDEN: POR TIPO DE DOCUMENTO');
+      Ticket.EscribirLinea(STicketOrdenTipoDocumento);
     Ticket.Negrita(False);
     Ticket.Alinear(alIzquierda);
     Ticket.SaltarLineas(1);
@@ -767,7 +782,7 @@ begin
     end;
     // Cierre: subtotal del último grupo (por tipo) o resumen (cronológico).
     if (nVen + nTra + nIng + nGas + nDep) = 0 then
-      Ticket.EscribirLinea('Sin operaciones')
+      Ticket.EscribirLinea(STicketSinOperaciones)
     else if not ACronologico then
       SubtotalGrupo(sPrevGrupo)
     else
@@ -775,7 +790,7 @@ begin
       Ticket.LineaSeparadora('=');
       Ticket.Alinear(alCentro);
       Ticket.Negrita(True);
-      Ticket.EscribirLinea('-RESUMEN-');
+      Ticket.EscribirLinea(STicketResumen);
       Ticket.Negrita(False);
       Ticket.Alinear(alIzquierda);
       if nVen > 0 then

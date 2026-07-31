@@ -46,7 +46,8 @@ implementation
 uses
   Data.DB, DBAccess, Vcl.Dialogs,
   inLibFTicket, inLibPreviewTicket, inLibDir,
-  inLibGenerarTicket, inLibMsgCaja, inLibMsgConfiguracion;
+  inLibGenerarTicket, inLibMsgCaja, inLibMsgConfiguracion,
+  inLibMsgTickets;
 
 procedure ImprimirTicketOperacionCaja(
   AConexion: TUniConnection;
@@ -94,9 +95,9 @@ begin
     sConcepto := Qry.FieldByName('CONCEPTO_GASTO_INGRESO_OPCAJA').AsString;
     dImporte  := Qry.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
     if sTipo = 'EC' then
-      sTitulo := 'ENTRADA DE CAMBIO'
+      sTitulo := STicketEntradaCambio
     else
-      sTitulo := 'GASTO / RETIRADA DE CAJA';
+      sTitulo := STicketGastoRetiradaCaja;
   finally
     FreeAndNil(Qry);
   end;
@@ -111,22 +112,24 @@ begin
     Ticket.LineaSeparadora;
     { Datos }
     Ticket.Alinear(alIzquierda);
-    Ticket.TextoColumnas('Fecha:', sFecha);
-    Ticket.TextoColumnas('Caja:', ACaja);
-    Ticket.TextoColumnas('Empleado:', sEmpleado);
-    Ticket.TextoColumnas('Op.:', ANumOperacion);
+    Ticket.TextoColumnas(STicketFecha, sFecha);
+    Ticket.TextoColumnas(STicketCaja, ACaja);
+    Ticket.TextoColumnas(STicketEmpleado, sEmpleado);
+    Ticket.TextoColumnas(
+      STicketOperacionAbreviada,
+      ANumOperacion);
     if sConcepto <> '' then
-      Ticket.TextoColumnas('Concepto:', sConcepto);
+      Ticket.TextoColumnas(STicketConcepto, sConcepto);
     Ticket.LineaSeparadora;
     { Importe }
     Ticket.Negrita(True);
-    Ticket.TextoColumnas('IMPORTE:',
+    Ticket.TextoColumnas(STicketImporte,
       FormatFloat(',0.00', dImporte) + ' EUR');
     Ticket.Negrita(False);
     Ticket.LineaSeparadora;
     { Pie }
     Ticket.Alinear(alCentro);
-    Ticket.EscribirLinea('Firma:');
+    Ticket.EscribirLinea(STicketFirma);
     Ticket.SaltarLineas(2);
     Ticket.LineaSeparadora('.');
     EscribirPieTicketCaja(AConexion, Ticket, AEmpresa);

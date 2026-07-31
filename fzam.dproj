@@ -197,6 +197,7 @@
         <DCCReference Include="src\Lib\inLibMsgCompras.pas"/>
         <DCCReference Include="src\Lib\inLibMsgFacturas.pas"/>
         <DCCReference Include="src\Lib\inLibMsgCaja.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgTickets.pas"/>
         <DCCReference Include="src\Lib\inLibMsgIntegraciones.pas"/>
         <DCCReference Include="src\Lib\inLibMsgVerifactu.pas"/>
         <DCCReference
@@ -205,6 +206,8 @@
         <DCCReference Include="src\Lib\inLibScriptDB.pas"/>
         <DCCReference Include="src\Lib\inLibIBAN.pas"/>
         <DCCReference Include="src\Lib\inLibSepaRemesasVenta.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturasLecturasIntf.pas"/>
+        <DCCReference Include="src\DataModules\UniDataFacturasLecturas.pas"/>
         <DCCReference Include="src\Lib\inLibFacturas.pas"/>
         <DCCReference Include="src\Lib\inLibSqlSeguro.pas"/>
         <DCCReference Include="src\Lib\inLibMotorFiscalVenta.pas"/>
@@ -215,6 +218,15 @@
         <DCCReference Include="src\Lib\inLibFacturasComposicion.pas"/>
         <DCCReference Include="src\Lib\inLibFacturasBorrado.pas"/>
         <DCCReference Include="src\Lib\inLibFacturasEfectos.pas"/>
+        <DCCReference Include="src\Lib\inLibDocumentoIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibDocumento.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturasCobrosPresentacion.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturasEstadoFiscalPresentacion.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturasOperacionFiscal.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturasLineasEdicion.pas"/>
+        <DCCReference
+            Include="src\Lib\inLibFacturasConsolidacionPresentacion.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturasColumnasPresentacion.pas"/>
         <DCCReference Include="src\Lib\inLibFacturasMovimientos.pas"/>
         <DCCReference Include="src\Lib\inLibFacturasConsolidacion.pas"/>
         <DCCReference Include="src\Lib\inLibFacturasReapertura.pas"/>
@@ -240,6 +252,7 @@
         <DCCReference Include="src\Lib\inLibTraduccionesIntf.pas"/>
         <DCCReference Include="src\Lib\inLibTraducciones.pas"/>
         <DCCReference Include="src\Lib\inLibTraduccionesInforme.pas"/>
+        <DCCReference Include="src\Lib\inLibTraduccionesFastReport.pas"/>
         <DCCReference Include="src\Lib\inLibParametrosIntf.pas"/>
         <DCCReference Include="src\Lib\inLibParametrosBase.pas"/>
         <DCCReference Include="src\Lib\inLibConexionesIntf.pas"/>
@@ -642,6 +655,8 @@
         <DCCReference Include="src\Caja\Lib\inLibCajaDatosFactura.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibCajaTipos.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibCajaVentaIntf.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibCajaVentaCliente.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibCajaVentaOperacion.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibCajaStock.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibCajaDescuentos.pas"/>
         <DCCReference Include="src\Caja\DataModules\UniDataCajaConsultasRepositorio.pas"/>
@@ -738,6 +753,10 @@
         <DCCReference Include="src\Lib\inLibEAN13.pas"/>
         <DCCReference Include="src\Modals\inMtoModalArticulosPropiedades.pas"/>
         <DCCReference Include="src\Lib\inLibArticulosVariaciones.pas"/>
+        <DCCReference Include="src\Lib\inLibArticulosVariacionesIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibArticulosAltaTarifas.pas"/>
+        <DCCReference Include="src\Lib\inLibStockCeldaDocumento.pas"/>
+        <DCCReference Include="src\DataModules\UniDataArticulosVariaciones.pas"/>
         <DCCReference Include="src\Modals\inMtoModalAceptCancel.pas">
             <Form>frmModalAceptCancel</Form>
         </DCCReference>
@@ -765,7 +784,11 @@
         <DCCReference Include="src\Lib\inLibXades.pas"/>
         <DCCReference Include="src\Lib\inLibDocumentoFiscal.pas"/>
         <DCCReference Include="src\Lib\inLibRelojFiscal.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturaePersistenciaIntf.pas"/>
+        <DCCReference Include="src\DataModules\UniDataFacturaeRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibFacturae.pas"/>
+        <DCCReference Include="src\verifactu\inLibVerifactuNoVerifactuExportIntf.pas"/>
+        <DCCReference Include="src\verifactu\UniDataVerifactuNoVerifactuExport.pas"/>
         <DCCReference Include="src\Lib\inLibVerifactuNoVerifactuExport.pas"/>
         <DCCReference Include="src\Lib\inLibVerifactuNoVerifactuVerify.pas"/>
         <DCCReference Include="src\verifactu\inLibVerifactuInstalacion.pas"/>
@@ -886,6 +909,7 @@
         <DCCReference Include="src\Forms\inMtoAlbaranes.pas">
             <Form>frmMtoAlbaranes</Form>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoDocumento.pas"/>
         <DCCReference Include="src\DataModules\UniDataAlbaranes.pas">
             <Form>dmAlbaranes</Form>
             <DesignClass>TdmAlbaranes</DesignClass>
@@ -972,6 +996,8 @@
         </DCCReference>
         <DCCReference Include="src\Lib\inLibPedidosCompraIntf.pas"/>
         <DCCReference Include="src\Lib\inLibPedidosCompra.pas"/>
+        <DCCReference Include="src\Lib\inLibGridPivoteCompraPersistenciaIntf.pas"/>
+        <DCCReference Include="src\DataModules\UniDataGridPivoteCompraRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibGridPivoteCompra.pas"/>
         <DCCReference Include="src\Lib\inLibGridPivoteVenta.pas"/>
         <DCCReference Include="src\Lib\inLibPivoteVentaCalculo.pas"/>
@@ -1116,6 +1142,8 @@
         <DCCReference Include="src\Modals\inMtoModalSelFamilia.pas">
             <Form>frmModalSelFamilia</Form>
         </DCCReference>
+        <DCCReference Include="src\Lib\inLibFotosPersistenciaIntf.pas"/>
+        <DCCReference Include="src\DataModules\UniDataFotosRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibFotos.pas"/>
         <DCCReference Include="src\Lib\inLibDocumentosTrabajo.pas"/>
         <DCCReference Include="src\Lib\inLibImagen.pas"/>

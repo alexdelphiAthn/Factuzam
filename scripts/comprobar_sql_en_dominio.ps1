@@ -1,9 +1,9 @@
 param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoSentenciasSql = 223,
+  [int]$MaximoSentenciasSql = 158,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoUnidadesConSql = 59,
+  [int]$MaximoUnidadesConSql = 53,
   [switch]$MostrarTodos,
   [string]$RutaInventario = ''
 )

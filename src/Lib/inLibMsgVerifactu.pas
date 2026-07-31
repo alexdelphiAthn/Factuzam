@@ -16,6 +16,8 @@ unit inLibMsgVerifactu;
 interface
 
 resourcestring
+  SErrorRepositorioExportacionNoVerifactuNoRegistrado =
+    'No se ha registrado el repositorio de exportación NO VERI*FACTU.';
   SErrorRespuestaNtpNoValida =
     'sin respuesta NTP valida';
   SInfoRelojFiscalCorrecto =

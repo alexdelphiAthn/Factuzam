@@ -138,11 +138,17 @@ uses
   UniDataArticulosValidadorRepositorio,
   inLibVentasImpuestos, inLibContadorLineas, inLibData,
   inLibMsgArticulos, inLibMsgFacturas, inLibMsgVentas,
-  inLibSqlSeguro;
+  inLibSqlSeguro, inLibDocumento, inLibDocumentoIntf;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
+
+function EstrategiaAlbaranVenta: IEstrategiaDocumento;
+begin
+  Result := CrearEstrategiaDocumento(
+    CrearConfiguracionDocumento(tdAlbaran, sdVenta));
+end;
 
 const
   // Columnas REALES de fza_albaranes. La cabecera se lee de
@@ -367,7 +373,8 @@ begin
     sSerie := ObtenerSerieDefecto(
       ConexionPrincipal,
       UbicacionSesion.Empresa,
-      'AV');
+      CrearConfiguracionDocumento(
+        tdAlbaran, sdVenta).TipoContador);
     if sSerie = '' then
       sSerie := 'A1';
     if FindField('SERIE_ALB') <> nil then
@@ -476,7 +483,8 @@ begin
       Abort;
     end;
     q.SQL.Text := 'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC(:t, :s, :n)';
-    q.ParamByName('t').AsString := 'AV';
+    q.ParamByName('t').AsString :=
+      EstrategiaAlbaranVenta.TipoDocumentoMovimientoStock;
     AsignarDocumento;
     q.ExecSQL;
     q.SQL.Text :=
@@ -898,7 +906,9 @@ begin
     Params.CreateParam(ftString, 'pcont',             ptOutput);
     ParamByName('pserie').AsString    :=
       unqryTablaG.FieldByName('SERIE_ALB').AsString;
-    ParamByName('ptipodoc').AsString  := 'AV';
+    ParamByName('ptipodoc').AsString :=
+      CrearConfiguracionDocumento(
+        tdAlbaran, sdVenta).TipoContador;
     ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
     ParamByName('pEMPRESA_CONTADOR').AsString :=
                                   unqryTablaG.FieldByName(
@@ -937,7 +947,8 @@ begin
   try
     q.Connection := unqryTablaG.Connection;
     q.SQL.Text := 'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC(:t, :s, :n)';
-    q.ParamByName('t').AsString := 'AV';
+    q.ParamByName('t').AsString :=
+      EstrategiaAlbaranVenta.TipoDocumentoMovimientoStock;
     q.ParamByName('s').AsString :=
       unqryTablaG.FieldByName('SERIE_ALB').AsString;
     q.ParamByName('n').AsString :=
@@ -1290,7 +1301,11 @@ begin
     // conserva su serie aunque se retoque la empresa
     if (sNumero = '') or (sNumero = '0') then
     begin
-      sSerie := ObtenerSerieDefecto(ConexionPrincipal, AEmpresa, 'AV');
+      sSerie := ObtenerSerieDefecto(
+        ConexionPrincipal,
+        AEmpresa,
+        CrearConfiguracionDocumento(
+          tdAlbaran, sdVenta).TipoContador);
       if sSerie <> '' then
         unqryTablaG.FieldByName('SERIE_ALB').AsString := sSerie;
     end;
@@ -2081,10 +2096,12 @@ begin
     qExiste.SQL.Text :=
       'SELECT COUNT(*) AS N ' +
       '  FROM fza_movimientos_almacen ' +
-      ' WHERE TIPO_DOC_MOV   = ''AV'' ' +
+      ' WHERE TIPO_DOC_MOV   = :pTIPODOC ' +
       '   AND SERIE_DOC_MOV  = :pSER ' +
       '   AND NUMERO_DOC_MOV = :pNUM ' +
       '   AND LINEA_MOV      = :pLIN';
+    qExiste.ParamByName('pTIPODOC').AsString :=
+      EstrategiaAlbaranVenta.TipoDocumentoMovimientoStock;
     qFechaMov.Connection := unqryTablaG.Connection;
     qFechaMov.SQL.Text :=
       'UPDATE fza_movimientos_almacen ' +
@@ -2143,7 +2160,8 @@ begin
               'MV',
               IdentidadSesion.Usuario);
             ParamByName('p_NUMERO_MOV').AsString          := sNumeroMov;
-            ParamByName('p_TIPO_DOC_MOV').AsString        := 'AV';
+            ParamByName('p_TIPO_DOC_MOV').AsString :=
+              EstrategiaAlbaranVenta.TipoDocumentoMovimientoStock;
             ParamByName('p_SERIE_DOC_MOV').AsString       := sSerieAlb;
             ParamByName('p_NRO_DOC_MOV').AsString         := sNumeroAlb;
             ParamByName('p_LINEA_MOV').AsString           := sLinea;
@@ -2151,7 +2169,8 @@ begin
             ParamByName('p_CODIGO_ALMACEN_MOV').AsString  := sAlmacen;
             ParamByName('p_CODIGO_ALMACEN_CONTRA_MOV').Clear;
             ParamByName('p_CODIGO_UNIDAD_MOV').AsString   := sSku;
-            ParamByName('p_TIPO_MOVIMIENTO_MOV').AsString := 'S';
+            ParamByName('p_TIPO_MOVIMIENTO_MOV').AsString :=
+              EstrategiaAlbaranVenta.TipoMovimientoStock;
             ParamByName('p_CANTIDAD_MOV').AsFloat         := fCantidad;
             ParamByName('p_PRECIO_MEDIO_MOV').AsFloat     := 0;
             ParamByName('p_TOTAL_COSTE_MOV').AsFloat      := 0;

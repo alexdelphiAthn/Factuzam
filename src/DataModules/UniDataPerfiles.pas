@@ -28,7 +28,9 @@ type
     IProveedorAuditoriaDatos,
     IProveedorConexiones,
     IProveedorContextoSesion,
-    IPerfilesUsuario
+    ILectorPerfilesUsuario,
+    IEscritorPerfilesUsuario,
+    ICachePerfilesUsuario
   )
     unqryPerfiles: TUniQuery;
     unstdGrabarPerfil: TUniStoredProc;

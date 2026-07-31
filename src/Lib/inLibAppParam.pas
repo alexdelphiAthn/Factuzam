@@ -35,7 +35,9 @@ type
   protected
     procedure DespuesDeRecargar; override;
   public
-    constructor Create(const APerfilesUsuario: IPerfilesUsuario);
+    constructor Create(
+      const APerfilesLectura: ILectorPerfilesUsuario;
+      const ACachePerfiles: ICachePerfilesUsuario);
     destructor Destroy; override;
     procedure EstablecerLicencia(
       const AResultado: TResultadoLicenciaAplicacion);
@@ -44,7 +46,8 @@ type
   end;
 
 function CrearParametrosAplicacion(
-  const APerfilesUsuario: IPerfilesUsuario;
+  const APerfilesLectura: ILectorPerfilesUsuario;
+  const ACachePerfiles: ICachePerfilesUsuario;
   const AUsuario, AGrupo: string
 ): IParametrosAplicacion;
 
@@ -57,10 +60,12 @@ uses
 { TParametrosAplicacion }
 
 constructor TParametrosAplicacion.Create(
-  const APerfilesUsuario: IPerfilesUsuario);
+  const APerfilesLectura: ILectorPerfilesUsuario;
+  const ACachePerfiles: ICachePerfilesUsuario);
 begin
   inherited Create(
-    APerfilesUsuario,
+    APerfilesLectura,
+    ACachePerfiles,
     'frmMtoAppParam',
     TArray<string>.Create(
       'WindowState',
@@ -322,13 +327,15 @@ begin
 end;
 
 function CrearParametrosAplicacion(
-  const APerfilesUsuario: IPerfilesUsuario;
+  const APerfilesLectura: ILectorPerfilesUsuario;
+  const ACachePerfiles: ICachePerfilesUsuario;
   const AUsuario, AGrupo: string
 ): IParametrosAplicacion;
 var
   Parametros: TParametrosAplicacion;
 begin
-  Parametros := TParametrosAplicacion.Create(APerfilesUsuario);
+  Parametros := TParametrosAplicacion.Create(
+    APerfilesLectura, ACachePerfiles);
   // El interfaz gobierna la vida del objeto ANTES de inicializar:
   // DespuesDeRecargar toma una referencia temporal a Self y, con el
   // contador de referencias todavia a cero, al soltarla el objeto se

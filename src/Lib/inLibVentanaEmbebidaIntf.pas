@@ -28,7 +28,7 @@ type
   end;
 
   // Mantenimiento genérico abierto por inLibShowMto.
-  IMantenimientoEmbebido = interface
+  IMantenimientoEmbebido = interface(IVentanaEmbebida)
     ['{DAA11BD0-4933-4F32-B1F9-B567B2CBC200}']
     // Marca la instancia como "de búsqueda" (Ctrl+A). Con
     // AAplicarLayout recorta la UI (instancia 1 reservada); sin él la

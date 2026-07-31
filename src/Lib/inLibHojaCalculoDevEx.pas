@@ -2,14 +2,14 @@
 {                                                                              }
 {  Módulo:       inLibHojaCalculoDevEx                                         }
 {    Tipo:       Librería (adaptador)                                          }
-{ Versión:       1.1.0                                                         }
+{ Versión:       2.0.0                                                         }
 {   Fecha:       25/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Adaptador de IEscritorHojaCalculo sobre DevExpress (TdxSpreadSheet).      }
+{    Adaptadores de hoja de cálculo sobre DevExpress (TdxSpreadSheet).         }
 {    ÚNICA unidad del subsistema que ve tipos Tdx*. Las 4 operaciones de       }
 {    bajo nivel (mezclar, escribir, fórmula, cuadro) son métodos de clase      }
 {    (fuente única): las usan tanto el puerto como los shims de inLibDevExcel. }
@@ -32,7 +32,11 @@ type
   EHojaCalculo = class(Exception);
   // Adaptador DevExpress del puerto de escritura. Envuelve un control
   // TdxSpreadSheet (o una vista de tabla suelta para los shims legacy).
-  TEscritorHojaCalculoDevEx = class(TInterfacedObject, IEscritorHojaCalculo,
+  TEscritorHojaCalculoDevEx = class(
+    TInterfacedObject,
+    IEscritorHojaCalculo,
+    IFormateadorHojaCalculo,
+    IGuardadorHojaCalculo,
     ILectorHojaCalculo)
   private
     FControl: TdxSpreadSheet;
@@ -60,13 +64,13 @@ type
     procedure NuevaHoja(const ANombre: string);
     procedure IniciarLote;
     procedure FinalizarLote;
-    procedure Escribir(AFila, ACol: Integer; const AValor: Variant;
-      ANegrita: Boolean = False;
-      AAlineacion: TAlineacionCelda = acIzquierda;
-      const AFormato: string = '');
-    procedure EscribirFormula(AFila, ACol: Integer; const AFormula: string;
-      const AFormato: string = '');
+    procedure Escribir(AFila, ACol: Integer; const AValor: Variant);
+    procedure EscribirFormula(
+      AFila, ACol: Integer;
+      const AFormula: string);
     procedure Combinar(AFila, ACol, ANumFilas, ANumCols: Integer);
+    function CeldaExiste(AFila, ACol: Integer): Boolean;
+    // IFormateadorHojaCalculo
     procedure DibujarCuadro(AF1, AC1, AF2, AC2: Integer;
       AEstilo: TEstiloBorde);
     procedure BordeCelda(AFila, ACol: Integer; ALado: TLadoBorde;
@@ -75,7 +79,13 @@ type
     procedure Negrita(AFila, ACol: Integer; AActivar: Boolean = True);
     procedure TamanoFuente(AFila, ACol: Integer; ATamano: Integer);
     procedure AnchoColumna(ACol: Integer; AAncho: Integer);
-    function CeldaExiste(AFila, ACol: Integer): Boolean;
+    procedure Alinear(
+      AFila, ACol: Integer;
+      AAlineacion: TAlineacionCelda);
+    procedure AplicarFormato(
+      AFila, ACol: Integer;
+      const AFormato: string);
+    // IGuardadorHojaCalculo
     procedure Guardar(const ARuta: string);
     // ILectorHojaCalculo
     function LeerCelda(AFila, ACol: Integer): Variant;
@@ -83,12 +93,12 @@ type
     function UltimaColumna: Integer;
   end;
 
-// Escritor ligado al control (crea la hoja con NuevaHoja y permite Guardar).
-function CrearEscritorDevEx(
-  const AControl: TdxSpreadSheet): IEscritorHojaCalculo;
-// Escritor sobre una vista de tabla suelta (sin NuevaHoja ni Guardar).
-function CrearEscritorDevExTabla(
-  const ATabla: TdxSpreadSheetTableView): IEscritorHojaCalculo;
+// Servicios ligados al control.
+function CrearServiciosHojaCalculoDevEx(
+  const AControl: TdxSpreadSheet): TServiciosHojaCalculo;
+// Servicios sobre una vista suelta. Guardador queda sin asignar.
+function CrearServiciosHojaCalculoDevExTabla(
+  const ATabla: TdxSpreadSheetTableView): TServiciosHojaCalculo;
 // Lector sobre la primera hoja de un control ya cargado (sin limpiarlo).
 function CrearLectorDevEx(
   const AControl: TdxSpreadSheet): ILectorHojaCalculo;
@@ -242,22 +252,20 @@ begin
   FTabla.EndUpdate;
 end;
 
-procedure TEscritorHojaCalculoDevEx.Escribir(AFila, ACol: Integer;
-  const AValor: Variant; ANegrita: Boolean; AAlineacion: TAlineacionCelda;
-  const AFormato: string);
+procedure TEscritorHojaCalculoDevEx.Escribir(
+  AFila, ACol: Integer;
+  const AValor: Variant);
 begin
   AsegurarTabla;
-  EscribirCeldaDx(FTabla, AFila, ACol, AValor, ANegrita,
-    MapAlineacion(AAlineacion));
-  if AFormato <> '' then
-    FTabla.Cells[AFila, ACol].Style.DataFormat.FormatCode := AFormato;
+  FTabla.CreateCell(AFila, ACol).AsVariant := AValor;
 end;
 
-procedure TEscritorHojaCalculoDevEx.EscribirFormula(AFila, ACol: Integer;
-  const AFormula: string; const AFormato: string);
+procedure TEscritorHojaCalculoDevEx.EscribirFormula(
+  AFila, ACol: Integer;
+  const AFormula: string);
 begin
   AsegurarTabla;
-  EscribirFormulaDx(FTabla, AFila, ACol, AFormula, AFormato);
+  FTabla.CreateCell(AFila, ACol).SetText(AFormula, True);
 end;
 
 procedure TEscritorHojaCalculoDevEx.Combinar(AFila, ACol, ANumFilas,
@@ -326,6 +334,25 @@ begin
   FTabla.Columns[ACol].Size := AAncho;
 end;
 
+procedure TEscritorHojaCalculoDevEx.Alinear(
+  AFila, ACol: Integer;
+  AAlineacion: TAlineacionCelda);
+begin
+  AsegurarTabla;
+  FTabla.CreateCell(AFila, ACol).Style.AlignHorz :=
+    MapAlineacion(AAlineacion);
+  FTabla.Cells[AFila, ACol].Style.AlignVert := ssavCenter;
+end;
+
+procedure TEscritorHojaCalculoDevEx.AplicarFormato(
+  AFila, ACol: Integer;
+  const AFormato: string);
+begin
+  AsegurarTabla;
+  FTabla.CreateCell(AFila, ACol).Style.DataFormat.FormatCode :=
+    AFormato;
+end;
+
 function TEscritorHojaCalculoDevEx.CeldaExiste(AFila, ACol: Integer): Boolean;
 begin
   AsegurarTabla;
@@ -363,16 +390,26 @@ begin
     Result := FTabla.Dimensions.Right;
 end;
 
-function CrearEscritorDevEx(
-  const AControl: TdxSpreadSheet): IEscritorHojaCalculo;
+function CrearServiciosHojaCalculoDevEx(
+  const AControl: TdxSpreadSheet): TServiciosHojaCalculo;
+var
+  oAdaptador: TEscritorHojaCalculoDevEx;
 begin
-  Result := TEscritorHojaCalculoDevEx.Create(AControl);
+  oAdaptador := TEscritorHojaCalculoDevEx.Create(AControl);
+  Result.Escritor := oAdaptador;
+  Result.Formateador := oAdaptador;
+  Result.Guardador := oAdaptador;
 end;
 
-function CrearEscritorDevExTabla(
-  const ATabla: TdxSpreadSheetTableView): IEscritorHojaCalculo;
+function CrearServiciosHojaCalculoDevExTabla(
+  const ATabla: TdxSpreadSheetTableView): TServiciosHojaCalculo;
+var
+  oAdaptador: TEscritorHojaCalculoDevEx;
 begin
-  Result := TEscritorHojaCalculoDevEx.CreateTabla(ATabla);
+  oAdaptador := TEscritorHojaCalculoDevEx.CreateTabla(ATabla);
+  Result.Escritor := oAdaptador;
+  Result.Formateador := oAdaptador;
+  Result.Guardador := nil;
 end;
 
 function CrearLectorDevEx(

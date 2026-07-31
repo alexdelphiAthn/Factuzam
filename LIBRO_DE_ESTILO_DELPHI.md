@@ -803,6 +803,9 @@ interfaces, no busca singletons ni instancia implementaciones por su cuenta.
 - Un propietario publica un servicio mediante `IProveedorXxx`; las bases lo
   heredan con `Supports`. Esto propaga dependencias por el árbol de
   propietarios sin convertirlo en un localizador global.
+- `Supports` solo se usa durante la creación, la composición o los métodos
+  `Heredar*` incluidos en su lista blanca. El contrato resuelto se guarda en
+  un campo y no vuelve a descubrirse desde métodos de negocio.
 - Librerías, hilos y objetos sin propietario reciben los contratos en el
   constructor o en el método que inicia el trabajo.
 - Los parámetros de interfaz se pasan como `const` cuando no se reasignan.
@@ -810,6 +813,9 @@ interfaces, no busca singletons ni instancia implementaciones por su cuenta.
   evita que el consumidor arrastre UniDAC, VCL o DevExpress.
 - Las interfaces propias llevan GUID y exponen la operación mínima que el
   consumidor necesita.
+- Si una implementación ofrece varias capacidades, se publican interfaces
+  pequeñas y un `record TServiciosXxx` para inyectarlas juntas. El consumidor
+  solo conserva las capacidades que usa.
 
 No se depende de `inLibAppParam`, `inLibCajaParam` ni de otra implementación
 concreta cuando basta `IParametrosAplicacion`, `IParametrosCaja` o el

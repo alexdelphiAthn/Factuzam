@@ -1798,7 +1798,7 @@ begin
       RecogerPerfilesParticulares(oList, sPermisos);
         ConexionPrincipal.StartTransaction;
       try
-        PerfilesUsuario.GrabarPerfiles(oList);
+        PerfilesEscritura.GrabarPerfiles(oList);
         ConexionPrincipal.Commit;
       except
         ConexionPrincipal.Rollback;

@@ -25,7 +25,7 @@ type
   TPruebasCadenas = class
   private
     FServicioObjeto: TServicioPerfilesPrueba;
-    FServicio: IPerfilesUsuario;
+    FServicio: ILectorPerfilesUsuario;
   public
     [Setup]
     procedure Preparar;

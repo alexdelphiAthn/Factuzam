@@ -156,21 +156,14 @@ type
     FOnEntrarEdicion: TNotifyEvent;
     FOnResuelto: TSkuResueltoEvent;
     FOnSalirEdicion: TNotifyEvent;
-    function GetModo: TModoColumnasSku;
-    function GetOnEntrarEdicion: TNotifyEvent;
-    function GetOnResuelto: TSkuResueltoEvent;
-    function GetOnSalirEdicion: TNotifyEvent;
-    procedure SetOnEntrarEdicion(const AValue: TNotifyEvent);
-    procedure SetOnResuelto(const AValue: TSkuResueltoEvent);
-    procedure SetOnSalirEdicion(const AValue: TNotifyEvent);
   public
     constructor Create(AFallarAlConstruir: Boolean;
       AFallarAlDesmontar: Boolean = False);
-    procedure Construir;
+    procedure Construir(
+      AOnResuelto: TSkuResueltoEvent;
+      AOnEntrarEdicion, AOnSalirEdicion: TNotifyEvent);
     procedure Desmontar;
     procedure MostrarEditor;
-    function ResolverEntrada(const AEntrada: string): Boolean;
-    procedure SetAlmacenStock(const AValue: string);
     property Construcciones: Integer read FConstrucciones;
     property EditoresMostrados: Integer read FEditoresMostrados;
   end;
@@ -187,8 +180,13 @@ begin
   FFallarAlDesmontar := AFallarAlDesmontar;
 end;
 
-procedure TModoEntradaPrueba.Construir;
+procedure TModoEntradaPrueba.Construir(
+  AOnResuelto: TSkuResueltoEvent;
+  AOnEntrarEdicion, AOnSalirEdicion: TNotifyEvent);
 begin
+  FOnResuelto := AOnResuelto;
+  FOnEntrarEdicion := AOnEntrarEdicion;
+  FOnSalirEdicion := AOnSalirEdicion;
   Inc(FConstrucciones);
   if FFallarAlConstruir then
     raise Exception.Create('Fallo controlado');
@@ -206,57 +204,9 @@ begin
     raise Exception.Create('Fallo de desmontaje controlado');
 end;
 
-function TModoEntradaPrueba.GetModo: TModoColumnasSku;
-begin
-  Result := mcsSku;
-end;
-
-function TModoEntradaPrueba.GetOnEntrarEdicion: TNotifyEvent;
-begin
-  Result := FOnEntrarEdicion;
-end;
-
-function TModoEntradaPrueba.GetOnResuelto: TSkuResueltoEvent;
-begin
-  Result := FOnResuelto;
-end;
-
-function TModoEntradaPrueba.GetOnSalirEdicion: TNotifyEvent;
-begin
-  Result := FOnSalirEdicion;
-end;
-
 procedure TModoEntradaPrueba.MostrarEditor;
 begin
   Inc(FEditoresMostrados);
-end;
-
-function TModoEntradaPrueba.ResolverEntrada(
-  const AEntrada: string): Boolean;
-begin
-  Result := False;
-end;
-
-procedure TModoEntradaPrueba.SetAlmacenStock(const AValue: string);
-begin
-end;
-
-procedure TModoEntradaPrueba.SetOnEntrarEdicion(
-  const AValue: TNotifyEvent);
-begin
-  FOnEntrarEdicion := AValue;
-end;
-
-procedure TModoEntradaPrueba.SetOnResuelto(
-  const AValue: TSkuResueltoEvent);
-begin
-  FOnResuelto := AValue;
-end;
-
-procedure TModoEntradaPrueba.SetOnSalirEdicion(
-  const AValue: TNotifyEvent);
-begin
-  FOnSalirEdicion := AValue;
 end;
 
 procedure TPruebasColumnasDocumento.Preparar;

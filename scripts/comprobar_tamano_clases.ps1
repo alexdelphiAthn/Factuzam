@@ -14,25 +14,25 @@ param(
       ObjetivoMetodos = 120
     }
     TfrmMtoFacturasBase = @{
-      Lineas = 4000
-      Metodos = 133
+      Lineas = 1779
+      Metodos = 104
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
     }
     TfrmMtoOpeCaja = @{
-      Lineas = 4060
+      Lineas = 3981
       Metodos = 104
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
     }
     TfrmMtoArticulos = @{
-      Lineas = 3406
+      Lineas = 3344
       Metodos = 97
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
     }
     TfrmStockConsulta = @{
-      Lineas = 3139
+      Lineas = 3088
       Metodos = 81
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
@@ -47,6 +47,14 @@ param(
       Lineas = 944
       Metodos = 40
       Campos = 10
+      ObjetivoLineas = 1500
+      ObjetivoMetodos = 45
+      ObjetivoCampos = 25
+    }
+    TGridPivoteCompra = @{
+      Lineas = 2490
+      Metodos = 48
+      Campos = 32
       ObjetivoLineas = 1500
       ObjetivoMetodos = 45
       ObjetivoCampos = 25
@@ -162,6 +170,78 @@ param(
     'src\DataModules\UniDataDevolucionesCompraMovimientos.pas' = @{
       Lineas = 447
       Rutinas = 11
+      ObjetivoLineas = 1200
+      ObjetivoRutinas = 30
+    }
+    'src\Lib\inLibArticulosVariaciones.pas' = @{
+      Lineas = 136
+      Rutinas = 10
+      ObjetivoLineas = 600
+      ObjetivoRutinas = 30
+    }
+    'src\Lib\inLibArticulosVariacionesIntf.pas' = @{
+      Lineas = 73
+      Rutinas = 2
+      ObjetivoLineas = 600
+      ObjetivoRutinas = 30
+    }
+    'src\DataModules\UniDataArticulosVariaciones.pas' = @{
+      Lineas = 692
+      Rutinas = 43
+      ObjetivoLineas = 1200
+      ObjetivoRutinas = 30
+    }
+    'src\Lib\inLibFotos.pas' = @{
+      Lineas = 1763
+      Rutinas = 43
+      ObjetivoLineas = 1200
+      ObjetivoRutinas = 30
+    }
+    'src\Lib\inLibFotosPersistenciaIntf.pas' = @{
+      Lineas = 96
+      Rutinas = 2
+      ObjetivoLineas = 600
+      ObjetivoRutinas = 30
+    }
+    'src\DataModules\UniDataFotosRepositorio.pas' = @{
+      Lineas = 466
+      Rutinas = 33
+      ObjetivoLineas = 1200
+      ObjetivoRutinas = 30
+    }
+    'src\Lib\inLibFacturasLecturasIntf.pas' = @{
+      Lineas = 74
+      Rutinas = 2
+      ObjetivoLineas = 600
+      ObjetivoRutinas = 30
+    }
+    'src\DataModules\UniDataFacturasLecturas.pas' = @{
+      Lineas = 252
+      Rutinas = 19
+      ObjetivoLineas = 1200
+      ObjetivoRutinas = 30
+    }
+    'src\verifactu\inLibVerifactuNoVerifactuExportIntf.pas' = @{
+      Lineas = 64
+      Rutinas = 2
+      ObjetivoLineas = 600
+      ObjetivoRutinas = 30
+    }
+    'src\verifactu\UniDataVerifactuNoVerifactuExport.pas' = @{
+      Lineas = 222
+      Rutinas = 17
+      ObjetivoLineas = 1200
+      ObjetivoRutinas = 30
+    }
+    'src\Lib\inLibFacturaePersistenciaIntf.pas' = @{
+      Lineas = 66
+      Rutinas = 2
+      ObjetivoLineas = 600
+      ObjetivoRutinas = 30
+    }
+    'src\DataModules\UniDataFacturaeRepositorio.pas' = @{
+      Lineas = 310
+      Rutinas = 21
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
     }

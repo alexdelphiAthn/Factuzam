@@ -42,7 +42,8 @@ type
     FFormulario: TCustomForm;
     FDatos: TDataSource;
     FEtiquetaTabla: TcxLabel;
-    FServicio: IPerfilesUsuario;
+    FServicioLectura: ILectorPerfilesUsuario;
+    FServicioEscritura: IEscritorPerfilesUsuario;
     FSolicitarDestino: TSolicitarDestinoPerfilMto;
     FRecogerParticulares: TRecogerPerfilesParticularesMto;
     FResetearGrid: TResetearGridPerfilMto;
@@ -57,7 +58,8 @@ type
       AFormulario: TCustomForm;
       ADatos: TDataSource;
       AEtiquetaTabla: TcxLabel;
-      const AServicio: IPerfilesUsuario;
+      const AServicioLectura: ILectorPerfilesUsuario;
+      const AServicioEscritura: IEscritorPerfilesUsuario;
       ASolicitarDestino: TSolicitarDestinoPerfilMto;
       ARecogerParticulares: TRecogerPerfilesParticularesMto;
       AResetearGrid: TResetearGridPerfilMto;
@@ -99,7 +101,8 @@ constructor TGestorPerfilesMto.Create(
   AFormulario: TCustomForm;
   ADatos: TDataSource;
   AEtiquetaTabla: TcxLabel;
-  const AServicio: IPerfilesUsuario;
+  const AServicioLectura: ILectorPerfilesUsuario;
+  const AServicioEscritura: IEscritorPerfilesUsuario;
   ASolicitarDestino: TSolicitarDestinoPerfilMto;
   ARecogerParticulares: TRecogerPerfilesParticularesMto;
   AResetearGrid: TResetearGridPerfilMto;
@@ -109,7 +112,8 @@ begin
   FFormulario := AFormulario;
   FDatos := ADatos;
   FEtiquetaTabla := AEtiquetaTabla;
-  FServicio := AServicio;
+  FServicioLectura := AServicioLectura;
+  FServicioEscritura := AServicioEscritura;
   FSolicitarDestino := ASolicitarDestino;
   FRecogerParticulares := ARecogerParticulares;
   FResetearGrid := AResetearGrid;
@@ -120,17 +124,18 @@ end;
 destructor TGestorPerfilesMto.Destroy;
 begin
   FreeAndNil(FPerfil);
-  FServicio := nil;
+  FServicioLectura := nil;
+  FServicioEscritura := nil;
   inherited;
 end;
 
 procedure TGestorPerfilesMto.CargarPerfil(
   const AUsuario, AGrupo: string);
 begin
-  if not Assigned(FServicio) then
+  if not Assigned(FServicioLectura) then
     raise Exception.Create(SErrorServicioPerfilesUsuarioNoConfigurado);
   FreeAndNil(FPerfil);
-  FServicio.CargarPerfilFormulario(
+  FServicioLectura.CargarPerfilFormulario(
     FFormulario.Name, AUsuario, AGrupo, FPerfil);
   if not Assigned(FPerfil) then
     FPerfil := TProfileDicc.Create;
@@ -220,24 +225,24 @@ end;
 procedure TGestorPerfilesMto.CargarPerfilesComunes(
   const AUsuarioGrupo: string);
 begin
-  if not Assigned(FServicio) then
+  if not Assigned(FServicioEscritura) then
     raise Exception.Create(SErrorServicioPerfilesUsuarioNoConfigurado);
-  FServicio.GrabarPerfil(
+  FServicioEscritura.GrabarPerfil(
     AUsuarioGrupo, FFormulario.Name,
     'oRenameComponents', 'False');
-  FServicio.GrabarPerfil(
+  FServicioEscritura.GrabarPerfil(
     AUsuarioGrupo, FFormulario.Name,
     'oCreateItems', 'False');
-  FServicio.GrabarPerfil(
+  FServicioEscritura.GrabarPerfil(
     AUsuarioGrupo, FFormulario.Name,
     'oBusqGlobal', 'Grid');
-  FServicio.GrabarPerfil(
+  FServicioEscritura.GrabarPerfil(
     AUsuarioGrupo, FFormulario.Name,
     'oApplyWidth', 'True');
-  FServicio.GrabarPerfil(
+  FServicioEscritura.GrabarPerfil(
     AUsuarioGrupo, FFormulario.Name,
     'oMostrarPerfil', 'False');
-  FServicio.GrabarPerfil(
+  FServicioEscritura.GrabarPerfil(
     AUsuarioGrupo, FFormulario.Name,
     'oGetSQLFromDB', 'False');
 end;
@@ -259,7 +264,8 @@ begin
       oGrid := TcxCustomGridTableView(
         FFormulario.Components[i]);
       GetSettingsColumn(
-        oGrid, FFormulario.Name, FFormulario.Owner, FServicio);
+        oGrid, FFormulario.Name, FFormulario.Owner,
+        FServicioEscritura);
     end;
   end;
 end;
@@ -316,7 +322,7 @@ begin
         Valor(oGrid.Name + '__oCreateItems', 'False'));
       CollectSettingsColumnProfile(
         oGrid, FFormulario.Name, APermisos,
-        FServicio, APerfiles);
+        FServicioEscritura, APerfiles);
     end;
   end;
   if Assigned(FRecogerParticulares) then
@@ -337,10 +343,10 @@ begin
     Screen.Cursor := crHourGlass;
     oPerfiles := TPerfilList.Create;
     try
-      if not Assigned(FServicio) then
+      if not Assigned(FServicioEscritura) then
         raise Exception.Create(
           SErrorServicioPerfilesUsuarioNoConfigurado);
-      FServicio.EliminarPerfil(
+      FServicioEscritura.EliminarPerfil(
         sPermisos, FFormulario.Name);
       ConstruirPerfilesLayout(sPermisos, oPerfiles);
       if not Assigned(AConexion) then
@@ -348,7 +354,7 @@ begin
           SErrorConexionPrincipalNoDisponible);
       AConexion.StartTransaction;
       try
-        FServicio.GrabarPerfiles(oPerfiles);
+        FServicioEscritura.GrabarPerfiles(oPerfiles);
         AConexion.Commit;
       except
         AConexion.Rollback;

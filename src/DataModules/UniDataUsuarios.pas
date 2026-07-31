@@ -118,7 +118,7 @@ begin
   begin
     sUsuario := Trim(FindField('USUARIO_USU').AsString);
     if (sUsuario = '') or
-       SimbolosProhibidos(sUsuario, PerfilesUsuario) then
+       SimbolosProhibidos(sUsuario, PerfilesLectura) then
     begin
       ShowMessageFmt(SErrorNombreUsuario, [sUsuario]);
       bError := True;

@@ -29,7 +29,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
   Forms, Dialogs, Uni, System.Generics.Collections, System.Types,
-  inMtoGen, dxSkinsCore, dxSkinBlue, dxSkinsForm,
+  inMtoDocumento, dxSkinsCore, dxSkinBlue, dxSkinsForm,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit,
   cxDBEdit, cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, DB,
@@ -46,7 +46,7 @@ uses
   // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
   inLibColumnasSkuIntf, inLibGridPivoteVenta,
   UniDataPedidosCompra, cxBlobEdit, System.Actions, Vcl.ActnList,
-  dxShellDialogs, cxSplitter;
+  dxShellDialogs, cxSplitter, inLibDocumento, inLibDocumentoIntf;
 
 const
   CANT_TALLAS_MAX = 20;
@@ -60,7 +60,7 @@ const
   ANCHO_TALLA_PX  = 50;
 
 type
-  TfrmMtoPedidosCompra = class(TfrmMtoGen)
+  TfrmMtoPedidosCompra = class(TfrmMtoDocumento)
     pnlTopFicha:         TPanel;
     splSplitterFicha:    TcxSplitter;
     pcCab:               TcxPageControl;
@@ -378,10 +378,6 @@ type
   public
     dmmPedidosCompra: TdmPedidosCompra;
     procedure CrearTablaPrincipal; override;
-    // Restricción de la precarga a la empresa/almacén del usuario
-    function SqlRestriccionUsuario: string; override;
-    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
-    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 implementation
@@ -416,19 +412,6 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 // dsTablaG apunta a la cabecera del pedido de compra. El articulo
 // activo vive en la fila del sub-grid tvLineasPedido
 // (CODIGO_ART_PEDCLIN / CODIGO_UNIDAD_PEDCLIN).
-procedure TfrmMtoPedidosCompra.ResolverArtSkuActivo(out ACodArt,
-                                                    ACodSku: string);
-begin
-  ResolverArtSkuActivoDocumento(
-    tvLineasPedido, ACodArt, ACodSku);
-end;
-
-function TfrmMtoPedidosCompra.DataSourcesParaFoto: TArray<TDataSource>;
-begin
-  Result := DataSourcesParaFotoDocumento(
-    dsTablaG, tvLineasPedido);
-end;
-
 function TfrmMtoPedidosCompra.BuscarArticuloPedidoCompra: string;
 var
   sPrv: string;
@@ -485,9 +468,7 @@ begin
     AsegurarCabeceraPersistidaCompra(
       dmmPedidosCompra.unqryTablaG,
       dmmPedidosCompra.unqryPedidosCompraLineas,
-      CrearConfiguracionTallasCompra(
-        STextoPedidoCompra, 'PEDC', 'PEDCLIN',
-        'fza_pedidos_compra_lineas'),
+      ConfiguracionTallasDocumento,
       nil);
 end;
 
@@ -501,9 +482,7 @@ begin
       dmmPedidosCompra.unqryTablaG,
       dmmPedidosCompra.unqryPedidosCompraLineas,
       dmmPedidosCompra.unqryTablaG.Connection,
-      CrearConfiguracionTallasCompra(
-        STextoPedidoCompra, 'PEDC', 'PEDCLIN',
-        'fza_pedidos_compra_lineas'),
+      ConfiguracionTallasDocumento,
       AsegurarCabeceraPersistidaParaLineas,
       FPivote.ValidarPivotePosible, AMensaje);
 end;
@@ -1009,14 +988,11 @@ begin
     curCabCANTIDAD_A_ALBARANAR_PEDC.EditValue := TotalAAlbaranar;
 end;
 
-function TfrmMtoPedidosCompra.SqlRestriccionUsuario: string;
-begin
-  Result := SqlFiltroDocumento(
-    ContextoSesion, ParametrosApp, 'PEDC');
-end;
-
 procedure TfrmMtoPedidosCompra.CrearTablaPrincipal;
 begin
+  InicializarDocumento(
+    CrearConfiguracionDocumento(tdPedido, sdCompra));
+  AsignarVistaLineasDocumento(tvLineasPedido);
   inherited;
   dmmPedidosCompra := TdmPedidosCompra(
     AsegurarDataModuleDocumento(
@@ -2248,7 +2224,7 @@ begin
   CargarSeriesEmpresa(
     ConexionPrincipal,
     sEmpresa,
-    'PC',
+    ConfiguracionDocumento.TipoContador,
     cbbSERIE_PEDC.Properties.Items);
   if cbbSERIE_PEDC.Properties.Items.Count = 0 then
   begin

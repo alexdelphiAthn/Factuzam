@@ -66,6 +66,9 @@ type
   protected
     procedure PdfExportado(const ARuta: string); override;
   public
+    class procedure ArchivarFacturaConsolidada(
+      ADataModule: TdmFacturas;
+      const ASerie, ANumero: string); static;
     procedure preparar_consulta; override;
     procedure AfterReportLoaded; override;
     procedure ConfigurarNombrePDF;
@@ -79,10 +82,34 @@ implementation
 
 {$R *.dfm}
 
-uses inMtoPreviewExcel, inLibFacturaExcel, inLibVerifactu,
-     inLibFormatoDocumento, inLibVentasWsCola, inLibFacturaPdfBlob;
+uses
+  inMtoPreviewExcel, inLibFacturaExcel, inLibVerifactu,
+  inLibFormatoDocumento, inLibVentasWsCola, inLibFacturaPdfBlob,
+  inLibDir;
 
 { TfrmPrintFac }
+
+class procedure TfrmPrintFac.ArchivarFacturaConsolidada(
+  ADataModule: TdmFacturas;
+  const ASerie, ANumero: string);
+var
+  Formulario: TfrmPrintFac;
+  sRutaPdf: string;
+begin
+  Formulario := TfrmPrintFac.Create(Application);
+  try
+    Formulario.edtSerie.Text := ASerie;
+    Formulario.edtNroFac.Text := ANumero;
+    Formulario.dmFac := ADataModule;
+    Formulario.Consultar_Formularios;
+    sRutaPdf := GetUserFolderTickets + 'Factura_' +
+      FormatDateTime('yyyy_mm_dd_hh_nn_ss_zzz', Now) + '.pdf';
+    if Formulario.ExportarPdfActual(sRutaPdf) then
+      System.SysUtils.DeleteFile(sRutaPdf);
+  finally
+    FreeAndNil(Formulario);
+  end;
+end;
 
 procedure TfrmPrintFac.btnExcelClick(Sender: TObject);
 var

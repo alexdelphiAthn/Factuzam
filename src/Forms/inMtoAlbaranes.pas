@@ -18,7 +18,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, inMtoGen, dxSkinsCore, dxSkinBlue,
+  Dialogs, inMtoDocumento, dxSkinsCore, dxSkinBlue,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, dxSkinsForm, cxLabel, cxTextEdit,
   cxDBEdit, cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, DB,
@@ -33,10 +33,11 @@ uses
   cxDBLabel, cxButtonEdit, System.Generics.Collections,
   cxGridBandedTableView, cxGridDBBandedTableView, UniDataAlbaranes,
   System.Actions, Vcl.ActnList,
-  inLibColumnasSkuIntf, inLibGridTallasInline;
+  inLibColumnasSkuIntf, inLibGridTallasInline,
+  inLibDocumento, inLibDocumentoIntf;
 
 type
-  TfrmMtoAlbaranes = class(TfrmMtoGen)
+  TfrmMtoAlbaranes = class(TfrmMtoDocumento)
     pnlTopFicha: TPanel;
     pcCab: TcxPageControl;
     tsCabecera: TcxTabSheet;
@@ -277,10 +278,6 @@ type
   public
     dmmAlbaranes: TdmAlbaranes;
     procedure CrearTablaPrincipal; override;
-    // Restricción de la precarga a la empresa del usuario
-    function SqlRestriccionUsuario: string; override;
-    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
-    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 implementation
@@ -316,7 +313,7 @@ begin
   CargarSeriesEmpresa(
     ConexionPrincipal,
     sEmpresa,
-    'AV',
+    ConfiguracionDocumento.TipoContador,
     cbbSERIE_ALB.Properties.Items);
   if cbbSERIE_ALB.Properties.Items.Count = 0 then
   begin
@@ -331,19 +328,6 @@ end;
 // dsTablaG apunta a la cabecera de albaran. El articulo activo vive en
 // la fila del sub-grid tvLineasAlbaran (CODIGO_ART_ALBLIN /
 // CODIGO_UNIDAD_ALBLIN).
-procedure TfrmMtoAlbaranes.ResolverArtSkuActivo(out ACodArt,
-                                                ACodSku: string);
-begin
-  ResolverArtSkuActivoDocumento(
-    tvLineasAlbaran, ACodArt, ACodSku);
-end;
-
-function TfrmMtoAlbaranes.DataSourcesParaFoto: TArray<TDataSource>;
-begin
-  Result := DataSourcesParaFotoDocumento(
-    dsTablaG, tvLineasAlbaran);
-end;
-
 function TfrmMtoAlbaranes.BuscarArticuloAlbaran: string;
 var
   qry     : TUniQuery;
@@ -867,14 +851,11 @@ begin
   end;
 end;
 
-function TfrmMtoAlbaranes.SqlRestriccionUsuario: string;
-begin
-  Result := SqlFiltroDocumento(
-    ContextoSesion, ParametrosApp, 'ALB');
-end;
-
 procedure TfrmMtoAlbaranes.CrearTablaPrincipal;
 begin
+  InicializarDocumento(
+    CrearConfiguracionDocumento(tdAlbaran, sdVenta));
+  AsignarVistaLineasDocumento(tvLineasAlbaran);
   inherited;
   dmmAlbaranes := TdmAlbaranes(AsegurarDataModuleDocumento(
     Self, tdmDataModule, TdmAlbaranes));
@@ -1335,15 +1316,14 @@ end;
 
 procedure TfrmMtoAlbaranes.AsegurarCabeceraPersistidaParaLineas;
 var
-  oConfiguracion: TConfiguracionPersistenciaDocumento;
+  oConfiguracion: TConfiguracionDocumento;
 begin
   if not Assigned(dmmAlbaranes) then
     raise Exception.Create(SErrorAlbaranVentaNoInicializado)
   else
   begin
-    oConfiguracion := CrearConfiguracionPersistenciaDocumento(
-      SErrorCrearSeleccionarAlbaranAntesLineas,
-      'ALB', 'ALBLIN');
+    oConfiguracion := ConfiguracionPersistenciaDocumento(
+      SErrorCrearSeleccionarAlbaranAntesLineas);
     oConfiguracion.RecrearLineaVacia := True;
     AsegurarCabeceraPersistidaDocumento(
       dmmAlbaranes.unqryTablaG,

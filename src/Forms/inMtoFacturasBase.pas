@@ -18,7 +18,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, inMtoGen,  cxGraphics, cxControls, cxLookAndFeels,
+  Dialogs, inMtoDocumento, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxStyles, dxSkinsCore, dxSkinBlue,  System.StrUtils,
   dxSkinscxPCPainter, cxCustomData, cxFilter, cxData, cxDataStorage,
   cxEdit, cxNavigator, DB, cxDBData, cxContainer, System.UITypes,
@@ -56,10 +56,63 @@ uses
   dxSkinWhiteprint, dxSkinXmas2008Blue,
   // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
   inLibColumnasSkuIntf, inLibGridPivoteVenta,
-  inLibFacturasServiciosIntf, inLibEmisionFiscalIntf;
+  inLibFacturasServiciosIntf, inLibEmisionFiscalIntf,
+  inLibDocumento, inLibDocumentoIntf,
+  inLibFacturasColumnasPresentacion,
+  inLibFacturasLineasEdicion;
 
 type
-  TfrmMtoFacturasBase = class(TfrmMtoGen)
+  TfrmMtoFacturasBase = class;
+
+  TControladorFacturas = class
+  private
+    FAnfitrion: TfrmMtoFacturasBase;
+  public
+    constructor Create(AAnfitrion: TfrmMtoFacturasBase);
+    procedure ActualizarBloqueoEdicion;
+    procedure ActualizarLabelPrendas;
+    procedure ActivarSkuArticuloLinea(const ACodArt: string;
+      AEnfocar: Boolean);
+    procedure AplicarEdicionPreciosLinea(Sender: TObject);
+    procedure AplicarOrigenCobros;
+    procedure AplicarVisibilidadColumnasCreacion(ACrear: Boolean);
+    function AsegurarCabeceraPersistidaParaLineas: Boolean;
+    procedure AsegurarPrimeraLineaFacturaBorrador;
+    procedure btnCODIGO_EMPRESA_FACTURAPropertiesEditValueChanged(
+      Sender: TObject);
+    procedure btnConsolidarClick(Sender: TObject);
+    procedure btnGenerarRecibosClick(Sender: TObject);
+    procedure btnReciboPagadoClick(Sender: TObject);
+    procedure btnVolverBorradorClick(Sender: TObject);
+    procedure cbbTARIFA_ARTICULOS_CLIENTESPropertiesChange(
+      Sender: TObject);
+    procedure chkDescripcion_ampliadaPropertiesChange(Sender: TObject);
+    procedure ConstruirModoEntrada;
+    procedure CrearColumnasHostFactura(AClasico: Boolean);
+    procedure CrearTablaPrincipal;
+    procedure dsTablaGDataChange(Sender: TObject; Field: TField);
+    procedure dsTablaGStateChange(Sender: TObject);
+    function EsVentaMayorNormal: Boolean;
+    procedure EjecutarOperacionFiscal(
+      const ATipoOperacion, AAccion: string);
+    procedure GuardarPendienteAntesDeImprimir;
+    function ModoCreacionActivo: Boolean;
+    function ModoCreacionSolicitado: Boolean;
+    function MostrarSkuArticulo(const ACodArt: string): Boolean;
+    procedure NuevaFacturaDesdeInsert(Sender: TObject);
+    function PuedeConsultarEstadoColaVerifactu: Boolean;
+    function PrecioSkuTallas(const ACodigoArticulo,
+      ACodigoSku: string): Double;
+    procedure RecalcLineaFacturaSegura(Sender: TObject);
+    procedure ReaplicarVisibilidadDetalle;
+    procedure sbImprimirClick(Sender: TObject);
+    procedure SenalarCampoValidacion(ACampo: TCampoValidacionFac);
+    procedure SeriesCambiadasDesdeDM(Sender: TObject);
+    procedure SincronizarColumnaSku;
+    procedure SincronizarColumnasCreacion;
+  end;
+
+  TfrmMtoFacturasBase = class(TfrmMtoDocumento)
     pnlVerifactu: TPanel;
     cxgrdbclmnGrdDBTabPrinESTADO_VERIFACTU: TcxGridDBColumn;
     pcDetail: TcxPageControl;
@@ -511,7 +564,8 @@ type
       Sender: TObject);
     procedure cxgrdbclmntv1TIPOIVA_ARTICULO_FACTURA_LINEAPropertiesChange(
       Sender: TObject);
-    procedure tvLineasFacturaPRECIOSALIDA_FACTURA_LINEAPropertiesEditValueChanged(
+    procedure
+      tvLineasFacturaPRECIOSALIDA_FACTURA_LINEAPropertiesEditValueChanged(
       Sender: TObject);
     procedure tvLineasFacturaPORCEN_DTO_FACTURA_LINEAPropertiesEditValueChanged(
       Sender: TObject);
@@ -533,12 +587,8 @@ type
     procedure ActualizarComboSeries;
     procedure CambiarEstadoRecibo(sEstado:String);
     procedure CrearTablaPrincipal; override;
-    // Restricción de la precarga a la empresa/almacén/caja del usuario
-    function SqlRestriccionUsuario: string; override;
     procedure ResetForm; override;
     procedure CambiarIVA;
-    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
-    function  DataSourcesParaFoto: TArray<TDataSource>; override;
     function  ContarHijosActivos: Integer; override;
     function  DescripcionHijos: string; override;
     // Nombre de la vista SQL a consultar en el listado principal.
@@ -558,12 +608,12 @@ type
     // fza_articulos en cada repintado del grid. Se rellena perezosamente
     // (y desde el resolver al teclear el articulo) y se vacia al recrear
     // la tabla principal.
-    FArtMostrarSku: TDictionary<string, Boolean>;
     FEnterSkuActivo: Boolean;
     FEnterSkuAnterior: Boolean;
-    FConsolidandoSku: Boolean;
     FReaplicandoVisibilidadDetalle: Boolean;
     FActualizandoLabelPrendas: Boolean;
+    FControlador: TControladorFacturas;
+    FEditorLineas: TEditorLineasFactura;
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
@@ -580,50 +630,31 @@ type
       const AError: EValidacionFactura);
     function ConfirmarBorradoFactura(
       const ASerie, ANumero: string): Boolean;
-    procedure NuevaFacturaDesdeInsert(Sender: TObject);
-    procedure SeriesCambiadasDesdeDM(Sender: TObject);
     // Conmuta que precio es editable (s/IVA o c/IVA) segun la tarifa
     // de la linea. Antes vivia en TdmFacturas.dsLinFacStateChange.
     procedure AplicarEdicionPreciosLinea(Sender: TObject);
-    function  EsVentaMayorNormal: Boolean;
-    function  TextoCobroPlural: string;
-    function  PrefijoExportCobros: string;
-    procedure AplicarTerminologiaCobros;
     procedure AplicarOrigenCobros;
-    procedure ConfigurarColumnasRecibos;
-    procedure ConfigurarColumnasEfectosVenta;
     // Modo creacion de articulos de la cabecera (ESCREARARTICULOS_FAC='S').
-    function  ModoCreacionActivo: Boolean;
     // Visibilidad de las columnas de creacion de articulos del detalle.
     // Solo se ven cuando la cabecera esta en modo "Crear/Act Articulo";
     // ocultas en caso contrario.
-    procedure AplicarVisibilidadColumnasCreacion(bCrear: Boolean);
-    procedure SincronizarColumnasCreacion;
     // Regla de negocio del SKU en lineas: solo se muestra/edita cuando el
     // articulo tiene variacion (tallas/colores) o es nuevo (aun no existe
     // en la BBDD). Para articulos normales el SKU se autoresuelve y estorba.
-    function  MostrarSkuArticulo(const ACodArt: string): Boolean;
-    procedure ActivarSkuArticuloLinea(const ACodArt: string;
-                                      bEnfocar: Boolean);
     procedure ConsolidarSkuLinea(Sender: TObject);
-    function  AsegurarCabeceraPersistidaParaLineas: Boolean;
-    procedure AsegurarPrimeraLineaFacturaBorrador;
     procedure DesactivarEnterSku(Sender: TObject);
     procedure RestaurarEnterSku(Sender: TObject);
     procedure SalirEditorSku(Sender: TObject);
     // La columna SKU completa se oculta si ninguna linea la necesita y no
     // hay modo creacion; dentro de una columna visible, las celdas que no
     // proceden se vacian (OnGetDataText) y se bloquean (OnEditing).
-    procedure SincronizarColumnaSku;
     // Reimpone TODA la visibilidad de columnas del detalle que controlamos
     // por logica de negocio. Necesario porque AplicarEtiquetas ->
     // PonerAnchosTitulos (inLibDevExp) repone la visibilidad desde el perfil
     // (por defecto visible) y pisa lo que fijamos en CrearTablaPrincipal.
-    procedure ReaplicarVisibilidadDetalle;
     // Pinta lblTotalPrendasFactura con el total de prendas (suma de
     // CANTIDAD_FACLIN de todas las lineas). Calculado en Delphi, no
     // persiste en BBDD.
-    procedure ActualizarLabelPrendas;
     procedure dsLinFacDataChange(Sender: TObject; Field: TField);
     procedure ctbCODIGO_UNIDAD_FACTURA_LINEAGetDataText(
       Sender: TcxCustomGridTableItem; ARecordIndex: Integer; var AText: string);
@@ -637,23 +668,16 @@ type
     // Ejecuta una ANULACION o SUBSANACION con la estrategia fiscal activa.
     procedure EjecutarOperacionFiscal(
       const ATipoOperacion, AAccion: string);
-    function EmitirFiscalmente(
-      const ASolicitud: TSolicitudEmisionFiscal
-    ): TResultadoEmisionFiscal;
     // Carga perezosa de sub-pestañas detail. Cada pestaña se asegura de
     // que su query este abierta solo cuando el usuario la activa, evitando
     // refresh master/detail innecesario al cambiar de factura cuando la
     // pestaña no esta visible.
     procedure PcDetailChange(Sender: TObject);
-    function PuedeConsultarEstadoColaVerifactu: Boolean;
     // Envuelve GridRecalc con try/except EInvalidOperation. El editor
     // inplace del cxGrid puede llegar sin Parent durante transiciones
     // de celda; mismo patron defensivo que en inMtoCajaOpe.
     procedure RecalcLineaFacturaSegura(Sender: TObject);
     procedure GuardarPendienteAntesDeImprimir;
-    // Genera en silencio el PDF de la factura recien lanzada y lo deja
-    // archivado en fza_facturas.PDF_FAC (via PdfExportado del modal)
-    procedure GenerarPdfFacturaConsolidada(const ASerie, ANumero: string);
     // === CONTRATO DE ENTRADA ColumnSKUcxGrid ===
     // F1 cicla Auto (desglose) -> SKU -> Tallas horizontal con las
     // lineas de la factura a la vista. El Construir hace ClearItems:
@@ -666,10 +690,7 @@ type
     // presentacion CLASICA (articulo + SKU con sus handlers legacy):
     // el contrato no cubre el alta de articulos inline.
 
-    function  ModoCreacionSolicitado: Boolean;
     procedure ConstruirModoEntrada;
-    procedure CrearColumnasHostFactura(bClasico: Boolean);
-    procedure MostrarColumnasAtributoGlobalesFac;
     procedure ModoEntradaResuelto(const ACodArt, ASku,
                                   ADescripcion: string;
                                   ACompleto: Boolean);
@@ -681,13 +702,9 @@ type
     // el modo (AceptarNoCatalogo). Sin SKU (no mueve stock); completa
     // la fiscalidad por defecto y deja descripcion/precio al usuario.
     procedure AplicarLineaNoCatalogo(const ACodArt: string);
-    // Porcentaje de IVA de la cabecera para un tipo (N/R/S/E).
-    function  PorcentajeIvaFactura(const ATipoIva: string): Double;
     // Contrato ObtenerPrecioSku del modo tallas: PVP C/IVA que la
     // factura aplicaria al SKU, para que la consolidacion visual separe
     // filas por precio.
-    function  PrecioSkuTallas(const ACodigoArticulo,
-                              ACodigoSku: string): Double;
     procedure PivoteVentaCrearLineaSku(const ACodigoSku: string);
     procedure PivoteVentaBandaCambiada(ABanda: TBandaPivoteVenta);
   protected
@@ -712,6 +729,10 @@ uses
   inLibGenBusq,
   inLibShowMto,
   inLibFacturas,
+  inLibFacturasCobrosPresentacion,
+  inLibFacturasEstadoFiscalPresentacion,
+  inLibFacturasOperacionFiscal,
+  inLibFacturasConsolidacionPresentacion,
   inLibGridCantidad,
   inLibArticulosValidadorIntf,
   UniDataArticulosValidadorRepositorio,
@@ -734,7 +755,6 @@ uses
   inLibFacturasComposicion,
   inMtoModalFacturarTicket,
   inLibLog,
-  inLibDir,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku, inLibColumnasDocumento, UniDataGen,
   inLibPresentacionDocumento,
@@ -745,14 +765,23 @@ uses
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
-procedure TfrmMtoFacturasBase.btnCODIGO_EMPRESA_FACTURAPropertiesEditValueChanged(
+constructor TControladorFacturas.Create(
+  AAnfitrion: TfrmMtoFacturasBase);
+begin
+  inherited Create;
+  FAnfitrion := AAnfitrion;
+end;
+
+procedure TControladorFacturas.
+  btnCODIGO_EMPRESA_FACTURAPropertiesEditValueChanged(
   Sender: TObject);
 var
   e: TcxCustomEdit;
   sCodigo:String;
   unqrySol:TUniQuery;
 begin
-  inherited;
+  with FAnfitrion do
+  begin
   if Assigned(dsTablaG.DataSet) then
   if ((dsTablaG.DataSet.State = dsInsert) or
      (dsTablaG.Dataset.State = dsEdit))
@@ -765,7 +794,7 @@ begin
     begin
       dsTablaG.Dataset.FindField('CODIGO_EMP_FAC').AsString :=
                                                      VarToStr(e.EditingValue);
-      unqrySol := TUniQuery.Create(Self);
+      unqrySol := TUniQuery.Create(FAnfitrion);
       unqrySol.Connection := ConexionPrincipal;
       unqrySol.SQL.Text := 'SELECT * ' +
                            '  FROM fza_empresas ' +
@@ -782,6 +811,7 @@ begin
       FreeAndNil(unqrySol);
     end;
   end;
+end;
 end;
 
 procedure TfrmMtoFacturasBase.ResetForm;
@@ -815,7 +845,8 @@ begin
     FModoEntrada := nil;
   end;
   RestaurarEnterSku(Self);
-  FreeAndNil(FArtMostrarSku);
+  FreeAndNil(FEditorLineas);
+  FreeAndNil(FControlador);
   inherited;
 end;
 
@@ -874,198 +905,73 @@ begin
   end;
 end;
 
-function TfrmMtoFacturasBase.EsVentaMayorNormal: Boolean;
+function TControladorFacturas.EsVentaMayorNormal: Boolean;
 begin
+  with FAnfitrion do
+  begin
   Result := SameText(TipoFacturaFiltro, 'NORMAL');
+  end;
 end;
 
-function TfrmMtoFacturasBase.TextoCobroPlural: string;
+procedure TControladorFacturas.AplicarOrigenCobros;
+var
+  Configuracion: TConfiguracionCobrosFactura;
+  Controles: TControlesCobrosFactura;
 begin
-  if EsVentaMayorNormal then
-    Result := 'efectos de cobro'
-  else
-    Result := 'recibos';
-end;
-
-function TfrmMtoFacturasBase.PrefijoExportCobros: string;
-begin
-  if EsVentaMayorNormal then
-    Result := 'EfectosCobro_Borrador_'
-  else
-    Result := 'Recibos_Borrador_';
-end;
-
-procedure TfrmMtoFacturasBase.ConfigurarColumnasRecibos;
-begin
-  tvRecibos.DataController.DataSource := dmmFacturas.dsRecibos;
-  tvRecibos.OptionsData.Appending := True;
-  tvRecibos.OptionsData.Deleting := True;
-  tvRecibos.OptionsData.Editing := True;
-  tvRecibos.OptionsData.Inserting := True;
-  tvRecibos.Navigator.Buttons.Insert.Visible := True;
-  tvRecibos.Navigator.Buttons.Delete.Visible := True;
-  tvRecibos.Navigator.Buttons.Post.Visible := True;
-  tvRecibos.Navigator.Buttons.Cancel.Visible := True;
-  cxgrdbclmnRecibosNRO_FACTURA_RECIBO.DataBinding.FieldName :=
-    'NUMERO_FAC_REC';
-  cxgrdbclmnRecibosSERIE_FACTURA_RECIBO.DataBinding.FieldName :=
-    'SERIE_FAC_REC';
-  cxgrdbclmnRecibosNRO_PLAZO_RECIBO.DataBinding.FieldName :=
-    'NUMERO_PLAZO_REC';
-  cxgrdbclmnRecibosFORMA_PAGO_ORIGEN_RECIBO.DataBinding.FieldName :=
-    'FORMA_PAGO_ORIGEN_RECIBO_REC';
-  cxgrdbclmnRecibosFORMA_PAGO_DESCRIPCION_ORIGEN_RECIBO.DataBinding.FieldName :=
-    'FORMA_PAGO_DESCRIPCION_ORIGEN_RECIBO_REC';
-  cxgrdbclmnRecibosEUROS_RECIBO.DataBinding.FieldName :=
-    'EUROS_RECIBO_REC';
-  cxgrdbclmnRecibosESTADO_RECIBO.DataBinding.FieldName :=
-    'ESTADO_RECIBO_REC';
-  cxgrdbclmnRecibosFECHA_EXPEDICION_RECIBO.DataBinding.FieldName :=
-    'FECHA_EXPEDICION_RECIBO_REC';
-  cxgrdbclmnRecibosFECHA_VENCIMIENTO_RECIBO.DataBinding.FieldName :=
-    'FECHA_VENCIMIENTO_RECIBO_REC';
-  cxgrdbclmnRecibosIBAN_CLIENTE_RECIBO.DataBinding.FieldName :=
-    'IBAN_CLI_REC';
-  cxgrdbclmnRecibosFECHA_PAGO_RECIBO.DataBinding.FieldName :=
-    'FECHA_PAGO_RECIBO_REC';
-  cxgrdbclmnRecibosLOCALIDAD_EXPEDICION_RECIBO.DataBinding.FieldName :=
-    'LOCALIDAD_EXPEDICION_RECIBO_REC';
-  cxgrdbclmnRecibosCODIGO_CLIENTE_RECIBO.DataBinding.FieldName :=
-    'CODIGO_CLI_REC';
-  cxgrdbclmnRecibosRAZONSOCIAL_CLIENTE_RECIBO.DataBinding.FieldName :=
-    'RAZON_SOCIAL_CLI_REC';
-  cxgrdbclmnRecibosDIRECCION1_CLIENTE_RECIBO.DataBinding.FieldName :=
-    'DIRECCION1_CLIENTE_RECIBO_REC';
-  cxgrdbclmnRecibosPOBLACION_CLIENTE_RECIBO.DataBinding.FieldName :=
-    'POBLACION_CLI_REC';
-  cxgrdbclmnRecibosPROVINCIA_CLIENTE_RECIBO.DataBinding.FieldName :=
-    'PROVINCIA_CLI_REC';
-  cxgrdbclmnRecibosCPOSTAL_CLIENTE_RECIBO.DataBinding.FieldName :=
-    'CODIGO_POSTAL_CLI_REC';
-  cxgrdbclmnRecibosIMPORTE_LETRA_RECIBO.DataBinding.FieldName :=
-    'IMPORTE_LETRA_RECIBO_REC';
-  cxgrdbclmnRecibosLOCALIDAD_EXPEDICION_RECIBO.Visible := True;
-  cxgrdbclmnRecibosDIRECCION1_CLIENTE_RECIBO.Visible := True;
-  cxgrdbclmnRecibosPOBLACION_CLIENTE_RECIBO.Visible := True;
-  cxgrdbclmnRecibosPROVINCIA_CLIENTE_RECIBO.Visible := True;
-  cxgrdbclmnRecibosCPOSTAL_CLIENTE_RECIBO.Visible := True;
-  cxgrdbclmnRecibosIMPORTE_LETRA_RECIBO.Visible := True;
-end;
-
-procedure TfrmMtoFacturasBase.ConfigurarColumnasEfectosVenta;
-begin
-  tvRecibos.DataController.DataSource := dmmFacturas.dsEfectosVenta;
-  tvRecibos.OptionsData.Appending := False;
-  tvRecibos.OptionsData.Deleting := False;
-  tvRecibos.OptionsData.Editing := False;
-  tvRecibos.OptionsData.Inserting := False;
-  tvRecibos.Navigator.Buttons.Insert.Visible := False;
-  tvRecibos.Navigator.Buttons.Delete.Visible := False;
-  tvRecibos.Navigator.Buttons.Post.Visible := False;
-  tvRecibos.Navigator.Buttons.Cancel.Visible := False;
-  cxgrdbclmnRecibosNRO_FACTURA_RECIBO.DataBinding.FieldName :=
-    'NUMERO_FAC_EFV';
-  cxgrdbclmnRecibosSERIE_FACTURA_RECIBO.DataBinding.FieldName :=
-    'SERIE_FAC_EFV';
-  cxgrdbclmnRecibosNRO_PLAZO_RECIBO.DataBinding.FieldName := 'NUMERO_EFV';
-  cxgrdbclmnRecibosFORMA_PAGO_ORIGEN_RECIBO.DataBinding.FieldName :=
-    'CODIGO_TEFE_EFV';
-  cxgrdbclmnRecibosFORMA_PAGO_DESCRIPCION_ORIGEN_RECIBO.DataBinding.FieldName :=
-    'DESCRIPCION_TEFE_VIEW_EFV';
-  cxgrdbclmnRecibosEUROS_RECIBO.DataBinding.FieldName := 'IMPORTE_EFV';
-  cxgrdbclmnRecibosESTADO_RECIBO.DataBinding.FieldName := 'ESTADO_EFV';
-  cxgrdbclmnRecibosFECHA_EXPEDICION_RECIBO.DataBinding.FieldName :=
-    'FECHA_EMISION_EFV';
-  cxgrdbclmnRecibosFECHA_VENCIMIENTO_RECIBO.DataBinding.FieldName :=
-    'FECHA_VENCIMIENTO_EFV';
-  cxgrdbclmnRecibosIBAN_CLIENTE_RECIBO.DataBinding.FieldName := 'IBAN_EFV';
-  cxgrdbclmnRecibosFECHA_PAGO_RECIBO.DataBinding.FieldName :=
-    'FECHA_COBRO_EFV';
-  cxgrdbclmnRecibosLOCALIDAD_EXPEDICION_RECIBO.DataBinding.FieldName :=
-    'REFERENCIA_DOCUMENTO_EFV';
-  cxgrdbclmnRecibosCODIGO_CLIENTE_RECIBO.DataBinding.FieldName :=
-    'CODIGO_CLI_EFV';
-  cxgrdbclmnRecibosRAZONSOCIAL_CLIENTE_RECIBO.DataBinding.FieldName :=
-    'RAZON_SOCIAL_CLI_EFV';
-  cxgrdbclmnRecibosDIRECCION1_CLIENTE_RECIBO.DataBinding.FieldName :=
-    'OBSERVACIONES_EFV';
-  cxgrdbclmnRecibosPOBLACION_CLIENTE_RECIBO.DataBinding.FieldName :=
-    'OBSERVACIONES_EFV';
-  cxgrdbclmnRecibosPROVINCIA_CLIENTE_RECIBO.DataBinding.FieldName :=
-    'OBSERVACIONES_EFV';
-  cxgrdbclmnRecibosCPOSTAL_CLIENTE_RECIBO.DataBinding.FieldName :=
-    'OBSERVACIONES_EFV';
-  cxgrdbclmnRecibosIMPORTE_LETRA_RECIBO.DataBinding.FieldName :=
-    'OBSERVACIONES_EFV';
-  cxgrdbclmnRecibosLOCALIDAD_EXPEDICION_RECIBO.Visible := True;
-  cxgrdbclmnRecibosDIRECCION1_CLIENTE_RECIBO.Visible := False;
-  cxgrdbclmnRecibosPOBLACION_CLIENTE_RECIBO.Visible := False;
-  cxgrdbclmnRecibosPROVINCIA_CLIENTE_RECIBO.Visible := False;
-  cxgrdbclmnRecibosCPOSTAL_CLIENTE_RECIBO.Visible := False;
-  cxgrdbclmnRecibosIMPORTE_LETRA_RECIBO.Visible := False;
-end;
-
-procedure TfrmMtoFacturasBase.AplicarOrigenCobros;
-begin
+  with FAnfitrion do
+  begin
+  Configuracion := CrearConfiguracionCobrosFactura(TipoFacturaFiltro);
+  Controles := Default(TControlesCobrosFactura);
+  Controles.AplicarOrigenDatos := Assigned(dmmFacturas);
+  Controles.Vista := tvRecibos;
   if Assigned(dmmFacturas) then
   begin
-    if EsVentaMayorNormal then
-      ConfigurarColumnasEfectosVenta
-    else
-      ConfigurarColumnasRecibos;
+    Controles.DataSourceRecibos := dmmFacturas.dsRecibos;
+    Controles.DataSourceEfectos := dmmFacturas.dsEfectosVenta;
   end;
-  AplicarTerminologiaCobros;
-end;
-
-procedure TfrmMtoFacturasBase.AplicarTerminologiaCobros;
-begin
-  if EsVentaMayorNormal then
-  begin
-    tsRecibos.Caption := SCaptionTabEfectos;
-    btnGenerarRecibos.Caption := SCaptionGenerarEfectos;
-    btnGenerarRecibos2.Caption := SCaptionGenerarEfectos;
-    btnImprimirRecibo.Caption := SCaptionImprimirEfecto;
-    btnImprimirRecibo.Visible := False;
-    btnReciboEmitido.Caption := SCaptionEfectoPendiente;
-    btnReciboPagado.Caption := SCaptionEfectoCobrado;
-    btnReciboDevuelto.Caption := SCaptionEfectoDevuelto;
-    cxgrdbclmnRecibosNRO_FACTURA_RECIBO.Caption :=
-      SCaptionColNroBorradorEfecto;
-    cxgrdbclmnRecibosSERIE_FACTURA_RECIBO.Caption :=
-      SCaptionColSerieBorradorEfecto;
-    cxgrdbclmnRecibosNRO_PLAZO_RECIBO.Caption := SCaptionColEfecto;
-    cxgrdbclmnRecibosEUROS_RECIBO.Caption := SCaptionColTotalEfecto;
-    cxgrdbclmnRecibosESTADO_RECIBO.Caption := SCaptionColEstadoEfecto;
-    cxgrdbclmnRecibosFECHA_EXPEDICION_RECIBO.Caption :=
-      SCaptionColFechaEmisionEfecto;
-    cxgrdbclmnRecibosFECHA_PAGO_RECIBO.Caption :=
-      SCaptionColFechaCobroEfecto;
-    cxgrdbclmnRecibosLOCALIDAD_EXPEDICION_RECIBO.Caption :=
-      SCaptionColReferenciaEfecto;
-  end
-  else
-  begin
-    tsRecibos.Caption := SCaptionTabRecibos;
-    btnGenerarRecibos.Caption := SCaptionGenerarRecibos;
-    btnGenerarRecibos2.Caption := SCaptionGenerarRecibos;
-    btnImprimirRecibo.Caption := SCaptionImprimirRecibo;
-    btnImprimirRecibo.Visible := True;
-    btnReciboEmitido.Caption := SCaptionReciboEmitido;
-    btnReciboPagado.Caption := SCaptionReciboPagado;
-    btnReciboDevuelto.Caption := SCaptionReciboDevuelto;
-    cxgrdbclmnRecibosNRO_FACTURA_RECIBO.Caption :=
-      SCaptionColNroBorradorRecibo;
-    cxgrdbclmnRecibosSERIE_FACTURA_RECIBO.Caption :=
-      SCaptionColSerieBorradorRecibo;
-    cxgrdbclmnRecibosNRO_PLAZO_RECIBO.Caption := SCaptionColNroPlazo;
-    cxgrdbclmnRecibosEUROS_RECIBO.Caption := SCaptionColTotalRecibo;
-    cxgrdbclmnRecibosESTADO_RECIBO.Caption := SCaptionColEstadoRecibo;
-    cxgrdbclmnRecibosFECHA_EXPEDICION_RECIBO.Caption :=
-      SCaptionColFechaExpedicionRecibo;
-    cxgrdbclmnRecibosFECHA_PAGO_RECIBO.Caption :=
-      SCaptionColFechaPagoRecibo;
-    cxgrdbclmnRecibosLOCALIDAD_EXPEDICION_RECIBO.Caption :=
-      SCaptionColLocalidadExpedicionRecibo;
+  Controles.Pestana := tsRecibos;
+  Controles.BotonGenerar := btnGenerarRecibos;
+  Controles.BotonGenerarSecundario := btnGenerarRecibos2;
+  Controles.BotonImprimir := btnImprimirRecibo;
+  Controles.BotonPendiente := btnReciboEmitido;
+  Controles.BotonCobrado := btnReciboPagado;
+  Controles.BotonDevuelto := btnReciboDevuelto;
+  Controles.Columnas[ccfNumeroFactura] :=
+    cxgrdbclmnRecibosNRO_FACTURA_RECIBO;
+  Controles.Columnas[ccfSerieFactura] :=
+    cxgrdbclmnRecibosSERIE_FACTURA_RECIBO;
+  Controles.Columnas[ccfNumeroPlazo] :=
+    cxgrdbclmnRecibosNRO_PLAZO_RECIBO;
+  Controles.Columnas[ccfFormaPago] :=
+    cxgrdbclmnRecibosFORMA_PAGO_ORIGEN_RECIBO;
+  Controles.Columnas[ccfDescripcionFormaPago] :=
+    cxgrdbclmnRecibosFORMA_PAGO_DESCRIPCION_ORIGEN_RECIBO;
+  Controles.Columnas[ccfImporte] := cxgrdbclmnRecibosEUROS_RECIBO;
+  Controles.Columnas[ccfEstado] := cxgrdbclmnRecibosESTADO_RECIBO;
+  Controles.Columnas[ccfFechaExpedicion] :=
+    cxgrdbclmnRecibosFECHA_EXPEDICION_RECIBO;
+  Controles.Columnas[ccfFechaVencimiento] :=
+    cxgrdbclmnRecibosFECHA_VENCIMIENTO_RECIBO;
+  Controles.Columnas[ccfIban] := cxgrdbclmnRecibosIBAN_CLIENTE_RECIBO;
+  Controles.Columnas[ccfFechaPago] :=
+    cxgrdbclmnRecibosFECHA_PAGO_RECIBO;
+  Controles.Columnas[ccfLocalidad] :=
+    cxgrdbclmnRecibosLOCALIDAD_EXPEDICION_RECIBO;
+  Controles.Columnas[ccfCodigoCliente] :=
+    cxgrdbclmnRecibosCODIGO_CLIENTE_RECIBO;
+  Controles.Columnas[ccfRazonSocialCliente] :=
+    cxgrdbclmnRecibosRAZONSOCIAL_CLIENTE_RECIBO;
+  Controles.Columnas[ccfDireccionCliente] :=
+    cxgrdbclmnRecibosDIRECCION1_CLIENTE_RECIBO;
+  Controles.Columnas[ccfPoblacionCliente] :=
+    cxgrdbclmnRecibosPOBLACION_CLIENTE_RECIBO;
+  Controles.Columnas[ccfProvinciaCliente] :=
+    cxgrdbclmnRecibosPROVINCIA_CLIENTE_RECIBO;
+  Controles.Columnas[ccfCodigoPostalCliente] :=
+    cxgrdbclmnRecibosCPOSTAL_CLIENTE_RECIBO;
+  Controles.Columnas[ccfImporteLetra] :=
+    cxgrdbclmnRecibosIMPORTE_LETRA_RECIBO;
+  TPresentacionCobrosFactura.Aplicar(Configuracion, Controles);
   end;
 end;
 
@@ -1076,7 +982,7 @@ begin
   inherited;
   if not PuedeImprimir then
     Abort;
-  if EsVentaMayorNormal then
+  if FControlador.EsVentaMayorNormal then
     ShowMessage(SInfoImpresionEfectosCobroEnRemesas)
   else
   begin
@@ -1177,8 +1083,8 @@ begin
   jvcalcAux.Execute;
 end;
 
-procedure TfrmMtoFacturasBase.btnCODIGO_CLIENTEKeyUp(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
+procedure TfrmMtoFacturasBase.btnCODIGO_CLIENTEKeyUp(
+  Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
   inherited;
 //  if ((Key = VK_RETURN) and (Shift = [ssCtrl])) then
@@ -1207,7 +1113,8 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturasBase.btnCODIGO_CLIENTEPropertiesChange(Sender: TObject);
+procedure TfrmMtoFacturasBase.btnCODIGO_CLIENTEPropertiesChange(
+  Sender: TObject);
 begin
   inherited;
   //ActualizarComboSeries;
@@ -1257,27 +1164,35 @@ begin
 end;
 
 procedure TfrmMtoFacturasBase.btnExportarRecibosClick(Sender: TObject);
+var
+  Configuracion: TConfiguracionCobrosFactura;
 begin
   inherited;
   if not PuedeExportar then
     Abort;
-  ExportarExcel(ParametrosApp, cxgrdRecibos, PrefijoExportCobros +
-                      dsTablaG.Dataset.FieldByName(fseriefac).AsString +
-                      '_' +
-                      dsTablaG.Dataset.FieldByName(fnrofac).AsString);
+  Configuracion := CrearConfiguracionCobrosFactura(TipoFacturaFiltro);
+  ExportarExcel(
+    ParametrosApp,
+    cxgrdRecibos,
+    Configuracion.PrefijoExportacion +
+      dsTablaG.Dataset.FieldByName(fseriefac).AsString + '_' +
+      dsTablaG.Dataset.FieldByName(fnrofac).AsString);
 end;
 
-procedure TfrmMtoFacturasBase.btnGenerarRecibosClick(Sender: TObject);
+procedure TControladorFacturas.btnGenerarRecibosClick(Sender: TObject);
 var
   bReemplazar:Boolean;
+  Configuracion: TConfiguracionCobrosFactura;
   iRes: Integer;
   qCobros: TDataSet;
   sMensaje: string;
   sEmp, sCli, sPref: string;
   selBanco: TSeleccionBancoResult;
 begin
-  inherited;
+  with FAnfitrion do
+  begin
   bReemplazar := True;
+  Configuracion := CrearConfiguracionCobrosFactura(TipoFacturaFiltro);
   with dmmFacturas.unqryTablaG do
   begin
     if ((State = dsEdit) or (State = dsInsert)) then
@@ -1293,7 +1208,9 @@ begin
     qCobros := dmmFacturas.unqryRecibos;
   if (qCobros <> nil) and (qCobros.RecordCount > 0) then
   begin
-    sMensaje := Format(SPreguntaReemplazarCobros, [TextoCobroPlural]);
+    sMensaje := Format(
+      SPreguntaReemplazarCobros,
+      [Configuracion.TextoPlural]);
     if ( Application.MessageBox( PChar(sMensaje),
                                  PChar(STituloMensajeAdvertencia),
                                  MB_YESNO ) = ID_YES ) then
@@ -1308,11 +1225,15 @@ begin
     sEmp  := dsTablaG.DataSet.FieldByName('CODIGO_EMP_FAC').AsString;
     sCli  := dsTablaG.DataSet.FieldByName('CODIGO_CLI_FAC').AsString;
     sPref := dmmFacturas.GetBancoDefectoCliente(sCli);
-    selBanco := TfrmModalSeleccionarBanco.Ejecutar(Self, ConexionPrincipal,
+    selBanco := TfrmModalSeleccionarBanco.Ejecutar(
+      FAnfitrion,
+      ConexionPrincipal,
                                                    sEmp, ubeCobro, sPref);
     if not selBanco.Aceptado then
-      ShowMessage(Format(SInfoGeneracionCobrosCancelada,
-                         [TextoCobroPlural]))
+      ShowMessage(
+        Format(
+          SInfoGeneracionCobrosCancelada,
+          [Configuracion.TextoPlural]))
     else
     begin
       if EsVentaMayorNormal then
@@ -1348,14 +1269,16 @@ begin
       end;
     end;
   end;
+  end;
 end;
 
-procedure TfrmMtoFacturasBase.sbImprimirClick(Sender: TObject);
+procedure TControladorFacturas.sbImprimirClick(Sender: TObject);
 var
   form:  TfrmPrintFac;
   sFase: string;
 begin
-  inherited;
+  with FAnfitrion do
+  begin
   if not PuedeImprimir then
     Abort;
   // En modo SIN el borrador se imprime directamente, sin consolidar. Si
@@ -1382,43 +1305,15 @@ begin
   finally
     FreeAndNil(form);
   end;
-end;
-
-procedure TfrmMtoFacturasBase.GenerarPdfFacturaConsolidada(
-  const ASerie, ANumero: string);
-var
-  form:     TfrmPrintFac;
-  sRutaPdf: string;
-begin
-  // Usa el formato por defecto del usuario (perfil <form>_default). Si
-  // hay formatos guardados pero ninguno por defecto, aparece el selector
-  // una vez, igual que al imprimir. El volcado al blob lo hace el propio
-  // PdfExportado del modal; el fichero temporal no se conserva.
-  form := TfrmPrintFac.Create(Application);
-  try
-    try
-      form.edtSerie.Text  := ASerie;
-      form.edtNroFac.Text := ANumero;
-      form.dmFac := dmmFacturas;
-      form.Consultar_Formularios;
-      sRutaPdf := GetUserFolderTickets + 'Factura_' +
-        FormatDateTime('yyyy_mm_dd_hh_nn_ss_zzz', Now) + '.pdf';
-      if form.ExportarPdfActual(sRutaPdf) then
-        System.SysUtils.DeleteFile(sRutaPdf);
-    except
-      on E: Exception do
-        Log.LogError('No se pudo archivar el PDF al consolidar ' +
-          ASerie + '\' + ANumero + ': ' + E.Message);
-    end;
-  finally
-    FreeAndNil(form);
   end;
 end;
 
-procedure TfrmMtoFacturasBase.GuardarPendienteAntesDeImprimir;
+procedure TControladorFacturas.GuardarPendienteAntesDeImprimir;
 var
   ConnGrabar: TUniConnection;
 begin
+  with FAnfitrion do
+  begin
   if Assigned(dmmFacturas) then
   begin
     ConnGrabar := dmmFacturas.unqryTablaG.Connection;
@@ -1435,11 +1330,12 @@ begin
     end;
   end;
 end;
+end;
 
 procedure TfrmMtoFacturasBase.btnReciboDevueltoClick(Sender: TObject);
 begin
   inherited;
-  if EsVentaMayorNormal then
+  if FControlador.EsVentaMayorNormal then
   begin
     dmmFacturas.AsegurarEfectosVentaAbierta;
     if dmmFacturas.CambiarEstadoEfectoVenta('DEVUELTO') then
@@ -1454,7 +1350,7 @@ end;
 procedure TfrmMtoFacturasBase.btnReciboEmitidoClick(Sender: TObject);
 begin
   inherited;
-  if EsVentaMayorNormal then
+  if FControlador.EsVentaMayorNormal then
   begin
     dmmFacturas.AsegurarEfectosVentaAbierta;
     if dmmFacturas.CambiarEstadoEfectoVenta('PENDIENTE') then
@@ -1466,7 +1362,7 @@ begin
     CambiarEstadoRecibo('Emitido');
 end;
 
-procedure TfrmMtoFacturasBase.btnReciboPagadoClick(Sender: TObject);
+procedure TControladorFacturas.btnReciboPagadoClick(Sender: TObject);
 var
   frm: TfrmModalRegistrarPago;
   q: TDataSet;
@@ -1474,7 +1370,8 @@ var
   iRes: Integer;
   fPend: Double;
 begin
-  inherited;
+  with FAnfitrion do
+  begin
   if EsVentaMayorNormal then
   begin
     dmmFacturas.AsegurarEfectosVentaAbierta;
@@ -1517,37 +1414,26 @@ begin
   end
   else
     CambiarEstadoRecibo('Pagado');
-end;
-
-function TfrmMtoFacturasBase.MostrarSkuArticulo(const ACodArt: string): Boolean;
-var
-  bMostrar : Boolean;
-begin
-  // Por defecto mostramos (no bloquear): linea sin articulo o fallo de BD.
-  bMostrar := True;
-  if (ACodArt <> '') and Assigned(FArtMostrarSku) then
-  begin
-    if not FArtMostrarSku.TryGetValue(ACodArt, bMostrar) then
-    begin
-      try
-        bMostrar := inLibFacturas.ArticuloFacturaDebeMostrarSku(
-          ConexionPrincipal, ACodArt);
-        FArtMostrarSku.AddOrSetValue(ACodArt, bMostrar);
-      except
-        // Ante cualquier fallo de BD mostramos el SKU y no cacheamos, para
-        // reintentar en el siguiente repintado.
-        bMostrar := True;
-      end;
-    end;
   end;
-  Result := bMostrar;
+  end;
+
+function TControladorFacturas.MostrarSkuArticulo(
+  const ACodArt: string): Boolean;
+begin
+  with FAnfitrion do
+  begin
+  Result := Assigned(FEditorLineas) and
+    FEditorLineas.DebeMostrarSku(ACodArt);
+  end;
 end;
 
-procedure TfrmMtoFacturasBase.ActivarSkuArticuloLinea(const ACodArt: string;
-                                                      bEnfocar: Boolean);
+procedure TControladorFacturas.ActivarSkuArticuloLinea(
+  const ACodArt: string; AEnfocar: Boolean);
 var
   oCampoSku: TField;
 begin
+  with FAnfitrion do
+  begin
   // Con un modo del contrato construido, la columna SKU es del modo
   // (o no existe): la eleccion de color/talla la resuelve su paleta.
   if FModoEntrada <> nil then
@@ -1555,7 +1441,7 @@ begin
   if MostrarSkuArticulo(ACodArt) then
   begin
     ctbCODIGO_UNIDAD_FACTURA_LINEA.Visible := True;
-    if bEnfocar and Assigned(dmmFacturas) and
+    if AEnfocar and Assigned(dmmFacturas) and
        dmmFacturas.unqryLinFac.Active and
        (dmmFacturas.unqryLinFac.State in [dsInsert, dsEdit]) then
     begin
@@ -1567,16 +1453,20 @@ begin
           var
             Edit: TcxCustomEdit;
           begin
-            DesactivarEnterSku(tvLineasFactura);
-            tvLineasFactura.Controller.FocusedColumn :=
-              ctbCODIGO_UNIDAD_FACTURA_LINEA;
-            tvLineasFactura.Controller.EditingController.ShowEdit;
-            Edit := tvLineasFactura.Controller.EditingController.Edit;
+            FAnfitrion.DesactivarEnterSku(
+              FAnfitrion.tvLineasFactura);
+            FAnfitrion.tvLineasFactura.Controller.FocusedColumn :=
+              FAnfitrion.ctbCODIGO_UNIDAD_FACTURA_LINEA;
+            FAnfitrion.tvLineasFactura.Controller.
+              EditingController.ShowEdit;
+            Edit := FAnfitrion.tvLineasFactura.Controller.
+              EditingController.Edit;
             if Edit is TcxComboBox then
               (Edit as TcxComboBox).DroppedDown := True;
           end);
       end;
     end;
+  end;
   end;
 end;
 
@@ -1618,7 +1508,7 @@ begin
   // ni es nuevo. El valor sigue en el dataset; solo se oculta visualmente.
   sArt := VarToStr(tvLineasFactura.DataController.GetValue(
                      ARecordIndex, ctbCODIGO_ARTICULO_FACTURA_LINEA.Index));
-  if not MostrarSkuArticulo(sArt) then
+  if not FControlador.MostrarSkuArticulo(sArt) then
     AText := '';
 end;
 
@@ -1629,7 +1519,7 @@ begin
   // El SKU solo es editable cuando procede mostrarlo (variacion o nuevo).
   if (AItem = ctbCODIGO_UNIDAD_FACTURA_LINEA) and Assigned(dmmFacturas) then
   begin
-    AAllow := MostrarSkuArticulo(
+    AAllow := FControlador.MostrarSkuArticulo(
       dmmFacturas.unqryLinFac.FieldByName('CODIGO_ART_FACLIN').AsString);
     if AAllow then
       DesactivarEnterSku(Sender)
@@ -1707,126 +1597,31 @@ end;
 
 procedure TfrmMtoFacturasBase.ConsolidarSkuLinea(Sender: TObject);
 var
-  e          : TcxCustomEdit;
-  Lin        : TDataSet;
-  Validador  : IArticulosValidador;
-  Resolver   : IArticulosResolver;
-  Resolucion : TArtResolucionEntrada;
-  Datos      : TArticuloDatos;
-  Precio     : TArticuloPrecio;
-  CodTarifa  : string;
-  FechaFac   : TDateTime;
-  CodArt     : string;
-  CodSku     : string;
-  fPorcen    : Currency;
-  sTipoIVA   : string;
+  CodigoSku: string;
+  Editor: TcxCustomEdit;
+  Resultado: TResultadoEdicionLineaFactura;
 begin
-  if FConsolidandoSku then
-    Exit;
-  if not (Sender is TcxCustomEdit) then
-    Exit;
-  FConsolidandoSku := True;
-  Validador := nil;
-  Resolver := nil;
-  Lin := dmmFacturas.unqryLinFac;
-  try
-    if (Lin = nil) or (not Lin.Active) then
-      Exit;
-    if not (Lin.State in [dsInsert, dsEdit]) then
-    begin
-      if Lin.CanModify then
-        Lin.Edit;
-    end;
-    if not (Lin.State in [dsInsert, dsEdit]) then
-      Exit;
-    e      := Sender as TcxCustomEdit;
-    CodSku := Trim(VarToStr(e.EditingValue));
-    if (CodSku = '') and (e is TcxCustomTextEdit) then
-      CodSku := Trim(TcxCustomTextEdit(e).Text);
-    if CodSku = '' then
-      CodSku := Trim(VarToStr(e.EditValue));
-    CodArt := Lin.FindField('CODIGO_ART_FACLIN').AsString;
-    if CodSku = '' then
-      Exit;
-
-    CodTarifa := dmmFacturas.unqryTablaG.FindField(
-                                       'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-    FechaFac  := dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
-
-    Validador := CrearValidadorArticulos(ConexionPrincipal);
-    Resolver := CrearResolverArticulos(
-      ConexionPrincipal);
-    Resolucion := Validador.Resolver(CodSku);
-    if Resolucion.Encontrado and (Resolucion.CodigoSku <> '') then
-    begin
-      CodArt := Resolucion.CodigoArticulo;
-      CodSku := Resolucion.CodigoSku;
-    end
-    else if CodArt = '' then
-      Exit;
-    Datos  := Resolver.ResolverDatos(CodArt, CodSku, CodTarifa, FechaFac);
-    Precio := Datos.PrecioPedido;
-    // Si el SKU tecleado a mano no pertenece al artículo, ResolverDatos lo
-    // ignora y deja CodigoSku vacío. En ese caso no tocamos el precio.
-    if Datos.CodigoSku = '' then Exit;
-
-    if Assigned(FArtMostrarSku) then
-    begin
-      FArtMostrarSku.AddOrSetValue(Datos.CodigoArticulo,
-                                   Datos.EsVariacion or Datos.RequiereSku);
-    end;
-    ActivarSkuArticuloLinea(Datos.CodigoArticulo, False);
-    Lin.FindField('CODIGO_ART_FACLIN').AsString := Datos.CodigoArticulo;
-    if Assigned(Lin.FindField('CODIGO_UNIDAD_FACLIN')) then
-      Lin.FieldByName('CODIGO_UNIDAD_FACLIN').AsString := Datos.CodigoSku;
-    if VarToStr(e.EditValue) <> Datos.CodigoSku then
-      e.EditValue := Datos.CodigoSku;
-    if Assigned(Lin.FindField('DESCRIPCION_VARIACION_FACLIN')) then
-      Lin.FieldByName('DESCRIPCION_VARIACION_FACLIN').AsString :=
-        Datos.DescripcionSku;
-    Lin.FindField('DESCRIPCION_ARTICULO_FACLIN').AsString :=
-      Datos.DescripcionArticulo;
-    if Assigned(Lin.FindField('TIPO_ARTICULO_FACLIN')) then
-      Lin.FindField('TIPO_ARTICULO_FACLIN').AsString := Datos.TipoArticulo;
-    Lin.FindField('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString :=
-      Datos.TipoCantidad;
-    Lin.FindField('TIPO_IVA_ARTICULO_FACLIN').AsString := Datos.TipoIVA;
-    Lin.FindField('CODIGO_FAM_FACLIN').AsString := Datos.CodigoFamilia;
-    Lin.FindField('NOMBRE_FAM_FACLIN').AsString := Datos.DescripcionFamilia;
-    Lin.FindField('CODIGO_TAR_FACLIN').AsString := CodTarifa;
-
-    Lin.FindField('PRECIO_SALIDA_FACLIN').AsFloat   := Precio.PrecioSalida;
-    Lin.FindField('PORCENTAJE_DTO_FACLIN').AsFloat  := Precio.PorcentajeDto;
-    Lin.FindField('PRECIO_DTO_FACLIN').AsFloat      := Precio.PrecioDto;
-    Lin.FindField('ESIMP_INCL_TARIFA_FACLIN').AsString :=
-                                          IfThen(Precio.EsImpIncl, 'S', 'N');
-
-    // Porcentaje con decimales (el AsInteger anterior truncaba IVAs no
-    // enteros y descuadraba centimos) y conversion unica de la comun.
-    sTipoIVA := Datos.TipoIVA;
-    fPorcen  := PorcentajeIvaFactura(sTipoIVA);
-    if Precio.EsImpIncl then
-    begin
-      Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
-        Precio.PrecioFinal;
-      Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
-        PrecioSinIvaDesdeConIva(Precio.PrecioFinal, fPorcen);
-    end
-    else
-    begin
-      Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
-        Precio.PrecioFinal;
-      Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
-        PrecioConIvaDesdeSinIva(Precio.PrecioFinal, fPorcen);
-    end;
-  finally
-    Validador := nil;
-    Resolver := nil;
-    FConsolidandoSku := False;
+  if Assigned(FEditorLineas) and (Sender is TcxCustomEdit) then
+  begin
+    Editor := TcxCustomEdit(Sender);
+    CodigoSku := Trim(VarToStr(Editor.EditingValue));
+    if (CodigoSku = '') and (Editor is TcxCustomTextEdit) then
+      CodigoSku := Trim(TcxCustomTextEdit(Editor).Text);
+    if CodigoSku = '' then
+      CodigoSku := Trim(VarToStr(Editor.EditValue));
+    Resultado := FEditorLineas.AplicarEntrada(CodigoSku);
+    if Resultado.Aplicado and (Resultado.CodigoSku <> '') and
+       (VarToStr(Editor.EditValue) <> Resultado.CodigoSku) then
+      Editor.EditValue := Resultado.CodigoSku;
+    if Resultado.Aplicado then
+      FControlador.ActivarSkuArticuloLinea(
+        Resultado.CodigoArticulo,
+        False);
   end;
 end;
 
-procedure TfrmMtoFacturasBase.ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesEditValueChanged(
+procedure TfrmMtoFacturasBase.
+  ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesEditValueChanged(
   Sender: TObject);
 begin
   inherited;
@@ -1883,8 +1678,8 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturasBase.cbbSerieFacturaKeyUp(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
+procedure TfrmMtoFacturasBase.cbbSerieFacturaKeyUp(
+  Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
   inherited;
   if ((Key = VK_DOWN) and (Shift = [ssShift])) then
@@ -1921,13 +1716,14 @@ begin
   dsTablaG.DataSet.FindField(ftipofac).AsString := sSubtipo;
 end;
 
-procedure TfrmMtoFacturasBase.cbbTARIFA_ARTICULOS_CLIENTESPropertiesChange(
+procedure TControladorFacturas.cbbTARIFA_ARTICULOS_CLIENTESPropertiesChange(
   Sender: TObject);
 var
   e: TcxCustomEdit;
   sTarifa: string;
 begin
-  inherited;
+  with FAnfitrion do
+  begin
   if ((dsTablaG.DataSet.State = dsInsert)) then
   begin
     e := Sender as TcxCustomEdit;
@@ -1941,10 +1737,6 @@ begin
         dsTablaG.DataSet.FieldByName(
           'ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString :=
           dmmFacturas.unqryTarifas.FieldByName('ESIMP_INCL_TAR').AsString;
-        // Opcional: Mostrar mensaje de confirmación
-        // ShowMessage('IVA incluido: ' +
-        //   IfThen(dmmFacturas.unqryTarifas.FieldByName('ESIMP_INCL_TAR').AsString = 'S',
-        //          'SÍ', 'NO'));
       end
       else
       begin
@@ -1952,60 +1744,41 @@ begin
       end;
     end;
   end;
+  end;
 end;
 
-procedure TfrmMtoFacturasBase.ActualizarBloqueoEdicion;
+procedure TControladorFacturas.ActualizarBloqueoEdicion;
 var
-  oCampo:    TField;
-  sFase:     string;
-  bEditable: Boolean;
-  bBorrador: Boolean;
+  CampoFase: TField;
+  Configuracion: TConfiguracionEstadoFiscalFactura;
+  Controles: TControlesEstadoFiscalFactura;
 begin
+  with FAnfitrion do
+  begin
   if Assigned(dmmFacturas) and
      (dsTablaG.DataSet <> nil) and
      dsTablaG.DataSet.Active then
   begin
-    oCampo := dsTablaG.DataSet.FindField(ffasefac);
-    if oCampo <> nil then
+    CampoFase := dsTablaG.DataSet.FindField(ffasefac);
+    if CampoFase <> nil then
     begin
-      sFase := oCampo.AsString;
-      // Borrador sin cerrar: sin fase (facturas antiguas) o BORRADOR y
-      // todavía sin consolidar (candado del flujo antiguo). Solo un
-      // borrador así admite el botón Consolidar.
-      bBorrador := ((sFase = '') or SameText(sFase, 'BORRADOR')) and
-                   (dsTablaG.DataSet.FieldByName(fescon).AsString <> 'S');
-      // Editable = borrador. En modo SIN la consolidación no cierra
-      // fiscalmente: el documento emitido sin Verifactu (SIN_VERIFACTU)
-      // y la marca de consolidación no bloquean la edición; solo los
-      // estados terminales (anulada/rectificada) quedan bloqueados. Un
-      // alta nueva (dsInsert) tampoco tiene fase y debe poder grabarse.
-      bEditable := bBorrador;
-      if SinVerifactuActivo(ParametrosApp) and
-         ((sFase = '') or SameText(sFase, 'BORRADOR') or
-          SameText(sFase, cFaseFacturaSinVerifactu)) then
-        bEditable := True;
-      if dsTablaG.DataSet.State = dsInsert then
-        bEditable := True;
-      dsTablaG.AutoEdit := bEditable;
-      dmmFacturas.unqryLinFac.ReadOnly := not bEditable;
-      tvLineasFactura.OptionsData.Editing   := bEditable;
-      tvLineasFactura.OptionsData.Inserting := bEditable;
-      tvLineasFactura.OptionsData.Deleting  := bEditable;
-      // Consolidar lanza el registro a Verifactu: solo tiene sentido
-      // en borrador. Imprimir, al revés: solo tras lanzarla. En modo
-      // SIN no hay cierre fiscal (ni registro SIF ni cola AEAT): la
-      // consolidación no aplica, así que se permite imprimir el
-      // borrador directamente sin obligar a consolidarlo antes.
-      if dsTablaG.DataSet.State = dsBrowse then
-      begin
-        btnConsolidar.Enabled := bBorrador and
-                                 (not dsTablaG.DataSet.IsEmpty);
-        if SinVerifactuActivo(ParametrosApp) then
-          btnImprimir.Enabled := not dsTablaG.DataSet.IsEmpty
-        else
-          btnImprimir.Enabled := not bEditable;
-      end;
+      Configuracion := CrearConfiguracionEstadoFiscalFactura(
+        CampoFase.AsString,
+        dsTablaG.DataSet.FieldByName(fescon).AsString = 'S',
+        SinVerifactuActivo(ParametrosApp),
+        dsTablaG.DataSet.IsEmpty,
+        dsTablaG.DataSet.State);
+      dmmFacturas.unqryLinFac.ReadOnly := not Configuracion.Editable;
+      Controles := Default(TControlesEstadoFiscalFactura);
+      Controles.DataSourceCabecera := dsTablaG;
+      Controles.VistaLineas := tvLineasFactura;
+      Controles.BotonConsolidar := btnConsolidar;
+      Controles.BotonImprimir := btnImprimir;
+      TPresentacionEstadoFiscalFactura.Aplicar(
+        Configuracion,
+        Controles);
     end;
+  end;
   end;
 end;
 
@@ -2013,19 +1786,6 @@ end;
 // El articulo activo vive en la linea seleccionada del sub-grid
 // tvLineasFactura. Leemos de ahi para que Ctrl+F muestre la foto
 // de la linea actual.
-procedure TfrmMtoFacturasBase.ResolverArtSkuActivo(out ACodArt,
-                                                   ACodSku: string);
-begin
-  ResolverArtSkuActivoDocumento(
-    tvLineasFactura, ACodArt, ACodSku);
-end;
-
-function TfrmMtoFacturasBase.DataSourcesParaFoto: TArray<TDataSource>;
-begin
-  Result := DataSourcesParaFotoDocumento(
-    dsTablaG, tvLineasFactura);
-end;
-
 function TfrmMtoFacturasBase.ContarHijosActivos: Integer;
 var
   sNum, sSerie: string;
@@ -2045,10 +1805,12 @@ begin
   Result := 'líneas de borrador';
 end;
 
-function TfrmMtoFacturasBase.PuedeConsultarEstadoColaVerifactu: Boolean;
+function TControladorFacturas.PuedeConsultarEstadoColaVerifactu: Boolean;
 var
   Qry: TUniQuery;
 begin
+  with FAnfitrion do
+  begin
   Qry := TUniQuery.Create(nil);
   try
     try
@@ -2078,21 +1840,17 @@ begin
   finally
     Qry.Free;
   end;
+  end;
 end;
 
-function TfrmMtoFacturasBase.SqlRestriccionUsuario: string;
-begin
-  Result := SqlFiltroDocumento(
-    ContextoSesion, ParametrosApp, 'FAC', True);
-end;
-
-procedure TfrmMtoFacturasBase.CrearTablaPrincipal;
+procedure TControladorFacturas.CrearTablaPrincipal;
 var
   sVista: string;
 begin
-  inherited;
+  with FAnfitrion do
+  begin
   dmmFacturas := TdmFacturas(AsegurarDataModuleDocumento(
-    Self, tdmDataModule, TdmFacturas));
+    FAnfitrion, tdmDataModule, TdmFacturas));
   dmmFacturas.ConfigurarServicios(
     CrearServiciosFactura(
       ConexionPrincipal,
@@ -2111,6 +1869,13 @@ begin
   dmmFacturas.OnSeriesCambiadas := SeriesCambiadasDesdeDM;
   dmmFacturas.OnLinFacEstado := AplicarEdicionPreciosLinea;
   dmmFacturas.TipoFacturaDefecto := TipoFacturaFiltro;
+  FreeAndNil(FEditorLineas);
+  FEditorLineas := TEditorLineasFactura.Create(
+    ConexionPrincipal,
+    dmmFacturas.unqryTablaG,
+    dmmFacturas.unqryLinFac,
+    CrearValidadorArticulos(ConexionPrincipal),
+    CrearResolverArticulos(ConexionPrincipal));
   ConfigurarTablaPrincipalDocumento(
     dmmFacturas, dsTablaG, tvLineasFactura,
     dmmFacturas.dsLinFac, [], pkFieldName,
@@ -2147,9 +1912,7 @@ begin
   // que se vacia su texto (OnGetDataText) y se bloquea su edicion (OnEditing)
   // segun el articulo de cada linea. El cache evita reconsultar fza_articulos
   // en cada repintado.
-  if not Assigned(FArtMostrarSku) then
-    FArtMostrarSku := TDictionary<string, Boolean>.Create;
-  FArtMostrarSku.Clear;
+  FEditorLineas.VaciarCache;
   ctbCODIGO_UNIDAD_FACTURA_LINEA.OnGetDataText :=
                                   ctbCODIGO_UNIDAD_FACTURA_LINEAGetDataText;
   with TcxComboBoxProperties(ctbCODIGO_UNIDAD_FACTURA_LINEA.Properties) do
@@ -2228,6 +1991,7 @@ begin
     end;
   end;
   ActualizarBloqueoEdicion;
+  end;
 end;
 
 function TfrmMtoFacturasBase.NombreVistaListado: string;
@@ -2235,76 +1999,76 @@ begin
   Result := 'vi_facturas';
 end;
 
-function TfrmMtoFacturasBase.EmitirFiscalmente(
-  const ASolicitud: TSolicitudEmisionFiscal
-): TResultadoEmisionFiscal;
-var
-  Servicio: IServicioEmisionFiscal;
-begin
-  Servicio := CrearServicioEmisionFiscal(
-    ParametrosApp,
-    ParametrosCaja,
-    ConexionPrincipal, CrearServicioVerifactuColaUniDAC(ConexionPrincipal));
-  Result := Servicio.Emitir(ASolicitud);
-end;
-
-procedure TfrmMtoFacturasBase.EjecutarOperacionFiscal(
+procedure TControladorFacturas.EjecutarOperacionFiscal(
   const ATipoOperacion, AAccion: string);
 var
-  sSerie: string;
-  sNumero: string;
-  bBorrarMovimientos: Boolean;
-  EsFacturaSimplificada: Boolean;
+  BorrarMovimientos: Boolean;
+  Contexto: TContextoOperacionFiscalFactura;
+  Preparacion: TPreparacionOperacionFiscalFactura;
   Solicitud: TSolicitudEmisionFiscal;
   Resultado: TResultadoEmisionFiscal;
+  Servicio: IServicioEmisionFiscal;
 begin
-  sSerie  := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
-  sNumero := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
-  bBorrarMovimientos := True;
-  EsFacturaSimplificada := SameText(
-    dsTablaG.DataSet.FieldByName(ftipofac).AsString, 'SIMPLIFICADA');
-  if Trim(sNumero) = '' then
-    ShowMessage(SErrorBorradorListaNoSeleccionado)
-  else if dsTablaG.DataSet.FieldByName(
-            'ESCONSOLIDADA_FAC').AsString <> 'S' then
-    ShowMessage(Format(SErrorBorradorNoCerradoAccionFiscal,
-                       [sSerie, sNumero, LowerCase(AAccion)]))
-  else if MessageDlg(Format(SPreguntaAccionFiscalBorrador,
-                           [AAccion, sSerie, sNumero]), mtConfirmation,
-                     [mbYes, mbNo], 0) = mrYes then
+  with FAnfitrion do
   begin
-    if SameText(ATipoOperacion, 'ANULACION') and
-       EsFacturaSimplificada then
+  Contexto := Default(TContextoOperacionFiscalFactura);
+  Contexto.Serie :=
+    dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
+  Contexto.Numero :=
+    dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
+  Contexto.TipoFactura :=
+    dsTablaG.DataSet.FieldByName(ftipofac).AsString;
+  Contexto.TipoOperacion := ATipoOperacion;
+  Contexto.Accion := AAccion;
+  Contexto.Usuario := IdentidadSesion.Usuario;
+  Contexto.Consolidada := dsTablaG.DataSet.FieldByName(
+    'ESCONSOLIDADA_FAC').AsString = 'S';
+  Preparacion := PrepararOperacionFiscalFactura(Contexto);
+  if not Preparacion.EsValida then
+    ShowMessage(Preparacion.MensajeError)
+  else if MessageDlg(
+            Preparacion.PreguntaConfirmacion,
+            mtConfirmation,
+            [mbYes, mbNo],
+            0) = mrYes then
+  begin
+    BorrarMovimientos := True;
+    if Preparacion.SolicitaDecisionBorrarMovimientos then
     begin
-      bBorrarMovimientos := MessageDlg(
-        Format(SPreguntaBorrarMovimientosTicketAnulado,
-               [sSerie, sNumero]), mtConfirmation,
+      BorrarMovimientos := MessageDlg(
+        Preparacion.PreguntaBorrarMovimientos,
+        mtConfirmation,
         [mbYes, mbNo], 0) = mrYes;
     end;
-    Solicitud := TSolicitudEmisionFiscal.ParaOperacion(
-      sSerie,
-      sNumero,
-      IdentidadSesion.Usuario,
-      ATipoOperacion,
-      AAccion,
-      bBorrarMovimientos);
-    Resultado := EmitirFiscalmente(Solicitud);
+    Solicitud := CrearSolicitudOperacionFiscalFactura(
+      Contexto,
+      BorrarMovimientos);
+    Servicio := CrearServicioEmisionFiscal(
+      ParametrosApp,
+      ParametrosCaja,
+      ConexionPrincipal,
+      CrearServicioVerifactuColaUniDAC(ConexionPrincipal));
+    Resultado := Servicio.Emitir(Solicitud);
     ShowMessage(Resultado.Mensaje);
     dsTablaG.DataSet.Refresh;
   end;
+  end;
 end;
 
-procedure TfrmMtoFacturasBase.btnConsolidarClick(Sender: TObject);
+procedure TControladorFacturas.btnConsolidarClick(Sender: TObject);
 var
   bConsolidada: Boolean;
   sSerie: string;
   sNumero: string;
+  Preparacion: TPreparacionConsolidacionFactura;
   Resultado: TResultadoConsolidacionFactura;
   Validacion: TResultadoOperacionFactura;
   Servicio: IServicioConsolidacionFactura;
   ServicioEmision: IServicioEmisionFiscal;
   ServicioMovimientos: IServicioMovimientosFactura;
 begin
+  with FAnfitrion do
+  begin
   bConsolidada := False;
   if (dsTablaG.DataSet = nil) or
      (not dsTablaG.DataSet.Active) or
@@ -2326,10 +2090,13 @@ begin
     ServicioEmision,
     ServicioMovimientos);
   Validacion := Servicio.Validar(sSerie, sNumero);
-  if not Validacion.Exito then
-    ShowMessage(Validacion.Mensaje)
-  else if MessageDlg(Format(SPreguntaLanzarBorradorFiscal,
-                           [sSerie, sNumero]), mtConfirmation,
+  Preparacion := PrepararConsolidacionFactura(
+    Validacion,
+    sSerie,
+    sNumero);
+  if not Preparacion.EsValida then
+    ShowMessage(Preparacion.MensajeError)
+  else if MessageDlg(Preparacion.PreguntaConfirmacion, mtConfirmation,
                      [mbYes, mbNo], 0) =
           mrYes then
   begin
@@ -2348,20 +2115,31 @@ begin
       dsTablaG.DataSet.Refresh;
       if dmmFacturas.unqryMovimientosFac.Active then
         dmmFacturas.unqryMovimientosFac.Refresh;
-      // El PDF archivado es presentación y queda fuera del caso de uso.
-      GenerarPdfFacturaConsolidada(sSerie, sNumero);
+      try
+        TfrmPrintFac.ArchivarFacturaConsolidada(
+          dmmFacturas,
+          sSerie,
+          sNumero);
+      except
+        on E: Exception do
+          Log.LogError('No se pudo archivar el PDF al consolidar ' +
+            sSerie + '\' + sNumero + ': ' + E.Message);
+      end;
       ShowMessage(Resultado.MensajeFiscal);
     end;
   end;
+  end;
 end;
 
-procedure TfrmMtoFacturasBase.btnVolverBorradorClick(Sender: TObject);
+procedure TControladorFacturas.btnVolverBorradorClick(Sender: TObject);
 var
   sSerie: string;
   sNumero: string;
   Validacion: TResultadoOperacionFactura;
   Servicio: IServicioReaperturaBorrador;
 begin
+  with FAnfitrion do
+  begin
   // Deshace un lanzamiento que la AEAT aún NO ha aceptado (p. ej. NIF
   // erróneo detectado tras Consolidar): aparca la fila ALTA de la cola
   // y devuelve la factura a BORRADOR para poder corregirla y relanzar.
@@ -2399,6 +2177,7 @@ begin
       on E: EReaperturaBorrador do
         ShowMessage(E.Message);
     end;
+  end;
   end;
 end;
 
@@ -2449,37 +2228,45 @@ begin
   Result := True;
 end;
 
-procedure TfrmMtoFacturasBase.AplicarVisibilidadColumnasCreacion(
-  bCrear: Boolean);
+procedure TControladorFacturas.AplicarVisibilidadColumnasCreacion(
+  ACrear: Boolean);
 begin
-  ctbCODIGO_FAMILIA_FACTURA_LINEA.Visible        := bCrear;
-  ctbNOMBRE_FAMILIA_FACTURA_LINEA.Visible        := bCrear;
-  ctbESPROVEEDORPRINCIPAL_FACTURA_LINEA.Visible  := bCrear;
-  ctbCODIGO_PROVEEDOR_FACTURA_LINEA.Visible      := bCrear;
-  ctbRAZONSOCIAL_PROVEEDOR_FACTURA_LINEA.Visible := bCrear;
-  ctbPRECIO_ULT_COMPRA_FACTURA_LINEA.Visible     := bCrear;
+  with FAnfitrion do
+  begin
+  ctbCODIGO_FAMILIA_FACTURA_LINEA.Visible        := ACrear;
+  ctbNOMBRE_FAMILIA_FACTURA_LINEA.Visible        := ACrear;
+  ctbESPROVEEDORPRINCIPAL_FACTURA_LINEA.Visible  := ACrear;
+  ctbCODIGO_PROVEEDOR_FACTURA_LINEA.Visible      := ACrear;
+  ctbRAZONSOCIAL_PROVEEDOR_FACTURA_LINEA.Visible := ACrear;
+  ctbPRECIO_ULT_COMPRA_FACTURA_LINEA.Visible     := ACrear;
+  end;
 end;
 
-function TfrmMtoFacturasBase.ModoCreacionActivo: Boolean;
+function TControladorFacturas.ModoCreacionActivo: Boolean;
 begin
+  with FAnfitrion do
+  begin
   // El modo creacion vive en la cabecera (ESCREARARTICULOS_FAC). Se lee del
   // dataset activo para que cada factura tenga el suyo, no el ultimo check.
   Result := (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
             (dsTablaG.DataSet.FindField(fcreart) <> nil) and
             (dsTablaG.DataSet.FieldByName(fcreart).AsString = 'S');
+  end;
 end;
 
-procedure TfrmMtoFacturasBase.SincronizarColumnasCreacion;
+procedure TControladorFacturas.SincronizarColumnasCreacion;
 begin
   AplicarVisibilidadColumnasCreacion(ModoCreacionActivo);
 end;
 
-procedure TfrmMtoFacturasBase.SincronizarColumnaSku;
+procedure TControladorFacturas.SincronizarColumnaSku;
 var
   i        : Integer;
   dc       : TcxCustomDataController;
   bMostrar : Boolean;
 begin
+  with FAnfitrion do
+  begin
   // Con un modo del contrato construido, la columna SKU es del modo.
   if FModoEntrada <> nil then
     Exit;
@@ -2500,9 +2287,12 @@ begin
   if ctbCODIGO_UNIDAD_FACTURA_LINEA.Visible <> bMostrar then
     ctbCODIGO_UNIDAD_FACTURA_LINEA.Visible := bMostrar;
 end;
+end;
 
-procedure TfrmMtoFacturasBase.ReaplicarVisibilidadDetalle;
+procedure TControladorFacturas.ReaplicarVisibilidadDetalle;
 begin
+  with FAnfitrion do
+  begin
   // Durante la reconstruccion del modo las columnas ctb* estan muertas
   // (ClearItems) hasta que CrearColumnasHostFactura las reasigna.
   if FConstruyendoModo then
@@ -2525,9 +2315,12 @@ begin
     end;
   end;
 end;
+end;
 
-procedure TfrmMtoFacturasBase.ActualizarLabelPrendas;
+procedure TControladorFacturas.ActualizarLabelPrendas;
 begin
+  with FAnfitrion do
+  begin
   if not FActualizandoLabelPrendas then
   begin
     FActualizandoLabelPrendas := True;
@@ -2541,6 +2334,7 @@ begin
       FActualizandoLabelPrendas := False;
     end;
   end;
+  end;
 end;
 
 procedure TfrmMtoFacturasBase.AplicarEtiquetas;
@@ -2548,29 +2342,30 @@ begin
   inherited;
   // inherited -> PonerAnchosTitulos repuso la visibilidad de las columnas
   // desde el perfil (por defecto visibles). Reimponemos nuestras reglas.
-  ReaplicarVisibilidadDetalle;
+  FControlador.ReaplicarVisibilidadDetalle;
   AplicarOrigenCobros;
 end;
 
 procedure TfrmMtoFacturasBase.dsLinFacDataChange(Sender: TObject;
-  Field: TField);
+                                                 Field: TField);
 begin
   // Field = nil: cambio de registro de linea, recarga del detalle (al navegar
   // de factura) o alta/baja de linea. Re-evaluamos la visibilidad del detalle.
   if Field = nil then
   begin
-    ReaplicarVisibilidadDetalle;
+    FControlador.ReaplicarVisibilidadDetalle;
     // Alta/baja/edicion de linea cambia el total de prendas. Con la
     // linea a medio insertar/editar no se recalcula (el recorrido esta
     // ademas vetado en TotalPrendasLineasVenta): se refresca en el
     // DataChange del Post.
     if (dmmFacturas = nil) or
        (not (dmmFacturas.unqryLinFac.State in dsEditModes)) then
-      ActualizarLabelPrendas;
+      FControlador.ActualizarLabelPrendas;
   end;
 end;
 
-procedure TfrmMtoFacturasBase.chkCrearArticulosPropertiesChange(Sender: TObject);
+procedure TfrmMtoFacturasBase.chkCrearArticulosPropertiesChange(
+  Sender: TObject);
 begin
   inherited;
   if FConstruyendoModo then
@@ -2583,20 +2378,22 @@ begin
     ConstruirModoEntrada;
     Exit;
   end;
-  AplicarVisibilidadColumnasCreacion(chkCrearArticulos.Checked);
+  FControlador.AplicarVisibilidadColumnasCreacion(
+    chkCrearArticulos.Checked);
   // En modo creacion el SKU hace falta para los articulos nuevos: lo
   // mostramos ya. Al desactivarlo, recalculamos por si alguna linea con
   // variacion lo sigue necesitando.
   if chkCrearArticulos.Checked then
     ctbCODIGO_UNIDAD_FACTURA_LINEA.Visible := True
   else
-    SincronizarColumnaSku;
+    FControlador.SincronizarColumnaSku;
 end;
 
-procedure TfrmMtoFacturasBase.chkDescripcion_ampliadaPropertiesChange(
+procedure TControladorFacturas.chkDescripcion_ampliadaPropertiesChange(
   Sender: TObject);
 begin
-  inherited;
+  with FAnfitrion do
+  begin
   with ctbDESCRIPCION_ARTICULO_FACTURA_LINEA do
   begin
     if (chkDescripcion_ampliada.Checked = True) then
@@ -2616,6 +2413,7 @@ begin
       ctbDESCRIPCION_ARTICULO_FACTURA_LINEA.PropertiesClassName :=
                                                         'TcxTextEditProperties';
     end;
+  end;
   end;
 end;
 
@@ -2649,9 +2447,10 @@ begin
     ctbFECHA_ENTREGA_FACTURA_LINEA.Visible := False;
 end;
 
-procedure TfrmMtoFacturasBase.dsTablaGStateChange(Sender: TObject);
+procedure TControladorFacturas.dsTablaGStateChange(Sender: TObject);
 begin
-  inherited;
+  with FAnfitrion do
+  begin
   if Assigned(dsTablaG.DataSet) then
   begin
     if (dsTablaG.State = dsInsert) then
@@ -2686,14 +2485,17 @@ begin
       ActualizarBloqueoEdicion;
     end;
   end;
+  end;
 end;
 
-procedure TfrmMtoFacturasBase.dsTablaGDataChange(Sender: TObject;
+procedure TControladorFacturas.dsTablaGDataChange(Sender: TObject;
                                                  Field: TField);
 var
   bClasicoNecesario: Boolean;
   bClasicoConstruido: Boolean;
 begin
+  with FAnfitrion do
+  begin
   if ((Field = nil) or SameText(Field.FieldName, 'CODIGO_EMP_FAC')) and
      Assigned(dmmFacturas) and dmmFacturas.unqryTablaG.Active and
      (not dmmFacturas.unqryTablaG.IsEmpty) then
@@ -2736,6 +2538,7 @@ begin
           dmmFacturas.DesempaquetarAtributosLineas;
       end;
     end;
+  end;
   end;
 end;
 
@@ -2810,7 +2613,7 @@ begin
                                        'frmMtoArtFacSearch') then
     begin
       dmmFacturas.CopiarArticuloaLinea(dmmFacturas.unqryArtDataLinFac);
-      ActivarSkuArticuloLinea(
+      FControlador.ActivarSkuArticuloLinea(
         dmmFacturas.unqryLinFac.FieldByName('CODIGO_ART_FACLIN').AsString,
         True);
     end;
@@ -2821,170 +2624,27 @@ procedure TfrmMtoFacturasBase.
            cxgrdbclmntv1CODIGO_ARTICULO_FACTURA_LINEAPropertiesEditValueChanged(
                                                                Sender: TObject);
 var
-  e          : TcxCustomEdit;
-  sInput     : string;
-  Validador  : IArticulosValidador;
-  Resolver   : IArticulosResolver;
-  Resolucion : TArtResolucionEntrada;
-  Datos      : TArticuloDatos;
-  DatosSku   : TArticuloDatos;
-  Precio     : TArticuloPrecio;
-  Lin        : TDataSet;
-  CodTarifa  : string;
-  FechaFac   : TDateTime;
-  SkuAnterior: string;
-  fPorcen    : Currency;
-  sTipoIVA   : string;
+  Edit: TcxCustomEdit;
+  Input: string;
+  Resultado: TResultadoEdicionLineaFactura;
 begin
   inherited;
-  Lin := dmmFacturas.unqryLinFac;
-  if not (Lin.State in [dsInsert, dsEdit]) then Exit;
-
-  e      := Sender as TcxCustomEdit;
-  sInput := Trim(VarToStr(e.EditingValue));
-  if sInput = '' then Exit;
-  SkuAnterior := '';
-  if Assigned(Lin.FindField('CODIGO_UNIDAD_FACLIN')) then
-    SkuAnterior := Trim(Lin.FieldByName('CODIGO_UNIDAD_FACLIN').AsString);
-
-  CodTarifa := dmmFacturas.unqryTablaG.FindField(
-                                       'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-  FechaFac  := dmmFacturas.unqryTablaG.FindField('FECHA_FAC').AsDateTime;
-
-  Validador := CrearValidadorArticulos(ConexionPrincipal);
-  Resolver := CrearResolverArticulos(
-    ConexionPrincipal);
-  try
-    Resolucion := Validador.Resolver(sInput);
-    if not Resolucion.Encontrado then Exit;
-
-    // Datos básicos del artículo + SKU (si lo hay) + precio en la tarifa.
-    Datos := Resolver.ResolverDatos(Resolucion.CodigoArticulo,
-                                    Resolucion.CodigoSku,
-                                    CodTarifa, FechaFac);
-    if not Datos.Encontrado then Exit;
-    if Datos.RequiereSku and (Resolucion.CodigoSku = '') and
-       (SkuAnterior <> '') then
+  if Assigned(FEditorLineas) and (Sender is TcxCustomEdit) then
+  begin
+    Edit := TcxCustomEdit(Sender);
+    Input := Trim(VarToStr(Edit.EditingValue));
+    if Input <> '' then
     begin
-      DatosSku := Resolver.ResolverDatos(Resolucion.CodigoArticulo,
-                                         SkuAnterior,
-                                         CodTarifa,
-                                         FechaFac);
-      if DatosSku.Encontrado and (DatosSku.CodigoSku <> '') then
-        Datos := DatosSku;
+      Resultado := FEditorLineas.AplicarDesdeEditor(Input);
+      if Resultado.Aplicado then
+      begin
+        FControlador.ActivarSkuArticuloLinea(
+          Resultado.CodigoArticulo,
+          Resultado.RequiereSku);
+        if Resultado.RecalcularDesdeEditor then
+          RecalcLineaFacturaSegura(Sender);
+      end;
     end;
-    // Pre-cargamos la regla del SKU de este articulo (ya existe): se mostrara
-    // si es de variacion o tiene varios SKUs. Evita reconsultar en el pintado.
-    if Assigned(FArtMostrarSku) then
-    begin
-      FArtMostrarSku.AddOrSetValue(Datos.CodigoArticulo,
-                                   Datos.EsVariacion or Datos.RequiereSku);
-    end;
-    // Si el articulo recien tecleado necesita SKU, mostramos ya la columna
-    // (el rescan al postear/navegar la ocultara de nuevo si procede).
-    ActivarSkuArticuloLinea(Datos.CodigoArticulo, Datos.RequiereSku);
-
-    // Si el padre tiene varios SKUs y aún no hay SKU, ResolverDatos no calcula
-    // precio. Pedimos el del padre para arrastrar IVA y % DTO (mismo patrón
-    // que en caja); PRECIO_SALIDA queda a 0 hasta que se elija el SKU.
-    if Datos.RequiereSku then
-      Precio := Resolver.ResolverPrecio(Resolucion.CodigoArticulo, '',
-                                        CodTarifa, FechaFac)
-    else
-      Precio := Datos.PrecioPedido;
-
-    Lin.FindField('CODIGO_ART_FACLIN').AsString := Datos.CodigoArticulo;
-    // CODIGO_UNIDAD_FACLIN y DESCRIPCION_VARIACION_FACLIN ya existen en la
-    // tabla base, pero la vista vi_facturas_lineas sólo los expone tras la
-    // migración 2026-05-10. Asignación defensiva por si aún no se aplicó.
-    if Assigned(Lin.FindField('CODIGO_UNIDAD_FACLIN')) then
-      Lin.FieldByName('CODIGO_UNIDAD_FACLIN').AsString   := Datos.CodigoSku;
-    if Assigned(Lin.FindField('DESCRIPCION_VARIACION_FACLIN')) then
-      Lin.FieldByName('DESCRIPCION_VARIACION_FACLIN').AsString :=
-        Datos.DescripcionSku;
-    Lin.FindField('DESCRIPCION_ARTICULO_FACLIN').AsString :=
-      Datos.DescripcionArticulo;
-    // TIPO_ARTICULO_FACLIN existe en la tabla base pero vi_facturas_lineas no
-    // lo expone: asignacion defensiva (mismo motivo que CODIGO_UNIDAD_FACLIN).
-    if Assigned(Lin.FindField('TIPO_ARTICULO_FACLIN')) then
-      Lin.FindField('TIPO_ARTICULO_FACLIN').AsString     := Datos.TipoArticulo;
-    Lin.FindField('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString :=
-      Datos.TipoCantidad;
-    Lin.FindField('TIPO_IVA_ARTICULO_FACLIN').AsString   := Datos.TipoIVA;
-    Lin.FindField('CODIGO_FAM_FACLIN').AsString          := Datos.CodigoFamilia;
-    Lin.FindField('NOMBRE_FAM_FACLIN').AsString := Datos.DescripcionFamilia;
-    Lin.FindField('CODIGO_TAR_FACLIN').AsString          := CodTarifa;
-    Lin.FindField('ESIMP_INCL_TARIFA_FACLIN').AsString   :=
-                                          IfThen(Precio.EsImpIncl, 'S', 'N');
-    Lin.FindField('PORCENTAJE_DTO_FACLIN').AsFloat := Precio.PorcentajeDto;
-    Lin.FindField('PRECIO_DTO_FACLIN').AsFloat           := Precio.PrecioDto;
-
-    if Datos.UltimoCoste.Encontrado then
-    begin
-      Lin.FindField('ESPROVEEDORPRINCIPAL_FACLIN').AsString :=
-                          IfThen(Datos.UltimoCoste.EsProveedorPrincipal,
-                                 'S',
-                                 'N');
-      Lin.FindField('CODIGO_PRV_FACLIN').AsString    :=
-        Datos.UltimoCoste.CodigoProveedor;
-      Lin.FindField('RAZON_SOCIAL_PROVEEDOR_FACLIN').AsString :=
-                                              Datos.UltimoCoste.RazonSocialProveedor;
-      Lin.FindField('PRECIO_ULT_COMPRA_FACLIN').AsFloat :=
-                                              Datos.UltimoCoste.PrecioUltCompra;
-    end;
-
-    // Si el padre tiene varios SKUs aún sin elegir, dejamos PRECIO_SALIDA y
-    // PRECIO_VENTA_*_FACLIN a 0 hasta que el usuario complete el SKU. Movemos
-    // el foco a la columna SKU y abrimos su dropdown automáticamente.
-    if Datos.RequiereSku then
-    begin
-      Lin.FindField('PRECIO_SALIDA_FACLIN').AsFloat := 0;
-      Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat := 0;
-      Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat := 0;
-      // Diferimos para que termine el ciclo de edición actual antes de
-      // saltar a la celda contigua.
-      TThread.ForceQueue(nil,
-        procedure
-        var Edit: TcxCustomEdit;
-        begin
-          tvLineasFactura.Controller.FocusedColumn :=
-            ctbCODIGO_UNIDAD_FACTURA_LINEA;
-          tvLineasFactura.Controller.EditingController.ShowEdit;
-          Edit := tvLineasFactura.Controller.EditingController.Edit;
-          if Edit is TcxComboBox then
-            (Edit as TcxComboBox).DroppedDown := True;
-        end);
-      Exit;
-    end;
-
-    Lin.FindField('PRECIO_SALIDA_FACLIN').AsFloat := Precio.PrecioSalida;
-
-    // Reproducimos la conversión IVA inc./exc. que hacía CopiarArticuloaLinea
-    // Porcentaje con decimales (el AsInteger anterior truncaba IVAs no
-    // enteros y descuadraba centimos) y conversion unica de la comun.
-    sTipoIVA := Datos.TipoIVA;
-    fPorcen  := PorcentajeIvaFactura(sTipoIVA);
-    if Precio.EsImpIncl then
-    begin
-      Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
-        Precio.PrecioFinal;
-      Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
-        PrecioSinIvaDesdeConIva(Precio.PrecioFinal, fPorcen);
-    end
-    else
-    begin
-      Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
-        Precio.PrecioFinal;
-      Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
-        PrecioConIvaDesdeSinIva(Precio.PrecioFinal, fPorcen);
-    end;
-    // Disparamos el recalculo para que TOTAL_FACLIN y TOTAL_FAC_SIVA_FACLIN
-    // se vuelquen al dataset. Si el usuario se va de la fila sin tocar
-    // otros campos, sin esto los totales quedaban a 0 en el INSERT.
-    RecalcLineaFacturaSegura(Sender);
-  finally
-    Validador := nil;
-    Resolver := nil;
   end;
 end;
 
@@ -3049,11 +2709,13 @@ begin
   end;
 end;
 
-function TfrmMtoFacturasBase.AsegurarCabeceraPersistidaParaLineas: Boolean;
+function TControladorFacturas.AsegurarCabeceraPersistidaParaLineas: Boolean;
 var
   dsCab: TDataSet;
   dsLin: TDataSet;
 begin
+  with FAnfitrion do
+  begin
   Result := False;
   if Assigned(dmmFacturas) then
   begin
@@ -3083,9 +2745,10 @@ begin
       end;
     end;
   end;
+  end;
 end;
 
-procedure TfrmMtoFacturasBase.AsegurarPrimeraLineaFacturaBorrador;
+procedure TControladorFacturas.AsegurarPrimeraLineaFacturaBorrador;
 var
   dsCab: TDataSet;
   dsLin: TDataSet;
@@ -3093,6 +2756,8 @@ var
   sSerie: string;
   sFase: string;
 begin
+  with FAnfitrion do
+  begin
   if not Assigned(dmmFacturas) then
     Exit;
   dsCab := dmmFacturas.unqryTablaG;
@@ -3119,16 +2784,18 @@ begin
     dsLin.Append;
 end;
 
+end;
+
 procedure TfrmMtoFacturasBase.cxgrdLineasFacturaEnter(Sender: TObject);
 begin
-  AsegurarPrimeraLineaFacturaBorrador;
+  FControlador.AsegurarPrimeraLineaFacturaBorrador;
   // Contrato de entrada: primera construccion al entrar en el grid (las
   // lineas ya estan abiertas como detail de la factura). El teardown
   // cancela la linea vacia auto-anadida: se recrea despues.
   if not FColsModoConstruido then
   begin
     ConstruirModoEntrada;
-    AsegurarPrimeraLineaFacturaBorrador;
+    FControlador.AsegurarPrimeraLineaFacturaBorrador;
   end;
   if FModoEntrada <> nil then
     FModoEntrada.MostrarEditor;
@@ -3142,8 +2809,10 @@ begin
         dmmFacturas.unqryTablaG);
 end;
 
-procedure TfrmMtoFacturasBase.RecalcLineaFacturaSegura(Sender: TObject);
+procedure TControladorFacturas.RecalcLineaFacturaSegura(Sender: TObject);
 begin
+  with FAnfitrion do
+  begin
   try
     GridRecalc(ConexionPrincipal, Sender,
                tvLineasFactura,
@@ -3160,6 +2829,7 @@ begin
       inLibLog.Log.LogWarning(
         'FacturasBase.RecalcLineaFacturaSegura: EInvalidOperation ' +
         'ignorada: ' + E.Message);
+  end;
   end;
 end;
 
@@ -3179,7 +2849,8 @@ begin
   RecalcLineaFacturaSegura(Sender);
 end;
 
-procedure TfrmMtoFacturasBase.tvLineasFacturaPRECIO_DTO_FACTURA_LINEAPropertiesEditValueChanged(
+procedure TfrmMtoFacturasBase.
+  tvLineasFacturaPRECIO_DTO_FACTURA_LINEAPropertiesEditValueChanged(
   Sender: TObject);
 begin
   inherited;
@@ -3227,7 +2898,8 @@ begin
   //rellenar razon social proveedor y precio de coste
 end;
 
-procedure TfrmMtoFacturasBase.ctbTOTAL_FACTURASIVA_LINEAPropertiesEditValueChanged(
+procedure TfrmMtoFacturasBase.
+  ctbTOTAL_FACTURASIVA_LINEAPropertiesEditValueChanged(
   Sender: TObject);
 begin
   inherited;
@@ -3289,12 +2961,15 @@ end;
 // CONTRATO DE ENTRADA ColumnSKUcxGrid (Auto / SKU / Tallas horizontal + F1)
 // ===========================================================================
 
-function TfrmMtoFacturasBase.ModoCreacionSolicitado: Boolean;
+function TControladorFacturas.ModoCreacionSolicitado: Boolean;
 begin
+  with FAnfitrion do
+  begin
   // El alta de articulos inline (Crear/Act Articulo) necesita la
   // presentacion clasica: el contrato rechaza articulos inexistentes.
   Result := ModoCreacionActivo or
             (Assigned(chkCrearArticulos) and chkCrearArticulos.Checked);
+  end;
 end;
 
 procedure TfrmMtoFacturasBase.KeyDown(var Key: Word; Shift: TShiftState);
@@ -3302,18 +2977,20 @@ begin
   ProcesarTeclaCambioModoDocumento(
     Key, Shift, (pcPantalla.ActivePage = tsFicha) and
     (pcDetail.ActivePage = tsLineasFactura) and
-    (not ModoCreacionSolicitado), FModoEntradaSel,
+    (not FControlador.ModoCreacionSolicitado), FModoEntradaSel,
     [mcsAuto, mcsSku, mcsTallasHorPed], ConstruirModoEntrada);
   inherited;
 end;
 
-procedure TfrmMtoFacturasBase.ConstruirModoEntrada;
+procedure TControladorFacturas.ConstruirModoEntrada;
 var
   Cfg: TConfigColumnasSku;
   CfgPV: TGridPivoteVentaConfig;
   ds: TDataSet;
   bClasico: Boolean;
 begin
+  with FAnfitrion do
+  begin
   if (dmmFacturas = nil) or (csDestroying in ComponentState) then
     Exit;
   ds := dmmFacturas.unqryLinFac;
@@ -3414,7 +3091,9 @@ begin
         begin
           tsLineasFactura.Caption :=
             SCaptionTabLineasBorradorDesglose;
-          MostrarColumnasAtributoGlobalesFac;
+          MostrarColumnasAtributoGlobalesDocumento(
+            dmmFacturas.unqryTablaG.Connection,
+            tvLineasFactura);
         end;
       end;
     end;
@@ -3426,64 +3105,70 @@ begin
   // Reglas de visibilidad e ImpIncl sobre las columnas recreadas.
   ReaplicarVisibilidadDetalle;
   dmmFacturas.dsLinFacStateChange(dmmFacturas.dsLinFac);
+  end;
 end;
 
-procedure TfrmMtoFacturasBase.CrearColumnasHostFactura(bClasico: Boolean);
-  function Col(const ACaption, ACampo: string; AAncho: Integer;
-               AEditable: Boolean): TcxGridDBColumn;
-  begin
-    Result := tvLineasFactura.CreateColumn as TcxGridDBColumn;
-    Result.Caption := ACaption;
-    Result.DataBinding.FieldName := ACampo;
-    Result.Width := AAncho;
-    Result.Options.Editing := AEditable;
-  end;
+procedure TControladorFacturas.CrearColumnasHostFactura(AClasico: Boolean);
 var
-  bTallas: Boolean;
-  ctbVendedorLinea: TcxGridDBColumn;
+  Columnas: TColumnasFactura;
+  Configuracion: TConfiguracionColumnasFactura;
 begin
-  // Columnas propias del documento tras el ClearItems del contrato. Se
-  // REASIGNAN las referencias ctb* del dfm para que la logica existente
-  // (dsLinFacStateChange, visibilidad de creacion, toggles de cabecera)
-  // siga funcionando sobre las columnas recreadas.
-  bTallas := (not bClasico) and (FModoEntradaSel = mcsTallasHorPed);
-  ctbLINEA_FACTURA_LINEA := Col('Nro Linea', 'LINEA_FACLIN', 60, False);
-  ctbVendedorLinea := nil;
-  if SameText(TipoFacturaFiltro, 'SIMPLIFICADA') then
-    ctbVendedorLinea := Col('Vendedor', 'CODIGO_VENDEDOR_FACLIN',
-                            90, False);
-  if bClasico then
+  with FAnfitrion do
   begin
-    // Articulo + SKU clasicos con sus handlers de siempre (alta de
-    // articulos inline, busqueda [...] y combo de SKUs por articulo).
-    ctbCODIGO_ARTICULO_FACTURA_LINEA :=
-      Col('Código Artículo', 'CODIGO_ART_FACLIN', 152, True);
-    ctbCODIGO_ARTICULO_FACTURA_LINEA.PropertiesClass :=
-      TcxButtonEditProperties;
+  Configuracion := Default(TConfiguracionColumnasFactura);
+  Configuracion.Vista := tvLineasFactura;
+  Configuracion.DataSourceIvas := dmmFacturas.dsIvasTipos;
+  Configuracion.Clasico := AClasico;
+  Configuracion.Tallas :=
+    (not AClasico) and (FModoEntradaSel = mcsTallasHorPed);
+  Configuracion.Simplificada :=
+    SameText(TipoFacturaFiltro, 'SIMPLIFICADA');
+  Configuracion.CrearArticulos := ModoCreacionSolicitado;
+  Configuracion.DescripcionAmpliada :=
+    chkDescripcion_ampliada.Checked;
+  Configuracion.MostrarFechaEntrega := chkFechaEntrega.Checked;
+  Columnas := CrearColumnasFactura(Configuracion);
+  ctbLINEA_FACTURA_LINEA := Columnas.Linea;
+  ctbCODIGO_ARTICULO_FACTURA_LINEA := Columnas.Articulo;
+  ctbCODIGO_UNIDAD_FACTURA_LINEA := Columnas.Sku;
+  ctbCODIGO_FAMILIA_FACTURA_LINEA := Columnas.CodigoFamilia;
+  ctbNOMBRE_FAMILIA_FACTURA_LINEA := Columnas.NombreFamilia;
+  ctbESPROVEEDORPRINCIPAL_FACTURA_LINEA :=
+    Columnas.EsProveedorPrincipal;
+  ctbCODIGO_PROVEEDOR_FACTURA_LINEA := Columnas.CodigoProveedor;
+  ctbRAZONSOCIAL_PROVEEDOR_FACTURA_LINEA :=
+    Columnas.RazonSocialProveedor;
+  ctbPRECIO_ULT_COMPRA_FACTURA_LINEA := Columnas.PrecioUltimaCompra;
+  ctbDESCRIPCION_ARTICULO_FACTURA_LINEA :=
+    Columnas.DescripcionArticulo;
+  ctbTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA := Columnas.TipoCantidad;
+  ctbCANTIDAD_FACTURA_LINEA := Columnas.Cantidad;
+  ctbPRECIOSALIDA_FACTURA_LINEA := Columnas.PrecioSalida;
+  ctbPORCEN_DTO_FACTURA_LINEA := Columnas.PorcentajeDescuento;
+  ctbPRECIO_DTO_FACTURA_LINEA := Columnas.PrecioDescuento;
+  ctbPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA :=
+    Columnas.PrecioVentaSinIva;
+  ctbIMP_INCL_TARIFA_FACTURA_LINEA := Columnas.ImpuestosIncluidos;
+  ctbTIPOIVA_ARTICULO_FACTURA_LINEA := Columnas.TipoIva;
+  ctbPORCEN_IVA_FACTURA_LINEA := Columnas.PorcentajeIva;
+  ctbPRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA :=
+    Columnas.PrecioVentaConIva;
+  ctbTOTAL_FACTURA_LINEA := Columnas.TotalConIva;
+  ctbTOTAL_FACTURASIVA_LINEA := Columnas.TotalSinIva;
+  ctbFECHA_ENTREGA_FACTURA_LINEA := Columnas.FechaEntrega;
+  if AClasico then
+  begin
     with TcxButtonEditProperties(
-           ctbCODIGO_ARTICULO_FACTURA_LINEA.Properties) do
+      ctbCODIGO_ARTICULO_FACTURA_LINEA.Properties) do
     begin
-      Buttons.Clear;
-      with Buttons.Add do
-      begin
-        Default := True;
-        Kind := bkEllipsis;
-      end;
       OnButtonClick :=
         cxgrdbclmntv1CODIGO_ARTICULO_FACTURA_LINEAPropertiesButtonClick;
       OnEditValueChanged :=
         cxgrdbclmntv1CODIGO_ARTICULO_FACTURA_LINEAPropertiesEditValueChanged;
     end;
-    ctbCODIGO_UNIDAD_FACTURA_LINEA :=
-      Col('SKU', 'CODIGO_UNIDAD_FACLIN', 180, True);
-    ctbCODIGO_UNIDAD_FACTURA_LINEA.Visible := False;
-    ctbCODIGO_UNIDAD_FACTURA_LINEA.PropertiesClass :=
-      TcxComboBoxProperties;
     with TcxComboBoxProperties(
-           ctbCODIGO_UNIDAD_FACTURA_LINEA.Properties) do
+      ctbCODIGO_UNIDAD_FACTURA_LINEA.Properties) do
     begin
-      ImmediatePost := True;
-      PostPopupValueOnTab := True;
       OnInitPopup := ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesInitPopup;
       OnCloseUp := ctbCODIGO_UNIDAD_FACTURA_LINEAPropertiesCloseUp;
       OnEditValueChanged :=
@@ -3491,216 +3176,35 @@ begin
     end;
     ctbCODIGO_UNIDAD_FACTURA_LINEA.OnGetDataText :=
       ctbCODIGO_UNIDAD_FACTURA_LINEAGetDataText;
-  end
-  else
-  begin
-    // Las columnas de articulo/SKU son del modo: referencias fuera.
-    ctbCODIGO_ARTICULO_FACTURA_LINEA := nil;
-    ctbCODIGO_UNIDAD_FACTURA_LINEA := nil;
   end;
-  var ctbDESCRIPCION_VARIACION_FACTURA_LINEA :=
-    Col('Variación', 'DESCRIPCION_VARIACION_FACLIN', 140, False);
-  ctbDESCRIPCION_VARIACION_FACTURA_LINEA.Visible := False;
-  // Columnas de creacion de articulos (solo visibles en modo creacion).
-  ctbCODIGO_FAMILIA_FACTURA_LINEA :=
-    Col('Código Familia', 'CODIGO_FAM_FACLIN', 153, True);
-  ctbNOMBRE_FAMILIA_FACTURA_LINEA :=
-    Col('Nombre Familia', 'NOMBRE_FAM_FACLIN', 245, True);
-  ctbESPROVEEDORPRINCIPAL_FACTURA_LINEA :=
-    Col('Proveedor Principal', 'ESPROVEEDORPRINCIPAL_FACLIN', 172, True);
-  ctbESPROVEEDORPRINCIPAL_FACTURA_LINEA.PropertiesClass :=
-    TcxCheckBoxProperties;
-  ctbCODIGO_PROVEEDOR_FACTURA_LINEA :=
-    Col('Código Proveedor', 'CODIGO_PRV_FACLIN', 163, True);
-  ctbRAZONSOCIAL_PROVEEDOR_FACTURA_LINEA :=
-    Col('Razón Social Proveedor', 'RAZON_SOCIAL_PROVEEDOR_FACLIN',
-        200, True);
-  ctbPRECIO_ULT_COMPRA_FACTURA_LINEA :=
-    Col('Precio Coste', 'PRECIO_ULT_COMPRA_FACLIN', 100, True);
-  ctbPRECIO_ULT_COMPRA_FACTURA_LINEA.PropertiesClass :=
-    TcxCurrencyEditProperties;
-  AplicarVisibilidadColumnasCreacion(bClasico and ModoCreacionSolicitado);
-  // Descripcion (memo si la cabecera pide descripciones ampliadas).
-  ctbDESCRIPCION_ARTICULO_FACTURA_LINEA :=
-    Col('Descripción', 'DESCRIPCION_ARTICULO_FACLIN', 300, True);
-  if chkDescripcion_ampliada.Checked then
-  begin
-    ctbDESCRIPCION_ARTICULO_FACTURA_LINEA.PropertiesClassName :=
-      'TcxMemoProperties';
-    with TcxMemoProperties(
-           ctbDESCRIPCION_ARTICULO_FACTURA_LINEA.Properties) do
-    begin
-      VisibleLineCount := 3;
-      MaxLength := 1000;
-      ScrollBars := ssBoth;
-    end;
-  end;
-  // Cantidad y tipo de cantidad: fuera del modo tallas (alli las
-  // cantidades viven en las celdas de talla del pivote).
-  if not bTallas then
-  begin
-    ctbTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA :=
-      Col('', 'TIPO_CANTIDAD_ARTICULO_FACLIN', 20, False);
-    ctbTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA.Visible := False;
-    ctbTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA.VisibleForCustomization :=
-      False;
-    ctbCANTIDAD_FACTURA_LINEA := Col('Cantidad', 'CANTIDAD_FACLIN',
-                                     90, True);
-    ctbCANTIDAD_FACTURA_LINEA.PropertiesClass := TcxSpinEditProperties;
+  if Assigned(ctbCANTIDAD_FACTURA_LINEA) then
     TcxSpinEditProperties(ctbCANTIDAD_FACTURA_LINEA.Properties).
       OnEditValueChanged :=
         cxgrdbclmntv1CANTIDAD_FACTURA_LINEAPropertiesEditValueChanged;
-    // Decimales de la cantidad segun la unidad de la linea (metros...).
-    VincularCantidadGrid(ctbCANTIDAD_FACTURA_LINEA,
-                         ctbTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA);
-  end
-  else
-  begin
-    ctbCANTIDAD_FACTURA_LINEA := nil;
-    ctbTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA := nil;
-  end;
-  ctbPRECIOSALIDA_FACTURA_LINEA :=
-    Col('Precio Salida', 'PRECIO_SALIDA_FACLIN', 100, True);
-  ctbPRECIOSALIDA_FACTURA_LINEA.PropertiesClass :=
-    TcxCurrencyEditProperties;
   TcxCurrencyEditProperties(ctbPRECIOSALIDA_FACTURA_LINEA.Properties).
     OnEditValueChanged :=
       tvLineasFacturaPRECIOSALIDA_FACTURA_LINEAPropertiesEditValueChanged;
-  ctbPORCEN_DTO_FACTURA_LINEA :=
-    Col('% Dto', 'PORCENTAJE_DTO_FACLIN', 80, True);
-  ctbPORCEN_DTO_FACTURA_LINEA.PropertiesClass := TcxSpinEditProperties;
-  with TcxSpinEditProperties(ctbPORCEN_DTO_FACTURA_LINEA.Properties) do
-  begin
-    DisplayFormat := '0.00 %';
-    EditFormat := '0.00 %';
-    MaxValue := 100;
+  TcxSpinEditProperties(ctbPORCEN_DTO_FACTURA_LINEA.Properties).
     OnEditValueChanged :=
       tvLineasFacturaPORCEN_DTO_FACTURA_LINEAPropertiesEditValueChanged;
-  end;
-  ctbPRECIO_DTO_FACTURA_LINEA :=
-    Col('Menos Dto', 'PRECIO_DTO_FACLIN', 90, True);
-  ctbPRECIO_DTO_FACTURA_LINEA.PropertiesClass :=
-    TcxCurrencyEditProperties;
   TcxCurrencyEditProperties(ctbPRECIO_DTO_FACTURA_LINEA.Properties).
     OnEditValueChanged :=
       tvLineasFacturaPRECIO_DTO_FACTURA_LINEAPropertiesEditValueChanged;
-  ctbPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA :=
-    Col('Precio Ud. sin IVA', 'PRECIO_VENTA_SIVA_ARTICULO_FACLIN',
-        120, True);
-  ctbPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA.PropertiesClass :=
-    TcxCurrencyEditProperties;
   TcxCurrencyEditProperties(
     ctbPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA.Properties).
       OnEditValueChanged :=
  cxgrdbclmntv1PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEAPropertiesEditValueChanged;
-  ctbIMP_INCL_TARIFA_FACTURA_LINEA :=
-    Col('ImpIncl', 'ESIMP_INCL_TARIFA_FACLIN', 79, True);
-  ctbIMP_INCL_TARIFA_FACTURA_LINEA.Visible := False;
-  ctbIMP_INCL_TARIFA_FACTURA_LINEA.PropertiesClass :=
-    TcxCheckBoxProperties;
-  with TcxCheckBoxProperties(
-         ctbIMP_INCL_TARIFA_FACTURA_LINEA.Properties) do
-  begin
-    ReadOnly := True;
-    ValueChecked := 'S';
-    ValueUnchecked := 'N';
-  end;
-  ctbTIPOIVA_ARTICULO_FACTURA_LINEA :=
-    Col('Tipo de IVA', 'TIPO_IVA_ARTICULO_FACLIN', 109, True);
-  ctbTIPOIVA_ARTICULO_FACTURA_LINEA.PropertiesClass :=
-    TcxLookupComboBoxProperties;
-  with TcxLookupComboBoxProperties(
-         ctbTIPOIVA_ARTICULO_FACTURA_LINEA.Properties) do
-  begin
-    DropDownListStyle := lsFixedList;
-    KeyFieldNames := 'CODIGO_ABREVIATURA_IVA_IVATIP';
-    with ListColumns.Add do
-    begin
-      Caption := 'Tipo de IVA';
-      FieldName := 'NOMBRE_TIPO_IVA_IVATIP';
-    end;
-    ListOptions.ShowHeader := False;
-    ListSource := dmmFacturas.dsIvasTipos;
+  TcxLookupComboBoxProperties(ctbTIPOIVA_ARTICULO_FACTURA_LINEA.Properties).
     OnChange :=
       cxgrdbclmntv1TIPOIVA_ARTICULO_FACTURA_LINEAPropertiesChange;
-  end;
-  ctbPORCEN_IVA_FACTURA_LINEA :=
-    Col('% IVA', 'PORCENTAJE_IVA_FACLIN', 79, True);
-  ctbPORCEN_IVA_FACTURA_LINEA.PropertiesClass := TcxSpinEditProperties;
-  with TcxSpinEditProperties(ctbPORCEN_IVA_FACTURA_LINEA.Properties) do
-  begin
-    DisplayFormat := '0.00 %';
-    EditFormat := '0.00 %';
-  end;
-  ctbPRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA :=
-    Col('Precio Ud. con IVA', 'PRECIO_VENTA_CIVA_ARTICULO_FACLIN',
-        120, True);
-  ctbPRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA.PropertiesClass :=
-    TcxCurrencyEditProperties;
   TcxCurrencyEditProperties(
     ctbPRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEA.Properties).
       OnEditValueChanged :=
  cxgrdbclmntv1PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEAPropertiesEditValueChanged;
-  ctbTOTAL_FACTURA_LINEA :=
-    Col('Total con IVA', 'TOTAL_FACLIN', 120, False);
-  ctbTOTAL_FACTURA_LINEA.PropertiesClass := TcxCurrencyEditProperties;
-  ctbTOTAL_FACTURASIVA_LINEA :=
-    Col('Total Sin IVA', 'TOTAL_FAC_SIVA_FACLIN', 125, True);
-  ctbTOTAL_FACTURASIVA_LINEA.PropertiesClass := TcxCurrencyEditProperties;
   TcxCurrencyEditProperties(ctbTOTAL_FACTURASIVA_LINEA.Properties).
     OnEditValueChanged :=
       ctbTOTAL_FACTURASIVA_LINEAPropertiesEditValueChanged;
-  ctbFECHA_ENTREGA_FACTURA_LINEA :=
-    Col('Fecha Entrega', 'FECHA_ENTREGA_FACLIN', 100, True);
-  ctbFECHA_ENTREGA_FACTURA_LINEA.PropertiesClass := TcxDateEditProperties;
-  with TcxDateEditProperties(
-         ctbFECHA_ENTREGA_FACTURA_LINEA.Properties) do
-  begin
-    DateButtons := [btnClear, btnToday];
-    DisplayFormat := 'dd/mm/yyyy';
-    EditFormat := 'dd/mm/yyyy';
   end;
-  ctbFECHA_ENTREGA_FACTURA_LINEA.Visible := chkFechaEntrega.Checked;
-  // Sumas de pie (el ClearItems se llevo las del dfm).
-  with tvLineasFactura.DataController.Summary do
-  begin
-    BeginUpdate;
-    try
-      FooterSummaryItems.Clear;
-      with TcxGridDBTableSummaryItem(FooterSummaryItems.Add) do
-      begin
-        Kind := skSum;
-        Format := '##,##.00 ' + #8364;
-        Column := ctbTOTAL_FACTURA_LINEA;
-      end;
-      if ctbCANTIDAD_FACTURA_LINEA <> nil then
-        with TcxGridDBTableSummaryItem(FooterSummaryItems.Add) do
-        begin
-          Kind := skSum;
-          Format := '#,##.00';
-          Column := ctbCANTIDAD_FACTURA_LINEA;
-        end;
-      with TcxGridDBTableSummaryItem(FooterSummaryItems.Add) do
-      begin
-        Kind := skSum;
-        Format := '##,##.00 ' + #8364;
-        Column := ctbTOTAL_FACTURASIVA_LINEA;
-      end;
-    finally
-      EndUpdate;
-    end;
-  end;
-  // Orden normal del documento: la LINEA delante del bloque de articulo
-  // que creo el modo (las columnas del host nacen detras).
-  ctbLINEA_FACTURA_LINEA.Index := 0;
-  if Assigned(ctbVendedorLinea) then
-    ctbVendedorLinea.Index := 1;
-end;
-
-procedure TfrmMtoFacturasBase.MostrarColumnasAtributoGlobalesFac;
-begin
-  MostrarColumnasAtributoGlobalesDocumento(
-    dmmFacturas.unqryTablaG.Connection, tvLineasFactura);
 end;
 
 procedure TfrmMtoFacturasBase.ModoEntradaResuelto(const ACodArt, ASku,
@@ -3719,172 +3223,15 @@ end;
 
 procedure TfrmMtoFacturasBase.AplicarArticuloFactura(
   const AEntrada: string);
-var
-  Lin: TDataSet;
-  Validador: IArticulosValidador;
-  Resolver: IArticulosResolver;
-  Resolucion: TArtResolucionEntrada;
-  Datos: TArticuloDatos;
-  Precio: TArticuloPrecio;
-  CodTarifa: string;
-  FechaFac: TDateTime;
-  fPorcen: Currency;
 begin
-  if FConsolidandoSku or (Trim(AEntrada) = '') or
-     (not Assigned(dmmFacturas)) then
-    Exit;
-  Lin := dmmFacturas.unqryLinFac;
-  if (Lin = nil) or (not Lin.Active) then
-    Exit;
-  if not (Lin.State in [dsInsert, dsEdit]) then
-    if Lin.CanModify then
-      Lin.Edit;
-  if not (Lin.State in [dsInsert, dsEdit]) then
-    Exit;
-  FConsolidandoSku := True;
-  Validador := nil;
-  Resolver := nil;
-  try
-    CodTarifa := dmmFacturas.unqryTablaG.FindField(
-                   'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-    FechaFac := Date;
-    if not dmmFacturas.unqryTablaG.FindField('FECHA_FAC').IsNull then
-      FechaFac := dmmFacturas.unqryTablaG.
-                    FindField('FECHA_FAC').AsDateTime;
-    Validador := CrearValidadorArticulos(ConexionPrincipal);
-    Resolver := CrearResolverArticulos(
-      ConexionPrincipal);
-    Resolucion := Validador.Resolver(Trim(AEntrada));
-    if not Resolucion.Encontrado then
-      Exit;
-    Datos := Resolver.ResolverDatos(Resolucion.CodigoArticulo,
-                                    Resolucion.CodigoSku,
-                                    CodTarifa, FechaFac);
-    if not Datos.Encontrado then
-      Exit;
-    if Assigned(FArtMostrarSku) then
-      FArtMostrarSku.AddOrSetValue(Datos.CodigoArticulo,
-                                   Datos.EsVariacion or Datos.RequiereSku);
-    Lin.FindField('CODIGO_ART_FACLIN').AsString := Datos.CodigoArticulo;
-    if Assigned(Lin.FindField('CODIGO_UNIDAD_FACLIN')) then
-      Lin.FieldByName('CODIGO_UNIDAD_FACLIN').AsString :=
-        Datos.CodigoSku;
-    if Assigned(Lin.FindField('DESCRIPCION_VARIACION_FACLIN')) then
-      Lin.FieldByName('DESCRIPCION_VARIACION_FACLIN').AsString :=
-        Datos.DescripcionSku;
-    Lin.FindField('DESCRIPCION_ARTICULO_FACLIN').AsString :=
-      Datos.DescripcionArticulo;
-    if Assigned(Lin.FindField('TIPO_ARTICULO_FACLIN')) then
-      Lin.FindField('TIPO_ARTICULO_FACLIN').AsString :=
-        Datos.TipoArticulo;
-    Lin.FindField('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString :=
-      Datos.TipoCantidad;
-    Lin.FindField('TIPO_IVA_ARTICULO_FACLIN').AsString := Datos.TipoIVA;
-    Lin.FindField('CODIGO_FAM_FACLIN').AsString := Datos.CodigoFamilia;
-    Lin.FindField('NOMBRE_FAM_FACLIN').AsString :=
-      Datos.DescripcionFamilia;
-    Lin.FindField('CODIGO_TAR_FACLIN').AsString := CodTarifa;
-    if Datos.UltimoCoste.Encontrado then
-    begin
-      Lin.FindField('ESPROVEEDORPRINCIPAL_FACLIN').AsString :=
-        IfThen(Datos.UltimoCoste.EsProveedorPrincipal, 'S', 'N');
-      Lin.FindField('CODIGO_PRV_FACLIN').AsString :=
-        Datos.UltimoCoste.CodigoProveedor;
-      Lin.FindField('RAZON_SOCIAL_PROVEEDOR_FACLIN').AsString :=
-        Datos.UltimoCoste.RazonSocialProveedor;
-      Lin.FindField('PRECIO_ULT_COMPRA_FACLIN').AsFloat :=
-        Datos.UltimoCoste.PrecioUltCompra;
-    end;
-    Precio := Datos.PrecioPedido;
-    Lin.FindField('ESIMP_INCL_TARIFA_FACLIN').AsString :=
-      IfThen(Precio.EsImpIncl, 'S', 'N');
-    Lin.FindField('PORCENTAJE_DTO_FACLIN').AsFloat :=
-      Precio.PorcentajeDto;
-    Lin.FindField('PRECIO_DTO_FACLIN').AsFloat := Precio.PrecioDto;
-    Lin.FindField('PRECIO_SALIDA_FACLIN').AsFloat := Precio.PrecioSalida;
-    fPorcen := PorcentajeIvaFactura(Datos.TipoIVA);
-    if Precio.EsImpIncl then
-    begin
-      Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
-        Precio.PrecioFinal;
-      Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
-        PrecioSinIvaDesdeConIva(Precio.PrecioFinal, fPorcen);
-    end
-    else
-    begin
-      Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
-        Precio.PrecioFinal;
-      Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
-        PrecioConIvaDesdeSinIva(Precio.PrecioFinal, fPorcen);
-    end;
-    // Recalculo de la linea y de los totales fiscales de la cabecera
-    // (sin esto TOTAL_FACLIN y TOTAL_FAC_SIVA_FACLIN quedaban a 0 en el
-    // INSERT si el usuario abandonaba la fila sin tocar otros campos).
-    ActualizarLineaFactura(ConexionPrincipal, Lin, dmmFacturas.unqryTablaG,
-      'PRECIO_SALIDA_FACLIN',
-      Lin.FieldByName('PRECIO_SALIDA_FACLIN').Value);
-  finally
-    Resolver := nil;
-    Validador := nil;
-    FConsolidandoSku := False;
-  end;
+  if Assigned(FEditorLineas) then
+    FEditorLineas.AplicarEntrada(AEntrada);
 end;
 
 procedure TfrmMtoFacturasBase.AplicarLineaNoCatalogo(const ACodArt: string);
-var
-  Lin: TDataSet;
-  CodTarifa: string;
 begin
-  if FConsolidandoSku or (Trim(ACodArt) = '') or
-     (not Assigned(dmmFacturas)) then
-    Exit;
-  Lin := dmmFacturas.unqryLinFac;
-  if (Lin = nil) or (not Lin.Active) then
-    Exit;
-  if not (Lin.State in [dsInsert, dsEdit]) then
-    if Lin.CanModify then
-      Lin.Edit;
-  if not (Lin.State in [dsInsert, dsEdit]) then
-    Exit;
-  FConsolidandoSku := True;
-  try
-    CodTarifa := dmmFacturas.unqryTablaG.FindField(
-                   'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-    // Linea libre: el codigo tecleado se factura tal cual, sin SKU (no
-    // mueve stock) y sin datos de catalogo. El usuario teclea la
-    // descripcion, la cantidad y el precio.
-    Lin.FindField('CODIGO_ART_FACLIN').AsString := Trim(ACodArt);
-    if Assigned(Lin.FindField('CODIGO_UNIDAD_FACLIN')) then
-      Lin.FieldByName('CODIGO_UNIDAD_FACLIN').AsString := '';
-    if Assigned(Lin.FindField('DESCRIPCION_VARIACION_FACLIN')) then
-      Lin.FieldByName('DESCRIPCION_VARIACION_FACLIN').AsString := '';
-    // La descripcion es obligatoria (el BeforePost de la linea descarta
-    // las lineas sin ella): se precarga con el codigo y queda editable.
-    if Trim(Lin.FindField('DESCRIPCION_ARTICULO_FACLIN').AsString) = '' then
-      Lin.FindField('DESCRIPCION_ARTICULO_FACLIN').AsString :=
-        Trim(ACodArt);
-    // Fiscalidad por defecto: IVA normal si la linea no trae tipo.
-    if Trim(Lin.FindField('TIPO_IVA_ARTICULO_FACLIN').AsString) = '' then
-      Lin.FindField('TIPO_IVA_ARTICULO_FACLIN').AsString := 'N';
-    Lin.FindField('CODIGO_TAR_FACLIN').AsString := CodTarifa;
-    Lin.FindField('ESIMP_INCL_TARIFA_FACLIN').AsString :=
-      dmmFacturas.unqryTablaG.FindField(
-        'ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString;
-    Lin.FindField('PORCENTAJE_DTO_FACLIN').AsFloat := 0;
-    Lin.FindField('PRECIO_DTO_FACLIN').AsFloat := 0;
-    // Sin tarifa aplicable: precios a 0 hasta que el usuario los ponga.
-    Lin.FindField('PRECIO_SALIDA_FACLIN').AsFloat := 0;
-    Lin.FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat := 0;
-    Lin.FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat := 0;
-    if Lin.FindField('CANTIDAD_FACLIN').AsFloat = 0 then
-      Lin.FindField('CANTIDAD_FACLIN').AsFloat := 1;
-    // Recalculo de la linea y de los totales fiscales de la cabecera.
-    ActualizarLineaFactura(ConexionPrincipal, Lin, dmmFacturas.unqryTablaG,
-      'PRECIO_SALIDA_FACLIN',
-      Lin.FieldByName('PRECIO_SALIDA_FACLIN').Value);
-  finally
-    FConsolidandoSku := False;
-  end;
+  if Assigned(FEditorLineas) then
+    FEditorLineas.AplicarLineaNoCatalogo(ACodArt);
 end;
 
 procedure TfrmMtoFacturasBase.MostrarResultadoOperacion(
@@ -3932,9 +3279,11 @@ begin
   SenalarCampoValidacion(AError.Campo);
 end;
 
-procedure TfrmMtoFacturasBase.SenalarCampoValidacion(
+procedure TControladorFacturas.SenalarCampoValidacion(
   ACampo: TCampoValidacionFac);
 begin
+  with FAnfitrion do
+  begin
   case ACampo of
     cvfNinguno:
     begin
@@ -3986,20 +3335,29 @@ begin
     cvfTipoIva:
       pcDetail.ActivePage := tsLineasFactura;
   end;
+  end;
 end;
 
-procedure TfrmMtoFacturasBase.NuevaFacturaDesdeInsert(Sender: TObject);
+procedure TControladorFacturas.NuevaFacturaDesdeInsert(Sender: TObject);
 begin
+  with FAnfitrion do
+  begin
   sbNuevaFacturaClick(Sender);
+  end;
 end;
 
-procedure TfrmMtoFacturasBase.SeriesCambiadasDesdeDM(Sender: TObject);
+procedure TControladorFacturas.SeriesCambiadasDesdeDM(Sender: TObject);
 begin
+  with FAnfitrion do
+  begin
   ActualizarComboSeries;
+  end;
 end;
 
-procedure TfrmMtoFacturasBase.AplicarEdicionPreciosLinea(Sender: TObject);
+procedure TControladorFacturas.AplicarEdicionPreciosLinea(Sender: TObject);
 begin
+  with FAnfitrion do
+  begin
   if not Assigned(dmmFacturas) then
     Exit;
   with dmmFacturas.dsLinFac do
@@ -4027,56 +3385,19 @@ begin
       end;
     end;
   end;
+  end;
 end;
 
-function TfrmMtoFacturasBase.PorcentajeIvaFactura(
-  const ATipoIva: string): Double;
-begin
-  // Delegado en la comun (misma convencion PORCENTAJE_IVAx_FAC).
-  Result := 0;
-  if (dmmFacturas <> nil) and dmmFacturas.unqryTablaG.Active then
-    Result := PorcentajeIvaCabecera(dmmFacturas.unqryTablaG, 'FAC',
-                                    ATipoIva);
-end;
-
-function TfrmMtoFacturasBase.PrecioSkuTallas(const ACodigoArticulo,
+function TControladorFacturas.PrecioSkuTallas(const ACodigoArticulo,
   ACodigoSku: string): Double;
-var
-  Resolver: IArticulosResolver;
-  Datos: TArticuloDatos;
-  Precio: TArticuloPrecio;
-  sTarifa: string;
-  dFecha: TDateTime;
-  rPorIva: Double;
 begin
-  Result := 0;
-  if (dmmFacturas <> nil) and dmmFacturas.unqryTablaG.Active then
+  with FAnfitrion do
   begin
-    sTarifa := dmmFacturas.unqryTablaG.
-                 FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-    dFecha := Date;
-    if not dmmFacturas.unqryTablaG.FieldByName('FECHA_FAC').IsNull then
-      dFecha := dmmFacturas.unqryTablaG.
-                  FieldByName('FECHA_FAC').AsDateTime;
-    Resolver := CrearResolverArticulos(
-      dmmFacturas.unqryTablaG.Connection);
-    try
-      Datos := Resolver.ResolverDatos(ACodigoArticulo, ACodigoSku,
-                                      sTarifa, dFecha);
-      if Datos.Encontrado then
-      begin
-        Precio := Datos.PrecioPedido;
-        rPorIva := PorcentajeIvaFactura(Datos.TipoIVA);
-        // FieldPrecioBase de la factura es el PVP C/IVA de la linea:
-        // misma conversion que AplicarArticuloFactura pero a la inversa.
-        if Precio.EsImpIncl then
-          Result := Precio.PrecioFinal
-        else
-          Result := PrecioConIvaDesdeSinIva(Precio.PrecioFinal, rPorIva);
-      end;
-    finally
-      Resolver := nil;
-    end;
+  Result := 0;
+  if Assigned(FEditorLineas) then
+    Result := FEditorLineas.PrecioSku(
+      ACodigoArticulo,
+      ACodigoSku);
   end;
 end;
 
@@ -4092,6 +3413,126 @@ begin
   tsLineasFactura.Caption := SCaptionTabLineasBorradorTallasHoriz;
 end;
 
+procedure TfrmMtoFacturasBase.ActualizarBloqueoEdicion;
+begin
+  FControlador.ActualizarBloqueoEdicion;
+end;
+
+procedure TfrmMtoFacturasBase.AplicarEdicionPreciosLinea(
+  Sender: TObject);
+begin
+  FControlador.AplicarEdicionPreciosLinea(Sender);
+end;
+
+procedure TfrmMtoFacturasBase.AplicarOrigenCobros;
+begin
+  FControlador.AplicarOrigenCobros;
+end;
+
+procedure TfrmMtoFacturasBase.
+  btnCODIGO_EMPRESA_FACTURAPropertiesEditValueChanged(
+  Sender: TObject);
+begin
+  inherited;
+  FControlador.
+    btnCODIGO_EMPRESA_FACTURAPropertiesEditValueChanged(Sender);
+end;
+
+procedure TfrmMtoFacturasBase.btnConsolidarClick(Sender: TObject);
+begin
+  FControlador.btnConsolidarClick(Sender);
+end;
+
+procedure TfrmMtoFacturasBase.btnGenerarRecibosClick(Sender: TObject);
+begin
+  inherited;
+  FControlador.btnGenerarRecibosClick(Sender);
+end;
+
+procedure TfrmMtoFacturasBase.btnReciboPagadoClick(Sender: TObject);
+begin
+  inherited;
+  FControlador.btnReciboPagadoClick(Sender);
+end;
+
+procedure TfrmMtoFacturasBase.btnVolverBorradorClick(Sender: TObject);
+begin
+  FControlador.btnVolverBorradorClick(Sender);
+end;
+
+procedure TfrmMtoFacturasBase.cbbTARIFA_ARTICULOS_CLIENTESPropertiesChange(
+  Sender: TObject);
+begin
+  inherited;
+  FControlador.cbbTARIFA_ARTICULOS_CLIENTESPropertiesChange(Sender);
+end;
+
+procedure TfrmMtoFacturasBase.chkDescripcion_ampliadaPropertiesChange(
+  Sender: TObject);
+begin
+  inherited;
+  FControlador.chkDescripcion_ampliadaPropertiesChange(Sender);
+end;
+
+procedure TfrmMtoFacturasBase.ConstruirModoEntrada;
+begin
+  FControlador.ConstruirModoEntrada;
+end;
+
+procedure TfrmMtoFacturasBase.CrearTablaPrincipal;
+begin
+  if not Assigned(FControlador) then
+    FControlador := TControladorFacturas.Create(Self);
+  InicializarDocumento(
+    CrearConfiguracionDocumento(tdFactura, sdVenta));
+  AsignarVistaLineasDocumento(tvLineasFactura);
+  inherited;
+  FControlador.CrearTablaPrincipal;
+end;
+
+procedure TfrmMtoFacturasBase.dsTablaGDataChange(
+  Sender: TObject; Field: TField);
+begin
+  FControlador.dsTablaGDataChange(Sender, Field);
+end;
+
+procedure TfrmMtoFacturasBase.dsTablaGStateChange(Sender: TObject);
+begin
+  inherited;
+  FControlador.dsTablaGStateChange(Sender);
+end;
+
+procedure TfrmMtoFacturasBase.EjecutarOperacionFiscal(
+  const ATipoOperacion, AAccion: string);
+begin
+  FControlador.EjecutarOperacionFiscal(
+    ATipoOperacion,
+    AAccion);
+end;
+
+procedure TfrmMtoFacturasBase.GuardarPendienteAntesDeImprimir;
+begin
+  FControlador.GuardarPendienteAntesDeImprimir;
+end;
+
+procedure TfrmMtoFacturasBase.RecalcLineaFacturaSegura(
+  Sender: TObject);
+begin
+  FControlador.RecalcLineaFacturaSegura(Sender);
+end;
+
+procedure TfrmMtoFacturasBase.sbImprimirClick(Sender: TObject);
+begin
+  inherited;
+  FControlador.sbImprimirClick(Sender);
+end;
+
+procedure TfrmMtoFacturasBase.SenalarCampoValidacion(
+  ACampo: TCampoValidacionFac);
+begin
+  FControlador.SenalarCampoValidacion(ACampo);
+end;
+
 procedure TfrmMtoFacturasBase.PcDetailChange(Sender: TObject);
 begin
   if not Assigned(dmmFacturas) then Exit;
@@ -4100,7 +3541,7 @@ begin
   // AbrirDetalles por ser la pestaña por defecto y la mas usada.
   if pcDetail.ActivePage = tsRecibos then
   begin
-    if EsVentaMayorNormal then
+    if FControlador.EsVentaMayorNormal then
       dmmFacturas.AsegurarEfectosVentaAbierta
     else
       dmmFacturas.AsegurarRecibosAbierta;

@@ -267,6 +267,8 @@ uses
   inLibData,
   inLibVerifactu,
   inLibDocumentoFiscal,
+  inLibDocumento,
+  inLibDocumentoIntf,
   inLibArticulosValidadorIntf,
   UniDataArticulosValidadorRepositorio,
   inLibLicenciaAplicacion,
@@ -1742,7 +1744,9 @@ begin
       Params.CreateParam(ftString, 'pUSUARIOMODIF', ptInput);
       ParamByName('pserie').AsString :=
                                 unqryTablaG.FindField('SERIE_FAC').AsString;
-      ParamByName('ptipodoc').AsString :=  'FC';
+      ParamByName('ptipodoc').AsString :=
+        CrearConfiguracionDocumento(
+          tdFactura, sdVenta).TipoContador;
       ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
       ParamByName('pEMPRESA_CONTADOR').AsString :=
                        unqryTablaG.FindField('CODIGO_EMP_FAC').AsString;
@@ -2356,7 +2360,9 @@ begin
     if ExisteSerieEmpresa(
          FieldByName(fseriefac).AsString,
          FieldByName(fcodemp).AsString,
-         'FC') then
+         CrearConfiguracionDocumento(
+           tdFactura,
+           sdVenta).TipoContador) then
     begin
       raise EValidacionFactura.Create(
         SErrorSerieFacturaOtraEmpresa,

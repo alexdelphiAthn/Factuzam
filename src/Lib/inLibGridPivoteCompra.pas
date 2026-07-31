@@ -50,7 +50,8 @@ uses
   cxGridTableView, cxGridDBTableView, cxGrid,
   inLibGridTallasInline,
   inLibAtributosPaleta,
-  inLibContextoSesionIntf;
+  inLibContextoSesionIntf,
+  inLibGridPivoteCompraPersistenciaIntf;
 
 type
   // Config inmutable que el form construye una vez y pasa al constructor.
@@ -161,6 +162,7 @@ type
     FOrigColIndexCol     : Integer;
     FOrigColIndexColProv : Integer;
     FAlturaFilaOriginal  : Integer;
+    FRepositorio         : IRepositorioGridPivoteCompra;
     procedure FilterRecord(DataSet: TDataSet; var Accept: Boolean);
     function  GetSerieNumeroActivos(out ASerie, ANumero: string): Boolean;
     function  GetLineaActiva(out ALinea: Integer;
@@ -305,6 +307,20 @@ constructor TGridPivoteCompra.Create(const ACfg: TGridPivoteCompraConfig);
 begin
   inherited Create;
   FCfg := ACfg;
+  FRepositorio := TFabricaRepositorioGridPivoteCompra.Crear(ACfg.Conexion);
+  FRepositorio.Configurar(
+    ACfg.TablaLineas,
+    ACfg.FieldSerieLin,
+    ACfg.FieldNumeroLin,
+    ACfg.FieldLinea,
+    ACfg.FieldArt,
+    ACfg.FieldSku,
+    ACfg.FieldCantidad,
+    ACfg.FieldCantidadRecibida,
+    ACfg.FieldIdAcPivot,
+    ACfg.FieldAlmacen,
+    ACfg.FieldColorTexto,
+    ACfg.MaxColumnasTallas);
   FActivo                  := False;
   FExpandido               := False;
   FPivotLineasRepr         := TList<Integer>.Create;
@@ -364,6 +380,7 @@ begin
   FreeAndNil(FPivotSkuPrefijo);
   FreeAndNil(FPivotVarSku);
   FreeAndNil(FPivotSinTalla);
+  FRepositorio := nil;
   inherited;
 end;
 
@@ -412,9 +429,9 @@ function TGridPivoteCompra.ResolverAvColorBasico(
   const ACodigoAtbColor: string; out AIdAv: Integer;
   out AValorAv, ANombreColor, AMensaje: string): Boolean;
 var
-  q      : TUniQuery;
-  iIdAtb : Integer;
-  sCodigo: string;
+  iIdAtb     : Integer;
+  sCodigo    : string;
+  bTieneBasico: Boolean;
 begin
   Result := False;
   AIdAv := 0;
@@ -428,193 +445,89 @@ begin
     AMensaje := SErrorConexionResolverColorCompra
   else
   begin
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := FCfg.Conexion;
-      q.SQL.Text :=
-        'SELECT ID_ATB, NOMBRE_ATB ' +
-        '  FROM fza_atributos_basicos ' +
-        ' WHERE ID_VA_ATB = ''CO'' ' +
-        '   AND CODIGO_ATB = :cod ' +
-        '   AND COALESCE(ESACTIVO_ATB, ''S'') = ''S'' ' +
-        ' LIMIT 1';
-      q.ParamByName('cod').AsString := sCodigo;
-      q.Open;
-      if q.IsEmpty then
-        AMensaje := Format(SErrorColorBasicoCompraNoExiste, [sCodigo])
-      else
+    if not FRepositorio.BuscarColorBasico(
+      sCodigo,
+      iIdAtb,
+      ANombreColor) then
+      AMensaje := Format(SErrorColorBasicoCompraNoExiste, [sCodigo])
+    else
+    begin
+      AValorAv := sCodigo;
+      if FRepositorio.BuscarValorColor(
+        AValorAv,
+        AIdAv,
+        bTieneBasico) then
       begin
-        iIdAtb := q.FieldByName('ID_ATB').AsInteger;
-        ANombreColor := q.FieldByName('NOMBRE_ATB').AsString;
-        AValorAv := sCodigo;
-        q.Close;
-        q.SQL.Text :=
-          'SELECT ID_AV, ID_ATB_AV ' +
-          '  FROM fza_atributos_valores ' +
-          ' WHERE ID_VA_AV = ''CO'' ' +
-          '   AND AV = :av ' +
-          ' LIMIT 1';
-        q.ParamByName('av').AsString := AValorAv;
-        q.Open;
-        if not q.IsEmpty then
-        begin
-          AIdAv := q.FieldByName('ID_AV').AsInteger;
-          if q.FieldByName('ID_ATB_AV').IsNull and (iIdAtb > 0) then
-          begin
-            q.Close;
-            q.SQL.Text :=
-              'UPDATE fza_atributos_valores ' +
-              '   SET ID_ATB_AV = :id_atb, INSTANTE_MODIF = NOW(), ' +
-              '       USUARIO_MODIF = :usuario ' +
-              ' WHERE ID_AV = :id_av';
-            q.ParamByName('id_atb').AsInteger := iIdAtb;
-            q.ParamByName('usuario').AsString :=
-              FCfg.ContextoSesion.Identidad.Usuario;
-            q.ParamByName('id_av').AsInteger := AIdAv;
-            q.Execute;
-          end;
-        end
-        else
-        begin
-          q.Close;
-          q.SQL.Text :=
-            'INSERT INTO fza_atributos_valores ' +
-            '  (ID_VA_AV, AV, DESCRIPCION_AV, ID_ATB_AV, ESACTIVO_AV, ' +
-            '   ORDEN_AV, INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, ' +
-            '   USUARIO_MODIF) ' +
-            'VALUES (''CO'', :av, :descripcion, :id_atb, ''S'', 0, ' +
-            '        NOW(), :usuario, NOW(), :usuario)';
-          q.ParamByName('av').AsString := AValorAv;
-          q.ParamByName('descripcion').AsString := ANombreColor;
-          q.ParamByName('id_atb').AsInteger := iIdAtb;
-          q.ParamByName('usuario').AsString :=
-            FCfg.ContextoSesion.Identidad.Usuario;
-          q.Execute;
-          q.SQL.Text := 'SELECT LAST_INSERT_ID() AS ID_AV';
-          q.Open;
-          if not q.IsEmpty then
-            AIdAv := q.FieldByName('ID_AV').AsInteger;
-        end;
-        Result := AIdAv > 0;
-        if not Result then
-          AMensaje := Format(SErrorResolverColorCompra, [sCodigo]);
-      end;
-    finally
-      FreeAndNil(q);
+        if (not bTieneBasico) and (iIdAtb > 0) then
+          FRepositorio.VincularValorColor(
+            AIdAv,
+            iIdAtb,
+            FCfg.ContextoSesion.Identidad.Usuario);
+      end
+      else
+        AIdAv := FRepositorio.InsertarValorColor(
+          AValorAv,
+          ANombreColor,
+          FCfg.ContextoSesion.Identidad.Usuario,
+          iIdAtb);
+      Result := AIdAv > 0;
+      if not Result then
+        AMensaje := Format(SErrorResolverColorCompra, [sCodigo]);
     end;
   end;
 end;
 
 function TGridPivoteCompra.ValidarPivotePosible(var AMensaje: string): Boolean;
 var
-  q           : TUniQuery;
+  q           : TDataSet;
   incidencias : TStringList;
   sSerie      : string;
   sNumero     : string;
 begin
   Result   := True;
   AMensaje := '';
-  if not GetSerieNumeroActivos(sSerie, sNumero) then Exit;
-  incidencias := TStringList.Create;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FCfg.Conexion;
-    // 1. Articulos con talla real pero sin sistema de tallas asignado
-    // en la linea. Los articulos con color y sin tallaje son pivotables:
-    // se muestran en una unica columna "Cantidad".
-    q.SQL.Text :=
-      'SELECT DISTINCT L.' + FCfg.FieldArt + ' AS ART ' +
-      '  FROM ' + FCfg.TablaLineas + ' L ' +
-      ' WHERE L.' + FCfg.FieldSerieLin  + ' = :SERIE ' +
-      '   AND L.' + FCfg.FieldNumeroLin + ' = :NUMERO ' +
-      '   AND (L.' + FCfg.FieldIdAcPivot + ' IS NULL ' +
-      '        OR L.' + FCfg.FieldIdAcPivot + ' = 0) ' +
-      '   AND EXISTS ( ' +
-      '         SELECT 1 FROM fza_atributos_sku SAT ' +
-      '          JOIN fza_atributos_valores AVT ' +
-      '            ON AVT.ID_AV = SAT.ID_AV_SA ' +
-      '           AND AVT.ID_VA_AV = ''TAL'' ' +
-      '         WHERE SAT.CODIGO_UNIDAD_SKU_SA = L.' + FCfg.FieldSku + ') ' +
-      ' ORDER BY ART';
-    q.ParamByName('SERIE').AsString  := sSerie;
-    q.ParamByName('NUMERO').AsString := sNumero;
-    q.Open;
-    while not q.Eof do
-    begin
-      incidencias.Add(Format(SErrorArticuloSinSistemaTallasPivote,
-        [q.FieldByName('ART').AsString]));
-      q.Next;
+  if GetSerieNumeroActivos(sSerie, sNumero) then
+  begin
+    incidencias := TStringList.Create;
+    q := nil;
+    try
+      q := FRepositorio.BuscarArticulosSinSistema(sSerie, sNumero);
+      while not q.Eof do
+      begin
+        incidencias.Add(Format(SErrorArticuloSinSistemaTallasPivote,
+          [q.FieldByName('ART').AsString]));
+        q.Next;
+      end;
+      FreeAndNil(q);
+      q := FRepositorio.BuscarSistemasConExceso(sSerie, sNumero);
+      while not q.Eof do
+      begin
+        incidencias.Add(Format(SErrorSistemaTallasSuperaMaximoPivote,
+          [q.FieldByName('ART').AsString,
+           q.FieldByName('SISTEMA').AsString,
+           q.FieldByName('N').AsInteger,
+           FCfg.MaxColumnasTallas]));
+        q.Next;
+      end;
+      FreeAndNil(q);
+      q := FRepositorio.BuscarSkusFueraSistema(sSerie, sNumero);
+      while not q.Eof do
+      begin
+        incidencias.Add(Format(SErrorSkuFueraSistemaTallasPivote,
+          [q.FieldByName('SKU').AsString,
+           q.FieldByName('ART').AsString,
+           q.FieldByName('TALLA').AsString]));
+        q.Next;
+      end;
+      if incidencias.Count > 0 then
+      begin
+        AMensaje := Format(SErrorActivarPivoteTallas, [incidencias.Text]);
+        Result := False;
+      end;
+    finally
+      FreeAndNil(q);
+      FreeAndNil(incidencias);
     end;
-    q.Close;
-    // 2. Sistemas con mas valores que MaxColumnasTallas. Subquery escalar
-    //    para evitar multiplicar al JOINear ACD directamente.
-    q.SQL.Text :=
-      'SELECT DISTINCT L.' + FCfg.FieldArt + ' AS ART, ' +
-      '       AC.NOMBRE_AC AS SISTEMA, ' +
-      '       (SELECT COUNT(*) FROM fza_atributos_conjuntos_det ACD ' +
-      '         WHERE ACD.ID_AC_ACD = L.' + FCfg.FieldIdAcPivot + ') AS N ' +
-      '  FROM ' + FCfg.TablaLineas + ' L ' +
-      '  JOIN fza_atributos_conjuntos AC ' +
-      '    ON AC.ID_AC = L.' + FCfg.FieldIdAcPivot + ' ' +
-      ' WHERE L.' + FCfg.FieldSerieLin  + ' = :SERIE ' +
-      '   AND L.' + FCfg.FieldNumeroLin + ' = :NUMERO ' +
-      '   AND L.' + FCfg.FieldIdAcPivot + ' > 0 ' +
-      '   AND (SELECT COUNT(*) FROM fza_atributos_conjuntos_det ACD ' +
-      '         WHERE ACD.ID_AC_ACD = L.' + FCfg.FieldIdAcPivot + ') > :NMAX ' +
-      ' ORDER BY ART';
-    q.ParamByName('SERIE').AsString  := sSerie;
-    q.ParamByName('NUMERO').AsString := sNumero;
-    q.ParamByName('NMAX').AsInteger  := FCfg.MaxColumnasTallas;
-    q.Open;
-    while not q.Eof do
-    begin
-      incidencias.Add(Format(SErrorSistemaTallasSuperaMaximoPivote,
-        [q.FieldByName('ART').AsString,
-         q.FieldByName('SISTEMA').AsString,
-         q.FieldByName('N').AsInteger,
-         FCfg.MaxColumnasTallas]));
-      q.Next;
-    end;
-    q.Close;
-    // 3. SKUs con talla "huerfana" (TAL no presente en el sistema
-    //    asignado a la linea).
-    q.SQL.Text :=
-      'SELECT DISTINCT L.' + FCfg.FieldSku + ' AS SKU, ' +
-      '       L.' + FCfg.FieldArt + ' AS ART, AV.AV AS TALLA ' +
-      '  FROM ' + FCfg.TablaLineas + ' L ' +
-      '  JOIN fza_atributos_sku SAT ' +
-      '    ON SAT.CODIGO_UNIDAD_SKU_SA = L.' + FCfg.FieldSku + ' ' +
-      '  JOIN fza_atributos_valores AV ' +
-      '    ON AV.ID_AV = SAT.ID_AV_SA ' +
-      '   AND AV.ID_VA_AV = ''TAL'' ' +
-      ' WHERE L.' + FCfg.FieldSerieLin  + ' = :SERIE ' +
-      '   AND L.' + FCfg.FieldNumeroLin + ' = :NUMERO ' +
-      '   AND L.' + FCfg.FieldIdAcPivot + ' > 0 ' +
-      '   AND NOT EXISTS ( ' +
-      '         SELECT 1 FROM fza_atributos_conjuntos_det ACD ' +
-      '          WHERE ACD.ID_AC_ACD = L.' + FCfg.FieldIdAcPivot + ' ' +
-      '            AND ACD.ID_AV_ACD = SAT.ID_AV_SA) ' +
-      ' ORDER BY ART, SKU';
-    q.ParamByName('SERIE').AsString  := sSerie;
-    q.ParamByName('NUMERO').AsString := sNumero;
-    q.Open;
-    while not q.Eof do
-    begin
-      incidencias.Add(Format(SErrorSkuFueraSistemaTallasPivote,
-        [q.FieldByName('SKU').AsString,
-         q.FieldByName('ART').AsString,
-         q.FieldByName('TALLA').AsString]));
-      q.Next;
-    end;
-    q.Close;
-    if incidencias.Count > 0 then
-    begin
-      AMensaje := Format(SErrorActivarPivoteTallas, [incidencias.Text]);
-      Result := False;
-    end;
-  finally
-    FreeAndNil(q);
-    FreeAndNil(incidencias);
   end;
 end;
 
@@ -891,7 +804,7 @@ end;
 
 procedure TGridPivoteCompra.CargarCachePivot;
 var
-  q          : TUniQuery;
+  q          : TDataSet;
   dictRepr   : TDictionary<string,Integer>;
   sSerie     : string;
   sNumero    : string;
@@ -905,8 +818,6 @@ var
   rRecibida  : Double;
   iLineaRepr : Integer;
   iKeyPivot  : Int64;
-  sSelectRecibida: string;
-  bTieneRecibida: Boolean;
   sSku, sAlmLin, sAlmCab, sAlmEfe, sLineaRaw, sVarSku: string;
 begin
   FPivotLineasRepr.Clear;
@@ -927,11 +838,6 @@ begin
   FPivotSinTalla.Clear;
   FPivotMaxAvTalla := 0;
   if not GetSerieNumeroActivos(sSerie, sNumero) then Exit;
-  bTieneRecibida := FCfg.FieldCantidadRecibida <> '';
-  if bTieneRecibida then
-    sSelectRecibida := ', IFNULL(L.' + FCfg.FieldCantidadRecibida + ', 0) AS RECIBIDA '
-  else
-    sSelectRecibida := ', 0 AS RECIBIDA ';
   // Almacen de cabecera para fallback cuando la linea no lleva el suyo.
   sAlmCab := '';
   if (FCfg.FieldAlmacenMaster <> '') and Assigned(FCfg.SourceMaster) and
@@ -939,69 +845,9 @@ begin
      and (not FCfg.SourceMaster.DataSet.IsEmpty) then
     sAlmCab := FCfg.SourceMaster.DataSet.FieldByName(FCfg.FieldAlmacenMaster).AsString;
   dictRepr := TDictionary<string,Integer>.Create;
-  q := TUniQuery.Create(nil);
+  q := nil;
   try
-    q.Connection := FCfg.Conexion;
-    // JOINs directos a fza_atributos_sku/valores/basicos (la vista
-    // vi_atributos_sku_basico es lenta por sus muchos LEFT JOIN).
-    q.SQL.Text :=
-      'SELECT L.' + FCfg.FieldLinea + ' AS LINEA, ' +
-      '       L.' + FCfg.FieldArt + ' AS ART, ' +
-      '       COALESCE(L.' + FCfg.FieldIdAcPivot + ', 0) AS ID_AC, ' +
-      '       COALESCE(AVC.ID_AV, 0) AS COLOR_AV, ' +
-      // COLOR_TXT: texto del COLOR DEL SKU (AVC.AV, p.ej. "VERDE"). El
-      // cuadradito visual lo aporta CODIGO_ATB via lookup HEX. Asi el
-      // usuario ve la etiqueta del SKU y a su lado el cuadradito del
-      // basico que le aplica. Si no hay AV, fallback al nombre del
-      // basico y luego al parseo del codigo SKU.
-      '       COALESCE(NULLIF(AVC.AV, ''''), ATBC.NOMBRE_ATB, ' +
-      '                SUBSTRING_INDEX(SUBSTRING_INDEX(L.' + FCfg.FieldSku + ', ''/'', 2), ''/'', -1), ' +
-      '                '''') AS COLOR_TXT, ' +
-      // COLOR_PROV_TXT: el COLOR DEL PROVEEDOR (texto libre, p.ej. "011"
-      // o "AZUL TURQUESA PROV-XYZ"). Solo se lee si la config trae
-      // FieldColorTexto (pedidos lo tiene como COLOR_TEXTO_PEDCLIN).
-      // Vacio para albaranes.
-      IfThen(FCfg.FieldColorTexto <> '',
-             '       COALESCE(NULLIF(L.' + FCfg.FieldColorTexto + ', ''''), '''') AS COLOR_PROV_TXT, ',
-             '       '''' AS COLOR_PROV_TXT, ') +
-      '       COALESCE(ATBC.CODIGO_ATB, ' +
-      '                SUBSTRING_INDEX(SUBSTRING_INDEX(L.' + FCfg.FieldSku + ', ''/'', 2), ''/'', -1), ' +
-      '                '''') AS COLOR_COD, ' +
-      '       COALESCE(T.ID_AV_SA, 0) AS TALLA_AV, ' +
-      '       L.' + FCfg.FieldCantidad + ' AS CANTIDAD, ' +
-      '       L.' + FCfg.FieldSku + ' AS SKU, ' +
-      '       COALESCE(SKU0.CODIGO_VAR_SKU, ''TC'') AS VAR_SKU, ' +
-      '       L.' + FCfg.FieldAlmacen + ' AS ALM_LIN ' +
-      sSelectRecibida +
-      '  FROM ' + FCfg.TablaLineas + ' L ' +
-      '  LEFT JOIN fza_articulos_skus SKU0 ' +
-      '    ON SKU0.CODIGO_UNIDAD_SKU = L.' + FCfg.FieldSku + ' ' +
-      // SAC: filtramos a la fila del atributo CO para que la fza_
-      // atributos_sku no multiplique filas (un SKU tiene N atributos,
-      // y sin filtro el resto del SELECT se replicaba N veces; las
-      // sumas de CANTIDAD y RECIBIDA salian multiplicadas por N en el
-      // cache de pivote y la matriz se veia duplicada).
-      '  LEFT JOIN fza_atributos_sku SAC ' +
-      '    ON SAC.CODIGO_UNIDAD_SKU_SA = L.' + FCfg.FieldSku + ' ' +
-      '   AND EXISTS (SELECT 1 FROM fza_atributos_valores AV ' +
-      '                WHERE AV.ID_AV = SAC.ID_AV_SA ' +
-      '                  AND AV.ID_VA_AV = ''CO'') ' +
-      '  LEFT JOIN fza_atributos_valores AVC ' +
-      '    ON AVC.ID_AV = SAC.ID_AV_SA ' +
-      '   AND AVC.ID_VA_AV = ''CO'' ' +
-      '  LEFT JOIN fza_atributos_basicos ATBC ' +
-      '    ON ATBC.ID_ATB = AVC.ID_ATB_AV ' +
-      '  LEFT JOIN fza_atributos_sku T ' +
-      '    ON T.CODIGO_UNIDAD_SKU_SA = L.' + FCfg.FieldSku + ' ' +
-      '   AND EXISTS (SELECT 1 FROM fza_atributos_valores AVT ' +
-      '                WHERE AVT.ID_AV = T.ID_AV_SA ' +
-      '                  AND AVT.ID_VA_AV = ''TAL'') ' +
-      ' WHERE L.' + FCfg.FieldSerieLin  + ' = :SERIE ' +
-      '   AND L.' + FCfg.FieldNumeroLin + ' = :NUMERO ' +
-      ' ORDER BY ART, COLOR_AV, L.' + FCfg.FieldLinea;
-    q.ParamByName('SERIE').AsString  := sSerie;
-    q.ParamByName('NUMERO').AsString := sNumero;
-    q.Open;
+    q := FRepositorio.BuscarLineasPivote(sSerie, sNumero);
     while not q.Eof do
     begin
       iLinea    := q.FieldByName('LINEA').AsInteger;
@@ -1088,7 +934,6 @@ begin
       end;
       q.Next;
     end;
-    q.Close;
   finally
     FreeAndNil(q);
     FreeAndNil(dictRepr);
@@ -2222,7 +2067,6 @@ end;
 function TGridPivoteCompra.ResolverSkuCelda(AKey: Int64;
                                             out ASku: string): Boolean;
 var
-  q          : TUniQuery;
   iLineaRepr : Integer;
   iTallaAv   : Integer;
   iColorAv   : Integer;
@@ -2247,112 +2091,34 @@ begin
     Exit;
   if not FPivotColorAv.TryGetValue(iLineaRepr, iColorAv) then
     iColorAv := 0;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FCfg.Conexion;
-    if iColorAv > 0 then
-      q.SQL.Text :=
-        'SELECT sk.CODIGO_UNIDAD_SKU ' +
-        '  FROM fza_articulos_skus sk ' +
-        ' WHERE sk.CODIGO_ART_SKU = :art ' +
-        '   AND sk.ESACTIVO_SKU = ''S'' ' +
-        '   AND EXISTS (SELECT 1 FROM fza_atributos_sku sa ' +
-        '                WHERE sa.CODIGO_UNIDAD_SKU_SA = ' +
-        '                      sk.CODIGO_UNIDAD_SKU ' +
-        '                  AND sa.ID_AV_SA = :talla) ' +
-        '   AND EXISTS (SELECT 1 FROM fza_atributos_sku sa ' +
-        '                WHERE sa.CODIGO_UNIDAD_SKU_SA = ' +
-        '                      sk.CODIGO_UNIDAD_SKU ' +
-        '                  AND sa.ID_AV_SA = :color) ' +
-        ' LIMIT 1'
-    else
-      q.SQL.Text :=
-        'SELECT sk.CODIGO_UNIDAD_SKU ' +
-        '  FROM fza_articulos_skus sk ' +
-        ' WHERE sk.CODIGO_ART_SKU = :art ' +
-        '   AND sk.ESACTIVO_SKU = ''S'' ' +
-        '   AND EXISTS (SELECT 1 FROM fza_atributos_sku sa ' +
-        '                WHERE sa.CODIGO_UNIDAD_SKU_SA = ' +
-        '                      sk.CODIGO_UNIDAD_SKU ' +
-        '                  AND sa.ID_AV_SA = :talla) ' +
-        ' LIMIT 1';
-    q.ParamByName('art').AsString := sArt;
-    q.ParamByName('talla').AsInteger := iTallaAv;
-    if iColorAv > 0 then
-      q.ParamByName('color').AsInteger := iColorAv;
-    q.Open;
-    if not q.Eof then
-      ASku := q.FieldByName('CODIGO_UNIDAD_SKU').AsString;
-    Result := Trim(ASku) <> '';
-    if Result then
-      Exit;
-    q.Close;
-    sPrefijo := '';
-    FPivotSkuPrefijo.TryGetValue(iLineaRepr, sPrefijo);
-    if sPrefijo = '' then
-      sPrefijo := sArt;
-    q.SQL.Text :=
-      'SELECT AV ' +
-      '  FROM fza_atributos_valores ' +
-      ' WHERE ID_AV = :talla ' +
-      ' LIMIT 1';
-    q.ParamByName('talla').AsInteger := iTallaAv;
-    q.Open;
-    if not q.Eof then
-      sTalla := q.FieldByName('AV').AsString
-    else
-      sTalla := '';
-    q.Close;
-    if Trim(sTalla) = '' then
-      Exit;
-    ASku := sPrefijo + '/' + sTalla;
-    sVarSku := '';
-    FPivotVarSku.TryGetValue(iLineaRepr, sVarSku);
-    if sVarSku = '' then
-      sVarSku := 'TC';
-    q.SQL.Text :=
-      'INSERT IGNORE INTO fza_articulos_skus ' +
-      '  (CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ' +
-      '   ESACTIVO_SKU, INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, ' +
-      '   USUARIO_MODIF) ' +
-      'VALUES (:sku, :art, :varsku, ''S'', NOW(), :u, NOW(), :u)';
-    q.ParamByName('sku').AsString := ASku;
-    q.ParamByName('art').AsString := sArt;
-    q.ParamByName('varsku').AsString := sVarSku;
-    q.ParamByName('u').AsString :=
-      FCfg.ContextoSesion.Identidad.Usuario;
-    q.ExecSQL;
-    if iColorAv > 0 then
-    begin
-      q.SQL.Text :=
-        'INSERT IGNORE INTO fza_atributos_sku ' +
-        '  (CODIGO_UNIDAD_SKU_SA, ID_AV_SA, INSTANTE_ALTA, ' +
-        '   USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-        'VALUES (:sku, :av, NOW(), :u, NOW(), :u)';
-      q.ParamByName('sku').AsString := ASku;
-      q.ParamByName('av').AsInteger := iColorAv;
-      q.ParamByName('u').AsString :=
-        FCfg.ContextoSesion.Identidad.Usuario;
-      q.ExecSQL;
-    end;
-    q.SQL.Text :=
-      'INSERT IGNORE INTO fza_atributos_sku ' +
-      '  (CODIGO_UNIDAD_SKU_SA, ID_AV_SA, INSTANTE_ALTA, ' +
-      '   USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-      'VALUES (:sku, :av, NOW(), :u, NOW(), :u)';
-    q.ParamByName('sku').AsString := ASku;
-    q.ParamByName('av').AsInteger := iTallaAv;
-    q.ParamByName('u').AsString :=
-      FCfg.ContextoSesion.Identidad.Usuario;
-    q.ExecSQL;
-    Result := Trim(ASku) <> '';
-    if (Result) and (inLibLog.Log() <> nil) then
-      inLibLog.Log.LogInfo(Format(
-        'PivoteCompra.ResolverSku: creado/asegurado sku=%s',
-        [ASku]));
-  finally
-    FreeAndNil(q);
-  end;
+  ASku := FRepositorio.BuscarSku(sArt, iTallaAv, iColorAv);
+  Result := Trim(ASku) <> '';
+  if Result then
+    Exit;
+  sPrefijo := '';
+  FPivotSkuPrefijo.TryGetValue(iLineaRepr, sPrefijo);
+  if sPrefijo = '' then
+    sPrefijo := sArt;
+  sTalla := FRepositorio.BuscarValorAtributo(iTallaAv);
+  if Trim(sTalla) = '' then
+    Exit;
+  ASku := sPrefijo + '/' + sTalla;
+  sVarSku := '';
+  FPivotVarSku.TryGetValue(iLineaRepr, sVarSku);
+  if sVarSku = '' then
+    sVarSku := 'TC';
+  FRepositorio.AsegurarSkuConAtributos(
+    ASku,
+    sArt,
+    sVarSku,
+    FCfg.ContextoSesion.Identidad.Usuario,
+    iColorAv,
+    iTallaAv);
+  Result := Trim(ASku) <> '';
+  if (Result) and (inLibLog.Log() <> nil) then
+    inLibLog.Log.LogInfo(Format(
+      'PivoteCompra.ResolverSku: creado/asegurado sku=%s',
+      [ASku]));
 end;
 
 function TGridPivoteCompra.CrearLineaRealDesdeCelda(AKey: Int64;
@@ -2732,7 +2498,6 @@ end;
 function TGridPivoteCompra.CambiarColorLineaActiva(
   const ACodigoAtbColor: string; out AMensaje: string): Boolean;
 var
-  q            : TUniQuery;
   ds           : TDataSet;
   Campo        : TField;
   bLineaActual : Boolean;
@@ -2790,58 +2555,16 @@ begin
           sVarSku := '';
           FPivotVarSku.TryGetValue(iLinea, sVarSku);
           if sVarSku = '' then
-          begin
-            q := TUniQuery.Create(nil);
-            try
-              q.Connection := FCfg.Conexion;
-              q.SQL.Text :=
-                'SELECT COALESCE(NULLIF(TIPO_VARIACION_ART, ''''), ''TC'') ' +
-                '       AS VARSKU ' +
-                '  FROM fza_articulos ' +
-                ' WHERE CODIGO_ART_ART = :art ' +
-                ' LIMIT 1';
-              q.ParamByName('art').AsString := sArt;
-              q.Open;
-              if not q.IsEmpty then
-                sVarSku := q.FieldByName('VARSKU').AsString;
-            finally
-              FreeAndNil(q);
-            end;
-          end;
+            sVarSku := FRepositorio.BuscarTipoVariacion(sArt);
           if sVarSku = '' then
             sVarSku := 'TC';
           sSkuColor := sArt + '/' + sValorAv;
-          q := TUniQuery.Create(nil);
-          try
-            q.Connection := FCfg.Conexion;
-            q.SQL.Text :=
-              'INSERT INTO fza_articulos_skus ' +
-              '  (CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ' +
-              '   ESACTIVO_SKU, INSTANTE_ALTA, USUARIO_ALTA, ' +
-              '   INSTANTE_MODIF, USUARIO_MODIF) ' +
-              'VALUES (:sku, :art, :varsku, ''S'', NOW(), :usuario, ' +
-              '        NOW(), :usuario) ' +
-              'ON DUPLICATE KEY UPDATE ESACTIVO_SKU = ''S'', ' +
-              '  INSTANTE_MODIF = NOW(), USUARIO_MODIF = :usuario';
-            q.ParamByName('sku').AsString := sSkuColor;
-            q.ParamByName('art').AsString := sArt;
-            q.ParamByName('varsku').AsString := sVarSku;
-            q.ParamByName('usuario').AsString :=
-              FCfg.ContextoSesion.Identidad.Usuario;
-            q.Execute;
-            q.SQL.Text :=
-              'INSERT IGNORE INTO fza_atributos_sku ' +
-              '  (CODIGO_UNIDAD_SKU_SA, ID_AV_SA, INSTANTE_ALTA, ' +
-              '   USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-              'VALUES (:sku, :av, NOW(), :usuario, NOW(), :usuario)';
-            q.ParamByName('sku').AsString := sSkuColor;
-            q.ParamByName('av').AsInteger := iIdAv;
-            q.ParamByName('usuario').AsString :=
-              FCfg.ContextoSesion.Identidad.Usuario;
-            q.Execute;
-          finally
-            FreeAndNil(q);
-          end;
+          FRepositorio.AsegurarSkuColor(
+            sSkuColor,
+            sArt,
+            sVarSku,
+            FCfg.ContextoSesion.Identidad.Usuario,
+            iIdAv);
           if not (ds.State in dsEditModes) then
             ds.Edit;
           ds.FieldByName(FCfg.FieldSku).AsString := sSkuColor;

@@ -352,7 +352,7 @@ $eventosDelgados = @(
   },
   @{
     Ruta = 'src\Forms\inMtoFacturasBase.pas'
-    Metodo = 'TfrmMtoFacturasBase.btnConsolidarClick'
+    Metodo = 'TControladorFacturas.btnConsolidarClick'
     Delegado = 'Servicio.Consolidar'
   }
 )

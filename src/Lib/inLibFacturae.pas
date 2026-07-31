@@ -39,7 +39,8 @@ implementation
 
 uses
   System.Classes, System.IOUtils, System.Math, System.StrUtils, Data.DB,
-  DBAccess, inLibDocumentoFiscal, inLibXades, inLibMsgFacturas;
+  inLibDocumentoFiscal, inLibXades, inLibMsgFacturas,
+  inLibFacturaePersistenciaIntf;
 
 const
   cNsFacturae =
@@ -599,32 +600,15 @@ begin
   end;
 end;
 
-procedure CargarCertificadoEmpresa(AConn: TUniConnection;
-                                   const ACodigoEmpresa: string;
-                                   out ASerial, ATitular: string);
-var
-  Qry: TUniQuery;
+procedure CargarCertificadoEmpresa(
+  const ARepositorio: IRepositorioFacturae;
+  const ACodigoEmpresa: string;
+  out ASerial, ATitular: string);
 begin
-  ASerial := '';
-  ATitular := '';
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := AConn;
-    Qry.SQL.Text :=
-      ' SELECT CODIGO_CERTIFICADO_EMP, TITULAR_CERTIFICADO_EMP ' +
-      ' FROM fza_empresas ' +
-      ' WHERE CODIGO_EMP_EMP = :EMP ' +
-      ' LIMIT 1';
-    Qry.ParamByName('EMP').AsString := ACodigoEmpresa;
-    Qry.Open;
-    if not Qry.IsEmpty then
-    begin
-      ASerial := Trim(Qry.FieldByName('CODIGO_CERTIFICADO_EMP').AsString);
-      ATitular := Trim(Qry.FieldByName('TITULAR_CERTIFICADO_EMP').AsString);
-    end;
-  finally
-    FreeAndNil(Qry);
-  end;
+  ARepositorio.CargarCertificadoEmpresa(
+    ACodigoEmpresa,
+    ASerial,
+    ATitular);
   if (ASerial = '') and (ATitular = '') then
     raise Exception.Create(SErrorCertificadoFacturaeNoConfigurado);
 end;
@@ -831,160 +815,16 @@ begin
   Linea(ASb, 3, '</fe:PaymentDetails>');
 end;
 
-procedure GuardarXmlFactura(AConn: TUniConnection;
-                            const AContextoSesion:
-                            IContextoSesionAplicacion;
-                            const ASerie, ANumero,
-                            AXml: string);
-var
-  Qry: TUniQuery;
+procedure GuardarXmlFactura(
+  const ARepositorio: IRepositorioFacturae;
+  const AContextoSesion: IContextoSesionAplicacion;
+  const ASerie, ANumero, AXml: string);
 begin
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := AConn;
-    Qry.SQL.Text :=
-      ' UPDATE fza_facturas ' +
-      ' SET XML_FAC = :XML_FAC, USUARIO_MODIF = :USUARIO_MODIF ' +
-      ' WHERE SERIE_FAC = :SERIE ' +
-      '   AND NUMERO_FAC = :NUMERO';
-    Qry.ParamByName('XML_FAC').DataType := ftMemo;
-    Qry.ParamByName('XML_FAC').AsString := AXml;
-    Qry.ParamByName('USUARIO_MODIF').AsString :=
-      AContextoSesion.Identidad.Usuario;
-    Qry.ParamByName('SERIE').AsString := ASerie;
-    Qry.ParamByName('NUMERO').AsString := ANumero;
-    Qry.ExecSQL;
-  finally
-    FreeAndNil(Qry);
-  end;
-end;
-
-function ColumnaExiste(AConn: TUniConnection; const ATabla,
-                       ACampo: string): Boolean;
-var
-  Qry: TUniQuery;
-begin
-  Result := False;
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := AConn;
-    Qry.SQL.Text :=
-      ' SELECT COUNT(*) AS TOTAL ' +
-      ' FROM INFORMATION_SCHEMA.COLUMNS ' +
-      ' WHERE TABLE_SCHEMA = DATABASE() ' +
-      ' AND TABLE_NAME = :TABLA ' +
-      ' AND COLUMN_NAME = :CAMPO ';
-    Qry.ParamByName('TABLA').AsString := ATabla;
-    Qry.ParamByName('CAMPO').AsString := ACampo;
-    Qry.Open;
-    if not Qry.IsEmpty then
-      Result := Qry.FieldByName('TOTAL').AsInteger > 0;
-  finally
-    FreeAndNil(Qry);
-  end;
-end;
-
-function ColumnasDir3Disponibles(AConn: TUniConnection;
-                                 const ATabla, ASufijo: string): Boolean;
-begin
-  Result := ColumnaExiste(AConn, ATabla,
-    'CODIGO_OFICINA_CONTABLE_' + ASufijo);
-  if Result then
-    Result := ColumnaExiste(AConn, ATabla,
-      'CODIGO_ORGANO_GESTOR_' + ASufijo);
-  if Result then
-    Result := ColumnaExiste(AConn, ATabla,
-      'CODIGO_UNIDAD_TRAMITADORA_' + ASufijo);
-end;
-
-function ColumnasPersonaFisicaDisponibles(AConn: TUniConnection;
-                                          const ATabla, ASufijo: string):
-                                          Boolean;
-begin
-  Result := ColumnaExiste(AConn, ATabla,
-    'NOMBRE_PERSONA_CLIENTE_' + ASufijo);
-  if Result then
-    Result := ColumnaExiste(AConn, ATabla,
-      'APELLIDOS_PERSONA_CLIENTE_' + ASufijo);
-end;
-
-function SqlCabeceraFacturae(AConn: TUniConnection): string;
-var
-  bDir3Factura: Boolean;
-  bDir3Cliente: Boolean;
-  bCodigoPagoFacturae: Boolean;
-  bPersonaFacturae: Boolean;
-  bPersonaCliente: Boolean;
-begin
-  bDir3Factura := ColumnasDir3Disponibles(AConn, 'fza_facturas', 'FAC');
-  bDir3Cliente := ColumnasDir3Disponibles(AConn, 'fza_clientes', 'CLI');
-  bCodigoPagoFacturae := ColumnaExiste(AConn, 'fza_formas_pago',
-    'CODIGO_FACTURAE_FP');
-  bPersonaFacturae := ColumnasPersonaFisicaDisponibles(AConn,
-    'fza_facturas', 'FAC');
-  bPersonaCliente := ColumnasPersonaFisicaDisponibles(AConn,
-    'fza_clientes', 'CLI');
-  Result := ' SELECT f.* ';
-  if bCodigoPagoFacturae then
-    Result := Result +
-      ', fp.CODIGO_FACTURAE_FP AS CODIGO_FACTURAE_FP '
-  else
-    Result := Result + ', ''01'' AS CODIGO_FACTURAE_FP ';
-  if bDir3Cliente then
-  begin
-    Result := Result +
-      ', cli.CODIGO_OFICINA_CONTABLE_CLI AS CODIGO_OFICINA_CONTABLE_CLI ' +
-      ', cli.CODIGO_ORGANO_GESTOR_CLI AS CODIGO_ORGANO_GESTOR_CLI ' +
-      ', cli.CODIGO_UNIDAD_TRAMITADORA_CLI AS CODIGO_UNIDAD_TRAMITADORA_CLI ';
-  end;
-  if bPersonaCliente then
-  begin
-    Result := Result +
-      ', cli.NOMBRE_PERSONA_CLIENTE_CLI AS NOMBRE_PERSONA_CLIENTE_CLI ' +
-      ', cli.APELLIDOS_PERSONA_CLIENTE_CLI AS APELLIDOS_PERSONA_CLIENTE_CLI ';
-  end;
-  if (not bDir3Factura) and bDir3Cliente then
-  begin
-    Result := Result +
-      ', cli.CODIGO_OFICINA_CONTABLE_CLI AS CODIGO_OFICINA_CONTABLE_FAC ' +
-      ', cli.CODIGO_ORGANO_GESTOR_CLI AS CODIGO_ORGANO_GESTOR_FAC ' +
-      ', cli.CODIGO_UNIDAD_TRAMITADORA_CLI AS CODIGO_UNIDAD_TRAMITADORA_FAC ';
-  end
-  else if not bDir3Factura then
-  begin
-    Result := Result +
-      ', '''' AS CODIGO_OFICINA_CONTABLE_FAC ' +
-      ', '''' AS CODIGO_ORGANO_GESTOR_FAC ' +
-      ', '''' AS CODIGO_UNIDAD_TRAMITADORA_FAC ';
-  end;
-  if (not bPersonaFacturae) and bPersonaCliente then
-  begin
-    Result := Result +
-      ', cli.NOMBRE_PERSONA_CLIENTE_CLI AS NOMBRE_PERSONA_CLIENTE_FAC ' +
-      ', cli.APELLIDOS_PERSONA_CLIENTE_CLI AS APELLIDOS_PERSONA_CLIENTE_FAC ';
-  end
-  else if not bPersonaFacturae then
-  begin
-    Result := Result +
-      ', '''' AS NOMBRE_PERSONA_CLIENTE_FAC ' +
-      ', '''' AS APELLIDOS_PERSONA_CLIENTE_FAC ';
-  end;
-  Result := Result + ' FROM fza_facturas f ';
-  if bCodigoPagoFacturae then
-  begin
-    Result := Result +
-      ' LEFT JOIN fza_formas_pago fp ' +
-      ' ON fp.CODIGO_FP_FP = f.FORMA_PAGO_FAC ';
-  end;
-  if bDir3Cliente or bPersonaCliente then
-  begin
-    Result := Result +
-      ' LEFT JOIN fza_clientes cli ' +
-      ' ON cli.CODIGO_CLI_CLI = f.CODIGO_CLI_FAC ';
-  end;
-  Result := Result +
-    ' WHERE f.SERIE_FAC = :SERIE ' +
-    ' AND f.NUMERO_FAC = :NUMERO ';
+  ARepositorio.GuardarXml(
+    ASerie,
+    ANumero,
+    AContextoSesion.Identidad.Usuario,
+    AXml);
 end;
 
 function EmitirFacturae(AConn: TUniConnection;
@@ -993,8 +833,9 @@ function EmitirFacturae(AConn: TUniConnection;
                         const ASerie, ANumero, AArchivo: string):
                         TFacturaeResultado;
 var
-  QryCab: TUniQuery;
-  QryLin: TUniQuery;
+  QryCab: TDataSet;
+  QryLin: TDataSet;
+  Repositorio: IRepositorioFacturae;
   DatosCert: TXadesDatosCertificado;
   Opciones: TXadesOpciones;
   sSerial: string;
@@ -1007,26 +848,14 @@ begin
     raise Exception.Create(SErrorConexionFacturaeNoDisponible);
   if Trim(AArchivo) = '' then
     raise Exception.Create(SErrorFicheroSalidaFacturaeNoIndicado);
-  QryCab := TUniQuery.Create(nil);
-  QryLin := TUniQuery.Create(nil);
+  Repositorio := TFabricaRepositorioFacturae.Crear(AConn);
+  QryCab := nil;
+  QryLin := nil;
   try
-    QryCab.Connection := AConn;
-    QryCab.SQL.Text := SqlCabeceraFacturae(AConn);
-    QryCab.ParamByName('SERIE').AsString := ASerie;
-    QryCab.ParamByName('NUMERO').AsString := ANumero;
-    QryCab.Open;
-    QryLin.Connection := AConn;
-    QryLin.SQL.Text :=
-      ' SELECT * ' +
-      ' FROM fza_facturas_lineas ' +
-      ' WHERE SERIE_FAC_FACLIN = :SERIE ' +
-      '   AND NUMERO_FAC_FACLIN = :NUMERO ' +
-      ' ORDER BY LINEA_FACLIN';
-    QryLin.ParamByName('SERIE').AsString := ASerie;
-    QryLin.ParamByName('NUMERO').AsString := ANumero;
-    QryLin.Open;
+    QryCab := Repositorio.BuscarCabecera(ASerie, ANumero);
+    QryLin := Repositorio.BuscarLineas(ASerie, ANumero);
     ValidarFactura(QryCab, QryLin);
-    CargarCertificadoEmpresa(AConn,
+    CargarCertificadoEmpresa(Repositorio,
       CampoStr(QryCab, 'CODIGO_EMP_FAC'), sSerial, sTitular);
     sXmlBase := ConstruirXmlFacturae(QryCab, QryLin);
     Opciones := OpcionesXadesFacturae(IdFacturaeSeguro(ASerie, ANumero));
@@ -1036,7 +865,7 @@ begin
     if (sCarpeta <> '') and (not TDirectory.Exists(sCarpeta)) then
       TDirectory.CreateDirectory(sCarpeta);
     TFile.WriteAllText(AArchivo, sXmlFirmado, TEncoding.UTF8);
-    GuardarXmlFactura(AConn, AContextoSesion, ASerie, ANumero,
+    GuardarXmlFactura(Repositorio, AContextoSesion, ASerie, ANumero,
       sXmlFirmado);
     Result.Archivo := AArchivo;
     Result.NumeroSerieCertificado := DatosCert.NumeroSerie;

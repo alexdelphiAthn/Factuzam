@@ -32,7 +32,8 @@ uses
   inLibPreviewTicket,
   inLibDir,
   inLibContextoSesionIntf,
-  inLibParametrosIntf;
+  inLibParametrosIntf,
+  inLibMsgTickets;
 
 type
   TArqueoTicket = class
@@ -164,7 +165,8 @@ begin
     ATicket.EscribirLinea(
       Trim(oEmpresa.CodigoPostal + ' ' + oEmpresa.Poblacion));
     ATicket.EscribirLinea(oEmpresa.Provincia);
-    ATicket.EscribirLinea('CIF: ' + oEmpresa.Nif);
+    ATicket.EscribirLinea(
+      Format(STicketCif, [oEmpresa.Nif]));
   end;
 end;
 
@@ -185,19 +187,19 @@ begin
   if oContadores.Encontrado then
   begin
     ATicket.TextoColumnas(
-      'Primera operación:',
+      STicketPrimeraOperacion,
       oContadores.PrimeraOperacion);
     ATicket.TextoColumnas(
-      'Última operación:',
+      STicketUltimaOperacion,
       oContadores.UltimaOperacion);
   end;
   ATicket.LineaSeparadora('-');
   ATicket.TextoColumnas(
-    'OPERACIONES',
+    STicketOperaciones,
     IntToStr(AArqueo.CantidadVentas));
   if oContadores.Encontrado then
     ATicket.TextoColumnas(
-      'UNIDADES VTA.',
+      STicketUnidadesVenta,
       FmtImp(oContadores.Unidades));
 end;
 
@@ -212,47 +214,69 @@ begin
 
   ATicket.SaltarLineas(1);
   ATicket.Negrita(True);
-  ATicket.EscribirLinea('LÍNEAS DE ARTÍCULOS');
+  ATicket.EscribirLinea(STicketLineasArticulos);
   ATicket.Negrita(False);
-  ATicket.TextoColumnas('  BRUTO',           FmtImp(AArqueo.BrutoLineas));
+  ATicket.TextoColumnas(STicketBruto, FmtImp(AArqueo.BrutoLineas));
 
   ATicket.SaltarLineas(1);
   ATicket.Negrita(True);
-  ATicket.EscribirLinea('OPERACIONES');
+  ATicket.EscribirLinea(STicketOperaciones);
   ATicket.Negrita(False);
-  ATicket.TextoColumnas('  Ventas Normales',  FmtImp(AArqueo.VentasNormales));
-  ATicket.TextoColumnas('+ Ventas Préstamos', FmtImp(AArqueo.VentasPrestamos));
-  ATicket.TextoColumnas('− Devoluciones',     FmtImp(AArqueo.Devoluciones));
+  ATicket.TextoColumnas(
+    STicketVentasNormales,
+    FmtImp(AArqueo.VentasNormales));
+  ATicket.TextoColumnas(
+    STicketVentasPrestamos,
+    FmtImp(AArqueo.VentasPrestamos));
+  ATicket.TextoColumnas(
+    STicketDevoluciones,
+    FmtImp(AArqueo.Devoluciones));
   ATicket.Negrita(True);
-  ATicket.TextoColumnas('= TOTAL VENTAS',     FmtImp(AArqueo.TotalVentas));
-  ATicket.Negrita(False);
-
-  ATicket.SaltarLineas(1);
-  ATicket.Negrita(True);
-  ATicket.EscribirLinea('COBROS');
-  ATicket.Negrita(False);
-  ATicket.TextoColumnas('  Vales recogidos',   FmtImp(AArqueo.ValesRecogidos));
-  ATicket.TextoColumnas('+ Vales emitidos',    FmtImp(AArqueo.ValesEmitidos));
-  ATicket.TextoColumnas('+ Cobros clientes',   FmtImp(AArqueo.CobrosClientes));
-  ATicket.TextoColumnas('− Pendiente cobro',   FmtImp(AArqueo.PendienteCobro));
-  ATicket.Negrita(True);
-  ATicket.TextoColumnas('= Ingresos caja',     FmtImp(AArqueo.IngresosCaja));
+  ATicket.TextoColumnas(STicketTotalVentas, FmtImp(AArqueo.TotalVentas));
   ATicket.Negrita(False);
 
   ATicket.SaltarLineas(1);
   ATicket.Negrita(True);
-  ATicket.EscribirLinea('EFECTIVO');
+  ATicket.EscribirLinea(STicketCobros);
   ATicket.Negrita(False);
-  ATicket.TextoColumnas('  Eftvo. ingresos',   FmtImp(AArqueo.EfectivoIngresos));
-  ATicket.TextoColumnas('+ Efectivo entradas', FmtImp(AArqueo.EfectivoEntradas));
-  ATicket.TextoColumnas('− Efectivo salidas',  FmtImp(AArqueo.EfectivoSalidas));
-  ATicket.TextoColumnas('+ Efectivo anterior', FmtImp(AArqueo.EfectivoAnterior));
+  ATicket.TextoColumnas(
+    STicketValesRecogidos,
+    FmtImp(AArqueo.ValesRecogidos));
+  ATicket.TextoColumnas(
+    STicketValesEmitidos,
+    FmtImp(AArqueo.ValesEmitidos));
+  ATicket.TextoColumnas(
+    STicketCobrosClientes,
+    FmtImp(AArqueo.CobrosClientes));
+  ATicket.TextoColumnas(
+    STicketPendienteCobro,
+    FmtImp(AArqueo.PendienteCobro));
   ATicket.Negrita(True);
-  ATicket.TextoColumnas('= Efectivo en caja',  FmtImp(AArqueo.EfectivoCaja));
+  ATicket.TextoColumnas(STicketIngresosCaja, FmtImp(AArqueo.IngresosCaja));
   ATicket.Negrita(False);
-  ATicket.TextoColumnas('+ Otros (tarj/...)',  FmtImp(AArqueo.OtrosIngresos));
+
+  ATicket.SaltarLineas(1);
   ATicket.Negrita(True);
-  ATicket.TextoColumnas('= SALDO RECONTAR',    FmtImp(AArqueo.SaldoRecontar));
+  ATicket.EscribirLinea(STicketEfectivo);
+  ATicket.Negrita(False);
+  ATicket.TextoColumnas(
+    STicketEfectivoIngresos,
+    FmtImp(AArqueo.EfectivoIngresos));
+  ATicket.TextoColumnas(
+    STicketEfectivoEntradas,
+    FmtImp(AArqueo.EfectivoEntradas));
+  ATicket.TextoColumnas(
+    STicketEfectivoSalidas,
+    FmtImp(AArqueo.EfectivoSalidas));
+  ATicket.TextoColumnas(
+    STicketEfectivoAnterior,
+    FmtImp(AArqueo.EfectivoAnterior));
+  ATicket.Negrita(True);
+  ATicket.TextoColumnas(STicketEfectivoCaja, FmtImp(AArqueo.EfectivoCaja));
+  ATicket.Negrita(False);
+  ATicket.TextoColumnas(STicketOtrosIngresos, FmtImp(AArqueo.OtrosIngresos));
+  ATicket.Negrita(True);
+  ATicket.TextoColumnas(STicketSaldoRecontar, FmtImp(AArqueo.SaldoRecontar));
   ATicket.Negrita(False);
 end;
 
@@ -270,9 +294,11 @@ begin
       AArqueo);
     ATicket.SaltarLineas(1);
     ATicket.Negrita(True);
-    ATicket.EscribirLinea('DEVOLUCIONES CLIENTES');
+    ATicket.EscribirLinea(STicketDevolucionesClientes);
     ATicket.Negrita(False);
-    ATicket.TextoColumnas('  NETO ARTÍCULOS', FmtImp(AArqueo.Devoluciones));
+    ATicket.TextoColumnas(
+      STicketNetoArticulos,
+      FmtImp(AArqueo.Devoluciones));
     iLinea := 0;
     while iLinea < Length(aLineas) do
     begin
@@ -314,7 +340,7 @@ begin
     begin
       ATicket.SaltarLineas(1);
       ATicket.Negrita(True);
-      ATicket.EscribirLinea('RESUMEN NETO POR SECCIÓN');
+      ATicket.EscribirLinea(STicketResumenNetoSeccion);
       ATicket.Negrita(False);
       iLinea := 0;
       while iLinea < Length(aLineas) do
@@ -358,14 +384,14 @@ begin
   begin
     ATicket.SaltarLineas(1);
     ATicket.Negrita(True);
-    ATicket.EscribirLinea('RESUMEN VENTAS POR TEMPORADA');
+    ATicket.EscribirLinea(STicketResumenVentasTemporada);
     ATicket.Negrita(False);
     iLinea := 0;
     while iLinea < Length(aLineas) do
     begin
       ATicket.TextoColumnas(
         Format(
-          '%-20s %s uds',
+          STicketFormatoResumenTemporada,
           [Copy(aLineas[iLinea].Temporada, 1, 20),
            FormatFloat('0.##', aLineas[iLinea].Unidades)]),
         FmtImp(aLineas[iLinea].Neto));
@@ -388,14 +414,14 @@ begin
   begin
     ATicket.SaltarLineas(1);
     ATicket.Negrita(True);
-    ATicket.EscribirLinea('RESUMEN VENTAS POR EMPLEADO');
+    ATicket.EscribirLinea(STicketResumenVentasEmpleado);
     ATicket.Negrita(False);
     iLinea := 0;
     while iLinea < Length(aLineas) do
     begin
       ATicket.TextoColumnas(
         Format(
-          '%-12s  %3d ops',
+          STicketFormatoResumenEmpleado,
           [aLineas[iLinea].Empleado,
            aLineas[iLinea].Operaciones]),
         FmtImp(aLineas[iLinea].Neto));
@@ -418,14 +444,14 @@ begin
   begin
     ATicket.SaltarLineas(1);
     ATicket.Negrita(True);
-    ATicket.EscribirLinea('RESUMEN POR FORMA DE PAGO');
+    ATicket.EscribirLinea(STicketResumenFormaPago);
     ATicket.Negrita(False);
     iLinea := 0;
     while iLinea < Length(aLineas) do
     begin
       ATicket.TextoColumnas(
         Format(
-          '%-12s  %3d uds',
+          STicketFormatoResumenFormaPago,
           [aLineas[iLinea].Descripcion,
            aLineas[iLinea].Unidades]),
         FmtImp(aLineas[iLinea].Importe));
@@ -452,14 +478,20 @@ begin
   begin
     ATicket.SaltarLineas(1);
     ATicket.Negrita(True);
-    ATicket.EscribirLinea('RESUMEN VENTAS POR SERIE');
+    ATicket.EscribirLinea(STicketResumenVentasSerie);
     ATicket.Negrita(False);
     // El formato debe sumar exactamente N_CHAR_LIN (42) para que la columna
     // TOTAL acabe en el margen derecho, igual que el resto del ticket. Sin
     // espacio entre SERIE y BASE: la serie va a la izquierda y el importe a
     // la derecha, así no se pegan. 7+9+1+5+1+9+1+9 = 42.
-    ATicket.EscribirLinea(Format('%-7s%9s %5s %9s %9s',
-                                 ['SE', 'BASE IMP', '%IVA', 'CUOTA', 'TOTAL']));
+    ATicket.EscribirLinea(
+      Format(
+        '%-7s%9s %5s %9s %9s',
+        [STicketCabeceraSerie,
+         STicketCabeceraBaseImponible,
+         STicketCabeceraPorcentajeIva,
+         STicketCabeceraCuota,
+         STicketTotal]));
     iLinea := 0;
     while iLinea < Length(aLineas) do
     begin
@@ -526,18 +558,18 @@ begin
     Ticket.SaltarLineas(1);
     Ticket.Alinear(alCentro);
     Ticket.Negrita(True);
-    Ticket.EscribirLinea(Format('ARQUEO CAJA %s', [ACaja]));
-    Ticket.EscribirLinea('PERIODO SELECCIONADO');
-    Ticket.EscribirLinea(Format('DESDE %s',
+    Ticket.EscribirLinea(Format(STicketArqueoCaja, [ACaja]));
+    Ticket.EscribirLinea(STicketPeriodoSeleccionado);
+    Ticket.EscribirLinea(Format(STicketDesde,
       [FormatDateTime('dd/mm/yy hh:nn:ss', AFechaDesde)]));
-    Ticket.EscribirLinea(Format('HASTA %s',
+    Ticket.EscribirLinea(Format(STicketHasta,
       [FormatDateTime('dd/mm/yy hh:nn:ss', AFechaHasta)]));
     Ticket.Negrita(False);
     // Marca de reimpresión: el arqueo original ya se emitió en su día
     if ADuplicado then
     begin
       Ticket.Negrita(True);
-      Ticket.EscribirLinea('*** DUPLICADO ***');
+      Ticket.EscribirLinea(STicketDuplicado);
       Ticket.Negrita(False);
     end;
     Ticket.SaltarLineas(1);
@@ -638,36 +670,37 @@ begin
     Ticket.SaltarLineas(1);
     Ticket.Alinear(alCentro);
     Ticket.Negrita(True);
-    Ticket.EscribirLinea('CIERRE DE CAJA ' + AArqueo.Caja);
+    Ticket.EscribirLinea(
+      Format(STicketCierreCaja, [AArqueo.Caja]));
     Ticket.Negrita(False);
     // Marca de reimpresión del justificante de cierre
     if ADuplicado then
     begin
       Ticket.Negrita(True);
-      Ticket.EscribirLinea('*** DUPLICADO ***');
+      Ticket.EscribirLinea(STicketDuplicado);
       Ticket.Negrita(False);
     end;
     { Datos del cierre }
     Ticket.Alinear(alIzquierda);
-    Ticket.EscribirLinea('PERIODO CERRADO');
-    Ticket.TextoColumnas('Inicio:',
+    Ticket.EscribirLinea(STicketPeriodoCerrado);
+    Ticket.TextoColumnas(STicketInicio,
       FormatDateTime('dd/mm/yyyy hh:nn:ss', AArqueo.FechaDesde));
-    Ticket.TextoColumnas('Fin:',
+    Ticket.TextoColumnas(STicketFin,
       FormatDateTime('dd/mm/yyyy hh:nn:ss', AArqueo.FechaHasta));
-    Ticket.TextoColumnas('Ventas:',
+    Ticket.TextoColumnas(STicketVentas,
       IntToStr(AArqueo.CantidadVentas));
-    Ticket.TextoColumnas('Cierre por:',
+    Ticket.TextoColumnas(STicketCierrePor,
       AContextoSesion.Identidad.Usuario);
     // Vendedor (empleado de caja) que estampa el cierre; los arqueos
     // grabados antes de exigirlo pueden venir sin él
     if AVendedor <> '' then
-      Ticket.TextoColumnas('Vendedor:', AVendedor);
+      Ticket.TextoColumnas(STicketVendedor, AVendedor);
     Ticket.LineaSeparadora('=');
     { Desglose de billetes y monedas }
     if ADesgloseBilletes <> '' then
     begin
       Ticket.Negrita(True);
-      Ticket.EscribirLinea('BILLETES Y MONEDAS');
+      Ticket.EscribirLinea(STicketBilletesMonedas);
       Ticket.Negrita(False);
       slBilletes := TStringList.Create;
       try
@@ -695,25 +728,30 @@ begin
     end;
     { Efectivo sistema (desglose) }
     Ticket.Negrita(True);
-    Ticket.EscribirLinea('EFECTIVO SISTEMA');
+    Ticket.EscribirLinea(STicketEfectivoSistema);
     Ticket.Negrita(False);
-    Ticket.TextoColumnas('  Ventas:',
+    Ticket.TextoColumnas(STicketVentasSangrado,
       FmtImp(AArqueo.EfectivoIngresos));
-    Ticket.TextoColumnas('  + Entradas:',
+    Ticket.TextoColumnas(STicketEntradasSangrado,
       FmtImp(AArqueo.EfectivoEntradas));
-    Ticket.TextoColumnas('  - Gastos:',
+    Ticket.TextoColumnas(STicketGastosSangrado,
       FmtImp(AArqueo.EfectivoSalidas));
-    Ticket.TextoColumnas('  + Anterior:',
+    Ticket.TextoColumnas(STicketAnteriorSangrado,
       FmtImp(AArqueo.EfectivoAnterior));
-    Ticket.TextoColumnas('  = Total:',
+    Ticket.TextoColumnas(STicketTotalSangrado,
       FmtImp(AArqueo.EfectivoCaja));
     Ticket.LineaSeparadora;
     { Detalle por forma de pago: 3 columnas alineadas a la derecha
       sobre los 42 caracteres del ticket (14+14+14) }
     Ticket.Negrita(True);
-    Ticket.EscribirLinea('RECUENTO');
+    Ticket.EscribirLinea(STicketRecuento);
     Ticket.Negrita(False);
-    Ticket.EscribirLinea(Format('%14s%14s%14s', ['Sist.', 'Rec.', 'Dif.']));
+    Ticket.EscribirLinea(
+      Format(
+        '%14s%14s%14s',
+        [STicketSistemaAbreviado,
+         STicketRecuentoAbreviado,
+         STicketDiferenciaAbreviada]));
     for i := 0 to High(ALineas) do
     begin
       Ticket.EscribirLinea(ALineas[i].Descripcion);
@@ -726,39 +764,40 @@ begin
     Ticket.LineaSeparadora('=');
     { Totales }
     Ticket.Negrita(True);
-    Ticket.TextoColumnas('TOTAL SISTEMA:',
+    Ticket.TextoColumnas(STicketTotalSistema,
       FmtImp(ATotalSistema));
-    Ticket.TextoColumnas('TOTAL RECONTADO:',
+    Ticket.TextoColumnas(STicketTotalRecontado,
       FmtImp(ATotalRecuento));
-    Ticket.TextoColumnas('DIFERENCIA:',
+    Ticket.TextoColumnas(STicketDiferencia,
       FmtImp(ADiferencia));
     Ticket.Negrita(False);
     Ticket.LineaSeparadora;
     { Retirada }
     if ARetirada > 0 then
     begin
-      Ticket.TextoColumnas('RETIRADA:',
+      Ticket.TextoColumnas(STicketRetirada,
         FmtImp(ARetirada));
-      Ticket.TextoColumnas('  Destino:',
+      Ticket.TextoColumnas(STicketDestinoSangrado,
         AConceptoRetirada);
     end;
     { Dejo para mañana }
     Ticket.Negrita(True);
-    Ticket.TextoColumnas('DEJO EN CAJA:',
+    Ticket.TextoColumnas(STicketDejoCaja,
       FmtImp(AEfectivoDejado));
     Ticket.Negrita(False);
     { Observaciones }
     if AObservaciones <> '' then
     begin
       Ticket.LineaSeparadora;
-      Ticket.EscribirLinea('Obs: ' + AObservaciones);
+      Ticket.EscribirLinea(
+        Format(STicketObservaciones, [AObservaciones]));
     end;
     { Pie }
     Ticket.LineaSeparadora;
     Ticket.Alinear(alCentro);
     Ticket.EscribirLinea(
       FormatDateTime('dd/mm/yyyy hh:nn:ss', Now));
-    Ticket.EscribirLinea('Firma:');
+    Ticket.EscribirLinea(STicketFirma);
     Ticket.SaltarLineas(2);
     Ticket.LineaSeparadora('.');
     Ticket.SaltarLineas(1);

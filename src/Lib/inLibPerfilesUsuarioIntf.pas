@@ -2,14 +2,14 @@
 {                                                                              }
 {  Módulo:       inLibPerfilesUsuarioIntf                                      }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       24/07/2026                                                    }
+{ Versión:       2.0.0                                                         }
+{   Fecha:       31/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Contratos y estructuras para la persistencia de perfiles de usuario.      }
+{    Contratos segregados para los perfiles de usuario.                        }
 {******************************************************************************}
 unit inLibPerfilesUsuarioIntf;
 
@@ -38,15 +38,8 @@ type
 
   TPerfilList = TList<TPerfilItem>;
 
-  IPerfilesUsuario = interface
+  ILectorPerfilesUsuario = interface
     ['{76B2E17F-A962-4F37-8C33-72F44C8B63D7}']
-    procedure GrabarPerfil(
-      const AUsuarioGrupo, AClave, ASubclave, AValor: string;
-      const AValorTexto: WideString = '');
-    procedure GrabarPerfiles(const APerfiles: TPerfilList);
-    procedure EliminarPerfil(
-      const AUsuarioGrupo, AClave: string;
-      const ASubclave: string = '');
     function ObtenerValorPerfil(
       const AClave, ASubclave, AValorPredeterminado: string
     ): string;
@@ -54,7 +47,6 @@ type
       const AClave: string;
       const AValorPredeterminado: string = ''
     ): string;
-    procedure PrecargarPerfilesUsuario;
     function CargarPerfilFormulario(
       const AFormulario: string;
       out APerfil: TProfileDicc
@@ -63,16 +55,56 @@ type
       const AFormulario, AUsuario, AGrupo: string;
       out APerfil: TProfileDicc
     ): Boolean; overload;
+  end;
+
+  IEscritorPerfilesUsuario = interface
+    ['{1EC5C995-D03E-43CA-AC71-DE5E45F7D399}']
+    procedure GrabarPerfil(
+      const AUsuarioGrupo, AClave, ASubclave, AValor: string;
+      const AValorTexto: WideString = '');
+    procedure GrabarPerfiles(const APerfiles: TPerfilList);
+    procedure EliminarPerfil(
+      const AUsuarioGrupo, AClave: string;
+      const ASubclave: string = '');
+  end;
+
+  ICachePerfilesUsuario = interface
+    ['{E3DA791F-90CF-4BFA-81FD-4B0BFF4FABCC}']
+    procedure PrecargarPerfilesUsuario;
     procedure ResincronizarPerfilFormulario(const AFormulario: string);
     procedure InvalidarCachePerfiles;
   end;
 
-  IProveedorPerfilesUsuario = interface
-    ['{5D4A522A-54B3-40E5-A388-790D59C8E12E}']
-    function GetPerfilesUsuario: IPerfilesUsuario;
-    property PerfilesUsuario: IPerfilesUsuario read GetPerfilesUsuario;
+  TServiciosPerfilesUsuario = record
+    Lectura: ILectorPerfilesUsuario;
+    Escritura: IEscritorPerfilesUsuario;
+    Cache: ICachePerfilesUsuario;
   end;
 
+  IProveedorPerfilesUsuario = interface
+    ['{5D4A522A-54B3-40E5-A388-790D59C8E12E}']
+    function GetServiciosPerfilesUsuario: TServiciosPerfilesUsuario;
+    property ServiciosPerfilesUsuario: TServiciosPerfilesUsuario
+      read GetServiciosPerfilesUsuario;
+  end;
+
+function CrearServiciosPerfilesUsuario(
+  const ALectura: ILectorPerfilesUsuario;
+  const AEscritura: IEscritorPerfilesUsuario;
+  const ACache: ICachePerfilesUsuario
+): TServiciosPerfilesUsuario;
+
 implementation
+
+function CrearServiciosPerfilesUsuario(
+  const ALectura: ILectorPerfilesUsuario;
+  const AEscritura: IEscritorPerfilesUsuario;
+  const ACache: ICachePerfilesUsuario
+): TServiciosPerfilesUsuario;
+begin
+  Result.Lectura := ALectura;
+  Result.Escritura := AEscritura;
+  Result.Cache := ACache;
+end;
 
 end.

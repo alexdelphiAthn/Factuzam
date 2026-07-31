@@ -863,7 +863,7 @@ begin
   begin
     var sDescripcion := Trim(FindField('DESCRIPCION_ART').AsString);
     if (sDescripcion = '') or
-       SimbolosProhibidos(sDescripcion, PerfilesUsuario) then
+       SimbolosProhibidos(sDescripcion, PerfilesLectura) then
     begin
       raise ERangeError.CreateFmt(SErrorDescripcionArticulo,
                                  [FindField('DESCRIPCION_ART').AsString]);

@@ -75,3 +75,15 @@ DESARROLLOS EN CURSO/refactorizacion_fase_sql2_3c_resultados.md.
 Resultado de SQL-2.3d documentado en
 DESARROLLOS EN CURSO/refactorizacion_fase_sql2_3d_resultados.md.
 
+_____________________________________________________________
+
+PENDIENTE TÉCNICO - SQL EN FORMULARIO: COLA VERIFACTU (31/07/2026)
+TfrmMtoFacturasBase.PuedeConsultarEstadoColaVerifactu consulta
+INFORMATION_SCHEMA.COLUMNS con SQL literal dentro del formulario para
+comprobar el esquema de fza_verifactu_cola antes de componer el listado.
+Moverla al servicio de cola Verifactu (CrearServicioVerifactuColaUniDAC,
+implementación UniData*) como comprobación de esquema del propio
+contrato, y que el formulario pregunte al servicio. No abordarlo dentro
+del fascículo F2 de la Fase 3 (en curso por un hilo concurrente):
+fascículo propio, sin mezclar con la extracción de reglas.
+

@@ -71,11 +71,11 @@ begin
     sCodigo := Trim(FindField('IVA_IVAGRP').AsString);
     sDescripcion := Trim(FindField('DESCRIPCION_IVA_IVAGRP').AsString);
     if (sDescripcion = '') or
-       SimbolosProhibidos(sDescripcion, PerfilesUsuario) then
+       SimbolosProhibidos(sDescripcion, PerfilesLectura) then
       raise ERangeError.CreateFmt(SErrorDescripcionGrupoIva,
                                   [sDescripcion]);
     if (sCodigo = '') or
-       SimbolosProhibidos(sCodigo, PerfilesUsuario) then
+       SimbolosProhibidos(sCodigo, PerfilesLectura) then
       raise ERangeError.CreateFmt(SErrorCodigoGrupoIva,
                                   [sCodigo]);
     if (FindField('ESDEFAULT_IVA_IVAGRP').AsString = 'S') then

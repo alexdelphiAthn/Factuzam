@@ -295,6 +295,8 @@ uses
   inLibAtributosPaleta,
   inLibGenBusq, inLibUser,
   inLibArticulosValidadorIntf,
+  inLibPerfilesUsuarioIntf,
+  inLibStockCeldaDocumento,
   inMtoModalOperacionesCajaSku, inLibMsgArticulos, inLibMsgCaja,
   inLibMsgComun, inLibMsgVentas;
 
@@ -394,7 +396,8 @@ var
 begin
   Formulario := BuscarStockConsulta;
   if Formulario <> nil then
-    Formulario.AsignarPerfilesUsuario(nil);
+    Formulario.AsignarPerfilesUsuario(
+      CrearServiciosPerfilesUsuario(nil, nil, nil));
 end;
 
 procedure TfrmStockConsulta.FormCreate(Sender: TObject);
@@ -553,7 +556,7 @@ begin
     GetFormUserProfile(dic, 'frmStockConsulta',
                        IdentidadSesion.Usuario,
                        IdentidadSesion.Grupo,
-                       PerfilesUsuario);
+                       PerfilesLectura);
     FModoDesglosado := SameText(
       GetPerfilValueDef(dic, 'ModoDesglosado', 'N'), 'S');
   finally
@@ -564,8 +567,8 @@ end;
 
 procedure TfrmStockConsulta.GuardarModoUsuario;
 begin
-  if Assigned(PerfilesUsuario) then
-    PerfilesUsuario.GrabarPerfil(
+  if Assigned(PerfilesEscritura) then
+    PerfilesEscritura.GrabarPerfil(
       IdentidadSesion.Usuario,
       'frmStockConsulta',
       'ModoDesglosado',
@@ -1252,141 +1255,88 @@ var
   rec      : TcxCustomGridRecord;
   col      : TcxGridDBColumn;
   vCantidad: Variant;
-  sCampo   : string;
-  sGrupo   : string;
-  sColor   : string;
-  sTalla   : string;
-  sAlm     : string;
-  iTalla   : Integer;
-  alms     : TArray<string>;
-  colores  : TArray<string>;
+  i        : Integer;
+  sSku     : string;
+  Estado   : TEstadoCeldaStock;
+  Celda    : TCeldaDocumentoResuelta;
+  Linea    : TLineaCeldaStock;
 begin
   Result := False;
   ALinea.Clear;
   AMensaje := '';
-  rec := nil;
+  // Aqui solo se lee el grid; las decisiones (guardas, talla, almacen
+  // y color) viven en inLibStockCeldaDocumento.
+  Estado := Default(TEstadoCeldaStock);
+  Estado.CodigoArticulo := FCodArt;
+  Estado.EsModoTodo := FEsModoTodo;
+  Estado.EsModoColor := FEsModoColor;
+  Estado.EstadoEsExistencias := EstadoActual = esExistencias;
+  Estado.HayColoresEnLista := lstColores.Items.Count > 0;
+  Estado.AlmacenesSeleccionados := AlmacenesSeleccionadosLista;
+  Estado.ColoresSeleccionados := ColoresSeleccionadosLista;
+  SetLength(Estado.Tallas, Length(FColumnas));
+  for i := 0 to High(FColumnas) do
+    Estado.Tallas[i] := FColumnas[i].Codigo;
+  rec := tvStock.Controller.FocusedRecord;
+  Estado.HayFila := rec <> nil;
   col := nil;
-  sCampo := '';
-  sGrupo := '';
-  sColor := '';
-  sTalla := '';
-  sAlm := '';
-  iTalla := -1;
-  if Trim(FCodArt) = '' then
-  begin
-    AMensaje := SErrorArticuloStockNoSeleccionadoDocumento;
-  end;
-  if (AMensaje = '') and (not FEsModoTodo) and
-     (EstadoActual <> esExistencias) then
-  begin
-    AMensaje := SErrorEstadoStockNoEsExistencias;
-  end;
-  if AMensaje = '' then
-  begin
-    rec := tvStock.Controller.FocusedRecord;
-    if rec = nil then
-    begin
-      AMensaje := SErrorCeldaStockNoSeleccionada;
-    end;
-  end;
-  if AMensaje = '' then
-  begin
-    if not (tvStock.Controller.FocusedColumn is TcxGridDBColumn) then
-    begin
-      AMensaje := SErrorCeldaCantidadStockNoSeleccionada;
-    end;
-  end;
-  if AMensaje = '' then
+  if tvStock.Controller.FocusedColumn is TcxGridDBColumn then
   begin
     col := TcxGridDBColumn(tvStock.Controller.FocusedColumn);
-    sCampo := col.DataBinding.FieldName;
-    if FEsModoTodo then
-    begin
-      if (FColEstado = nil) or
-         (StrToIntDef(VarToStr(rec.Values[FColEstado.Index]), -1) <>
-          Ord(esExistencias)) then
-      begin
-        AMensaje := SErrorFilaExistenciasStockNoSeleccionada;
-      end;
-    end;
+    Estado.HayColumnaDeDatos := True;
+    Estado.NombreCampo := col.DataBinding.FieldName;
   end;
-  if AMensaje = '' then
+  if Estado.HayFila and (FColEstado <> nil) then
+    Estado.FilaEsExistencias :=
+      StrToIntDef(VarToStr(rec.Values[FColEstado.Index]), -1) =
+        Ord(esExistencias);
+  if Estado.HayFila and (FColGrupo <> nil) then
   begin
-    if StartsText('T', sCampo) and
-       TryStrToInt(Copy(sCampo, 2, MaxInt), iTalla) and
-       (iTalla >= 0) and (iTalla <= High(FColumnas)) then
-    begin
-      sTalla := FColumnas[iTalla].Codigo;
-    end
-    else if SameText(sCampo, 'TOTAL') and (Length(FColumnas) = 0) then
-    begin
-      sTalla := '';
-    end
-    else
-    begin
+    Estado.HayColumnaGrupo := True;
+    Estado.Grupo := VarToStr(rec.Values[FColGrupo.Index]);
+  end;
+  Celda := ResolverCeldaStockParaDocumento(Estado);
+  case Celda.Motivo of
+    mcdSinArticulo:
+      AMensaje := SErrorArticuloStockNoSeleccionadoDocumento;
+    mcdEstadoNoExistencias:
+      AMensaje := SErrorEstadoStockNoEsExistencias;
+    mcdSinFila:
+      AMensaje := SErrorCeldaStockNoSeleccionada;
+    mcdSinColumnaCantidad:
+      AMensaje := SErrorCeldaCantidadStockNoSeleccionada;
+    mcdFilaNoExistencias:
+      AMensaje := SErrorFilaExistenciasStockNoSeleccionada;
+    mcdColumnaNoValida:
       AMensaje := SErrorColumnaStockDocumentoNoSeleccionada;
-    end;
-  end;
-  if (AMensaje = '') and (FColGrupo = nil) then
-  begin
-    AMensaje := SErrorGrupoFilaStockNoLeido;
-  end;
-  if AMensaje = '' then
-  begin
-    sGrupo := VarToStr(rec.Values[FColGrupo.Index]);
-    if FEsModoColor then
-    begin
-      sColor := sGrupo;
-      alms := AlmacenesSeleccionadosLista;
-      if Length(alms) = 1 then
-      begin
-        sAlm := alms[0];
-      end
-      else
-      begin
-        AMensaje := SErrorAlmacenStockNoUnico;
-      end;
-    end
-    else
-    begin
-      sAlm := sGrupo;
-      colores := ColoresSeleccionadosLista;
-      if Length(colores) = 1 then
-      begin
-        sColor := colores[0];
-      end
-      else if (Length(colores) = 0) and (lstColores.Items.Count = 0) then
-      begin
-        sColor := '';
-      end
-      else
-      begin
-        AMensaje := SErrorColorStockUnidadNoUnico;
-      end;
-    end;
+    mcdGrupoNoLeido:
+      AMensaje := SErrorGrupoFilaStockNoLeido;
+    mcdAlmacenNoUnico:
+      AMensaje := SErrorAlmacenStockNoUnico;
+    mcdColorNoUnico:
+      AMensaje := SErrorColorStockUnidadNoUnico;
   end;
   if AMensaje = '' then
   begin
-    if ResolverCodigoSkuDocumentoTrabajo(sColor, sTalla,
-                                         ALinea.CodigoSku, AMensaje) then
+    if ResolverCodigoSkuDocumentoTrabajo(Celda.Color, Celda.Talla,
+                                         sSku, AMensaje) then
     begin
       vCantidad := rec.Values[col.Index];
       if VarIsNull(vCantidad) or VarIsEmpty(vCantidad) then
-      begin
-        ALinea.CantidadStock := 0;
-      end
+        Linea := ComponerLineaCeldaStock(
+          FCodArt, Celda.Almacen, sSku,
+          Celda.Color, Celda.Talla, 0, True)
       else
-      begin
-        ALinea.CantidadStock := VarAsType(vCantidad, varDouble);
-      end;
-      ALinea.CodigoArticulo := FCodArt;
-      ALinea.CodigoAlmacen := sAlm;
-      ALinea.Cantidad := ALinea.CantidadStock;
-      ALinea.Origen := 'CTRL_U';
-      if Trim(sColor + sTalla) <> '' then
-      begin
-        ALinea.DescripcionSku := Trim(sColor + ' ' + sTalla);
-      end;
+        Linea := ComponerLineaCeldaStock(
+          FCodArt, Celda.Almacen, sSku, Celda.Color, Celda.Talla,
+          VarAsType(vCantidad, varDouble), False);
+      ALinea.CodigoArticulo := Linea.CodigoArticulo;
+      ALinea.CodigoSku := Linea.CodigoSku;
+      ALinea.CodigoAlmacen := Linea.CodigoAlmacen;
+      ALinea.DescripcionSku := Linea.DescripcionSku;
+      ALinea.Origen := Linea.Origen;
+      ALinea.CantidadStock := Linea.CantidadStock;
+      ALinea.Cantidad := Linea.Cantidad;
       Result := True;
     end;
   end;

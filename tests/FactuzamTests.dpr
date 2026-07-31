@@ -54,10 +54,22 @@ uses
     '..\src\Lib\inLibValoresAutomaticos.pas',
   inLibBusquedasCompra in
     '..\src\Lib\inLibBusquedasCompra.pas',
+  inLibDocumentoIntf in
+    '..\src\Lib\inLibDocumentoIntf.pas',
+  inLibDocumento in
+    '..\src\Lib\inLibDocumento.pas',
   inLibValidacionDocumento in
     '..\src\Lib\inLibValidacionDocumento.pas',
   inLibPresentacionDocumento in
     '..\src\Lib\inLibPresentacionDocumento.pas',
+  inLibFacturasCobrosPresentacion in
+    '..\src\Lib\inLibFacturasCobrosPresentacion.pas',
+  inLibFacturasEstadoFiscalPresentacion in
+    '..\src\Lib\inLibFacturasEstadoFiscalPresentacion.pas',
+  inLibFacturasOperacionFiscal in
+    '..\src\Lib\inLibFacturasOperacionFiscal.pas',
+  inLibFacturasConsolidacionPresentacion in
+    '..\src\Lib\inLibFacturasConsolidacionPresentacion.pas',
   inLibShowMto in '..\src\Lib\inLibShowMto.pas',
   inLibImpuestosComun in '..\src\Lib\inLibImpuestosComun.pas',
   inLibComprasImpuestos in '..\src\Lib\inLibComprasImpuestos.pas',
@@ -67,9 +79,17 @@ uses
   inLibSqlSeguro in '..\src\Lib\inLibSqlSeguro.pas',
   inLibRectificativas in '..\src\Lib\inLibRectificativas.pas',
   inLibArticulosFiltro in '..\src\Lib\inLibArticulosFiltro.pas',
+  inLibArticulosAltaTarifas in
+    '..\src\Lib\inLibArticulosAltaTarifas.pas',
+  inLibStockCeldaDocumento in
+    '..\src\Lib\inLibStockCeldaDocumento.pas',
   inLibCajaTipos in '..\src\Caja\Lib\inLibCajaTipos.pas',
   inLibFaseCobro in '..\src\Caja\Lib\inLibFaseCobro.pas',
   inLibCajaVentaIntf in '..\src\Caja\Lib\inLibCajaVentaIntf.pas',
+  inLibCajaVentaCliente in
+    '..\src\Caja\Lib\inLibCajaVentaCliente.pas',
+  inLibCajaVentaOperacion in
+    '..\src\Caja\Lib\inLibCajaVentaOperacion.pas',
   inLibCajaDescuentos in '..\src\Caja\Lib\inLibCajaDescuentos.pas',
   inLibCajaRectificacion in
     '..\src\Caja\Lib\inLibCajaRectificacion.pas',
@@ -106,6 +126,8 @@ uses
     '..\src\DataModules\UniDataComprasSesionesUnidadTrabajo.pas',
   UniDataVerifactuColaRepositorio in
     '..\src\verifactu\UniDataVerifactuColaRepositorio.pas',
+  UniDataVerifactuNoVerifactuExport in
+    '..\src\verifactu\UniDataVerifactuNoVerifactuExport.pas',
   UniDataVerifactuColaProcesador in
     '..\src\verifactu\UniDataVerifactuColaProcesador.pas',
   UniDataVerifactuColaResultados in
@@ -116,6 +138,12 @@ uses
     '..\src\DataModules\UniDataAlbaranesCompraMovimientos.pas',
   UniDataDevolucionesCompraMovimientos in
     '..\src\DataModules\UniDataDevolucionesCompraMovimientos.pas',
+  UniDataArticulosVariaciones in
+    '..\src\DataModules\UniDataArticulosVariaciones.pas',
+  UniDataFotosRepositorio in
+    '..\src\DataModules\UniDataFotosRepositorio.pas',
+  UniDataGridPivoteCompraRepositorio in
+    '..\src\DataModules\UniDataGridPivoteCompraRepositorio.pas',
   UniDataPedidosCompraOperaciones in
     '..\src\DataModules\UniDataPedidosCompraOperaciones.pas',
   UniDataVentasWsJson in
@@ -124,6 +152,10 @@ uses
     '..\src\DataModules\UniDataCatalogoSqlValidacion.pas',
   UniDataFacturasRepositorio in
     '..\src\DataModules\UniDataFacturasRepositorio.pas',
+  UniDataFacturasLecturas in
+    '..\src\DataModules\UniDataFacturasLecturas.pas',
+  UniDataFacturaeRepositorio in
+    '..\src\DataModules\UniDataFacturaeRepositorio.pas',
   UniDataCajaConsultasRepositorio in
     '..\src\Caja\DataModules\UniDataCajaConsultasRepositorio.pas',
   inLibArticulosResolverIntf in
@@ -196,6 +228,7 @@ uses
   PruebasValoresAutomaticos in
     'PruebasValoresAutomaticos.pas',
   PruebasBusquedasCompra in 'PruebasBusquedasCompra.pas',
+  PruebasDocumento in 'PruebasDocumento.pas',
   PruebasCatalogoSql in 'PruebasCatalogoSql.pas',
   PruebasCatalogoSqlRepositorios in
     'PruebasCatalogoSqlRepositorios.pas',
@@ -203,6 +236,14 @@ uses
     'PruebasArticulosResolverCatalogo.pas',
   PruebasArticulosCatalogoSql22 in
     'PruebasArticulosCatalogoSql22.pas',
+  PruebasArticulosAltaTarifas in
+    'PruebasArticulosAltaTarifas.pas',
+  PruebasStockCeldaDocumento in
+    'PruebasStockCeldaDocumento.pas',
+  PruebasCajaVentaCliente in
+    'PruebasCajaVentaCliente.pas',
+  PruebasCajaVentaOperacion in
+    'PruebasCajaVentaOperacion.pas',
   PruebasTraspasoTicketCatalogo in
     'PruebasTraspasoTicketCatalogo.pas',
   PruebasArqueoCatalogo in
@@ -234,6 +275,16 @@ uses
   PruebasReglasCompartidas in 'PruebasReglasCompartidas.pas',
   PruebasCajaVenta in 'PruebasCajaVenta.pas',
   PruebasFacturasServicios in 'PruebasFacturasServicios.pas',
+  PruebasFacturasLecturas in 'PruebasFacturasLecturas.pas',
+  PruebasFacturaePersistencia in 'PruebasFacturaePersistencia.pas',
+  PruebasFacturasCobrosPresentacion in
+    'PruebasFacturasCobrosPresentacion.pas',
+  PruebasFacturasEstadoFiscalPresentacion in
+    'PruebasFacturasEstadoFiscalPresentacion.pas',
+  PruebasFacturasOperacionFiscal in
+    'PruebasFacturasOperacionFiscal.pas',
+  PruebasFacturasConsolidacionPresentacion in
+    'PruebasFacturasConsolidacionPresentacion.pas',
   PruebasExcepcionesAplicacion in
     'PruebasExcepcionesAplicacion.pas',
   PruebasEmisionFiscal in 'PruebasEmisionFiscal.pas',
@@ -241,10 +292,18 @@ uses
     'PruebasAlbaranesCompraMovimientos.pas',
   PruebasDevolucionesCompraMovimientos in
     'PruebasDevolucionesCompraMovimientos.pas',
+  PruebasArticulosVariaciones in
+    'PruebasArticulosVariaciones.pas',
+  PruebasFotosPersistencia in
+    'PruebasFotosPersistencia.pas',
+  PruebasGridPivoteCompraPersistencia in
+    'PruebasGridPivoteCompraPersistencia.pas',
   PruebasPedidosCompra in 'PruebasPedidosCompra.pas',
   PruebasVentasWsJson in 'PruebasVentasWsJson.pas',
   PruebasVerifactuColaRepositorio in
     'PruebasVerifactuColaRepositorio.pas',
+  PruebasExportacionNoVerifactuPersistencia in
+    'PruebasExportacionNoVerifactuPersistencia.pas',
   PruebasJsonSeguro in 'PruebasJsonSeguro.pas',
   PruebasTraducciones in 'PruebasTraducciones.pas';
 

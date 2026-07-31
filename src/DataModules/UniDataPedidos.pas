@@ -147,7 +147,8 @@ implementation
 uses
   inLibValoresAutomaticos, inLibLog, System.Diagnostics, System.UITypes,
   Vcl.Dialogs, inLibVentasImpuestos, inLibContadorLineas, JclDebug,
-  inLibData, inLibMsgArticulos, inLibMsgVentas;
+  inLibData, inLibMsgArticulos, inLibMsgVentas,
+  inLibDocumento, inLibDocumentoIntf;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -469,7 +470,8 @@ begin
     sSerie := ObtenerSerieDefecto(
       ConexionPrincipal,
       UbicacionSesion.Empresa,
-      'PE');
+      CrearConfiguracionDocumento(
+        tdPedido, sdVenta).TipoContador);
     if sSerie = '' then
       sSerie := 'A1';
     if FindField('SERIE_PED') <> nil then
@@ -917,7 +919,9 @@ begin
     Params.CreateParam(ftString, 'pUSUARIOMODIF',     ptInput);
     ParamByName('pserie').AsString    :=
       unqryTablaG.FieldByName('SERIE_PED').AsString;
-    ParamByName('ptipodoc').AsString  := 'PE';
+    ParamByName('ptipodoc').AsString :=
+      CrearConfiguracionDocumento(
+        tdPedido, sdVenta).TipoContador;
     ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
     ParamByName('pEMPRESA_CONTADOR').AsString :=
                                  unqryTablaG.FieldByName(
@@ -1092,7 +1096,11 @@ begin
     // conserva su serie aunque se retoque la empresa
     if (sNumero = '') or (sNumero = '0') then
     begin
-      sSerie := ObtenerSerieDefecto(ConexionPrincipal, AEmpresa, 'PE');
+      sSerie := ObtenerSerieDefecto(
+        ConexionPrincipal,
+        AEmpresa,
+        CrearConfiguracionDocumento(
+          tdPedido, sdVenta).TipoContador);
       if sSerie <> '' then
         unqryTablaG.FieldByName('SERIE_PED').AsString := sSerie;
     end;

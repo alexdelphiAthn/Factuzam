@@ -132,14 +132,6 @@ type
     FGuardandoCantidad: Boolean;
     // Cancela la validación si el usuario abandona la paleta de variación.
     FEntradaCancelada : Boolean;
-    function GetModo: TModoColumnasSku;
-    function GetOnResuelto: TSkuResueltoEvent;
-    procedure SetOnResuelto(const AValue: TSkuResueltoEvent);
-    function GetOnEntrarEdicion: TNotifyEvent;
-    procedure SetOnEntrarEdicion(const AValue: TNotifyEvent);
-    function GetOnSalirEdicion: TNotifyEvent;
-    procedure SetOnSalirEdicion(const AValue: TNotifyEvent);
-    procedure SetAlmacenStock(const AValue: string);
     function CdsLineas: TDataSet;
     function CampoTexto(ADs: TDataSet; const ACampo: string): string;
     function CampoFloat(ADs: TDataSet; const ACampo: string): Double;
@@ -184,7 +176,9 @@ type
     constructor Create(const AConfig: TConfigColumnasSku;
                        const ACfgPivote: TGridPivoteVentaConfig);
     destructor Destroy; override;
-    procedure Construir;
+    procedure Construir(
+      AOnResuelto: TSkuResueltoEvent;
+      AOnEntrarEdicion, AOnSalirEdicion: TNotifyEvent);
     procedure Desmontar;
     procedure MostrarEditor;
     function MarcarTodoAAlbaranar: Integer;
@@ -272,49 +266,6 @@ begin
   inherited;
 end;
 
-function TGridPivoteVenta.GetModo: TModoColumnasSku;
-begin
-  Result := mcsTallasHorPed;
-end;
-
-function TGridPivoteVenta.GetOnResuelto: TSkuResueltoEvent;
-begin
-  Result := FOnResuelto;
-end;
-
-procedure TGridPivoteVenta.SetOnResuelto(
-  const AValue: TSkuResueltoEvent);
-begin
-  FOnResuelto := AValue;
-end;
-
-function TGridPivoteVenta.GetOnEntrarEdicion: TNotifyEvent;
-begin
-  Result := FOnEntrarEdicion;
-end;
-
-procedure TGridPivoteVenta.SetOnEntrarEdicion(
-  const AValue: TNotifyEvent);
-begin
-  FOnEntrarEdicion := AValue;
-end;
-
-function TGridPivoteVenta.GetOnSalirEdicion: TNotifyEvent;
-begin
-  Result := FOnSalirEdicion;
-end;
-
-procedure TGridPivoteVenta.SetOnSalirEdicion(
-  const AValue: TNotifyEvent);
-begin
-  FOnSalirEdicion := AValue;
-end;
-
-procedure TGridPivoteVenta.SetAlmacenStock(const AValue: string);
-begin
-  FConfig.AlmacenStock := AValue;
-end;
-
 function TGridPivoteVenta.CdsLineas: TDataSet;
 begin
   Result := nil;
@@ -383,8 +334,13 @@ begin
   Result.Articulo := CampoTexto(ADs, FCfg.FieldArt);
 end;
 
-procedure TGridPivoteVenta.Construir;
+procedure TGridPivoteVenta.Construir(
+  AOnResuelto: TSkuResueltoEvent;
+  AOnEntrarEdicion, AOnSalirEdicion: TNotifyEvent);
 begin
+  FOnResuelto := AOnResuelto;
+  FOnEntrarEdicion := AOnEntrarEdicion;
+  FOnSalirEdicion := AOnSalirEdicion;
   // Cada montaje del modo repuebla las posiciones de conjuntos, igual
   // que la recreacion del gestor en la version monolitica.
   FModelo.InvalidarPosiciones;

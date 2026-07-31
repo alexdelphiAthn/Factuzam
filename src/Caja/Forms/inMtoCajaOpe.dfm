@@ -958,7 +958,7 @@
     object actCobro: TAction
       Caption = 'actCobro'
       ShortCut = 123
-      OnExecute = actCobroExecute
+      OnExecute = btnF12Click
     end
     object actCargarCta: TAction
       Caption = 'CargarCta'

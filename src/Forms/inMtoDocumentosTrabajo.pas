@@ -304,13 +304,13 @@ begin
   end
   else
     FModoEntrada := CrearModoEntradaGrid(Cfg);
-  FModoEntrada.OnResuelto := ModoEntradaResuelto;
-  FModoEntrada.OnEntrarEdicion := DesactivarEnterAsTabTemporal;
-  FModoEntrada.OnSalirEdicion := RestaurarEnterAsTabTemporal;
   // El flag ANTES del Construir: si aborta a medias, nadie debe tocar
   // las columnas del dfm, muertas en el ClearItems.
   FColsModoConstruido := True;
-  FModoEntrada.Construir;
+  FModoEntrada.Construir(
+    ModoEntradaResuelto,
+    DesactivarEnterAsTabTemporal,
+    RestaurarEnterAsTabTemporal);
   CrearColumnasHostDTR;
   case DetectarModoColumnasSku(Cfg) of
     mcsSku: tsLineasDTR.Caption := SCaptionLineasSku;

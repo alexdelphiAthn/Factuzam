@@ -32,21 +32,15 @@ type
     FConfig: TConfigColumnasSku;
     FGrid: TGridArticulosLineas;
     FOnResuelto: TSkuResueltoEvent;
-    function GetModo: TModoColumnasSku;
-    function GetOnResuelto: TSkuResueltoEvent;
-    procedure SetOnResuelto(const AValue: TSkuResueltoEvent);
-    function GetOnEntrarEdicion: TNotifyEvent;
-    procedure SetOnEntrarEdicion(const AValue: TNotifyEvent);
-    function GetOnSalirEdicion: TNotifyEvent;
-    procedure SetOnSalirEdicion(const AValue: TNotifyEvent);
-    procedure SetAlmacenStock(const AValue: string);
     // Reenvia el aviso de TGridArticulosLineas al documento.
     procedure GridResuelto(const ACodArt, ASku, ADescripcion: string;
                            ACompleto: Boolean);
   public
     constructor Create(const AConfig: TConfigColumnasSku);
     destructor Destroy; override;
-    procedure Construir;
+    procedure Construir(
+      AOnResuelto: TSkuResueltoEvent;
+      AOnEntrarEdicion, AOnSalirEdicion: TNotifyEvent);
     procedure Desmontar;
     procedure MostrarEditor;
     function ResolverEntrada(const AEntrada: string): Boolean;
@@ -91,49 +85,6 @@ begin
   inherited;
 end;
 
-function TModoEntradaDesglose.GetModo: TModoColumnasSku;
-begin
-  Result := mcsDesglose;
-end;
-
-function TModoEntradaDesglose.GetOnResuelto: TSkuResueltoEvent;
-begin
-  Result := FOnResuelto;
-end;
-
-procedure TModoEntradaDesglose.SetOnResuelto(
-  const AValue: TSkuResueltoEvent);
-begin
-  FOnResuelto := AValue;
-end;
-
-function TModoEntradaDesglose.GetOnEntrarEdicion: TNotifyEvent;
-begin
-  Result := FGrid.OnEntrarEdicion;
-end;
-
-procedure TModoEntradaDesglose.SetOnEntrarEdicion(
-  const AValue: TNotifyEvent);
-begin
-  FGrid.OnEntrarEdicion := AValue;
-end;
-
-function TModoEntradaDesglose.GetOnSalirEdicion: TNotifyEvent;
-begin
-  Result := FGrid.OnSalirEdicion;
-end;
-
-procedure TModoEntradaDesglose.SetOnSalirEdicion(
-  const AValue: TNotifyEvent);
-begin
-  FGrid.OnSalirEdicion := AValue;
-end;
-
-procedure TModoEntradaDesglose.SetAlmacenStock(const AValue: string);
-begin
-  FGrid.AlmacenStock := AValue;
-end;
-
 procedure TModoEntradaDesglose.GridResuelto(const ACodArt, ASku,
   ADescripcion: string; ACompleto: Boolean);
 begin
@@ -141,8 +92,13 @@ begin
     FOnResuelto(ACodArt, ASku, ADescripcion, ACompleto);
 end;
 
-procedure TModoEntradaDesglose.Construir;
+procedure TModoEntradaDesglose.Construir(
+  AOnResuelto: TSkuResueltoEvent;
+  AOnEntrarEdicion, AOnSalirEdicion: TNotifyEvent);
 begin
+  FOnResuelto := AOnResuelto;
+  FGrid.OnEntrarEdicion := AOnEntrarEdicion;
+  FGrid.OnSalirEdicion := AOnSalirEdicion;
   FGrid.Construir;
 end;
 

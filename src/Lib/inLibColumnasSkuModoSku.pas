@@ -68,14 +68,6 @@ type
     FTimerResolve: TTimer;
     FSkuPend: string;
     FUltimoFiltro: string;
-    function GetModo: TModoColumnasSku;
-    function GetOnResuelto: TSkuResueltoEvent;
-    procedure SetOnResuelto(const AValue: TSkuResueltoEvent);
-    function GetOnEntrarEdicion: TNotifyEvent;
-    procedure SetOnEntrarEdicion(const AValue: TNotifyEvent);
-    function GetOnSalirEdicion: TNotifyEvent;
-    procedure SetOnSalirEdicion(const AValue: TNotifyEvent);
-    procedure SetAlmacenStock(const AValue: string);
     // OnExit del editor in-place de la celda de SKU: avisa al host para
     // restaurar el EnterAsTab que desactivo al entrar.
     procedure EditorSalir(Sender: TObject);
@@ -137,7 +129,9 @@ type
   public
     constructor Create(const AConfig: TConfigColumnasSku);
     destructor Destroy; override;
-    procedure Construir;
+    procedure Construir(
+      AOnResuelto: TSkuResueltoEvent;
+      AOnEntrarEdicion, AOnSalirEdicion: TNotifyEvent);
     procedure Desmontar;
     procedure MostrarEditor;
     function ResolverEntrada(const AEntrada: string): Boolean;
@@ -193,41 +187,6 @@ begin
   inherited;
 end;
 
-function TModoEntradaSku.GetModo: TModoColumnasSku;
-begin
-  Result := mcsSku;
-end;
-
-function TModoEntradaSku.GetOnResuelto: TSkuResueltoEvent;
-begin
-  Result := FOnResuelto;
-end;
-
-procedure TModoEntradaSku.SetOnResuelto(const AValue: TSkuResueltoEvent);
-begin
-  FOnResuelto := AValue;
-end;
-
-function TModoEntradaSku.GetOnEntrarEdicion: TNotifyEvent;
-begin
-  Result := FOnEntrarEdicion;
-end;
-
-procedure TModoEntradaSku.SetOnEntrarEdicion(const AValue: TNotifyEvent);
-begin
-  FOnEntrarEdicion := AValue;
-end;
-
-function TModoEntradaSku.GetOnSalirEdicion: TNotifyEvent;
-begin
-  Result := FOnSalirEdicion;
-end;
-
-procedure TModoEntradaSku.SetOnSalirEdicion(const AValue: TNotifyEvent);
-begin
-  FOnSalirEdicion := AValue;
-end;
-
 procedure TModoEntradaSku.EditorSalir(Sender: TObject);
 begin
   if Assigned(FOnSalirEdicion) then
@@ -245,25 +204,15 @@ begin
     FOnSalirEdicion(Sender);
 end;
 
-procedure TModoEntradaSku.SetAlmacenStock(const AValue: string);
-begin
-  // El stock del desplegable depende del almacen: invalida el dataset y
-  // la proxima busqueda reconsulta.
-  if FAlmacenStock <> AValue then
-  begin
-    FAlmacenStock := AValue;
-    if (FBusqQry <> nil) and FBusqQry.Active then
-      FBusqQry.Close;
-  end;
-end;
-
 procedure TModoEntradaSku.Desmontar;
 begin
   // Sin estado externo que convertir: las lineas del cds YA son la
   // representacion por SKU.
 end;
 
-procedure TModoEntradaSku.Construir;
+procedure TModoEntradaSku.Construir(
+  AOnResuelto: TSkuResueltoEvent;
+  AOnEntrarEdicion, AOnSalirEdicion: TNotifyEvent);
 var
   i: Integer;
   procedure CrearColumnaOculta(const ACampo: string);
@@ -280,6 +229,9 @@ var
     end;
   end;
 begin
+  FOnResuelto := AOnResuelto;
+  FOnEntrarEdicion := AOnEntrarEdicion;
+  FOnSalirEdicion := AOnSalirEdicion;
   // El desplegable debe existir antes de crear la columna que lo usa.
   CrearLookupBusqueda;
   FConfig.View.BeginUpdate;

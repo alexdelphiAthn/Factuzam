@@ -22,7 +22,8 @@ uses
 function CrearRegistroDefinicionesSqlAplicacion:
   IRegistroDefinicionesSql;
 procedure CrearCatalogoSqlAplicacion(
-  const APerfiles: IPerfilesUsuario;
+  const APerfilesLectura: ILectorPerfilesUsuario;
+  const APerfilesEscritura: IEscritorPerfilesUsuario;
   AActivo: Boolean;
   out ACatalogo: ICatalogoSql;
   out AIncidencias: IRegistroIncidenciasSql);
@@ -89,7 +90,8 @@ begin
 end;
 
 procedure CrearCatalogoSqlAplicacion(
-  const APerfiles: IPerfilesUsuario;
+  const APerfilesLectura: ILectorPerfilesUsuario;
+  const APerfilesEscritura: IEscritorPerfilesUsuario;
   AActivo: Boolean;
   out ACatalogo: ICatalogoSql;
   out AIncidencias: IRegistroIncidenciasSql);
@@ -102,20 +104,22 @@ begin
   AIncidencias := TRegistroIncidenciasSql.Create;
   oPerfil := nil;
   if AActivo and
-     Assigned(APerfiles) then
+     Assigned(APerfilesLectura) and
+     Assigned(APerfilesEscritura) then
   begin
     try
       oRegistro :=
         CrearRegistroDefinicionesSqlAplicacion;
       oAdministrador := TAdministradorSqlPerfiles.Create(
-        APerfiles);
+        APerfilesLectura,
+        APerfilesEscritura);
       try
         oAdministrador.PublicarCatalogo(
           oRegistro);
       finally
         FreeAndNil(oAdministrador);
       end;
-      APerfiles.CargarPerfilFormulario(
+      APerfilesLectura.CargarPerfilFormulario(
         CLAVE_PERFIL_CATALOGO_SQL,
         PERFIL_TODOS,
         PERFIL_TODOS,

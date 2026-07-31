@@ -29,7 +29,9 @@ type
     TDataModule,
     IProveedorConexiones,
     IProveedorContextoSesion,
-    IFiltrosGuardados
+    ILectorFiltrosGuardados,
+    IEscritorFiltrosGuardados,
+    ICompartidorFiltrosGuardados
   )
     procedure DataModuleCreate(Sender: TObject);
   private

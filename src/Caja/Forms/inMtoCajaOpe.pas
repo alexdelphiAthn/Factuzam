@@ -199,7 +199,6 @@ type
     procedure actBuscarEmpleadosExecute(Sender: TObject);
     procedure actSalirExecute(Sender: TObject);
     procedure actEliminarLineaExecute(Sender: TObject);
-    procedure actCobroExecute(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure tvArticuloPropertiesChange(Sender: TObject);
     procedure cxGrid1DBTableView1Editing(Sender: TcxCustomGridTableView;
@@ -263,12 +262,9 @@ type
       const ASerie, ANumero, AAlmacen: string);
     procedure WMPreguntarVentaOrigen(var Msg: TMessage);
                                        message WM_PREGUNTAR_VENTA_ORIGEN;
-    function HayLineasNegativas: Boolean;
     function PedirMotivoDevolucionSiProcede: Boolean;
-    procedure LimpiarEstadoDevolucion;
     procedure CargarDepositosF2;
     procedure ActualizarRelojCaja;
-    procedure SincronizarFechaCajaCabecera;
     procedure lblFechaCajaDblClick(Sender: TObject);
     procedure AsegurarLineaNueva;
     procedure ActualizarFoco;
@@ -288,10 +284,8 @@ type
     procedure RecalcularLineasDesdeDM;
     procedure ConsultarStock(const CodigoInput: string);
     function  ValidarSkuParaVenta(const SkuFinal: string): Boolean;
-    procedure EliminarLineaPorValidacion;
     procedure BuscarEmpleados;
     procedure BuscarClientes;
-    function HayLineasConDeposito: Boolean;
     procedure ProcesarResultadoCierre(
       const AResultado: TResultadoCierreVenta;
       AEnviarEmail: Boolean;
@@ -302,9 +296,6 @@ type
     procedure tvLineasOpeAvButtonClick(Sender: TObject;
                                        AButtonIndex: Integer);
     procedure AbrirPopupAvEnEntrada(Sender: TObject);
-    procedure CargarAvsValidos(const ACodArt: string;
-                               AOrden: Integer;
-                               var AAvs: TArray<string>);
     procedure RegistrarValorAtributo(AOrden: Integer;
                                      const AvNuevo: string);
     procedure FinalizarUltimoAtributo;
@@ -412,6 +403,8 @@ uses
   inMtoStockConsulta,
   inLibCorreoTickets,
   inLibCajaDescuentos,
+  inLibCajaVentaCliente,
+  inLibCajaVentaOperacion,
   inLibCajaOpeComposicion,
   // Raiz de composicion de la ventana de caja: el adaptador UniData* se
   // construye aqui y se inyecta en la factoria de dominio.
@@ -438,7 +431,8 @@ function CrearServiciosOperacionCajaVcl(
   const AParametrosCaja: IParametrosCaja;
   const APermisos: IPermisosAplicacion;
   const AContextoSesion: IContextoSesionAplicacion;
-  const APerfilesUsuario: IPerfilesUsuario;
+  const APerfilesLectura: ILectorPerfilesUsuario;
+  const APerfilesEscritura: IEscritorPerfilesUsuario;
   const ANombreFormulario: string;
   ADatosCaja: TdmCajaOpe;
   out AIncidenciasSql: IRegistroIncidenciasSql
@@ -451,15 +445,16 @@ var
   oRepositorioTicketsCaja: IRepositorioTicketsCaja;
 begin
   bCatalogoSqlActivo := False;
-  if Assigned(APerfilesUsuario) then
+  if Assigned(APerfilesLectura) then
     bCatalogoSqlActivo := SameText(
-      APerfilesUsuario.ObtenerValorPerfil(
+      APerfilesLectura.ObtenerValorPerfil(
         ANombreFormulario,
         'oGetSQLFromDB',
         'False'),
       'True');
   CrearCatalogoSqlAplicacion(
-    APerfilesUsuario,
+    APerfilesLectura,
+    APerfilesEscritura,
     bCatalogoSqlActivo,
     oCatalogoSql,
     AIncidenciasSql);
@@ -506,7 +501,8 @@ begin
     AFormulario.ParametrosCaja,
     AFormulario.Permisos,
     AFormulario.ContextoSesion,
-    AFormulario.PerfilesUsuario,
+    AFormulario.PerfilesLectura,
+    AFormulario.PerfilesEscritura,
     AFormulario.Name,
     AFormulario.DatosCaja,
     AFormulario.FIncidenciasSql);
@@ -551,26 +547,6 @@ begin
   lblFechaCaja.Caption := FormatDateTime('hh:nn:ss dddd d mmmm yyyy', FFecha);
 end;
 
-procedure TfrmMtoOpeCaja.SincronizarFechaCajaCabecera;
-var
-  bPost: Boolean;
-begin
-  bPost := False;
-  if Assigned(DatosCaja) and
-     DatosCaja.cdsCabecera.Active and
-     (not DatosCaja.cdsCabecera.IsEmpty) then
-  begin
-    if DatosCaja.cdsCabecera.State = dsBrowse then
-    begin
-      DatosCaja.cdsCabecera.Edit;
-      bPost := True;
-    end;
-    DatosCaja.cdsCabecera.FieldByName('FECHA_FAC').AsDateTime := FFecha;
-    if bPost then
-      DatosCaja.cdsCabecera.Post;
-  end;
-end;
-
 procedure TfrmMtoOpeCaja.lblFechaCajaDblClick(Sender: TObject);
 var
   sHora: string;
@@ -588,7 +564,7 @@ begin
       FFecha := Trunc(dtFechaBase) + Frac(dtHora);
       FUltimoTickReloj := Now;
       ActualizarRelojCaja;
-      SincronizarFechaCajaCabecera;
+      EscribirFechaCabeceraVenta(DatosCaja.cdsCabecera, FFecha);
       NotificarFechaCaja(FFecha);
     end
     else
@@ -599,7 +575,7 @@ begin
     FFecha := Now;
     FUltimoTickReloj := Now;
     ActualizarRelojCaja;
-    SincronizarFechaCajaCabecera;
+    EscribirFechaCabeceraVenta(DatosCaja.cdsCabecera, FFecha);
     NotificarFechaCaja(FFecha);
   end;
 end;
@@ -896,33 +872,6 @@ begin
   Result := Resultado.Permitida;
 end;
 
-procedure TfrmMtoOpeCaja.EliminarLineaPorValidacion;
-begin
-  if not Assigned(DatosCaja) then Exit;
-  if not DatosCaja.cdsLineas.Active then Exit;
-
-  if DatosCaja.cdsLineas.State = dsInsert then
-    DatosCaja.cdsLineas.Cancel
-  else if DatosCaja.cdsLineas.State = dsEdit then
-  begin
-    DatosCaja.cdsLineas.Cancel;
-    if not DatosCaja.cdsLineas.IsEmpty then
-      DatosCaja.cdsLineas.Delete;
-  end;
-
-  //dbtvStock.ClearItems;
-  GridRecalc(ConexionPrincipal,nil,
-             tvLineasOpe,
-             DatosCaja.cdsLineas,
-             DatosCaja.cdsCabecera,
-             ActualizarLabelTotal);
-  AsegurarLineaNueva;
-end;
-
-// Hook de lectura con pistola a nivel de FORMULARIO (KeyPreview heredado de
-// TfrmBase = True): da igual que control tenga el foco. Delegamos toda la
-// deteccion (trama STX/ETX + rafaga por velocidad) en TLectorScanner; el codigo
-// leido llega luego por OnCodigoLeido (LectorCodigoLeido).
 procedure TfrmMtoOpeCaja.FormKeyPress(Sender: TObject; var Key: Char);
 begin
   FLector.KeyPress(Key);
@@ -1088,7 +1037,7 @@ begin
     begin
       VieneDeDep :=
         DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
-      if (VieneDeDep = 'S') or (VieneDeDep = 'A') then
+      if EsLineaDeposito(VieneDeDep) then
       begin
         ShowMessage(SErrorLineaDepositoCajaNoCancelable);
         Exit;
@@ -1412,7 +1361,7 @@ begin
     if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodigoPadre) and
        not ValidarSkuParaVenta(SkuDetectado) then
     begin
-      EliminarLineaPorValidacion;
+      EliminarLineaVentaPorValidacion(DatosCaja.cdsLineas);
       DisplayValue := null;
       Error := False;
       Abort;
@@ -1813,35 +1762,13 @@ begin
 end;
 
 procedure TfrmMtoOpeCaja.RellenarAtributosDesdeSku(Sku: string);
-var
-  Lookup  : IArticulosAtributosLookup;
-  Valores : TArray<TArticuloAtributoValor>;
-  V       : TArticuloAtributoValor;
-  i       : Integer;
 begin
-  if Trim(Sku) = '' then Exit;
-  Lookup := CrearLookupAtributosArticulos(ConexionPrincipal);
-  try
-    Valores := Lookup.ObtenerAtributosDeSku(Sku);
-    if Length(Valores) = 0 then
-    begin
-      Exit;
-    end;
-
-    if not (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
-      DatosCaja.cdsLineas.Edit;
-
-    for V in Valores do
-    begin
-      i := V.Orden;
-      if (i >= 1) and (i <= 5) then
-        DatosCaja.cdsLineas.FieldByName('ATTR' + IntToStr(
-          i) + '_VALOR').AsString
-                                                                       := V.Valor;
-    end;
-  finally
-    Lookup := nil;
-  end;
+  // Callback de DatosCaja y pegamento del grid: la escritura vive en
+  // inLibCajaVentaOperacion y el lookup se inyecta aqui (14.1).
+  RellenarAtributosLineaDesdeSku(
+    DatosCaja.cdsLineas,
+    Sku,
+    CrearLookupAtributosArticulos(ConexionPrincipal));
 end;
 
 function TfrmMtoOpeCaja.ConsolidarSiExiste(SkuBuscado: string): Boolean;
@@ -2258,7 +2185,7 @@ begin
     if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticuloActual) and
        not ValidarSkuParaVenta(SkuDetectado) then
     begin
-      EliminarLineaPorValidacion;
+      EliminarLineaVentaPorValidacion(DatosCaja.cdsLineas);
       Key := 0;
       Exit;
     end;
@@ -2585,7 +2512,7 @@ begin
         if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticulo) and
            not ValidarSkuParaVenta(SkuDetectado) then
         begin
-          EliminarLineaPorValidacion;
+          EliminarLineaVentaPorValidacion(DatosCaja.cdsLineas);
           Exit;
         end;
         ActualizarColumnasDinamicas(CodArticulo);
@@ -2689,7 +2616,7 @@ begin
   // F4: localizar el ticket de origen (escaneo del EAN-13, operación o
   // documento) y cargar sus artículos en negativo. El usuario borra las
   // líneas que no se devuelvan.
-  if not OperacionVacia then
+  if not OperacionVentaVacia(DatosCaja.cdsLineas) then
     ShowMessage(SErrorDevolucionTicketOperacionEnCurso)
   else
   begin
@@ -2806,68 +2733,20 @@ begin
   end;
 end;
 
-function TfrmMtoOpeCaja.HayLineasNegativas: Boolean;
-var
-  Marcador: TBookmark;
-  sVieneDeDep: string;
-begin
-  // Devolución de venta: líneas en negativo que no sean cancelaciones
-  // de depósito (esas llevan su propio circuito)
-  Result := False;
-  if Assigned(DatosCaja) and DatosCaja.cdsLineas.Active then
-  begin
-    DatosCaja.cdsLineas.DisableControls;
-    try
-      Marcador := DatosCaja.cdsLineas.GetBookmark;
-      try
-        DatosCaja.cdsLineas.First;
-        while (not DatosCaja.cdsLineas.Eof) and (not Result) do
-        begin
-          sVieneDeDep := Trim(
-            DatosCaja.cdsLineas.FieldByName(
-              'VIENE_DE_DEPOSITO').AsString);
-          if (DatosCaja.cdsLineas.FieldByName(
-                'CANTIDAD_FACLIN').AsFloat < 0) and
-             (sVieneDeDep <> 'S') and
-             (sVieneDeDep <> 'A') then
-            Result := True
-          else
-            DatosCaja.cdsLineas.Next;
-        end;
-        if DatosCaja.cdsLineas.BookmarkValid(Marcador) then
-          DatosCaja.cdsLineas.GotoBookmark(Marcador);
-      finally
-        DatosCaja.cdsLineas.FreeBookmark(Marcador);
-      end;
-    finally
-      DatosCaja.cdsLineas.EnableControls;
-    end;
-  end;
-end;
-
 function TfrmMtoOpeCaja.PedirMotivoDevolucionSiProcede: Boolean;
 var
   sMotivo: string;
 begin
   // Motivo obligatorio (una vez por operación) si hay devolución
   Result := True;
-  if HayLineasNegativas and (Trim(FMotivoDevolucion) = '') then
+  if HayLineasNegativasVenta(DatosCaja.cdsLineas) and
+     (Trim(FMotivoDevolucion) = '') then
   begin
     if TfrmModalMotivoDevolucion.Ejecutar(Self, sMotivo) then
       FMotivoDevolucion := sMotivo
     else
       Result := False;
   end;
-end;
-
-procedure TfrmMtoOpeCaja.LimpiarEstadoDevolucion;
-begin
-  FMotivoDevolucion := '';
-  FSerieOrigenDev := '';
-  FNumeroOrigenDev := '';
-  FEmpresaOrigenDev := '';
-  FAlmacenOrigenDev := '';
-  FSkuPendienteVentaOrigen := '';
 end;
 
 procedure TfrmMtoOpeCaja.btnF10Click(Sender: TObject);
@@ -2878,11 +2757,6 @@ end;
 procedure TfrmMtoOpeCaja.actBuscarModificarExecute(Sender: TObject);
 begin
   btnF10Click(Sender);
-end;
-
-procedure TfrmMtoOpeCaja.actCobroExecute(Sender: TObject);
-begin
-  btnF12Click(Sender);
 end;
 
 procedure TfrmMtoOpeCaja.actEliminarLineaExecute(Sender: TObject);
@@ -2929,7 +2803,8 @@ procedure TfrmMtoOpeCaja.RestaurarLayoutCaja;
 var
   Layout: TLayoutLoader;
 begin
-  Layout := TLayoutLoader.Create(Self.Name, ContextoSesion, PerfilesUsuario);
+  Layout := TLayoutLoader.Create(
+    Self.Name, ContextoSesion, PerfilesLectura);
   try
     if not Layout.Disponible then Exit;
     Layout.RestaurarGeometria(Self);
@@ -3097,224 +2972,89 @@ begin
   // Durante un escaneo no validamos el cliente: el foco se mueve a la rejilla
   // y el campo pudo quedar con la rafaga; lo da por bueno y no molesta.
   if FProcesandoLecturaScanner then
+    Error := False
+  else if not FValidandoCliente then
   begin
-    Error := False;
-    Exit;
-  end;
-  if FValidandoCliente then
-    Exit;
-  FValidandoCliente := True;
-  try
-  // =======================================================================
-  // 1. LIMPIEZA INCONDICIONAL DE DEPÓSITOS DEL CLIENTE ANTERIOR
-  // =======================================================================
-  if DatosCaja.cdsLineas.Active then
-  begin
-    // Si hay una línea a medio meter, la cancelamos para evitar Abort en
-    // BeforePost
-    if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
-    begin
-      if Trim(DatosCaja.cdsLineas.FieldByName(
-        'CODIGO_ART_FACLIN').AsString) = '' then
-        DatosCaja.cdsLineas.Cancel
-      else
-        DatosCaja.cdsLineas.Post;
-    end;
-    DatosCaja.cdsLineas.DisableControls;
+    FValidandoCliente := True;
     try
-      DatosCaja.cdsLineas.First;
-      while not DatosCaja.cdsLineas.Eof do
+      // 1. Limpieza de los depositos del cliente anterior. La regla y
+      //    las escrituras de cabecera viven en inLibCajaVentaCliente;
+      //    aqui quedan el grid, las etiquetas y el recalculo.
+      LimpiarLineasDeposito(DatosCaja.cdsLineas);
+      // 2. Busqueda y asignacion del nuevo cliente.
+      sCodigo := VarToStr(DisplayValue);
+      if Trim(sCodigo) = '' then
       begin
-        if (DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'S')
-           or
-           (DatosCaja.cdsLineas.FieldByName(
-             'VIENE_DE_DEPOSITO').AsString = 'A') then
+        lblNombreCliente.Caption := SCaptionVentaContado;
+        EscribirCabeceraVentaContado(DatosCaja.cdsCabecera,
+                                     DatosCaja.GetTarifaDefault);
+        lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName(
+          'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
+        Error := False;
+      end
+      else
+      begin
+        sNomCliente := '';
+        if FRepositorioConsultas.ObtenerCliente(
+             sCodigo,
+             Cliente) then
         begin
-          DatosCaja.cdsLineas.Delete;
+          sNomCliente := Cliente.RazonSocial;
+          EscribirCabeceraClienteVenta(DatosCaja.cdsCabecera, Cliente);
+          lblTarifa.Caption :=
+            Cliente.TarifaArticulo;
+          // Cliente con depositos: solo se cargan solos con el
+          // parametro de autocarga activo.
+          if DebeCargarDepositosCliente(
+               Cliente.EsPermiteDeuda,
+               ParametrosCaja.GetBool(
+                 'vgerAutoLoadDepositos',
+                 False)) then
+          begin
+            tvLineasOpe.BeginUpdate;
+            FActualizandoDepositos := True;
+            try
+              DatosCaja.CargarDepositosCliente(
+                sCodigo);
+            finally
+              tvLineasOpe.EndUpdate;
+              FActualizandoDepositos := False;
+            end;
+          end;
+        end;
+        if sNomCliente = '' then
+        begin
+          Error := True;
+          ErrorText := SErrorCodigoClienteCajaNoExiste;
         end
         else
         begin
-          DatosCaja.cdsLineas.Next;
+          Error := False;
+          lblNombreCliente.Caption := sNomCliente;
+          ErrorText := '';
         end;
       end;
-    finally
-      DatosCaja.cdsLineas.EnableControls;
-    end;
-  end;
-  // =======================================================================
-  // 2. BÚSQUEDA Y ASIGNACIÓN DEL NUEVO CLIENTE
-  // =======================================================================
-  sCodigo := VarToStr(DisplayValue);
-
-  if Trim(sCodigo) = '' then
-  begin
-    lblNombreCliente.Caption := SCaptionVentaContado;
-    DatosCaja.cdsCabecera.Edit;
-    DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString := '';
-    DatosCaja.cdsCabecera.FieldByName(
-      'RAZON_SOCIAL_CLIENTE_FAC').AsString := '';
-    DatosCaja.cdsCabecera.FieldByName('NIF_CLIENTE_FAC').AsString := '';
-    DatosCaja.cdsCabecera.FieldByName('MOVIL_CLIENTE_FAC').AsString := '';
-    DatosCaja.cdsCabecera.FieldByName('EMAIL_CLIENTE_FAC').AsString := '';
-    DatosCaja.cdsCabecera.FieldByName(
-      'DIRECCION1_CLIENTE_FAC').AsString := '';
-    DatosCaja.cdsCabecera.FieldByName(
-      'DIRECCION2_CLIENTE_FAC').AsString := '';
-    DatosCaja.cdsCabecera.FieldByName('POBLACION_CLIENTE_FAC').AsString := '';
-    DatosCaja.cdsCabecera.FieldByName('PROVINCIA_CLIENTE_FAC').AsString := '';
-    DatosCaja.cdsCabecera.FieldByName(
-      'CODIGO_POSTAL_CLIENTE_FAC').AsString := '';
-    DatosCaja.cdsCabecera.FieldByName(
-      'CODIGO_PAI_CLIENTE_FAC').AsString := '';
-    DatosCaja.cdsCabecera.FieldByName(
-      'NOMBRE_PAI_CLIENTE_FAC').AsString := '';
-    DatosCaja.cdsCabecera.FieldByName(
-      'CODIGO_OFICINA_CONTABLE_FAC').AsString := '';
-    DatosCaja.cdsCabecera.FieldByName(
-      'CODIGO_ORGANO_GESTOR_FAC').AsString := '';
-    DatosCaja.cdsCabecera.FieldByName(
-      'CODIGO_UNIDAD_TRAMITADORA_FAC').AsString := '';
-    DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString :=
-      DatosCaja.GetTarifaDefault;
-    DatosCaja.cdsCabecera.FieldByName(
-      'ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString := 'S';
-    lblTarifa.Caption :=
-      DatosCaja.cdsCabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-    Error := False;
-  end
-  else
-  begin
-    if FRepositorioConsultas.ObtenerCliente(
-         sCodigo,
-         Cliente) then
-    begin
-      DatosCaja.cdsCabecera.Edit;
-      DatosCaja.cdsCabecera.FieldByName(
-        'CODIGO_CLI_FAC').AsString :=
-        Cliente.Codigo;
-      sNomCliente := Cliente.RazonSocial;
-      DatosCaja.cdsCabecera.FieldByName(
-        'RAZON_SOCIAL_CLIENTE_FAC').AsString :=
-        Cliente.RazonSocial;
-      DatosCaja.cdsCabecera.FieldByName(
-        'NIF_CLIENTE_FAC').AsString :=
-        Cliente.Nif;
-      DatosCaja.cdsCabecera.FieldByName(
-        'MOVIL_CLIENTE_FAC').AsString :=
-        Cliente.Movil;
-      DatosCaja.cdsCabecera.FieldByName(
-        'EMAIL_CLIENTE_FAC').AsString :=
-        Cliente.Email;
-      DatosCaja.cdsCabecera.FieldByName(
-        'DIRECCION1_CLIENTE_FAC').AsString :=
-        Cliente.Direccion1;
-      DatosCaja.cdsCabecera.FieldByName(
-        'DIRECCION2_CLIENTE_FAC').AsString :=
-        Cliente.Direccion2;
-      DatosCaja.cdsCabecera.FieldByName(
-        'POBLACION_CLIENTE_FAC').AsString :=
-        Cliente.Poblacion;
-      DatosCaja.cdsCabecera.FieldByName(
-        'PROVINCIA_CLIENTE_FAC').AsString :=
-        Cliente.Provincia;
-      DatosCaja.cdsCabecera.FieldByName(
-        'CODIGO_POSTAL_CLIENTE_FAC').AsString :=
-        Cliente.CodigoPostal;
-      DatosCaja.cdsCabecera.FieldByName(
-        'CODIGO_PAI_CLIENTE_FAC').AsString :=
-        Cliente.CodigoPais;
-      DatosCaja.cdsCabecera.FieldByName(
-        'NOMBRE_PAI_CLIENTE_FAC').AsString :=
-        Cliente.NombrePais;
-      DatosCaja.cdsCabecera.FieldByName(
-        'CODIGO_OFICINA_CONTABLE_FAC').AsString :=
-        Cliente.CodigoOficinaContable;
-      DatosCaja.cdsCabecera.FieldByName(
-        'CODIGO_ORGANO_GESTOR_FAC').AsString :=
-        Cliente.CodigoOrganoGestor;
-      DatosCaja.cdsCabecera.FieldByName(
-        'CODIGO_UNIDAD_TRAMITADORA_FAC').AsString :=
-        Cliente.CodigoUnidadTramitadora;
-      DatosCaja.cdsCabecera.FieldByName(
-        'ESIVA_RECARGO_CLIENTE_FAC').AsString :=
-        Cliente.EsIvaRecargo;
-      DatosCaja.cdsCabecera.FieldByName(
-        'ESIVA_EXENTO_CLIENTE_FAC').AsString :=
-        Cliente.EsIvaExento;
-      DatosCaja.cdsCabecera.FieldByName(
-        'ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC').AsString :=
-        Cliente.EsRegimenEspecialAgricola;
-      DatosCaja.cdsCabecera.FieldByName(
-        'ESRETENCIONES_CLIENTE_FAC').AsString :=
-        Cliente.EsRetenciones;
-      DatosCaja.cdsCabecera.FieldByName(
-        'ESINTRACOMUNITARIO_CLIENTE_FAC').AsString :=
-        Cliente.EsIntracomunitario;
-      if Trim(Cliente.CodigoFormaPago) <> '' then
+      // 3. Proteccion contra dataset vacio y recalculo final.
+      if DatosCaja.cdsLineas.Active then
       begin
-        DatosCaja.cdsCabecera.FieldByName(
-          'FORMA_PAGO_FAC').AsString :=
-          Cliente.CodigoFormaPago;
-      end;
-      DatosCaja.cdsCabecera.FieldByName(
-        'TARIFA_ARTICULO_CLIENTE_FAC').AsString :=
-        Cliente.TarifaArticulo;
-      lblTarifa.Caption :=
-        Cliente.TarifaArticulo;
-      // Si es un cliente con depósitos, los cargamos.
-      if SameText(Cliente.EsPermiteDeuda, 'S') then
-      begin
-        tvLineasOpe.BeginUpdate;
-        FActualizandoDepositos := True;
+        tvLineasOpe.DataController.UpdateItems(False);
+        // 2º Ponemos el foco en la línea nueva
+        AsegurarLineaNueva;
+        // 3º Como paso final absoluto, pisamos la etiqueta leyendo la
+        // memoria contable
+        Totales := TFacturaTotales.Create(ConexionPrincipal,
+                                          DatosCaja.cdsCabecera,
+                                          DatosCaja.cdsLineas);
         try
-          if ParametrosCaja.GetBool(
-               'vgerAutoLoadDepositos',
-               False) then
-          begin
-            DatosCaja.CargarDepositosCliente(
-              sCodigo);
-          end;
+          Totales.ProcesarFacturaCompleta;
+          ActualizarLabelTotal(nil, Totales.Totales.TotalLiquido);
         finally
-          tvLineasOpe.EndUpdate;
-          FActualizandoDepositos := False;
+          FreeAndNil(Totales);
         end;
       end;
-    end;
-    if sNomCliente = '' then
-    begin
-      Error := True;
-      ErrorText := SErrorCodigoClienteCajaNoExiste;
-    end
-    else
-    begin
-      Error := False;
-      lblNombreCliente.Caption := sNomCliente;
-      ErrorText := '';
-    end;
-  end;
-  // =======================================================================
-  // 3. PROTECCIÓN CONTRA DATASET VACÍO Y RECÁLCULO FINAL
-  // =======================================================================
-  if DatosCaja.cdsLineas.Active then
-  begin
-    tvLineasOpe.DataController.UpdateItems(False);
-
-    // 2º Ponemos el foco en la línea nueva
-    AsegurarLineaNueva;
-
-    // 3º Como paso final absoluto, pisamos la etiqueta leyendo la memoria
-    // contable
-    Totales := TFacturaTotales.Create(ConexionPrincipal,DatosCaja.cdsCabecera,
-                                      DatosCaja.cdsLineas);
-    try
-      Totales.ProcesarFacturaCompleta;
-      ActualizarLabelTotal(nil, Totales.Totales.TotalLiquido);
     finally
-      FreeAndNil(Totales);
+      FValidandoCliente := False;
     end;
-  end;
-  finally
-    FValidandoCliente := False;
   end;
 end;
 
@@ -3446,35 +3186,6 @@ begin
 //  tvLineasOpe.ApplyBestFit(nil, True, False);
 end;
 
-function TfrmMtoOpeCaja.HayLineasConDeposito: Boolean;
-var
-  Bkm: TBookmark;
-  VieneDeDep: string;
-begin
-  Result := False;
-  DatosCaja.cdsLineas.DisableControls;
-  Bkm := DatosCaja.cdsLineas.GetBookmark;
-  try
-    DatosCaja.cdsLineas.First;
-    while not DatosCaja.cdsLineas.Eof do
-    begin
-      VieneDeDep :=
-        DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
-      if (VieneDeDep = 'S') or (VieneDeDep = 'A') then
-      begin
-        Result := True;
-        Break;
-      end;
-      DatosCaja.cdsLineas.Next;
-    end;
-  finally
-    if DatosCaja.cdsLineas.BookmarkValid(Bkm) then
-      DatosCaja.cdsLineas.GotoBookmark(Bkm);
-    DatosCaja.cdsLineas.FreeBookmark(Bkm);
-    DatosCaja.cdsLineas.EnableControls;
-  end;
-end;
-
 procedure TfrmMtoOpeCaja.ProcesarResultadoCierre(
   const AResultado: TResultadoCierreVenta;
   AEnviarEmail: Boolean;
@@ -3500,7 +3211,13 @@ begin
      (Trim(FSerieOrigenDev) <> '') and
      (FCaptionPrevio <> '') then
     Caption := FCaptionPrevio;
-  LimpiarEstadoDevolucion;
+  // Limpiar el estado de devolucion (motivo y ticket de origen).
+  FMotivoDevolucion := '';
+  FSerieOrigenDev := '';
+  FNumeroOrigenDev := '';
+  FEmpresaOrigenDev := '';
+  FAlmacenOrigenDev := '';
+  FSkuPendienteVentaOrigen := '';
   if AResultado.CodigoValeGenerado <> '' then
   begin
     ShowMessage(Format(
@@ -3548,31 +3265,13 @@ var
   ObjTotales: TFacturaTotales;
   Solicitud: TSolicitudCierreVenta;
   Resultado: TResultadoCierreVenta;
-  sSerieDocumento: string;
-  sTipoFactura: string;
-  dtFechaFactura: TDateTime;
+  Documento: TDocumentoCierreVenta;
 begin
-  if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
-  begin
-    if DatosCaja.cdsLineas.State = dsInsert then
-    begin
-      if Trim(DatosCaja.cdsLineas.FieldByName(
-        'CODIGO_ART_FACLIN').AsString) = '' then
-      begin
-        DatosCaja.cdsLineas.Cancel;
-      end
-      else
-      begin
-        DatosCaja.cdsLineas.Post;
-      end;
-    end
-    else
-    begin
-      DatosCaja.cdsLineas.Post;
-    end;
-  end;
+  // El cierre de la linea pendiente y el documento del cierre viven
+  // en inLibCajaVentaOperacion.
+  CerrarLineaPendiente(DatosCaja.cdsLineas);
   ActualizarRelojCaja;
-  SincronizarFechaCajaCabecera;
+  EscribirFechaCabeceraVenta(DatosCaja.cdsCabecera, FFecha);
   frmFaseCobro := nil;
   ObjTotales := nil;
   // Con líneas en negativo se pide el motivo de la devolución antes de
@@ -3586,7 +3285,8 @@ begin
     ObjTotales.ProcesarFacturaCompleta;
     frmFaseCobro := TfrmMtoCajaFaseCobro.Create(Self);
     frmFaseCobro.CargarDatosDesdeFactura(ObjTotales);
-    frmFaseCobro.FHayLineasDeposito := HayLineasConDeposito;
+    frmFaseCobro.FHayLineasDeposito :=
+      HayLineasDepositoVenta(DatosCaja.cdsLineas);
     frmFaseCobro.FCodigoEmpresa := FCodigoEmpresa;
     frmFaseCobro.FCodigoAlmacen := FCodigoAlmacen;
     frmFaseCobro.FCodigoCaja := FCodigoCaja;
@@ -3615,31 +3315,23 @@ begin
           frmFaseCobro.DatosCobro.ImporteDescuentoGlobal);
         ObjTotales.ProcesarFacturaCompleta;
       end;
-      sSerieDocumento := frmFaseCobro.cbbSERIE_FAC.Text;
-      sTipoFactura := 'SIMPLIFICADA';
-      dtFechaFactura := 0;
-      if frmFaseCobro.TipoImpresion = tiFactura then
-      begin
-        sSerieDocumento := frmFaseCobro.FSerieFactura;
-        sTipoFactura := 'NORMAL';
-        dtFechaFactura := frmFaseCobro.FFechaFactura;
-      end;
-      if (frmFaseCobro.TipoImpresion <> tiFactura) and
-         (FNumeroRectifica <> '') then
-      begin
-        sTipoFactura := 'RECTIFICATIVA';
-      end;
+      Documento := ResolverDocumentoCierreVenta(
+        frmFaseCobro.TipoImpresion = tiFactura,
+        frmFaseCobro.cbbSERIE_FAC.Text,
+        frmFaseCobro.FSerieFactura,
+        frmFaseCobro.FFechaFactura,
+        FNumeroRectifica <> '');
       ActualizarRelojCaja;
-      SincronizarFechaCajaCabecera;
+      EscribirFechaCabeceraVenta(DatosCaja.cdsCabecera, FFecha);
       frmFaseCobro.FFecha := FFecha;
       Solicitud := Default(TSolicitudCierreVenta);
       Solicitud.TipoImpresion := frmFaseCobro.TipoImpresion;
       Solicitud.Grabacion.CodigoEmpresa := FCodigoEmpresa;
       Solicitud.Grabacion.CodigoAlmacen := FCodigoAlmacen;
       Solicitud.Grabacion.CodigoCaja := FCodigoCaja;
-      Solicitud.Grabacion.SerieDocumento := sSerieDocumento;
-      Solicitud.Grabacion.TipoFactura := sTipoFactura;
-      Solicitud.Grabacion.FechaFactura := dtFechaFactura;
+      Solicitud.Grabacion.SerieDocumento := Documento.Serie;
+      Solicitud.Grabacion.TipoFactura := Documento.TipoFactura;
+      Solicitud.Grabacion.FechaFactura := Documento.FechaFactura;
       Solicitud.Grabacion.FechaOperacion := FFecha;
       Solicitud.Grabacion.NumeroManual := frmFaseCobro.FNumeroManual;
       Solicitud.Grabacion.TipoRectificativa := FTipoRectificativa;
@@ -3674,13 +3366,7 @@ end;
 
 function TfrmMtoOpeCaja.OperacionVacia: Boolean;
 begin
-  Result := True;
-  if Assigned(DatosCaja) and DatosCaja.cdsLineas.Active then
-  begin
-    if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
-      DatosCaja.cdsLineas.Cancel;
-    Result := DatosCaja.cdsLineas.IsEmpty;
-  end;
+  Result := OperacionVentaVacia(DatosCaja.cdsLineas);
 end;
 
 function TfrmMtoOpeCaja.FormularioCaja: TCustomForm;
@@ -4049,7 +3735,7 @@ begin
   // Ctrl+F12 -> resetear layout
   if (Key = VK_F12) and (ssCtrl in Shift) and not (ssAlt in Shift) then
   begin
-    ResetearLayout(Self.Name, PerfilesUsuario);
+    ResetearLayout(Self.Name, PerfilesEscritura);
     Key := 0;
   end;
 end;
@@ -4133,31 +3819,6 @@ begin
   if (CurrentEdit is TcxButtonEdit)
      and (CurrentEdit.Tag >= 1) and (CurrentEdit.Tag <= 5) then
     tvLineasOpeAvButtonClick(CurrentEdit, 0);
-end;
-
-procedure TfrmMtoOpeCaja.CargarAvsValidos(const ACodArt: string;
-  AOrden: Integer; var AAvs: TArray<string>);
-var
-  Lookup : IArticulosAtributosLookup;
-  Vals   : TArray<TArticuloAtributoValor>;
-  i      : Integer;
-begin
-  // Devuelve los AV (BLANCO, MALVA, 42, 44, ...) que el articulo tiene
-  // referenciados en alguno de sus SKUs para la columna `AOrden`. Mismo
-  // metodo que usa inMtoInventarios: ordena por ORDEN_AV para que tallas
-  // S/M/L/XL salgan correctamente.
-  SetLength(AAvs, 0);
-  if Trim(ACodArt) = '' then Exit;
-  if (AOrden < 1) or (AOrden > 5) then Exit;
-  Lookup := CrearLookupAtributosArticulos(ConexionPrincipal);
-  try
-    Vals := Lookup.ObtenerAvsEnSkus(ACodArt, AOrden);
-  finally
-    Lookup := nil;
-  end;
-  SetLength(AAvs, Length(Vals));
-  for i := 0 to High(Vals) do
-    AAvs[i] := Vals[i].Valor;
 end;
 
 procedure TfrmMtoOpeCaja.RegistrarValorAtributo(AOrden: Integer;
@@ -4312,7 +3973,11 @@ begin
   NombreAtb := DatosCaja.cdsLineas.FieldByName(
                  'ATTR' + IntToStr(Orden) + '_NOMBRE').AsString;
 
-  CargarAvsValidos(ArtPadre, Orden, Avs);
+  CargarAvsValidosArticulo(
+    ArtPadre,
+    Orden,
+    CrearLookupAtributosArticulos(ConexionPrincipal),
+    Avs);
   if Length(Avs) = 0 then
   begin
     ShowMessage(SErrorValoresAtributoCajaNoDefinidos);
@@ -4453,7 +4118,7 @@ procedure TfrmMtoOpeCaja.GuardarLayoutCaja;
 var
   Layout: TLayoutSaver;
 begin
-  Layout := TLayoutSaver.Create(Self.Name, PerfilesUsuario);
+  Layout := TLayoutSaver.Create(Self.Name, PerfilesEscritura);
   try
     Layout.GuardarGeometria(Self);
     Layout.GuardarAlturaPanel('StockPanelHeight', pnlBusqueda);

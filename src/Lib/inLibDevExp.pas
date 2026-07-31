@@ -51,18 +51,20 @@ uses
                                         const sName: string;
                                         const AsProfile: string;
                                         const APerfilesUsuario:
-                                          IPerfilesUsuario;
+                                          IEscritorPerfilesUsuario;
                                         AList: TPerfilList);
 
   procedure GetSettingsColumn(AcxgrdtvVista: TcxCustomGridTableView;
                               sName: String;
                               Sender: TComponent;
-                              const APerfilesUsuario: IPerfilesUsuario;
+                              const APerfilesUsuario:
+                                IEscritorPerfilesUsuario;
                               sUserGroup:String = 'Todos');
   procedure GetSettingsColumnProfile( AcxgrdtvVista: TcxCustomGridTableView;
                                       sName: String;
                                       Sender: TComponent;
-                                      const APerfilesUsuario: IPerfilesUsuario;
+                                      const APerfilesUsuario:
+                                        IEscritorPerfilesUsuario;
                                       AsProfile: String);
   procedure PonerAnchosTitulos( AcxgrdtvVista: TcxCustomGridTableView;
                                 AsDes: string;
@@ -440,7 +442,8 @@ end;
 procedure GetSettingsColumn(AcxgrdtvVista: TcxCustomGridTableView;
                             sName: String;
                             Sender: TComponent;
-                            const APerfilesUsuario: IPerfilesUsuario;
+                            const APerfilesUsuario:
+                              IEscritorPerfilesUsuario;
                             sUserGroup:String = 'Todos');
 var
   i: Integer;
@@ -570,7 +573,7 @@ procedure CollectSettingsColumnProfile(AcxgrdtvVista: TcxCustomGridTableView;
                                         const sName: string;
                                         const AsProfile: string;
                                         const APerfilesUsuario:
-                                          IPerfilesUsuario;
+                                          IEscritorPerfilesUsuario;
                                         AList: TPerfilList);
 var
   i: Integer;
@@ -708,7 +711,7 @@ procedure GetSettingsColumnProfile( AcxgrdtvVista: TcxCustomGridTableView;
                                     sName: String;
                                     Sender: TComponent;
                                     const APerfilesUsuario:
-                                      IPerfilesUsuario;
+                                      IEscritorPerfilesUsuario;
                                     AsProfile: String);
 var
   i: Integer;

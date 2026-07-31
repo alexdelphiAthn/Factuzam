@@ -339,12 +339,15 @@ uses inLibUser,
   inLibConexionesUniDAC,
   inLibTraduccionesIntf,
   inLibTraducciones,
+  inLibTraduccionesFastReport,
   inLibAuditoriaDatosIntf,
   inLibAuditoriaDatos,
   inLibMonitorSQLIntf,
   inLibMonitorSQLUniDAC,
   inLibMonitorSQLLog,
   inLibLog,
+  inLibPerfilesUsuarioIntf,
+  inLibFiltrosGuardadosIntf,
   inLibMsgCaja,
   inLibMsgComun,
   inLibMsgConfiguracion,
@@ -761,10 +764,15 @@ begin
     TServicioAuditoriaDatos.Create(ContextoSesion));
   tmr1Timer(nil);
   FdmDataPerfiles := TdmPerfiles.Create(Self);
-  AsignarPerfilesUsuario(FdmDataPerfiles);
+  AsignarPerfilesUsuario(
+    CrearServiciosPerfilesUsuario(
+      FdmDataPerfiles,
+      FdmDataPerfiles,
+      FdmDataPerfiles));
   inLibLog.Log.LogInfo('Arranque: creando parámetros de aplicación');
   ParametrosAppCreados := CrearParametrosAplicacion(
-    PerfilesUsuario,
+    PerfilesLectura,
+    CachePerfiles,
     IdentidadActual.Usuario,
     IdentidadActual.Grupo
   );
@@ -777,7 +785,8 @@ begin
   GestorLicencia.EstablecerLicencia(AResultadoLicencia);
   inLibLog.Log.LogInfo('Arranque: creando parámetros de caja');
   ParametrosCajaCreados := CrearParametrosCaja(
-    PerfilesUsuario,
+    PerfilesLectura,
+    CachePerfiles,
     ContextoSesion,
     IdentidadActual.Usuario,
     IdentidadActual.Grupo
@@ -800,6 +809,7 @@ begin
     TServicioTraducciones.Create(
       Conexiones,
       ParametrosApp.GetString('appIdioma', IDIOMA_ESPANOL)));
+  AplicarIdiomaFastReport(Traducciones.Idioma);
   Traducciones.Aplicar(Self);
   if FSplashInicio is TfrmSplash then
     Traducciones.Aplicar(TfrmSplash(FSplashInicio));
@@ -808,7 +818,11 @@ begin
     ParametrosApp,
     CrearValidadorArticulos(ConexionPrincipal));
   FdmDataFiltros  := TdmFiltros.Create(Self);
-  AsignarFiltrosGuardados(FdmDataFiltros);
+  AsignarFiltrosGuardados(
+    CrearServiciosFiltrosGuardados(
+      FdmDataFiltros,
+      FdmDataFiltros,
+      FdmDataFiltros));
   oFzaWinf := TfzaWinF.Create(Self);
   oFzaWinf.Charge(ConexionPrincipal);
   // Toda pantalla de fza_winforms debe tener su clase en el catalogo
@@ -1195,7 +1209,7 @@ var
 begin
   swTotal := TStopwatch.StartNew;
   Log.LogInfo('Arranque: PrecargarCachesSerie INICIO');
-  PerfilesUsuario.PrecargarPerfilesUsuario;
+  CachePerfiles.PrecargarPerfilesUsuario;
   AsignarInformesGuiasCache(
     TInformesGuiasCache.Create(ConexionPrincipal));
   InformesGuiasCache.Precargar;
@@ -1657,10 +1671,12 @@ begin
     FParametrosAppEdicion := nil;
     FParametrosCajaEdicion := nil;
     DesvincularPerfilesStockConsulta;
-    AsignarPerfilesUsuario(nil);
+    AsignarPerfilesUsuario(
+      CrearServiciosPerfilesUsuario(nil, nil, nil));
     if (FdmDataPerfiles <> nil) then
       FreeAndNil(FdmDataPerfiles);
-    AsignarFiltrosGuardados(nil);
+    AsignarFiltrosGuardados(
+      CrearServiciosFiltrosGuardados(nil, nil, nil));
     if (FdmDataFiltros <> nil) then
       FreeAndNil(FdmDataFiltros);
     AsignarAuditoriaDatos(nil);

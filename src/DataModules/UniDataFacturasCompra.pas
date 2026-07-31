@@ -9,12 +9,9 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Data module de FACTURAS DE COMPRA (facturas de compra).         }
-{    Espejo de UniDataAlbaranesCompra: misma cabecera + lineas sobre           }
-{    proveedor y precio de compra, pero al CERRAR la cabecera                  }
-{    (ABIERTA -> CERRADA) genera movimientos de SALIDA via                     }
-{    inLibFacturasCompraMovimientos (la cantidad va en positivo en el      }
-{    documento y RESTA del stock). Codigo de tipo de documento 'FP'.           }
+{    Data module de facturas de compra. La factura genera asiento, pero no     }
+{    mueve stock: la entrada ya se produjo al cerrar el albaran de compra.     }
+{    Su codigo de contador y serie se obtiene de la configuracion documental.  }
 {******************************************************************************}
 unit UniDataFacturasCompra;
 
@@ -149,7 +146,7 @@ uses
   inLibData,
   inLibArticulosValidadorIntf,
   UniDataArticulosValidadorRepositorio,
-  inLibMsgCompras;
+  inLibMsgCompras, inLibDocumento, inLibDocumentoIntf;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -467,7 +464,8 @@ begin
     sSerie := ObtenerSerieDefecto(
       ConexionPrincipal,
       UbicacionSesion.Empresa,
-      'FP');
+      CrearConfiguracionDocumento(
+        tdFactura, sdCompra).TipoContador);
     if FindField('SERIE_FACC') <> nil then
     begin
       if sSerie <> '' then
@@ -838,7 +836,9 @@ begin
     Params.CreateParam(ftString, 'pcont',             ptOutput);
     ParamByName('pserie').AsString :=
       unqryTablaG.FieldByName('SERIE_FACC').AsString;
-    ParamByName('ptipodoc').AsString := 'FP';
+    ParamByName('ptipodoc').AsString :=
+      CrearConfiguracionDocumento(
+        tdFactura, sdCompra).TipoContador;
     ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
     ParamByName('pEMPRESA_CONTADOR').AsString :=
       unqryTablaG.FieldByName('CODIGO_EMP_FACC').AsString;

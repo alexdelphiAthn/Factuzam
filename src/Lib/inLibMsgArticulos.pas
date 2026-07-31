@@ -140,6 +140,10 @@ resourcestring
     'No se ha registrado el distribuidor de tallas por almacén.';
   SErrorPersistenciaTallasNoRegistrada =
     'No se ha registrado la persistencia del modo de tallas.';
+  SErrorArticulosVariacionesNoRegistradas =
+    'No se ha registrado la implementación de variaciones de artículos.';
+  SErrorPersistenciaFotosNoRegistrada =
+    'No se ha registrado la persistencia del subsistema de fotos.';
   // La libreria ya no construye repositorios: la raiz de composicion
   // (TfrmBase.CrearValidadorArticulos / CrearLookupAtributosArticulos)
   // debe rellenar la configuracion antes de crear el modo de entrada.

@@ -59,13 +59,6 @@ type
     // True si la ultima entrada traia talla (lectura de SKU/barras):
     // el foco vuelve al articulo para encadenar lecturas.
     FUltimaConTalla: Boolean;
-    function GetModo: TModoColumnasSku;
-    function GetOnResuelto: TSkuResueltoEvent;
-    procedure SetOnResuelto(const AValue: TSkuResueltoEvent);
-    function GetOnEntrarEdicion: TNotifyEvent;
-    procedure SetOnEntrarEdicion(const AValue: TNotifyEvent);
-    function GetOnSalirEdicion: TNotifyEvent;
-    procedure SetOnSalirEdicion(const AValue: TNotifyEvent);
     procedure LogSesion(const ATexto: string);
     function CamposLineas: TCamposLineasTallas;
     function ConfigPersistencia: TConfigPersistenciaTallas;
@@ -92,8 +85,9 @@ type
     constructor Create(const AConfig: TConfigColumnasSku;
                        const ACfgTallas: TGridTallasConfig);
     destructor Destroy; override;
-    procedure SetAlmacenStock(const AValue: string);
-    procedure Construir;
+    procedure Construir(
+      AOnResuelto: TSkuResueltoEvent;
+      AOnEntrarEdicion, AOnSalirEdicion: TNotifyEvent);
     // Des-pivote al abandonar el modo: cada celda con cantidad pasa a
     // una linea por SKU (cantidad plana) y se limpian las celdas.
     procedure Desmontar;
@@ -209,44 +203,6 @@ begin
   FLineasCds.OnRecargarCeldas := FPresentacion.ArmarRecarga;
 end;
 
-function TModoEntradaTallas.GetModo: TModoColumnasSku;
-begin
-  Result := mcsTallasInline;
-end;
-
-function TModoEntradaTallas.GetOnResuelto: TSkuResueltoEvent;
-begin
-  Result := FOnResuelto;
-end;
-
-procedure TModoEntradaTallas.SetOnResuelto(
-  const AValue: TSkuResueltoEvent);
-begin
-  FOnResuelto := AValue;
-end;
-
-function TModoEntradaTallas.GetOnEntrarEdicion: TNotifyEvent;
-begin
-  Result := FOnEntrarEdicion;
-end;
-
-procedure TModoEntradaTallas.SetOnEntrarEdicion(
-  const AValue: TNotifyEvent);
-begin
-  FOnEntrarEdicion := AValue;
-end;
-
-function TModoEntradaTallas.GetOnSalirEdicion: TNotifyEvent;
-begin
-  Result := FOnSalirEdicion;
-end;
-
-procedure TModoEntradaTallas.SetOnSalirEdicion(
-  const AValue: TNotifyEvent);
-begin
-  FOnSalirEdicion := AValue;
-end;
-
 procedure TModoEntradaTallas.EntrarEdicion(Sender: TObject);
 begin
   if Assigned(FOnEntrarEdicion) then
@@ -257,17 +213,6 @@ procedure TModoEntradaTallas.SalirEdicion(Sender: TObject);
 begin
   if Assigned(FOnSalirEdicion) then
     FOnSalirEdicion(Sender);
-end;
-
-procedure TModoEntradaTallas.SetAlmacenStock(const AValue: string);
-begin
-  // El stock del desplegable de busqueda depende del almacen: se
-  // invalida el dataset y la proxima busqueda reconsulta.
-  if FConfig.AlmacenStock <> AValue then
-  begin
-    FConfig.AlmacenStock := AValue;
-    FPresentacion.EstablecerAlmacenStock(AValue);
-  end;
 end;
 
 function TModoEntradaTallas.UnidadesDocumento: Double;
@@ -352,8 +297,13 @@ begin
   end;
 end;
 
-procedure TModoEntradaTallas.Construir;
+procedure TModoEntradaTallas.Construir(
+  AOnResuelto: TSkuResueltoEvent;
+  AOnEntrarEdicion, AOnSalirEdicion: TNotifyEvent);
 begin
+  FOnResuelto := AOnResuelto;
+  FOnEntrarEdicion := AOnEntrarEdicion;
+  FOnSalirEdicion := AOnSalirEdicion;
   FPresentacion.Construir;
   // El gestor antes de la conversion: la conversion persiste celdas.
   FPresentacion.CrearGestor;

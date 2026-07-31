@@ -16,6 +16,10 @@ unit inLibMsgFacturas;
 interface
 
 resourcestring
+  SErrorLecturasFacturasNoRegistradas =
+    'No se ha registrado el repositorio de lecturas de facturas.';
+  SErrorRepositorioFacturaeNoRegistrado =
+    'No se ha registrado el repositorio de Facturae.';
   SCliToTbl = 'Cliente: %s pasado correctamente a la tabla de ' +
                      'clientes';
   SEmpToTbl = 'Empresa: %s pasada correctamente a la tabla de '+
@@ -348,6 +352,8 @@ resourcestring
   SCaptionColFechaExpedicionRecibo = 'Fecha Expedición Recibo';
   SCaptionColFechaPagoRecibo = 'Fecha Pago Recibo';
   SCaptionColLocalidadExpedicionRecibo = 'Localidad Expedición';
+  SCaptionEfectosCobroPlural = 'efectos de cobro';
+  SCaptionRecibosPlural = 'recibos';
   SCaptionTabLineasBorradorClasico = '&1_Lineas de Borrador [Clásico]';
   SCaptionTabLineasBorradorSku = '&1_Lineas de Borrador [SKU]';
   SCaptionTabLineasBorradorDesglose =

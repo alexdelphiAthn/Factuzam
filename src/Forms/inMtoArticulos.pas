@@ -584,6 +584,7 @@ uses
   inMtoModalGenImpSave, // dialogo de ambito para "Guardar precarga"
   inLibEAN13,
   inLibArticulosCodigosBarras,
+  inLibArticulosAltaTarifas,
   inLibArticulosFiltro,
   inLibAtributosPaleta,
   inLibLog,             // Log.LogPerf para cronometros del AfterScroll
@@ -896,25 +897,21 @@ end;
 procedure TfrmMtoArticulos.btnAddSKUClick(Sender: TObject);
 var
   frmSel: TfrmMtoModalAddPreciosTar;
-  i, j: Integer;
+  i: Integer;
   qryTodasTarifas: TUniQuery;
   qrySkus: TUniQuery;
   ListaSkus, ListaTarifas: TStringList;
   SkusSel, TarifasSel: TStringList;
-  // --- VARIABLES PARA CONTROL DE VIGENCIA ---
-  TarifasActivas: TStringList;
   Bkm: TBookmark;
-  LlaveUnica: string;
-  HaySolapamiento, TieneUserHasta, DbHastaIsNull: Boolean;
-  UserDesde, UserHasta, DbDesde, DbHasta: TDate;
-  Cond1, Cond2: Boolean;
   codArticulo: String;
   PrecioPadre: Double;
   sSku: string;
+  Vigencia: TVigenciaTarifa;
+  Existentes: TFilasTarifaExistentes;
+  Combinaciones: TCombinacionesAltaTarifa;
+  Fila: TFilaNuevaTarifa;
 begin
   inherited;
-  UserHasta := 0;
-  DbHasta := 0;
   if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
     dmmArticulos.unqryTablaG.Post;
 
@@ -930,7 +927,7 @@ begin
   TarifasSel   := TStringList.Create;
   try
     // --- CARGA DE SKUs ---
-    ListaSkus.Add('ARTÍCULO');
+    ListaSkus.Add(cSkuFilaArticulo);
     qrySkus := TUniQuery.Create(nil);
     try
       qrySkus.Connection := dmmArticulos.unqryTablaG.Connection;
@@ -974,109 +971,51 @@ begin
     frmSel.CargarTarifas(ListaTarifas);
 
     frmSel.ShowModal;
-    if frmSel.sFicha <> 'S' then Exit;
+    if frmSel.sFicha = 'S' then
+    begin
+      frmSel.ObtenerSkusSeleccionados(SkusSel);
+      frmSel.ObtenerTarifasSeleccionadas(TarifasSel);
+      Vigencia.Desde := frmSel.FechaDesde;
+      Vigencia.TieneHasta := frmSel.TieneFechaHasta;
+      if Vigencia.TieneHasta then
+        Vigencia.Hasta := frmSel.FechaHasta
+      else
+        Vigencia.Hasta := 0;
 
-    frmSel.ObtenerSkusSeleccionados(SkusSel);
-    frmSel.ObtenerTarifasSeleccionadas(TarifasSel);
-    UserDesde      := frmSel.FechaDesde;
-    TieneUserHasta := frmSel.TieneFechaHasta;
-    if TieneUserHasta then UserHasta := frmSel.FechaHasta;
+      // Las decisiones (solapamiento de vigencias, ocupacion y herencia
+      // del precio del padre) viven en inLibArticulosAltaTarifas; aqui
+      // queda el dataset y el modal.
+      dmmArticulos.unqryTarifasArticulos.DisableControls;
+      try
+        Bkm := dmmArticulos.unqryTarifasArticulos.GetBookmark;
+        Existentes := LeerFilasTarifaExistentes(
+                        dmmArticulos.unqryTarifasArticulos);
+        if dmmArticulos.unqryTarifasArticulos.BookmarkValid(Bkm) then
+          dmmArticulos.unqryTarifasArticulos.GotoBookmark(Bkm);
+        dmmArticulos.unqryTarifasArticulos.FreeBookmark(Bkm);
 
-    dmmArticulos.unqryTarifasArticulos.DisableControls;
-    TarifasActivas := TStringList.Create;
-    TarifasActivas.Sorted := True;
-    TarifasActivas.Duplicates := dupIgnore;
-    try
-      Bkm := dmmArticulos.unqryTarifasArticulos.GetBookmark;
-      dmmArticulos.unqryTarifasArticulos.First;
-      while not dmmArticulos.unqryTarifasArticulos.Eof do
-      begin
-        DbDesde := dmmArticulos.unqryTarifasArticulos.FieldByName(
-                                             'FECHA_DESDE_ARTTAR').AsDateTime;
-        DbHastaIsNull := dmmArticulos.unqryTarifasArticulos.FieldByName(
-                                                 'FECHA_HASTA_ARTTAR').IsNull;
-        if not DbHastaIsNull then
-          DbHasta := dmmArticulos.unqryTarifasArticulos.FieldByName(
-                                             'FECHA_HASTA_ARTTAR').AsDateTime;
-        Cond1 := (not TieneUserHasta) or (DbDesde <= UserHasta);
-        Cond2 := DbHastaIsNull or (UserDesde <= DbHasta);
-        HaySolapamiento := Cond1 and Cond2;
-        if HaySolapamiento then
+        Combinaciones := CalcularCombinacionesAltaTarifas(
+          SkusSel.ToStringArray, TarifasSel.ToStringArray,
+          Existentes, Vigencia);
+        for i := 0 to High(Combinaciones) do
         begin
-          LlaveUnica := dmmArticulos.unqryTarifasArticulos.FieldByName(
-            'CODIGO_UNIDAD_ARTTAR').AsString + '|' +
-                        dmmArticulos.unqryTarifasArticulos.FieldByName(
-                          'CODIGO_TAR_ARTTAR').AsString;
-          // Marcamos combinación como ocupada en estas fechas
-          TarifasActivas.Add(LlaveUnica);
-        end;
-        dmmArticulos.unqryTarifasArticulos.Next;
-      end;
-      if dmmArticulos.unqryTarifasArticulos.BookmarkValid(Bkm) then
-        dmmArticulos.unqryTarifasArticulos.GotoBookmark(Bkm);
-      dmmArticulos.unqryTarifasArticulos.FreeBookmark(Bkm);
-
-      for i := 0 to SkusSel.Count - 1 do
-      begin
-        for j := 0 to TarifasSel.Count - 1 do
-        begin
-          if SkusSel[i] = 'ARTÍCULO' then
-            LlaveUnica := '|' + TarifasSel[j]
-          else
-            LlaveUnica := SkusSel[i] + '|' + TarifasSel[j];
-
-          if TarifasActivas.IndexOf(LlaveUnica) <> -1 then Continue;
-
-          dmmArticulos.unqryTarifasArticulos.Append;
-          if SkusSel[i] = 'ARTÍCULO' then
-            dmmArticulos.unqryTarifasArticulos.FieldByName(
-              'CODIGO_UNIDAD_ARTTAR').AsString := ''
-          else
-            dmmArticulos.unqryTarifasArticulos.FieldByName(
-              'CODIGO_UNIDAD_ARTTAR').AsString := SkusSel[i];
-
-          dmmArticulos.unqryTarifasArticulos.FieldByName(
-            'CODIGO_TAR_ARTTAR').AsString := TarifasSel[j];
-
-          // Para filas de SKU heredamos el precio del padre (fila del
-          // artículo en la misma tarifa) si existe; si no, queda a 0.
-          if SkusSel[i] = 'ARTÍCULO' then
+          if Combinaciones[i].EsFilaArticulo then
             PrecioPadre := 0
           else
             PrecioPadre := dmmArticulos.ObtenerPrecioTarifaPadre(
-                                                       codArticulo,
-                                                       TarifasSel[j]);
-
-          dmmArticulos.unqryTarifasArticulos.FieldByName(
-            'PRECIO_SALIDA_ARTTAR').AsFloat := PrecioPadre;
-          dmmArticulos.unqryTarifasArticulos.FieldByName(
-            'PRECIO_FINAL_ARTTAR').AsFloat  := PrecioPadre;
-          if PrecioPadre > 0 then
-            dmmArticulos.unqryTarifasArticulos.FieldByName(
-              'ESACTIVO_ARTTAR').AsString := 'S'
-          else
-            dmmArticulos.unqryTarifasArticulos.FieldByName(
-              'ESACTIVO_ARTTAR').AsString := 'N';
-
-          dmmArticulos.unqryTarifasArticulos.FieldByName(
-            'FECHA_DESDE_ARTTAR').AsDateTime := UserDesde;
-          if TieneUserHasta then
-            dmmArticulos.unqryTarifasArticulos.FieldByName(
-              'FECHA_HASTA_ARTTAR').AsDateTime := UserHasta
-          else
-            dmmArticulos.unqryTarifasArticulos.FieldByName(
-              'FECHA_HASTA_ARTTAR').Clear;
-
-          dmmArticulos.unqryTarifasArticulos.Post;
-          TarifasActivas.Add(LlaveUnica);
+                                             codArticulo,
+                                             Combinaciones[i].Tarifa);
+          Fila := ComponerFilaNuevaTarifa(
+                    Combinaciones[i], PrecioPadre, Vigencia);
+          EscribirFilaNuevaTarifa(
+            dmmArticulos.unqryTarifasArticulos, Fila);
         end;
+      finally
+        dmmArticulos.unqryTarifasArticulos.EnableControls;
       end;
-    finally
-      FreeAndNil(TarifasActivas);
-      dmmArticulos.unqryTarifasArticulos.EnableControls;
+      dmmArticulos.unqryTarifasArticulos.Refresh;
+      ActualizarVisibilidadColumnaSku;
     end;
-    dmmArticulos.unqryTarifasArticulos.Refresh;
-    ActualizarVisibilidadColumnaSku;
   finally
     FreeAndNil(SkusSel);
     FreeAndNil(TarifasSel);
@@ -2043,7 +1982,7 @@ begin
       RecogerPerfilesParticulares(oList, sPermisos);
       ConexionPrincipal.StartTransaction;
       try
-        PerfilesUsuario.GrabarPerfiles(oList);
+        PerfilesEscritura.GrabarPerfiles(oList);
         ConexionPrincipal.Commit;
       except
         ConexionPrincipal.Rollback;

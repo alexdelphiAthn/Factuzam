@@ -2,19 +2,16 @@
 {                                                                              }
 {  Módulo:       inLibHojaCalculoIntf                                          }
 {    Tipo:       Librería (interfaces)                                         }
-{ Versión:       1.1.0                                                         }
-{   Fecha:       25/07/2026                                                    }
+{ Versión:       2.0.0                                                         }
+{   Fecha:       31/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Puertos de escritura y lectura de hojas de cálculo, independientes del    }
-{    motor concreto (DevExpress, OOXML, doble de prueba). Los exportadores     }
-{    de dominio dependen de estas interfaces y no del control TdxSpreadSheet.  }
-{    v1.1 (Fase 2): el puerto crece con las operaciones que usa un            }
-{    exportador real (formato, fondo, borde por lado, tamaño de fuente,        }
-{    negrita, ancho de columna, lote y existencia de celda).                   }
+{    Puertos de contenido, formato, guardado y lectura de hojas de cálculo,    }
+{    independientes del motor concreto. Cada consumidor recibe solo las       }
+{    operaciones que usa.                                                      }
 {******************************************************************************}
 unit inLibHojaCalculoIntf;
 
@@ -31,21 +28,24 @@ type
   TEstiloBorde = (ebNinguno, ebFino, ebMedio, ebGrueso);
   // Lado de una celda para bordes sueltos (el adaptador lo mapea a TcxBorder).
   TLadoBorde = (lbSuperior, lbInferior, lbIzquierdo, lbDerecho);
-  // Puerto de escritura. Índices de fila y columna en base 0. El color es un
-  // TColor codificado como Cardinal ($00BBGGRR) para no depender de la VCL.
+  // Escritura de contenido y estructura. Índices en base 0.
   IEscritorHojaCalculo = interface
     ['{4584B695-CCB6-4AE2-A94B-33F28A5D8EDD}']
     // Limpia el libro y crea una hoja nueva con ese nombre; queda activa.
     procedure NuevaHoja(const ANombre: string);
     procedure IniciarLote;
     procedure FinalizarLote;
-    procedure Escribir(AFila, ACol: Integer; const AValor: Variant;
-                       ANegrita: Boolean = False;
-                       AAlineacion: TAlineacionCelda = acIzquierda;
-                       const AFormato: string = '');
-    procedure EscribirFormula(AFila, ACol: Integer; const AFormula: string;
-                              const AFormato: string = '');
+    procedure Escribir(AFila, ACol: Integer; const AValor: Variant);
+    procedure EscribirFormula(
+      AFila, ACol: Integer;
+      const AFormula: string);
     procedure Combinar(AFila, ACol, ANumFilas, ANumCols: Integer);
+    function CeldaExiste(AFila, ACol: Integer): Boolean;
+  end;
+  // Formato visual. El color es un TColor codificado como Cardinal
+  // ($00BBGGRR) para no depender de la VCL.
+  IFormateadorHojaCalculo = interface
+    ['{7A671706-776A-4E5A-A16D-A05E62811C9F}']
     procedure DibujarCuadro(AF1, AC1, AF2, AC2: Integer;
                             AEstilo: TEstiloBorde);
     procedure BordeCelda(AFila, ACol: Integer; ALado: TLadoBorde;
@@ -54,8 +54,21 @@ type
     procedure Negrita(AFila, ACol: Integer; AActivar: Boolean = True);
     procedure TamanoFuente(AFila, ACol: Integer; ATamano: Integer);
     procedure AnchoColumna(ACol: Integer; AAncho: Integer);
-    function CeldaExiste(AFila, ACol: Integer): Boolean;
+    procedure Alinear(
+      AFila, ACol: Integer;
+      AAlineacion: TAlineacionCelda);
+    procedure AplicarFormato(
+      AFila, ACol: Integer;
+      const AFormato: string);
+  end;
+  IGuardadorHojaCalculo = interface
+    ['{35A0166C-A008-4BF7-A245-8006A38C1C07}']
     procedure Guardar(const ARuta: string);
+  end;
+  TServiciosHojaCalculo = record
+    Escritor: IEscritorHojaCalculo;
+    Formateador: IFormateadorHojaCalculo;
+    Guardador: IGuardadorHojaCalculo;
   end;
   // Puerto de lectura: ruta de importación (leer celdas por índice, base 0).
   ILectorHojaCalculo = interface

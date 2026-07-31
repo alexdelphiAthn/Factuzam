@@ -49,12 +49,16 @@ type
     procedure btnSalirClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   private
+    FEliminador: IEliminadorFormatoImpresion;
     { Private declarations }
   public
     { Public declarations }
       sFicha:string;
       sElegido:string;
       bPredeterminado:boolean;
+    constructor Create(
+      AOwner: TComponent;
+      const AEliminador: IEliminadorFormatoImpresion); reintroduce;
   end;
 
 implementation
@@ -62,17 +66,23 @@ implementation
 {$R *.dfm}
 
 procedure TfrmMtoModalGenImpEle.btnDeleteFormatoClick(Sender: TObject);
-var
-  oEliminador: IEliminadorFormatoImpresion;
 begin
   inherited;
   sElegido := lstFormatos.Items[lstFormatos.ItemIndex];
-  if Supports(Self.Owner, IEliminadorFormatoImpresion, oEliminador) then
-    oEliminador.EliminarFormatoImpresion(sElegido, Self)
+  if Assigned(FEliminador) then
+    FEliminador.EliminarFormatoImpresion(sElegido, Self)
   else
     raise EInvalidCast.Create(
       'El propietario no permite eliminar formatos de impresión.');
   sFicha := 'D';
+end;
+
+constructor TfrmMtoModalGenImpEle.Create(
+  AOwner: TComponent;
+  const AEliminador: IEliminadorFormatoImpresion);
+begin
+  FEliminador := AEliminador;
+  inherited Create(AOwner);
 end;
 
 procedure TfrmMtoModalGenImpEle.btnSalirClick(Sender: TObject);

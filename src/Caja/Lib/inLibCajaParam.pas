@@ -36,7 +36,8 @@ type
     procedure DespuesDeRecargar; override;
   public
     constructor Create(
-      const APerfilesUsuario: IPerfilesUsuario;
+      const APerfilesLectura: ILectorPerfilesUsuario;
+      const ACachePerfiles: ICachePerfilesUsuario;
       const AContextoSesion: IContextoSesionAplicacion);
     destructor Destroy; override;
     function ImpresoraCaja: string;
@@ -45,7 +46,8 @@ type
   end;
 
 function CrearParametrosCaja(
-  const APerfilesUsuario: IPerfilesUsuario;
+  const APerfilesLectura: ILectorPerfilesUsuario;
+  const ACachePerfiles: ICachePerfilesUsuario;
   const AContextoSesion: IContextoSesionAplicacion;
   const AUsuario, AGrupo: string
 ): IParametrosCaja;
@@ -58,14 +60,16 @@ uses
 { TParametrosCaja }
 
 constructor TParametrosCaja.Create(
-  const APerfilesUsuario: IPerfilesUsuario;
+  const APerfilesLectura: ILectorPerfilesUsuario;
+  const ACachePerfiles: ICachePerfilesUsuario;
   const AContextoSesion: IContextoSesionAplicacion);
 begin
   if not Assigned(AContextoSesion) then
     raise EArgumentNilException.Create(
       SErrorContextoImpresoraCajaNoProporcionado);
   inherited Create(
-    APerfilesUsuario,
+    APerfilesLectura,
+    ACachePerfiles,
     'frmMtoCajaParam',
     TArray<string>.Create(
       'WindowState',
@@ -312,7 +316,8 @@ begin
 end;
 
 function CrearParametrosCaja(
-  const APerfilesUsuario: IPerfilesUsuario;
+  const APerfilesLectura: ILectorPerfilesUsuario;
+  const ACachePerfiles: ICachePerfilesUsuario;
   const AContextoSesion: IContextoSesionAplicacion;
   const AUsuario, AGrupo: string
 ): IParametrosCaja;
@@ -320,7 +325,8 @@ var
   Parametros: TParametrosCaja;
 begin
   Parametros := TParametrosCaja.Create(
-    APerfilesUsuario,
+    APerfilesLectura,
+    ACachePerfiles,
     AContextoSesion);
   // Mismo orden que en la factoria de aplicacion: el interfaz gobierna
   // la vida del objeto antes de inicializar, por si algun hook toma una

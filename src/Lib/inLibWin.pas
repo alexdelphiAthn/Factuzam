@@ -39,13 +39,15 @@ uses
                            sNameObject:String):TObject; overload;
   procedure CargarCaptions(oControl:TComponent;
                            Sender:TComponent;
-                           const APerfilesUsuario: IPerfilesUsuario;
+                           const APerfilesUsuario:
+                             IEscritorPerfilesUsuario;
                            sUser:String = 'Todos');
   procedure SetLabelForm(oControl:TComponent;
                          var oPerfilDic : TProfileDicc );
   procedure GrabarPerfilDatam(dmmModule:TDataModule;
                               Sender:TComponent;
-                              const APerfilesUsuario: IPerfilesUsuario;
+                              const APerfilesUsuario:
+                                IEscritorPerfilesUsuario;
                               sUser:string = 'Todos');
   function GetVolumeID(ADriveChar: Char): String;
   function FindFormOwner(AoSender: TObject):TComponent;
@@ -355,7 +357,8 @@ end;
 
 procedure GrabarPerfilDatam(dmmModule:TDataModule;
                             Sender:TComponent;
-                            const APerfilesUsuario: IPerfilesUsuario;
+                            const APerfilesUsuario:
+                              IEscritorPerfilesUsuario;
                             sUser:string = 'Todos');
 var
   oControl:TComponent;
@@ -542,7 +545,8 @@ end;
 
 procedure CargarCaptions(oControl:TComponent;
                          Sender:TComponent;
-                         const APerfilesUsuario: IPerfilesUsuario;
+                         const APerfilesUsuario:
+                           IEscritorPerfilesUsuario;
                          sUser:String = 'Todos');
     function GetComponentPropertyValue(Component: TComponent;
                                        APropName: string): string;

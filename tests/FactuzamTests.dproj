@@ -96,8 +96,16 @@
         <DCCReference Include="..\src\Lib\inLibDatasets.pas"/>
         <DCCReference Include="..\src\Lib\inLibValoresAutomaticos.pas"/>
         <DCCReference Include="..\src\Lib\inLibBusquedasCompra.pas"/>
+        <DCCReference Include="..\src\Lib\inLibDocumentoIntf.pas"/>
+        <DCCReference Include="..\src\Lib\inLibDocumento.pas"/>
         <DCCReference Include="..\src\Lib\inLibValidacionDocumento.pas"/>
         <DCCReference Include="..\src\Lib\inLibPresentacionDocumento.pas"/>
+        <DCCReference Include="..\src\Lib\inLibFacturasCobrosPresentacion.pas"/>
+        <DCCReference
+            Include="..\src\Lib\inLibFacturasEstadoFiscalPresentacion.pas"/>
+        <DCCReference Include="..\src\Lib\inLibFacturasOperacionFiscal.pas"/>
+        <DCCReference
+            Include="..\src\Lib\inLibFacturasConsolidacionPresentacion.pas"/>
         <DCCReference Include="..\src\Lib\inLibShowMto.pas"/>
         <DCCReference Include="..\src\Lib\inLibImpuestosComun.pas"/>
         <DCCReference Include="..\src\Lib\inLibComprasImpuestos.pas"/>
@@ -132,6 +140,17 @@
             Include="..\src\Lib\inLibDevolucionesCompraMovimientos.pas"/>
         <DCCReference
             Include="..\src\DataModules\UniDataDevolucionesCompraMovimientos.pas"/>
+        <DCCReference Include="..\src\Lib\inLibArticulosVariacionesIntf.pas"/>
+        <DCCReference Include="..\src\Lib\inLibArticulosVariaciones.pas"/>
+        <DCCReference
+            Include="..\src\DataModules\UniDataArticulosVariaciones.pas"/>
+        <DCCReference Include="..\src\Lib\inLibFotosPersistenciaIntf.pas"/>
+        <DCCReference
+            Include="..\src\DataModules\UniDataFotosRepositorio.pas"/>
+        <DCCReference
+            Include="..\src\Lib\inLibGridPivoteCompraPersistenciaIntf.pas"/>
+        <DCCReference
+            Include="..\src\DataModules\UniDataGridPivoteCompraRepositorio.pas"/>
         <DCCReference Include="..\src\Lib\inLibPedidosCompraIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibPedidosCompra.pas"/>
         <DCCReference
@@ -140,10 +159,18 @@
         <DCCReference Include="..\src\Lib\inLibVentasWsJson.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataVentasWsJson.pas"/>
         <DCCReference Include="..\src\verifactu\UniDataVerifactuColaRepositorio.pas"/>
+        <DCCReference
+            Include="..\src\verifactu\inLibVerifactuNoVerifactuExportIntf.pas"/>
+        <DCCReference
+            Include="..\src\verifactu\UniDataVerifactuNoVerifactuExport.pas"/>
         <DCCReference Include="..\src\verifactu\UniDataVerifactuColaProcesador.pas"/>
         <DCCReference Include="..\src\verifactu\UniDataVerifactuColaResultados.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataCatalogoSqlValidacion.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataFacturasRepositorio.pas"/>
+        <DCCReference Include="..\src\Lib\inLibFacturasLecturasIntf.pas"/>
+        <DCCReference Include="..\src\DataModules\UniDataFacturasLecturas.pas"/>
+        <DCCReference Include="..\src\Lib\inLibFacturaePersistenciaIntf.pas"/>
+        <DCCReference Include="..\src\DataModules\UniDataFacturaeRepositorio.pas"/>
         <DCCReference Include="..\src\Caja\DataModules\UniDataCajaConsultasRepositorio.pas"/>
         <DCCReference Include="..\src\Lib\inLibArticulosResolverIntf.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataArticulosResolverRepositorio.pas"/>
@@ -191,6 +218,7 @@
         <DCCReference Include="PruebasDatasets.pas"/>
         <DCCReference Include="PruebasValoresAutomaticos.pas"/>
         <DCCReference Include="PruebasBusquedasCompra.pas"/>
+        <DCCReference Include="PruebasDocumento.pas"/>
         <DCCReference Include="PruebasCatalogoSql.pas"/>
         <DCCReference Include="PruebasValidacionTallasCompra.pas"/>
         <DCCReference Include="DoblesModoTallas.pas"/>
@@ -203,12 +231,24 @@
         <DCCReference Include="PruebasReglasCompartidas.pas"/>
         <DCCReference Include="PruebasCajaVenta.pas"/>
         <DCCReference Include="PruebasFacturasServicios.pas"/>
+        <DCCReference Include="PruebasFacturasLecturas.pas"/>
+        <DCCReference Include="PruebasFacturaePersistencia.pas"/>
+        <DCCReference Include="PruebasFacturasCobrosPresentacion.pas"/>
+        <DCCReference Include="PruebasFacturasEstadoFiscalPresentacion.pas"/>
+        <DCCReference Include="PruebasFacturasOperacionFiscal.pas"/>
+        <DCCReference
+            Include="PruebasFacturasConsolidacionPresentacion.pas"/>
         <DCCReference Include="PruebasExcepcionesAplicacion.pas"/>
         <DCCReference Include="PruebasEmisionFiscal.pas"/>
         <DCCReference Include="PruebasDevolucionesCompraMovimientos.pas"/>
+        <DCCReference Include="PruebasArticulosVariaciones.pas"/>
+        <DCCReference Include="PruebasFotosPersistencia.pas"/>
+        <DCCReference Include="PruebasGridPivoteCompraPersistencia.pas"/>
         <DCCReference Include="PruebasPedidosCompra.pas"/>
         <DCCReference Include="PruebasVentasWsJson.pas"/>
         <DCCReference Include="PruebasVerifactuColaRepositorio.pas"/>
+        <DCCReference
+            Include="PruebasExportacionNoVerifactuPersistencia.pas"/>
         <DCCReference Include="PruebasCatalogoSqlRepositorios.pas"/>
         <DCCReference Include="PruebasArticulosResolverCatalogo.pas"/>
         <DCCReference Include="PruebasArticulosCatalogoSql22.pas"/>

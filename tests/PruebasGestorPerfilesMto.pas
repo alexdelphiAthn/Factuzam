@@ -21,7 +21,9 @@ uses
 
 type
   TServicioPerfilesPrueba = class(
-    TInterfacedObject, IPerfilesUsuario)
+    TInterfacedObject,
+    ILectorPerfilesUsuario,
+    IEscritorPerfilesUsuario)
   private
     FValores: TProfileDicc;
     FGrabados: TPerfilList;
@@ -45,7 +47,6 @@ type
       const AClave: string;
       const AValorPredeterminado: string = ''
     ): string;
-    procedure PrecargarPerfilesUsuario;
     function CargarPerfilFormulario(
       const AFormulario: string;
       out APerfil: TProfileDicc
@@ -54,9 +55,6 @@ type
       const AFormulario, AUsuario, AGrupo: string;
       out APerfil: TProfileDicc
     ): Boolean; overload;
-    procedure ResincronizarPerfilFormulario(
-      const AFormulario: string);
-    procedure InvalidarCachePerfiles;
     property Grabados: TPerfilList read FGrabados;
     property Eliminaciones: Integer read FEliminaciones;
   end;
@@ -68,7 +66,8 @@ type
     FDatos: TDataSource;
     FEtiqueta: TcxLabel;
     FServicioObjeto: TServicioPerfilesPrueba;
-    FServicio: IPerfilesUsuario;
+    FServicioLectura: ILectorPerfilesUsuario;
+    FServicioEscritura: IEscritorPerfilesUsuario;
     FGestor: TGestorPerfilesMto;
     FReseteos: Integer;
     FBorradosGuias: Integer;
@@ -173,10 +172,6 @@ begin
   Result := AValorPredeterminado;
 end;
 
-procedure TServicioPerfilesPrueba.PrecargarPerfilesUsuario;
-begin
-end;
-
 function TServicioPerfilesPrueba.CargarPerfilFormulario(
   const AFormulario: string;
   out APerfil: TProfileDicc): Boolean;
@@ -197,15 +192,6 @@ begin
   Result := True;
 end;
 
-procedure TServicioPerfilesPrueba.ResincronizarPerfilFormulario(
-  const AFormulario: string);
-begin
-end;
-
-procedure TServicioPerfilesPrueba.InvalidarCachePerfiles;
-begin
-end;
-
 procedure TPruebasGestorPerfilesMto.Preparar;
 begin
   FFormulario := TForm.CreateNew(nil);
@@ -214,13 +200,15 @@ begin
   FDatos := TDataSource.Create(FFormulario);
   FEtiqueta := TcxLabel.Create(FFormulario);
   FServicioObjeto := TServicioPerfilesPrueba.Create;
-  FServicio := FServicioObjeto;
+  FServicioLectura := FServicioObjeto;
+  FServicioEscritura := FServicioObjeto;
   FReseteos := 0;
   FBorradosGuias := 0;
   FDescripcionEditable := False;
   FUltimoGrid := '';
   FGestor := TGestorPerfilesMto.Create(
-    FFormulario, FDatos, FEtiqueta, FServicio,
+    FFormulario, FDatos, FEtiqueta,
+    FServicioLectura, FServicioEscritura,
     SolicitarDestino, RecogerParticular,
     ResetearGrid, BorrarGuias);
 end;
@@ -228,7 +216,8 @@ end;
 procedure TPruebasGestorPerfilesMto.Limpiar;
 begin
   FreeAndNil(FGestor);
-  FServicio := nil;
+  FServicioLectura := nil;
+  FServicioEscritura := nil;
   FServicioObjeto := nil;
   FreeAndNil(FFormulario);
 end;

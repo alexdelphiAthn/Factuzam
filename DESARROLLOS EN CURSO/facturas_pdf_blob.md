@@ -13,7 +13,7 @@ consulta.
 | Esquema (5 columnas nuevas)   | `facturas_pdf_blob.sql` (idempotente) |
 | Volcado fichero→blob          | `src/Lib/inLibFacturaPdfBlob.pas` |
 | Hook en toda exportación PDF  | `src/Modals/inMtoModalImpFac.pas` (`PdfExportado`) |
-| Generación al consolidar      | `src/Forms/inMtoFacturasBase.pas` (`GenerarPdfFacturaConsolidada`) |
+| Generación al consolidar      | `src/Modals/inMtoModalImpFac.pas` (`ArchivarFacturaConsolidada`) |
 | Servicio externo              | `mcp/servidor_mcp.py` (herramienta `factura_pdf`) |
 
 Columnas nuevas en `fza_facturas` (patrón de `fza_ventas_ws_cola`):

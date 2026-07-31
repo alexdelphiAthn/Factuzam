@@ -46,8 +46,8 @@ function CrearMovimientosDevolucionCompraUniDAC(
 implementation
 
 uses
-  System.SysUtils, Data.DB, DBAccess, inLibValoresAutomaticos,
-  inLibMsgCompras;
+  System.SysUtils, Data.DB, DBAccess, inLibDocumento,
+  inLibDocumentoIntf, inLibValoresAutomaticos, inLibMsgCompras;
 type
   TMovimientosDevolucionCompraUniDAC = class(
     TInterfacedObject,
@@ -61,6 +61,12 @@ type
     procedure RevertirDesdeDevolucion(
       const ASerieDevc, ANumDevc, AUsuario: string);
   end;
+
+function EstrategiaDevolucionCompra: IEstrategiaDocumento;
+begin
+  Result := CrearEstrategiaDocumento(
+    CrearConfiguracionDocumento(tdDevolucion, sdCompra));
+end;
 
 // Carga los datos minimos del devolucion necesarios para construir los
 // movimientos: empresa (para el parametro p_CODIGO_EMPRESA_MOV) y
@@ -118,9 +124,11 @@ begin
     qChk.SQL.Text :=
       'SELECT COUNT(*) AS N ' +
       '  FROM fza_movimientos_almacen ' +
-      ' WHERE TIPO_DOC_MOV   = ''DC'' ' +
+      ' WHERE TIPO_DOC_MOV   = :t ' +
       '   AND SERIE_DOC_MOV  = :s ' +
       '   AND NUMERO_DOC_MOV = :n';
+    qChk.ParamByName('t').AsString :=
+      EstrategiaDevolucionCompra.TipoDocumentoMovimientoStock;
     qChk.ParamByName('s').AsString := ASerieDevc;
     qChk.ParamByName('n').AsString := ANumDevc;
     qChk.Open;
@@ -250,7 +258,8 @@ begin
       // reusamos tal cual como LINEA_MOV.
       sLinea := qSrc.FieldByName('LINEA').AsString;
       spIns.ParamByName('p_NUMERO_MOV').AsString          := sNumeroMov;
-      spIns.ParamByName('p_TIPO_DOC_MOV').AsString        := 'DC';
+      spIns.ParamByName('p_TIPO_DOC_MOV').AsString :=
+        EstrategiaDevolucionCompra.TipoDocumentoMovimientoStock;
       spIns.ParamByName('p_SERIE_DOC_MOV').AsString       := ASerieDevc;
       spIns.ParamByName('p_NRO_DOC_MOV').AsString         := ANumDevc;
       spIns.ParamByName('p_LINEA_MOV').AsString           := sLinea;
@@ -258,7 +267,8 @@ begin
       spIns.ParamByName('p_CODIGO_ALMACEN_MOV').AsString  := sCodigoAlm;
       spIns.ParamByName('p_CODIGO_ALMACEN_CONTRA_MOV').Clear;
       spIns.ParamByName('p_CODIGO_UNIDAD_MOV').AsString   := sCodigoSku;
-      spIns.ParamByName('p_TIPO_MOVIMIENTO_MOV').AsString := 'S';
+      spIns.ParamByName('p_TIPO_MOVIMIENTO_MOV').AsString :=
+        EstrategiaDevolucionCompra.TipoMovimientoStock;
       spIns.ParamByName('p_CANTIDAD_MOV').AsFloat         := rCantidad;
       spIns.ParamByName('p_PRECIO_MEDIO_MOV').AsFloat     := rPrecio;
       spIns.ParamByName('p_TOTAL_COSTE_MOV').AsFloat      := rTotal;
@@ -323,9 +333,11 @@ begin
     qPares.SQL.Text :=
       'SELECT DISTINCT CODIGO_EMP_MOV, CODIGO_ALM_MOV ' +
       '  FROM fza_movimientos_almacen ' +
-      ' WHERE TIPO_DOC_MOV   = ''DC'' ' +
+      ' WHERE TIPO_DOC_MOV   = :t ' +
       '   AND SERIE_DOC_MOV  = :s ' +
       '   AND NUMERO_DOC_MOV = :n';
+    qPares.ParamByName('t').AsString :=
+      EstrategiaDevolucionCompra.TipoDocumentoMovimientoStock;
     qPares.ParamByName('s').AsString := ASerieDevc;
     qPares.ParamByName('n').AsString := ANumDevc;
     qPares.Open;
@@ -335,7 +347,8 @@ begin
     //    CANTIDAD_STK + acumuladores por subtipo en una transacción.
     qExec.SQL.Text :=
       'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC(:t, :s, :n)';
-    qExec.ParamByName('t').AsString := 'DC';
+    qExec.ParamByName('t').AsString :=
+      EstrategiaDevolucionCompra.TipoDocumentoMovimientoStock;
     qExec.ParamByName('s').AsString := ASerieDevc;
     qExec.ParamByName('n').AsString := ANumDevc;
     qExec.ExecSQL;

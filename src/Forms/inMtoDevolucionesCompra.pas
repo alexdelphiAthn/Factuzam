@@ -26,7 +26,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
   Forms, Dialogs, Uni,
-  inMtoGen, dxSkinsCore, dxSkinBlue, dxSkinsForm,
+  inMtoDocumento, dxSkinsCore, dxSkinBlue, dxSkinsForm,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit,
   cxDBEdit, cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, DB,
@@ -43,14 +43,14 @@ uses
   inLibColumnasSkuIntf,
   inLibGridPivoteVenta,
   UniDataDevolucionesCompra, cxBlobEdit, dxShellDialogs, System.Actions,
-  Vcl.ActnList, cxSplitter;
+  Vcl.ActnList, cxSplitter, inLibDocumento, inLibDocumentoIntf;
 
 const
   CANT_TALLAS_MAX = 20;
   CANT_ATRIB_MAX  = 5;
 
 type
-  TfrmMtoDevolucionesCompra = class(TfrmMtoGen)
+  TfrmMtoDevolucionesCompra = class(TfrmMtoDocumento)
     pnlTopFicha:         TPanel;
     splSplitterFicha:    TcxSplitter;
     pcCab:               TcxPageControl;
@@ -299,10 +299,7 @@ type
   public
     dmmDevolucionesCompra: TdmDevolucionesCompra;
     procedure CrearTablaPrincipal; override;
-    // Restricción de la precarga a la empresa/almacén del usuario
-    function SqlRestriccionUsuario: string; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
-    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 implementation
@@ -394,7 +391,7 @@ begin
   CargarSeriesEmpresa(
     ConexionPrincipal,
     sEmpresa,
-    'DC',
+    ConfiguracionDocumento.TipoContador,
     cbbSERIE_DEVC.Properties.Items);
   if cbbSERIE_DEVC.Properties.Items.Count = 0 then
   begin
@@ -412,19 +409,12 @@ end;
 procedure TfrmMtoDevolucionesCompra.ResolverArtSkuActivo(out ACodArt,
                                                       ACodSku: string);
 begin
-  ResolverArtSkuActivoDocumento(
-    tvLineasDevolucion, ACodArt, ACodSku);
+  inherited;
   if ACodArt = '' then
   begin
     ACodArt := ValorLineaActiva('CODIGO_ART_DEVCLIN');
     ACodSku := ValorLineaActiva('CODIGO_UNIDAD_DEVCLIN');
   end;
-end;
-
-function TfrmMtoDevolucionesCompra.DataSourcesParaFoto: TArray<TDataSource>;
-begin
-  Result := DataSourcesParaFotoDocumento(
-    dsTablaG, tvLineasDevolucion);
 end;
 
 procedure TfrmMtoDevolucionesCompra.FormCreate(Sender: TObject);
@@ -1117,9 +1107,7 @@ begin
     AsegurarCabeceraPersistidaCompra(
       dmmDevolucionesCompra.unqryTablaG,
       dmmDevolucionesCompra.unqryDevolucionesCompraLineas,
-      CrearConfiguracionTallasCompra(
-        'una devolucion', 'DEVC', 'DEVCLIN',
-        'fza_devoluciones_compra_lineas'),
+      ConfiguracionTallasDocumento,
       ValidarAlmacenSalidaParaLineas);
 end;
 
@@ -1133,9 +1121,7 @@ begin
       dmmDevolucionesCompra.unqryTablaG,
       dmmDevolucionesCompra.unqryDevolucionesCompraLineas,
       dmmDevolucionesCompra.unqryTablaG.Connection,
-      CrearConfiguracionTallasCompra(
-        'una devolucion', 'DEVC', 'DEVCLIN',
-        'fza_devoluciones_compra_lineas'),
+      ConfiguracionTallasDocumento,
       AsegurarCabeceraPersistidaParaLineas,
       FPivote.ValidarPivotePosible, AMensaje);
 end;
@@ -1150,14 +1136,11 @@ begin
   end;
 end;
 
-function TfrmMtoDevolucionesCompra.SqlRestriccionUsuario: string;
-begin
-  Result := SqlFiltroDocumento(
-    ContextoSesion, ParametrosApp, 'DEVC');
-end;
-
 procedure TfrmMtoDevolucionesCompra.CrearTablaPrincipal;
 begin
+  InicializarDocumento(
+    CrearConfiguracionDocumento(tdDevolucion, sdCompra));
+  AsignarVistaLineasDocumento(tvLineasDevolucion);
   inherited;
   dmmDevolucionesCompra := TdmDevolucionesCompra(
     AsegurarDataModuleDocumento(

@@ -61,7 +61,7 @@ type
   THackWinControl = class(TWinControl);
   // Resultado del dialogo de borrado: cancelar, desactivar o borrar igual.
   TAccionBorrado = (abContinuar, abDesactivar, abCancelar);
-  TfrmMtoGen = class(TfrmBase, IVentanaEmbebida, IMantenimientoEmbebido)
+  TfrmMtoGen = class(TfrmBase, IMantenimientoEmbebido)
     pButtonPage: TPanel;
     pButtonRightBar: TPanel;
     pButtonBDStat: TPanel;
@@ -860,7 +860,7 @@ begin
     GrabarPerfilDatam(
       tdmDataModule as TdmBase,
       Self.Owner,
-      PerfilesUsuario);
+      PerfilesEscritura);
 end;
 
 procedure TfrmMtoGen.RecogerPerfilesParticulares(var oList: TPerfilList;
@@ -1059,7 +1059,7 @@ begin
       begin
         GetFormUserProfile(TdmBase(tdmDataModule).FoPerfilDic,
                            TdmBase(tdmDataModule).Name,
-                           PerfilesUsuario);
+                           PerfilesLectura);
         LoadSQLFromProfile(TdmBase(tdmDataModule),
                            TdmBase(tdmDataModule).FoPerfilDic);
       end;
@@ -1534,12 +1534,14 @@ begin
     InformesGuiasCache, GetConexionTrabajo,
     ObtenerConsultaGuias, EjecutarModalGuias);
   FGestorPerfiles := TGestorPerfilesMto.Create(
-    Self, dsTablaG, lblTablaOrigen, PerfilesUsuario,
+    Self, dsTablaG, lblTablaOrigen,
+    PerfilesLectura, PerfilesEscritura,
     SolicitarDestinoPerfil, RecogerPerfilesParticulares,
     ResetearGridPerfil, FGestorGuias.BorrarGuias);
   FGestorFiltros := TGestorFiltrosMto.Create(
     Self, cxGrdDBTabPrin, edtBusqGlobal, tmrBusqGlobal,
-    pmFiltros, FiltrosGuardados, SolicitarDatosFiltro,
+    pmFiltros, FiltrosLectura, FiltrosEscritura,
+    SolicitarDatosFiltro,
     EjecutarGestionFiltros);
   btnCargarCaptions.Enabled := False;
   Self.HandleNeeded; //da problemas
@@ -2142,8 +2144,8 @@ end;
 // Guardan y comparten DataController.Filter de la lista principal con
 // nombre propio. Independientes del filtro incidental que ya guarda
 // "Grabar Grid" (sbGrabarGridClick) junto con el layout. Ver
-// IFiltrosGuardados para el acceso a BBDD (fza_filtros_guardados /
-// fza_filtros_guardados_compartidos).
+// Los contratos de lectura, escritura y comparticion dan acceso a BBDD
+// (fza_filtros_guardados / fza_filtros_guardados_compartidos).
 
 procedure TfrmMtoGen.sbFiltrosClick(Sender: TObject);
 begin

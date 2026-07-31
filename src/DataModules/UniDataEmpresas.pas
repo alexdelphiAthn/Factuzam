@@ -194,7 +194,7 @@ begin
        (FindField('EMPSER').IsNull) or
        SimbolosProhibidos(
          FindField('EMPSER').AsString,
-         PerfilesUsuario) then
+         PerfilesLectura) then
     begin
       raise ERangeError.CreateFmt(SErrorSerieEmpresa,
                                  [FindField('EMPSER').AsString]);
@@ -648,13 +648,13 @@ begin
     sCodigoEmpresa := Trim(FindField('CODIGO_EMP_EMP').AsString);
     sRazonSocial := Trim(FindField('RAZON_SOCIAL_EMP').AsString);
     if (sRazonSocial = '') or
-       SimbolosProhibidos(sRazonSocial, PerfilesUsuario) then
+       SimbolosProhibidos(sRazonSocial, PerfilesLectura) then
     begin
       raise ERangeError.CreateFmt(SErrorRazonSocialEmpresa,
                                  [sRazonSocial]);
     end;
     if (sCodigoEmpresa = '') or
-       SimbolosProhibidos(sCodigoEmpresa, PerfilesUsuario) then
+       SimbolosProhibidos(sCodigoEmpresa, PerfilesLectura) then
     begin
       raise ERangeError.CreateFmt(SErrorCodigoEmpresa,
                                  [sCodigoEmpresa]);

@@ -77,8 +77,12 @@ type
     FAuditoriaDatos: IServicioAuditoriaDatos;
     FMonitorSQL: IServicioMonitorSQL;
     FContextoSesion: IContextoSesionAplicacion;
-    FFiltrosGuardados: IFiltrosGuardados;
-    FPerfilesUsuario: IPerfilesUsuario;
+    FFiltrosLectura: ILectorFiltrosGuardados;
+    FFiltrosEscritura: IEscritorFiltrosGuardados;
+    FFiltrosComparticion: ICompartidorFiltrosGuardados;
+    FPerfilesLectura: ILectorPerfilesUsuario;
+    FPerfilesEscritura: IEscritorPerfilesUsuario;
+    FCachePerfiles: ICachePerfilesUsuario;
     FParametrosApp: IParametrosAplicacion;
     FParametrosCaja: IParametrosCaja;
     FInformesGuiasCache: IInformesGuiasCache;
@@ -95,8 +99,14 @@ type
     function GetContextoSesion: IContextoSesionAplicacion;
     function GetIdentidadSesion: TIdentidadSesion;
     function GetUbicacionSesion: TUbicacionSesion;
-    function GetFiltrosGuardados: IFiltrosGuardados;
-    function GetPerfilesUsuario: IPerfilesUsuario;
+    function GetFiltrosLectura: ILectorFiltrosGuardados;
+    function GetFiltrosEscritura: IEscritorFiltrosGuardados;
+    function GetFiltrosComparticion: ICompartidorFiltrosGuardados;
+    function GetServiciosFiltrosGuardados: TServiciosFiltrosGuardados;
+    function GetPerfilesLectura: ILectorPerfilesUsuario;
+    function GetPerfilesEscritura: IEscritorPerfilesUsuario;
+    function GetCachePerfiles: ICachePerfilesUsuario;
+    function GetServiciosPerfilesUsuario: TServiciosPerfilesUsuario;
     function GetParametrosApp: IParametrosAplicacion;
     function GetParametrosCaja: IParametrosCaja;
     function GetInformesGuiasCache: IInformesGuiasCache;
@@ -172,9 +182,9 @@ type
     procedure AsignarContextoSesion(
       const AContextoSesion: IContextoSesionAplicacion);
     procedure AsignarFiltrosGuardados(
-      const AFiltrosGuardados: IFiltrosGuardados);
+      const AServicios: TServiciosFiltrosGuardados);
     procedure AsignarPerfilesUsuario(
-      const APerfilesUsuario: IPerfilesUsuario);
+      const AServicios: TServiciosPerfilesUsuario);
     procedure AsignarParametros(
       const AParametrosApp: IParametrosAplicacion;
       const AParametrosCaja: IParametrosCaja);
@@ -197,9 +207,18 @@ type
       read GetIdentidadSesion;
     property UbicacionSesion: TUbicacionSesion
       read GetUbicacionSesion;
-    property FiltrosGuardados: IFiltrosGuardados
-      read GetFiltrosGuardados;
-    property PerfilesUsuario: IPerfilesUsuario read GetPerfilesUsuario;
+    property FiltrosLectura: ILectorFiltrosGuardados
+      read GetFiltrosLectura;
+    property FiltrosEscritura: IEscritorFiltrosGuardados
+      read GetFiltrosEscritura;
+    property FiltrosComparticion: ICompartidorFiltrosGuardados
+      read GetFiltrosComparticion;
+    property PerfilesLectura: ILectorPerfilesUsuario
+      read GetPerfilesLectura;
+    property PerfilesEscritura: IEscritorPerfilesUsuario
+      read GetPerfilesEscritura;
+    property CachePerfiles: ICachePerfilesUsuario
+      read GetCachePerfiles;
     property ParametrosApp: IParametrosAplicacion read GetParametrosApp;
     property ParametrosCaja: IParametrosCaja read GetParametrosCaja;
     property InformesGuiasCache: IInformesGuiasCache
@@ -279,11 +298,11 @@ begin
   if not FCatalogoSqlInicializado then
   begin
     bActivo := False;
-    if Assigned(FPerfilesUsuario) then
+    if Assigned(FPerfilesLectura) then
     begin
       try
         bActivo := SameText(
-          FPerfilesUsuario.ObtenerValorPerfil(
+          FPerfilesLectura.ObtenerValorPerfil(
             Self.Name,
             'oGetSQLFromDB',
             'False'),
@@ -297,7 +316,8 @@ begin
       end;
     end;
     CrearCatalogoSqlAplicacion(
-      FPerfilesUsuario,
+      FPerfilesLectura,
+      FPerfilesEscritura,
       bActivo,
       FCatalogoSql,
       FIncidenciasSql);
@@ -583,35 +603,61 @@ end;
 procedure TfrmBase.HeredarFiltrosGuardados(AOwner: TComponent);
 var
   Proveedor: IProveedorFiltrosGuardados;
+  Servicios: TServiciosFiltrosGuardados;
 begin
-  FFiltrosGuardados := nil;
+  FFiltrosLectura := nil;
+  FFiltrosEscritura := nil;
+  FFiltrosComparticion := nil;
   if Supports(AOwner, IProveedorFiltrosGuardados, Proveedor) then
-    FFiltrosGuardados := Proveedor.FiltrosGuardados;
-  if not Assigned(FFiltrosGuardados) and
+  begin
+    Servicios := Proveedor.ServiciosFiltrosGuardados;
+    FFiltrosLectura := Servicios.Lectura;
+    FFiltrosEscritura := Servicios.Escritura;
+    FFiltrosComparticion := Servicios.Comparticion;
+  end;
+  if not Assigned(FFiltrosLectura) and
      Assigned(Application.MainForm) and
      (Application.MainForm <> AOwner) and
      Supports(
        Application.MainForm,
        IProveedorFiltrosGuardados,
        Proveedor) then
-    FFiltrosGuardados := Proveedor.FiltrosGuardados;
+  begin
+    Servicios := Proveedor.ServiciosFiltrosGuardados;
+    FFiltrosLectura := Servicios.Lectura;
+    FFiltrosEscritura := Servicios.Escritura;
+    FFiltrosComparticion := Servicios.Comparticion;
+  end;
 end;
 
 procedure TfrmBase.HeredarPerfilesUsuario(AOwner: TComponent);
 var
   Proveedor: IProveedorPerfilesUsuario;
+  Servicios: TServiciosPerfilesUsuario;
 begin
-  FPerfilesUsuario := nil;
+  FPerfilesLectura := nil;
+  FPerfilesEscritura := nil;
+  FCachePerfiles := nil;
   if Supports(AOwner, IProveedorPerfilesUsuario, Proveedor) then
-    FPerfilesUsuario := Proveedor.PerfilesUsuario;
-  if not Assigned(FPerfilesUsuario) and
+  begin
+    Servicios := Proveedor.ServiciosPerfilesUsuario;
+    FPerfilesLectura := Servicios.Lectura;
+    FPerfilesEscritura := Servicios.Escritura;
+    FCachePerfiles := Servicios.Cache;
+  end;
+  if not Assigned(FPerfilesLectura) and
      Assigned(Application.MainForm) and
      (Application.MainForm <> AOwner) and
      Supports(
        Application.MainForm,
        IProveedorPerfilesUsuario,
        Proveedor) then
-    FPerfilesUsuario := Proveedor.PerfilesUsuario;
+  begin
+    Servicios := Proveedor.ServiciosPerfilesUsuario;
+    FPerfilesLectura := Servicios.Lectura;
+    FPerfilesEscritura := Servicios.Escritura;
+    FCachePerfiles := Servicios.Cache;
+  end;
 end;
 
 procedure TfrmBase.HeredarParametros(AOwner: TComponent);
@@ -709,15 +755,19 @@ begin
 end;
 
 procedure TfrmBase.AsignarFiltrosGuardados(
-  const AFiltrosGuardados: IFiltrosGuardados);
+  const AServicios: TServiciosFiltrosGuardados);
 begin
-  FFiltrosGuardados := AFiltrosGuardados;
+  FFiltrosLectura := AServicios.Lectura;
+  FFiltrosEscritura := AServicios.Escritura;
+  FFiltrosComparticion := AServicios.Comparticion;
 end;
 
 procedure TfrmBase.AsignarPerfilesUsuario(
-  const APerfilesUsuario: IPerfilesUsuario);
+  const AServicios: TServiciosPerfilesUsuario);
 begin
-  FPerfilesUsuario := APerfilesUsuario;
+  FPerfilesLectura := AServicios.Lectura;
+  FPerfilesEscritura := AServicios.Escritura;
+  FCachePerfiles := AServicios.Cache;
   FCatalogoSql := nil;
   FIncidenciasSql := nil;
   FCatalogoSqlInicializado := False;
@@ -786,14 +836,52 @@ begin
   Result := FContextoSesion.Ubicacion;
 end;
 
-function TfrmBase.GetFiltrosGuardados: IFiltrosGuardados;
+function TfrmBase.GetFiltrosLectura: ILectorFiltrosGuardados;
 begin
-  Result := FFiltrosGuardados;
+  Result := FFiltrosLectura;
 end;
 
-function TfrmBase.GetPerfilesUsuario: IPerfilesUsuario;
+function TfrmBase.GetFiltrosEscritura: IEscritorFiltrosGuardados;
 begin
-  Result := FPerfilesUsuario;
+  Result := FFiltrosEscritura;
+end;
+
+function TfrmBase.GetFiltrosComparticion: ICompartidorFiltrosGuardados;
+begin
+  Result := FFiltrosComparticion;
+end;
+
+function TfrmBase.GetServiciosFiltrosGuardados:
+  TServiciosFiltrosGuardados;
+begin
+  Result := CrearServiciosFiltrosGuardados(
+    FFiltrosLectura,
+    FFiltrosEscritura,
+    FFiltrosComparticion);
+end;
+
+function TfrmBase.GetPerfilesLectura: ILectorPerfilesUsuario;
+begin
+  Result := FPerfilesLectura;
+end;
+
+function TfrmBase.GetPerfilesEscritura: IEscritorPerfilesUsuario;
+begin
+  Result := FPerfilesEscritura;
+end;
+
+function TfrmBase.GetCachePerfiles: ICachePerfilesUsuario;
+begin
+  Result := FCachePerfiles;
+end;
+
+function TfrmBase.GetServiciosPerfilesUsuario:
+  TServiciosPerfilesUsuario;
+begin
+  Result := CrearServiciosPerfilesUsuario(
+    FPerfilesLectura,
+    FPerfilesEscritura,
+    FCachePerfiles);
 end;
 
 function TfrmBase.GetParametrosApp: IParametrosAplicacion;

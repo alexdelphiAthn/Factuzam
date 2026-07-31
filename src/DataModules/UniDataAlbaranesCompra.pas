@@ -146,7 +146,8 @@ uses
   inLibData,
   inLibArticulosValidadorIntf,
   UniDataArticulosValidadorRepositorio,
-  inLibMsgCompras, inLibMsgVentas;
+  inLibMsgCompras, inLibMsgVentas,
+  inLibDocumento, inLibDocumentoIntf;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -427,7 +428,8 @@ begin
     sSerie := ObtenerSerieDefecto(
       ConexionPrincipal,
       UbicacionSesion.Empresa,
-      'AB');
+      CrearConfiguracionDocumento(
+        tdAlbaran, sdCompra).TipoContador);
     if FindField('SERIE_ALBC') <> nil then
     begin
       if sSerie <> '' then
@@ -876,7 +878,9 @@ begin
     Params.CreateParam(ftString, 'pcont',             ptOutput);
     ParamByName('pserie').AsString :=
       unqryTablaG.FieldByName('SERIE_ALBC').AsString;
-    ParamByName('ptipodoc').AsString := 'AB';
+    ParamByName('ptipodoc').AsString :=
+      CrearConfiguracionDocumento(
+        tdAlbaran, sdCompra).TipoContador;
     ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
     ParamByName('pEMPRESA_CONTADOR').AsString :=
       unqryTablaG.FieldByName('CODIGO_EMP_ALBC').AsString;

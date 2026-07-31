@@ -18,7 +18,8 @@ interface
 
 uses
   System.Generics.Collections, Vcl.Forms, Vcl.Controls, cxPC, System.Classes,
-  winapi.Windows, winapi.Messages, System.SysUtils;
+  winapi.Windows, winapi.Messages, System.SysUtils,
+  inLibVentanaEmbebidaIntf;
 
 type
   TEmbeddedFormManager = class(TComponent)
@@ -28,6 +29,7 @@ type
     // Identidad estable de cada ventana (CALL[#instancia]); el caption
     // queda solo como texto visible de la pestania.
     FClaves: TDictionary<string, TForm>;
+    FContratos: TDictionary<TForm, IMantenimientoEmbebido>;
     procedure InternalCloseForm(AForm: TForm;
                                 AForzar: Boolean = False);
     procedure QuitarClave(AForm: TForm);
@@ -39,9 +41,10 @@ type
     constructor Create(APageControl: TcxPageControl); reintroduce;
     destructor Destroy; override;
     procedure EmbedForm(AForm: TForm;
-                        const ATitle: string;
-                        const AClave: string = '';
-                        ASelect: Boolean = True);
+                         const AMantenimiento: IMantenimientoEmbebido;
+                         const ATitle: string;
+                         const AClave: string = '';
+                         ASelect: Boolean = True);
     function FindFormByCaption(const ATitle: string): TForm;
     // Ventana registrada con esa clave; nil si no hay ninguna.
     function FormPorClave(const AClave: string): TForm;
@@ -49,6 +52,8 @@ type
     function FormActivo: TForm;
     // Clave con la que se registro un formulario; '' si no esta.
     function ClaveDeForm(AForm: TForm): string;
+    function MantenimientoDeForm(
+      AForm: TForm): IMantenimientoEmbebido;
     function GetEnumerator: TList<TForm>.TEnumerator;
     procedure CloseFormByCaption(const ATitle:string);
     procedure CloseActiveForm;
@@ -56,8 +61,6 @@ type
   end;
 
 implementation
-
-uses inLibVentanaEmbebidaIntf;
 
 { TEmbeddedFormManager }
 
@@ -67,6 +70,7 @@ begin
   FPageControl := APageControl;
   FForms := TList<TForm>.Create;
   FClaves := TDictionary<string, TForm>.Create;
+  FContratos := TDictionary<TForm, IMantenimientoEmbebido>.Create;
 end;
 
 procedure TEmbeddedFormManager.Notification(AComponent: TComponent;
@@ -77,10 +81,13 @@ begin
   begin
     FForms.Remove(TForm(AComponent));
     QuitarClave(TForm(AComponent));
+    FContratos.Remove(TForm(AComponent));
   end;
 end;
 
 procedure TEmbeddedFormManager.EmbedForm(AForm: TForm;
+                                         const AMantenimiento:
+                                           IMantenimientoEmbebido;
                                          const ATitle: string;
                                          const AClave: string = '';
                                          ASelect: Boolean = True);
@@ -89,6 +96,7 @@ var
 begin
   if AClave <> '' then
     FClaves.AddOrSetValue(AClave, AForm);
+  FContratos.AddOrSetValue(AForm, AMantenimiento);
   SendMessage(FPageControl.Handle, WM_SETREDRAW, WPARAM(False), 0);
   try
     AForm.BorderStyle := bsNone;
@@ -113,6 +121,7 @@ end;
 
 destructor TEmbeddedFormManager.Destroy;
 begin
+  FreeAndNil(FContratos);
   FreeAndNil(FForms);
   FreeAndNil(FClaves);
   inherited;
@@ -176,6 +185,13 @@ begin
   end;
 end;
 
+function TEmbeddedFormManager.MantenimientoDeForm(
+  AForm: TForm): IMantenimientoEmbebido;
+begin
+  if not FContratos.TryGetValue(AForm, Result) then
+    Result := nil;
+end;
+
 procedure TEmbeddedFormManager.QuitarClave(AForm: TForm);
 var
   sClave: string;
@@ -221,7 +237,7 @@ procedure TEmbeddedFormManager.InternalCloseForm(AForm: TForm;
                                                 AForzar: Boolean);
 var
   ParentTab: TWinControl;
-  oVentana: IVentanaEmbebida;
+  oMantenimiento: IMantenimientoEmbebido;
 begin
   if (AForm = nil) or (PPointer(AForm)^ = nil) then
     Exit;
@@ -234,8 +250,8 @@ begin
     // La ventana decide si intercepta el cierre (p.ej. volver de la
     // ficha a la lista); este gestor ya no conoce TfrmMtoGen.
     if (not AForzar) and
-       Supports(AForm, IVentanaEmbebida, oVentana) and
-       oVentana.InterceptarCierre then
+       FContratos.TryGetValue(AForm, oMantenimiento) and
+       oMantenimiento.InterceptarCierre then
       Exit;
     // Congela todo antes de tocar nada
     SendMessage(FPageControl.Handle, WM_SETREDRAW, WPARAM(False), 0);
@@ -244,6 +260,7 @@ begin
     ParentTab := AForm.Parent;
     FForms.Remove(AForm);
     QuitarClave(AForm);
+    FContratos.Remove(AForm);
     AForm.Parent := nil;
     // Release, no Free: difiere la destruccion a la cola de mensajes.
     // Un Free inline aqui (handler de WM_FREECONTROL / cierre con tareas

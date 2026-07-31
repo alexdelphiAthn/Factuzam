@@ -16,6 +16,8 @@ unit inLibMsgCompras;
 interface
 
 resourcestring
+  SErrorPersistenciaGridPivoteCompraNoRegistrada =
+    'No se ha registrado la persistencia del pivote de compra.';
   SAvisoAlmacenDestinoAlbaranCompraObligatorio =
     'Debe seleccionar el almacén destino del albarán de compra.';
   SAvisoAlbaranCompraFacturado =

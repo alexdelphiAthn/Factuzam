@@ -27,7 +27,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
   Forms, Dialogs, Uni, System.Types,
-  inMtoGen, dxSkinsCore, dxSkinBlue, dxSkinsForm,
+  inMtoDocumento, dxSkinsCore, dxSkinBlue, dxSkinsForm,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit,
   cxDBEdit, cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, DB,
@@ -44,7 +44,7 @@ uses
   inLibColumnasSkuIntf,
   inLibGridPivoteVenta,
   UniDataFacturasCompra, cxBlobEdit, dxShellDialogs, System.Actions,
-  Vcl.ActnList, cxSplitter;
+  Vcl.ActnList, cxSplitter, inLibDocumento, inLibDocumentoIntf;
 
 const
   CANT_TALLAS_MAX = 20;
@@ -52,7 +52,7 @@ const
   ID_VA_COLOR     = 'CO';
 
 type
-  TfrmMtoFacturasCompra = class(TfrmMtoGen)
+  TfrmMtoFacturasCompra = class(TfrmMtoDocumento)
     pnlTopFicha:         TPanel;
     splSplitterFicha:    TcxSplitter;
     pcCab:               TcxPageControl;
@@ -269,10 +269,6 @@ type
   public
     dmmFacturasCompra: TdmFacturasCompra;
     procedure CrearTablaPrincipal; override;
-    // Restricción de la precarga a la empresa/almacén del usuario
-    function SqlRestriccionUsuario: string; override;
-    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
-    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 implementation
@@ -325,7 +321,7 @@ begin
   CargarSeriesEmpresa(
     ConexionPrincipal,
     sEmpresa,
-    'FP',
+    ConfiguracionDocumento.TipoContador,
     cbbSERIE_FACC.Properties.Items);
   if cbbSERIE_FACC.Properties.Items.Count = 0 then
   begin
@@ -340,19 +336,6 @@ end;
 // dsTablaG apunta a la cabecera del factura de compra. El articulo
 // activo vive en la fila del sub-grid tvLineasFactura
 // (CODIGO_ART_FACCLIN / CODIGO_UNIDAD_FACCLIN).
-procedure TfrmMtoFacturasCompra.ResolverArtSkuActivo(out ACodArt,
-                                                      ACodSku: string);
-begin
-  ResolverArtSkuActivoDocumento(
-    tvLineasFactura, ACodArt, ACodSku);
-end;
-
-function TfrmMtoFacturasCompra.DataSourcesParaFoto: TArray<TDataSource>;
-begin
-  Result := DataSourcesParaFotoDocumento(
-    dsTablaG, tvLineasFactura);
-end;
-
 function TfrmMtoFacturasCompra.BuscarArticuloFacturaCompra: string;
 var
   sPrv: string;
@@ -463,14 +446,11 @@ begin
     ConstruirModoEntrada;
 end;
 
-function TfrmMtoFacturasCompra.SqlRestriccionUsuario: string;
-begin
-  Result := SqlFiltroDocumento(
-    ContextoSesion, ParametrosApp, 'FACC');
-end;
-
 procedure TfrmMtoFacturasCompra.CrearTablaPrincipal;
 begin
+  InicializarDocumento(
+    CrearConfiguracionDocumento(tdFactura, sdCompra));
+  AsignarVistaLineasDocumento(tvLineasFactura);
   inherited;
   dmmFacturasCompra := TdmFacturasCompra(
     AsegurarDataModuleDocumento(
@@ -1042,9 +1022,7 @@ begin
     AsegurarCabeceraPersistidaCompra(
       dmmFacturasCompra.unqryTablaG,
       dmmFacturasCompra.unqryFacturasCompraLineas,
-      CrearConfiguracionTallasCompra(
-        'una factura', 'FACC', 'FACCLIN',
-        'fza_facturas_compra_lineas'),
+      ConfiguracionTallasDocumento,
       nil);
 end;
 
@@ -1083,9 +1061,7 @@ begin
       dmmFacturasCompra.unqryTablaG,
       dmmFacturasCompra.unqryFacturasCompraLineas,
       dmmFacturasCompra.unqryTablaG.Connection,
-      CrearConfiguracionTallasCompra(
-        'una factura', 'FACC', 'FACCLIN',
-        'fza_facturas_compra_lineas'),
+      ConfiguracionTallasDocumento,
       AsegurarCabeceraPersistidaParaLineas,
       FPivote.ValidarPivotePosible, AMensaje);
 end;

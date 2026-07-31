@@ -992,8 +992,8 @@ begin
   // (PrecargarPerfilesUsuario). Asi no se va a BBDD a refrescar; el BLOB
   // del .frx se carga lazy cuando el usuario elige un formato concreto.
   form.lstFormatos.Clear;
-  if Assigned(PerfilesUsuario) and
-     PerfilesUsuario.CargarPerfilFormulario(Self.Name, perfilDic) then
+  if Assigned(PerfilesLectura) and
+     PerfilesLectura.CargarPerfilFormulario(Self.Name, perfilDic) then
   try
     for kvp in perfilDic do
       form.lstFormatos.AddItem(kvp.Value.sValue, nil);
@@ -1039,7 +1039,7 @@ begin
     sFichaAccion := '';
     unqryPerfiles.Close;
     unqryPerfiles.Open;
-    sDefaultSubKey := PerfilesUsuario.ObtenerSubclavePerfil(
+    sDefaultSubKey := PerfilesLectura.ObtenerSubclavePerfil(
       Self.Name + '_default',
       '');
     if (not bForzarSeleccion) and (sDefaultSubKey <> '') then
@@ -1052,7 +1052,7 @@ begin
     end
     else
     begin
-      form := TfrmMtoModalGenImpEle.Create(Self);
+      form := TfrmMtoModalGenImpEle.Create(Self, Self);
       try
         CargarFormatos(form);
         if sDefaultSubKey <> '' then
@@ -1092,16 +1092,16 @@ begin
                 begin
                   sPermisos := formularioSave.cbbPermisos.Text;
                   // Borramos cualquier regla anterior para evitar duplicados
-                  PerfilesUsuario.EliminarPerfil(
+                  PerfilesEscritura.EliminarPerfil(
                     IdentidadSesion.Usuario,
                     Self.Name + '_default');
-                  PerfilesUsuario.EliminarPerfil(
+                  PerfilesEscritura.EliminarPerfil(
                     IdentidadSesion.Grupo,
                     Self.Name + '_default');
-                  PerfilesUsuario.EliminarPerfil(
+                  PerfilesEscritura.EliminarPerfil(
                     oAll,
                     Self.Name + '_default');
-                  PerfilesUsuario.GrabarPerfil(
+                  PerfilesEscritura.GrabarPerfil(
                     sPermisos,
                     Self.Name + '_default',
                     sElegido,
@@ -1116,13 +1116,13 @@ begin
           begin
             if sDefaultSubKey <> '' then
             begin
-              PerfilesUsuario.EliminarPerfil(
+              PerfilesEscritura.EliminarPerfil(
                 IdentidadSesion.Usuario,
                 Self.Name + '_default');
-              PerfilesUsuario.EliminarPerfil(
+              PerfilesEscritura.EliminarPerfil(
                 IdentidadSesion.Grupo,
                 Self.Name + '_default');
-              PerfilesUsuario.EliminarPerfil(
+              PerfilesEscritura.EliminarPerfil(
                 oAll,
                 Self.Name + '_default');
             end;
@@ -1199,8 +1199,8 @@ begin
         unqrySol.ParamByName('Descripcion').AsString := sElegido;
         unqrySol.Execute;
         // Refrescamos cache para que CargarFormatos no vea el borrado.
-        if Assigned(PerfilesUsuario) then
-          PerfilesUsuario.ResincronizarPerfilFormulario(Self.Name);
+        if Assigned(CachePerfiles) then
+          CachePerfiles.ResincronizarPerfilFormulario(Self.Name);
       end;
       CargarFormatos(form);
     end;
@@ -1414,8 +1414,8 @@ begin
         unqryPerfiles.Open;
         // Refrescamos el cache de perfiles del form (lo usa CargarFormatos)
         // para que la lista de formatos refleje el alta inmediatamente.
-        if Assigned(PerfilesUsuario) then
-          PerfilesUsuario.ResincronizarPerfilFormulario(Self.Name);
+        if Assigned(CachePerfiles) then
+          CachePerfiles.ResincronizarPerfilFormulario(Self.Name);
         // Atar las guias referenciadas por este .frx al formato recien
         // guardado: clona en fza_informes_guias las que existian como
         // globales para que el formato quede autocontenido.

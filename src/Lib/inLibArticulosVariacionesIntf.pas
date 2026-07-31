@@ -1,0 +1,73 @@
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibArticulosVariacionesIntf                                 }
+{    Tipo:       Contrato                                                      }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       31/07/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Puerto de variaciones y SKU de artículos con fábrica registrable.         }
+{******************************************************************************}
+unit inLibArticulosVariacionesIntf;
+
+interface
+
+uses
+  Vcl.Forms, Uni;
+
+type
+  IGestorArticulosVariaciones = interface
+    ['{BBF0B749-B893-423C-A356-D0C5F8AC705E}']
+    procedure CargarVariaciones(const ACodigoArticulo: string);
+    function GuardarVariaciones: Boolean;
+    function Validar: string;
+    function ObtenerCodigoArticulo: string;
+    function EstaModificado: Boolean;
+  end;
+  IArticulosVariaciones = interface
+    ['{2E1F381A-45D1-4206-BF82-111CFDE2999B}']
+    procedure AsegurarSkuSinVariaciones(
+      const ACodigoArticulo, AUsuario: string);
+    procedure AsegurarSkuActivo(
+      const ACodigoArticulo, AUsuario: string);
+    function TieneSkuActivo(
+      const ACodigoArticulo: string): Boolean;
+    function CrearGestor(
+      APanelAtributos: TScrollBox;
+      const AUsuario: string): IGestorArticulosVariaciones;
+  end;
+  TFabricaCrearArticulosVariaciones = function(
+    AConexion: TUniConnection): IArticulosVariaciones;
+  TFabricaArticulosVariaciones = class
+  private
+    class var FFabrica: TFabricaCrearArticulosVariaciones;
+  public
+    class procedure Registrar(
+      AFabrica: TFabricaCrearArticulosVariaciones);
+    class function Crear(
+      AConexion: TUniConnection): IArticulosVariaciones;
+  end;
+
+implementation
+
+uses
+  System.SysUtils, inLibMsgArticulos;
+
+class procedure TFabricaArticulosVariaciones.Registrar(
+  AFabrica: TFabricaCrearArticulosVariaciones);
+begin
+  FFabrica := AFabrica;
+end;
+
+class function TFabricaArticulosVariaciones.Crear(
+  AConexion: TUniConnection): IArticulosVariaciones;
+begin
+  if not Assigned(FFabrica) then
+    raise Exception.Create(SErrorArticulosVariacionesNoRegistradas);
+  Result := FFabrica(AConexion);
+end;
+
+end.

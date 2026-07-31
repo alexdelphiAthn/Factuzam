@@ -20,6 +20,7 @@ uses
   inLibMsgConfiguracion,
   inLibMsgFacturas,
   inLibMsgIntegraciones,
+  inLibMsgTickets,
   inLibMsgVentas,
   inLibMsgVerifactu,
   Vcl.Consts;
@@ -316,6 +317,36 @@ begin
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.
       SErrorDistribuidorTallasNoRegistrado);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SErrorPersistenciaTallasNoRegistrada',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SErrorPersistenciaTallasNoRegistrada);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SErrorArticulosVariacionesNoRegistradas',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SErrorArticulosVariacionesNoRegistradas);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SErrorPersistenciaFotosNoRegistrada',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SErrorPersistenciaFotosNoRegistrada);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SErrorValidadorArticulosNoInyectado',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SErrorValidadorArticulosNoInyectado);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SErrorLookupAtributosNoInyectado',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SErrorLookupAtributosNoInyectado);
   ARegistrar(
     'inLibMsgArticulos.' +
     'SErrorInvarianteUnidadesTallas',
@@ -2166,6 +2197,30 @@ begin
       SCaptionColTallaN);
   ARegistrar(
     'inLibMsgArticulos.' +
+    'SCaptionColDescripcion',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SCaptionColDescripcion);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SCaptionColCodigoBarras',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SCaptionColCodigoBarras);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SCaptionColRefProveedor',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SCaptionColRefProveedor);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SCaptionColStock',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SCaptionColStock);
+  ARegistrar(
+    'inLibMsgArticulos.' +
     'SCaptionCargandoMovimientos',
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.
@@ -3287,6 +3342,84 @@ begin
     @inLibMsgCaja.
       SCaptionImprimirQrNoDisponible);
   ARegistrar(
+    'inLibMsgCaja.' +
+    'SErrorMotivoDevolucionCajaObligatorio',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SErrorMotivoDevolucionCajaObligatorio);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SErrorTicketDevolucionCajaNoEncontrado',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SErrorTicketDevolucionCajaNoEncontrado);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SErrorTicketDevolucionCajaEsRectificativa',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SErrorTicketDevolucionCajaEsRectificativa);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SErrorTicketDevolucionCajaDatosOperacion',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SErrorTicketDevolucionCajaDatosOperacion);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SErrorTicketDevolucionCajaDatosDocumento',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SErrorTicketDevolucionCajaDatosDocumento);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SErrorTicketDevolucionCajaSinSeleccion',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SErrorTicketDevolucionCajaSinSeleccion);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SInfoTicketDevolucionCajaLocalizado',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SInfoTicketDevolucionCajaLocalizado);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SInfoVentasOrigenSkuCaja',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SInfoVentasOrigenSkuCaja);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SErrorVentaOrigenCajaSinSeleccion',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SErrorVentaOrigenCajaSinSeleccion);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SErrorDevolucionTicketOperacionEnCurso',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SErrorDevolucionTicketOperacionEnCurso);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SAvisoDevolucionTicketOtraEmpresa',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SAvisoDevolucionTicketOtraEmpresa);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SCaptionDevolucionTicketDe',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SCaptionDevolucionTicketDe);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorPersistenciaGridPivoteCompraNoRegistrada',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorPersistenciaGridPivoteCompraNoRegistrada);
+  ARegistrar(
     'inLibMsgCompras.' +
     'SAvisoAlmacenDestinoAlbaranCompraObligatorio',
     'src/Lib/inLibMsgCompras.pas',
@@ -3604,6 +3737,24 @@ begin
     'src/Lib/inLibMsgCompras.pas',
     @inLibMsgCompras.
       SErrorAlbaranCompraSinCantidadParaMovimientos);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorMovimientosAlbaranCompraNoRegistrados',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorMovimientosAlbaranCompraNoRegistrados);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorPedidosCompraNoRegistrados',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorPedidosCompraNoRegistrados);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorMovimientosDevolucionCompraNoRegistrados',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorMovimientosDevolucionCompraNoRegistrados);
   ARegistrar(
     'inLibMsgCompras.' +
     'SErrorDevolucionCompraMovimientosNoEncontrada',
@@ -8184,6 +8335,18 @@ begin
       SCaptionColLocalidadExpedicionRecibo);
   ARegistrar(
     'inLibMsgFacturas.' +
+    'SCaptionEfectosCobroPlural',
+    'src/Lib/inLibMsgFacturas.pas',
+    @inLibMsgFacturas.
+      SCaptionEfectosCobroPlural);
+  ARegistrar(
+    'inLibMsgFacturas.' +
+    'SCaptionRecibosPlural',
+    'src/Lib/inLibMsgFacturas.pas',
+    @inLibMsgFacturas.
+      SCaptionRecibosPlural);
+  ARegistrar(
+    'inLibMsgFacturas.' +
     'SCaptionTabLineasBorradorClasico',
     'src/Lib/inLibMsgFacturas.pas',
     @inLibMsgFacturas.
@@ -8436,6 +8599,12 @@ begin
       SErrorEncolarVentaWebservice);
   ARegistrar(
     'inLibMsgIntegraciones.' +
+    'SErrorVentasWsJsonNoRegistrado',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorVentasWsJsonNoRegistrado);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
     'SErrorApiKeyInstalacionFaltante',
     'src/Lib/inLibMsgIntegraciones.pas',
     @inLibMsgIntegraciones.
@@ -8476,6 +8645,1092 @@ begin
     'src/Lib/inLibMsgIntegraciones.pas',
     @inLibMsgIntegraciones.
       SCaptionErrorImportandoPedido);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketRegaloNumero',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketRegaloNumero);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketFacturaSimplificadaNumero',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketFacturaSimplificadaNumero);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketOperacionNumero',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketOperacionNumero);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCifNif',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCifNif);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketTelefono',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketTelefono);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEtiquetaOperacionNumero',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEtiquetaOperacionNumero);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketFormatoTienda',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketFormatoTienda);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCabeceraArticulos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCabeceraArticulos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketSuma',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketSuma);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketDescuento',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketDescuento);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketValeRecogido',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketValeRecogido);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketAPagar',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketAPagar);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCambioEfectivo',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCambioEfectivo);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketValeEmitidoFavor',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketValeEmitidoFavor);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCodigoValeEmitido',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCodigoValeEmitido);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCodigoValeEmitidoEspacio',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCodigoValeEmitidoEspacio);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketBaseImponible',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketBaseImponible);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketBaseImponibleReducida',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketBaseImponibleReducida);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketTotalIvaFormato',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketTotalIvaFormato);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketLeAtendio',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketLeAtendio);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketIvaIncluido',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketIvaIncluido);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketGraciasVisita',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketGraciasVisita);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketResumenOperacion',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketResumenOperacion);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketDepositosEntregas',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketDepositosEntregas);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEtiquetaCodigoCliente',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEtiquetaCodigoCliente);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEtiquetaFecha',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEtiquetaFecha);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEtiquetaNumeroOperacion',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEtiquetaNumeroOperacion);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketValorArticulo',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketValorArticulo);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEntregasCuenta',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEntregasCuenta);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCuentaArticulo',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCuentaArticulo);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCuentaInicialArticulo',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCuentaInicialArticulo);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCuentaArticuloPendiente',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCuentaArticuloPendiente);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCuentaInicial',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCuentaInicial);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketDevolucionEconomica',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketDevolucionEconomica);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketTotalNuevosDepositos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketTotalNuevosDepositos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketTotalDepositosDevueltos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketTotalDepositosDevueltos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketAnticiposEntregadosAhora',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketAnticiposEntregadosAhora);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketDevueltoOperacion',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketDevueltoOperacion);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketTotalPagadoDepositos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketTotalPagadoDepositos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketConformeCliente',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketConformeCliente);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketMovimientoDepositosPrestamos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketMovimientoDepositosPrestamos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketDevolucionArticulos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketDevolucionArticulos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEstadoCuentaDepositos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEstadoCuentaDepositos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketFormatoFechaLarga',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketFormatoFechaLarga);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEmpresa',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEmpresa);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCliente',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCliente);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketFechaHora',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketFechaHora);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketTotal',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketTotal);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketPendiente',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketPendiente);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketRetiradoEn',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketRetiradoEn);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEntregaInicial',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEntregaInicial);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketACuenta',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketACuenta);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketTotalPendientePago',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketTotalPendientePago);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEntradaCambio',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEntradaCambio);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketGastoRetiradaCaja',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketGastoRetiradaCaja);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketFecha',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketFecha);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCaja',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCaja);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEmpleado',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEmpleado);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketOperacionAbreviada',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketOperacionAbreviada);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketConcepto',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketConcepto);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketImporte',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketImporte);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketFirma',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketFirma);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketSolicitudTraspaso',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketSolicitudTraspaso);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketTraspaso',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketTraspaso);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketOrigen',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketOrigen);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketDestino',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketDestino);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEstado',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEstado);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketArticulos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketArticulos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketUnidadesPedidas',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketUnidadesPedidas);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketUnidades',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketUnidades);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketStockOrigen',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketStockOrigen);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketStockDestino',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketStockDestino);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketStockOrigenTrasTraspaso',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketStockOrigenTrasTraspaso);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketStockDestinoTrasTraspaso',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketStockDestinoTrasTraspaso);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketOperacion',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketOperacion);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketStockOrigenActual',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketStockOrigenActual);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketStockDestinoActual',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketStockDestinoActual);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCif',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCif);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketPrimeraOperacion',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketPrimeraOperacion);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketUltimaOperacion',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketUltimaOperacion);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketOperaciones',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketOperaciones);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketUnidadesVenta',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketUnidadesVenta);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketLineasArticulos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketLineasArticulos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketBruto',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketBruto);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketVentasNormales',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketVentasNormales);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketVentasPrestamos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketVentasPrestamos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketDevoluciones',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketDevoluciones);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketTotalVentas',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketTotalVentas);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCobros',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCobros);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketValesRecogidos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketValesRecogidos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketValesEmitidos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketValesEmitidos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCobrosClientes',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCobrosClientes);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketPendienteCobro',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketPendienteCobro);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketIngresosCaja',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketIngresosCaja);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEfectivo',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEfectivo);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEfectivoIngresos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEfectivoIngresos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEfectivoEntradas',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEfectivoEntradas);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEfectivoSalidas',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEfectivoSalidas);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEfectivoAnterior',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEfectivoAnterior);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEfectivoCaja',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEfectivoCaja);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketOtrosIngresos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketOtrosIngresos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketSaldoRecontar',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketSaldoRecontar);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketDevolucionesClientes',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketDevolucionesClientes);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketNetoArticulos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketNetoArticulos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketResumenNetoSeccion',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketResumenNetoSeccion);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketResumenVentasTemporada',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketResumenVentasTemporada);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketFormatoResumenTemporada',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketFormatoResumenTemporada);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketResumenVentasEmpleado',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketResumenVentasEmpleado);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketFormatoResumenEmpleado',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketFormatoResumenEmpleado);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketResumenFormaPago',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketResumenFormaPago);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketFormatoResumenFormaPago',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketFormatoResumenFormaPago);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketResumenVentasSerie',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketResumenVentasSerie);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCabeceraSerie',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCabeceraSerie);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCabeceraBaseImponible',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCabeceraBaseImponible);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCabeceraPorcentajeIva',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCabeceraPorcentajeIva);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCabeceraCuota',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCabeceraCuota);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketArqueoCaja',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketArqueoCaja);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketPeriodoSeleccionado',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketPeriodoSeleccionado);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketDesde',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketDesde);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketHasta',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketHasta);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketDuplicado',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketDuplicado);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCierreCaja',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCierreCaja);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketPeriodoCerrado',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketPeriodoCerrado);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketInicio',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketInicio);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketFin',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketFin);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketVentas',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketVentas);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCierrePor',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCierrePor);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketVendedor',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketVendedor);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketBilletesMonedas',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketBilletesMonedas);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEfectivoSistema',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEfectivoSistema);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketVentasSangrado',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketVentasSangrado);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEntradasSangrado',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEntradasSangrado);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketGastosSangrado',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketGastosSangrado);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketAnteriorSangrado',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketAnteriorSangrado);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketTotalSangrado',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketTotalSangrado);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketRecuento',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketRecuento);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketSistemaAbreviado',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketSistemaAbreviado);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketRecuentoAbreviado',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketRecuentoAbreviado);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketDiferenciaAbreviada',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketDiferenciaAbreviada);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketTotalSistema',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketTotalSistema);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketTotalRecontado',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketTotalRecontado);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketDiferencia',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketDiferencia);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketRetirada',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketRetirada);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketDestinoSangrado',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketDestinoSangrado);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketDejoCaja',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketDejoCaja);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketObservaciones',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketObservaciones);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketCambio',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketCambio);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketNumeroFactura',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketNumeroFactura);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketOperacionCorta',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketOperacionCorta);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketClienteCorto',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketClienteCorto);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketTotalTraspasoCoste',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketTotalTraspasoCoste);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketEntregadoCuenta',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketEntregadoCuenta);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketPendienteSangrado',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketPendienteSangrado);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketRotuloTraspaso',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketRotuloTraspaso);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketRotuloIngreso',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketRotuloIngreso);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketRotuloGasto',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketRotuloGasto);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketRotuloDeposito',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketRotuloDeposito);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketRotuloVenta',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketRotuloVenta);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketTraspasosSalientes',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketTraspasosSalientes);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketIngresosPorCaja',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketIngresosPorCaja);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketGastosPorCaja',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketGastosPorCaja);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketVentasCreditoDepositos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketVentasCreditoDepositos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketVentasFacturadas',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketVentasFacturadas);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketTraspasos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketTraspasos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketSubtotalCoste',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketSubtotalCoste);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketIngresos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketIngresos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketSubtotal',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketSubtotal);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketGastos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketGastos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketDepositos',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketDepositos);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketSubtotalVenta',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketSubtotalVenta);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketSubtotalCobrado',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketSubtotalCobrado);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketTotalVentasSinSigno',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketTotalVentasSinSigno);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketArqueoCajaHora',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketArqueoCajaHora);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketDel',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketDel);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketAl',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketAl);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketTodasSeries',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketTodasSeries);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketSeries',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketSeries);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketOrdenCronologico',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketOrdenCronologico);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketOrdenTipoDocumento',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketOrdenTipoDocumento);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketSinOperaciones',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketSinOperaciones);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketResumen',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketResumen);
   ARegistrar(
     'inLibMsgVentas.' +
     'SPreguntaBorrarAlbaran',

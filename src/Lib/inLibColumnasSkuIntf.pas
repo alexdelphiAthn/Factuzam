@@ -114,21 +114,16 @@ type
                                        AOrden: Integer): TArray<string>;
   end;
 
-  // Contrato comun de los modos de entrada montados sobre el cxGrid.
+  // Ciclo de vida que consumen los formularios de documento. Los eventos
+  // se inyectan al construir; el resto de operaciones queda encapsulado en
+  // cada modo.
   IModoEntradaGrid = interface
     ['{5E92D8F4-71A6-4BC3-9D08-E4F1A27C6B50}']
-    function GetModo: TModoColumnasSku;
-    function GetOnResuelto: TSkuResueltoEvent;
-    procedure SetOnResuelto(const AValue: TSkuResueltoEvent);
-    function GetOnEntrarEdicion: TNotifyEvent;
-    procedure SetOnEntrarEdicion(const AValue: TNotifyEvent);
-    function GetOnSalirEdicion: TNotifyEvent;
-    procedure SetOnSalirEdicion(const AValue: TNotifyEvent);
-    // Cambia el almacen del stock del buscador (invalida el desplegable).
-    procedure SetAlmacenStock(const AValue: string);
     // Crea sus columnas sobre el View. El documento anade las suyas
     // (cantidad, precio, ...) DESPUES sobre el mismo View.
-    procedure Construir;
+    procedure Construir(
+      AOnResuelto: TSkuResueltoEvent;
+      AOnEntrarEdicion, AOnSalirEdicion: TNotifyEvent);
     // Prepara el abandono del modo ANTES de reconstruir en otro. El
     // modo tallas des-pivota: expande cada celda con cantidad en una
     // linea por SKU (cantidad plana) y limpia su tabla de celdas, para
@@ -137,22 +132,6 @@ type
     procedure Desmontar;
     // Deja el editor de entrada abierto, listo para teclear o escanear.
     procedure MostrarEditor;
-    // Resuelve una entrada (SKU, articulo, barras, ref proveedor) y
-    // rellena la linea actual. False si no se encontro o se cancelo.
-    function ResolverEntrada(const AEntrada: string): Boolean;
-    // Modo EFECTIVO (nunca mcsAuto: la factoria ya decidio).
-    property Modo: TModoColumnasSku read GetModo;
-    property OnResuelto: TSkuResueltoEvent read GetOnResuelto
-                                           write SetOnResuelto;
-    // Entrada/salida de los editores in-place del modo (celda de SKU,
-    // combos de atributo, desplegable incremental). Pensados para que un
-    // host TfrmBase enganche DesactivarEnterAsTabTemporal /
-    // RestaurarEnterAsTabTemporal y el Enter llegue a la celda en vez de
-    // convertirse en Tab (TJvEnterAsTab de inMtoFrmBase).
-    property OnEntrarEdicion: TNotifyEvent read GetOnEntrarEdicion
-                                           write SetOnEntrarEdicion;
-    property OnSalirEdicion: TNotifyEvent read GetOnSalirEdicion
-                                          write SetOnSalirEdicion;
   end;
 
 implementation

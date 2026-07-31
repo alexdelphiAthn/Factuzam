@@ -2,14 +2,15 @@
 {                                                                              }
 {  Módulo:       inLibFotos                                                    }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       17/05/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       31/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
 {    Gestion de fotos por articulo y SKU.                                      }
+{    La persistencia SQL se recibe mediante IRepositorioFotos.                 }
 {    Guardado, redimensionado (300/600/real) y resolucion con fallback         }
 {    SKU -> articulo, analogo al de tarifas.                                   }
 {    Sustitucion de TfrxPictureView foto300/foto600/fotoReal en FastReports.   }
@@ -54,8 +55,9 @@ uses
   System.Generics.Collections,
   Vcl.Graphics, Vcl.Controls, Vcl.ExtCtrls, Vcl.Imaging.PngImage,
   Vcl.Imaging.Jpeg, Vcl.Imaging.GIFImg,
-  Data.DB, DBAccess, Uni,
-  frxClass, frxDBSet, inLibParametrosIntf, inLibArticulosValidadorIntf;
+  Data.DB, Uni,
+  frxClass, frxDBSet, inLibParametrosIntf, inLibArticulosValidadorIntf,
+  inLibFotosPersistenciaIntf;
 
 const
   // Columnas de fza_articulos_fotos
@@ -109,6 +111,8 @@ type
     // Resolutor de codigos de barras inyectado por la raiz de
     // composicion: la libreria no construye repositorios UniData*.
     FValidador: IArticulosValidador;
+    // Persistencia inyectada por la fábrica registrada en la composición.
+    FRepositorio: IRepositorioFotos;
     // Caché de precarga a nivel artículo (código artículo -> foto resuelta).
     // Cuando está activa, Resolver(art, '') la consulta en vez de ir a BBDD,
     // evitando el N+1 en informes con muchas fotos. La llena PrecargarFotosLote
@@ -310,6 +314,7 @@ function oFotos: TFotosArticulos;
 implementation
 
 uses
+
   Winapi.GDIPOBJ, Winapi.GDIPAPI,
   inLibMsgArticulos;
 
@@ -360,6 +365,7 @@ procedure TFotosArticulos.AsignarConexion(
 begin
   if not Assigned(AParametrosApp) then
     raise EArgumentNilException.Create('AParametrosApp');
+  FRepositorio := TFabricaRepositorioFotos.Crear(AConexion);
   FConexion := AConexion;
   FParametrosApp := AParametrosApp;
   FValidador := AValidador;
@@ -367,6 +373,7 @@ end;
 
 procedure TFotosArticulos.LiberarServicios;
 begin
+  FRepositorio := nil;
   FConexion := nil;
   FParametrosApp := nil;
   FValidador := nil;
@@ -467,10 +474,8 @@ end;
 function TFotosArticulos.Resolver(const ACodArt,
                                   ACodSku: string): TFotoInfo;
 var
-  q        : TUniQuery;
+  q        : TDataSet;
   prefijos : TArray<string>;
-  i        : Integer;
-  sInList  : string;
   sClave   : string;
 begin
   Result.Clear;
@@ -484,31 +489,14 @@ begin
      FCachePrecarga.TryGetValue(ACodArt, Result) then
     Exit;
 
-  q := TUniQuery.Create(nil);
+  q := nil;
   try
-    q.Connection := FConexion;
-
     // 1. SKU completo o prefijo: una sola consulta con IN y ORDER BY
     //    LENGTH(CODIGO_UNIDAD_FOT) DESC para que la mas especifica gane.
     prefijos := GenerarPrefijosSku(ACodSku);
     if Length(prefijos) > 0 then
     begin
-      sInList := '';
-      for i := 0 to High(prefijos) do
-      begin
-        if sInList <> '' then sInList := sInList + ', ';
-        sInList := sInList + ':P' + IntToStr(i);
-      end;
-      q.SQL.Text :=
-        ' SELECT * FROM fza_articulos_fotos '             +
-        '  WHERE CODIGO_ART_FOT    = :CODIGO_ART '        +
-        '    AND CODIGO_UNIDAD_FOT IN (' + sInList + ') ' +
-        '  ORDER BY LENGTH(CODIGO_UNIDAD_FOT) DESC '      +
-        '  LIMIT 1';
-      q.ParamByName('CODIGO_ART').AsString := ACodArt;
-      for i := 0 to High(prefijos) do
-        q.ParamByName('P' + IntToStr(i)).AsString := prefijos[i];
-      q.Open;
+      q := FRepositorio.BuscarFotoPorUnidades(ACodArt, prefijos);
       if not q.Eof then
       begin
         sClave := q.FieldByName(fcodunidadfot).AsString;
@@ -522,17 +510,11 @@ begin
         Result.ExtensionOrigen := q.FieldByName(fextfot).AsString;
         Exit;
       end;
-      q.Close;
+      FreeAndNil(q);
     end;
 
     // 2. Fallback: foto del articulo (CODIGO_UNIDAD_FOT = '')
-    q.SQL.Text :=
-      ' SELECT * FROM fza_articulos_fotos ' +
-      '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
-      '    AND CODIGO_UNIDAD_FOT = '''' ' +
-      '  LIMIT 1';
-    q.ParamByName('CODIGO_ART').AsString := ACodArt;
-    q.Open;
+    q := FRepositorio.BuscarFotoArticulo(ACodArt);
     if not q.Eof then
     begin
       Result.Encontrada      := True;
@@ -546,15 +528,8 @@ begin
     //    El orden explicito mantiene el mismo resultado entre llamadas.
     if (ACodSku = '') and not Result.Encontrada then
     begin
-      q.Close;
-      q.SQL.Text :=
-        ' SELECT * FROM fza_articulos_fotos ' +
-        '  WHERE CODIGO_ART_FOT = :CODIGO_ART ' +
-        '    AND CODIGO_UNIDAD_FOT <> '''' ' +
-        '  ORDER BY CODIGO_UNIDAD_FOT, NOMBRE_FOT_FOT ' +
-        '  LIMIT 1';
-      q.ParamByName('CODIGO_ART').AsString := ACodArt;
-      q.Open;
+      FreeAndNil(q);
+      q := FRepositorio.BuscarPrimeraFotoUnidad(ACodArt);
       if not q.Eof then
       begin
         Result.Encontrada      := True;
@@ -572,9 +547,9 @@ end;
 function TFotosArticulos.ResolverArticulosLote(
   const ACodigos: TArray<string>): TDictionary<string, TFotoInfo>;
 var
-  q: TUniQuery;
-  i, cnt: Integer;
-  sIn, sArtCur, sArt, sUni: string;
+  q: TDataSet;
+  cnt: Integer;
+  sArtCur, sArt, sUni: string;
   artFound: Boolean;
   artNom, artExt, uniClave, uniNom, uniExt: string;
   dict: TDictionary<string, TFotoInfo>;
@@ -618,26 +593,9 @@ begin
   Result := dict;
   if Length(ACodigos) > 0 then
   begin
-    q := TUniQuery.Create(nil);
+    q := nil;
     try
-      q.Connection := FConexion;
-      sIn := '';
-      for i := 0 to High(ACodigos) do
-      begin
-        if sIn <> '' then
-          sIn := sIn + ', ';
-        sIn := sIn + ':A' + IntToStr(i);
-      end;
-      q.SQL.Text :=
-        ' SELECT ' + fcodartfot + ', ' + fcodunidadfot + ', ' +
-                     fnomfot + ', ' + fextfot +
-        '   FROM fza_articulos_fotos ' +
-        '  WHERE ' + fcodartfot + ' IN (' + sIn + ') ' +
-        '  ORDER BY ' + fcodartfot + ', ' + fcodunidadfot + ', ' +
-                       fnomfot;
-      for i := 0 to High(ACodigos) do
-        q.ParamByName('A' + IntToStr(i)).AsString := ACodigos[i];
-      q.Open;
+      q := FRepositorio.BuscarFotosArticulos(ACodigos);
       sArtCur  := '';
       cnt      := 0;
       artFound := False;
@@ -1011,7 +969,7 @@ end;
 function TFotosArticulos.Guardar(const ACodArt, ACodSku,
                                  AFicheroOrigen, AUsuario: string): TFotoInfo;
 var
-  q              : TUniQuery;
+  q              : TDataSet;
   sDirBase       : string;
   sClave         : string;
   sNombreNuevo   : string;
@@ -1050,16 +1008,9 @@ begin
   sNombreAnterior := '';
   sExtAnterior    := '';
   iIndice         := 1;
-  q := TUniQuery.Create(nil);
+  q := nil;
   try
-    q.Connection := FConexion;
-    q.SQL.Text :=
-      ' SELECT * FROM fza_articulos_fotos ' +
-      '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
-      '    AND CODIGO_UNIDAD_FOT = :CODIGO_SKU';
-    q.ParamByName('CODIGO_ART').AsString := ACodArt;
-    q.ParamByName('CODIGO_SKU').AsString := ACodSku;
-    q.Open;
+    q := FRepositorio.BuscarFotoEditable(ACodArt, ACodSku);
     bExiste := not q.Eof;
     if bExiste then
     begin
@@ -1093,16 +1044,9 @@ begin
   end;
 
   // 3. Upsert en fza_articulos_fotos
-  q := TUniQuery.Create(nil);
+  q := nil;
   try
-    q.Connection := FConexion;
-    q.SQL.Text :=
-      ' SELECT * FROM fza_articulos_fotos ' +
-      '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
-      '    AND CODIGO_UNIDAD_FOT = :CODIGO_SKU';
-    q.ParamByName('CODIGO_ART').AsString := ACodArt;
-    q.ParamByName('CODIGO_SKU').AsString := ACodSku;
-    q.Open;
+    q := FRepositorio.BuscarFotoEditable(ACodArt, ACodSku);
     bExiste := not q.Eof;
     if bExiste then q.Edit else q.Insert;
     q.FieldByName(fcodartfot).AsString    := ACodArt;
@@ -1151,7 +1095,6 @@ var
   ruta300, ruta600 : string;
   rutaReal         : string;
   rutaReal300, rutaReal600, rutaRealNuevo: string;
-  q                : TUniQuery;
 begin
   Result.Clear;
   info := Resolver(ACodArt, ACodSku);
@@ -1187,23 +1130,8 @@ begin
   if FileExists(rutaReal) then RenameFile(rutaReal, rutaRealNuevo);
 
   // Actualizamos la fila correspondiente.
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FConexion;
-    q.SQL.Text :=
-      ' UPDATE fza_articulos_fotos ' +
-      '    SET NOMBRE_FOT_FOT   = :NOMBRE, ' +
-      '        USUARIO_MODIF    = :USUARIO ' +
-      '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
-      '    AND CODIGO_UNIDAD_FOT = :CODIGO_UNIDAD';
-    q.ParamByName('NOMBRE').AsString        := sNombreNuevo;
-    q.ParamByName('USUARIO').AsString       := AUsuario;
-    q.ParamByName('CODIGO_ART').AsString    := ACodArt;
-    q.ParamByName('CODIGO_UNIDAD').AsString := info.ClaveResuelta;
-    q.Execute;
-  finally
-    FreeAndNil(q);
-  end;
+  FRepositorio.ActualizarNombreFoto(
+    ACodArt, info.ClaveResuelta, sNombreNuevo, AUsuario);
 
   Result.Encontrada      := True;
   Result.Origen          := info.Origen;
@@ -1220,44 +1148,13 @@ procedure TFotosArticulos.Eliminar(const ACodArt, ACodUnidad: string);
 // nivel articulo; un valor concreto borra esa fila de SKU o prefijo
 // independientemente de si hay heredadas por debajo.
 var
-  q       : TUniQuery;
-  sNombre : string;
+  sNombre: string;
 begin
   // Localizamos el nombre del fichero asociado a la fila exacta antes
   // de borrar el registro.
-  sNombre := '';
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FConexion;
-    q.SQL.Text :=
-      ' SELECT NOMBRE_FOT_FOT '                  +
-      '   FROM fza_articulos_fotos '             +
-      '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
-      '    AND CODIGO_UNIDAD_FOT = :CODIGO_UNIDAD';
-    q.ParamByName('CODIGO_ART').AsString    := ACodArt;
-    q.ParamByName('CODIGO_UNIDAD').AsString := ACodUnidad;
-    q.Open;
-    if not q.Eof then
-      sNombre := q.FieldByName(fnomfot).AsString;
-  finally
-    FreeAndNil(q);
-  end;
-
+  sNombre := FRepositorio.BuscarNombreFoto(ACodArt, ACodUnidad);
   BorrarFicherosDeNombre(sNombre);
-
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FConexion;
-    q.SQL.Text :=
-      ' DELETE FROM fza_articulos_fotos ' +
-      '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
-      '    AND CODIGO_UNIDAD_FOT = :CODIGO_UNIDAD';
-    q.ParamByName('CODIGO_ART').AsString    := ACodArt;
-    q.ParamByName('CODIGO_UNIDAD').AsString := ACodUnidad;
-    q.Execute;
-  finally
-    FreeAndNil(q);
-  end;
+  FRepositorio.EliminarFoto(ACodArt, ACodUnidad);
 end;
 
 { ----------------------------------------------------------------- }
@@ -1590,7 +1487,7 @@ function TFotosArticulos.GuardarSesion(
   const ACodArtTentativo, ACodUnidad,
         AFicheroOrigen, AUsuario: string): TFotoInfo;
 var
-  q              : TUniQuery;
+  q              : TDataSet;
   sDirBase       : string;
   sClave         : string;
   sNombreNuevo   : string;
@@ -1627,20 +1524,10 @@ begin
   // se borran los PNG anteriores y se sube el numero.
   sNombreAnterior := '';
   iIndice := 1;
-  q := TUniQuery.Create(nil);
+  q := nil;
   try
-    q.Connection := FConexion;
-    q.SQL.Text :=
-      'SELECT NOMBRE_FOT_CSF FROM fza_compras_sesiones_fotos ' +
-      ' WHERE SERIE_SES_CSF     = :s ' +
-      '   AND NUMERO_SES_CSF    = :n ' +
-      '   AND LINEA_CSF         = :l ' +
-      '   AND CODIGO_UNIDAD_CSF = :u';
-    q.ParamByName('s').AsString := ASerieSes;
-    q.ParamByName('n').AsString := ANumeroSes;
-    q.ParamByName('l').AsInteger := ALinea;
-    q.ParamByName('u').AsString := ACodUnidad;
-    q.Open;
+    q := FRepositorio.BuscarFotoSesion(
+      ASerieSes, ANumeroSes, ALinea, ACodUnidad);
     bExiste := not q.Eof;
     if bExiste then
     begin
@@ -1667,33 +1554,15 @@ begin
     FreeAndNil(oGraphic);
   end;
 
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FConexion;
-    q.SQL.Text :=
-      'INSERT INTO fza_compras_sesiones_fotos ' +
-      '  (SERIE_SES_CSF, NUMERO_SES_CSF, LINEA_CSF, CODIGO_UNIDAD_CSF, ' +
-      '   CODIGO_ART_TENTATIVO_CSF, NOMBRE_FOT_CSF, EXTENSION_ORIGEN_CSF, ' +
-      '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-      'VALUES (:s, :n, :l, :u, :a, :nom, :ext, NOW(), :usr, NOW(), :usr) ' +
-      'ON DUPLICATE KEY UPDATE ' +
-      '  CODIGO_ART_TENTATIVO_CSF = :a, ' +
-      '  NOMBRE_FOT_CSF           = :nom, ' +
-      '  EXTENSION_ORIGEN_CSF     = :ext, ' +
-      '  INSTANTE_MODIF           = NOW(), ' +
-      '  USUARIO_MODIF            = :usr';
-    q.ParamByName('s').AsString   := ASerieSes;
-    q.ParamByName('n').AsString   := ANumeroSes;
-    q.ParamByName('l').AsInteger  := ALinea;
-    q.ParamByName('u').AsString   := ACodUnidad;
-    q.ParamByName('a').AsString   := ACodArtTentativo;
-    q.ParamByName('nom').AsString := sNombreNuevo;
-    q.ParamByName('ext').AsString := sExt;
-    q.ParamByName('usr').AsString := AUsuario;
-    q.ExecSQL;
-  finally
-    FreeAndNil(q);
-  end;
+  FRepositorio.GuardarFotoSesion(
+    ASerieSes,
+    ANumeroSes,
+    ALinea,
+    ACodUnidad,
+    ACodArtTentativo,
+    sNombreNuevo,
+    sExt,
+    AUsuario);
 
   // Tras escribir la nueva, limpiar los PNG del nombre anterior.
   if (sNombreAnterior <> '') and (sNombreAnterior <> sNombreNuevo) then
@@ -1713,29 +1582,18 @@ function TFotosArticulos.ResolverSesion(
   ALinea: Integer;
   const ACodUnidad: string = ''): TFotoInfo;
 var
-  q : TUniQuery;
+  q : TDataSet;
   prefijos: TArray<string>;
   i : Integer;
 begin
   Result.Clear;
   if (ASerieSes = '') or (ANumeroSes = '') or (ALinea <= 0) then Exit;
 
-  q := TUniQuery.Create(nil);
+  q := nil;
   try
-    q.Connection := FConexion;
-
     // 1. Match exacto por SKU (o cadena vacia = padre)
-    q.SQL.Text :=
-      'SELECT * FROM fza_compras_sesiones_fotos ' +
-      ' WHERE SERIE_SES_CSF     = :s ' +
-      '   AND NUMERO_SES_CSF    = :n ' +
-      '   AND LINEA_CSF         = :l ' +
-      '   AND CODIGO_UNIDAD_CSF = :u';
-    q.ParamByName('s').AsString := ASerieSes;
-    q.ParamByName('n').AsString := ANumeroSes;
-    q.ParamByName('l').AsInteger := ALinea;
-    q.ParamByName('u').AsString := ACodUnidad;
-    q.Open;
+    q := FRepositorio.BuscarFotoSesion(
+      ASerieSes, ANumeroSes, ALinea, ACodUnidad);
     if not q.Eof then
     begin
       Result.Encontrada    := True;
@@ -1750,7 +1608,7 @@ begin
                        q.FieldByName('EXTENSION_ORIGEN_CSF').AsString;
       Exit;
     end;
-    q.Close;
+    FreeAndNil(q);
 
     // 2. Fallback por prefijos (mismo esquema que Resolver). Solo si
     //    nos pidieron un SKU concreto.
@@ -1760,17 +1618,8 @@ begin
       for i := 0 to High(prefijos) do
       begin
         if prefijos[i] = ACodUnidad then Continue;
-        q.SQL.Text :=
-          'SELECT * FROM fza_compras_sesiones_fotos ' +
-          ' WHERE SERIE_SES_CSF     = :s ' +
-          '   AND NUMERO_SES_CSF    = :n ' +
-          '   AND LINEA_CSF         = :l ' +
-          '   AND CODIGO_UNIDAD_CSF = :u';
-        q.ParamByName('s').AsString  := ASerieSes;
-        q.ParamByName('n').AsString  := ANumeroSes;
-        q.ParamByName('l').AsInteger := ALinea;
-        q.ParamByName('u').AsString  := prefijos[i];
-        q.Open;
+        q := FRepositorio.BuscarFotoSesion(
+          ASerieSes, ANumeroSes, ALinea, prefijos[i]);
         if not q.Eof then
         begin
           Result.Encontrada    := True;
@@ -1784,23 +1633,15 @@ begin
                        q.FieldByName('EXTENSION_ORIGEN_CSF').AsString;
           Exit;
         end;
-        q.Close;
+        FreeAndNil(q);
       end;
     end;
 
     // 3. Fallback a foto de la linea (CODIGO_UNIDAD_CSF = '')
     if ACodUnidad <> '' then
     begin
-      q.SQL.Text :=
-        'SELECT * FROM fza_compras_sesiones_fotos ' +
-        ' WHERE SERIE_SES_CSF     = :s ' +
-        '   AND NUMERO_SES_CSF    = :n ' +
-        '   AND LINEA_CSF         = :l ' +
-        '   AND CODIGO_UNIDAD_CSF = ''''';
-      q.ParamByName('s').AsString  := ASerieSes;
-      q.ParamByName('n').AsString  := ANumeroSes;
-      q.ParamByName('l').AsInteger := ALinea;
-      q.Open;
+      q := FRepositorio.BuscarFotoSesion(
+        ASerieSes, ANumeroSes, ALinea, '');
       if not q.Eof then
       begin
         Result.Encontrada    := True;
@@ -1824,45 +1665,26 @@ procedure TFotosArticulos.EliminarSesion(
   ALinea: Integer;
   const ACodUnidad: string);
 var
-  q          : TUniQuery;
+  q          : TDataSet;
   sNombreBase: string;
 begin
   if (ASerieSes = '') or (ANumeroSes = '') or (ALinea <= 0) then Exit;
   sNombreBase := '';
-  q := TUniQuery.Create(nil);
+  q := nil;
   try
-    q.Connection := FConexion;
-    q.SQL.Text :=
-      'SELECT NOMBRE_FOT_CSF FROM fza_compras_sesiones_fotos ' +
-      ' WHERE SERIE_SES_CSF     = :s ' +
-      '   AND NUMERO_SES_CSF    = :n ' +
-      '   AND LINEA_CSF         = :l ' +
-      '   AND CODIGO_UNIDAD_CSF = :u';
-    q.ParamByName('s').AsString  := ASerieSes;
-    q.ParamByName('n').AsString  := ANumeroSes;
-    q.ParamByName('l').AsInteger := ALinea;
-    q.ParamByName('u').AsString  := ACodUnidad;
-    q.Open;
+    q := FRepositorio.BuscarFotoSesion(
+      ASerieSes, ANumeroSes, ALinea, ACodUnidad);
     if not q.Eof then
       sNombreBase := q.FieldByName('NOMBRE_FOT_CSF').AsString;
-    q.Close;
-    if sNombreBase = '' then Exit;
-
-    q.SQL.Text :=
-      'DELETE FROM fza_compras_sesiones_fotos ' +
-      ' WHERE SERIE_SES_CSF     = :s ' +
-      '   AND NUMERO_SES_CSF    = :n ' +
-      '   AND LINEA_CSF         = :l ' +
-      '   AND CODIGO_UNIDAD_CSF = :u';
-    q.ParamByName('s').AsString  := ASerieSes;
-    q.ParamByName('n').AsString  := ANumeroSes;
-    q.ParamByName('l').AsInteger := ALinea;
-    q.ParamByName('u').AsString  := ACodUnidad;
-    q.ExecSQL;
   finally
     FreeAndNil(q);
   end;
-  BorrarFicherosDeNombre(sNombreBase);
+  if sNombreBase <> '' then
+  begin
+    FRepositorio.EliminarFotoSesion(
+      ASerieSes, ANumeroSes, ALinea, ACodUnidad);
+    BorrarFicherosDeNombre(sNombreBase);
+  end;
 end;
 
 procedure TFotosArticulos.MigrarFotosSesion(
@@ -1870,31 +1692,18 @@ procedure TFotosArticulos.MigrarFotosSesion(
   ALinea: Integer;
   const ACodigoArt, AUsuario: string);
 var
-  qSrc, qIns, qDel: TUniQuery;
+  qSrc, qIns: TDataSet;
   sClave, sNombreNuevo, sNombreSrc, sExt, sCodUnidad: string;
   iIndice: Integer;
 begin
   if (ASerieSes = '') or (ANumeroSes = '') or (ALinea <= 0) then Exit;
   if Trim(ACodigoArt) = '' then Exit;
 
-  qSrc := TUniQuery.Create(nil);
-  qIns := TUniQuery.Create(nil);
-  qDel := TUniQuery.Create(nil);
+  qSrc := nil;
+  qIns := nil;
   try
-    qSrc.Connection := FConexion;
-    qIns.Connection := FConexion;
-    qDel.Connection := FConexion;
-
-    qSrc.SQL.Text :=
-      'SELECT * FROM fza_compras_sesiones_fotos ' +
-      ' WHERE SERIE_SES_CSF  = :s ' +
-      '   AND NUMERO_SES_CSF = :n ' +
-      '   AND LINEA_CSF      = :l';
-    qSrc.ParamByName('s').AsString  := ASerieSes;
-    qSrc.ParamByName('n').AsString  := ANumeroSes;
-    qSrc.ParamByName('l').AsInteger := ALinea;
-    qSrc.Open;
-
+    qSrc := FRepositorio.BuscarFotosSesionLinea(
+      ASerieSes, ANumeroSes, ALinea);
     while not qSrc.Eof do
     begin
       sCodUnidad := qSrc.FieldByName('CODIGO_UNIDAD_CSF').AsString;
@@ -1905,17 +1714,13 @@ begin
       // Indice siguiente segun lo que ya haya en fza_articulos_fotos
       // para no machacar fotos previas del mismo articulo+unidad.
       iIndice := 1;
-      qIns.SQL.Text :=
-        'SELECT NOMBRE_FOT_FOT FROM fza_articulos_fotos ' +
-        ' WHERE CODIGO_ART_FOT    = :a ' +
-        '   AND CODIGO_UNIDAD_FOT = :u';
-      qIns.ParamByName('a').AsString := ACodigoArt;
-      qIns.ParamByName('u').AsString := sCodUnidad;
-      qIns.Open;
+      qIns := FRepositorio.BuscarFotoEditable(ACodigoArt, sCodUnidad);
       if not qIns.Eof then
-        iIndice := ExtraerIndice(qIns.FieldByName('NOMBRE_FOT_FOT').AsString) + 1;
-      qIns.Close;
-      if iIndice < 1 then iIndice := 1;
+        iIndice := ExtraerIndice(
+          qIns.FieldByName('NOMBRE_FOT_FOT').AsString) + 1;
+      FreeAndNil(qIns);
+      if iIndice < 1 then
+        iIndice := 1;
       sNombreNuevo := ComponerNombre(sClave, iIndice);
 
       // Renombrar los tres PNG (real, 600, 300) — si alguno no existe
@@ -1931,42 +1736,21 @@ begin
                    SubdirDe(frPx300) + sNombreNuevo + '.png');
 
       // Upsert en fza_articulos_fotos
-      qIns.SQL.Text :=
-        'INSERT INTO fza_articulos_fotos ' +
-        '  (CODIGO_ART_FOT, CODIGO_UNIDAD_FOT, NOMBRE_FOT_FOT, ' +
-        '   EXTENSION_ORIGEN_FOT, INSTANTE_ALTA, USUARIO_ALTA, ' +
-        '   INSTANTE_MODIF, USUARIO_MODIF) ' +
-        'VALUES (:a, :u, :nom, :ext, NOW(), :usr, NOW(), :usr) ' +
-        'ON DUPLICATE KEY UPDATE ' +
-        '  NOMBRE_FOT_FOT       = :nom, ' +
-        '  EXTENSION_ORIGEN_FOT = :ext, ' +
-        '  INSTANTE_MODIF       = NOW(), ' +
-        '  USUARIO_MODIF        = :usr';
-      qIns.ParamByName('a').AsString   := ACodigoArt;
-      qIns.ParamByName('u').AsString   := sCodUnidad;
-      qIns.ParamByName('nom').AsString := sNombreNuevo;
-      qIns.ParamByName('ext').AsString := sExt;
-      qIns.ParamByName('usr').AsString := AUsuario;
-      qIns.ExecSQL;
-
+      FRepositorio.GuardarFotoMigrada(
+        ACodigoArt,
+        sCodUnidad,
+        sNombreNuevo,
+        sExt,
+        AUsuario);
       qSrc.Next;
     end;
     qSrc.Close;
-
     // Borrar de un golpe todas las filas migradas
-    qDel.SQL.Text :=
-      'DELETE FROM fza_compras_sesiones_fotos ' +
-      ' WHERE SERIE_SES_CSF  = :s ' +
-      '   AND NUMERO_SES_CSF = :n ' +
-      '   AND LINEA_CSF      = :l';
-    qDel.ParamByName('s').AsString  := ASerieSes;
-    qDel.ParamByName('n').AsString  := ANumeroSes;
-    qDel.ParamByName('l').AsInteger := ALinea;
-    qDel.ExecSQL;
+    FRepositorio.EliminarFotosSesionLinea(
+      ASerieSes, ANumeroSes, ALinea);
   finally
     FreeAndNil(qSrc);
     FreeAndNil(qIns);
-    FreeAndNil(qDel);
   end;
 end;
 

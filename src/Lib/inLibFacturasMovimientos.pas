@@ -16,7 +16,7 @@ unit inLibFacturasMovimientos;
 interface
 
 uses
-  Uni, inLibFacturasServiciosIntf;
+  Uni, inLibDocumentoIntf, inLibFacturasServiciosIntf;
 
 type
   TServicioMovimientosFactura = class(
@@ -24,6 +24,7 @@ type
     IServicioMovimientosFactura)
   private
     FConexion: TUniConnection;
+    FEstrategiaDocumento: IEstrategiaDocumento;
     procedure ConfigurarInsercion(AProcedimiento: TUniStoredProc);
     procedure InsertarMovimiento(
       AProcedimiento: TUniStoredProc;
@@ -40,13 +41,15 @@ type
 implementation
 
 uses
-  System.SysUtils, Data.DB, inLibValoresAutomaticos;
+  System.SysUtils, Data.DB, inLibDocumento, inLibValoresAutomaticos;
 
 constructor TServicioMovimientosFactura.Create(
   AConexion: TUniConnection);
 begin
   inherited Create;
   FConexion := AConexion;
+  FEstrategiaDocumento := CrearEstrategiaDocumento(
+    CrearConfiguracionDocumento(tdFactura, sdVenta));
 end;
 
 procedure TServicioMovimientosFactura.ConfigurarInsercion(
@@ -143,7 +146,8 @@ procedure TServicioMovimientosFactura.InsertarMovimiento(
 begin
   AProcedimiento.ParamByName('p_NUMERO_MOV').AsString :=
     ANumeroMovimiento;
-  AProcedimiento.ParamByName('p_TIPO_DOC_MOV').AsString := 'FC';
+  AProcedimiento.ParamByName('p_TIPO_DOC_MOV').AsString :=
+    FEstrategiaDocumento.TipoDocumentoMovimientoStock;
   AProcedimiento.ParamByName('p_SERIE_DOC_MOV').AsString :=
     ASolicitud.Serie;
   AProcedimiento.ParamByName('p_NRO_DOC_MOV').AsString :=
@@ -157,7 +161,8 @@ begin
     'p_CODIGO_ALMACEN_CONTRA_MOV').Clear;
   AProcedimiento.ParamByName('p_CODIGO_UNIDAD_MOV').AsString := ASku;
   AProcedimiento.ParamByName(
-    'p_TIPO_MOVIMIENTO_MOV').AsString := 'S';
+    'p_TIPO_MOVIMIENTO_MOV').AsString :=
+      FEstrategiaDocumento.TipoMovimientoStock;
   AProcedimiento.ParamByName('p_CANTIDAD_MOV').AsFloat := ACantidad;
   AProcedimiento.ParamByName('p_PRECIO_MEDIO_MOV').AsFloat := 0;
   AProcedimiento.ParamByName('p_TOTAL_COSTE_MOV').AsFloat := 0;
@@ -219,13 +224,15 @@ begin
       QryExiste.SQL.Text :=
         'SELECT NUMERO_MOV ' +
         '  FROM fza_movimientos_almacen ' +
-        ' WHERE TIPO_DOC_MOV IN (''FC'', ''VE'') ' +
+        ' WHERE TIPO_DOC_MOV IN (:tipo_documento, ''VE'') ' +
         '   AND SERIE_DOC_MOV = :serie ' +
         '   AND NUMERO_DOC_MOV = :numero ' +
         '   AND LINEA_MOV = :linea ' +
         ' ORDER BY CASE TIPO_DOC_MOV ' +
         '          WHEN ''VE'' THEN 0 ELSE 1 END, NUMERO_MOV ' +
         ' LIMIT 1';
+      QryExiste.ParamByName('tipo_documento').AsString :=
+        FEstrategiaDocumento.TipoDocumentoMovimientoStock;
       QryActualizar.Connection := FConexion;
       QryActualizar.SQL.Text :=
         'UPDATE fza_facturas_lineas ' +

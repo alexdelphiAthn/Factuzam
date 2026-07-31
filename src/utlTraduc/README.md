@@ -30,7 +30,7 @@ puede leer la BBDD.
 
 El registro
 `src/Lib/inLibRegistroResourcestringTraducciones.pas` enlaza cada clave
-`unidad.identificador` con su `resourcestring`. Incluye las nueve unidades
+`unidad.identificador` con su `resourcestring`. Incluye las unidades
 `inLibMsg*` y `src/vcl37/Vcl.Consts.pas`. Se regenera mediante:
 
 ```powershell
@@ -54,6 +54,20 @@ desde las llamadas `RegistrarParametro` mediante:
 El selector de destino carga los idiomas activos de la BBDD al conectar. El
 combo admite también escribir una etiqueta nueva, por ejemplo `fr-FR`, para
 crear otro idioma sin modificar `utlTraduc`.
+
+Los rótulos de tickets térmicos viven en
+`src/Lib/inLibMsgTickets.pas`. Se importan con `Sincronizar español` igual que
+el resto de `resourcestring`. La propuesta catalana y su SQL idempotente se
+regeneran mediante:
+
+```powershell
+& '.\DESARROLLOS EN CURSO\generar_traducciones_tickets.ps1'
+```
+
+El resultado es
+`DESARROLLOS EN CURSO/traducciones_ca_es_tickets_d24.sql`. Para otro idioma,
+se selecciona o escribe su etiqueta en `utlTraduc` y se completan las mismas
+claves `inLibMsgTickets.*`, sin modificar los generadores de ticket.
 
 En sentido inverso, Factuzam consulta la BBDD cuando evalúa un
 `resourcestring`, carga un formulario o solicita un texto de Developer

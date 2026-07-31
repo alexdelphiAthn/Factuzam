@@ -785,7 +785,7 @@ begin
     tvRetenciones,
     Self.Name,
     Self.Owner,
-    PerfilesUsuario);
+    PerfilesEscritura);
 end;
 
 procedure TfrmMtoEmpresas.chkAplicaRetencionesPropertiesChange(Sender: TObject);

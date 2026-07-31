@@ -43,7 +43,8 @@ type
     FEditorBusqueda: TcxTextEdit;
     FTemporizadorBusqueda: TTimer;
     FMenu: TPopupMenu;
-    FServicio: IFiltrosGuardados;
+    FServicioLectura: ILectorFiltrosGuardados;
+    FServicioEscritura: IEscritorFiltrosGuardados;
     FSolicitarDatos: TSolicitarDatosFiltroMto;
     FEjecutarGestion: TEjecutarGestionFiltroMto;
     FFiltroCapturadoBase64: string;
@@ -58,7 +59,8 @@ type
       AEditorBusqueda: TcxTextEdit;
       ATemporizadorBusqueda: TTimer;
       AMenu: TPopupMenu;
-      const AServicio: IFiltrosGuardados;
+      const AServicioLectura: ILectorFiltrosGuardados;
+      const AServicioEscritura: IEscritorFiltrosGuardados;
       ASolicitarDatos: TSolicitarDatosFiltroMto;
       AEjecutarGestion: TEjecutarGestionFiltroMto);
     procedure MostrarMenu(AButton: TSpeedButton);
@@ -86,7 +88,8 @@ constructor TGestorFiltrosMto.Create(
   AEditorBusqueda: TcxTextEdit;
   ATemporizadorBusqueda: TTimer;
   AMenu: TPopupMenu;
-  const AServicio: IFiltrosGuardados;
+  const AServicioLectura: ILectorFiltrosGuardados;
+  const AServicioEscritura: IEscritorFiltrosGuardados;
   ASolicitarDatos: TSolicitarDatosFiltroMto;
   AEjecutarGestion: TEjecutarGestionFiltroMto);
 begin
@@ -96,7 +99,8 @@ begin
   FEditorBusqueda := AEditorBusqueda;
   FTemporizadorBusqueda := ATemporizadorBusqueda;
   FMenu := AMenu;
-  FServicio := AServicio;
+  FServicioLectura := AServicioLectura;
+  FServicioEscritura := AServicioEscritura;
   FSolicitarDatos := ASolicitarDatos;
   FEjecutarGestion := AEjecutarGestion;
   FFiltroCapturadoBase64 := '';
@@ -121,9 +125,9 @@ var
   oSeparador: TMenuItem;
 begin
   FMenu.Items.Clear;
-  if Assigned(FServicio) then
+  if Assigned(FServicioLectura) then
   begin
-    oLista := FServicio.ListarFiltros(
+    oLista := FServicioLectura.ListarFiltros(
       FPropietario.Name, FVista.Name);
     try
       if oLista.Count = 0 then
@@ -337,9 +341,9 @@ var
   sFiltroBase64: string;
 begin
   FTemporizadorBusqueda.Enabled := False;
-  if Assigned(FServicio) then
+  if Assigned(FServicioLectura) then
   begin
-    sFiltroBase64 := FServicio.CargarFiltroBase64(
+    sFiltroBase64 := FServicioLectura.CargarFiltroBase64(
       (Sender as TMenuItem).Tag);
     AplicarDesdeBase64(sFiltroBase64);
   end;
@@ -386,7 +390,8 @@ begin
     ShowMessage(SErrorFiltroActualVacio);
   end
   else if Assigned(FSolicitarDatos) and
-          Assigned(FServicio) then
+          Assigned(FServicioLectura) and
+          Assigned(FServicioEscritura) then
   begin
     try
       FFiltroCapturadoBase64 := sFiltroBase64;
@@ -400,7 +405,7 @@ begin
       oDatos := FSolicitarDatos();
       if oDatos.Aceptado then
       begin
-        iIdFiltro := FServicio.BuscarFiltroPropio(
+        iIdFiltro := FServicioLectura.BuscarFiltroPropio(
           FPropietario.Name, FVista.Name, oDatos.Nombre);
         if iIdFiltro > 0 then
         begin
@@ -409,7 +414,7 @@ begin
               PChar(STituloSobrescribirFiltro),
               MB_YESNO + MB_ICONQUESTION) = ID_YES then
           begin
-            FServicio.SobrescribirFiltro(
+            FServicioEscritura.SobrescribirFiltro(
               iIdFiltro, oDatos.Nombre, oDatos.Descripcion,
               sFiltroBase64);
             ShowMessage(SInfoFiltroSobrescrito);
@@ -417,7 +422,7 @@ begin
         end
         else
         begin
-          FServicio.GuardarFiltroNuevo(
+          FServicioEscritura.GuardarFiltroNuevo(
             FPropietario.Name, FVista.Name, oDatos.Nombre,
             oDatos.Descripcion, sFiltroBase64);
           ShowMessage(SInfoFiltroGuardado);

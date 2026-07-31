@@ -299,11 +299,9 @@ function ConstruirModoEntradaDocumento(
   const AContextoLog: string): Boolean;
 begin
   Result := True;
-  AModoEntrada.OnResuelto := AOnResuelto;
-  AModoEntrada.OnEntrarEdicion := AOnEntrarEdicion;
-  AModoEntrada.OnSalirEdicion := AOnSalirEdicion;
   try
-    AModoEntrada.Construir;
+    AModoEntrada.Construir(
+      AOnResuelto, AOnEntrarEdicion, AOnSalirEdicion);
   except
     on E: Exception do
     begin

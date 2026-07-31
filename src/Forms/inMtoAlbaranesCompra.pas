@@ -26,7 +26,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
   Forms, Dialogs, Uni, System.Types,
-  inMtoGen, dxSkinsCore, dxSkinBlue, dxSkinsForm,
+  inMtoDocumento, dxSkinsCore, dxSkinBlue, dxSkinsForm,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit,
   cxDBEdit, cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, DB,
@@ -43,7 +43,7 @@ uses
   inLibColumnasSkuIntf,
   inLibGridPivoteVenta,
   UniDataAlbaranesCompra, cxBlobEdit, dxShellDialogs, System.Actions,
-  Vcl.ActnList, cxSplitter;
+  Vcl.ActnList, cxSplitter, inLibDocumento, inLibDocumentoIntf;
 
 const
   CANT_TALLAS_MAX = 20;
@@ -51,7 +51,7 @@ const
   ID_VA_COLOR     = 'CO';
 
 type
-  TfrmMtoAlbaranesCompra = class(TfrmMtoGen)
+  TfrmMtoAlbaranesCompra = class(TfrmMtoDocumento)
     pnlTopFicha:         TPanel;
     splSplitterFicha:    TcxSplitter;
     pcCab:               TcxPageControl;
@@ -286,10 +286,6 @@ type
   public
     dmmAlbaranesCompra: TdmAlbaranesCompra;
     procedure CrearTablaPrincipal; override;
-    // Restricción de la precarga a la empresa/almacén del usuario
-    function SqlRestriccionUsuario: string; override;
-    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
-    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 implementation
@@ -326,19 +322,6 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 // dsTablaG apunta a la cabecera del albaran de compra. El articulo
 // activo vive en la fila del sub-grid tvLineasAlbaran
 // (CODIGO_ART_ALBCLIN / CODIGO_UNIDAD_ALBCLIN).
-procedure TfrmMtoAlbaranesCompra.ResolverArtSkuActivo(out ACodArt,
-                                                      ACodSku: string);
-begin
-  ResolverArtSkuActivoDocumento(
-    tvLineasAlbaran, ACodArt, ACodSku);
-end;
-
-function TfrmMtoAlbaranesCompra.DataSourcesParaFoto: TArray<TDataSource>;
-begin
-  Result := DataSourcesParaFotoDocumento(
-    dsTablaG, tvLineasAlbaran);
-end;
-
 function TfrmMtoAlbaranesCompra.BuscarArticuloAlbaranCompra: string;
 var
   sPrv: string;
@@ -402,9 +385,7 @@ begin
     AsegurarCabeceraPersistidaCompra(
       dmmAlbaranesCompra.unqryTablaG,
       dmmAlbaranesCompra.unqryAlbaranesCompraLineas,
-      CrearConfiguracionTallasCompra(
-        STextoAlbaranCompra, 'ALBC', 'ALBCLIN',
-        'fza_albaranes_compra_lineas'),
+      ConfiguracionTallasDocumento,
       nil);
 end;
 
@@ -418,9 +399,7 @@ begin
       dmmAlbaranesCompra.unqryTablaG,
       dmmAlbaranesCompra.unqryAlbaranesCompraLineas,
       dmmAlbaranesCompra.unqryTablaG.Connection,
-      CrearConfiguracionTallasCompra(
-        STextoAlbaranCompra, 'ALBC', 'ALBCLIN',
-        'fza_albaranes_compra_lineas'),
+      ConfiguracionTallasDocumento,
       AsegurarCabeceraPersistidaParaLineas,
       FPivote.ValidarPivotePosible, AMensaje);
 end;
@@ -684,7 +663,7 @@ begin
   CargarSeriesEmpresa(
     ConexionPrincipal,
     sEmpresa,
-    'AB',
+    ConfiguracionDocumento.TipoContador,
     cbbSERIE_ALBC.Properties.Items);
   if cbbSERIE_ALBC.Properties.Items.Count = 0 then
   begin
@@ -750,14 +729,11 @@ begin
   pcAlbaran.ActivePage := tsLineasAlbaran;
 end;
 
-function TfrmMtoAlbaranesCompra.SqlRestriccionUsuario: string;
-begin
-  Result := SqlFiltroDocumento(
-    ContextoSesion, ParametrosApp, 'ALBC');
-end;
-
 procedure TfrmMtoAlbaranesCompra.CrearTablaPrincipal;
 begin
+  InicializarDocumento(
+    CrearConfiguracionDocumento(tdAlbaran, sdCompra));
+  AsignarVistaLineasDocumento(tvLineasAlbaran);
   inherited;
   dmmAlbaranesCompra := TdmAlbaranesCompra(
     AsegurarDataModuleDocumento(

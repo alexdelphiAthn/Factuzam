@@ -164,6 +164,7 @@ uses  inLibWin,
       inLibConfiguracionIni,
       inLibConexionesUniDAC,
       inLibTraducciones,
+      inLibTraduccionesFastReport,
       inLibMsgComun,
       inLibMsgConfiguracion,
       inLibDir,
@@ -189,6 +190,7 @@ begin
       ObtenerIdiomaConfigurado(
         ucConexion,
         edtUser.Text)));
+  AplicarIdiomaFastReport(Traducciones.Idioma);
   Traducciones.Aplicar(Self);
 end;
 

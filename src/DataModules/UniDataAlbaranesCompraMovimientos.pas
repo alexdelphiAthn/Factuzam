@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataAlbaranesCompraMovimientos                             }
 {    Tipo:       Librería                                                      }
@@ -41,7 +41,8 @@ function CrearMovimientosAlbaranCompraUniDAC(
 implementation
 
 uses
-  System.SysUtils, Data.DB, inLibValoresAutomaticos, inLibMsgCompras;
+  System.SysUtils, Data.DB, inLibDocumento, inLibDocumentoIntf,
+  inLibValoresAutomaticos, inLibMsgCompras;
 type
   TMovimientosAlbaranCompraUniDAC = class(
     TInterfacedObject,
@@ -55,6 +56,13 @@ type
     procedure RevertirDesdeAlbaran(
       const ASerieAlbc, ANumAlbc, AUsuario: string);
   end;
+
+function EstrategiaAlbaranCompra: IEstrategiaDocumento;
+begin
+  Result := CrearEstrategiaDocumento(
+    CrearConfiguracionDocumento(tdAlbaran, sdCompra));
+end;
+
 // Carga los datos minimos del albaran necesarios para construir los
 // movimientos: empresa (para el parametro p_CODIGO_EMPRESA_MOV) y
 // almacen por defecto de la cabecera (fallback cuando linea/celda no
@@ -298,9 +306,11 @@ begin
     qChk.SQL.Text :=
       'SELECT COUNT(*) AS N ' +
       '  FROM fza_movimientos_almacen ' +
-      ' WHERE TIPO_DOC_MOV   = ''AC'' ' +
+      ' WHERE TIPO_DOC_MOV   = :t ' +
       '   AND SERIE_DOC_MOV  = :s ' +
       '   AND NUMERO_DOC_MOV = :n';
+    qChk.ParamByName('t').AsString :=
+      EstrategiaAlbaranCompra.TipoDocumentoMovimientoStock;
     qChk.ParamByName('s').AsString := ASerieAlbc;
     qChk.ParamByName('n').AsString := ANumAlbc;
     qChk.Open;
@@ -457,7 +467,8 @@ begin
       // reusamos tal cual como LINEA_MOV.
       sLinea := qSrc.FieldByName('LINEA').AsString;
       spIns.ParamByName('p_NUMERO_MOV').AsString          := sNumeroMov;
-      spIns.ParamByName('p_TIPO_DOC_MOV').AsString        := 'AC';
+      spIns.ParamByName('p_TIPO_DOC_MOV').AsString :=
+        EstrategiaAlbaranCompra.TipoDocumentoMovimientoStock;
       spIns.ParamByName('p_SERIE_DOC_MOV').AsString       := ASerieAlbc;
       spIns.ParamByName('p_NRO_DOC_MOV').AsString         := ANumAlbc;
       spIns.ParamByName('p_LINEA_MOV').AsString           := sLinea;
@@ -465,7 +476,8 @@ begin
       spIns.ParamByName('p_CODIGO_ALMACEN_MOV').AsString  := sCodigoAlm;
       spIns.ParamByName('p_CODIGO_ALMACEN_CONTRA_MOV').Clear;
       spIns.ParamByName('p_CODIGO_UNIDAD_MOV').AsString   := sCodigoSku;
-      spIns.ParamByName('p_TIPO_MOVIMIENTO_MOV').AsString := 'E';
+      spIns.ParamByName('p_TIPO_MOVIMIENTO_MOV').AsString :=
+        EstrategiaAlbaranCompra.TipoMovimientoStock;
       spIns.ParamByName('p_CANTIDAD_MOV').AsFloat         := rCantidad;
       spIns.ParamByName('p_PRECIO_MEDIO_MOV').AsFloat     := rPrecio;
       spIns.ParamByName('p_TOTAL_COSTE_MOV').AsFloat      := rTotal;
@@ -536,9 +548,11 @@ begin
     qPares.SQL.Text :=
       'SELECT DISTINCT CODIGO_EMP_MOV, CODIGO_ALM_MOV ' +
       '  FROM fza_movimientos_almacen ' +
-      ' WHERE TIPO_DOC_MOV   = ''AC'' ' +
+      ' WHERE TIPO_DOC_MOV   = :t ' +
       '   AND SERIE_DOC_MOV  = :s ' +
       '   AND NUMERO_DOC_MOV = :n';
+    qPares.ParamByName('t').AsString :=
+      EstrategiaAlbaranCompra.TipoDocumentoMovimientoStock;
     qPares.ParamByName('s').AsString := ASerieAlbc;
     qPares.ParamByName('n').AsString := ANumAlbc;
     qPares.Open;
@@ -548,7 +562,8 @@ begin
     //    CANTIDAD_STK + acumuladores por subtipo en una transacción.
     qExec.SQL.Text :=
       'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC(:t, :s, :n)';
-    qExec.ParamByName('t').AsString := 'AC';
+    qExec.ParamByName('t').AsString :=
+      EstrategiaAlbaranCompra.TipoDocumentoMovimientoStock;
     qExec.ParamByName('s').AsString := ASerieAlbc;
     qExec.ParamByName('n').AsString := ANumAlbc;
     qExec.ExecSQL;

@@ -88,7 +88,8 @@ begin
   // 'Predeterminado' pinta un report en blanco.
   frxReportOrigen.AssignAll(frxrprt1);
   FCodigosTarifa := TStringList.Create;
-  FLayout := TLayoutLoader.Create(Self.Name, ContextoSesion, PerfilesUsuario);
+  FLayout := TLayoutLoader.Create(
+    Self.Name, ContextoSesion, PerfilesLectura);
   dtFechaAplicacion.Date := Date;
 end;
 

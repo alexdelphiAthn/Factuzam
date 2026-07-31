@@ -223,9 +223,9 @@ begin
   FListadoFiltros.DisableControls;
   try
     FListadoFiltros.EmptyDataSet;
-    if Assigned(FiltrosGuardados) then
+    if Assigned(FiltrosLectura) then
     begin
-      Filtros := FiltrosGuardados.ListarFiltros(FMto, FVista);
+      Filtros := FiltrosLectura.ListarFiltros(FMto, FVista);
       try
         for Info in Filtros do
         begin
@@ -259,7 +259,7 @@ end;
 function TfrmModalGestionFiltros.IdFiltroSeleccionado: Int64;
 begin
   Result := 0;
-  if Assigned(FiltrosGuardados) and
+  if Assigned(FiltrosLectura) and
      FListadoFiltros.Active and
      (not FListadoFiltros.IsEmpty) then
   begin
@@ -325,7 +325,7 @@ begin
   if IdFiltroSeleccionado > 0 then
   begin
     sFiltroBase64 :=
-      FiltrosGuardados.CargarFiltroBase64(IdFiltroSeleccionado);
+      FiltrosLectura.CargarFiltroBase64(IdFiltroSeleccionado);
   end;
   CargarFiltroEnEditor(sFiltroBase64);
 end;
@@ -407,7 +407,7 @@ var
   bHayFiltro: Boolean;
   bEsPropio: Boolean;
 begin
-  bHayFiltro := Assigned(FiltrosGuardados) and
+  bHayFiltro := Assigned(FiltrosLectura) and
                 FListadoFiltros.Active and
                 (not FListadoFiltros.IsEmpty);
   bEsPropio := False;
@@ -452,7 +452,7 @@ begin
   lbCompartidoCon.Items.Clear;
   if IdFiltroSeleccionado > 0 then
   begin
-    FDestinos := FiltrosGuardados.ListarDestinosCompartidos(
+    FDestinos := FiltrosComparticion.ListarDestinosCompartidos(
       IdFiltroSeleccionado);
     for info in FDestinos do
     begin
@@ -533,7 +533,7 @@ begin
     sNombre := FListadoFiltros.FieldByName('NOMBRE_FILT').AsString;
     sDescripcion := FListadoFiltros.FieldByName(
       'DESCRIPCION_FILT').AsString;
-    FiltrosGuardados.SobrescribirFiltro(
+    FiltrosEscritura.SobrescribirFiltro(
       IdFiltroSeleccionado,
       sNombre,
       sDescripcion,
@@ -559,7 +559,7 @@ begin
   else
   begin
     sFiltroGuardado :=
-      FiltrosGuardados.CargarFiltroBase64(IdFiltroSeleccionado);
+      FiltrosLectura.CargarFiltroBase64(IdFiltroSeleccionado);
     sMensaje := Format(SPreguntaReemplazarFiltro,
       [ResumirFiltro(sFiltroGuardado),
        ResumirFiltro(FFiltroActualBase64)]);
@@ -569,7 +569,7 @@ begin
       sNombre := FListadoFiltros.FieldByName('NOMBRE_FILT').AsString;
       sDescripcion := FListadoFiltros.FieldByName(
         'DESCRIPCION_FILT').AsString;
-      FiltrosGuardados.SobrescribirFiltro(
+      FiltrosEscritura.SobrescribirFiltro(
         IdFiltroSeleccionado,
         sNombre,
         sDescripcion,
@@ -605,7 +605,7 @@ begin
                                            sDescripcionInicial);
     if res.Aceptado then
     begin
-      iIdFiltro := FiltrosGuardados.BuscarFiltroPropio(
+      iIdFiltro := FiltrosLectura.BuscarFiltroPropio(
         FMto,
         FVista,
         res.Nombre);
@@ -615,7 +615,7 @@ begin
       end
       else
       begin
-        FiltrosGuardados.GuardarFiltroNuevo(
+        FiltrosEscritura.GuardarFiltroNuevo(
           FMto,
           FVista,
           res.Nombre,
@@ -644,7 +644,7 @@ begin
       FListadoFiltros.FieldByName('DESCRIPCION_FILT').AsString);
     if res.Aceptado then
     begin
-      FiltrosGuardados.RenombrarFiltro(
+      FiltrosEscritura.RenombrarFiltro(
         IdFiltroSeleccionado,
         res.Nombre,
         res.Descripcion);
@@ -666,7 +666,7 @@ begin
                               PChar(STituloConfirmarBorradoFiltro),
                               MB_YESNO + MB_ICONQUESTION) = ID_YES then
     begin
-      FiltrosGuardados.BorrarFiltro(IdFiltroSeleccionado);
+      FiltrosEscritura.BorrarFiltro(IdFiltroSeleccionado);
       CargarDatos;
     end;
   end;
@@ -698,7 +698,7 @@ begin
                                        'frmBuscarUsuarioFiltro', Self) then
     begin
       sUsuario := q.FieldByName('USUARIO').AsString;
-      FiltrosGuardados.CompartirConDestino(
+      FiltrosComparticion.CompartirConDestino(
         IdFiltroSeleccionado,
         'USUARIO',
         sUsuario);
@@ -733,7 +733,7 @@ begin
                                          'frmBuscarGrupoFiltro', Self) then
       begin
         sGrupo := q.FieldByName('GRUPO').AsString;
-        FiltrosGuardados.CompartirConDestino(
+        FiltrosComparticion.CompartirConDestino(
           IdFiltroSeleccionado,
           'GRUPO',
           sGrupo);
@@ -745,7 +745,7 @@ begin
   end
   else
   begin
-    FiltrosGuardados.CompartirConDestino(
+    FiltrosComparticion.CompartirConDestino(
       IdFiltroSeleccionado,
       'GRUPO',
       IdentidadActual.Grupo);
@@ -758,7 +758,7 @@ end;
 procedure TfrmModalGestionFiltros.btnCompartirTodosClick(Sender: TObject);
 begin
   inherited;
-  FiltrosGuardados.CompartirConDestino(
+  FiltrosComparticion.CompartirConDestino(
     IdFiltroSeleccionado,
     'TODOS',
     '');
@@ -771,7 +771,7 @@ begin
   inherited;
   if (lbCompartidoCon.ItemIndex >= 0) and Assigned(FDestinos) then
   begin
-    FiltrosGuardados.QuitarDestinoCompartido(
+    FiltrosComparticion.QuitarDestinoCompartido(
       FDestinos[lbCompartidoCon.ItemIndex].Id);
     RefrescarCompartidoCon;
   end;

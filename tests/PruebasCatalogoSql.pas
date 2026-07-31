@@ -71,7 +71,8 @@ uses
 type
   TPerfilesUsuarioFalso = class(
     TInterfacedObject,
-    IPerfilesUsuario)
+    ILectorPerfilesUsuario,
+    IEscritorPerfilesUsuario)
   private
     FGrabaciones: Integer;
     FPerfil: TProfileDicc;
@@ -96,7 +97,6 @@ type
       const AClave: string;
       const AValorPredeterminado: string = ''
     ): string;
-    procedure PrecargarPerfilesUsuario;
     function CargarPerfilFormulario(
       const AFormulario: string;
       out APerfil: TProfileDicc
@@ -105,9 +105,6 @@ type
       const AFormulario, AUsuario, AGrupo: string;
       out APerfil: TProfileDicc
     ): Boolean; overload;
-    procedure ResincronizarPerfilFormulario(
-      const AFormulario: string);
-    procedure InvalidarCachePerfiles;
     property Grabaciones: Integer read FGrabaciones;
   end;
 
@@ -252,10 +249,6 @@ begin
   Result := AValorPredeterminado;
 end;
 
-procedure TPerfilesUsuarioFalso.PrecargarPerfilesUsuario;
-begin
-end;
-
 function TPerfilesUsuarioFalso.CargarPerfilFormulario(
   const AFormulario: string;
   out APerfil: TProfileDicc): Boolean;
@@ -270,15 +263,6 @@ function TPerfilesUsuarioFalso.CargarPerfilFormulario(
 begin
   APerfil := ClonarPerfil;
   Result := True;
-end;
-
-procedure TPerfilesUsuarioFalso.ResincronizarPerfilFormulario(
-  const AFormulario: string);
-begin
-end;
-
-procedure TPerfilesUsuarioFalso.InvalidarCachePerfiles;
-begin
 end;
 
 procedure TPruebasCatalogoSql.SinPerfil_DevuelveSqlBase;
@@ -368,7 +352,8 @@ var
   oDefinicionExistente: TDefinicionSql;
   oDefinicionNueva: TDefinicionSql;
   oDefiniciones: TDefinicionesSql;
-  oPerfiles: IPerfilesUsuario;
+  oPerfilesLectura: ILectorPerfilesUsuario;
+  oPerfilesEscritura: IEscritorPerfilesUsuario;
   oPerfilesObjeto: TPerfilesUsuarioFalso;
   sSqlPersonalizado: string;
 begin
@@ -380,13 +365,15 @@ begin
   sSqlPersonalizado :=
     'SELECT VALOR FROM VISTA WHERE A = :a AND B = :b';
   oPerfilesObjeto := TPerfilesUsuarioFalso.Create;
-  oPerfiles := oPerfilesObjeto;
+  oPerfilesLectura := oPerfilesObjeto;
+  oPerfilesEscritura := oPerfilesObjeto;
   oPerfilesObjeto.Definir(
     ClavePerfilSql(oDefinicionExistente),
     'S;V=2',
     sSqlPersonalizado);
   oAdministrador := TAdministradorSqlPerfiles.Create(
-    oPerfiles);
+    oPerfilesLectura,
+    oPerfilesEscritura);
   try
     oAdministrador.PublicarFaltantes(
       CLAVE_PERFIL_CATALOGO_SQL,
@@ -530,7 +517,10 @@ begin
   oRegistro :=
     CrearRegistroDefinicionesSqlAplicacion;
   oDefiniciones := oRegistro.ObtenerDefiniciones;
-  Assert.AreEqual(120, oRegistro.Cantidad);
+  // 123 = 120 + las tres consultas de factura de Caja incorporadas
+  // en 95ecd9da: por codigo de barras, por operacion y ventas
+  // origen SKU.
+  Assert.AreEqual(123, oRegistro.Cantidad);
   Assert.AreEqual(
     'SQL__RepositorioComprasSesiones__ObtenerSiguienteLinea',
     ClavePerfilSql(oDefiniciones[0]));
@@ -609,7 +599,8 @@ var
   oDefinicion: TDefinicionSql;
   oDefiniciones: TDefinicionesSql;
   oIncidencias: IRegistroIncidenciasSql;
-  oPerfiles: IPerfilesUsuario;
+  oPerfilesLectura: ILectorPerfilesUsuario;
+  oPerfilesEscritura: IEscritorPerfilesUsuario;
   oPerfilesObjeto: TPerfilesUsuarioFalso;
   oRevisiones: TRevisionesPerfilSql;
   sSqlPerfil: string;
@@ -621,7 +612,8 @@ begin
   sSqlPerfil :=
     'SELECT VALOR FROM VISTA WHERE A = :a AND B = :b';
   oPerfilesObjeto := TPerfilesUsuarioFalso.Create;
-  oPerfiles := oPerfilesObjeto;
+  oPerfilesLectura := oPerfilesObjeto;
+  oPerfilesEscritura := oPerfilesObjeto;
   oPerfilesObjeto.Definir(
     ClavePerfilSql(oDefinicion),
     'S;V=2',
@@ -631,7 +623,8 @@ begin
     ClavePerfilSql(oDefinicion),
     'Incidencia anterior');
   oAdministrador := TAdministradorSqlPerfiles.Create(
-    oPerfiles);
+    oPerfilesLectura,
+    oPerfilesEscritura);
   try
     oRevisiones := oAdministrador.Revisar(
       CLAVE_PERFIL_CATALOGO_SQL,
@@ -666,7 +659,8 @@ var
   oAdministrador: TAdministradorSqlPerfiles;
   oDefinicion: TDefinicionSql;
   oDefiniciones: TDefinicionesSql;
-  oPerfiles: IPerfilesUsuario;
+  oPerfilesLectura: ILectorPerfilesUsuario;
+  oPerfilesEscritura: IEscritorPerfilesUsuario;
   oPerfilesObjeto: TPerfilesUsuarioFalso;
   sDirectorio: string;
   sIndice: string;
@@ -679,7 +673,8 @@ begin
   sSqlPerfil :=
     'SELECT VALOR FROM VISTA WHERE A = :a AND B = :b';
   oPerfilesObjeto := TPerfilesUsuarioFalso.Create;
-  oPerfiles := oPerfilesObjeto;
+  oPerfilesLectura := oPerfilesObjeto;
+  oPerfilesEscritura := oPerfilesObjeto;
   oPerfilesObjeto.Definir(
     ClavePerfilSql(oDefinicion),
     'S;V=2',
@@ -689,7 +684,8 @@ begin
     TPath.GetRandomFileName);
   TDirectory.CreateDirectory(sDirectorio);
   oAdministrador := TAdministradorSqlPerfiles.Create(
-    oPerfiles);
+    oPerfilesLectura,
+    oPerfilesEscritura);
   try
     oAdministrador.Exportar(
       sDirectorio,

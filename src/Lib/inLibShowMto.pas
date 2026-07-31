@@ -136,6 +136,8 @@ resourcestring
   SErrorAnfitrionPantallasNoDisponible =
     'El propietario no proporciona el servicio de apertura de ' +
     'pantallas (IAnfitrionPantallas).';
+  SErrorMantenimientoEmbebidoNoDisponible =
+    'La pantalla registrada no implementa IMantenimientoEmbebido.';
 
 // Descubre el anfitrion o falla ruidosamente (PLAN_SOLID Fase 4):
 // abrir una pantalla sin anfitrion era antes un no-op silencioso.
@@ -253,14 +255,20 @@ begin
       Exit;
     end;
     TargetForm := FormClass.Create(AOwner);
+    try
+      oMto := TargetForm as IMantenimientoEmbebido;
+    except
+      FreeAndNil(TargetForm);
+      raise EServicioNoDisponible.Create(
+        SErrorMantenimientoEmbebidoNoDisponible);
+    end;
     TargetForm.Hide;
     bBusquedaTemporal := False;
     // Si es la instancia 1 (reservada para busquedas), marcar el modo
     // y recortar el layout antes de embeber: sin Lista, sin Busqueda,
     // sin Precarga, sin Exportar a Excel; navegador con solo Insert/
     // Delete/Edit/Post/Cancel. Asi el Show muestra ya la UI reducida.
-    if (ABusq <> '') and
-       Supports(TargetForm, IMantenimientoEmbebido, oMto) then
+    if ABusq <> '' then
     begin
       if (ofzaF.NumVentanas > 1) and
          (sClave = ofzaF.Call + '#1') then
@@ -272,16 +280,20 @@ begin
       end;
     end;
     try
-      oGestor.EmbedForm(TargetForm, NewCaption, sClave, True);
+      oGestor.EmbedForm(
+        TargetForm, oMto, NewCaption, sClave, True);
     finally
-      if bBusquedaTemporal and
-         Supports(TargetForm, IMantenimientoEmbebido, oMto) then
+      if bBusquedaTemporal then
         oMto.DesactivarModoBusqueda;
     end;
     inLibLog.Log.LogInfo('Pantalla abierta: ' + ofzaF.Caption);
   end
   else
   begin
+    oMto := oGestor.MantenimientoDeForm(TargetForm);
+    if not Assigned(oMto) then
+      raise EServicioNoDisponible.Create(
+        SErrorMantenimientoEmbebidoNoDisponible);
     if (TargetForm.Parent is TcxTabSheet) then
       (TargetForm.Parent as TcxTabSheet).PageControl.ActivePage :=
                                              (TargetForm.Parent as TcxTabSheet);
@@ -291,7 +303,7 @@ begin
   //   y se rellena en background mientras la UI sigue respondiendo.
   // - Con parametro de busqueda: sincrono, porque el Locate necesita la
   //   query activa al volver.
-  if Supports(TargetForm, IMantenimientoEmbebido, oMto) then
+  if Assigned(oMto) then
   begin
     if ABusq <> '' then
     begin

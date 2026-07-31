@@ -75,7 +75,8 @@ implementation
 uses
   System.StrUtils, inMtoPreviewExcel, inLibMovVentasArtExcel,
   inLibMsgVentas,
-  inLibHojaCalculoDevEx, dxSpreadSheet, inLibFotos;
+  inLibHojaCalculoIntf, inLibHojaCalculoDevEx, dxSpreadSheet,
+  inLibFotos;
 
 { TfrmPrintMovVentasArt }
 
@@ -270,6 +271,7 @@ end;
 procedure TfrmPrintMovVentasArt.ExportarExcelMovVentas(Sender: TObject);
 var
   fPreview: TfrmMtoPreviewExcel;
+  oServiciosHoja: TServiciosHojaCalculo;
 begin
   preparar_consulta;
   Self.Hide;
@@ -279,8 +281,12 @@ begin
       fPreview.DialogoGuardar.InitialDir :=
         ParametrosApp.GetPath('appDirExcel');
       fPreview.DialogoGuardar.FileName := 'Movimientos_ventas_articulos';
+      oServiciosHoja := CrearServiciosHojaCalculoDevEx(
+        fPreview.dxSpreadSheet1);
       ExportarMovVentasArtExcel(
-        CrearEscritorDevEx(fPreview.dxSpreadSheet1), unqryMovVentasPrint);
+        oServiciosHoja.Escritor,
+        oServiciosHoja.Formateador,
+        unqryMovVentasPrint);
       fPreview.ShowModal;
     finally
       FreeAndNil(fPreview);

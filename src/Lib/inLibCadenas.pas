@@ -25,7 +25,7 @@ function HayCoincidencia(
   const ACadena, ACaracteres: string): string;
 function SimbolosProhibidos(
   const ACadena: string;
-  const APerfilesUsuario: IPerfilesUsuario): Boolean;
+  const APerfilesUsuario: ILectorPerfilesUsuario): Boolean;
 function SepararAnsi(
   const ACadena, ASeparador: string): TArrayCadenas;
 function ContarOcurrenciasAnsi(
@@ -70,7 +70,7 @@ end;
 
 function SimbolosProhibidos(
   const ACadena: string;
-  const APerfilesUsuario: IPerfilesUsuario): Boolean;
+  const APerfilesUsuario: ILectorPerfilesUsuario): Boolean;
 var
   sSimbolos: string;
 begin

@@ -45,7 +45,8 @@ type
   TRevisionesPerfilSql = array of TRevisionPerfilSql;
   TAdministradorSqlPerfiles = class
   private
-    FPerfiles: IPerfilesUsuario;
+    FPerfilesLectura: ILectorPerfilesUsuario;
+    FPerfilesEscritura: IEscritorPerfilesUsuario;
     function CargarPerfil(
       const AClavePerfil: string): TProfileDicc;
     function PerfilActivo(const AValor: string): Boolean;
@@ -54,7 +55,8 @@ type
       AEstado: TEstadoPerfilSql): string;
   public
     constructor Create(
-      const APerfiles: IPerfilesUsuario);
+      const APerfilesLectura: ILectorPerfilesUsuario;
+      const APerfilesEscritura: IEscritorPerfilesUsuario);
     procedure PublicarFaltantes(
       const AClavePerfil: string;
       const ADefiniciones: TDefinicionesSql);
@@ -95,20 +97,22 @@ resourcestring
     'El registro de definiciones SQL no está configurado.';
 
 constructor TAdministradorSqlPerfiles.Create(
-  const APerfiles: IPerfilesUsuario);
+  const APerfilesLectura: ILectorPerfilesUsuario;
+  const APerfilesEscritura: IEscritorPerfilesUsuario);
 begin
   inherited Create;
-  FPerfiles := APerfiles;
+  FPerfilesLectura := APerfilesLectura;
+  FPerfilesEscritura := APerfilesEscritura;
 end;
 
 function TAdministradorSqlPerfiles.CargarPerfil(
   const AClavePerfil: string): TProfileDicc;
 begin
   Result := nil;
-  if not Assigned(FPerfiles) then
+  if not Assigned(FPerfilesLectura) then
     raise Exception.Create(
       SErrorPerfilesSqlNoConfigurados);
-  FPerfiles.CargarPerfilFormulario(
+  FPerfilesLectura.CargarPerfilFormulario(
     AClavePerfil,
     PERFIL_TODOS,
     PERFIL_TODOS,
@@ -189,7 +193,7 @@ begin
           [ADefiniciones[iIndice].Version,
            CalcularHuellaSql(
              ADefiniciones[iIndice].SqlBase)]);
-        FPerfiles.GrabarPerfil(
+        FPerfilesEscritura.GrabarPerfil(
           PERFIL_TODOS,
           AClavePerfil,
           sClaveSql,

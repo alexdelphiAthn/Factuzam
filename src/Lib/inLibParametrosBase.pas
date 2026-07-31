@@ -43,7 +43,8 @@ type
   private
     FSeccionCritica: TCriticalSection;
     FDefiniciones: TObjectDictionary<string, TParametroDef>;
-    FPerfilesUsuario: IPerfilesUsuario;
+    FPerfilesLectura: ILectorPerfilesUsuario;
+    FCachePerfiles: ICachePerfilesUsuario;
     FFormularioPerfil: string;
     FClavesExcluidas: TArray<string>;
     function EsClaveExcluida(const AClave: string): Boolean;
@@ -55,7 +56,8 @@ type
     );
   protected
     constructor Create(
-      const APerfilesUsuario: IPerfilesUsuario;
+      const APerfilesLectura: ILectorPerfilesUsuario;
+      const ACachePerfiles: ICachePerfilesUsuario;
       const AFormularioPerfil: string;
       const AClavesExcluidas: TArray<string>
     );
@@ -107,18 +109,21 @@ end;
 { TParametrosBase }
 
 constructor TParametrosBase.Create(
-  const APerfilesUsuario: IPerfilesUsuario;
+  const APerfilesLectura: ILectorPerfilesUsuario;
+  const ACachePerfiles: ICachePerfilesUsuario;
   const AFormularioPerfil: string;
   const AClavesExcluidas: TArray<string>);
 begin
   inherited Create;
-  if not Assigned(APerfilesUsuario) then
+  if not Assigned(APerfilesLectura) or
+     not Assigned(ACachePerfiles) then
     raise EArgumentNilException.Create(
       SErrorServicioPerfilesNoProporcionado);
   FSeccionCritica := TCriticalSection.Create;
   FDefiniciones :=
     TObjectDictionary<string, TParametroDef>.Create([doOwnsValues]);
-  FPerfilesUsuario := APerfilesUsuario;
+  FPerfilesLectura := APerfilesLectura;
+  FCachePerfiles := ACachePerfiles;
   FFormularioPerfil := AFormularioPerfil;
   FClavesExcluidas := System.Copy(
     AClavesExcluidas,
@@ -129,7 +134,8 @@ end;
 
 destructor TParametrosBase.Destroy;
 begin
-  FPerfilesUsuario := nil;
+  FPerfilesLectura := nil;
+  FCachePerfiles := nil;
   FreeAndNil(FDefiniciones);
   FreeAndNil(FSeccionCritica);
   inherited;
@@ -206,8 +212,8 @@ var
 begin
   Perfil := nil;
   try
-    FPerfilesUsuario.ResincronizarPerfilFormulario(FFormularioPerfil);
-    if not FPerfilesUsuario.CargarPerfilFormulario(
+    FCachePerfiles.ResincronizarPerfilFormulario(FFormularioPerfil);
+    if not FPerfilesLectura.CargarPerfilFormulario(
       FFormularioPerfil,
       AUsuario,
       AGrupo,

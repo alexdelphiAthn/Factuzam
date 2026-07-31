@@ -79,7 +79,7 @@ begin
   FMenu := TPopupMenu.Create(nil);
   FGestor := TGestorFiltrosMto.Create(
     FPropietario, FVista, FEditor, FTemporizador,
-    FMenu, nil, nil, nil);
+    FMenu, nil, nil, nil, nil);
 end;
 
 procedure TPruebasGestorFiltrosMto.Limpiar;

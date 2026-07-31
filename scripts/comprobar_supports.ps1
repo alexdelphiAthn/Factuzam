@@ -1,7 +1,7 @@
 param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoSupportsFueraDeListaBlanca = 5
+  [int]$MaximoSupportsFueraDeListaBlanca = 0
 )
 
 Set-StrictMode -Version Latest

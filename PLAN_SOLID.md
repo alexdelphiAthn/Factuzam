@@ -56,8 +56,8 @@ Donde existe script de trinquete, manda la cifra del script.
 | Units `inLib*`→`UniData*` (§3.3, cerrado)   | —       | **0**   |
 | Sentencias SQL literales en `inLib*`        | 471     | 469     |
 | Units `inLib*` con SQL                      | 79      | 71      |
-| `Supports(...)` totales                     | 75      | 70      |
-| `Supports(...)` fuera de lista blanca       | —       | 5       |
+| `Supports(...)` totales                     | 75      | 66      |
+| `Supports(...)` fuera de lista blanca       | —       | **0**   |
 | Units > 2.000 líneas (sin vendorizado)      | 20      | 20      |
 | Métodos > 200 líneas                        | 30      | ≤38 (tope)|
 | Fan-in de `inLibMsg` (fachada)              | 197     | 60      |
@@ -118,11 +118,11 @@ entran en el plan**; los trinquetes impiden que regresen.
   - Variables `frmXxx` / `dmXxx` del IDE eliminadas.
   - Las 2 infracciones `inLib*`→`inMto*` de `inLibCajaOpeComposicion`
     cerradas mediante contratos.
-- **Arranque de la Fase 4.** `Supports` sigue el patrón de creación
-  `Heredar*`: se resuelve una vez, se guarda en campo y el fallo es
-  ruidoso (`EServicioNoDisponible` en `inLibAnfitrionMtoIntf`, con
-  prueba en `PruebasNavegacionDocumento`). `comprobar_supports.ps1`
-  vigila con lista blanca y tope 5.
+- **Fase 4 — Inyección explícita e ISP, completada.** Los contratos se
+  resuelven al crear o heredar el consumidor y se conservan en campos.
+  `ShowMto`, `InternalCloseForm` y `GenImpEle` ya no descubren
+  capacidades durante el trabajo. `comprobar_supports.ps1` vigila con
+  lista blanca y tope 0.
 - **Catálogo SQL por perfiles (SQL-0 … SQL-2.3d).** 89 definiciones de
   once repositorios. Los resolutores de artículos, los tickets de
   traspaso, el arqueo, la tira y los documentos de Caja consumen contratos; sus
@@ -167,14 +167,26 @@ densos de esa línea base eran:
 | 17         | `inLibVentasWsJson`                 | integración |
 | 15         | `inLibPedidosCompra`                | dominio    |
 
-La medida vigilada baja a 223 sentencias en 59 units. Los dos focos de
+La medida vigilada baja a 158 sentencias en 53 units. Los dos focos de
 sesiones de compra, `inLibVerifactuCola`,
 `inLibAlbaranesCompraMovimientos`, `inLibPedidosCompra` e
 `inLibVentasWsJson` ya están a cero SQL en `inLib*`. También queda
 cerrado `inLibDevolucionesCompraMovimientos`, cuyas 9 sentencias viven
-en `UniDataDevolucionesCompraMovimientos`. En pedidos de compra el
-analizador vigente encontró 28 sentencias, frente a las 15 de la línea
-base.
+en `UniDataDevolucionesCompraMovimientos`, y
+`inLibArticulosVariaciones`, cuyas 11 sentencias viven en
+`UniDataArticulosVariaciones`. `inLibFotos` queda también a cero: sus
+19 sentencias se ejecutan en `UniDataFotosRepositorio` mediante un
+contrato de infraestructura basado en `TDataSet`.
+`inLibGridPivoteCompra` queda asimismo a cero: sus 17 construcciones
+SQL viven en `UniDataGridPivoteCompraRepositorio` tras un puerto propio,
+sin records de negocio. `inLibFacturas` queda a cero: sus siete lecturas
+auxiliares viven en `UniDataFacturasLecturas` tras
+`IRepositorioLecturasFactura`. Las exportaciones NO VERI*FACTU y
+Facturae quedan también a cero SQL: sus 6 y 5 sentencias viven en
+`UniDataVerifactuNoVerifactuExport` y `UniDataFacturaeRepositorio`.
+En pedidos de compra
+el analizador vigente encontró 28 sentencias, frente a las 15 de la
+línea base.
 
 ### 3.2 SRP — Urgencia ALTA. Las clases-dios siguen intactas
 
@@ -184,7 +196,7 @@ Estado con `scripts/comprobar_tamano_clases.ps1` (topes vigentes:
 | Clase                    | Líneas | Métodos | Primer alcance |
 |--------------------------|-------:|--------:|----------------|
 | `TfrmMtoOpeCaja`         | 4.060  | 104     | resolución de venta y escáner |
-| `TfrmMtoFacturasBase`    | 4.000  | 133     | reglas fiscales y recibos |
+| `TfrmMtoFacturasBase`    | 1.779  | 104     | fiscalidad y consolidación |
 | `TfrmMtoComprasSesiones` | 3.659  | 99      | creación/materialización |
 | `TfrmMtoArticulos`       | 3.406  | 97      | alta y validación de SKU |
 | `TfrmStockConsulta`      | 3.139  | 81      | consulta, pivote y tarjetas |
@@ -270,13 +282,15 @@ es una violación de LSP. La barrera es de crecimiento: los topes de
 `comprobar_tamano_clases.ps1` impiden ampliar las bases, y §14.5 obliga
 a decidir colaborador/estrategia antes de tocar `TfrmMtoGen`.
 
-### 3.6 ISP — Residual de la Fase 4
+### 3.6 ISP — Fase 4 cerrada
 
-Con `Supports` domado (5 fuera de lista blanca, objetivo 0), queda
-partir los contratos gordos midiendo por consumidor:
-`IEscritorHojaCalculo` (14 métodos), `IModoEntradaGrid` (12 + 4
-propiedades), `IFiltrosGuardados` (11), `IPerfilesUsuario` (10).
-`IAnfitrionMantenimiento` ya está delgado y no se toca.
+`Supports` queda en 0 fuera de lista blanca. Los contratos gordos se
+han separado por consumidor: contenido/formato/guardado de hoja de
+cálculo; ciclo de vida del modo de entrada; lectura/escritura/compartición
+de filtros; y lectura/escritura/caché de perfiles. Los registros
+`TServicios*` permiten inyectar juntas las vistas de un mismo adaptador
+sin volver a descubrir capacidades. `IAnfitrionMantenimiento` permanece
+delgado.
 
 ### 3.7 Higiene residual — barato, cerrarlo pronto
 
@@ -328,16 +342,18 @@ contrato de persistencia por constructor; la implementación vive en
    La fachada queda sin UniDAC ni SQL, con dobles sin BBDD; el adaptador
    y su plan de reducción están en el documento de resultados.
    `PruebasEmisionFiscal`, `PruebasRectificativas` y la batería completa
-   pasaron en Release Win32 + Win64. La revalidación global del árbol
-   concurrente queda pendiente por la ausencia ajena de
-   `inLibMsgRegistroTraducciones.pas`.
+   pasaron en Release Win32 + Win64. La compilación global del árbol
+   concurrente se ha revalidado en Debug Win64 y Release Win32/Win64;
+   la ausencia de `inLibMsgRegistroTraducciones.pas` ya no bloquea
+   porque no quedan referencias activas a esa unidad.
 5. Repetir el patrón por densidad. `inLibAlbaranesCompraMovimientos`
    `inLibPedidosCompra`, `inLibVentasWsJson` e
-   `inLibDevolucionesCompraMovimientos` ya están cerrados; queda
-   `inLibArticulosVariaciones`.
+   `inLibDevolucionesCompraMovimientos` ya están cerrados.
+   `inLibArticulosVariaciones` cierra esta cola de dominio.
 6. `inLibFotos`, `inLibGridPivoteCompra` y `inLibColumnasSkuModoTallas`
    son infraestructura, no dominio: basta aislar su SQL tras un contrato
-   propio, sin forzar `record` de negocio.
+   propio, sin forzar `record` de negocio. Los tres focos ya están a
+   cero SQL en `inLib*`.
 7. **Regla para el trinquete:** ninguna unit `inLib*` **nueva** contiene
    SQL literal. Las existentes solo bajan
    (`comprobar_sql_en_dominio.ps1`, topes 469/71).
@@ -403,39 +419,41 @@ además los límites específicos y el cero SQL definidos en el anexo.
 
 ---
 
-### Fase 4 — Cierre de inyección explícita e ISP (esfuerzo: medio)
+### Fase 4 — Cierre de inyección explícita e ISP — COMPLETADA
 
-El arranque está hecho (ver §2). Queda:
-
-1. Bajar el tope de `comprobar_supports.ps1` de 5 a 0: los 3 capability
-   checks de `ShowMto` / `InternalCloseForm` y el modal `GenImpEle`
-   pasan a resolución en creación o a un contrato explícito.
-2. Partir los contratos gordos por consumidor real:
-   `IEscritorHojaCalculo` (14) → escritura de celdas vs formato vs
-   guardado; `IModoEntradaGrid` (12+4); `IFiltrosGuardados` (11);
-   `IPerfilesUsuario` (10).
+1. `comprobar_supports.ps1` tiene tope 0. `ShowMto` resuelve
+   `IMantenimientoEmbebido` al crear el formulario y `FormManager`
+   conserva ese contrato; `GenImpEle` recibe `IEliminadorElemento`
+   por constructor.
+2. Contratos separados por consumidor real:
+   `IEscritorHojaCalculo` + `IFormateadorHojaCalculo` +
+   `IGuardadorHojaCalculo`; `IModoEntradaGrid` reducido a su ciclo de
+   vida; `ILector`/`IEscritor`/`ICompartidorFiltrosGuardados`; y
+   `ILector`/`IEscritor`/`ICachePerfilesUsuario`.
 
 **Criterio de salida:** `Supports()` fuera de lista blanca = 0; ningún
 consumidor obligado a implementar métodos que no usa.
 
 ---
 
-### Fase 5 — OCP: una sola familia de documentos (esfuerzo: alto)
+### Fase 5 — OCP: una sola familia de documentos (COMPLETADA)
 
-Solo abordable después de la Fase 3, con `inMtoFacturasBase` adelgazado.
+El prerrequisito queda cumplido: `inMtoFacturasBase` está por debajo de
+2.000 líneas y 120 métodos.
 
-1. `TConfiguracionDocumento` como `record`: tablas, prefijos, signo del
-   stock, contador, serie, asiento, Verifactu.
-2. `IEstrategiaDocumento` para lo que de verdad difiere: precios,
-   impuestos, movimiento de stock y numeración.
-3. Migrar en orden: `Albaranes` (40 % de solape) → `Pedidos` (39 %) →
-   `Facturas` → `Devoluciones`.
+1. Hecho: `TConfiguracionDocumento` concentra tablas, prefijos, signo del
+   stock, contador, serie, asiento y Verifactu.
+2. Hecho: `IEstrategiaDocumento` resuelve precios, impuestos, movimiento
+   de stock y numeración.
+3. Hecho: migración en orden `Albaranes` → `Pedidos` → `Facturas` →
+   `Devoluciones`.
 4. **No tocar** los grids pivote (9 % de solape, §14.6).
-5. Fachada temporal en las units antiguas, anotada en
-   `ISSUES PENDIENTES.txt`, eliminada al migrar el último consumidor.
+5. Hecho: los alias y factorías temporales se eliminaron al migrar el
+   último consumidor.
 
-**Criterio de salida:** un tipo de documento nuevo = una configuración
-y, como mucho, una estrategia. Nunca un formulario copiado.
+**Criterio de salida cumplido:** un tipo de documento nuevo = una
+configuración y, como mucho, una estrategia. Nunca un formulario
+copiado.
 
 ---
 
@@ -572,20 +590,21 @@ Ninguna cifra puede subir. El script correspondiente falla el build.
 | `except` vacíos                          | 0        | ✔    | 0        |
 | Infracciones `inLib*`→`inMto*`           | 0        | ✔    | 0        |
 | `inLib*`→`UniData*`                      | 0        | ✔    | 0        |
-| Sentencias SQL en `inLib*`               | 223      | 2    | ≤ 250    |
-| Units `inLib*` con SQL                   | 59       | 2    | ≤ 40     |
+| Sentencias SQL en `inLib*`               | 158      | 2    | ≤ 250    |
+| Units `inLib*` con SQL                   | 53       | 2    | ≤ 40     |
 | Líneas por clase                         | 4.075    | 3    | ≤ 2.000  |
 | `TfrmMtoComprasSesiones` — líneas        | 3.634    | 3    | ≤ 2.000  |
+| `TfrmMtoFacturasBase` — líneas           | 1.779    | 3    | ≤ 2.000  |
 | Métodos por clase                        | 133      | 3    | ≤ 120    |
 | Campos por clase                         | 49       | 3    | solo baja|
 | Líneas de unit procedural vigilada       | 3.042    | 3    | ≤ 1.200  |
 | Rutinas de unit procedural vigilada      | 75       | 3    | ≤ 30     |
 | Métodos > 200 líneas                     | 38       | 3    | ≤ 10     |
-| `Supports()` fuera de lista blanca       | 5        | 4    | 0        |
+| `Supports()` fuera de lista blanca       | 0        | ✔    | 0        |
 | Fan-in de `inLibMsg`                     | 60       | 6    | 0 (unidad eliminada) |
 | Fan-in con cuerpo                        | 84       | 6    | solo baja|
 | Fan-out máximo por unidad                | 101      | 6    | ≤ 40     |
-| Units de prueba DUnitX                   | 44       | 2-3  | ≥ 50     |
+| Units de prueba DUnitX                   | 64       | 2-3  | ≥ 50     |
 
 ---
 
@@ -633,8 +652,9 @@ Ordenados para que cada uno sea pequeño, verificable y deje algo medido.
 6. `inLibComprasSesionesMaterializar`: primera operación de escritura
    tras el contrato, transaccional e idempotente.
 7. `inLibVerifactuCola` tras contrato; las baterías fiscales pasaron en
-   Release Win32 + Win64. Revalidación global pendiente por la unidad
-   concurrente `inLibMsgRegistroTraducciones.pas` ausente.
+   Release Win32 + Win64. La revalidación global ya no queda bloqueada:
+   no existen referencias activas a la unidad concurrente ausente
+   `inLibMsgRegistroTraducciones.pas`.
 8. `inLibAlbaranesCompraMovimientos` tras contrato.
 9. `inLibPedidosCompra` tras contrato; sus 28 sentencias viven en
    `UniDataPedidosCompraOperaciones`.
@@ -642,13 +662,34 @@ Ordenados para que cada uno sea pequeño, verificable y deje algo medido.
     `UniDataVentasWsJson`.
 11. `inLibDevolucionesCompraMovimientos` tras contrato; sus 9
     sentencias viven en `UniDataDevolucionesCompraMovimientos`.
-12. Fachada `inLibMsg`: primera tanda de migración de `uses` (60 → ~40).
-13. ~~Fase 3, fascículo 1: `inMtoComprasSesiones`.~~ **Hecho**: las
+12. `inLibArticulosVariaciones` tras contrato; sus 11 sentencias viven
+    en `UniDataArticulosVariaciones`.
+13. `inLibFotos` tras `IRepositorioFotos`; sus 19 sentencias viven en
+    `UniDataFotosRepositorio` y el puerto usa `TDataSet`, sin nuevos
+    records de negocio.
+14. `inLibGridPivoteCompra` tras
+    `IRepositorioGridPivoteCompra`; sus 17 construcciones SQL viven en
+    `UniDataGridPivoteCompraRepositorio`, sin records de negocio.
+15. SQL-2.4, lecturas de `inLibFacturas`: sus siete sentencias viven en
+    `UniDataFacturasLecturas` tras `IRepositorioLecturasFactura`.
+16. SQL-2.4, exportaciones: `inLibVerifactuNoVerifactuExport` e
+    `inLibFacturae` quedan a cero; sus 11 sentencias viven tras puertos
+    propios en adaptadores UniDAC.
+17. Fachada `inLibMsg`: primera tanda de migración de `uses` (60 → ~40).
+18. ~~Fase 3, fascículo 1: `inMtoComprasSesiones`.~~ **Hecho**: las
     reglas de creación salen a `inLibComprasSesionesCreacion` con 18
     pruebas sin BBDD; la clase baja de 3.669 a 3.634 líneas.
-14. Fase 3, fascículo 2: `inMtoFacturasBase` extrae reglas fiscales y
-    recibos a colaborador con pruebas.
-15. ISP: partir `IEscritorHojaCalculo` por consumidor real.
+19. ~~Fase 3, fascículo 2: `inMtoFacturasBase`.~~ **Hecho**: presentación
+    de cobros, bloqueo fiscal, anulaciones/subsanaciones y consolidación
+    salen a colaboradores propios; el archivado PDF queda en su modal.
+    Las 20 pruebas no usan BBDD. En el árbol compartido la clase baja de
+    4.008/133 a 1.779/104, incluidas extracciones de edición
+    de líneas y coordinación del formulario.
+20. ~~ISP: partir los cuatro contratos gordos por consumidor real.~~
+    **Hecho**: hoja de cálculo, modo de entrada, filtros y perfiles.
+21. ~~Fase 5, OCP: una sola familia de documentos.~~ **Hecho**:
+    configuración y estrategia únicas, ancestro común y migración de
+    albaranes, pedidos, facturas y devoluciones.
 
 A partir de aquí las fases 2 y 3 avanzan en paralelo por dominios.
 
@@ -665,8 +706,8 @@ La Fase 1 está cerrada: sus reglas se promueven **ya**.
 - ~~Fase 2b → §14.1~~: **promovido**. Opción A, doble dirección
   vigilada por script y cuatro entradas nuevas en la lista negra.
 - Fase 3 → §14.5: topes de 2.000 líneas / 120 métodos por clase.
-- Fase 4 → §14.2: *"`Supports` solo en inicialización; el resultado se
-  guarda en un campo"*.
+- ~~Fase 4 → §14.2~~: **promovido**. `Supports` solo en inicialización;
+  el resultado se guarda en un campo.
 - Fase 5 → §14.6: configuración + estrategia como vía única para un tipo
   de documento nuevo.
 - Fase 6 → §14.1: auto-registro de pantallas en `initialization`.

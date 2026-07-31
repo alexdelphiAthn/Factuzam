@@ -18,7 +18,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, inMtoGen, dxSkinsCore, dxSkinBlue,
+  Dialogs, inMtoDocumento, dxSkinsCore, dxSkinBlue,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, dxSkinsForm, cxLabel, cxTextEdit,
   cxDBEdit, cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, DB,
@@ -34,10 +34,11 @@ uses
   cxGridBandedTableView, cxGridDBBandedTableView,
   System.Actions, Vcl.ActnList,
   // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
-  inLibColumnasSkuIntf, inLibGridPivoteVenta;
+  inLibColumnasSkuIntf, inLibGridPivoteVenta,
+  inLibDocumento, inLibDocumentoIntf;
 
 type
-  TfrmMtoPedidos = class(TfrmMtoGen)
+  TfrmMtoPedidos = class(TfrmMtoDocumento)
     pnlTopFicha: TPanel;
     pcCab: TcxPageControl;
     tsCabecera: TcxTabSheet;
@@ -303,10 +304,6 @@ type
     dmmPedidos: TdmPedidos;
     destructor Destroy; override;
     procedure CrearTablaPrincipal; override;
-    // Restricción de la precarga a la empresa del usuario
-    function SqlRestriccionUsuario: string; override;
-    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
-    function  DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 implementation
@@ -374,7 +371,7 @@ begin
   CargarSeriesEmpresa(
     ConexionPrincipal,
     sEmpresa,
-    'PE',
+    ConfiguracionDocumento.TipoContador,
     cbbSERIE_PED.Properties.Items);
   if cbbSERIE_PED.Properties.Items.Count = 0 then
   begin
@@ -389,19 +386,6 @@ end;
 // dsTablaG apunta a la cabecera de pedido. El articulo activo vive en
 // la fila del sub-grid tvPedidosLineas (CODIGO_ART_PEDLIN /
 // CODIGOPRODPS_PEDLIN, usado como SKU efectivo en venta mayor).
-procedure TfrmMtoPedidos.ResolverArtSkuActivo(out ACodArt,
-                                              ACodSku: string);
-begin
-  ResolverArtSkuActivoDocumento(
-    tvPedidosLineas, ACodArt, ACodSku);
-end;
-
-function TfrmMtoPedidos.DataSourcesParaFoto: TArray<TDataSource>;
-begin
-  Result := DataSourcesParaFotoDocumento(
-    dsTablaG, tvPedidosLineas);
-end;
-
 function TfrmMtoPedidos.BuscarArticuloPedido: string;
 var
   qry     : TUniQuery;
@@ -753,14 +737,11 @@ begin
   end;
 end;
 
-function TfrmMtoPedidos.SqlRestriccionUsuario: string;
-begin
-  Result := SqlFiltroDocumento(
-    ContextoSesion, ParametrosApp, 'PED');
-end;
-
 procedure TfrmMtoPedidos.CrearTablaPrincipal;
 begin
+  InicializarDocumento(
+    CrearConfiguracionDocumento(tdPedido, sdVenta));
+  AsignarVistaLineasDocumento(tvPedidosLineas);
   inherited;
   dmmPedidos := TdmPedidos(AsegurarDataModuleDocumento(
     Self, tdmDataModule, TdmPedidos));
@@ -1142,15 +1123,14 @@ end;
 
 procedure TfrmMtoPedidos.AsegurarCabeceraPersistidaParaLineas;
 var
-  oConfiguracion: TConfiguracionPersistenciaDocumento;
+  oConfiguracion: TConfiguracionDocumento;
 begin
   if not Assigned(dmmPedidos) then
     raise Exception.Create(SErrorPedidoVentaNoInicializado)
   else
   begin
-    oConfiguracion := CrearConfiguracionPersistenciaDocumento(
-      SErrorCrearSeleccionarPedidoAntesLineas,
-      'PED', 'PEDLIN');
+    oConfiguracion := ConfiguracionPersistenciaDocumento(
+      SErrorCrearSeleccionarPedidoAntesLineas);
     oConfiguracion.CampoProductoLinea :=
       'CODIGOPRODPS_PEDLIN';
     oConfiguracion.RecrearLineaVacia := True;

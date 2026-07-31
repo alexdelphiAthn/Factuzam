@@ -48,7 +48,7 @@ implementation
 
 uses
   inLibDir, inLibUnidadesMedida, inLibVerifactu, inLibFormatoDocumento,
-  inLibPreviewTicket;
+  inLibPreviewTicket, inLibMsgTickets;
 
 const
   CAMPOS_PIE_TICKET_CAJA: array[0..3] of string = (
@@ -286,30 +286,39 @@ begin
     Ticket.SaltarLineas(1);
     Ticket.Negrita(True);
     if ASinPrecios then
-      Ticket.EscribirLinea('TICKET REGALO Nro. ' + sDocumento)
+      Ticket.EscribirLinea(
+        Format(STicketRegaloNumero, [sDocumento]))
     else
-      Ticket.EscribirLinea('FACTURA SIMPLIFICADA Nro. ' + sDocumento);
+      Ticket.EscribirLinea(
+        Format(STicketFacturaSimplificadaNumero, [sDocumento]));
     Ticket.Negrita(False);
     Ticket.SaltarLineas(1);
     Ticket.Alinear(alCentro);
     Ticket.EscribirLinea(Cab.RazonSocialEmp);
     Ticket.EscribirLinea(Cab.Direccion1Emp);
     Ticket.EscribirLinea(Cab.CPostalEmp + ' ' + Cab.PoblacionEmp);
-    Ticket.EscribirLinea('CIF/NIF: ' + Cab.NifEmp);
+    Ticket.EscribirLinea(
+      Format(STicketCifNif, [Cab.NifEmp]));
     if Trim(Cab.MovilEmp) <> '' then
-      Ticket.EscribirLinea('TELÉFONO: ' + Cab.MovilEmp);
+      Ticket.EscribirLinea(
+        Format(STicketTelefono, [Cab.MovilEmp]));
     Ticket.SaltarLineas(1);
     // Formatear línea de operación y tienda
     Ticket.Alinear(alIzquierda);
-    Ticket.TextoColumnas('OPERACIÓN NRO.', ANumeroGenerado);
+    Ticket.TextoColumnas(
+      STicketEtiquetaOperacionNumero,
+      ANumeroGenerado);
     Ticket.SaltarLineas(1);
     Ticket.TextoColumnas(FormatDateTime('dd/mm/yyyy hh:nn',
                          dtFechaOperacion),
-                         LPAD(ACodigoEmpresa, 3) + ' Tda.' +
-                         LPAD(ACodigoAlmacen, 3) + '-' + LPAD(ACodigoCaja, 2));
+                         Format(
+                           STicketFormatoTienda,
+                           [LPAD(ACodigoEmpresa, 3),
+                            LPAD(ACodigoAlmacen, 3),
+                            LPAD(ACodigoCaja, 2)]));
     // === ARTÍCULOS ===
     Ticket.LineaSeparadora('-');
-    Ticket.EscribirLinea('Artículo/Sku                Uds    Total');
+    Ticket.EscribirLinea(STicketCabeceraArticulos);
     Ticket.LineaSeparadora('-');
     dLin.DisableControls;
     try
@@ -352,15 +361,17 @@ begin
     Ticket.Negrita(True);
     if DatosCobro.ImporteDescuentoGlobal > 0 then
     begin
-      Ticket.TextoColumnas('SUMA', Format('%.2f',
+      Ticket.TextoColumnas(STicketSuma, Format('%.2f',
                 [Cab.TotalLiquido + DatosCobro.ImporteDescuentoGlobal]) + ' €');
-      Ticket.TextoColumnas('DESCUENTO', Format('-%.2f',
+      Ticket.TextoColumnas(STicketDescuento, Format('-%.2f',
                                    [DatosCobro.ImporteDescuentoGlobal]) + ' €');
     end;
     if DatosCobro.ImporteValeRecogido > 0 then
-      Ticket.TextoColumnas('VALE RECOGIDO', Format('-%.2f',
+      Ticket.TextoColumnas(STicketValeRecogido, Format('-%.2f',
                                       [DatosCobro.ImporteValeRecogido]) + ' €');
-    Ticket.TextoColumnas('A PAGAR', Format('%.2f', [Cab.TotalLiquido]) + ' €');
+    Ticket.TextoColumnas(
+      STicketAPagar,
+      Format('%.2f', [Cab.TotalLiquido]) + ' €');
     Ticket.Negrita(False);
     Ticket.Alinear(alIzquierda);
     Ticket.Negrita(True);
@@ -377,24 +388,24 @@ begin
       DatosCobro.MemTablePagos.Next;
     end;
     if DatosCobro.ImporteCambio > 0 then
-      Ticket.TextoColumnas('CAMBIO EFECTIVO', Format('%.2f',
+      Ticket.TextoColumnas(STicketCambioEfectivo, Format('%.2f',
                                             [DatosCobro.ImporteCambio]) + ' €');
     Ticket.Negrita(False);
     if DatosCobro.ImporteValeEmitido > 0 then
     begin
       Ticket.SaltarLineas(1);
       Ticket.Negrita(True);
-      Ticket.TextoColumnas('VALE EMITIDO A SU FAVOR', Format('%.2f',
+      Ticket.TextoColumnas(STicketValeEmitidoFavor, Format('%.2f',
                                        [DatosCobro.ImporteValeEmitido]) + ' €');
       // Si el codigo no cabe junto a la etiqueta (ancho 42), va en
       // una linea propia debajo.
-      if Length('CÓDIGO VALE EMITIDO: ' +
+      if Length(STicketCodigoValeEmitidoEspacio +
                 DatosCobro.CodigoValeEmitido) <= 42 then
-        Ticket.TextoColumnas('CÓDIGO VALE EMITIDO: ',
+        Ticket.TextoColumnas(STicketCodigoValeEmitidoEspacio,
                              DatosCobro.CodigoValeEmitido)
       else
       begin
-        Ticket.EscribirLinea('CÓDIGO VALE EMITIDO:');
+        Ticket.EscribirLinea(STicketCodigoValeEmitido);
         Ticket.EscribirLinea(DatosCobro.CodigoValeEmitido);
       end;
       Ticket.Negrita(False);
@@ -405,16 +416,18 @@ begin
     // Mostrar desglose de base e IVA (N = Normal, R = Reducido, etc.)
     if Abs(Cab.TotalIvaN) > 0.001 then
     begin
-      Ticket.TextoColumnas('BASE IMPONIBLE', Format('%.2f', [Cab.BaseIN]) +
+      Ticket.TextoColumnas(STicketBaseImponible,
+        Format('%.2f', [Cab.BaseIN]) +
                                                                           ' €');
-      Ticket.TextoColumnas(Format('TOTAL IVA(%.0f%%)', [Cab.PorcIvaN]),
+      Ticket.TextoColumnas(Format(STicketTotalIvaFormato, [Cab.PorcIvaN]),
                                         Format('%.2f', [Cab.TotalIvaN]) + ' €');
     end;
     if Abs(Cab.TotalIvaR) > 0 then
     begin
-      Ticket.TextoColumnas('BASE IMPONIBLE RED.', Format('%.2f', [Cab.BaseIR]) +
+      Ticket.TextoColumnas(STicketBaseImponibleReducida,
+        Format('%.2f', [Cab.BaseIR]) +
                                                                           ' €');
-      Ticket.TextoColumnas(Format('TOTAL IVA(%.0f%%)', [Cab.PorcIvaR]),
+      Ticket.TextoColumnas(Format(STicketTotalIvaFormato, [Cab.PorcIvaR]),
                                         Format('%.2f', [Cab.TotalIvaR]) + ' €');
     end;
     end;
@@ -426,10 +439,11 @@ begin
     var sVendedor := ObtenerDiminutivoVendedor(AConexion,
           DatosCobro.TotalesFactura.Cabecera.FieldByName(
             'CODIGO_CAJERO_FAC').AsString);
-    Ticket.EscribirLinea('LE ATENDIÓ: ' + sVendedor);
+    Ticket.EscribirLinea(
+      Format(STicketLeAtendio, [sVendedor]));
     if not ASinPrecios then
-      Ticket.EscribirLinea('IVA INCLUIDO');
-    Ticket.EscribirLinea('GRACIAS POR SU VISITA');
+      Ticket.EscribirLinea(STicketIvaIncluido);
+    Ticket.EscribirLinea(STicketGraciasVisita);
     EscribirPieTicketCaja(AConexion, Ticket, ACodigoEmpresa);
     // Código de barras EAN-13 del ticket (parámetro de caja): permite
     // localizar el ticket al escanearlo en devoluciones (F4). También

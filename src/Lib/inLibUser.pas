@@ -44,7 +44,8 @@ procedure FilterProfileUserGroup(var APerfilUserDic: TProfileUserDicc;
                                  var APerfilDic: TProfileDicc);
 procedure GetFormUserProfile(var APerfilDic: TProfileDicc;
                              AFormName: string;
-                             const APerfilesUsuario: IPerfilesUsuario); overload;
+                             const APerfilesUsuario:
+                               ILectorPerfilesUsuario); overload;
 function GetPerfilSubKeyValueDef( var APerfilDic: TProfileDicc;
                                   ASubKey: string;
                                   sSubSubKey: string;
@@ -62,7 +63,8 @@ procedure GetDictionaryKeySubKey( var APerfilDic: TProfileDicc;
                                 sGridViewName: string);
 procedure GetFormUserProfile(var APerfilDic: TProfileDicc;
                              const AFormName, sUsuario, sGrupo: string;
-                             const APerfilesUsuario: IPerfilesUsuario); overload;
+                             const APerfilesUsuario:
+                               ILectorPerfilesUsuario); overload;
 
 implementation
 
@@ -72,7 +74,7 @@ uses
 // Dentro de inLibUser.pas
 procedure GetFormUserProfile(var APerfilDic: TProfileDicc;
   const AFormName, sUsuario, sGrupo: string;
-  const APerfilesUsuario: IPerfilesUsuario);
+  const APerfilesUsuario: ILectorPerfilesUsuario);
 begin
   if not Assigned(APerfilesUsuario) then
     raise Exception.Create(SErrorServicioPerfilesUsuarioNoConfigurado);
@@ -154,7 +156,7 @@ end;
 procedure GetFormUserProfile(
   var APerfilDic: TProfileDicc;
   AFormName: string;
-  const APerfilesUsuario: IPerfilesUsuario);
+  const APerfilesUsuario: ILectorPerfilesUsuario);
 begin
   if not Assigned(APerfilesUsuario) then
     raise Exception.Create(SErrorServicioPerfilesUsuarioNoConfigurado);

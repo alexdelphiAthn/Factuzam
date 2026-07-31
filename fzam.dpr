@@ -49,6 +49,7 @@ uses
   inLibMsgCompras in 'src\Lib\inLibMsgCompras.pas',
   inLibMsgFacturas in 'src\Lib\inLibMsgFacturas.pas',
   inLibMsgCaja in 'src\Lib\inLibMsgCaja.pas',
+  inLibMsgTickets in 'src\Lib\inLibMsgTickets.pas',
   inLibMsgIntegraciones in 'src\Lib\inLibMsgIntegraciones.pas',
   inLibMsgVerifactu in 'src\Lib\inLibMsgVerifactu.pas',
   inLibRegistroResourcestringTraducciones in
@@ -58,6 +59,10 @@ uses
   inLibScriptDB in 'src\Lib\inLibScriptDB.pas',
   inLibIBAN in 'src\Lib\inLibIBAN.pas',
   inLibSepaRemesasVenta in 'src\Lib\inLibSepaRemesasVenta.pas',
+  inLibFacturasLecturasIntf in
+    'src\Lib\inLibFacturasLecturasIntf.pas',
+  UniDataFacturasLecturas in
+    'src\DataModules\UniDataFacturasLecturas.pas',
   inLibFacturas in 'src\Lib\inLibFacturas.pas',
   inLibSqlSeguro in 'src\Lib\inLibSqlSeguro.pas',
   inLibMotorFiscalVenta in 'src\Lib\inLibMotorFiscalVenta.pas',
@@ -75,6 +80,20 @@ uses
     'src\Lib\inLibFacturasComposicion.pas',
   inLibFacturasBorrado in 'src\Lib\inLibFacturasBorrado.pas',
   inLibFacturasEfectos in 'src\Lib\inLibFacturasEfectos.pas',
+  inLibDocumentoIntf in 'src\Lib\inLibDocumentoIntf.pas',
+  inLibDocumento in 'src\Lib\inLibDocumento.pas',
+  inLibFacturasCobrosPresentacion in
+    'src\Lib\inLibFacturasCobrosPresentacion.pas',
+  inLibFacturasEstadoFiscalPresentacion in
+    'src\Lib\inLibFacturasEstadoFiscalPresentacion.pas',
+  inLibFacturasOperacionFiscal in
+    'src\Lib\inLibFacturasOperacionFiscal.pas',
+  inLibFacturasLineasEdicion in
+    'src\Lib\inLibFacturasLineasEdicion.pas',
+  inLibFacturasConsolidacionPresentacion in
+    'src\Lib\inLibFacturasConsolidacionPresentacion.pas',
+  inLibFacturasColumnasPresentacion in
+    'src\Lib\inLibFacturasColumnasPresentacion.pas',
   inLibFacturasMovimientos in
     'src\Lib\inLibFacturasMovimientos.pas',
   inLibFacturasConsolidacion in
@@ -110,6 +129,8 @@ uses
   inLibTraduccionesIntf in 'src\Lib\inLibTraduccionesIntf.pas',
   inLibTraducciones in 'src\Lib\inLibTraducciones.pas',
   inLibTraduccionesInforme in 'src\Lib\inLibTraduccionesInforme.pas',
+  inLibTraduccionesFastReport in
+    'src\Lib\inLibTraduccionesFastReport.pas',
   inLibParametrosIntf in 'src\Lib\inLibParametrosIntf.pas',
   inLibParametrosBase in 'src\Lib\inLibParametrosBase.pas',
   inLibConexionesIntf in 'src\Lib\inLibConexionesIntf.pas',
@@ -282,6 +303,9 @@ uses
   inLibCajaDatosFactura in 'src\Caja\Lib\inLibCajaDatosFactura.pas',
   inLibCajaTipos in 'src\Caja\Lib\inLibCajaTipos.pas',
   inLibCajaVentaIntf in 'src\Caja\Lib\inLibCajaVentaIntf.pas',
+  inLibCajaVentaCliente in 'src\Caja\Lib\inLibCajaVentaCliente.pas',
+  inLibCajaVentaOperacion in
+    'src\Caja\Lib\inLibCajaVentaOperacion.pas',
   inLibCajaStock in 'src\Caja\Lib\inLibCajaStock.pas',
   inLibCajaDescuentos in 'src\Caja\Lib\inLibCajaDescuentos.pas',
   UniDataCajaConsultasRepositorio in
@@ -368,7 +392,13 @@ uses
   inMtoModalArticulosPropiedades in
     'src\Modals\inMtoModalArticulosPropiedades.pas',
   inLibArticulosVariaciones in 'src\Lib\inLibArticulosVariaciones.pas',
+  inLibArticulosVariacionesIntf in
+    'src\Lib\inLibArticulosVariacionesIntf.pas',
+  UniDataArticulosVariaciones in
+    'src\DataModules\UniDataArticulosVariaciones.pas',
   inLibArticulosCodigosBarras in 'src\Lib\inLibArticulosCodigosBarras.pas',
+  inLibArticulosAltaTarifas in 'src\Lib\inLibArticulosAltaTarifas.pas',
+  inLibStockCeldaDocumento in 'src\Lib\inLibStockCeldaDocumento.pas',
   inLibArticulosFiltro in 'src\Lib\inLibArticulosFiltro.pas',
   inMtoModalAceptCancel in 'src\Modals\inMtoModalAceptCancel.pas' {frmModalAceptCancel},
   inMtoModalGenerarSKUs in 'src\Modals\inMtoModalGenerarSKUs.pas' {frmMtoModalGenerarSKUS},
@@ -391,7 +421,15 @@ uses
   inLibXades in 'src\Lib\inLibXades.pas',
   inLibDocumentoFiscal in 'src\Lib\inLibDocumentoFiscal.pas',
   inLibRelojFiscal in 'src\Lib\inLibRelojFiscal.pas',
+  inLibFacturaePersistenciaIntf in
+    'src\Lib\inLibFacturaePersistenciaIntf.pas',
+  UniDataFacturaeRepositorio in
+    'src\DataModules\UniDataFacturaeRepositorio.pas',
   inLibFacturae in 'src\Lib\inLibFacturae.pas',
+  inLibVerifactuNoVerifactuExportIntf in
+    'src\verifactu\inLibVerifactuNoVerifactuExportIntf.pas',
+  UniDataVerifactuNoVerifactuExport in
+    'src\verifactu\UniDataVerifactuNoVerifactuExport.pas',
   inLibVerifactuNoVerifactuExport in 'src\Lib\inLibVerifactuNoVerifactuExport.pas',
   inLibVerifactuNoVerifactuVerify in 'src\Lib\inLibVerifactuNoVerifactuVerify.pas',
   inLibVerifactuInstalacion in 'src\verifactu\inLibVerifactuInstalacion.pas',
@@ -449,6 +487,7 @@ uses
   inMtoDepositosCliente in 'src\Forms\inMtoDepositosCliente.pas' {frmMtoDepositosCliente},
   UniDataDepositosCliente in 'src\DataModules\UniDataDepositosCliente.pas' {dmDepositosCliente: TDataModule},
   inMtoAlbaranes in 'src\Forms\inMtoAlbaranes.pas' {frmMtoAlbaranes},
+  inMtoDocumento in 'src\Forms\inMtoDocumento.pas',
   UniDataAlbaranes in 'src\DataModules\UniDataAlbaranes.pas' {dmAlbaranes: TdmAlbaranes},
   inMtoAlbaranesCompra in 'src\Forms\inMtoAlbaranesCompra.pas' {frmMtoAlbaranesCompra},
   UniDataAlbaranesCompra in 'src\DataModules\UniDataAlbaranesCompra.pas' {dmAlbaranesCompra: TdmAlbaranesCompra},
@@ -481,6 +520,10 @@ uses
   inMtoModalSelAlmacenAlbaran in 'src\Modals\inMtoModalSelAlmacenAlbaran.pas' {frmModalSelAlmacenAlbaran},
   inLibPedidosCompraIntf in 'src\Lib\inLibPedidosCompraIntf.pas',
   inLibPedidosCompra in 'src\Lib\inLibPedidosCompra.pas',
+  inLibGridPivoteCompraPersistenciaIntf in
+    'src\Lib\inLibGridPivoteCompraPersistenciaIntf.pas',
+  UniDataGridPivoteCompraRepositorio in
+    'src\DataModules\UniDataGridPivoteCompraRepositorio.pas',
   inLibGridPivoteCompra in 'src\Lib\inLibGridPivoteCompra.pas',
   inLibGridPivoteVenta in 'src\Lib\inLibGridPivoteVenta.pas',
   inLibPivoteVentaCalculo in 'src\Lib\inLibPivoteVentaCalculo.pas',
@@ -590,6 +633,10 @@ uses
   inMtoModalImportarPedidosPS in 'src\Modals\inMtoModalImportarPedidosPS.pas' {frmModalImportarPedidosPS},
   inLibPrestaImporter in 'src\Lib\inLibPrestaImporter.pas',
   inMtoModalSelFamilia in 'src\Modals\inMtoModalSelFamilia.pas' {frmModalSelFamilia},
+  inLibFotosPersistenciaIntf in
+    'src\Lib\inLibFotosPersistenciaIntf.pas',
+  UniDataFotosRepositorio in
+    'src\DataModules\UniDataFotosRepositorio.pas',
   inLibFotos in 'src\Lib\inLibFotos.pas',
   inLibDocumentosTrabajo in 'src\Lib\inLibDocumentosTrabajo.pas',
   inLibImagen in 'src\Lib\inLibImagen.pas',

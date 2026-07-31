@@ -16,7 +16,7 @@ unit inLibValidacionDocumento;
 interface
 
 uses
-  Data.DB, Uni;
+  Data.DB, Uni, inLibDocumentoIntf;
 
 type
   TAccionCabeceraDocumento = procedure of object;
@@ -24,54 +24,26 @@ type
   TValidadorPivoteCompra = function(
     var AMensaje: string): Boolean of object;
 
-  TConfiguracionDocumento = record
-    MensajeCabeceraNoDisponible: string;
-    DocumentoConArticulo: string;
-    TablaLineas: string;
-    CampoSerieCabecera: string;
-    CampoNumeroCabecera: string;
-    CampoEstadoCabecera: string;
-    CampoPivoteCabecera: string;
-    ValorEstadoCabecera: string;
-    CampoSerieLinea: string;
-    CampoNumeroLinea: string;
-    CampoArticuloLinea: string;
-    CampoProductoLinea: string;
-    CampoUnidadLinea: string;
-    CampoPivoteLinea: string;
-    CancelarLineaSoloSinNumero: Boolean;
-    RecrearLineaVacia: Boolean;
-  end;
-
-  TConfiguracionPersistenciaDocumento = TConfiguracionDocumento;
-  TConfiguracionTallasCompra = TConfiguracionDocumento;
-
-function CrearConfiguracionPersistenciaDocumento(
-  const AMensajeCabeceraNoDisponible, APrefijoCabecera,
-  APrefijoLinea: string): TConfiguracionPersistenciaDocumento;
 procedure AsegurarCabeceraPersistidaDocumento(
   ACabecera, ALineas: TDataSet;
-  const AConfiguracion: TConfiguracionPersistenciaDocumento;
+  const AConfiguracion: TConfiguracionDocumento;
   AValidarCabecera: TAccionCabeceraDocumento);
-function CrearConfiguracionTallasCompra(
-  const ADocumentoConArticulo, APrefijoCabecera,
-  APrefijoLinea, ATablaLineas: string): TConfiguracionTallasCompra;
 function LineaCompraTieneArticulo(ADataSet: TDataSet;
-  const AConfiguracion: TConfiguracionTallasCompra): Boolean;
+  const AConfiguracion: TConfiguracionDocumento): Boolean;
 function LineaCompraVacia(ADataSet: TDataSet;
-  const AConfiguracion: TConfiguracionTallasCompra): Boolean;
+  const AConfiguracion: TConfiguracionDocumento): Boolean;
 function LineaCompraTieneSistemaTallas(ADataSet: TDataSet;
-  const AConfiguracion: TConfiguracionTallasCompra): Boolean;
+  const AConfiguracion: TConfiguracionDocumento): Boolean;
 procedure AsegurarCabeceraPersistidaCompra(
   ACabecera, ALineas: TDataSet;
-  const AConfiguracion: TConfiguracionTallasCompra;
+  const AConfiguracion: TConfiguracionDocumento;
   AValidarCabecera: TAccionCabeceraCompra);
 function SqlArticulosSinSistemaTallasCompra(
-  const AConfiguracion: TConfiguracionTallasCompra): string;
+  const AConfiguracion: TConfiguracionDocumento): string;
 function PuedeActivarTallasHorizontalCompra(
   ACabecera, ALineas: TDataSet;
   AConexion: TUniConnection;
-  const AConfiguracion: TConfiguracionTallasCompra;
+  const AConfiguracion: TConfiguracionDocumento;
   AAsegurarCabecera: TAccionCabeceraCompra;
   AValidarPivote: TValidadorPivoteCompra;
   var AMensaje: string): Boolean;
@@ -81,44 +53,6 @@ implementation
 uses
   System.Classes, System.SysUtils, inLibMsgArticulos,
   inLibMsgCompras, inLibMsgComun;
-
-function CrearConfiguracionPersistenciaDocumento(
-  const AMensajeCabeceraNoDisponible, APrefijoCabecera,
-  APrefijoLinea: string): TConfiguracionPersistenciaDocumento;
-begin
-  Result.MensajeCabeceraNoDisponible :=
-    AMensajeCabeceraNoDisponible;
-  Result.CampoSerieCabecera := 'SERIE_' + APrefijoCabecera;
-  Result.CampoNumeroCabecera := 'NUMERO_' + APrefijoCabecera;
-  Result.CampoEstadoCabecera := '';
-  Result.ValorEstadoCabecera := '';
-  Result.CampoSerieLinea :=
-    'SERIE_' + APrefijoCabecera + '_' + APrefijoLinea;
-  Result.CampoNumeroLinea :=
-    'NUMERO_' + APrefijoCabecera + '_' + APrefijoLinea;
-  Result.CampoArticuloLinea := 'CODIGO_ART_' + APrefijoLinea;
-  Result.CampoProductoLinea := 'CODIGO_UNIDAD_' + APrefijoLinea;
-  Result.CancelarLineaSoloSinNumero := False;
-  Result.RecrearLineaVacia := False;
-end;
-
-function CrearConfiguracionTallasCompra(
-  const ADocumentoConArticulo, APrefijoCabecera,
-  APrefijoLinea, ATablaLineas: string): TConfiguracionTallasCompra;
-begin
-  Result := CrearConfiguracionPersistenciaDocumento(
-    Format(SErrorCrearSeleccionarDocumentoAntesLineas,
-      [ADocumentoConArticulo]), APrefijoCabecera, APrefijoLinea);
-  Result.DocumentoConArticulo := ADocumentoConArticulo;
-  Result.TablaLineas := ATablaLineas;
-  Result.CampoPivoteCabecera :=
-    'ESPIVOTE_HORIZONTAL_' + APrefijoCabecera;
-  Result.CampoEstadoCabecera := Result.CampoPivoteCabecera;
-  Result.ValorEstadoCabecera := 'N';
-  Result.CampoUnidadLinea := Result.CampoProductoLinea;
-  Result.CampoPivoteLinea := 'ID_AC_PIVOT_' + APrefijoLinea;
-  Result.CancelarLineaSoloSinNumero := True;
-end;
 
 function ValorTextoLinea(ADataSet: TDataSet;
   const ACampo: string): string;
@@ -135,7 +69,7 @@ begin
 end;
 
 function LineaDocumentoVacia(ADataSet: TDataSet;
-  const AConfiguracion: TConfiguracionPersistenciaDocumento): Boolean;
+  const AConfiguracion: TConfiguracionDocumento): Boolean;
 begin
   Result :=
     (ValorTextoLinea(
@@ -145,7 +79,7 @@ begin
 end;
 
 function LineaCompraTieneArticulo(ADataSet: TDataSet;
-  const AConfiguracion: TConfiguracionTallasCompra): Boolean;
+  const AConfiguracion: TConfiguracionDocumento): Boolean;
 begin
   Result :=
     (ValorTextoLinea(
@@ -155,14 +89,14 @@ begin
 end;
 
 function LineaCompraVacia(ADataSet: TDataSet;
-  const AConfiguracion: TConfiguracionTallasCompra): Boolean;
+  const AConfiguracion: TConfiguracionDocumento): Boolean;
 begin
   Result := not LineaCompraTieneArticulo(
     ADataSet, AConfiguracion);
 end;
 
 function LineaCompraTieneSistemaTallas(ADataSet: TDataSet;
-  const AConfiguracion: TConfiguracionTallasCompra): Boolean;
+  const AConfiguracion: TConfiguracionDocumento): Boolean;
 var
   oCampo: TField;
 begin
@@ -177,7 +111,7 @@ end;
 
 procedure SincronizarCabeceraEnLineaDocumento(
   ACabecera, ALineas: TDataSet;
-  const AConfiguracion: TConfiguracionPersistenciaDocumento);
+  const AConfiguracion: TConfiguracionDocumento);
 var
   oCampo: TField;
 begin
@@ -199,7 +133,7 @@ end;
 
 procedure AsegurarCabeceraPersistidaDocumento(
   ACabecera, ALineas: TDataSet;
-  const AConfiguracion: TConfiguracionPersistenciaDocumento;
+  const AConfiguracion: TConfiguracionDocumento;
   AValidarCabecera: TAccionCabeceraDocumento);
 var
   bCancelarLinea: Boolean;
@@ -261,7 +195,7 @@ end;
 
 procedure AsegurarCabeceraPersistidaCompra(
   ACabecera, ALineas: TDataSet;
-  const AConfiguracion: TConfiguracionTallasCompra;
+  const AConfiguracion: TConfiguracionDocumento;
   AValidarCabecera: TAccionCabeceraCompra);
 begin
   AsegurarCabeceraPersistidaDocumento(
@@ -269,7 +203,7 @@ begin
 end;
 
 function SqlArticulosSinSistemaTallasCompra(
-  const AConfiguracion: TConfiguracionTallasCompra): string;
+  const AConfiguracion: TConfiguracionDocumento): string;
 begin
   Result :=
     'SELECT DISTINCT L.' + AConfiguracion.CampoArticuloLinea +
@@ -287,7 +221,7 @@ end;
 function PuedeActivarTallasHorizontalCompra(
   ACabecera, ALineas: TDataSet;
   AConexion: TUniConnection;
-  const AConfiguracion: TConfiguracionTallasCompra;
+  const AConfiguracion: TConfiguracionDocumento;
   AAsegurarCabecera: TAccionCabeceraCompra;
   AValidarPivote: TValidadorPivoteCompra;
   var AMensaje: string): Boolean;

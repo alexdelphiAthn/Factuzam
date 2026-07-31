@@ -47,7 +47,7 @@ implementation
 
 uses
   inLibVerifactu, inLibFormatoDocumento,
-  inLibPreviewTicket, inLibMsgCaja;
+  inLibPreviewTicket, inLibMsgCaja, inLibMsgTickets;
 
 function LPAD(
   const AValue: string;
@@ -198,16 +198,20 @@ begin
   if FNombreEmpresa <> '' then
     FTicket.EscribirLinea(FNombreEmpresa);
   FTicket.SaltarLineas(1);
-  FTicket.EscribirLinea('*** RESUMEN DE LA OPERACIÓN ***');
-  FTicket.EscribirLinea('DEPÓSITOS Y ENTREGAS');
+  FTicket.EscribirLinea(STicketResumenOperacion);
+  FTicket.EscribirLinea(STicketDepositosEntregas);
   FTicket.Negrita(False);
   FTicket.SaltarLineas(1);
   FTicket.Alinear(alIzquierda);
-  FTicket.TextoColumnas('CÓDIGO CLIENTE:', sCodigoCliente);
   FTicket.TextoColumnas(
-    'FECHA:',
+    STicketEtiquetaCodigoCliente,
+    sCodigoCliente);
+  FTicket.TextoColumnas(
+    STicketEtiquetaFecha,
     FormatDateTime('dd/mm/yyyy hh:nn', FFechaOperacion));
-  FTicket.TextoColumnas('Nº OPERACIÓN:', FContexto.Operacion);
+  FTicket.TextoColumnas(
+    STicketEtiquetaNumeroOperacion,
+    FContexto.Operacion);
   FTicket.SaltarLineas(1);
 end;
 
@@ -233,8 +237,9 @@ begin
       FTicket.EscribirLinea(ADepositos[i].CodigoUnidad);
       FTicket.Alinear(alDerecha);
       FTicket.EscribirLinea(
-        'Valor Artículo: ' +
-        FormatFloat('#,##0.00', ADepositos[i].TotalPvp) + ' €');
+        Format(
+          STicketValorArticulo,
+          [FormatFloat('#,##0.00', ADepositos[i].TotalPvp)]));
       FTicket.Alinear(alIzquierda);
     end;
     FTicket.SaltarLineas(1);
@@ -250,7 +255,7 @@ begin
   oEntregas := FRepositorio.ListarEntregasResguardo(FContexto);
   if Length(oEntregas) > 0 then
   begin
-    EscribirTituloSeccion('ENTREGAS A CUENTA');
+    EscribirTituloSeccion(STicketEntregasCuenta);
     for i := 0 to High(oEntregas) do
     begin
       FTotalEntregas := FTotalEntregas + oEntregas[i].Importe;
@@ -258,17 +263,20 @@ begin
       if Trim(oEntregas[i].DescripcionArticulo) <> '' then
       begin
         if oEntregas[i].TipoOperacion = 'CB' then
-          sConcepto := 'A cuenta: ' + oEntregas[i].DescripcionArticulo
+          sConcepto := Format(
+            STicketCuentaArticulo,
+            [oEntregas[i].DescripcionArticulo])
         else if oEntregas[i].TipoOperacion = 'DE' then
-          sConcepto := 'A cta. inicial: ' +
-            oEntregas[i].DescripcionArticulo;
+          sConcepto := Format(
+            STicketCuentaInicialArticulo,
+            [oEntregas[i].DescripcionArticulo]);
       end
       else
       begin
         if oEntregas[i].TipoOperacion = 'CB' then
-          sConcepto := 'A cuenta para artículo pendiente'
+          sConcepto := STicketCuentaArticuloPendiente
         else if oEntregas[i].TipoOperacion = 'DE' then
-          sConcepto := 'A cuenta inicial';
+          sConcepto := STicketCuentaInicial;
       end;
       FTicket.EscribirLinea(Copy(sConcepto, 1, 40));
       FTicket.Alinear(alDerecha);
@@ -289,7 +297,7 @@ begin
     FRepositorio.ListarDevolucionesEconomicasResguardo(FContexto);
   if Length(oDevoluciones) > 0 then
   begin
-    EscribirTituloSeccion('DEVOLUCIÓN ECONÓMICA');
+    EscribirTituloSeccion(STicketDevolucionEconomica);
     for i := 0 to High(oDevoluciones) do
     begin
       FTotalDevoluciones :=
@@ -328,28 +336,33 @@ begin
   FTicket.Alinear(alDerecha);
   if FTotalNuevos > 0 then
     FTicket.EscribirLinea(
-      'TOTAL NUEVOS DEPÓSITOS: ' +
-      FormatFloat('#,##0.00', FTotalNuevos) + ' €');
+      Format(
+        STicketTotalNuevosDepositos,
+        [FormatFloat('#,##0.00', FTotalNuevos)]));
   if FTotalDevueltos <> 0 then
     FTicket.EscribirLinea(
-      'TOTAL DEPÓSITOS DEVUELTOS: ' +
-      FormatFloat('#,##0.00', FTotalDevueltos) + ' €');
+      Format(
+        STicketTotalDepositosDevueltos,
+        [FormatFloat('#,##0.00', FTotalDevueltos)]));
   FTicket.EscribirLinea(
-    'ANTICIPOS ENTREGADOS AHORA: ' +
-    FormatFloat('#,##0.00', FTotalEntregas) + ' €');
+    Format(
+      STicketAnticiposEntregadosAhora,
+      [FormatFloat('#,##0.00', FTotalEntregas)]));
   if FTotalDevoluciones < 0 then
     FTicket.EscribirLinea(
-      'DEVUELTO EN ESTA OPERACIÓN: ' +
-      FormatFloat('#,##0.00', FTotalDevoluciones) + ' €');
+      Format(
+        STicketDevueltoOperacion,
+        [FormatFloat('#,##0.00', FTotalDevoluciones)]));
   FTicket.SaltarLineas(1);
   FTicket.Negrita(True);
   FTicket.EscribirLinea(
-    'TOTAL PAGADO (TICKET + DEPÓSITOS): ' +
-    FormatFloat('#,##0.00', dTotalPagado) + ' €');
+    Format(
+      STicketTotalPagadoDepositos,
+      [FormatFloat('#,##0.00', dTotalPagado)]));
   FTicket.Negrita(False);
   FTicket.SaltarLineas(2);
   FTicket.Alinear(alCentro);
-  FTicket.EscribirLinea('Conforme, el cliente');
+  FTicket.EscribirLinea(STicketConformeCliente);
   FTicket.SaltarLineas(4);
   FTicket.LineaSeparadora('_');
   EscribirPieTicket(
@@ -386,7 +399,7 @@ begin
     FRepositorio.ListarNuevosDepositosResguardo(FContexto);
   EscribirCabecera;
   EscribirDepositos(
-    'MOVIMIENTO DE DEPÓSITOS/PRÉSTAMOS',
+    STicketMovimientoDepositosPrestamos,
     False,
     FNuevosDepositos,
     FTotalNuevos);
@@ -395,7 +408,7 @@ begin
   oDepositosDevueltos :=
     FRepositorio.ListarDepositosDevueltosResguardo(FContexto);
   EscribirDepositos(
-    'DEVOLUCIÓN DE ARTÍCULOS',
+    STicketDevolucionArticulos,
     True,
     oDepositosDevueltos,
     FTotalDevueltos);
@@ -515,10 +528,14 @@ begin
     oTicket.Negrita(True);
     if bTieneFactura then
       oTicket.EscribirLinea(
-        'FACTURA SIMPLIFICADA Nro. ' + sDocumentoFac)
+        Format(
+          STicketFacturaSimplificadaNumero,
+          [sDocumentoFac]))
     else
       oTicket.EscribirLinea(
-        'TICKET DE OPERACIÓN Nro. ' + ANumeroOperacion);
+        Format(
+          STicketOperacionNumero,
+          [ANumeroOperacion]));
     oTicket.Negrita(False);
     oTicket.SaltarLineas(1);
     oTicket.Alinear(alCentro);
@@ -528,24 +545,31 @@ begin
       oCabecera.CodigoPostalEmpresa + ' ' +
       oCabecera.PoblacionEmpresa);
     oTicket.EscribirLinea(
-      'CIF/NIF: ' + oCabecera.NifEmpresaFactura);
+      Format(
+        STicketCifNif,
+        [oCabecera.NifEmpresaFactura]));
     if Trim(oCabecera.MovilEmpresa) <> '' then
       oTicket.EscribirLinea(
-        'TELÉFONO: ' + oCabecera.MovilEmpresa);
+        Format(
+          STicketTelefono,
+          [oCabecera.MovilEmpresa]));
     oTicket.SaltarLineas(1);
     oTicket.Alinear(alIzquierda);
-    oTicket.TextoColumnas('OPERACIÓN NRO.', ANumeroOperacion);
+    oTicket.TextoColumnas(
+      STicketEtiquetaOperacionNumero,
+      ANumeroOperacion);
     oTicket.SaltarLineas(1);
     oTicket.TextoColumnas(
       FormatDateTime('dd/mm/yyyy hh:nn', dFechaOperacion),
-      LPAD(ACodigoEmpresa, 3) + ' Tda.' +
-      LPAD(ACodigoAlmacen, 3) + '-' +
-      LPAD(ACodigoCaja, 2));
+      Format(
+        STicketFormatoTienda,
+        [LPAD(ACodigoEmpresa, 3),
+         LPAD(ACodigoAlmacen, 3),
+         LPAD(ACodigoCaja, 2)]));
     if bTieneFactura then
     begin
       oTicket.LineaSeparadora('-');
-      oTicket.EscribirLinea(
-        'Artículo/Sku                Uds    Total');
+      oTicket.EscribirLinea(STicketCabeceraArticulos);
       oTicket.LineaSeparadora('-');
       oLineas := ARepositorio.ListarLineasTicket(
         oCabecera.SerieFactura,
@@ -572,7 +596,7 @@ begin
       oTicket.Alinear(alIzquierda);
       oTicket.Negrita(True);
       oTicket.TextoColumnas(
-        'A PAGAR',
+        STicketAPagar,
         FormatFloat('#,##0.00', oCabecera.TotalLiquido) + ' €');
       oTicket.Negrita(False);
     end;
@@ -592,7 +616,7 @@ begin
     end;
     if dTotalCambio > 0 then
       oTicket.TextoColumnas(
-        'CAMBIO EFECTIVO',
+        STicketCambioEfectivo,
         FormatFloat('#,##0.00', dTotalCambio) + ' €');
     oTicket.Negrita(False);
     oVales := ARepositorio.ListarValesTicket(oContexto);
@@ -601,15 +625,17 @@ begin
       oTicket.SaltarLineas(1);
       oTicket.Negrita(True);
       oTicket.TextoColumnas(
-        'VALE EMITIDO A SU FAVOR',
+        STicketValeEmitidoFavor,
         FormatFloat('#,##0.00', oVales[i].ImporteNominal) + ' €');
-      if Length('CÓDIGO VALE EMITIDO: ' + oVales[i].Codigo) <= 42 then
+      if Length(
+           STicketCodigoValeEmitidoEspacio +
+           oVales[i].Codigo) <= 42 then
         oTicket.TextoColumnas(
-          'CÓDIGO VALE EMITIDO: ',
+          STicketCodigoValeEmitidoEspacio,
           oVales[i].Codigo)
       else
       begin
-        oTicket.EscribirLinea('CÓDIGO VALE EMITIDO:');
+        oTicket.EscribirLinea(STicketCodigoValeEmitido);
         oTicket.EscribirLinea(oVales[i].Codigo);
       end;
       oTicket.Negrita(False);
@@ -620,22 +646,22 @@ begin
       if oCabecera.TotalIvaNormal > 0 then
       begin
         oTicket.TextoColumnas(
-          'BASE IMPONIBLE',
+          STicketBaseImponible,
           FormatFloat('#,##0.00', oCabecera.BaseIvaNormal) + ' €');
         oTicket.TextoColumnas(
           Format(
-            'TOTAL IVA(%.0f%%)',
+            STicketTotalIvaFormato,
             [oCabecera.PorcentajeIvaNormal]),
           FormatFloat('#,##0.00', oCabecera.TotalIvaNormal) + ' €');
       end;
       if oCabecera.TotalIvaReducido > 0 then
       begin
         oTicket.TextoColumnas(
-          'BASE IMPONIBLE RED.',
+          STicketBaseImponibleReducida,
           FormatFloat('#,##0.00', oCabecera.BaseIvaReducido) + ' €');
         oTicket.TextoColumnas(
           Format(
-            'TOTAL IVA(%.0f%%)',
+            STicketTotalIvaFormato,
             [oCabecera.PorcentajeIvaReducido]),
           FormatFloat('#,##0.00', oCabecera.TotalIvaReducido) + ' €');
       end;
@@ -643,9 +669,11 @@ begin
     oTicket.SaltarLineas(2);
     oTicket.Alinear(alCentro);
     oTicket.EscribirLinea(
-      'LE ATENDIÓ: ' + oCabecera.DiminutivoVendedor);
-    oTicket.EscribirLinea('IVA INCLUIDO');
-    oTicket.EscribirLinea('GRACIAS POR SU VISITA');
+      Format(
+        STicketLeAtendio,
+        [oCabecera.DiminutivoVendedor]));
+    oTicket.EscribirLinea(STicketIvaIncluido);
+    oTicket.EscribirLinea(STicketGraciasVisita);
     if Trim(oCabecera.TextoLegalEmpresa) <> '' then
     begin
       oTicket.SaltarLineas(1);
@@ -723,24 +751,23 @@ begin
         oTicket.Alinear(alCentro);
         oTicket.Negrita(True);
         oTicket.SaltarLineas(3);
-        oTicket.EscribirLinea(
-          'ESTADO DE SU CUENTA ENTREGAS/DEPÓSITOS');
+        oTicket.EscribirLinea(STicketEstadoCuentaDepositos);
         oTicket.EscribirLinea(
           FormatDateTime(
-            'dddd, d "de" mmmm "de" yyyy, hh:nn',
+            STicketFormatoFechaLarga,
             Now));
         oTicket.Negrita(False);
         oTicket.LineaSeparadora('-');
         oTicket.Alinear(alIzquierda);
         oTicket.Negrita(True);
-        oTicket.EscribirLinea('EMPRESA:');
+        oTicket.EscribirLinea(STicketEmpresa);
         oTicket.Negrita(False);
         oTicket.EscribirLinea(
           Format(
             '%-4s %s',
             [oEmpresa.Codigo, Copy(oEmpresa.RazonSocial, 1, 36)]));
         oTicket.Negrita(True);
-        oTicket.EscribirLinea('CLIENTE:');
+        oTicket.EscribirLinea(STicketCliente);
         oTicket.Negrita(False);
         oTicket.EscribirLinea(
           Format(
@@ -751,7 +778,7 @@ begin
         oTicket.EscribirLinea(
           Format(
             '%-14s %13s %13s',
-            ['Fecha/Hora', 'Total', 'Pendiente']));
+            [STicketFechaHora, STicketTotal, STicketPendiente]));
         oTicket.LineaSeparadora('-');
         dTotalPendienteCliente := 0;
         for i := 0 to High(oDepositos) do
@@ -786,7 +813,9 @@ begin
           oTicket.EscribirLinea(
             '  ' + Copy(oDepositos[i].Descripcion, 1, 40));
           oTicket.EscribirLinea(
-            '  RETIRADO EN (' + sOrigenDeposito + ')');
+            Format(
+              STicketRetiradoEn,
+              [sOrigenDeposito]));
           oAnticipos :=
             ARepositorio.ListarAnticiposRecordatorio(
               oDepositos[i].IdDeposito);
@@ -794,9 +823,9 @@ begin
           begin
             sConcepto := '';
             if oAnticipos[j].TipoOperacion = 'DE' then
-              sConcepto := '  > Entrega inicial'
+              sConcepto := STicketEntregaInicial
             else if oAnticipos[j].TipoOperacion = 'CB' then
-              sConcepto := '  > A cuenta';
+              sConcepto := STicketACuenta;
             sOrigen := oAnticipos[j].Empresa;
             if oAnticipos[j].Almacen <> '' then
               sOrigen := sOrigen + '/' + oAnticipos[j].Almacen;
@@ -823,7 +852,7 @@ begin
         oTicket.LineaSeparadora('-');
         oTicket.Negrita(True);
         oTicket.TextoColumnas(
-          'TOTAL PDTE. DE PAGO:',
+          STicketTotalPendientePago,
           FormatFloat(
             '#,##0.00',
             dTotalPendienteCliente) + ' €');

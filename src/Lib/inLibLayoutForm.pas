@@ -22,14 +22,14 @@ unit inLibLayoutForm;
 //    * Anchos de columnas de cxGrid (cualquier número de grids)
 //    * Altura de paneles asociados a splitters
 //
-//  Persistencia: usa IPerfilesUsuario.GrabarPerfiles para escribir TODAS las
+//  Persistencia: usa IEscritorPerfilesUsuario para escribir TODAS las
 //  claves del layout en un único INSERT ... VALUES por lote, en lugar de un
 //  INSERT por clave. Para un layout con varios grids esto reduce drásticamente
 //  el tráfico contra MySQL.
 //
 //  Uso típico:
 //    Para guardar (Alt+F12):
-//      var Layout := TLayoutSaver.Create(Self.Name, PerfilesUsuario);
+//      var Layout := TLayoutSaver.Create(Self.Name, PerfilesEscritura);
 //      try
 //        Layout.GuardarGeometria(Self);
 //        Layout.GuardarAlturaPanel('PanelMaestro', pnlMaestro);
@@ -41,7 +41,7 @@ unit inLibLayoutForm;
 //      end;
 //
 //    Para restaurar (FormShow):
-//      var Layout := TLayoutLoader.Create(Self.Name, PerfilesUsuario);
+//      var Layout := TLayoutLoader.Create(Self.Name, PerfilesLectura);
 //      try
 //        if Layout.Disponible then
 //        begin
@@ -92,12 +92,12 @@ type
     FFormKey: string;
     FPerfil: TProfileDicc;
     FDisponible: Boolean;
-    FPerfilesUsuario: IPerfilesUsuario;
+    FPerfilesLectura: ILectorPerfilesUsuario;
   public
     constructor Create(
       const AFormKey: string;
       const AContextoSesion: IContextoSesionAplicacion;
-      const APerfilesUsuario: IPerfilesUsuario);
+      const APerfilesLectura: ILectorPerfilesUsuario);
     destructor  Destroy; override;
     procedure RestaurarGeometria(AForm: TForm);
     procedure RestaurarAlturaPanel(const AClave: string;
@@ -123,12 +123,12 @@ type
   private
     FFormKey: string;
     FClaves: TStringList;
-    FPerfilesUsuario: IPerfilesUsuario;
+    FPerfilesEscritura: IEscritorPerfilesUsuario;
     procedure SetClave(const AClave, AValor: string);
   public
     constructor Create(
       const AFormKey: string;
-      const APerfilesUsuario: IPerfilesUsuario);
+      const APerfilesEscritura: IEscritorPerfilesUsuario);
     destructor  Destroy; override;
     procedure GuardarGeometria(AForm: TForm);
     procedure GuardarAlturaPanel(const AClave: string; APanel: TPanel);
@@ -146,7 +146,7 @@ type
 // Devuelve True si se borró, False si el usuario canceló.
 function ResetearLayout(
   const AFormKey: string;
-  const APerfilesUsuario: IPerfilesUsuario): Boolean;
+  const APerfilesEscritura: IEscritorPerfilesUsuario): Boolean;
 
 implementation
 
@@ -178,20 +178,20 @@ end;
 constructor TLayoutLoader.Create(
   const AFormKey: string;
   const AContextoSesion: IContextoSesionAplicacion;
-  const APerfilesUsuario: IPerfilesUsuario);
+  const APerfilesLectura: ILectorPerfilesUsuario);
 var
   Identidad: TIdentidadSesion;
   iClaves: Integer;
 begin
   inherited Create;
   FFormKey := AFormKey;
-  FPerfilesUsuario := APerfilesUsuario;
+  FPerfilesLectura := APerfilesLectura;
   FPerfil  := nil;
   Log.LogInfo(Format('TLayoutLoader.Create: formKey="%s" -> GetFormUserProfile',
                      [AFormKey]));
   Identidad := AContextoSesion.Identidad;
   inLibUser.GetFormUserProfile(FPerfil, FFormKey, Identidad.Usuario,
-    Identidad.Grupo, FPerfilesUsuario);
+    Identidad.Grupo, FPerfilesLectura);
   FDisponible := FPerfil <> nil;
   if FPerfil <> nil then
     iClaves := FPerfil.Count
@@ -296,11 +296,11 @@ end;
 
 constructor TLayoutSaver.Create(
   const AFormKey: string;
-  const APerfilesUsuario: IPerfilesUsuario);
+  const APerfilesEscritura: IEscritorPerfilesUsuario);
 begin
   inherited Create;
   FFormKey := AFormKey;
-  FPerfilesUsuario := APerfilesUsuario;
+  FPerfilesEscritura := APerfilesEscritura;
   FClaves  := TStringList.Create;
 end;
 
@@ -389,7 +389,7 @@ begin
           Item.Value     := FClaves.ValueFromIndex[i];
           Lote.Add(Item);
         end;
-        FPerfilesUsuario.GrabarPerfiles(Lote);
+        FPerfilesEscritura.GrabarPerfiles(Lote);
       finally
         FreeAndNil(Lote);
       end;
@@ -404,7 +404,7 @@ end;
 
 function ResetearLayout(
   const AFormKey: string;
-  const APerfilesUsuario: IPerfilesUsuario): Boolean;
+  const APerfilesEscritura: IEscritorPerfilesUsuario): Boolean;
 var
   sPermisos: string;
 begin
@@ -412,7 +412,7 @@ begin
   if TSolicitudPermisoLayout.Solicitar(
     AFormKey, STextoResetearLayout, sPermisos) then
   begin
-    APerfilesUsuario.EliminarPerfil(sPermisos, AFormKey);
+    APerfilesEscritura.EliminarPerfil(sPermisos, AFormKey);
     ShowMessage(SInfoLayoutReseteado);
     Result := True;
   end;

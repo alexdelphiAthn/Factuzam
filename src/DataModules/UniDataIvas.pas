@@ -83,7 +83,7 @@ begin
   begin
     sCodigo := Trim(FindField('CODIGO_IVA').AsString);
     if (sCodigo = '') or
-       SimbolosProhibidos(sCodigo, PerfilesUsuario) then
+       SimbolosProhibidos(sCodigo, PerfilesLectura) then
     begin
       ShowMessageFmt(SErrorCodigoIva, [sCodigo]);
       bError := True;

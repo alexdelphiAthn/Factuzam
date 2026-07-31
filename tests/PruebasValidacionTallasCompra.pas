@@ -38,19 +38,24 @@ implementation
 
 uses
   System.SysUtils, Data.DB, Datasnap.DBClient,
+  inLibDocumento, inLibDocumentoIntf,
   inLibValidacionDocumento;
 
-function ConfiguracionPedido: TConfiguracionTallasCompra;
+function ConfiguracionPedido: TConfiguracionDocumento;
 begin
-  Result := CrearConfiguracionTallasCompra(
-    'un pedido', 'PEDC', 'PEDCLIN',
-    'fza_pedidos_compra_lineas');
+  Result := CrearConfiguracionDocumento(tdPedido, sdCompra);
+  Result.MensajeCabeceraNoDisponible :=
+    'Debe existir la cabecera del pedido.';
+  Result.DocumentoConArticulo := 'un pedido';
+  Result.CampoEstadoCabecera := Result.CampoPivoteCabecera;
+  Result.ValorEstadoCabecera := 'N';
+  Result.CancelarLineaSoloSinNumero := True;
 end;
 
 procedure TPruebasValidacionTallasCompra.
   Configuracion_GeneraCamposDocumento;
 var
-  oConfiguracion: TConfiguracionTallasCompra;
+  oConfiguracion: TConfiguracionDocumento;
 begin
   oConfiguracion := ConfiguracionPedido;
   Assert.AreEqual('SERIE_PEDC',
@@ -68,7 +73,7 @@ end;
 procedure TPruebasValidacionTallasCompra.
   Linea_DetectaArticuloYSistemaTallas;
 var
-  oConfiguracion: TConfiguracionTallasCompra;
+  oConfiguracion: TConfiguracionDocumento;
   oDataSet: TClientDataSet;
 begin
   oConfiguracion := ConfiguracionPedido;
@@ -107,7 +112,7 @@ procedure TPruebasValidacionTallasCompra.
   Persistencia_PublicaCabeceraYSincronizaLinea;
 var
   oCabecera: TClientDataSet;
-  oConfiguracion: TConfiguracionTallasCompra;
+  oConfiguracion: TConfiguracionDocumento;
   oLineas: TClientDataSet;
 begin
   oConfiguracion := ConfiguracionPedido;
@@ -161,11 +166,14 @@ procedure TPruebasValidacionTallasCompra.
   PersistenciaVenta_RecreaLineaVacia;
 var
   oCabecera: TClientDataSet;
-  oConfiguracion: TConfiguracionPersistenciaDocumento;
+  oConfiguracion: TConfiguracionDocumento;
   oLineas: TClientDataSet;
 begin
-  oConfiguracion := CrearConfiguracionPersistenciaDocumento(
-    'Debe existir la cabecera.', 'PED', 'PEDLIN');
+  oConfiguracion := CrearConfiguracionDocumento(
+    tdPedido,
+    sdVenta);
+  oConfiguracion.MensajeCabeceraNoDisponible :=
+    'Debe existir la cabecera.';
   oConfiguracion.CampoProductoLinea :=
     'CODIGOPRODPS_PEDLIN';
   oConfiguracion.RecrearLineaVacia := True;

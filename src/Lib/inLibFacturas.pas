@@ -18,7 +18,8 @@ interface
 
 uses
   Uni, System.StrUtils, System.SysUtils, System.Classes, Data.DB, System.Math,
-  Datasnap.DBClient, Datasnap.Provider, inLibMotorFiscalVenta;
+  Datasnap.DBClient, Datasnap.Provider, inLibMotorFiscalVenta,
+  inLibFacturasLecturasIntf;
 
 const
   fnrofaclin = 'NUMERO_FAC_FACLIN';
@@ -264,6 +265,8 @@ type
     _mensajeError: string;
     _LineaenEdicion:TLinFac;
     _lineasMotorFiscal: TLineasMotorFiscalVenta;
+    FRepositorioLecturas: IRepositorioLecturasFactura;
+    function RepositorioLecturas: IRepositorioLecturasFactura;
     function LineaActualPendienteDeResolver: Boolean;
     function ClienteTieneDatosFiscales: Boolean;
     function CrearConfiguracionMotorFiscal:
@@ -379,54 +382,20 @@ function ArticuloFacturaDebeMostrarSku(
   AConexion: TUniConnection;
   const ACodigoArticulo: string): Boolean;
 var
-  Consulta: TUniQuery;
+  Repositorio: IRepositorioLecturasFactura;
 begin
-  Result := True;
-  if ACodigoArticulo <> '' then
-  begin
-    Consulta := TUniQuery.Create(nil);
-    try
-      Consulta.Connection := AConexion;
-      Consulta.SQL.Text :=
-        'SELECT A.ESVARIACION_ART, ' +
-        '       (SELECT COUNT(*) FROM fza_articulos_skus S ' +
-        '         WHERE S.CODIGO_ART_SKU = A.CODIGO_ART_ART ' +
-        '           AND S.ESACTIVO_SKU = ''S'') AS NSKU ' +
-        '  FROM fza_articulos A ' +
-        ' WHERE A.CODIGO_ART_ART = :art ' +
-        ' LIMIT 1';
-      Consulta.ParamByName('art').AsString := ACodigoArticulo;
-      Consulta.Open;
-      Result := Consulta.IsEmpty or
-        (Consulta.FieldByName('ESVARIACION_ART').AsString = 'S') or
-        (Consulta.FieldByName('NSKU').AsInteger > 1);
-    finally
-      FreeAndNil(Consulta);
-    end;
-  end;
+  Repositorio := TFabricaRepositorioLecturasFactura.Crear(AConexion);
+  Result := Repositorio.ArticuloDebeMostrarSku(ACodigoArticulo);
 end;
 
 function ContarLineasFactura(
   AConexion: TUniConnection;
   const ASerie, ANumero: string): Integer;
 var
-  Consulta: TUniQuery;
+  Repositorio: IRepositorioLecturasFactura;
 begin
-  Consulta := TUniQuery.Create(nil);
-  try
-    Consulta.Connection := AConexion;
-    Consulta.SQL.Text :=
-      'SELECT COUNT(*) AS N ' +
-      '  FROM fza_facturas_lineas ' +
-      ' WHERE NUMERO_FAC_FACLIN = :numero ' +
-      '   AND SERIE_FAC_FACLIN = :serie';
-    Consulta.ParamByName('numero').AsString := ANumero;
-    Consulta.ParamByName('serie').AsString := ASerie;
-    Consulta.Open;
-    Result := Consulta.FieldByName('N').AsInteger;
-  finally
-    FreeAndNil(Consulta);
-  end;
+  Repositorio := TFabricaRepositorioLecturasFactura.Crear(AConexion);
+  Result := Repositorio.ContarLineas(ASerie, ANumero);
 end;
 
 function IfThen(AValue: Boolean;
@@ -944,6 +913,15 @@ begin
   //ProcesarFacturaCompleta;
 end;
 
+function TFacturaTotales.RepositorioLecturas:
+  IRepositorioLecturasFactura;
+begin
+  if not Assigned(FRepositorioLecturas) then
+    FRepositorioLecturas :=
+      TFabricaRepositorioLecturasFactura.Crear(_conexion);
+  Result := FRepositorioLecturas;
+end;
+
 procedure TFacturaTotales.InicializarTotales;
 begin
   FillChar(_totales, SizeOf(_totales), 0);
@@ -1022,20 +1000,13 @@ end;
 
 procedure TFacturaTotales.CargarConfiguracionIVA(sGrupoZona: string);
 var
-  Qry: TUniQuery;
+  Qry: TDataSet;
 begin
   if sGrupoZona = '' then Exit;
-  Qry := TUniQuery.Create(nil);
+  Qry := RepositorioLecturas.BuscarConfiguracionIva(
+    sGrupoZona,
+    _fechaFactura);
   try
-    Qry.Connection := _conexion;
-    Qry.SQL.Text := 'SELECT * FROM vi_ivas ' +
-                    ' WHERE IVA_IVAGRP = :grupo ' +
-                    '   AND FECHA_DESDE_IVA <= :fecha ' +
-                    '   AND (FECHA_HASTA_IVA >= :fecha OR FECHA_HASTA_IVA IS ' +
-                    'NULL)';
-    Qry.ParamByName('grupo').AsString := sGrupoZona;
-    Qry.ParamByName('fecha').AsDateTime := _fechaFactura;
-    Qry.Open;
     if not Qry.IsEmpty then
     begin
       if _unqryFac.State = dsBrowse then _unqryFac.Edit;
@@ -1532,51 +1503,21 @@ begin
 end;
 
 function TFacturaTotales.BuscarPorcenRetencion(CodEmpresa: string): Currency;
-var
-  Qry: TUniQuery;
 begin
-  Result := 0;
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := _conexion;
-    Qry.SQL.Text := 'SELECT PORCENTAJE_EMPRET ' +
-                    '  FROM fza_empresas_retenciones ' +
-                    ' WHERE CODIGO_EMP_EMPRET = :EMP ' +
-                    '   AND FECHA_DESDE_EMPRET <= :FECHA ' +
-                    '   AND (FECHA_HASTA_EMPRET >= :FECHA ' +
-                    '        OR FECHA_HASTA_EMPRET IS NULL) ' +
-                    ' ORDER BY FECHA_DESDE_EMPRET DESC LIMIT 1';
-    Qry.ParamByName('EMP').AsString := CodEmpresa;
-    Qry.ParamByName('FECHA').AsDateTime := _FechaFactura;
-    Qry.Open;
-    if not Qry.IsEmpty then
-      Result := Qry.Fields[0].AsCurrency;
-  finally
-    FreeAndNil(Qry);
-  end;
+  Result := RepositorioLecturas.BuscarPorcentajeRetencion(
+    CodEmpresa,
+    _FechaFactura);
 end;
 
 function TFacturaTotales.BuscarDatosIVAAgricola(CodEmpresa: string): Boolean;
 var
-  Qry: TUniQuery;
+  Qry: TDataSet;
 begin
   Result := False;
-  Qry := TUniQuery.Create(nil);
+  Qry := RepositorioLecturas.BuscarDatosIvaAgricola(
+    CodEmpresa,
+    _FechaFactura);
   try
-    Qry.Connection := _conexion;
-    Qry.SQL.Text := 'SELECT IVA_IVAGRP, CODIGO_IVA, ' +
-                    '       PORCENTAJE_NORMAL_IVA, PORCENTAJE_EXENTO_IVA, ' +
-                    '       PORCENTAJE_REDUCIDO_IVA, ' +
-                    'PORCENTAJE_SUPERREDUCIDO_IVA ' +
-                    '  FROM vi_ivas_empresa ' +
-                    ' WHERE ESIVAAGRICOLA_IVA_IVAGRP = ''S'' ' +
-                    '   AND CODIGO_EMP_EMP = :EMP ' +
-                    '   AND FECHA_DESDE_IVA <= :FECHA ' +
-                    '   AND (   FECHA_HASTA_IVA IS NULL ' +
-                    '        OR FECHA_HASTA_IVA >= :FECHA)';
-    Qry.ParamByName('EMP').AsString := CodEmpresa;
-    Qry.ParamByName('FECHA').AsDateTime := _FechaFactura;
-    Qry.Open;
     if not Qry.IsEmpty then
     begin
       _GrupoZonaIVA := Qry.FieldByName('IVA_IVAGRP').AsString;
@@ -1600,7 +1541,7 @@ end;
 
 procedure TFacturaTotales.VerificarYCompletarDatosCliente;
 var
-  Qry: TUniQuery;
+  Qry: TDataSet;
   sCodCli: string;
 begin
   sCodCli := _unqryFac.FieldByName('CODIGO_CLI_FAC').AsString;
@@ -1609,17 +1550,8 @@ begin
      (sCodCli = 'VENTA CONTADO') or //no hay cliente
      (_unqryFac.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString <> '') then
     Exit;
-  Qry := TUniQuery.Create(nil);
+  Qry := RepositorioLecturas.BuscarClienteConTarifa(sCodCli);
   try
-    Qry.Connection := _conexion;
-    Qry.SQL.Text := '    SELECT * ' +
-                    '      FROM fza_clientes ' +
-                    ' LEFT JOIN fza_tarifas ' +
-                    '        ON fza_clientes.TARIFA_ARTICULO_CLI = ' +
-                    '           fza_tarifas.CODIGO_TAR_ARTTAR ' +
-                    '     WHERE CODIGO_CLI_CLI = :cliente';
-    Qry.ParamByName('cliente').AsString := sCodCli;
-    Qry.Open;
     if not Qry.IsEmpty then
     begin
       if (_unqryFac.State = dsBrowse) then
@@ -1673,20 +1605,14 @@ end;
 
 procedure TFacturaTotales.VerificarYCompletarDatosEmpresa;
 var
-  Qry: TUniQuery;
+  Qry: TDataSet;
 begin
   if (_unqryFac.FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsString <> '') then
     Exit;
   if _codigoEmpresa = '' then
     Exit;
-  Qry := TUniQuery.Create(nil);
+  Qry := RepositorioLecturas.BuscarEmpresa(_codigoEmpresa);
   try
-    Qry.Connection := _conexion;
-    Qry.SQL.Text := 'SELECT * ' +
-                    '  FROM fza_empresas ' +
-                    ' WHERE CODIGO_EMP_EMP = :empresa';
-    Qry.ParamByName('empresa').AsString := _codigoEmpresa;
-    Qry.Open;
     if not Qry.IsEmpty then
     begin
       if (_unqryFac.State = dsBrowse) then

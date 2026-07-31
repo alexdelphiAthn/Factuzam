@@ -267,7 +267,6 @@ inherited frmPrint: TfrmPrint
     end
   end
   object frLocalizationController1: TfrLocalizationController
-    Language = 'Spanish'
     Left = 64
     Top = 184
   end
