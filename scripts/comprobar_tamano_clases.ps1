@@ -1,4 +1,4 @@
-param(
+﻿param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [ValidateRange(0, [int]::MaxValue)]
   [int]$MaximoLineasPorClase = 3894,
@@ -26,7 +26,7 @@ param(
       ObjetivoMetodos = 120
     }
     TfrmMtoArticulos = @{
-      Lineas = 3300
+      Lineas = 3005
       Metodos = 97
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120

@@ -43,6 +43,7 @@ uses
   inLibGridPivoteCompra,
   inLibColumnasSkuIntf,
   inLibGridPivoteVenta,
+  inLibAplicacionArticuloCompraIntf,
   UniDataAlbaranesCompra, cxBlobEdit, dxShellDialogs, System.Actions,
   Vcl.ActnList, cxSplitter, inLibDocumento, inLibDocumentoIntf;
 
@@ -219,7 +220,7 @@ type
     FMostrarAtributos: Boolean;
     FColColorPivot   : TcxGridDBColumn;
     FBasicosColor    : TArray<string>;
-    FAplicandoArticulo: Boolean;
+    FAplicacionArticuloCompra: IAplicacionArticuloCompra;
     // Guarda contra reentrada del toggle desde dsTablaGDataChangeHook
     // disparado por el Edit/Post de PersistirPreferenciaPivote (entre
     // el Edit y el set, la cabecera tiene el ESPIVOTE viejo y el hook
@@ -259,6 +260,9 @@ type
     function BuscarSkuAlbaranCompra(const ACodigoArt: string): string;
     function ArticuloLineaActivaAlbaranCompra: string;
     procedure AplicarArticuloAlbaranCompra(const ACodigoArt: string);
+    procedure EnfocarSkuAlbaranCompra(AAbrirBusqueda: Boolean);
+    procedure PresentarArticuloAlbaranCompra(
+      const AResultado: TResultadoAplicacionArticuloCompra);
     procedure AsegurarCabeceraPersistidaParaLineas;
     procedure AsegurarPrimeraLineaAlbaranCompra;
     procedure DesactivarEnterAsTabEnCombo(AComp: TcxDBLookupComboBox);
@@ -299,6 +303,8 @@ uses
   inLibArticulosResolverIntf,
   inLibArticulosValidadorIntf,
   UniDataArticulosValidadorRepositorio,
+  inLibAplicacionArticuloCompra,
+  UniDataAplicacionArticuloCompra,
   inLibGridCantidad,
   inLibColumnasDocumento, UniDataGen,
   inLibBusquedasCompra,
@@ -409,243 +415,56 @@ end;
 procedure TfrmMtoAlbaranesCompra.AplicarArticuloAlbaranCompra(
   const ACodigoArt: string);
 var
-  ds         : TDataSet;
-  Validador  : IArticulosValidador;
-  Resolver   : IArticulosResolver;
-  Resolucion : TArtResolucionEntrada;
-  Datos      : TArticuloDatos;
-  qry        : TUniQuery;
-  sInput     : string;
-  sPrv       : string;
-  sAlm       : string;
-  sModeloPrv : string;
-  dFecha     : TDateTime;
-  iAcPivot   : Integer;
-  rCantidad  : Double;
-
-  function CampoCabeceraString(const ACampo: string): string;
-  var
-    Campo: TField;
-  begin
-    Result := '';
-    Campo := dmmAlbaranesCompra.unqryTablaG.FindField(ACampo);
-    if Campo <> nil then
-      Result := Trim(Campo.AsString);
-  end;
-
-  function FechaCabecera: TDateTime;
-  var
-    Campo: TField;
-  begin
-    Result := Date;
-    Campo := dmmAlbaranesCompra.unqryTablaG.FindField('FECHA_ALBC');
-    if (Campo <> nil) and (not Campo.IsNull) then
-      Result := Campo.AsDateTime;
-  end;
-
-  function ResolverConjuntoPivotArticulo(
-    const ACodigoArticulo: string): Integer;
-  begin
-    Result := 0;
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := dmmAlbaranesCompra.unqryTablaG.Connection;
-      qry.SQL.Text :=
-        'SELECT aca.ID_AC_ACA ' +
-        '  FROM fza_articulos_conjuntos_asign aca ' +
-        ' WHERE aca.CODIGO_ART_ACA = :art ' +
-        '   AND aca.ID_VA_ACA <> ''CO'' ' +
-        ' ORDER BY aca.ID_VA_ACA ' +
-        ' LIMIT 1';
-      qry.ParamByName('art').AsString := ACodigoArticulo;
-      qry.Open;
-      if not qry.IsEmpty then
-        Result := qry.FieldByName('ID_AC_ACA').AsInteger;
-    finally
-      FreeAndNil(qry);
-    end;
-  end;
-
-  function ModeloProveedorArticulo(const ACodigoArticulo,
-                                        ACodigoProveedor: string): string;
-  begin
-    Result := '';
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := dmmAlbaranesCompra.unqryTablaG.Connection;
-      qry.SQL.Text :=
-        'SELECT ap.REF_PROVEEDOR_AP ' +
-        '  FROM fza_articulos_proveedores ap ' +
-        ' WHERE ap.CODIGO_ART_AP = :art ' +
-        '   AND COALESCE(TRIM(ap.REF_PROVEEDOR_AP), '''') <> '''' ' +
-        ' ORDER BY CASE WHEN ap.CODIGO_PRV_AP = :prv THEN 0 ELSE 1 END, ' +
-        '          CASE ap.ESPROVEEDORPRINCIPAL_AP WHEN ''S'' THEN 0 ' +
-        '               ELSE 1 END, ' +
-        '          ap.FECHA_VALIDEZ_AP DESC, ap.CODIGO_PRV_AP ' +
-        ' LIMIT 1';
-      qry.ParamByName('art').AsString := ACodigoArticulo;
-      qry.ParamByName('prv').AsString := ACodigoProveedor;
-      qry.Open;
-      if not qry.IsEmpty then
-        Result := qry.FieldByName('REF_PROVEEDOR_AP').AsString;
-    finally
-      FreeAndNil(qry);
-    end;
-  end;
-
-  procedure PonerString(const ACampo, AValor: string);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.AsString := AValor;
-  end;
-
-  procedure PonerFloat(const ACampo: string; AValor: Double);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.AsFloat := AValor;
-  end;
-
-  procedure PonerInteger(const ACampo: string; AValor: Integer);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.AsInteger := AValor;
-  end;
-
-  procedure LimpiarCampo(const ACampo: string);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.Clear;
-  end;
-
-  procedure EnfocarSku(AAbrirBusqueda: Boolean);
-  var
-    colSku: TcxGridDBColumn;
-  begin
-    colSku := tvLineasAlbaran.GetColumnByFieldName('CODIGO_UNIDAD_ALBCLIN');
-    if colSku <> nil then
-    begin
-      colSku.Visible := True;
-      TThread.ForceQueue(nil,
-        procedure
-        begin
-          tvLineasAlbaran.Controller.FocusedColumn := colSku;
-          tvLineasAlbaran.Controller.EditingController.ShowEdit;
-          if AAbrirBusqueda then
-            colLineaAlbcCODIGO_UNIDADPropertiesButtonClick(nil, 0);
-        end);
-    end;
-  end;
-
+  oEntrada: TEntradaAplicacionArticuloCompra;
+  oResultado: TResultadoAplicacionArticuloCompra;
+  bPivoteActivo: Boolean;
 begin
-  sInput := Trim(ACodigoArt);
-  if (sInput <> '') and Assigned(dmmAlbaranesCompra) and
-     (not FAplicandoArticulo) then
+  if (Trim(ACodigoArt) <> '') and Assigned(dmmAlbaranesCompra) and
+     (FAplicacionArticuloCompra <> nil) then
   begin
     AsegurarCabeceraPersistidaParaLineas;
-    ds := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
-    if Assigned(ds) and ds.Active then
-    begin
-      FAplicandoArticulo := True;
-      Validador := nil;
-      Resolver := nil;
-      try
-        if ds.IsEmpty then
-          ds.Append;
-        if not (ds.State in dsEditModes) then
-          ds.Edit;
-        sPrv := CampoCabeceraString('CODIGO_PRV_ALBC');
-        sAlm := CampoCabeceraString('CODIGO_ALM_ALBC');
-        dFecha := FechaCabecera;
-        Validador := CrearValidadorArticulos(
-                       dmmAlbaranesCompra.unqryTablaG.Connection);
-        Resolver := CrearResolverArticulos(
-          dmmAlbaranesCompra.unqryTablaG.Connection);
-        Resolucion := Validador.Resolver(sInput);
-        if Resolucion.Encontrado then
-        begin
-          Datos := Resolver.ResolverDatos(Resolucion.CodigoArticulo,
-                                          Resolucion.CodigoSku,
-                                          '',
-                                          dFecha,
-                                          sAlm,
-                                          sPrv);
-          if Datos.Encontrado then
-          begin
-            if Datos.RequiereSku then
-              Datos.UltimoCoste := Resolver.ResolverUltimoCoste(
-                Datos.CodigoArticulo, sPrv, '');
-            iAcPivot := ResolverConjuntoPivotArticulo(Datos.CodigoArticulo);
-            sModeloPrv := ModeloProveedorArticulo(Datos.CodigoArticulo, sPrv);
-            if sModeloPrv = '' then
-              sModeloPrv := Datos.UltimoCoste.RefProveedor;
-            PonerString('CODIGO_ART_ALBCLIN', Datos.CodigoArticulo);
-            PonerString('CODIGO_UNIDAD_ALBCLIN', Datos.CodigoSku);
-            PonerString('REF_PRV_ALBCLIN', sModeloPrv);
-            PonerString('CODIGO_FAM_ALBCLIN', Datos.CodigoFamilia);
-            PonerString('DESCRIPCION_ARTICULO_ALBCLIN',
-                        Datos.DescripcionArticulo);
-            PonerString('TIPO_CANTIDAD_ARTICULO_ALBCLIN',
-                        Datos.TipoCantidad);
-            PonerString('TIPO_IVA_ARTICULO_ALBCLIN', Datos.TipoIVA);
-            if sAlm <> '' then
-              PonerString('CODIGO_ALMACEN_ALBCLIN', sAlm);
-            if iAcPivot > 0 then
-              PonerInteger('ID_AC_PIVOT_ALBCLIN', iAcPivot)
-            else
-              LimpiarCampo('ID_AC_PIVOT_ALBCLIN');
-            rCantidad := 0;
-            if ds.FindField('CANTIDAD_ALBCLIN') <> nil then
-              rCantidad := ds.FieldByName('CANTIDAD_ALBCLIN').AsFloat;
-            if Datos.RequiereSku and (Datos.CodigoSku = '') then
-            begin
-              PonerFloat('CANTIDAD_ALBCLIN', 0);
-              PonerFloat('TOTAL_UNIDADES_ALBCLIN', 0);
-              rCantidad := 0;
-            end
-            else if rCantidad = 0 then
-            begin
-              rCantidad := 1;
-              PonerFloat('CANTIDAD_ALBCLIN', rCantidad);
-              PonerFloat('TOTAL_UNIDADES_ALBCLIN', rCantidad);
-            end;
-            PonerFloat('PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN',
-                       Datos.UltimoCoste.PrecioUltCompra);
-            PonerFloat('TOTAL_ALBCLIN',
-                       rCantidad * Datos.UltimoCoste.PrecioUltCompra);
-            PrepararLineaFiscalCompra(
-              dmmAlbaranesCompra.unqryTablaG.Connection,
-              dmmAlbaranesCompra.unqryTablaG, ds, 'ALBC', 'ALBCLIN',
-              'TOTAL_ALBCLIN');
-            // Pivote antiguo RETIRADO: el modo tallas del contrato
-            // (mcsTallasHorPed) sustituye su activacion automatica.
-            if Datos.RequiereSku and (Datos.CodigoSku = '') and
-               ((FPivote = nil) or (not FPivote.Activo)) then
-              EnfocarSku(True);
-          end
-          else if Datos.Mensaje <> '' then
-            MessageDlg(Datos.Mensaje, mtWarning, [mbOk], 0);
-        end
-        else if Resolucion.Mensaje <> '' then
-          MessageDlg(Resolucion.Mensaje, mtWarning, [mbOk], 0);
-      finally
-        Resolver := nil;
-        Validador := nil;
-        FAplicandoArticulo := False;
-      end;
-    end;
+    bPivoteActivo := Assigned(FPivote) and FPivote.Activo;
+    oEntrada := RecogerEntradaArticuloCompra(
+      ACodigoArt,
+      dmmAlbaranesCompra.unqryTablaG,
+      tdacAlbaran,
+      bPivoteActivo);
+    oResultado := FAplicacionArticuloCompra.Ejecutar(
+      oEntrada,
+      tdacAlbaran);
+    PresentarArticuloAlbaranCompra(oResultado);
   end;
+end;
+
+procedure TfrmMtoAlbaranesCompra.EnfocarSkuAlbaranCompra(
+  AAbrirBusqueda: Boolean);
+var
+  oColumnaSku: TcxGridDBColumn;
+begin
+  oColumnaSku := tvLineasAlbaran.GetColumnByFieldName(
+    'CODIGO_UNIDAD_ALBCLIN');
+  if oColumnaSku <> nil then
+  begin
+    oColumnaSku.Visible := True;
+    TThread.ForceQueue(nil,
+      procedure
+      begin
+        tvLineasAlbaran.Controller.FocusedColumn := oColumnaSku;
+        tvLineasAlbaran.Controller.EditingController.ShowEdit;
+        if AAbrirBusqueda then
+          colLineaAlbcCODIGO_UNIDADPropertiesButtonClick(nil, 0);
+      end);
+  end;
+end;
+
+procedure TfrmMtoAlbaranesCompra.PresentarArticuloAlbaranCompra(
+  const AResultado: TResultadoAplicacionArticuloCompra);
+begin
+  if AResultado.Mensaje <> '' then
+    MessageDlg(AResultado.Mensaje, mtWarning, [mbOk], 0);
+  if AResultado.Aplicado and AResultado.RequiereSku and
+     ((FPivote = nil) or (not FPivote.Activo)) then
+    EnfocarSkuAlbaranCompra(True);
 end;
 
 // Combo de serie de la cabecera: al desplegar se recargan las series
@@ -688,6 +507,17 @@ begin
   ConfigurarColumnaBotonDocumento(
     FColColorPivot, colLinAlbcColorPivotButtonClick);
   inherited;
+  FAplicacionArticuloCompra := CrearAplicacionArticuloCompra(
+    CrearRepositorioLecturasArticuloCompraUniDAC(
+      dmmAlbaranesCompra.unqryTablaG.Connection,
+      CrearValidadorArticulos(
+        dmmAlbaranesCompra.unqryTablaG.Connection),
+      CrearResolverArticulos(
+        dmmAlbaranesCompra.unqryTablaG.Connection)),
+    CrearPuertoLineaArticuloCompraUniDAC(
+      dmmAlbaranesCompra.unqryTablaG.Connection,
+      dmmAlbaranesCompra.unqryTablaG,
+      dmmAlbaranesCompra.unqryAlbaranesCompraLineas));
   ConfigurarColumnaBusquedaDocumento(
     tvLineasAlbaran, 'CODIGO_UNIDAD_ALBCLIN',
     colLineaAlbcCODIGO_UNIDADPropertiesButtonClick,
@@ -763,6 +593,7 @@ end;
 
 procedure TfrmMtoAlbaranesCompra.FormDestroy(Sender: TObject);
 begin
+  FAplicacionArticuloCompra := nil;
   LiberarModoYGestoresDocumento(
     FModoEntrada, FPivote, FGestorTallas);
   inherited;

@@ -1,4 +1,4 @@
-param(
+﻿param(
   [string]$Raiz = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
   [int]$MaximoMiembros = 10
 )
@@ -25,7 +25,9 @@ $contratosSinUniDAC = @(
   'src\Lib\inLibVentasWsColaIntf.pas',
   'src\Lib\inLibVentasWsCola.pas',
   'src\Lib\inLibFacturaePersistenciaIntf.pas',
-  'src\Lib\inLibPedidosCompraIntf.pas'
+  'src\Lib\inLibPedidosCompraIntf.pas',
+  'src\Lib\inLibAplicacionArticuloCompraIntf.pas',
+  'src\verifactu\inLibVerifactuEsquemaIntf.pas'
 )
 # El resguardo examina todas las unidades activas de primera parte, no
 # solo los *Intf.pas: una interfaz ancha o un contrato retirado tampoco

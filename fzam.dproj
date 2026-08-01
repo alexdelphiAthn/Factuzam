@@ -1,4 +1,4 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{5372F570-A327-4800-98DB-9E38B75C697D}</ProjectGuid>
         <ProjectVersion>20.4</ProjectVersion>
@@ -480,6 +480,7 @@
             <Form>dmConn</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataComposicionAplicacion.pas"/>
         <DCCReference Include="src\DataModules\UniDataGen.pas">
             <Form>dmBase</Form>
             <DesignClass>TDataModule</DesignClass>
@@ -763,6 +764,7 @@
         <DCCReference Include="src\Modals\inMtoModalArticulosPropiedades.pas"/>
         <DCCReference Include="src\Lib\inLibArticulosVariaciones.pas"/>
         <DCCReference Include="src\Lib\inLibArticulosAtributosBasicos.pas"/>
+        <DCCReference Include="src\Lib\inLibArticulosAtributosBasicosIntf.pas"/>
         <DCCReference Include="src\Lib\inLibArticulosVisibilidad.pas"/>
         <DCCReference Include="src\Lib\inLibStockConsultaInfo.pas"/>
         <DCCReference Include="src\Lib\inLibInventariosEntrada.pas"/>
@@ -819,6 +821,8 @@
         <DCCReference Include="src\verifactu\inLibVerifactuColaIntf.pas"/>
         <DCCReference Include="src\verifactu\inLibVerifactuCola.pas"/>
         <DCCReference Include="src\verifactu\UniDataVerifactuColaRepositorio.pas"/>
+        <DCCReference Include="src\verifactu\inLibVerifactuEsquemaIntf.pas"/>
+        <DCCReference Include="src\verifactu\UniDataVerifactuEsquema.pas"/>
         <DCCReference Include="src\verifactu\UniDataVerifactuColaProcesador.pas"/>
         <DCCReference Include="src\verifactu\UniDataVerifactuColaResultados.pas"/>
         <DCCReference Include="src\verifactu\inLibVerifactuReintentos.pas"/>
@@ -1103,6 +1107,8 @@
         <DCCReference Include="src\Lib\inLibCopiasSeguridadIntf.pas"/>
         <DCCReference Include="src\Lib\inLibCopiasSeguridadReglas.pas"/>
         <DCCReference Include="src\Lib\inLibCopiasSeguridad.pas"/>
+        <DCCReference Include="src\Lib\inLibOperacionesAplicacionIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibCoordinadorOperacionesAplicacion.pas"/>
         <DCCReference Include="src\DataModules\UniDataComprasSesiones.pas">
             <Form>dmComprasSesiones</Form>
             <DesignClass>TdmComprasSesiones</DesignClass>
@@ -1171,6 +1177,11 @@
         <DCCReference Include="src\DataModules\UniDataArticulosValidadorRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibArticulosResolverIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataArticulosResolverRepositorio.pas"/>
+        <DCCReference Include="src\Lib\inLibAplicacionArticuloCompraIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibAplicacionArticuloCompra.pas"/>
+        <DCCReference Include="src\DataModules\UniDataAplicacionArticuloCompra.pas"/>
+        <DCCReference Include="src\DataModules\UniDataDocsProveedorSql.pas"/>
+        <DCCReference Include="src\DataModules\UniDataDocsProveedor.pas"/>
         <DCCReference Include="src\Lib\inLibArticulosResolver.pas"/>
         <DCCReference Include="src\Modals\inMtoModalAddPreciosTar.pas">
             <Form>frmMtoModalAddPreciosTar</Form>
@@ -1180,6 +1191,8 @@
         </DCCReference>
         <DCCReference Include="src\Lib\inLibArticulosAtributosIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataArticulosAtributosRepositorio.pas"/>
+        <DCCReference
+            Include="src\DataModules\UniDataArticulosAtributosBasicosRepositorio.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibTraspasoTicketIntf.pas"/>
         <DCCReference Include="src\Caja\DataModules\UniDataTraspasoTicketRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibAtributosPaleta.pas"/>

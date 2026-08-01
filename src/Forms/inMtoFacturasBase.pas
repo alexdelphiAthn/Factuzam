@@ -752,6 +752,8 @@ uses
   inLibVerifactuTipos,
   inLibEmisionFiscal,
   UniDataVerifactuColaRepositorio,
+  inLibVerifactuEsquemaIntf,
+  UniDataVerifactuEsquema,
   UniDataFacturasRepositorio,
   UniDataFacturasLecturas,
   UniDataFacturasOperaciones,
@@ -1802,39 +1804,16 @@ end;
 
 function TControladorFacturas.PuedeConsultarEstadoColaVerifactu: Boolean;
 var
-  Qry: TUniQuery;
+  oRepositorio: IRepositorioEsquemaVerifactu;
+  sMensaje: string;
 begin
   with FAnfitrion do
   begin
-  Qry := TUniQuery.Create(nil);
-  try
-    try
-      Qry.Connection := ConexionPrincipal;
-      Qry.SQL.Text :=
-        ' SELECT COUNT(*) AS N ' +
-        '   FROM INFORMATION_SCHEMA.COLUMNS ' +
-        '  WHERE TABLE_SCHEMA = DATABASE() ' +
-        '    AND TABLE_NAME = ''fza_verifactu_cola'' ' +
-        '    AND COLUMN_NAME IN (''ID_VFCOLA'', ' +
-        '                        ''SERIE_FAC_VFCOLA'', ' +
-        '                        ''NUMERO_FAC_VFCOLA'', ' +
-        '                        ''ESTADO_VFCOLA'')';
-      Qry.Open;
-      Result := Qry.FieldByName('N').AsInteger = 4;
-      if not Result then
-        inLibLog.Log.LogWarning('Facturas: esquema de cola Verifactu ' +
-          'incompleto; se abre listado sin estado de cola.');
-    except
-      on E: Exception do
-      begin
-        Result := False;
-        inLibLog.Log.LogWarning('Facturas: no se pudo comprobar cola ' +
-          'Verifactu; se abre listado sin estado de cola. ' + E.Message);
-      end;
-    end;
-  finally
-    Qry.Free;
-  end;
+    oRepositorio := CrearRepositorioEsquemaVerifactuUniDAC(
+      ConexionPrincipal);
+    Result := oRepositorio.ColaDisponible(sMensaje);
+    if sMensaje <> '' then
+      inLibLog.Log.LogWarning(sMensaje);
   end;
 end;
 

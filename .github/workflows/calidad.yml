@@ -1,0 +1,44 @@
+name: Calidad
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+    inputs:
+      ejecutar_delphi:
+        description: Compilar y ejecutar DUnitX en el runner Delphi
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  trinquetes:
+    name: Trinquetes y pruebas de scripts
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Obtener el repositorio
+        uses: actions/checkout@v6
+      - name: Comprobar calidad
+        shell: pwsh
+        run: .\scripts\comprobar_calidad.ps1
+
+  pruebas-delphi:
+    name: DUnitX Win32 y Win64
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      inputs.ejecutar_delphi
+    runs-on:
+      - self-hosted
+      - Windows
+      - Delphi
+    timeout-minutes: 90
+    steps:
+      - name: Obtener el repositorio
+        uses: actions/checkout@v6
+      - name: Compilar y ejecutar DUnitX
+        shell: pwsh
+        run: .\scripts\ejecutar_pruebas_delphi.ps1

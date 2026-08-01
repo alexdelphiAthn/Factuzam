@@ -5,9 +5,9 @@ No sustituye a `LIBRO_DE_ESTILO_DELPHI.md` §14: **lo ejecuta**. El libro
 de estilo dice *cómo debe quedar el código*; este documento dice *en qué
 orden llegar hasta ahí, con qué métrica y con qué criterio de parada*.
 
-Línea base: 30/07/2026. Esta versión sustituye a la del 29/07/2026 tras
-una auditoría independiente del código: incorpora lo ya completado, un
-hallazgo nuevo de dirección de capas (§3.3) y el reordenado de fases.
+Línea base: 30/07/2026. Estado actualizado: 01/08/2026. Esta versión
+conserva las cifras históricas de partida y añade las mediciones del
+árbol de trabajo actual.
 
 ---
 
@@ -15,7 +15,7 @@ hallazgo nuevo de dirección de capas (§3.3) y el reordenado de fases.
 
 El proyecto **no** parte de cero en arquitectura. Hay dirección de capas
 documentada y verificada, contratos propios, colaboradores `TGestor*`,
-red DUnitX y nueve scripts de trinquete. El problema no es *"no hay
+red DUnitX y dieciséis scripts de comprobación. El problema no es *"no hay
 diseño"*: es que **el diseño nuevo convive con un núcleo legado que
 concentra casi toda la masa del proyecto**, y que ese núcleo sigue
 hablando SQL directamente.
@@ -39,42 +39,45 @@ transacciones y zona fiscal, donde un fascículo sin red se paga caro.
 
 ---
 
-## 1. Línea base medida (30/07/2026)
+## 1. Línea base y estado medido (01/08/2026)
 
 Medido sobre `src/`, excluyendo `3rdpartyComp`, `vcl`, `vcl37`, las
 carpetas de pruebas sueltas y los proyectos utilitarios independientes.
-Donde existe script de trinquete, manda la cifra del script.
+Donde existe script de trinquete, manda la cifra del script. La columna
+del 01/08 se ha medido sobre el árbol compartido, incluidos los cambios
+en curso.
 
-| Métrica                                     | 29/07   | 30/07   |
-|---------------------------------------------|---------|---------|
-| Units propias                               | 457     | 452     |
-| Líneas de código propio                     | 261.397 | ~250.000|
-| `var` en sección `interface`                | 1.516   | **0**   |
-| `except` vacíos                             | 55      | **0**   |
-| `resourcestring`                            | 5       | **1.458**|
-| Infracciones de capa `inLib*`→`inMto*`      | 2       | **0**   |
-| Units `inLib*`→`UniData*` (§3.3, cerrado)   | —       | **0**   |
-| Sentencias SQL literales en `inLib*`        | 471     | 469     |
-| Units `inLib*` con SQL                      | 79      | 71      |
-| `Supports(...)` totales                     | 75      | 66      |
-| `Supports(...)` fuera de lista blanca       | —       | **0**   |
-| Units > 2.000 líneas (sin vendorizado)      | 20      | 20      |
-| Métodos > 200 líneas                        | 30      | ≤38 (tope)|
-| Fan-in de `inLibMsg` (fachada)              | 197     | 60      |
-| Units de pruebas DUnitX                     | 30      | 38      |
-| Contratos `I*` propios                      | 70      | >70     |
-| Tamaño de `fzam.exe`                        | 99,7 MB | 99,7 MB |
+| Métrica                                     | 29/07   | 30/07    | 01/08       |
+|---------------------------------------------|---------|----------|-------------|
+| Units propias                               | 457     | 452      | **586**     |
+| Líneas de código propio                     | 261.397 | ~250.000 | **264.301** |
+| `var` en sección `interface`                | 1.516   | **0**    | **0**       |
+| `except` vacíos                             | 55      | **0**    | **0**       |
+| `resourcestring`                            | 5       | **1.458** | **2.031**  |
+| Infracciones de capa `inLib*`→`inMto*`      | 2       | **0**    | **0**       |
+| Units `inLib*`→`UniData*` (§3.3, cerrado)   | —       | **0**    | **0**       |
+| Sentencias SQL literales en `inLib*`        | 471     | 469      | **78**      |
+| Units `inLib*` con SQL                      | 79      | 71       | **35**      |
+| `Supports(...)` totales                     | 75      | 66       | 80          |
+| `Supports(...)` fuera de lista blanca       | —       | **0**    | **0**       |
+| Units > 2.000 líneas (sin vendorizado)      | 20      | 20       | **15**      |
+| Métodos > 200 líneas                        | 30      | ≤38 (tope) | **25**    |
+| Fan-in de `inLibMsg` (fachada)              | 197     | 60       | **0 (eliminada)** |
+| Units de pruebas DUnitX                     | 30      | 38       | **73**      |
+| Contratos `I*` propios                      | 70      | >70      | **188**     |
+| Tamaño de `fzam.exe` (Win64 Release)        | 99,7 MB | 99,7 MB  | 101,7 MB    |
 
 ### 1.1 Acoplamiento eferente (fan-out): units que arrastran el proyecto
 
 | Units usadas | Unidad                    |
 |--------------|---------------------------|
-| 78           | `inMtoPrincipal`          |
-| 57           | `inMtoFacturasBase`       |
-| 49           | `inMtoCajaOpe`            |
-| 36           | `inMtoPedidosCompra`      |
-| 35           | `inMtoFacturasCompra`     |
-| 34           | `inMtoAlbaranesCompra` / `inMtoDevolucionesCompra` |
+| 72           | `inMtoPrincipal`          |
+| 60           | `inMtoFacturasBase`       |
+| 52           | `inMtoCajaOpe`            |
+| 42           | `UniDataComposicionAplicacion` |
+| 40           | `inMtoPedidosCompra`      |
+| 39           | `inMtoFrmBase` / `inMtoFacturasCompra` |
+| 38           | `inMtoAlbaranesCompra`    |
 
 El catálogo central, que tenía fan-out 101, ha sido retirado.
 
@@ -83,11 +86,11 @@ El catálogo central, que tenía fan-out 101, ha sido retirado.
 | Units que la usan | Unidad                |
 |-------------------|-----------------------|
 | 102               | `inLibRegistroPantallas` (infraestructura estable) |
+| 87                | `inLibLog`            |
 | 84                | `inLibUser`           |
-| 83                | `inLibLog`            |
-| 78                | `inLibMsgComun`       |
-| 70                | `inLibMsgArticulos`   |
-| 63                | `inMtoFrmBase`        |
+| 76                | `inLibMsgComun`       |
+| 72                | `inLibMsgArticulos`   |
+| 64                | `inMtoFrmBase`        |
 | 59                | `UniDataGen`          |
 | 49                | `inLibWin`            |
 | 46                | `inMtoGen`            |
@@ -106,17 +109,17 @@ Decisiones tomadas, ejecutadas y verificadas sobre el código. **No
 entran en el plan**; los trinquetes impiden que regresen.
 
 - **Fase 0 — Instrumentación.** Scripts en `scripts/` con tope congelado
-  y salida no-cero: `comprobar_estado_global`,
+  y salida no-cero, entre ellos: `comprobar_estado_global`,
   `comprobar_sql_en_dominio`, `comprobar_tamano_clases`,
   `comprobar_acoplamiento`, `comprobar_dependencias_capas`,
   `comprobar_supports`, `comprobar_flujos_largos`,
   `comprobar_formularios_delgados`, `comprobar_sql_transacciones` y
   `comprobar_registro_pantallas`.
 - **Fase 1 — Higiene, completada.**
-  - `var` en sección `interface` = 0 (eran 1.516). Los 1.413 mensajes de
-    `inLibMsg` son `resourcestring` repartidos en nueve catálogos de
+  - `var` en sección `interface` = 0 (eran 1.516). Los 1.413 mensajes que
+    concentraba `inLibMsg` son `resourcestring` repartidos en catálogos de
     dominio (`inLibMsgComun`, `inLibMsgFacturas`, `inLibMsgCaja`…).
-    Queda retirar la fachada (§3.7).
+    La fachada ya está retirada (§3.7).
   - `except` vacíos = 0 (eran 55): propagan, registran en `inLibLog` y
     continúan, o usan `inLibJsonSeguro` con pruebas propias.
   - Variables `frmXxx` / `dmXxx` del IDE eliminadas.
@@ -142,7 +145,7 @@ entran en el plan**; los trinquetes impiden que regresen.
   `UniDataComprasSesiones` ni SQL.
 - **Registro de pantallas por referencia de clase**, verificado por el
   compilador.
-- **Red DUnitX**: 44 units de prueba, fixtures sin BBDD real.
+- **Red DUnitX**: 73 units de prueba, fixtures sin BBDD real.
 - **UniDAC como acceso a datos.** No se sustituye: se envuelve.
 
 ---
@@ -171,7 +174,7 @@ densos de esa línea base eran:
 | 17         | `inLibVentasWsJson`                 | integración |
 | 15         | `inLibPedidosCompra`                | dominio    |
 
-La medida vigilada baja a 158 sentencias en 53 units. Los dos focos de
+La medida vigilada baja a 78 sentencias en 35 units. Los dos focos de
 sesiones de compra, `inLibVerifactuCola`,
 `inLibAlbaranesCompraMovimientos`, `inLibPedidosCompra` e
 `inLibVentasWsJson` ya están a cero SQL en `inLib*`. También queda
@@ -192,19 +195,19 @@ En pedidos de compra
 el analizador vigente encontró 28 sentencias, frente a las 15 de la
 línea base.
 
-### 3.2 SRP — Urgencia ALTA. Las clases-dios siguen intactas
+### 3.2 SRP — Urgencia ALTA. Las clases-dios siguen activas
 
 Estado con `scripts/comprobar_tamano_clases.ps1` (topes vigentes:
-4.075 líneas / 133 métodos / 49 campos por clase):
+3.894 líneas / 104 métodos / 40 campos por clase):
 
 | Clase                    | Líneas | Métodos | Primer alcance |
 |--------------------------|-------:|--------:|----------------|
-| `TfrmMtoOpeCaja`         | 4.060  | 104     | resolución de venta y escáner |
+| `TfrmMtoOpeCaja`         | 3.893  | 104     | resolución de venta y escáner |
 | `TfrmMtoFacturasBase`    | 1.779  | 104     | fiscalidad y consolidación |
-| `TfrmMtoComprasSesiones` | 3.659  | 99      | creación/materialización |
-| `TfrmMtoArticulos`       | 3.406  | 97      | alta y validación de SKU |
-| `TfrmStockConsulta`      | 3.139  | 81      | consulta, pivote y tarjetas |
-| `TfrmMtoInventarios`     | 3.069  | 77      | resolución de entradas y líneas |
+| `TfrmMtoComprasSesiones` | 3.590  | 99      | creación/materialización |
+| `TfrmMtoArticulos`       | 3.005  | 97      | alta y validación de SKU |
+| `TfrmStockConsulta`      | 2.948  | 81      | consulta, pivote y tarjetas |
+| `TfrmMtoInventarios`     | 3.029  | 77      | resolución de entradas y líneas |
 
 Nada de eso se prueba sin levantar la VCL. El patrón de salida existe y
 tiene pruebas: seis colaboradores `TGestor*` con dependencias por
@@ -279,8 +282,8 @@ Ojo: `inLibGridPivoteVenta` / `inLibGridPivoteCompra` solo comparten un
 
 ### 3.5 LSP — Urgencia MEDIA-BAJA, pero creciente
 
-Cadena real: `TfrmBase` → `TfrmMtoGen` (fan-in 52) →
-`TfrmMtoFacturasBase` → descendientes. 51 clases heredan de `TfrmMtoGen`
+Cadena real: `TfrmBase` → `TfrmMtoGen` (fan-in 46) →
+`TfrmMtoFacturasBase` → descendientes. 45 clases heredan de `TfrmMtoGen`
 métodos que no todas honran; cada hook sobreescrito para "no hacer nada"
 es una violación de LSP. La barrera es de crecimiento: los topes de
 `comprobar_tamano_clases.ps1` impiden ampliar las bases, y §14.5 obliga
@@ -307,12 +310,11 @@ por interfaz y lista de contratos retirados; sus casos viven en
 
 ### 3.7 Higiene residual — barato, cerrarlo pronto
 
-- **Fachada `inLibMsg`**: 60 consumidores pendientes de migrar a los
-  nueve catálogos y eliminarla (anotado en `ISSUES PENDIENTES.txt`).
-  8.513 líneas que desaparecen enteras al retirarla.
+- **Fachada `inLibMsg`**: resuelto. Los 60 consumidores se migraron a
+  los catálogos de dominio y la unidad, con sus 8.513 líneas, está eliminada.
 - **Catálogo central de pantallas**: resuelto. Las 52 pantallas y los 48
   data modules se auto-registran en su propia unidad.
-- **Fan-in con cuerpo**: `inLibUser` 84, `inLibLog` 81, `inLibWin` 49.
+- **Fan-in con cuerpo**: `inLibLog` 87, `inLibUser` 84, `inLibWin` 49.
   Separar contrato de implementación (Fase 6).
 
 ---
@@ -369,10 +371,11 @@ contrato de persistencia por constructor; la implementación vive en
    cero SQL en `inLib*`.
 7. **Regla para el trinquete:** ninguna unit `inLib*` **nueva** contiene
    SQL literal. Las existentes solo bajan
-   (`comprobar_sql_en_dominio.ps1`, topes 469/71).
+   (`comprobar_sql_en_dominio.ps1`, topes 78/35).
 
-**Criterio de salida:** sentencias SQL en `inLib*` ≤ 250 y units con SQL
-≤ 40; al menos 5 dominios con pruebas DUnitX que corren sin conexión.
+**Hito cuantitativo alcanzado:** 78 sentencias SQL en 35 units `inLib*`,
+por debajo del umbral 250/40. El vaciado completo continúa por dominios,
+con pruebas DUnitX sin conexión.
 
 ---
 
@@ -389,7 +392,7 @@ tope de `inLib*`→`UniData*` está en 0, sin lista blanca.
 ### Fase 3 — Descuartizar las clases-dios (esfuerzo: alto)
 
 Los seis formularios de §3.2 más las clases-dios de librería. Topes
-monotónicos vigentes: 4.075 líneas / 133 métodos / 49 campos; cada
+monotónicos vigentes: 3.894 líneas / 104 métodos / 40 campos; cada
 fascículo de extracción baja al menos uno y ninguno vuelve a subir.
 
 Para las clases-dios de librería manda el
@@ -474,16 +477,16 @@ copiado.
 
 **Compilación y arranque**
 
-1. Retirar la fachada `inLibMsg`: migrar los 60 `uses` restantes por
-   tandas a los catálogos de dominio y borrar la unidad (8.513 líneas).
+1. **Hecho:** retirada la fachada `inLibMsg`; sus 60 consumidores usan
+   los catálogos de dominio y la unidad de 8.513 líneas está eliminada.
 2. **Hecho:** retirado `inMtoCatalogoPantallas` (fan-out 101). Cada
    `inMto*` y `UniData*` se registra en su `initialization` sobre
    `inLibRegistroPantallas`, manteniendo la referencia de clase verificada
    por el compilador. `ComprobarRegistradas` sigue avisando en el arranque.
-3. Trocear los fan-in altos con cuerpo (`inLibUser` 84, `inLibLog` 81,
+3. Trocear los fan-in altos con cuerpo (`inLibLog` 87, `inLibUser` 84,
    `inLibWin` 49): contrato `*Intf` estable separado de la
    implementación.
-4. Los 99,7 MB de `fzam.exe`: revisar símbolos de depuración, RTTI y
+4. Los 101,7 MB de `fzam.exe` en Win64 Release: revisar símbolos de depuración, RTTI y
    enlace de paquetes DevExpress. Configuración, no arquitectura, pero
    afecta a despliegue y arranque.
 
@@ -592,32 +595,62 @@ formulario copiado.
 
 ---
 
-## 6. Trinquetes: métrica, tope actual, objetivo
+## 6. Trinquetes: métrica, estado actual y objetivo
 
-Ninguna cifra puede subir. El script correspondiente falla el build.
+Las medidas se contrastan con los topes configurados en cada script; una
+regresión por encima de esos topes falla el build.
 
-| Métrica                                  | Tope hoy | Fase | Objetivo |
-|------------------------------------------|----------|------|----------|
+| Métrica                                  | Medida actual | Fase | Objetivo |
+|------------------------------------------|---------------|------|----------|
 | `var` en sección `interface`             | 0        | ✔    | 0        |
 | `except` vacíos                          | 0        | ✔    | 0        |
 | Infracciones `inLib*`→`inMto*`           | 0        | ✔    | 0        |
 | `inLib*`→`UniData*`                      | 0        | ✔    | 0        |
-| Sentencias SQL en `inLib*`               | 158      | 2    | ≤ 250    |
-| Units `inLib*` con SQL                   | 53       | 2    | ≤ 40     |
-| Líneas por clase                         | 4.075    | 3    | ≤ 2.000  |
-| `TfrmMtoComprasSesiones` — líneas        | 3.634    | 3    | ≤ 2.000  |
+| Sentencias SQL en `inLib*`               | 78       | 2    | ≤ 250    |
+| Units `inLib*` con SQL                   | 35       | 2    | ≤ 40     |
+| Líneas por clase                         | 3.893    | 3    | ≤ 2.000  |
+| `TfrmMtoComprasSesiones` — líneas        | 3.590    | 3    | ≤ 2.000  |
 | `TfrmMtoFacturasBase` — líneas           | 1.779    | 3    | ≤ 2.000  |
-| Métodos por clase                        | 133      | 3    | ≤ 120    |
-| Campos por clase                         | 49       | 3    | solo baja|
-| Líneas de unit procedural vigilada       | 3.042    | 3    | ≤ 1.200  |
-| Rutinas de unit procedural vigilada      | 75       | 3    | ≤ 30     |
-| Métodos > 200 líneas                     | 38       | 3    | ≤ 10     |
+| Métodos por clase                        | 104      | 3    | ≤ 120    |
+| Campos por clase                         | 40       | 3    | solo baja|
+| Líneas de unit procedural vigilada       | 1.170    | 3    | ≤ 1.200  |
+| Rutinas de unit procedural vigilada      | 43       | 3    | ≤ 30     |
+| Métodos > 200 líneas                     | 25       | 3    | ≤ 10     |
+| Métodos > 120 líneas                     | 112      | P3   | solo baja|
+| Riesgo acumulado de métodos > 120        | 25.862   | P3   | solo baja|
+| Riesgo máximo de un método > 120         | 480      | P3   | solo baja|
+| Llamadas a `Exit`                        | 1.107    | P3   | solo baja|
+| Llamadas a `Continue`                    | 73       | P3   | solo baja|
+| Sentencias `with`                        | 339      | P3   | solo baja|
+| Líneas de más de 80 columnas             | 552      | P3   | solo baja|
 | `Supports()` fuera de lista blanca       | 0        | ✔    | 0        |
 | Interfaces propias > 10 miembros         | 0        | ✔    | 0        |
-| Fan-in de `inLibMsg`                     | 60       | 6    | 0 (unidad eliminada) |
-| Fan-in con cuerpo                        | 84       | 6    | solo baja|
-| Fan-out máximo por unidad                | 101      | 6    | ≤ 40     |
-| Units de prueba DUnitX                   | 64       | 2-3  | ≥ 50     |
+| Fan-in de `inLibMsg`                     | 0 (unidad eliminada) | ✔ | 0 |
+| Fan-in con cuerpo                        | 87       | 6    | solo baja|
+| Fan-out máximo por unidad                | 72       | 6    | ≤ 40     |
+| Units de prueba DUnitX                   | 73       | 2-3  | ≥ 50     |
+
+### 6.1 P3 — Clean Code y automatización
+
+`comprobar_metodos_largos.ps1` no ordena ya solo por longitud. La puntuación
+de riesgo suma líneas y pondera decisiones, `Exit`/`Continue`, manejadores de
+excepción, escrituras y pertenencia a caja o Verifactu. Los topes vigentes
+son 112 métodos, 25.862 puntos acumulados y 480 para un método individual.
+Una extracción debe bajar al menos una de esas medidas sin empeorar las
+restantes.
+
+`comprobar_estilo_codigo.ps1` vigila por unidad `Exit`, `Continue`, `with`,
+ancho y tabuladores. La línea base vive en
+`scripts/estilo_linea_base.csv`; las unidades nuevas entran a cero y la
+actualización de la línea base solo admite reducciones.
+
+La ejecución automatizada tiene dos niveles:
+
+1. `.github/workflows/calidad.yml` ejecuta
+   `scripts/comprobar_calidad.ps1` en cada push y pull request.
+2. La ejecución manual con `ejecutar_delphi` usa un runner Windows con
+   Delphi y lanza `scripts/ejecutar_pruebas_delphi.ps1`, que compila y
+   ejecuta DUnitX en Release para Win32 y Win64.
 
 ---
 
@@ -688,7 +721,8 @@ Ordenados para que cada uno sea pequeño, verificable y deje algo medido.
 16. SQL-2.4, exportaciones: `inLibVerifactuNoVerifactuExport` e
     `inLibFacturae` quedan a cero; sus 11 sentencias viven tras puertos
     propios en adaptadores UniDAC.
-17. Fachada `inLibMsg`: primera tanda de migración de `uses` (60 → ~40).
+17. ~~Fachada `inLibMsg`: migración de los 60 consumidores y retirada de
+    la unidad.~~ **Hecho**, fan-in 0.
 18. ~~Fase 3, fascículo 1: `inMtoComprasSesiones`.~~ **Hecho**: las
     reglas de creación salen a `inLibComprasSesionesCreacion` con 18
     pruebas sin BBDD; la clase baja de 3.669 a 3.634 líneas.

@@ -205,6 +205,10 @@ type
     constructor Create(AOwner: TComponent;
                        const APermisos: IPermisosAplicacion); reintroduce;
                        overload;
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla); reintroduce;
+      overload;
     destructor Destroy; override;
     procedure AsignarPermisos(const APermisos: IPermisosAplicacion);
     procedure AsignarConexiones(
@@ -354,6 +358,13 @@ begin
   HeredarPreviewTicket(AOwner);
   HeredarProveedorPreviewExcel(AOwner);
   inherited Create(AOwner);
+end;
+
+constructor TfrmBase.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla);
+begin
+  Create(AOwner, AContexto.Permisos);
 end;
 
 destructor TfrmBase.Destroy;

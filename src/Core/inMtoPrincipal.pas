@@ -24,8 +24,8 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, cxGraphics,
   cxControls, cxLookAndFeels, cxLookAndFeelPainters, dxCore, cxContainer,
   cxEdit, dxSkinsForm, cxStyles, cxClasses, Vcl.ExtCtrls, cxLabel,
-  Vcl.Menus, cxPC, cxTextEdit, cxMemo, inMtoFrmBase, UniDataConn,
-  UniDataPerfiles, UniDataFiltros, cxLocalization, Vcl.Buttons,
+  Vcl.Menus, cxPC, cxTextEdit, cxMemo, inMtoFrmBase,
+  cxLocalization, Vcl.Buttons,
   inLibUnitForm, JvMenus,
   System.UITypes, Uni, dxShellDialogs, dxSkinsCore, dxSkinBlue,
   JvComponentBase, JvEnterTab, dxSkinBasic, dxSkinBlack, dxSkinBlueprint,
@@ -47,15 +47,14 @@ uses
   dxSkinWhiteprint, dxSkinWXI, dxSkinXmas2008Blue,
   inLibFormManager, System.Actions,
   Vcl.ComCtrls, JvExComCtrls, JvStatusBar, Vcl.AppEvnts,
-  System.Diagnostics,
-  System.Threading,
   dxGDIPlusClasses, cxImage, Vcl.Imaging.pngimage,
   inLibContextoSesionIntf, inLibParametrosIntf, inLibShowMto,
   inLibLicenciaAplicacion, inLibAnfitrionMtoIntf,
   inLibCajaVentanasIntf, inLibPermisosIntf,
   inLibCopiasSeguridadIntf,
-  inLibExcepcionesAplicacionIntf, inLibVentasWsCola,
-  inLibFotos, inLibUnidadesMedida;
+  inLibExcepcionesAplicacionIntf,
+  inLibOperacionesAplicacionIntf,
+  UniDataComposicionAplicacion;
 
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
@@ -65,7 +64,8 @@ type
     IAnfitrionPantallas,
     IAnfitrionMantenimiento,
     IProveedorMenuPantallas,
-    IAnfitrionCajaVentanas
+    IAnfitrionCajaVentanas,
+    IPresentacionOperacionesAplicacion
   )
     mnuCaja: TMenuItem;
     mnuMenuCaja: TMenuItem;
@@ -146,6 +146,7 @@ type
     // (asi la libreria ya no conoce TfrmMtoPrincipal).
     function GestorVentanas: TEmbeddedFormManager;
     function RegistroPantallas: TfzaWinF;
+    function CrearPantalla(AClase: TFormClass): TForm;
     procedure PrepararAperturaPantalla;
     function ResolverCallPantalla(const AUnidadClase: string): string;
     function ResolverDataModulePantalla(
@@ -241,20 +242,13 @@ type
   private
     FException: Boolean;
     FSavedNCMValid: Boolean;
-    FEnOperacionLarga: Boolean;
     FProgressBar: TProgressBar;
     FProgressLabel: TcxLabel;
-    FWorkerOperacion: TThread;
     FReiniciando: Boolean;
-    FCancelaOperacionSolicitada: Boolean;
     FFalloCargaPermisosAvisado: Boolean;
-    FParametrosAppEdicion: IParametrosEdicion;
-    FParametrosCajaEdicion: IParametrosEdicion;
-    FServicioCopiasSeguridad: IServicioCopiasSeguridad;
     FGestorExcepciones: IGestorExcepcionesAplicacion;
-    FVentasWsCola: TVentasWsCola;
-    FServicioFotos: TFotosArticulos;
-    FServicioUnidades: TUnidadesMedida;
+    FComposicion: TComposicionAplicacion;
+    FCoordinadorOperaciones: ICoordinadorOperacionesAplicacion;
     // Handlers de aplicacion (OnException/OnIdle/OnMessage) registrados via
     // TApplicationEvents: una asignacion directa Application.OnX queda
     // anulada en cuanto cualquier form crea su propio TApplicationEvents
@@ -267,7 +261,6 @@ type
     procedure MostrarSplashInicio;
     procedure CrearInfraestructuraAplicacion;
     procedure CrearParametrosSesion(
-      const AIdentidad: TIdentidadSesion;
       const AResultadoLicencia: TResultadoLicenciaAplicacion);
     procedure CrearServiciosSesion;
     procedure ComprobarConfiguracionFiscal;
@@ -284,12 +277,6 @@ type
     procedure AppException(Sender: TObject; E: Exception);
     procedure AplicarPermisosMenu;
     procedure AvisarFalloCargaPermisos(const ADetalle: string);
-    // Precarga de caches de arranque. El modo (serie / paralelo) lo decide
-    // el parametro appArranqueEnParalelo.
-    procedure PrecargarCachesSerie;
-    procedure PrecargarCachesParalelo;
-    function EjecutarCargaWorker(ACarga: TProc<TUniConnection>;
-                                 out AError: string): Int64;
     function SolicitarDestinoCopia(
       out ARutaFichero, AContrasena: string
     ): Boolean;
@@ -297,18 +284,7 @@ type
     function SolicitarOrigenRestauracion(
       out ARutaFichero, AContrasena: string
     ): Boolean;
-    procedure WorkerProgreso(const AEtapa: string;
-                              APaso, ATotal: Integer;
-                              AFilaGlobal,
-                              AFilasGlobalTotal: Integer);
-    procedure BackupFinalizar(AExito: Boolean; const AError: string;
-                               ALogBuffer: TStringList);
-    procedure RestoreFinalizar(AExito: Boolean; const AError: string;
-                                ALogBuffer: TStringList);
-    function EsErrorCancelacion(const AError: string): Boolean;
     procedure SolicitarCancelarOperacionEnCurso;
-    procedure MostrarBarraProgreso;
-    procedure OcultarBarraProgreso;
     function ContieneDDL(const ASQL: string): Boolean;
     procedure ActualizarFondoLogo;
     procedure CargarFondoLogo;
@@ -325,10 +301,6 @@ type
   public
     { Public declarations }
     FormManager : TEmbeddedFormManager;
-    FDmConn: TdmConn;
-    FdmDataPerfiles: TdmPerfiles;
-    FdmDataFiltros: TdmFiltros;
-    oFzaWinf: TfzaWinF;
     // Splash mostrado al arrancar; lo libera CerrarSplashInicio al final
     // del FormCreate, respetando un suelo minimo de visibilidad.
     FSplashInicio:    TObject;
@@ -347,32 +319,28 @@ type
     procedure CerrarSplashInicio(aMinimoMs: Integer);
     procedure CrearLogoFondoBg;
     procedure CentrarLogoFondoBg;
-    procedure DetenerVentasWsCola;
     procedure FormResize(Sender: TObject);
+    procedure MostrarOperacion;
+    procedure ActualizarProgreso(
+      const AEtapa: string;
+      APaso, ATotal: Integer;
+      AFilaGlobal, AFilasGlobalTotal: Integer);
+    procedure MostrarCancelando;
+    procedure FinalizarOperacion(
+      ATipo: TTipoOperacionAplicacion;
+      AExito, ACancelada: Boolean;
+      const AError: string;
+      ALogBuffer: TStringList);
   end;
 
 implementation
 
-uses inLibUser,
-  inLibWin,
+uses inLibWin,
   inLibDevExp,
   inLibGlobalVar,
-  inLibInformesGuiasCache,
-  inLibConfigCampos,
-  inLibPermisos,
-  inLibPermisosUniDAC,
-  inLibConexionesIntf,
-  inLibConexionesUniDAC,
-  inLibTraduccionesIntf,
-  inLibTraducciones,
   inLibTraduccionesFastReport,
-  inLibAuditoriaDatosIntf,
-  inLibAuditoriaDatos,
   inLibMonitorSQLIntf,
-  inLibMonitorSQLUniDAC,
   inLibMonitorSQLLog,
-  UniDataFotosRepositorio,
-  UniDataVentasWsSesion,
   inLibLog,
   inLibPerfilesUsuarioIntf,
   inLibFiltrosGuardadosIntf,
@@ -400,19 +368,11 @@ uses inLibUser,
   inMtoModalImpEfectosPago,
   inMtoModalFacturarAlbaranes,
   inMtoModalCargarEfectosRemesa,
-  inLibCajaParam,
-  inLibAppParam,
-  inLibVerifactu,
-  inLibVerifactuInstalacion,
-  inLibVerifactuCola,
-  UniDataVerifactuColaProcesador,
   inLibCertificates,
   inMtoGen,
   inMtoFotoArticulo,
   System.DateUtils,
   System.RegularExpressions,
-  inLibCopiasSeguridad,
-  inLibExcepcionesAplicacion,
   inMtoModalContrasenaCopia;
 
 {$R *.dfm}
@@ -421,7 +381,12 @@ const
   URL_MANUAL_WEB = 'https://www.veryverifactu.com/manual/index.html';
   URL_FORO_SOPORTE = 'https://foro.veryverifactu.com/';
 
+resourcestring
+  SErrorPantallaNoHeredaFrmBase =
+    'La pantalla registrada no hereda de TfrmBase.';
+
 type
+  TClaseFrmBase = class of TfrmBase;
   TVisorMonitorSQLMemo = class(
     TInterfacedObject,
     IVisorMonitorSQL
@@ -455,64 +420,6 @@ begin
   if Assigned(FMemo) and FMemo.Visible then
     FMemo.Lines.Add(
       FormatDateTime('hh:nn:ss.zzz', Now) + ' - ' + ASQL);
-end;
-
-function EsEventoNoVerifactuArranqueCierre(ATipoEvento: Integer): Boolean;
-begin
-  Result := (ATipoEvento = cEventoNoVerifactuInicio) or
-            (ATipoEvento = cEventoNoVerifactuFin);
-end;
-
-function PuedeRegistrarEventoFiscalSeguro(
-                                          const AParametrosApp:
-                                          IParametrosAplicacion;
-                                          ATipoEvento: Integer;
-                                          const ADescripcion: string):
-                                          Boolean;
-var
-  sNifProductor: string;
-begin
-  Result := True;
-  if EsEventoNoVerifactuArranqueCierre(ATipoEvento) then
-  begin
-    if not NoVerifactuActivo(AParametrosApp) then
-      Result := False
-    else
-    begin
-      sNifProductor := NormalizarNifVerifactu(
-        AParametrosApp.GetString('appVerifactuSifNif', ''));
-      if Length(sNifProductor) <> 9 then
-      begin
-        Result := False;
-        inLibLog.Log.LogWarning('No se registra evento fiscal "' +
-          ADescripcion + '": appVerifactuSifNif vacío o no válido para ' +
-          'el perfil actual.');
-      end;
-    end;
-  end;
-end;
-
-procedure RegistrarEventoFiscalSeguro(
-                                      const AParametrosApp:
-                                      IParametrosAplicacion;
-                                      AConexion: TUniConnection;
-                                      const AUsuario: string;
-                                      ATipoEvento: Integer;
-                                      const ADescripcion: string);
-begin
-  if PuedeRegistrarEventoFiscalSeguro(AParametrosApp, ATipoEvento,
-     ADescripcion) then
-  begin
-    try
-      if AConexion <> nil then
-        RegistrarEventoVerifactu(AParametrosApp, AConexion, AUsuario,
-          ATipoEvento, ADescripcion);
-    except
-      on E: Exception do
-        inLibLog.Log.LogError('No se pudo registrar evento fiscal "' +
-          ADescripcion + '": ' + E.Message);
-    end;
-  end;
 end;
 
 procedure TfrmMtoPrincipal.MostrarAvisoCaducidadCertificado;
@@ -651,7 +558,8 @@ procedure TfrmMtoPrincipal.ApplicationEvents1Idle(Sender: TObject;
 var
   EstadoTeclas: string;
 begin
-  if FEnOperacionLarga then
+  if Assigned(FCoordinadorOperaciones) and
+     FCoordinadorOperaciones.EnCurso then
   begin
     Done := True;
     Exit;
@@ -680,12 +588,12 @@ end;
 
 function TfrmMtoPrincipal.GetParametrosAppEdicion: IParametrosEdicion;
 begin
-  Result := FParametrosAppEdicion;
+  Result := FComposicion.ParametrosAppEdicion;
 end;
 
 function TfrmMtoPrincipal.GetParametrosCajaEdicion: IParametrosEdicion;
 begin
-  Result := FParametrosCajaEdicion;
+  Result := FComposicion.ParametrosCajaEdicion;
 end;
 
 procedure TfrmMtoPrincipal.PrepararContextoAplicacion(
@@ -699,17 +607,11 @@ begin
   AsignarContextoSesion(AContextoSesion);
   AIdentidad := ContextoSesion.Identidad;
   AUbicacion := ContextoSesion.Ubicacion;
-  FGestorExcepciones :=
-    CrearGestorExcepcionesAplicacion(
-      ContextoSesion);
   FAppEvents := TApplicationEvents.Create(Self);
   FAppEvents.OnException := AppException;
   FSavedNCMValid := False;
   FAppEvents.OnIdle := ApplicationEvents1Idle;
   FAppEvents.OnMessage := AppMessage;
-  FWorkerOperacion := nil;
-  FCancelaOperacionSolicitada := False;
-  FEnOperacionLarga := False;
 end;
 
 procedure TfrmMtoPrincipal.MostrarSplashInicio;
@@ -729,76 +631,36 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.CrearInfraestructuraAplicacion;
-var
-  RegistroMonitorSQL: IRegistroMonitorSQL;
-  ServicioMonitorSQL: IServicioMonitorSQL;
-  VisorMonitorSQL: IVisorMonitorSQL;
 begin
   FormManager := TEmbeddedFormManager.Create(Self.pcPrincipal);
-  FDmConn     := TdmConn.Create(Self);
-  FServicioCopiasSeguridad := TServicioCopiasSeguridad.Create(
+  FComposicion := TComposicionAplicacion.Create(
+    Self,
     ContextoSesion,
-    FDmConn.conUni);
-  VisorMonitorSQL := TVisorMonitorSQLMemo.Create(cxMemo1);
-  RegistroMonitorSQL := TRegistroMonitorSQLLog.Create(
-    inLibLog.Log,
-    VisorMonitorSQL);
-  ServicioMonitorSQL :=
-    TServicioMonitorSQLUniDAC.Create(
-      FDmConn.UniSQLMonitor1,
-      RegistroMonitorSQL);
-  FDmConn.AsignarReceptorMonitorSQL(
-    ServicioMonitorSQL as IReceptorEventosMonitorSQL);
-  AsignarMonitorSQL(ServicioMonitorSQL);
-  inLibLog.Log.AsignarMonitorSQL(ServicioMonitorSQL);
-  FDmConn.conUni.Connect;
-  AsignarConexiones(
-    TServicioConexionesUniDAC.Create(FDmConn.conUni));
-  FServicioUnidades := TUnidadesMedida.Create;
-  AsignarUnidadesMedida(FServicioUnidades);
-  FServicioUnidades.AsignarConexion(ConexionPrincipal);
-  AsignarAuditoriaDatos(
-    TServicioAuditoriaDatos.Create(ContextoSesion));
+    RegistroLog,
+    TRegistroMonitorSQLLog.Create(
+      inLibLog.Log,
+      TVisorMonitorSQLMemo.Create(cxMemo1)),
+    Self as IPresentacionOperacionesAplicacion);
+  FGestorExcepciones := FComposicion.GestorExcepciones;
+  FCoordinadorOperaciones := FComposicion.Operaciones;
+  AsignarMonitorSQL(FComposicion.MonitorSQL);
+  inLibLog.Log.AsignarMonitorSQL(FComposicion.MonitorSQL);
+  AsignarConexiones(FComposicion.Conexiones);
+  AsignarUnidadesMedida(FComposicion.Unidades);
+  AsignarAuditoriaDatos(FComposicion.AuditoriaDatos);
   tmr1Timer(nil);
-  FdmDataPerfiles := TdmPerfiles.Create(Self);
-  AsignarPerfilesUsuario(
-    CrearServiciosPerfilesUsuario(
-      FdmDataPerfiles,
-      FdmDataPerfiles,
-      FdmDataPerfiles));
+  FComposicion.CrearPerfiles;
+  AsignarPerfilesUsuario(FComposicion.ServiciosPerfiles);
 end;
 
 procedure TfrmMtoPrincipal.CrearParametrosSesion(
-  const AIdentidad: TIdentidadSesion;
   const AResultadoLicencia: TResultadoLicenciaAplicacion);
-var
-  ServiciosApp: TServiciosParametrosAplicacion;
-  ServiciosCaja: TServiciosParametrosCaja;
 begin
-  inLibLog.Log.LogInfo('Arranque: creando parámetros de aplicación');
-  ServiciosApp := CrearParametrosAplicacion(
-    PerfilesLectura,
-    CachePerfiles,
-    AIdentidad.Usuario,
-    AIdentidad.Grupo
-  );
-  ServiciosApp.GestorLicencia.EstablecerLicencia(AResultadoLicencia);
-  inLibLog.Log.LogInfo('Arranque: creando parámetros de caja');
-  ServiciosCaja := CrearParametrosCaja(
-    PerfilesLectura,
-    CachePerfiles,
-    ContextoSesion,
-    AIdentidad.Usuario,
-    AIdentidad.Grupo
-  );
-  FParametrosAppEdicion := ServiciosApp.Edicion;
-  FParametrosCajaEdicion := ServiciosCaja.Edicion;
-  AsignarParametros(ServiciosApp.Lectura, ServiciosCaja.Lectura);
-  FDmConn.AsignarParametrosApp(ServiciosApp.Lectura);
-  AsignarTraducciones(
-    TServicioTraducciones.Create(
-      Conexiones,
-      ParametrosApp.GetString('appIdioma', IDIOMA_ESPANOL)));
+  FComposicion.CrearParametros(AResultadoLicencia);
+  AsignarParametros(
+    FComposicion.ParametrosApp,
+    FComposicion.ParametrosCaja);
+  AsignarTraducciones(FComposicion.Traducciones);
   AplicarIdiomaFastReport(Traducciones.Idioma);
   Traducciones.Aplicar(Self);
   if FSplashInicio is TfrmSplash then
@@ -807,80 +669,30 @@ end;
 
 procedure TfrmMtoPrincipal.CrearServiciosSesion;
 begin
-  FServicioFotos := TFotosArticulos.Create;
-  AsignarFotosArticulos(FServicioFotos);
-  FServicioFotos.AsignarConexion(
-    ConexionPrincipal,
-    ParametrosApp,
-    CrearValidadorArticulos(ConexionPrincipal),
-    CrearRepositorioFotosUniDAC(ConexionPrincipal));
-  FdmDataFiltros  := TdmFiltros.Create(Self);
-  AsignarFiltrosGuardados(
-    CrearServiciosFiltrosGuardados(
-      FdmDataFiltros,
-      FdmDataFiltros,
-      FdmDataFiltros));
-  oFzaWinf := TfzaWinF.Create(Self);
-  oFzaWinf.Charge(ConexionPrincipal);
-  // Cada pantalla de fza_winforms se auto-registra en su propia unidad.
-  // Si falta alguna queda en el log desde el arranque en vez de fallar
-  // al abrir el menú.
-  oFzaWinf.ComprobarRegistradas;
+  FComposicion.CrearServiciosSesion;
+  AsignarFotosArticulos(FComposicion.Fotos);
+  AsignarFiltrosGuardados(FComposicion.ServiciosFiltros);
 end;
 
 procedure TfrmMtoPrincipal.ComprobarConfiguracionFiscal;
 begin
-  try
-    SincronizarVersionInstalacionesSif(
-      ParametrosApp,
-      ConexionPrincipal,
-      IdentidadSesion.Usuario);
-  except
-    on E: Exception do
-      inLibLog.Log.LogWarning('No se pudo sincronizar la versión SIF: ' +
-                              E.Message);
-  end;
-  try
-    AsegurarDeclaracionResponsableSif(ParametrosApp, oVersion);
-  except
-    on E: Exception do
-      inLibLog.Log.LogWarning('No se pudo disponer de la declaración ' +
-                               'responsable de esta versión: ' + E.Message);
-  end;
+  FComposicion.ComprobarConfiguracionFiscal(oVersion);
 end;
 
 procedure TfrmMtoPrincipal.CargarDatosArranque;
+var
+  sErrorPermisos: string;
 begin
-  if ParametrosApp.GetBool('appArranqueEnParalelo', False) then
-    PrecargarCachesParalelo
-  else
-    PrecargarCachesSerie;
-  // Cache de unidades de medida: decimales por unidad y factores de
-  // conversion. La usan ficha de articulo, lineas de documento e informes.
-  UnidadesMedida.Cargar;
-  // Trazar la impresora resuelta: si queda '' o 'DEBUG', el F9 global de
-  // abrir cajon no se activa fuera de caja (ver ImpresoraCajaAsignada).
-  inLibLog.Log.LogInfo('Arranque: impresora de caja resuelta = "' +
-                       ParametrosCaja.ImpresoraCaja + '"');
+  sErrorPermisos := FComposicion.CargarDatosArranque;
+  AsignarInformesGuiasCache(FComposicion.InformesGuias);
+  AsignarPermisos(FComposicion.Permisos);
+  if sErrorPermisos <> '' then
+    AvisarFalloCargaPermisos(sErrorPermisos);
 end;
 
 procedure TfrmMtoPrincipal.IniciarProcesosSegundoPlano;
 begin
-  // Hilo de la cola Verifactu: arranca siempre; cada ciclo consulta el
-  // parámetro appVerifactuActivo, así puede activarse sin reiniciar
-  TVerifactuCola.IniciarHilo(
-    CrearProcesadorVerifactuColaUniDAC(
-      Conexiones,
-      ContextoSesion,
-      ParametrosApp,
-      ParametrosCaja,
-      IdentidadSesion.Usuario));
-  FVentasWsCola := TVentasWsCola.Create;
-  FVentasWsCola.IniciarHilo(
-    ContextoSesion,
-    ParametrosApp,
-    CrearFabricaSesionVentasWsUniDAC(Conexiones),
-    IdentidadSesion.Usuario);
+  FComposicion.IniciarProcesosSegundoPlano;
 end;
 
 procedure TfrmMtoPrincipal.ActualizarEstadoSesion(
@@ -890,8 +702,9 @@ var
   sDistintivo: string;
 begin
   sDistintivo := '';
-  jvStatusBar1.Panels[1].Text := FDmConn.conUni.Server + ':' +
-    IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
+  jvStatusBar1.Panels[1].Text := FComposicion.DmConn.conUni.Server + ':' +
+    IntToStr(FComposicion.DmConn.conUni.Port) + ' (' +
+    FComposicion.DmConn.conUni.Database + ')';
   if AIdentidad.EsAdministrador then
     sDistintivo := ' ✪';
   jvStatusBar1.Panels[2].Text := AIdentidad.Usuario + ' (' +
@@ -966,12 +779,7 @@ end;
 
 procedure TfrmMtoPrincipal.RegistrarInicioAplicacion;
 begin
-  inLibLog.Log.LogInfo('Arranque del sistema');
-  RegistrarEventoFiscalSeguro(ParametrosApp,
-    ConexionPrincipal,
-    IdentidadSesion.Usuario,
-    cEventoNoVerifactuInicio,
-    'Inicio del sistema');
+  FComposicion.RegistrarInicioFiscal;
 end;
 
 procedure TfrmMtoPrincipal.InicializarAplicacion(
@@ -985,7 +793,7 @@ begin
     AContextoSesion, IdentidadActual, UbicacionActual);
   MostrarSplashInicio;
   CrearInfraestructuraAplicacion;
-  CrearParametrosSesion(IdentidadActual, AResultadoLicencia);
+  CrearParametrosSesion(AResultadoLicencia);
   CrearServiciosSesion;
   ComprobarConfiguracionFiscal;
   CargarDatosArranque;
@@ -1202,8 +1010,8 @@ var
 begin
   ARutaFichero := '';
   AContrasena := '';
-  sExtension := FServicioCopiasSeguridad.ExtensionCreacion;
-  bCifrada := FServicioCopiasSeguridad.ModoCreacion =
+  sExtension := FCoordinadorOperaciones.ExtensionCreacionCopia;
+  bCifrada := FCoordinadorOperaciones.ModoCreacionCopia =
     mpcCifrada;
   saveDialog.Title := STituloGuardarCopiaSeguridad;
   saveDialog.DefaultExtension := Copy(
@@ -1255,181 +1063,14 @@ begin
     sRutaFichero,
     sContrasena) then
   begin
-    MostrarBarraProgreso;
-    try
-      FCancelaOperacionSolicitada := False;
-      FServicioCopiasSeguridad.IniciarCopia(
-        sRutaFichero,
-        sContrasena,
-        WorkerProgreso,
-        BackupFinalizar,
-        FWorkerOperacion);
-    except
-      OcultarBarraProgreso;
-      raise;
-    end;
+    FCoordinadorOperaciones.IniciarCopia(
+      sRutaFichero,
+      sContrasena);
   end;
 end;
 
 // validar iban online https://www.iban.com
 // validar nif europeo https://ec.europa.eu/taxation_customs/tin/#/check-tin
-
-procedure TfrmMtoPrincipal.PrecargarCachesSerie;
-var
-  swTotal: TStopwatch;
-  Identidad: TIdentidadPermisos;
-  IdentidadActual: TIdentidadSesion;
-begin
-  swTotal := TStopwatch.StartNew;
-  Log.LogInfo('Arranque: PrecargarCachesSerie INICIO');
-  CachePerfiles.PrecargarPerfilesUsuario;
-  AsignarInformesGuiasCache(
-    TInformesGuiasCache.Create(ConexionPrincipal));
-  InformesGuiasCache.Precargar;
-  InicializarConfigCampos(ConexionPrincipal);
-  oConfigCampos.Precargar;
-  IdentidadActual := ContextoSesion.Identidad;
-  Identidad := TIdentidadPermisos.Crear(
-    IdentidadActual.Usuario,
-    IdentidadActual.Grupo,
-    IdentidadActual.EsAdministrador);
-  try
-    AsignarPermisos(
-      TCargadorPermisosUniDAC.Cargar(ConexionPrincipal, Identidad));
-  except
-    on E: Exception do
-    begin
-      AsignarPermisos(
-        TPermisosAplicacion.CrearNoDisponible(Identidad));
-      AvisarFalloCargaPermisos(E.ClassName + ': ' + E.Message);
-    end;
-  end;
-  Log.LogInfo(
-    Format('PrecargaSerie: total=%d ms', [swTotal.ElapsedMilliseconds]));
-end;
-
-function TfrmMtoPrincipal.EjecutarCargaWorker(ACarga: TProc<TUniConnection>;
-                                              out AError: string): Int64;
-var
-  sw: TStopwatch;
-  c: TUniConnection;
-begin
-  AError := '';
-  sw := TStopwatch.StartNew;
-  c := nil;
-  try
-    try
-      if not Assigned(Conexiones) then
-        raise Exception.Create(SErrorServicioConexionesNoDisponible);
-      c := Conexiones.CrearConexion(
-        nil,
-        uctPrecarga);
-      ACarga(c);
-    except
-      // Capturamos la excepcion en la tarea para que NO aborte el WaitForAll.
-      // La cache afectada queda sin cargar y degrada sola (FCargada=False).
-      on E: Exception do
-        AError := E.ClassName + ': ' + E.Message;
-    end;
-  finally
-    if c <> nil then
-      FreeAndNil(c);
-  end;
-  Result := sw.ElapsedMilliseconds;
-end;
-
-procedure TfrmMtoPrincipal.PrecargarCachesParalelo;
-var
-  swTotal: TStopwatch;
-  bEsAdmin: Boolean;
-  Identidad: TIdentidadPermisos;
-  IdentidadActual: TIdentidadSesion;
-  PermisosCargados: IPermisosAplicacion;
-  msPerfiles, msInfGuias, msConfig, msPermisos: Int64;
-  errPerfiles, errInfGuias, errConfig, errPermisos: string;
-  t1, t2, t3, t4: ITask;
-begin
-  swTotal := TStopwatch.StartNew;
-  Log.LogInfo('Arranque: PrecargarCachesParalelo INICIO');
-  IdentidadActual := ContextoSesion.Identidad;
-  bEsAdmin := IdentidadActual.EsAdministrador;
-  Identidad := TIdentidadPermisos.Crear(
-    IdentidadActual.Usuario,
-    IdentidadActual.Grupo,
-    bEsAdmin);
-  PermisosCargados := nil;
-  msPerfiles := 0;
-  msInfGuias := 0;
-  msConfig := 0;
-  msPermisos := 0;
-  errPerfiles := '';
-  errInfGuias := '';
-  errConfig := '';
-  errPermisos := '';
-  AsignarInformesGuiasCache(
-    TInformesGuiasCache.Create(ConexionPrincipal));
-  InicializarConfigCampos(ConexionPrincipal);
-  // Cada tarea escribe solo en SUS variables (sin estado compartido) y captura
-  // su excepcion (no se propaga al WaitForAll). El log es thread-safe (mutex).
-  t1 := TTask.Run(
-    procedure
-    begin
-      msPerfiles := EjecutarCargaWorker(
-        procedure(c: TUniConnection)
-        begin
-          FdmDataPerfiles.PrecargarPerfilesUsuario(c);
-        end, errPerfiles);
-    end);
-  t2 := TTask.Run(
-    procedure
-    begin
-      msInfGuias := EjecutarCargaWorker(
-        procedure(c: TUniConnection)
-        begin
-          InformesGuiasCache.Precargar(c);
-        end, errInfGuias);
-    end);
-  t3 := TTask.Run(
-    procedure
-    begin
-      msConfig := EjecutarCargaWorker(
-        procedure(c: TUniConnection)
-        begin
-          oConfigCampos.Precargar(c);
-        end, errConfig);
-    end);
-  t4 := TTask.Run(
-    procedure
-    begin
-      msPermisos := EjecutarCargaWorker(
-        procedure(c: TUniConnection)
-        begin
-          PermisosCargados :=
-            TCargadorPermisosUniDAC.Cargar(c, Identidad);
-        end, errPermisos);
-    end);
-  TTask.WaitForAll([t1, t2, t3, t4]);
-  if Assigned(PermisosCargados) then
-    AsignarPermisos(PermisosCargados)
-  else
-  begin
-    AsignarPermisos(
-      TPermisosAplicacion.CrearNoDisponible(Identidad));
-    if errPermisos = '' then
-      errPermisos := 'La carga no devolvió una caché de permisos';
-  end;
-  Log.LogInfo(Format('PrecargaParalela: total=%d ms || ' +
-    'perfiles=%d infguias=%d config=%d permisos=%d',
-    [swTotal.ElapsedMilliseconds,
-     msPerfiles, msInfGuias, msConfig, msPermisos]));
-  if (errPerfiles <> '') or (errInfGuias <> '') or
-     (errConfig <> '') or (errPermisos <> '') then
-    Log.LogError(Format('PrecargaParalela errores -> perfiles=[%s] ' +
-      'infguias=[%s] config=[%s] permisos=[%s]',
-      [errPerfiles, errInfGuias, errConfig, errPermisos]));
-  if errPermisos <> '' then
-    AvisarFalloCargaPermisos(errPermisos);
-end;
 
 procedure TfrmMtoPrincipal.AvisarFalloCargaPermisos(
   const ADetalle: string);
@@ -1471,11 +1112,11 @@ var
     end
     else
     begin
-      sCodigo := oFzaWinf.CodigoMenu(AItem);
+      sCodigo := FComposicion.RegistroPantallas.CodigoMenu(AItem);
       if (sCodigo <> '') and
          (not Permisos.TienePermiso(sCodigo, paPermitir)) then
       begin
-        sCall := oFzaWinf.CallRegistrado(AItem);
+        sCall := FComposicion.RegistroPantallas.CallRegistrado(AItem);
         AItem.Enabled := False;
         if sCall <> '' then
         begin
@@ -1501,118 +1142,101 @@ begin
       ProcesarItem(Menu.Items[i]);
 end;
 
-procedure TfrmMtoPrincipal.WorkerProgreso(const AEtapa: string;
-                                          APaso, ATotal: Integer;
-                                          AFilaGlobal,
-                                          AFilasGlobalTotal: Integer);
+procedure TfrmMtoPrincipal.ActualizarProgreso(
+  const AEtapa: string;
+  APaso, ATotal: Integer;
+  AFilaGlobal, AFilasGlobalTotal: Integer);
 begin
-  if (FProgressBar = nil) or (not FProgressBar.Visible) then
-    Exit;
-  if AFilasGlobalTotal > 0 then
+  if Assigned(FProgressBar) and FProgressBar.Visible then
   begin
-    FProgressBar.Max := AFilasGlobalTotal;
-    FProgressBar.Position := AFilaGlobal;
-  end;
-  if ATotal > 0 then
-    FProgressLabel.Caption :=
-      Format('%s  %d / %d', [AEtapa, APaso, ATotal])
-  else
-    FProgressLabel.Caption := AEtapa;
-  FProgressBar.Update;
-  FProgressLabel.Update;
-end;
-
-procedure TfrmMtoPrincipal.BackupFinalizar(AExito: Boolean;
-  const AError: string; ALogBuffer: TStringList);
-var
-  bCancelada: Boolean;
-begin
-  bCancelada := (not AExito) and EsErrorCancelacion(AError);
-  FWorkerOperacion := nil;
-  FCancelaOperacionSolicitada := False;
-  OcultarBarraProgreso;
-  if bCancelada then
-    ShowMessage(SOperacionCancelada)
-  else if AExito then
-  begin
-    inLibLog.Log.LogInfo('Copia de seguridad creada exitosamente');
-    ShowMessage(SInfoCopiaSeguridadGuardada);
-  end
-  else
-  begin
-    inLibLog.Log.LogError('Fallo al crear copia de seguridad: ' + AError);
-    ShowMessage(Format(SErrorCrearCopiaSeguridad, [AError]));
+    if AFilasGlobalTotal > 0 then
+    begin
+      FProgressBar.Max := AFilasGlobalTotal;
+      FProgressBar.Position := AFilaGlobal;
+    end;
+    if ATotal > 0 then
+      FProgressLabel.Caption :=
+        Format('%s  %d / %d', [AEtapa, APaso, ATotal])
+    else
+      FProgressLabel.Caption := AEtapa;
+    FProgressBar.Update;
+    FProgressLabel.Update;
   end;
 end;
 
-procedure TfrmMtoPrincipal.RestoreFinalizar(AExito: Boolean;
-  const AError: string; ALogBuffer: TStringList);
+procedure TfrmMtoPrincipal.FinalizarOperacion(
+  ATipo: TTipoOperacionAplicacion;
+  AExito, ACancelada: Boolean;
+  const AError: string;
+  ALogBuffer: TStringList);
 var
   LogForm: TfrmMtoModalScriptLog;
-  bCancelada: Boolean;
 begin
-  bCancelada := (not AExito) and EsErrorCancelacion(AError);
-  FWorkerOperacion := nil;
-  FCancelaOperacionSolicitada := False;
-  OcultarBarraProgreso;
-  if bCancelada then
+  if Assigned(FProgressBar) then
+    FProgressBar.Visible := False;
+  if Assigned(FProgressLabel) then
+    FProgressLabel.Visible := False;
+  pnlPPBottom.Visible := False;
+  if (not AExito) and (not ACancelada) and (AError = '') then
+    FreeAndNil(ALogBuffer)
+  else if ATipo = toaCopiaSeguridad then
   begin
-    if ALogBuffer <> nil then
-      FreeAndNil(ALogBuffer);
-    ShowMessage(SAvisoRestauracionCancelada);
+    FreeAndNil(ALogBuffer);
+    if ACancelada then
+      ShowMessage(SOperacionCancelada)
+    else if AExito then
+      ShowMessage(SInfoCopiaSeguridadGuardada)
+    else
+      ShowMessage(Format(SErrorCrearCopiaSeguridad, [AError]));
   end
-  else
+  else if ATipo = toaRestauracion then
   begin
-    // Mostrar log de ejecución
-    LogForm := TfrmMtoModalScriptLog.Create(Self);
-    LogForm.LogMemo.Lines.Add('-- RESTAURACIÓN DE COPIA DE SEGURIDAD --');
-    LogForm.LogMemo.Lines.Add(
-      '-------------------------------------------------');
-    if ALogBuffer <> nil then
+    if ACancelada then
     begin
-      LogForm.AppendLines(ALogBuffer);
       FreeAndNil(ALogBuffer);
-    end;
-    LogForm.Show;
-    if AExito then
-      ShowMessage(SScriptEjecutado)
+      ShowMessage(SAvisoRestauracionCancelada);
+    end
     else
     begin
-      inLibLog.Log.LogError('Error en restauración: ' + AError);
-      ShowMessage(Format(SErrorEjecutarScript, [AError]));
+      LogForm := TfrmMtoModalScriptLog.Create(Self);
+      LogForm.LogMemo.Lines.Add(
+        '-- RESTAURACIÓN DE COPIA DE SEGURIDAD --');
+      LogForm.LogMemo.Lines.Add(
+        '-------------------------------------------------');
+      if Assigned(ALogBuffer) then
+      begin
+        LogForm.AppendLines(ALogBuffer);
+        FreeAndNil(ALogBuffer);
+      end;
+      LogForm.Show;
+      if AExito then
+        ShowMessage(SScriptEjecutado)
+      else
+        ShowMessage(Format(SErrorEjecutarScript, [AError]));
     end;
   end;
-end;
-
-function TfrmMtoPrincipal.EsErrorCancelacion(const AError: string): Boolean;
-begin
-  Result := Pos('cancelada', LowerCase(AError)) > 0;
 end;
 
 procedure TfrmMtoPrincipal.SolicitarCancelarOperacionEnCurso;
 begin
-  if FEnOperacionLarga then
+  if Assigned(FCoordinadorOperaciones) and
+     FCoordinadorOperaciones.EnCurso then
   begin
-    if FCancelaOperacionSolicitada then
+    if FCoordinadorOperaciones.CancelacionSolicitada then
       ShowMessage(SCancelacionSolicitada)
-    else if MessageDlg(SPreguntaCancelarOperacion,
-                       mtWarning, [mbYes, mbNo], 0) = mrYes then
+    else if MessageDlg(
+         SPreguntaCancelarOperacion,
+         mtWarning,
+         [mbYes, mbNo],
+         0) = mrYes then
     begin
-      FCancelaOperacionSolicitada := True;
-      if Assigned(FWorkerOperacion) then
-        FWorkerOperacion.Terminate;
-      if FProgressLabel <> nil then
-      begin
-        FProgressLabel.Caption := SCaptionCancelandoOperacion;
-        FProgressLabel.Update;
-      end;
+      FCoordinadorOperaciones.SolicitarCancelacion;
     end;
   end;
 end;
 
-procedure TfrmMtoPrincipal.MostrarBarraProgreso;
+procedure TfrmMtoPrincipal.MostrarOperacion;
 begin
-  FEnOperacionLarga := True;
   if FProgressLabel = nil then
   begin
     FProgressLabel := TcxLabel.Create(Self);
@@ -1643,50 +1267,27 @@ begin
   FProgressLabel.Update;
 end;
 
-procedure TfrmMtoPrincipal.OcultarBarraProgreso;
+procedure TfrmMtoPrincipal.MostrarCancelando;
 begin
-  FEnOperacionLarga := False;
-  if FProgressBar <> nil then
-    FProgressBar.Visible := False;
-  if FProgressLabel <> nil then
-    FProgressLabel.Visible := False;
-  pnlPPBottom.Visible := False;
+  if Assigned(FProgressLabel) then
+  begin
+    FProgressLabel.Caption := SCaptionCancelandoOperacion;
+    FProgressLabel.Update;
+  end;
 end;
 
 function TfrmMtoPrincipal.CrearCopiaPreviaScript: Boolean;
 var
   sContrasena: string;
-  sError: string;
   sRutaFichero: string;
 begin
   Result := SolicitarDestinoCopia(
     sRutaFichero,
     sContrasena);
   if Result then
-  begin
-    MostrarBarraProgreso;
-    try
-      Result := FServicioCopiasSeguridad.CrearCopia(
-        sRutaFichero,
-        sContrasena,
-        WorkerProgreso,
-        sError);
-      if Result then
-      begin
-        inLibLog.Log.LogInfo('Copia de seguridad creada en ' +
-          sRutaFichero);
-        ShowMessage(SInfoCopiaSeguridadGuardada);
-      end
-      else
-      begin
-        inLibLog.Log.LogError('Fallo al crear copia de seguridad: ' +
-                              sError);
-        ShowMessage(Format(SErrorCrearCopiaSeguridad, [sError]));
-      end;
-    finally
-      OcultarBarraProgreso;
-    end;
-  end;
+    Result := FCoordinadorOperaciones.CrearCopia(
+      sRutaFichero,
+      sContrasena);
 end;
 
 procedure TfrmMtoPrincipal.FormActivate(Sender: TObject);
@@ -1697,11 +1298,10 @@ end;
 
 destructor TfrmMtoPrincipal.Destroy;
 begin
+  FCoordinadorOperaciones := nil;
+  FGestorExcepciones := nil;
+  FreeAndNil(FComposicion);
   inherited;
-  if Assigned(FServicioFotos) then
-    FServicioFotos.LiberarServicios;
-  FreeAndNil(FServicioFotos);
-  FreeAndNil(FServicioUnidades);
 end;
 
 procedure TfrmMtoPrincipal.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -1719,14 +1319,11 @@ begin
     GestorContexto
   ) then
     GestorContexto.MarcarCierreAplicacion;
-  RegistrarEventoFiscalSeguro(ParametrosApp,
-    ConexionPrincipal,
-    IdentidadSesion.Usuario,
-    cEventoNoVerifactuFin,
-    'Cierre del sistema');
-  // Parar el hilo de la cola Verifactu antes de liberar las conexiones
-  DetenerVentasWsCola;
-  TVerifactuCola.DetenerHilo;
+  if Assigned(FComposicion) then
+  begin
+    FComposicion.RegistrarCierreFiscal;
+    FComposicion.DetenerProcesosSegundoPlano;
+  end;
   if Assigned(FAppEvents) then
   begin
     FAppEvents.OnException := nil;
@@ -1744,58 +1341,35 @@ begin
       on E: Exception do inLibLog.Log.LogError('Error en CloseAll: ' +
                                                                      E.Message);
     end;
-    FreeAndNil(oFzaWinf);
     AsignarFotosArticulos(nil);
     AsignarUnidadesMedida(nil);
-    if Assigned(FDmConn) then
-      FDmConn.AsignarParametrosApp(nil);
     AsignarTraducciones(nil);
     AsignarParametros(nil, nil);
-    FParametrosAppEdicion := nil;
-    FParametrosCajaEdicion := nil;
     DesvincularPerfilesStockConsulta;
     AsignarPerfilesUsuario(
       CrearServiciosPerfilesUsuario(nil, nil, nil));
-    if (FdmDataPerfiles <> nil) then
-      FreeAndNil(FdmDataPerfiles);
     AsignarFiltrosGuardados(
       CrearServiciosFiltrosGuardados(nil, nil, nil));
-    if (FdmDataFiltros <> nil) then
-      FreeAndNil(FdmDataFiltros);
     AsignarAuditoriaDatos(nil);
-    if Assigned(MonitorSQL) then
-    begin
-      MonitorSQL.CerrarPendiente;
-      MonitorSQL.EstablecerActivo(False);
-      MonitorSQL.Invalidar;
-    end;
-    if Assigned(FDmConn) then
-      FDmConn.AsignarReceptorMonitorSQL(nil);
     inLibLog.Log.AsignarMonitorSQL(nil);
     AsignarMonitorSQL(nil);
-    if Assigned(Conexiones) then
-      Conexiones.Invalidar;
     AsignarConexiones(nil);
-    // Caches de la sesión: liberarlas evita la fuga en re-login.
     AsignarInformesGuiasCache(nil);
-    LiberarConfigCampos;
-    FreeAndNil(FDmConn);
+    FCoordinadorOperaciones := nil;
+    FGestorExcepciones := nil;
+    FreeAndNil(FComposicion);
   finally
     inLibLog.Log.LogInfo('Ventana principal Cerrada');
     Action := caFree;
   end;
 end;
 
-procedure TfrmMtoPrincipal.DetenerVentasWsCola;
-begin
-  FreeAndNil(FVentasWsCola);
-end;
-
 procedure TfrmMtoPrincipal.FormCloseQuery(Sender: TObject;
   var CanClose: Boolean);
 begin
   inherited;
-  if FEnOperacionLarga then
+  if Assigned(FCoordinadorOperaciones) and
+     FCoordinadorOperaciones.EnCurso then
   begin
     CanClose := False;
     SolicitarCancelarOperacionEnCurso;
@@ -1862,7 +1436,9 @@ begin
     // tickets asignada. Sin impresora solo responde con la sesion de caja
     // abierta, para avisar de la falta de
     // configuracion. F9 sola, sin Ctrl/Alt/Mayus.
-    if (Msg.wParam = WPARAM(VK_ESCAPE)) and FEnOperacionLarga then
+    if (Msg.wParam = WPARAM(VK_ESCAPE)) and
+       Assigned(FCoordinadorOperaciones) and
+       FCoordinadorOperaciones.EnCurso then
     begin
       SolicitarCancelarOperacionEnCurso;
       Handled := True;
@@ -2060,7 +1636,7 @@ var
 begin
   ARutaFichero := '';
   AContrasena := '';
-  bEsAdministrador := FServicioCopiasSeguridad.ModoCreacion =
+  bEsAdministrador := FCoordinadorOperaciones.ModoCreacionCopia =
     mpcTextoPlano;
   openDialog.Title := STituloRestaurarCopiaEjecutarScript;
   openDialog.FileTypes.Clear;
@@ -2089,11 +1665,11 @@ begin
   if Result then
   begin
     ARutaFichero := openDialog.FileName;
-    Result := FServicioCopiasSeguridad.PuedeRestaurar(
+    Result := FCoordinadorOperaciones.PuedeRestaurar(
       ARutaFichero);
     if not Result then
       ShowMessage(SErrorTipoRestauracionNoPermitido)
-    else if FServicioCopiasSeguridad.RequiereContrasena(
+    else if FCoordinadorOperaciones.RequiereContrasena(
       ARutaFichero) then
     begin
       Result := TfrmModalContrasenaCopia.SolicitarExistente(
@@ -2124,7 +1700,7 @@ begin
       sContrasena);
     if bContinuar then
     begin
-      bCifrada := FServicioCopiasSeguridad.RequiereContrasena(
+      bCifrada := FCoordinadorOperaciones.RequiereContrasena(
         sRutaFichero);
       bRequiereCopia := bCifrada;
       sPreguntaCopia := SPreguntaCopiaAntesRestaurarCifrada;
@@ -2166,19 +1742,9 @@ begin
       end;
       if bContinuar then
       begin
-        MostrarBarraProgreso;
-        try
-          FCancelaOperacionSolicitada := False;
-          FServicioCopiasSeguridad.IniciarRestauracion(
-            sRutaFichero,
-            sContrasena,
-            WorkerProgreso,
-            RestoreFinalizar,
-            FWorkerOperacion);
-        except
-          OcultarBarraProgreso;
-          raise;
-        end;
+        FCoordinadorOperaciones.IniciarRestauracion(
+          sRutaFichero,
+          sContrasena);
       end;
     end;
   end;
@@ -2193,15 +1759,17 @@ begin
   bConectado := False;
   ADateStr := DateToStr(Now);
   ATimeStr := FormatDateTime('hh:mm', Now);
-  if FDmConn <> nil then
-    if FDmConn.conUni.Connected then
+  if Assigned(FComposicion) and Assigned(FComposicion.DmConn) then
+    if FComposicion.DmConn.conUni.Connected then
     begin
       bConectado := True;
       jvStatusBar1.Panels[4].Text := '' + ADateStr + ' ' + ATimeStr + ' Conn';
     end
     else
       bConectado := False;
-  if (FDmConn = nil) or (not bConectado) then
+  if (not Assigned(FComposicion)) or
+     (not Assigned(FComposicion.DmConn)) or
+     (not bConectado) then
   begin
     jvStatusBar1.Panels[4].Text := '' + ADateStr + ' ' + ATimeStr + 'NO Conn';
     inLibLog.Log.LogError('Se ha perdido la conexión con la BBDD');
@@ -2365,7 +1933,7 @@ begin
     // esta visible (permisos de menu ya aplicados).
     if oItem.Visible then
     begin
-      sCall := oFzaWinf.CallRegistrado(oItem);
+      sCall := FComposicion.RegistroPantallas.CallRegistrado(oItem);
       if sCall <> '' then
         ShowMto(Self, sCall);
     end;
@@ -2606,19 +2174,33 @@ end;
 
 function TfrmMtoPrincipal.RegistroPantallas: TfzaWinF;
 begin
-  Result := oFzaWinf;
+  Result := FComposicion.RegistroPantallas;
+end;
+
+function TfrmMtoPrincipal.CrearPantalla(AClase: TFormClass): TForm;
+var
+  Contexto: TContextoAutorizacionPantalla;
+begin
+  if not AClase.InheritsFrom(TfrmBase) then
+  begin
+    raise EInvalidCast.Create(
+      SErrorPantallaNoHeredaFrmBase);
+  end;
+  Contexto := TContextoAutorizacionPantalla.Crear(Permisos);
+  Result := TClaseFrmBase(AClase).Create(Self, Contexto);
 end;
 
 function TfrmMtoPrincipal.ResolverCallPantalla(
   const AUnidadClase: string): string;
 begin
-  Result := oFzaWinf.CallDeUnit(AUnidadClase);
+  Result := FComposicion.RegistroPantallas.CallDeUnit(AUnidadClase);
 end;
 
 function TfrmMtoPrincipal.ResolverDataModulePantalla(
   const AUnidadClase: string): string;
 begin
-  Result := oFzaWinf.GetDataModuleName(AUnidadClase);
+  Result := FComposicion.RegistroPantallas.GetDataModuleName(
+    AUnidadClase);
 end;
 
 procedure TfrmMtoPrincipal.CancelarEdicionesPantallas;

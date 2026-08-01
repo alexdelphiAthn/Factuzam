@@ -1,4 +1,4 @@
-param(
+﻿param(
   [string]$RaizRepositorio = (Split-Path -Parent $PSScriptRoot),
   [switch]$OmitirLineaBase
 )
@@ -14,6 +14,10 @@ $rutaMetodos = Join-Path $RaizRepositorio `
   'scripts\comprobar_metodos_largos.ps1'
 $rutaInterfaces = Join-Path $RaizRepositorio `
   'scripts\comprobar_interfaces_segregadas.ps1'
+$rutaConsultasUi = Join-Path $RaizRepositorio `
+  'scripts\comprobar_consultas_ui.ps1'
+$rutaPruebasDelphi = Join-Path $RaizRepositorio `
+  'scripts\ejecutar_pruebas_delphi.ps1'
 $utf8ConBom = [System.Text.UTF8Encoding]::new($true)
 [System.Text.Encoding]::RegisterProvider(
   [System.Text.CodePagesEncodingProvider]::Instance)
@@ -237,11 +241,13 @@ function Agregar-CasosEstilo {
     '    Exit;',
     '  while Falso do',
     '    Continue;',
-    "  Texto := 'Exit Continue';",
-    '  // Exit Continue',
+    '  with Objeto do',
+    '    Valor := 1;',
+    "  Texto := 'Exit Continue with';",
+    '  // Exit Continue with',
     '  { Exit',
-    '    Continue }',
-    '  (* Exit Continue *)',
+    '    Continue with }',
+    '  (* Exit Continue with *)',
     $linea80,
     $linea81,
     $lineaAcentuada79,
@@ -282,6 +288,24 @@ function Agregar-CasosInterfaces {
     -Contenido ($lineas -join "`r`n")
 }
 
+function Agregar-CasosConsultasUi {
+  param([string]$Raiz)
+  $contenido = @(
+    'unit CasosConsultasUi;',
+    'interface',
+    'implementation',
+    'procedure Ejecutar;',
+    'begin',
+    '  Uno := TUniQuery.Create(nil);',
+    '  Dos := TUniQuery . Create (nil);',
+    'end;',
+    'end.'
+  ) -join "`r`n"
+  Escribir-ArchivoPrueba `
+    -Ruta (Join-Path $Raiz 'src\Forms\CasosConsultasUi.pas') `
+    -Contenido $contenido
+}
+
 function Agregar-ContratosSinUniDAC {
   param([string]$Raiz)
   $rutas = @(
@@ -291,7 +315,9 @@ function Agregar-ContratosSinUniDAC {
     'src\Lib\inLibVentasWsColaIntf.pas',
     'src\Lib\inLibVentasWsCola.pas',
     'src\Lib\inLibFacturaePersistenciaIntf.pas',
-    'src\Lib\inLibPedidosCompraIntf.pas'
+    'src\Lib\inLibPedidosCompraIntf.pas',
+    'src\Lib\inLibAplicacionArticuloCompraIntf.pas',
+    'src\verifactu\inLibVerifactuEsquemaIntf.pas'
   )
   foreach ($ruta in $rutas) {
     $unidad = [System.IO.Path]::GetFileNameWithoutExtension($ruta)
@@ -326,7 +352,12 @@ function Borrar-RaizPrueba {
 }
 
 Registrar-Prueba 'sintaxis y formato de los scripts' {
-  foreach ($ruta in @($rutaEstilo, $rutaMetodos, $rutaInterfaces)) {
+  foreach ($ruta in @(
+    $rutaEstilo,
+    $rutaMetodos,
+    $rutaInterfaces,
+    $rutaConsultasUi,
+    $rutaPruebasDelphi)) {
     $tokens = $null
     $errores = $null
     $null = [System.Management.Automation.Language.Parser]::ParseFile(
@@ -358,10 +389,9 @@ if (-not $OmitirLineaBase) {
       -Codigo 0 `
       -Textos @(
         'Estilo de codigo: OK.',
-        'Exit: 1141.',
-        'Continue: 73.',
-        'Lineas anchas: 557.',
-        'Lineas con tabulador: 0.'
+        'With:',
+        'Lineas anchas:',
+        'Lineas con tabulador:'
       )
   }
   Registrar-Prueba 'linea base real de metodos' {
@@ -371,10 +401,9 @@ if (-not $OmitirLineaBase) {
       -Codigo 0 `
       -Textos @(
         'Metodos largos: OK.',
-        'Analizados: 7611.',
-        'De mas de 120 lineas: 116.',
-        'Mas largo: 286 lineas',
-        'Rutinas generadas fuera del limite: 2.'
+        'De mas de 120 lineas:',
+        'Riesgo acumulado:',
+        'Mayor riesgo:'
       )
   }
   Registrar-Prueba 'linea base real de interfaces' {
@@ -387,6 +416,52 @@ if (-not $OmitirLineaBase) {
         'contratos retirados: 13;'
       )
   }
+  Registrar-Prueba 'linea base real de consultas UI' {
+    $resultado = Ejecutar-Script -Ruta $rutaConsultasUi
+    Confirmar-Resultado `
+      -Resultado $resultado `
+      -Codigo 0 `
+      -Textos @(
+        'Consultas UI: OK.',
+        'TUniQuery.Create: 173;',
+        'máximo permitido: 173.'
+      )
+  }
+}
+
+$raizConsultasUi = Nueva-RaizPrueba
+try {
+  Agregar-CasosConsultasUi -Raiz $raizConsultasUi
+  Registrar-Prueba 'consultas UI: permite el limite exacto' {
+    $resultado = Ejecutar-Script `
+      -Ruta $rutaConsultasUi `
+      -Argumentos @(
+        '-Raiz', $raizConsultasUi,
+        '-MaximoConsultasUi', '2'
+      )
+    Confirmar-Resultado `
+      -Resultado $resultado `
+      -Codigo 0 `
+      -Textos @('TUniQuery.Create: 2; máximo permitido: 2.')
+  }
+  Registrar-Prueba 'consultas UI: bloquea una aparicion nueva' {
+    $resultado = Ejecutar-Script `
+      -Ruta $rutaConsultasUi `
+      -Argumentos @(
+        '-Raiz', $raizConsultasUi,
+        '-MaximoConsultasUi', '1'
+      )
+    Confirmar-Resultado `
+      -Resultado $resultado `
+      -Codigo 1 `
+      -Textos @(
+        'Construcciones TUniQuery.Create en UI: 2;',
+        'máximo permitido: 1.'
+      )
+  }
+}
+finally {
+  Borrar-RaizPrueba -Ruta $raizConsultasUi
 }
 
 $raizEstilo = Nueva-RaizPrueba
@@ -398,8 +473,10 @@ try {
       -Ruta $rutaEstilo `
       -Argumentos @(
         '-Raiz', $raizEstilo,
+        '-OmitirLineaBasePorUnidad',
         '-MaximoExit', '3',
         '-MaximoContinue', '1',
+        '-MaximoWith', '1',
         '-MaximoLineasAnchas', '1',
         '-MaximoLineasConTabulador', '1'
       )
@@ -409,6 +486,7 @@ try {
       -Textos @(
         'Exit: 3.',
         'Continue: 1.',
+        'With: 1.',
         'Lineas anchas: 1.',
         'Lineas con tabulador: 1.'
       )
@@ -418,8 +496,10 @@ try {
       -Ruta $rutaEstilo `
       -Argumentos @(
         '-Raiz', $raizEstilo,
+        '-OmitirLineaBasePorUnidad',
         '-MaximoExit', '2',
         '-MaximoContinue', '1',
+        '-MaximoWith', '1',
         '-MaximoLineasAnchas', '1',
         '-MaximoLineasConTabulador', '1'
       )
@@ -433,8 +513,10 @@ try {
       -Ruta $rutaEstilo `
       -Argumentos @(
         '-Raiz', $raizEstilo,
+        '-OmitirLineaBasePorUnidad',
         '-MaximoExit', '3',
         '-MaximoContinue', '0',
+        '-MaximoWith', '1',
         '-MaximoLineasAnchas', '1',
         '-MaximoLineasConTabulador', '1'
       )
@@ -448,8 +530,10 @@ try {
       -Ruta $rutaEstilo `
       -Argumentos @(
         '-Raiz', $raizEstilo,
+        '-OmitirLineaBasePorUnidad',
         '-MaximoExit', '3',
         '-MaximoContinue', '1',
+        '-MaximoWith', '1',
         '-MaximoLineasAnchas', '0',
         '-MaximoLineasConTabulador', '1'
       )
@@ -465,8 +549,10 @@ try {
       -Ruta $rutaEstilo `
       -Argumentos @(
         '-Raiz', $raizEstilo,
+        '-OmitirLineaBasePorUnidad',
         '-MaximoExit', '3',
         '-MaximoContinue', '1',
+        '-MaximoWith', '1',
         '-MaximoLineasAnchas', '1',
         '-MaximoLineasConTabulador', '0'
       )
@@ -477,9 +563,58 @@ try {
         'Lineas con tabuladores: 1; maximo permitido: 0.'
       )
   }
+  Registrar-Prueba 'estilo: fallo independiente de with' {
+    $resultado = Ejecutar-Script `
+      -Ruta $rutaEstilo `
+      -Argumentos @(
+        '-Raiz', $raizEstilo,
+        '-OmitirLineaBasePorUnidad',
+        '-MaximoExit', '3',
+        '-MaximoContinue', '1',
+        '-MaximoWith', '0',
+        '-MaximoLineasAnchas', '1',
+        '-MaximoLineasConTabulador', '1'
+      )
+    Confirmar-Resultado `
+      -Resultado $resultado `
+      -Codigo 1 `
+      -Textos @('Sentencias with: 1; maximo permitido: 0.')
+  }
 }
 finally {
   Borrar-RaizPrueba -Ruta $raizEstilo
+}
+
+$raizLineaBaseEstilo = Nueva-RaizPrueba
+try {
+  Agregar-CasosEstilo -Raiz $raizLineaBaseEstilo
+  $rutaLineaBaseEstilo = Join-Path `
+    $raizLineaBaseEstilo `
+    'estilo_linea_base.csv'
+  $contenidoLineaBase = @(
+    'Ruta;Exit;Continue;With;Anchas;Tabuladores',
+    'src\CasosEstilo.pas;3;1;0;1;1'
+  ) -join "`r`n"
+  Escribir-ArchivoPrueba `
+    -Ruta $rutaLineaBaseEstilo `
+    -Contenido $contenidoLineaBase
+  Registrar-Prueba 'estilo: bloquea deuda nueva por unidad' {
+    $resultado = Ejecutar-Script `
+      -Ruta $rutaEstilo `
+      -Argumentos @(
+        '-Raiz', $raizLineaBaseEstilo,
+        '-RutaLineaBase', $rutaLineaBaseEstilo
+      )
+    Confirmar-Resultado `
+      -Resultado $resultado `
+      -Codigo 1 `
+      -Textos @(
+        'src\CasosEstilo.pas: With = 1; linea base: 0.'
+      )
+  }
+}
+finally {
+  Borrar-RaizPrueba -Ruta $raizLineaBaseEstilo
 }
 
 $raizMetodos = Nueva-RaizPrueba
@@ -500,7 +635,9 @@ try {
       -Codigo 0 `
       -Textos @(
         'De mas de 120 lineas: 1.',
-        'Mas largo: 130 lineas (MetodoLargo).'
+        'Mas largo: 130 lineas (MetodoLargo).',
+        'Riesgo acumulado: 138.',
+        'Mayor riesgo: 138 (MetodoLargo).'
       )
   }
   Registrar-Prueba 'metodos: fallo por cantidad' {
@@ -536,6 +673,42 @@ try {
         'maximo permitido: 129.'
       )
   }
+  Registrar-Prueba 'metodos: fallo por riesgo acumulado' {
+    $resultado = Ejecutar-Script `
+      -Ruta $rutaMetodos `
+      -Argumentos @(
+        '-Raiz', $raizMetodos,
+        '-UmbralLineas', '120',
+        '-MaximoMetodosLargos', '1',
+        '-MaximoLineasPorMetodo', '130',
+        '-MaximoRiesgoAcumulado', '137'
+      )
+    Confirmar-Resultado `
+      -Resultado $resultado `
+      -Codigo 1 `
+      -Textos @(
+        'Riesgo acumulado de metodos largos: 138;',
+        'maximo permitido: 137.'
+      )
+  }
+  Registrar-Prueba 'metodos: fallo por riesgo individual' {
+    $resultado = Ejecutar-Script `
+      -Ruta $rutaMetodos `
+      -Argumentos @(
+        '-Raiz', $raizMetodos,
+        '-UmbralLineas', '120',
+        '-MaximoMetodosLargos', '1',
+        '-MaximoLineasPorMetodo', '130',
+        '-MaximoRiesgoPorMetodo', '137'
+      )
+    Confirmar-Resultado `
+      -Resultado $resultado `
+      -Codigo 1 `
+      -Textos @(
+        'Riesgo del metodo mas expuesto (MetodoLargo): 138;',
+        'maximo permitido: 137.'
+      )
+  }
 }
 finally {
   Borrar-RaizPrueba -Ruta $raizMetodos
@@ -563,7 +736,7 @@ try {
       -Codigo 0 `
       -Textos @(
         'Interfaces segregadas: OK.',
-        'Unidades analizadas: 8;'
+        'Unidades analizadas: 10;'
       )
   }
 }
@@ -651,8 +824,10 @@ try {
       -Ruta $rutaEstilo `
       -Argumentos @(
         '-Raiz', $raizExclusiones,
+        '-OmitirLineaBasePorUnidad',
         '-MaximoExit', '0',
         '-MaximoContinue', '0',
+        '-MaximoWith', '0',
         '-MaximoLineasAnchas', '0',
         '-MaximoLineasConTabulador', '0'
       )
@@ -662,6 +837,7 @@ try {
       -Textos @(
         'Exit: 0.',
         'Continue: 0.',
+        'With: 0.',
         'Lineas anchas: 0.',
         'Lineas con tabulador: 0.'
       )

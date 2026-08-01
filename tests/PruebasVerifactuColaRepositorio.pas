@@ -68,6 +68,10 @@ type
     procedure NoVerifactu_EstadoRegistroSegunOperacion;
     [Test]
     procedure Rectificativa_SinServicioEmisionFallaDeFormaRuidosa;
+    [Test]
+    procedure Esquema_ConsultaLasCuatroColumnasDeCola;
+    [Test]
+    procedure Esquema_ConexionNulaFallaDeFormaRuidosa;
   end;
 
 implementation
@@ -77,6 +81,7 @@ uses
   inLibVerifactuColaIntf, inLibVerifactuCola,
   inLibVerifactuReintentos,
   UniDataVerifactuColaRepositorio,
+  UniDataVerifactuEsquema,
   UniDataVerifactuColaProcesador, UniDataVerifactuColaResultados,
   UniDataVerifactuColaOperaciones;
 
@@ -600,6 +605,30 @@ begin
         '2',
         'I',
         False);
+    end,
+    EArgumentNilException);
+end;
+
+procedure TPruebasVerifactuColaRepositorio.
+  Esquema_ConsultaLasCuatroColumnasDeCola;
+var
+  sSql: string;
+begin
+  sSql := TRepositorioEsquemaVerifactuUniDAC.SqlComprobarCola;
+  Assert.IsTrue(Pos('INFORMATION_SCHEMA.COLUMNS', sSql) > 0);
+  Assert.IsTrue(Pos('ID_VFCOLA', sSql) > 0);
+  Assert.IsTrue(Pos('SERIE_FAC_VFCOLA', sSql) > 0);
+  Assert.IsTrue(Pos('NUMERO_FAC_VFCOLA', sSql) > 0);
+  Assert.IsTrue(Pos('ESTADO_VFCOLA', sSql) > 0);
+end;
+
+procedure TPruebasVerifactuColaRepositorio.
+  Esquema_ConexionNulaFallaDeFormaRuidosa;
+begin
+  Assert.WillRaise(
+    procedure
+    begin
+      CrearRepositorioEsquemaVerifactuUniDAC(nil);
     end,
     EArgumentNilException);
 end;

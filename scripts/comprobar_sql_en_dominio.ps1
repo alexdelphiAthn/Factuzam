@@ -348,6 +348,7 @@ $rutasSinSql = @(
   'src\Lib\inLibDevolucionesCompraStock.pas',
   'src\Caja\Lib\inLibArqueoPersistencia.pas',
   'src\Lib\inLibAtributosPaleta.pas',
+  'src\Lib\inLibArticulosAtributosBasicos.pas',
   'src\Lib\inLibDocumentosTrabajo.pas',
   'src\Lib\inLibGenerarTicket.pas',
   'src\Lib\inLibColumnasSkuModoSku.pas'

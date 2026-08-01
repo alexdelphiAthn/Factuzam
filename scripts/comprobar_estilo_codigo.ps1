@@ -2,22 +2,27 @@ param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [ValidateRange(1, [int]::MaxValue)]
   [int]$MaximoColumnas = 80,
-  [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoExit = 1346,
-  [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoContinue = 106,
-  [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoLineasAnchas = 572,
-  [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoLineasConTabulador = 0,
+  [ValidateRange(-1, [int]::MaxValue)]
+  [int]$MaximoExit = -1,
+  [ValidateRange(-1, [int]::MaxValue)]
+  [int]$MaximoContinue = -1,
+  [ValidateRange(-1, [int]::MaxValue)]
+  [int]$MaximoWith = -1,
+  [ValidateRange(-1, [int]::MaxValue)]
+  [int]$MaximoLineasAnchas = -1,
+  [ValidateRange(-1, [int]::MaxValue)]
+  [int]$MaximoLineasConTabulador = -1,
+  [string]$RutaLineaBase = (
+    Join-Path $PSScriptRoot 'estilo_linea_base.csv'),
+  [switch]$OmitirLineaBasePorUnidad,
+  [switch]$ActualizarLineaBase,
   [switch]$MostrarTodos
 )
 
-# Trinquete gradual del libro de estilo (secciones 1 y 16): evitar
-# Exit y Continue, 80 columnas maximo y sangria con espacios, nunca
-# tabuladores. Los topes congelan la medida actual del codigo legado
-# y solo pueden bajar; el codigo nuevo entra limpio porque cualquier
-# infraccion nueva supera el tope y falla el build.
+# Trinquete gradual de Clean Code. La linea base se conserva por unidad:
+# una unidad existente no puede empeorar y una nueva debe entrar sin Exit,
+# Continue, with, lineas anchas ni tabuladores. La actualizacion solo reduce
+# deuda ya registrada; nunca admite deuda nueva.
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -84,9 +89,102 @@ function Medir-EstiloUnidad {
   return [pscustomobject]@{
     Exit = [regex]::Matches($limpio, '(?i)\bexit\b').Count
     Continue = [regex]::Matches($limpio, '(?i)\bcontinue\b').Count
+    With = [regex]::Matches($limpio, '(?i)\bwith\b').Count
     Anchas = $lineasAnchas
     Tabuladores = $lineasConTabulador
   }
+}
+
+function Sumar-Columna {
+  param(
+    [object[]]$Lista,
+    [string]$Propiedad
+  )
+  if ($Lista.Count -eq 0) {
+    return 0
+  }
+  return [int](
+    $Lista |
+      Measure-Object $Propiedad -Sum
+  ).Sum
+}
+
+function Leer-LineaBase {
+  param([string]$Ruta)
+  if (-not (Test-Path -LiteralPath $Ruta -PathType Leaf)) {
+    throw "No se encontro la linea base de estilo: $Ruta."
+  }
+  $filas = @(Import-Csv -LiteralPath $Ruta -Delimiter ';')
+  $resultado = [System.Collections.Generic.Dictionary[string, object]]::new(
+    [System.StringComparer]::OrdinalIgnoreCase)
+  foreach ($fila in $filas) {
+    if ($resultado.ContainsKey($fila.Ruta)) {
+      throw "Ruta duplicada en la linea base de estilo: $($fila.Ruta)."
+    }
+    $resultado.Add($fila.Ruta, [pscustomobject]@{
+      Ruta = $fila.Ruta
+      Exit = [int]$fila.Exit
+      Continue = [int]$fila.Continue
+      With = [int]$fila.With
+      Anchas = [int]$fila.Anchas
+      Tabuladores = [int]$fila.Tabuladores
+    })
+  }
+  return $resultado
+}
+
+function Escribir-LineaBaseInicial {
+  param(
+    [string]$Ruta,
+    [object[]]$Mediciones
+  )
+  $directorio = Split-Path -Parent $Ruta
+  if (-not (Test-Path -LiteralPath $directorio)) {
+    $null = New-Item -ItemType Directory -Path $directorio
+  }
+  $Mediciones |
+    Sort-Object Ruta |
+    Select-Object Ruta, Exit, Continue, With, Anchas, Tabuladores |
+    Export-Csv `
+      -LiteralPath $Ruta `
+      -Delimiter ';' `
+      -NoTypeInformation `
+      -Encoding utf8BOM
+}
+
+function Actualizar-LineaBaseExistente {
+  param(
+    [string]$Ruta,
+    [object[]]$Mediciones,
+    [System.Collections.Generic.Dictionary[string, object]]$LineaBase
+  )
+  $porRuta = [System.Collections.Generic.Dictionary[string, object]]::new(
+    [System.StringComparer]::OrdinalIgnoreCase)
+  foreach ($medicion in $Mediciones) {
+    $porRuta.Add($medicion.Ruta, $medicion)
+  }
+  $actualizada = [System.Collections.Generic.List[object]]::new()
+  foreach ($fila in $LineaBase.Values) {
+    if ($porRuta.ContainsKey($fila.Ruta)) {
+      $medicion = $porRuta[$fila.Ruta]
+      $reducida = [pscustomobject]@{
+        Ruta = $fila.Ruta
+        Exit = [Math]::Min($fila.Exit, $medicion.Exit)
+        Continue = [Math]::Min($fila.Continue, $medicion.Continue)
+        With = [Math]::Min($fila.With, $medicion.With)
+        Anchas = [Math]::Min($fila.Anchas, $medicion.Anchas)
+        Tabuladores = [Math]::Min(
+          $fila.Tabuladores,
+          $medicion.Tabuladores)
+      }
+      $total = $reducida.Exit + $reducida.Continue +
+        $reducida.With + $reducida.Anchas + $reducida.Tabuladores
+      if ($total -gt 0) {
+        $actualizada.Add($reducida)
+      }
+    }
+  }
+  Escribir-LineaBaseInicial -Ruta $Ruta -Mediciones $actualizada
 }
 
 $rutaSrc = Join-Path $Raiz 'src'
@@ -104,41 +202,115 @@ foreach ($archivo in $archivos) {
     -Contenido $contenido `
     -Columnas $MaximoColumnas
   $totalUnidad = $medicion.Exit + $medicion.Continue +
-    $medicion.Anchas + $medicion.Tabuladores
+    $medicion.With + $medicion.Anchas + $medicion.Tabuladores
   if ($totalUnidad -gt 0) {
     $mediciones.Add([pscustomobject]@{
       Unidad = $archivo.BaseName
       Exit = $medicion.Exit
       Continue = $medicion.Continue
+      With = $medicion.With
       Anchas = $medicion.Anchas
       Tabuladores = $medicion.Tabuladores
       Total = $totalUnidad
       Ruta = [System.IO.Path]::GetRelativePath(
         $Raiz,
-        $archivo.FullName)
+        $archivo.FullName).Replace('/', '\')
     })
   }
 }
 
-function Sumar-Columna {
-  param(
-    [System.Collections.Generic.List[object]]$Lista,
-    [string]$Propiedad
-  )
-  if ($Lista.Count -eq 0) {
-    return 0
+$lineaBase = $null
+if (-not $OmitirLineaBasePorUnidad) {
+  if (-not (Test-Path -LiteralPath $RutaLineaBase -PathType Leaf)) {
+    if (-not $ActualizarLineaBase) {
+      throw "No se encontro la linea base de estilo: $RutaLineaBase."
+    }
+    Escribir-LineaBaseInicial `
+      -Ruta $RutaLineaBase `
+      -Mediciones $mediciones.ToArray()
   }
-  return [int](
-    $Lista |
-      Measure-Object $Propiedad -Sum
-  ).Sum
+  $lineaBase = Leer-LineaBase -Ruta $RutaLineaBase
 }
 
-$totalExit = Sumar-Columna -Lista $mediciones -Propiedad 'Exit'
-$totalContinue = Sumar-Columna -Lista $mediciones -Propiedad 'Continue'
-$totalAnchas = Sumar-Columna -Lista $mediciones -Propiedad 'Anchas'
+$errores = [System.Collections.Generic.List[string]]::new()
+if (-not $OmitirLineaBasePorUnidad) {
+  foreach ($medicion in $mediciones) {
+    if (-not $lineaBase.ContainsKey($medicion.Ruta)) {
+      $errores.Add(
+        "Unidad con deuda nueva y sin linea base: $($medicion.Ruta).")
+      continue
+    }
+    $tope = $lineaBase[$medicion.Ruta]
+    foreach ($propiedad in @(
+      'Exit',
+      'Continue',
+      'With',
+      'Anchas',
+      'Tabuladores')) {
+      if ($medicion.$propiedad -gt $tope.$propiedad) {
+        $errores.Add(
+          "$($medicion.Ruta): $propiedad = $($medicion.$propiedad); " +
+          "linea base: $($tope.$propiedad).")
+      }
+    }
+  }
+}
+
+if ($ActualizarLineaBase -and ($errores.Count -eq 0)) {
+  Actualizar-LineaBaseExistente `
+    -Ruta $RutaLineaBase `
+    -Mediciones $mediciones.ToArray() `
+    -LineaBase $lineaBase
+  $lineaBase = Leer-LineaBase -Ruta $RutaLineaBase
+  Write-Output "Linea base de estilo actualizada: $RutaLineaBase."
+}
+
+if (-not $OmitirLineaBasePorUnidad) {
+  if ($MaximoExit -lt 0) {
+    $MaximoExit = Sumar-Columna `
+      -Lista @($lineaBase.Values) `
+      -Propiedad 'Exit'
+  }
+  if ($MaximoContinue -lt 0) {
+    $MaximoContinue = Sumar-Columna `
+      -Lista @($lineaBase.Values) `
+      -Propiedad 'Continue'
+  }
+  if ($MaximoWith -lt 0) {
+    $MaximoWith = Sumar-Columna `
+      -Lista @($lineaBase.Values) `
+      -Propiedad 'With'
+  }
+  if ($MaximoLineasAnchas -lt 0) {
+    $MaximoLineasAnchas = Sumar-Columna `
+      -Lista @($lineaBase.Values) `
+      -Propiedad 'Anchas'
+  }
+  if ($MaximoLineasConTabulador -lt 0) {
+    $MaximoLineasConTabulador = Sumar-Columna `
+      -Lista @($lineaBase.Values) `
+      -Propiedad 'Tabuladores'
+  }
+}
+elseif (@(
+  $MaximoExit,
+  $MaximoContinue,
+  $MaximoWith,
+  $MaximoLineasAnchas,
+  $MaximoLineasConTabulador) -contains -1) {
+  throw 'Al omitir la linea base deben indicarse todos los maximos.'
+}
+
+$totalExit = Sumar-Columna -Lista $mediciones.ToArray() -Propiedad 'Exit'
+$totalContinue = Sumar-Columna `
+  -Lista $mediciones.ToArray() `
+  -Propiedad 'Continue'
+$totalWith = Sumar-Columna -Lista $mediciones.ToArray() -Propiedad 'With'
+$totalAnchas = Sumar-Columna `
+  -Lista $mediciones.ToArray() `
+  -Propiedad 'Anchas'
 $totalTabuladores = Sumar-Columna `
-  -Lista $mediciones `
+  -Lista $mediciones.ToArray() `
   -Propiedad 'Tabuladores'
 
 $ordenadas = @(
@@ -149,17 +321,17 @@ $limite = 20
 if ($MostrarTodos) {
   $limite = $ordenadas.Count
 }
-Write-Output 'Estilo por unidad (Exit, Continue, ancho, tabuladores):'
+Write-Output (
+  'Estilo por unidad (Exit, Continue, with, ancho, tabuladores):')
 Write-Output (
   $ordenadas |
     Select-Object -First $limite |
     Format-Table `
-      Unidad, Exit, Continue, Anchas, Tabuladores, Ruta `
+      Unidad, Exit, Continue, With, Anchas, Tabuladores, Ruta `
       -AutoSize |
     Out-String -Width 200
 ).TrimEnd()
 
-$errores = [System.Collections.Generic.List[string]]::new()
 if ($totalExit -gt $MaximoExit) {
   $errores.Add(
     "Llamadas a Exit: $totalExit; maximo permitido: $MaximoExit.")
@@ -168,6 +340,10 @@ if ($totalContinue -gt $MaximoContinue) {
   $errores.Add(
     "Llamadas a Continue: $totalContinue; maximo permitido: " +
     "$MaximoContinue.")
+}
+if ($totalWith -gt $MaximoWith) {
+  $errores.Add(
+    "Sentencias with: $totalWith; maximo permitido: $MaximoWith.")
 }
 if ($totalAnchas -gt $MaximoLineasAnchas) {
   $errores.Add(
@@ -185,5 +361,5 @@ if ($errores.Count -gt 0) {
 }
 Write-Output (
   "Estilo de codigo: OK. Exit: $totalExit. Continue: " +
-  "$totalContinue. Lineas anchas: $totalAnchas. Lineas con " +
-  "tabulador: $totalTabuladores.")
+  "$totalContinue. With: $totalWith. Lineas anchas: $totalAnchas. " +
+  "Lineas con tabulador: $totalTabuladores.")

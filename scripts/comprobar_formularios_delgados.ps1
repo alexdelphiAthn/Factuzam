@@ -50,6 +50,38 @@ $objetivos = @(
   @{
     Ruta = 'src\Forms\inMtoArticulos.pas'
     Metodo = 'ConstruirSqlArticulos'
+  },
+  @{
+    Ruta = 'src\Forms\inMtoArticulos.pas'
+    Metodo = 'AsegurarBasicoFilaActual'
+  },
+  @{
+    Ruta = 'src\Forms\inMtoArticulos.pas'
+    Metodo = 'tvSkuAtributosBasicosNOMBRE_ATBPropertiesEditValueChanged'
+  },
+  @{
+    Ruta = 'src\Forms\inMtoArticulos.pas'
+    Metodo = 'tvSkuAtributosBasicosVALOR_NUM_ATBPropertiesEditValueChanged'
+  },
+  @{
+    Ruta = 'src\Forms\inMtoArticulos.pas'
+    Metodo = 'tvSkuAtributosBasicosUNIDAD_ATBPropertiesEditValueChanged'
+  },
+  @{
+    Ruta = 'src\Forms\inMtoArticulos.pas'
+    Metodo = 'tvSkuAtributosBasicosDESCRIPCION_AABPropertiesEditValueChanged'
+  },
+  @{
+    Ruta = 'src\Forms\inMtoArticulos.pas'
+    Metodo = 'tvSkuAtributosBasicosID_ATB_AVPropertiesValidate'
+  },
+  @{
+    Ruta = 'src\Forms\inMtoArticulos.pas'
+    Metodo = 'tvSkuAtributosBasicosID_ATB_AVPropertiesEditValueChanged'
+  },
+  @{
+    Ruta = 'src\Forms\inMtoArticulos.pas'
+    Metodo = 'tvSkuAtributosBasicosDblClick'
   }
 )
 

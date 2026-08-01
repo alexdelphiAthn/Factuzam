@@ -31,6 +31,8 @@ type
     function GestorVentanas: TEmbeddedFormManager;
     // Registro de pantallas cargado de fza_winforms.
     function RegistroPantallas: TfzaWinF;
+    // Crea la pantalla con el contexto explícito que decida la composición.
+    function CrearPantalla(AClase: TFormClass): TForm;
     // Restaurar la ventana principal y minimizar el menú de caja.
     procedure PrepararAperturaPantalla;
   end;
@@ -254,7 +256,7 @@ begin
       ShowMessageFmt(SClassRttiNotFnd, [ofzaF.UnitForm]);
       Exit;
     end;
-    TargetForm := FormClass.Create(AOwner);
+    TargetForm := oAnfitrion.CrearPantalla(FormClass);
     try
       oMto := TargetForm as IMantenimientoEmbebido;
     except

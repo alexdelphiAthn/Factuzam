@@ -72,6 +72,16 @@ type
     property Disponible: Boolean read GetDisponible;
   end;
 
+  TContextoAutorizacionPantalla = record
+  private
+    FPermisos: IPermisosAplicacion;
+  public
+    class function Crear(
+      const APermisos: IPermisosAplicacion
+    ): TContextoAutorizacionPantalla; static;
+    property Permisos: IPermisosAplicacion read FPermisos;
+  end;
+
   IProveedorPermisosAplicacion = interface
     ['{5405FD8F-CE72-47B0-B512-E520B0B8B7AB}']
     function GetPermisos: IPermisosAplicacion;
@@ -92,6 +102,12 @@ implementation
 
 uses
   System.SysUtils;
+
+class function TContextoAutorizacionPantalla.Crear(
+  const APermisos: IPermisosAplicacion): TContextoAutorizacionPantalla;
+begin
+  Result.FPermisos := APermisos;
+end;
 
 class function TIdentidadPermisos.Crear(
   const AUsuario, AGrupo: string;

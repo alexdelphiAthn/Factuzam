@@ -235,6 +235,8 @@ uses
   inMtoModalImpEfectosPago in 'src\Modals\inMtoModalImpEfectosPago.pas' {frmPrintEfectosPago},
   inMtoSplash in 'src\Core\inMtoSplash.pas' {frmSplash},
   UniDataConn in 'src\DataModules\UniDataConn.pas' {dmConn: TDataModule},
+  UniDataComposicionAplicacion in
+    'src\DataModules\UniDataComposicionAplicacion.pas',
   UniDataGen in 'src\DataModules\UniDataGen.pas' {dmBase: TDataModule},
   UniDataArticulos in 'src\DataModules\UniDataArticulos.pas' {dmArticulos: TdmArticulos},
   UniDataClientes in 'src\DataModules\UniDataClientes.pas' {dmClientes: TdmClientes},
@@ -409,6 +411,8 @@ uses
   inLibArticulosVariaciones in 'src\Lib\inLibArticulosVariaciones.pas',
   inLibArticulosAtributosBasicos in
     'src\Lib\inLibArticulosAtributosBasicos.pas',
+  inLibArticulosAtributosBasicosIntf in
+    'src\Lib\inLibArticulosAtributosBasicosIntf.pas',
   inLibArticulosVisibilidad in
     'src\Lib\inLibArticulosVisibilidad.pas',
   inLibStockConsultaInfo in 'src\Lib\inLibStockConsultaInfo.pas',
@@ -472,6 +476,10 @@ uses
   inLibVerifactuCola in 'src\verifactu\inLibVerifactuCola.pas',
   UniDataVerifactuColaRepositorio in
     'src\verifactu\UniDataVerifactuColaRepositorio.pas',
+  inLibVerifactuEsquemaIntf in
+    'src\verifactu\inLibVerifactuEsquemaIntf.pas',
+  UniDataVerifactuEsquema in
+    'src\verifactu\UniDataVerifactuEsquema.pas',
   UniDataVerifactuColaProcesador in
     'src\verifactu\UniDataVerifactuColaProcesador.pas',
   UniDataVerifactuColaResultados in
@@ -621,6 +629,10 @@ uses
   inLibCopiasSeguridadReglas in
     'src\Lib\inLibCopiasSeguridadReglas.pas',
   inLibCopiasSeguridad in 'src\Lib\inLibCopiasSeguridad.pas',
+  inLibOperacionesAplicacionIntf in
+    'src\Lib\inLibOperacionesAplicacionIntf.pas',
+  inLibCoordinadorOperacionesAplicacion in
+    'src\Lib\inLibCoordinadorOperacionesAplicacion.pas',
   UniDataComprasSesiones in 'src\DataModules\UniDataComprasSesiones.pas' {dmComprasSesiones: TdmComprasSesiones},
   UniDataComprasSesionesRepositorio in
     'src\DataModules\UniDataComprasSesionesRepositorio.pas',
@@ -691,6 +703,15 @@ uses
     'src\Lib\inLibArticulosResolverIntf.pas',
   UniDataArticulosResolverRepositorio in
     'src\DataModules\UniDataArticulosResolverRepositorio.pas',
+  inLibAplicacionArticuloCompraIntf in
+    'src\Lib\inLibAplicacionArticuloCompraIntf.pas',
+  inLibAplicacionArticuloCompra in
+    'src\Lib\inLibAplicacionArticuloCompra.pas',
+  UniDataAplicacionArticuloCompra in
+    'src\DataModules\UniDataAplicacionArticuloCompra.pas',
+  UniDataDocsProveedorSql in
+    'src\DataModules\UniDataDocsProveedorSql.pas',
+  UniDataDocsProveedor in 'src\DataModules\UniDataDocsProveedor.pas',
   inLibArticulosResolver in 'src\Lib\inLibArticulosResolver.pas',
   inMtoModalAddPreciosTar in 'src\Modals\inMtoModalAddPreciosTar.pas' {frmMtoModalAddPreciosTar},
   inMtoModalCalcularMargen in 'src\Modals\inMtoModalCalcularMargen.pas' {frmModalCalcularMargen},
@@ -698,6 +719,8 @@ uses
     'src\Lib\inLibArticulosAtributosIntf.pas',
   UniDataArticulosAtributosRepositorio in
     'src\DataModules\UniDataArticulosAtributosRepositorio.pas',
+  UniDataArticulosAtributosBasicosRepositorio in
+    'src\DataModules\UniDataArticulosAtributosBasicosRepositorio.pas',
   inLibAtributosPaleta in 'src\Lib\inLibAtributosPaleta.pas',
   inLibAtributosPaletaIntf in 'src\Lib\inLibAtributosPaletaIntf.pas',
   UniDataAtributosPaletaRepositorio in

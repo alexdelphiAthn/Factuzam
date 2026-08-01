@@ -40,14 +40,10 @@ uses
   Vcl.PlatformDefaultStyleActnCtrls, Vcl.ActnMan, cxButtonEdit, cxSplitter,
   cxDBExtLookupComboBox, cxListView, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   cxDBLabel, dxShellDialogs, inLibArticulosVariaciones, inMtoModalAceptCancel,
-  cxCustomListBox, cxCheckListBox, System.UITypes, System.Types;
+  cxCustomListBox, cxCheckListBox, System.UITypes, System.Types,
+  inLibArticulosAtributosBasicosIntf;
 
 type
-  // Ambito que elige el usuario cuando hay que crear un atributo basico
-  // nuevo desde el helper del SKU. Global = compartido entre articulos;
-  // ad-hoc = exclusivo de este articulo (CODIGO_ATB con prefijo AD_).
-  TAmbitoBasico = (abCancelar, abGlobal, abAdHoc);
-
   TfrmMtoArticulos = class(TfrmMtoGen)
     pnlTopFicha: TPanel;
     pnlButtonFicha: TPanel;
@@ -529,11 +525,13 @@ type
     // NOMBRE_ATRIBUTO (uppercase) -> ID_ATRIBUTO del articulo actual. Lo usa
     // tvStock para colorear el nombre del atributo segun la paleta basica.
     FAtributosStock : TDictionary<string, string>;
+    FGestorAtributosBasicos: IGestorAtributosBasicosSku;
     function AsegurarBasicoFilaActual: Integer;
-    function AsegurarFilaSA(const ACodSKU, AIdVaAv,
-                            AValorAv: string): Integer;
+    function ObtenerContextoAtributoActual(
+      out AContexto: TContextoAtributoBasicoSku): Boolean;
     function PreguntarAmbitoBasico(const ACodArt,
-                                   AValorAv: string): TAmbitoBasico;
+      AValorAv: string;
+      out AAmbito: TAmbitoAtributoBasico): Boolean;
     // Resuelve el color (atributo 'CO') del SKU seleccionado leyendo el
     // detalle de atributos del SKU en foco. Devuelve False si no hay color.
     function ObtenerColorSkuActual(out aCodArt, aColor: string): Boolean;
@@ -588,6 +586,7 @@ uses
   inLibArticulosAltaTarifas,
   inLibArticulosAtributosBasicos,
   inLibArticulosVisibilidad,
+  UniDataArticulosAtributosBasicosRepositorio,
   UniDataArticulosVariaciones,
   inLibArticulosFiltro,
   inLibAtributosPaleta,
@@ -1550,6 +1549,8 @@ begin
   if FAtributosStock = nil then
     FAtributosStock := TDictionary<string, string>.Create;
   dmmArticulos := tdmDataModule as TdmArticulos;
+  FGestorAtributosBasicos := TGestorAtributosBasicosSku.Create(
+    TRepositorioAtributosBasicosSku.Create(ConexionPrincipal));
   // La vista de stock se empuja al DM (ya no la busca con GetOwnerForm).
   dmmArticulos.AsignarVistaStock(tvStock);
   cbbFamilia.Properties.ListSource := dmmArticulos.dsFamiliaArticulos;
@@ -2366,6 +2367,7 @@ end;
 
 procedure TfrmMtoArticulos.FormDestroy(Sender: TObject);
 begin
+  FGestorAtributosBasicos := nil;
   inherited;
   if Assigned(FGestorProp) then
     FreeAndNil(FGestorProp);
@@ -2393,7 +2395,8 @@ begin
 end;
 
 function TfrmMtoArticulos.PreguntarAmbitoBasico(
-  const ACodArt, AValorAv: string): TAmbitoBasico;
+  const ACodArt, AValorAv: string;
+  out AAmbito: TAmbitoAtributoBasico): Boolean;
 // Cuando el helper del SKU tiene que CREAR un atributo basico nuevo
 // (porque la fila aun no tiene ninguno) preguntamos al usuario que
 // tipo quiere: global (compartido entre articulos) o ad-hoc (exclusivo
@@ -2403,406 +2406,232 @@ function TfrmMtoArticulos.PreguntarAmbitoBasico(
 // MB_YESNOCANCEL nos da 3 botones de serie:
 //   Si       -> Global (Recommended por defecto)
 //   No       -> Ad-hoc (compatibilidad con comportamiento previo)
-//   Cancelar -> abCancelar
+//   Cancelar -> Result = False
 var
   CodGlobal, CodAdHoc, Texto: string;
 begin
+  Result := False;
+  AAmbito := aabGlobal;
   CodGlobal := StringReplace(Trim(AValorAv), ' ', '_', [rfReplaceAll]);
-  if CodGlobal = '' then CodGlobal := STextoAtributoBasicoSinValor;
+  if CodGlobal = '' then
+    CodGlobal := STextoAtributoBasicoSinValor;
   CodAdHoc  := Format('AD_%s_%s', [ACodArt, CodGlobal]);
-
   Texto := Format(SPreguntaCrearAtributoBasicoSku,
     [CodGlobal, CodAdHoc]);
-
   case Application.MessageBox(
          PChar(Texto),
          PChar(STituloCrearAtributoBasico),
          MB_YESNOCANCEL + MB_ICONQUESTION + MB_DEFBUTTON1) of
-    ID_YES : Result := abGlobal;
-    ID_NO  : Result := abAdHoc;
-  else
-    Result := abCancelar;
+    ID_YES:
+      begin
+        AAmbito := aabGlobal;
+        Result := True;
+      end;
+    ID_NO:
+      begin
+        AAmbito := aabAdHoc;
+        Result := True;
+      end;
   end;
 end;
 
-function TfrmMtoArticulos.AsegurarFilaSA(
-  const ACodSKU, AIdVaAv, AValorAv: string): Integer;
-// Materializa una fila virtual del UNION de vi_atributos_sku_basico:
-//   1) busca o crea el AV (par ID_VA_AV + AV de fza_atributos_valores)
-//   2) inserta el bridge fza_atributos_sku (SKU <-> AV) si no existe
-//   3) devuelve el ID_AV resultante para que el llamante pueda colgar
-//      ya el atributo basico del articulo
-// Sin esto, los SKUs huerfanos (sin filas en SA) salen como meras filas
-// informativas en el grid y editar el basico no tiene donde aterrizar.
+function TfrmMtoArticulos.ObtenerContextoAtributoActual(
+  out AContexto: TContextoAtributoBasicoSku): Boolean;
 var
-  qry: TUniQuery;
+  oDatos: TDataSet;
 begin
-  Result := 0;
-  if (ACodSKU = '') or (AIdVaAv = '') then Exit;
-
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    // 1) Buscar AV existente para esta variacion + valor.
-    qry.SQL.Text :=
-      'SELECT ID_AV FROM fza_atributos_valores '   +
-      ' WHERE ID_VA_AV = :IDVA AND AV = :VAL '     +
-      ' LIMIT 1';
-    qry.ParamByName('IDVA').AsString := AIdVaAv;
-    qry.ParamByName('VAL').AsString  := AValorAv;
-    qry.Open;
-    if not qry.IsEmpty then
-      Result := qry.FieldByName('ID_AV').AsInteger;
-    qry.Close;
-
-    // 2) Si no existia, crearlo.
-    if Result = 0 then
-    begin
-      qry.SQL.Text :=
-        'INSERT INTO fza_atributos_valores '                             +
-        '   (ID_VA_AV, AV, ORDEN_AV, '                                   +
-        '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) '               +
-        'VALUES (:IDVA, :VAL, 0, NOW(), :USR, :USR)';
-      qry.ParamByName('IDVA').AsString := AIdVaAv;
-      qry.ParamByName('VAL').AsString  := AValorAv;
-      qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
-      qry.Execute;
-
-      qry.SQL.Text := 'SELECT LAST_INSERT_ID() AS ID';
-      qry.Open;
-      Result := qry.FieldByName('ID').AsInteger;
-      qry.Close;
-    end;
-
-    if Result = 0 then Exit;
-
-    // 3) Enlazar SKU <-> AV en la tabla puente (idempotente).
-    qry.SQL.Text :=
-      'INSERT IGNORE INTO fza_atributos_sku '                            +
-      '   (CODIGO_UNIDAD_SKU_SA, ID_AV_SA, '                             +
-      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) '                 +
-      'VALUES (:SKU, :AV, NOW(), :USR, :USR)';
-    qry.ParamByName('SKU').AsString  := ACodSKU;
-    qry.ParamByName('AV').AsInteger  := Result;
-    qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
-    qry.Execute;
-  finally
-    FreeAndNil(qry);
+  AContexto := Default(TContextoAtributoBasicoSku);
+  Result := Assigned(FGestorAtributosBasicos) and
+            Assigned(dmmArticulos) and
+            Assigned(dmmArticulos.unqryDetallesAtributos) and
+            dmmArticulos.unqryDetallesAtributos.Active and
+            (not dmmArticulos.unqryDetallesAtributos.IsEmpty);
+  if Result then
+  begin
+    oDatos := dmmArticulos.unqryDetallesAtributos;
+    AContexto.CodigoArticulo := oDatos.FieldByName(
+      'CODIGO_ART_SKU').AsString;
+    AContexto.CodigoSku := oDatos.FieldByName(
+      'CODIGO_UNIDAD_SKU').AsString;
+    AContexto.IdVariacion := oDatos.FieldByName(
+      'ID_VA_AV').AsString;
+    AContexto.ValorAtributo := oDatos.FieldByName(
+      'VALOR_AV').AsString;
+    if not oDatos.FieldByName('ID_AV').IsNull then
+      AContexto.IdValor := oDatos.FieldByName('ID_AV').AsInteger;
+    AContexto.Usuario := IdentidadSesion.Usuario;
+    Result := (AContexto.CodigoArticulo <> '') and
+              (AContexto.CodigoSku <> '') and
+              (AContexto.IdVariacion <> '');
   end;
 end;
 
 function TfrmMtoArticulos.AsegurarBasicoFilaActual: Integer;
-// Devuelve el ID_ATB del básico aplicable a la fila activa del detalle
-// de SKUs. Si la fila no tiene básico (override blocked o nada heredado)
-// crea uno ad-hoc en fza_atributos_basicos con el VALOR_AV como nombre,
-// y persiste el override per-artículo apuntando a él. Así, cuando el
-// usuario edita Nombre/Valor/Unidad sin haber elegido básico, tenemos
-// un registro donde grabarlo.
-//
-// Devuelve 0 si la fila no es válida (sin SKU activo, etc.).
 var
-  ds      : TDataSet;
-  qry     : TUniQuery;
-  CodArt  : string;
-  IdAv    : Integer;
-  IdVaAv  : string;
-  ValorAv : string;
-  Codigo  : string;
+  oContexto: TContextoAtributoBasicoSku;
+  oDatos: TDataSet;
+  eAmbito: TAmbitoAtributoBasico;
+  bContinuar: Boolean;
 begin
   Result := 0;
-  if (not Assigned(dmmArticulos)) or
-     (not Assigned(dmmArticulos.unqryDetallesAtributos)) or
-     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
-
-  ds := dmmArticulos.unqryDetallesAtributos;
-  if ds.IsEmpty then Exit;
-
-  if not ds.FieldByName('ID_ATB_AV').IsNull then
+  if ObtenerContextoAtributoActual(oContexto) then
   begin
-    Result := ds.FieldByName('ID_ATB_AV').AsInteger;
-    Exit;
-  end;
-
-  CodArt  := ds.FieldByName('CODIGO_ART_SKU').AsString;
-  IdVaAv  := ds.FieldByName('ID_VA_AV').AsString;
-  ValorAv := ds.FieldByName('VALOR_AV').AsString;
-  // Fila virtual del UNION de vi_atributos_sku_basico: el SKU no tenia
-  // todavia su atributo enlazado en fza_atributos_sku. Materializamos
-  // (AV + bridge SA) para tener un ID_AV real al que colgar el basico.
-  if ds.FieldByName('ID_AV').IsNull then
-    IdAv := AsegurarFilaSA(ds.FieldByName('CODIGO_UNIDAD_SKU').AsString,
-                           IdVaAv, ValorAv)
-  else
-    IdAv := ds.FieldByName('ID_AV').AsInteger;
-  if (CodArt = '') or (IdAv = 0) or (IdVaAv = '') then Exit;
-
-  // CODIGO_ATB unico en su variacion (UQ ID_VA_ATB+CODIGO_ATB).
-  // Si el valor esta vacio caemos al ID interno como fallback para
-  // evitar colisiones. Si hay valor, preguntamos al usuario si quiere
-  // un basico GLOBAL (compartido, CODIGO_ATB = valor) o AD-HOC (con
-  // prefijo AD_<articulo>_, exclusivo del articulo). De esta forma
-  // dejamos de imponer el prefijo AD_ sin preguntar.
-  if Trim(ValorAv) = '' then
-    Codigo := Format('AD_%s_%d', [CodArt, IdAv])
-  else
-  begin
-    case PreguntarAmbitoBasico(CodArt, ValorAv) of
-      abCancelar: Exit;
-      abGlobal  : Codigo := StringReplace(Trim(ValorAv), ' ', '_',
-                                          [rfReplaceAll]);
-      abAdHoc   : Codigo := Format('AD_%s_%s',
-                                   [CodArt,
-                                    StringReplace(Trim(ValorAv), ' ', '_',
-                                                  [rfReplaceAll])]);
+    oDatos := dmmArticulos.unqryDetallesAtributos;
+    if not oDatos.FieldByName('ID_ATB_AV').IsNull then
+      Result := oDatos.FieldByName('ID_ATB_AV').AsInteger
+    else
+    begin
+      eAmbito := aabAdHoc;
+      bContinuar := Trim(oContexto.ValorAtributo) = '';
+      if not bContinuar then
+        bContinuar := PreguntarAmbitoBasico(
+          oContexto.CodigoArticulo,
+          oContexto.ValorAtributo,
+          eAmbito);
+      if bContinuar then
+        Result := FGestorAtributosBasicos.AsegurarBasico(
+          oContexto,
+          eAmbito);
     end;
-  end;
-  // CODIGO_ATB es varchar(100): truncamos por si el articulo + valor
-  // se nos van de largo.
-  if Length(Codigo) > 100 then
-    Codigo := Copy(Codigo, 1, 100);
-
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    // 1) Insertar (o reutilizar) básico ad-hoc.
-    qry.SQL.Text :=
-      'INSERT INTO fza_atributos_basicos '              +
-      '   (ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB, '         +
-      '    ESACTIVO_ATB, '                              +
-      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) '+
-      'VALUES (:IDVA, :COD, :NOM, ''S'', '              +
-      '        NOW(), :USR, :USR) '                     +
-      'ON DUPLICATE KEY UPDATE '                        +
-      '   USUARIO_MODIF = VALUES(USUARIO_MODIF)';
-    qry.ParamByName('IDVA').AsString := IdVaAv;
-    qry.ParamByName('COD').AsString  := Codigo;
-    qry.ParamByName('NOM').AsString  := ValorAv;
-    qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
-    qry.Execute;
-
-    // 2) Leer el ID resultante (sea recién creado o ya existente).
-    qry.SQL.Text :=
-      'SELECT ID_ATB FROM fza_atributos_basicos '       +
-      ' WHERE ID_VA_ATB  = :IDVA '                      +
-      '   AND CODIGO_ATB = :COD';
-    qry.ParamByName('IDVA').AsString := IdVaAv;
-    qry.ParamByName('COD').AsString  := Codigo;
-    qry.Open;
-    if not qry.IsEmpty then
-      Result := qry.FieldByName('ID_ATB').AsInteger;
-    qry.Close;
-    if Result = 0 then Exit;
-
-    // 3) Override per-artículo apuntando al nuevo básico.
-    qry.SQL.Text :=
-      'INSERT INTO fza_articulos_atributos_basicos '   +
-      '   (CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, '    +
-      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) '+
-      'VALUES (:ART, :AV, :ATB, NOW(), :USR, :USR) '   +
-      'ON DUPLICATE KEY UPDATE '                       +
-      '   ID_ATB_AAB    = VALUES(ID_ATB_AAB), '        +
-      '   USUARIO_MODIF = VALUES(USUARIO_MODIF)';
-    qry.ParamByName('ART').AsString  := CodArt;
-    qry.ParamByName('AV').AsInteger  := IdAv;
-    qry.ParamByName('ATB').AsInteger := Result;
-    qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
-    qry.Execute;
-  finally
-    FreeAndNil(qry);
   end;
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosNOMBRE_ATBPropertiesEditValueChanged(
   Sender: TObject);
 var
-  qry  : TUniQuery;
   ds   : TDataSet;
   vNew : Variant;
   IdAtb: Integer;
 begin
-  if (not Assigned(dmmArticulos)) or
-     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
-  ds := dmmArticulos.unqryDetallesAtributos;
-  if ds.IsEmpty then Exit;
-  // Si la fila no tiene básico aún (bloqueado o heredado=NULL), creamos
-  // uno ad-hoc para que la edición tenga un destino.
-  IdAtb := AsegurarBasicoFilaActual;
-  if IdAtb = 0 then
+  if Assigned(dmmArticulos) and
+     dmmArticulos.unqryDetallesAtributos.Active then
   begin
-    if ds.State in [dsEdit, dsInsert] then ds.Cancel;
-    Exit;
+    ds := dmmArticulos.unqryDetallesAtributos;
+    if not ds.IsEmpty then
+    begin
+      IdAtb := AsegurarBasicoFilaActual;
+      if IdAtb > 0 then
+      begin
+        vNew := (Sender as TcxCustomEdit).EditingValue;
+        FGestorAtributosBasicos.ActualizarNombre(
+          IdAtb,
+          VarToStr(vNew),
+          IdentidadSesion.Usuario);
+        if ds.State in [dsEdit, dsInsert] then
+          ds.Cancel;
+        ds.Refresh;
+        if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
+          dmmArticulos.unqryAtributosBasicosLookup.Refresh;
+      end
+      else if ds.State in [dsEdit, dsInsert] then
+        ds.Cancel;
+    end;
   end;
-  vNew := (Sender as TcxCustomEdit).EditingValue;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text :=
-      'UPDATE fza_atributos_basicos '   +
-      '   SET NOMBRE_ATB    = :VAL, '   +
-      '       USUARIO_MODIF = :USR '    +
-      ' WHERE ID_ATB = :ID';
-    qry.ParamByName('VAL').AsString  := VarToStr(vNew);
-    qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
-    qry.ParamByName('ID').AsInteger  := IdAtb;
-    qry.Execute;
-  finally
-    FreeAndNil(qry);
-  end;
-  if ds.State in [dsEdit, dsInsert] then ds.Cancel;
-  ds.Refresh;
-  if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
-    dmmArticulos.unqryAtributosBasicosLookup.Refresh;
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosVALOR_NUM_ATBPropertiesEditValueChanged(
   Sender: TObject);
 var
-  qry  : TUniQuery;
   ds   : TDataSet;
   vNew : Variant;
   IdAtb: Integer;
+  oValor: TRealOpcional;
 begin
-  if (not Assigned(dmmArticulos)) or
-     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
-  ds := dmmArticulos.unqryDetallesAtributos;
-  if ds.IsEmpty then Exit;
-  IdAtb := AsegurarBasicoFilaActual;
-  if IdAtb = 0 then
+  if Assigned(dmmArticulos) and
+     dmmArticulos.unqryDetallesAtributos.Active then
   begin
-    if ds.State in [dsEdit, dsInsert] then ds.Cancel;
-    Exit;
+    ds := dmmArticulos.unqryDetallesAtributos;
+    if not ds.IsEmpty then
+    begin
+      IdAtb := AsegurarBasicoFilaActual;
+      if IdAtb > 0 then
+      begin
+        vNew := (Sender as TcxCustomEdit).EditingValue;
+        if VarIsNull(vNew) or
+           (VarToStr(vNew) = '') then
+          oValor := RealNulo
+        else
+          oValor := RealConValor(Double(vNew));
+        FGestorAtributosBasicos.ActualizarValorNumerico(
+          IdAtb,
+          oValor,
+          IdentidadSesion.Usuario);
+        if ds.State in [dsEdit, dsInsert] then
+          ds.Cancel;
+        ds.Refresh;
+        if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
+          dmmArticulos.unqryAtributosBasicosLookup.Refresh;
+      end
+      else if ds.State in [dsEdit, dsInsert] then
+        ds.Cancel;
+    end;
   end;
-  vNew := (Sender as TcxCustomEdit).EditingValue;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text :=
-      'UPDATE fza_atributos_basicos '   +
-      '   SET VALOR_NUM_ATB = :VAL, '   +
-      '       USUARIO_MODIF = :USR '    +
-      ' WHERE ID_ATB = :ID';
-    if VarIsNull(vNew) or (VarToStr(vNew) = '') then
-      qry.ParamByName('VAL').Clear
-    else
-      qry.ParamByName('VAL').AsFloat := Double(vNew);
-    qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
-    qry.ParamByName('ID').AsInteger  := IdAtb;
-    qry.Execute;
-  finally
-    FreeAndNil(qry);
-  end;
-  if ds.State in [dsEdit, dsInsert] then ds.Cancel;
-  ds.Refresh;
-  if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
-    dmmArticulos.unqryAtributosBasicosLookup.Refresh;
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosUNIDAD_ATBPropertiesEditValueChanged(
   Sender: TObject);
 var
-  qry  : TUniQuery;
   ds   : TDataSet;
   vNew : Variant;
   IdAtb: Integer;
 begin
-  if (not Assigned(dmmArticulos)) or
-     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
-  ds := dmmArticulos.unqryDetallesAtributos;
-  if ds.IsEmpty then Exit;
-  IdAtb := AsegurarBasicoFilaActual;
-  if IdAtb = 0 then
+  if Assigned(dmmArticulos) and
+     dmmArticulos.unqryDetallesAtributos.Active then
   begin
-    if ds.State in [dsEdit, dsInsert] then ds.Cancel;
-    Exit;
+    ds := dmmArticulos.unqryDetallesAtributos;
+    if not ds.IsEmpty then
+    begin
+      IdAtb := AsegurarBasicoFilaActual;
+      if IdAtb > 0 then
+      begin
+        vNew := (Sender as TcxCustomEdit).EditingValue;
+        FGestorAtributosBasicos.ActualizarUnidad(
+          IdAtb,
+          VarToStr(vNew),
+          IdentidadSesion.Usuario);
+        if ds.State in [dsEdit, dsInsert] then
+          ds.Cancel;
+        ds.Refresh;
+        if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
+          dmmArticulos.unqryAtributosBasicosLookup.Refresh;
+      end
+      else if ds.State in [dsEdit, dsInsert] then
+        ds.Cancel;
+    end;
   end;
-  vNew := (Sender as TcxCustomEdit).EditingValue;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text :=
-      'UPDATE fza_atributos_basicos '   +
-      '   SET UNIDAD_ATB    = :VAL, '   +
-      '       USUARIO_MODIF = :USR '    +
-      ' WHERE ID_ATB = :ID';
-    qry.ParamByName('VAL').AsString  := VarToStr(vNew);
-    qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
-    qry.ParamByName('ID').AsInteger  := IdAtb;
-    qry.Execute;
-  finally
-    FreeAndNil(qry);
-  end;
-  if ds.State in [dsEdit, dsInsert] then ds.Cancel;
-  ds.Refresh;
-  if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
-    dmmArticulos.unqryAtributosBasicosLookup.Refresh;
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosDESCRIPCION_AABPropertiesEditValueChanged(
   Sender: TObject);
-// Descripcion del color POR ARTICULO: vive en
-// fza_articulos_atributos_basicos.DESCRIPCION_AAB (PK CODIGO_ART_AAB+ID_AV_AAB),
-// distinta para cada articulo. Si la fila override aun no existe la creamos
-// sembrando ID_ATB_AAB con el basico ya resuelto (ID_ATB_AV de la vista) para
-// NO alterar el color mostrado: una fila con ID_ATB_AAB NULL significa
-// "bloqueo / sin basico". El ON DUPLICATE KEY UPDATE toca solo la descripcion,
-// asi que descripcion y basico se editan de forma independiente.
 var
-  qry   : TUniQuery;
-  ds    : TDataSet;
-  IdAv  : Integer;
-  CodArt: string;
-  vNew  : Variant;
-  fldAtb: TField;
+  oContexto: TContextoAtributoBasicoSku;
+  oDatos: TDataSet;
+  oDescripcion: TCadenaOpcional;
+  oIdBasico: TEnteroOpcional;
+  vNuevo: Variant;
 begin
-  if (not Assigned(dmmArticulos)) or
-     (not Assigned(dmmArticulos.unqryDetallesAtributos)) or
-     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
-  ds := dmmArticulos.unqryDetallesAtributos;
-  if ds.IsEmpty then Exit;
-  CodArt := ds.FieldByName('CODIGO_ART_SKU').AsString;
-  // Fila virtual del UNION: materializamos AV+SA para tener un ID_AV real.
-  if ds.FieldByName('ID_AV').IsNull then
-    IdAv := AsegurarFilaSA(ds.FieldByName('CODIGO_UNIDAD_SKU').AsString,
-                           ds.FieldByName('ID_VA_AV').AsString,
-                           ds.FieldByName('VALOR_AV').AsString)
-  else
-    IdAv := ds.FieldByName('ID_AV').AsInteger;
-  if (CodArt = '') or (IdAv = 0) then Exit;
-  vNew := (Sender as TcxCustomEdit).EditingValue;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text :=
-      'INSERT INTO fza_articulos_atributos_basicos '          +
-      '   (CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, '           +
-      '    DESCRIPCION_AAB, '                                 +
-      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) '      +
-      'VALUES (:ART, :AV, :ATB, :DESC, NOW(), :USR, :USR) '   +
-      'ON DUPLICATE KEY UPDATE '                              +
-      '   DESCRIPCION_AAB = VALUES(DESCRIPCION_AAB), '        +
-      '   USUARIO_MODIF   = VALUES(USUARIO_MODIF)';
-    qry.ParamByName('ART').AsString := CodArt;
-    qry.ParamByName('AV').AsInteger := IdAv;
-    // Semilla del basico al crear la fila: el resuelto actual, para que la
-    // descripcion no cambie el color mostrado.
-    fldAtb := ds.FindField('ID_ATB_AV');
-    if (fldAtb <> nil) and (not fldAtb.IsNull) then
-      qry.ParamByName('ATB').AsInteger := fldAtb.AsInteger
+  if ObtenerContextoAtributoActual(oContexto) then
+  begin
+    oDatos := dmmArticulos.unqryDetallesAtributos;
+    if not oDatos.FieldByName('ID_ATB_AV').IsNull then
+      oIdBasico := EnteroConValor(
+        oDatos.FieldByName('ID_ATB_AV').AsInteger)
     else
-      qry.ParamByName('ATB').Clear;
-    if VarIsNull(vNew) or (VarToStr(vNew) = '') then
-      qry.ParamByName('DESC').Clear
+      oIdBasico := EnteroNulo;
+    vNuevo := (Sender as TcxCustomEdit).EditingValue;
+    if VarIsNull(vNuevo) or
+       (VarToStr(vNuevo) = '') then
+      oDescripcion := CadenaNula
     else
-      qry.ParamByName('DESC').AsString := VarToStr(vNew);
-    qry.ParamByName('USR').AsString := IdentidadSesion.Usuario;
-    qry.Execute;
-  finally
-    FreeAndNil(qry);
+      oDescripcion := CadenaConValor(VarToStr(vNuevo));
+    FGestorAtributosBasicos.GuardarDescripcion(
+      oContexto,
+      oIdBasico,
+      oDescripcion);
+    if oDatos.State in [dsEdit, dsInsert] then
+      oDatos.Cancel;
+    oDatos.Refresh;
   end;
-  // Cancel + Refresh: la rejilla cuelga de una vista de solo lectura; tras
-  // grabar a mano, recargamos para que la descripcion persistida se vea.
-  if ds.State in [dsEdit, dsInsert] then ds.Cancel;
-  ds.Refresh;
 end;
 
 function TfrmMtoArticulos.ObtenerColorSkuActual(out aCodArt,
@@ -2965,67 +2794,41 @@ procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesValidate(
 //   3) Si cancela, marcamos Error para que el combo no asuma el texto
 //      tecleado como un ID huerfano.
 var
-  Texto, IdVaAv, CodArt: string;
-  ds                  : TDataSet;
-  CodigoExistente     : string;
-  Ambito              : TAmbitoBasico;
-  AmbitoCodigo        : TAmbitoCodigoAtributoBasico;
-  CodigoNuevo         : string;
+  sTexto: string;
+  sCodigoExistente: string;
+  sCodigoNuevo: string;
+  eAmbito: TAmbitoAtributoBasico;
+  oContexto: TContextoAtributoBasicoSku;
 begin
   Error := False;
-  Texto := Trim(VarToStr(DisplayValue));
-  if Texto = '' then Exit;
-  if (not Assigned(dmmArticulos)) or
-     (not Assigned(dmmArticulos.unqryDetallesAtributos)) or
-     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
-  ds := dmmArticulos.unqryDetallesAtributos;
-  if ds.IsEmpty then Exit;
-
-  IdVaAv := ds.FieldByName('ID_VA_AV').AsString;
-  CodArt := ds.FieldByName('CODIGO_ART_SKU').AsString;
-  if (IdVaAv = '') or (CodArt = '') then Exit;
-
-  // 1) Buscar match exacto en fza_atributos_basicos para este tipo de
-  //    atributo. Damos prioridad a CODIGO_ATB exacto sobre NOMBRE_ATB.
-  if dmmArticulos.BuscarAtributoBasicoActivo(
-       IdVaAv, Texto, CodigoExistente) then
+  sTexto := Trim(VarToStr(DisplayValue));
+  if (sTexto <> '') and
+     ObtenerContextoAtributoActual(oContexto) then
   begin
-    // Ya existe: devolvemos el CODIGO_ATB para que el combo resuelva
-    // a su ID_ATB via su mecanismo interno de lookup.
-    DisplayValue := CodigoExistente;
-    Exit;
+    if FGestorAtributosBasicos.BuscarCodigoActivo(
+         oContexto.IdVariacion,
+         sTexto,
+         sCodigoExistente) then
+      DisplayValue := sCodigoExistente
+    else if PreguntarAmbitoBasico(
+              oContexto.CodigoArticulo,
+              sTexto,
+              eAmbito) then
+    begin
+      sCodigoNuevo := FGestorAtributosBasicos.CrearAtributoBasico(
+        oContexto,
+        sTexto,
+        eAmbito);
+      if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
+        dmmArticulos.unqryAtributosBasicosLookup.Refresh;
+      DisplayValue := sCodigoNuevo;
+    end
+    else
+    begin
+      Error := True;
+      ErrorText := 'Sin asignar.';
+    end;
   end;
-
-  // 2) No existe — preguntar al usuario que quiere crear.
-  Ambito := PreguntarAmbitoBasico(CodArt, Texto);
-  if Ambito = abCancelar then
-  begin
-    Error     := True;
-    ErrorText := 'Sin asignar.';
-    Exit;
-  end;
-
-  // 3) Crear el básico nuevo con el código que toque según el ámbito.
-  case Ambito of
-    abGlobal:
-      AmbitoCodigo := acabGlobal;
-    abAdHoc:
-      AmbitoCodigo := acabAdHoc;
-  else
-    AmbitoCodigo := acabGlobal;
-  end;
-  CodigoNuevo := ComponerCodigoAtributoBasico(
-    AmbitoCodigo, CodArt, Texto);
-  dmmArticulos.CrearAtributoBasico(
-    IdVaAv, CodigoNuevo, Texto, IdentidadSesion.Usuario);
-
-  // 4) Refrescar lookup para que el combo lo encuentre al resolver.
-  if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
-    dmmArticulos.unqryAtributosBasicosLookup.Refresh;
-
-  // 5) Devolver el CODIGO_ATB nuevo para que el combo lo seleccione.
-  //    Esto disparara OnEditValueChanged y se grabara el override.
-  DisplayValue := CodigoNuevo;
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesEditValueChanged(
@@ -3036,65 +2839,30 @@ procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesEditValueChan
 // La vista resuelve mediante COALESCE(override, conjunto, global) y la
 // elección aquí no contamina ni el conjunto ni el default global.
 //
-// Si el usuario limpia el lookup, BORRAMOS la fila de override (la
-// resolución cae al conjunto del artículo o, en su defecto, al global).
+// Si el usuario limpia el lookup, guardamos un bloqueo explícito con
+// ID_ATB_AAB nulo para impedir que reaparezca un valor heredado.
 var
-  qry   : TUniQuery;
-  ds    : TDataSet;
-  IdAv  : Integer;
-  vNew  : Variant;
-  CodArt: string;
+  oContexto: TContextoAtributoBasicoSku;
+  oDatos: TDataSet;
+  oIdBasico: TEnteroOpcional;
+  vNuevo: Variant;
 begin
-  if (not Assigned(dmmArticulos)) or
-     (not Assigned(dmmArticulos.unqryDetallesAtributos)) or
-     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
-
-  ds   := dmmArticulos.unqryDetallesAtributos;
-  if ds.IsEmpty then Exit;
-  CodArt := ds.FieldByName('CODIGO_ART_SKU').AsString;
-  // Fila virtual: materializamos AV+SA antes de poder asignar override.
-  if ds.FieldByName('ID_AV').IsNull then
-    IdAv := AsegurarFilaSA(ds.FieldByName('CODIGO_UNIDAD_SKU').AsString,
-                           ds.FieldByName('ID_VA_AV').AsString,
-                           ds.FieldByName('VALOR_AV').AsString)
-  else
-    IdAv := ds.FieldByName('ID_AV').AsInteger;
-  if (CodArt = '') or (IdAv = 0) then Exit;
-  vNew   := (Sender as TcxCustomEdit).EditingValue;
-
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    // UPSERT del override per-artículo. Si vNew es NULL/'' guardamos
-    // un BLOQUEO: la fila existe con ID_ATB_AAB = NULL para indicar que
-    // este artículo no quiere básico para este valor (la vista da
-    // preferencia a la existencia de la fila override sobre el conjunto
-    // o el global; sin esto, vaciar la celda volvería a heredar y el
-    // básico reaparecería). Para volver a heredar hay que eliminar la
-    // fila a mano vía SQL u otra acción dedicada.
-    qry.SQL.Text :=
-      'INSERT INTO fza_articulos_atributos_basicos ' +
-      '   (CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, '  +
-      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-      'VALUES (:ART, :AV, :ATB, NOW(), :USR, :USR) ' +
-      'ON DUPLICATE KEY UPDATE '                     +
-      '   ID_ATB_AAB    = VALUES(ID_ATB_AAB), '      +
-      '   USUARIO_MODIF = VALUES(USUARIO_MODIF)';
-    qry.ParamByName('ART').AsString  := CodArt;
-    qry.ParamByName('AV').AsInteger  := IdAv;
-    if VarIsNull(vNew) or (VarToStr(vNew) = '') then
-      qry.ParamByName('ATB').Clear
+  if ObtenerContextoAtributoActual(oContexto) then
+  begin
+    oDatos := dmmArticulos.unqryDetallesAtributos;
+    vNuevo := (Sender as TcxCustomEdit).EditingValue;
+    if VarIsNull(vNuevo) or
+       (VarToStr(vNuevo) = '') then
+      oIdBasico := EnteroNulo
     else
-      qry.ParamByName('ATB').AsInteger := Integer(vNew);
-    qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
-    qry.Execute;
-  finally
-    FreeAndNil(qry);
+      oIdBasico := EnteroConValor(Integer(vNuevo));
+    FGestorAtributosBasicos.GuardarOverride(
+      oContexto,
+      oIdBasico);
+    if oDatos.State in [dsEdit, dsInsert] then
+      oDatos.Cancel;
+    oDatos.Refresh;
   end;
-  // Refrescamos la vista para repintar NOMBRE_ATB, HEX_ATB, VALOR_NUM_ATB,
-  // FUENTE_ATB (pasa a 'A') y ETIQUETA_BASICO.
-  if ds.State in [dsEdit, dsInsert] then ds.Cancel;
-  ds.Refresh;
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosHEX_ATBPropertiesButtonClick(
@@ -3112,61 +2880,56 @@ var
   IdAtb: Integer;
   Dlg: TColorDialog;
   LHex: string;
-  qry: TUniQuery;
 begin
-  if (not Assigned(dmmArticulos)) or
-     (not Assigned(dmmArticulos.unqryDetallesAtributos)) or
-     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
-  ds := dmmArticulos.unqryDetallesAtributos;
-  if ds.IsEmpty then Exit;
-  IdAtb := AsegurarBasicoFilaActual;
-  if IdAtb = 0 then Exit;
-
-  Dlg := TColorDialog.Create(Self);
-  try
-    Dlg.Options := [cdFullOpen, cdAnyColor];
-    LHex := Trim(ds.FieldByName('HEX_ATB').AsString);
-    if (Length(LHex) = 7) and (LHex[1] = '#') then
-    try
-      Dlg.Color := RGB(
-        StrToInt('$' + Copy(LHex, 2, 2)),
-        StrToInt('$' + Copy(LHex, 4, 2)),
-        StrToInt('$' + Copy(LHex, 6, 2)));
-    except
-      Dlg.Color := clWhite;
-    end
-    else
-      Dlg.Color := clWhite;
-
-    if not Dlg.Execute then Exit;
-
-    LHex := Format('#%.2X%.2X%.2X',
-                   [GetRValue(Dlg.Color),
-                    GetGValue(Dlg.Color),
-                    GetBValue(Dlg.Color)]);
-
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := ConexionPrincipal;
-      qry.SQL.Text :=
-        'UPDATE fza_atributos_basicos '   +
-        '   SET HEX_ATB       = :HEX, '   +
-        '       USUARIO_MODIF = :USR '    +
-        ' WHERE ID_ATB = :ID';
-      qry.ParamByName('HEX').AsString  := LHex;
-      qry.ParamByName('USR').AsString  := IdentidadSesion.Usuario;
-      qry.ParamByName('ID').AsInteger  := IdAtb;
-      qry.Execute;
-    finally
-      FreeAndNil(qry);
+  if Assigned(dmmArticulos) and
+     Assigned(dmmArticulos.unqryDetallesAtributos) and
+     dmmArticulos.unqryDetallesAtributos.Active then
+  begin
+    ds := dmmArticulos.unqryDetallesAtributos;
+    if not ds.IsEmpty then
+    begin
+      IdAtb := AsegurarBasicoFilaActual;
+      if IdAtb > 0 then
+      begin
+        Dlg := TColorDialog.Create(Self);
+        try
+          Dlg.Options := [cdFullOpen, cdAnyColor];
+          LHex := Trim(ds.FieldByName('HEX_ATB').AsString);
+          if (Length(LHex) = 7) and
+             (LHex[1] = '#') then
+          try
+            Dlg.Color := RGB(
+              StrToInt('$' + Copy(LHex, 2, 2)),
+              StrToInt('$' + Copy(LHex, 4, 2)),
+              StrToInt('$' + Copy(LHex, 6, 2)));
+          except
+            Dlg.Color := clWhite;
+          end
+          else
+            Dlg.Color := clWhite;
+          if Dlg.Execute then
+          begin
+            LHex := Format(
+              '#%.2X%.2X%.2X',
+              [GetRValue(Dlg.Color),
+               GetGValue(Dlg.Color),
+               GetBValue(Dlg.Color)]);
+            FGestorAtributosBasicos.ActualizarHex(
+              IdAtb,
+              LHex,
+              IdentidadSesion.Usuario);
+            if ds.State in [dsEdit, dsInsert] then
+              ds.Cancel;
+            ds.Refresh;
+            if Assigned(
+                 dmmArticulos.unqryAtributosBasicosLookup) then
+              dmmArticulos.unqryAtributosBasicosLookup.Refresh;
+          end;
+        finally
+          FreeAndNil(Dlg);
+        end;
+      end;
     end;
-    if ds.State in [dsEdit, dsInsert] then ds.Cancel;
-    ds.Refresh;
-    // El lookup tiene cacheado el HEX viejo: refrescamos también.
-    if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
-      dmmArticulos.unqryAtributosBasicosLookup.Refresh;
-  finally
-    FreeAndNil(Dlg);
   end;
 end;
 

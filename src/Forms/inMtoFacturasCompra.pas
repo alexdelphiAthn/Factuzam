@@ -44,6 +44,7 @@ uses
   inLibGridPivoteCompra,
   inLibColumnasSkuIntf,
   inLibGridPivoteVenta,
+  inLibAplicacionArticuloCompraIntf,
   UniDataFacturasCompra, cxBlobEdit, dxShellDialogs, System.Actions,
   Vcl.ActnList, cxSplitter, inLibDocumento, inLibDocumentoIntf;
 
@@ -196,7 +197,7 @@ type
     FMostrarAtributos: Boolean;
     FColColorPivot   : TcxGridDBColumn;
     FBasicosColor    : TArray<string>;
-    FAplicandoArticulo: Boolean;
+    FAplicacionArticuloCompra: IAplicacionArticuloCompra;
     // Guarda contra reentrada del toggle desde dsTablaGDataChangeHook
     // disparado por el Edit/Post de PersistirPreferenciaPivote (entre
     // el Edit y el set, la cabecera tiene el ESPIVOTE viejo y el hook
@@ -238,6 +239,9 @@ type
     function BuscarSkuFacturaCompra(const ACodigoArt: string): string;
     function ArticuloLineaActivaFacturaCompra: string;
     procedure AplicarArticuloFacturaCompra(const ACodigoArt: string);
+    procedure EnfocarSkuFacturaCompra(AAbrirBusqueda: Boolean);
+    procedure PresentarArticuloFacturaCompra(
+      const AResultado: TResultadoAplicacionArticuloCompra);
     procedure colLineaFaccCODIGO_ARTPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure colLineaFaccCODIGO_ARTPropertiesValidate(Sender: TObject;
@@ -280,6 +284,8 @@ uses
   inLibArticulosResolverIntf,
   inLibArticulosValidadorIntf,
   UniDataArticulosValidadorRepositorio,
+  inLibAplicacionArticuloCompra,
+  UniDataAplicacionArticuloCompra,
   inLibGridCantidad,
   inLibColumnasDocumento, UniDataGen,
   inLibBusquedasCompra,
@@ -406,6 +412,17 @@ begin
   ConfigurarColumnaBotonDocumento(
     FColColorPivot, colLinFaccColorPivotButtonClick);
   inherited;
+  FAplicacionArticuloCompra := CrearAplicacionArticuloCompra(
+    CrearRepositorioLecturasArticuloCompraUniDAC(
+      dmmFacturasCompra.unqryTablaG.Connection,
+      CrearValidadorArticulos(
+        dmmFacturasCompra.unqryTablaG.Connection),
+      CrearResolverArticulos(
+        dmmFacturasCompra.unqryTablaG.Connection)),
+    CrearPuertoLineaArticuloCompraUniDAC(
+      dmmFacturasCompra.unqryTablaG.Connection,
+      dmmFacturasCompra.unqryTablaG,
+      dmmFacturasCompra.unqryFacturasCompraLineas));
   ConfigurarColumnaBusquedaDocumento(
     tvLineasFactura, 'CODIGO_ART_FACCLIN',
     colLineaFaccCODIGO_ARTPropertiesButtonClick,
@@ -477,6 +494,7 @@ end;
 
 procedure TfrmMtoFacturasCompra.FormDestroy(Sender: TObject);
 begin
+  FAplicacionArticuloCompra := nil;
   LiberarModoYGestoresDocumento(
     FModoEntrada, FPivote, FGestorTallas);
   inherited;
@@ -1079,252 +1097,68 @@ end;
 procedure TfrmMtoFacturasCompra.AplicarArticuloFacturaCompra(
   const ACodigoArt: string);
 var
-  ds         : TDataSet;
-  Validador  : IArticulosValidador;
-  Resolver   : IArticulosResolver;
-  Resolucion : TArtResolucionEntrada;
-  Datos      : TArticuloDatos;
-  qry        : TUniQuery;
-  sInput     : string;
-  sPrv       : string;
-  sAlm       : string;
-  sModeloPrv : string;
-  dFecha     : TDateTime;
-  iAcPivot   : Integer;
-  rCantidad  : Double;
-
-  function CampoCabeceraString(const ACampo: string): string;
-  var
-    Campo: TField;
-  begin
-    Result := '';
-    Campo := dmmFacturasCompra.unqryTablaG.FindField(ACampo);
-    if Campo <> nil then
-      Result := Trim(Campo.AsString);
-  end;
-
-  function FechaCabecera: TDateTime;
-  var
-    Campo: TField;
-  begin
-    Result := Date;
-    Campo := dmmFacturasCompra.unqryTablaG.FindField('FECHA_FACC');
-    if (Campo <> nil) and (not Campo.IsNull) then
-      Result := Campo.AsDateTime;
-  end;
-
-  function ResolverConjuntoPivotArticulo(
-    const ACodigoArticulo: string): Integer;
-  begin
-    Result := 0;
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := dmmFacturasCompra.unqryTablaG.Connection;
-      qry.SQL.Text :=
-        'SELECT aca.ID_AC_ACA ' +
-        '  FROM fza_articulos_conjuntos_asign aca ' +
-        ' WHERE aca.CODIGO_ART_ACA = :art ' +
-        '   AND aca.ID_VA_ACA <> ''CO'' ' +
-        ' ORDER BY aca.ID_VA_ACA ' +
-        ' LIMIT 1';
-      qry.ParamByName('art').AsString := ACodigoArticulo;
-      qry.Open;
-      if not qry.IsEmpty then
-        Result := qry.FieldByName('ID_AC_ACA').AsInteger;
-    finally
-      FreeAndNil(qry);
-    end;
-  end;
-
-  function ModeloProveedorArticulo(const ACodigoArticulo,
-                                        ACodigoProveedor: string): string;
-  begin
-    Result := '';
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := dmmFacturasCompra.unqryTablaG.Connection;
-      qry.SQL.Text :=
-        'SELECT ap.REF_PROVEEDOR_AP ' +
-        '  FROM fza_articulos_proveedores ap ' +
-        ' WHERE ap.CODIGO_ART_AP = :art ' +
-        '   AND COALESCE(TRIM(ap.REF_PROVEEDOR_AP), '''') <> '''' ' +
-        ' ORDER BY CASE WHEN ap.CODIGO_PRV_AP = :prv THEN 0 ELSE 1 END, ' +
-        '          CASE ap.ESPROVEEDORPRINCIPAL_AP WHEN ''S'' THEN 0 ' +
-        '               ELSE 1 END, ' +
-        '          ap.FECHA_VALIDEZ_AP DESC, ap.CODIGO_PRV_AP ' +
-        ' LIMIT 1';
-      qry.ParamByName('art').AsString := ACodigoArticulo;
-      qry.ParamByName('prv').AsString := ACodigoProveedor;
-      qry.Open;
-      if not qry.IsEmpty then
-        Result := qry.FieldByName('REF_PROVEEDOR_AP').AsString;
-    finally
-      FreeAndNil(qry);
-    end;
-  end;
-
-  procedure PonerString(const ACampo, AValor: string);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.AsString := AValor;
-  end;
-
-  procedure PonerFloat(const ACampo: string; AValor: Double);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.AsFloat := AValor;
-  end;
-
-  procedure PonerInteger(const ACampo: string; AValor: Integer);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.AsInteger := AValor;
-  end;
-
-  procedure LimpiarCampo(const ACampo: string);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.Clear;
-  end;
-
-  procedure EnfocarSku(AAbrirBusqueda: Boolean);
-  var
-    colSku: TcxGridDBColumn;
-  begin
-    colSku := tvLineasFactura.GetColumnByFieldName('CODIGO_UNIDAD_FACCLIN');
-    if colSku <> nil then
-    begin
-      colSku.Visible := True;
-      TThread.ForceQueue(nil,
-        procedure
-        begin
-          tvLineasFactura.Controller.FocusedColumn := colSku;
-          tvLineasFactura.Controller.EditingController.ShowEdit;
-          if AAbrirBusqueda then
-            colLineaFaccCODIGO_UNIDADPropertiesButtonClick(nil, 0);
-        end);
-    end;
-  end;
-
+  oEntrada: TEntradaAplicacionArticuloCompra;
+  oResultado: TResultadoAplicacionArticuloCompra;
+  bPivoteActivo: Boolean;
 begin
-  sInput := Trim(ACodigoArt);
-  if (sInput <> '') and Assigned(dmmFacturasCompra) and
-     (not FAplicandoArticulo) then
+  if (Trim(ACodigoArt) <> '') and Assigned(dmmFacturasCompra) and
+     (FAplicacionArticuloCompra <> nil) then
   begin
     AsegurarCabeceraPersistidaParaLineas;
-    ds := dmmFacturasCompra.unqryFacturasCompraLineas;
-    if Assigned(ds) and ds.Active then
+    bPivoteActivo := Assigned(FPivote) and FPivote.Activo;
+    oEntrada := RecogerEntradaArticuloCompra(
+      ACodigoArt,
+      dmmFacturasCompra.unqryTablaG,
+      tdacFactura,
+      bPivoteActivo);
+    oResultado := FAplicacionArticuloCompra.Ejecutar(
+      oEntrada,
+      tdacFactura);
+    PresentarArticuloFacturaCompra(oResultado);
+  end;
+end;
+
+procedure TfrmMtoFacturasCompra.EnfocarSkuFacturaCompra(
+  AAbrirBusqueda: Boolean);
+var
+  oColumnaSku: TcxGridDBColumn;
+begin
+  oColumnaSku := tvLineasFactura.GetColumnByFieldName(
+    'CODIGO_UNIDAD_FACCLIN');
+  if oColumnaSku <> nil then
+  begin
+    oColumnaSku.Visible := True;
+    TThread.ForceQueue(nil,
+      procedure
+      begin
+        tvLineasFactura.Controller.FocusedColumn := oColumnaSku;
+        tvLineasFactura.Controller.EditingController.ShowEdit;
+        if AAbrirBusqueda then
+          colLineaFaccCODIGO_UNIDADPropertiesButtonClick(nil, 0);
+      end);
+  end;
+end;
+
+procedure TfrmMtoFacturasCompra.PresentarArticuloFacturaCompra(
+  const AResultado: TResultadoAplicacionArticuloCompra);
+var
+  oLineas: TDataSet;
+begin
+  if AResultado.Mensaje <> '' then
+    MessageDlg(AResultado.Mensaje, mtWarning, [mbOk], 0);
+  if AResultado.Aplicado then
+  begin
+    if AResultado.RequiereSku and
+       ((FPivote = nil) or (not FPivote.Activo)) then
+      EnfocarSkuFacturaCompra(True);
+    RefrescarVisibilidadTallas;
+    if FMostrarAtributos then
+      CargarCaptionsAtributosLineaActiva;
+    if Assigned(FPivote) and FPivote.Activo then
     begin
-      FAplicandoArticulo := True;
-      Validador := nil;
-      Resolver := nil;
-      try
-        if ds.IsEmpty then
-          ds.Append;
-        if not (ds.State in dsEditModes) then
-          ds.Edit;
-        sPrv := CampoCabeceraString('CODIGO_PRV_FACC');
-        sAlm := CampoCabeceraString('CODIGO_ALM_FACC');
-        dFecha := FechaCabecera;
-        Validador := CrearValidadorArticulos(
-                       dmmFacturasCompra.unqryTablaG.Connection);
-        Resolver := CrearResolverArticulos(
-          dmmFacturasCompra.unqryTablaG.Connection);
-        Resolucion := Validador.Resolver(sInput);
-        if Resolucion.Encontrado then
-        begin
-          Datos := Resolver.ResolverDatos(Resolucion.CodigoArticulo,
-                                          Resolucion.CodigoSku,
-                                          '',
-                                          dFecha,
-                                          sAlm,
-                                          sPrv);
-          if Datos.Encontrado then
-          begin
-            if Datos.RequiereSku then
-              Datos.UltimoCoste := Resolver.ResolverUltimoCoste(
-                Datos.CodigoArticulo, sPrv, '');
-            iAcPivot := ResolverConjuntoPivotArticulo(Datos.CodigoArticulo);
-            sModeloPrv := ModeloProveedorArticulo(Datos.CodigoArticulo, sPrv);
-            if sModeloPrv = '' then
-              sModeloPrv := Datos.UltimoCoste.RefProveedor;
-            PonerString('CODIGO_ART_FACCLIN', Datos.CodigoArticulo);
-            PonerString('CODIGO_UNIDAD_FACCLIN', Datos.CodigoSku);
-            PonerString('REF_PRV_FACCLIN', sModeloPrv);
-            PonerString('CODIGO_FAM_FACCLIN', Datos.CodigoFamilia);
-            PonerString('NOMBRE_FAM_FACCLIN', Datos.DescripcionFamilia);
-            PonerString('DESCRIPCION_ARTICULO_FACCLIN',
-                        Datos.DescripcionArticulo);
-            PonerString('TIPO_CANTIDAD_ARTICULO_FACCLIN',
-                        Datos.TipoCantidad);
-            PonerString('TIPO_IVA_ARTICULO_FACCLIN', Datos.TipoIVA);
-            if sAlm <> '' then
-              PonerString('CODIGO_ALMACEN_FACCLIN', sAlm);
-            if iAcPivot > 0 then
-              PonerInteger('ID_AC_PIVOT_FACCLIN', iAcPivot)
-            else
-              LimpiarCampo('ID_AC_PIVOT_FACCLIN');
-            rCantidad := 0;
-            if ds.FindField('CANTIDAD_FACCLIN') <> nil then
-              rCantidad := ds.FieldByName('CANTIDAD_FACCLIN').AsFloat;
-            if Datos.RequiereSku and (Datos.CodigoSku = '') then
-            begin
-              PonerFloat('CANTIDAD_FACCLIN', 0);
-              PonerFloat('TOTAL_UNIDADES_FACCLIN', 0);
-              rCantidad := 0;
-            end
-            else if rCantidad = 0 then
-            begin
-              rCantidad := 1;
-              PonerFloat('CANTIDAD_FACCLIN', rCantidad);
-              PonerFloat('TOTAL_UNIDADES_FACCLIN', rCantidad);
-            end
-            else
-              PonerFloat('TOTAL_UNIDADES_FACCLIN', rCantidad);
-            PonerFloat('PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN',
-                       Datos.UltimoCoste.PrecioUltCompra);
-            PonerFloat('TOTAL_FACCLIN',
-                       rCantidad * Datos.UltimoCoste.PrecioUltCompra);
-            PrepararLineaFiscalCompra(
-              dmmFacturasCompra.unqryTablaG.Connection,
-              dmmFacturasCompra.unqryTablaG, ds, 'FACC', 'FACCLIN',
-              'TOTAL_FACCLIN');
-            // Pivote de compras antiguo RETIRADO: sin auto-activacion
-            // por preferencia ESPIVOTE. El modo de entrada (tallas
-            // horizontal / SKU / desglose) lo gobierna el contrato
-            // ColumnSKUcxGrid via F1.
-            if Datos.RequiereSku and (Datos.CodigoSku = '') and
-               ((FPivote = nil) or (not FPivote.Activo)) then
-              EnfocarSku(True);
-            RefrescarVisibilidadTallas;
-            if FMostrarAtributos then
-              CargarCaptionsAtributosLineaActiva;
-            if Assigned(FPivote) and FPivote.Activo and
-               (ds.State in dsEditModes) then
-              ds.Post;
-          end
-          else if Datos.Mensaje <> '' then
-            MessageDlg(Datos.Mensaje, mtWarning, [mbOk], 0);
-        end
-        else if Resolucion.Mensaje <> '' then
-          MessageDlg(Resolucion.Mensaje, mtWarning, [mbOk], 0);
-      finally
-        Resolver := nil;
-        Validador := nil;
-        FAplicandoArticulo := False;
-      end;
+      oLineas := dmmFacturasCompra.unqryFacturasCompraLineas;
+      if oLineas.State in dsEditModes then
+        oLineas.Post;
     end;
   end;
 end;

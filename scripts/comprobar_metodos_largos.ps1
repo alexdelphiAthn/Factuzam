@@ -3,17 +3,22 @@ param(
   [ValidateRange(1, [int]::MaxValue)]
   [int]$UmbralLineas = 120,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoMetodosLargos = 116,
+  [int]$MaximoMetodosLargos = 112,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoLineasPorMetodo = 286,
+  [int]$MaximoLineasPorMetodo = 285,
+  [ValidateRange(0, [int]::MaxValue)]
+  [int]$MaximoRiesgoAcumulado = 25862,
+  [ValidateRange(0, [int]::MaxValue)]
+  [int]$MaximoRiesgoPorMetodo = 480,
   [switch]$MostrarTodos
 )
 
 # Trinquete gradual del libro de estilo (seccion 14.5): a partir de
 # $UmbralLineas un metodo mezcla pasos y debe revisarse. El tope de
 # metodos de mas de 200 lineas vive en comprobar_flujos_largos.ps1;
-# este script congela el recuento por encima del umbral y la longitud
-# del metodo mas largo escrito a mano, y ninguna cifra puede subir.
+# este script congela el recuento, la longitud y el riesgo. El riesgo
+# pondera decisiones, salidas tempranas, excepciones, escrituras y las
+# zonas de caja/Verifactu para ordenar las extracciones por impacto.
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -79,7 +84,7 @@ function Medir-BloqueMetodo {
     $Bloque,
     '(?im)^begin\b')
   if (-not $inicio.Success) {
-    return 0
+    return $null
   }
   $tokens = [regex]::Matches(
     $Bloque.Substring($inicio.Index),
@@ -95,12 +100,18 @@ function Medir-BloqueMetodo {
     }
     if ($nivel -eq 0) {
       $longitud = $inicio.Index + $token.Index + $token.Length
-      return (
-        [regex]::Matches($Bloque.Substring(0, $longitud), "`n")
-      ).Count + 1
+      return [pscustomobject]@{
+        Lineas = (
+          [regex]::Matches($Bloque.Substring(0, $longitud), "`n")
+        ).Count + 1
+        Longitud = $longitud
+      }
     }
   }
-  return ([regex]::Matches($Bloque, "`n")).Count + 1
+  return [pscustomobject]@{
+    Lineas = ([regex]::Matches($Bloque, "`n")).Count + 1
+    Longitud = $Bloque.Length
+  }
 }
 
 function Obtener-MetodosPascal {
@@ -122,15 +133,43 @@ function Obtener-MetodosPascal {
       $fin = $Limpio.Length
     }
     $bloque = $Limpio.Substring($inicio, $fin - $inicio)
-    $numeroLineas = Medir-BloqueMetodo -Bloque $bloque
-    if ($numeroLineas -gt 0) {
+    $medidaBloque = Medir-BloqueMetodo -Bloque $bloque
+    if ($null -ne $medidaBloque) {
+      $bloqueMetodo = $bloque.Substring(0, $medidaBloque.Longitud)
+      $decisiones = [regex]::Matches(
+        $bloqueMetodo,
+        '(?i)\b(if|case|for|while|repeat)\b').Count
+      $salidas = [regex]::Matches(
+        $bloqueMetodo,
+        '(?i)\b(exit|continue)\b').Count
+      $excepciones = [regex]::Matches(
+        $bloqueMetodo,
+        '(?i)\bexcept\b').Count
+      $escrituras = [regex]::Matches(
+        $bloqueMetodo,
+        '(?i)\b(ExecSQL|StartTransaction|Commit|Rollback)\b').Count
+      $esZonaCritica = $RutaRelativa -match
+        '(?i)^src\\(verifactu|Caja)\\'
+      $riesgo = $medidaBloque.Lineas + ($decisiones * 4) +
+        ($salidas * 8) + ($excepciones * 8) + ($escrituras * 6)
+      $zona = '-'
+      if ($esZonaCritica) {
+        $riesgo += 30
+        $zona = 'Fiscal/Caja'
+      }
       $numeroLinea = (
         [regex]::Matches($Limpio.Substring(0, $inicio), "`n")
       ).Count + 1
       $metodos.Add([pscustomobject]@{
         Nombre = $coincidencias[$indice].Groups['nombre'].Value
         Linea = $numeroLinea
-        Lineas = $numeroLineas
+        Lineas = $medidaBloque.Lineas
+        Decisiones = $decisiones
+        Salidas = $salidas
+        Excepciones = $excepciones
+        Escrituras = $escrituras
+        Riesgo = $riesgo
+        Zona = $zona
         Ruta = $RutaRelativa
       })
     }
@@ -146,6 +185,8 @@ $largos = [System.Collections.Generic.List[object]]::new()
 $generadosEncontrados = [System.Collections.Generic.List[object]]::new()
 $maximoLineas = 0
 $nombreMaximo = ''
+$maximoRiesgo = 0
+$nombreMaximoRiesgo = ''
 $totalMetodos = 0
 $archivos = Obtener-ArchivosPascalPropios -RutaRaiz $Raiz
 foreach ($archivo in $archivos) {
@@ -182,8 +223,18 @@ foreach ($archivo in $archivos) {
 
 $ordenados = @(
   $largos |
-    Sort-Object Lineas -Descending
+    Sort-Object -Property `
+      @{ Expression = 'Riesgo'; Descending = $true }, `
+      @{ Expression = 'Lineas'; Descending = $true }
 )
+$riesgoAcumulado = 0
+foreach ($metodo in $largos) {
+  $riesgoAcumulado += $metodo.Riesgo
+  if ($metodo.Riesgo -gt $maximoRiesgo) {
+    $maximoRiesgo = $metodo.Riesgo
+    $nombreMaximoRiesgo = $metodo.Nombre
+  }
+}
 $limite = 20
 if ($MostrarTodos) {
   $limite = $ordenados.Count
@@ -192,8 +243,11 @@ Write-Output "Metodos de mas de $UmbralLineas lineas:"
 Write-Output (
   $ordenados |
     Select-Object -First $limite |
-    Format-Table Nombre, Lineas, Linea, Ruta -AutoSize |
-    Out-String -Width 200
+    Format-Table `
+      Nombre, Riesgo, Lineas, Decisiones, Salidas, Escrituras, Zona, `
+      Linea, Ruta `
+      -AutoSize |
+    Out-String -Width 240
 ).TrimEnd()
 
 $errores = [System.Collections.Generic.List[string]]::new()
@@ -213,6 +267,16 @@ if ($maximoLineas -gt $MaximoLineasPorMetodo) {
     "Lineas del metodo mas largo ($nombreMaximo): $maximoLineas; " +
     "maximo permitido: $MaximoLineasPorMetodo.")
 }
+if ($riesgoAcumulado -gt $MaximoRiesgoAcumulado) {
+  $errores.Add(
+    "Riesgo acumulado de metodos largos: $riesgoAcumulado; " +
+    "maximo permitido: $MaximoRiesgoAcumulado.")
+}
+if ($maximoRiesgo -gt $MaximoRiesgoPorMetodo) {
+  $errores.Add(
+    "Riesgo del metodo mas expuesto ($nombreMaximoRiesgo): " +
+    "$maximoRiesgo; maximo permitido: $MaximoRiesgoPorMetodo.")
+}
 if ($errores.Count -gt 0) {
   $errores | ForEach-Object { Write-Error $_ }
   exit 1
@@ -221,4 +285,6 @@ Write-Output (
   "Metodos largos: OK. Analizados: $totalMetodos. De mas de " +
   "$UmbralLineas lineas: $($largos.Count). Mas largo: " +
   "$maximoLineas lineas ($nombreMaximo). Rutinas generadas fuera " +
-  "del limite: $($generadosEncontrados.Count).")
+  "del limite: $($generadosEncontrados.Count). Riesgo acumulado: " +
+  "$riesgoAcumulado. Mayor riesgo: $maximoRiesgo " +
+  "($nombreMaximoRiesgo).")

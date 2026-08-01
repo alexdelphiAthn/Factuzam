@@ -39,6 +39,9 @@ este cubre el código Pascal / Delphi que lo consume.
     cálculos y transformaciones viven en unidades `inLib*` cohesivas.
 14. **Todo código extraído debe quedar verificable**. La lógica pura se cubre
     con DUnitX y el SQL con las pruebas de integración correspondientes.
+15. **SOLID y Clean Code son reglas de no regresión**. Cada cambio conserva o
+    mejora la separación de responsabilidades, el sentido de las dependencias
+    y los topes vigilados por `scripts/comprobar_calidad.ps1`.
 
 ---
 
@@ -897,6 +900,16 @@ Un método nuevo debe representar un paso con nombre. Como guía:
 - al tocar un método legado de más de 200 líneas, extraer pasos cohesivos
   siempre que el alcance lo permita.
 
+Los objetivos de migración para las clases-dios vigiladas son 2.000 líneas y
+120 métodos por clase. Para las unidades procedurales vigiladas son 1.200
+líneas y 30 rutinas. Son techos para reducir legado, no tamaños aceptables
+para una clase o unidad nueva. Cada pieza nueva recibe en
+`comprobar_tamano_clases.ps1` el límite menor que corresponda a su función.
+
+Los topes individuales solo pueden bajar. Una extracción se considera
+completa cuando reduce al menos una medida de la pieza original sin trasladar
+el monolito entero a la pieza nueva.
+
 La extracción se hace por fascículos pequeños: fijar comportamiento con
 pruebas, extraer una responsabilidad, compilar y solo entonces continuar.
 
@@ -967,6 +980,291 @@ tests\bin\Win64\Debug\FactuzamTests.exe
 Antes de cerrar una refactorización transversal se valida también Release y
 las plataformas Win32/Win64 afectadas.
 
+### 14.10 SOLID aplicado a Factuzam
+
+SOLID no se usa como una cuota de clases o interfaces. Se usa para que el
+código pueda cambiar por una causa concreta sin arrastrar la UI, la BBDD ni
+otros dominios. En Factuzam cada principio se traduce así:
+
+| Principio | Regla comprobable en el proyecto |
+|-----------|-----------------------------------|
+| **S — Responsabilidad única** | Una unidad, clase o método tiene un motivo principal de cambio. |
+| **O — Abierto/cerrado** | Una variante nueva entra por configuración, estrategia o registro, no copiando un flujo. |
+| **L — Sustitución de Liskov** | Un descendiente mantiene el contrato observable de su ancestro. |
+| **I — Segregación de interfaces** | Cada consumidor recibe solo las operaciones que necesita. |
+| **D — Inversión de dependencias** | El dominio depende de contratos; la raíz conecta UniDAC y la UI. |
+
+Referencias ya aplicadas en el código:
+
+- `inLibGestorFiltrosMto` para un colaborador extraído de un formulario;
+- `inLibComprasSesionesIntf`, `inLibComprasSesiones` y
+  `UniDataComprasSesionesRepositorio` para contrato, dominio y adaptador;
+- `inLibDocumentoIntf` e `inMtoDocumento` para configuración y estrategia.
+
+Si aplicar un patrón añade más acoplamiento o hace más difícil leer un caso
+sencillo, no se fuerza. Primero se identifica el cambio real que hay que
+aislar y después se elige la pieza mínima que lo consigue.
+
+### 14.11 Responsabilidad única (SRP)
+
+Una responsabilidad no equivale a «hacer una sola instrucción». Equivale a
+tener un único actor o causa principal que obligue a modificar la pieza.
+
+- Un formulario cambia por presentación y coordinación de la interacción.
+- Un data module cambia por persistencia, consultas y eventos de dataset.
+- Una librería de dominio cambia por una regla, cálculo o transformación.
+- Un adaptador `UniData*` cambia por el esquema o por detalles de UniDAC.
+- Una unidad `inLib*Intf` cambia cuando cambia el contrato del consumidor.
+
+Un handler visual sigue, por norma, este flujo: recoge la entrada visual,
+invoca la operación correspondiente y representa el resultado. Si contiene
+SQL, transacciones, cálculos de negocio o varios pasos reutilizables, esas
+partes se extraen a la capa correspondiente.
+
+Señales de que una clase o un método mezcla responsabilidades:
+
+- su nombre necesita «Y» para describir lo que hace;
+- recibe dependencias de UI, persistencia y dominio a la vez;
+- cambia por motivos independientes, como fiscalidad e impresión;
+- usa campos privados que solo sirven a subconjuntos inconexos de métodos;
+- no puede probarse sin levantar un formulario o una BBDD, aunque su núcleo
+  sea un cálculo puro.
+
+La salida preferida es una función pura, un `TGestorXxx`, un servicio de
+dominio, una estrategia o un adaptador de persistencia. Cada colaborador
+nuevo tiene responsabilidad, consumidor, propietario y ciclo de vida
+explícitos. No se crean clases auxiliares sin una frontera real.
+
+Los límites y la forma de extraer métodos se describen en §14.5. El código
+legado que supere los objetivos no se reescribe de golpe: al tocarlo no se
+incrementa su tope y, si el alcance lo permite, se extrae un paso cohesivo.
+
+### 14.12 Abierto/cerrado (OCP) y sustitución (LSP)
+
+#### 14.12.1 Extender sin duplicar el flujo
+
+Cuando aparecen variantes del mismo proceso, el flujo estable permanece y
+lo variable se expresa mediante:
+
+- un `record` de configuración para tablas, campos, signos y opciones;
+- una interfaz de estrategia cuando cambia el comportamiento;
+- un registro o factoría en la raíz de composición cuando cambia la clase;
+- un evento o callback tipado cuando cambia la reacción del consumidor.
+
+Añadir un tipo de documento no implica copiar un formulario ni ampliar una
+cadena de `if` por tipo. Se añade una configuración y, solo si cambia una
+regla, una implementación de la estrategia correspondiente. Tampoco se
+generalizan dos flujos por parecido superficial: manda el modelo compartido,
+como establece §14.6.
+
+No se modifica una abstracción estable para añadir opciones que solo usa un
+consumidor. Esa opción pertenece a una configuración específica, a una
+interfaz más pequeña o al propio consumidor.
+
+#### 14.12.2 Conservar el contrato de los ancestros
+
+Todo descendiente se puede usar donde se espera su ancestro sin sorpresas.
+Un override:
+
+- mantiene las precondiciones; no exige datos adicionales inesperados;
+- conserva las postcondiciones y efectos documentados;
+- respeta propiedad, liberación, transacción y propagación de errores;
+- llama a `inherited;` al principio cuando el contrato base así lo exige;
+- no convierte una operación válida del ancestro en un «no soportado»;
+- no sobreescribe un hook solo para dejarlo vacío y anular el comportamiento.
+
+Si solo algunos descendientes admiten una capacidad, esa capacidad no se
+añade al ancestro común. Se expresa mediante una interfaz pequeña o una
+composición que implementan únicamente las clases capaces de cumplirla.
+
+Los contratos polimórficos relevantes tienen pruebas compartidas: la misma
+batería se ejecuta contra cada implementación y comprueba resultados,
+errores y efectos observables. Probar solo la clase concreta no demuestra
+sustituibilidad.
+
+### 14.13 Segregación (ISP) e inversión de dependencias (DIP)
+
+#### 14.13.1 Interfaces diseñadas desde el consumidor
+
+Una interfaz agrupa operaciones que un mismo consumidor necesita juntas; no
+publica toda la API de la implementación. Se separan, por ejemplo, lectura,
+escritura, caché y compartición si tienen consumidores distintos.
+
+Reglas:
+
+- una interfaz propia no supera 10 métodos;
+- lleva GUID y nombres del dominio, no del componente que la implementa;
+- no incluye métodos «por si acaso» ni miembros implementados como no-op;
+- los contratos de dominio no exponen VCL, DevExpress, UniDAC ni `TDataSet`;
+- los datos cruzan la frontera como tipos simples, enumerados o `record`;
+- si un objeto ofrece varias capacidades, se inyectan juntas mediante un
+  `record TServiciosXxx`, pero cada consumidor conserva solo las que usa.
+
+El límite de diez miembros es un máximo de seguridad, no un objetivo. Si una
+interfaz mezcla dos razones de cambio, se divide aunque tenga menos miembros.
+
+#### 14.13.2 Depender de contratos estables
+
+Las reglas de negocio no crean ni buscan sus dependencias. Las reciben por
+constructor o por el método que inicia la operación y las guardan en campos
+tipados cuando su ciclo de vida abarca varios métodos.
+
+La raíz de composición crea las implementaciones concretas. Los adaptadores
+`UniData*` implementan persistencia; las unidades `inLib*` consumen los
+contratos `inLib*Intf`. Una unidad de dominio nueva:
+
+- no contiene SQL literal ni conoce nombres de tablas;
+- no incluye unidades `UniData*` en ningún `uses`;
+- no accede a conexiones, sesión o parámetros globales;
+- no usa `Supports` dentro de métodos de negocio;
+- falla de forma explícita al faltar una dependencia obligatoria, en vez de
+  buscar un singleton o continuar con un valor implícito.
+
+Una dependencia opcional solo es opcional si el dominio define el
+comportamiento en su ausencia. Se representa con una estrategia nula
+deliberada o una condición explícita en la composición, nunca capturando una
+excepción de configuración para seguir silenciosamente.
+
+### 14.14 Clean Code en Object Pascal
+
+#### 14.14.1 Nombres que expresan intención
+
+- Se usa el mismo vocabulario del dominio en BBDD, UI, código y pruebas.
+- Un método indica acción y objeto: `CalcularTotalesFactura`,
+  `ValidarPeriodoIva`, `GuardarLineasPedido`.
+- Un booleano permite leer la condición como una afirmación:
+  `EsFacturaEditable`, `TieneLineasPendientes`.
+- Se evitan nombres genéricos como `Datos`, `Info`, `Manager`, `Aux` o
+  `Proceso` si no concretan la responsabilidad.
+- Las abreviaturas se limitan a las ya establecidas por el proyecto y el
+  dominio. La coherencia no justifica crear una abreviatura nueva ambigua.
+
+El nombre y la firma deben explicar el propósito sin necesitar un comentario.
+Los comentarios explican decisiones, restricciones o motivos, como indica
+§13.
+
+#### 14.14.2 Métodos y nivel de abstracción
+
+Un método representa un paso nombrable y mantiene un nivel de abstracción.
+No mezcla, por ejemplo, la decisión «materializar sesión» con asignaciones de
+parámetros UniDAC y cambios de foco en controles.
+
+- Las consultas devuelven información y no cambian estado observable.
+- Los procedimientos que cambian estado lo expresan con un verbo claro.
+- Los efectos laterales relevantes aparecen en la firma, el nombre o el
+  contrato; no se esconden dentro de una función de consulta.
+- Cuando una firma acumula muchos parámetros relacionados, se usa un
+  `record` de entrada o configuración con nombre de dominio.
+- Un booleano que selecciona dos algoritmos suele sustituirse por un
+  enumerado, dos métodos con intención clara o una estrategia.
+- Al alcanzar un tercer nivel de anidación, se revisa la extracción de una
+  condición o un paso. No se usa `Exit` para disimular la complejidad.
+
+Se prefieren condiciones positivas y bloques acotados. Una expresión
+compleja que representa una regla se extrae a un método booleano con nombre
+de dominio.
+
+#### 14.14.3 Acoplamiento y encapsulación
+
+Una clase pide a un colaborador que realice una operación; no navega por sus
+detalles internos para hacerla desde fuera. Las cadenas largas del tipo
+`A.B.C.D` son una señal de conocimiento excesivo y se encapsulan detrás de
+una operación con intención.
+
+- No se accede a campos `F*` de otra clase.
+- No se expone un componente visual o dataset solo para que otra capa lo
+  manipule.
+- Los campos son privados; se publica la mínima operación necesaria.
+- La propiedad del recurso y quién lo libera quedan claros al crearlo.
+- No se guarda una referencia más tiempo del que permite su propietario.
+
+#### 14.14.4 Literales, mensajes y código muerto
+
+- Los mensajes visibles y textos traducibles son `resourcestring` en el
+  catálogo `inLibMsg*` del dominio correspondiente.
+- Las constantes de dominio tienen nombre; no se repiten números, estados o
+  cadenas con significado de negocio dentro de métodos.
+- Los nombres de campo SQL repetidos usan las constantes de §11.
+- Los valores cerrados se modelan con enumerados; no con cadenas libres.
+- El código sin uso, los parámetros obsoletos y los bloques comentados se
+  eliminan. Git conserva el historial.
+
+No se crea una constante para ocultar un literal obvio y local, como cero en
+un contador. Se nombra cuando el valor tiene significado o se repite como
+parte de una regla.
+
+#### 14.14.5 Errores y resultados
+
+Una operación termina con un resultado válido o informa de que no pudo
+completarse. No devuelve un valor aparentemente correcto después de un
+fallo.
+
+- Las excepciones representan fallos excepcionales, no bifurcaciones
+  habituales del negocio.
+- Los rechazos esperables usan un resultado tipado cuando el llamador debe
+  decidir cómo mostrarlos.
+- Un `except` solo captura cuando puede añadir contexto, recuperar el flujo
+  o traducir la excepción; en otro caso se deja propagar.
+- No se mezclan `Boolean`, mensajes y excepciones para representar el mismo
+  fallo en distintas implementaciones de un contrato.
+
+### 14.15 Regla del boy scout y trinquetes de calidad
+
+Al tocar código legado se deja la zona un poco mejor, pero dentro del alcance
+del cambio. Se puede renombrar una variable confusa, extraer una condición o
+eliminar un `uses` muerto. No se mezcla una reorganización masiva con un
+cambio funcional.
+
+Los topes de calidad son trinquetes: pueden bajar, nunca subir. No se cambia
+un máximo, una exclusión o una lista blanca para hacer pasar código nuevo. Si
+una excepción arquitectónica fuera realmente necesaria, se documenta la
+decisión y se acuerda antes de modificar el comprobador.
+
+El estilo legado se congela además por unidad en
+`scripts/estilo_linea_base.csv`. Una unidad nueva entra sin `Exit`,
+`Continue`, `with`, líneas de más de 80 columnas ni tabuladores. Una unidad
+existente no puede superar ninguna de sus medidas. Después de reducir deuda,
+la línea base se baja con:
+
+```powershell
+.\scripts\comprobar_estilo_codigo.ps1 -ActualizarLineaBase
+```
+
+La actualización toma el mínimo entre la medida guardada y la actual: no
+puede utilizarse para aceptar una regresión.
+
+La entrada única para ejecutar todos los resguardos es:
+
+```powershell
+.\scripts\comprobar_calidad.ps1
+```
+
+La batería completa en un equipo con Delphi se ejecuta en Release para Win32
+y Win64:
+
+```powershell
+.\scripts\ejecutar_pruebas_delphi.ps1
+```
+
+`.github/workflows/calidad.yml` ejecuta los trinquetes y sus pruebas en cada
+push y pull request. La opción manual `ejecutar_delphi` añade DUnitX en un
+runner propio con las etiquetas `Windows` y `Delphi`. Ese runner debe usar
+GitHub Actions Runner 2.329.0 o posterior, requisito de `actions/checkout@v6`.
+
+Los resguardos principales cubren:
+
+| Objetivo | Comprobadores |
+|----------|---------------|
+| Capas y DIP | `comprobar_dependencias_capas`, `comprobar_sql_en_dominio`, `comprobar_estado_global` |
+| SRP | `comprobar_tamano_clases`, `comprobar_flujos_largos`, `comprobar_formularios_delgados` |
+| ISP e inyección | `comprobar_interfaces_segregadas`, `comprobar_supports` |
+| Clean Code | `comprobar_estilo_codigo`, `comprobar_metodos_largos`, `comprobar_codificacion` |
+| Persistencia segura | `comprobar_sql_transacciones` |
+
+Que los scripts terminen correctamente es necesario, pero no suficiente. La
+revisión también comprueba nombres, cohesión, contrato de los descendientes,
+efectos laterales y que las pruebas cubran el comportamiento modificado.
+
 ---
 
 ## 15. Manías y convenciones particulares del autor
@@ -984,11 +1282,14 @@ Estas son convenciones que ya están en el código y que conviene
 3. **`Self.` explícito** cuando se accede a propiedades del propio
    formulario desde un método (`Self.pkFieldName`, `Self.Owner`). Es
    redundante en Delphi pero el código lo usa por claridad.
-4. **`with` controlado**: se permite `with ... do` solo cuando el bloque
-   es corto y la entidad es inequívoca:
+4. **Sin `with` nuevo**: siempre se nombra el receptor. El legado se retira
+   gradualmente al tocar la unidad:
    ```pascal
-   with tvLineasFacturacion.DataController.DataSet do
-     ShowMto(Self.Owner, 'Articulos', FieldByName('CODIGO_ART_FACLIN').AsString);
+   oDataSet := tvLineasFacturacion.DataController.DataSet;
+   ShowMto(
+     Self.Owner,
+     'Articulos',
+     oDataSet.FieldByName('CODIGO_ART_FACLIN').AsString);
    ```
 5. **Mensajes de UI siempre en español** y con tildes correctas:
    `'IBAN Validado OK'`, no `'IBAN OK'` ni `'IBAN valid'`.
@@ -1027,6 +1328,10 @@ Estas son convenciones que ya están en el código y que conviene
 ✗  Unidades inLib* usando unidades UniData*
 ✗  Librerías que instancian un repositorio en vez de recibirlo
 ✗  Fachadas inLib* que solo re-exportan tipos de UniData*
+✗  SQL literal nuevo dentro de una unidad inLib*
+✗  Contratos de dominio que exponen VCL, DevExpress, UniDAC o TDataSet
+✗  Interfaces con más de 10 métodos o con miembros que el consumidor no usa
+✗  Supports dentro de un método de negocio o como localizador de servicios
 ✗  uses circulares — romper moviendo a uses de implementation
 ✗  Nombres de unidad con tilde o eñe en el fichero
 ✗  TForm con código de negocio: la lógica va a inLib*
@@ -1036,11 +1341,16 @@ Estas son convenciones que ya están en el código y que conviene
 ✗  Identificar ventanas por Caption o ClassName
 ✗  Añadir handlers de menú que solo llaman a ShowMto
 ✗  Métodos nuevos de más de 200 líneas
+✗  with en código nuevo
+✗  Overrides vacíos o que invalidan una operación admitida por el ancestro
+✗  Funciones de consulta con efectos laterales ocultos
+✗  Copiar un formulario o ampliar if por tipo para añadir una variante
 ✗  SQL con valores de usuario concatenados
 ✗  except vacío o que convierte un fallo en éxito silencioso
 ✗  Componentes VCL o conexiones compartidas con un hilo trabajador
 ✗  Llamar a inherited al final del handler; va al principio
 ✗  Acceder a campos privados (F*) de otra clase
+✗  Aumentar un tope o una lista blanca para aceptar una regresión nueva
 ```
 
 La separación de capas y su comprobación automática se describen en §14.1.
@@ -2042,6 +2352,18 @@ Cuando aparezca un prefijo de columna nuevo en `LIBRO_DE_ESTILO_BBDD.md`
 - [ ] `FreeAndNil` para todo recurso creado.
 - [ ] Nombres de columna SQL en mayúsculas, tal cual viven en la BBDD.
 - [ ] Sin estado global mutable ni nuevas variables `frmMtoXxx`/`dmmXxx`.
+- [ ] Cada unidad, clase y método modificado conserva una responsabilidad
+      principal y un nivel de abstracción coherente.
+- [ ] Los handlers visuales coordinan; no contienen SQL, transacciones ni
+      reglas de negocio reutilizables.
+- [ ] Las dependencias obligatorias entran por constructor, herencia o
+      parámetro explícito; no se buscan durante el trabajo.
+- [ ] Las interfaces responden a un consumidor, no superan 10 métodos y no
+      filtran tipos de infraestructura al dominio.
+- [ ] Los descendientes conservan precondiciones, resultados, errores y
+      efectos definidos por el ancestro.
+- [ ] Las variantes nuevas usan configuración, estrategia o registro, sin
+      copiar formularios ni cadenas de condiciones por tipo.
 - [ ] Si es Mto: `CrearTablaPrincipal` y solo los hooks necesarios.
 - [ ] Si es Mto: clases auto-registradas en sus propias unidades.
 - [ ] Si abre desde menú: usa `MenuGenericoClick`, salvo lógica adicional.
@@ -2052,7 +2374,12 @@ Cuando aparezca un prefijo de columna nuevo en `LIBRO_DE_ESTILO_BBDD.md`
 - [ ] Sin `except` vacío, `Exit`, `Continue` ni instrucciones en la línea
       del `if`, `while` o `for`.
 - [ ] Métodos nuevos por debajo de 200 líneas y con una responsabilidad.
+- [ ] Nombres expresivos, sin efectos laterales ocultos ni literales de
+      negocio repetidos.
+- [ ] Los textos visibles nuevos son `resourcestring` del catálogo de su
+      dominio.
 - [ ] Pruebas DUnitX/SQL añadidas o actualizadas cuando corresponda.
-- [ ] `scripts\comprobar_dependencias_capas.ps1` termina correctamente.
+- [ ] `scripts\comprobar_calidad.ps1` termina correctamente y no se han
+      elevado topes ni añadido excepciones para hacerlo pasar.
 - [ ] Comentarios en español, sin código muerto comentado.
 - [ ] Si tocas la BBDD, el cambio cumple `LIBRO_DE_ESTILO_BBDD.md`.

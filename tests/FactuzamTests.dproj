@@ -1,4 +1,4 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{E93654F6-79B6-4847-ADDE-B833A998DC6D}</ProjectGuid>
         <MainSource>FactuzamTests.dpr</MainSource>
@@ -92,6 +92,8 @@
         <DCCReference Include="..\src\Lib\inLibCifradoCopias.pas"/>
         <DCCReference Include="..\src\Lib\inLibCopiasSeguridadIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibCopiasSeguridadReglas.pas"/>
+        <DCCReference Include="..\src\Lib\inLibOperacionesAplicacionIntf.pas"/>
+        <DCCReference Include="..\src\Lib\inLibCoordinadorOperacionesAplicacion.pas"/>
         <DCCReference Include="..\src\Lib\inLibConfiguracionIni.pas"/>
         <DCCReference Include="..\src\Lib\inLibDocumentoFiscal.pas"/>
         <DCCReference Include="..\src\Lib\inLibIBAN.pas"/>
@@ -187,6 +189,8 @@
         <DCCReference Include="..\src\DataModules\UniDataVentasWsSesion.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataColumnasSkuServicios.pas"/>
         <DCCReference Include="..\src\verifactu\UniDataVerifactuColaRepositorio.pas"/>
+        <DCCReference Include="..\src\verifactu\inLibVerifactuEsquemaIntf.pas"/>
+        <DCCReference Include="..\src\verifactu\UniDataVerifactuEsquema.pas"/>
         <DCCReference
             Include="..\src\verifactu\inLibVerifactuNoVerifactuExportIntf.pas"/>
         <DCCReference
@@ -204,12 +208,21 @@
         <DCCReference Include="..\src\Lib\inLibArticulosResolverIntf.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataArticulosResolverRepositorio.pas"/>
         <DCCReference Include="..\src\Lib\inLibArticulosValidadorIntf.pas"/>
+        <DCCReference Include="..\src\Lib\inLibAplicacionArticuloCompraIntf.pas"/>
+        <DCCReference Include="..\src\Lib\inLibAplicacionArticuloCompra.pas"/>
+        <DCCReference Include="..\src\DataModules\UniDataAplicacionArticuloCompra.pas"/>
+        <DCCReference Include="..\src\DataModules\UniDataDocsProveedorSql.pas"/>
+        <DCCReference Include="..\src\DataModules\UniDataDocsProveedor.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataArticulosValidadorRepositorio.pas"/>
         <DCCReference Include="..\src\Lib\inLibArticulosAtributosIntf.pas"/>
+        <DCCReference
+            Include="..\src\Lib\inLibArticulosAtributosBasicosIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibModoTallasIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibModoTallasModelo.pas"/>
         <DCCReference Include="..\src\Lib\inLibModoTallasConversion.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataArticulosAtributosRepositorio.pas"/>
+        <DCCReference
+            Include="..\src\DataModules\UniDataArticulosAtributosBasicosRepositorio.pas"/>
         <DCCReference Include="..\src\Caja\Lib\inLibTraspasoTicketIntf.pas"/>
         <DCCReference Include="..\src\Caja\DataModules\UniDataTraspasoTicketRepositorio.pas"/>
         <DCCReference Include="..\src\Caja\Lib\inLibArqueoIntf.pas"/>
@@ -279,6 +292,7 @@
         <DCCReference Include="PruebasGridPivoteCompraPersistencia.pas"/>
         <DCCReference Include="PruebasPivoteCompraCalculo.pas"/>
         <DCCReference Include="PruebasPedidosCompra.pas"/>
+        <DCCReference Include="PruebasAplicacionArticuloCompra.pas"/>
         <DCCReference Include="PruebasVentasWsJson.pas"/>
         <DCCReference Include="PruebasVerifactuColaRepositorio.pas"/>
         <DCCReference

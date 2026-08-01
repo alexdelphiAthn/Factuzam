@@ -126,11 +126,6 @@ type
     function ReconstruirStock: string;
     function ObtenerPrecioTarifaPadre(const aCodArt,
                                             aCodTarifa: string): Double;
-    function BuscarAtributoBasicoActivo(
-      const AIdVariacion, ATexto: string;
-      out ACodigoAtributo: string): Boolean;
-    procedure CrearAtributoBasico(
-      const AIdVariacion, ACodigo, ANombre, AUsuario: string);
     // El modal de etiquetas se nutre de estas tres rutinas: dos para
     // poblar tarifa y almacenes, y la tercera para construir el dataset
     // que consume el FastReport.
@@ -157,60 +152,6 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
-
-function TdmArticulos.BuscarAtributoBasicoActivo(
-  const AIdVariacion, ATexto: string;
-  out ACodigoAtributo: string): Boolean;
-var
-  Consulta: TUniQuery;
-begin
-  ACodigoAtributo := '';
-  Consulta := TUniQuery.Create(nil);
-  try
-    Consulta.Connection := ConexionPrincipal;
-    Consulta.SQL.Text :=
-      'SELECT CODIGO_ATB FROM fza_atributos_basicos ' +
-      ' WHERE ID_VA_ATB = :IDVA ' +
-      '   AND ESACTIVO_ATB = ''S'' ' +
-      '   AND (CODIGO_ATB = :T OR NOMBRE_ATB = :T) ' +
-      ' ORDER BY (CODIGO_ATB = :T) DESC ' +
-      ' LIMIT 1';
-    Consulta.ParamByName('IDVA').AsString := AIdVariacion;
-    Consulta.ParamByName('T').AsString := ATexto;
-    Consulta.Open;
-    Result := not Consulta.IsEmpty;
-    if Result then
-      ACodigoAtributo :=
-        Consulta.FieldByName('CODIGO_ATB').AsString;
-  finally
-    FreeAndNil(Consulta);
-  end;
-end;
-
-procedure TdmArticulos.CrearAtributoBasico(
-  const AIdVariacion, ACodigo, ANombre, AUsuario: string);
-var
-  Consulta: TUniQuery;
-begin
-  Consulta := TUniQuery.Create(nil);
-  try
-    Consulta.Connection := ConexionPrincipal;
-    Consulta.SQL.Text :=
-      'INSERT INTO fza_atributos_basicos ' +
-      '  (ID_VA_ATB, CODIGO_ATB, NOMBRE_ATB, ESACTIVO_ATB, ' +
-      '   INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-      'VALUES (:IDVA, :COD, :NOM, ''S'', NOW(), :USR, :USR) ' +
-      'ON DUPLICATE KEY UPDATE ' +
-      '  USUARIO_MODIF = VALUES(USUARIO_MODIF)';
-    Consulta.ParamByName('IDVA').AsString := AIdVariacion;
-    Consulta.ParamByName('COD').AsString := ACodigo;
-    Consulta.ParamByName('NOM').AsString := ANombre;
-    Consulta.ParamByName('USR').AsString := AUsuario;
-    Consulta.Execute;
-  finally
-    FreeAndNil(Consulta);
-  end;
-end;
 
 function TdmArticulos.ArticuloTieneProvPrin(sArt:String):Boolean;
 var

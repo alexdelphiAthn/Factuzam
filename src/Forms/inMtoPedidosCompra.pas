@@ -46,6 +46,7 @@ uses
   inLibGridPivoteCompra,
   // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
   inLibColumnasSkuIntf, inLibGridPivoteVenta,
+  inLibAplicacionArticuloCompraIntf,
   UniDataPedidosCompra, cxBlobEdit, System.Actions, Vcl.ActnList,
   dxShellDialogs, cxSplitter, inLibDocumento, inLibDocumentoIntf;
 
@@ -252,7 +253,7 @@ type
     // que la columna Color es unica.
     FColColorProveedorPivot : TcxGridDBColumn;
     FBasicosColor           : TArray<string>;
-    FAplicandoArticulo      : Boolean;
+    FAplicacionArticuloCompra: IAplicacionArticuloCompra;
     FAfterPostLineasOriginal: TDataSetNotifyEvent;
     FEstiloRecepcionVencida : TcxStyle;
     // Guarda contra la reentrancia que provoca PersistirPreferenciaPivote:
@@ -294,6 +295,9 @@ type
     function BuscarSkuPedidoCompra(const ACodigoArt: string): string;
     function ArticuloLineaActivaPedidoCompra: string;
     procedure AplicarArticuloPedidoCompra(const ACodigoArt: string);
+    procedure EnfocarSkuPedidoCompra(AAbrirBusqueda: Boolean);
+    procedure PresentarArticuloPedidoCompra(
+      const AResultado: TResultadoAplicacionArticuloCompra);
     procedure AsegurarCabeceraPersistidaParaLineas;
     procedure AsegurarPrimeraLineaPedidoCompra;
     procedure DesactivarEnterAsTabEnCombo(AComp: TcxDBLookupComboBox);
@@ -394,6 +398,8 @@ uses
   inLibArticulosResolverIntf,
   inLibArticulosValidadorIntf,
   UniDataArticulosValidadorRepositorio,
+  inLibAplicacionArticuloCompra,
+  UniDataAplicacionArticuloCompra,
   inLibGridCantidad,
   inLibColumnasDocumento, UniDataGen,
   inLibBusquedasCompra,
@@ -493,260 +499,84 @@ end;
 procedure TfrmMtoPedidosCompra.AplicarArticuloPedidoCompra(
   const ACodigoArt: string);
 var
-  ds         : TDataSet;
-  Validador  : IArticulosValidador;
-  Resolver   : IArticulosResolver;
-  Resolucion : TArtResolucionEntrada;
-  Datos      : TArticuloDatos;
-  qry        : TUniQuery;
-  sInput     : string;
-  sPrv       : string;
-  sAlm       : string;
-  sModeloPrv : string;
-  dFecha     : TDateTime;
-  iAcPivot   : Integer;
-  rCantidad  : Double;
-
-  function CampoCabeceraString(const ACampo: string): string;
-  var
-    Campo: TField;
-  begin
-    Result := '';
-    Campo := dmmPedidosCompra.unqryTablaG.FindField(ACampo);
-    if Campo <> nil then
-      Result := Trim(Campo.AsString);
-  end;
-
-  function FechaCabecera: TDateTime;
-  var
-    Campo: TField;
-  begin
-    Result := Date;
-    Campo := dmmPedidosCompra.unqryTablaG.FindField('FECHA_PEDC');
-    if (Campo <> nil) and (not Campo.IsNull) then
-      Result := Campo.AsDateTime;
-  end;
-
-  function ResolverConjuntoPivotArticulo(
-    const ACodigoArticulo: string): Integer;
-  begin
-    Result := 0;
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := dmmPedidosCompra.unqryTablaG.Connection;
-      qry.SQL.Text :=
-        'SELECT aca.ID_AC_ACA ' +
-        '  FROM fza_articulos_conjuntos_asign aca ' +
-        ' WHERE aca.CODIGO_ART_ACA = :art ' +
-        '   AND aca.ID_VA_ACA <> ''CO'' ' +
-        ' ORDER BY aca.ID_VA_ACA ' +
-        ' LIMIT 1';
-      qry.ParamByName('art').AsString := ACodigoArticulo;
-      qry.Open;
-      if not qry.IsEmpty then
-        Result := qry.FieldByName('ID_AC_ACA').AsInteger;
-    finally
-      FreeAndNil(qry);
-    end;
-  end;
-
-  function ModeloProveedorArticulo(const ACodigoArticulo,
-                                        ACodigoProveedor: string): string;
-  begin
-    Result := '';
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := dmmPedidosCompra.unqryTablaG.Connection;
-      qry.SQL.Text :=
-        'SELECT ap.REF_PROVEEDOR_AP ' +
-        '  FROM fza_articulos_proveedores ap ' +
-        ' WHERE ap.CODIGO_ART_AP = :art ' +
-        '   AND COALESCE(TRIM(ap.REF_PROVEEDOR_AP), '''') <> '''' ' +
-        ' ORDER BY CASE WHEN ap.CODIGO_PRV_AP = :prv THEN 0 ELSE 1 END, ' +
-        '          CASE ap.ESPROVEEDORPRINCIPAL_AP WHEN ''S'' THEN 0 ' +
-        '               ELSE 1 END, ' +
-        '          ap.FECHA_VALIDEZ_AP DESC, ap.CODIGO_PRV_AP ' +
-        ' LIMIT 1';
-      qry.ParamByName('art').AsString := ACodigoArticulo;
-      qry.ParamByName('prv').AsString := ACodigoProveedor;
-      qry.Open;
-      if not qry.IsEmpty then
-        Result := qry.FieldByName('REF_PROVEEDOR_AP').AsString;
-    finally
-      FreeAndNil(qry);
-    end;
-  end;
-
-  procedure PonerString(const ACampo, AValor: string);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.AsString := AValor;
-  end;
-
-  procedure PonerFloat(const ACampo: string; AValor: Double);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.AsFloat := AValor;
-  end;
-
-  procedure PonerInteger(const ACampo: string; AValor: Integer);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.AsInteger := AValor;
-  end;
-
-  procedure LimpiarCampo(const ACampo: string);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.Clear;
-  end;
-
-  procedure EnfocarSku(AAbrirBusqueda: Boolean);
-  var
-    colSku: TcxGridDBColumn;
-  begin
-    colSku := tvLineasPedido.GetColumnByFieldName('CODIGO_UNIDAD_PEDCLIN');
-    if colSku <> nil then
-    begin
-      colSku.Visible := True;
-      TThread.ForceQueue(nil,
-        procedure
-        begin
-          tvLineasPedido.Controller.FocusedColumn := colSku;
-          tvLineasPedido.Controller.EditingController.ShowEdit;
-          if AAbrirBusqueda then
-            colLineaPedcCODIGO_UNIDADPropertiesButtonClick(nil, 0);
-        end);
-    end;
-  end;
-
+  oEntrada: TEntradaAplicacionArticuloCompra;
+  oResultado: TResultadoAplicacionArticuloCompra;
+  bPivoteActivo: Boolean;
 begin
-  sInput := Trim(ACodigoArt);
-  if (sInput <> '') and Assigned(dmmPedidosCompra) and
-     (not FAplicandoArticulo) then
+  if (Trim(ACodigoArt) <> '') and Assigned(dmmPedidosCompra) and
+     (FAplicacionArticuloCompra <> nil) then
   begin
     AsegurarCabeceraPersistidaParaLineas;
-    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-    if Assigned(ds) and ds.Active then
+    bPivoteActivo := Assigned(FPivote) and FPivote.Activo;
+    oEntrada := RecogerEntradaArticuloCompra(
+      ACodigoArt,
+      dmmPedidosCompra.unqryTablaG,
+      tdacPedido,
+      bPivoteActivo);
+    oResultado := FAplicacionArticuloCompra.Ejecutar(
+      oEntrada,
+      tdacPedido);
+    PresentarArticuloPedidoCompra(oResultado);
+  end;
+end;
+
+procedure TfrmMtoPedidosCompra.EnfocarSkuPedidoCompra(
+  AAbrirBusqueda: Boolean);
+var
+  oColumnaSku: TcxGridDBColumn;
+begin
+  oColumnaSku := tvLineasPedido.GetColumnByFieldName(
+    'CODIGO_UNIDAD_PEDCLIN');
+  if oColumnaSku <> nil then
+  begin
+    oColumnaSku.Visible := True;
+    TThread.ForceQueue(nil,
+      procedure
+      begin
+        tvLineasPedido.Controller.FocusedColumn := oColumnaSku;
+        tvLineasPedido.Controller.EditingController.ShowEdit;
+        if AAbrirBusqueda then
+          colLineaPedcCODIGO_UNIDADPropertiesButtonClick(nil, 0);
+      end);
+  end;
+end;
+
+procedure TfrmMtoPedidosCompra.PresentarArticuloPedidoCompra(
+  const AResultado: TResultadoAplicacionArticuloCompra);
+var
+  oLineas: TDataSet;
+begin
+  if AResultado.Mensaje <> '' then
+    MessageDlg(AResultado.Mensaje, mtWarning, [mbOk], 0);
+  if AResultado.Aplicado then
+  begin
+    if Assigned(FPivote) then
     begin
-      FAplicandoArticulo := True;
-      Validador := nil;
-      Resolver := nil;
-      try
-        if ds.IsEmpty then
-          ds.Append;
-        if not (ds.State in dsEditModes) then
-          ds.Edit;
-        sPrv := CampoCabeceraString('CODIGO_PRV_PEDC');
-        sAlm := CampoCabeceraString('CODIGO_ALM_PEDC');
-        dFecha := FechaCabecera;
-        Validador := CrearValidadorArticulos(
-                       dmmPedidosCompra.unqryTablaG.Connection);
-        Resolver := CrearResolverArticulos(
-          dmmPedidosCompra.unqryTablaG.Connection);
-        Resolucion := Validador.Resolver(sInput);
-        if Resolucion.Encontrado then
+      if (AResultado.AccionPivote = apacDesactivar) and FPivote.Activo then
+        btnTallasHorizontalClick(nil)
+      else if AResultado.AccionPivote = apacActivarYRecargar then
+      begin
+        if not FPivote.Activo then
+          btnTallasHorizontalClick(nil);
+        if FPivote.Activo then
         begin
-          Datos := Resolver.ResolverDatos(Resolucion.CodigoArticulo,
-                                          Resolucion.CodigoSku,
-                                          '',
-                                          dFecha,
-                                          sAlm,
-                                          sPrv);
-          if Datos.Encontrado then
-          begin
-            if Datos.RequiereSku then
-              Datos.UltimoCoste := Resolver.ResolverUltimoCoste(
-                Datos.CodigoArticulo, sPrv, '');
-            iAcPivot := ResolverConjuntoPivotArticulo(Datos.CodigoArticulo);
-            sModeloPrv := ModeloProveedorArticulo(Datos.CodigoArticulo, sPrv);
-            if sModeloPrv = '' then
-              sModeloPrv := Datos.UltimoCoste.RefProveedor;
-            PonerString('CODIGO_ART_PEDCLIN', Datos.CodigoArticulo);
-            PonerString('CODIGO_UNIDAD_PEDCLIN', Datos.CodigoSku);
-            PonerString('REF_PRV_PEDCLIN', sModeloPrv);
-            PonerString('CODIGO_FAM_PEDCLIN', Datos.CodigoFamilia);
-            PonerString('DESCRIPCION_ARTICULO_PEDCLIN',
-                        Datos.DescripcionArticulo);
-            PonerString('TIPO_CANTIDAD_ARTICULO_PEDCLIN',
-                        Datos.TipoCantidad);
-            PonerString('TIPO_IVA_ARTICULO_PEDCLIN', Datos.TipoIVA);
-            if sAlm <> '' then
-              PonerString('CODIGO_ALMACEN_PEDCLIN', sAlm);
-            if iAcPivot > 0 then
-              PonerInteger('ID_AC_PIVOT_PEDCLIN', iAcPivot)
-            else
-              LimpiarCampo('ID_AC_PIVOT_PEDCLIN');
-            rCantidad := 0;
-            if ds.FindField('CANTIDAD_PEDCLIN') <> nil then
-              rCantidad := ds.FieldByName('CANTIDAD_PEDCLIN').AsFloat;
-            if Datos.RequiereSku and (Datos.CodigoSku = '') then
-            begin
-              PonerFloat('CANTIDAD_PEDCLIN', 0);
-              PonerFloat('TOTAL_UNIDADES_PEDCLIN', 0);
-              rCantidad := 0;
-            end
-            else if rCantidad = 0 then
-            begin
-              rCantidad := 1;
-              PonerFloat('CANTIDAD_PEDCLIN', rCantidad);
-              PonerFloat('TOTAL_UNIDADES_PEDCLIN', rCantidad);
-            end;
-            PonerFloat('PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN',
-                       Datos.UltimoCoste.PrecioUltCompra);
-            PonerFloat('TOTAL_PEDCLIN',
-                       rCantidad * Datos.UltimoCoste.PrecioUltCompra);
-            PrepararLineaFiscalCompra(
-              dmmPedidosCompra.unqryTablaG.Connection,
-              dmmPedidosCompra.unqryTablaG, ds, 'PEDC', 'PEDCLIN',
-              'TOTAL_PEDCLIN');
-            if Assigned(FPivote) then
-            begin
-              if iAcPivot <= 0 then
-              begin
-                if FPivote.Activo then
-                  btnTallasHorizontalClick(nil);
-              end
-              else if CampoCabeceraString('ESPIVOTE_HORIZONTAL_PEDC') <> 'N'
-              then
-              begin
-                if not FPivote.Activo then
-                  btnTallasHorizontalClick(nil);
-                if FPivote.Activo then
-                begin
-                  if ds.State in dsEditModes then
-                    ds.Post;
-                  FPivote.RecargarYRepublicar;
-                end;
-              end;
-            end;
-            if Datos.RequiereSku and (Datos.CodigoSku = '') and
-               ((FPivote = nil) or (not FPivote.Activo)) then
-              EnfocarSku(True);
-          end
-          else if Datos.Mensaje <> '' then
-            MessageDlg(Datos.Mensaje, mtWarning, [mbOk], 0);
-        end
-        else if Resolucion.Mensaje <> '' then
-          MessageDlg(Resolucion.Mensaje, mtWarning, [mbOk], 0);
-      finally
-        Resolver := nil;
-        Validador := nil;
-        FAplicandoArticulo := False;
+          oLineas := dmmPedidosCompra.unqryPedidosCompraLineas;
+          if oLineas.State in dsEditModes then
+            oLineas.Post;
+          FPivote.RecargarYRepublicar;
+        end;
+      end
+      else if AResultado.AccionPivote = apacRecargar then
+      begin
+        oLineas := dmmPedidosCompra.unqryPedidosCompraLineas;
+        if oLineas.State in dsEditModes then
+          oLineas.Post;
+        FPivote.RecargarYRepublicar;
       end;
     end;
+    if AResultado.RequiereSku and
+       ((FPivote = nil) or (not FPivote.Activo)) then
+      EnfocarSkuPedidoCompra(True);
   end;
 end;
 
@@ -769,6 +599,17 @@ begin
     FColColorPivot, colLinPedcColorPivotButtonClick);
   FColColorProveedorPivot := nil;
   inherited;
+  FAplicacionArticuloCompra := CrearAplicacionArticuloCompra(
+    CrearRepositorioLecturasArticuloCompraUniDAC(
+      dmmPedidosCompra.unqryTablaG.Connection,
+      CrearValidadorArticulos(
+        dmmPedidosCompra.unqryTablaG.Connection),
+      CrearResolverArticulos(
+        dmmPedidosCompra.unqryTablaG.Connection)),
+    CrearPuertoLineaArticuloCompraUniDAC(
+      dmmPedidosCompra.unqryTablaG.Connection,
+      dmmPedidosCompra.unqryTablaG,
+      dmmPedidosCompra.unqryPedidosCompraLineas));
   FEstiloRecepcionVencida := TcxStyle.Create(Self);
   FEstiloRecepcionVencida.AssignedValues := [svTextColor];
   FEstiloRecepcionVencida.TextColor := clRed;
@@ -850,6 +691,7 @@ procedure TfrmMtoPedidosCompra.FormDestroy(Sender: TObject);
 var
   bHuboCambios: Boolean;
 begin
+  FAplicacionArticuloCompra := nil;
   // El modo del contrato se libera ANTES del inherited: su teardown
   // toca el view y el dataset de lineas, que deben seguir vivos (misma
   // leccion que pedidos/facturas de venta, AV al cerrar 08/07/26).

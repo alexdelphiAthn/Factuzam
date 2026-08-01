@@ -44,6 +44,10 @@ uses
     '..\src\Lib\inLibCopiasSeguridadIntf.pas',
   inLibCopiasSeguridadReglas in
     '..\src\Lib\inLibCopiasSeguridadReglas.pas',
+  inLibOperacionesAplicacionIntf in
+    '..\src\Lib\inLibOperacionesAplicacionIntf.pas',
+  inLibCoordinadorOperacionesAplicacion in
+    '..\src\Lib\inLibCoordinadorOperacionesAplicacion.pas',
   inLibConfiguracionIni in
     '..\src\Lib\inLibConfiguracionIni.pas',
   inLibDocumentoFiscal in
@@ -89,6 +93,8 @@ uses
     '..\src\Lib\inLibArticulosAltaTarifas.pas',
   inLibArticulosAtributosBasicos in
     '..\src\Lib\inLibArticulosAtributosBasicos.pas',
+  inLibArticulosAtributosBasicosIntf in
+    '..\src\Lib\inLibArticulosAtributosBasicosIntf.pas',
   inLibArticulosVisibilidad in
     '..\src\Lib\inLibArticulosVisibilidad.pas',
   inLibStockCeldaDocumento in
@@ -142,6 +148,10 @@ uses
     '..\src\DataModules\UniDataComprasSesionesUnidadTrabajo.pas',
   UniDataVerifactuColaRepositorio in
     '..\src\verifactu\UniDataVerifactuColaRepositorio.pas',
+  inLibVerifactuEsquemaIntf in
+    '..\src\verifactu\inLibVerifactuEsquemaIntf.pas',
+  UniDataVerifactuEsquema in
+    '..\src\verifactu\UniDataVerifactuEsquema.pas',
   UniDataVerifactuNoVerifactuExport in
     '..\src\verifactu\UniDataVerifactuNoVerifactuExport.pas',
   UniDataVerifactuColaProcesador in
@@ -198,12 +208,24 @@ uses
     '..\src\DataModules\UniDataArticulosResolverRepositorio.pas',
   inLibArticulosValidadorIntf in
     '..\src\Lib\inLibArticulosValidadorIntf.pas',
+  inLibAplicacionArticuloCompraIntf in
+    '..\src\Lib\inLibAplicacionArticuloCompraIntf.pas',
+  inLibAplicacionArticuloCompra in
+    '..\src\Lib\inLibAplicacionArticuloCompra.pas',
+  UniDataAplicacionArticuloCompra in
+    '..\src\DataModules\UniDataAplicacionArticuloCompra.pas',
+  UniDataDocsProveedorSql in
+    '..\src\DataModules\UniDataDocsProveedorSql.pas',
+  UniDataDocsProveedor in
+    '..\src\DataModules\UniDataDocsProveedor.pas',
   UniDataArticulosValidadorRepositorio in
     '..\src\DataModules\UniDataArticulosValidadorRepositorio.pas',
   inLibArticulosAtributosIntf in
     '..\src\Lib\inLibArticulosAtributosIntf.pas',
   UniDataArticulosAtributosRepositorio in
     '..\src\DataModules\UniDataArticulosAtributosRepositorio.pas',
+  UniDataArticulosAtributosBasicosRepositorio in
+    '..\src\DataModules\UniDataArticulosAtributosBasicosRepositorio.pas',
   inLibTraspasoTicketIntf in
     '..\src\Caja\Lib\inLibTraspasoTicketIntf.pas',
   UniDataTraspasoTicketRepositorio in
@@ -348,6 +370,8 @@ uses
   PruebasPivoteCompraCalculo in
     'PruebasPivoteCompraCalculo.pas',
   PruebasPedidosCompra in 'PruebasPedidosCompra.pas',
+  PruebasAplicacionArticuloCompra in
+    'PruebasAplicacionArticuloCompra.pas',
   PruebasVentasWsJson in 'PruebasVentasWsJson.pas',
   PruebasVerifactuColaRepositorio in
     'PruebasVerifactuColaRepositorio.pas',
