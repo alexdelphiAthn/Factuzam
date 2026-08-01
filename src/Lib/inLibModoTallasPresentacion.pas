@@ -23,7 +23,7 @@ uses
   cxGraphics, cxEdit, cxTextEdit, cxDropDownEdit, cxCurrencyEdit,
   cxDataStorage, cxGrid, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView,
-  inLibColumnasSkuIntf, inLibGridTallasInline, inLibAtributosPaleta,
+  inLibColumnasSkuIntf, inLibGridTallasInline,
   inLibModoTallasIntf, inLibModoTallasBuscador,
   inLibDistribuidorTallas;
 
@@ -315,7 +315,6 @@ end;
 
 procedure TPresentacionModoTallas.CrearGestor;
 begin
-  FCfgTallas.Conexion := FConfig.Conexion;
   FCfgTallas.Grid := FConfig.View;
   FGestor := TGestorGridTallas.Create(FCfgTallas);
 end;
@@ -653,7 +652,7 @@ begin
     FLineas.ConfirmarEdicionPendiente;
     Master := FCfgTallas.SourceMaster.DataSet;
     Parametros := Default(TParametrosDistribuidorTallas);
-    Parametros.Conexion := FConfig.Conexion;
+    Parametros.Conexion := FCfgTallas.Conexion;
     Parametros.Usuario := FCfgTallas.Usuario;
     Parametros.TablaCeldas := FCfgTallas.TablaCeldas;
     Parametros.CampoSerie := FCfgTallas.FieldSerieCel;
@@ -758,9 +757,9 @@ begin
         AViewInfo.GridRecord.Values[ColumnaArticulo.Index]);
     sTexto := AViewInfo.Text;
   end;
-  if PintarCeldaSwatchArticuloSiAplica(
-       FConfig.Conexion, ACanvas, AViewInfo, sArticulo, sTexto,
-       nil) then
+  if Assigned(FConfig.Servicios.Paleta) and
+     FConfig.Servicios.Paleta.PintarCeldaArticulo(
+       ACanvas, AViewInfo, sArticulo, sTexto) then
     ADone := True;
 end;
 

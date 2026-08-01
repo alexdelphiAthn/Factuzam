@@ -41,7 +41,8 @@ unit UniDataConsultaOpe;
 interface
 
 uses
-  System.SysUtils, System.Classes, Data.DB, Uni, MemDS, DBAccess, vcl.dialogs;
+  System.SysUtils, System.Classes, Data.DB, Uni, MemDS, DBAccess,
+  inLibInteraccionDatosIntf;
 
 type
   TdmConsultaOpe = class(TDataModule)
@@ -81,12 +82,14 @@ type
     // OnEditValueChanged y luego FormShow llama tambien a RecargarMaestro:
     // antes salian 2-3 cargas identicas.
     FUltimaClaveMaestro: string;
+    FOnNotificarMensaje: TNotificarMensajeDatosEvent;
     procedure ConectarConsultas;
     procedure ConfigurarConsultaMaestro;
     procedure ConfigurarConsultasCaja;
     procedure ConfigurarConsultasMovimientoCliente;
     procedure ConfigurarConsultasDepositoFactura;
     procedure AbrirSeguro(q: TUniQuery; const sNombre: string);
+    procedure NotificarError(const AMensaje: string);
   public
     constructor Create(
       AOwner: TComponent;
@@ -116,6 +119,8 @@ type
     // True si la operacion seleccionada es un traspaso (TR misma empresa /
     // TA entre empresas). Usado para reimprimir su ticket especifico.
     function  EsTraspaso: Boolean;
+    property OnNotificarMensaje: TNotificarMensajeDatosEvent
+      read FOnNotificarMensaje write FOnNotificarMensaje;
   end;
 
 implementation
@@ -660,6 +665,19 @@ begin
 end;
 
 // -----------------------------------------------------------------------------
+procedure TdmConsultaOpe.NotificarError(const AMensaje: string);
+begin
+  if Assigned(FOnNotificarMensaje) then
+  begin
+    FOnNotificarMensaje(Self, AMensaje, smdError);
+  end
+  else
+  begin
+    inLibLog.Log.LogError(AMensaje);
+  end;
+end;
+
+// -----------------------------------------------------------------------------
 procedure TdmConsultaOpe.AbrirSeguro(q: TUniQuery; const sNombre: string);
 begin
   try
@@ -670,8 +688,8 @@ begin
       q.Close;
       // Registramos pero no propagamos: un fallo en una pestaña no debe
       // tirar el maestro ni las demas pestañas.
-      ShowMessage(Format(SErrorAbrirConsultaOpe,
-                         [sNombre, E.Message]));
+      NotificarError(Format(SErrorAbrirConsultaOpe,
+        [sNombre, E.Message]));
     end;
   end;
 end;

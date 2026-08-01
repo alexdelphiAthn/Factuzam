@@ -16,7 +16,8 @@ unit inLibTicketsCajaIntf;
 interface
 
 uses
-  System.SysUtils;
+  System.SysUtils,
+  inLibGenerarTicketIntf;
 
 type
   TContextoOperacionTicketCaja = record
@@ -191,6 +192,7 @@ type
     Resguardos: IRepositorioResguardosCaja;
     Tickets: IRepositorioTicketsVentaCaja;
     Recordatorios: IRepositorioRecordatoriosCaja;
+    Impresion: ILecturasImpresionTicket;
   end;
 
 implementation

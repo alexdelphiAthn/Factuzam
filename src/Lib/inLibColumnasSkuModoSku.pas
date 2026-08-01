@@ -29,13 +29,13 @@ interface
 
 uses
   Winapi.Windows, System.SysUtils, System.Classes, System.Variants,
-  System.Types, System.Generics.Collections, Data.DB, Uni, Vcl.Controls,
+  System.Types, Data.DB, Vcl.Controls,
   Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Forms, Vcl.Graphics, cxGraphics, cxEdit,
   cxTextEdit,
   cxDropDownEdit, cxEditRepositoryItems, cxDBExtLookupComboBox, cxGrid,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
   inLibColumnasSkuIntf, inLibArticulosValidadorIntf,
-  inLibArticulosAtributosIntf, inLibAtributosPaleta;
+  inLibArticulosAtributosIntf, inLibModoTallasIntf;
 
 type
   TModoEntradaSku = class(TInterfacedObject, IModoEntradaGrid)
@@ -50,7 +50,7 @@ type
     // Desplegable de busqueda incremental por CODIGO_UNIDAD_SKU: query +
     // datasource + view en su repositorio + item de edicion combo. Todo en
     // runtime (la lib no tiene .dfm), como inLibGridArticulos.
-    FBusqQry: TUniQuery;
+    FBusqueda: IBusquedaSkusTallas;
     FBusqDs: TDataSource;
     FBusqRepo: TcxGridViewRepository;
     FBusqView: TcxGridDBTableView;
@@ -155,6 +155,11 @@ begin
   FLookup := AConfig.LookupAtributos;
   if not Assigned(FLookup) then
     raise Exception.Create(SErrorLookupAtributosNoInyectado);
+  if not Assigned(AConfig.Servicios.Busqueda) then
+    raise EArgumentNilException.Create('Servicios.Busqueda');
+  if not Assigned(AConfig.Servicios.Paleta) then
+    raise EArgumentNilException.Create('Servicios.Paleta');
+  FBusqueda := AConfig.Servicios.Busqueda.CrearBusqueda;
   FTimerBusq := TTimer.Create(nil);
   FTimerBusq.Enabled := False;
   FTimerBusq.Interval := 350;
@@ -182,7 +187,7 @@ begin
   FreeAndNil(FEditRepo);
   FreeAndNil(FBusqRepo);
   FreeAndNil(FBusqDs);
-  FreeAndNil(FBusqQry);
+  FBusqueda := nil;
   FLookup := nil;
   inherited;
 end;
@@ -270,10 +275,8 @@ begin
   //    debounce) consulta el top-100 cuyo CODIGO_UNIDAD_SKU empieza por lo
   //    tecleado. Precargar el catalogo entero es inviable con cientos de
   //    miles de SKU (vease inLibGridArticulos.CrearLookupBusqueda).
-  FBusqQry := TUniQuery.Create(nil);
-  FBusqQry.Connection := FConfig.Conexion;
   FBusqDs := TDataSource.Create(nil);
-  FBusqDs.DataSet := FBusqQry;
+  FBusqDs.DataSet := FBusqueda.Dataset;
   // 2. View del desplegable, en su repositorio (no en pantalla).
   FBusqRepo := TcxGridViewRepository.Create(nil);
   FBusqView := FBusqRepo.CreateItem(TcxGridDBTableView)
@@ -341,30 +344,15 @@ begin
 end;
 
 procedure TModoEntradaSku.AbrirBusquedaFiltrada(const ATexto: string);
-const
-  SQL_BASE =
-    'SELECT s.CODIGO_UNIDAD_SKU AS SKU,' +
-    '       s.CODIGO_UNIDAD_SKU AS INPUT_BUSQUEDA,' +
-    '       a.DESCRIPCION_ART AS DESCRIPCION,' +
-    '       COALESCE((SELECT SUM(st.CANTIDAD_STK)' +
-    '                   FROM fza_articulos_stockactual st' +
-    '                  WHERE st.CODIGO_UNIDAD_STK = s.CODIGO_UNIDAD_SKU' +
-    '                    AND st.CODIGO_ALM_STK = :ALM), 0) AS STOCK' +
-    '  FROM fza_articulos_skus s' +
-    '  JOIN fza_articulos a ON a.CODIGO_ART_ART = s.CODIGO_ART_SKU' +
-    ' WHERE s.ESACTIVO_SKU = ''S'' AND a.ESACTIVO_ART = ''S''' +
-    '   AND a.TIPO_ART = ''ESTANDAR''';
-  SQL_FILTRO = ' AND s.CODIGO_UNIDAD_SKU LIKE :PREF';
-  SQL_ORDEN = ' ORDER BY s.CODIGO_UNIDAD_SKU LIMIT 100';
 begin
-  if FBusqQry <> nil then
+  if Assigned(FBusqueda) then
   begin
     // Siempre: aunque la query ya este abierta con el mismo filtro,
     // el desplegable puede tener filtro interno pegado (autocompletado).
     LimpiarFiltroDesplegable;
     // Reabre solo si cambia el texto o el dataset esta invalidado
     // (cambio de almacen / primera vez).
-    if not (FBusqQry.Active and (FUltimoFiltro = ATexto)) then
+    if not (FBusqueda.Dataset.Active and (FUltimoFiltro = ATexto)) then
     begin
       Screen.Cursor := crHourGlass;
       FBusqView.BeginUpdate;
@@ -372,17 +360,7 @@ begin
         // Desenganchar la vista mientras se recambia la query evita
         // que reaplique su filtro sobre el dataset a medio abrir.
         FBusqView.DataController.DataSource := nil;
-        if FBusqQry.Active then
-          FBusqQry.Close;
-        if ATexto = '' then
-          FBusqQry.SQL.Text := SQL_BASE + SQL_ORDEN
-        else
-        begin
-          FBusqQry.SQL.Text := SQL_BASE + SQL_FILTRO + SQL_ORDEN;
-          FBusqQry.ParamByName('PREF').AsString := ATexto + '%';
-        end;
-        FBusqQry.ParamByName('ALM').AsString := FAlmacenStock;
-        FBusqQry.Open;
+        FBusqueda.Aplicar(ATexto, FAlmacenStock);
         FUltimoFiltro := ATexto;
         FBusqView.DataController.DataSource := FBusqDs;
         FBusqView.DataController.Refresh;
@@ -458,7 +436,8 @@ begin
     // cerrar el desplegable vacio descartaba el codigo en silencio y
     // los articulos fuera de catalogo no se podian teclear.
     if (sEntrada = '') and (Edit is TcxCustomTextEdit) and
-       (FBusqQry <> nil) and FBusqQry.Active and FBusqQry.IsEmpty then
+       Assigned(FBusqueda) and FBusqueda.Dataset.Active and
+       FBusqueda.Dataset.IsEmpty then
       sEntrada := Trim(TcxCustomTextEdit(Edit).Text);
     DispararResolucion(sEntrada);
   end;
@@ -614,8 +593,8 @@ begin
     sTexto := AViewInfo.Text;
   sArticulo := ValorRecord(AViewInfo.GridRecord,
                            FConfig.Campos.CodigoArt);
-  if PintarCeldaSwatchArticuloSiAplica(
-       FConfig.Conexion, ACanvas, AViewInfo, sArticulo, sTexto, nil) then
+  if FConfig.Servicios.Paleta.PintarCeldaArticulo(
+       ACanvas, AViewInfo, sArticulo, sTexto) then
     ADone := True;
   if (not ADone) and (sTexto <> '') and (sTexto <> AViewInfo.Text) then
   begin
@@ -798,8 +777,7 @@ var
   Atribs: TArray<TArticuloAtributo>;
   Avs: TArray<TArticuloAtributoValor>;
   AvsStr: TArray<string>;
-  Mapa: TDictionary<string, string>;
-  sIdVa, sAvNuevo: string;
+  sAvNuevo: string;
   i, j: Integer;
   bCancelado: Boolean;
 begin
@@ -826,16 +804,10 @@ begin
         SetLength(AvsStr, Length(Avs));
         for j := 0 to High(Avs) do
           AvsStr[j] := Avs[j].Valor;
-        sIdVa := '';
-        Mapa := ObtenerMapaAtributosGlobal(FConfig.Conexion);
-        if Mapa <> nil then
-          Mapa.TryGetValue(UpperCase(Trim(Atribs[i].NombreAtributo)),
-                           sIdVa);
         // Paleta de swatches (desarrollo ya hecho, mismo selector que
         // caja/inventarios). Auto-centrada (-1,-1).
-        if SeleccionarAvConPaleta(FConfig.Conexion, sIdVa, AvsStr, '',
-                                  sAvNuevo,
-                                  -1, -1, 160) then
+        if FConfig.Servicios.Paleta.Seleccionar(
+             Atribs[i].NombreAtributo, AvsStr, sAvNuevo) then
           Result := Result + '/' + sAvNuevo
         else
           bCancelado := True;

@@ -30,7 +30,7 @@ type
 
   // Validación de negocio (stock insuficiente, líneas incompletas, destino
   // sin elegir...). El formulario la captura y la muestra como aviso
-  // (ShowMessage); no debe llegar al diálogo de error no controlado.
+  // El formulario informa del fallo; no debe llegar al error no controlado.
   EValidacionTraspaso = class(Exception);
 
   TdmTraspaso = class(TDataModule)

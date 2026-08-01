@@ -322,7 +322,7 @@ uses
   inLibValidacionDocumento, inLibPresentacionDocumento, inLibLog,
   inLibMsgArticulos, inLibMsgVentas,
   // Composicion del puerto de persistencia del pivote (V2).
-  UniDataPivoteVenta;
+  UniDataPivoteVenta, UniDataColumnasSkuServicios;
 
 {$R *.dfm}
 
@@ -1357,16 +1357,17 @@ begin
   if FModoEntradaSel <> mcsSku then
     dmmPedidos.DesempaquetarAtributosLineas;
   Cfg := CrearConfigColumnasSkuDocumento(
-    dmmPedidos.unqryTablaG.Connection, ContextoSesion,
+    CrearServiciosColumnasSkuUniDAC(
+      dmmPedidos.unqryTablaG.Connection), ContextoSesion,
     tvPedidosLineas, ds, FModoEntradaSel,
     dmmPedidos.unqryTablaG.FieldByName(
       'CODIGO_ALM_PED').AsString, 'PEDLIN');
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
-    CrearValidadorArticulos(Cfg.Conexion);
+    CrearValidadorArticulos(dmmPedidos.unqryTablaG.Connection);
   Cfg.LookupAtributos :=
-    CrearLookupAtributosArticulos(Cfg.Conexion);
+    CrearLookupAtributosArticulos(dmmPedidos.unqryTablaG.Connection);
   // Precio por SKU para la consolidacion del modo tallas: lineas con
   // precio distinto no fusionan.
   Cfg.ObtenerPrecioSku := PrecioSkuTallas;

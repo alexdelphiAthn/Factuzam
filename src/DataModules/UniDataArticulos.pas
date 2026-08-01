@@ -19,7 +19,7 @@ interface
 uses
   inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
-  Uni, inLibUser, inLibLog, cxListView, Vcl.Forms, vcl.dialogs,
+  Uni, inLibUser, inLibLog, cxListView, Vcl.Forms,
   Vcl.ComCtrls, Winapi.Windows, system.strUtils, cxGridDBTableView,
   cxCustomData, cxFilter,
   System.Variants, vcl.Controls, Datasnap.Provider, Datasnap.DBClient,
@@ -597,11 +597,6 @@ var
 begin
   with qryBorrarLineas do
   begin
-//  if not( Application.MessageBox(  '¿Desea borrar también tarifas y ' +
-//                                   'proveedores de la ficha del artículo?',
-//                                   'Mensaje Advertencia',
-//                                   MB_YESNO ) = ID_YES ) then
-//    begin
     qryBorrarLineas := TUniQuery.Create(Self);
     Connection := ConexionPrincipal;
     SQL.Text := 'DELETE ' +
@@ -983,16 +978,16 @@ begin
       // De >0 a 0 estando activa -> preguntar si desactivar
       if (oldPrecio > 0) and (newPrecio = 0) and (esActivo = 'S') then
       begin
-        if MessageDlg(SPreguntaDesactivarTarifaSinPrecio,
-                      mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+        if SolicitarConfirmacion(
+             SPreguntaDesactivarTarifaSinPrecio) then
           FindField('ESACTIVO_ARTTAR').AsString := 'N';
       end;
 
       // De 0 a >0 estando inactiva -> preguntar si activar
       if (oldPrecio = 0) and (newPrecio > 0) and (esActivo = 'N') then
       begin
-        if MessageDlg(SPreguntaActivarTarifaConPrecio,
-                      mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+        if SolicitarConfirmacion(
+             SPreguntaActivarTarifaConPrecio) then
           FindField('ESACTIVO_ARTTAR').AsString := 'S';
       end;
     end;
@@ -1028,8 +1023,9 @@ begin
                                 FindField('FECHA_HASTA_ARTTAR')))
       then
       begin
-        ShowMessageFmt(SErrorTarifaFechasConcurrentes,
-                       [FindField('CODIGO_UNIDAD_ARTTAR').AsString]);
+        NotificarError(Format(
+          SErrorTarifaFechasConcurrentes,
+          [FindField('CODIGO_UNIDAD_ARTTAR').AsString]));
         Abort;
       end;
     finally

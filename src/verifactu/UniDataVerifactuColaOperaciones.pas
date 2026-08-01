@@ -346,7 +346,7 @@ begin
     TVentasWsCola.RegistrarFactura(
       AParametrosCaja,
       CrearRepositorioVentasWsColaUniDAC(AQryTrx.Connection),
-      AQryTrx, AUsuario, ASerie, ANumero, ATipoOperacion);
+      AUsuario, ASerie, ANumero, ATipoOperacion);
   except
     on E: Exception do
     begin
@@ -469,7 +469,7 @@ begin
         TVentasWsCola.RegistrarFactura(
           AParametrosCaja,
           CrearRepositorioVentasWsColaUniDAC(Qry.Connection),
-          Qry, AUsuario, ASerieOriginal, ANumeroOriginal,
+          AUsuario, ASerieOriginal, ANumeroOriginal,
           'SUSTITUCION');
       end;
     finally

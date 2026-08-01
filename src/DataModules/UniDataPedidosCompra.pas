@@ -127,10 +127,11 @@ implementation
 
 uses
   inLibLog, inLibValoresAutomaticos, inLibContadorLineas,
+  UniDataContadorLineasRepositorio,
   System.Diagnostics, System.UITypes, System.Generics.Collections,
-  Vcl.Dialogs, ComCtrls, cxListView,
+  ComCtrls, cxListView,
   inLibPedidosCompra,
-  UniDataPedidosCompraOperaciones,
+  UniDataPedidosCompraPendientes,
   inLibComprasImpuestos,
   inLibData,
   inLibArticulosValidadorIntf,
@@ -571,8 +572,8 @@ begin
   if (unqryTablaG.FindField('CODIGO_ALM_PEDC') <> nil) and
      (Trim(unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString) = '') then
   begin
-    MessageDlg(SAvisoAlmacenDestinoPedidoCompraObligatorio,
-               mtWarning, [mbOk], 0);
+    NotificarAdvertencia(
+      SAvisoAlmacenDestinoPedidoCompraObligatorio);
     Abort;
   end;
 end;
@@ -620,7 +621,7 @@ begin
     FReorganizacionPendiente := True
   else
     inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
-      CrearPedidosCompraUniDAC(ConexionPrincipal),
+      CrearPendientesPedidoCompraUniDAC(ConexionPrincipal),
       sSerie, sNumero, IdentidadSesion.Usuario);
 end;
 
@@ -636,14 +637,15 @@ begin
   sSerie  := unqryTablaG.FieldByName('SERIE_PEDC').AsString;
   sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
   if (sSerie = '') or (sNumero = '') then Exit;
-  if MessageDlg(Format(SPreguntaBorrarPedidoCompra,
-                       [sSerie, sNumero]),
-                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+  if not SolicitarConfirmacion(
+    Format(SPreguntaBorrarPedidoCompra,
+      [sSerie, sNumero])) then
   begin
     Abort;
   end;
   inLibPedidosCompra.BorrarPdteRecibirDesdePedido(
-    CrearPedidosCompraUniDAC(ConexionPrincipal), sSerie, sNumero);
+    CrearPendientesPedidoCompraUniDAC(ConexionPrincipal),
+    sSerie, sNumero);
   // Borrar lineas asociadas para que no se queden huerfanas (no hay
   // FK con CASCADE).
   with TUniQuery.Create(nil) do
@@ -783,7 +785,8 @@ begin
     sSerie  := Trim(unqryTablaG.FieldByName('SERIE_PEDC').AsString);
     if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
        ((DataSet.State = dsInsert) and
-        LineaDocExiste(ConexionPrincipal, LIN_PEDIDOS_COMPRA, sSerie,
+        LineaDocExiste(CrearContadorLineasDocumento(ConexionPrincipal),
+          LIN_PEDIDOS_COMPRA, sSerie,
           sNumero, sLinea)) then
     begin
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
@@ -792,7 +795,8 @@ begin
         DataSet.FieldByName('NUMERO_PEDC_PEDCLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_PEDC_PEDCLIN') <> nil then
         DataSet.FieldByName('SERIE_PEDC_PEDCLIN').AsString := sSerie;
-      iNuevaLinea := GetSiguienteLineaDocLibre(ConexionPrincipal,
+      iNuevaLinea := GetSiguienteLineaDocLibre(
+        CrearContadorLineasDocumento(ConexionPrincipal),
         CONT_PEDIDOS_COMPRA, LIN_PEDIDOS_COMPRA, sSerie, sNumero);
       if iNuevaLinea = 0 then
       begin
@@ -830,7 +834,7 @@ begin
     FReorganizacionPendiente := True
   else
     inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
-      CrearPedidosCompraUniDAC(ConexionPrincipal),
+      CrearPendientesPedidoCompraUniDAC(ConexionPrincipal),
       sSerie, sNumero, IdentidadSesion.Usuario);
 end;
 
@@ -847,7 +851,7 @@ begin
   sLinea  := unqryPedidosCompraLineas.FieldByName('LINEA_PEDCLIN').AsString;
   if (sSerie = '') or (sNumero = '') then Exit;
   inLibPedidosCompra.BorrarPdteRecibirDesdePedido(
-    CrearPedidosCompraUniDAC(ConexionPrincipal),
+    CrearPendientesPedidoCompraUniDAC(ConexionPrincipal),
     sSerie, sNumero, sLinea);
 end;
 
@@ -1358,7 +1362,7 @@ begin
       sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
       if (sSerie <> '') and (sNumero <> '') then
         inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
-          CrearPedidosCompraUniDAC(ConexionPrincipal),
+          CrearPendientesPedidoCompraUniDAC(ConexionPrincipal),
           sSerie, sNumero, IdentidadSesion.Usuario);
     end;
   end;
@@ -1387,7 +1391,7 @@ begin
     sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
     if (sSerie <> '') and (sNumero <> '') then
       inLibPedidosCompra.GenerarPdteRecibirDesdePedido(
-        CrearPedidosCompraUniDAC(ConexionPrincipal),
+        CrearPendientesPedidoCompraUniDAC(ConexionPrincipal),
         sSerie, sNumero, IdentidadSesion.Usuario);
   end;
 end;

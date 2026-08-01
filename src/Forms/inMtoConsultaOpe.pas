@@ -29,7 +29,8 @@ uses
   inMtoFrmBase, inLibVentasCalendario, inLibLayoutForm,
   UniDataConsultaOpe, UniDataCaja, dxCore, cxDateUtils, dxCoreGraphics,
   cxCurrencyEdit, cxClasses, cxGridCustomView, JvComponentBase, JvEnterTab,
-  cxLocalization, Vcl.Menus, inLibCajaTipos, inLibCajaVentanasIntf;
+  cxLocalization, Vcl.Menus, inLibCajaTipos, inLibCajaVentanasIntf,
+  inLibInteraccionDatosIntf;
 
 type
   TfrmConsultaOpe = class(TfrmBase, IConsultaOperacionesCaja)
@@ -118,6 +119,10 @@ type
     FAlmacen:    string;
     FCaja:       string;
     // Factura de la operación seleccionada (pestaña Factura)
+    procedure NotificarMensajeDesdeDM(
+      Sender: TObject;
+      const AMensaje: string;
+      ASeveridad: TSeveridadMensajeDatos);
     function FacturaSeleccionada(out ASerie, ANumero: string): Boolean;
     function SeleccionarTipoRectificativa(
       const ASerie, ANumero: string;
@@ -161,6 +166,7 @@ implementation
 {$R *.dfm}
 
 uses inLibGenerarTicketBD, inLibGenerarTicketCaja,
+     UniDataGenerarTicketRepositorio,
      inLibLog, inLibFotos, inMtoFotoArticulo,
      inLibTraspasoTicket, inLibShowMto, Uni,
      inLibVerifactu, inMtoModalFacturarTicket,
@@ -181,6 +187,7 @@ procedure TfrmConsultaOpe.FormCreate(Sender: TObject);
 begin
   inherited;
   FdmConsulta := TdmConsultaOpe.Create(Self, ConexionPrincipal);
+  FdmConsulta.OnNotificarMensaje := NotificarMensajeDesdeDM;
   FLayout := TLayoutLoader.Create(
     Self.Name, ContextoSesion, PerfilesLectura);
   FVentasCal := TVentasCalendarioCache.Create(
@@ -202,6 +209,26 @@ begin
   tmrBusqueda.Interval := 400;
   KeyPreview := True;   // para que FormKeyDown capture F5/ESC aunque el foco
                         // este en el grid o en el edit de busqueda
+end;
+
+procedure TfrmConsultaOpe.NotificarMensajeDesdeDM(
+  Sender: TObject;
+  const AMensaje: string;
+  ASeveridad: TSeveridadMensajeDatos);
+var
+  TipoMensaje: TMsgDlgType;
+begin
+  case ASeveridad of
+    smdInformacion:
+      TipoMensaje := mtInformation;
+    smdAdvertencia:
+      TipoMensaje := mtWarning;
+    smdError:
+      TipoMensaje := mtError;
+  else
+    TipoMensaje := mtInformation;
+  end;
+  MessageDlg(AMensaje, TipoMensaje, [mbOK], 0);
 end;
 
 function TfrmConsultaOpe.FormularioConsultaCaja: TCustomForm;
@@ -1011,7 +1038,10 @@ begin
       if FdmConsulta.EsOperacionCaja then
         ImprimirTicketOperacionCaja(
                                     PreviewTicket,
-                                    ConexionPrincipal, sEmp, sAlm, sCaja,
+                                    ConexionPrincipal,
+                                    CrearLecturasImpresionTicket(
+                                      ConexionPrincipal),
+                                    sEmp, sAlm, sCaja,
                                     sNumOp,
                                     ANombreImpresora);
       if (not FdmConsulta.TieneFactura)

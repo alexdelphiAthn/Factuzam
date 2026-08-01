@@ -92,12 +92,9 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 
 function TdmEmpresas.ConfirmarCambioCriticoEmpresa(
   const sAccion: string): Boolean;
-var
-  sMensaje: string;
 begin
-  sMensaje := Format(SPreguntaCambioCriticoEmpresa, [sAccion]);
-  Result := Application.MessageBox(PChar(sMensaje), PChar(SAdvMsg),
-                                   MB_YESNO or MB_ICONWARNING) = ID_YES;
+  Result := SolicitarConfirmacion(
+    Format(SPreguntaCambioCriticoEmpresa, [sAccion]));
 end;
 
 procedure TdmEmpresas.unqryRetencionesAfterInsert(DataSet: TDataSet);
@@ -585,9 +582,8 @@ begin
   end;
   if unqryFacturasEmpresas.RecordCount > 0 then
   begin
-    if not (Application.MessageBox(
-      PWideChar(SPreguntaBorrarEmpresaConFacturas),
-      PWideChar(SAdvMsg), MB_YESNO) = ID_YES) then
+    if not SolicitarConfirmacion(
+      SPreguntaBorrarEmpresaConFacturas) then
     begin
       Abort;
     end;

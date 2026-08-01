@@ -68,7 +68,8 @@ uses
   cxGridDBTableView, cxGrid, cxPC, cxGraphics, cxLocalization,
   dxSkinsCore, dxSkinBlue, dxSkinsForm, dxScrollbarAnnotations,
   dxDateRanges, cxMemo, cxControls, dxCoreGraphics, cxCustomListBox,
-  cxRadioGroup, inLibLectorScanner, inLibDocumentosTrabajo, inLibFotos,
+  cxRadioGroup, inLibLectorScanner, inLibDocumentosTrabajo,
+  UniDataDocumentosTrabajoRepositorio, inLibFotos,
   inMtoFrmBase, inLibPermisosIntf;
 
 const
@@ -300,7 +301,8 @@ uses
   inLibStockConsultaInfo,
   UniDataStockConsultaInfo,
   inMtoModalOperacionesCajaSku, inLibMsgArticulos, inLibMsgCaja,
-  inLibMsgComun, inLibMsgVentas;
+  inLibMsgComun, inLibMsgVentas,
+  inLibDocumentosTrabajoPresentacion;
 
 {$R *.dfm}
 
@@ -1025,6 +1027,8 @@ begin
       AgregarUnidadADocumentoTrabajo(
         Self,
         ConexionPrincipal,
+        CrearRepositoriosDocumentosTrabajo(ConexionPrincipal),
+        CrearInteraccionDocumentosTrabajoVcl,
         BusquedaVisual,
         ContextoSesion,
         ParametrosCaja,

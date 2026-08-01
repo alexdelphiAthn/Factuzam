@@ -340,10 +340,9 @@ end;
 procedure TdmClientes.unqryTablaGBeforeDelete(DataSet: TDataSet);
 begin
   inherited;
-  if (unqryFacturasClientes.RecordCount > 0) then
-    if not (Application.MessageBox(
-      PWideChar(SPreguntaBorrarClienteConFacturas),
-      PWideChar(SAdvMsg), MB_YESNO) = ID_YES) then
+  if (unqryFacturasClientes.RecordCount > 0) and
+     (not SolicitarConfirmacion(
+       SPreguntaBorrarClienteConFacturas)) then
       Abort;
 end;
 

@@ -52,7 +52,7 @@ type
 implementation
 
 uses
-  System.SysUtils, Vcl.Dialogs, inLibMsgConfiguracion;
+  System.SysUtils, inLibMsgConfiguracion;
 
 procedure ConfigurarCredencialesMySQL(
   AConexion: TUniConnection;
@@ -120,7 +120,7 @@ begin
     except
       on E: Exception do
       begin
-        ShowMessage(
+        raise Exception.Create(
           Format(
             SErrorConexionBbddConExcepcion,
             [
@@ -128,7 +128,6 @@ begin
               E.ClassName,
               E.Message
             ]));
-        raise;
       end;
     end;
   end;

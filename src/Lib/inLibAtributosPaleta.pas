@@ -23,15 +23,11 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.ImgList,
   Uni,
   cxGraphics,
-  cxGridCustomView, cxGridCustomTableView, cxGridTableView, System.UITypes;
+  cxGridCustomView, cxGridCustomTableView, cxGridTableView, System.UITypes,
+  inLibAtributosPaletaIntf;
 
 type
-  TInfoBasico = record
-    HexColor : string;       // '#RRGGBB' tal y como vino de EXTRA_ATB
-    Color    : TColor;       // Convertido a TColor (clNone si no parseable)
-    Nombre   : string;       // NOMBRE_ATB
-    EsValido : Boolean;      // True si Color es parseable
-  end;
+  TInfoBasico = inLibAtributosPaletaIntf.TInfoBasico;
 
 const
   // Pixeles horizontales que reserva PintarCeldaConCuadradoColor delante
@@ -44,6 +40,8 @@ const
 
 // Invalida la cache (llamar al refrescar fza_atributos_basicos).
 procedure InvalidarCachePaleta;
+procedure ConfigurarLecturasAtributosPaleta(
+  const ALecturas: ILecturasAtributosPaleta);
 
 // Busca por (ID_VA_ATB, CODIGO_ATB). Devuelve True si existe en la paleta
 // Y su EXTRA_ATB es un color valido.
@@ -60,7 +58,6 @@ function ObtenerInfoBasicoArticulo(AConexion: TUniConnection;
 
 // Devuelve los codigos basicos de una variacion usados por los SKU activos
 // de un articulo, ordenados como la paleta.
-function SqlBasicosArticulo: string;
 function ObtenerBasicosArticulo(AConexion: TUniConnection;
                                 const ACodArt, AIdVA: string): TArray<string>;
 
@@ -136,7 +133,8 @@ function PintarCeldaSwatchSiAplica(AConexion: TUniConnection;
 // asignacion especifica del articulo (color proveedor -> color basico) y usa
 // la paleta global solo como fallback. ATexto puede ser un valor o un SKU.
 function PintarCeldaSwatchArticuloSiAplica(
-  AConexion: TUniConnection; ACanvas: TcxCanvas;
+  AConexion: TUniConnection;
+  ACanvas: TcxCanvas;
   AViewInfo: TcxGridTableDataCellViewInfo;
   const ACodArt, ATexto: string;
   ADict: TDictionary<string, string>): Boolean;
@@ -152,7 +150,8 @@ function BuscarInfoBasicoEnArticulo(AConexion: TUniConnection;
 // Igual que BuscarInfoBasicoEnArticulo, dando prioridad a las asignaciones
 // particulares del articulo antes de consultar el basico global del AV.
 function BuscarInfoBasicoEnArticuloContextual(
-  AConexion: TUniConnection; const ACodArt, ATexto: string;
+  AConexion: TUniConnection;
+  const ACodArt, ATexto: string;
   ADict: TDictionary<string, string>;
   out AInfo: TInfoBasico): Boolean;
 
@@ -212,6 +211,7 @@ type
   TfrmSelPalAvAux = class(TForm)
   private
     FConexion  : TUniConnection;
+    FLecturas: ILecturasAtributosPaleta;
     FListBox  : TListBox;
     FIdVa     : string;
     FAvs      : TArray<string>;
@@ -229,6 +229,8 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   public
     constructor CreateConOpciones(AConexion: TUniConnection;
+                                  const ALecturas:
+                                  ILecturasAtributosPaleta;
                                   const AIdVa: string;
                                   const AAvs: array of string;
                                   const AValorActual: string;
@@ -246,6 +248,15 @@ var
   // (inventario, caja, ...). Carga perezosa via ObtenerMapaAtributosGlobal.
   GMapaGlobal        : TDictionary<string, string>;
   GMapaGlobalCargado : Boolean;
+  GLecturasPersistencia: ILecturasAtributosPaleta;
+
+procedure ConfigurarLecturasAtributosPaleta(
+  const ALecturas: ILecturasAtributosPaleta);
+begin
+  GLecturasPersistencia := ALecturas;
+  InvalidarCachePaleta;
+  InvalidarMapaAtributosGlobal;
+end;
 
 function ClaveCache(const AIdVA, ACodigoATB: string): string;
 begin
@@ -281,61 +292,39 @@ begin
   end;
 end;
 
-procedure CargarCache(AConexion: TUniConnection);
+procedure CargarCache(AConexion: TUniConnection;
+  const ALecturas: ILecturasAtributosPaleta);
 var
-  q    : TUniQuery;
-  Info : TInfoBasico;
-  sIdVa, sCod, sNom, sAv, sDesc: string;
+  Entrada: TEntradaCacheBasico;
+  Entradas: TArray<TEntradaCacheBasico>;
 begin
   GCache.Clear;
   GCacheCargado := False;
-  if AConexion = nil then Exit;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := AConexion;
-    // Hacemos JOIN con fza_atributos_valores para cachear también los textos reales (AV y DESCRIPCION)
-    // que los usuarios han escrito libremente y que son los que viajan en los SKUs de los Grids.
-    q.SQL.Text :=
-      'SELECT B.ID_VA_ATB, ' +
-      '       B.CODIGO_ATB, B.NOMBRE_ATB, B.HEX_ATB, V.AV, V.DESCRIPCION_AV ' +
-      '  FROM fza_atributos_basicos B ' +
-      '  LEFT JOIN fza_atributos_valores V ON V.ID_ATB_AV = B.ID_ATB ' +
-      ' WHERE B.ESACTIVO_ATB = ''S'' ' +
-      '   AND B.HEX_ATB IS NOT NULL ' +
-      '   AND B.HEX_ATB <> '''' ';
-    q.Open;
-    while not q.Eof do
+  if (AConexion <> nil) and (ALecturas <> nil) then
+  begin
+    Entradas := ALecturas.ListarEntradasCache(AConexion);
+    for Entrada in Entradas do
     begin
-      Info := Default(TInfoBasico);
-      Info.HexColor := q.FieldByName('HEX_ATB').AsString;
-      Info.Color    := HexToColor(Info.HexColor);
-      Info.Nombre   := q.FieldByName('NOMBRE_ATB').AsString;
-      Info.EsValido := Info.Color <> clNone;
-
-      if Info.EsValido then
+      if Entrada.Info.EsValido then
       begin
-        sIdVa := q.FieldByName('ID_VA_ATB').AsString;
-        sCod  := q.FieldByName('CODIGO_ATB').AsString;
-        sNom  := q.FieldByName('NOMBRE_ATB').AsString;
-        sAv   := q.FieldByName('AV').AsString;
-        sDesc := q.FieldByName('DESCRIPCION_AV').AsString;
-        // Cacheamos por el Código del color básico (ej. "01")
-        GCache.AddOrSetValue(ClaveCache(sIdVa, sCod), Info);
-        // Cacheamos por el Nombre del color básico (ej. "Rojo Básico")
-        if Trim(sNom) <> '' then
-          GCache.AddOrSetValue(ClaveCache(sIdVa, sNom), Info);
-        // Cacheamos por el Valor/Token del proveedor que compone el SKU (ej. "ROJO-FUEGO")
-        if Trim(sAv) <> '' then
-          GCache.AddOrSetValue(ClaveCache(sIdVa, sAv), Info);
-        // Cacheamos por el texto libre exacto por si un grid lo muestra crudo (ej. "Rojo Fuego")
-        if Trim(sDesc) <> '' then
-          GCache.AddOrSetValue(ClaveCache(sIdVa, sDesc), Info);
+        GCache.AddOrSetValue(
+          ClaveCache(Entrada.IdVariacion, Entrada.Codigo),
+          Entrada.Info);
+        if Trim(Entrada.Nombre) <> '' then
+          GCache.AddOrSetValue(
+            ClaveCache(Entrada.IdVariacion, Entrada.Nombre),
+            Entrada.Info);
+        if Trim(Entrada.Valor) <> '' then
+          GCache.AddOrSetValue(
+            ClaveCache(Entrada.IdVariacion, Entrada.Valor),
+            Entrada.Info);
+        if Trim(Entrada.Descripcion) <> '' then
+          GCache.AddOrSetValue(
+            ClaveCache(Entrada.IdVariacion, Entrada.Descripcion),
+            Entrada.Info);
       end;
-      q.Next;
     end;
     GCacheCargado := True;
-  finally
-    FreeAndNil(q);
   end;
 end;
 
@@ -348,60 +337,15 @@ begin
   GCacheCargado := False;
 end;
 
-function SqlBasicosArticulo: string;
-begin
-  Result :=
-    'SELECT ATB.CODIGO_ATB, MIN(ATB.ORDEN_ATB) AS ORDEN_ATB, ' +
-    '       MIN(ATB.NOMBRE_ATB) AS NOMBRE_ATB ' +
-    '  FROM fza_articulos_skus SK ' +
-    '  JOIN fza_atributos_sku SA ' +
-    '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
-    '  JOIN fza_atributos_valores AV ' +
-    '    ON AV.ID_AV = SA.ID_AV_SA ' +
-    '   AND AV.ID_VA_AV = :va ' +
-    '  JOIN fza_atributos_basicos ATB ' +
-    '    ON ATB.ID_VA_ATB = :va ' +
-    '   AND (ATB.ID_ATB = AV.ID_ATB_AV ' +
-    '        OR (AV.ID_ATB_AV IS NULL AND ATB.CODIGO_ATB = AV.AV)) ' +
-    ' WHERE SK.CODIGO_ART_SKU = :art ' +
-    '   AND COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'' ' +
-    '   AND COALESCE(AV.ESACTIVO_AV, ''S'') = ''S'' ' +
-    '   AND COALESCE(ATB.ESACTIVO_ATB, ''S'') = ''S'' ' +
-    ' GROUP BY ATB.CODIGO_ATB ' +
-    ' ORDER BY ORDEN_ATB, NOMBRE_ATB, ATB.CODIGO_ATB';
-end;
-
 function ObtenerBasicosArticulo(AConexion: TUniConnection;
   const ACodArt, AIdVA: string): TArray<string>;
-var
-  i: Integer;
-  oConsulta: TUniQuery;
-  sArticulo: string;
 begin
-  SetLength(Result, 0);
-  sArticulo := Trim(ACodArt);
-  if sArticulo <> '' then
-  begin
-    oConsulta := TUniQuery.Create(nil);
-    try
-      oConsulta.Connection := AConexion;
-      oConsulta.SQL.Text := SqlBasicosArticulo;
-      oConsulta.ParamByName('va').AsString := AIdVA;
-      oConsulta.ParamByName('art').AsString := sArticulo;
-      oConsulta.Open;
-      SetLength(Result, oConsulta.RecordCount);
-      i := 0;
-      while not oConsulta.Eof do
-      begin
-        Result[i] :=
-          oConsulta.FieldByName('CODIGO_ATB').AsString;
-        Inc(i);
-        oConsulta.Next;
-      end;
-    finally
-      oConsulta.Free;
-    end;
-  end;
+  Result := nil;
+  if (GLecturasPersistencia <> nil) and (Trim(ACodArt) <> '') then
+    Result := GLecturasPersistencia.ObtenerBasicosArticulo(
+      AConexion,
+      ACodArt,
+      AIdVA);
 end;
 
 function ObtenerInfoBasico(AConexion: TUniConnection;
@@ -412,7 +356,7 @@ begin
   Result := False;
   if (Trim(AIdVA) = '') or (Trim(ACodigoATB) = '') then Exit;
   if not GCacheCargado then
-    CargarCache(AConexion);
+    CargarCache(AConexion, GLecturasPersistencia);
   if not GCacheCargado then Exit;
   if GCache.TryGetValue(ClaveCache(AIdVA, ACodigoATB), AInfo) then
     Result := AInfo.EsValido;
@@ -524,59 +468,16 @@ end;
 procedure CargarMapaAtributosArticulo(AConexion: TUniConnection;
                                       const ACodArt: string;
                                       ADict: TDictionary<string, string>);
-var
-  q : TUniQuery;
 begin
-  if ADict = nil then Exit;
-  ADict.Clear;
-  if (Trim(ACodArt) = '') or (AConexion = nil) then Exit;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := AConexion;
-    q.SQL.Text :=
-      'SELECT DISTINCT ID_ATRIBUTO, NOMBRE_ATRIBUTO '          +
-      '  FROM vi_atributos_nombres '                           +
-      ' WHERE CODIGO_ART_PADRE_ARTVIN = :ART ';
-    q.ParamByName('ART').AsString := ACodArt;
-    q.Open;
-    while not q.Eof do
-    begin
-      ADict.AddOrSetValue(
-        UpperCase(Trim(q.FieldByName('NOMBRE_ATRIBUTO').AsString)),
-        q.FieldByName('ID_ATRIBUTO').AsString);
-      q.Next;
-    end;
-  finally
-    FreeAndNil(q);
-  end;
+  if GLecturasPersistencia <> nil then
+    GLecturasPersistencia.CargarMapaArticulo(AConexion, ACodArt, ADict);
 end;
 
 procedure CargarMapaAtributosGlobal(AConexion: TUniConnection;
                                     ADict: TDictionary<string, string>);
-var
-  q : TUniQuery;
-  Nombre : string;
 begin
-  if ADict = nil then Exit;
-  ADict.Clear;
-  if AConexion = nil then Exit;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := AConexion;
-    q.SQL.Text :=
-      'SELECT ID_ATB_VA, COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE_VA ' +
-      '  FROM fza_variaciones_atributos';
-    q.Open;
-    while not q.Eof do
-    begin
-      Nombre := UpperCase(Trim(q.FieldByName('NOMBRE_VA').AsString));
-      if Nombre <> '' then
-        ADict.AddOrSetValue(Nombre, q.FieldByName('ID_ATB_VA').AsString);
-      q.Next;
-    end;
-  finally
-    FreeAndNil(q);
-  end;
+  if GLecturasPersistencia <> nil then
+    GLecturasPersistencia.CargarMapaGlobal(AConexion, ADict);
 end;
 
 function ObtenerMapaAtributosGlobal(
@@ -621,13 +522,15 @@ begin
   else
     Dict := ObtenerMapaAtributosGlobal(AConexion);
   if (Dict = nil) or (Dict.Count = 0) then Exit;
-  if not BuscarInfoBasicoEnArticulo(AConexion, sTexto, Dict, Info) then Exit;
+  if not BuscarInfoBasicoEnArticulo(
+    AConexion, sTexto, Dict, Info) then Exit;
   // Pasamos sTexto explicitly a la función de pintado
   Result := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto);
 end;
 
 function PintarCeldaSwatchArticuloSiAplica(
-  AConexion: TUniConnection; ACanvas: TcxCanvas;
+  AConexion: TUniConnection;
+  ACanvas: TcxCanvas;
   AViewInfo: TcxGridTableDataCellViewInfo;
   const ACodArt, ATexto: string;
   ADict: TDictionary<string, string>): Boolean;
@@ -646,8 +549,8 @@ begin
     Dict := ObtenerMapaAtributosGlobal(AConexion);
   if (ACanvas <> nil) and (AViewInfo <> nil) and
      (Dict <> nil) and (Dict.Count > 0) and
-     BuscarInfoBasicoEnArticuloContextual(AConexion, ACodArt, sTexto, Dict,
-       Info) then
+     BuscarInfoBasicoEnArticuloContextual(
+       AConexion, ACodArt, sTexto, Dict, Info) then
     Result := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto);
 end;
 
@@ -684,7 +587,8 @@ begin
       if Segmento <> '' then
       begin
         for IdVa in ADict.Values do
-          if ObtenerInfoBasico(AConexion, IdVa, Segmento, AInfo) then
+          if ObtenerInfoBasico(
+            AConexion, IdVa, Segmento, AInfo) then
             Exit(True);
       end;
     end;
@@ -711,7 +615,8 @@ begin
   begin
     v := Tabla.DataController.Values[i, AColumn.Index];
     if VarIsNull(v) or VarIsClear(v) then Continue;
-    if BuscarInfoBasicoEnArticulo(AConexion, VarToStr(v), ADict, Info) then
+    if BuscarInfoBasicoEnArticulo(
+      AConexion, VarToStr(v), ADict, Info) then
     begin
       AColumn.Width := AColumn.Width + ANCHO_SWATCH_PX;
       Exit(True);
@@ -750,7 +655,8 @@ begin
     for i := 0 to High(AAvs) do
     begin
       Av := AAvs[i];
-      if not ObtenerInfoBasico(AConexion, AIdVa, Av, Info) then Continue;
+      if not ObtenerInfoBasico(
+        AConexion, AIdVa, Av, Info) then Continue;
 
       Bmp.Canvas.Brush.Style := bsSolid;
       Bmp.Canvas.Brush.Color := Info.Color;
@@ -794,48 +700,28 @@ end;
 procedure TfrmSelPalAvAux.CargarPaletaArticulo(const ACodArt,
   AIdVa: string);
 var
-  q: TUniQuery;
-  Info: TInfoBasico;
+  Valor: TValorPaletaArticulo;
+  Valores: TArray<TValorPaletaArticulo>;
   sAv: string;
 begin
-  if Trim(ACodArt) <> '' then
+  if (Trim(ACodArt) <> '') and (FLecturas <> nil) then
   begin
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := FConexion;
-      q.SQL.Text :=
-        'SELECT av.AV, b.NOMBRE_ATB, b.HEX_ATB ' +
-        '  FROM fza_articulos_atributos_basicos aab ' +
-        '  JOIN fza_atributos_valores av ON av.ID_AV = aab.ID_AV_AAB ' +
-        '  JOIN fza_atributos_basicos b ON b.ID_ATB = aab.ID_ATB_AAB ' +
-        ' WHERE aab.CODIGO_ART_AAB = :art ' +
-        '   AND (:idva = '''' OR av.ID_VA_AV = :idva) ' +
-        '   AND b.ESACTIVO_ATB = ''S'' ' +
-        '   AND b.HEX_ATB IS NOT NULL ' +
-        '   AND b.HEX_ATB <> ''''';
-      q.ParamByName('art').AsString := ACodArt;
-      q.ParamByName('idva').AsString := AIdVa;
-      q.Open;
-      while not q.Eof do
-      begin
-        Info := Default(TInfoBasico);
-        Info.HexColor := q.FieldByName('HEX_ATB').AsString;
-        Info.Color := HexToColor(Info.HexColor);
-        Info.Nombre := q.FieldByName('NOMBRE_ATB').AsString;
-        Info.EsValido := Info.Color <> clNone;
-        sAv := UpperCase(Trim(q.FieldByName('AV').AsString));
-        if Info.EsValido and (sAv <> '') then
-          FInfoArticulo.AddOrSetValue(sAv, Info);
-        q.Next;
-      end;
-    finally
-      FreeAndNil(q);
+    Valores := FLecturas.ListarPaletaArticulo(
+      FConexion,
+      ACodArt,
+      AIdVa);
+    for Valor in Valores do
+    begin
+      sAv := UpperCase(Trim(Valor.Valor));
+      if Valor.Info.EsValido and (sAv <> '') then
+        FInfoArticulo.AddOrSetValue(sAv, Valor.Info);
     end;
   end;
 end;
 
 function BuscarInfoBasicoEnArticuloContextual(
-  AConexion: TUniConnection; const ACodArt, ATexto: string;
+  AConexion: TUniConnection;
+  const ACodArt, ATexto: string;
   ADict: TDictionary<string, string>;
   out AInfo: TInfoBasico): Boolean;
 var
@@ -851,8 +737,8 @@ var
     if (Trim(ACodArt) <> '') and (Trim(AValor) <> '') then
       for IdVa in ADict.Values do
         if not Result then
-          Result := ObtenerInfoBasicoArticulo(AConexion, ACodArt, IdVa,
-            AValor, AInfo);
+          Result := ObtenerInfoBasicoArticulo(
+            AConexion, ACodArt, IdVa, AValor, AInfo);
   end;
 
 begin
@@ -874,7 +760,8 @@ begin
       end;
     end;
     if not Result then
-      Result := BuscarInfoBasicoEnArticulo(AConexion, Texto, ADict, AInfo);
+      Result := BuscarInfoBasicoEnArticulo(
+        AConexion, Texto, ADict, AInfo);
   end;
 end;
 
@@ -882,7 +769,6 @@ function ObtenerInfoBasicoArticulo(AConexion: TUniConnection;
   const ACodArt, AIdVA, AValor: string;
   out AInfo: TInfoBasico): Boolean;
 var
-  q: TUniQuery;
   sClave: string;
 begin
   AInfo := Default(TInfoBasico);
@@ -892,44 +778,22 @@ begin
   begin
     if GCacheArticulo.TryGetValue(sClave, AInfo) then
       Result := AInfo.EsValido
-    else
+    else if GLecturasPersistencia <> nil then
     begin
-      q := TUniQuery.Create(nil);
-      try
-        q.Connection := AConexion;
-        q.SQL.Text :=
-          'SELECT b.NOMBRE_ATB, b.HEX_ATB ' +
-          '  FROM fza_articulos_atributos_basicos aab ' +
-          '  JOIN fza_atributos_valores av ON av.ID_AV = aab.ID_AV_AAB ' +
-          '  JOIN fza_atributos_basicos b ON b.ID_ATB = aab.ID_ATB_AAB ' +
-          ' WHERE aab.CODIGO_ART_AAB = :art ' +
-          '   AND av.AV = :av ' +
-          '   AND (:idva = '''' OR av.ID_VA_AV = :idva) ' +
-          '   AND b.ESACTIVO_ATB = ''S'' ' +
-          '   AND b.HEX_ATB IS NOT NULL ' +
-          '   AND b.HEX_ATB <> '''' ' +
-          ' LIMIT 1';
-        q.ParamByName('art').AsString := ACodArt;
-        q.ParamByName('av').AsString := AValor;
-        q.ParamByName('idva').AsString := AIdVA;
-        q.Open;
-        if not q.IsEmpty then
-        begin
-          AInfo.HexColor := q.FieldByName('HEX_ATB').AsString;
-          AInfo.Color := HexToColor(AInfo.HexColor);
-          AInfo.Nombre := q.FieldByName('NOMBRE_ATB').AsString;
-          AInfo.EsValido := AInfo.Color <> clNone;
-        end;
-        GCacheArticulo.AddOrSetValue(sClave, AInfo);
-        Result := AInfo.EsValido;
-      finally
-        FreeAndNil(q);
-      end;
+      Result := GLecturasPersistencia.ObtenerInfoBasicoArticulo(
+        AConexion,
+        ACodArt,
+        AIdVA,
+        AValor,
+        AInfo);
+      GCacheArticulo.AddOrSetValue(sClave, AInfo);
     end;
   end;
 end;
 
 constructor TfrmSelPalAvAux.CreateConOpciones(AConexion: TUniConnection;
+                                              const ALecturas:
+                                              ILecturasAtributosPaleta;
                                               const AIdVa: string;
                                               const AAvs: array of string;
                                               const AValorActual: string;
@@ -948,6 +812,7 @@ var
 begin
   inherited CreateNew(nil);
   FConexion := AConexion;
+  FLecturas := ALecturas;
 
   // Anclar explicitamente el popup al form activo (Caja / Inventarios)
   // como PopupParent. Sin esto el ShowModal de un form sin borde reasigna
@@ -1079,8 +944,11 @@ begin
   if (not HayColor) and (Trim(FIdVa) <> '') then
     HayColor := ObtenerInfoBasico(FConexion, FIdVa, Av, Info);
   if not HayColor then
-    HayColor := BuscarInfoBasicoEnArticulo(FConexion, Av,
-      ObtenerMapaAtributosGlobal(FConexion), Info);
+    HayColor := BuscarInfoBasicoEnArticulo(
+      FConexion,
+      Av,
+      ObtenerMapaAtributosGlobal(FConexion),
+      Info);
 
   if HayColor then
   begin
@@ -1182,8 +1050,16 @@ begin
   AValor := '';
   Result := False;
   if Length(AAvs) = 0 then Exit;
-  F := TfrmSelPalAvAux.CreateConOpciones(AConexion, AIdVa, AAvs, AValorActual,
-    AScreenLeft, AScreenTop, AWidthHint, ACodArt);
+  F := TfrmSelPalAvAux.CreateConOpciones(
+    AConexion,
+    GLecturasPersistencia,
+    AIdVa,
+    AAvs,
+    AValorActual,
+    AScreenLeft,
+    AScreenTop,
+    AWidthHint,
+    ACodArt);
   try
     if F.ShowModal = mrOk then
     begin
@@ -1207,6 +1083,7 @@ initialization
   GMapaGlobalCargado := False;
 
 finalization
+  GLecturasPersistencia := nil;
   FreeAndNil(GCache);
   FreeAndNil(GCacheArticulo);
   FreeAndNil(GMapaGlobal);

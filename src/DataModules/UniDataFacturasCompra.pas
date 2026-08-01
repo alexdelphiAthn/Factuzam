@@ -142,7 +142,8 @@ implementation
 
 uses
   inLibLog, inLibValoresAutomaticos, inLibContadorLineas,
-  System.Diagnostics, System.UITypes, Vcl.Dialogs,
+  UniDataContadorLineasRepositorio,
+  System.Diagnostics, System.UITypes,
   inLibComprasImpuestos,
   inLibData,
   inLibArticulosValidadorIntf,
@@ -613,9 +614,9 @@ begin
       q.Close;
       if iBloqueos > 0 then
         raise Exception.Create(SErrorBorrarFacturaCompraEfectosPagados);
-      if MessageDlg(Format(SPreguntaBorrarFacturaCompra,
-                           [sSerie, sNumero]),
-                    mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+      if not SolicitarConfirmacion(
+        Format(SPreguntaBorrarFacturaCompra,
+          [sSerie, sNumero])) then
       begin
         Abort;
       end;
@@ -786,7 +787,8 @@ begin
     sSerie  := Trim(unqryTablaG.FieldByName('SERIE_FACC').AsString);
     if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
        ((DataSet.State = dsInsert) and
-        LineaDocExiste(ConexionPrincipal, LIN_FACTURAS_COMPRA, sSerie,
+        LineaDocExiste(CrearContadorLineasDocumento(ConexionPrincipal),
+          LIN_FACTURAS_COMPRA, sSerie,
           sNumero, sLinea)) then
     begin
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
@@ -795,7 +797,8 @@ begin
         DataSet.FieldByName('NUMERO_FACC_FACCLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_FACC_FACCLIN') <> nil then
         DataSet.FieldByName('SERIE_FACC_FACCLIN').AsString := sSerie;
-      iNuevaLinea := GetSiguienteLineaDocLibre(ConexionPrincipal,
+      iNuevaLinea := GetSiguienteLineaDocLibre(
+        CrearContadorLineasDocumento(ConexionPrincipal),
         CONT_FACTURAS_COMPRA, LIN_FACTURAS_COMPRA, sSerie, sNumero);
       if iNuevaLinea = 0 then
       begin

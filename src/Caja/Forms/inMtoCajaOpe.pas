@@ -280,7 +280,7 @@ type
     procedure MostrarColumnasCuentaCliente(AActivar: Boolean);
     function ObtenerColumnaPorTag(NumColumn:Integer):TcxGridDBColumn;
     function RellenarDatosArticuloEnDataset(Codigo: string): Boolean;
-    procedure RecalcularPrecioDesdeSku(sSKU:string);
+    procedure RecalcularPrecioDesdeSku(const ASku: string);
     procedure ActualizarLabelTotal(Sender: TObject; NuevoTotal: Currency);
     procedure RecalcularLineasDesdeDM;
     procedure ConsultarStock(const CodigoInput: string);
@@ -1576,118 +1576,37 @@ end;
 
 function TfrmMtoOpeCaja.RellenarDatosArticuloEnDataset(Codigo: string): Boolean;
 var
-  CodigoLimpio  : string;
-  Validador     : IArticulosValidador;
-  Resolver      : IArticulosResolver;
-  Resolucion    : TArtResolucionEntrada;
-  Datos         : TArticuloDatos;
-  CodTarifa     : string;
-  FechaTicket   : TDateTime;
+  Resultado: TResultadoPreparacionArticuloVenta;
+  Validador: IArticulosValidador;
+  Resolver: IArticulosResolver;
 begin
   Result := False;
   FMotivoRechazoArticulo := '';
-  CodigoLimpio := UpperCase(Trim(Codigo));
-  if CodigoLimpio = '' then Exit;
-  Validador := CrearValidadorArticulos(ConexionPrincipal);
-  Resolver := CrearResolverArticulos(
-    ConexionPrincipal);
-  try
-    // Si la entrada viene de la pistola (STX...ETX), resolvemos UNICAMENTE
-    // contra codigos de barras; en cualquier otro caso, busqueda unificada.
-    if FResolviendoPorScanner then
-      Resolucion := Validador.ResolverCodigoBarras(CodigoLimpio)
-    else
-      Resolucion := Validador.Resolver(CodigoLimpio);
-    if not Resolucion.Encontrado then
-    begin
-      Exit;
-    end;
-
-    CodTarifa   := DatosCaja.cdsCabecera.FieldByName(
-                                          'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-    FechaTicket := DatosCaja.cdsCabecera.FieldByName('FECHA_FAC').AsDateTime;
-
-    DatosCaja.cdsLineas.DisableControls;
+  if Trim(Codigo) <> '' then
+  begin
+    Validador := CrearValidadorArticulos(ConexionPrincipal);
+    Resolver := CrearResolverArticulos(ConexionPrincipal);
     try
-      if DatosCaja.cdsLineas.State = dsBrowse then DatosCaja.cdsLineas.Edit;
-      DatosCaja.cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString :=
-                                                Resolucion.DescripcionArticulo;
-      DatosCaja.cdsLineas.FieldByName('TIPO_ARTICULO_FACLIN').AsString :=
-                                                Resolucion.TipoArticulo;
-      DatosCaja.cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString :=
-                                                Resolucion.CodigoArticulo;
-      DatosCaja.cdsLineas.FieldByName(
-        'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger
-                                                := Resolucion.NumAtributosReq;
-
-      if Resolucion.CodigoSku <> '' then
-      begin
-        // SKU resuelto (uno único, o detectado por la vista de búsqueda).
-        if not FActualizandoDepositos then
-        begin
-          ConsultarStock(Resolucion.CodigoSku);
-        end;
-        DatosCaja.cdsLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString :=
-                                                Resolucion.CodigoSku;
-        RecalcularPrecioDesdeSku(Resolucion.CodigoSku);
-        Result := True;
-      end
-      else if Resolucion.RequiereSku then
-      begin
-        // Padre con varios SKUs: se mostrarán talla/color al usuario. La
-        // línea queda con descripción/IVA/% dto del padre, pero sin precio
-        // definitivo hasta que se elija el SKU.
-        if not FActualizandoDepositos then
-        begin
-          ConsultarStock(Resolucion.CodigoArticulo);
-        end;
-        DatosCaja.cdsLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString :=
-                                                Resolucion.CodigoArticulo;
-        if not FActualizandoDepositos then
-        begin
-          Datos := Resolver.ResolverDatos(Resolucion.CodigoArticulo, '',
-                                          CodTarifa, FechaTicket);
-          // ResolverDatos no calcula precio cuando hay >1 SKU sin elegir;
-          // pedimos el del padre explícitamente para arrastrar IVA y %dto.
-          var Precio := Resolver.ResolverPrecio(Resolucion.CodigoArticulo, '',
-                                                CodTarifa, FechaTicket);
-          DatosCaja.cdsLineas.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString
-                                                := Datos.TipoIVA;
-          DatosCaja.cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString
-                                                := IfThen(Precio.EsImpIncl,
-                                                          'S',
-                                                          'N');
-          DatosCaja.cdsLineas.FieldByName('PORCENTAJE_DTO_FACLIN').AsFloat
-                                                := Precio.PorcentajeDto;
-          DatosCaja.cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency :=
-            0;
-          DatosCaja.cdsLineas.FieldByName('PRECIO_DTO_FACLIN').AsCurrency := 0;
-          DatosCaja.cdsLineas.FieldByName(
-                            'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := 0;
-          DatosCaja.cdsLineas.FieldByName(
-                            'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
-          DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACLIN').AsCurrency := 1;
-        end;
-        Result := True;
-      end
-      else
-      begin
-        // Artículo localizado y activo, pero sin SKU vendible (p. ej. una
-        // variación que se quedó sin tallas/colores). Guardamos el motivo
-        // para que el validador de caja muestre un mensaje exacto en vez
-        // del genérico "no encontrado o descatalogado".
-        FMotivoRechazoArticulo := Resolucion.Mensaje;
-      end;
+      Resultado := PrepararArticuloLineaVenta(
+        DatosCaja.cdsLineas,
+        DatosCaja.cdsCabecera,
+        Codigo,
+        FResolviendoPorScanner,
+        FActualizandoDepositos,
+        Validador,
+        Resolver,
+        ConsultarStock,
+        RecalcularPrecioDesdeSku);
+      Result := Resultado.Preparado;
+      FMotivoRechazoArticulo := Resultado.MotivoRechazo;
+      if Resultado.Preparado and (not FActualizandoDepositos) then
+        GridRecalc(ConexionPrincipal, FRepositorioLecturas, nil,
+                   tvLineasOpe, DatosCaja.cdsLineas,
+                   DatosCaja.cdsCabecera, ActualizarLabelTotal);
     finally
-      DatosCaja.cdsLineas.EnableControls;
+      Validador := nil;
+      Resolver := nil;
     end;
-    if Result and (not FActualizandoDepositos) then
-      GridRecalc(ConexionPrincipal, FRepositorioLecturas, nil,
-                 tvLineasOpe, DatosCaja.cdsLineas,
-                 DatosCaja.cdsCabecera, ActualizarLabelTotal);
-  finally
-    Validador := nil;
-    Resolver := nil;
   end;
 end;
 
@@ -1714,7 +1633,7 @@ begin
   end;
 end;
 
-procedure TfrmMtoOpeCaja.RecalcularPrecioDesdeSku(sSKU: string);
+procedure TfrmMtoOpeCaja.RecalcularPrecioDesdeSku(const ASku: string);
 var
   Resolver     : IArticulosResolver;
   Precio       : TArticuloPrecio;
@@ -1722,7 +1641,7 @@ var
   CodArt       : string;
   FechaFactura : TDateTime;
 begin
-  if Trim(sSKU) = '' then Exit;
+  if Trim(ASku) = '' then Exit;
   CodTarifa    := DatosCaja.cdsCabecera.FieldByName(
                                        'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
   FechaFactura := DatosCaja.cdsCabecera.FieldByName('FECHA_FAC').AsDateTime;
@@ -1731,7 +1650,7 @@ begin
   Resolver := CrearResolverArticulos(
     ConexionPrincipal);
   try
-    Precio := Resolver.ResolverPrecio(CodArt, sSKU, CodTarifa, FechaFactura);
+    Precio := Resolver.ResolverPrecio(CodArt, ASku, CodTarifa, FechaFactura);
     if not Precio.TieneRegistro then Exit;
 
     DatosCaja.cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString :=

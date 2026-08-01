@@ -368,7 +368,8 @@ uses
   System.Diagnostics,
   inMtoModalAddBlockInventario,
   // Factoria del contrato de entrada (prueba ColumnSKUcxGrid).
-  inLibColumnasSku, inLibColumnasDocumento, UniDataGen;
+  inLibColumnasSku, inLibColumnasDocumento, UniDataGen,
+  UniDataColumnasSkuServicios;
 
 {$R *.dfm}
 
@@ -844,16 +845,17 @@ begin
     AsegurarDesempaquetadoAtributos;
   end;
   Cfg := CrearConfigColumnasSkuDocumento(
-    ConexionPrincipal, ContextoSesion, tvLineas,
+    CrearServiciosColumnasSkuUniDAC(ConexionPrincipal),
+    ContextoSesion, tvLineas,
     dmmInventarios.cdsLineas, FModoEntradaSel,
     dsTablaG.DataSet.FieldByName(
       'CODIGO_ALM_INV').AsString, 'INVLIN');
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
-    CrearValidadorArticulos(Cfg.Conexion);
+    CrearValidadorArticulos(ConexionPrincipal);
   Cfg.LookupAtributos :=
-    CrearLookupAtributosArticulos(Cfg.Conexion);
+    CrearLookupAtributosArticulos(ConexionPrincipal);
   Cfg.Campos.Cantidad := 'CANTIDAD_FISICA_INVLIN';
   // El almacen es de CABECERA en inventario: sin columna de linea.
   Cfg.Campos.Almacen := '';

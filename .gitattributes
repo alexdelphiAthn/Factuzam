@@ -1,5 +1,6 @@
 * text=auto
 .gitattributes text eol=crlf
+.editorconfig text eol=lf
 
 # Codigo Delphi / RAD Studio: trabajar en Windows con CRLF.
 *.pas text eol=crlf

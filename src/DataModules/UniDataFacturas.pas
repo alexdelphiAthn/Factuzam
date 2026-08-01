@@ -275,6 +275,7 @@ uses
   inLibLicenciaAplicacion,
   inLibVentasImpuestos,
   inLibContadorLineas,
+  UniDataContadorLineasRepositorio,
   inLibMsgFacturas, inLibMsgVentas,
   inLibSqlSeguro;
 
@@ -2080,10 +2081,12 @@ begin
     if (sNumLin = '0') or
        (sNumLin = '') or
        ((DataSet.State = dsInsert) and
-        LineaDocExiste(ConexionPrincipal, LIN_FACTURAS, sSerie, sNumero,
+        LineaDocExiste(CrearContadorLineasDocumento(ConexionPrincipal),
+          LIN_FACTURAS, sSerie, sNumero,
           sNumLin)) then
     begin
-      iNuevaLinea := GetSiguienteLineaDocLibreSiguiente(ConexionPrincipal,
+      iNuevaLinea := GetSiguienteLineaDocLibreSiguiente(
+        CrearContadorLineasDocumento(ConexionPrincipal),
         CONT_FACTURAS, LIN_FACTURAS, sSerie, sNumero);
       if iNuevaLinea > 0 then
         sNuevoNroLinea := Format('%.3d', [iNuevaLinea])

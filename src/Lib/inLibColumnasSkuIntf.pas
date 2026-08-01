@@ -27,12 +27,28 @@ unit inLibColumnasSkuIntf;
 interface
 
 uses
-  System.Classes, Data.DB, Uni, cxGridDBTableView,
+  System.Classes, Data.DB, cxGraphics, cxGridCustomView,
+  cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
   inLibContextoSesionIntf, inLibArticulosValidadorIntf,
   inLibArticulosAtributosIntf, inLibGenBusq,
-  inLibDistribuidorTallas;
+  inLibDistribuidorTallas, inLibModoTallasIntf;
 
 type
+  IModoEntradaGrid = interface;
+  IFabricaModoEntradaDesglose = interface;
+  IPresentacionAtributosSku = interface(ISelectorValorAtributo)
+    ['{86869E2F-9B9F-4F90-B9D4-E3C48DF48E34}']
+    function PintarCeldaArticulo(
+      ACanvas: TcxCanvas;
+      AViewInfo: TcxGridTableDataCellViewInfo;
+      const ACodigoArticulo, ATexto: string): Boolean;
+  end;
+  TServiciosColumnasSku = record
+    Busqueda: IFabricaBusquedaTallas;
+    Paleta: IPresentacionAtributosSku;
+    PersistenciaTallas: IFabricaPersistenciaTallas;
+    ModoDesglose: IFabricaModoEntradaDesglose;
+  end;
   // Modo de entrada de articulos en el grid del documento.
   TModoColumnasSku = (
     mcsAuto,        // decidir segun los campos disponibles en el cds
@@ -72,7 +88,7 @@ type
 
   // Todo lo que necesita un modo para montarse sobre el grid del documento.
   TConfigColumnasSku = record
-    Conexion: TUniConnection;
+    Servicios: TServiciosColumnasSku;
     ContextoSesion: IContextoSesionAplicacion;
     ValidadorArticulos: IArticulosValidador;
     LookupAtributos: IArticulosAtributosLookup;
@@ -135,6 +151,11 @@ type
     procedure Desmontar;
     // Deja el editor de entrada abierto, listo para teclear o escanear.
     procedure MostrarEditor;
+  end;
+  IFabricaModoEntradaDesglose = interface
+    ['{D73BB57F-91D2-4DF2-97C3-8AE68C444995}']
+    function CrearModoDesglose(
+      const AConfig: TConfigColumnasSku): IModoEntradaGrid;
   end;
 
 implementation

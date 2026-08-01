@@ -127,6 +127,12 @@ type
   private
     FProcsInstalados: Boolean;
     FCalculandoTotales: Boolean;
+    procedure EjecutarSqlInstalacion(
+      AEjecutor: TUniSQL;
+      const ASql: string);
+    procedure InstalarProcedimientoAlbaranFin(AEjecutor: TUniSQL);
+    procedure InstalarProcedimientoAlbaranInicio(AEjecutor: TUniSQL);
+    procedure InstalarProcedimientoAlbaranLinea(AEjecutor: TUniSQL);
     procedure AsignarNumeroLineaPedido(DataSet: TDataSet);
     procedure PersistirAlmacenCabecera;
     procedure ValidarAlmacenCabecera;
@@ -147,7 +153,8 @@ implementation
 
 uses
   inLibValoresAutomaticos, inLibLog, System.Diagnostics, System.UITypes,
-  Vcl.Dialogs, inLibVentasImpuestos, inLibContadorLineas, JclDebug,
+  inLibVentasImpuestos, inLibContadorLineas,
+  UniDataContadorLineasRepositorio, JclDebug,
   inLibData, inLibMsgArticulos, inLibMsgVentas,
   inLibDocumento, inLibDocumentoIntf;
 
@@ -420,18 +427,20 @@ const
   var
     swQ: TStopwatch;
   begin
-    if qry.Active then Exit;
-    swQ := TStopwatch.StartNew;
-    try
-      qry.Open;
-      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-    except
-      on E: Exception do
-      begin
-        inLibLog.Log.LogPerf(TAG,
-          Nombre + ' ERROR=' + E.Message,
-          swQ.ElapsedMilliseconds);
-        raise;
+    if not qry.Active then
+    begin
+      swQ := TStopwatch.StartNew;
+      try
+        qry.Open;
+        inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+      except
+        on E: Exception do
+        begin
+          inLibLog.Log.LogPerf(TAG,
+            Nombre + ' ERROR=' + E.Message,
+            swQ.ElapsedMilliseconds);
+          raise;
+        end;
       end;
     end;
   end;
@@ -521,9 +530,9 @@ begin
   begin
     Abort;
   end;
-  if MessageDlg(Format(SPreguntaBorrarPedidoVenta,
-                       [sSerie, sNumero]),
-                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+  if not SolicitarConfirmacion(
+    Format(SPreguntaBorrarPedidoVenta,
+      [sSerie, sNumero])) then
   begin
     Abort;
   end;
@@ -742,7 +751,8 @@ begin
     sSerie  := Trim(unqryTablaG.FieldByName('SERIE_PED').AsString);
     if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
        ((DataSet.State = dsInsert) and
-        LineaDocExiste(ConexionPrincipal, LIN_PEDIDOS, sSerie, sNumero,
+        LineaDocExiste(CrearContadorLineasDocumento(ConexionPrincipal),
+          LIN_PEDIDOS, sSerie, sNumero,
           sLinea)) then
     begin
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
@@ -751,7 +761,8 @@ begin
         DataSet.FieldByName('NUMERO_PED_PEDLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_PED_PEDLIN') <> nil then
         DataSet.FieldByName('SERIE_PED_PEDLIN').AsString := sSerie;
-      iNuevaLinea := GetSiguienteLineaDocLibre(ConexionPrincipal,
+      iNuevaLinea := GetSiguienteLineaDocLibre(
+        CrearContadorLineasDocumento(ConexionPrincipal),
         CONT_PEDIDOS, LIN_PEDIDOS, sSerie, sNumero);
       // El helper ya persiste CONTADOR_LINEAS_PED en BBDD dentro de su
       // propia transaccion. NO se toca unqryTablaG: el Edit anterior
@@ -1025,8 +1036,7 @@ begin
   if (unqryTablaG.FindField('CODIGO_ALM_PED') <> nil) and
      (Trim(unqryTablaG.FieldByName('CODIGO_ALM_PED').AsString) = '') then
   begin
-    MessageDlg(SAvisoAlmacenSalidaPedidoObligatorio,
-               mtWarning, [mbOk], 0);
+    NotificarAdvertencia(SAvisoAlmacenSalidaPedidoObligatorio);
     Abort;
   end;
 end;
@@ -1040,14 +1050,13 @@ begin
     sCliente := Trim(unqryTablaG.FieldByName('CODIGO_CLI_PED').AsString);
   if (sCliente = '') or (sCliente = '0') then
   begin
-    MessageDlg(SAvisoClientePedidoObligatorio,
-               mtWarning, [mbOk], 0);
+    NotificarAdvertencia(SAvisoClientePedidoObligatorio);
     Abort;
   end;
   if not ClienteExiste(sCliente) then
   begin
-    MessageDlg(Format(SAvisoClientePedidoNoExiste, [sCliente]),
-               mtWarning, [mbOk], 0);
+    NotificarAdvertencia(
+      Format(SAvisoClientePedidoNoExiste, [sCliente]));
     Abort;
   end;
 end;
@@ -1269,8 +1278,8 @@ begin
     FindField('ESIVA_EXENTO_CLIENTE_PED').AsString        :=
       DataSet.FindField('ESIVA_EXENTO_CLI').AsString;
     FindField('ESREGIMENESPECIALAGRICOLA_CLIENTE_PED').AsString :=
-                                       DataSet.FindField(
-                                         'ESREGIMENESPECIALAGRICOLA_CLI').AsString;
+      DataSet.FindField(
+        'ESREGIMENESPECIALAGRICOLA_CLI').AsString;
     FindField('ESRETENCIONES_CLIENTE_PED').AsString       :=
       DataSet.FindField('ESRETENCIONES_CLI').AsString;
     FindField('ESINTRACOMUNITARIO_CLIENTE_PED').AsString  :=
@@ -1327,25 +1336,23 @@ begin
   end;
 end;
 
-procedure TdmPedidos.InstalarProcedimientos;
-var
-  q: TUniSQL;
-
-  procedure Run(const sSql: string);
-  begin
-    q.SQL.Text := sSql;
-    q.Execute;
-  end;
-
+procedure TdmPedidos.EjecutarSqlInstalacion(
+  AEjecutor: TUniSQL;
+  const ASql: string);
 begin
-  if not FProcsInstalados then
-  begin
-    q := TUniSQL.Create(nil);
-    try
-      q.Connection := ConexionPrincipal;
-      Run('DROP PROCEDURE IF EXISTS PRC_PED_CREAR_ALBARAN_FIN');
-      Run(
-        'CREATE PROCEDURE PRC_PED_CREAR_ALBARAN_FIN(' +
+  AEjecutor.SQL.Text := ASql;
+  AEjecutor.Execute;
+end;
+
+procedure TdmPedidos.InstalarProcedimientoAlbaranFin(
+  AEjecutor: TUniSQL);
+begin
+  EjecutarSqlInstalacion(
+    AEjecutor,
+    'DROP PROCEDURE IF EXISTS PRC_PED_CREAR_ALBARAN_FIN');
+  EjecutarSqlInstalacion(
+    AEjecutor,
+    'CREATE PROCEDURE PRC_PED_CREAR_ALBARAN_FIN(' +
         '  IN p_NUMERO_ALB varchar(20), ' +
         '  IN p_SERIE_ALB varchar(20), ' +
         '  IN p_NUMERO_PED varchar(20), ' +
@@ -1394,9 +1401,17 @@ begin
         '       AND SERIE_PED = p_SERIE_PED; ' +
         '  END IF; ' +
         'END');
-      Run('DROP PROCEDURE IF EXISTS PRC_PED_CREAR_ALBARAN_INICIO');
-      Run(
-        'CREATE PROCEDURE PRC_PED_CREAR_ALBARAN_INICIO(' +
+end;
+
+procedure TdmPedidos.InstalarProcedimientoAlbaranInicio(
+  AEjecutor: TUniSQL);
+begin
+  EjecutarSqlInstalacion(
+    AEjecutor,
+    'DROP PROCEDURE IF EXISTS PRC_PED_CREAR_ALBARAN_INICIO');
+  EjecutarSqlInstalacion(
+    AEjecutor,
+    'CREATE PROCEDURE PRC_PED_CREAR_ALBARAN_INICIO(' +
         '  IN p_NUMERO_PED varchar(20), ' +
         '  IN p_SERIE_PED varchar(20), ' +
         '  IN p_USUARIO varchar(100), ' +
@@ -1481,9 +1496,17 @@ begin
         '  SET p_NUMERO_ALB = v_numero; ' +
         '  SET p_SERIE_ALB = v_serie; ' +
         'END');
-      Run('DROP PROCEDURE IF EXISTS PRC_PED_CREAR_ALBARAN_LINEA');
-      Run(
-        'CREATE PROCEDURE PRC_PED_CREAR_ALBARAN_LINEA(' +
+end;
+
+procedure TdmPedidos.InstalarProcedimientoAlbaranLinea(
+  AEjecutor: TUniSQL);
+begin
+  EjecutarSqlInstalacion(
+    AEjecutor,
+    'DROP PROCEDURE IF EXISTS PRC_PED_CREAR_ALBARAN_LINEA');
+  EjecutarSqlInstalacion(
+    AEjecutor,
+    'CREATE PROCEDURE PRC_PED_CREAR_ALBARAN_LINEA(' +
         '  IN p_NUMERO_ALB varchar(20), ' +
         '  IN p_SERIE_ALB varchar(20), ' +
         '  IN p_NUMERO_PED varchar(20), ' +
@@ -1577,9 +1600,23 @@ begin
         '     AND SERIE_PED_PEDLIN = p_SERIE_PED ' +
         '     AND LINEA_PEDLIN = p_LINEA_PED; ' +
         'END');
+end;
+
+procedure TdmPedidos.InstalarProcedimientos;
+var
+  Ejecutor: TUniSQL;
+begin
+  if not FProcsInstalados then
+  begin
+    Ejecutor := TUniSQL.Create(nil);
+    try
+      Ejecutor.Connection := ConexionPrincipal;
+      InstalarProcedimientoAlbaranFin(Ejecutor);
+      InstalarProcedimientoAlbaranInicio(Ejecutor);
+      InstalarProcedimientoAlbaranLinea(Ejecutor);
       FProcsInstalados := True;
     finally
-      FreeAndNil(q);
+      FreeAndNil(Ejecutor);
     end;
   end;
 end;
@@ -1651,7 +1688,7 @@ begin
     for i := 0 to aLineas.Count - 1 do
     begin
       par := aLineas[i];
-      if par.Value <= 0 then Continue;
+      if par.Value > 0 then
       with unstrdprcCrearAlbaranLinea do
       begin
         Params.Clear;
@@ -1948,8 +1985,7 @@ begin
   sAlmacen := Trim(UbicacionSesion.Almacen);
   if sAlmacen = '' then
   begin
-    MessageDlg(SAvisoAlmacenSalidaPedidoObligatorio,
-               mtWarning, [mbOk], 0);
+    NotificarAdvertencia(SAvisoAlmacenSalidaPedidoObligatorio);
     Abort;
   end;
 

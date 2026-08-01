@@ -36,7 +36,8 @@ type
     procedure GridResuelto(const ACodArt, ASku, ADescripcion: string;
                            ACompleto: Boolean);
   public
-    constructor Create(const AConfig: TConfigColumnasSku);
+    constructor Create(const AConfig: TConfigColumnasSku;
+      AGrid: TGridArticulosLineas);
     destructor Destroy; override;
     procedure Construir(
       AOnResuelto: TSkuResueltoEvent;
@@ -48,33 +49,14 @@ type
 
 implementation
 
-constructor TModoEntradaDesglose.Create(const AConfig: TConfigColumnasSku);
-var
-  Campos: TCamposGridArt;
-  i: Integer;
+constructor TModoEntradaDesglose.Create(
+  const AConfig: TConfigColumnasSku; AGrid: TGridArticulosLineas);
 begin
   inherited Create;
   FConfig := AConfig;
-  // Traduccion del record de campos del contrato al de la controladora.
-  Campos.CodigoArt := AConfig.Campos.CodigoArt;
-  Campos.CodigoUnidad := AConfig.Campos.CodigoUnidad;
-  Campos.Descripcion := AConfig.Campos.Descripcion;
-  Campos.Cantidad := AConfig.Campos.Cantidad;
-  Campos.NumAtributos := AConfig.Campos.NumAtributos;
-  for i := 1 to 5 do
-  begin
-    Campos.AttrValor[i] := AConfig.Campos.AttrValor[i];
-    Campos.AttrNombre[i] := AConfig.Campos.AttrNombre[i];
-  end;
-  FGrid := TGridArticulosLineas.Create(
-    AConfig.Conexion,
-    AConfig.View,
-    AConfig.Cds,
-    Campos,
-    AConfig.ContextoSesion,
-    AConfig.BusquedaVisual,
-    AConfig.ValidadorArticulos,
-    AConfig.LookupAtributos);
+  if not Assigned(AGrid) then
+    raise EArgumentNilException.Create('AGrid');
+  FGrid := AGrid;
   FGrid.OnResuelto := GridResuelto;
   FGrid.AlmacenStock := AConfig.AlmacenStock;
   FGrid.AceptarNoCatalogo := AConfig.AceptarNoCatalogo;

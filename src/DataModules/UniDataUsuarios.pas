@@ -19,7 +19,7 @@ interface
 uses
   inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
-  inLibUser, UniDataConn, Vcl.Dialogs;
+  inLibUser, UniDataConn;
 
 type
   TdmUsuarios = class(TdmBase)
@@ -121,12 +121,14 @@ begin
     if (sUsuario = '') or
        SimbolosProhibidos(sUsuario, PerfilesLectura) then
     begin
-      ShowMessageFmt(SErrorNombreUsuario, [sUsuario]);
+      NotificarError(Format(SErrorNombreUsuario, [sUsuario]));
       bError := True;
     end;
     if (UsuarioEsGrupo(sUsuario)) then
     begin
-      ShowMessageFmt(SErrorUsuarioCoincideGrupo, [sUsuario]);
+      NotificarError(Format(
+        SErrorUsuarioCoincideGrupo,
+        [sUsuario]));
       bError := True;
     end;
     if bError then

@@ -55,7 +55,7 @@ uses
   inLibPermisosIntf, inLibVentanaEmbebidaIntf,
   inLibGestorFiltrosMto, inLibGestorPerfilesMto,
   inLibGestorGuiasGridMto, inLibGestorTareasMto,
-  inLibGestorArticulosMto;
+  inLibGestorArticulosMto, inLibInteraccionDatosIntf;
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   THackWinControl = class(TWinControl);
@@ -233,6 +233,10 @@ type
     // Suscrito a TdmBase.OnActivarFicha: al insertar en la tabla
     // principal el form activa su pestania de ficha (el DM no toca UI).
     procedure ActivarFichaDesdeDM(Sender: TObject);
+    procedure NotificarMensajeDesdeDM(Sender: TObject;
+      const AMensaje: string; ASeveridad: TSeveridadMensajeDatos);
+    function ConfirmarMensajeDesdeDM(Sender: TObject;
+      const AMensaje: string): Boolean;
 //    procedure CollectSettingsColumnProfile( cxgrdtvVista: TcxGridDBTableView;
 //                                        const sName: string;
 //                                        const sProfile: string;
@@ -1033,6 +1037,29 @@ begin
     pcPantalla.ActivePage := tsFicha;
 end;
 
+procedure TfrmMtoGen.NotificarMensajeDesdeDM(Sender: TObject;
+  const AMensaje: string; ASeveridad: TSeveridadMensajeDatos);
+var
+  eTipoDialogo: TMsgDlgType;
+begin
+  case ASeveridad of
+    smdInformacion:
+      eTipoDialogo := mtInformation;
+    smdAdvertencia:
+      eTipoDialogo := mtWarning;
+  else
+    eTipoDialogo := mtError;
+  end;
+  MessageDlg(AMensaje, eTipoDialogo, [mbOk], 0);
+end;
+
+function TfrmMtoGen.ConfirmarMensajeDesdeDM(Sender: TObject;
+  const AMensaje: string): Boolean;
+begin
+  Result := MessageDlg(
+    AMensaje, mtConfirmation, [mbYes, mbNo], 0) = mrYes;
+end;
+
 procedure TfrmMtoGen.CrearTablaPrincipal;
 var
   sNameModule: string;
@@ -1103,6 +1130,10 @@ begin
       // TdmFacturas en la Fase 3).
       (tdmDataModule as TdmBase).AsignarMaestroCabecera(dsTablaG);
       (tdmDataModule as TdmBase).OnActivarFicha := ActivarFichaDesdeDM;
+      (tdmDataModule as TdmBase).OnNotificarMensaje :=
+        NotificarMensajeDesdeDM;
+      (tdmDataModule as TdmBase).OnConfirmarMensaje :=
+        ConfirmarMensajeDesdeDM;
     end;
   end;
   inherited;

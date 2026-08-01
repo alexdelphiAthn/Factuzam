@@ -39,7 +39,7 @@ procedure AplicarValoresPorDefecto(AConexion: TUniConnection;
 implementation
 
 uses
-  System.SysUtils, Vcl.Dialogs, inLibMsgComun;
+  System.SysUtils, inLibMsgComun;
 
 const
   SQL_VIGENCIA_SERIE =
@@ -185,7 +185,7 @@ begin
         oProcedimiento.Params.ParamByName('pcont').AsString;
     except
       on E: Exception do
-        ShowMessage(Format(
+        raise Exception.Create(Format(
           SErrorGenerarContadorAutomatico, [E.Message]));
     end;
   finally

@@ -18,7 +18,7 @@ interface
 uses
   System.Classes, Uni, inLibParametrosIntf, inLibPermisosIntf,
   inLibCajaTipos, inLibCajaVentaIntf, inLibTicketsCajaIntf,
-  inLibUnidadesMedida, inLibPreviewTicket;
+  inLibUnidadesMedida, inLibPreviewTicket, inLibGenerarTicketIntf;
 
 type
   TImpresorVentaVcl = class(TInterfacedObject, IImpresorVenta)
@@ -31,6 +31,7 @@ type
     FRepositorioTicketsCaja: IRepositorioTicketsVentaCaja;
     FUnidadesMedida: TUnidadesMedida;
     FPreviewTicket: IPreviewTicket;
+    FLecturasImpresionTicket: ILecturasImpresionTicket;
     procedure ImprimirFacturaA4(
       const ASerie, ANumero: string);
   public
@@ -54,7 +55,8 @@ type
 implementation
 
 uses
-  System.SysUtils, Vcl.Forms, UniDataFacturas, inMtoModalImpFac,
+  System.SysUtils, System.UITypes, Vcl.Forms, Vcl.Dialogs,
+  UniDataFacturas, inMtoModalImpFac,
   inLibGenerarTicket, inLibGenerarTicketBD, inLibGenerarTicketCaja,
   inLibDir, inLibFacturasComposicion,
   // Raiz de composicion de este servicio: los adaptadores UniData* se
@@ -63,7 +65,8 @@ uses
   UniDataFacturasLecturas,
   UniDataFacturasOperaciones,
   UniDataArticulosResolverRepositorio,
-  UniDataVerifactuColaRepositorio;
+  UniDataVerifactuColaRepositorio,
+  UniDataGenerarTicketRepositorio;
 
 constructor TImpresorVentaVcl.Create(
   APropietario: TComponent;
@@ -84,6 +87,7 @@ begin
   FRepositorioTicketsCaja := ARepositorioTicketsCaja;
   FUnidadesMedida := AUnidades;
   FPreviewTicket := APreviewTicket;
+  FLecturasImpresionTicket := CrearLecturasImpresionTicket(FConexion);
 end;
 
 procedure TImpresorVentaVcl.ImprimirFacturaA4(
@@ -126,6 +130,8 @@ end;
 procedure TImpresorVentaVcl.Imprimir(
   const ASolicitud: TSolicitudImpresionVenta;
   ARutasPdf: TStrings);
+var
+  ResultadoApertura: TResultadoAperturaCajon;
 begin
   case ASolicitud.TipoImpresion of
     tiConTicket:
@@ -135,6 +141,7 @@ begin
           FPreviewTicket,
           FUnidadesMedida,
           FConexion,
+          FLecturasImpresionTicket,
           ASolicitud.CodigoEmpresa,
           ASolicitud.CodigoAlmacen,
           ASolicitud.CodigoCaja,
@@ -160,6 +167,7 @@ begin
           FPreviewTicket,
           FUnidadesMedida,
           FConexion,
+          FLecturasImpresionTicket,
           ASolicitud.CodigoEmpresa,
           ASolicitud.CodigoAlmacen,
           ASolicitud.CodigoCaja,
@@ -176,6 +184,7 @@ begin
           FPreviewTicket,
           FUnidadesMedida,
           FConexion,
+          FLecturasImpresionTicket,
           ASolicitud.CodigoEmpresa,
           ASolicitud.CodigoAlmacen,
           ASolicitud.CodigoCaja,
@@ -190,7 +199,17 @@ begin
       end;
     tiSinTicket:
       begin
-        AbrirCajonSinVenta(FPermisos, FParametrosCaja);
+        ResultadoApertura := AbrirCajonSinVenta(
+          FPermisos,
+          FParametrosCaja);
+        if not ResultadoApertura.Correcto then
+        begin
+          MessageDlg(
+            ResultadoApertura.Mensaje,
+            mtWarning,
+            [mbOK],
+            0);
+        end;
       end;
   end;
 end;

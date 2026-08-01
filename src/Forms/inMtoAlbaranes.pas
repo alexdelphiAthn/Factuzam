@@ -290,7 +290,7 @@ uses
   UniDataArticulosValidadorRepositorio, inLibVentasImpuestos,
   inLibValoresAutomaticos, inLibUser, inLibColumnasSku,
   inLibColumnasDocumento, UniDataGen,
-  UniDataModoTallas,
+  UniDataModoTallas, UniDataColumnasSkuServicios,
   inLibValidacionDocumento, inLibPresentacionDocumento,
   inLibMsgArticulos, inLibMsgComun, inLibMsgFacturas, inLibMsgVentas;
 
@@ -682,22 +682,25 @@ begin
   if FModoEntradaSel <> mcsSku then
     dmmAlbaranes.DesempaquetarAtributosLineas;
   Cfg := CrearConfigColumnasSkuDocumento(
-    dmmAlbaranes.unqryTablaG.Connection, ContextoSesion,
+    CrearServiciosColumnasSkuUniDAC(
+      dmmAlbaranes.unqryTablaG.Connection), ContextoSesion,
     tvLineasAlbaran, ds, FModoEntradaSel,
     dmmAlbaranes.unqryTablaG.FieldByName(
       'CODIGO_ALM_ALB').AsString, 'ALBLIN');
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
-    CrearValidadorArticulos(Cfg.Conexion);
+    CrearValidadorArticulos(dmmAlbaranes.unqryTablaG.Connection);
   Cfg.LookupAtributos :=
-    CrearLookupAtributosArticulos(Cfg.Conexion);
+    CrearLookupAtributosArticulos(
+      dmmAlbaranes.unqryTablaG.Connection);
   // Precio por SKU para la consolidacion del modo tallas: lineas con
   // precio distinto no fusionan.
   Cfg.ObtenerPrecioSku := PrecioSkuTallasAlb;
   if FModoEntradaSel = mcsTallasInline then
   begin
     CfgT := Default(TGridTallasConfig);
+    CfgT.Conexion := dmmAlbaranes.unqryTablaG.Connection;
     CfgT.ContextoSesion := ContextoSesion;
     CfgT.Usuario := IdentidadSesion.Usuario;
     CfgT.Grid := tvLineasAlbaran;
@@ -720,8 +723,7 @@ begin
     CfgT.FieldAlmacenCel := '';
     CfgT.IdFilaFijo := 1;
     CfgT.MaxColumnas := 20;
-    FModoEntrada := CrearModoEntradaGridTallas(
-      Cfg, CfgT, CrearPersistenciaModoTallas, CrearBusquedaSkusTallas);
+    FModoEntrada := CrearModoEntradaGridTallas(Cfg, CfgT);
   end
   else
     FModoEntrada := CrearModoEntradaGrid(Cfg);

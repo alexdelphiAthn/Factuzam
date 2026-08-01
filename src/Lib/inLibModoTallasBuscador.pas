@@ -19,7 +19,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Variants, Data.DB,
-  Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Uni,
+  Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls,
   cxEdit, cxTextEdit, cxDropDownEdit, cxEditRepositoryItems,
   cxDBExtLookupComboBox, cxGrid, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView,
@@ -71,51 +71,10 @@ type
       read FOnEntradaElegida write FOnEntradaElegida;
   end;
 
-// Selector de valor de atributo con la paleta de swatches.
-function CrearSelectorAvPaleta(
-  AConexion: TUniConnection): ISelectorValorAtributo;
-
 implementation
 
 uses
-  System.Generics.Collections,
-  inLibAtributosPaleta, inLibMsgArticulos;
-
-type
-  TSelectorAvPaleta = class(TInterfacedObject, ISelectorValorAtributo)
-  private
-    FConexion: TUniConnection;
-  public
-    constructor Create(AConexion: TUniConnection);
-    function Seleccionar(const ANombreAtributo: string;
-      const AValores: TArray<string>; out AValor: string): Boolean;
-  end;
-
-constructor TSelectorAvPaleta.Create(AConexion: TUniConnection);
-begin
-  inherited Create;
-  FConexion := AConexion;
-end;
-
-function TSelectorAvPaleta.Seleccionar(const ANombreAtributo: string;
-  const AValores: TArray<string>; out AValor: string): Boolean;
-var
-  Mapa: TDictionary<string, string>;
-  sIdVa: string;
-begin
-  sIdVa := '';
-  Mapa := ObtenerMapaAtributosGlobal(FConexion);
-  if Mapa <> nil then
-    Mapa.TryGetValue(UpperCase(Trim(ANombreAtributo)), sIdVa);
-  Result := SeleccionarAvConPaleta(FConexion, sIdVa, AValores, '',
-                                   AValor, -1, -1, 160);
-end;
-
-function CrearSelectorAvPaleta(
-  AConexion: TUniConnection): ISelectorValorAtributo;
-begin
-  Result := TSelectorAvPaleta.Create(AConexion);
-end;
+  inLibMsgArticulos;
 
 constructor TBuscadorSkusTallas.Create(
   const ABusqueda: IBusquedaSkusTallas;

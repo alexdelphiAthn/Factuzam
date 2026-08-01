@@ -35,6 +35,7 @@ uses
   Uni,
   inMtoFrmBase, inLibArqueo, inLibArqueoTicket,
   inLibArqueoTicketIntf, inLibArqueoPersistencia,
+  UniDataArqueoPersistencia,
   Vcl.ComCtrls, dxCore,
   cxDateUtils, cxCurrencyEdit, cxRadioGroup,
   JvComponentBase, JvEnterTab, cxLocalization, cxGroupBox;
@@ -1313,7 +1314,7 @@ begin
   Screen.Cursor := crHourGlass;
   try
     TArqueoPersistencia.GrabarArqueo(
-      FConn,
+      CrearPersistenciaArqueo(FConn),
       FArqueoActual,
       Lineas,
       dTotalRecuento,

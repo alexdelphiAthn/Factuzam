@@ -26,12 +26,18 @@ type
     procedure ServiciosVacios_NoAsignanNingunPuerto;
     [Test]
     procedure PrefijosSku_OrdenaDeMasAMenosEspecifico;
+    [Test]
+    procedure Almacenamiento_ComponeNombreCanonico;
+    [Test]
+    procedure Fachada_SinServicios_SePuedeLiberar;
   end;
 
 implementation
 
 uses
-  inLibFotosPersistenciaIntf, inLibFotos;
+  System.SysUtils,
+  inLibFotosPersistenciaIntf, inLibFotosAlmacenamiento,
+  inLibFotos;
 
 procedure TPruebasFotosPersistencia.
   ServiciosVacios_NoAsignanNingunPuerto;
@@ -53,6 +59,37 @@ begin
   Assert.AreEqual(2, Integer(Length(Prefijos)));
   Assert.AreEqual('BLUS-SEDA/BLANCO/L', Prefijos[0]);
   Assert.AreEqual('BLUS-SEDA/BLANCO', Prefijos[1]);
+end;
+
+procedure TPruebasFotosPersistencia.
+  Almacenamiento_ComponeNombreCanonico;
+var
+  oAlmacenamiento: TAlmacenamientoFotos;
+  sClave         : string;
+  sNombre        : string;
+begin
+  oAlmacenamiento := TAlmacenamientoFotos.Create;
+  try
+    sClave := oAlmacenamiento.ClaveNombre(
+      'BLUS-SEDA', 'BLUS-SEDA/BLANCO:L');
+    sNombre := oAlmacenamiento.ComponerNombre(sClave, 7);
+    Assert.AreEqual('BLUS-SEDA_BLANCO_L_007', sNombre);
+    Assert.AreEqual(7, oAlmacenamiento.ExtraerIndice(sNombre));
+    Assert.AreEqual('jpeg',
+      oAlmacenamiento.ExtensionOrigen('foto.JPEG'));
+  finally
+    FreeAndNil(oAlmacenamiento);
+  end;
+end;
+
+procedure TPruebasFotosPersistencia.
+  Fachada_SinServicios_SePuedeLiberar;
+var
+  oFotos: TFotosArticulos;
+begin
+  oFotos := TFotosArticulos.Create;
+  FreeAndNil(oFotos);
+  Assert.IsFalse(Assigned(oFotos));
 end;
 
 initialization

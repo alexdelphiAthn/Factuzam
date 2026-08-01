@@ -37,7 +37,7 @@ unit inLibCriptoCurr;
       API := TCoinGeckoAPI.Create;
       try
         Precio := API.GetPrice('bitcoin', 'eur');
-        ShowMessage('BTC = ' + FormatFloat('0.00', Precio) + ' EUR');
+        // Presentar el precio desde el formulario consumidor.
       finally
         FreeAndNil(API);
       end;

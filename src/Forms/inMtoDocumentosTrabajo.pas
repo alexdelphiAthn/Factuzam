@@ -141,7 +141,7 @@ uses
   inMtoModalAddBlockDocumentoTrabajo,
   // Factoria del contrato + IdentidadSesion.Usuario para el gestor de tallas.
   inLibColumnasSku,
-  UniDataModoTallas,
+  UniDataModoTallas, UniDataColumnasSkuServicios,
   // Modal de destino (almacen/serie/numero) del "Enviar a...".
   inMtoModalEnviarDestino,
   // Contrato de la operación TPV abierta para el volcado de SKUs.
@@ -251,14 +251,17 @@ begin
   if FModoEntradaSel <> mcsSku then
     dmmDocumentosTrabajo.DesempaquetarAtributosLineas;
   Cfg := Default(TConfigColumnasSku);
-  Cfg.Conexion := dmmDocumentosTrabajo.unqryTablaG.Connection;
+  Cfg.Servicios := CrearServiciosColumnasSkuUniDAC(
+    dmmDocumentosTrabajo.unqryTablaG.Connection);
   Cfg.ContextoSesion := ContextoSesion;
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
-    CrearValidadorArticulos(Cfg.Conexion);
+    CrearValidadorArticulos(
+      dmmDocumentosTrabajo.unqryTablaG.Connection);
   Cfg.LookupAtributos :=
-    CrearLookupAtributosArticulos(Cfg.Conexion);
+    CrearLookupAtributosArticulos(
+      dmmDocumentosTrabajo.unqryTablaG.Connection);
   Cfg.View := tvLineasDTR;
   Cfg.Cds := ds;
   Cfg.Modo := FModoEntradaSel;
@@ -279,6 +282,7 @@ begin
   if FModoEntradaSel = mcsTallasInline then
   begin
     CfgT := Default(TGridTallasConfig);
+    CfgT.Conexion := dmmDocumentosTrabajo.unqryTablaG.Connection;
     CfgT.ContextoSesion := ContextoSesion;
     CfgT.Usuario := IdentidadSesion.Usuario;
     CfgT.Grid := tvLineasDTR;
@@ -304,8 +308,7 @@ begin
     CfgT.FieldAlmacenCel := '';
     CfgT.IdFilaFijo := 1;
     CfgT.MaxColumnas := 20;
-    FModoEntrada := CrearModoEntradaGridTallas(
-      Cfg, CfgT, CrearPersistenciaModoTallas, CrearBusquedaSkusTallas);
+    FModoEntrada := CrearModoEntradaGridTallas(Cfg, CfgT);
   end
   else
     FModoEntrada := CrearModoEntradaGrid(Cfg);

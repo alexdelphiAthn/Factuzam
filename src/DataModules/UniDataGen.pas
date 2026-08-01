@@ -22,7 +22,7 @@ uses
   Uni, inLibUser, inLibWin, inLibLog, inLibAnfitrionDatosIntf,
   inLibAuditoriaDatosIntf, inLibConexionesIntf, inLibContextoSesionIntf,
   inLibPerfilesUsuarioIntf, inLibParametrosIntf,
-  inLibFotos, inLibUnidadesMedida;
+  inLibFotos, inLibUnidadesMedida, inLibInteraccionDatosIntf;
 
 type
   TdmBase = class(
@@ -56,6 +56,8 @@ type
     FFotosArticulos: TFotosArticulos;
     FUnidadesMedida: TUnidadesMedida;
     FOnActivarFicha: TNotifyEvent;
+    FOnNotificarMensaje: TNotificarMensajeDatosEvent;
+    FOnConfirmarMensaje: TConfirmarMensajeDatosEvent;
     function GetCurrentForm: TComponent;
     function GetAuditoriaDatos: IServicioAuditoriaDatos;
     function GetConexiones: IServicioConexiones;
@@ -77,6 +79,8 @@ type
     procedure HeredarParametros(AOwner: TComponent);
     procedure HeredarFotosArticulos(AOwner: TComponent);
     procedure HeredarUnidadesMedida(AOwner: TComponent);
+    procedure NotificarMensaje(const AMensaje: string;
+      ASeveridad: TSeveridadMensajeDatos);
   protected
     // DataSource de la cabecera (dsTablaG del Mto), empujado por el
     // form via AsignarMaestroCabecera.
@@ -85,6 +89,10 @@ type
     function GetOwnerForm<T: TComponent>: T;
     function HasOwnerForm: Boolean;
     procedure ActualizarAuditoria(DataSet: TDataSet);
+    procedure NotificarInformacion(const AMensaje: string);
+    procedure NotificarAdvertencia(const AMensaje: string);
+    procedure NotificarError(const AMensaje: string);
+    function SolicitarConfirmacion(const AMensaje: string): Boolean;
   public
     constructor Create(AOwner: TComponent); override;
     property CurrentForm: TComponent read GetCurrentForm write SetCurrentForm;
@@ -128,6 +136,10 @@ type
     // su pestania de ficha (antes el DM tocaba pcPantalla del form).
     property OnActivarFicha: TNotifyEvent
       read FOnActivarFicha write FOnActivarFicha;
+    property OnNotificarMensaje: TNotificarMensajeDatosEvent
+      read FOnNotificarMensaje write FOnNotificarMensaje;
+    property OnConfirmarMensaje: TConfirmarMensajeDatosEvent
+      read FOnConfirmarMensaje write FOnConfirmarMensaje;
     function CrearConexionTrabajo(
       AOwner: TComponent;
       AUso: TUsoConexionTrabajo
@@ -458,6 +470,50 @@ begin
     raise Exception.Create(SErrorServicioAuditoriaDatosNoConfigurado);
 end;
 
+procedure TdmBase.NotificarMensaje(const AMensaje: string;
+  ASeveridad: TSeveridadMensajeDatos);
+begin
+  if Assigned(FOnNotificarMensaje) then
+    FOnNotificarMensaje(Self, AMensaje, ASeveridad)
+  else
+  begin
+    case ASeveridad of
+      smdInformacion:
+        inLibLog.Log.LogInfo(AMensaje);
+      smdAdvertencia:
+        inLibLog.Log.LogWarning(AMensaje);
+      smdError:
+        inLibLog.Log.LogError(AMensaje);
+    end;
+  end;
+end;
+
+procedure TdmBase.NotificarInformacion(const AMensaje: string);
+begin
+  NotificarMensaje(AMensaje, smdInformacion);
+end;
+
+procedure TdmBase.NotificarAdvertencia(const AMensaje: string);
+begin
+  NotificarMensaje(AMensaje, smdAdvertencia);
+end;
+
+procedure TdmBase.NotificarError(const AMensaje: string);
+begin
+  NotificarMensaje(AMensaje, smdError);
+end;
+
+function TdmBase.SolicitarConfirmacion(
+  const AMensaje: string): Boolean;
+begin
+  Result := False;
+  if Assigned(FOnConfirmarMensaje) then
+    Result := FOnConfirmarMensaje(Self, AMensaje)
+  else
+    inLibLog.Log.LogWarning(
+      'Confirmación de datos sin presentador: ' + AMensaje);
+end;
+
 procedure TdmBase.DoCreate;
 var
   Conexion: TUniConnection;
@@ -517,31 +573,25 @@ var
   ds: TCustomDADataSet;
   sql: TCustomDASQL;
 begin
-  if NewConn = nil then
-    Exit;
-  for i := 0 to ComponentCount - 1 do
+  if NewConn <> nil then
   begin
-    Comp := Components[i];
-    // TUniQuery, TUniTable, TUniStoredProc heredan de TCustomDADataSet.
-    if Comp is TCustomDADataSet then
+    for i := 0 to ComponentCount - 1 do
     begin
-      ds := TCustomDADataSet(Comp);
-      // Si el dataset YA esta activo, lo dejamos en paz. Muchos data
-      // modules (Empresas, Clientes, Atributos...) abren lookups contra la
-      // conexion principal en DataModuleCreate; cerrarlos para reasignar
-      // los dejaria vacios y obligaria a re-fetchearlos. Solo redirigimos
-      // los datasets que aun no se han abierto — esos son los que nos
-      // interesa que vayan contra FConn (unqryTablaG, SPs como
-      // unspAplicar, queries on-demand que se abran mas tarde).
-      if not ds.Active then
-        ds.Connection := NewConn;
-    end
-    // TUniSQL, TUniScript heredan de TCustomDASQL. No tienen estado de
-    // "activo" — solo guardan SQL pendiente — asi que reasignar es seguro.
-    else if Comp is TCustomDASQL then
-    begin
-      sql := TCustomDASQL(Comp);
-      sql.Connection := NewConn;
+      Comp := Components[i];
+      // TUniQuery, TUniTable y TUniStoredProc derivan de este tipo.
+      if Comp is TCustomDADataSet then
+      begin
+        ds := TCustomDADataSet(Comp);
+        // Los datasets activos conservan la conexion con la que abrieron.
+        if not ds.Active then
+          ds.Connection := NewConn;
+      end
+      // TUniSQL y TUniScript no tienen estado activo.
+      else if Comp is TCustomDASQL then
+      begin
+        sql := TCustomDASQL(Comp);
+        sql.Connection := NewConn;
+      end;
     end;
   end;
 end;

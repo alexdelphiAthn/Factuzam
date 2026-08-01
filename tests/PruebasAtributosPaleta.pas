@@ -31,14 +31,15 @@ type
 implementation
 
 uses
-  System.SysUtils, inLibAtributosPaleta;
+  System.SysUtils, inLibAtributosPaleta,
+  UniDataAtributosPaletaRepositorio;
 
 procedure TPruebasAtributosPaleta.
   SqlBasicos_ConservaRelacionesYActivos;
 var
   sSql: string;
 begin
-  sSql := SqlBasicosArticulo;
+  sSql := SqlBasicosArticuloAtributosPaleta;
   Assert.IsTrue(Pos('FROM fza_articulos_skus SK', sSql) > 0);
   Assert.IsTrue(Pos('AV.ID_VA_AV = :va', sSql) > 0);
   Assert.IsTrue(Pos('SK.CODIGO_ART_SKU = :art', sSql) > 0);

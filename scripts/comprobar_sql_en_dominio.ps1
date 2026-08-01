@@ -1,9 +1,9 @@
 param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoSentenciasSql = 158,
+  [int]$MaximoSentenciasSql = 78,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoUnidadesConSql = 53,
+  [int]$MaximoUnidadesConSql = 35,
   [switch]$MostrarTodos,
   [string]$RutaInventario = ''
 )
@@ -342,6 +342,27 @@ if ($RutaInventario -ne '') {
 }
 
 $errores = [System.Collections.Generic.List[string]]::new()
+$rutasSinSql = @(
+  'src\Lib\inLibPermisosAdmin.pas',
+  'src\Lib\inLibContadorLineas.pas',
+  'src\Lib\inLibDevolucionesCompraStock.pas',
+  'src\Caja\Lib\inLibArqueoPersistencia.pas',
+  'src\Lib\inLibAtributosPaleta.pas',
+  'src\Lib\inLibDocumentosTrabajo.pas',
+  'src\Lib\inLibGenerarTicket.pas',
+  'src\Lib\inLibColumnasSkuModoSku.pas'
+)
+foreach ($rutaSinSql in $rutasSinSql) {
+  $medicionProhibida = @(
+    $mediciones |
+      Where-Object { $_.Ruta -eq $rutaSinSql }
+  )
+  if ($medicionProhibida.Count -gt 0) {
+    $errores.Add(
+      'La unidad extraida vuelve a contener SQL literal: ' +
+      $rutaSinSql + '.')
+  }
+}
 if ($totalSentencias -gt $MaximoSentenciasSql) {
   $errores.Add(
     "Sentencias SQL literales: $totalSentencias; maximo permitido: " +

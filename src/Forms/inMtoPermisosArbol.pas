@@ -74,6 +74,7 @@ type
     FExpTodos     : TDictionary<string, string>;
     FColocados    : TDictionary<string, Boolean>;
     FInicializando: Boolean;
+    FRepositoriosPermisos: TRepositoriosPermisosAdmin;
     // Proveedor del menu/registro (el principal). Descubierto UNA vez
     // en CrearTablaPrincipal; sin el, esta pantalla no tiene sentido.
     FProveedorMenu: IProveedorMenuPantallas;
@@ -123,7 +124,8 @@ type
 implementation
 
 uses
-  System.StrUtils, System.Rtti, inLibMsgConfiguracion;
+  System.StrUtils, System.Rtti, inLibMsgConfiguracion,
+  UniDataPermisosAdminRepositorio;
 
 resourcestring
   SErrorPermisosSinProveedorMenu =
@@ -445,12 +447,14 @@ begin
   FreeAndNil(FExpGrupo);
   FreeAndNil(FExpTodos);
   FExpSujeto := TPermisosAdmin.CargarExplicitos(
-    ConexionPrincipal,
+    FRepositoriosPermisos.Consulta,
     FSujetoActual.Nombre);
-  FExpTodos  := TPermisosAdmin.CargarExplicitos(ConexionPrincipal, 'Todos');
+  FExpTodos := TPermisosAdmin.CargarExplicitos(
+    FRepositoriosPermisos.Consulta,
+    'Todos');
   if (FSujetoActual.Tipo = tsUsuario) and (FSujetoActual.Grupo <> '') then
     FExpGrupo := TPermisosAdmin.CargarExplicitos(
-      ConexionPrincipal,
+      FRepositoriosPermisos.Consulta,
       FSujetoActual.Grupo)
   else
     FExpGrupo := nil;
@@ -562,7 +566,7 @@ begin
   else
     sVal := 'N';
   TPermisosAdmin.Establecer(
-    ConexionPrincipal,
+    FRepositoriosPermisos.Edicion,
     ContextoSesion,
     FSujetoActual.Nombre,
     ACodigo, sVal, ADescripcion);
@@ -623,7 +627,10 @@ procedure TfrmMtoPermisosArbol.HeredarRama(ANode: TcxTreeListNode);
     code := N.Texts[cIdxCodigo];
     if code <> '' then
     begin
-      TPermisosAdmin.Heredar(ConexionPrincipal, FSujetoActual.Nombre, code);
+      TPermisosAdmin.Heredar(
+        FRepositoriosPermisos.Edicion,
+        FSujetoActual.Nombre,
+        code);
       if FExpSujeto <> nil then
         FExpSujeto.Remove(code);
     end;
@@ -710,8 +717,10 @@ begin
   FInicializando := True;
   try
     sNombre := FSujetoActual.Nombre;
-    FSujetos := TPermisosAdmin.ListarSujetos(ConexionPrincipal);
-    FCatalogo := TPermisosAdmin.CatalogoCodigos(ConexionPrincipal);
+    FSujetos := TPermisosAdmin.ListarSujetos(
+      FRepositoriosPermisos.Consulta);
+    FCatalogo := TPermisosAdmin.CatalogoCodigos(
+      FRepositoriosPermisos.Consulta);
     PoblarCombos;
     ConstruirArbol;
     idx := IndiceSujeto(sNombre);
@@ -787,7 +796,7 @@ begin
         Screen.Cursor := crHourGlass;
         try
           n := TPermisosAdmin.Copiar(
-            ConexionPrincipal,
+            FRepositoriosPermisos.Edicion,
             ContextoSesion,
             org.Nombre,
             dst.Nombre, reempl, chkSoloMenu.Checked);
@@ -830,11 +839,15 @@ begin
   if not Supports(Self.Owner, IProveedorMenuPantallas,
                   FProveedorMenu) then
     raise EServicioNoDisponible.Create(SErrorPermisosSinProveedorMenu);
+  FRepositoriosPermisos := CrearRepositoriosPermisosAdmin(
+    ConexionPrincipal);
   FInicializando := True;
   try
     ConstruirInterfaz;
-    FSujetos  := TPermisosAdmin.ListarSujetos(ConexionPrincipal);
-    FCatalogo := TPermisosAdmin.CatalogoCodigos(ConexionPrincipal);
+    FSujetos := TPermisosAdmin.ListarSujetos(
+      FRepositoriosPermisos.Consulta);
+    FCatalogo := TPermisosAdmin.CatalogoCodigos(
+      FRepositoriosPermisos.Consulta);
     PoblarCombos;
     ConstruirArbol;
     if Length(FSujetos) > 0 then

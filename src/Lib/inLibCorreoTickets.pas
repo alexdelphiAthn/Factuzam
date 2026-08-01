@@ -240,7 +240,8 @@ begin
         True);
     if ADatos.EsOperacionCaja then
       ImprimirTicketOperacionCaja(
-        APreviewTicket, AConexion, AEmpresa, AAlmacen, ACaja,
+        APreviewTicket, AConexion, ARepositorioTicketsCaja.Impresion,
+        AEmpresa, AAlmacen, ACaja,
         ANumeroOperacion, 'DEBUG', ARutasPDF, True);
     if (ARutasPDF.Count > 0) and (Trim(ADatos.CodigoCliente) <> '') then
       ImprimirRecordatorio(

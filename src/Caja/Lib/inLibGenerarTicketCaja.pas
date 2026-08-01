@@ -19,11 +19,25 @@ interface
 
 uses
   System.SysUtils, System.Classes, Uni,
-  inLibPermisosIntf, inLibParametrosIntf, inLibPreviewTicket;
+  inLibPermisosIntf, inLibParametrosIntf, inLibPreviewTicket,
+  inLibGenerarTicketIntf;
+
+type
+  TEstadoAperturaCajon = (
+    eacAbierto,
+    eacSinPermiso,
+    eacSinImpresora
+  );
+  TResultadoAperturaCajon = record
+    Estado: TEstadoAperturaCajon;
+    Mensaje: string;
+    function Correcto: Boolean;
+  end;
 
 procedure ImprimirTicketOperacionCaja(
   const APreview: IPreviewTicket;
   AConexion: TUniConnection;
+  const ALecturasTicket: ILecturasImpresionTicket;
   const AEmpresa, AAlmacen, ACaja, ANumOperacion: string;
   const ANombreImpresora: string = 'DEBUG';
   ARutasPDF: TStrings = nil;
@@ -33,9 +47,9 @@ procedure ImprimirTicketOperacionCaja(
 // global en cualquier ventana del programa). Comprueba el permiso
 // 'caja.abrirCajon' y manda el pulso de apertura por la impresora de
 // tickets resuelta por los parámetros de caja.
-procedure AbrirCajonSinVenta(
+function AbrirCajonSinVenta(
   const APermisos: IPermisosAplicacion;
-  const AParametrosCaja: IParametrosCaja);
+  const AParametrosCaja: IParametrosCaja): TResultadoAperturaCajon;
 
 // True si hay impresora de tickets real asignada en parametros
 // (valor no vacío y distinto de 'DEBUG').
@@ -45,14 +59,20 @@ function ImpresoraCajaAsignada(
 implementation
 
 uses
-  Data.DB, DBAccess, Vcl.Dialogs,
+  Data.DB, DBAccess,
   inLibFTicket, inLibDir,
   inLibGenerarTicket, inLibMsgCaja, inLibMsgConfiguracion,
   inLibMsgTickets;
 
+function TResultadoAperturaCajon.Correcto: Boolean;
+begin
+  Result := Estado = eacAbierto;
+end;
+
 procedure ImprimirTicketOperacionCaja(
   const APreview: IPreviewTicket;
   AConexion: TUniConnection;
+  const ALecturasTicket: ILecturasImpresionTicket;
   const AEmpresa, AAlmacen, ACaja, ANumOperacion: string;
   const ANombreImpresora: string;
   ARutasPDF: TStrings;
@@ -134,7 +154,7 @@ begin
     Ticket.EscribirLinea(STicketFirma);
     Ticket.SaltarLineas(2);
     Ticket.LineaSeparadora('.');
-    EscribirPieTicketCaja(AConexion, Ticket, AEmpresa);
+    EscribirPieTicketCaja(ALecturasTicket, Ticket, AEmpresa);
     Ticket.SaltarLineas(1);
     Ticket.CortarPapel;
     { Imprimir o previsualizar }
@@ -165,21 +185,27 @@ begin
   end;
 end;
 
-procedure AbrirCajonSinVenta(
+function AbrirCajonSinVenta(
   const APermisos: IPermisosAplicacion;
-  const AParametrosCaja: IParametrosCaja);
+  const AParametrosCaja: IParametrosCaja): TResultadoAperturaCajon;
 var
   Ticket: TTicketTermico;
 begin
-  // Lanzada por F9 global. Si no hay permiso o impresora valida, avisa y no
-  // hace nada; en otro caso manda solo el pulso de apertura del cajon.
+  Result.Estado := eacSinPermiso;
+  Result.Mensaje := SErrorPermisoAbrirCajon;
   if (not Assigned(APermisos)) or
      (not APermisos.TienePermiso(
        PERMISO_CAJA_ABRIR_CAJON,
        paPermitir)) then
-    ShowMessage(SErrorPermisoAbrirCajon)
+  begin
+    Result.Estado := eacSinPermiso;
+    Result.Mensaje := SErrorPermisoAbrirCajon;
+  end
   else if not ImpresoraCajaAsignada(AParametrosCaja) then
-    ShowMessage(SErrorImpresoraTicketsCajaNoConfigurada)
+  begin
+    Result.Estado := eacSinImpresora;
+    Result.Mensaje := SErrorImpresoraTicketsCajaNoConfigurada;
+  end
   else
   begin
     Ticket := TTicketTermico.Create(
@@ -190,6 +216,8 @@ begin
     finally
       FreeAndNil(Ticket);
     end;
+    Result.Estado := eacAbierto;
+    Result.Mensaje := '';
   end;
 end;
 

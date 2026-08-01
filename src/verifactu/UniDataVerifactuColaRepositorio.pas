@@ -178,7 +178,7 @@ begin
   TVentasWsCola.RegistrarFactura(
     AParametrosCaja,
     CrearRepositorioVentasWsColaUniDAC(FQry.Connection),
-    FQry, AUsuario, ASerie, ANumero, ATipoOperacion);
+    AUsuario, ASerie, ANumero, ATipoOperacion);
 end;
 
 procedure TServicioVerifactuColaUniDAC.RegistrarFacturaNoVerifactu(
@@ -236,7 +236,7 @@ begin
   TVentasWsCola.RegistrarFactura(
     AParametrosCaja,
     CrearRepositorioVentasWsColaUniDAC(FQry.Connection),
-    FQry, AUsuario, ASerie, ANumero, ATipoOperacion);
+    AUsuario, ASerie, ANumero, ATipoOperacion);
 end;
 
 procedure TServicioVerifactuColaUniDAC.BorrarMovimientosFactura(

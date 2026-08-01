@@ -17,8 +17,8 @@ unit inLibVentasWsCola;
 interface
 
 uses
-  System.SysUtils, System.Classes, Uni, inLibConexionesIntf,
-  inLibParametrosIntf, inLibContextoSesionIntf,
+  System.SysUtils, System.Classes, inLibParametrosIntf,
+  inLibContextoSesionIntf,
   inLibVentasWsJsonIntf, inLibVentasWsColaIntf;
 
 type
@@ -37,7 +37,6 @@ type
     class procedure RegistrarFactura(
       const AParametrosCaja: IParametrosCaja;
       const ARepositorio: IRepositorioVentasWsCola;
-      AQryTrx: TUniQuery;
       const AUsuario: string;
       const ASerie, ANumero, ATipoOperacion: string); static;
     class procedure RegistrarEventoSeguro(
@@ -57,11 +56,9 @@ type
       const ASerie, ANumero, ARutaPdf: string); static;
     destructor Destroy; override;
     procedure IniciarHilo(
-      const AConexiones: IServicioConexiones;
       const AContextoSesion: IContextoSesionAplicacion;
       const AParametrosApp: IParametrosAplicacion;
-      AFabricaRepositorio: TFabricaCrearRepositorioVentasWsCola;
-      AFabricaVentasWsJson: TFabricaCrearVentasWsJson;
+      const AFabricaSesion: IFabricaSesionVentasWs;
       const AUsuario: string);
     procedure DetenerHilo;
   end;
@@ -76,13 +73,11 @@ uses
 type
   THiloVentasWsCola = class(TThread)
   private
-    FConn: TUniConnection;
+    FSesion: ISesionVentasWs;
     FRepositorio: IRepositorioVentasWsCola;
-    FConexiones: IServicioConexiones;
     FContextoSesion: IContextoSesionAplicacion;
     FParametrosApp: IParametrosAplicacion;
-    FFabricaRepositorio: TFabricaCrearRepositorioVentasWsCola;
-    FFabricaVentasWsJson: TFabricaCrearVentasWsJson;
+    FFabricaSesion: IFabricaSesionVentasWs;
     FUsuario: string;
     FAvisoConfiguracion: Boolean;
     procedure EsperarCiclo;
@@ -95,11 +90,9 @@ type
     procedure Execute; override;
   public
     constructor Create(
-      const AConexiones: IServicioConexiones;
       const AContextoSesion: IContextoSesionAplicacion;
       const AParametrosApp: IParametrosAplicacion;
-      AFabricaRepositorio: TFabricaCrearRepositorioVentasWsCola;
-      AFabricaVentasWsJson: TFabricaCrearVentasWsJson;
+      const AFabricaSesion: IFabricaSesionVentasWs;
       const AUsuario: string); reintroduce;
     destructor Destroy; override;
   end;
@@ -124,7 +117,6 @@ end;
 class procedure TVentasWsCola.RegistrarFactura(
   const AParametrosCaja: IParametrosCaja;
   const ARepositorio: IRepositorioVentasWsCola;
-  AQryTrx: TUniQuery;
   const AUsuario: string;
   const ASerie, ANumero, ATipoOperacion: string);
 var
@@ -237,21 +229,17 @@ begin
 end;
 
 procedure TVentasWsCola.IniciarHilo(
-  const AConexiones: IServicioConexiones;
   const AContextoSesion: IContextoSesionAplicacion;
   const AParametrosApp: IParametrosAplicacion;
-  AFabricaRepositorio: TFabricaCrearRepositorioVentasWsCola;
-  AFabricaVentasWsJson: TFabricaCrearVentasWsJson;
+  const AFabricaSesion: IFabricaSesionVentasWs;
   const AUsuario: string);
 begin
   if FHilo = nil then
   begin
     FHilo := THiloVentasWsCola.Create(
-      AConexiones,
       AContextoSesion,
       AParametrosApp,
-      AFabricaRepositorio,
-      AFabricaVentasWsJson,
+      AFabricaSesion,
       AUsuario);
     FHilo.FreeOnTerminate := False;
     FHilo.Start;
@@ -277,37 +265,29 @@ begin
 end;
 
 constructor THiloVentasWsCola.Create(
-  const AConexiones: IServicioConexiones;
   const AContextoSesion: IContextoSesionAplicacion;
   const AParametrosApp: IParametrosAplicacion;
-  AFabricaRepositorio: TFabricaCrearRepositorioVentasWsCola;
-  AFabricaVentasWsJson: TFabricaCrearVentasWsJson;
+  const AFabricaSesion: IFabricaSesionVentasWs;
   const AUsuario: string);
 begin
-  if not Assigned(AConexiones) then
-    raise EArgumentNilException.Create('AConexiones');
   if not Assigned(AContextoSesion) then
     raise EArgumentNilException.Create('AContextoSesion');
-  if not Assigned(AFabricaRepositorio) then
-    raise EArgumentNilException.Create('AFabricaRepositorio');
   if not Assigned(AParametrosApp) then
     raise EArgumentNilException.Create('AParametrosApp');
-  if not Assigned(AFabricaVentasWsJson) then
-    raise EArgumentNilException.Create('AFabricaVentasWsJson');
+  if not Assigned(AFabricaSesion) then
+    raise EArgumentNilException.Create('AFabricaSesion');
   inherited Create(True);
-  FConexiones := AConexiones;
   FContextoSesion := AContextoSesion;
   FParametrosApp := AParametrosApp;
-  FFabricaRepositorio := AFabricaRepositorio;
-  FFabricaVentasWsJson := AFabricaVentasWsJson;
+  FFabricaSesion := AFabricaSesion;
   FUsuario := AUsuario;
 end;
 
 destructor THiloVentasWsCola.Destroy;
 begin
   FRepositorio := nil;
-  FreeAndNil(FConn);
-  FConexiones := nil;
+  FSesion := nil;
+  FFabricaSesion := nil;
   FContextoSesion := nil;
   FParametrosApp := nil;
   inherited;
@@ -329,7 +309,7 @@ begin
         begin
           Log.LogError('Cola de ventas WS: ' + E.Message);
           FRepositorio := nil;
-          FreeAndNil(FConn);
+          FSesion := nil;
         end;
       end;
     end;
@@ -372,12 +352,16 @@ begin
   if TClienteFactuzamApi.Configurada(FParametrosApp) then
   begin
     FAvisoConfiguracion := False;
-    if FConn = nil then
+    if FSesion = nil then
     begin
-      FConn := FConexiones.CrearConexion(
-        nil,
-        uctSegundoPlano);
-      FRepositorio := FFabricaRepositorio(FConn);
+      FSesion := FFabricaSesion.CrearSesion;
+      if not Assigned(FSesion) then
+        raise Exception.Create('La fábrica no creó la sesión VentasWs');
+      FRepositorio := FSesion.Repositorio;
+      if not Assigned(FRepositorio) then
+        raise Exception.Create('La sesión VentasWs no tiene repositorio');
+      if not Assigned(FSesion.Json) then
+        raise Exception.Create('La sesión VentasWs no tiene serializador');
     end;
     FRepositorio.ReencolarProcesandoCaducadas;
     aPendientes := FRepositorio.BuscarPendientes(10);
@@ -414,7 +398,7 @@ begin
         sContenido := TVentasWsJson.ConstruirEvento(
           FParametrosApp,
           oVersion,
-          FFabricaVentasWsJson(FConn),
+          FSesion.Json,
           AIdCola,
           oFila.IdEvento, oFila.TipoEvento, oFila.Empresa,
           oFila.Serie, oFila.Numero);

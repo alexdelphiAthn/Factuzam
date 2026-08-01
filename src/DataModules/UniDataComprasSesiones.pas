@@ -208,6 +208,7 @@ uses
   inLibValoresAutomaticos,
   inLibComprasSesionesReglas,
   inLibContadorLineas,
+  UniDataContadorLineasRepositorio,
   inLibComprasImpuestos,
   inLibData,
   inLibMsgCompras;
@@ -730,7 +731,8 @@ begin
   // estaba en BD; el siguiente Add reasignaba la misma LINEA).
   sSerie  := unqryTablaG.FieldByName('SERIE_SES').AsString;
   sNumero := unqryTablaG.FieldByName('NUMERO_SES').AsString;
-  iNuevaLinea := GetSiguienteLineaDoc(ConexionPrincipal, CONT_SESIONES,
+  iNuevaLinea := GetSiguienteLineaDoc(
+    CrearContadorLineasDocumento(ConexionPrincipal), CONT_SESIONES,
     sSerie, sNumero);
   if iNuevaLinea = 0 then
   begin

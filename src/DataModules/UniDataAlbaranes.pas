@@ -135,9 +135,10 @@ implementation
 
 uses
   inLibValoresAutomaticos, inLibLog, System.Diagnostics,
-  System.UITypes, Vcl.Dialogs, inLibArticulosValidadorIntf,
+  System.UITypes, inLibArticulosValidadorIntf,
   UniDataArticulosValidadorRepositorio,
-  inLibVentasImpuestos, inLibContadorLineas, inLibData,
+  inLibVentasImpuestos, inLibContadorLineas,
+  UniDataContadorLineasRepositorio, inLibData,
   inLibMsgArticulos, inLibMsgFacturas, inLibMsgVentas,
   inLibSqlSeguro, inLibDocumento, inLibDocumentoIntf;
 
@@ -473,13 +474,12 @@ begin
     end;
     if iBloqueos > 0 then
     begin
-      MessageDlg(SAvisoAlbaranFacturado,
-                 mtWarning, [mbOk], 0);
+      NotificarAdvertencia(SAvisoAlbaranFacturado);
       Abort;
     end;
-    if MessageDlg(Format(SPreguntaBorrarAlbaran,
-                         [sSerie, sNumero]),
-                  mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    if not SolicitarConfirmacion(
+      Format(SPreguntaBorrarAlbaran,
+        [sSerie, sNumero])) then
     begin
       Abort;
     end;
@@ -651,8 +651,7 @@ begin
   if (unqryTablaG.FindField('CODIGO_ALM_ALB') <> nil) and
      (Trim(unqryTablaG.FieldByName('CODIGO_ALM_ALB').AsString) = '') then
   begin
-    MessageDlg(SAvisoAlmacenSalidaAlbaranObligatorio,
-               mtWarning, [mbOk], 0);
+    NotificarAdvertencia(SAvisoAlmacenSalidaAlbaranObligatorio);
     Abort;
   end;
 end;
@@ -779,7 +778,8 @@ begin
     sSerie  := Trim(unqryTablaG.FieldByName('SERIE_ALB').AsString);
     if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
        ((DataSet.State = dsInsert) and
-        LineaDocExiste(ConexionPrincipal, LIN_ALBARANES, sSerie, sNumero,
+        LineaDocExiste(CrearContadorLineasDocumento(ConexionPrincipal),
+          LIN_ALBARANES, sSerie, sNumero,
           sLinea)) then
     begin
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
@@ -788,7 +788,8 @@ begin
         DataSet.FieldByName('NUMERO_ALB_ALBLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_ALB_ALBLIN') <> nil then
         DataSet.FieldByName('SERIE_ALB_ALBLIN').AsString := sSerie;
-      iNuevaLinea := GetSiguienteLineaDocLibre(ConexionPrincipal,
+      iNuevaLinea := GetSiguienteLineaDocLibre(
+        CrearContadorLineasDocumento(ConexionPrincipal),
         CONT_ALBARANES, LIN_ALBARANES, sSerie, sNumero);
       // El helper ya persiste CONTADOR_LINEAS_ALB en BBDD dentro de su
       // propia transaccion. NO se toca unqryTablaG (leccion de
@@ -1083,7 +1084,8 @@ begin
         sLineaActual := sLineaVieja;
         if (sLineaVieja = '') or (StrToIntDef(sLineaVieja, 0) = 0) then
         begin
-          iNuevaLinea := GetSiguienteLineaDocLibre(ConexionPrincipal,
+          iNuevaLinea := GetSiguienteLineaDocLibre(
+            CrearContadorLineasDocumento(ConexionPrincipal),
             CONT_ALBARANES, LIN_ALBARANES, ASerie, ANumero);
           if iNuevaLinea > 0 then
           begin

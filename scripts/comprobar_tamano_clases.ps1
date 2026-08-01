@@ -1,7 +1,7 @@
 param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoLineasPorClase = 3981,
+  [int]$MaximoLineasPorClase = 3894,
   [ValidateRange(0, [int]::MaxValue)]
   [int]$MaximoMetodosPorClase = 104,
   [ValidateRange(0, [int]::MaxValue)]
@@ -20,7 +20,7 @@ param(
       ObjetivoMetodos = 120
     }
     TfrmMtoOpeCaja = @{
-      Lineas = 3959
+      Lineas = 3894
       Metodos = 104
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
@@ -52,12 +52,100 @@ param(
       ObjetivoCampos = 25
     }
     TGridPivoteCompra = @{
-      Lineas = 2490
-      Metodos = 48
-      Campos = 32
+      Lineas = 259
+      Metodos = 29
+      Campos = 5
       ObjetivoLineas = 1500
       ObjetivoMetodos = 45
       ObjetivoCampos = 25
+    }
+    TPedidosCompraUniDAC = @{
+      Lineas = 143
+      Metodos = 9
+      Campos = 4
+      ObjetivoLineas = 300
+      ObjetivoMetodos = 15
+      ObjetivoCampos = 6
+    }
+    TPedidosCompraPendientesUniDAC = @{
+      Lineas = 51
+      Metodos = 4
+      Campos = 1
+      ObjetivoLineas = 150
+      ObjetivoMetodos = 5
+      ObjetivoCampos = 3
+    }
+    TCreacionAlbaranPedidoCompraUniDAC = @{
+      Lineas = 62
+      Metodos = 3
+      Campos = 1
+      ObjetivoLineas = 150
+      ObjetivoMetodos = 6
+      ObjetivoCampos = 3
+    }
+    TIncorporacionAlbaranPedidoCompraUniDAC = @{
+      Lineas = 60
+      Metodos = 3
+      Campos = 1
+      ObjetivoLineas = 150
+      ObjetivoMetodos = 5
+      ObjetivoCampos = 3
+    }
+    TRecepcionPedidoCompraUniDAC = @{
+      Lineas = 114
+      Metodos = 2
+      Campos = 3
+      ObjetivoLineas = 150
+      ObjetivoMetodos = 5
+      ObjetivoCampos = 5
+    }
+    TCachePivoteCompra = @{
+      Lineas = 127
+      Metodos = 3
+      Campos = 20
+      ObjetivoLineas = 1200
+      ObjetivoMetodos = 40
+      ObjetivoCampos = 20
+    }
+    TCorrespondenciaPivoteCompra = @{
+      Lineas = 432
+      Metodos = 11
+      Campos = 3
+      ObjetivoLineas = 1200
+      ObjetivoMetodos = 40
+      ObjetivoCampos = 20
+    }
+    TEstadoEdicionPivoteCompra = @{
+      Lineas = 33
+      Metodos = 3
+      Campos = 2
+      ObjetivoLineas = 1200
+      ObjetivoMetodos = 40
+      ObjetivoCampos = 20
+    }
+    TValidadorPivoteCompra = @{
+      Lineas = 126
+      Metodos = 3
+      Campos = 3
+      ObjetivoLineas = 1200
+      ObjetivoMetodos = 40
+      ObjetivoCampos = 20
+    }
+    TPresentacionPivoteCompra = @{
+      Lineas = 705
+      Metodos = 19
+      Campos = 11
+      ObjetivoLineas = 1200
+      ObjetivoMetodos = 40
+      ObjetivoCampos = 20
+    }
+    TEdicionPivoteCompra = @{
+      Lineas = 1170
+      Metodos = 21
+      Campos = 9
+      ObjetivoLineas = 1200
+      ObjetivoMetodos = 40
+      ObjetivoCampos = 20
     }
     TModeloPivoteVenta = @{
       Lineas = 727
@@ -132,10 +220,40 @@ param(
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataPedidosCompraOperaciones.pas' = @{
-      Lineas = 1748
-      Rutinas = 57
-      ObjetivoLineas = 1200
+      Lineas = 177
+      Rutinas = 19
+      ObjetivoLineas = 300
+      ObjetivoRutinas = 20
+    }
+    'src\DataModules\UniDataPedidosCompraPendientes.pas' = @{
+      Lineas = 352
+      Rutinas = 13
+      ObjetivoLineas = 500
+      ObjetivoRutinas = 15
+    }
+    'src\DataModules\UniDataPedidosCompraAlbaranComun.pas' = @{
+      Lineas = 294
+      Rutinas = 5
+      ObjetivoLineas = 400
+      ObjetivoRutinas = 10
+    }
+    'src\DataModules\UniDataPedidosCompraCreacionAlbaran.pas' = @{
+      Lineas = 650
+      Rutinas = 24
+      ObjetivoLineas = 800
       ObjetivoRutinas = 30
+    }
+    'src\DataModules\UniDataPedidosCompraIncorporacionAlbaran.pas' = @{
+      Lineas = 536
+      Rutinas = 10
+      ObjetivoLineas = 700
+      ObjetivoRutinas = 20
+    }
+    'src\DataModules\UniDataPedidosCompraRecepcion.pas' = @{
+      Lineas = 145
+      Rutinas = 5
+      ObjetivoLineas = 250
+      ObjetivoRutinas = 10
     }
     'src\Lib\inLibAlbaranesCompraMovimientos.pas' = @{
       Lineas = 68

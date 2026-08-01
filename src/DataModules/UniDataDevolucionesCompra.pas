@@ -125,10 +125,11 @@ implementation
 
 uses
   inLibLog, inLibValoresAutomaticos,
-  System.Diagnostics, System.UITypes, Vcl.Dialogs,
+  System.Diagnostics, System.UITypes,
   inLibDevolucionesCompraMovimientos,
   UniDataDevolucionesCompraMovimientos,
   inLibContadorLineas,
+  UniDataContadorLineasRepositorio,
   inLibComprasImpuestos,
   inLibData,
   inLibArticulosValidadorIntf,
@@ -379,13 +380,12 @@ begin
     end;
     if iBloqueos > 0 then
     begin
-      MessageDlg(SAvisoDevolucionCompraFacturada,
-                 mtWarning, [mbOk], 0);
+      NotificarAdvertencia(SAvisoDevolucionCompraFacturada);
       Abort;
     end;
-    if MessageDlg(Format(SPreguntaBorrarDevolucionCompra,
-                         [sSerie, sNumero]),
-                  mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    if not SolicitarConfirmacion(
+      Format(SPreguntaBorrarDevolucionCompra,
+        [sSerie, sNumero])) then
     begin
       Abort;
     end;
@@ -533,7 +533,8 @@ begin
     sSerie  := Trim(unqryTablaG.FieldByName('SERIE_DEVC').AsString);
     if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
        ((DataSet.State = dsInsert) and
-        LineaDocExiste(ConexionPrincipal, LIN_DEVOLUCIONES_COMPRA, sSerie,
+        LineaDocExiste(CrearContadorLineasDocumento(ConexionPrincipal),
+          LIN_DEVOLUCIONES_COMPRA, sSerie,
           sNumero, sLinea)) then
     begin
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
@@ -542,7 +543,8 @@ begin
         DataSet.FieldByName('NUMERO_DEVC_DEVCLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_DEVC_DEVCLIN') <> nil then
         DataSet.FieldByName('SERIE_DEVC_DEVCLIN').AsString := sSerie;
-      iNuevaLinea := GetSiguienteLineaDocLibre(ConexionPrincipal,
+      iNuevaLinea := GetSiguienteLineaDocLibre(
+        CrearContadorLineasDocumento(ConexionPrincipal),
         CONT_DEVOLUCIONES_COMPRA, LIN_DEVOLUCIONES_COMPRA, sSerie, sNumero);
       if iNuevaLinea = 0 then
       begin

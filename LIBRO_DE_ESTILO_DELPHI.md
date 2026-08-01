@@ -1340,9 +1340,11 @@ el combo de niveles.
 
 ### 18.4 API pública — `inLibFotos`
 
-Singleton `oFotos: TFotosArticulos` creado en `initialization` de la
-unit. La raíz de composición le entrega la conexión mediante
-`AsignarConexion`.
+`TFotosArticulos` es una fachada creada por la raíz de composición. Esta le
+entrega los repositorios y servicios mediante `AsignarConexion`, y la fachada
+delega en colaboradores de consulta, edición, almacenamiento físico, sesión y
+presentación. Los consumidores pueden seguir usando `inLibFotos` mientras se
+migran gradualmente a contratos más pequeños.
 
 ```pascal
 // Resolver con fallback
@@ -1605,7 +1607,15 @@ es esporádico).
 
 | Unidad                                   | Carpeta            | Rol                                      |
 |------------------------------------------|--------------------|------------------------------------------|
-| `inLibFotos`                             | `src/Lib/`         | Núcleo: persistencia, redimensionado, rotación, sustitución en informes |
+| `inLibFotos`                             | `src/Lib/`         | Fachada compatible y composición de colaboradores |
+| `inLibFotosTipos`                        | `src/Lib/`         | Tipos compartidos y contrato de lectura para presentación |
+| `inLibFotosConsulta`                     | `src/Lib/`         | Resolución jerárquica, lotes, caché y lectura de alias |
+| `inLibFotosEdicion`                      | `src/Lib/`         | Guardado, rotación y eliminación de fotos de artículos |
+| `inLibFotosAlmacenamiento`               | `src/Lib/`         | PNG físico, tamaños, nombres, rotación y borrado |
+| `inLibFotosSesion`                       | `src/Lib/`         | Fotos temporales y materialización de sesiones de compra |
+| `inLibFotosPresentacion`                 | `src/Lib/`         | Foto VCL embebida y sustitución en FastReport |
+| `inLibFotosPersistenciaIntf`             | `src/Lib/`         | Contratos segregados de persistencia |
+| `UniDataFotosRepositorio`                | `src/DataModules/` | Adaptadores UniDAC de los contratos de persistencia |
 | `inMtoFotoArticulo`                      | `src/Forms/`       | Pantalla flotante (no modal)             |
 | `inMtoModalFotoArticulo`                 | `src/Modals/`      | Wrapper modal con `class function Ejecutar` |
 | `inMtoGen` (modificada)                  | `src/Forms/`       | Atajo Ctrl + Alt + F, `ResolverArtSkuActivo` virtual y `LeerArtSkuDeDataSet` |

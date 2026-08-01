@@ -25,7 +25,7 @@ interface
 uses
   inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
-  inLibUser, UniDataConn, Vcl.Dialogs;
+  inLibUser, UniDataConn;
 
 type
   TdmMovimientosAlmacen = class(TdmBase)
@@ -49,7 +49,8 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TdmMovimientosAlmacen.BloquearEdicion(const aOp: string);
 begin
-  ShowMessage(Format(SAvisoEdicionMovimientoAlmacen, [aOp]));
+  NotificarAdvertencia(
+    Format(SAvisoEdicionMovimientoAlmacen, [aOp]));
   Abort;
 end;
 

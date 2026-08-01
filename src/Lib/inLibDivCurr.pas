@@ -35,7 +35,7 @@ unit inLibDivCurr;
       API := TFrankfurterAPI.Create;
       try
         Tasa := API.GetRate('EUR', 'USD');
-        ShowMessage('1 EUR = ' + FormatFloat('0.0000', Tasa) + ' USD');
+        // Presentar la tasa desde el formulario consumidor.
       finally
         FreeAndNil(API);
       end;

@@ -15,6 +15,10 @@ uses
   DUnitX.TestFramework,
   inLibAtributosPaleta in
     '..\src\Lib\inLibAtributosPaleta.pas',
+  inLibAtributosPaletaIntf in
+    '..\src\Lib\inLibAtributosPaletaIntf.pas',
+  UniDataAtributosPaletaRepositorio in
+    '..\src\DataModules\UniDataAtributosPaletaRepositorio.pas',
   inLibColumnasDocumento in
     '..\src\Lib\inLibColumnasDocumento.pas',
   inLibFiltroUsuario in
@@ -152,10 +156,26 @@ uses
     '..\src\DataModules\UniDataFotosRepositorio.pas',
   UniDataGridPivoteCompraRepositorio in
     '..\src\DataModules\UniDataGridPivoteCompraRepositorio.pas',
+  UniDataPedidosCompraPendientes in
+    '..\src\DataModules\UniDataPedidosCompraPendientes.pas',
+  UniDataPedidosCompraAlbaranComun in
+    '..\src\DataModules\UniDataPedidosCompraAlbaranComun.pas',
+  UniDataPedidosCompraCreacionAlbaran in
+    '..\src\DataModules\UniDataPedidosCompraCreacionAlbaran.pas',
+  UniDataPedidosCompraIncorporacionAlbaran in
+    '..\src\DataModules\UniDataPedidosCompraIncorporacionAlbaran.pas',
+  UniDataPedidosCompraRecepcion in
+    '..\src\DataModules\UniDataPedidosCompraRecepcion.pas',
   UniDataPedidosCompraOperaciones in
     '..\src\DataModules\UniDataPedidosCompraOperaciones.pas',
   UniDataVentasWsJson in
     '..\src\DataModules\UniDataVentasWsJson.pas',
+  UniDataVentasWsCola in
+    '..\src\DataModules\UniDataVentasWsCola.pas',
+  UniDataVentasWsSesion in
+    '..\src\DataModules\UniDataVentasWsSesion.pas',
+  UniDataColumnasSkuServicios in
+    '..\src\DataModules\UniDataColumnasSkuServicios.pas',
   UniDataCatalogoSqlValidacion in
     '..\src\DataModules\UniDataCatalogoSqlValidacion.pas',
   UniDataFacturasRepositorio in
@@ -208,6 +228,10 @@ uses
   inLibTraduccionesIntf in
     '..\src\Lib\inLibTraduccionesIntf.pas',
   inLibTraducciones in '..\src\Lib\inLibTraducciones.pas',
+  inLibGridPivoteCompraTipos in
+    '..\src\Lib\inLibGridPivoteCompraTipos.pas',
+  inLibPivoteCompraCalculo in
+    '..\src\Lib\inLibPivoteCompraCalculo.pas',
   inLibPivoteVentaCalculo in
     '..\src\Lib\inLibPivoteVentaCalculo.pas',
   inLibPivoteVentaIntf in
@@ -312,6 +336,8 @@ uses
     'PruebasFotosPersistencia.pas',
   PruebasGridPivoteCompraPersistencia in
     'PruebasGridPivoteCompraPersistencia.pas',
+  PruebasPivoteCompraCalculo in
+    'PruebasPivoteCompraCalculo.pas',
   PruebasPedidosCompra in 'PruebasPedidosCompra.pas',
   PruebasVentasWsJson in 'PruebasVentasWsJson.pas',
   PruebasVerifactuColaRepositorio in

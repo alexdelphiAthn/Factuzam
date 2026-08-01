@@ -18,7 +18,7 @@ interface
 
 uses
   SysUtils, Classes, ADODB, DBAccess, Uni, inLibUser, vcl.Controls,
-  UniProvider, MySQLUniProvider, DASQLMonitor, UniSQLMonitor, vcl.Dialogs,
+  UniProvider, MySQLUniProvider, DASQLMonitor, UniSQLMonitor,
   inLibMonitorSQLIntf, inLibParametrosIntf;
 
 type
@@ -141,7 +141,8 @@ begin
   except
     on E: Exception do
       {$IFDEF DEBUG}
-      ShowMessage(Format(SAvisoColacionSesion, [E.Message]));
+      inLibLog.Log.LogWarning(
+        Format(SAvisoColacionSesion, [E.Message]));
       {$ENDIF}
   end;
   // Ejecutamos un comando SQL directo al servidor nada más conectar.
@@ -153,7 +154,8 @@ begin
     // Si falla (por permisos), no bloqueamos la app, pero queda registrado.
     on E: Exception do
       {$IFDEF DEBUG}
-      ShowMessage(Format(SAvisoTimeoutServidor, [E.Message]));
+      inLibLog.Log.LogWarning(
+        Format(SAvisoTimeoutServidor, [E.Message]));
       {$ENDIF}
   end;
 end;

@@ -35,12 +35,16 @@ type
     procedure Incorporar_DeleganLasDosVariantes;
     [Test]
     procedure EjecutarRecepcion_DelegaParametrosYResultado;
+    [Test]
+    procedure Pendientes_AdmiteContratoEstrecho;
+    [Test]
+    procedure EjecutarRecepcion_AdmiteContratoEstrecho;
   end;
 
 implementation
 
 uses
-  System.SysUtils, inLibGridPivoteCompra,
+  System.SysUtils, inLibGridPivoteCompraTipos,
   inLibPedidosCompraIntf, inLibPedidosCompra;
 
 type
@@ -54,7 +58,11 @@ type
     opcfIncorporar,
     opcfIncorporarConCantidades,
     opcfEjecutarRecepcion);
-  TPedidosCompraFalso = class(TInterfacedObject, IPedidosCompra)
+  TPedidosCompraFalso = class(
+    TInterfacedObject,
+    IPedidosCompra,
+    IPedidosCompraPendientes,
+    IRecepcionPedidoCompra)
   public
     Almacen: string;
     CantidadCeldas: Integer;
@@ -106,6 +114,8 @@ type
 
 var
   oServicioFalso: IPedidosCompra;
+  oPendientesFalso: IPedidosCompraPendientes;
+  oRecepcionFalsa: IRecepcionPedidoCompra;
   oFalso: TPedidosCompraFalso;
 
 procedure TPedidosCompraFalso.GenerarPdteRecibirDesdePedido(
@@ -240,11 +250,15 @@ procedure PrepararServicioFalso;
 begin
   oFalso := TPedidosCompraFalso.Create;
   oServicioFalso := oFalso;
+  oPendientesFalso := oFalso;
+  oRecepcionFalsa := oFalso;
 end;
 
 procedure TPruebasPedidosCompra.Liberar;
 begin
   oServicioFalso := nil;
+  oPendientesFalso := nil;
+  oRecepcionFalsa := nil;
   oFalso := nil;
 end;
 
@@ -357,6 +371,31 @@ begin
   Assert.AreEqual('AR', Resultado.SerieAlbaran);
   Assert.AreEqual('2001', Resultado.NumeroAlbaran);
   Assert.AreEqual('RECIBIDO', Resultado.Mensaje);
+end;
+
+procedure TPruebasPedidosCompra.Pendientes_AdmiteContratoEstrecho;
+begin
+  PrepararServicioFalso;
+  GenerarPdteRecibirDesdePedido(
+    oPendientesFalso, 'PC', '9', 'PRUEBAS');
+  Assert.AreEqual(opcfGenerarPendientes, oFalso.Operacion);
+  Assert.AreEqual('9', oFalso.Numero);
+end;
+
+procedure TPruebasPedidosCompra.
+  EjecutarRecepcion_AdmiteContratoEstrecho;
+var
+  Parametros: TParametrosRecepcionPedidoCompra;
+  Resultado: TResultadoRecepcionPedidoCompra;
+begin
+  PrepararServicioFalso;
+  Parametros.SeriePedido := 'PC';
+  Parametros.NumeroPedido := '10';
+  Parametros.CodigoAlmacen := 'A4';
+  Assert.IsTrue(EjecutarRecepcionPedidoCompra(
+    oRecepcionFalsa, Parametros, Resultado));
+  Assert.AreEqual(opcfEjecutarRecepcion, oFalso.Operacion);
+  Assert.AreEqual('10', oFalso.Numero);
 end;
 
 initialization

@@ -95,7 +95,8 @@ implementation
 uses
   System.Generics.Collections, Data.DB,
   inLibCatalogoSqlEjecucion,
-  UniDataCatalogoSqlValidacion;
+  UniDataCatalogoSqlValidacion,
+  UniDataGenerarTicketRepositorio;
 
 const
   SQL_EMPRESA_RESGUARDO =
@@ -395,6 +396,7 @@ begin
   Result.Resguardos := Repositorio;
   Result.Tickets := Repositorio;
   Result.Recordatorios := Repositorio;
+  Result.Impresion := CrearLecturasImpresionTicket(AConexion);
 end;
 
 constructor TRepositorioTicketsCaja.Create(

@@ -29,6 +29,7 @@ type
                                         IPersistenciaEntradaTallas,
                                         IPersistenciaPresentacionTallas)
   private
+    FConexion: TUniConnection;
     FCfg: TConfigPersistenciaTallas;
     function NuevaConsulta: TUniQuery;
     function Serie: string;
@@ -50,7 +51,8 @@ type
     procedure UpsertCelda(AConsulta: TUniQuery; ALinea, AFila,
       AIdAv: Integer; ACantidad: Double; const AAlmacen: string);
   public
-    constructor Create(const ACfg: TConfigPersistenciaTallas);
+    constructor Create(AConexion: TUniConnection;
+      const ACfg: TConfigPersistenciaTallas);
     function ConsultarTotalesPorLinea: TArray<TTotalLineaTallas>;
     function ConsultarCeldasDocumento: TArray<TCeldaTallas>;
     function ConsultarCeldasLinea(ALinea: Integer): TArray<TCeldaTallas>;
@@ -85,6 +87,7 @@ type
   end;
 
 function CrearPersistenciaModoTallas(
+  AConexion: TUniConnection;
   const ACfg: TConfigPersistenciaTallas): TServiciosPersistenciaModoTallas;
 function CrearBusquedaSkusTallas(
   AConexion: TUniConnection): IBusquedaSkusTallas;
@@ -167,16 +170,19 @@ const
   SQL_BUSQ_ORDEN = ' ORDER BY STOCK DESC, x.SKU LIMIT 100';
 
 constructor TPersistenciaModoTallasUniDAC.Create(
-  const ACfg: TConfigPersistenciaTallas);
+  AConexion: TUniConnection; const ACfg: TConfigPersistenciaTallas);
 begin
+  if not Assigned(AConexion) then
+    raise EArgumentNilException.Create('AConexion');
   inherited Create;
+  FConexion := AConexion;
   FCfg := ACfg;
 end;
 
 function TPersistenciaModoTallasUniDAC.NuevaConsulta: TUniQuery;
 begin
   Result := TUniQuery.Create(nil);
-  Result.Connection := FCfg.Conexion;
+  Result.Connection := FConexion;
 end;
 
 function TPersistenciaModoTallasUniDAC.Serie: string;
@@ -741,22 +747,22 @@ end;
 
 function TPersistenciaModoTallasUniDAC.EnTransaccion: Boolean;
 begin
-  Result := FCfg.Conexion.InTransaction;
+  Result := FConexion.InTransaction;
 end;
 
 procedure TPersistenciaModoTallasUniDAC.IniciarTransaccion;
 begin
-  FCfg.Conexion.StartTransaction;
+  FConexion.StartTransaction;
 end;
 
 procedure TPersistenciaModoTallasUniDAC.ConfirmarTransaccion;
 begin
-  FCfg.Conexion.Commit;
+  FConexion.Commit;
 end;
 
 procedure TPersistenciaModoTallasUniDAC.RevertirTransaccion;
 begin
-  FCfg.Conexion.Rollback;
+  FConexion.Rollback;
 end;
 
 constructor TBusquedaSkusTallasUniDAC.Create(AConexion: TUniConnection);
@@ -810,12 +816,13 @@ begin
 end;
 
 function CrearPersistenciaModoTallas(
+  AConexion: TUniConnection;
   const ACfg: TConfigPersistenciaTallas): TServiciosPersistenciaModoTallas;
 var
   Persistencia: TPersistenciaModoTallasUniDAC;
 begin
   Result := Default(TServiciosPersistenciaModoTallas);
-  Persistencia := TPersistenciaModoTallasUniDAC.Create(ACfg);
+  Persistencia := TPersistenciaModoTallasUniDAC.Create(AConexion, ACfg);
   Result.Modelo := Persistencia;
   Result.Rederivacion := Persistencia;
   Result.Desmontaje := Persistencia;

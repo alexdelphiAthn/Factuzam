@@ -17,7 +17,7 @@ unit inLibModoTallasIntf;
 interface
 
 uses
-  System.SysUtils, Data.DB, Uni;
+  System.SysUtils, Data.DB;
 
 type
   // Valores / nombres de los 5 atributos posibles de una linea.
@@ -247,7 +247,6 @@ type
   // UniData* lee serie, numero y clave extra del master en cada
   // operacion, como hacia el modo antes de extraer el SQL.
   TConfigPersistenciaTallas = record
-    Conexion: TUniConnection;
     Master: TDataSet;
     Usuario: string;
     CampoSerieMaster: string;
@@ -264,10 +263,16 @@ type
     CamposDocExtraCel: TArray<string>;
     IdFilaFijo: Integer;
   end;
-  TFabricaPersistenciaTallas = function(
-    const ACfg: TConfigPersistenciaTallas): TServiciosPersistenciaModoTallas;
-  TFabricaBusquedaTallas = function(
-    AConexion: TUniConnection): IBusquedaSkusTallas;
+  IFabricaPersistenciaTallas = interface
+    ['{B269FE09-C9BC-4E64-97A4-02C5967E1111}']
+    function CrearPersistencia(
+      const AConfig: TConfigPersistenciaTallas):
+      TServiciosPersistenciaModoTallas;
+  end;
+  IFabricaBusquedaTallas = interface
+    ['{6410DE3B-0FA6-40AA-B50E-13FD20C7C498}']
+    function CrearBusqueda: IBusquedaSkusTallas;
+  end;
 
 implementation
 end.

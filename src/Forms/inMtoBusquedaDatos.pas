@@ -28,7 +28,8 @@ uses
   cxLocalization, Vcl.StdCtrls, cxRadioGroup, cxNavigator, cxDBNavigator,
   Vcl.Buttons, cxGridCustomTableView, cxGridTableView, cxGridLevel, cxClasses,
   cxGridCustomView, cxGrid, cxPC, cxLookupEdit, cxDBLookupEdit,
-  cxDBLookupComboBox, inLibDocumentosTrabajo;
+  cxDBLookupComboBox, inLibDocumentosTrabajo,
+  UniDataDocumentosTrabajoRepositorio;
 
 type
   TfrmMtoBusquedaDatos = class(TfrmMtoSearch)
@@ -123,7 +124,8 @@ type
 implementation
 
 uses
-  inLibLog, inLibShowMto, inLibAtributosPaleta, inLibMsgComun;
+  inLibLog, inLibShowMto, inLibAtributosPaleta, inLibMsgComun,
+  inLibDocumentosTrabajoPresentacion;
 
 {$R *.dfm}
 
@@ -238,6 +240,8 @@ begin
   begin
     try
       AgregarUnidadADocumentoTrabajo(Self, ConexionPrincipal,
+        CrearRepositoriosDocumentosTrabajo(ConexionPrincipal),
+        CrearInteraccionDocumentosTrabajoVcl,
         BusquedaVisual, ContextoSesion, ParametrosCaja, linea,
         CrearResolverArticulos(ConexionPrincipal));
     except
@@ -881,7 +885,8 @@ begin
       unqryResultados.SQL.Add('          eti.CODIGO_UNIDAD_SKU');
     end;
     unqryResultados.SQL.Add(' LIMIT ' + IntToStr(ObtenerLimite));
-    unqryResultados.ParamByName('ALMACEN_DOC').AsString := UbicacionSesion.Almacen;
+    unqryResultados.ParamByName('ALMACEN_DOC').AsString :=
+      UbicacionSesion.Almacen;
     if sFamilia <> '' then
       unqryResultados.ParamByName('FAMILIA').AsString := sFamilia;
     if sProveedor <> '' then

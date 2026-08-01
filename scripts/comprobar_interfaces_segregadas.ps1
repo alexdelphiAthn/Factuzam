@@ -12,7 +12,20 @@ $nombresRetirados = @(
   'IRepositorioGridPivoteCompra',
   'IRepositorioPivoteVenta',
   'IDBHelpers',
-  'IDBMetadataProvider'
+  'IDBMetadataProvider',
+  'TFabricaCrearRepositorioVentasWsCola',
+  'TFabricaCrearVentasWsJson',
+  'TFabricaPersistenciaTallas',
+  'TFabricaBusquedaTallas'
+)
+$contratosSinUniDAC = @(
+  'src\Lib\inLibModoTallasIntf.pas',
+  'src\Lib\inLibColumnasSkuIntf.pas',
+  'src\Lib\inLibVentasWsJsonIntf.pas',
+  'src\Lib\inLibVentasWsColaIntf.pas',
+  'src\Lib\inLibVentasWsCola.pas',
+  'src\Lib\inLibFacturaePersistenciaIntf.pas',
+  'src\Lib\inLibPedidosCompraIntf.pas'
 )
 # El resguardo examina todas las unidades activas de primera parte, no
 # solo los *Intf.pas: una interfaz ancha o un contrato retirado tampoco
@@ -43,6 +56,7 @@ $archivos = @(
 )
 $interfacesAmplias = [System.Collections.Generic.List[object]]::new()
 $referenciasRetiradas = [System.Collections.Generic.List[string]]::new()
+$fugasUniDAC = [System.Collections.Generic.List[string]]::new()
 $patronInterfaz =
   '(?ms)^\s*(?<nombre>I[A-Za-z0-9_]+)\s*=\s*' +
   'interface(?:\([^\)]*\))?\s*' +
@@ -75,6 +89,25 @@ foreach ($archivo in $archivos) {
     }
   }
 }
+foreach ($rutaRelativa in $contratosSinUniDAC) {
+  $rutaContrato = Join-Path $Raiz $rutaRelativa
+  $contenido = Get-Content -LiteralPath $rutaContrato -Raw
+  $ejecutable = [regex]::Replace(
+    $contenido,
+    "'(?:''|[^'])*'",
+    "''")
+  $ejecutable = [regex]::Replace(
+    $ejecutable,
+    '(?s)\{.*?\}|\(\*.*?\*\)',
+    ' ')
+  $ejecutable = [regex]::Replace(
+    $ejecutable,
+    '(?m)//[^\r\n]*',
+    ' ')
+  if ($ejecutable -match '\bUni\b|\bTUni(?:Connection|Query)\b') {
+    $fugasUniDAC.Add($rutaRelativa)
+  }
+}
 if ($interfacesAmplias.Count -gt 0) {
   $detalle = $interfacesAmplias |
     ForEach-Object {
@@ -87,7 +120,12 @@ if ($referenciasRetiradas.Count -gt 0) {
   throw "Han reaparecido contratos retirados:`n" +
     ($referenciasRetiradas -join "`n")
 }
+if ($fugasUniDAC.Count -gt 0) {
+  throw "Contratos de negocio acoplados a UniDAC:`n" +
+    ($fugasUniDAC -join "`n")
+}
 Write-Output (
   'Interfaces segregadas: OK. Unidades analizadas: ' +
   "$($archivos.Count); maximo permitido: $MaximoMiembros " +
-  "miembros; contratos retirados: $($nombresRetirados.Count).")
+  "miembros; contratos retirados: $($nombresRetirados.Count); " +
+  "contratos sin UniDAC: $($contratosSinUniDAC.Count).")

@@ -58,7 +58,14 @@ $usosLibADatos = [System.Collections.Generic.List[string]]::new()
 $unidadesLibADatos = [System.Collections.Generic.HashSet[string]]::new(
   [System.StringComparer]::OrdinalIgnoreCase)
 $infracciones = [System.Collections.Generic.List[string]]::new()
+$dialogosFueraPresentacion = [System.Collections.Generic.List[string]]::new()
 $deudaConocida = [System.Collections.Generic.List[string]]::new()
+$dominioSinDialogos = @(
+  'inLibConexionesUniDAC',
+  'inLibDocumentosTrabajo',
+  'inLibGenerarTicketCaja',
+  'inLibValoresAutomaticos'
+)
 $unidades = @{}
 $contenidoProyecto = Get-Content -LiteralPath $rutaProyecto -Raw
 $rutasProyecto = foreach ($coincidencia in [regex]::Matches(
@@ -147,6 +154,25 @@ foreach ($clave in $unidades.Keys) {
       }
     }
   }
+  $esDatos = $unidad.Nombre -match '^(?i)UniData'
+  $esDominioControlado = $dominioSinDialogos -contains $unidad.Nombre
+  if ($esDatos -or $esDominioControlado) {
+    $dialogos = [regex]::Matches(
+      $unidad.Limpio,
+      '(?i)\b(ShowMessage\w*|MessageDlg\w*|InputQuery\w*|' +
+      'MessageBox\w*)\b')
+    if ($dialogos.Count -gt 0) {
+      $relativa = [System.IO.Path]::GetRelativePath(
+        $raiz,
+        $unidad.Archivo)
+      $nombresDialogos = $dialogos |
+        ForEach-Object { $_.Value } |
+        Sort-Object -Unique
+      $dialogosFueraPresentacion.Add(
+        $unidad.Nombre + ': ' + ($nombresDialogos -join ', ') +
+        ' (' + $relativa + ')')
+    }
+  }
   if ($unidad.Nombre -ine 'inMtoPrincipal' -and
       $unidad.Limpio -match '\b(TfrmMtoPrincipal|frmMtoPrincipal)\b') {
     $relativa = [System.IO.Path]::GetRelativePath(
@@ -201,6 +227,12 @@ if ($usosLibADatos.Count -gt 0) {
     Write-Host ('  ' + $uso)
   }
 }
+if ($dialogosFueraPresentacion.Count -gt 0) {
+  Write-Host 'Dialogos fuera de la capa de presentacion:'
+  foreach ($dialogo in $dialogosFueraPresentacion) {
+    Write-Host ('  ' + $dialogo)
+  }
+}
 $excesoLibADatos = $usosLibADatos.Count -gt $maximoUsosLibADatos
 if ($excesoLibADatos) {
   Write-Host (
@@ -208,7 +240,7 @@ if ($excesoLibADatos) {
     '; maximo permitido: ' + $maximoUsosLibADatos + '.')
 }
 if (($infracciones.Count -gt 0) -or ($ciclos.Count -gt 0) -or
-    $excesoLibADatos) {
+    $excesoLibADatos -or ($dialogosFueraPresentacion.Count -gt 0)) {
   exit 1
 }
 

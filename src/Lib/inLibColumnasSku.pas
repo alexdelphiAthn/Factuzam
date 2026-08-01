@@ -23,7 +23,7 @@ unit inLibColumnasSku;
 interface
 
 uses
-  System.SysUtils, Data.DB, Uni,
+  System.SysUtils, Data.DB,
   inLibColumnasSkuIntf, inLibGridTallasInline, inLibGridPivoteVenta,
   inLibModoTallasIntf;
 
@@ -37,13 +37,9 @@ function CrearModoEntradaGrid(const AConfig: TConfigColumnasSku)
 
 // Modo tallas en horizontal (pivote de compras): necesita ademas la
 // TGridTallasConfig del documento (tabla de celdas, campos de pivote).
-// El adaptador completa Conexion, Grid y ColumnasTallas.
+// Los adaptadores de búsqueda y persistencia llegan en AConfig.Servicios.
 function CrearModoEntradaGridTallas(const AConfig: TConfigColumnasSku;
-                                    const ACfgTallas: TGridTallasConfig;
-                                    AFabricaPersistencia:
-                                      TFabricaPersistenciaTallas;
-                                    AFabricaBusqueda:
-                                      TFabricaBusquedaTallas)
+                                    const ACfgTallas: TGridTallasConfig)
                                                      : IModoEntradaGrid;
 
 // Modo tallas horizontal de pedidos de venta: no usa tabla de celdas.
@@ -86,25 +82,24 @@ begin
     // Estos modos necesitan configuracion propia del documento.
     raise Exception.Create(SErrorFactoriaTallasHorizontalObligatoria);
   if Cfg.Modo = mcsDesglose then
-    Result := TModoEntradaDesglose.Create(Cfg)
+  begin
+    if not Assigned(Cfg.Servicios.ModoDesglose) then
+      raise EArgumentNilException.Create('Servicios.ModoDesglose');
+    Result := Cfg.Servicios.ModoDesglose.CrearModoDesglose(Cfg);
+  end
   else
     Result := TModoEntradaSku.Create(Cfg);
 end;
 
 function CrearModoEntradaGridTallas(const AConfig: TConfigColumnasSku;
-                                    const ACfgTallas: TGridTallasConfig;
-                                    AFabricaPersistencia:
-                                      TFabricaPersistenciaTallas;
-                                    AFabricaBusqueda:
-                                      TFabricaBusquedaTallas)
+                                    const ACfgTallas: TGridTallasConfig)
                                                      : IModoEntradaGrid;
 var
   Cfg: TConfigColumnasSku;
 begin
   Cfg := AConfig;
   Cfg.Modo := mcsTallasInline;
-  Result := TModoEntradaTallas.Create(
-    Cfg, ACfgTallas, AFabricaPersistencia, AFabricaBusqueda);
+  Result := TModoEntradaTallas.Create(Cfg, ACfgTallas);
 end;
 
 function CrearModoEntradaGridPivoteVenta(

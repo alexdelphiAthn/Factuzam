@@ -388,7 +388,7 @@ uses
   inLibFiltroUsuario,
   inLibAtributosPaleta,
   inLibPedidosCompra,
-  UniDataPedidosCompraOperaciones,
+  UniDataPedidosCompraRecepcion,
   inLibLog,
   inLibValoresAutomaticos,
   inLibArticulosResolverIntf,
@@ -406,7 +406,7 @@ uses
   inLibColumnasSku, inLibMsgCompras,
   // Composicion del puerto de persistencia del pivote (V2).
   UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio,
-  UniDataModoTallas;
+  UniDataModoTallas, UniDataColumnasSkuServicios;
 
 {$R *.dfm}
 
@@ -2364,7 +2364,7 @@ begin
     ParametrosRecepcion.Celdas := arrCeldas;
     try
       bOk := inLibPedidosCompra.EjecutarRecepcionPedidoCompra(
-        CrearPedidosCompraUniDAC(ConexionPrincipal),
+        CrearRecepcionPedidoCompraUniDAC(ConexionPrincipal),
         ParametrosRecepcion, ResultadoRecepcion);
       sMsg := ResultadoRecepcion.Mensaje;
       if bOk then
@@ -2473,16 +2473,19 @@ begin
   if FModoEntradaSel = mcsAuto then
     dmmPedidosCompra.DesempaquetarAtributosLineas;
   Cfg := CrearConfigColumnasSkuDocumento(
-    dmmPedidosCompra.unqryTablaG.Connection,
+    CrearServiciosColumnasSkuUniDAC(
+      dmmPedidosCompra.unqryTablaG.Connection),
     ContextoSesion, tvLineasPedido, ds, FModoEntradaSel,
     Trim(dmmPedidosCompra.unqryTablaG.
       FieldByName('CODIGO_ALM_PEDC').AsString), 'PEDCLIN');
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
-    CrearValidadorArticulos(Cfg.Conexion);
+    CrearValidadorArticulos(
+      dmmPedidosCompra.unqryTablaG.Connection);
   Cfg.LookupAtributos :=
-    CrearLookupAtributosArticulos(Cfg.Conexion);
+    CrearLookupAtributosArticulos(
+      dmmPedidosCompra.unqryTablaG.Connection);
   if FModoEntradaSel = mcsTallasHorPed then
   begin
     CfgPV := CrearConfigPivoteBandasDocumentoCompra(
@@ -2511,6 +2514,7 @@ begin
     // consolidadas por articulo+color y cantidades por celda de talla
     // en fza_pedidos_compra_celdas.
     CfgT := Default(TGridTallasConfig);
+    CfgT.Conexion := dmmPedidosCompra.unqryTablaG.Connection;
     CfgT.ContextoSesion := ContextoSesion;
     CfgT.Usuario := IdentidadSesion.Usuario;
     CfgT.Grid := tvLineasPedido;
@@ -2534,8 +2538,7 @@ begin
     CfgT.FieldAlmacenCel := '';
     CfgT.IdFilaFijo := 1;
     CfgT.MaxColumnas := CANT_TALLAS_MAX;
-    FModoEntrada := CrearModoEntradaGridTallas(
-      Cfg, CfgT, CrearPersistenciaModoTallas, CrearBusquedaSkusTallas);
+    FModoEntrada := CrearModoEntradaGridTallas(Cfg, CfgT);
   end
   else
     FModoEntrada := CrearModoEntradaGrid(Cfg);

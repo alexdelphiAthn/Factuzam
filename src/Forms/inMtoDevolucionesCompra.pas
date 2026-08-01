@@ -320,6 +320,7 @@ uses
   UniDataArticulos,
   inLibComprasImpuestos,
   inLibDevolucionesCompraStock,
+  UniDataDevolucionesCompraStockRepositorio,
   inLibMsgArticulos, inLibMsgCompras,
   inMtoModalImpDevCompra,
   inMtoModalImpDevCompraV,
@@ -328,7 +329,8 @@ uses
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku,
   // Composicion del puerto de persistencia del pivote (V2).
-  UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio;
+  UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio,
+  UniDataColumnasSkuServicios;
 
 {$R *.dfm}
 
@@ -1512,6 +1514,7 @@ var
   bPivotActivo: Boolean;
   Estado: TEstadoStockDevolucionCompra;
   Parametros: TParametrosStockDevolucionCompra;
+  Persistencia: IPersistenciaStockDevolucionCompra;
 begin
   if dmmDevolucionesCompra <> nil then
   begin
@@ -1552,8 +1555,10 @@ begin
           LeerNumeroDataset(dsCab, 'PORCENTAJE_IVAS_DEVC');
         Parametros.IvaExento :=
           LeerNumeroDataset(dsCab, 'PORCENTAJE_IVAE_DEVC');
+        Persistencia := CrearPersistenciaStockDevolucionCompra(
+          ConexionPrincipal);
         Estado := ConsultarEstadoStockDevolucionCompra(
-          ConexionPrincipal, Parametros);
+          Persistencia, Parametros);
         if Estado <> esdcDisponible then
           MostrarEstadoStockDevolucionCompra(Estado)
         else if MessageDlg(SPreguntaPrepararStockFilaDevolucion,
@@ -1567,7 +1572,7 @@ begin
             if dsLin.Active then
               dsLin.Close;
             if DevolverTodoStockCompra(
-              ConexionPrincipal, Parametros, iLineas, Estado) then
+              Persistencia, Parametros, iLineas, Estado) then
             begin
               if not dsLin.Active then
                 dsLin.Open;
@@ -1835,16 +1840,19 @@ begin
   if FModoEntradaSel = mcsAuto then
     dmmDevolucionesCompra.DesempaquetarAtributosLineas;
   Cfg := CrearConfigColumnasSkuDocumento(
-    dmmDevolucionesCompra.unqryTablaG.Connection,
+    CrearServiciosColumnasSkuUniDAC(
+      dmmDevolucionesCompra.unqryTablaG.Connection),
     ContextoSesion, tvLineasDevolucion, ds, FModoEntradaSel,
     Trim(dmmDevolucionesCompra.unqryTablaG.
       FieldByName('CODIGO_ALM_DEVC').AsString), 'DEVCLIN');
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
-    CrearValidadorArticulos(Cfg.Conexion);
+    CrearValidadorArticulos(
+      dmmDevolucionesCompra.unqryTablaG.Connection);
   Cfg.LookupAtributos :=
-    CrearLookupAtributosArticulos(Cfg.Conexion);
+    CrearLookupAtributosArticulos(
+      dmmDevolucionesCompra.unqryTablaG.Connection);
   if FModoEntradaSel = mcsTallasHorPed then
   begin
     CfgPV := CrearConfigPivoteBandasDocumentoCompra(

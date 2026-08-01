@@ -59,7 +59,7 @@ uses
   Winapi.Windows,
   System.SysUtils, System.Classes, System.Generics.Collections,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Graphics,
-  Vcl.Dialogs, Vcl.ComCtrls,
+  Vcl.ComCtrls,
   cxControls, cxContainer, cxEdit, cxTextEdit,
   cxLabel, cxDropDownEdit, cxButtons,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView,

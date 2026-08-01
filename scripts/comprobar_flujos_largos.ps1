@@ -140,7 +140,7 @@ $objetivos = @(
     Nombre = 'TRevertidorComprasSesiones.Ejecutar'
   },
   @{
-    Ruta = 'src\DataModules\UniDataPedidosCompraOperaciones.pas'
+    Ruta = 'src\DataModules\UniDataPedidosCompraCreacionAlbaran.pas'
     Nombre = 'CrearAlbaranDesdePedidoConCantidadesInterno'
   },
   @{
@@ -160,8 +160,8 @@ $objetivos = @(
     Nombre = 'TTiraCajaTicket.ExportarExcel'
   },
   @{
-    Ruta = 'src\Caja\Lib\inLibArqueoPersistencia.pas'
-    Nombre = 'TArqueoPersistencia.GrabarArqueo'
+    Ruta = 'src\Caja\DataModules\UniDataArqueoPersistencia.pas'
+    Nombre = 'TPersistenciaArqueoUniDAC.GrabarArqueo'
   },
   @{
     Ruta = 'src\Lib\inLibGenerarTicketBD.pas'
@@ -212,53 +212,68 @@ foreach ($metodo in $ayudantesCaja) {
   }
 }
 
-$rutaPedidosCompra = Join-Path $Raiz `
-  'src\DataModules\UniDataPedidosCompraOperaciones.pas'
-$contenidoPedidosCompra =
-  Get-Content -LiteralPath $rutaPedidosCompra -Raw
-$ayudantesRecepcion = @(
-  'CalcularTotalCeldasRecepcion',
-  'ValidarSolicitudRecepcionCeldas',
-  'ReservarNumeroAlbaranCompra',
-  'PrepararInsercionCabeceraAlbaranPedido',
-  'AsignarParametrosCabeceraAlbaranPedido',
-  'CrearCabeceraAlbaranPedido',
-  'PrepararConsultaLineaPedidoRecepcion',
-  'CargarLineaPedidoRecepcion',
-  'CalcularCantidadRecepcion',
-  'PrepararInsercionLineaAlbaranPedido',
-  'AsignarParametrosLineaAlbaranPedido',
-  'InsertarLineaAlbaranPedido',
-  'ActualizarCantidadRecibidaPedido',
-  'ProcesarCeldasRecepcionPedido',
-  'BorrarCabeceraAlbaranCompra',
-  'CerrarAlbaranCompra',
-  'AplicarTemporadaArticulosAlbaran',
-  'FinalizarAlbaranCreado'
+$gruposAyudantesRecepcion = @(
+  @{
+    Ruta = 'src\DataModules\UniDataPedidosCompraCreacionAlbaran.pas'
+    Nombres = @(
+      'CalcularTotalCeldasRecepcion',
+      'ValidarSolicitudRecepcionCeldas',
+      'ReservarNumeroAlbaranCompra',
+      'PrepararInsercionCabeceraAlbaranPedido',
+      'AsignarParametrosCabeceraAlbaranPedido',
+      'CrearCabeceraAlbaranPedido',
+      'PrepararConsultaLineaPedidoRecepcion',
+      'CargarLineaPedidoRecepcion',
+      'CalcularCantidadRecepcion',
+      'PrepararInsercionLineaAlbaranPedido',
+      'AsignarParametrosLineaAlbaranPedido',
+      'InsertarLineaAlbaranPedido',
+      'ActualizarCantidadRecibidaPedido',
+      'ProcesarCeldasRecepcionPedido',
+      'BorrarCabeceraAlbaranCompra'
+    )
+  },
+  @{
+    Ruta = 'src\DataModules\UniDataPedidosCompraAlbaranComun.pas'
+    Nombres = @(
+      'CerrarAlbaranCompra',
+      'AplicarTemporadaArticulosAlbaran',
+      'FinalizarAlbaranCreado'
+    )
+  }
 )
-$metodosPedidosCompra =
-  Obtener-MetodosPascal -Ruta $rutaPedidosCompra
-foreach ($nombre in $ayudantesRecepcion) {
-  $metodo = @(
-    $metodosPedidosCompra |
-      Where-Object { $_.Nombre -eq $nombre }
-  )
-  if ($metodo.Count -ne 1) {
-    throw "No se encontro un ayudante unico de recepcion: $nombre."
-  }
-  if ($metodo[0].Lineas -gt $MaximoFlujo) {
-    throw (
-      "UniDataPedidosCompraOperaciones.pas`:$($metodo[0].Linea) " +
-      "$nombre ocupa $($metodo[0].Lineas) lineas; " +
-      "maximo permitido: $MaximoFlujo.")
-  }
-  $referencias = [regex]::Matches(
-    $contenidoPedidosCompra,
-    "\b$nombre\b").Count
-  if ($referencias -lt 2) {
-    throw "El ayudante de recepcion $nombre no tiene consumidor."
+foreach ($grupo in $gruposAyudantesRecepcion) {
+  $rutaPedidosCompra = Join-Path $Raiz $grupo.Ruta
+  $contenidoPedidosCompra =
+    Get-Content -LiteralPath $rutaPedidosCompra -Raw
+  $metodosPedidosCompra =
+    Obtener-MetodosPascal -Ruta $rutaPedidosCompra
+  foreach ($nombre in $grupo.Nombres) {
+    $metodo = @(
+      $metodosPedidosCompra |
+        Where-Object { $_.Nombre -eq $nombre }
+    )
+    if ($metodo.Count -ne 1) {
+      throw "No se encontro un ayudante unico de recepcion: $nombre."
+    }
+    if ($metodo[0].Lineas -gt $MaximoFlujo) {
+      throw (
+        "$($grupo.Ruta)`:$($metodo[0].Linea) $nombre ocupa " +
+        "$($metodo[0].Lineas) lineas; maximo permitido: " +
+        "$MaximoFlujo.")
+    }
+    $referencias = [regex]::Matches(
+      $contenidoPedidosCompra,
+      "\b$nombre\b").Count
+    if ($referencias -lt 2) {
+      throw "El ayudante de recepcion $nombre no tiene consumidor."
+    }
   }
 }
+$rutaPedidosCompra = Join-Path $Raiz `
+  'src\DataModules\UniDataPedidosCompraCreacionAlbaran.pas'
+$contenidoPedidosCompra =
+  Get-Content -LiteralPath $rutaPedidosCompra -Raw
 if ($contenidoPedidosCompra -notmatch
     '(?s)PrepararConsultaLineaPedidoRecepcion.*?' +
     'JOIN\s+fza_pedidos_compra\s+P.*?' +
@@ -500,7 +515,7 @@ foreach ($contrato in $contratosTiraCaja) {
 }
 
 $rutaArqueoPersistencia =
-  Join-Path $Raiz 'src\Caja\Lib\inLibArqueoPersistencia.pas'
+  Join-Path $Raiz 'src\Caja\DataModules\UniDataArqueoPersistencia.pas'
 $contenidoArqueoPersistencia =
   Get-Content -LiteralPath $rutaArqueoPersistencia -Raw
 $ayudantesGrabacionArqueo = @(
@@ -528,7 +543,7 @@ foreach ($nombre in $ayudantesGrabacionArqueo) {
   }
   if ($metodo[0].Lineas -gt $MaximoFlujo) {
     throw (
-      "inLibArqueoPersistencia.pas`:$($metodo[0].Linea) $nombre ocupa " +
+      "UniDataArqueoPersistencia.pas`:$($metodo[0].Linea) $nombre ocupa " +
       "$($metodo[0].Lineas) lineas; maximo permitido: $MaximoFlujo.")
   }
   $referencias = [regex]::Matches(
@@ -621,7 +636,7 @@ if ($contenidoGenerarTicketBD -notmatch
   throw 'El resguardo no conserva el orden de sus secciones y salida.'
 }
 $contratosResguardoDeposito = @(
-  'IRepositorioTicketsCaja',
+  'IRepositorioResguardosCaja',
   'ListarNuevosDepositosResguardo',
   'ListarEntregasResguardo',
   'ListarDevolucionesEconomicasResguardo',
@@ -654,14 +669,19 @@ if ($contenidoFormularioConsultaOpe -notmatch
     'CrearRepositorioTraspasoTicket.*?' +
     'CrearRepositorioTicketsCaja.*?ConexionPrincipal' -or
     $contenidoFormularioConsultaOpe -notmatch
+    '(?s)RepositoriosTickets\s*:=\s*CrearRepositorioTicketsCaja' -or
+    $contenidoFormularioConsultaOpe -notmatch
     '(?s)ImprimirTicketDesdeBD\(.*?' +
-    'CrearRepositorioTicketsCaja' -or
+    'RepositoriosTickets\.Tickets' -or
     $contenidoFormularioConsultaOpe -notmatch
     '(?s)ImprimirResguardoDeposito\(.*?' +
-    'CrearRepositorioTicketsCaja' -or
+    'RepositoriosTickets\.Resguardos' -or
     $contenidoFormularioConsultaOpe -notmatch
     '(?s)ImprimirRecordatorio\(.*?' +
-    'CrearRepositorioTicketsCaja') {
+    'RepositoriosTickets\.Recordatorios' -or
+    $contenidoFormularioConsultaOpe -notmatch
+    '(?s)ImprimirTicketOperacionCaja\(.*?' +
+    'CrearLecturasImpresionTicket') {
   throw 'La consulta de operaciones no conserva el repositorio de tickets.'
 }
 $rutaFormularioCajaOpe =
@@ -669,10 +689,10 @@ $rutaFormularioCajaOpe =
 $contenidoFormularioCajaOpe =
   Get-Content -LiteralPath $rutaFormularioCajaOpe -Raw
 if ($contenidoFormularioCajaOpe -notmatch
-    '(?s)TRepositorioTicketsCaja\.Create\(.*?' +
+    '(?s)CrearRepositoriosTicketsCaja\(.*?' +
     'AsignarRepositorioTicketsCaja\(.*?' +
     'TImpresorVentaVcl\.Create\(.*?' +
-    'oRepositorioTicketsCaja\)' -or
+    'oRepositorioTicketsCaja\.Tickets' -or
     $contenidoFormularioCajaOpe -notmatch
     '(?s)EnviarDocumentacionOperacion\(.*?' +
     'CrearRepositorioTraspasoTicket.*?' +

@@ -17,7 +17,7 @@ unit inLibVentasWsColaIntf;
 interface
 
 uses
-  Uni;
+  inLibVentasWsJsonIntf;
 
 type
   TFilaVentasWsCola = record
@@ -61,8 +61,17 @@ type
       AEsperaSegundos: Integer;
       const AMensaje, AUsuario: string);
   end;
-  TFabricaCrearRepositorioVentasWsCola = function(
-    AConexion: TUniConnection): IRepositorioVentasWsCola;
+  ISesionVentasWs = interface
+    ['{06E365D5-63CF-48D0-9D6E-165A815DBB77}']
+    function GetRepositorio: IRepositorioVentasWsCola;
+    function GetJson: IVentasWsJson;
+    property Repositorio: IRepositorioVentasWsCola read GetRepositorio;
+    property Json: IVentasWsJson read GetJson;
+  end;
+  IFabricaSesionVentasWs = interface
+    ['{6827FEAE-15F3-41A1-99CC-A1F1341A361F}']
+    function CrearSesion: ISesionVentasWs;
+  end;
 
 implementation
 end.

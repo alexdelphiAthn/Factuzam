@@ -95,7 +95,9 @@ implementation
 
 uses
   System.Diagnostics, inLibDevExp, inLibFotos, inLibLog,
-  inLibDocumentosTrabajo, inMtoFotoArticulo, UniDataRectificativasSql,
+  inLibDocumentosTrabajo, inLibDocumentosTrabajoPresentacion,
+  UniDataDocumentosTrabajoRepositorio,
+  inMtoFotoArticulo, UniDataRectificativasSql,
   inLibMsgComun, inLibMsgVentas;
 
 {$R *.dfm}
@@ -522,6 +524,8 @@ procedure TfrmModalListadoVentas.miAgregarDocumentoClick(Sender: TObject);
 begin
   try
     AgregarArticuloActivoADocumentoTrabajo(Self, ConexionPrincipal,
+      CrearRepositoriosDocumentosTrabajo(ConexionPrincipal),
+      CrearInteraccionDocumentosTrabajoVcl,
       BusquedaVisual, ContextoSesion, ParametrosCaja, ResolverArtSkuStock,
       CrearResolverArticulos(ConexionPrincipal));
   except

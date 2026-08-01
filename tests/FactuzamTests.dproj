@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{E93654F6-79B6-4847-ADDE-B833A998DC6D}</ProjectGuid>
         <MainSource>FactuzamTests.dpr</MainSource>
@@ -74,6 +74,9 @@
         </DelphiCompile>
         <DCCReference Include="..\src\DataModules\UniDataGen.pas"/>
         <DCCReference Include="..\src\Lib\inLibAtributosPaleta.pas"/>
+        <DCCReference Include="..\src\Lib\inLibAtributosPaletaIntf.pas"/>
+        <DCCReference
+            Include="..\src\DataModules\UniDataAtributosPaletaRepositorio.pas"/>
         <DCCReference Include="..\src\Lib\inLibColumnasDocumento.pas"/>
         <DCCReference Include="..\src\Lib\inLibFiltroUsuario.pas"/>
         <DCCReference Include="..\src\Lib\inLibGestorFiltrosMto.pas"/>
@@ -145,6 +148,14 @@
         <DCCReference
             Include="..\src\DataModules\UniDataArticulosVariaciones.pas"/>
         <DCCReference Include="..\src\Lib\inLibFotosPersistenciaIntf.pas"/>
+        <DCCReference Include="..\src\Lib\inLibInteraccionDatosIntf.pas"/>
+        <DCCReference Include="..\src\Lib\inLibFotosTipos.pas"/>
+        <DCCReference Include="..\src\Lib\inLibFotosConsulta.pas"/>
+        <DCCReference Include="..\src\Lib\inLibFotosAlmacenamiento.pas"/>
+        <DCCReference Include="..\src\Lib\inLibFotosEdicion.pas"/>
+        <DCCReference Include="..\src\Lib\inLibFotosSesion.pas"/>
+        <DCCReference Include="..\src\Lib\inLibFotosPresentacion.pas"/>
+        <DCCReference Include="..\src\Lib\inLibFotos.pas"/>
         <DCCReference
             Include="..\src\DataModules\UniDataFotosRepositorio.pas"/>
         <DCCReference
@@ -154,10 +165,23 @@
         <DCCReference Include="..\src\Lib\inLibPedidosCompraIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibPedidosCompra.pas"/>
         <DCCReference
+            Include="..\src\DataModules\UniDataPedidosCompraPendientes.pas"/>
+        <DCCReference
+            Include="..\src\DataModules\UniDataPedidosCompraAlbaranComun.pas"/>
+        <DCCReference
+            Include="..\src\DataModules\UniDataPedidosCompraCreacionAlbaran.pas"/>
+        <DCCReference
+            Include="..\src\DataModules\UniDataPedidosCompraIncorporacionAlbaran.pas"/>
+        <DCCReference
+            Include="..\src\DataModules\UniDataPedidosCompraRecepcion.pas"/>
+        <DCCReference
             Include="..\src\DataModules\UniDataPedidosCompraOperaciones.pas"/>
         <DCCReference Include="..\src\Lib\inLibVentasWsJsonIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibVentasWsJson.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataVentasWsJson.pas"/>
+        <DCCReference Include="..\src\DataModules\UniDataVentasWsCola.pas"/>
+        <DCCReference Include="..\src\DataModules\UniDataVentasWsSesion.pas"/>
+        <DCCReference Include="..\src\DataModules\UniDataColumnasSkuServicios.pas"/>
         <DCCReference Include="..\src\verifactu\UniDataVerifactuColaRepositorio.pas"/>
         <DCCReference
             Include="..\src\verifactu\inLibVerifactuNoVerifactuExportIntf.pas"/>
@@ -196,6 +220,8 @@
         <DCCReference Include="..\src\Lib\inLibExcepcionesAplicacionIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibTraduccionesIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibTraducciones.pas"/>
+        <DCCReference Include="..\src\Lib\inLibGridPivoteCompraTipos.pas"/>
+        <DCCReference Include="..\src\Lib\inLibPivoteCompraCalculo.pas"/>
         <DCCReference Include="..\src\Lib\inLibPivoteVentaCalculo.pas"/>
         <DCCReference Include="..\src\Lib\inLibPivoteVentaIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibPivoteVentaModelo.pas"/>
@@ -244,6 +270,7 @@
         <DCCReference Include="PruebasArticulosVariaciones.pas"/>
         <DCCReference Include="PruebasFotosPersistencia.pas"/>
         <DCCReference Include="PruebasGridPivoteCompraPersistencia.pas"/>
+        <DCCReference Include="PruebasPivoteCompraCalculo.pas"/>
         <DCCReference Include="PruebasPedidosCompra.pas"/>
         <DCCReference Include="PruebasVentasWsJson.pas"/>
         <DCCReference Include="PruebasVerifactuColaRepositorio.pas"/>

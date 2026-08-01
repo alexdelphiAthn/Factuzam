@@ -1001,7 +1001,8 @@ procedure TPruebasColumnasDocumento.
 var
   oConfig: TConfigColumnasSku;
 begin
-  oConfig := CrearConfigColumnasSkuDocumento(nil, nil, FVista, nil,
+  oConfig := CrearConfigColumnasSkuDocumento(
+    Default(TServiciosColumnasSku), nil, FVista, nil,
     mcsAuto, 'ALM01', 'ALBCLIN');
   Assert.IsTrue(oConfig.View = FVista);
   Assert.IsTrue(oConfig.Cds = nil);

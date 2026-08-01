@@ -314,7 +314,8 @@ uses
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku,
   // Composicion del puerto de persistencia del pivote (V2).
-  UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio;
+  UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio,
+  UniDataColumnasSkuServicios;
 
 {$R *.dfm}
 
@@ -1215,16 +1216,19 @@ begin
   if FModoEntradaSel = mcsAuto then
     dmmAlbaranesCompra.DesempaquetarAtributosLineas;
   Cfg := CrearConfigColumnasSkuDocumento(
-    dmmAlbaranesCompra.unqryTablaG.Connection,
+    CrearServiciosColumnasSkuUniDAC(
+      dmmAlbaranesCompra.unqryTablaG.Connection),
     ContextoSesion, tvLineasAlbaran, ds, FModoEntradaSel,
     Trim(dmmAlbaranesCompra.unqryTablaG.
       FieldByName('CODIGO_ALM_ALBC').AsString), 'ALBCLIN');
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
-    CrearValidadorArticulos(Cfg.Conexion);
+    CrearValidadorArticulos(
+      dmmAlbaranesCompra.unqryTablaG.Connection);
   Cfg.LookupAtributos :=
-    CrearLookupAtributosArticulos(Cfg.Conexion);
+    CrearLookupAtributosArticulos(
+      dmmAlbaranesCompra.unqryTablaG.Connection);
   if FModoEntradaSel = mcsTallasHorPed then
   begin
     CfgPV := CrearConfigPivoteBandasDocumentoCompra(

@@ -38,9 +38,45 @@ type
     Cantidad: Double;
     procedure Clear;
   end;
+  ILecturasDocumentosTrabajo = interface
+    ['{F3A03012-91E0-4BDA-B47F-53CE11A624B8}']
+    function ConsultaDocumentosAbiertos(
+      const AUsuario: string): string;
+    procedure CompletarDatosArticulo(
+      var ALinea: TDocTrabajoLineaOrigen);
+  end;
+  IEscrituraDocumentosTrabajo = interface
+    ['{B911B05D-E00B-41FC-9B22-C0BB317A3201}']
+    function CrearDocumento(const ATitulo, AEmpresa, AAlmacen,
+      AUsuario: string): Int64;
+    procedure InsertarLinea(AIdDocumento: Int64;
+      const ALinea: TDocTrabajoLineaOrigen;
+      const AUsuario: string);
+  end;
+  TRepositoriosDocumentosTrabajo = record
+    Lecturas: ILecturasDocumentosTrabajo;
+    Escritura: IEscrituraDocumentosTrabajo;
+  end;
+  TAccionDocumentoTrabajo = (
+    adtCancelar,
+    adtCrear,
+    adtSeleccionar
+  );
+  IInteraccionDocumentosTrabajo = interface
+    ['{6B74E0A2-0AA6-4E5B-9818-F706FB8F2A40}']
+    function ElegirDestino: TAccionDocumentoTrabajo;
+    function SolicitarTitulo(
+      const ATituloPropuesto: string;
+      out ATitulo: string): Boolean;
+    procedure InformarUnidadAgregada;
+  end;
 
 function AgregarUnidadADocumentoTrabajo(AOwner: TComponent;
                                         AConexion: TUniConnection;
+                                        const ARepositorios:
+                                        TRepositoriosDocumentosTrabajo;
+                                        const AInteraccion:
+                                        IInteraccionDocumentosTrabajo;
                                         const ABusquedaVisual:
                                         IBusquedaVisual;
                                         const AContextoSesion:
@@ -53,6 +89,10 @@ function AgregarUnidadADocumentoTrabajo(AOwner: TComponent;
                                         Boolean;
 function AgregarArticuloActivoADocumentoTrabajo(AOwner: TComponent;
                                                 AConexion: TUniConnection;
+                                                const ARepositorios:
+                                                TRepositoriosDocumentosTrabajo;
+                                                const AInteraccion:
+                                                IInteraccionDocumentosTrabajo;
                                                 const ABusquedaVisual:
                                                 IBusquedaVisual;
                                                 const AContextoSesion:
@@ -68,7 +108,7 @@ function AgregarArticuloActivoADocumentoTrabajo(AOwner: TComponent;
 implementation
 
 uses
-  Vcl.Dialogs, Vcl.Forms, Winapi.Windows,
+  Vcl.Forms,
   inLibMsgArticulos, inLibMsgVentas;
 
 procedure TDocTrabajoLineaOrigen.Clear;
@@ -85,66 +125,43 @@ begin
   Cantidad := 0;
 end;
 
-function ConnTrabajo(AConexion: TUniConnection): TUniConnection;
-begin
-  if AConexion = nil then
-    raise EArgumentNilException.Create('AConexion');
-  Result := AConexion;
-end;
-
-function CrearDocumentoTrabajo(AConexion: TUniConnection;
+function CrearDocumentoTrabajo(
+                               const ARepositorio:
+                               IEscrituraDocumentosTrabajo;
                                const AContextoSesion:
                                IContextoSesionAplicacion;
                                const ATitulo: string): Int64;
 var
-  q: TUniQuery;
   Identidad: TIdentidadSesion;
   Ubicacion: TUbicacionSesion;
 begin
   Result := 0;
   Identidad := AContextoSesion.Identidad;
   Ubicacion := AContextoSesion.Ubicacion;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := ConnTrabajo(AConexion);
-    q.SQL.Text :=
-      'INSERT INTO fza_documentos_trabajo ' +
-      '  (TITULO_DTR, TIPO_DTR, ESTADO_DTR, CODIGO_EMP_DTR, ' +
-      '   CODIGO_ALM_DTR, USUARIO_DTR, INSTANTE_DOCUMENTO_DTR, ' +
-      '   INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-      'VALUES ' +
-      '  (:TITULO, ''GENERAL'', ''ABIERTO'', :EMPRESA, :ALMACEN, ' +
-      '   :USUARIO, NOW(), NOW(), :USUARIO_ALTA, :USUARIO_MODIF)';
-    q.ParamByName('TITULO').AsString := ATitulo;
-    q.ParamByName('EMPRESA').AsString := Ubicacion.Empresa;
-    q.ParamByName('ALMACEN').AsString := Ubicacion.Almacen;
-    q.ParamByName('USUARIO').AsString := Identidad.Usuario;
-    q.ParamByName('USUARIO_ALTA').AsString := Identidad.Usuario;
-    q.ParamByName('USUARIO_MODIF').AsString := Identidad.Usuario;
-    q.Execute;
-    q.SQL.Text := 'SELECT LAST_INSERT_ID() AS ID';
-    q.Open;
-    if not q.IsEmpty then
-    begin
-      Result := q.FieldByName('ID').AsLargeInt;
-    end;
-  finally
-    FreeAndNil(q);
-  end;
+  if ARepositorio <> nil then
+    Result := ARepositorio.CrearDocumento(
+      ATitulo,
+      Ubicacion.Empresa,
+      Ubicacion.Almacen,
+      Identidad.Usuario);
 end;
 
 function SeleccionarDocumentoTrabajo(AOwner: TComponent;
                                      AConexion: TUniConnection;
+                                     const ARepositorios:
+                                     TRepositoriosDocumentosTrabajo;
+                                     const AInteraccion:
+                                     IInteraccionDocumentosTrabajo;
                                      const ABusquedaVisual:
                                      IBusquedaVisual;
                                      const AContextoSesion:
                                      IContextoSesionAplicacion;
                                      out AIdDtr: Int64): Boolean;
 var
-  iResp: Integer;
+  Accion: TAccionDocumentoTrabajo;
   sTitulo: string;
   sId: string;
-  sSql: string;
+  sConsulta: string;
   frmParent: TCustomForm;
 begin
   Result := False;
@@ -154,37 +171,37 @@ begin
   begin
     frmParent := TCustomForm(AOwner);
   end;
-  iResp := Application.MessageBox(
-    PWideChar(SPreguntaCrearDocumentoTrabajo),
-    PWideChar(STituloAgregarDocumentoTrabajo),
-    MB_YESNOCANCEL + MB_ICONQUESTION + MB_DEFBUTTON2);
-  if iResp = IDYES then
+  Accion := adtCancelar;
+  if Assigned(AInteraccion) then
   begin
-    sTitulo := 'Documento de trabajo ' + FormatDateTime('dd/mm/yyyy hh:nn', Now);
-    if InputQuery(STituloNuevoDocumentoTrabajo,
-                  SSolicitudTituloDocumentoTrabajo, sTitulo) then
+    Accion := AInteraccion.ElegirDestino;
+  end;
+  if Accion = adtCrear then
+  begin
+    sTitulo := 'Documento de trabajo ' +
+      FormatDateTime('dd/mm/yyyy hh:nn', Now);
+    if Assigned(AInteraccion) and
+       AInteraccion.SolicitarTitulo(sTitulo, sTitulo) then
     begin
       if Trim(sTitulo) <> '' then
       begin
-        AIdDtr := CrearDocumentoTrabajo(AConexion, AContextoSesion,
+        AIdDtr := CrearDocumentoTrabajo(
+          ARepositorios.Escritura,
+          AContextoSesion,
           Trim(sTitulo));
         Result := AIdDtr > 0;
       end;
     end;
   end
-  else if iResp = IDNO then
+  else if Accion = adtSeleccionar then
   begin
-    sSql :=
-      'SELECT ID_DTR, TITULO_DTR, USUARIO_DTR, ' +
-      '       INSTANTE_DOCUMENTO_DTR, ESTADO_DTR ' +
-      '  FROM fza_documentos_trabajo ' +
-      ' WHERE ESTADO_DTR = ''ABIERTO'' ' +
-      '   AND USUARIO_DTR = ' +
-      QuotedStr(AContextoSesion.Identidad.Usuario) + ' ' +
-      ' ORDER BY INSTANTE_DOCUMENTO_DTR DESC, ID_DTR DESC';
+    sConsulta := '';
+    if ARepositorios.Lecturas <> nil then
+      sConsulta := ARepositorios.Lecturas.ConsultaDocumentosAbiertos(
+        AContextoSesion.Identidad.Usuario);
     if ABusquedaVisual.EjecutarBusqueda(AConexion,
                                        'Documentos de Trabajo abiertos',
-                                       sSql, 'ID_DTR', sId,
+                                       sConsulta, 'ID_DTR', sId,
                                        'frmBuscarDocumentosTrabajo',
                                        frmParent) then
     begin
@@ -194,65 +211,13 @@ begin
   end;
 end;
 
-function SiguienteLinea(AConexion: TUniConnection; AIdDtr: Int64): string;
-var
-  q: TUniQuery;
-  iLinea: Integer;
-begin
-  iLinea := 1;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := ConnTrabajo(AConexion);
-    q.SQL.Text :=
-      'SELECT COALESCE(MAX(CAST(LINEA_DTL AS UNSIGNED)), 0) + 1 AS LINEA ' +
-      '  FROM fza_documentos_trabajo_lineas ' +
-      ' WHERE ID_DTR_DTL = :ID_DTR';
-    q.ParamByName('ID_DTR').AsLargeInt := AIdDtr;
-    q.Open;
-    if not q.IsEmpty then
-    begin
-      iLinea := q.FieldByName('LINEA').AsInteger;
-    end;
-  finally
-    FreeAndNil(q);
-  end;
-  Result := Format('%.8d', [iLinea]);
-end;
-
-procedure CompletarDatosArticulo(AConexion: TUniConnection;
+procedure CompletarDatosArticulo(
+                                 const ARepositorio:
+                                 ILecturasDocumentosTrabajo;
                                  var ALinea: TDocTrabajoLineaOrigen);
-var
-  q: TUniQuery;
 begin
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := ConnTrabajo(AConexion);
-    q.SQL.Text :=
-      'SELECT a.DESCRIPCION_ART, ' +
-      '       (SELECT GROUP_CONCAT(av.AV ORDER BY av.ORDEN_AV ' +
-      '               SEPARATOR '' / '') ' +
-      '          FROM fza_atributos_sku sa ' +
-      '          JOIN fza_atributos_valores av ON av.ID_AV = sa.ID_AV_SA ' +
-      '         WHERE sa.CODIGO_UNIDAD_SKU_SA = :SKU) AS DESCRIPCION_SKU ' +
-      '  FROM fza_articulos a ' +
-      ' WHERE a.CODIGO_ART_ART = :ART';
-    q.ParamByName('ART').AsString := ALinea.CodigoArticulo;
-    q.ParamByName('SKU').AsString := ALinea.CodigoSku;
-    q.Open;
-    if not q.IsEmpty then
-    begin
-      if Trim(ALinea.DescripcionArticulo) = '' then
-      begin
-        ALinea.DescripcionArticulo := q.FieldByName('DESCRIPCION_ART').AsString;
-      end;
-      if Trim(ALinea.DescripcionSku) = '' then
-      begin
-        ALinea.DescripcionSku := q.FieldByName('DESCRIPCION_SKU').AsString;
-      end;
-    end;
-  finally
-    FreeAndNil(q);
-  end;
+  if ARepositorio <> nil then
+    ARepositorio.CompletarDatosArticulo(ALinea);
 end;
 
 procedure ResolverSkuSiEsUnico(
@@ -289,60 +254,28 @@ begin
   end;
 end;
 
-procedure InsertarLineaDocumentoTrabajo(AConexion: TUniConnection;
+procedure InsertarLineaDocumentoTrabajo(
+                                        const ARepositorio:
+                                        IEscrituraDocumentosTrabajo;
                                         const AContextoSesion:
                                         IContextoSesionAplicacion;
                                         AIdDtr: Int64;
                                         const ALinea:
                                         TDocTrabajoLineaOrigen);
-var
-  q: TUniQuery;
 begin
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := ConnTrabajo(AConexion);
-    q.SQL.Text :=
-      'INSERT INTO fza_documentos_trabajo_lineas ' +
-      '  (ID_DTR_DTL, LINEA_DTL, CODIGO_ART_DTL, CODIGO_UNIDAD_DTL, ' +
-      '   CODIGO_ALM_DTL, LOTE_DTL, FECHA_CADUCIDAD_DTL, ' +
-      '   DESCRIPCION_ARTICULO_DTL, DESCRIPCION_UNIDAD_DTL, ' +
-      '   CANTIDAD_STOCK_DTL, CANTIDAD_DTL, INSTANTE_STOCK_DTL, ' +
-      '   ORIGEN_DTL, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-      'VALUES ' +
-      '  (:ID_DTR, :LINEA, :ART, :SKU, :ALM, :LOTE, :CADUCIDAD, ' +
-      '   :DESC_ART, :DESC_SKU, :CANTIDAD_STOCK, :CANTIDAD, NOW(), ' +
-      '   :ORIGEN, NOW(), :USUARIO_ALTA, :USUARIO_MODIF)';
-    q.ParamByName('ID_DTR').AsLargeInt := AIdDtr;
-    q.ParamByName('LINEA').AsString := SiguienteLinea(AConexion, AIdDtr);
-    q.ParamByName('ART').AsString := ALinea.CodigoArticulo;
-    q.ParamByName('SKU').AsString := ALinea.CodigoSku;
-    q.ParamByName('ALM').AsString := ALinea.CodigoAlmacen;
-    q.ParamByName('LOTE').AsString := ALinea.Lote;
-    if ALinea.FechaCaducidad = 0 then
-    begin
-      q.ParamByName('CADUCIDAD').Clear;
-    end
-    else
-    begin
-      q.ParamByName('CADUCIDAD').AsDate := ALinea.FechaCaducidad;
-    end;
-    q.ParamByName('DESC_ART').AsString := ALinea.DescripcionArticulo;
-    q.ParamByName('DESC_SKU').AsString := ALinea.DescripcionSku;
-    q.ParamByName('CANTIDAD_STOCK').AsFloat := ALinea.CantidadStock;
-    q.ParamByName('CANTIDAD').AsFloat := ALinea.Cantidad;
-    q.ParamByName('ORIGEN').AsString := ALinea.Origen;
-    q.ParamByName('USUARIO_ALTA').AsString :=
-      AContextoSesion.Identidad.Usuario;
-    q.ParamByName('USUARIO_MODIF').AsString :=
-      AContextoSesion.Identidad.Usuario;
-    q.Execute;
-  finally
-    FreeAndNil(q);
-  end;
+  if ARepositorio <> nil then
+    ARepositorio.InsertarLinea(
+      AIdDtr,
+      ALinea,
+      AContextoSesion.Identidad.Usuario);
 end;
 
 function AgregarUnidadADocumentoTrabajo(AOwner: TComponent;
                                         AConexion: TUniConnection;
+                                        const ARepositorios:
+                                        TRepositoriosDocumentosTrabajo;
+                                        const AInteraccion:
+                                        IInteraccionDocumentosTrabajo;
                                         const ABusquedaVisual:
                                         IBusquedaVisual;
                                         const AContextoSesion:
@@ -370,25 +303,34 @@ begin
   begin
     raise Exception.Create(SErrorArticuloDocumentoTrabajoVariosSkus);
   end;
-  CompletarDatosArticulo(AConexion, rLinea);
+  CompletarDatosArticulo(ARepositorios.Lecturas, rLinea);
   if Trim(rLinea.Origen) = '' then
   begin
     rLinea.Origen := 'MANUAL';
   end;
   if SeleccionarDocumentoTrabajo(
-    AOwner, AConexion, ABusquedaVisual, AContextoSesion, iIdDtr) then
+    AOwner, AConexion, ARepositorios, AInteraccion, ABusquedaVisual,
+    AContextoSesion, iIdDtr) then
   begin
-    InsertarLineaDocumentoTrabajo(AConexion, AContextoSesion, iIdDtr,
+    InsertarLineaDocumentoTrabajo(
+      ARepositorios.Escritura,
+      AContextoSesion,
+      iIdDtr,
       rLinea);
-    Application.MessageBox(PWideChar(SInfoUnidadAgregadaDocumentoTrabajo),
-                           PWideChar(STituloDocumentoTrabajo),
-                           MB_OK + MB_ICONINFORMATION);
+    if Assigned(AInteraccion) then
+    begin
+      AInteraccion.InformarUnidadAgregada;
+    end;
     Result := True;
   end;
 end;
 
 function AgregarArticuloActivoADocumentoTrabajo(AOwner: TComponent;
                                                 AConexion: TUniConnection;
+                                                const ARepositorios:
+                                                TRepositoriosDocumentosTrabajo;
+                                                const AInteraccion:
+                                                IInteraccionDocumentosTrabajo;
                                                 const ABusquedaVisual:
                                                 IBusquedaVisual;
                                                 const AContextoSesion:
@@ -413,6 +355,7 @@ begin
   rLinea.Cantidad := 1;
   rLinea.Origen := 'MTO';
   Result := AgregarUnidadADocumentoTrabajo(AOwner, AConexion,
+    ARepositorios, AInteraccion,
     ABusquedaVisual, AContextoSesion, AParametrosCaja, rLinea,
     AResolverArticulos);
 end;

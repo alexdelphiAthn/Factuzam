@@ -766,7 +766,7 @@ uses
   inLibColumnasSku, inLibColumnasDocumento, UniDataGen,
   inLibPresentacionDocumento,
   // Composicion del puerto de persistencia del pivote (V2).
-  UniDataPivoteVenta;
+  UniDataPivoteVenta, UniDataColumnasSkuServicios;
 
 {$R *.dfm}
 
@@ -3029,14 +3029,17 @@ begin
       if FModoEntradaSel <> mcsSku then
         dmmFacturas.DesempaquetarAtributosLineas;
       Cfg := CrearConfigColumnasSkuDocumento(
-        dmmFacturas.unqryTablaG.Connection, ContextoSesion,
+        CrearServiciosColumnasSkuUniDAC(
+          dmmFacturas.unqryTablaG.Connection), ContextoSesion,
         tvLineasFactura, ds, FModoEntradaSel, '', 'FACLIN');
       Cfg.BusquedaVisual := BusquedaVisual;
       Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
       Cfg.ValidadorArticulos :=
-        CrearValidadorArticulos(Cfg.Conexion);
+        CrearValidadorArticulos(
+          dmmFacturas.unqryTablaG.Connection);
       Cfg.LookupAtributos :=
-        CrearLookupAtributosArticulos(Cfg.Conexion);
+        CrearLookupAtributosArticulos(
+          dmmFacturas.unqryTablaG.Connection);
       if dmmFacturas.unqryTablaG.FindField(
         'CODIGO_ALM_FAC') <> nil then
         Cfg.AlmacenStock := Trim(

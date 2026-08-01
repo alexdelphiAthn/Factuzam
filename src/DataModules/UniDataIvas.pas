@@ -19,7 +19,7 @@ interface
 uses
   inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
-   inLibUser, vcl.dialogs;
+  inLibUser;
 
 type
   TdmIvas = class(TdmBase)
@@ -86,14 +86,15 @@ begin
     if (sCodigo = '') or
        SimbolosProhibidos(sCodigo, PerfilesLectura) then
     begin
-      ShowMessageFmt(SErrorCodigoIva, [sCodigo]);
+      NotificarError(Format(SErrorCodigoIva, [sCodigo]));
       bError := True;
     end;
     if ((FindField('IVA_IVAGRP').AsString = '0') or
         (not ExisteGrupoZonaIVA(FindField('IVA_IVAGRP').AsString))) then
     begin
-      ShowMessageFmt(SErrorGrupoIvaNoExiste,
-                     [FindField('IVA_IVAGRP').AsString]);
+      NotificarError(Format(
+        SErrorGrupoIvaNoExiste,
+        [FindField('IVA_IVAGRP').AsString]));
       bError := True;
     end;
     if (not(bError)) then
@@ -146,19 +147,21 @@ var
   swQ: TStopwatch;
 begin
   inherited;
-  if unqryZonasIVA.Active then Exit;
-  swQ := TStopwatch.StartNew;
-  try
-    unqryZonasIVA.Open;
-    inLibLog.Log.LogPerf('Ivas.AbrirDetalles',
-      'unqryZonasIVA OK', swQ.ElapsedMilliseconds);
-  except
-    on E: Exception do
-    begin
+  if not unqryZonasIVA.Active then
+  begin
+    swQ := TStopwatch.StartNew;
+    try
+      unqryZonasIVA.Open;
       inLibLog.Log.LogPerf('Ivas.AbrirDetalles',
-        'unqryZonasIVA ERROR=' + E.Message,
-        swQ.ElapsedMilliseconds);
-      raise;
+        'unqryZonasIVA OK', swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+      begin
+        inLibLog.Log.LogPerf('Ivas.AbrirDetalles',
+          'unqryZonasIVA ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
+        raise;
+      end;
     end;
   end;
 end;

@@ -130,7 +130,7 @@ procedure ConfigurarTablaPrincipalDocumento(
   const AConsultasDetalle: array of TUniQuery;
   var AClavePrincipal: string; const AClave: string);
 function CrearConfigColumnasSkuDocumento(
-  AConexion: TUniConnection;
+  const AServicios: TServiciosColumnasSku;
   const AContextoSesion: IContextoSesionAplicacion;
   AVista: TcxGridDBTableView; ADataSet: TDataSet;
   AModo: TModoColumnasSku; const AAlmacenStock,
@@ -568,7 +568,7 @@ begin
 end;
 
 function CrearConfigColumnasSkuDocumento(
-  AConexion: TUniConnection;
+  const AServicios: TServiciosColumnasSku;
   const AContextoSesion: IContextoSesionAplicacion;
   AVista: TcxGridDBTableView; ADataSet: TDataSet;
   AModo: TModoColumnasSku; const AAlmacenStock,
@@ -577,7 +577,7 @@ var
   iIndice: Integer;
 begin
   Result := Default(TConfigColumnasSku);
-  Result.Conexion := AConexion;
+  Result.Servicios := AServicios;
   Result.ContextoSesion := AContextoSesion;
   Result.View := AVista;
   Result.Cds := ADataSet;

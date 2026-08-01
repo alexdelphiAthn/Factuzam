@@ -297,7 +297,8 @@ uses
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku,
   // Composicion del puerto de persistencia del pivote (V2).
-  UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio;
+  UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio,
+  UniDataColumnasSkuServicios;
 
 {$R *.dfm}
 
@@ -893,16 +894,19 @@ begin
   if FModoEntradaSel = mcsAuto then
     dmmFacturasCompra.DesempaquetarAtributosLineas;
   Cfg := CrearConfigColumnasSkuDocumento(
-    dmmFacturasCompra.unqryTablaG.Connection,
+    CrearServiciosColumnasSkuUniDAC(
+      dmmFacturasCompra.unqryTablaG.Connection),
     ContextoSesion, tvLineasFactura, ds, FModoEntradaSel,
     Trim(dmmFacturasCompra.unqryTablaG.
       FieldByName('CODIGO_ALM_FACC').AsString), 'FACCLIN');
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
-    CrearValidadorArticulos(Cfg.Conexion);
+    CrearValidadorArticulos(
+      dmmFacturasCompra.unqryTablaG.Connection);
   Cfg.LookupAtributos :=
-    CrearLookupAtributosArticulos(Cfg.Conexion);
+    CrearLookupAtributosArticulos(
+      dmmFacturasCompra.unqryTablaG.Connection);
   if FModoEntradaSel = mcsTallasHorPed then
   begin
     CfgPV := CrearConfigPivoteBandasDocumentoCompra(

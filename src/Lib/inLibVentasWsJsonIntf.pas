@@ -16,7 +16,7 @@ unit inLibVentasWsJsonIntf;
 interface
 
 uses
-  Uni, inLibParametrosIntf;
+  inLibParametrosIntf;
 
 type
   IVentasWsJson = interface
@@ -28,8 +28,5 @@ type
       const AIdEvento, ATipoEvento, AEmpresa,
         ASerie, ANumero: string): string;
   end;
-  TFabricaCrearVentasWsJson = function(
-    AConexion: TUniConnection): IVentasWsJson;
-
 implementation
 end.

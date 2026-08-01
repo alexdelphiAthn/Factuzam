@@ -301,6 +301,7 @@ type
     // cualquier ventana si hay impresora de tickets asignada y Ctrl+U abre
     // la consulta de stock; Ctrl+E abre la consulta de articulos similares.
     procedure AppMessage(var Msg: TMsg; var Handled: Boolean);
+    procedure AbrirCajonDesdePresentacion;
     procedure MostrarAvisoCaducidadCertificado;
   public
     { Public declarations }
@@ -352,7 +353,7 @@ uses inLibUser,
   inLibMonitorSQLUniDAC,
   inLibMonitorSQLLog,
   UniDataFotosRepositorio,
-  UniDataVentasWsJson,
+  UniDataVentasWsSesion,
   inLibLog,
   inLibPerfilesUsuarioIntf,
   inLibFiltrosGuardadosIntf,
@@ -386,7 +387,6 @@ uses inLibUser,
   inLibVerifactuInstalacion,
   inLibVerifactuCola,
   UniDataVerifactuColaProcesador,
-  UniDataVentasWsCola,
   inLibCertificates,
   inMtoGen,
   inMtoFotoArticulo,
@@ -879,11 +879,9 @@ begin
       IdentidadSesion.Usuario));
   FVentasWsCola := TVentasWsCola.Create;
   FVentasWsCola.IniciarHilo(
-    Conexiones,
     ContextoSesion,
     ParametrosApp,
-    CrearRepositorioVentasWsColaUniDAC,
-    CrearVentasWsJsonUniDAC,
+    CrearFabricaSesionVentasWsUniDAC(Conexiones),
     IdentidadSesion.Usuario);
   jvStatusBar1.Panels[1].Text := FDmConn.conUni.Server + ':' +
     IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
@@ -1779,6 +1777,17 @@ begin
   ActualizarFondoLogo;
 end;
 
+procedure TfrmMtoPrincipal.AbrirCajonDesdePresentacion;
+var
+  Resultado: TResultadoAperturaCajon;
+begin
+  Resultado := AbrirCajonSinVenta(Permisos, ParametrosCaja);
+  if not Resultado.Correcto then
+  begin
+    MessageDlg(Resultado.Mensaje, mtWarning, [mbOK], 0);
+  end;
+end;
+
 procedure TfrmMtoPrincipal.AppMessage(var Msg: TMsg; var Handled: Boolean);
 var
   oControlActivo: TWinControl;
@@ -1811,7 +1820,7 @@ begin
        (GetKeyState(VK_CONTROL) >= 0) and (GetKeyState(VK_MENU) >= 0) and
        (GetKeyState(VK_SHIFT) >= 0) then
     begin
-      AbrirCajonSinVenta(Permisos, ParametrosCaja);
+      AbrirCajonDesdePresentacion;
       Handled := True;
     end
     // Ctrl+A conserva Seleccionar todo cuando el foco esta en un editor.
@@ -1870,7 +1879,7 @@ begin
      (GetKeyState(VK_CONTROL) >= 0) and (GetKeyState(VK_MENU) >= 0) and
      (GetKeyState(VK_SHIFT) >= 0) then
   begin
-    AbrirCajonSinVenta(Permisos, ParametrosCaja);
+    AbrirCajonDesdePresentacion;
     Result := True;
     Exit;
   end;

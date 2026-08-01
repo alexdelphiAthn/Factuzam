@@ -19,12 +19,14 @@ uses
   System.SysUtils, System.Classes, Data.DB, Uni, inLibCajaDatosFactura,
   inLibFTicket,        // Donde está tu TTicketTermico
   inLibFaseCobro,      // Para TDatosFaseCobro
-  inLibParametrosIntf, inLibUnidadesMedida, inLibPreviewTicket;
+  inLibParametrosIntf, inLibUnidadesMedida, inLibPreviewTicket,
+  inLibGenerarTicketIntf;
 
   procedure ImprimirT(const AParametrosApp: IParametrosAplicacion;
                       const APreview: IPreviewTicket;
                       AUnidades: TUnidadesMedida;
                       AConexion: TUniConnection;
+                      const ALecturasTicket: ILecturasImpresionTicket;
                       const ACodigoEmpresa,
                             ACodigoAlmacen,
                             ACodigoCaja,
@@ -38,11 +40,14 @@ uses
 
   // Diminutivo de ticket del empleado (fza_empleados) a partir de su
   // codigo. Si no se resuelve, devuelve el propio codigo recibido.
-  function ObtenerDiminutivoVendedor(AConexion: TUniConnection;
+  function ObtenerDiminutivoVendedor(
+    const ALecturasTicket: ILecturasImpresionTicket;
     const ACodigo: string): string;
   // Escribe las cuatro lineas configurables del pie de caja de la empresa.
   // Cada linea se limita al ancho real del ticket termico (42 caracteres).
-  procedure EscribirPieTicketCaja(AConexion: TUniConnection;
+  procedure EscribirPieTicketCaja(
+                                  const ALecturasTicket:
+                                  ILecturasImpresionTicket;
                                   ATicket: TTicketTermico;
                                   const ACodigoEmpresa: string);
 
@@ -52,87 +57,91 @@ uses
   inLibDir, inLibVerifactu, inLibFormatoDocumento,
   inLibMsgTickets, inLibTraducciones;
 
-const
-  CAMPOS_PIE_TICKET_CAJA: array[0..3] of string = (
-    'TEXTO_PIE_TICKET_CAJA_1_EMP',
-    'TEXTO_PIE_TICKET_CAJA_2_EMP',
-    'TEXTO_PIE_TICKET_CAJA_3_EMP',
-    'TEXTO_PIE_TICKET_CAJA_4_EMP');
-
-function CamposPieTicketCajaDisponibles(
-  AConexion: TUniConnection): Boolean;
-var
-  qry: TUniQuery;
-begin
-  Result := False;
-  if (AConexion <> nil) and AConexion.Connected then
-  begin
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := AConexion;
-      qry.SQL.Text :=
-        'SELECT COUNT(*) AS N ' +
-        '  FROM INFORMATION_SCHEMA.COLUMNS ' +
-        ' WHERE TABLE_SCHEMA = DATABASE() ' +
-        '   AND TABLE_NAME = ''fza_empresas'' ' +
-        '   AND COLUMN_NAME IN (''TEXTO_PIE_TICKET_CAJA_1_EMP'', ' +
-        '                       ''TEXTO_PIE_TICKET_CAJA_2_EMP'', ' +
-        '                       ''TEXTO_PIE_TICKET_CAJA_3_EMP'', ' +
-        '                       ''TEXTO_PIE_TICKET_CAJA_4_EMP'')';
-      qry.Open;
-      Result := qry.FieldByName('N').AsInteger = 4;
-    finally
-      FreeAndNil(qry);
-    end;
+type
+  TImpresorTicketVenta = class
+  private
+    FParametrosApp       : IParametrosAplicacion;
+    FPreview             : IPreviewTicket;
+    FUnidades            : TUnidadesMedida;
+    FConexion            : TUniConnection;
+    FLecturasTicket      : ILecturasImpresionTicket;
+    FCodigoEmpresa       : string;
+    FCodigoAlmacen       : string;
+    FCodigoCaja          : string;
+    FNumeroGenerado      : string;
+    FDatosCobro          : TDatosFaseCobro;
+    FNombreImpresora     : string;
+    FSinPrecios          : Boolean;
+    FFechaOperacion      : TDateTime;
+    FRutasPDF            : TStrings;
+    FImprimirCodigoBarras: Boolean;
+    FTicket              : TTicketTermico;
+    FCabecera            : TDatosCabeceraFactura;
+    FLineas              : TDataSet;
+    FDocumento           : string;
+    FQRTexto             : string;
+    constructor Create(
+      const AParametrosApp: IParametrosAplicacion;
+      const APreview: IPreviewTicket;
+      AUnidades: TUnidadesMedida;
+      AConexion: TUniConnection;
+      const ALecturasTicket: ILecturasImpresionTicket;
+      const ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja,
+        ANumeroGenerado: string;
+      const ADatosCobro: TDatosFaseCobro;
+      const ANombreImpresora: string;
+      ASinPrecios: Boolean;
+      AFechaOperacion: TDateTime;
+      ARutasPDF: TStrings;
+      AImprimirCodigoBarras: Boolean);
+    function LPad(const AValor: string; ALongitud: Integer;
+      const ACaracter: Char = '0'): string;
+    function ConstruirQRTributario: string;
+    procedure PrepararDatos;
+    procedure EscribirQRTributario;
+    procedure EscribirCabecera;
+    procedure EscribirArticulos;
+    procedure EscribirResumenImportes;
+    procedure EscribirPagosYCambio;
+    procedure EscribirValeEmitido;
+    procedure EscribirDesgloseIva;
+    procedure EscribirTotales;
+    procedure EscribirCodigoBarras;
+    procedure EscribirPie;
+    procedure Emitir;
+  public
+    procedure Ejecutar;
   end;
-end;
 
-procedure EscribirPieTicketCaja(AConexion: TUniConnection;
+procedure EscribirPieTicketCaja(
+                                const ALecturasTicket:
+                                ILecturasImpresionTicket;
                                 ATicket: TTicketTermico;
                                 const ACodigoEmpresa: string);
 var
-  qry: TUniQuery;
   i: Integer;
+  Lineas: TArray<string>;
   sLinea: string;
   EsHaEscrito: Boolean;
 begin
   EsHaEscrito := False;
   if (ATicket <> nil) and (Trim(ACodigoEmpresa) <> '') and
-     CamposPieTicketCajaDisponibles(AConexion) then
+     (ALecturasTicket <> nil) then
   begin
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := AConexion;
-      qry.SQL.Text :=
-        'SELECT TEXTO_PIE_TICKET_CAJA_1_EMP, ' +
-        '       TEXTO_PIE_TICKET_CAJA_2_EMP, ' +
-        '       TEXTO_PIE_TICKET_CAJA_3_EMP, ' +
-        '       TEXTO_PIE_TICKET_CAJA_4_EMP ' +
-        '  FROM fza_empresas ' +
-        ' WHERE CODIGO_EMP_EMP = :EMP';
-      qry.ParamByName('EMP').AsString := ACodigoEmpresa;
-      qry.Open;
-      if not qry.IsEmpty then
+    Lineas := ALecturasTicket.ListarPieCaja(ACodigoEmpresa);
+    for i := 0 to High(Lineas) do
+    begin
+      sLinea := Copy(Trim(Lineas[i]), 1, N_CHAR_LIN);
+      if sLinea <> '' then
       begin
-        for i := Low(CAMPOS_PIE_TICKET_CAJA) to
-                 High(CAMPOS_PIE_TICKET_CAJA) do
+        if not EsHaEscrito then
         begin
-          sLinea := Copy(Trim(qry.FieldByName(
-            CAMPOS_PIE_TICKET_CAJA[i]).AsString), 1, N_CHAR_LIN);
-          if sLinea <> '' then
-          begin
-            if not EsHaEscrito then
-            begin
-              ATicket.SaltarLineas(1);
-              ATicket.Alinear(alCentro);
-              EsHaEscrito := True;
-            end;
-            ATicket.EscribirLinea(sLinea);
-          end;
+          ATicket.SaltarLineas(1);
+          ATicket.Alinear(alCentro);
+          EsHaEscrito := True;
         end;
+        ATicket.EscribirLinea(sLinea);
       end;
-    finally
-      FreeAndNil(qry);
     end;
   end;
 end;
@@ -140,71 +149,373 @@ end;
 // Cruza el codigo de empleado (CODIGO_CAJERO_FAC) con su diminutivo de
 // ticket en fza_empleados. Si no hay conexion o no se encuentra, devuelve
 // el codigo recibido para no dejar el dato en blanco.
-function ObtenerDiminutivoVendedor(AConexion: TUniConnection;
+function ObtenerDiminutivoVendedor(
+  const ALecturasTicket: ILecturasImpresionTicket;
   const ACodigo: string): string;
-var
-  qry: TUniQuery;
 begin
   Result := ACodigo;
-  if (Trim(ACodigo) <> '') and (AConexion <> nil) and AConexion.Connected then
-  begin
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := AConexion;
-      qry.SQL.Text :=
-        'SELECT DIMINUTIVO_TICKET_EMPL' +
-        '  FROM fza_empleados' +
-        ' WHERE CODIGO_EMPL = :COD';
-      qry.ParamByName('COD').AsString := ACodigo;
-      qry.Open;
-      if (not qry.IsEmpty) and
-         (Trim(qry.FieldByName('DIMINUTIVO_TICKET_EMPL').AsString) <> '') then
-        Result := Trim(qry.FieldByName('DIMINUTIVO_TICKET_EMPL').AsString);
-    finally
-      FreeAndNil(qry);
-    end;
-  end;
+  if (Trim(ACodigo) <> '') and (ALecturasTicket <> nil) then
+    Result := ALecturasTicket.ObtenerDiminutivoVendedor(ACodigo);
 end;
 
 // EAN-13 del ticket desde fza_facturas ('' si la factura no lo tiene o
 // si la columna aún no existe: script codigo_barras_ticket.sql sin
 // aplicar).
-function ObtenerCodigoBarrasTicketBD(AConexion: TUniConnection;
+function ObtenerCodigoBarrasTicketBD(
+  const ALecturasTicket: ILecturasImpresionTicket;
   const ASerie, ANumero: string): string;
-var
-  qry: TUniQuery;
 begin
   Result := '';
-  if (Trim(ASerie) <> '') and (Trim(ANumero) <> '') then
+  if (Trim(ASerie) <> '') and (Trim(ANumero) <> '') and
+     (ALecturasTicket <> nil) then
+    Result := ALecturasTicket.ObtenerCodigoBarras(ASerie, ANumero);
+end;
+
+constructor TImpresorTicketVenta.Create(
+  const AParametrosApp: IParametrosAplicacion;
+  const APreview: IPreviewTicket;
+  AUnidades: TUnidadesMedida;
+  AConexion: TUniConnection;
+  const ALecturasTicket: ILecturasImpresionTicket;
+  const ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja,
+    ANumeroGenerado: string;
+  const ADatosCobro: TDatosFaseCobro;
+  const ANombreImpresora: string;
+  ASinPrecios: Boolean;
+  AFechaOperacion: TDateTime;
+  ARutasPDF: TStrings;
+  AImprimirCodigoBarras: Boolean);
+begin
+  inherited Create;
+  FParametrosApp := AParametrosApp;
+  FPreview := APreview;
+  FUnidades := AUnidades;
+  FConexion := AConexion;
+  FLecturasTicket := ALecturasTicket;
+  FCodigoEmpresa := ACodigoEmpresa;
+  FCodigoAlmacen := ACodigoAlmacen;
+  FCodigoCaja := ACodigoCaja;
+  FNumeroGenerado := ANumeroGenerado;
+  FDatosCobro := ADatosCobro;
+  FNombreImpresora := ANombreImpresora;
+  FSinPrecios := ASinPrecios;
+  FFechaOperacion := AFechaOperacion;
+  FRutasPDF := ARutasPDF;
+  FImprimirCodigoBarras := AImprimirCodigoBarras;
+end;
+
+function TImpresorTicketVenta.LPad(const AValor: string;
+  ALongitud: Integer; const ACaracter: Char): string;
+begin
+  if Length(AValor) >= ALongitud then
+    Result := AValor
+  else
+    Result := StringOfChar(
+      ACaracter, ALongitud - Length(AValor)) + AValor;
+end;
+
+function TImpresorTicketVenta.ConstruirQRTributario: string;
+begin
+  Result := '';
+  if (not SinVerifactuActivo(FParametrosApp)) and
+     (not FSinPrecios) then
+    Result := ConstruirUrlQR(
+      FParametrosApp,
+      FCabecera.NifEmp,
+      FDatosCobro.TotalesFactura.Cabecera.FieldByName(
+        'SERIE_FAC').AsString,
+      FDatosCobro.TotalesFactura.Cabecera.FieldByName(
+        'NUMERO_FAC').AsString,
+      FCabecera.Fecha,
+      FCabecera.TotalLiquido);
+end;
+
+procedure TImpresorTicketVenta.PrepararDatos;
+begin
+  FCabecera := LeerCabeceraFactura(
+    FDatosCobro.TotalesFactura.Cabecera);
+  if FFechaOperacion = 0 then
+    FFechaOperacion := Now;
+  FLineas := FDatosCobro.TotalesFactura.Lineas;
+  FDocumento := FormatearDocumentoDataSet(
+    FConexion,
+    FDatosCobro.TotalesFactura.Cabecera,
+    'SERIE_FAC',
+    'NUMERO_FAC');
+  FQRTexto := ConstruirQRTributario;
+end;
+
+procedure TImpresorTicketVenta.EscribirQRTributario;
+begin
+  if FQRTexto <> '' then
   begin
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := AConexion;
-      qry.SQL.Text :=
-        'SELECT COUNT(*) AS N ' +
-        '  FROM INFORMATION_SCHEMA.COLUMNS ' +
-        ' WHERE TABLE_SCHEMA = DATABASE() ' +
-        '   AND TABLE_NAME = ''fza_facturas'' ' +
-        '   AND COLUMN_NAME = ''CODIGO_BARRAS_FAC''';
-      qry.Open;
-      if qry.FieldByName('N').AsInteger > 0 then
-      begin
-        qry.Close;
-        qry.SQL.Text :=
-          'SELECT CODIGO_BARRAS_FAC ' +
-          '  FROM fza_facturas ' +
-          ' WHERE SERIE_FAC = :SERIE ' +
-          '   AND NUMERO_FAC = :NUMERO';
-        qry.ParamByName('SERIE').AsString := ASerie;
-        qry.ParamByName('NUMERO').AsString := ANumero;
-        qry.Open;
-        if not qry.IsEmpty then
-          Result := Trim(
-            qry.FieldByName('CODIGO_BARRAS_FAC').AsString);
-      end;
-    finally
-      FreeAndNil(qry);
+    FTicket.Alinear(alCentro);
+    FTicket.SaltarLineas(1);
+    FTicket.EscribirLinea('QR tributario:');
+    FTicket.ImprimirQRNativo(FQRTexto, 6, 49);
+    if VerifactuActivo(FParametrosApp) then
+    begin
+      FTicket.Alinear(alCentro);
+      FTicket.EscribirLinea('VERI*FACTU - Factura verificable');
+      FTicket.EscribirLinea('en la sede electrónica de la AEAT');
     end;
+    FTicket.Alinear(alIzquierda);
+  end;
+end;
+
+procedure TImpresorTicketVenta.EscribirCabecera;
+begin
+  EscribirQRTributario;
+  FTicket.SaltarLineas(1);
+  FTicket.Negrita(True);
+  if FSinPrecios then
+    FTicket.EscribirLinea(
+      Format(STicketRegaloNumero, [FDocumento]))
+  else
+    FTicket.EscribirLinea(
+      Format(STicketFacturaSimplificadaNumero, [FDocumento]));
+  FTicket.Negrita(False);
+  FTicket.SaltarLineas(1);
+  FTicket.Alinear(alCentro);
+  FTicket.EscribirLinea(FCabecera.RazonSocialEmp);
+  FTicket.EscribirLinea(FCabecera.Direccion1Emp);
+  FTicket.EscribirLinea(
+    FCabecera.CPostalEmp + ' ' + FCabecera.PoblacionEmp);
+  FTicket.EscribirLinea(
+    Format(STicketCifNif, [FCabecera.NifEmp]));
+  if Trim(FCabecera.MovilEmp) <> '' then
+    FTicket.EscribirLinea(
+      Format(STicketTelefono, [FCabecera.MovilEmp]));
+  FTicket.SaltarLineas(1);
+  FTicket.Alinear(alIzquierda);
+  FTicket.TextoColumnas(
+    STicketEtiquetaOperacionNumero, FNumeroGenerado);
+  FTicket.SaltarLineas(1);
+  FTicket.TextoColumnas(
+    FormatDateTime('dd/mm/yyyy hh:nn', FFechaOperacion),
+    Format(STicketFormatoTienda,
+      [LPad(FCodigoEmpresa, 3), LPad(FCodigoAlmacen, 3),
+       LPad(FCodigoCaja, 2)]));
+end;
+
+procedure TImpresorTicketVenta.EscribirArticulos;
+var
+  sArticulo, sUnidad, sUnidades, sPrecio: string;
+begin
+  FTicket.LineaSeparadora('-');
+  FTicket.EscribirLinea(STicketCabeceraArticulos);
+  FTicket.LineaSeparadora('-');
+  FLineas.DisableControls;
+  try
+    FLineas.First;
+    while not FLineas.Eof do
+    begin
+      sArticulo := Format('%-26s', [Copy(FLineas.FieldByName(
+        'CODIGO_UNIDAD_FACLIN').AsString, 1, 26)]);
+      sUnidad := '';
+      if FLineas.FindField('TIPO_CANTIDAD_ARTICULO_FACLIN') <> nil then
+        sUnidad := FLineas.FieldByName(
+          'TIPO_CANTIDAD_ARTICULO_FACLIN').AsString;
+      if Assigned(FUnidades) then
+        sUnidades := FUnidades.Formatear(
+          FLineas.FieldByName('CANTIDAD_FACLIN').AsFloat, sUnidad)
+      else
+        sUnidades := FormatFloat(
+          '0', FLineas.FieldByName('CANTIDAD_FACLIN').AsFloat);
+      sUnidades := Format('%4s', [sUnidades]);
+      if FSinPrecios then
+        FTicket.EscribirLinea(sArticulo + sUnidades)
+      else
+      begin
+        sPrecio := FormatFloat('#,##0.00',
+          FLineas.FieldByName('TOTAL_FACLIN').AsCurrency) + ' €';
+        FTicket.TextoColumnas(sArticulo + sUnidades, sPrecio);
+      end;
+      FTicket.EscribirLinea(Copy(FLineas.FieldByName(
+        'DESCRIPCION_ARTICULO_FACLIN').AsString, 1, 42));
+      FLineas.Next;
+    end;
+  finally
+    FLineas.EnableControls;
+  end;
+  FTicket.LineaSeparadora('-');
+  FTicket.SaltarLineas(1);
+end;
+
+procedure TImpresorTicketVenta.EscribirResumenImportes;
+begin
+  FTicket.Alinear(alIzquierda);
+  FTicket.Negrita(True);
+  if FDatosCobro.ImporteDescuentoGlobal > 0 then
+  begin
+    FTicket.TextoColumnas(STicketSuma,
+      Format('%.2f', [FCabecera.TotalLiquido +
+        FDatosCobro.ImporteDescuentoGlobal]) + ' €');
+    FTicket.TextoColumnas(STicketDescuento,
+      Format('-%.2f', [FDatosCobro.ImporteDescuentoGlobal]) + ' €');
+  end;
+  if FDatosCobro.ImporteValeRecogido > 0 then
+    FTicket.TextoColumnas(STicketValeRecogido,
+      Format('-%.2f', [FDatosCobro.ImporteValeRecogido]) + ' €');
+  FTicket.TextoColumnas(
+    STicketAPagar,
+    Format('%.2f', [FCabecera.TotalLiquido]) + ' €');
+  FTicket.Negrita(False);
+end;
+
+procedure TImpresorTicketVenta.EscribirPagosYCambio;
+var
+  dImporte: Double;
+  sFormaPago: string;
+begin
+  FTicket.Alinear(alIzquierda);
+  FTicket.Negrita(True);
+  FDatosCobro.MemTablePagos.First;
+  while not FDatosCobro.MemTablePagos.Eof do
+  begin
+    sFormaPago := FDatosCobro.MemTablePagos.FieldByName(
+      'DESCRIPCION_FORMA_PAGO_CFP').AsString;
+    dImporte := FDatosCobro.MemTablePagos.FieldByName(
+      'IMPORTE_ENTREGADO').AsFloat;
+    if dImporte > 0.001 then
+      FTicket.TextoColumnas(
+        UpperCase(sFormaPago), Format('%.2f', [dImporte]) + ' €');
+    FDatosCobro.MemTablePagos.Next;
+  end;
+  if FDatosCobro.ImporteCambio > 0 then
+    FTicket.TextoColumnas(STicketCambioEfectivo,
+      Format('%.2f', [FDatosCobro.ImporteCambio]) + ' €');
+  FTicket.Negrita(False);
+end;
+
+procedure TImpresorTicketVenta.EscribirValeEmitido;
+begin
+  if FDatosCobro.ImporteValeEmitido > 0 then
+  begin
+    FTicket.SaltarLineas(1);
+    FTicket.Negrita(True);
+    FTicket.TextoColumnas(STicketValeEmitidoFavor,
+      Format('%.2f', [FDatosCobro.ImporteValeEmitido]) + ' €');
+    if Length(STicketCodigoValeEmitidoEspacio +
+       FDatosCobro.CodigoValeEmitido) <= 42 then
+      FTicket.TextoColumnas(
+        STicketCodigoValeEmitidoEspacio, FDatosCobro.CodigoValeEmitido)
+    else
+    begin
+      FTicket.EscribirLinea(STicketCodigoValeEmitido);
+      FTicket.EscribirLinea(FDatosCobro.CodigoValeEmitido);
+    end;
+    FTicket.Negrita(False);
+  end;
+end;
+
+procedure TImpresorTicketVenta.EscribirDesgloseIva;
+begin
+  if Abs(FCabecera.TotalIvaN) > 0.001 then
+  begin
+    FTicket.TextoColumnas(STicketBaseImponible,
+      Format('%.2f', [FCabecera.BaseIN]) + ' €');
+    FTicket.TextoColumnas(
+      Format(STicketTotalIvaFormato, [FCabecera.PorcIvaN]),
+      Format('%.2f', [FCabecera.TotalIvaN]) + ' €');
+  end;
+  if Abs(FCabecera.TotalIvaR) > 0 then
+  begin
+    FTicket.TextoColumnas(STicketBaseImponibleReducida,
+      Format('%.2f', [FCabecera.BaseIR]) + ' €');
+    FTicket.TextoColumnas(
+      Format(STicketTotalIvaFormato, [FCabecera.PorcIvaR]),
+      Format('%.2f', [FCabecera.TotalIvaR]) + ' €');
+  end;
+end;
+
+procedure TImpresorTicketVenta.EscribirTotales;
+begin
+  if not FSinPrecios then
+  begin
+    EscribirResumenImportes;
+    EscribirPagosYCambio;
+    EscribirValeEmitido;
+    FTicket.SaltarLineas(1);
+    EscribirDesgloseIva;
+  end;
+end;
+
+procedure TImpresorTicketVenta.EscribirCodigoBarras;
+var
+  sCodigo: string;
+begin
+  if FImprimirCodigoBarras then
+  begin
+    sCodigo := ObtenerCodigoBarrasTicketBD(
+      FLecturasTicket,
+      FDatosCobro.TotalesFactura.Cabecera.FieldByName(
+        'SERIE_FAC').AsString,
+      FDatosCobro.TotalesFactura.Cabecera.FieldByName(
+        'NUMERO_FAC').AsString);
+    if sCodigo <> '' then
+    begin
+      FTicket.SaltarLineas(1);
+      FTicket.ImprimirEAN13Nativo(sCodigo);
+    end;
+  end;
+end;
+
+procedure TImpresorTicketVenta.EscribirPie;
+var
+  sVendedor: string;
+begin
+  FTicket.SaltarLineas(2);
+  FTicket.Alinear(alCentro);
+  sVendedor := ObtenerDiminutivoVendedor(
+    FLecturasTicket,
+    FDatosCobro.TotalesFactura.Cabecera.FieldByName(
+      'CODIGO_CAJERO_FAC').AsString);
+  FTicket.EscribirLinea(Format(STicketLeAtendio, [sVendedor]));
+  if not FSinPrecios then
+    FTicket.EscribirLinea(STicketIvaIncluido);
+  FTicket.EscribirLinea(STicketGraciasVisita);
+  EscribirPieTicketCaja(FLecturasTicket, FTicket, FCodigoEmpresa);
+  EscribirCodigoBarras;
+  FTicket.SaltarLineas(1);
+  FTicket.EscribirLinea('');
+  FTicket.SaltarLineas(3);
+  FTicket.CortarPapel;
+  FTicket.AbrirCajon;
+end;
+
+procedure TImpresorTicketVenta.Emitir;
+var
+  sComandos, sRutaPDF, sSufijoPDF: string;
+begin
+  sComandos := FTicket.ObtenerComandos;
+  sSufijoPDF := '';
+  if FSinPrecios then
+    sSufijoPDF := '_regalo';
+  sRutaPDF := GetUserFolderTickets + 'Ticket_' +
+    FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + sSufijoPDF + '.pdf';
+  ImprimirOPrevisualizarTicket(
+    FPreview, FTicket, sComandos, sRutaPDF, FNombreImpresora);
+  if (FRutasPDF <> nil) and FileExists(sRutaPDF) then
+    FRutasPDF.Add(sRutaPDF);
+end;
+
+procedure TImpresorTicketVenta.Ejecutar;
+var
+  ProteccionIdioma: IInterface;
+begin
+  PrepararDatos;
+  ProteccionIdioma := ProtegerDocumentoVentaEspanol;
+  FTicket := TTicketTermico.Create(FNombreImpresora);
+  try
+    FTicket.Inicializar;
+    EscribirCabecera;
+    EscribirArticulos;
+    EscribirTotales;
+    EscribirPie;
+    Emitir;
+  finally
+    FreeAndNil(FTicket);
   end;
 end;
 
@@ -212,288 +523,32 @@ procedure ImprimirT(const AParametrosApp: IParametrosAplicacion;
                     const APreview: IPreviewTicket;
                     AUnidades: TUnidadesMedida;
                     AConexion: TUniConnection;
+                    const ALecturasTicket: ILecturasImpresionTicket;
                     const ACodigoEmpresa,
                           ACodigoAlmacen,
                           ACodigoCaja,
                           ANumeroGenerado: string;
                           DatosCobro: TDatosFaseCobro;
-                          NombreImpresora:string = 'DEBUG';
-                          ASinPrecios: Boolean = False;
-                          AFechaOperacion: TDateTime = 0;
-                          ARutasPDF: TStrings = nil;
-                          AImprimirCodigoBarras: Boolean = False);
+                          NombreImpresora:string;
+                          ASinPrecios: Boolean;
+                          AFechaOperacion: TDateTime;
+                          ARutasPDF: TStrings;
+                          AImprimirCodigoBarras: Boolean);
 var
-  Ticket: TTicketTermico;
-  Cab: TDatosCabeceraFactura;
-  dLin: TDataSet;
-  QRTexto: string;
-  ComandosESC, RutaFicheroPDF: string;
-  sCodigoBarras: string;
-  sDocumento: string;
-  dtFechaOperacion: TDateTime;
-  oProteccionIdioma: IInterface;
-
-  function LPAD(const AValue: string;
-                ALength: Integer;
-                const APadChar: Char = '0'): string;
-  var
-    CurrentLength: Integer;
-  begin
-    CurrentLength := Length(AValue);
-    if CurrentLength >= ALength then
-      Result := AValue
-    else
-      Result := StringOfChar(APadChar, ALength - CurrentLength) + AValue;
-  end;
-
+  Impresor: TImpresorTicketVenta;
 begin
-  if not DatosCobro.FRequiereFactura then
-    Exit;
-//  NombreImpresora := 'DEBUG';
-  Cab := LeerCabeceraFactura(DatosCobro.TotalesFactura.Cabecera);
-  dtFechaOperacion := AFechaOperacion;
-  if dtFechaOperacion = 0 then
-    dtFechaOperacion := Now;
-  dLin := DatosCobro.TotalesFactura.Lineas;
-  sDocumento := FormatearDocumentoDataSet(AConexion,
-    DatosCobro.TotalesFactura.Cabecera, 'SERIE_FAC', 'NUMERO_FAC');
-  // QR tributario fiscal: URL de cotejo/remisión AEAT generada en local.
-  // El ticket regalo (sin precios) no lleva QR ni datos fiscales.
-  QRTexto := '';
-  if (not SinVerifactuActivo(AParametrosApp)) and (not ASinPrecios) then
-    QRTexto := ConstruirUrlQR(AParametrosApp,
-                 Cab.NifEmp,
-                 DatosCobro.TotalesFactura.Cabecera.FieldByName(
-                                                     'SERIE_FAC').AsString,
-                 DatosCobro.TotalesFactura.Cabecera.FieldByName(
-                                                     'NUMERO_FAC').AsString,
-                 Cab.Fecha,
-                 Cab.TotalLiquido);
-  oProteccionIdioma := ProtegerDocumentoVentaEspanol;
-  Ticket := TTicketTermico.Create(NombreImpresora);
-  try
-    Ticket.Inicializar;
-    // === QR TRIBUTARIO AL PRINCIPIO (modo fiscal activo) ===
-    if QRTexto <> '' then
-    begin
-      Ticket.Alinear(alCentro);
-      Ticket.SaltarLineas(1);
-      Ticket.EscribirLinea('QR tributario:');
-      // Nivel de corrección M (49) exigido por la AEAT para el QR
-      Ticket.ImprimirQRNativo(QRTexto, 6, 49);
-      if VerifactuActivo(AParametrosApp) then
-      begin
-        Ticket.Alinear(alCentro);
-        Ticket.EscribirLinea('VERI*FACTU - Factura verificable');
-        Ticket.EscribirLinea('en la sede electrónica de la AEAT');
-      end;
-      Ticket.Alinear(alIzquierda);
-    end;
-    Ticket.SaltarLineas(1);
-    Ticket.Negrita(True);
-    if ASinPrecios then
-      Ticket.EscribirLinea(
-        Format(STicketRegaloNumero, [sDocumento]))
-    else
-      Ticket.EscribirLinea(
-        Format(STicketFacturaSimplificadaNumero, [sDocumento]));
-    Ticket.Negrita(False);
-    Ticket.SaltarLineas(1);
-    Ticket.Alinear(alCentro);
-    Ticket.EscribirLinea(Cab.RazonSocialEmp);
-    Ticket.EscribirLinea(Cab.Direccion1Emp);
-    Ticket.EscribirLinea(Cab.CPostalEmp + ' ' + Cab.PoblacionEmp);
-    Ticket.EscribirLinea(
-      Format(STicketCifNif, [Cab.NifEmp]));
-    if Trim(Cab.MovilEmp) <> '' then
-      Ticket.EscribirLinea(
-        Format(STicketTelefono, [Cab.MovilEmp]));
-    Ticket.SaltarLineas(1);
-    // Formatear línea de operación y tienda
-    Ticket.Alinear(alIzquierda);
-    Ticket.TextoColumnas(
-      STicketEtiquetaOperacionNumero,
-      ANumeroGenerado);
-    Ticket.SaltarLineas(1);
-    Ticket.TextoColumnas(FormatDateTime('dd/mm/yyyy hh:nn',
-                         dtFechaOperacion),
-                         Format(
-                           STicketFormatoTienda,
-                           [LPAD(ACodigoEmpresa, 3),
-                            LPAD(ACodigoAlmacen, 3),
-                            LPAD(ACodigoCaja, 2)]));
-    // === ARTÍCULOS ===
-    Ticket.LineaSeparadora('-');
-    Ticket.EscribirLinea(STicketCabeceraArticulos);
-    Ticket.LineaSeparadora('-');
-    dLin.DisableControls;
+  if DatosCobro.FRequiereFactura then
+  begin
+    Impresor := TImpresorTicketVenta.Create(
+      AParametrosApp, APreview, AUnidades, AConexion, ALecturasTicket,
+      ACodigoEmpresa, ACodigoAlmacen, ACodigoCaja, ANumeroGenerado,
+      DatosCobro, NombreImpresora, ASinPrecios, AFechaOperacion,
+      ARutasPDF, AImprimirCodigoBarras);
     try
-      dLin.First;
-      while not dLin.Eof do
-      begin
-        var sArt := Format('%-26s', [Copy(dLin.FieldByName(
-                              'CODIGO_UNIDAD_FACLIN').AsString, 1, 26)]);
-        var sUni := '';
-        if dLin.FindField('TIPO_CANTIDAD_ARTICULO_FACLIN') <> nil then
-          sUni := dLin.FieldByName('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString;
-        var sUds := '';
-        if Assigned(AUnidades) then
-          sUds := AUnidades.Formatear(
-            dLin.FieldByName('CANTIDAD_FACLIN').AsFloat, sUni)
-        else
-          sUds := FormatFloat(
-            '0', dLin.FieldByName('CANTIDAD_FACLIN').AsFloat);
-        sUds := Format('%4s', [sUds]);
-        var Des := Format('%-38s', [Copy(dLin.FieldByName(
-                            'DESCRIPCION_ARTICULO_FACLIN').AsString, 1, 38)]);
-        if ASinPrecios then
-          Ticket.EscribirLinea(sArt + sUds)
-        else
-        begin
-          var sPre := FormatFloat('#,##0.00',
-                      dLin.FieldByName('TOTAL_FACLIN').AsCurrency) + ' €';
-          Ticket.TextoColumnas(sArt + sUds, sPre);
-        end;
-        Ticket.EscribirLinea(Copy(dLin.FieldByName(
-                        'DESCRIPCION_ARTICULO_FACLIN').AsString, 1, 42));
-//        CantidadTotal := CantidadTotal +
-//                           dLin.FieldByName('CANTIDAD_FACLIN').AsFloat;
-        dLin.Next;
-      end;
+      Impresor.Ejecutar;
     finally
-      dLin.EnableControls;
+      FreeAndNil(Impresor);
     end;
-    Ticket.LineaSeparadora('-');
-    Ticket.SaltarLineas(1);
-    // === TOTALES === (el ticket regalo no lleva importes ni pagos)
-    if not ASinPrecios then
-    begin
-    Ticket.Alinear(alIzquierda);
-    Ticket.Negrita(True);
-    if DatosCobro.ImporteDescuentoGlobal > 0 then
-    begin
-      Ticket.TextoColumnas(STicketSuma, Format('%.2f',
-                [Cab.TotalLiquido + DatosCobro.ImporteDescuentoGlobal]) + ' €');
-      Ticket.TextoColumnas(STicketDescuento, Format('-%.2f',
-                                   [DatosCobro.ImporteDescuentoGlobal]) + ' €');
-    end;
-    if DatosCobro.ImporteValeRecogido > 0 then
-      Ticket.TextoColumnas(STicketValeRecogido, Format('-%.2f',
-                                      [DatosCobro.ImporteValeRecogido]) + ' €');
-    Ticket.TextoColumnas(
-      STicketAPagar,
-      Format('%.2f', [Cab.TotalLiquido]) + ' €');
-    Ticket.Negrita(False);
-    Ticket.Alinear(alIzquierda);
-    Ticket.Negrita(True);
-    DatosCobro.MemTablePagos.First;
-    while not DatosCobro.MemTablePagos.Eof do
-    begin
-      var FPName := DatosCobro.MemTablePagos.FieldByName(
-                                                 'DESCRIPCION_FORMA_PAGO_CFP').AsString;
-      var FPAmount := DatosCobro.MemTablePagos.FieldByName(
-                                                   'IMPORTE_ENTREGADO').AsFloat;
-      if FPAmount > 0.001 then
-        Ticket.TextoColumnas(UpperCase(FPName),
-                                             Format('%.2f', [FPAmount]) + ' €');
-      DatosCobro.MemTablePagos.Next;
-    end;
-    if DatosCobro.ImporteCambio > 0 then
-      Ticket.TextoColumnas(STicketCambioEfectivo, Format('%.2f',
-                                            [DatosCobro.ImporteCambio]) + ' €');
-    Ticket.Negrita(False);
-    if DatosCobro.ImporteValeEmitido > 0 then
-    begin
-      Ticket.SaltarLineas(1);
-      Ticket.Negrita(True);
-      Ticket.TextoColumnas(STicketValeEmitidoFavor, Format('%.2f',
-                                       [DatosCobro.ImporteValeEmitido]) + ' €');
-      // Si el codigo no cabe junto a la etiqueta (ancho 42), va en
-      // una linea propia debajo.
-      if Length(STicketCodigoValeEmitidoEspacio +
-                DatosCobro.CodigoValeEmitido) <= 42 then
-        Ticket.TextoColumnas(STicketCodigoValeEmitidoEspacio,
-                             DatosCobro.CodigoValeEmitido)
-      else
-      begin
-        Ticket.EscribirLinea(STicketCodigoValeEmitido);
-        Ticket.EscribirLinea(DatosCobro.CodigoValeEmitido);
-      end;
-      Ticket.Negrita(False);
-    end;
-//    Ticket.TextoColumnas('CANTIDAD DE ARTICULOS', Format('%.2f',
-//                                                        [CantidadTotal]), 42);
-    Ticket.SaltarLineas(1);
-    // Mostrar desglose de base e IVA (N = Normal, R = Reducido, etc.)
-    if Abs(Cab.TotalIvaN) > 0.001 then
-    begin
-      Ticket.TextoColumnas(STicketBaseImponible,
-        Format('%.2f', [Cab.BaseIN]) +
-                                                                          ' €');
-      Ticket.TextoColumnas(Format(STicketTotalIvaFormato, [Cab.PorcIvaN]),
-                                        Format('%.2f', [Cab.TotalIvaN]) + ' €');
-    end;
-    if Abs(Cab.TotalIvaR) > 0 then
-    begin
-      Ticket.TextoColumnas(STicketBaseImponibleReducida,
-        Format('%.2f', [Cab.BaseIR]) +
-                                                                          ' €');
-      Ticket.TextoColumnas(Format(STicketTotalIvaFormato, [Cab.PorcIvaR]),
-                                        Format('%.2f', [Cab.TotalIvaR]) + ' €');
-    end;
-    end;
-    // === PIE DE TICKET ===
-    Ticket.SaltarLineas(2);
-    Ticket.Alinear(alCentro);
-    // Mostramos el diminutivo de ticket del vendedor (fza_empleados) en
-    // lugar de su codigo de empleado.
-    var sVendedor := ObtenerDiminutivoVendedor(AConexion,
-          DatosCobro.TotalesFactura.Cabecera.FieldByName(
-            'CODIGO_CAJERO_FAC').AsString);
-    Ticket.EscribirLinea(
-      Format(STicketLeAtendio, [sVendedor]));
-    if not ASinPrecios then
-      Ticket.EscribirLinea(STicketIvaIncluido);
-    Ticket.EscribirLinea(STicketGraciasVisita);
-    EscribirPieTicketCaja(AConexion, Ticket, ACodigoEmpresa);
-    // Código de barras EAN-13 del ticket (parámetro de caja): permite
-    // localizar el ticket al escanearlo en devoluciones (F4). También
-    // en el ticket regalo, que sirve para cambios y devoluciones.
-    if AImprimirCodigoBarras then
-    begin
-      sCodigoBarras := ObtenerCodigoBarrasTicketBD(
-        AConexion,
-        DatosCobro.TotalesFactura.Cabecera.FieldByName(
-          'SERIE_FAC').AsString,
-        DatosCobro.TotalesFactura.Cabecera.FieldByName(
-          'NUMERO_FAC').AsString);
-      if sCodigoBarras <> '' then
-      begin
-        Ticket.SaltarLineas(1);
-        Ticket.ImprimirEAN13Nativo(sCodigoBarras);
-      end;
-    end;
-    Ticket.SaltarLineas(1);
-    Ticket.EscribirLinea('');
-    Ticket.SaltarLineas(3);
-    Ticket.CortarPapel;
-    Ticket.AbrirCajon;
-    ComandosESC := Ticket.ObtenerComandos;
-    // Sufijo para que el regalo no pise el PDF del fiscal del mismo
-    // segundo
-    var sSufijoPDF := '';
-    if ASinPrecios then
-      sSufijoPDF := '_regalo';
-    RutaFicheroPDF := GetUserFolderTickets + 'Ticket_' +
-                        FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) +
-                        sSufijoPDF + '.pdf';
-    ImprimirOPrevisualizarTicket(
-      APreview, Ticket, ComandosESC, RutaFicheroPDF,
-                                 NombreImpresora);
-    if (ARutasPDF <> nil) and FileExists(RutaFicheroPDF) then
-      ARutasPDF.Add(RutaFicheroPDF);
-  finally
-    FreeAndNil(Ticket);
   end;
 end;
 

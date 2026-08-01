@@ -18,7 +18,7 @@ interface
 
 uses
   System.SysUtils, System.Generics.Collections,
-  Vcl.Dialogs, Classes, DB, MemDS, inLibUser,
+  Classes, DB, MemDS, inLibUser,
   DBAccess, Uni, inLibAuditoriaDatosIntf, inLibConexionesIntf,
   inLibContextoSesionIntf, inLibPerfilesUsuarioIntf;
 

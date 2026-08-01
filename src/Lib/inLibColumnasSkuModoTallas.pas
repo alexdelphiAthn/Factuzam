@@ -53,8 +53,6 @@ type
     FLineasCds: TLineasDocumentoTallasCds;
     FModelo: TModeloTallas;
     FPresentacion: TPresentacionModoTallas;
-    FFabricaPersistencia: TFabricaPersistenciaTallas;
-    FFabricaBusqueda: TFabricaBusquedaTallas;
     FOnResuelto: TSkuResueltoEvent;
     FOnEntrarEdicion: TNotifyEvent;
     FOnSalirEdicion: TNotifyEvent;
@@ -85,9 +83,7 @@ type
       const AResolucion: TArtResolucionEntrada);
   public
     constructor Create(const AConfig: TConfigColumnasSku;
-                       const ACfgTallas: TGridTallasConfig;
-                       AFabricaPersistencia: TFabricaPersistenciaTallas;
-                       AFabricaBusqueda: TFabricaBusquedaTallas);
+                       const ACfgTallas: TGridTallasConfig);
     destructor Destroy; override;
     procedure Construir(
       AOnResuelto: TSkuResueltoEvent;
@@ -102,19 +98,15 @@ type
 implementation
 
 uses
-  inLibModoTallasBuscador, inLibMsgArticulos;
+  inLibMsgArticulos;
 
 constructor TModoEntradaTallas.Create(
   const AConfig: TConfigColumnasSku;
-  const ACfgTallas: TGridTallasConfig;
-  AFabricaPersistencia: TFabricaPersistenciaTallas;
-  AFabricaBusqueda: TFabricaBusquedaTallas);
+  const ACfgTallas: TGridTallasConfig);
 begin
   inherited Create;
   FConfig := AConfig;
   FCfgTallas := ACfgTallas;
-  FFabricaPersistencia := AFabricaPersistencia;
-  FFabricaBusqueda := AFabricaBusqueda;
   FLookup := AConfig.LookupAtributos;
   if not Assigned(FLookup) then
     raise Exception.Create(SErrorLookupAtributosNoInyectado);
@@ -172,7 +164,6 @@ function TModoEntradaTallas.ConfigPersistencia
   : TConfigPersistenciaTallas;
 begin
   Result := Default(TConfigPersistenciaTallas);
-  Result.Conexion := FConfig.Conexion;
   Result.Master := FCfgTallas.SourceMaster.DataSet;
   Result.Usuario := FCfgTallas.Usuario;
   Result.CampoSerieMaster := FCfgTallas.FieldSerieMaster;
@@ -194,8 +185,15 @@ procedure TModoEntradaTallas.CrearColaboradores;
 var
   Busqueda: IBusquedaSkusTallas;
 begin
-  FPersistencias := FFabricaPersistencia(ConfigPersistencia);
-  Busqueda := FFabricaBusqueda(FConfig.Conexion);
+  if not Assigned(FConfig.Servicios.PersistenciaTallas) then
+    raise EArgumentNilException.Create('Servicios.PersistenciaTallas');
+  if not Assigned(FConfig.Servicios.Busqueda) then
+    raise EArgumentNilException.Create('Servicios.Busqueda');
+  if not Assigned(FConfig.Servicios.Paleta) then
+    raise EArgumentNilException.Create('Servicios.Paleta');
+  FPersistencias := FConfig.Servicios.PersistenciaTallas.
+    CrearPersistencia(ConfigPersistencia);
+  Busqueda := FConfig.Servicios.Busqueda.CrearBusqueda;
   FLineasCds := TLineasDocumentoTallasCds.Create(FConfig.Cds,
                                                  CamposLineas);
   FLineasCds.Registro := LogSesion;
@@ -204,7 +202,7 @@ begin
   FLineas.Entrada := FLineasCds;
   FLineas.Presentacion := FLineasCds;
   FModelo := TModeloTallas.Create(FLookup, FPersistencias.Modelo,
-    CrearSelectorAvPaleta(FConfig.Conexion), LogSesion);
+    FConfig.Servicios.Paleta, LogSesion);
   FPresentacion := TPresentacionModoTallas.Create(FConfig, FCfgTallas,
     FLineas.Presentacion, FPersistencias.Presentacion, Busqueda, LogSesion);
   FPresentacion.OnResolverEntrada := ResolverEntradaDiferida;

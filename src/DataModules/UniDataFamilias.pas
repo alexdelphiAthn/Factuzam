@@ -103,7 +103,7 @@ begin
                                 unqryTablaG.FindField(
                                   'CODIGO_FAM_FAM').AsString) then
     begin
-      ShowMessage(SAvisoPropiedadFamiliaDuplicada);
+      NotificarAdvertencia(SAvisoPropiedadFamiliaDuplicada);
       Abort;
     end;
   end;

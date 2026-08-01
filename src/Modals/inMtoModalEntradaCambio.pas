@@ -73,6 +73,7 @@ implementation
 
 uses
   UniDataCaja, inLibGenerarTicketCaja,
+  UniDataGenerarTicketRepositorio,
   inMtoGenSearch, Data.DB, inLibMsgComun;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -255,6 +256,7 @@ begin
     ImprimirTicketOperacionCaja(
       PreviewTicket,
       ConexionPrincipal,
+      CrearLecturasImpresionTicket(ConexionPrincipal),
       FEmpresa,
       FAlmacen,
       FCaja,

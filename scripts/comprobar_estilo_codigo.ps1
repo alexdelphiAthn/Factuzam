@@ -3,11 +3,11 @@ param(
   [ValidateRange(1, [int]::MaxValue)]
   [int]$MaximoColumnas = 80,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoExit = 1349,
+  [int]$MaximoExit = 1346,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoContinue = 107,
+  [int]$MaximoContinue = 106,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoLineasAnchas = 575,
+  [int]$MaximoLineasAnchas = 572,
   [ValidateRange(0, [int]::MaxValue)]
   [int]$MaximoLineasConTabulador = 0,
   [switch]$MostrarTodos

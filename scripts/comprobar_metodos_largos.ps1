@@ -3,7 +3,7 @@ param(
   [ValidateRange(1, [int]::MaxValue)]
   [int]$UmbralLineas = 120,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoMetodosLargos = 124,
+  [int]$MaximoMetodosLargos = 123,
   [ValidateRange(0, [int]::MaxValue)]
   [int]$MaximoLineasPorMetodo = 312,
   [switch]$MostrarTodos

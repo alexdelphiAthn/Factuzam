@@ -39,6 +39,8 @@ uses
   inLibShowMto in 'src\Lib\inLibShowMto.pas',
   inLibAnfitrionMtoIntf in 'src\Lib\inLibAnfitrionMtoIntf.pas',
   inLibAnfitrionDatosIntf in 'src\Lib\inLibAnfitrionDatosIntf.pas',
+  inLibInteraccionDatosIntf in
+    'src\Lib\inLibInteraccionDatosIntf.pas',
   inLibRegistroPantallas in 'src\Lib\inLibRegistroPantallas.pas',
   inLibVentanaEmbebidaIntf in 'src\Lib\inLibVentanaEmbebidaIntf.pas',
   inLibUnitForm in 'src\Lib\inLibUnitForm.pas',
@@ -106,6 +108,8 @@ uses
   inLibFacturasReapertura in
     'src\Lib\inLibFacturasReapertura.pas',
   inLibDevolucionesCompraStock in 'src\Lib\inLibDevolucionesCompraStock.pas',
+  UniDataDevolucionesCompraStockRepositorio in
+    'src\DataModules\UniDataDevolucionesCompraStockRepositorio.pas',
   inLibFacturaPdfBlob in 'src\Lib\inLibFacturaPdfBlob.pas',
   inLibFormatoDocumento in 'src\Lib\inLibFormatoDocumento.pas',
   inLibInformesGuiasCache in 'src\Lib\inLibInformesGuiasCache.pas',
@@ -149,6 +153,8 @@ uses
   inLibPermisos in 'src\Lib\inLibPermisos.pas',
   inLibPermisosUniDAC in 'src\Lib\inLibPermisosUniDAC.pas',
   inLibPermisosAdmin in 'src\Lib\inLibPermisosAdmin.pas',
+  UniDataPermisosAdminRepositorio in
+    'src\DataModules\UniDataPermisosAdminRepositorio.pas',
   inLibFiltroUsuario in 'src\Lib\inLibFiltroUsuario.pas',
   inLibGestorFiltrosMto in 'src\Lib\inLibGestorFiltrosMto.pas',
   inLibGestorPerfilesMto in 'src\Lib\inLibGestorPerfilesMto.pas',
@@ -287,6 +293,8 @@ uses
   inLibModoTallasPresentacion in
     'src\Lib\inLibModoTallasPresentacion.pas',
   UniDataModoTallas in 'src\DataModules\UniDataModoTallas.pas',
+  UniDataColumnasSkuServicios in
+    'src\DataModules\UniDataColumnasSkuServicios.pas',
   inLibColumnasSkuModoTallas in 'src\Lib\inLibColumnasSkuModoTallas.pas',
   inLibLectorScanner in 'src\Lib\inLibLectorScanner.pas',
   inMtoCajaFaseCobro in 'src\Caja\Forms\inMtoCajaFaseCobro.pas' {frmMtoCajaFaseCobro},
@@ -343,6 +351,8 @@ uses
   inLibArqueo in 'src\Caja\Lib\inLibArqueo.pas',
   inLibArqueoTicket in 'src\Caja\Lib\inLibArqueoTicket.pas',
   inLibArqueoPersistencia in 'src\Caja\Lib\inLibArqueoPersistencia.pas',
+  UniDataArqueoPersistencia in
+    'src\Caja\DataModules\UniDataArqueoPersistencia.pas',
   inLibGenerarTicketCaja in 'src\Caja\Lib\inLibGenerarTicketCaja.pas',
   inLibTiraCajaTicket in 'src\Caja\Lib\inLibTiraCajaTicket.pas',
   inMtoModalArqueo in 'src\Caja\Modals\inMtoModalArqueo.pas' {frmModalArqueo},
@@ -421,6 +431,9 @@ uses
   uDJMSepa1914XML in 'src\Lib3par\uDJMSepa1914XML.pas',
   uDJMSepa3414XML in 'src\Lib3par\uDJMSepa3414XML.pas',
   inLibGenerarTicket in 'src\Lib\inLibGenerarTicket.pas',
+  inLibGenerarTicketIntf in 'src\Lib\inLibGenerarTicketIntf.pas',
+  UniDataGenerarTicketRepositorio in
+    'src\DataModules\UniDataGenerarTicketRepositorio.pas',
   inLibGenerarTicketBD in 'src\Lib\inLibGenerarTicketBD.pas',
   inLibCorreoTickets in 'src\Lib\inLibCorreoTickets.pas',
   inLibFactuzamApi in 'src\Lib\inLibFactuzamApi.pas',
@@ -431,6 +444,7 @@ uses
   UniDataVentasWsJson in 'src\DataModules\UniDataVentasWsJson.pas',
   inLibVentasWsColaIntf in 'src\Lib\inLibVentasWsColaIntf.pas',
   UniDataVentasWsCola in 'src\DataModules\UniDataVentasWsCola.pas',
+  UniDataVentasWsSesion in 'src\DataModules\UniDataVentasWsSesion.pas',
   inLibVentasWsCola in 'src\Lib\inLibVentasWsCola.pas',
   inLibXades in 'src\Lib\inLibXades.pas',
   inLibDocumentoFiscal in 'src\Lib\inLibDocumentoFiscal.pas',
@@ -533,6 +547,16 @@ uses
   inMtoModalSepaRemesaVenta in 'src\Modals\inMtoModalSepaRemesaVenta.pas',
   inMtoPedidosCompra in 'src\Forms\inMtoPedidosCompra.pas' {frmMtoPedidosCompra},
   UniDataPedidosCompra in 'src\DataModules\UniDataPedidosCompra.pas' {dmPedidosCompra: TdmPedidosCompra},
+  UniDataPedidosCompraPendientes in
+    'src\DataModules\UniDataPedidosCompraPendientes.pas',
+  UniDataPedidosCompraAlbaranComun in
+    'src\DataModules\UniDataPedidosCompraAlbaranComun.pas',
+  UniDataPedidosCompraCreacionAlbaran in
+    'src\DataModules\UniDataPedidosCompraCreacionAlbaran.pas',
+  UniDataPedidosCompraIncorporacionAlbaran in
+    'src\DataModules\UniDataPedidosCompraIncorporacionAlbaran.pas',
+  UniDataPedidosCompraRecepcion in
+    'src\DataModules\UniDataPedidosCompraRecepcion.pas',
   UniDataPedidosCompraOperaciones in
     'src\DataModules\UniDataPedidosCompraOperaciones.pas',
   inMtoModalSelAlmacenPedido in 'src\Modals\inMtoModalSelAlmacenPedido.pas' {frmModalSelAlmacenPedido},
@@ -541,6 +565,20 @@ uses
   inLibPedidosCompra in 'src\Lib\inLibPedidosCompra.pas',
   inLibGridPivoteCompraPersistenciaIntf in
     'src\Lib\inLibGridPivoteCompraPersistenciaIntf.pas',
+  inLibGridPivoteCompraTipos in
+    'src\Lib\inLibGridPivoteCompraTipos.pas',
+  inLibPivoteCompraCalculo in
+    'src\Lib\inLibPivoteCompraCalculo.pas',
+  inLibPivoteCompraCorrespondencia in
+    'src\Lib\inLibPivoteCompraCorrespondencia.pas',
+  inLibPivoteCompraEstadoEdicion in
+    'src\Lib\inLibPivoteCompraEstadoEdicion.pas',
+  inLibPivoteCompraValidacion in
+    'src\Lib\inLibPivoteCompraValidacion.pas',
+  inLibGridPivoteCompraPresentacion in
+    'src\Lib\inLibGridPivoteCompraPresentacion.pas',
+  inLibGridPivoteCompraEdicion in
+    'src\Lib\inLibGridPivoteCompraEdicion.pas',
   UniDataGridPivoteCompraRepositorio in
     'src\DataModules\UniDataGridPivoteCompraRepositorio.pas',
   inLibGridPivoteCompra in 'src\Lib\inLibGridPivoteCompra.pas',
@@ -629,6 +667,8 @@ uses
   inLibDevolucionesCompraMovimientosIntf in
     'src\Lib\inLibDevolucionesCompraMovimientosIntf.pas',
   inLibContadorLineas in 'src\Lib\inLibContadorLineas.pas',
+  UniDataContadorLineasRepositorio in
+    'src\DataModules\UniDataContadorLineasRepositorio.pas',
   inMtoModalAltaRapida in 'src\Modals\inMtoModalAltaRapida.pas' {frmMtoModalAltaRapida},
   inLibArticulosValidadorIntf in
     'src\Lib\inLibArticulosValidadorIntf.pas',
@@ -646,6 +686,9 @@ uses
   UniDataArticulosAtributosRepositorio in
     'src\DataModules\UniDataArticulosAtributosRepositorio.pas',
   inLibAtributosPaleta in 'src\Lib\inLibAtributosPaleta.pas',
+  inLibAtributosPaletaIntf in 'src\Lib\inLibAtributosPaletaIntf.pas',
+  UniDataAtributosPaletaRepositorio in
+    'src\DataModules\UniDataAtributosPaletaRepositorio.pas',
   inMtoModalScriptLog in 'src\Modals\inMtoModalScriptLog.pas' {frmMtoModalScriptLog},
   inLibPresta in 'src\Lib\inLibPresta.pas',
   inLibScanDateTime in 'src\Lib\inLibScanDateTime.pas',
@@ -654,10 +697,21 @@ uses
   inMtoModalSelFamilia in 'src\Modals\inMtoModalSelFamilia.pas' {frmModalSelFamilia},
   inLibFotosPersistenciaIntf in
     'src\Lib\inLibFotosPersistenciaIntf.pas',
+  inLibFotosTipos in 'src\Lib\inLibFotosTipos.pas',
+  inLibFotosConsulta in 'src\Lib\inLibFotosConsulta.pas',
+  inLibFotosAlmacenamiento in
+    'src\Lib\inLibFotosAlmacenamiento.pas',
+  inLibFotosEdicion in 'src\Lib\inLibFotosEdicion.pas',
+  inLibFotosSesion in 'src\Lib\inLibFotosSesion.pas',
+  inLibFotosPresentacion in 'src\Lib\inLibFotosPresentacion.pas',
   UniDataFotosRepositorio in
     'src\DataModules\UniDataFotosRepositorio.pas',
   inLibFotos in 'src\Lib\inLibFotos.pas',
   inLibDocumentosTrabajo in 'src\Lib\inLibDocumentosTrabajo.pas',
+  inLibDocumentosTrabajoPresentacion in
+    'src\Lib\inLibDocumentosTrabajoPresentacion.pas',
+  UniDataDocumentosTrabajoRepositorio in
+    'src\DataModules\UniDataDocumentosTrabajoRepositorio.pas',
   inLibImagen in 'src\Lib\inLibImagen.pas',
   inLibFotosNube in 'src\Lib\inLibFotosNube.pas',
   inMtoFotoArticulo in 'src\Forms\inMtoFotoArticulo.pas' {frmFotoArticulo},
@@ -734,6 +788,7 @@ begin
   TdxDiacriticStringOptions.NormalizationMode :=
                                      TdxDiacriticStringNormalizationMode.System;
   Application.Initialize;
+  ConfigurarLecturasAtributosPaleta(LecturasAtributosPaleta);
   Application.MainFormOnTaskbar := True;
   Application.Title := 'Fzam';
   if CrearContextoSesionInicial(

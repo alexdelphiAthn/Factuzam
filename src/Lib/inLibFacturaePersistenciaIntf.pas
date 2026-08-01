@@ -16,7 +16,7 @@ unit inLibFacturaePersistenciaIntf;
 interface
 
 uses
-  System.SysUtils, Data.DB, Uni;
+  System.SysUtils, Data.DB;
 
 type
   // Los TDataSet devueltos pertenecen al llamador.

@@ -230,7 +230,6 @@ type
 implementation
 
 uses
-  Vcl.Dialogs,          // MessageDlg para validación de SKU en BeforePost
   System.Diagnostics,   // TStopwatch para instrumentacion de rendimiento
   System.StrUtils,      // IfThen(Boolean, string, string) para snapshot
   inLibUser,            // Usuario logueado
@@ -1068,9 +1067,8 @@ begin
   CodSku := DataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString;
   if (CodSku <> CodArticulo) and (not SkuExiste(CodSku)) then
   begin
-    if MessageDlg(
-         Format(SPreguntaCrearSkuInventario, [CodSku]),
-         mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    if not SolicitarConfirmacion(
+      Format(SPreguntaCrearSkuInventario, [CodSku])) then
       raise Exception.CreateFmt(SErrorSkuInventarioNoExiste, [CodSku]);
 
     for i := 0 to 4 do

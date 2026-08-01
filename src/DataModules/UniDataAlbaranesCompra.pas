@@ -141,7 +141,8 @@ implementation
 
 uses
   inLibLog, inLibValoresAutomaticos, inLibContadorLineas,
-  System.Diagnostics, System.UITypes, Vcl.Dialogs,
+  UniDataContadorLineasRepositorio,
+  System.Diagnostics, System.UITypes,
   inLibAlbaranesCompraMovimientos,
   UniDataAlbaranesCompraMovimientos,
   inLibComprasImpuestos,
@@ -525,8 +526,8 @@ begin
   if (unqryTablaG.FindField('CODIGO_ALM_ALBC') <> nil) and
      (Trim(unqryTablaG.FieldByName('CODIGO_ALM_ALBC').AsString) = '') then
   begin
-    MessageDlg(SAvisoAlmacenDestinoAlbaranCompraObligatorio,
-               mtWarning, [mbOk], 0);
+    NotificarAdvertencia(
+      SAvisoAlmacenDestinoAlbaranCompraObligatorio);
     Abort;
   end;
 end;
@@ -630,13 +631,12 @@ begin
     end;
     if iBloqueos > 0 then
     begin
-      MessageDlg(SAvisoAlbaranCompraFacturado,
-                 mtWarning, [mbOk], 0);
+      NotificarAdvertencia(SAvisoAlbaranCompraFacturado);
       Abort;
     end;
-    if MessageDlg(Format(SPreguntaBorrarAlbaranCompra,
-                         [sSerie, sNumero]),
-                  mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    if not SolicitarConfirmacion(
+      Format(SPreguntaBorrarAlbaranCompra,
+        [sSerie, sNumero])) then
     begin
       Abort;
     end;
@@ -824,7 +824,8 @@ begin
     sSerie  := Trim(unqryTablaG.FieldByName('SERIE_ALBC').AsString);
     if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
        ((DataSet.State = dsInsert) and
-        LineaDocExiste(ConexionPrincipal, LIN_ALBARANES_COMPRA, sSerie,
+        LineaDocExiste(CrearContadorLineasDocumento(ConexionPrincipal),
+          LIN_ALBARANES_COMPRA, sSerie,
           sNumero, sLinea)) then
     begin
       if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
@@ -833,7 +834,8 @@ begin
         DataSet.FieldByName('NUMERO_ALBC_ALBCLIN').AsString := sNumero;
       if DataSet.FindField('SERIE_ALBC_ALBCLIN') <> nil then
         DataSet.FieldByName('SERIE_ALBC_ALBCLIN').AsString := sSerie;
-      iNuevaLinea := GetSiguienteLineaDocLibre(ConexionPrincipal,
+      iNuevaLinea := GetSiguienteLineaDocLibre(
+        CrearContadorLineasDocumento(ConexionPrincipal),
         CONT_ALBARANES_COMPRA, LIN_ALBARANES_COMPRA, sSerie, sNumero);
       if iNuevaLinea = 0 then
       begin

@@ -147,6 +147,65 @@ uses
   inLibDevExcel,
   inLibMsgTickets;
 
+type
+  TImpresorTiraCajaTicket = class
+  private
+    FParametrosApp    : IParametrosAplicacion;
+    FPreview          : IPreviewTicket;
+    FRepositorio      : IRepositorioTiraCajaTicket;
+    FEmpresa          : string;
+    FAlmacen          : string;
+    FCaja             : string;
+    FFechaDesde       : TDate;
+    FFechaHasta       : TDate;
+    FSeries           : TArray<string>;
+    FImprimirQR       : Boolean;
+    FNombreImpresora  : string;
+    FCronologico      : Boolean;
+    FIncluirTraspasos : Boolean;
+    FIncluirIngresos  : Boolean;
+    FIncluirGastos    : Boolean;
+    FIncluirCredito   : Boolean;
+    FVerCoste         : Boolean;
+    FTicket           : TTicketTermico;
+    FGrupoAnterior    : string;
+    FNumeroVentas     : Integer;
+    FNumeroTraspasos  : Integer;
+    FNumeroIngresos   : Integer;
+    FNumeroGastos     : Integer;
+    FNumeroDepositos  : Integer;
+    FTotalVentas      : Currency;
+    FTotalTraspasos   : Currency;
+    FTotalIngresos    : Currency;
+    FTotalGastos      : Currency;
+    FTotalDepositos   : Currency;
+    FTotalCobrado     : Currency;
+    constructor Create(
+      const AParametrosApp: IParametrosAplicacion;
+      const APreview: IPreviewTicket;
+      const ARepositorio: IRepositorioTiraCajaTicket;
+      const AEmpresa, AAlmacen, ACaja: string;
+      AFechaDesde, AFechaHasta: TDate;
+      const ASeries: TArray<string>;
+      AImprimirQR: Boolean;
+      const ANombreImpresora: string;
+      ACronologico, AIncluirTraspasos, AIncluirIngresos,
+        AIncluirGastos, AIncluirCredito, AValorarTraspasos: Boolean);
+    function RotuloGrupo(const AGrupo: string): string;
+    function NumeroOperaciones: Integer;
+    procedure InicializarAcumuladores;
+    procedure EscribirCabecera;
+    procedure EscribirCabeceraGrupo(const AGrupo: string);
+    procedure EscribirSubtotalGrupo(const AGrupo: string);
+    procedure RenderizarOperacion(
+      const AOperacion: TOperacionTiraCaja);
+    procedure EscribirOperaciones;
+    procedure EscribirCierre;
+    procedure Emitir;
+  public
+    procedure Ejecutar;
+  end;
+
 // =============================================================================
 //   Helpers de formato
 // =============================================================================
@@ -535,6 +594,320 @@ begin
     AFechaHasta);
 end;
 
+constructor TImpresorTiraCajaTicket.Create(
+  const AParametrosApp: IParametrosAplicacion;
+  const APreview: IPreviewTicket;
+  const ARepositorio: IRepositorioTiraCajaTicket;
+  const AEmpresa, AAlmacen, ACaja: string;
+  AFechaDesde, AFechaHasta: TDate;
+  const ASeries: TArray<string>;
+  AImprimirQR: Boolean;
+  const ANombreImpresora: string;
+  ACronologico, AIncluirTraspasos, AIncluirIngresos,
+    AIncluirGastos, AIncluirCredito, AValorarTraspasos: Boolean);
+begin
+  inherited Create;
+  FParametrosApp := AParametrosApp;
+  FPreview := APreview;
+  FRepositorio := ARepositorio;
+  FEmpresa := AEmpresa;
+  FAlmacen := AAlmacen;
+  FCaja := ACaja;
+  FFechaDesde := AFechaDesde;
+  FFechaHasta := AFechaHasta;
+  FSeries := Copy(ASeries, 0, Length(ASeries));
+  FImprimirQR := AImprimirQR;
+  FNombreImpresora := ANombreImpresora;
+  FCronologico := ACronologico;
+  FIncluirTraspasos := AIncluirTraspasos;
+  FIncluirIngresos := AIncluirIngresos;
+  FIncluirGastos := AIncluirGastos;
+  FIncluirCredito := AIncluirCredito;
+  FVerCoste := AValorarTraspasos;
+end;
+
+function TImpresorTiraCajaTicket.RotuloGrupo(
+  const AGrupo: string): string;
+begin
+  if AGrupo = 'TRA' then
+    Result := STicketRotuloTraspaso
+  else if AGrupo = 'ING' then
+    Result := STicketRotuloIngreso
+  else if AGrupo = 'GAS' then
+    Result := STicketRotuloGasto
+  else if AGrupo = 'DEP' then
+    Result := STicketRotuloDeposito
+  else
+    Result := STicketRotuloVenta;
+end;
+
+function TImpresorTiraCajaTicket.NumeroOperaciones: Integer;
+begin
+  Result := FNumeroVentas + FNumeroTraspasos + FNumeroIngresos +
+    FNumeroGastos + FNumeroDepositos;
+end;
+
+procedure TImpresorTiraCajaTicket.InicializarAcumuladores;
+begin
+  FGrupoAnterior := '';
+  FNumeroVentas := 0;
+  FNumeroTraspasos := 0;
+  FNumeroIngresos := 0;
+  FNumeroGastos := 0;
+  FNumeroDepositos := 0;
+  FTotalVentas := 0;
+  FTotalTraspasos := 0;
+  FTotalIngresos := 0;
+  FTotalGastos := 0;
+  FTotalDepositos := 0;
+  FTotalCobrado := 0;
+end;
+
+procedure TImpresorTiraCajaTicket.EscribirCabecera;
+var
+  i: Integer;
+  sSeries: string;
+begin
+  TTiraCajaTicket.EscribirCabeceraEmpresa(
+    FTicket, FRepositorio, FEmpresa);
+  FTicket.SaltarLineas(1);
+  FTicket.Alinear(alCentro);
+  FTicket.Negrita(True);
+  FTicket.EscribirLinea(Format(STicketArqueoCajaHora,
+    [FCaja, FormatDateTime('hh:nn', Now)]));
+  FTicket.EscribirLinea(Format(STicketDel,
+    [FormatDateTime('dd/mm/yy hh:nn', FFechaDesde)]));
+  FTicket.EscribirLinea(Format(STicketAl,
+    [FormatDateTime('dd/mm/yy hh:nn', FFechaHasta)]));
+  if Length(FSeries) = 0 then
+    FTicket.EscribirLinea(STicketTodasSeries)
+  else
+  begin
+    sSeries := '';
+    for i := 0 to High(FSeries) do
+    begin
+      if sSeries <> '' then
+        sSeries := sSeries + ', ';
+      sSeries := sSeries + FSeries[i];
+    end;
+    FTicket.EscribirLinea(Format(STicketSeries, [sSeries]));
+  end;
+  if FCronologico then
+    FTicket.EscribirLinea(STicketOrdenCronologico)
+  else
+    FTicket.EscribirLinea(STicketOrdenTipoDocumento);
+  FTicket.Negrita(False);
+  FTicket.Alinear(alIzquierda);
+  FTicket.SaltarLineas(1);
+end;
+
+procedure TImpresorTiraCajaTicket.EscribirCabeceraGrupo(
+  const AGrupo: string);
+begin
+  FTicket.Alinear(alCentro);
+  FTicket.Negrita(True);
+  if AGrupo = 'TRA' then
+    FTicket.EscribirLinea(STicketTraspasosSalientes)
+  else if AGrupo = 'ING' then
+    FTicket.EscribirLinea(STicketIngresosPorCaja)
+  else if AGrupo = 'GAS' then
+    FTicket.EscribirLinea(STicketGastosPorCaja)
+  else if AGrupo = 'DEP' then
+    FTicket.EscribirLinea(STicketVentasCreditoDepositos)
+  else
+    FTicket.EscribirLinea(STicketVentasFacturadas);
+  FTicket.Negrita(False);
+  FTicket.Alinear(alIzquierda);
+end;
+
+procedure TImpresorTiraCajaTicket.EscribirSubtotalGrupo(
+  const AGrupo: string);
+begin
+  if AGrupo = 'TRA' then
+  begin
+    FTicket.TextoColumnas(
+      STicketTraspasos, IntToStr(FNumeroTraspasos));
+    if FVerCoste then
+    begin
+      FTicket.Negrita(True);
+      FTicket.TextoColumnas(
+        STicketSubtotalCoste, TTiraCajaTicket.FmtImp(FTotalTraspasos));
+      FTicket.Negrita(False);
+    end;
+  end
+  else if AGrupo = 'ING' then
+  begin
+    FTicket.TextoColumnas(STicketIngresos, IntToStr(FNumeroIngresos));
+    FTicket.Negrita(True);
+    FTicket.TextoColumnas(
+      STicketSubtotal, TTiraCajaTicket.FmtImp(FTotalIngresos));
+    FTicket.Negrita(False);
+  end
+  else if AGrupo = 'GAS' then
+  begin
+    FTicket.TextoColumnas(STicketGastos, IntToStr(FNumeroGastos));
+    FTicket.Negrita(True);
+    FTicket.TextoColumnas(
+      STicketSubtotal, TTiraCajaTicket.FmtImp(FTotalGastos));
+    FTicket.Negrita(False);
+  end
+  else if AGrupo = 'DEP' then
+  begin
+    FTicket.TextoColumnas(STicketDepositos, IntToStr(FNumeroDepositos));
+    FTicket.Negrita(True);
+    FTicket.TextoColumnas(
+      STicketSubtotalVenta, TTiraCajaTicket.FmtImp(FTotalDepositos));
+    FTicket.Negrita(False);
+    if FTotalCobrado <> 0 then
+      FTicket.TextoColumnas(
+        STicketSubtotalCobrado, TTiraCajaTicket.FmtImp(FTotalCobrado));
+  end
+  else
+  begin
+    FTicket.TextoColumnas(STicketOperaciones, IntToStr(FNumeroVentas));
+    FTicket.Negrita(True);
+    FTicket.TextoColumnas(
+      STicketTotalVentasSinSigno, TTiraCajaTicket.FmtImp(FTotalVentas));
+    FTicket.Negrita(False);
+  end;
+end;
+
+procedure TImpresorTiraCajaTicket.RenderizarOperacion(
+  const AOperacion: TOperacionTiraCaja);
+var
+  dCobrado: Currency;
+begin
+  if AOperacion.Grupo = 'TRA' then
+  begin
+    FTotalTraspasos := FTotalTraspasos +
+      TTiraCajaTicket.EscribirTraspasoOpe(
+        FTicket, FRepositorio, AOperacion, FVerCoste);
+    Inc(FNumeroTraspasos);
+  end
+  else if AOperacion.Grupo = 'ING' then
+  begin
+    FTotalIngresos := FTotalIngresos +
+      TTiraCajaTicket.EscribirIngresoGastoOpe(FTicket, AOperacion);
+    Inc(FNumeroIngresos);
+  end
+  else if AOperacion.Grupo = 'GAS' then
+  begin
+    FTotalGastos := FTotalGastos +
+      TTiraCajaTicket.EscribirIngresoGastoOpe(FTicket, AOperacion);
+    Inc(FNumeroGastos);
+  end
+  else if AOperacion.Grupo = 'DEP' then
+  begin
+    FTotalDepositos := FTotalDepositos +
+      TTiraCajaTicket.EscribirDepositoOpe(
+        FTicket, FRepositorio, AOperacion, dCobrado);
+    FTotalCobrado := FTotalCobrado + dCobrado;
+    Inc(FNumeroDepositos);
+  end
+  else
+  begin
+    TTiraCajaTicket.EscribirOperacion(
+      FParametrosApp, FTicket, FRepositorio, AOperacion, FImprimirQR);
+    FTotalVentas := FTotalVentas + AOperacion.TotalLiquido;
+    Inc(FNumeroVentas);
+  end;
+end;
+
+procedure TImpresorTiraCajaTicket.EscribirOperaciones;
+var
+  aOperaciones: TArray<TOperacionTiraCaja>;
+  Operacion: TOperacionTiraCaja;
+  sGrupo: string;
+begin
+  aOperaciones := FRepositorio.ListarOperaciones(
+    FEmpresa, FAlmacen, FCaja, FFechaDesde, FFechaHasta, FSeries,
+    FCronologico, FIncluirTraspasos, FIncluirIngresos,
+    FIncluirGastos, FIncluirCredito);
+  for Operacion in aOperaciones do
+  begin
+    sGrupo := Operacion.Grupo;
+    if FCronologico then
+    begin
+      FTicket.Negrita(True);
+      FTicket.EscribirLinea('[' + RotuloGrupo(sGrupo) + ']');
+      FTicket.Negrita(False);
+    end
+    else if sGrupo <> FGrupoAnterior then
+    begin
+      if FGrupoAnterior <> '' then
+      begin
+        EscribirSubtotalGrupo(FGrupoAnterior);
+        FTicket.LineaSeparadora('=');
+        FTicket.LineaSeparadora('=');
+      end
+      else
+        FTicket.LineaSeparadora('=');
+      EscribirCabeceraGrupo(sGrupo);
+    end;
+    RenderizarOperacion(Operacion);
+    FTicket.LineaSeparadora('-');
+    FGrupoAnterior := sGrupo;
+  end;
+end;
+
+procedure TImpresorTiraCajaTicket.EscribirCierre;
+begin
+  if NumeroOperaciones = 0 then
+    FTicket.EscribirLinea(STicketSinOperaciones)
+  else if not FCronologico then
+    EscribirSubtotalGrupo(FGrupoAnterior)
+  else
+  begin
+    FTicket.LineaSeparadora('=');
+    FTicket.Alinear(alCentro);
+    FTicket.Negrita(True);
+    FTicket.EscribirLinea(STicketResumen);
+    FTicket.Negrita(False);
+    FTicket.Alinear(alIzquierda);
+    if FNumeroVentas > 0 then
+      EscribirSubtotalGrupo('VEN');
+    if FNumeroTraspasos > 0 then
+      EscribirSubtotalGrupo('TRA');
+    if FNumeroIngresos > 0 then
+      EscribirSubtotalGrupo('ING');
+    if FNumeroGastos > 0 then
+      EscribirSubtotalGrupo('GAS');
+    if FNumeroDepositos > 0 then
+      EscribirSubtotalGrupo('DEP');
+  end;
+  FTicket.SaltarLineas(1);
+  FTicket.Alinear(alCentro);
+  FTicket.EscribirLinea(FormatDateTime('dd/mm/yyyy hh:nn:ss', Now));
+  FTicket.SaltarLineas(2);
+  FTicket.CortarPapel;
+end;
+
+procedure TImpresorTiraCajaTicket.Emitir;
+var
+  sComandos, sRutaPDF: string;
+begin
+  sComandos := FTicket.ObtenerComandos;
+  sRutaPDF := GetUserFolderTickets + 'TiraCaja_' +
+    FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
+  ImprimirOPrevisualizarTicket(
+    FPreview, FTicket, sComandos, sRutaPDF, FNombreImpresora);
+end;
+
+procedure TImpresorTiraCajaTicket.Ejecutar;
+begin
+  InicializarAcumuladores;
+  FTicket := TTicketTermico.Create(FNombreImpresora);
+  try
+    FTicket.Inicializar;
+    EscribirCabecera;
+    EscribirOperaciones;
+    EscribirCierre;
+    Emitir;
+  finally
+    FreeAndNil(FTicket);
+  end;
+end;
+
 class procedure TTiraCajaTicket.Imprimir(
   const AParametrosApp: IParametrosAplicacion;
   const APreview: IPreviewTicket;
@@ -551,278 +924,18 @@ class procedure TTiraCajaTicket.Imprimir(
   AIncluirCredito: Boolean;
   AValorarTraspasos: Boolean);
 var
-  aOperaciones: TArray<TOperacionTiraCaja>;
-  oOperacion: TOperacionTiraCaja;
-  Ticket: TTicketTermico;
-  ComandosESC, RutaPDF, sSerieTxt: string;
-  sGrupo, sPrevGrupo: string;
-  i: Integer;
-  bVerCoste: Boolean;
-  dCobradoOp: Currency;
-  nVen, nTra, nIng, nGas, nDep: Integer;
-  totVen, totTra, totIng, totGas, totDepV, totDepC: Currency;
-
-  // Rótulo corto del tipo, para el modo cronológico.
-  function RotuloGrupo(const AG: string): string;
-  begin
-    if AG = 'TRA' then
-      Result := STicketRotuloTraspaso
-    else if AG = 'ING' then
-      Result := STicketRotuloIngreso
-    else if AG = 'GAS' then
-      Result := STicketRotuloGasto
-    else if AG = 'DEP' then
-      Result := STicketRotuloDeposito
-    else
-      Result := STicketRotuloVenta;
-  end;
-
-  // Cabecera de sección (modo por tipo de documento).
-  procedure CabeceraGrupo(const AG: string);
-  begin
-    Ticket.Alinear(alCentro);
-    Ticket.Negrita(True);
-    if AG = 'TRA' then
-      Ticket.EscribirLinea(STicketTraspasosSalientes)
-    else if AG = 'ING' then
-      Ticket.EscribirLinea(STicketIngresosPorCaja)
-    else if AG = 'GAS' then
-      Ticket.EscribirLinea(STicketGastosPorCaja)
-    else if AG = 'DEP' then
-      Ticket.EscribirLinea(STicketVentasCreditoDepositos)
-    else
-      Ticket.EscribirLinea(STicketVentasFacturadas);
-    Ticket.Negrita(False);
-    Ticket.Alinear(alIzquierda);
-  end;
-
-  // Pie / subtotal de un grupo según sus acumuladores.
-  procedure SubtotalGrupo(const AG: string);
-  begin
-    if AG = 'TRA' then
-    begin
-      Ticket.TextoColumnas(STicketTraspasos, IntToStr(nTra));
-      if bVerCoste then
-      begin
-        Ticket.Negrita(True);
-        Ticket.TextoColumnas(STicketSubtotalCoste, FmtImp(totTra));
-        Ticket.Negrita(False);
-      end;
-    end
-    else if AG = 'ING' then
-    begin
-      Ticket.TextoColumnas(STicketIngresos, IntToStr(nIng));
-      Ticket.Negrita(True);
-      Ticket.TextoColumnas(STicketSubtotal, FmtImp(totIng));
-      Ticket.Negrita(False);
-    end
-    else if AG = 'GAS' then
-    begin
-      Ticket.TextoColumnas(STicketGastos, IntToStr(nGas));
-      Ticket.Negrita(True);
-      Ticket.TextoColumnas(STicketSubtotal, FmtImp(totGas));
-      Ticket.Negrita(False);
-    end
-    else if AG = 'DEP' then
-    begin
-      Ticket.TextoColumnas(STicketDepositos, IntToStr(nDep));
-      Ticket.Negrita(True);
-      Ticket.TextoColumnas(STicketSubtotalVenta, FmtImp(totDepV));
-      Ticket.Negrita(False);
-      if totDepC <> 0 then
-        Ticket.TextoColumnas(STicketSubtotalCobrado, FmtImp(totDepC));
-    end
-    else
-    begin
-      Ticket.TextoColumnas(STicketOperaciones, IntToStr(nVen));
-      Ticket.Negrita(True);
-      Ticket.TextoColumnas(STicketTotalVentasSinSigno, FmtImp(totVen));
-      Ticket.Negrita(False);
-    end;
-  end;
-
-  // Render de la fila actual del cursor según su grupo, acumulando totales.
-  procedure RenderFila(const AG: string);
-  begin
-    if AG = 'TRA' then
-    begin
-      totTra := totTra + EscribirTraspasoOpe(
-        Ticket,
-        ARepositorio,
-        oOperacion,
-        bVerCoste);
-      Inc(nTra);
-    end
-    else if AG = 'ING' then
-    begin
-      totIng := totIng + EscribirIngresoGastoOpe(
-        Ticket,
-        oOperacion);
-      Inc(nIng);
-    end
-    else if AG = 'GAS' then
-    begin
-      totGas := totGas + EscribirIngresoGastoOpe(
-        Ticket,
-        oOperacion);
-      Inc(nGas);
-    end
-    else if AG = 'DEP' then
-    begin
-      totDepV := totDepV + EscribirDepositoOpe(
-        Ticket,
-        ARepositorio,
-        oOperacion,
-        dCobradoOp);
-      totDepC := totDepC + dCobradoOp;
-      Inc(nDep);
-    end
-    else
-    begin
-      EscribirOperacion(
-        AParametrosApp,
-        Ticket,
-        ARepositorio,
-        oOperacion,
-        AImprimirQR);
-      totVen := totVen + oOperacion.TotalLiquido;
-      Inc(nVen);
-    end;
-  end;
-
+  Impresor: TImpresorTiraCajaTicket;
 begin
-  nVen   := 0;
-  nTra   := 0;
-  nIng   := 0;
-  nGas   := 0;
-  nDep   := 0;
-  totVen   := 0;
-  totTra   := 0;
-  totIng   := 0;
-  totGas   := 0;
-  totDepV  := 0;
-  totDepC  := 0;
-  // Los traspasos solo se valoran (coste) si el usuario tiene permiso para ver
-  // coste; el resto de bloques (ingresos, gastos, depósitos) siempre se valoran.
-  bVerCoste := AValorarTraspasos;
-  Ticket := TTicketTermico.Create(ANombreImpresora);
+  Impresor := TImpresorTiraCajaTicket.Create(
+    AParametrosApp, APreview, ARepositorio,
+    AEmpresa, AAlmacen, ACaja, AFechaDesde, AFechaHasta, ASeries,
+    AImprimirQR, ANombreImpresora, ACronologico,
+    AIncluirTraspasos, AIncluirIngresos, AIncluirGastos,
+    AIncluirCredito, AValorarTraspasos);
   try
-    Ticket.Inicializar;
-    EscribirCabeceraEmpresa(
-      Ticket,
-      ARepositorio,
-      AEmpresa);
-    // Título: caja, rango exacto, series seleccionadas y modo de agrupamiento.
-    Ticket.SaltarLineas(1);
-    Ticket.Alinear(alCentro);
-    Ticket.Negrita(True);
-    Ticket.EscribirLinea(Format(STicketArqueoCajaHora,
-      [ACaja, FormatDateTime('hh:nn', Now)]));
-    Ticket.EscribirLinea(Format(STicketDel,
-      [FormatDateTime('dd/mm/yy hh:nn', AFechaDesde)]));
-    Ticket.EscribirLinea(Format(STicketAl,
-      [FormatDateTime('dd/mm/yy hh:nn', AFechaHasta)]));
-    if Length(ASeries) = 0 then
-      Ticket.EscribirLinea(STicketTodasSeries)
-    else
-    begin
-      sSerieTxt := '';
-      for i := 0 to High(ASeries) do
-      begin
-        if sSerieTxt <> '' then
-          sSerieTxt := sSerieTxt + ', ';
-        sSerieTxt := sSerieTxt + ASeries[i];
-      end;
-      Ticket.EscribirLinea(Format(STicketSeries, [sSerieTxt]));
-    end;
-    if ACronologico then
-      Ticket.EscribirLinea(STicketOrdenCronologico)
-    else
-      Ticket.EscribirLinea(STicketOrdenTipoDocumento);
-    Ticket.Negrita(False);
-    Ticket.Alinear(alIzquierda);
-    Ticket.SaltarLineas(1);
-    // Impresión y Excel comparten el mismo read model de operaciones.
-    aOperaciones := ARepositorio.ListarOperaciones(
-      AEmpresa,
-      AAlmacen,
-      ACaja,
-      AFechaDesde,
-      AFechaHasta,
-      ASeries,
-      ACronologico,
-      AIncluirTraspasos,
-      AIncluirIngresos,
-      AIncluirGastos,
-      AIncluirCredito);
-    sPrevGrupo := '';
-    for oOperacion in aOperaciones do
-    begin
-      sGrupo := oOperacion.Grupo;
-      if ACronologico then
-      begin
-        // Cada operación rotulada con su tipo, para saber qué es cada una.
-        Ticket.Negrita(True);
-        Ticket.EscribirLinea('[' + RotuloGrupo(sGrupo) + ']');
-        Ticket.Negrita(False);
-      end
-      else
-      begin
-        // Cambio de tipo: cierra el grupo anterior y abre el siguiente.
-        if sGrupo <> sPrevGrupo then
-        begin
-          if sPrevGrupo <> '' then
-          begin
-            SubtotalGrupo(sPrevGrupo);
-            Ticket.LineaSeparadora('=');
-            Ticket.LineaSeparadora('=');
-          end
-          else
-            Ticket.LineaSeparadora('=');
-          CabeceraGrupo(sGrupo);
-        end;
-      end;
-      RenderFila(sGrupo);
-      Ticket.LineaSeparadora('-');
-      sPrevGrupo := sGrupo;
-    end;
-    // Cierre: subtotal del último grupo (por tipo) o resumen (cronológico).
-    if (nVen + nTra + nIng + nGas + nDep) = 0 then
-      Ticket.EscribirLinea(STicketSinOperaciones)
-    else if not ACronologico then
-      SubtotalGrupo(sPrevGrupo)
-    else
-    begin
-      Ticket.LineaSeparadora('=');
-      Ticket.Alinear(alCentro);
-      Ticket.Negrita(True);
-      Ticket.EscribirLinea(STicketResumen);
-      Ticket.Negrita(False);
-      Ticket.Alinear(alIzquierda);
-      if nVen > 0 then
-        SubtotalGrupo('VEN');
-      if nTra > 0 then
-        SubtotalGrupo('TRA');
-      if nIng > 0 then
-        SubtotalGrupo('ING');
-      if nGas > 0 then
-        SubtotalGrupo('GAS');
-      if nDep > 0 then
-        SubtotalGrupo('DEP');
-    end;
-    Ticket.SaltarLineas(1);
-    Ticket.Alinear(alCentro);
-    Ticket.EscribirLinea(FormatDateTime('dd/mm/yyyy hh:nn:ss', Now));
-    Ticket.SaltarLineas(2);
-    Ticket.CortarPapel;
-    // Vista previa (DEBUG) o impresión real.
-    ComandosESC := Ticket.ObtenerComandos;
-    RutaPDF := GetUserFolderTickets + 'TiraCaja_' +
-               FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-    ImprimirOPrevisualizarTicket(APreview, Ticket, ComandosESC, RutaPDF,
-                                 ANombreImpresora);
+    Impresor.Ejecutar;
   finally
-    FreeAndNil(Ticket);
+    FreeAndNil(Impresor);
   end;
 end;
 

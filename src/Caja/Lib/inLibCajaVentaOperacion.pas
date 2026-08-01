@@ -9,9 +9,9 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripcion:                                                                }
-{    Operacion de venta de caja sobre sus datasets: cierre de la linea         }
-{    pendiente, deteccion de devoluciones y depositos, fecha de la             }
-{    cabecera, atributos de la linea por SKU y documento del cierre.           }
+{    Operación de venta de caja sobre sus datasets: cierre de la línea         }
+{    pendiente, detección de devoluciones y depósitos, fecha de la             }
+{    cabecera, preparación del artículo y documento del cierre.                }
 {                                                                              }
 {    Reune helpers que vivian enteros en TfrmMtoOpeCaja y no tocaban           }
 {    ningun control. No conoce formularios, DevExpress ni UniDAC: el           }
@@ -24,7 +24,9 @@ interface
 
 uses
   Data.DB, Datasnap.DBClient,
-  inLibArticulosAtributosIntf;
+  inLibArticulosAtributosIntf,
+  inLibArticulosResolverIntf,
+  inLibArticulosValidadorIntf;
 
 type
   // Serie, tipo y fecha del documento que nace al cerrar la venta.
@@ -33,6 +35,13 @@ type
     TipoFactura: string;
     FechaFactura: TDateTime;
   end;
+
+  TResultadoPreparacionArticuloVenta = record
+    Preparado: Boolean;
+    MotivoRechazo: string;
+  end;
+
+  TAccionCodigoCaja = procedure(const ACodigo: string) of object;
 
 // Cierra la linea pendiente: la insercion sin articulo se cancela; la
 // que tiene articulo, y cualquier edicion, se graban.
@@ -95,11 +104,97 @@ function ResolverDocumentoCierreVenta(
   const AFechaFactura: TDateTime;
   AHayRectificacion: Boolean): TDocumentoCierreVenta;
 
+// Resuelve una entrada manual o de escáner y prepara los datos de artículo
+// de la línea. Las reacciones de stock y precio se reciben como callbacks
+// para mantener esta operación separada de la presentación.
+function PrepararArticuloLineaVenta(
+  ALineas, ACabecera: TDataSet;
+  const ACodigo: string;
+  AEsLecturaScanner, AActualizandoDepositos: Boolean;
+  const AValidador: IArticulosValidador;
+  const AResolver: IArticulosResolver;
+  AConsultarStock, ARecalcularPrecio: TAccionCodigoCaja):
+  TResultadoPreparacionArticuloVenta;
+
 implementation
 
 uses
   System.SysUtils,
   inLibCajaVentaCliente;
+
+procedure EscribirDatosBaseArticulo(
+  ALineas: TDataSet;
+  const AResolucion: TArtResolucionEntrada);
+begin
+  if ALineas.State = dsBrowse then
+    ALineas.Edit;
+  ALineas.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString :=
+    AResolucion.DescripcionArticulo;
+  ALineas.FieldByName('TIPO_ARTICULO_FACLIN').AsString :=
+    AResolucion.TipoArticulo;
+  ALineas.FieldByName('CODIGO_ART_FACLIN').AsString :=
+    AResolucion.CodigoArticulo;
+  ALineas.FieldByName(
+    'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger :=
+    AResolucion.NumAtributosReq;
+end;
+
+procedure PrepararSkuResuelto(
+  ALineas: TDataSet;
+  const ACodigoSku: string;
+  AActualizandoDepositos: Boolean;
+  AConsultarStock, ARecalcularPrecio: TAccionCodigoCaja);
+begin
+  if (not AActualizandoDepositos) and Assigned(AConsultarStock) then
+    AConsultarStock(ACodigoSku);
+  ALineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString :=
+    ACodigoSku;
+  if Assigned(ARecalcularPrecio) then
+    ARecalcularPrecio(ACodigoSku);
+end;
+
+procedure PrepararSkuPendiente(
+  ALineas, ACabecera: TDataSet;
+  const ACodigoArticulo: string;
+  AActualizandoDepositos: Boolean;
+  const AResolver: IArticulosResolver;
+  AConsultarStock: TAccionCodigoCaja);
+var
+  Datos: TArticuloDatos;
+  Precio: TArticuloPrecio;
+  sCodTarifa: string;
+  dtFechaTicket: TDateTime;
+begin
+  if (not AActualizandoDepositos) and Assigned(AConsultarStock) then
+    AConsultarStock(ACodigoArticulo);
+  ALineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString :=
+    ACodigoArticulo;
+  if (not AActualizandoDepositos) and Assigned(AResolver) then
+  begin
+    sCodTarifa := ACabecera.FieldByName(
+      'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
+    dtFechaTicket := ACabecera.FieldByName('FECHA_FAC').AsDateTime;
+    Datos := AResolver.ResolverDatos(
+      ACodigoArticulo, '', sCodTarifa, dtFechaTicket);
+    Precio := AResolver.ResolverPrecio(
+      ACodigoArticulo, '', sCodTarifa, dtFechaTicket);
+    ALineas.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString :=
+      Datos.TipoIVA;
+    if Precio.EsImpIncl then
+      ALineas.FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString := 'S'
+    else
+      ALineas.FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString := 'N';
+    ALineas.FieldByName('PORCENTAJE_DTO_FACLIN').AsFloat :=
+      Precio.PorcentajeDto;
+    ALineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency := 0;
+    ALineas.FieldByName('PRECIO_DTO_FACLIN').AsCurrency := 0;
+    ALineas.FieldByName(
+      'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := 0;
+    ALineas.FieldByName(
+      'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
+    ALineas.FieldByName('CANTIDAD_FACLIN').AsCurrency := 1;
+  end;
+end;
 
 procedure CerrarLineaPendiente(ALineas: TDataSet);
 begin
@@ -298,6 +393,61 @@ begin
     SetLength(AAvs, Length(Vals));
     for i := 0 to High(Vals) do
       AAvs[i] := Vals[i].Valor;
+  end;
+end;
+
+function PrepararArticuloLineaVenta(
+  ALineas, ACabecera: TDataSet;
+  const ACodigo: string;
+  AEsLecturaScanner, AActualizandoDepositos: Boolean;
+  const AValidador: IArticulosValidador;
+  const AResolver: IArticulosResolver;
+  AConsultarStock, ARecalcularPrecio: TAccionCodigoCaja):
+  TResultadoPreparacionArticuloVenta;
+var
+  Resolucion: TArtResolucionEntrada;
+  sCodigoLimpio: string;
+begin
+  Result := Default(TResultadoPreparacionArticuloVenta);
+  sCodigoLimpio := UpperCase(Trim(ACodigo));
+  if (sCodigoLimpio <> '') and Assigned(AValidador) then
+  begin
+    if AEsLecturaScanner then
+      Resolucion := AValidador.ResolverCodigoBarras(sCodigoLimpio)
+    else
+      Resolucion := AValidador.Resolver(sCodigoLimpio);
+    if Resolucion.Encontrado then
+    begin
+      ALineas.DisableControls;
+      try
+        EscribirDatosBaseArticulo(ALineas, Resolucion);
+        if Resolucion.CodigoSku <> '' then
+        begin
+          PrepararSkuResuelto(
+            ALineas,
+            Resolucion.CodigoSku,
+            AActualizandoDepositos,
+            AConsultarStock,
+            ARecalcularPrecio);
+          Result.Preparado := True;
+        end
+        else if Resolucion.RequiereSku then
+        begin
+          PrepararSkuPendiente(
+            ALineas,
+            ACabecera,
+            Resolucion.CodigoArticulo,
+            AActualizandoDepositos,
+            AResolver,
+            AConsultarStock);
+          Result.Preparado := True;
+        end
+        else
+          Result.MotivoRechazo := Resolucion.Mensaje;
+      finally
+        ALineas.EnableControls;
+      end;
+    end;
   end;
 end;
 

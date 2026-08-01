@@ -44,7 +44,7 @@ unit UniDataArticulosValidadorRepositorio;
       try
         r := val.Resolver(InputUsuario);
         if not r.Encontrado then
-          ShowMessage(r.Mensaje)
+          InformarResultado(r.Mensaje)
         else if r.RequiereSku then
           // pedir SKU al usuario y volver a resolver
         else
