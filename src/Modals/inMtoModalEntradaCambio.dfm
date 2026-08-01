@@ -1,4 +1,4 @@
-inherited frmModalEntradaCambio: TfrmModalEntradaCambio
+﻿inherited frmModalEntradaCambio: TfrmModalEntradaCambio
   BorderStyle = bsDialog
   Caption = 'Entrada de Cambio (F6)'
   ClientHeight = 230

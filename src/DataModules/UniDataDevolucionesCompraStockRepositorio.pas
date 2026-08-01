@@ -1,4 +1,4 @@
-unit UniDataDevolucionesCompraStockRepositorio;
+﻿unit UniDataDevolucionesCompraStockRepositorio;
 
 {
   Caso de uso para preparar la devolucion de todo el stock disponible

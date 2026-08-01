@@ -1,4 +1,4 @@
-inherited frmGenFacRec: TfrmGenFacRec
+﻿inherited frmGenFacRec: TfrmGenFacRec
   Left = 516
   Top = 286
   HorzScrollBar.Visible = False

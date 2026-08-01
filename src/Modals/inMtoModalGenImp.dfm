@@ -1,4 +1,4 @@
-inherited frmPrint: TfrmPrint
+﻿inherited frmPrint: TfrmPrint
   Left = 506
   Top = 279
   HorzScrollBar.Visible = False

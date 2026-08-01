@@ -1,4 +1,4 @@
-inherited frmMtoCajaPagosHist: TfrmMtoCajaPagosHist
+﻿inherited frmMtoCajaPagosHist: TfrmMtoCajaPagosHist
   Caption = 'Hist'#243'rico de Pagos de Caja'
   TextHeight = 19
   inherited pButtonPage: TPanel

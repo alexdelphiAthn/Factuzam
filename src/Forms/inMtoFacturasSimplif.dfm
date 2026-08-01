@@ -1,4 +1,4 @@
-inherited frmMtoFacturasSimplif: TfrmMtoFacturasSimplif
+﻿inherited frmMtoFacturasSimplif: TfrmMtoFacturasSimplif
   Caption = 'Borradores Simplificados (Caja)'
   OnDestroy = FormDestroy
   inherited pButtonPage: TPanel

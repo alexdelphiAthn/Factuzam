@@ -1,4 +1,4 @@
-unit inMtoModalSesionMaterializar;
+﻿unit inMtoModalSesionMaterializar;
 
 {
   Modal de confirmación previa a la materialización de una sesión de compra.

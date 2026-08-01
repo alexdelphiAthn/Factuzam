@@ -1,4 +1,4 @@
-program FactuzamNormalizer;
+﻿program FactuzamNormalizer;
 
 uses
   Vcl.Forms,

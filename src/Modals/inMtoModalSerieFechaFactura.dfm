@@ -1,4 +1,4 @@
-inherited frmModalSerieFechaFactura: TfrmModalSerieFechaFactura
+﻿inherited frmModalSerieFechaFactura: TfrmModalSerieFechaFactura
   Caption = 'Borrador normal: serie y fecha'
   ClientHeight = 200
   ClientWidth = 440

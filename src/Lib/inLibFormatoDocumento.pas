@@ -1,4 +1,4 @@
-unit inLibFormatoDocumento;
+﻿unit inLibFormatoDocumento;
 
 interface
 

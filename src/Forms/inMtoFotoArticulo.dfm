@@ -1,4 +1,4 @@
-inherited frmFotoArticulo: TfrmFotoArticulo
+﻿inherited frmFotoArticulo: TfrmFotoArticulo
   BorderIcons = [biSystemMenu]
   Caption = 'Foto del art'#237'culo / SKU'
   ClientHeight = 600

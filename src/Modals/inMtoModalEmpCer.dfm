@@ -1,4 +1,4 @@
-inherited frmMtoModalEmpCer: TfrmMtoModalEmpCer
+﻿inherited frmMtoModalEmpCer: TfrmMtoModalEmpCer
   BorderIcons = []
   Caption = 'Seleccionar Certificado'
   ClientHeight = 183

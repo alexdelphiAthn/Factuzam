@@ -20,8 +20,9 @@ este cubre el código Pascal / Delphi que lo consume.
 4. **Herencia obligatoria** para formularios: todo formulario hereda de
    `TfrmBase` (o de `TfrmMtoGen` si es mantenimiento). Nunca de `TForm`
    directamente.
-5. **Los nombres de columna SQL viajan tal cual** desde la BBDD al código:
-   `FieldByName('CODIGO_CLI_CLI')`, nunca traducidos ni camelizados.
+5. **Los nombres de columna SQL viajan tal cual** dentro de persistencia y
+   binding visual: `FieldByName('CODIGO_CLI_CLI')`, nunca traducidos ni
+   camelizados. No atraviesan contratos de aplicación ni records de dominio.
 6. **Sin notación húngara para tipos de control** (no `TfrmMtoClientes` para
    un panel): los prefijos de control (`btn`, `lbl`, `txt`...) indican el
    tipo VCL, no el tipo lógico. Para variables locales sí se usa prefijo
@@ -644,9 +645,9 @@ a unidades nuevas.
 
 ## 11. Constantes para nombres de columna SQL
 
-En cada librería que manipula una tabla, **declarar constantes con el
-prefijo `f`** (de *field*) para evitar literales repetidos por toda la
-unidad. Pattern: nombre corto en minúsculas, valor = nombre real de la
+En cada adaptador `UniData*` que manipula una tabla, **declarar constantes
+con el prefijo `f`** (de *field*) para evitar literales repetidos por toda la
+unidad. Patrón: nombre corto en minúsculas, valor = nombre real de la
 columna.
 
 ```pascal
@@ -668,9 +669,10 @@ Linea.FieldByName(fcant).AsCurrency := 1.0;
 Linea.FieldByName(fporiva).AsCurrency := IVAGeneral;
 ```
 
-**No** se usan en formularios (los `.dfm` referencian el nombre real por
-`DataField`); sí en librerías (`inLib*`) donde el SQL es manipulado por
-código.
+**No** se usan en formularios ni en contratos `inLib*Intf`. Los `.dfm`
+referencian el nombre real por `DataField`; los records de dominio usan
+nombres del negocio. El SQL y sus constantes físicas pertenecen a
+`UniData*`.
 
 ---
 
@@ -892,13 +894,19 @@ documentos se decide si la responsabilidad pertenece a:
 - un record de configuración más una operación común;
 - un data module o servicio de persistencia.
 
-Un método nuevo debe representar un paso con nombre. Como guía:
+Un método nuevo debe representar un paso con nombre. Los límites P5 son:
 
-- objetivo habitual: hasta 80 líneas;
-- a partir de 120 líneas, revisar si mezcla pasos;
-- no crear ni ampliar métodos por encima de 200 líneas;
-- al tocar un método legado de más de 200 líneas, extraer pasos cohesivos
-  siempre que el alcance lo permita.
+- handler VCL: hasta 15 líneas efectivas de cuerpo;
+- método normal: hasta 60 líneas efectivas y, preferiblemente, menos de 40;
+- método fiscal, de caja o transaccional: hasta 10 decisiones;
+- anidación: hasta dos niveles; el tercero exige extraer condición o paso;
+- ningún método nuevo supera 80 líneas sin una excepción arquitectónica
+  documentada y aprobada.
+
+Los umbrales de 120 y 200 líneas que vigilan los scripts son límites de
+migración del legado, no tamaños aceptables para código nuevo. Al tocar un
+método de más de 120 líneas se reduce alguna de sus medidas siempre que el
+alcance lo permita. No se crea ni amplía ninguno de más de 200 líneas.
 
 Los objetivos de migración para las clases-dios vigiladas son 2.000 líneas y
 120 métodos por clase. Para las unidades procedurales vigiladas son 1.200
@@ -969,6 +977,15 @@ Se unifica comportamiento equivalente, no código que solo se parece.
   datos. Complementan DUnitX; no lo sustituyen.
 - Un refactor no mezcla cambios funcionales ni normalizaciones masivas de
   formato.
+- Todo bug corregido añade una prueba de regresión que falle antes del
+  cambio y pase después.
+- Un caso de uso cubre, según corresponda, éxito, entrada límite, rechazo
+  esperado, excepción, cancelación y rollback.
+- Un adaptador que traduce campos o tipos añade pruebas de contrato para
+  campos obligatorios, opcionales y conversiones.
+- El número de pruebas no sustituye la cobertura. En dominio y aplicación
+  se mide cobertura cuando exista soporte en el runner; fiscalidad, caja y
+  transacciones tienen prioridad sobre la cobertura de componentes VCL.
 
 Ejecución básica:
 
@@ -1159,6 +1176,13 @@ parámetros UniDAC y cambios de foco en controles.
   enumerado, dos métodos con intención clara o una estrategia.
 - Al alcanzar un tercer nivel de anidación, se revisa la extracción de una
   condición o un paso. No se usa `Exit` para disimular la complejidad.
+- Un handler VCL recoge valores, llama a una operación y presenta el
+  resultado. Si supera 15 líneas efectivas, se extrae la coordinación.
+- Un método normal no supera 60 líneas efectivas. Superar 40 obliga a
+  comprobar que conserva una única responsabilidad y nivel de abstracción.
+- Los métodos fiscales, de caja y transaccionales no superan 10 decisiones.
+- Las firmas nuevas no acumulan más de cinco parámetros independientes. Los
+  valores que forman una entrada cohesiva viajan en un `record`.
 
 Se prefieren condiciones positivas y bloques acotados. Una expresión
 compleja que representa una regla se extrae a un método booleano con nombre
@@ -1177,6 +1201,10 @@ una operación con intención.
 - Los campos son privados; se publica la mínima operación necesaria.
 - La propiedad del recurso y quién lo libera quedan claros al crearlo.
 - No se guarda una referencia más tiempo del que permite su propietario.
+- Un colaborador de aplicación no recibe un formulario concreto ni usa
+  `with FAnfitrion do`. Recibe una vista mínima, callbacks tipados o valores.
+- Una extracción no se considera desacoplamiento si la nueva clase conserva
+  acceso completo al objeto original y puede manipular todos sus campos.
 
 #### 14.14.4 Literales, mensajes y código muerto
 
@@ -1207,6 +1235,14 @@ fallo.
   o traducir la excepción; en otro caso se deja propagar.
 - No se mezclan `Boolean`, mensajes y excepciones para representar el mismo
   fallo en distintas implementaciones de un contrato.
+- No se deduce un estado buscando palabras dentro de un mensaje de error.
+  Cancelación, conflicto, ausencia y validación se representan con
+  enumerados, excepciones específicas o resultados tipados.
+- Una dependencia, dataset o campo obligatorio falla inmediatamente con
+  contexto suficiente. `FindField` solo tolera ausencia cuando el contrato
+  declara expresamente el campo como opcional.
+- La firma o documentación del contrato indica quién posee y libera listas,
+  streams, datasets, conexiones, workers y demás objetos no gestionados.
 
 ### 14.15 Regla del boy scout y trinquetes de calidad
 
@@ -1232,6 +1268,12 @@ la línea base se baja con:
 
 La actualización toma el mínimo entre la medida guardada y la actual: no
 puede utilizarse para aceptar una regresión.
+
+La codificación también es un trinquete. Todo archivo nuevo usa UTF-8 con
+BOM y CRLF. Si un archivo legado tiene una excepción y se normaliza, ese
+cambio se hace en un commit mecánico separado cuando la conversión genere un
+diff amplio. Una modificación funcional no añade nuevas excepciones ni
+mezcla una normalización masiva que impida revisar el comportamiento.
 
 La entrada única para ejecutar todos los resguardos es:
 
@@ -1265,6 +1307,31 @@ Que los scripts terminen correctamente es necesario, pero no suficiente. La
 revisión también comprueba nombres, cohesión, contrato de los descendientes,
 efectos laterales y que las pruebas cubran el comportamiento modificado.
 
+### 14.16 Criterio P5 para código nuevo y legado modificado
+
+P5 distingue entre el objetivo de excelencia y los topes temporales que
+permiten migrar el legado sin una reescritura masiva:
+
+| Aspecto | Código nuevo | Legado modificado |
+|---------|--------------|--------------------|
+| Handler VCL | Hasta 15 líneas efectivas | No crece; se extrae coordinación |
+| Método normal | Hasta 60; objetivo menor de 40 | No crece; si supera 120, reduce una medida |
+| Decisiones en zona fiscal/caja | Hasta 10 | No aumenta y se cubre con caracterización |
+| Anidación | Hasta 2 niveles | No se añade un nivel nuevo |
+| `Exit`, `Continue`, `with` | Cero | No aumentan; se retiran en la zona tocada |
+| Dependencias | Explícitas y mínimas | No se introduce búsqueda global nueva |
+| Pruebas | Éxito, límites y fallos relevantes | Prueba de caracterización antes de extraer |
+| Codificación | UTF-8 con BOM y CRLF | Sin excepciones nuevas; normalización separada |
+
+Las líneas efectivas son las comprendidas entre `begin` y `end`, sin contar
+líneas vacías ni comentarios aislados. Las decisiones son las que informa
+`comprobar_metodos_largos.ps1`. Hasta que exista un límite automático más
+estricto, los valores de esta tabla se comprueban también en revisión.
+
+Una pieza cumple P5 cuando puede leerse de arriba abajo, sus dependencias se
+ven en la firma o constructor, sus efectos están expresados, el error no se
+convierte en éxito y su núcleo se prueba sin levantar la VCL ni una BBDD.
+
 ---
 
 ## 15. Manías y convenciones particulares del autor
@@ -1296,9 +1363,10 @@ Estas son convenciones que ya están en el código y que conviene
 6. **Strings con SQL** se construyen por concatenación con espacios al
    principio de cada línea, para que el SQL siga siendo legible:
    ```pascal
-   unqryCliPrint.SQL.Text := ' SELECT * ' +
-                             ' from vi_clientes ' +
-                             ' where CODIGO_CLI_CLI = :CODIGO';
+   unqryCliPrint.SQL.Text :=
+     'SELECT CODIGO_CLI, NOMBRE_CLI ' +
+     '  FROM vi_clientes ' +
+     ' WHERE CODIGO_CLI = :CODIGO';
    ```
 7. **Parámetros SQL en mayúsculas**: `:CODIGO`, `:NUMERO`. Coincide con la
    convención de la BBDD.
@@ -1341,12 +1409,20 @@ Estas son convenciones que ya están en el código y que conviene
 ✗  Identificar ventanas por Caption o ClassName
 ✗  Añadir handlers de menú que solo llaman a ShowMto
 ✗  Métodos nuevos de más de 200 líneas
+✗  Handlers VCL nuevos de más de 15 líneas efectivas
+✗  Métodos nuevos de más de 60 líneas sin dividir pasos cohesivos
+✗  Métodos fiscales, de caja o transaccionales con más de 10 decisiones
 ✗  with en código nuevo
+✗  Colaboradores que reciben el formulario completo como anfitrión
+✗  Extracciones que solo trasladan el monolito a una clase con back-reference
 ✗  Overrides vacíos o que invalidan una operación admitida por el ancestro
 ✗  Funciones de consulta con efectos laterales ocultos
 ✗  Copiar un formulario o ampliar if por tipo para añadir una variante
 ✗  SQL con valores de usuario concatenados
 ✗  except vacío o que convierte un fallo en éxito silencioso
+✗  Inferir estados de negocio buscando texto dentro de un mensaje de error
+✗  Ignorar con FindField la ausencia de un campo obligatorio
+✗  Contratos sin propiedad clara de listas, streams, datasets o workers
 ✗  Componentes VCL o conexiones compartidas con un hilo trabajador
 ✗  Llamar a inherited al final del handler; va al principio
 ✗  Acceder a campos privados (F*) de otra clase
@@ -1511,43 +1587,47 @@ end.
 ### 17.3 Librería nueva
 
 ```pascal
-unit inLibMiUtilidad;
+unit inLibCalculoMargen;
 
 interface
 
-uses
-  System.SysUtils, System.Classes,
-  Data.DB, Uni;
-
-const
-  fcampoX = 'CAMPO_X_TABLA';
-
 type
-  TMiResultado = record
-    Ok      : Boolean;
-    Mensaje : string;
+  TEntradaCalculoMargen = record
+    PrecioCoste: Currency;
+    PorcentajeMargen: Double;
   end;
-
-  TMiUtilidad = class
+  TResultadoCalculoMargen = record
+    EsValido: Boolean;
+    PrecioSalida: Currency;
+  end;
+  TCalculadorMargen = class
   public
-    class function Procesar(AQuery: TUniQuery): TMiResultado;
+    class function Calcular(
+      const AEntrada: TEntradaCalculoMargen):
+      TResultadoCalculoMargen;
   end;
 
 implementation
 
-class function TMiUtilidad.Procesar(AQuery: TUniQuery): TMiResultado;
+class function TCalculadorMargen.Calcular(
+  const AEntrada: TEntradaCalculoMargen):
+  TResultadoCalculoMargen;
 begin
-  Result.Ok := False;
-  Result.Mensaje := '';
-  if Assigned(AQuery) then
+  Result := Default(TResultadoCalculoMargen);
+  Result.EsValido := AEntrada.PrecioCoste >= 0;
+  if Result.EsValido then
   begin
-    // ... lógica ...
-    Result.Ok := True;
+    Result.PrecioSalida := AEntrada.PrecioCoste *
+      (1 + (AEntrada.PorcentajeMargen / 100));
   end;
 end;
 
 end.
 ```
+
+Una librería de dominio nueva no recibe `TUniQuery`, `TDataSet` ni nombres
+de columnas. Si necesita persistencia, el contrato vive en `inLib*Intf`, la
+librería recibe esa interfaz y el adaptador se implementa en `UniData*`.
 
 ---
 
@@ -1975,11 +2055,17 @@ Subsistema transversal para diagnosticar fallos y trazar actividad del
 usuario sin recompilar. Se controla por completo desde **Parámetros
 Generales** (`frmMtoAppParam`) y los cambios se aplican en caliente.
 
+El singleton `Log` se conserva como fachada de compatibilidad para código
+legado e infraestructura. El código nuevo de dominio o aplicación recibe
+`IRegistroLog` desde `inLibLogIntf` y registra mediante ese contrato. No usa
+`Log` como dependencia oculta.
+
 Las unidades implicadas son:
 
 | Unidad                  | Carpeta            | Rol                                                                                  |
 |-------------------------|--------------------|--------------------------------------------------------------------------------------|
-| `inLibLog`              | `src/Lib/`         | Singleton `Log: TLog`, niveles, rotación, mutex entre procesos, `AplicarModosDepuracion` |
+| `inLibLogIntf`          | `src/Lib/`         | Contrato pequeño `IRegistroLog` para dominio y aplicación                            |
+| `inLibLog`              | `src/Lib/`         | Implementación, fachada legado, niveles, rotación y mutex entre procesos              |
 | `inLibAppParam`         | `src/Lib/`         | Registra los 4 parámetros booleanos y llama a `AplicarFlagsLog` tras `Recargar`      |
 | `UniDataConn`           | `src/DataModules/` | `UniSQLMonitor1SQL` cronometra cada query y la vuelca con `LogSQLExt`                |
 | `inMtoFrmBase`          | `src/Core/`        | `DoShow` / `DoClose` autologuean apertura y cierre de cualquier formulario           |
@@ -2174,6 +2260,20 @@ Log.LogInfo('Inicio de cierre de caja ' + sCodCaja);
 
 ### 19.5 API rápida
 
+API preferida para código nuevo:
+
+```pascal
+uses inLibLogIntf;
+
+FRegistroLog.RegistrarInformacion(AMensaje);
+FRegistroLog.RegistrarAviso(AMensaje);
+FRegistroLog.RegistrarError(AMensaje);
+FRegistroLog.RegistrarRendimiento(AEtiqueta, ADetalle, ADuracionMs);
+```
+
+La interfaz se recibe por constructor o composición. La siguiente API
+concreta queda para infraestructura y migración de consumidores existentes:
+
 ```pascal
 uses inLibLog;
 
@@ -2234,6 +2334,8 @@ intente mostrar diálogos sobre un form ya liberado.
 
 ### 19.7 Checklist al añadir una unidad nueva
 
+- [ ] El dominio y la aplicación reciben `IRegistroLog`; no introducen una
+      llamada nueva al singleton `Log`.
 - [ ] El formulario hereda de `TfrmBase` o derivado → autolog Show/Close.
 - [ ] El data module hereda de `TdmBase` y su query principal se llama
       `unqryTablaG` → autolog BeforeInsert/BeforePost.
@@ -2373,13 +2475,30 @@ Cuando aparezca un prefijo de columna nuevo en `LIBRO_DE_ESTILO_BBDD.md`
 - [ ] SQL parametrizado; transacciones completas en escrituras múltiples.
 - [ ] Sin `except` vacío, `Exit`, `Continue` ni instrucciones en la línea
       del `if`, `while` o `for`.
-- [ ] Métodos nuevos por debajo de 200 líneas y con una responsabilidad.
+- [ ] Handlers VCL nuevos de hasta 15 líneas efectivas: recogen, invocan y
+      presentan.
+- [ ] Métodos normales nuevos de hasta 60 líneas, preferiblemente menos de
+      40, y con un único nivel de abstracción.
+- [ ] Métodos fiscales, de caja o transaccionales con un máximo de 10
+      decisiones y pruebas de error/rollback.
+- [ ] Ningún colaborador recibe un formulario completo ni conserva una
+      back-reference para manipular su estado interno.
 - [ ] Nombres expresivos, sin efectos laterales ocultos ni literales de
       negocio repetidos.
+- [ ] Estados y errores tipados; no se interpretan buscando texto en
+      mensajes.
+- [ ] Campos y dependencias obligatorios fallan inmediatamente; `FindField`
+      solo se usa como opcional cuando el contrato lo declara.
+- [ ] Propiedad y liberación de listas, streams, datasets, conexiones y
+      workers están definidas.
 - [ ] Los textos visibles nuevos son `resourcestring` del catálogo de su
       dominio.
 - [ ] Pruebas DUnitX/SQL añadidas o actualizadas cuando corresponda.
 - [ ] `scripts\comprobar_calidad.ps1` termina correctamente y no se han
       elevado topes ni añadido excepciones para hacerlo pasar.
+- [ ] La aplicación y DUnitX compilan y pasan en las plataformas afectadas;
+      para cambios transversales, Release Win32 y Win64.
+- [ ] Los archivos nuevos usan UTF-8 con BOM y CRLF; una normalización
+      masiva se entrega separada del cambio funcional.
 - [ ] Comentarios en español, sin código muerto comentado.
 - [ ] Si tocas la BBDD, el cambio cumple `LIBRO_DE_ESTILO_BBDD.md`.

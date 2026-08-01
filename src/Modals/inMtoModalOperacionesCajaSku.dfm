@@ -1,4 +1,4 @@
-inherited frmModalOperacionesCajaSku: TfrmModalOperacionesCajaSku
+﻿inherited frmModalOperacionesCajaSku: TfrmModalOperacionesCajaSku
   BorderStyle = bsSizeable
   Caption = 'Operaciones de caja'
   ClientHeight = 520

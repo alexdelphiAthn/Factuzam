@@ -1,4 +1,4 @@
-unit inLibGenerarTicketIntf;
+﻿unit inLibGenerarTicketIntf;
 
 interface
 

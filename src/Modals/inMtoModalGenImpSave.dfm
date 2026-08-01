@@ -1,4 +1,4 @@
-inherited frmModalGenImpSave: TfrmModalGenImpSave
+﻿inherited frmModalGenImpSave: TfrmModalGenImpSave
   BorderIcons = []
   BorderStyle = bsSingle
   Caption = 'Guardar Objeto Editado'

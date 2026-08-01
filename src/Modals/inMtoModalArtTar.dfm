@@ -1,4 +1,4 @@
-inherited frmMtoModalArtTar: TfrmMtoModalArtTar
+﻿inherited frmMtoModalArtTar: TfrmMtoModalArtTar
   BorderIcons = []
   Caption = 'Seleccionar Tarifas'
   ClientHeight = 184

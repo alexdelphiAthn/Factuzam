@@ -1,4 +1,4 @@
-inherited frmMtoVerifactuLog: TfrmMtoVerifactuLog
+﻿inherited frmMtoVerifactuLog: TfrmMtoVerifactuLog
   Caption = 'Verifactu - Log'
   TextHeight = 19
   inherited pButtonPage: TPanel

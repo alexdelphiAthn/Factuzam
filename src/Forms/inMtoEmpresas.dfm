@@ -1,4 +1,4 @@
-inherited frmMtoEmpresas: TfrmMtoEmpresas
+﻿inherited frmMtoEmpresas: TfrmMtoEmpresas
   Left = 5
   Top = 4
   Margins.Left = 0

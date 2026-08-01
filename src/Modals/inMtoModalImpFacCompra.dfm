@@ -1,4 +1,4 @@
-inherited frmPrintFacCompra: TfrmPrintFacCompra
+﻿inherited frmPrintFacCompra: TfrmPrintFacCompra
   Caption = 'Imprimir Factura de Compra'
   ClientHeight = 220
   ClientWidth = 460

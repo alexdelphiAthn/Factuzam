@@ -1,4 +1,4 @@
-inherited dmVariaciones: TdmVariaciones
+﻿inherited dmVariaciones: TdmVariaciones
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (

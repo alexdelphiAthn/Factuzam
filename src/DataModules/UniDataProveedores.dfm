@@ -1,4 +1,4 @@
-inherited dmProveedores: TdmProveedores
+﻿inherited dmProveedores: TdmProveedores
   Height = 260
   Width = 386
   PixelsPerInch = 120

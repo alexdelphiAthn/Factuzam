@@ -1,4 +1,4 @@
-inherited dmDepositosCliente: TdmDepositosCliente
+﻿inherited dmDepositosCliente: TdmDepositosCliente
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO `fza_depositos_cliente`'

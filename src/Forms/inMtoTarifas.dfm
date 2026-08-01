@@ -1,4 +1,4 @@
-inherited frmMtoTarifas: TfrmMtoTarifas
+﻿inherited frmMtoTarifas: TfrmMtoTarifas
   Left = 5
   Top = 4
   Caption = 'Tarifas'

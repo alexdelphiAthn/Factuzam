@@ -1,4 +1,4 @@
-inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
+﻿inherited frmMtoComprasPlantillas: TfrmMtoComprasPlantillas
   Caption = 'Plantillas de Sesiones de Compra'
   ClientHeight = 700
   ClientWidth = 1100

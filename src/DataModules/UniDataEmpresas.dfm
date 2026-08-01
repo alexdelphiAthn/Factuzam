@@ -1,4 +1,4 @@
-inherited dmEmpresas: TdmEmpresas
+﻿inherited dmEmpresas: TdmEmpresas
   Height = 168
   Width = 970
   PixelsPerInch = 120

@@ -1,4 +1,4 @@
-object dmConn: TdmConn
+﻿object dmConn: TdmConn
   OnCreate = DataModuleCreate
   Height = 299
   Width = 506

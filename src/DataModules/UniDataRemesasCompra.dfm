@@ -1,4 +1,4 @@
-inherited dmRemesasCompra: TdmRemesasCompra
+﻿inherited dmRemesasCompra: TdmRemesasCompra
   Height = 240
   Width = 360
   PixelsPerInch = 120

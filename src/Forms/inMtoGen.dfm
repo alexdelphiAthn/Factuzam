@@ -1,4 +1,4 @@
-inherited frmMtoGen: TfrmMtoGen
+﻿inherited frmMtoGen: TfrmMtoGen
   BorderStyle = bsNone
   Caption = 'Ventana Gen'#233'rica'
   ClientHeight = 558

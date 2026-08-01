@@ -1,4 +1,4 @@
-program PruebasParametrosBase;
+﻿program PruebasParametrosBase;
 
 {$APPTYPE CONSOLE}
 

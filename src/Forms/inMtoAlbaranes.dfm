@@ -1,4 +1,4 @@
-inherited frmMtoAlbaranes: TfrmMtoAlbaranes
+﻿inherited frmMtoAlbaranes: TfrmMtoAlbaranes
   Caption = 'Mantenimiento de Albaranes'
   ClientHeight = 765
   ClientWidth = 1085

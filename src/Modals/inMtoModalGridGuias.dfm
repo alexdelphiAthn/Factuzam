@@ -1,4 +1,4 @@
-inherited frmModalGridGuias: TfrmModalGridGuias
+﻿inherited frmModalGridGuias: TfrmModalGridGuias
   Caption = 'Gu'#237'as del grid'
   TextHeight = 19
   inherited pnlCamposGrid: TPanel

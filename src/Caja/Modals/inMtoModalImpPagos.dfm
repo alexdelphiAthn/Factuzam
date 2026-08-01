@@ -1,4 +1,4 @@
-inherited frmPrintPagos: TfrmPrintPagos
+﻿inherited frmPrintPagos: TfrmPrintPagos
   Caption = 'Imprimir Hist'#243'rico de Pagos'
   ClientHeight = 320
   ClientWidth = 640

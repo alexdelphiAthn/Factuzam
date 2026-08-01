@@ -1,4 +1,4 @@
-inherited frmPrintSesion: TfrmPrintSesion
+﻿inherited frmPrintSesion: TfrmPrintSesion
   Caption = 'Imprimir Sesión de Compra'
   ClientHeight = 249
   ClientWidth = 460

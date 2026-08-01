@@ -1,4 +1,4 @@
-inherited frmModalCargarEfectosRemesa: TfrmModalCargarEfectosRemesa
+﻿inherited frmModalCargarEfectosRemesa: TfrmModalCargarEfectosRemesa
   Caption = 'Cargar efectos en remesa'
   ClientHeight = 580
   ClientWidth = 760

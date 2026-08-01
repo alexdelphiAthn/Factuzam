@@ -1,4 +1,4 @@
-inherited dmFamilias: TdmFamilias
+﻿inherited dmFamilias: TdmFamilias
   Height = 282
   Width = 887
   PixelsPerInch = 120

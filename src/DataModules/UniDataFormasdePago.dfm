@@ -1,4 +1,4 @@
-inherited dmFormasdePago: TdmFormasdePago
+﻿inherited dmFormasdePago: TdmFormasdePago
   Height = 155
   Width = 522
   PixelsPerInch = 120

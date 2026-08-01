@@ -1,4 +1,4 @@
-inherited frmMtoEmpleados: TfrmMtoEmpleados
+﻿inherited frmMtoEmpleados: TfrmMtoEmpleados
   Caption = 'Empleados'
   TextHeight = 19
   inherited pButtonPage: TPanel

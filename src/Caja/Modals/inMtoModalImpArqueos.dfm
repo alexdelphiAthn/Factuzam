@@ -1,4 +1,4 @@
-inherited frmPrintArqueos: TfrmPrintArqueos
+﻿inherited frmPrintArqueos: TfrmPrintArqueos
   Caption = 'Imprimir Hist'#243'rico de Arqueos'
   ClientHeight = 320
   TextHeight = 19

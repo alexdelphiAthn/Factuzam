@@ -1,4 +1,4 @@
-inherited dmCajaValesHist: TdmCajaValesHist
+﻿inherited dmCajaValesHist: TdmCajaValesHist
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO `fza_caja_vales`'

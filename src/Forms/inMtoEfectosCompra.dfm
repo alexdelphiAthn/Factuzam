@@ -1,4 +1,4 @@
-inherited frmMtoEfectosCompra: TfrmMtoEfectosCompra
+﻿inherited frmMtoEfectosCompra: TfrmMtoEfectosCompra
   Caption = 'Efectos de Pago a Proveedor'
   TextHeight = 19
   inherited pButtonPage: TPanel

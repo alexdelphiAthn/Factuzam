@@ -1,4 +1,4 @@
-inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
+﻿inherited frmPrintAlbCompraV: TfrmPrintAlbCompraV
   Caption = 'Imprimir Albarán de Compra (Vertical)'
   ClientHeight = 220
   ClientWidth = 460

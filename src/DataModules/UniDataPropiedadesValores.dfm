@@ -1,4 +1,4 @@
-inherited dmPropiedadesValores: TdmPropiedadesValores
+﻿inherited dmPropiedadesValores: TdmPropiedadesValores
   OnCreate = DataModuleCreate
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (

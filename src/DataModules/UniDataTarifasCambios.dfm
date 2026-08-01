@@ -1,4 +1,4 @@
-inherited dmTarifasCambios: TdmTarifasCambios
+﻿inherited dmTarifasCambios: TdmTarifasCambios
   OnCreate = DataModuleCreate
   OnDestroy = DataModuleDestroy
   Height = 240

@@ -1,4 +1,4 @@
-inherited dmPermisosGrupo: TdmPermisosGrupo
+﻿inherited dmPermisosGrupo: TdmPermisosGrupo
   Height = 200
   Width = 400
   inherited unqryTablaG: TUniQuery

@@ -1,4 +1,4 @@
-inherited frmModalGenPass: TfrmModalGenPass
+﻿inherited frmModalGenPass: TfrmModalGenPass
   BorderIcons = []
   BorderStyle = bsSingle
   Caption = 'Establecer Password Usuario'

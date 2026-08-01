@@ -1,4 +1,4 @@
-inherited frmModalDocsCreados: TfrmModalDocsCreados
+﻿inherited frmModalDocsCreados: TfrmModalDocsCreados
   Caption = 'Documentos creados'
   ClientHeight = 420
   ClientWidth = 720

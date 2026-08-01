@@ -1,4 +1,4 @@
-inherited frmPrintDocsProveedor: TfrmPrintDocsProveedor
+﻿inherited frmPrintDocsProveedor: TfrmPrintDocsProveedor
   Caption = 'Listado de documentos proveedor'
   ClientWidth = 700
   StyleElements = [seFont, seClient, seBorder]

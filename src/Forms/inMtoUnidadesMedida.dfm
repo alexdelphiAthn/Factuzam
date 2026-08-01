@@ -1,4 +1,4 @@
-inherited frmMtoUnidadesMedida: TfrmMtoUnidadesMedida
+﻿inherited frmMtoUnidadesMedida: TfrmMtoUnidadesMedida
   Caption = 'Unidades de Medida'
   TextHeight = 19
   inherited pButtonPage: TPanel

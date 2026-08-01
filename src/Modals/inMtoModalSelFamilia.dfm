@@ -1,4 +1,4 @@
-inherited frmModalSelFamilia: TfrmModalSelFamilia
+﻿inherited frmModalSelFamilia: TfrmModalSelFamilia
   Caption = 'Seleccionar familia'
   ClientHeight = 520
   ClientWidth = 560

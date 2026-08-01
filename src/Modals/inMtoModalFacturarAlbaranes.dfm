@@ -1,4 +1,4 @@
-inherited frmModalFacturarAlbaranes: TfrmModalFacturarAlbaranes
+﻿inherited frmModalFacturarAlbaranes: TfrmModalFacturarAlbaranes
   Caption = 'Crear borradores de compra'
   ClientHeight = 560
   ClientWidth = 720

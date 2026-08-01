@@ -1,4 +1,4 @@
-unit inLibContadorLineas;
+﻿unit inLibContadorLineas;
 
 {
   Tipos y puerto para asignar lineas de documento. La implementacion

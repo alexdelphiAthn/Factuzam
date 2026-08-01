@@ -1,4 +1,4 @@
-inherited dmAtributosBasicos: TdmAtributosBasicos
+﻿inherited dmAtributosBasicos: TdmAtributosBasicos
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (

@@ -1,4 +1,4 @@
-inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
+﻿inherited frmModalAddBlockInventario: TfrmModalAddBlockInventario
   Caption = 'A'#241'adir Bloque - Carga masiva en Inventario'
   StyleElements = [seFont, seClient, seBorder]
   TextHeight = 19

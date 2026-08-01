@@ -1,4 +1,4 @@
-inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
+﻿inherited frmMtoCajaOperacionesHist: TfrmMtoCajaOperacionesHist
   Caption = 'Hist'#243'rico de Operaciones de Caja'
   StyleElements = [seFont, seClient, seBorder]
   OnDestroy = FormDestroy

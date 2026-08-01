@@ -1,4 +1,4 @@
-inherited dmTarifas: TdmTarifas
+﻿inherited dmTarifas: TdmTarifas
   Width = 400
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery

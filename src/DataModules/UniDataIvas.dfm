@@ -1,4 +1,4 @@
-inherited dmIvas: TdmIvas
+﻿inherited dmIvas: TdmIvas
   Height = 159
   Width = 267
   PixelsPerInch = 120

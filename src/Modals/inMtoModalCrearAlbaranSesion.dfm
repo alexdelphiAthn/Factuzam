@@ -1,4 +1,4 @@
-inherited frmModalCrearAlbaranSesion: TfrmModalCrearAlbaranSesion
+﻿inherited frmModalCrearAlbaranSesion: TfrmModalCrearAlbaranSesion
   Caption = 'Crear art'#237'culos y albar'#225'n / pedido'
   ClientHeight = 560
   ClientWidth = 580

@@ -1,4 +1,4 @@
-inherited frmMtoVerifactuCola: TfrmMtoVerifactuCola
+﻿inherited frmMtoVerifactuCola: TfrmMtoVerifactuCola
   Caption = 'Verifactu - Cola de Env'#237'os'
   TextHeight = 19
   inherited pButtonPage: TPanel

@@ -1,4 +1,4 @@
-inherited frmMtoPreviewExcel: TfrmMtoPreviewExcel
+﻿inherited frmMtoPreviewExcel: TfrmMtoPreviewExcel
   BorderIcons = []
   Caption = 'Previsualizaci'#243'n Excel'
   ClientHeight = 563

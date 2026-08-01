@@ -1,4 +1,4 @@
-inherited frmMtoAtributosBasicos: TfrmMtoAtributosBasicos
+﻿inherited frmMtoAtributosBasicos: TfrmMtoAtributosBasicos
   Caption = 'Atributos b'#225'sicos'
   StyleElements = [seFont, seClient, seBorder]
   TextHeight = 19

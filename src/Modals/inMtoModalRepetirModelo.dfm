@@ -1,4 +1,4 @@
-inherited frmModalRepetirModelo: TfrmModalRepetirModelo
+﻿inherited frmModalRepetirModelo: TfrmModalRepetirModelo
   Caption = 'Modelo repetido en la sesi'#243'n'
   ClientHeight = 240
   ClientWidth = 640

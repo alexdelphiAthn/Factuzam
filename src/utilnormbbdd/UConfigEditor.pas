@@ -1,4 +1,4 @@
-unit UConfigEditor;
+﻿unit UConfigEditor;
 
 {
   Editor de configuración del normalizador. Permite editar:

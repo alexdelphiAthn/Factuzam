@@ -1,4 +1,4 @@
-inherited frmModalVerifactuDecl: TfrmModalVerifactuDecl
+﻿inherited frmModalVerifactuDecl: TfrmModalVerifactuDecl
   Caption = 'Declaraci'#243'n Responsable - Verifactu'
   ClientHeight = 560
   ClientWidth = 720

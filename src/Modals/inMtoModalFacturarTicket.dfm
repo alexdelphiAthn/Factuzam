@@ -1,4 +1,4 @@
-inherited frmModalFacturarTicket: TfrmModalFacturarTicket
+﻿inherited frmModalFacturarTicket: TfrmModalFacturarTicket
   Caption = 'Crear borrador normal del ticket'
   ClientHeight = 300
   ClientWidth = 560

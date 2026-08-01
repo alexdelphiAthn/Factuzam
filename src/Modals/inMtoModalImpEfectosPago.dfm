@@ -1,4 +1,4 @@
-inherited frmPrintEfectosPago: TfrmPrintEfectosPago
+﻿inherited frmPrintEfectosPago: TfrmPrintEfectosPago
   Caption = 'Listado de efectos de pago'
   ClientWidth = 700
   StyleElements = [seFont, seClient, seBorder]

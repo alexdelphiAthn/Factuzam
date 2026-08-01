@@ -1,4 +1,4 @@
-inherited dmEfectosCompra: TdmEfectosCompra
+﻿inherited dmEfectosCompra: TdmEfectosCompra
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     SQLDelete.Strings = (

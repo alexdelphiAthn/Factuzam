@@ -1,4 +1,4 @@
-object dmTraspaso: TdmTraspaso
+﻿object dmTraspaso: TdmTraspaso
   OnCreate = DataModuleCreate
   Height = 311
   Width = 458

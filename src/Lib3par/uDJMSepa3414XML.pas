@@ -1,7 +1,7 @@
-unit uDJMSepa3414XML;
+Ôªøunit uDJMSepa3414XML;
 {
 https://github.com/cocosistemas/Delphi-SEPA-XML-ES
-Diego J.MuÒoz. Freelance. Cocosistemas.com
+Diego J.Mu√±oz. Freelance. Cocosistemas.com
 }
 //2016-01-20
 //ver los pdfs de los bancos, con la norma.
@@ -14,9 +14,9 @@ Diego J.MuÒoz. Freelance. Cocosistemas.com
 {
 uso:
 setInfoPresentador
-- AÒadimos Ordenante: addOrdenante (uno por cada cuenta de cargo del pago, donde nos cargan lo pagado)
-- AÒadimos los pagos: addPago (uno por cada pago, el solo se coloca en su Ordenante, Èste ha tenido que
-ser aÒadido previamente)
+- A√±adimos Ordenante: addOrdenante (uno por cada cuenta de cargo del pago, donde nos cargan lo pagado)
+- A√±adimos los pagos: addPago (uno por cada pago, el solo se coloca en su Ordenante, √©ste ha tenido que
+ser a√±adido previamente)
 - createfile (las ordenes estan en los arrays)
 - closefile
 }
@@ -141,30 +141,30 @@ end;
 
 procedure TDJMNorma3414XML.WriteGroupHeader;
 begin
-  //1.0 Group Header Conjunto de caracterÌsticas compartidas por todas las operaciones incluidas en el mensaje
+  //1.0 Group Header Conjunto de caracter√≠sticas compartidas por todas las operaciones incluidas en el mensaje
   Writeln(FsTxt, '<GrpHdr>');
 
   //1.1 MessageId Referencia asignada por la parte iniciadora y enviada a la siguiente
-  //parte de la cadena para identificar el mensaje de forma inequÌvoca
+  //parte de la cadena para identificar el mensaje de forma inequ√≠voca
   Writeln(FsTxt, '<MsgId>'+uSEPA_CleanStr(uSEPA_GenerateUUID)+'</MsgId>');
 
   //1.2 Fecha y hora cuando la parte iniciadora ha creado un (grupo de) instrucciones de pago
   //(con 'now' es suficiente)
   Writeln(FsTxt, '<CreDtTm>'+uSEPA_FormatDateTimeXML(FdFileDate)+'</CreDtTm>');
 
-  //1.6  N˙mero de operaciones individuales que contiene el mensaje
+  //1.6  N√∫mero de operaciones individuales que contiene el mensaje
   Writeln(FsTxt, '<NbOfTxs>'+IntToStr(CalculateNumOperaciones)+'</NbOfTxs>');
 
   //1.7 Suma total de todos los importes individuales incluidos en el mensaje
   writeLn(FsTxt, '<CtrlSum>'+uSEPA_FormatAmountXML(FmTotalImportes)+'</CtrlSum>');
 
-  //1.8 Parte que presenta el mensaje. En el mensaje de presentaciÛn, puede ser el ìOrdenanteî o ìel presentadorî
+  //1.8 Parte que presenta el mensaje. En el mensaje de presentaci√≥n, puede ser el ‚ÄúOrdenante‚Äù o ‚Äúel presentador‚Äù
   Write(FsTxt, '<InitgPty>');
       //Nombre de la parte
       WriteLn(FsTxt, '<Nm>'+uSEPA_CleanStr(FsNombrePresentador, C_INITIATOR_NAME_MAX_LENGTH)+'</Nm>');
 
-      //Para el sistema de adeudos SEPA se utilizar· exclusivamente la etiqueta ìOtraî estructurada
-      //seg˙n lo definido en el epÌgrafe ìIdentificador del presentadorî de la secciÛn 3.3
+      //Para el sistema de adeudos SEPA se utilizar√° exclusivamente la etiqueta ‚ÄúOtra‚Äù estructurada
+      //seg√∫n lo definido en el ep√≠grafe ‚ÄúIdentificador del presentador‚Äù de la secci√≥n 3.3
       WriteLn(FsTxt, '<Id>');
       WriteLn(FsTxt, '<OrgId>');
       WriteLn(FsTxt, '<Othr>');
@@ -213,25 +213,25 @@ procedure TDJMNorma3414XML.writeOrdenesPago;
 var
   iPago:Integer;
 begin
-   //2.0 InformaciÛn del pago - PaymentInformation
+   //2.0 Informaci√≥n del pago - PaymentInformation
   writeLn(FsTxt, '<PmtInf>');
-  //2.1 IdentificaciÛn de InformaciÛn del pago - PaymentInformationIdentification
-  //Referencia asignada por el ordenante para identificar claramente el bloque de informaciÛn de pago dentro del mensaje
+  //2.1 Identificaci√≥n de Informaci√≥n del pago - PaymentInformationIdentification
+  //Referencia asignada por el ordenante para identificar claramente el bloque de informaci√≥n de pago dentro del mensaje
   writeLn(FsTxt, '<PmtInfId>'+uSEPA_CleanStr(oOrdenante.sPaymentId)+'</PmtInfId>');
-  //2.2 MÈtodo de pago - PaymentMethod
+  //2.2 M√©todo de pago - PaymentMethod
   writeLn(FsTxt, '<PmtMtd>'+'TRF'+'</PmtMtd>');
-  //2.4 N˙mero de operaciones - NumberOfTransactions 
+  //2.4 N√∫mero de operaciones - NumberOfTransactions 
   writeLn(FsTxt, '<NbOfTxs>'+IntToStr(oOrdenante.iPagos)+'</NbOfTxs>');
   //2.5 Con trol de suma - ControlSum
-  //Suma total de todos los importes individuales incluidos en el bloque de informaciÛn
+  //Suma total de todos los importes individuales incluidos en el bloque de informaci√≥n
   //de pago, sin tener en cuenta las divisas. Sirve como elemento de control.  
   writeLn(FsTxt, '<CtrlSum>'+uSEPA_FormatAmountXML(oOrdenante.mSumaImportes)+'</CtrlSum>');
-  //2.6 InformaciÛn del tipo de pago - PaymentTypeInformation  
+  //2.6 Informaci√≥n del tipo de pago - PaymentTypeInformation  
   writeLn(FsTxt, '<PmtTpInf>');
   //2.8 Nivel de servicio - ServiceLevel
   writeLn(FsTxt, '<SvcLvl><Cd>'+'SEPA'+'</Cd></SvcLvl>');
   writeLn(FsTxt, '</PmtTpInf>');
-  //2.17 Fecha de ejecuciÛn solicitada - Requested ExecutionDate
+  //2.17 Fecha de ejecuci√≥n solicitada - Requested ExecutionDate
   writeLn(FsTxt, '<ReqdExctnDt>'+uSEPA_FormatDateXML(FdOrdenesPago)+'</ReqdExctnDt>');
   //2.19 Ordenante - Debtor
   writeLn(FsTxt, '<Dbtr><Nm>'+uSEPA_CleanStr(oOrdenante.sNombreOrdenante)+'</Nm></Dbtr>');
@@ -246,7 +246,7 @@ begin
   uSEPA_writeBICInfo(FsTxt, oOrdenante.sBICOrdenante);
   writeLn(FsTxt, '</DbtrAgt>');
 
-  //2.24 Cl·usula de gastos - ChargeBearer
+  //2.24 Cl√°usula de gastos - ChargeBearer
   //writeLn(FsTxt, '<ChrgBr>'+uSEPA_CleanString(ChrgBr)+'</ChrgBr>');
 
   for iPago := 1 to oOrdenante.iPagos
@@ -259,18 +259,18 @@ end;
 
 procedure TDJMNorma3414XML.writeCreditTransferOperationInfo;
 begin
-  //2.27 InformaciÛn de tran sferencia individual - CreditTransferTran sactionInformation
+  //2.27 Informaci√≥n de tran sferencia individual - CreditTransferTran sactionInformation
   WriteLn(FsTxt, '<CdtTrfTxInf>');
 
-  //2.28 IdentificaciÛn del pago - PaymentIdentification
+  //2.28 Identificaci√≥n del pago - PaymentIdentification
   Write(FsTxt, '<PmtId>');
-  //2.30 IdentificaciÛn de extremo a extremo - EndTo EndIdentification
-  //Referencia ˙nica que asigna la parte i niciadora para identi ficar la operaciÛn
+  //2.30 Identificaci√≥n de extremo a extremo - EndTo EndIdentification
+  //Referencia √∫nica que asigna la parte i niciadora para identi ficar la operaci√≥n
   //y que se transmite sin cambios a lo largo de la cadena del pago hasta el beneficiario.
   Write(FsTxt,'<EndToEndId>'+uSEPA_CleanStr(oPago.sIdPago)+'</EndToEndId>');
   WriteLn(FsTxt,'</PmtId>');
 
-  //2.31 InformaciÛn del tipo de pago ñ PaymentTypeInformation
+  //2.31 Informaci√≥n del tipo de pago ‚Äì PaymentTypeInformation
   //<PmtTpInf>
 
   //2.42 Importe - Amoun t
@@ -301,7 +301,7 @@ var
   iOrdenanteAux:Integer;
   iPagosAux:Integer;
 begin
-//localizar en el arry de Ordenantes el iban, aÒadirlo en los pagos de ese Ordenante
+//localizar en el arry de Ordenantes el iban, a√±adirlo en los pagos de ese Ordenante
 iOrdenanteFound:=-1;
 for iOrdenanteAux:=1 to FiOrdenantes
 do begin
@@ -312,17 +312,17 @@ do begin
    end;
 if iOrdenanteFound=-1
 then begin
-     ShowMessage('No se encontrÛ Ordenante para el IBAN: '+sIBANOrdenante);
+     ShowMessage('No se encontr√≥ Ordenante para el IBAN: '+sIBANOrdenante);
      Exit;
      end;
 
 if FListOrdenantes[iOrdenanteFound].iPagos=5000
 then begin
-     showmessage(string('No admitimos m·s de 5000 pagos por Ordenante'));
+     showmessage(string('No admitimos m√°s de 5000 pagos por Ordenante'));
      Exit;
      end;
 
-//hemos encontrado el Ordenante con ese IBAN, aÒadimos un pago
+//hemos encontrado el Ordenante con ese IBAN, a√±adimos un pago
 FListOrdenantes[iOrdenanteFound].iPagos:=FListOrdenantes[iOrdenanteFound].iPagos+1;
 iPagosAux:=FListOrdenantes[iOrdenanteFound].iPagos;
 
@@ -345,10 +345,10 @@ var
 begin
   if FiOrdenantes=10
   then begin
-       ShowMessage(string('Solamente se admiten como m·ximo 10 Ordenantes'));
+       ShowMessage(string('Solamente se admiten como m√°ximo 10 Ordenantes'));
        Exit;
        end;
-  //si ya hay uno con esa cuenta, no lo aÒadimos
+  //si ya hay uno con esa cuenta, no lo a√±adimos
   lFound:=False;
   for iAux:=1 to FiOrdenantes
   do begin

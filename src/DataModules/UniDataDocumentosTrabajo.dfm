@@ -1,3 +1,3 @@
-inherited dmDocumentosTrabajo: TdmDocumentosTrabajo
+﻿inherited dmDocumentosTrabajo: TdmDocumentosTrabajo
   PixelsPerInch = 120
 end

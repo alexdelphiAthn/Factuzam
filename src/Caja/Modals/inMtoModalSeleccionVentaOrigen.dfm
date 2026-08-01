@@ -1,4 +1,4 @@
-inherited frmModalSeleccionVentaOrigen: TfrmModalSeleccionVentaOrigen
+﻿inherited frmModalSeleccionVentaOrigen: TfrmModalSeleccionVentaOrigen
   Caption = 'Seleccionar venta de origen de la devoluci'#243'n'
   ClientHeight = 480
   ClientWidth = 900

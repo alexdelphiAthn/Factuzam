@@ -1,4 +1,4 @@
-inherited frmMtoPropiedades: TfrmMtoPropiedades
+﻿inherited frmMtoPropiedades: TfrmMtoPropiedades
   Caption = 'Propiedades'
   StyleElements = [seFont, seClient, seBorder]
   TextHeight = 19

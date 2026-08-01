@@ -1,4 +1,4 @@
-inherited dmVerifactuLog: TdmVerifactuLog
+﻿inherited dmVerifactuLog: TdmVerifactuLog
   inherited unqryTablaG: TUniQuery
     SQLRecCount.Strings = (
       'SELECT COUNT(*) FROM fza_verifactu_eventos')

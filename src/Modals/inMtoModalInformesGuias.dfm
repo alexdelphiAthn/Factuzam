@@ -1,4 +1,4 @@
-inherited frmModalInformesGuias: TfrmModalInformesGuias
+﻿inherited frmModalInformesGuias: TfrmModalInformesGuias
   Caption = 'Gu'#237'as del informe'
   TextHeight = 19
   inherited pnlCamposGrid: TPanel

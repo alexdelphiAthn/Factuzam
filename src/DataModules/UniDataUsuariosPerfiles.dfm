@@ -1,4 +1,4 @@
-inherited dmUsuariosPerfiles: TdmUsuariosPerfiles
+﻿inherited dmUsuariosPerfiles: TdmUsuariosPerfiles
   OldCreateOrder = True
   inherited unqryTablaG: TUniQuery
     Connection = dmConn.conUni

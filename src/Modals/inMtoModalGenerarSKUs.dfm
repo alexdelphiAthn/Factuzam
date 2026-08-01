@@ -1,4 +1,4 @@
-inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
+﻿inherited frmMtoModalGenerarSKUS: TfrmMtoModalGenerarSKUS
   Caption = 'Generar SKUS'
   ClientHeight = 485
   ClientWidth = 732

@@ -1,4 +1,4 @@
-inherited frmModalSeleccionarBanco: TfrmModalSeleccionarBanco
+﻿inherited frmModalSeleccionarBanco: TfrmModalSeleccionarBanco
   Caption = 'Seleccionar banco de la empresa'
   ClientHeight = 420
   ClientWidth = 720

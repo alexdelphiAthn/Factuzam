@@ -1,4 +1,4 @@
-inherited frmMtoRemesasCompra: TfrmMtoRemesasCompra
+﻿inherited frmMtoRemesasCompra: TfrmMtoRemesasCompra
   Caption = 'Remesas de Pago'
   TextHeight = 19
   inherited pButtonPage: TPanel

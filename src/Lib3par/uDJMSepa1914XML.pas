@@ -1,7 +1,7 @@
-unit uDJMSepa1914XML;
+Ôªøunit uDJMSepa1914XML;
 {
 https://github.com/cocosistemas/Delphi-SEPA-XML-ES
-Diego J.MuÒoz. Freelance. Cocosistemas.com
+Diego J.Mu√±oz. Freelance. Cocosistemas.com
 }
 //2016-01-15
 //ver los pdfs de los bancos, con la norma.
@@ -13,9 +13,9 @@ Diego J.MuÒoz. Freelance. Cocosistemas.com
 {
 uso:
 - setInfoPresentador
-- AÒadimos Ordenantes: addOrdenante (uno por cada cuenta de ingreso del cobro, donde nos pagan)
-- AÒadimos los cobros: addCobro (uno por cada cobro, Èl solo se coloca en su Ordenante,
-  Èste ha tenido que ser aÒadido previamente)
+- A√±adimos Ordenantes: addOrdenante (uno por cada cuenta de ingreso del cobro, donde nos pagan)
+- A√±adimos los cobros: addCobro (uno por cada cobro, √©l solo se coloca en su Ordenante,
+  √©ste ha tenido que ser a√±adido previamente)
 - createfile (las ordenes estan en los arrays)
 - closefile
 }
@@ -46,7 +46,7 @@ TInfoOrdenante = class
                 sNombreOrdenante:string;
                 sIBANOrdenante:string;
                 sBICOrdenante:string;
-                sIdOrdenante:string; //el ID ˙nico del ordenante, normalmente dado por el banco
+                sIdOrdenante:string; //el ID √∫nico del ordenante, normalmente dado por el banco
                 listCobros : TListOfCobros;
                 iCobros : Integer;
 end;
@@ -170,30 +170,30 @@ end;
 
 procedure TDJMNorma1914XML.WriteGroupHeader;
 begin
-  //1.0 Group Header Conjunto de caracterÌsticas compartidas por todas las operaciones incluidas en el mensaje
+  //1.0 Group Header Conjunto de caracter√≠sticas compartidas por todas las operaciones incluidas en el mensaje
   Writeln(FsTxt, '<GrpHdr>');
 
   //1.1 MessageId Referencia asignada por la parte iniciadora y enviada a la siguiente
-  //parte de la cadena para identificar el mensaje de forma inequÌvoca
+  //parte de la cadena para identificar el mensaje de forma inequ√≠voca
   Writeln(FsTxt, '<MsgId>'+uSEPA_CleanStr(uSEPA_GenerateUUID)+'</MsgId>');
 
   //1.2 Fecha y hora cuando la parte iniciadora ha creado un (grupo de) instrucciones de pago
   //(con 'now' es suficiente)
   Writeln(FsTxt, '<CreDtTm>'+uSEPA_FormatDateTimeXML(FdFileDate)+'</CreDtTm>');
 
-  //1.6  N˙mero de operaciones individuales que contiene el mensaje
+  //1.6  N√∫mero de operaciones individuales que contiene el mensaje
   Writeln(FsTxt, '<NbOfTxs>'+IntToStr(CalculateNumOperaciones)+'</NbOfTxs>');
 
   //1.7 Suma total de todos los importes individuales incluidos en el mensaje
   writeLn(FsTxt, '<CtrlSum>'+uSEPA_FormatAmountXML(FmTotalImportes)+'</CtrlSum>');
 
-  //1.8 Parte que presenta el mensaje. En el mensaje de presentaciÛn, puede ser el ìOrdenanteî o ìel presentadorî
+  //1.8 Parte que presenta el mensaje. En el mensaje de presentaci√≥n, puede ser el ‚ÄúOrdenante‚Äù o ‚Äúel presentador‚Äù
   Write(FsTxt, '<InitgPty>');
       //Nombre de la parte
       WriteLn(FsTxt, '<Nm>'+uSEPA_CleanStr(FsNombrePresentador, C_INITIATOR_NAME_MAX_LENGTH)+'</Nm>');
 
-      //Para el sistema de adeudos SEPA se utilizar· exclusivamente la etiqueta ìOtraî estructurada
-      //seg˙n lo definido en el epÌgrafe ìIdentificador del presentadorî de la secciÛn 3.3
+      //Para el sistema de adeudos SEPA se utilizar√° exclusivamente la etiqueta ‚ÄúOtra‚Äù estructurada
+      //seg√∫n lo definido en el ep√≠grafe ‚ÄúIdentificador del presentador‚Äù de la secci√≥n 3.3
       WriteLn(FsTxt, '<Id>');
       WriteLn(FsTxt, '<OrgId>');
       WriteLn(FsTxt, '<Othr>');
@@ -220,7 +220,7 @@ WriteLn(FsTxt,
 '<Document xmlns="urn:iso:std:iso:20022:tech:xsd:'+C_Schema_19+'"'+
                   ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">');
 
-//MESSAGE ROOT. Identifica el tipo de mensaje: iniciaciÛn de adeudos directos
+//MESSAGE ROOT. Identifica el tipo de mensaje: iniciaci√≥n de adeudos directos
 WriteLn(FsTxt, '<CstmrDrctDbtInitn>');
 writeGroupHeader;
 //la info de cada Ordenante 
@@ -243,12 +243,12 @@ var
   iCobro:Integer;
 begin
 
-   //2.0 1..n Conjunto de caracterÌsticas que se aplican a la parte del Ordenante de
-   //las operaciones de pago incluidas en el mensaje de iniciaciÛn de adeudos directos
+   //2.0 1..n Conjunto de caracter√≠sticas que se aplican a la parte del Ordenante de
+   //las operaciones de pago incluidas en el mensaje de iniciaci√≥n de adeudos directos
    writeLn(FsTxt, '<PmtInf>');
 
-  //2.1 Referencia ˙nica, asignada por el presentador, para identificar inequÌvocamente
-  //el bloque de informaciÛn del pago dentro del mensaje
+  //2.1 Referencia √∫nica, asignada por el presentador, para identificar inequ√≠vocamente
+  //el bloque de informaci√≥n del pago dentro del mensaje
   writeLn(FsTxt, '<PmtInfId>'+uSEPA_CleanStr(oOrdenante.sPaymentId)+'</PmtInfId>');
 
   //2.2 Especifica el medio de pago que se utiliza para mover los fondos.
@@ -257,28 +257,28 @@ begin
 
   //2.3 <BtchBookg> Info de apunte en cuenta, no lo ponemos
 
-  //2.4 <NbOfTxs> N∫ DE OPERACIONES, NO LO PONEMOS
+  //2.4 <NbOfTxs> N¬∫ DE OPERACIONES, NO LO PONEMOS
   //writeLn(FsTxt, '<NbOfTxs>'+IntToStr(NbOfTxs)+'</NbOfTxs>');
 
-  //2.5 Suma total de todos los importes individuales incluidos en el bloque ëInformaciÛn del pagoí,
+  //2.5 Suma total de todos los importes individuales incluidos en el bloque ‚ÄòInformaci√≥n del pago‚Äô,
   //sin tener en cuenta la divisa de los importes. No lo ponemos
   //writeLn(FsTxt, '<CtrlSum>'+SEPAFormatAmount(oOrdenante.mSumaImportes)+'</CtrlSum>');
 
-  //2.6 InformaciÛn del tipo de pago
+  //2.6 Informaci√≥n del tipo de pago
   writeLn(FsTxt, '<PmtTpInf>');
 
   //2.8 Nivel de servicio
   writeLn(FsTxt, '<SvcLvl>');
-  //2.9 CÛdigo del nivel de servicio, fijo a 'SEPA'
+  //2.9 C√≥digo del nivel de servicio, fijo a 'SEPA'
   WriteLn(FsTxt, '<Cd>'+'SEPA'+'</Cd>');
   Writeln(FsTxt, '</SvcLvl>');
 
   //2.10 NO HAY
 
-  //2.11 Instrumento especÌfico del esquema SEPA
+  //2.11 Instrumento espec√≠fico del esquema SEPA
   write(FsTxt, '<LclInstrm>');
 
-  //2.12  Esquema bajo cuyas reglas ha de procesarse la operaciÛn (AT-20), fijo a 'CORE'
+  //2.12  Esquema bajo cuyas reglas ha de procesarse la operaci√≥n (AT-20), fijo a 'CORE'
   writeLn(FsTxt, '<Cd>'+'CORE'+'</Cd>');
   writeLn(FsTxt, '</LclInstrm>');
 
@@ -291,31 +291,31 @@ begin
   //Fecha solicitada por el Ordenante para realizar el cargo en la cuenta del deudor (AT-11)
   writeLn(FsTxt, '<ReqdColltnDt>'+uSEPA_FormatDateXML(FdOrdenesCobro)+'</ReqdColltnDt>');
 
-  //2.19 Ordenante ñ Creditor
+  //2.19 Ordenante ‚Äì Creditor
   writeLn(FsTxt, '<Cdtr><Nm>'+uSEPA_CleanStr(oOrdenante.sNombreOrdenante, C_Ordenante_NAME_MAXLEN)+'</Nm></Cdtr>');
 
-  //2.20 Cuenta del Ordenante ñ CreditorAccount
-  //IdentificaciÛn inequÌvoca de la cuenta del Ordenante (AT-04)
+  //2.20 Cuenta del Ordenante ‚Äì CreditorAccount
+  //Identificaci√≥n inequ√≠voca de la cuenta del Ordenante (AT-04)
   writeLn(FsTxt, '<CdtrAcct>');
   uSEPA_writeAccountIdentification(FsTxt, oOrdenante.sIBANOrdenante);
   writeLn(FsTxt, '</CdtrAcct>');
 
-  //2.21 Entidad del Ordenante ñ CreditorAgent
-  //Entidad de crÈdito donde el Ordenante mantiene su cuenta.
+  //2.21 Entidad del Ordenante ‚Äì CreditorAgent
+  //Entidad de cr√©dito donde el Ordenante mantiene su cuenta.
   writeLn(FsTxt, '<CdtrAgt>');
   uSEPA_writeBICInfo(FsTxt, oOrdenante.sBICOrdenante);
   writeLn(FsTxt, '</CdtrAgt>');
 
-  //2.24 Cl·usula de gastos ñ ChargeBearer
-  //Especifica quÈ parte(s) correr·(n) con los costes asociados al tratamiento de la operaciÛn de pago
+  //2.24 Cl√°usula de gastos ‚Äì ChargeBearer
+  //Especifica qu√© parte(s) correr√°(n) con los costes asociados al tratamiento de la operaci√≥n de pago
   //Fijo a 'SLEV'
   writeLn(FsTxt, '<ChrgBr>'+'SLEV'+'</ChrgBr>');
 
 
-  //2.27 IdentificaciÛn del Ordenante ñ CreditorSchemeIdentification
+  //2.27 Identificaci√≥n del Ordenante ‚Äì CreditorSchemeIdentification
   writeIdentificacionOrdenante(oOrdenante.sIdOrdenante);
 
-  //2.28 1..n InformaciÛn de la operaciÛn de adeudo directo ñ DirectDebitTransactionInformation
+  //2.28 1..n Informaci√≥n de la operaci√≥n de adeudo directo ‚Äì DirectDebitTransactionInformation
   for iCobro := 1 to oOrdenante.iCobros
   do begin
      //DrctDbtTxInfEntry[i].SaveToStream(FsTxt, schema);
@@ -328,53 +328,53 @@ end;
 
 procedure TDJMNorma1914XML.writeDirectDebitOperationInfo;
 begin
- //2.28 1..n InformaciÛn de la operaciÛn de adeudo directo ñ DirectDebitTransactionInformation 
+ //2.28 1..n Informaci√≥n de la operaci√≥n de adeudo directo ‚Äì DirectDebitTransactionInformation 
  WriteLn(FsTxt,  '<DrctDbtTxInf>');
 
-  //2.29 IdentificaciÛn del pago ñ PaymentIdentification
+  //2.29 Identificaci√≥n del pago ‚Äì PaymentIdentification
   WriteLn(FsTxt, '<PmtId>');
-  //2.31 IdentificaciÛn de extremo a extremo ñ EndToEndIdentification
-  //IdentificaciÛn ˙nica asignada por la parte iniciadora para identificar inequÌvocamente
-  //cada operaciÛn (AT-10). Esta referencia se transmite de extremo a extremo,
+  //2.31 Identificaci√≥n de extremo a extremo ‚Äì EndToEndIdentification
+  //Identificaci√≥n √∫nica asignada por la parte iniciadora para identificar inequ√≠vocamente
+  //cada operaci√≥n (AT-10). Esta referencia se transmite de extremo a extremo,
   //sin cambios, a lo largo de toda la cadena de pago
   Writeln(FsTxt, '<EndToEndId>'+uSEPA_CleanStr(oCobro.sIdCobro)+'</EndToEndId>');
   Writeln(FsTxt, '</PmtId>');
   
-  //2.44 Importe ordenado ñ InstructedAmount
+  //2.44 Importe ordenado ‚Äì InstructedAmount
   WriteLn(FsTxt,  '<InstdAmt Ccy="'+'EUR'+'">'+uSEPA_FormatAmountXML(oCobro.mImporte)+'</InstdAmt>');
 
-  //2.46 OperaciÛn de adeudo directo ñ DirectDebitTransaction
-  //Conjunto de elementos que suministran informaciÛn especÌfica relativa al mandato de adeudo directo
+  //2.46 Operaci√≥n de adeudo directo ‚Äì DirectDebitTransaction
+  //Conjunto de elementos que suministran informaci√≥n espec√≠fica relativa al mandato de adeudo directo
   WriteLn(FsTxt,  '<DrctDbtTx>');
   WriteInfoMandato(oCobro.sIdMandato,oCobro.dDateOfSignature);
   WriteLn(FsTxt,  '</DrctDbtTx>');
 
-  //2.66 IdentificaciÛn del Ordenante ñ CreditorSchemeIdentification
+  //2.66 Identificaci√≥n del Ordenante ‚Äì CreditorSchemeIdentification
   //es como el 2.27. No lo ponemos porque ya ponemos el 2.27
   //writeIdentificacionOrdenante(sIdOrdenanteAux);
 
-  //2.70 Entidad del deudor ñ DebtorAgent
+  //2.70 Entidad del deudor ‚Äì DebtorAgent
   WriteLn(FsTxt,  '<DbtrAgt>');
   uSEPA_writeBICInfo(FsTxt, oCobro.sBIC);
   WriteLn(FsTxt,  '</DbtrAgt>');
 
-  //2.72 Deudor ñ Debtor
+  //2.72 Deudor ‚Äì Debtor
   WriteLn(FsTxt,  '<Dbtr><Nm>'+uSEPA_CleanStr(oCobro.sNombreDeudor, C_DEUDOR_NAME_MAXLEN)+'</Nm></Dbtr>');
 
-  //2.73 Cuenta del deudor ñ DebtorAccount
+  //2.73 Cuenta del deudor ‚Äì DebtorAccount
   WriteLn(FsTxt,  '<DbtrAcct>');
   uSEPA_writeAccountIdentification(FsTxt, oCobro.sIBAN);
   WriteLn(FsTxt,  '</DbtrAcct>');
 
   {
   if UltmtDbtrNm <> '' then
-    //2.74 ⁄ltimo deudor ñ UltimateDebtor 
+    //2.74 √öltimo deudor ‚Äì UltimateDebtor 
     WriteLn(FsTxt,  '<UltmtDbtr><Nm>'+uSEPA_CleanStr(UltmtDbtrNm, DBTR_NM_MAX_LEN)+'</Nm></UltmtDbtr>');
   }
 
-  //2.88 Concepto ñ RemittanceInformation
-  //InformaciÛn que opcionalmente remite el Ordenante al deudor para permitirle conciliar el pago
-  //con la informaciÛn comercial del mismo (AT-22).
+  //2.88 Concepto ‚Äì RemittanceInformation
+  //Informaci√≥n que opcionalmente remite el Ordenante al deudor para permitirle conciliar el pago
+  //con la informaci√≥n comercial del mismo (AT-22).
   WriteLn(FsTxt,  '<RmtInf><Ustrd>'+uSEPA_CleanStr(oCobro.sConcepto, C_RMTINF_MAXLEN)+'</Ustrd></RmtInf>');
 
   WriteLn(FsTxt,  '</DrctDbtTxInf>');
@@ -382,14 +382,14 @@ end;
 
 procedure TDJMNorma1914XML.writeInfoMandato;
 begin
-  //2.47 InformaciÛn del mandato ñ MandateRelatedInformation 
+  //2.47 Informaci√≥n del mandato ‚Äì MandateRelatedInformation 
   WriteLn(FsTxt, '<MndtRltdInf>');
-  //2.48 IdentificaciÛn del mandato ñ MandateIdentification.
-  //Por ejemplo un n∫ o algo asÌ
+  //2.48 Identificaci√≥n del mandato ‚Äì MandateIdentification.
+  //Por ejemplo un n¬∫ o algo as√≠
   WriteLn(FsTxt, '<MndtId>'+uSEPA_CleanStr(sIdMandato, C_MNDTID_MAXLEN)+'</MndtId>');
-  //2.49 Fecha de firma ñ DateOfSignature   
+  //2.49 Fecha de firma ‚Äì DateOfSignature   
   WriteLn(FsTxt, '<DtOfSgntr>'+uSEPA_FormatDateXML(dDateOfSignature)+'</DtOfSgntr>');
-  //2.50 Indicador de modificaciÛn ñ AmendmentIndicator
+  //2.50 Indicador de modificaci√≥n ‚Äì AmendmentIndicator
   WriteLn(FsTxt, '<AmdmntInd>'+'false'+'</AmdmntInd>');
   {
   if AmdmntInd 'es True' then
@@ -404,7 +404,7 @@ var
   iOrdenanteAux:Integer;
   iCobrosAux:Integer;
 begin
-//localizar en el array de Ordenantes el iban, aÒadirlo en los cobros de ese Ordenante
+//localizar en el array de Ordenantes el iban, a√±adirlo en los cobros de ese Ordenante
 iOrdenanteFound:=-1;
 for iOrdenanteAux:=1 to FiOrdenantes
 do begin
@@ -415,17 +415,17 @@ do begin
    end;
 if iOrdenanteFound=-1
 then begin
-     ShowMessage('No se encontrÛ Ordenante para el IBAN: '+sIBANOrdenante);
+     ShowMessage('No se encontr√≥ Ordenante para el IBAN: '+sIBANOrdenante);
      Exit;
      end;
 
 if FListOrdenantes[iOrdenanteFound].iCobros=5000
 then begin
-     showmessage(string('No admitimos m·s de 5000 cobros por Ordenante'));
+     showmessage(string('No admitimos m√°s de 5000 cobros por Ordenante'));
      Exit;
      end;
 
-//hemos encontrado el Ordenante con ese IBAN, aÒadimos un cobro
+//hemos encontrado el Ordenante con ese IBAN, a√±adimos un cobro
 FListOrdenantes[iOrdenanteFound].iCobros:=FListOrdenantes[iOrdenanteFound].iCobros+1;
 iCobrosAux:=FListOrdenantes[iOrdenanteFound].iCobros;
 
@@ -450,10 +450,10 @@ var
 begin
   if FiOrdenantes=10
   then begin
-       ShowMessage(string('Solamente se admiten como m·ximo 10 Ordenantes'));
+       ShowMessage(string('Solamente se admiten como m√°ximo 10 Ordenantes'));
        Exit;
        end;
-  //si ya hay uno con esa cuenta, no lo aÒadimos
+  //si ya hay uno con esa cuenta, no lo a√±adimos
   lFound:=False;
   for iAux:=1 to FiOrdenantes
   do begin

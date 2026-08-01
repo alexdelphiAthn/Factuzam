@@ -1,4 +1,4 @@
-inherited dmCajaFormasPago: TdmCajaFormasPago
+﻿inherited dmCajaFormasPago: TdmCajaFormasPago
   inherited unqryTablaG: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (

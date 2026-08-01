@@ -1,4 +1,4 @@
-unit UniDataAtributosPaletaRepositorio;
+﻿unit UniDataAtributosPaletaRepositorio;
 
 interface
 

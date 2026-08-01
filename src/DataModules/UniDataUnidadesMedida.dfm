@@ -1,4 +1,4 @@
-inherited dmUnidadesMedida: TdmUnidadesMedida
+﻿inherited dmUnidadesMedida: TdmUnidadesMedida
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (

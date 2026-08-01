@@ -1,4 +1,4 @@
-inherited frmModalMotivoDevolucion: TfrmModalMotivoDevolucion
+﻿inherited frmModalMotivoDevolucion: TfrmModalMotivoDevolucion
   BorderStyle = bsDialog
   Caption = 'Motivo de la devoluci'#243'n'
   ClientHeight = 170

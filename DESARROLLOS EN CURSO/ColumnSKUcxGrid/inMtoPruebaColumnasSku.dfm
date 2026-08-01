@@ -1,4 +1,4 @@
-inherited frmMtoPruebaColumnasSku: TfrmMtoPruebaColumnasSku
+﻿inherited frmMtoPruebaColumnasSku: TfrmMtoPruebaColumnasSku
   Caption = 'Prueba ColumnSKUcxGrid (TfrmMtoGen)'
   OnDestroy = FormDestroy
   TextHeight = 17

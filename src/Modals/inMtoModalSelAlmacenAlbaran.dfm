@@ -1,4 +1,4 @@
-inherited frmModalSelAlmacenAlbaran: TfrmModalSelAlmacenAlbaran
+﻿inherited frmModalSelAlmacenAlbaran: TfrmModalSelAlmacenAlbaran
   Caption = 'Crear albarán desde pedido'
   ClientHeight = 280
   ClientWidth = 560

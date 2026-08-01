@@ -1,4 +1,4 @@
-object dmFiltros: TdmFiltros
+﻿object dmFiltros: TdmFiltros
   OldCreateOrder = False
   OnCreate = DataModuleCreate
   Height = 188

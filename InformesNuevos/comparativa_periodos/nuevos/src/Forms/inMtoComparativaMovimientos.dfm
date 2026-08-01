@@ -1,4 +1,4 @@
-inherited frmMtoComparativaMovimientos: TfrmMtoComparativaMovimientos
+﻿inherited frmMtoComparativaMovimientos: TfrmMtoComparativaMovimientos
   Caption = 'Comparativa de periodos'
   ClientHeight = 600
   ClientWidth = 900

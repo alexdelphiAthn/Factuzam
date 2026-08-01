@@ -1,4 +1,4 @@
-inherited frmMtoVariaciones: TfrmMtoVariaciones
+﻿inherited frmMtoVariaciones: TfrmMtoVariaciones
   Caption = 'Tipos de Variaciones'
   TextHeight = 19
   inherited pButtonPage: TPanel

@@ -1,4 +1,4 @@
-object dmMig: TdmMig
+﻿object dmMig: TdmMig
   Height = 240
   Width = 420
   object conSrv: TUniConnection

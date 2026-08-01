@@ -1,4 +1,4 @@
-inherited dmEmpleados: TdmEmpleados
+﻿inherited dmEmpleados: TdmEmpleados
   Height = 187
   Width = 399
   inherited unqryTablaG: TUniQuery

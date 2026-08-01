@@ -1,4 +1,4 @@
-object dmBase: TdmBase
+﻿object dmBase: TdmBase
   OnCreate = DataModuleCreate
   OnDestroy = DataModuleDestroy
   Height = 188

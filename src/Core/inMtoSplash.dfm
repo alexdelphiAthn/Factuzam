@@ -1,4 +1,4 @@
-object frmSplash: TfrmSplash
+﻿object frmSplash: TfrmSplash
   Left = 472
   Top = 190
   BorderIcons = []

@@ -1,4 +1,4 @@
-unit ScanDateTime;
+﻿unit ScanDateTime;
 
 
 interface

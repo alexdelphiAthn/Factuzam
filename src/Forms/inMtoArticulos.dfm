@@ -1,4 +1,4 @@
-inherited frmMtoArticulos: TfrmMtoArticulos
+﻿inherited frmMtoArticulos: TfrmMtoArticulos
   Left = 5
   Top = 4
   Caption = 'Articulos'

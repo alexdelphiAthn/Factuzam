@@ -1,4 +1,4 @@
-inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
+﻿inherited frmModalAddBlockTarifa: TfrmModalAddBlockTarifa
   Caption = 'A'#241'adir Bloque - Carga masiva en Tarifa'
   StyleElements = [seFont, seClient, seBorder]
   TextHeight = 19

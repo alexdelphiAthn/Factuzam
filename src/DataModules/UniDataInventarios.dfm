@@ -1,4 +1,4 @@
-inherited dmInventarios: TdmInventarios
+﻿inherited dmInventarios: TdmInventarios
   Height = 457
   Width = 1125
   PixelsPerInch = 120

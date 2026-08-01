@@ -1,4 +1,4 @@
-inherited frmMtoPermisos: TfrmMtoPermisos
+﻿inherited frmMtoPermisos: TfrmMtoPermisos
   Caption = 'Permisos'
   TextHeight = 19
   inherited pButtonPage: TPanel

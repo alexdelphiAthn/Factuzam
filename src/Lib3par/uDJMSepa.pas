@@ -1,7 +1,7 @@
-unit uDJMSepa;
+ï»¿unit uDJMSepa;
 {
 https://github.com/cocosistemas/Delphi-SEPA-XML-ES
-Diego J.Muñoz. Freelance. Cocosistemas.com
+Diego J.MuÃ±oz. Freelance. Cocosistemas.com
 }
 
 interface
@@ -126,7 +126,7 @@ do begin
    if not(Ord(sOut[i]) in [65..90,97..122,48..57,47,45,63,58,40,41,46,44,39,43,32])
    then sOut[i] := ' ';
    end;
-// Convertir a mayúsculas
+// Convertir a mayÃºsculas
 //sOut := ansiuppercase(sOut);
 
 // Codificar a Utf8

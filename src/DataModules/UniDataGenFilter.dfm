@@ -1,4 +1,4 @@
-inherited dmGenFilter: TdmGenFilter
+﻿inherited dmGenFilter: TdmGenFilter
   Width = 426
   object unqryEmpresas: TUniQuery
     Connection = dmConn.conUni

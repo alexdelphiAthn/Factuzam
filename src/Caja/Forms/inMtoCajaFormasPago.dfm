@@ -1,4 +1,4 @@
-inherited frmMtoCajaFormasPago: TfrmMtoCajaFormasPago
+﻿inherited frmMtoCajaFormasPago: TfrmMtoCajaFormasPago
   Caption = 'Formas de Pago Caja'
   TextHeight = 19
   inherited pButtonPage: TPanel

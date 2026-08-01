@@ -15,7 +15,18 @@ Manual práctico para añadir tablas, columnas, índices, vistas y procedimiento
 7. **Todas las tablas** tienen ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci.
 8. **No hay funciones ni triggers** en la bbdd sólo hay procedimientos, se evita el uso de funciones y triggers. Se sustituirán por procedimientos almacenados.
 9. **No hay FOREIGN KEYS** en la bbdd. Sólo hay índices para conectar dos tablas unidas por el mismo campo.
-10.**El prefijo para las tablas es fza_nombre_tabla** para diferenciar de pruebas u otras integraciones.
+10. **El prefijo para las tablas es `fza_nombre_tabla`** para diferenciar de
+    pruebas u otras integraciones.
+11. **Nunca se modifica `factuzam_original.sql`.** Es el modelo de una
+    instalación limpia. Todo cambio vive en un script independiente dentro
+    de `DESARROLLOS EN CURSO/`.
+12. **Todo cambio de esquema es idempotente.** Antes de crear una tabla,
+    columna o índice se consulta `INFORMATION_SCHEMA` o se usa una cláusula
+    `IF NOT EXISTS` compatible con la versión objetivo de MariaDB.
+13. **Cada script, vista y procedimiento tiene una responsabilidad.** Su
+    nombre indica el cambio o caso de uso y no mezcla dominios independientes.
+14. **Los valores externos siempre se parametrizan.** El SQL dinámico solo
+    concatena identificadores validados mediante una lista blanca.
 ---
 
 ## 2. Catálogo de sufijos por tabla
@@ -319,18 +330,23 @@ Estas son las abreviaturas oficiales. **No inventes otras**.
 
 ### 4.1 Pasos
 
-1. Define el nombre de la tabla en plural y minúsculas: `fza_<nombre_plural>`.
-2. Asigna un sufijo único de 3-6 letras y añádelo al catálogo de la sección 2.
-3. Define las columnas siguiendo las reglas de la sección 3.
-4. Define los índices siguiendo la sección 6.
-5. Registra el sufijo y los conceptos propios en `UNormalizerEngine.pas` → `InitDefaults` (instrucciones en la sección 8).
+1. Crea un script idempotente en `DESARROLLOS EN CURSO/`. No modifiques
+   `factuzam_original.sql`.
+2. Define el nombre de la tabla en plural y minúsculas:
+   `fza_<nombre_plural>`.
+3. Asigna un sufijo único de 3-6 letras y añádelo al catálogo de la sección 2.
+4. Define las columnas siguiendo las reglas de la sección 3.
+5. Define los índices siguiendo la sección 6 y comprueba su existencia.
+6. Registra el sufijo y los conceptos propios en
+   `UNormalizerEngine.pas` → `InitDefaults` (instrucciones en la sección 8).
+7. Añade la verificación y, si el cambio es destructivo, el rollback.
 
 ### 4.2 Ejemplo: tabla `fza_promociones`
 
 Sufijo elegido: `PROMO`. Vamos a registrar promociones que aplican a una empresa, opcionalmente a una familia de artículos, durante un rango de fechas, con un porcentaje de descuento.
 
 ```sql
-CREATE TABLE `fza_promociones` (
+CREATE TABLE IF NOT EXISTS `fza_promociones` (
   `CODIGO_PROMO`               varchar(20)   NOT NULL,
   `NOMBRE_PROMO`               varchar(100)  NOT NULL,
   `DESCRIPCION_PROMO`          varchar(500)  DEFAULT NULL,
@@ -340,48 +356,63 @@ CREATE TABLE `fza_promociones` (
   `FECHA_FIN_PROMO`            date          NOT NULL,
   `PORCENTAJE_DESCUENTO_PROMO` decimal(5,2)  NOT NULL,
   `PRECIO_MINIMO_PROMO`        decimal(19,6) DEFAULT NULL,
-  `ESACUMULABLE_PROMO`         char(1)       NOT NULL DEFAULT 'N',
-  `ESACTIVO_PROMO`             char(1)       NOT NULL DEFAULT 'S',
+  `ESACUMULABLE_PROMO`         varchar(1)    NOT NULL DEFAULT 'N',
+  `ESACTIVO_PROMO`             varchar(1)    NOT NULL DEFAULT 'S',
   `INSTANTE_ALTA`              datetime      NOT NULL,
   `USUARIO_ALTA`               varchar(50)   NOT NULL,
   `INSTANTE_MODIF`             datetime      DEFAULT NULL,
   `USUARIO_MODIF`              varchar(50)   DEFAULT NULL,
   PRIMARY KEY (`CODIGO_PROMO`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-ALTER TABLE `fza_promociones` ADD INDEX `IDX_PROMO_EMP`        (`CODIGO_EMP_PROMO`);
-ALTER TABLE `fza_promociones` ADD INDEX `IDX_PROMO_FAM`        (`CODIGO_FAM_PROMO`);
-ALTER TABLE `fza_promociones` ADD INDEX `IDX_PROMO_FECHA_FIN`  (`FECHA_FIN_PROMO`);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_spanish_ci;
+CREATE INDEX IF NOT EXISTS `IDX_PROMO_EMP`
+  ON `fza_promociones` (`CODIGO_EMP_PROMO`);
+CREATE INDEX IF NOT EXISTS `IDX_PROMO_FAM`
+  ON `fza_promociones` (`CODIGO_FAM_PROMO`);
+CREATE INDEX IF NOT EXISTS `IDX_PROMO_FECHA_FIN`
+  ON `fza_promociones` (`FECHA_FIN_PROMO`);
 ```
 
 Observaciones:
 
 - `CODIGO_PROMO` es la PK, no lleva concepto duplicado.
 - `CODIGO_EMP_PROMO` y `CODIGO_FAM_PROMO` siguen el patrón `<TIPO_ID>_<SUFIJO_DESTINO>_<SUFIJO_TABLA>`.
-- `ESACUMULABLE_PROMO` y `ESACTIVO_PROMO` son booleanos `char(1)`.
+- `ESACUMULABLE_PROMO` y `ESACTIVO_PROMO` son booleanos `varchar(1)`.
 - Las cuatro columnas de auditoría no llevan sufijo `_PROMO`.
 
 ---
 
 ## 5. Cómo añadir una columna a una tabla existente
 
-```sql
-ALTER TABLE `fza_clientes`
-  ADD COLUMN `WHATSAPP_CLI` varchar(20) DEFAULT NULL AFTER `EMAIL_CLI`;
-
-ALTER TABLE `fza_clientes`
-  ADD COLUMN `ESVIP_CLI` char(1) NOT NULL DEFAULT 'N' AFTER `WHATSAPP_CLI`;
-```
-
-Si la columna nueva es FK, mantén el patrón:
+Nunca se entrega un `ALTER TABLE` desnudo. El patrón canónico comprueba el
+catálogo y prepara únicamente la operación que falta:
 
 ```sql
-ALTER TABLE `fza_clientes`
-  ADD COLUMN `CODIGO_VENDEDOR_USU_CLI` varchar(20) DEFAULT NULL;
-
-ALTER TABLE `fza_clientes`
-  ADD INDEX `IDX_CLI_VENDEDOR_USU` (`CODIGO_VENDEDOR_USU_CLI`);
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_clientes'
+     AND COLUMN_NAME = 'ESVIP_CLI'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_clientes
+     ADD COLUMN ESVIP_CLI varchar(1) NOT NULL DEFAULT ''N''',
+  'SELECT ''ESVIP_CLI ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 ```
+
+Para índices se consulta `INFORMATION_SCHEMA.STATISTICS`; para tablas,
+`INFORMATION_SCHEMA.TABLES`. El ejemplo completo de referencia es
+`DESARROLLOS EN CURSO/proveedores_nombre.sql`.
+
+Si la columna es una FK lógica, mantiene el patrón de §3.4 y añade un índice
+idempotente. Una columna `NOT NULL` sobre una tabla con datos se migra en
+fases: columna nullable, relleno verificable y restricción final.
 
 ---
 
@@ -400,16 +431,17 @@ Las **columnas abreviadas** son los nombres de las columnas indexadas pero **sin
 
 ```sql
 -- Índice simple en CODIGO_EMP_FAC de la tabla fza_facturas
-ALTER TABLE `fza_facturas` ADD INDEX `IDX_FAC_EMP` (`CODIGO_EMP_FAC`);
-
+CREATE INDEX IF NOT EXISTS `IDX_FAC_EMP`
+  ON `fza_facturas` (`CODIGO_EMP_FAC`);
 -- Índice compuesto en CODIGO_CLI_FAC + FECHA_FAC
-ALTER TABLE `fza_facturas` ADD INDEX `IDX_FAC_CLI_FECHA` (`CODIGO_CLI_FAC`, `FECHA_FAC`);
-
+CREATE INDEX IF NOT EXISTS `IDX_FAC_CLI_FECHA`
+  ON `fza_facturas` (`CODIGO_CLI_FAC`, `FECHA_FAC`);
 -- Índice único en NIF_CLI
-ALTER TABLE `fza_clientes` ADD UNIQUE INDEX `UQ_CLI_NIF` (`NIF_CLI`);
-
+CREATE UNIQUE INDEX IF NOT EXISTS `UQ_CLI_NIF`
+  ON `fza_clientes` (`NIF_CLI`);
 -- Índice compuesto único: serie + número de factura
-ALTER TABLE `fza_facturas` ADD UNIQUE INDEX `UQ_FAC_SERIE_NUMERO` (`SERIE_FAC`, `NUMERO_FAC`);
+CREATE UNIQUE INDEX IF NOT EXISTS `UQ_FAC_SERIE_NUMERO`
+  ON `fza_facturas` (`SERIE_FAC`, `NUMERO_FAC`);
 ```
 
 ### 6.3 Reglas
@@ -428,8 +460,8 @@ ALTER TABLE `fza_facturas` ADD UNIQUE INDEX `UQ_FAC_SERIE_NUMERO` (`SERIE_FAC`, 
 |-----------------|---------|------------------------------------|
 | Vista           | `VI_`   | `VI_FAC_PENDIENTES_COBRO`          |
 | Procedimiento   | `PRC_`  | `PRC_FAC_INSERT`, `PRC_REC_ANULAR` |
-| Función         | `FN_`   | `FN_CLI_SALDO_ACTUAL`              |
-| Trigger         | `TRG_`  | `TRG_FAC_BI`, `TRG_MOV_AU`         |
+| Función legado  | `FN_`   | `FN_CLI_SALDO_ACTUAL`              |
+| Trigger legado  | `TRG_`  | `TRG_FAC_BI`, `TRG_MOV_AU`         |
 
 Para triggers, el sufijo después del nombre de tabla indica el evento:
 
@@ -437,10 +469,13 @@ Para triggers, el sufijo después del nombre de tabla indica el evento:
 - `BU` = Before Update, `AU` = After Update
 - `BD` = Before Delete, `AD` = After Delete
 
+Las filas de función y trigger documentan objetos heredados. No autorizan
+crear otros nuevos: la regla de §1.8 permanece vigente.
+
 ### 7.2 Ejemplo de vista
 
 ```sql
-CREATE VIEW `VI_FAC_PENDIENTES_COBRO` AS
+CREATE OR REPLACE VIEW `VI_FAC_PENDIENTES_COBRO` AS
 SELECT
   F.`SERIE_FAC`,
   F.`NUMERO_FAC`,
@@ -470,8 +505,7 @@ Convención de parámetros:
 
 ```sql
 DELIMITER $$
-
-CREATE PROCEDURE `PRC_FAC_ANULAR` (
+CREATE OR REPLACE PROCEDURE `PRC_FAC_ANULAR` (
   IN  p_SERIE         varchar(10),
   IN  p_NUMERO        varchar(20),
   IN  p_USUARIO       varchar(50),
@@ -480,22 +514,20 @@ CREATE PROCEDURE `PRC_FAC_ANULAR` (
 )
 BEGIN
   DECLARE v_existe int DEFAULT 0;
-
   DECLARE EXIT HANDLER FOR SQLEXCEPTION
   BEGIN
     ROLLBACK;
     SET p_RESULTADO = -1;
     RESIGNAL;
   END;
-
   START TRANSACTION;
-
-  SELECT COUNT(*) INTO v_existe
-    FROM `fza_facturas`
-   WHERE `SERIE_FAC`     = p_SERIE
-     AND `NUMERO_FAC`    = p_NUMERO
-     AND `ESANULADA_FAC` = 'N';
-
+  SELECT EXISTS(
+    SELECT 1
+      FROM `fza_facturas`
+     WHERE `SERIE_FAC` = p_SERIE
+       AND `NUMERO_FAC` = p_NUMERO
+       AND `ESANULADA_FAC` = 'N'
+  ) INTO v_existe;
   IF v_existe = 0 THEN
     SET p_RESULTADO = 0;          -- no existe o ya estaba anulada
     ROLLBACK;
@@ -511,7 +543,6 @@ BEGIN
     COMMIT;
   END IF;
 END$$
-
 DELIMITER ;
 ```
 Las columnas de las tablas (`OLD.`, `NEW.`) **mantienen su nombre completo con sufijo**, no se pueden renombrar. Si quieres una variable interna del trigger sin sufijo, usa `DECLARE v_<nombre>` y trabaja con ella.
@@ -556,10 +587,107 @@ Compila el normalizador y, a partir de ese momento, generará los SQL respetando
 
 ---
 
-## 9. Lista de verificación antes de hacer commit
+## 9. Clean SQL y calidad P5
+
+Estas reglas se aplican a scripts de migración, consultas de aplicación,
+vistas y procedimientos. Los límites históricos no justifican código nuevo
+difícil de leer o de probar.
+
+### 9.1 Legibilidad y nivel de abstracción
+
+- Palabras reservadas SQL en mayúsculas e identificadores con el formato de
+  este libro.
+- Una columna por línea en listas largas de `SELECT`, `INSERT` y `UPDATE`.
+- Cada `JOIN`, `WHERE`, `GROUP BY`, `HAVING` y `ORDER BY` empieza en una
+  línea reconocible.
+- Todas las columnas de consultas con varias tablas llevan alias de tabla.
+- No se usa `SELECT *` en código de producción. Se enumeran las columnas que
+  forman el contrato del consumidor.
+- Un alias expresa el rol de la tabla y se mantiene en toda la sentencia.
+- Un comentario explica la razón, la compatibilidad o el riesgo; no traduce
+  una sentencia evidente ni conserva SQL comentado.
+- No se dejan líneas en blanco dentro de un bloque SQL ejecutable.
+
+Una consulta responde a una pregunta. Si materializa datos, calcula reglas y
+formatea una salida a la vez, se divide en pasos con nombres y contratos
+verificables.
+
+### 9.2 Tamaño y complejidad
+
+- Un procedimiento nuevo tiene un único caso de uso y busca permanecer por
+  debajo de 80 líneas efectivas.
+- Por encima de 120 líneas se divide en procedimientos o pasos cohesivos.
+- No se crea ni amplía un procedimiento de más de 200 líneas.
+- La anidación máxima habitual es de dos niveles.
+- Un procedimiento fiscal, de caja o transaccional no supera 10 decisiones
+  sin una justificación documentada y pruebas específicas.
+- Una migración puede ser larga por contener comprobaciones repetidas, pero
+  cada fichero cubre un único cambio desplegable y verificable.
+
+Las líneas efectivas excluyen comentarios y delimitadores. Los límites son
+criterios de revisión aunque todavía no exista un comprobador automático para
+todos ellos.
+
+### 9.3 Seguridad de datos y transacciones
+
+- `INSERT`, `UPDATE` y `DELETE` reciben valores mediante parámetros desde
+  Delphi. No se concatenan valores de usuario, rutas, códigos ni fechas.
+- Los identificadores dinámicos proceden de una lista blanca y se delimitan.
+- Todo `UPDATE` o `DELETE` lleva un predicado explícito. Una operación sobre
+  toda la tabla exige comentario de intención, copia de seguridad y
+  verificación previa del número de filas.
+- Una operación que escribe en varias tablas define un único propietario de
+  la transacción y garantiza `COMMIT` o `ROLLBACK`.
+- Un procedimiento llamado dentro de una transacción no ejecuta un `COMMIT`
+  oculto salvo que su contrato declare que es el propietario.
+- El DDL de MariaDB puede realizar commits implícitos. Una migración no
+  promete rollback transaccional cuando el motor no puede ofrecerlo; incluye
+  comprobaciones previas, verificación posterior y rollback compensatorio.
+- Los procesos reintentables usan claves, estados o marcas que aseguran
+  idempotencia y evitan duplicar documentos, movimientos o eventos fiscales.
+- Un cambio destructivo (`DROP`, `RENAME`, reducción de tipo o borrado
+  masivo) requiere confirmación del usuario y un rollback preparado.
+
+### 9.4 Rendimiento observable
+
+- Los filtros, uniones y ordenaciones frecuentes tienen un índice justificable
+  por el patrón real de acceso; no se crean índices por intuición.
+- Se revisa `EXPLAIN` al añadir o modificar consultas sobre tablas de gran
+  volumen o caminos interactivos sensibles.
+- Se evitan funciones sobre columnas indexadas dentro de predicados cuando
+  impidan usar el índice.
+- Para comprobar existencia se prefiere `EXISTS` o `LIMIT 1`; no se cuentan
+  todas las filas si el total no forma parte del resultado.
+- No se introduce una consulta por fila cuando el mismo trabajo puede
+  resolverse por conjuntos.
+- La optimización conserva primero la corrección. Toda reescritura de SQL
+  mantiene pruebas de resultados y casos límite.
+
+### 9.5 Errores, contratos y pruebas
+
+- Un procedimiento devuelve estados mediante códigos o resultados definidos;
+  no obliga al consumidor a interpretar texto libre.
+- Un error SQL no se convierte en éxito ni se silencia. El handler revierte
+  lo que posee y usa `RESIGNAL` cuando el llamador debe conocer el fallo.
+- Los `NULL`, cadenas vacías y valores `'S'`/`'N'` tienen una semántica
+  explícita y coherente con el contrato Delphi.
+- Las columnas devueltas por una vista o procedimiento constituyen un
+  contrato: se enumeran, se nombran de forma estable y se prueban.
+- Toda migración se ejecuta al menos dos veces sobre una BBDD de prueba para
+  demostrar idempotencia.
+- Las pruebas cubren datos existentes, ausencia de datos, límites, error y
+  rollback. Los cambios fiscales o de caja incluyen además reintento y
+  prevención de duplicados.
+
+---
+
+## 10. Lista de verificación antes de hacer commit
 
 Antes de subir un cambio que toque el esquema, verifica:
 
+- `factuzam_original.sql` no se ha modificado.
+- El cambio vive en un script idempotente de `DESARROLLOS EN CURSO/` y se ha
+  ejecutado dos veces sobre una BBDD de prueba.
 - La tabla nueva (si la hay) está en el catálogo de la sección 2.
 - Todas las columnas terminan con el sufijo correcto, salvo las cuatro de auditoría.
 - Las FK lógicas siguen el patrón `<TIPO_ID>_<SUFIJO_DESTINO>_<SUFIJO_TABLA>`.
@@ -568,3 +696,17 @@ Antes de subir un cambio que toque el esquema, verifica:
 - Los índices se llaman `IDX_<SUF>_…` o `UQ_<SUF>_…`.
 - Las vistas empiezan por `VI_`, los procedimientos por `PRC_`, las funciones por `FN_`, los triggers por `TRG_`.
 - Has registrado los cambios estructurales (sufijo nuevo, abreviatura nueva, excepción) en `UNormalizerEngine.pas`.
+- No hay `SELECT *`, valores externos concatenados ni SQL dinámico sin lista
+  blanca.
+- Las escrituras múltiples tienen propietario de transacción, `COMMIT`,
+  `ROLLBACK` y pruebas de error.
+- Los `UPDATE` y `DELETE` incluyen un predicado explícito; los masivos tienen
+  confirmación, estimación de filas y rollback.
+- Los procedimientos nuevos permanecen por debajo de 80 líneas efectivas y
+  las zonas fiscales, de caja o transaccionales no superan 10 decisiones.
+- Las consultas sensibles se han revisado con `EXPLAIN` y sus índices están
+  justificados por filtros, uniones u ordenaciones reales.
+- Los contratos de vistas y procedimientos enumeran columnas y representan
+  estados mediante tipos o códigos, no mediante interpretación de mensajes.
+- Los scripts conservan UTF-8, finales CRLF y no contienen líneas en blanco
+  dentro de bloques SQL ejecutables.

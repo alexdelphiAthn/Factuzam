@@ -1,4 +1,4 @@
-inherited frmModalIncidencias: TfrmModalIncidencias
+﻿inherited frmModalIncidencias: TfrmModalIncidencias
   Caption = 'Incidencias'
   ClientHeight = 480
   ClientWidth = 700

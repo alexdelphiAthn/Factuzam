@@ -1,4 +1,4 @@
-inherited frmModalDistribuidor: TfrmModalDistribuidor
+﻿inherited frmModalDistribuidor: TfrmModalDistribuidor
   Caption = 'Distribuidor por almac'#233'n / talla'
   ClientHeight = 480
   ClientWidth = 900

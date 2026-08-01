@@ -1,4 +1,4 @@
-object frmTestSqlSrv: TfrmTestSqlSrv
+﻿object frmTestSqlSrv: TfrmTestSqlSrv
   Left = 0
   Top = 0
   Caption = 'Factuzam - Test UniDAC SQL Server (selector de Provider)'

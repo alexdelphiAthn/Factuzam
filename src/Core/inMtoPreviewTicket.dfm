@@ -1,4 +1,4 @@
-object FormVisualizador: TFormVisualizador
+﻿object FormVisualizador: TFormVisualizador
   Left = 0
   Top = 0
   Caption = 'Ticket  |  F8 Imprimir  |  F7 PDF  |  F6 PNG  |  ESC Salir'

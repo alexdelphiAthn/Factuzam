@@ -1,4 +1,4 @@
-inherited frmPrintDepositos: TfrmPrintDepositos
+﻿inherited frmPrintDepositos: TfrmPrintDepositos
   Caption = 'Imprimir Hist'#243'rico de Dep'#243'sitos'
   ClientHeight = 320
   TextHeight = 19

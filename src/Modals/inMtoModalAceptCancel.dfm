@@ -1,4 +1,4 @@
-inherited frmModalAceptCancel: TfrmModalAceptCancel
+﻿inherited frmModalAceptCancel: TfrmModalAceptCancel
   Caption = ''
   ClientHeight = 408
   ClientWidth = 526

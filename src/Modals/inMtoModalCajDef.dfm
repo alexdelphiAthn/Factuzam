@@ -1,4 +1,4 @@
-inherited frmMtoModalCajDef: TfrmMtoModalCajDef
+﻿inherited frmMtoModalCajDef: TfrmMtoModalCajDef
   BorderIcons = []
   Caption = 'Seleccionar Caja'
   ClientHeight = 184

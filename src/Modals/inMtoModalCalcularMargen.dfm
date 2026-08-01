@@ -1,4 +1,4 @@
-inherited frmModalCalcularMargen: TfrmModalCalcularMargen
+﻿inherited frmModalCalcularMargen: TfrmModalCalcularMargen
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'Calcular margen comercial'

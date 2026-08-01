@@ -1,4 +1,4 @@
-inherited frmModalSesionDuplicado: TfrmModalSesionDuplicado
+﻿inherited frmModalSesionDuplicado: TfrmModalSesionDuplicado
   Caption = 'C'#243'digo de art'#237'culo duplicado'
   ClientHeight = 380
   ClientWidth = 580

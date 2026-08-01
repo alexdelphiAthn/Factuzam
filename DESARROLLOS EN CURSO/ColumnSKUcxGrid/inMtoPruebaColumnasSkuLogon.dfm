@@ -1,4 +1,4 @@
-object frmMtoPruebaColumnasSkuLogon: TfrmMtoPruebaColumnasSkuLogon
+﻿object frmMtoPruebaColumnasSkuLogon: TfrmMtoPruebaColumnasSkuLogon
   Left = 0
   Top = 0
   BorderStyle = bsDialog

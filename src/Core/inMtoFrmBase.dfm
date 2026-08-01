@@ -1,4 +1,4 @@
-object frmBase: TfrmBase
+﻿object frmBase: TfrmBase
   Left = 0
   Top = 0
   Caption = 'frmBase'

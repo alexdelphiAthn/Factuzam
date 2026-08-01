@@ -1,4 +1,4 @@
-inherited frmMtoDepositosCliente: TfrmMtoDepositosCliente
+﻿inherited frmMtoDepositosCliente: TfrmMtoDepositosCliente
   Caption = 'Dep'#243'sitos de Clientes'
   OnCreate = FormCreate
   OnDestroy = FormDestroy

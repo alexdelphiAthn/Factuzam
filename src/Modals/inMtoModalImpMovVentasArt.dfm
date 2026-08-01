@@ -1,4 +1,4 @@
-inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
+﻿inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
   Caption = 'Movimientos de ventas por art'#237'culos y fechas'
   ClientWidth = 700
   StyleElements = [seFont, seClient, seBorder]

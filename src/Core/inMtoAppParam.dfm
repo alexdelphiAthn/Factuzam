@@ -1,4 +1,4 @@
-object frmMtoAppParam: TfrmMtoAppParam
+﻿object frmMtoAppParam: TfrmMtoAppParam
   Left = 0
   Top = 0
   Caption = 'Par'#225'metros Generales de la Aplicaci'#243'n'

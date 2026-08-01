@@ -1,4 +1,4 @@
-inherited dmVerifactuCola: TdmVerifactuCola
+﻿inherited dmVerifactuCola: TdmVerifactuCola
   inherited unqryTablaG: TUniQuery
     SQLUpdate.Strings = (
       'UPDATE `fza_verifactu_cola`'

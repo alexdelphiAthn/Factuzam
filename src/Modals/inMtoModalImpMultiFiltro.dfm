@@ -1,4 +1,4 @@
-inherited frmPrintMultiFiltro: TfrmPrintMultiFiltro
+﻿inherited frmPrintMultiFiltro: TfrmPrintMultiFiltro
   Caption = 'Informe con filtros'
   ClientHeight = 470
   ClientWidth = 620

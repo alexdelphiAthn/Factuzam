@@ -1,4 +1,4 @@
-inherited frmPrintFac: TfrmPrintFac
+﻿inherited frmPrintFac: TfrmPrintFac
   Caption = 'Imprimir Borrador'
   ClientHeight = 249
   ClientWidth = 412

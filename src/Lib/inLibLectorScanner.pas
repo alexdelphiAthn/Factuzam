@@ -1,4 +1,4 @@
-unit inLibLectorScanner;
+﻿unit inLibLectorScanner;
 { Detector reutilizable de lector de codigo de barras a nivel de formulario.
   Encapsula las dos formas de deteccion que estaban duplicadas en caja,
   consulta de stock y traspasos, para poder incorporarlas a cualquier

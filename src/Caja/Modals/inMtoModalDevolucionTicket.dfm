@@ -1,4 +1,4 @@
-inherited frmModalDevolucionTicket: TfrmModalDevolucionTicket
+﻿inherited frmModalDevolucionTicket: TfrmModalDevolucionTicket
   BorderStyle = bsDialog
   Caption = 'Devoluci'#243'n por ticket (F4)'
   ClientHeight = 440

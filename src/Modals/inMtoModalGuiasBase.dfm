@@ -1,4 +1,4 @@
-inherited frmModalGuiasBase: TfrmModalGuiasBase
+﻿inherited frmModalGuiasBase: TfrmModalGuiasBase
   BorderIcons = [biSystemMenu]
   Caption = 'Gu'#237'as'
   ClientHeight = 620

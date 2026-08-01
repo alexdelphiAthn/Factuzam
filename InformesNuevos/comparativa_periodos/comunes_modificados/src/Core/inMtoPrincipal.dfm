@@ -1,4 +1,4 @@
-inherited frmMtoPrincipal: TfrmMtoPrincipal
+﻿inherited frmMtoPrincipal: TfrmMtoPrincipal
   Caption = 'Fzam'
   ClientHeight = 533
   ClientWidth = 1120

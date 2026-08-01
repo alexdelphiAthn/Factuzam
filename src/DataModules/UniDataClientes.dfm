@@ -1,4 +1,4 @@
-inherited dmClientes: TdmClientes
+﻿inherited dmClientes: TdmClientes
   Height = 356
   Width = 989
   PixelsPerInch = 120

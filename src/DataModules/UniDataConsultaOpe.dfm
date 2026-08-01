@@ -1,4 +1,4 @@
-object dmConsultaOpe: TdmConsultaOpe
+﻿object dmConsultaOpe: TdmConsultaOpe
   OnCreate = DataModuleCreate
   Height = 500
   Width = 750

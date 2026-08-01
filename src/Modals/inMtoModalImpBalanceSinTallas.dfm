@@ -1,4 +1,4 @@
-inherited frmPrintBalanceSinTallas: TfrmPrintBalanceSinTallas
+﻿inherited frmPrintBalanceSinTallas: TfrmPrintBalanceSinTallas
   Caption = 'Balance de almac'#233'n sin tallas'
   ClientHeight = 470
   ClientWidth = 620

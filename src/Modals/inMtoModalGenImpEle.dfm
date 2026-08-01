@@ -1,4 +1,4 @@
-inherited frmMtoModalGenImpEle: TfrmMtoModalGenImpEle
+﻿inherited frmMtoModalGenImpEle: TfrmMtoModalGenImpEle
   BorderIcons = []
   Caption = 'Elecci'#243'n de formulario creados por el usuario'
   ClientHeight = 152

@@ -1,4 +1,4 @@
-unit inLibAtributosPaletaIntf;
+﻿unit inLibAtributosPaletaIntf;
 
 interface
 

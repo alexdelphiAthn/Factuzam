@@ -1,4 +1,4 @@
-inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
+﻿inherited frmMtoAtributosConjuntos: TfrmMtoAtributosConjuntos
   Caption = 'Colecciones de Atributos'
   StyleElements = [seFont, seClient, seBorder]
   TextHeight = 19

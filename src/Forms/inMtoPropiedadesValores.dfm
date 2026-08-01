@@ -1,4 +1,4 @@
-inherited frmMtoPropiedadesValores: TfrmMtoPropiedadesValores
+﻿inherited frmMtoPropiedadesValores: TfrmMtoPropiedadesValores
   Caption = 'Valores de Propiedades'
   TextHeight = 19
   inherited pButtonPage: TPanel

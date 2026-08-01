@@ -1,4 +1,4 @@
-inherited dmArticulos: TdmArticulos
+﻿inherited dmArticulos: TdmArticulos
   Height = 665
   Width = 1640
   PixelsPerInch = 120

@@ -1,4 +1,4 @@
-inherited frmPrintOperaciones: TfrmPrintOperaciones
+﻿inherited frmPrintOperaciones: TfrmPrintOperaciones
   Caption = 'Imprimir Hist'#243'rico de Operaciones'
   ClientHeight = 320
   TextHeight = 19

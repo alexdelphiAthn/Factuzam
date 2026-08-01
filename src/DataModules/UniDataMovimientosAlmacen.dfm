@@ -1,4 +1,4 @@
-inherited dmMovimientosAlmacen: TdmMovimientosAlmacen
+﻿inherited dmMovimientosAlmacen: TdmMovimientosAlmacen
   inherited unqryTablaG: TUniQuery
     BeforeInsert = unqryTablaGBeforeInsert
     BeforeEdit = unqryTablaGBeforeEdit

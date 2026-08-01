@@ -1,4 +1,4 @@
-inherited frmModalGastoCaja: TfrmModalGastoCaja
+﻿inherited frmModalGastoCaja: TfrmModalGastoCaja
   BorderStyle = bsDialog
   Caption = 'Gastos por Caja / Retiradas (F7)'
   ClientHeight = 330

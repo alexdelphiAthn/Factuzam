@@ -1,4 +1,4 @@
-inherited frmMtoMovimientosAlmacen: TfrmMtoMovimientosAlmacen
+﻿inherited frmMtoMovimientosAlmacen: TfrmMtoMovimientosAlmacen
   Caption = 'Movimientos de Almac'#233'n'
   StyleElements = [seFont, seClient, seBorder]
   OnDestroy = FormDestroy

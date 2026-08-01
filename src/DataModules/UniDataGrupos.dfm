@@ -1,4 +1,4 @@
-inherited dmGrupos: TdmGrupos
+﻿inherited dmGrupos: TdmGrupos
   Width = 360
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery

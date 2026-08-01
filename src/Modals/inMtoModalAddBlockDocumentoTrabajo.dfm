@@ -1,4 +1,4 @@
-inherited frmModalAddBlockDocumentoTrabajo: TfrmModalAddBlockDocumentoTrabajo
+﻿inherited frmModalAddBlockDocumentoTrabajo: TfrmModalAddBlockDocumentoTrabajo
   Caption = 'A'#241'adir Bloque - Documento de Trabajo'
   StyleElements = [seFont, seClient, seBorder]
   TextHeight = 19

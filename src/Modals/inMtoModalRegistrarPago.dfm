@@ -1,4 +1,4 @@
-inherited frmModalRegistrarPago: TfrmModalRegistrarPago
+﻿inherited frmModalRegistrarPago: TfrmModalRegistrarPago
   Caption = 'Conciliar efecto'
   ClientHeight = 240
   ClientWidth = 360

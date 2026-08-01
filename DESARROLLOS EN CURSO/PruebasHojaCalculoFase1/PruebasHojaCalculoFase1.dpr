@@ -1,4 +1,4 @@
-program PruebasHojaCalculoFase1;
+﻿program PruebasHojaCalculoFase1;
 
 {$APPTYPE CONSOLE}
 {$STRONGLINKTYPES ON}

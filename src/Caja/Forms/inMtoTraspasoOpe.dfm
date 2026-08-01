@@ -1,4 +1,4 @@
-inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
+﻿inherited frmMtoOpeTraspaso: TfrmMtoOpeTraspaso
   Caption = 'Traspasos'
   ClientHeight = 639
   ClientWidth = 896

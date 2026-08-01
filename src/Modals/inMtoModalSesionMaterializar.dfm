@@ -1,4 +1,4 @@
-inherited frmModalSesionMaterializar: TfrmModalSesionMaterializar
+﻿inherited frmModalSesionMaterializar: TfrmModalSesionMaterializar
   Caption = 'Materializar sesi'#243'n de compra'
   ClientHeight = 360
   ClientWidth = 580

@@ -1,4 +1,4 @@
-inherited dmPropiedades: TdmPropiedades
+﻿inherited dmPropiedades: TdmPropiedades
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
