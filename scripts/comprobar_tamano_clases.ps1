@@ -864,7 +864,9 @@ if ($maximoCampos -gt $MaximoCamposPorClase) {
     "$MaximoCamposPorClase.")
 }
 if ($errores.Count -gt 0) {
-  $errores | ForEach-Object { Write-Error $_ }
+  $errores | ForEach-Object {
+    Write-Error $_ -ErrorAction Continue
+  }
   exit 1
 }
 Write-Output (

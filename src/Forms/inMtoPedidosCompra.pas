@@ -2363,9 +2363,9 @@ begin
     ParametrosRecepcion.Incorporar := form.Incorporar;
     ParametrosRecepcion.Celdas := arrCeldas;
     try
-      bOk := inLibPedidosCompra.EjecutarRecepcionPedidoCompra(
-        CrearRecepcionPedidoCompraUniDAC(ConexionPrincipal),
-        ParametrosRecepcion, ResultadoRecepcion);
+      bOk := CrearRecepcionPedidoCompraUniDAC(
+        ConexionPrincipal).EjecutarRecepcionPedidoCompra(
+          ParametrosRecepcion, ResultadoRecepcion);
       sMsg := ResultadoRecepcion.Mensaje;
       if bOk then
       begin

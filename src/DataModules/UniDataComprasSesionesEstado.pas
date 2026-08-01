@@ -17,6 +17,7 @@ interface
 
 uses
   inLibComprasSesionesIntf,
+  inLibComprasSesionesLecturasIntf,
   inLibComprasSesionesMaterializacionIntf,
   UniDataComprasSesiones;
 
@@ -44,7 +45,6 @@ procedure PersistirErrorMaterializacion(
   const AUsuario, AMensaje: string);
 
 implementation
-
 uses
   System.SysUtils,
   Data.DB, DBAccess, Uni,

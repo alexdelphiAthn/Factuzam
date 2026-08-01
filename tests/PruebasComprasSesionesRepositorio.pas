@@ -19,6 +19,7 @@ uses
   DUnitX.TestFramework,
   inLibComprasSesiones,
   inLibComprasSesionesIntf,
+  inLibComprasSesionesLecturasIntf,
   inLibComprasSesionesMaterializacionIntf,
   DoblesComprasSesiones;
 

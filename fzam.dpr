@@ -26,6 +26,7 @@ uses
   inLibFormatoExcel in 'src\Lib\inLibFormatoExcel.pas',
   inLibDir in 'src\Lib\inLibDir.pas',
   inLibGlobalVar in 'src\Lib\inLibGlobalVar.pas',
+  inLibLogIntf in 'src\Lib\inLibLogIntf.pas',
   inLibLog in 'src\Lib\inLibLog.pas',
   inLibDiag in 'src\Lib\inLibDiag.pas',
   inLibCadenas in 'src\Lib\inLibCadenas.pas',
@@ -408,6 +409,8 @@ uses
   inLibArticulosVariaciones in 'src\Lib\inLibArticulosVariaciones.pas',
   inLibArticulosAtributosBasicos in
     'src\Lib\inLibArticulosAtributosBasicos.pas',
+  inLibArticulosVisibilidad in
+    'src\Lib\inLibArticulosVisibilidad.pas',
   inLibStockConsultaInfo in 'src\Lib\inLibStockConsultaInfo.pas',
   inLibInventariosEntrada in 'src\Lib\inLibInventariosEntrada.pas',
   UniDataStockConsultaInfo in
@@ -473,6 +476,8 @@ uses
     'src\verifactu\UniDataVerifactuColaProcesador.pas',
   UniDataVerifactuColaResultados in
     'src\verifactu\UniDataVerifactuColaResultados.pas',
+  inLibVerifactuReintentos in
+    'src\verifactu\inLibVerifactuReintentos.pas',
   UniDataVerifactuColaOperaciones in
     'src\verifactu\UniDataVerifactuColaOperaciones.pas',
   inLibEmisionFiscalIntf in
@@ -562,6 +567,8 @@ uses
   inMtoModalSelAlmacenPedido in 'src\Modals\inMtoModalSelAlmacenPedido.pas' {frmModalSelAlmacenPedido},
   inMtoModalSelAlmacenAlbaran in 'src\Modals\inMtoModalSelAlmacenAlbaran.pas' {frmModalSelAlmacenAlbaran},
   inLibPedidosCompraIntf in 'src\Lib\inLibPedidosCompraIntf.pas',
+  inLibPedidosCompraRecepcionIntf in
+    'src\Lib\inLibPedidosCompraRecepcionIntf.pas',
   inLibPedidosCompra in 'src\Lib\inLibPedidosCompra.pas',
   inLibGridPivoteCompraPersistenciaIntf in
     'src\Lib\inLibGridPivoteCompraPersistenciaIntf.pas',
@@ -585,6 +592,8 @@ uses
   inLibGridPivoteVenta in 'src\Lib\inLibGridPivoteVenta.pas',
   inLibPivoteVentaCalculo in 'src\Lib\inLibPivoteVentaCalculo.pas',
   inLibPivoteVentaIntf in 'src\Lib\inLibPivoteVentaIntf.pas',
+  inLibPivoteVentaComposicionIntf in
+    'src\Lib\inLibPivoteVentaComposicionIntf.pas',
   inLibPivoteVentaModelo in 'src\Lib\inLibPivoteVentaModelo.pas',
   inLibGridPivoteVentaVista in
     'src\Lib\inLibGridPivoteVentaVista.pas',
@@ -625,6 +634,8 @@ uses
     'src\DataModules\UniDataComprasSesionesArticulos.pas',
   UniDataComprasSesionesComposicion in
     'src\DataModules\UniDataComprasSesionesComposicion.pas',
+  UniDataComprasSesionesLecturasComposicion in
+    'src\DataModules\UniDataComprasSesionesLecturasComposicion.pas',
   UniDataComprasSesionesDocumentosComun in
     'src\DataModules\UniDataComprasSesionesDocumentosComun.pas',
   UniDataComprasSesionesEstado in
@@ -651,6 +662,8 @@ uses
     'src\Lib\inLibComprasSesionesCreacion.pas',
   inLibComprasSesionesMaterializacionIntf in
     'src\Lib\inLibComprasSesionesMaterializacionIntf.pas',
+  inLibComprasSesionesLecturasIntf in
+    'src\Lib\inLibComprasSesionesLecturasIntf.pas',
   inLibComprasSesionesReglas in 'src\Lib\inLibComprasSesionesReglas.pas',
   inLibGridTallasInline in 'src\Lib\inLibGridTallasInline.pas',
   inLibColumnasDocumento in 'src\Lib\inLibColumnasDocumento.pas',

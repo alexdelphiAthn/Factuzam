@@ -65,6 +65,10 @@ const
   // por las mismas razones que los mensajes de atributos de arriba.
   WM_PREGUNTAR_VENTA_ORIGEN = WM_APP + 106;
 type
+  TServiciosLecturaOperacionCaja = record
+    ConsultaStock: IResultadoConsultaCaja;
+    RepositorioFacturas: IRepositorioLecturasFactura;
+  end;
   TfrmMtoOpeCaja = class(TfrmBase, IOperacionCaja)
     pnlUp: TPanel;
     pnlCli: TPanel;
@@ -242,7 +246,7 @@ type
     FServicioCierreVenta: IServicioCierreVenta;
     FRepositorioConsultas: IRepositorioConsultasCaja;
     FServicioRectificacion: IServicioRectificacionCaja;
-    FConsultaStock: IResultadoConsultaCaja;
+    FLecturas: TServiciosLecturaOperacionCaja;
     FIncidenciasSql: IRegistroIncidenciasSql;
     // Devoluciones: motivo (se pide al cobrar si hay líneas en negativo)
     // y ticket de origen (F4 o selector de venta sin código). Si el
@@ -350,7 +354,6 @@ type
     // Conserva el padre canonico resuelto por OnValidate. El lookup puede
     // dejar temporalmente vacio CODIGO_ART_FACLIN durante PostEditValue.
     FArticuloResueltoEdicion: string;
-    FRepositorioLecturas: IRepositorioLecturasFactura;
   private
     FNumeroCajaActual: Integer;
     // Bitmap reusable para pintar el cuadradito del color actual en el boton
@@ -619,7 +622,7 @@ begin
   begin
     DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat := ACant;
     DatosCaja.cdsLineas.Post;
-    GridRecalc(ConexionPrincipal, FRepositorioLecturas, nil,
+    GridRecalc(ConexionPrincipal, FLecturas.RepositorioFacturas, nil,
                tvLineasOpe, DatosCaja.cdsLineas,
                DatosCaja.cdsCabecera, ActualizarLabelTotal);
     AsegurarLineaNueva;
@@ -743,10 +746,10 @@ begin
       end;
     end;
     dsStock.DataSet := nil;
-    FConsultaStock :=
+    FLecturas.ConsultaStock :=
       FRepositorioConsultas.ConsultarStock(
         sCodigoConsulta);
-    DataSetStock := FConsultaStock.DataSet;
+    DataSetStock := FLecturas.ConsultaStock.DataSet;
     dsStock.DataSet := DataSetStock;
     View := dbtvStock;
     View.BeginUpdate;
@@ -1003,7 +1006,8 @@ begin
             RellenarAtributosDesdeSku(sSku);
           if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
             DatosCaja.cdsLineas.Post;
-          GridRecalc(ConexionPrincipal, FRepositorioLecturas, nil,
+          GridRecalc(
+            ConexionPrincipal, FLecturas.RepositorioFacturas, nil,
                      tvLineasOpe,
                      DatosCaja.cdsLineas,
                      DatosCaja.cdsCabecera,
@@ -1042,8 +1046,7 @@ begin
       DatosCaja.cdsLineas.Cancel
     else if not DatosCaja.cdsLineas.IsEmpty then
       DatosCaja.cdsLineas.Delete;
-
-    GridRecalc(ConexionPrincipal, FRepositorioLecturas, nil,
+    GridRecalc(ConexionPrincipal, FLecturas.RepositorioFacturas, nil,
                tvLineasOpe,
                DatosCaja.cdsLineas,
                DatosCaja.cdsCabecera,
@@ -1364,7 +1367,8 @@ begin
     if (NumAtributos > 0) and (SkuDetectado = CodigoPadre) then
     begin
       DatosCaja.cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency := 0;
-      GridRecalc(ConexionPrincipal, FRepositorioLecturas, nil,
+      GridRecalc(
+        ConexionPrincipal, FLecturas.RepositorioFacturas, nil,
                  tvLineasOpe,
                  DatosCaja.cdsLineas,
                  DatosCaja.cdsCabecera,
@@ -1437,8 +1441,7 @@ begin
     DatosCaja.cdsLineas.FieldByName(
       'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
   end;
-
-  GridRecalc(ConexionPrincipal, FRepositorioLecturas, Sender,
+  GridRecalc(ConexionPrincipal, FLecturas.RepositorioFacturas, Sender,
              tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
@@ -1456,8 +1459,7 @@ begin
     DatosCaja.cdsLineas.FieldByName(
       'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
   end;
-
-  GridRecalc(ConexionPrincipal, FRepositorioLecturas, Sender,
+  GridRecalc(ConexionPrincipal, FLecturas.RepositorioFacturas, Sender,
              tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
@@ -1473,8 +1475,7 @@ begin
     DatosCaja.cdsLineas.FieldByName(
                      'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
   end;
-
-  GridRecalc(ConexionPrincipal, FRepositorioLecturas, Sender,
+  GridRecalc(ConexionPrincipal, FLecturas.RepositorioFacturas, Sender,
              tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
@@ -1483,7 +1484,7 @@ end;
 
 procedure TfrmMtoOpeCaja.tvTotalPropertiesEditValueChanged(Sender: TObject);
 begin
-  GridRecalc(ConexionPrincipal, FRepositorioLecturas, Sender,
+  GridRecalc(ConexionPrincipal, FLecturas.RepositorioFacturas, Sender,
              tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
@@ -1492,7 +1493,7 @@ end;
 
 procedure TfrmMtoOpeCaja.tvUdsPropertiesEditValueChanged(Sender: TObject);
 begin
-  GridRecalc(ConexionPrincipal, FRepositorioLecturas, Sender,
+  GridRecalc(ConexionPrincipal, FLecturas.RepositorioFacturas, Sender,
              tvLineasOpe,
              DatosCaja.cdsLineas,
              DatosCaja.cdsCabecera,
@@ -1600,7 +1601,8 @@ begin
       Result := Resultado.Preparado;
       FMotivoRechazoArticulo := Resultado.MotivoRechazo;
       if Resultado.Preparado and (not FActualizandoDepositos) then
-        GridRecalc(ConexionPrincipal, FRepositorioLecturas, nil,
+        GridRecalc(
+          ConexionPrincipal, FLecturas.RepositorioFacturas, nil,
                    tvLineasOpe, DatosCaja.cdsLineas,
                    DatosCaja.cdsCabecera, ActualizarLabelTotal);
     finally
@@ -1668,8 +1670,7 @@ begin
                           'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := 0;
     DatosCaja.cdsLineas.FieldByName(
                           'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
-
-    GridRecalc(ConexionPrincipal, FRepositorioLecturas, nil,
+    GridRecalc(ConexionPrincipal, FLecturas.RepositorioFacturas, nil,
                tvLineasOpe, DatosCaja.cdsLineas,
                DatosCaja.cdsCabecera, ActualizarLabelTotal);
   finally
@@ -1718,7 +1719,8 @@ begin
           dsLineas.DataSet.DisableControls;
           Clon.Post;
           dsLineas.DataSet.EnableControls;
-          GridRecalc(ConexionPrincipal, FRepositorioLecturas, nil,
+          GridRecalc(
+            ConexionPrincipal, FLecturas.RepositorioFacturas, nil,
                      tvLineasOpe,
                      DatosCaja.cdsLineas,
                      DatosCaja.cdsCabecera,
@@ -2560,7 +2562,8 @@ begin
         CargarDevolucionOtraEmpresa(
           Seleccion.Serie, Seleccion.Numero, Seleccion.Almacen);
       end;
-      GridRecalc(ConexionPrincipal, FRepositorioLecturas, nil,
+      GridRecalc(
+        ConexionPrincipal, FLecturas.RepositorioFacturas, nil,
                  tvLineasOpe,
                  DatosCaja.cdsLineas,
                  DatosCaja.cdsCabecera,
@@ -2855,7 +2858,7 @@ procedure TfrmMtoOpeCaja.RecalcularLineasDesdeDM;
 begin
   GridRecalc(
     ConexionPrincipal,
-    FRepositorioLecturas,
+    FLecturas.RepositorioFacturas,
     nil,
     tvLineasOpe,
     DatosCaja.cdsLineas,
@@ -2961,7 +2964,7 @@ begin
         // memoria contable
         Totales := TFacturaTotales.Create(
           ConexionPrincipal,
-          FRepositorioLecturas,
+          FLecturas.RepositorioFacturas,
           DatosCaja.cdsCabecera,
           DatosCaja.cdsLineas);
         try
@@ -3201,7 +3204,7 @@ begin
   try
     ObjTotales := TFacturaTotales.Create(
       ConexionPrincipal,
-      FRepositorioLecturas,
+      FLecturas.RepositorioFacturas,
       DatosCaja.cdsCabecera,
       DatosCaja.cdsLineas);
     ObjTotales.ProcesarFacturaCompleta;
@@ -3392,7 +3395,7 @@ begin
   // interna
   Totales := TFacturaTotales.Create(
     ConexionPrincipal,
-    FRepositorioLecturas,
+    FLecturas.RepositorioFacturas,
     DatosCaja.cdsCabecera,
     DatosCaja.cdsLineas);
   try
@@ -3491,8 +3494,8 @@ end;
 procedure TfrmMtoOpeCaja.FormDestroy(Sender: TObject);
 begin
   dsStock.DataSet := nil;
-  FRepositorioLecturas := nil;
-  FConsultaStock := nil;
+  FLecturas.RepositorioFacturas := nil;
+  FLecturas.ConsultaStock := nil;
   FServicioRectificacion := nil;
   FRepositorioConsultas := nil;
   FIncidenciasSql := nil;
@@ -3583,7 +3586,7 @@ end;
 procedure TfrmMtoOpeCaja.FormCreate(Sender: TObject);
 begin
   inherited;
-  FRepositorioLecturas :=
+  FLecturas.RepositorioFacturas :=
     CrearRepositorioLecturasFacturaUniDAC(ConexionPrincipal);
   // Detector del lector de codigo de barras (modo restaurar, con anti-eco para
   // la rejilla editable). Los parametros salen de la configuracion de caja.

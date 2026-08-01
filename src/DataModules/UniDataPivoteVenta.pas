@@ -21,8 +21,7 @@ interface
 
 uses
   Uni,
-  inLibPivoteVentaIntf, inLibGenBusq;
-
+  inLibPivoteVentaComposicionIntf, inLibPivoteVentaIntf, inLibGenBusq;
 // Composición del adaptador para los formularios consumidores.
 function CrearRepositorioPivoteVenta(AConexion: TUniConnection;
                                      const AUsuario: string;
@@ -35,13 +34,16 @@ uses
   System.SysUtils;
 
 type
+  TContextoRepositorioPivoteVenta = record
+    Usuario: string;
+    BusquedaVisual: IBusquedaVisual;
+  end;
   TRepositorioPivoteVentaUniDAC = class(TInterfacedObject,
                                         IRepositorioModeloPivoteVenta,
                                         IRepositorioEdicionPivoteVenta)
   private
     FConexion: TUniConnection;
-    FUsuario : string;
-    FBusquedaVisual: IBusquedaVisual;
+    FContexto: TContextoRepositorioPivoteVenta;
     function CrearConsulta: TUniQuery;
     function ListaIds(const AIds: TArray<Integer>): string;
     function LeerValoresTalla(AConsulta: TUniQuery;
@@ -96,16 +98,14 @@ constructor TRepositorioPivoteVentaUniDAC.Create(
 begin
   inherited Create;
   FConexion := AConexion;
-  FUsuario := AUsuario;
-  FBusquedaVisual := ABusquedaVisual;
+  FContexto.Usuario := AUsuario;
+  FContexto.BusquedaVisual := ABusquedaVisual;
 end;
-
 function TRepositorioPivoteVentaUniDAC.CrearConsulta: TUniQuery;
 begin
   Result := TUniQuery.Create(nil);
   Result.Connection := FConexion;
 end;
-
 // Lista estructural de ids enteros para cláusulas IN. Solo valores
 // numéricos generados por código; ningún texto externo.
 function TRepositorioPivoteVentaUniDAC.ListaIds(
@@ -121,7 +121,6 @@ begin
     Result := Result + IntToStr(AIds[i]);
   end;
 end;
-
 function TRepositorioPivoteVentaUniDAC.LeerValoresTalla(
   AConsulta: TUniQuery; const ACampoId, ACampoValor: string)
   : TValoresTallaPivoteVenta;
@@ -441,7 +440,7 @@ begin
       oConsulta.ParamByName('sku').AsString := ACodigoSku;
       oConsulta.ParamByName('art').AsString := ACodigoArticulo;
       oConsulta.ParamByName('varsku').AsString := AVariacionSku;
-      oConsulta.ParamByName('u').AsString := FUsuario;
+      oConsulta.ParamByName('u').AsString := FContexto.Usuario;
       oConsulta.ExecSQL;
       if AColorAv > 0 then
       begin
@@ -452,7 +451,7 @@ begin
           'VALUES (:sku, :av, NOW(), :u, NOW(), :u)';
         oConsulta.ParamByName('sku').AsString := ACodigoSku;
         oConsulta.ParamByName('av').AsInteger := AColorAv;
-        oConsulta.ParamByName('u').AsString := FUsuario;
+        oConsulta.ParamByName('u').AsString := FContexto.Usuario;
         oConsulta.ExecSQL;
       end;
       if ATallaAv > 0 then
@@ -464,7 +463,7 @@ begin
           'VALUES (:sku, :av, NOW(), :u, NOW(), :u)';
         oConsulta.ParamByName('sku').AsString := ACodigoSku;
         oConsulta.ParamByName('av').AsInteger := ATallaAv;
-        oConsulta.ParamByName('u').AsString := FUsuario;
+        oConsulta.ParamByName('u').AsString := FContexto.Usuario;
         oConsulta.ExecSQL;
       end;
     finally
@@ -508,7 +507,7 @@ begin
         ' ORDER BY STOCK DESC, a.CODIGO_ART_ART';
       oConsulta.ParamByName('ALM').AsString := AAlmacenStock;
       oConsulta.Open;
-      if FBusquedaVisual.EjecutarBusqueda(FConexion,
+      if FContexto.BusquedaVisual.EjecutarBusqueda(FConexion,
                                          'Búsqueda de artículos',
                                          oConsulta,
                                          'frmMtoArtTraspasoSearch') then

@@ -49,7 +49,7 @@ function CrearParametrosAplicacion(
   const APerfilesLectura: ILectorPerfilesUsuario;
   const ACachePerfiles: ICachePerfilesUsuario;
   const AUsuario, AGrupo: string
-): IParametrosAplicacion;
+): TServiciosParametrosAplicacion;
 
 implementation
 
@@ -330,17 +330,16 @@ function CrearParametrosAplicacion(
   const APerfilesLectura: ILectorPerfilesUsuario;
   const ACachePerfiles: ICachePerfilesUsuario;
   const AUsuario, AGrupo: string
-): IParametrosAplicacion;
+): TServiciosParametrosAplicacion;
 var
   Parametros: TParametrosAplicacion;
 begin
   Parametros := TParametrosAplicacion.Create(
     APerfilesLectura, ACachePerfiles);
-  // El interfaz gobierna la vida del objeto ANTES de inicializar:
-  // DespuesDeRecargar toma una referencia temporal a Self y, con el
-  // contador de referencias todavia a cero, al soltarla el objeto se
-  // autodestruiria y la factoria devolveria un puntero colgante.
-  Result := Parametros;
+  // Los contratos gobiernan la vida del objeto antes de inicializar.
+  Result.Lectura := Parametros;
+  Result.Edicion := Parametros;
+  Result.GestorLicencia := Parametros;
   Parametros.InicializarParametrosApp(AUsuario, AGrupo);
 end;
 

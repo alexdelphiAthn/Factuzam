@@ -23,8 +23,8 @@ interface
 
 uses
   System.Classes, System.Generics.Collections, Data.DB, Uni,
-  inLibColumnasSkuIntf, inLibPivoteVentaCalculo, inLibPivoteVentaIntf;
-
+  inLibColumnasSkuIntf, inLibPivoteVentaCalculo,
+  inLibPivoteVentaComposicionIntf, inLibPivoteVentaIntf;
 type
   // Alias de compatibilidad: la banda se declara en el calculo puro y
   // los consumidores siguen usandola desde esta unidad.
@@ -257,7 +257,6 @@ begin
   FPresentacion := TPresentacionPivoteVenta.Create(oCfgPres,
     oCallbacks, FModelo);
 end;
-
 destructor TGridPivoteVenta.Destroy;
 begin
   // La presentacion restaura eventos y vista temporal en su propio

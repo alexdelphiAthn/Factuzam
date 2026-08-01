@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataComprasSesionesMaterializacionRepositorio              }
 {    Tipo:       Repositorio                                                   }
@@ -18,7 +18,7 @@ interface
 uses
   Uni,
   inLibCatalogoSqlIntf,
-  inLibComprasSesionesMaterializacionIntf;
+  inLibComprasSesionesLecturasIntf;
 
 type
   TRepositorioLecturasMaterializacionComprasSesiones = class(

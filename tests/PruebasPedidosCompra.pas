@@ -376,8 +376,8 @@ end;
 procedure TPruebasPedidosCompra.Pendientes_AdmiteContratoEstrecho;
 begin
   PrepararServicioFalso;
-  GenerarPdteRecibirDesdePedido(
-    oPendientesFalso, 'PC', '9', 'PRUEBAS');
+  oPendientesFalso.GenerarPdteRecibirDesdePedido(
+    'PC', '9', 'PRUEBAS');
   Assert.AreEqual(opcfGenerarPendientes, oFalso.Operacion);
   Assert.AreEqual('9', oFalso.Numero);
 end;
@@ -392,8 +392,8 @@ begin
   Parametros.SeriePedido := 'PC';
   Parametros.NumeroPedido := '10';
   Parametros.CodigoAlmacen := 'A4';
-  Assert.IsTrue(EjecutarRecepcionPedidoCompra(
-    oRecepcionFalsa, Parametros, Resultado));
+  Assert.IsTrue(oRecepcionFalsa.EjecutarRecepcionPedidoCompra(
+    Parametros, Resultado));
   Assert.AreEqual(opcfEjecutarRecepcion, oFalso.Operacion);
   Assert.AreEqual('10', oFalso.Numero);
 end;

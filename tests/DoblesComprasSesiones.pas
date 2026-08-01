@@ -17,6 +17,7 @@ interface
 
 uses
   inLibComprasSesionesIntf,
+  inLibComprasSesionesLecturasIntf,
   inLibComprasSesionesMaterializacionIntf;
 
 type

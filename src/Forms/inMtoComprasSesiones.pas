@@ -590,7 +590,6 @@ begin
   if Assigned(ContextoSesion) then
     ContextoSesion.LogSesion(ATexto);
 end;
-
 // ===========================================================================
 //   TJvEnterAsTab — apagar mientras el grid tiene foco
 // ===========================================================================
@@ -599,13 +598,11 @@ end;
 // Enter navega celda a celda (combinado con FocusCellOnTab del grid).
 // La logica vive en inLibGridTallasInline.ActivarEnterComoTab — funciona
 // igual para cualquier Mto que use el patron.
-
 procedure TfrmMtoComprasSesiones.cxgrdLineasEnter(Sender: TObject);
 begin
   inherited;
   inLibGridTallasInline.ActivarEnterComoTab(Self, False);
 end;
-
 procedure TfrmMtoComprasSesiones.cxgrdLineasExit(Sender: TObject);
 begin
   inherited;

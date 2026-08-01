@@ -31,16 +31,9 @@ type
 // Sincroniza los pendientes de recibir con el estado actual del pedido.
 procedure GenerarPdteRecibirDesdePedido(const APedidos: IPedidosCompra;
   const ASeriePedc, ANumPedc, AUsuario: string); overload;
-procedure GenerarPdteRecibirDesdePedido(
-  const APendientes: IPedidosCompraPendientes;
-  const ASeriePedc, ANumPedc, AUsuario: string); overload;
 
 // Borra los pendientes del pedido o únicamente los de una línea.
 procedure BorrarPdteRecibirDesdePedido(const APedidos: IPedidosCompra;
-  const ASeriePedc, ANumPedc: string;
-  const ALinea: string = ''); overload;
-procedure BorrarPdteRecibirDesdePedido(
-  const APendientes: IPedidosCompraPendientes;
   const ASeriePedc, ANumPedc: string;
   const ALinea: string = ''); overload;
 
@@ -86,10 +79,6 @@ function IncorporarAlbaranDesdePedidoConCantidades(
 function EjecutarRecepcionPedidoCompra(const APedidos: IPedidosCompra;
   const AParametros: TParametrosRecepcionPedidoCompra;
   out AResultado: TResultadoRecepcionPedidoCompra): Boolean; overload;
-function EjecutarRecepcionPedidoCompra(
-  const ARecepcion: IRecepcionPedidoCompra;
-  const AParametros: TParametrosRecepcionPedidoCompra;
-  out AResultado: TResultadoRecepcionPedidoCompra): Boolean; overload;
 
 implementation
 
@@ -100,26 +89,10 @@ begin
     ASeriePedc, ANumPedc, AUsuario);
 end;
 
-procedure GenerarPdteRecibirDesdePedido(
-  const APendientes: IPedidosCompraPendientes;
-  const ASeriePedc, ANumPedc, AUsuario: string); overload;
-begin
-  APendientes.GenerarPdteRecibirDesdePedido(
-    ASeriePedc, ANumPedc, AUsuario);
-end;
-
 procedure BorrarPdteRecibirDesdePedido(const APedidos: IPedidosCompra;
   const ASeriePedc, ANumPedc, ALinea: string); overload;
 begin
   APedidos.BorrarPdteRecibirDesdePedido(
-    ASeriePedc, ANumPedc, ALinea);
-end;
-
-procedure BorrarPdteRecibirDesdePedido(
-  const APendientes: IPedidosCompraPendientes;
-  const ASeriePedc, ANumPedc, ALinea: string); overload;
-begin
-  APendientes.BorrarPdteRecibirDesdePedido(
     ASeriePedc, ANumPedc, ALinea);
 end;
 
@@ -188,15 +161,6 @@ function EjecutarRecepcionPedidoCompra(const APedidos: IPedidosCompra;
   out AResultado: TResultadoRecepcionPedidoCompra): Boolean; overload;
 begin
   Result := APedidos.EjecutarRecepcionPedidoCompra(
-    AParametros, AResultado);
-end;
-
-function EjecutarRecepcionPedidoCompra(
-  const ARecepcion: IRecepcionPedidoCompra;
-  const AParametros: TParametrosRecepcionPedidoCompra;
-  out AResultado: TResultadoRecepcionPedidoCompra): Boolean; overload;
-begin
-  Result := ARecepcion.EjecutarRecepcionPedidoCompra(
     AParametros, AResultado);
 end;
 

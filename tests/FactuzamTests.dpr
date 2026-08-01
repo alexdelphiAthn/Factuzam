@@ -89,6 +89,8 @@ uses
     '..\src\Lib\inLibArticulosAltaTarifas.pas',
   inLibArticulosAtributosBasicos in
     '..\src\Lib\inLibArticulosAtributosBasicos.pas',
+  inLibArticulosVisibilidad in
+    '..\src\Lib\inLibArticulosVisibilidad.pas',
   inLibStockCeldaDocumento in
     '..\src\Lib\inLibStockCeldaDocumento.pas',
   inLibStockConsultaInfo in
@@ -128,6 +130,8 @@ uses
     '..\src\Lib\inLibComprasSesionesCreacion.pas',
   inLibComprasSesionesMaterializacionIntf in
     '..\src\Lib\inLibComprasSesionesMaterializacionIntf.pas',
+  inLibComprasSesionesLecturasIntf in
+    '..\src\Lib\inLibComprasSesionesLecturasIntf.pas',
   inLibComprasSesiones in
     '..\src\Lib\inLibComprasSesiones.pas',
   inLibComprasSesionesMaterializar in
@@ -144,6 +148,8 @@ uses
     '..\src\verifactu\UniDataVerifactuColaProcesador.pas',
   UniDataVerifactuColaResultados in
     '..\src\verifactu\UniDataVerifactuColaResultados.pas',
+  inLibVerifactuReintentos in
+    '..\src\verifactu\inLibVerifactuReintentos.pas',
   UniDataVerifactuColaOperaciones in
     '..\src\verifactu\UniDataVerifactuColaOperaciones.pas',
   UniDataAlbaranesCompraMovimientos in
@@ -236,6 +242,8 @@ uses
     '..\src\Lib\inLibPivoteVentaCalculo.pas',
   inLibPivoteVentaIntf in
     '..\src\Lib\inLibPivoteVentaIntf.pas',
+  inLibPivoteVentaComposicionIntf in
+    '..\src\Lib\inLibPivoteVentaComposicionIntf.pas',
   inLibPivoteVentaModelo in
     '..\src\Lib\inLibPivoteVentaModelo.pas',
   PruebasAtributosPaleta in 'PruebasAtributosPaleta.pas',
@@ -246,6 +254,7 @@ uses
   PruebasGestorGuiasGridMto in 'PruebasGestorGuiasGridMto.pas',
   PruebasGestorTareasMto in 'PruebasGestorTareasMto.pas',
   PruebasGestorArticulosMto in 'PruebasGestorArticulosMto.pas',
+  PruebasArticulosVisibilidad in 'PruebasArticulosVisibilidad.pas',
   PruebasGestorCopiaLineasCompra in
     'PruebasGestorCopiaLineasCompra.pas',
   PruebasDiagnosticoMetadata in 'PruebasDiagnosticoMetadata.pas',

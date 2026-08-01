@@ -17,6 +17,7 @@ interface
 
 uses
   inLibComprasSesionesIntf,
+  inLibComprasSesionesLecturasIntf,
   inLibComprasSesionesMaterializacionIntf,
   inLibFotos,
   UniDataComprasSesiones;
@@ -66,7 +67,6 @@ type
   end;
 
 implementation
-
 uses
   System.SysUtils,
   UniDataComprasSesionesAlbaranes,
@@ -74,7 +74,6 @@ uses
   UniDataComprasSesionesEstado,
   UniDataComprasSesionesPedidos,
   UniDataComprasSesionesReversion;
-
 constructor TPersistenciaMaterializacionComprasSesiones.Create(
   ADataModule: TdmComprasSesiones;
   AFotos: TFotosArticulos;
@@ -101,7 +100,6 @@ begin
   FLecturas := ALecturas;
   FRepositorioSesiones := ARepositorioSesiones;
 end;
-
 function TPersistenciaMaterializacionComprasSesiones.
   ValidarMaterializacion(
     out AMensajeError: string): Boolean;
@@ -111,7 +109,6 @@ begin
     FRepositorioSesiones,
     AMensajeError);
 end;
-
 function TPersistenciaMaterializacionComprasSesiones.
   CargarConfiguracion:
     TConfiguracionMaterializacionSesion;
@@ -119,7 +116,6 @@ begin
   Result := CargarConfiguracionMaterializacion(
     FDataModule);
 end;
-
 function TPersistenciaMaterializacionComprasSesiones.
   ConsultarAlmacenes: TArray<string>;
 begin
@@ -127,7 +123,6 @@ begin
     FDataModule,
     FLecturas.Estado);
 end;
-
 function TPersistenciaMaterializacionComprasSesiones.
   ResolverSerieDocumento(
     const AEmpresa, ATipoDocumento, AAlmacen,
@@ -140,7 +135,6 @@ begin
     AAlmacen,
     ASerieAlternativa);
 end;
-
 procedure TPersistenciaMaterializacionComprasSesiones.
   MaterializarArticulos(
     const AUsuario: string);
@@ -151,7 +145,6 @@ begin
     FLecturas.Articulos,
     AUsuario);
 end;
-
 function TPersistenciaMaterializacionComprasSesiones.
   MaterializarPedido(
     const AUsuario, ASerie, AAlmacen: string):
@@ -164,7 +157,6 @@ begin
     ASerie,
     AAlmacen);
 end;
-
 function TPersistenciaMaterializacionComprasSesiones.
   MaterializarAlbaran(
     const AUsuario, ASerie, AAlmacen: string):
@@ -177,7 +169,6 @@ begin
     ASerie,
     AAlmacen);
 end;
-
 procedure TPersistenciaMaterializacionComprasSesiones.
   CerrarSesion(
     const APedido, AAlbaran: TDocumentoMaterializado;
@@ -189,7 +180,6 @@ begin
     AAlbaran,
     AUsuario);
 end;
-
 procedure TPersistenciaMaterializacionComprasSesiones.
   RegistrarError(
     const AUsuario, AMensaje: string);
@@ -199,7 +189,6 @@ begin
     AUsuario,
     AMensaje);
 end;
-
 function TPersistenciaMaterializacionComprasSesiones.
   ValidarReversion(
     out AMensajeError: string): Boolean;
@@ -208,7 +197,6 @@ begin
     FDataModule,
     AMensajeError);
 end;
-
 procedure TPersistenciaMaterializacionComprasSesiones.
   EjecutarReversion(
     const AUsuario: string);
@@ -218,5 +206,4 @@ begin
     FLecturas.Reversion,
     AUsuario);
 end;
-
 end.

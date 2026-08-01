@@ -261,7 +261,7 @@ function Agregar-CasosInterfaces {
   $miembrosJustos = 1..10 |
     ForEach-Object { "    procedure Operacion$_;" }
   $miembrosDeMas = 1..11 |
-    ForEach-Object { "    function Consulta$_: Integer;" }
+    ForEach-Object { "    function Consulta${_}: Integer;" }
   $lineas = @(
     'unit CasosInterfaces;',
     'interface',
@@ -280,6 +280,31 @@ function Agregar-CasosInterfaces {
   Escribir-ArchivoPrueba `
     -Ruta (Join-Path $Raiz 'src\CasosInterfaces.pas') `
     -Contenido ($lineas -join "`r`n")
+}
+
+function Agregar-ContratosSinUniDAC {
+  param([string]$Raiz)
+  $rutas = @(
+    'src\Lib\inLibModoTallasIntf.pas',
+    'src\Lib\inLibColumnasSkuIntf.pas',
+    'src\Lib\inLibVentasWsJsonIntf.pas',
+    'src\Lib\inLibVentasWsColaIntf.pas',
+    'src\Lib\inLibVentasWsCola.pas',
+    'src\Lib\inLibFacturaePersistenciaIntf.pas',
+    'src\Lib\inLibPedidosCompraIntf.pas'
+  )
+  foreach ($ruta in $rutas) {
+    $unidad = [System.IO.Path]::GetFileNameWithoutExtension($ruta)
+    $contenido = @(
+      "unit $unidad;",
+      'interface',
+      'implementation',
+      'end.'
+    ) -join "`r`n"
+    Escribir-ArchivoPrueba `
+      -Ruta (Join-Path $Raiz $ruta) `
+      -Contenido $contenido
+  }
 }
 
 function Borrar-RaizPrueba {
@@ -333,9 +358,9 @@ if (-not $OmitirLineaBase) {
       -Codigo 0 `
       -Textos @(
         'Estilo de codigo: OK.',
-        'Exit: 1349.',
-        'Continue: 107.',
-        'Lineas anchas: 575.',
+        'Exit: 1141.',
+        'Continue: 73.',
+        'Lineas anchas: 557.',
         'Lineas con tabulador: 0.'
       )
   }
@@ -346,9 +371,9 @@ if (-not $OmitirLineaBase) {
       -Codigo 0 `
       -Textos @(
         'Metodos largos: OK.',
-        'Analizados: 7335.',
-        'De mas de 120 lineas: 124.',
-        'Mas largo: 312 lineas',
+        'Analizados: 7611.',
+        'De mas de 120 lineas: 116.',
+        'Mas largo: 286 lineas',
         'Rutinas generadas fuera del limite: 2.'
       )
   }
@@ -359,7 +384,7 @@ if (-not $OmitirLineaBase) {
       -Codigo 0 `
       -Textos @(
         'Interfaces segregadas: OK.',
-        'contratos retirados: 9.'
+        'contratos retirados: 13;'
       )
   }
 }
@@ -519,6 +544,7 @@ finally {
 $raizInterfaces = Nueva-RaizPrueba
 try {
   Agregar-CasosInterfaces -Raiz $raizInterfaces
+  Agregar-ContratosSinUniDAC -Raiz $raizInterfaces
   Registrar-Prueba 'interfaces: ancha detectada fuera de *Intf.pas' {
     $resultado = Ejecutar-Script `
       -Ruta $rutaInterfaces `
@@ -537,7 +563,7 @@ try {
       -Codigo 0 `
       -Textos @(
         'Interfaces segregadas: OK.',
-        'Unidades analizadas: 1;'
+        'Unidades analizadas: 8;'
       )
   }
 }
@@ -547,6 +573,7 @@ finally {
 
 $raizRetirados = Nueva-RaizPrueba
 try {
+  Agregar-ContratosSinUniDAC -Raiz $raizRetirados
   $contenidoRetirado = @(
     'unit CasosRetirados;',
     'interface',

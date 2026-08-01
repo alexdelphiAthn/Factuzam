@@ -17,6 +17,7 @@ interface
 
 uses
   inLibComprasSesionesIntf,
+  inLibComprasSesionesLecturasIntf,
   inLibComprasSesionesMaterializacionIntf,
   UniDataComprasSesiones;
 
@@ -27,7 +28,6 @@ function MaterializarAlbaranSesion(
   TDocumentoMaterializado;
 
 implementation
-
 uses
   System.SysUtils,
   Data.DB, DBAccess, Uni,
@@ -113,7 +113,6 @@ begin
     FreeAndNil(q);
   end;
 end;
-
 // Inserta una linea en fza_albaranes_compra_lineas con SUM(CANTIDAD) por
 // (SKU, almacen) agregando todas las celdas que aportan a esa combinacion
 // dentro de la linea actual de la sesion. Devuelve la LINEA_ALBCLIN

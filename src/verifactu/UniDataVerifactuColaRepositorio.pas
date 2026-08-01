@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataVerifactuColaRepositorio                               }
 {    Tipo:       Librería                                                      }
@@ -27,12 +27,10 @@ function CrearServicioVerifactuColaUniDAC(
   AConexion: TUniConnection): IServicioVerifactuCola; overload;
 
 implementation
-
 uses
   System.SysUtils, inLibLog, inLibParametrosIntf, inLibEmisionFiscalIntf,
   inLibVerifactu, inLibVentasWsCola, UniDataVerifactuColaOperaciones,
   UniDataVentasWsCola;
-
 type
   TServicioVerifactuColaUniDAC = class(
     TInterfacedObject,
@@ -73,19 +71,16 @@ type
       const AUsuario, ASerie, ANumero, ASerieOrigen,
       ANumeroOrigen, ATipoRelacion: string);
   end;
-
 function CrearServicioVerifactuColaUniDAC(
   AQry: TUniQuery): IServicioVerifactuCola;
 begin
   Result := TServicioVerifactuColaUniDAC.Create(AQry);
 end;
-
 function CrearServicioVerifactuColaUniDAC(
   AConexion: TUniConnection): IServicioVerifactuCola;
 begin
   Result := TServicioVerifactuColaUniDAC.Create(AConexion);
 end;
-
 constructor TServicioVerifactuColaUniDAC.Create(AQry: TUniQuery);
 begin
   if not Assigned(AQry) then

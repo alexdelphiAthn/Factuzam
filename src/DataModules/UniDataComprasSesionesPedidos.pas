@@ -17,6 +17,7 @@ interface
 
 uses
   inLibComprasSesionesIntf,
+  inLibComprasSesionesLecturasIntf,
   inLibComprasSesionesMaterializacionIntf,
   UniDataComprasSesiones;
 
@@ -27,7 +28,6 @@ function MaterializarPedidoSesion(
   TDocumentoMaterializado;
 
 implementation
-
 uses
   System.SysUtils,
   Data.DB, DBAccess, Uni,

@@ -50,7 +50,7 @@ function CrearParametrosCaja(
   const ACachePerfiles: ICachePerfilesUsuario;
   const AContextoSesion: IContextoSesionAplicacion;
   const AUsuario, AGrupo: string
-): IParametrosCaja;
+): TServiciosParametrosCaja;
 
 implementation
 
@@ -320,7 +320,7 @@ function CrearParametrosCaja(
   const ACachePerfiles: ICachePerfilesUsuario;
   const AContextoSesion: IContextoSesionAplicacion;
   const AUsuario, AGrupo: string
-): IParametrosCaja;
+): TServiciosParametrosCaja;
 var
   Parametros: TParametrosCaja;
 begin
@@ -328,10 +328,9 @@ begin
     APerfilesLectura,
     ACachePerfiles,
     AContextoSesion);
-  // Mismo orden que en la factoria de aplicacion: el interfaz gobierna
-  // la vida del objeto antes de inicializar, por si algun hook toma una
-  // referencia temporal a Self durante la carga.
-  Result := Parametros;
+  // Los contratos gobiernan la vida del objeto antes de inicializar.
+  Result.Lectura := Parametros;
+  Result.Edicion := Parametros;
   Parametros.InicializarParametrosCaja(AUsuario, AGrupo);
 end;
 

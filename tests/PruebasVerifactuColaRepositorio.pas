@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       PruebasVerifactuColaRepositorio                               }
 {    Tipo:       Pruebas (DUnitX)                                              }
@@ -75,6 +75,7 @@ implementation
 uses
   System.SysUtils, Uni, inLibParametrosIntf, inLibEmisionFiscalIntf,
   inLibVerifactuColaIntf, inLibVerifactuCola,
+  inLibVerifactuReintentos,
   UniDataVerifactuColaRepositorio,
   UniDataVerifactuColaProcesador, UniDataVerifactuColaResultados,
   UniDataVerifactuColaOperaciones;

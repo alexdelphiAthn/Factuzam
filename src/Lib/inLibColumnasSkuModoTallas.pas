@@ -112,7 +112,6 @@ begin
     raise Exception.Create(SErrorLookupAtributosNoInyectado);
   CrearColaboradores;
 end;
-
 destructor TModoEntradaTallas.Destroy;
 begin
   // Soltar los hooks del cds ANTES de liberar la presentacion: su
@@ -130,13 +129,11 @@ begin
   FLookup := nil;
   inherited;
 end;
-
 procedure TModoEntradaTallas.LogSesion(const ATexto: string);
 begin
   if Assigned(FConfig.ContextoSesion) then
     FConfig.ContextoSesion.LogSesion(ATexto);
 end;
-
 function TModoEntradaTallas.CamposLineas: TCamposLineasTallas;
 var
   i: Integer;
@@ -159,7 +156,6 @@ begin
   Result.TotalUds := FCfgTallas.FieldTotalUds;
   Result.TotalLinea := FCfgTallas.FieldTotalLinea;
 end;
-
 function TModoEntradaTallas.ConfigPersistencia
   : TConfigPersistenciaTallas;
 begin
@@ -180,7 +176,6 @@ begin
   Result.CamposDocExtraCel := FCfgTallas.CamposDocExtraCel;
   Result.IdFilaFijo := FCfgTallas.IdFilaFijo;
 end;
-
 procedure TModoEntradaTallas.CrearColaboradores;
 var
   Busqueda: IBusquedaSkusTallas;
@@ -210,19 +205,16 @@ begin
   FPresentacion.OnSalirEdicion := SalirEdicion;
   FLineasCds.OnRecargarCeldas := FPresentacion.ArmarRecarga;
 end;
-
 procedure TModoEntradaTallas.EntrarEdicion(Sender: TObject);
 begin
   if Assigned(FOnEntrarEdicion) then
     FOnEntrarEdicion(Sender);
 end;
-
 procedure TModoEntradaTallas.SalirEdicion(Sender: TObject);
 begin
   if Assigned(FOnSalirEdicion) then
     FOnSalirEdicion(Sender);
 end;
-
 function TModoEntradaTallas.UnidadesDocumento: Double;
 begin
   Result := TModeloTallas.UnidadesDocumento(

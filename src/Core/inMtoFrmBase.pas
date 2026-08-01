@@ -43,6 +43,7 @@ uses
   inLibContextoSesionIntf, inLibFiltrosGuardadosIntf,
   inLibPerfilesUsuarioIntf, inLibParametrosIntf,
   inLibInformesGuiasCache, inLibTraduccionesIntf,
+  inLibLogIntf,
   inLibCatalogoSqlIntf, inLibArticulosResolverIntf,
   inLibArticulosValidadorIntf, inLibArticulosAtributosIntf,
   inLibTraspasoTicketIntf, inLibArqueoIntf,
@@ -103,6 +104,7 @@ type
     FSolicitudPermisoLayout: ISolicitudPermisoLayout;
     FPreviewTicket: IPreviewTicket;
     FProveedorPreviewExcel: IProveedorPreviewExcel;
+    FRegistroLog: IRegistroLog;
     FCatalogoSql: ICatalogoSql;
     FIncidenciasSql: IRegistroIncidenciasSql;
     FCatalogoSqlInicializado: Boolean;
@@ -134,6 +136,7 @@ type
     function GetSolicitudPermisoLayout: ISolicitudPermisoLayout;
     function GetPreviewTicket: IPreviewTicket;
     function GetProveedorPreviewExcel: IProveedorPreviewExcel;
+    function GetRegistroLog: IRegistroLog;
     function GetConexionPrincipal: TUniConnection;
     function NormalizarSegmentoClaveTraduccion(
       const ATexto: string): string;
@@ -195,6 +198,7 @@ type
     function CatalogoSqlAplicacion: ICatalogoSql;
     function IncidenciasSqlAplicacion:
       IRegistroIncidenciasSql;
+    property RegistroLog: IRegistroLog read GetRegistroLog;
   public
     { Public declarations }
     constructor Create(AOwner: TComponent); overload; override;
@@ -302,6 +306,7 @@ var
   ProveedorPermisos: IProveedorPermisosAplicacion;
 begin
   FPermisos := nil;
+  FRegistroLog := CrearRegistroLog;
   if Supports(
        AOwner,
        IProveedorPermisosAplicacion,
@@ -331,6 +336,7 @@ constructor TfrmBase.Create(
   const APermisos: IPermisosAplicacion);
 begin
   FPermisos := APermisos;
+  FRegistroLog := CrearRegistroLog;
   HeredarConexiones(AOwner);
   HeredarAuditoriaDatos(AOwner);
   HeredarMonitorSQL(AOwner);
@@ -354,6 +360,7 @@ destructor TfrmBase.Destroy;
 begin
   FCatalogoSql := nil;
   FIncidenciasSql := nil;
+  FRegistroLog := nil;
   FFotosArticulos := nil;
   FUnidadesMedida := nil;
   FBusquedaVisual := nil;
@@ -1164,6 +1171,11 @@ end;
 function TfrmBase.GetProveedorPreviewExcel: IProveedorPreviewExcel;
 begin
   Result := FProveedorPreviewExcel;
+end;
+
+function TfrmBase.GetRegistroLog: IRegistroLog;
+begin
+  Result := FRegistroLog;
 end;
 
 function TfrmBase.GetConexionPrincipal: TUniConnection;

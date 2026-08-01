@@ -31,15 +31,14 @@ function CrearServicioComprasSesiones(
   TServicioComprasSesiones;
 
 implementation
-
 uses
   inLibComprasSesionesIntf,
+  inLibComprasSesionesLecturasIntf,
   inLibComprasSesionesMaterializacionIntf,
+  UniDataComprasSesionesLecturasComposicion,
   UniDataComprasSesionesMaterializar,
-  UniDataComprasSesionesMaterializacionRepositorio,
   UniDataComprasSesionesRepositorio,
   UniDataComprasSesionesUnidadTrabajo;
-
 function CrearServicioComprasSesiones(
   AConexion: TUniConnection;
   ADataModule: TdmComprasSesiones;
@@ -48,8 +47,6 @@ function CrearServicioComprasSesiones(
   const AIncidenciasSql: IRegistroIncidenciasSql):
   TServicioComprasSesiones;
 var
-  oAdaptadorLecturas:
-    TRepositorioLecturasMaterializacionComprasSesiones;
   oLecturasMaterializacion:
     TServiciosLecturasMaterializacion;
   oMaterializacion:
@@ -68,18 +65,8 @@ begin
       ACatalogoSql,
       AIncidenciasSql);
   oLecturasMaterializacion :=
-    Default(TServiciosLecturasMaterializacion);
-  oAdaptadorLecturas :=
-    TRepositorioLecturasMaterializacionComprasSesiones.Create(
+    CrearLecturasMaterializacionComprasSesiones(
       AConexion, ACatalogoSql, AIncidenciasSql);
-  oLecturasMaterializacion.Articulos := oAdaptadorLecturas;
-  oLecturasMaterializacion.Albaranes.Articulos := oAdaptadorLecturas;
-  oLecturasMaterializacion.Albaranes.Documentos := oAdaptadorLecturas;
-  oLecturasMaterializacion.Estado := oAdaptadorLecturas;
-  oLecturasMaterializacion.Pedidos.Articulos := oAdaptadorLecturas;
-  oLecturasMaterializacion.Pedidos.Documentos := oAdaptadorLecturas;
-  oLecturasMaterializacion.Pedidos.Pendientes := oAdaptadorLecturas;
-  oLecturasMaterializacion.Reversion := oAdaptadorLecturas;
   oMaterializacion :=
     TPersistenciaMaterializacionComprasSesiones.Create(
       ADataModule,
@@ -97,5 +84,4 @@ begin
     oReversion,
     oUnidadTrabajo);
 end;
-
 end.

@@ -20,7 +20,7 @@ uses
   System.SysUtils, System.Classes, System.IOUtils, //inLibGlobalVar,
   inLibDir, Windows, System.SyncObjs, Winapi.Messages,
   System.TypInfo, System.Zip, System.Generics.Collections,
-  inLibMonitorSQLIntf, inLibParametrosIntf;
+  inLibMonitorSQLIntf, inLibParametrosIntf, inLibLogIntf;
 
 const
   DEFAULT_LOG_RETENTION = 10;
@@ -96,6 +96,7 @@ type
   end;
 
 function Log: TLog;
+function CrearRegistroLog: IRegistroLog;
 procedure LiberarLog;
 
 // Aplica los flags de depuración al log y al monitor SQL inyectado.
@@ -116,6 +117,19 @@ type
     FechaOrden: TDateTime;
   end;
 
+  TAdaptadorRegistroLog = class(TInterfacedObject, IRegistroLog)
+  private
+    FLog: TLog;
+  public
+    constructor Create(ALog: TLog);
+    procedure RegistrarInformacion(const AMensaje: string);
+    procedure RegistrarAviso(const AMensaje: string);
+    procedure RegistrarError(const AMensaje: string);
+    procedure RegistrarRendimiento(
+      const AEtiqueta, ADetalle: string;
+      ADuracionMs: Int64);
+  end;
+
 var
   FLog: TLog;
 
@@ -124,9 +138,49 @@ begin
   Result := FLog;
 end;
 
+function CrearRegistroLog: IRegistroLog;
+begin
+  Result := TAdaptadorRegistroLog.Create(Log);
+end;
+
 procedure LiberarLog;
 begin
   FreeAndNil(FLog);
+end;
+
+{ TAdaptadorRegistroLog }
+
+constructor TAdaptadorRegistroLog.Create(ALog: TLog);
+begin
+  inherited Create;
+  if not Assigned(ALog) then
+    raise EArgumentNilException.Create('Log no proporcionado.');
+  FLog := ALog;
+end;
+
+procedure TAdaptadorRegistroLog.RegistrarInformacion(
+  const AMensaje: string);
+begin
+  FLog.LogInfo(AMensaje);
+end;
+
+procedure TAdaptadorRegistroLog.RegistrarAviso(
+  const AMensaje: string);
+begin
+  FLog.LogWarning(AMensaje);
+end;
+
+procedure TAdaptadorRegistroLog.RegistrarError(
+  const AMensaje: string);
+begin
+  FLog.LogError(AMensaje);
+end;
+
+procedure TAdaptadorRegistroLog.RegistrarRendimiento(
+  const AEtiqueta, ADetalle: string;
+  ADuracionMs: Int64);
+begin
+  FLog.LogPerf(AEtiqueta, ADetalle, ADuracionMs);
 end;
 
 function CompararInfoLog(const AIzquierda, ADerecha: TLogFileInfo): Integer;

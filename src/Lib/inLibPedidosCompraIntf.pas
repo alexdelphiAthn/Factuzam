@@ -16,28 +16,15 @@ unit inLibPedidosCompraIntf;
 interface
 
 uses
-  inLibGridPivoteCompraTipos;
-
+  inLibGridPivoteCompraTipos,
+  inLibPedidosCompraRecepcionIntf;
 type
-  TParametrosRecepcionPedidoCompra = record
-    SeriePedido: string;
-    NumeroPedido: string;
-    CodigoAlmacen: string;
-    SerieAlbaran: string;
-    SerieAlbaranDestino: string;
-    NumeroAlbaranDestino: string;
-    Usuario: string;
-    ReferenciaProveedor: string;
-    FechaRecepcion: TDateTime;
-    IdPvTemporada: Integer;
-    Incorporar: Boolean;
-    Celdas: TArray<TCeldaARecibir>;
-  end;
-  TResultadoRecepcionPedidoCompra = record
-    SerieAlbaran: string;
-    NumeroAlbaran: string;
-    Mensaje: string;
-  end;
+  TParametrosRecepcionPedidoCompra =
+    inLibPedidosCompraRecepcionIntf.TParametrosRecepcionPedidoCompra;
+  TResultadoRecepcionPedidoCompra =
+    inLibPedidosCompraRecepcionIntf.TResultadoRecepcionPedidoCompra;
+  IRecepcionPedidoCompra =
+    inLibPedidosCompraRecepcionIntf.IRecepcionPedidoCompra;
   IPedidosCompraPendientes = interface
     ['{83E33711-78D3-4D8F-92A0-94BB2DD3B05D}']
     procedure GenerarPdteRecibirDesdePedido(
@@ -77,12 +64,6 @@ type
       AIdPvTemporada: Integer;
       const ACeldas: TArray<TCeldaARecibir>;
       out AMensaje: string): Boolean;
-  end;
-  IRecepcionPedidoCompra = interface
-    ['{15EC0714-1FBD-4D5F-A954-E4367F6285E7}']
-    function EjecutarRecepcionPedidoCompra(
-      const AParametros: TParametrosRecepcionPedidoCompra;
-      out AResultado: TResultadoRecepcionPedidoCompra): Boolean;
   end;
   // Contrato histórico conservado para consumidores externos.
   IPedidosCompra = interface

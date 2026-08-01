@@ -587,10 +587,10 @@ uses
   inLibArticulosCodigosBarras,
   inLibArticulosAltaTarifas,
   inLibArticulosAtributosBasicos,
+  inLibArticulosVisibilidad,
   UniDataArticulosVariaciones,
   inLibArticulosFiltro,
   inLibAtributosPaleta,
-  inLibLog,             // Log.LogPerf para cronometros del AfterScroll
   System.Diagnostics,   // TStopwatch
   inLibMsgArticulos, inLibMsgComun;
 
@@ -637,85 +637,21 @@ begin
 end;
 
 procedure TfrmMtoArticulos.ActualizarVisibilidadColumnaSku;
-// Si ninguna fila del grid de tarifas tiene CODIGO_UNIDAD_ARTTAR rellenado
-// (es decir, todos los precios son a nivel de artículo padre), oculta la
-// columna SKU. En cuanto se añade un precio para un SKU concreto vuelve a
-// mostrarse.
-//
-// Además ocultamos las columnas "Precio Últ Compra" y "Fecha Últ Compra"
-// del grid de SKUs cuando ningún SKU tiene precio asignado: dan ruido
-// visual cuando todos los costes viven a nivel de artículo padre.
 var
-  ds  : TDataSet;
-  fld : TField;
-  bm  : TBookmark;
-  hay : Boolean;
-  fldPrecio: TField;
-  hayPrecioSku: Boolean;
-  dsSkus: TDataSet;
+  Visibilidad: TVisibilidadColumnasArticulo;
 begin
-  if not Assigned(dmmArticulos) then Exit;
-  ds := dmmArticulos.unqryTarifasArticulos;
-  if (ds = nil) or (not ds.Active) then
+  if Assigned(dmmArticulos) then
   begin
-    tvTarifasCODIGO_UNIDAD_TARIFA.Visible := False;
-    Exit;
+    Visibilidad := EvaluarVisibilidadColumnasArticulo(
+      dmmArticulos.unqryTarifasArticulos,
+      dmmArticulos.unqrySkus);
+    tvTarifasCODIGO_UNIDAD_TARIFA.Visible :=
+      Visibilidad.MostrarSkuTarifa;
+    tvSkuMtoPRECIO_ULT_COMPRA_SKUC.Visible :=
+      Visibilidad.MostrarCompraSku;
+    tvSkuMtoFECHA_ULT_COMPRA_SKUC.Visible :=
+      Visibilidad.MostrarCompraSku;
   end;
-  fld := ds.FindField('CODIGO_UNIDAD_ARTTAR');
-  if fld = nil then Exit;
-
-  hay := False;
-  ds.DisableControls;
-  bm := ds.GetBookmark;
-  try
-    ds.First;
-    while not ds.Eof do
-    begin
-      if (not fld.IsNull) and (Trim(fld.AsString) <> '') then
-      begin
-        hay := True;
-        Break;
-      end;
-      ds.Next;
-    end;
-  finally
-    if ds.BookmarkValid(bm) then ds.GotoBookmark(bm);
-    ds.FreeBookmark(bm);
-    ds.EnableControls;
-  end;
-
-  tvTarifasCODIGO_UNIDAD_TARIFA.Visible := hay;
-
-  // Columnas de precio/fecha de última compra del grid de SKUs
-  dsSkus := dmmArticulos.unqrySkus;
-  hayPrecioSku := False;
-  if (dsSkus <> nil) and dsSkus.Active then
-  begin
-    fldPrecio := dsSkus.FindField('PRECIO_ULT_COMPRA_SKUC');
-    if fldPrecio <> nil then
-    begin
-      dsSkus.DisableControls;
-      bm := dsSkus.GetBookmark;
-      try
-        dsSkus.First;
-        while not dsSkus.Eof do
-        begin
-          if (not fldPrecio.IsNull) and (fldPrecio.AsFloat <> 0) then
-          begin
-            hayPrecioSku := True;
-            Break;
-          end;
-          dsSkus.Next;
-        end;
-      finally
-        if dsSkus.BookmarkValid(bm) then dsSkus.GotoBookmark(bm);
-        dsSkus.FreeBookmark(bm);
-        dsSkus.EnableControls;
-      end;
-    end;
-  end;
-  tvSkuMtoPRECIO_ULT_COMPRA_SKUC.Visible := hayPrecioSku;
-  tvSkuMtoFECHA_ULT_COMPRA_SKUC.Visible  := hayPrecioSku;
 end;
 
 procedure TfrmMtoArticulos.AsegurarSkuArticuloSinVariaciones(
@@ -2226,7 +2162,7 @@ begin
   ActualizarVisibilidadColumnaSku;
   msActVisCol := swTramo.ElapsedMilliseconds;
 
-  inLibLog.Log.LogPerf('Articulos.AfterScroll',
+  RegistroLog.RegistrarRendimiento('Articulos.AfterScroll',
     Format('art=%s | Prop=%d | Var=%d | ActVar=%d | Sku=%d | RefSkus=%d | ' +
            'RefVarArt=%d | MapaAtr=%d | StockAS=%d | ActColSku=%d',
            [CodArticulo, msCargarProp, msCargarVar, msActVisVar,

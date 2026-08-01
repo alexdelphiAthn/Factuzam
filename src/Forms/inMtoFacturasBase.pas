@@ -830,7 +830,6 @@ begin
     pcDetail.ActivePage := tsLineasFactura;
   end;
 end;
-
 destructor TfrmMtoFacturasBase.Destroy;
 begin
   // El modo del contrato se libera ANTES del inherited: su teardown
@@ -856,7 +855,6 @@ begin
   FreeAndNil(FControlador);
   inherited;
 end;
-
 procedure TfrmMtoFacturasBase.btnUpdateClienteClick(Sender: TObject);
 begin
   inherited;
@@ -869,7 +867,6 @@ begin
                    [FieldByName('CODIGO_CLI_FAC').AsString]);
   end;
 end;
-
 procedure TfrmMtoFacturasBase.btnUpdateEmpresaClick(Sender: TObject);
 begin
   inherited;
@@ -882,7 +879,6 @@ begin
               [FieldByName('CODIGO_EMP_FAC').AsString]);
   end;
  end;
-
 procedure TfrmMtoFacturasBase.sbNuevaFacturaClick(Sender: TObject);
 var
   sEmpresaDef:String;
@@ -911,7 +907,6 @@ begin
     end;
   end;
 end;
-
 function TControladorFacturas.EsVentaMayorNormal: Boolean;
 begin
   with FAnfitrion do
@@ -919,7 +914,6 @@ begin
   Result := SameText(TipoFacturaFiltro, 'NORMAL');
   end;
 end;
-
 procedure TControladorFacturas.AplicarOrigenCobros;
 var
   Configuracion: TConfiguracionCobrosFactura;
@@ -981,7 +975,6 @@ begin
   TPresentacionCobrosFactura.Aplicar(Configuracion, Controles);
   end;
 end;
-
 procedure TfrmMtoFacturasBase.btnImprimirReciboClick(Sender: TObject);
 var
   form:TfrmPrintRecFac;
@@ -1007,14 +1000,12 @@ begin
     end;
   end;
 end;
-
 procedure TfrmMtoFacturasBase.btnIraArticuloClick(Sender: TObject);
 begin
   inherited;
   ShowMtoCodigoDataSet(Self.Owner, 'Articulos',
     tvLineasFactura.DataController.DataSet, fcodart);
 end;
-
 procedure TfrmMtoFacturasBase.actArticuloExecute(Sender: TObject);
 begin
   inherited;
@@ -1023,19 +1014,16 @@ begin
     else
       ShowMto(Self.Owner, 'Articulos');
 end;
-
 procedure TfrmMtoFacturasBase.actClienteExecute(Sender: TObject);
 begin
   inherited;
   btnIraClienteClick(Sender);
 end;
-
 procedure TfrmMtoFacturasBase.actEmpresaExecute(Sender: TObject);
 begin
   inherited;
   btnIrAEmpresaClick(Sender);
 end;
-
 procedure TfrmMtoFacturasBase.actMovimientoExecute(Sender: TObject);
 var
   ds: TDataSet;

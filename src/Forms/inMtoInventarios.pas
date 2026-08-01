@@ -386,13 +386,11 @@ begin
   ResolverArtSkuActivoDocumento(
     tvLineas, ACodArt, ACodSku);
 end;
-
 function TfrmMtoInventarios.DataSourcesParaFoto: TArray<TDataSource>;
 begin
   Result := DataSourcesParaFotoDocumento(
     dsTablaG, tvLineas);
 end;
-
 function TfrmMtoInventarios.ComprobarRecuentoRemotoDisponible: Boolean;
 begin
   Result := Assigned(dmmInventarios) and
@@ -400,13 +398,11 @@ begin
   if not Result then
     ShowMessage(SErrorMigracionRecuentoInventariosNoAplicada);
 end;
-
 function TfrmMtoInventarios.SqlRestriccionUsuario: string;
 begin
   Result := SqlFiltroDocumento(
     ContextoSesion, ParametrosApp, 'INV');
 end;
-
 procedure TfrmMtoInventarios.CrearTablaPrincipal;
 var
   emp: string;

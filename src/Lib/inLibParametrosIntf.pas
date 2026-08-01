@@ -71,6 +71,17 @@ type
     procedure Recargar(const AUsuario, AGrupo: string);
   end;
 
+  TServiciosParametrosAplicacion = record
+    Lectura: IParametrosAplicacion;
+    Edicion: IParametrosEdicion;
+    GestorLicencia: IGestorLicenciaAplicacion;
+  end;
+
+  TServiciosParametrosCaja = record
+    Lectura: IParametrosCaja;
+    Edicion: IParametrosEdicion;
+  end;
+
   IProveedorParametros = interface
     ['{A6F5D9A6-89F4-4D2F-B6A4-1B64ECE1DFCD}']
     function GetParametrosApp: IParametrosAplicacion;

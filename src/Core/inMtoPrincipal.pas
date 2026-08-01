@@ -772,46 +772,29 @@ procedure TfrmMtoPrincipal.CrearParametrosSesion(
   const AIdentidad: TIdentidadSesion;
   const AResultadoLicencia: TResultadoLicenciaAplicacion);
 var
-  GestorLicencia: IGestorLicenciaAplicacion;
-  ParametrosAppCreados: IParametrosAplicacion;
-  ParametrosCajaCreados: IParametrosCaja;
+  ServiciosApp: TServiciosParametrosAplicacion;
+  ServiciosCaja: TServiciosParametrosCaja;
 begin
   inLibLog.Log.LogInfo('Arranque: creando parámetros de aplicación');
-  ParametrosAppCreados := CrearParametrosAplicacion(
+  ServiciosApp := CrearParametrosAplicacion(
     PerfilesLectura,
     CachePerfiles,
     AIdentidad.Usuario,
     AIdentidad.Grupo
   );
-  if not Supports(
-    ParametrosAppCreados,
-    IGestorLicenciaAplicacion,
-    GestorLicencia
-  ) then
-    raise Exception.Create(SErrorParametrosSinEstadoLicencia);
-  GestorLicencia.EstablecerLicencia(AResultadoLicencia);
+  ServiciosApp.GestorLicencia.EstablecerLicencia(AResultadoLicencia);
   inLibLog.Log.LogInfo('Arranque: creando parámetros de caja');
-  ParametrosCajaCreados := CrearParametrosCaja(
+  ServiciosCaja := CrearParametrosCaja(
     PerfilesLectura,
     CachePerfiles,
     ContextoSesion,
     AIdentidad.Usuario,
     AIdentidad.Grupo
   );
-  if not Supports(
-    ParametrosAppCreados,
-    IParametrosEdicion,
-    FParametrosAppEdicion
-  ) then
-    raise Exception.Create(SErrorParametrosAplicacionSinContratoEdicion);
-  if not Supports(
-    ParametrosCajaCreados,
-    IParametrosEdicion,
-    FParametrosCajaEdicion
-  ) then
-    raise Exception.Create(SErrorParametrosCajaSinContratoEdicion);
-  AsignarParametros(ParametrosAppCreados, ParametrosCajaCreados);
-  FDmConn.AsignarParametrosApp(ParametrosAppCreados);
+  FParametrosAppEdicion := ServiciosApp.Edicion;
+  FParametrosCajaEdicion := ServiciosCaja.Edicion;
+  AsignarParametros(ServiciosApp.Lectura, ServiciosCaja.Lectura);
+  FDmConn.AsignarParametrosApp(ServiciosApp.Lectura);
   AsignarTraducciones(
     TServicioTraducciones.Create(
       Conexiones,

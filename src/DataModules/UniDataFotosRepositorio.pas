@@ -22,10 +22,8 @@ function CrearRepositorioFotosUniDAC(
   AConexion: TUniConnection): TRepositoriosFotos;
 
 implementation
-
 uses
   System.SysUtils, Data.DB;
-
 type
   TRepositorioFotosUniDAC = class(
     TInterfacedObject,
@@ -77,7 +75,6 @@ type
       const ASerieSesion, ANumeroSesion: string;
       ALinea: Integer);
   end;
-
 constructor TRepositorioFotosUniDAC.Create(
   AConexion: TUniConnection);
 begin
@@ -86,13 +83,11 @@ begin
   inherited Create;
   FConexion := AConexion;
 end;
-
 function TRepositorioFotosUniDAC.NuevaConsulta: TUniQuery;
 begin
   Result := TUniQuery.Create(nil);
   Result.Connection := FConexion;
 end;
-
 function TRepositorioFotosUniDAC.BuscarFotoPorUnidades(
   const ACodigoArticulo: string;
   const AUnidades: TArray<string>): TDataSet;

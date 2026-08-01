@@ -15,9 +15,7 @@
 {    en UniDataPivoteVenta.                                                    }
 {******************************************************************************}
 unit inLibPivoteVentaIntf;
-
 interface
-
 type
   // Atributos de variación de un SKU: color (id y textos) y talla.
   TInfoSkuPivoteVenta = record
@@ -75,10 +73,6 @@ type
     function ElegirArticuloDesdeBusqueda(const AAlmacenStock: string;
                                          out ACodigoArticulo: string)
                                          : Boolean;
-  end;
-  TRepositoriosPivoteVenta = record
-    Modelo: IRepositorioModeloPivoteVenta;
-    Edicion: IRepositorioEdicionPivoteVenta;
   end;
 
 implementation

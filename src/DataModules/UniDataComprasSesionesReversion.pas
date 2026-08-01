@@ -16,7 +16,7 @@ unit UniDataComprasSesionesReversion;
 interface
 
 uses
-  inLibComprasSesionesMaterializacionIntf,
+  inLibComprasSesionesLecturasIntf,
   UniDataComprasSesiones;
 
 function ValidarReversionSesion(

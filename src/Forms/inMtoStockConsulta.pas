@@ -467,7 +467,6 @@ begin
   FMenuAgregarDoc.OnClick := MenuAgregarDocClick;
   FPopMenuStock.Items.Add(FMenuAgregarDoc);
   grdStock.PopupMenu := FPopMenuStock;
-
   // Lista paralela combo -> estado y radios de modo
   FEstadosCombo := TList<TEstadoStock>.Create;
   FrbSimplificado := TcxRadioButton.Create(Self);
@@ -492,7 +491,6 @@ begin
   CrearPestanasFotos;
   PoblarComboEstados;
   cbbEstado.Style.TextColor := ColorEstado(esExistencias);
-
   pcVistas.ActivePage := tsPorAlmacen;
   pcFiltros.ActivePage := tsColores;
   CrearEstilosEstado;
@@ -500,7 +498,6 @@ begin
   CargarAlmacenes;
   AjustarFotoCabecera;
 end;
-
 procedure TfrmStockConsulta.PoblarComboEstados;
   procedure AddEstado(AEstado: TEstadoStock);
   begin

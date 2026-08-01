@@ -16,7 +16,7 @@ unit UniDataComprasSesionesDocumentosComun;
 interface
 
 uses
-  inLibComprasSesionesMaterializacionIntf;
+  inLibComprasSesionesLecturasIntf;
 
 function ConsultarLineasDocumentoCompra(
   const ALecturas: ILecturasDocumentosMaterializacion;

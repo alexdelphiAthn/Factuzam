@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       UniDataVerifactuColaResultados                                }
 {    Tipo:       Librería                                                      }
@@ -31,28 +31,11 @@ type
       AIdCola: Int64; const ASerie, ANumero, AMensaje: string;
       AIntentos: Integer); static;
   end;
-function CalcularEsperaReintentoVerifactu(AIntentos: Integer): Integer;
-function CalcularEstadoReintentoVerifactu(
-  AIntentos, AMaxIntentos: Integer): string;
 implementation
 uses
   System.SysUtils, System.Classes, Data.DB, inLibVerifactu,
-  inLibRelojFiscal, inLibVentasWsCola, UniDataVentasWsCola;
-function CalcularEsperaReintentoVerifactu(AIntentos: Integer): Integer;
-begin
-  if AIntentos > 5 then
-    Result := 60 * 32
-  else
-    Result := 60 * (1 shl AIntentos);
-end;
-function CalcularEstadoReintentoVerifactu(
-  AIntentos, AMaxIntentos: Integer): string;
-begin
-  if (AIntentos + 1) >= AMaxIntentos then
-    Result := 'ERROR'
-  else
-    Result := 'PENDIENTE';
-end;
+  inLibRelojFiscal, inLibVentasWsCola, inLibVerifactuReintentos,
+  UniDataVentasWsCola;
 procedure AsignarResultadoComun(AQry: TUniQuery;
   const AResultado: TResultadoEnvioVerifactu);
 begin

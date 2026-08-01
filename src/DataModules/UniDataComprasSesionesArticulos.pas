@@ -18,6 +18,7 @@ interface
 uses
   Uni,
   inLibFotos,
+  inLibComprasSesionesLecturasIntf,
   inLibComprasSesionesMaterializacionIntf,
   UniDataComprasSesiones;
 
@@ -38,7 +39,6 @@ procedure MaterializarArticulosSesion(
   const AUsuario: string);
 
 implementation
-
 uses
   System.SysUtils,
   Data.DB, DBAccess,
@@ -66,20 +66,16 @@ begin
   iLenSeq := 12 - Length(sPref);
   if iLenSeq <= 0 then
     raise Exception.Create(Format(SErrorPrefijoEanSesionLargo, [sPref]));
-
   iNext := ALecturas.ObtenerSiguienteSecuenciaEan(
     sPref,
     iLenSeq);
-
   sBase  := sPref + Format('%.*d', [iLenSeq, iNext]);
   cCheck := inLibEAN13.CalcularDigitoEAN13(sBase);
   Result := sBase + cCheck;
 end;
-
 // ---------------------------------------------------------------------------
 // Auxiliares internas
 // ---------------------------------------------------------------------------
-
 procedure InsertarArticulo(AConn: TUniConnection;
                            ADM: TdmComprasSesiones;
                            const AUsuario, ASerieSes, ANumSes: string;
@@ -170,7 +166,6 @@ begin
     q.ParamByName('art').AsString := ACodigoArt;
     q.ParamByName('u').AsString  := AUsuario;
     q.ExecSQL;
-
     // Fila — mismo fallback en cascada.
     q.SQL.Text :=
       'INSERT IGNORE INTO fza_articulos_conjuntos_asign ' +

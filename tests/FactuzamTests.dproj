@@ -84,6 +84,7 @@
         <DCCReference Include="..\src\Lib\inLibGestorGuiasGridMto.pas"/>
         <DCCReference Include="..\src\Lib\inLibGestorTareasMto.pas"/>
         <DCCReference Include="..\src\Lib\inLibGestorArticulosMto.pas"/>
+        <DCCReference Include="..\src\Lib\inLibArticulosVisibilidad.pas"/>
         <DCCReference Include="..\src\Lib\inLibGestorCopiaLineasCompra.pas"/>
         <DCCReference Include="..\src\Lib\inLibDiag.pas"/>
         <DCCReference Include="..\src\Lib\inLibCadenas.pas"/>
@@ -131,6 +132,8 @@
         <DCCReference Include="..\src\Lib\inLibCatalogoSqlEjecucion.pas"/>
         <DCCReference Include="..\src\Lib\inLibComprasSesionesIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibComprasSesionesMaterializacionIntf.pas"/>
+        <DCCReference
+            Include="..\src\Lib\inLibComprasSesionesLecturasIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibComprasSesiones.pas"/>
         <DCCReference Include="..\src\Lib\inLibComprasSesionesMaterializar.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataComprasSesionesRepositorio.pas"/>
@@ -163,6 +166,7 @@
         <DCCReference
             Include="..\src\DataModules\UniDataGridPivoteCompraRepositorio.pas"/>
         <DCCReference Include="..\src\Lib\inLibPedidosCompraIntf.pas"/>
+        <DCCReference Include="..\src\Lib\inLibPedidosCompraRecepcionIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibPedidosCompra.pas"/>
         <DCCReference
             Include="..\src\DataModules\UniDataPedidosCompraPendientes.pas"/>
@@ -189,6 +193,7 @@
             Include="..\src\verifactu\UniDataVerifactuNoVerifactuExport.pas"/>
         <DCCReference Include="..\src\verifactu\UniDataVerifactuColaProcesador.pas"/>
         <DCCReference Include="..\src\verifactu\UniDataVerifactuColaResultados.pas"/>
+        <DCCReference Include="..\src\verifactu\inLibVerifactuReintentos.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataCatalogoSqlValidacion.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataFacturasRepositorio.pas"/>
         <DCCReference Include="..\src\Lib\inLibFacturasLecturasIntf.pas"/>
@@ -224,6 +229,7 @@
         <DCCReference Include="..\src\Lib\inLibPivoteCompraCalculo.pas"/>
         <DCCReference Include="..\src\Lib\inLibPivoteVentaCalculo.pas"/>
         <DCCReference Include="..\src\Lib\inLibPivoteVentaIntf.pas"/>
+        <DCCReference Include="..\src\Lib\inLibPivoteVentaComposicionIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibPivoteVentaModelo.pas"/>
         <DCCReference Include="PruebasAtributosPaleta.pas"/>
         <DCCReference Include="PruebasColumnasDocumento.pas"/>
@@ -233,6 +239,7 @@
         <DCCReference Include="PruebasGestorGuiasGridMto.pas"/>
         <DCCReference Include="PruebasGestorTareasMto.pas"/>
         <DCCReference Include="PruebasGestorArticulosMto.pas"/>
+        <DCCReference Include="PruebasArticulosVisibilidad.pas"/>
         <DCCReference Include="PruebasGestorCopiaLineasCompra.pas"/>
         <DCCReference Include="PruebasDiagnosticoMetadata.pas"/>
         <DCCReference Include="PruebasCadenas.pas"/>
