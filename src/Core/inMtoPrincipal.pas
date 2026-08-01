@@ -260,6 +260,25 @@ type
     // anulada en cuanto cualquier form crea su propio TApplicationEvents
     // (multicaster de la VCL), p.ej. el generador de procesos.
     FAppEvents: TApplicationEvents;
+    procedure PrepararContextoAplicacion(
+      const AContextoSesion: IContextoSesionAplicacion;
+      out AIdentidad: TIdentidadSesion;
+      out AUbicacion: TUbicacionSesion);
+    procedure MostrarSplashInicio;
+    procedure CrearInfraestructuraAplicacion;
+    procedure CrearParametrosSesion(
+      const AIdentidad: TIdentidadSesion;
+      const AResultadoLicencia: TResultadoLicenciaAplicacion);
+    procedure CrearServiciosSesion;
+    procedure ComprobarConfiguracionFiscal;
+    procedure CargarDatosArranque;
+    procedure IniciarProcesosSegundoPlano;
+    procedure ActualizarEstadoSesion(
+      const AIdentidad: TIdentidadSesion;
+      const AUbicacion: TUbicacionSesion);
+    procedure AplicarTema;
+    procedure ConfigurarPresentacionPrincipal;
+    procedure RegistrarInicioAplicacion;
     procedure AbrirUrlAyuda(const AUrl: string);
     procedure AplicarTituloVentana;
     procedure AppException(Sender: TObject; E: Exception);
@@ -669,55 +688,17 @@ begin
   Result := FParametrosCajaEdicion;
 end;
 
-procedure TfrmMtoPrincipal.InicializarAplicacion(
+procedure TfrmMtoPrincipal.PrepararContextoAplicacion(
   const AContextoSesion: IContextoSesionAplicacion;
-  const AResultadoLicencia: TResultadoLicenciaAplicacion);
-var
-  sDis: string;
-  ServicioMonitorSQL: IServicioMonitorSQL;
-  RegistroMonitorSQL: IRegistroMonitorSQL;
-  VisorMonitorSQL: IVisorMonitorSQL;
-  IdentidadActual: TIdentidadSesion;
-  UbicacionActual: TUbicacionSesion;
-  ParametrosAppCreados: IParametrosAplicacion;
-  ParametrosCajaCreados: IParametrosCaja;
-  GestorLicencia: IGestorLicenciaAplicacion;
-
-  procedure AplicarTema;
-  var
-    sTema, sPaleta: string;
-  begin
-    if not (Assigned(LookAndFeelController1) and
-            Assigned(dxSkinController1)) then
-      Exit;
-    try
-      sTema := ParametrosApp.GetString('appTema');
-      if sTema = '' then
-      begin
-        if DarkModeIsEnabled then
-          sTema := 'MetropolisDark'
-        else
-          sTema := 'Office2007Pink';
-      end;
-      LookAndFeelController1.SkinName := sTema;
-      dxSkinController1.SkinName      := sTema;
-      // Paleta de color (solo skins modernos la soportan)
-      sPaleta := ParametrosApp.GetString('appPaleta');
-      if sPaleta <> '' then
-        TcxRootLookAndFeel.Instance.SkinPaletteName := sPaleta;
-    except
-      on E: Exception do
-        inLibLog.Log.LogWarning('Error al establecer skin: ' + E.Message);
-    end;
-  end;
-
+  out AIdentidad: TIdentidadSesion;
+  out AUbicacion: TUbicacionSesion);
 begin
   if not Assigned(AContextoSesion) then
     raise EArgumentNilException.Create(
       SErrorContextoInicioSesionNoProporcionado);
   AsignarContextoSesion(AContextoSesion);
-  IdentidadActual := ContextoSesion.Identidad;
-  UbicacionActual := ContextoSesion.Ubicacion;
+  AIdentidad := ContextoSesion.Identidad;
+  AUbicacion := ContextoSesion.Ubicacion;
   FGestorExcepciones :=
     CrearGestorExcepcionesAplicacion(
       ContextoSesion);
@@ -729,10 +710,10 @@ begin
   FWorkerOperacion := nil;
   FCancelaOperacionSolicitada := False;
   FEnOperacionLarga := False;
-  sDis := '';
-  // Splash no-modal al arrancar. Lo mantenemos visible mientras corre el
-  // resto de la inicializacion y garantizamos un suelo de 1000 ms para
-  // que la marca se lea aunque todo termine en 250 ms.
+end;
+
+procedure TfrmMtoPrincipal.MostrarSplashInicio;
+begin
   FSplashInicio := nil;
   FSplashTimestamp := Now;
   try
@@ -745,6 +726,14 @@ begin
     // Si el splash falla por lo que sea, no rompemos el arranque.
     FreeAndNil(FSplashInicio);
   end;
+end;
+
+procedure TfrmMtoPrincipal.CrearInfraestructuraAplicacion;
+var
+  RegistroMonitorSQL: IRegistroMonitorSQL;
+  ServicioMonitorSQL: IServicioMonitorSQL;
+  VisorMonitorSQL: IVisorMonitorSQL;
+begin
   FormManager := TEmbeddedFormManager.Create(Self.pcPrincipal);
   FDmConn     := TdmConn.Create(Self);
   FServicioCopiasSeguridad := TServicioCopiasSeguridad.Create(
@@ -777,12 +766,22 @@ begin
       FdmDataPerfiles,
       FdmDataPerfiles,
       FdmDataPerfiles));
+end;
+
+procedure TfrmMtoPrincipal.CrearParametrosSesion(
+  const AIdentidad: TIdentidadSesion;
+  const AResultadoLicencia: TResultadoLicenciaAplicacion);
+var
+  GestorLicencia: IGestorLicenciaAplicacion;
+  ParametrosAppCreados: IParametrosAplicacion;
+  ParametrosCajaCreados: IParametrosCaja;
+begin
   inLibLog.Log.LogInfo('Arranque: creando parámetros de aplicación');
   ParametrosAppCreados := CrearParametrosAplicacion(
     PerfilesLectura,
     CachePerfiles,
-    IdentidadActual.Usuario,
-    IdentidadActual.Grupo
+    AIdentidad.Usuario,
+    AIdentidad.Grupo
   );
   if not Supports(
     ParametrosAppCreados,
@@ -796,8 +795,8 @@ begin
     PerfilesLectura,
     CachePerfiles,
     ContextoSesion,
-    IdentidadActual.Usuario,
-    IdentidadActual.Grupo
+    AIdentidad.Usuario,
+    AIdentidad.Grupo
   );
   if not Supports(
     ParametrosAppCreados,
@@ -821,6 +820,10 @@ begin
   Traducciones.Aplicar(Self);
   if FSplashInicio is TfrmSplash then
     Traducciones.Aplicar(TfrmSplash(FSplashInicio));
+end;
+
+procedure TfrmMtoPrincipal.CrearServiciosSesion;
+begin
   FServicioFotos := TFotosArticulos.Create;
   AsignarFotosArticulos(FServicioFotos);
   FServicioFotos.AsignarConexion(
@@ -840,6 +843,10 @@ begin
   // Si falta alguna queda en el log desde el arranque en vez de fallar
   // al abrir el menú.
   oFzaWinf.ComprobarRegistradas;
+end;
+
+procedure TfrmMtoPrincipal.ComprobarConfiguracionFiscal;
+begin
   try
     SincronizarVersionInstalacionesSif(
       ParametrosApp,
@@ -855,8 +862,12 @@ begin
   except
     on E: Exception do
       inLibLog.Log.LogWarning('No se pudo disponer de la declaración ' +
-                              'responsable de esta versión: ' + E.Message);
+                               'responsable de esta versión: ' + E.Message);
   end;
+end;
+
+procedure TfrmMtoPrincipal.CargarDatosArranque;
+begin
   if ParametrosApp.GetBool('appArranqueEnParalelo', False) then
     PrecargarCachesParalelo
   else
@@ -868,6 +879,10 @@ begin
   // abrir cajon no se activa fuera de caja (ver ImpresoraCajaAsignada).
   inLibLog.Log.LogInfo('Arranque: impresora de caja resuelta = "' +
                        ParametrosCaja.ImpresoraCaja + '"');
+end;
+
+procedure TfrmMtoPrincipal.IniciarProcesosSegundoPlano;
+begin
   // Hilo de la cola Verifactu: arranca siempre; cada ciclo consulta el
   // parámetro appVerifactuActivo, así puede activarse sin reiniciar
   TVerifactuCola.IniciarHilo(
@@ -883,16 +898,57 @@ begin
     ParametrosApp,
     CrearFabricaSesionVentasWsUniDAC(Conexiones),
     IdentidadSesion.Usuario);
+end;
+
+procedure TfrmMtoPrincipal.ActualizarEstadoSesion(
+  const AIdentidad: TIdentidadSesion;
+  const AUbicacion: TUbicacionSesion);
+var
+  sDistintivo: string;
+begin
+  sDistintivo := '';
   jvStatusBar1.Panels[1].Text := FDmConn.conUni.Server + ':' +
     IntToStr(FDmConn.conUni.Port) + ' (' + FDmConn.conUni.Database + ')';
-  if IdentidadActual.EsAdministrador then
-    sDis := ' ✪';
-  jvStatusBar1.Panels[2].Text := IdentidadActual.Usuario + ' (' +
-    IdentidadActual.Grupo + ') ' + sDis;
-  jvStatusBar1.Panels[3].Text := UbicacionActual.Empresa + '\' +
-    UbicacionActual.Almacen + '\' + UbicacionActual.Caja;
+  if AIdentidad.EsAdministrador then
+    sDistintivo := ' ✪';
+  jvStatusBar1.Panels[2].Text := AIdentidad.Usuario + ' (' +
+    AIdentidad.Grupo + ') ' + sDistintivo;
+  jvStatusBar1.Panels[3].Text := AUbicacion.Empresa + '\' +
+    AUbicacion.Almacen + '\' + AUbicacion.Caja;
   AplicarTituloVentana;
-  // Aplicar permisos de menú: ocultar items sin acceso
+end;
+
+procedure TfrmMtoPrincipal.AplicarTema;
+var
+  sPaleta, sTema: string;
+begin
+  if Assigned(LookAndFeelController1) and
+     Assigned(dxSkinController1) then
+  begin
+    try
+      sTema := ParametrosApp.GetString('appTema');
+      if sTema = '' then
+      begin
+        if DarkModeIsEnabled then
+          sTema := 'MetropolisDark'
+        else
+          sTema := 'Office2007Pink';
+      end;
+      LookAndFeelController1.SkinName := sTema;
+      dxSkinController1.SkinName := sTema;
+      sPaleta := ParametrosApp.GetString('appPaleta');
+      if sPaleta <> '' then
+        TcxRootLookAndFeel.Instance.SkinPaletteName := sPaleta;
+    except
+      on E: Exception do
+        inLibLog.Log.LogWarning(
+          'Error al establecer skin: ' + E.Message);
+    end;
+  end;
+end;
+
+procedure TfrmMtoPrincipal.ConfigurarPresentacionPrincipal;
+begin
   AplicarPermisosMenu;
   // Visibilidad inicial del panel de monitor SQL: ya no la decide solo el
   // {$IFDEF DEBUG}. AplicarModosDepuracion la sincronizará con los flags
@@ -923,15 +979,37 @@ begin
   // evitamos un EReadError 'Invalid property value' al cargar el form.
   Self.OnResize := FormResize;
   ActualizarFondoLogo;
+end;
+
+procedure TfrmMtoPrincipal.RegistrarInicioAplicacion;
+begin
   inLibLog.Log.LogInfo('Arranque del sistema');
   RegistrarEventoFiscalSeguro(ParametrosApp,
     ConexionPrincipal,
     IdentidadSesion.Usuario,
     cEventoNoVerifactuInicio,
     'Inicio del sistema');
-  // Suelo de visibilidad del splash: si la inicializacion fue mas rapida
-  // de 1000 ms, esperamos a llegar a ese minimo para que el usuario
-  // pueda leer la marca; si tardo mas, lo cerramos sin demora.
+end;
+
+procedure TfrmMtoPrincipal.InicializarAplicacion(
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AResultadoLicencia: TResultadoLicenciaAplicacion);
+var
+  IdentidadActual: TIdentidadSesion;
+  UbicacionActual: TUbicacionSesion;
+begin
+  PrepararContextoAplicacion(
+    AContextoSesion, IdentidadActual, UbicacionActual);
+  MostrarSplashInicio;
+  CrearInfraestructuraAplicacion;
+  CrearParametrosSesion(IdentidadActual, AResultadoLicencia);
+  CrearServiciosSesion;
+  ComprobarConfiguracionFiscal;
+  CargarDatosArranque;
+  IniciarProcesosSegundoPlano;
+  ActualizarEstadoSesion(IdentidadActual, UbicacionActual);
+  ConfigurarPresentacionPrincipal;
+  RegistrarInicioAplicacion;
   CerrarSplashInicio(1000);
   MostrarAvisoCaducidadCertificado;
 end;

@@ -621,317 +621,320 @@ begin
   AjustarVentanaAContenido;
 end;
 
-procedure TFormVisualizador.ProcesarComandosESCPOS(const Comandos: string);
+function TFormVisualizador.LeerByteComando(
+  const AComandos: string; var AIndice: Integer): Byte;
+begin
+  Inc(AIndice);
+  Result := 0;
+  if AIndice <= Length(AComandos) then
+    Result := Ord(AComandos[AIndice]);
+end;
+
+function TFormVisualizador.LeerWordComando(
+  const AComandos: string; var AIndice: Integer): Word;
+var
+  bAlto, bBajo: Byte;
+begin
+  bBajo := LeerByteComando(AComandos, AIndice);
+  bAlto := LeerByteComando(AComandos, AIndice);
+  Result := bBajo + (bAlto shl 8);
+end;
+
+procedure TFormVisualizador.VaciarBufferTexto(var ABuffer: string);
+begin
+  if ABuffer <> '' then
+  begin
+    ImprimirTexto(ABuffer);
+    ABuffer := '';
+  end;
+end;
+
+procedure TFormVisualizador.ReiniciarFormatoTexto;
+begin
+  FFuenteActual := 0;
+  FNegrita := False;
+  FSubrayado := False;
+  FAlineacion := 0;
+  FTamanoAncho := 1;
+  FTamanoAlto := 1;
+  FInverso := False;
+end;
+
+procedure TFormVisualizador.DibujarLineaCorte;
+begin
+  AsegurarAltoPapel(FCurrentY + 20 + MARGEN_PAPEL_FINAL);
+  FCanvas.Pen.Color := clGray;
+  FCanvas.Pen.Style := psDash;
+  FCanvas.MoveTo(0, FCurrentY + 10);
+  FCanvas.LineTo(ANCHO_PAPEL_PIXELS, FCurrentY + 10);
+  FCurrentY := FCurrentY + 20;
+end;
+
+procedure TFormVisualizador.ProcesarComandoESC(
+  const AComandos: string; var AIndice: Integer;
+  var ABuffer: string);
+var
+  i, iAncho, iBytesPorLinea, iLineas: Integer;
+  sDatosImagen: string;
+begin
+  Inc(AIndice);
+  if AIndice <= Length(AComandos) then
+  begin
+    case AComandos[AIndice] of
+      '@':
+        ReiniciarFormatoTexto;
+      'M', 'm':
+        begin
+          FFuenteActual := LeerByteComando(AComandos, AIndice);
+          if FFuenteActual > 2 then
+            FFuenteActual := 1;
+        end;
+      'E':
+        FNegrita := LeerByteComando(AComandos, AIndice) <> 0;
+      '-':
+        FSubrayado := LeerByteComando(AComandos, AIndice) <> 0;
+      'a':
+        begin
+          FAlineacion := LeerByteComando(AComandos, AIndice);
+          if FAlineacion > 2 then
+            FAlineacion := 0;
+        end;
+      'd':
+        begin
+          VaciarBufferTexto(ABuffer);
+          iLineas := LeerByteComando(AComandos, AIndice);
+          FCurrentY := FCurrentY + iLineas * ObtenerAltoLinea;
+        end;
+      '*':
+        begin
+          VaciarBufferTexto(ABuffer);
+          LeerByteComando(AComandos, AIndice);
+          iAncho := LeerWordComando(AComandos, AIndice);
+          iBytesPorLinea := (iAncho + 7) div 8;
+          sDatosImagen := '';
+          for i := 1 to iBytesPorLinea do
+            sDatosImagen := sDatosImagen +
+              Char(LeerByteComando(AComandos, AIndice));
+          ImprimirImagenRaster(sDatosImagen, iAncho, 1);
+        end;
+      'i':
+        DibujarLineaCorte;
+      'p':
+        Inc(AIndice, 3);
+    end;
+  end;
+end;
+
+procedure TFormVisualizador.ProcesarCodigoBarras(
+  const AComandos: string; var AIndice: Integer;
+  var ABuffer: string);
+var
+  bDato, bFormato, bLongitud: Byte;
+  i: Integer;
+  sDatos: string;
+begin
+  bFormato := LeerByteComando(AComandos, AIndice);
+  sDatos := '';
+  if bFormato <= 6 then
+  begin
+    bDato := LeerByteComando(AComandos, AIndice);
+    while (bDato <> 0) and (AIndice <= Length(AComandos)) do
+    begin
+      sDatos := sDatos + Char(bDato);
+      bDato := LeerByteComando(AComandos, AIndice);
+    end;
+  end
+  else
+  begin
+    bLongitud := LeerByteComando(AComandos, AIndice);
+    for i := 1 to bLongitud do
+      sDatos := sDatos + Char(LeerByteComando(AComandos, AIndice));
+  end;
+  VaciarBufferTexto(ABuffer);
+  if (bFormato = 2) or (bFormato = 67) then
+    DibujarEAN13(sDatos);
+end;
+
+procedure TFormVisualizador.ProcesarComandoQR(
+  const AComandos: string; var AIndice: Integer;
+  var ABuffer: string);
+var
+  bCodigo, bParteAlta, bParteBaja: Byte;
+  bEsQR: Boolean;
+  i, iLongitud: Integer;
+begin
+  Inc(AIndice);
+  if AIndice <= Length(AComandos) then
+  begin
+    bEsQR := AComandos[AIndice] = 'k';
+    bParteBaja := LeerByteComando(AComandos, AIndice);
+    bParteAlta := LeerByteComando(AComandos, AIndice);
+    iLongitud := bParteBaja + bParteAlta * 256;
+    if bEsQR then
+    begin
+      LeerByteComando(AComandos, AIndice);
+      bCodigo := LeerByteComando(AComandos, AIndice);
+      case bCodigo of
+        65:
+          for i := 1 to iLongitud - 2 do
+            LeerByteComando(AComandos, AIndice);
+        67:
+          begin
+            FQRTamanoModulo := LeerByteComando(AComandos, AIndice);
+            for i := 1 to iLongitud - 3 do
+              LeerByteComando(AComandos, AIndice);
+          end;
+        69:
+          begin
+            FQRNivelError := LeerByteComando(AComandos, AIndice);
+            for i := 1 to iLongitud - 3 do
+              LeerByteComando(AComandos, AIndice);
+          end;
+        80:
+          begin
+            LeerByteComando(AComandos, AIndice);
+            FQRTexto := '';
+            for i := 1 to iLongitud - 3 do
+              FQRTexto := FQRTexto +
+                Char(LeerByteComando(AComandos, AIndice));
+          end;
+        81:
+          begin
+            for i := 1 to iLongitud - 2 do
+              LeerByteComando(AComandos, AIndice);
+            VaciarBufferTexto(ABuffer);
+            DibujarQRCode;
+            FQRTexto := '';
+          end;
+      else
+        for i := 1 to iLongitud - 2 do
+          LeerByteComando(AComandos, AIndice);
+      end;
+    end
+    else
+      for i := 1 to iLongitud do
+        LeerByteComando(AComandos, AIndice);
+  end;
+end;
+
+procedure TFormVisualizador.ProcesarImagenRasterGS(
+  const AComandos: string; var AIndice: Integer;
+  var ABuffer: string);
+var
+  i, iAlto, iAnchoBytes, iAnchoPixels: Integer;
+  iBit, iByte, iInicioX, x, y: Integer;
+  sDatos: string;
+begin
+  Inc(AIndice);
+  if (AIndice <= Length(AComandos)) and
+     (AComandos[AIndice] = '0') then
+  begin
+    LeerByteComando(AComandos, AIndice);
+    iAnchoBytes := LeerWordComando(AComandos, AIndice);
+    iAlto := LeerWordComando(AComandos, AIndice);
+    VaciarBufferTexto(ABuffer);
+    sDatos := '';
+    for i := 1 to iAnchoBytes * iAlto do
+      sDatos := sDatos + Char(LeerByteComando(AComandos, AIndice));
+    iAnchoPixels := iAnchoBytes * 8;
+    case FAlineacion of
+      1:
+        iInicioX := (ANCHO_PAPEL_PIXELS - iAnchoPixels) div 2;
+      2:
+        iInicioX := ANCHO_PAPEL_PIXELS - iAnchoPixels - MARGEN_PIXELS;
+    else
+      iInicioX := MARGEN_PIXELS;
+    end;
+    AsegurarAltoPapel(FCurrentY + iAlto + MARGEN_PAPEL_FINAL);
+    for y := 0 to iAlto - 1 do
+    begin
+      for x := 0 to iAnchoPixels - 1 do
+      begin
+        iByte := y * iAnchoBytes + x div 8;
+        iBit := 7 - x mod 8;
+        if (iByte < Length(sDatos)) and
+           ((Ord(sDatos[iByte + 1]) and (1 shl iBit)) <> 0) then
+          FCanvas.Pixels[iInicioX + x, FCurrentY + y] := clBlack;
+      end;
+    end;
+    FCurrentY := FCurrentY + iAlto;
+  end;
+end;
+
+procedure TFormVisualizador.ProcesarComandoGS(
+  const AComandos: string; var AIndice: Integer;
+  var ABuffer: string);
+var
+  bPosicion, bValor: Byte;
+begin
+  Inc(AIndice);
+  if AIndice <= Length(AComandos) then
+  begin
+    case AComandos[AIndice] of
+      '!':
+        begin
+          bValor := LeerByteComando(AComandos, AIndice);
+          FTamanoAncho := (bValor and $0F) + 1;
+          FTamanoAlto := ((bValor shr 4) and $07) + 1;
+          if FTamanoAncho > 8 then
+            FTamanoAncho := 1;
+          if FTamanoAlto > 8 then
+            FTamanoAlto := 1;
+        end;
+      'B':
+        FInverso := LeerByteComando(AComandos, AIndice) <> 0;
+      'h':
+        FBarcodeAltura := LeerByteComando(AComandos, AIndice);
+      'w', 'f':
+        LeerByteComando(AComandos, AIndice);
+      'H':
+        begin
+          bPosicion := LeerByteComando(AComandos, AIndice);
+          FBarcodeHriDebajo := (bPosicion = 2) or (bPosicion = 50);
+        end;
+      'k':
+        ProcesarCodigoBarras(AComandos, AIndice, ABuffer);
+      '(':
+        ProcesarComandoQR(AComandos, AIndice, ABuffer);
+      'v':
+        ProcesarImagenRasterGS(AComandos, AIndice, ABuffer);
+    end;
+  end;
+end;
+
+procedure TFormVisualizador.ProcesarComandosESCPOS(
+  const Comandos: string);
 var
   i: Integer;
-  BufferTexto: string;
-  function LeerByte: Byte;
-  begin
-    Inc(i);
-    if i <= Length(Comandos) then
-      Result := Ord(Comandos[i])
-    else
-      Result := 0;
-  end;
-  function LeerWord: Word;
-  var
-    Lo, Hi: Byte;
-  begin
-    Lo := LeerByte;
-    Hi := LeerByte;
-    Result := Lo + (Hi shl 8);
-  end;
+  sBuffer: string;
 begin
   i := 1;
-  BufferTexto := '';
+  sBuffer := '';
   while i <= Length(Comandos) do
   begin
     case Comandos[i] of
-      #27: // ESC
+      #27:
+        ProcesarComandoESC(Comandos, i, sBuffer);
+      #29:
+        ProcesarComandoGS(Comandos, i, sBuffer);
+      #10:
         begin
-          Inc(i);
-          if i > Length(Comandos) then Break;
-          case Comandos[i] of
-            '@': // Inicializar
-              begin
-                FFuenteActual := 0;
-                FNegrita := False;
-                FSubrayado := False;
-                FAlineacion := 0;
-                FTamanoAncho := 1;
-                FTamanoAlto := 1;
-                FInverso := False;
-              end;
-            'M', 'm': // Seleccionar fuente
-              begin
-                FFuenteActual := LeerByte;
-                if FFuenteActual > 2 then FFuenteActual := 1;
-              end;
-            'E': // Negrita on/off
-              begin
-                FNegrita := LeerByte <> 0;
-              end;
-            '-': // Subrayado on/off
-              begin
-                var Modo := LeerByte;
-                FSubrayado := Modo <> 0;
-              end;
-            'a': // Alineación
-              begin
-                FAlineacion := LeerByte;
-                if FAlineacion > 2 then FAlineacion := 0;
-              end;
-            'd': // Saltar n líneas
-              begin
-                if BufferTexto <> '' then
-                begin
-                  ImprimirTexto(BufferTexto);
-                  BufferTexto := '';
-                end;
-                var Lineas := LeerByte;
-                FCurrentY := FCurrentY + (Lineas * ObtenerAltoLinea);
-              end;
-            '*': // Gráficos raster
-              begin
-                if BufferTexto <> '' then
-                begin
-                  ImprimirTexto(BufferTexto);
-                  BufferTexto := '';
-                end;
-                var Modo := LeerByte;
-                var Ancho := LeerWord;
-                var BytesPorLinea := (Ancho + 7) div 8;
-                // Leer datos de imagen (una línea)
-                var DatosImagen := '';
-                for var j := 1 to BytesPorLinea do
-                  DatosImagen := DatosImagen + Char(LeerByte);
-                ImprimirImagenRaster(DatosImagen, Ancho, 1);
-              end;
-            'i': // Cortar papel
-              begin
-                // Visual: dibujar línea de corte
-                AsegurarAltoPapel(FCurrentY + 20 + MARGEN_PAPEL_FINAL);
-                FCanvas.Pen.Color := clGray;
-                FCanvas.Pen.Style := psDash;
-                FCanvas.MoveTo(0, FCurrentY + 10);
-                FCanvas.LineTo(ANCHO_PAPEL_PIXELS, FCurrentY + 10);
-                FCurrentY := FCurrentY + 20;
-              end;
-            'p': // Abrir cajón (ignorar)
-              begin
-                Inc(i, 3); // Saltar parámetros
-              end;
-          end;
-        end;
-      #29: // GS
-        begin
-          Inc(i);
-          if i > Length(Comandos) then Break;
-          case Comandos[i] of
-            '!': // Tamaño de carácter
-              begin
-                var Valor := LeerByte;
-                FTamanoAncho := (Valor and $0F) + 1;
-                FTamanoAlto := ((Valor shr 4) and $07) + 1;
-                if FTamanoAncho > 8 then FTamanoAncho := 1;
-                if FTamanoAlto > 8 then FTamanoAlto := 1;
-              end;
-            'B': // Modo blanco/negro invertido
-              begin
-                FInverso := LeerByte <> 0;
-              end;
-            'h': // Altura del código de barras 1D
-              begin
-                FBarcodeAltura := LeerByte;
-              end;
-            'w': // Ancho de módulo del código de barras (visual fijo)
-              begin
-                LeerByte;
-              end;
-            'H': // Posición del HRI (2 o 50 = debajo)
-              begin
-                var PosHri := LeerByte;
-                FBarcodeHriDebajo := (PosHri = 2) or (PosHri = 50);
-              end;
-            'f': // Fuente del HRI (se ignora en el visual)
-              begin
-                LeerByte;
-              end;
-            'k': // Código de barras 1D (EAN13 en formatos A=2 y B=67)
-              begin
-                var M := LeerByte;
-                var DatosBarcode := '';
-                if M <= 6 then
-                begin
-                  // Formato A: datos terminados en NUL
-                  var B := LeerByte;
-                  while (B <> 0) and (i <= Length(Comandos)) do
-                  begin
-                    DatosBarcode := DatosBarcode + Char(B);
-                    B := LeerByte;
-                  end;
-                end
-                else
-                begin
-                  // Formato B: byte de longitud + datos
-                  var N := LeerByte;
-                  for var j := 1 to N do
-                    DatosBarcode := DatosBarcode + Char(LeerByte);
-                end;
-                if BufferTexto <> '' then
-                begin
-                  ImprimirTexto(BufferTexto);
-                  BufferTexto := '';
-                end;
-                if (M = 2) or (M = 67) then
-                  DibujarEAN13(DatosBarcode);
-              end;
-             '(': // Comandos función (incluye QR)
-              begin
-                Inc(i);
-                if i > Length(Comandos) then Break;
-                if Comandos[i] = 'k' then // Comando QR
-                begin
-                  var pL := LeerByte;
-                  var pH := LeerByte;
-                  var DataLength := pL + (pH * 256);
-                  var Fn := LeerByte; // Función
-                  var Cn := LeerByte; // Código de función
-                  case Cn of
-                    65: // 'A' - Seleccionar modelo (ignorar)
-                      begin
-                        for var j := 1 to DataLength - 2 do
-                          LeerByte;
-                      end;
-                    67: // 'C' - Tamaño del módulo
-                      begin
-                        FQRTamanoModulo := LeerByte;
-                        for var j := 1 to DataLength - 3 do
-                          LeerByte;
-                      end;
-                    69: // 'E' - Nivel de corrección de errores
-                      begin
-                        FQRNivelError := LeerByte;
-                        for var j := 1 to DataLength - 3 do
-                          LeerByte;
-                      end;
-                    80: // 'P' - Almacenar datos
-                      begin
-                        // Leer el texto del QR
-                        //(saltar primeros 3 bytes de cabecera)
-                        LeerByte; // Saltar byte adicional
-                        FQRTexto := '';
-                        for var j := 1 to DataLength - 3 do
-                          FQRTexto := FQRTexto + Char(LeerByte);
-                      end;
-                    81: // 'Q' - Imprimir QR
-                      begin
-                        for var j := 1 to DataLength - 2 do
-                          LeerByte;
-                        // Imprimir texto pendiente
-                        if BufferTexto <> '' then
-                        begin
-                          ImprimirTexto(BufferTexto);
-                          BufferTexto := '';
-                        end;
-                        // Dibujar el QR
-                        DibujarQRCode;
-                        FQRTexto := ''; // Limpiar después de imprimir
-                      end;
-                  else
-                    // Comando desconocido, saltar datos
-                    for var j := 1 to DataLength - 2 do
-                      LeerByte;
-                  end;
-                end
-                else
-                begin
-                  // Otro comando con paréntesis, saltar
-                  var pL := LeerByte;
-                  var pH := LeerByte;
-                  var DataLength := pL + (pH * 256);
-                  for var j := 1 to DataLength do
-                    LeerByte;
-                end;
-              end;
-            'v': // Imprimir imagen raster (formato GS v 0)
-              begin
-                Inc(i);
-                if i > Length(Comandos) then Break;
-                if Comandos[i] = '0' then
-                begin
-                  var Modo := LeerByte;
-                  var AnchoBytes := LeerWord;
-                  var Alto := LeerWord;
-                  if BufferTexto <> '' then
-                  begin
-                    ImprimirTexto(BufferTexto);
-                    BufferTexto := '';
-                  end;
-                  // Leer datos completos de imagen
-                  var DatosImagen := '';
-                  for var j := 1 to AnchoBytes * Alto do
-                    DatosImagen := DatosImagen + Char(LeerByte);
-                  // Procesar imagen completa
-                  var AnchoPixels := AnchoBytes * 8;
-                  var X, Y: Integer;
-                  var StartX: Integer;
-                  // Calcular posición X según alineación
-                  case FAlineacion of
-                    1: StartX := (ANCHO_PAPEL_PIXELS - AnchoPixels) div 2;
-                    2: StartX := ANCHO_PAPEL_PIXELS - AnchoPixels -
-                                 MARGEN_PIXELS; // Derecha
-                  else
-                    StartX := MARGEN_PIXELS; // Izquierda
-                  end;
-                  AsegurarAltoPapel(FCurrentY + Alto +
-                                     MARGEN_PAPEL_FINAL);
-                  for Y := 0 to Alto - 1 do
-                  begin
-                    for X := 0 to AnchoPixels - 1 do
-                    begin
-                      var ByteIndex := Y * AnchoBytes + (X div 8);
-                      var BitIndex := 7 - (X mod 8);
-                      if (ByteIndex < Length(DatosImagen)) and
-                         ((Ord(DatosImagen[ByteIndex + 1]) and
-                         (1 shl BitIndex)) <> 0) then
-                      begin
-                        FCanvas.Pixels[StartX + X, FCurrentY + Y] := clBlack;
-                      end;
-                    end;
-                  end;
-                  FCurrentY := FCurrentY + Alto;
-                end;
-              end;
-          end;
-        end;
-      #10: // LF - Nueva línea
-        begin
-          if BufferTexto <> '' then
-          begin
-            ImprimirTexto(BufferTexto);
-            BufferTexto := '';
-          end;
+          VaciarBufferTexto(sBuffer);
           NuevaLinea;
         end;
-      #13: // CR - Retorno de carro (ignorar en este contexto)
+      #13:
         begin
-          // Normalmente se ignora
+          // El retorno de carro no altera el cursor del preview.
         end;
-      #9: // TAB
-        begin
-          BufferTexto := BufferTexto + '    '; // 4 espacios
-        end;
+      #9:
+        sBuffer := sBuffer + '    ';
     else
-      // Caracteres imprimibles
       if Ord(Comandos[i]) >= 32 then
-          BufferTexto := BufferTexto + Comandos[i];
+        sBuffer := sBuffer + Comandos[i];
     end;
     Inc(i);
   end;
-  // Imprimir texto restante
-  if BufferTexto <> '' then
-    ImprimirTexto(BufferTexto);
+  VaciarBufferTexto(sBuffer);
 end;
 
 procedure TFormVisualizador.AjustarFuente;

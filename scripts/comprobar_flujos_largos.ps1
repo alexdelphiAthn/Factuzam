@@ -1,7 +1,7 @@
 param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [int]$MaximoFlujo = 100,
-  [int]$MaximoMetodosMayoresDe200 = 33
+  [int]$MaximoMetodosMayoresDe200 = 28
 )
 
 Set-StrictMode -Version Latest
@@ -186,6 +186,22 @@ $objetivos = @(
   @{
     Ruta = 'src\Forms\inMtoDevolucionesCompra.pas'
     Nombre = 'TfrmMtoDevolucionesCompra.AplicarArticuloDevolucion'
+  },
+  @{
+    Ruta = 'src\Core\inMtoPreviewTicket.pas'
+    Nombre = 'TFormVisualizador.ProcesarComandosESCPOS'
+  },
+  @{
+    Ruta = 'src\Caja\Lib\inLibTiraCajaTicket.pas'
+    Nombre = 'TTiraCajaTicket.Imprimir'
+  },
+  @{
+    Ruta = 'src\Lib\inLibGenerarTicket.pas'
+    Nombre = 'ImprimirT'
+  },
+  @{
+    Ruta = 'src\Core\inMtoPrincipal.pas'
+    Nombre = 'TfrmMtoPrincipal.InicializarAplicacion'
   }
 )
 $mediciones = [System.Collections.Generic.List[object]]::new()
@@ -194,6 +210,55 @@ foreach ($objetivo in $objetivos) {
     -RutaRelativa $objetivo.Ruta `
     -Nombre $objetivo.Nombre
   $mediciones.Add($medicion)
+}
+
+$gruposFlujosExtraidos = @(
+  @{
+    Ruta = 'src\Core\inMtoPreviewTicket.pas'
+    Patron = '^TFormVisualizador\.(LeerByteComando|LeerWordComando|' +
+      'VaciarBufferTexto|ReiniciarFormatoTexto|DibujarLineaCorte|' +
+      'ProcesarComandoESC|ProcesarCodigoBarras|ProcesarComandoQR|' +
+      'ProcesarImagenRasterGS|ProcesarComandoGS)$'
+    Minimo = 10
+  },
+  @{
+    Ruta = 'src\Caja\Lib\inLibTiraCajaTicket.pas'
+    Patron = '^TImpresorTiraCajaTicket\.'
+    Minimo = 12
+  },
+  @{
+    Ruta = 'src\Lib\inLibGenerarTicket.pas'
+    Patron = '^TImpresorTicketVenta\.'
+    Minimo = 16
+  },
+  @{
+    Ruta = 'src\Core\inMtoPrincipal.pas'
+    Patron = '^TfrmMtoPrincipal\.(PrepararContextoAplicacion|' +
+      'MostrarSplashInicio|CrearInfraestructuraAplicacion|' +
+      'CrearParametrosSesion|CrearServiciosSesion|' +
+      'ComprobarConfiguracionFiscal|CargarDatosArranque|' +
+      'IniciarProcesosSegundoPlano|ActualizarEstadoSesion|' +
+      'AplicarTema|ConfigurarPresentacionPrincipal|' +
+      'RegistrarInicioAplicacion)$'
+    Minimo = 12
+  }
+)
+foreach ($grupo in $gruposFlujosExtraidos) {
+  $rutaGrupo = Join-Path $Raiz $grupo.Ruta
+  $metodosGrupo = @(
+    Obtener-MetodosPascal -Ruta $rutaGrupo |
+      Where-Object { $_.Nombre -match $grupo.Patron }
+  )
+  if ($metodosGrupo.Count -lt $grupo.Minimo) {
+    throw "Faltan colaboradores extraidos en $($grupo.Ruta)."
+  }
+  foreach ($metodo in $metodosGrupo) {
+    if ($metodo.Lineas -gt $MaximoFlujo) {
+      throw (
+        "$($grupo.Ruta)`:$($metodo.Linea) $($metodo.Nombre) ocupa " +
+        "$($metodo.Lineas) lineas; maximo permitido: $MaximoFlujo.")
+    }
+  }
 }
 
 $rutaCaja = Join-Path $Raiz 'src\Caja\DataModules\UniDataCaja.pas'
