@@ -125,6 +125,11 @@ formulario consumidor. Al abrir la pantalla:
 Desactivar el interruptor en un formulario no cambia los demás consumidores
 de la misma operación.
 
+El inventario de unidades que leen el interruptor, publican perfiles o
+aportan definiciones al catálogo, junto con el recorrido histórico de los
+data modules, está en
+[`MANUAL_SQL_PERFILES.md`](../MANUAL_SQL_PERFILES.md#21-unidades-que-leen-ogetsqlfromdb-y-publican-perfiles).
+
 ### Validación y fallback seguro
 
 Antes de ejecutar una personalización se comprueba que:

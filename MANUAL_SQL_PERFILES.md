@@ -12,9 +12,9 @@ repositorio decide si utiliza:
 1. El SQL base incluido y probado con el ejecutable.
 2. Una personalización activa guardada en `fza_usuarios_perfiles`.
 
-El catálogo actual contiene 120 operaciones de doce repositorios:
+El catálogo actual contiene 126 operaciones de doce repositorios:
 
-- 116 lecturas que admiten perfil y fallback al SQL base;
+- 122 lecturas que admiten perfil y fallback al SQL base;
 - dos comprobaciones técnicas de esquema que usan siempre el SQL base;
 - dos escrituras de Facturas registradas como `pesSoloBase`.
 
@@ -66,6 +66,94 @@ Cada definición declara además una política:
 
 La política de escritura no autoriza un reintento directo. Su ejecutor debe
 hacer `Rollback` antes de volver al SQL base.
+
+### 2.1. Unidades que leen `oGetSQLFromDB` y publican perfiles
+
+`oGetSQLFromDB` no lo emite un repositorio ni contiene texto SQL. Es una
+propiedad del perfil de cada formulario. `TGestorPerfilesMto` la crea con
+valor predeterminado `False` y la conserva al guardar el perfil de la
+pantalla.
+
+Las unidades que intervienen en su recorrido son:
+
+| Unidad | Responsabilidad | ¿Escribe SQL en perfiles? |
+|---|---|---|
+| `inLibGestorPerfilesMto` | Crea y guarda `oGetSQLFromDB` bajo la clave del formulario | No; solo escribe el interruptor |
+| `inMtoGen` | Lee el interruptor y activa el cargador histórico del data module | No; el recorrido histórico solo lee perfiles existentes |
+| `UniDataRepositoriosPantalla` | Lee el interruptor con el nombre de cualquier pantalla `TfrmBase` que solicite `ContextoRepositoriosPantalla` | Indirectamente; si está activo solicita la publicación central |
+| `UniDataComposicionAplicacion` | Lee el interruptor del formulario propietario durante la composición de los servicios de sesión | Indirectamente; si está activo solicita la publicación central |
+| `inMtoCajaOpe` | Lee el interruptor al componer los servicios específicos de la operación de caja | Indirectamente; si está activo solicita la publicación central |
+| `UniDataCatalogoSqlAplicacion` | Compone las definiciones de los doce repositorios y llama a `PublicarCatalogo` | Sí; publica todas las filas ausentes de `SQL_REPOSITORIOS` |
+| `inLibCatalogoSqlAdmin` | Revisa cada definición y usa `IEscritorPerfilesUsuario` | Sí; realiza la escritura física sin sobrescribir filas existentes |
+| `inLibCatalogoSqlPerfiles` | Resuelve una definición contra el perfil cargado | No; solo lee y selecciona SQL base o personalizado |
+
+Por tanto, una pantalla no publica únicamente las operaciones que consume.
+La primera llamada activa a `CrearCatalogoSqlAplicacion` publica todas las
+definiciones publicables que falten en el registro central. Las aperturas
+posteriores no sobrescriben el SQL base ya publicado ni una personalización.
+
+Una pantalla derivada de `TfrmBase` puede activar este recorrido cuando:
+
+1. dispone de servicios de lectura y escritura de perfiles;
+2. tiene `oGetSQLFromDB=True` bajo su propio `KEY_USUPER`;
+3. solicita algún miembro de `ContextoRepositoriosPantalla`.
+
+No es necesario mantener una lista cerrada de formularios: la fábrica pasa
+el `Name` real de cada pantalla al contexto. Para localizar los consumidores
+actuales debe buscarse `ContextoRepositoriosPantalla` en las unidades de
+formularios.
+
+### 2.2. Unidades que aportan SQL al catálogo compartido
+
+Solo las unidades registradas explícitamente por
+`CrearRegistroDefinicionesSqlAplicacion` pueden publicar texto SQL en
+`SQL_REPOSITORIOS`. El inventario actual es:
+
+| Unidad | Identificador de repositorio | Publicables | Solo base |
+|---|---|---:|---:|
+| `UniDataComprasSesionesRepositorio` | `RepositorioComprasSesiones` | 17 | 0 |
+| `UniDataComprasSesionesMaterializacionRepositorio` | `RepositorioMaterializacionComprasSesiones` | 16 | 0 |
+| `UniDataFacturasRepositorio` | `RepositorioFacturas` | 5 | 2 |
+| `UniDataCajaConsultasRepositorio` | `RepositorioConsultasCaja` | 13 | 0 |
+| `UniDataArticulosResolverRepositorio` | `RepositorioArticulosResolver` | 10 | 0 |
+| `UniDataArticulosValidadorRepositorio` | `RepositorioArticulosValidador` | 7 | 0 |
+| `UniDataArticulosAtributosRepositorio` | `RepositorioArticulosAtributos` | 7 | 0 |
+| `UniDataTraspasoTicketRepositorio` | `RepositorioTraspasoTicket` | 5 | 0 |
+| `UniDataArqueoRepositorio` | `RepositorioArqueoCaja` | 9 | 1 |
+| `UniDataArqueoTicketRepositorio` | `RepositorioArqueoTicket` | 11 | 0 |
+| `UniDataTiraCajaTicketRepositorio` | `RepositorioTiraCajaTicket` | 7 | 0 |
+| `UniDataTicketsCajaRepositorio` | `RepositorioTicketsCaja` | 15 | 1 |
+| **Total** | | **122** | **4** |
+
+Cada unidad expone `DefinicionesSql`. Añadir SQL a una clase de repositorio
+no basta para hacerlo configurable: la definición debe formar parte de ese
+array y el array debe agregarse explícitamente al registro de la aplicación.
+Las cuatro operaciones `pesSoloBase` aparecen en revisión y exportación,
+pero no crean una fila sustituible en perfiles.
+
+### 2.3. Recorrido histórico de los data modules
+
+El mecanismo anterior sigue activo únicamente para pantallas
+`TfrmMtoGen`. Cuando `oGetSQLFromDB=True`, `inMtoGen` carga un perfil cuya
+clave es el `Name` del data module asociado y `inLibWin.LoadSQLFromProfile`
+recorre sus componentes:
+
+- un `TUniQuery` cuyo nombre contiene `unqry` usa su nombre como subclave y
+  puede recibir otro `SQL.Text`;
+- un `TUniStoredProc` cuyo nombre contiene `unstrdprc` usa su nombre como
+  subclave y puede recibir otro `StoredProcName`.
+
+Este recorrido no publica el SQL base, no crea filas ausentes, no valida el
+texto y no reintenta con el SQL base si la ejecución personalizada falla.
+La relación entre formulario y data module procede de `DATAMODULE_WINF`,
+por lo que no existe una lista estática fiable de unidades en el código.
+Para inventariarlo hay que cruzar esa configuración con los data modules
+registrados mediante `RegistrarDataModule`.
+
+No debe añadirse ninguna operación nueva a este mecanismo. Durante la
+migración, una misma operación no debe mantenerse a la vez bajo la clave del
+data module y bajo `SQL_REPOSITORIOS`; la fuente válida será la definición
+del repositorio.
 
 ## 3. Cómo se identifica una consulta
 
@@ -176,7 +264,7 @@ DESARROLLOS EN CURSO/perfiles_sql_compras_sesiones.sql
 
 El script es idempotente y no sobrescribe filas existentes. Para el
 catálogo completo debe utilizarse `PublicarCatalogo` desde la aplicación;
-así se publican las 116 lecturas sustituibles vigentes y se respetan las
+así se publican las 122 lecturas sustituibles vigentes y se respetan las
 personalizaciones existentes.
 
 ## 5. Modificar una consulta
