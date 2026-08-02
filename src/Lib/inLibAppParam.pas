@@ -292,7 +292,7 @@ begin
     '');
   RegistrarParametro('Verifactu', 'appVerifactuSifDireccion',
     'Dirección postal del productor del software', tpString,
-    'Calle Cascajal, 7 1ºB 49159 Villaralbo (Zamora)');
+    '');
   RegistrarParametro('Verifactu', 'appVerifactuDeclaracionLugar',
     'Lugar de suscripción de la declaración responsable', tpString, '');
   RegistrarParametro('Verifactu', 'appVerifactuDeclaracionFecha',
