@@ -95,6 +95,7 @@ function ExigirAnfitrionCaja(
 function BuscarOperacionCajaVacia: IOperacionCaja;
 function BuscarOperacionCajaVisible: IOperacionCaja;
 function PuedenCerrarOperacionesCaja: Boolean;
+procedure LiberarOperacionesCaja;
 procedure RefrescarConsultasOperacionesCaja;
 procedure NotificarFechaCaja(AFecha: TDateTime);
 
@@ -157,6 +158,25 @@ begin
     if Supports(Screen.Forms[i], IOperacionCaja, oOperacion) and
        not oOperacion.IntentarCerrar then
       Result := False;
+    Dec(i);
+  end;
+end;
+
+procedure LiberarOperacionesCaja;
+var
+  i: Integer;
+  oFormulario: TCustomForm;
+  oOperacion: IOperacionCaja;
+begin
+  i := Screen.FormCount - 1;
+  while i >= 0 do
+  begin
+    oFormulario := nil;
+    if Supports(Screen.Forms[i], IOperacionCaja, oOperacion) then
+      oFormulario := oOperacion.FormularioCaja;
+    oOperacion := nil;
+    if Assigned(oFormulario) then
+      FreeAndNil(oFormulario);
     Dec(i);
   end;
 end;

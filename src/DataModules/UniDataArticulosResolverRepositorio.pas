@@ -129,9 +129,11 @@ const
   SQL_CONTAR_SKUS_ACTIVOS =
     'SELECT CODIGO_UNIDAD_SKU FROM fza_articulos_skus ' +
     'WHERE CODIGO_ART_SKU = :art AND ESACTIVO_SKU = ''S''';
+  // Un precio de SKU parcial se aplica a sus descendientes. Gana siempre
+  // la coincidencia más larga y el precio padre queda como último recurso.
   SQL_RESOLVER_PRECIO =
     'SELECT t.CODIGO_TAR_ARTTAR, tar.NOMBRE_TAR_TAR, ' +
-    'CASE WHEN t.CODIGO_UNIDAD_ARTTAR = :sku AND :sku <> '''' ' +
+    'CASE WHEN COALESCE(t.CODIGO_UNIDAD_ARTTAR, '''') <> '''' ' +
     'THEN ''ESPECIFICO_SKU'' ELSE ''HEREDADO_PADRE'' END ' +
     'AS ORIGEN_PRECIO, t.PRECIO_SALIDA_ARTTAR, ' +
     't.PRECIO_FINAL_ARTTAR, t.PRECIO_DTO_ARTTAR, ' +
@@ -152,14 +154,18 @@ const
     'AND t.CODIGO_TAR_ARTTAR = :tar ' +
     'AND t.ESACTIVO_ARTTAR = ''S'' ' +
     'AND (t.CODIGO_UNIDAD_ARTTAR = :sku ' +
+    'OR (COALESCE(t.CODIGO_UNIDAD_ARTTAR, '''') <> '''' ' +
+    'AND LEFT(:sku, CHAR_LENGTH(t.CODIGO_UNIDAD_ARTTAR) + 1) ' +
+    '= CONCAT(t.CODIGO_UNIDAD_ARTTAR, ''/'')) ' +
     'OR t.CODIGO_UNIDAD_ARTTAR IS NULL ' +
     'OR t.CODIGO_UNIDAD_ARTTAR = '''') ' +
     'AND (t.FECHA_DESDE_ARTTAR IS NULL ' +
     'OR t.FECHA_DESDE_ARTTAR <= :fec) ' +
     'AND (t.FECHA_HASTA_ARTTAR IS NULL ' +
     'OR t.FECHA_HASTA_ARTTAR >= :fec) ' +
-    'ORDER BY CASE WHEN t.CODIGO_UNIDAD_ARTTAR = :sku ' +
-    'AND :sku <> '''' THEN 0 ELSE 1 END LIMIT 1';
+    'ORDER BY CASE WHEN COALESCE(t.CODIGO_UNIDAD_ARTTAR, '''') = '''' ' +
+    'THEN 1 ELSE 0 END, ' +
+    'CHAR_LENGTH(t.CODIGO_UNIDAD_ARTTAR) DESC LIMIT 1';
   SQL_COSTE_SKU =
     'SELECT PRECIO_ULT_COMPRA_SKUC, FECHA_ULT_COMPRA_SKUC ' +
     'FROM fza_articulos_skus_costes ' +

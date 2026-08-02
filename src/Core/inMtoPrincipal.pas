@@ -1363,6 +1363,9 @@ begin
     FComposicion.RegistrarCierreFiscal;
     FComposicion.DetenerProcesosSegundoPlano;
   end;
+  // Las ventas flotantes conservan referencias a servicios de la sesion.
+  // Deben destruirse antes de liberar la composicion que los proporciona.
+  LiberarOperacionesCaja;
   if Assigned(FAppEvents) then
   begin
     FAppEvents.OnException := nil;
@@ -1428,6 +1431,8 @@ begin
       CanClose := True;  // Permite el cierre
     end;
   end;
+  if CanClose and not FReiniciando then
+    CanClose := PuedenCerrarOperacionesCaja;
 end;
 
 procedure TfrmMtoPrincipal.mnArchivoSalirClick(Sender: TObject);
