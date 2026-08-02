@@ -31,6 +31,7 @@ uses
   cxButtons,
   cxClasses,
   cxControls,
+  cxDBEdit,
   cxCustomData,
   cxData,
   cxDataStorage,
@@ -46,8 +47,12 @@ uses
   cxGridTableView,
   cxLookAndFeels,
   cxLookAndFeelPainters,
+  cxLabel,
+  cxMemo,
   cxNavigator,
+  cxPC,
   cxStyles,
+  cxTextEdit,
   dxDateRanges,
   dxScrollbarAnnotations,
   dxSkinsCore,
@@ -74,15 +79,75 @@ type
     btnAbrirSeguimiento: TcxButton;
     btnEjecutarScript: TcxButton;
     btnInstalarActualizacion: TcxButton;
+    pnlFichaCabecera: TPanel;
+    lblReferencia: TcxLabel;
+    txtReferencia: TcxDBTextEdit;
+    lblEstado: TcxLabel;
+    txtEstado: TcxDBTextEdit;
+    lblFechaError: TcxLabel;
+    txtFechaError: TcxDBTextEdit;
+    lblUsuarioError: TcxLabel;
+    txtUsuarioError: TcxDBTextEdit;
+    lblUltimaConsulta: TcxLabel;
+    txtUltimaConsulta: TcxDBTextEdit;
+    lblResultadoConsulta: TcxLabel;
+    txtResultadoConsulta: TcxDBTextEdit;
+    lblEstadoSincronizacion: TcxLabel;
+    pcFichaError: TcxPageControl;
+    tsComunicacion: TcxTabSheet;
+    pnlAccionesComunicacion: TPanel;
+    btnFichaActualizar: TcxButton;
+    btnFichaResponder: TcxButton;
+    btnFichaAbrirSeguimiento: TcxButton;
+    memComunicaciones: TcxDBMemo;
+    tsDetalleTecnico: TcxTabSheet;
+    pnlMensajeError: TPanel;
+    lblMensajeError: TcxLabel;
+    memMensajeError: TcxDBMemo;
+    memDetalleError: TcxDBMemo;
+    tsScript: TcxTabSheet;
+    pnlCabeceraScript: TPanel;
+    lblEstadoScript: TcxLabel;
+    txtEstadoScript: TcxDBTextEdit;
+    lblDescripcionScript: TcxLabel;
+    txtDescripcionScript: TcxDBTextEdit;
+    lblHashScript: TcxLabel;
+    txtHashScript: TcxDBTextEdit;
+    memScript: TcxDBMemo;
+    pnlAccionScript: TPanel;
+    btnFichaEjecutarScript: TcxButton;
+    tsActualizacion: TcxTabSheet;
+    pnlCabeceraEjecutable: TPanel;
+    lblEstadoEjecutable: TcxLabel;
+    txtEstadoEjecutable: TcxDBTextEdit;
+    lblVersionEjecutable: TcxLabel;
+    txtVersionEjecutable: TcxDBTextEdit;
+    lblNombreEjecutable: TcxLabel;
+    txtNombreEjecutable: TcxDBTextEdit;
+    lblTamanoEjecutable: TcxLabel;
+    txtTamanoEjecutable: TcxDBTextEdit;
+    pnlDetalleEjecutable: TPanel;
+    lblDescripcionEjecutable: TcxLabel;
+    memDescripcionEjecutable: TcxDBMemo;
+    lblUrlEjecutable: TcxLabel;
+    txtUrlEjecutable: TcxDBTextEdit;
+    lblHashEjecutable: TcxLabel;
+    txtHashEjecutable: TcxDBTextEdit;
+    pnlAccionEjecutable: TPanel;
+    btnFichaInstalarActualizacion: TcxButton;
     procedure btnActualizarEstadoClick(Sender: TObject);
     procedure btnEnviarComentarioClick(Sender: TObject);
     procedure btnAbrirSeguimientoClick(Sender: TObject);
     procedure btnEjecutarScriptClick(Sender: TObject);
     procedure btnInstalarActualizacionClick(Sender: TObject);
+    procedure tsFichaDetalleShow(Sender: TObject);
   private
+    FSincronizando: Boolean;
     dmmErroresEnvios: TdmErroresEnvios;
     function CampoTexto(const ANombre: string): string;
-    function HayRegistroActual: Boolean;
+    function HayRegistroActual(AMostrarAviso: Boolean = True): Boolean;
+    procedure ActualizarAccionesFicha;
+    procedure SincronizarFicha(AMostrarResultado: Boolean);
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -125,12 +190,13 @@ begin
   inherited;
 end;
 
-function TfrmMtoErroresEnvios.HayRegistroActual: Boolean;
+function TfrmMtoErroresEnvios.HayRegistroActual(
+  AMostrarAviso: Boolean): Boolean;
 begin
   Result := Assigned(dsTablaG.DataSet) and
     dsTablaG.DataSet.Active and
     not dsTablaG.DataSet.IsEmpty;
-  if not Result then
+  if not Result and AMostrarAviso then
     MessageDlg(
       'Seleccione un envío de error.',
       mtInformation,
@@ -142,26 +208,83 @@ function TfrmMtoErroresEnvios.CampoTexto(
   const ANombre: string): string;
 begin
   Result := '';
-  if HayRegistroActual then
+  if HayRegistroActual(False) then
     Result := dsTablaG.DataSet.FieldByName(ANombre).AsString;
+end;
+
+procedure TfrmMtoErroresEnvios.ActualizarAccionesFicha;
+var
+  bEjecutablePendiente: Boolean;
+  bScriptPendiente: Boolean;
+begin
+  bScriptPendiente := HayRegistroActual(False) and
+    SameText(CampoTexto('ESTADO_SCRIPT_ERENV'), 'PROPUESTO') and
+    (Trim(CampoTexto('SCRIPT_SQL_ERENV')) <> '');
+  bEjecutablePendiente := HayRegistroActual(False) and
+    SameText(CampoTexto('ESTADO_EJECUTABLE_ERENV'), 'PROPUESTO') and
+    (Trim(CampoTexto('URL_EJECUTABLE_ERENV')) <> '');
+  btnEjecutarScript.Enabled := bScriptPendiente;
+  btnFichaEjecutarScript.Enabled := bScriptPendiente;
+  btnInstalarActualizacion.Enabled := bEjecutablePendiente;
+  btnFichaInstalarActualizacion.Enabled := bEjecutablePendiente;
+end;
+
+procedure TfrmMtoErroresEnvios.SincronizarFicha(
+  AMostrarResultado: Boolean);
+var
+  CursorAnterior: TCursor;
+  sError: string;
+begin
+  if not FSincronizando and Assigned(dmmErroresEnvios) and
+     HayRegistroActual(False) then
+  begin
+    FSincronizando := True;
+    CursorAnterior := Screen.Cursor;
+    Screen.Cursor := crHourGlass;
+    lblEstadoSincronizacion.Caption :=
+      'Consultando mensajes y propuestas del soporte...';
+    lblEstadoSincronizacion.Style.TextColor := clNavy;
+    lblEstadoSincronizacion.Repaint;
+    try
+      if dmmErroresEnvios.ActualizarActual(sError) then
+      begin
+        lblEstadoSincronizacion.Caption :=
+          'Seguimiento actualizado dentro de Factuzam.';
+        lblEstadoSincronizacion.Style.TextColor := clGreen;
+        if AMostrarResultado then
+          MessageDlg(
+            'Estado, mensajes y propuestas actualizados.',
+            mtInformation,
+            [mbOk],
+            0);
+      end
+      else
+      begin
+        lblEstadoSincronizacion.Caption :=
+          'No se pudo actualizar: ' + sError;
+        lblEstadoSincronizacion.Style.TextColor := clRed;
+        if AMostrarResultado then
+          MessageDlg(sError, mtError, [mbOk], 0);
+      end;
+    finally
+      ActualizarAccionesFicha;
+      Screen.Cursor := CursorAnterior;
+      FSincronizando := False;
+    end;
+  end;
+end;
+
+procedure TfrmMtoErroresEnvios.tsFichaDetalleShow(Sender: TObject);
+begin
+  inherited tsFichaShow(Sender);
+  SincronizarFicha(False);
 end;
 
 procedure TfrmMtoErroresEnvios.btnActualizarEstadoClick(
   Sender: TObject);
-var
-  sError: string;
 begin
   if HayRegistroActual then
-  begin
-    if dmmErroresEnvios.ActualizarActual(sError) then
-      MessageDlg(
-        'Estado y comunicaciones actualizados.',
-        mtInformation,
-        [mbOk],
-        0)
-    else
-      MessageDlg(sError, mtError, [mbOk], 0);
-  end;
+    SincronizarFicha(True);
 end;
 
 procedure TfrmMtoErroresEnvios.btnEnviarComentarioClick(
@@ -183,11 +306,16 @@ begin
       else if dmmErroresEnvios.EnviarComentarioActual(
                 sMensaje,
                 sError) then
+      begin
+        lblEstadoSincronizacion.Caption :=
+          'Comentario enviado y conversación actualizada.';
+        lblEstadoSincronizacion.Style.TextColor := clGreen;
         MessageDlg(
           'Comentario enviado correctamente.',
           mtInformation,
           [mbOk],
-          0)
+          0);
+      end
       else
         MessageDlg(sError, mtError, [mbOk], 0);
     end;
@@ -263,6 +391,7 @@ begin
         begin
           if dmmErroresEnvios.EjecutarScriptActual(sError) then
           begin
+            ActualizarAccionesFicha;
             if sError = '' then
               MessageDlg(
                 'Script ejecutado correctamente.',

@@ -25,6 +25,8 @@ type
     [Test]
     procedure Definiciones_SonDiezLecturasValidas;
     [Test]
+    procedure ResolverPrecio_PriorizaSkuParcialMasEspecifico;
+    [Test]
     procedure ListarSkus_UsaContratoEstructuralFijo;
     [Test]
     procedure PerfilSinCamposObligatorios_ResuelveSqlBase;
@@ -104,6 +106,23 @@ begin
       oValidacion.EsValido,
       oValidacion.Mensaje);
   end;
+end;
+
+procedure TPruebasArticulosResolverCatalogo.
+  ResolverPrecio_PriorizaSkuParcialMasEspecifico;
+var
+  oDefinicion: TDefinicionSql;
+begin
+  oDefinicion :=
+    TRepositorioArticulosResolver.DefinicionesSql[2];
+  Assert.IsTrue(
+    Pos(
+      'LEFT(:sku, CHAR_LENGTH(t.CODIGO_UNIDAD_ARTTAR) + 1)',
+      oDefinicion.SqlBase) > 0);
+  Assert.IsTrue(
+    Pos(
+      'CHAR_LENGTH(t.CODIGO_UNIDAD_ARTTAR) DESC',
+      oDefinicion.SqlBase) > 0);
 end;
 
 procedure TPruebasArticulosResolverCatalogo.
