@@ -334,7 +334,7 @@ begin
   Estado := TEstadoFotosRelacionadas.Create;
   try
     Filtros := Estado.FiltrosSecundarios(dfFamilia);
-    Assert.AreEqual(2, Length(Filtros));
+    Assert.AreEqual(2, Integer(Length(Filtros)));
     Assert.AreEqual(Ord(dfProveedor), Ord(Filtros[0]));
     Assert.AreEqual(Ord(dfTemporada), Ord(Filtros[1]));
     Filtros := Estado.FiltrosSecundarios(dfTemporada);
@@ -455,7 +455,7 @@ var
 begin
   Columnas := DefinirColumnasPivoteStock(
     TallasDePrueba, False, False, 'Almacén', 'Estado', 'Total');
-  Assert.AreEqual(4, Length(Columnas));
+  Assert.AreEqual(4, Integer(Length(Columnas)));
   Assert.AreEqual(Ord(cpsGrupo), Ord(Columnas[0].Clase));
   Assert.AreEqual(CAMPO_GRUPO_PIVOTE_STOCK, Columnas[0].Campo);
   Assert.AreEqual(Ord(cpsTalla), Ord(Columnas[1].Clase));
@@ -472,7 +472,7 @@ var
 begin
   Columnas := DefinirColumnasPivoteStock(
     TallasDePrueba, True, True, 'Color', 'Estado', 'Total');
-  Assert.AreEqual(5, Length(Columnas));
+  Assert.AreEqual(5, Integer(Length(Columnas)));
   Assert.AreEqual(Ord(cpsEstado), Ord(Columnas[1].Clase));
   Assert.AreEqual(CAMPO_ESTADO_PIVOTE_STOCK, Columnas[1].Campo);
   Assert.AreEqual(ANCHO_COL_ESTADO_STOCK, Columnas[1].Ancho);
@@ -488,7 +488,7 @@ begin
   Columnas := DefinirColumnasPivoteStock(
     Tallas, True, False, 'Color', 'Estado', 'Total');
   Assert.AreEqual(ANCHO_COL_COLOR_STOCK, Columnas[0].Ancho);
-  Assert.AreEqual(2, Length(Columnas));
+  Assert.AreEqual(2, Integer(Length(Columnas)));
   Columnas := DefinirColumnasPivoteStock(
     Tallas, False, False, 'Almacén', 'Estado', 'Total');
   Assert.AreEqual(ANCHO_COL_ALMACEN_STOCK, Columnas[0].Ancho);
@@ -527,7 +527,7 @@ begin
   Assert.IsTrue(Solicitud.ModoDesglosado);
   Assert.IsTrue(Solicitud.PorColor);
   Assert.IsFalse(Solicitud.OcultarCeros);
-  Assert.AreEqual(2, Length(Solicitud.Almacenes));
+  Assert.AreEqual(2, Integer(Length(Solicitud.Almacenes)));
   Assert.AreEqual('AZUL', Solicitud.Colores[0]);
 end;
 

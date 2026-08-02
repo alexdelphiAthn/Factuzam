@@ -200,9 +200,11 @@ var
   sNumero: string;
   Cantidades: TCantidadesPivotSesion;
   Cantidad: TCantidadPivotSesion;
+  Gestor: TGestorGridTallas;
 begin
   sSerie := FEntorno.Cabecera.FieldByName('SERIE_SES').AsString;
   sNumero := FEntorno.Cabecera.FieldByName('NUMERO_SES').AsString;
+  Gestor := GestorTallas;
   if EsFormatoDistribuido then
     CopiarCeldasDistribuidas(ALineaOrigen, ALineaDestino)
   else
@@ -212,8 +214,8 @@ begin
       sSerie, sNumero, ALineaOrigen);
     for Cantidad in Cantidades do
     begin
-      if (Cantidad.Cantidad > 0) and Assigned(GestorTallas) then
-        GestorTallas.PersistirCantidad(
+      if (Cantidad.Cantidad > 0) and Assigned(Gestor) then
+        Gestor.PersistirCantidad(
           ALineaDestino,
           Cantidad.IdValorPivot,
           Cantidad.Cantidad);
@@ -291,9 +293,11 @@ var
   Modo: TModoCopiaLineaCompra;
   Resultado: TResultadoCopiaLineaCompra;
   Cantidades: TArray<Double>;
+  Gestor: TGestorGridTallas;
 begin
   Modo := ModoCopiaLineaSesion(AOpcion);
-  if Assigned(GestorTallas) and
+  Gestor := GestorTallas;
+  if Assigned(Gestor) and
      (not FEntorno.Lineas.IsEmpty) and
      (not FEntorno.Cabecera.IsEmpty) then
   begin
@@ -303,11 +307,11 @@ begin
     begin
       if Resultado.CopiarCantidades then
         ReponerCantidadesDuplicado(Resultado, Cantidades);
-      GestorTallas.RefrescarTotalesLineaActual;
+      Gestor.RefrescarTotalesLineaActual;
       if Assigned(FEntorno.RefrescarTotalesSesion) then
         FEntorno.RefrescarTotalesSesion();
-      GestorTallas.RecalcularMaxColumnas;
-      GestorTallas.CargarCantidadesTodasLineas;
+      Gestor.RecalcularMaxColumnas;
+      Gestor.CargarCantidadesTodasLineas;
       ColocarFocoEnCopia(Resultado.LineaDestino, Modo);
     end;
   end;
@@ -319,6 +323,7 @@ procedure TCoordinadorCopiaLineasSesion.AplicarCopiaEnLineaActual(
   AModo: TModoCopiaLineaCompra);
 var
   Resultado: TResultadoCopiaLineaCompra;
+  Gestor: TGestorGridTallas;
 begin
   Resultado := FGestor.AplicarCopiaPendiente(AModo);
   if Resultado.Aplicada then
@@ -329,11 +334,12 @@ begin
         Resultado.LineaDestino);
     FEntorno.Lineas.Refresh;
     FEntorno.Lineas.Locate('LINEA_SESLIN', Resultado.LineaDestino, []);
-    if Assigned(GestorTallas) then
+    Gestor := GestorTallas;
+    if Assigned(Gestor) then
     begin
-      GestorTallas.RecalcularMaxColumnas;
-      GestorTallas.CargarCantidadesTodasLineas;
-      GestorTallas.RefrescarTotalesLineaActual;
+      Gestor.RecalcularMaxColumnas;
+      Gestor.CargarCantidadesTodasLineas;
+      Gestor.RefrescarTotalesLineaActual;
     end;
     if Assigned(FEntorno.RefrescarTotalesSesion) then
       FEntorno.RefrescarTotalesSesion();

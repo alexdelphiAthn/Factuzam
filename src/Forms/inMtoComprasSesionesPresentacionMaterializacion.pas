@@ -51,6 +51,7 @@ function CrearAplicacionMaterializacionCompraSesionVcl(
 implementation
 
 uses
+  Vcl.Controls,
   Vcl.Forms,
   Vcl.Dialogs,
   inLibComprasSesionesAplicacion,

@@ -461,7 +461,7 @@ resourcestring
     'desarrollador o copiarlo al portapapeles.';
   SCaptionCerrar = 'Cerrar';
   SCaptionCopiarPortapapeles = 'Copiar al portapapeles';
-  SCaptionEnviarDesarrollador = 'Enviar al desarrollador';
+  SCaptionEnviarDesarrollador = 'Enviar error al soporte';
   SCaptionActivarLogCompleto = 'Activar LOG completo';
   SCaptionEnviarCopiaSeguridadError =
     'Enviar copia de seguridad protegida (ZIP)';

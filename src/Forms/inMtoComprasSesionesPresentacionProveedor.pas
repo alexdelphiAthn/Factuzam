@@ -293,8 +293,10 @@ var
   sResumen: string;
   iLinea: Integer;
   iFila: Integer;
+  Gestor: TGestorGridTallas;
 begin
   sProveedor := CodigoProveedorCabecera;
+  Gestor := GestorTallas;
   if EsFormatoDistribuido then
   begin
     if ValidarKitSobreLineaActual(
@@ -315,7 +317,7 @@ begin
   end
   else if AplicarKitProveedorALinea(
     FEntorno.Datos,
-    GestorTallas,
+    Gestor,
     FEntorno.Servicio,
     sProveedor,
     ACodigoKit,
@@ -323,12 +325,12 @@ begin
   begin
     iLinea := FEntorno.Datos.unqrySesionLin.FieldByName(
       'LINEA_SESLIN').AsInteger;
-    if Assigned(GestorTallas) then
+    if Assigned(Gestor) then
     begin
-      GestorTallas.RefrescarTotalesLineaActual;
+      Gestor.RefrescarTotalesLineaActual;
       iFila := FEntorno.Vista.Controller.FocusedRecordIndex;
       if iFila >= 0 then
-        GestorTallas.CargarCantidadesUnaLinea(iFila, iLinea);
+        Gestor.CargarCantidadesUnaLinea(iFila, iLinea);
     end;
     FEntorno.Datos.RefrescarTotalesSesion;
     Anotar(Format('AplicarKit %s sobre linea %d',

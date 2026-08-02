@@ -496,17 +496,14 @@ type
     function BuscarArticulo:String;
     procedure WMCancelarLinea(var Msg: TMessage); message WM_CANCELAR_LINEA;
     function ConsolidarSiExiste(SkuBuscado: string): Boolean;
-    procedure ConstruirColumnasDinamicas;
     procedure RellenarAtributosDesdeSku(Sku: string);
     procedure ActualizarColumnasDinamicas(ArticuloPadre: string);
     procedure PoblarAtributosLineasDeposito;
     procedure MostrarColumnasCuentaCliente(AActivar: Boolean);
     function ObtenerColumnaPorTag(NumColumn:Integer):TcxGridDBColumn;
     function RellenarDatosArticuloEnDataset(Codigo: string): Boolean;
-    procedure RecalcularPrecioDesdeSku(const ASku: string);
     procedure ActualizarLabelTotal(Sender: TObject; NuevoTotal: Currency);
     procedure RecalcularLineasDesdeDM;
-    procedure ConsultarStock(const CodigoInput: string);
     function  ValidarSkuParaVenta(const SkuFinal: string): Boolean;
     procedure BuscarEmpleados;
     procedure BuscarClientes;
@@ -516,13 +513,8 @@ type
       const AEmailEnvio: string);
     procedure WMSaltarAtributo(var Msg: TMessage); message WM_SALTAR_ATRIBUTO;
     procedure DsLineasDataChange(Sender: TObject; Field: TField);
-    procedure RefrescarFotoStock;
     procedure tvLineasOpeAvButtonClick(Sender: TObject;
                                        AButtonIndex: Integer);
-    procedure AbrirPopupAvEnEntrada(Sender: TObject);
-    procedure RegistrarValorAtributo(AOrden: Integer;
-                                     const AvNuevo: string);
-    procedure FinalizarUltimoAtributo;
     procedure WMFinalizarAtribCaja(var Msg: TMessage);
                                        message WM_FINALIZAR_ATRIB_CAJA;
     procedure WMAvanzarAtribCaja(var Msg: TMessage);
@@ -531,7 +523,6 @@ type
                                        message WM_ABRIR_POPUP_AV;
     procedure WMEnfocarArticuloCaja(var Msg: TMessage);
                                        message WM_ENFOCAR_ARTICULO_CAJA;
-    procedure SolicitarFocoArticuloLineaNueva;
     procedure ProcesarLecturaScanner(const ACodigo: string);
     procedure LectorCodigoLeido(Sender: TObject; const ACodigo: string);
     function  LectorRejillaEditando: Boolean;
@@ -1114,11 +1105,6 @@ begin
   AFormulario.FEditorLineas.Inicializar;
 end;
 
-procedure TfrmMtoOpeCaja.ConsultarStock(const CodigoInput: string);
-begin
-  FEditorLineas.ConsultarStock(CodigoInput);
-end;
-
 procedure TfrmMtoOpeCaja.tvLineasOpeCustomDrawCell(
   Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
   AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
@@ -1224,12 +1210,6 @@ begin
   FEditorLineas.InicializarPopupBusqueda(Sender);
 end;
 
-procedure TfrmMtoOpeCaja.RecalcularPrecioDesdeSku(
-  const ASku: string);
-begin
-  FEditorLineas.RecalcularPrecioDesdeSku(ASku);
-end;
-
 procedure TfrmMtoOpeCaja.RellenarAtributosDesdeSku(Sku: string);
 begin
   FEditorLineas.RellenarAtributosDesdeSku(Sku);
@@ -1239,11 +1219,6 @@ function TfrmMtoOpeCaja.ConsolidarSiExiste(
   SkuBuscado: string): Boolean;
 begin
   Result := FEditorLineas.ConsolidarSiExiste(SkuBuscado);
-end;
-
-procedure TfrmMtoOpeCaja.ConstruirColumnasDinamicas;
-begin
-  FEditorLineas.ConstruirColumnasDinamicas;
 end;
 
 procedure TfrmMtoOpeCaja.PoblarAtributosLineasDeposito;
@@ -1337,20 +1312,10 @@ begin
   FEditorLineas.AsegurarLineaNueva;
 end;
 
-procedure TfrmMtoOpeCaja.RefrescarFotoStock;
-begin
-  FEditorLineas.RefrescarFotoStock;
-end;
-
 procedure TfrmMtoOpeCaja.DsLineasDataChange(
   Sender: TObject; Field: TField);
 begin
   FEditorLineas.NotificarCambioLinea(Sender, Field);
-end;
-
-procedure TfrmMtoOpeCaja.SolicitarFocoArticuloLineaNueva;
-begin
-  FEditorLineas.SolicitarFocoArticuloLineaNueva;
 end;
 
 procedure TfrmMtoOpeCaja.WMEnfocarArticuloCaja(var Msg: TMessage);
@@ -1358,25 +1323,9 @@ begin
   FEditorLineas.EnfocarArticulo;
 end;
 
-procedure TfrmMtoOpeCaja.AbrirPopupAvEnEntrada(Sender: TObject);
-begin
-  FEditorLineas.AbrirPopupAvEnEntrada(Sender);
-end;
-
 procedure TfrmMtoOpeCaja.WMAbrirPopupAv(var Msg: TMessage);
 begin
   FEditorLineas.AbrirPopupAtributo;
-end;
-
-procedure TfrmMtoOpeCaja.RegistrarValorAtributo(
-  AOrden: Integer; const AvNuevo: string);
-begin
-  FEditorLineas.RegistrarValorAtributo(AOrden, AvNuevo);
-end;
-
-procedure TfrmMtoOpeCaja.FinalizarUltimoAtributo;
-begin
-  FEditorLineas.FinalizarUltimoAtributo;
 end;
 
 procedure TfrmMtoOpeCaja.tvLineasOpeAvButtonClick(

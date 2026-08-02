@@ -65,6 +65,7 @@ type
     FLblEstadoLog: TcxLabel;
     FMemoDescripcion: TcxMemo;
     FMemoDetalle: TcxMemo;
+    FPanelBotones: TPanel;
     FRegistroLog: IRegistroLog;
     FServicioEnvioErrores: IServicioEnvioErrores;
     function ConstruirDetalle(Sender: TObject;
@@ -461,6 +462,8 @@ begin
         not FEvidencia.Log.Completo;
     end;
   end;
+  if Assigned(FPanelBotones) then
+    FPanelBotones.BringToFront;
 end;
 
 procedure TGestorExcepcionesAplicacion.ActualizarEstadoLog;
@@ -486,15 +489,14 @@ procedure TGestorExcepcionesAplicacion.CrearPanelBotones;
 var
   BotonCerrar: TcxButton;
   BotonCopiar: TcxButton;
-  Panel: TPanel;
 begin
-  Panel := TPanel.Create(FDialogo);
-  Panel.Parent := FDialogo;
-  Panel.Align := alBottom;
-  Panel.Height := 52;
-  Panel.BevelOuter := bvNone;
+  FPanelBotones := TPanel.Create(FDialogo);
+  FPanelBotones.Parent := FDialogo;
+  FPanelBotones.Align := alBottom;
+  FPanelBotones.Height := 52;
+  FPanelBotones.BevelOuter := bvNone;
   BotonCerrar := TcxButton.Create(FDialogo);
-  BotonCerrar.Parent := Panel;
+  BotonCerrar.Parent := FPanelBotones;
   BotonCerrar.SetBounds(732, 8, 100, 32);
   BotonCerrar.Anchors := [akRight, akTop];
   BotonCerrar.Caption := SCaptionCerrar;
@@ -502,26 +504,27 @@ begin
   BotonCerrar.Default := True;
   BotonCerrar.Cancel := True;
   BotonCopiar := TcxButton.Create(FDialogo);
-  BotonCopiar.Parent := Panel;
+  BotonCopiar.Parent := FPanelBotones;
   BotonCopiar.SetBounds(534, 8, 190, 32);
   BotonCopiar.Anchors := [akRight, akTop];
   BotonCopiar.Caption := SCaptionCopiarPortapapeles;
   BotonCopiar.OnClick := CopiarDetalleClick;
   FBotonEnviar := TcxButton.Create(FDialogo);
-  FBotonEnviar.Parent := Panel;
-  FBotonEnviar.SetBounds(356, 8, 170, 32);
+  FBotonEnviar.Parent := FPanelBotones;
+  FBotonEnviar.SetBounds(336, 8, 190, 32);
   FBotonEnviar.Anchors := [akRight, akTop];
   FBotonEnviar.Caption := SCaptionEnviarDesarrollador;
   FBotonEnviar.Enabled := Assigned(FServicioEnvioErrores);
   FBotonEnviar.OnClick := EnviarDesarrolladorClick;
   FBotonActivarLog := TcxButton.Create(FDialogo);
-  FBotonActivarLog.Parent := Panel;
+  FBotonActivarLog.Parent := FPanelBotones;
   FBotonActivarLog.SetBounds(12, 8, 180, 32);
   FBotonActivarLog.Caption := SCaptionActivarLogCompleto;
   FBotonActivarLog.Visible :=
     Assigned(FServicioEnvioErrores) and
     not FEvidencia.Log.Completo;
   FBotonActivarLog.OnClick := ActivarLogClick;
+  FPanelBotones.BringToFront;
   FDialogo.ActiveControl := BotonCerrar;
 end;
 
@@ -546,8 +549,8 @@ begin
   try
     ConfigurarDialogo;
     CrearPanelContacto;
-    CrearPanelBotones;
     CrearMemoDetalle(ATexto);
+    CrearPanelBotones;
     FDialogo.ShowModal;
   finally
     if Assigned(FServicioEnvioErrores) then
@@ -561,6 +564,7 @@ begin
     FLblEstadoLog := nil;
     FMemoDescripcion := nil;
     FMemoDetalle := nil;
+    FPanelBotones := nil;
     FreeAndNil(FDialogo);
   end;
 end;

@@ -366,7 +366,7 @@ var
 begin
   Lineas := LeerLineasImportacionCsvInventario(
     TArray<string>.Create('SKU1;3', 'SKU2=4'));
-  Assert.AreEqual(2, Length(Lineas));
+  Assert.AreEqual(2, Integer(Length(Lineas)));
   Assert.AreEqual('SKU1', Lineas[0].CodigoUnidad);
   Assert.AreEqual(Double(3), Lineas[0].Cantidad, 0.0001);
   Assert.AreEqual('SKU2', Lineas[1].CodigoUnidad);

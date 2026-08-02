@@ -240,12 +240,12 @@ var
 begin
   oSkus := TArray<string>.Create('  ART-1/ROJO/L ', '', '   ');
   oLista := ComponerListaSkusAltaTarifa(oSkus);
-  Assert.AreEqual(2, Length(oLista));
+  Assert.AreEqual(2, Integer(Length(oLista)));
   Assert.AreEqual(cSkuFilaArticulo, oLista[0]);
   Assert.AreEqual('ART-1/ROJO/L', oLista[1]);
   SetLength(oSkus, 0);
   oLista := ComponerListaSkusAltaTarifa(oSkus);
-  Assert.AreEqual(1, Length(oLista));
+  Assert.AreEqual(1, Integer(Length(oLista)));
   Assert.AreEqual(cSkuFilaArticulo, oLista[0]);
 end;
 

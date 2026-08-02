@@ -632,7 +632,7 @@ begin
   EntornoMaterializacion.FuenteTarifas := Dmm.dsTarifas;
   EntornoMaterializacion.FuenteTemporadas := Dmm.dsTemporadas;
   EntornoMaterializacion.Registrar :=
-    procedure(const ATexto: string)
+    procedure(ATexto: string)
     begin
       LogSes(ATexto);
     end;
@@ -672,7 +672,7 @@ begin
       Dmm.RefrescarTotalesSesion;
     end;
   EntornoCopia.RegistrarAviso :=
-    procedure(const ATexto: string)
+    procedure(ATexto: string)
     begin
       LogSes(ATexto);
     end;
@@ -716,7 +716,7 @@ begin
         AModelo, ALineaOrigen, AColorTexto, AColorBasico, AMargen);
     end;
   EntornoModelo.RegistrarAviso :=
-    procedure(const ATexto: string)
+    procedure(ATexto: string)
     begin
       LogSes(ATexto);
     end;
@@ -742,7 +742,7 @@ begin
       Result := GestorTallas;
     end;
   EntornoProveedor.MostrarNombreProveedor :=
-    procedure(const ATexto: string)
+    procedure(ATexto: string)
     begin
       lblProveedorNombre.Caption := ATexto;
     end;
@@ -752,12 +752,12 @@ begin
       RefrescarVisibilidadTipoIva;
     end;
   EntornoProveedor.AbrirDistribuidor :=
-    procedure(const ACodigoKit: string)
+    procedure(ACodigoKit: string)
     begin
       FTallas.AbrirDistribuidor(ACodigoKit);
     end;
   EntornoProveedor.Registrar :=
-    procedure(const ATexto: string)
+    procedure(ATexto: string)
     begin
       LogSes(ATexto);
     end;
