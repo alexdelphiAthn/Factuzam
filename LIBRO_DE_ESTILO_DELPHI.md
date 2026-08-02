@@ -291,8 +291,8 @@ Toda unidad nueva empieza con la siguiente caja de 80 columnas exactas:
 {   Fecha:       11/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
-{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
-{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo.                                    }
+{  SPDX-License-Identifier: MPL-2.0                                            }
 {  Descripción:                                                                }
 {    <una o varias líneas describiendo el propósito de la unidad>              }
 {******************************************************************************}
@@ -1461,8 +1461,8 @@ Esqueleto mínimo:
 {   Fecha:       11/05/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
-{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
-{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo.                                    }
+{  SPDX-License-Identifier: MPL-2.0                                            }
 {  Descripción:                                                                }
 {    Mantenimiento de tarifas comerciales.                                     }
 {******************************************************************************}

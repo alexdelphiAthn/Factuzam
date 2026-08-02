@@ -249,6 +249,7 @@ begin
   AddSuf('fza_efectos_compra',                  'EFEC');
   AddSuf('fza_efectos_venta',                   'EFV');
   AddSuf('fza_empleados',                       'EMPL');
+  AddSuf('fza_errores_envios',                  'ERENV');
   AddSuf('fza_empresas',                        'EMP');
   AddSuf('fza_empresas_bancos',                 'EMPBAN');
   AddSuf('fza_empresas_retenciones',            'EMPRET');

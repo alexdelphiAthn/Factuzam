@@ -22,7 +22,8 @@ uses
 
 function CrearGestorExcepcionesAplicacion(
   const AContextoSesion: IContextoSesionAplicacion;
-  const ARegistroLog: IRegistroLog
+  const ARegistroLog: IRegistroLog;
+  const APresentacion: IPresentacionExcepcionesAplicacion
 ): IGestorExcepcionesAplicacion;
 
 implementation
@@ -53,31 +54,21 @@ type
     TInterfacedObject,
     IGestorExcepcionesAplicacion)
   private
-    FBotonActivarLog: TcxButton;
-    FBotonEnviar: TcxButton;
-    FChkEnviarCopia: TcxCheckBox;
     FContextoSesion: IContextoSesionAplicacion;
-    FDialogo: TForm;
-    FEdtEmail: TcxTextEdit;
-    FEdtTelefono: TcxTextEdit;
     FEvidencia: TEvidenciaError;
-    FLblEvidencias: TcxLabel;
-    FLblEstadoLog: TcxLabel;
-    FMemoDescripcion: TcxMemo;
-    FMemoDetalle: TcxMemo;
-    FPanelBotones: TPanel;
+    FEstadoVista: TEstadoVistaErrorAplicacion;
+    FPresentacion: IPresentacionExcepcionesAplicacion;
     FRegistroLog: IRegistroLog;
     FServicioEnvioErrores: IServicioEnvioErrores;
+    FVista: IVistaErrorAplicacion;
     function ConstruirDetalle(Sender: TObject;
       E: Exception): string;
+    procedure AplicarEstadoVista;
     procedure ActivarLogClick(Sender: TObject);
     procedure ActualizarEstadoLog;
     procedure ConfigurarDialogo;
     procedure CopiaSeguridadCambio(Sender: TObject);
     procedure CopiarDetalleClick(Sender: TObject);
-    procedure CrearMemoDetalle(const ATexto: string);
-    procedure CrearPanelBotones;
-    procedure CrearPanelContacto;
     procedure EnviarDesarrolladorClick(Sender: TObject);
     procedure MostrarDetalle(const ATexto: string);
     procedure MostrarFallback(E: Exception);
@@ -91,7 +82,8 @@ type
   public
     constructor Create(
       const AContextoSesion: IContextoSesionAplicacion;
-      const ARegistroLog: IRegistroLog);
+      const ARegistroLog: IRegistroLog;
+      const APresentacion: IPresentacionExcepcionesAplicacion);
     procedure Gestionar(Sender: TObject; E: Exception);
     procedure AsignarServicioEnvioErrores(
       const AServicio: IServicioEnvioErrores);
@@ -99,24 +91,30 @@ type
 
 function CrearGestorExcepcionesAplicacion(
   const AContextoSesion: IContextoSesionAplicacion;
-  const ARegistroLog: IRegistroLog
+  const ARegistroLog: IRegistroLog;
+  const APresentacion: IPresentacionExcepcionesAplicacion
 ): IGestorExcepcionesAplicacion;
 begin
   Result := TGestorExcepcionesAplicacion.Create(
     AContextoSesion,
-    ARegistroLog);
+    ARegistroLog,
+    APresentacion);
 end;
 
 constructor TGestorExcepcionesAplicacion.Create(
   const AContextoSesion: IContextoSesionAplicacion;
-  const ARegistroLog: IRegistroLog);
+  const ARegistroLog: IRegistroLog;
+  const APresentacion: IPresentacionExcepcionesAplicacion);
 begin
   inherited Create;
   if not Assigned(AContextoSesion) then
     raise EArgumentNilException.Create('AContextoSesion');
   if not Assigned(ARegistroLog) then
     raise EArgumentNilException.Create('ARegistroLog');
+  if not Assigned(APresentacion) then
+    raise EArgumentNilException.Create('APresentacion');
   FContextoSesion := AContextoSesion;
+  FPresentacion := APresentacion;
   FRegistroLog := ARegistroLog;
 end;
 
@@ -222,14 +220,54 @@ begin
 end;
 
 procedure TGestorExcepcionesAplicacion.ConfigurarDialogo;
+var
+  Acciones: TAccionesVistaErrorAplicacion;
+  Configuracion: TConfiguracionVistaErrorAplicacion;
 begin
-  FDialogo.Caption := STituloErrorProducido;
-  FDialogo.Position := poScreenCenter;
-  FDialogo.Width := 860;
-  FDialogo.Height := 744;
-  FDialogo.BorderStyle := bsSizeable;
-  FDialogo.BorderIcons := [biSystemMenu];
-  FDialogo.KeyPreview := True;
+  Acciones := Default(TAccionesVistaErrorAplicacion);
+  Acciones.ActivarLog :=
+    procedure
+    begin
+      ActivarLogClick(nil);
+    end;
+  Acciones.CambiarCopiaSeguridad :=
+    procedure
+    begin
+      CopiaSeguridadCambio(nil);
+    end;
+  Acciones.CopiarDetalle :=
+    procedure
+    begin
+      CopiarDetalleClick(nil);
+    end;
+  Acciones.EnviarError :=
+    procedure
+    begin
+      EnviarDesarrolladorClick(nil);
+    end;
+  Configuracion := Default(TConfiguracionVistaErrorAplicacion);
+  Configuracion.Titulo := STituloErrorProducido;
+  Configuracion.EtiquetaEmail := SCaptionEmailContactoError;
+  Configuracion.EtiquetaTelefono := SCaptionTelefonoContactoError;
+  Configuracion.EtiquetaDescripcion := SCaptionDescripcionError;
+  Configuracion.TextoCerrar := SCaptionCerrar;
+  Configuracion.TextoCopiar := SCaptionCopiarPortapapeles;
+  Configuracion.TextoEnviar := SCaptionEnviarDesarrollador;
+  Configuracion.TextoActivarLog := SCaptionActivarLogCompleto;
+  Configuracion.TextoEnviarCopia := SCaptionEnviarCopiaSeguridadError;
+  Configuracion.PuedeEnviar := Assigned(FServicioEnvioErrores);
+  Configuracion.Acciones := Acciones;
+  FVista.Configurar(Configuracion);
+  FEstadoVista := Default(TEstadoVistaErrorAplicacion);
+  FEstadoVista.Evidencias := SCaptionDetalleErrorCabecera + ' ' +
+    SInfoEvidenciasError;
+  FEstadoVista.PuedeEnviar := Assigned(FServicioEnvioErrores);
+  FEstadoVista.ActivarLogVisible :=
+    Assigned(FServicioEnvioErrores) and
+    not FEvidencia.Log.Completo;
+  FEstadoVista.ActivarLogHabilitado := True;
+  ActualizarEstadoLog;
+  AplicarEstadoVista;
 end;
 
 procedure ConfigurarEtiqueta(
@@ -361,211 +399,67 @@ begin
   end;
 end;
 
-procedure TGestorExcepcionesAplicacion.CrearPanelContacto;
-var
-  LabelDescripcion: TcxLabel;
-  LabelEmail: TcxLabel;
-  LabelTelefono: TcxLabel;
-  Panel: TPanel;
-begin
-  Panel := TPanel.Create(FDialogo);
-  Panel.Parent := FDialogo;
-  Panel.Align := alTop;
-  Panel.Height := 234;
-  Panel.BevelOuter := bvNone;
-  FLblEvidencias := TcxLabel.Create(FDialogo);
-  ConfigurarEtiqueta(
-    FLblEvidencias,
-    Panel,
-    12,
-    8,
-    820,
-    42,
-    SCaptionDetalleErrorCabecera + ' ' + SInfoEvidenciasError);
-  LabelEmail := TcxLabel.Create(FDialogo);
-  ConfigurarEtiqueta(
-    LabelEmail,
-    Panel,
-    12,
-    56,
-    125,
-    24,
-    SCaptionEmailContactoError);
-  FEdtEmail := TcxTextEdit.Create(FDialogo);
-  FEdtEmail.Parent := Panel;
-  FEdtEmail.SetBounds(140, 54, 290, 26);
-  LabelTelefono := TcxLabel.Create(FDialogo);
-  ConfigurarEtiqueta(
-    LabelTelefono,
-    Panel,
-    450,
-    56,
-    150,
-    24,
-    SCaptionTelefonoContactoError);
-  FEdtTelefono := TcxTextEdit.Create(FDialogo);
-  FEdtTelefono.Parent := Panel;
-  FEdtTelefono.SetBounds(600, 54, 232, 26);
-  LabelDescripcion := TcxLabel.Create(FDialogo);
-  ConfigurarEtiqueta(
-    LabelDescripcion,
-    Panel,
-    12,
-    88,
-    820,
-    24,
-    SCaptionDescripcionError);
-  FMemoDescripcion := TcxMemo.Create(FDialogo);
-  FMemoDescripcion.Parent := Panel;
-  FMemoDescripcion.SetBounds(12, 112, 820, 48);
-  FMemoDescripcion.Anchors := [akLeft, akTop, akRight];
-  FChkEnviarCopia := TcxCheckBox.Create(FDialogo);
-  FChkEnviarCopia.Parent := Panel;
-  FChkEnviarCopia.SetBounds(12, 164, 820, 24);
-  FChkEnviarCopia.Caption := SCaptionEnviarCopiaSeguridadError;
-  FChkEnviarCopia.Enabled := Assigned(FServicioEnvioErrores);
-  FChkEnviarCopia.OnClick := CopiaSeguridadCambio;
-  FLblEstadoLog := TcxLabel.Create(FDialogo);
-  ConfigurarEtiqueta(
-    FLblEstadoLog,
-    Panel,
-    12,
-    190,
-    820,
-    38,
-    '');
-  ActualizarEstadoLog;
-end;
-
 procedure TGestorExcepcionesAplicacion.CopiaSeguridadCambio(
   Sender: TObject);
 begin
-  if FChkEnviarCopia.Checked then
+  if FVista.EnviarCopiaSeguridad then
   begin
-    FLblEvidencias.Caption := SInfoEvidenciasCopiaError;
-    FLblEstadoLog.Caption := SInfoCopiaSeguridadError;
-    FLblEstadoLog.Style.TextColor := clNavy;
-    if Assigned(FBotonActivarLog) then
-      FBotonActivarLog.Visible := False;
+    FEstadoVista.Evidencias := SInfoEvidenciasCopiaError;
+    FEstadoVista.EstadoLog := SInfoCopiaSeguridadError;
+    FEstadoVista.NivelEstado := nevaInformacion;
+    FEstadoVista.ActivarLogVisible := False;
   end
   else
   begin
     if Assigned(FServicioEnvioErrores) then
       FServicioEnvioErrores.DescartarCopiaSeguridad(FEvidencia);
-    FLblEvidencias.Caption := SCaptionDetalleErrorCabecera + ' ' +
+    FEstadoVista.Evidencias := SCaptionDetalleErrorCabecera + ' ' +
       SInfoEvidenciasError;
     ActualizarEstadoLog;
-    if Assigned(FBotonActivarLog) then
-    begin
-      FBotonActivarLog.Visible :=
-        Assigned(FServicioEnvioErrores) and
-        not FEvidencia.Log.Completo;
-    end;
+    FEstadoVista.ActivarLogVisible :=
+      Assigned(FServicioEnvioErrores) and
+      not FEvidencia.Log.Completo;
   end;
-  if Assigned(FPanelBotones) then
-    FPanelBotones.BringToFront;
+  AplicarEstadoVista;
+end;
+
+procedure TGestorExcepcionesAplicacion.AplicarEstadoVista;
+begin
+  if Assigned(FVista) then
+    FVista.AplicarEstado(FEstadoVista);
 end;
 
 procedure TGestorExcepcionesAplicacion.ActualizarEstadoLog;
 begin
   if not Assigned(FServicioEnvioErrores) then
   begin
-    FLblEstadoLog.Caption := SErrorNoSePudoEnviarError;
-    FLblEstadoLog.Style.TextColor := clMaroon;
+    FEstadoVista.EstadoLog := SErrorNoSePudoEnviarError;
+    FEstadoVista.NivelEstado := nevaError;
   end
   else if FEvidencia.Log.Completo then
   begin
-    FLblEstadoLog.Caption := SInfoLogErrorCompleto;
-    FLblEstadoLog.Style.TextColor := clGreen;
+    FEstadoVista.EstadoLog := SInfoLogErrorCompleto;
+    FEstadoVista.NivelEstado := nevaCorrecto;
   end
   else
   begin
-    FLblEstadoLog.Caption := SAvisoLogErrorIncompleto;
-    FLblEstadoLog.Style.TextColor := clMaroon;
+    FEstadoVista.EstadoLog := SAvisoLogErrorIncompleto;
+    FEstadoVista.NivelEstado := nevaError;
   end;
-end;
-
-procedure TGestorExcepcionesAplicacion.CrearPanelBotones;
-var
-  BotonCerrar: TcxButton;
-  BotonCopiar: TcxButton;
-begin
-  FPanelBotones := TPanel.Create(FDialogo);
-  FPanelBotones.Parent := FDialogo;
-  FPanelBotones.Align := alBottom;
-  FPanelBotones.Height := 52;
-  FPanelBotones.BevelOuter := bvNone;
-  BotonCerrar := TcxButton.Create(FDialogo);
-  BotonCerrar.Parent := FPanelBotones;
-  BotonCerrar.SetBounds(732, 8, 100, 32);
-  BotonCerrar.Anchors := [akRight, akTop];
-  BotonCerrar.Caption := SCaptionCerrar;
-  BotonCerrar.ModalResult := mrOk;
-  BotonCerrar.Default := True;
-  BotonCerrar.Cancel := True;
-  BotonCopiar := TcxButton.Create(FDialogo);
-  BotonCopiar.Parent := FPanelBotones;
-  BotonCopiar.SetBounds(534, 8, 190, 32);
-  BotonCopiar.Anchors := [akRight, akTop];
-  BotonCopiar.Caption := SCaptionCopiarPortapapeles;
-  BotonCopiar.OnClick := CopiarDetalleClick;
-  FBotonEnviar := TcxButton.Create(FDialogo);
-  FBotonEnviar.Parent := FPanelBotones;
-  FBotonEnviar.SetBounds(336, 8, 190, 32);
-  FBotonEnviar.Anchors := [akRight, akTop];
-  FBotonEnviar.Caption := SCaptionEnviarDesarrollador;
-  FBotonEnviar.Enabled := Assigned(FServicioEnvioErrores);
-  FBotonEnviar.OnClick := EnviarDesarrolladorClick;
-  FBotonActivarLog := TcxButton.Create(FDialogo);
-  FBotonActivarLog.Parent := FPanelBotones;
-  FBotonActivarLog.SetBounds(12, 8, 180, 32);
-  FBotonActivarLog.Caption := SCaptionActivarLogCompleto;
-  FBotonActivarLog.Visible :=
-    Assigned(FServicioEnvioErrores) and
-    not FEvidencia.Log.Completo;
-  FBotonActivarLog.OnClick := ActivarLogClick;
-  FPanelBotones.BringToFront;
-  FDialogo.ActiveControl := BotonCerrar;
-end;
-
-procedure TGestorExcepcionesAplicacion.CrearMemoDetalle(
-  const ATexto: string);
-begin
-  FMemoDetalle := TcxMemo.Create(FDialogo);
-  FMemoDetalle.Parent := FDialogo;
-  FMemoDetalle.Align := alClient;
-  FMemoDetalle.Properties.ReadOnly := True;
-  FMemoDetalle.Properties.ScrollBars := ssBoth;
-  FMemoDetalle.Properties.WordWrap := False;
-  FMemoDetalle.Style.Font.Name := 'Consolas';
-  FMemoDetalle.Style.Font.Size := 9;
-  FMemoDetalle.Text := ATexto;
 end;
 
 procedure TGestorExcepcionesAplicacion.MostrarDetalle(
   const ATexto: string);
 begin
-  FDialogo := TForm.Create(nil);
+  FVista := FPresentacion.CrearVistaError;
   try
     ConfigurarDialogo;
-    CrearPanelContacto;
-    CrearMemoDetalle(ATexto);
-    CrearPanelBotones;
-    FDialogo.ShowModal;
+    FVista.EstablecerDetalle(ATexto);
+    FVista.Mostrar;
   finally
     if Assigned(FServicioEnvioErrores) then
       FServicioEnvioErrores.Limpiar(FEvidencia);
-    FBotonActivarLog := nil;
-    FBotonEnviar := nil;
-    FChkEnviarCopia := nil;
-    FEdtEmail := nil;
-    FEdtTelefono := nil;
-    FLblEvidencias := nil;
-    FLblEstadoLog := nil;
-    FMemoDescripcion := nil;
-    FMemoDetalle := nil;
-    FPanelBotones := nil;
-    FreeAndNil(FDialogo);
+    FVista := nil;
   end;
 end;
 
@@ -600,14 +494,14 @@ begin
   begin
     Screen.Cursor := crDefault;
     Result := SolicitarContrasenaCopia(
-      FDialogo,
+      Screen.ActiveCustomForm,
       sContrasena);
     if Result then
     begin
       Screen.Cursor := crHourGlass;
-      FLblEstadoLog.Caption := SInfoPreparandoCopiaSeguridadError;
-      FLblEstadoLog.Style.TextColor := clNavy;
-      FLblEstadoLog.Repaint;
+      FEstadoVista.EstadoLog := SInfoPreparandoCopiaSeguridadError;
+      FEstadoVista.NivelEstado := nevaInformacion;
+      AplicarEstadoVista;
       Result := FServicioEnvioErrores.PrepararCopiaSeguridad(
         FEvidencia,
         sContrasena,
@@ -633,9 +527,10 @@ begin
   if Assigned(FServicioEnvioErrores) then
   begin
     FServicioEnvioErrores.ActivarDiagnosticoCompleto;
-    FLblEstadoLog.Caption := SInfoLogActivadoRepetir;
-    FLblEstadoLog.Style.TextColor := clGreen;
-    FBotonActivarLog.Enabled := False;
+    FEstadoVista.EstadoLog := SInfoLogActivadoRepetir;
+    FEstadoVista.NivelEstado := nevaCorrecto;
+    FEstadoVista.ActivarLogHabilitado := False;
+    AplicarEstadoVista;
   end;
 end;
 
@@ -648,9 +543,9 @@ var
   Resultado: TResultadoEnvioError;
   sMensaje: string;
 begin
-  Contacto.Email := Trim(FEdtEmail.Text);
-  Contacto.Telefono := Trim(FEdtTelefono.Text);
-  Contacto.Descripcion := FMemoDescripcion.Text;
+  Contacto.Email := Trim(FVista.Email);
+  Contacto.Telefono := Trim(FVista.Telefono);
+  Contacto.Descripcion := FVista.Descripcion;
   if not EmailSoporteValido(Contacto.Email) or
      not TelefonoSoporteValido(Contacto.Telefono) then
   begin
@@ -662,14 +557,15 @@ begin
   end
   else
   begin
-    bEnviarCopia := FChkEnviarCopia.Checked;
+    bEnviarCopia := FVista.EnviarCopiaSeguridad;
     if bEnviarCopia then
       bContinuar := True
     else
       bContinuar := PreguntarActivacionLog;
     if bContinuar then
     begin
-      FBotonEnviar.Enabled := False;
+      FEstadoVista.PuedeEnviar := False;
+      AplicarEstadoVista;
       Screen.Cursor := crHourGlass;
       try
         if bEnviarCopia then
@@ -705,20 +601,24 @@ begin
                 SInfoEnviarContrasenaCopiaError,
                 [Resultado.Referencia]);
           end;
-          FMemoDetalle.Lines.Insert(0, sMensaje + sLineBreak);
+          FVista.InsertarDetalle(sMensaje + sLineBreak);
           FRegistroLog.RegistrarInformacion(sMensaje);
-          MessageDlg(sMensaje, mtInformation, [mbOk], 0);
+          FPresentacion.MostrarMensaje(sMensaje);
         end
         else
         begin
-          FBotonEnviar.Enabled := True;
+          FEstadoVista.PuedeEnviar := True;
+          AplicarEstadoVista;
           FRegistroLog.RegistrarAviso(
             'No se pudo enviar AppException: ' + sMensaje);
           MessageDlg(sMensaje, mtError, [mbOk], 0);
         end;
       end;
       if not bContinuar then
-        FBotonEnviar.Enabled := True;
+      begin
+        FEstadoVista.PuedeEnviar := True;
+        AplicarEstadoVista;
+      end;
     end;
   end;
 end;
@@ -726,10 +626,10 @@ end;
 procedure TGestorExcepcionesAplicacion.CopiarDetalleClick(
   Sender: TObject);
 begin
-  if Assigned(FMemoDetalle) then
+  if Assigned(FVista) then
   begin
     try
-      Clipboard.AsText := FMemoDetalle.Text;
+      Clipboard.AsText := FVista.TextoDetalle;
     except
       on E: Exception do
         FRegistroLog.RegistrarAviso(

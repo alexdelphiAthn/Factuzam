@@ -25,6 +25,9 @@ function GetPerfilValueTextDef(
   var APerfil: TProfileDicc;
   ASubKey: string;
   AValorDefecto: WideString): WideString;
+function GetPerfilValueDef(
+  var APerfil: TProfileDicc;
+  ASubKey, AValorDefecto: string): string;
 
 implementation
 
@@ -61,6 +64,20 @@ begin
       APerfil.TryGetValue(ASubKey, oValor);
       Result := oValor.sValueText;
     end;
+  end;
+end;
+
+function GetPerfilValueDef(
+  var APerfil: TProfileDicc;
+  ASubKey, AValorDefecto: string): string;
+var
+  oValor: TDictValue;
+begin
+  Result := AValorDefecto;
+  if Assigned(APerfil) and APerfil.ContainsKey(ASubKey) then
+  begin
+    APerfil.TryGetValue(ASubKey, oValor);
+    Result := oValor.sValue;
   end;
 end;
 

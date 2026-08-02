@@ -19,6 +19,52 @@ uses
   inLibLogIntf;
 
 type
+  TDatosEmpresaError = record
+    RazonSocial: string;
+    Nif: string;
+    NumeroInstalacionSif: string;
+    CodigoSif: string;
+    VersionSif: string;
+    Direccion1: string;
+    Direccion2: string;
+    CodigoPostal: string;
+    Poblacion: string;
+    Provincia: string;
+    Telefono: string;
+  end;
+
+  IRepositorioDatosEmpresaError = interface
+    ['{792A1E88-CE07-4C4F-8F12-8CD59392B84F}']
+    function Obtener(
+      const ACodigoEmpresa: string): TDatosEmpresaError;
+  end;
+
+  TRegistroEnvioErrorLocal = record
+    InstanteError: TDateTime;
+    InstanteEnvio: TDateTime;
+    UrlServicio: string;
+    UrlSeguimiento: string;
+    UrlEstado: string;
+    Referencia: string;
+    TokenSeguimiento: string;
+    Estado: string;
+    CodigoHttp: Integer;
+    ClaseError: string;
+    MensajeError: string;
+    DetalleError: string;
+    MensajeEnvio: string;
+    EmailContacto: string;
+    TelefonoContacto: string;
+    Descripcion: string;
+    Usuario: string;
+  end;
+
+  IRepositorioErroresEnvios = interface
+    ['{B67A9A55-A7DD-48F8-B9F6-C982692AF2BB}']
+    procedure Registrar(
+      const ARegistro: TRegistroEnvioErrorLocal);
+  end;
+
   TContactoError = record
     Email: string;
     Telefono: string;
@@ -26,6 +72,7 @@ type
   end;
 
   TEvidenciaError = record
+    InstanteError: TDateTime;
     ClaseError: string;
     MensajeError: string;
     DetalleError: string;
@@ -41,6 +88,8 @@ type
     Referencia: string;
     TokenSeguimiento: string;
     UrlSeguimiento: string;
+    UrlEstado: string;
+    Estado: string;
     Mensaje: string;
   end;
 

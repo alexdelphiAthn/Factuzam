@@ -1,5 +1,7 @@
 ﻿program Fzam;
 
+{ SPDX-License-Identifier: MPL-2.0 }
+{ Copyright (c) Alejandro Laorden Hidalgo. }
 uses
 //  {$IFDEF DEBUG}
 //  FastMM4,
@@ -139,6 +141,12 @@ uses
   inLibEnvioErroresIntf in
     'src\Lib\inLibEnvioErroresIntf.pas',
   inLibEnvioErrores in 'src\Lib\inLibEnvioErrores.pas',
+  UniDataEnvioErroresEmpresaRepositorio in
+    'src\DataModules\UniDataEnvioErroresEmpresaRepositorio.pas',
+  UniDataErroresEnviosRepositorio in
+    'src\DataModules\UniDataErroresEnviosRepositorio.pas',
+  UniDataErroresEnvios in
+    'src\DataModules\UniDataErroresEnvios.pas' {dmErroresEnvios: TDataModule},
   inLibFiltrosGuardadosIntf in 'src\Lib\inLibFiltrosGuardadosIntf.pas',
   inLibPerfilesUsuarioIntf in 'src\Lib\inLibPerfilesUsuarioIntf.pas',
   inLibPerfilesUsuarioValores in 'src\Lib\inLibPerfilesUsuarioValores.pas',
@@ -230,6 +238,16 @@ uses
   inMtoModalGenPass in 'src\Modals\inMtoModalGenPass.pas' {frmModalGenPass},
   inMtoModalContrasenaCopia in
     'src\Modals\inMtoModalContrasenaCopia.pas',
+  inMtoModalErrorAplicacion in
+    'src\Modals\inMtoModalErrorAplicacion.pas',
+  inMtoModalMensajeTexto in
+    'src\Modals\inMtoModalMensajeTexto.pas',
+  inMtoErroresEnvios in
+    'src\Forms\inMtoErroresEnvios.pas' {frmMtoErroresEnvios},
+  inLibSeguimientoErrores in
+    'src\Lib\inLibSeguimientoErrores.pas',
+  inLibActualizacionSoporte in
+    'src\Lib\inLibActualizacionSoporte.pas',
   inMtoModalListadoVentas in
     'src\Modals\inMtoModalListadoVentas.pas' {frmModalListadoVentas},
   inMtoModalImpFac in 'src\Modals\inMtoModalImpFac.pas' {frmPrintFac},
@@ -1111,6 +1129,7 @@ begin
   var Principal: TfrmMtoPrincipal;
   var RegistroLogAplicacion: IRegistroLog;
   var ResultadoLicenciaInicial: TResultadoLicenciaAplicacion;
+  ProcesarArranqueActualizacionSoporte;
 //  {$IFDEF DEBUG}
 //      ReportMemoryLeaksOnShutdown := True;
 //  {$ENDIF}

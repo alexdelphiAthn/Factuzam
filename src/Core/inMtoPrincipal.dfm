@@ -2657,6 +2657,10 @@
         Caption = 'Foro de soporte'
         OnClick = mnuForoSoporteClick
       end
+      object mnuErroresEnvios: TMenuItem
+        Caption = 'Env'#237'o de errores'
+        OnClick = MenuGenericoClick
+      end
       object Acercade1: TMenuItem
         Bitmap.Data = {
           36100000424D3610000000000000360000002800000020000000200000000100

@@ -231,17 +231,11 @@ end;
 function GetPerfilValueDef(var APerfilDic: TProfileDicc;
   ASubKey: string;
   sValueDef: string): string;
-var
-  oDictValue        : TDictValue;
 begin
-  if APerfilDic.ContainsKey(ASubKey) then
-  begin
-    APerfilDic.TryGetValue(ASubKey,
-      oDictValue);
-    Result := oDictValue.sValue;
-  end
-  else
-    Result := sValueDef;
+  Result := inLibPerfilesUsuarioValores.GetPerfilValueDef(
+    APerfilDic,
+    ASubKey,
+    sValueDef);
 end;
 
 end.

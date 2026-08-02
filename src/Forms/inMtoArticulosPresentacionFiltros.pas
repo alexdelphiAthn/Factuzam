@@ -85,7 +85,7 @@ uses
   System.UITypes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   inMtoModalGenImpSave,
-  inLibUser,
+  inLibPerfilesUsuarioValores,
   inLibArticulosFiltro,
   inLibArticulosPresentacion,
   inLibMsgArticulos,

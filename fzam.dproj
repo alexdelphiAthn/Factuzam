@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{5372F570-A327-4800-98DB-9E38B75C697D}</ProjectGuid>
         <ProjectVersion>20.4</ProjectVersion>
@@ -261,6 +261,12 @@
         <DCCReference Include="src\Lib\inLibExcepcionesAplicacion.pas"/>
         <DCCReference Include="src\Lib\inLibEnvioErroresIntf.pas"/>
         <DCCReference Include="src\Lib\inLibEnvioErrores.pas"/>
+        <DCCReference Include="src\DataModules\UniDataEnvioErroresEmpresaRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataErroresEnviosRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataErroresEnvios.pas">
+            <Form>dmErroresEnvios</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
         <DCCReference Include="src\Lib\inLibFiltrosGuardadosIntf.pas"/>
         <DCCReference Include="src\Lib\inLibPerfilesUsuarioIntf.pas"/>
         <DCCReference Include="src\Lib\inLibPerfilesUsuarioValores.pas"/>
@@ -419,6 +425,13 @@
             <Form>frmModalGenPass</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalContrasenaCopia.pas"/>
+        <DCCReference Include="src\Modals\inMtoModalErrorAplicacion.pas"/>
+        <DCCReference Include="src\Modals\inMtoModalMensajeTexto.pas"/>
+        <DCCReference Include="src\Forms\inMtoErroresEnvios.pas">
+            <Form>frmMtoErroresEnvios</Form>
+        </DCCReference>
+        <DCCReference Include="src\Lib\inLibSeguimientoErrores.pas"/>
+        <DCCReference Include="src\Lib\inLibActualizacionSoporte.pas"/>
         <DCCReference Include="src\Modals\inMtoModalListadoVentas.pas">
             <Form>frmModalListadoVentas</Form>
         </DCCReference>

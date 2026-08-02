@@ -21,6 +21,63 @@ uses
   inLibEnvioErroresIntf;
 
 type
+  TNivelEstadoVistaErrorAplicacion = (
+    nevaInformacion,
+    nevaCorrecto,
+    nevaError);
+
+  TAccionesVistaErrorAplicacion = record
+    ActivarLog: TProc;
+    CambiarCopiaSeguridad: TProc;
+    CopiarDetalle: TProc;
+    EnviarError: TProc;
+  end;
+
+  TConfiguracionVistaErrorAplicacion = record
+    Titulo: string;
+    EtiquetaEmail: string;
+    EtiquetaTelefono: string;
+    EtiquetaDescripcion: string;
+    TextoCerrar: string;
+    TextoCopiar: string;
+    TextoEnviar: string;
+    TextoActivarLog: string;
+    TextoEnviarCopia: string;
+    PuedeEnviar: Boolean;
+    Acciones: TAccionesVistaErrorAplicacion;
+  end;
+
+  TEstadoVistaErrorAplicacion = record
+    Evidencias: string;
+    EstadoLog: string;
+    NivelEstado: TNivelEstadoVistaErrorAplicacion;
+    PuedeEnviar: Boolean;
+    ActivarLogVisible: Boolean;
+    ActivarLogHabilitado: Boolean;
+  end;
+
+  IVistaErrorAplicacion = interface
+    ['{45BB3FB7-298A-4D15-BA52-A8CF53891E89}']
+    procedure Configurar(
+      const AConfiguracion: TConfiguracionVistaErrorAplicacion);
+    procedure Mostrar;
+    procedure EstablecerDetalle(const ATexto: string);
+    procedure InsertarDetalle(const ATexto: string);
+    function TextoDetalle: string;
+    function Email: string;
+    function Telefono: string;
+    function Descripcion: string;
+    function EnviarCopiaSeguridad: Boolean;
+    procedure AplicarEstado(
+      const AEstado: TEstadoVistaErrorAplicacion);
+  end;
+
+  IPresentacionExcepcionesAplicacion = interface
+    ['{8FD42A41-8514-4CB2-B576-AF4D443484B4}']
+    function CrearVistaError: IVistaErrorAplicacion;
+    procedure MostrarMensaje(const ATexto: string);
+  end;
+
   IGestorExcepcionesAplicacion = interface
     ['{6A758B40-A4C8-43A0-B006-D59744479228}']
     procedure Gestionar(

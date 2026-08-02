@@ -22,13 +22,8 @@ $objetivos = @(
     Metodo = 'GuardarPendienteAntesDeImprimir'
   },
   @{
-    Ruta = 'src\Forms\inMtoFacturasBase.pas'
-    Clase = 'TControladorFacturas'
-    Metodo = 'GuardarPendienteAntesDeImprimir'
-  },
-  @{
-    Ruta = 'src\Forms\inMtoFacturasBase.pas'
-    Clase = 'TControladorFacturas'
+    Ruta = 'src\Forms\inMtoFacturasPresentadorLineasVcl.pas'
+    Clase = 'TPresentadorLineasFacturaVcl'
     Metodo = 'MostrarSkuArticulo'
   },
   @{
@@ -48,40 +43,49 @@ $objetivos = @(
     Metodo = 'btnGenerarCBClick'
   },
   @{
-    Ruta = 'src\Forms\inMtoArticulos.pas'
-    Metodo = 'ConstruirSqlArticulos'
+    Ruta = 'src\Forms\inMtoArticulosPresentacionFiltros.pas'
+    Clase = 'TPresentadorFiltrosArticulos'
+    Metodo = 'ConstruirSql'
   },
   @{
-    Ruta = 'src\Forms\inMtoArticulos.pas'
+    Ruta = 'src\Forms\inMtoArticulosPresentacionAtributos.pas'
+    Clase = 'TPresentadorAtributosBasicosArticulo'
     Metodo = 'AsegurarBasicoFilaActual'
   },
   @{
-    Ruta = 'src\Forms\inMtoArticulos.pas'
-    Metodo = 'tvSkuAtributosBasicosNOMBRE_ATBPropertiesEditValueChanged'
+    Ruta = 'src\Forms\inMtoArticulosPresentacionAtributos.pas'
+    Clase = 'TPresentadorAtributosBasicosArticulo'
+    Metodo = 'CambiarNombre'
   },
   @{
-    Ruta = 'src\Forms\inMtoArticulos.pas'
-    Metodo = 'tvSkuAtributosBasicosVALOR_NUM_ATBPropertiesEditValueChanged'
+    Ruta = 'src\Forms\inMtoArticulosPresentacionAtributos.pas'
+    Clase = 'TPresentadorAtributosBasicosArticulo'
+    Metodo = 'CambiarValorNumerico'
   },
   @{
-    Ruta = 'src\Forms\inMtoArticulos.pas'
-    Metodo = 'tvSkuAtributosBasicosUNIDAD_ATBPropertiesEditValueChanged'
+    Ruta = 'src\Forms\inMtoArticulosPresentacionAtributos.pas'
+    Clase = 'TPresentadorAtributosBasicosArticulo'
+    Metodo = 'CambiarUnidad'
   },
   @{
-    Ruta = 'src\Forms\inMtoArticulos.pas'
-    Metodo = 'tvSkuAtributosBasicosDESCRIPCION_AABPropertiesEditValueChanged'
+    Ruta = 'src\Forms\inMtoArticulosPresentacionAtributos.pas'
+    Clase = 'TPresentadorAtributosBasicosArticulo'
+    Metodo = 'CambiarDescripcion'
   },
   @{
-    Ruta = 'src\Forms\inMtoArticulos.pas'
-    Metodo = 'tvSkuAtributosBasicosID_ATB_AVPropertiesValidate'
+    Ruta = 'src\Forms\inMtoArticulosPresentacionAtributos.pas'
+    Clase = 'TPresentadorAtributosBasicosArticulo'
+    Metodo = 'ValidarBasico'
   },
   @{
-    Ruta = 'src\Forms\inMtoArticulos.pas'
-    Metodo = 'tvSkuAtributosBasicosID_ATB_AVPropertiesEditValueChanged'
+    Ruta = 'src\Forms\inMtoArticulosPresentacionAtributos.pas'
+    Clase = 'TPresentadorAtributosBasicosArticulo'
+    Metodo = 'CambiarBasico'
   },
   @{
-    Ruta = 'src\Forms\inMtoArticulos.pas'
-    Metodo = 'tvSkuAtributosBasicosDblClick'
+    Ruta = 'src\Forms\inMtoArticulosPresentacionAtributos.pas'
+    Clase = 'TPresentadorAtributosBasicosArticulo'
+    Metodo = 'ElegirColor'
   }
 )
 

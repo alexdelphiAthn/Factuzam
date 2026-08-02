@@ -26,7 +26,9 @@ function CrearServicioEnvioErrores(
   const AContextoSesion: IContextoSesionAplicacion;
   const AParametros: IParametrosAplicacion;
   const ARegistroLog: IRegistroLog;
-  const ARepositorioCopias: IRepositorioCopiasSeguridad
+  const ARepositorioCopias: IRepositorioCopiasSeguridad;
+  const ARepositorioDatosEmpresa: IRepositorioDatosEmpresaError;
+  const ARepositorioErroresEnvios: IRepositorioErroresEnvios
 ): IServicioEnvioErrores;
 
 implementation
@@ -65,6 +67,8 @@ type
     FParametros: IParametrosAplicacion;
     FRegistroLog: IRegistroLog;
     FRepositorioCopias: IRepositorioCopiasSeguridad;
+    FRepositorioDatosEmpresa: IRepositorioDatosEmpresaError;
+    FRepositorioErroresEnvios: IRepositorioErroresEnvios;
     function CapturarPantallazo: string;
     function CopiarLogReciente(const ARutaOrigen: string): string;
     function CrearRutaTemporal(const AExtension: string): string;
@@ -78,12 +82,24 @@ type
     procedure AnadirArchivos(
       AFormulario: TMultipartFormData;
       const AEvidencia: TEvidenciaError);
+    procedure AnadirCamposEmpresa(
+      AFormulario: TMultipartFormData;
+      const ADatos: TDatosEmpresaError);
+    function ObtenerDatosEmpresa(
+      const ACodigoEmpresa: string): TDatosEmpresaError;
+    procedure RegistrarEnvioSeguro(
+      const AEvidencia: TEvidenciaError;
+      const AContacto: TContactoError;
+      const AUrlServicio: string;
+      const AResultado: TResultadoEnvioError);
   public
     constructor Create(
       const AContextoSesion: IContextoSesionAplicacion;
       const AParametros: IParametrosAplicacion;
       const ARegistroLog: IRegistroLog;
-      const ARepositorioCopias: IRepositorioCopiasSeguridad);
+      const ARepositorioCopias: IRepositorioCopiasSeguridad;
+      const ARepositorioDatosEmpresa: IRepositorioDatosEmpresaError;
+      const ARepositorioErroresEnvios: IRepositorioErroresEnvios);
     function Preparar(
       const AClaseError, AMensajeError,
       ADetalleError: string): TEvidenciaError;
@@ -110,35 +126,47 @@ function CrearServicioEnvioErrores(
   const AContextoSesion: IContextoSesionAplicacion;
   const AParametros: IParametrosAplicacion;
   const ARegistroLog: IRegistroLog;
-  const ARepositorioCopias: IRepositorioCopiasSeguridad
+  const ARepositorioCopias: IRepositorioCopiasSeguridad;
+  const ARepositorioDatosEmpresa: IRepositorioDatosEmpresaError;
+  const ARepositorioErroresEnvios: IRepositorioErroresEnvios
 ): IServicioEnvioErrores;
 begin
   Result := TServicioEnvioErrores.Create(
     AContextoSesion,
     AParametros,
     ARegistroLog,
-    ARepositorioCopias);
+    ARepositorioCopias,
+    ARepositorioDatosEmpresa,
+    ARepositorioErroresEnvios);
 end;
 
 constructor TServicioEnvioErrores.Create(
   const AContextoSesion: IContextoSesionAplicacion;
   const AParametros: IParametrosAplicacion;
   const ARegistroLog: IRegistroLog;
-  const ARepositorioCopias: IRepositorioCopiasSeguridad);
+  const ARepositorioCopias: IRepositorioCopiasSeguridad;
+  const ARepositorioDatosEmpresa: IRepositorioDatosEmpresaError;
+  const ARepositorioErroresEnvios: IRepositorioErroresEnvios);
 begin
   inherited Create;
   if not Assigned(AContextoSesion) then
     raise EArgumentNilException.Create('AContextoSesion');
+  if not Assigned(ARepositorioDatosEmpresa) then
+    raise EArgumentNilException.Create('ARepositorioDatosEmpresa');
   if not Assigned(AParametros) then
     raise EArgumentNilException.Create('AParametros');
   if not Assigned(ARegistroLog) then
     raise EArgumentNilException.Create('ARegistroLog');
   if not Assigned(ARepositorioCopias) then
     raise EArgumentNilException.Create('ARepositorioCopias');
+  if not Assigned(ARepositorioErroresEnvios) then
+    raise EArgumentNilException.Create('ARepositorioErroresEnvios');
   FContextoSesion := AContextoSesion;
   FParametros := AParametros;
   FRegistroLog := ARegistroLog;
   FRepositorioCopias := ARepositorioCopias;
+  FRepositorioDatosEmpresa := ARepositorioDatosEmpresa;
+  FRepositorioErroresEnvios := ARepositorioErroresEnvios;
 end;
 
 function TServicioEnvioErrores.CrearRutaTemporal(
@@ -259,6 +287,7 @@ function TServicioEnvioErrores.Preparar(
   const AClaseError, AMensajeError,
   ADetalleError: string): TEvidenciaError;
 begin
+  Result.InstanteError := Now;
   Result.ClaseError := AClaseError;
   Result.MensajeError := AMensajeError;
   Result.DetalleError := ADetalleError;
@@ -375,6 +404,7 @@ procedure TServicioEnvioErrores.AnadirCampos(
   const AContacto: TContactoError);
 var
   bCopiaSeguridad: Boolean;
+  DatosEmpresa: TDatosEmpresaError;
   Identidad: TIdentidadSesion;
   Ubicacion: TUbicacionSesion;
 begin
@@ -390,6 +420,8 @@ begin
   AFormulario.AddField('usuario', Identidad.Usuario);
   AFormulario.AddField('grupo', Identidad.Grupo);
   AFormulario.AddField('empresa', Ubicacion.Empresa);
+  DatosEmpresa := ObtenerDatosEmpresa(Ubicacion.Empresa);
+  AnadirCamposEmpresa(AFormulario, DatosEmpresa);
   AFormulario.AddField('almacen', Ubicacion.Almacen);
   AFormulario.AddField('caja', Ubicacion.Caja);
   AFormulario.AddField('equipo', GetComputerName);
@@ -429,6 +461,40 @@ begin
     AFormulario.AddField(
       'log_completo',
       BooleanoServicio(AEvidencia.Log.Completo));
+  end;
+end;
+
+procedure TServicioEnvioErrores.AnadirCamposEmpresa(
+  AFormulario: TMultipartFormData;
+  const ADatos: TDatosEmpresaError);
+begin
+  AFormulario.AddField(
+    'empresa_razon_social', ADatos.RazonSocial);
+  AFormulario.AddField('empresa_nif', ADatos.Nif);
+  AFormulario.AddField(
+    'empresa_sif', ADatos.NumeroInstalacionSif);
+  AFormulario.AddField('empresa_codigo_sif', ADatos.CodigoSif);
+  AFormulario.AddField('empresa_version_sif', ADatos.VersionSif);
+  AFormulario.AddField('empresa_direccion1', ADatos.Direccion1);
+  AFormulario.AddField('empresa_direccion2', ADatos.Direccion2);
+  AFormulario.AddField(
+    'empresa_codigo_postal', ADatos.CodigoPostal);
+  AFormulario.AddField('empresa_poblacion', ADatos.Poblacion);
+  AFormulario.AddField('empresa_provincia', ADatos.Provincia);
+  AFormulario.AddField('empresa_telefono', ADatos.Telefono);
+end;
+
+function TServicioEnvioErrores.ObtenerDatosEmpresa(
+  const ACodigoEmpresa: string): TDatosEmpresaError;
+begin
+  Result := Default(TDatosEmpresaError);
+  try
+    Result := FRepositorioDatosEmpresa.Obtener(ACodigoEmpresa);
+  except
+    on E: Exception do
+      FRegistroLog.RegistrarAviso(
+        'No se pudieron obtener los datos de empresa para el error: ' +
+        E.Message);
   end;
 end;
 
@@ -484,6 +550,8 @@ begin
   Result.Referencia := '';
   Result.TokenSeguimiento := '';
   Result.UrlSeguimiento := '';
+  Result.UrlEstado := '';
+  Result.Estado := '';
   Result.Mensaje := Format(
     SErrorRespuestaEnvioError,
     [AEstadoHttp]);
@@ -497,6 +565,8 @@ begin
         JsonTexto(Json, 'token_seguimiento');
       Result.UrlSeguimiento :=
         JsonTexto(Json, 'url_seguimiento');
+      Result.UrlEstado := JsonTexto(Json, 'url_estado');
+      Result.Estado := JsonTexto(Json, 'estado');
       if JsonTexto(Json, 'message') <> '' then
         Result.Mensaje := JsonTexto(Json, 'message');
     finally
@@ -522,13 +592,17 @@ var
   Http: THTTPClient;
   Respuesta: TStringStream;
   ResultadoHttp: IHTTPResponse;
+  sUrlServicio: string;
 begin
   Result.Ok := False;
   Result.EstadoHttp := 0;
   Result.Referencia := '';
   Result.TokenSeguimiento := '';
   Result.UrlSeguimiento := '';
+  Result.UrlEstado := '';
+  Result.Estado := 'ERROR_ENVIO';
   Result.Mensaje := SErrorNoSePudoEnviarError;
+  sUrlServicio := UrlEnvio;
   if EmailSoporteValido(AContacto.Email) and
      TelefonoSoporteValido(AContacto.Telefono) then
   begin
@@ -547,7 +621,7 @@ begin
         AnadirCampos(Formulario, AEvidencia, AContacto);
         AnadirArchivos(Formulario, AEvidencia);
         ResultadoHttp := Http.Post(
-          UrlEnvio,
+          sUrlServicio,
           Formulario,
           Respuesta);
         Result := LeerRespuesta(
@@ -565,6 +639,51 @@ begin
   end
   else
     Result.Mensaje := SErrorContactoEnvioErrorNoValido;
+  if Result.Ok and (Result.Estado = '') then
+    Result.Estado := 'NUEVO';
+  RegistrarEnvioSeguro(
+    AEvidencia,
+    AContacto,
+    sUrlServicio,
+    Result);
+end;
+
+procedure TServicioEnvioErrores.RegistrarEnvioSeguro(
+  const AEvidencia: TEvidenciaError;
+  const AContacto: TContactoError;
+  const AUrlServicio: string;
+  const AResultado: TResultadoEnvioError);
+var
+  Identidad: TIdentidadSesion;
+  Registro: TRegistroEnvioErrorLocal;
+begin
+  Identidad := FContextoSesion.Identidad;
+  Registro := Default(TRegistroEnvioErrorLocal);
+  Registro.InstanteError := AEvidencia.InstanteError;
+  Registro.InstanteEnvio := Now;
+  Registro.UrlServicio := AUrlServicio;
+  Registro.UrlSeguimiento := AResultado.UrlSeguimiento;
+  Registro.UrlEstado := AResultado.UrlEstado;
+  Registro.Referencia := AResultado.Referencia;
+  Registro.TokenSeguimiento := AResultado.TokenSeguimiento;
+  Registro.Estado := AResultado.Estado;
+  Registro.CodigoHttp := AResultado.EstadoHttp;
+  Registro.ClaseError := AEvidencia.ClaseError;
+  Registro.MensajeError := AEvidencia.MensajeError;
+  Registro.DetalleError := AEvidencia.DetalleError;
+  Registro.MensajeEnvio := AResultado.Mensaje;
+  Registro.EmailContacto := Trim(AContacto.Email);
+  Registro.TelefonoContacto := Trim(AContacto.Telefono);
+  Registro.Descripcion := AContacto.Descripcion;
+  Registro.Usuario := Identidad.Usuario;
+  try
+    FRepositorioErroresEnvios.Registrar(Registro);
+  except
+    on E: Exception do
+      FRegistroLog.RegistrarAviso(
+        'No se pudo guardar el historial local del error: ' +
+        E.Message);
+  end;
 end;
 
 procedure TServicioEnvioErrores.ActivarDiagnosticoCompleto;

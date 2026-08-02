@@ -89,6 +89,7 @@ type
       const AContextoSesion: IContextoSesionAplicacion;
       const ARegistroLog: IRegistroLog;
       const ARegistroMonitorSQL: IRegistroMonitorSQL;
+      const AGestorExcepciones: IGestorExcepcionesAplicacion;
       const APresentacionOperaciones:
         IPresentacionOperacionesAplicacion);
     destructor Destroy; override;
@@ -152,7 +153,6 @@ uses
   inLibPermisos,
   inLibPermisosUniDAC,
   inLibCoordinadorOperacionesAplicacion,
-  inLibExcepcionesAplicacion,
   inLibEnvioErrores,
   inLibVentasWsCola,
   inLibVerifactu,
@@ -165,6 +165,8 @@ uses
   UniDataFotosRepositorio,
   UniDataArticulosValidadorRepositorio,
   UniDataInformesGuiasRepositorio,
+  UniDataEnvioErroresEmpresaRepositorio,
+  UniDataErroresEnviosRepositorio,
   UniDataCatalogoSqlAplicacion,
   UniDataCopiasSeguridad,
   UniDataRepositoriosPantalla,
@@ -215,6 +217,7 @@ constructor TComposicionAplicacion.Create(
   const AContextoSesion: IContextoSesionAplicacion;
   const ARegistroLog: IRegistroLog;
   const ARegistroMonitorSQL: IRegistroMonitorSQL;
+  const AGestorExcepciones: IGestorExcepcionesAplicacion;
   const APresentacionOperaciones:
     IPresentacionOperacionesAplicacion);
 begin
@@ -227,14 +230,13 @@ begin
     raise EArgumentNilException.Create('ARegistroLog');
   if not Assigned(ARegistroMonitorSQL) then
     raise EArgumentNilException.Create('ARegistroMonitorSQL');
+  if not Assigned(AGestorExcepciones) then
+    raise EArgumentNilException.Create('AGestorExcepciones');
   FOwner := AOwner;
   FContextoSesion := AContextoSesion;
   FRegistroLog := ARegistroLog;
   FRegistroMonitorSQL := ARegistroMonitorSQL;
-  FGestorExcepciones :=
-    CrearGestorExcepcionesAplicacion(
-      FContextoSesion,
-      FRegistroLog);
+  FGestorExcepciones := AGestorExcepciones;
   FDmConn := TdmConn.Create(FOwner);
   FRepositorioCopias := CrearRepositorioCopiasSeguridadUniDAC(
     FContextoSesion,
@@ -304,7 +306,9 @@ begin
     FContextoSesion,
     FServiciosParametrosApp.Lectura,
     FRegistroLog,
-    FRepositorioCopias);
+    FRepositorioCopias,
+    CrearRepositorioDatosEmpresaError(FDmConn.conUni),
+    CrearRepositorioErroresEnvios(FDmConn.conUni));
   FGestorExcepciones.AsignarServicioEnvioErrores(
     FServicioEnvioErrores);
   FRegistroLog.RegistrarInformacion(

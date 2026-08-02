@@ -94,6 +94,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_efectos_compra`                 | `EFEC`    |
 | `fza_efectos_venta`                  | `EFV`     |
 | `fza_empleados`                      | `EMPL`    |
+| `fza_errores_envios`                 | `ERENV`   |
 | `fza_empresas`                       | `EMP`     |
 | `fza_empresas_bancos`                | `EMPBAN`  |
 | `fza_empresas_retenciones`           | `EMPRET`  |

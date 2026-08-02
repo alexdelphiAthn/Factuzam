@@ -153,6 +153,7 @@ type
       const AUnidadClase: string): string;
     procedure CancelarEdicionesPantallas;
     procedure VincularFotoMantenimiento(AMantenimiento: TObject);
+    function CrearCopiaPreviaScriptSoporte: Boolean;
     function MenuAplicacion: TMainMenu;
     function CrearOperacionCaja(
       AOwner: TComponent;
@@ -207,6 +208,7 @@ type
     Acercade1: TMenuItem;
     mnuManualWeb: TMenuItem;
     mnuForoSoporte: TMenuItem;
+    mnuErroresEnvios: TMenuItem;
     mnuConsultaStocks: TMenuItem;
     mnuArticulosSimilares: TMenuItem;
     Listados1: TMenuItem;
@@ -337,6 +339,7 @@ implementation
 uses inLibWin,
   inLibDevExp,
   inLibGlobalVar,
+  inLibExcepcionesAplicacion,
   inLibTraduccionesFastReport,
   inLibMonitorSQLIntf,
   inLibMonitorSQLLog,
@@ -374,7 +377,8 @@ uses inLibWin,
   inMtoFotoArticulo,
   System.DateUtils,
   System.RegularExpressions,
-  inMtoModalContrasenaCopia;
+  inMtoModalContrasenaCopia,
+  inMtoModalErrorAplicacion;
 
 function CrearContextoRestauracionCopiasVcl(
   AFormulario: TfrmMtoPrincipal): TContextoRestauracionCopiasVcl;
@@ -651,6 +655,10 @@ end;
 procedure TfrmMtoPrincipal.CrearInfraestructuraAplicacion;
 begin
   FormManager := TEmbeddedFormManager.Create(Self.pcPrincipal);
+  FGestorExcepciones := CrearGestorExcepcionesAplicacion(
+    ContextoSesion,
+    RegistroLog,
+    CrearPresentacionExcepcionesAplicacionVcl);
   FComposicion := TComposicionAplicacion.Create(
     Self,
     ContextoSesion,
@@ -658,9 +666,9 @@ begin
     TRegistroMonitorSQLLog.Create(
       RegistroLog,
       TVisorMonitorSQLMemo.Create(cxMemo1)),
+    FGestorExcepciones,
     Self as IPresentacionOperacionesAplicacion);
   AsignarConfiguracionCampos(FComposicion.ConfiguracionCampos);
-  FGestorExcepciones := FComposicion.GestorExcepciones;
   FCoordinadorOperaciones := FComposicion.Operaciones;
   AsignarMonitorSQL(FComposicion.MonitorSQL);
   RegistroLog.AsignarMonitorSQL(FComposicion.MonitorSQL);
@@ -1314,6 +1322,11 @@ begin
     Result := FCoordinadorOperaciones.CrearCopia(
       sRutaFichero,
       sContrasena);
+end;
+
+function TfrmMtoPrincipal.CrearCopiaPreviaScriptSoporte: Boolean;
+begin
+  Result := CrearCopiaPreviaScript;
 end;
 
 procedure TfrmMtoPrincipal.FormActivate(Sender: TObject);

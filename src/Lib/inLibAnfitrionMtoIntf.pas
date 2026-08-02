@@ -33,6 +33,7 @@ type
       const AUnidadClase: string): string;
     procedure CancelarEdicionesPantallas;
     procedure VincularFotoMantenimiento(AMantenimiento: TObject);
+    function CrearCopiaPreviaScriptSoporte: Boolean;
   end;
 
   IProveedorMenuPantallas = interface
