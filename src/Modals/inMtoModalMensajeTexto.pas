@@ -44,6 +44,10 @@ type
     class procedure Mostrar(
       AOwner: TComponent;
       const ATexto: string); static;
+    class function Solicitar(
+      AOwner: TComponent;
+      const ATitulo: string;
+      var ATexto: string): Boolean; static;
   end;
 
 implementation
@@ -85,6 +89,35 @@ begin
     oDialogo.mTexto.SelLength := 0;
     oDialogo.ActiveControl := oDialogo.mTexto;
     oDialogo.ShowModal;
+  finally
+    FreeAndNil(oDialogo);
+  end;
+end;
+
+class function TfrmModalMensajeTexto.Solicitar(
+  AOwner: TComponent;
+  const ATitulo: string;
+  var ATexto: string): Boolean;
+var
+  oDialogo: TfrmModalMensajeTexto;
+begin
+  oDialogo := TfrmModalMensajeTexto.Create(AOwner);
+  try
+    oDialogo.Caption := ATitulo;
+    oDialogo.mTexto.Properties.ReadOnly := False;
+    oDialogo.mTexto.Text := ATexto;
+    oDialogo.btnCopiar.Caption := 'Cancelar';
+    oDialogo.btnCopiar.Cancel := True;
+    oDialogo.btnCopiar.OnClick := nil;
+    oDialogo.btnCopiar.ModalResult := mrCancel;
+    oDialogo.btnCerrar.Caption := 'Enviar';
+    oDialogo.btnCerrar.Cancel := False;
+    oDialogo.btnCerrar.Default := True;
+    oDialogo.btnCerrar.ModalResult := mrOk;
+    oDialogo.ActiveControl := oDialogo.mTexto;
+    Result := oDialogo.ShowModal = mrOk;
+    if Result then
+      ATexto := oDialogo.mTexto.Text;
   finally
     FreeAndNil(oDialogo);
   end;

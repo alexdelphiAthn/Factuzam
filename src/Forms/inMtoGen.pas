@@ -172,10 +172,6 @@ type
     // Se libera en Destroy DESPUES del data module para que los Close
     // implicitos de las queries no queden colgando.
     FConn: TUniConnection;
-    // Anfitrion de mantenimiento (el principal). Se descubre UNA vez en
-    // FormCreate (patron 5.3 del PLAN_SOLID); fuera de fzam queda a nil
-    // y la pantalla degrada como siempre.
-    FAnfitrionMto: IAnfitrionMantenimiento;
     FSqlBaseBusquedaExterna: string;
     // Hooks del dataset principal original (en el data module).
     FBeforeInsertOrig: TDataSetNotifyEvent;
@@ -242,6 +238,10 @@ type
 //                                        const sProfile: string;
 //                                        AList: TPerfilList);
   protected
+    // Anfitrion de mantenimiento (el principal). Se descubre UNA vez en
+    // FormCreate (patron 5.3 del PLAN_SOLID); fuera de fzam queda a nil
+    // y la pantalla degrada como siempre.
+    FAnfitrionMto: IAnfitrionMantenimiento;
     property ConexionTrabajo: TUniConnection read GetConexionTrabajo;
     function ConsultaPerfilesLocal: TUniQuery; virtual;
     procedure AplicarGuiasGrid(AQuery: TUniQuery);

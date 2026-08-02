@@ -173,10 +173,10 @@ begin
   if HayRegistroActual then
   begin
     sMensaje := '';
-    if InputQuery(
-      'Enviar comentario',
-      'Comentario para el desarrollador o técnico:',
-      sMensaje) then
+    if TfrmModalMensajeTexto.Solicitar(
+         Self,
+         'Comentario para el desarrollador o técnico',
+         sMensaje) then
     begin
       if Trim(sMensaje) = '' then
         MessageDlg('Escriba un comentario.', mtWarning, [mbOk], 0)
@@ -252,10 +252,8 @@ begin
            [mbYes, mbNo],
            0) = mrYes then
       begin
-        if not Supports(
-                 Owner,
-                 IAnfitrionMantenimiento,
-                 Anfitrion) then
+        Anfitrion := FAnfitrionMto;
+        if not Assigned(Anfitrion) then
           MessageDlg(
             'No está disponible el servicio de copia de seguridad.',
             mtError,

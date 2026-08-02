@@ -197,6 +197,20 @@ begin
     AError := SysErrorMessage(GetLastError);
 end;
 
+procedure RestaurarEjecutableAnterior(
+  const ARutaAnterior, ARutaActual: string;
+  var AError: string);
+begin
+  if not MoveFileEx(
+           PChar(ARutaAnterior),
+           PChar(ARutaActual),
+           MOVEFILE_WRITE_THROUGH) then
+    AError := AError + sLineBreak +
+      'No se pudo restaurar automáticamente el ejecutable anterior: ' +
+      SysErrorMessage(GetLastError) + sLineBreak +
+      'Se conserva en: ' + ARutaAnterior;
+end;
+
 function InstalarActualizacionSoporte(
   const AUrl, ASha256: string;
   ACantidadBytes: Int64;
@@ -231,10 +245,10 @@ begin
     begin
       AError := 'No se pudo copiar el nuevo ejecutable: ' +
         SysErrorMessage(GetLastError);
-      MoveFileEx(
-        PChar(ARutaAnterior),
-        PChar(sRutaActual),
-        MOVEFILE_WRITE_THROUGH);
+      RestaurarEjecutableAnterior(
+        ARutaAnterior,
+        sRutaActual,
+        AError);
     end
     else if not ArrancarNuevoEjecutable(
                       sRutaActual,
@@ -242,10 +256,10 @@ begin
                       AError) then
     begin
       DeleteFile(sRutaActual);
-      MoveFileEx(
-        PChar(ARutaAnterior),
-        PChar(sRutaActual),
-        MOVEFILE_WRITE_THROUGH);
+      RestaurarEjecutableAnterior(
+        ARutaAnterior,
+        sRutaActual,
+        AError);
     end
     else
       Result := True;
