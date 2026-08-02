@@ -457,10 +457,66 @@ resourcestring
   STituloGuardarListadoExcel = 'Guardar listado a Excel';
   STituloErrorProducido = 'Se ha producido un error';
   SCaptionDetalleErrorCabecera =
-    '  Detalle completo del error. Usa "Copiar al ' +
-    'portapapeles" para pegarlo en un reporte.';
+    'Detalle completo del error. Puedes enviarlo directamente al ' +
+    'desarrollador o copiarlo al portapapeles.';
   SCaptionCerrar = 'Cerrar';
   SCaptionCopiarPortapapeles = 'Copiar al portapapeles';
+  SCaptionEnviarDesarrollador = 'Enviar al desarrollador';
+  SCaptionActivarLogCompleto = 'Activar LOG completo';
+  SCaptionEnviarCopiaSeguridadError =
+    'Enviar copia de seguridad protegida (ZIP)';
+  STituloContrasenaCopiaError = 'Proteger copia de seguridad';
+  SInfoContrasenaCopiaError =
+    'La copia se cifrará y comprimirá. Guarde esta contraseña: deberá ' +
+    'enviarla por correo al desarrollador.';
+  SCaptionContrasenaCopiaError = 'Contraseña';
+  SCaptionRepetirContrasenaCopiaError = 'Repita la contraseña';
+  SErrorContrasenaCopiaErrorVacia =
+    'La contraseña de la copia no puede estar vacía.';
+  SErrorContrasenasCopiaErrorNoCoinciden =
+    'Las contraseñas no coinciden.';
+  SCaptionEmailContactoError = 'Email de contacto:';
+  SCaptionTelefonoContactoError = 'Teléfono de contacto:';
+  SCaptionDescripcionError = '¿Qué estaba haciendo cuando ocurrió?';
+  SInfoEvidenciasError =
+    'Se adjuntarán el detalle técnico, el pantallazo de Factuzam y el ' +
+    'tramo reciente del LOG.';
+  SInfoEvidenciasCopiaError =
+    'Se adjuntarán el detalle técnico, el pantallazo de Factuzam y una ' +
+    'copia de seguridad protegida.';
+  SInfoCopiaSeguridadError =
+    'Al enviar se solicitará la contraseña y se creará el ZIP. La ' +
+    'operación puede tardar varios minutos.';
+  SInfoPreparandoCopiaSeguridadError =
+    'Preparando la copia de seguridad protegida...';
+  SErrorPrepararCopiaSeguridadError =
+    'No se pudo preparar la copia de seguridad.' + sLineBreak + '%s';
+  SAvisoLogErrorIncompleto =
+    'Aviso: no están activas las tres trazas del LOG (SQL, rendimiento ' +
+    'y avanzada). Puede enviar el error, pero diagnosticarlo será más ' +
+    'costoso.';
+  SPreguntaActivarLogCompleto =
+    '¿Desea activar ahora las trazas SQL, rendimiento y avanzada? ' +
+    'Después cierre este aviso y repita la operación que produjo el ' +
+    'error.';
+  SInfoLogActivadoRepetir =
+    'LOG completo activado para esta sesión. Cierre este aviso y repita ' +
+    'la operación que produjo el error.';
+  SInfoLogErrorCompleto =
+    'Las trazas SQL, rendimiento y avanzada están activas.';
+  SErrorContactoEnvioErrorNoValido =
+    'Indique un email válido y un teléfono de contacto válido.';
+  SErrorNoSePudoEnviarError =
+    'No se pudo enviar el error al desarrollador.';
+  SErrorRespuestaEnvioError =
+    'El servicio de errores respondió con HTTP %d.';
+  SInfoErrorEnviado =
+    'Error enviado correctamente. Referencia: %s';
+  SInfoSeguimientoError =
+    'Puede consultar la comunicación en: %s';
+  SInfoEnviarContrasenaCopiaError =
+    'La contraseña no se ha enviado ni almacenado. Envíela usted por ' +
+    'correo a info@veryverifactu.com e indique esta referencia: %s';
   SCaptionSinFiltrosGuardados = '(Sin filtros guardados)';
   SCaptionGuardarFiltroActual = 'Guardar filtro actual...';
   SCaptionGestionarCompartirFiltros = 'Gestionar y compartir filtros...';

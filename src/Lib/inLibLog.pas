@@ -90,9 +90,11 @@ type
     procedure EnableLogType(ALogType: TLogType);
     procedure DisableLogType(ALogType: TLogType);
     function IsLogTypeEnabled(ALogType: TLogType): Boolean;
+    procedure ActivarDiagnosticoCompleto;
     procedure AsignarMonitorSQL(
       const AMonitorSQL: IServicioMonitorSQL);
     property InstanceID: string read FInstanceID;
+    property ArchivoActual: string read FLogFileName;
   end;
 
 function Log: TLog;
@@ -137,7 +139,8 @@ type
       ACorrecto: Boolean;
       const AError: string = '';
       const AParametros: string = '');
-    function SQLActivo: Boolean;
+    function ObtenerEvidencias: TEvidenciasLog;
+    procedure ActivarDiagnosticoCompleto;
     procedure AsignarMonitorSQL(
       const AMonitorSQL: IServicioMonitorSQL);
     procedure AplicarModosDepuracion(
@@ -219,9 +222,17 @@ begin
     AParametros);
 end;
 
-function TAdaptadorRegistroLog.SQLActivo: Boolean;
+function TAdaptadorRegistroLog.ObtenerEvidencias: TEvidenciasLog;
 begin
-  Result := FLog.IsLogTypeEnabled(ltSQL);
+  Result.RutaArchivo := FLog.ArchivoActual;
+  Result.SQLActivo := FLog.IsLogTypeEnabled(ltSQL);
+  Result.RendimientoActivo := FLog.IsLogTypeEnabled(ltPerf);
+  Result.AvanzadoActivo := FLog.IsLogTypeEnabled(ltAvanzado);
+end;
+
+procedure TAdaptadorRegistroLog.ActivarDiagnosticoCompleto;
+begin
+  FLog.ActivarDiagnosticoCompleto;
 end;
 
 procedure TAdaptadorRegistroLog.AsignarMonitorSQL(
@@ -482,6 +493,17 @@ end;
 function TLog.IsLogTypeEnabled(ALogType: TLogType): Boolean;
 begin
   Result := ALogType in FLogFlags;
+end;
+
+procedure TLog.ActivarDiagnosticoCompleto;
+begin
+  EnableLogType(ltSQL);
+  EnableLogType(ltPerf);
+  EnableLogType(ltAvanzado);
+  if Assigned(FMonitorSQL) then
+    FMonitorSQL.EstablecerActivo(True);
+  LogInfo(
+    'Diagnóstico completo activado desde la pantalla de error');
 end;
 
 function TLog.FechaLogArchivo(const AFileName: string): TDateTime;

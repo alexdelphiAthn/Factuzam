@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inLibBackupWorker                                             }
 {    Tipo:       Librería (Lib)                                                }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       27/05/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       02/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -120,10 +120,11 @@ type
 function CrearCopiaSeguridadBD(const AHost: string; APort: Integer;
                                const ADatabase, AUser, APassword: string;
                                const ARutaFichero: string;
-                               AEncriptar: Boolean;
-                                const APassEncriptar: string;
-                                AOnProgreso: TWorkerProgresoEvent;
-                                out AError: string):
+                                AEncriptar: Boolean;
+                               const APassEncriptar: string;
+                               AOnProgreso: TWorkerProgresoEvent;
+                               out AError: string;
+                               AComprimirAntesCifrado: Boolean = True):
                                 TResultadoCopiaSeguridad;
 
 implementation
@@ -165,7 +166,8 @@ function CrearCopiaSeguridadBD(const AHost: string; APort: Integer;
                                AEncriptar: Boolean;
                                const APassEncriptar: string;
                                AOnProgreso: TWorkerProgresoEvent;
-                               out AError: string):
+                               out AError: string;
+                               AComprimirAntesCifrado: Boolean):
                                TResultadoCopiaSeguridad;
 var
   Conn: TUniConnection;
@@ -228,9 +230,18 @@ begin
             s := Writer.GetScript;
             s := StringReplace(s, 'DEFINER=`root`@`localhost`', '',
                                [rfReplaceAll, rfIgnoreCase]);
-            s := CifrarCopiaSeguridad(
-              s,
-              APassEncriptar);
+            if AComprimirAntesCifrado then
+            begin
+              s := CifrarCopiaSeguridadComprimida(
+                s,
+                APassEncriptar);
+            end
+            else
+            begin
+              s := CifrarCopiaSeguridad(
+                s,
+                APassEncriptar);
+            end;
             MyText := TStringList.Create;
             try
               MyText.Text := s;

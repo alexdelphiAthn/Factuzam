@@ -1,765 +1,444 @@
-# PLAN_SOLID — Hoja de ruta de desacoplamiento y optimización
+﻿# PLAN SOLID — prioridades P0–P5
 
-Plan de ejecución para llevar Factuzam a un cumplimiento real de SOLID.
-No sustituye a `LIBRO_DE_ESTILO_DELPHI.md` §14: **lo ejecuta**. El libro
-de estilo dice *cómo debe quedar el código*; este documento dice *en qué
-orden llegar hasta ahí, con qué métrica y con qué criterio de parada*.
+Hoja de ruta vigente para llevar Factuzam a un código que pueda defenderse
+en una revisión de ingeniería exigente. El libro de estilo define cómo debe
+quedar cada pieza; este plan decide qué corregir primero y cómo demostrar que
+la mejora es real.
 
-Línea base: 30/07/2026. Estado actualizado: 01/08/2026. Esta versión
-conserva las cifras históricas de partida y añade las mediciones del
-árbol de trabajo actual.
+Estado medido: **02/08/2026**. La auditoría se ha realizado sobre el árbol de
+trabajo actual, incluidos sus cambios sin confirmar. Commit de referencia:
+`42be12feac6ddde6205c84ae3f53fb343041c3a5`.
 
----
-
-## 0. Premisa
-
-El proyecto **no** parte de cero en arquitectura. Hay dirección de capas
-documentada y verificada, contratos propios, colaboradores `TGestor*`,
-red DUnitX y dieciséis scripts de comprobación. El problema no es *"no hay
-diseño"*: es que **el diseño nuevo convive con un núcleo legado que
-concentra casi toda la masa del proyecto**, y que ese núcleo sigue
-hablando SQL directamente.
-
-Por eso el plan no es una refactorización: es una **migración por
-fascículos con trinquete**. Cada fase deja una métrica que ya no puede
-empeorar, verificada por script en cada commit.
-
-Regla del fascículo (no negociable):
-
-1. Prueba DUnitX que fija el comportamiento actual (incluidos los bugs
-   que deban conservarse).
-2. Extraer **una** responsabilidad.
-3. Compilar Win32 + Win64 y pasar `FactuzamTests.exe`.
-4. Commit.
-
-Un fascículo nunca mezcla cambio funcional, normalización de formato ni
-renombrados masivos. La Fase 1 se ejecutó a mucha velocidad; la regla
-sigue vigente precisamente porque las fases que quedan tocan
-transacciones y zona fiscal, donde un fascículo sin red se paga caro.
+Las tareas ejecutables y su reparto sin unidades Pascal concurrentes están en
+[`TAREAS_IA_SOLID.md`](TAREAS_IA_SOLID.md).
 
 ---
 
-## 1. Línea base y estado medido (01/08/2026)
+## 1. Veredicto ejecutivo
 
-Medido sobre `src/`, excluyendo `3rdpartyComp`, `vcl`, `vcl37`, las
-carpetas de pruebas sueltas y los proyectos utilitarios independientes.
-Donde existe script de trinquete, manda la cifra del script. La columna
-del 01/08 se ha medido sobre el árbol compartido, incluidos los cambios
-en curso.
+Factuzam ya tiene una base de ingeniería seria: dirección de capas comprobada,
+contratos propios, composición explícita en varios dominios, compilación
+Win32/Win64 y 604 pruebas DUnitX que pasan en ambas plataformas. No es un
+proyecto sin arquitectura.
 
-| Métrica                                     | 29/07   | 30/07    | 01/08       |
-|---------------------------------------------|---------|----------|-------------|
-| Units propias                               | 457     | 452      | **586**     |
-| Líneas de código propio                     | 261.397 | ~250.000 | **264.301** |
-| `var` en sección `interface`                | 1.516   | **0**    | **0**       |
-| `except` vacíos                             | 55      | **0**    | **0**       |
-| `resourcestring`                            | 5       | **1.458** | **2.031**  |
-| Infracciones de capa `inLib*`→`inMto*`      | 2       | **0**    | **0**       |
-| Units `inLib*`→`UniData*` (§3.3, cerrado)   | —       | **0**    | **0**       |
-| Sentencias SQL literales en `inLib*`        | 471     | 469      | **78**      |
-| Units `inLib*` con SQL                      | 79      | 71       | **35**      |
-| `Supports(...)` totales                     | 75      | 66       | 80          |
-| `Supports(...)` fuera de lista blanca       | —       | **0**    | **0**       |
-| Units > 2.000 líneas (sin vendorizado)      | 20      | 20       | **15**      |
-| Métodos > 200 líneas                        | 30      | ≤38 (tope) | **25**    |
-| Fan-in de `inLibMsg` (fachada)              | 197     | 60       | **0 (eliminada)** |
-| Units de pruebas DUnitX                     | 30      | 38       | **73**      |
-| Contratos `I*` propios                      | 70      | >70      | **188**     |
-| Tamaño de `fzam.exe` (Win64 Release)        | 99,7 MB | 99,7 MB  | 101,7 MB    |
+Todavía no alcanza P5. Los cinco bloqueos principales son:
 
-### 1.1 Acoplamiento eferente (fan-out): units que arrastran el proyecto
+1. La comprobación global de calidad está roja por 44 infracciones nuevas de
+   codificación y finales de línea.
+2. Se ha reducido el acceso directo a datos, pero la UI conserva 35
+   `TUniQuery.Create`, 68 asignaciones `SQL.Text`, 18 componentes UniDAC en
+   DFM y 5 operaciones transaccionales.
+3. Quedan 76 sentencias SQL en 33 unidades `inLib*`. La dirección de capas es
+   correcta, pero una parte del dominio todavía conoce la persistencia.
+4. El contexto general de repositorios se consulta 148 veces desde 55
+   unidades. Sus interfaces individuales son pequeñas, pero el agregado actúa
+   como localizador de servicios y permite que cualquier pantalla alcance
+   capacidades que no declara.
+5. Persisten clases y métodos demasiado grandes: cinco formularios vigilados
+   superan 2.000 líneas, hay 101 métodos de más de 120 líneas y 20 de más de
+   200.
 
-| Units usadas | Unidad                    |
-|--------------|---------------------------|
-| 72           | `inMtoPrincipal`          |
-| 60           | `inMtoFacturasBase`       |
-| 52           | `inMtoCajaOpe`            |
-| 42           | `UniDataComposicionAplicacion` |
-| 40           | `inMtoPedidosCompra`      |
-| 39           | `inMtoFrmBase` / `inMtoFacturasCompra` |
-| 38           | `inMtoAlbaranesCompra`    |
-
-El catálogo central, que tenía fan-out 101, ha sido retirado.
-
-### 1.2 Acoplamiento aferente (fan-in): units que paralizan la compilación
-
-| Units que la usan | Unidad                |
-|-------------------|-----------------------|
-| 102               | `inLibRegistroPantallas` (infraestructura estable) |
-| 87                | `inLibLog`            |
-| 84                | `inLibUser`           |
-| 76                | `inLibMsgComun`       |
-| 72                | `inLibMsgArticulos`   |
-| 64                | `inMtoFrmBase`        |
-| 59                | `UniDataGen`          |
-| 49                | `inLibWin`            |
-| 46                | `inMtoGen`            |
-
-`inLibRegistroPantallas` es infraestructura deliberadamente estable y el
-resguardo lo informa por separado. Los fascículos de `except` registran
-contexto en `inLibLog`. Es el precio correcto de no silenciar errores, pero
-refuerza la necesidad de separar su contrato de su implementación
-(Fase 6).
+La prioridad no es añadir más abstracciones. Es cerrar esos cinco huecos sin
+perder el comportamiento ya protegido.
 
 ---
 
-## 2. Lo que ya está resuelto — no reabrir
+## 2. Evidencia reproducible
 
-Decisiones tomadas, ejecutadas y verificadas sobre el código. **No
-entran en el plan**; los trinquetes impiden que regresen.
+### 2.1 Estado de compilación y pruebas
 
-- **Fase 0 — Instrumentación.** Scripts en `scripts/` con tope congelado
-  y salida no-cero, entre ellos: `comprobar_estado_global`,
-  `comprobar_sql_en_dominio`, `comprobar_tamano_clases`,
-  `comprobar_acoplamiento`, `comprobar_dependencias_capas`,
-  `comprobar_supports`, `comprobar_flujos_largos`,
-  `comprobar_formularios_delgados`, `comprobar_sql_transacciones` y
-  `comprobar_registro_pantallas`.
-- **Fase 1 — Higiene, completada.**
-  - `var` en sección `interface` = 0 (eran 1.516). Los 1.413 mensajes que
-    concentraba `inLibMsg` son `resourcestring` repartidos en catálogos de
-    dominio (`inLibMsgComun`, `inLibMsgFacturas`, `inLibMsgCaja`…).
-    La fachada ya está retirada (§3.7).
-  - `except` vacíos = 0 (eran 55): propagan, registran en `inLibLog` y
-    continúan, o usan `inLibJsonSeguro` con pruebas propias.
-  - Variables `frmXxx` / `dmXxx` del IDE eliminadas.
-  - Las 2 infracciones `inLib*`→`inMto*` de `inLibCajaOpeComposicion`
-    cerradas mediante contratos.
-- **Fase 4 — Inyección explícita e ISP, completada.** Los contratos se
-  resuelven al crear o heredar el consumidor y se conservan en campos.
-  `ShowMto`, `InternalCloseForm` y `GenImpEle` ya no descubren
-  capacidades durante el trabajo. `comprobar_supports.ps1` vigila con
-  lista blanca y tope 0.
-- **Catálogo SQL por perfiles (SQL-0 … SQL-2.3d).** 89 definiciones de
-  once repositorios. Los resolutores de artículos, los tickets de
-  traspaso, el arqueo, la tira y los documentos de Caja consumen contratos; sus
-  implementaciones UniDAC viven en `DataModules`. Las librerías de
-  presentación ya no contienen SQL. Detalle en `ISSUES PENDIENTES.txt`
-  y `MANUAL_SQL_PERFILES.md`.
-- **Piloto de repositorios de la Fase 2 conectado.**
-  `TServicioComprasSesiones` consume `IRepositorioComprasSesiones` y la
-  implementación `UniDataComprasSesionesRepositorio` se inyecta por
-  constructor. C1-C7 separa además la materialización en puertos,
-  orquestador puro, unidad de trabajo y adaptadores especializados.
-  `inLibComprasSesiones*` ya no conoce UniDAC,
-  `UniDataComprasSesiones` ni SQL.
-- **Registro de pantallas por referencia de clase**, verificado por el
-  compilador.
-- **Red DUnitX**: 73 units de prueba, fixtures sin BBDD real.
-- **UniDAC como acceso a datos.** No se sustituye: se envuelve.
+Ejecutado el 02/08/2026:
 
----
+- `fzam.dproj`, Release Win32: compila.
+- DUnitX Win32: **604/604** pruebas, 0 fallos, 0 errores y 0 fugas.
+- `fzam.dproj`, Release Win64: compila.
+- DUnitX Win64: **604/604** pruebas, 0 fallos, 0 errores y 0 fugas.
+- 87 unidades Pascal de pruebas presentes en `tests/`.
 
-## 3. Diagnóstico por principio, con evidencia
+La red de regresión es una fortaleza real. No sustituye pruebas de integración
+con MariaDB para adaptadores que escriben varias tablas.
 
-Ordenado por urgencia real, no por el orden del acrónimo.
+### 2.2 Métricas actuales
 
-### 3.1 DIP — Urgencia ALTA. El dominio sigue hablando SQL
+| Métrica | Estado actual | Lectura |
+|---------|--------------:|---------|
+| Unidades analizadas por calidad | 706 | Cobertura amplia del código propio |
+| Clases analizadas | 552 | Base suficiente para un trinquete útil |
+| Ciclo mayor entre capas | 1 | Sin ciclos entre unidades propias |
+| Aristas `inLib* -> UniData*` | 0 | Dirección de dependencia correcta |
+| Variables `var` en `interface` | 0 | Cerrado |
+| `except` vacíos | 0 | Cerrado |
+| Miembros máximos por interfaz vigilada | 10 | ISP sintáctico correcto |
+| SQL literal en `inLib*` | 76 en 33 unidades | DIP todavía incompleto |
+| Valores externos concatenados en SQL | 0 | Seguridad SQL bien protegida |
+| `TUniQuery.Create` en UI | 35 | Persistencia todavía visible en UI |
+| `SQL.Text :=` en UI | 68 | Persistencia todavía visible en UI |
+| Componentes UniDAC en DFM | 18 | Formularios aún propietarios de datos |
+| Transacciones creadas/iniciadas en UI | 5 | Responsabilidad mal ubicada |
+| Métodos de más de 120 líneas | 101 | Deuda SRP/Clean Code alta |
+| Métodos de más de 200 líneas | 20 | Prioridad de extracción |
+| Riesgo acumulado de métodos largos | 23.073 | Trinquete útil, todavía alto |
+| Riesgo máximo | 417 | Restauración de copias |
+| `Exit` / `Continue` / `with` | 1.062 / 60 / 322 | Deuda de lectura y control de flujo |
+| Líneas de más de 80 columnas | 462 | Deuda de formato |
+| Tabuladores | 0 | Cerrado |
+| Excepciones heredadas de codificación | 542 | Deuda mecánica pendiente |
+| Infracciones totales de codificación | 586 | 542 heredadas + 44 nuevas |
+| Infracciones nuevas de codificación | 44 | **P0: calidad global roja** |
 
-La medición de partida, anterior al piloto activo de compras, encontró
-469 sentencias SQL literales en 71 units `inLib*`
-(`comprobar_sql_en_dominio.ps1`). La infraestructura de salida ya existe
-(contratos, catálogo por perfiles, repositorio piloto), pero los focos
-densos de esa línea base eran:
+### 2.3 Concentraciones de riesgo
 
-| Sentencias | Unidad                              | Naturaleza |
-|-----------:|-------------------------------------|------------|
-| 40         | `inLibComprasSesionesMaterializar`  | dominio + escrituras |
-| 31         | `inLibComprasSesiones`              | dominio    |
-| 26         | `inLibVerifactuCola`                | **fiscal** |
-| 26         | `inLibAlbaranesCompraMovimientos`   | dominio + stock |
-| 20         | `inLibFotos`                        | infraestructura |
-| 20         | `inLibGridPivoteCompra`             | infraestructura |
-| 20         | `inLibColumnasSkuModoTallas`        | infraestructura |
-| 17         | `inLibVentasWsJson`                 | integración |
-| 15         | `inLibPedidosCompra`                | dominio    |
+#### Fan-out
 
-La medida vigilada baja a 78 sentencias en 35 units. Los dos focos de
-sesiones de compra, `inLibVerifactuCola`,
-`inLibAlbaranesCompraMovimientos`, `inLibPedidosCompra` e
-`inLibVentasWsJson` ya están a cero SQL en `inLib*`. También queda
-cerrado `inLibDevolucionesCompraMovimientos`, cuyas 9 sentencias viven
-en `UniDataDevolucionesCompraMovimientos`, y
-`inLibArticulosVariaciones`, cuyas 11 sentencias viven en
-`UniDataArticulosVariaciones`. `inLibFotos` queda también a cero: sus
-19 sentencias se ejecutan en `UniDataFotosRepositorio` mediante un
-contrato de infraestructura basado en `TDataSet`.
-`inLibGridPivoteCompra` queda asimismo a cero: sus 17 construcciones
-SQL viven en `UniDataGridPivoteCompraRepositorio` tras un puerto propio,
-sin records de negocio. `inLibFacturas` queda a cero: sus siete lecturas
-auxiliares viven en `UniDataFacturasLecturas` tras
-`IRepositorioLecturasFactura`. Las exportaciones NO VERI*FACTU y
-Facturae quedan también a cero SQL: sus 6 y 5 sentencias viven en
-`UniDataVerifactuNoVerifactuExport` y `UniDataFacturaeRepositorio`.
-En pedidos de compra
-el analizador vigente encontró 28 sentencias, frente a las 15 de la
-línea base.
+| Unidad | Fan-out |
+|--------|--------:|
+| `UniDataRepositoriosGeneralesPantalla` | 76 |
+| `inMtoFacturasBase` | 64 |
+| `inMtoFrmBase` | 63 |
+| `inLibRepositoriosPantallaIntf` | 58 |
+| `inMtoCajaOpe` | 54 |
+| `inMtoPrincipal` | 52 |
+| `UniDataComposicionAplicacion` | 47 |
+| `UniDataRepositoriosCajaPantalla` | 39 |
 
-### 3.2 SRP — Urgencia ALTA. Las clases-dios siguen activas
+`IContextoRepositoriosPantalla` agrupa diez familias de capacidades. El
+comprobador de ISP pasa porque cada interfaz hija respeta diez miembros, pero
+el diseño completo sigue permitiendo descubrimiento tardío de dependencias.
+Es un caso en el que una métrica local verde no basta para declarar resuelto
+el principio.
 
-Estado con `scripts/comprobar_tamano_clases.ps1` (topes vigentes:
-3.894 líneas / 104 métodos / 40 campos por clase):
+#### Clases grandes
 
-| Clase                    | Líneas | Métodos | Primer alcance |
-|--------------------------|-------:|--------:|----------------|
-| `TfrmMtoOpeCaja`         | 3.893  | 104     | resolución de venta y escáner |
-| `TfrmMtoFacturasBase`    | 1.779  | 104     | fiscalidad y consolidación |
-| `TfrmMtoComprasSesiones` | 3.590  | 99      | creación/materialización |
-| `TfrmMtoArticulos`       | 3.005  | 97      | alta y validación de SKU |
-| `TfrmStockConsulta`      | 2.948  | 81      | consulta, pivote y tarjetas |
-| `TfrmMtoInventarios`     | 3.029  | 77      | resolución de entradas y líneas |
+| Clase | Líneas | Métodos | Campos |
+|-------|-------:|--------:|-------:|
+| `TfrmMtoOpeCaja` | 3.604 | 104 | 35 |
+| `TfrmMtoComprasSesiones` | 3.425 | 99 | 28 |
+| `TfrmMtoArticulos` | 2.971 | 97 | 16 |
+| `TfrmMtoInventarios` | 2.886 | 76 | 13 |
+| `TfrmStockConsulta` | 2.219 | 75 | 40 |
+| `TdmFacturas` | 2.465 | 71 | 23 |
+| `TfrmMtoGen` | 2.135 | 104 | 14 |
+| `TfrmMtoPrincipal` | 2.037 | 87 | 21 |
 
-Nada de eso se prueba sin levantar la VCL. El patrón de salida existe y
-tiene pruebas: seis colaboradores `TGestor*` con dependencias por
-constructor y callbacks tipados. **Falta escalarlo, no inventarlo.**
+`TfrmMtoFacturasBase` ya baja de 2.000 líneas, pero conserva 104 métodos. Su
+`TControladorFacturas` mantiene una referencia al formulario y ejecuta gran
+parte del trabajo mediante `with FAnfitrion`; eso desplaza métodos dentro de
+la misma unidad, no crea una frontera comprobable.
 
-Atención a las clases-dios *de librería*, que el plan anterior no
-listaba. En la línea base,
-`inLibComprasSesionesMaterializar` tenía 3.060 líneas y era a la vez el
-mayor foco de SQL; `inLibGridPivoteVenta` (3.100) y
-`inLibColumnasSkuModoTallas` (3.010) le seguían. C1-C7 deja el
-orquestador `inLib*` en 300 líneas y la fachada
-`UniDataComprasSesionesMaterializar` en 189/12. Ninguna unidad
-resultante supera 1.200 líneas ni 30 rutinas. El coste de separación y
-el plan de reducción neta están medidos en el anexo.
+#### Métodos de mayor riesgo
 
-El desglose operativo, los límites propios y las pruebas de estos tres
-focos están en el
-[anexo SRP de librerías](<DESARROLLOS EN CURSO/plan_srp_clases_dios_libreria.md>).
-El anexo forma parte de esta fase y evita que una extracción de SQL se
-dé por terminada si solo desplaza el monolito desde `inLib*` a
-`UniData*`.
+Los primeros focos medidos son:
 
-### 3.3 Capas — CERRADO. `inLib*` → `UniData*` a cero
-
-Las infracciones hacia `inMto*` ya estaban cerradas. La auditoría
-señaló además **6 units `inLib*` usando `UniData*`**, contra la
-dirección del diagrama de §14.1. La medición sobre el árbol dio
-**8 units y 10 aristas**: faltaban dos de `src\Caja\Lib`
-(`inLibCajaOpeComposicion` y `inLibCajaConsultasRepositorio`).
-
-Se ejecutó la **Opción A**: el cableado sube a la raíz de composición
-real. Resultado, verificado por script y por compilación:
-
-- **10 aristas → 0.** El tope de `comprobar_dependencias_capas.ps1`
-  queda en 0 y ya solo puede quedarse ahí.
-- Cuatro fachadas eliminadas: `inLibFacturasRepositorio` y
-  `inLibCajaConsultasRepositorio` (cero consumidores),
-  `inLibArticulosValidador` y `inLibArticulosAtributosLookup` (alias de
-  tipo más factorías; 35 consumidores migrados a `*Intf` y a los
-  repositorios `UniData*`).
-- `inLibFacturasComposicion` y `inLibCajaOpeComposicion` reciben los
-  adaptadores ya construidos en vez de fabricarlos.
-- `inLibColumnasDocumento` pasa a un contrato (`IAnfitrionDatosDocumento`)
-  e `inLibGridColumnChooser` pierde un `uses` de `UniDataConn` que
-  estaba **muerto**.
-
-El hallazgo más importante no estaba en el recuento: **cinco units
-`inLib*` más** (`inLibFotos`, `inLibGridArticulos`,
-`inLibGridPivoteVenta`, `inLibColumnasSkuModoSku`,
-`inLibColumnasSkuModoTallas`) construían repositorios llamando a
-`CrearValidadorArticulosBase` / `CrearLookupAtributosArticulosBase`. No
-aparecían en ningún trinquete porque la fachada `inLib*` les escondía el
-`uses UniData*`. Ahora exigen inyección con error explícito.
-
-La regla está promovida a §14.1 y a la lista negra de §16. Detalle en
-`DESARROLLOS EN CURSO/refactorizacion_capas_inlib_unidata_resultados.md`.
-
-### 3.4 OCP — Urgencia MEDIA. Las familias compra/venta están duplicadas
-
-| Par                                       | Métodos comunes |
-|-------------------------------------------|-----------------|
-| `inMtoAlbaranes` / `inMtoAlbaranesCompra` | 20 (40 %)       |
-| `inMtoPedidos` / `inMtoPedidosCompra`     | 21 (39 %)       |
-
-Cerca de 9.000 líneas donde compra y venta divergen en tabla, campos y
-signo del stock pero comparten el flujo. Añadir un tipo de documento hoy
-significa copiar un formulario. Sigue pospuesto a la Fase 5: sin la
-Fase 3 no hay donde apoyar la unificación.
-
-Ojo: `inLibGridPivoteVenta` / `inLibGridPivoteCompra` solo comparten un
-9 % de nombres. Ahí **no** se unifica (§14.6).
-
-### 3.5 LSP — Urgencia MEDIA-BAJA, pero creciente
-
-Cadena real: `TfrmBase` → `TfrmMtoGen` (fan-in 46) →
-`TfrmMtoFacturasBase` → descendientes. 45 clases heredan de `TfrmMtoGen`
-métodos que no todas honran; cada hook sobreescrito para "no hacer nada"
-es una violación de LSP. La barrera es de crecimiento: los topes de
-`comprobar_tamano_clases.ps1` impiden ampliar las bases, y §14.5 obliga
-a decidir colaborador/estrategia antes de tocar `TfrmMtoGen`.
-
-### 3.6 ISP — Fase 4 cerrada
-
-`Supports` queda en 0 fuera de lista blanca. Los contratos gordos se
-han separado por consumidor: contenido/formato/guardado de hoja de
-cálculo; ciclo de vida del modo de entrada; lectura/escritura/compartición
-de filtros; y lectura/escritura/caché de perfiles. Los registros
-`TServicios*` permiten inyectar juntas las vistas de un mismo adaptador
-sin volver a descubrir capacidades. `IAnfitrionMantenimiento` permanece
-delgado.
-
-Los dos contratos anchos del subsistema de copias (metadatos, 17
-miembros; helpers SQL, 28) están igualmente separados por consumidor en
-`Core_Interfaces`: lectura de esquema/objetos/datos e inyección conjunta
-mediante `TServiciosLecturaBBDD` y `TServiciosSqlBBDD`. El resguardo
-`comprobar_interfaces_segregadas.ps1` examina ahora todas las unidades
-activas de primera parte —no solo `*Intf.pas`— con tope de 10 miembros
-por interfaz y lista de contratos retirados; sus casos viven en
-`PruebasTrinquetesEstilo.ps1`.
-
-### 3.7 Higiene residual — barato, cerrarlo pronto
-
-- **Fachada `inLibMsg`**: resuelto. Los 60 consumidores se migraron a
-  los catálogos de dominio y la unidad, con sus 8.513 líneas, está eliminada.
-- **Catálogo central de pantallas**: resuelto. Las 52 pantallas y los 48
-  data modules se auto-registran en su propia unidad.
-- **Fan-in con cuerpo**: `inLibLog` 87, `inLibUser` 84, `inLibWin` 49.
-  Separar contrato de implementación (Fase 6).
+- `TRestoreWorker.EjecutarSQLStreaming`: riesgo 417, 275 líneas y 32
+  decisiones.
+- `ExportarMovVentasArtExcel`: riesgo 409 y 285 líneas.
+- `ImprimirTicketDesdeBD`: riesgo 363 y 271 líneas.
+- `ExportarDocumentoTrabajoExcel`: riesgo 337 y 285 líneas.
+- `TfrmMtoOpeCaja.cxGrid1DBTableView1EditKeyDown`: riesgo 335, 22
+  decisiones y 8 salidas en zona de caja.
+- `CargarDatosFactura`: riesgo 331 y 261 líneas en zona fiscal.
+- `TdmArticulos.PoblarCdsEtiquetasArtDesdeUniQuery`: riesgo 331 y 223
+  líneas.
+- `TdmPedidos.ImportarPedidoPrestaShop`: riesgo 330 y tres escrituras.
+- `TDatosFaseCobro.CalcularTotales`: riesgo 318 y 22 decisiones.
 
 ---
 
-## 4. Fases
+## 3. Análisis SOLID actual
 
-El orden ha cambiado respecto al plan del 29/07: la 1 está cerrada y la
-decisión de capas (2b) se intercala porque es barata y congela un
-problema que hoy crece sin vigilancia. Las fases 2 y 3 avanzan en
-paralelo por dominios en cuanto el piloto esté rodado.
+### S — Responsabilidad única: cumplimiento parcial, prioridad alta
 
----
+Los casos de uso nuevos y varios adaptadores ya son cohesivos. El problema
+permanece en formularios, data modules y controladores que mezclan eventos
+VCL, reglas, consultas, transacciones, impresión y navegación.
 
-### Fase 2 — Repositorios: sacar el SQL del dominio (EN CURSO, prioridad máxima)
+Una extracción cuenta como SRP solo si el colaborador:
 
-**Idea:** `inLib*` deja de conocer UniDAC y el esquema. Recibe el
-contrato de persistencia por constructor; la implementación vive en
-`UniData*` y la raíz de composición la inyecta.
+- recibe dependencias mínimas;
+- no conserva una referencia al formulario completo;
+- se prueba sin crear la VCL;
+- expone una intención de negocio, no una copia del nombre del evento.
 
-**Acciones**
+Mover handlers a otra clase con `FAnfitrion: Tfrm...` no cierra SRP.
 
-1. **Piloto de sesiones de compra terminado.** El contrato
-   (`IRepositorioComprasSesiones`) lo consume
-   `TServicioComprasSesiones`; la implementación
-   (`UniDataComprasSesionesRepositorio`) se inyecta desde el formulario
-   y `UniDataComprasSesiones` ha salido de las fachadas de dominio.
-   - Lecturas primero. Los tipos que cruzan la frontera son `record`,
-     nunca `TDataSet`.
-   - Pruebas DUnitX del dominio con repositorio falso en memoria,
-     sin BBDD.
-2. **Límite transaccional de compras terminado.**
-   `IUnidadTrabajoMaterializacion` demuestra confirmación única,
-   rollback y reutilización de una transacción activa.
-   `comprobar_sql_transacciones.ps1` vigila el orquestador.
-3. **Materialización de sesiones de compra terminada.** Las 3.042
-   líneas de la unidad procedural se reparten por responsabilidad; la
-   fachada queda en 189/12 y el orquestador no conoce UniDAC. Resultado
-   y reducción posterior en el anexo SRP.
-4. **`inLibVerifactuCola` tras contrato, terminado.**
-   La fachada queda sin UniDAC ni SQL, con dobles sin BBDD; el adaptador
-   y su plan de reducción están en el documento de resultados.
-   `PruebasEmisionFiscal`, `PruebasRectificativas` y la batería completa
-   pasaron en Release Win32 + Win64. La compilación global del árbol
-   concurrente se ha revalidado en Debug Win64 y Release Win32/Win64;
-   la ausencia de `inLibMsgRegistroTraducciones.pas` ya no bloquea
-   porque no quedan referencias activas a esa unidad.
-5. Repetir el patrón por densidad. `inLibAlbaranesCompraMovimientos`
-   `inLibPedidosCompra`, `inLibVentasWsJson` e
-   `inLibDevolucionesCompraMovimientos` ya están cerrados.
-   `inLibArticulosVariaciones` cierra esta cola de dominio.
-6. `inLibFotos`, `inLibGridPivoteCompra` y `inLibColumnasSkuModoTallas`
-   son infraestructura, no dominio: basta aislar su SQL tras un contrato
-   propio, sin forzar `record` de negocio. Los tres focos ya están a
-   cero SQL en `inLib*`.
-7. **Regla para el trinquete:** ninguna unit `inLib*` **nueva** contiene
-   SQL literal. Las existentes solo bajan
-   (`comprobar_sql_en_dominio.ps1`, topes 78/35).
+### O — Abierto/cerrado: cumplimiento medio
 
-**Hito cuantitativo alcanzado:** 78 sentencias SQL en 35 units `inLib*`,
-por debajo del umbral 250/40. El vaciado completo continúa por dominios,
-con pruebas DUnitX sin conexión.
+Los contratos de repositorio, políticas y casos de uso permiten sustituir
+implementaciones. En los grandes handlers todavía se añaden variantes con
+`case`, cadenas de `if`, nombres de campo y ramas por tipo de documento.
 
----
+La mejora prioritaria es convertir variantes estables en estrategias o
+políticas. No se crearán jerarquías para condicionales triviales: OCP se
+aplica donde una variante obliga hoy a modificar un núcleo fiscal,
+transaccional o reutilizado.
 
-### Fase 2b — Sellar la dirección de capas (COMPLETADA)
+### L — Sustitución de Liskov: riesgo estructural, no fallo demostrado
 
-1. `comprobar_dependencias_capas.ps1` cuenta `inLib*` → `UniData*`.
-   Hecho: cubre las dos direcciones, tope 0.
-2. Opción A decidida y ejecutada; regla promovida a §14.1 y §16.
-3. `inLibColumnasDocumento` e `inLibGridColumnChooser` corregidos.
+No se ha encontrado una violación funcional reproducible de LSP. Sí existe
+riesgo por la jerarquía VCL profunda (`TfrmBase`, `TfrmMtoGen`, documentos y
+descendientes), por contratos implícitos de datasets y por hooks cuyo orden
+depende de `inherited`.
 
-**Criterio de salida cumplido:** el script cubre ambas direcciones y el
-tope de `inLib*`→`UniData*` está en 0, sin lista blanca.
+La salida no es eliminar la herencia VCL. Es documentar y probar sus
+precondiciones, dejar en la base solo comportamiento verdaderamente común y
+mover reglas variables a colaboradores inyectados.
 
-### Fase 3 — Descuartizar las clases-dios (esfuerzo: alto)
+### I — Segregación de interfaces: correcta en tamaño, incompleta en uso
 
-Los seis formularios de §3.2 más las clases-dios de librería. Topes
-monotónicos vigentes: 3.894 líneas / 104 métodos / 40 campos; cada
-fascículo de extracción baja al menos uno y ninguno vuelve a subir.
+Todas las interfaces vigiladas respetan el máximo de diez miembros. Sin
+embargo, el contexto general de pantalla ofrece diez puertas hacia decenas de
+servicios. Un consumidor que recibe ese contexto depende potencialmente de
+todo el catálogo.
 
-Para las clases-dios de librería manda el
-[anexo SRP de librerías](<DESARROLLOS EN CURSO/plan_srp_clases_dios_libreria.md>):
-instrumentación por clase y unidad procedural, fascículos C/V/T y
-pruebas funcionales por consumidor.
+El objetivo es que cada formulario declare un contexto de feature mínimo y
+que solo la raíz de composición conozca implementaciones UniDAC. Una bolsa de
+dependencias no se considera ISP aunque esté formada por interfaces pequeñas.
 
-**Método por formulario** (un fascículo por cambio revisable):
+### D — Inversión de dependencias: avance fuerte, cierre pendiente
 
-1. Inventariar los métodos por responsabilidad: cálculo, impresión,
-   búsqueda, validación, stock, cobros/pagos, navegación, permisos y
-   exportación.
-2. Extraer primero la responsabilidad cohesiva de mayor tamaño que no
-   necesite controles. La pieza de dominio recibe contratos y datos
-   simples; no conoce VCL, DevExpress, UniDAC ni el formulario.
-3. Lo estrictamente visual va a un colaborador de presentación: puede
-   recibir vistas o controles, pero no contiene SQL ni decide negocio.
-4. La coordinación queda en el formulario. El resultado vuelve como
-   `record`, interfaz o callback tipado, sin cast al formulario.
-5. Fijar el comportamiento antes de moverlo: cada regla extraída añade
-   DUnitX sin BBDD.
-6. No se crean clases para alcanzar una cuota: un `TGestor*` nuevo debe
-   tener responsabilidad, consumidor y ciclo de vida explícitos.
+Está cerrado `inLib* -> UniData* = 0`, no hay ciclos de capa y los valores SQL
+no se concatenan. Falta:
 
-**Orden sugerido** (cruza con la Fase 2 para rendir doble):
-
-| # | Unidad                   | Primera responsabilidad | Riesgo |
-|---|--------------------------|-------------------------|--------|
-| 1 | `inMtoCajaOpe`           | resolución de venta y escáner | caja activa |
-| 2 | `inMtoComprasSesiones`   | creación/materialización | transacciones |
-| 3 | `inMtoArticulos`         | altas SKU y atributos básicos | alto reuso |
-| 4 | `inMtoStockConsulta`     | consulta, pivote y tarjetas | presentación |
-| 5 | `inMtoInventarios`       | resolución de entradas y líneas | stock |
-| 6 | `inMtoFacturasBase`      | objetivo alcanzado; vigilar regresiones | Verifactu |
-
-**Criterio de salida:** los seis formularios por debajo de 2.000 líneas
-y 120 métodos; los topes individuales solo bajan y se comprueban en la
-compilación Release/Win64. Las clases y unidades de librería cumplen
-además los límites específicos y el cero SQL definidos en el anexo.
+- sacar 76 sentencias de 33 unidades `inLib*`;
+- sacar de la UI la creación de consultas, SQL, componentes UniDAC y
+  transacciones;
+- sustituir la resolución tardía desde el contexto general por inyección de
+  capacidades concretas;
+- probar adaptadores transaccionales críticos contra MariaDB controlada.
 
 ---
 
-### Fase 4 — Cierre de inyección explícita e ISP — COMPLETADA
+## 4. Análisis Clean Code actual
 
-1. `comprobar_supports.ps1` tiene tope 0. `ShowMto` resuelve
-   `IMantenimientoEmbebido` al crear el formulario y `FormManager`
-   conserva ese contrato; `GenImpEle` recibe `IEliminadorElemento`
-   por constructor.
-2. Contratos separados por consumidor real:
-   `IEscritorHojaCalculo` + `IFormateadorHojaCalculo` +
-   `IGuardadorHojaCalculo`; `IModoEntradaGrid` reducido a su ciclo de
-   vida; `ILector`/`IEscritor`/`ICompartidorFiltrosGuardados`; y
-   `ILector`/`IEscritor`/`ICachePerfilesUsuario`.
+### Fortalezas que deben conservarse
 
-**Criterio de salida:** `Supports()` fuera de lista blanca = 0; ningún
-consumidor obligado a implementar métodos que no usa.
+- 0 globales `var` en interfaces y 0 `except` vacíos.
+- 0 aristas prohibidas de capa y 0 ciclos mayores.
+- contratos propios en lugar de `Supports` improvisado;
+- SQL parametrizado y tres identificadores dinámicos protegidos por lista
+  blanca;
+- 604 pruebas verdes en Win32 y Win64;
+- CI con calidad y Delphi obligatorios;
+- tabuladores eliminados y topes de no regresión automatizados.
 
----
+### Deuda que impide calificar el código como excelente
 
-### Fase 5 — OCP: una sola familia de documentos (COMPLETADA)
-
-El prerrequisito queda cumplido: `inMtoFacturasBase` está por debajo de
-2.000 líneas y 120 métodos.
-
-1. Hecho: `TConfiguracionDocumento` concentra tablas, prefijos, signo del
-   stock, contador, serie, asiento y Verifactu.
-2. Hecho: `IEstrategiaDocumento` resuelve precios, impuestos, movimiento
-   de stock y numeración.
-3. Hecho: migración en orden `Albaranes` → `Pedidos` → `Facturas` →
-   `Devoluciones`.
-4. **No tocar** los grids pivote (9 % de solape, §14.6).
-5. Hecho: los alias y factorías temporales se eliminaron al migrar el
-   último consumidor.
-
-**Criterio de salida cumplido:** un tipo de documento nuevo = una
-configuración y, como mucho, una estrategia. Nunca un formulario
-copiado.
+- Los topes actuales congelan legado, pero no son una definición de calidad.
+  Que un script pase con 1.062 `Exit` o 101 métodos largos significa que no se
+  ha empeorado, no que esté terminado.
+- Hay nombres de campo, datasets y SQL atravesando presentación, aplicación y
+  persistencia.
+- Algunos “controladores” son extensiones privilegiadas del formulario y no
+  objetos independientes.
+- La prueba unitaria domina; falta una capa pequeña de pruebas de integración
+  para escrituras y transacciones MariaDB.
+- Las excepciones de codificación permiten mantener deuda histórica. P5 exige
+  llevar esa lista a cero mediante cambios mecánicos separados.
 
 ---
 
-### Fase 6 — Optimización (esfuerzo: medio)
+## 5. Nueva escala de prioridades
 
-**Compilación y arranque**
+P0–P4 expresan **orden de ejecución**. P5 expresa el **estado final de
+excelencia**.
 
-1. **Hecho:** retirada la fachada `inLibMsg`; sus 60 consumidores usan
-   los catálogos de dominio y la unidad de 8.513 líneas está eliminada.
-2. **Hecho:** retirado `inMtoCatalogoPantallas` (fan-out 101). Cada
-   `inMto*` y `UniData*` se registra en su `initialization` sobre
-   `inLibRegistroPantallas`, manteniendo la referencia de clase verificada
-   por el compilador. `ComprobarRegistradas` sigue avisando en el arranque.
-3. Trocear los fan-in altos con cuerpo (`inLibLog` 87, `inLibUser` 84,
-   `inLibWin` 49): contrato `*Intf` estable separado de la
-   implementación.
-4. Los 101,7 MB de `fzam.exe` en Win64 Release: revisar símbolos de depuración, RTTI y
-   enlace de paquetes DevExpress. Configuración, no arquitectura, pero
-   afecta a despliegue y arranque.
+| Nivel | Significado | Puede esperar |
+|-------|-------------|---------------|
+| P0 | Rama no verificable, regresión o riesgo inmediato de datos | No |
+| P1 | Bloqueo arquitectónico o complejidad en zona crítica | Solo detrás de P0 |
+| P2 | Persistencia dentro de UI | Detrás de P1 del mismo feature |
+| P3 | Persistencia dentro de dominio y servicios | Detrás de puertos estables |
+| P4 | Complejidad, extensibilidad, pruebas de integración y deuda transversal | Tras cerrar fronteras |
+| P5 | Código terminado: simple, explícito, probado y sin deuda aceptada | Es el destino |
 
-**Ejecución (MariaDB / UniDAC)** — con los repositorios de la Fase 2 el
-SQL queda concentrado y por fin auditable:
+### P0 — Recuperar una línea base totalmente verde
 
-5. Detectar N+1 (bucles que abren consulta por fila) → `JOIN` o carga
-   previa en `record`.
-6. `Prepared := True` y reutilización de `TUniQuery` en bucles calientes
-   (materialización de compras, movimientos, tira de tickets).
-7. Revisar `SELECT *` sobre tablas anchas; pedir columnas.
-8. Contrastar los `WHERE` reales contra índices con `EXPLAIN`; los que
-   falten, como script idempotente en `DESARROLLOS EN CURSO/` (reglas
-   duras 1 y 2 de `CLAUDE.md`).
-9. Revisar `AfterPost` / `BeforePost` que encadenan escrituras (§14.7).
+**Problema actual:** `comprobar_codificacion.ps1` informa 44 infracciones
+nuevas: 12 unidades sin BOM y con LF, además de archivos con finales de línea
+mezclados.
 
-**Criterio de salida:** fan-out máximo ≤ 40; `inLibMsg` eliminada;
-tiempos de build y arranque medidos antes/después; consultas calientes
-sin `type = ALL` sobre tablas grandes.
+Acciones:
 
----
+1. Normalizar exclusivamente codificación y finales de línea, sin cambios
+   lógicos.
+2. No aumentar baselines ni máximos para ocultar el fallo.
+3. Repetir calidad completa, compilación y 604 pruebas en Win32/Win64.
 
-## 5. Patrones de referencia
+Criterio de salida:
 
-### 5.1 Repositorio tras contrato (Fase 2)
+- `scripts/comprobar_calidad.ps1` verde;
+- 0 infracciones nuevas de codificación;
+- compilación y 604/604 pruebas verdes en las dos plataformas.
 
-Contrato — sin UniDAC, sin VCL, sin DevExpress:
+### P1 — Romper los bloqueos arquitectónicos
 
-```pascal
-unit inLibComprasSesionesIntf;
-interface
-type
-  TLineaSesionCompra = record
-    CodigoArticulo: string;
-    Cantidad: Currency;
-    PrecioCoste: Currency;
-    EsBaja: Boolean;
-  end;
-  TLineasSesionCompra = TArray<TLineaSesionCompra>;
-  IRepositorioComprasSesiones = interface
-    ['{PONER-GUID-AQUI}']
-    function CargarLineas(const ACodigoSesion: string):
-                                              TLineasSesionCompra;
-    procedure GuardarLineas(const ACodigoSesion: string;
-                            const ALineas: TLineasSesionCompra);
-    function ExisteSesion(const ACodigoSesion: string): Boolean;
-  end;
-implementation
-end.
-```
+Acciones:
 
-El dominio consume el contrato y no sabe que hay una BBDD detrás:
+1. Sustituir `IContextoRepositoriosPantalla` como localizador accesible desde
+   cualquier formulario por contextos mínimos de feature.
+2. Dividir `UniDataRepositoriosGeneralesPantalla` y
+   `UniDataRepositoriosCajaPantalla` por capacidades cohesivas.
+3. Convertir los contextos ya existentes de Facturas, Caja, Compras,
+   Inventario, Artículos y Stock en dependencias inyectadas de verdad.
+4. Retirar controladores con referencia al formulario completo, empezando por
+   `TControladorFacturas`.
+5. Bajar a menos de 2.000 líneas los cinco formularios vigilados todavía
+   pendientes, sin crear un nuevo monolito en `UniData*`.
+6. Caracterizar primero restauración, caja y fiscalidad, por su impacto.
 
-```pascal
-constructor TMaterializadorCompras.Create(
-  const ARepositorio: IRepositorioComprasSesiones);
-begin
-  inherited Create;
-  FRepositorio := ARepositorio;
-end;
-```
+Criterio de salida:
 
-En pruebas se inyecta un `TRepositorioComprasSesionesMemoria`. Sin
-conexión, sin fixture de BBDD.
+- 148 accesos desde 55 consumidores al contexto general pasan a 0;
+- ninguna fábrica de pantalla supera 10 capacidades;
+- las unidades de composición generales quedan por debajo de fan-out 40;
+- las cinco clases vigiladas quedan por debajo de 2.000 líneas;
+- ningún colaborador de presentación conserva un `Tfrm...` completo;
+- los núcleos extraídos se prueban sin VCL y sin BBDD.
 
-### 5.2 Colaborador extraído (Fase 3)
+### P2 — UI sin persistencia
 
-El molde ya está escrito: `inLibGestorFiltrosMto.pas`. Dependencias por
-constructor, callbacks tipados y `record` de resultado. Ningún cast al
-formulario. **Copiar esa estructura literalmente** para cada colaborador
-nuevo.
+Acciones:
 
-### 5.3 Descubrir una vez, no en cada método (Fase 4)
+1. Extraer las consultas y escrituras de los 25 focos UI medidos.
+2. Mover componentes UniDAC de DFM a data modules o adaptadores.
+3. Mover las cinco transacciones a unidades de trabajo explícitas.
+4. Dejar en cada handler: recoger entrada, invocar caso de uso y presentar
+   resultado.
 
-```pascal
-{ En la creación de la clase base — una sola vez }
-procedure TfrmBase.ResolverServicios;
-begin
-  inherited;
-  if not Supports(Self.Owner, IAnfitrionMantenimiento, FAnfitrion) then
-    raise EServicioNoDisponible.Create(SAnfitrionMtoNoDisponible);
-end;
-```
+Criterio de salida del trinquete UI:
 
-En el resto de la clase se usa `FAnfitrion`. Nunca se vuelve a llamar a
-`Supports`.
+| Indicador | Actual | Objetivo |
+|-----------|-------:|---------:|
+| `TUniQuery.Create` | 35 | 0 |
+| `SQL.Text :=` | 68 | 0 |
+| Componentes UniDAC en DFM | 18 | 0 |
+| Transacciones en UI | 5 | 0 |
+| `SQL.Add` / `CommandText` / `TUniStoredProc.Create` | 0 | 0 |
 
-### 5.4 Configuración + estrategia (Fase 5)
+### P3 — Dominio sin SQL ni detalles UniDAC
 
-```pascal
-type
-  TConfiguracionDocumento = record
-    TablaCabecera: string;
-    TablaLineas: string;
-    SufijoCabecera: string;
-    SufijoLineas: string;
-    SignoStock: Integer;      { +1 entrada, -1 salida }
-    EsCompra: Boolean;
-    EmiteVerifactu: Boolean;
-  end;
-```
+Acciones:
 
-Un tipo de documento nuevo = una constante de configuración. Si además
-cambia una regla, una implementación de `IEstrategiaDocumento`. Nunca un
-formulario copiado.
+1. Extraer las 76 sentencias restantes de las 33 unidades `inLib*` a
+   adaptadores `UniData*`.
+2. Definir contratos por caso de uso; no crear un repositorio genérico ni una
+   nueva bolsa de consultas.
+3. Mantener resultados de negocio fuera de `TUniQuery` cuando no sea necesario
+   enlazar un dataset de presentación.
+4. Declarar propietario de transacción, commit, rollback e idempotencia en
+   cada escritura de varias tablas.
 
----
+Criterio de salida:
 
-## 6. Trinquetes: métrica, estado actual y objetivo
+- SQL literal en `inLib*`: 76 -> 0;
+- unidades `inLib*` con SQL: 33 -> 0;
+- `inLib* -> UniData*`: permanece en 0;
+- valores externos concatenados: permanece en 0;
+- cada adaptador crítico tiene prueba contractual y transaccional.
 
-Las medidas se contrastan con los topes configurados en cada script; una
-regresión por encima de esos topes falla el build.
+### P4 — Reducir complejidad y demostrar extensibilidad
 
-| Métrica                                  | Medida actual | Fase | Objetivo |
-|------------------------------------------|---------------|------|----------|
-| `var` en sección `interface`             | 0        | ✔    | 0        |
-| `except` vacíos                          | 0        | ✔    | 0        |
-| Infracciones `inLib*`→`inMto*`           | 0        | ✔    | 0        |
-| `inLib*`→`UniData*`                      | 0        | ✔    | 0        |
-| Sentencias SQL en `inLib*`               | 78       | 2    | ≤ 250    |
-| Units `inLib*` con SQL                   | 35       | 2    | ≤ 40     |
-| Líneas por clase                         | 3.893    | 3    | ≤ 2.000  |
-| `TfrmMtoComprasSesiones` — líneas        | 3.590    | 3    | ≤ 2.000  |
-| `TfrmMtoFacturasBase` — líneas           | 1.779    | 3    | ≤ 2.000  |
-| Métodos por clase                        | 104      | 3    | ≤ 120    |
-| Campos por clase                         | 40       | 3    | solo baja|
-| Líneas de unit procedural vigilada       | 1.170    | 3    | ≤ 1.200  |
-| Rutinas de unit procedural vigilada      | 43       | 3    | ≤ 30     |
-| Métodos > 200 líneas                     | 25       | 3    | ≤ 10     |
-| Métodos > 120 líneas                     | 112      | P3   | solo baja|
-| Riesgo acumulado de métodos > 120        | 25.862   | P3   | solo baja|
-| Riesgo máximo de un método > 120         | 480      | P3   | solo baja|
-| Llamadas a `Exit`                        | 1.107    | P3   | solo baja|
-| Llamadas a `Continue`                    | 73       | P3   | solo baja|
-| Sentencias `with`                        | 339      | P3   | solo baja|
-| Líneas de más de 80 columnas             | 552      | P3   | solo baja|
-| `Supports()` fuera de lista blanca       | 0        | ✔    | 0        |
-| Interfaces propias > 10 miembros         | 0        | ✔    | 0        |
-| Fan-in de `inLibMsg`                     | 0 (unidad eliminada) | ✔ | 0 |
-| Fan-in con cuerpo                        | 87       | 6    | solo baja|
-| Fan-out máximo por unidad                | 72       | 6    | ≤ 40     |
-| Units de prueba DUnitX                   | 73       | 2-3  | ≥ 50     |
+Acciones:
 
-### 6.1 P3 — Clean Code y automatización
+1. Dividir primero los 20 métodos de más de 200 líneas y después los de mayor
+   riesgo.
+2. Separar cálculo, decisión, persistencia y presentación; no crear métodos
+   auxiliares que solo fragmenten texto.
+3. Sustituir ramas repetidas por políticas cuando representen variantes de
+   negocio estables.
+4. Probar contratos de la jerarquía VCL y orden de hooks donde una omisión de
+   `inherited` cambie el comportamiento.
+5. Añadir una suite reducida de integración MariaDB para repositorios,
+   rollback, idempotencia y errores parciales.
+6. Medir tiempos de los caminos interactivos y usar `EXPLAIN` en consultas
+   nuevas o modificadas de gran volumen.
 
-`comprobar_metodos_largos.ps1` no ordena ya solo por longitud. La puntuación
-de riesgo suma líneas y pondera decisiones, `Exit`/`Continue`, manejadores de
-excepción, escrituras y pertenencia a caja o Verifactu. Los topes vigentes
-son 112 métodos, 25.862 puntos acumulados y 480 para un método individual.
-Una extracción debe bajar al menos una de esas medidas sin empeorar las
-restantes.
+Criterio de salida:
 
-`comprobar_estilo_codigo.ps1` vigila por unidad `Exit`, `Continue`, `with`,
-ancho y tabuladores. La línea base vive en
-`scripts/estilo_linea_base.csv`; las unidades nuevas entran a cero y la
-actualización de la línea base solo admite reducciones.
+- métodos de más de 200 líneas: 20 -> 0;
+- riesgo máximo de método: 417 -> menor o igual a 200;
+- ningún método fiscal/caja modificado supera 10 decisiones;
+- ninguna clase/data module nuevo supera los límites P5;
+- pruebas de integración críticas ejecutables de forma repetible.
 
-La ejecución automatizada tiene dos niveles:
+### P5 — Excelencia mantenible
 
-1. `.github/workflows/calidad.yml` ejecuta
-   `scripts/comprobar_calidad.ps1` en cada push y pull request.
-2. La ejecución manual con `ejecutar_delphi` usa un runner Windows con
-   Delphi y lanza `scripts/ejecutar_pruebas_delphi.ps1`, que compila y
-   ejecuta DUnitX en Release para Win32 y Win64.
+P5 no se alcanza porque los topes no crezcan. Se alcanza cuando no queda
+deuda aceptada en código propio modificado y el legado completo ha pasado por
+fascículos seguros.
+
+Objetivo final:
+
+- 0 excepciones de codificación; UTF-8 con BOM y CRLF en todo archivo propio;
+- 0 `Exit`, `Continue` y `with` en código propio escrito o refactorizado;
+- 0 líneas de más de 80 columnas fuera de recursos inevitables documentados;
+- handlers VCL de hasta 15 líneas efectivas;
+- métodos normales de hasta 60 líneas, objetivo menor de 40;
+- dependencias visibles en constructor, método o contexto mínimo;
+- SQL solo en adaptadores de persistencia y scripts idempotentes;
+- errores expresados y registrados, nunca convertidos en éxito;
+- éxito, límites y fallos relevantes cubiertos por pruebas;
+- CI obligatoria verde en calidad, Win32, Win64, DUnitX e integración crítica.
 
 ---
 
-## 7. Riesgos y reglas de no regresión
+## 6. Orden de ejecución y regla de fascículo
 
-1. **No hacer big bang.** Un fascículo por commit. Si un commit toca más
-   de dos units de producción, probablemente sea dos commits. La
-   velocidad de la Fase 1 fue posible porque era mecánica; las fases 2 y
-   3 no lo son.
-2. **No mezclar formato con estructura.** Un refactor no reindenta.
-3. **Fachadas temporales con fecha de caducidad.** Toda fachada se anota
-   en `ISSUES PENDIENTES.txt` con la unidad que la sustituye y no recibe
-   lógica nueva (§14.6).
-4. **La red primero.** Si un flujo no tiene prueba, la prueba se escribe
-   *antes* de tocarlo, aunque solo fije el comportamiento actual.
-5. **Escrituras solo con transacción y rollback probado.** Ninguna
-   materialización migra a repositorio sin límites transaccionales
-   fijados y prueba de rollback (§14.7, SQL-2.3b).
-6. **No introducir dependencias nuevas.** Los repositorios envuelven
-   UniDAC; no lo sustituyen.
-7. **Verifactu y caja son zona fiscal.** Cualquier fascículo que toque
-   `inLibVerifactu*` o `inMtoCajaOpe` se valida además contra
-   `PruebasEmisionFiscal`, `PruebasRectificativas` y `PruebasCajaVenta`,
-   en Release Win32 + Win64.
-8. **Cuidado con unificar lo que solo se parece.** El 9 % de solape de
-   los grids pivote es la señal: si el modelo difiere, se comparte solo
-   el núcleo común.
+Cada tarea sigue esta secuencia:
+
+1. Medir la unidad y fijar el comportamiento con pruebas de caracterización.
+2. Extraer una sola responsabilidad o frontera.
+3. Aplicar P5 a todo código nuevo y a la zona modificada.
+4. Ejecutar los comprobadores específicos del riesgo.
+5. Compilar Win32 y Win64 y ejecutar DUnitX.
+6. Mostrar métricas antes/después y el diff limitado a las unidades asignadas.
+
+No se mezclan en un mismo fascículo:
+
+- cambio funcional y normalización masiva;
+- extracción de persistencia y rediseño visual;
+- cambio fiscal y limpieza cosmética;
+- varias transacciones sin una prueba por cada contrato.
+
+La ejecución paralela usa las olas de `TAREAS_IA_SOLID.md`. Dentro de una ola
+no se repite ninguna unidad Pascal. Los manifiestos Delphi, scripts, workflow,
+baselines y documentos son propiedad exclusiva de tareas seriales de
+integración.
 
 ---
 
-## 8. Arranque: los próximos doce commits
+## 7. Definición de terminado por tarea
 
-Ordenados para que cada uno sea pequeño, verificable y deje algo medido.
+Una tarea solo se cierra cuando:
 
-1. ~~`comprobar_dependencias_capas.ps1` cuenta `inLib*`→`UniData*`.~~
-   **Hecho**, tope 0.
-2. ~~Decisión de capas promovida a §14.1.~~ **Hecho**: Opción A, con
-   `inLibColumnasDocumento` e `inLibGridColumnChooser` tras contrato.
-3. `inLibComprasSesiones` consume `IRepositorioComprasSesiones` en
-   lecturas; `UniDataComprasSesiones` sale del `uses` de `interface`.
-4. Pruebas DUnitX del dominio de compras con
-   `TRepositorioComprasSesionesMemoria`, sin BBDD.
-5. Límites transaccionales de materialización fijados + prueba de
-   rollback (amplía `comprobar_sql_transacciones.ps1` si hace falta).
-6. `inLibComprasSesionesMaterializar`: primera operación de escritura
-   tras el contrato, transaccional e idempotente.
-7. `inLibVerifactuCola` tras contrato; las baterías fiscales pasaron en
-   Release Win32 + Win64. La revalidación global ya no queda bloqueada:
-   no existen referencias activas a la unidad concurrente ausente
-   `inLibMsgRegistroTraducciones.pas`.
-8. `inLibAlbaranesCompraMovimientos` tras contrato.
-9. `inLibPedidosCompra` tras contrato; sus 28 sentencias viven en
-   `UniDataPedidosCompraOperaciones`.
-10. `inLibVentasWsJson` tras contrato; sus 17 sentencias viven en
-    `UniDataVentasWsJson`.
-11. `inLibDevolucionesCompraMovimientos` tras contrato; sus 9
-    sentencias viven en `UniDataDevolucionesCompraMovimientos`.
-12. `inLibArticulosVariaciones` tras contrato; sus 11 sentencias viven
-    en `UniDataArticulosVariaciones`.
-13. `inLibFotos` tras `IRepositorioFotos`; sus 19 sentencias viven en
-    `UniDataFotosRepositorio` y el puerto usa `TDataSet`, sin nuevos
-    records de negocio.
-14. `inLibGridPivoteCompra` tras
-    `IRepositorioGridPivoteCompra`; sus 17 construcciones SQL viven en
-    `UniDataGridPivoteCompraRepositorio`, sin records de negocio.
-15. SQL-2.4, lecturas de `inLibFacturas`: sus siete sentencias viven en
-    `UniDataFacturasLecturas` tras `IRepositorioLecturasFactura`.
-16. SQL-2.4, exportaciones: `inLibVerifactuNoVerifactuExport` e
-    `inLibFacturae` quedan a cero; sus 11 sentencias viven tras puertos
-    propios en adaptadores UniDAC.
-17. ~~Fachada `inLibMsg`: migración de los 60 consumidores y retirada de
-    la unidad.~~ **Hecho**, fan-in 0.
-18. ~~Fase 3, fascículo 1: `inMtoComprasSesiones`.~~ **Hecho**: las
-    reglas de creación salen a `inLibComprasSesionesCreacion` con 18
-    pruebas sin BBDD; la clase baja de 3.669 a 3.634 líneas.
-19. ~~Fase 3, fascículo 2: `inMtoFacturasBase`.~~ **Hecho**: presentación
-    de cobros, bloqueo fiscal, anulaciones/subsanaciones y consolidación
-    salen a colaboradores propios; el archivado PDF queda en su modal.
-    Las 20 pruebas no usan BBDD. En el árbol compartido la clase baja de
-    4.008/133 a 1.779/104, incluidas extracciones de edición
-    de líneas y coordinación del formulario.
-20. ~~ISP: partir los cuatro contratos gordos por consumidor real.~~
-    **Hecho**: hoja de cálculo, modo de entrada, filtros y perfiles.
-21. ~~Fase 5, OCP: una sola familia de documentos.~~ **Hecho**:
-    configuración y estrategia únicas, ancestro común y migración de
-    albaranes, pedidos, facturas y devoluciones.
-
-A partir de aquí las fases 2 y 3 avanzan en paralelo por dominios.
+- conserva el comportamiento visible o documenta expresamente el cambio;
+- añade o adapta pruebas antes de retirar el código anterior;
+- no amplía listas blancas, baselines ni máximos sin una reducción neta
+  explicada;
+- no introduce dependencias nuevas ni acceso global;
+- no crea una interfaz de más de diez miembros ni una bolsa de servicios;
+- no deja SQL, transacciones o `TUniQuery` en UI o dominio cuando ese sea su
+  objetivo;
+- pasa los comprobadores de calidad relevantes;
+- compila y pasa las pruebas en Win32 y Win64;
+- informa de unidades creadas, métricas antes/después y riesgos pendientes;
+- no modifica `factuzam_original.sql` y no hace commit salvo petición expresa.
 
 ---
 
-## 9. Qué promover al libro de estilo cuando el plan avance
+## 8. Decisiones cerradas que no deben reabrirse
 
-La Fase 1 está cerrada: sus reglas se promueven **ya**.
+- UniDAC sigue siendo la tecnología de acceso a datos.
+- `factuzam_original.sql` no se modifica.
+- Los cambios de esquema viven en scripts idempotentes de
+  `DESARROLLOS EN CURSO/`.
+- `inLib* -> UniData*` debe permanecer en 0.
+- No vuelven globales `var`, `except` vacíos, `Supports` improvisado ni
+  catálogos agregadores de formularios.
+- No se relajan topes para hacer verde una regresión.
+- Una clase extraída con referencia al formulario completo no se contabiliza
+  como desacoplamiento.
 
-- Fase 1 (ya) → §14.3: *"los textos de UI son `resourcestring`, nunca
-  `var`"*; y a §16: `var` en sección `interface`.
-- Fase 2 → §14.7: *"una unit `inLib*` nueva no contiene SQL literal; la
-  persistencia entra por contrato"*.
-- ~~Fase 2b → §14.1~~: **promovido**. Opción A, doble dirección
-  vigilada por script y cuatro entradas nuevas en la lista negra.
-- Fase 3 → §14.5: topes de 2.000 líneas / 120 métodos por clase.
-- ~~Fase 4 → §14.2~~: **promovido**. `Supports` solo en inicialización;
-  el resultado se guarda en un campo.
-- Fase 5 → §14.6: configuración + estrategia como vía única para un tipo
-  de documento nuevo.
-- ~~Fase 6 → §14.1~~: auto-registro de pantallas completado.
-
-Y a §16 (lista negra), según se cierren: `Supports` dentro de un método
-de negocio, SQL literal en `inLib*` nueva, formulario de documento
-copiado de otro, `inLib*` que usa `UniData*` fuera de la regla de
-composición elegida.
+Este documento se vuelve a medir al terminar cada prioridad. Las cifras
+históricas se conservan en Git; aquí solo permanece la foto útil para decidir
+el siguiente trabajo.

@@ -131,6 +131,8 @@ type
     // "Enviar a...": comprueba documento grabado con lineas y deja los
     // posts hechos; devuelve el ID_DTR o 0 si no procede.
     function PrepararEnvio: Int64;
+    function SeleccionarUbicacionCaja(
+      out AEmpresa, AAlmacen, ACaja: string): Boolean;
     procedure ConfigurarEnvioNumerado(
       ATipo: TTipoEnvioNumeradoDocumentoTrabajo;
       out ATitulo, ATipoContador, AMensajeError,
@@ -168,7 +170,7 @@ uses
   inLibColumnasSku,
   UniDataModoTallas, UniDataColumnasSkuServicios,
   // Modal de destino (almacen/serie/numero) del "Enviar a...".
-  inMtoModalEnviarDestino,
+  inMtoModalEnviarDestino, inMtoModalCajDef,
   // Listado del documento con una foto de 300 x 300 por línea.
   inMtoPreviewExcel, inLibDocumentosTrabajoExcel, inLibWin,
   inLibMsgArticulos, inLibMsgCaja, inLibMsgComun, inLibMsgVentas;
@@ -890,48 +892,111 @@ var
   ds: TDataSet;
   Bm: TBookmark;
   iOk, iMal: Integer;
+  oAnfitrion: IAnfitrionCajaVentanas;
   oOperacionCaja: IOperacionCaja;
+  oFormularioCaja: TCustomForm;
+  sEmpresa, sAlmacen, sCaja: string;
 begin
   idDtr := PrepararEnvio;
-  if idDtr <= 0 then
-    Exit;
-  // La venta TPV debe estar ABIERTA: el volcado usa su propio flujo
-  // de resolucion (precios/tarifa/IVA de la operacion en curso).
-  oOperacionCaja := BuscarOperacionCajaVisible;
-  if oOperacionCaja = nil then
+  if (idDtr > 0) and
+     SeleccionarUbicacionCaja(sEmpresa, sAlmacen, sCaja) then
   begin
-    ShowMessage(SErrorVentaTpvNoAbiertaDocumentoTrabajo);
-    Exit;
-  end;
-  ds := dmmDocumentosTrabajo.unqryLineas;
-  iOk := 0;
-  iMal := 0;
-  Bm := ds.GetBookmark;
-  ds.DisableControls;
-  try
-    ds.First;
-    while not ds.Eof do
+    oOperacionCaja := BuscarOperacionCajaVacia;
+    if oOperacionCaja = nil then
     begin
-      if oOperacionCaja.CargarSkuExterno(
-           ds.FieldByName('CODIGO_UNIDAD_DTL').AsString,
-           ds.FieldByName('CANTIDAD_DTL').AsFloat) then
-        Inc(iOk)
-      else
-        Inc(iMal);
-      ds.Next;
+      oAnfitrion := ExigirAnfitrionCaja(Application.MainForm);
+      oOperacionCaja :=
+        oAnfitrion.CrearOperacionCaja(Application, Permisos);
     end;
-    if ds.BookmarkValid(Bm) then
-      ds.GotoBookmark(Bm);
-  finally
-    ds.EnableControls;
-    ds.FreeBookmark(Bm);
+    oFormularioCaja := oOperacionCaja.FormularioCaja;
+    try
+      oFormularioCaja.PopupParent := Self;
+      if oFormularioCaja.Tag <= 0 then
+        oFormularioCaja.Tag := 1;
+      oFormularioCaja.Caption := Format(
+        STituloOperacionNCajaReal,
+        [oFormularioCaja.Tag, sCaja]);
+      oOperacionCaja.PrepararValores(
+        sEmpresa, sAlmacen, sCaja, Now);
+      // CargarSkuExterno deja preparada la siguiente linea y le da foco.
+      // La venta debe estar visible antes de empezar a volcar los SKU.
+      oFormularioCaja.Show;
+      if oFormularioCaja.WindowState = wsMinimized then
+        oFormularioCaja.WindowState := wsNormal;
+      oFormularioCaja.BringToFront;
+      ds := dmmDocumentosTrabajo.unqryLineas;
+      iOk := 0;
+      iMal := 0;
+      Bm := ds.GetBookmark;
+      ds.DisableControls;
+      try
+        ds.First;
+        while not ds.Eof do
+        begin
+          if oOperacionCaja.CargarSkuExterno(
+               ds.FieldByName('CODIGO_UNIDAD_DTL').AsString,
+               ds.FieldByName('CANTIDAD_DTL').AsFloat) then
+            Inc(iOk)
+          else
+            Inc(iMal);
+          ds.Next;
+        end;
+        if ds.BookmarkValid(Bm) then
+          ds.GotoBookmark(Bm);
+      finally
+        ds.EnableControls;
+        ds.FreeBookmark(Bm);
+      end;
+      if iMal = 0 then
+        ShowMessage(Format(
+          SInfoLineasDocumentoTrabajoVolcadasTpv,
+          [iOk]))
+      else
+        ShowMessage(Format(
+          SAvisoLineasDocumentoTrabajoNoVolcadasTpv,
+          [iOk, iMal]));
+    except
+      FreeAndNil(oFormularioCaja);
+      raise;
+    end;
   end;
-  oOperacionCaja.FormularioCaja.BringToFront;
-  if iMal = 0 then
-    ShowMessage(Format(SInfoLineasDocumentoTrabajoVolcadasTpv, [iOk]))
-  else
-    ShowMessage(Format(SAvisoLineasDocumentoTrabajoNoVolcadasTpv,
-                       [iOk, iMal]));
+end;
+
+function TfrmMtoDocumentosTrabajo.SeleccionarUbicacionCaja(
+  out AEmpresa, AAlmacen, ACaja: string): Boolean;
+var
+  oSelector: TfrmMtoModalCajDef;
+begin
+  AEmpresa := UbicacionSesion.Empresa;
+  AAlmacen := UbicacionSesion.Almacen;
+  ACaja := UbicacionSesion.Caja;
+  Result := not ParametrosCaja.GetBool(
+    'vgerShowCajaSelection', True);
+  if not Result then
+  begin
+    oSelector := TfrmMtoModalCajDef.Create(Self);
+    try
+      oSelector.sEmpresa := AEmpresa;
+      oSelector.sAlmacen := AAlmacen;
+      oSelector.sCaja := ACaja;
+      oSelector.ShowModal;
+      Result := oSelector.sFicha = 'S';
+      if Result then
+      begin
+        AEmpresa := oSelector.EmpresaSeleccionada;
+        AAlmacen := oSelector.AlmacenSeleccionado;
+        ACaja := oSelector.CajaSeleccionada;
+      end;
+    finally
+      FreeAndNil(oSelector);
+    end;
+  end;
+  if Result and
+     ((AEmpresa = '') or (AAlmacen = '') or (ACaja = '')) then
+  begin
+    ShowMessage(SErrorAsignarUbicacionCaja);
+    Result := False;
+  end;
 end;
 
 function TfrmMtoDocumentosTrabajo.CrearLineasCargaTraspaso:
@@ -939,6 +1004,7 @@ function TfrmMtoDocumentosTrabajo.CrearLineasCargaTraspaso:
 var
   ds: TDataSet;
   Marcador: TBookmark;
+  PartesSku: TArray<string>;
   iAtributo: Integer;
   iLinea: Integer;
 begin
@@ -955,18 +1021,27 @@ begin
         ds.FieldByName('CODIGO_ART_DTL').AsString;
       Result[iLinea].CodigoSku :=
         ds.FieldByName('CODIGO_UNIDAD_DTL').AsString;
+      PartesSku := Result[iLinea].CodigoSku.Split(['/']);
       Result[iLinea].Descripcion :=
         ds.FieldByName('DESCRIPCION_ARTICULO_DTL').AsString;
       Result[iLinea].Cantidad :=
         ds.FieldByName('CANTIDAD_DTL').AsFloat;
       Result[iLinea].NumeroAtributos :=
         ds.FieldByName('NUM_ATRIBUTOS_DTL').AsInteger;
+      if Result[iLinea].NumeroAtributos < Length(PartesSku) - 1 then
+        Result[iLinea].NumeroAtributos := Length(PartesSku) - 1;
+      if Result[iLinea].NumeroAtributos > 5 then
+        Result[iLinea].NumeroAtributos := 5;
       for iAtributo := 1 to 5 do
       begin
         Result[iLinea].ValoresAtributos[iAtributo] :=
           ds.FieldByName(Format(
             'ATTR%d_VALOR_DTL',
             [iAtributo])).AsString;
+        if (Result[iLinea].ValoresAtributos[iAtributo] = '') and
+           (iAtributo < Length(PartesSku)) then
+          Result[iLinea].ValoresAtributos[iAtributo] :=
+            PartesSku[iAtributo];
         Result[iLinea].NombresAtributos[iAtributo] :=
           ds.FieldByName(Format(
             'ATTR%d_NOMBRE_DTL',
@@ -994,35 +1069,28 @@ var
   sEmp, sAlm, sCaja: string;
 begin
   idDtr := PrepararEnvio;
-  if idDtr > 0 then
+  if (idDtr > 0) and
+     SeleccionarUbicacionCaja(sEmp, sAlm, sCaja) then
   begin
-    sEmp := UbicacionSesion.Empresa;
-    sAlm := UbicacionSesion.Almacen;
-    sCaja := UbicacionSesion.Caja;
-    if (sEmp = '') or (sAlm = '') or (sCaja = '') then
-      ShowMessage(SErrorUbicacionCajaTraspasoNoAsignada)
-    else
-    begin
-      oAnfitrion := ExigirAnfitrionCaja(Application.MainForm);
-      oTraspaso := oAnfitrion.CrearTraspasoCaja(Application, Permisos);
-      oFormulario := oTraspaso.FormularioTraspaso;
-      try
-        oFormulario.PopupParent := Self;
-        oFormulario.Caption := Format(
-          STituloTraspasosAlmacenCaja,
-          [sAlm, sCaja]);
-        oTraspaso.PrepararCargaExterna(
-          AModo,
-          sEmp,
-          sAlm,
-          sCaja,
-          Date,
-          CrearLineasCargaTraspaso);
-        oFormulario.Show;
-      except
-        FreeAndNil(oFormulario);
-        raise;
-      end;
+    oAnfitrion := ExigirAnfitrionCaja(Application.MainForm);
+    oTraspaso := oAnfitrion.CrearTraspasoCaja(Application, Permisos);
+    oFormulario := oTraspaso.FormularioTraspaso;
+    try
+      oFormulario.PopupParent := Self;
+      oFormulario.Caption := Format(
+        STituloTraspasosAlmacenCaja,
+        [sAlm, sCaja]);
+      oTraspaso.PrepararCargaExterna(
+        AModo,
+        sEmp,
+        sAlm,
+        sCaja,
+        Date,
+        CrearLineasCargaTraspaso);
+      oFormulario.Show;
+    except
+      FreeAndNil(oFormulario);
+      raise;
     end;
   end;
 end;

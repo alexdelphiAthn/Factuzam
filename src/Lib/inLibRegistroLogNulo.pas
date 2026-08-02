@@ -44,7 +44,8 @@ type
       ACorrecto: Boolean;
       const AError: string = '';
       const AParametros: string = '');
-    function SQLActivo: Boolean;
+    function ObtenerEvidencias: TEvidenciasLog;
+    procedure ActivarDiagnosticoCompleto;
     procedure AsignarMonitorSQL(
       const AMonitorSQL: IServicioMonitorSQL);
     procedure AplicarModosDepuracion(
@@ -89,9 +90,16 @@ procedure TRegistroLogNulo.RegistrarSQL(
 begin
 end;
 
-function TRegistroLogNulo.SQLActivo: Boolean;
+function TRegistroLogNulo.ObtenerEvidencias: TEvidenciasLog;
 begin
-  Result := False;
+  Result.RutaArchivo := '';
+  Result.SQLActivo := False;
+  Result.RendimientoActivo := False;
+  Result.AvanzadoActivo := False;
+end;
+
+procedure TRegistroLogNulo.ActivarDiagnosticoCompleto;
+begin
 end;
 
 procedure TRegistroLogNulo.AsignarMonitorSQL(

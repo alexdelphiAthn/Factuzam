@@ -20,6 +20,14 @@ uses
   inLibParametrosIntf;
 
 type
+  TEvidenciasLog = record
+    RutaArchivo: string;
+    SQLActivo: Boolean;
+    RendimientoActivo: Boolean;
+    AvanzadoActivo: Boolean;
+    function Completo: Boolean;
+  end;
+
   IRegistroLog = interface
     ['{97324860-FA85-460F-92D2-9B0E1C95588C}']
     procedure RegistrarInformacion(const AMensaje: string);
@@ -37,7 +45,8 @@ type
       ACorrecto: Boolean;
       const AError: string = '';
       const AParametros: string = '');
-    function SQLActivo: Boolean;
+    function ObtenerEvidencias: TEvidenciasLog;
+    procedure ActivarDiagnosticoCompleto;
     procedure AsignarMonitorSQL(
       const AMonitorSQL: IServicioMonitorSQL);
     procedure AplicarModosDepuracion(
@@ -51,5 +60,12 @@ type
   end;
 
 implementation
+
+function TEvidenciasLog.Completo: Boolean;
+begin
+  Result := SQLActivo and
+            RendimientoActivo and
+            AvanzadoActivo;
+end;
 
 end.

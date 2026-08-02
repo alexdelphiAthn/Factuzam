@@ -647,16 +647,29 @@ procedure TfrmMtoOpeTraspaso.CargarLineasExternas(
 var
   Linea: TLineaCargaTraspaso;
   NumeroLinea: Integer;
+  iMaxAtributos: Integer;
+  sArticuloAtributos: string;
 begin
   NumeroLinea := 0;
+  iMaxAtributos := 0;
+  sArticuloAtributos := '';
   FDatos.cdsLineas.EmptyDataSet;
   FDatos.cdsLineas.DisableControls;
   try
     for Linea in ALineas do
+    begin
       AgregarLineaExterna(Linea, NumeroLinea);
+      if Linea.NumeroAtributos > iMaxAtributos then
+      begin
+        iMaxAtributos := Linea.NumeroAtributos;
+        sArticuloAtributos := Linea.CodigoArticulo;
+      end;
+    end;
   finally
     FDatos.cdsLineas.EnableControls;
   end;
+  if iMaxAtributos > 0 then
+    FGridCtrl.MostrarColumnasAtributosArticulo(sArticuloAtributos);
   AsegurarLineaNueva;
   ActualizarTotal;
 end;

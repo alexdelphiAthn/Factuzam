@@ -41,6 +41,8 @@ type
     [Test]
     procedure CopiaActual_UsaSalAleatoria;
     [Test]
+    procedure CopiaComprimida_RestauraYReduceContenidoRepetitivo;
+    [Test]
     procedure CopiaHistorica_SigueRestaurandose;
   end;
 
@@ -192,6 +194,26 @@ begin
     'SELECT 1;',
     'misma contraseña');
   Assert.AreNotEqual(sPrimera, sSegunda);
+end;
+
+procedure TPruebasCifrado.
+  CopiaComprimida_RestauraYReduceContenidoRepetitivo;
+var
+  sCifrado: string;
+  sOrigen: string;
+begin
+  sOrigen := StringOfChar('A', 100000);
+  sCifrado := CifrarCopiaSeguridadComprimida(
+    sOrigen,
+    'contraseña comprimida');
+  Assert.AreEqual(1, Pos('FZAM_COPIA_CIFRADA_V3', sCifrado));
+  Assert.IsTrue(EsFormatoCifradoActual(sCifrado));
+  Assert.IsTrue(Length(sCifrado) < Length(sOrigen));
+  Assert.AreEqual(
+    sOrigen,
+    DescifrarCopiaSeguridad(
+      sCifrado,
+      'contraseña comprimida'));
 end;
 
 procedure TPruebasCifrado.

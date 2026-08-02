@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inLibCopiasSeguridad                                          }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       29/07/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       02/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -56,6 +56,11 @@ type
       AOnFinalizar: TFinalizarCopiaSeguridadEvent;
       out AWorker: TThread);
     function CrearCopia(
+      const ARutaFichero, AContrasena: string;
+      AOnProgreso: TProgresoCopiaSeguridadEvent;
+      out AError: string
+    ): TResultadoCopiaSeguridad;
+    function CrearCopiaProtegida(
       const ARutaFichero, AContrasena: string;
       AOnProgreso: TProgresoCopiaSeguridadEvent;
       out AError: string
@@ -232,6 +237,27 @@ begin
     AContrasena,
     AOnProgreso,
     AError);
+end;
+
+function TRepositorioCopiasSeguridadUniDAC.CrearCopiaProtegida(
+  const ARutaFichero, AContrasena: string;
+  AOnProgreso: TProgresoCopiaSeguridadEvent;
+  out AError: string): TResultadoCopiaSeguridad;
+begin
+  ValidarConexion;
+  ValidarContrasena(AContrasena);
+  Result := CrearCopiaSeguridadBD(
+    FConexion.Server,
+    FConexion.Port,
+    FConexion.Database,
+    FConexion.Username,
+    FConexion.Password,
+    ARutaFichero,
+    True,
+    AContrasena,
+    AOnProgreso,
+    AError,
+    True);
 end;
 
 end.

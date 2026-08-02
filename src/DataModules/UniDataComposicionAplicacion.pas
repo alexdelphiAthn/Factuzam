@@ -22,6 +22,8 @@ uses
   inLibContextoSesionIntf,
   inLibLicenciaAplicacion,
   inLibExcepcionesAplicacionIntf,
+  inLibEnvioErroresIntf,
+  inLibCopiasSeguridadIntf,
   inLibOperacionesAplicacionIntf,
   inLibConexionesIntf,
   inLibAuditoriaDatosIntf,
@@ -69,6 +71,8 @@ type
     FUnidades: TUnidadesMedida;
     FRegistroPantallas: TfzaWinF;
     FGestorExcepciones: IGestorExcepcionesAplicacion;
+    FServicioEnvioErrores: IServicioEnvioErrores;
+    FRepositorioCopias: IRepositorioCopiasSeguridad;
     FOperaciones: ICasoUsoCopiasSeguridad;
     FVentasWsCola: TObject;
     FProcesosSegundoPlanoIniciados: Boolean;
@@ -147,9 +151,9 @@ uses
   inLibTraducciones,
   inLibPermisos,
   inLibPermisosUniDAC,
-  inLibCopiasSeguridadIntf,
   inLibCoordinadorOperacionesAplicacion,
   inLibExcepcionesAplicacion,
+  inLibEnvioErrores,
   inLibVentasWsCola,
   inLibVerifactu,
   inLibVerifactuInstalacion,
@@ -213,8 +217,6 @@ constructor TComposicionAplicacion.Create(
   const ARegistroMonitorSQL: IRegistroMonitorSQL;
   const APresentacionOperaciones:
     IPresentacionOperacionesAplicacion);
-var
-  oRepositorioCopias: IRepositorioCopiasSeguridad;
 begin
   inherited Create;
   if not Assigned(AOwner) then
@@ -234,11 +236,11 @@ begin
       FContextoSesion,
       FRegistroLog);
   FDmConn := TdmConn.Create(FOwner);
-  oRepositorioCopias := CrearRepositorioCopiasSeguridadUniDAC(
+  FRepositorioCopias := CrearRepositorioCopiasSeguridadUniDAC(
     FContextoSesion,
     FDmConn.conUni);
   FOperaciones := TCasoUsoCopiasSeguridad.Create(
-    oRepositorioCopias,
+    FRepositorioCopias,
     APresentacionOperaciones);
   CrearInfraestructura;
   FCerrada := False;
@@ -298,6 +300,13 @@ begin
     Identidad.Grupo);
   FServiciosParametrosApp.GestorLicencia.EstablecerLicencia(
     AResultadoLicencia);
+  FServicioEnvioErrores := CrearServicioEnvioErrores(
+    FContextoSesion,
+    FServiciosParametrosApp.Lectura,
+    FRegistroLog,
+    FRepositorioCopias);
+  FGestorExcepciones.AsignarServicioEnvioErrores(
+    FServicioEnvioErrores);
   FRegistroLog.RegistrarInformacion(
     'Arranque: creando parámetros de caja');
   FServiciosParametrosCaja := CrearParametrosCaja(
@@ -706,6 +715,10 @@ begin
     FPermisos := nil;
     FInformesGuias := nil;
     FOperaciones := nil;
+    if Assigned(FGestorExcepciones) then
+      FGestorExcepciones.AsignarServicioEnvioErrores(nil);
+    FServicioEnvioErrores := nil;
+    FRepositorioCopias := nil;
     LiberarRegistrosServicios;
     FreeAndNil(FDmFiltros);
     FreeAndNil(FDmPerfiles);

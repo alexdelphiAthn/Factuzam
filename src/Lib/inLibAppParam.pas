@@ -161,6 +161,9 @@ begin
     'API key / token de la instalación', tpString, '');
   RegistrarParametro('Servicios web', 'appApiReferencia',
     'Referencia global de la instalación', tpString, '');
+  RegistrarParametro('Servicios web', 'appErroresUrl',
+    'URL directa para enviar errores al desarrollador', tpString,
+    'https://webservice.veryverifactu.com/error.php');
   RegistrarParametro('Servicios web', 'appVentasWsSegundosCiclo',
     'Segundos entre ciclos de la cola de ventas', tpInteger, '60');
   RegistrarParametro('Servicios web', 'appVentasWsMaxIntentos',

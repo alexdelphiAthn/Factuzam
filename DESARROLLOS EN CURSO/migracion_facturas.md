@@ -2,12 +2,14 @@
 
 Reconstruye el detalle de venta del legacy como **factura SIMPLIFICADA** en
 Factuzam. Nuevo dominio del migrador (`src/utilmigsqlsrv/inLibMigFacturas.pas`).
-Complementa a `inLibMigVentas` (capa de caja). No requiere cambios de esquema.
+Complementa a `inLibMigVentas` (capa de caja). Para importar también el código
+de barras histórico debe haberse aplicado antes `codigo_barras_ticket.sql`.
 
 | Origen | Destino |
 |---|---|
 | `occaj` (operación de venta) | `fza_facturas` (cabecera, una por operación) |
 | `occajarp` (líneas) | `fza_facturas_lineas` |
+| `ocdocdat` (datos del documento) | `fza_facturas.CODIGO_BARRAS_FAC` |
 
 ## Alcance
 
@@ -58,6 +60,12 @@ Cada **línea** enlaza:
 - `FECHA_FAC` = `FechaOpe` (o `Fecha`).
 - `CODIGO_CLI_FAC` = `Cliente` (o `'0'` público).
 - `CODIGO_CAJERO_FAC` = `Vendedor`; `CODIGO_ALM/CAJA_FAC` + `NUMERO_OPERACION_FAC`.
+- `CODIGO_BARRAS_FAC` = `ocdocdat.CodigoBarras`, enlazado por empresa, tipo
+  `VE`, ejercicio, serie, número y caja. Si hubiese varias filas documentales,
+  se prioriza la que coincide también por almacén y operación. Se conserva el
+  valor exacto del legacy para que F4 pueda localizar el ticket antiguo al
+  escanearlo. Si la columna destino todavía no existe, la migración continúa
+  sin códigos y deja aviso en el log.
 - **IVA por bandas N/R/S/E:** se usan las 4 bandas que el legacy trae en
   `occaj` (`BaseImp1-4`/`PorcenIva1-4`/`CuotaIVA1-4`), clasificando cada una
   por su % (`0`=Exento, `<6`=Super, `<13`=Reducido, resto=Normal) y

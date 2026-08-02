@@ -68,6 +68,10 @@ begin
     'Referencia global de la instalación',
     'src/Lib/inLibAppParam.pas');
   ARegistrar(
+    'inMtoAppParam.Parametros.appErroresUrl.Descripcion',
+    'URL directa para enviar errores al desarrollador',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
     'inMtoAppParam.Parametros.appVentasWsSegundosCiclo.Descri' +
     'pcion',
     'Segundos entre ciclos de la cola de ventas',

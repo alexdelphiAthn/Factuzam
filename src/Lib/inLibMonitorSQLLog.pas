@@ -69,7 +69,7 @@ end;
 function TRegistroMonitorSQLLog.GetMonitorizacionActiva: Boolean;
 begin
   Result := Assigned(FRegistroLog) and
-            FRegistroLog.SQLActivo;
+            FRegistroLog.ObtenerEvidencias.SQLActivo;
 end;
 
 procedure TRegistroMonitorSQLLog.RegistrarSQL(

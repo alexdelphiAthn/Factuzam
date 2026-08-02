@@ -288,6 +288,8 @@ uses
     '..\src\Lib\inLibPerfilesUsuarioValores.pas',
   inLibExcepcionesAplicacionIntf in
     '..\src\Lib\inLibExcepcionesAplicacionIntf.pas',
+  inLibEnvioErroresIntf in
+    '..\src\Lib\inLibEnvioErroresIntf.pas',
   inLibJsonSeguro in '..\src\Lib\inLibJsonSeguro.pas',
   inLibTraduccionesIntf in
     '..\src\Lib\inLibTraduccionesIntf.pas',
@@ -413,6 +415,7 @@ uses
   PruebasImportacionPedidos in 'PruebasImportacionPedidos.pas',
   PruebasExcepcionesAplicacion in
     'PruebasExcepcionesAplicacion.pas',
+  PruebasEnvioErrores in 'PruebasEnvioErrores.pas',
   PruebasEmisionFiscal in 'PruebasEmisionFiscal.pas',
   PruebasAlbaranesCompraMovimientos in
     'PruebasAlbaranesCompraMovimientos.pas',

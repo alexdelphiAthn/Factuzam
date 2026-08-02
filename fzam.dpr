@@ -136,6 +136,9 @@ uses
     'src\Lib\inLibExcepcionesAplicacionIntf.pas',
   inLibExcepcionesAplicacion in
     'src\Lib\inLibExcepcionesAplicacion.pas',
+  inLibEnvioErroresIntf in
+    'src\Lib\inLibEnvioErroresIntf.pas',
+  inLibEnvioErrores in 'src\Lib\inLibEnvioErrores.pas',
   inLibFiltrosGuardadosIntf in 'src\Lib\inLibFiltrosGuardadosIntf.pas',
   inLibPerfilesUsuarioIntf in 'src\Lib\inLibPerfilesUsuarioIntf.pas',
   inLibPerfilesUsuarioValores in 'src\Lib\inLibPerfilesUsuarioValores.pas',

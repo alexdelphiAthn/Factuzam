@@ -2,14 +2,14 @@
 {                                                                              }
 {  Módulo:       inLibCifradoCopias                                            }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       29/07/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       02/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Cifrado autenticado y versionado para copias de seguridad.                }
+{    Cifrado autenticado, comprimido y versionado para copias de seguridad.    }
 {******************************************************************************}
 unit inLibCifradoCopias;
 
@@ -25,6 +25,9 @@ function EsFormatoCifradoActual(const ADatos: string): Boolean;
 function CifrarCopiaSeguridad(
   const ADatos, AContrasena: string
 ): string;
+function CifrarCopiaSeguridadComprimida(
+  const ADatos, AContrasena: string
+): string;
 function DescifrarCopiaSeguridad(
   const ADatos, AContrasena: string
 ): string;
@@ -37,12 +40,14 @@ uses
   System.Hash,
   System.NetEncoding,
   System.StrUtils,
+  System.ZLib,
   DCPcrypt2,
   DCPrijndael,
   inLibCifrado;
 
 const
   CABECERA_CIFRADO = 'FZAM_COPIA_CIFRADA_V2';
+  CABECERA_CIFRADO_COMPRIMIDO = 'FZAM_COPIA_CIFRADA_V3';
   ITERACIONES_PBKDF2 = 100000;
   LONGITUD_SAL = 16;
   LONGITUD_VECTOR = 16;
@@ -51,6 +56,7 @@ const
   LONGITUD_BLOQUE_AES = 16;
   PROVEEDOR_RSA_AES = 24;
   VERIFICAR_CONTEXTO = $F0000000;
+  MAXIMO_DATOS_DESCOMPRIMIDOS = 1024 * 1024 * 1024;
 
 function FzaCryptAcquireContextW(
   var AProveedor: NativeUInt;
@@ -311,15 +317,78 @@ begin
   end;
 end;
 
-function EsFormatoCifradoActual(const ADatos: string): Boolean;
+function ComprimirBytes(const ADatos: TBytes): TBytes;
+var
+  Destino: TMemoryStream;
+  Compresor: TZCompressionStream;
 begin
-  Result := StartsText(
-    CABECERA_CIFRADO,
-    TrimLeft(ADatos));
+  Destino := TMemoryStream.Create;
+  try
+    Compresor := TZCompressionStream.Create(clMax, Destino);
+    try
+      if Length(ADatos) > 0 then
+        Compresor.WriteBuffer(ADatos[0], Length(ADatos));
+    finally
+      FreeAndNil(Compresor);
+    end;
+    SetLength(Result, Destino.Size);
+    Destino.Position := 0;
+    if Destino.Size > 0 then
+      Destino.ReadBuffer(Result[0], Destino.Size);
+  finally
+    FreeAndNil(Destino);
+  end;
 end;
 
-function CifrarCopiaSeguridad(
-  const ADatos, AContrasena: string): string;
+function DescomprimirBytes(const ADatos: TBytes): TBytes;
+var
+  Buffer: TBytes;
+  Destino: TMemoryStream;
+  Descompresor: TZDecompressionStream;
+  Leidos: Integer;
+  Origen: TBytesStream;
+begin
+  Origen := TBytesStream.Create(ADatos);
+  Destino := TMemoryStream.Create;
+  try
+    Descompresor := TZDecompressionStream.Create(Origen);
+    try
+      SetLength(Buffer, 65536);
+      Leidos := Descompresor.Read(Buffer[0], Length(Buffer));
+      while Leidos > 0 do
+      begin
+        if Destino.Size + Leidos > MAXIMO_DATOS_DESCOMPRIMIDOS then
+        begin
+          raise ECifradoCopia.Create(
+            'La copia descomprimida supera el tamaño permitido.');
+        end;
+        Destino.WriteBuffer(Buffer[0], Leidos);
+        Leidos := Descompresor.Read(Buffer[0], Length(Buffer));
+      end;
+    finally
+      FreeAndNil(Descompresor);
+    end;
+    SetLength(Result, Destino.Size);
+    Destino.Position := 0;
+    if Destino.Size > 0 then
+      Destino.ReadBuffer(Result[0], Destino.Size);
+  finally
+    FreeAndNil(Destino);
+    FreeAndNil(Origen);
+  end;
+end;
+
+function EsFormatoCifradoActual(const ADatos: string): Boolean;
+begin
+  Result := StartsText(CABECERA_CIFRADO, TrimLeft(ADatos)) or
+            StartsText(
+              CABECERA_CIFRADO_COMPRIMIDO,
+              TrimLeft(ADatos));
+end;
+
+function CifrarCopiaSeguridadInterna(
+  const ADatos, AContrasena: string;
+  AComprimir: Boolean): string;
 var
   aCifrado: TBytes;
   aClaveCifrado: TBytes;
@@ -330,6 +399,7 @@ var
   aOrigen: TBytes;
   aSal: TBytes;
   aVector: TBytes;
+  sCabecera: string;
 begin
   if Trim(AContrasena) = '' then
   begin
@@ -349,6 +419,13 @@ begin
     LONGITUD_CLAVE,
     LONGITUD_CLAVE);
   aOrigen := TEncoding.UTF8.GetBytes(ADatos);
+  if AComprimir then
+  begin
+    aOrigen := ComprimirBytes(aOrigen);
+    sCabecera := CABECERA_CIFRADO_COMPRIMIDO;
+  end
+  else
+    sCabecera := CABECERA_CIFRADO;
   aCifrado := CifrarAESBytes(
     aOrigen,
     aClaveCifrado,
@@ -361,12 +438,30 @@ begin
   aMac := THashSHA2.GetHMACAsBytes(
     aDatosAutenticados,
     aClaveMac);
-  Result := CABECERA_CIFRADO + sLineBreak +
+  Result := sCabecera + sLineBreak +
     IntToStr(ITERACIONES_PBKDF2) + sLineBreak +
     CodificarBase64(aSal) + sLineBreak +
     CodificarBase64(aVector) + sLineBreak +
     CodificarBase64(aMac) + sLineBreak +
     CodificarBase64(aCifrado);
+end;
+
+function CifrarCopiaSeguridad(
+  const ADatos, AContrasena: string): string;
+begin
+  Result := CifrarCopiaSeguridadInterna(
+    ADatos,
+    AContrasena,
+    False);
+end;
+
+function CifrarCopiaSeguridadComprimida(
+  const ADatos, AContrasena: string): string;
+begin
+  Result := CifrarCopiaSeguridadInterna(
+    ADatos,
+    AContrasena,
+    True);
 end;
 
 function DescifrarFormatoActual(
@@ -383,8 +478,10 @@ var
   aPlano: TBytes;
   aSal: TBytes;
   aVector: TBytes;
+  bComprimida: Boolean;
   iIteraciones: Integer;
   oLineas: TStringList;
+  sCabecera: string;
 begin
   if Trim(AContrasena) = '' then
   begin
@@ -399,9 +496,12 @@ begin
       raise ECifradoCopia.Create(
         'La cabecera de la copia cifrada está incompleta.');
     end;
-    if not SameText(
-      Trim(oLineas[0]),
-      CABECERA_CIFRADO) then
+    sCabecera := Trim(oLineas[0]);
+    bComprimida := SameText(
+      sCabecera,
+      CABECERA_CIFRADO_COMPRIMIDO);
+    if not SameText(sCabecera, CABECERA_CIFRADO) and
+       not bComprimida then
     begin
       raise ECifradoCopia.Create(
         'La versión de la copia cifrada no es compatible.');
@@ -458,6 +558,8 @@ begin
     aCifrado,
     aClaveCifrado,
     aVector);
+  if bComprimida then
+    aPlano := DescomprimirBytes(aPlano);
   Result := TEncoding.UTF8.GetString(aPlano);
 end;
 

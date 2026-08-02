@@ -61,6 +61,11 @@ type
       AOnProgreso: TProgresoCopiaSeguridadEvent;
       out AError: string
     ): TResultadoCopiaSeguridad;
+    function CrearCopiaProtegida(
+      const ARutaFichero, AContrasena: string;
+      AOnProgreso: TProgresoCopiaSeguridadEvent;
+      out AError: string
+    ): TResultadoCopiaSeguridad;
   end;
   IServicioCopiasSeguridad = IRepositorioCopiasSeguridad;
 

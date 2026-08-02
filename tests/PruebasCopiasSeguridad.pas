@@ -82,6 +82,10 @@ type
       const ARutaFichero, AContrasena: string;
       AOnProgreso: TProgresoCopiaSeguridadEvent;
       out AError: string): TResultadoCopiaSeguridad;
+    function CrearCopiaProtegida(
+      const ARutaFichero, AContrasena: string;
+      AOnProgreso: TProgresoCopiaSeguridadEvent;
+      out AError: string): TResultadoCopiaSeguridad;
   end;
   TPresentacionOperacionesFalsa = class(
     TInterfacedObject,
@@ -174,6 +178,17 @@ begin
   AError := FError;
   if Assigned(AOnProgreso) then
     AOnProgreso('Copia', 1, 1, 1, 1);
+  Result := FResultado;
+end;
+
+function TServicioCopiasFalso.CrearCopiaProtegida(
+  const ARutaFichero, AContrasena: string;
+  AOnProgreso: TProgresoCopiaSeguridadEvent;
+  out AError: string): TResultadoCopiaSeguridad;
+begin
+  AError := FError;
+  if Assigned(AOnProgreso) then
+    AOnProgreso('Copia protegida', 1, 1, 1, 1);
   Result := FResultado;
 end;
 

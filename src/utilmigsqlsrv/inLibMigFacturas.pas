@@ -92,6 +92,28 @@ begin
   Result := (s = '') or (s = '0');
 end;
 
+function ColumnaDestinoExiste(Eng: IContextoMigracion; const sTabla,
+  sColumna: string): Boolean;
+var
+  q: TUniQuery;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := Eng.Datos.ConexionDestino;
+    q.SQL.Text :=
+      'SELECT COUNT(*) AS N FROM INFORMATION_SCHEMA.COLUMNS ' +
+      'WHERE TABLE_SCHEMA = DATABASE() ' +
+      'AND TABLE_NAME = :tabla ' +
+      'AND COLUMN_NAME = :columna';
+    q.ParamByName('tabla').AsString := sTabla;
+    q.ParamByName('columna').AsString := sColumna;
+    q.Open;
+    Result := q.FieldByName('N').AsInteger > 0;
+  finally
+    q.Free;
+  end;
+end;
+
 procedure LimpiarMigracionPrevia(Eng: IContextoMigracion);
 var
   q: TUniQuery;
@@ -336,10 +358,25 @@ const
     '       ISNULL(c.PorcenRecargo3, 0) AS PorcenRecargo3, ' +
     '       ISNULL(c.CuotaRE3, 0) AS CuotaRE3, ' +
     '       ISNULL(c.PorcenRecargo4, 0) AS PorcenRecargo4, ' +
-    '       ISNULL(c.CuotaRE4, 0) AS CuotaRE4 ' +
+    '       ISNULL(c.CuotaRE4, 0) AS CuotaRE4, ' +
+    '       ISNULL(doc.CodigoBarras, '''') AS CodigoBarras ' +
     'FROM dbo.occaj c ' +
     'LEFT JOIN dbo.ocalm alm ON alm.Empresa = c.Empresa ' +
     '                       AND alm.Almacen = c.Almacen ' +
+    'OUTER APPLY ( ' +
+    '  SELECT TOP (1) d.CodigoBarras ' +
+    '  FROM dbo.ocdocdat d ' +
+    '  WHERE d.Empresa = c.Empresa ' +
+    '    AND d.TipoDoc = c.TipoDoc ' +
+    '    AND d.Ejercicio = c.Ejercicio ' +
+    '    AND d.Serie = ISNULL(c.Serie, '''') ' +
+    '    AND d.NroDoc = c.NroDoc ' +
+    '    AND d.Caja = c.Caja ' +
+    '    AND NULLIF(LTRIM(RTRIM(d.CodigoBarras)), '''') IS NOT NULL ' +
+    '  ORDER BY CASE ' +
+    '    WHEN d.Almacen = c.Almacen AND d.Operacion = c.Operacion ' +
+    '      THEN 0 ELSE 1 END, d.Id ' +
+    ') doc ' +
     cWhere;
   cSelLin =
     'SELECT c.Empresa, c.Almacen, c.Caja, c.Operacion, ' +
@@ -406,13 +443,15 @@ var
   bulkFac, bulkLin:        TBulkInsert;
   fs:                      TFormatSettings;
   iEmp, iAlm, iCaja, iOpe: Integer;
-  iNroDoc:                 Integer;
+  iNroDoc, iCodigosBarras: Integer;
   sEmp, sAlm, sNumOp:      string;
   sNumFac, sSerieFac:      string;
   sArt, sUni, sTipoArt:    string;
   sCli, sLinea, sNmov:     string;
   sAhora, sUser, sFecha:   string;
-  sFila:                   string;
+  sFila, sColsFac:         string;
+  sCodigoBarras:           string;
+  bTieneCodigoBarras:      Boolean;
   iva:                     TIvaCab;
   fNeto:                   Double;
   dtFecha:                 TDateTime;
@@ -426,6 +465,16 @@ begin
   LimpiarMigracionPrevia(Eng);
   sAhora := DateTimeASQL(Now);
   sUser  := ValorOrNull(Eng.Usuario);
+  bTieneCodigoBarras := ColumnaDestinoExiste(
+    Eng, 'fza_facturas', 'CODIGO_BARRAS_FAC');
+  sColsFac := cColsFac;
+  if bTieneCodigoBarras then
+    sColsFac := sColsFac + ', CODIGO_BARRAS_FAC'
+  else
+    Eng.Registro.Log(
+      '  facturas: CODIGO_BARRAS_FAC no existe; no se importarán los ' +
+      'códigos de barras de los tickets legacy.');
+  iCodigosBarras := 0;
   // DOS PASADAS, sin ORDER BY. El ORDER BY que agrupaba las líneas por
   // operación obligaba a SQL Server a ORDENAR ~774k filas anchas del JOIN
   // occaj⨝occajarp ANTES de devolver la primera fila: el .Open del cursor
@@ -433,7 +482,8 @@ begin
   // una por operación, sin agrupar) de líneas (occajarp, cada una
   // independiente) ningún cursor ordena y la barra avanza desde la fila 1.
   // --- PASO 1: cabeceras (occaj → fza_facturas) ---
-  bulkFac := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_facturas', cColsFac, 2000);
+  bulkFac := TBulkInsert.Create(Eng.Datos.ConexionDestino, 'fza_facturas',
+                                sColsFac, 2000);
   qCab := NuevoQOrigen(Eng, cSelCab);
   qCab.UniDirectional := True;
   try
@@ -477,12 +527,16 @@ begin
       sFecha := DateTimeASQL(Trunc(dtFecha));
       fNeto  := qCab.FieldByName('Neto').AsFloat;
       sCli   := Trim(qCab.FieldByName('Cliente').AsString);
+      sCodigoBarras := Trim(
+        qCab.FieldByName('CodigoBarras').AsString);
+      if bTieneCodigoBarras and (sCodigoBarras <> '') then
+        Inc(iCodigosBarras);
       if sCli = '' then
         sCli := '0';
       // Desglose de IVA por bandas N/R/S/E desde las bandas del legacy.
       CalcularIvaCabecera(qCab, fNeto, iva);
-      // 39 columnas en cColsFac. TIPO_FAC ('SIMPLIFICADA'),
-      // ESCONSOLIDADA_FAC ('S') y FORMA_PAGO_FAC ('CONTADO') son literales.
+      // 39 columnas base en cColsFac; el código de barras opcional se añade
+      // al final. TIPO_FAC, ESCONSOLIDADA_FAC y FORMA_PAGO_FAC son literales.
       sFila := Format(
         '%s, %s, %s, ''SIMPLIFICADA'', ''S'', %s, %s, ' +
         '%s, %s, %s, %s, %s, ' +
@@ -507,6 +561,8 @@ begin
          ValorOrNull(sAlm), ValorOrNull(IntToStr(iCaja)),
          ValorOrNull(sNumOp),
          sAhora, sAhora, sUser, sUser]);
+      if bTieneCodigoBarras then
+        sFila := sFila + ', ' + ValorOrNull(sCodigoBarras);
       try
         bulkFac.Add(sFila);
         Inc(Stats.Insertadas);
@@ -521,6 +577,10 @@ begin
       qCab.Next;
     end;
     bulkFac.FlushPendiente;
+    if bTieneCodigoBarras then
+      Eng.Registro.Log(Format(
+        '  facturas: %d códigos de barras legacy importados.',
+        [iCodigosBarras]));
   finally
     bulkFac.Free;
     qCab.Free;

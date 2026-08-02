@@ -249,6 +249,8 @@
         <DCCReference Include="src\Lib\inLibContextoSesion.pas"/>
         <DCCReference Include="src\Lib\inLibExcepcionesAplicacionIntf.pas"/>
         <DCCReference Include="src\Lib\inLibExcepcionesAplicacion.pas"/>
+        <DCCReference Include="src\Lib\inLibEnvioErroresIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibEnvioErrores.pas"/>
         <DCCReference Include="src\Lib\inLibFiltrosGuardadosIntf.pas"/>
         <DCCReference Include="src\Lib\inLibPerfilesUsuarioIntf.pas"/>
         <DCCReference Include="src\Lib\inLibPerfilesUsuarioValores.pas"/>

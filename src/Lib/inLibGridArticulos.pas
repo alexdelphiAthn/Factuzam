@@ -224,6 +224,8 @@ type
     // Resuelve una entrada (codigo de articulo, SKU, codigo de barras o ref
     // de proveedor) y rellena la linea. Devuelve False si no se encontro.
     function ResolverEntrada(const AEntrada: string): Boolean;
+    // Hace visibles las columnas de color/talla de un articulo ya cargado.
+    procedure MostrarColumnasAtributosArticulo(const ACodArt: string);
     property OnResuelto: TArtResueltoEvent read FOnResuelto write FOnResuelto;
     // Entrada/salida de edicion in-place (ver comentario de los campos).
     property OnEntrarEdicion: TNotifyEvent read FOnEntrarEdicion
@@ -398,6 +400,13 @@ begin
     GotoBookmark.Visible := False;
     Filter.Visible := False;
   end;
+end;
+
+procedure TGridArticulosLineas.MostrarColumnasAtributosArticulo(
+  const ACodArt: string);
+begin
+  if Trim(ACodArt) <> '' then
+    ActualizarColumnasAtributo(ACodArt);
 end;
 
 // Cuando el cxGrid crea el editor in-place de una celda: si es una columna de

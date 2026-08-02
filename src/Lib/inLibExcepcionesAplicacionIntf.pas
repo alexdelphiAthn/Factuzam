@@ -16,7 +16,9 @@ unit inLibExcepcionesAplicacionIntf;
 interface
 
 uses
-  System.SysUtils, inLibContextoSesionIntf;
+  System.SysUtils,
+  inLibContextoSesionIntf,
+  inLibEnvioErroresIntf;
 
 type
   IGestorExcepcionesAplicacion = interface
@@ -24,6 +26,8 @@ type
     procedure Gestionar(
       Sender: TObject;
       E: Exception);
+    procedure AsignarServicioEnvioErrores(
+      const AServicio: IServicioEnvioErrores);
   end;
 
 function EsRuidoEditorInplace(
