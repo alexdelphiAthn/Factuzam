@@ -340,9 +340,25 @@
       Caption = 'Albarán de venta (mayor)...'
       OnClick = miEnviarAlbaranDTRClick
     end
+    object miEnviarFacturaVentaDTR: TMenuItem
+      Caption = 'Factura de venta (mayor)...'
+      OnClick = miEnviarFacturaVentaDTRClick
+    end
     object miEnviarTpvDTR: TMenuItem
       Caption = 'Venta TPV'
       OnClick = miEnviarTpvDTRClick
+    end
+    object miEnviarPedidoCompraDTR: TMenuItem
+      Caption = 'Pedido de compra...'
+      OnClick = miEnviarPedidoCompraDTRClick
+    end
+    object miEnviarTraspasoCajaDTR: TMenuItem
+      Caption = 'Traspaso de caja...'
+      OnClick = miEnviarTraspasoCajaDTRClick
+    end
+    object miEnviarPeticionTraspasoDTR: TMenuItem
+      Caption = 'Petición de traspaso...'
+      OnClick = miEnviarPeticionTraspasoDTRClick
     end
     object miEnviarInventarioDTR: TMenuItem
       Caption = 'Inventario...'

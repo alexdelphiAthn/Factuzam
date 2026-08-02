@@ -32,9 +32,14 @@ uses
   cxDropDownEdit, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs, UniDataDocumentosTrabajo,
   // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
-  inLibColumnasSkuIntf, inLibGridTallasInline;
+  inLibColumnasSkuIntf, inLibGridTallasInline,
+  inLibDocumentosTrabajo, inLibCajaVentanasIntf;
 
 type
+  TTipoEnvioNumeradoDocumentoTrabajo = (
+    tenFacturaVenta,
+    tenPedidoCompra
+  );
   TfrmMtoDocumentosTrabajo = class(TfrmMtoGen)
     pcAmbitoDTR: TcxPageControl;
     tsAmbitoPropiosDTR: TcxTabSheet;
@@ -85,12 +90,20 @@ type
     btnEnviarADTR: TcxButton;
     pmEnviarDTR: TPopupMenu;
     miEnviarAlbaranDTR: TMenuItem;
+    miEnviarFacturaVentaDTR: TMenuItem;
     miEnviarTpvDTR: TMenuItem;
+    miEnviarPedidoCompraDTR: TMenuItem;
+    miEnviarTraspasoCajaDTR: TMenuItem;
+    miEnviarPeticionTraspasoDTR: TMenuItem;
     miEnviarInventarioDTR: TMenuItem;
     miEnviarTarifasDTR: TMenuItem;
     procedure btnEnviarADTRClick(Sender: TObject);
     procedure miEnviarAlbaranDTRClick(Sender: TObject);
+    procedure miEnviarFacturaVentaDTRClick(Sender: TObject);
     procedure miEnviarTpvDTRClick(Sender: TObject);
+    procedure miEnviarPedidoCompraDTRClick(Sender: TObject);
+    procedure miEnviarTraspasoCajaDTRClick(Sender: TObject);
+    procedure miEnviarPeticionTraspasoDTRClick(Sender: TObject);
     procedure miEnviarInventarioDTRClick(Sender: TObject);
     procedure miEnviarTarifasDTRClick(Sender: TObject);
     procedure btnListadoDTRClick(Sender: TObject);
@@ -107,6 +120,7 @@ type
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
+    FRepositorios: TRepositoriosDocumentosTrabajo;
     procedure ConstruirModoEntrada;
     procedure CrearColumnasHostDTR;
     procedure MostrarColumnasAtributoGlobalesDTR;
@@ -117,6 +131,17 @@ type
     // "Enviar a...": comprueba documento grabado con lineas y deja los
     // posts hechos; devuelve el ID_DTR o 0 si no procede.
     function PrepararEnvio: Int64;
+    procedure ConfigurarEnvioNumerado(
+      ATipo: TTipoEnvioNumeradoDocumentoTrabajo;
+      out ATitulo, ATipoContador, AMensajeError,
+      AMensajeCreado: string);
+    function ResolverNumeroEnvio(
+      const ASerie, ANumero, ATipoContador, AEmpresa,
+      AMensajeError: string): string;
+    procedure EnviarDocumentoNumerado(
+      ATipo: TTipoEnvioNumeradoDocumentoTrabajo);
+    function CrearLineasCargaTraspaso: TLineasCargaTraspaso;
+    procedure AbrirTraspasoCaja(AModo: TModoVentanaTraspaso);
     procedure AplicarEstadoAmbito;
     procedure CargarAlmacenesEtiquetasDTR(ALV: TcxListView);
     procedure CrearDataSetEtiquetasDTR(ADmArt: TObject;
@@ -137,18 +162,16 @@ type
 implementation
 
 uses
-  Uni, UniDataArticulos, inLibFotos, inLibGenBusq, inMtoModalEtiqArt,
+  UniDataArticulos, inLibFotos, inLibGenBusq, inMtoModalEtiqArt,
   inMtoModalAddBlockDocumentoTrabajo,
   // Factoria del contrato + IdentidadSesion.Usuario para el gestor de tallas.
   inLibColumnasSku,
   UniDataModoTallas, UniDataColumnasSkuServicios,
   // Modal de destino (almacen/serie/numero) del "Enviar a...".
   inMtoModalEnviarDestino,
-  // Contrato de la operación TPV abierta para el volcado de SKUs.
-  inLibCajaVentanasIntf,
   // Listado del documento con una foto de 300 x 300 por línea.
-  inMtoPreviewExcel, inLibDocumentosTrabajoExcel, inLibWin, inLibLog,
-  inLibMsgArticulos, inLibMsgComun, inLibMsgVentas;
+  inMtoPreviewExcel, inLibDocumentosTrabajoExcel, inLibWin,
+  inLibMsgArticulos, inLibMsgCaja, inLibMsgComun, inLibMsgVentas;
 
 {$R *.dfm}
 
@@ -159,6 +182,8 @@ end;
 procedure TfrmMtoDocumentosTrabajo.CrearTablaPrincipal;
 begin
   inherited;
+  FRepositorios := ContextoRepositoriosPantalla.Documentos.
+    CrearRepositoriosDocumentosTrabajo;
   dmmDocumentosTrabajo := tdmDataModule as TdmDocumentosTrabajo;
   if dmmDocumentosTrabajo <> nil then
   begin
@@ -227,7 +252,7 @@ begin
     except
       on E: EInvalidOperation do
         // Ruido del editor inplace; queda constancia en el log.
-        inLibLog.Log.LogWarning(
+        RegistroLog.RegistrarAviso(
           'DocumentosTrabajo.ConstruirModoEntrada: HideEdit ' +
           'ignorado: ' + E.Message);
     end;
@@ -251,16 +276,17 @@ begin
   if FModoEntradaSel <> mcsSku then
     dmmDocumentosTrabajo.DesempaquetarAtributosLineas;
   Cfg := Default(TConfigColumnasSku);
+  Cfg.RegistroLog := RegistroLog;
   Cfg.Servicios := CrearServiciosColumnasSkuUniDAC(
     dmmDocumentosTrabajo.unqryTablaG.Connection);
   Cfg.ContextoSesion := ContextoSesion;
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
-    CrearValidadorArticulos(
+    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
       dmmDocumentosTrabajo.unqryTablaG.Connection);
   Cfg.LookupAtributos :=
-    CrearLookupAtributosArticulos(
+    ContextoRepositoriosPantalla.Articulos.CrearLookupAtributosArticulos(
       dmmDocumentosTrabajo.unqryTablaG.Connection);
   Cfg.View := tvLineasDTR;
   Cfg.Cds := ds;
@@ -363,39 +389,30 @@ end;
 
 procedure TfrmMtoDocumentosTrabajo.MostrarColumnasAtributoGlobalesDTR;
 var
-  Qry: TUniQuery;
+  Nombres: TNombresAtributosDocumentoTrabajo;
+  Nombre: string;
   i, iOrden: Integer;
   Col: TcxGridColumn;
 begin
   // Nombres globales de atributos para ver Color/Talla desde el
   // principio (mismo helper que inventarios / banco de pruebas).
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := dmmDocumentosTrabajo.unqryTablaG.Connection;
-    Qry.SQL.Text :=
-      'SELECT COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE,' +
-      '       MIN(ORDEN_VA) AS ORDEN' +
-      '  FROM fza_variaciones_atributos' +
-      ' GROUP BY COALESCE(NOMBRE_VA, ID_ATB_VA)' +
-      ' ORDER BY ORDEN, NOMBRE LIMIT 5';
-    Qry.Open;
-    iOrden := 1;
-    while (not Qry.Eof) and (iOrden <= 5) do
+  Nombres := FRepositorios.Lecturas.ListarNombresAtributos;
+  iOrden := 1;
+  for Nombre in Nombres do
+  begin
+    if iOrden <= 5 then
     begin
       for i := 0 to tvLineasDTR.ColumnCount - 1 do
       begin
         Col := tvLineasDTR.Columns[i];
         if Col.Tag = iOrden then
         begin
-          Col.Caption := Qry.FieldByName('NOMBRE').AsString;
+          Col.Caption := Nombre;
           Col.Visible := True;
         end;
       end;
       Inc(iOrden);
-      Qry.Next;
     end;
-  finally
-    FreeAndNil(Qry);
   end;
 end;
 
@@ -556,7 +573,6 @@ begin
         sTitulo := ds.FieldByName('TITULO_DTR').AsString;
         res := TfrmModalAddBlockDocumentoTrabajo.Ejecutar(
           Self,
-          dmmDocumentosTrabajo.unqryTablaG.Connection,
           ds.FieldByName('ID_DTR').AsLargeInt,
           sAlmacen,
           sTitulo);
@@ -576,7 +592,8 @@ end;
 
 procedure TfrmMtoDocumentosTrabajo.btnCompartirDTRClick(Sender: TObject);
 var
-  q: TUniQuery;
+  Consulta: IConsultaDocumentoTrabajo;
+  Datos: TDataSet;
   sDestino: string;
   sTipo: string;
 begin
@@ -590,27 +607,17 @@ begin
     end
     else
     begin
-      q := TUniQuery.Create(nil);
+      Consulta := FRepositorios.Lecturas.ConsultarDestinosCompartir;
+      Datos := Consulta.DataSet;
       try
-        q.SQL.Text :=
-          'SELECT ''USUARIO'' AS TIPO, ' +
-          '       USUARIO_USU AS DESTINO ' +
-          '  FROM fza_usuarios ' +
-          ' WHERE COALESCE(ESACTIVO_USU, ''S'') = ''S'' ' +
-          ' UNION ALL ' +
-          'SELECT ''GRUPO'' AS TIPO, ' +
-          '       GRUPO_USUGRP AS DESTINO ' +
-          '  FROM fza_usuarios_grupos ' +
-          ' ORDER BY TIPO, DESTINO';
-        if BusquedaVisual.EjecutarBusqueda(
-          ConexionPrincipal,
+        if BusquedaVisual.EjecutarBusquedaDataSet(
           'Compartir Documento de Trabajo',
-                                           q,
-                                           'frmBuscarCompartirDTR',
-                                           Self) then
+          Datos,
+          'frmBuscarCompartirDTR',
+          Self) then
         begin
-          sTipo := q.FieldByName('TIPO').AsString;
-          sDestino := q.FieldByName('DESTINO').AsString;
+          sTipo := Datos.FieldByName('TIPO').AsString;
+          sDestino := Datos.FieldByName('DESTINO').AsString;
           if dmmDocumentosTrabajo.CompartirDocumentoActual(sDestino,
                                                            sTipo) then
           begin
@@ -623,7 +630,7 @@ begin
           pcDetalleDTR.ActivePage := tsCompartirDTR;
         end;
       finally
-        FreeAndNil(q);
+        Consulta := nil;
       end;
     end;
   end;
@@ -726,8 +733,7 @@ procedure TfrmMtoDocumentosTrabajo.miEnviarAlbaranDTRClick(
   Sender: TObject);
 var
   idDtr: Int64;
-  q: TUniQuery;
-  sp: TUniStoredProc;
+  iLineas: Integer;
   ds: TDataSet;
   sEmp, sAlm, sSerie, sNumero: string;
 begin
@@ -747,82 +753,135 @@ begin
   // Numero '0' = contador oficial de albaranes de venta (tipo 'AV').
   if sNumero = '0' then
   begin
-    sp := TUniStoredProc.Create(nil);
-    try
-      sp.Connection := dmmDocumentosTrabajo.unqryTablaG.Connection;
-      sp.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
-      sp.Params.Clear;
-      sp.Params.CreateParam(ftString, 'pserie', ptInput);
-      sp.Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      sp.Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
-      sp.Params.CreateParam(ftString, 'pUSUARIOMODIF', ptInput);
-      sp.Params.CreateParam(ftString, 'pcont', ptOutput);
-      sp.ParamByName('pserie').AsString := sSerie;
-      sp.ParamByName('ptipodoc').AsString := 'AV';
-      sp.ParamByName('pEMPRESA_CONTADOR').AsString := sEmp;
-      sp.ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
-      sp.ExecProc;
-      sNumero := sp.ParamByName('pcont').AsString;
-    finally
-      FreeAndNil(sp);
-    end;
+    sNumero := FRepositorios.Materializacion.SiguienteContador(
+      sSerie,
+      'AV',
+      sEmp,
+      IdentidadSesion.Usuario);
     if (sNumero = '') or (sNumero = '0') then
     begin
       ShowMessage(Format(SErrorContadorAlbaranDocumentoTrabajo, [sSerie]));
       Exit;
     end;
   end;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := dmmDocumentosTrabajo.unqryTablaG.Connection;
-    // Cabecera minima ABIERTA: cliente, fiscalidad y precios se
-    // completan en el Mto de albaranes.
-    q.SQL.Text :=
-      'INSERT INTO fza_albaranes ' +
-      ' (NUMERO_ALB, SERIE_ALB, FECHA_ALB, ESTADO_ALB, ' +
-      '  CODIGO_EMP_ALB, CODIGO_ALM_ALB, CONTADOR_LINEAS_ALB, ' +
-      '  INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
-      'SELECT :NUMERO, :SERIE, CURDATE(), ''ABIERTO'', :EMP, :ALM, ' +
-      '       LPAD(COUNT(*) * 10, 8, ''0''), NOW(), NOW(), :USU, :USU ' +
-      '  FROM fza_documentos_trabajo_lineas ' +
-      ' WHERE ID_DTR_DTL = :ID';
-    q.ParamByName('NUMERO').AsString := sNumero;
-    q.ParamByName('SERIE').AsString := sSerie;
-    q.ParamByName('EMP').AsString := sEmp;
-    q.ParamByName('ALM').AsString := sAlm;
-    q.ParamByName('ID').AsLargeInt := idDtr;
-    q.ParamByName('USU').AsString := IdentidadSesion.Usuario;
-    q.ExecSQL;
-    // Lineas numeradas a paso 10 (convencion de albaranes) con
-    // cantidad del documento; precios a 0 para revisar en el Mto.
-    q.SQL.Text :=
-      'INSERT INTO fza_albaranes_lineas ' +
-      ' (NUMERO_ALB_ALBLIN, SERIE_ALB_ALBLIN, LINEA_ALBLIN, ' +
-      '  CODIGO_ART_ALBLIN, DESCRIPCION_ARTICULO_ALBLIN, ' +
-      '  CANTIDAD_ALBLIN, CODIGO_ALMACEN_ALBLIN, ' +
-      '  CODIGO_UNIDAD_ALBLIN, LOTE_ALBLIN, FECHA_CADUCIDAD_ALBLIN, ' +
-      '  DESCRIPCION_VARIACION_ALBLIN, ' +
-      '  INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-      'SELECT :NUMERO, :SERIE, ' +
-      '       LPAD(CAST(LINEA_DTL AS UNSIGNED) * 10, 4, ''0''), ' +
-      '       CODIGO_ART_DTL, LEFT(DESCRIPCION_ARTICULO_DTL, 100), ' +
-      '       CANTIDAD_DTL, :ALM, ' +
-      '       CODIGO_UNIDAD_DTL, COALESCE(LOTE_DTL, ''''), ' +
-      '       FECHA_CADUCIDAD_DTL, DESCRIPCION_UNIDAD_DTL, ' +
-      '       NOW(), :USU, :USU ' +
-      '  FROM fza_documentos_trabajo_lineas ' +
-      ' WHERE ID_DTR_DTL = :ID';
-    q.ParamByName('NUMERO').AsString := sNumero;
-    q.ParamByName('SERIE').AsString := sSerie;
-    q.ParamByName('ALM').AsString := sAlm;
-    q.ParamByName('ID').AsLargeInt := idDtr;
-    q.ParamByName('USU').AsString := IdentidadSesion.Usuario;
-    q.ExecSQL;
-    ShowMessage(Format(SInfoAlbaranDocumentoTrabajoCreado,
-                       [sSerie, sNumero, q.RowsAffected]));
-  finally
-    FreeAndNil(q);
+  iLineas := FRepositorios.Materializacion.CrearAlbaran(
+    idDtr,
+    sEmp,
+    sAlm,
+    sSerie,
+    sNumero,
+    IdentidadSesion.Usuario);
+  ShowMessage(Format(SInfoAlbaranDocumentoTrabajoCreado,
+                     [sSerie, sNumero, iLineas]));
+end;
+
+procedure TfrmMtoDocumentosTrabajo.ConfigurarEnvioNumerado(
+  ATipo: TTipoEnvioNumeradoDocumentoTrabajo;
+  out ATitulo, ATipoContador, AMensajeError,
+  AMensajeCreado: string);
+begin
+  case ATipo of
+    tenFacturaVenta:
+    begin
+      ATitulo := STituloEnviarFacturaVentaDocumentoTrabajo;
+      ATipoContador := 'FC';
+      AMensajeError := SErrorContadorFacturaVentaDocumentoTrabajo;
+      AMensajeCreado := SInfoFacturaVentaDocumentoTrabajoCreada;
+    end;
+    tenPedidoCompra:
+    begin
+      ATitulo := STituloEnviarPedidoCompraDocumentoTrabajo;
+      ATipoContador := 'PC';
+      AMensajeError := SErrorContadorPedidoCompraDocumentoTrabajo;
+      AMensajeCreado := SInfoPedidoCompraDocumentoTrabajoCreado;
+    end;
   end;
+end;
+
+function TfrmMtoDocumentosTrabajo.ResolverNumeroEnvio(
+  const ASerie, ANumero, ATipoContador, AEmpresa,
+  AMensajeError: string): string;
+begin
+  Result := ANumero;
+  if Result = '0' then
+  begin
+    Result := FRepositorios.Materializacion.SiguienteContador(
+      ASerie,
+      ATipoContador,
+      AEmpresa,
+      IdentidadSesion.Usuario);
+    if (Result = '') or (Result = '0') then
+    begin
+      ShowMessage(Format(AMensajeError, [ASerie]));
+      Result := '';
+    end;
+  end;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.EnviarDocumentoNumerado(
+  ATipo: TTipoEnvioNumeradoDocumentoTrabajo);
+var
+  idDtr: Int64;
+  iLineas: Integer;
+  ds: TDataSet;
+  sEmp, sAlm, sSerie, sNumero: string;
+  sTitulo, sTipoContador, sMensajeError, sMensajeCreado: string;
+begin
+  ConfigurarEnvioNumerado(
+    ATipo,
+    sTitulo,
+    sTipoContador,
+    sMensajeError,
+    sMensajeCreado);
+  idDtr := PrepararEnvio;
+  if idDtr > 0 then
+  begin
+    ds := dmmDocumentosTrabajo.unqryTablaG;
+    sEmp := ds.FieldByName('CODIGO_EMP_DTR').AsString;
+    sAlm := ds.FieldByName('CODIGO_ALM_DTR').AsString;
+    sSerie := '';
+    sNumero := '0';
+    if TfrmModalEnviarDestino.Ejecutar(
+         Self,
+         dmmDocumentosTrabajo.unqryTablaG.Connection,
+         sTitulo,
+         sEmp,
+         sTipoContador,
+         sAlm,
+         sSerie,
+         sNumero) then
+    begin
+      sNumero := ResolverNumeroEnvio(
+        sSerie,
+        sNumero,
+        sTipoContador,
+        sEmp,
+        sMensajeError);
+      if sNumero <> '' then
+      begin
+        iLineas := 0;
+        case ATipo of
+          tenFacturaVenta:
+            iLineas := FRepositorios.Materializacion.CrearFacturaVenta(
+              idDtr, sEmp, sAlm, sSerie, sNumero,
+              IdentidadSesion.Usuario);
+          tenPedidoCompra:
+            iLineas := FRepositorios.Materializacion.CrearPedidoCompra(
+              idDtr, sEmp, sAlm, sSerie, sNumero,
+              IdentidadSesion.Usuario);
+        end;
+        ShowMessage(Format(
+          sMensajeCreado,
+          [sSerie, sNumero, iLineas]));
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.miEnviarFacturaVentaDTRClick(
+  Sender: TObject);
+begin
+  EnviarDocumentoNumerado(tenFacturaVenta);
 end;
 
 procedure TfrmMtoDocumentosTrabajo.miEnviarTpvDTRClick(Sender: TObject);
@@ -875,12 +934,122 @@ begin
                        [iOk, iMal]));
 end;
 
+function TfrmMtoDocumentosTrabajo.CrearLineasCargaTraspaso:
+  TLineasCargaTraspaso;
+var
+  ds: TDataSet;
+  Marcador: TBookmark;
+  iAtributo: Integer;
+  iLinea: Integer;
+begin
+  ds := dmmDocumentosTrabajo.unqryLineas;
+  SetLength(Result, ds.RecordCount);
+  iLinea := 0;
+  Marcador := ds.GetBookmark;
+  ds.DisableControls;
+  try
+    ds.First;
+    while not ds.Eof do
+    begin
+      Result[iLinea].CodigoArticulo :=
+        ds.FieldByName('CODIGO_ART_DTL').AsString;
+      Result[iLinea].CodigoSku :=
+        ds.FieldByName('CODIGO_UNIDAD_DTL').AsString;
+      Result[iLinea].Descripcion :=
+        ds.FieldByName('DESCRIPCION_ARTICULO_DTL').AsString;
+      Result[iLinea].Cantidad :=
+        ds.FieldByName('CANTIDAD_DTL').AsFloat;
+      Result[iLinea].NumeroAtributos :=
+        ds.FieldByName('NUM_ATRIBUTOS_DTL').AsInteger;
+      for iAtributo := 1 to 5 do
+      begin
+        Result[iLinea].ValoresAtributos[iAtributo] :=
+          ds.FieldByName(Format(
+            'ATTR%d_VALOR_DTL',
+            [iAtributo])).AsString;
+        Result[iLinea].NombresAtributos[iAtributo] :=
+          ds.FieldByName(Format(
+            'ATTR%d_NOMBRE_DTL',
+            [iAtributo])).AsString;
+      end;
+      Inc(iLinea);
+      ds.Next;
+    end;
+    if ds.BookmarkValid(Marcador) then
+      ds.GotoBookmark(Marcador);
+  finally
+    ds.EnableControls;
+    ds.FreeBookmark(Marcador);
+  end;
+  SetLength(Result, iLinea);
+end;
+
+procedure TfrmMtoDocumentosTrabajo.AbrirTraspasoCaja(
+  AModo: TModoVentanaTraspaso);
+var
+  idDtr: Int64;
+  oAnfitrion: IAnfitrionCajaVentanas;
+  oTraspaso: ITraspasoCaja;
+  oFormulario: TCustomForm;
+  sEmp, sAlm, sCaja: string;
+begin
+  idDtr := PrepararEnvio;
+  if idDtr > 0 then
+  begin
+    sEmp := UbicacionSesion.Empresa;
+    sAlm := UbicacionSesion.Almacen;
+    sCaja := UbicacionSesion.Caja;
+    if (sEmp = '') or (sAlm = '') or (sCaja = '') then
+      ShowMessage(SErrorUbicacionCajaTraspasoNoAsignada)
+    else
+    begin
+      oAnfitrion := ExigirAnfitrionCaja(Application.MainForm);
+      oTraspaso := oAnfitrion.CrearTraspasoCaja(Application, Permisos);
+      oFormulario := oTraspaso.FormularioTraspaso;
+      try
+        oFormulario.PopupParent := Self;
+        oFormulario.Caption := Format(
+          STituloTraspasosAlmacenCaja,
+          [sAlm, sCaja]);
+        oTraspaso.PrepararCargaExterna(
+          AModo,
+          sEmp,
+          sAlm,
+          sCaja,
+          Date,
+          CrearLineasCargaTraspaso);
+        oFormulario.Show;
+      except
+        FreeAndNil(oFormulario);
+        raise;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.miEnviarPedidoCompraDTRClick(
+  Sender: TObject);
+begin
+  EnviarDocumentoNumerado(tenPedidoCompra);
+end;
+
+procedure TfrmMtoDocumentosTrabajo.miEnviarTraspasoCajaDTRClick(
+  Sender: TObject);
+begin
+  AbrirTraspasoCaja(mvtTraspaso);
+end;
+
+procedure TfrmMtoDocumentosTrabajo.miEnviarPeticionTraspasoDTRClick(
+  Sender: TObject);
+begin
+  AbrirTraspasoCaja(mvtPeticion);
+end;
+
 procedure TfrmMtoDocumentosTrabajo.miEnviarInventarioDTRClick(
   Sender: TObject);
 var
   idDtr: Int64;
-  q: TUniQuery;
-  sp: TUniStoredProc;
+  iLineas: Integer;
   ds: TDataSet;
   sEmp, sAlm, sSerie, sNumero: string;
 begin
@@ -903,25 +1072,11 @@ begin
   // de inventarios al grabar: PRC_GET_NEXT_CONT_FACT_SERIE).
   if sNumero = '0' then
   begin
-    sp := TUniStoredProc.Create(nil);
-    try
-      sp.Connection := dmmDocumentosTrabajo.unqryTablaG.Connection;
-      sp.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
-      sp.Params.Clear;
-      sp.Params.CreateParam(ftString, 'pserie', ptInput);
-      sp.Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      sp.Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
-      sp.Params.CreateParam(ftString, 'pUSUARIOMODIF', ptInput);
-      sp.Params.CreateParam(ftString, 'pcont', ptOutput);
-      sp.ParamByName('pserie').AsString := sSerie;
-      sp.ParamByName('ptipodoc').AsString := 'IN';
-      sp.ParamByName('pEMPRESA_CONTADOR').AsString := sEmp;
-      sp.ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
-      sp.ExecProc;
-      sNumero := sp.ParamByName('pcont').AsString;
-    finally
-      FreeAndNil(sp);
-    end;
+    sNumero := FRepositorios.Materializacion.SiguienteContador(
+      sSerie,
+      'IN',
+      sEmp,
+      IdentidadSesion.Usuario);
     if (sNumero = '') or (sNumero = '0') then
     begin
       ShowMessage(Format(SErrorContadorInventarioDocumentoTrabajo,
@@ -929,119 +1084,31 @@ begin
       Exit;
     end;
   end;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := dmmDocumentosTrabajo.unqryTablaG.Connection;
-    // Cabecera del inventario, ABIERTO, con los datos del documento.
-    q.SQL.Text :=
-      'INSERT INTO fza_inventarios ' +
-      ' (CODIGO_EMP_INV, CODIGO_ALM_INV, SERIE_INV, NUMERO_INV, ' +
-      '  TIPO_DOC_INV, FECHA_INV, ESTADO_INV, DESCRIPCION_INV, ' +
-      '  CONTADOR_LINEAS_INV, INSTANTE_ALTA, INSTANTE_MODIF, ' +
-      '  USUARIO_ALTA, USUARIO_MODIF) ' +
-      'SELECT :EMP, :ALM, :SERIE, :NUMERO, ''IN'', NOW(), ''ABIERTO'', ' +
-      '       CONCAT(''Desde doc. trabajo '', :ID), ' +
-      '       LPAD(COUNT(*), 8, ''0''), NOW(), NOW(), :USU, :USU ' +
-      '  FROM fza_documentos_trabajo_lineas ' +
-      ' WHERE ID_DTR_DTL = :ID';
-    q.ParamByName('EMP').AsString := sEmp;
-    q.ParamByName('ALM').AsString := sAlm;
-    q.ParamByName('SERIE').AsString := sSerie;
-    q.ParamByName('NUMERO').AsString := sNumero;
-    q.ParamByName('ID').AsLargeInt := idDtr;
-    q.ParamByName('USU').AsString := IdentidadSesion.Usuario;
-    q.ExecSQL;
-    // Lineas: fisica = cantidad del documento; teorica = snapshot de
-    // stock. El boton "Recalcular teorico/PMP" del Mto de inventarios
-    // deja despues los teoricos y PMPs oficiales.
-    q.SQL.Text :=
-      'INSERT INTO fza_inventarios_lineas ' +
-      ' (CODIGO_EMP_INVLIN, CODIGO_ALM_INVLIN, SERIE_INV_INVLIN, ' +
-      '  NUMERO_INV_INVLIN, LINEA_INVLIN, CODIGO_ART_INVLIN, ' +
-      '  CODIGO_UNIDAD_INVLIN, LOTE_INVLIN, ' +
-      '  DESCRIPCION_ARTICULO_INVLIN, CANTIDAD_TEORICA_INVLIN, ' +
-      '  CANTIDAD_FISICA_INVLIN, CANTIDAD_DIFERENCIA_INVLIN, ' +
-      '  PRECIO_MEDIO_INVLIN, PRECIO_MEDIO_NUEVO_INVLIN, ' +
-      '  TOTAL_COSTE_DIFERENCIA_INVLIN, FECHA_RECUENTO_INVLIN, ' +
-      '  INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-      // LINEA_DTL ya es unica y ordenada dentro del documento: se
-      // reutiliza tal cual como numero de linea del inventario (sin
-      // ROW_NUMBER, que exige MariaDB >= 10.2).
-      'SELECT :EMP, :ALM, :SERIE, :NUMERO, LINEA_DTL, ' +
-      '       CODIGO_ART_DTL, CODIGO_UNIDAD_DTL, COALESCE(LOTE_DTL, ''''), ' +
-      '       DESCRIPCION_ARTICULO_DTL, CANTIDAD_STOCK_DTL, ' +
-      '       CANTIDAD_DTL, CANTIDAD_DTL - CANTIDAD_STOCK_DTL, ' +
-      '       0, 0, 0, NOW(), NOW(), :USU, :USU ' +
-      '  FROM fza_documentos_trabajo_lineas ' +
-      ' WHERE ID_DTR_DTL = :ID';
-    q.ParamByName('EMP').AsString := sEmp;
-    q.ParamByName('ALM').AsString := sAlm;
-    q.ParamByName('SERIE').AsString := sSerie;
-    q.ParamByName('NUMERO').AsString := sNumero;
-    q.ParamByName('ID').AsLargeInt := idDtr;
-    q.ParamByName('USU').AsString := IdentidadSesion.Usuario;
-    q.ExecSQL;
-    ShowMessage(Format(SInfoInventarioDocumentoTrabajoCreado,
-                       [sSerie, sNumero, sAlm, q.RowsAffected]));
-  finally
-    FreeAndNil(q);
-  end;
+  iLineas := FRepositorios.Materializacion.CrearInventario(
+    idDtr,
+    sEmp,
+    sAlm,
+    sSerie,
+    sNumero,
+    IdentidadSesion.Usuario);
+  ShowMessage(Format(SInfoInventarioDocumentoTrabajoCreado,
+                     [sSerie, sNumero, sAlm, iLineas]));
 end;
 
 procedure TfrmMtoDocumentosTrabajo.miEnviarTarifasDTRClick(
   Sender: TObject);
 var
-  idDtr, idTarc: Int64;
-  q: TUniQuery;
+  idDtr: Int64;
+  idTarc: Int64;
 begin
   idDtr := PrepararEnvio;
   if idDtr <= 0 then
     Exit;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := dmmDocumentosTrabajo.unqryTablaG.Connection;
-    // Sesion de cambios de tarifa en BORRADOR sobre la tarifa por
-    // defecto (la primera); origen/destino y regla se retocan en el
-    // propio Mto de sesiones de tarifas.
-    q.SQL.Text :=
-      'INSERT INTO fza_tarifas_cambios ' +
-      ' (NOMBRE_TARC, FECHA_TARC, ESTADO_TARC, ' +
-      '  CODIGO_TAR_ORIGEN_TARC, CODIGO_TAR_DESTINO_TARC, ' +
-      '  INSTANTE_ALTA, USUARIO_ALTA) ' +
-      'SELECT CONCAT(''Desde doc. trabajo '', :ID), CURDATE(), ' +
-      '       ''BORRADOR'', T.COD, T.COD, NOW(), :USU ' +
-      '  FROM (SELECT MIN(CODIGO_TAR_TAR) AS COD ' +
-      '          FROM fza_tarifas) T';
-    q.ParamByName('ID').AsLargeInt := idDtr;
-    q.ParamByName('USU').AsString := IdentidadSesion.Usuario;
-    q.ExecSQL;
-    q.SQL.Text := 'SELECT LAST_INSERT_ID() AS ID';
-    q.Open;
-    idTarc := q.FieldByName('ID').AsLargeInt;
-    q.Close;
-    // Una linea por ARTICULO distinto del documento (el Mto de
-    // sesiones rellena precios actuales y nuevos al preparar).
-    q.SQL.Text :=
-      'INSERT INTO fza_tarifas_cambios_lineas ' +
-      ' (CODIGO_TARC_TARCLIN, CODIGO_ART_TARCLIN, ' +
-      '  CODIGO_UNIDAD_SKU_TARCLIN, CODIGO_TAR_ORIGEN_TARCLIN, ' +
-      '  CODIGO_TAR_DESTINO_TARCLIN, ESAPLICAR_TARCLIN, ' +
-      '  ESTADO_TARCLIN, INSTANTE_ALTA, USUARIO_ALTA) ' +
-      'SELECT DISTINCT :TARC, L.CODIGO_ART_DTL, '''', ' +
-      '       C.CODIGO_TAR_ORIGEN_TARC, C.CODIGO_TAR_DESTINO_TARC, ' +
-      '       ''S'', ''PENDIENTE'', NOW(), :USU ' +
-      '  FROM fza_documentos_trabajo_lineas L ' +
-      '  JOIN fza_tarifas_cambios C ON C.CODIGO_TARC = :TARC ' +
-      ' WHERE L.ID_DTR_DTL = :ID';
-    q.ParamByName('TARC').AsLargeInt := idTarc;
-    q.ParamByName('ID').AsLargeInt := idDtr;
-    q.ParamByName('USU').AsString := IdentidadSesion.Usuario;
-    q.ExecSQL;
-    ShowMessage(Format(SInfoCambioTarifasDocumentoTrabajoCreado,
-                       [idTarc]));
-  finally
-    FreeAndNil(q);
-  end;
+  idTarc := FRepositorios.Materializacion.CrearSesionTarifa(
+    idDtr,
+    IdentidadSesion.Usuario);
+  ShowMessage(Format(SInfoCambioTarifasDocumentoTrabajoCreado,
+                     [idTarc]));
 end;
 
 procedure TfrmMtoDocumentosTrabajo.pcAmbitoDTRChange(Sender: TObject);

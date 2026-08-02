@@ -550,7 +550,6 @@ begin
   begin
     res := TfrmModalCargarSesionTarifa.Ejecutar(
       Self,
-      dmmTarifasCambios.unqryTablaG.Connection,
       dsTablaG.DataSet.FieldByName('CODIGO_TARC').AsInteger,
       dsTablaG.DataSet.FieldByName('CODIGO_TAR_ORIGEN_TARC').AsString,
       dsTablaG.DataSet.FieldByName('CODIGO_TAR_DESTINO_TARC').AsString);

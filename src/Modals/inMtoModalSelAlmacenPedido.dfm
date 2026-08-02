@@ -200,62 +200,15 @@
       OnExecute = actCancelarExecute
     end
   end
-  object unqryTemporadas: TUniQuery
-    SQL.Strings = (
-      'SELECT ID_PV_ARTPROP, PV'
-      '  FROM fza_propiedades_valores'
-      ' WHERE ID_PROP_PV = '#39'TEMPORADA'#39
-      '   AND ESACTIVO_PV = '#39'S'#39
-      ' ORDER BY PV')
-    Left = 320
-    Top = 16
-  end
   object dsTemporadas: TDataSource
-    DataSet = unqryTemporadas
     Left = 392
     Top = 16
   end
-  object unqryAlmacenes: TUniQuery
-    SQL.Strings = (
-      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM'
-      '  FROM fza_almacenes'
-      ' WHERE ESACTIVO_ALM = '#39'S'#39
-      ' ORDER BY NOMBRE_ALM_ALM')
-    Left = 456
-    Top = 16
-  end
   object dsAlmacenes: TDataSource
-    DataSet = unqryAlmacenes
     Left = 504
     Top = 16
   end
-  object unqryAlbExist: TUniQuery
-    SQL.Strings = (
-      'SELECT NUMERO_ALBC, SERIE_ALBC, FECHA_ALBC, ESTADO_ALBC,'
-      '       TOTAL_LIQUIDO_ALBC'
-      '  FROM fza_albaranes_compra'
-      ' WHERE NUMERO_PED_ALBC = :np'
-      '   AND SERIE_PED_ALBC  = :sp'
-      '   AND IFNULL(ESTADO_ALBC, '#39#39') NOT IN ('#39'FACTURADO'#39', '#39'CANCELADO'#39')'
-      ' ORDER BY FECHA_ALBC DESC, NUMERO_ALBC DESC')
-    Left = 320
-    Top = 80
-    ParamData = <
-      item
-        DataType = ftWideString
-        Name = 'np'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftWideString
-        Name = 'sp'
-        ParamType = ptInput
-        Value = nil
-      end>
-  end
   object dsAlbExist: TDataSource
-    DataSet = unqryAlbExist
     Left = 392
     Top = 80
   end

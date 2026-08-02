@@ -160,6 +160,9 @@ type
     function CrearConsultaOperacionesCaja(
       AOwner: TComponent;
       const APermisos: IPermisosAplicacion): IConsultaOperacionesCaja;
+    function CrearTraspasoCaja(
+      AOwner: TComponent;
+      const APermisos: IPermisosAplicacion): ITraspasoCaja;
   published
     tmr1: TTimer;
     StyleRepository1: TcxStyleRepository;
@@ -248,7 +251,7 @@ type
     FFalloCargaPermisosAvisado: Boolean;
     FGestorExcepciones: IGestorExcepcionesAplicacion;
     FComposicion: TComposicionAplicacion;
-    FCoordinadorOperaciones: ICoordinadorOperacionesAplicacion;
+    FCoordinadorOperaciones: ICasoUsoCopiasSeguridad;
     // Handlers de aplicacion (OnException/OnIdle/OnMessage) registrados via
     // TApplicationEvents: una asignacion directa Application.OnX queda
     // anulada en cuanto cualquier form crea su propio TApplicationEvents
@@ -281,11 +284,7 @@ type
       out ARutaFichero, AContrasena: string
     ): Boolean;
     function CrearCopiaPreviaScript: Boolean;
-    function SolicitarOrigenRestauracion(
-      out ARutaFichero, AContrasena: string
-    ): Boolean;
     procedure SolicitarCancelarOperacionEnCurso;
-    function ContieneDDL(const ASQL: string): Boolean;
     procedure ActualizarFondoLogo;
     procedure CargarFondoLogo;
     procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
@@ -328,7 +327,7 @@ type
     procedure MostrarCancelando;
     procedure FinalizarOperacion(
       ATipo: TTipoOperacionAplicacion;
-      AExito, ACancelada: Boolean;
+      AResultado: TResultadoCopiaSeguridad;
       const AError: string;
       ALogBuffer: TStringList);
   end;
@@ -341,7 +340,7 @@ uses inLibWin,
   inLibTraduccionesFastReport,
   inLibMonitorSQLIntf,
   inLibMonitorSQLLog,
-  inLibLog,
+
   inLibPerfilesUsuarioIntf,
   inLibFiltrosGuardadosIntf,
   inLibMsgCaja,
@@ -353,6 +352,7 @@ uses inLibWin,
   inMtoCajaMenu,
   inMtoCajaOpe,
   inMtoConsultaOpe,
+  inMtoTraspasoOpe,
   inMtoCajaParam,
   inMtoBusquedaDatos,
   inMtoModalVerifactuDecl,
@@ -367,6 +367,7 @@ uses inLibWin,
   inMtoModalImpDocsProveedor,
   inMtoModalImpEfectosPago,
   inMtoModalFacturarAlbaranes,
+  inMtoRestauracionCopiasVcl,
   inMtoModalCargarEfectosRemesa,
   inLibCertificates,
   inMtoGen,
@@ -374,6 +375,31 @@ uses inLibWin,
   System.DateUtils,
   System.RegularExpressions,
   inMtoModalContrasenaCopia;
+
+function CrearContextoRestauracionCopiasVcl(
+  AFormulario: TfrmMtoPrincipal): TContextoRestauracionCopiasVcl;
+begin
+  Result := Default(TContextoRestauracionCopiasVcl);
+  Result.Owner := AFormulario;
+  Result.Dialogo := AFormulario.openDialog;
+  Result.CasoUso := AFormulario.FCoordinadorOperaciones;
+  Result.RutaCopias := AFormulario.ParametrosApp.GetPath(
+    'appDirCopiasSeguridad');
+  Result.Visible := AFormulario.mnuEjecutarScript.Visible;
+  Result.ComprobarDDL :=
+    function(const ASQL: string): Boolean
+    begin
+      Result := TRegEx.IsMatch(
+        ASQL,
+        '\b(CREATE|ALTER|DROP|TRUNCATE|RENAME)\b',
+        [roIgnoreCase]);
+    end;
+  Result.CrearCopiaPrevia :=
+    function: Boolean
+    begin
+      Result := AFormulario.CrearCopiaPreviaScript;
+    end;
+end;
 
 {$R *.dfm}
 
@@ -521,7 +547,7 @@ begin
           end;
         except
           on E: Exception do
-            inLibLog.Log.LogWarning('No se pudo comprobar la caducidad de ' +
+            RegistroLog.RegistrarAviso('No se pudo comprobar la caducidad de ' +
               'certificados al arrancar: ' + E.Message);
         end;
       finally
@@ -543,14 +569,6 @@ begin
     sTitulo := oAppName + ' ' + oVersion;
   Self.Caption := sTitulo;
   Application.Title := sTitulo;
-end;
-
-function TfrmMtoPrincipal.ContieneDDL(const ASQL: string): Boolean;
-var
-  Patron: string;
-begin
-  Patron := '\b(CREATE|ALTER|DROP|TRUNCATE|RENAME)\b';
-  Result := TRegEx.IsMatch(ASQL, Patron, [roIgnoreCase]);
 end;
 
 procedure TfrmMtoPrincipal.ApplicationEvents1Idle(Sender: TObject;
@@ -619,7 +637,7 @@ begin
   FSplashInicio := nil;
   FSplashTimestamp := Now;
   try
-    FSplashInicio := TfrmSplash.Create(nil);
+    FSplashInicio := TfrmSplash.Create(nil, RegistroLog);
     TfrmSplash(FSplashInicio).FormStyle := fsStayOnTop;
     TfrmSplash(FSplashInicio).btnAceptar.Visible := False;
     TfrmSplash(FSplashInicio).Show;
@@ -638,14 +656,17 @@ begin
     ContextoSesion,
     RegistroLog,
     TRegistroMonitorSQLLog.Create(
-      inLibLog.Log,
+      RegistroLog,
       TVisorMonitorSQLMemo.Create(cxMemo1)),
     Self as IPresentacionOperacionesAplicacion);
+  AsignarConfiguracionCampos(FComposicion.ConfiguracionCampos);
   FGestorExcepciones := FComposicion.GestorExcepciones;
   FCoordinadorOperaciones := FComposicion.Operaciones;
   AsignarMonitorSQL(FComposicion.MonitorSQL);
-  inLibLog.Log.AsignarMonitorSQL(FComposicion.MonitorSQL);
+  RegistroLog.AsignarMonitorSQL(FComposicion.MonitorSQL);
   AsignarConexiones(FComposicion.Conexiones);
+  AsignarFabricaContextosRepositoriosPantalla(
+    FComposicion.FabricaContextosRepositoriosPantalla);
   AsignarUnidadesMedida(FComposicion.Unidades);
   AsignarAuditoriaDatos(FComposicion.AuditoriaDatos);
   tmr1Timer(nil);
@@ -737,7 +758,7 @@ begin
         TcxRootLookAndFeel.Instance.SkinPaletteName := sPaleta;
     except
       on E: Exception do
-        inLibLog.Log.LogWarning(
+        RegistroLog.RegistrarAviso(
           'Error al establecer skin: ' + E.Message);
     end;
   end;
@@ -751,7 +772,7 @@ begin
   // appModoDebug / appModoDebugSQL que acaba de cargar el servicio.
   pnlPPBottom.Visible := False;
   cxMemo1.Visible     := False;
-  inLibLog.AplicarModosDepuracion(ParametrosApp);
+  RegistroLog.AplicarModosDepuracion(ParametrosApp);
   AplicarTema;
   CargarFondoLogo;
   // pcPrincipal tiene Align=alClient en Panel1 y repinta su area cliente
@@ -906,7 +927,7 @@ begin
   except
     // Si el form ya estaba liberado por algun motivo, lo ignoramos.
     on E: Exception do
-      inLibLog.Log.LogWarning(
+      RegistroLog.RegistrarAviso(
         'Principal: cierre del splash de inicio fallo: ' +
         E.Message);
   end;
@@ -938,7 +959,8 @@ begin
       try
         oPng.LoadFromStream(oRes);
         imgFondoLogo.Picture.Assign(oPng);
-        inLibLog.Log.LogInfo('CargarFondoLogo: OK desde recurso FONDO ' +
+        RegistroLog.RegistrarInformacion(
+          'CargarFondoLogo: OK desde recurso FONDO ' +
                              '(' + IntToStr(oRes.Size) + ' bytes)');
         Exit;
       finally
@@ -949,13 +971,14 @@ begin
     end;
   except
     on E: Exception do
-      inLibLog.Log.LogInfo('CargarFondoLogo: recurso FONDO no disponible ' +
+      RegistroLog.RegistrarInformacion(
+        'CargarFondoLogo: recurso FONDO no disponible ' +
                            '(' + E.Message + '); pruebo disco');
   end;
   // 2) Fallback a fichero suelto: para builds Debug donde fondo.png
   //    vive en la raiz del repo (..\..ondo.png desde Win32/Debug).
   sBase := inLibDir.DirApp;
-  inLibLog.Log.LogInfo('CargarFondoLogo: base="' + sBase + '"');
+  RegistroLog.RegistrarInformacion('CargarFondoLogo: base="' + sBase + '"');
   for i := 0 to High(CRutas) do
   begin
     sRuta := sBase + CRutas[i];
@@ -963,16 +986,18 @@ begin
     begin
       try
         imgFondoLogo.Picture.LoadFromFile(sRuta);
-        inLibLog.Log.LogInfo('CargarFondoLogo: OK desde "' + sRuta + '"');
+        RegistroLog.RegistrarInformacion(
+          'CargarFondoLogo: OK desde "' + sRuta + '"');
         Exit;
       except
         on E: Exception do
-          inLibLog.Log.LogWarning('No se pudo cargar fondo ' + sRuta +
+          RegistroLog.RegistrarAviso('No se pudo cargar fondo ' + sRuta +
                                   ': ' + E.Message);
       end;
     end
     else
-      inLibLog.Log.LogInfo('CargarFondoLogo: no existe "' + sRuta + '"');
+      RegistroLog.RegistrarInformacion(
+        'CargarFondoLogo: no existe "' + sRuta + '"');
   end;
 end;
 
@@ -1078,7 +1103,8 @@ begin
   if not FFalloCargaPermisosAvisado then
   begin
     FFalloCargaPermisosAvisado := True;
-    Log.LogError('No se pudieron cargar los permisos: ' + ADetalle);
+    RegistroLog.RegistrarError(
+      'No se pudieron cargar los permisos: ' + ADetalle);
     MessageDlg(Format(SAvisoCargaPermisosRestringidos, [GetLogFolder]),
                mtWarning, [mbOK], 0);
   end;
@@ -1121,14 +1147,14 @@ var
         if sCall <> '' then
         begin
           AItem.Visible := True;
-          Log.LogInfo(Format(
+          RegistroLog.RegistrarInformacion(Format(
             'Permiso %s denegado: menú desactivado',
             [sCodigo]));
         end
         else
         begin
           AItem.Visible := False;
-          Log.LogInfo(Format(
+          RegistroLog.RegistrarInformacion(Format(
             'Permiso %s denegado: menú oculto',
             [sCodigo]));
         end;
@@ -1166,7 +1192,7 @@ end;
 
 procedure TfrmMtoPrincipal.FinalizarOperacion(
   ATipo: TTipoOperacionAplicacion;
-  AExito, ACancelada: Boolean;
+  AResultado: TResultadoCopiaSeguridad;
   const AError: string;
   ALogBuffer: TStringList);
 var
@@ -1177,21 +1203,21 @@ begin
   if Assigned(FProgressLabel) then
     FProgressLabel.Visible := False;
   pnlPPBottom.Visible := False;
-  if (not AExito) and (not ACancelada) and (AError = '') then
+  if (AResultado = rcsFallida) and (AError = '') then
     FreeAndNil(ALogBuffer)
   else if ATipo = toaCopiaSeguridad then
   begin
     FreeAndNil(ALogBuffer);
-    if ACancelada then
+    if AResultado = rcsCancelada then
       ShowMessage(SOperacionCancelada)
-    else if AExito then
+    else if AResultado = rcsCompletada then
       ShowMessage(SInfoCopiaSeguridadGuardada)
     else
       ShowMessage(Format(SErrorCrearCopiaSeguridad, [AError]));
   end
   else if ATipo = toaRestauracion then
   begin
-    if ACancelada then
+    if AResultado = rcsCancelada then
     begin
       FreeAndNil(ALogBuffer);
       ShowMessage(SAvisoRestauracionCancelada);
@@ -1209,7 +1235,7 @@ begin
         FreeAndNil(ALogBuffer);
       end;
       LogForm.Show;
-      if AExito then
+      if AResultado = rcsCompletada then
         ShowMessage(SScriptEjecutado)
       else
         ShowMessage(Format(SErrorEjecutarScript, [AError]));
@@ -1332,13 +1358,13 @@ begin
   FGestorExcepciones := nil;
   inherited;
   try
-    inLibLog.Log.LogInfo('Cerrando ventana principal');
+    RegistroLog.RegistrarInformacion('Cerrando ventana principal');
     tmr1.Enabled := False;
     if Assigned(FormManager) then
     try
       FormManager.CloseAll;
     except
-      on E: Exception do inLibLog.Log.LogError('Error en CloseAll: ' +
+      on E: Exception do RegistroLog.RegistrarError('Error en CloseAll: ' +
                                                                      E.Message);
     end;
     AsignarFotosArticulos(nil);
@@ -1351,7 +1377,7 @@ begin
     AsignarFiltrosGuardados(
       CrearServiciosFiltrosGuardados(nil, nil, nil));
     AsignarAuditoriaDatos(nil);
-    inLibLog.Log.AsignarMonitorSQL(nil);
+    RegistroLog.AsignarMonitorSQL(nil);
     AsignarMonitorSQL(nil);
     AsignarConexiones(nil);
     AsignarInformesGuiasCache(nil);
@@ -1359,7 +1385,7 @@ begin
     FGestorExcepciones := nil;
     FreeAndNil(FComposicion);
   finally
-    inLibLog.Log.LogInfo('Ventana principal Cerrada');
+    RegistroLog.RegistrarInformacion('Ventana principal Cerrada');
     Action := caFree;
   end;
 end;
@@ -1629,125 +1655,10 @@ begin
     Result := inherited IsShortCut(Message);
 end;
 
-function TfrmMtoPrincipal.SolicitarOrigenRestauracion(
-  out ARutaFichero, AContrasena: string): Boolean;
-var
-  bEsAdministrador: Boolean;
-begin
-  ARutaFichero := '';
-  AContrasena := '';
-  bEsAdministrador := FCoordinadorOperaciones.ModoCreacionCopia =
-    mpcTextoPlano;
-  openDialog.Title := STituloRestaurarCopiaEjecutarScript;
-  openDialog.FileTypes.Clear;
-  with openDialog.FileTypes.Add do
-  begin
-    if bEsAdministrador then
-    begin
-      DisplayName := SCaptionFiltroCopiasSqlCifradas;
-      FileMask := '*.sql;*.crypt';
-    end
-    else
-    begin
-      DisplayName := SCaptionFiltroCopiasScriptsCifrados;
-      FileMask := '*.crypt';
-    end;
-  end;
-  if bEsAdministrador then
-    openDialog.DefaultExtension := 'sql'
-  else
-    openDialog.DefaultExtension := 'crypt';
-  openDialog.DefaultFolder := ParametrosApp.GetPath(
-    'appDirCopiasSeguridad');
-  openDialog.Options := openDialog.Options +
-    [fdoStrictFileTypes, fdoFileMustExist];
-  Result := openDialog.Execute;
-  if Result then
-  begin
-    ARutaFichero := openDialog.FileName;
-    Result := FCoordinadorOperaciones.PuedeRestaurar(
-      ARutaFichero);
-    if not Result then
-      ShowMessage(SErrorTipoRestauracionNoPermitido)
-    else if FCoordinadorOperaciones.RequiereContrasena(
-      ARutaFichero) then
-    begin
-      Result := TfrmModalContrasenaCopia.SolicitarExistente(
-        Self,
-        AContrasena);
-    end;
-  end;
-end;
-
 procedure TfrmMtoPrincipal.mnuEjecutarScriptClick(Sender: TObject);
-var
-  aBytes: TBytes;
-  bCifrada: Boolean;
-  bContinuar: Boolean;
-  bRequiereCopia: Boolean;
-  iRespuesta: Integer;
-  iBytesALeer: Int64;
-  oFichero: TFileStream;
-  sContrasena: string;
-  sPreguntaCopia: string;
-  sRutaFichero: string;
-  sSqlTexto: string;
 begin
-  if mnuEjecutarScript.Visible then
-  begin
-    bContinuar := SolicitarOrigenRestauracion(
-      sRutaFichero,
-      sContrasena);
-    if bContinuar then
-    begin
-      bCifrada := FCoordinadorOperaciones.RequiereContrasena(
-        sRutaFichero);
-      bRequiereCopia := bCifrada;
-      sPreguntaCopia := SPreguntaCopiaAntesRestaurarCifrada;
-      if not bCifrada then
-      begin
-        oFichero := TFileStream.Create(
-          sRutaFichero,
-          fmOpenRead or fmShareDenyNone);
-        try
-          iBytesALeer := oFichero.Size;
-          if iBytesALeer > 65536 then
-            iBytesALeer := 65536;
-          SetLength(aBytes, iBytesALeer);
-          oFichero.ReadBuffer(
-            aBytes,
-            iBytesALeer);
-          sSqlTexto := TEncoding.UTF8.GetString(aBytes);
-        finally
-          FreeAndNil(oFichero);
-        end;
-        bRequiereCopia := ContieneDDL(sSqlTexto);
-        sPreguntaCopia := SPreguntaCopiaSeguridadAntesDDL;
-      end;
-      if bRequiereCopia then
-      begin
-        iRespuesta := MessageDlg(
-          sPreguntaCopia,
-          mtWarning,
-          [mbYes, mbNo, mbCancel],
-          0);
-        case iRespuesta of
-          mrYes:
-            bContinuar := CrearCopiaPreviaScript;
-          mrCancel:
-            bContinuar := False;
-        end;
-        if not bContinuar then
-          ShowMessage(SInfoScriptCancelado);
-      end;
-      if bContinuar then
-      begin
-        FCoordinadorOperaciones.IniciarRestauracion(
-          sRutaFichero,
-          sContrasena);
-      end;
-    end;
-  end;
+  TCoordinadorRestauracionCopiasVcl.Ejecutar(
+    CrearContextoRestauracionCopiasVcl(Self));
 end;
 
 procedure TfrmMtoPrincipal.tmr1Timer(Sender: TObject);
@@ -1772,7 +1683,7 @@ begin
      (not bConectado) then
   begin
     jvStatusBar1.Panels[4].Text := '' + ADateStr + ' ' + ATimeStr + 'NO Conn';
-    inLibLog.Log.LogError('Se ha perdido la conexión con la BBDD');
+    RegistroLog.RegistrarError('Se ha perdido la conexión con la BBDD');
   end;
 
 end;
@@ -1859,7 +1770,7 @@ var
 begin
   inherited;
   try
-    frmSplash := TfrmSplash.Create(Self);
+    frmSplash := TfrmSplash.Create(Self, RegistroLog);
     frmSplash.ShowModal;
   finally
     FreeAndNil(frmSplash);
@@ -2247,6 +2158,13 @@ begin
     raise EInvalidCast.Create(
       'La ventana de consulta no implementa IConsultaOperacionesCaja.');
   end;
+end;
+
+function TfrmMtoPrincipal.CrearTraspasoCaja(
+  AOwner: TComponent;
+  const APermisos: IPermisosAplicacion): ITraspasoCaja;
+begin
+  Result := TfrmMtoOpeTraspaso.Create(AOwner, APermisos);
 end;
 
 // Restaurar la ventana principal y apartar el menu de caja antes de

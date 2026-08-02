@@ -30,7 +30,8 @@ uses
   UniDataConsultaOpe, UniDataCaja, dxCore, cxDateUtils, dxCoreGraphics,
   cxCurrencyEdit, cxClasses, cxGridCustomView, JvComponentBase, JvEnterTab,
   cxLocalization, Vcl.Menus, inLibCajaTipos, inLibCajaVentanasIntf,
-  inLibInteraccionDatosIntf;
+  inLibInteraccionDatosIntf,
+  inLibConsultaFacturasOperacionesPersistenciaIntf;
 
 type
   TfrmConsultaOpe = class(TfrmBase, IConsultaOperacionesCaja)
@@ -118,6 +119,7 @@ type
     FEmpresa:    string;
     FAlmacen:    string;
     FCaja:       string;
+    FRepositorioFacturas: IRepositorioConsultaFacturasOperaciones;
     // Factura de la operación seleccionada (pestaña Factura)
     procedure NotificarMensajeDesdeDM(
       Sender: TObject;
@@ -166,15 +168,13 @@ implementation
 {$R *.dfm}
 
 uses inLibGenerarTicketBD, inLibGenerarTicketCaja,
-     UniDataGenerarTicketRepositorio,
-     inLibLog, inLibFotos, inMtoFotoArticulo,
-     inLibTraspasoTicket, inLibShowMto, Uni,
+     inLibFotos, inMtoFotoArticulo,
+     inLibTraspasoTicket, inLibShowMto,
      inLibVerifactu, inMtoModalFacturarTicket,
-     inLibEmisionFiscalIntf, inLibEmisionFiscal,
-     UniDataVerifactuColaRepositorio,
+     inLibEmisionFiscalIntf,
   inLibCorreoTickets, inLibAtributosPaleta, inLibMsgComun,
   inLibMsgCaja, inLibMsgConfiguracion, inLibMsgFacturas,
-  inLibTicketsCajaIntf, UniDataVentasCalendario;
+  inLibTicketsCajaIntf;
 
 // -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -186,13 +186,19 @@ end;
 procedure TfrmConsultaOpe.FormCreate(Sender: TObject);
 begin
   inherited;
-  FdmConsulta := TdmConsultaOpe.Create(Self, ConexionPrincipal);
+  FdmConsulta := TdmConsultaOpe.Create(
+    Self,
+    ConexionPrincipal,
+    RegistroLog);
   FdmConsulta.OnNotificarMensaje := NotificarMensajeDesdeDM;
   FLayout := TLayoutLoader.Create(
     Self.Name, ContextoSesion, PerfilesLectura);
+  FRepositorioFacturas := ContextoRepositoriosPantalla.Operaciones.
+    CrearRepositorioConsultaFacturas;
   FVentasCal := TVentasCalendarioCache.Create(
     ConexionPrincipal,
-    CrearRepositorioVentasCalendarioUniDAC(ConexionPrincipal));
+    ContextoRepositoriosPantalla.Operaciones.
+      CrearRepositorioVentasCalendario);
   dtpFecha.Properties.OnGetDayState := dtpFechaGetDayState;
   cxViewMaestro.DataController.DataSource := FdmConsulta.dsMaestro;
   cxViewOpe.DataController.DataSource     := FdmConsulta.dsOperacion;
@@ -238,6 +244,7 @@ end;
 
 procedure TfrmConsultaOpe.FormDestroy(Sender: TObject);
 begin
+  FRepositorioFacturas := nil;
   inherited;
   FreeAndNil(FLayout);
   FreeAndNil(FVentasCal);
@@ -276,7 +283,8 @@ end;
 procedure TfrmConsultaOpe.FormShow(Sender: TObject);
 begin
   inherited;
-  Log.LogInfo(Format('frmConsultaOpe.FormShow: INICIO emp="%s" alm="%s" ' +
+  RegistroLog.RegistrarInformacion(
+    Format('frmConsultaOpe.FormShow: INICIO emp="%s" alm="%s" ' +
                      'caja="%s" fecha=%s',
                      [FEmpresa, FAlmacen, FCaja, DateToStr(dtpFecha.Date)]));
   Caption := Format('Buscar operaciones — Empresa %s / Almacen %s / Caja %s',
@@ -287,7 +295,7 @@ begin
   AjustarAPantalla;
   if edtBuscar.CanFocus then
     edtBuscar.SetFocus;
-  Log.LogInfo('frmConsultaOpe.FormShow: FIN');
+  RegistroLog.RegistrarInformacion('frmConsultaOpe.FormShow: FIN');
 end;
 
 procedure TfrmConsultaOpe.FormKeyDown(Sender: TObject; var Key: Word;
@@ -434,7 +442,7 @@ end;
 
 procedure TfrmConsultaOpe.btnAnularVerifactuClick(Sender: TObject);
 var
-  Qry: TUniQuery;
+  Factura: TFacturaConsultaOperacion;
   sSerie: string;
   sNumero: string;
   Resultado: TResultadoEmisionFiscal;
@@ -446,50 +454,34 @@ begin
     ShowMessage(SErrorOperacionSinBorrador)
   else
   begin
-    Qry := TUniQuery.Create(nil);
-    try
-      Qry.Connection := ConexionPrincipal;
-      Qry.SQL.Text :=
-        ' SELECT ESCONSOLIDADA_FAC FROM fza_facturas ' +
-        ' WHERE SERIE_FAC  = :SERIE ' +
-        '   AND NUMERO_FAC = :NUMERO';
-      Qry.ParamByName('SERIE').AsString  := sSerie;
-      Qry.ParamByName('NUMERO').AsString := sNumero;
-      Qry.Open;
-      if Qry.IsEmpty or (Qry.Fields[0].AsString <> 'S') then
-        ShowMessage(Format(SErrorBorradorNoCerradoFiscalmente,
-                           [sSerie, sNumero]))
-      else if MessageDlg(Format(SPreguntaAnularFiscalmenteBorrador,
-                               [sSerie, sNumero]), mtConfirmation,
-                         [mbYes, mbNo], 0) = mrYes then
-      begin
-        Qry.Close;
-        Servicio := CrearServicioEmisionFiscal(
-          ParametrosApp,
-          ParametrosCaja,
-          ConexionPrincipal,
-          CrearServicioVerifactuColaUniDAC(ConexionPrincipal));
-        Solicitud := TSolicitudEmisionFiscal.ParaOperacion(
-          sSerie,
-          sNumero,
-          IdentidadSesion.Usuario,
-          'ANULACION',
-          'Anulación',
-          True,
-          'Anulación encolada desde Buscar operaciones');
-        Resultado := Servicio.Emitir(Solicitud);
-        ShowMessage(Resultado.Mensaje);
-        RefrescarOperaciones;
-      end;
-    finally
-      FreeAndNil(Qry);
+    Factura := FRepositorioFacturas.ConsultarFactura(sSerie, sNumero);
+    if (not Factura.Existe) or (not Factura.Consolidada) then
+      ShowMessage(Format(SErrorBorradorNoCerradoFiscalmente,
+                         [sSerie, sNumero]))
+    else if MessageDlg(Format(SPreguntaAnularFiscalmenteBorrador,
+                             [sSerie, sNumero]), mtConfirmation,
+                       [mbYes, mbNo], 0) = mrYes then
+    begin
+      Servicio := ContextoRepositoriosPantalla.Operaciones.
+        CrearServicioEmisionFiscal;
+      Solicitud := TSolicitudEmisionFiscal.ParaOperacion(
+        sSerie,
+        sNumero,
+        IdentidadSesion.Usuario,
+        'ANULACION',
+        'Anulación',
+        True,
+        'Anulación encolada desde Buscar operaciones');
+      Resultado := Servicio.Emitir(Solicitud);
+      ShowMessage(Resultado.Mensaje);
+      RefrescarOperaciones;
     end;
   end;
 end;
 
 procedure TfrmConsultaOpe.btnFacturarTicketClick(Sender: TObject);
 var
-  Qry:     TUniQuery;
+  Factura: TFacturaConsultaOperacion;
   oRes:    TFacturarTicketResult;
   sSerie:  string;
   sNumero: string;
@@ -503,27 +495,14 @@ begin
     ShowMessage(SErrorOperacionSinBorrador)
   else
   begin
-    Qry := TUniQuery.Create(nil);
-    try
-      Qry.Connection := ConexionPrincipal;
-      Qry.SQL.Text :=
-        ' SELECT TIPO_FAC, FECHA_FAC FROM fza_facturas ' +
-        ' WHERE SERIE_FAC  = :SERIE ' +
-        '   AND NUMERO_FAC = :NUMERO';
-      Qry.ParamByName('SERIE').AsString  := sSerie;
-      Qry.ParamByName('NUMERO').AsString := sNumero;
-      Qry.Open;
-      if Qry.IsEmpty or
-         (not SameText(Qry.FieldByName('TIPO_FAC').AsString,
-                       'SIMPLIFICADA')) then
-        ShowMessage(SErrorFacturarTicketRequiereSimplificado)
-      else
-      begin
-        dtFecha := Qry.FieldByName('FECHA_FAC').AsDateTime;
-        bSigue  := True;
-      end;
-    finally
-      FreeAndNil(Qry);
+    Factura := FRepositorioFacturas.ConsultarFactura(sSerie, sNumero);
+    if (not Factura.Existe) or
+       (not SameText(Factura.Tipo, 'SIMPLIFICADA')) then
+      ShowMessage(SErrorFacturarTicketRequiereSimplificado)
+    else
+    begin
+      dtFecha := Factura.Fecha;
+      bSigue := True;
     end;
     if bSigue then
     begin
@@ -541,7 +520,7 @@ end;
 
 procedure TfrmConsultaOpe.btnRectificarClick(Sender: TObject);
 var
-  Qry:     TUniQuery;
+  Factura: TFacturaConsultaOperacion;
   oAnfitrion: IAnfitrionCajaVentanas;
   oOperacionCaja: IOperacionCaja;
   oFormularioCaja: TCustomForm;
@@ -558,25 +537,12 @@ begin
     ShowMessage(SErrorOperacionSinBorrador)
   else
   begin
-    Qry := TUniQuery.Create(nil);
-    try
-      Qry.Connection := ConexionPrincipal;
-      Qry.SQL.Text :=
-        ' SELECT TIPO_FAC FROM fza_facturas ' +
-        ' WHERE SERIE_FAC  = :SERIE ' +
-        '   AND NUMERO_FAC = :NUMERO';
-      Qry.ParamByName('SERIE').AsString  := sSerie;
-      Qry.ParamByName('NUMERO').AsString := sNumero;
-      Qry.Open;
-      if Qry.IsEmpty or
-         SameText(Qry.FieldByName('TIPO_FAC').AsString,
-                  'RECTIFICATIVA') then
-        ShowMessage(SErrorRectificarRectificativa)
-      else
-        bSigue := True;
-    finally
-      FreeAndNil(Qry);
-    end;
+    Factura := FRepositorioFacturas.ConsultarFactura(sSerie, sNumero);
+    if (not Factura.Existe) or
+       SameText(Factura.Tipo, 'RECTIFICATIVA') then
+      ShowMessage(SErrorRectificarRectificativa)
+    else
+      bSigue := True;
   end;
   if bSigue and SeleccionarTipoRectificativa(
     sSerie, sNumero, TipoRectificativa) then
@@ -741,16 +707,18 @@ procedure TfrmConsultaOpe.RestaurarLayout;
 begin
   if not FLayout.Disponible then
   begin
-    Log.LogInfo('RestaurarLayout: SKIP (FLayout no disponible)');
+    RegistroLog.RegistrarInformacion(
+      'RestaurarLayout: SKIP (FLayout no disponible)');
     Exit;
   end;
-  Log.LogInfo('RestaurarLayout: aplicando geometria + 9 grids');
+  RegistroLog.RegistrarInformacion(
+    'RestaurarLayout: aplicando geometria + 9 grids');
   FLayout.RestaurarGeometria(Self);
   FLayout.RestaurarAlturaPanel('PnlMaestroHeight', pnlMaestro, 80);
   FLayout.RestaurarAnchoPanel('FotoConsultaWidth', pnlFotoConsulta, 50);
   FLayout.RestaurarGrid('Maestro', cxViewMaestro);
   AplicarAnchosPestanasHijas;
-  Log.LogInfo('RestaurarLayout: FIN');
+  RegistroLog.RegistrarInformacion('RestaurarLayout: FIN');
 end;
 
 // Encaja el formulario en el area de trabajo del monitor actual. En
@@ -823,10 +791,11 @@ procedure TfrmConsultaOpe.RecargarMaestro;
 begin
   if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
   begin
-    Log.LogInfo('RecargarMaestro: SKIP (contexto vacio)');
+    RegistroLog.RegistrarInformacion('RecargarMaestro: SKIP (contexto vacio)');
     Exit;
   end;
-  Log.LogInfo(Format('RecargarMaestro: emp="%s" alm="%s" caja="%s" ' +
+  RegistroLog.RegistrarInformacion(
+    Format('RecargarMaestro: emp="%s" alm="%s" caja="%s" ' +
                      'fecha=%s txt="%s"',
                      [FEmpresa, FAlmacen, FCaja, DateToStr(dtpFecha.Date),
                       Trim(edtBuscar.Text)]));
@@ -848,7 +817,8 @@ begin
   // operacion activa no ha cambiado realmente.
   if Field = nil then
   begin
-    Log.LogInfo('OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas');
+    RegistroLog.RegistrarInformacion(
+      'OnMaestroDataChange: Field=nil -> RefrescarPestanasHijas');
     FdmConsulta.RefrescarPestanasHijas;
     AjustarVisibilidadPestanas;
   end;
@@ -969,8 +939,11 @@ begin
             ParametrosApp,
             PreviewTicket,
             UnidadesMedida,
-            CrearRepositorioTraspasoTicket,
-            CrearRepositorioTicketsCaja,
+            ContextoRepositoriosPantalla.TicketsCaja.
+              CrearRepositorioTraspasoTicket,
+            ContextoRepositoriosPantalla.TicketsCaja.
+              CrearRepositorioTicketsCaja,
+            RegistroLog,
             ConexionPrincipal,
             sEmp,
             sAlm,
@@ -1007,14 +980,16 @@ begin
     // Los traspasos usan su ticket específico con stock origen/destino.
     if FdmConsulta.EsTraspaso then
       TTraspasoTicket.ImprimirTraspasoDesdeBD(
-                                              PreviewTicket,
-                                              CrearRepositorioTraspasoTicket,
-                                              sEmp,
-                                              sAlm, sCaja, sNumOp,
-                                              ANombreImpresora)
+        PreviewTicket,
+        ContextoRepositoriosPantalla.TicketsCaja.
+          CrearRepositorioTraspasoTicket,
+        sEmp,
+        sAlm, sCaja, sNumOp,
+        ANombreImpresora)
     else
     begin
-      RepositoriosTickets := CrearRepositorioTicketsCaja;
+      RepositoriosTickets := ContextoRepositoriosPantalla.TicketsCaja.
+        CrearRepositorioTicketsCaja;
       if FdmConsulta.TieneFactura then
         ImprimirTicketDesdeBD(
           ParametrosApp,
@@ -1039,8 +1014,8 @@ begin
         ImprimirTicketOperacionCaja(
                                     PreviewTicket,
                                     ConexionPrincipal,
-                                    CrearLecturasImpresionTicket(
-                                      ConexionPrincipal),
+                                    ContextoRepositoriosPantalla.TicketsCaja.
+                                      CrearLecturasImpresionTicketCaja,
                                     sEmp, sAlm, sCaja,
                                     sNumOp,
                                     ANombreImpresora);

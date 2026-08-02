@@ -19,7 +19,7 @@ interface
 uses
   System.SysUtils, Uni, inLibParametrosIntf,
   inLibTraspasoTicketIntf, inLibTicketsCajaIntf,
-  inLibUnidadesMedida, inLibPreviewTicket;
+  inLibUnidadesMedida, inLibPreviewTicket, inLibLogIntf;
 
 type
   TDatosCorreoOperacion = record
@@ -45,6 +45,7 @@ function EnviarDocumentacionOperacion(
   AUnidades: TUnidadesMedida;
   const ARepositorioTraspaso: IRepositorioTraspasoTicket;
   const ARepositorioTicketsCaja: TRepositoriosTicketsCaja;
+  const ARegistroLog: IRegistroLog;
   AConexion: TUniConnection;
   const AEmpresa, AAlmacen, ACaja, ANumeroOperacion, AEmail: string;
   out AMensaje: string): Boolean;
@@ -54,7 +55,7 @@ implementation
 uses
   System.Classes, System.JSON, System.Net.HttpClient, System.Net.Mime,
   inLibGenerarTicketBD, inLibGenerarTicketCaja,
-  inLibTraspasoTicket, inLibLog, inLibFactuzamApi;
+  inLibTraspasoTicket, inLibFactuzamApi;
 
 const
   cRutaCorreo = 'correo/enviar_ticket.php';
@@ -299,6 +300,7 @@ function EnviarDocumentacionOperacion(
   AUnidades: TUnidadesMedida;
   const ARepositorioTraspaso: IRepositorioTraspasoTicket;
   const ARepositorioTicketsCaja: TRepositoriosTicketsCaja;
+  const ARegistroLog: IRegistroLog;
   AConexion: TUniConnection;
   const AEmpresa, AAlmacen, ACaja, ANumeroOperacion, AEmail: string;
   out AMensaje: string): Boolean;
@@ -358,9 +360,9 @@ begin
             on E: Exception do
             begin
               AMensaje := 'No se pudo enviar la documentación: ' + E.Message;
-              if Log() <> nil then
-                Log.LogError('Correo de operación ' + ANumeroOperacion +
-                  ': ' + E.Message);
+              ARegistroLog.RegistrarError(
+                'Correo de operación ' + ANumeroOperacion + ': ' +
+                E.Message);
             end;
           end;
         finally

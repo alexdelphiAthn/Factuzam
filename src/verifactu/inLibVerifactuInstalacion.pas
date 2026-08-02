@@ -17,7 +17,7 @@ unit inLibVerifactuInstalacion;
 interface
 
 uses
-  System.SysUtils, Uni, inLibParametrosIntf;
+  System.SysUtils, Uni, inLibParametrosIntf, inLibLogIntf;
 
 const
   cCodigoSifFactuzam = 'FZ';
@@ -56,10 +56,12 @@ procedure SincronizarVersionInstalacionesSif(
                                              const AUsuario: string);
 function ObtenerDeclaracionResponsableSif(
   const AParametrosApp: IParametrosAplicacion;
-  const AVersion: string): string;
+  const AVersion: string;
+  const ARegistroLog: IRegistroLog = nil): string;
 procedure AsegurarDeclaracionResponsableSif(
   const AParametrosApp: IParametrosAplicacion;
-  const AVersion: string);
+  const AVersion: string;
+  const ARegistroLog: IRegistroLog = nil);
 procedure ValidarInstalacionSif(const ANumero, AVersion, ACodigoSif,
                                 ANombreEmpresa, ANifEmpresa: string);
 
@@ -69,7 +71,7 @@ uses
   System.Classes, System.IOUtils, System.JSON, System.Net.HttpClient,
   System.Net.URLClient,
   Data.DB,
-  inLibGlobalVar, inLibLog, inLibFactuzamApi,
+  inLibGlobalVar, inLibFactuzamApi,
   inLibMsgIntegraciones, inLibMsgVerifactu;
 
 const
@@ -397,7 +399,7 @@ begin
 end;
 
 procedure RegistrarEstadoDeclaracionSif(const AVersion,
-                                              AOrigen: string);
+  AOrigen: string; const ARegistroLog: IRegistroLog);
 var
   oEstado: TJSONObject;
   sCarpeta: string;
@@ -417,13 +419,16 @@ begin
                        oEstado.ToJSON, TEncoding.UTF8);
   except
     on E: Exception do
-      Log.LogWarning('No se pudo registrar el estado local de la ' +
-                     'declaración responsable: ' + E.Message);
+      if Assigned(ARegistroLog) then
+        ARegistroLog.RegistrarAviso(
+          'No se pudo registrar el estado local de la ' +
+          'declaración responsable: ' + E.Message);
   end;
   FreeAndNil(oEstado);
 end;
 
-function CargarDeclaracionCacheSif(const AVersion: string): string;
+function CargarDeclaracionCacheSif(const AVersion: string;
+  const ARegistroLog: IRegistroLog): string;
 var
   sRuta: string;
 begin
@@ -435,12 +440,13 @@ begin
     if not DeclaracionCoincideSifVersion(Result, AVersion) then
       Result := ''
     else
-      RegistrarEstadoDeclaracionSif(AVersion, 'cache_local');
+      RegistrarEstadoDeclaracionSif(
+        AVersion, 'cache_local', ARegistroLog);
   end;
 end;
 
 procedure GuardarDeclaracionCacheSif(const AVersion, AHtml,
-                                           AOrigen: string);
+  AOrigen: string; const ARegistroLog: IRegistroLog);
 var
   sCarpeta: string;
 begin
@@ -449,11 +455,14 @@ begin
     TDirectory.CreateDirectory(sCarpeta);
     TFile.WriteAllText(RutaCacheDeclaracionSif(AVersion), AHtml,
                        TEncoding.UTF8);
-    RegistrarEstadoDeclaracionSif(AVersion, AOrigen);
+    RegistrarEstadoDeclaracionSif(
+      AVersion, AOrigen, ARegistroLog);
   except
     on E: Exception do
-      Log.LogWarning('No se pudo guardar la declaración responsable en ' +
-                     'la caché local: ' + E.Message);
+      if Assigned(ARegistroLog) then
+        ARegistroLog.RegistrarAviso(
+          'No se pudo guardar la declaración responsable en ' +
+          'la caché local: ' + E.Message);
   end;
 end;
 
@@ -479,7 +488,8 @@ end;
 
 function ObtenerDeclaracionResponsableSif(
   const AParametrosApp: IParametrosAplicacion;
-  const AVersion: string): string;
+  const AVersion: string;
+  const ARegistroLog: IRegistroLog): string;
 var
   sErrorCache: string;
   sErrorPublica: string;
@@ -495,7 +505,8 @@ begin
       AVersion);
     if not DeclaracionCoincideSifVersion(Result, AVersion) then
       raise Exception.Create(SErrorDeclaracionWebserviceOtraVersion);
-    GuardarDeclaracionCacheSif(AVersion, Result, 'webservice');
+    GuardarDeclaracionCacheSif(
+      AVersion, Result, 'webservice', ARegistroLog);
   except
     on E: Exception do
     begin
@@ -506,7 +517,7 @@ begin
   if Result = '' then
   begin
     try
-      Result := CargarDeclaracionCacheSif(AVersion);
+      Result := CargarDeclaracionCacheSif(AVersion, ARegistroLog);
     except
       on E: Exception do
       begin
@@ -521,7 +532,8 @@ begin
       Result := DescargarDeclaracionPublicaSif;
       if not DeclaracionCoincideSifVersion(Result, AVersion) then
         raise Exception.Create(SErrorDeclaracionPaginaPublicaOtraVersion);
-      GuardarDeclaracionCacheSif(AVersion, Result, 'pagina_publica');
+      GuardarDeclaracionCacheSif(
+        AVersion, Result, 'pagina_publica', ARegistroLog);
     except
       on E: Exception do
       begin
@@ -537,13 +549,15 @@ end;
 
 procedure AsegurarDeclaracionResponsableSif(
   const AParametrosApp: IParametrosAplicacion;
-  const AVersion: string);
+  const AVersion: string;
+  const ARegistroLog: IRegistroLog);
 var
   sHtml: string;
 begin
-  sHtml := CargarDeclaracionCacheSif(AVersion);
+  sHtml := CargarDeclaracionCacheSif(AVersion, ARegistroLog);
   if sHtml = '' then
-    sHtml := ObtenerDeclaracionResponsableSif(AParametrosApp, AVersion);
+    sHtml := ObtenerDeclaracionResponsableSif(
+      AParametrosApp, AVersion, ARegistroLog);
 end;
 
 procedure VaciarEstado(var AEstado: TEstadoInstalacionSif);

@@ -27,8 +27,9 @@ uses
   cxContainer, Vcl.Menus, dxSkinsForm, cxClasses, cxLocalization, Vcl.StdCtrls,
   cxButtons, cxDBNavigator, Vcl.Buttons, dxBevel, cxLabel, cxTextEdit,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
-  cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataCajaPagosHist,
-  inLibPerfilesUsuarioIntf, MemDS, DBAccess, Uni, cxCheckBox, cxCheckComboBox,
+  cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls,
+  inLibPerfilesUsuarioIntf, inLibCajaPagosHistPersistenciaIntf,
+  cxCheckBox, cxCheckComboBox,
   cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
   Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs;
 
@@ -69,11 +70,10 @@ type
   private
     FFiltrosCargando: Boolean;
     FCargaInicialHecha: Boolean;
-    dmmCajaPagosHist: TdmCajaPagosHist;
+    FRepositorioPersistencia: IRepositorioCajaPagosHist;
     procedure CargarAnyosFiltro;
     procedure LeerFiltrosPerfil;
-    function  ConstruirWherePagos: string;
-    function  ConstruirSqlPagos: string;
+    function ObtenerFiltros: TFiltrosCajaPagosHist;
     procedure AbrirPagos;
     procedure AplicarFiltrosPagos;
   public
@@ -118,7 +118,9 @@ end;
 procedure TfrmMtoCajaPagosHist.CrearTablaPrincipal;
 begin
   inherited;
-  dmmCajaPagosHist := tdmDataModule as TdmCajaPagosHist;
+  FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
+    CrearRepositorioCajaPagosHist(
+    dsTablaG.DataSet);
   pkFieldName := 'CODIGO_EMP_PAGO;CODIGO_ALM_PAGO;CODIGO_CAJA_PAGO;' +
                  'SERIE_OPERACION_PAGO;NUMERO_OPERACION_PAGO;NUMERO_LINEA_PAGO';
   pnlContFiltrosCaja.Visible := False;
@@ -126,12 +128,7 @@ begin
   btnToggleFiltrosCaja.Caption := SCaptionFiltrosCargaContraido;
   CargarAnyosFiltro;
   LeerFiltrosPerfil;
-  if Assigned(dmmCajaPagosHist) and
-     Assigned(dmmCajaPagosHist.unqryTablaG) then
-  begin
-    dmmCajaPagosHist.unqryTablaG.Close;
-    dmmCajaPagosHist.unqryTablaG.SQL.Text := ConstruirSqlPagos;
-  end;
+  FRepositorioPersistencia.PrepararConsulta(ObtenerFiltros);
 end;
 
 procedure TfrmMtoCajaPagosHist.ResetForm;
@@ -146,8 +143,8 @@ end;
 
 procedure TfrmMtoCajaPagosHist.CargarAnyosFiltro;
 var
-  qry: TUniQuery;
   item: TcxCheckComboBoxItem;
+  aAnyos: TCadenasCajaPagosHist;
   sAnyoActual: string;
   sAnyo: string;
 begin
@@ -155,27 +152,14 @@ begin
   sAnyoActual := IntToStr(YearOf(Date));
   item := ccbFiltroAnyo.Properties.Items.Add;
   item.Description := sAnyoActual;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := dmmCajaPagosHist.unqryTablaG.Connection;
-    qry.SQL.Text :=
-      'SELECT DISTINCT YEAR(FECHA_PAGO) AS ANYO ' +
-      '  FROM vi_caja_pagos ' +
-      ' WHERE FECHA_PAGO IS NOT NULL ' +
-      ' ORDER BY ANYO DESC';
-    qry.Open;
-    while not qry.Eof do
+  aAnyos := FRepositorioPersistencia.ListarAnyos;
+  for sAnyo in aAnyos do
+  begin
+    if sAnyo <> sAnyoActual then
     begin
-      sAnyo := qry.FieldByName('ANYO').AsString;
-      if sAnyo <> sAnyoActual then
-      begin
-        item := ccbFiltroAnyo.Properties.Items.Add;
-        item.Description := sAnyo;
-      end;
-      qry.Next;
+      item := ccbFiltroAnyo.Properties.Items.Add;
+      item.Description := sAnyo;
     end;
-  finally
-    FreeAndNil(qry);
   end;
 end;
 
@@ -236,75 +220,57 @@ begin
   end;
 end;
 
-function TfrmMtoCajaPagosHist.ConstruirWherePagos: string;
+function TfrmMtoCajaPagosHist.ObtenerFiltros: TFiltrosCajaPagosHist;
 var
-  sAnyos: string;
   i: Integer;
+  iAnyo: Integer;
 begin
-  sAnyos := '';
+  Result := Default(TFiltrosCajaPagosHist);
   for i := 0 to ccbFiltroAnyo.Properties.Items.Count - 1 do
   begin
     if ccbFiltroAnyo.States[i] = cbsChecked then
     begin
-      if sAnyos <> '' then
-        sAnyos := sAnyos + ', ';
-      sAnyos := sAnyos + ccbFiltroAnyo.Properties.Items[i].Description;
+      iAnyo := Length(Result.Anyos);
+      SetLength(Result.Anyos, iAnyo + 1);
+      Result.Anyos[iAnyo] :=
+        ccbFiltroAnyo.Properties.Items[i].Description;
     end;
   end;
-  Result := ' WHERE 1 = 1';
-  if sAnyos <> '' then
-    Result := Result + ' AND YEAR(FECHA_PAGO) IN (' + sAnyos + ')';
-  // Restricción por usuario (appRestringirEmpAlmCaja): acota a su
-  // empresa/almacén/caja por encima del filtro de años.
-  Result := Result + SqlFiltroEmpAlmCaja(
+  Result.Empresa := EmpresaRestringida(
     ContextoSesion,
-    ParametrosApp,
-    'CODIGO_EMP_PAGO',
-                                         'CODIGO_ALM_PAGO',
-                                         'CODIGO_CAJA_PAGO');
-end;
-
-function TfrmMtoCajaPagosHist.ConstruirSqlPagos: string;
-begin
-  Result := 'SELECT * FROM vi_caja_pagos' +
-            ConstruirWherePagos +
-            ' ORDER BY FECHA_PAGO DESC';
+    ParametrosApp);
+  Result.Almacen := AlmacenRestringido(
+    ContextoSesion,
+    ParametrosApp);
+  Result.Caja := CajaRestringida(
+    ContextoSesion,
+    ParametrosApp);
 end;
 
 procedure TfrmMtoCajaPagosHist.AbrirPagos;
 var
-  qry: TUniQuery;
+  oDatos: TDataSet;
   cursorPrev: TCursor;
 begin
-  if Assigned(dmmCajaPagosHist) and
-     Assigned(dmmCajaPagosHist.unqryTablaG) then
+  oDatos := dsTablaG.DataSet;
+  if Assigned(oDatos) then
   begin
-    qry := dmmCajaPagosHist.unqryTablaG;
     cursorPrev := Screen.Cursor;
     Screen.Cursor := crHourGlass;
-    qry.DisableControls;
+    oDatos.DisableControls;
     try
-      if not qry.Active then
-        qry.Open;
+      FRepositorioPersistencia.AbrirConsulta;
     finally
-      qry.EnableControls;
+      oDatos.EnableControls;
       Screen.Cursor := cursorPrev;
     end;
   end;
 end;
 
 procedure TfrmMtoCajaPagosHist.AplicarFiltrosPagos;
-var
-  qry: TUniQuery;
 begin
-  if Assigned(dmmCajaPagosHist) and
-     Assigned(dmmCajaPagosHist.unqryTablaG) then
-  begin
-    qry := dmmCajaPagosHist.unqryTablaG;
-    qry.Close;
-    qry.SQL.Text := ConstruirSqlPagos;
-    AbrirPagos;
-  end;
+  FRepositorioPersistencia.PrepararConsulta(ObtenerFiltros);
+  AbrirPagos;
 end;
 
 procedure TfrmMtoCajaPagosHist.btnToggleFiltrosCajaClick(Sender: TObject);
@@ -388,12 +354,7 @@ begin
   finally
     FFiltrosCargando := False;
   end;
-  if Assigned(dmmCajaPagosHist) and
-     Assigned(dmmCajaPagosHist.unqryTablaG) then
-  begin
-    dmmCajaPagosHist.unqryTablaG.Close;
-    dmmCajaPagosHist.unqryTablaG.SQL.Text := ConstruirSqlPagos;
-  end;
+  FRepositorioPersistencia.PrepararConsulta(ObtenerFiltros);
   pnlContFiltrosCaja.Visible := False;
   pnlFiltrosCaja.Height := 22;
   btnToggleFiltrosCaja.Caption := SCaptionFiltrosCargaContraido;

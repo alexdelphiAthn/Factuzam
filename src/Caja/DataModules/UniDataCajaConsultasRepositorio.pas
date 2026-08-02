@@ -33,7 +33,8 @@ type
   end;
   TRepositorioConsultasCaja = class(
     TInterfacedObject,
-    IRepositorioConsultasCaja)
+    IRepositorioConsultasCaja,
+    IRepositorioArticulosCaja)
   private
     FConexion: TUniConnection;
     FCatalogoSql: ICatalogoSql;
@@ -66,6 +67,12 @@ type
     function EjecutarConsultarVentasOrigenSku(
       const ASql, ASku, AEmpresa: string):
       IResultadoConsultaCaja;
+    function EjecutarConsultarArticulos(
+      const ASql, ATarifa, ATexto: string;
+      AFechaTarifa: TDateTime;
+      AUsarTexto: Boolean): IResultadoConsultaCaja;
+    function EjecutarListarNombresAtributosArticulo(
+      const ASql, AArticulo: string): TNombresAtributosCaja;
   public
     constructor Create(
       AConexion: TUniConnection;
@@ -94,7 +101,21 @@ type
       ANumeroOperacion: string): IResultadoConsultaCaja;
     function ConsultarVentasOrigenSku(
       const ASku, AEmpresa: string): IResultadoConsultaCaja;
+    function ConsultarArticulosIncremental(
+      const ATarifa, ATexto: string;
+      AFechaTarifa: TDateTime): IResultadoConsultaCaja;
+    function ConsultarArticulosBusqueda(
+      const ATarifa: string;
+      AFechaTarifa: TDateTime): IResultadoConsultaCaja;
+    function ListarNombresAtributosArticulo(
+      const AArticulo: string): TNombresAtributosCaja;
   end;
+
+function CrearRepositorioArticulosCajaUniDAC(
+  AConexion: TUniConnection;
+  const ACatalogoSql: ICatalogoSql = nil;
+  const AIncidenciasSql: IRegistroIncidenciasSql = nil
+): IRepositorioArticulosCaja;
 
 implementation
 
@@ -182,6 +203,53 @@ const
     'AND f.FECHA_FAC >= (CURDATE() - INTERVAL 12 MONTH) ' +
     'ORDER BY f.INSTANTE_ALTA DESC ' +
     'LIMIT 200';
+  SQL_CONSULTAR_ARTICULOS_INCREMENTAL =
+    'SELECT v.CODIGO_ART_ART AS INPUT_BUSQUEDA, ' +
+    'v.CODIGO_ART_ART AS CODIGO_PADRE, v.DESCRIPCION_ART, ' +
+    'v.RAZON_SOCIAL_PROVEEDOR, v.REF_PROVEEDOR, ' +
+    'pv.PV AS TEMPORADA ' +
+    'FROM vi_art_busquedas v ' +
+    'LEFT JOIN fza_articulos_propiedades ap ' +
+    'ON ap.CODIGO_ART_ART = v.CODIGO_ART_ART ' +
+    'AND ap.CODIGO_PROP_ARTPROP = ''TEMPORADA'' ' +
+    'LEFT JOIN fza_propiedades_valores pv ' +
+    'ON pv.ID_PV_ARTPROP = ap.ID_PV_ARTPROP ' +
+    'WHERE (v.CODIGO_TAR_ARTTAR = :TARIFA ' +
+    'OR v.CODIGO_TAR_ARTTAR IS NULL) ' +
+    'AND (v.FECHA_DESDE_ARTTAR IS NULL ' +
+    'OR v.FECHA_DESDE_ARTTAR <= :FECHA_TARIFA) ' +
+    'AND (v.FECHA_HASTA_ARTTAR IS NULL ' +
+    'OR v.FECHA_HASTA_ARTTAR >= :FECHA_TARIFA) ' +
+    'AND v.CODIGO_ART_ART LIKE :TOKEN ' +
+    'ORDER BY v.CODIGO_ART_ART LIMIT 20';
+  SQL_CONSULTAR_ARTICULOS_BUSQUEDA =
+    'SELECT v.CODIGO_ART_ART, v.DESCRIPCION_ART, ' +
+    'v.DESCRIPCION_FAM, pv.PV AS TEMPORADA, ' +
+    'v.RAZON_SOCIAL_PROVEEDOR, v.REF_PROVEEDOR, ' +
+    'v.CODIGO_TAR_ARTTAR, v.NOMBRE_TAR_TAR, ' +
+    'v.PRECIO_FINAL_ARTTAR, v.FECHA_DESDE_ARTTAR, ' +
+    'v.FECHA_HASTA_ARTTAR ' +
+    'FROM vi_art_busquedas v ' +
+    'LEFT JOIN fza_articulos_propiedades ap ' +
+    'ON ap.CODIGO_ART_ART = v.CODIGO_ART_ART ' +
+    'AND ap.CODIGO_PROP_ARTPROP = ''TEMPORADA'' ' +
+    'AND ap.CODIGO_UNIDAD_ARTPROP = '''' ' +
+    'LEFT JOIN fza_propiedades_valores pv ' +
+    'ON pv.ID_PV_ARTPROP = ap.ID_PV_ARTPROP ' +
+    'WHERE (v.CODIGO_TAR_ARTTAR = :TARIFA ' +
+    'OR v.CODIGO_TAR_ARTTAR IS NULL) ' +
+    'AND (v.FECHA_DESDE_ARTTAR IS NULL ' +
+    'OR v.FECHA_DESDE_ARTTAR <= :FECHA_TARIFA) ' +
+    'AND (v.FECHA_HASTA_ARTTAR IS NULL ' +
+    'OR v.FECHA_HASTA_ARTTAR >= :FECHA_TARIFA) ' +
+    'ORDER BY v.CODIGO_ART_ART';
+  SQL_LISTAR_NOMBRES_ATRIBUTOS_ARTICULO =
+    'SELECT vat.NOMBRE_VA AS NOMBRE_ATRIBUTO ' +
+    'FROM fza_articulos a ' +
+    'JOIN fza_variaciones_atributos vat ' +
+    'ON vat.ID_VAR_VA = a.TIPO_VARIACION_ART ' +
+    'WHERE a.CODIGO_ART_ART = :ARTICULO ' +
+    'ORDER BY vat.ORDEN_VA LIMIT 5';
 
 function DefinicionConsultarStock: TDefinicionSql;
 begin
@@ -312,6 +380,42 @@ begin
     pesPerfilLecturaConFallback);
 end;
 
+function DefinicionConsultarArticulosIncremental: TDefinicionSql;
+begin
+  Result := CrearDefinicionSql(
+    'RepositorioConsultasCaja',
+    'ConsultarArticulosIncremental',
+    SQL_CONSULTAR_ARTICULOS_INCREMENTAL,
+    'TARIFA,FECHA_TARIFA,TOKEN',
+    'INPUT_BUSQUEDA,CODIGO_PADRE,DESCRIPCION_ART',
+    tssSelect,
+    pesPerfilLecturaConFallback);
+end;
+
+function DefinicionConsultarArticulosBusqueda: TDefinicionSql;
+begin
+  Result := CrearDefinicionSql(
+    'RepositorioConsultasCaja',
+    'ConsultarArticulosBusqueda',
+    SQL_CONSULTAR_ARTICULOS_BUSQUEDA,
+    'TARIFA,FECHA_TARIFA',
+    'CODIGO_ART_ART,DESCRIPCION_ART,DESCRIPCION_FAM',
+    tssSelect,
+    pesPerfilLecturaConFallback);
+end;
+
+function DefinicionListarNombresAtributosArticulo: TDefinicionSql;
+begin
+  Result := CrearDefinicionSql(
+    'RepositorioConsultasCaja',
+    'ListarNombresAtributosArticulo',
+    SQL_LISTAR_NOMBRES_ATRIBUTOS_ARTICULO,
+    'ARTICULO',
+    'NOMBRE_ATRIBUTO',
+    tssSelect,
+    pesPerfilLecturaConFallback);
+end;
+
 constructor TConsultaCaja.Create(ADataSet: TDataSet);
 begin
   inherited Create;
@@ -343,7 +447,7 @@ end;
 class function TRepositorioConsultasCaja.DefinicionesSql:
   TDefinicionesSql;
 begin
-  SetLength(Result, 10);
+  SetLength(Result, 13);
   Result[0] := DefinicionConsultarStock;
   Result[1] := DefinicionConsultarClientes;
   Result[2] := DefinicionConsultarEmpleados;
@@ -354,6 +458,9 @@ begin
   Result[7] := DefinicionConsultarFacturaPorCodigoBarras;
   Result[8] := DefinicionConsultarFacturaPorOperacion;
   Result[9] := DefinicionConsultarVentasOrigenSku;
+  Result[10] := DefinicionConsultarArticulosIncremental;
+  Result[11] := DefinicionConsultarArticulosBusqueda;
+  Result[12] := DefinicionListarNombresAtributosArticulo;
 end;
 
 function TRepositorioConsultasCaja.EjecutarConsulta(
@@ -795,6 +902,73 @@ begin
   end;
 end;
 
+function TRepositorioConsultasCaja.EjecutarConsultarArticulos(
+  const ASql, ATarifa, ATexto: string;
+  AFechaTarifa: TDateTime;
+  AUsarTexto: Boolean): IResultadoConsultaCaja;
+var
+  oConsulta: TUniQuery;
+  oDefinicion: TDefinicionSql;
+begin
+  if AUsarTexto then
+  begin
+    oDefinicion := DefinicionConsultarArticulosIncremental;
+  end
+  else
+  begin
+    oDefinicion := DefinicionConsultarArticulosBusqueda;
+  end;
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := ASql;
+    oConsulta.ParamByName('TARIFA').AsString := ATarifa;
+    oConsulta.ParamByName('FECHA_TARIFA').AsDate := AFechaTarifa;
+    if AUsarTexto then
+    begin
+      oConsulta.ParamByName('TOKEN').AsString := '%' + ATexto + '%';
+    end;
+    oConsulta.Open;
+    ValidarCamposResultadoSql(
+      oDefinicion,
+      oConsulta);
+    Result := TConsultaCaja.Create(oConsulta);
+    oConsulta := nil;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioConsultasCaja.
+  EjecutarListarNombresAtributosArticulo(
+  const ASql, AArticulo: string): TNombresAtributosCaja;
+var
+  iNombre: Integer;
+  oConsulta: TUniQuery;
+begin
+  SetLength(Result, 0);
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := ASql;
+    oConsulta.ParamByName('ARTICULO').AsString := AArticulo;
+    oConsulta.Open;
+    ValidarCamposResultadoSql(
+      DefinicionListarNombresAtributosArticulo,
+      oConsulta);
+    while not oConsulta.Eof do
+    begin
+      iNombre := Length(Result);
+      SetLength(Result, iNombre + 1);
+      Result[iNombre] :=
+        oConsulta.FieldByName('NOMBRE_ATRIBUTO').AsString;
+      oConsulta.Next;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
 function TRepositorioConsultasCaja.ConsultarFacturaPorCodigoBarras(
   const ACodigoBarras: string): IResultadoConsultaCaja;
 var
@@ -861,6 +1035,89 @@ begin
     end,
     FIncidenciasSql);
   Result := oResultado;
+end;
+
+function TRepositorioConsultasCaja.ConsultarArticulosIncremental(
+  const ATarifa, ATexto: string;
+  AFechaTarifa: TDateTime): IResultadoConsultaCaja;
+var
+  oDefinicion: TDefinicionSql;
+  oResultado: IResultadoConsultaCaja;
+begin
+  oDefinicion := DefinicionConsultarArticulosIncremental;
+  oResultado := nil;
+  EjecutarLecturaSqlConFallback(
+    oDefinicion,
+    FCatalogoSql,
+    procedure(const ASql: string)
+    begin
+      oResultado := EjecutarConsultarArticulos(
+        ASql,
+        ATarifa,
+        ATexto,
+        AFechaTarifa,
+        True);
+    end,
+    FIncidenciasSql);
+  Result := oResultado;
+end;
+
+function TRepositorioConsultasCaja.ConsultarArticulosBusqueda(
+  const ATarifa: string;
+  AFechaTarifa: TDateTime): IResultadoConsultaCaja;
+var
+  oDefinicion: TDefinicionSql;
+  oResultado: IResultadoConsultaCaja;
+begin
+  oDefinicion := DefinicionConsultarArticulosBusqueda;
+  oResultado := nil;
+  EjecutarLecturaSqlConFallback(
+    oDefinicion,
+    FCatalogoSql,
+    procedure(const ASql: string)
+    begin
+      oResultado := EjecutarConsultarArticulos(
+        ASql,
+        ATarifa,
+        '',
+        AFechaTarifa,
+        False);
+    end,
+    FIncidenciasSql);
+  Result := oResultado;
+end;
+
+function TRepositorioConsultasCaja.ListarNombresAtributosArticulo(
+  const AArticulo: string): TNombresAtributosCaja;
+var
+  aNombres: TNombresAtributosCaja;
+  oDefinicion: TDefinicionSql;
+begin
+  SetLength(aNombres, 0);
+  oDefinicion := DefinicionListarNombresAtributosArticulo;
+  EjecutarLecturaSqlConFallback(
+    oDefinicion,
+    FCatalogoSql,
+    procedure(const ASql: string)
+    begin
+      aNombres := EjecutarListarNombresAtributosArticulo(
+        ASql,
+        AArticulo);
+    end,
+    FIncidenciasSql);
+  Result := aNombres;
+end;
+
+function CrearRepositorioArticulosCajaUniDAC(
+  AConexion: TUniConnection;
+  const ACatalogoSql: ICatalogoSql;
+  const AIncidenciasSql: IRegistroIncidenciasSql
+): IRepositorioArticulosCaja;
+begin
+  Result := TRepositorioConsultasCaja.Create(
+    AConexion,
+    ACatalogoSql,
+    AIncidenciasSql);
 end;
 
 end.

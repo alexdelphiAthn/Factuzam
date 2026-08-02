@@ -279,14 +279,17 @@ $coordinadores = @(
   },
   @{
     Ruta = 'src\Lib\inLibFacturasConsolidacion.pas'
-    Metodo = 'TServicioConsolidacionFactura.Consolidar'
+    Metodo = 'TCasoUsoConsolidacionFactura.Consolidar'
     Marcas = @(
-      'StartTransaction',
+      'FUnidadTrabajo.Ejecutar',
       'FServicioEmision.Emitir',
-      'FServicioMovimientos.GenerarSalidas',
-      'Commit',
-      'Rollback'
+      'FServicioMovimientos.GenerarSalidas'
     )
+  },
+  @{
+    Ruta = 'src\DataModules\UniDataFacturasOperaciones.pas'
+    Metodo = 'TPersistenciaFacturasUniDAC.Ejecutar'
+    Marcas = @('StartTransaction', 'Commit', 'Rollback')
   },
   @{
     Ruta = 'src\DataModules\UniDataAlbaranes.pas'
@@ -352,8 +355,8 @@ $eventosDelgados = @(
   },
   @{
     Ruta = 'src\Forms\inMtoFacturasBase.pas'
-    Metodo = 'TControladorFacturas.btnConsolidarClick'
-    Delegado = 'Servicio.Consolidar'
+    Metodo = 'TfrmMtoFacturasBase.btnConsolidarClick'
+    Delegado = 'TCoordinadorConsolidacionFacturaVcl.Ejecutar'
   }
 )
 foreach ($objetivo in $eventosDelgados) {

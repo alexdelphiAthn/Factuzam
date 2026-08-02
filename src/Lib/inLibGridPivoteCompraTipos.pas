@@ -19,12 +19,13 @@ uses
   System.Generics.Collections, System.UITypes,
   Data.DB, Uni,
   cxGridDBTableView,
-  inLibContextoSesionIntf, inLibGridTallasInline;
+  inLibContextoSesionIntf, inLibGridTallasInline, inLibLogIntf;
 
 type
   TGridPivoteCompraConfig = record
     Conexion               : TUniConnection;
     ContextoSesion         : IContextoSesionAplicacion;
+    RegistroLog            : IRegistroLog;
     Grid                   : TcxGridDBTableView;
     SourceMaster           : TDataSource;
     SourceLineas           : TUniQuery;

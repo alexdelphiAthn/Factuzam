@@ -34,6 +34,10 @@ type
     procedure Coordinador_CopiaSincrona_NotificaPresentacion;
     [Test]
     procedure Coordinador_Cancelacion_EsIdempotente;
+    [Test]
+    procedure Coordinador_CancelacionTipada_NoNecesitaTexto;
+    [Test]
+    procedure Coordinador_FalloTipado_NoInterpretaTexto;
   end;
 
 implementation
@@ -51,9 +55,14 @@ type
     TInterfacedObject,
     IServicioCopiasSeguridad)
   private
-    FResultado: Boolean;
+    FResultado: TResultadoCopiaSeguridad;
+    FFinalizarAlIniciar: Boolean;
+    FError: string;
   public
-    constructor Create(AResultado: Boolean);
+    constructor Create(
+      AResultado: TResultadoCopiaSeguridad;
+      AFinalizarAlIniciar: Boolean = False;
+      const AError: string = '');
     function ModoCreacion: TModoProteccionCopia;
     function ExtensionCreacion: string;
     function PuedeRestaurar(const ARutaFichero: string): Boolean;
@@ -72,7 +81,7 @@ type
     function CrearCopia(
       const ARutaFichero, AContrasena: string;
       AOnProgreso: TProgresoCopiaSeguridadEvent;
-      out AError: string): Boolean;
+      out AError: string): TResultadoCopiaSeguridad;
   end;
   TPresentacionOperacionesFalsa = class(
     TInterfacedObject,
@@ -81,7 +90,7 @@ type
     FMostrada: Boolean;
     FCancelando: Boolean;
     FFinalizada: Boolean;
-    FExito: Boolean;
+    FResultado: TResultadoCopiaSeguridad;
     FTipo: TTipoOperacionAplicacion;
   public
     procedure MostrarOperacion;
@@ -92,20 +101,25 @@ type
     procedure MostrarCancelando;
     procedure FinalizarOperacion(
       ATipo: TTipoOperacionAplicacion;
-      AExito, ACancelada: Boolean;
+      AResultado: TResultadoCopiaSeguridad;
       const AError: string;
       ALogBuffer: TStringList);
     property Mostrada: Boolean read FMostrada;
     property Cancelando: Boolean read FCancelando;
     property Finalizada: Boolean read FFinalizada;
-    property Exito: Boolean read FExito;
+    property Resultado: TResultadoCopiaSeguridad read FResultado;
     property Tipo: TTipoOperacionAplicacion read FTipo;
   end;
 
-constructor TServicioCopiasFalso.Create(AResultado: Boolean);
+constructor TServicioCopiasFalso.Create(
+  AResultado: TResultadoCopiaSeguridad;
+  AFinalizarAlIniciar: Boolean;
+  const AError: string);
 begin
   inherited Create;
   FResultado := AResultado;
+  FFinalizarAlIniciar := AFinalizarAlIniciar;
+  FError := AError;
 end;
 
 function TServicioCopiasFalso.ModoCreacion: TModoProteccionCopia;
@@ -137,6 +151,8 @@ procedure TServicioCopiasFalso.IniciarCopia(
   out AWorker: TThread);
 begin
   AWorker := nil;
+  if FFinalizarAlIniciar and Assigned(AOnFinalizar) then
+    AOnFinalizar(FResultado, FError, nil);
 end;
 
 procedure TServicioCopiasFalso.IniciarRestauracion(
@@ -146,14 +162,16 @@ procedure TServicioCopiasFalso.IniciarRestauracion(
   out AWorker: TThread);
 begin
   AWorker := nil;
+  if FFinalizarAlIniciar and Assigned(AOnFinalizar) then
+    AOnFinalizar(FResultado, FError, nil);
 end;
 
 function TServicioCopiasFalso.CrearCopia(
   const ARutaFichero, AContrasena: string;
   AOnProgreso: TProgresoCopiaSeguridadEvent;
-  out AError: string): Boolean;
+  out AError: string): TResultadoCopiaSeguridad;
 begin
-  AError := '';
+  AError := FError;
   if Assigned(AOnProgreso) then
     AOnProgreso('Copia', 1, 1, 1, 1);
   Result := FResultado;
@@ -178,12 +196,12 @@ end;
 
 procedure TPresentacionOperacionesFalsa.FinalizarOperacion(
   ATipo: TTipoOperacionAplicacion;
-  AExito, ACancelada: Boolean;
+  AResultado: TResultadoCopiaSeguridad;
   const AError: string;
   ALogBuffer: TStringList);
 begin
   FFinalizada := True;
-  FExito := AExito;
+  FResultado := AResultado;
   FTipo := ATipo;
   FreeAndNil(ALogBuffer);
 end;
@@ -244,12 +262,14 @@ var
 begin
   oPresentacion := TPresentacionOperacionesFalsa.Create;
   oCoordinador := TCoordinadorOperacionesAplicacion.Create(
-    TServicioCopiasFalso.Create(True),
+    TServicioCopiasFalso.Create(rcsCompletada),
     oPresentacion);
   Assert.IsTrue(oCoordinador.CrearCopia('copia.crypt', 'clave'));
   Assert.IsTrue(oPresentacion.Mostrada);
   Assert.IsTrue(oPresentacion.Finalizada);
-  Assert.IsTrue(oPresentacion.Exito);
+  Assert.AreEqual(
+    Integer(rcsCompletada),
+    Integer(oPresentacion.Resultado));
   Assert.AreEqual(
     Integer(toaCopiaSeguridad),
     Integer(oPresentacion.Tipo));
@@ -264,13 +284,53 @@ var
 begin
   oPresentacion := TPresentacionOperacionesFalsa.Create;
   oCoordinador := TCoordinadorOperacionesAplicacion.Create(
-    TServicioCopiasFalso.Create(True),
+    TServicioCopiasFalso.Create(rcsCompletada),
     oPresentacion);
   oCoordinador.IniciarCopia('copia.crypt', 'clave');
   Assert.IsTrue(oCoordinador.EnCurso);
   Assert.IsTrue(oCoordinador.SolicitarCancelacion);
   Assert.IsFalse(oCoordinador.SolicitarCancelacion);
   Assert.IsTrue(oPresentacion.Cancelando);
+end;
+
+procedure TPruebasCopiasSeguridad.
+  Coordinador_CancelacionTipada_NoNecesitaTexto;
+var
+  oCoordinador: ICoordinadorOperacionesAplicacion;
+  oPresentacion: TPresentacionOperacionesFalsa;
+begin
+  oPresentacion := TPresentacionOperacionesFalsa.Create;
+  oCoordinador := TCoordinadorOperacionesAplicacion.Create(
+    TServicioCopiasFalso.Create(
+      rcsCancelada,
+      True,
+      'Interrumpida por el usuario'),
+    oPresentacion);
+  oCoordinador.IniciarCopia('copia.crypt', 'clave');
+  Assert.AreEqual(
+    Integer(rcsCancelada),
+    Integer(oPresentacion.Resultado));
+  Assert.IsFalse(oCoordinador.EnCurso);
+end;
+
+procedure TPruebasCopiasSeguridad.
+  Coordinador_FalloTipado_NoInterpretaTexto;
+var
+  oCoordinador: ICoordinadorOperacionesAplicacion;
+  oPresentacion: TPresentacionOperacionesFalsa;
+begin
+  oPresentacion := TPresentacionOperacionesFalsa.Create;
+  oCoordinador := TCoordinadorOperacionesAplicacion.Create(
+    TServicioCopiasFalso.Create(
+      rcsFallida,
+      True,
+      'La conexión fue cancelada por el servidor'),
+    oPresentacion);
+  oCoordinador.IniciarCopia('copia.crypt', 'clave');
+  Assert.AreEqual(
+    Integer(rcsFallida),
+    Integer(oPresentacion.Resultado));
+  Assert.IsFalse(oCoordinador.EnCurso);
 end;
 
 initialization

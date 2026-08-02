@@ -20,8 +20,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.ExtCtrls, Vcl.StdCtrls, System.Actions, Vcl.ActnList,
-  Data.DB, MemDS, DBAccess, Uni,
-  inMtoFrmBase,
+  Data.DB, inMtoFrmBase, inLibSeleccionFamiliaPersistenciaIntf,
   cxClasses, cxGraphics, cxLookAndFeels, cxLookAndFeelPainters, cxControls,
   cxContainer, cxEdit, cxLabel, cxButtons, cxTextEdit, cxLocalization,
   cxStyles, cxData, cxDataStorage, cxCustomData, cxFilter, cxNavigator,
@@ -43,7 +42,6 @@ type
     tlcNombre         : TcxDBTreeListColumn;
     tlcCodigo         : TcxDBTreeListColumn;
     dsFamilias        : TDataSource;
-    unqryFamilias     : TUniQuery;
     ActionList1       : TActionList;
     actAceptar        : TAction;
     actCancelar       : TAction;
@@ -59,6 +57,9 @@ type
   private
     FCodigoFamilia : string;
     FNombreFamilia : string;
+    FRepositorio: IRepositorioSeleccionFamilia;
+    FConsulta: IConsultaSeleccionFamilia;
+    FFamilias: TDataSet;
     procedure AplicarFiltro;
   public
     property CodigoFamilia : string read FCodigoFamilia;
@@ -73,7 +74,11 @@ procedure TfrmModalSelFamilia.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
-  unqryFamilias.Connection := ConexionPrincipal;
+  FRepositorio := ContextoRepositoriosPantalla.Documentos.
+    CrearRepositorioSeleccionFamilia;
+  FConsulta := FRepositorio.CrearConsulta;
+  FFamilias := FConsulta.DataSet;
+  dsFamilias.DataSet := FFamilias;
 end;
 
 procedure TfrmModalSelFamilia.FormShow(Sender: TObject);
@@ -87,6 +92,10 @@ procedure TfrmModalSelFamilia.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   inherited;
+  dsFamilias.DataSet := nil;
+  FFamilias := nil;
+  FConsulta := nil;
+  FRepositorio := nil;
   Action := caFree;
 end;
 
@@ -95,28 +104,7 @@ var
   sTxt : string;
 begin
   sTxt := Trim(txtFiltro.Text);
-  unqryFamilias.Close;
-  if sTxt = '' then
-  begin
-    unqryFamilias.SQL.Text :=
-      'SELECT CODIGO_FAM_FAM, NOMBRE_FAM_FAM, ' +
-      '       COALESCE(CODIGO_SUBFAMILIA_FAM, '''') AS CODIGO_PADRE_FAM ' +
-      '  FROM fza_articulos_familias ' +
-      ' WHERE ESACTIVO_FAM = ''S'' ' +
-      ' ORDER BY ORDEN_FAM, NOMBRE_FAM_FAM';
-  end
-  else
-  begin
-    // Con filtro mostramos plano (sin jerarquia)
-    unqryFamilias.SQL.Text :=
-      'SELECT CODIGO_FAM_FAM, NOMBRE_FAM_FAM, '''' AS CODIGO_PADRE_FAM ' +
-      '  FROM fza_articulos_familias ' +
-      ' WHERE ESACTIVO_FAM = ''S'' ' +
-      '   AND (CODIGO_FAM_FAM LIKE :p OR NOMBRE_FAM_FAM LIKE :p) ' +
-      ' ORDER BY ORDEN_FAM, NOMBRE_FAM_FAM';
-    unqryFamilias.ParamByName('p').AsString := '%' + sTxt + '%';
-  end;
-  unqryFamilias.Open;
+  FConsulta.AplicarFiltro(sTxt);
   tlFamilias.FullExpand;
 end;
 
@@ -135,15 +123,15 @@ end;
 procedure TfrmModalSelFamilia.btnAceptarClick(Sender: TObject);
 begin
   inherited;
-  if (unqryFamilias.IsEmpty) or
+  if (FFamilias.IsEmpty) or
      (tlFamilias.FocusedNode = nil) then
   begin
     FCodigoFamilia := '';
     ModalResult := mrCancel;
     Exit;
   end;
-  FCodigoFamilia := unqryFamilias.FieldByName('CODIGO_FAM_FAM').AsString;
-  FNombreFamilia := unqryFamilias.FieldByName('NOMBRE_FAM_FAM').AsString;
+  FCodigoFamilia := FFamilias.FieldByName('CODIGO_FAM_FAM').AsString;
+  FNombreFamilia := FFamilias.FieldByName('NOMBRE_FAM_FAM').AsString;
   ModalResult := mrOk;
 end;
 

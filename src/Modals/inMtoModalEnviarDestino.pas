@@ -24,7 +24,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Uni,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxContainer, cxEdit, cxLabel, cxTextEdit, cxMaskEdit, cxDropDownEdit,
-  cxButtons, inMtoFrmBase;
+  cxButtons, inMtoFrmBase, inLibDestinoEnvioPersistenciaIntf;
 
 type
   TfrmModalEnviarDestino = class(TfrmBase)
@@ -58,53 +58,32 @@ class function TfrmModalEnviarDestino.Ejecutar(AOwner: TComponent;
   ATipoDocSerie: string; var AAlm, ASerie, ANumero: string): Boolean;
 var
   frm: TfrmModalEnviarDestino;
-  q: TUniQuery;
+  aAlmacenes: TValoresDestinoEnvio;
+  aSeries: TValoresDestinoEnvio;
+  oRepositorio: IRepositorioDestinoEnvio;
+  sValor: string;
 begin
   Result := False;
   frm := TfrmModalEnviarDestino.Create(AOwner);
-  q := TUniQuery.Create(nil);
   try
     frm.Caption := ATitulo;
-    q.Connection := AConn;
-    // Almacenes (de la empresa si viene informada).
-    q.SQL.Text :=
-      'SELECT CODIGO_ALM_ALM FROM fza_almacenes ' +
-      'WHERE (:EMP = '''' OR CODIGO_EMP_ALM = :EMP) ' +
-      'ORDER BY CODIGO_ALM_ALM';
-    q.ParamByName('EMP').AsString := AEmpresa;
-    q.Open;
-    while not q.Eof do
+    oRepositorio := frm.ContextoRepositoriosPantalla.Documentos.
+      CrearRepositorioDestinoEnvio(AConn);
+    aAlmacenes := oRepositorio.ListarAlmacenes(AEmpresa);
+    for sValor in aAlmacenes do
     begin
-      frm.cbbAlmacen.Properties.Items.Add(
-        q.FieldByName('CODIGO_ALM_ALM').AsString);
-      q.Next;
+      frm.cbbAlmacen.Properties.Items.Add(sValor);
     end;
-    q.Close;
     frm.cbbAlmacen.ItemIndex :=
       frm.cbbAlmacen.Properties.Items.IndexOf(AAlm);
     if (frm.cbbAlmacen.ItemIndex < 0) and
        (frm.cbbAlmacen.Properties.Items.Count > 0) then
       frm.cbbAlmacen.ItemIndex := 0;
-    // Series del tipo de documento destino, vigentes.
-    q.SQL.Text :=
-      'SELECT EMPSER FROM fza_empresas_series ' +
-      'WHERE CODIGO_EMP_EMPSER = :EMP ' +
-      '  AND TIPO_DOC_EMPSER = :TIPO ' +
-      '  AND (FECHA_DESDE_EMPSER IS NULL OR ' +
-      '       FECHA_DESDE_EMPSER <= NOW()) ' +
-      '  AND (FECHA_HASTA_EMPSER IS NULL OR ' +
-      '       FECHA_HASTA_EMPSER >= NOW()) ' +
-      'ORDER BY EMPSER';
-    q.ParamByName('EMP').AsString := AEmpresa;
-    q.ParamByName('TIPO').AsString := ATipoDocSerie;
-    q.Open;
-    while not q.Eof do
+    aSeries := oRepositorio.ListarSeries(AEmpresa, ATipoDocSerie);
+    for sValor in aSeries do
     begin
-      frm.cbbSerie.Properties.Items.Add(
-        q.FieldByName('EMPSER').AsString);
-      q.Next;
+      frm.cbbSerie.Properties.Items.Add(sValor);
     end;
-    q.Close;
     frm.cbbSerie.ItemIndex :=
       frm.cbbSerie.Properties.Items.IndexOf(ASerie);
     if (frm.cbbSerie.ItemIndex < 0) and
@@ -124,7 +103,6 @@ begin
         ShowMessage(SErrorDestinoEnvioIncompleto);
     end;
   finally
-    FreeAndNil(q);
     FreeAndNil(frm);
   end;
 end;

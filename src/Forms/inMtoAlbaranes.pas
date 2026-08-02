@@ -35,7 +35,8 @@ uses
   cxGridBandedTableView, cxGridDBBandedTableView, UniDataAlbaranes,
   System.Actions, Vcl.ActnList,
   inLibColumnasSkuIntf, inLibGridTallasInline,
-  inLibDocumento, inLibDocumentoIntf;
+  inLibDocumento, inLibDocumentoIntf,
+  inLibEntradaAlbaranVentaPersistenciaIntf;
 
 type
   TfrmMtoAlbaranes = class(TfrmMtoDocumento)
@@ -234,6 +235,7 @@ type
     FModoEntradaSel: TModoColumnasSku;
     FModoEntrada: IModoEntradaGrid;
     FColsModoConstruido: Boolean;
+    FRepositorioEntradaAlbaranVenta: IRepositorioEntradaAlbaranVenta;
     function BuscarArticuloAlbaran: string;
     function BuscarSkuAlbaran(const ACodigoArt: string): string;
     function ArticuloLineaActivaAlbaran: string;
@@ -285,12 +287,11 @@ implementation
 
 uses
   inMtoModalFacturarAlbaranesFechas, inLibGridCantidad,
-  inLibGenBusq, inLibShowMto, inLibFiltroUsuario, Uni,
+  inLibGenBusq, inLibShowMto, inLibFiltroUsuario,
   inLibArticulosResolverIntf, inLibArticulosValidadorIntf,
-  UniDataArticulosValidadorRepositorio, inLibVentasImpuestos,
-  inLibValoresAutomaticos, inLibUser, inLibColumnasSku,
+  inLibVentasImpuestos, inLibValoresAutomaticos, inLibUser,
+  inLibColumnasSku,
   inLibColumnasDocumento, UniDataGen,
-  UniDataModoTallas, UniDataColumnasSkuServicios,
   inLibValidacionDocumento, inLibPresentacionDocumento,
   inLibMsgArticulos, inLibMsgComun, inLibMsgFacturas, inLibMsgVentas;
 
@@ -332,7 +333,8 @@ end;
 // CODIGO_UNIDAD_ALBLIN).
 function TfrmMtoAlbaranes.BuscarArticuloAlbaran: string;
 var
-  qry     : TUniQuery;
+  Consulta: IConsultaEntradaAlbaranVenta;
+  Datos   : TDataSet;
   Campo   : TField;
   sTarifa : string;
   dFecha  : TDateTime;
@@ -345,34 +347,21 @@ begin
     dFecha := Date;
     if not dmmAlbaranes.unqryTablaG.FieldByName('FECHA_ALB').IsNull then
       dFecha := dmmAlbaranes.unqryTablaG.FieldByName('FECHA_ALB').AsDateTime;
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := dmmAlbaranes.unqryTablaG.Connection;
-      qry.SQL.Text :=
-        'SELECT * ' +
-        '  FROM vi_art_busquedas ' +
-        ' WHERE (CODIGO_TAR_ARTTAR = :tarifa ' +
-        '    OR CODIGO_TAR_ARTTAR IS NULL) ' +
-        '   AND FECHA_DESDE_ARTTAR < :fecha ' +
-        '   AND (FECHA_HASTA_ARTTAR IS NULL ' +
-        '        OR FECHA_HASTA_ARTTAR > :fecha)';
-      qry.ParamByName('tarifa').AsString := sTarifa;
-      qry.ParamByName('fecha').AsDateTime := dFecha;
-      if BusquedaVisual.EjecutarBusqueda(
-        ConexionPrincipal,
+    Consulta := FRepositorioEntradaAlbaranVenta.ConsultarArticulos(
+      sTarifa,
+      dFecha);
+    Datos := Consulta.DataSet;
+    if BusquedaVisual.EjecutarBusquedaDataSet(
         'Búsqueda de Artículos en Líneas de Albarán',
-           qry,
-           'frmMtoArtFacSearch',
-           Self) then
-      begin
-        Campo := qry.FindField('CODIGO_ART_ART');
-        if Campo = nil then
-          Campo := qry.FindField('CODIGO_ART');
-        if Campo <> nil then
-          Result := Campo.AsString;
-      end;
-    finally
-      FreeAndNil(qry);
+        Datos,
+        'frmMtoArtFacSearch',
+        Self) then
+    begin
+      Campo := Datos.FindField('CODIGO_ART_ART');
+      if Campo = nil then
+        Campo := Datos.FindField('CODIGO_ART');
+      if Campo <> nil then
+        Result := Campo.AsString;
     end;
   end;
 end;
@@ -394,7 +383,8 @@ end;
 function TfrmMtoAlbaranes.BuscarSkuAlbaran(
   const ACodigoArt: string): string;
 var
-  qry : TUniQuery;
+  Consulta: IConsultaEntradaAlbaranVenta;
+  Datos: TDataSet;
   sArt: string;
 begin
   Result := '';
@@ -407,36 +397,14 @@ begin
                mtInformation, [mbOk], 0)
   else
   begin
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := dmmAlbaranes.unqryTablaG.Connection;
-      qry.SQL.Text :=
-        'SELECT SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU, ' +
-        '       GROUP_CONCAT(AV.AV ORDER BY COALESCE(VA.ORDEN_VA, 999), ' +
-        '                    AV.ORDEN_AV SEPARATOR '' / '') AS ATRIBUTOS ' +
-        '  FROM fza_articulos_skus SK ' +
-        '  LEFT JOIN fza_atributos_sku SA ' +
-        '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
-        '  LEFT JOIN fza_atributos_valores AV ' +
-        '    ON AV.ID_AV = SA.ID_AV_SA ' +
-        '  LEFT JOIN fza_variaciones_atributos VA ' +
-        '    ON VA.ID_VAR_VA = SK.CODIGO_VAR_SKU ' +
-        '   AND VA.ID_ATB_VA = AV.ID_VA_AV ' +
-        ' WHERE SK.CODIGO_ART_SKU = :art ' +
-        '   AND COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'' ' +
-        ' GROUP BY SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU ' +
-        ' ORDER BY SK.CODIGO_UNIDAD_SKU';
-      qry.ParamByName('art').AsString := sArt;
-      if BusquedaVisual.EjecutarBusqueda(
-        ConexionPrincipal,
+    Consulta := FRepositorioEntradaAlbaranVenta.ConsultarSkus(sArt);
+    Datos := Consulta.DataSet;
+    if BusquedaVisual.EjecutarBusquedaDataSet(
         'SKUs del artículo ' + sArt,
-           qry,
-           'frmMtoAlbSkuSearch',
-           Self) and (qry.FindField('CODIGO_UNIDAD_SKU') <> nil) then
-        Result := qry.FieldByName('CODIGO_UNIDAD_SKU').AsString;
-    finally
-      FreeAndNil(qry);
-    end;
+        Datos,
+        'frmMtoAlbSkuSearch',
+        Self) and (Datos.FindField('CODIGO_UNIDAD_SKU') <> nil) then
+      Result := Datos.FieldByName('CODIGO_UNIDAD_SKU').AsString;
   end;
 end;
 
@@ -520,9 +488,11 @@ begin
         if not dmmAlbaranes.unqryTablaG.FieldByName('FECHA_ALB').IsNull then
           dFecha := dmmAlbaranes.unqryTablaG.
                       FieldByName('FECHA_ALB').AsDateTime;
-        Validador := CrearValidadorArticulos(
+        Validador := ContextoRepositoriosPantalla.Articulos.
+          CrearValidadorArticulos(
                        dmmAlbaranes.unqryTablaG.Connection);
-        Resolver := CrearResolverArticulos(
+        Resolver := ContextoRepositoriosPantalla.Articulos.
+          CrearResolverArticulos(
           dmmAlbaranes.unqryTablaG.Connection);
         Resolucion := Validador.Resolver(sInput);
         if Resolucion.Encontrado then
@@ -635,7 +605,7 @@ begin
     if not dmmAlbaranes.unqryTablaG.FieldByName('FECHA_ALB').IsNull then
       dFecha := dmmAlbaranes.unqryTablaG.
                   FieldByName('FECHA_ALB').AsDateTime;
-    Resolver := CrearResolverArticulos(
+    Resolver := ContextoRepositoriosPantalla.Articulos.CrearResolverArticulos(
       dmmAlbaranes.unqryTablaG.Connection);
     try
       Datos := Resolver.ResolverDatos(ACodigoArticulo, ACodigoSku,
@@ -682,17 +652,19 @@ begin
   if FModoEntradaSel <> mcsSku then
     dmmAlbaranes.DesempaquetarAtributosLineas;
   Cfg := CrearConfigColumnasSkuDocumento(
-    CrearServiciosColumnasSkuUniDAC(
-      dmmAlbaranes.unqryTablaG.Connection), ContextoSesion,
+    ContextoRepositoriosPantalla.Ventas.CrearServiciosColumnasSku,
+    ContextoSesion,
     tvLineasAlbaran, ds, FModoEntradaSel,
     dmmAlbaranes.unqryTablaG.FieldByName(
       'CODIGO_ALM_ALB').AsString, 'ALBLIN');
+  Cfg.RegistroLog := RegistroLog;
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
-    CrearValidadorArticulos(dmmAlbaranes.unqryTablaG.Connection);
+    ContextoRepositoriosPantalla.Articulos.
+      CrearValidadorArticulos(dmmAlbaranes.unqryTablaG.Connection);
   Cfg.LookupAtributos :=
-    CrearLookupAtributosArticulos(
+    ContextoRepositoriosPantalla.Articulos.CrearLookupAtributosArticulos(
       dmmAlbaranes.unqryTablaG.Connection);
   // Precio por SKU para la consolidacion del modo tallas: lineas con
   // precio distinto no fusionan.
@@ -864,6 +836,9 @@ begin
     CrearConfiguracionDocumento(tdAlbaran, sdVenta));
   AsignarVistaLineasDocumento(tvLineasAlbaran);
   inherited;
+  FRepositorioEntradaAlbaranVenta :=
+    ContextoRepositoriosPantalla.Ventas.
+      CrearRepositorioEntradaAlbaranVenta;
   dmmAlbaranes := TdmAlbaranes(AsegurarDataModuleDocumento(
     Self, tdmDataModule, TdmAlbaranes));
   ConfigurarTablaPrincipalDocumento(
@@ -911,11 +886,8 @@ end;
 procedure TfrmMtoAlbaranes.ActualizarColumnasOpcionalesLinea;
 var
   ds: TDataSet;
-  q: TUniQuery;
   sArticulo: string;
-  bTrazable: Boolean;
-  bVariacion: Boolean;
-  iSkus: Integer;
+  Configuracion: TConfiguracionArticuloAlbaranVenta;
 
   procedure PonerVisibleCampo(const ACampo: string; AVisible: Boolean);
   var
@@ -932,9 +904,7 @@ begin
   if FColsModoConstruido then
     Exit;
   sArticulo := '';
-  bTrazable := False;
-  bVariacion := False;
-  iSkus := 0;
+  Configuracion := Default(TConfiguracionArticuloAlbaranVenta);
   if (dmmAlbaranes <> nil) and
      Assigned(dmmAlbaranes.unqryAlbaranesLineas) then
   begin
@@ -943,36 +913,18 @@ begin
        (ds.FindField('CODIGO_ART_ALBLIN') <> nil) then
       sArticulo := Trim(ds.FieldByName('CODIGO_ART_ALBLIN').AsString);
   end;
-  if (sArticulo <> '') and Assigned(dmmAlbaranes) then
-  begin
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := dmmAlbaranes.unqryTablaG.Connection;
-      q.SQL.Text :=
-        'SELECT a.ESTRAZABLE_ART, a.ESVARIACION_ART, ' +
-        '       (SELECT COUNT(*) ' +
-        '          FROM fza_articulos_skus sk ' +
-        '         WHERE sk.CODIGO_ART_SKU = a.CODIGO_ART_ART ' +
-        '           AND COALESCE(sk.ESACTIVO_SKU, ''S'') = ''S'') AS NUM_SKUS ' +
-        '  FROM fza_articulos a ' +
-        ' WHERE a.CODIGO_ART_ART = :art';
-      q.ParamByName('art').AsString := sArticulo;
-      q.Open;
-      if not q.IsEmpty then
-      begin
-        bTrazable := q.FieldByName('ESTRAZABLE_ART').AsString = 'S';
-        bVariacion := q.FieldByName('ESVARIACION_ART').AsString = 'S';
-        iSkus := q.FieldByName('NUM_SKUS').AsInteger;
-      end;
-    finally
-      FreeAndNil(q);
-    end;
-  end;
-  PonerVisibleCampo('LOTE_ALBLIN', bTrazable);
-  PonerVisibleCampo('FECHA_CADUCIDAD_ALBLIN', bTrazable);
-  PonerVisibleCampo('CODIGO_UNIDAD_ALBLIN', bVariacion or (iSkus > 1));
+  if sArticulo <> '' then
+    Configuracion := FRepositorioEntradaAlbaranVenta.
+      LeerConfiguracionArticulo(sArticulo);
+  PonerVisibleCampo('LOTE_ALBLIN', Configuracion.EsTrazable);
+  PonerVisibleCampo(
+    'FECHA_CADUCIDAD_ALBLIN',
+    Configuracion.EsTrazable);
+  PonerVisibleCampo(
+    'CODIGO_UNIDAD_ALBLIN',
+    Configuracion.EsVariacion or (Configuracion.NumeroSkus > 1));
   PonerVisibleCampo('DESCRIPCION_VARIACION_ALBLIN',
-                    bVariacion or (iSkus > 1));
+    Configuracion.EsVariacion or (Configuracion.NumeroSkus > 1));
   PonerVisibleCampo('CODIGO_ALMACEN_ALBLIN', False);
 end;
 
@@ -1065,7 +1017,7 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
   sLineasSinSku := LineasSinSkuRequerido(
-    CrearValidadorArticulos(
+    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
       dmmAlbaranes.unqryTablaG.Connection),
     dmmAlbaranes.unqryAlbaranesLineas, 'ALBLIN');
   if (sLineasSinSku = '') or

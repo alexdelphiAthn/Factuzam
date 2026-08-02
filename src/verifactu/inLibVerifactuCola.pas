@@ -68,7 +68,7 @@ type
 implementation
 
 uses
-  System.SysUtils, inLibLog;
+  System.SysUtils;
 
 var
   oProcesadorCola: IProcesadorVerifactuCola;
@@ -187,9 +187,8 @@ begin
     raise EArgumentNilException.Create('AProcesador');
   if not Assigned(oProcesadorCola) then
   begin
+    AProcesador.Iniciar;
     oProcesadorCola := AProcesador;
-    oProcesadorCola.Iniciar;
-    Log.LogInfo('Cola Verifactu: procesador iniciado');
   end;
 end;
 
@@ -199,7 +198,6 @@ begin
   begin
     oProcesadorCola.Detener;
     oProcesadorCola := nil;
-    Log.LogInfo('Cola Verifactu: procesador detenido');
   end;
 end;
 

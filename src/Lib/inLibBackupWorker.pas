@@ -36,7 +36,7 @@ type
     FRutaFichero: string;
     FEncriptar: Boolean;
     FPassEncriptar: string;
-    FExito: Boolean;
+    FResultado: TResultadoCopiaSeguridad;
     FError: string;
     FProgresoEtapa: string;
     FProgresoPaso: Integer;
@@ -74,7 +74,7 @@ type
     FRutaFichero: string;
     FDesencriptar: Boolean;
     FPassDesencriptar: string;
-    FExito: Boolean;
+    FResultado: TResultadoCopiaSeguridad;
     FError: string;
     FLogBuffer: TStringList;
     FStopwatch: TStopwatch;
@@ -100,6 +100,7 @@ type
     procedure ScriptError(Sender: TObject; E: Exception;
                            SQL: string; var Action: TErrorAction);
     procedure ComprobarCancelacion;
+    procedure RegistrarExcepcion(E: Exception);
     procedure SyncProgreso;
     procedure SyncFinalizar;
   protected
@@ -120,9 +121,10 @@ function CrearCopiaSeguridadBD(const AHost: string; APort: Integer;
                                const ADatabase, AUser, APassword: string;
                                const ARutaFichero: string;
                                AEncriptar: Boolean;
-                               const APassEncriptar: string;
-                               AOnProgreso: TWorkerProgresoEvent;
-                               out AError: string): Boolean;
+                                const APassEncriptar: string;
+                                AOnProgreso: TWorkerProgresoEvent;
+                                out AError: string):
+                                TResultadoCopiaSeguridad;
 
 implementation
 
@@ -163,7 +165,8 @@ function CrearCopiaSeguridadBD(const AHost: string; APort: Integer;
                                AEncriptar: Boolean;
                                const APassEncriptar: string;
                                AOnProgreso: TWorkerProgresoEvent;
-                               out AError: string): Boolean;
+                               out AError: string):
+                               TResultadoCopiaSeguridad;
 var
   Conn: TUniConnection;
   Options: TBackupOptions;
@@ -236,7 +239,7 @@ begin
               FreeAndNil(MyText);
             end;
           end;
-          Result := True;
+          Result := rcsCompletada;
         finally
           FreeAndNil(Engine);
         end;
@@ -249,10 +252,15 @@ begin
       on E: Exception do
       begin
         if E is EAbort then
-          AError := E.Message
+        begin
+          AError := E.Message;
+          Result := rcsCancelada;
+        end
         else
+        begin
           AError := E.ClassName + ': ' + E.Message;
-        Result := False;
+          Result := rcsFallida;
+        end;
       end;
     end;
   finally
@@ -276,7 +284,7 @@ begin
   FRutaFichero := ARutaFichero;
   FEncriptar := AEncriptar;
   FPassEncriptar := APassEncriptar;
-  FExito := False;
+  FResultado := rcsFallida;
 end;
 
 procedure TBackupWorker.EngineProgress(const AEtapa: string;
@@ -305,13 +313,13 @@ end;
 procedure TBackupWorker.SyncFinalizar;
 begin
   if Assigned(FOnFinalizar) then
-    FOnFinalizar(FExito, FError, nil);
+    FOnFinalizar(FResultado, FError, nil);
 end;
 
 procedure TBackupWorker.Execute;
 begin
   try
-    FExito := CrearCopiaSeguridadBD(
+    FResultado := CrearCopiaSeguridadBD(
       FHost,
       FPort,
       FDatabase,
@@ -343,7 +351,7 @@ begin
   FRutaFichero := ARutaFichero;
   FDesencriptar := ADesencriptar;
   FPassDesencriptar := APassDesencriptar;
-  FExito := False;
+  FResultado := rcsFallida;
   FErrores := 0;
   FPosicion := 0;
   FTotal := 0;
@@ -358,6 +366,20 @@ procedure TRestoreWorker.ComprobarCancelacion;
 begin
   if Terminated then
     raise EAbort.Create(SErrorOperacionCanceladaUsuario);
+end;
+
+procedure TRestoreWorker.RegistrarExcepcion(E: Exception);
+begin
+  if E is EAbort then
+  begin
+    FResultado := rcsCancelada;
+    FError := E.Message;
+  end
+  else
+  begin
+    FResultado := rcsFallida;
+    FError := E.ClassName + ': ' + E.Message;
+  end;
 end;
 
 function TRestoreWorker.EsCreacionVista(const ASQL: string): Boolean;
@@ -801,7 +823,7 @@ end;
 procedure TRestoreWorker.SyncFinalizar;
 begin
   if Assigned(FOnFinalizar) then
-    FOnFinalizar(FExito, FError, FLogBuffer)
+    FOnFinalizar(FResultado, FError, FLogBuffer)
   else
     FreeAndNil(FLogBuffer);
 end;
@@ -894,32 +916,20 @@ begin
           end;
           ComprobarCancelacion;
           ValidarEstructuraRestaurada(Conn);
-          FExito := True;
+          FResultado := rcsCompletada;
         except
           on E: Exception do
-          begin
-            FExito := False;
-            if E is EAbort then
-              FError := E.Message
-            else
-              FError := E.ClassName + ': ' + E.Message;
-          end;
+            RegistrarExcepcion(E);
         end;
       finally
         Conn.Free;
       end;
     except
       on E: Exception do
-      begin
-        FExito := False;
-        if E is EAbort then
-          FError := E.Message
-        else
-          FError := E.ClassName + ': ' + E.Message;
-      end;
+        RegistrarExcepcion(E);
     end;
   finally
-    if (FError = '') and (not FExito) then
+    if (FError = '') and (FResultado = rcsFallida) then
     begin
       if FPrimerError <> '' then
         FError := FPrimerError

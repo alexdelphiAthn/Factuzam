@@ -29,7 +29,7 @@ uses
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataEfectosVenta,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, cxCurrencyEdit, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  dxShellDialogs;
+  dxShellDialogs, inLibFusionEfectosIntf;
 
 type
   TfrmMtoEfectosVenta = class(TfrmMtoGen)
@@ -50,7 +50,7 @@ type
     procedure btnRegistrarCobroClick(Sender: TObject);
     procedure btnFusionarEfectosClick(Sender: TObject);
   private
-    { Private declarations }
+    FCasoUsoFusionEfectos: ICasoUsoFusionEfectos;
   public
     dmmEfectosVenta: TdmEfectosVenta;
     procedure CrearTablaPrincipal; override;
@@ -63,7 +63,24 @@ implementation
 
 uses
   inLibWin, inMtoModalRegistrarPago, inLibFiltroUsuario,
-  inLibMsgComun, inLibMsgVentas;
+  inLibMsgComun, inLibMsgVentas, inLibFusionEfectos,
+  UniDataFusionEfectos, inMtoFusionEfectosVcl;
+
+function CrearContextoFusionEfectosVentaVcl(
+  AFormulario: TfrmMtoEfectosVenta): TContextoFusionEfectosVcl;
+begin
+  Result := Default(TContextoFusionEfectosVcl);
+  Result.Vista := AFormulario.cxGrdDBTabPrin;
+  Result.CasoUso := AFormulario.FCasoUsoFusionEfectos;
+  Result.IndiceSerie :=
+    AFormulario.dbcGrdDBTabPrinSERIE_FAC_EFV.Index;
+  Result.IndiceNumero :=
+    AFormulario.dbcGrdDBTabPrinNUMERO_FAC_EFV.Index;
+  Result.IndiceEfecto :=
+    AFormulario.dbcGrdDBTabPrinNUMERO_EFV.Index;
+  Result.MensajeSeleccionInsuficiente :=
+    SErrorEfectosVentaFusionInsuficientes;
+end;
 
 {$R *.dfm}
 
@@ -73,6 +90,8 @@ procedure TfrmMtoEfectosVenta.CrearTablaPrincipal;
 begin
   inherited;
   dmmEfectosVenta := tdmDataModule as TdmEfectosVenta;
+  FCasoUsoFusionEfectos := CrearCasoUsoFusionEfectos(
+    CrearRepositorioFusionEfectosVentaUniDAC(dmmEfectosVenta));
   pkFieldName := 'SERIE_FAC_EFV;NUMERO_FAC_EFV;NUMERO_EFV';
 end;
 
@@ -130,39 +149,13 @@ begin
 end;
 
 procedure TfrmMtoEfectosVenta.btnFusionarEfectosClick(Sender: TObject);
-var
-  aClaves: TClavesEfectoVenta;
-  i: Integer;
-  iRec: Integer;
-  iRes: Integer;
-  sReferencia: string;
 begin
   inherited;
   if not Assigned(dmmEfectosVenta) then
     ShowMessage(SErrorCarteraEfectosNoAbierta)
-  else if cxGrdDBTabPrin.Controller.SelectedRecordCount < 2 then
-    ShowMessage(SErrorEfectosVentaFusionInsuficientes)
-  else if MessageDlg(SPreguntaFusionarEfectos, mtConfirmation,
-                     [mbYes, mbNo], 0) = mrYes then
-  begin
-    SetLength(aClaves, cxGrdDBTabPrin.Controller.SelectedRecordCount);
-    for i := 0 to cxGrdDBTabPrin.Controller.SelectedRecordCount - 1 do
-    begin
-      iRec := cxGrdDBTabPrin.Controller.SelectedRecords[i].RecordIndex;
-      aClaves[i].SerieFac := VarToStr(cxGrdDBTabPrin.DataController.Values[
-        iRec, dbcGrdDBTabPrinSERIE_FAC_EFV.Index]);
-      aClaves[i].NumeroFac := VarToStr(cxGrdDBTabPrin.DataController.Values[
-        iRec, dbcGrdDBTabPrinNUMERO_FAC_EFV.Index]);
-      aClaves[i].NumeroEfec := StrToIntDef(VarToStr(
-        cxGrdDBTabPrin.DataController.Values[
-          iRec, dbcGrdDBTabPrinNUMERO_EFV.Index]), 0);
-    end;
-    iRes := dmmEfectosVenta.FusionarEfectosPendientes(aClaves, sReferencia);
-    if iRes > 0 then
-      ShowMessage(Format(SInfoEfectosConciliados, [sReferencia]))
-    else
-      ShowMessage(SErrorFusionarEfectos);
-  end;
+  else
+    TCoordinadorFusionEfectosVcl.Ejecutar(
+      CrearContextoFusionEfectosVentaVcl(Self));
 end;
 
 initialization

@@ -52,7 +52,8 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier, dxSkinValentine,
   dxSkinVisualStudio2013Blue, dxSkinVisualStudio2013Dark,
   dxSkinVisualStudio2013Light, dxSkinVS2010, dxSkinWhiteprint,
-  dxSkinXmas2008Blue, Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs;
+  dxSkinXmas2008Blue, Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs,
+  inLibClientesPersistenciaIntf;
 
 type
   TfrmMtoClientes = class(TfrmMtoGen)
@@ -439,6 +440,7 @@ type
     procedure PcPestanasChange(Sender: TObject);
   private
     FDmmClientes: TDMClientes;
+    FRepositorioClientes: IRepositorioClientes;
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -460,8 +462,7 @@ uses
   inLibDir,
   inLibIBAN,
   inLibMsgVentas,
-  inLibPermisosIntf,
-  Uni;
+  inLibPermisosIntf;
 
 {$R *.dfm}
 
@@ -684,6 +685,8 @@ end;
 procedure TfrmMtoClientes.CrearTablaPrincipal;
 begin
   inherited;
+  FRepositorioClientes :=
+    ContextoRepositoriosPantalla.Ventas.CrearRepositorioClientes;
   FDmmClientes := tdmDataModule as TdmClientes;
   tvFacturacion.DataController.DataSource := FDmmClientes.dsFacturasClientes;
   tvLineasFacturacion.DataController.DataSource :=
@@ -755,7 +758,6 @@ end;
 
 function TfrmMtoClientes.ContarHijosActivos: Integer;
 var
-  q: TUniQuery;
   sCodCli: string;
 begin
   Result := 0;
@@ -765,20 +767,7 @@ begin
   sCodCli := dsTablaG.DataSet.FieldByName('CODIGO_CLI_CLI').AsString;
   if sCodCli = '' then
     Exit;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := ConexionPrincipal;
-    q.SQL.Text :=
-      'SELECT (SELECT COUNT(*) FROM fza_facturas  ' +
-      '         WHERE CODIGO_CLI_FAC = :pCli) ' +
-      '     + (SELECT COUNT(*) FROM fza_albaranes ' +
-      '         WHERE CODIGO_CLI_ALB = :pCli) AS N';
-    q.ParamByName('pCli').AsString := sCodCli;
-    q.Open;
-    Result := q.FieldByName('N').AsInteger;
-  finally
-    FreeAndNil(q);
-  end;
+  Result := FRepositorioClientes.ContarDocumentos(sCodCli);
 end;
 
 function TfrmMtoClientes.DescripcionHijos: string;

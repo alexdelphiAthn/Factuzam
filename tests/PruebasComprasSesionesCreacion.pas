@@ -76,7 +76,8 @@ implementation
 uses
   System.SysUtils, Data.DB, Datasnap.DBClient,
   inLibComprasSesionesIntf,
-  inLibComprasSesionesCreacion;
+  inLibComprasSesionesCreacion,
+  inLibComprasSesionesCreacionDataSet;
 
 function EstadoBase: TEstadoSesionCreacion;
 begin

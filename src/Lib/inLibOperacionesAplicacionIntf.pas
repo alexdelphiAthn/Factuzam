@@ -34,11 +34,11 @@ type
     procedure MostrarCancelando;
     procedure FinalizarOperacion(
       ATipo: TTipoOperacionAplicacion;
-      AExito, ACancelada: Boolean;
+      AResultado: TResultadoCopiaSeguridad;
       const AError: string;
       ALogBuffer: TStringList);
   end;
-  ICoordinadorOperacionesAplicacion = interface
+  ICasoUsoCopiasSeguridad = interface
     ['{180674F0-5585-45F4-B285-7050C5F0CFE5}']
     function EnCurso: Boolean;
     function ModoCreacionCopia: TModoProteccionCopia;
@@ -54,6 +54,7 @@ type
     function CancelacionSolicitada: Boolean;
     function SolicitarCancelacion: Boolean;
   end;
+  ICoordinadorOperacionesAplicacion = ICasoUsoCopiasSeguridad;
 
 implementation
 

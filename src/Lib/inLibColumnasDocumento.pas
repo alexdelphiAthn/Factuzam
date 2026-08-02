@@ -24,12 +24,13 @@ uses
   System.Classes, Vcl.Forms, Data.DB, Uni, cxEdit,
   cxGridCustomTableView, cxGridDBTableView, inLibContextoSesionIntf,
   inLibColumnasSkuIntf, inLibGridTallasInline, inLibGridPivoteCompra,
-  inLibGridPivoteVenta, inLibAnfitrionDatosIntf;
+  inLibGridPivoteVenta, inLibAnfitrionDatosIntf, inLibLogIntf;
 
 type
   TConfigPivoteDocumentoCompra = record
     Conexion: TUniConnection;
     ContextoSesion: IContextoSesionAplicacion;
+    RegistroLog: IRegistroLog;
     Usuario: string;
     Vista: TcxGridDBTableView;
     SourceMaster: TDataSource;
@@ -67,7 +68,8 @@ procedure CrearColumnasAtributosDocumento(
   AOnGetDataText: TcxGridGetDataTextEvent = nil);
 procedure DesmontarModoEntradaDocumento(
   AVista: TcxGridDBTableView; ADataSet: TDataSet;
-  var AModoEntrada: IModoEntradaGrid);
+  var AModoEntrada: IModoEntradaGrid;
+  const ARegistroLog: IRegistroLog = nil);
 procedure PrepararReconstruccionModoDocumento(
   AVista: TcxGridDBTableView; ADataSet: TDataSet;
   var AModoEntrada: IModoEntradaGrid;
@@ -80,7 +82,8 @@ function ConstruirModoEntradaDocumento(
   AOnEntrarEdicion, AOnSalirEdicion: TNotifyEvent;
   AModoSeleccionado: TModoColumnasSku;
   const AModosDegradables: TConjuntoModosColumnasSku;
-  const AContextoLog: string): Boolean;
+  const AContextoLog: string;
+  const ARegistroLog: IRegistroLog = nil): Boolean;
 procedure ConfigurarColumnaBotonDocumento(
   AColumna: TcxGridDBColumn;
   AOnButtonClick: TcxEditButtonClickEvent;
@@ -95,7 +98,8 @@ function CrearColumnaColorPivoteDocumento(
 procedure LiberarModoYGestoresDocumento(
   var AModoEntrada: IModoEntradaGrid;
   var APivote: TGridPivoteCompra;
-  var AGestorTallas: TGestorGridTallas);
+  var AGestorTallas: TGestorGridTallas;
+  const ARegistroLog: IRegistroLog = nil);
 procedure ActualizarModoEntradaAlNavegarDocumento(
   AField: TField; ALineas: TDataSet; AMaster: TDataSource;
   AConstruido: Boolean; AModo: TModoColumnasSku;
@@ -181,7 +185,7 @@ implementation
 
 uses
   System.SysUtils, Winapi.Windows, cxDataStorage, cxButtonEdit,
-  cxCurrencyEdit, inLibLog, inLibFotos, inLibMsgArticulos,
+  cxCurrencyEdit, inLibFotos, inLibMsgArticulos,
   inLibMsgComun;
 
 procedure CrearColumnasTallasDocumento(
@@ -239,7 +243,8 @@ end;
 
 procedure DesmontarModoEntradaDocumento(
   AVista: TcxGridDBTableView; ADataSet: TDataSet;
-  var AModoEntrada: IModoEntradaGrid);
+  var AModoEntrada: IModoEntradaGrid;
+  const ARegistroLog: IRegistroLog);
 begin
   if Assigned(AVista) then
   begin
@@ -249,8 +254,8 @@ begin
       except
         on E: EInvalidOperation do
           // Ruido del editor inplace durante el desmontaje.
-          if inLibLog.Log() <> nil then
-            inLibLog.Log.LogWarning(
+          if Assigned(ARegistroLog) then
+            ARegistroLog.RegistrarAviso(
               'DesmontarModoEntradaDocumento: HideEdit ignorado: ' +
               E.Message);
       end;
@@ -296,7 +301,8 @@ function ConstruirModoEntradaDocumento(
   AOnEntrarEdicion, AOnSalirEdicion: TNotifyEvent;
   AModoSeleccionado: TModoColumnasSku;
   const AModosDegradables: TConjuntoModosColumnasSku;
-  const AContextoLog: string): Boolean;
+  const AContextoLog: string;
+  const ARegistroLog: IRegistroLog): Boolean;
 begin
   Result := True;
   try
@@ -307,8 +313,8 @@ begin
     begin
       if AModoSeleccionado in AModosDegradables then
       begin
-        if inLibLog.Log() <> nil then
-          inLibLog.Log.LogError(
+        if Assigned(ARegistroLog) then
+          ARegistroLog.RegistrarError(
             AContextoLog +
             ': fallo construyendo tallas horizontal, ' +
             'se degrada a SKU: ' + E.Message);
@@ -372,7 +378,8 @@ end;
 procedure LiberarModoYGestoresDocumento(
   var AModoEntrada: IModoEntradaGrid;
   var APivote: TGridPivoteCompra;
-  var AGestorTallas: TGestorGridTallas);
+  var AGestorTallas: TGestorGridTallas;
+  const ARegistroLog: IRegistroLog);
 begin
   if Assigned(AModoEntrada) then
   begin
@@ -381,8 +388,8 @@ begin
     except
       // El cierre no debe quedar bloqueado por un desmontaje parcial.
       on E: Exception do
-        if inLibLog.Log() <> nil then
-          inLibLog.Log.LogWarning(
+        if Assigned(ARegistroLog) then
+          ARegistroLog.RegistrarAviso(
             'LiberarModoYGestoresDocumento: Desmontar fallo: ' +
             E.Message);
     end;
@@ -911,6 +918,7 @@ var
 begin
   Result := Default(TGridPivoteCompraConfig);
   Result.Conexion := AConfig.Conexion;
+  Result.RegistroLog := AConfig.RegistroLog;
   if AConfig.AplicarContextoPivote then
     Result.ContextoSesion := AConfig.ContextoSesion;
   Result.Grid := AConfig.Vista;

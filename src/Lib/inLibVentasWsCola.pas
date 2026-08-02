@@ -19,12 +19,13 @@ interface
 uses
   System.SysUtils, System.Classes, inLibParametrosIntf,
   inLibContextoSesionIntf,
-  inLibVentasWsJsonIntf, inLibVentasWsColaIntf;
+  inLibVentasWsJsonIntf, inLibVentasWsColaIntf, inLibLogIntf;
 
 type
   TVentasWsCola = class
   private
     FHilo: TThread;
+    FRegistroLog: IRegistroLog;
     class function Activa(
       const AParametrosCaja: IParametrosCaja): Boolean; static;
     class procedure AdjuntarPdfSeguro(
@@ -32,7 +33,8 @@ type
       const ARepositorio: IRepositorioVentasWsCola;
       const AUsuario: string;
       const ASerie, ANumero, ARutaPdf: string;
-      AEsFactura: Boolean); static;
+      AEsFactura: Boolean;
+      const ARegistroLog: IRegistroLog); static;
   public
     class procedure RegistrarFactura(
       const AParametrosCaja: IParametrosCaja;
@@ -43,17 +45,21 @@ type
       const AParametrosCaja: IParametrosCaja;
       const ARepositorio: IRepositorioVentasWsCola;
       const AUsuario: string;
-      const ATipoEvento, ASerie, ANumero: string); static;
+      const ATipoEvento, ASerie, ANumero: string;
+      const ARegistroLog: IRegistroLog); static;
     class procedure AdjuntarTicketPdfSeguro(
       const AParametrosCaja: IParametrosCaja;
       const ARepositorio: IRepositorioVentasWsCola;
       const AUsuario: string;
-      const ASerie, ANumero, ARutaPdf: string); static;
+      const ASerie, ANumero, ARutaPdf: string;
+      const ARegistroLog: IRegistroLog); static;
     class procedure AdjuntarFacturaPdfSeguro(
       const AParametrosCaja: IParametrosCaja;
       const ARepositorio: IRepositorioVentasWsCola;
       const AUsuario: string;
-      const ASerie, ANumero, ARutaPdf: string); static;
+      const ASerie, ANumero, ARutaPdf: string;
+      const ARegistroLog: IRegistroLog); static;
+    constructor Create(const ARegistroLog: IRegistroLog);
     destructor Destroy; override;
     procedure IniciarHilo(
       const AContextoSesion: IContextoSesionAplicacion;
@@ -67,7 +73,7 @@ implementation
 
 uses
   Winapi.Windows, System.Hash,
-  inLibGlobalVar, inLibLog, inLibMsgIntegraciones,
+  inLibGlobalVar, inLibMsgIntegraciones,
   inLibVentasWsJson, inLibFactuzamApi;
 
 type
@@ -78,6 +84,7 @@ type
     FContextoSesion: IContextoSesionAplicacion;
     FParametrosApp: IParametrosAplicacion;
     FFabricaSesion: IFabricaSesionVentasWs;
+    FRegistroLog: IRegistroLog;
     FUsuario: string;
     FAvisoConfiguracion: Boolean;
     procedure EsperarCiclo;
@@ -93,7 +100,8 @@ type
       const AContextoSesion: IContextoSesionAplicacion;
       const AParametrosApp: IParametrosAplicacion;
       const AFabricaSesion: IFabricaSesionVentasWs;
-      const AUsuario: string); reintroduce;
+      const AUsuario: string;
+      const ARegistroLog: IRegistroLog); reintroduce;
     destructor Destroy; override;
   end;
 
@@ -147,7 +155,8 @@ class procedure TVentasWsCola.RegistrarEventoSeguro(
   const AParametrosCaja: IParametrosCaja;
   const ARepositorio: IRepositorioVentasWsCola;
   const AUsuario: string;
-  const ATipoEvento, ASerie, ANumero: string);
+  const ATipoEvento, ASerie, ANumero: string;
+  const ARegistroLog: IRegistroLog);
 begin
   if Activa(AParametrosCaja) then
   begin
@@ -156,8 +165,10 @@ begin
         NuevoUuid, ATipoEvento, ASerie, ANumero, AUsuario);
     except
       on E: Exception do
-        Log.LogError('No se pudo encolar el evento ' + ATipoEvento +
-          ' de ' + ASerie + '\' + ANumero + ': ' + E.Message);
+        if Assigned(ARegistroLog) then
+          ARegistroLog.RegistrarError(
+            'No se pudo encolar el evento ' + ATipoEvento +
+            ' de ' + ASerie + '\' + ANumero + ': ' + E.Message);
     end;
   end;
 end;
@@ -166,7 +177,8 @@ class procedure TVentasWsCola.AdjuntarTicketPdfSeguro(
   const AParametrosCaja: IParametrosCaja;
   const ARepositorio: IRepositorioVentasWsCola;
   const AUsuario: string;
-  const ASerie, ANumero, ARutaPdf: string);
+  const ASerie, ANumero, ARutaPdf: string;
+  const ARegistroLog: IRegistroLog);
 begin
   AdjuntarPdfSeguro(
     AParametrosCaja,
@@ -175,14 +187,16 @@ begin
     ASerie,
     ANumero,
     ARutaPdf,
-    False);
+    False,
+    ARegistroLog);
 end;
 
 class procedure TVentasWsCola.AdjuntarFacturaPdfSeguro(
   const AParametrosCaja: IParametrosCaja;
   const ARepositorio: IRepositorioVentasWsCola;
   const AUsuario: string;
-  const ASerie, ANumero, ARutaPdf: string);
+  const ASerie, ANumero, ARutaPdf: string;
+  const ARegistroLog: IRegistroLog);
 begin
   AdjuntarPdfSeguro(
     AParametrosCaja,
@@ -191,7 +205,8 @@ begin
     ASerie,
     ANumero,
     ARutaPdf,
-    True);
+    True,
+    ARegistroLog);
 end;
 
 class procedure TVentasWsCola.AdjuntarPdfSeguro(
@@ -199,7 +214,8 @@ class procedure TVentasWsCola.AdjuntarPdfSeguro(
   const ARepositorio: IRepositorioVentasWsCola;
   const AUsuario: string;
   const ASerie, ANumero, ARutaPdf: string;
-  AEsFactura: Boolean);
+  AEsFactura: Boolean;
+  const ARegistroLog: IRegistroLog);
 var
   iIdCola: Int64;
   sTipoEvento: string;
@@ -222,10 +238,18 @@ begin
       end;
     except
       on E: Exception do
-        Log.LogError('No se pudo adjuntar el PDF de ' + ASerie + '\' +
-          ANumero + ' a la cola de ventas: ' + E.Message);
+        if Assigned(ARegistroLog) then
+          ARegistroLog.RegistrarError(
+            'No se pudo adjuntar el PDF de ' + ASerie + '\' +
+            ANumero + ' a la cola de ventas: ' + E.Message);
     end;
   end;
+end;
+
+constructor TVentasWsCola.Create(const ARegistroLog: IRegistroLog);
+begin
+  inherited Create;
+  FRegistroLog := ARegistroLog;
 end;
 
 procedure TVentasWsCola.IniciarHilo(
@@ -233,17 +257,28 @@ procedure TVentasWsCola.IniciarHilo(
   const AParametrosApp: IParametrosAplicacion;
   const AFabricaSesion: IFabricaSesionVentasWs;
   const AUsuario: string);
+var
+  oHilo: TThread;
 begin
   if FHilo = nil then
   begin
-    FHilo := THiloVentasWsCola.Create(
+    oHilo := THiloVentasWsCola.Create(
       AContextoSesion,
       AParametrosApp,
       AFabricaSesion,
-      AUsuario);
-    FHilo.FreeOnTerminate := False;
-    FHilo.Start;
-    Log.LogInfo('Cola de ventas WS: hilo iniciado');
+      AUsuario,
+      FRegistroLog);
+    try
+      oHilo.FreeOnTerminate := False;
+      oHilo.Start;
+      if Assigned(FRegistroLog) then
+        FRegistroLog.RegistrarInformacion(
+          'Cola de ventas WS: hilo iniciado');
+      FHilo := oHilo;
+      oHilo := nil;
+    finally
+      FreeAndNil(oHilo);
+    end;
   end;
 end;
 
@@ -254,7 +289,9 @@ begin
     FHilo.Terminate;
     FHilo.WaitFor;
     FreeAndNil(FHilo);
-    Log.LogInfo('Cola de ventas WS: hilo detenido');
+    if Assigned(FRegistroLog) then
+      FRegistroLog.RegistrarInformacion(
+        'Cola de ventas WS: hilo detenido');
   end;
 end;
 
@@ -268,7 +305,8 @@ constructor THiloVentasWsCola.Create(
   const AContextoSesion: IContextoSesionAplicacion;
   const AParametrosApp: IParametrosAplicacion;
   const AFabricaSesion: IFabricaSesionVentasWs;
-  const AUsuario: string);
+  const AUsuario: string;
+  const ARegistroLog: IRegistroLog);
 begin
   if not Assigned(AContextoSesion) then
     raise EArgumentNilException.Create('AContextoSesion');
@@ -281,6 +319,7 @@ begin
   FParametrosApp := AParametrosApp;
   FFabricaSesion := AFabricaSesion;
   FUsuario := AUsuario;
+  FRegistroLog := ARegistroLog;
 end;
 
 destructor THiloVentasWsCola.Destroy;
@@ -290,6 +329,7 @@ begin
   FFabricaSesion := nil;
   FContextoSesion := nil;
   FParametrosApp := nil;
+  FRegistroLog := nil;
   inherited;
 end;
 
@@ -307,7 +347,9 @@ begin
       except
         on E: Exception do
         begin
-          Log.LogError('Cola de ventas WS: ' + E.Message);
+          if Assigned(FRegistroLog) then
+            FRegistroLog.RegistrarError(
+              'Cola de ventas WS: ' + E.Message);
           FRepositorio := nil;
           FSesion := nil;
         end;
@@ -375,8 +417,10 @@ begin
   end
   else if not FAvisoConfiguracion then
   begin
-    Log.LogWarning('Cola de ventas WS pendiente: falta URL, API key o ' +
-      'referencia de instalación.');
+    if Assigned(FRegistroLog) then
+      FRegistroLog.RegistrarAviso(
+        'Cola de ventas WS pendiente: falta URL, API key o ' +
+        'referencia de instalación.');
     FAvisoConfiguracion := True;
   end;
 end;

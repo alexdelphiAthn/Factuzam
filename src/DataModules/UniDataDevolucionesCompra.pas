@@ -124,7 +124,7 @@ type
 implementation
 
 uses
-  inLibLog, inLibValoresAutomaticos,
+  inLibValoresAutomaticos,
   System.Diagnostics, System.UITypes,
   inLibDevolucionesCompraMovimientos,
   UniDataDevolucionesCompraMovimientos,
@@ -208,11 +208,12 @@ const
     swQ := TStopwatch.StartNew;
     try
       qry.Open;
-      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+      RegistroLog.RegistrarRendimiento(
+        TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
     except
       on E: Exception do
       begin
-        inLibLog.Log.LogPerf(TAG,
+        RegistroLog.RegistrarRendimiento(TAG,
           Nombre + ' ERROR=' + E.Message,
           swQ.ElapsedMilliseconds);
         raise;
@@ -230,7 +231,7 @@ begin
                  'unqryDevolucionesCompraLineas');
   AbrirConTiempo(unqryMovimientosProveedor,
                  'unqryMovimientosProveedor');
-  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+  RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmDevolucionesCompra.RefrescarAlmacenes(

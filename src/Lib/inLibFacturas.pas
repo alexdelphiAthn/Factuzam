@@ -19,7 +19,7 @@ interface
 uses
   Uni, System.StrUtils, System.SysUtils, System.Classes, Data.DB, System.Math,
   Datasnap.DBClient, Datasnap.Provider, inLibMotorFiscalVenta,
-  inLibFacturasLecturasIntf;
+  inLibFacturasLecturasIntf, inLibLogIntf;
 
 const
   fnrofaclin = 'NUMERO_FAC_FACLIN';
@@ -266,6 +266,7 @@ type
     _LineaenEdicion:TLinFac;
     _lineasMotorFiscal: TLineasMotorFiscalVenta;
     FRepositorioLecturas: IRepositorioLecturasFactura;
+    FRegistroLog: IRegistroLog;
     function RepositorioLecturas: IRepositorioLecturasFactura;
     function LineaActualPendienteDeResolver: Boolean;
     function ClienteTieneDatosFiscales: Boolean;
@@ -297,7 +298,8 @@ type
                          IRepositorioLecturasFactura;
                        AUnqryFac: TDataset;
                        unqryLineas: TDataset;
-                       LineaEnEdicion:TLinFac = nil);
+                       LineaEnEdicion:TLinFac = nil;
+                       const ARegistroLog: IRegistroLog = nil);
     function ProcesarFacturaCompleta: Boolean;
     procedure CalcularTotalesFactura;
     procedure ActualizarTotalesEnDataSet;
@@ -342,7 +344,7 @@ implementation
 
 uses
   System.Variants,
-  inLibLog, inLibMsgFacturas;
+  inLibRegistroLogNulo, inLibMsgFacturas;
 
 procedure PostearSiPendiente(ADataSet: TDataSet);
 begin
@@ -895,9 +897,13 @@ constructor TFacturaTotales.Create(AConexion: TUniConnection;
                                      IRepositorioLecturasFactura;
                                    AUnqryFac: TDataset;
                                    unqryLineas: TDataset;
-                                   LineaEnEdicion:TLinFac = nil);
+                                   LineaEnEdicion:TLinFac;
+                                   const ARegistroLog: IRegistroLog);
 begin
   inherited Create;
+  FRegistroLog := ARegistroLog;
+  if not Assigned(FRegistroLog) then
+    FRegistroLog := CrearRegistroLogNulo;
   _conexion := AConexion;
   FRepositorioLecturas := ARepositorioLecturas;
   _unqryFac := AUnqryFac;
@@ -1251,9 +1257,9 @@ begin
       begin
         _mensajeError := E.Message;
         // Se registra la causa original; el llamante decide si aborta
-        if Log() <> nil then
-          Log.LogError('TFacturaTotales.ProcesarFacturaCompleta (' +
-                       E.ClassName + '): ' + E.Message);
+        FRegistroLog.RegistrarError(
+          'TFacturaTotales.ProcesarFacturaCompleta (' +
+          E.ClassName + '): ' + E.Message);
         Result := False;
       end;
     end;
@@ -1493,7 +1499,7 @@ begin
       _unqryLineas.FreeBookmark(bookmark);
     end;
     if WasEmptyInsert then
-      _unqryLineas.Append  
+      _unqryLineas.Append
     else if WasEdit then
       _unqryLineas.Edit;
   finally

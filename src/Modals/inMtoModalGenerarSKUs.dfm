@@ -165,79 +165,11 @@
       end
     end
   end
-  object unqryMaestro: TUniQuery
-    Connection = dmConn.conUni
-    SQL.Strings = (
-      'SELECT aca.CODIGO_ART_ACA, aca.ID_VA_ACA AS ID_ATB_VA,'
-      '       va.ID_VAR_VA,'
-      '       COALESCE(va.NOMBRE_VA, aca.ID_VA_ACA) AS NOMBRE_ATRIBUTO,'
-      '       va.ORDEN_VA,'
-      '       aca.ORDEN_ACA'
-      '  FROM fza_articulos_conjuntos_asign aca'
-      '  JOIN fza_variaciones_atributos va'
-      '    ON va.ID_ATB_VA = aca.ID_VA_ACA'
-      '   AND va.ID_VAR_VA = :var'
-      ' WHERE aca.CODIGO_ART_ACA = :art'
-      
-        ' ORDER BY COALESCE(NULLIF(aca.ORDEN_ACA, 0), va.ORDEN_VA), va.OR' +
-        'DEN_VA')
-    Active = True
-    Left = 600
-    Top = 64
-    ParamData = <
-      item
-        DataType = ftWideString
-        Name = 'var'
-        ParamType = ptInput
-        Value = ''
-      end
-      item
-        DataType = ftWideString
-        Name = 'art'
-        ParamType = ptInput
-        Value = ''
-      end>
-  end
-  object unqryDetalle: TUniQuery
-    Connection = dmConn.conUni
-    SQL.Strings = (
-      'SELECT  '
-      '             atr.ID_ATB_VA,  '
-      '             val.ID_AV AS ID_AC,  '
-      '             val.AV AS NOMBRE_AC,  '
-      '             val.ORDEN_AV,  '
-      '             0 AS ASIGNADO  '
-      '        FROM fza_variaciones_atributos atr  '
-      '        JOIN fza_articulos_conjuntos_asign asign  '
-      '          ON asign.ID_VA_ACA = atr.ID_ATB_VA  '
-      '         AND asign.CODIGO_ART_ACA = '#39'DEMO-CAMISA'#39'  '
-      '        JOIN fza_atributos_conjuntos_det det  '
-      '          ON det.ID_AC_ACD = asign.ID_AC_ACA  '
-      '        JOIN fza_atributos_valores val  '
-      '          ON val.ID_AV = det.ID_AV_ACD  '
-      '       '
-      '')
-    MasterSource = dsMaestro
-    MasterFields = 'ID_ATB_VA'
-    DetailFields = 'ID_ATB_VA'
-    Active = True
-    Left = 680
-    Top = 56
-    ParamData = <
-      item
-        DataType = ftWideString
-        Name = 'ID_ATB_VA'
-        ParamType = ptInput
-        Value = nil
-      end>
-  end
   object dsMaestro: TDataSource
-    DataSet = unqryMaestro
     Left = 592
     Top = 144
   end
   object dsDetalle: TDataSource
-    DataSet = unqryDetalle
     Left = 688
     Top = 144
   end

@@ -44,7 +44,7 @@ uses
   cxMaskEdit, cxDropDownEdit, cxLookupEdit, cxDBLookupEdit,
   cxDBLookupComboBox, cxCheckBox,
   System.Actions, Vcl.ActnList,
-  Data.DB, MemDS, DBAccess, Uni;
+  Data.DB, inLibSeleccionAlmacenPersistenciaIntf;
 
 type
   TSelAlmacenAlbaranResult = record
@@ -66,14 +66,12 @@ type
     lblPedido:          TLabel;
     lblAlmacen:         TcxLabel;
     cbbAlmacen:         TcxLookupComboBox;
-    unqryAlmacenes:     TUniQuery;
     dsAlmacenes:        TDataSource;
     ActionList1:        TActionList;
     actAceptar:         TAction;
     chkAnadirExistente: TcxCheckBox;
     lblAlbaran:         TcxLabel;
     cbbAlbaran:         TcxLookupComboBox;
-    unqryAlbaranesPed:  TUniQuery;
     dsAlbaranesPed:     TDataSource;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -91,6 +89,11 @@ type
     FEsExistente    : Boolean;
     FNumeroAlb      : string;
     FSerieAlb       : string;
+    FRepositorio: IRepositorioSeleccionAlmacen;
+    FConsultaAlmacenes: IConsultaSeleccionAlmacen;
+    FConsultaAlbaranes: IConsultaSeleccionAlmacen;
+    FAlmacenes: TDataSet;
+    FAlbaranes: TDataSet;
     procedure CargarAlmacenes;
     procedure CargarAlbaranesPedido;
     procedure ActualizarEstadoControles;
@@ -154,13 +157,20 @@ begin
   FEsExistente   := False;
   FNumeroAlb     := '';
   FSerieAlb      := '';
-  unqryAlmacenes.Connection    := ConexionPrincipal;
-  unqryAlbaranesPed.Connection := ConexionPrincipal;
+  FRepositorio := ContextoRepositoriosPantalla.Documentos.
+    CrearRepositorioSeleccionAlmacen;
 end;
 
 procedure TfrmModalSelAlmacenAlbaran.FormShow(Sender: TObject);
 begin
   inherited;
+  dsAlmacenes.DataSet := nil;
+  dsAlbaranesPed.DataSet := nil;
+  FAlmacenes := nil;
+  FAlbaranes := nil;
+  FConsultaAlmacenes := nil;
+  FConsultaAlbaranes := nil;
+  FRepositorio := nil;
   lblPedido.Caption := Format(SCaptionCrearAlbaranDesdePedido,
     [FormatearDocumentoEmpresa(ConexionPrincipal, FCodigoEmpresa, FSeriePed,
       FNumPed)]);
@@ -192,24 +202,19 @@ end;
 
 procedure TfrmModalSelAlmacenAlbaran.CargarAlmacenes;
 begin
-  // Combo con todos los almacenes activos.
-  unqryAlmacenes.Connection := ConexionPrincipal;
-  if unqryAlmacenes.Active then
-    unqryAlmacenes.Close;
-  unqryAlmacenes.Open;
+  FConsultaAlmacenes := FRepositorio.ConsultarAlmacenes;
+  FAlmacenes := FConsultaAlmacenes.DataSet;
+  dsAlmacenes.DataSet := FAlmacenes;
   cbbAlmacen.Properties.ListSource := dsAlmacenes;
 end;
 
 procedure TfrmModalSelAlmacenAlbaran.CargarAlbaranesPedido;
 begin
-  // Albaranes ya creados desde ESTE pedido y no facturados; son los
-  // unicos destinos validos para anadir lineas.
-  unqryAlbaranesPed.Connection := ConexionPrincipal;
-  if unqryAlbaranesPed.Active then
-    unqryAlbaranesPed.Close;
-  unqryAlbaranesPed.ParamByName('np').AsString := FNumPed;
-  unqryAlbaranesPed.ParamByName('sp').AsString := FSeriePed;
-  unqryAlbaranesPed.Open;
+  FConsultaAlbaranes := FRepositorio.ConsultarAlbaranesVenta(
+    FNumPed,
+    FSeriePed);
+  FAlbaranes := FConsultaAlbaranes.DataSet;
+  dsAlbaranesPed.DataSet := FAlbaranes;
   cbbAlbaran.Properties.ListSource := dsAlbaranesPed;
 end;
 
@@ -219,8 +224,9 @@ var
 begin
   // Solo se puede anadir a un albaran existente si el pedido tiene
   // alguno no facturado.
-  bHayAlbaranes := unqryAlbaranesPed.Active and
-                   (unqryAlbaranesPed.RecordCount > 0);
+  bHayAlbaranes := Assigned(FAlbaranes) and
+                   FAlbaranes.Active and
+                   (FAlbaranes.RecordCount > 0);
   chkAnadirExistente.Enabled := bHayAlbaranes;
   if not bHayAlbaranes then
     chkAnadirExistente.Checked := False;
@@ -277,8 +283,8 @@ begin
       sNumAlb := VarToStr(vAlb);
       // La serie real se lee de la fila localizada; los albaranes de un
       // pedido comparten serie con el pedido, pero no lo damos por hecho.
-      if unqryAlbaranesPed.Locate('NUMERO_ALB', sNumAlb, []) then
-        FSerieAlb := unqryAlbaranesPed.FieldByName('SERIE_ALB').AsString
+      if FAlbaranes.Locate('NUMERO_ALB', sNumAlb, []) then
+        FSerieAlb := FAlbaranes.FieldByName('SERIE_ALB').AsString
       else
         FSerieAlb := FSeriePed;
       FNumeroAlb     := sNumAlb;

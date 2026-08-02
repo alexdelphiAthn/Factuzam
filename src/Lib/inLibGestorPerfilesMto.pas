@@ -17,7 +17,7 @@ interface
 
 uses
   System.Classes, Vcl.Forms, Data.DB, Uni, cxLabel, cxGridCustomTableView,
-  inLibPerfilesUsuarioIntf;
+  inLibPerfilesUsuarioIntf, inLibConfigCamposIntf, inLibLogIntf;
 
 type
   TSolicitarDestinoPerfilMto = function(
@@ -44,6 +44,8 @@ type
     FEtiquetaTabla: TcxLabel;
     FServicioLectura: ILectorPerfilesUsuario;
     FServicioEscritura: IEscritorPerfilesUsuario;
+    FConfiguracionCampos: IConfiguracionCampos;
+    FRegistroLog: IRegistroLog;
     FSolicitarDestino: TSolicitarDestinoPerfilMto;
     FRecogerParticulares: TRecogerPerfilesParticularesMto;
     FResetearGrid: TResetearGridPerfilMto;
@@ -60,6 +62,8 @@ type
       AEtiquetaTabla: TcxLabel;
       const AServicioLectura: ILectorPerfilesUsuario;
       const AServicioEscritura: IEscritorPerfilesUsuario;
+      const AConfiguracionCampos: IConfiguracionCampos;
+      const ARegistroLog: IRegistroLog;
       ASolicitarDestino: TSolicitarDestinoPerfilMto;
       ARecogerParticulares: TRecogerPerfilesParticularesMto;
       AResetearGrid: TResetearGridPerfilMto;
@@ -103,6 +107,8 @@ constructor TGestorPerfilesMto.Create(
   AEtiquetaTabla: TcxLabel;
   const AServicioLectura: ILectorPerfilesUsuario;
   const AServicioEscritura: IEscritorPerfilesUsuario;
+  const AConfiguracionCampos: IConfiguracionCampos;
+  const ARegistroLog: IRegistroLog;
   ASolicitarDestino: TSolicitarDestinoPerfilMto;
   ARecogerParticulares: TRecogerPerfilesParticularesMto;
   AResetearGrid: TResetearGridPerfilMto;
@@ -114,6 +120,8 @@ begin
   FEtiquetaTabla := AEtiquetaTabla;
   FServicioLectura := AServicioLectura;
   FServicioEscritura := AServicioEscritura;
+  FConfiguracionCampos := AConfiguracionCampos;
+  FRegistroLog := ARegistroLog;
   FSolicitarDestino := ASolicitarDestino;
   FRecogerParticulares := ARecogerParticulares;
   FResetearGrid := AResetearGrid;
@@ -126,6 +134,8 @@ begin
   FreeAndNil(FPerfil);
   FServicioLectura := nil;
   FServicioEscritura := nil;
+  FConfiguracionCampos := nil;
+  FRegistroLog := nil;
   inherited;
 end;
 
@@ -193,7 +203,7 @@ begin
         begin
           oGrid.BeginUpdate;
           try
-            CrearItemsFaltantes(oGrid);
+            CrearItemsFaltantes(oGrid, FRegistroLog);
           finally
             oGrid.EndUpdate;
           end;
@@ -211,8 +221,12 @@ begin
           'True') then
         begin
           PonerAnchosTitulos(
-            oGrid, FFormulario.Name, FPerfil);
-          RestaurarFocoGrid(oGrid, FPerfil);
+            oGrid,
+            FFormulario.Name,
+            FPerfil,
+            FConfiguracionCampos,
+            FRegistroLog);
+          RestaurarFocoGrid(oGrid, FPerfil, FRegistroLog);
         end;
       end;
     end;
@@ -322,7 +336,7 @@ begin
         Valor(oGrid.Name + '__oCreateItems', 'False'));
       CollectSettingsColumnProfile(
         oGrid, FFormulario.Name, APermisos,
-        FServicioEscritura, APerfiles);
+        FServicioEscritura, APerfiles, FRegistroLog);
     end;
   end;
   if Assigned(FRecogerParticulares) then
@@ -444,7 +458,7 @@ procedure TGestorPerfilesMto.RestaurarFoco(
   AVista: TcxCustomGridTableView);
 begin
   if Assigned(FPerfil) and Assigned(AVista) then
-    RestaurarFocoGrid(AVista, FPerfil);
+    RestaurarFocoGrid(AVista, FPerfil, FRegistroLog);
 end;
 
 end.

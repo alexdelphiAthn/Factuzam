@@ -156,47 +156,6 @@
     Left = 176
     Top = 120
   end
-  object unqryPerfiles: TUniQuery
-    Connection = dmConn.conUni
-    SQL.Strings = (
-      'select USUARIO_GRUPO_USUPER, KEY_USUPER, SUBKEY_USUPER,'
-      '       VALUE_USUPER, TYPE_BLOB_USUPER,'
-      '       INSTANTE_MODIF, INSTANTE_ALTA,'
-      '       USUARIO_ALTA, USUARIO_MODIF'
-      '  from fza_usuarios_perfiles'
-      ' where (KEY_USUPER = :FormName)'
-      '   and (USUARIO_GRUPO_USUPER = :Usuario OR'
-      '        USUARIO_GRUPO_USUPER = :Grupo   OR'
-      '        USUARIO_GRUPO_USUPER = :Todos)')
-    Left = 16
-    Top = 8
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'FormName'
-        Value = nil
-      end
-      item
-        DataType = ftUnknown
-        Name = 'Usuario'
-        Value = nil
-      end
-      item
-        DataType = ftUnknown
-        Name = 'Grupo'
-        Value = nil
-      end
-      item
-        DataType = ftUnknown
-        Name = 'Todos'
-        Value = nil
-      end>
-  end
-  object dsPerfiles: TDataSource
-    DataSet = unqryPerfiles
-    Left = 16
-    Top = 64
-  end
   object frxdsgnr1: TfrxDesigner
     CloseQuery = False
     DefaultScriptLanguage = 'PascalScript'
@@ -269,29 +228,5 @@
   object frLocalizationController1: TfrLocalizationController
     Left = 64
     Top = 184
-  end
-  object unqryInformesGuias: TUniQuery
-    Connection = dmConn.conUni
-    SQL.Strings = (
-      'select *'
-      '  from fza_informes_guias'
-      ' where INFORME_INFGUI = :INF'
-      '   and ESACTIVO_INFGUI = '#39'S'#39
-      '   and (FORMATO_INFGUI = '#39#39
-      '        or FORMATO_INFGUI = :FMT)'
-      ' order by ORDEN_INFGUI, CODIGO_INFGUI')
-    Left = 112
-    Top = 8
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'INF'
-        Value = nil
-      end
-      item
-        DataType = ftUnknown
-        Name = 'FMT'
-        Value = nil
-      end>
   end
 end

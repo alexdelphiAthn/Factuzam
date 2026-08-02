@@ -23,17 +23,22 @@ type
     mpcTextoPlano,
     mpcCifrada
   );
+  TResultadoCopiaSeguridad = (
+    rcsCompletada,
+    rcsCancelada,
+    rcsFallida
+  );
   TProgresoCopiaSeguridadEvent = procedure(
     const AEtapa: string;
     APaso, ATotal: Integer;
     AFilaGlobal, AFilasGlobalTotal: Integer
   ) of object;
   TFinalizarCopiaSeguridadEvent = procedure(
-    AExito: Boolean;
+    AResultado: TResultadoCopiaSeguridad;
     const AError: string;
     ALogBuffer: TStringList
   ) of object;
-  IServicioCopiasSeguridad = interface
+  IRepositorioCopiasSeguridad = interface
     ['{690064B6-D994-4687-9A4F-75C6CF917E46}']
     function ModoCreacion: TModoProteccionCopia;
     function ExtensionCreacion: string;
@@ -55,8 +60,9 @@ type
       const ARutaFichero, AContrasena: string;
       AOnProgreso: TProgresoCopiaSeguridadEvent;
       out AError: string
-    ): Boolean;
+    ): TResultadoCopiaSeguridad;
   end;
+  IServicioCopiasSeguridad = IRepositorioCopiasSeguridad;
 
 implementation
 

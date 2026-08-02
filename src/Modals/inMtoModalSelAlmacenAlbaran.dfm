@@ -143,45 +143,11 @@
       OnExecute = actAceptarExecute
     end
   end
-  object unqryAlmacenes: TUniQuery
-    SQL.Strings = (
-      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM'
-      '  FROM fza_almacenes'
-      ' WHERE ESACTIVO_ALM = '#39'S'#39
-      ' ORDER BY NOMBRE_ALM_ALM')
-    Left = 360
-    Top = 16
-  end
   object dsAlmacenes: TDataSource
-    DataSet = unqryAlmacenes
     Left = 408
     Top = 16
   end
-  object unqryAlbaranesPed: TUniQuery
-    SQL.Strings = (
-      'SELECT NUMERO_ALB, SERIE_ALB, FECHA_ALB, ESTADO_ALB, '
-      '       TOTAL_LIQUIDO_ALB'
-      '  FROM fza_albaranes'
-      ' WHERE NUMERO_PED_ALB = :np'
-      '   AND SERIE_PED_ALB  = :sp'
-      '   AND IFNULL(ESTADO_ALB, '#39#39') <> '#39'FACTURADO'#39
-      ' ORDER BY FECHA_ALB DESC, NUMERO_ALB DESC')
-    Left = 360
-    Top = 72
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'np'
-        Value = nil
-      end
-      item
-        DataType = ftUnknown
-        Name = 'sp'
-        Value = nil
-      end>
-  end
   object dsAlbaranesPed: TDataSource
-    DataSet = unqryAlbaranesPed
     Left = 408
     Top = 72
   end

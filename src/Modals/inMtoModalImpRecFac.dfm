@@ -594,14 +594,6 @@
     Left = 472
     Top = 240
   end
-  inherited unqryPerfiles: TUniQuery
-    Left = 312
-    Top = 128
-  end
-  inherited dsPerfiles: TDataSource
-    Left = 312
-    Top = 184
-  end
   inherited frxdsgnr1: TfrxDesigner
     Left = 312
     Top = 240

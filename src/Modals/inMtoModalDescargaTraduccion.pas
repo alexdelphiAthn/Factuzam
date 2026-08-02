@@ -66,7 +66,7 @@ type
 implementation
 
 uses
-  inLibLog, inLibMsgIntegraciones, inLibTraduccionesDescarga;
+  inLibMsgIntegraciones, inLibTraduccionesDescarga;
 
 {$R *.dfm}
 
@@ -137,7 +137,7 @@ begin
     on E: Exception do
     begin
       FError := E.Message;
-      Log.LogError(
+      RegistroLog.RegistrarError(
         'Descarga de traducción ' + FIdioma + ': ' + E.Message);
     end;
   end;

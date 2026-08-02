@@ -23,18 +23,20 @@ uses
   Uni, inLibParametrosIntf,
   inLibContextoSesionIntf,
   inLibCajaVentaIntf,
-  inLibFacturasPersistenciaIntf, inLibVentasWsColaIntf;
+  inLibFacturasPersistenciaIntf, inLibVentasWsColaIntf,
+  inLibLogIntf;
 
 function CrearServiciosOperacionCaja(
   AConexion: TUniConnection;
   const AParametrosCaja: IParametrosCaja;
   const AContextoSesion: IContextoSesionAplicacion;
   const AImpresor: IImpresorVenta;
-  const AGrabador: IGrabadorVentaCaja;
+  const AUnidadTrabajo: IUnidadTrabajoVentaCaja;
   const ARepositorioConsultas: IRepositorioConsultasCaja;
   const ARepositorioPdf: IRepositorioPdfFactura;
-  const ARepositorioVentasWs: IRepositorioVentasWsCola
-): TServiciosOperacionCaja;
+  const ARepositorioVentasWs: IRepositorioVentasWsCola;
+  const ARegistroLog: IRegistroLog
+): TContextoDependenciasOperacionCaja;
 
 implementation
 
@@ -49,11 +51,12 @@ function CrearServiciosOperacionCaja(
   const AParametrosCaja: IParametrosCaja;
   const AContextoSesion: IContextoSesionAplicacion;
   const AImpresor: IImpresorVenta;
-  const AGrabador: IGrabadorVentaCaja;
+  const AUnidadTrabajo: IUnidadTrabajoVentaCaja;
   const ARepositorioConsultas: IRepositorioConsultasCaja;
   const ARepositorioPdf: IRepositorioPdfFactura;
-  const ARepositorioVentasWs: IRepositorioVentasWsCola
-): TServiciosOperacionCaja;
+  const ARepositorioVentasWs: IRepositorioVentasWsCola;
+  const ARegistroLog: IRegistroLog
+): TContextoDependenciasOperacionCaja;
 begin
   Result.RepositorioConsultas := ARepositorioConsultas;
   Result.ServicioRectificacion :=
@@ -66,14 +69,15 @@ begin
   Result.RepartidorDescuento :=
     TRepartidorDescuento.Create;
   Result.Impresor := AImpresor;
-  Result.ServicioCierre :=
-    TServicioCierreVenta.Create(
-      AGrabador,
+  Result.CasoUsoCierre :=
+    TCasoUsoCierreVentaCaja.Create(
+      AUnidadTrabajo,
       Result.Impresor,
       AParametrosCaja,
       AContextoSesion,
       ARepositorioPdf,
-      ARepositorioVentasWs);
+      ARepositorioVentasWs,
+      ARegistroLog);
 end;
 
 end.

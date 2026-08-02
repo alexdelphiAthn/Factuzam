@@ -112,11 +112,27 @@ uses
   Vcl.Dialogs,
   inLibArticulosAtributosIntf,
   inLibArticulosValidadorIntf,
+  inLibLogIntf,
   inLibAtributosPaleta, inLibGridPivoteVentaPresentacion,
-  inLibGridPivoteVentaVista, inLibLog, inLibMsgArticulos,
+  inLibGridPivoteVentaVista, inLibMsgArticulos,
   inLibMsgVentas, inLibPivoteVentaModelo;
 
 type
+  TRegistroPivoteVenta = class
+  private
+    FRegistroLog: IRegistroLog;
+  public
+    constructor Create(const ARegistroLog: IRegistroLog);
+    destructor Destroy; override;
+    procedure RegistrarInfo(const AMensaje: string);
+    procedure RegistrarAdvertencia(const AMensaje: string);
+  end;
+
+  TEstadoGridPivoteVenta = record
+    GuardandoCantidad: Boolean;
+    EntradaCancelada: Boolean;
+  end;
+
   TGridPivoteVenta = class(TInterfacedObject, IModoEntradaGrid,
                            IPivoteVentaAlbaranar,
                            IPivoteVentaBorrarGrupo)
@@ -126,12 +142,11 @@ type
     FRepositorio      : IRepositorioEdicionPivoteVenta;
     FModelo           : TModeloPivoteVenta;
     FPresentacion     : TPresentacionPivoteVenta;
+    FRegistroEventos  : TRegistroPivoteVenta;
     FOnResuelto       : TSkuResueltoEvent;
     FOnEntrarEdicion  : TNotifyEvent;
     FOnSalirEdicion   : TNotifyEvent;
-    FGuardandoCantidad: Boolean;
-    // Cancela la validación si el usuario abandona la paleta de variación.
-    FEntradaCancelada : Boolean;
+    FEstado           : TEstadoGridPivoteVenta;
     function CdsLineas: TDataSet;
     function CampoTexto(ADs: TDataSet; const ACampo: string): string;
     function CampoFloat(ADs: TDataSet; const ACampo: string): Double;
@@ -189,19 +204,28 @@ type
     function BorrarGrupoActual: Integer;
     function ResolverEntrada(const AEntrada: string): Boolean;
   end;
-
-procedure RegistrarInfoPivoteVenta(const AMensaje: string);
+constructor TRegistroPivoteVenta.Create(
+  const ARegistroLog: IRegistroLog);
 begin
-  if Log() <> nil then
-    Log.LogInfo(AMensaje);
+  inherited Create;
+  FRegistroLog := ARegistroLog;
 end;
-
-procedure RegistrarWarningPivoteVenta(const AMensaje: string);
+destructor TRegistroPivoteVenta.Destroy;
 begin
-  if Log() <> nil then
-    Log.LogWarning(AMensaje);
+  FRegistroLog := nil;
+  inherited;
 end;
-
+procedure TRegistroPivoteVenta.RegistrarInfo(const AMensaje: string);
+begin
+  if Assigned(FRegistroLog) then
+    FRegistroLog.RegistrarInformacion(AMensaje);
+end;
+procedure TRegistroPivoteVenta.RegistrarAdvertencia(
+  const AMensaje: string);
+begin
+  if Assigned(FRegistroLog) then
+    FRegistroLog.RegistrarAviso(AMensaje);
+end;
 function CrearModoEntradaGridPivoteVenta(
   const AConfig: TConfigColumnasSku;
   const ACfgPivote: TGridPivoteVentaConfig): IModoEntradaGrid;
@@ -217,16 +241,17 @@ var
 begin
   inherited Create;
   FConfig := AConfig;
+  FRegistroEventos := TRegistroPivoteVenta.Create(FConfig.RegistroLog);
   FConfig.Modo := mcsTallasHorPed;
   FCfg := ACfgPivote;
   if FCfg.MaxColumnas <= 0 then
     FCfg.MaxColumnas := 20;
   FRepositorio := FCfg.Repositorios.Edicion;
   if ((FRepositorio = nil) or (FCfg.Repositorios.Modelo = nil)) and
-     (Log() <> nil) then
+     Assigned(FConfig.RegistroLog) then
     // Sin puerto compuesto, el pivote pierde SKU, conjuntos y alta de
     // SKU: el consumidor debe pasar CrearRepositorioPivoteVenta.
-    Log.LogWarning(
+    FConfig.RegistroLog.RegistrarAviso(
       'GridPivoteVenta: config sin Repositorio; las resoluciones de ' +
       'SKU y conjuntos quedaran vacias.');
   FModelo := TModeloPivoteVenta.Create(FCfg.Repositorios.Modelo,
@@ -252,17 +277,17 @@ begin
   oCallbacks.AlLineaFocada := AlLineaFocada;
   oCallbacks.AlEntrarEdicion := AlEntrarEdicion;
   oCallbacks.AlSalirEdicion := AlSalirEdicion;
-  oCallbacks.AlLogInfo := RegistrarInfoPivoteVenta;
-  oCallbacks.AlLogWarning := RegistrarWarningPivoteVenta;
+  oCallbacks.AlLogInfo := FRegistroEventos.RegistrarInfo;
+  oCallbacks.AlLogWarning := FRegistroEventos.RegistrarAdvertencia;
   FPresentacion := TPresentacionPivoteVenta.Create(oCfgPres,
     oCallbacks, FModelo);
 end;
 destructor TGridPivoteVenta.Destroy;
 begin
-  // La presentacion restaura eventos y vista temporal en su propio
-  // destructor; despues puede liberarse el modelo.
+  // La presentación restaura sus eventos antes de liberar el modelo.
   FreeAndNil(FPresentacion);
   FreeAndNil(FModelo);
+  FreeAndNil(FRegistroEventos);
   inherited;
 end;
 
@@ -318,7 +343,7 @@ end;
 
 procedure TGridPivoteVenta.PonerGuardando(AGuardando: Boolean);
 begin
-  FGuardandoCantidad := AGuardando;
+  FEstado.GuardandoCantidad := AGuardando;
   if FPresentacion <> nil then
     FPresentacion.EdicionSuspendida := AGuardando;
 end;
@@ -419,9 +444,9 @@ begin
           oDatos.Almacen := CampoTexto(oDs, FCfg.FieldAlmacen);
           if FModelo.RegistrarLinea(oDatos, iLineaRepr,
                                     bGrupoNuevo) then
-            if bGrupoNuevo and (Log() <> nil) then
+            if bGrupoNuevo and Assigned(FConfig.RegistroLog) then
               // Traza de diagnostico (fase de integracion).
-              Log.LogInfo(Format(
+              FConfig.RegistroLog.RegistrarInformacion(Format(
                 'PivVenta.Cache: repr=%d art=%s tallaAv=%d sku=%s',
                 [iLineaRepr, oDatos.Articulo, oInfo.TallaAv, sSku]));
         end;
@@ -438,12 +463,12 @@ begin
     FModelo.CompletarCarga;
     aSinConjunto := FModelo.GruposSinConjunto;
     for i := 0 to High(aSinConjunto) do
-      if (Log() <> nil) and
+      if Assigned(FConfig.RegistroLog) and
          FModelo.Grupo(aSinConjunto[i], oGrupo) then
         // Error DOCUMENTADO: sin conjunto (ni real ni virtual) que
         // cubra las tallas del grupo, sus celdas no tienen columna
         // donde pintarse.
-        Log.LogWarning(Format(
+        FConfig.RegistroLog.RegistrarAviso(Format(
           'PivVenta.Cache: NINGUN conjunto global cubre las %d ' +
           'tallas del grupo repr=%d (art=%s); sus cantidades no se ' +
           'pintaran en columnas de talla. Revisar ' +
@@ -593,7 +618,7 @@ var
   rPedida, rEntregada, rPendBase: Double;
   bFiltrado, bBorrar: Boolean;
 begin
-  if not FGuardandoCantidad then
+  if not FEstado.GuardandoCantidad then
   begin
     oDs := CdsLineas;
     iLineaFoco := LineaBaseDesdeClaveCelda(AClave);
@@ -907,7 +932,7 @@ var
   bPrecio, bLineaVacia, bSeguir: Boolean;
 begin
   Result := False;
-  FEntradaCancelada := False;
+  FEstado.EntradaCancelada := False;
   if Trim(AEntrada) <> '' then
   begin
     oValidador := FConfig.ValidadorArticulos;
@@ -931,7 +956,7 @@ begin
         sSku := ElegirSkuConPaleta(oRes.CodigoArticulo);
         if sSku = '' then
         begin
-          FEntradaCancelada := True;
+          FEstado.EntradaCancelada := True;
           bSeguir := False;
         end;
       end;
@@ -999,7 +1024,7 @@ function TGridPivoteVenta.AlResolverEntradaEditor(
   out ACancelada: Boolean): Boolean;
 begin
   Result := ResolverEntrada(AEntrada);
-  ACancelada := FEntradaCancelada;
+  ACancelada := FEstado.EntradaCancelada;
   ATextoLinea := CampoTexto(CdsLineas, FCfg.FieldArt);
 end;
 

@@ -517,10 +517,8 @@ begin
   oRegistro :=
     CrearRegistroDefinicionesSqlAplicacion;
   oDefiniciones := oRegistro.ObtenerDefiniciones;
-  // 123 = 120 + las tres consultas de factura de Caja incorporadas
-  // en 95ecd9da: por codigo de barras, por operacion y ventas
-  // origen SKU.
-  Assert.AreEqual(123, oRegistro.Cantidad);
+  // 126 = 123 + las consultas de articulos y atributos de caja.
+  Assert.AreEqual(126, oRegistro.Cantidad);
   Assert.AreEqual(
     'SQL__RepositorioComprasSesiones__ObtenerSiguienteLinea',
     ClavePerfilSql(oDefiniciones[0]));

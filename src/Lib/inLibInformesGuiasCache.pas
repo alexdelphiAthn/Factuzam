@@ -22,8 +22,7 @@ unit inLibInformesGuiasCache;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.Generics.Collections,
-  DBAccess, Uni;
+  System.SysUtils, System.Generics.Collections;
 
 type
   TInformeGuiaItem = record
@@ -43,10 +42,16 @@ type
   TListaGuias      = TList<TInformeGuiaItem>;
   TGuiasPorInforme = TObjectDictionary<string, TListaGuias>;
 
+  ILectorInformesGuias = interface
+    ['{42F49D2B-2A43-4B31-8577-1BB76243586F}']
+    function Cargar: TArray<TInformeGuiaItem>;
+  end;
+
   IInformesGuiasCache = interface
     ['{6315909C-BE4B-473A-B544-5B741D3B3135}']
     function GetCargada: Boolean;
-    procedure Precargar(AConn: TUniConnection = nil);
+    procedure Precargar(
+      const ALector: ILectorInformesGuias = nil);
     procedure Invalidar;
     function Obtener(
       const AInforme,
@@ -67,13 +72,14 @@ type
   )
   private
     FPorInforme: TGuiasPorInforme;
-    FConexion: TUniConnection;
+    FLector: ILectorInformesGuias;
     FCargada:    Boolean;
     function GetCargada: Boolean;
   public
-    constructor Create(AConexion: TUniConnection);
+    constructor Create(const ALector: ILectorInformesGuias);
     destructor  Destroy; override;
-    procedure   Precargar(AConn: TUniConnection = nil);
+    procedure Precargar(
+      const ALector: ILectorInformesGuias = nil);
     procedure   Invalidar;
     // Devuelve las guias activas que aplican al (Informe, Formato) dado,
     // replicando el filtro del SELECT original: FORMATO_INFGUI = '' (guia
@@ -86,10 +92,11 @@ type
 
 implementation
 
-constructor TInformesGuiasCache.Create(AConexion: TUniConnection);
+constructor TInformesGuiasCache.Create(
+  const ALector: ILectorInformesGuias);
 begin
   inherited Create;
-  FConexion := AConexion;
+  FLector := ALector;
   FPorInforme := TGuiasPorInforme.Create([doOwnsValues]);
   FCargada    := False;
 end;
@@ -111,52 +118,28 @@ begin
   FCargada := False;
 end;
 
-procedure TInformesGuiasCache.Precargar(AConn: TUniConnection = nil);
+procedure TInformesGuiasCache.Precargar(
+  const ALector: ILectorInformesGuias);
 var
-  qry:         TUniQuery;
+  oLector: ILectorInformesGuias;
+  arrGuias: TArray<TInformeGuiaItem>;
   item:        TInformeGuiaItem;
   sInformeKey: string;
   lst:         TListaGuias;
 begin
   FPorInforme.Clear;
   FCargada := False;
-  if AConn = nil then
-    AConn := FConexion;
-  if (AConn = nil) or (not AConn.Connected) then
-    Exit;
-  try
-    qry := TUniQuery.Create(nil);
+  oLector := ALector;
+  if not Assigned(oLector) then
+  begin
+    oLector := FLector;
+  end;
+  if Assigned(oLector) then
+  begin
     try
-      qry.Connection := AConn;
-      // Cargamos solo las guias activas. ORDER BY (INFORME, ORDEN, CODIGO)
-      // permite que Obtener pueda devolver el slice ya ordenado sin tener
-      // que reordenar en memoria.
-      qry.SQL.Text :=
-        'SELECT CODIGO_INFGUI, INFORME_INFGUI, FORMATO_INFGUI, '       +
-        '       DATASET_MASTER_INFGUI, TIPO_INFGUI, TABLA_INFGUI, '    +
-        '       SQL_INFGUI, MASTER_FIELDS_INFGUI, DETAIL_FIELDS_INFGUI,' +
-        '       ORDEN_INFGUI, COLUMNAS_VISIBLES_INFGUI '               +
-        '  FROM fza_informes_guias '                                    +
-        ' WHERE ESACTIVO_INFGUI = ''S'' '                               +
-        ' ORDER BY INFORME_INFGUI, ORDEN_INFGUI, CODIGO_INFGUI';
-      qry.Open;
-      while not qry.Eof do
+      arrGuias := oLector.Cargar;
+      for item in arrGuias do
       begin
-        item.Codigo        := qry.FieldByName('CODIGO_INFGUI').AsString;
-        item.Informe       := qry.FieldByName('INFORME_INFGUI').AsString;
-        item.Formato       := qry.FieldByName('FORMATO_INFGUI').AsString;
-        item.DatasetMaster := qry.FieldByName('DATASET_MASTER_INFGUI').AsString;
-        item.Tipo          := qry.FieldByName('TIPO_INFGUI').AsString;
-        item.Tabla         := qry.FieldByName('TABLA_INFGUI').AsString;
-        item.SqlStr        := qry.FieldByName('SQL_INFGUI').AsString;
-        item.MasterFields  := qry.FieldByName('MASTER_FIELDS_INFGUI').AsString;
-        item.DetailFields  := qry.FieldByName('DETAIL_FIELDS_INFGUI').AsString;
-        item.Orden         := qry.FieldByName('ORDEN_INFGUI').AsInteger;
-        item.ColumnasVisibles :=
-          qry.FieldByName('COLUMNAS_VISIBLES_INFGUI').AsString;
-        // Indexamos por nombre de informe en minusculas porque el INFORME
-        // viene de Self.Name del TfrmPrint y el campo DB es varchar con
-        // collation case-insensitive por defecto en MariaDB.
         sInformeKey := LowerCase(item.Informe);
         if not FPorInforme.TryGetValue(sInformeKey, lst) then
         begin
@@ -164,17 +147,12 @@ begin
           FPorInforme.Add(sInformeKey, lst);
         end;
         lst.Add(item);
-        qry.Next;
       end;
-    finally
-      FreeAndNil(qry);
+      FCargada := True;
+    except
+      // La impresion puede continuar sin enriquecimiento de guias.
+      FPorInforme.Clear;
     end;
-    FCargada := True;
-  except
-    // Si la precarga falla dejamos FCargada=False; AbrirGuiasRuntime
-    // detecta el estado y sigue como si no hubiera guias (la app no
-    // necesita guias para imprimir, solo se pierde el enriquecido).
-    FPorInforme.Clear;
   end;
 end;
 

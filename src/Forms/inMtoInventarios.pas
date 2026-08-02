@@ -36,9 +36,14 @@ uses
   Vcl.ActnMan, System.Generics.Collections, System.Types,
   dxSpreadSheet, dxSpreadSheetCore,
   // Contrato de entrada de articulos (ColumnSKUcxGrid, en src\Lib).
-  inLibColumnasSkuIntf;
+  inLibColumnasSkuIntf,
+  inLibInventariosAplicacionIntf;
 
 type
+  TContextoDependenciasInventario = record
+    AplicacionEntrada: IAplicacionEntradaInventario;
+  end;
+
   TfrmMtoInventarios = class(TfrmMtoGen)
     dlgAbrir: TOpenDialog;
     // Columnas del grid de la pestana Lista (view heredado cxGrdDBTabPrin)
@@ -251,6 +256,7 @@ type
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
+    FDependencias: TContextoDependenciasInventario;
 
     // === LÓGICA DINÁMICA SKUs (mismo patrón que inMtoCajaOpe) ===
     procedure ActualizarColumnasDinamicas(const ArticuloPadre: string);
@@ -293,12 +299,6 @@ type
     procedure AbrirPopupSkuEnEntrada(Sender: TObject);
 
     // === BUSQUEDA UNIFICADA DE ARTICULOS (codigo, SKU o codigo de barras) ===
-    procedure ResolverInputArticulo(const AInput: string;
-                                    out ACodigoPadre: string;
-                                    out ACodigoSku: string;
-                                    out ADescripcion: string;
-                                    out ATipoArt: string;
-                                    out AEncontrado: Boolean);
     procedure RellenarLineaDesdeBusqueda(const AInput: string;
                                          var AResolvedValue: string;
                                          var AError: Boolean;
@@ -359,11 +359,14 @@ uses
   inLibArticulosValidadorIntf,
   inLibArticulosAtributosIntf,
   inLibAtributosPaleta,
-  inLibLog,
+
   inLibMsgArticulos,
   inLibInventarioExcel, inLibHojaCalculoDevEx,
   inLibInventarioNube,
   inLibInventariosEntrada,
+  inLibInventariosEntradaDataSet,
+  inLibInventariosAplicacion,
+  inMtoInventariosEntradaVcl,
   inMtoPreviewExcel,
   System.Diagnostics,
   inMtoModalAddBlockInventario,
@@ -374,6 +377,94 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure InicializarEntradaInventarioVcl(
+  AFormulario: TfrmMtoInventarios;
+  const AValidador: IArticulosValidador);
+var
+  Callbacks: TCallbacksEntradaInventario;
+  Operaciones: IOperacionesEntradaInventario;
+begin
+  Callbacks := Default(TCallbacksEntradaInventario);
+  Callbacks.MuestraAtributos :=
+    function: Boolean
+    begin
+      Result := AFormulario.FMostrarColumnasAtributos;
+    end;
+  Callbacks.ObtenerNumeroAtributos :=
+    function(const ACodigoArticulo: string): Integer
+    begin
+      Result := AFormulario.ObtenerNumAtributosArticulo(ACodigoArticulo);
+    end;
+  Callbacks.AsegurarEdicion :=
+    function: TErrorEntradaInventario
+    begin
+      Result := eeiNinguno;
+      if (AFormulario.dmmInventarios = nil) or
+         (not AFormulario.dmmInventarios.cdsLineas.Active) then
+        Result := eeiLineasNoAbiertas
+      else
+      begin
+        if not (AFormulario.dmmInventarios.cdsLineas.State in
+          [dsEdit, dsInsert]) then
+          AFormulario.dmmInventarios.cdsLineas.Edit;
+        if not (AFormulario.dmmInventarios.cdsLineas.State in
+          [dsEdit, dsInsert]) then
+          Result := eeiLineaNoEditable;
+      end;
+    end;
+  Callbacks.EscribirArticulo :=
+    procedure(const ACodigoArticulo, ADescripcion: string)
+    begin
+      EscribirArticuloLineaInventario(
+        AFormulario.dmmInventarios.cdsLineas,
+        ACodigoArticulo,
+        ADescripcion);
+    end;
+  Callbacks.ActualizarColumnas :=
+    procedure(const ACodigoArticulo: string)
+    begin
+      AFormulario.ActualizarColumnasDinamicas(ACodigoArticulo);
+    end;
+  Callbacks.NumeroAtributosActual :=
+    function: Integer
+    begin
+      Result := AFormulario.FNumAtributosActual;
+    end;
+  Callbacks.EscribirUnidad :=
+    procedure(const ACodigoUnidad: string)
+    begin
+      AFormulario.dmmInventarios.cdsLineas.FieldByName(
+        'CODIGO_UNIDAD_INVLIN').AsString := ACodigoUnidad;
+    end;
+  Callbacks.CargarStock :=
+    procedure(const ACodigoUnidad: string)
+    var
+      CantidadTeorica: Currency;
+      PrecioMedio: Currency;
+    begin
+      AFormulario.dmmInventarios.RellenarDatosSku(
+        ACodigoUnidad,
+        CantidadTeorica,
+        PrecioMedio);
+      EscribirStockLineaInventario(
+        AFormulario.dmmInventarios.cdsLineas,
+        ACodigoUnidad,
+        CantidadTeorica,
+        PrecioMedio);
+      AFormulario.dmmInventarios.AsegurarFechaRecuentoLinea;
+    end;
+  Callbacks.RellenarAtributos :=
+    procedure(const ACodigoSku: string)
+    begin
+      AFormulario.RellenarAtributosDesdeSku(ACodigoSku);
+    end;
+  Operaciones := TAdaptadorEntradaInventarioVcl.Create(Callbacks);
+  AFormulario.FDependencias.AplicacionEntrada :=
+    CrearAplicacionEntradaInventario(
+    AValidador,
+    Operaciones);
+end;
 
 { TfrmMtoInventarios }
 
@@ -436,6 +527,10 @@ begin
   end;
   tvMovs.DataController.DataSource   := dmmInventarios.dsMovsRegul;
   dmmInventarios.cdsLineas.AfterInsert := cdsLineasAfterInsertHook;
+  InicializarEntradaInventarioVcl(
+    Self,
+    ContextoRepositoriosPantalla.Articulos.
+      CrearValidadorArticulos(ConexionPrincipal));
 end;
 
 procedure TfrmMtoInventarios.FormCreate(Sender: TObject);
@@ -489,6 +584,7 @@ end;
 
 procedure TfrmMtoInventarios.FormDestroy(Sender: TObject);
 begin
+  FDependencias := Default(TContextoDependenciasInventario);
   // Contrato de entrada: soltar eventos del view y liberar el modo
   // ANTES de que muera el form (evita punteros colgantes en el grid).
   if FModoEntrada <> nil then
@@ -812,7 +908,7 @@ begin
     Exit;
   // Diagnostico temporal de la prueba: con que estado del cds se
   // construye cada vez (persigue el "atributos vacios al entrar").
-  inLibLog.Log.LogInfo(Format(
+  RegistroLog.RegistrarInformacion(Format(
     '[ConstruirModoEntrada] modo=%d filas=%d desempaquetadas=%s ' +
     'estado=%d attr1_fila1="%s"',
     [Ord(FModoEntradaSel), dmmInventarios.cdsLineas.RecordCount,
@@ -846,12 +942,15 @@ begin
     dmmInventarios.cdsLineas, FModoEntradaSel,
     dsTablaG.DataSet.FieldByName(
       'CODIGO_ALM_INV').AsString, 'INVLIN');
+  Cfg.RegistroLog := RegistroLog;
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
-    CrearValidadorArticulos(ConexionPrincipal);
+    ContextoRepositoriosPantalla.Articulos.
+      CrearValidadorArticulos(ConexionPrincipal);
   Cfg.LookupAtributos :=
-    CrearLookupAtributosArticulos(ConexionPrincipal);
+    ContextoRepositoriosPantalla.Articulos.
+      CrearLookupAtributosArticulos(ConexionPrincipal);
   Cfg.Campos.Cantidad := 'CANTIDAD_FISICA_INVLIN';
   // El almacen es de CABECERA en inventario: sin columna de linea.
   Cfg.Campos.Almacen := '';
@@ -892,7 +991,7 @@ begin
   // Conversion terminada: el guardian de BeforePost vuelve a aplicar.
   dmmInventarios.ModoPivoteActivo := False;
   // Diagnostico temporal: estado al terminar de construir.
-  inLibLog.Log.LogInfo(Format(
+  RegistroLog.RegistrarInformacion(Format(
     '[ConstruirModoEntrada] FIN filas=%d desempaquetadas=%s ' +
     'attr1_fila_activa="%s"',
     [dmmInventarios.cdsLineas.RecordCount,
@@ -1343,7 +1442,7 @@ begin
   // Optimización: si es el mismo padre, no repintamos
   if SameText(ArticuloPadre, FUltimoArticuloPadre) then
   begin
-    inLibLog.Log.LogPerf('ActualizarColumnasDinamicas(memoizado)',
+    RegistroLog.RegistrarRendimiento('ActualizarColumnasDinamicas(memoizado)',
       Format('articulo=%s', [ArticuloPadre]),
       swTotal.ElapsedMilliseconds);
     Exit;
@@ -1445,7 +1544,8 @@ begin
   swTotal := TStopwatch.StartNew;
 
   swCreate := TStopwatch.StartNew;
-  Lookup := CrearLookupAtributosArticulos(ConexionPrincipal);
+  Lookup := ContextoRepositoriosPantalla.Articulos.
+    CrearLookupAtributosArticulos(ConexionPrincipal);
   msCreate := swCreate.ElapsedMilliseconds;
   try
     swObtener := TStopwatch.StartNew;
@@ -1466,7 +1566,7 @@ begin
     Lookup := nil;
   end;
 
-  inLibLog.Log.LogPerf('RellenarAtributosDesdeSku',
+  RegistroLog.RegistrarRendimiento('RellenarAtributosDesdeSku',
     Format('sku=%s nVals=%d | Create=%d ObtenerAtributosDeSku=%d SetFields=%d',
            [Sku, Length(Valores), msCreate, msObtener, msSet]),
     swTotal.ElapsedMilliseconds);
@@ -1799,7 +1899,8 @@ begin
   SetLength(AAvs, 0);
   if Trim(ACodArt) = '' then Exit;
   if (AOrden < 1) or (AOrden > 5) then Exit;
-  Lookup := CrearLookupAtributosArticulos(ConexionPrincipal);
+  Lookup := ContextoRepositoriosPantalla.Articulos.
+    CrearLookupAtributosArticulos(ConexionPrincipal);
   try
     Vals := Lookup.ObtenerAvsEnSkus(ACodArt, AOrden);
   finally
@@ -1960,7 +2061,7 @@ begin
   msDialog := swDialog.ElapsedMilliseconds;
   if Codigo = '' then
   begin
-    inLibLog.Log.LogPerf('UnidadButtonClick(cancelado)',
+    RegistroLog.RegistrarRendimiento('UnidadButtonClick(cancelado)',
       Format('BuscarArticuloDialog=%d', [msDialog]),
       swTotal.ElapsedMilliseconds);
     Exit;
@@ -2007,7 +2108,7 @@ begin
   end;
   msFocus := swFocus.ElapsedMilliseconds;
 
-  inLibLog.Log.LogPerf('UnidadButtonClick(total)',
+  RegistroLog.RegistrarRendimiento('UnidadButtonClick(total)',
     Format('codigo=%s resolved=%s | BuscarDialog=%d RellenarLinea=%d ' +
            'EditValue=%d FocusSKU1=%d',
            [Codigo, Resolved, msDialog, msRellenar, msReflect, msFocus]),
@@ -2175,189 +2276,42 @@ begin
   end;
 end;
 
-procedure TfrmMtoInventarios.ResolverInputArticulo(const AInput: string;
-                                                  out ACodigoPadre: string;
-                                                  out ACodigoSku: string;
-                                                  out ADescripcion: string;
-                                                  out ATipoArt: string;
-                                                  out AEncontrado: Boolean);
-var
-  Validador  : IArticulosValidador;
-  Resolucion : TArtResolucionEntrada;
-begin
-  ACodigoPadre := '';
-  ACodigoSku   := '';
-  ADescripcion := '';
-  ATipoArt     := '';
-  AEncontrado  := False;
-  if Trim(AInput) = '' then Exit;
-
-  Validador := CrearValidadorArticulos(ConexionPrincipal);
-  try
-    Resolucion := Validador.Resolver(AInput);
-    if not Resolucion.Encontrado then Exit;
-    ACodigoPadre := Resolucion.CodigoArticulo;
-    ACodigoSku   := Resolucion.CodigoSku;
-    ADescripcion := Resolucion.DescripcionArticulo;
-    ATipoArt     := Resolucion.TipoArticulo;
-    AEncontrado  := True;
-  finally
-    Validador := nil;
-  end;
-end;
-
 procedure TfrmMtoInventarios.RellenarLineaDesdeBusqueda(const AInput: string;
                                                        var AResolvedValue: string;
                                                        var AError: Boolean;
                                                        var AErrorText: TCaption);
 var
-  CodPadre, CodSku, Desc, TipoArt: string;
-  Encontrado: Boolean;
-  CantTeo, PMPAct: Currency;
-  NumAtr: Integer;
-  Decision: TDecisionEntradaInventario;
-  swTotal, swTramo: TStopwatch;
-  msResolver, msSetFieldsCabecera, msActColsDin,
-  msSetFieldsSku, msRellenarDatosSku, msSetFieldsImporte,
-  msRellenarAtributos: Int64;
-
-  function AsegurarEdicionLinea: Boolean;
-  begin
-    Result := False;
-    if (dmmInventarios = nil) or
-       (not dmmInventarios.cdsLineas.Active) then
-    begin
-      AError := True;
-      AErrorText := SErrorLineasInventarioNoAbiertas;
-      Exit;
-    end;
-    if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then
-      dmmInventarios.cdsLineas.Edit;
-    if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then
-    begin
-      AError := True;
-      AErrorText := SErrorLineaInventarioNoEditable;
-      Exit;
-    end;
-    Result := True;
-  end;
+  Resultado: TResultadoEntradaInventario;
+  Cronometro: TStopwatch;
 begin
   AError := False;
   AErrorText := '';
-
-  // [PERF:RellenarLineaBusqueda] Cronometros por tramo. El usuario reporta
-  // ~10 s entre elegir un articulo con SKU y ver el color. Necesitamos saber
-  // si el coste vive en ResolverInputArticulo, en RellenarDatosArticulo,
-  // en la SQL de columnas dinamicas, en RellenarDatosSku o en
-  // RellenarAtributosDesdeSku. Cada Lookup arranca una conexion / ejecuta
-  // queries, asi que aqui se ve el reparto.
-//  msSetFieldsCabecera     := 0;
-//  msActColsDin            := 0;
-//  msSetFieldsSku          := 0;
-  msRellenarDatosSku      := 0;
-  msSetFieldsImporte      := 0;
-  msRellenarAtributos     := 0;
-  swTotal := TStopwatch.StartNew;
-
-  swTramo := TStopwatch.StartNew;
-  ResolverInputArticulo(AInput, CodPadre, CodSku, Desc, TipoArt, Encontrado);
-  msResolver := swTramo.ElapsedMilliseconds;
-
-  if not Encontrado then
-  begin
-    AError := True;
-    AErrorText := SErrorArticuloInventarioNoEncontrado;
-    inLibLog.Log.LogPerf('RellenarLineaDesdeBusqueda(NO ENCONTRADO)',
-      Format('input=%s | Resolver=%d', [AInput, msResolver]),
-      swTotal.ElapsedMilliseconds);
-    Exit;
+  Cronometro := TStopwatch.StartNew;
+  Resultado := FDependencias.AplicacionEntrada.Procesar(AInput);
+  AResolvedValue := Resultado.CodigoUnidad;
+  AError := Resultado.Error <> eeiNinguno;
+  case Resultado.Error of
+    eeiArticuloNoEncontrado:
+      AErrorText := SErrorArticuloInventarioNoEncontrado;
+    eeiTipoArticuloSinStock:
+      AErrorText := Format(
+        SErrorArticuloInventarioTipoSinStock,
+        [Resultado.CodigoArticulo, Resultado.TipoArticulo]);
+    eeiAtributosRequierenSku:
+      AErrorText := Format(
+        SErrorArticuloInventarioAtributosSinSku,
+        [Resultado.CodigoArticulo]);
+    eeiLineasNoAbiertas:
+      AErrorText := SErrorLineasInventarioNoAbiertas;
+    eeiLineaNoEditable:
+      AErrorText := SErrorLineaInventarioNoEditable;
   end;
-
-  // Solo se admiten artículos físicos (TIPO_ART='ESTANDAR') en inventarios.
-  // SERVICIO/KIT no llevan stock, así que no tiene sentido recontarlos.
-  if not SameText(TipoArt, 'ESTANDAR') then
-  begin
-    AError := True;
-    AErrorText := Format(SErrorArticuloInventarioTipoSinStock,
-                         [CodPadre, TipoArt]);
-    Exit;
-  end;
-  NumAtr := 0;
-  if (not FMostrarColumnasAtributos) and (CodSku = '') then
-  begin
-    NumAtr := ObtenerNumAtributosArticulo(CodPadre);
-    if NumAtr > 0 then
-    begin
-      AError := True;
-      AErrorText := Format(SErrorArticuloInventarioAtributosSinSku,
-        [CodPadre]);
-      Exit;
-    end;
-  end;
-
-  if not AsegurarEdicionLinea then
-    Exit;
-
-  // Resolver ya nos dio Desc y TipoArt: NO volvemos a llamar a
-  // RellenarDatosArticulo (que abria unqryArticulo + unqryDefinicionArticulo)
-  // porque la SQL de vi_atributos_nombres es justo la que ActualizarColumnasDinamicas
-  // va a ejecutar a continuacion. Antes esa SQL se lanzaba dos veces para
-  // el mismo articulo y se comia 12 s (6+6).
-  swTramo := TStopwatch.StartNew;
-  EscribirArticuloLineaInventario(
-    dmmInventarios.cdsLineas, CodPadre, Desc);
-  msSetFieldsCabecera := swTramo.ElapsedMilliseconds;
-
-  // ActualizarColumnasDinamicas hace el unico hit a vi_atributos_nombres,
-  // pinta los captions de SKU1..5 y, dentro, asigna FNumAtributosActual y
-  // NUM_ATRIBUTOS_REQ_INV_LINEA del cds. Usamos FNumAtributosActual como
-  // valor de NumAtr para la rama de SKU posterior.
-  swTramo := TStopwatch.StartNew;
-  ActualizarColumnasDinamicas(CodPadre);
-  msActColsDin := swTramo.ElapsedMilliseconds;
-  if FMostrarColumnasAtributos then
-    NumAtr := FNumAtributosActual;
-  if not AsegurarEdicionLinea then
-    Exit;
-
-  Decision := ResolverEntradaInventario(CodPadre, CodSku, NumAtr);
-  swTramo := TStopwatch.StartNew;
-  dmmInventarios.cdsLineas.FieldByName(
-    'CODIGO_UNIDAD_INVLIN').AsString := Decision.CodigoUnidad;
-  AResolvedValue := Decision.CodigoUnidad;
-  msSetFieldsSku := swTramo.ElapsedMilliseconds;
-  if Decision.CargarStock then
-  begin
-    swTramo := TStopwatch.StartNew;
-    dmmInventarios.RellenarDatosSku(
-      Decision.CodigoUnidad, CantTeo, PMPAct);
-    msRellenarDatosSku := swTramo.ElapsedMilliseconds;
-    swTramo := TStopwatch.StartNew;
-    EscribirStockLineaInventario(
-      dmmInventarios.cdsLineas,
-      Decision.CodigoUnidad,
-      CantTeo,
-      PMPAct);
-    dmmInventarios.AsegurarFechaRecuentoLinea;
-    msSetFieldsImporte := swTramo.ElapsedMilliseconds;
-  end;
-  if Decision.RellenarAtributos then
-  begin
-    swTramo := TStopwatch.StartNew;
-    RellenarAtributosDesdeSku(Decision.CodigoUnidad);
-    msRellenarAtributos := swTramo.ElapsedMilliseconds;
-  end;
-
-  inLibLog.Log.LogPerf('RellenarLineaDesdeBusqueda',
-    Format('input=%s padre=%s sku=%s NumAtr=%d | Resolver=%d ' +
-           'SetFieldsCab=%d ActColsDin=%d ' +
-           'SetFieldsSku=%d RellenarDatosSku=%d SetFieldsImporte=%d ' +
-           'RellenarAtributos=%d',
-           [AInput, CodPadre, CodSku, NumAtr,
-            msResolver, msSetFieldsCabecera,
-            msActColsDin, msSetFieldsSku, msRellenarDatosSku,
-            msSetFieldsImporte, msRellenarAtributos]),
-    swTotal.ElapsedMilliseconds);
+  RegistroLog.RegistrarRendimiento('RellenarLineaDesdeBusqueda',
+    Format(
+      'input=%s padre=%s sku=%s unidad=%s error=%d',
+      [AInput, Resultado.CodigoArticulo, Resultado.CodigoSku,
+       Resultado.CodigoUnidad, Ord(Resultado.Error)]),
+    Cronometro.ElapsedMilliseconds);
 end;
 
 procedure TfrmMtoInventarios.tvLineasUdsFisicasPropertiesValidate(
@@ -2816,7 +2770,6 @@ begin
 
   res := TfrmModalAddBlockInventario.Ejecutar(
            Self,
-           (ds as TUniQuery).Connection,
            ds.FieldByName('CODIGO_EMP_INV').AsString,
            ds.FieldByName('CODIGO_ALM_INV').AsString,
            ds.FieldByName('SERIE_INV').AsString,

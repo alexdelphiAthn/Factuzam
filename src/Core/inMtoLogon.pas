@@ -43,7 +43,9 @@ uses
   dxSkinsDefaultPainters, dxSkinValentine, dxSkinVisualStudio2013Blue,
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
   dxSkinWhiteprint, dxSkinXmas2008Blue, dascript, UniScript,
-  inLibContextoSesionIntf, inLibLicenciaAplicacion;
+  inLibContextoSesionIntf, inLibLicenciaAplicacion,
+  inLibCopiasSeguridadIntf,
+  inLibRestauracionCopiasConexionIntf;
 
 type
   EInvalidUser = class(Exception);
@@ -114,6 +116,7 @@ type
     FPasswordConexionEncriptado: string;
     FResultadoInicioSesion: TResultadoInicioSesion;
     FResultadoLicencia: TResultadoLicenciaAplicacion;
+    FCasoUsoRestauracion: ICasoUsoRestauracionConexion;
     procedure AplicarTraduccionesPantalla;
     procedure CambiarPass(f:TUniConnection);
     procedure UniScript1Error(Sender: TObject; E: Exception; SQL: string;
@@ -128,16 +131,18 @@ type
     function PorcentajeProgreso(AValor, ATotal: Integer): Integer;
     function TextoProgreso(const AEtapa: string;
                            AValor, ATotal: Integer): string;
-    function EsErrorCancelacion(const AError: string): Boolean;
     procedure SolicitarCancelarOperacionEnCurso;
     procedure WorkerProgreso(const AEtapa: string;
                               APaso, ATotal: Integer;
                               AFilaGlobal,
                               AFilasGlobalTotal: Integer);
-    procedure BackupFinalizar(AExito: Boolean; const AError: string;
+    procedure BackupFinalizar(AResultado: TResultadoCopiaSeguridad;
+                              const AError: string;
+                              ALogBuffer: TStringList);
+    procedure RestoreFinalizar(AResultado: TResultadoCopiaSeguridad;
+                               const AError: string;
                                ALogBuffer: TStringList);
-    procedure RestoreFinalizar(AExito: Boolean; const AError: string;
-                                ALogBuffer: TStringList);
+    procedure PrepararWorkerRestauracion(AWorker: TThread);
     function ExisteUser(sNom: string; f: TUniConnection): Boolean;
     function LoginCorrecto(sNom,
                            sPassLogin: string;
@@ -168,7 +173,7 @@ uses  inLibWin,
       inLibMsgComun,
       inLibMsgConfiguracion,
       inLibDir,
-      inLibLog,
+
       Backup.Engine,
       Backup.Types,
       Providers_MySQL,
@@ -178,7 +183,37 @@ uses  inLibWin,
       Core_Helpers,
       inLibDBStructure,
       inMtoModalScriptLog,
-      inLibBackupWorker;
+      inLibBackupWorker,
+      inLibRestauracionCopiasConexion,
+      UniDataRestauracionCopiasConexion,
+      inMtoLogonRestauracionVcl;
+
+function CrearContextoLogonRestauracionVcl(
+  AFormulario: TfrmLogon): TContextoLogonRestauracionVcl;
+begin
+  Result := Default(TContextoLogonRestauracionVcl);
+  Result.Dialogo := AFormulario.openDialog;
+  Result.CasoUso := AFormulario.FCasoUsoRestauracion;
+  Result.Host := AFormulario.edtHostName.Text;
+  Result.Puerto := AFormulario.edtPortBD.Text;
+  Result.BaseDatos := AFormulario.edtNomBD.Text;
+  Result.Usuario := AFormulario.edtUserBD.Text;
+  Result.OnPrepararWorker :=
+    AFormulario.PrepararWorkerRestauracion;
+  Result.OnProgreso := AFormulario.WorkerProgreso;
+  Result.OnFinalizar := AFormulario.RestoreFinalizar;
+  Result.EstablecerContrasena :=
+    procedure(const AContrasena: string)
+    begin
+      AFormulario.FPasswordConexion := AContrasena;
+    end;
+  Result.MostrarPreparacion :=
+    procedure
+    begin
+      AFormulario.MostrarBarraProgreso(
+        SCaptionPreparandoRestauracion);
+    end;
+end;
 
 {$R *.dfm}
 
@@ -187,9 +222,11 @@ begin
   AsignarTraducciones(
     TServicioTraducciones.Create(
       TServicioConexionesUniDAC.Create(ucConexion),
+      RegistroLog,
       ObtenerIdiomaConfigurado(
         ucConexion,
-        edtUser.Text)));
+        edtUser.Text,
+        RegistroLog)));
   AplicarIdiomaFastReport(Traducciones.Idioma);
   Traducciones.Aplicar(Self);
 end;
@@ -264,7 +301,7 @@ begin
       // Ejecutamos
       SqlScript.Execute;
 
-      Log.LogInfo('El script se ejecutó exitosamente');
+      RegistroLog.RegistrarInformacion('El script se ejecutó exitosamente');
       ShowMessage(SScriptEjecutado);
     finally
       FreeAndNil(SqlScript);
@@ -272,7 +309,7 @@ begin
   end
   else
   begin
-    Log.LogInfo('El script no fue ejecutado');
+    RegistroLog.RegistrarInformacion('El script no fue ejecutado');
     ShowMessage(SScriptNoEjecutado);
   end;
 
@@ -299,7 +336,7 @@ begin
   Self.ClientWidth  := pnlButtons.Left + pnlButtons.Width + pnlButtons.Left;
   Self.ClientHeight := pnlButtons.Top + pnlButtons.Height + pnlLogin.Top;
   {$IFDEF DEBUG}
-    inliblog.Log.LogInfo('Arrancando en modo Debug');
+    RegistroLog.RegistrarInformacion('Arrancando en modo Debug');
   {$ENDIF}
   FCerrarAplicacion := False;
   FEnOperacionLarga := False;
@@ -338,7 +375,7 @@ begin
   except
     on E: Exception do
     begin
-      inliblog.Log.LogError('Fallo al conectar al servidor MySQL: ' +
+      RegistroLog.RegistrarError('Fallo al conectar al servidor MySQL: ' +
                             E.ClassName + ': ' + E.Message);
       ShowMessage(Format(SErrorConexionServidorBBDD, [E.Message]));
       chkAuto.Checked := False;
@@ -355,7 +392,7 @@ begin
 
   if not CheckResult.IsOK then
   begin
-    inliblog.Log.LogError('Estructura BBDD no válida: ' +
+    RegistroLog.RegistrarError('Estructura BBDD no válida: ' +
                           CheckResult.FormattedMessage);
     ShowMessage(Format(SErrorEstructuraBBDD,
                        [CheckResult.FormattedMessage]));
@@ -389,7 +426,7 @@ begin
   except
     on E: Exception do
     begin
-      inliblog.Log.LogError('Fallo al conectar a ' + edtNomBD.Text + ': ' +
+      RegistroLog.RegistrarError('Fallo al conectar a ' + edtNomBD.Text + ': ' +
                             E.ClassName + ': ' + E.Message);
       ShowMessage(Format(SErrorConexionBBDD,
                          [edtNomBD.Text, E.Message]));
@@ -419,7 +456,7 @@ begin
     except
       on E: Exception do
       begin
-        inliblog.Log.LogError('Fallo en auto-login: ' +
+        RegistroLog.RegistrarError('Fallo en auto-login: ' +
                               E.ClassName + ': ' + E.Message);
         ShowMessage(Format(SErrorInicioAutomatico, [E.Message]));
         chkAuto.Checked := False;
@@ -462,7 +499,7 @@ begin
     except
       on E: Exception do
       begin
-        inliblog.Log.LogError('Fallo al conectar al servidor MySQL: ' +
+        RegistroLog.RegistrarError('Fallo al conectar al servidor MySQL: ' +
                               E.ClassName + ': ' + E.Message);
         ShowMessage(Format(SErrorConexionServidorBBDD, [E.Message]));
         chkAuto.Checked := False;
@@ -477,7 +514,7 @@ begin
       CheckResult := TDBStructureChecker.Check(ucConexion, edtNomBD.Text);
       if not CheckResult.IsOK then
       begin
-        inliblog.Log.LogError('Estructura BBDD no válida: ' +
+        RegistroLog.RegistrarError('Estructura BBDD no válida: ' +
                               CheckResult.FormattedMessage);
         ShowMessage(Format(SErrorEstructuraBBDD,
                            [CheckResult.FormattedMessage]));
@@ -505,7 +542,7 @@ begin
         except
           on E: Exception do
           begin
-            inliblog.Log.LogError('Fallo al conectar a ' + edtNomBD.Text +
+            RegistroLog.RegistrarError('Fallo al conectar a ' + edtNomBD.Text +
                                   ': ' + E.ClassName + ': ' + E.Message);
             ShowMessage(Format(SErrorConexionBBDD,
                                [edtNomBD.Text, E.Message]));
@@ -565,7 +602,8 @@ begin
         FResultadoLicencia.Comprobada := True;
         FResultadoLicencia.Estado := elaValida;
         FResultadoLicencia.Mensaje := 'Licencia establecida.';
-        inliblog.Log.LogInfo('Licencia establecida. Código: ' + sCodigo);
+        RegistroLog.RegistrarInformacion(
+          'Licencia establecida. Código: ' + sCodigo);
         ShowMessage(Format(SLicenciaEstablecida,
                            [sCodigo, iNumeroNifs, sRutaIni,
                             Trim(sDetalleNifs)]));
@@ -575,7 +613,7 @@ begin
         FResultadoLicencia.Comprobada := True;
         FResultadoLicencia.Estado := elaSinNifEmpresa;
         FResultadoLicencia.Mensaje := 'No hay NIF de empresa configurado.';
-        inliblog.Log.LogInfo(
+        RegistroLog.RegistrarInformacion(
           'No se establece licencia porque no hay NIF de empresa.');
         ShowMessage(SLicenciaNoEstablecidaSinNif);
       end;
@@ -583,7 +621,8 @@ begin
       on E: Exception do
       begin
         FResultadoLicencia.Mensaje := E.Message;
-        inliblog.Log.LogError('Error estableciendo licencia: ' + E.Message);
+        RegistroLog.RegistrarError(
+          'Error estableciendo licencia: ' + E.Message);
         ShowMessage(Format(SErrorEstablecerLicencia, [E.Message]));
       end;
     end;
@@ -601,17 +640,17 @@ begin
         FResultadoLicencia.Estado := Estado;
         FResultadoLicencia.Mensaje := sMensaje;
         if Estado = elaSinNifEmpresa then
-          inliblog.Log.LogInfo(sMensaje)
+          RegistroLog.RegistrarInformacion(sMensaje)
         else
-          inliblog.Log.LogInfo('Licencia de aplicación válida.');
+          RegistroLog.RegistrarInformacion('Licencia de aplicación válida.');
       end
       else
       begin
         FResultadoLicencia.Comprobada := True;
         FResultadoLicencia.Estado := Estado;
         FResultadoLicencia.Mensaje := 'Copia DEMO. ' + sMensaje;
-        inliblog.Log.LogWarning('Aplicación en modo DEMO. ' + sMensaje);
-        inliblog.Log.LogError('Código guardado: ' + sCodigoGuardado +
+        RegistroLog.RegistrarAviso('Aplicación en modo DEMO. ' + sMensaje);
+        RegistroLog.RegistrarError('Código guardado: ' + sCodigoGuardado +
                               ' Código esperado: ' + sCodigoEsperado);
         ShowMessage(Format(SModoDemo, [LIMITE_FACTURAS_DEMO_DIA]));
       end;
@@ -621,8 +660,8 @@ begin
         FResultadoLicencia.Comprobada := True;
         FResultadoLicencia.Estado := elaInvalida;
         FResultadoLicencia.Mensaje := 'Copia DEMO. ' + E.Message;
-        inliblog.Log.LogError('Error validando licencia: ' + E.Message);
-        inliblog.Log.LogWarning('Aplicación en modo DEMO por error ' +
+        RegistroLog.RegistrarError('Error validando licencia: ' + E.Message);
+        RegistroLog.RegistrarAviso('Aplicación en modo DEMO por error ' +
                                 'validando licencia.');
         ShowMessage(Format(SModoDemo, [LIMITE_FACTURAS_DEMO_DIA]));
       end;
@@ -817,11 +856,6 @@ begin
     Result := sEtapa;
 end;
 
-function TfrmLogon.EsErrorCancelacion(const AError: string): Boolean;
-begin
-  Result := Pos('cancelada', LowerCase(AError)) > 0;
-end;
-
 procedure TfrmLogon.SolicitarCancelarOperacionEnCurso;
 begin
   if FEnOperacionLarga then
@@ -869,40 +903,40 @@ begin
   FProgressLabel.Update;
 end;
 
-procedure TfrmLogon.BackupFinalizar(AExito: Boolean;
+procedure TfrmLogon.BackupFinalizar(
+  AResultado: TResultadoCopiaSeguridad;
   const AError: string; ALogBuffer: TStringList);
-var
-  bCancelada: Boolean;
 begin
-  bCancelada := (not AExito) and EsErrorCancelacion(AError);
   FWorkerOperacion := nil;
+  FCasoUsoRestauracion := CrearCasoUsoRestauracionConexion(
+    CrearRepositorioRestauracionConexionUniDAC(ucConexion));
   FCancelaOperacionSolicitada := False;
   OcultarBarraProgreso;
-  if bCancelada then
+  if AResultado = rcsCancelada then
     ShowMessage(SOperacionCancelada)
-  else if AExito then
+  else if AResultado = rcsCompletada then
   begin
-    Log.LogInfo(edtUser.Text + ' Guardó copia exitosamente');
+    RegistroLog.RegistrarInformacion(
+      edtUser.Text + ' Guardó copia exitosamente');
     ShowMessage(SCopiaSeguridadGuardada);
   end
   else
   begin
-    Log.LogError('La copia falló: ' + AError);
+    RegistroLog.RegistrarError('La copia falló: ' + AError);
     ShowMessage(Format(SErrorCrearCopiaSeguridad, [AError]));
   end;
 end;
 
-procedure TfrmLogon.RestoreFinalizar(AExito: Boolean;
+procedure TfrmLogon.RestoreFinalizar(
+  AResultado: TResultadoCopiaSeguridad;
   const AError: string; ALogBuffer: TStringList);
 var
   LogForm: TfrmMtoModalScriptLog;
-  bCancelada: Boolean;
 begin
-  bCancelada := (not AExito) and EsErrorCancelacion(AError);
   FWorkerOperacion := nil;
   FCancelaOperacionSolicitada := False;
   OcultarBarraProgreso;
-  if bCancelada then
+  if AResultado = rcsCancelada then
   begin
     if ALogBuffer <> nil then
       FreeAndNil(ALogBuffer);
@@ -920,14 +954,21 @@ begin
       FreeAndNil(ALogBuffer);
     end;
     LogForm.Show;
-    if AExito then
+    if AResultado = rcsCompletada then
       ShowMessage(SScriptSuccess)
     else
     begin
-      Log.LogError('Error en restauración: ' + AError);
+      RegistroLog.RegistrarError('Error en restauración: ' + AError);
       ShowMessage(Format(SErrorRestaurarCopiaSeguridad, [AError]));
     end;
   end;
+end;
+
+procedure TfrmLogon.PrepararWorkerRestauracion(
+  AWorker: TThread);
+begin
+  FCancelaOperacionSolicitada := False;
+  FWorkerOperacion := AWorker;
 end;
 
 procedure TfrmLogon.btnCopiaSeguridadClick(Sender: TObject);
@@ -974,77 +1015,15 @@ begin
   end
   else
   begin
-    Log.LogError('La copia se canceló');
+    RegistroLog.RegistrarError('La copia se canceló');
     ShowMessage(SCopiaSeguridadCancelada);
   end;
 end;
 
 procedure TfrmLogon.btnRecoverClick(Sender: TObject);
-var
-  unqryTestBD       : TUniQuery;
-  Worker            : TRestoreWorker;
-  bDesencriptar     : Boolean;
-  sPassDesencriptar : string;
 begin
-  bDesencriptar := False;
-  sPassDesencriptar := '';
-  FPasswordConexion := InputBox(SGetPassBBDD, '', '');
-  ConfigurarYConectarMySQL(ucConexion, edtUserBD.Text,
-    FPasswordConexion,
-    edtHostName.Text,
-    edtPortBD.Text,
-    'information_schema');
-  unqryTestBD := TUniQuery.Create(nil);
-  try
-    unqryTestBD.Connection := ucConexion;
-    unqryTestBD.SQL.Text := 'SELECT SCHEMA_NAME ' +
-                            '  FROM INFORMATION_SCHEMA.SCHEMATA ' +
-                            ' WHERE SCHEMA_NAME = :BBDD ' ;
-    unqryTestBD.ParamByName('BBDD').AsString := edtNomBD.Text;
-    unqryTestBD.Open;
-  finally
-    unqryTestBD.Close;
-    FreeAndNil(unqryTestBD);
-  end;
-  opendialog.Title := STituloCargarCopiaSeguridad;
-  opendialog.FileTypes.Clear;
-  with opendialog.FileTypes.Add do
-  begin
-    DisplayName := SCaptionFiltroCopiasSqlEncriptadas;
-    FileMask := '*.sql;*.crypt';
-  end;
-  with opendialog.FileTypes.Add do
-  begin
-    DisplayName := SCaptionFiltroTodosArchivos;
-    FileMask := '*.*';
-  end;
-  opendialog.DefaultExtension := 'sql';
-  openDialog.DefaultFolder := GetUserDeskFolder;
-  if openDialog.Execute then
-  begin
-    if SameText(ExtractFileExt(openDialog.FileName), '.crypt') then
-    begin
-      bDesencriptar := True;
-      sPassDesencriptar := FPasswordConexion;
-    end;
-    MostrarBarraProgreso(SCaptionPreparandoRestauracion);
-    Worker := TRestoreWorker.Create(
-      edtHostName.Text,
-      StrToIntDef(edtPortBD.Text, 3306),
-      edtNomBD.Text,
-      edtUserBD.Text,
-      FPasswordConexion,
-      openDialog.FileName,
-      sPassDesencriptar,
-      bDesencriptar);
-    Worker.OnProgreso := WorkerProgreso;
-    Worker.OnFinalizar := RestoreFinalizar;
-    FCancelaOperacionSolicitada := False;
-    FWorkerOperacion := Worker;
-    Worker.Start;
-  end
-  else
-    ShowMessage(SCargaScriptCancelada);
+  TCoordinadorLogonRestauracionVcl.Ejecutar(
+    CrearContextoLogonRestauracionVcl(Self));
 end;
 
 procedure TfrmLogon.btnTestClick(Sender: TObject);
@@ -1056,7 +1035,7 @@ begin
                             edtHostName.Text,
                             edtPortBD.Text,
                             edtNomBD.Text);
-  Log.LogInfo(SconnSuccBBDD);
+  RegistroLog.RegistrarInformacion(SconnSuccBBDD);
   ShowMessage(SConnSuccBBDD);
   Exit;
 end;
@@ -1085,7 +1064,7 @@ begin
       sPassEnBD := CifrarAES(sNewPass);
       FPasswordConexion := sNewPass;
       ShowMessageFmt(SPasswordBBDDChanged, [FPasswordConexion]);
-      Log.LogInfo(sPasswordBBDDChanged);
+      RegistroLog.RegistrarInformacion(sPasswordBBDDChanged);
       EscribirCadenaIni(
         'ConnData', 'PasswordEn', sPassEnBD, GetUserFolder);
       FreeAndNil(qryCommand);
@@ -1182,18 +1161,18 @@ begin
     end
     else if not ExisteUser(edtUser.Text, ucConexion) then
     begin
-      Log.LogError(SUsuarioNoExiste);
+      RegistroLog.RegistrarError(SUsuarioNoExiste);
       raise EInvalidUser.Create(SUsuarioNoExiste);
     end
     else if not LoginCorrecto(edtUser.Text, edtPass.Text, ucConexion) then
     begin
       if (Sender <> nil) then
         ShowMessage(SErrorAuthPass);
-      Log.LogError(SErrorAuthPass);
+      RegistroLog.RegistrarError(SErrorAuthPass);
     end
     else
     begin
-      Log.LogInfo('Login Correcto');
+      RegistroLog.RegistrarInformacion('Login Correcto');
       tbUsers.Edit;
       tbUsers.FieldByName('ULTIMO_LOGIN_USU').AsDateTime := Now;
       tbUsers.Post;
@@ -1222,7 +1201,8 @@ begin
     end;
     on E: Exception do
     begin
-      Log.LogError('Error en login: ' + E.ClassName + ': ' + E.Message);
+      RegistroLog.RegistrarError(
+        'Error en login: ' + E.ClassName + ': ' + E.Message);
       InvalidarResultadoInicioSesion;
       if tbUsers.Active then
         tbUsers.Close;
@@ -1394,7 +1374,7 @@ begin
                                            GetUserFolder));
   end;
   leerini;
-  inliblog.Log.LogInfo('Leyendo archivo ini de usuario');
+  RegistroLog.RegistrarInformacion('Leyendo archivo ini de usuario');
 end;
 
 function TfrmLogon.IsInitializeAuto: Boolean;

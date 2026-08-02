@@ -24,7 +24,6 @@ unit inLibComprasSesionesCreacion;
 interface
 
 uses
-  Data.DB,
   inLibComprasSesionesIntf;
 
 type
@@ -118,15 +117,6 @@ function ComponerParametrosMaterializacion(
   const AElegidos: TAjustesCreacionElegidos):
   TParametrosMaterializacionSesion;
 
-// Traduccion entre la cabecera activa y los records de arriba. Conoce
-// TDataSet, no UniDAC ni el formulario: se prueba con un
-// TClientDataSet en memoria.
-function LeerEstadoSesionCreacion(
-  ADataSet: TDataSet): TEstadoSesionCreacion;
-procedure EscribirCabeceraSesionCreacion(
-  ADataSet: TDataSet;
-  const ACabecera: TCabeceraSesionActualizada);
-
 implementation
 
 uses
@@ -206,57 +196,6 @@ begin
   Result.SerieAlbaran := AElegidos.SerieAlbaran;
   Result.SeriePedido := AElegidos.SeriePedido;
   Result.UnDocumentoPorAlmacen := AElegidos.UnDocumentoPorAlmacen;
-end;
-
-function LeerEstadoSesionCreacion(
-  ADataSet: TDataSet): TEstadoSesionCreacion;
-begin
-  Result := Default(TEstadoSesionCreacion);
-  Result.HayCabecera :=
-    Assigned(ADataSet) and ADataSet.Active and (not ADataSet.IsEmpty);
-  if not Result.HayCabecera then
-    Exit;
-  Result.Estado := ADataSet.FieldByName('ESTADO_SES').AsString;
-  Result.Serie := ADataSet.FieldByName('SERIE_SES').AsString;
-  Result.Numero := ADataSet.FieldByName('NUMERO_SES').AsString;
-  Result.Empresa := ADataSet.FieldByName('CODIGO_EMP_SES').AsString;
-  Result.Almacen := ADataSet.FieldByName('CODIGO_ALM_SES').AsString;
-  Result.Tarifa := ADataSet.FieldByName('CODIGO_TAR_SES').AsString;
-  Result.TieneTemporada :=
-    not ADataSet.FieldByName('ID_PV_TEMPORADA_SES').IsNull;
-  if Result.TieneTemporada then
-    Result.Temporada :=
-      ADataSet.FieldByName('ID_PV_TEMPORADA_SES').AsInteger;
-  Result.GeneraPedido :=
-    ADataSet.FieldByName('ESGENERA_PEDIDO_SES').AsString = 'S';
-  Result.GeneraAlbaran :=
-    ADataSet.FieldByName('ESGENERA_ALBARAN_SES').AsString = 'S';
-  Result.FormatoDistribuido :=
-    ADataSet.FieldByName('ESFORMATO_DISTRIBUIDO_SES').AsString = 'S';
-  Result.RefProveedor := ADataSet.FieldByName('REF_PRV_SES').AsString;
-end;
-
-procedure EscribirCabeceraSesionCreacion(
-  ADataSet: TDataSet;
-  const ACabecera: TCabeceraSesionActualizada);
-begin
-  ADataSet.Edit;
-  ADataSet.FieldByName('CODIGO_ALM_SES').AsString := ACabecera.Almacen;
-  ADataSet.FieldByName('CODIGO_TAR_SES').AsString := ACabecera.Tarifa;
-  if ACabecera.LimpiarTemporada then
-    ADataSet.FieldByName('ID_PV_TEMPORADA_SES').Clear
-  else
-    ADataSet.FieldByName('ID_PV_TEMPORADA_SES').AsInteger :=
-      ACabecera.Temporada;
-  ADataSet.FieldByName('ESGENERA_PEDIDO_SES').AsString :=
-    IfThen(ACabecera.GeneraPedido, 'S', 'N');
-  ADataSet.FieldByName('ESGENERA_ALBARAN_SES').AsString :=
-    IfThen(ACabecera.GeneraAlbaran, 'S', 'N');
-  // Ref. del documento del proveedor: viaja a REF_PROVEEDOR_ALBC via
-  // InsertarAlbaranCompraCabecera, que ya lee S.REF_PRV_SES.
-  ADataSet.FieldByName('REF_PRV_SES').AsString :=
-    ACabecera.RefProveedor;
-  ADataSet.Post;
 end;
 
 end.

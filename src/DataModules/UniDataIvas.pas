@@ -42,7 +42,7 @@ implementation
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 uses
-  inLibCadenas, inLibDatasets, inLibLog, System.Diagnostics,
+  inLibCadenas, inLibDatasets, System.Diagnostics,
   inLibMsgComun;
 
 {$R *.dfm}
@@ -152,12 +152,12 @@ begin
     swQ := TStopwatch.StartNew;
     try
       unqryZonasIVA.Open;
-      inLibLog.Log.LogPerf('Ivas.AbrirDetalles',
+      RegistroLog.RegistrarRendimiento('Ivas.AbrirDetalles',
         'unqryZonasIVA OK', swQ.ElapsedMilliseconds);
     except
       on E: Exception do
       begin
-        inLibLog.Log.LogPerf('Ivas.AbrirDetalles',
+        RegistroLog.RegistrarRendimiento('Ivas.AbrirDetalles',
           'unqryZonasIVA ERROR=' + E.Message,
           swQ.ElapsedMilliseconds);
         raise;

@@ -30,12 +30,13 @@ uses
   cxButtons, cxDBNavigator, Vcl.Buttons, dxBevel, cxLabel, cxTextEdit,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, Vcl.ComCtrls,
-  UniDataCajaOperacionesHist, inLibPerfilesUsuarioIntf, MemDS, DBAccess, Uni,
+  UniDataCajaOperacionesHist, inLibPerfilesUsuarioIntf,
   cxCheckBox, cxCheckComboBox, cxCurrencyEdit, cxSpinEdit, cxBlobEdit,
   dxScrollbarAnnotations, dxCore, cxRadioGroup, Vcl.AppEvnts, JvComponentBase,
   JvEnterTab, dxShellDialogs, System.Actions, Vcl.ActnList, cxCalendar,
   UniDataConsultaOpe, dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetTypes,
-  dxSpreadSheetStyles, dxHashUtils, cxMaskEdit, cxDropDownEdit;
+  dxSpreadSheetStyles, dxHashUtils, cxMaskEdit, cxDropDownEdit,
+  inLibCajaOperacionesHistPersistenciaIntf;
 
 type
   TfrmMtoCajaOperacionesHist = class(TfrmMtoGen)
@@ -113,11 +114,13 @@ type
     FactIrVale: TAction;
     FactExportarOperacionExcel: TAction;
     dmmCajaOperacionesHist: TdmCajaOperacionesHist;
+    FRepositorioPersistencia: IRepositorioCajaOperacionesHist;
     procedure CargarAnyosFiltro;
     procedure CargarAlmacenesFiltro;
     procedure LeerFiltrosPerfil;
-    function  ConstruirWhereOperaciones: string;
-    function  ConstruirSqlOperaciones: string;
+    function ObtenerRestriccion:
+      TRestriccionCajaOperacionesHist;
+    function ObtenerFiltros: TFiltrosCajaOperacionesHist;
     function  ContarOperaciones: Integer;
     procedure AplicarFiltrosOperaciones;
     procedure AbrirConProgreso;
@@ -269,7 +272,13 @@ procedure TfrmMtoCajaOperacionesHist.CrearTablaPrincipal;
 begin
   inherited;
   dmmCajaOperacionesHist := tdmDataModule as TdmCajaOperacionesHist;
-  FdmConsulta := TdmConsultaOpe.Create(Self, ConexionPrincipal);
+  FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
+    CrearRepositorioCajaOperacionesHist(
+    dmmCajaOperacionesHist.unqryTablaG);
+  FdmConsulta := TdmConsultaOpe.Create(
+    Self,
+    ConexionPrincipal,
+    RegistroLog);
   CrearAccionesFicha;
   CrearFichaDetalle;
   pkFieldName := 'CODIGO_EMP_OPCAJA;CODIGO_ALM_OPCAJA;' +
@@ -304,7 +313,7 @@ begin
   if Assigned(dmmCajaOperacionesHist) and
      Assigned(dmmCajaOperacionesHist.unqryTablaG) then
   begin
-    dmmCajaOperacionesHist.unqryTablaG.SQL.Text := ConstruirSqlOperaciones;
+    FRepositorioPersistencia.PrepararConsulta(ObtenerFiltros);
     dsTablaG.OnDataChange := OnTablaGDataChange;
   end;
 end;
@@ -372,7 +381,8 @@ end;
 
 procedure TfrmMtoCajaOperacionesHist.CargarAnyosFiltro;
 var
-  qry: TUniQuery;
+  Anyos: TCadenasCajaOperacionesHist;
+  Anyo: string;
   item: TcxCheckComboBoxItem;
   sAnyoActual: string;
   bExisteActual: Boolean;
@@ -383,25 +393,15 @@ begin
   ccbFiltroAnyo.Properties.Items.Clear;
   bExisteActual := False;
   sAnyoActual := IntToStr(YearOf(Date));
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := dmmCajaOperacionesHist.unqryTablaG.Connection;
-    qry.SQL.Text :=
-      'SELECT DISTINCT YEAR(FECHA_OPERACION_OPCAJA) AS ANYO ' +
-      '  FROM fza_caja_operaciones ' +
-      ' WHERE FECHA_OPERACION_OPCAJA IS NOT NULL ' +
-      ' ORDER BY ANYO DESC';
-    qry.Open;
-    while not qry.Eof do
+  Anyos := FRepositorioPersistencia.ListarAnyos;
+  for Anyo in Anyos do
+  begin
+    item := ccbFiltroAnyo.Properties.Items.Add;
+    item.Description := Anyo;
+    if item.Description = sAnyoActual then
     begin
-      item := ccbFiltroAnyo.Properties.Items.Add;
-      item.Description := qry.FieldByName('ANYO').AsString;
-      if item.Description = sAnyoActual then
-        bExisteActual := True;
-      qry.Next;
+      bExisteActual := True;
     end;
-  finally
-    FreeAndNil(qry);
   end;
   // El año en curso es el valor por defecto del filtro: lo añadimos aunque
   // todavia no tenga operaciones para que se pueda marcar.
@@ -414,7 +414,8 @@ end;
 
 procedure TfrmMtoCajaOperacionesHist.CargarAlmacenesFiltro;
 var
-  qry: TUniQuery;
+  Almacenes: TAlmacenesCajaOperacionesHist;
+  Almacen: TAlmacenCajaOperacionesHist;
   item: TcxCheckComboBoxItem;
 begin
   ccbFiltroAlmacen.Properties.Items.Clear;
@@ -422,33 +423,15 @@ begin
     FCodigosAlmacen := TStringList.Create
   else
     FCodigosAlmacen.Clear;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := dmmCajaOperacionesHist.unqryTablaG.Connection;
-    // Con la restricción por usuario activa el combo solo ofrece su
-    // empresa/almacén (fza_almacenes lleva la empresa en CODIGO_EMP_ALM).
-    qry.SQL.Text :=
-      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM ' +
-      '  FROM fza_almacenes ' +
-      ' WHERE ESACTIVO_ALM = ''S'' ' +
-      SqlFiltroEmpAlmCaja(
-        ContextoSesion,
-        ParametrosApp,
-        'CODIGO_EMP_ALM',
-        'CODIGO_ALM_ALM',
-        '') +
-      ' ORDER BY ORDEN_ALM, CODIGO_ALM_ALM';
-    qry.Open;
-    while not qry.Eof do
-    begin
-      item := ccbFiltroAlmacen.Properties.Items.Add;
-      item.Description := qry.FieldByName('CODIGO_ALM_ALM').AsString +
-                          ' - ' + qry.FieldByName('NOMBRE_ALM_ALM').AsString;
-      FCodigosAlmacen.Add(qry.FieldByName('CODIGO_ALM_ALM').AsString);
-      qry.Next;
-    end;
-  finally
-    FreeAndNil(qry);
+  // Con la restricción por usuario activa el combo solo ofrece su
+  // empresa y almacén.
+  Almacenes := FRepositorioPersistencia.ListarAlmacenes(
+    ObtenerRestriccion);
+  for Almacen in Almacenes do
+  begin
+    item := ccbFiltroAlmacen.Properties.Items.Add;
+    item.Description := Almacen.Codigo + ' - ' + Almacen.Nombre;
+    FCodigosAlmacen.Add(Almacen.Codigo);
   end;
 end;
 
@@ -538,136 +521,56 @@ begin
   end;
 end;
 
-function TfrmMtoCajaOperacionesHist.ConstruirWhereOperaciones: string;
+function TfrmMtoCajaOperacionesHist.ObtenerRestriccion:
+  TRestriccionCajaOperacionesHist;
+begin
+  Result.Empresa := EmpresaRestringida(ContextoSesion, ParametrosApp);
+  Result.Almacen := AlmacenRestringido(ContextoSesion, ParametrosApp);
+  Result.Caja := CajaRestringida(ContextoSesion, ParametrosApp);
+end;
+
+function TfrmMtoCajaOperacionesHist.ObtenerFiltros:
+  TFiltrosCajaOperacionesHist;
 var
-  sAnyos, sAlm: string;
   i: Integer;
 begin
-  // Años marcados -> lista IN sobre YEAR(FECHA_OPERACION_OPCAJA). Si no hay
-  // ninguno marcado no se filtra por año (salen todos).
-  sAnyos := '';
+  SetLength(Result.Anyos, 0);
   for i := 0 to ccbFiltroAnyo.Properties.Items.Count - 1 do
   begin
     if ccbFiltroAnyo.States[i] = cbsChecked then
     begin
-      if sAnyos <> '' then
-        sAnyos := sAnyos + ', ';
-      sAnyos := sAnyos + ccbFiltroAnyo.Properties.Items[i].Description;
+      SetLength(Result.Anyos, Length(Result.Anyos) + 1);
+      Result.Anyos[High(Result.Anyos)] :=
+        ccbFiltroAnyo.Properties.Items[i].Description;
     end;
   end;
-  // Almacenes marcados -> lista IN de codigos. Sin nada marcado = todos.
-  sAlm := '';
+  SetLength(Result.Almacenes, 0);
   for i := 0 to ccbFiltroAlmacen.Properties.Items.Count - 1 do
   begin
     if (ccbFiltroAlmacen.States[i] = cbsChecked) and
        (i < FCodigosAlmacen.Count) then
     begin
-      if sAlm <> '' then
-        sAlm := sAlm + ', ';
-      sAlm := sAlm + QuotedStr(FCodigosAlmacen[i]);
+      SetLength(Result.Almacenes, Length(Result.Almacenes) + 1);
+      Result.Almacenes[High(Result.Almacenes)] := FCodigosAlmacen[i];
     end;
   end;
-  Result := ' WHERE 1 = 1';
-  if sAnyos <> '' then
-    Result := Result +
-              ' AND YEAR(o.FECHA_OPERACION_OPCAJA) IN (' + sAnyos + ')';
-  if sAlm <> '' then
-    Result := Result + ' AND o.CODIGO_ALM_OPCAJA IN (' + sAlm + ')';
-  // Restricción por usuario (appRestringirEmpAlmCaja): acota a su
-  // empresa/almacén/caja por encima de lo marcado en los combos.
-  Result := Result + SqlFiltroEmpAlmCaja(
-    ContextoSesion,
-    ParametrosApp,
-    'o.CODIGO_EMP_OPCAJA',
-                                         'o.CODIGO_ALM_OPCAJA',
-                                         'o.CODIGO_CAJA_OPCAJA');
-end;
-
-function TfrmMtoCajaOperacionesHist.ConstruirSqlOperaciones: string;
-begin
-  Result :=
-    'SELECT o.CODIGO_EMP_OPCAJA, ' +
-    '       o.CODIGO_ALM_OPCAJA, ' +
-    '       o.CODIGO_CAJA_OPCAJA, ' +
-    '       o.NUMERO_OPERACION_OPCAJA, ' +
-    '       MIN(o.FECHA_OPERACION_OPCAJA) AS FECHA_OP, ' +
-    '       GROUP_CONCAT(DISTINCT o.TIPO_OPERACION_OPCAJA ' +
-    '                    ORDER BY o.TIPO_OPERACION_OPCAJA ' +
-    '                    SEPARATOR '','') AS TIPOS_OP, ' +
-    '       GROUP_CONCAT(DISTINCT ' +
-    '                    NULLIF(o.CONCEPTO_GASTO_INGRESO_OPCAJA, '''') ' +
-    '                    SEPARATOR '' | '') AS CONCEPTOS, ' +
-    '       COALESCE(MAX(f.TOTAL_LIQUIDO_FAC), ' +
-    '                SUM(o.IMPORTE_TOTAL_OPCAJA)) AS IMPORTE_TOTAL, ' +
-    '       COALESCE(MAX(f.SERIE_FAC), MAX(o.SERIE_FAC_OPCAJA)) ' +
-    '         AS SERIE_FAC, ' +
-    '       COALESCE(MAX(f.NUMERO_FAC), MAX(o.NUMERO_FAC_OPCAJA)) ' +
-    '         AS NUMERO_FAC, ' +
-    '       MAX(COALESCE(f.CODIGO_CLI_FAC, o.CODIGO_CLI_OPCAJA)) ' +
-    '         AS CLIENTE, ' +
-    '       MAX(cli.RAZON_SOCIAL_CLI) AS RAZON_SOCIAL_CLI, ' +
-    '       MAX(o.CODIGO_EMPLEADO_OPCAJA) AS EMPLEADO ' +
-    '  FROM fza_caja_operaciones o ' +
-    '  LEFT JOIN fza_facturas f ' +
-    '    ON f.CODIGO_EMP_FAC = o.CODIGO_EMP_OPCAJA ' +
-    '   AND f.CODIGO_ALM_FAC = o.CODIGO_ALM_OPCAJA ' +
-    '   AND f.CODIGO_CAJA_FAC = o.CODIGO_CAJA_OPCAJA ' +
-    '   AND f.NUMERO_OPERACION_FAC = o.NUMERO_OPERACION_OPCAJA ' +
-    '  LEFT JOIN fza_clientes cli ' +
-    '    ON cli.CODIGO_CLI_CLI = COALESCE(f.CODIGO_CLI_FAC, ' +
-    '                                     o.CODIGO_CLI_OPCAJA) ' +
-    ConstruirWhereOperaciones +
-    ' GROUP BY o.CODIGO_EMP_OPCAJA, ' +
-    '          o.CODIGO_ALM_OPCAJA, ' +
-    '          o.CODIGO_CAJA_OPCAJA, ' +
-    '          o.NUMERO_OPERACION_OPCAJA ' +
-    // Ultima operacion arriba: ante empate de FECHA_OP desempatamos por
-    // numero de operacion en numerico, no como texto.
-    ' ORDER BY FECHA_OP DESC, ' +
-    '          CAST(o.NUMERO_OPERACION_OPCAJA AS UNSIGNED) DESC';
+  Result.Restriccion := ObtenerRestriccion;
 end;
 
 function TfrmMtoCajaOperacionesHist.ContarOperaciones: Integer;
-var
-  qry: TUniQuery;
 begin
   // Total de filas con el filtro activo: alimenta el Max de la barra de
   // progreso para que avance "segun el nro de registros".
-  Result := 0;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := dmmCajaOperacionesHist.unqryTablaG.Connection;
-    qry.SQL.Text :=
-      'SELECT COUNT(*) AS N FROM ( ' +
-      '  SELECT 1 ' +
-      '    FROM fza_caja_operaciones o ' +
-      ConstruirWhereOperaciones +
-      '   GROUP BY o.CODIGO_EMP_OPCAJA, ' +
-      '            o.CODIGO_ALM_OPCAJA, ' +
-      '            o.CODIGO_CAJA_OPCAJA, ' +
-      '            o.NUMERO_OPERACION_OPCAJA ' +
-      ') q';
-    qry.Open;
-    if not qry.IsEmpty then
-      Result := qry.Fields[0].AsInteger;
-  finally
-    FreeAndNil(qry);
-  end;
+  Result := FRepositorioPersistencia.ContarOperaciones(ObtenerFiltros);
 end;
 
 procedure TfrmMtoCajaOperacionesHist.AplicarFiltrosOperaciones;
-var
-  qry: TUniQuery;
-  sSql: string;
 begin
   if Assigned(dmmCajaOperacionesHist) and
      Assigned(dmmCajaOperacionesHist.unqryTablaG) then
   begin
-    qry := dmmCajaOperacionesHist.unqryTablaG;
-    sSql := ConstruirSqlOperaciones;
-    if Trim(qry.SQL.Text) <> Trim(sSql) then
+    if FRepositorioPersistencia.PrepararConsulta(ObtenerFiltros) then
     begin
-      qry.SQL.Text := sSql;
       AbrirConProgreso;
     end;
   end;
@@ -678,14 +581,14 @@ const
   TAM_BLOQUE = 2000;
   MAX_FILAS_CARGA = 200000;
 var
-  qry: TUniQuery;
+  Datos: TDataSet;
   nTotal, nLeidos: Integer;
   cursorPrev: TCursor;
 begin
   if Assigned(dmmCajaOperacionesHist) and
      Assigned(dmmCajaOperacionesHist.unqryTablaG) then
   begin
-    qry := dmmCajaOperacionesHist.unqryTablaG;
+    Datos := dmmCajaOperacionesHist.unqryTablaG;
     cursorPrev := Screen.Cursor;
     Screen.Cursor := crHourGlass;
     // Mostramos el overlay antes del COUNT para que el usuario tenga
@@ -697,7 +600,7 @@ begin
     // (el valor por defecto de 25 seria lento). DisableControls evita que
     // el grid fuerce el fetch completo y nos quite el progreso. FetchRows
     // solo se puede fijar con la query cerrada, asi que no se restaura.
-    qry.DisableControls;
+    Datos.DisableControls;
     try
       nTotal := ContarOperaciones;
       // Tope de seguridad: cargar cientos de miles de filas de golpe
@@ -719,22 +622,20 @@ begin
           else
             FbarProgreso.Max := 1;
         end;
-        qry.Close;
-        qry.FetchRows := TAM_BLOQUE;
-        qry.Open;
+        FRepositorioPersistencia.AbrirConsulta(TAM_BLOQUE);
         nLeidos := 0;
-        qry.First;
-        while not qry.Eof do
+        Datos.First;
+        while not Datos.Eof do
         begin
           Inc(nLeidos);
           if (nLeidos mod 200) = 0 then
             ActualizarProgresoCarga(nLeidos, nTotal);
-          qry.Next;
+          Datos.Next;
         end;
-        qry.First;
+        Datos.First;
       end;
     finally
-      qry.EnableControls;
+      Datos.EnableControls;
       OcultarProgresoCarga;
       Screen.Cursor := cursorPrev;
     end;
@@ -1832,7 +1733,9 @@ begin
   end;
   if Assigned(dmmCajaOperacionesHist) and
      Assigned(dmmCajaOperacionesHist.unqryTablaG) then
-    dmmCajaOperacionesHist.unqryTablaG.SQL.Text := ConstruirSqlOperaciones;
+  begin
+    FRepositorioPersistencia.PrepararConsulta(ObtenerFiltros);
+  end;
   pnlContFiltrosCaja.Visible := False;
   pnlFiltrosCaja.Height := 22;
   btnToggleFiltrosCaja.Caption := SCaptionFiltrosCargaContraido;
@@ -1849,6 +1752,7 @@ end;
 
 procedure TfrmMtoCajaOperacionesHist.FormDestroy(Sender: TObject);
 begin
+  FRepositorioPersistencia := nil;
   inherited;
   FreeAndNil(FdmConsulta);
   FreeAndNil(FCodigosAlmacen);

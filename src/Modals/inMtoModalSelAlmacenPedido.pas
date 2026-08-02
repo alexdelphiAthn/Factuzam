@@ -47,7 +47,7 @@ uses
   cxDBData, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid,
   System.Actions, Vcl.ActnList,
-  Data.DB, MemDS, DBAccess, Uni;
+  Data.DB, inLibSeleccionAlmacenPersistenciaIntf;
 
 type
   TfrmModalSelAlmacenPedido = class(TfrmBase)
@@ -58,7 +58,6 @@ type
     lblPedido:   TLabel;
     lblAlmacen:  TcxLabel;
     cbbAlmacen:     TcxLookupComboBox;
-    unqryAlmacenes: TUniQuery;
     dsAlmacenes:    TDataSource;
     lblSerieAlb:    TcxLabel;
     cbbSerieAlb:    TcxComboBox;
@@ -67,7 +66,6 @@ type
     lblTemporada:   TcxLabel;
     cbbTemporada:   TcxLookupComboBox;
     dsTemporadas:   TDataSource;
-    unqryTemporadas: TUniQuery;
     lblFecha:       TcxLabel;
     dteFecha:       TcxDateEdit;
     ActionList1: TActionList;
@@ -78,7 +76,6 @@ type
     cxgrdAlbExist:    TcxGrid;
     tvAlbExist:       TcxGridDBTableView;
     cxgrdlvlAlbExist: TcxGridLevel;
-    unqryAlbExist:    TUniQuery;
     dsAlbExist:       TDataSource;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -89,6 +86,13 @@ type
     procedure cbbAlmacenPropertiesEditValueChanged(Sender: TObject);
     procedure chkIncorporarClick(Sender: TObject);
   private
+    FRepositorio: IRepositorioSeleccionAlmacen;
+    FConsultaAlmacenes: IConsultaSeleccionAlmacen;
+    FConsultaTemporadas: IConsultaSeleccionAlmacen;
+    FConsultaAlbaranes: IConsultaSeleccionAlmacen;
+    FAlmacenes: TDataSet;
+    FTemporadas: TDataSet;
+    FAlbaranes: TDataSet;
     procedure CargarAlmacenes;
     procedure ConfigurarLookupTemporada;
     procedure ProponerSerieAlmacen;
@@ -119,7 +123,7 @@ type
 implementation
 
 uses
-  inLibValoresAutomaticos, inLibFormatoDocumento,
+  inLibFormatoDocumento,
   inLibMsgCompras, inLibMsgVentas;
 
 {$R *.dfm}
@@ -144,12 +148,14 @@ begin
   Incorporar           := False;
   AlbaranSerieDestino  := '';
   AlbaranNumDestino    := '';
-  // Conexion de las queries que usa el modal.
-  unqryTemporadas.Connection := ConexionPrincipal;
-  unqryAlbExist.Connection   := ConexionPrincipal;
+  FRepositorio := ContextoRepositoriosPantalla.Documentos.
+    CrearRepositorioSeleccionAlmacen;
 end;
 
 procedure TfrmModalSelAlmacenPedido.FormShow(Sender: TObject);
+var
+  aSeries: TSeriesSeleccionAlmacen;
+  sSerie: string;
 begin
   inherited;
   lblPedido.Caption := Format(SCaptionCrearAlbaranDesdePedidoCompra,
@@ -158,11 +164,12 @@ begin
   CargarAlmacenes;
   ConfigurarLookupTemporada;
   // Defaults. El combo de serie ofrece las series 'AB' de la empresa.
-  CargarSeriesEmpresa(
-    ConexionPrincipal,
-    CodigoEmpresa,
-    'AB',
-    cbbSerieAlb.Properties.Items);
+  cbbSerieAlb.Properties.Items.Clear;
+  aSeries := FRepositorio.ListarSeries(CodigoEmpresa, 'AB');
+  for sSerie in aSeries do
+  begin
+    cbbSerieAlb.Properties.Items.Add(sSerie);
+  end;
   cbbSerieAlb.Text := SerieAlbDefecto;
   CargarAlbaranesExistentes;
   // Por defecto se crea un albaran nuevo; el usuario decide si incorpora.
@@ -192,6 +199,16 @@ procedure TfrmModalSelAlmacenPedido.FormClose(Sender: TObject;
                                               var Action: TCloseAction);
 begin
   inherited;
+  dsAlmacenes.DataSet := nil;
+  dsTemporadas.DataSet := nil;
+  dsAlbExist.DataSet := nil;
+  FAlmacenes := nil;
+  FTemporadas := nil;
+  FAlbaranes := nil;
+  FConsultaAlmacenes := nil;
+  FConsultaTemporadas := nil;
+  FConsultaAlbaranes := nil;
+  FRepositorio := nil;
   // No usar caFree: el llamador (btnCrearAlbaranClick) hace
   // FreeAndNil(form) en su finally. Si la cerramos aqui dejamos un
   // puntero colgante que provoca double-free AV al leer Aceptado /
@@ -206,14 +223,9 @@ begin
   // (que en el modal es definitivo) puede ser distinto del que figura
   // en las lineas — util cuando el pedido se generaliza al almacen
   // central y el albaran se hace contra una tienda concreta.
-  unqryAlmacenes.Connection := ConexionPrincipal;
-  if not unqryAlmacenes.Active then
-    unqryAlmacenes.Open
-  else
-  begin
-    unqryAlmacenes.Close;
-    unqryAlmacenes.Open;
-  end;
+  FConsultaAlmacenes := FRepositorio.ConsultarAlmacenes;
+  FAlmacenes := FConsultaAlmacenes.DataSet;
+  dsAlmacenes.DataSet := FAlmacenes;
   cbbAlmacen.Properties.ListSource := dsAlmacenes;
 end;
 
@@ -232,8 +244,7 @@ begin
     sAlm := ''
   else
     sAlm := Trim(VarToStr(vAlm));
-  sSerie := ObtenerSeriePropiaAlmacen(
-    ConexionPrincipal,
+  sSerie := FRepositorio.ObtenerSerieAlmacen(
     CodigoEmpresa,
     'AB',
     sAlm);
@@ -250,9 +261,9 @@ end;
 
 procedure TfrmModalSelAlmacenPedido.ConfigurarLookupTemporada;
 begin
-  // El SQL ya esta en el DFM. Lo abrimos al show.
-  if not unqryTemporadas.Active then
-    unqryTemporadas.Open;
+  FConsultaTemporadas := FRepositorio.ConsultarTemporadas;
+  FTemporadas := FConsultaTemporadas.DataSet;
+  dsTemporadas.DataSet := FTemporadas;
   cbbTemporada.Properties.ListSource    := dsTemporadas;
   cbbTemporada.Properties.KeyFieldNames := 'ID_PV_ARTPROP';
   cbbTemporada.Properties.ListColumns.Clear;
@@ -266,14 +277,11 @@ end;
 
 procedure TfrmModalSelAlmacenPedido.CargarAlbaranesExistentes;
 begin
-  // Albaranes de compra ya creados desde ESTE pedido y no facturados ni
-  // cancelados: son los unicos destinos validos para incorporar lineas.
-  unqryAlbExist.Connection := ConexionPrincipal;
-  if unqryAlbExist.Active then
-    unqryAlbExist.Close;
-  unqryAlbExist.ParamByName('np').AsString := NumPedc;
-  unqryAlbExist.ParamByName('sp').AsString := SeriePedc;
-  unqryAlbExist.Open;
+  FConsultaAlbaranes := FRepositorio.ConsultarAlbaranesCompra(
+    NumPedc,
+    SeriePedc);
+  FAlbaranes := FConsultaAlbaranes.DataSet;
+  dsAlbExist.DataSet := FAlbaranes;
   tvAlbExist.DataController.DataSource := dsAlbExist;
 end;
 
@@ -282,7 +290,9 @@ var
   bHay: Boolean;
 begin
   // Solo se puede incorporar si el pedido tiene algun albaran elegible.
-  bHay := unqryAlbExist.Active and (unqryAlbExist.RecordCount > 0);
+  bHay := Assigned(FAlbaranes) and
+    FAlbaranes.Active and
+    (FAlbaranes.RecordCount > 0);
   chkIncorporar.Enabled := bHay;
   if not bHay then
     chkIncorporar.Checked := False;
@@ -342,14 +352,14 @@ begin
   begin
     // Modo incorporar: hace falta el albaran destino seleccionado en el
     // grid (el cursor del dataset sigue a la fila con foco).
-    if unqryAlbExist.IsEmpty then
+    if FAlbaranes.IsEmpty then
     begin
       MessageDlg(SInfoAlbaranesIncorporarNoDisponibles,
                  mtInformation, [mbOk], 0);
       Exit;
     end;
-    AlbaranSerieDestino := unqryAlbExist.FieldByName('SERIE_ALBC').AsString;
-    AlbaranNumDestino   := unqryAlbExist.FieldByName('NUMERO_ALBC').AsString;
+    AlbaranSerieDestino := FAlbaranes.FieldByName('SERIE_ALBC').AsString;
+    AlbaranNumDestino   := FAlbaranes.FieldByName('NUMERO_ALBC').AsString;
     Incorporar    := True;
     CodigoAlmacen := VarToStr(vAlm);
     Aceptado      := True;

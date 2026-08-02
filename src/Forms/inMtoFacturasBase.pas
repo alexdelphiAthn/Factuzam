@@ -59,6 +59,7 @@ uses
   inLibFacturasServiciosIntf, inLibEmisionFiscalIntf,
   inLibFacturasLecturasIntf,
   inLibFacturasPersistenciaIntf,
+  inLibFacturasAplicacionIntf,
   inLibDocumento, inLibDocumentoIntf,
   inLibFacturasColumnasPresentacion,
   inLibFacturasLineasEdicion;
@@ -71,20 +72,15 @@ type
     FAnfitrion: TfrmMtoFacturasBase;
   public
     constructor Create(AAnfitrion: TfrmMtoFacturasBase);
-    procedure ActualizarBloqueoEdicion;
     procedure ActualizarLabelPrendas;
     procedure ActivarSkuArticuloLinea(const ACodArt: string;
       AEnfocar: Boolean);
     procedure AplicarEdicionPreciosLinea(Sender: TObject);
-    procedure AplicarOrigenCobros;
     procedure AplicarVisibilidadColumnasCreacion(ACrear: Boolean);
     function AsegurarCabeceraPersistidaParaLineas: Boolean;
     procedure AsegurarPrimeraLineaFacturaBorrador;
     procedure btnCODIGO_EMPRESA_FACTURAPropertiesEditValueChanged(
       Sender: TObject);
-    procedure btnConsolidarClick(Sender: TObject);
-    procedure btnGenerarRecibosClick(Sender: TObject);
-    procedure btnReciboPagadoClick(Sender: TObject);
     procedure btnVolverBorradorClick(Sender: TObject);
     procedure cbbTARIFA_ARTICULOS_CLIENTESPropertiesChange(
       Sender: TObject);
@@ -95,8 +91,6 @@ type
     procedure dsTablaGDataChange(Sender: TObject; Field: TField);
     procedure dsTablaGStateChange(Sender: TObject);
     function EsVentaMayorNormal: Boolean;
-    procedure EjecutarOperacionFiscal(
-      const ATipoOperacion, AAccion: string);
     procedure GuardarPendienteAntesDeImprimir;
     function ModoCreacionActivo: Boolean;
     function ModoCreacionSolicitado: Boolean;
@@ -112,6 +106,15 @@ type
     procedure SeriesCambiadasDesdeDM(Sender: TObject);
     procedure SincronizarColumnaSku;
     procedure SincronizarColumnasCreacion;
+  end;
+
+  TContextoDependenciasFacturas = record
+    Vista: IVistaFactura;
+    Consolidacion: IAplicacionConsolidacionFactura;
+    OperacionFiscal: IAplicacionOperacionFiscalFactura;
+    Cobros: IAplicacionCobrosFactura;
+    Estado: IPresentadorEstadoFactura;
+    ModoEntrada: IGestorModoEntradaFactura;
   end;
 
   TfrmMtoFacturasBase = class(TfrmMtoDocumento)
@@ -618,6 +621,8 @@ type
     FEditorLineas: TEditorLineasFactura;
     FRepositorioLecturas: IRepositorioLecturasFactura;
     FPersistenciaFacturas: TPersistenciaFacturas;
+    FServiciosFactura: TServiciosFactura;
+    FDependencias: TContextoDependenciasFacturas;
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
@@ -760,15 +765,251 @@ uses
   UniDataVentasWsCola,
   inLibFacturasMovimientos,
   inLibFacturasConsolidacion,
+  inLibFacturasAplicacion,
+  inMtoFacturasVistaVcl,
+  inMtoFacturasConsolidacionVcl,
+  inMtoFacturasCobrosVcl,
   inLibFacturasReapertura,
   inLibFacturasComposicion,
   inMtoModalFacturarTicket,
-  inLibLog,
+
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku, inLibColumnasDocumento, UniDataGen,
   inLibPresentacionDocumento,
   // Composicion del puerto de persistencia del pivote (V2).
   UniDataPivoteVenta, UniDataColumnasSkuServicios;
+
+function CrearContextoConsolidacionFacturaVcl(
+  AFormulario: TfrmMtoFacturasBase
+): TContextoConsolidacionFacturaVcl;
+begin
+  Result := Default(TContextoConsolidacionFacturaVcl);
+  Result.Facturas := AFormulario.dsTablaG.DataSet;
+  Result.Aplicacion := AFormulario.FDependencias.Consolidacion;
+  Result.Vista := AFormulario.FDependencias.Vista;
+  Result.Usuario := AFormulario.IdentidadSesion.Usuario;
+end;
+
+function CrearContextoCobrosFacturaVcl(
+  AFormulario: TfrmMtoFacturasBase): TContextoCobrosFacturaVcl;
+begin
+  Result := Default(TContextoCobrosFacturaVcl);
+  Result.Aplicacion := AFormulario.FDependencias.Cobros;
+  Result.Cabecera := AFormulario.dsTablaG.DataSet;
+  Result.Efectos := AFormulario.dmmFacturas.unqryEfectosVenta;
+  Result.Recibos := AFormulario.dmmFacturas.unqryRecibos;
+  Result.DataModule := AFormulario.dmmFacturas;
+  Result.Conexion := AFormulario.ConexionPrincipal;
+  Result.PropietarioVisual := AFormulario;
+  Result.Usuario := AFormulario.IdentidadSesion.Usuario;
+  Result.EsVentaMayor := SameText(
+    AFormulario.TipoFacturaFiltro,
+    'NORMAL');
+  Result.AsegurarEfectos :=
+    procedure
+    begin
+      AFormulario.dmmFacturas.AsegurarEfectosVentaAbierta;
+    end;
+  Result.AsegurarRecibos :=
+    procedure
+    begin
+      AFormulario.dmmFacturas.AsegurarRecibosAbierta;
+    end;
+  Result.GenerarRecibos :=
+    procedure
+    begin
+      with AFormulario.dmmFacturas.unstrdprcGetRecibos do
+      begin
+        ParamByName('pNRO_FACTURA').AsString :=
+          AFormulario.dsTablaG.DataSet.FieldByName(fnrofac).AsString;
+        ParamByName('pSERIE_FACTURA').AsString :=
+          AFormulario.dsTablaG.DataSet.FieldByName(fseriefac).AsString;
+        ParamByName('pUSUARIO').AsString :=
+          AFormulario.IdentidadSesion.Usuario;
+        ExecProc;
+      end;
+      AFormulario.dmmFacturas.unqryRecibos.Close;
+      AFormulario.dmmFacturas.unqryRecibos.Open;
+    end;
+  Result.RefrescarEfectos :=
+    procedure
+    begin
+      AFormulario.dmmFacturas.unqryEfectosVenta.Close;
+      AFormulario.dmmFacturas.unqryEfectosVenta.Open;
+    end;
+  Result.MarcarReciboPagado :=
+    procedure
+    begin
+      AFormulario.CambiarEstadoRecibo('Pagado');
+    end;
+  Result.MarcarReciboPendiente :=
+    procedure
+    begin
+      AFormulario.CambiarEstadoRecibo('Emitido');
+    end;
+  Result.MarcarReciboDevuelto :=
+    procedure
+    begin
+      AFormulario.CambiarEstadoRecibo('Devuelto');
+    end;
+end;
+
+procedure PrepararDependenciasFacturas(
+  AFormulario: TfrmMtoFacturasBase);
+var
+  oCasoUsoConsolidacion: ICasoUsoConsolidacionFactura;
+  oOperacionesVista: TOperacionesVistaFacturaVcl;
+  oServicioEmision: IServicioEmisionFiscal;
+  oServicioMovimientos: IServicioMovimientosFactura;
+begin
+  if not Assigned(AFormulario.FControlador) then
+    AFormulario.FControlador := TControladorFacturas.Create(AFormulario);
+  if AFormulario.FRepositorioLecturas = nil then
+    AFormulario.FRepositorioLecturas :=
+      CrearRepositorioLecturasFacturaUniDAC(
+        AFormulario.ConexionPrincipal);
+  if AFormulario.FPersistenciaFacturas.Borrado = nil then
+    AFormulario.FPersistenciaFacturas :=
+      CrearPersistenciaFacturasUniDAC(
+        AFormulario.ConexionPrincipal);
+  if AFormulario.FDependencias.Vista = nil then
+  begin
+    oOperacionesVista := Default(TOperacionesVistaFacturaVcl);
+    oOperacionesVista.Confirmar :=
+      function(const APregunta: string): Boolean
+      begin
+        Result := MessageDlg(
+          APregunta,
+          mtConfirmation,
+          [mbYes, mbNo],
+          0) = mrYes;
+      end;
+    oOperacionesVista.MostrarInformacion :=
+      procedure(const AMensaje: string)
+      begin
+        ShowMessage(AMensaje);
+      end;
+    oOperacionesVista.MostrarError :=
+      procedure(const AMensaje: string)
+      begin
+        ShowMessage(AMensaje);
+      end;
+    oOperacionesVista.RefrescarFactura :=
+      procedure
+      begin
+        if Assigned(AFormulario.dsTablaG.DataSet) and
+           AFormulario.dsTablaG.DataSet.Active then
+          AFormulario.dsTablaG.DataSet.Refresh;
+      end;
+    oOperacionesVista.RefrescarMovimientos :=
+      procedure
+      begin
+        if Assigned(AFormulario.dmmFacturas) and
+           Assigned(AFormulario.dmmFacturas.unqryMovimientosFac) and
+           AFormulario.dmmFacturas.unqryMovimientosFac.Active then
+          AFormulario.dmmFacturas.unqryMovimientosFac.Refresh;
+      end;
+    oOperacionesVista.ArchivarFactura :=
+      procedure(const ASerie, ANumero: string)
+      begin
+        try
+          TfrmPrintFac.ArchivarFacturaConsolidada(
+            AFormulario.dmmFacturas,
+            ASerie,
+            ANumero);
+        except
+          on E: Exception do
+            AFormulario.RegistroLog.RegistrarError(
+              'No se pudo archivar el PDF al consolidar ' +
+              ASerie + '\' + ANumero + ': ' + E.Message);
+        end;
+      end;
+    oOperacionesVista.AplicarEstado :=
+      procedure(const AEstado: TEstadoVisualFactura)
+      var
+        Configuracion: TConfiguracionEstadoFiscalFactura;
+        Controles: TControlesEstadoFiscalFactura;
+      begin
+        if Assigned(AFormulario.dmmFacturas) then
+          AFormulario.dmmFacturas.unqryLinFac.ReadOnly :=
+            not AEstado.Editable;
+        Configuracion := Default(TConfiguracionEstadoFiscalFactura);
+        Configuracion.Editable := AEstado.Editable;
+        Configuracion.ActualizarAcciones := AEstado.ActualizarAcciones;
+        Configuracion.PuedeConsolidar := AEstado.PuedeConsolidar;
+        Configuracion.PuedeImprimir := AEstado.PuedeImprimir;
+        Controles := Default(TControlesEstadoFiscalFactura);
+        Controles.DataSourceCabecera := AFormulario.dsTablaG;
+        Controles.VistaLineas := AFormulario.tvLineasFactura;
+        Controles.BotonConsolidar := AFormulario.btnConsolidar;
+        Controles.BotonImprimir := AFormulario.btnImprimir;
+        TPresentacionEstadoFiscalFactura.Aplicar(
+          Configuracion,
+          Controles);
+      end;
+    oOperacionesVista.AplicarModoEntrada :=
+      procedure(AModo: TModoEntradaFactura)
+      begin
+        case AModo of
+          mefAutomatico:
+            AFormulario.FModoEntradaSel := mcsAuto;
+          mefSku:
+            AFormulario.FModoEntradaSel := mcsSku;
+          mefTallas:
+            AFormulario.FModoEntradaSel := mcsTallasHorPed;
+        end;
+        AFormulario.ConstruirModoEntrada;
+      end;
+    AFormulario.FDependencias.Vista := CrearVistaFacturaVcl(
+      oOperacionesVista);
+    AFormulario.FDependencias.Estado := CrearPresentadorEstadoFactura(
+      AFormulario.FDependencias.Vista);
+    AFormulario.FDependencias.ModoEntrada :=
+      CrearGestorModoEntradaFactura(
+      AFormulario.FDependencias.Vista,
+      mefAutomatico);
+  end;
+  if AFormulario.FServiciosFactura.Efectos = nil then
+  begin
+    oServicioEmision := CrearServicioEmisionFiscal(
+      AFormulario.ParametrosApp,
+      AFormulario.ParametrosCaja,
+      AFormulario.ConexionPrincipal,
+      CrearServicioVerifactuColaUniDAC(
+        AFormulario.ConexionPrincipal));
+    oServicioMovimientos := TServicioMovimientosFactura.Create(
+      AFormulario.ConexionPrincipal,
+      AFormulario.FPersistenciaFacturas.Movimientos);
+    oCasoUsoConsolidacion := CrearCasoUsoConsolidacionFactura(
+      AFormulario.FPersistenciaFacturas.UnidadTrabajo,
+      AFormulario.FPersistenciaFacturas.Consolidacion,
+      oServicioEmision,
+      oServicioMovimientos);
+    AFormulario.FServiciosFactura := CrearServiciosFactura(
+      AFormulario.ConexionPrincipal,
+      TRepositorioFacturas.Create(
+        AFormulario.ConexionPrincipal,
+        AFormulario.ContextoRepositoriosPantalla.CatalogoSql,
+        AFormulario.ContextoRepositoriosPantalla.IncidenciasSql),
+      AFormulario.FRepositorioLecturas,
+      AFormulario.FPersistenciaFacturas,
+      AFormulario.ContextoRepositoriosPantalla.Articulos.CrearResolverArticulos(
+        AFormulario.ConexionPrincipal),
+      CrearServicioVerifactuColaUniDAC(
+        AFormulario.ConexionPrincipal));
+    AFormulario.FDependencias.Consolidacion :=
+      CrearAplicacionConsolidacionFactura(
+        oCasoUsoConsolidacion,
+        AFormulario.FDependencias.Vista);
+    AFormulario.FDependencias.OperacionFiscal :=
+      CrearAplicacionOperacionFiscalFactura(
+        oServicioEmision,
+        AFormulario.FDependencias.Vista);
+    AFormulario.FDependencias.Cobros :=
+      CrearAplicacionCobrosFactura(
+        AFormulario.FServiciosFactura.Efectos);
+  end;
+end;
 
 {$R *.dfm}
 
@@ -846,8 +1087,8 @@ begin
       // Teardown defensivo en cierre: nada que hacer si el grid ya
       // esta a medio destruir.
       on E: Exception do
-        if inLibLog.Log() <> nil then
-          inLibLog.Log.LogWarning(
+        if RegistroLog <> nil then
+          RegistroLog.RegistrarAviso(
             'FacturasBase.Destroy: Desmontar fallo: ' + E.Message);
     end;
     FModoEntrada := nil;
@@ -855,6 +1096,7 @@ begin
   RestaurarEnterSku(Self);
   FreeAndNil(FEditorLineas);
   FreeAndNil(FControlador);
+  FDependencias := Default(TContextoDependenciasFacturas);
   inherited;
 end;
 procedure TfrmMtoFacturasBase.btnUpdateClienteClick(Sender: TObject);
@@ -916,12 +1158,13 @@ begin
   Result := SameText(TipoFacturaFiltro, 'NORMAL');
   end;
 end;
-procedure TControladorFacturas.AplicarOrigenCobros;
+procedure AplicarOrigenCobrosFacturaVcl(
+  AFormulario: TfrmMtoFacturasBase);
 var
   Configuracion: TConfiguracionCobrosFactura;
   Controles: TControlesCobrosFactura;
 begin
-  with FAnfitrion do
+  with AFormulario do
   begin
   Configuracion := CrearConfiguracionCobrosFactura(TipoFacturaFiltro);
   Controles := Default(TControlesCobrosFactura);
@@ -977,30 +1220,61 @@ begin
   TPresentacionCobrosFactura.Aplicar(Configuracion, Controles);
   end;
 end;
+
+function CrearContextoDetalleFacturaVcl(
+  AFormulario: TfrmMtoFacturasBase
+): TContextoDetalleFacturaVcl;
+begin
+  Result := Default(TContextoDetalleFacturaVcl);
+  Result.EsVentaMayor := SameText(
+    AFormulario.TipoFacturaFiltro,
+    'NORMAL');
+  if AFormulario.pcDetail.ActivePage = AFormulario.tsRecibos then
+    Result.Detalle := dfvCobros
+  else if AFormulario.pcDetail.ActivePage = AFormulario.tsVerifactu then
+    Result.Detalle := dfvConsolidacion
+  else if AFormulario.pcDetail.ActivePage = AFormulario.tsRegistro then
+    Result.Detalle := dfvRegistro
+  else if AFormulario.pcDetail.ActivePage =
+          AFormulario.tsMovimientosFac then
+    Result.Detalle := dfvMovimientos;
+  Result.AsegurarEfectos :=
+    procedure
+    begin
+      AFormulario.dmmFacturas.AsegurarEfectosVentaAbierta;
+    end;
+  Result.AsegurarRecibos :=
+    procedure
+    begin
+      AFormulario.dmmFacturas.AsegurarRecibosAbierta;
+    end;
+  Result.AsegurarConsolidacion :=
+    procedure
+    begin
+      AFormulario.dmmFacturas.AsegurarConsolidacionAbierta;
+    end;
+  Result.AsegurarRegistro :=
+    procedure
+    begin
+      AFormulario.dmmFacturas.AsegurarErroresAbierta;
+    end;
+  Result.AsegurarMovimientos :=
+    procedure
+    begin
+      AFormulario.dmmFacturas.AsegurarMovimientosFacAbierta;
+    end;
+end;
+
+procedure TfrmMtoFacturasBase.AplicarOrigenCobros;
+begin
+  AplicarOrigenCobrosFacturaVcl(Self);
+end;
 procedure TfrmMtoFacturasBase.btnImprimirReciboClick(Sender: TObject);
-var
-  form:TfrmPrintRecFac;
 begin
   inherited;
-  if not PuedeImprimir then
-    Abort;
-  if FControlador.EsVentaMayorNormal then
-    ShowMessage(SInfoImpresionEfectosCobroEnRemesas)
-  else
-  begin
-    form := TfrmPrintRecFac.Create(Application);
-    try
-      form.dmFac := dmmFacturas;
-      form.edtNroFac.Text :=
-        dsTablaG.DataSet.findField('NUMERO_FAC').AsString;
-      form.edtSerie.Text := dsTablaG.DataSet.findField('SERIE_FAC').AsString;
-      form.edtPlazoRecFac.Text :=
-        dmmFacturas.unqryRecibos.FindField('NUMERO_PLAZO_REC').AsString;
-      form.ShowModal;
-    finally
-      FreeAndNil(form);
-    end;
-  end;
+  TCoordinadorCobrosFacturaVcl.ImprimirRecibo(
+    CrearContextoCobrosFacturaVcl(Self),
+    PuedeImprimir);
 end;
 procedure TfrmMtoFacturasBase.btnIraArticuloClick(Sender: TObject);
 begin
@@ -1176,99 +1450,6 @@ begin
       dsTablaG.Dataset.FieldByName(fnrofac).AsString);
 end;
 
-procedure TControladorFacturas.btnGenerarRecibosClick(Sender: TObject);
-var
-  bReemplazar:Boolean;
-  Configuracion: TConfiguracionCobrosFactura;
-  iRes: Integer;
-  qCobros: TDataSet;
-  sMensaje: string;
-  sEmp, sCli, sPref: string;
-  selBanco: TSeleccionBancoResult;
-begin
-  with FAnfitrion do
-  begin
-  bReemplazar := True;
-  Configuracion := CrearConfiguracionCobrosFactura(TipoFacturaFiltro);
-  with dmmFacturas.unqryTablaG do
-  begin
-    if ((State = dsEdit) or (State = dsInsert)) then
-      Post;
-  end;
-  if EsVentaMayorNormal then
-    dmmFacturas.AsegurarEfectosVentaAbierta
-  else
-    dmmFacturas.AsegurarRecibosAbierta;
-  if EsVentaMayorNormal then
-    qCobros := dmmFacturas.unqryEfectosVenta
-  else
-    qCobros := dmmFacturas.unqryRecibos;
-  if (qCobros <> nil) and (qCobros.RecordCount > 0) then
-  begin
-    sMensaje := Format(
-      SPreguntaReemplazarCobros,
-      [Configuracion.TextoPlural]);
-    if ( Application.MessageBox( PChar(sMensaje),
-                                 PChar(STituloMensajeAdvertencia),
-                                 MB_YESNO ) = ID_YES ) then
-      bReemplazar := True
-    else
-      bReemplazar := False;
-  end;
-  if bReemplazar = True then
-  begin
-    // Cuenta de la empresa (ingreso) para el cobro: eleccion manual, con el
-    // banco por defecto del cliente pre-seleccionado si lo tiene.
-    sEmp  := dsTablaG.DataSet.FieldByName('CODIGO_EMP_FAC').AsString;
-    sCli  := dsTablaG.DataSet.FieldByName('CODIGO_CLI_FAC').AsString;
-    sPref := dmmFacturas.GetBancoDefectoCliente(sCli);
-    selBanco := TfrmModalSeleccionarBanco.Ejecutar(
-      FAnfitrion,
-      ConexionPrincipal,
-                                                   sEmp, ubeCobro, sPref);
-    if not selBanco.Aceptado then
-      ShowMessage(
-        Format(
-          SInfoGeneracionCobrosCancelada,
-          [Configuracion.TextoPlural]))
-    else
-    begin
-      if EsVentaMayorNormal then
-      begin
-        iRes := dmmFacturas.GenerarEfectosVenta(selBanco.CodigoEmpban,
-                                                selBanco.Iban);
-        if iRes > 0 then
-          ShowMessage(Format(SInfoEfectosCobroGenerados, [iRes]))
-        else if iRes = 0 then
-          ShowMessage(SAvisoEfectosCobroNoGenerados)
-        else
-          ShowMessage(SErrorGenerarEfectosCobroSinBorrador);
-      end
-      else
-      begin
-        with dmmFacturas.unstrdprcGetRecibos do
-        begin
-          ParamByName('pNRO_FACTURA').AsString :=
-                               dsTablaG.DataSet.FieldByName(fnrofac).AsString;
-          ParamByName('pSERIE_FACTURA').AsString :=
-                             dsTablaG.DataSet.FieldByName(fseriefac).AsString;
-          ParamByName('pUSUARIO').AsString := IdentidadSesion.Usuario;
-          ExecProc;
-          dmmFacturas.unqryRecibos.Close;
-          dmmFacturas.unqryRecibos.Open;
-        end;
-        // Estampar la cuenta de la empresa (ingreso) en los recibos.
-        if selBanco.CodigoEmpban <> '' then
-          dmmFacturas.EstamparBancoRecibos(
-            dsTablaG.DataSet.FieldByName(fseriefac).AsString,
-            dsTablaG.DataSet.FieldByName(fnrofac).AsString,
-            selBanco.CodigoEmpban, selBanco.Iban);
-      end;
-    end;
-  end;
-  end;
-end;
-
 procedure TControladorFacturas.sbImprimirClick(Sender: TObject);
 var
   form:  TfrmPrintFac;
@@ -1332,87 +1513,16 @@ end;
 procedure TfrmMtoFacturasBase.btnReciboDevueltoClick(Sender: TObject);
 begin
   inherited;
-  if FControlador.EsVentaMayorNormal then
-  begin
-    dmmFacturas.AsegurarEfectosVentaAbierta;
-    if dmmFacturas.CambiarEstadoEfectoVenta('DEVUELTO') then
-      ShowMessage(SInfoEfectoMarcadoDevuelto)
-    else
-      ShowMessage(SErrorMarcarEfectoDevuelto);
-  end
-  else
-    CambiarEstadoRecibo('Devuelto');
+  TCoordinadorCobrosFacturaVcl.MarcarDevuelto(
+    CrearContextoCobrosFacturaVcl(Self));
 end;
 
 procedure TfrmMtoFacturasBase.btnReciboEmitidoClick(Sender: TObject);
 begin
   inherited;
-  if FControlador.EsVentaMayorNormal then
-  begin
-    dmmFacturas.AsegurarEfectosVentaAbierta;
-    if dmmFacturas.CambiarEstadoEfectoVenta('PENDIENTE') then
-      ShowMessage(SInfoEfectoMarcadoPendiente)
-    else
-      ShowMessage(SErrorMarcarEfectoPendiente);
-  end
-  else
-    CambiarEstadoRecibo('Emitido');
+  TCoordinadorCobrosFacturaVcl.MarcarPendiente(
+    CrearContextoCobrosFacturaVcl(Self));
 end;
-
-procedure TControladorFacturas.btnReciboPagadoClick(Sender: TObject);
-var
-  frm: TfrmModalRegistrarPago;
-  q: TDataSet;
-  iEfe: Integer;
-  iRes: Integer;
-  fPend: Double;
-begin
-  with FAnfitrion do
-  begin
-  if EsVentaMayorNormal then
-  begin
-    dmmFacturas.AsegurarEfectosVentaAbierta;
-    if (dmmFacturas.unqryEfectosVenta <> nil) and
-       dmmFacturas.unqryEfectosVenta.Active and
-       (not dmmFacturas.unqryEfectosVenta.IsEmpty) then
-    begin
-      q := dmmFacturas.unqryEfectosVenta;
-      iEfe := q.FieldByName('NUMERO_EFV').AsInteger;
-      fPend := q.FieldByName('IMPORTE_PENDIENTE_EFV').AsFloat;
-      if fPend <= 0.0001 then
-        ShowMessage(SErrorEfectoSinImportePendiente)
-      else
-      begin
-        frm := TfrmModalRegistrarPago.Create(nil);
-        try
-          frm.SetDatos(
-            Format('Efecto %d - vto %s - pendiente %.2f',
-              [iEfe,
-               FormatDateTime('dd/mm/yyyy',
-                 q.FieldByName('FECHA_VENCIMIENTO_EFV').AsDateTime),
-               fPend]),
-            fPend);
-          if frm.ShowModal = mrOk then
-          begin
-            iRes := dmmFacturas.RegistrarCobroEfectoVenta(iEfe, frm.Fecha,
-                      frm.Importe, frm.Tipo, frm.Referencia);
-            if iRes > 0 then
-              ShowMessage(SInfoEfectoConciliado)
-            else
-              ShowMessage(SErrorConciliarEfecto);
-          end;
-        finally
-          frm.Free;
-        end;
-      end;
-    end
-    else
-      ShowMessage(SErrorEfectoNoSeleccionado);
-  end
-  else
-    CambiarEstadoRecibo('Pagado');
-  end;
-  end;
 
 function TControladorFacturas.MostrarSkuArticulo(
   const ACodArt: string): Boolean;
@@ -1569,7 +1679,7 @@ begin
   try
     Combo.Properties.Items.Clear;
     if CodArt = '' then Exit;
-    Resolver := CrearResolverArticulos(
+    Resolver := ContextoRepositoriosPantalla.Articulos.CrearResolverArticulos(
       ConexionPrincipal);
     try
       Skus := Resolver.ListarSkus(CodArt);
@@ -1744,39 +1854,52 @@ begin
   end;
 end;
 
-procedure TControladorFacturas.ActualizarBloqueoEdicion;
+function ObtenerSolicitudEstadoFacturaVcl(
+  AFormulario: TfrmMtoFacturasBase;
+  out ASolicitud: TSolicitudEstadoFactura): Boolean;
 var
   CampoFase: TField;
-  Configuracion: TConfiguracionEstadoFiscalFactura;
-  Controles: TControlesEstadoFiscalFactura;
 begin
-  with FAnfitrion do
+  ASolicitud := Default(TSolicitudEstadoFactura);
+  Result := Assigned(AFormulario.dmmFacturas) and
+    Assigned(AFormulario.dsTablaG.DataSet) and
+    AFormulario.dsTablaG.DataSet.Active;
+  if Result then
   begin
-  if Assigned(dmmFacturas) and
-     (dsTablaG.DataSet <> nil) and
-     dsTablaG.DataSet.Active then
-  begin
-    CampoFase := dsTablaG.DataSet.FindField(ffasefac);
-    if CampoFase <> nil then
+    CampoFase := AFormulario.dsTablaG.DataSet.FindField(ffasefac);
+    Result := Assigned(CampoFase);
+    if Result then
     begin
-      Configuracion := CrearConfiguracionEstadoFiscalFactura(
-        CampoFase.AsString,
-        dsTablaG.DataSet.FieldByName(fescon).AsString = 'S',
-        SinVerifactuActivo(ParametrosApp),
-        dsTablaG.DataSet.IsEmpty,
-        dsTablaG.DataSet.State);
-      dmmFacturas.unqryLinFac.ReadOnly := not Configuracion.Editable;
-      Controles := Default(TControlesEstadoFiscalFactura);
-      Controles.DataSourceCabecera := dsTablaG;
-      Controles.VistaLineas := tvLineasFactura;
-      Controles.BotonConsolidar := btnConsolidar;
-      Controles.BotonImprimir := btnImprimir;
-      TPresentacionEstadoFiscalFactura.Aplicar(
-        Configuracion,
-        Controles);
+      ASolicitud.Fase := CampoFase.AsString;
+      ASolicitud.Consolidada :=
+        AFormulario.dsTablaG.DataSet.FieldByName(
+          fescon).AsString = 'S';
+      ASolicitud.SinVerifactu := SinVerifactuActivo(
+        AFormulario.ParametrosApp);
+      if AFormulario.dsTablaG.DataSet.IsEmpty then
+        ASolicitud.EstadoDatos := edfSinDatos
+      else
+      begin
+        case AFormulario.dsTablaG.DataSet.State of
+          dsInsert:
+            ASolicitud.EstadoDatos := edfInsertando;
+          dsEdit:
+            ASolicitud.EstadoDatos := edfEditando;
+        else
+          ASolicitud.EstadoDatos := edfConsultando;
+        end;
+      end;
     end;
   end;
-  end;
+end;
+
+procedure TfrmMtoFacturasBase.ActualizarBloqueoEdicion;
+var
+  Solicitud: TSolicitudEstadoFactura;
+begin
+  if Assigned(FDependencias.Estado) and
+     ObtenerSolicitudEstadoFacturaVcl(Self, Solicitud) then
+    FDependencias.Estado.Presentar(Solicitud);
 end;
 
 // dsTablaG apunta a la cabecera de factura, que no tiene CODIGO_ART_*.
@@ -1813,7 +1936,7 @@ begin
       ConexionPrincipal);
     Result := oRepositorio.ColaDisponible(sMensaje);
     if sMensaje <> '' then
-      inLibLog.Log.LogWarning(sMensaje);
+      RegistroLog.RegistrarAviso(sMensaje);
   end;
 end;
 
@@ -1825,17 +1948,7 @@ begin
   begin
   dmmFacturas := TdmFacturas(AsegurarDataModuleDocumento(
     FAnfitrion, tdmDataModule, TdmFacturas));
-  dmmFacturas.ConfigurarServicios(
-    CrearServiciosFactura(
-      ConexionPrincipal,
-      TRepositorioFacturas.Create(
-        ConexionPrincipal,
-        CatalogoSqlAplicacion,
-        IncidenciasSqlAplicacion),
-      FRepositorioLecturas,
-      FPersistenciaFacturas,
-      CrearResolverArticulos(ConexionPrincipal),
-      CrearServicioVerifactuColaUniDAC(ConexionPrincipal)));
+  dmmFacturas.ConfigurarServicios(FServiciosFactura);
   dmmFacturas.OnResultadoOperacion := MostrarResultadoOperacion;
   dmmFacturas.OnResultadoBorrado := MostrarResultadoBorrado;
   dmmFacturas.OnAdvertencia := MostrarAdvertenciaFactura;
@@ -1850,8 +1963,10 @@ begin
     ConexionPrincipal,
     dmmFacturas.unqryTablaG,
     dmmFacturas.unqryLinFac,
-    CrearValidadorArticulos(ConexionPrincipal),
-    CrearResolverArticulos(ConexionPrincipal),
+    ContextoRepositoriosPantalla.Articulos.
+      CrearValidadorArticulos(ConexionPrincipal),
+    ContextoRepositoriosPantalla.Articulos.
+      CrearResolverArticulos(ConexionPrincipal),
     FRepositorioLecturas);
   ConfigurarTablaPrincipalDocumento(
     dmmFacturas, dsTablaG, tvLineasFactura,
@@ -1977,128 +2092,34 @@ begin
   Result := 'vi_facturas';
 end;
 
-procedure TControladorFacturas.EjecutarOperacionFiscal(
-  const ATipoOperacion, AAccion: string);
-var
-  Contexto: TContextoOperacionFiscalFactura;
-  Preparacion: TPreparacionOperacionFiscalFactura;
-  Solicitud: TSolicitudEmisionFiscal;
-  Resultado: TResultadoEmisionFiscal;
-  Servicio: IServicioEmisionFiscal;
+function CrearContextoOperacionFiscalFacturaVcl(
+  AFormulario: TfrmMtoFacturasBase;
+  const ATipoOperacion, AAccion: string
+): TContextoOperacionFiscalFactura;
 begin
-  with FAnfitrion do
-  begin
-  Contexto := Default(TContextoOperacionFiscalFactura);
-  Contexto.Serie :=
-    dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
-  Contexto.Numero :=
-    dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
-  Contexto.TipoFactura :=
-    dsTablaG.DataSet.FieldByName(ftipofac).AsString;
-  Contexto.TipoOperacion := ATipoOperacion;
-  Contexto.Accion := AAccion;
-  Contexto.Usuario := IdentidadSesion.Usuario;
-  Contexto.Consolidada := dsTablaG.DataSet.FieldByName(
+  Result := Default(TContextoOperacionFiscalFactura);
+  Result.Serie := AFormulario.dsTablaG.DataSet.FieldByName(
+    'SERIE_FAC').AsString;
+  Result.Numero := AFormulario.dsTablaG.DataSet.FieldByName(
+    'NUMERO_FAC').AsString;
+  Result.TipoFactura := AFormulario.dsTablaG.DataSet.FieldByName(
+    ftipofac).AsString;
+  Result.TipoOperacion := ATipoOperacion;
+  Result.Accion := AAccion;
+  Result.Usuario := AFormulario.IdentidadSesion.Usuario;
+  Result.Consolidada := AFormulario.dsTablaG.DataSet.FieldByName(
     'ESCONSOLIDADA_FAC').AsString = 'S';
-  Preparacion := PrepararOperacionFiscalFactura(Contexto);
-  if not Preparacion.EsValida then
-    ShowMessage(Preparacion.MensajeError)
-  else if MessageDlg(
-            Preparacion.PreguntaConfirmacion,
-            mtConfirmation,
-            [mbYes, mbNo],
-            0) = mrYes then
-  begin
-    Solicitud := CrearSolicitudOperacionFiscalFactura(Contexto);
-    Servicio := CrearServicioEmisionFiscal(
-      ParametrosApp,
-      ParametrosCaja,
-      ConexionPrincipal,
-      CrearServicioVerifactuColaUniDAC(ConexionPrincipal));
-    Resultado := Servicio.Emitir(Solicitud);
-    ShowMessage(Resultado.Mensaje);
-    dsTablaG.DataSet.Refresh;
-  end;
-  end;
 end;
 
-procedure TControladorFacturas.btnConsolidarClick(Sender: TObject);
-var
-  bConsolidada: Boolean;
-  sSerie: string;
-  sNumero: string;
-  Preparacion: TPreparacionConsolidacionFactura;
-  Resultado: TResultadoConsolidacionFactura;
-  Validacion: TResultadoOperacionFactura;
-  Servicio: IServicioConsolidacionFactura;
-  ServicioEmision: IServicioEmisionFiscal;
-  ServicioMovimientos: IServicioMovimientosFactura;
+procedure TfrmMtoFacturasBase.EjecutarOperacionFiscal(
+  const ATipoOperacion, AAccion: string);
 begin
-  with FAnfitrion do
-  begin
-  bConsolidada := False;
-  if (dsTablaG.DataSet = nil) or
-     (not dsTablaG.DataSet.Active) or
-     dsTablaG.DataSet.IsEmpty then
-  begin
-    ShowMessage(SErrorBorradorListaNoSeleccionado);
-    Abort;
-  end;
-  sSerie  := dsTablaG.DataSet.FieldByName(fseriefac).AsString;
-  sNumero := dsTablaG.DataSet.FieldByName(fnrofac).AsString;
-  ServicioEmision := CrearServicioEmisionFiscal(
-    ParametrosApp,
-    ParametrosCaja,
-    ConexionPrincipal, CrearServicioVerifactuColaUniDAC(ConexionPrincipal));
-  ServicioMovimientos :=
-    TServicioMovimientosFactura.Create(
-      ConexionPrincipal,
-      FPersistenciaFacturas.Movimientos);
-  Servicio := CrearServicioConsolidacionFactura(
-    ConexionPrincipal,
-    FPersistenciaFacturas.Consolidacion,
-    ServicioEmision,
-    ServicioMovimientos);
-  Validacion := Servicio.Validar(sSerie, sNumero);
-  Preparacion := PrepararConsolidacionFactura(
-    Validacion,
-    sSerie,
-    sNumero);
-  if not Preparacion.EsValida then
-    ShowMessage(Preparacion.MensajeError)
-  else if MessageDlg(Preparacion.PreguntaConfirmacion, mtConfirmation,
-                     [mbYes, mbNo], 0) =
-          mrYes then
-  begin
-    try
-      Resultado := Servicio.Consolidar(
-        sSerie,
-        sNumero,
-        IdentidadSesion.Usuario);
-      bConsolidada := True;
-    except
-      on E: EConsolidacionFactura do
-        ShowMessage(E.Message);
-    end;
-    if bConsolidada then
-    begin
-      dsTablaG.DataSet.Refresh;
-      if dmmFacturas.unqryMovimientosFac.Active then
-        dmmFacturas.unqryMovimientosFac.Refresh;
-      try
-        TfrmPrintFac.ArchivarFacturaConsolidada(
-          dmmFacturas,
-          sSerie,
-          sNumero);
-      except
-        on E: Exception do
-          Log.LogError('No se pudo archivar el PDF al consolidar ' +
-            sSerie + '\' + sNumero + ': ' + E.Message);
-      end;
-      ShowMessage(Resultado.MensajeFiscal);
-    end;
-  end;
-  end;
+  if Assigned(FDependencias.OperacionFiscal) then
+    FDependencias.OperacionFiscal.Ejecutar(
+      CrearContextoOperacionFiscalFacturaVcl(
+        Self,
+        ATipoOperacion,
+        AAccion));
 end;
 
 procedure TControladorFacturas.btnVolverBorradorClick(Sender: TObject);
@@ -2130,7 +2151,8 @@ begin
     ParametrosCaja,
     ConexionPrincipal,
     FPersistenciaFacturas.Reapertura,
-    CrearRepositorioVentasWsColaUniDAC(ConexionPrincipal));
+    CrearRepositorioVentasWsColaUniDAC(ConexionPrincipal),
+    RegistroLog);
   Validacion := Servicio.Validar(sSerie, sNumero);
   if not Validacion.Exito then
     ShowMessage(Validacion.Mensaje)
@@ -2627,7 +2649,7 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
   sLineasSinSku := LineasSinSkuRequerido(
-    CrearValidadorArticulos(
+    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
       dmmFacturas.unqryTablaG.Connection),
     dmmFacturas.unqryLinFac, 'FACLIN');
   if (sLineasSinSku <> '') and
@@ -2675,7 +2697,7 @@ begin
   except
     on E: EInvalidOperation do
       // Solo el caso del editor inplace sin Parent; queda en el log.
-      inLibLog.Log.LogWarning(
+      RegistroLog.RegistrarAviso(
         'FacturasBase.tvLineasFacturaKeyDown: EInvalidOperation ' +
         'ignorada: ' + E.Message);
   end;
@@ -2798,7 +2820,7 @@ begin
       // Editor inplace de cxGrid sin Parent durante transicion de celda.
       // GridRecalc ya valida Edit.Parent, pero el FocusedColumn / refresh
       // posterior puede disparar el mismo error en carrera.
-      inLibLog.Log.LogWarning(
+      RegistroLog.RegistrarAviso(
         'FacturasBase.RecalcLineaFacturaSegura: EInvalidOperation ' +
         'ignorada: ' + E.Message);
   end;
@@ -2946,11 +2968,13 @@ end;
 
 procedure TfrmMtoFacturasBase.KeyDown(var Key: Word; Shift: TShiftState);
 begin
-  ProcesarTeclaCambioModoDocumento(
-    Key, Shift, (pcPantalla.ActivePage = tsFicha) and
+  ProcesarTeclaCambioModoFacturaVcl(
+    Key,
+    Shift,
+    (pcPantalla.ActivePage = tsFicha) and
     (pcDetail.ActivePage = tsLineasFactura) and
-    (not FControlador.ModoCreacionSolicitado), FModoEntradaSel,
-    [mcsAuto, mcsSku, mcsTallasHorPed], ConstruirModoEntrada);
+    (not FControlador.ModoCreacionSolicitado),
+    FDependencias.ModoEntrada);
   inherited;
 end;
 
@@ -2999,13 +3023,14 @@ begin
         CrearServiciosColumnasSkuUniDAC(
           dmmFacturas.unqryTablaG.Connection), ContextoSesion,
         tvLineasFactura, ds, FModoEntradaSel, '', 'FACLIN');
+      Cfg.RegistroLog := RegistroLog;
       Cfg.BusquedaVisual := BusquedaVisual;
       Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
       Cfg.ValidadorArticulos :=
-        CrearValidadorArticulos(
+        ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
           dmmFacturas.unqryTablaG.Connection);
       Cfg.LookupAtributos :=
-        CrearLookupAtributosArticulos(
+        ContextoRepositoriosPantalla.Articulos.CrearLookupAtributosArticulos(
           dmmFacturas.unqryTablaG.Connection);
       if dmmFacturas.unqryTablaG.FindField(
         'CODIGO_ALM_FAC') <> nil then
@@ -3391,20 +3416,10 @@ begin
   tsLineasFactura.Caption := SCaptionTabLineasBorradorTallasHoriz;
 end;
 
-procedure TfrmMtoFacturasBase.ActualizarBloqueoEdicion;
-begin
-  FControlador.ActualizarBloqueoEdicion;
-end;
-
 procedure TfrmMtoFacturasBase.AplicarEdicionPreciosLinea(
   Sender: TObject);
 begin
   FControlador.AplicarEdicionPreciosLinea(Sender);
-end;
-
-procedure TfrmMtoFacturasBase.AplicarOrigenCobros;
-begin
-  FControlador.AplicarOrigenCobros;
 end;
 
 procedure TfrmMtoFacturasBase.
@@ -3418,19 +3433,22 @@ end;
 
 procedure TfrmMtoFacturasBase.btnConsolidarClick(Sender: TObject);
 begin
-  FControlador.btnConsolidarClick(Sender);
+  TCoordinadorConsolidacionFacturaVcl.Ejecutar(
+    CrearContextoConsolidacionFacturaVcl(Self));
 end;
 
 procedure TfrmMtoFacturasBase.btnGenerarRecibosClick(Sender: TObject);
 begin
   inherited;
-  FControlador.btnGenerarRecibosClick(Sender);
+  TCoordinadorCobrosFacturaVcl.Generar(
+    CrearContextoCobrosFacturaVcl(Self));
 end;
 
 procedure TfrmMtoFacturasBase.btnReciboPagadoClick(Sender: TObject);
 begin
   inherited;
-  FControlador.btnReciboPagadoClick(Sender);
+  TCoordinadorCobrosFacturaVcl.MarcarCobrado(
+    CrearContextoCobrosFacturaVcl(Self));
 end;
 
 procedure TfrmMtoFacturasBase.btnVolverBorradorClick(Sender: TObject);
@@ -3459,14 +3477,7 @@ end;
 
 procedure TfrmMtoFacturasBase.CrearTablaPrincipal;
 begin
-  if not Assigned(FControlador) then
-    FControlador := TControladorFacturas.Create(Self);
-  if FRepositorioLecturas = nil then
-    FRepositorioLecturas :=
-      CrearRepositorioLecturasFacturaUniDAC(ConexionPrincipal);
-  if FPersistenciaFacturas.Borrado = nil then
-    FPersistenciaFacturas :=
-      CrearPersistenciaFacturasUniDAC(ConexionPrincipal);
+  PrepararDependenciasFacturas(Self);
   InicializarDocumento(
     CrearConfiguracionDocumento(tdFactura, sdVenta));
   AsignarVistaLineasDocumento(tvLineasFactura);
@@ -3486,14 +3497,6 @@ begin
   inherited;
   if Assigned(FControlador) then
     FControlador.dsTablaGStateChange(Sender);
-end;
-
-procedure TfrmMtoFacturasBase.EjecutarOperacionFiscal(
-  const ATipoOperacion, AAccion: string);
-begin
-  FControlador.EjecutarOperacionFiscal(
-    ATipoOperacion,
-    AAccion);
 end;
 
 procedure TfrmMtoFacturasBase.GuardarPendienteAntesDeImprimir;
@@ -3521,23 +3524,9 @@ end;
 
 procedure TfrmMtoFacturasBase.PcDetailChange(Sender: TObject);
 begin
-  if not Assigned(dmmFacturas) then Exit;
-  // Despachador: cada sub-pestaña detail tiene su query lazy. Solo se
-  // abre al activarse. Lineas (tsLineasFactura) se abre desde
-  // AbrirDetalles por ser la pestaña por defecto y la mas usada.
-  if pcDetail.ActivePage = tsRecibos then
-  begin
-    if FControlador.EsVentaMayorNormal then
-      dmmFacturas.AsegurarEfectosVentaAbierta
-    else
-      dmmFacturas.AsegurarRecibosAbierta;
-  end
-  else if pcDetail.ActivePage = tsVerifactu then
-    dmmFacturas.AsegurarConsolidacionAbierta
-  else if pcDetail.ActivePage = tsRegistro then
-    dmmFacturas.AsegurarErroresAbierta
-  else if pcDetail.ActivePage = tsMovimientosFac then
-    dmmFacturas.AsegurarMovimientosFacAbierta;
+  if Assigned(dmmFacturas) then
+    ActivarDetalleFacturaVcl(
+      CrearContextoDetalleFacturaVcl(Self));
 end;
 
 initialization

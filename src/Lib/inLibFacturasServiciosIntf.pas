@@ -193,7 +193,7 @@ type
   end;
   EConsolidacionFactura = class(Exception);
   EReaperturaBorrador = class(Exception);
-  IServicioConsolidacionFactura = interface
+  ICasoUsoConsolidacionFactura = interface
     ['{754DE5B5-EC92-467B-960B-8A26BD1DEB90}']
     function Validar(
       const ASerie, ANumero: string

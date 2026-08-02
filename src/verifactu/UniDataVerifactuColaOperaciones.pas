@@ -17,7 +17,7 @@ unit UniDataVerifactuColaOperaciones;
 interface
 
 uses
-  Uni, inLibParametrosIntf, inLibEmisionFiscalIntf;
+  Uni, inLibParametrosIntf, inLibEmisionFiscalIntf, inLibLogIntf;
 type
   TOperacionesVerifactuColaUniDAC = class
   public
@@ -29,7 +29,8 @@ type
       const AParametrosCaja: IParametrosCaja;
       AQryTrx: TUniQuery;
       const AUsuario, ASerie, ANumero, ATipoOperacion: string;
-      ABorrarMovimientos: Boolean); static;
+      ABorrarMovimientos: Boolean;
+      const ARegistroLog: IRegistroLog); static;
     // Marca una factura recién abonada como RECTIFICATIVA, la enlaza con
     // la original (columnas ABONO) y delega el alta fiscal en el servicio
     // de emisión inyectado. La llama el modal de Rectificar de Facturas.
@@ -59,7 +60,7 @@ function ObtenerEstadoRegistroNoVerifactu(
 implementation
 
 uses
-  System.SysUtils, System.Classes, Data.DB, inLibLog, inLibMsgFacturas,
+  System.SysUtils, System.Classes, Data.DB, inLibMsgFacturas,
   inLibMsgVerifactu, inLibVerifactu, inLibVerifactuEnvio, inLibRelojFiscal,
   inLibVentasWsCola, UniDataVentasWsCola;
 function ObtenerEstadoRegistroNoVerifactu(
@@ -99,7 +100,8 @@ procedure RegistrarIncidenciaNoVerifactuSeguro(
   AConn: TUniConnection;
   const AUsuario: string;
   ATipoEvento: Integer;
-  const ADescripcion, AMensaje, ASerie, ANumero: string);
+  const ADescripcion, AMensaje, ASerie, ANumero: string;
+  const ARegistroLog: IRegistroLog);
 begin
   try
     RegistrarEventoVerifactu(AParametrosApp, AConn, AUsuario,
@@ -107,8 +109,10 @@ begin
   except
     on E: Exception do
     begin
-      Log.LogError('No se pudo registrar la incidencia NO VERI*FACTU: ' +
-                   E.Message);
+      if Assigned(ARegistroLog) then
+        ARegistroLog.RegistrarError(
+          'No se pudo registrar la incidencia NO VERI*FACTU: ' +
+          E.Message);
     end;
   end;
 end;
@@ -322,7 +326,8 @@ class procedure TOperacionesVerifactuColaUniDAC.RegistrarFacturaNoVerifactu(
   const AParametrosCaja: IParametrosCaja;
   AQryTrx: TUniQuery;
   const AUsuario, ASerie, ANumero, ATipoOperacion: string;
-  ABorrarMovimientos: Boolean);
+  ABorrarMovimientos: Boolean;
+  const ARegistroLog: IRegistroLog);
 var
   oResultado: TResultadoEnvioVerifactu;
 begin
@@ -354,13 +359,14 @@ begin
         RegistrarIncidenciaNoVerifactuSeguro(AParametrosApp,
           AQryTrx.Connection, AUsuario,
           cEventoNoVerifactuIncidenciaReloj,
-          'Incidencia de reloj NO VERI*FACTU', E.Message, ASerie, ANumero)
+          'Incidencia de reloj NO VERI*FACTU', E.Message, ASerie, ANumero,
+          ARegistroLog)
       else
         RegistrarIncidenciaNoVerifactuSeguro(AParametrosApp,
           AQryTrx.Connection, AUsuario,
           cEventoNoVerifactuIncidenciaCert,
           'Incidencia de certificado NO VERI*FACTU', E.Message,
-          ASerie, ANumero);
+          ASerie, ANumero, ARegistroLog);
       raise;
     end;
   end;

@@ -110,12 +110,11 @@ type
                              out ANumero, ASerie: string): Boolean;
     // Atender: lista las solicitudes pendientes que me tocan (yo, origen).
     procedure CargarSolicitudesPendientes(AItems, ACodigos: TStrings);
-    // Igual pero en un TUniQuery (para el modal de busqueda de solicitudes
-    // abiertas: PENDIENTE/PARCIAL). El llamante lo libera.
-    function QuerySolicitudesAbiertas: TUniQuery;
+    // Dataset para el modal de solicitudes abiertas. El llamante lo libera.
+    function QuerySolicitudesAbiertas: TDataSet;
     // Historico de MIS peticiones (yo soy el destino que pide), todos los
     // estados, para saber si se han servido/denegado. El llamante lo libera.
-    function QueryMisPeticiones(const APropio: string): TUniQuery;
+    function QueryMisPeticiones(const APropio: string): TDataSet;
     // Carga una solicitud pendiente en cabecera/líneas para servirla.
     function CargarSolicitud(const ANumero, ASerie: string): Boolean;
     // Cierra (estado CERRADA) la solicitud cargada aunque queden lineas sin
@@ -921,21 +920,22 @@ begin
   end;
 end;
 
-function TdmTraspaso.QuerySolicitudesAbiertas: TUniQuery;
+function TdmTraspaso.QuerySolicitudesAbiertas: TDataSet;
 var
+  oConsulta: TUniQuery;
   sPropio: string;
 begin
   // Solicitudes ABIERTAS (PENDIENTE) que me tocan a mi (yo soy el origen al que
   // se pide). Una vez resueltas (COMPLETADO/DENEGADO/CERRADA) no vuelven a
   // salir. Cada fila lleva el resumen para el modal y el NUMERO/SERIE.
   sPropio := cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
-  Result := TUniQuery.Create(nil);
-  Result.Connection := FConexion;
+  oConsulta := TUniQuery.Create(nil);
+  oConsulta.Connection := FConexion;
   // Devolvemos los nombres reales de columna (sin alias) para que el
-  // formateador (fza_config_campos / oConfigCampos) ponga los titulos, igual
+  // formateador (fza_config_campos) ponga los titulos, igual
   // que el resto de buscadores. El conteo de lineas pendientes es calculado,
   // con sufijo de la tabla para poder titularlo en config.
-  Result.SQL.Text :=
+  oConsulta.SQL.Text :=
     'SELECT S.NUMERO_TRSOL, S.SERIE_TRSOL, S.FECHA_TRSOL,' +
     '       S.CODIGO_ALM_DESTINO_TRSOL, S.ESTADO_TRSOL,' +
     '       (SELECT COUNT(*) FROM fza_traspasos_solicitudes_lineas L' +
@@ -946,10 +946,14 @@ begin
     ' WHERE S.CODIGO_ALM_ORIGEN_TRSOL = :PROPIO' +
     '   AND S.ESTADO_TRSOL = ''PENDIENTE''' +
     ' ORDER BY S.FECHA_TRSOL, S.NUMERO_TRSOL';
-  Result.ParamByName('PROPIO').AsString := sPropio;
+  oConsulta.ParamByName('PROPIO').AsString := sPropio;
+  Result := oConsulta;
 end;
 
-function TdmTraspaso.QueryMisPeticiones(const APropio: string): TUniQuery;
+function TdmTraspaso.QueryMisPeticiones(
+  const APropio: string): TDataSet;
+var
+  oConsulta: TUniQuery;
 begin
   // Historico de MIS peticiones: yo soy el DESTINO que pidio. Salen TODOS los
   // estados (PENDIENTE / COMPLETADO TOTAL / COMPLETADO PARCIAL / DENEGADO TOTAL
@@ -957,9 +961,9 @@ begin
   // reales de columna (sin alias)
   // para que el formateador (fza_config_campos) ponga los titulos; el origen
   // es a quien pedi. El llamante libera el query.
-  Result := TUniQuery.Create(nil);
-  Result.Connection := FConexion;
-  Result.SQL.Text :=
+  oConsulta := TUniQuery.Create(nil);
+  oConsulta.Connection := FConexion;
+  oConsulta.SQL.Text :=
     'SELECT S.NUMERO_TRSOL, S.SERIE_TRSOL, S.FECHA_TRSOL,' +
     '       S.CODIGO_ALM_ORIGEN_TRSOL, S.ESTADO_TRSOL,' +
     '       (SELECT COUNT(*) FROM fza_traspasos_solicitudes_lineas L' +
@@ -969,7 +973,8 @@ begin
     '  FROM fza_traspasos_solicitudes S' +
     ' WHERE S.CODIGO_ALM_DESTINO_TRSOL = :PROPIO' +
     ' ORDER BY S.FECHA_TRSOL DESC, S.NUMERO_TRSOL DESC';
-  Result.ParamByName('PROPIO').AsString := APropio;
+  oConsulta.ParamByName('PROPIO').AsString := APropio;
+  Result := oConsulta;
 end;
 
 function TdmTraspaso.CerrarSolicitud: Boolean;

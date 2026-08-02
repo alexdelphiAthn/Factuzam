@@ -149,9 +149,9 @@ begin
   iProcedimientos := 0;
   oDefiniciones :=
     TRepositorioConsultasCaja.DefinicionesSql;
-  // 10 = 7 + las tres consultas de factura incorporadas en 95ecd9da.
+  // 13 = 10 + las tres consultas de articulos y atributos de caja.
   Assert.AreEqual(
-    10,
+    13,
     Integer(Length(oDefiniciones)));
   for iIndice := 0 to High(oDefiniciones) do
   begin
@@ -343,9 +343,9 @@ begin
   Assert.IsTrue(Assigned(oIncidencias));
   oRegistro :=
     CrearRegistroDefinicionesSqlAplicacion;
-  // 123: ver el recuento de RegistroAplicacion_IncluyePiloto.
+  // 126: ver el recuento de RegistroAplicacion_IncluyePiloto.
   Assert.AreEqual(
-    123,
+    126,
     oRegistro.Cantidad);
   oDefinicion := BuscarDefinicion(
     TRepositorioConsultasCaja.DefinicionesSql,

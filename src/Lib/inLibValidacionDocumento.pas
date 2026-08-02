@@ -16,7 +16,7 @@ unit inLibValidacionDocumento;
 interface
 
 uses
-  Data.DB, Uni, inLibDocumentoIntf;
+  Data.DB, Uni, inLibDocumentoIntf, inLibArticulosValidadorIntf;
 
 type
   TAccionCabeceraDocumento = procedure of object;
@@ -34,6 +34,10 @@ function LineaCompraVacia(ADataSet: TDataSet;
   const AConfiguracion: TConfiguracionDocumento): Boolean;
 function LineaCompraTieneSistemaTallas(ADataSet: TDataSet;
   const AConfiguracion: TConfiguracionDocumento): Boolean;
+function LineasSinSkuRequerido(
+  const AValidador: IArticulosValidador;
+  ALineas: TDataSet;
+  const ASufijo: string): string;
 procedure AsegurarCabeceraPersistidaCompra(
   ACabecera, ALineas: TDataSet;
   const AConfiguracion: TConfiguracionDocumento;
@@ -106,6 +110,71 @@ begin
     oCampo := ADataSet.FindField(AConfiguracion.CampoPivoteLinea);
     if Assigned(oCampo) then
       Result := (not oCampo.IsNull) and (oCampo.AsInteger > 0);
+  end;
+end;
+
+function LineasSinSkuRequerido(
+  const AValidador: IArticulosValidador;
+  ALineas: TDataSet;
+  const ASufijo: string): string;
+var
+  Cache: TStringList;
+  Marcador: TBookmark;
+  Articulo: string;
+  TieneSku: string;
+  CampoArticulo: TField;
+  CampoSku: TField;
+  CampoLinea: TField;
+begin
+  Result := '';
+  if Assigned(AValidador) and
+     Assigned(ALineas) and
+     ALineas.Active then
+  begin
+    CampoArticulo := ALineas.FindField('CODIGO_ART_' + ASufijo);
+    CampoSku := ALineas.FindField('CODIGO_UNIDAD_' + ASufijo);
+    CampoLinea := ALineas.FindField('LINEA_' + ASufijo);
+    if Assigned(CampoArticulo) and
+       Assigned(CampoSku) and
+       Assigned(CampoLinea) and
+       (not ALineas.IsEmpty) then
+    begin
+      Cache := TStringList.Create;
+      Marcador := ALineas.GetBookmark;
+      ALineas.DisableControls;
+      try
+        ALineas.First;
+        while not ALineas.Eof do
+        begin
+          Articulo := Trim(CampoArticulo.AsString);
+          if (Articulo <> '') and (Trim(CampoSku.AsString) = '') then
+          begin
+            TieneSku := Cache.Values[Articulo];
+            if TieneSku = '' then
+            begin
+              if AValidador.TieneSkuActivo(Articulo) then
+                TieneSku := 'S';
+              if TieneSku = '' then
+                TieneSku := 'N';
+              Cache.Values[Articulo] := TieneSku;
+            end;
+            if TieneSku = 'S' then
+            begin
+              if Result <> '' then
+                Result := Result + ', ';
+              Result := Result + CampoLinea.AsString;
+            end;
+          end;
+          ALineas.Next;
+        end;
+        if ALineas.BookmarkValid(Marcador) then
+          ALineas.GotoBookmark(Marcador);
+      finally
+        ALineas.EnableControls;
+        ALineas.FreeBookmark(Marcador);
+        FreeAndNil(Cache);
+      end;
+    end;
   end;
 end;
 

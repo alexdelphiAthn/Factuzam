@@ -18,7 +18,7 @@ interface
 uses
   System.Classes, Vcl.Forms, Vcl.Menus, Uni, cxGrid,
   cxGridDBTableView, inLibInformesGuiasCache,
-  inLibGridColumnChooser;
+  inLibGridColumnChooser, inLibLogIntf;
 
 type
   TObtenerConexionGuiasMto = function: TUniConnection of object;
@@ -39,6 +39,7 @@ type
     FCamposGuia: TStringList;
     FCamposGuiaTabla: TStringList;
     FColumnasVisibles: TStringList;
+    FRegistroLog: IRegistroLog;
     function Conexion: TUniConnection;
     function BuscarColumna(
       const ACampo: string): TcxGridDBColumn;
@@ -67,7 +68,8 @@ type
       const ACache: IInformesGuiasCache;
       AObtenerConexion: TObtenerConexionGuiasMto;
       AObtenerConsulta: TObtenerConsultaGuiasMto;
-      AEjecutarModal: TEjecutarModalGuiasMto);
+      AEjecutarModal: TEjecutarModalGuiasMto;
+      const ARegistroLog: IRegistroLog = nil);
     destructor Destroy; override;
     procedure Aplicar(AConsulta: TUniQuery);
     procedure BorrarGuias;
@@ -90,8 +92,8 @@ implementation
 
 uses
   System.SysUtils, System.Generics.Collections, Vcl.Controls,
-  Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Graphics, inLibLog,
-  inLibMsgComun;
+  Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Graphics,
+  inLibMsgComun, inLibRegistroLogNulo;
 
 constructor TGestorGuiasGridMto.Create(
   AFormulario: TForm;
@@ -100,7 +102,8 @@ constructor TGestorGuiasGridMto.Create(
   const ACache: IInformesGuiasCache;
   AObtenerConexion: TObtenerConexionGuiasMto;
   AObtenerConsulta: TObtenerConsultaGuiasMto;
-  AEjecutarModal: TEjecutarModalGuiasMto);
+  AEjecutarModal: TEjecutarModalGuiasMto;
+  const ARegistroLog: IRegistroLog);
 begin
   inherited Create;
   FFormulario := AFormulario;
@@ -110,6 +113,9 @@ begin
   FObtenerConexion := AObtenerConexion;
   FObtenerConsulta := AObtenerConsulta;
   FEjecutarModal := AEjecutarModal;
+  FRegistroLog := ARegistroLog;
+  if not Assigned(FRegistroLog) then
+    FRegistroLog := CrearRegistroLogNulo;
   FSqlOriginal := '';
   FCamposGuia := TStringList.Create;
   FCamposGuiaTabla := TStringList.Create;
@@ -180,7 +186,7 @@ begin
   except
     on E: Exception do
     begin
-      inLibLog.Log.LogError(
+      FRegistroLog.RegistrarError(
         'AplicarGuiasGrid: error al reabrir query enriquecida: ' +
         E.Message);
       try
@@ -189,7 +195,7 @@ begin
         AConsulta.Open;
       except
         on E2: Exception do
-          inLibLog.Log.LogError(
+          FRegistroLog.RegistrarError(
             'AplicarGuiasGrid: tampoco abre el SQL original tras ' +
             'restaurar: ' + E2.Message);
       end;
@@ -253,7 +259,7 @@ begin
   if Assigned(AConsulta) then
   begin
     oResultado := EnriquecerQueryConGuias(
-      FCache, FFormulario.Name, AConsulta);
+      FCache, FFormulario.Name, AConsulta, FRegistroLog);
     try
       if oResultado.Exito and
          (oResultado.CamposNuevos.Count > 0) then
@@ -555,7 +561,7 @@ begin
       oConsulta.SQL.Text := FSqlOriginal;
     end;
     oResultado := EnriquecerQueryConGuias(
-      FCache, FFormulario.Name, oConsulta);
+      FCache, FFormulario.Name, oConsulta, FRegistroLog);
     try
       if oResultado.Exito and
          (oResultado.CamposNuevos.Count > 0) then

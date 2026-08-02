@@ -19,17 +19,17 @@ interface
 uses
   Winapi.Windows, System.SysUtils, System.Classes, System.Diagnostics,
   System.Variants, System.UITypes, Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls,
-  Vcl.Graphics, Data.DB, Uni,
+  Vcl.Graphics, Data.DB,
   cxControls, cxContainer, cxEdit, cxLabel, cxTextEdit, cxCheckBox,
   cxButtons, cxMaskEdit, cxDropDownEdit, cxButtonEdit, cxGridDBTableView,
   inMtoGenSearch, cxGraphics, cxLookAndFeels, cxLookAndFeelPainters, cxStyles,
-  cxDBData, Vcl.Menus, cxBlobEdit, MemDS, DBAccess, System.Actions,
+  cxDBData, Vcl.Menus, cxBlobEdit, System.Actions,
   Vcl.ActnList, Vcl.Dialogs, dxShellDialogs, JvComponentBase, JvEnterTab,
   cxLocalization, Vcl.StdCtrls, cxRadioGroup, cxNavigator, cxDBNavigator,
   Vcl.Buttons, cxGridCustomTableView, cxGridTableView, cxGridLevel, cxClasses,
   cxGridCustomView, cxGrid, cxPC, cxLookupEdit, cxDBLookupEdit,
   cxDBLookupComboBox, inLibDocumentosTrabajo,
-  UniDataDocumentosTrabajoRepositorio;
+  inLibBusquedaDatosPersistenciaIntf;
 
 type
   TfrmMtoBusquedaDatos = class(TfrmMtoSearch)
@@ -51,7 +51,6 @@ type
     btnBuscar: TcxButton;
     btnLimpiar: TcxButton;
     lblResultados: TcxLabel;
-    unqryResultados: TUniQuery;
     btnOcultar: TcxButton;
     btnPerfiles: TcxButton;
     lblFamilia: TcxLabel;
@@ -60,7 +59,6 @@ type
     cbbProveedor: TcxLookupComboBox;
     lblTemporada: TcxLabel;
     cbbTemporada: TcxComboBox;
-    unqryProveedoresBusqueda: TUniQuery;
     dsProveedoresBusqueda: TDataSource;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -86,10 +84,14 @@ type
     FCronometroApertura: TStopwatch;
     FBusquedaProveedor: string;
     FInstanteBusquedaProveedor: UInt64;
+    FRepositorioPersistencia: IRepositorioBusquedaDatos;
+    FResultadoBusqueda: IResultadoBusquedaDatos;
+    FResultadoProveedores: IResultadoBusquedaDatos;
     procedure InicializarListas;
     procedure CargarFiltrosPrecarga;
-    procedure CargarCombo(ACombo: TcxComboBox; const ASQL,
-      ACampoCodigo, ACampoNombre: string);
+    procedure CargarCombo(
+      ACombo: TcxComboBox;
+      const AOpciones: TOpcionesBusquedaDatos);
     procedure SeleccionarProveedorPorInicio;
     procedure ActualizarInterfazCampo;
     procedure ActualizarColumnasColor;
@@ -101,7 +103,6 @@ type
     procedure ActualizarContador;
     procedure ConfigurarColumna(const ACampo, ATitulo: string;
       AAncho: Integer; AVisible: Boolean);
-    function ObtenerExpresionCampo: string;
     function ObtenerLimite: Integer;
     function NormalizarHexColor(const AValor: string; out AHex: string;
       out ARojo, AVerde, AAzul: Integer): Boolean;
@@ -124,27 +125,10 @@ type
 implementation
 
 uses
-  inLibLog, inLibShowMto, inLibAtributosPaleta, inLibMsgComun,
+  inLibShowMto, inLibAtributosPaleta, inLibMsgComun,
   inLibDocumentosTrabajoPresentacion;
 
 {$R *.dfm}
-
-const
-  CAMPO_TODOS = 0;
-  CAMPO_ARTICULO = 1;
-  CAMPO_SKU = 2;
-  CAMPO_DESCRIPCION = 3;
-  CAMPO_TALLA = 4;
-  CAMPO_COLOR = 5;
-  CAMPO_CODIGO_BARRAS = 6;
-  CAMPO_FAMILIA = 7;
-  CAMPO_PROVEEDOR = 8;
-  CAMPO_REF_PROVEEDOR = 9;
-  CAMPO_TEMPORADA = 10;
-  CAMPO_ALMACEN = 11;
-  CAMPO_PROPIEDADES = 12;
-  CAMPO_COLOR_BASICO = 13;
-  CAMPO_PROXIMIDAD_COLOR = 14;
 
 class procedure TfrmMtoBusquedaDatos.Ejecutar(AOwner: TComponent;
   AParentForm: TCustomForm);
@@ -162,10 +146,11 @@ begin
       frm.PopupParent := AParentForm;
     frm.ShowModal;
     if (frm.sFicha = 'S') and
-       frm.unqryResultados.Active and
-       (not frm.unqryResultados.IsEmpty) then
+       Assigned(frm.dsTablaG.DataSet) and
+       frm.dsTablaG.DataSet.Active and
+       (not frm.dsTablaG.DataSet.IsEmpty) then
     begin
-      sCodigoArt := frm.unqryResultados.FieldByName(
+      sCodigoArt := frm.dsTablaG.DataSet.FieldByName(
                                       'CODIGO_ART_ART').AsString;
     end;
   finally
@@ -178,11 +163,11 @@ end;
 procedure TfrmMtoBusquedaDatos.FormCreate(Sender: TObject);
 begin
   inherited;
-  unqryResultados.Connection := ConexionPrincipal;
-  unqryResultados.ReadOnly := True;
-  unqryProveedoresBusqueda.Connection := ConexionPrincipal;
-  unqryProveedoresBusqueda.ReadOnly := True;
-  dsTablaG.DataSet := unqryResultados;
+  FRepositorioPersistencia :=
+    ContextoRepositoriosPantalla.Configuracion.
+      CrearRepositorioBusquedaDatos(ConexionPrincipal);
+  dsTablaG.DataSet := nil;
+  dsProveedoresBusqueda.DataSet := nil;
   FColumnasCreadas := False;
   FAltoCriterios := pnlCriterios.Height;
   FBusquedaProveedor := '';
@@ -240,10 +225,12 @@ begin
   begin
     try
       AgregarUnidadADocumentoTrabajo(Self, ConexionPrincipal,
-        CrearRepositoriosDocumentosTrabajo(ConexionPrincipal),
+        ContextoRepositoriosPantalla.Documentos.
+          CrearRepositoriosDocumentosTrabajo(ConexionPrincipal),
         CrearInteraccionDocumentosTrabajoVcl,
         BusquedaVisual, ContextoSesion, ParametrosCaja, linea,
-        CrearResolverArticulos(ConexionPrincipal));
+        ContextoRepositoriosPantalla.Articulos.
+          CrearResolverArticulos(ConexionPrincipal));
     except
       on E: Exception do
       begin
@@ -270,12 +257,12 @@ var
 begin
   FTimerPrecarga.Enabled := False;
   Update;
-  inLibLog.Log.LogPerf('BusquedaDatos.Abrir',
+  RegistroLog.RegistrarRendimiento('BusquedaDatos.Abrir',
     'formulario visible sin consultar artículos',
     FCronometroApertura.ElapsedMilliseconds);
   sw := TStopwatch.StartNew;
   CargarFiltrosPrecarga;
-  inLibLog.Log.LogPerf('BusquedaDatos.Precarga',
+  RegistroLog.RegistrarRendimiento('BusquedaDatos.Precarga',
     'catálogos de familia, proveedor y temporada',
     sw.ElapsedMilliseconds);
   if edtValor.CanFocus then
@@ -328,35 +315,24 @@ end;
 
 procedure TfrmMtoBusquedaDatos.CargarFiltrosPrecarga;
 begin
-  CargarCombo(cbbFamilia,
-    'SELECT CODIGO_FAM_FAM AS COD, ' +
-    '       COALESCE(NOMBRE_FAM_FAM, DESCRIPCION_FAM, ' +
-    '                CODIGO_FAM_FAM) AS NOM ' +
-    '  FROM fza_articulos_familias ' +
-    ' WHERE IFNULL(ESACTIVO_FAM, ''S'') = ''S'' ' +
-    ' ORDER BY ORDEN_FAM, CODIGO_FAM_FAM',
-    'COD', 'NOM');
-  unqryProveedoresBusqueda.Close;
-  unqryProveedoresBusqueda.SQL.Text :=
-    'SELECT CODIGO_PRV_PRV, RAZON_SOCIAL_PRV ' +
-    '  FROM fza_proveedores ' +
-    ' WHERE IFNULL(ESACTIVO_PRV, ''S'') = ''S'' ' +
-    ' ORDER BY RAZON_SOCIAL_PRV, CODIGO_PRV_PRV';
-  unqryProveedoresBusqueda.Open;
+  CargarCombo(
+    cbbFamilia,
+    FRepositorioPersistencia.ListarFamilias);
+  dsProveedoresBusqueda.DataSet := nil;
+  FResultadoProveedores :=
+    FRepositorioPersistencia.ConsultarProveedores;
+  dsProveedoresBusqueda.DataSet := FResultadoProveedores.DataSet;
   cbbProveedor.EditValue := Null;
-  CargarCombo(cbbTemporada,
-    'SELECT PV AS COD, PV AS NOM ' +
-    '  FROM fza_propiedades_valores ' +
-    ' WHERE ID_PROP_PV = ''TEMPORADA'' ' +
-    '   AND IFNULL(ESACTIVO_PV, ''S'') = ''S'' ' +
-    ' ORDER BY PV',
-    'COD', 'NOM');
+  CargarCombo(
+    cbbTemporada,
+    FRepositorioPersistencia.ListarTemporadas);
 end;
 
-procedure TfrmMtoBusquedaDatos.CargarCombo(ACombo: TcxComboBox;
-  const ASQL, ACampoCodigo, ACampoNombre: string);
+procedure TfrmMtoBusquedaDatos.CargarCombo(
+  ACombo: TcxComboBox;
+  const AOpciones: TOpcionesBusquedaDatos);
 var
-  qry: TUniQuery;
+  oOpcion: TOpcionBusquedaDatos;
   sCodigo: string;
   sNombre: string;
 begin
@@ -364,23 +340,14 @@ begin
   try
     ACombo.Properties.Items.Clear;
     ACombo.Properties.Items.Add('(Todos)');
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := ConexionPrincipal;
-      qry.SQL.Text := ASQL;
-      qry.Open;
-      while not qry.Eof do
-      begin
-        sCodigo := qry.FieldByName(ACampoCodigo).AsString;
-        sNombre := qry.FieldByName(ACampoNombre).AsString;
-        if (sNombre <> '') and (sNombre <> sCodigo) then
-          ACombo.Properties.Items.Add(sCodigo + ' - ' + sNombre)
-        else
-          ACombo.Properties.Items.Add(sCodigo);
-        qry.Next;
-      end;
-    finally
-      FreeAndNil(qry);
+    for oOpcion in AOpciones do
+    begin
+      sCodigo := oOpcion.Codigo;
+      sNombre := oOpcion.Nombre;
+      if (sNombre <> '') and (sNombre <> sCodigo) then
+        ACombo.Properties.Items.Add(sCodigo + ' - ' + sNombre)
+      else
+        ACombo.Properties.Items.Add(sCodigo);
     end;
   finally
     ACombo.Properties.Items.EndUpdate;
@@ -410,7 +377,10 @@ begin
   chkDistinguirMayusculas.Checked := False;
   edtBusqGlobal.Clear;
   cxGrdDBTabPrin.DataController.Filter.Clear;
-  unqryResultados.Close;
+  if Assigned(dsTablaG.DataSet) then
+  begin
+    dsTablaG.DataSet.Close;
+  end;
   lblResultados.Caption := SCaptionSeleccioneFiltrosBuscar;
 end;
 
@@ -448,29 +418,31 @@ end;
 
 procedure TfrmMtoBusquedaDatos.SeleccionarProveedorPorInicio;
 var
+  oProveedores: TDataSet;
   sBusqueda: string;
   sCodigo: string;
   sCodigoEncontrado: string;
   sNombre: string;
 begin
+  oProveedores := dsProveedoresBusqueda.DataSet;
   sBusqueda := FBusquedaProveedor;
   sCodigoEncontrado := '';
   if sBusqueda = '' then
     cbbProveedor.EditValue := Null
-  else if unqryProveedoresBusqueda.Active then
+  else if Assigned(oProveedores) and oProveedores.Active then
   begin
-    unqryProveedoresBusqueda.First;
-    while (not unqryProveedoresBusqueda.Eof) and
+    oProveedores.First;
+    while (not oProveedores.Eof) and
           (sCodigoEncontrado = '') do
     begin
-      sCodigo := Trim(unqryProveedoresBusqueda.FieldByName(
+      sCodigo := Trim(oProveedores.FieldByName(
                                            'CODIGO_PRV_PRV').AsString);
-      sNombre := Trim(unqryProveedoresBusqueda.FieldByName(
+      sNombre := Trim(oProveedores.FieldByName(
                                          'RAZON_SOCIAL_PRV').AsString);
       if SameText(Copy(sCodigo, 1, Length(sBusqueda)), sBusqueda) or
          SameText(Copy(sNombre, 1, Length(sBusqueda)), sBusqueda) then
         sCodigoEncontrado := sCodigo;
-      unqryProveedoresBusqueda.Next;
+      oProveedores.Next;
     end;
     if sCodigoEncontrado <> '' then
     begin
@@ -515,49 +487,25 @@ end;
 procedure TfrmMtoBusquedaDatos.edtValorPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
-  qryPaleta: TUniQuery;
-  lstColores: TStringList;
-  aColores: TArray<string>;
+  aColores: TCadenasBusquedaDatos;
   sColor: string;
   pPopup: TPoint;
-  i: Integer;
 begin
-  qryPaleta := TUniQuery.Create(nil);
-  lstColores := TStringList.Create;
-  try
-    qryPaleta.Connection := ConexionPrincipal;
-    qryPaleta.SQL.Add('SELECT NOMBRE_ATB');
-    qryPaleta.SQL.Add('  FROM fza_atributos_basicos');
-    qryPaleta.SQL.Add(' WHERE ID_VA_ATB = ''CO''');
-    qryPaleta.SQL.Add('   AND ESACTIVO_ATB = ''S''');
-    qryPaleta.SQL.Add(
-      '   AND HEX_ATB REGEXP ''^#?[0-9A-Fa-f]{6}$''');
-    qryPaleta.SQL.Add(' ORDER BY ORDEN_ATB, CODIGO_ATB');
-    qryPaleta.Open;
-    while not qryPaleta.Eof do
-    begin
-      lstColores.Add(qryPaleta.FieldByName('NOMBRE_ATB').AsString);
-      qryPaleta.Next;
-    end;
-    SetLength(aColores, lstColores.Count);
-    for i := 0 to lstColores.Count - 1 do
-      aColores[i] := lstColores[i];
-    pPopup.X := 0;
-    pPopup.Y := edtValor.Height;
-    pPopup := edtValor.ClientToScreen(pPopup);
-    if SeleccionarAvConPaleta(
-      ConexionPrincipal,
-      'CO',
-      aColores,
-      edtValor.Text,
-      sColor,
-                              pPopup.X, pPopup.Y, edtValor.Width) then
-    begin
-      edtValor.Text := sColor;
-    end;
-  finally
-    FreeAndNil(lstColores);
-    FreeAndNil(qryPaleta);
+  aColores := FRepositorioPersistencia.ListarColoresPaleta;
+  pPopup.X := 0;
+  pPopup.Y := edtValor.Height;
+  pPopup := edtValor.ClientToScreen(pPopup);
+  if SeleccionarAvConPaleta(
+    ConexionPrincipal,
+    'CO',
+    aColores,
+    edtValor.Text,
+    sColor,
+    pPopup.X,
+    pPopup.Y,
+    edtValor.Width) then
+  begin
+    edtValor.Text := sColor;
   end;
 end;
 
@@ -623,7 +571,7 @@ begin
     if bConsultaPreparada then
     begin
       swTramo := TStopwatch.StartNew;
-      unqryResultados.Open;
+      dsTablaG.DataSet.Open;
       msConsulta := swTramo.ElapsedMilliseconds;
       if not FColumnasCreadas then
       begin
@@ -642,10 +590,10 @@ begin
   end;
   if bConsultaPreparada then
   begin
-    inLibLog.Log.LogPerf('BusquedaDatos.Buscar',
+    RegistroLog.RegistrarRendimiento('BusquedaDatos.Buscar',
       Format('campo=%d filas=%d preparar=%d consulta=%d columnas=%d ' +
              'interfaz=%d',
-             [cbbCampo.ItemIndex, unqryResultados.RecordCount,
+             [cbbCampo.ItemIndex, dsTablaG.DataSet.RecordCount,
               msPreparar, msConsulta, msColumnas, msInterfaz]),
       swTotal.ElapsedMilliseconds);
   end;
@@ -658,31 +606,24 @@ end;
 
 function TfrmMtoBusquedaDatos.PrepararConsulta: Boolean;
 var
-  sCampo: string;
-  sValor: string;
-  sParametro: string;
-  sFamilia: string;
-  sProveedor: string;
-  sTemporada: string;
+  oCriterios: TCriteriosBusquedaDatos;
   sHexObjetivo: string;
-  sComponenteRojo: string;
-  sComponenteVerde: string;
-  sComponenteAzul: string;
-  sDistancia: string;
   iRojo: Integer;
   iVerde: Integer;
   iAzul: Integer;
   bProximidad: Boolean;
 begin
   Result := True;
-  sValor := Trim(edtValor.Text);
-  sFamilia := CodigoCombo(cbbFamilia);
-  sProveedor := CodigoProveedor;
-  sTemporada := CodigoCombo(cbbTemporada);
+  iRojo := 0;
+  iVerde := 0;
+  iAzul := 0;
   bProximidad := cbbCampo.ItemIndex = CAMPO_PROXIMIDAD_COLOR;
   if bProximidad then
   begin
-    Result := ResolverColorObjetivo(sValor, sHexObjetivo, iRojo,
+    Result := ResolverColorObjetivo(
+      Trim(edtValor.Text),
+      sHexObjetivo,
+      iRojo,
                                     iVerde, iAzul);
     if not Result then
     begin
@@ -693,263 +634,29 @@ begin
   if Result then
   begin
     if bProximidad then
+    begin
       edtValor.Text := sHexObjetivo;
-    sComponenteRojo :=
-      'CONV(SUBSTRING(REPLACE(pal.HEX_ATB, ''#'', ''''), 1, 2), 16, 10)';
-    sComponenteVerde :=
-      'CONV(SUBSTRING(REPLACE(pal.HEX_ATB, ''#'', ''''), 3, 2), 16, 10)';
-    sComponenteAzul :=
-      'CONV(SUBSTRING(REPLACE(pal.HEX_ATB, ''#'', ''''), 5, 2), 16, 10)';
-    sDistancia := 'ROUND(SQRT(POW(' + sComponenteRojo +
-      ' - :ROJO, 2) + POW(' + sComponenteVerde +
-      ' - :VERDE, 2) + POW(' + sComponenteAzul +
-      ' - :AZUL, 2)), 2)';
-    unqryResultados.Close;
-    unqryResultados.SQL.Clear;
-    unqryResultados.SQL.Add('SELECT eti.CODIGO_ART_ART,');
-    unqryResultados.SQL.Add('       eti.CODIGO_UNIDAD_SKU,');
-    unqryResultados.SQL.Add('       eti.DESCRIPCION_ART,');
-    unqryResultados.SQL.Add('       eti.ATR_CO,');
-    unqryResultados.SQL.Add('       pal.CODIGO_ATB AS CODIGO_COLOR_BASICO,');
-    unqryResultados.SQL.Add('       pal.NOMBRE_ATB AS COLOR_BASICO,');
-    unqryResultados.SQL.Add('       pal.HEX_ATB AS HEX_COLOR_BASICO,');
-    if bProximidad then
-      unqryResultados.SQL.Add(
-        '       ' + sDistancia + ' AS DISTANCIA_COLOR,')
-    else
-      unqryResultados.SQL.Add(
-        '       CAST(NULL AS DECIMAL(10, 2)) AS DISTANCIA_COLOR,');
-    unqryResultados.SQL.Add('       eti.ATR_TAL,');
-    unqryResultados.SQL.Add(
-      '       COALESCE(stk.CANTIDAD_STOCK, 0) AS CANTIDAD_STOCK,');
-    unqryResultados.SQL.Add(
-      '       COALESCE(stk.CANTIDAD_STOCK_ALMACEN, 0)');
-    unqryResultados.SQL.Add('         AS CANTIDAD_STOCK_ALMACEN,');
-    unqryResultados.SQL.Add('       stk.ALMACENES_STOCK,');
-    unqryResultados.SQL.Add('       eti.CODIGO_BARRAS_CB,');
-    unqryResultados.SQL.Add('       eti.CODIGO_FAM_ART,');
-    unqryResultados.SQL.Add('       eti.NOMBRE_FAM_FAM,');
-    unqryResultados.SQL.Add('       eti.CODIGO_PRV_PRV,');
-    unqryResultados.SQL.Add('       eti.RAZON_SOCIAL_PRV,');
-    unqryResultados.SQL.Add('       eti.REF_PROVEEDOR,');
-    unqryResultados.SQL.Add('       eti.PROP_TEMPORADA,');
-    unqryResultados.SQL.Add('       eti.PROP_MARCA,');
-    unqryResultados.SQL.Add('       eti.PROP_MATERIAL,');
-    unqryResultados.SQL.Add('       eti.PROP_GENERO,');
-    unqryResultados.SQL.Add('       eti.ATRIBUTOS_TXT,');
-    unqryResultados.SQL.Add('       eti.PROPIEDADES_TXT,');
-    unqryResultados.SQL.Add('       eti.ESACTIVO_ART,');
-    unqryResultados.SQL.Add('       eti.ESACTIVO_SKU');
-    unqryResultados.SQL.Add('  FROM vi_articulos_skus_etiquetas eti');
-    unqryResultados.SQL.Add('  LEFT JOIN (');
-    unqryResultados.SQL.Add(
-      '       SELECT sa.CODIGO_UNIDAD_SKU_SA AS CODIGO_UNIDAD_SKU,');
-    unqryResultados.SQL.Add('              atb.CODIGO_ATB,');
-    unqryResultados.SQL.Add('              atb.NOMBRE_ATB,');
-    unqryResultados.SQL.Add('              atb.DESCRIPCION_ATB,');
-    unqryResultados.SQL.Add('              atb.HEX_ATB');
-    unqryResultados.SQL.Add('         FROM fza_atributos_sku sa');
-    unqryResultados.SQL.Add('         JOIN fza_atributos_valores av');
-    unqryResultados.SQL.Add('           ON av.ID_AV = sa.ID_AV_SA');
-    unqryResultados.SQL.Add('          AND av.ID_VA_AV = ''CO''');
-    unqryResultados.SQL.Add('         JOIN fza_articulos_skus sku');
-    unqryResultados.SQL.Add(
-      '           ON sku.CODIGO_UNIDAD_SKU = sa.CODIGO_UNIDAD_SKU_SA');
-    unqryResultados.SQL.Add(
-      '    LEFT JOIN fza_articulos_atributos_basicos aab');
-    unqryResultados.SQL.Add(
-      '           ON aab.CODIGO_ART_AAB = sku.CODIGO_ART_SKU');
-    unqryResultados.SQL.Add('          AND aab.ID_AV_AAB = av.ID_AV');
-    unqryResultados.SQL.Add(
-      '    LEFT JOIN fza_articulos_conjuntos_asign aca');
-    unqryResultados.SQL.Add(
-      '           ON aca.CODIGO_ART_ACA = sku.CODIGO_ART_SKU');
-    unqryResultados.SQL.Add('          AND aca.ID_VA_ACA = av.ID_VA_AV');
-    unqryResultados.SQL.Add(
-      '    LEFT JOIN fza_atributos_conjuntos_det acd');
-    unqryResultados.SQL.Add('           ON acd.ID_AC_ACD = aca.ID_AC_ACA');
-    unqryResultados.SQL.Add('          AND acd.ID_AV_ACD = av.ID_AV');
-    unqryResultados.SQL.Add('    LEFT JOIN fza_atributos_basicos atb');
-    unqryResultados.SQL.Add('           ON atb.ID_ATB = CASE');
-    unqryResultados.SQL.Add(
-      '                WHEN aab.CODIGO_ART_AAB IS NOT NULL');
-    unqryResultados.SQL.Add('                THEN aab.ID_ATB_AAB');
-    unqryResultados.SQL.Add('                WHEN acd.ID_ATB_ACD IS NOT NULL');
-    unqryResultados.SQL.Add('                THEN acd.ID_ATB_ACD');
-    unqryResultados.SQL.Add('                ELSE av.ID_ATB_AV');
-    unqryResultados.SQL.Add('              END');
-    unqryResultados.SQL.Add('       ) pal');
-    unqryResultados.SQL.Add(
-      '    ON pal.CODIGO_UNIDAD_SKU = eti.CODIGO_UNIDAD_SKU');
-    unqryResultados.SQL.Add('  LEFT JOIN (');
-    unqryResultados.SQL.Add('       SELECT CODIGO_UNIDAD_STK,');
-    unqryResultados.SQL.Add(
-      '              SUM(CANTIDAD_STK) AS CANTIDAD_STOCK,');
-    unqryResultados.SQL.Add(
-      '              SUM(CASE WHEN CODIGO_ALM_STK = :ALMACEN_DOC');
-    unqryResultados.SQL.Add('                       THEN CANTIDAD_STK');
-    unqryResultados.SQL.Add('                       ELSE 0 END)');
-    unqryResultados.SQL.Add('                AS CANTIDAD_STOCK_ALMACEN,');
-    unqryResultados.SQL.Add(
-      '              GROUP_CONCAT(DISTINCT CODIGO_ALM_STK');
-    unqryResultados.SQL.Add(
-      '                ORDER BY CODIGO_ALM_STK SEPARATOR '', '')');
-    unqryResultados.SQL.Add('                AS ALMACENES_STOCK');
-    unqryResultados.SQL.Add('         FROM fza_articulos_stockactual');
-    unqryResultados.SQL.Add('        GROUP BY CODIGO_UNIDAD_STK');
-    unqryResultados.SQL.Add('       ) stk');
-    unqryResultados.SQL.Add(
-      '    ON stk.CODIGO_UNIDAD_STK = eti.CODIGO_UNIDAD_SKU');
-    unqryResultados.SQL.Add(' WHERE 1 = 1');
-    if cbbEstado.ItemIndex = 0 then
-    begin
-      unqryResultados.SQL.Add('   AND eti.ESACTIVO_ART = ''S''');
-      unqryResultados.SQL.Add('   AND eti.ESACTIVO_SKU = ''S''');
-    end
-    else if cbbEstado.ItemIndex = 2 then
-    begin
-      unqryResultados.SQL.Add(
-        '   AND (COALESCE(eti.ESACTIVO_ART, ''N'') <> ''S''');
-      unqryResultados.SQL.Add(
-        '     OR COALESCE(eti.ESACTIVO_SKU, ''N'') <> ''S'')');
     end;
-    if cbbStock.ItemIndex = 1 then
-      unqryResultados.SQL.Add(
-        '   AND COALESCE(stk.CANTIDAD_STOCK, 0) > 0')
-    else if cbbStock.ItemIndex = 2 then
-      unqryResultados.SQL.Add(
-        '   AND COALESCE(stk.CANTIDAD_STOCK, 0) <= 0');
-    if sFamilia <> '' then
-      unqryResultados.SQL.Add(
-        '   AND eti.CODIGO_FAM_ART = :FAMILIA');
-    if sProveedor <> '' then
-      unqryResultados.SQL.Add(
-        '   AND eti.CODIGO_PRV_PRV = :PROVEEDOR');
-    if sTemporada <> '' then
-      unqryResultados.SQL.Add(
-        '   AND eti.PROP_TEMPORADA = :TEMPORADA');
-    if bProximidad then
-      unqryResultados.SQL.Add(
-        '   AND pal.HEX_ATB REGEXP ''^#?[0-9A-Fa-f]{6}$''')
-    else if sValor <> '' then
-    begin
-      sCampo := ObtenerExpresionCampo;
-      if chkDistinguirMayusculas.Checked then
-        sCampo := 'BINARY COALESCE(' + sCampo + ', '''')'
-      else
-      begin
-        sCampo := 'UPPER(COALESCE(' + sCampo + ', ''''))';
-        sValor := UpperCase(sValor);
-      end;
-      sParametro := sValor;
-      case cbbCoincidencia.ItemIndex of
-        0:
-          begin
-            unqryResultados.SQL.Add(
-              '   AND ' + sCampo + ' LIKE :BUSQUEDA');
-            sParametro := '%' + sValor + '%';
-          end;
-        1:
-          begin
-            unqryResultados.SQL.Add(
-              '   AND ' + sCampo + ' LIKE :BUSQUEDA');
-            sParametro := sValor + '%';
-          end;
-        2:
-          unqryResultados.SQL.Add(
-            '   AND ' + sCampo + ' = :BUSQUEDA');
-        3:
-          begin
-            unqryResultados.SQL.Add(
-              '   AND ' + sCampo + ' LIKE :BUSQUEDA');
-            sParametro := '%' + sValor;
-          end;
-        4:
-          begin
-            unqryResultados.SQL.Add(
-              '   AND ' + sCampo + ' NOT LIKE :BUSQUEDA');
-            sParametro := '%' + sValor + '%';
-          end;
-      end;
-    end;
-    if bProximidad then
-    begin
-      unqryResultados.SQL.Add(
-        ' ORDER BY DISTANCIA_COLOR, eti.CODIGO_ART_ART,');
-      unqryResultados.SQL.Add('          eti.CODIGO_UNIDAD_SKU');
-    end
-    else
-    begin
-      unqryResultados.SQL.Add(
-        ' ORDER BY eti.CODIGO_ART_ART, eti.ATR_CO, eti.ATR_TAL,');
-      unqryResultados.SQL.Add('          eti.CODIGO_UNIDAD_SKU');
-    end;
-    unqryResultados.SQL.Add(' LIMIT ' + IntToStr(ObtenerLimite));
-    unqryResultados.ParamByName('ALMACEN_DOC').AsString :=
-      UbicacionSesion.Almacen;
-    if sFamilia <> '' then
-      unqryResultados.ParamByName('FAMILIA').AsString := sFamilia;
-    if sProveedor <> '' then
-      unqryResultados.ParamByName('PROVEEDOR').AsString := sProveedor;
-    if sTemporada <> '' then
-      unqryResultados.ParamByName('TEMPORADA').AsString := sTemporada;
-    if bProximidad then
-    begin
-      unqryResultados.ParamByName('ROJO').AsInteger := iRojo;
-      unqryResultados.ParamByName('VERDE').AsInteger := iVerde;
-      unqryResultados.ParamByName('AZUL').AsInteger := iAzul;
-    end
-    else if sValor <> '' then
-      unqryResultados.ParamByName('BUSQUEDA').AsString := sParametro;
-  end;
-end;
-
-function TfrmMtoBusquedaDatos.ObtenerExpresionCampo: string;
-begin
-  case cbbCampo.ItemIndex of
-    CAMPO_ARTICULO:
-      Result := 'eti.CODIGO_ART_ART';
-    CAMPO_SKU:
-      Result := 'eti.CODIGO_UNIDAD_SKU';
-    CAMPO_DESCRIPCION:
-      Result := 'eti.DESCRIPCION_ART';
-    CAMPO_TALLA:
-      Result := 'eti.ATR_TAL';
-    CAMPO_COLOR:
-      Result := 'eti.ATR_CO';
-    CAMPO_COLOR_BASICO:
-      Result :=
-        'CONCAT_WS('' '', pal.CODIGO_ATB, pal.NOMBRE_ATB, ' +
-        'pal.DESCRIPCION_ATB, pal.HEX_ATB)';
-    CAMPO_CODIGO_BARRAS:
-      Result := 'eti.CODIGO_BARRAS_CB';
-    CAMPO_FAMILIA:
-      Result :=
-        'CONCAT_WS('' '', eti.CODIGO_FAM_ART, eti.NOMBRE_FAM_FAM)';
-    CAMPO_PROVEEDOR:
-      Result :=
-        'CONCAT_WS('' '', eti.CODIGO_PRV_PRV, ' +
-        'eti.RAZON_SOCIAL_PRV)';
-    CAMPO_REF_PROVEEDOR:
-      Result := 'eti.REF_PROVEEDOR';
-    CAMPO_TEMPORADA:
-      Result := 'eti.PROP_TEMPORADA';
-    CAMPO_ALMACEN:
-      Result := 'stk.ALMACENES_STOCK';
-    CAMPO_PROPIEDADES:
-      Result :=
-        'CONCAT_WS('' '', eti.ATRIBUTOS_TXT, ' +
-        'eti.PROPIEDADES_TXT)';
-    else
-      Result :=
-        'CONCAT_WS('' '', eti.CODIGO_ART_ART, ' +
-        'eti.CODIGO_UNIDAD_SKU, eti.DESCRIPCION_ART, eti.ATR_CO, ' +
-        'eti.ATR_TAL, eti.CODIGO_BARRAS_CB, eti.CODIGO_FAM_ART, ' +
-        'eti.NOMBRE_FAM_FAM, eti.CODIGO_PRV_PRV, ' +
-        'eti.RAZON_SOCIAL_PRV, eti.REF_PROVEEDOR, ' +
-        'eti.PROP_TEMPORADA, eti.ATRIBUTOS_TXT, ' +
-        'eti.PROPIEDADES_TXT, stk.ALMACENES_STOCK, ' +
-        'pal.CODIGO_ATB, pal.NOMBRE_ATB, pal.HEX_ATB)';
+    oCriterios := Default(TCriteriosBusquedaDatos);
+    oCriterios.Campo := cbbCampo.ItemIndex;
+    oCriterios.Coincidencia := cbbCoincidencia.ItemIndex;
+    oCriterios.Estado := cbbEstado.ItemIndex;
+    oCriterios.Stock := cbbStock.ItemIndex;
+    oCriterios.Limite := ObtenerLimite;
+    oCriterios.DistinguirMayusculas :=
+      chkDistinguirMayusculas.Checked;
+    oCriterios.Valor := Trim(edtValor.Text);
+    oCriterios.Familia := CodigoCombo(cbbFamilia);
+    oCriterios.Proveedor := CodigoProveedor;
+    oCriterios.Temporada := CodigoCombo(cbbTemporada);
+    oCriterios.Almacen := UbicacionSesion.Almacen;
+    oCriterios.Rojo := iRojo;
+    oCriterios.Verde := iVerde;
+    oCriterios.Azul := iAzul;
+    dsTablaG.DataSet := nil;
+    FResultadoBusqueda :=
+      FRepositorioPersistencia.PrepararBusqueda(oCriterios);
+    dsTablaG.DataSet := FResultadoBusqueda.DataSet;
   end;
 end;
 
@@ -978,38 +685,21 @@ function TfrmMtoBusquedaDatos.ResolverColorObjetivo(
   const AValor: string; out AHex: string;
   out ARojo, AVerde, AAzul: Integer): Boolean;
 var
-  qryColor: TUniQuery;
-  sValor: string;
+  sHexEncontrado: string;
 begin
   Result := NormalizarHexColor(AValor, AHex, ARojo, AVerde, AAzul);
   if (not Result) and (Trim(AValor) <> '') then
   begin
-    qryColor := TUniQuery.Create(nil);
-    try
-      qryColor.Connection := ConexionPrincipal;
-      qryColor.SQL.Add('SELECT HEX_ATB');
-      qryColor.SQL.Add('  FROM fza_atributos_basicos');
-      qryColor.SQL.Add(' WHERE ID_VA_ATB = ''CO''');
-      qryColor.SQL.Add('   AND ESACTIVO_ATB = ''S''');
-      qryColor.SQL.Add('   AND HEX_ATB IS NOT NULL');
-      qryColor.SQL.Add('   AND (UPPER(CODIGO_ATB) = :VALOR');
-      qryColor.SQL.Add(
-        '     OR UPPER(REPLACE(CODIGO_ATB, ''_'', '' '')) = :VALOR');
-      qryColor.SQL.Add('     OR UPPER(NOMBRE_ATB) = :VALOR');
-      qryColor.SQL.Add('     OR UPPER(DESCRIPCION_ATB) = :VALOR)');
-      qryColor.SQL.Add(' ORDER BY ORDEN_ATB, CODIGO_ATB');
-      qryColor.SQL.Add(' LIMIT 1');
-      sValor := UpperCase(Trim(AValor));
-      qryColor.ParamByName('VALOR').AsString := sValor;
-      qryColor.Open;
-      if not qryColor.IsEmpty then
-      begin
-        Result := NormalizarHexColor(
-          qryColor.FieldByName('HEX_ATB').AsString, AHex,
-          ARojo, AVerde, AAzul);
-      end;
-    finally
-      FreeAndNil(qryColor);
+    sHexEncontrado :=
+      FRepositorioPersistencia.BuscarHexColor(AValor);
+    if sHexEncontrado <> '' then
+    begin
+      Result := NormalizarHexColor(
+        sHexEncontrado,
+        AHex,
+        ARojo,
+        AVerde,
+        AAzul);
     end;
   end;
 end;
@@ -1026,13 +716,13 @@ begin
   Result := False;
   ALinea.Clear;
   AMensaje := '';
-  ds := unqryResultados;
+  ds := dsTablaG.DataSet;
   rec := cxGrdDBTabPrin.Controller.FocusedRecord;
   if (rec = nil) or (rec.RecordIndex < 0) then
   begin
     AMensaje := 'Seleccione una fila de SKU de la rejilla.';
   end
-  else if (not ds.Active) or ds.IsEmpty then
+  else if (not Assigned(ds)) or (not ds.Active) or ds.IsEmpty then
   begin
     AMensaje := 'Seleccione un SKU de la rejilla.';
   end
@@ -1109,7 +799,7 @@ procedure TfrmMtoBusquedaDatos.ActualizarContador;
 var
   iFilas: Integer;
 begin
-  iFilas := unqryResultados.RecordCount;
+  iFilas := dsTablaG.DataSet.RecordCount;
   if iFilas >= ObtenerLimite then
     lblResultados.Caption := Format(SCaptionSkuEncontradosLimite,
                                     [FormatFloat('#,##0', iFilas)])

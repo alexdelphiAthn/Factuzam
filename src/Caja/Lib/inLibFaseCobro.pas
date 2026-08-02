@@ -32,7 +32,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections, System.Math,
-  Data.DB, VirtualTable, inLibFacturas, Uni;
+  Data.DB, VirtualTable, inLibFacturas, inLibFaseCobroPersistenciaIntf;
 
 type
   TDatosCliente = record
@@ -98,7 +98,7 @@ type
 
   TDatosFaseCobro = class
   private
-    FConexion: TUniConnection;
+    FRepositorio: IRepositorioFaseCobro;
     FTotalesFactura: TFacturaTotales;
     FDatosCliente: TDatosCliente;
     FMemTablePagos: TVirtualTable;
@@ -131,7 +131,9 @@ type
                                const ADefault: string = ''): string;
   public
     FRequiereFactura:Boolean;
-    constructor Create(AConexion: TUniConnection; AMemTable: TVirtualTable);
+    constructor Create(
+      const ARepositorio: IRepositorioFaseCobro;
+      AMemTable: TVirtualTable);
     destructor Destroy; override;
     procedure CargarDatosFactura(ATotales: TFacturaTotales);
     procedure EstablecerCliente(const ACodigo, ANombre: string;
@@ -240,11 +242,12 @@ end;
 
 { TDatosFaseCobro }
 
-constructor TDatosFaseCobro.Create(AConexion: TUniConnection;
-                                   AMemTable: TVirtualTable);
+constructor TDatosFaseCobro.Create(
+  const ARepositorio: IRepositorioFaseCobro;
+  AMemTable: TVirtualTable);
 begin
   inherited Create;
-  FConexion := AConexion;
+  FRepositorio := ARepositorio;
   FMemTablePagos := AMemTable;
   FValesRecogidos := TList<TValeAplicado>.Create;
   FImporteBruto := 0;
@@ -717,7 +720,6 @@ end;
 
 function TDatosFaseCobro.ValidarVale: TResultadoValidacion;
 var
-  qry: TUniQuery;
   Bookmark: TBookmark;
   CodigoVale: string;
 begin
@@ -726,15 +728,9 @@ begin
      not FMemTablePagos.Active or
      FMemTablePagos.IsEmpty then
     Exit;
-  qry := TUniQuery.Create(nil);
   FMemTablePagos.DisableControls;
   Bookmark := FMemTablePagos.GetBookmark;
   try
-    qry.Connection := FConexion;
-    qry.SQL.Text := 'SELECT * ' +
-                    '  FROM fza_caja_vales ' +
-                    ' WHERE CODIGO_VL = :CODIGO ' +
-                    '   AND ESTADO_VL = ' + QuotedStr('PENDIENTE');
     FMemTablePagos.First;
     while not FMemTablePagos.Eof do
     begin
@@ -745,10 +741,7 @@ begin
          (FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency <> 0) then
       begin
         CodigoVale := FMemTablePagos.FieldByName('REFERENCIA').AsString;
-        qry.Close;
-        qry.ParamByName('CODIGO').AsString := CodigoVale;
-        qry.Open;
-        if qry.IsEmpty then
+        if not FRepositorio.ExisteValePendiente(CodigoVale) then
         begin
           Result := TResultadoValidacion.Error(
             'El vale introducido (' + CodigoVale + ') no existe en la base ' +
@@ -763,7 +756,6 @@ begin
       FMemTablePagos.GotoBookmark(Bookmark);
     FMemTablePagos.FreeBookmark(Bookmark);
     FMemTablePagos.EnableControls;
-    FreeAndNil(qry);
   end;
 end;
 

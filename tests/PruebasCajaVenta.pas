@@ -31,7 +31,9 @@ type
     [Test]
     procedure Descuento_ReparteYCuadraElUltimoCentimo;
     [Test]
-    procedure Cierre_GrabaAntesDeImprimir;
+    procedure Cierre_UnidadTrabajoAntesDeImprimir;
+    [Test]
+    procedure Cierre_NoImprimeSiUnidadTrabajoNoGraba;
     [Test]
     procedure Rectificacion_DiferenciasCopiaClienteYNiegaLineas;
     [Test]
@@ -47,31 +49,31 @@ uses
   inLibCajaRectificacion;
 
 type
-  TGrabadorVentaFalso = class(
+  TUnidadTrabajoVentaCajaFalsa = class(
     TInterfacedObject,
-    IGrabadorVentaCaja)
+    IUnidadTrabajoVentaCaja)
   private
-    FGrabado: Boolean;
+    FEjecutada: Boolean;
+    FResultadoGrabada: Boolean;
   public
-    function GrabarVenta(
-      const ASolicitud: TSolicitudGrabacionVenta;
-      out ANumeroGenerado, ACodigoValeGenerado: string
-    ): Boolean;
-    function UltimaSerieFacturaGrabada: string;
-    function UltimoNumeroFacturaGrabada: string;
-    function SerieFacturaImpresion: string;
-    function NumeroFacturaImpresion: string;
-    property Grabado: Boolean read FGrabado;
+    constructor Create(AResultadoGrabada: Boolean = True);
+    function Ejecutar(
+      const ASolicitud: TSolicitudGrabacionVenta
+    ): TResultadoPersistenciaVentaCaja;
+    property Ejecutada: Boolean read FEjecutada;
   end;
   TImpresorVentaFalso = class(
     TInterfacedObject,
     IImpresorVenta)
   private
-    FGrabador: TGrabadorVentaFalso;
+    FUnidadTrabajo: TUnidadTrabajoVentaCajaFalsa;
     FImpreso: Boolean;
     FGrabadoAntesDeImprimir: Boolean;
+    FSerieFactura: string;
+    FNumeroFactura: string;
   public
-    constructor Create(AGrabador: TGrabadorVentaFalso);
+    constructor Create(
+      AUnidadTrabajo: TUnidadTrabajoVentaCajaFalsa);
     procedure Imprimir(
       const ASolicitud: TSolicitudImpresionVenta;
       ARutasPdf: TStrings);
@@ -81,6 +83,8 @@ type
     property Impreso: Boolean read FImpreso;
     property GrabadoAntesDeImprimir: Boolean
       read FGrabadoAntesDeImprimir;
+    property SerieFactura: string read FSerieFactura;
+    property NumeroFactura: string read FNumeroFactura;
   end;
   TResultadoConsultaCajaFalso = class(
     TInterfacedObject,
@@ -259,42 +263,36 @@ begin
     CrearCabecera);
 end;
 
-function TGrabadorVentaFalso.GrabarVenta(
-  const ASolicitud: TSolicitudGrabacionVenta;
-  out ANumeroGenerado, ACodigoValeGenerado: string
-): Boolean;
+constructor TUnidadTrabajoVentaCajaFalsa.Create(
+  AResultadoGrabada: Boolean);
 begin
-  FGrabado := True;
-  ANumeroGenerado := '000001';
-  ACodigoValeGenerado := 'VALE-1';
-  Result := True;
+  inherited Create;
+  FResultadoGrabada := AResultadoGrabada;
 end;
 
-function TGrabadorVentaFalso.UltimaSerieFacturaGrabada: string;
+function TUnidadTrabajoVentaCajaFalsa.Ejecutar(
+  const ASolicitud: TSolicitudGrabacionVenta
+): TResultadoPersistenciaVentaCaja;
 begin
-  Result := 'T';
-end;
-
-function TGrabadorVentaFalso.UltimoNumeroFacturaGrabada: string;
-begin
-  Result := '000001';
-end;
-
-function TGrabadorVentaFalso.SerieFacturaImpresion: string;
-begin
-  Result := 'T';
-end;
-
-function TGrabadorVentaFalso.NumeroFacturaImpresion: string;
-begin
-  Result := '000001';
+  FEjecutada := True;
+  Result := Default(TResultadoPersistenciaVentaCaja);
+  Result.Grabada := FResultadoGrabada;
+  if Result.Grabada then
+  begin
+    Result.NumeroOperacion := '000001';
+    Result.CodigoValeGenerado := 'VALE-1';
+    Result.UltimaSerieFactura := 'T';
+    Result.UltimoNumeroFactura := '000001';
+    Result.SerieFacturaImpresion := 'T';
+    Result.NumeroFacturaImpresion := '000001';
+  end;
 end;
 
 constructor TImpresorVentaFalso.Create(
-  AGrabador: TGrabadorVentaFalso);
+  AUnidadTrabajo: TUnidadTrabajoVentaCajaFalsa);
 begin
   inherited Create;
-  FGrabador := AGrabador;
+  FUnidadTrabajo := AUnidadTrabajo;
 end;
 
 procedure TImpresorVentaFalso.Imprimir(
@@ -302,7 +300,9 @@ procedure TImpresorVentaFalso.Imprimir(
   ARutasPdf: TStrings);
 begin
   FImpreso := True;
-  FGrabadoAntesDeImprimir := FGrabador.Grabado;
+  FGrabadoAntesDeImprimir := FUnidadTrabajo.Ejecutada;
+  FSerieFactura := ASolicitud.SerieFactura;
+  FNumeroFactura := ASolicitud.NumeroFactura;
 end;
 
 procedure TImpresorVentaFalso.GenerarPdfRespaldo(
@@ -407,22 +407,23 @@ begin
   Assert.AreEqual(0.34, Double(Resultado[2].ImporteDescuento), 0.0001);
 end;
 
-procedure TPruebasCajaVenta.Cierre_GrabaAntesDeImprimir;
+procedure TPruebasCajaVenta.Cierre_UnidadTrabajoAntesDeImprimir;
 var
-  GrabadorObjeto: TGrabadorVentaFalso;
+  UnidadTrabajoObjeto: TUnidadTrabajoVentaCajaFalsa;
   ImpresorObjeto: TImpresorVentaFalso;
-  Grabador: IGrabadorVentaCaja;
+  UnidadTrabajo: IUnidadTrabajoVentaCaja;
   Impresor: IImpresorVenta;
-  Servicio: IServicioCierreVenta;
+  CasoUso: ICasoUsoCierreVentaCaja;
   Solicitud: TSolicitudCierreVenta;
   Resultado: TResultadoCierreVenta;
 begin
-  GrabadorObjeto := TGrabadorVentaFalso.Create;
-  Grabador := GrabadorObjeto;
-  ImpresorObjeto := TImpresorVentaFalso.Create(GrabadorObjeto);
+  UnidadTrabajoObjeto := TUnidadTrabajoVentaCajaFalsa.Create;
+  UnidadTrabajo := UnidadTrabajoObjeto;
+  ImpresorObjeto := TImpresorVentaFalso.Create(
+    UnidadTrabajoObjeto);
   Impresor := ImpresorObjeto;
-  Servicio := TServicioCierreVenta.Create(
-    Grabador,
+  CasoUso := TCasoUsoCierreVentaCaja.Create(
+    UnidadTrabajo,
     Impresor,
     nil,
     nil,
@@ -430,12 +431,44 @@ begin
     nil);
   Solicitud := Default(TSolicitudCierreVenta);
   Solicitud.TipoImpresion := tiConTicket;
-  Resultado := Servicio.Ejecutar(Solicitud);
+  Resultado := CasoUso.Ejecutar(Solicitud);
   Assert.IsTrue(Resultado.Grabada);
   Assert.AreEqual('000001', Resultado.NumeroGenerado);
   Assert.AreEqual('VALE-1', Resultado.CodigoValeGenerado);
   Assert.IsTrue(ImpresorObjeto.Impreso);
   Assert.IsTrue(ImpresorObjeto.GrabadoAntesDeImprimir);
+  Assert.AreEqual('T', ImpresorObjeto.SerieFactura);
+  Assert.AreEqual('000001', ImpresorObjeto.NumeroFactura);
+end;
+
+procedure TPruebasCajaVenta.Cierre_NoImprimeSiUnidadTrabajoNoGraba;
+var
+  UnidadTrabajoObjeto: TUnidadTrabajoVentaCajaFalsa;
+  ImpresorObjeto: TImpresorVentaFalso;
+  UnidadTrabajo: IUnidadTrabajoVentaCaja;
+  Impresor: IImpresorVenta;
+  CasoUso: ICasoUsoCierreVentaCaja;
+  Solicitud: TSolicitudCierreVenta;
+  Resultado: TResultadoCierreVenta;
+begin
+  UnidadTrabajoObjeto := TUnidadTrabajoVentaCajaFalsa.Create(False);
+  UnidadTrabajo := UnidadTrabajoObjeto;
+  ImpresorObjeto := TImpresorVentaFalso.Create(
+    UnidadTrabajoObjeto);
+  Impresor := ImpresorObjeto;
+  CasoUso := TCasoUsoCierreVentaCaja.Create(
+    UnidadTrabajo,
+    Impresor,
+    nil,
+    nil,
+    nil,
+    nil);
+  Solicitud := Default(TSolicitudCierreVenta);
+  Resultado := CasoUso.Ejecutar(Solicitud);
+  Assert.IsFalse(Resultado.Grabada);
+  Assert.AreEqual('', Resultado.NumeroGenerado);
+  Assert.AreEqual('', Resultado.CodigoValeGenerado);
+  Assert.IsFalse(ImpresorObjeto.Impreso);
 end;
 
 procedure TPruebasCajaVenta.

@@ -134,7 +134,7 @@ type
 implementation
 
 uses
-  inLibValoresAutomaticos, inLibLog, System.Diagnostics,
+  inLibValoresAutomaticos, System.Diagnostics,
   System.UITypes, inLibArticulosValidadorIntf,
   UniDataArticulosValidadorRepositorio,
   inLibVentasImpuestos, inLibContadorLineas,
@@ -308,11 +308,12 @@ const
     swQ := TStopwatch.StartNew;
     try
       qry.Open;
-      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+      RegistroLog.RegistrarRendimiento(
+        TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
     except
       on E: Exception do
       begin
-        inLibLog.Log.LogPerf(TAG,
+        RegistroLog.RegistrarRendimiento(TAG,
           Nombre + ' ERROR=' + E.Message,
           swQ.ElapsedMilliseconds);
         raise;
@@ -335,7 +336,7 @@ begin
   AbrirConTiempo(unqryMovimientosAlb,  'unqryMovimientosAlb');
   AbrirConTiempo(unqryFormasPago,      'unqryFormasPago');
   AbrirConTiempo(unqryTarifas,         'unqryTarifas');
-  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+  RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmAlbaranes.RefrescarAlmacenes(const ACodigoEmpresa: string);
@@ -2194,7 +2195,7 @@ begin
       end;
       if ((sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
           (sSku = '') or (sAlmacen = '')) and (fCantidad > 0) then
-        inLibLog.Log.LogWarning(Format(
+        RegistroLog.RegistrarAviso(Format(
           'Albaran %s/%s linea %s sin movimiento AV. Articulo=%s, ' +
           'SKU=%s, almacen=%s.',
           [sSerieAlb, sNumeroAlb, sLinea, sArticulo, sSku, sAlmacen]));

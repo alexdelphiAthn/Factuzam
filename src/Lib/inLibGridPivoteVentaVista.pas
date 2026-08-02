@@ -28,7 +28,7 @@ const
   CAMPO_LINEA_VISTA_PIVOTE = '__LINEA_VISTA_PV';
 
 type
-  TLogPivoteVentaEvent = procedure(const AMensaje: string);
+  TLogPivoteVentaEvent = procedure(const AMensaje: string) of object;
   // Configuración de la vista temporal: grid, datasets y campos host.
   TConfigVistaPivoteVenta = record
     View              : TcxGridDBTableView;

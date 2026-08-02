@@ -27,7 +27,7 @@ uses
   System.DateUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs,
   inMtoModalGenImp, cxGraphics, cxLookAndFeels, cxLookAndFeelPainters,
-  Vcl.Menus, frxDesgn, Data.DB, MemDS, DBAccess, Uni,
+  Vcl.Menus, frxDesgn, Data.DB,
   frxExportXLSX, frxClass, frxDBSet, frxExportBaseDialog, frxExportPDF,
   Vcl.StdCtrls, cxButtons, Vcl.ExtCtrls, cxControls, cxContainer, cxEdit,
   cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar, cxLabel, cxButtonEdit,
@@ -35,11 +35,10 @@ uses
   Vcl.ComCtrls, dxCore, cxStyles, dxSkinsForm, cxClasses, cxLocalization,
   JvComponentBase, JvEnterTab, System.Actions, Vcl.ActnList, frxSmartMemo,
   frLocalization, frLanguageSpanish, frxExportBaseImageSettingsDialog,
-  frCoreClasses;
+  frCoreClasses, inLibInformesCajaPersistenciaIntf;
 
 type
   TfrmPrintPagos = class(TfrmPrint)
-    unqryPagosPrint: TUniQuery;
     dsPagosPrint: TDataSource;
     fxdsPagos: TfrxDBDataset;
     lblFechas: TcxLabel;
@@ -68,12 +67,15 @@ type
     // Codigo de forma de pago de cada item de clbFormasPago, en el mismo
     // orden (el item solo guarda el texto "COD - Descripcion").
     FCodigosFP: TStringList;
+    FRepositorioPersistencia: IRepositorioInformesCaja;
+    FResultado: IResultadoInformeCaja;
     // Abre el selector estandar de caja (inMtoModalCajDef) acotado a la
     // empresa del usuario y vuelca el almacen y la caja en bedAlmacen/bedCaja.
     procedure SeleccionarAlmacenCaja;
     // Rellena el listbox con las formas de pago presentes en los pagos del
     // periodo / caja actuales (todas marcadas por defecto).
     procedure CargarFormasPago;
+    function ConstruirSolicitud: TSolicitudInformeCaja;
   protected
     procedure DoShow; override;
   public
@@ -116,7 +118,8 @@ end;
 
 procedure TfrmPrintPagos.CargarFormasPago;
 var
-  qry: TUniQuery;
+  FormasPago: TFormasPagoInformeCaja;
+  FormaPago: TFormaPagoInformeCaja;
   item: TcxCheckListBoxItem;
 begin
   // Listamos las formas de pago distintas que aparecen en los pagos del
@@ -124,42 +127,23 @@ begin
   // defecto no se filtra por forma de pago.
   if FCodigosFP = nil then
     FCodigosFP := TStringList.Create;
+  if not Assigned(FRepositorioPersistencia) then
+  begin
+    FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
+      CrearRepositorioInformesCaja;
+  end;
   clbFormasPago.Items.BeginUpdate;
   try
     clbFormasPago.Items.Clear;
     FCodigosFP.Clear;
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := ConexionPrincipal;
-      qry.SQL.Text :=
-        ' SELECT DISTINCT p.CODIGO_FP_CFP AS COD,                         ' +
-        '        COALESCE(fp.DESCRIPCION_FORMA_PAGO_FP, p.CODIGO_FP_CFP)  ' +
-        '          AS DESCR                                               ' +
-        '   FROM vi_caja_pagos p                                          ' +
-        '   LEFT JOIN fza_formas_pago fp                                  ' +
-        '          ON fp.CODIGO_FP_FP = p.CODIGO_FP_CFP                   ' +
-        '  WHERE p.CODIGO_EMP_PAGO  = :pEMP                               ' +
-        '    AND p.CODIGO_ALM_PAGO  = :pALM                               ' +
-        '    AND p.CODIGO_CAJA_PAGO = :pCAJA                              ' +
-        '    AND DATE(p.FECHA_PAGO) BETWEEN :pDESDE AND :pHASTA           ' +
-        '  ORDER BY COD                                                   ';
-      qry.ParamByName('pEMP').AsString     := edtEmpresa.Text;
-      qry.ParamByName('pALM').AsString     := bedAlmacen.Text;
-      qry.ParamByName('pCAJA').AsString    := bedCaja.Text;
-      qry.ParamByName('pDESDE').AsDateTime := dteDesde.Date;
-      qry.ParamByName('pHASTA').AsDateTime := dteHasta.Date;
-      qry.Open;
-      while not qry.Eof do
-      begin
-        item := clbFormasPago.Items.Add;
-        item.Text := qry.FieldByName('COD').AsString + ' - ' +
-                     qry.FieldByName('DESCR').AsString;
-        item.Checked := True;
-        FCodigosFP.Add(qry.FieldByName('COD').AsString);
-        qry.Next;
-      end;
-    finally
-      FreeAndNil(qry);
+    FormasPago := FRepositorioPersistencia.ListarFormasPago(
+      ConstruirSolicitud);
+    for FormaPago in FormasPago do
+    begin
+      item := clbFormasPago.Items.Add;
+      item.Text := FormaPago.Codigo + ' - ' + FormaPago.Descripcion;
+      item.Checked := True;
+      FCodigosFP.Add(FormaPago.Codigo);
     end;
   finally
     clbFormasPago.Items.EndUpdate;
@@ -176,12 +160,7 @@ begin
   bCambio := False;
   frm := TfrmMtoModalCajDef.Create(Self);
   try
-    frm.qrySeleccion.Connection := ConexionPrincipal;
-    frm.qrySeleccion.SQL.Text :=
-      ' SELECT * FROM vi_cajasdef WHERE Empresa = :pEMP ' +
-      ' ORDER BY Almacen, Caja ';
-    frm.qrySeleccion.ParamByName('pEMP').AsString := edtEmpresa.Text;
-    frm.qrySeleccion.Open;
+    frm.Cargar(edtEmpresa.Text);
     // Cierra el cronometro SQL antes de entrar en el selector modal.
     CerrarMonitorSQLPendiente;
     frm.sEmpresa := edtEmpresa.Text;
@@ -195,8 +174,8 @@ begin
       frm.ShowModal;
       if frm.sFicha = 'S' then
       begin
-        bedAlmacen.Text := frm.qrySeleccion.FieldByName('Almacen').AsString;
-        bedCaja.Text    := frm.qrySeleccion.FieldByName('Caja').AsString;
+        bedAlmacen.Text := frm.AlmacenSeleccionado;
+        bedCaja.Text    := frm.CajaSeleccionada;
         bCambio         := True;
       end;
     finally
@@ -233,52 +212,56 @@ end;
 
 procedure TfrmPrintPagos.preparar_consulta;
 var
-  i, nMarcadas: Integer;
-  sInFP: string;
+  CodigosSeleccionados: TCodigosFormaPagoInformeCaja;
+  i: Integer;
+  nMarcadas: Integer;
 begin
   inherited;
   // Forma(s) de pago marcadas en el listbox. Solo se filtra cuando la
   // seleccion es parcial: si estan todas (o ninguna) marcadas no se filtra,
   // de modo que el listado no sale vacio por descuido.
-  sInFP := '';
   nMarcadas := 0;
+  SetLength(CodigosSeleccionados, 0);
   for i := 0 to clbFormasPago.Items.Count - 1 do
   begin
     if clbFormasPago.Items[i].Checked then
     begin
       Inc(nMarcadas);
-      if sInFP <> '' then
-        sInFP := sInFP + ',';
-      sInFP := sInFP + QuotedStr(FCodigosFP[i]);
+      SetLength(
+        CodigosSeleccionados,
+        Length(CodigosSeleccionados) + 1);
+      CodigosSeleccionados[High(CodigosSeleccionados)] :=
+        FCodigosFP[i];
     end;
   end;
   // fza_caja_pagos no tiene fecha propia: leemos de vi_caja_pagos, que expone
   // FECHA_PAGO (de la operacion asociada) y NUMERO_FAC_PAGO / SERIE_FAC_PAGO.
   // El rango se aplica sobre DATE(FECHA_PAGO) para ser inclusivo por dia.
-  with unqryPagosPrint do
+  if (nMarcadas = 0) or
+     (nMarcadas = clbFormasPago.Items.Count) then
   begin
-    Close;
-    Connection := ConexionPrincipal;
-    SQL.Text :=
-      ' SELECT *                                                          ' +
-      '   FROM vi_caja_pagos                                              ' +
-      '  WHERE CODIGO_EMP_PAGO  = :pEMP                                   ' +
-      '    AND CODIGO_ALM_PAGO  = :pALM                                   ' +
-      '    AND CODIGO_CAJA_PAGO = :pCAJA                                  ' +
-      '    AND DATE(FECHA_PAGO) BETWEEN :pDESDE AND :pHASTA               ';
-    if (nMarcadas > 0) and (nMarcadas < clbFormasPago.Items.Count) then
-      SQL.Text := SQL.Text +
-        '    AND CODIGO_FP_CFP IN (' + sInFP + ')                         ';
-    SQL.Text := SQL.Text +
-      '  ORDER BY FECHA_PAGO, NUMERO_OPERACION_PAGO, NUMERO_LINEA_PAGO    ';
-    ParamByName('pEMP').AsString     := edtEmpresa.Text;
-    ParamByName('pALM').AsString     := bedAlmacen.Text;
-    ParamByName('pCAJA').AsString    := bedCaja.Text;
-    ParamByName('pDESDE').AsDateTime := dteDesde.Date;
-    ParamByName('pHASTA').AsDateTime := dteHasta.Date;
-    Open;
+    SetLength(CodigosSeleccionados, 0);
   end;
+  if not Assigned(FRepositorioPersistencia) then
+  begin
+    FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
+      CrearRepositorioInformesCaja;
+  end;
+  dsPagosPrint.DataSet := nil;
+  FResultado := FRepositorioPersistencia.ConsultarPagos(
+    ConstruirSolicitud,
+    CodigosSeleccionados);
+  dsPagosPrint.DataSet := FResultado.DataSet;
   fxdsPagos.UpdateBounds;
+end;
+
+function TfrmPrintPagos.ConstruirSolicitud: TSolicitudInformeCaja;
+begin
+  Result.Empresa := edtEmpresa.Text;
+  Result.Almacen := bedAlmacen.Text;
+  Result.Caja := bedCaja.Text;
+  Result.FechaDesde := dteDesde.Date;
+  Result.FechaHasta := dteHasta.Date;
 end;
 
 end.

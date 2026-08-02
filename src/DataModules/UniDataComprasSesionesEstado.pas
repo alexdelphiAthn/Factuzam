@@ -12,9 +12,7 @@
 {    Estado y metadatos de materialización de una sesión de compra.            }
 {******************************************************************************}
 unit UniDataComprasSesionesEstado;
-
 interface
-
 uses
   inLibComprasSesionesIntf,
   inLibComprasSesionesLecturasIntf,
@@ -48,7 +46,6 @@ implementation
 uses
   System.SysUtils,
   Data.DB, DBAccess, Uni,
-  inLibLog,
   inLibMsgCompras,
   inLibValoresAutomaticos,
   UniDataComprasSesionesOperaciones;
@@ -154,15 +151,17 @@ procedure AvisarErrorNoPersistido(
   ADM: TdmComprasSesiones;
   const AMensaje: string);
 begin
-  Log.LogWarning(
-    'UniDataComprasSesionesEstado: ' +
-    'no se pudo persistir MENSAJE_ERROR_SES: ' +
-    AMensaje);
-  if Assigned(ADM) and
-     Assigned(ADM.ContextoSesion) then
-    ADM.ContextoSesion.LogSesion(
-      '  AVISO: no se pudo persistir el error: ' +
+  if Assigned(ADM) then
+  begin
+    ADM.RegistroLog.RegistrarAviso(
+      'UniDataComprasSesionesEstado: ' +
+      'no se pudo persistir MENSAJE_ERROR_SES: ' +
       AMensaje);
+    if Assigned(ADM.ContextoSesion) then
+      ADM.ContextoSesion.LogSesion(
+        '  AVISO: no se pudo persistir el error: ' +
+        AMensaje);
+  end;
 end;
 
 procedure PersistirErrorMaterializacion(

@@ -106,7 +106,7 @@ type
 implementation
 
 uses
-  inLibLog, inLibPivoteCompraCalculo;
+  inLibPivoteCompraCalculo;
 
 constructor TCachePivoteCompra.Create;
 begin
@@ -443,8 +443,8 @@ begin
             FCfg.ContextoSesion.Identidad.Usuario,
             iColor, iTalla);
           Result := Trim(ASku) <> '';
-          if Result and (inLibLog.Log() <> nil) then
-            inLibLog.Log.LogInfo(Format(
+          if Result and Assigned(FCfg.RegistroLog) then
+            FCfg.RegistroLog.RegistrarInformacion(Format(
               'PivoteCompra.ResolverSku: creado/asegurado sku=%s',
               [ASku]));
         end;
@@ -566,8 +566,8 @@ begin
     end;
   end;
   Result := ALineaReal <> '';
-  if Result and (inLibLog.Log() <> nil) then
-    inLibLog.Log.LogInfo(Format(
+  if Result and Assigned(FCfg.RegistroLog) then
+    FCfg.RegistroLog.RegistrarInformacion(Format(
       'PivoteCompra.CrearLinea: key=%d linea=%s sku=%s cantidad=%g',
       [AClave, ALineaReal, sSku, ACantidad]));
 end;

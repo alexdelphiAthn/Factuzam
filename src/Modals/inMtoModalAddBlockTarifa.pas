@@ -18,10 +18,9 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, System.Generics.Collections, System.Math,
+  System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls,
   Vcl.StdCtrls,
-  Data.DB, MemDS, DBAccess, Uni,
   cxGraphics, cxControls, cxLookAndFeels, cxClasses, cxContainer, cxEdit,
   cxLabel, cxButtons, cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar,
   cxCurrencyEdit, cxCheckBox, cxRadioGroup,
@@ -31,10 +30,11 @@ uses
   cxCustomData, cxStyles, dxScrollbarAnnotations, cxTL, cxDBData, Vcl.ComCtrls,
   dxCore, cxDateUtils, JvComponentBase, JvEnterTab, cxLocalization, cxSplitter,
   cxSpinEdit, cxCustomListBox, cxCheckListBox, cxGroupBox, cxInplaceContainer,
-  cxDBTL, cxTLData, cxPC;
+  cxDBTL, cxTLData, cxPC,
+  inLibCargaMasivaArticulosPersistenciaIntf;
 
 type
-  TAjusteAlcance = (aaSoloFinal, aaSoloSalida, aaAmbos);
+  TAjusteAlcance = TAjusteAlcanceCargaMasiva;
 
   TAddBlockTarifaResult = record
     Aceptado          : Boolean;
@@ -87,10 +87,7 @@ type
     // === Overrides ==========================================================
     function  ValidarAntesDePrevisualizar(out AMensaje: string): Boolean;
     override;
-    function  ColumnasSelectExtra: string; override;
-    function  SubquerYaCargado: string; override;
-    function  WhereExcluirYaCargados: string; override;
-    procedure VincularParametrosExtra(AQry: TUniQuery); override;
+    function ContextoCargaMasiva: TContextoCargaMasivaArticulos; override;
     function  TextoConfirmacion(ANumPendientes: Integer): string; override;
     function  TextoExito(ANumInsertados: Integer): string; override;
     function  TextoExcluirYaCargados: string; override;
@@ -105,16 +102,10 @@ type
     function  ObtenerCodigoTarifaOrigen: string;
     function  AlcanceAjusteActual: TAjusteAlcance;
 
-    function  AjustarPrecio(APrecio: Double): Double;
-    procedure CalcularPreciosFinales(APrecioOrigSalida,
-                                     APrecioOrigFinal: Double;
-                                     out APrecioSalida, APrecioFinal: Double;
-                                     out APorcenDto: Double);
-
   public
-    class function Ejecutar(AOwner: TComponent;
-                            AConn: TUniConnection;
-                            const ACodigoTarifa: string): TAddBlockTarifaResult;
+    class function Ejecutar(
+      AOwner: TComponent;
+      const ACodigoTarifa: string): TAddBlockTarifaResult;
     property ResultadoTarifa: TAddBlockTarifaResult read FResultadoTarifa;
   end;
 
@@ -129,8 +120,8 @@ uses
 //   API publica
 // ============================================================================
 
-class function TfrmModalAddBlockTarifa.Ejecutar(AOwner: TComponent;
-  AConn: TUniConnection;
+class function TfrmModalAddBlockTarifa.Ejecutar(
+  AOwner: TComponent;
   const ACodigoTarifa: string): TAddBlockTarifaResult;
 var
   frm: TfrmModalAddBlockTarifa;
@@ -139,7 +130,7 @@ begin
   frm := TfrmModalAddBlockTarifa.Create(AOwner);
   try
     frm.FCodigoTarifaIni := ACodigoTarifa;
-    frm.Inicializar(AConn);
+    frm.Inicializar;
     frm.CargarTarifas;
 
     if ACodigoTarifa <> '' then
@@ -182,31 +173,18 @@ end;
 
 procedure TfrmModalAddBlockTarifa.CargarTarifas;
 var
-  qry: TUniQuery;
+  aTarifas: TTarifasCargaMasiva;
+  oTarifa: TTarifaCargaMasiva;
 begin
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := FConn;
-    qry.SQL.Text :=
-      'SELECT CODIGO_TAR_ARTTAR, NOMBRE_TAR_TAR ' +
-      'FROM fza_tarifas ' +
-      'WHERE ESACTIVO_ARTTAR = ''S'' ' +
-      'ORDER BY ORDEN_TAR, CODIGO_TAR_ARTTAR';
-    qry.Open;
-    cbxTarifa.Properties.Items.Clear;
-    cbxTarifaOrigen.Properties.Items.Clear;
-    while not qry.Eof do
-    begin
-      cbxTarifa.Properties.Items.Add(
-        qry.FieldByName('CODIGO_TAR_ARTTAR').AsString + ' - ' +
-        qry.FieldByName('NOMBRE_TAR_TAR').AsString);
-      cbxTarifaOrigen.Properties.Items.Add(
-        qry.FieldByName('CODIGO_TAR_ARTTAR').AsString + ' - ' +
-        qry.FieldByName('NOMBRE_TAR_TAR').AsString);
-      qry.Next;
-    end;
-  finally
-    FreeAndNil(qry);
+  aTarifas := ConsultasCargaMasiva.ListarTarifas;
+  cbxTarifa.Properties.Items.Clear;
+  cbxTarifaOrigen.Properties.Items.Clear;
+  for oTarifa in aTarifas do
+  begin
+    cbxTarifa.Properties.Items.Add(
+      oTarifa.Codigo + ' - ' + oTarifa.Nombre);
+    cbxTarifaOrigen.Properties.Items.Add(
+      oTarifa.Codigo + ' - ' + oTarifa.Nombre);
   end;
 end;
 
@@ -269,60 +247,6 @@ begin
   end;
 end;
 
-function TfrmModalAddBlockTarifa.AjustarPrecio(APrecio: Double): Double;
-var
-  n, r, val: Double;
-begin
-  Result := APrecio;
-  if not chkAjustarPrecio.Checked then Exit;
-  if APrecio <= 0 then Exit;
-
-  n := spnMultiplo.Value;
-  r := spnRestar.Value;
-  if n <= 0 then Exit;
-
-  // Ceil hacia el siguiente múltiplo de n y luego resta "menos"
-  val := Ceil(APrecio / n) * n - r;
-  if val < 0 then val := 0;
-  Result := Round(val * 100) / 100;
-end;
-
-procedure TfrmModalAddBlockTarifa.CalcularPreciosFinales(
-  APrecioOrigSalida, APrecioOrigFinal: Double;
-  out APrecioSalida, APrecioFinal: Double; out APorcenDto: Double);
-var
-  baseSalida: Double;
-  alcance   : TAjusteAlcance;
-begin
-  APorcenDto := spnPorcenDto.Value;
-
-  if APrecioOrigSalida > 0 then
-    baseSalida := APrecioOrigSalida
-  else
-    baseSalida := APrecioOrigFinal;
-
-  APrecioSalida := baseSalida;
-
-  if APorcenDto > 0 then
-    APrecioFinal := baseSalida * (1 - APorcenDto / 100)
-  else
-    APrecioFinal := baseSalida;
-
-  if chkAjustarPrecio.Checked then
-  begin
-    alcance := AlcanceAjusteActual;
-    if alcance in [aaSoloSalida, aaAmbos] then
-      APrecioSalida := AjustarPrecio(APrecioSalida);
-    if alcance in [aaSoloFinal, aaAmbos] then
-      APrecioFinal := AjustarPrecio(APrecioFinal);
-
-    if (APrecioSalida > 0) and (APrecioSalida <> APrecioFinal) then
-      APorcenDto := (1 - APrecioFinal / APrecioSalida) * 100
-    else if APrecioSalida = APrecioFinal then
-      APorcenDto := 0;
-  end;
-end;
-
 // ============================================================================
 //   Overrides de la base
 // ============================================================================
@@ -362,69 +286,12 @@ begin
   Result := True;
 end;
 
-function TfrmModalAddBlockTarifa.ColumnasSelectExtra: string;
-var
-  tarOrigen: string;
+function TfrmModalAddBlockTarifa.ContextoCargaMasiva:
+  TContextoCargaMasivaArticulos;
 begin
-  tarOrigen := ObtenerCodigoTarifaOrigen;
-  if tarOrigen <> '' then
-  begin
-    Result :=
-      '(SELECT t.PRECIO_SALIDA_ARTTAR' +
-      '  FROM fza_articulos_tarifas t' +
-      ' WHERE t.CODIGO_ART_ARTTAR = a.CODIGO_ART_ART' +
-      '   AND t.CODIGO_TAR_ARTTAR = :P_TARIFA_ORIG_S' +
-      '   AND t.ESACTIVO_ARTTAR = ''S''' +
-      ' ORDER BY t.FECHA_DESDE_ARTTAR DESC LIMIT 1) AS PRECIO_SALIDA_ORIG, ' +
-      '(SELECT t.PRECIO_FINAL_ARTTAR' +
-      '  FROM fza_articulos_tarifas t' +
-      ' WHERE t.CODIGO_ART_ARTTAR = a.CODIGO_ART_ART' +
-      '   AND t.CODIGO_TAR_ARTTAR = :P_TARIFA_ORIG_F' +
-      '   AND t.ESACTIVO_ARTTAR = ''S''' +
-      ' ORDER BY t.FECHA_DESDE_ARTTAR DESC LIMIT 1) AS PRECIO_FINAL_ORIG,';
-  end
-  else
-    Result := '0 AS PRECIO_SALIDA_ORIG, 0 AS PRECIO_FINAL_ORIG,';
-end;
-
-function TfrmModalAddBlockTarifa.SubquerYaCargado: string;
-begin
-  Result :=
-    'CASE WHEN EXISTS (SELECT 1 FROM fza_articulos_tarifas ta' +
-    '                   WHERE ta.CODIGO_ART_ARTTAR = a.CODIGO_ART_ART' +
-    '                     AND ta.CODIGO_TAR_ARTTAR = :P_TARIFA_CHK)' +
-    '     THEN ''S'' ELSE ''N'' END';
-end;
-
-function TfrmModalAddBlockTarifa.WhereExcluirYaCargados: string;
-begin
-  Result :=
-    'NOT EXISTS (SELECT 1 FROM fza_articulos_tarifas tx' +
-    '             WHERE tx.CODIGO_ART_ARTTAR = a.CODIGO_ART_ART' +
-    '               AND tx.CODIGO_TAR_ARTTAR = :P_TARIFA_EXCL)';
-end;
-
-procedure TfrmModalAddBlockTarifa.VincularParametrosExtra(AQry: TUniQuery);
-
-  function HasParam(const N: string): Boolean;
-  begin
-    Result := AQry.Params.FindParam(N) <> nil;
-  end;
-
-var
-  tar, tarOrig: string;
-begin
-  tar     := ObtenerCodigoTarifaActual;
-  tarOrig := ObtenerCodigoTarifaOrigen;
-
-  if HasParam('P_TARIFA_CHK') then
-    AQry.ParamByName('P_TARIFA_CHK').AsString := tar;
-  if HasParam('P_TARIFA_EXCL') then
-    AQry.ParamByName('P_TARIFA_EXCL').AsString := tar;
-  if HasParam('P_TARIFA_ORIG_S') then
-    AQry.ParamByName('P_TARIFA_ORIG_S').AsString := tarOrig;
-  if HasParam('P_TARIFA_ORIG_F') then
-    AQry.ParamByName('P_TARIFA_ORIG_F').AsString := tarOrig;
+  Result.Modo := mcTarifa;
+  Result.CodigoTarifa := ObtenerCodigoTarifaActual;
+  Result.CodigoTarifaOrigen := ObtenerCodigoTarifaOrigen;
 end;
 
 function TfrmModalAddBlockTarifa.TextoConfirmacion(
@@ -458,137 +325,60 @@ end;
 //   Insercion real
 // ============================================================================
 
-function TfrmModalAddBlockTarifa.EjecutarInsercion(out ANumInsertados: Integer;
+function TfrmModalAddBlockTarifa.EjecutarInsercion(
+  out ANumInsertados: Integer;
   out ACodigos: TArray<string>): Boolean;
 var
-  ins        : TUniQuery;
-  codigoTar  : string;
-  usuario    : string;
-  codigos    : TList<string>;
-  precOrigSal, precOrigFin: Double;
-  precSalida, precFinal, dto: Double;
-  dtoEuros: Double;
+  oParametros: TParametrosInsercionTarifa;
+  oResultado: TResultadoInsercionCargaMasiva;
 begin
   Result := False;
   ANumInsertados := 0;
-  ACodigos := nil;
-
-  if (FSqlPreview = nil) or (not FSqlPreview.Active) or
-     (FSqlPreview.RecordCount = 0) then Exit;
-
-  codigoTar := ObtenerCodigoTarifaActual;
-  usuario   := IdentidadSesion.Usuario;
-
-  codigos := TList<string>.Create;
-  ins     := TUniQuery.Create(nil);
-  try
-    ins.Connection := FConn;
-    ins.SQL.Text :=
-      'INSERT INTO fza_articulos_tarifas (' +
-      '  CODIGO_ART_ARTTAR, CODIGO_UNIDAD_ARTTAR, CODIGO_TAR_ARTTAR,' +
-      '  ESACTIVO_ARTTAR, PRECIO_SALIDA_ARTTAR, PRECIO_FINAL_ARTTAR,' +
-      '  PRECIO_DTO_ARTTAR, PORCENTAJE_DTO_ARTTAR,' +
-      '  FECHA_DESDE_ARTTAR, FECHA_HASTA_ARTTAR,' +
-      '  USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA' +
-      ') VALUES (' +
-      '  :CODIGO_ART_ART, '''', :CODIGO_TAR_ARTTAR,' +
-      '  ''S'', :PRECIO_SALIDA, :PRECIO_FINAL,' +
-      '  :PRECIO_DTO, :PORCEN_DTO, :FECHA_DESDE, :FECHA_HASTA,' +
-      '  :USR, :USR2, NOW()' +
-      ')';
-
-    FSqlPreview.DisableControls;
-    FConn.StartTransaction;
+  SetLength(ACodigos, 0);
+  if Assigned(DatosPreview) and DatosPreview.Active and
+     (DatosPreview.RecordCount > 0) then
+  begin
+    oParametros.CodigoTarifa := ObtenerCodigoTarifaActual;
+    oParametros.CodigoTarifaOrigen := ObtenerCodigoTarifaOrigen;
+    oParametros.FechaDesde := dtFechaDesde.Date;
+    oParametros.FechaHasta := dtFechaHasta.Date;
+    oParametros.UsaFechaHasta := chkConFechaHasta.Checked;
+    oParametros.PorcentajeDescuento := spnPorcenDto.Value;
+    oParametros.AjustarPrecio := chkAjustarPrecio.Checked;
+    oParametros.MultiploAjuste := spnMultiplo.Value;
+    oParametros.RestarAjuste := spnRestar.Value;
+    oParametros.AlcanceAjuste := AlcanceAjusteActual;
+    oParametros.Usuario := IdentidadSesion.Usuario;
     try
-      FSqlPreview.First;
-      while not FSqlPreview.Eof do
-      begin
-        if FSqlPreview.FieldByName('YA_CARGADO').AsString = 'S' then
-        begin
-          FSqlPreview.Next;
-          Continue;
-        end;
-
-        if chkCopiarDeTarifa.Checked then
-        begin
-          precOrigSal := FSqlPreview.FieldByName('PRECIO_SALIDA_ORIG').AsFloat;
-          precOrigFin := FSqlPreview.FieldByName('PRECIO_FINAL_ORIG').AsFloat;
-        end
-        else
-        begin
-          precOrigSal := 0;
-          precOrigFin := 0;
-        end;
-
-        CalcularPreciosFinales(precOrigSal, precOrigFin,
-                               precSalida, precFinal, dto);
-
-        if (precOrigSal = 0) and (precOrigFin = 0) then
-        begin
-          precSalida := 0;
-          precFinal  := 0;
-          dto        := spnPorcenDto.Value;
-        end;
-
-        // Euros de descuento: salida - final (0 si no hay descuento real)
-        dtoEuros := precSalida - precFinal;
-        if dtoEuros < 0 then
-          dtoEuros := 0;
-
-        ins.ParamByName('CODIGO_ART_ART').AsString :=
-          FSqlPreview.FieldByName('CODIGO_ART_ART').AsString;
-        ins.ParamByName('CODIGO_TAR_ARTTAR').AsString  := codigoTar;
-        ins.ParamByName('PRECIO_SALIDA').AsFloat   := precSalida;
-        ins.ParamByName('PRECIO_FINAL').AsFloat    := precFinal;
-        ins.ParamByName('PRECIO_DTO').AsFloat      := dtoEuros;
-        ins.ParamByName('PORCEN_DTO').AsFloat      := dto;
-        ins.ParamByName('FECHA_DESDE').AsDateTime  := dtFechaDesde.Date;
-
-        if chkConFechaHasta.Checked then
-          ins.ParamByName('FECHA_HASTA').AsDateTime := dtFechaHasta.Date
-        else
-          ins.ParamByName('FECHA_HASTA').Clear;
-
-        ins.ParamByName('USR').AsString  := usuario;
-        ins.ParamByName('USR2').AsString := usuario;
-
-        ins.Execute;
-        codigos.Add(FSqlPreview.FieldByName('CODIGO_ART_ART').AsString);
-        Inc(ANumInsertados);
-
-        FSqlPreview.Next;
-      end;
-      FConn.Commit;
-      Result := True;
-      ACodigos := codigos.ToArray;
-
-      // Rellenar resultado especifico
-      FResultadoTarifa.Aceptado         := True;
-      FResultadoTarifa.NumInsertados    := ANumInsertados;
+      oResultado := InsercionesCargaMasiva.InsertarTarifa(
+        ConsultaPreview,
+        oParametros);
+      ANumInsertados := oResultado.NumeroLineas;
+      ACodigos := oResultado.CodigosArticulo;
+      FResultadoTarifa.Aceptado := True;
+      FResultadoTarifa.NumInsertados := ANumInsertados;
       FResultadoTarifa.ArticulosCodigos := ACodigos;
-      FResultadoTarifa.CodigoTarifa     := codigoTar;
-      FResultadoTarifa.FechaDesdeTarifa := dtFechaDesde.Date;
-      FResultadoTarifa.UsaFechaHasta    := chkConFechaHasta.Checked;
-      if chkConFechaHasta.Checked then
-        FResultadoTarifa.FechaHastaTarifa := dtFechaHasta.Date;
-      FResultadoTarifa.PorcenDtoDefecto := spnPorcenDto.Value;
-      FResultadoTarifa.AjustarPrecio    := chkAjustarPrecio.Checked;
-      FResultadoTarifa.MultiploAjuste   := spnMultiplo.Value;
-      FResultadoTarifa.RestarAjuste     := spnRestar.Value;
-      FResultadoTarifa.AlcanceAjuste    := AlcanceAjusteActual;
-      FResultadoTarifa.CopiarDeTarifa   := ObtenerCodigoTarifaOrigen;
+      FResultadoTarifa.CodigoTarifa := oParametros.CodigoTarifa;
+      FResultadoTarifa.FechaDesdeTarifa := oParametros.FechaDesde;
+      FResultadoTarifa.UsaFechaHasta := oParametros.UsaFechaHasta;
+      if oParametros.UsaFechaHasta then
+      begin
+        FResultadoTarifa.FechaHastaTarifa := oParametros.FechaHasta;
+      end;
+      FResultadoTarifa.PorcenDtoDefecto :=
+        oParametros.PorcentajeDescuento;
+      FResultadoTarifa.AjustarPrecio := oParametros.AjustarPrecio;
+      FResultadoTarifa.MultiploAjuste := oParametros.MultiploAjuste;
+      FResultadoTarifa.RestarAjuste := oParametros.RestarAjuste;
+      FResultadoTarifa.AlcanceAjuste := oParametros.AlcanceAjuste;
+      FResultadoTarifa.CopiarDeTarifa := oParametros.CodigoTarifaOrigen;
+      Result := True;
     except
       on E: Exception do
       begin
-        FConn.Rollback;
         ShowMessage(SErrorInsertarTarifaAddBlock + E.Message);
-        Result := False;
       end;
     end;
-  finally
-    FSqlPreview.EnableControls;
-    FreeAndNil(ins);
-    FreeAndNil(codigos);
   end;
 end;
 

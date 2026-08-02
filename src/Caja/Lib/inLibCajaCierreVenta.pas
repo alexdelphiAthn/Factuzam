@@ -18,31 +18,36 @@ interface
 uses
   inLibParametrosIntf, inLibContextoSesionIntf,
   inLibCajaVentaIntf, inLibFacturasPersistenciaIntf,
-  inLibVentasWsColaIntf;
+  inLibVentasWsColaIntf, inLibLogIntf;
 
 type
-  TServicioCierreVenta = class(TInterfacedObject, IServicioCierreVenta)
+  TCasoUsoCierreVentaCaja = class(
+    TInterfacedObject,
+    ICasoUsoCierreVentaCaja)
   private
-    FGrabador: IGrabadorVentaCaja;
+    FUnidadTrabajo: IUnidadTrabajoVentaCaja;
     FImpresor: IImpresorVenta;
     FParametrosCaja: IParametrosCaja;
     FContextoSesion: IContextoSesionAplicacion;
     FRepositorioPdf: IRepositorioPdfFactura;
     FRepositorioVentasWs: IRepositorioVentasWsCola;
+    FRegistroLog: IRegistroLog;
     procedure ArchivarPdf(
-      const ARutaPdf: string);
+      const ARutaPdf: string;
+      const APersistencia: TResultadoPersistenciaVentaCaja);
     function PrepararImpresion(
       const ASolicitud: TSolicitudCierreVenta;
-      const ANumeroGenerado: string
+      const APersistencia: TResultadoPersistenciaVentaCaja
     ): TSolicitudImpresionVenta;
   public
     constructor Create(
-      const AGrabador: IGrabadorVentaCaja;
+      const AUnidadTrabajo: IUnidadTrabajoVentaCaja;
       const AImpresor: IImpresorVenta;
       const AParametrosCaja: IParametrosCaja;
       const AContextoSesion: IContextoSesionAplicacion;
       const ARepositorioPdf: IRepositorioPdfFactura;
-      const ARepositorioVentasWs: IRepositorioVentasWsCola);
+      const ARepositorioVentasWs: IRepositorioVentasWsCola;
+      const ARegistroLog: IRegistroLog = nil);
     function Ejecutar(
       const ASolicitud: TSolicitudCierreVenta
     ): TResultadoCierreVenta;
@@ -52,27 +57,32 @@ implementation
 
 uses
   System.SysUtils, System.Classes, inLibVentasWsCola,
-  inLibFacturaPdfBlob, inLibLog;
+  inLibFacturaPdfBlob, inLibRegistroLogNulo;
 
-constructor TServicioCierreVenta.Create(
-  const AGrabador: IGrabadorVentaCaja;
+constructor TCasoUsoCierreVentaCaja.Create(
+  const AUnidadTrabajo: IUnidadTrabajoVentaCaja;
   const AImpresor: IImpresorVenta;
   const AParametrosCaja: IParametrosCaja;
   const AContextoSesion: IContextoSesionAplicacion;
   const ARepositorioPdf: IRepositorioPdfFactura;
-  const ARepositorioVentasWs: IRepositorioVentasWsCola);
+  const ARepositorioVentasWs: IRepositorioVentasWsCola;
+  const ARegistroLog: IRegistroLog);
 begin
   inherited Create;
-  FGrabador := AGrabador;
+  FUnidadTrabajo := AUnidadTrabajo;
   FImpresor := AImpresor;
   FParametrosCaja := AParametrosCaja;
   FContextoSesion := AContextoSesion;
   FRepositorioPdf := ARepositorioPdf;
   FRepositorioVentasWs := ARepositorioVentasWs;
+  FRegistroLog := ARegistroLog;
+  if not Assigned(FRegistroLog) then
+    FRegistroLog := CrearRegistroLogNulo;
 end;
 
-procedure TServicioCierreVenta.ArchivarPdf(
-  const ARutaPdf: string);
+procedure TCasoUsoCierreVentaCaja.ArchivarPdf(
+  const ARutaPdf: string;
+  const APersistencia: TResultadoPersistenciaVentaCaja);
 var
   sUsuario: string;
 begin
@@ -83,46 +93,51 @@ begin
     FParametrosCaja,
     FRepositorioVentasWs,
     sUsuario,
-    FGrabador.UltimaSerieFacturaGrabada,
-    FGrabador.UltimoNumeroFacturaGrabada,
-    ARutaPdf);
+    APersistencia.UltimaSerieFactura,
+    APersistencia.UltimoNumeroFactura,
+    ARutaPdf,
+    FRegistroLog);
   GuardarPdfFacturaEnBlob(
     FRepositorioPdf,
     FContextoSesion,
-    FGrabador.UltimaSerieFacturaGrabada,
-    FGrabador.UltimoNumeroFacturaGrabada,
+    APersistencia.UltimaSerieFactura,
+    APersistencia.UltimoNumeroFactura,
     ARutaPdf,
-    'TicketTermico');
+    'TicketTermico',
+    FRegistroLog);
 end;
 
-function TServicioCierreVenta.PrepararImpresion(
+function TCasoUsoCierreVentaCaja.PrepararImpresion(
   const ASolicitud: TSolicitudCierreVenta;
-  const ANumeroGenerado: string
+  const APersistencia: TResultadoPersistenciaVentaCaja
 ): TSolicitudImpresionVenta;
 begin
   Result.TipoImpresion := ASolicitud.TipoImpresion;
   Result.CodigoEmpresa := ASolicitud.Grabacion.CodigoEmpresa;
   Result.CodigoAlmacen := ASolicitud.Grabacion.CodigoAlmacen;
   Result.CodigoCaja := ASolicitud.Grabacion.CodigoCaja;
-  Result.NumeroOperacion := ANumeroGenerado;
-  Result.SerieFactura := FGrabador.SerieFacturaImpresion;
-  Result.NumeroFactura := FGrabador.NumeroFacturaImpresion;
+  Result.NumeroOperacion := APersistencia.NumeroOperacion;
+  Result.SerieFactura := APersistencia.SerieFacturaImpresion;
+  Result.NumeroFactura := APersistencia.NumeroFacturaImpresion;
   Result.FechaOperacion := ASolicitud.Grabacion.FechaOperacion;
   Result.DatosCobro := ASolicitud.Grabacion.DatosCobro;
 end;
 
-function TServicioCierreVenta.Ejecutar(
+function TCasoUsoCierreVentaCaja.Ejecutar(
   const ASolicitud: TSolicitudCierreVenta
 ): TResultadoCierreVenta;
 var
   Impresion: TSolicitudImpresionVenta;
+  Persistencia: TResultadoPersistenciaVentaCaja;
   RutasPdf: TStringList;
 begin
   Result := Default(TResultadoCierreVenta);
-  Result.Grabada := FGrabador.GrabarVenta(
-    ASolicitud.Grabacion,
-    Result.NumeroGenerado,
-    Result.CodigoValeGenerado);
+  Persistencia := FUnidadTrabajo.Ejecutar(
+    ASolicitud.Grabacion);
+  Result.Grabada := Persistencia.Grabada;
+  Result.NumeroGenerado := Persistencia.NumeroOperacion;
+  Result.CodigoValeGenerado :=
+    Persistencia.CodigoValeGenerado;
   if Result.Grabada then
   begin
     if Assigned(ASolicitud.Grabacion.DatosCobro) then
@@ -134,7 +149,7 @@ begin
     try
       Impresion := PrepararImpresion(
         ASolicitud,
-        Result.NumeroGenerado);
+        Persistencia);
       FImpresor.Imprimir(Impresion, RutasPdf);
       if RutasPdf.Count = 0 then
       begin
@@ -143,16 +158,18 @@ begin
         except
           on E: Exception do
           begin
-            Log.LogError(
+            FRegistroLog.RegistrarError(
               'No se pudo generar el PDF de respaldo del ticket ' +
-              FGrabador.UltimaSerieFacturaGrabada + '\' +
-              FGrabador.UltimoNumeroFacturaGrabada + ': ' +
+              Persistencia.UltimaSerieFactura + '\' +
+              Persistencia.UltimoNumeroFactura + ': ' +
               E.Message);
           end;
         end;
       end;
       if RutasPdf.Count > 0 then
-        ArchivarPdf(RutasPdf[RutasPdf.Count - 1]);
+        ArchivarPdf(
+          RutasPdf[RutasPdf.Count - 1],
+          Persistencia);
     finally
       FreeAndNil(RutasPdf);
     end;

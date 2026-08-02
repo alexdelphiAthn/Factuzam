@@ -32,7 +32,7 @@ unit inLibDiag;
 interface
 
 uses
-  Data.DB;
+  Data.DB, inLibLogIntf;
 
 type
   TIncidenciaMetadataCampo = record
@@ -51,13 +51,14 @@ function MensajeCampoBooleanoNumerico(
   const AIncidencia: TIncidenciaMetadataCampo): string;
 procedure DiagnosticarCamposBooleanos(
   ADataSet: TDataSet;
-  const AContexto: string);
+  const AContexto: string;
+  const ARegistroLog: IRegistroLog);
 
 implementation
 
 uses
   System.SysUtils, System.StrUtils, System.TypInfo,
-  inLibLog, inLibMsgIntegraciones;
+  inLibMsgIntegraciones;
 
 // Cada capa concatena su nombre a la traza para que el compilador
 // no pueda colapsar la llamada (tail call) ni inlinearla. Así
@@ -150,7 +151,8 @@ end;
 
 procedure DiagnosticarCamposBooleanos(
   ADataSet: TDataSet;
-  const AContexto: string);
+  const AContexto: string;
+  const ARegistroLog: IRegistroLog);
 var
   aIncidencias: TIncidenciasMetadataCampos;
   i: Integer;
@@ -158,9 +160,10 @@ begin
   aIncidencias :=
     DetectarCamposBooleanosNumericos(ADataSet);
   for i := 0 to Length(aIncidencias) - 1 do
-    inLibLog.Log.LogError(
-      MensajeCampoBooleanoNumerico(
-        AContexto, aIncidencias[i]));
+    if Assigned(ARegistroLog) then
+      ARegistroLog.RegistrarError(
+        MensajeCampoBooleanoNumerico(
+          AContexto, aIncidencias[i]));
 end;
 
 end.

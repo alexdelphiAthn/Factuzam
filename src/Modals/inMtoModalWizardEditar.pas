@@ -159,7 +159,7 @@ implementation
 {$R *.dfm}
 
 uses
-  UniDataConn, inLibUser, inLibGlobalVar, inLibLog,
+  UniDataConn, inLibUser, inLibGlobalVar,
   inLibMsgComun;
 
 const
@@ -216,7 +216,7 @@ begin
     // Si la version de TJvWizard difiere y estas propiedades no
     // existen, no es critico: el wizard sigue funcionando.
     on E: Exception do
-      inLibLog.Log.LogWarning(
+      RegistroLog.RegistrarAviso(
         'WizardEditar: cabeceras del asistente no aplicadas: ' +
         E.Message);
   end;
@@ -547,7 +547,7 @@ begin
     except
       // El llamador cae al plan B (parseo del SQL) con Result=False.
       on E: Exception do
-        inLibLog.Log.LogWarning(
+        RegistroLog.RegistrarAviso(
           'WizardEditar: apertura temporal de la guia fallo: ' +
           E.Message);
     end;

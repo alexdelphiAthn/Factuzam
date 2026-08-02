@@ -45,6 +45,8 @@ type
     [Test]
     procedure Procesador_ConservaElPrimeroYLaParadaEsIdempotente;
     [Test]
+    procedure Procesador_FalloInicio_NoQuedaRegistrado;
+    [Test]
     procedure ProcesadorAusente_FallaDeFormaRuidosa;
     [Test]
     procedure ProcesadorUniDAC_SinConexionesFallaDeFormaRuidosa;
@@ -138,6 +140,7 @@ type
     TInterfacedObject,
     IProcesadorVerifactuCola)
   public
+    FallaAlIniciar: Boolean;
     Inicios: Integer;
     Paradas: Integer;
     procedure Iniciar;
@@ -228,6 +231,8 @@ end;
 procedure TProcesadorVerifactuColaFalso.Iniciar;
 begin
   Inc(Inicios);
+  if FallaAlIniciar then
+    raise EInvalidOpException.Create('Fallo de inicio simulado');
 end;
 
 procedure TProcesadorVerifactuColaFalso.Detener;
@@ -434,6 +439,33 @@ begin
   Assert.AreEqual(1, Primero.Paradas);
   Assert.AreEqual(0, Segundo.Inicios);
   Assert.AreEqual(0, Segundo.Paradas);
+end;
+
+procedure TPruebasVerifactuColaRepositorio.
+  Procesador_FalloInicio_NoQuedaRegistrado;
+var
+  ContratoPrimero: IProcesadorVerifactuCola;
+  ContratoSegundo: IProcesadorVerifactuCola;
+  Primero: TProcesadorVerifactuColaFalso;
+  Segundo: TProcesadorVerifactuColaFalso;
+begin
+  Primero := TProcesadorVerifactuColaFalso.Create;
+  Primero.FallaAlIniciar := True;
+  Segundo := TProcesadorVerifactuColaFalso.Create;
+  ContratoPrimero := Primero;
+  ContratoSegundo := Segundo;
+  Assert.WillRaise(
+    procedure
+    begin
+      TVerifactuCola.IniciarHilo(ContratoPrimero);
+    end,
+    EInvalidOpException);
+  TVerifactuCola.IniciarHilo(ContratoSegundo);
+  TVerifactuCola.DetenerHilo;
+  Assert.AreEqual(1, Primero.Inicios);
+  Assert.AreEqual(0, Primero.Paradas);
+  Assert.AreEqual(1, Segundo.Inicios);
+  Assert.AreEqual(1, Segundo.Paradas);
 end;
 
 procedure TPruebasVerifactuColaRepositorio.

@@ -24,15 +24,15 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  System.UITypes, Vcl.ExtCtrls, Vcl.StdCtrls, Data.DB, MemDS,
-  DBAccess, Uni,
+  System.UITypes, Vcl.ExtCtrls, Vcl.StdCtrls, Data.DB,
   inMtoFrmBase, JvComponentBase, JvEnterTab,
   cxClasses, cxLocalization, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, Vcl.Menus, cxButtons, cxContainer, cxEdit, cxLabel,
   cxTextEdit, cxButtonEdit, cxMaskEdit, cxDropDownEdit, cxRadioGroup, cxStyles,
   cxCustomData, cxFilter, cxData, cxDataStorage, cxDBData, cxGridLevel,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
-  cxGridDBTableView, cxGrid;
+  cxGridDBTableView, cxGrid,
+  inLibFacturacionAlbaranesCompraPersistenciaIntf;
 
 type
   TfrmModalFacturarAlbaranes = class(TfrmBase)
@@ -70,19 +70,15 @@ type
     procedure btnSalirClick(Sender: TObject);
     procedure rgModoPropertiesEditValueChanged(Sender: TObject);
   private
-    // Campos primero (E2169): conexion y datasets de trabajo.
-    FConn:       TUniConnection;
-    FQryAlb:     TUniQuery;
-    FDsAlb:      TDataSource;
-    FQryFac:     TUniQuery;
-    FSp:         TUniStoredProc;
-    FFacSeries:  TStringList;
+    FRepositorio: IRepositorioFacturacionAlbaranesCompra;
+    FConsultaAlbaranes: IConsultaFacturacionAlbaranesCompra;
+    FDsAlb: TDataSource;
+    FFacSeries: TStringList;
     FFacNumeros: TStringList;
     FConfirmado: Boolean;
-    FFacSerie:   string;
-    FFacNumero:  string;
+    FFacSerie: string;
+    FFacNumero: string;
     procedure ActualizarModo;
-    procedure DefinirParamsSp;
     procedure CargarProveedorNombre(const APrv: string);
     procedure CargarFacturasAbiertas(const AEmp, APrv: string);
     procedure RecogerAlbaranes(ASeries, ANumeros: TStringList);
@@ -112,36 +108,19 @@ begin
   FConfirmado := False;
   FFacSeries  := TStringList.Create;
   FFacNumeros := TStringList.Create;
-  FConn := ConexionPrincipal;
-  // Query de albaranes candidatos (pendientes de facturar). El DataSource se
-  // engancha al grid por codigo para no depender de un data module.
-  FQryAlb := TUniQuery.Create(Self);
-  FQryAlb.Connection := FConn;
-  FQryAlb.SQL.Text :=
-    'SELECT NUMERO_ALBC, SERIE_ALBC, FECHA_ALBC, REF_PROVEEDOR_ALBC, ' +
-    '       RAZON_SOCIAL_PRV_ALBC, TOTAL_LIQUIDO_ALBC, ESTADO_ALBC ' +
-    '  FROM fza_albaranes_compra ' +
-    ' WHERE CODIGO_EMP_ALBC = :emp AND CODIGO_PRV_ALBC = :prv ' +
-    '   AND COALESCE(ESTADO_ALBC, '''') NOT IN (''FACTURADO'', ''CANCELADO'') ' +
-    ' ORDER BY FECHA_ALBC, NUMERO_ALBC';
+  FRepositorio := ContextoRepositoriosPantalla.Documentos.
+    CrearRepositorioFacturacionAlbaranesCompra;
   FDsAlb := TDataSource.Create(Self);
-  FDsAlb.DataSet := FQryAlb;
   tvAlb.DataController.DataSource := FDsAlb;
-  // Query de facturas abiertas (para el modo "incorporar").
-  FQryFac := TUniQuery.Create(Self);
-  FQryFac.Connection := FConn;
-  // Stored proc de facturacion con sus parametros fijados una vez.
-  FSp := TUniStoredProc.Create(Self);
-  FSp.Connection := FConn;
-  FSp.StoredProcName := 'PRC_FACC_FACTURAR_ALBARAN';
-  DefinirParamsSp;
   rgModo.ItemIndex := 0;
   ActualizarModo;
 end;
 
 procedure TfrmModalFacturarAlbaranes.FormDestroy(Sender: TObject);
 begin
-  // Las queries / datasource / sp se liberan con el form (Owner = Self).
+  FDsAlb.DataSet := nil;
+  FConsultaAlbaranes := nil;
+  FRepositorio := nil;
   FreeAndNil(FFacSeries);
   FreeAndNil(FFacNumeros);
   inherited;
@@ -165,21 +144,6 @@ begin
       btnProveedorPropertiesButtonClick(btnProveedor, 0);
     end;
   end;
-end;
-
-procedure TfrmModalFacturarAlbaranes.DefinirParamsSp;
-begin
-  // Orden EXACTO de la firma de PRC_FACC_FACTURAR_ALBARAN (5 IN + 3 OUT):
-  // los parametros de CALL en MySQL/MariaDB se enlazan por posicion.
-  FSp.Params.Clear;
-  FSp.Params.CreateParam(ftString,  'p_SERIE_ALB',     ptInput);
-  FSp.Params.CreateParam(ftString,  'p_NUMERO_ALB',    ptInput);
-  FSp.Params.CreateParam(ftString,  'p_SERIE_FAC',     ptInput);
-  FSp.Params.CreateParam(ftString,  'p_NUMERO_FAC',    ptInput);
-  FSp.Params.CreateParam(ftString,  'p_USUARIO',       ptInput);
-  FSp.Params.CreateParam(ftString,  'p_SERIE_FAC_OUT', ptOutput);
-  FSp.Params.CreateParam(ftString,  'p_NUMERO_FAC_OUT',ptOutput);
-  FSp.Params.CreateParam(ftInteger, 'p_RESULTADO',     ptOutput);
 end;
 
 procedure TfrmModalFacturarAlbaranes.SetContexto(const AEmpresa,
@@ -206,57 +170,34 @@ begin
 end;
 
 procedure TfrmModalFacturarAlbaranes.CargarProveedorNombre(const APrv: string);
-var
-  q: TUniQuery;
 begin
   lblNombrePrv.Caption := '';
-  if APrv = '' then
-    Exit;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FConn;
-    q.SQL.Text :=
-      'SELECT NOMBRE_PRV FROM fza_proveedores WHERE CODIGO_PRV_PRV = :p';
-    q.ParamByName('p').AsString := APrv;
-    q.Open;
-    if not q.Eof then
-      lblNombrePrv.Caption := q.FieldByName('NOMBRE_PRV').AsString;
-  finally
-    FreeAndNil(q);
-  end;
+  if APrv <> '' then
+    lblNombrePrv.Caption := FRepositorio.BuscarNombreProveedor(APrv);
 end;
 
 procedure TfrmModalFacturarAlbaranes.CargarFacturasAbiertas(const AEmp,
                                                             APrv: string);
+var
+  Factura: TFacturaCompraAbierta;
+  Facturas: TFacturasCompraAbiertas;
 begin
   FFacSeries.Clear;
   FFacNumeros.Clear;
   cbbFacExistente.Properties.Items.Clear;
   cbbFacExistente.ItemIndex := -1;
-  FQryFac.Close;
-  FQryFac.SQL.Text :=
-    'SELECT SERIE_FACC, NUMERO_FACC, FECHA_FACC, TOTAL_LIQUIDO_FACC ' +
-    '  FROM fza_facturas_compra ' +
-    ' WHERE CODIGO_EMP_FACC = :emp AND CODIGO_PRV_FACC = :prv ' +
-    '   AND COALESCE(ESTADO_FACC, '''') IN (''ABIERTA'', ''CERRADA'') ' +
-    ' ORDER BY FECHA_FACC DESC, NUMERO_FACC DESC';
-  FQryFac.ParamByName('emp').AsString := AEmp;
-  FQryFac.ParamByName('prv').AsString := APrv;
-  FQryFac.Open;
-  while not FQryFac.Eof do
+  Facturas := FRepositorio.ListarFacturasAbiertas(AEmp, APrv);
+  for Factura in Facturas do
   begin
     // Listas paralelas: el ItemIndex del combo indexa serie/numero reales.
-    FFacSeries.Add(FQryFac.FieldByName('SERIE_FACC').AsString);
-    FFacNumeros.Add(FQryFac.FieldByName('NUMERO_FACC').AsString);
+    FFacSeries.Add(Factura.Serie);
+    FFacNumeros.Add(Factura.Numero);
     cbbFacExistente.Properties.Items.Add(
       FormatearDocumentoEmpresa(ConexionPrincipal, AEmp,
-        FQryFac.FieldByName('SERIE_FACC').AsString,
-        FQryFac.FieldByName('NUMERO_FACC').AsString) + '   (' +
-      FormatDateTime('dd/mm/yyyy',
-        FQryFac.FieldByName('FECHA_FACC').AsDateTime) + ')');
-    FQryFac.Next;
+        Factura.Serie,
+        Factura.Numero) + '   (' +
+      FormatDateTime('dd/mm/yyyy', Factura.Fecha) + ')');
   end;
-  FQryFac.Close;
 end;
 
 procedure TfrmModalFacturarAlbaranes.btnCargarClick(Sender: TObject);
@@ -271,12 +212,13 @@ begin
   else
   begin
     CargarProveedorNombre(sPrv);
-    FQryAlb.Close;
-    FQryAlb.ParamByName('emp').AsString := sEmp;
-    FQryAlb.ParamByName('prv').AsString := sPrv;
-    FQryAlb.Open;
+    FDsAlb.DataSet := nil;
+    FConsultaAlbaranes := FRepositorio.ConsultarAlbaranesPendientes(
+      sEmp,
+      sPrv);
+    FDsAlb.DataSet := FConsultaAlbaranes.DataSet;
     CargarFacturasAbiertas(sEmp, sPrv);
-    if FQryAlb.IsEmpty then
+    if FConsultaAlbaranes.DataSet.IsEmpty then
       ShowMessage(SInfoAlbaranesPendientesProveedorNoEncontrados);
   end;
 end;
@@ -284,26 +226,35 @@ end;
 procedure TfrmModalFacturarAlbaranes.btnEmpresaPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
+  Consulta: IConsultaFacturacionAlbaranesCompra;
+  Datos: TDataSet;
   sVal: string;
 begin
   inherited;
-  // Caja de busqueda modal generica (TfrmMtoSearch via inLibGenBusq).
-  if BusquedaVisual.EjecutarBusqueda(ConexionPrincipal, 'Buscar empresa',
-       'SELECT * FROM fza_empresas ORDER BY RAZON_SOCIAL_EMP',
-       'CODIGO_EMP_EMP', sVal, 'srchEmpFacAlb', Self) then
+  Consulta := FRepositorio.ConsultarEmpresas;
+  Datos := Consulta.DataSet;
+  if BusquedaVisual.EjecutarBusquedaDataSet(
+       'Buscar empresa', Datos, 'srchEmpFacAlb', Self) then
+  begin
+    sVal := Datos.FieldByName('CODIGO_EMP_EMP').AsString;
     btnEmpresa.Text := sVal;
+  end;
 end;
 
 procedure TfrmModalFacturarAlbaranes.btnProveedorPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
+  Consulta: IConsultaFacturacionAlbaranesCompra;
+  Datos: TDataSet;
   sVal: string;
 begin
   inherited;
-  if BusquedaVisual.EjecutarBusqueda(ConexionPrincipal, 'Buscar proveedor',
-       'SELECT * FROM fza_proveedores ORDER BY NOMBRE_PRV',
-       'CODIGO_PRV_PRV', sVal, 'srchPrvFacAlb', Self) then
+  Consulta := FRepositorio.ConsultarProveedores;
+  Datos := Consulta.DataSet;
+  if BusquedaVisual.EjecutarBusquedaDataSet(
+       'Buscar proveedor', Datos, 'srchPrvFacAlb', Self) then
   begin
+    sVal := Datos.FieldByName('CODIGO_PRV_PRV').AsString;
     btnProveedor.Text := sVal;
     CargarProveedorNombre(sVal);
   end;
@@ -312,6 +263,7 @@ end;
 procedure TfrmModalFacturarAlbaranes.RecogerAlbaranes(ASeries,
                                                       ANumeros: TStringList);
 var
+  Datos: TDataSet;
   i, ri: Integer;
 begin
   ASeries.Clear;
@@ -328,22 +280,25 @@ begin
     end;
   end
   // Sin seleccion: ofrecer facturar TODOS los albaranes listados.
-  else if FQryAlb.Active and (not FQryAlb.IsEmpty) then
+  else if (FConsultaAlbaranes <> nil) and
+          FConsultaAlbaranes.DataSet.Active and
+          (not FConsultaAlbaranes.DataSet.IsEmpty) then
   begin
     if MessageDlg(SPreguntaFacturarTodosAlbaranesListados,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
-      FQryAlb.DisableControls;
+      Datos := FConsultaAlbaranes.DataSet;
+      Datos.DisableControls;
       try
-        FQryAlb.First;
-        while not FQryAlb.Eof do
+        Datos.First;
+        while not Datos.Eof do
         begin
-          ASeries.Add(FQryAlb.FieldByName('SERIE_ALBC').AsString);
-          ANumeros.Add(FQryAlb.FieldByName('NUMERO_ALBC').AsString);
-          FQryAlb.Next;
+          ASeries.Add(Datos.FieldByName('SERIE_ALBC').AsString);
+          ANumeros.Add(Datos.FieldByName('NUMERO_ALBC').AsString);
+          Datos.Next;
         end;
       finally
-        FQryAlb.EnableControls;
+        Datos.EnableControls;
       end;
     end;
   end;
@@ -365,7 +320,8 @@ end;
 
 procedure TfrmModalFacturarAlbaranes.btnFacturarClick(Sender: TObject);
 var
-  i, nOk, nSkip, res: Integer;
+  i, nOk, nSkip: Integer;
+  Resultado: TResultadoFacturacionAlbaranCompra;
   sSerieAcum, sNumAcum: string;
   lSeries, lNumeros: TStringList;
   bSeguir: Boolean;
@@ -391,19 +347,18 @@ begin
       nSkip := 0;
       for i := 0 to lSeries.Count - 1 do
       begin
-        FSp.ParamByName('p_SERIE_ALB').AsString  := lSeries[i];
-        FSp.ParamByName('p_NUMERO_ALB').AsString := lNumeros[i];
-        FSp.ParamByName('p_SERIE_FAC').AsString  := sSerieAcum;
-        FSp.ParamByName('p_NUMERO_FAC').AsString := sNumAcum;
-        FSp.ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
-        FSp.ExecProc;
-        res := FSp.ParamByName('p_RESULTADO').AsInteger;
-        if res = 1 then
+        Resultado := FRepositorio.FacturarAlbaran(
+          lSeries[i],
+          lNumeros[i],
+          sSerieAcum,
+          sNumAcum,
+          IdentidadSesion.Usuario);
+        if Resultado.Procesado then
         begin
           // La 1a llamada deja la factura (nueva o la elegida); las
           // siguientes acumulan en ella.
-          sSerieAcum := FSp.ParamByName('p_SERIE_FAC_OUT').AsString;
-          sNumAcum   := FSp.ParamByName('p_NUMERO_FAC_OUT').AsString;
+          sSerieAcum := Resultado.SerieFactura;
+          sNumAcum := Resultado.NumeroFactura;
           Inc(nOk);
         end
         else

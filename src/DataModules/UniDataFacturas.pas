@@ -262,7 +262,7 @@ implementation
 
 uses
   inLibValoresAutomaticos,
-  inLibLog,
+
   System.Diagnostics,
   inLibFacturas,
   inLibData,
@@ -1354,7 +1354,7 @@ begin
   AbrirSiCerrada(unqryTarifas);
   AbrirSiCerrada(unqryPaisesCli);
   AbrirSiCerrada(unqryPaisesEmp);
-  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+  RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmFacturas.RefrescarAlmacenes(const ACodigoEmpresa: string);
@@ -1416,12 +1416,12 @@ begin
   try
     RellenarParamsDesdeMaestro(unqryRecibos);
     unqryRecibos.Open;
-    inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryRecibos OK',
+    RegistroLog.RegistrarRendimiento('Facturas.Lazy', 'unqryRecibos OK',
       swQ.ElapsedMilliseconds);
   except
     on E: Exception do
     begin
-      inLibLog.Log.LogPerf('Facturas.Lazy',
+      RegistroLog.RegistrarRendimiento('Facturas.Lazy',
         'unqryRecibos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
       raise;
     end;
@@ -1437,12 +1437,12 @@ begin
     try
       RellenarParamsDesdeMaestro(unqryEfectosVenta);
       unqryEfectosVenta.Open;
-      inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryEfectosVenta OK',
+      RegistroLog.RegistrarRendimiento('Facturas.Lazy', 'unqryEfectosVenta OK',
         swQ.ElapsedMilliseconds);
     except
       on E: Exception do
       begin
-        inLibLog.Log.LogPerf('Facturas.Lazy',
+        RegistroLog.RegistrarRendimiento('Facturas.Lazy',
           'unqryEfectosVenta ERROR=' + E.Message, swQ.ElapsedMilliseconds);
         raise;
       end;
@@ -1551,12 +1551,12 @@ begin
   try
     RellenarParamsDesdeMaestro(unqryConsolidacion);
     unqryConsolidacion.Open;
-    inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryConsolidacion OK',
+    RegistroLog.RegistrarRendimiento('Facturas.Lazy', 'unqryConsolidacion OK',
       swQ.ElapsedMilliseconds);
   except
     on E: Exception do
     begin
-      inLibLog.Log.LogPerf('Facturas.Lazy',
+      RegistroLog.RegistrarRendimiento('Facturas.Lazy',
         'unqryConsolidacion ERROR=' + E.Message, swQ.ElapsedMilliseconds);
       raise;
     end;
@@ -1571,12 +1571,12 @@ begin
   try
     RellenarParamsDesdeMaestro(unqryErrores);
     unqryErrores.Open;
-    inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryErrores OK',
+    RegistroLog.RegistrarRendimiento('Facturas.Lazy', 'unqryErrores OK',
       swQ.ElapsedMilliseconds);
   except
     on E: Exception do
     begin
-      inLibLog.Log.LogPerf('Facturas.Lazy',
+      RegistroLog.RegistrarRendimiento('Facturas.Lazy',
         'unqryErrores ERROR=' + E.Message, swQ.ElapsedMilliseconds);
       raise;
     end;
@@ -1591,12 +1591,12 @@ begin
   try
     RellenarParamsDesdeMaestro(unqryMovimientosFac);
     unqryMovimientosFac.Open;
-    inLibLog.Log.LogPerf('Facturas.Lazy', 'unqryMovimientosFac OK',
+    RegistroLog.RegistrarRendimiento('Facturas.Lazy', 'unqryMovimientosFac OK',
       swQ.ElapsedMilliseconds);
   except
     on E: Exception do
     begin
-      inLibLog.Log.LogPerf('Facturas.Lazy',
+      RegistroLog.RegistrarRendimiento('Facturas.Lazy',
         'unqryMovimientosFac ERROR=' + E.Message, swQ.ElapsedMilliseconds);
       raise;
     end;

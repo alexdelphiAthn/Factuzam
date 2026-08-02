@@ -17,7 +17,8 @@ interface
 
 uses
   inLibCatalogoSqlIntf,
-  inLibPerfilesUsuarioIntf;
+  inLibPerfilesUsuarioIntf,
+  inLibLogIntf;
 
 function CrearRegistroDefinicionesSqlAplicacion:
   IRegistroDefinicionesSql;
@@ -26,7 +27,8 @@ procedure CrearCatalogoSqlAplicacion(
   const APerfilesEscritura: IEscritorPerfilesUsuario;
   AActivo: Boolean;
   out ACatalogo: ICatalogoSql;
-  out AIncidencias: IRegistroIncidenciasSql);
+  out AIncidencias: IRegistroIncidenciasSql;
+  const ARegistroLog: IRegistroLog = nil);
 
 implementation
 
@@ -36,7 +38,6 @@ uses
   inLibCatalogoSqlIncidencias,
   inLibCatalogoSqlPerfiles,
   inLibCatalogoSqlAdmin,
-  inLibLog,
   UniDataComprasSesionesMaterializacionRepositorio,
   UniDataComprasSesionesRepositorio,
   UniDataFacturasRepositorio,
@@ -94,7 +95,8 @@ procedure CrearCatalogoSqlAplicacion(
   const APerfilesEscritura: IEscritorPerfilesUsuario;
   AActivo: Boolean;
   out ACatalogo: ICatalogoSql;
-  out AIncidencias: IRegistroIncidenciasSql);
+  out AIncidencias: IRegistroIncidenciasSql;
+  const ARegistroLog: IRegistroLog);
 var
   oAdministrador: TAdministradorSqlPerfiles;
   oPerfil: TProfileDicc;
@@ -128,8 +130,8 @@ begin
       on E: Exception do
       begin
         FreeAndNil(oPerfil);
-        if Log() <> nil then
-          Log.LogError(
+        if Assigned(ARegistroLog) then
+          ARegistroLog.RegistrarError(
             Format(
               SErrorCatalogoSqlAplicacion,
               [E.Message]));

@@ -141,7 +141,8 @@ begin
     AConfig.ContextoSesion,
     AConfig.BusquedaVisual,
     AConfig.ValidadorArticulos,
-    AConfig.LookupAtributos);
+    AConfig.LookupAtributos,
+    AConfig.RegistroLog);
   try
     Result := TModoEntradaDesglose.Create(AConfig, Grid);
     Grid := nil;

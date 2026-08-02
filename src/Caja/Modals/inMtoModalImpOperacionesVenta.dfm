@@ -1001,14 +1001,7 @@
       end
     end
   end
-  object unqryVentasPrint: TUniQuery
-    SQL.Strings = (
-      'SELECT * FROM fza_caja_operaciones')
-    Left = 216
-    Top = 16
-  end
   object dsVentasPrint: TDataSource
-    DataSet = unqryVentasPrint
     Left = 216
     Top = 72
   end

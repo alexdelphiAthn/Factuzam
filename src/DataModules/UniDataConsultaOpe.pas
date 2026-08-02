@@ -42,7 +42,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, Data.DB, Uni, MemDS, DBAccess,
-  inLibInteraccionDatosIntf;
+  inLibInteraccionDatosIntf, inLibLogIntf;
 
 type
   TdmConsultaOpe = class(TDataModule)
@@ -67,6 +67,7 @@ type
     procedure DataModuleCreate(Sender: TObject);
   private
     FConexion: TUniConnection;
+    FRegistroLog: IRegistroLog;
     FCargando: Boolean;
     // Clave (Emp|Alm|Caja|NumOp) de la ultima operacion para la que se
     // refrescaron las pestanas hijas. Si una nueva llamada a
@@ -93,7 +94,8 @@ type
   public
     constructor Create(
       AOwner: TComponent;
-      AConexion: TUniConnection); reintroduce;
+      AConexion: TUniConnection;
+      const ARegistroLog: IRegistroLog); reintroduce;
     procedure CargarMaestro(AFecha:     TDate;
                             const AEmp,
                                   AAlm,
@@ -127,16 +129,20 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibLog, inLibMsgComun, UniDataRectificativasSql;
+uses inLibMsgComun, UniDataRectificativasSql;
 
 {$R *.dfm}
 
 // -----------------------------------------------------------------------------
 constructor TdmConsultaOpe.Create(
   AOwner: TComponent;
-  AConexion: TUniConnection);
+  AConexion: TUniConnection;
+  const ARegistroLog: IRegistroLog);
 begin
+  if not Assigned(ARegistroLog) then
+    raise EArgumentNilException.Create('ARegistroLog');
   FConexion := AConexion;
+  FRegistroLog := ARegistroLog;
   inherited Create(AOwner);
 end;
 
@@ -490,11 +496,13 @@ begin
   sClave := AEmp + '|' + AAlm + '|' + ACaja + '|' + ANumOp;
   if sClave = FUltimaClaveHijas then
   begin
-    Log.LogInfo(Format('CargarDetalleOperacion: SKIP (misma op "%s")',
+    FRegistroLog.RegistrarInformacion(
+      Format('CargarDetalleOperacion: SKIP (misma op "%s")',
                        [sClave]));
     Exit;
   end;
-  Log.LogInfo(Format('CargarDetalleOperacion: cargando op "%s" (prev="%s")',
+  FRegistroLog.RegistrarInformacion(
+    Format('CargarDetalleOperacion: cargando op "%s" (prev="%s")',
                      [sClave, FUltimaClaveHijas]));
   // --- Operacion ---
   qryOperacion.Close;
@@ -570,18 +578,21 @@ var
 begin
   if FCargando then
   begin
-    Log.LogInfo('RefrescarPestanasHijas: BLOQUEADA por FCargando=True');
+    FRegistroLog.RegistrarInformacion(
+      'RefrescarPestanasHijas: BLOQUEADA por FCargando=True');
     Exit;
   end;
   if qryMaestro.IsEmpty then
   begin
     if FUltimaClaveHijas <> '' then
     begin
-      Log.LogInfo('RefrescarPestanasHijas: maestro vacio, cerrando hijas');
+      FRegistroLog.RegistrarInformacion(
+        'RefrescarPestanasHijas: maestro vacio, cerrando hijas');
       CerrarPestanasHijas;
     end
     else
-      Log.LogInfo('RefrescarPestanasHijas: maestro vacio (no-op, ya cerradas)');
+      FRegistroLog.RegistrarInformacion(
+        'RefrescarPestanasHijas: maestro vacio (no-op, ya cerradas)');
     Exit;
   end;
   sEmp    := qryMaestro.FieldByName('CODIGO_EMP_OPCAJA').AsString;
@@ -618,11 +629,13 @@ begin
                    '|' + ATextoLibre;
   if sClaveMaestro = FUltimaClaveMaestro then
   begin
-    Log.LogInfo(Format('CargarMaestro: SKIP (mismos params "%s")',
+    FRegistroLog.RegistrarInformacion(
+      Format('CargarMaestro: SKIP (mismos params "%s")',
                        [sClaveMaestro]));
     Exit;
   end;
-  Log.LogInfo(Format('CargarMaestro: fecha=%s emp="%s" alm="%s" caja="%s" ' +
+  FRegistroLog.RegistrarInformacion(
+    Format('CargarMaestro: fecha=%s emp="%s" alm="%s" caja="%s" ' +
                      'txt="%s" (prev="%s")',
                      [DateToStr(AFecha), AEmp, AAlm, ACaja, ATextoLibre,
                       FUltimaClaveMaestro]));
@@ -673,7 +686,7 @@ begin
   end
   else
   begin
-    inLibLog.Log.LogError(AMensaje);
+    FRegistroLog.RegistrarError(AMensaje);
   end;
 end;
 

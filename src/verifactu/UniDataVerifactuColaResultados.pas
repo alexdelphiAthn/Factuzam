@@ -16,7 +16,7 @@ unit UniDataVerifactuColaResultados;
 interface
 
 uses
-  Uni, inLibParametrosIntf, inLibVerifactuEnvio;
+  Uni, inLibParametrosIntf, inLibVerifactuEnvio, inLibLogIntf;
 type
   TResultadosVerifactuColaUniDAC = class
   public
@@ -24,12 +24,14 @@ type
       AConexion: TUniConnection; const AParametrosApp: IParametrosAplicacion;
       const AParametrosCaja: IParametrosCaja; const AUsuario: string;
       AIdCola: Int64; const ASerie, ANumero, ATipoOperacion: string;
-      const AResultado: TResultadoEnvioVerifactu); static;
+      const AResultado: TResultadoEnvioVerifactu;
+      const ARegistroLog: IRegistroLog); static;
     class procedure GuardarEnvioError(
       AConexion: TUniConnection; const AParametrosApp: IParametrosAplicacion;
       const AParametrosCaja: IParametrosCaja; const AUsuario: string;
       AIdCola: Int64; const ASerie, ANumero, AMensaje: string;
-      AIntentos: Integer); static;
+      AIntentos: Integer;
+      const ARegistroLog: IRegistroLog); static;
   end;
 implementation
 uses
@@ -53,7 +55,8 @@ class procedure TResultadosVerifactuColaUniDAC.GuardarEnvioOk(
   AConexion: TUniConnection; const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja; const AUsuario: string;
   AIdCola: Int64; const ASerie, ANumero, ATipoOperacion: string;
-  const AResultado: TResultadoEnvioVerifactu);
+  const AResultado: TResultadoEnvioVerifactu;
+  const ARegistroLog: IRegistroLog);
 var
   Qry:           TUniQuery;
   oPngStream:    TBytesStream;
@@ -238,13 +241,14 @@ begin
     AParametrosCaja,
     CrearRepositorioVentasWsColaUniDAC(AConexion),
     AUsuario,
-    'FISCAL_ACTUALIZADO', ASerie, ANumero);
+    'FISCAL_ACTUALIZADO', ASerie, ANumero, ARegistroLog);
 end;
 class procedure TResultadosVerifactuColaUniDAC.GuardarEnvioError(
   AConexion: TUniConnection; const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja; const AUsuario: string;
   AIdCola: Int64; const ASerie, ANumero, AMensaje: string;
-  AIntentos: Integer);
+  AIntentos: Integer;
+  const ARegistroLog: IRegistroLog);
 var
   Qry:          TUniQuery;
   iMaxIntentos: Integer;
@@ -300,6 +304,6 @@ begin
     AParametrosCaja,
     CrearRepositorioVentasWsColaUniDAC(AConexion),
     AUsuario,
-    'FISCAL_ACTUALIZADO', ASerie, ANumero);
+    'FISCAL_ACTUALIZADO', ASerie, ANumero, ARegistroLog);
 end;
 end.

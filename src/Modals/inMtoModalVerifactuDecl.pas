@@ -55,7 +55,7 @@ uses
   System.IOUtils,
   Data.DB, Uni,
   inLibGlobalVar, inLibVerifactuInstalacion, inLibParametrosIntf,
-  inLibMsgVerifactu;
+  inLibMsgVerifactu, inLibLogIntf;
 
 {$R *.dfm}
 
@@ -80,9 +80,11 @@ begin
 end;
 
 function DescargarHtmlDeclaracion(
-  const AParametrosApp: IParametrosAplicacion): string;
+  const AParametrosApp: IParametrosAplicacion;
+  const ARegistroLog: IRegistroLog): string;
 begin
-  Result := ObtenerDeclaracionResponsableSif(AParametrosApp, oVersion);
+  Result := ObtenerDeclaracionResponsableSif(
+    AParametrosApp, oVersion, ARegistroLog);
 end;
 
 function GuardarHtmlTemporal(const AHtml: string): string;
@@ -377,7 +379,7 @@ begin
     if Trim(FHtmlDeclaracion) = '' then
     begin
       FHtmlDeclaracion := AjustarHtmlParaVisor(
-        DescargarHtmlDeclaracion(ParametrosApp));
+        DescargarHtmlDeclaracion(ParametrosApp, RegistroLog));
     end;
     sHtml := AgregarAnexoImpresion(
       ConexionPrincipal,
@@ -467,7 +469,7 @@ begin
   try
     AsegurarVisorHtml;
     FHtmlDeclaracion := AjustarHtmlParaVisor(
-      DescargarHtmlDeclaracion(ParametrosApp));
+      DescargarHtmlDeclaracion(ParametrosApp, RegistroLog));
     sArchivo := GuardarHtmlTemporal(FHtmlDeclaracion);
     mDeclaracion.Visible := False;
     FWebDeclaracion.Visible := True;

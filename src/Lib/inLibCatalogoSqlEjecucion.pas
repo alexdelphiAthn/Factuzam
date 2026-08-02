@@ -27,7 +27,7 @@ procedure EjecutarLecturaSqlConFallback(
 implementation
 
 uses
-  System.SysUtils, inLibLog;
+  System.SysUtils;
 
 resourcestring
   SErrorEjecutorSqlNoConfigurado =
@@ -45,10 +45,6 @@ begin
     AIncidencias.Registrar(
       AClavePerfil,
       ACausa);
-  if Log() <> nil then
-    Log.LogError(Format(
-      SLogFallbackSql,
-      [AClavePerfil, ACausa]));
 end;
 
 procedure EjecutarLecturaSqlConFallback(

@@ -22,7 +22,7 @@ uses
   Dialogs, ExtCtrls, jpeg, StdCtrls, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, JvExControls,
   JvAnimatedImage, JvGIFCtrl, cxTextEdit, cxHyperLinkEdit, Vcl.Menus, cxButtons,
-  Vcl.Imaging.pngimage;
+  Vcl.Imaging.pngimage, inLibLogIntf;
 
 type
   TfrmSplash = class(TForm)
@@ -41,19 +41,32 @@ type
     FlblNombre:  TcxLabel;
     FlblVersion: TcxLabel;
     FimgLogo:    TImage;
+    FRegistroLog: IRegistroLog;
   public
-    { Public declarations }
+    constructor Create(
+      AOwner: TComponent;
+      const ARegistroLog: IRegistroLog); reintroduce;
   end;
 
 implementation
 
 uses
-  inLibGlobalVar, inLibDir, inLibLog, inLibImagen,
+  inLibGlobalVar, inLibDir, inLibImagen,
   inLibTraducciones, inLibMsgComun;
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+constructor TfrmSplash.Create(
+  AOwner: TComponent;
+  const ARegistroLog: IRegistroLog);
+begin
+  if not Assigned(ARegistroLog) then
+    raise EArgumentNilException.Create('ARegistroLog');
+  FRegistroLog := ARegistroLog;
+  inherited Create(AOwner);
+end;
 
 procedure TfrmSplash.cxLabel1Click(Sender: TObject);
 begin
@@ -118,7 +131,7 @@ begin
     except
       // Recurso no presente (build sin fondo.res); seguimos a disco.
       on E: Exception do
-        inLibLog.Log.LogInfo(
+        FRegistroLog.RegistrarInformacion(
           'Splash: recurso FONDO no disponible (' + E.Message +
           '); se intenta cargar de disco.');
     end;
@@ -135,7 +148,7 @@ begin
           Break;
         except
           on E: Exception do
-            inLibLog.Log.LogWarning('Splash: no se pudo cargar ' + sRuta +
+            FRegistroLog.RegistrarAviso('Splash: no se pudo cargar ' + sRuta +
                                     ': ' + E.Message);
         end;
       end;

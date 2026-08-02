@@ -46,11 +46,9 @@ uses
   cxCustomData, cxFilter, cxData, cxDataStorage, cxNavigator,
   cxDBData, cxGridLevel, cxClasses,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
-  cxGridDBTableView, cxGrid, UniDataCaja,
-  // Acceso a datos
-  Uni, MemDS, VirtualTable,
+  cxGridDBTableView, cxGrid,
   inMtoFrmBase, Vcl.Menus, cxStyles, dxDateRanges,
-  dxScrollbarAnnotations;
+  dxScrollbarAnnotations, inLibInformesCajaPersistenciaIntf;
 
 type
   // Record con los datos del vale seleccionado que se devuelve al formulario
@@ -99,8 +97,10 @@ type
     procedure btnESCClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
-    FMemVales: TVirtualTable;
+    FDatos: TDataSet;
     FValeSeleccionado: TValeSeleccionado;
+    FRepositorioPersistencia: IRepositorioInformesCaja;
+    FResultado: IResultadoInformeCaja;
     procedure CargarVales(const AFiltro: string = '');
     procedure ActualizarBotonAceptar;
     function  ValidarPinYSeleccionar: Boolean;
@@ -161,26 +161,18 @@ begin
   inherited;
   Self.KeyPreview := True;
   Self.OnKeyDown := FormKeyDown;
-  FMemVales := TVirtualTable.Create(Self);
-  with FMemVales do
-  begin
-    FieldDefs.Add('CODIGO_VL',           ftString,   50);
-    FieldDefs.Add('PIN_SEGURIDAD_VL',    ftString,   10);
-    FieldDefs.Add('ESTADO_VL',           ftString,   15);
-    FieldDefs.Add('IMPORTE_NOMINAL_VL',  ftCurrency);
-    FieldDefs.Add('FECHA_EMISION_VL',    ftDateTime);
-    FieldDefs.Add('FECHA_CADUCIDAD_VL',  ftDate);
-    FieldDefs.Add('OBSERVACIONES_VL',    ftString,  200);
-    Open;
-  end;
-  dsVales.DataSet := FMemVales;
+  FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
+    CrearRepositorioInformesCaja;
   ConfigurarGrid;
 end;
 
 procedure TfrmMtoCajaSeleccionVale.FormDestroy(Sender: TObject);
 begin
+  dsVales.DataSet := nil;
+  FDatos := nil;
+  FResultado := nil;
+  FRepositorioPersistencia := nil;
   inherited;
-  // FMemVales pertenece a Self como componente, se libera automáticamente
 end;
 
 procedure TfrmMtoCajaSeleccionVale.FormShow(Sender: TObject);
@@ -211,71 +203,22 @@ end;
 
 procedure TfrmMtoCajaSeleccionVale.CargarVales(const AFiltro: string);
 var
-  qry: TUniQuery;
-  SQL: string;
   bUsarCaducidad: Boolean;
   sPin: string;
 begin
   bUsarCaducidad :=
     ParametrosCaja.GetBool('vgerCaducidadDefVale', False);
   sPin := Trim(edtPin.Text);
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    SQL :=
-      'SELECT CODIGO_VL, PIN_SEGURIDAD_VL, ESTADO_VL,' +
-      '       IMPORTE_NOMINAL_VL, FECHA_EMISION_VL,' +
-      '       FECHA_CADUCIDAD_VL, OBSERVACIONES_VL' +
-      '  FROM fza_caja_vales' +
-      ' WHERE ESTADO_VL = ''PENDIENTE''';
-    if bUsarCaducidad then
-      SQL := SQL + ' AND (FECHA_CADUCIDAD_VL IS NULL ' +
-                   '      OR FECHA_CADUCIDAD_VL >= CURDATE())';
-    if AFiltro <> '' then
-      SQL := SQL + ' AND CODIGO_VL LIKE :FILTRO';
-    // Filtrar también por PIN si se ha introducido
-    if sPin <> '' then
-      SQL := SQL + ' AND PIN_SEGURIDAD_VL = :PIN';
-    SQL := SQL + ' ORDER BY FECHA_EMISION_VL DESC';
-    qry.SQL.Text := SQL;
-    if AFiltro <> '' then
-      qry.ParamByName('FILTRO').AsString := '%' + AFiltro + '%';
-    if sPin <> '' then
-      qry.ParamByName('PIN').AsString := sPin;
-    qry.Open;
-    FMemVales.DisableControls;
-    FMemVales.Clear;
-    try
-      while not qry.Eof do
-      begin
-        FMemVales.Append;
-        FMemVales.FieldByName('CODIGO_VL').AsString            :=
-          qry.FieldByName('CODIGO_VL').AsString;
-        FMemVales.FieldByName('PIN_SEGURIDAD_VL').AsString     :=
-          qry.FieldByName('PIN_SEGURIDAD_VL').AsString;
-        FMemVales.FieldByName('ESTADO_VL').AsString            :=
-          qry.FieldByName('ESTADO_VL').AsString;
-        FMemVales.FieldByName('IMPORTE_NOMINAL_VL').AsCurrency :=
-          qry.FieldByName('IMPORTE_NOMINAL_VL').AsCurrency;
-        FMemVales.FieldByName('FECHA_EMISION_VL').AsDateTime   :=
-          qry.FieldByName('FECHA_EMISION_VL').AsDateTime;
-        if not qry.FieldByName('FECHA_CADUCIDAD_VL').IsNull then
-          FMemVales.FieldByName('FECHA_CADUCIDAD_VL').AsDateTime :=
-            qry.FieldByName('FECHA_CADUCIDAD_VL').AsDateTime;
-        FMemVales.FieldByName('OBSERVACIONES_VL').AsString     :=
-          qry.FieldByName('OBSERVACIONES_VL').AsString;
-        FMemVales.Post;
-        qry.Next;
-      end;
-    finally
-      FMemVales.EnableControls;
-    end;
-    FMemVales.First;
-  finally
-    FreeAndNil(qry);
-  end;
+  dsVales.DataSet := nil;
+  FDatos := nil;
+  FResultado := FRepositorioPersistencia.ConsultarValesPendientes(
+    AFiltro,
+    sPin,
+    bUsarCaducidad);
+  FDatos := FResultado.DataSet;
+  dsVales.DataSet := FDatos;
   ActualizarBotonAceptar;
-  if (sPin <> '') and (FMemVales.RecordCount = 1) then
+  if (sPin <> '') and (FDatos.RecordCount = 1) then
   begin
     if ValidarPinYSeleccionar then
       ModalResult := mrOk;
@@ -284,7 +227,8 @@ end;
 
 procedure TfrmMtoCajaSeleccionVale.ActualizarBotonAceptar;
 begin
-  btnAceptar.Enabled := (FMemVales.RecordCount > 0) and
+  btnAceptar.Enabled := Assigned(FDatos) and
+                        (FDatos.RecordCount > 0) and
                         (dbtvVales.Controller.FocusedRecord <> nil);
 end;
 
@@ -327,7 +271,9 @@ var
   bPinObligatorio: Boolean;
 begin
   Result := False;
-  if FMemVales.IsEmpty or (FMemVales.Bof and FMemVales.Eof) then
+  if (not Assigned(FDatos)) or
+     FDatos.IsEmpty or
+     (FDatos.Bof and FDatos.Eof) then
   begin
     ShowMessage(SErrorValeCajaNoSeleccionado);
     Exit;
@@ -335,7 +281,7 @@ begin
   bPinObligatorio :=
     ParametrosCaja.GetBool('vgerRecuperaValePIN', False);
   PinIntroducido  := Trim(edtPin.Text);
-  PinReal         := FMemVales.FieldByName('PIN_SEGURIDAD_VL').AsString;
+  PinReal := FDatos.FieldByName('PIN_SEGURIDAD_VL').AsString;
   if bPinObligatorio and (PinReal <> '') then
   begin
     if PinIntroducido = '' then
@@ -353,10 +299,11 @@ begin
     end;
   end;
   // Rellenar el record de salida
-  FValeSeleccionado.CodigoVale   := FMemVales.FieldByName('CODIGO_VL').AsString;
+  FValeSeleccionado.CodigoVale :=
+    FDatos.FieldByName('CODIGO_VL').AsString;
   FValeSeleccionado.PinSeguridad := PinReal;
   FValeSeleccionado.Importe      :=
-    FMemVales.FieldByName('IMPORTE_NOMINAL_VL').AsCurrency;
+    FDatos.FieldByName('IMPORTE_NOMINAL_VL').AsCurrency;
   FValeSeleccionado.Descripcion  := FValeSeleccionado.CodigoVale;
   Result := True;
 end;

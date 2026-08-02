@@ -25,6 +25,8 @@ uses
 type
   TResolverDocTrabajoArtSku = procedure(out ACodArt, ACodSku: string) of object;
 
+  TNombresAtributosDocumentoTrabajo = TArray<string>;
+
   TDocTrabajoLineaOrigen = record
     CodigoArticulo: string;
     CodigoSku: string;
@@ -38,13 +40,23 @@ type
     Cantidad: Double;
     procedure Clear;
   end;
+
+  IConsultaDocumentoTrabajo = interface
+    ['{73E0E3AF-F935-4853-802A-39ACF5326677}']
+    function DataSet: TDataSet;
+  end;
+
   ILecturasDocumentosTrabajo = interface
     ['{F3A03012-91E0-4BDA-B47F-53CE11A624B8}']
     function ConsultaDocumentosAbiertos(
       const AUsuario: string): string;
     procedure CompletarDatosArticulo(
       var ALinea: TDocTrabajoLineaOrigen);
+    function ConsultarDestinosCompartir: IConsultaDocumentoTrabajo;
+    function ListarNombresAtributos:
+      TNombresAtributosDocumentoTrabajo;
   end;
+
   IEscrituraDocumentosTrabajo = interface
     ['{B911B05D-E00B-41FC-9B22-C0BB317A3201}']
     function CrearDocumento(const ATitulo, AEmpresa, AAlmacen,
@@ -53,9 +65,36 @@ type
       const ALinea: TDocTrabajoLineaOrigen;
       const AUsuario: string);
   end;
+
+  IMaterializacionDocumentosTrabajo = interface
+    ['{6C6E17B1-1C0C-4EF7-92B4-8365FB52B506}']
+    function SiguienteContador(
+      const ASerie, ATipoDocumento, AEmpresa,
+      AUsuario: string): string;
+    function CrearAlbaran(
+      AIdDocumento: Int64;
+      const AEmpresa, AAlmacen, ASerie, ANumero,
+      AUsuario: string): Integer;
+    function CrearFacturaVenta(
+      AIdDocumento: Int64;
+      const AEmpresa, AAlmacen, ASerie, ANumero,
+      AUsuario: string): Integer;
+    function CrearPedidoCompra(
+      AIdDocumento: Int64;
+      const AEmpresa, AAlmacen, ASerie, ANumero,
+      AUsuario: string): Integer;
+    function CrearInventario(
+      AIdDocumento: Int64;
+      const AEmpresa, AAlmacen, ASerie, ANumero,
+      AUsuario: string): Integer;
+    function CrearSesionTarifa(
+      AIdDocumento: Int64;
+      const AUsuario: string): Int64;
+  end;
   TRepositoriosDocumentosTrabajo = record
     Lecturas: ILecturasDocumentosTrabajo;
     Escritura: IEscrituraDocumentosTrabajo;
+    Materializacion: IMaterializacionDocumentosTrabajo;
   end;
   TAccionDocumentoTrabajo = (
     adtCancelar,

@@ -30,8 +30,8 @@ uses
   cxTextEdit, cxButtons, cxListBox, cxStyles, cxCustomData, cxFilter,
   cxData, cxDataStorage, cxNavigator, cxDBData, cxGridLevel,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
-  cxGridCustomView, cxFilterControl, Data.DB, Datasnap.DBClient, Uni,
-  inLibFiltrosGuardadosIntf;
+  cxGridCustomView, cxFilterControl, Data.DB, Datasnap.DBClient,
+  inLibFiltrosGuardadosIntf, inLibDestinosFiltrosPersistenciaIntf;
 
 type
   TGestionFiltrosResult = record
@@ -90,6 +90,7 @@ type
     FControlFiltro: TcxFilterControl;
     FListadoFiltros: TClientDataSet;
     FDataSourceFiltros: TDataSource;
+    FRepositorioDestinos: IRepositorioDestinosFiltros;
     function IdFiltroSeleccionado: Int64;
     function GuardarFiltroEditorBase64: string;
     function ResumirFiltro(const ABase64: string): string;
@@ -153,6 +154,8 @@ begin
     frm.FVista := AVista;
     frm.FVistaComponente := AVistaComponente;
     frm.FFiltroActualBase64 := AFiltroActualBase64;
+    frm.FRepositorioDestinos := frm.ContextoRepositoriosPantalla.Configuracion.
+      CrearRepositorioDestinosFiltros;
     frm.CargarDatos;
     frm.ShowModal;
     Result := frm.FResultado;
@@ -674,44 +677,32 @@ end;
 
 procedure TfrmModalGestionFiltros.btnCompartirUsuarioClick(Sender: TObject);
 var
-  q: TUniQuery;
+  oResultado: IResultadoDestinosFiltros;
   sUsuario: string;
   IdentidadActual: TIdentidadSesion;
 begin
   inherited;
   IdentidadActual := ContextoSesion.Identidad;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := ConexionPrincipal;
-    q.SQL.Text :=
-      'SELECT USUARIO_USU AS USUARIO ' +
-      '  FROM fza_usuarios ' +
-      ' WHERE COALESCE(ESACTIVO_USU, ''S'') = ''S'' ' +
-      '   AND USUARIO_USU <> :USUARIOACTUAL ' +
-      'ORDER BY USUARIO_USU';
-    q.ParamByName('USUARIOACTUAL').AsString :=
-      IdentidadActual.Usuario;
-    if BusquedaVisual.EjecutarBusqueda(
-      ConexionPrincipal,
-      'Compartir filtro con usuario',
-      q,
-                                       'frmBuscarUsuarioFiltro', Self) then
-    begin
-      sUsuario := q.FieldByName('USUARIO').AsString;
-      FiltrosComparticion.CompartirConDestino(
-        IdFiltroSeleccionado,
-        'USUARIO',
-        sUsuario);
-      RefrescarCompartidoCon;
-    end;
-  finally
-    FreeAndNil(q);
+  oResultado := FRepositorioDestinos.ConsultarUsuarios(
+    IdentidadActual.Usuario);
+  if BusquedaVisual.EjecutarBusquedaDataSet(
+    'Compartir filtro con usuario',
+    oResultado.DataSet,
+    'frmBuscarUsuarioFiltro',
+    Self) then
+  begin
+    sUsuario := oResultado.DataSet.FieldByName('USUARIO').AsString;
+    FiltrosComparticion.CompartirConDestino(
+      IdFiltroSeleccionado,
+      'USUARIO',
+      sUsuario);
+    RefrescarCompartidoCon;
   end;
 end;
 
 procedure TfrmModalGestionFiltros.btnCompartirGrupoClick(Sender: TObject);
 var
-  q: TUniQuery;
+  oResultado: IResultadoDestinosFiltros;
   sGrupo: string;
   IdentidadActual: TIdentidadSesion;
 begin
@@ -719,28 +710,19 @@ begin
   IdentidadActual := ContextoSesion.Identidad;
   if IdentidadActual.EsAdministrador then
   begin
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := ConexionPrincipal;
-      q.SQL.Text :=
-        'SELECT GRUPO_USUGRP AS GRUPO ' +
-        '  FROM fza_usuarios_grupos ' +
-        'ORDER BY GRUPO_USUGRP';
-      if BusquedaVisual.EjecutarBusqueda(
-        ConexionPrincipal,
-        'Compartir filtro con grupo',
-        q,
-                                         'frmBuscarGrupoFiltro', Self) then
-      begin
-        sGrupo := q.FieldByName('GRUPO').AsString;
-        FiltrosComparticion.CompartirConDestino(
-          IdFiltroSeleccionado,
-          'GRUPO',
-          sGrupo);
-        RefrescarCompartidoCon;
-      end;
-    finally
-      FreeAndNil(q);
+    oResultado := FRepositorioDestinos.ConsultarGrupos;
+    if BusquedaVisual.EjecutarBusquedaDataSet(
+      'Compartir filtro con grupo',
+      oResultado.DataSet,
+      'frmBuscarGrupoFiltro',
+      Self) then
+    begin
+      sGrupo := oResultado.DataSet.FieldByName('GRUPO').AsString;
+      FiltrosComparticion.CompartirConDestino(
+        IdFiltroSeleccionado,
+        'GRUPO',
+        sGrupo);
+      RefrescarCompartidoCon;
     end;
   end
   else

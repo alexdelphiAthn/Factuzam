@@ -15,20 +15,18 @@
 {    UniDataVerifactuColaOperaciones.                                          }
 {******************************************************************************}
 unit UniDataVerifactuColaRepositorio;
-
 interface
-
 uses
-  Uni, inLibVerifactuColaIntf;
-
+  Uni, inLibVerifactuColaIntf, inLibLogIntf;
 function CrearServicioVerifactuColaUniDAC(
-  AQry: TUniQuery): IServicioVerifactuCola; overload;
+  AQry: TUniQuery;
+  const ARegistroLog: IRegistroLog = nil): IServicioVerifactuCola; overload;
 function CrearServicioVerifactuColaUniDAC(
-  AConexion: TUniConnection): IServicioVerifactuCola; overload;
-
+  AConexion: TUniConnection;
+  const ARegistroLog: IRegistroLog = nil): IServicioVerifactuCola; overload;
 implementation
 uses
-  System.SysUtils, inLibLog, inLibParametrosIntf, inLibEmisionFiscalIntf,
+  System.SysUtils, inLibParametrosIntf, inLibEmisionFiscalIntf,
   inLibVerifactu, inLibVentasWsCola, UniDataVerifactuColaOperaciones,
   UniDataVentasWsCola;
 type
@@ -39,9 +37,12 @@ type
     FConexion: TUniConnection;
     FQry: TUniQuery;
     FQryPropia: Boolean;
+    FRegistroLog: IRegistroLog;
   public
-    constructor Create(AQry: TUniQuery); overload;
-    constructor Create(AConexion: TUniConnection); overload;
+    constructor Create(AQry: TUniQuery;
+      const ARegistroLog: IRegistroLog); overload;
+    constructor Create(AConexion: TUniConnection;
+      const ARegistroLog: IRegistroLog); overload;
     destructor Destroy; override;
     procedure EncolarFactura(
       const AParametrosApp: IParametrosAplicacion;
@@ -72,16 +73,20 @@ type
       ANumeroOrigen, ATipoRelacion: string);
   end;
 function CrearServicioVerifactuColaUniDAC(
-  AQry: TUniQuery): IServicioVerifactuCola;
+  AQry: TUniQuery;
+  const ARegistroLog: IRegistroLog): IServicioVerifactuCola;
 begin
-  Result := TServicioVerifactuColaUniDAC.Create(AQry);
+  Result := TServicioVerifactuColaUniDAC.Create(AQry, ARegistroLog);
 end;
 function CrearServicioVerifactuColaUniDAC(
-  AConexion: TUniConnection): IServicioVerifactuCola;
+  AConexion: TUniConnection;
+  const ARegistroLog: IRegistroLog): IServicioVerifactuCola;
 begin
-  Result := TServicioVerifactuColaUniDAC.Create(AConexion);
+  Result := TServicioVerifactuColaUniDAC.Create(
+    AConexion, ARegistroLog);
 end;
-constructor TServicioVerifactuColaUniDAC.Create(AQry: TUniQuery);
+constructor TServicioVerifactuColaUniDAC.Create(AQry: TUniQuery;
+  const ARegistroLog: IRegistroLog);
 begin
   if not Assigned(AQry) then
     raise EArgumentNilException.Create('AQry');
@@ -91,10 +96,11 @@ begin
   FQry := AQry;
   FConexion := AQry.Connection;
   FQryPropia := False;
+  FRegistroLog := ARegistroLog;
 end;
-
 constructor TServicioVerifactuColaUniDAC.Create(
-  AConexion: TUniConnection);
+  AConexion: TUniConnection;
+  const ARegistroLog: IRegistroLog);
 begin
   if not Assigned(AConexion) then
     raise EArgumentNilException.Create('AConexion');
@@ -103,29 +109,27 @@ begin
   FQry := TUniQuery.Create(nil);
   FQry.Connection := FConexion;
   FQryPropia := True;
+  FRegistroLog := ARegistroLog;
 end;
-
 destructor TServicioVerifactuColaUniDAC.Destroy;
 begin
   if FQryPropia then
     FreeAndNil(FQry);
   FConexion := nil;
+  FRegistroLog := nil;
   inherited;
 end;
-
 procedure TServicioVerifactuColaUniDAC.EncolarFactura(
   const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja;
   const AUsuario, ASerie, ANumero, ATipoOperacion: string;
   ABorrarMovimientos: Boolean);
 begin
-  // Encola el registro de una factura. FQry participa en la
-  // transacción de la grabación de la venta: factura y cola se
-  // confirman o deshacen juntas.
+  // FQry comparte transacción con la factura: ambas se confirman o
+  // deshacen juntas.
   ValidarRequisitosFiscalesEmision(AParametrosApp, FConexion,
     ASerie, ANumero);
-  // ON DUPLICATE: si la operación ya estaba encolada se relanza
-  // (vuelve a PENDIENTE con los intentos a cero)
+  // ON DUPLICATE relanza a PENDIENTE con los intentos a cero.
   FQry.SQL.Text :=
     ' INSERT INTO fza_verifactu_cola ' +
     ' (SERIE_FAC_VFCOLA, NUMERO_FAC_VFCOLA, TIPO_OPERACION_VFCOLA, ' +
@@ -148,9 +152,8 @@ begin
   if ATipoOperacion = 'ANULACION' then
     TOperacionesVerifactuColaUniDAC.BorrarMovimientosFactura(
       FQry, ASerie, ANumero);
-  // El lanzamiento saca la factura de BORRADOR en el acto: el QR es
-  // calculable en local (ConstruirUrlQR) y la petición al ws viaja
-  // asíncrona en el hilo de la cola.
+  // El lanzamiento saca la factura de BORRADOR; el QR se calcula en
+  // local y la petición al ws viaja por el hilo de la cola.
   if SameText(ATipoOperacion, 'ALTA') then
   begin
     FQry.SQL.Text :=
@@ -175,7 +178,6 @@ begin
     CrearRepositorioVentasWsColaUniDAC(FQry.Connection),
     AUsuario, ASerie, ANumero, ATipoOperacion);
 end;
-
 procedure TServicioVerifactuColaUniDAC.RegistrarFacturaNoVerifactu(
   const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja;
@@ -190,9 +192,9 @@ begin
     ASerie,
     ANumero,
     ATipoOperacion,
-    ABorrarMovimientos);
+    ABorrarMovimientos,
+    FRegistroLog);
 end;
-
 procedure TServicioVerifactuColaUniDAC.MarcarFacturaSinVerifactu(
   const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja;
@@ -226,14 +228,15 @@ begin
   if ATipoOperacion = 'ANULACION' then
     TOperacionesVerifactuColaUniDAC.BorrarMovimientosFactura(
       FQry, ASerie, ANumero);
-  Log.LogInfo('Factura ' + ASerie + '\' + ANumero +
-    ' emitida en modo SIN VERIFACTU. Operación: ' + ATipoOperacion);
+  if Assigned(FRegistroLog) then
+    FRegistroLog.RegistrarInformacion(
+      'Factura ' + ASerie + '\' + ANumero +
+      ' emitida en modo SIN VERIFACTU. Operación: ' + ATipoOperacion);
   TVentasWsCola.RegistrarFactura(
     AParametrosCaja,
     CrearRepositorioVentasWsColaUniDAC(FQry.Connection),
     AUsuario, ASerie, ANumero, ATipoOperacion);
 end;
-
 procedure TServicioVerifactuColaUniDAC.BorrarMovimientosFactura(
   const ASerie, ANumero: string);
 begin
@@ -242,7 +245,6 @@ begin
     ASerie,
     ANumero);
 end;
-
 procedure TServicioVerifactuColaUniDAC.EncolarRectificativa(
   const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja;
@@ -264,7 +266,6 @@ begin
     ATipoRectificativa,
     ABorrarMovimientosOriginales);
 end;
-
 procedure TServicioVerifactuColaUniDAC.RegistrarRelacionFactura(
   const AUsuario, ASerie, ANumero, ASerieOrigen,
   ANumeroOrigen, ATipoRelacion: string);
@@ -278,5 +279,4 @@ begin
     ANumeroOrigen,
     ATipoRelacion);
 end;
-
 end.

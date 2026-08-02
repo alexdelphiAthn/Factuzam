@@ -136,7 +136,7 @@ type
 implementation
 
 uses
-  dxCoreGraphics, inLibLog, inLibMsgArticulos;
+  dxCoreGraphics, inLibMsgArticulos;
 
 type
   // Acceso a OnExit (protegido en TWinControl) de los editores
@@ -560,7 +560,8 @@ begin
     except
       on E: EInvalidOperation do
         // Ruido del editor inplace; queda constancia en el log.
-        inLibLog.Log.LogWarning(
+        if Assigned(FConfig.RegistroLog) then
+          FConfig.RegistroLog.RegistrarAviso(
           'ModoTallas.TimerResolve: HideEdit ignorado: ' + E.Message);
     end;
   // Resuelto y editor cerrado: se restaura el EnterAsTab (si el foco
@@ -617,7 +618,8 @@ begin
     except
       on E: EInvalidOperation do
         // Ruido del editor inplace; queda constancia en el log.
-        inLibLog.Log.LogWarning(
+        if Assigned(FConfig.RegistroLog) then
+          FConfig.RegistroLog.RegistrarAviso(
           'ModoTallas.MostrarEditor: ShowEdit ignorado: ' + E.Message);
     end;
   end;

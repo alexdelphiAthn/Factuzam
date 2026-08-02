@@ -393,7 +393,7 @@ uses
   inLibAtributosPaleta,
   inLibPedidosCompra,
   UniDataPedidosCompraRecepcion,
-  inLibLog,
+
   inLibValoresAutomaticos,
   inLibArticulosResolverIntf,
   inLibArticulosValidadorIntf,
@@ -602,9 +602,9 @@ begin
   FAplicacionArticuloCompra := CrearAplicacionArticuloCompra(
     CrearRepositorioLecturasArticuloCompraUniDAC(
       dmmPedidosCompra.unqryTablaG.Connection,
-      CrearValidadorArticulos(
+      ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
         dmmPedidosCompra.unqryTablaG.Connection),
-      CrearResolverArticulos(
+      ContextoRepositoriosPantalla.Articulos.CrearResolverArticulos(
         dmmPedidosCompra.unqryTablaG.Connection)),
     CrearPuertoLineaArticuloCompraUniDAC(
       dmmPedidosCompra.unqryTablaG.Connection,
@@ -710,8 +710,8 @@ begin
       except
         // Teardown defensivo en cierre.
         on E: Exception do
-          if inLibLog.Log() <> nil then
-            inLibLog.Log.LogWarning(
+          if RegistroLog <> nil then
+            RegistroLog.RegistrarAviso(
               'PedidosCompra.FormDestroy: Desmontar fallo: ' +
               E.Message);
       end;
@@ -927,6 +927,7 @@ begin
     oBase.PrefijoCelda := 'PEDCCEL';
     oBase.NombreTablaDocumento := 'pedidos';
     oBase.AplicarContextoPivote := True;
+    oBase.RegistroLog := RegistroLog;
     oBase.TieneCantidadRecibida := True;
     if ColumnaPedidosCompraExiste('COLOR_TEXTO_PEDCLIN') then
       oBase.CampoColorTexto := 'COLOR_TEXTO_PEDCLIN';
@@ -1154,12 +1155,12 @@ procedure TfrmMtoPedidosCompra.btnGrabarClick(Sender: TObject);
 var
   sLineasSinSku: string;
 begin
-  if inLibLog.Log() <> nil then
-    inLibLog.Log.LogInfo('PedidosCompra.btnGrabarClick: INICIO');
+  if RegistroLog <> nil then
+    RegistroLog.RegistrarInformacion('PedidosCompra.btnGrabarClick: INICIO');
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
   sLineasSinSku := LineasSinSkuRequerido(
-    CrearValidadorArticulos(
+    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
       dmmPedidosCompra.unqryTablaG.Connection),
     dmmPedidosCompra.unqryPedidosCompraLineas, 'PEDCLIN');
   if (sLineasSinSku <> '') and
@@ -2320,13 +2321,14 @@ begin
     ContextoSesion, tvLineasPedido, ds, FModoEntradaSel,
     Trim(dmmPedidosCompra.unqryTablaG.
       FieldByName('CODIGO_ALM_PEDC').AsString), 'PEDCLIN');
+  Cfg.RegistroLog := RegistroLog;
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
-    CrearValidadorArticulos(
+    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
       dmmPedidosCompra.unqryTablaG.Connection);
   Cfg.LookupAtributos :=
-    CrearLookupAtributosArticulos(
+    ContextoRepositoriosPantalla.Articulos.CrearLookupAtributosArticulos(
       dmmPedidosCompra.unqryTablaG.Connection);
   if FModoEntradaSel = mcsTallasHorPed then
   begin

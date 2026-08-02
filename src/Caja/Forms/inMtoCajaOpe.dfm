@@ -807,55 +807,8 @@
     Top = 136
   end
   object dsBusq: TDataSource
-    DataSet = qryBusq
     Left = 80
     Top = 192
-  end
-  object qryBusq: TUniQuery
-    SQL.Strings = (
-      'SELECT'
-      '    v.CODIGO_ART_ART AS INPUT_BUSQUEDA,'
-      '    v.CODIGO_ART_ART AS CODIGO_PADRE,'
-      '    v.DESCRIPCION_ART,'
-      '    v.RAZON_SOCIAL_PROVEEDOR,'
-      '    v.REF_PROVEEDOR,'
-      '    pv.PV AS TEMPORADA'
-      'FROM vi_art_busquedas v'
-      'LEFT JOIN fza_articulos_propiedades ap'
-      '       ON ap.CODIGO_ART_ART = v.CODIGO_ART_ART'
-      '      AND ap.CODIGO_PROP_ARTPROP = '#39'TEMPORADA'#39
-      'LEFT JOIN fza_propiedades_valores pv'
-      '       ON pv.ID_PV_ARTPROP = ap.ID_PV_ARTPROP'
-      
-        'WHERE (v.CODIGO_TAR_ARTTAR = :TARIFA OR v.CODIGO_TAR_ARTTAR IS N' +
-        'ULL)'
-      
-        '  AND (v.FECHA_DESDE_ARTTAR IS NULL OR v.FECHA_DESDE_ARTTAR <= :' +
-        'FECHA_TARIFA)'
-      
-        '  AND (v.FECHA_HASTA_ARTTAR IS NULL OR v.FECHA_HASTA_ARTTAR >= :' +
-        'FECHA_TARIFA)'
-      '  AND v.CODIGO_ART_ART LIKE :TOKEN'
-      'ORDER BY v.CODIGO_ART_ART'
-      'LIMIT 20')
-    Left = 80
-    Top = 256
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'TARIFA'
-        Value = nil
-      end
-      item
-        DataType = ftUnknown
-        Name = 'FECHA_TARIFA'
-        Value = nil
-      end
-      item
-        DataType = ftUnknown
-        Name = 'TOKEN'
-        Value = nil
-      end>
   end
   object tvrBusq: TcxGridViewRepository
     Left = 80

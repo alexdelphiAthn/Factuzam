@@ -18,7 +18,7 @@ interface
 
 uses
   System.SysUtils, Uni, inLibParametrosIntf,
-  inLibVerifactuNoVerifactuExportIntf;
+  inLibVerifactuNoVerifactuExportIntf, inLibLogIntf;
 
 type
   TResultadoExportacionNoVerifactu = record
@@ -37,14 +37,15 @@ function ExportarRegistrosNoVerifactu(
                                       IRepositorioExportacionNoVerifactu;
                                       AConn: TUniConnection;
                                       const AUsuario: string;
-                                      const AArchivoBase: string):
+                                      const AArchivoBase: string;
+                                      const ARegistroLog: IRegistroLog):
                                       TResultadoExportacionNoVerifactu;
 
 implementation
 
 uses
   System.Classes, System.IOUtils, System.Hash, System.NetEncoding, Data.DB,
-  inLibGlobalVar, inLibLog, inLibMsgVerifactu, inLibVerifactu;
+  inLibGlobalVar, inLibMsgVerifactu, inLibVerifactu;
 
 const
   cNsFactuzamNoVerifactu = 'urn:factuzam:no-verifactu:v1';
@@ -164,7 +165,9 @@ procedure RegistrarIncidenciaExportacionSeguro(
                                                IParametrosAplicacion;
                                                AConn: TUniConnection;
                                                const AUsuario: string;
-                                               const AMensaje: string);
+                                               const AMensaje: string;
+                                               const ARegistroLog:
+                                               IRegistroLog);
 begin
   try
     RegistrarEventoVerifactu(AParametrosApp, AConn, AUsuario,
@@ -174,9 +177,10 @@ begin
     on E: Exception do
     begin
       // La incidencia principal ya queda en el error que se muestra.
-      inLibLog.Log.LogError(
-        'No se pudo registrar el evento NO VERI*FACTU: ' +
-        E.Message);
+      if Assigned(ARegistroLog) then
+        ARegistroLog.RegistrarError(
+          'No se pudo registrar el evento NO VERI*FACTU: ' +
+          E.Message);
     end;
   end;
 end;
@@ -185,7 +189,8 @@ procedure ValidarExportacionLegalNoVerifactu(
   const AParametrosApp: IParametrosAplicacion;
   AConn: TUniConnection;
   const AUsuario: string;
-  const ARepositorio: IRepositorioExportacionNoVerifactu);
+  const ARepositorio: IRepositorioExportacionNoVerifactu;
+  const ARegistroLog: IRegistroLog);
 var
   iEventos:  Integer;
   iFacturas: Integer;
@@ -211,7 +216,7 @@ begin
     if sError <> '' then
     begin
       RegistrarIncidenciaExportacionSeguro(AParametrosApp, AConn,
-        AUsuario, sError);
+        AUsuario, sError, ARegistroLog);
       raise Exception.Create(sError);
     end;
   end;
@@ -417,7 +422,8 @@ function ExportarRegistrosNoVerifactu(
                                       IRepositorioExportacionNoVerifactu;
                                       AConn: TUniConnection;
                                       const AUsuario: string;
-                                      const AArchivoBase: string):
+                                      const AArchivoBase: string;
+                                      const ARegistroLog: IRegistroLog):
                                       TResultadoExportacionNoVerifactu;
 var
   sXmlEventos: string;
@@ -431,7 +437,8 @@ begin
     AParametrosApp,
     AConn,
     AUsuario,
-    ARepositorio);
+    ARepositorio,
+    ARegistroLog);
   Result.TitularCertificado := '';
   Result.SerieCertificado := '';
   Result.ArchivoEventos := NombreArchivoConSufijo(AArchivoBase, '_eventos');

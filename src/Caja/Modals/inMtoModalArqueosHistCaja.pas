@@ -34,7 +34,8 @@ uses
   cxGridDBTableView, cxGrid, dxScrollbarAnnotations,
   // Acceso a datos
   Uni,
-  inMtoFrmBase, inLibArqueoTicket;
+  inMtoFrmBase, inLibArqueoTicket,
+  inLibInformesCajaPersistenciaIntf;
 
 type
   TfrmModalArqueosHistCaja = class(TfrmBase)
@@ -73,7 +74,9 @@ type
     FEmpresa: string;
     FAlmacen: string;
     FCaja: string;
-    FQry: TUniQuery;
+    FDatos: TDataSet;
+    FRepositorioPersistencia: IRepositorioInformesCaja;
+    FResultado: IResultadoInformeCaja;
     procedure CargarArqueos;
     function ArqueoSeleccionado: string;
   public
@@ -106,6 +109,8 @@ begin
   Frm := TfrmModalArqueosHistCaja.Create(AOwner);
   try
     Frm.FConn    := AConn;
+    Frm.FRepositorioPersistencia :=
+      Frm.ContextoRepositoriosPantalla.Caja.CrearRepositorioInformesCaja(AConn);
     Frm.FEmpresa := AEmpresa;
     Frm.FAlmacen := AAlmacen;
     Frm.FCaja    := ACaja;
@@ -121,14 +126,15 @@ begin
   Self.Position := poScreenCenter;
   Self.KeyPreview := True;
   Self.OnKeyDown := FormKeyDown;
-  FQry := TUniQuery.Create(Self);
-  dsArqueos.DataSet := FQry;
 end;
 
 procedure TfrmModalArqueosHistCaja.FormDestroy(Sender: TObject);
 begin
+  dsArqueos.DataSet := nil;
+  FDatos := nil;
+  FResultado := nil;
+  FRepositorioPersistencia := nil;
   inherited;
-  // FQry pertenece a Self como componente; se libera automáticamente.
 end;
 
 procedure TfrmModalArqueosHistCaja.FormShow(Sender: TObject);
@@ -144,29 +150,23 @@ procedure TfrmModalArqueosHistCaja.CargarArqueos;
 begin
   if (FConn = nil) or (not FConn.Connected) then
     Exit;
-  FQry.Close;
-  FQry.Connection := FConn;
-  // SELECT * para tolerar BBDD sin la migración del cierre Z: las columnas
-  // de recuento (TOTAL_RECUENTO_ARQ / DIFERENCIA_TOTAL_ARQ) saldrán vacías
-  // en el grid si aún no existen, sin romper la consulta.
-  FQry.SQL.Text :=
-    ' SELECT *                                                            ' +
-    '   FROM fza_caja_arqueos                                             ' +
-    '  WHERE CODIGO_EMP_ARQ  = :pEMP                                      ' +
-    '    AND CODIGO_ALM_ARQ  = :pALM                                      ' +
-    '    AND CODIGO_CAJA_ARQ = :pCAJA                                     ' +
-    '  ORDER BY FECHA_DESDE_ARQ DESC, CODIGO_ARQ DESC                     ';
-  FQry.ParamByName('pEMP').AsString  := FEmpresa;
-  FQry.ParamByName('pALM').AsString  := FAlmacen;
-  FQry.ParamByName('pCAJA').AsString := FCaja;
-  FQry.Open;
+  dsArqueos.DataSet := nil;
+  FDatos := nil;
+  FResultado := FRepositorioPersistencia.ConsultarArqueosHistorico(
+    FEmpresa,
+    FAlmacen,
+    FCaja);
+  FDatos := FResultado.DataSet;
+  dsArqueos.DataSet := FDatos;
 end;
 
 function TfrmModalArqueosHistCaja.ArqueoSeleccionado: string;
 begin
   Result := '';
-  if (FQry <> nil) and FQry.Active and (not FQry.IsEmpty) then
-    Result := FQry.FieldByName('CODIGO_ARQ').AsString;
+  if Assigned(FDatos) and FDatos.Active and (not FDatos.IsEmpty) then
+  begin
+    Result := FDatos.FieldByName('CODIGO_ARQ').AsString;
+  end;
 end;
 
 procedure TfrmModalArqueosHistCaja.btnDupTicketClick(Sender: TObject);
@@ -183,8 +183,10 @@ begin
   try
     TArqueoTicket.ImprimirDesdeHistorico(
       PreviewTicket,
-      CrearRepositorioArqueoCaja(FConn),
-      CrearRepositorioArqueoTicket(FConn),
+      ContextoRepositoriosPantalla.TicketsCaja.
+        CrearRepositorioArqueoCaja(FConn),
+      ContextoRepositoriosPantalla.TicketsCaja.
+        CrearRepositorioArqueoTicket(FConn),
       ParametrosCaja,
       FEmpresa,
       FAlmacen,
@@ -210,7 +212,8 @@ begin
   try
     TArqueoTicket.ImprimirCierreDesdeHistorico(
       PreviewTicket,
-      CrearRepositorioArqueoTicket(FConn),
+      ContextoRepositoriosPantalla.TicketsCaja.
+        CrearRepositorioArqueoTicket(FConn),
       ContextoSesion,
       FEmpresa,
       FAlmacen,

@@ -131,16 +131,8 @@
     Top = 440
   end
   object DataSource1: TDataSource
-    DataSet = qrySeleccion
     Left = 88
     Top = 32
-  end
-  object qrySeleccion: TUniQuery
-    Connection = dmConn.conUni
-    SQL.Strings = (
-      'select * from vi_cajasdef')
-    Left = 96
-    Top = 88
   end
   object ActionList1: TActionList
     Left = 368

@@ -28,8 +28,8 @@ uses
   cxGridDBTableView, cxGrid, dxSkinsCore, dxSkinBlue, cxContainer, cxMaskEdit,
   cxDropDownEdit, cxNavigator, cxPropertiesStore, dxSkinsForm,
   cxCalendar, cxDBData,
-  Data.DB, MemDS, DBAccess, Uni,
-  inMtoFrmBase, UniDataAlbaranes, dxCore, cxDateUtils, Vcl.Menus;
+  inMtoFrmBase, UniDataAlbaranes, dxCore, cxDateUtils, Vcl.Menus,
+  inLibFacturacionAlbaranesFechasPersistenciaIntf;
 
 type
   TfrmModalFacturarAlbaranesFechas = class(TfrmBase)
@@ -58,13 +58,14 @@ type
     btnSeleccionarTodos: TcxButton;
     btnFacturar: TcxButton;
     btnCerrar: TcxButton;
-    qBuscar: TUniQuery;
     procedure FormCreate(Sender: TObject);
     procedure btnBuscarClick(Sender: TObject);
     procedure btnSeleccionarTodosClick(Sender: TObject);
     procedure btnFacturarClick(Sender: TObject);
     procedure btnCerrarClick(Sender: TObject);
   private
+    FRepositorio: IRepositorioFacturacionAlbaranesFechas;
+    FAlbaranes: TAlbaranesFacturacionFechas;
     procedure CargarGrid;
   public
     dmmAlbaranes: TdmAlbaranes;
@@ -84,7 +85,8 @@ begin
   dteDesde.Date   := EncodeDate(YearOf(Date), MonthOf(Date), 1);
   dteHasta.Date   := Date;
   chkAgruparPorCliente.Checked := True;
-  qBuscar.Connection := ConexionPrincipal;
+  FRepositorio := ContextoRepositoriosPantalla.Documentos.
+    CrearRepositorioFacturacionAlbaranesFechas;
 end;
 
 procedure TfrmModalFacturarAlbaranesFechas.btnCerrarClick(Sender: TObject);
@@ -98,20 +100,10 @@ begin
   try
     lblEstado.Caption := SCaptionBuscandoAlbaranes;
     Application.ProcessMessages;
-    qBuscar.Close;
-    qBuscar.SQL.Text :=
-      'SELECT NUMERO_ALB, SERIE_ALB, FECHA_ALB, CODIGO_CLI_ALB, ' +
-      '       RAZON_SOCIAL_CLIENTE_ALB, TOTAL_LIQUIDO_ALB ' +
-      '  FROM fza_albaranes ' +
-      ' WHERE SERIE_ALB   = :pSERIE ' +
-      '   AND FECHA_ALB   BETWEEN :pDESDE AND :pHASTA ' +
-      '   AND IFNULL(ESTADO_ALB, '''') <> ''FACTURADO'' ' +
-      '   AND IFNULL(ESTADO_ALB, '''') <> ''CANCELADO'' ' +
-      ' ORDER BY CODIGO_CLI_ALB, FECHA_ALB, NUMERO_ALB';
-    qBuscar.ParamByName('pSERIE').AsString    := edtSerie.Text;
-    qBuscar.ParamByName('pDESDE').AsDateTime  := dteDesde.Date;
-    qBuscar.ParamByName('pHASTA').AsDateTime  := dteHasta.Date;
-    qBuscar.Open;
+    FAlbaranes := FRepositorio.Buscar(
+      edtSerie.Text,
+      dteDesde.Date,
+      dteHasta.Date);
     CargarGrid;
     lblEstado.Caption := Format(SCaptionAlbaranesEncontrados,
                                 [tvAlbaranes.DataController.RecordCount]);
@@ -125,26 +117,22 @@ var
   i: Integer;
 begin
   tvAlbaranes.DataController.RecordCount := 0;
-  tvAlbaranes.DataController.RecordCount := qBuscar.RecordCount;
-  qBuscar.First;
-  i := 0;
-  while not qBuscar.Eof do
+  tvAlbaranes.DataController.RecordCount := Length(FAlbaranes);
+  for i := 0 to High(FAlbaranes) do
   begin
     tvAlbaranes.DataController.Values[i, colSel.Index]         := True;
     tvAlbaranes.DataController.Values[i, colNumero.Index]      :=
-      qBuscar.FieldByName('NUMERO_ALB').AsString;
+      FAlbaranes[i].Numero;
     tvAlbaranes.DataController.Values[i, colSerie.Index]       :=
-      qBuscar.FieldByName('SERIE_ALB').AsString;
+      FAlbaranes[i].Serie;
     tvAlbaranes.DataController.Values[i, colFecha.Index]       :=
-      qBuscar.FieldByName('FECHA_ALB').AsDateTime;
+      FAlbaranes[i].Fecha;
     tvAlbaranes.DataController.Values[i, colCliente.Index]     :=
-      qBuscar.FieldByName('CODIGO_CLI_ALB').AsString;
+      FAlbaranes[i].CodigoCliente;
     tvAlbaranes.DataController.Values[i, colRazonSocial.Index] :=
-      qBuscar.FieldByName('RAZON_SOCIAL_CLIENTE_ALB').AsString;
+      FAlbaranes[i].RazonSocial;
     tvAlbaranes.DataController.Values[i, colTotal.Index]       :=
-      qBuscar.FieldByName('TOTAL_LIQUIDO_ALB').AsCurrency;
-    Inc(i);
-    qBuscar.Next;
+      FAlbaranes[i].Total;
   end;
 end;
 

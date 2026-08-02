@@ -106,18 +106,7 @@
       OnClick = btnAceptarClick
     end
   end
-  object unqryFamilias: TUniQuery
-    SQL.Strings = (
-      'SELECT CODIGO_FAM_FAM, NOMBRE_FAM_FAM,'
-      '       COALESCE(CODIGO_SUBFAMILIA_FAM, '#39#39') AS CODIGO_PADRE_FAM'
-      '  FROM fza_articulos_familias'
-      ' WHERE ESACTIVO_FAM = '#39'S'#39
-      ' ORDER BY ORDEN_FAM, NOMBRE_FAM_FAM')
-    Left = 480
-    Top = 16
-  end
   object dsFamilias: TDataSource
-    DataSet = unqryFamilias
     Left = 480
     Top = 72
   end

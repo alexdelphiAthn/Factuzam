@@ -474,14 +474,7 @@
       end
     end
   end
-  object unqryDepositosPrint: TUniQuery
-    SQL.Strings = (
-      'SELECT * FROM fza_depositos_cliente')
-    Left = 96
-    Top = 16
-  end
   object dsDepositosPrint: TDataSource
-    DataSet = unqryDepositosPrint
     Left = 96
     Top = 72
   end

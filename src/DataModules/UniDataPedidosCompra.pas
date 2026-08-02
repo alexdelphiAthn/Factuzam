@@ -126,7 +126,7 @@ type
 implementation
 
 uses
-  inLibLog, inLibValoresAutomaticos, inLibContadorLineas,
+  inLibValoresAutomaticos, inLibContadorLineas,
   UniDataContadorLineasRepositorio,
   System.Diagnostics, System.UITypes, System.Generics.Collections,
   ComCtrls, cxListView,
@@ -405,12 +405,12 @@ begin
     swQ := TStopwatch.StartNew;
     try
       unqryPedidosCompraLineas.Open;
-      inLibLog.Log.LogPerf(TAG, 'unqryPedidosCompraLineas OK',
+      RegistroLog.RegistrarRendimiento(TAG, 'unqryPedidosCompraLineas OK',
                             swQ.ElapsedMilliseconds);
     except
       on E: Exception do
       begin
-        inLibLog.Log.LogPerf(TAG,
+        RegistroLog.RegistrarRendimiento(TAG,
           'unqryPedidosCompraLineas ERROR=' + E.Message,
           swQ.ElapsedMilliseconds);
         raise;
@@ -422,12 +422,12 @@ begin
     swQ := TStopwatch.StartNew;
     try
       unqryAlbaranesPedc.Open;
-      inLibLog.Log.LogPerf(TAG, 'unqryAlbaranesPedc OK',
+      RegistroLog.RegistrarRendimiento(TAG, 'unqryAlbaranesPedc OK',
                             swQ.ElapsedMilliseconds);
     except
       on E: Exception do
       begin
-        inLibLog.Log.LogPerf(TAG,
+        RegistroLog.RegistrarRendimiento(TAG,
           'unqryAlbaranesPedc ERROR=' + E.Message,
           swQ.ElapsedMilliseconds);
         raise;
@@ -439,12 +439,12 @@ begin
     swQ := TStopwatch.StartNew;
     try
       unqryFormasPago.Open;
-      inLibLog.Log.LogPerf(TAG, 'unqryFormasPago OK',
+      RegistroLog.RegistrarRendimiento(TAG, 'unqryFormasPago OK',
                             swQ.ElapsedMilliseconds);
     except
       on E: Exception do
       begin
-        inLibLog.Log.LogPerf(TAG,
+        RegistroLog.RegistrarRendimiento(TAG,
           'unqryFormasPago ERROR=' + E.Message,
           swQ.ElapsedMilliseconds);
         raise;
@@ -456,19 +456,19 @@ begin
     swQ := TStopwatch.StartNew;
     try
       unqryAlmacenesPedc.Open;
-      inLibLog.Log.LogPerf(TAG, 'unqryAlmacenesPedc OK',
+      RegistroLog.RegistrarRendimiento(TAG, 'unqryAlmacenesPedc OK',
                             swQ.ElapsedMilliseconds);
     except
       on E: Exception do
       begin
-        inLibLog.Log.LogPerf(TAG,
+        RegistroLog.RegistrarRendimiento(TAG,
           'unqryAlmacenesPedc ERROR=' + E.Message,
           swQ.ElapsedMilliseconds);
         raise;
       end;
     end;
   end;
-  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+  RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmPedidosCompra.unqryTablaGAfterInsert(DataSet: TDataSet);

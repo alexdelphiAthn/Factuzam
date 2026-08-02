@@ -25,7 +25,8 @@ uses
   cxContainer, cxEdit, cxLabel, cxTextEdit, cxButtons, cxCurrencyEdit,
   cxRadioGroup, cxButtonEdit, Uni,
   inMtoFrmBase, dxCoreGraphics, Vcl.Menus, cxMaskEdit, cxGroupBox,
-  JvComponentBase, JvEnterTab, cxClasses, cxLocalization;
+  JvComponentBase, JvEnterTab, cxClasses, cxLocalization,
+  inLibCajaVentaIntf, inLibGastoCajaPersistenciaIntf;
 
 type
   TfrmModalGastoCaja = class(TfrmBase)
@@ -60,6 +61,8 @@ type
     FAlmacen: string;
     FCaja: string;
     FFechaOperacion: TDateTime;
+    FRepositorioConsultas: IRepositorioConsultasCaja;
+    FRepositorioPersistencia: IRepositorioGastoCaja;
     procedure BuscarEmpleados;
     procedure ValidarEmpleado;
     procedure Grabar;
@@ -83,9 +86,8 @@ implementation
 {$R *.dfm}
 
 uses
-  UniDataCaja, inLibGenerarTicketCaja,
-  UniDataGenerarTicketRepositorio,
-  inMtoGenSearch, Data.DB, inLibMsgCaja, inLibMsgComun;
+  inLibGenerarTicketCaja, inMtoGenSearch, Data.DB,
+  inLibMsgCaja, inLibMsgComun;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -105,6 +107,12 @@ begin
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
     frm.FFechaOperacion := AFechaOperacion;
+    frm.FRepositorioConsultas :=
+      frm.ContextoRepositoriosPantalla.Caja.
+        CrearRepositorioConsultasCaja(AConn);
+    frm.FRepositorioPersistencia :=
+      frm.ContextoRepositoriosPantalla.TicketsCaja.
+        CrearRepositorioGastoCaja(AConn);
     frm.btnEmpleado.Text := frm.IdentidadSesion.Usuario;
     frm.ValidarEmpleado;
     if frm.ShowModal = mrOk then
@@ -131,6 +139,12 @@ begin
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
     frm.FFechaOperacion := AFechaOperacion;
+    frm.FRepositorioConsultas :=
+      frm.ContextoRepositoriosPantalla.Caja.
+        CrearRepositorioConsultasCaja(AConn);
+    frm.FRepositorioPersistencia :=
+      frm.ContextoRepositoriosPantalla.TicketsCaja.
+        CrearRepositorioGastoCaja(AConn);
     frm.btnEmpleado.Text := frm.IdentidadSesion.Usuario;
     frm.ValidarEmpleado;
     frm.txtImporte.Value := Double(AImporte);
@@ -165,61 +179,37 @@ end;
 procedure TfrmModalGastoCaja.BuscarEmpleados;
 var
   formulario: TfrmMtoSearch;
-  unqry: TUniQuery;
+  oResultado: IResultadoConsultaCaja;
 begin
-  unqry := TUniQuery.Create(nil);
+  oResultado := FRepositorioConsultas.ConsultarEmpleados;
+  formulario := TfrmMtoSearch.Create(nil);
   try
-    unqry.Connection := FConn;
-    unqry.SQL.Text :=
-      'SELECT CODIGO_EMPL AS `Código`,' +
-      '       DIMINUTIVO_TICKET_EMPL AS `Nombre`' +
-      '  FROM fza_empleados' +
-      ' WHERE ESACTIVO_EMPL = ''S''' +
-      '   AND CODIGO_EMPL IS NOT NULL' +
-      ' ORDER BY CODIGO_EMPL';
-    formulario := TfrmMtoSearch.Create(nil);
-    try
-      formulario.Caption := STituloBusquedaEmpleados;
-      formulario.dsTablaG.DataSet := unqry;
-      unqry.Open;
-      formulario.ProcesarPerfiles;
-      formulario.ShowModal;
-      if formulario.sFicha = 'S' then
-      begin
-        btnEmpleado.Text := unqry.Fields[0].AsString;
-        ValidarEmpleado;
-      end;
-    finally
-      FreeAndNil(formulario);
+    formulario.Caption := STituloBusquedaEmpleados;
+    formulario.dsTablaG.DataSet := oResultado.DataSet;
+    formulario.ProcesarPerfiles;
+    formulario.ShowModal;
+    if formulario.sFicha = 'S' then
+    begin
+      btnEmpleado.Text := oResultado.DataSet.Fields[0].AsString;
+      ValidarEmpleado;
     end;
   finally
-    FreeAndNil(unqry);
+    FreeAndNil(formulario);
   end;
 end;
 
 procedure TfrmModalGastoCaja.ValidarEmpleado;
 var
-  Q: TUniQuery;
+  oEmpleado: TEmpleadoCaja;
 begin
   lblEmpleadoNombre.Caption := '';
-  if (FConn = nil) or (Trim(btnEmpleado.Text) = '') then
-    Exit;
-  Q := TUniQuery.Create(nil);
-  try
-    Q.Connection := FConn;
-    Q.SQL.Text :=
-      'SELECT DIMINUTIVO_TICKET_EMPL' +
-      '  FROM fza_empleados' +
-      ' WHERE (CODIGO_EMPL = :pCOD' +
-      '    OR DIMINUTIVO_TICKET_EMPL = :pCOD2)';
-    Q.ParamByName('pCOD').AsString  := Trim(btnEmpleado.Text);
-    Q.ParamByName('pCOD2').AsString := Trim(btnEmpleado.Text);
-    Q.Open;
-    if not Q.Eof then
-      lblEmpleadoNombre.Caption :=
-        Q.FieldByName('DIMINUTIVO_TICKET_EMPL').AsString;
-  finally
-    FreeAndNil(Q);
+  if Assigned(FRepositorioConsultas) and
+     (Trim(btnEmpleado.Text) <> '') and
+     FRepositorioConsultas.BuscarEmpleado(
+       Trim(btnEmpleado.Text),
+       oEmpleado) then
+  begin
+    lblEmpleadoNombre.Caption := oEmpleado.Nombre;
   end;
 end;
 
@@ -265,61 +255,38 @@ end;
 
 procedure TfrmModalGastoCaja.Grabar;
 var
-  dm: TdmCajaOpe;
+  oSolicitud: TSolicitudGastoCaja;
   sNumOp: string;
-  QryTrx: TUniQuery;
-  dImporte: Currency;
-  sConcepto, sTipo, sEmpleado: string;
+  sTipo: string;
 begin
-  dm := TdmCajaOpe.Create(
-    nil, FConn, ParametrosApp, ParametrosCaja, PreviewTicket);
-  try
-    dm.AsignarContextoSesion(ContextoSesion);
-    dImporte  := Currency(txtImporte.Value);
-    sEmpleado := Trim(btnEmpleado.Text);
-    sTipo     := ObtenerTipoTexto;
-    sConcepto := Trim(txtConcepto.Text);
-    if sConcepto <> '' then
-      sConcepto := sTipo + ': ' + sConcepto
-    else
-      sConcepto := sTipo;
-    sNumOp := dm.SiguienteOpCaja(
-      FEmpresa, FAlmacen, FCaja, sEmpleado);
-    FConn.StartTransaction;
-    try
-      QryTrx := TUniQuery.Create(nil);
-      try
-        QryTrx.Connection := FConn;
-        dm.InsertarOperacionCaja(
-          QryTrx,
-          FEmpresa, FAlmacen, FCaja,
-          sNumOp, 'GC', dImporte, sEmpleado,
-          FFechaOperacion,
-          '', '', '', sConcepto);
-        dm.InsertarPagoCaja(
-          QryTrx,
-          FEmpresa, FAlmacen, FCaja,
-          '', sNumOp, 1, 'EFE', dImporte, 0);
-      finally
-        FreeAndNil(QryTrx);
-      end;
-      FConn.Commit;
-    except
-      FConn.Rollback;
-      raise;
-    end;
-    ImprimirTicketOperacionCaja(
-      PreviewTicket,
-      ConexionPrincipal,
-      CrearLecturasImpresionTicket(ConexionPrincipal),
-      FEmpresa,
-      FAlmacen,
-      FCaja,
-      sNumOp,
-      ParametrosCaja.ImpresoraCaja);
-  finally
-    FreeAndNil(dm);
+  oSolicitud := Default(TSolicitudGastoCaja);
+  oSolicitud.Empresa := FEmpresa;
+  oSolicitud.Almacen := FAlmacen;
+  oSolicitud.Caja := FCaja;
+  oSolicitud.Empleado := Trim(btnEmpleado.Text);
+  oSolicitud.FechaOperacion := FFechaOperacion;
+  oSolicitud.Importe := Currency(txtImporte.Value);
+  sTipo := ObtenerTipoTexto;
+  oSolicitud.Concepto := Trim(txtConcepto.Text);
+  if oSolicitud.Concepto <> '' then
+  begin
+    oSolicitud.Concepto := sTipo + ': ' + oSolicitud.Concepto;
+  end
+  else
+  begin
+    oSolicitud.Concepto := sTipo;
   end;
+  sNumOp := FRepositorioPersistencia.Registrar(oSolicitud);
+  ImprimirTicketOperacionCaja(
+    PreviewTicket,
+    ConexionPrincipal,
+    ContextoRepositoriosPantalla.TicketsCaja.
+      CrearLecturasImpresionTicketCaja(ConexionPrincipal),
+    FEmpresa,
+    FAlmacen,
+    FCaja,
+    sNumOp,
+    ParametrosCaja.ImpresoraCaja);
 end;
 
 initialization

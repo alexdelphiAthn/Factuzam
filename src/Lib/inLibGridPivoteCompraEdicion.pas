@@ -75,12 +75,10 @@ type
     function CambiarColorLineaActiva(const ACodigoAtbColor: string;
       out AMensaje: string): Boolean;
   end;
-
 implementation
-
 uses
   Winapi.Windows,
-  inLibLog, inLibMsgCompras, inLibPivoteCompraCalculo;
+  inLibMsgCompras, inLibPivoteCompraCalculo;
 
 constructor TEdicionPivoteCompra.Create(
   const ACfg: TGridPivoteCompraConfig;
@@ -764,8 +762,8 @@ begin
     except
       on E: EInvalidOperation do
       begin
-        if inLibLog.Log() <> nil then
-          inLibLog.Log.LogWarning(
+        if Assigned(FCfg.RegistroLog) then
+          FCfg.RegistroLog.RegistrarAviso(
             'GridPivoteCompra.CapturarEditorActivo: HideEdit ' +
             'ignorado: ' + E.Message);
       end;
@@ -869,8 +867,8 @@ var
   bPuedeGrabar: Boolean;
 begin
   Result := 0;
-  if inLibLog.Log() <> nil then
-    inLibLog.Log.LogInfo('PivoteCompra.PersistirPendiente: INICIO');
+  if Assigned(FCfg.RegistroLog) then
+    FCfg.RegistroLog.RegistrarInformacion('PivoteCompra.Persistir: INICIO');
   bPuedeGrabar := (not FGuardando) and FPresentacion.Activo and
     (not FPresentacion.Expandido);
   if bPuedeGrabar then
@@ -903,8 +901,8 @@ begin
           if FCorrespondencia.CrearLineaRealDesdeCelda(
             oPar.Key, dCantidad, sLineaReal) then
             Inc(Result)
-          else if inLibLog.Log() <> nil then
-            inLibLog.Log.LogInfo(Format(
+          else if Assigned(FCfg.RegistroLog) then
+            FCfg.RegistroLog.RegistrarInformacion(Format(
               'PivoteCompra.PersistirPendiente: sin linea real key=%d',
               [oPar.Key]));
         end
@@ -953,8 +951,8 @@ begin
         FCfg.SourceLineas.Locate(FCfg.FieldLinea, sLineaFoco, []);
       FCfg.SourceLineas.EnableControls;
       FGuardando := False;
-      if inLibLog.Log() <> nil then
-        inLibLog.Log.LogInfo(Format(
+      if Assigned(FCfg.RegistroLog) then
+        FCfg.RegistroLog.RegistrarInformacion(Format(
           'PivoteCompra.PersistirPendiente: FIN guardadas=%d',
           [Result]));
     end;

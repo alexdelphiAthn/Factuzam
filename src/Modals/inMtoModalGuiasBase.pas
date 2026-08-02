@@ -23,7 +23,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.UITypes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, System.Actions,
-  Vcl.ActnList, Data.DB, MemDS, DBAccess, Uni,
+  Vcl.ActnList, Data.DB,
   inMtoFrmBase, dxCore, dxSkinsForm, dxSkinsCore, dxSkinBlue,
   cxClasses, cxContainer, cxEdit, cxControls, cxLookAndFeels, cxLocalization,
   cxGraphics, cxLookAndFeelPainters, cxButtons, cxStyles, cxLabel, cxTextEdit,
@@ -31,7 +31,7 @@ uses
   dxScrollbarAnnotations, cxDBData, cxGridLevel, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGridCustomView, cxGrid, cxMemo,
   cxDropDownEdit, cxListBox,
-  JvComponentBase, JvEnterTab;
+  JvComponentBase, JvEnterTab, inLibGuiasPersistenciaIntf;
 
 type
   TfrmModalGuiasBase = class(TfrmBase)
@@ -59,7 +59,6 @@ type
     grdGuias: TcxGrid;
     tvGuias: TcxGridDBTableView;
     lvGuias: TcxGridLevel;
-    unqryGuias: TUniQuery;
     dsGuias: TDataSource;
     tvGuiasCODIGO: TcxGridDBColumn;
     tvGuiasTABLA: TcxGridDBColumn;
@@ -92,6 +91,9 @@ type
     function ObtenerCampoMasterSeleccionado: string; virtual;
     procedure ConfigurarGuiaNueva; virtual;
   private
+    FRepositorio: IRepositorioGuias;
+    FNavegador: INavegadorGuias;
+    FGuias: TDataSet;
     procedure CargarTablas;
     procedure CargarCamposTabla(const sTabla: string);
     procedure ActualizarResumen;
@@ -105,21 +107,22 @@ implementation
 {$R *.dfm}
 
 uses
-  UniDataConn, inLibUser, inLibMsgComun;
+  inLibUser, inLibMsgComun;
 
 procedure TfrmModalGuiasBase.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
+  FRepositorio := ContextoRepositoriosPantalla.Configuracion.
+    CrearRepositorioGuias;
 end;
 
 procedure TfrmModalGuiasBase.FormShow(Sender: TObject);
 begin
   inherited;
-  unqryGuias.Connection := ConexionPrincipal;
-  unqryGuias.Close;
-  unqryGuias.ParamByName('INF').AsString := ObtenerClaveInforme;
-  unqryGuias.Open;
+  FNavegador := FRepositorio.ConsultarGuias(ObtenerClaveInforme);
+  FGuias := FNavegador.DataSet;
+  dsGuias.DataSet := FGuias;
   lblTitulo.Caption := ObtenerTitulo;
   lblInfo.Caption := ObtenerInfoCaption;
   CargarCamposMaster;
@@ -129,27 +132,14 @@ end;
 
 procedure TfrmModalGuiasBase.CargarTablas;
 var
-  qry: TUniQuery;
+  aTablas: TNombresEsquemaGuias;
+  sTabla: string;
 begin
   cbbTabla.Properties.Items.Clear;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text :=
-      'SELECT TABLE_NAME FROM information_schema.TABLES ' +
-      ' WHERE TABLE_SCHEMA = database() ' +
-      '   AND TABLE_TYPE IN (''BASE TABLE'', ''VIEW'') ' +
-      ' ORDER BY TABLE_NAME';
-    qry.Open;
-    while not qry.Eof do
-    begin
-      cbbTabla.Properties.Items.Add(
-        qry.FieldByName('TABLE_NAME').AsString);
-      qry.Next;
-    end;
-    qry.Close;
-  finally
-    FreeAndNil(qry);
+  aTablas := FRepositorio.ListarTablas;
+  for sTabla in aTablas do
+  begin
+    cbbTabla.Properties.Items.Add(sTabla);
   end;
 end;
 
@@ -161,29 +151,16 @@ end;
 
 procedure TfrmModalGuiasBase.CargarCamposTabla(const sTabla: string);
 var
-  qry: TUniQuery;
+  aCampos: TNombresEsquemaGuias;
+  sCampo: string;
 begin
   lbCamposTabla.Items.Clear;
   if sTabla = '' then
     Exit;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text :=
-      'SELECT COLUMN_NAME FROM information_schema.COLUMNS ' +
-      ' WHERE TABLE_SCHEMA = database() AND TABLE_NAME = :TAB ' +
-      ' ORDER BY ORDINAL_POSITION';
-    qry.ParamByName('TAB').AsString := sTabla;
-    qry.Open;
-    while not qry.Eof do
-    begin
-      lbCamposTabla.Items.Add(
-        qry.FieldByName('COLUMN_NAME').AsString);
-      qry.Next;
-    end;
-    qry.Close;
-  finally
-    FreeAndNil(qry);
+  aCampos := FRepositorio.ListarCamposTabla(sTabla);
+  for sCampo in aCampos do
+  begin
+    lbCamposTabla.Items.Add(sCampo);
   end;
 end;
 
@@ -227,19 +204,21 @@ begin
     sBase := sMaster + '.' + sTabla + '.' + sDetail;
     sCodigo := sBase;
     // Si ya existe una guía con ese código, añadir sufijo numérico
-    if unqryGuias.Active then
+    if FGuias.Active then
     begin
       i := 1;
-      unqryGuias.DisableControls;
+      FGuias.DisableControls;
       try
-        while unqryGuias.Locate('CODIGO_INFGUI', sCodigo,
-                                 [loCaseInsensitive]) do
+        while FGuias.Locate(
+          'CODIGO_INFGUI',
+          sCodigo,
+          [loCaseInsensitive]) do
         begin
           sCodigo := sBase + IntToStr(i);
           Inc(i);
         end;
       finally
-        unqryGuias.EnableControls;
+        FGuias.EnableControls;
       end;
     end;
     edtCodigo.Text := sCodigo;
@@ -310,25 +289,24 @@ begin
   end;
   sMaster := ObtenerCampoMasterSeleccionado;
   sDetail := lbCamposTabla.Items[lbCamposTabla.ItemIndex];
-  unqryGuias.Append;
-  unqryGuias.FieldByName('CODIGO_INFGUI').AsString := sCodigo;
-  unqryGuias.FieldByName('INFORME_INFGUI').AsString := ObtenerClaveInforme;
-  unqryGuias.FieldByName('FORMATO_INFGUI').AsString := ObtenerFormatoSugerido;
-  unqryGuias.FieldByName('DATASET_MASTER_INFGUI').AsString :=
+  FGuias.Append;
+  FGuias.FieldByName('CODIGO_INFGUI').AsString := sCodigo;
+  FGuias.FieldByName('INFORME_INFGUI').AsString := ObtenerClaveInforme;
+  FGuias.FieldByName('FORMATO_INFGUI').AsString := ObtenerFormatoSugerido;
+  FGuias.FieldByName('DATASET_MASTER_INFGUI').AsString :=
     ObtenerDatasetMaster;
-  unqryGuias.FieldByName('TIPO_INFGUI').AsString := 'TABLA';
-  unqryGuias.FieldByName('TABLA_INFGUI').AsString := sTabla;
-  unqryGuias.FieldByName('MASTER_FIELDS_INFGUI').AsString := sMaster;
-  unqryGuias.FieldByName('DETAIL_FIELDS_INFGUI').AsString := sDetail;
-  unqryGuias.FieldByName('ORDEN_INFGUI').AsInteger :=
-    unqryGuias.RecordCount;
-  unqryGuias.FieldByName('ESACTIVO_INFGUI').AsString := 'S';
-  unqryGuias.FieldByName('INSTANTE_ALTA').AsDateTime := Now;
-  unqryGuias.FieldByName('USUARIO_ALTA').AsString := IdentidadSesion.Usuario;
-  unqryGuias.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
-  unqryGuias.FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
+  FGuias.FieldByName('TIPO_INFGUI').AsString := 'TABLA';
+  FGuias.FieldByName('TABLA_INFGUI').AsString := sTabla;
+  FGuias.FieldByName('MASTER_FIELDS_INFGUI').AsString := sMaster;
+  FGuias.FieldByName('DETAIL_FIELDS_INFGUI').AsString := sDetail;
+  FGuias.FieldByName('ORDEN_INFGUI').AsInteger := FGuias.RecordCount;
+  FGuias.FieldByName('ESACTIVO_INFGUI').AsString := 'S';
+  FGuias.FieldByName('INSTANTE_ALTA').AsDateTime := Now;
+  FGuias.FieldByName('USUARIO_ALTA').AsString := IdentidadSesion.Usuario;
+  FGuias.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
+  FGuias.FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
   ConfigurarGuiaNueva;
-  unqryGuias.Post;
+  FGuias.Post;
   ShowMessage(Format(SInfoGuiaAnadida,
     [sCodigo, sTabla, sDetail, sMaster]));
   edtCodigo.Text := '';
@@ -336,25 +314,33 @@ end;
 
 procedure TfrmModalGuiasBase.btnEliminarClick(Sender: TObject);
 begin
-  if unqryGuias.IsEmpty then
+  if FGuias.IsEmpty then
   begin
     ShowMessage(SInfoGuiasEliminarNoEncontradas);
     Exit;
   end;
   if MessageDlg(
     Format(SPreguntaEliminarGuia,
-      [unqryGuias.FieldByName('CODIGO_INFGUI').AsString]),
+      [FGuias.FieldByName('CODIGO_INFGUI').AsString]),
     mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-    unqryGuias.Delete;
+    FGuias.Delete;
 end;
 
 procedure TfrmModalGuiasBase.FormClose(Sender: TObject;
                                        var Action: TCloseAction);
 begin
   inherited;
-  if unqryGuias.State in [dsEdit, dsInsert] then
-    unqryGuias.Post;
-  unqryGuias.Close;
+  if Assigned(FGuias) then
+  begin
+    if FGuias.State in [dsEdit, dsInsert] then
+    begin
+      FGuias.Post;
+    end;
+    FGuias.Close;
+  end;
+  dsGuias.DataSet := nil;
+  FGuias := nil;
+  FNavegador := nil;
 end;
 
 procedure TfrmModalGuiasBase.btnCerrarClick(Sender: TObject);

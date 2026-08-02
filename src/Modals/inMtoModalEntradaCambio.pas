@@ -23,7 +23,8 @@ uses
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxContainer, cxEdit, cxLabel, cxTextEdit, cxButtons, cxCurrencyEdit,
   cxButtonEdit, Uni,
-  inMtoFrmBase;
+  inMtoFrmBase, inLibCajaVentaIntf,
+  inLibEntradaCambioPersistenciaIntf;
 
 type
   TfrmModalEntradaCambio = class(TfrmBase)
@@ -56,6 +57,8 @@ type
     FAlmacen: string;
     FCaja: string;
     FFechaOperacion: TDateTime;
+    FRepositorioConsultas: IRepositorioConsultasCaja;
+    FRepositorioEntrada: IRepositorioEntradaCambio;
     procedure BuscarEmpleados;
     procedure ValidarEmpleado;
     procedure Grabar;
@@ -72,9 +75,7 @@ implementation
 {$R *.dfm}
 
 uses
-  UniDataCaja, inLibGenerarTicketCaja,
-  UniDataGenerarTicketRepositorio,
-  inMtoGenSearch, Data.DB, inLibMsgComun;
+  inLibGenerarTicketCaja, inMtoGenSearch, inLibMsgComun;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -94,6 +95,10 @@ begin
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
     frm.FFechaOperacion := AFechaOperacion;
+    frm.FRepositorioConsultas := frm.ContextoRepositoriosPantalla.Caja.
+      CrearRepositorioConsultasCaja(AConn);
+    frm.FRepositorioEntrada := frm.ContextoRepositoriosPantalla.TicketsCaja.
+      CrearRepositorioEntradaCambio(AConn);
     frm.btnEmpleado.Text := frm.IdentidadSesion.Usuario;
     frm.ValidarEmpleado;
     if frm.ShowModal = mrOk then
@@ -126,61 +131,37 @@ end;
 procedure TfrmModalEntradaCambio.BuscarEmpleados;
 var
   formulario: TfrmMtoSearch;
-  unqry: TUniQuery;
+  oResultado: IResultadoConsultaCaja;
 begin
-  unqry := TUniQuery.Create(nil);
+  oResultado := FRepositorioConsultas.ConsultarEmpleados;
+  formulario := TfrmMtoSearch.Create(nil);
   try
-    unqry.Connection := FConn;
-    unqry.SQL.Text :=
-      'SELECT CODIGO_EMPL AS `Código`,' +
-      '       DIMINUTIVO_TICKET_EMPL AS `Nombre`' +
-      '  FROM fza_empleados' +
-      ' WHERE ESACTIVO_EMPL = ''S''' +
-      '   AND CODIGO_EMPL IS NOT NULL' +
-      ' ORDER BY CODIGO_EMPL';
-    formulario := TfrmMtoSearch.Create(nil);
-    try
-      formulario.Caption := STituloBusquedaEmpleados;
-      formulario.dsTablaG.DataSet := unqry;
-      unqry.Open;
-      formulario.ProcesarPerfiles;
-      formulario.ShowModal;
-      if formulario.sFicha = 'S' then
-      begin
-        btnEmpleado.Text := unqry.Fields[0].AsString;
-        ValidarEmpleado;
-      end;
-    finally
-      FreeAndNil(formulario);
+    formulario.Caption := STituloBusquedaEmpleados;
+    formulario.dsTablaG.DataSet := oResultado.DataSet;
+    formulario.ProcesarPerfiles;
+    formulario.ShowModal;
+    if formulario.sFicha = 'S' then
+    begin
+      btnEmpleado.Text := oResultado.DataSet.Fields[0].AsString;
+      ValidarEmpleado;
     end;
   finally
-    FreeAndNil(unqry);
+    FreeAndNil(formulario);
   end;
 end;
 
 procedure TfrmModalEntradaCambio.ValidarEmpleado;
 var
-  Q: TUniQuery;
+  oEmpleado: TEmpleadoCaja;
 begin
   lblEmpleadoNombre.Caption := '';
-  if (FConn = nil) or (Trim(btnEmpleado.Text) = '') then
-    Exit;
-  Q := TUniQuery.Create(nil);
-  try
-    Q.Connection := FConn;
-    Q.SQL.Text :=
-      'SELECT DIMINUTIVO_TICKET_EMPL' +
-      '  FROM fza_empleados' +
-      ' WHERE (CODIGO_EMPL = :pCOD' +
-      '    OR DIMINUTIVO_TICKET_EMPL = :pCOD2)';
-    Q.ParamByName('pCOD').AsString  := Trim(btnEmpleado.Text);
-    Q.ParamByName('pCOD2').AsString := Trim(btnEmpleado.Text);
-    Q.Open;
-    if not Q.Eof then
-      lblEmpleadoNombre.Caption :=
-        Q.FieldByName('DIMINUTIVO_TICKET_EMPL').AsString;
-  finally
-    FreeAndNil(Q);
+  if Assigned(FRepositorioConsultas) and
+     (Trim(btnEmpleado.Text) <> '') and
+     FRepositorioConsultas.BuscarEmpleado(
+       Trim(btnEmpleado.Text),
+       oEmpleado) then
+  begin
+    lblEmpleadoNombre.Caption := oEmpleado.Nombre;
   end;
 end;
 
@@ -213,58 +194,34 @@ end;
 
 procedure TfrmModalEntradaCambio.Grabar;
 var
-  dm: TdmCajaOpe;
+  oSolicitud: TSolicitudEntradaCambio;
   sNumOp: string;
-  QryTrx: TUniQuery;
-  dImporte: Currency;
   sConcepto, sEmpleado: string;
 begin
-  dm := TdmCajaOpe.Create(
-    nil, FConn, ParametrosApp, ParametrosCaja, PreviewTicket);
-  try
-    dm.AsignarContextoSesion(ContextoSesion);
-    dImporte  := Currency(txtImporte.Value);
-    sEmpleado := Trim(btnEmpleado.Text);
-    sConcepto := Trim(txtConcepto.Text);
-    if sConcepto = '' then
-      sConcepto := 'Entrada de cambio';
-    sNumOp := dm.SiguienteOpCaja(
-      FEmpresa, FAlmacen, FCaja, sEmpleado);
-    FConn.StartTransaction;
-    try
-      QryTrx := TUniQuery.Create(nil);
-      try
-        QryTrx.Connection := FConn;
-        dm.InsertarOperacionCaja(
-          QryTrx,
-          FEmpresa, FAlmacen, FCaja,
-          sNumOp, 'EC', dImporte, sEmpleado,
-          FFechaOperacion,
-          '', '', '', sConcepto);
-        dm.InsertarPagoCaja(
-          QryTrx,
-          FEmpresa, FAlmacen, FCaja,
-          '', sNumOp, 1, 'EFE', dImporte, 0);
-      finally
-        FreeAndNil(QryTrx);
-      end;
-      FConn.Commit;
-    except
-      FConn.Rollback;
-      raise;
-    end;
-    ImprimirTicketOperacionCaja(
-      PreviewTicket,
-      ConexionPrincipal,
-      CrearLecturasImpresionTicket(ConexionPrincipal),
-      FEmpresa,
-      FAlmacen,
-      FCaja,
-      sNumOp,
-      ParametrosCaja.ImpresoraCaja);
-  finally
-    FreeAndNil(dm);
+  sEmpleado := Trim(btnEmpleado.Text);
+  sConcepto := Trim(txtConcepto.Text);
+  if sConcepto = '' then
+  begin
+    sConcepto := 'Entrada de cambio';
   end;
+  oSolicitud.Empresa := FEmpresa;
+  oSolicitud.Almacen := FAlmacen;
+  oSolicitud.Caja := FCaja;
+  oSolicitud.Empleado := sEmpleado;
+  oSolicitud.Concepto := sConcepto;
+  oSolicitud.FechaOperacion := FFechaOperacion;
+  oSolicitud.Importe := Currency(txtImporte.Value);
+  sNumOp := FRepositorioEntrada.Registrar(oSolicitud);
+  ImprimirTicketOperacionCaja(
+    PreviewTicket,
+    ConexionPrincipal,
+    ContextoRepositoriosPantalla.TicketsCaja.
+      CrearLecturasImpresionTicketCaja(ConexionPrincipal),
+    FEmpresa,
+    FAlmacen,
+    FCaja,
+    sNumOp,
+    ParametrosCaja.ImpresoraCaja);
 end;
 
 initialization

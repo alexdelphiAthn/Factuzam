@@ -44,13 +44,46 @@ uses
   inLibPerfilesUsuarioIntf, inLibParametrosIntf,
   inLibInformesGuiasCache, inLibTraduccionesIntf,
   inLibLogIntf,
+  inLibConfigCamposIntf,
   inLibCatalogoSqlIntf, inLibArticulosResolverIntf,
   inLibArticulosValidadorIntf, inLibArticulosAtributosIntf,
+  inLibArticulosPropiedadesPersistenciaIntf,
+  inLibStockConsultaPersistenciaIntf,
+  inLibImpresionPersistenciaIntf,
+  inLibDevolucionesCompraPersistenciaIntf,
+  inLibAppParamPersistenciaIntf,
+  inLibBusquedaDatosPersistenciaIntf,
+  inLibGeneracionSkusPersistenciaIntf,
+  inLibDistribuidorPersistenciaIntf,
+  inLibMargenPersistenciaIntf,
+  inLibDestinosFiltrosPersistenciaIntf,
+  inLibFiltroArticulosPersistenciaIntf,
+  inLibGuiasPersistenciaIntf,
+  inLibDestinoEnvioPersistenciaIntf,
+  inLibSeleccionFamiliaPersistenciaIntf,
+  inLibSerieFechaFacturaPersistenciaIntf,
+  inLibSeleccionAlmacenPersistenciaIntf,
+  inLibFacturacionAlbaranesFechasPersistenciaIntf,
+  inLibFacturacionTicketPersistenciaIntf,
+  inLibDocumentosTrabajo,
+  inLibCajasDefectoPersistenciaIntf,
+  inLibFaseCobroPersistenciaIntf,
+  inLibCajaOperacionesHistPersistenciaIntf,
+  inLibCajaPagosHistPersistenciaIntf,
+  inLibCajaVentaIntf,
+  inLibTraspasoOpePersistenciaIntf,
+  inLibModalArqueoPersistenciaIntf,
+  inLibInformesCajaPersistenciaIntf,
+  inLibGastoCajaPersistenciaIntf,
+  inLibEntradaCambioPersistenciaIntf,
+  inLibGenerarTicketIntf,
   inLibTraspasoTicketIntf, inLibArqueoIntf,
+  inLibArqueoPersistencia,
   inLibArqueoTicketIntf, inLibTiraCajaTicketIntf,
   inLibTicketsCajaIntf, inLibFotos, inLibUnidadesMedida,
   inLibGenBusq, inLibDistribuidorTallas, inLibLayoutForm,
-  inLibPreviewTicket, inLibPreviewExcel;
+  inLibPreviewTicket, inLibPreviewExcel,
+  inLibRepositoriosPantallaIntf;
 
 type
   TEnterAsTabEstado = record
@@ -70,13 +103,17 @@ type
     IProveedorParametros,
     IProveedorInformesGuiasCache,
     IProveedorTraducciones,
+    IProveedorRegistroLog,
+    IProveedorConfiguracionCampos,
     IProveedorFotosArticulos,
     IProveedorUnidadesMedida,
     IProveedorBusquedaVisual,
     IProveedorDistribuidorTallasVisual,
     IProveedorSolicitudPermisoLayout,
     IProveedorPreviewTicket,
-    IContenedorProveedorPreviewExcel
+    IContenedorProveedorPreviewExcel,
+    IProveedorContextoRepositoriosPantalla,
+    IProveedorFabricaContextosRepositoriosPantalla
   )
     Localizer1: TcxLocalizer;
     jvntrstb1: TJvEnterAsTab;
@@ -105,9 +142,10 @@ type
     FPreviewTicket: IPreviewTicket;
     FProveedorPreviewExcel: IProveedorPreviewExcel;
     FRegistroLog: IRegistroLog;
-    FCatalogoSql: ICatalogoSql;
-    FIncidenciasSql: IRegistroIncidenciasSql;
-    FCatalogoSqlInicializado: Boolean;
+    FConfiguracionCampos: IConfiguracionCampos;
+    FFabricaContextosRepositorios:
+      IFabricaContextosRepositoriosPantalla;
+    FContextoRepositoriosPantalla: IContextoRepositoriosPantalla;
     FEnterAsTabEstados: array of TEnterAsTabEstado;
     FEnterAsTabTemporalActivo: Boolean;
     function GetPermisos: IPermisosAplicacion;
@@ -137,6 +175,11 @@ type
     function GetPreviewTicket: IPreviewTicket;
     function GetProveedorPreviewExcel: IProveedorPreviewExcel;
     function GetRegistroLog: IRegistroLog;
+    function GetConfiguracionCampos: IConfiguracionCampos;
+    function GetContextoRepositoriosPantalla:
+      IContextoRepositoriosPantalla;
+    function GetFabricaContextosRepositoriosPantalla:
+      IFabricaContextosRepositoriosPantalla;
     function GetConexionPrincipal: TUniConnection;
     function NormalizarSegmentoClaveTraduccion(
       const ATexto: string): string;
@@ -149,6 +192,9 @@ type
     procedure HeredarParametros(AOwner: TComponent);
     procedure HeredarInformesGuiasCache(AOwner: TComponent);
     procedure HeredarTraducciones(AOwner: TComponent);
+    procedure HeredarRegistroLog(AOwner: TComponent);
+    procedure HeredarConfiguracionCampos(AOwner: TComponent);
+    procedure HeredarFabricaContextosRepositorios(AOwner: TComponent);
     procedure HeredarFotosArticulos(AOwner: TComponent);
     procedure HeredarUnidadesMedida(AOwner: TComponent);
     procedure HeredarBusquedaVisual(AOwner: TComponent);
@@ -157,7 +203,7 @@ type
     procedure HeredarPreviewTicket(AOwner: TComponent);
     procedure HeredarProveedorPreviewExcel(AOwner: TComponent);
     procedure GuardarEnterAsTabDe(AOwner: TComponent);
-    procedure AsegurarCatalogoSqlAplicacion;
+    procedure InvalidarContextoRepositoriosPantalla;
     procedure AplicarIdiomaDevExpress;
     procedure TraducirDevExpress(
       const AResStringName: string;
@@ -174,30 +220,14 @@ type
     procedure RestaurarEnterAsTabTemporal(Sender: TObject);
     procedure ActualizarAuditoria(DataSet: TDataSet);
     procedure CerrarMonitorSQLPendiente;
-    function CrearResolverArticulos(
-      AConexion: TUniConnection = nil): IArticulosResolver;
-    function CrearValidadorArticulos(
-      AConexion: TUniConnection = nil): IArticulosValidador;
-    function CrearLookupAtributosArticulos(
-      AConexion: TUniConnection = nil): IArticulosAtributosLookup;
-    function CrearRepositorioTraspasoTicket(
-      AConexion: TUniConnection = nil): IRepositorioTraspasoTicket;
-    function CrearRepositorioArqueoCaja(
-      AConexion: TUniConnection = nil): IRepositorioArqueoCaja;
-    function CrearRepositorioArqueoTicket(
-      AConexion: TUniConnection = nil): IRepositorioArqueoTicket;
-    function CrearRepositorioTiraCajaTicket(
-      AConexion: TUniConnection = nil): IRepositorioTiraCajaTicket;
-    function CrearRepositorioTicketsCaja(
-      AConexion: TUniConnection = nil): TRepositoriosTicketsCaja;
     function TraducirCategoriaParametro(
       const AUnidad, ACategoria: string): string;
     function TraducirDescripcionParametro(
       const AUnidad: string;
       const AParametro: TParamInfo): string;
-    function CatalogoSqlAplicacion: ICatalogoSql;
-    function IncidenciasSqlAplicacion:
-      IRegistroIncidenciasSql;
+    property ContextoRepositoriosPantalla:
+      IContextoRepositoriosPantalla
+      read GetContextoRepositoriosPantalla;
     property RegistroLog: IRegistroLog read GetRegistroLog;
   public
     { Public declarations }
@@ -230,6 +260,12 @@ type
       const AInformesGuiasCache: IInformesGuiasCache);
     procedure AsignarTraducciones(
       const ATraducciones: IServicioTraducciones);
+    procedure AsignarRegistroLog(
+      const ARegistroLog: IRegistroLog);
+    procedure AsignarConfiguracionCampos(
+      const AConfiguracionCampos: IConfiguracionCampos);
+    procedure AsignarFabricaContextosRepositoriosPantalla(
+      const AFabrica: IFabricaContextosRepositoriosPantalla);
     procedure AplicarTraduccionActual;
     procedure AsignarFotosArticulos(AFotos: TFotosArticulos);
     procedure AsignarUnidadesMedida(AUnidades: TUnidadesMedida);
@@ -286,31 +322,30 @@ type
     property ProveedorPreviewExcel: IProveedorPreviewExcel
       read GetProveedorPreviewExcel;
     property ConexionPrincipal: TUniConnection read GetConexionPrincipal;
+    property ConfiguracionCampos: IConfiguracionCampos
+      read GetConfiguracionCampos;
   end;
 
 implementation
 
 uses
-  inLibLog, inLibMsgComun, inLibTraducciones,
-  UniDataCatalogoSqlAplicacion,
-  UniDataArticulosResolverRepositorio,
-  UniDataArticulosValidadorRepositorio,
-  UniDataArticulosAtributosRepositorio,
-  UniDataTraspasoTicketRepositorio,
-  UniDataArqueoRepositorio,
-  UniDataArqueoTicketRepositorio,
-  UniDataTiraCajaTicketRepositorio,
-  UniDataTicketsCajaRepositorio;
+  inLibRegistroLogNulo, inLibMsgComun, inLibTraducciones;
 
 {$R *.dfm}
 {$R CXLOCALIZATION.res}
+
+resourcestring
+  SErrorFabricaContextosRepositoriosNoConfigurada =
+    'La factoría de contextos de repositorios no está configurada.';
 
 constructor TfrmBase.Create(AOwner: TComponent);
 var
   ProveedorPermisos: IProveedorPermisosAplicacion;
 begin
   FPermisos := nil;
-  FRegistroLog := CrearRegistroLog;
+  HeredarRegistroLog(AOwner);
+  HeredarConfiguracionCampos(AOwner);
+  HeredarFabricaContextosRepositorios(AOwner);
   if Supports(
        AOwner,
        IProveedorPermisosAplicacion,
@@ -340,7 +375,9 @@ constructor TfrmBase.Create(
   const APermisos: IPermisosAplicacion);
 begin
   FPermisos := APermisos;
-  FRegistroLog := CrearRegistroLog;
+  HeredarRegistroLog(AOwner);
+  HeredarConfiguracionCampos(AOwner);
+  HeredarFabricaContextosRepositorios(AOwner);
   HeredarConexiones(AOwner);
   HeredarAuditoriaDatos(AOwner);
   HeredarMonitorSQL(AOwner);
@@ -369,9 +406,10 @@ end;
 
 destructor TfrmBase.Destroy;
 begin
-  FCatalogoSql := nil;
-  FIncidenciasSql := nil;
+  FContextoRepositoriosPantalla := nil;
+  FFabricaContextosRepositorios := nil;
   FRegistroLog := nil;
+  FConfiguracionCampos := nil;
   FFotosArticulos := nil;
   FUnidadesMedida := nil;
   FBusquedaVisual := nil;
@@ -380,174 +418,6 @@ begin
   FPreviewTicket := nil;
   FProveedorPreviewExcel := nil;
   inherited;
-end;
-
-procedure TfrmBase.AsegurarCatalogoSqlAplicacion;
-var
-  bActivo: Boolean;
-begin
-  if not FCatalogoSqlInicializado then
-  begin
-    bActivo := False;
-    if Assigned(FPerfilesLectura) then
-    begin
-      try
-        bActivo := SameText(
-          FPerfilesLectura.ObtenerValorPerfil(
-            Self.Name,
-            'oGetSQLFromDB',
-            'False'),
-          'True');
-      except
-        on E: Exception do
-          if Log() <> nil then
-            Log.LogWarning(
-              'No se pudo leer oGetSQLFromDB de ' +
-              Self.Name + ': ' + E.Message);
-      end;
-    end;
-    CrearCatalogoSqlAplicacion(
-      FPerfilesLectura,
-      FPerfilesEscritura,
-      bActivo,
-      FCatalogoSql,
-      FIncidenciasSql);
-    FCatalogoSqlInicializado := True;
-  end;
-end;
-
-function TfrmBase.CatalogoSqlAplicacion: ICatalogoSql;
-begin
-  AsegurarCatalogoSqlAplicacion;
-  Result := FCatalogoSql;
-end;
-
-function TfrmBase.IncidenciasSqlAplicacion:
-  IRegistroIncidenciasSql;
-begin
-  AsegurarCatalogoSqlAplicacion;
-  Result := FIncidenciasSql;
-end;
-
-function TfrmBase.CrearResolverArticulos(
-  AConexion: TUniConnection): IArticulosResolver;
-var
-  oConexion: TUniConnection;
-begin
-  AsegurarCatalogoSqlAplicacion;
-  oConexion := AConexion;
-  if not Assigned(oConexion) then
-    oConexion := ConexionPrincipal;
-  Result := TRepositorioArticulosResolver.Create(
-    oConexion,
-    FParametrosCaja,
-    FCatalogoSql,
-    FIncidenciasSql);
-end;
-
-function TfrmBase.CrearValidadorArticulos(
-  AConexion: TUniConnection): IArticulosValidador;
-var
-  oConexion: TUniConnection;
-begin
-  AsegurarCatalogoSqlAplicacion;
-  oConexion := AConexion;
-  if not Assigned(oConexion) then
-    oConexion := ConexionPrincipal;
-  Result := TRepositorioArticulosValidador.Create(
-    oConexion,
-    FCatalogoSql,
-    FIncidenciasSql);
-end;
-
-function TfrmBase.CrearLookupAtributosArticulos(
-  AConexion: TUniConnection): IArticulosAtributosLookup;
-var
-  oConexion: TUniConnection;
-begin
-  AsegurarCatalogoSqlAplicacion;
-  oConexion := AConexion;
-  if not Assigned(oConexion) then
-    oConexion := ConexionPrincipal;
-  Result := TRepositorioArticulosAtributos.Create(
-    oConexion,
-    FCatalogoSql,
-    FIncidenciasSql);
-end;
-
-function TfrmBase.CrearRepositorioTraspasoTicket(
-  AConexion: TUniConnection): IRepositorioTraspasoTicket;
-var
-  oConexion: TUniConnection;
-begin
-  AsegurarCatalogoSqlAplicacion;
-  oConexion := AConexion;
-  if not Assigned(oConexion) then
-    oConexion := ConexionPrincipal;
-  Result := TRepositorioTraspasoTicket.Create(
-    oConexion,
-    FCatalogoSql,
-    FIncidenciasSql);
-end;
-
-function TfrmBase.CrearRepositorioArqueoCaja(
-  AConexion: TUniConnection): IRepositorioArqueoCaja;
-var
-  oConexion: TUniConnection;
-begin
-  AsegurarCatalogoSqlAplicacion;
-  oConexion := AConexion;
-  if not Assigned(oConexion) then
-    oConexion := ConexionPrincipal;
-  Result := TRepositorioArqueoCaja.Create(
-    oConexion,
-    FCatalogoSql,
-    FIncidenciasSql);
-end;
-
-function TfrmBase.CrearRepositorioArqueoTicket(
-  AConexion: TUniConnection): IRepositorioArqueoTicket;
-var
-  oConexion: TUniConnection;
-begin
-  AsegurarCatalogoSqlAplicacion;
-  oConexion := AConexion;
-  if not Assigned(oConexion) then
-    oConexion := ConexionPrincipal;
-  Result := TRepositorioArqueoTicket.Create(
-    oConexion,
-    FCatalogoSql,
-    FIncidenciasSql);
-end;
-
-function TfrmBase.CrearRepositorioTiraCajaTicket(
-  AConexion: TUniConnection): IRepositorioTiraCajaTicket;
-var
-  oConexion: TUniConnection;
-begin
-  AsegurarCatalogoSqlAplicacion;
-  oConexion := AConexion;
-  if not Assigned(oConexion) then
-    oConexion := ConexionPrincipal;
-  Result := TRepositorioTiraCajaTicket.Create(
-    oConexion,
-    FCatalogoSql,
-    FIncidenciasSql);
-end;
-
-function TfrmBase.CrearRepositorioTicketsCaja(
-  AConexion: TUniConnection): TRepositoriosTicketsCaja;
-var
-  oConexion: TUniConnection;
-begin
-  AsegurarCatalogoSqlAplicacion;
-  oConexion := AConexion;
-  if not Assigned(oConexion) then
-    oConexion := ConexionPrincipal;
-  Result := CrearRepositoriosTicketsCaja(
-    oConexion,
-    FCatalogoSql,
-    FIncidenciasSql);
 end;
 
 function TfrmBase.NormalizarSegmentoClaveTraduccion(
@@ -934,6 +804,68 @@ begin
     FProveedorPreviewExcel := Contenedor.ProveedorPreviewExcel;
 end;
 
+procedure TfrmBase.HeredarRegistroLog(AOwner: TComponent);
+var
+  Proveedor: IProveedorRegistroLog;
+begin
+  FRegistroLog := nil;
+  if Supports(AOwner, IProveedorRegistroLog, Proveedor) then
+    FRegistroLog := Proveedor.RegistroLog;
+  if not Assigned(FRegistroLog) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorRegistroLog,
+       Proveedor) then
+    FRegistroLog := Proveedor.RegistroLog;
+  if not Assigned(FRegistroLog) then
+    FRegistroLog := CrearRegistroLogNulo;
+end;
+
+procedure TfrmBase.HeredarConfiguracionCampos(AOwner: TComponent);
+var
+  Proveedor: IProveedorConfiguracionCampos;
+begin
+  FConfiguracionCampos := nil;
+  if Supports(
+       AOwner,
+       IProveedorConfiguracionCampos,
+       Proveedor) then
+    FConfiguracionCampos := Proveedor.ConfiguracionCampos;
+  if not Assigned(FConfiguracionCampos) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorConfiguracionCampos,
+       Proveedor) then
+    FConfiguracionCampos := Proveedor.ConfiguracionCampos;
+end;
+
+procedure TfrmBase.HeredarFabricaContextosRepositorios(
+  AOwner: TComponent);
+var
+  Proveedor: IProveedorFabricaContextosRepositoriosPantalla;
+begin
+  FFabricaContextosRepositorios := nil;
+  if Supports(
+       AOwner,
+       IProveedorFabricaContextosRepositoriosPantalla,
+       Proveedor) then
+    FFabricaContextosRepositorios :=
+      Proveedor.FabricaContextosRepositoriosPantalla;
+  if not Assigned(FFabricaContextosRepositorios) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorFabricaContextosRepositoriosPantalla,
+       Proveedor) then
+    FFabricaContextosRepositorios :=
+      Proveedor.FabricaContextosRepositoriosPantalla;
+end;
+
 procedure TfrmBase.AsignarPermisos(
   const APermisos: IPermisosAplicacion);
 begin
@@ -944,6 +876,7 @@ procedure TfrmBase.AsignarConexiones(
   const AConexiones: IServicioConexiones);
 begin
   FConexiones := AConexiones;
+  InvalidarContextoRepositoriosPantalla;
 end;
 
 procedure TfrmBase.AsignarAuditoriaDatos(
@@ -962,6 +895,7 @@ procedure TfrmBase.AsignarContextoSesion(
   const AContextoSesion: IContextoSesionAplicacion);
 begin
   FContextoSesion := AContextoSesion;
+  InvalidarContextoRepositoriosPantalla;
 end;
 
 procedure TfrmBase.AsignarFiltrosGuardados(
@@ -978,9 +912,7 @@ begin
   FPerfilesLectura := AServicios.Lectura;
   FPerfilesEscritura := AServicios.Escritura;
   FCachePerfiles := AServicios.Cache;
-  FCatalogoSql := nil;
-  FIncidenciasSql := nil;
-  FCatalogoSqlInicializado := False;
+  InvalidarContextoRepositoriosPantalla;
 end;
 
 procedure TfrmBase.AsignarParametros(
@@ -989,6 +921,7 @@ procedure TfrmBase.AsignarParametros(
 begin
   FParametrosApp := AParametrosApp;
   FParametrosCaja := AParametrosCaja;
+  InvalidarContextoRepositoriosPantalla;
 end;
 
 procedure TfrmBase.AsignarInformesGuiasCache(
@@ -1005,6 +938,29 @@ begin
     ActivarTraduccionResourcestrings(FTraducciones);
   if Assigned(Localizer1) then
     AplicarIdiomaDevExpress;
+end;
+
+procedure TfrmBase.AsignarRegistroLog(
+  const ARegistroLog: IRegistroLog);
+begin
+  if Assigned(ARegistroLog) then
+    FRegistroLog := ARegistroLog
+  else
+    FRegistroLog := CrearRegistroLogNulo;
+  InvalidarContextoRepositoriosPantalla;
+end;
+
+procedure TfrmBase.AsignarConfiguracionCampos(
+  const AConfiguracionCampos: IConfiguracionCampos);
+begin
+  FConfiguracionCampos := AConfiguracionCampos;
+end;
+
+procedure TfrmBase.AsignarFabricaContextosRepositoriosPantalla(
+  const AFabrica: IFabricaContextosRepositoriosPantalla);
+begin
+  FFabricaContextosRepositorios := AFabrica;
+  InvalidarContextoRepositoriosPantalla;
 end;
 
 procedure TfrmBase.AplicarTraduccionActual;
@@ -1084,6 +1040,7 @@ begin
   FSolicitudPermisoLayout := ASolicitudPermisoLayout;
   FPreviewTicket := APreviewTicket;
   FProveedorPreviewExcel := AProveedorPreviewExcel;
+  InvalidarContextoRepositoriosPantalla;
 end;
 
 function TfrmBase.GetFiltrosEscritura: IEscritorFiltrosGuardados;
@@ -1187,6 +1144,45 @@ end;
 function TfrmBase.GetRegistroLog: IRegistroLog;
 begin
   Result := FRegistroLog;
+end;
+
+function TfrmBase.GetConfiguracionCampos: IConfiguracionCampos;
+begin
+  Result := FConfiguracionCampos;
+end;
+
+procedure TfrmBase.InvalidarContextoRepositoriosPantalla;
+begin
+  FContextoRepositoriosPantalla := nil;
+end;
+
+function TfrmBase.GetContextoRepositoriosPantalla:
+  IContextoRepositoriosPantalla;
+begin
+  if not Assigned(FContextoRepositoriosPantalla) then
+  begin
+    if not Assigned(FFabricaContextosRepositorios) then
+      raise EInvalidOpException.Create(
+        SErrorFabricaContextosRepositoriosNoConfigurada);
+    FContextoRepositoriosPantalla :=
+      FFabricaContextosRepositorios.Crear(
+        Name,
+        GetConexionPrincipal,
+        FParametrosApp,
+        FParametrosCaja,
+        FContextoSesion,
+        FPerfilesLectura,
+        FPerfilesEscritura,
+        FRegistroLog,
+        FPreviewTicket);
+  end;
+  Result := FContextoRepositoriosPantalla;
+end;
+
+function TfrmBase.GetFabricaContextosRepositoriosPantalla:
+  IFabricaContextosRepositoriosPantalla;
+begin
+  Result := FFabricaContextosRepositorios;
 end;
 
 function TfrmBase.GetConexionPrincipal: TUniConnection;
@@ -1328,14 +1324,20 @@ end;
 procedure TfrmBase.DoShow;
 begin
   inherited;
-  if (Log() <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
-    Log.LogEvento(Self.UnitName, Self.ClassName, 'Show', Self.Name);
+  FRegistroLog.RegistrarEvento(
+    Self.UnitName,
+    Self.ClassName,
+    'Show',
+    Self.Name);
 end;
 
 procedure TfrmBase.DoClose(var Action: TCloseAction);
 begin
-  if (Log() <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
-    Log.LogEvento(Self.UnitName, Self.ClassName, 'Close', Self.Name);
+  FRegistroLog.RegistrarEvento(
+    Self.UnitName,
+    Self.ClassName,
+    'Close',
+    Self.Name);
   inherited;
 end;
 

@@ -51,7 +51,7 @@ type
 implementation
 
 uses
-  inLibLog, System.Diagnostics, inLibMsgArticulos;
+  System.Diagnostics, inLibMsgArticulos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -91,11 +91,12 @@ const
     swQ := TStopwatch.StartNew;
     try
       qry.Open;
-      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+      RegistroLog.RegistrarRendimiento(
+        TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
     except
       on E: Exception do
       begin
-        inLibLog.Log.LogPerf(TAG, Nombre + ' ERROR=' + E.Message,
+        RegistroLog.RegistrarRendimiento(TAG, Nombre + ' ERROR=' + E.Message,
           swQ.ElapsedMilliseconds);
         raise;
       end;
@@ -112,7 +113,7 @@ begin
   AbrirConTiempo(unqryAtributosBasicosLookup, 'unqryAtributosBasicosLookup');
   AbrirConTiempo(unqryConjuntoDetalle,        'unqryConjuntoDetalle');
   AbrirConTiempo(unqryArticulosConjunto,      'unqryArticulosConjunto');
-  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+  RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmAtributosConjuntos.unqryConjuntoDetalleAfterInsert(

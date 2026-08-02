@@ -16,7 +16,7 @@ unit inLibMonitorSQLLog;
 interface
 
 uses
-  inLibLog,
+  inLibLogIntf,
   inLibMonitorSQLIntf;
 
 type
@@ -25,12 +25,12 @@ type
     IRegistroMonitorSQL
   )
   private
-    FLog: TLog;
+    FRegistroLog: IRegistroLog;
     FVisor: IVisorMonitorSQL;
     function GetMonitorizacionActiva: Boolean;
   public
     constructor Create(
-      ALog: TLog;
+      const ARegistroLog: IRegistroLog;
       const AVisor: IVisorMonitorSQL);
     procedure EstablecerVisible(AVisible: Boolean);
     procedure Invalidar;
@@ -46,11 +46,11 @@ type
 implementation
 
 constructor TRegistroMonitorSQLLog.Create(
-  ALog: TLog;
+  const ARegistroLog: IRegistroLog;
   const AVisor: IVisorMonitorSQL);
 begin
   inherited Create;
-  FLog := ALog;
+  FRegistroLog := ARegistroLog;
   FVisor := AVisor;
 end;
 
@@ -63,13 +63,13 @@ end;
 procedure TRegistroMonitorSQLLog.Invalidar;
 begin
   FVisor := nil;
-  FLog := nil;
+  FRegistroLog := nil;
 end;
 
 function TRegistroMonitorSQLLog.GetMonitorizacionActiva: Boolean;
 begin
-  Result := Assigned(FLog) and
-            FLog.IsLogTypeEnabled(ltSQL);
+  Result := Assigned(FRegistroLog) and
+            FRegistroLog.SQLActivo;
 end;
 
 procedure TRegistroMonitorSQLLog.RegistrarSQL(
@@ -78,8 +78,13 @@ procedure TRegistroMonitorSQLLog.RegistrarSQL(
   AOk: Boolean;
   const AError: string);
 begin
-  if Assigned(FLog) then
-    FLog.LogSQLExt(ASQL, ATiempoMs, -1, AOk, AError);
+  if Assigned(FRegistroLog) then
+    FRegistroLog.RegistrarSQL(
+      ASQL,
+      ATiempoMs,
+      -1,
+      AOk,
+      AError);
 end;
 
 procedure TRegistroMonitorSQLLog.MostrarSQL(const ASQL: string);

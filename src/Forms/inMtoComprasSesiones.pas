@@ -71,6 +71,7 @@ uses
   inLibComprasSesiones,
   inLibComprasSesionesIntf,
   inLibComprasSesionesCreacion,
+  inLibComprasSesionesAplicacionIntf,
   UniDataComprasSesiones, cxBlobEdit, dxShellDialogs, cxRadioGroup, Vcl.Buttons,
   dxDateRanges, cxSplitter;
 
@@ -81,6 +82,11 @@ const
   CANT_TALLAS_MAX = 20;
 
 type
+  TContextoDependenciasComprasSesiones = record
+    AplicacionMaterializacion:
+      IAplicacionMaterializacionCompraSesion;
+  end;
+
   // Los tipos TPosConjunto / TArrPosConjunto viven ahora en
   // inLibGridTallasInline (compartidos con futuros Mtos de Pedidos
   // / Albaranes / Facturas que reusen el patron).
@@ -434,6 +440,7 @@ type
     Dmm: TdmComprasSesiones;
     FGestorCopiaLineas: TGestorCopiaLineasCompra;
     FServicioComprasSesiones: TServicioComprasSesiones;
+    FDependencias: TContextoDependenciasComprasSesiones;
     // --- Busqueda incremental in-cell de la columna "Modelo prov." ---
     // Desplegable (ExtLookupComboBox) que lista los modelos
     // (REF_PROVEEDOR_AP) ya existentes del proveedor de la cabecera cuyo
@@ -574,7 +581,10 @@ uses
   inLibMsgArticulos, inLibMsgCompras,
   inLibPresentacionDocumento,
   inLibContextoSesionIntf,
-  inLibLog,
+
+  inLibComprasSesionesAplicacion,
+  inLibComprasSesionesCreacionDataSet,
+  inMtoComprasSesionesMaterializacionVcl,
   UniDataComprasSesionesOperaciones,
   UniDataComprasSesionesComposicion;
 
@@ -584,6 +594,204 @@ const
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure InicializarMaterializacionCompraSesionVcl(
+  AFormulario: TfrmMtoComprasSesiones);
+var
+  Callbacks: TCallbacksMaterializacionCompraSesion;
+  Adaptador: TAdaptadorMaterializacionCompraSesionVcl;
+  Operaciones: IOperacionesMaterializacionCompraSesion;
+  Vista: IVistaMaterializacionCompraSesion;
+begin
+  Callbacks := Default(TCallbacksMaterializacionCompraSesion);
+  Callbacks.LeerEstado :=
+    function: TEstadoSesionCreacion
+    begin
+      Result := LeerEstadoSesionCreacion(AFormulario.Dmm.unqryTablaG);
+    end;
+  Callbacks.GuardarEdicion :=
+    procedure
+    begin
+      if AFormulario.Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
+        AFormulario.Dmm.unqryTablaG.Post;
+      if AFormulario.Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
+        AFormulario.Dmm.unqrySesionLin.Post;
+    end;
+  Callbacks.NormalizarDuplicados :=
+    function(const AEstado: TEstadoSesionCreacion): Integer
+    begin
+      Result := AFormulario.FServicioComprasSesiones.
+        NormalizarDuplicadosIntraSesion(
+          AFormulario.IdentidadSesion.Usuario,
+          AEstado.Serie,
+          AEstado.Numero);
+    end;
+  Callbacks.Validar :=
+    function(out AIncidencias: TIncidenciasMaterializacionSesion): Boolean
+    var
+      iIncidencia: Integer;
+      Lista: TStringList;
+    begin
+      Lista := TStringList.Create;
+      try
+        Result := AFormulario.FServicioComprasSesiones.
+          ValidarSesionDetallado(Lista);
+        SetLength(AIncidencias, Lista.Count);
+        for iIncidencia := 0 to Lista.Count - 1 do
+          AIncidencias[iIncidencia] := Lista[iIncidencia];
+      finally
+        FreeAndNil(Lista);
+      end;
+    end;
+  Callbacks.CalcularDefectos :=
+    function(const AEstado: TEstadoSesionCreacion):
+      TDefectosDialogoCreacion
+    begin
+      Result := CalcularDefectosDialogoCreacion(
+        AEstado,
+        ObtenerSerieDefecto(
+          AFormulario.ConexionPrincipal,
+          AEstado.Empresa,
+          'AB'),
+        ObtenerSerieDefecto(
+          AFormulario.ConexionPrincipal,
+          AEstado.Empresa,
+          'PC'));
+    end;
+  Callbacks.ActualizarCabecera :=
+    procedure(const AAjustes: TAjustesCreacionElegidos)
+    var
+      Cabecera: TCabeceraSesionActualizada;
+    begin
+      Cabecera := ComponerCabeceraActualizada(AAjustes);
+      EscribirCabeceraSesionCreacion(
+        AFormulario.Dmm.unqryTablaG,
+        Cabecera);
+    end;
+  Callbacks.Materializar :=
+    function(
+      const AAjustes: TAjustesCreacionElegidos;
+      out AResultado: TResultadoMaterializacionSesion): Boolean
+    var
+      Parametros: TParametrosMaterializacionSesion;
+    begin
+      Parametros := ComponerParametrosMaterializacion(
+        AFormulario.IdentidadSesion.Usuario,
+        AAjustes);
+      Screen.Cursor := crHourGlass;
+      try
+        Result := AFormulario.FServicioComprasSesiones.
+          EjecutarMaterializacion(Parametros, AResultado);
+      finally
+        Screen.Cursor := crDefault;
+      end;
+    end;
+  Callbacks.Refrescar :=
+    procedure
+    begin
+      AFormulario.Dmm.unqryTablaG.Refresh;
+      if AFormulario.Dmm.unqrySesDocs.Active then
+        AFormulario.Dmm.unqrySesDocs.Refresh
+      else
+        AFormulario.Dmm.unqrySesDocs.Open;
+      AFormulario.RefrescarFotosProvisionales;
+    end;
+  Callbacks.Registrar :=
+    procedure(const ATexto: string)
+    begin
+      AFormulario.LogSes(ATexto);
+    end;
+  Callbacks.MostrarBloqueo :=
+    procedure(AMotivo: TMotivoBloqueoCreacion)
+    begin
+      case AMotivo of
+        mbcSinCabecera:
+          ShowMessage(SErrorSesionCompraNoActiva);
+        mbcYaMaterializada:
+          ShowMessage(SErrorSesionYaMaterializada);
+      end;
+    end;
+  Callbacks.InformarDuplicados :=
+    procedure(ACantidad: Integer)
+    begin
+      ShowMessage(Format(
+        SInfoDuplicadosSesionMarcadosReusar,
+        [ACantidad]));
+      AFormulario.Dmm.unqrySesionLin.Refresh;
+    end;
+  Callbacks.MostrarIncidencias :=
+    procedure(const AIncidencias: TIncidenciasMaterializacionSesion)
+    var
+      sIncidencia: string;
+      Lista: TStringList;
+    begin
+      Lista := TStringList.Create;
+      try
+        for sIncidencia in AIncidencias do
+          Lista.Add(sIncidencia);
+        TfrmModalIncidencias.Mostrar(
+          AFormulario,
+          'Hay incidencias que impiden materializar la sesion:',
+          Lista);
+      finally
+        FreeAndNil(Lista);
+      end;
+    end;
+  Callbacks.SolicitarAjustes :=
+    function(
+      const AEstado: TEstadoSesionCreacion;
+      const ADefectos: TDefectosDialogoCreacion;
+      out AAjustes: TAjustesCreacionElegidos): Boolean
+    begin
+      Result := TfrmModalCrearAlbaranSesion.Solicitar(
+        AFormulario,
+        AFormulario.Dmm.dsAlmacenes,
+        AFormulario.Dmm.dsTarifas,
+        AFormulario.Dmm.dsTemporadas,
+        AEstado,
+        ADefectos,
+        AAjustes);
+    end;
+  Callbacks.MostrarResultado :=
+    procedure(const AResultado: TResultadoMaterializacionSesion)
+    var
+      DocumentoSeleccionado: TDocumentoMaterializado;
+    begin
+      if Length(AResultado.Documentos) = 0 then
+        ShowMessage(SInfoSesionMaterializadaSinDocumentos)
+      else if TfrmModalDocsCreados.Seleccionar(
+        AFormulario,
+        AResultado.Documentos,
+        DocumentoSeleccionado) then
+      begin
+        if SameText(DocumentoSeleccionado.Tipo, 'Albaran') then
+          ShowMto(
+            Application.MainForm,
+            'AlbaranesCompra',
+            DocumentoSeleccionado.Serie + ',' +
+              DocumentoSeleccionado.Numero)
+        else if SameText(DocumentoSeleccionado.Tipo, 'Pedido') then
+          ShowMto(
+            Application.MainForm,
+            'PedidosCompra',
+            DocumentoSeleccionado.Serie + ',' +
+              DocumentoSeleccionado.Numero);
+      end;
+    end;
+  Callbacks.MostrarError :=
+    procedure(const AMensaje: string)
+    begin
+      TfrmModalIncidencias.MostrarMensaje(
+        AFormulario,
+        'No se pudo materializar la sesion:',
+        '[MATERIALIZAR] ' + AMensaje);
+    end;
+  Adaptador := TAdaptadorMaterializacionCompraSesionVcl.Create(Callbacks);
+  Operaciones := Adaptador;
+  Vista := Adaptador;
+  AFormulario.FDependencias.AplicacionMaterializacion :=
+    CrearAplicacionMaterializacionCompraSesion(Operaciones, Vista);
+end;
 
 procedure TfrmMtoComprasSesiones.LogSes(const ATexto: string);
 begin
@@ -813,8 +1021,10 @@ begin
   dmm := tdmDataModule as TdmComprasSesiones;
   FreeAndNil(FServicioComprasSesiones);
   FServicioComprasSesiones := CrearServicioComprasSesiones(
-    ConexionPrincipal, Dmm, FotosArticulos, CatalogoSqlAplicacion,
-    IncidenciasSqlAplicacion);
+    ConexionPrincipal, Dmm, FotosArticulos,
+    ContextoRepositoriosPantalla.CatalogoSql,
+    ContextoRepositoriosPantalla.IncidenciasSql);
+  InicializarMaterializacionCompraSesionVcl(Self);
   FreeAndNil(FGestorCopiaLineas);
   FGestorCopiaLineas := TGestorCopiaLineasCompra.Create(
     Dmm.unqryTablaG,
@@ -1455,8 +1665,8 @@ begin
     except
       // Si la conexion ya cayo no podemos hacer nada util aqui.
       on E: Exception do
-        if inLibLog.Log() <> nil then
-          inLibLog.Log.LogWarning(
+        if RegistroLog <> nil then
+          RegistroLog.RegistrarAviso(
             'ComprasSesiones.FormDestroy: cierre de query fallo: ' +
             E.Message);
     end;
@@ -1467,6 +1677,7 @@ begin
   if Supports(ContextoSesion, IGestorContextoSesion, GestorContexto) then
     GestorContexto.AsignarLogSesion(nil);
   FreeAndNil(FNombresConjunto);
+  FDependencias := Default(TContextoDependenciasComprasSesiones);
   FreeAndNil(FServicioComprasSesiones);
   FreeAndNil(FGestorCopiaLineas);
   FreeAndNil(FGestorTallas);
@@ -2276,7 +2487,7 @@ begin
       except
         on E: EInvalidOperation do
           // Ruido del editor inplace; queda constancia en el log.
-          inLibLog.Log.LogWarning(
+          RegistroLog.RegistrarAviso(
             'ComprasSesiones.ModeloTimerResolve: HideEdit ' +
             'ignorado: ' + E.Message);
       end;
@@ -2302,7 +2513,7 @@ begin
     except
       on E: EInvalidOperation do
         // Ruido del editor inplace; queda constancia en el log.
-        inLibLog.Log.LogWarning(
+        RegistroLog.RegistrarAviso(
           'ComprasSesiones.ModeloTimerResolve: HideEdit ' +
           'ignorado: ' + E.Message);
     end;
@@ -2408,179 +2619,10 @@ begin
 end;
 
 procedure TfrmMtoComprasSesiones.btnCrearClick(Sender: TObject);
-var
-  bOK    : Boolean;
-  sErr   : string;
-  incidencias : TStringList;
-  iAutoFix    : Integer;
-  Estado      : TEstadoSesionCreacion;
-  Defectos    : TDefectosDialogoCreacion;
-  Elegidos    : TAjustesCreacionElegidos;
-  Cabecera    : TCabeceraSesionActualizada;
-  DocumentoSeleccionado: TDocumentoMaterializado;
-  ParametrosMaterializacion: TParametrosMaterializacionSesion;
-  ResultadoMaterializacion: TResultadoMaterializacionSesion;
 begin
   inherited;
-  // Flujo:
-  //   1. Guardas y post de la edicion en curso.
-  //   2. ValidarSesionDetallado: si hay incidencias, modal y abortar.
-  //   3. Modal de settings con los defectos que calcula el dominio.
-  //   4. Materializar con los settings elegidos.
-  // Las decisiones (bloqueo, defectos, mapeo) viven en
-  // inLibComprasSesionesCreacion y se prueban sin VCL ni BBDD.
-  LogSes('btnCrearClick INICIO');
-  Estado := LeerEstadoSesionCreacion(Dmm.unqryTablaG);
-  case EvaluarBloqueoCreacionSesion(Estado) of
-    mbcSinCabecera:
-      begin
-        LogSes('  cabecera vacia, salida');
-        ShowMessage(SErrorSesionCompraNoActiva);
-        Exit;
-      end;
-    mbcYaMaterializada:
-      begin
-        LogSes('  sesion ya CERRADA, abortar');
-        ShowMessage(SErrorSesionYaMaterializada);
-        Exit;
-      end;
-  end;
-  LogSes(Format('  sesion=%s/%s, estado=%s, lineas master.CONTADOR=%d',
-                [Estado.Serie, Estado.Numero, Estado.Estado,
-                 Dmm.unqryTablaG.FieldByName(
-                   'CONTADOR_LINEAS_SES').AsInteger]));
-  if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
-  begin
-    LogSes('  master.Post pendiente');
-    Dmm.unqryTablaG.Post;
-  end;
-  if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
-  begin
-    LogSes('  detail.Post pendiente');
-    Dmm.unqrySesionLin.Post;
-  end;
-
-  // ---- 1b. Normalizar duplicados intra-sesion ----
-  // Si hay varias lineas con el mismo CODIGO_ART_TENTATIVO_SESLIN sin
-  // resolver, la materializacion reventaria con Duplicate entry en
-  // fza_articulos (PK CODIGO_ART_ART). Las marcamos automaticamente
-  // como REUSAR (la primera por LINEA crea el articulo, las demas son
-  // variantes — color/SKU — del mismo articulo).
-  iAutoFix := FServicioComprasSesiones.NormalizarDuplicadosIntraSesion(
-    IdentidadSesion.Usuario, Estado.Serie, Estado.Numero);
-  if iAutoFix > 0 then
-  begin
-    LogSes(Format(
-      '  NormalizarDuplicadosIntraSesion: %d linea(s) marcadas REUSAR',
-      [iAutoFix]));
-    ShowMessage(Format(SInfoDuplicadosSesionMarcadosReusar, [iAutoFix]));
-    Dmm.unqrySesionLin.Refresh;
-  end;
-
-  // ---- 2. Validador detallado ----
-  LogSes('  ValidarSesionDetallado');
-  incidencias := TStringList.Create;
-  try
-    if not FServicioComprasSesiones.ValidarSesionDetallado(
-             incidencias) then
-    begin
-      TfrmModalIncidencias.Mostrar(
-        Self,
-        'Hay incidencias que impiden materializar la sesion:',
-        incidencias);
-      Exit;
-    end;
-  finally
-    FreeAndNil(incidencias);
-  end;
-
-  // ---- 3. Modal de settings ----
-  Defectos := CalcularDefectosDialogoCreacion(
-    Estado,
-    ObtenerSerieDefecto(ConexionPrincipal, Estado.Empresa, 'AB'),
-    ObtenerSerieDefecto(ConexionPrincipal, Estado.Empresa, 'PC'));
-  if not TfrmModalCrearAlbaranSesion.Solicitar(
-           Self,
-           Dmm.dsAlmacenes,
-           Dmm.dsTarifas,
-           Dmm.dsTemporadas,
-           Estado,
-           Defectos,
-           Elegidos) then
-    Exit;
-
-  // Aplicar a la cabecera los settings elegidos para que la
-  // materializacion los vea. Las series NO se persisten: viajan como
-  // parametros porque pueden cambiar en cada materializacion.
-  Cabecera := ComponerCabeceraActualizada(Elegidos);
-  EscribirCabeceraSesionCreacion(Dmm.unqryTablaG, Cabecera);
-
-  // ---- 4. Materializar ----
-  LogSes(Format(
-    '  MaterializarSesion(genPed=%s, genAlb=%s, sAlb=%s, sPed=%s)',
-    [BoolToStr(Elegidos.GeneraPedido, True),
-     BoolToStr(Elegidos.GeneraAlbaran, True),
-     Elegidos.SerieAlbaran, Elegidos.SeriePedido]));
-  ParametrosMaterializacion := ComponerParametrosMaterializacion(
-    IdentidadSesion.Usuario, Elegidos);
-  Screen.Cursor := crHourGlass;
-  try
-    bOK := FServicioComprasSesiones.EjecutarMaterializacion(
-      ParametrosMaterializacion, ResultadoMaterializacion);
-  finally
-    Screen.Cursor := crDefault;
-  end;
-  sErr := ResultadoMaterializacion.MensajeError;
-  LogSes(Format(
-    '  Materializar -> bOK=%s, ped=%s/%s, alb=%s/%s, err=%s',
-    [BoolToStr(bOK, True),
-     ResultadoMaterializacion.SeriePedido,
-     ResultadoMaterializacion.NumeroPedido,
-     ResultadoMaterializacion.SerieAlbaran,
-     ResultadoMaterializacion.NumeroAlbaran, sErr]));
-  if bOK then
-  begin
-    LogSes('  master.Refresh');
-    Dmm.unqryTablaG.Refresh;
-    if Dmm.unqrySesDocs.Active then
-      Dmm.unqrySesDocs.Refresh
-    else
-      Dmm.unqrySesDocs.Open;
-    RefrescarFotosProvisionales;
-    // Mostrar todos los docs creados con boton "Ir a documento". En
-    // modo distribuido salen N albaranes (uno por almacen); en modo
-    // clasico solo uno. Sin docs no abrimos modal.
-    if Length(ResultadoMaterializacion.Documentos) = 0 then
-      ShowMessage(SInfoSesionMaterializadaSinDocumentos)
-    else
-    begin
-      if TfrmModalDocsCreados.Seleccionar(
-           Self,
-           ResultadoMaterializacion.Documentos,
-           DocumentoSeleccionado) then
-      begin
-        // BuscarTabla admite la PK compuesta separada por coma.
-        if SameText(DocumentoSeleccionado.Tipo, 'Albaran') then
-          ShowMto(Application.MainForm, 'AlbaranesCompra',
-                  DocumentoSeleccionado.Serie + ',' +
-                  DocumentoSeleccionado.Numero)
-        else if SameText(DocumentoSeleccionado.Tipo, 'Pedido') then
-          ShowMto(Application.MainForm, 'PedidosCompra',
-                  DocumentoSeleccionado.Serie + ',' +
-                  DocumentoSeleccionado.Numero);
-      end;
-    end;
-  end
-  else
-  begin
-    // El error tambien en modal de incidencias: se lee mejor aunque
-    // sea largo.
-    TfrmModalIncidencias.MostrarMensaje(
-      Self,
-      'No se pudo materializar la sesion:',
-      '[MATERIALIZAR] ' + sErr);
-  end;
-  LogSes('btnCrearClick FIN');
+  if Assigned(FDependencias.AplicacionMaterializacion) then
+    FDependencias.AplicacionMaterializacion.Ejecutar;
 end;
 
 
@@ -2899,7 +2941,7 @@ begin
       except
         on E: EInvalidOperation do
           // Ruido del editor inplace; queda constancia en el log.
-          inLibLog.Log.LogWarning(
+          RegistroLog.RegistrarAviso(
             'ComprasSesiones.DupModalTimer: HideEdit ignorado: ' +
             E.Message);
       end;

@@ -19,6 +19,22 @@ uses
   System.Classes, Vcl.Forms, inLibCajaTipos, inLibPermisosIntf;
 
 type
+  TModoVentanaTraspaso = (
+    mvtTraspaso,
+    mvtPeticion
+  );
+  TAtributosCargaTraspaso = array[1..5] of string;
+  TLineaCargaTraspaso = record
+    CodigoArticulo: string;
+    CodigoSku: string;
+    Descripcion: string;
+    Cantidad: Double;
+    NumeroAtributos: Integer;
+    ValoresAtributos: TAtributosCargaTraspaso;
+    NombresAtributos: TAtributosCargaTraspaso;
+  end;
+  TLineasCargaTraspaso = TArray<TLineaCargaTraspaso>;
+
   IOperacionCaja = interface
     ['{8DC46E81-713D-4CCB-ADCB-1D5204D6EF50}']
     function FormularioCaja: TCustomForm;
@@ -51,14 +67,27 @@ type
     procedure ActualizarFechaCaja(AFechaCaja: TDateTime);
   end;
 
+  ITraspasoCaja = interface
+    ['{8A0F8522-BC04-4D3B-AEA3-BC712D8BAF31}']
+    function FormularioTraspaso: TCustomForm;
+    procedure PrepararCargaExterna(
+      AModo: TModoVentanaTraspaso;
+      const AEmpresa, AAlmacen, ACaja: string;
+      AFecha: TDateTime;
+      const ALineas: TLineasCargaTraspaso);
+  end;
+
   IAnfitrionCajaVentanas = interface
-    ['{2D68C9D7-F132-476E-B762-543CA87E6DCC}']
+    ['{123C0301-B259-4C2C-842D-9BF3AE6C223C}']
     function CrearOperacionCaja(
       AOwner: TComponent;
       const APermisos: IPermisosAplicacion): IOperacionCaja;
     function CrearConsultaOperacionesCaja(
       AOwner: TComponent;
       const APermisos: IPermisosAplicacion): IConsultaOperacionesCaja;
+    function CrearTraspasoCaja(
+      AOwner: TComponent;
+      const APermisos: IPermisosAplicacion): ITraspasoCaja;
   end;
 
 function ExigirAnfitrionCaja(

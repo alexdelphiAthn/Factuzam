@@ -12,13 +12,10 @@
 {    Persistencia de la reversión de una sesión de compra materializada.       }
 {******************************************************************************}
 unit UniDataComprasSesionesReversion;
-
 interface
-
 uses
   inLibComprasSesionesLecturasIntf,
   UniDataComprasSesiones;
-
 function ValidarReversionSesion(
   ADM: TdmComprasSesiones;
   out AMensajeError: string): Boolean;
@@ -26,21 +23,23 @@ procedure EjecutarReversionSesion(
   ADM: TdmComprasSesiones;
   const ALecturas: ILecturasReversionMaterializacion;
   const AUsuario: string);
-
 implementation
 
 uses
   System.SysUtils,
   Data.DB, DBAccess, Uni,
-  inLibLog,
   inLibMsgCompras;
 // Aviso de paso omitido o degradado: rastro en el log tecnico y en la
 // pestania Log de la pantalla de sesiones cuando esta activa.
 procedure AvisoPaso(ADM: TdmComprasSesiones; const ATexto: string);
 begin
-  Log.LogWarning('inLibComprasSesionesMaterializar: ' + ATexto);
-  if Assigned(ADM) and Assigned(ADM.ContextoSesion) then
-    ADM.ContextoSesion.LogSesion('  AVISO: ' + ATexto);
+  if Assigned(ADM) then
+  begin
+    ADM.RegistroLog.RegistrarAviso(
+      'inLibComprasSesionesMaterializar: ' + ATexto);
+    if Assigned(ADM.ContextoSesion) then
+      ADM.ContextoSesion.LogSesion('  AVISO: ' + ATexto);
+  end;
 end;
 
 type

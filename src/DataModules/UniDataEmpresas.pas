@@ -79,7 +79,7 @@ type
 implementation
 
 uses
-  inLibCadenas, inLibDatasets, inLibValoresAutomaticos, inLibLog,
+  inLibCadenas, inLibDatasets, inLibValoresAutomaticos,
   System.Diagnostics,
   inLibFormatoDocumento, inLibIBAN, inLibMsgComun,
   inLibMsgFacturas;
@@ -445,11 +445,12 @@ const
     swQ := TStopwatch.StartNew;
     try
       qry.Open;
-      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+      RegistroLog.RegistrarRendimiento(
+        TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
     except
       on E: Exception do
       begin
-        inLibLog.Log.LogPerf(TAG,
+        RegistroLog.RegistrarRendimiento(TAG,
           Nombre + ' ERROR=' + E.Message,
           swQ.ElapsedMilliseconds);
         raise;
@@ -467,7 +468,7 @@ begin
   // activar su pestaña via AsegurarXxxAbierta.
   AbrirConTiempo(unqryPaises, 'unqryPaises');
   AbrirConTiempo(unqryIvas,   'unqryIvas');
-  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+  RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmEmpresas.AsegurarRetencionesAbierta;
@@ -477,12 +478,12 @@ begin
   swQ := TStopwatch.StartNew;
   try
     unqryRetenciones.Open;
-    inLibLog.Log.LogPerf('Empresas.Lazy', 'unqryRetenciones OK',
+    RegistroLog.RegistrarRendimiento('Empresas.Lazy', 'unqryRetenciones OK',
       swQ.ElapsedMilliseconds);
   except
     on E: Exception do
     begin
-      inLibLog.Log.LogPerf('Empresas.Lazy',
+      RegistroLog.RegistrarRendimiento('Empresas.Lazy',
         'unqryRetenciones ERROR=' + E.Message, swQ.ElapsedMilliseconds);
       raise;
     end;
@@ -496,12 +497,12 @@ begin
   swQ := TStopwatch.StartNew;
   try
     unqrySeries.Open;
-    inLibLog.Log.LogPerf('Empresas.Lazy', 'unqrySeries OK',
+    RegistroLog.RegistrarRendimiento('Empresas.Lazy', 'unqrySeries OK',
       swQ.ElapsedMilliseconds);
   except
     on E: Exception do
     begin
-      inLibLog.Log.LogPerf('Empresas.Lazy',
+      RegistroLog.RegistrarRendimiento('Empresas.Lazy',
         'unqrySeries ERROR=' + E.Message, swQ.ElapsedMilliseconds);
       raise;
     end;
@@ -515,12 +516,12 @@ begin
   swQ := TStopwatch.StartNew;
   try
     unqryBancos.Open;
-    inLibLog.Log.LogPerf('Empresas.Lazy', 'unqryBancos OK',
+    RegistroLog.RegistrarRendimiento('Empresas.Lazy', 'unqryBancos OK',
       swQ.ElapsedMilliseconds);
   except
     on E: Exception do
     begin
-      inLibLog.Log.LogPerf('Empresas.Lazy',
+      RegistroLog.RegistrarRendimiento('Empresas.Lazy',
         'unqryBancos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
       raise;
     end;
@@ -540,12 +541,12 @@ begin
       unqryFacturasEmpresas.Open;
     if not unqryFacturasLineasEmpresas.Active then
       unqryFacturasLineasEmpresas.Open;
-    inLibLog.Log.LogPerf('Empresas.Lazy',
+    RegistroLog.RegistrarRendimiento('Empresas.Lazy',
       'unqryFacturasEmpresas+Lineas OK', swQ.ElapsedMilliseconds);
   except
     on E: Exception do
     begin
-      inLibLog.Log.LogPerf('Empresas.Lazy',
+      RegistroLog.RegistrarRendimiento('Empresas.Lazy',
         'unqryFacturasEmpresas+Lineas ERROR=' + E.Message,
         swQ.ElapsedMilliseconds);
       raise;

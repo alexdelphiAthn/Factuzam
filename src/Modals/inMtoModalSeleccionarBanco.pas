@@ -22,18 +22,23 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  System.UITypes, Vcl.ExtCtrls, Vcl.StdCtrls, Data.DB, MemDS, DBAccess, Uni,
+  System.UITypes, Vcl.ExtCtrls, Vcl.StdCtrls, Data.DB, Uni,
   inMtoFrmBase, JvComponentBase, JvEnterTab,
   cxClasses, cxLocalization, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, Vcl.Menus, cxButtons, cxContainer, cxEdit, cxLabel,
   cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, cxDBData,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
-  cxGridDBTableView, cxGrid;
+  cxGridDBTableView, cxGrid, inLibSeleccionBancoEmpresaPersistenciaIntf;
 
 type
-  // Uso de la cuenta: cobro (ingreso de ventas) o pago (cargo de compras).
-  TUsoBancoEmpresa = (ubeCobro, ubePago);
+  TUsoBancoEmpresa =
+    inLibSeleccionBancoEmpresaPersistenciaIntf.TUsoBancoEmpresa;
 
+const
+  ubeCobro = inLibSeleccionBancoEmpresaPersistenciaIntf.ubeCobro;
+  ubePago = inLibSeleccionBancoEmpresaPersistenciaIntf.ubePago;
+
+type
   TSeleccionBancoResult = record
     Aceptado:      Boolean;
     CodigoEmpban:  string;
@@ -68,7 +73,8 @@ type
   private
     // Campos primero (E2169).
     FConn:      TUniConnection;
-    FQry:       TUniQuery;
+    FConsulta:  IConsultaBancosEmpresa;
+    FDatos:     TDataSet;
     FDs:        TDataSource;
     FEmpresa:   string;
     FUso:       TUsoBancoEmpresa;
@@ -107,7 +113,7 @@ begin
     frm.FEmpresa := ACodigoEmpresa;
     frm.FUso     := AUso;
     frm.CargarCuentas;
-    if frm.FQry.IsEmpty then
+    if frm.FDatos.IsEmpty then
     begin
       // Sin cuentas activas: se informa y se sigue sin banco asignado.
       ShowMessage(SInfoEmpresaSinCuentasBancarias);
@@ -118,7 +124,7 @@ begin
       // Pre-selecciona el banco por defecto del proveedor/cliente si se pasa
       // y pertenece a la empresa; si no, queda el ESDEFECTO segun el uso.
       if (APreferEmpban <> '') then
-        frm.FQry.Locate('CODIGO_EMPBAN', APreferEmpban, []);
+        frm.FDatos.Locate('CODIGO_EMPBAN', APreferEmpban, []);
       frm.ShowModal;
     end;
     Result := frm.FResultado;
@@ -132,57 +138,41 @@ begin
   inherited;
   Self.Position := poScreenCenter;
   FResultado.Aceptado := False;
-  FQry := TUniQuery.Create(Self);
   FDs  := TDataSource.Create(Self);
-  FDs.DataSet := FQry;
   tvBancos.DataController.DataSource := FDs;
 end;
 
 procedure TfrmModalSeleccionarBanco.CargarCuentas;
 var
-  sColDef: string;
+  Repositorio: IRepositorioSeleccionBancoEmpresa;
 begin
-  if not Assigned(FConn) then
-    FConn := ConexionPrincipal;
   if FUso = ubePago then
-  begin
-    sColDef := 'ESDEFECTO_PAGO_EMPBAN';
-    lblInfo.Caption := SCaptionCuentaEmpresaPagoEfectos;
-  end
+    lblInfo.Caption := SCaptionCuentaEmpresaPagoEfectos
   else
-  begin
-    sColDef := 'ESDEFECTO_COBRO_EMPBAN';
     lblInfo.Caption := SCaptionCuentaEmpresaCobroRecibos;
-  end;
-  FQry.Close;
-  FQry.Connection := FConn;
-  // La cuenta por defecto del uso queda la primera (DESC) -> preseleccionada.
-  FQry.SQL.Text :=
-    'SELECT * ' +
-    '  FROM vi_empresas_bancos ' +
-    ' WHERE CODIGO_EMP_EMPBAN = :emp ' +
-    '   AND COALESCE(ESACTIVO_EMPBAN, ''S'') = ''S'' ' +
-    ' ORDER BY ' + sColDef + ' DESC, NOMBRE_EMPBAN';
-  FQry.ParamByName('emp').AsString := FEmpresa;
-  FQry.Open;
+  Repositorio := ContextoRepositoriosPantalla.Configuracion.
+    CrearRepositorioSeleccionBancoEmpresa(FConn);
+  FConsulta := Repositorio.ConsultarCuentas(FEmpresa, FUso);
+  FDatos := FConsulta.DataSet;
+  FDs.DataSet := FDatos;
 end;
 
 procedure TfrmModalSeleccionarBanco.btnAceptarClick(Sender: TObject);
 begin
   inherited;
   FResultado.Aceptado := True;
-  if not FQry.IsEmpty then
+  if not FDatos.IsEmpty then
   begin
-    FResultado.CodigoEmpban  := FQry.FieldByName('CODIGO_EMPBAN').AsString;
-    FResultado.Iban          := FQry.FieldByName('IBAN_EMPBAN').AsString;
-    FResultado.Entidad       := FQry.FieldByName('ENTIDAD_EMPBAN').AsString;
-    FResultado.Oficina       := FQry.FieldByName('OFICINA_EMPBAN').AsString;
+    FResultado.CodigoEmpban  := FDatos.FieldByName('CODIGO_EMPBAN').AsString;
+    FResultado.Iban          := FDatos.FieldByName('IBAN_EMPBAN').AsString;
+    FResultado.Entidad       := FDatos.FieldByName('ENTIDAD_EMPBAN').AsString;
+    FResultado.Oficina       := FDatos.FieldByName('OFICINA_EMPBAN').AsString;
     FResultado.DigitoControl :=
-                          FQry.FieldByName('DIGITO_CONTROL_EMPBAN').AsString;
-    FResultado.Cuenta        := FQry.FieldByName('CUENTA_EMPBAN').AsString;
-    FResultado.Nombre        := FQry.FieldByName('NOMBRE_EMPBAN').AsString;
+                       FDatos.FieldByName('DIGITO_CONTROL_EMPBAN').AsString;
+    FResultado.Cuenta        := FDatos.FieldByName('CUENTA_EMPBAN').AsString;
+    FResultado.Nombre        := FDatos.FieldByName('NOMBRE_EMPBAN').AsString;
     FResultado.NombreBanco   :=
-                          FQry.FieldByName('NOMBRE_BAN_VIEW_EMPBAN').AsString;
+                       FDatos.FieldByName('NOMBRE_BAN_VIEW_EMPBAN').AsString;
   end;
   ModalResult := mrOk;
 end;

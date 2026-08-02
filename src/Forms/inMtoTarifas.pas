@@ -230,7 +230,6 @@ begin
 
   res := TfrmModalAddBlockTarifa.Ejecutar(
            Self,
-           (dsTablaG.DataSet as TUniQuery).Connection,
            codigoTar);
 
   if res.Aceptado then

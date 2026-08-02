@@ -21,11 +21,11 @@ uses
   inLibOperacionesAplicacionIntf;
 
 type
-  TCoordinadorOperacionesAplicacion = class(
+  TCasoUsoCopiasSeguridad = class(
     TInterfacedObject,
-    ICoordinadorOperacionesAplicacion)
+    ICasoUsoCopiasSeguridad)
   private
-    FServicioCopias: IServicioCopiasSeguridad;
+    FRepositorioCopias: IRepositorioCopiasSeguridad;
     FPresentacion: IPresentacionOperacionesAplicacion;
     FWorker: TThread;
     FEnCurso: Boolean;
@@ -38,13 +38,12 @@ type
       APaso, ATotal: Integer;
       AFilaGlobal, AFilasGlobalTotal: Integer);
     procedure FinalizarWorker(
-      AExito: Boolean;
+      AResultado: TResultadoCopiaSeguridad;
       const AError: string;
       ALogBuffer: TStringList);
-    function EsErrorCancelacion(const AError: string): Boolean;
   public
     constructor Create(
-      const AServicioCopias: IServicioCopiasSeguridad;
+      const ARepositorioCopias: IRepositorioCopiasSeguridad;
       const APresentacion: IPresentacionOperacionesAplicacion);
     function EnCurso: Boolean;
     function ModoCreacionCopia: TModoProteccionCopia;
@@ -60,6 +59,7 @@ type
     function CancelacionSolicitada: Boolean;
     function SolicitarCancelacion: Boolean;
   end;
+  TCoordinadorOperacionesAplicacion = TCasoUsoCopiasSeguridad;
 
 implementation
 
@@ -74,12 +74,12 @@ resourcestring
   SErrorOperacionAplicacionEnCurso =
     'Ya hay una operación larga en curso.';
 
-constructor TCoordinadorOperacionesAplicacion.Create(
-  const AServicioCopias: IServicioCopiasSeguridad;
+constructor TCasoUsoCopiasSeguridad.Create(
+  const ARepositorioCopias: IRepositorioCopiasSeguridad;
   const APresentacion: IPresentacionOperacionesAplicacion);
 begin
   inherited Create;
-  if not Assigned(AServicioCopias) then
+  if not Assigned(ARepositorioCopias) then
   begin
     raise EArgumentNilException.Create(
       SErrorServicioCopiasNoProporcionado);
@@ -89,11 +89,11 @@ begin
     raise EArgumentNilException.Create(
       SErrorPresentacionOperacionesNoProporcionada);
   end;
-  FServicioCopias := AServicioCopias;
+  FRepositorioCopias := ARepositorioCopias;
   FPresentacion := APresentacion;
 end;
 
-procedure TCoordinadorOperacionesAplicacion.ComenzarOperacion(
+procedure TCasoUsoCopiasSeguridad.ComenzarOperacion(
   ATipo: TTipoOperacionAplicacion);
 begin
   if FEnCurso then
@@ -108,53 +108,52 @@ begin
   FPresentacion.MostrarOperacion;
 end;
 
-procedure TCoordinadorOperacionesAplicacion.AbortarInicioOperacion;
+procedure TCasoUsoCopiasSeguridad.AbortarInicioOperacion;
 begin
   FWorker := nil;
   FCancelacionSolicitada := False;
   FEnCurso := False;
   FPresentacion.FinalizarOperacion(
     FTipoOperacion,
-    False,
-    False,
+    rcsFallida,
     '',
     nil);
 end;
 
-function TCoordinadorOperacionesAplicacion.EnCurso: Boolean;
+function TCasoUsoCopiasSeguridad.EnCurso: Boolean;
 begin
   Result := FEnCurso;
 end;
 
-function TCoordinadorOperacionesAplicacion.ModoCreacionCopia:
+function TCasoUsoCopiasSeguridad.ModoCreacionCopia:
   TModoProteccionCopia;
 begin
-  Result := FServicioCopias.ModoCreacion;
+  Result := FRepositorioCopias.ModoCreacion;
 end;
 
-function TCoordinadorOperacionesAplicacion.ExtensionCreacionCopia: string;
+function TCasoUsoCopiasSeguridad.ExtensionCreacionCopia: string;
 begin
-  Result := FServicioCopias.ExtensionCreacion;
+  Result := FRepositorioCopias.ExtensionCreacion;
 end;
 
-function TCoordinadorOperacionesAplicacion.PuedeRestaurar(
+function TCasoUsoCopiasSeguridad.PuedeRestaurar(
   const ARutaFichero: string): Boolean;
 begin
-  Result := FServicioCopias.PuedeRestaurar(ARutaFichero);
+  Result := FRepositorioCopias.PuedeRestaurar(ARutaFichero);
 end;
 
-function TCoordinadorOperacionesAplicacion.RequiereContrasena(
+function TCasoUsoCopiasSeguridad.RequiereContrasena(
   const ARutaFichero: string): Boolean;
 begin
-  Result := FServicioCopias.RequiereContrasena(ARutaFichero);
+  Result := FRepositorioCopias.RequiereContrasena(ARutaFichero);
 end;
 
-procedure TCoordinadorOperacionesAplicacion.IniciarCopia(
+procedure TCasoUsoCopiasSeguridad.IniciarCopia(
   const ARutaFichero, AContrasena: string);
 begin
   ComenzarOperacion(toaCopiaSeguridad);
   try
-    FServicioCopias.IniciarCopia(
+    FRepositorioCopias.IniciarCopia(
       ARutaFichero,
       AContrasena,
       ProgresoWorker,
@@ -166,12 +165,12 @@ begin
   end;
 end;
 
-procedure TCoordinadorOperacionesAplicacion.IniciarRestauracion(
+procedure TCasoUsoCopiasSeguridad.IniciarRestauracion(
   const ARutaFichero, AContrasena: string);
 begin
   ComenzarOperacion(toaRestauracion);
   try
-    FServicioCopias.IniciarRestauracion(
+    FRepositorioCopias.IniciarRestauracion(
       ARutaFichero,
       AContrasena,
       ProgresoWorker,
@@ -183,32 +182,34 @@ begin
   end;
 end;
 
-function TCoordinadorOperacionesAplicacion.CrearCopia(
+function TCasoUsoCopiasSeguridad.CrearCopia(
   const ARutaFichero, AContrasena: string): Boolean;
 var
+  Resultado: TResultadoCopiaSeguridad;
   sError: string;
 begin
   ComenzarOperacion(toaCopiaSeguridad);
   sError := '';
   try
-    Result := FServicioCopias.CrearCopia(
+    Resultado := FRepositorioCopias.CrearCopia(
       ARutaFichero,
       AContrasena,
       ProgresoWorker,
       sError);
-    FinalizarWorker(Result, sError, nil);
+    FinalizarWorker(Resultado, sError, nil);
+    Result := Resultado = rcsCompletada;
   except
     AbortarInicioOperacion;
     raise;
   end;
 end;
 
-function TCoordinadorOperacionesAplicacion.CancelacionSolicitada: Boolean;
+function TCasoUsoCopiasSeguridad.CancelacionSolicitada: Boolean;
 begin
   Result := FCancelacionSolicitada;
 end;
 
-function TCoordinadorOperacionesAplicacion.SolicitarCancelacion: Boolean;
+function TCasoUsoCopiasSeguridad.SolicitarCancelacion: Boolean;
 begin
   Result := FEnCurso and not FCancelacionSolicitada;
   if Result then
@@ -220,7 +221,7 @@ begin
   end;
 end;
 
-procedure TCoordinadorOperacionesAplicacion.ProgresoWorker(
+procedure TCasoUsoCopiasSeguridad.ProgresoWorker(
   const AEtapa: string;
   APaso, ATotal: Integer;
   AFilaGlobal, AFilasGlobalTotal: Integer);
@@ -236,29 +237,19 @@ begin
   end;
 end;
 
-procedure TCoordinadorOperacionesAplicacion.FinalizarWorker(
-  AExito: Boolean;
+procedure TCasoUsoCopiasSeguridad.FinalizarWorker(
+  AResultado: TResultadoCopiaSeguridad;
   const AError: string;
   ALogBuffer: TStringList);
-var
-  bCancelada: Boolean;
 begin
-  bCancelada := (not AExito) and EsErrorCancelacion(AError);
   FWorker := nil;
   FCancelacionSolicitada := False;
   FEnCurso := False;
   FPresentacion.FinalizarOperacion(
     FTipoOperacion,
-    AExito,
-    bCancelada,
+    AResultado,
     AError,
     ALogBuffer);
-end;
-
-function TCoordinadorOperacionesAplicacion.EsErrorCancelacion(
-  const AError: string): Boolean;
-begin
-  Result := Pos('cancelada', LowerCase(AError)) > 0;
 end;
 
 end.

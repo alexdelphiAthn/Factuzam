@@ -20,7 +20,7 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   XMLIntf, XMLDoc, REST.Client, REST.Types, system.Variants,
   REST.Authenticator.Basic,
-  inLibPresta;
+  inLibPresta, inLibLogIntf;
 
 type
   TPrestaConn = class
@@ -31,9 +31,11 @@ type
     FRequest: TRESTRequest;
     FResponse: TRESTResponse;
     FAuth: THTTPBasicAuthenticator;
+    FRegistroLog: IRegistroLog;
     procedure DoRequest(const sResource:string);
   public
-    constructor Create(const aBaseURL, aApiKey:string);
+    constructor Create(const aBaseURL, aApiKey:string;
+      const ARegistroLog: IRegistroLog);
     destructor Destroy; override;
     function ListarPedidosResumen(out idsCsv:string):Integer;
     function CargarPedido(const sIdPedido:string):TOrder;
@@ -52,12 +54,13 @@ type
   TPrestaPedidoResumenList = TList<TPrestaPedidoResumen>;
 
 function ListarPedidosResumen(const aBaseURL, aApiKey:string;
-                              aLista:TPrestaPedidoResumenList):Boolean;
+  aLista:TPrestaPedidoResumenList;
+  const ARegistroLog: IRegistroLog):Boolean;
 
 implementation
 
 uses
-  inLibLog, inLibScanDateTime;
+  inLibScanDateTime;
 
 type
   TDestinoDireccionPresta = (ddpEntrega, ddpFacturacion);
@@ -103,9 +106,11 @@ type
 
 { TPrestaConn }
 
-constructor TPrestaConn.Create(const aBaseURL, aApiKey: string);
+constructor TPrestaConn.Create(const aBaseURL, aApiKey: string;
+  const ARegistroLog: IRegistroLog);
 begin
   inherited Create;
+  FRegistroLog := ARegistroLog;
   FBaseURL := aBaseURL;
   FApiKey  := aApiKey;
   FClient   := TRESTClient.Create(nil);
@@ -482,7 +487,8 @@ begin
   except
     // Los pedidos sin hilos de mensajes son válidos.
     on E: Exception do
-      inLibLog.Log.LogWarning(
+      if Assigned(FConexion.FRegistroLog) then
+        FConexion.FRegistroLog.RegistrarAviso(
         'PrestaImporter: mensajes del pedido ' + IdPedido +
         ' omitidos: ' + E.Message);
   end;
@@ -505,7 +511,8 @@ end;
 { Función auxiliar }
 
 function ListarPedidosResumen(const aBaseURL, aApiKey:string;
-                              aLista:TPrestaPedidoResumenList):Boolean;
+  aLista:TPrestaPedidoResumenList;
+  const ARegistroLog: IRegistroLog):Boolean;
 var
   Conn: TPrestaConn;
   Ord:  TOrder;
@@ -517,7 +524,7 @@ begin
   Result := False;
   if aLista = nil then Exit;
   aLista.Clear;
-  Conn := TPrestaConn.Create(aBaseURL, aApiKey);
+  Conn := TPrestaConn.Create(aBaseURL, aApiKey, ARegistroLog);
   try
     Conn.ListarPedidosResumen(ids);
     if ids = '' then Exit;
@@ -540,7 +547,8 @@ begin
       except
         // Saltar pedidos individuales con error sin abortar el lote.
         on E: Exception do
-          inLibLog.Log.LogError(
+          if Assigned(ARegistroLog) then
+            ARegistroLog.RegistrarError(
             'PrestaImporter: pedido ' + arr[i] + ' omitido: ' +
             E.Message);
       end;

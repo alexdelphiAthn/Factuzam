@@ -152,11 +152,11 @@ type
 implementation
 
 uses
-  inLibValoresAutomaticos, inLibLog, System.Diagnostics, System.UITypes,
+  inLibValoresAutomaticos, System.Diagnostics, System.UITypes,
   inLibVentasImpuestos, inLibContadorLineas,
   UniDataContadorLineasRepositorio, JclDebug,
   inLibData, inLibMsgArticulos, inLibMsgVentas,
-  inLibDocumento, inLibDocumentoIntf;
+  inLibDocumento, inLibDocumentoIntf, inLibLogIntf;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -432,11 +432,12 @@ const
       swQ := TStopwatch.StartNew;
       try
         qry.Open;
-        inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+        RegistroLog.RegistrarRendimiento(
+          TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
       except
         on E: Exception do
         begin
-          inLibLog.Log.LogPerf(TAG,
+          RegistroLog.RegistrarRendimiento(TAG,
             Nombre + ' ERROR=' + E.Message,
             swQ.ElapsedMilliseconds);
           raise;
@@ -456,7 +457,7 @@ begin
   AbrirConTiempo(unqryFormasPago,    'unqryFormasPago');
   AbrirConTiempo(unqryAlmacenesPed,  'unqryAlmacenesPed');
   AbrirConTiempo(unqryTarifas,       'unqryTarifas');
-  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+  RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmPedidos.unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -640,13 +641,14 @@ end;
 // identificar QUIEN esta posteando lineas vacias en bucle (el sintoma
 // del 07/07/2026: trio de contador repetido ~13 veces/segundo sin
 // ningun INSERT y sin excepcion visible). Maximo 3 volcados por sesion.
-procedure VolcarPilaPostLineaVacia;
+procedure VolcarPilaPostLineaVacia(
+  const ARegistroLog: IRegistroLog);
 var
   Pila: TJclStackInfoList;
   Lineas: TStringList;
 begin
   if (iVolcadosPilaLineaVacia < 3) and
-     (Log() <> nil) then
+     Assigned(ARegistroLog) then
   begin
     Inc(iVolcadosPilaLineaVacia);
     Lineas := TStringList.Create;
@@ -663,7 +665,7 @@ begin
         on E: Exception do
           Lineas.Add('(no se pudo capturar la pila: ' + E.Message + ')');
       end;
-      Log.LogWarning(
+      ARegistroLog.RegistrarAviso(
         'Post de linea de pedido VACIA rechazado. Pila del llamador:' +
         sLineBreak + Lineas.Text);
     finally
@@ -683,7 +685,7 @@ begin
   // grid quemaba CONTADOR_LINEAS_PED en bucle (log 17:03 y 17:16).
   if LineaPedidoVacia(DataSet) then
   begin
-    VolcarPilaPostLineaVacia;
+    VolcarPilaPostLineaVacia(RegistroLog);
     raise Exception.Create(SErrorLineaPedidoSinArticulo);
   end;
   AsignarNumeroLineaPedido(DataSet);
@@ -2162,8 +2164,8 @@ begin
         except
           // Si el mensaje ya existe (hilo PK), saltar
           on E: Exception do
-            if Log() <> nil then
-              Log.LogInfo(
+            if RegistroLog <> nil then
+              RegistroLog.RegistrarInformacion(
                 'ImportarPedidoPrestaShop: mensaje ' + tm.idMensaje +
                 ' omitido: ' + E.Message);
         end;

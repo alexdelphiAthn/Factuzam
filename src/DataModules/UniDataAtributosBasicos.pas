@@ -38,7 +38,7 @@ type
 implementation
 
 uses
-  inLibLog, System.Diagnostics, inLibMsgArticulos;
+  System.Diagnostics, inLibMsgArticulos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -62,12 +62,12 @@ begin
   swQ := TStopwatch.StartNew;
   try
     unqryAtributosLookup.Open;
-    inLibLog.Log.LogPerf('AtributosBasicos.AbrirDetalles',
+    RegistroLog.RegistrarRendimiento('AtributosBasicos.AbrirDetalles',
       'unqryAtributosLookup OK', swQ.ElapsedMilliseconds);
   except
     on E: Exception do
     begin
-      inLibLog.Log.LogPerf('AtributosBasicos.AbrirDetalles',
+      RegistroLog.RegistrarRendimiento('AtributosBasicos.AbrirDetalles',
         'unqryAtributosLookup ERROR=' + E.Message,
         swQ.ElapsedMilliseconds);
       raise;

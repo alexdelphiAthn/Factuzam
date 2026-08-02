@@ -298,7 +298,7 @@ implementation
 uses
   System.StrUtils,
   inLibFiltroUsuario,
-  inLibLog,
+
   inLibValoresAutomaticos,
   inLibArticulosResolverIntf,
   inLibArticulosValidadorIntf,
@@ -510,9 +510,9 @@ begin
   FAplicacionArticuloCompra := CrearAplicacionArticuloCompra(
     CrearRepositorioLecturasArticuloCompraUniDAC(
       dmmAlbaranesCompra.unqryTablaG.Connection,
-      CrearValidadorArticulos(
+      ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
         dmmAlbaranesCompra.unqryTablaG.Connection),
-      CrearResolverArticulos(
+      ContextoRepositoriosPantalla.Articulos.CrearResolverArticulos(
         dmmAlbaranesCompra.unqryTablaG.Connection)),
     CrearPuertoLineaArticuloCompraUniDAC(
       dmmAlbaranesCompra.unqryTablaG.Connection,
@@ -644,6 +644,7 @@ begin
     oBase.PrefijoCelda := 'ALBCCEL';
     oBase.NombreTablaDocumento := 'albaranes';
     oBase.AplicarContextoPivote := True;
+    oBase.RegistroLog := RegistroLog;
     oConfigTallas := CrearConfigTallasDocumentoCompra(oBase);
     FGestorTallas := TGestorGridTallas.Create(oConfigTallas);
     ConfigurarEventosTallasDocumento(FTallaColumns,
@@ -867,12 +868,12 @@ procedure TfrmMtoAlbaranesCompra.btnGrabarClick(Sender: TObject);
 var
   sLineasSinSku: string;
 begin
-  if inLibLog.Log() <> nil then
-    inLibLog.Log.LogInfo('AlbaranesCompra.btnGrabarClick: INICIO');
+  if RegistroLog <> nil then
+    RegistroLog.RegistrarInformacion('AlbaranesCompra.btnGrabarClick: INICIO');
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
   sLineasSinSku := LineasSinSkuRequerido(
-    CrearValidadorArticulos(
+    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
       dmmAlbaranesCompra.unqryTablaG.Connection),
     dmmAlbaranesCompra.unqryAlbaranesCompraLineas, 'ALBCLIN');
   if (sLineasSinSku <> '') and
@@ -1052,13 +1053,14 @@ begin
     ContextoSesion, tvLineasAlbaran, ds, FModoEntradaSel,
     Trim(dmmAlbaranesCompra.unqryTablaG.
       FieldByName('CODIGO_ALM_ALBC').AsString), 'ALBCLIN');
+  Cfg.RegistroLog := RegistroLog;
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
-    CrearValidadorArticulos(
+    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
       dmmAlbaranesCompra.unqryTablaG.Connection);
   Cfg.LookupAtributos :=
-    CrearLookupAtributosArticulos(
+    ContextoRepositoriosPantalla.Articulos.CrearLookupAtributosArticulos(
       dmmAlbaranesCompra.unqryTablaG.Connection);
   if FModoEntradaSel = mcsTallasHorPed then
   begin

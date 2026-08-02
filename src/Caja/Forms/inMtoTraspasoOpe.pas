@@ -29,16 +29,17 @@ uses
   cxButtonEdit, cxSpinEdit, cxDropDownEdit, cxButtons, cxClasses, cxGridLevel,
   cxGridCustomTableView, cxGridCustomView, cxGridTableView, cxGridDBTableView,
   cxGrid, cxSplitter, Vcl.Imaging.PngImage, System.Generics.Collections,
-  Data.DB, Datasnap.DBClient, Uni, UniDataTraspaso,
+  Data.DB, Datasnap.DBClient, UniDataTraspaso,
   inLibTraspasoTicket, inLibGridArticulos, inLibArticulosValidadorIntf,
   inLibPermisosIntf, inLibGenBusq, inLibFotos, inLibAtributosPaleta,
   Vcl.Menus, dxCoreGraphics, JvComponentBase, JvEnterTab,
   cxLocalization, inLibLectorScanner, cxStyles, cxDBData, cxCustomData,
   cxFilter, cxData, cxDataStorage, cxNavigator, dxDateRanges,
-  dxScrollbarAnnotations;
+  dxScrollbarAnnotations, inLibCajaVentaIntf, inLibCajaVentanasIntf,
+  inLibTraspasoOpePersistenciaIntf;
 
 type
-  TfrmMtoOpeTraspaso = class(TfrmBase)
+  TfrmMtoOpeTraspaso = class(TfrmBase, ITraspasoCaja)
     pnlModos: TPanel;
     btnModoTraspaso: TcxButton;
     btnModoSolicitar: TcxButton;
@@ -93,18 +94,26 @@ type
     FFecha: TDateTime;
     FModo: TModoTraspaso;
     FVerCoste: Boolean;
-    FStockQry: TUniQuery;
+    FStockDatos: TDataSet;
     FStockDs: TDataSource;
     FNavDs: TDataSource;
     FColUds: TcxGridDBColumn;
     FColPedidas: TcxGridDBColumn;
     FColMotivo: TcxGridDBColumn;
-    FQModalSolic: TUniQuery;
+    FQModalSolic: TDataSet;
+    FConsultaStock: IResultadoConsultaCaja;
+    FRepositorioConsultas: IRepositorioConsultasCaja;
+    FRepositorioPersistencia: IRepositorioTraspasoOpe;
     // Lectura con pistola a nivel de FORMULARIO (igual que inMtoCajaOpe): la
     // mecanica (trama STX/ETX + rafaga por velocidad) la lleva TLectorScanner.
     // En modo "consumir" y pasivo dentro de la rejilla (ahi resuelve la celda
     // via inLibGridArticulos); el detector por velocidad cubre el foco fuera.
     FLector: TLectorScanner;
+    procedure AgregarLineaExterna(
+      const ALinea: TLineaCargaTraspaso;
+      var ANumeroLinea: Integer);
+    procedure CargarLineasExternas(
+      const ALineas: TLineasCargaTraspaso);
     procedure LectorCodigoLeido(Sender: TObject; const ACodigo: string);
     function  LectorEsControlRejilla(AControl: TControl): Boolean;
     procedure ProcesarLecturaScanner(const ACodigo: string);
@@ -142,8 +151,14 @@ type
               ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
               var ADone: Boolean);
   public
+    function FormularioTraspaso: TCustomForm;
     procedure PrepararValores(AModo: TModoTraspaso; const AEmpresa, AAlmacen,
-                              ACaja: string; AFecha: TDateTime);
+                               ACaja: string; AFecha: TDateTime);
+    procedure PrepararCargaExterna(
+      AModo: TModoVentanaTraspaso;
+      const AEmpresa, AAlmacen, ACaja: string;
+      AFecha: TDateTime;
+      const ALineas: TLineasCargaTraspaso);
   end;
 
 implementation
@@ -151,7 +166,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibLog, inLibMsgCaja, inLibMsgComun;
+  inLibMsgCaja, inLibMsgComun;
 
 procedure TfrmMtoOpeTraspaso.FormCreate(Sender: TObject);
 begin
@@ -168,6 +183,10 @@ begin
   FLector.OnEsControlRejilla := LectorEsControlRejilla;
   FComboCodigos := TStringList.Create;
   FDatos := TdmTraspaso.Create(Self, ConexionPrincipal);
+  FRepositorioConsultas := ContextoRepositoriosPantalla.Caja.
+    CrearRepositorioConsultasCaja;
+  FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
+    CrearRepositorioTraspasoOpe;
   // Coste/importe solo para administrador: TienePermiso devuelve True siempre a
   // admin; al resto, oculto por defecto (default False) salvo permiso explicito
   // 'caja.verCoste'. Sin sistema de permisos, oculto.
@@ -188,6 +207,12 @@ begin
   // Evitar callbacks de stock/foto durante el desmontaje.
   if Assigned(FNavDs) then
     FNavDs.OnDataChange := nil;
+  if Assigned(FStockDs) then
+    FStockDs.DataSet := nil;
+  FStockDatos := nil;
+  FConsultaStock := nil;
+  FRepositorioConsultas := nil;
+  FRepositorioPersistencia := nil;
   FreeAndNil(FGridCtrl);
   FreeAndNil(FComboCodigos);
   // FDatos y los componentes runtime (grid/foto/datasources) los libera el
@@ -237,8 +262,11 @@ begin
     Campos,
     ContextoSesion,
     BusquedaVisual,
-    CrearValidadorArticulos(ConexionPrincipal),
-    CrearLookupAtributosArticulos(ConexionPrincipal));
+    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
+      ConexionPrincipal),
+    ContextoRepositoriosPantalla.Articulos.CrearLookupAtributosArticulos(
+      ConexionPrincipal),
+    RegistroLog);
   FGridCtrl.OnResuelto := GridResuelto;
   FGridCtrl.Construir;
   // Columnas propias del traspaso.
@@ -298,13 +326,7 @@ begin
   FStockView.OptionsView.ColumnAutoWidth := True;
   FStockView.OptionsCustomize.ColumnFiltering := False;
   FStockView.OnCustomDrawCell := StockViewCustomDrawCell;
-  // Query del SP pivotado (mismo que usa caja: almacenes en filas, tallas en
-  // columnas). Acepta codigo de articulo o SKU como entrada.
-  FStockQry := TUniQuery.Create(Self);
-  FStockQry.Connection := ConexionPrincipal;
-  FStockQry.SQL.Text := 'CALL PRC_GET_CAJA_STOCK_PIVOTADO(:ARTICULO)';
   FStockDs := TDataSource.Create(Self);
-  FStockDs.DataSet := FStockQry;
   FStockView.DataController.DataSource := FStockDs;
   // Refrescar stock+foto al moverse por las lineas (cambio de registro).
   FNavDs := TDataSource.Create(Self);
@@ -324,13 +346,14 @@ begin
   // primera columna). Se omiten los cronometros de perf.
   if (ACodigo <> '') and Assigned(FStockView) then
   begin
+    FStockDs.DataSet := nil;
+    FConsultaStock := FRepositorioConsultas.ConsultarStock(ACodigo);
+    FStockDatos := FConsultaStock.DataSet;
+    FStockDs.DataSet := FStockDatos;
     FStockView.BeginUpdate;
     try
-      FStockQry.Close;
       FStockView.ClearItems;
-      FStockQry.ParamByName('ARTICULO').AsString := ACodigo;
-      FStockQry.Open;
-      if not FStockQry.IsEmpty then
+      if not FStockDatos.IsEmpty then
       begin
         FStockView.DataController.CreateAllItems;
         for i := 0 to FStockView.ColumnCount - 1 do
@@ -344,7 +367,7 @@ begin
     finally
       FStockView.EndUpdate;
     end;
-    if FStockQry.Active and (not FStockQry.IsEmpty) then
+    if FStockDatos.Active and (not FStockDatos.IsEmpty) then
     begin
       FStockView.BeginUpdate;
       try
@@ -353,7 +376,7 @@ begin
         except
           // ApplyBestFit puede fallar si no hay columnas; lo ignoramos.
           on E: Exception do
-            inLibLog.Log.LogWarning(
+            RegistroLog.RegistrarAviso(
               'TraspasoOpe: ApplyBestFit del stock ignorado: ' +
               E.Message);
         end;
@@ -370,11 +393,11 @@ begin
         // talla que esten a cero en todos los almacenes (el SP devuelve una
         // columna por cada talla del articulo, tenga o no stock). No se tocan
         // Codigo/Almacen (texto) ni el Total.
-        FStockQry.DisableControls;
+        FStockDatos.DisableControls;
         try
           for i := 0 to FStockView.ColumnCount - 1 do
           begin
-            Fld := FStockQry.FindField(
+            Fld := FStockDatos.FindField(
               FStockView.Columns[i].DataBinding.FieldName);
             if (Fld <> nil) and
                (Fld.DataType in [ftSmallint, ftInteger, ftWord, ftLargeint,
@@ -384,20 +407,20 @@ begin
                (not SameText(Fld.FieldName, 'Stock Total')) then
             begin
               bTodoCero := True;
-              FStockQry.First;
-              while (not FStockQry.Eof) and bTodoCero do
+              FStockDatos.First;
+              while (not FStockDatos.Eof) and bTodoCero do
               begin
                 if Fld.AsFloat <> 0 then
                   bTodoCero := False;
-                FStockQry.Next;
+                FStockDatos.Next;
               end;
               if bTodoCero then
                 FStockView.Columns[i].Visible := False;
             end;
           end;
-          FStockQry.First;
+          FStockDatos.First;
         finally
-          FStockQry.EnableControls;
+          FStockDatos.EnableControls;
         end;
       finally
         FStockView.EndUpdate;
@@ -442,8 +465,10 @@ begin
   begin
     // Sin lineas: vaciar stock y foto.
     RefrescarFotoStock('', '');
-    if Assigned(FStockQry) then
-      FStockQry.Close;
+    if Assigned(FStockDs) then
+      FStockDs.DataSet := nil;
+    FStockDatos := nil;
+    FConsultaStock := nil;
     if Assigned(FStockView) then
       FStockView.ClearItems;
   end
@@ -552,6 +577,109 @@ begin
     if Trim(txtEmpleado.Text) <> '' then
       txtEmpleadoExit(nil);
   end;
+end;
+
+function TfrmMtoOpeTraspaso.FormularioTraspaso: TCustomForm;
+begin
+  Result := Self;
+end;
+
+procedure TfrmMtoOpeTraspaso.AgregarLineaExterna(
+  const ALinea: TLineaCargaTraspaso;
+  var ANumeroLinea: Integer);
+var
+  iAtributo: Integer;
+  sAlmacenOrigen: string;
+begin
+  if (Trim(ALinea.CodigoSku) <> '') and
+     FDatos.cdsLineas.Locate(
+       'CODIGO_UNIDAD',
+       ALinea.CodigoSku,
+       []) then
+  begin
+    FDatos.cdsLineas.Edit;
+    FDatos.cdsLineas.FieldByName('CANTIDAD').AsFloat :=
+      FDatos.cdsLineas.FieldByName('CANTIDAD').AsFloat + ALinea.Cantidad;
+    FDatos.cdsLineas.FieldByName('TOTAL').AsCurrency :=
+      FDatos.cdsLineas.FieldByName('CANTIDAD').AsFloat *
+      FDatos.cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency;
+    FDatos.cdsLineas.Post;
+  end
+  else
+  begin
+    Inc(ANumeroLinea, 10);
+    sAlmacenOrigen :=
+      FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+    FDatos.cdsLineas.Append;
+    FDatos.cdsLineas.FieldByName('LINEA').AsString :=
+      Format('%.4d', [ANumeroLinea]);
+    FDatos.cdsLineas.FieldByName('CODIGO_ART').AsString :=
+      ALinea.CodigoArticulo;
+    FDatos.cdsLineas.FieldByName('CODIGO_UNIDAD').AsString :=
+      ALinea.CodigoSku;
+    FDatos.cdsLineas.FieldByName('DESCRIPCION').AsString :=
+      ALinea.Descripcion;
+    FDatos.cdsLineas.FieldByName('NUM_ATRIBUTOS').AsInteger :=
+      ALinea.NumeroAtributos;
+    for iAtributo := 1 to 5 do
+    begin
+      FDatos.cdsLineas.FieldByName(
+        Format('ATTR%d_VALOR', [iAtributo])).AsString :=
+        ALinea.ValoresAtributos[iAtributo];
+      FDatos.cdsLineas.FieldByName(
+        Format('ATTR%d_NOMBRE', [iAtributo])).AsString :=
+        ALinea.NombresAtributos[iAtributo];
+    end;
+    FDatos.cdsLineas.FieldByName('CANTIDAD').AsFloat := ALinea.Cantidad;
+    FDatos.cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency :=
+      FDatos.ObtenerCosteMedio(ALinea.CodigoSku, sAlmacenOrigen);
+    FDatos.cdsLineas.FieldByName('STOCK_ORIGEN').AsFloat :=
+      FDatos.ObtenerStock(ALinea.CodigoSku, sAlmacenOrigen);
+    FDatos.cdsLineas.FieldByName('TOTAL').AsCurrency :=
+      FDatos.cdsLineas.FieldByName('CANTIDAD').AsFloat *
+      FDatos.cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency;
+    FDatos.cdsLineas.Post;
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.CargarLineasExternas(
+  const ALineas: TLineasCargaTraspaso);
+var
+  Linea: TLineaCargaTraspaso;
+  NumeroLinea: Integer;
+begin
+  NumeroLinea := 0;
+  FDatos.cdsLineas.EmptyDataSet;
+  FDatos.cdsLineas.DisableControls;
+  try
+    for Linea in ALineas do
+      AgregarLineaExterna(Linea, NumeroLinea);
+  finally
+    FDatos.cdsLineas.EnableControls;
+  end;
+  AsegurarLineaNueva;
+  ActualizarTotal;
+end;
+
+procedure TfrmMtoOpeTraspaso.PrepararCargaExterna(
+  AModo: TModoVentanaTraspaso;
+  const AEmpresa, AAlmacen, ACaja: string;
+  AFecha: TDateTime;
+  const ALineas: TLineasCargaTraspaso);
+var
+  ModoTraspaso: TModoTraspaso;
+begin
+  if AModo = mvtPeticion then
+    ModoTraspaso := mtSolicitar
+  else
+    ModoTraspaso := mtTraspaso;
+  PrepararValores(
+    ModoTraspaso,
+    AEmpresa,
+    AAlmacen,
+    ACaja,
+    AFecha);
+  CargarLineasExternas(ALineas);
 end;
 
 procedure TfrmMtoOpeTraspaso.AplicarModo(AModo: TModoTraspaso);
@@ -766,30 +894,16 @@ end;
 
 procedure TfrmMtoOpeTraspaso.CargarAlmacenesDestino;
 var
-  q: TUniQuery;
+  Almacenes: TAlmacenesDestinoTraspaso;
+  Almacen: TAlmacenDestinoTraspaso;
 begin
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := ConexionPrincipal;
-    // Destinos: cualquier almacen ESTANDAR activo (excepto el propio), de la
-    // misma empresa o de otra (el traspaso entre empresas se graba como TA).
-    q.SQL.Text :=
-      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM FROM fza_almacenes ' +
-      ' WHERE ESACTIVO_ALM = ''S'' AND TIPO_USO_ALM = ''ESTANDAR'' ' +
-      '   AND CODIGO_ALM_ALM <> :PROPIO ' +
-      ' ORDER BY ORDEN_ALM, CODIGO_ALM_ALM';
-    q.ParamByName('PROPIO').AsString := FAlmacen;
-    q.Open;
-    while not q.Eof do
-    begin
-      FComboCodigos.Add(q.FieldByName('CODIGO_ALM_ALM').AsString);
-      cboDestino.Properties.Items.Add(
-        q.FieldByName('CODIGO_ALM_ALM').AsString + ' - ' +
-        q.FieldByName('NOMBRE_ALM_ALM').AsString);
-      q.Next;
-    end;
-  finally
-    FreeAndNil(q);
+  // Destinos: cualquier almacen ESTANDAR activo salvo el propio.
+  Almacenes := FRepositorioPersistencia.ListarAlmacenesDestino(FAlmacen);
+  for Almacen in Almacenes do
+  begin
+    FComboCodigos.Add(Almacen.Codigo);
+    cboDestino.Properties.Items.Add(
+      Almacen.Codigo + ' - ' + Almacen.Nombre);
   end;
 end;
 
@@ -1030,7 +1144,7 @@ begin
     if sNum <> '' then
       TTraspasoTicket.ImprimirSolicitud(
         PreviewTicket,
-        CrearRepositorioTraspasoTicket,
+        ContextoRepositoriosPantalla.TicketsCaja.CrearRepositorioTraspasoTicket,
         sNum,
         sSer,
         ParametrosCaja.ImpresoraCaja);
@@ -1116,17 +1230,19 @@ end;
 
 procedure TfrmMtoOpeTraspaso.AbrirMisPeticiones;
 var
-  Q: TUniQuery;
+  Datos: TDataSet;
 begin
   // Historico (solo consulta) de las peticiones que YO he hecho (soy el
   // destino que pide): numero,serie,fecha,a quien pedi (origen) y estado,// para saber si se han servido/denegado. Reutiliza el buscador de
   // solicitudes; los titulos los pone el formateador (fza_config_campos).
-  Q := FDatos.QueryMisPeticiones(FAlmacen);
+  Datos := FDatos.QueryMisPeticiones(FAlmacen);
   try
-    BusquedaVisual.EjecutarBusqueda(ConexionPrincipal,'Mis peticiones', Q,
-                                    'frmMtoSolicitudesSearch');
+    BusquedaVisual.EjecutarBusquedaDataSet(
+      'Mis peticiones',
+      Datos,
+      'frmMtoSolicitudesSearch');
   finally
-    FreeAndNil(Q);
+    FreeAndNil(Datos);
   end;
 end;
 
@@ -1148,7 +1264,9 @@ begin
           // Ticket de la solicitud: cada SKU con stock origen / destino.
           TTraspasoTicket.ImprimirSolicitud(
                                             PreviewTicket,
-                                            CrearRepositorioTraspasoTicket,
+                                            ContextoRepositoriosPantalla.
+                                              TicketsCaja.
+                                              CrearRepositorioTraspasoTicket,
                                             sNum, sSer,
                                             ParametrosCaja.ImpresoraCaja);
           AplicarModo(mtSolicitar);
@@ -1183,27 +1301,19 @@ end;
 
 procedure TfrmMtoOpeTraspaso.BuscarEmpleado;
 var
-  Q: TUniQuery;
+  Consulta: IResultadoConsultaCaja;
+  Datos: TDataSet;
 begin
   // Buscador de empleados (mismos datos y rejilla que la caja). Al elegir uno,// su codigo va al campo y se valida para mostrar el nombre.
-  Q := TUniQuery.Create(nil);
-  try
-    Q.Connection := ConexionPrincipal;
-    Q.SQL.Text :=
-      'SELECT CODIGO_EMPL AS `Código de Empleado`,' +
-      '       DIMINUTIVO_TICKET_EMPL AS `Nombre de Empleado`' +
-      '  FROM fza_empleados' +
-      ' WHERE ESACTIVO_EMPL = ''S''' +
-      '   AND CODIGO_EMPL IS NOT NULL' +
-      ' ORDER BY CODIGO_EMPL';
-    if BusquedaVisual.EjecutarBusqueda(ConexionPrincipal,'Buscar empleado', Q,
-                                       'frmMtoEmpCajSearch') then
-    begin
-      txtEmpleado.Text := Q.Fields[0].AsString;
-      txtEmpleadoExit(nil);
-    end;
-  finally
-    FreeAndNil(Q);
+  Consulta := FRepositorioConsultas.ConsultarEmpleados;
+  Datos := Consulta.DataSet;
+  if BusquedaVisual.EjecutarBusquedaDataSet(
+       'Buscar empleado',
+       Datos,
+       'frmMtoEmpCajSearch') then
+  begin
+    txtEmpleado.Text := Datos.Fields[0].AsString;
+    txtEmpleadoExit(nil);
   end;
 end;
 
@@ -1304,7 +1414,8 @@ begin
             if AConTicket then
               TTraspasoTicket.ImprimirTraspaso(
                 PreviewTicket,
-                CrearRepositorioTraspasoTicket,
+                ContextoRepositoriosPantalla.TicketsCaja.
+                  CrearRepositorioTraspasoTicket,
                 sNumOp,
                 sOrigen,
                 sDestino,
@@ -1335,7 +1446,8 @@ begin
         if AConTicket then
           TTraspasoTicket.ImprimirTraspaso(
             PreviewTicket,
-            CrearRepositorioTraspasoTicket,
+            ContextoRepositoriosPantalla.TicketsCaja.
+              CrearRepositorioTraspasoTicket,
             sNumOp,
             sOrigen,
             sDestino,

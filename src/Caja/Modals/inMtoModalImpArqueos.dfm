@@ -454,14 +454,7 @@
       end
     end
   end
-  object unqryArqueosPrint: TUniQuery
-    SQL.Strings = (
-      'SELECT * FROM fza_caja_arqueos')
-    Left = 96
-    Top = 16
-  end
   object dsArqueosPrint: TDataSource
-    DataSet = unqryArqueosPrint
     Left = 96
     Top = 72
   end

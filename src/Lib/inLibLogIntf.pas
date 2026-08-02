@@ -15,6 +15,10 @@ unit inLibLogIntf;
 
 interface
 
+uses
+  inLibMonitorSQLIntf,
+  inLibParametrosIntf;
+
 type
   IRegistroLog = interface
     ['{97324860-FA85-460F-92D2-9B0E1C95588C}']
@@ -24,6 +28,26 @@ type
     procedure RegistrarRendimiento(
       const AEtiqueta, ADetalle: string;
       ADuracionMs: Int64);
+    procedure RegistrarEvento(
+      const AUnidad, AObjeto, AEvento, ADetalle: string);
+    procedure RegistrarSQL(
+      const ASQL: string;
+      ADuracionMs: Int64;
+      AFilas: Integer;
+      ACorrecto: Boolean;
+      const AError: string = '';
+      const AParametros: string = '');
+    function SQLActivo: Boolean;
+    procedure AsignarMonitorSQL(
+      const AMonitorSQL: IServicioMonitorSQL);
+    procedure AplicarModosDepuracion(
+      const AParametros: IParametrosAplicacion);
+  end;
+
+  IProveedorRegistroLog = interface
+    ['{DBF55EF8-1DA6-463C-BCF9-8A58BD9DB661}']
+    function GetRegistroLog: IRegistroLog;
+    property RegistroLog: IRegistroLog read GetRegistroLog;
   end;
 
 implementation

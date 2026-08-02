@@ -35,13 +35,16 @@ type
     IRepositorioConsolidacionFactura,
     IRepositorioEfectosFactura,
     IRepositorioMovimientosFactura,
-    IRepositorioPdfFactura)
+    IRepositorioPdfFactura,
+    IUnidadTrabajoFacturas)
   private
     FConexion: TUniConnection;
     function NuevaConsulta: TUniQuery;
     function TablaEfectosExiste: Boolean;
   public
     constructor Create(AConexion: TUniConnection);
+    { IUnidadTrabajoFacturas }
+    procedure Ejecutar(const ATrabajo: TProc);
     { IRepositorioBorradoFactura }
     function TieneEfectosCobrados(
       const ASerie, ANumero: string): Boolean;
@@ -104,6 +107,27 @@ begin
     raise EArgumentNilException.Create('AConexion');
   inherited Create;
   FConexion := AConexion;
+end;
+
+procedure TPersistenciaFacturasUniDAC.Ejecutar(
+  const ATrabajo: TProc);
+var
+  bTransaccionPropia: Boolean;
+begin
+  if not Assigned(ATrabajo) then
+    raise EArgumentNilException.Create('ATrabajo');
+  bTransaccionPropia := not FConexion.InTransaction;
+  if bTransaccionPropia then
+    FConexion.StartTransaction;
+  try
+    ATrabajo();
+    if bTransaccionPropia and FConexion.InTransaction then
+      FConexion.Commit;
+  except
+    if bTransaccionPropia and FConexion.InTransaction then
+      FConexion.Rollback;
+    raise;
+  end;
 end;
 
 function TPersistenciaFacturasUniDAC.NuevaConsulta: TUniQuery;
@@ -825,6 +849,7 @@ var
   oAdaptador: TPersistenciaFacturasUniDAC;
 begin
   oAdaptador := TPersistenciaFacturasUniDAC.Create(AConexion);
+  Result.UnidadTrabajo := oAdaptador;
   Result.Borrado := oAdaptador;
   Result.Reapertura := oAdaptador;
   Result.Consolidacion := oAdaptador;

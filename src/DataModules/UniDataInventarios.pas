@@ -233,7 +233,7 @@ uses
   System.Diagnostics,   // TStopwatch para instrumentacion de rendimiento
   System.StrUtils,      // IfThen(Boolean, string, string) para snapshot
   inLibUser,            // Usuario logueado
-  inLibLog,             // Log.LogInfo para metricas
+               // RegistroLog.RegistrarInformacion para metricas
   inLibData,
   UniDataConn,
   inLibMsgArticulos;
@@ -481,7 +481,8 @@ begin
     unqryTablaG.SQL.Add('   TOTAL_UNIDADES_DIFERENCIA_INV,');
     unqryTablaG.SQL.Add('   TOTAL_EUROS_DIFERENCIA_INV,');
     if not FColumnaContadorLineas then
-      Log.LogWarning('Inventarios: falta CONTADOR_LINEAS_INV. Ejecutar ' +
+      RegistroLog.RegistrarAviso(
+        'Inventarios: falta CONTADOR_LINEAS_INV. Ejecutar ' +
         'DESARROLLOS EN CURSO\inventarios_contador_lineas.sql antes de ' +
         'anadir lineas manuales.');
     if FColumnasRecuentoRemoto then
@@ -492,7 +493,8 @@ begin
       unqryTablaG.SQL.Add('   ID_RECUENTO_REMOTO_INV,');
     end
     else
-      Log.LogWarning('Inventarios: faltan columnas de recuento remoto. ' +
+      RegistroLog.RegistrarAviso(
+        'Inventarios: faltan columnas de recuento remoto. ' +
         'La lista se abrira sin esos campos; ejecutar ' +
         'DESARROLLOS EN CURSO\recuento_inventarios_factuzam.sql.');
     unqryTablaG.SQL.Add('   INSTANTE_ALTA, INSTANTE_MODIF,');
@@ -862,7 +864,7 @@ begin
     msDef := swQry2.ElapsedMilliseconds;
   end;
 
-  inLibLog.Log.LogPerf('RellenarDatosArticulo',
+  RegistroLog.RegistrarRendimiento('RellenarDatosArticulo',
     Format('articulo=%s NumAtr=%d | unqryArticulo=%d ' +
            'unqryDefinicionArticulo=%d',
            [ACodigoArticulo, ANumAtributos, msArt, msDef]),
@@ -889,7 +891,7 @@ begin
     APMPActual := unqryStockActual.FieldByName('PRECIO_MEDIO_STK').AsCurrency;
   end;
 
-  inLibLog.Log.LogPerf('RellenarDatosSku',
+  RegistroLog.RegistrarRendimiento('RellenarDatosSku',
     Format('sku=%s almacen=%s teo=%.2f pmp=%.4f',
            [ASku, FCodigoAlmacen, ACantidadTeorica, APMPActual]),
     swTotal.ElapsedMilliseconds);
@@ -979,7 +981,7 @@ begin
       Snapshot := Snapshot + F.FieldName + '=' + F.AsString +
         IfThen(F.Required, '(REQ)', '');
   end;
-  inLibLog.Log.LogInfo('[cdsLineasBeforePost] state=' +
+  RegistroLog.RegistrarInformacion('[cdsLineasBeforePost] state=' +
     IntToStr(Ord(DataSet.State)) + ' | ' + Snapshot);
   AsegurarFechaRecuentoLinea;
 
@@ -1261,7 +1263,7 @@ begin
   unqryTablaG.Refresh;
   msRefresh := swTramo.ElapsedMilliseconds;
 
-  inLibLog.Log.LogInfo(Format(
+  RegistroLog.RegistrarInformacion(Format(
     '[PERF:Aplicar] total=%d ms | ApplyUpdates=%d | ExecProc=%d | ' +
     'Recargas=%d | Refresh=%d (emp=%s alm=%s ser=%s nro=%s)',
     [swTotal.ElapsedMilliseconds, msApply, msExecProc, msRecargas, msRefresh,

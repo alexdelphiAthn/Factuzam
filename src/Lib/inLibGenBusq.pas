@@ -17,7 +17,7 @@ unit inLibGenBusq;
 interface
 
 uses
-  Forms, Uni, DBAccess;
+  Forms, Uni, DBAccess, Data.DB;
 
 type
   IBusquedaVisual = interface
@@ -28,6 +28,11 @@ type
                               const AName: string;
                               AParentForm: TCustomForm = nil):
                               Boolean; overload;
+    function EjecutarBusquedaDataSet(
+      const ACaption: string;
+      ADataSet: TDataSet;
+      const AName: string;
+      AParentForm: TCustomForm = nil): Boolean;
     function EjecutarBusqueda(AConexion: TUniConnection;
                               const ACaption, ASql,
                                     ACampoResultado: string;

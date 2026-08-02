@@ -29,8 +29,7 @@ uses
   DBAccess, Uni, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, JvComponentBase, JvEnterTab, dxShellDialogs,
   cxMaskEdit, cxDropDownEdit, inLibValoresAutomaticos,
-  inMtoModalAltaRapida, inLibDevExp,
-  inLibConfigCampos, inLibGenBusq;
+  inMtoModalAltaRapida, inLibDevExp, inLibGenBusq;
 
 type
   TDefCampo = record
@@ -97,6 +96,11 @@ type
                               const AName: string;
                               AParentForm: TCustomForm = nil):
                               Boolean; overload;
+    function EjecutarBusquedaDataSet(
+      const ACaption: string;
+      ADataSet: TDataSet;
+      const AName: string;
+      AParentForm: TCustomForm = nil): Boolean;
     function EjecutarBusqueda(AConexion: TUniConnection;
                               const ACaption, ASql,
                                     ACampoResultado: string;
@@ -127,6 +131,31 @@ begin
     if Assigned(AParentForm) then
       oFormulario.PopupParent := AParentForm;
     ADataSet.Connection := AConexion;
+    oFormulario.dsTablaG.DataSet := ADataSet;
+    if not ADataSet.Active then
+      ADataSet.Open;
+    oFormulario.ProcesarPerfiles;
+    oFormulario.ShowModal;
+    Result := oFormulario.sFicha = 'S';
+  finally
+    FreeAndNil(oFormulario);
+  end;
+end;
+
+function TBusquedaVisualMto.EjecutarBusquedaDataSet(
+  const ACaption: string;
+  ADataSet: TDataSet;
+  const AName: string;
+  AParentForm: TCustomForm): Boolean;
+var
+  oFormulario: TfrmMtoSearch;
+begin
+  oFormulario := TfrmMtoSearch.Create(nil);
+  try
+    oFormulario.Caption := ACaption;
+    oFormulario.Name := AName;
+    if Assigned(AParentForm) then
+      oFormulario.PopupParent := AParentForm;
     oFormulario.dsTablaG.DataSet := ADataSet;
     if not ADataSet.Active then
       ADataSet.Open;
@@ -250,23 +279,23 @@ begin
   AplicarPropertiesPorPrefijo(cxGrdDBTabPrin);
   if DebeAjustarColumnasAutomaticamente then
     cxGrdDBTabPrin.ApplyBestFit();
-  // Titulos y anchos "bonitos" desde fza_config_campos (cache oConfigCampos):
+  // Títulos y anchos desde el contrato de configuración de campos.
   // sustituye los nombres crudos de columna (CODIGO_PRV_PRV, RAZON_SOCIAL_PRV
   // ...) por el TITULO_VISUAL_CC configurado. Es el mismo origen que usa
   // PonerAnchosTitulos en los Mtos normales, pero el buscador crea sus
   // columnas a mano y no pasa por esa ruta (va ligada a oApplyWidth), asi que
   // lo aplicamos aqui explicitamente. Tras ApplyBestFit para que el ancho
   // configurado prevalezca.
-  if (oConfigCampos() <> nil) and
-     oConfigCampos.Cargada then
+  if Assigned(ConfiguracionCampos) and
+     ConfiguracionCampos.Cargada then
     for i := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
     begin
       col := cxGrdDBTabPrin.Columns[i] as TcxGridDBColumn;
       sField := col.DataBinding.FieldName;
-      sTit := oConfigCampos.ObtenerTitulo(sField);
+      sTit := ConfiguracionCampos.ObtenerTitulo(sField);
       if sTit <> '' then
         col.Caption := sTit;
-      iAncho := oConfigCampos.ObtenerAncho(sField);
+      iAncho := ConfiguracionCampos.ObtenerAncho(sField);
       if iAncho > 0 then
         col.Width := iAncho;
     end;

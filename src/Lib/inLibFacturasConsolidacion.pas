@@ -17,15 +17,15 @@ unit inLibFacturasConsolidacion;
 interface
 
 uses
-  Uni, inLibFacturasServiciosIntf, inLibEmisionFiscalIntf,
+  inLibFacturasServiciosIntf, inLibEmisionFiscalIntf,
   inLibFacturasPersistenciaIntf;
 
-function CrearServicioConsolidacionFactura(
-  AConexion: TUniConnection;
+function CrearCasoUsoConsolidacionFactura(
+  const AUnidadTrabajo: IUnidadTrabajoFacturas;
   const ARepositorio: IRepositorioConsolidacionFactura;
   const AServicioEmision: IServicioEmisionFiscal;
   const AServicioMovimientos: IServicioMovimientosFactura
-): IServicioConsolidacionFactura;
+): ICasoUsoConsolidacionFactura;
 
 implementation
 
@@ -33,11 +33,11 @@ uses
   System.SysUtils, inLibMsgFacturas;
 
 type
-  TServicioConsolidacionFactura = class(
+  TCasoUsoConsolidacionFactura = class(
     TInterfacedObject,
-    IServicioConsolidacionFactura)
+    ICasoUsoConsolidacionFactura)
   private
-    FConexion: TUniConnection;
+    FUnidadTrabajo: IUnidadTrabajoFacturas;
     FRepositorio: IRepositorioConsolidacionFactura;
     FServicioEmision: IServicioEmisionFiscal;
     FServicioMovimientos: IServicioMovimientosFactura;
@@ -51,7 +51,7 @@ type
     ): TSolicitudMovimientosFactura;
   public
     constructor Create(
-      AConexion: TUniConnection;
+      const AUnidadTrabajo: IUnidadTrabajoFacturas;
       const ARepositorio: IRepositorioConsolidacionFactura;
       const AServicioEmision: IServicioEmisionFiscal;
       const AServicioMovimientos: IServicioMovimientosFactura);
@@ -63,28 +63,28 @@ type
     ): TResultadoConsolidacionFactura;
   end;
 
-constructor TServicioConsolidacionFactura.Create(
-  AConexion: TUniConnection;
+constructor TCasoUsoConsolidacionFactura.Create(
+  const AUnidadTrabajo: IUnidadTrabajoFacturas;
   const ARepositorio: IRepositorioConsolidacionFactura;
   const AServicioEmision: IServicioEmisionFiscal;
   const AServicioMovimientos: IServicioMovimientosFactura);
 begin
   inherited Create;
-  if not Assigned(AConexion) then
-    raise EArgumentNilException.Create('AConexion');
+  if not Assigned(AUnidadTrabajo) then
+    raise EArgumentNilException.Create('AUnidadTrabajo');
   if not Assigned(ARepositorio) then
     raise EArgumentNilException.Create('ARepositorio');
   if not Assigned(AServicioEmision) then
     raise EArgumentNilException.Create('AServicioEmision');
   if not Assigned(AServicioMovimientos) then
     raise EArgumentNilException.Create('AServicioMovimientos');
-  FConexion := AConexion;
+  FUnidadTrabajo := AUnidadTrabajo;
   FRepositorio := ARepositorio;
   FServicioEmision := AServicioEmision;
   FServicioMovimientos := AServicioMovimientos;
 end;
 
-function TServicioConsolidacionFactura.Evaluar(
+function TCasoUsoConsolidacionFactura.Evaluar(
   const ASerie, ANumero: string;
   const ADatos: TDatosFacturaConsolidacion
 ): TResultadoOperacionFactura;
@@ -106,7 +106,7 @@ begin
   end;
 end;
 
-function TServicioConsolidacionFactura.CrearSolicitudMovimientos(
+function TCasoUsoConsolidacionFactura.CrearSolicitudMovimientos(
   const ASerie, ANumero, AUsuario: string;
   const ADatos: TDatosFacturaConsolidacion
 ): TSolicitudMovimientosFactura;
@@ -120,7 +120,7 @@ begin
   Result.Usuario := AUsuario;
 end;
 
-function TServicioConsolidacionFactura.Validar(
+function TCasoUsoConsolidacionFactura.Validar(
   const ASerie, ANumero: string
 ): TResultadoOperacionFactura;
 var
@@ -133,69 +133,60 @@ begin
   Result := Evaluar(ASerie, ANumero, Datos);
 end;
 
-function TServicioConsolidacionFactura.Consolidar(
+function TCasoUsoConsolidacionFactura.Consolidar(
   const ASerie, ANumero, AUsuario: string
 ): TResultadoConsolidacionFactura;
 var
   Datos: TDatosFacturaConsolidacion;
   ResultadoValidacion: TResultadoOperacionFactura;
   ResultadoFiscal: TResultadoEmisionFiscal;
+  Resultado: TResultadoConsolidacionFactura;
   SolicitudFiscal: TSolicitudEmisionFiscal;
   SolicitudMovimientos: TSolicitudMovimientosFactura;
-  TransaccionPropia: Boolean;
 begin
-  Result.MensajeFiscal := '';
-  Result.MovimientosGenerados := 0;
-  TransaccionPropia := not FConexion.InTransaction;
-  if TransaccionPropia then
-    FConexion.StartTransaction;
-  try
-    Datos := FRepositorio.CargarDatosConsolidacion(
-      ASerie,
-      ANumero,
-      True);
-    ResultadoValidacion := Evaluar(ASerie, ANumero, Datos);
-    if not ResultadoValidacion.Exito then
+  Resultado := Default(TResultadoConsolidacionFactura);
+  FUnidadTrabajo.Ejecutar(
+    procedure
     begin
-      raise EConsolidacionFactura.Create(
-        ResultadoValidacion.Mensaje);
-    end;
-    SolicitudFiscal := TSolicitudEmisionFiscal.ParaConsolidacion(
-      ASerie,
-      ANumero,
-      AUsuario);
-    ResultadoFiscal := FServicioEmision.Emitir(SolicitudFiscal);
-    Result.MensajeFiscal := ResultadoFiscal.Mensaje;
-    if FacturaDebeGenerarMovimientos(
-         Datos.TipoFactura,
-         Datos.MueveStock) then
-    begin
-      SolicitudMovimientos := CrearSolicitudMovimientos(
+      Datos := FRepositorio.CargarDatosConsolidacion(
         ASerie,
         ANumero,
-        AUsuario,
-        Datos);
-      Result.MovimientosGenerados :=
-        FServicioMovimientos.GenerarSalidas(SolicitudMovimientos);
-    end;
-    if TransaccionPropia and FConexion.InTransaction then
-      FConexion.Commit;
-  except
-    if TransaccionPropia and FConexion.InTransaction then
-      FConexion.Rollback;
-    raise;
-  end;
+        True);
+      ResultadoValidacion := Evaluar(ASerie, ANumero, Datos);
+      if not ResultadoValidacion.Exito then
+        raise EConsolidacionFactura.Create(
+          ResultadoValidacion.Mensaje);
+      SolicitudFiscal := TSolicitudEmisionFiscal.ParaConsolidacion(
+        ASerie,
+        ANumero,
+        AUsuario);
+      ResultadoFiscal := FServicioEmision.Emitir(SolicitudFiscal);
+      Resultado.MensajeFiscal := ResultadoFiscal.Mensaje;
+      if FacturaDebeGenerarMovimientos(
+           Datos.TipoFactura,
+           Datos.MueveStock) then
+      begin
+        SolicitudMovimientos := CrearSolicitudMovimientos(
+          ASerie,
+          ANumero,
+          AUsuario,
+          Datos);
+        Resultado.MovimientosGenerados :=
+          FServicioMovimientos.GenerarSalidas(SolicitudMovimientos);
+      end;
+    end);
+  Result := Resultado;
 end;
 
-function CrearServicioConsolidacionFactura(
-  AConexion: TUniConnection;
+function CrearCasoUsoConsolidacionFactura(
+  const AUnidadTrabajo: IUnidadTrabajoFacturas;
   const ARepositorio: IRepositorioConsolidacionFactura;
   const AServicioEmision: IServicioEmisionFiscal;
   const AServicioMovimientos: IServicioMovimientosFactura
-): IServicioConsolidacionFactura;
+): ICasoUsoConsolidacionFactura;
 begin
-  Result := TServicioConsolidacionFactura.Create(
-    AConexion,
+  Result := TCasoUsoConsolidacionFactura.Create(
+    AUnidadTrabajo,
     ARepositorio,
     AServicioEmision,
     AServicioMovimientos);

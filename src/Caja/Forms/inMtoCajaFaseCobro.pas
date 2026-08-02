@@ -30,12 +30,34 @@ uses
   cxGrid, cxDropDownEdit, dxDateRanges, dxScrollbarAnnotations,
   cxCheckBox,
   // Acceso a Datos y Librerías Propias
-  Uni, MemDS, VirtualTable,
+  VirtualTable,
   inMtoFrmBase, inLibFacturas, inLibFaseCobro, inLibCajaTipos,
+  inLibFaseCobroPersistenciaIntf,
   inMtoCajaReferenciaPago, System.UITypes, dxGDIPlusClasses, cxImage;
 
 type
   TTipoImpresionTicket = inLibCajaTipos.TTipoImpresionVenta;
+  TEntradaFaseCobro = record
+    CodigoEmpresa: string;
+    CodigoAlmacen: string;
+    CodigoCaja: string;
+    Fecha: TDateTime;
+    CodigoCliente: string;
+    EmailCliente: string;
+    NifCliente: string;
+    CodigoPaisCliente: string;
+    NombrePaisCliente: string;
+    RectificaA: string;
+    HayLineasDeposito: Boolean;
+  end;
+  TResultadoFaseCobro = record
+    TipoImpresion: TTipoImpresionTicket;
+    SerieDocumento: string;
+    SerieFactura: string;
+    FechaFactura: TDateTime;
+    NumeroManual: string;
+    DatosCobro: TDatosFaseCobro;
+  end;
   TfrmMtoCajaFaseCobro = class(TfrmBase)
     pnlPrincipal: TPanel;
     pnlIzquierdo: TPanel;
@@ -152,10 +174,25 @@ type
   private
     FTipoImpresion: TTipoImpresionTicket;
     FDatosCobro: TDatosFaseCobro;
+    FRepositorioPersistencia: IRepositorioFaseCobro;
     FMemTablePagos: TVirtualTable;
     FActualizandoVale: Boolean;
     FEmailEnvio: string;
     FActualizandoEmail: Boolean;
+    FCodigoEmpresa: string;
+    FCodigoCliente: string;
+    FEmailCliente: string;
+    FNifCliente: string;
+    FCodigoPaisCliente: string;
+    FNombrePaisCliente: string;
+    FSerieFactura: string;
+    FFechaFactura: TDateTime;
+    FNumeroManual: string;
+    FRectificaA: string;
+    FCodigoAlmacen: string;
+    FCodigoCaja: string;
+    FFecha: TDate;
+    FHayLineasDeposito: Boolean;
     function ValidaryConfirmar:boolean;
     function PuedeEmitir(const ASerie: string; AFecha: TDateTime): Boolean;
     function SerieAdmiteFecha(const ASerie: string;
@@ -182,22 +219,8 @@ type
     property TipoImpresion: TTipoImpresionTicket read FTipoImpresion;
     property EnviarEmail: Boolean read GetEnviarEmail;
     property EmailEnvio: string read FEmailEnvio;
-  public
-    FCodigoEmpresa:String;
-    FCodigoCliente: String;
-    FEmailCliente: String;
-    FNifCliente: String;
-    FCodigoPaisCliente: String;
-    FNombrePaisCliente: String;
-    FSerieFactura: String;
-    FFechaFactura: TDateTime;
-    FNumeroManual: String;
-    // 'serie\numero' del ticket rectificado: activa el modo
-    // rectificación (series de subtipo RECTIFICATIVA y aviso en caption)
-    FRectificaA: String;
-    FCodigoAlmacen, FCodigoCaja:String;
-    FFecha:TDate;
-    FHayLineasDeposito: Boolean;
+    procedure Configurar(const AEntrada: TEntradaFaseCobro);
+    function ObtenerResultado: TResultadoFaseCobro;
     procedure CargarDatosDesdeFactura(TotalesFactura: TFacturaTotales);
     procedure AlRecalcularDatos(Sender: TObject);
     function AlRequerirReferencia(AInfo: TFormaPagoInfo;
@@ -211,60 +234,69 @@ implementation
 uses inMtoCajaSeleccionVale, inMtoModalSerieFechaFactura,
      UniDataCaja, inLibDocumentoFiscal, inLibCorreoTickets, inLibMsgCaja;
 
-procedure TfrmMtoCajaFaseCobro.CargarComboSeries;
-var
-  qry: TUniQuery;
-  sSubtipo: string;
+procedure TfrmMtoCajaFaseCobro.Configurar(
+  const AEntrada: TEntradaFaseCobro);
 begin
-  // En modo rectificación el documento sale con serie rectificativa
-  // (subtipo RECTIFICATIVA de fza_empresas_series)
-  if FRectificaA <> '' then
-    sSubtipo := 'RECTIFICATIVA'
-  else
-    sSubtipo := 'SIMPLIFICADA';
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    // Series propias del almacen/caja y tambien las genericas de la
-    // empresa (almacen/caja a NULL), p.ej. la rectificativa R1
-    qry.SQL.Text := 'SELECT EMPSER AS SERIE_CON              ' +
-                    '  FROM vi_empresas_series                         ' +
-                    ' WHERE CODIGO_EMP_EMPSER = :EMPRESA            ' +
-                    '   AND (CODIGO_ALM_EMPSER = :ALMACEN            ' +
-                    '        OR IFNULL(CODIGO_ALM_EMPSER, '''') = '''') ' +
-                    '   AND (CODIGO_CAJA_EMPSER = :CAJA                 ' +
-                    '        OR IFNULL(CODIGO_CAJA_EMPSER, '''') = '''') ' +
-                    '   AND TIPO_DOC_EMPSER     = ' + QuotedStr('FC')      +
-                    '   AND SUBTIPO_EMPSER = ' + QuotedStr(sSubtipo) +
-                    '   AND (FECHA_DESDE_EMPSER <= :FECHA               ' +
-                    '        AND (FECHA_HASTA_EMPSER >= :FECHA          ' +
-                    '             OR FECHA_HASTA_EMPSER IS NULL ))      ';
-    qry.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
-    qry.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
-    qry.ParamByName('CAJA').AsString := FCodigoCaja;
-    qry.ParamByName('FECHA').AsDateTime := FFecha;
-    qry.Open;
-    cbbSERIE_FAC.Properties.Items.BeginUpdate;
-    try
-      cbbSERIE_FAC.Properties.Items.Clear;
-      while not qry.Eof do
-      begin
-        cbbSERIE_FAC.Properties.Items.Add(qry.FieldByName('SERIE_CON').AsString);
-        qry.Next;
-      end;
-    finally
-      cbbSERIE_FAC.Properties.Items.EndUpdate;
-    end;
-    if cbbSERIE_FAC.Properties.Items.Count > 0 then
-    begin
-      if cbbSERIE_FAC.ItemIndex = -1 then
-        cbbSERIE_FAC.ItemIndex := 0;
-    end;
-  finally
-    FreeAndNil(qry);
-  end;
+  FCodigoEmpresa := AEntrada.CodigoEmpresa;
+  FCodigoAlmacen := AEntrada.CodigoAlmacen;
+  FCodigoCaja := AEntrada.CodigoCaja;
+  FFecha := AEntrada.Fecha;
+  FCodigoCliente := AEntrada.CodigoCliente;
+  FEmailCliente := AEntrada.EmailCliente;
+  FNifCliente := AEntrada.NifCliente;
+  FCodigoPaisCliente := AEntrada.CodigoPaisCliente;
+  FNombrePaisCliente := AEntrada.NombrePaisCliente;
+  FRectificaA := AEntrada.RectificaA;
+  FHayLineasDeposito := AEntrada.HayLineasDeposito;
 end;
 
+function TfrmMtoCajaFaseCobro.ObtenerResultado:
+  TResultadoFaseCobro;
+begin
+  Result := Default(TResultadoFaseCobro);
+  Result.TipoImpresion := FTipoImpresion;
+  Result.SerieDocumento := cbbSERIE_FAC.Text;
+  Result.SerieFactura := FSerieFactura;
+  Result.FechaFactura := FFechaFactura;
+  Result.NumeroManual := FNumeroManual;
+  Result.DatosCobro := FDatosCobro;
+end;
+
+procedure TfrmMtoCajaFaseCobro.CargarComboSeries;
+var
+  Solicitud: TSolicitudSeriesFaseCobro;
+  Series: TSeriesFaseCobro;
+  sSerie: string;
+begin
+  Solicitud.CodigoEmpresa := FCodigoEmpresa;
+  Solicitud.CodigoAlmacen := FCodigoAlmacen;
+  Solicitud.CodigoCaja := FCodigoCaja;
+  Solicitud.Fecha := FFecha;
+  if FRectificaA <> '' then
+  begin
+    Solicitud.Subtipo := 'RECTIFICATIVA';
+  end
+  else
+  begin
+    Solicitud.Subtipo := 'SIMPLIFICADA';
+  end;
+  Series := FRepositorioPersistencia.ListarSeries(Solicitud);
+  cbbSERIE_FAC.Properties.Items.BeginUpdate;
+  try
+    cbbSERIE_FAC.Properties.Items.Clear;
+    for sSerie in Series do
+    begin
+      cbbSERIE_FAC.Properties.Items.Add(sSerie);
+    end;
+  finally
+    cbbSERIE_FAC.Properties.Items.EndUpdate;
+  end;
+  if (cbbSERIE_FAC.Properties.Items.Count > 0) and
+     (cbbSERIE_FAC.ItemIndex = -1) then
+  begin
+    cbbSERIE_FAC.ItemIndex := 0;
+  end;
+end;
 procedure TfrmMtoCajaFaseCobro.btnConTicketClick(Sender: TObject);
 begin
   if ValidarYConfirmar and PuedeEmitir(cbbSERIE_FAC.Text, FFecha) then
@@ -393,43 +425,33 @@ end;
 procedure TfrmMtoCajaFaseCobro.AvisarSiNumeracionConHuecos(
   const ASerie: string);
 var
-  Qry: TUniQuery;
-  iFilas, iMin, iMax: Int64;
+  Resumen: TResumenNumeracionFaseCobro;
 begin
-  // Aviso (no bloqueante): comprueba que la numeracion de la serie no tenga
-  // huecos (que cada numero tenga su anterior). Si faltan numeros no se
-  // cumple la correlatividad legal; aqui solo se recuerda al usuario.
-  // El parametro de caja vgerAvisoHuecosNumeracion permite silenciarlo.
   if (Trim(ASerie) <> '') and
      ParametrosCaja.GetBool('vgerAvisoHuecosNumeracion', True) then
   begin
-    Qry := TUniQuery.Create(nil);
-    try
-      Qry.Connection := ConexionPrincipal;
-      Qry.SQL.Text :=
-        'SELECT COUNT(*) AS NFILAS, ' +
-        '       MIN(CAST(NUMERO_FAC AS UNSIGNED)) AS NMIN, ' +
-        '       MAX(CAST(NUMERO_FAC AS UNSIGNED)) AS NMAX ' +
-        '  FROM fza_facturas ' +
-        ' WHERE CODIGO_EMP_FAC = :EMP ' +
-        '   AND SERIE_FAC      = :SERIE';
-      Qry.ParamByName('EMP').AsString   := FCodigoEmpresa;
-      Qry.ParamByName('SERIE').AsString := ASerie;
-      Qry.Open;
-      iFilas := Qry.FieldByName('NFILAS').AsLargeInt;
-      iMin   := Qry.FieldByName('NMIN').AsLargeInt;
-      iMax   := Qry.FieldByName('NMAX').AsLargeInt;
-      if (iFilas > 0) and (iFilas <> iMax - iMin + 1) then
-        MessageDlg(
-          Format(SAvisoHuecosNumeracionSerieCaja,
-                 [ASerie, (iMax - iMin + 1) - iFilas, iMin, iMax]),
-          mtWarning, [mbOK], 0);
-    finally
-      FreeAndNil(Qry);
+    Resumen := FRepositorioPersistencia.ObtenerResumenNumeracion(
+      FCodigoEmpresa,
+      ASerie,
+      0);
+    if (Resumen.Filas > 0) and
+       (Resumen.Filas <> Resumen.Maximo - Resumen.Minimo + 1) then
+    begin
+      MessageDlg(
+        Format(
+          SAvisoHuecosNumeracionSerieCaja,
+          [
+            ASerie,
+            (Resumen.Maximo - Resumen.Minimo + 1) - Resumen.Filas,
+            Resumen.Minimo,
+            Resumen.Maximo
+          ]),
+        mtWarning,
+        [mbOK],
+        0);
     end;
   end;
 end;
-
 function TfrmMtoCajaFaseCobro.NumeroManualIntroducido: string;
 var
   s: string;
@@ -442,63 +464,64 @@ begin
     Result := s;
 end;
 
-function TfrmMtoCajaFaseCobro.ValidarHuecoManual(const ASerie, ANumero: string;
-  out ANumeroFmt: string): Boolean;
+function TfrmMtoCajaFaseCobro.ValidarHuecoManual(
+  const ASerie, ANumero: string;
+  out ANumeroFmt: string
+): Boolean;
 var
-  Qry: TUniQuery;
-  iNum, iMin, iMax, iExiste: Int64;
-  iLen: Integer;
+  Resumen: TResumenNumeracionFaseCobro;
+  iNumero: Int64;
 begin
-  // Solo se admite un numero que rellene un hueco real de la serie: que no
-  // exista ya y que este entre el minimo y el maximo. Devuelve el numero
-  // formateado con los digitos de la serie.
   Result := False;
   ANumeroFmt := '';
-  iNum := StrToInt64Def(Trim(ANumero), 0);
-  if iNum <= 0 then
-    MessageDlg(SErrorNumeroBorradorCajaNoValido,
-      mtError, [mbOK], 0)
+  iNumero := StrToInt64Def(Trim(ANumero), 0);
+  if iNumero <= 0 then
+  begin
+    MessageDlg(
+      SErrorNumeroBorradorCajaNoValido,
+      mtError,
+      [mbOK],
+      0);
+  end
   else
   begin
-    Qry := TUniQuery.Create(nil);
-    try
-      Qry.Connection := ConexionPrincipal;
-      Qry.SQL.Text :=
-        'SELECT MIN(CAST(NUMERO_FAC AS UNSIGNED)) AS NMIN, ' +
-        '       MAX(CAST(NUMERO_FAC AS UNSIGNED)) AS NMAX, ' +
-        '       MAX(LENGTH(NUMERO_FAC))           AS NLEN, ' +
-        '       SUM(CASE WHEN CAST(NUMERO_FAC AS UNSIGNED) = :NUM ' +
-        '                THEN 1 ELSE 0 END)        AS NEXISTE ' +
-        '  FROM fza_facturas ' +
-        ' WHERE CODIGO_EMP_FAC = :EMP ' +
-        '   AND SERIE_FAC      = :SERIE';
-      Qry.ParamByName('NUM').AsLargeInt := iNum;
-      Qry.ParamByName('EMP').AsString   := FCodigoEmpresa;
-      Qry.ParamByName('SERIE').AsString := ASerie;
-      Qry.Open;
-      iMin    := Qry.FieldByName('NMIN').AsLargeInt;
-      iMax    := Qry.FieldByName('NMAX').AsLargeInt;
-      iLen    := Qry.FieldByName('NLEN').AsInteger;
-      iExiste := Qry.FieldByName('NEXISTE').AsLargeInt;
-      if iExiste > 0 then
-        MessageDlg(Format(SErrorNumeroBorradorCajaExistente,
-          [iNum, ASerie]), mtError, [mbOK], 0)
-      else if (iMax <= iMin) or (iNum <= iMin) or (iNum >= iMax) then
-        MessageDlg(Format(SErrorNumeroBorradorCajaNoEsHueco,
-          [iNum, ASerie, iMin, iMax]), mtError, [mbOK], 0)
-      else
+    Resumen := FRepositorioPersistencia.ObtenerResumenNumeracion(
+      FCodigoEmpresa,
+      ASerie,
+      iNumero);
+    if Resumen.ExistentesNumero > 0 then
+    begin
+      MessageDlg(
+        Format(
+          SErrorNumeroBorradorCajaExistente,
+          [iNumero, ASerie]),
+        mtError,
+        [mbOK],
+        0);
+    end
+    else if (Resumen.Maximo <= Resumen.Minimo) or
+            (iNumero <= Resumen.Minimo) or
+            (iNumero >= Resumen.Maximo) then
+    begin
+      MessageDlg(
+        Format(
+          SErrorNumeroBorradorCajaNoEsHueco,
+          [iNumero, ASerie, Resumen.Minimo, Resumen.Maximo]),
+        mtError,
+        [mbOK],
+        0);
+    end
+    else
+    begin
+      ANumeroFmt := IntToStr(iNumero);
+      while Length(ANumeroFmt) < Resumen.Longitud do
       begin
-        ANumeroFmt := IntToStr(iNum);
-        while Length(ANumeroFmt) < iLen do
-          ANumeroFmt := '0' + ANumeroFmt;
-        Result := True;
+        ANumeroFmt := '0' + ANumeroFmt;
       end;
-    finally
-      FreeAndNil(Qry);
+      Result := True;
     end;
   end;
 end;
-
 function TfrmMtoCajaFaseCobro.PuedeEmitir(const ASerie: string;
   AFecha: TDateTime): Boolean;
 var
@@ -544,7 +567,11 @@ begin
   chkEnviarEmail.Checked := False;
   DibujarIconoEmail;
   ConfigurarTablaVirtual;
-  FDatosCobro := TDatosFaseCobro.Create(ConexionPrincipal, FMemTablePagos);
+  FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
+    CrearRepositorioFaseCobro;
+  FDatosCobro := TDatosFaseCobro.Create(
+    FRepositorioPersistencia,
+    FMemTablePagos);
   FDatosCobro.OnRecalculado := AlRecalcularDatos;
   FDatosCobro.OnRequiereReferencia := AlRequerirReferencia;
 //  CargarFormasPago;
@@ -660,73 +687,64 @@ begin
   inherited;
   if Assigned(FDatosCobro) then
     FreeAndNil(FDatosCobro);
+  FRepositorioPersistencia := nil;
 end;
 
 procedure TfrmMtoCajaFaseCobro.CargarFormasPago;
 var
-  qry: TUniQuery;
+  Resultado: IResultadoConsultaFaseCobro;
+  oFormasPago: TDataSet;
+  iCampo: Integer;
+  oCampoDestino: TField;
 begin
-  qry := TUniQuery.Create(nil);
+  Resultado := FRepositorioPersistencia.ConsultarFormasPago;
+  oFormasPago := Resultado.DataSet;
+  if FMemTablePagos.Active then
+  begin
+    FMemTablePagos.Close;
+  end;
+  FMemTablePagos.FieldDefs.Clear;
+  FMemTablePagos.Fields.Clear;
+  FMemTablePagos.FieldDefs.Assign(oFormasPago.FieldDefs);
+  FMemTablePagos.FieldDefs.Add('FACTOR_CAMBIO', ftCurrency);
+  FMemTablePagos.FieldDefs.Add('ESIMPORTE_DIVISA', ftString, 1);
+  FMemTablePagos.FieldDefs.Add('REFERENCIA', ftString, 255);
+  FMemTablePagos.FieldDefs.Add('IMPORTE_ENTREGADO', ftFloat);
+  FMemTablePagos.FieldDefs.Add('IMPORTE_DIVISA', ftFloat);
+  FMemTablePagos.FieldDefs.Add('IMPORTE_CAMBIO', ftCurrency);
+  FMemTablePagos.FieldDefs.Add('CODIGO_DIVISA', ftString, 6);
+  FMemTablePagos.Open;
+  FMemTablePagos.DisableControls;
   try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text := '  SELECT * ' +
-                    '    FROM fza_caja_formas_pago ' +
-                    '   WHERE ESACTIVO_FORMA_PAGO_CFP = ''S'' ' +
-                    'ORDER BY ORDEN_VISUAL_FORMA_PAGO_CFP';
-    qry.Open;
-
-    with FMemTablePagos do
+    oFormasPago.First;
+    while not oFormasPago.Eof do
     begin
-      if Active then Close;
-      FieldDefs.Clear;
-      Fields.Clear;
-      // Copiar FieldDefs desde la query
-      FieldDefs.Assign(qry.FieldDefs);
-      // Añadir campos extra que no vienen de BD
-      FieldDefs.Add('FACTOR_CAMBIO',      ftCurrency);
-      FieldDefs.Add('ESIMPORTE_DIVISA',   ftString, 1);
-      FieldDefs.Add('REFERENCIA',         ftString, 255);
-      FieldDefs.Add('IMPORTE_ENTREGADO',  ftFloat);
-      FieldDefs.Add('IMPORTE_DIVISA',     ftFloat);
-      FieldDefs.Add('IMPORTE_CAMBIO',     ftCurrency);
-      FieldDefs.Add('CODIGO_DIVISA',      ftString, 6);
-      Open;
-      // Ahora cargar los datos desde la query
-      DisableControls;
-      try
-        qry.First;
-        while not qry.Eof do
+      FMemTablePagos.Append;
+      for iCampo := 0 to oFormasPago.FieldCount - 1 do
+      begin
+        oCampoDestino := FMemTablePagos.FindField(
+          oFormasPago.Fields[iCampo].FieldName);
+        if Assigned(oCampoDestino) and
+           not oFormasPago.Fields[iCampo].IsNull then
         begin
-          Append;
-          // Copiar campos que existen en ambos
-          var i: Integer;
-          for i := 0 to qry.FieldCount - 1 do
-          begin
-            var F := FindField(qry.Fields[i].FieldName);
-            if Assigned(F) and not qry.Fields[i].IsNull then
-              F.Value := qry.Fields[i].Value;
-          end;
-          // Valores por defecto para campos extra
-          FieldByName('FACTOR_CAMBIO').AsCurrency    := 1;
-          FieldByName('ESIMPORTE_DIVISA').AsString   := 'S';
-          FieldByName('REFERENCIA').AsString         := '';
-          FieldByName('IMPORTE_ENTREGADO').AsFloat   := 0;
-          FieldByName('IMPORTE_DIVISA').AsFloat      := 0;
-          FieldByName('IMPORTE_CAMBIO').AsCurrency   := 0;
-          FieldByName('CODIGO_DIVISA').AsString      := 'EUR';
-          Post;
-          qry.Next;
+          oCampoDestino.Value := oFormasPago.Fields[iCampo].Value;
         end;
-        First;
-      finally
-        EnableControls;
       end;
+      FMemTablePagos.FieldByName('FACTOR_CAMBIO').AsCurrency := 1;
+      FMemTablePagos.FieldByName('ESIMPORTE_DIVISA').AsString := 'S';
+      FMemTablePagos.FieldByName('REFERENCIA').AsString := '';
+      FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat := 0;
+      FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsFloat := 0;
+      FMemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency := 0;
+      FMemTablePagos.FieldByName('CODIGO_DIVISA').AsString := 'EUR';
+      FMemTablePagos.Post;
+      oFormasPago.Next;
     end;
+    FMemTablePagos.First;
   finally
-    FreeAndNil(qry);
+    FMemTablePagos.EnableControls;
   end;
 end;
-
 procedure TfrmMtoCajaFaseCobro.RellenarPendienteEnFormaActual;
 var
   Pendiente: Currency;
@@ -1172,10 +1190,7 @@ end;
 
 procedure TfrmMtoCajaFaseCobro.FormShow(Sender: TObject);
 var
-  qryCli: TUniQuery;
-  PermiteDeuda: Boolean;
-  LimiteCredito, DeudaActual: Currency;
-  NomCliente: string;
+  Cliente: TClienteFaseCobro;
 begin
   inherited;
   FEmailEnvio := Trim(FEmailCliente);
@@ -1184,35 +1199,20 @@ begin
     Caption := Caption + '  -  RECTIFICA al borrador ' + FRectificaA;
   if Trim(FCodigoCliente) <> '' then
   begin
-    qryCli := TUniQuery.Create(nil);
-    try
-      qryCli.Connection := ConexionPrincipal;
-      qryCli.SQL.Text := 'SELECT RAZON_SOCIAL_CLI, EMAIL_CLI, ' +
-                         '       ESPERMITE_DEUDA_CLI, ' +
-                         '       TOTAL_LIMITE_CREDITO_CLI, ' +
-                         '       TOTAL_DEUDA_CLI ' +
-                         '  FROM fza_clientes ' +
-                         ' WHERE CODIGO_CLI_CLI = :COD LIMIT 1';
-      qryCli.ParamByName('COD').AsString := FCodigoCliente;
-      qryCli.Open;
-      if not qryCli.IsEmpty then
+    if FRepositorioPersistencia.ObtenerCliente(
+         FCodigoCliente,
+         Cliente) then
+    begin
+      if FEmailEnvio = '' then
       begin
-        NomCliente := qryCli.FieldByName('RAZON_SOCIAL_CLI').AsString;
-        if FEmailEnvio = '' then
-          FEmailEnvio := Trim(qryCli.FieldByName('EMAIL_CLI').AsString);
-        PermiteDeuda :=
-          (qryCli.FieldByName('ESPERMITE_DEUDA_CLI').AsString = 'S');
-        LimiteCredito :=
-          qryCli.FieldByName('TOTAL_LIMITE_CREDITO_CLI').AsCurrency;
-        DeudaActual := 0;
-        FDatosCobro.EstablecerCliente(FCodigoCliente,
-                                      NomCliente,
-                                      PermiteDeuda,
-                                      LimiteCredito,
-                                      DeudaActual);
+        FEmailEnvio := Trim(Cliente.Email);
       end;
-    finally
-      FreeAndNil(qryCli);
+      FDatosCobro.EstablecerCliente(
+        FCodigoCliente,
+        Cliente.Nombre,
+        Cliente.PermiteDeuda,
+        Cliente.LimiteCredito,
+        0);
     end;
   end;
   CargarComboSeries;

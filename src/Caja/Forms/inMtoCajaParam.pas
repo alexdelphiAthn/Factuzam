@@ -23,9 +23,10 @@ uses
   cxLookAndFeelPainters, cxStyles, cxFilter, dxScrollbarAnnotations, cxEdit,
   cxCheckBox, cxInplaceContainer, cxTextEdit, cxContainer,
   inLibGlobalVar, dxCoreGraphics, cxMaskEdit, cxButtonEdit, cxSpinEdit,
-  Vcl.ExtCtrls, inMtoFrmBase, Uni, cxDropDownEdit, Vcl.Menus, Vcl.StdCtrls,
+  Vcl.ExtCtrls, inMtoFrmBase, cxDropDownEdit, Vcl.Menus, Vcl.StdCtrls,
   cxButtons, JvComponentBase, JvInspector, JvExControls, System.Actions,
-  Vcl.ActnList, Vcl.Printers, System.UITypes, inLibParametrosIntf;
+  Vcl.ActnList, Vcl.Printers, System.UITypes, inLibParametrosIntf,
+  inLibAppParamPersistenciaIntf;
 
 type
   // Tipos de punteros necesarios para la generación dinámica en JvInspector
@@ -72,6 +73,7 @@ type
     FStrs:  TList<PString>;
     FValoresOriginales: TDictionary<string, string>;
     FParametrosEdicion: IParametrosEdicion;
+    FRepositorioPersistencia: IRepositorioAppParam;
     procedure CapturarValoresOriginales;
     function  HayCambiosPendientes: Boolean;
     procedure LimpiarMemoria;
@@ -81,7 +83,6 @@ type
     function  QuitarTildes(const Texto: string): string;
     function  BuscarItemPorNombre(ItemPadre: TJvCustomInspectorItem;
                                   const Nombre: string): TJvCustomInspectorItem;
-//    procedure GuardarNodos(ItemPadre: TJvCustomInspectorItem; qryS:TUniQuery);
     procedure FiltrarVerticalGrid(Grid: TJvInspector; Texto: string);
     procedure CargarParametros(Grid: TJvInspector;
                                const pUsuario,
@@ -102,7 +103,7 @@ implementation
 {$R *.dfm}
 
 uses
-  StrUtils, inLibLayoutForm, inLibLog, inLibMsgCaja;
+  StrUtils, inLibLayoutForm, inLibMsgCaja;
 
 // ----------------------------------------------------------------------
 // GESTIÓN DE MEMORIA Y CICLO DE VIDA
@@ -116,6 +117,8 @@ begin
   if not Supports(Owner, IProveedorParametrosEdicion, Proveedor) then
     raise Exception.Create(SErrorProveedorParametrosCajaNoConfigurado);
   FParametrosEdicion := Proveedor.ParametrosCajaEdicion;
+  FRepositorioPersistencia := ContextoRepositoriosPantalla.Configuracion.
+    CrearRepositorioAppParam;
   if not Assigned(FParametrosEdicion) then
     raise Exception.Create(SErrorParametrosCajaEditablesNoConfigurados);
   if jvntrstb1 <> nil then
@@ -158,6 +161,7 @@ end;
 procedure TfrmMtoCajaParam.FormDestroy(Sender: TObject);
 begin
   FParametrosEdicion := nil;
+  FRepositorioPersistencia := nil;
   LimpiarMemoria;
   FreeAndNil(FBools);
   FreeAndNil(FInts);
@@ -396,78 +400,63 @@ procedure TfrmMtoCajaParam.CargarParametros(Grid: TJvInspector;
                                             const pUsuario,
                                             pGrupo: string);
 var
-  qry: TUniQuery;
+  Valores: TValoresPerfilAppParam;
+  ValorPerfil: TValorPerfilAppParam;
   SubKey, ValorStr: string;
   ItemData: TJvCustomInspectorItem;
 begin
   ResetearADefectos;
   Grid.Refresh;
-
-  qry := TUniQuery.Create(nil);
+  Valores := FRepositorioPersistencia.CargarValores(
+    pUsuario,
+    pGrupo,
+    'frmMtoCajaParam');
+  Grid.BeginUpdate;
   try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text :=
-            'CALL PRC_GETPERFILFORMULARIO(:p_usuario, :p_grupo, :p_formulario)';
-    qry.ParamByName('p_usuario').AsString    := pUsuario;
-    qry.ParamByName('p_grupo').AsString      := pGrupo;
-    qry.ParamByName('p_formulario').AsString := 'frmMtoCajaParam';
-    qry.Open;
-
-    Grid.BeginUpdate;
-    try
-      while not qry.Eof do
+    for ValorPerfil in Valores do
+    begin
+      SubKey := ValorPerfil.Subclave;
+      ValorStr := ValorPerfil.Valor;
+      ItemData := BuscarItemPorNombre(Grid.Root, SubKey);
+      if (ItemData <> nil) and (ItemData.Data <> nil) then
       begin
-        SubKey := qry.FieldByName('SUBKEY_USUPER').AsString;
-        ValorStr := qry.FieldByName('VALUE_USUPER').AsString;
-        ItemData := BuscarItemPorNombre(Grid.Root, SubKey);
-
-        if (ItemData <> nil) and (ItemData.Data <> nil) then
-        begin
-          try
-            if (ValorStr = '') and
-                      (ItemData.Data.TypeInfo.Kind in [tkInteger, tkFloat]) then
-              ValorStr := '0';
-            ItemData.DisplayValue := ValorStr;
-          except
-            // El resto de parametros del perfil se sigue aplicando.
-            on E: Exception do
-              inLibLog.Log.LogWarning(
-                'CajaParam: no se pudo aplicar el parametro "' +
-                SubKey + '": ' + E.Message);
-          end;
+        try
+          if (ValorStr = '') and
+             (ItemData.Data.TypeInfo.Kind in [tkInteger, tkFloat]) then
+            ValorStr := '0';
+          ItemData.DisplayValue := ValorStr;
+        except
+          // El resto de parametros del perfil se sigue aplicando.
+          on E: Exception do
+            RegistroLog.RegistrarAviso(
+              'CajaParam: no se pudo aplicar el parametro "' +
+              SubKey + '": ' + E.Message);
         end;
-        qry.Next;
       end;
-    finally
-      Grid.EndUpdate;
     end;
-    CapturarValoresOriginales;
   finally
-    FreeAndNil(qry);
+    Grid.EndUpdate;
   end;
+  CapturarValoresOriginales;
 end;
 
 procedure TfrmMtoCajaParam.btnGuardarClick(Sender: TObject);
 var
-  qry: TUniQuery;
+  ValoresGuardar: TValoresPerfilAppParam;
+  ValorGuardado: TValorPerfilAppParam;
   sUsuarioGrupo: string;
   i, j: Integer;
   NodoPrincipal, ParamItem: TJvCustomInspectorItem;
   ValorAGuardar: string;
-  GuardadosCount: Integer; // NUEVO: Para saber si ha habido cambios
+  GuardadosCount: Integer;
+  CambioReal: Boolean;
 begin
   JvInspector1.SaveValues;
-  if cmbGrupoUsuario.ItemIndex = -1 then Exit;
-  sUsuarioGrupo := cmbGrupoUsuario.Text;
-
-  GuardadosCount := 0;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text := 'CALL PRC_SETPERFILFORMULARIO(:p_usuario_grupo, ' +
-                    '                             :p_formulario, ' +
-                    '                             :p_subkey, ' +
-                    '                             :p_value)';
+  if cmbGrupoUsuario.ItemIndex >= 0 then
+  begin
+    sUsuarioGrupo := cmbGrupoUsuario.Text;
+    GuardadosCount := 0;
+    SetLength(ValoresGuardar, 0);
     for i := 0 to JvInspector1.Root.Count - 1 do
     begin
       NodoPrincipal := JvInspector1.Root.Items[i];
@@ -490,21 +479,34 @@ begin
           end
           else
             ValorAGuardar := '';
+          CambioReal := True;
           if FValoresOriginales.ContainsKey(ParamItem.Name) then
+            CambioReal := not SameText(
+              FValoresOriginales[ParamItem.Name],
+              ValorAGuardar);
+          if CambioReal then
           begin
-            // SameText protege contra posibles variaciones de
-            // mayúsculas/minúsculas
-            if SameText(FValoresOriginales[ParamItem.Name], ValorAGuardar) then
-              Continue;
+            SetLength(ValoresGuardar, Length(ValoresGuardar) + 1);
+            ValoresGuardar[High(ValoresGuardar)].Subclave :=
+              ParamItem.Name;
+            ValoresGuardar[High(ValoresGuardar)].Valor :=
+              ValorAGuardar;
+            Inc(GuardadosCount);
           end;
-          qry.ParamByName('p_usuario_grupo').AsString := sUsuarioGrupo;
-          qry.ParamByName('p_formulario').AsString    := 'frmMtoCajaParam';
-          qry.ParamByName('p_subkey').AsString        := ParamItem.Name;
-          qry.ParamByName('p_value').AsString         := ValorAGuardar;
-          qry.Execute;
-          Inc(GuardadosCount); // Contamos un guardado real
-          FValoresOriginales.AddOrSetValue(ParamItem.Name, ValorAGuardar);
         end;
+      end;
+    end;
+    if Length(ValoresGuardar) > 0 then
+    begin
+      FRepositorioPersistencia.GuardarValores(
+        sUsuarioGrupo,
+        'frmMtoCajaParam',
+        ValoresGuardar);
+      for ValorGuardado in ValoresGuardar do
+      begin
+        FValoresOriginales.AddOrSetValue(
+          ValorGuardado.Subclave,
+          ValorGuardado.Valor);
       end;
     end;
     if GuardadosCount > 0 then
@@ -523,14 +525,12 @@ begin
     begin
       ShowMessage(SInfoParametrosCajaSinCambios);
     end;
-  finally
-    FreeAndNil(qry);
   end;
 end;
 
 procedure TfrmMtoCajaParam.FormShow(Sender: TObject);
 var
-  qry: TUniQuery;
+  Ambitos: TCadenasAppParam;
   s: string;
 begin
   ConstruirInspector;
@@ -545,24 +545,13 @@ begin
   // grupos del sistema (y pueden editarla).
   if IdentidadSesion.GrupoRaiz = 'S' then
   begin
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := ConexionPrincipal;
-      qry.SQL.Text :=
-        'SELECT ''Todos'' AS S ' +
-        'UNION SELECT GRUPO_USUGRP FROM fza_usuarios_grupos ' +
-        'UNION SELECT USUARIO_USU FROM fza_usuarios ' +
-        'ORDER BY S';
-      qry.Open;
-      while not qry.Eof do
+    Ambitos := FRepositorioPersistencia.ListarAmbitos;
+    for s in Ambitos do
+    begin
+      if cmbGrupoUsuario.Properties.Items.IndexOf(s) < 0 then
       begin
-        s := qry.Fields[0].AsString;
-        if cmbGrupoUsuario.Properties.Items.IndexOf(s) < 0 then
-          cmbGrupoUsuario.Properties.Items.Add(s);
-        qry.Next;
+        cmbGrupoUsuario.Properties.Items.Add(s);
       end;
-    finally
-      FreeAndNil(qry);
     end;
   end;
   cmbGrupoUsuario.Visible := True;
@@ -597,24 +586,14 @@ end;
 procedure TfrmMtoCajaParam.GetTarifasList(Sender: TJvCustomInspectorItem;
                                           Strings: TStrings);
 var
-  qry: TUniQuery;
+  Tarifas: TCadenasAppParam;
+  Tarifa: string;
 begin
   Strings.Clear;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text :=
-      'SELECT CODIGO_TAR_ARTTAR FROM fza_tarifas' +
-      ' WHERE ESACTIVO_ARTTAR = ''S''' +
-      ' ORDER BY ORDEN_TAR';
-    qry.Open;
-    while not qry.Eof do
-    begin
-      Strings.Add(qry.FieldByName('CODIGO_TAR_ARTTAR').AsString);
-      qry.Next;
-    end;
-  finally
-    FreeAndNil(qry);
+  Tarifas := FRepositorioPersistencia.ListarTarifas;
+  for Tarifa in Tarifas do
+  begin
+    Strings.Add(Tarifa);
   end;
 end;
 
@@ -742,23 +721,17 @@ end;
 
 procedure TfrmMtoCajaParam.btnChangeIdClick(Sender: TObject);
 var
-  qry: TUniQuery;
+  Ambitos: TCadenasAppParam;
+  Ambito: string;
   usuarios: TStringList;
   sUsuario: string;
 begin
-  qry := TUniQuery.Create(nil);
   usuarios := TStringList.Create;
   try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text := 'SELECT ''Todos'' AS S ' +
-                    'UNION SELECT GRUPO_USUGRP FROM fza_usuarios_grupos ' +
-                    'UNION SELECT USUARIO_USU FROM fza_usuarios ' +
-                    'ORDER BY S';
-    qry.Open;
-    while not qry.Eof do
+    Ambitos := FRepositorioPersistencia.ListarAmbitos;
+    for Ambito in Ambitos do
     begin
-      usuarios.Add(qry.Fields[0].AsString);
-      qry.Next;
+      usuarios.Add(Ambito);
     end;
 
     if usuarios.Count = 0 then
@@ -787,7 +760,6 @@ begin
     end;
   finally
     FreeAndNil(usuarios);
-    FreeAndNil(qry);
   end;
 end;
 

@@ -448,14 +448,6 @@
     Left = 64
     Top = 8
   end
-  inherited unqryPerfiles: TUniQuery
-    Left = 288
-    Top = 48
-  end
-  inherited dsPerfiles: TDataSource
-    Left = 224
-    Top = 8
-  end
   inherited frxReportOrigen: TfrxReport
     ReportOptions.Author = ''
     ReportOptions.LastChange = 46164.719528437500000000

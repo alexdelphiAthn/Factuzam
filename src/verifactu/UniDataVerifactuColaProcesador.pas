@@ -12,22 +12,23 @@
 {    Procesador UniDAC de la cola Verifactu y worker con conexión propia.      }
 {******************************************************************************}
 unit UniDataVerifactuColaProcesador;
-
 interface
-
 uses
   System.Classes, Uni, inLibConexionesIntf, inLibParametrosIntf,
-  inLibContextoSesionIntf, inLibVerifactuColaIntf;
-
+  inLibContextoSesionIntf, inLibVerifactuColaIntf, inLibLogIntf;
 type
+  TContextoProcesadorVerifactuCola = record
+    Conexiones: IServicioConexiones;
+    ContextoSesion: IContextoSesionAplicacion;
+    ParametrosApp: IParametrosAplicacion;
+    ParametrosCaja: IParametrosCaja;
+    RegistroLog: IRegistroLog;
+    Usuario: string;
+  end;
   THiloVerifactuCola = class(TThread)
   private
     FConn: TUniConnection;
-    FConexiones: IServicioConexiones;
-    FContextoSesion: IContextoSesionAplicacion;
-    FParametrosApp: IParametrosAplicacion;
-    FParametrosCaja: IParametrosCaja;
-    FUsuario: string;
+    FContexto: TContextoProcesadorVerifactuCola;
     FAvisoNoDisponible: Boolean;
     function PuedeContinuar: Boolean;
     procedure ProcesarPendientes;
@@ -40,11 +41,7 @@ type
     procedure Execute; override;
   public
     constructor Create(
-      const AConexiones: IServicioConexiones;
-      const AContextoSesion: IContextoSesionAplicacion;
-      const AParametrosApp: IParametrosAplicacion;
-      const AParametrosCaja: IParametrosCaja;
-      const AUsuario: string); reintroduce;
+      const AContexto: TContextoProcesadorVerifactuCola); reintroduce;
     destructor Destroy; override;
   end;
 function CrearProcesadorVerifactuColaUniDAC(
@@ -52,11 +49,11 @@ function CrearProcesadorVerifactuColaUniDAC(
   const AContextoSesion: IContextoSesionAplicacion;
   const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja;
-  const AUsuario: string): IProcesadorVerifactuCola;
+  const AUsuario: string;
+  const ARegistroLog: IRegistroLog = nil): IProcesadorVerifactuCola;
 implementation
-
 uses
-  Winapi.Windows, System.SysUtils, inLibLog, inLibVerifactu,
+  Winapi.Windows, System.SysUtils, inLibVerifactu,
   inLibVerifactuTipos, inLibVerifactuEnvio,
   UniDataVerifactuColaResultados;
 const
@@ -70,20 +67,12 @@ type
     TInterfacedObject,
     IProcesadorVerifactuCola)
   private
-    FConexiones: IServicioConexiones;
-    FContextoSesion: IContextoSesionAplicacion;
-    FParametrosApp: IParametrosAplicacion;
-    FParametrosCaja: IParametrosCaja;
-    FUsuario: string;
+    FContexto: TContextoProcesadorVerifactuCola;
     FHilo: THiloVerifactuCola;
     FIniciado: Boolean;
   public
     constructor Create(
-      const AConexiones: IServicioConexiones;
-      const AContextoSesion: IContextoSesionAplicacion;
-      const AParametrosApp: IParametrosAplicacion;
-      const AParametrosCaja: IParametrosCaja;
-      const AUsuario: string);
+      const AContexto: TContextoProcesadorVerifactuCola);
     destructor Destroy; override;
     procedure Iniciar;
     procedure Detener;
@@ -93,63 +82,54 @@ function CrearProcesadorVerifactuColaUniDAC(
   const AContextoSesion: IContextoSesionAplicacion;
   const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja;
-  const AUsuario: string): IProcesadorVerifactuCola;
+  const AUsuario: string;
+  const ARegistroLog: IRegistroLog): IProcesadorVerifactuCola;
+var
+  oContexto: TContextoProcesadorVerifactuCola;
 begin
-  Result := TProcesadorVerifactuColaUniDAC.Create(
-    AConexiones,
-    AContextoSesion,
-    AParametrosApp,
-    AParametrosCaja,
-    AUsuario);
+  oContexto := Default(TContextoProcesadorVerifactuCola);
+  oContexto.Conexiones := AConexiones;
+  oContexto.ContextoSesion := AContextoSesion;
+  oContexto.ParametrosApp := AParametrosApp;
+  oContexto.ParametrosCaja := AParametrosCaja;
+  oContexto.Usuario := AUsuario;
+  oContexto.RegistroLog := ARegistroLog;
+  Result := TProcesadorVerifactuColaUniDAC.Create(oContexto);
 end;
 constructor TProcesadorVerifactuColaUniDAC.Create(
-  const AConexiones: IServicioConexiones;
-  const AContextoSesion: IContextoSesionAplicacion;
-  const AParametrosApp: IParametrosAplicacion;
-  const AParametrosCaja: IParametrosCaja;
-  const AUsuario: string);
+  const AContexto: TContextoProcesadorVerifactuCola);
 begin
-  if not Assigned(AConexiones) then
+  if not Assigned(AContexto.Conexiones) then
     raise EArgumentNilException.Create('AConexiones');
-  if not Assigned(AContextoSesion) then
+  if not Assigned(AContexto.ContextoSesion) then
     raise EArgumentNilException.Create('AContextoSesion');
-  if not Assigned(AParametrosApp) then
+  if not Assigned(AContexto.ParametrosApp) then
     raise EArgumentNilException.Create('AParametrosApp');
-  if not Assigned(AParametrosCaja) then
+  if not Assigned(AContexto.ParametrosCaja) then
     raise EArgumentNilException.Create('AParametrosCaja');
   inherited Create;
-  FConexiones := AConexiones;
-  FContextoSesion := AContextoSesion;
-  FParametrosApp := AParametrosApp;
-  FParametrosCaja := AParametrosCaja;
-  FUsuario := AUsuario;
+  FContexto := AContexto;
   FHilo := nil;
   FIniciado := False;
 end;
 destructor TProcesadorVerifactuColaUniDAC.Destroy;
 begin
   Detener;
-  FParametrosCaja := nil;
-  FParametrosApp := nil;
-  FContextoSesion := nil;
-  FConexiones := nil;
+  FContexto := Default(TContextoProcesadorVerifactuCola);
   inherited;
 end;
 procedure TProcesadorVerifactuColaUniDAC.Iniciar;
 begin
   if not FIniciado then
   begin
-    FHilo := THiloVerifactuCola.Create(
-      FConexiones,
-      FContextoSesion,
-      FParametrosApp,
-      FParametrosCaja,
-      FUsuario);
+    FHilo := THiloVerifactuCola.Create(FContexto);
     try
       FHilo.FreeOnTerminate := False;
       FHilo.Start;
       FIniciado := True;
-      Log.LogInfo('Cola Verifactu: hilo iniciado');
+      if Assigned(FContexto.RegistroLog) then
+        FContexto.RegistroLog.RegistrarInformacion(
+          'Cola Verifactu: hilo iniciado');
     except
       FreeAndNil(FHilo);
       raise;
@@ -164,61 +144,56 @@ begin
     FHilo.WaitFor;
     FreeAndNil(FHilo);
     FIniciado := False;
-    Log.LogInfo('Cola Verifactu: hilo detenido');
+    if Assigned(FContexto.RegistroLog) then
+      FContexto.RegistroLog.RegistrarInformacion(
+        'Cola Verifactu: hilo detenido');
   end;
 end;
 // ===========================================================================
 //   THiloVerifactuCola — worker en segundo plano
 // ===========================================================================
 constructor THiloVerifactuCola.Create(
-  const AConexiones: IServicioConexiones;
-  const AContextoSesion: IContextoSesionAplicacion;
-  const AParametrosApp: IParametrosAplicacion;
-  const AParametrosCaja: IParametrosCaja;
-  const AUsuario: string);
+  const AContexto: TContextoProcesadorVerifactuCola);
 begin
-  if not Assigned(AConexiones) then
+  if not Assigned(AContexto.Conexiones) then
     raise EArgumentNilException.Create('AConexiones');
-  if not Assigned(AContextoSesion) then
+  if not Assigned(AContexto.ContextoSesion) then
     raise EArgumentNilException.Create('AContextoSesion');
-  if not Assigned(AParametrosApp) then
+  if not Assigned(AContexto.ParametrosApp) then
     raise EArgumentNilException.Create('AParametrosApp');
-  if not Assigned(AParametrosCaja) then
+  if not Assigned(AContexto.ParametrosCaja) then
     raise EArgumentNilException.Create('AParametrosCaja');
   inherited Create(True);
-  FConexiones := AConexiones;
-  FContextoSesion := AContextoSesion;
-  FParametrosApp := AParametrosApp;
-  FParametrosCaja := AParametrosCaja;
-  FUsuario := AUsuario;
+  FContexto := AContexto;
 end;
 destructor THiloVerifactuCola.Destroy;
 begin
   FreeAndNil(FConn);
-  FParametrosCaja := nil;
-  FParametrosApp := nil;
-  FContextoSesion := nil;
-  FConexiones := nil;
+  FContexto := Default(TContextoProcesadorVerifactuCola);
   inherited;
 end;
 procedure THiloVerifactuCola.Execute;
 begin
   NameThreadForDebugging('VerifactuCola');
   FAvisoNoDisponible := False;
-  while (not Terminated) and (not FContextoSesion.CerrandoAplicacion) do
+  while (not Terminated) and
+        (not FContexto.ContextoSesion.CerrandoAplicacion) do
   begin
     // La espera va primero: deja respirar el arranque de la app y
     // permite cerrar sin procesar nada a medias
     EsperarCiclo;
-    if (not Terminated) and (not FContextoSesion.CerrandoAplicacion) and
-       (ModoVerifactu(FParametrosApp) = mvVerifactu) then
+    if (not Terminated) and
+       (not FContexto.ContextoSesion.CerrandoAplicacion) and
+       (ModoVerifactu(FContexto.ParametrosApp) = mvVerifactu) then
     begin
       try
         ProcesarPendientes;
       except
         on E: Exception do
         begin
-          inLibLog.Log.LogError('Cola Verifactu: ' + E.Message);
+          if Assigned(FContexto.RegistroLog) then
+            FContexto.RegistroLog.RegistrarError(
+              'Cola Verifactu: ' + E.Message);
           // Si la conexión propia quedó inservible se recrea al
           // siguiente ciclo
           FreeAndNil(FConn);
@@ -231,7 +206,7 @@ procedure THiloVerifactuCola.EsperarCiclo;
 var
   iSegundos: Integer;
 begin
-  iSegundos := FParametrosApp.GetInt('appVerifactuSegundosCiclo', 60);
+  iSegundos := FContexto.ParametrosApp.GetInt('appVerifactuSegundosCiclo', 60);
   if iSegundos < 5 then
     iSegundos := 5;
   EsperarSegundos(iSegundos);
@@ -240,7 +215,7 @@ function THiloVerifactuCola.PuedeContinuar: Boolean;
 begin
   Result := not Terminated;
   if Result then
-    Result := not FContextoSesion.CerrandoAplicacion;
+    Result := not FContexto.ContextoSesion.CerrandoAplicacion;
 end;
 procedure THiloVerifactuCola.EsperarSegundos(ASegundos: Integer);
 var
@@ -265,7 +240,7 @@ var
   iEspera: Integer;
 begin
   if FConn = nil then
-    FConn := FConexiones.CrearConexion(
+    FConn := FContexto.Conexiones.CrearConexion(
       nil,
       uctSegundoPlano);
   if not EnvioVerifactuDisponible then
@@ -274,7 +249,8 @@ begin
     // Se deja constancia una sola vez por sesión.
     if not FAvisoNoDisponible then
     begin
-      RegistrarEventoVerifactu(FParametrosApp, FConn, FUsuario,
+      RegistrarEventoVerifactu(
+        FContexto.ParametrosApp, FConn, FContexto.Usuario,
         cEventoVerifactuInfo,
         'Cola Verifactu activa sin cliente de envío AEAT disponible: ' +
         'las facturas quedan en estado PENDIENTE');
@@ -305,7 +281,7 @@ begin
         ' WHERE ESTADO_VFCOLA = ''ERROR'' ' +
         '   AND CONTADOR_INTENTOS_VFCOLA < :MAXINTENTOS';
       Qry.ParamByName('MAXINTENTOS').AsInteger :=
-        FParametrosApp.GetInt('appVerifactuMaxIntentos', 10);
+        FContexto.ParametrosApp.GetInt('appVerifactuMaxIntentos', 10);
       Qry.Execute;
       Qry.SQL.Text :=
         ' SELECT ID_VFCOLA, SERIE_FAC_VFCOLA, NUMERO_FAC_VFCOLA, ' +
@@ -355,7 +331,7 @@ begin
       '     USUARIO_MODIF  = :USUARIO ' +
       ' WHERE ID_VFCOLA = :ID ' +
       '   AND ESTADO_VFCOLA = ''PENDIENTE''';
-    Qry.ParamByName('USUARIO').AsString := FUsuario;
+    Qry.ParamByName('USUARIO').AsString := FContexto.Usuario;
     Qry.ParamByName('ID').AsLargeInt    := AIdCola;
     Qry.Execute;
     bReclamada := (Qry.RowsAffected = 1);
@@ -369,8 +345,8 @@ begin
     // puestos hasta el commit/rollback
     FConn.StartTransaction;
     try
-      oResultado := EnviarRegistroFactura(FParametrosApp, FConn,
-        FUsuario, ASerie, ANumero, ATipoOperacion);
+      oResultado := EnviarRegistroFactura(FContexto.ParametrosApp, FConn,
+        FContexto.Usuario, ASerie, ANumero, ATipoOperacion);
       if oResultado.Ok then
       begin
         // El registro YA está aceptado por la AEAT: si fallara la
@@ -378,8 +354,10 @@ begin
         // resolverá por la vía del registro duplicado
         try
           TResultadosVerifactuColaUniDAC.GuardarEnvioOk(
-            FConn, FParametrosApp, FParametrosCaja, FUsuario,
-            AIdCola, ASerie, ANumero, ATipoOperacion, oResultado);
+            FConn, FContexto.ParametrosApp, FContexto.ParametrosCaja,
+            FContexto.Usuario,
+            AIdCola, ASerie, ANumero, ATipoOperacion, oResultado,
+            FContexto.RegistroLog);
           FConn.Commit;
           Result := oResultado.EsperaSegundos;
         except
@@ -388,10 +366,11 @@ begin
             if FConn.InTransaction then
               FConn.Rollback;
             TResultadosVerifactuColaUniDAC.GuardarEnvioError(
-              FConn, FParametrosApp, FParametrosCaja, FUsuario,
+              FConn, FContexto.ParametrosApp, FContexto.ParametrosCaja,
+              FContexto.Usuario,
               AIdCola, ASerie, ANumero,
               'Aceptado por la AEAT pero falló la persistencia ' +
-              'local: ' + E.Message, AIntentos);
+              'local: ' + E.Message, AIntentos, FContexto.RegistroLog);
           end;
         end;
       end
@@ -399,8 +378,10 @@ begin
       begin
         FConn.Rollback;
         TResultadosVerifactuColaUniDAC.GuardarEnvioError(
-          FConn, FParametrosApp, FParametrosCaja, FUsuario,
-          AIdCola, ASerie, ANumero, oResultado.MensajeError, AIntentos);
+          FConn, FContexto.ParametrosApp, FContexto.ParametrosCaja,
+          FContexto.Usuario,
+          AIdCola, ASerie, ANumero, oResultado.MensajeError, AIntentos,
+          FContexto.RegistroLog);
       end;
     except
       on E: Exception do
@@ -408,8 +389,10 @@ begin
         if FConn.InTransaction then
           FConn.Rollback;
         TResultadosVerifactuColaUniDAC.GuardarEnvioError(
-          FConn, FParametrosApp, FParametrosCaja, FUsuario,
-          AIdCola, ASerie, ANumero, E.Message, AIntentos);
+          FConn, FContexto.ParametrosApp, FContexto.ParametrosCaja,
+          FContexto.Usuario,
+          AIdCola, ASerie, ANumero, E.Message, AIntentos,
+          FContexto.RegistroLog);
       end;
     end;
   end;

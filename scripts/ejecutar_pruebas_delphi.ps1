@@ -9,7 +9,7 @@ param(
 )
 
 # Entrada automatizada para un equipo o runner que tenga Delphi instalado.
-# Ejecuta primero los trinquetes, compila DUnitX y lanza cada ejecutable.
+# Ejecuta los trinquetes, compila fzam y compila y ejecuta DUnitX.
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -67,12 +67,13 @@ function Ejecutar-PowerShell {
   }
 }
 
-function Compilar-Pruebas {
+function Compilar-Proyecto {
   param(
     [string]$RsVars,
     [string]$Proyecto,
     [string]$Plataforma,
-    [string]$Config
+    [string]$Config,
+    [string]$Descripcion
   )
   $comando = (
     'call "{0}" && msbuild "{1}" /t:Build /p:Config={2} ' +
@@ -81,7 +82,7 @@ function Compilar-Pruebas {
   & $env:ComSpec /d /s /c $comando
   if ($LASTEXITCODE -ne 0) {
     throw (
-      "Fallo al compilar pruebas $Plataforma/${Config}: " +
+      "Fallo al compilar $Descripcion $Plataforma/${Config}: " +
       "codigo $LASTEXITCODE.")
   }
 }
@@ -98,9 +99,13 @@ function Ejecutar-Bateria {
   }
 }
 
-$rutaProyecto = Join-Path $Raiz 'tests\FactuzamTests.dproj'
-if (-not (Test-Path -LiteralPath $rutaProyecto -PathType Leaf)) {
-  throw "No se encontro el proyecto de pruebas: $rutaProyecto."
+$rutaAplicacion = Join-Path $Raiz 'fzam.dproj'
+$rutaPruebas = Join-Path $Raiz 'tests\FactuzamTests.dproj'
+if (-not (Test-Path -LiteralPath $rutaAplicacion -PathType Leaf)) {
+  throw "No se encontro el proyecto principal: $rutaAplicacion."
+}
+if (-not (Test-Path -LiteralPath $rutaPruebas -PathType Leaf)) {
+  throw "No se encontro el proyecto de pruebas: $rutaPruebas."
 }
 if (-not $OmitirCalidad) {
   Ejecutar-PowerShell `
@@ -109,12 +114,21 @@ if (-not $OmitirCalidad) {
 $rsVars = Resolver-RsVars -RutaIndicada $RutaRsVars
 foreach ($plataforma in $Plataformas) {
   Write-Output (
-    "=== DUnitX $plataforma/$Configuracion ===")
-  Compilar-Pruebas `
+    "=== fzam $plataforma/$Configuracion ===")
+  Compilar-Proyecto `
     -RsVars $rsVars `
-    -Proyecto $rutaProyecto `
+    -Proyecto $rutaAplicacion `
     -Plataforma $plataforma `
-    -Config $Configuracion
+    -Config $Configuracion `
+    -Descripcion 'fzam'
+  Write-Output (
+    "=== DUnitX $plataforma/$Configuracion ===")
+  Compilar-Proyecto `
+    -RsVars $rsVars `
+    -Proyecto $rutaPruebas `
+    -Plataforma $plataforma `
+    -Config $Configuracion `
+    -Descripcion 'DUnitX'
   $rutaEjecutable = Join-Path `
     $Raiz `
     "tests\bin\$plataforma\$Configuracion\FactuzamTests.exe"

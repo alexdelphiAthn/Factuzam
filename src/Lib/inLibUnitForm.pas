@@ -20,7 +20,7 @@ uses
   System.Generics.Defaults, System.Generics.Collections, System.Contnrs,
   Classes, Windows, Forms, vcl.Menus, Controls, Data.DB, Uni,
   System.SysUtils,
-  System.StrUtils, inLibUser, Vcl.Buttons, Types;
+  System.StrUtils, inLibUser, Vcl.Buttons, Types, inLibLogIntf;
 
 type
 
@@ -74,8 +74,9 @@ type
  private
    FList:TObjectList<TfzaForm>;
    FOwner:TComponent;
+   FRegistroLog: IRegistroLog;
  public
-   constructor Create(Owner:TComponent);
+   constructor Create(Owner:TComponent; const ARegistroLog: IRegistroLog);
    destructor Destroy; override;
    procedure Charge(nConn:TUniConnection);
    function GetDataModuleName(sUnitName:string):String;
@@ -105,7 +106,7 @@ type
 implementation
 
 uses
-  inLibRegistroPantallas, inLibLog;
+  inLibRegistroPantallas;
 
 
 { TfzaForm }
@@ -269,15 +270,17 @@ begin
        (ClasePantalla(ozaForm.UnitForm) = nil) then
     begin
       Inc(Result);
-      inLibLog.Log.LogError('Pantalla sin clase registrada: ' +
-                            ozaForm.Call + ' -> ' + ozaForm.UnitForm);
+      FRegistroLog.RegistrarError('Pantalla sin clase registrada: ' +
+                                  ozaForm.Call + ' -> ' +
+                                  ozaForm.UnitForm);
     end;
     if (Trim(ozaForm.DataUnit) <> '') and
        (ClaseDataModule(ozaForm.DataUnit) = nil) then
     begin
       Inc(Result);
-      inLibLog.Log.LogError('Data module sin clase registrada: ' +
-                            ozaForm.Call + ' -> ' + ozaForm.DataUnit);
+      FRegistroLog.RegistrarError('Data module sin clase registrada: ' +
+                                  ozaForm.Call + ' -> ' +
+                                  ozaForm.DataUnit);
     end;
   end;
 end;
@@ -329,14 +332,17 @@ begin
       Result := FList[i].Call;
 end;
 
-constructor TfzaWinF.Create(Owner:TComponent);
+constructor TfzaWinF.Create(Owner:TComponent;
+  const ARegistroLog: IRegistroLog);
 begin
   FList := TObjectList<TfzaForm>.Create;
   FOwner := Owner;
+  FRegistroLog := ARegistroLog;
 end;
 
 destructor TfzaWinF.Destroy;
 begin
+  FRegistroLog := nil;
   FreeAndNil(FList);
   inherited;
 end;
@@ -392,7 +398,7 @@ begin
       // Si hay un texto mal formado en la BD, lo ignoramos para no
       // romper el programa, pero queda constancia en el log.
       on E: Exception do
-        inLibLog.Log.LogWarning(
+        FRegistroLog.RegistrarAviso(
           'Atajo "' + ofzaForm.ShortCut + '" invalido: ' +
           E.Message);
     end;

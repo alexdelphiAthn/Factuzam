@@ -181,7 +181,7 @@ implementation
 uses
   DateUtils,
   inMtoModalArqueo, inMtoModalEntradaCambio, inMtoModalGastoCaja,
-  inLibMsgCaja, UniDataVentasCalendario;
+  inLibMsgCaja;
 
 {$R *.dfm}
 
@@ -269,7 +269,8 @@ begin
   // calendario
   FVentasCal := TVentasCalendarioCache.Create(
     ConexionPrincipal,
-    CrearRepositorioVentasCalendarioUniDAC(ConexionPrincipal));
+    ContextoRepositoriosPantalla.Operaciones.
+      CrearRepositorioVentasCalendario);
 
   if ParametrosCaja.GetBool('vgerShowCajaSelection', True) then
     AbrirSelectorCaja
@@ -437,8 +438,6 @@ var
 begin
   frm := TfrmMtoModalCajDef.Create(Self);
   try
-    frm.qrySeleccion.Connection := ConexionPrincipal;
-    frm.qrySeleccion.Open;
     // Cierra el cronometro SQL antes de entrar en el selector modal.
     CerrarMonitorSQLPendiente;
     frm.sEmpresa := UbicacionSesion.Empresa;
@@ -447,9 +446,9 @@ begin
     frm.ShowModal;
     if (frm.sFicha = 'S') then
     begin
-      FEmpresa := frm.qrySeleccion.FieldByName('Empresa').AsString;
-      FAlmacen := frm.qrySeleccion.FieldByName('Almacen').AsString;
-      FCaja    := frm.qrySeleccion.FieldByName('Caja').AsString;
+      FEmpresa := frm.EmpresaSeleccionada;
+      FAlmacen := frm.AlmacenSeleccionado;
+      FCaja    := frm.CajaSeleccionada;
       lblEmpresa.Caption := Format(SCaptionEmpresaAlmacenCaja,
                                    [FEmpresa, FAlmacen, FCaja]);
       RecargarCalendario;

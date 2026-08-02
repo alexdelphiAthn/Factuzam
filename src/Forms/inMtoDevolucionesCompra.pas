@@ -26,7 +26,7 @@ interface
 uses
   inLibRegistroPantallas,
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
-  Forms, Dialogs, Uni,
+  Forms, Dialogs,
   inMtoDocumento, dxSkinsCore, dxSkinBlue, dxSkinsForm,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit,
@@ -39,6 +39,7 @@ uses
   cxRadioGroup, cxDBNavigator, Vcl.Buttons, System.UITypes, cxMemo,
   cxCheckBox, cxGroupBox, cxDBLabel, cxButtonEdit, cxGridBandedTableView,
   cxGridDBBandedTableView, System.Generics.Collections,
+  inLibDevolucionesCompraPersistenciaIntf,
   inLibGridTallasInline,
   inLibGridPivoteCompra,
   inLibColumnasSkuIntf,
@@ -226,6 +227,8 @@ type
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
+    FServiciosPersistencia:
+      TServiciosPersistenciaDevolucionCompra;
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
     procedure InicializarGestorYPivote;
@@ -320,7 +323,6 @@ uses
   UniDataArticulos,
   inLibComprasImpuestos,
   inLibDevolucionesCompraStock,
-  UniDataDevolucionesCompraStockRepositorio,
   inLibMsgArticulos, inLibMsgCompras,
   inMtoModalImpDevCompra,
   inMtoModalImpDevCompraV,
@@ -422,6 +424,9 @@ end;
 
 procedure TfrmMtoDevolucionesCompra.FormCreate(Sender: TObject);
 begin
+  FServiciosPersistencia :=
+    ContextoRepositoriosPantalla.Documentos.
+      CrearServiciosPersistenciaDevolucionCompra;
   FColorPivotCodigos := TDictionary<string, string>.Create;
   // Columnas no-bound de tallas y atributos ANTES del inherited.
   CrearColumnasTallas;
@@ -580,141 +585,56 @@ begin
 end;
 
 function TfrmMtoDevolucionesCompra.CodigoSkuRepresentanteColor(
-  const ACodigoArticulo, AColor: string; AIdAcPivot: Integer): string;
-var
-  qry: TUniQuery;
+  const ACodigoArticulo, AColor: string;
+  AIdAcPivot: Integer
+): string;
 begin
-  Result := '';
-  if (ACodigoArticulo <> '') and (AColor <> '') then
-  begin
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := ConexionPrincipal;
-      qry.SQL.Text :=
-        'SELECT X.SKU ' +
-        '  FROM ( ' +
-        '        SELECT SK.CODIGO_UNIDAD_SKU AS SKU, ' +
-        '               COALESCE(NULLIF(AVC.AV, ''''), ' +
-        '                 CASE WHEN INSTR(SK.CODIGO_UNIDAD_SKU, ''/'') > 0 ' +
-        '                      THEN SUBSTRING_INDEX(SUBSTRING_INDEX(' +
-        '                        SK.CODIGO_UNIDAD_SKU, ''/'', 2), ''/'', -1) ' +
-        '                      ELSE '''' END, '''') AS COLOR_TXT, ' +
-        '               CASE WHEN :idac <= 0 THEN 0 ' +
-        '                    WHEN TAL.ID_AV_SA IS NULL THEN 0 ' +
-        '                    WHEN ACD.ID_AV_ACD IS NOT NULL THEN 0 ' +
-        '                    ELSE 1 END AS PENALIZA, ' +
-        '               COALESCE(ACD.ORDEN_ACD, 999999) AS ORDEN_TALLA ' +
-        '          FROM fza_articulos_skus SK ' +
-        '          LEFT JOIN fza_atributos_sku CO ' +
-        '            ON CO.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
-        '           AND EXISTS (SELECT 1 FROM fza_atributos_valores AVC0 ' +
-        '                        WHERE AVC0.ID_AV = CO.ID_AV_SA ' +
-        '                          AND AVC0.ID_VA_AV = ''CO'') ' +
-        '          LEFT JOIN fza_atributos_valores AVC ' +
-        '            ON AVC.ID_AV = CO.ID_AV_SA ' +
-        '           AND AVC.ID_VA_AV = ''CO'' ' +
-        '          LEFT JOIN fza_atributos_sku TAL ' +
-        '            ON TAL.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
-        '           AND EXISTS (SELECT 1 FROM fza_atributos_valores AVT ' +
-        '                        WHERE AVT.ID_AV = TAL.ID_AV_SA ' +
-        '                          AND AVT.ID_VA_AV = ''TAL'') ' +
-        '          LEFT JOIN fza_atributos_conjuntos_det ACD ' +
-        '            ON ACD.ID_AC_ACD = :idac ' +
-        '           AND ACD.ID_AV_ACD = TAL.ID_AV_SA ' +
-        '         WHERE SK.CODIGO_ART_SKU = :art ' +
-        '           AND COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'' ' +
-        '       ) X ' +
-        ' WHERE X.COLOR_TXT = :color ' +
-        ' ORDER BY X.PENALIZA, X.ORDEN_TALLA, X.SKU ' +
-        ' LIMIT 1';
-      qry.ParamByName('art').AsString := ACodigoArticulo;
-      qry.ParamByName('color').AsString := AColor;
-      qry.ParamByName('idac').AsInteger := AIdAcPivot;
-      qry.Open;
-      if not qry.Eof then
-        Result := Trim(qry.FieldByName('SKU').AsString);
-    finally
-      FreeAndNil(qry);
-    end;
-  end;
+  Result := FServiciosPersistencia.Datos.CodigoSkuRepresentanteColor(
+    ACodigoArticulo,
+    AColor,
+    AIdAcPivot);
 end;
-
 procedure TfrmMtoDevolucionesCompra.CargarOpcionesColorPivot(
   AProps: TcxComboBoxProperties);
 var
-  ds      : TDataSet;
-  qry     : TUniQuery;
-  sArt    : string;
-  sTexto  : string;
-  sCodigo : string;
+  oDataSet: TDataSet;
+  arrColores: TColoresArticuloDevolucionCompra;
+  sArticulo: string;
+  iColor: Integer;
 begin
-  if AProps <> nil then
+  if Assigned(AProps) then
   begin
     AProps.Items.BeginUpdate;
     try
       AProps.Items.Clear;
-      if FColorPivotCodigos <> nil then
+      if Assigned(FColorPivotCodigos) then
+      begin
         FColorPivotCodigos.Clear;
+      end;
       if Assigned(dmmDevolucionesCompra) then
       begin
-        ds := dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
-        if (ds <> nil) and ds.Active and (not ds.IsEmpty) then
+        oDataSet := dmmDevolucionesCompra.
+          unqryDevolucionesCompraLineas;
+        if Assigned(oDataSet) and
+           oDataSet.Active and
+           not oDataSet.IsEmpty then
         begin
-          sArt := ValorLineaActiva('CODIGO_ART_DEVCLIN');
-          if sArt <> '' then
+          sArticulo := ValorLineaActiva('CODIGO_ART_DEVCLIN');
+          if sArticulo <> '' then
           begin
-            qry := TUniQuery.Create(nil);
-            try
-              qry.Connection := ConexionPrincipal;
-              qry.SQL.Text :=
-                'SELECT X.COLOR_TXT, MIN(X.COLOR_COD) AS COLOR_COD ' +
-                '  FROM ( ' +
-                '        SELECT COALESCE(NULLIF(AVC.AV, ''''), ' +
-                '                 CASE WHEN INSTR(SK.CODIGO_UNIDAD_SKU, ' +
-                '                                 ''/'') > 0 ' +
-                '                      THEN SUBSTRING_INDEX(SUBSTRING_INDEX(' +
-                '                        SK.CODIGO_UNIDAD_SKU, ''/'', 2), ' +
-                '                        ''/'', -1) ' +
-                '                      ELSE '''' END, '''') AS COLOR_TXT, ' +
-                '               COALESCE(ATBC.CODIGO_ATB, ' +
-                '                 CASE WHEN INSTR(SK.CODIGO_UNIDAD_SKU, ' +
-                '                                 ''/'') > 0 ' +
-                '                      THEN SUBSTRING_INDEX(SUBSTRING_INDEX(' +
-                '                        SK.CODIGO_UNIDAD_SKU, ''/'', 2), ' +
-                '                        ''/'', -1) ' +
-                '                      ELSE '''' END, '''') AS COLOR_COD ' +
-                '          FROM fza_articulos_skus SK ' +
-                '          LEFT JOIN fza_atributos_sku CO ' +
-                '            ON CO.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
-                '           AND EXISTS (SELECT 1 FROM fza_atributos_valores AVC0 ' +
-                '                        WHERE AVC0.ID_AV = CO.ID_AV_SA ' +
-                '                          AND AVC0.ID_VA_AV = ''CO'') ' +
-                '          LEFT JOIN fza_atributos_valores AVC ' +
-                '            ON AVC.ID_AV = CO.ID_AV_SA ' +
-                '           AND AVC.ID_VA_AV = ''CO'' ' +
-                '          LEFT JOIN fza_atributos_basicos ATBC ' +
-                '            ON ATBC.ID_ATB = AVC.ID_ATB_AV ' +
-                '         WHERE SK.CODIGO_ART_SKU = :art ' +
-                '           AND COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'' ' +
-                '       ) X ' +
-                ' WHERE X.COLOR_TXT <> '''' ' +
-                ' GROUP BY X.COLOR_TXT ' +
-                ' ORDER BY X.COLOR_TXT';
-              qry.ParamByName('art').AsString := sArt;
-              qry.Open;
-              while not qry.Eof do
+            arrColores := FServiciosPersistencia.Datos.
+              ListarColoresArticulo(sArticulo);
+            for iColor := 0 to High(arrColores) do
+            begin
+              AProps.Items.Add(arrColores[iColor].Texto);
+              if Assigned(FColorPivotCodigos) and
+                 (arrColores[iColor].Texto <> '') and
+                 (arrColores[iColor].Codigo <> '') then
               begin
-                sTexto := Trim(qry.FieldByName('COLOR_TXT').AsString);
-                sCodigo := Trim(qry.FieldByName('COLOR_COD').AsString);
-                AProps.Items.Add(sTexto);
-                if (FColorPivotCodigos <> nil) and (sTexto <> '') and
-                   (sCodigo <> '') then
-                  FColorPivotCodigos.AddOrSetValue(UpperCase(sTexto),
-                                                   sCodigo);
-                qry.Next;
+                FColorPivotCodigos.AddOrSetValue(
+                  UpperCase(arrColores[iColor].Texto),
+                  arrColores[iColor].Codigo);
               end;
-            finally
-              FreeAndNil(qry);
             end;
           end;
         end;
@@ -724,7 +644,6 @@ begin
     end;
   end;
 end;
-
 procedure TfrmMtoDevolucionesCompra.ConfigurarEditorColorPivot(
   AEdit: TcxCustomEdit);
 begin
@@ -897,199 +816,131 @@ begin
 end;
 
 function TfrmMtoDevolucionesCompra.ObtenerColorPivotLineaActual(
-  const ASerie, ANumero, ALinea: string; out AColorAv: Integer): Boolean;
-var
-  qry: TUniQuery;
+  const ASerie, ANumero, ALinea: string;
+  out AColorAv: Integer
+): Boolean;
 begin
-  Result := False;
-  AColorAv := 0;
-  if (ASerie <> '') and (ANumero <> '') and (ALinea <> '') then
-  begin
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := ConexionPrincipal;
-      qry.SQL.Text :=
-        'SELECT COALESCE(AVC.ID_AV, 0) AS COLOR_AV ' +
-        '  FROM fza_devoluciones_compra_lineas L ' +
-        '  LEFT JOIN fza_atributos_sku SAC ' +
-        '    ON SAC.CODIGO_UNIDAD_SKU_SA = L.CODIGO_UNIDAD_DEVCLIN ' +
-        '   AND EXISTS (SELECT 1 FROM fza_atributos_valores AV ' +
-        '                WHERE AV.ID_AV = SAC.ID_AV_SA ' +
-        '                  AND AV.ID_VA_AV = ''CO'') ' +
-        '  LEFT JOIN fza_atributos_valores AVC ' +
-        '    ON AVC.ID_AV = SAC.ID_AV_SA ' +
-        '   AND AVC.ID_VA_AV = ''CO'' ' +
-        ' WHERE L.SERIE_DEVC_DEVCLIN = :serie ' +
-        '   AND L.NUMERO_DEVC_DEVCLIN = :numero ' +
-        '   AND L.LINEA_DEVCLIN = :linea';
-      qry.ParamByName('serie').AsString := ASerie;
-      qry.ParamByName('numero').AsString := ANumero;
-      qry.ParamByName('linea').AsString := ALinea;
-      qry.Open;
-      if not qry.IsEmpty then
-      begin
-        AColorAv := qry.FieldByName('COLOR_AV').AsInteger;
-        Result := True;
-      end;
-    finally
-      FreeAndNil(qry);
-    end;
-  end;
+  Result := FServiciosPersistencia.Datos.ObtenerColorLinea(
+    ASerie,
+    ANumero,
+    ALinea,
+    AColorAv);
 end;
-
 procedure TfrmMtoDevolucionesCompra.BorrarGrupoColorPivotActual;
 var
-  dsCab       : TDataSet;
-  dsLin       : TDataSet;
-  qry         : TUniQuery;
-  sSerie      : string;
-  sNumero     : string;
-  sLinea      : string;
-  sArt        : string;
-  iColorAv    : Integer;
-  iFilas      : Integer;
-  bTxOwned    : Boolean;
+  oCabecera: TDataSet;
+  oLineas: TDataSet;
+  Grupo: TGrupoColorDevolucionCompra;
+  sLinea: string;
+  iFilas: Integer;
   bPivotActivo: Boolean;
-
-  function SQLJoinColorLinea: string;
-  begin
-    Result :=
-      '  LEFT JOIN fza_atributos_sku SAC ' +
-      '    ON SAC.CODIGO_UNIDAD_SKU_SA = L.CODIGO_UNIDAD_DEVCLIN ' +
-      '   AND EXISTS (SELECT 1 FROM fza_atributos_valores AV ' +
-      '                WHERE AV.ID_AV = SAC.ID_AV_SA ' +
-      '                  AND AV.ID_VA_AV = ''CO'') ' +
-      '  LEFT JOIN fza_atributos_valores AVC ' +
-      '    ON AVC.ID_AV = SAC.ID_AV_SA ' +
-      '   AND AVC.ID_VA_AV = ''CO'' ';
-  end;
-
-  function SQLCondicionGrupo: string;
-  begin
-    Result :=
-      ' WHERE L.SERIE_DEVC_DEVCLIN = :serie ' +
-      '   AND L.NUMERO_DEVC_DEVCLIN = :numero ' +
-      '   AND L.CODIGO_ART_DEVCLIN = :art ';
-    if iColorAv > 0 then
-      Result := Result +
-        '   AND COALESCE(AVC.ID_AV, 0) = :color_av '
-    else
-      Result := Result +
-        '   AND COALESCE(AVC.ID_AV, 0) = 0 ';
-  end;
-
-  procedure ParametrosGrupo(AQuery: TUniQuery);
-  begin
-    AQuery.ParamByName('serie').AsString := sSerie;
-    AQuery.ParamByName('numero').AsString := sNumero;
-    AQuery.ParamByName('art').AsString := sArt;
-    if iColorAv > 0 then
-      AQuery.ParamByName('color_av').AsInteger := iColorAv;
-  end;
 
   procedure RefrescarTrasBorrado;
   begin
-    if dsLin.Active and (not dsLin.IsEmpty) then
-      dsLin.First;
+    if oLineas.Active and not oLineas.IsEmpty then
+    begin
+      oLineas.First;
+    end;
     dmmDevolucionesCompra.CalcularTotalesDevolucionCompra;
     dmmDevolucionesCompra.SincronizarMovimientos;
-    if (dsCab <> nil) and dsCab.Active and (dsCab.State in dsEditModes) then
-      dsCab.Post;
-    if bPivotActivo and Assigned(FPivote) and (not FPivote.Activo) then
+    if Assigned(oCabecera) and
+       oCabecera.Active and
+       (oCabecera.State in dsEditModes) then
+    begin
+      oCabecera.Post;
+    end;
+    if bPivotActivo and
+       Assigned(FPivote) and
+       not FPivote.Activo then
+    begin
       btnTallasHorizontalClick(nil);
+    end;
     if Assigned(FPivote) and FPivote.Activo then
+    begin
       FPivote.RecargarYRepublicar;
+    end;
   end;
 
 begin
   if Assigned(dmmDevolucionesCompra) then
   begin
-    dsCab := dmmDevolucionesCompra.unqryTablaG;
-    dsLin := dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
+    oCabecera := dmmDevolucionesCompra.unqryTablaG;
+    oLineas := dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
     bPivotActivo := Assigned(FPivote) and FPivote.Activo;
-    if (dsLin <> nil) and dsLin.Active and (not dsLin.IsEmpty) then
+    if Assigned(oLineas) and
+       oLineas.Active and
+       not oLineas.IsEmpty then
     begin
-      if dsLin.State = dsInsert then
-        dsLin.Cancel
+      if oLineas.State = dsInsert then
+      begin
+        oLineas.Cancel;
+      end
       else
       begin
-        if dsLin.State in dsEditModes then
-          dsLin.Post;
-        sSerie := ValorLineaActiva('SERIE_DEVC_DEVCLIN');
-        sNumero := ValorLineaActiva('NUMERO_DEVC_DEVCLIN');
-        sLinea := ValorLineaActiva('LINEA_DEVCLIN');
-        sArt := ValorLineaActiva('CODIGO_ART_DEVCLIN');
-        if ObtenerColorPivotLineaActual(sSerie, sNumero, sLinea,
-             iColorAv) and (sArt <> '') then
+        if oLineas.State in dsEditModes then
         begin
-          qry := TUniQuery.Create(nil);
+          oLineas.Post;
+        end;
+        Grupo.Serie := ValorLineaActiva('SERIE_DEVC_DEVCLIN');
+        Grupo.Numero := ValorLineaActiva('NUMERO_DEVC_DEVCLIN');
+        sLinea := ValorLineaActiva('LINEA_DEVCLIN');
+        Grupo.CodigoArticulo :=
+          ValorLineaActiva('CODIGO_ART_DEVCLIN');
+        if ObtenerColorPivotLineaActual(
+             Grupo.Serie,
+             Grupo.Numero,
+             sLinea,
+             Grupo.IdColor) and
+           (Grupo.CodigoArticulo <> '') then
+        begin
+          Screen.Cursor := crHourGlass;
           try
-            qry.Connection := ConexionPrincipal;
-            Screen.Cursor := crHourGlass;
-            try
-              if bPivotActivo then
-                FPivote.Desactivar;
-              if dsLin.Active then
-                dsLin.Close;
-              bTxOwned := not ConexionPrincipal.InTransaction;
-              try
-                if bTxOwned then
-                  ConexionPrincipal.StartTransaction;
-                qry.SQL.Text :=
-                  'DELETE C ' +
-                  '  FROM fza_devoluciones_compra_celdas C ' +
-                  '  JOIN fza_devoluciones_compra_lineas L ' +
-                  '    ON C.SERIE_DEVC_DEVCCEL = L.SERIE_DEVC_DEVCLIN ' +
-                  '   AND C.NUMERO_DEVC_DEVCCEL = L.NUMERO_DEVC_DEVCLIN ' +
-                  '   AND CAST(C.LINEA_DEVC_DEVCCEL AS UNSIGNED) ' +
-                  '       = CAST(L.LINEA_DEVCLIN AS UNSIGNED) ' +
-                  SQLJoinColorLinea +
-                  SQLCondicionGrupo;
-                ParametrosGrupo(qry);
-                qry.ExecSQL;
-                qry.SQL.Text :=
-                  'DELETE L ' +
-                  '  FROM fza_devoluciones_compra_lineas L ' +
-                  SQLJoinColorLinea +
-                  SQLCondicionGrupo;
-                ParametrosGrupo(qry);
-                qry.ExecSQL;
-                iFilas := qry.RowsAffected;
-                if bTxOwned and ConexionPrincipal.InTransaction then
-                  ConexionPrincipal.Commit;
-              except
-                if bTxOwned and ConexionPrincipal.InTransaction then
-                  ConexionPrincipal.Rollback;
-                raise;
-              end;
-              if not dsLin.Active then
-                dsLin.Open;
-              RefrescarTrasBorrado;
-              if iFilas = 0 then
-                MessageDlg(SErrorLineaColorDevolucionNoEncontrada,
-                           mtInformation, [mbOk], 0);
-            finally
-              Screen.Cursor := crDefault;
-              if (dsLin <> nil) and (not dsLin.Active) then
-                dsLin.Open;
-              if bPivotActivo and Assigned(FPivote) and
-                 (not FPivote.Activo) then
-                btnTallasHorizontalClick(nil);
+            if bPivotActivo then
+            begin
+              FPivote.Desactivar;
+            end;
+            if oLineas.Active then
+            begin
+              oLineas.Close;
+            end;
+            iFilas := FServiciosPersistencia.Datos.BorrarGrupoColor(
+              Grupo);
+            if not oLineas.Active then
+            begin
+              oLineas.Open;
+            end;
+            RefrescarTrasBorrado;
+            if iFilas = 0 then
+            begin
+              MessageDlg(
+                SErrorLineaColorDevolucionNoEncontrada,
+                mtInformation,
+                [mbOk],
+                0);
             end;
           finally
-            FreeAndNil(qry);
+            Screen.Cursor := crDefault;
+            if Assigned(oLineas) and not oLineas.Active then
+            begin
+              oLineas.Open;
+            end;
+            if bPivotActivo and
+               Assigned(FPivote) and
+               not FPivote.Activo then
+            begin
+              btnTallasHorizontalClick(nil);
+            end;
           end;
         end
         else
         begin
-          dsLin.Delete;
+          oLineas.Delete;
           RefrescarTrasBorrado;
         end;
       end;
     end;
   end;
 end;
-
 procedure TfrmMtoDevolucionesCompra.ValidarAlmacenSalidaParaLineas;
 begin
   if (dmmDevolucionesCompra.unqryTablaG.FindField(
@@ -1211,6 +1062,7 @@ begin
     oBase.PrefijoCelda := 'DEVCCEL';
     oBase.NombreTablaDocumento := 'devoluciones';
     oBase.AplicarContextoPivote := False;
+    oBase.RegistroLog := RegistroLog;
     oConfigTallas := CrearConfigTallasDocumentoCompra(oBase);
     FGestorTallas := TGestorGridTallas.Create(oConfigTallas);
     ConfigurarEventosTallasDocumento(FTallaColumns,
@@ -1514,7 +1366,6 @@ var
   bPivotActivo: Boolean;
   Estado: TEstadoStockDevolucionCompra;
   Parametros: TParametrosStockDevolucionCompra;
-  Persistencia: IPersistenciaStockDevolucionCompra;
 begin
   if dmmDevolucionesCompra <> nil then
   begin
@@ -1555,10 +1406,9 @@ begin
           LeerNumeroDataset(dsCab, 'PORCENTAJE_IVAS_DEVC');
         Parametros.IvaExento :=
           LeerNumeroDataset(dsCab, 'PORCENTAJE_IVAE_DEVC');
-        Persistencia := CrearPersistenciaStockDevolucionCompra(
-          ConexionPrincipal);
         Estado := ConsultarEstadoStockDevolucionCompra(
-          Persistencia, Parametros);
+          FServiciosPersistencia.Stock,
+          Parametros);
         if Estado <> esdcDisponible then
           MostrarEstadoStockDevolucionCompra(Estado)
         else if MessageDlg(SPreguntaPrepararStockFilaDevolucion,
@@ -1572,7 +1422,10 @@ begin
             if dsLin.Active then
               dsLin.Close;
             if DevolverTodoStockCompra(
-              Persistencia, Parametros, iLineas, Estado) then
+              FServiciosPersistencia.Stock,
+              Parametros,
+              iLineas,
+              Estado) then
             begin
               if not dsLin.Active then
                 dsLin.Open;
@@ -1626,7 +1479,7 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
   sLineasSinSku := LineasSinSkuRequerido(
-    CrearValidadorArticulos(
+    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
       dmmDevolucionesCompra.unqryTablaG.Connection),
     dmmDevolucionesCompra.unqryDevolucionesCompraLineas, 'DEVCLIN');
   if (sLineasSinSku <> '') and
@@ -1845,13 +1698,14 @@ begin
     ContextoSesion, tvLineasDevolucion, ds, FModoEntradaSel,
     Trim(dmmDevolucionesCompra.unqryTablaG.
       FieldByName('CODIGO_ALM_DEVC').AsString), 'DEVCLIN');
+  Cfg.RegistroLog := RegistroLog;
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
-    CrearValidadorArticulos(
+    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
       dmmDevolucionesCompra.unqryTablaG.Connection);
   Cfg.LookupAtributos :=
-    CrearLookupAtributosArticulos(
+    ContextoRepositoriosPantalla.Articulos.CrearLookupAtributosArticulos(
       dmmDevolucionesCompra.unqryTablaG.Connection);
   if FModoEntradaSel = mcsTallasHorPed then
   begin
@@ -2155,84 +2009,30 @@ begin
 end;
 
 function TAplicacionArticuloDevolucion.ResolverConjuntoPivotArticulo(
-  const CodigoArticulo: string): Integer;
-var
-  Consulta: TUniQuery;
+  const CodigoArticulo: string
+): Integer;
 begin
-  Result := 0;
-  Consulta := TUniQuery.Create(nil);
-  try
-    Consulta.Connection := FFormulario.ConexionPrincipal;
-    Consulta.SQL.Text :=
-      'SELECT aca.ID_AC_ACA ' +
-      '  FROM fza_articulos_conjuntos_asign aca ' +
-      ' WHERE aca.CODIGO_ART_ACA = :art ' +
-      '   AND aca.ID_VA_ACA <> ''CO'' ' +
-      ' ORDER BY aca.ID_VA_ACA ' +
-      ' LIMIT 1';
-    Consulta.ParamByName('art').AsString := CodigoArticulo;
-    Consulta.Open;
-    if not Consulta.IsEmpty then
-      Result := Consulta.FieldByName('ID_AC_ACA').AsInteger;
-  finally
-    FreeAndNil(Consulta);
-  end;
+  Result := FFormulario.FServiciosPersistencia.Datos.
+    ResolverConjuntoPivotArticulo(CodigoArticulo);
 end;
 
 function TAplicacionArticuloDevolucion.ModeloProveedorArticulo(
-  const CodigoArticulo, CodigoProveedor: string): string;
-var
-  Consulta: TUniQuery;
+  const CodigoArticulo, CodigoProveedor: string
+): string;
 begin
-  Result := '';
-  Consulta := TUniQuery.Create(nil);
-  try
-    Consulta.Connection := FFormulario.ConexionPrincipal;
-    Consulta.SQL.Text :=
-      'SELECT ap.REF_PROVEEDOR_AP ' +
-      '  FROM fza_articulos_proveedores ap ' +
-      ' WHERE ap.CODIGO_ART_AP = :art ' +
-      '   AND COALESCE(TRIM(ap.REF_PROVEEDOR_AP), '''') <> '''' ' +
-      ' ORDER BY CASE WHEN ap.CODIGO_PRV_AP = :prv THEN 0 ELSE 1 END, ' +
-      '          CASE ap.ESPROVEEDORPRINCIPAL_AP WHEN ''S'' THEN 0 ' +
-      '               ELSE 1 END, ' +
-      '          ap.FECHA_VALIDEZ_AP DESC, ap.CODIGO_PRV_AP ' +
-      ' LIMIT 1';
-    Consulta.ParamByName('art').AsString := CodigoArticulo;
-    Consulta.ParamByName('prv').AsString := CodigoProveedor;
-    Consulta.Open;
-    if not Consulta.IsEmpty then
-      Result := Consulta.FieldByName('REF_PROVEEDOR_AP').AsString;
-  finally
-    FreeAndNil(Consulta);
-  end;
+  Result := FFormulario.FServiciosPersistencia.Datos.
+    ModeloProveedorArticulo(
+      CodigoArticulo,
+      CodigoProveedor);
 end;
 
 function TAplicacionArticuloDevolucion.EsCodigoArticuloExacto(
-  const Codigo: string): Boolean;
-var
-  Consulta: TUniQuery;
+  const Codigo: string
+): Boolean;
 begin
-  Result := False;
-  if Trim(Codigo) <> '' then
-  begin
-    Consulta := TUniQuery.Create(nil);
-    try
-      Consulta.Connection := FFormulario.ConexionPrincipal;
-      Consulta.SQL.Text :=
-        'SELECT 1 ' +
-        '  FROM fza_articulos ' +
-        ' WHERE CODIGO_ART_ART = :art ' +
-        ' LIMIT 1';
-      Consulta.ParamByName('art').AsString := Trim(Codigo);
-      Consulta.Open;
-      Result := not Consulta.IsEmpty;
-    finally
-      FreeAndNil(Consulta);
-    end;
-  end;
+  Result := FFormulario.FServiciosPersistencia.Datos.
+    EsCodigoArticuloExacto(Codigo);
 end;
-
 procedure TAplicacionArticuloDevolucion.PonerString(
   const Campo, Valor: string);
 var
@@ -2312,7 +2112,8 @@ procedure TAplicacionArticuloDevolucion.CargarDatosArticulo;
 var
   Resolver: IArticulosResolver;
 begin
-  Resolver := FFormulario.CrearResolverArticulos(
+  Resolver := FFormulario.ContextoRepositoriosPantalla.Articulos.
+    CrearResolverArticulos(
     FFormulario.ConexionPrincipal);
   try
     FDatos := Resolver.ResolverDatos(
@@ -2331,7 +2132,8 @@ var
   Validador: IArticulosValidador;
   Resolucion: TArtResolucionEntrada;
 begin
-  Validador := FFormulario.CrearValidadorArticulos(
+  Validador := FFormulario.ContextoRepositoriosPantalla.Articulos.
+    CrearValidadorArticulos(
     FFormulario.ConexionPrincipal);
   try
     Resolucion := Validador.Resolver(FCodigoArticulo);

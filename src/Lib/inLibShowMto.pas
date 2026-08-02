@@ -64,7 +64,7 @@ implementation
  uses
       inLibAnfitrionMtoIntf,
   inLibMsgComun,
-      inLibLog,
+      inLibLogIntf,
       inLibRegistroPantallas,
       inLibVentanaEmbebidaIntf;
 
@@ -151,6 +151,16 @@ begin
       SErrorAnfitrionPantallasNoDisponible);
 end;
 
+function ExigirRegistroLog(AOwner: TComponent): IRegistroLog;
+var
+  Proveedor: IProveedorRegistroLog;
+begin
+  if not Supports(AOwner, IProveedorRegistroLog, Proveedor) then
+    raise EServicioNoDisponible.Create(
+      'El propietario no proporciona IRegistroLog.');
+  Result := Proveedor.RegistroLog;
+end;
+
 procedure ShowMto(AOwner: TComponent;
                   ACall: String;
                   ABusq:string = '');
@@ -161,6 +171,7 @@ var
   TargetForm: TForm;
   FormClass: TFormClass;
   oMto: IMantenimientoEmbebido;
+  oRegistroLog: IRegistroLog;
   iNum : Integer;
   iActiva, iSiguiente, iPrimera, iHueco: Integer;
   sClave: string;
@@ -168,6 +179,7 @@ var
   bBusquedaTemporal: Boolean;
 begin
   oAnfitrion := ExigirAnfitrionPantallas(AOwner);
+  oRegistroLog := ExigirRegistroLog(AOwner);
   oAnfitrion.PrepararAperturaPantalla;
   oGestor := oAnfitrion.GestorVentanas;
   ofzaF := oAnfitrion.RegistroPantallas.GetElement(ACall);
@@ -178,7 +190,8 @@ begin
   end;
   if (ofzaF.mnMenuItem <> nil) and (not ofzaF.mnMenuItem.Visible) then
   begin
-    inLibLog.Log.LogWarning('Intento de acceso a menú oculto: ' + ACall);
+    oRegistroLog.RegistrarAviso(
+      'Intento de acceso a menú oculto: ' + ACall);
     Exit;
   end;
   // Identidad de la ventana: clave estable CALL[#instancia] separada
@@ -251,8 +264,8 @@ begin
       // Antes era un FindType RTTI que fallaba en runtime; ahora la
       // clase o está en el catálogo o se avisa (y el arranque ya lo
       // dejó en el log vía ComprobarRegistradas).
-      inLibLog.Log.LogError('Pantalla sin clase registrada: ' +
-                            ofzaF.UnitForm);
+      oRegistroLog.RegistrarError(
+        'Pantalla sin clase registrada: ' + ofzaF.UnitForm);
       ShowMessageFmt(SClassRttiNotFnd, [ofzaF.UnitForm]);
       Exit;
     end;
@@ -288,7 +301,8 @@ begin
       if bBusquedaTemporal then
         oMto.DesactivarModoBusqueda;
     end;
-    inLibLog.Log.LogInfo('Pantalla abierta: ' + ofzaF.Caption);
+    oRegistroLog.RegistrarInformacion(
+      'Pantalla abierta: ' + ofzaF.Caption);
   end
   else
   begin
@@ -324,11 +338,14 @@ function CrearDataModule(const ADataUnit: string;
                          AOwner: TComponent): TDataModule;
 var
   Clase: TComponentClass;
+  RegistroLog: IRegistroLog;
 begin
   Result := nil;
+  RegistroLog := ExigirRegistroLog(AOwner);
   Clase := ClaseDataModule(ADataUnit);
   if Clase = nil then
-    inLibLog.Log.LogError('Data module sin clase registrada: ' + ADataUnit)
+    RegistroLog.RegistrarError(
+      'Data module sin clase registrada: ' + ADataUnit)
   else
     Result := TDataModule(Clase.Create(AOwner));
 end;

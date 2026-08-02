@@ -154,7 +154,7 @@ begin
       oResultado := ExportarRegistrosNoVerifactu(ParametrosApp,
         CrearRepositorioExportacionNoVerifactuUniDAC(ConexionPrincipal),
         ConexionPrincipal,
-        IdentidadSesion.Usuario, oDialogo.FileName);
+        IdentidadSesion.Usuario, oDialogo.FileName, RegistroLog);
       MessageDlg(Format(SInfoExportacionNoVerifactuGenerada,
         [oResultado.ArchivoEventos, oResultado.ArchivoFacturacion,
          oResultado.Eventos, oResultado.RegistrosFactura]),

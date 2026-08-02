@@ -415,9 +415,9 @@ begin
   FAplicacionArticuloCompra := CrearAplicacionArticuloCompra(
     CrearRepositorioLecturasArticuloCompraUniDAC(
       dmmFacturasCompra.unqryTablaG.Connection,
-      CrearValidadorArticulos(
+      ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
         dmmFacturasCompra.unqryTablaG.Connection),
-      CrearResolverArticulos(
+      ContextoRepositoriosPantalla.Articulos.CrearResolverArticulos(
         dmmFacturasCompra.unqryTablaG.Connection)),
     CrearPuertoLineaArticuloCompraUniDAC(
       dmmFacturasCompra.unqryTablaG.Connection,
@@ -545,6 +545,7 @@ begin
     oBase.PrefijoCelda := 'FACCCEL';
     oBase.NombreTablaDocumento := 'facturas';
     oBase.AplicarContextoPivote := True;
+    oBase.RegistroLog := RegistroLog;
     oConfigTallas := CrearConfigTallasDocumentoCompra(oBase);
     FGestorTallas := TGestorGridTallas.Create(oConfigTallas);
     ConfigurarEventosTallasDocumento(FTallaColumns,
@@ -741,7 +742,7 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
   sLineasSinSku := LineasSinSkuRequerido(
-    CrearValidadorArticulos(
+    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
       dmmFacturasCompra.unqryTablaG.Connection),
     dmmFacturasCompra.unqryFacturasCompraLineas, 'FACCLIN');
   if (sLineasSinSku <> '') and
@@ -917,13 +918,14 @@ begin
     ContextoSesion, tvLineasFactura, ds, FModoEntradaSel,
     Trim(dmmFacturasCompra.unqryTablaG.
       FieldByName('CODIGO_ALM_FACC').AsString), 'FACCLIN');
+  Cfg.RegistroLog := RegistroLog;
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
-    CrearValidadorArticulos(
+    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
       dmmFacturasCompra.unqryTablaG.Connection);
   Cfg.LookupAtributos :=
-    CrearLookupAtributosArticulos(
+    ContextoRepositoriosPantalla.Articulos.CrearLookupAtributosArticulos(
       dmmFacturasCompra.unqryTablaG.Connection);
   if FModoEntradaSel = mcsTallasHorPed then
   begin

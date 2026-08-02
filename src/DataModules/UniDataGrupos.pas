@@ -38,7 +38,7 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibLog, System.Diagnostics;
+uses System.Diagnostics;
 
 {$R *.dfm}
 
@@ -61,12 +61,12 @@ begin
   swQ := TStopwatch.StartNew;
   try
     unqryUsuariosGrupo.Open;
-    inLibLog.Log.LogPerf('Grupos.AbrirDetalles',
+    RegistroLog.RegistrarRendimiento('Grupos.AbrirDetalles',
       'unqryUsuariosGrupo OK', swQ.ElapsedMilliseconds);
   except
     on E: Exception do
     begin
-      inLibLog.Log.LogPerf('Grupos.AbrirDetalles',
+      RegistroLog.RegistrarRendimiento('Grupos.AbrirDetalles',
         'unqryUsuariosGrupo ERROR=' + E.Message,
         swQ.ElapsedMilliseconds);
       raise;

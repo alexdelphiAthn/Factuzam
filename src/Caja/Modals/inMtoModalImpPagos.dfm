@@ -558,14 +558,7 @@
       end
     end
   end
-  object unqryPagosPrint: TUniQuery
-    SQL.Strings = (
-      'SELECT * FROM vi_caja_pagos')
-    Left = 408
-    Top = 16
-  end
   object dsPagosPrint: TDataSource
-    DataSet = unqryPagosPrint
     Left = 408
     Top = 72
   end

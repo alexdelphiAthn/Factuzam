@@ -179,10 +179,4 @@
       OnClick = btnCerrarClick
     end
   end
-  object qBuscar: TUniQuery
-    SQL.Strings = (
-      'SELECT 1')
-    Left = 800
-    Top = 56
-  end
 end

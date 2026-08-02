@@ -316,23 +316,7 @@
     Left = 832
     Top = 400
   end
-  object unqryGuias: TUniQuery
-    SQL.Strings = (
-      'select *'
-      '  from fza_informes_guias'
-      ' where INFORME_INFGUI = :INF'
-      ' order by ORDEN_INFGUI, CODIGO_INFGUI')
-    Left = 32
-    Top = 420
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'INF'
-        Value = nil
-      end>
-  end
   object dsGuias: TDataSource
-    DataSet = unqryGuias
     Left = 32
     Top = 476
   end

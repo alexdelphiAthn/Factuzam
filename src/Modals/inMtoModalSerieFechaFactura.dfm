@@ -65,17 +65,7 @@
       OnClick = btnAceptarClick
     end
   end
-  object qrySeries: TUniQuery
-    SQL.Strings = (
-      'SELECT DISTINCT SERIE_CON, DEFAULT_CON'
-      'FROM fza_contadores'
-      'WHERE TIPO_DOC_CON = '#39'FC'#39' AND ESACTIVO_CON = '#39'S'#39
-      'ORDER BY DEFAULT_CON DESC')
-    Left = 360
-    Top = 24
-  end
   object dsSeries: TDataSource
-    DataSet = qrySeries
     Left = 360
     Top = 72
   end

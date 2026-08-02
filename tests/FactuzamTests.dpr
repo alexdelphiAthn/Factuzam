@@ -36,6 +36,18 @@ uses
   inLibGestorCopiaLineasCompra in
     '..\src\Lib\inLibGestorCopiaLineasCompra.pas',
   inLibDiag in '..\src\Lib\inLibDiag.pas',
+  inLibRegistroLogNulo in
+    '..\src\Lib\inLibRegistroLogNulo.pas',
+  inLibConfigCamposIntf in
+    '..\src\Lib\inLibConfigCamposIntf.pas',
+  inLibRepositoriosPantallaIntf in
+    '..\src\Lib\inLibRepositoriosPantallaIntf.pas',
+  UniDataRepositoriosPantalla in
+    '..\src\DataModules\UniDataRepositoriosPantalla.pas',
+  UniDataRepositoriosGeneralesPantalla in
+    '..\src\DataModules\UniDataRepositoriosGeneralesPantalla.pas',
+  UniDataRepositoriosCajaPantalla in
+    '..\src\DataModules\UniDataRepositoriosCajaPantalla.pas',
   inLibCadenas in '..\src\Lib\inLibCadenas.pas',
   inLibCifrado in '..\src\Lib\inLibCifrado.pas',
   inLibCifradoCopias in
@@ -76,6 +88,10 @@ uses
     '..\src\Lib\inLibFacturasEstadoFiscalPresentacion.pas',
   inLibFacturasOperacionFiscal in
     '..\src\Lib\inLibFacturasOperacionFiscal.pas',
+  inLibFacturasAplicacionIntf in
+    '..\src\Lib\inLibFacturasAplicacionIntf.pas',
+  inLibFacturasAplicacion in
+    '..\src\Lib\inLibFacturasAplicacion.pas',
   inLibFacturasConsolidacionPresentacion in
     '..\src\Lib\inLibFacturasConsolidacionPresentacion.pas',
   inLibShowMto in '..\src\Lib\inLibShowMto.pas',
@@ -95,6 +111,10 @@ uses
     '..\src\Lib\inLibArticulosAtributosBasicos.pas',
   inLibArticulosAtributosBasicosIntf in
     '..\src\Lib\inLibArticulosAtributosBasicosIntf.pas',
+  inLibArticulosGuardadoIntf in
+    '..\src\Lib\inLibArticulosGuardadoIntf.pas',
+  inLibArticulosGuardado in
+    '..\src\Lib\inLibArticulosGuardado.pas',
   inLibArticulosVisibilidad in
     '..\src\Lib\inLibArticulosVisibilidad.pas',
   inLibStockCeldaDocumento in
@@ -103,13 +123,23 @@ uses
     '..\src\Lib\inLibStockConsultaInfo.pas',
   inLibInventariosEntrada in
     '..\src\Lib\inLibInventariosEntrada.pas',
+  inLibInventariosAplicacionIntf in
+    '..\src\Lib\inLibInventariosAplicacionIntf.pas',
+  inLibInventariosAplicacion in
+    '..\src\Lib\inLibInventariosAplicacion.pas',
   inLibCajaTipos in '..\src\Caja\Lib\inLibCajaTipos.pas',
   inLibFaseCobro in '..\src\Caja\Lib\inLibFaseCobro.pas',
+  inLibFaseCobroPersistenciaIntf in
+    '..\src\Caja\Lib\inLibFaseCobroPersistenciaIntf.pas',
   inLibCajaVentaIntf in '..\src\Caja\Lib\inLibCajaVentaIntf.pas',
   inLibCajaVentaCliente in
     '..\src\Caja\Lib\inLibCajaVentaCliente.pas',
   inLibCajaVentaOperacion in
     '..\src\Caja\Lib\inLibCajaVentaOperacion.pas',
+  inLibCajaEntradaIntf in
+    '..\src\Caja\Lib\inLibCajaEntradaIntf.pas',
+  inLibCajaEntrada in
+    '..\src\Caja\Lib\inLibCajaEntrada.pas',
   inLibCajaDescuentos in '..\src\Caja\Lib\inLibCajaDescuentos.pas',
   inLibCajaRectificacion in
     '..\src\Caja\Lib\inLibCajaRectificacion.pas',
@@ -134,6 +164,12 @@ uses
     '..\src\Lib\inLibComprasSesionesIntf.pas',
   inLibComprasSesionesCreacion in
     '..\src\Lib\inLibComprasSesionesCreacion.pas',
+  inLibComprasSesionesCreacionDataSet in
+    '..\src\Lib\inLibComprasSesionesCreacionDataSet.pas',
+  inLibComprasSesionesAplicacionIntf in
+    '..\src\Lib\inLibComprasSesionesAplicacionIntf.pas',
+  inLibComprasSesionesAplicacion in
+    '..\src\Lib\inLibComprasSesionesAplicacion.pas',
   inLibComprasSesionesMaterializacionIntf in
     '..\src\Lib\inLibComprasSesionesMaterializacionIntf.pas',
   inLibComprasSesionesLecturasIntf in
@@ -303,12 +339,22 @@ uses
     'PruebasArticulosAltaTarifas.pas',
   PruebasArticulosAtributosBasicos in
     'PruebasArticulosAtributosBasicos.pas',
+  PruebasArticulosGuardado in
+    'PruebasArticulosGuardado.pas',
   PruebasStockCeldaDocumento in
     'PruebasStockCeldaDocumento.pas',
   PruebasStockConsultaInfo in
     'PruebasStockConsultaInfo.pas',
+  inLibStockConsultaEntradaIntf in
+    '..\src\Lib\inLibStockConsultaEntradaIntf.pas',
+  inLibStockConsultaEntrada in
+    '..\src\Lib\inLibStockConsultaEntrada.pas',
+  PruebasStockConsultaEntrada in
+    'PruebasStockConsultaEntrada.pas',
   PruebasInventariosEntrada in
     'PruebasInventariosEntrada.pas',
+  PruebasInventariosAplicacion in
+    'PruebasInventariosAplicacion.pas',
   PruebasCajaVentaCliente in
     'PruebasCajaVentaCliente.pas',
   PruebasCajaVentaOperacion in
@@ -329,6 +375,8 @@ uses
     'PruebasComprasSesionesRepositorio.pas',
   PruebasComprasSesionesCreacion in
     'PruebasComprasSesionesCreacion.pas',
+  PruebasComprasSesionesAplicacion in
+    'PruebasComprasSesionesAplicacion.pas',
   DoblesPivoteVenta in 'DoblesPivoteVenta.pas',
   PruebasPivoteVenta in 'PruebasPivoteVenta.pas',
   PruebasValidacionTallasCompra in
@@ -343,6 +391,7 @@ uses
   PruebasRectificativas in 'PruebasRectificativas.pas',
   PruebasReglasCompartidas in 'PruebasReglasCompartidas.pas',
   PruebasCajaVenta in 'PruebasCajaVenta.pas',
+  PruebasCajaEntrada in 'PruebasCajaEntrada.pas',
   PruebasFacturasServicios in 'PruebasFacturasServicios.pas',
   PruebasFacturasLecturas in 'PruebasFacturasLecturas.pas',
   PruebasFacturaePersistencia in 'PruebasFacturaePersistencia.pas',
@@ -354,6 +403,14 @@ uses
     'PruebasFacturasOperacionFiscal.pas',
   PruebasFacturasConsolidacionPresentacion in
     'PruebasFacturasConsolidacionPresentacion.pas',
+  PruebasFacturasConsolidacion in
+    'PruebasFacturasConsolidacion.pas',
+  PruebasFacturasAplicacion in
+    'PruebasFacturasAplicacion.pas',
+  PruebasRestauracionCopiasConexion in
+    'PruebasRestauracionCopiasConexion.pas',
+  PruebasFusionEfectos in 'PruebasFusionEfectos.pas',
+  PruebasImportacionPedidos in 'PruebasImportacionPedidos.pas',
   PruebasExcepcionesAplicacion in
     'PruebasExcepcionesAplicacion.pas',
   PruebasEmisionFiscal in 'PruebasEmisionFiscal.pas',

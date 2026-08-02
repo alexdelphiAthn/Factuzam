@@ -83,7 +83,7 @@ type
 implementation
 
 uses
-  inLibLog, inLibDocumentoFiscal,
+  inLibDocumentoFiscal,
   inLibValoresAutomaticos, System.Diagnostics, inLibMsgCompras;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -119,11 +119,12 @@ const
     swQ := TStopwatch.StartNew;
     try
       qry.Open;
-      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+      RegistroLog.RegistrarRendimiento(
+        TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
     except
       on E: Exception do
       begin
-        inLibLog.Log.LogPerf(TAG, Nombre + ' ERROR=' + E.Message,
+        RegistroLog.RegistrarRendimiento(TAG, Nombre + ' ERROR=' + E.Message,
           swQ.ElapsedMilliseconds);
         raise;
       end;
@@ -137,7 +138,7 @@ begin
   // Articulos/LinFacturasArticulos/Kits/Pagos son lazy. Paises es un
   // lookup pequeno que el combo del domicilio fiscal necesita ya abierto.
   AbrirConTiempo(unqryPaises, 'unqryPaises');
-  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+  RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmProveedores.AsegurarArticulosAbierta;
@@ -147,12 +148,12 @@ begin
   swQ := TStopwatch.StartNew;
   try
     unqryArticulos.Open;
-    inLibLog.Log.LogPerf('Proveedores.Lazy', 'unqryArticulos OK',
+    RegistroLog.RegistrarRendimiento('Proveedores.Lazy', 'unqryArticulos OK',
       swQ.ElapsedMilliseconds);
   except
     on E: Exception do
     begin
-      inLibLog.Log.LogPerf('Proveedores.Lazy',
+      RegistroLog.RegistrarRendimiento('Proveedores.Lazy',
         'unqryArticulos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
       raise;
     end;
@@ -166,12 +167,13 @@ begin
   swQ := TStopwatch.StartNew;
   try
     unqryLinFacturasArticulos.Open;
-    inLibLog.Log.LogPerf('Proveedores.Lazy', 'unqryLinFacturasArticulos OK',
+    RegistroLog.RegistrarRendimiento(
+      'Proveedores.Lazy', 'unqryLinFacturasArticulos OK',
       swQ.ElapsedMilliseconds);
   except
     on E: Exception do
     begin
-      inLibLog.Log.LogPerf('Proveedores.Lazy',
+      RegistroLog.RegistrarRendimiento('Proveedores.Lazy',
         'unqryLinFacturasArticulos ERROR=' + E.Message,
         swQ.ElapsedMilliseconds);
       raise;
@@ -188,12 +190,12 @@ begin
     unqryConjuntosTallas.Open;
     unqryKits.Open;
     unqryKitsDet.Open;
-    inLibLog.Log.LogPerf('Proveedores.Lazy', 'unqryKits OK',
+    RegistroLog.RegistrarRendimiento('Proveedores.Lazy', 'unqryKits OK',
       swQ.ElapsedMilliseconds);
   except
     on E: Exception do
     begin
-      inLibLog.Log.LogPerf('Proveedores.Lazy',
+      RegistroLog.RegistrarRendimiento('Proveedores.Lazy',
         'unqryKits ERROR=' + E.Message, swQ.ElapsedMilliseconds);
       raise;
     end;
@@ -210,12 +212,12 @@ begin
       unqryFormaPago.Open;
     if not unqryEmpresasBancos.Active then
       unqryEmpresasBancos.Open;
-    inLibLog.Log.LogPerf('Proveedores.Lazy', 'unqryPagos OK',
+    RegistroLog.RegistrarRendimiento('Proveedores.Lazy', 'unqryPagos OK',
       swQ.ElapsedMilliseconds);
   except
     on E: Exception do
     begin
-      inLibLog.Log.LogPerf('Proveedores.Lazy',
+      RegistroLog.RegistrarRendimiento('Proveedores.Lazy',
         'unqryPagos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
       raise;
     end;

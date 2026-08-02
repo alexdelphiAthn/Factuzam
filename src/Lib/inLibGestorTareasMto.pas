@@ -17,7 +17,7 @@ interface
 
 uses
   System.SysUtils, System.Threading, System.Generics.Collections,
-  Vcl.Forms, Vcl.ExtCtrls;
+  Vcl.Forms, Vcl.ExtCtrls, inLibLogIntf;
 
 type
   TConsultarCierreAplicacionMto = function: Boolean of object;
@@ -30,6 +30,7 @@ type
     FTareas: TList<ITask>;
     FConsultarCierre: TConsultarCierreAplicacionMto;
     FEstado: IInterface;
+    FRegistroLog: IRegistroLog;
     function AplicacionCerrando: Boolean;
     function GetCantidadTareas: Integer;
     function GetEnDestruccion: Boolean;
@@ -37,7 +38,8 @@ type
   public
     constructor Create(
       AFormulario: TForm;
-      AConsultarCierre: TConsultarCierreAplicacionMto);
+      AConsultarCierre: TConsultarCierreAplicacionMto;
+      const ARegistroLog: IRegistroLog = nil);
     destructor Destroy; override;
     procedure Bloquear(ABloquear: Boolean);
     procedure Ejecutar(
@@ -56,7 +58,7 @@ implementation
 
 uses
   System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.ComCtrls,
-  Vcl.Graphics, inLibLog, inLibMsgComun;
+  Vcl.Graphics, inLibMsgComun, inLibRegistroLogNulo;
 
 type
   IEstadoTareasMto = interface
@@ -87,7 +89,8 @@ end;
 
 constructor TGestorTareasMto.Create(
   AFormulario: TForm;
-  AConsultarCierre: TConsultarCierreAplicacionMto);
+  AConsultarCierre: TConsultarCierreAplicacionMto;
+  const ARegistroLog: IRegistroLog);
 var
   oEstado: IEstadoTareasMto;
 begin
@@ -97,6 +100,9 @@ begin
   FBloqueos := 0;
   FTareas := nil;
   FConsultarCierre := AConsultarCierre;
+  FRegistroLog := ARegistroLog;
+  if not Assigned(FRegistroLog) then
+    FRegistroLog := CrearRegistroLogNulo;
   oEstado := TEstadoTareasMto.Create;
   FEstado := oEstado;
 end;
@@ -107,6 +113,7 @@ begin
   FreeAndNil(FTareas);
   FreeAndNil(FOverlay);
   FEstado := nil;
+  FRegistroLog := nil;
   inherited;
 end;
 
@@ -226,7 +233,7 @@ begin
           except
             on E: Exception do
             begin
-              inLibLog.Log.LogError(
+              FRegistroLog.RegistrarError(
                 '[EjecutarEnBackground] ' +
                 E.ClassName + ': ' + E.Message);
               sError := E.Message;
@@ -256,7 +263,7 @@ begin
                 end;
               except
                 on E: Exception do
-                  inLibLog.Log.LogError(
+                  FRegistroLog.RegistrarError(
                     '[EjecutarEnBackground.AlTerminar] ' +
                     E.ClassName + ': ' + E.Message);
               end;

@@ -41,9 +41,14 @@ uses
   cxDBExtLookupComboBox, cxListView, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   cxDBLabel, dxShellDialogs, inLibArticulosVariaciones, inMtoModalAceptCancel,
   cxCustomListBox, cxCheckListBox, System.UITypes, System.Types,
-  inLibArticulosAtributosBasicosIntf;
+  inLibArticulosAtributosBasicosIntf,
+  inLibArticulosGuardadoIntf;
 
 type
+  TContextoDependenciasArticulos = record
+    AplicacionGuardado: IAplicacionGuardadoArticulo;
+  end;
+
   TfrmMtoArticulos = class(TfrmMtoGen)
     pnlTopFicha: TPanel;
     pnlButtonFicha: TPanel;
@@ -526,6 +531,7 @@ type
     // tvStock para colorear el nombre del atributo segun la paleta basica.
     FAtributosStock : TDictionary<string, string>;
     FGestorAtributosBasicos: IGestorAtributosBasicosSku;
+    FDependencias: TContextoDependenciasArticulos;
     function AsegurarBasicoFilaActual: Integer;
     function ObtenerContextoAtributoActual(
       out AContexto: TContextoAtributoBasicoSku): Boolean;
@@ -585,6 +591,8 @@ uses
   inLibArticulosCodigosBarras,
   inLibArticulosAltaTarifas,
   inLibArticulosAtributosBasicos,
+  inLibArticulosGuardado,
+  inMtoArticulosGuardadoVcl,
   inLibArticulosVisibilidad,
   UniDataArticulosAtributosBasicosRepositorio,
   UniDataArticulosVariaciones,
@@ -603,6 +611,79 @@ const
   UMBRAL_PRECARGA = 50000;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure InicializarGuardadoArticuloVcl(AFormulario: TfrmMtoArticulos);
+var
+  Callbacks: TCallbacksGuardadoArticulo;
+  Operaciones: IOperacionesGuardadoArticulo;
+begin
+  Callbacks := Default(TCallbacksGuardadoArticulo);
+  Callbacks.ValidarPropiedades :=
+    function: string
+    begin
+      Result := '';
+      if Assigned(AFormulario.FGestorProp) then
+        Result := AFormulario.FGestorProp.Validar;
+    end;
+  Callbacks.GuardarPropiedades :=
+    function(out AMensajeError: string): Boolean
+    begin
+      Result := True;
+      AMensajeError := '';
+      if Assigned(AFormulario.FGestorProp) then
+      begin
+        try
+          AFormulario.FGestorProp.GuardarPropiedades;
+        except
+          on E: Exception do
+          begin
+            Result := False;
+            AMensajeError := E.Message;
+          end;
+        end;
+      end;
+    end;
+  Callbacks.GuardarEdicionesPendientes :=
+    procedure
+    begin
+      if AFormulario.dmmArticulos.unqryProveedoresArticulos.State in
+        [dsInsert, dsEdit] then
+        AFormulario.dmmArticulos.unqryProveedoresArticulos.Post;
+      if AFormulario.dmmArticulos.unqryTarifasArticulos.State in
+        [dsInsert, dsEdit] then
+        AFormulario.dmmArticulos.unqryTarifasArticulos.Post;
+      if AFormulario.dmmArticulos.unqryVariacionesArticulos.State in
+        [dsInsert, dsEdit] then
+        AFormulario.dmmArticulos.unqryVariacionesArticulos.Post;
+      if AFormulario.dmmArticulos.unqrySkus.State in
+        [dsInsert, dsEdit] then
+        AFormulario.dmmArticulos.unqrySkus.Post;
+      if AFormulario.dmmArticulos.unqryTablaG.State in
+        [dsInsert, dsEdit] then
+        AFormulario.dmmArticulos.unqryTablaG.Post;
+    end;
+  Callbacks.GuardarVariaciones :=
+    function(out AMensajeError: string): Boolean
+    begin
+      Result := True;
+      AMensajeError := '';
+      if Assigned(AFormulario.FGestorVar) then
+      begin
+        try
+          AFormulario.FGestorVar.GuardarVariaciones;
+        except
+          on E: Exception do
+          begin
+            Result := False;
+            AMensajeError := E.Message;
+          end;
+        end;
+      end;
+    end;
+  Operaciones := TAdaptadorGuardadoArticuloVcl.Create(Callbacks);
+  AFormulario.FDependencias.AplicacionGuardado :=
+    CrearAplicacionGuardadoArticulo(Operaciones);
+end;
 
 procedure TfrmMtoArticulos.ActualizarVisibilidadVariaciones;
 var
@@ -1151,64 +1232,26 @@ end;
 
 procedure TfrmMtoArticulos.btnGrabarClick(Sender: TObject);
 var
-  sErrorProp: string;
+  Resultado: TResultadoGuardadoArticulo;
 begin
-  if Assigned(FGestorProp) then
-  begin
-    sErrorProp := FGestorProp.Validar;
-    if sErrorProp <> '' then
-    begin
-      ShowMessage(Format(SAvisoRevisionArticulo, [sErrorProp]));
-      pcDetail.ActivePage := tsPropiedades;
-      Exit;
-    end;
-    try
-      FGestorProp.GuardarPropiedades;
-    except
-      on E: Exception do
+  Resultado := FDependencias.AplicacionGuardado.Ejecutar;
+  case Resultado.Error of
+    egaRevisionPropiedades:
       begin
-        ShowMessage(Format(SErrorGuardarPropiedadesArticulo, [E.Message]));
-        Exit;
+        ShowMessage(Format(SAvisoRevisionArticulo, [Resultado.Mensaje]));
+        pcDetail.ActivePage := tsPropiedades;
       end;
-    end;
+    egaGuardadoPropiedades:
+      ShowMessage(Format(
+        SErrorGuardarPropiedadesArticulo,
+        [Resultado.Mensaje]));
+    egaGuardadoVariaciones:
+      ShowMessage(Format(
+        SErrorGuardarVariacionesArticulo,
+        [Resultado.Mensaje]));
   end;
-  if ( (dmmArticulos.unqryProveedoresArticulos.State = dsInsert) or
-       (dmmArticulos.unqryProveedoresArticulos.State = dsEdit)) then
-  begin
-    dmmArticulos.unqryProveedoresArticulos.Post;
-  end;
-  if ( (dmmArticulos.unqryTarifasArticulos.State = dsInsert) or
-       (dmmArticulos.unqryTarifasArticulos.State = dsEdit)) then
-  begin
-    dmmArticulos.unqryTarifasArticulos.Post;
-  end;
-  if ( (dmmArticulos.unqryVariacionesArticulos.State = dsInsert) or
-       (dmmArticulos.unqryVariacionesArticulos.State = dsEdit)) then
-  begin
-    dmmArticulos.unqryVariacionesArticulos.Post;
-  end;
-  if ( (dmmArticulos.unqrySkus.State = dsInsert) or
-       (dmmArticulos.unqrySkus.State = dsEdit)) then
-  begin
-    dmmArticulos.unqrySkus.Post;
-  end;
-  if ( (dmmArticulos.unqryTablaG.State = dsInsert) or
-       (dmmArticulos.unqryTablaG.State = dsEdit)) then
-  begin
-    dmmArticulos.unqryTablaG.Post;
-  end;
-  if Assigned(FGestorVar) then
-  try
-    FGestorVar.GuardarVariaciones;
-  except
-    on E: Exception do
-    begin
-      ShowMessage(Format(SErrorGuardarVariacionesArticulo, [E.Message]));
-      Exit;
-    end;
-  end;
-  // Delegar en base: transacción + mensaje de confirmación
-  inherited;
+  if Resultado.Error = egaNinguno then
+    inherited;
 end;
 
 procedure TfrmMtoArticulos.btnNuevoArticuloClick(Sender: TObject);
@@ -1580,6 +1623,7 @@ begin
   pcDetail.OnChange := PcDetailChange;
   InicializarPestanyaPropiedades;
   InicializarPestanyaVariaciones;
+  InicializarGuardadoArticuloVcl(Self);
   // Filtros de carga (estado, stock, temporadas): poblar la lista de
   // temporadas, leer las preferencias guardadas por usuario y aplicar
   // el filtro reescribiendo el SQL de unqryTablaG antes de que el
@@ -1972,8 +2016,9 @@ begin
   // Crear el gestor
   FGestorProp := TGestorPropiedades.Create(
     FScrollProp,
-    ConexionPrincipal,   // <-- ajusta al nombre real de tu TUniConnection
-    IdentidadSesion.Usuario               // <-- ajusta a tu función/variable de usuario
+    ContextoRepositoriosPantalla.Articulos.
+      CrearServiciosPropiedadesArticulo(ConexionPrincipal),
+    IdentidadSesion.Usuario
   );
 end;
 
@@ -2367,6 +2412,7 @@ end;
 
 procedure TfrmMtoArticulos.FormDestroy(Sender: TObject);
 begin
+  FDependencias := Default(TContextoDependenciasArticulos);
   FGestorAtributosBasicos := nil;
   inherited;
   if Assigned(FGestorProp) then

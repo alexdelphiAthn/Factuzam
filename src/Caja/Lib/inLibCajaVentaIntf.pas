@@ -45,6 +45,7 @@ type
     Codigo: string;
     Nombre: string;
   end;
+  TNombresAtributosCaja = TArray<string>;
   TClienteCaja = record
     Codigo: string;
     RazonSocial: string;
@@ -93,6 +94,17 @@ type
       ANumeroOperacion: string): IResultadoConsultaCaja;
     function ConsultarVentasOrigenSku(
       const ASku, AEmpresa: string): IResultadoConsultaCaja;
+  end;
+  IRepositorioArticulosCaja = interface
+    ['{6C1C97EF-F58D-4AF5-AC46-607C60686337}']
+    function ConsultarArticulosIncremental(
+      const ATarifa, ATexto: string;
+      AFechaTarifa: TDateTime): IResultadoConsultaCaja;
+    function ConsultarArticulosBusqueda(
+      const ATarifa: string;
+      AFechaTarifa: TDateTime): IResultadoConsultaCaja;
+    function ListarNombresAtributosArticulo(
+      const AArticulo: string): TNombresAtributosCaja;
   end;
   TResultadoRectificacionCaja = record
     Serie: string;
@@ -177,16 +189,20 @@ type
     AlmacenOrigenDevolucion: string;
     DatosCobro: TDatosFaseCobro;
   end;
-  IGrabadorVentaCaja = interface
+  TResultadoPersistenciaVentaCaja = record
+    Grabada: Boolean;
+    NumeroOperacion: string;
+    CodigoValeGenerado: string;
+    UltimaSerieFactura: string;
+    UltimoNumeroFactura: string;
+    SerieFacturaImpresion: string;
+    NumeroFacturaImpresion: string;
+  end;
+  IUnidadTrabajoVentaCaja = interface
     ['{B5A33934-55EC-41B1-83B2-AEB0FBAA07BD}']
-    function GrabarVenta(
-      const ASolicitud: TSolicitudGrabacionVenta;
-      out ANumeroGenerado, ACodigoValeGenerado: string
-    ): Boolean;
-    function UltimaSerieFacturaGrabada: string;
-    function UltimoNumeroFacturaGrabada: string;
-    function SerieFacturaImpresion: string;
-    function NumeroFacturaImpresion: string;
+    function Ejecutar(
+      const ASolicitud: TSolicitudGrabacionVenta
+    ): TResultadoPersistenciaVentaCaja;
   end;
   TSolicitudCierreVenta = record
     Grabacion: TSolicitudGrabacionVenta;
@@ -197,19 +213,19 @@ type
     NumeroGenerado: string;
     CodigoValeGenerado: string;
   end;
-  IServicioCierreVenta = interface
+  ICasoUsoCierreVentaCaja = interface
     ['{78B5CC6D-7852-4944-995D-F6ED0EFA7B58}']
     function Ejecutar(
       const ASolicitud: TSolicitudCierreVenta
     ): TResultadoCierreVenta;
   end;
-  TServiciosOperacionCaja = record
+  TContextoDependenciasOperacionCaja = record
     RepositorioConsultas: IRepositorioConsultasCaja;
     ServicioRectificacion: IServicioRectificacionCaja;
     PoliticaStock: IPoliticaStockVenta;
     RepartidorDescuento: IRepartidorDescuento;
     Impresor: IImpresorVenta;
-    ServicioCierre: IServicioCierreVenta;
+    CasoUsoCierre: ICasoUsoCierreVentaCaja;
   end;
 
 function EvaluarPoliticaStockVenta(

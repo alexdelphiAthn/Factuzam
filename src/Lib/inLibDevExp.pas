@@ -33,7 +33,8 @@ uses
     inLibPerfilesUsuarioIntf,
     cxCheckBox, cxMemo, cxCurrencyEdit, ExtDlgs, OleServer, AxCtrls,
     OleCtrls, DBOleCtl, cxLookAndFeels, System.Generics.Collections, TypInfo,
-    inLibLog, inLibParametrosIntf, Uni, inLibFormatoExcel,
+    inLibLogIntf, inLibConfigCamposIntf,
+    inLibParametrosIntf, Uni, inLibFormatoExcel,
     inLibFacturas, inLibFacturasLecturasIntf;
   procedure BusqAllGrid(var AdbTvGen: TcxGridDBTableView;
                         AsDatoBusq: String);
@@ -46,13 +47,15 @@ uses
 //  procedure RecoverColumnsStateActiveWindow;
 //  procedure ResetColumnsStateActiveWindow;
   procedure RestaurarFocoGrid(AcxgrdtvVista: TcxCustomGridTableView;
-                              var oPerfilDic: TProfileDicc);
+                              var oPerfilDic: TProfileDicc;
+                              const ARegistroLog: IRegistroLog);
   procedure CollectSettingsColumnProfile( AcxgrdtvVista: TcxCustomGridTableView;
                                         const sName: string;
                                         const AsProfile: string;
                                         const APerfilesUsuario:
                                           IEscritorPerfilesUsuario;
-                                        AList: TPerfilList);
+                                        AList: TPerfilList;
+                                        const ARegistroLog: IRegistroLog);
 
   procedure GetSettingsColumn(AcxgrdtvVista: TcxCustomGridTableView;
                               sName: String;
@@ -68,7 +71,10 @@ uses
                                       AsProfile: String);
   procedure PonerAnchosTitulos( AcxgrdtvVista: TcxCustomGridTableView;
                                 AsDes: string;
-                                var oPerfilDic: TProfileDicc);
+                                var oPerfilDic: TProfileDicc;
+                                const AConfiguracionCampos:
+                                  IConfiguracionCampos;
+                                const ARegistroLog: IRegistroLog);
   // Asigna PropertiesClass a las columnas del view en funcion del prefijo
   // del campo, siguiendo la convencion del LIBRO_DE_ESTILO_BBDD.md §3.2.
   // Mapeo:
@@ -107,15 +113,16 @@ uses
   // Devuelve el número de columnas nuevas creadas. Sustituye a la antigua
   // llamada directa a DataController.CreateAllItems, que duplicaba todas
   // las columnas en cada apertura del form con oCreateItems='True'.
-  function CrearItemsFaltantes(AView: TcxCustomGridTableView): Integer;
+  function CrearItemsFaltantes(
+    AView: TcxCustomGridTableView;
+    const ARegistroLog: IRegistroLog): Integer;
 
 implementation
 
   uses inLibWin,
        inLibMsgComun,
        inLibDatasets,
-       inLibDir, uGenericIfThen,
-       inLibConfigCampos;
+       inLibDir, uGenericIfThen;
 
 procedure GridRecalc(AConexion: TUniConnection;
                      const ARepositorioLecturas:
@@ -267,7 +274,9 @@ begin
   end;
 end;
 
-function CrearItemsFaltantes(AView: TcxCustomGridTableView): Integer;
+function CrearItemsFaltantes(
+  AView: TcxCustomGridTableView;
+  const ARegistroLog: IRegistroLog): Integer;
 var
   oCtrl       : TcxGridDBDataController;
   oDataSet    : TDataSet;
@@ -317,8 +326,10 @@ begin
       end;
     end;
   end;
-  Log.LogInfo(Format('CrearItemsFaltantes: vista=%s creadas=%d items_total=%d',
-                     [AView.Name, Result, AView.ItemCount]));
+  ARegistroLog.RegistrarInformacion(
+    Format(
+      'CrearItemsFaltantes: vista=%s creadas=%d items_total=%d',
+      [AView.Name, Result, AView.ItemCount]));
 end;
 
 // Helpers locales para AplicarPropertiesPorPrefijo
@@ -500,7 +511,8 @@ begin
 end;
 
 procedure RestaurarFocoGrid(AcxgrdtvVista: TcxCustomGridTableView;
-                            var oPerfilDic: TProfileDicc);
+                            var oPerfilDic: TProfileDicc;
+                            const ARegistroLog: IRegistroLog);
 var
   sFocusedIDString: string;
   sCamposClave: string;
@@ -513,7 +525,8 @@ begin
      not Assigned(oDBDataCtrl.DataSet) or
      not oDBDataCtrl.DataSet.Active then
   begin
-    Log.LogInfo(Format('RestaurarFocoGrid: vista=%s SKIP (dataset no activo)',
+    ARegistroLog.RegistrarInformacion(
+      Format('RestaurarFocoGrid: vista=%s SKIP (dataset no activo)',
       [AcxgrdtvVista.Name]));
     Exit;
   end;
@@ -522,7 +535,8 @@ begin
   if (sCamposClave <> '') and
      (not CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave)) then
   begin
-    Log.LogWarning(Format('RestaurarFocoGrid: vista=%s clave="%s" ' +
+    ARegistroLog.RegistrarAviso(
+      Format('RestaurarFocoGrid: vista=%s clave="%s" ' +
       'no disponible en la consulta activa',
       [AcxgrdtvVista.Name, sCamposClave]));
     oDBDataCtrl.KeyFieldNames := '';
@@ -539,7 +553,8 @@ begin
     if (sCamposClave <> '') and
        (not CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave)) then
     begin
-      Log.LogWarning(Format('RestaurarFocoGrid: vista=%s clave="%s" ' +
+      ARegistroLog.RegistrarAviso(
+        Format('RestaurarFocoGrid: vista=%s clave="%s" ' +
         'descartada porque faltan campos',
         [AcxgrdtvVista.Name, sCamposClave]));
       sCamposClave := '';
@@ -548,7 +563,8 @@ begin
 
   if sCamposClave = '' then
   begin
-    Log.LogWarning(Format('RestaurarFocoGrid: vista=%s SKIP (sin clave primaria)',
+    ARegistroLog.RegistrarAviso(
+      Format('RestaurarFocoGrid: vista=%s SKIP (sin clave primaria)',
       [AcxgrdtvVista.Name]));
     Exit;
   end;
@@ -556,7 +572,8 @@ begin
   sFocusedIDString := GetPerfilValueDef(oPerfilDic,
                                         AcxgrdtvVista.Name + '_FocusedID', '');
 
-  Log.LogInfo(Format('RestaurarFocoGrid: vista=%s clave="%s" valorGuardado="%s"',
+  ARegistroLog.RegistrarInformacion(
+    Format('RestaurarFocoGrid: vista=%s clave="%s" valorGuardado="%s"',
     [AcxgrdtvVista.Name, sCamposClave, sFocusedIDString]));
 
   if sFocusedIDString <> '' then
@@ -569,7 +586,8 @@ begin
       vLocateValues,
       []
     );
-    Log.LogInfo(Format('RestaurarFocoGrid: Locate(%s, %s) = %s',
+    ARegistroLog.RegistrarInformacion(
+      Format('RestaurarFocoGrid: Locate(%s, %s) = %s',
       [sCamposClave, sFocusedIDString, BoolToStr(bFound, True)]));
   end;
 end;
@@ -579,7 +597,8 @@ procedure CollectSettingsColumnProfile(AcxgrdtvVista: TcxCustomGridTableView;
                                         const AsProfile: string;
                                         const APerfilesUsuario:
                                           IEscritorPerfilesUsuario;
-                                        AList: TPerfilList);
+                                        AList: TPerfilList;
+                                        const ARegistroLog: IRegistroLog);
 var
   i: Integer;
   oItem: TcxGridColumn;
@@ -614,7 +633,8 @@ begin
   if (sCamposClave <> '') and
      (not CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave)) then
   begin
-    Log.LogWarning(Format('CollectSettingsColumnProfile: vista=%s ' +
+    ARegistroLog.RegistrarAviso(
+      Format('CollectSettingsColumnProfile: vista=%s ' +
       'clave="%s" no disponible en la consulta activa',
       [AcxgrdtvVista.Name, sCamposClave]));
     oDBDataCtrl.KeyFieldNames := '';
@@ -631,7 +651,8 @@ begin
     if (sCamposClave <> '') and
        (not CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave)) then
     begin
-      Log.LogWarning(Format('CollectSettingsColumnProfile: vista=%s ' +
+      ARegistroLog.RegistrarAviso(
+        Format('CollectSettingsColumnProfile: vista=%s ' +
         'clave="%s" descartada porque faltan campos',
         [AcxgrdtvVista.Name, sCamposClave]));
       sCamposClave := '';
@@ -823,7 +844,10 @@ end;
 
 procedure PonerAnchosTitulos(AcxgrdtvVista: TcxCustomGridTableView;
                              AsDes: string;
-                             var oPerfilDic: TProfileDicc);
+                             var oPerfilDic: TProfileDicc;
+                             const AConfiguracionCampos:
+                               IConfiguracionCampos;
+                             const ARegistroLog: IRegistroLog);
 var
   oItem: TcxGridColumn;
   i, iIdx, iBand, iCol, iRow: Integer;
@@ -838,7 +862,8 @@ begin
   try
     sName := AcxgrdtvVista.Name;
     iMaxIdx := AcxgrdtvVista.ItemCount - 1;
-    Log.LogInfo(Format('PonerAnchosTitulos: vista=%s items=%d form=%s',
+    ARegistroLog.RegistrarInformacion(
+      Format('PonerAnchosTitulos: vista=%s items=%d form=%s',
                        [sName, AcxgrdtvVista.ItemCount, AsDes]));
 
     // 1. Restaurar Visibilidad, Caption, Ancho y Ordenación de datos
@@ -856,18 +881,18 @@ begin
       sVal := GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Caption', '');
       if sVal <> '' then
         oItem.Caption := sVal
-      else if (oConfigCampos() <> nil) and
-              oConfigCampos.Cargada and
-              (oConfigCampos.ObtenerTitulo(sColumnName) <> '') then
-        oItem.Caption := oConfigCampos.ObtenerTitulo(sColumnName);
+      else if Assigned(AConfiguracionCampos) and
+              AConfiguracionCampos.Cargada and
+              (AConfiguracionCampos.ObtenerTitulo(sColumnName) <> '') then
+        oItem.Caption := AConfiguracionCampos.ObtenerTitulo(sColumnName);
       // Ancho: perfil usuario > config_campos > design-time
       sVal := GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Width', '');
       if sVal <> '' then
         oItem.Width := StrToIntDef(sVal, oItem.Width)
-      else if (oConfigCampos() <> nil) and
-              oConfigCampos.Cargada and
-              (oConfigCampos.ObtenerAncho(sColumnName) > 0) then
-        oItem.Width := oConfigCampos.ObtenerAncho(sColumnName);
+      else if Assigned(AConfiguracionCampos) and
+              AConfiguracionCampos.Cargada and
+              (AConfiguracionCampos.ObtenerAncho(sColumnName) > 0) then
+        oItem.Width := AConfiguracionCampos.ObtenerAncho(sColumnName);
       oItem.SortOrder := TcxDataSortOrder(StrToIntDef(
         GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'SortOrder', '0'), 0));
       if Ord(oItem.SortOrder) <> 0 then
@@ -894,7 +919,7 @@ begin
         iIdx := StrToIntDef(sVal, oItem.Index);
         if iIdx > iMaxIdx then
         begin
-          Log.LogWarning(Format(
+          ARegistroLog.RegistrarAviso(Format(
             '  columna %s: Index guardado=%d > max=%d, ajustado',
             [sColumnName, iIdx, iMaxIdx]));
           iIdx := iMaxIdx;
@@ -932,7 +957,7 @@ begin
       // Protección contra BandIndex inválido
       if (iMaxBands > 0) and (iBand >= iMaxBands) then
       begin
-        Log.LogWarning(Format(
+        ARegistroLog.RegistrarAviso(Format(
           '  columna banded %s: BandIndex=%d >= bands=%d, ajustado a %d',
           [sColumnName, iBand, iMaxBands, iMaxBands - 1]));
         iBand := iMaxBands - 1;
@@ -943,7 +968,8 @@ begin
         iCol := 0;
       if iRow < 0 then
         iRow := 0;
-      Log.LogInfo(Format('  banded %s: band=%d col=%d row=%d',
+      ARegistroLog.RegistrarInformacion(
+        Format('  banded %s: band=%d col=%d row=%d',
                          [sColumnName, iBand, iCol, iRow]));
       oBanded.Position.BandIndex := iBand;
       oBanded.Position.ColIndex  := iCol;

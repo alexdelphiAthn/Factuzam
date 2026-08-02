@@ -19,7 +19,7 @@ interface
 uses
   System.SyncObjs,
   inLibParametrosIntf, inLibParametrosBase, inLibPerfilesUsuarioIntf,
-  inLibLicenciaAplicacion;
+  inLibLicenciaAplicacion, inLibLogIntf;
 
 type
   TParametrosAplicacion = class(
@@ -29,6 +29,7 @@ type
   )
   private
     FBloqueoLicencia: TCriticalSection;
+    FRegistroLog: IRegistroLog;
     FResultadoLicencia: TResultadoLicenciaAplicacion;
     procedure InicializarParametrosApp(
       const AUsuario, AGrupo: string);
@@ -37,7 +38,8 @@ type
   public
     constructor Create(
       const APerfilesLectura: ILectorPerfilesUsuario;
-      const ACachePerfiles: ICachePerfilesUsuario);
+      const ACachePerfiles: ICachePerfilesUsuario;
+      const ARegistroLog: IRegistroLog);
     destructor Destroy; override;
     procedure EstablecerLicencia(
       const AResultado: TResultadoLicenciaAplicacion);
@@ -48,21 +50,25 @@ type
 function CrearParametrosAplicacion(
   const APerfilesLectura: ILectorPerfilesUsuario;
   const ACachePerfiles: ICachePerfilesUsuario;
+  const ARegistroLog: IRegistroLog;
   const AUsuario, AGrupo: string
 ): TServiciosParametrosAplicacion;
 
 implementation
 
 uses
-  System.SysUtils, inLibPathTokens, inLibLog,
+  System.SysUtils, inLibPathTokens,
   inLibMsgConfiguracion;
 
 { TParametrosAplicacion }
 
 constructor TParametrosAplicacion.Create(
   const APerfilesLectura: ILectorPerfilesUsuario;
-  const ACachePerfiles: ICachePerfilesUsuario);
+  const ACachePerfiles: ICachePerfilesUsuario;
+  const ARegistroLog: IRegistroLog);
 begin
+  if not Assigned(ARegistroLog) then
+    raise EArgumentNilException.Create('ARegistroLog');
   inherited Create(
     APerfilesLectura,
     ACachePerfiles,
@@ -79,12 +85,14 @@ begin
     )
   );
   FBloqueoLicencia := TCriticalSection.Create;
+  FRegistroLog := ARegistroLog;
   FResultadoLicencia :=
     TResultadoLicenciaAplicacion.CrearNoComprobada;
 end;
 
 destructor TParametrosAplicacion.Destroy;
 begin
+  FRegistroLog := nil;
   FreeAndNil(FBloqueoLicencia);
   inherited;
 end;
@@ -318,7 +326,8 @@ end;
 
 procedure TParametrosAplicacion.DespuesDeRecargar;
 begin
-  AplicarModosDepuracion(Self as IParametrosAplicacion);
+  FRegistroLog.AplicarModosDepuracion(
+    Self as IParametrosAplicacion);
 end;
 
 function TParametrosAplicacion.GetPath(const ANombre: string): string;
@@ -329,13 +338,16 @@ end;
 function CrearParametrosAplicacion(
   const APerfilesLectura: ILectorPerfilesUsuario;
   const ACachePerfiles: ICachePerfilesUsuario;
+  const ARegistroLog: IRegistroLog;
   const AUsuario, AGrupo: string
 ): TServiciosParametrosAplicacion;
 var
   Parametros: TParametrosAplicacion;
 begin
   Parametros := TParametrosAplicacion.Create(
-    APerfilesLectura, ACachePerfiles);
+    APerfilesLectura,
+    ACachePerfiles,
+    ARegistroLog);
   // Los contratos gobiernan la vida del objeto antes de inicializar.
   Result.Lectura := Parametros;
   Result.Edicion := Parametros;

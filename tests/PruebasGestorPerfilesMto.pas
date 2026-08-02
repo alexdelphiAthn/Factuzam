@@ -209,6 +209,7 @@ begin
   FGestor := TGestorPerfilesMto.Create(
     FFormulario, FDatos, FEtiqueta,
     FServicioLectura, FServicioEscritura,
+    nil, nil,
     SolicitarDestino, RecogerParticular,
     ResetearGrid, BorrarGuias);
 end;

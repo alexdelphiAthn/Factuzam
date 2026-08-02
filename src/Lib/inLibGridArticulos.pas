@@ -37,7 +37,7 @@ uses
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
   inLibArticulosValidadorIntf, inLibArticulosAtributosIntf,
   inLibAtributosPaleta,
-  inLibContextoSesionIntf, inLibGenBusq;
+  inLibContextoSesionIntf, inLibGenBusq, inLibLogIntf;
 
 type
   // Nombres de los campos del cds que usa la controladora. Cada host los
@@ -62,6 +62,7 @@ type
   private
     FConn: TUniConnection;
     FContextoSesion: IContextoSesionAplicacion;
+    FRegistroLog: IRegistroLog;
     FView: TcxGridDBTableView;
     FCds: TDataSet;
     FCampos: TCamposGridArt;
@@ -209,7 +210,8 @@ type
       const AContextoSesion: IContextoSesionAplicacion;
       const ABusquedaVisual: IBusquedaVisual;
       const AValidador: IArticulosValidador = nil;
-      const ALookup: IArticulosAtributosLookup = nil);
+      const ALookup: IArticulosAtributosLookup = nil;
+      const ARegistroLog: IRegistroLog = nil);
     destructor Destroy; override;
     // Crea la columna de articulo + las 5 columnas de atributo y engancha el
     // OnInitEdit del View. El host anade sus columnas DESPUES sobre el View.
@@ -239,7 +241,7 @@ type
 implementation
 
 uses
-  inLibLog, inLibMsgArticulos;
+  inLibMsgArticulos;
 
 type
   // Acceso a OnExit (protegido en TWinControl) de los editores in-place
@@ -252,11 +254,13 @@ constructor TGridArticulosLineas.Create(AConn: TUniConnection;
   const AContextoSesion: IContextoSesionAplicacion;
   const ABusquedaVisual: IBusquedaVisual;
   const AValidador: IArticulosValidador;
-  const ALookup: IArticulosAtributosLookup);
+  const ALookup: IArticulosAtributosLookup;
+  const ARegistroLog: IRegistroLog);
 begin
   inherited Create;
   FConn := AConn;
   FContextoSesion := AContextoSesion;
+  FRegistroLog := ARegistroLog;
   FBusquedaVisual := ABusquedaVisual;
   FView := AView;
   FCds := ACds;
@@ -1028,7 +1032,8 @@ begin
       except
         on E: EInvalidOperation do
           // Ruido del editor inplace; queda constancia en el log.
-          inLibLog.Log.LogWarning(
+          if Assigned(FRegistroLog) then
+            FRegistroLog.RegistrarAviso(
             'GridArticulos.TimerResolve: HideEdit ignorado: ' +
             E.Message);
       end;
@@ -1057,7 +1062,8 @@ begin
     except
       on E: EInvalidOperation do
         // Ruido del editor inplace; queda constancia en el log.
-        inLibLog.Log.LogWarning(
+        if Assigned(FRegistroLog) then
+          FRegistroLog.RegistrarAviso(
           'GridArticulos.MostrarEditorArticulo: ShowEdit ignorado: ' +
           E.Message);
     end;
@@ -1153,7 +1159,8 @@ begin
           except
             on E: EInvalidOperation do
               // Ruido del editor inplace; queda en el log.
-              inLibLog.Log.LogWarning(
+              if Assigned(FRegistroLog) then
+                FRegistroLog.RegistrarAviso(
                 'GridArticulos.ArticuloButtonClick: HideEdit ' +
                 'ignorado: ' + E.Message);
           end;
@@ -1566,7 +1573,8 @@ begin
       except
         // Si aun no puede parentarse el editor, seguimos: se auto-centrara.
         on E: Exception do
-          inLibLog.Log.LogWarning(
+          if Assigned(FRegistroLog) then
+            FRegistroLog.RegistrarAviso(
             'GridArticulos.AbrirPaletaOrden: ShowEdit ignorado: ' +
             E.Message);
       end;

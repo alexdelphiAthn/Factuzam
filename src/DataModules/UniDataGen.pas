@@ -19,10 +19,11 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.TypInfo, Data.DB, MemDS, DBAccess,
-  Uni, inLibUser, inLibWin, inLibLog, inLibAnfitrionDatosIntf,
+  Uni, inLibUser, inLibWin, inLibAnfitrionDatosIntf,
   inLibAuditoriaDatosIntf, inLibConexionesIntf, inLibContextoSesionIntf,
   inLibPerfilesUsuarioIntf, inLibParametrosIntf,
-  inLibFotos, inLibUnidadesMedida, inLibInteraccionDatosIntf;
+  inLibFotos, inLibUnidadesMedida, inLibInteraccionDatosIntf,
+  inLibLogIntf;
 
 type
   TdmBase = class(
@@ -33,6 +34,7 @@ type
     IProveedorContextoSesion,
     IProveedorPerfilesUsuario,
     IProveedorParametros,
+    IProveedorRegistroLog,
     IProveedorFotosArticulos,
     IProveedorUnidadesMedida
   )
@@ -53,6 +55,7 @@ type
     FCachePerfiles: ICachePerfilesUsuario;
     FParametrosApp: IParametrosAplicacion;
     FParametrosCaja: IParametrosCaja;
+    FRegistroLog: IRegistroLog;
     FFotosArticulos: TFotosArticulos;
     FUnidadesMedida: TUnidadesMedida;
     FOnActivarFicha: TNotifyEvent;
@@ -68,6 +71,7 @@ type
     function GetServiciosPerfilesUsuario: TServiciosPerfilesUsuario;
     function GetParametrosApp: IParametrosAplicacion;
     function GetParametrosCaja: IParametrosCaja;
+    function GetRegistroLog: IRegistroLog;
     function GetFotosArticulos: TFotosArticulos;
     function GetUnidadesMedida: TUnidadesMedida;
     function GetConexionPrincipal: TUniConnection;
@@ -77,6 +81,7 @@ type
     procedure HeredarContextoSesion(AOwner: TComponent);
     procedure HeredarPerfilesUsuario(AOwner: TComponent);
     procedure HeredarParametros(AOwner: TComponent);
+    procedure HeredarRegistroLog(AOwner: TComponent);
     procedure HeredarFotosArticulos(AOwner: TComponent);
     procedure HeredarUnidadesMedida(AOwner: TComponent);
     procedure NotificarMensaje(const AMensaje: string;
@@ -109,6 +114,7 @@ type
       read GetPerfilesLectura;
     property ParametrosApp: IParametrosAplicacion read GetParametrosApp;
     property ParametrosCaja: IParametrosCaja read GetParametrosCaja;
+    property RegistroLog: IRegistroLog read GetRegistroLog;
     property FotosArticulos: TFotosArticulos read GetFotosArticulos;
     property UnidadesMedida: TUnidadesMedida read GetUnidadesMedida;
     property ConexionPrincipal: TUniConnection
@@ -124,6 +130,8 @@ type
     procedure AsignarParametros(
       const AParametrosApp: IParametrosAplicacion;
       const AParametrosCaja: IParametrosCaja);
+    procedure AsignarRegistroLog(
+      const ARegistroLog: IRegistroLog);
     // El form empuja el DataSource de su cabecera (dsTablaG); el DM ya
     // no sube a buscarlo con GetOwnerForm. Cada TdmXxx sobreescribe
     // para cablear los MasterSource de sus detalles.
@@ -190,7 +198,7 @@ implementation
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 uses
-  Vcl.Forms, inLibData, inLibMsgComun;
+  Vcl.Forms, inLibData, inLibMsgComun, inLibRegistroLogNulo;
 
 {$R *.dfm}
 
@@ -201,6 +209,7 @@ begin
   HeredarContextoSesion(AOwner);
   HeredarPerfilesUsuario(AOwner);
   HeredarParametros(AOwner);
+  HeredarRegistroLog(AOwner);
   HeredarFotosArticulos(AOwner);
   HeredarUnidadesMedida(AOwner);
   inherited Create(AOwner);
@@ -312,6 +321,25 @@ begin
   end;
 end;
 
+procedure TdmBase.HeredarRegistroLog(AOwner: TComponent);
+var
+  Proveedor: IProveedorRegistroLog;
+begin
+  FRegistroLog := nil;
+  if Supports(AOwner, IProveedorRegistroLog, Proveedor) then
+    FRegistroLog := Proveedor.RegistroLog;
+  if not Assigned(FRegistroLog) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorRegistroLog,
+       Proveedor) then
+    FRegistroLog := Proveedor.RegistroLog;
+  if not Assigned(FRegistroLog) then
+    FRegistroLog := CrearRegistroLogNulo;
+end;
+
 procedure TdmBase.AsignarAuditoriaDatos(
   const AAuditoriaDatos: IServicioAuditoriaDatos);
 begin
@@ -354,6 +382,15 @@ procedure TdmBase.AsignarParametros(
 begin
   FParametrosApp := AParametrosApp;
   FParametrosCaja := AParametrosCaja;
+end;
+
+procedure TdmBase.AsignarRegistroLog(
+  const ARegistroLog: IRegistroLog);
+begin
+  if Assigned(ARegistroLog) then
+    FRegistroLog := ARegistroLog
+  else
+    FRegistroLog := CrearRegistroLogNulo;
 end;
 
 function TdmBase.GetContextoSesion: IContextoSesionAplicacion;
@@ -433,6 +470,11 @@ begin
   Result := FParametrosCaja;
 end;
 
+function TdmBase.GetRegistroLog: IRegistroLog;
+begin
+  Result := FRegistroLog;
+end;
+
 function TdmBase.GetFotosArticulos: TFotosArticulos;
 begin
   Result := FFotosArticulos;
@@ -479,11 +521,11 @@ begin
   begin
     case ASeveridad of
       smdInformacion:
-        inLibLog.Log.LogInfo(AMensaje);
+        FRegistroLog.RegistrarInformacion(AMensaje);
       smdAdvertencia:
-        inLibLog.Log.LogWarning(AMensaje);
+        FRegistroLog.RegistrarAviso(AMensaje);
       smdError:
-        inLibLog.Log.LogError(AMensaje);
+        FRegistroLog.RegistrarError(AMensaje);
     end;
   end;
 end;
@@ -510,7 +552,7 @@ begin
   if Assigned(FOnConfirmarMensaje) then
     Result := FOnConfirmarMensaje(Self, AMensaje)
   else
-    inLibLog.Log.LogWarning(
+    FRegistroLog.RegistrarAviso(
       'Confirmación de datos sin presentador: ' + AMensaje);
 end;
 
@@ -621,7 +663,7 @@ begin
         TUniStoredProc(Comp).BreakExec;
     except
       on E: Exception do
-        inLibLog.Log.LogError('No se pudo cancelar ' + Comp.Name + ': ' +
+        FRegistroLog.RegistrarError('No se pudo cancelar ' + Comp.Name + ': ' +
                               E.Message);
     end;
   end;
@@ -647,10 +689,13 @@ end;
 procedure TdmBase.unqryPerfilesBeforePost(DataSet: TDataSet);
 begin
   ActualizarAuditoria(DataSet);
-  if (Log() <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
-    Log.LogEvento(Self.UnitName, DataSet.Name, 'BeforePost',
-                  'state=' + GetEnumName(TypeInfo(TDataSetState),
-                                          Ord(DataSet.State)));
+  FRegistroLog.RegistrarEvento(
+    Self.UnitName,
+    DataSet.Name,
+    'BeforePost',
+    'state=' + GetEnumName(
+      TypeInfo(TDataSetState),
+      Ord(DataSet.State)));
 end;
 
 // Guarda el maestro empujado por el form; los TdmXxx sobreescriben y
@@ -665,18 +710,24 @@ begin
   // El DM ya no toca la UI: avisa y el form activa su pestania Ficha.
   if Assigned(FOnActivarFicha) then
     FOnActivarFicha(Self);
-  if (Log() <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
-    Log.LogEvento(Self.UnitName, DataSet.Name, 'BeforeInsert', '');
+  FRegistroLog.RegistrarEvento(
+    Self.UnitName,
+    DataSet.Name,
+    'BeforeInsert',
+    '');
 end;
 
 procedure TdmBase.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   AjustarEmpresasAlmacenesDocumento(unqryTablaG.Connection, DataSet);
   ActualizarAuditoria(DataSet);
-  if (Log() <> nil) and Log.IsLogTypeEnabled(ltAvanzado) then
-    Log.LogEvento(Self.UnitName, DataSet.Name, 'BeforePost',
-                  'state=' + GetEnumName(TypeInfo(TDataSetState),
-                                          Ord(DataSet.State)));
+  FRegistroLog.RegistrarEvento(
+    Self.UnitName,
+    DataSet.Name,
+    'BeforePost',
+    'state=' + GetEnumName(
+      TypeInfo(TDataSetState),
+      Ord(DataSet.State)));
 end;
 
 function TdmBase.ObtenerTablaPrincipal: TDataSet;

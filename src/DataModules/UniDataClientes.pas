@@ -73,7 +73,7 @@ implementation
 
 uses
   inLibValoresAutomaticos,
-  inLibLog,
+
   System.Diagnostics,
   inLibMsgArticulos, inLibMsgComun, inLibMsgFacturas,
   inLibMsgVentas;
@@ -157,11 +157,12 @@ const
     swQ := TStopwatch.StartNew;
     try
       qry.Open;
-      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+      RegistroLog.RegistrarRendimiento(
+        TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
     except
       on E: Exception do
       begin
-        inLibLog.Log.LogPerf(TAG,
+        RegistroLog.RegistrarRendimiento(TAG,
           Nombre + ' ERROR=' + E.Message,
           swQ.ElapsedMilliseconds);
         raise;
@@ -180,7 +181,7 @@ begin
   AbrirConTiempo(unqryFormaPago, 'unqryFormaPago');
   AbrirConTiempo(unqryEmpresasBancos, 'unqryEmpresasBancos');
   AbrirConTiempo(unqryTarifas,   'unqryTarifas');
-  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+  RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmClientes.AsegurarHistoriaFacturacionAbierta;
@@ -194,12 +195,12 @@ begin
       unqryFacturasClientes.Open;
     if not unqryFacturasLineasClientes.Active then
       unqryFacturasLineasClientes.Open;
-    inLibLog.Log.LogPerf('Clientes.Lazy',
+    RegistroLog.RegistrarRendimiento('Clientes.Lazy',
       'unqryFacturasClientes+Lineas OK', swQ.ElapsedMilliseconds);
   except
     on E: Exception do
     begin
-      inLibLog.Log.LogPerf('Clientes.Lazy',
+      RegistroLog.RegistrarRendimiento('Clientes.Lazy',
         'unqryFacturasClientes+Lineas ERROR=' + E.Message,
         swQ.ElapsedMilliseconds);
       raise;
@@ -214,12 +215,12 @@ begin
   swQ := TStopwatch.StartNew;
   try
     unqryDepositos.Open;
-    inLibLog.Log.LogPerf('Clientes.Lazy', 'unqryDepositos OK',
+    RegistroLog.RegistrarRendimiento('Clientes.Lazy', 'unqryDepositos OK',
       swQ.ElapsedMilliseconds);
   except
     on E: Exception do
     begin
-      inLibLog.Log.LogPerf('Clientes.Lazy',
+      RegistroLog.RegistrarRendimiento('Clientes.Lazy',
         'unqryDepositos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
       raise;
     end;

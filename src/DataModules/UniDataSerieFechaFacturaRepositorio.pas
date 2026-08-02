@@ -1,0 +1,135 @@
+﻿{******************************************************************************}
+{                                                                              }
+{  Modulo:       UniDataSerieFechaFacturaRepositorio                         }
+{    Tipo:       Adaptador UniDAC                                              }
+{ Version:       1.0.0                                                         }
+{   Fecha:       02/08/2026                                                    }
+{   Autor:       FactuZam                                                      }
+{                                                                              }
+{  Descripcion:                                                                }
+{    Persistencia UniDAC del selector de serie y fecha de factura.             }
+{******************************************************************************}
+unit UniDataSerieFechaFacturaRepositorio;
+
+interface
+
+uses
+  Uni, inLibSerieFechaFacturaPersistenciaIntf;
+
+function CrearRepositorioSerieFechaFacturaUniDAC(
+  AConexion: TUniConnection): IRepositorioSerieFechaFactura;
+
+implementation
+
+uses
+  System.SysUtils, Data.DB;
+
+const
+  SQL_CONSULTAR_SERIES =
+    'SELECT DISTINCT SERIE_CON, DEFAULT_CON FROM fza_contadores ' +
+    'WHERE TIPO_DOC_CON = ''FC'' AND ESACTIVO_CON = ''S'' ' +
+    'ORDER BY DEFAULT_CON DESC';
+  SQL_OBTENER_SERIE_ALMACEN =
+    'SELECT EMPSER FROM fza_empresas_series ' +
+    'WHERE CODIGO_EMP_EMPSER = :EMP AND TIPO_DOC_EMPSER = ''FC'' ' +
+    'AND CODIGO_ALM_EMPSER = :ALM ' +
+    'AND (FECHA_DESDE_EMPSER IS NULL OR FECHA_DESDE_EMPSER <= CURDATE()) ' +
+    'AND (FECHA_HASTA_EMPSER IS NULL OR FECHA_HASTA_EMPSER >= CURDATE()) ' +
+    'LIMIT 1';
+
+type
+  TConsultaSeriesFacturaUniDAC = class(
+    TInterfacedObject,
+    IConsultaSeriesFactura)
+  private
+    FConsulta: TUniQuery;
+  public
+    constructor Create(AConsulta: TUniQuery);
+    destructor Destroy; override;
+    function DataSet: TDataSet;
+  end;
+
+  TRepositorioSerieFechaFacturaUniDAC = class(
+    TInterfacedObject,
+    IRepositorioSerieFechaFactura)
+  private
+    FConexion: TUniConnection;
+  public
+    constructor Create(AConexion: TUniConnection);
+    function ConsultarSeries: IConsultaSeriesFactura;
+    function ObtenerSerieAlmacen(
+      const AEmpresa: string;
+      const AAlmacen: string): string;
+  end;
+
+constructor TConsultaSeriesFacturaUniDAC.Create(AConsulta: TUniQuery);
+begin
+  inherited Create;
+  FConsulta := AConsulta;
+end;
+
+destructor TConsultaSeriesFacturaUniDAC.Destroy;
+begin
+  FreeAndNil(FConsulta);
+  inherited;
+end;
+
+function TConsultaSeriesFacturaUniDAC.DataSet: TDataSet;
+begin
+  Result := FConsulta;
+end;
+
+constructor TRepositorioSerieFechaFacturaUniDAC.Create(
+  AConexion: TUniConnection);
+begin
+  inherited Create;
+  FConexion := AConexion;
+end;
+
+function TRepositorioSerieFechaFacturaUniDAC.ConsultarSeries:
+  IConsultaSeriesFactura;
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := SQL_CONSULTAR_SERIES;
+    oConsulta.Open;
+    Result := TConsultaSeriesFacturaUniDAC.Create(oConsulta);
+  except
+    FreeAndNil(oConsulta);
+    raise;
+  end;
+end;
+
+function TRepositorioSerieFechaFacturaUniDAC.ObtenerSerieAlmacen(
+  const AEmpresa: string;
+  const AAlmacen: string): string;
+var
+  oConsulta: TUniQuery;
+begin
+  Result := '';
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := SQL_OBTENER_SERIE_ALMACEN;
+    oConsulta.ParamByName('EMP').AsString := AEmpresa;
+    oConsulta.ParamByName('ALM').AsString := AAlmacen;
+    oConsulta.Open;
+    if not oConsulta.IsEmpty then
+    begin
+      Result := oConsulta.FieldByName('EMPSER').AsString;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function CrearRepositorioSerieFechaFacturaUniDAC(
+  AConexion: TUniConnection): IRepositorioSerieFechaFactura;
+begin
+  Result := TRepositorioSerieFechaFacturaUniDAC.Create(AConexion);
+end;
+
+end.

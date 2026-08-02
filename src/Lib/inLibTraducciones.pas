@@ -17,7 +17,7 @@ interface
 
 uses
   System.Classes, System.Generics.Collections, System.SyncObjs,
-  Uni, inLibConexionesIntf, inLibTraduccionesIntf;
+  Uni, inLibConexionesIntf, inLibTraduccionesIntf, inLibLogIntf;
 
 type
   TServicioTraducciones = class(
@@ -32,6 +32,7 @@ type
     FTextos: TDictionary<string, string>;
     FTextosInforme: TDictionary<string, string>;
     FCacheCargada: Boolean;
+    FRegistroLog: IRegistroLog;
     function GetIdioma: string;
     function NormalizarIdioma(const AIdioma: string): string;
     function PseudoTraducir(const ATexto: string): string;
@@ -63,7 +64,12 @@ type
     constructor Create(
       const AConexiones: IServicioConexiones;
       const AIdioma: string = IDIOMA_ESPANOL;
-      const AIdiomaBase: string = IDIOMA_ESPANOL);
+      const AIdiomaBase: string = IDIOMA_ESPANOL); overload;
+    constructor Create(
+      const AConexiones: IServicioConexiones;
+      const ARegistroLog: IRegistroLog;
+      const AIdioma: string = IDIOMA_ESPANOL;
+      const AIdiomaBase: string = IDIOMA_ESPANOL); overload;
     destructor Destroy; override;
     procedure EstablecerIdioma(const AIdioma: string);
     procedure Recargar;
@@ -83,7 +89,8 @@ function NormalizarIdiomaAplicacion(
   const AIdioma: string): string;
 function ObtenerIdiomaConfigurado(
   AConexion: TUniConnection;
-  const AUsuario: string): string;
+  const AUsuario: string;
+  const ARegistroLog: IRegistroLog = nil): string;
 function ResolverServicioTraducciones(
   AOwner: TComponent): IServicioTraducciones;
 procedure ActivarTraduccionResourcestrings(
@@ -95,8 +102,8 @@ procedure AplicarTraducciones(
 implementation
 
 uses
-  System.Character, System.SysUtils, System.TypInfo, Vcl.Forms, inLibLog,
-  inLibRegistroResourcestringTraducciones;
+  System.Character, System.SysUtils, System.TypInfo, Vcl.Forms,
+  inLibRegistroResourcestringTraducciones, inLibRegistroLogNulo;
 
 const
   PROPIEDADES_TRADUCIBLES: array[0..3] of string = (
@@ -269,7 +276,22 @@ constructor TServicioTraducciones.Create(
   const AConexiones: IServicioConexiones;
   const AIdioma, AIdiomaBase: string);
 begin
+  Create(
+    AConexiones,
+    CrearRegistroLogNulo,
+    AIdioma,
+    AIdiomaBase);
+end;
+
+constructor TServicioTraducciones.Create(
+  const AConexiones: IServicioConexiones;
+  const ARegistroLog: IRegistroLog;
+  const AIdioma, AIdiomaBase: string);
+begin
   inherited Create;
+  if not Assigned(ARegistroLog) then
+    raise EArgumentNilException.Create('ARegistroLog');
+  FRegistroLog := ARegistroLog;
   FBloqueo := TCriticalSection.Create;
   FTextos := TDictionary<string, string>.Create;
   FTextosInforme := TDictionary<string, string>.Create;
@@ -281,6 +303,7 @@ end;
 
 destructor TServicioTraducciones.Destroy;
 begin
+  FRegistroLog := nil;
   FConexiones := nil;
   FreeAndNil(FTextos);
   FreeAndNil(FTextosInforme);
@@ -368,10 +391,9 @@ begin
         FTextos.Clear;
         FTextosInforme.Clear;
         FCacheCargada := True;
-        if Log() <> nil then
-          Log.LogWarning(
-            'No se pudo cargar el catálogo de traducciones: ' +
-            E.ClassName + ': ' + E.Message);
+        FRegistroLog.RegistrarAviso(
+          'No se pudo cargar el catálogo de traducciones: ' +
+          E.ClassName + ': ' + E.Message);
       end;
     end;
   end;
@@ -450,11 +472,10 @@ begin
           Consulta.Next;
         end;
       end;
-      if Log() <> nil then
-        Log.LogInfo(
-          Format(
-            'Catálogo de traducciones cargado: idioma=%s, textos=%d',
-            [FIdioma, FTextos.Count]));
+      FRegistroLog.RegistrarInformacion(
+        Format(
+          'Catálogo de traducciones cargado: idioma=%s, textos=%d',
+          [FIdioma, FTextos.Count]));
     finally
       FreeAndNil(Consulta);
       FreeAndNil(Conexion);
@@ -808,11 +829,18 @@ end;
 
 function ObtenerIdiomaConfigurado(
   AConexion: TUniConnection;
-  const AUsuario: string): string;
+  const AUsuario: string;
+  const ARegistroLog: IRegistroLog): string;
 var
   Consulta: TUniQuery;
   Idioma: string;
+  Registro: IRegistroLog;
 begin
+  Registro := ARegistroLog;
+  if not Assigned(Registro) then
+  begin
+    Registro := CrearRegistroLogNulo;
+  end;
   Result := IDIOMA_ESPANOL;
   if Assigned(AConexion) and AConexion.Connected then
   begin
@@ -847,10 +875,9 @@ begin
         end;
       except
         on E: Exception do
-          if Log() <> nil then
-            Log.LogWarning(
-              'No se pudo resolver el idioma configurado: ' +
-              E.ClassName + ': ' + E.Message);
+          Registro.RegistrarAviso(
+            'No se pudo resolver el idioma configurado: ' +
+            E.ClassName + ': ' + E.Message);
       end;
     finally
       FreeAndNil(Consulta);

@@ -19,7 +19,8 @@ unit inLibUnidadesMedida;
 interface
 
 uses
-  System.Generics.Collections, System.Generics.Defaults, System.SysUtils, Uni;
+  System.Generics.Collections, System.Generics.Defaults, System.SysUtils, Uni,
+  inLibLogIntf;
 
 type
   TUnidadInfo = class
@@ -37,8 +38,10 @@ type
     FConexion: TUniConnection;
     FUnidades: TObjectDictionary<string, TUnidadInfo>;
     FDecimalesPorDefecto: Integer;
+    FRegistroLog: IRegistroLog;
   public
-    constructor Create;
+    constructor Create; overload;
+    constructor Create(const ARegistroLog: IRegistroLog); overload;
     destructor Destroy; override;
     procedure AsignarConexion(AConexion: TUniConnection);
     // (Re)carga la cache desde fza_unidades_medida. Tolera tabla ausente o
@@ -74,13 +77,26 @@ type
 implementation
 
 uses
-  inLibLog;
+  inLibRegistroLogNulo;
 
 { TUnidadesMedida }
 
 constructor TUnidadesMedida.Create;
 begin
   inherited;
+  FRegistroLog := CrearRegistroLogNulo;
+  FConexion := nil;
+  FUnidades := TObjectDictionary<string, TUnidadInfo>.Create(
+    [doOwnsValues],
+    TIStringComparer.Ordinal);
+  FDecimalesPorDefecto := 0;
+end;
+
+constructor TUnidadesMedida.Create(
+  const ARegistroLog: IRegistroLog);
+begin
+  inherited Create;
+  FRegistroLog := ARegistroLog;
   FConexion := nil;
   // Comparador sin distincion de mayusculas: 'Uds' y 'uds' son la misma unidad.
   FUnidades := TObjectDictionary<string, TUnidadInfo>.Create([doOwnsValues],
@@ -90,6 +106,7 @@ end;
 
 destructor TUnidadesMedida.Destroy;
 begin
+  FRegistroLog := nil;
   FreeAndNil(FUnidades);
   inherited;
 end;
@@ -139,8 +156,8 @@ begin
       // la cache queda vacia y se usan los decimales por defecto.
       on E: Exception do
       begin
-        if Log() <> nil then
-          Log.LogWarning('inLibUnidadesMedida.Cargar: ' + E.Message);
+        FRegistroLog.RegistrarAviso(
+          'inLibUnidadesMedida.Cargar: ' + E.Message);
       end;
     end;
   finally

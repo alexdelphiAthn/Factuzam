@@ -63,7 +63,7 @@ uses
   JvInspector,          // TJvInspector (divider del inspector)
   inLibUser,            // TProfileDicc
   inLibContextoSesionIntf,
-  inLibPerfilesUsuarioIntf;
+  inLibPerfilesUsuarioIntf, inLibLogIntf;
 
 type
   ISolicitudPermisoLayout = interface
@@ -87,11 +87,13 @@ type
     FPerfil: TProfileDicc;
     FDisponible: Boolean;
     FPerfilesLectura: ILectorPerfilesUsuario;
+    FRegistroLog: IRegistroLog;
   public
     constructor Create(
       const AFormKey: string;
       const AContextoSesion: IContextoSesionAplicacion;
-      const APerfilesLectura: ILectorPerfilesUsuario);
+      const APerfilesLectura: ILectorPerfilesUsuario;
+      const ARegistroLog: IRegistroLog = nil);
     destructor  Destroy; override;
     procedure RestaurarGeometria(AForm: TForm);
     procedure RestaurarAlturaPanel(const AClave: string;
@@ -149,7 +151,7 @@ implementation
 
 uses
   Vcl.Dialogs,
-  inLibLog, inLibMsgComun, inLibMsgConfiguracion,
+  inLibMsgComun, inLibMsgConfiguracion,
   cxGridDBDataDefinitions;
 
 // =============================================================================
@@ -159,7 +161,8 @@ uses
 constructor TLayoutLoader.Create(
   const AFormKey: string;
   const AContextoSesion: IContextoSesionAplicacion;
-  const APerfilesLectura: ILectorPerfilesUsuario);
+  const APerfilesLectura: ILectorPerfilesUsuario;
+  const ARegistroLog: IRegistroLog);
 var
   Identidad: TIdentidadSesion;
   iClaves: Integer;
@@ -167,9 +170,12 @@ begin
   inherited Create;
   FFormKey := AFormKey;
   FPerfilesLectura := APerfilesLectura;
+  FRegistroLog := ARegistroLog;
   FPerfil  := nil;
-  Log.LogInfo(Format('TLayoutLoader.Create: formKey="%s" -> GetFormUserProfile',
-                     [AFormKey]));
+  if Assigned(FRegistroLog) then
+    FRegistroLog.RegistrarInformacion(Format(
+      'TLayoutLoader.Create: formKey="%s" -> GetFormUserProfile',
+      [AFormKey]));
   Identidad := AContextoSesion.Identidad;
   inLibUser.GetFormUserProfile(FPerfil, FFormKey, Identidad.Usuario,
     Identidad.Grupo, FPerfilesLectura);
@@ -178,12 +184,15 @@ begin
     iClaves := FPerfil.Count
   else
     iClaves := -1;
-  Log.LogInfo(Format('TLayoutLoader.Create: formKey="%s" disponible=%s claves=%d',
-                     [AFormKey, BoolToStr(FDisponible, True), iClaves]));
+  if Assigned(FRegistroLog) then
+    FRegistroLog.RegistrarInformacion(Format(
+      'TLayoutLoader.Create: formKey="%s" disponible=%s claves=%d',
+      [AFormKey, BoolToStr(FDisponible, True), iClaves]));
 end;
 
 destructor TLayoutLoader.Destroy;
 begin
+  FRegistroLog := nil;
   if Assigned(FPerfil) then
     FreeAndNil(FPerfil);
   inherited;

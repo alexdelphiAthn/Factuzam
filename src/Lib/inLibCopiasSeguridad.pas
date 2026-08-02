@@ -22,9 +22,9 @@ uses
   inLibCopiasSeguridadIntf;
 
 type
-  TServicioCopiasSeguridad = class(
+  TRepositorioCopiasSeguridadUniDAC = class(
     TInterfacedObject,
-    IServicioCopiasSeguridad
+    IRepositorioCopiasSeguridad
   )
   private
     FContextoSesion: IContextoSesionAplicacion;
@@ -59,7 +59,7 @@ type
       const ARutaFichero, AContrasena: string;
       AOnProgreso: TProgresoCopiaSeguridadEvent;
       out AError: string
-    ): Boolean;
+    ): TResultadoCopiaSeguridad;
   end;
 
 implementation
@@ -69,7 +69,7 @@ uses
   inLibBackupWorker,
   inLibCopiasSeguridadReglas;
 
-constructor TServicioCopiasSeguridad.Create(
+constructor TRepositorioCopiasSeguridadUniDAC.Create(
   const AContextoSesion: IContextoSesionAplicacion;
   AConexion: TUniConnection);
 begin
@@ -83,12 +83,12 @@ begin
   FConexion := AConexion;
 end;
 
-function TServicioCopiasSeguridad.EsAdministrador: Boolean;
+function TRepositorioCopiasSeguridadUniDAC.EsAdministrador: Boolean;
 begin
   Result := FContextoSesion.Identidad.EsAdministrador;
 end;
 
-procedure TServicioCopiasSeguridad.ValidarConexion;
+procedure TRepositorioCopiasSeguridadUniDAC.ValidarConexion;
 begin
   if not Assigned(FConexion) then
   begin
@@ -97,7 +97,7 @@ begin
   end;
 end;
 
-procedure TServicioCopiasSeguridad.ValidarContrasena(
+procedure TRepositorioCopiasSeguridadUniDAC.ValidarContrasena(
   const AContrasena: string);
 begin
   if Trim(AContrasena) = '' then
@@ -107,20 +107,20 @@ begin
   end;
 end;
 
-function TServicioCopiasSeguridad.ModoCreacion:
+function TRepositorioCopiasSeguridadUniDAC.ModoCreacion:
   TModoProteccionCopia;
 begin
   Result := TPoliticaCopiasSeguridad.ModoCreacion(
     EsAdministrador);
 end;
 
-function TServicioCopiasSeguridad.ExtensionCreacion: string;
+function TRepositorioCopiasSeguridadUniDAC.ExtensionCreacion: string;
 begin
   Result := TPoliticaCopiasSeguridad.ExtensionCreacion(
     EsAdministrador);
 end;
 
-function TServicioCopiasSeguridad.PuedeRestaurar(
+function TRepositorioCopiasSeguridadUniDAC.PuedeRestaurar(
   const ARutaFichero: string): Boolean;
 begin
   Result := TPoliticaCopiasSeguridad.PuedeRestaurar(
@@ -128,14 +128,14 @@ begin
     ARutaFichero);
 end;
 
-function TServicioCopiasSeguridad.RequiereContrasena(
+function TRepositorioCopiasSeguridadUniDAC.RequiereContrasena(
   const ARutaFichero: string): Boolean;
 begin
   Result := TPoliticaCopiasSeguridad.EsCopiaCifrada(
     ARutaFichero);
 end;
 
-procedure TServicioCopiasSeguridad.IniciarCopia(
+procedure TRepositorioCopiasSeguridadUniDAC.IniciarCopia(
   const ARutaFichero, AContrasena: string;
   AOnProgreso: TProgresoCopiaSeguridadEvent;
   AOnFinalizar: TFinalizarCopiaSeguridadEvent;
@@ -170,7 +170,7 @@ begin
   end;
 end;
 
-procedure TServicioCopiasSeguridad.IniciarRestauracion(
+procedure TRepositorioCopiasSeguridadUniDAC.IniciarRestauracion(
   const ARutaFichero, AContrasena: string;
   AOnProgreso: TProgresoCopiaSeguridadEvent;
   AOnFinalizar: TFinalizarCopiaSeguridadEvent;
@@ -210,10 +210,10 @@ begin
   end;
 end;
 
-function TServicioCopiasSeguridad.CrearCopia(
+function TRepositorioCopiasSeguridadUniDAC.CrearCopia(
   const ARutaFichero, AContrasena: string;
   AOnProgreso: TProgresoCopiaSeguridadEvent;
-  out AError: string): Boolean;
+  out AError: string): TResultadoCopiaSeguridad;
 var
   bEncriptar: Boolean;
 begin

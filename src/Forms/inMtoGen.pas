@@ -394,7 +394,7 @@ uses inLibData,
      inLibConexionesIntf,
      inLibUnitForm,
      inLibShowMto,
-     inLibLog,
+
      inMtoModalGenImpSave,
      inMtoModalGuardarFiltro,
      inMtoModalGestionFiltros,
@@ -1111,7 +1111,7 @@ begin
     except
       on E: Exception do
       begin
-        inliblog.Log.LogError('No se pudo crear conexión propia para ' +
+        RegistroLog.RegistrarError('No se pudo crear conexión propia para ' +
           Self.Name + ': ' + E.Message +
           '. Se sigue usando dmConn.conUni.');
         FConn := nil;
@@ -1137,7 +1137,7 @@ begin
     end;
   end;
   inherited;
-  inLibLog.Log.LogPerf(Self.Name + '.CrearTablaPrincipal',
+  RegistroLog.RegistrarRendimiento(Self.Name + '.CrearTablaPrincipal',
     Format('CrearDM=%d ms | FConn.Connect=%d ms | ReasignarConexion=%d ms',
            [msCrearDM, msFConn, msReasignar]),
     swTotal.ElapsedMilliseconds);
@@ -1280,11 +1280,11 @@ begin
       if Assigned(unqry) then
         unqry.EnableControls;
       if ErrMsg = '' then
-        inLibLog.Log.LogPerf('Carga/async', Self.Name + ' | OK',
+        RegistroLog.RegistrarRendimiento('Carga/async', Self.Name + ' | OK',
           sw.ElapsedMilliseconds)
       else
       begin
-        inLibLog.Log.LogPerf('Carga/async',
+        RegistroLog.RegistrarRendimiento('Carga/async',
           Self.Name + ' | error=' + ErrMsg,
           sw.ElapsedMilliseconds);
         // No mostramos ShowMessage aqui — molesta si pasa al abrir
@@ -1301,14 +1301,14 @@ begin
           dmDat.AbrirDetalles;
         except
           on E: Exception do
-            inLibLog.Log.LogError(
+            RegistroLog.RegistrarError(
               '[AbrirDetalles] ' + Self.Name + ': ' + E.Message);
         end;
       // Diagnostico defensivo: cazar columnas ES* tipadas como numericas
       // antes de que el Refresh del navegador rompa con EConvertError
       // 'N' is not a valid floating point value. Solo loguea, no aborta.
       inLibDiag.DiagnosticarCamposBooleanos(
-        unqry, Self.Name);
+        unqry, Self.Name, RegistroLog);
       // (b) Enriquecer query con guias de grid (LEFT JOIN runtime)
       FGestorGuias.Aplicar(unqry);
       // (c) Revincular grid solo si lo soltamos antes (yaActiva = False).
@@ -1323,7 +1323,7 @@ begin
           dmDat.ReactivarControlesTrasAbrir;
         except
           on E: Exception do
-            inLibLog.Log.LogError(
+            RegistroLog.RegistrarError(
               '[ReactivarControlesTrasAbrir] ' + Self.Name + ': ' + E.Message);
         end;
       // (e) Restaurar posicion del cursor guardada en el perfil.
@@ -1364,7 +1364,7 @@ begin
     if unqry.Active then
       unqry.Close;
     unqry.SQL.Text := InyectarFiltroSql(unqry.SQL.Text, sFiltro);
-    inLibLog.Log.LogInfo(Self.Name +
+    RegistroLog.RegistrarInformacion(Self.Name +
       ': precarga restringida por usuario (appRestringirEmpAlmCaja)');
   end;
 end;
@@ -1405,19 +1405,19 @@ begin
       // Diagnostico defensivo: cazar columnas ES* tipadas como numericas
       // antes de que el Refresh del navegador rompa con EConvertError.
       inLibDiag.DiagnosticarCamposBooleanos(
-        unqry, Self.Name);
+        unqry, Self.Name, RegistroLog);
       // Enriquecer con guias de grid (LEFT JOIN runtime)
       FGestorGuias.Aplicar(unqry);
       // Restaurar posicion del cursor guardada en el perfil
       FGestorPerfiles.RestaurarFoco(cxGrdDBTabPrin);
       // Hook de borrar (Delete -> Desactivar). Idempotente.
       InstalarGuardianBorrado;
-      inLibLog.Log.LogPerf('Carga/sync', Self.Name + ' | OK',
+      RegistroLog.RegistrarRendimiento('Carga/sync', Self.Name + ' | OK',
         sw.ElapsedMilliseconds);
     except
       on E: Exception do
       begin
-        inLibLog.Log.LogPerf('Carga/sync',
+        RegistroLog.RegistrarRendimiento('Carga/sync',
           Self.Name + ' | error=' + E.Message,
           sw.ElapsedMilliseconds);
         raise;
@@ -1458,7 +1458,7 @@ begin
     // tarea sigue usando el data module y FConn, y liberarlos provoca
     // AVs y cuelgues del cierre. Se sueltan del Owner y NO se liberan:
     // fuga controlada que el SO recupera al terminar el proceso.
-    inliblog.Log.LogWarning('Tareas de fondo aun vivas al destruir "' +
+    RegistroLog.RegistrarAviso('Tareas de fondo aun vivas al destruir "' +
                             Self.Name + '": se dejan sin liberar su ' +
                             'data module y su conexion.');
     // tdmDataModule esta declarado como TObject: cast a TComponent para
@@ -1489,13 +1489,13 @@ begin
       // Disconnect en pool no deberia fallar, pero si lo hace no queremos
       // que el destructor lance.
       on E: Exception do
-        if inliblog.Log() <> nil then
-          inliblog.Log.LogWarning(
+        if RegistroLog <> nil then
+          RegistroLog.RegistrarAviso(
             'MtoGen.Destroy: Disconnect fallo: ' + E.Message);
     end;
     FreeAndNil(FConn);
   end;
-  inliblog.Log.LogInfo('Ventana de mantenimiento: ' +
+  RegistroLog.RegistrarInformacion('Ventana de mantenimiento: ' +
                                                    Self.Caption + ' Cerrada');
   inherited;
 end;
@@ -1556,10 +1556,10 @@ begin
   // Descubrir el anfitrion UNA vez; el resto de metodos usa el campo.
   // Fuera de fzam (pruebas, proyectos independientes) no existe.
   if not Supports(Self.Owner, IAnfitrionMantenimiento, FAnfitrionMto) then
-    inliblog.Log.LogInfo(
+    RegistroLog.RegistrarInformacion(
       'Sin anfitrion de mantenimiento (standalone): ' + Self.ClassName);
   FGestorTareas := TGestorTareasMto.Create(
-    Self, AplicacionCerrando);
+    Self, AplicacionCerrando, RegistroLog);
   FGestorArticulos := TGestorArticulosMto.Create(
     dsTablaG, ResolverArtSkuActivo,
     DataSourcesParaFoto, FotoArticuloVisible,
@@ -1568,10 +1568,11 @@ begin
   FGestorGuias := TGestorGuiasGridMto.Create(
     Self, cxgrdPrincipal, cxGrdDBTabPrin,
     InformesGuiasCache, GetConexionTrabajo,
-    ObtenerConsultaGuias, EjecutarModalGuias);
+    ObtenerConsultaGuias, EjecutarModalGuias, RegistroLog);
   FGestorPerfiles := TGestorPerfilesMto.Create(
     Self, dsTablaG, lblTablaOrigen,
     PerfilesLectura, PerfilesEscritura,
+    ConfiguracionCampos, RegistroLog,
     SolicitarDestinoPerfil, RecogerPerfilesParticulares,
     ResetearGridPerfil, FGestorGuias.BorrarGuias);
   FGestorFiltros := TGestorFiltrosMto.Create(
@@ -1582,7 +1583,7 @@ begin
   btnCargarCaptions.Enabled := False;
   Self.HandleNeeded; //da problemas
   nvNavegador.Buttons.OnButtonClick := NavegadorButtonClick;
-  inliblog.Log.LogInfo('Ventana de mantenimiento: ' +
+  RegistroLog.RegistrarInformacion('Ventana de mantenimiento: ' +
                                                      Self.Caption + ' Abierta');
   tsFichCab := nil;
   tsFichBut := nil;
@@ -1603,7 +1604,7 @@ begin
     rbBBDD.Checked := false;
     rbGrid.Checked := true;
   end;
-  inLibLog.Log.LogPerf(Self.Name + '.FormCreate',
+  RegistroLog.RegistrarRendimiento(Self.Name + '.FormCreate',
     'ProcesarPerfiles=' + IntToStr(msProcesarPerfiles) + ' ms',
     swTotal.ElapsedMilliseconds);
 end;

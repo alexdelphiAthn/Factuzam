@@ -26,7 +26,8 @@ uses
   cxButtonEdit, cxSpinEdit, Vcl.ExtCtrls, inMtoFrmBase, Uni,
   cxDropDownEdit, Vcl.Menus, Vcl.StdCtrls, cxButtons,
   JvComponentBase, JvInspector, JvExControls, System.Actions,
-  Vcl.ActnList, dxSkinsCore, System.UITypes, inLibParametrosIntf;
+  Vcl.ActnList, dxSkinsCore, System.UITypes, inLibParametrosIntf,
+  inLibAppParamPersistenciaIntf;
 
 type
   PBoolean = ^Boolean;
@@ -69,6 +70,7 @@ type
     FStrs             : TList<PString>;
     FValoresOriginales: TDictionary<string, string>;
     FParametrosEdicion: IParametrosEdicion;
+    FRepositorioPersistencia: IRepositorioAppParam;
     FCargandoParametros: Boolean;
     FIdiomaInspectorAnterior: string;
     FProcesandoIdioma: Boolean;
@@ -125,15 +127,17 @@ implementation
 {$R *.dfm}
 
 uses
-  StrUtils, inLibLog, Vcl.Printers,
+  StrUtils, Vcl.Printers,
    dxSkinsLookAndFeelPainter,
    dxSkinsDefaultPainters, dxSkinsForm,
   FileCtrl, inLibPathTokens,               // SelectDirectory
    inLibLayoutForm, inLibVerifactu, inLibFactuzamApi,
    inLibMsgConfiguracion, inLibTraducciones, inLibTraduccionesIntf,
-   inLibTraduccionesDescarga, inMtoModalDescargaTraduccion;
+   inLibTraduccionesDescarga, inMtoModalDescargaTraduccion,
+   inLibLogIntf;
 
 procedure RegistrarCambioConfiguracionVerifactuSeguro(
+  const ARegistroLog: IRegistroLog;
   const AParametrosApp: IParametrosAplicacion;
   AConexion: TUniConnection;
   const AUsuario: string;
@@ -146,8 +150,9 @@ begin
         'Cambio de configuración Verifactu', ADetalle);
   except
     on E: Exception do
-      Log.LogError('No se pudo registrar el cambio de configuración ' +
-        'Verifactu: ' + E.Message);
+      ARegistroLog.RegistrarError(
+        'No se pudo registrar el cambio de configuración Verifactu: ' +
+        E.Message);
   end;
 end;
 
@@ -175,6 +180,8 @@ begin
   if not Supports(Owner, IProveedorParametrosEdicion, Proveedor) then
     raise Exception.Create(SErrorProveedorEdicionParametrosNoConfigurado);
   FParametrosEdicion := Proveedor.ParametrosAppEdicion;
+  FRepositorioPersistencia := ContextoRepositoriosPantalla.Configuracion.
+    CrearRepositorioAppParam;
   if not Assigned(FParametrosEdicion) then
     raise Exception.Create(
       SErrorParametrosAplicacionEditablesNoConfigurados);
@@ -221,6 +228,7 @@ end;
 procedure TfrmMtoAppParam.FormDestroy(Sender: TObject);
 begin
   FParametrosEdicion := nil;
+  FRepositorioPersistencia := nil;
   LimpiarMemoria;
   FreeAndNil(FBools);
   FreeAndNil(FInts);
@@ -424,39 +432,28 @@ procedure TfrmMtoAppParam.GetIdiomasList(
   Sender: TJvCustomInspectorItem;
   Strings: TStrings);
 var
-  Idioma: string;
-  qry: TUniQuery;
+  arrIdiomas: TCadenasAppParam;
+  sIdioma: string;
 begin
   Strings.Clear;
   Strings.Add(IDIOMA_ESPANOL);
   Strings.Add(IDIOMA_INGLES);
   Strings.Add(IDIOMA_CATALAN);
   Strings.Add(IDIOMA_CHINO_SIMPLIFICADO);
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text :=
-      'SELECT DISTINCT IDIOMA_TRAD ' +
-      '  FROM fza_traducciones ' +
-      ' WHERE ESACTIVO_TRAD = ''S'' ' +
-      ' ORDER BY IDIOMA_TRAD';
-    qry.Open;
-    while not qry.Eof do
+  arrIdiomas := FRepositorioPersistencia.ListarIdiomas;
+  for sIdioma in arrIdiomas do
+  begin
+    if (Trim(sIdioma) <> '') and
+       (Strings.IndexOf(Trim(sIdioma)) < 0) then
     begin
-      Idioma := Trim(
-        qry.FieldByName('IDIOMA_TRAD').AsString);
-      if (Idioma <> '') and
-         (Strings.IndexOf(Idioma) < 0) then
-        Strings.Add(Idioma);
-      qry.Next;
+      Strings.Add(Trim(sIdioma));
     end;
-  finally
-    FreeAndNil(qry);
   end;
   if Strings.IndexOf(IDIOMA_PSEUDO) < 0 then
+  begin
     Strings.Add(IDIOMA_PSEUDO);
+  end;
 end;
-
 function TfrmMtoAppParam.EsIdiomaDescargable(
   const AIdioma: string): Boolean;
 begin
@@ -545,7 +542,7 @@ begin
           begin
             bAplicado := False;
             sError := E.Message;
-            Log.LogError(
+            RegistroLog.RegistrarError(
               'Aplicación del idioma ' + sIdioma + ': ' + E.Message);
           end;
         end;
@@ -644,56 +641,36 @@ begin
 end;
 
 procedure TfrmMtoAppParam.GetTemporadasList(
-  Sender: TJvCustomInspectorItem; Strings: TStrings);
+  Sender: TJvCustomInspectorItem;
+  Strings: TStrings);
 var
-  qry: TUniQuery;
+  arrTemporadas: TCadenasAppParam;
+  sTemporada: string;
 begin
   Strings.Clear;
   Strings.Add('');
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text :=
-      'SELECT PV FROM fza_propiedades_valores' +
-      ' WHERE ID_PROP_PV = ''TEMPORADA''' +
-      '   AND ESACTIVO_PV = ''S''' +
-      ' ORDER BY PV';
-    qry.Open;
-    while not qry.Eof do
-    begin
-      Strings.Add(qry.FieldByName('PV').AsString);
-      qry.Next;
-    end;
-  finally
-    FreeAndNil(qry);
+  arrTemporadas := FRepositorioPersistencia.ListarTemporadas;
+  for sTemporada in arrTemporadas do
+  begin
+    Strings.Add(sTemporada);
   end;
 end;
 
 procedure TfrmMtoAppParam.GetNifsEmpresasList(
-  Sender: TJvCustomInspectorItem; Strings: TStrings);
+  Sender: TJvCustomInspectorItem;
+  Strings: TStrings);
 var
-  qry: TUniQuery;
+  arrNifs: TCadenasAppParam;
+  sNif: string;
 begin
   Strings.Clear;
   Strings.Add('');
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text :=
-      'SELECT DISTINCT NIF_EMP FROM fza_empresas' +
-      ' WHERE IFNULL(NIF_EMP, '''') <> ''''' +
-      ' ORDER BY NIF_EMP';
-    qry.Open;
-    while not qry.Eof do
-    begin
-      Strings.Add(qry.FieldByName('NIF_EMP').AsString);
-      qry.Next;
-    end;
-  finally
-    FreeAndNil(qry);
+  arrNifs := FRepositorioPersistencia.ListarNifsEmpresas;
+  for sNif in arrNifs do
+  begin
+    Strings.Add(sNif);
   end;
 end;
-
 procedure TfrmMtoAppParam.InspectorItemEdit(Sender: TJvCustomInspector;
   Item: TJvCustomInspectorItem; var DisplayStr: string);
 var
@@ -767,7 +744,8 @@ end;
 procedure TfrmMtoAppParam.CargarParametros(Grid: TJvInspector;
                                            const pUsuario, pGrupo: string);
 var
-  qry     : TUniQuery;
+  Valores: TValoresPerfilAppParam;
+  ValorPerfil: TValorPerfilAppParam;
   SubKey  : string;
   ValorStr: string;
   ItemData: TJvCustomInspectorItem;
@@ -814,22 +792,16 @@ begin
     bTokenComun := False;
     bReferenciaComun := False;
 
-    qry := TUniQuery.Create(nil);
+    Valores := FRepositorioPersistencia.CargarValores(
+      pUsuario,
+      pGrupo,
+      'frmMtoAppParam');
+    Grid.BeginUpdate;
     try
-      qry.Connection := ConexionPrincipal;
-      qry.SQL.Text   :=
-        'CALL PRC_GETPERFILFORMULARIO(:p_usuario, :p_grupo, :p_formulario)';
-      qry.ParamByName('p_usuario').AsString    := pUsuario;
-      qry.ParamByName('p_grupo').AsString      := pGrupo;
-      qry.ParamByName('p_formulario').AsString := 'frmMtoAppParam';
-      qry.Open;
-
-      Grid.BeginUpdate;
-      try
-        while not qry.Eof do
-        begin
-          SubKey   := qry.FieldByName('SUBKEY_USUPER').AsString;
-          ValorStr := qry.FieldByName('VALUE_USUPER').AsString;
+      for ValorPerfil in Valores do
+      begin
+          SubKey := ValorPerfil.Subclave;
+          ValorStr := ValorPerfil.Valor;
           if SameText(SubKey, 'appApiUrl') then
             bUrlComun := Trim(ValorStr) <> ''
           else if SameText(SubKey, 'appApiToken') then
@@ -859,28 +831,24 @@ begin
             except
               // El resto de parametros se sigue aplicando.
               on E: Exception do
-                inLibLog.Log.LogWarning(
+                RegistroLog.RegistrarAviso(
                   'AppParam: no se pudo aplicar el parametro "' +
                   SubKey + '": ' + E.Message);
             end;
           end;
-          qry.Next;
-        end;
-        if (Trim(sUrlFotos) = '') and (Trim(sUrlRecuentos) = '') then
-          sUrlFotos := cUrlFactuzamApiDefecto;
-        AplicarValorHistorico('appApiUrl', sUrlFotos, sUrlRecuentos,
-          bUrlComun);
-        AplicarValorHistorico('appApiToken', sTokenFotos, sTokenRecuentos,
-          bTokenComun);
-        AplicarValorHistorico('appApiReferencia', sReferenciaFotos,
-          sReferenciaRecuentos, bReferenciaComun);
-      finally
-        Grid.EndUpdate;
       end;
-      CapturarValoresOriginales;
+      if (Trim(sUrlFotos) = '') and (Trim(sUrlRecuentos) = '') then
+        sUrlFotos := cUrlFactuzamApiDefecto;
+      AplicarValorHistorico('appApiUrl', sUrlFotos, sUrlRecuentos,
+        bUrlComun);
+      AplicarValorHistorico('appApiToken', sTokenFotos, sTokenRecuentos,
+        bTokenComun);
+      AplicarValorHistorico('appApiReferencia', sReferenciaFotos,
+        sReferenciaRecuentos, bReferenciaComun);
     finally
-      FreeAndNil(qry);
+      Grid.EndUpdate;
     end;
+    CapturarValoresOriginales;
     FIdiomaInspectorAnterior := NormalizarIdiomaAplicacion(
       ValorParametroInspector('appIdioma', IDIOMA_ESPANOL));
   finally
@@ -890,7 +858,7 @@ end;
 
 procedure TfrmMtoAppParam.btnGuardarClick(Sender: TObject);
 var
-  qry           : TUniQuery;
+  ValoresGuardar: TValoresPerfilAppParam;
   sUsuarioGrupo : string;
   i, j          : Integer;
   NodoPrincipal : TJvCustomInspectorItem;
@@ -911,16 +879,7 @@ begin
   IgnoradosCount := 0;
   TemaAnterior := ParametrosApp.GetString('appTema');
   CambioVerifactu := False;
-
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text   :=
-      'CALL PRC_SETPERFILFORMULARIO(:p_usuario_grupo, ' +
-      '                             :p_formulario,    ' +
-      '                             :p_subkey,        ' +
-      '                             :p_value)';
-
+  SetLength(ValoresGuardar, 0);
     for i := 0 to JvInspector1.Root.Count - 1 do
     begin
       NodoPrincipal := JvInspector1.Root.Items[i];
@@ -953,21 +912,32 @@ begin
         PuedeEditar := UsuarioPuedeEditarParametro(ParamItem.Name);
         if CambioReal and PuedeEditar then
         begin
-          qry.ParamByName('p_usuario_grupo').AsString := sUsuarioGrupo;
-          qry.ParamByName('p_formulario').AsString    := 'frmMtoAppParam';
-          qry.ParamByName('p_subkey').AsString        := ParamItem.Name;
-          qry.ParamByName('p_value').AsString         := ValorAGuardar;
-          qry.Execute;
+          SetLength(ValoresGuardar, Length(ValoresGuardar) + 1);
+          ValoresGuardar[High(ValoresGuardar)].Subclave :=
+            ParamItem.Name;
+          ValoresGuardar[High(ValoresGuardar)].Valor :=
+            ValorAGuardar;
           Inc(GuardadosCount);
           if StartsText('appVerifactu', ParamItem.Name) then
             CambioVerifactu := True;
-          FValoresOriginales.AddOrSetValue(ParamItem.Name, ValorAGuardar);
         end
         else if CambioReal and (not PuedeEditar) then
           Inc(IgnoradosCount);
       end;
     end;
-
+    if Length(ValoresGuardar) > 0 then
+    begin
+      FRepositorioPersistencia.GuardarValores(
+        sUsuarioGrupo,
+        'frmMtoAppParam',
+        ValoresGuardar);
+      for var ValorGuardado in ValoresGuardar do
+      begin
+        FValoresOriginales.AddOrSetValue(
+          ValorGuardado.Subclave,
+          ValorGuardado.Valor);
+      end;
+    end;
     if GuardadosCount > 0 then
     begin
       ShowMessage(Format(SInfoParametrosGuardados,
@@ -993,7 +963,9 @@ begin
         end;
       end;
       if CambioVerifactu then
-        RegistrarCambioConfiguracionVerifactuSeguro(ParametrosApp,
+        RegistrarCambioConfiguracionVerifactuSeguro(
+          RegistroLog,
+          ParametrosApp,
           ConexionPrincipal,
           IdentidadSesion.Usuario,
           'Parámetros guardados para ' + sUsuarioGrupo + ': ' +
@@ -1007,9 +979,6 @@ begin
                          [IgnoradosCount]))
     else
       ShowMessage(SInfoSinCambiosParametros);
-  finally
-    FreeAndNil(qry);
-  end;
 end;
 
 // -----------------------------------------------------------------------
@@ -1060,7 +1029,7 @@ end;
 
 procedure TfrmMtoAppParam.FormShow(Sender: TObject);
 var
-  qry: TUniQuery;
+  Ambitos: TCadenasAppParam;
   s: string;
 begin
   ConstruirInspector;
@@ -1075,24 +1044,13 @@ begin
   // grupos del sistema (y pueden editarla).
   if IdentidadSesion.GrupoRaiz = 'S' then
   begin
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := ConexionPrincipal;
-      qry.SQL.Text :=
-        'SELECT ''Todos'' AS S ' +
-        ' UNION SELECT GRUPO_USUGRP FROM fza_usuarios_grupos ' +
-        ' UNION SELECT USUARIO_USU FROM fza_usuarios ' +
-        ' ORDER BY S';
-      qry.Open;
-      while not qry.Eof do
+    Ambitos := FRepositorioPersistencia.ListarAmbitos;
+    for s in Ambitos do
+    begin
+      if cmbGrupoUsuario.Properties.Items.IndexOf(s) < 0 then
       begin
-        s := qry.Fields[0].AsString;
-        if cmbGrupoUsuario.Properties.Items.IndexOf(s) < 0 then
-          cmbGrupoUsuario.Properties.Items.Add(s);
-        qry.Next;
+        cmbGrupoUsuario.Properties.Items.Add(s);
       end;
-    finally
-      FreeAndNil(qry);
     end;
   end;
   cmbGrupoUsuario.Visible := True;
@@ -1211,24 +1169,17 @@ end;
 
 procedure TfrmMtoAppParam.btnChangeIdClick(Sender: TObject);
 var
-  qry     : TUniQuery;
+  Ambitos: TCadenasAppParam;
   usuarios: TStringList;
+  sAmbito: string;
   sUsuario: string;
 begin
-  qry      := TUniQuery.Create(nil);
   usuarios := TStringList.Create;
   try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text   :=
-      'SELECT ''Todos'' AS S ' +
-      ' UNION SELECT GRUPO_USUGRP FROM fza_usuarios_grupos ' +
-      ' UNION SELECT USUARIO_USU FROM fza_usuarios ' +
-      ' ORDER BY S';
-    qry.Open;
-    while not qry.Eof do
+    Ambitos := FRepositorioPersistencia.ListarAmbitos;
+    for sAmbito in Ambitos do
     begin
-      usuarios.Add(qry.Fields[0].AsString);
-      qry.Next;
+      usuarios.Add(sAmbito);
     end;
 
     if usuarios.Count = 0 then
@@ -1255,7 +1206,6 @@ begin
     end;
   finally
     FreeAndNil(usuarios);
-    FreeAndNil(qry);
   end;
 end;
 

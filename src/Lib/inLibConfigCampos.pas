@@ -19,7 +19,7 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
-  DBAccess, Uni;
+  DBAccess, Uni, inLibConfigCamposIntf, inLibLogIntf;
 
 type
   TConfigCampoItem = record
@@ -31,7 +31,7 @@ type
     Visible: Boolean;
   end;
 
-  TConfigCamposCache = class
+  TConfigCamposCache = class(TInterfacedObject, IConfiguracionCampos)
   private
     // Diccionario indexado por CAMPO (sin tabla) para busqueda rapida.
     // Si hay duplicados entre tablas, el ultimo gana; para resolucion
@@ -41,8 +41,12 @@ type
     FPorTablaCampo: TDictionary<string, TConfigCampoItem>;
     FConexion: TUniConnection;
     FCargada: Boolean;
+    FRegistroLog: IRegistroLog;
+    function GetCargada: Boolean;
   public
-    constructor Create(AConexion: TUniConnection);
+    constructor Create(
+      AConexion: TUniConnection;
+      const ARegistroLog: IRegistroLog);
     destructor Destroy; override;
     procedure Precargar(AConn: TUniConnection = nil);
     procedure Invalidar;
@@ -56,38 +60,17 @@ type
     property Cargada: Boolean read FCargada;
   end;
 
-function oConfigCampos: TConfigCamposCache;
-procedure InicializarConfigCampos(AConexion: TUniConnection);
-procedure LiberarConfigCampos;
-
 implementation
 
-uses
-  inLibLog;
-
-var
-  FConfigCampos: TConfigCamposCache;
-
-function oConfigCampos: TConfigCamposCache;
-begin
-  Result := FConfigCampos;
-end;
-
-procedure LiberarConfigCampos;
-begin
-  FreeAndNil(FConfigCampos);
-end;
-
-procedure InicializarConfigCampos(AConexion: TUniConnection);
-begin
-  LiberarConfigCampos;
-  FConfigCampos := TConfigCamposCache.Create(AConexion);
-end;
-
-constructor TConfigCamposCache.Create(AConexion: TUniConnection);
+constructor TConfigCamposCache.Create(
+  AConexion: TUniConnection;
+  const ARegistroLog: IRegistroLog);
 begin
   inherited Create;
+  if not Assigned(ARegistroLog) then
+    raise EArgumentNilException.Create('ARegistroLog');
   FConexion := AConexion;
+  FRegistroLog := ARegistroLog;
   FPorCampo := TDictionary<string, TConfigCampoItem>.Create;
   FPorTablaCampo := TDictionary<string, TConfigCampoItem>.Create;
   FCargada := False;
@@ -95,6 +78,7 @@ end;
 
 destructor TConfigCamposCache.Destroy;
 begin
+  FRegistroLog := nil;
   FreeAndNil(FPorCampo);
   FreeAndNil(FPorTablaCampo);
   inherited;
@@ -149,14 +133,17 @@ begin
       FreeAndNil(qry);
     end;
     FCargada := True;
-    Log.LogInfo(Format('ConfigCamposCache: precargados %d campos',
-      [FPorTablaCampo.Count]));
+    FRegistroLog.RegistrarInformacion(
+      Format(
+        'ConfigCamposCache: precargados %d campos',
+        [FPorTablaCampo.Count]));
   except
     on E: Exception do
     begin
       FPorCampo.Clear;
       FPorTablaCampo.Clear;
-      Log.LogError('ConfigCamposCache.Precargar: ' + E.Message);
+      FRegistroLog.RegistrarError(
+        'ConfigCamposCache.Precargar: ' + E.Message);
     end;
   end;
 end;
@@ -216,9 +203,9 @@ begin
     Result := item.AnchoColumna;
 end;
 
-initialization
-
-finalization
-  LiberarConfigCampos;
+function TConfigCamposCache.GetCargada: Boolean;
+begin
+  Result := FCargada;
+end;
 
 end.

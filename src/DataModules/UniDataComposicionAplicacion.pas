@@ -27,6 +27,9 @@ uses
   inLibAuditoriaDatosIntf,
   inLibMonitorSQLIntf,
   inLibLogIntf,
+  inLibConfigCamposIntf,
+  inLibConfigCampos,
+  inLibRepositoriosPantallaIntf,
   inLibParametrosIntf,
   inLibPerfilesUsuarioIntf,
   inLibFiltrosGuardadosIntf,
@@ -45,6 +48,10 @@ type
     FContextoSesion: IContextoSesionAplicacion;
     FRegistroLog: IRegistroLog;
     FRegistroMonitorSQL: IRegistroMonitorSQL;
+    FConfigCampos: IConfiguracionCampos;
+    FConfigCamposCarga: TConfigCamposCache;
+    FFabricaContextosRepositorios:
+      IFabricaContextosRepositoriosPantalla;
     FDmConn: TdmConn;
     FDmPerfiles: TDataModule;
     FDmFiltros: TDataModule;
@@ -62,7 +69,7 @@ type
     FUnidades: TUnidadesMedida;
     FRegistroPantallas: TfzaWinF;
     FGestorExcepciones: IGestorExcepcionesAplicacion;
-    FOperaciones: ICoordinadorOperacionesAplicacion;
+    FOperaciones: ICasoUsoCopiasSeguridad;
     FVentasWsCola: TObject;
     FProcesosSegundoPlanoIniciados: Boolean;
     FCerrada: Boolean;
@@ -98,6 +105,11 @@ type
     property AuditoriaDatos: IServicioAuditoriaDatos
       read FAuditoriaDatos;
     property MonitorSQL: IServicioMonitorSQL read FMonitorSQL;
+    property ConfiguracionCampos: IConfiguracionCampos
+      read FConfigCampos;
+    property FabricaContextosRepositoriosPantalla:
+      IFabricaContextosRepositoriosPantalla
+      read FFabricaContextosRepositorios;
     property ParametrosApp: IParametrosAplicacion
       read FServiciosParametrosApp.Lectura;
     property ParametrosCaja: IParametrosCaja
@@ -118,7 +130,7 @@ type
     property RegistroPantallas: TfzaWinF read FRegistroPantallas;
     property GestorExcepciones: IGestorExcepcionesAplicacion
       read FGestorExcepciones;
-    property Operaciones: ICoordinadorOperacionesAplicacion
+    property Operaciones: ICasoUsoCopiasSeguridad
       read FOperaciones;
   end;
 
@@ -133,11 +145,9 @@ uses
   inLibAuditoriaDatos,
   inLibMonitorSQLUniDAC,
   inLibTraducciones,
-  inLibConfigCampos,
   inLibPermisos,
   inLibPermisosUniDAC,
   inLibCopiasSeguridadIntf,
-  inLibCopiasSeguridad,
   inLibCoordinadorOperacionesAplicacion,
   inLibExcepcionesAplicacion,
   inLibVentasWsCola,
@@ -150,7 +160,10 @@ uses
   UniDataFiltros,
   UniDataFotosRepositorio,
   UniDataArticulosValidadorRepositorio,
+  UniDataInformesGuiasRepositorio,
   UniDataCatalogoSqlAplicacion,
+  UniDataCopiasSeguridad,
+  UniDataRepositoriosPantalla,
   inLibCatalogoSqlIntf;
 
 resourcestring
@@ -201,7 +214,7 @@ constructor TComposicionAplicacion.Create(
   const APresentacionOperaciones:
     IPresentacionOperacionesAplicacion);
 var
-  oServicioCopias: IServicioCopiasSeguridad;
+  oRepositorioCopias: IRepositorioCopiasSeguridad;
 begin
   inherited Create;
   if not Assigned(AOwner) then
@@ -217,13 +230,15 @@ begin
   FRegistroLog := ARegistroLog;
   FRegistroMonitorSQL := ARegistroMonitorSQL;
   FGestorExcepciones :=
-    CrearGestorExcepcionesAplicacion(FContextoSesion);
+    CrearGestorExcepcionesAplicacion(
+      FContextoSesion,
+      FRegistroLog);
   FDmConn := TdmConn.Create(FOwner);
-  oServicioCopias := TServicioCopiasSeguridad.Create(
+  oRepositorioCopias := CrearRepositorioCopiasSeguridadUniDAC(
     FContextoSesion,
     FDmConn.conUni);
-  FOperaciones := TCoordinadorOperacionesAplicacion.Create(
-    oServicioCopias,
+  FOperaciones := TCasoUsoCopiasSeguridad.Create(
+    oRepositorioCopias,
     APresentacionOperaciones);
   CrearInfraestructura;
   FCerrada := False;
@@ -244,7 +259,13 @@ begin
     FMonitorSQL as IReceptorEventosMonitorSQL);
   FDmConn.conUni.Connect;
   FConexiones := TServicioConexionesUniDAC.Create(FDmConn.conUni);
-  FUnidades := TUnidadesMedida.Create;
+  FFabricaContextosRepositorios :=
+    TFabricaContextosRepositoriosPantallaUniDAC.Create;
+  FConfigCamposCarga := TConfigCamposCache.Create(
+    FDmConn.conUni,
+    FRegistroLog);
+  FConfigCampos := FConfigCamposCarga;
+  FUnidades := TUnidadesMedida.Create(FRegistroLog);
   FUnidades.AsignarConexion(FDmConn.conUni);
   FAuditoriaDatos := TServicioAuditoriaDatos.Create(FContextoSesion);
 end;
@@ -272,6 +293,7 @@ begin
   FServiciosParametrosApp := CrearParametrosAplicacion(
     FServiciosPerfiles.Lectura,
     FServiciosPerfiles.Cache,
+    FRegistroLog,
     Identidad.Usuario,
     Identidad.Grupo);
   FServiciosParametrosApp.GestorLicencia.EstablecerLicencia(
@@ -287,6 +309,7 @@ begin
   FDmConn.AsignarParametrosApp(FServiciosParametrosApp.Lectura);
   FTraducciones := TServicioTraducciones.Create(
     FConexiones,
+    FRegistroLog,
     FServiciosParametrosApp.Lectura.GetString(
       'appIdioma',
       IDIOMA_ESPANOL));
@@ -318,7 +341,8 @@ begin
     FServiciosPerfiles.Escritura,
     bCatalogoActivo,
     oCatalogoSql,
-    oIncidenciasSql);
+    oIncidenciasSql,
+    FRegistroLog);
   FFotos := TFotosArticulos.Create;
   FFotos.AsignarConexion(
     FDmConn.conUni,
@@ -334,7 +358,7 @@ begin
     oDmFiltros,
     oDmFiltros,
     oDmFiltros);
-  FRegistroPantallas := TfzaWinF.Create(FOwner);
+  FRegistroPantallas := TfzaWinF.Create(FOwner, FRegistroLog);
   FRegistroPantallas.Charge(FDmConn.conUni);
   FRegistroPantallas.ComprobarRegistradas;
 end;
@@ -355,7 +379,8 @@ begin
   try
     AsegurarDeclaracionResponsableSif(
       FServiciosParametrosApp.Lectura,
-      AVersion);
+      AVersion,
+      FRegistroLog);
   except
     on E: Exception do
       FRegistroLog.RegistrarAviso(
@@ -404,10 +429,10 @@ begin
   FRegistroLog.RegistrarInformacion(
     'Arranque: PrecargarCachesSerie INICIO');
   FServiciosPerfiles.Cache.PrecargarPerfilesUsuario;
-  FInformesGuias := TInformesGuiasCache.Create(FDmConn.conUni);
+  FInformesGuias := TInformesGuiasCache.Create(
+    TLectorInformesGuiasUniDAC.Create(FDmConn.conUni));
   FInformesGuias.Precargar;
-  InicializarConfigCampos(FDmConn.conUni);
-  oConfigCampos.Precargar;
+  FConfigCamposCarga.Precargar;
   IdentidadSesion := FContextoSesion.Identidad;
   Identidad := TIdentidadPermisos.Crear(
     IdentidadSesion.Usuario,
@@ -469,8 +494,8 @@ begin
   sErrorInformes := '';
   sErrorConfig := '';
   sErrorPermisos := '';
-  FInformesGuias := TInformesGuiasCache.Create(FDmConn.conUni);
-  InicializarConfigCampos(FDmConn.conUni);
+  FInformesGuias := TInformesGuiasCache.Create(
+    TLectorInformesGuiasUniDAC.Create(FDmConn.conUni));
   tPerfiles := TTask.Run(
     procedure
     begin
@@ -487,7 +512,8 @@ begin
       msInformes := EjecutarCargaWorker(
         procedure(AConexion: TUniConnection)
         begin
-          FInformesGuias.Precargar(AConexion);
+          FInformesGuias.Precargar(
+            TLectorInformesGuiasUniDAC.Create(AConexion));
         end,
         sErrorInformes);
     end);
@@ -497,7 +523,7 @@ begin
       msConfig := EjecutarCargaWorker(
         procedure(AConexion: TUniConnection)
         begin
-          oConfigCampos.Precargar(AConexion);
+          FConfigCamposCarga.Precargar(AConexion);
         end,
         sErrorConfig);
     end);
@@ -561,21 +587,38 @@ procedure TComposicionAplicacion.IniciarProcesosSegundoPlano;
 var
   oVentasWsCola: TVentasWsCola;
 begin
-  TVerifactuCola.IniciarHilo(
-    CrearProcesadorVerifactuColaUniDAC(
-      FConexiones,
-      FContextoSesion,
-      FServiciosParametrosApp.Lectura,
-      FServiciosParametrosCaja.Lectura,
-      FContextoSesion.Identidad.Usuario));
-  FProcesosSegundoPlanoIniciados := True;
-  oVentasWsCola := TVentasWsCola.Create;
-  oVentasWsCola.IniciarHilo(
-    FContextoSesion,
-    FServiciosParametrosApp.Lectura,
-    CrearFabricaSesionVentasWsUniDAC(FConexiones),
-    FContextoSesion.Identidad.Usuario);
-  FVentasWsCola := oVentasWsCola;
+  if not FProcesosSegundoPlanoIniciados then
+  begin
+    oVentasWsCola := nil;
+    try
+      TVerifactuCola.IniciarHilo(
+        CrearProcesadorVerifactuColaUniDAC(
+          FConexiones,
+          FContextoSesion,
+          FServiciosParametrosApp.Lectura,
+          FServiciosParametrosCaja.Lectura,
+          FContextoSesion.Identidad.Usuario,
+          FRegistroLog));
+      oVentasWsCola := TVentasWsCola.Create(FRegistroLog);
+      oVentasWsCola.IniciarHilo(
+        FContextoSesion,
+        FServiciosParametrosApp.Lectura,
+        CrearFabricaSesionVentasWsUniDAC(FConexiones),
+        FContextoSesion.Identidad.Usuario);
+      FVentasWsCola := oVentasWsCola;
+      oVentasWsCola := nil;
+      FProcesosSegundoPlanoIniciados := True;
+    except
+      FreeAndNil(oVentasWsCola);
+      FreeAndNil(FVentasWsCola);
+      try
+        TVerifactuCola.DetenerHilo;
+      finally
+        FProcesosSegundoPlanoIniciados := False;
+      end;
+      raise;
+    end;
+  end;
 end;
 
 procedure TComposicionAplicacion.RegistrarInicioFiscal;
@@ -676,10 +719,12 @@ begin
     if Assigned(FDmConn) then
       FDmConn.AsignarReceptorMonitorSQL(nil);
     FMonitorSQL := nil;
+    FFabricaContextosRepositorios := nil;
     if Assigned(FConexiones) then
       FConexiones.Invalidar;
     FConexiones := nil;
-    LiberarConfigCampos;
+    FConfigCampos := nil;
+    FConfigCamposCarga := nil;
     FreeAndNil(FDmConn);
     FGestorExcepciones := nil;
     FRegistroMonitorSQL := nil;

@@ -34,7 +34,7 @@ uses
   System.Generics.Collections, System.Diagnostics, cxLocalization,
   inLibLectorScanner, inLibCajaTipos, inLibCajaVentanasIntf,
   inLibCajaVentaIntf, inLibCatalogoSqlIntf,
-  inLibFacturasLecturasIntf;
+  inLibFacturasLecturasIntf, inLibCajaEntradaIntf;
 
 const
   WM_CANCELAR_LINEA = WM_APP + 100;
@@ -68,6 +68,12 @@ type
   TServiciosLecturaOperacionCaja = record
     ConsultaStock: IResultadoConsultaCaja;
     RepositorioFacturas: IRepositorioLecturasFactura;
+  end;
+  TEntradaOperacionCaja = record
+    Lector: TLectorScanner;
+    Aplicacion: IAplicacionEntradaCaja;
+    ResolviendoPorScanner: Boolean;
+    ProcesandoLectura: Boolean;
   end;
   TfrmMtoOpeCaja = class(TfrmBase, IOperacionCaja)
     pnlUp: TPanel;
@@ -127,7 +133,6 @@ type
     styImporte: TcxStyle;
     tmrBusq: TTimer;
     dsBusq: TDataSource;
-    qryBusq: TUniQuery;
     tvrBusq: TcxGridViewRepository;
     dbtvBusq: TcxGridDBTableView;
     styCabecera: TcxStyle;
@@ -240,12 +245,9 @@ type
     FCaptionPrevio:   string;
     FUltimoTickReloj: TDateTime;
     FEnfoqueArticuloPendiente: Boolean;
-    FPoliticaStockVenta: IPoliticaStockVenta;
-    FRepartidorDescuento: IRepartidorDescuento;
-    FImpresorVenta: IImpresorVenta;
-    FServicioCierreVenta: IServicioCierreVenta;
-    FRepositorioConsultas: IRepositorioConsultasCaja;
-    FServicioRectificacion: IServicioRectificacionCaja;
+    FDependencias: TContextoDependenciasOperacionCaja;
+    FRepositorioArticulos: IRepositorioArticulosCaja;
+    FResultadoBusquedaIncremental: IResultadoConsultaCaja;
     FLecturas: TServiciosLecturaOperacionCaja;
     FIncidenciasSql: IRegistroIncidenciasSql;
     // Devoluciones: motivo (se pide al cobrar si hay líneas en negativo)
@@ -325,14 +327,7 @@ type
     // Detector reutilizable del lector de codigo de barras (trama STX/ETX +
     // rafaga por velocidad). La mecanica vive en TLectorScanner; aqui solo
     // queda el negocio (ProcesarLecturaScanner y los flags de abajo).
-    FLector: TLectorScanner;
-    // Activo mientras resolvemos una lectura con pistola: fuerza a
-    // RellenarDatosArticuloEnDataset a buscar SOLO en codigos de barras.
-    FResolviendoPorScanner: Boolean;
-    // Activo durante TODO ProcesarLecturaScanner. Lo consultan los validadores
-    // de cliente/empleado para no validar su texto (que pudo ensuciarse con la
-    // rafaga) cuando el escaneo mueve el foco a la rejilla.
-    FProcesandoLecturaScanner: Boolean;
+    FEntrada: TEntradaOperacionCaja;
     FValidandoCliente: Boolean;
     FCodigoEmpresa:String;
     FCodigoAlmacen, FCodigoCaja:String;
@@ -397,9 +392,8 @@ implementation
 uses
   inLibGridCantidad,
   inLibUser,
-  inLibLog,
-  inMtoCajaFaseCobro, inLibDevExp, inLibValoresAutomaticos,
-  inLibFacturas, inLibGenBusq,
+
+  inLibDevExp, inLibValoresAutomaticos, inLibFacturas, inLibGenBusq,
   inMtoModalGenImpSave, inLibLayoutForm,
   inLibArticulosValidadorIntf, inLibArticulosResolverIntf,
   inLibArticulosAtributosIntf,
@@ -407,15 +401,17 @@ uses
   inLibShowMto,
   inMtoStockConsulta,
   inLibCorreoTickets,
-  inLibCajaDescuentos,
   inLibCajaVentaCliente,
   inLibCajaVentaOperacion,
   inLibCajaOpeComposicion,
+  inLibCajaEntrada,
+  inMtoCajaEntradaVcl,
   // Raiz de composicion de la ventana de caja: el adaptador UniData* se
   // construye aqui y se inyecta en la factoria de dominio.
   UniDataCajaConsultasRepositorio,
   inMtoCajaImpresorVenta,
-  inMtoCajaGrabadorVenta,
+  inMtoCajaCierreVentaVcl,
+  UniDataCajaUnidadTrabajo,
   inMtoModalDevolucionTicket,
   inMtoModalSeleccionVentaOrigen,
   inMtoModalMotivoDevolucion,
@@ -423,6 +419,7 @@ uses
   inLibPermisosIntf,
   inLibContextoSesionIntf,
   inLibPerfilesUsuarioIntf,
+  inLibLogIntf,
   inLibTicketsCajaIntf,
   UniDataCatalogoSqlAplicacion,
   UniDataTicketsCajaRepositorio,
@@ -433,6 +430,168 @@ uses
   inLibUnidadesMedida, inLibPreviewTicket,
   System.StrUtils,
   inLibMsgCaja, inLibMsgVentas;
+
+procedure InicializarEntradaCajaVcl(AFormulario: TfrmMtoOpeCaja);
+var
+  Operaciones: TOperacionesEntradaCajaVcl;
+  PuertoOperaciones: IOperacionesEntradaCaja;
+  Vista: IVistaEntradaCaja;
+begin
+  Operaciones := Default(TOperacionesEntradaCajaVcl);
+  Operaciones.Disponible :=
+    function: Boolean
+    begin
+      Result := Assigned(AFormulario.DatosCaja) and
+        AFormulario.DatosCaja.cdsLineas.Active;
+    end;
+  Operaciones.VendedorAsignado :=
+    function: Boolean
+    begin
+      Result := Trim(AFormulario.DatosCaja.cdsCabecera.FieldByName(
+        'CODIGO_CAJERO_FAC').AsString) <> '';
+    end;
+  Operaciones.PermitirSku :=
+    function(const ACodigoSku: string): Boolean
+    begin
+      Result := AFormulario.ValidarSkuParaVenta(ACodigoSku);
+    end;
+  Operaciones.PrepararLinea :=
+    procedure
+    begin
+      if AFormulario.DatosCaja.cdsLineas.State = dsInsert then
+      begin
+        if Trim(AFormulario.DatosCaja.cdsLineas.FieldByName(
+          'CODIGO_ART_FACLIN').AsString) <> '' then
+        begin
+          AFormulario.DatosCaja.cdsLineas.Post;
+          AFormulario.DatosCaja.cdsLineas.Append;
+        end;
+      end
+      else
+      begin
+        if AFormulario.DatosCaja.cdsLineas.State = dsEdit then
+          AFormulario.DatosCaja.cdsLineas.Post;
+        AFormulario.DatosCaja.cdsLineas.Append;
+      end;
+    end;
+  Operaciones.ConsolidarSku :=
+    function(const ACodigoSku: string): Boolean
+    begin
+      Result := AFormulario.ConsolidarSiExiste(ACodigoSku);
+    end;
+  Operaciones.AplicarCodigo :=
+    procedure(const ACodigo, ACodigoSku, ACodigoArticulo: string)
+    begin
+      AFormulario.FEntrada.ResolviendoPorScanner := True;
+      try
+        AFormulario.RellenarDatosArticuloEnDataset(ACodigo);
+      finally
+        AFormulario.FEntrada.ResolviendoPorScanner := False;
+      end;
+      if (Trim(ACodigoSku) <> '') and
+         (ACodigoSku <> ACodigoArticulo) then
+        AFormulario.RellenarAtributosDesdeSku(ACodigoSku);
+      if AFormulario.DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
+        AFormulario.DatosCaja.cdsLineas.Post;
+      GridRecalc(
+        AFormulario.ConexionPrincipal,
+        AFormulario.FLecturas.RepositorioFacturas,
+        nil,
+        AFormulario.tvLineasOpe,
+        AFormulario.DatosCaja.cdsLineas,
+        AFormulario.DatosCaja.cdsCabecera,
+        AFormulario.ActualizarLabelTotal);
+    end;
+  Operaciones.Iniciar :=
+    procedure
+    begin
+      AFormulario.FEntrada.ProcesandoLectura := True;
+    end;
+  Operaciones.Finalizar :=
+    procedure
+    begin
+      AFormulario.FEntrada.ProcesandoLectura := False;
+    end;
+  Operaciones.MostrarError :=
+    procedure(const AMensaje: string)
+    begin
+      ShowMessage(AMensaje);
+    end;
+  Operaciones.EnfocarVendedor :=
+    procedure
+    begin
+      if AFormulario.btnCodigoEmpleado.CanFocus then
+        AFormulario.btnCodigoEmpleado.SetFocus;
+    end;
+  Operaciones.PrepararLectura :=
+    procedure
+    begin
+      AFormulario.tmrBusq.Enabled := False;
+      if AFormulario.tvLineasOpe.Controller.
+         EditingController.IsEditing then
+        AFormulario.tvLineasOpe.Controller.
+          EditingController.HideEdit(False);
+    end;
+  Operaciones.RefrescarConsolidacion :=
+    procedure
+    begin
+      AFormulario.tvLineasOpe.DataController.UpdateItems(True);
+    end;
+  Operaciones.PrepararSiguiente :=
+    procedure
+    begin
+      AFormulario.AsegurarLineaNueva;
+      AFormulario.tvLineasOpe.Controller.
+        EditingController.ShowEdit;
+    end;
+  CrearPuertosEntradaCajaVcl(
+    Operaciones,
+    PuertoOperaciones,
+    Vista);
+  AFormulario.FEntrada.Aplicacion := CrearAplicacionEntradaCaja(
+    AFormulario.ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
+      AFormulario.ConexionPrincipal),
+    PuertoOperaciones,
+    Vista);
+end;
+
+function CrearContextoCierreVentaCajaVcl(
+  AFormulario: TfrmMtoOpeCaja): TContextoCierreVentaCajaVcl;
+begin
+  Result := Default(TContextoCierreVentaCajaVcl);
+  Result.Propietario := AFormulario;
+  Result.Conexion := AFormulario.ConexionPrincipal;
+  Result.RepositorioFacturas :=
+    AFormulario.FLecturas.RepositorioFacturas;
+  Result.Cabecera := AFormulario.DatosCaja.cdsCabecera;
+  Result.Lineas := AFormulario.DatosCaja.cdsLineas;
+  Result.RepartidorDescuento :=
+    AFormulario.FDependencias.RepartidorDescuento;
+  Result.CasoUso := AFormulario.FDependencias.CasoUsoCierre;
+  Result.RegistroLog := AFormulario.RegistroLog;
+  Result.CodigoEmpresa := AFormulario.FCodigoEmpresa;
+  Result.CodigoAlmacen := AFormulario.FCodigoAlmacen;
+  Result.CodigoCaja := AFormulario.FCodigoCaja;
+  Result.TipoRectificativa := AFormulario.FTipoRectificativa;
+  Result.TratamientoMovimientos :=
+    AFormulario.FTratamientoMovRectificativa;
+  Result.SerieRectificada := AFormulario.FSerieRectifica;
+  Result.NumeroRectificado := AFormulario.FNumeroRectifica;
+  Result.MotivoDevolucion := AFormulario.FMotivoDevolucion;
+  Result.SerieOrigenDevolucion := AFormulario.FSerieOrigenDev;
+  Result.NumeroOrigenDevolucion := AFormulario.FNumeroOrigenDev;
+  Result.EmpresaOrigenDevolucion := AFormulario.FEmpresaOrigenDev;
+  Result.AlmacenOrigenDevolucion := AFormulario.FAlmacenOrigenDev;
+  Result.ConfirmarMotivoDevolucion :=
+    AFormulario.PedirMotivoDevolucionSiProcede;
+  Result.ActualizarReloj := AFormulario.ActualizarRelojCaja;
+  Result.LeerFecha :=
+    function: TDateTime
+    begin
+      Result := AFormulario.FFecha;
+    end;
+  Result.PresentarResultado := AFormulario.ProcesarResultadoCierre;
+end;
 
 function CrearServiciosOperacionCajaVcl(
   APropietario: TComponent;
@@ -445,14 +604,15 @@ function CrearServiciosOperacionCajaVcl(
   const AContextoSesion: IContextoSesionAplicacion;
   const APerfilesLectura: ILectorPerfilesUsuario;
   const APerfilesEscritura: IEscritorPerfilesUsuario;
+  const ARegistroLog: IRegistroLog;
   const ANombreFormulario: string;
   ADatosCaja: TdmCajaOpe;
   out AIncidenciasSql: IRegistroIncidenciasSql
-): TServiciosOperacionCaja;
+): TContextoDependenciasOperacionCaja;
 var
   bCatalogoSqlActivo: Boolean;
   oCatalogoSql: ICatalogoSql;
-  oGrabador: IGrabadorVentaCaja;
+  oUnidadTrabajo: IUnidadTrabajoVentaCaja;
   oImpresor: IImpresorVenta;
   oPersistenciaFacturas: TPersistenciaFacturas;
   oRepositorioTicketsCaja: TRepositoriosTicketsCaja;
@@ -470,7 +630,8 @@ begin
     APerfilesEscritura,
     bCatalogoSqlActivo,
     oCatalogoSql,
-    AIncidenciasSql);
+    AIncidenciasSql,
+    ARegistroLog);
   oRepositorioTicketsCaja := CrearRepositoriosTicketsCaja(
     AConexion, oCatalogoSql, AIncidenciasSql);
   ADatosCaja.AsignarRepositorioTicketsCaja(
@@ -484,26 +645,26 @@ begin
     oRepositorioTicketsCaja.Tickets,
     AUnidades,
     APreviewTicket);
-  oGrabador := TGrabadorVentaCaja.Create(ADatosCaja);
+  oUnidadTrabajo := TUnidadTrabajoVentaCajaUniDAC.Create(
+    ADatosCaja);
   oPersistenciaFacturas := CrearPersistenciaFacturasUniDAC(AConexion);
   Result := CrearServiciosOperacionCaja(
     AConexion,
     AParametrosCaja,
     AContextoSesion,
     oImpresor,
-    oGrabador,
+    oUnidadTrabajo,
     TRepositorioConsultasCaja.Create(
       AConexion,
       oCatalogoSql,
       AIncidenciasSql),
     oPersistenciaFacturas.Pdf,
-    CrearRepositorioVentasWsColaUniDAC(AConexion));
+    CrearRepositorioVentasWsColaUniDAC(AConexion),
+    ARegistroLog);
 end;
 
 procedure InicializarServiciosOperacionCajaVcl(
   AFormulario: TfrmMtoOpeCaja);
-var
-  oServicios: TServiciosOperacionCaja;
 begin
   AFormulario.DatosCaja := TdmCajaOpe.Create(
     AFormulario,
@@ -511,7 +672,7 @@ begin
     AFormulario.ParametrosApp,
     AFormulario.ParametrosCaja,
     AFormulario.PreviewTicket);
-  oServicios := CrearServiciosOperacionCajaVcl(
+  AFormulario.FDependencias := CrearServiciosOperacionCajaVcl(
     AFormulario,
     AFormulario.ParametrosApp,
     AFormulario.PreviewTicket,
@@ -522,21 +683,10 @@ begin
     AFormulario.ContextoSesion,
     AFormulario.PerfilesLectura,
     AFormulario.PerfilesEscritura,
+    AFormulario.RegistroLog,
     AFormulario.Name,
     AFormulario.DatosCaja,
     AFormulario.FIncidenciasSql);
-  AFormulario.FRepositorioConsultas :=
-    oServicios.RepositorioConsultas;
-  AFormulario.FServicioRectificacion :=
-    oServicios.ServicioRectificacion;
-  AFormulario.FPoliticaStockVenta :=
-    oServicios.PoliticaStock;
-  AFormulario.FRepartidorDescuento :=
-    oServicios.RepartidorDescuento;
-  AFormulario.FImpresorVenta :=
-    oServicios.Impresor;
-  AFormulario.FServicioCierreVenta :=
-    oServicios.ServicioCierre;
 end;
 
 procedure TfrmMtoOpeCaja.ActualizarFoco;
@@ -747,7 +897,7 @@ begin
     end;
     dsStock.DataSet := nil;
     FLecturas.ConsultaStock :=
-      FRepositorioConsultas.ConsultarStock(
+      FDependencias.RepositorioConsultas.ConsultarStock(
         sCodigoConsulta);
     DataSetStock := FLecturas.ConsultaStock.DataSet;
     dsStock.DataSet := DataSetStock;
@@ -783,7 +933,7 @@ begin
         except
           // BestFit es cosmetico: no bloquea la carga del stock.
           on E: Exception do
-            inLibLog.Log.LogWarning(
+            RegistroLog.RegistrarAviso(
               'CajaOpe: ApplyBestFit del stock ignorado: ' +
               E.Message);
         end;
@@ -862,7 +1012,7 @@ function TfrmMtoOpeCaja.ValidarSkuParaVenta(const SkuFinal: string): Boolean;
 var
   Resultado: TResultadoPoliticaStockVenta;
 begin
-  Resultado := FPoliticaStockVenta.Validar(
+  Resultado := FDependencias.PoliticaStock.Validar(
     SkuFinal,
     FCodigoAlmacen);
   if Resultado.Mensaje <> '' then
@@ -872,7 +1022,7 @@ end;
 
 procedure TfrmMtoOpeCaja.FormKeyPress(Sender: TObject; var Key: Char);
 begin
-  FLector.KeyPress(Key);
+  FEntrada.Lector.KeyPress(Key);
 end;
 
 procedure TfrmMtoOpeCaja.LectorCodigoLeido(Sender: TObject;
@@ -916,113 +1066,9 @@ end;
 // parametro vgerMoverLineaIdentif (que solo gobierna la entrada manual).
 // Unica precondicion: el vendedor (cajero) debe estar dado de alta.
 procedure TfrmMtoOpeCaja.ProcesarLecturaScanner(const ACodigo: string);
-var
-  Validador  : IArticulosValidador;
-  Resolucion : TArtResolucionEntrada;
-  sSku       : string;
 begin
-  if Assigned(DatosCaja) and DatosCaja.cdsLineas.Active then
-  begin
-   // Activo durante todo el procesado: evita que, al mover el foco a la
-   // rejilla, los validadores de cliente/empleado intenten validar el texto
-   // que la rafaga pudo dejar en esos campos.
-   FProcesandoLecturaScanner := True;
-   try
-    // Precondicion: sin vendedor dado de alta no se admiten lecturas.
-    if Trim(DatosCaja.cdsCabecera.FieldByName(
-                                       'CODIGO_CAJERO_FAC').AsString) = '' then
-    begin
-      ShowMessage(SErrorVendedorCajaNoAsignado);
-      if btnCodigoEmpleado.CanFocus then
-        btnCodigoEmpleado.SetFocus;
-    end
-    else
-    begin
-      tmrBusq.Enabled := False;
-      // Cerramos el editor in-place (si lo hubiera) sin volcar su contenido.
-      if tvLineasOpe.Controller.EditingController.IsEditing then
-        tvLineasOpe.Controller.EditingController.HideEdit(False);
-      // CLAVE: resolvemos el codigo SOLO contra codigos de barras ANTES de
-      // crear/rellenar ninguna linea. Asi decidimos si hay que consolidar (el
-      // SKU ya esta en el ticket) sin haber grabado todavia una linea de
-      // trabajo, que es justo lo que generaba el duplicado.
-      Validador := CrearValidadorArticulos(ConexionPrincipal);
-      try
-        Resolucion := Validador.ResolverCodigoBarras(ACodigo);
-      finally
-        Validador := nil;
-      end;
-      sSku := Resolucion.CodigoSku;
-      if not Resolucion.Encontrado then
-        ShowMessage(Format(SErrorCodigoBarrasVentaCajaNoEncontrado,
-          [ACodigo]))
-      else if (Trim(sSku) <> '') and not ValidarSkuParaVenta(sSku) then
-      begin
-        // SKU no vendible (inactivo o sin stock con bloqueo): ValidarSku ya
-        // mostro el motivo. No añadimos ni tocamos ninguna linea.
-      end
-      else
-      begin
-        // Garantizamos una linea de trabajo VACIA en insercion, sin pisar
-        // lineas ya confirmadas (la lectura puede llegar con el foco en
-        // cualquier control). Esa linea vacia no comparte SKU, asi que no
-        // interfiere en la deteccion de duplicados.
-        if DatosCaja.cdsLineas.State = dsInsert then
-        begin
-          if Trim(DatosCaja.cdsLineas.FieldByName(
-                                      'CODIGO_ART_FACLIN').AsString) <> '' then
-          begin
-            DatosCaja.cdsLineas.Post;
-            DatosCaja.cdsLineas.Append;
-          end;
-        end
-        else
-        begin
-          if DatosCaja.cdsLineas.State = dsEdit then
-            DatosCaja.cdsLineas.Post;
-          DatosCaja.cdsLineas.Append;
-        end;
-        // ¿El SKU ya esta en el ticket? -> sumamos cantidad en esa linea y NO
-        // creamos otra. ConsolidarSiExiste se encarga de cancelar/recolocar la
-        // linea de trabajo vacia (su recalculo interno la trata como insert
-        // vacio). Si no esta -> rellenamos la linea de trabajo y la grabamos.
-        if (Trim(sSku) <> '') and ConsolidarSiExiste(sSku) then
-        begin
-          // Consolidado: la unidad ya se sumo. El incremento se hizo via un
-          // CLON del dataset, que no notifica al grid principal, asi que la
-          // cantidad no se repintaria hasta mover el cursor. Forzamos el
-          // refresco para que se vea de inmediato.
-          tvLineasOpe.DataController.UpdateItems(True);
-        end
-        else
-        begin
-          FResolviendoPorScanner := True;
-          try
-            RellenarDatosArticuloEnDataset(ACodigo);
-          finally
-            FResolviendoPorScanner := False;
-          end;
-          if (Trim(sSku) <> '') and (sSku <> Resolucion.CodigoArticulo) then
-            RellenarAtributosDesdeSku(sSku);
-          if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
-            DatosCaja.cdsLineas.Post;
-          GridRecalc(
-            ConexionPrincipal, FLecturas.RepositorioFacturas, nil,
-                     tvLineasOpe,
-                     DatosCaja.cdsLineas,
-                     DatosCaja.cdsCabecera,
-                     ActualizarLabelTotal);
-        end;
-      end;
-      // Dejamos una linea editable y el foco en la celda de articulo de la
-      // rejilla, lista para encadenar lecturas venga de donde venga el foco.
-      AsegurarLineaNueva;
-      tvLineasOpe.Controller.EditingController.ShowEdit;
-    end;
-   finally
-     FProcesandoLecturaScanner := False;
-   end;
-  end;
+  if Assigned(FEntrada.Aplicacion) then
+    FEntrada.Aplicacion.Procesar(ACodigo);
 end;
 
 procedure TfrmMtoOpeCaja.WMCancelarLinea(var Msg: TMessage);
@@ -1057,7 +1103,10 @@ end;
 
 procedure TfrmMtoOpeCaja.tmrBusqTimer(Sender: TObject);
 var
+  dtFechaTarifa: TDateTime;
   EditActivo: TcxCustomEdit;
+  oDatosBusqueda: TDataSet;
+  sTarifa: string;
   TextEdit: TcxCustomTextEdit;
   TextoBusqueda: string;
 begin
@@ -1093,47 +1142,52 @@ begin
         TextoBusqueda := Trim(TextoBusqueda);
         if Length(TextoBusqueda) >= 1 then
         begin
-          qryBusq.Connection := ConexionPrincipal;
-          qryBusq.Close;
-          qryBusq.ParamByName('TARIFA').AsString :=
-                                              DatosCaja.cdsCabecera.FieldByName(
-                                    'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-          qryBusq.ParamByName('FECHA_TARIFA').AsDate :=
-                                              DatosCaja.cdsCabecera.FieldByName(
-                                                       'FECHA_FAC').AsDateTime;
-          qryBusq.ParamByName('TOKEN').AsString := '%' + TextoBusqueda + '%';
-          qryBusq.Open;
+          sTarifa := DatosCaja.cdsCabecera.FieldByName(
+            'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
+          dtFechaTarifa := DatosCaja.cdsCabecera.FieldByName(
+            'FECHA_FAC').AsDateTime;
+          dsBusq.DataSet := nil;
+          FResultadoBusquedaIncremental :=
+            FRepositorioArticulos.ConsultarArticulosIncremental(
+              sTarifa,
+              TextoBusqueda,
+              dtFechaTarifa);
+          oDatosBusqueda := FResultadoBusquedaIncremental.DataSet;
+          dsBusq.DataSet := oDatosBusqueda;
           // Diagnostico: registramos el resultado de la busqueda incremental
           // para saber si la vista vi_art_busquedas devuelve filas. El log SQL
           // estandar marca filas=- en queries con LIMIT, asi que aqui lo
           // contamos explicitamente. Si filas=0, el problema es de datos (la
           // vista no devuelve nada para esa TARIFA/FECHA) y no del UI.
           try
-            inLibLog.Log.LogInfo(Format('qryBusq.Open: TARIFA="%s" ' +
+            RegistroLog.RegistrarInformacion(
+              Format('qryBusq.Open: TARIFA="%s" ' +
               'FECHA_TARIFA="%s" TOKEN="%s" IsEmpty=%s RecordCount=%d',
-              [qryBusq.ParamByName('TARIFA').AsString,
-               DateToStr(qryBusq.ParamByName('FECHA_TARIFA').AsDate),
-               qryBusq.ParamByName('TOKEN').AsString,
-               BoolToStr(qryBusq.IsEmpty, True),
-               qryBusq.RecordCount]));
+              [sTarifa,
+               DateToStr(dtFechaTarifa),
+               TextoBusqueda,
+               BoolToStr(oDatosBusqueda.IsEmpty, True),
+               oDatosBusqueda.RecordCount]));
             // Volcamos los primeros 5 codigos para verificar que la vista
             // realmente devuelve algo aprovechable (no nulls, codigos validos)
-            if not qryBusq.IsEmpty then
+            if not oDatosBusqueda.IsEmpty then
             begin
-              qryBusq.First;
-              while (not qryBusq.Eof) and (qryBusq.RecNo <= 5) do
+              oDatosBusqueda.First;
+              while (not oDatosBusqueda.Eof) and
+                    (oDatosBusqueda.RecNo <= 5) do
               begin
-                inLibLog.Log.LogInfo(Format('qryBusq fila %d: cod="%s" desc="%s"',
-                  [qryBusq.RecNo,
-                   qryBusq.FieldByName('CODIGO_PADRE').AsString,
-                   qryBusq.FieldByName('DESCRIPCION_ART').AsString]));
-                qryBusq.Next;
+                RegistroLog.RegistrarInformacion(
+                  Format('qryBusq fila %d: cod="%s" desc="%s"',
+                  [oDatosBusqueda.RecNo,
+                   oDatosBusqueda.FieldByName('CODIGO_PADRE').AsString,
+                   oDatosBusqueda.FieldByName('DESCRIPCION_ART').AsString]));
+                oDatosBusqueda.Next;
               end;
-              qryBusq.First;
+              oDatosBusqueda.First;
             end;
           except
             on E: Exception do
-              inLibLog.Log.LogWarning('qryBusq diagnostico: ' +
+              RegistroLog.RegistrarAviso('qryBusq diagnostico: ' +
                                       E.ClassName + ' ' + E.Message);
           end;
           dbtvBusq.DataController.DataSource := dsBusq;
@@ -1148,7 +1202,8 @@ begin
     begin
        if not TcxExtLookupComboBox(EditActivo).DroppedDown then
        begin
-          if not qryBusq.IsEmpty then
+          if Assigned(dsBusq.DataSet) and
+             not dsBusq.DataSet.IsEmpty then
              TcxExtLookupComboBox(EditActivo).DroppedDown := True;
        end
        else
@@ -1183,7 +1238,7 @@ end;
 
 procedure TfrmMtoOpeCaja.tvArticuloPropertiesChange(Sender: TObject);
 begin
-  if not FLector.LeyendoTrama then
+  if not FEntrada.Lector.LeyendoTrama then
   begin
     tmrBusq.Enabled := False;
     tmrBusq.Enabled := True;
@@ -1238,95 +1293,46 @@ function TfrmMtoOpeCaja.BuscarArticulo: String;
       TSQLTimeStampField(F).DisplayFormat := AFormat;
   end;
 begin
-  // Popup de busqueda de articulos lanzado desde F3 en caja. Antes
-  // llamabamos a PRC_BUSQUEDA_ARTICULOS (TUniStoredProc); ahora atacamos
-  // vi_art_busquedas directamente como TUniQuery parametrizado por
-  // tarifa y fecha (mismo criterio de vigencia que el desplegable inline
-  // qryBusq). Anadimos columnas Temporada (LEFT JOIN
-  // fza_articulos_propiedades + fza_propiedades_valores con
-  // CODIGO_PROP_ARTPROP = 'TEMPORADA') y Proveedor (RAZON_SOCIAL_PROVEEDOR
-  // ya en la vista), junto con la ref. del proveedor principal.
-  // Configuramos DisplayLabel/DisplayFormat por campo
-  // para que la grilla salga legible aunque no haya layout guardado en
-  // fza_usuarios_perfiles para frmMtoArtFacSearch; si hay layout,// PonerAnchosTitulos lo sobrepone (vease inLibDevExp).
-  var unqryBusq := TUniQuery.Create(nil);
-  try
-    unqryBusq.Connection := ConexionPrincipal;
-    unqryBusq.SQL.Text :=
-      'SELECT'                                                      + sLineBreak +
-      '    v.CODIGO_ART_ART,'                                       + sLineBreak +
-      '    v.DESCRIPCION_ART,'                                      + sLineBreak +
-      '    v.DESCRIPCION_FAM,'                                      + sLineBreak +
-      '    pv.PV                       AS TEMPORADA,'               + sLineBreak +
-      '    v.RAZON_SOCIAL_PROVEEDOR,'                               + sLineBreak +
-      '    v.REF_PROVEEDOR,'                                        + sLineBreak +
-      '    v.CODIGO_TAR_ARTTAR,'                                    + sLineBreak +
-      '    v.NOMBRE_TAR_TAR,'                                       + sLineBreak +
-      '    v.PRECIO_FINAL_ARTTAR,'                                  + sLineBreak +
-      '    v.FECHA_DESDE_ARTTAR,'                                   + sLineBreak +
-      '    v.FECHA_HASTA_ARTTAR'                                    + sLineBreak +
-      'FROM vi_art_busquedas v'                                     + sLineBreak +
-      'LEFT JOIN fza_articulos_propiedades ap'                      + sLineBreak +
-      '       ON ap.CODIGO_ART_ART = v.CODIGO_ART_ART'              + sLineBreak +
-      '      AND ap.CODIGO_PROP_ARTPROP = ''TEMPORADA'''            + sLineBreak +
-      // Nivel articulo: evita duplicar el articulo por temporadas de color
-      '      AND ap.CODIGO_UNIDAD_ARTPROP = '''''                   + sLineBreak +
-      'LEFT JOIN fza_propiedades_valores pv'                        + sLineBreak +
-      '       ON pv.ID_PV_ARTPROP = ap.ID_PV_ARTPROP'               + sLineBreak +
-      'WHERE (v.CODIGO_TAR_ARTTAR = :TARIFA'                        + sLineBreak +
-      '       OR v.CODIGO_TAR_ARTTAR IS NULL)'                      + sLineBreak +
-      '  AND (v.FECHA_DESDE_ARTTAR IS NULL'                         + sLineBreak +
-      '       OR v.FECHA_DESDE_ARTTAR <= :FECHA_TARIFA)'            + sLineBreak +
-      '  AND (v.FECHA_HASTA_ARTTAR IS NULL'                         + sLineBreak +
-      '       OR v.FECHA_HASTA_ARTTAR >= :FECHA_TARIFA)'            + sLineBreak +
-      'ORDER BY v.CODIGO_ART_ART';
-
-    unqryBusq.ParamByName('TARIFA').AsString :=
-                                              DatosCaja.cdsCabecera.FieldByName(
-                                    'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-    unqryBusq.ParamByName('FECHA_TARIFA').AsDate :=
-                                              DatosCaja.cdsCabecera.FieldByName(
-                                                       'FECHA_FAC').AsDateTime;
-
-    // Abrimos aqui (en vez de dejar que lo haga EjecutarBusqueda) para
-    // tener acceso a los TField y poder fijar DisplayLabel / DisplayFormat
-    // antes de que cxGrdDBTabPrin.DataController.CreateAllItems cree las
-    // columnas en TfrmMtoSearch.CrearTablaPrincipal.
-    unqryBusq.Open;
-    ConfigCampo(unqryBusq.FindField('CODIGO_ART_ART'),
+  // El repositorio entrega la consulta ya abierta. Aqui solo se aplican
+  // metadatos de presentacion antes de crear las columnas de la busqueda.
+  var oResultado := FRepositorioArticulos.ConsultarArticulosBusqueda(
+    DatosCaja.cdsCabecera.FieldByName(
+      'TARIFA_ARTICULO_CLIENTE_FAC').AsString,
+    DatosCaja.cdsCabecera.FieldByName('FECHA_FAC').AsDateTime);
+  var oDatos := oResultado.DataSet;
+    ConfigCampo(oDatos.FindField('CODIGO_ART_ART'),
                 'Código',                '');
-    ConfigCampo(unqryBusq.FindField('DESCRIPCION_ART'),
+    ConfigCampo(oDatos.FindField('DESCRIPCION_ART'),
                 'Descripción',           '');
-    ConfigCampo(unqryBusq.FindField('DESCRIPCION_FAM'),
+    ConfigCampo(oDatos.FindField('DESCRIPCION_FAM'),
                 'Familia',               '');
-    ConfigCampo(unqryBusq.FindField('TEMPORADA'),
+    ConfigCampo(oDatos.FindField('TEMPORADA'),
                 'Temporada',             '');
-    ConfigCampo(unqryBusq.FindField('RAZON_SOCIAL_PROVEEDOR'),
+    ConfigCampo(oDatos.FindField('RAZON_SOCIAL_PROVEEDOR'),
                 'Proveedor',             '');
-    ConfigCampo(unqryBusq.FindField('REF_PROVEEDOR'),
+    ConfigCampo(oDatos.FindField('REF_PROVEEDOR'),
                 'Ref. proveedor',        '');
-    ConfigCampo(unqryBusq.FindField('CODIGO_TAR_ARTTAR'),
+    ConfigCampo(oDatos.FindField('CODIGO_TAR_ARTTAR'),
                 'Tarifa',                '');
-    ConfigCampo(unqryBusq.FindField('NOMBRE_TAR_TAR'),
+    ConfigCampo(oDatos.FindField('NOMBRE_TAR_TAR'),
                 'Nombre tarifa',         '');
-    ConfigCampo(unqryBusq.FindField('PRECIO_FINAL_ARTTAR'),
+    ConfigCampo(oDatos.FindField('PRECIO_FINAL_ARTTAR'),
                 'Precio',                '#,##0.00 €');
-    ConfigCampo(unqryBusq.FindField('FECHA_DESDE_ARTTAR'),
+    ConfigCampo(oDatos.FindField('FECHA_DESDE_ARTTAR'),
                 'Desde',                 'dd/mm/yyyy');
-    ConfigCampo(unqryBusq.FindField('FECHA_HASTA_ARTTAR'),
+    ConfigCampo(oDatos.FindField('FECHA_HASTA_ARTTAR'),
                 'Hasta',                 'dd/mm/yyyy');
-
-    if BusquedaVisual.EjecutarBusqueda(
-      ConexionPrincipal,
-      'Búsqueda de Artículos en Caja',
-                                       unqryBusq,
-                                       'frmMtoArtFacSearch',
-                                       Self) then
-      Result := unqryBusq.FieldByName('CODIGO_ART_ART').AsString
-    else
-      Result := '';
-  finally
-    FreeAndNil(unqryBusq);
+  if BusquedaVisual.EjecutarBusquedaDataSet(
+    'Búsqueda de Artículos en Caja',
+    oDatos,
+    'frmMtoArtFacSearch',
+    Self) then
+  begin
+    Result := oDatos.FieldByName('CODIGO_ART_ART').AsString;
+  end
+  else
+  begin
+    Result := '';
   end;
 end;
 
@@ -1396,16 +1402,15 @@ begin
     if (CodigoPadre <> '') and (CodigoPadre <> CodigoInput) then
     begin
        DisplayValue := CodigoPadre;
-       qryBusq.Connection := ConexionPrincipal;
-       if qryBusq.Active then qryBusq.Close;
-       qryBusq.ParamByName('TARIFA').AsString :=
-                                              DatosCaja.cdsCabecera.FieldByName(
-                                    'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-       qryBusq.ParamByName('FECHA_TARIFA').AsDate :=
-                                              DatosCaja.cdsCabecera.FieldByName(
-                                                       'FECHA_FAC').AsDateTime;
-       qryBusq.ParamByName('TOKEN').AsString := CodigoPadre;
-       qryBusq.Open;
+       dsBusq.DataSet := nil;
+       FResultadoBusquedaIncremental :=
+         FRepositorioArticulos.ConsultarArticulosIncremental(
+           DatosCaja.cdsCabecera.FieldByName(
+             'TARIFA_ARTICULO_CLIENTE_FAC').AsString,
+           CodigoPadre,
+           DatosCaja.cdsCabecera.FieldByName(
+             'FECHA_FAC').AsDateTime);
+       dsBusq.DataSet := FResultadoBusquedaIncremental.DataSet;
     end;
     ActualizarColumnasDinamicas(CodigoPadre);
     // Solo desglosamos atributos si SkuDetectado es un SKU real (distinto
@@ -1585,14 +1590,16 @@ begin
   FMotivoRechazoArticulo := '';
   if Trim(Codigo) <> '' then
   begin
-    Validador := CrearValidadorArticulos(ConexionPrincipal);
-    Resolver := CrearResolverArticulos(ConexionPrincipal);
+    Validador := ContextoRepositoriosPantalla.Articulos.
+      CrearValidadorArticulos(ConexionPrincipal);
+    Resolver := ContextoRepositoriosPantalla.Articulos.
+      CrearResolverArticulos(ConexionPrincipal);
     try
       Resultado := PrepararArticuloLineaVenta(
         DatosCaja.cdsLineas,
         DatosCaja.cdsCabecera,
         Codigo,
-        FResolviendoPorScanner,
+        FEntrada.ResolviendoPorScanner,
         FActualizandoDepositos,
         Validador,
         Resolver,
@@ -1649,7 +1656,7 @@ begin
   FechaFactura := DatosCaja.cdsCabecera.FieldByName('FECHA_FAC').AsDateTime;
   CodArt       := DatosCaja.cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString;
 
-  Resolver := CrearResolverArticulos(
+  Resolver := ContextoRepositoriosPantalla.Articulos.CrearResolverArticulos(
     ConexionPrincipal);
   try
     Precio := Resolver.ResolverPrecio(CodArt, ASku, CodTarifa, FechaFactura);
@@ -1685,7 +1692,8 @@ begin
   RellenarAtributosLineaDesdeSku(
     DatosCaja.cdsLineas,
     Sku,
-    CrearLookupAtributosArticulos(ConexionPrincipal));
+    ContextoRepositoriosPantalla.Articulos.
+      CrearLookupAtributosArticulos(ConexionPrincipal));
 end;
 
 function TfrmMtoOpeCaja.ConsolidarSiExiste(SkuBuscado: string): Boolean;
@@ -1780,8 +1788,7 @@ end;
 
 procedure TfrmMtoOpeCaja.PoblarAtributosLineasDeposito;
 var
-  QryNom: TUniQuery;
-  Nombres: TStringList;
+  aNombres: TNombresAtributosCaja;
   art, sku: string;
   i: Integer;
 begin
@@ -1789,19 +1796,9 @@ begin
   // ha cargado con F2, igual que haria un escaneo normal, para que se vean
   // sin entrar linea por linea. La carga de depositos no los puebla (esta
   // optimizada para no lanzar queries por fila).
-  QryNom := TUniQuery.Create(nil);
-  Nombres := TStringList.Create;
   DatosCaja.cdsLineas.DisableControls;
   FActualizandoDepositos := True;
   try
-    QryNom.Connection := ConexionPrincipal;
-    QryNom.SQL.Text :=
-      'SELECT vat.NOMBRE_VA AS NOMBRE_ATRIBUTO ' +
-      '  FROM fza_articulos a ' +
-      '  JOIN fza_variaciones_atributos vat ' +
-      '    ON vat.ID_VAR_VA = a.TIPO_VARIACION_ART ' +
-      ' WHERE a.CODIGO_ART_ART = :ART ' +
-      ' ORDER BY vat.ORDEN_VA LIMIT 5';
     DatosCaja.cdsLineas.First;
     while not DatosCaja.cdsLineas.Eof do
     begin
@@ -1811,23 +1808,16 @@ begin
       begin
         art := DatosCaja.cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString;
         sku := DatosCaja.cdsLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString;
-        Nombres.Clear;
-        QryNom.Close;
-        QryNom.ParamByName('ART').AsString := art;
-        QryNom.Open;
-        while not QryNom.Eof do
-        begin
-          Nombres.Add(QryNom.FieldByName('NOMBRE_ATRIBUTO').AsString);
-          QryNom.Next;
-        end;
+        aNombres :=
+          FRepositorioArticulos.ListarNombresAtributosArticulo(art);
         DatosCaja.cdsLineas.Edit;
         DatosCaja.cdsLineas.FieldByName(
-          'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger := Nombres.Count;
+          'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger := Length(aNombres);
         for i := 1 to 5 do
         begin
-          if i <= Nombres.Count then
+          if i <= Length(aNombres) then
             DatosCaja.cdsLineas.FieldByName(
-              'ATTR' + IntToStr(i) + '_NOMBRE').AsString := Nombres[i - 1]
+              'ATTR' + IntToStr(i) + '_NOMBRE').AsString := aNombres[i - 1]
           else
             DatosCaja.cdsLineas.FieldByName(
               'ATTR' + IntToStr(i) + '_NOMBRE').AsString := '';
@@ -1840,8 +1830,6 @@ begin
   finally
     FActualizandoDepositos := False;
     DatosCaja.cdsLineas.EnableControls;
-    FreeAndNil(Nombres);
-    FreeAndNil(QryNom);
   end;
 end;
 
@@ -2294,8 +2282,8 @@ begin
     end
     else
     begin
-       if qryBusq.Active then
-          qryBusq.Close;
+       dsBusq.DataSet := nil;
+       FResultadoBusquedaIncremental := nil;
     end;
   end;
 end;
@@ -2540,7 +2528,7 @@ begin
   begin
     if TfrmModalDevolucionTicket.Ejecutar(
          Self,
-         FRepositorioConsultas,
+         FDependencias.RepositorioConsultas,
          FCodigoEmpresa,
          FCodigoAlmacen,
          FCodigoCaja,
@@ -2579,7 +2567,7 @@ begin
   // Carga las líneas del ticket en negativo SIN marcar rectificativa
   // fiscal (el ticket es de otra empresa): la operación DV queda
   // referenciada al ticket de origen por SERIE/NUMERO_REF_ORIGEN.
-  FServicioRectificacion.Cargar(
+  FDependencias.ServicioRectificacion.Cargar(
     ASerie,
     ANumero,
     trcDiferencias,
@@ -2611,7 +2599,7 @@ begin
     try
       if TfrmModalSeleccionVentaOrigen.Ejecutar(
            Self,
-           FRepositorioConsultas,
+           FDependencias.RepositorioConsultas,
            sSku,
            FCodigoEmpresa,
            Seleccion) then
@@ -2757,7 +2745,7 @@ procedure TfrmMtoOpeCaja.ActualizarColumnasDinamicas(ArticuloPadre: string);
 var
   i: Integer;
   Col: TcxGridDBColumn;
-  NombresAtributos: TStringList;
+  aNombresAtributos: TNombresAtributosCaja;
   Cacheado: Boolean;
 begin
   // --- OPTIMIZACIÓN: Si es el mismo tipo de artículo, no repintamos ---
@@ -2767,83 +2755,52 @@ begin
     Exit;
   end;
   FUltimoArticuloPadre := ArticuloPadre;
-
-  NombresAtributos := TStringList.Create;
+  SetLength(aNombresAtributos, 0);
+  if (ArticuloPadre <> '') and (ArticuloPadre <> 'ACUENTA') then
+  begin
+    aNombresAtributos :=
+      FRepositorioArticulos.ListarNombresAtributosArticulo(
+        ArticuloPadre);
+  end;
+  FNumAtributosActual := Length(aNombresAtributos);
+  // Solo tocamos la memoria del dataset si estamos escaneando algo nuevo
+  if DatosCaja.cdsLineas.Active and
+     (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
+  begin
+    DatosCaja.cdsLineas.FieldByName(
+      'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger :=
+      Length(aNombresAtributos);
+  end;
+  tvLineasOpe.BeginUpdate;
   try
-    // Solo atacamos la base de datos si hay un artículo real
-    if (ArticuloPadre <> '') and (ArticuloPadre <> 'ACUENTA') then
+    for i := 1 to 5 do
     begin
-      datosCaja.qryDefinicionArticulo.Connection := ConexionPrincipal;
-      datosCaja.qryDefinicionArticulo.Close;
-      // ANTES: 4-way join sobre fza_articulos_skus -> fza_atributos_sku ->
-      //        fza_atributos_valores -> vi_atributos_nombres con DISTINCT.
-      //        Medido: 9.6 s en MariaDB con datos reales — el cuello del
-      //        flujo "Enter del codigo -> primer popup". La vista
-      //        vi_atributos_nombres por dentro hace un join + distinct
-      //        y al envolverla aqui en otro JOIN+DISTINCT, el optimizador
-      //        no la materializa.
-      // AHORA: lookup directo fza_articulos -> fza_variaciones_atributos
-      //        via TIPO_VARIACION_ART (que ya tiene indice). Es PK seek
-      //        sobre articulos y PK seek sobre variaciones_atributos.
-      //        Para un articulo con variacion TC, devuelve 2 filas
-      //        (Color, Talla). Para un articulo sin variacion, 0 filas.
-      datosCaja.qryDefinicionArticulo.SQL.Text :=
-      'SELECT vat.NOMBRE_VA      AS NOMBRE_ATRIBUTO,    ' +
-      '       vat.ORDEN_VA       AS ORDEN_VISUAL_ATRIBUTO ' +
-      '  FROM fza_articulos a                            ' +
-      '  JOIN fza_variaciones_atributos vat              ' +
-      '    ON vat.ID_VAR_VA = a.TIPO_VARIACION_ART       ' +
-      ' WHERE a.CODIGO_ART_ART = :ARTICULO               ' +
-      ' ORDER BY vat.ORDEN_VA                            ' +
-      ' LIMIT 5';
-      datosCaja.qryDefinicionArticulo.ParamByName('ARTICULO').AsString :=
-        ArticuloPadre;
-      datosCaja.qryDefinicionArticulo.Open;
-      while not datosCaja.qryDefinicionArticulo.Eof do
+      Col := ObtenerColumnaPorTag(i);
+      if Col <> nil then
       begin
-        NombresAtributos.Add(datosCaja.qryDefinicionArticulo.FieldByName(
-          'NOMBRE_ATRIBUTO').AsString);
-        datosCaja.qryDefinicionArticulo.Next;
-      end;
-    end;
-    FNumAtributosActual := NombresAtributos.Count;
-
-    // Solo tocamos la memoria del dataset si estamos escaneando algo nuevo
-    if DatosCaja.cdsLineas.Active
-       and (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
-      DatosCaja.cdsLineas.FieldByName(
-        'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger := NombresAtributos.Count;
-
-    tvLineasOpe.BeginUpdate;
-    try
-      for i := 1 to 5 do
-      begin
-        Col := ObtenerColumnaPorTag(i);
-        if (Col <> nil) then
+        if i <= Length(aNombresAtributos) then
         begin
-          if i <= NombresAtributos.Count then
+          Col.Caption := aNombresAtributos[i - 1];
+          Col.Visible := True;
+          Col.Options.Editing := True;
+          if DatosCaja.cdsLineas.Active and
+             (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
           begin
-            Col.Caption := NombresAtributos[i-1];
-            Col.Visible := True;
-            Col.Options.Editing := True;
-            if DatosCaja.cdsLineas.Active
-               and (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
-              DatosCaja.cdsLineas.FieldByName('ATTR' + IntToStr(
-                i) + '_NOMBRE').AsString := NombresAtributos[i-1];
-          end
-          else
-          begin
-            Col.Visible := False;
-            Col.Options.Editing := False;
-            Col.Caption := '-';
+            DatosCaja.cdsLineas.FieldByName(
+              'ATTR' + IntToStr(i) + '_NOMBRE').AsString :=
+              aNombresAtributos[i - 1];
           end;
+        end
+        else
+        begin
+          Col.Visible := False;
+          Col.Options.Editing := False;
+          Col.Caption := '-';
         end;
       end;
-    finally
-      tvLineasOpe.EndUpdate;
     end;
   finally
-    FreeAndNil(NombresAtributos);
+    tvLineasOpe.EndUpdate;
   end;
 //  tvLineasOpe.ApplyBestFit(nil, True, False);
 end;
@@ -2891,7 +2848,7 @@ var
 begin
   // Durante un escaneo no validamos el cliente: el foco se mueve a la rejilla
   // y el campo pudo quedar con la rafaga; lo da por bueno y no molesta.
-  if FProcesandoLecturaScanner then
+  if FEntrada.ProcesandoLectura then
     Error := False
   else if not FValidandoCliente then
   begin
@@ -2915,7 +2872,7 @@ begin
       else
       begin
         sNomCliente := '';
-        if FRepositorioConsultas.ObtenerCliente(
+        if FDependencias.RepositorioConsultas.ObtenerCliente(
              sCodigo,
              Cliente) then
         begin
@@ -2966,7 +2923,9 @@ begin
           ConexionPrincipal,
           FLecturas.RepositorioFacturas,
           DatosCaja.cdsCabecera,
-          DatosCaja.cdsLineas);
+          DatosCaja.cdsLineas,
+          nil,
+          RegistroLog);
         try
           Totales.ProcesarFacturaCompleta;
           ActualizarLabelTotal(nil, Totales.Totales.TotalLiquido);
@@ -3019,7 +2978,7 @@ var
   formulario: TfrmMtoSearch;
   Consulta: IResultadoConsultaCaja;
 begin
-  Consulta := FRepositorioConsultas.ConsultarClientes;
+  Consulta := FDependencias.RepositorioConsultas.ConsultarClientes;
   formulario := TfrmMtoSearch.Create(nil);
   try
     formulario.Name := 'frmMtoCliSearch';
@@ -3062,11 +3021,11 @@ var
   Encontrado: Boolean;
 begin
   // Durante un escaneo no validamos el empleado (mismo motivo que en cliente).
-  if FProcesandoLecturaScanner then
+  if FEntrada.ProcesandoLectura then
   begin
     Error := False;
   end;
-  if not FProcesandoLecturaScanner then
+  if not FEntrada.ProcesandoLectura then
   begin
     sCodigo := VarToStr(DisplayValue);
     Encontrado :=
@@ -3083,7 +3042,7 @@ begin
     if not Encontrado then
     begin
       Encontrado :=
-        FRepositorioConsultas.BuscarEmpleado(
+        FDependencias.RepositorioConsultas.BuscarEmpleado(
           sCodigo,
           Empleado);
     end;
@@ -3154,8 +3113,9 @@ begin
         ParametrosApp,
         PreviewTicket,
         UnidadesMedida,
-        CrearRepositorioTraspasoTicket,
-        CrearRepositorioTicketsCaja,
+        ContextoRepositoriosPantalla.TicketsCaja.CrearRepositorioTraspasoTicket,
+        ContextoRepositoriosPantalla.TicketsCaja.CrearRepositorioTicketsCaja,
+        RegistroLog,
         ConexionPrincipal,
         FCodigoEmpresa,
         FCodigoAlmacen,
@@ -3184,109 +3144,9 @@ begin
 end;
 
 procedure TfrmMtoOpeCaja.btnF12Click(Sender: TObject);
-var
-  frmFaseCobro: TfrmMtoCajaFaseCobro;
-  ObjTotales: TFacturaTotales;
-  Solicitud: TSolicitudCierreVenta;
-  Resultado: TResultadoCierreVenta;
-  Documento: TDocumentoCierreVenta;
 begin
-  // El cierre de la linea pendiente y el documento del cierre viven
-  // en inLibCajaVentaOperacion.
-  CerrarLineaPendiente(DatosCaja.cdsLineas);
-  ActualizarRelojCaja;
-  EscribirFechaCabeceraVenta(DatosCaja.cdsCabecera, FFecha);
-  frmFaseCobro := nil;
-  ObjTotales := nil;
-  // Con líneas en negativo se pide el motivo de la devolución antes de
-  // pasar al cobro; si el usuario cancela, no se abre la fase de cobro.
-  if PedirMotivoDevolucionSiProcede then
-  try
-    ObjTotales := TFacturaTotales.Create(
-      ConexionPrincipal,
-      FLecturas.RepositorioFacturas,
-      DatosCaja.cdsCabecera,
-      DatosCaja.cdsLineas);
-    ObjTotales.ProcesarFacturaCompleta;
-    frmFaseCobro := TfrmMtoCajaFaseCobro.Create(Self);
-    frmFaseCobro.CargarDatosDesdeFactura(ObjTotales);
-    frmFaseCobro.FHayLineasDeposito :=
-      HayLineasDepositoVenta(DatosCaja.cdsLineas);
-    frmFaseCobro.FCodigoEmpresa := FCodigoEmpresa;
-    frmFaseCobro.FCodigoAlmacen := FCodigoAlmacen;
-    frmFaseCobro.FCodigoCaja := FCodigoCaja;
-    frmFaseCobro.FFecha := FFecha;
-    frmFaseCobro.FCodigoCliente :=
-           DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString;
-    frmFaseCobro.FEmailCliente :=
-           DatosCaja.cdsCabecera.FieldByName('EMAIL_CLIENTE_FAC').AsString;
-    frmFaseCobro.FNifCliente :=
-           DatosCaja.cdsCabecera.FieldByName('NIF_CLIENTE_FAC').AsString;
-    frmFaseCobro.FCodigoPaisCliente :=
-           DatosCaja.cdsCabecera.FieldByName(
-             'CODIGO_PAI_CLIENTE_FAC').AsString;
-    frmFaseCobro.FNombrePaisCliente :=
-           DatosCaja.cdsCabecera.FieldByName(
-             'NOMBRE_PAI_CLIENTE_FAC').AsString;
-    if FNumeroRectifica <> '' then
-      frmFaseCobro.FRectificaA := FSerieRectifica + '\' + FNumeroRectifica;
-    if frmFaseCobro.ShowModal = mrOk then
-    begin
-      if frmFaseCobro.DatosCobro.ImporteDescuentoGlobal > 0 then
-      begin
-        AplicarRepartoDescuentoDataSet(
-          FRepartidorDescuento,
-          DatosCaja.cdsLineas,
-          frmFaseCobro.DatosCobro.ImporteDescuentoGlobal);
-        ObjTotales.ProcesarFacturaCompleta;
-      end;
-      Documento := ResolverDocumentoCierreVenta(
-        frmFaseCobro.TipoImpresion = tiFactura,
-        frmFaseCobro.cbbSERIE_FAC.Text,
-        frmFaseCobro.FSerieFactura,
-        frmFaseCobro.FFechaFactura,
-        FNumeroRectifica <> '');
-      ActualizarRelojCaja;
-      EscribirFechaCabeceraVenta(DatosCaja.cdsCabecera, FFecha);
-      frmFaseCobro.FFecha := FFecha;
-      Solicitud := Default(TSolicitudCierreVenta);
-      Solicitud.TipoImpresion := frmFaseCobro.TipoImpresion;
-      Solicitud.Grabacion.CodigoEmpresa := FCodigoEmpresa;
-      Solicitud.Grabacion.CodigoAlmacen := FCodigoAlmacen;
-      Solicitud.Grabacion.CodigoCaja := FCodigoCaja;
-      Solicitud.Grabacion.SerieDocumento := Documento.Serie;
-      Solicitud.Grabacion.TipoFactura := Documento.TipoFactura;
-      Solicitud.Grabacion.FechaFactura := Documento.FechaFactura;
-      Solicitud.Grabacion.FechaOperacion := FFecha;
-      Solicitud.Grabacion.NumeroManual := frmFaseCobro.FNumeroManual;
-      Solicitud.Grabacion.TipoRectificativa := FTipoRectificativa;
-      Solicitud.Grabacion.SerieRectificada := FSerieRectifica;
-      Solicitud.Grabacion.NumeroRectificado := FNumeroRectifica;
-      Solicitud.Grabacion.TratamientoMovimientos :=
-        FTratamientoMovRectificativa;
-      Solicitud.Grabacion.MotivoDevolucion := FMotivoDevolucion;
-      Solicitud.Grabacion.SerieOrigenDevolucion := FSerieOrigenDev;
-      Solicitud.Grabacion.NumeroOrigenDevolucion :=
-        FNumeroOrigenDev;
-      Solicitud.Grabacion.EmpresaOrigenDevolucion :=
-        FEmpresaOrigenDev;
-      Solicitud.Grabacion.AlmacenOrigenDevolucion :=
-        FAlmacenOrigenDev;
-      Solicitud.Grabacion.DatosCobro := frmFaseCobro.DatosCobro;
-      Resultado := FServicioCierreVenta.Ejecutar(Solicitud);
-      if Resultado.Grabada then
-      begin
-        ProcesarResultadoCierre(
-          Resultado,
-          frmFaseCobro.EnviarEmail,
-          frmFaseCobro.EmailEnvio);
-      end;
-    end;
-  finally
-    if Assigned(frmFaseCobro) then
-      FreeAndNil(frmFaseCobro);
-    FreeAndNil(ObjTotales);
-  end;
+  TCoordinadorCierreVentaCajaVcl.Ejecutar(
+    CrearContextoCierreVentaCajaVcl(Self));
 end;
 
 function TfrmMtoOpeCaja.OperacionVacia: Boolean;
@@ -3307,7 +3167,7 @@ procedure TfrmMtoOpeCaja.CargarRectificacion(
 var
   Resultado: TResultadoRectificacionCaja;
 begin
-  Resultado := FServicioRectificacion.Cargar(
+  Resultado := FDependencias.ServicioRectificacion.Cargar(
     ASerie,
     ANumero,
     ATipoRectificativa,
@@ -3397,7 +3257,9 @@ begin
     ConexionPrincipal,
     FLecturas.RepositorioFacturas,
     DatosCaja.cdsCabecera,
-    DatosCaja.cdsLineas);
+    DatosCaja.cdsLineas,
+    nil,
+    RegistroLog);
   try
     Totales.ProcesarFacturaCompleta;
     ActualizarLabelTotal(nil, Totales.Totales.TotalLiquido);
@@ -3464,7 +3326,7 @@ var
   formulario: TfrmMtoSearch;
   Consulta: IResultadoConsultaCaja;
 begin
-  Consulta := FRepositorioConsultas.ConsultarEmpleados;
+  Consulta := FDependencias.RepositorioConsultas.ConsultarEmpleados;
   formulario := TfrmMtoSearch.Create(nil);
   try
     formulario.Name := 'frmMtoEmpCajSearch';
@@ -3493,17 +3355,16 @@ end;
 
 procedure TfrmMtoOpeCaja.FormDestroy(Sender: TObject);
 begin
+  dsBusq.DataSet := nil;
   dsStock.DataSet := nil;
+  FResultadoBusquedaIncremental := nil;
   FLecturas.RepositorioFacturas := nil;
   FLecturas.ConsultaStock := nil;
-  FServicioRectificacion := nil;
-  FRepositorioConsultas := nil;
+  FRepositorioArticulos := nil;
   FIncidenciasSql := nil;
-  FServicioCierreVenta := nil;
-  FImpresorVenta := nil;
-  FRepartidorDescuento := nil;
-  FPoliticaStockVenta := nil;
-  FreeAndNil(FLector);
+  FDependencias := Default(TContextoDependenciasOperacionCaja);
+  FEntrada.Aplicacion := nil;
+  FreeAndNil(FEntrada.Lector);
   FreeAndNil(FBmpSwatchBoton);
 end;
 
@@ -3590,21 +3451,31 @@ begin
     CrearRepositorioLecturasFacturaUniDAC(ConexionPrincipal);
   // Detector del lector de codigo de barras (modo restaurar, con anti-eco para
   // la rejilla editable). Los parametros salen de la configuracion de caja.
-  FLector := TLectorScanner.Create;
-  FLector.Activo := ParametrosCaja.GetBool('vgerScanVelActivo', True);
-  FLector.UmbralMs := ParametrosCaja.GetInt('vgerScanVelMs', 40);
-  FLector.LongitudMinima := ParametrosCaja.GetInt('vgerScanMinLong', 4);
+  FEntrada.Lector := TLectorScanner.Create;
+  FEntrada.Lector.Activo := ParametrosCaja.GetBool(
+    'vgerScanVelActivo',
+    True);
+  FEntrada.Lector.UmbralMs := ParametrosCaja.GetInt(
+    'vgerScanVelMs',
+    40);
+  FEntrada.Lector.LongitudMinima := ParametrosCaja.GetInt(
+    'vgerScanMinLong',
+    4);
   // En caja, la lectura se procesa como artículo desde cualquier columna.
-  FLector.OmitirEnRejilla := False;
-  FLector.OnCodigoLeido := LectorCodigoLeido;
-  FLector.OnLecturaIniciada := LectorLecturaIniciada;
-  FLector.OnRejillaEditando := LectorRejillaEditando;
-  FLector.OnEsControlRejilla := LectorEsControlRejilla;
+  FEntrada.Lector.OmitirEnRejilla := False;
+  FEntrada.Lector.OnCodigoLeido := LectorCodigoLeido;
+  FEntrada.Lector.OnLecturaIniciada := LectorLecturaIniciada;
+  FEntrada.Lector.OnRejillaEditando := LectorRejillaEditando;
+  FEntrada.Lector.OnEsControlRejilla := LectorEsControlRejilla;
+  InicializarEntradaCajaVcl(Self);
   FBmpSwatchBoton := TBitmap.Create;
   // FswArtAPopup es un record (TStopwatch) — se inicializa a cero por
   // defecto, IsRunning sera False hasta que se arranque en
   // tvArticuloPropertiesValidate.
   InicializarServiciosOperacionCajaVcl(Self);
+  FRepositorioArticulos :=
+    ContextoRepositoriosPantalla.Caja.
+      CrearRepositorioArticulosCaja(ConexionPrincipal);
   dsLineas.DataSet := DatosCaja.cdsLineas;
   dsStock.DataSet := nil;
   dsLineas.OnDataChange := DsLineasDataChange;
@@ -3652,7 +3523,7 @@ procedure TfrmMtoOpeCaja.FormKeyDown(Sender: TObject; var Key: Word;
 begin
   // El lector resetea su estado, captura si la rejilla editaba y cierra la
   // lectura por velocidad (consume el VK_RETURN si era una rafaga del lector).
-  FLector.KeyDown(Key, Shift);
+  FEntrada.Lector.KeyDown(Key, Shift);
   if (Key = VK_F5) then
     btnF5.Click;
   // F4 -> devolución escaneando / localizando el ticket de origen
@@ -3906,7 +3777,8 @@ begin
   CargarAvsValidosArticulo(
     ArtPadre,
     Orden,
-    CrearLookupAtributosArticulos(ConexionPrincipal),
+    ContextoRepositoriosPantalla.Articulos.
+      CrearLookupAtributosArticulos(ConexionPrincipal),
     Avs);
   if Length(Avs) = 0 then
   begin
@@ -3966,7 +3838,7 @@ begin
         // Defensivo: si cxGrid desparenta el editor entre el HasParent
         // de arriba y el set EditValue, seguimos sin pintar — el data
         // link ya tiene el valor via RegistrarValorAtributo.
-        inLibLog.Log.LogWarning(
+        RegistroLog.RegistrarAviso(
           'CajaOpe: EditValue del editor inplace ignorado: ' +
           E.Message);
     end;

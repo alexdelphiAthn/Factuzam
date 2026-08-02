@@ -319,7 +319,7 @@ uses
   inLibGridTallasInline,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku, inLibColumnasDocumento, UniDataGen,
-  inLibValidacionDocumento, inLibPresentacionDocumento, inLibLog,
+  inLibValidacionDocumento, inLibPresentacionDocumento,
   inLibMsgArticulos, inLibMsgVentas,
   // Composicion del puerto de persistencia del pivote (V2).
   UniDataPivoteVenta, UniDataColumnasSkuServicios;
@@ -343,8 +343,8 @@ begin
       // Teardown defensivo en cierre: nada que hacer si el grid ya
       // esta a medio destruir.
       on E: Exception do
-        if inLibLog.Log() <> nil then
-          inLibLog.Log.LogWarning(
+        if RegistroLog <> nil then
+          RegistroLog.RegistrarAviso(
             'Pedidos.Destroy: Desmontar fallo: ' + E.Message);
     end;
     // Las capacidades sostienen la misma instancia: soltar tambien.
@@ -567,9 +567,11 @@ begin
         if not dmmPedidos.unqryTablaG.FieldByName('FECHA_PED').IsNull then
           dFecha := dmmPedidos.unqryTablaG.
                       FieldByName('FECHA_PED').AsDateTime;
-        Validador := CrearValidadorArticulos(
+        Validador := ContextoRepositoriosPantalla.Articulos.
+          CrearValidadorArticulos(
                        dmmPedidos.unqryTablaG.Connection);
-        Resolver := CrearResolverArticulos(
+        Resolver := ContextoRepositoriosPantalla.Articulos.
+          CrearResolverArticulos(
           dmmPedidos.unqryTablaG.Connection);
         Resolucion := Validador.Resolver(sInput);
         if Resolucion.Encontrado then
@@ -664,7 +666,7 @@ begin
     if not dmmPedidos.unqryTablaG.FieldByName('FECHA_PED').IsNull then
       dFecha := dmmPedidos.unqryTablaG.
                   FieldByName('FECHA_PED').AsDateTime;
-    Resolver := CrearResolverArticulos(
+    Resolver := ContextoRepositoriosPantalla.Articulos.CrearResolverArticulos(
       dmmPedidos.unqryTablaG.Connection);
     try
       Datos := Resolver.ResolverDatos(ACodigoArticulo, ACodigoSku,
@@ -849,7 +851,7 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (quedan sin precio y no moveran stock al albaranar).
   sLineasSinSku := LineasSinSkuRequerido(
-    CrearValidadorArticulos(
+    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
       dmmPedidos.unqryTablaG.Connection),
     dmmPedidos.unqryPedidosLineas, 'PEDLIN');
   if (sLineasSinSku = '') or
@@ -1291,7 +1293,7 @@ begin
       except
         on E: Exception do
           // Teardown defensivo; queda constancia en el log.
-          inLibLog.Log.LogWarning(
+          RegistroLog.RegistrarAviso(
             'Pedidos.ConstruirModoEntrada: HideEdit ignorado: ' +
             E.Message);
       end;
@@ -1300,7 +1302,7 @@ begin
     except
       on E: Exception do
         // Teardown defensivo; queda constancia en el log.
-        inLibLog.Log.LogWarning(
+        RegistroLog.RegistrarAviso(
           'Pedidos.ConstruirModoEntrada: soltar FocusedItem ' +
           'fallo: ' + E.Message);
     end;
@@ -1310,7 +1312,7 @@ begin
       except
         on E: Exception do
           // Teardown defensivo; queda constancia en el log.
-          inLibLog.Log.LogWarning(
+          RegistroLog.RegistrarAviso(
             'Pedidos.ConstruirModoEntrada: Desmontar fallo: ' +
             E.Message);
       end;
@@ -1319,7 +1321,7 @@ begin
     except
       on E: Exception do
         // Teardown defensivo; queda constancia en el log.
-        inLibLog.Log.LogWarning(
+        RegistroLog.RegistrarAviso(
           'Pedidos.ConstruirModoEntrada: soltar DataSource ' +
           'fallo: ' + E.Message);
     end;
@@ -1346,7 +1348,7 @@ begin
     except
       on E: Exception do
         // Sin DataSource el grid queda vacio: hay que saberlo.
-        inLibLog.Log.LogWarning(
+        RegistroLog.RegistrarAviso(
           'Pedidos.ConstruirModoEntrada: restaurar DataSource ' +
           'fallo: ' + E.Message);
     end;
@@ -1362,12 +1364,15 @@ begin
     tvPedidosLineas, ds, FModoEntradaSel,
     dmmPedidos.unqryTablaG.FieldByName(
       'CODIGO_ALM_PED').AsString, 'PEDLIN');
+  Cfg.RegistroLog := RegistroLog;
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
-    CrearValidadorArticulos(dmmPedidos.unqryTablaG.Connection);
+    ContextoRepositoriosPantalla.Articulos.
+      CrearValidadorArticulos(dmmPedidos.unqryTablaG.Connection);
   Cfg.LookupAtributos :=
-    CrearLookupAtributosArticulos(dmmPedidos.unqryTablaG.Connection);
+    ContextoRepositoriosPantalla.Articulos.
+      CrearLookupAtributosArticulos(dmmPedidos.unqryTablaG.Connection);
   // Precio por SKU para la consolidacion del modo tallas: lineas con
   // precio distinto no fusionan.
   Cfg.ObtenerPrecioSku := PrecioSkuTallas;
@@ -1654,7 +1659,7 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado no
   // pueden mover stock (los movimientos las saltan).
   sLineasSinSku := LineasSinSkuRequerido(
-    CrearValidadorArticulos(
+    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
       dmmPedidos.unqryTablaG.Connection),
     ds,
     'PEDLIN');
@@ -1823,7 +1828,7 @@ begin
   inherited;
   form := TfrmModalImportarPedidosPS.Create(Self);
   try
-    form.dmPedidos := dmmPedidos;
+    form.Configurar(dmmPedidos);
     form.ShowModal;
     dmmPedidos.unqryTablaG.Close;
     dmmPedidos.unqryTablaG.Open;

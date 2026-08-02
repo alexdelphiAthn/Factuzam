@@ -1146,203 +1146,23 @@
     end
   end
   object dsResEmpleado: TDataSource
-    DataSet = qryResEmpleado
     Left = 760
     Top = 80
   end
-  object qryResEmpleado: TUniQuery
-    Left = 760
-    Top = 120
-    ParamData = <
-      item
-        DataType = ftString
-        Name = 'pEMPRESA'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftString
-        Name = 'pALMACEN'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftString
-        Name = 'pCAJA'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftDateTime
-        Name = 'pFDESDE'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftDateTime
-        Name = 'pFHASTA'
-        ParamType = ptInput
-        Value = nil
-      end>
-  end
   object dsResFP: TDataSource
-    DataSet = qryResFP
     Left = 760
     Top = 160
   end
-  object qryResFP: TUniQuery
-    Left = 760
-    Top = 200
-    ParamData = <
-      item
-        DataType = ftString
-        Name = 'pEMPRESA'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftString
-        Name = 'pALMACEN'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftString
-        Name = 'pCAJA'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftDateTime
-        Name = 'pFDESDE'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftDateTime
-        Name = 'pFHASTA'
-        ParamType = ptInput
-        Value = nil
-      end>
-  end
   object dsResFam: TDataSource
-    DataSet = qryResFam
     Left = 760
     Top = 240
   end
-  object qryResFam: TUniQuery
-    Left = 760
-    Top = 280
-    ParamData = <
-      item
-        DataType = ftString
-        Name = 'pEMPRESA'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftString
-        Name = 'pALMACEN'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftString
-        Name = 'pCAJA'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftDateTime
-        Name = 'pFDESDE'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftDateTime
-        Name = 'pFHASTA'
-        ParamType = ptInput
-        Value = nil
-      end>
-  end
   object dsResProp: TDataSource
-    DataSet = qryResProp
     Left = 760
     Top = 320
   end
-  object qryResProp: TUniQuery
-    Left = 760
-    Top = 360
-    ParamData = <
-      item
-        DataType = ftString
-        Name = 'pEMPRESA'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftString
-        Name = 'pALMACEN'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftString
-        Name = 'pCAJA'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftDateTime
-        Name = 'pFDESDE'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftDateTime
-        Name = 'pFHASTA'
-        ParamType = ptInput
-        Value = nil
-      end>
-  end
   object dsResIVA: TDataSource
-    DataSet = qryResIVA
     Left = 760
     Top = 400
-  end
-  object qryResIVA: TUniQuery
-    Left = 760
-    Top = 440
-    ParamData = <
-      item
-        DataType = ftString
-        Name = 'pEMPRESA'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftString
-        Name = 'pALMACEN'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftString
-        Name = 'pCAJA'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftDateTime
-        Name = 'pFDESDE'
-        ParamType = ptInput
-        Value = nil
-      end
-      item
-        DataType = ftDateTime
-        Name = 'pFHASTA'
-        ParamType = ptInput
-        Value = nil
-      end>
   end
 end

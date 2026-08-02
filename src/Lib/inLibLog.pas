@@ -128,6 +128,20 @@ type
     procedure RegistrarRendimiento(
       const AEtiqueta, ADetalle: string;
       ADuracionMs: Int64);
+    procedure RegistrarEvento(
+      const AUnidad, AObjeto, AEvento, ADetalle: string);
+    procedure RegistrarSQL(
+      const ASQL: string;
+      ADuracionMs: Int64;
+      AFilas: Integer;
+      ACorrecto: Boolean;
+      const AError: string = '';
+      const AParametros: string = '');
+    function SQLActivo: Boolean;
+    procedure AsignarMonitorSQL(
+      const AMonitorSQL: IServicioMonitorSQL);
+    procedure AplicarModosDepuracion(
+      const AParametros: IParametrosAplicacion);
   end;
 
 var
@@ -181,6 +195,45 @@ procedure TAdaptadorRegistroLog.RegistrarRendimiento(
   ADuracionMs: Int64);
 begin
   FLog.LogPerf(AEtiqueta, ADetalle, ADuracionMs);
+end;
+
+procedure TAdaptadorRegistroLog.RegistrarEvento(
+  const AUnidad, AObjeto, AEvento, ADetalle: string);
+begin
+  FLog.LogEvento(AUnidad, AObjeto, AEvento, ADetalle);
+end;
+
+procedure TAdaptadorRegistroLog.RegistrarSQL(
+  const ASQL: string;
+  ADuracionMs: Int64;
+  AFilas: Integer;
+  ACorrecto: Boolean;
+  const AError, AParametros: string);
+begin
+  FLog.LogSQLExt(
+    ASQL,
+    ADuracionMs,
+    AFilas,
+    ACorrecto,
+    AError,
+    AParametros);
+end;
+
+function TAdaptadorRegistroLog.SQLActivo: Boolean;
+begin
+  Result := FLog.IsLogTypeEnabled(ltSQL);
+end;
+
+procedure TAdaptadorRegistroLog.AsignarMonitorSQL(
+  const AMonitorSQL: IServicioMonitorSQL);
+begin
+  FLog.AsignarMonitorSQL(AMonitorSQL);
+end;
+
+procedure TAdaptadorRegistroLog.AplicarModosDepuracion(
+  const AParametros: IParametrosAplicacion);
+begin
+  inLibLog.AplicarModosDepuracion(AParametros);
 end;
 
 function CompararInfoLog(const AIzquierda, ADerecha: TLogFileInfo): Integer;

@@ -140,7 +140,7 @@ type
 implementation
 
 uses
-  inLibLog, inLibValoresAutomaticos, inLibContadorLineas,
+  inLibValoresAutomaticos, inLibContadorLineas,
   UniDataContadorLineasRepositorio,
   System.Diagnostics, System.UITypes,
   inLibAlbaranesCompraMovimientos,
@@ -393,11 +393,12 @@ const
     swQ := TStopwatch.StartNew;
     try
       qry.Open;
-      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+      RegistroLog.RegistrarRendimiento(
+        TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
     except
       on E: Exception do
       begin
-        inLibLog.Log.LogPerf(TAG,
+        RegistroLog.RegistrarRendimiento(TAG,
           Nombre + ' ERROR=' + E.Message,
           swQ.ElapsedMilliseconds);
         raise;
@@ -416,7 +417,7 @@ begin
   AbrirConTiempo(unqryMovimientosProveedor,
                  'unqryMovimientosProveedor');
   AbrirConTiempo(unqryFormasPago, 'unqryFormasPago');
-  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+  RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmAlbaranesCompra.unqryTablaGAfterInsert(DataSet: TDataSet);

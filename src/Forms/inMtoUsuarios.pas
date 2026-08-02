@@ -114,8 +114,6 @@ begin
   // que F5 en el menu de caja). Rellena los tres campos de forma coherente.
   frm := TfrmMtoModalCajDef.Create(Application);
   try
-    frm.qrySeleccion.Connection := dmmUsuarios.unqryTablaG.Connection;
-    frm.qrySeleccion.Open;
     frm.sEmpresa := dmmUsuarios.unqryTablaG.FieldByName('EMPRESA_DEFECTO_USU').AsString;
     frm.sAlmacen := dmmUsuarios.unqryTablaG.FieldByName('ALMACEN_DEFECTO_USU').AsString;
     frm.sCaja    := dmmUsuarios.unqryTablaG.FieldByName('CAJA_DEFECTO_USU').AsString;
@@ -126,11 +124,11 @@ begin
           (dsTablaG.DataSet.State <> dsEdit)) then
         dsTablaG.DataSet.Edit;
       dmmUsuarios.unqryTablaG.FieldByName('EMPRESA_DEFECTO_USU').AsString :=
-                            frm.qrySeleccion.FieldByName('Empresa').AsString;
+                            frm.EmpresaSeleccionada;
       dmmUsuarios.unqryTablaG.FieldByName('ALMACEN_DEFECTO_USU').AsString :=
-                            frm.qrySeleccion.FieldByName('Almacen').AsString;
+                            frm.AlmacenSeleccionado;
       dmmUsuarios.unqryTablaG.FieldByName('CAJA_DEFECTO_USU').AsString :=
-                            frm.qrySeleccion.FieldByName('Caja').AsString;
+                            frm.CajaSeleccionada;
       dmmUsuarios.unqryTablaG.Post;
     end;
   finally

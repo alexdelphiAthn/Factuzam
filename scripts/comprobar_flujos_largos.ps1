@@ -734,7 +734,9 @@ if ($contenidoFormularioConsultaOpe -notmatch
     'CrearRepositorioTraspasoTicket.*?' +
     'CrearRepositorioTicketsCaja.*?ConexionPrincipal' -or
     $contenidoFormularioConsultaOpe -notmatch
-    '(?s)RepositoriosTickets\s*:=\s*CrearRepositorioTicketsCaja' -or
+    '(?s)RepositoriosTickets\s*:=\s*' +
+    '(?:ContextoRepositoriosPantalla\.TicketsCaja\.\s*)?' +
+    'CrearRepositorioTicketsCaja' -or
     $contenidoFormularioConsultaOpe -notmatch
     '(?s)ImprimirTicketDesdeBD\(.*?' +
     'RepositoriosTickets\.Tickets' -or
@@ -1097,12 +1099,6 @@ if ($contenidoAplicacionArticuloDevolucion -notmatch
   throw 'La fachada de articulo devuelto no coordina su colaborador.'
 }
 $contratosAplicacionArticuloDevolucion = @(
-  'FROM fza_articulos_conjuntos_asign aca',
-  'aca.ID_VA_ACA <>',
-  'FROM fza_articulos_proveedores ap',
-  'ap.CODIGO_PRV_AP = :prv',
-  'ap.ESPROVEEDORPRINCIPAL_AP',
-  'FROM fza_articulos',
   'Resolver.ResolverDatos(',
   'Resolver.ResolverUltimoCoste(',
   'FDatos.UltimoCoste.RefProveedor',
@@ -1118,6 +1114,24 @@ $contratosAplicacionArticuloDevolucion = @(
 foreach ($contrato in $contratosAplicacionArticuloDevolucion) {
   if (-not $contenidoAplicacionArticuloDevolucion.Contains($contrato)) {
     throw "La aplicacion de articulo devuelto no conserva: $contrato."
+  }
+}
+$rutaRepositorioArticuloDevolucion = Join-Path $Raiz `
+  'src\DataModules\UniDataDevolucionesCompraRepositorio.pas'
+$contenidoRepositorioArticuloDevolucion = Get-Content `
+  -LiteralPath $rutaRepositorioArticuloDevolucion `
+  -Raw
+$contratosRepositorioArticuloDevolucion = @(
+  'FROM fza_articulos_conjuntos_asign ACA',
+  'ACA.ID_VA_ACA <>',
+  'FROM fza_articulos_proveedores AP',
+  'AP.CODIGO_PRV_AP = :PROVEEDOR',
+  'AP.ESPROVEEDORPRINCIPAL_AP',
+  'FROM fza_articulos'
+)
+foreach ($contrato in $contratosRepositorioArticuloDevolucion) {
+  if (-not $contenidoRepositorioArticuloDevolucion.Contains($contrato)) {
+    throw "El repositorio de articulo devuelto no conserva: $contrato."
   }
 }
 

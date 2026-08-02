@@ -40,7 +40,7 @@ uses
   cxControls, cxContainer, cxEdit, cxTextEdit, cxSpinEdit,
   cxCheckBox, cxLabel, cxDropDownEdit, cxButtons,
   cxPC, cxLookAndFeels, cxLookAndFeelPainters,
-  DBAccess, Uni, System.UITypes;
+  System.UITypes, inLibArticulosPropiedadesPersistenciaIntf;
 
 type
   TTipoValorProp = (tvpLista, tvpTextoLibre, tvpNumero, tvpBooleano);
@@ -62,15 +62,17 @@ type
 
   TfrmSelPropiedades = class(TFrmModalAceptCancel)
   private
-    FConexion       : TUniConnection;
+    FLectura        : ILectorPropiedadesArticulo;
     FExcluirCodigos : TStringList;
     FListBox        : TListBox;
     procedure BtnAceptarClick(Sender: TObject);
     procedure BtnCancelarClick(Sender: TObject);
   public
     CodigosSeleccionados : TStringList;
-    constructor Create(AOwner: TComponent; AConexion: TUniConnection;
-                       AExcluir: TStringList); reintroduce;
+    constructor Create(
+      AOwner: TComponent;
+      const ALectura: ILectorPropiedadesArticulo;
+      AExcluir: TStringList); reintroduce;
     destructor Destroy; override;
     procedure CargarLista;
     function IsShortCut(var Message: TWMKey): Boolean; override;
@@ -78,7 +80,7 @@ type
 
   TGestorPropiedades = class
   private
-    FConexion       : TUniConnection;
+    FServicios      : TServiciosPropiedadesArticulo;
     FScrollBox      : TScrollBox;
     FCodigoArticulo : string;
     FUsuario        : string;
@@ -102,9 +104,10 @@ type
     procedure BtnPorUnidadClick(Sender: TObject);
     procedure AbrirEditorPorUnidad(const S: TSlotProp);
   public
-    constructor Create(AScrollBox: TScrollBox;
-                       AConexion: TUniConnection;
-                       const AUsuario: string);
+    constructor Create(
+      AScrollBox: TScrollBox;
+      const AServicios: TServiciosPropiedadesArticulo;
+      const AUsuario: string);
     destructor Destroy; override;
     procedure CargarPropiedades(const ACodigoArticulo: string);
     procedure CargarPropiedadesPorFamilia(const ACodigoFamilia: string);
@@ -131,7 +134,7 @@ type
   // tarifas/fotos). Construido en codigo, sin .dfm propio.
   TfrmPropPorUnidad = class(TFrmModalAceptCancel)
   private
-    FConexion   : TUniConnection;
+    FServicios  : TServiciosPropiedadesArticulo;
     FUsuario    : string;
     FArticulo   : string;
     FCodigoProp : string;
@@ -154,10 +157,12 @@ type
     procedure BtnAceptarClick(Sender: TObject);
     procedure BtnCancelarClick(Sender: TObject);
   public
-    constructor Create(AOwner: TComponent; AConexion: TUniConnection;
-                       const AUsuario, AArticulo, ACodigoProp,
-                       ANombreProp: string; ATipoValor: TTipoValorProp;
-                       const ANivel: string); reintroduce;
+    constructor Create(
+      AOwner: TComponent;
+      const AServicios: TServiciosPropiedadesArticulo;
+      const AUsuario, AArticulo, ACodigoProp, ANombreProp: string;
+      ATipoValor: TTipoValorProp;
+      const ANivel: string); reintroduce;
     destructor Destroy; override;
     function IsShortCut(var Message: TWMKey): Boolean; override;
   end;
@@ -175,11 +180,13 @@ const
   ANCHO_BTN_DEL  = 24;
   COLOR_REQUERIDO = clMaroon;
 
-constructor TfrmSelPropiedades.Create(AOwner: TComponent;
-  AConexion: TUniConnection; AExcluir: TStringList);
+constructor TfrmSelPropiedades.Create(
+  AOwner: TComponent;
+  const ALectura: ILectorPropiedadesArticulo;
+  AExcluir: TStringList);
 begin
   inherited Create(AOwner);
-  FConexion       := AConexion;
+  FLectura        := ALectura;
   FExcluirCodigos := AExcluir;
   CodigosSeleccionados := TStringList.Create;
   Caption    := 'Añadir propiedades al artículo';
@@ -228,37 +235,22 @@ end;
 
 procedure TfrmSelPropiedades.CargarLista;
 var
-  q: TUniQuery;
+  oPropiedad: TDefinicionPropiedadArticulo;
+  oPropiedades: TArray<TDefinicionPropiedadArticulo>;
 begin
   FListBox.Clear;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FConexion;
-    q.SQL.Text   :=
-      'SELECT CODIGO_PROP_ARTPROP, NOMBRE_PROP_PROP, TIPO_VALOR_PROP ' +
-      'FROM   fza_propiedades ' +
-      'WHERE  ESACTIVO_PROP = ''S'' ' +
-      'ORDER  BY NOMBRE_PROP_PROP';
-    q.Open;
-    while not q.Eof do
+  oPropiedades := FLectura.ListarDisponibles;
+  for oPropiedad in oPropiedades do
+  begin
+    // Excluir las ya asignadas
+    if FExcluirCodigos.IndexOf(oPropiedad.Codigo) < 0 then
     begin
-      // Excluir las ya asignadas
-      if FExcluirCodigos.IndexOf(q.FieldByName(
-        'CODIGO_PROP_ARTPROP').AsString) < 0 then
-      begin
-        FListBox.Items.AddObject(
-          q.FieldByName('NOMBRE_PROP_PROP').AsString + '  [' +
-          q.FieldByName('TIPO_VALOR_PROP').AsString + ']',
-          TObject(FListBox.Items.Count));
-        // Guardar el código en un objeto paralelo usando tag del form
-        // Usamos Items.Objects con índice entero como referencia, almacenamos
-        // código en Tag via SubItems trick → usamos un StringList auxiliar
-        CodigosSeleccionados.Add(q.FieldByName('CODIGO_PROP_ARTPROP').AsString);
-      end;
-      q.Next;
+      FListBox.Items.AddObject(
+        oPropiedad.Nombre + '  [' + oPropiedad.TipoValor + ']',
+        TObject(FListBox.Items.Count));
+      // La lista conserva el código asociado al mismo índice visual.
+      CodigosSeleccionados.Add(oPropiedad.Codigo);
     end;
-  finally
-    FreeAndNil(q);
   end;
   // CodigosSeleccionados servirá como mapa índice→código
   // lo reutilizamos; los seleccionados reales se calculan en BtnAceptarClick
@@ -292,12 +284,14 @@ end;
 { TGestorPropiedades — constructor / destructor                               }
 { ═══════════════════════════════════════════════════════════════════════════ }
 
-constructor TGestorPropiedades.Create(AScrollBox: TScrollBox;
-  AConexion: TUniConnection; const AUsuario: string);
+constructor TGestorPropiedades.Create(
+  AScrollBox: TScrollBox;
+  const AServicios: TServiciosPropiedadesArticulo;
+  const AUsuario: string);
 begin
   inherited Create;
   FScrollBox  := AScrollBox;
-  FConexion   := AConexion;
+  FServicios  := AServicios;
   FUsuario    := AUsuario;
   FSlots      := TList<TSlotProp>.Create;
   FModificado := False;
@@ -363,10 +357,12 @@ end;
 
 procedure TGestorPropiedades.CargarPropiedades(const ACodigoArticulo: string);
 var
-  q    : TUniQuery;
-  qOpc : TUniQuery;
-  S    : TSlotProp;
-  i    : Integer;
+  i: Integer;
+  oDefinicion: TDefinicionPropiedadArticulo;
+  oDefiniciones: TArray<TDefinicionPropiedadArticulo>;
+  oOpcion: TOpcionPropiedadArticulo;
+  oOpciones: TArray<TOpcionPropiedadArticulo>;
+  S: TSlotProp;
 begin
   // Guard de reentrada: dos cargas solapadas (p.ej. dos AfterScroll casi
   // simultaneos) comparten FSlots y el LimpiarControles de una vacia la
@@ -379,94 +375,39 @@ begin
     LimpiarControles;
     FModificado := False;
     if ACodigoArticulo = '' then Exit;
-    // ── 1. Propiedades ya asignadas a este artículo ──────────────────────
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := FConexion;
-      // Una fila por propiedad que el articulo tenga a CUALQUIER nivel
-      // (DISTINCT sobre la PK ampliada de Fase 1). El valor que se edita en
-      // esta pestaña es el de nivel ARTICULO (apz, CODIGO_UNIDAD_ARTPROP =
-      // ''); el desglose por color/SKU se gestiona en TfrmPropPorUnidad.
-      q.SQL.Text :=
-        'SELECT p.CODIGO_PROP_ARTPROP, p.NOMBRE_PROP_PROP, p.TIPO_VALOR_PROP, ' +
-        '       p.NIVEL_PROP, ' +
-        '       apz.ID_PV_ARTPROP, apz.VALOR_LIBRE_ARTPROP, ' +
-        '       COALESCE(fa.ESREQUERIDO_FA, ''N'') AS ESREQUERIDO_FA, ' +
-        '       COALESCE(fa.ORDEN_MOSTRAR_FA, 999) AS ORDEN_MOSTRAR_FA ' +
-        'FROM   (SELECT DISTINCT CODIGO_ART_ART, CODIGO_PROP_ARTPROP ' +
-        '          FROM fza_articulos_propiedades ' +
-        '         WHERE CODIGO_ART_ART = :art) d ' +
-        'JOIN   fza_propiedades p ' +
-        '       ON p.CODIGO_PROP_ARTPROP = d.CODIGO_PROP_ARTPROP ' +
-        'LEFT JOIN fza_articulos_propiedades apz ' +
-        '       ON apz.CODIGO_ART_ART        = d.CODIGO_ART_ART ' +
-        '      AND apz.CODIGO_PROP_ARTPROP   = d.CODIGO_PROP_ARTPROP ' +
-        '      AND apz.CODIGO_UNIDAD_ARTPROP = '''' ' +
-        'LEFT JOIN fza_articulos art ' +
-        '       ON art.CODIGO_ART_ART = d.CODIGO_ART_ART ' +
-        'LEFT JOIN fza_familias_atributos fa ' +
-        '       ON fa.CODIGO_PROP_ARTPROP = d.CODIGO_PROP_ARTPROP ' +
-        '      AND fa.CODIGO_FAM_FAM      = art.CODIGO_FAM_ART ' +
-        'WHERE  p.ESACTIVO_PROP = ''S'' ' +
-        'ORDER  BY COALESCE(fa.ORDEN_MOSTRAR_FA, 999), p.NOMBRE_PROP_PROP';
-      q.ParamByName('art').AsString := ACodigoArticulo;
-      q.Open;
-      while not q.Eof do
-      begin
-        // Default() libera los strings del record anterior (decrementa
-        // su refcount) antes de re-inicializar. FillChar machacaba los
-        // punteros sin liberar, dejando los buffers de strings huerfanos
-        // -> ~20 UnicodeString leak por cada CargarPropiedades.
-        S := Default(TSlotProp);
-        S.CodigoPropiedad := q.FieldByName('CODIGO_PROP_ARTPROP').AsString;
-        S.NombrePropiedad := q.FieldByName('NOMBRE_PROP_PROP').AsString;
-        S.TipoValor := TipoDesdeCadena(q.FieldByName('TIPO_VALOR_PROP').AsString);
-        S.Nivel           := q.FieldByName('NIVEL_PROP').AsString;
-        S.EsRequerido     := q.FieldByName('ESREQUERIDO_FA').AsString = 'S';
-        S.IdValorPV       := q.FieldByName('ID_PV_ARTPROP').AsInteger;
-        S.ValorLibre      := q.FieldByName('VALOR_LIBRE_ARTPROP').AsString;
-        S.OriginalIdValorPV  := S.IdValorPV;
-        S.OriginalValorLibre := S.ValorLibre;
-        S.Ctrl            := nil;
-        S.Opciones        := nil;
-        S.Eliminar        := False;
-        FSlots.Add(S);
-        q.Next;
-      end;
-    finally
-      FreeAndNil(q);
+    oDefiniciones := FServicios.Lectura.ListarAsignadas(ACodigoArticulo);
+    for oDefinicion in oDefiniciones do
+    begin
+      S := Default(TSlotProp);
+      S.CodigoPropiedad := oDefinicion.Codigo;
+      S.NombrePropiedad := oDefinicion.Nombre;
+      S.TipoValor := TipoDesdeCadena(oDefinicion.TipoValor);
+      S.Nivel := oDefinicion.Nivel;
+      S.EsRequerido := oDefinicion.EsRequerido;
+      S.IdValorPV := oDefinicion.IdValor;
+      S.ValorLibre := oDefinicion.ValorLibre;
+      S.OriginalIdValorPV := S.IdValorPV;
+      S.OriginalValorLibre := S.ValorLibre;
+      S.Ctrl := nil;
+      S.Opciones := nil;
+      S.Eliminar := False;
+      FSlots.Add(S);
     end;
     // ── 2. Opciones para slots tipo LISTA ────────────────────────────────
-    qOpc := TUniQuery.Create(nil);
-    try
-      qOpc.Connection := FConexion;
-      qOpc.SQL.Text   :=
-        'SELECT ID_PV_ARTPROP, PV ' +
-        'FROM   fza_propiedades_valores ' +
-        'WHERE  ID_PROP_PV = :cod ' +
-        '  AND  ESACTIVO_PV = ''S'' ' +
-        'ORDER  BY PV';
-      for i := 0 to FSlots.Count - 1 do
+    for i := 0 to FSlots.Count - 1 do
+    begin
+      if FSlots[i].TipoValor = tvpLista then
       begin
-        if FSlots[i].TipoValor = tvpLista then
+        S := FSlots[i];
+        S.Opciones := TDictionary<Integer, string>.Create;
+        oOpciones := FServicios.Lectura.ListarOpciones(
+          S.CodigoPropiedad);
+        for oOpcion in oOpciones do
         begin
-          S := FSlots[i];
-          S.Opciones := TDictionary<Integer, string>.Create;
-          qOpc.Close;
-          qOpc.ParamByName('cod').AsString := S.CodigoPropiedad;
-          qOpc.Open;
-          while not qOpc.Eof do
-          begin
-            S.Opciones.Add(
-              qOpc.FieldByName('ID_PV_ARTPROP').AsInteger,
-              qOpc.FieldByName('PV').AsString);
-            qOpc.Next;
-          end;
-          FSlots[i] := S;
+          S.Opciones.Add(oOpcion.IdValor, oOpcion.Valor);
         end;
+        FSlots[i] := S;
       end;
-    finally
-      FreeAndNil(qOpc);
     end;
     ReconstruirVista;
   finally
@@ -477,12 +418,14 @@ end;
 procedure TGestorPropiedades.CargarPropiedadesPorFamilia(
                                                    const ACodigoFamilia: string);
 var
-  qProp     : TUniQuery;
-  qOpc      : TUniQuery;
-  S         : TSlotProp;
-  cod       : string;
-  idx, i    : Integer;
-  EstaVacia : Boolean;
+  EstaVacia: Boolean;
+  i: Integer;
+  idx: Integer;
+  oDefinicion: TDefinicionPropiedadArticulo;
+  oDefiniciones: TArray<TDefinicionPropiedadArticulo>;
+  oOpcion: TOpcionPropiedadArticulo;
+  oOpciones: TArray<TOpcionPropiedadArticulo>;
+  S: TSlotProp;
 begin
   if ACodigoFamilia = '' then Exit;
 
@@ -532,78 +475,46 @@ begin
     FSlots[i] := S;
   end;
   FModificado := True;
-  qProp := TUniQuery.Create(nil);
-  qOpc  := TUniQuery.Create(nil);
-  try
-    qProp.Connection := FConexion;
-    qProp.SQL.Text   :=
-      'SELECT p.CODIGO_PROP_ARTPROP, p.NOMBRE_PROP_PROP, p.TIPO_VALOR_PROP, ' +
-      '       p.NIVEL_PROP, fa.ESREQUERIDO_FA ' +
-      'FROM fza_familias_atributos fa ' +
-      'JOIN fza_propiedades p ON p.CODIGO_PROP_ARTPROP = ' +
-      'fa.CODIGO_PROP_ARTPROP ' +
-      'WHERE fa.CODIGO_FAM_FAM = :fam ' +
-      '  AND p.ESACTIVO_PROP = ''S'' ' +
-      'ORDER BY fa.ORDEN_MOSTRAR_FA, p.NOMBRE_PROP_PROP';
-    qProp.ParamByName('fam').AsString := ACodigoFamilia;
-    qProp.Open;
-    qOpc.Connection := FConexion;
-    qOpc.SQL.Text   :=
-      'SELECT ID_PV_ARTPROP, PV ' +
-      'FROM fza_propiedades_valores ' +
-      'WHERE ID_PROP_PV = :cod AND ESACTIVO_PV = ''S'' ' +
-      'ORDER BY PV';
-    while not qProp.Eof do
+  oDefiniciones := FServicios.Lectura.ListarFamilia(ACodigoFamilia);
+  for oDefinicion in oDefiniciones do
+  begin
+    idx := IndexOfCodigo(oDefinicion.Codigo);
+    if idx < 0 then
     begin
-      cod := qProp.FieldByName('CODIGO_PROP_ARTPROP').AsString;
-      idx := IndexOfCodigo(cod);
-      if idx < 0 then
+      S := Default(TSlotProp);
+      S.CodigoPropiedad := oDefinicion.Codigo;
+      S.NombrePropiedad := oDefinicion.Nombre;
+      S.TipoValor := TipoDesdeCadena(oDefinicion.TipoValor);
+      S.Nivel := oDefinicion.Nivel;
+      S.EsRequerido := oDefinicion.EsRequerido;
+      S.IdValorPV := 0;
+      S.ValorLibre := '';
+      S.OriginalIdValorPV := S.IdValorPV;
+      S.OriginalValorLibre := S.ValorLibre;
+      S.Ctrl := nil;
+      S.Opciones := nil;
+      S.Eliminar := False;
+      if S.TipoValor = tvpLista then
       begin
-        // Ver nota arriba: FillChar machacaba strings sin liberar.
-        S := Default(TSlotProp);
-        S.CodigoPropiedad := cod;
-        S.NombrePropiedad := qProp.FieldByName('NOMBRE_PROP_PROP').AsString;
-        S.TipoValor       :=
-                      TipoDesdeCadena(qProp.FieldByName(
-                        'TIPO_VALOR_PROP').AsString);
-        S.Nivel           := qProp.FieldByName('NIVEL_PROP').AsString;
-        S.EsRequerido     := qProp.FieldByName('ESREQUERIDO_FA').AsString = 'S';
-        S.IdValorPV       := 0;
-        S.ValorLibre      := '';
-        S.OriginalIdValorPV  := S.IdValorPV;
-        S.OriginalValorLibre := S.ValorLibre;
-        S.Ctrl            := nil;
-        S.Opciones        := nil;
-        S.Eliminar        := False;
-        if S.TipoValor = tvpLista then
+        S.Opciones := TDictionary<Integer, string>.Create;
+        oOpciones := FServicios.Lectura.ListarOpciones(
+          S.CodigoPropiedad);
+        for oOpcion in oOpciones do
         begin
-          S.Opciones := TDictionary<Integer, string>.Create;
-          qOpc.Close;
-          qOpc.ParamByName('cod').AsString := S.CodigoPropiedad;
-          qOpc.Open;
-          while not qOpc.Eof do
-          begin
-            S.Opciones.Add(qOpc.FieldByName('ID_PV_ARTPROP').AsInteger,
-                           qOpc.FieldByName('PV').AsString);
-            qOpc.Next;
-          end;
+          S.Opciones.Add(oOpcion.IdValor, oOpcion.Valor);
         end;
-        FSlots.Add(S);
-      end
-      else
-      begin
-        S := FSlots[idx];
-        S.EsRequerido := qProp.FieldByName('ESREQUERIDO_FA').AsString = 'S';
-        S.Eliminar := False;
-        FSlots[idx] := S;
       end;
-      qProp.Next;
+      FSlots.Add(S);
+    end
+    else
+    begin
+      S := FSlots[idx];
+      S.EsRequerido := oDefinicion.EsRequerido;
+      S.Eliminar := False;
+      FSlots[idx] := S;
     end;
-    ReconstruirVista;
-  finally
-    FreeAndNil(qProp);
-    FreeAndNil(qOpc);
   end;
+  ReconstruirVista;
 end;
 
 procedure TGestorPropiedades.ReconstruirVista;
@@ -849,8 +760,15 @@ procedure TGestorPropiedades.AbrirEditorPorUnidad(const S: TSlotProp);
 var
   dlg: TfrmPropPorUnidad;
 begin
-  dlg := TfrmPropPorUnidad.Create(nil, FConexion, FUsuario, FCodigoArticulo,
-           S.CodigoPropiedad, S.NombrePropiedad, S.TipoValor, S.Nivel);
+  dlg := TfrmPropPorUnidad.Create(
+    nil,
+    FServicios,
+    FUsuario,
+    FCodigoArticulo,
+    S.CodigoPropiedad,
+    S.NombrePropiedad,
+    S.TipoValor,
+    S.Nivel);
   try
     dlg.ShowModal;
   finally
@@ -860,13 +778,14 @@ end;
 
 procedure TGestorPropiedades.AbrirSelectorPropiedades;
 var
-  dlg          : TfrmSelPropiedades;
-  Excluidos    : TStringList;
-  i            : Integer;
-  cod          : string;
-  qProp        : TUniQuery;
-  qOpc         : TUniQuery;
-  S            : TSlotProp;
+  cod: string;
+  dlg: TfrmSelPropiedades;
+  Excluidos: TStringList;
+  i: Integer;
+  oDefinicion: TDefinicionPropiedadArticulo;
+  oOpcion: TOpcionPropiedadArticulo;
+  oOpciones: TArray<TOpcionPropiedadArticulo>;
+  S: TSlotProp;
 begin
   if FCodigoArticulo = '' then
   begin
@@ -878,41 +797,22 @@ begin
     for i := 0 to FSlots.Count - 1 do
       if not FSlots[i].Eliminar then
         Excluidos.Add(FSlots[i].CodigoPropiedad);
-    dlg := TfrmSelPropiedades.Create(nil, FConexion, Excluidos);
+    dlg := TfrmSelPropiedades.Create(
+      nil,
+      FServicios.Lectura,
+      Excluidos);
     try
       if dlg.ShowModal <> mrOk then Exit;
       if dlg.CodigosSeleccionados.Count = 0 then Exit;
-      qProp := TUniQuery.Create(nil);
-      qOpc  := TUniQuery.Create(nil);
-      try
-        qProp.Connection := FConexion;
-        qProp.SQL.Text   :=
-          'SELECT CODIGO_PROP_ARTPROP, NOMBRE_PROP_PROP, TIPO_VALOR_PROP, ' +
-          '       NIVEL_PROP ' +
-          'FROM   fza_propiedades ' +
-          'WHERE  CODIGO_PROP_ARTPROP = :cod';
-        qOpc.Connection := FConexion;
-        qOpc.SQL.Text   :=
-          'SELECT ID_PV_ARTPROP, PV ' +
-          'FROM   fza_propiedades_valores ' +
-          'WHERE  ID_PROP_PV = :cod ' +
-          '  AND  ESACTIVO_PV = ''S'' ' +
-          'ORDER  BY PV';
-        for cod in dlg.CodigosSeleccionados do
+      for cod in dlg.CodigosSeleccionados do
+      begin
+        if FServicios.Lectura.Buscar(cod, oDefinicion) then
         begin
-          qProp.Close;
-          qProp.ParamByName('cod').AsString := cod;
-          qProp.Open;
-          if qProp.Eof then Continue;
-          // Ver nota arriba: FillChar machacaba strings sin liberar.
           S := Default(TSlotProp);
-          S.CodigoPropiedad :=
-            qProp.FieldByName('CODIGO_PROP_ARTPROP').AsString;
-          S.NombrePropiedad := qProp.FieldByName('NOMBRE_PROP_PROP').AsString;
-          S.TipoValor       :=
-                      TipoDesdeCadena(qProp.FieldByName(
-                        'TIPO_VALOR_PROP').AsString);
-          S.Nivel           := qProp.FieldByName('NIVEL_PROP').AsString;
+          S.CodigoPropiedad := oDefinicion.Codigo;
+          S.NombrePropiedad := oDefinicion.Nombre;
+          S.TipoValor := TipoDesdeCadena(oDefinicion.TipoValor);
+          S.Nivel := oDefinicion.Nivel;
           S.EsRequerido     := False;
           S.IdValorPV       := 0;
           S.ValorLibre      := '';
@@ -924,23 +824,18 @@ begin
           if S.TipoValor = tvpLista then
           begin
             S.Opciones := TDictionary<Integer, string>.Create;
-            qOpc.Close;
-            qOpc.ParamByName('cod').AsString := S.CodigoPropiedad;
-            qOpc.Open;
-            while not qOpc.Eof do
+            oOpciones := FServicios.Lectura.ListarOpciones(
+              S.CodigoPropiedad);
+            for oOpcion in oOpciones do
             begin
               S.Opciones.Add(
-                qOpc.FieldByName('ID_PV_ARTPROP').AsInteger,
-                qOpc.FieldByName('PV').AsString);
-              qOpc.Next;
+                oOpcion.IdValor,
+                oOpcion.Valor);
             end;
           end;
           FSlots.Add(S);
           FModificado := True;
         end;
-      finally
-        FreeAndNil(qProp);
-        FreeAndNil(qOpc);
       end;
       ReconstruirVista;
     finally
@@ -1043,69 +938,37 @@ begin
 end;
 
 procedure TGestorPropiedades.UpsertSlot(const S: TSlotProp);
-var
-  q: TUniQuery;
 begin
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FConexion;
-    q.SQL.Text   :=
-      'INSERT INTO fza_articulos_propiedades ' +
-      '  (CODIGO_ART_ART, CODIGO_PROP_ARTPROP, ID_PV_ARTPROP, ' +
-      'VALOR_LIBRE_ARTPROP, ' +
-      '   INSTANTE_ALTA, USUARIO_ALTA) ' +
-      'VALUES ' +
-      '  (:art, :prop, :idval, :libre, NOW(), :usr) ' +
-      'ON DUPLICATE KEY UPDATE ' +
-      '  ID_PV_ARTPROP = VALUES(ID_PV_ARTPROP), ' +
-      '  VALOR_LIBRE_ARTPROP = VALUES(VALOR_LIBRE_ARTPROP)';
-    q.ParamByName('art').AsString  := FCodigoArticulo;
-    q.ParamByName('prop').AsString := S.CodigoPropiedad;
-    if S.IdValorPV > 0 then
-      q.ParamByName('idval').AsInteger := S.IdValorPV
-    else
-      q.ParamByName('idval').Clear;
-    if S.ValorLibre <> '' then
-      q.ParamByName('libre').AsString := S.ValorLibre
-    else
-      q.ParamByName('libre').Clear;
-    q.ParamByName('usr').AsString := FUsuario;
-    q.Execute;
-  finally
-    FreeAndNil(q);
-  end;
+  FServicios.Escritura.GuardarValor(
+    FCodigoArticulo,
+    S.CodigoPropiedad,
+    '',
+    S.IdValorPV,
+    S.ValorLibre,
+    FUsuario);
 end;
 
 procedure TGestorPropiedades.DeleteSlot(const CodigoPropiedad: string);
-var
-  q: TUniQuery;
 begin
-  if FCodigoArticulo = '' then Exit;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FConexion;
-    q.SQL.Text   :=
-      'DELETE FROM fza_articulos_propiedades ' +
-      'WHERE CODIGO_ART_ART  = :art ' +
-      '  AND CODIGO_PROP_ARTPROP = :prop';
-    q.ParamByName('art').AsString  := FCodigoArticulo;
-    q.ParamByName('prop').AsString := CodigoPropiedad;
-    q.Execute;
-  finally
-    FreeAndNil(q);
-  end;
+  if FCodigoArticulo <> '' then
+    FServicios.Escritura.EliminarPropiedad(
+      FCodigoArticulo,
+      CodigoPropiedad);
 end;
 
 { ═══════════════════════════════════════════════════════════════════════════ }
 { TfrmPropPorUnidad — editor de una propiedad por color/SKU                    }
 { ═══════════════════════════════════════════════════════════════════════════ }
 
-constructor TfrmPropPorUnidad.Create(AOwner: TComponent;
-  AConexion: TUniConnection; const AUsuario, AArticulo, ACodigoProp,
-  ANombreProp: string; ATipoValor: TTipoValorProp; const ANivel: string);
+constructor TfrmPropPorUnidad.Create(
+  AOwner: TComponent;
+  const AServicios: TServiciosPropiedadesArticulo;
+  const AUsuario, AArticulo, ACodigoProp, ANombreProp: string;
+  ATipoValor: TTipoValorProp;
+  const ANivel: string);
 begin
   inherited Create(AOwner);
-  FConexion   := AConexion;
+  FServicios  := AServicios;
   FUsuario    := AUsuario;
   FArticulo   := AArticulo;
   FCodigoProp := ACodigoProp;
@@ -1162,117 +1025,49 @@ end;
 
 procedure TfrmPropPorUnidad.CargarOpciones;
 var
-  q: TUniQuery;
+  oOpcion: TOpcionPropiedadArticulo;
+  oOpciones: TArray<TOpcionPropiedadArticulo>;
 begin
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FConexion;
-    q.SQL.Text :=
-      'SELECT ID_PV_ARTPROP, PV ' +
-      'FROM   fza_propiedades_valores ' +
-      'WHERE  ID_PROP_PV = :cod ' +
-      '  AND  ESACTIVO_PV = ''S'' ' +
-      'ORDER  BY PV';
-    q.ParamByName('cod').AsString := FCodigoProp;
-    q.Open;
-    while not q.Eof do
-    begin
-      FOpciones.Add(TPair<Integer, string>.Create(
-        q.FieldByName('ID_PV_ARTPROP').AsInteger,
-        q.FieldByName('PV').AsString));
-      q.Next;
-    end;
-  finally
-    FreeAndNil(q);
+  oOpciones := FServicios.Lectura.ListarOpciones(FCodigoProp);
+  for oOpcion in oOpciones do
+  begin
+    FOpciones.Add(TPair<Integer, string>.Create(
+      oOpcion.IdValor,
+      oOpcion.Valor));
   end;
 end;
 
 procedure TfrmPropPorUnidad.CargarUnidades;
 var
-  q      : TUniQuery;
-  F      : TFilaUnidadProp;
-  partes : TArray<string>;
+  F: TFilaUnidadProp;
+  oUnidad: TUnidadPropiedadArticulo;
+  oUnidades: TArray<TUnidadPropiedadArticulo>;
 begin
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FConexion;
-    if FNivel = 'SKU' then
-      q.SQL.Text :=
-        'SELECT sk.CODIGO_UNIDAD_SKU AS UNIDAD, ' +
-        '       COALESCE((SELECT GROUP_CONCAT(av.AV ORDER BY av.ORDEN_AV ' +
-        '                          SEPARATOR '' / '') ' +
-        '                   FROM fza_atributos_sku sa ' +
-        '                   JOIN fza_atributos_valores av ' +
-        '                     ON av.ID_AV = sa.ID_AV_SA ' +
-        '                  WHERE sa.CODIGO_UNIDAD_SKU_SA = ' +
-        '                        sk.CODIGO_UNIDAD_SKU), ' +
-        '                sk.CODIGO_UNIDAD_SKU) AS NOMBRE ' +
-        'FROM   fza_articulos_skus sk ' +
-        'WHERE  sk.CODIGO_ART_SKU = :art ' +
-        '  AND  sk.ESACTIVO_SKU = ''S'' ' +
-        'ORDER  BY sk.CODIGO_UNIDAD_SKU'
-    else
-      q.SQL.Text :=
-        'SELECT DISTINCT ' +
-        '       SUBSTRING_INDEX(CODIGO_UNIDAD_SKU, ''/'', 2) AS UNIDAD ' +
-        'FROM   fza_articulos_skus ' +
-        'WHERE  CODIGO_ART_SKU = :art ' +
-        '  AND  ESACTIVO_SKU = ''S'' ' +
-        '  AND  CHAR_LENGTH(CODIGO_UNIDAD_SKU) ' +
-        '     - CHAR_LENGTH(REPLACE(CODIGO_UNIDAD_SKU, ''/'', '''')) >= 2 ' +
-        'ORDER  BY UNIDAD';
-    q.ParamByName('art').AsString := FArticulo;
-    q.Open;
-    while not q.Eof do
-    begin
-      F := Default(TFilaUnidadProp);
-      F.Unidad := q.FieldByName('UNIDAD').AsString;
-      if FNivel = 'SKU' then
-        F.Nombre := q.FieldByName('NOMBRE').AsString
-      else
-      begin
-        partes := F.Unidad.Split(['/']);
-        if Length(partes) > 0 then
-          F.Nombre := partes[High(partes)]
-        else
-          F.Nombre := F.Unidad;
-      end;
-      F.Ctrl := nil;
-      FFilas.Add(F);
-      q.Next;
-    end;
-  finally
-    FreeAndNil(q);
+  oUnidades := FServicios.Lectura.ListarUnidades(FArticulo, FNivel);
+  for oUnidad in oUnidades do
+  begin
+    F := Default(TFilaUnidadProp);
+    F.Unidad := oUnidad.Codigo;
+    F.Nombre := oUnidad.Nombre;
+    F.Ctrl := nil;
+    FFilas.Add(F);
   end;
 end;
 
 procedure TfrmPropPorUnidad.CargarValoresActuales;
 var
-  q: TUniQuery;
+  oValor: TValorUnidadPropiedadArticulo;
+  oValores: TArray<TValorUnidadPropiedadArticulo>;
   V: TValUnidadProp;
 begin
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FConexion;
-    q.SQL.Text :=
-      'SELECT CODIGO_UNIDAD_ARTPROP, ID_PV_ARTPROP, VALOR_LIBRE_ARTPROP ' +
-      'FROM   fza_articulos_propiedades ' +
-      'WHERE  CODIGO_ART_ART = :art ' +
-      '  AND  CODIGO_PROP_ARTPROP = :prop ' +
-      '  AND  CODIGO_UNIDAD_ARTPROP <> ''''';
-    q.ParamByName('art').AsString  := FArticulo;
-    q.ParamByName('prop').AsString := FCodigoProp;
-    q.Open;
-    while not q.Eof do
-    begin
-      V.IdValor    := q.FieldByName('ID_PV_ARTPROP').AsInteger;
-      V.ValorLibre := q.FieldByName('VALOR_LIBRE_ARTPROP').AsString;
-      FActuales.AddOrSetValue(
-        q.FieldByName('CODIGO_UNIDAD_ARTPROP').AsString, V);
-      q.Next;
-    end;
-  finally
-    FreeAndNil(q);
+  oValores := FServicios.Lectura.ListarValoresUnidades(
+    FArticulo,
+    FCodigoProp);
+  for oValor in oValores do
+  begin
+    V.IdValor := oValor.IdValor;
+    V.ValorLibre := oValor.ValorLibre;
+    FActuales.AddOrSetValue(oValor.CodigoUnidad, V);
   end;
 end;
 
@@ -1389,58 +1184,22 @@ end;
 
 procedure TfrmPropPorUnidad.UpsertUnidad(const AUnidad: string;
   AIdValor: Integer; const AValorLibre: string);
-var
-  q: TUniQuery;
 begin
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FConexion;
-    q.SQL.Text :=
-      'INSERT INTO fza_articulos_propiedades ' +
-      '  (CODIGO_ART_ART, CODIGO_PROP_ARTPROP, CODIGO_UNIDAD_ARTPROP, ' +
-      '   ID_PV_ARTPROP, VALOR_LIBRE_ARTPROP, INSTANTE_ALTA, USUARIO_ALTA) ' +
-      'VALUES ' +
-      '  (:art, :prop, :uni, :idval, :libre, NOW(), :usr) ' +
-      'ON DUPLICATE KEY UPDATE ' +
-      '  ID_PV_ARTPROP       = VALUES(ID_PV_ARTPROP), ' +
-      '  VALOR_LIBRE_ARTPROP = VALUES(VALOR_LIBRE_ARTPROP)';
-    q.ParamByName('art').AsString  := FArticulo;
-    q.ParamByName('prop').AsString := FCodigoProp;
-    q.ParamByName('uni').AsString  := AUnidad;
-    if AIdValor > 0 then
-      q.ParamByName('idval').AsInteger := AIdValor
-    else
-      q.ParamByName('idval').Clear;
-    if AValorLibre <> '' then
-      q.ParamByName('libre').AsString := AValorLibre
-    else
-      q.ParamByName('libre').Clear;
-    q.ParamByName('usr').AsString := FUsuario;
-    q.Execute;
-  finally
-    FreeAndNil(q);
-  end;
+  FServicios.Escritura.GuardarValor(
+    FArticulo,
+    FCodigoProp,
+    AUnidad,
+    AIdValor,
+    AValorLibre,
+    FUsuario);
 end;
 
 procedure TfrmPropPorUnidad.DeleteUnidad(const AUnidad: string);
-var
-  q: TUniQuery;
 begin
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FConexion;
-    q.SQL.Text :=
-      'DELETE FROM fza_articulos_propiedades ' +
-      'WHERE CODIGO_ART_ART        = :art ' +
-      '  AND CODIGO_PROP_ARTPROP   = :prop ' +
-      '  AND CODIGO_UNIDAD_ARTPROP = :uni';
-    q.ParamByName('art').AsString  := FArticulo;
-    q.ParamByName('prop').AsString := FCodigoProp;
-    q.ParamByName('uni').AsString  := AUnidad;
-    q.Execute;
-  finally
-    FreeAndNil(q);
-  end;
+  FServicios.Escritura.EliminarValorUnidad(
+    FArticulo,
+    FCodigoProp,
+    AUnidad);
 end;
 
 procedure TfrmPropPorUnidad.BtnAceptarClick(Sender: TObject);

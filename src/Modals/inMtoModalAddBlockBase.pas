@@ -18,10 +18,10 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, System.Generics.Collections, System.Math,
+  System.Classes, System.Generics.Collections,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls,
   Vcl.StdCtrls, Vcl.Menus,
-  Data.DB, MemDS, DBAccess, Uni,
+  Data.DB,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxStyles, cxClasses, cxContainer, cxEdit, cxLabel, cxButtons,
   cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar, cxCurrencyEdit,
@@ -35,11 +35,10 @@ uses
   dxSkinscxPCPainter, dxScrollbarAnnotations, dxDateRanges, dxCore,
   cxLocalization,
   inMtoFrmBase, Vcl.ComCtrls, cxDateUtils, cxGroupBox, JvComponentBase,
-  JvEnterTab, System.UITypes;
+  JvEnterTab, System.UITypes,
+  inLibCargaMasivaArticulosPersistenciaIntf;
 
 type
-  TStockCombinacion = (scCualquiera, scTodos, scSumaPositiva);
-
   // Resultado base. Los hijos pueden extender con un record propio si necesitan
   // mas campos (p.ej. tarifa: precio_dto, ajuste; inventario: numero_inv).
   TAddBlockBaseResult = record
@@ -170,19 +169,21 @@ type
     procedure chkLstAlmacenesClickCheck(Sender: TObject);
 
   protected
-    FConn          : TUniConnection;
     FBaseResultado : TAddBlockBaseResult;
     FPropagandoCheck: Boolean;
-
-    FQryFamilias   : TUniQuery;
+    FServicios: TServiciosCargaMasivaArticulos;
+    FConsultaFamilias: IConsultaCargaMasivaArticulos;
+    FConsultaProveedores: IConsultaCargaMasivaArticulos;
+    FConsultaPropValores: IConsultaCargaMasivaArticulos;
+    FConsultaPreview: IConsultaCargaMasivaArticulos;
+    FFamilias: TDataSet;
+    FProveedores: TDataSet;
+    FPropValores: TDataSet;
+    FDatosPreview: TDataSet;
     FDsFamilias    : TDataSource;
-    FQryProveedores: TUniQuery;
     FDsProveedores : TDataSource;
-    FQryPropValores: TUniQuery;
     FDsPropValores : TDataSource;
-    FSqlPreview    : TUniQuery;
     FDsPreview     : TDataSource;
-
     FCodigosPropiedades: TStringList;
 
     // === HOOKS para descendientes ============================================
@@ -192,27 +193,8 @@ type
     function  ValidarAntesDePrevisualizar(out AMensaje: string): Boolean;
     virtual;
 
-    // Columnas SELECT extra a inyectar antes de YA_CARGADO.
-    // Cada hijo puede devolver lo suyo (precio_origen, stock_kardex...).
-    // Debe terminar siempre en COMA si devuelve algo.
-    // Por defecto: ''.
-    function  ColumnasSelectExtra: string; virtual;
-
-    // Filtros extra (joins, where adicionales) que el hijo necesite.
-    // Por defecto: ''.
-    function  FiltrosWhereExtra: string; virtual;
-
-    // Subquery para el campo YA_CARGADO. Cada hijo decide qué significa
-    // "ya cargado" (en tarifa X, en inventario Y...).
-    // Si devuelve '', el preview no comprueba duplicados (todos = 'N').
-    function  SubquerYaCargado: string; virtual;
-
-    // Subquery para excluir los ya cargados (NOT EXISTS ...).
-    // Por defecto: ''. Si SubquerYaCargado <> '', el WHERE lo usa.
-    function  WhereExcluirYaCargados: string; virtual;
-
-    // Vincular parametros que solo conoce el hijo (nombres P_TARIFA_xxx etc.)
-    procedure VincularParametrosExtra(AQry: TUniQuery); virtual;
+    function ContextoCargaMasiva: TContextoCargaMasivaArticulos;
+      virtual; abstract;
 
     // Mensaje de confirmacion antes de aceptar
     function  TextoConfirmacion(ANumPendientes: Integer): string; virtual;
@@ -232,10 +214,6 @@ type
 
     // === API que los hijos pueden invocar ===================================
 
-    // Metodos del preview
-    function  ConstruirSQLPreview: string;
-    procedure AplicarParametros(AQry: TUniQuery);
-
     // Recogida de selecciones (los hijos pueden usarlas en su
     // EjecutarInsercion)
     function  RecogerCodigosFamiliaSeleccionados: TArray<string>;
@@ -243,11 +221,10 @@ type
     function  RecogerIdsValorPropiedadSeleccionados: TArray<Integer>;
     function  RecogerCodigosAlmacenesSeleccionados: TArray<string>;
 
-    function  StockCombinacionActual: TStockCombinacion;
-
-    // Helpers
-    function  StrArrToCsvSql(const A: TArray<string>): string;
-    function  IntArrToCsvSql(const A: TArray<Integer>): string;
+    function StockCombinacionActual: TStockCombinacionCargaMasiva;
+    function RecogerFiltros: TFiltrosCargaMasivaArticulos;
+    function GetConsultasCargaMasiva: IConsultasCargaMasivaArticulos;
+    function GetInsercionesCargaMasiva: IInsercionesCargaMasivaArticulos;
 
     // Carga de datos auxiliares (los hijos las llaman desde su Ejecutar)
     procedure CargarFiltrosAuxiliares;
@@ -257,9 +234,13 @@ type
     procedure CargarValoresPropiedad(const ACodigoPropiedad: string);
     procedure CargarAlmacenes;
 
-    // Estado del preview (los hijos lo necesitan en EjecutarInsercion)
-    property  Conn: TUniConnection read FConn;
-    property  QryPreview: TUniQuery read FSqlPreview;
+    property ConsultasCargaMasiva: IConsultasCargaMasivaArticulos
+      read GetConsultasCargaMasiva;
+    property InsercionesCargaMasiva: IInsercionesCargaMasivaArticulos
+      read GetInsercionesCargaMasiva;
+    property ConsultaPreview: IConsultaCargaMasivaArticulos
+      read FConsultaPreview;
+    property DatosPreview: TDataSet read FDatosPreview;
 
   private
     function  EsNodoChecked(ANode: TcxTreeListNode): Boolean;
@@ -268,8 +249,7 @@ type
     procedure ActualizarContadores;
 
   public
-    // El hijo establece la conexion y luego llama a Inicializar
-    procedure Inicializar(AConn: TUniConnection);
+    procedure Inicializar;
 
     property BaseResultado: TAddBlockBaseResult read FBaseResultado;
   end;
@@ -285,9 +265,8 @@ uses
 //   API publica del hijo
 // ============================================================================
 
-procedure TfrmModalAddBlockBase.Inicializar(AConn: TUniConnection);
+procedure TfrmModalAddBlockBase.Inicializar;
 begin
-  FConn := AConn;
   CargarFiltrosAuxiliares;
 end;
 
@@ -311,31 +290,6 @@ function TfrmModalAddBlockBase.ValidarAntesDePrevisualizar(
 begin
   AMensaje := '';
   Result   := True;
-end;
-
-function TfrmModalAddBlockBase.ColumnasSelectExtra: string;
-begin
-  Result := '';
-end;
-
-function TfrmModalAddBlockBase.FiltrosWhereExtra: string;
-begin
-  Result := '';
-end;
-
-function TfrmModalAddBlockBase.SubquerYaCargado: string;
-begin
-  Result := '';
-end;
-
-function TfrmModalAddBlockBase.WhereExcluirYaCargados: string;
-begin
-  Result := '';
-end;
-
-procedure TfrmModalAddBlockBase.VincularParametrosExtra(AQry: TUniQuery);
-begin
-  // override en hijos
 end;
 
 function TfrmModalAddBlockBase.TextoConfirmacion(
@@ -370,24 +324,13 @@ begin
   Self.Position := poMainFormCenter;
   FBaseResultado.Aceptado := False;
   FPropagandoCheck    := False;
-
+  FServicios :=
+    ContextoRepositoriosPantalla.Articulos.CrearServicioCargaMasivaArticulos;
   FCodigosPropiedades := TStringList.Create;
-
-  FQryFamilias    := TUniQuery.Create(Self);
   FDsFamilias     := TDataSource.Create(Self);
-  FDsFamilias.DataSet := FQryFamilias;
-
-  FQryProveedores := TUniQuery.Create(Self);
   FDsProveedores  := TDataSource.Create(Self);
-  FDsProveedores.DataSet := FQryProveedores;
-
-  FQryPropValores := TUniQuery.Create(Self);
   FDsPropValores  := TDataSource.Create(Self);
-  FDsPropValores.DataSet := FQryPropValores;
-
-  FSqlPreview     := TUniQuery.Create(Self);
   FDsPreview      := TDataSource.Create(Self);
-  FDsPreview.DataSet := FSqlPreview;
 
   // Defaults
   dtAltaDesde.Date := Date - 365;
@@ -415,6 +358,20 @@ begin
     end;
 
   FreeAndNil(FCodigosPropiedades);
+  FDsFamilias.DataSet := nil;
+  FDsProveedores.DataSet := nil;
+  FDsPropValores.DataSet := nil;
+  FDsPreview.DataSet := nil;
+  FFamilias := nil;
+  FProveedores := nil;
+  FPropValores := nil;
+  FDatosPreview := nil;
+  FConsultaFamilias := nil;
+  FConsultaProveedores := nil;
+  FConsultaPropValores := nil;
+  FConsultaPreview := nil;
+  FServicios.Consultas := nil;
+  FServicios.Inserciones := nil;
   inherited;
   Action := caHide;
 end;
@@ -444,16 +401,9 @@ procedure TfrmModalAddBlockBase.CargarFamilias;
 var
   i: Integer;
 begin
-  FQryFamilias.Connection := FConn;
-  FQryFamilias.SQL.Text :=
-    'SELECT CODIGO_FAM_FAM, ' +
-    '       COALESCE(CODIGO_SUBFAMILIA_FAM, '''') AS CODIGO_PADRE, ' +
-    '       NOMBRE_FAM_FAM, DESCRIPCION_FAM ' +
-    'FROM fza_articulos_familias ' +
-    'WHERE ESACTIVO_FAM = ''S'' ' +
-    'ORDER BY COALESCE(CODIGO_SUBFAMILIA_FAM,''''), ORDEN_FAM, NOMBRE_FAM_FAM';
-  FQryFamilias.Open;
-
+  FConsultaFamilias := FServicios.Consultas.ConsultarFamilias;
+  FFamilias := FConsultaFamilias.DataSet;
+  FDsFamilias.DataSet := FFamilias;
   tlFamilias.BeginUpdate;
   try
     tlFamilias.DataController.DataSource := FDsFamilias;
@@ -472,78 +422,46 @@ end;
 
 procedure TfrmModalAddBlockBase.CargarProveedores;
 begin
-  FQryProveedores.Connection := FConn;
-  FQryProveedores.SQL.Text :=
-    'SELECT CODIGO_PRV_PRV, RAZON_SOCIAL_PRV, NIF_PRV ' +
-    'FROM fza_proveedores ' +
-    'WHERE ESACTIVO_PRV = ''S'' ' +
-    'ORDER BY RAZON_SOCIAL_PRV';
-  FQryProveedores.Open;
+  FConsultaProveedores := FServicios.Consultas.ConsultarProveedores;
+  FProveedores := FConsultaProveedores.DataSet;
+  FDsProveedores.DataSet := FProveedores;
   tvProveedores.DataController.DataSource := FDsProveedores;
 end;
 
 procedure TfrmModalAddBlockBase.CargarPropiedades;
 var
-  qry             : TUniQuery;
+  aPropiedades: TPropiedadesCargaMasiva;
+  oPropiedad: TPropiedadCargaMasiva;
   iPropiedadDefecto: Integer;
 begin
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := FConn;
-    qry.SQL.Text :=
-      'SELECT CODIGO_PROP_ARTPROP, NOMBRE_PROP_PROP ' +
-      'FROM fza_propiedades ' +
-      'WHERE ESACTIVO_PROP = ''S'' AND TIPO_VALOR_PROP = ''LISTA'' ' +
-      'ORDER BY NOMBRE_PROP_PROP';
-    qry.Open;
-    cbxPropiedad.Properties.Items.Clear;
-    FCodigosPropiedades.Clear;
-
-    cbxPropiedad.Properties.Items.Add('(todas - ver todos los valores)');
-    FCodigosPropiedades.Add('');
-
-    while not qry.Eof do
-    begin
-      cbxPropiedad.Properties.Items.Add(qry.FieldByName(
-        'NOMBRE_PROP_PROP').AsString);
-      FCodigosPropiedades.Add(qry.FieldByName('CODIGO_PROP_ARTPROP').AsString);
-      qry.Next;
-    end;
-    iPropiedadDefecto := FCodigosPropiedades.IndexOf('TEMPORADA');
-    if iPropiedadDefecto < 0 then
-      iPropiedadDefecto := 0;
-    cbxPropiedad.ItemIndex := iPropiedadDefecto;
-    CargarValoresPropiedad(FCodigosPropiedades[iPropiedadDefecto]);
-  finally
-    FreeAndNil(qry);
+  aPropiedades := FServicios.Consultas.ListarPropiedades;
+  cbxPropiedad.Properties.Items.Clear;
+  FCodigosPropiedades.Clear;
+  cbxPropiedad.Properties.Items.Add('(todas - ver todos los valores)');
+  FCodigosPropiedades.Add('');
+  for oPropiedad in aPropiedades do
+  begin
+    cbxPropiedad.Properties.Items.Add(oPropiedad.Nombre);
+    FCodigosPropiedades.Add(oPropiedad.Codigo);
   end;
+  iPropiedadDefecto := FCodigosPropiedades.IndexOf('TEMPORADA');
+  if iPropiedadDefecto < 0 then
+  begin
+    iPropiedadDefecto := 0;
+  end;
+  cbxPropiedad.ItemIndex := iPropiedadDefecto;
+  CargarValoresPropiedad(FCodigosPropiedades[iPropiedadDefecto]);
 end;
 
 procedure TfrmModalAddBlockBase.CargarValoresPropiedad(
   const ACodigoPropiedad: string);
 begin
-  FQryPropValores.Close;
-  FQryPropValores.Connection := FConn;
-  if ACodigoPropiedad = '' then
-  begin
-    FQryPropValores.SQL.Text :=
-      'SELECT v.ID_PV_ARTPROP, v.ID_PROP_PV, p.NOMBRE_PROP_PROP, v.PV ' +
-      'FROM fza_propiedades_valores v ' +
-      'JOIN fza_propiedades p ON p.CODIGO_PROP_ARTPROP = v.ID_PROP_PV ' +
-      'WHERE v.ESACTIVO_PV = ''S'' AND p.TIPO_VALOR_PROP = ''LISTA'' ' +
-      'ORDER BY p.NOMBRE_PROP_PROP, v.PV';
-  end
-  else
-  begin
-    FQryPropValores.SQL.Text :=
-      'SELECT v.ID_PV_ARTPROP, v.ID_PROP_PV, p.NOMBRE_PROP_PROP, v.PV ' +
-      'FROM fza_propiedades_valores v ' +
-      'JOIN fza_propiedades p ON p.CODIGO_PROP_ARTPROP = v.ID_PROP_PV ' +
-      'WHERE v.ESACTIVO_PV = ''S'' AND v.ID_PROP_PV = :PROP ' +
-      'ORDER BY v.PV';
-    FQryPropValores.ParamByName('PROP').AsString := ACodigoPropiedad;
-  end;
-  FQryPropValores.Open;
+  FDsPropValores.DataSet := nil;
+  FPropValores := nil;
+  FConsultaPropValores :=
+    FServicios.Consultas.ConsultarValoresPropiedad(ACodigoPropiedad);
+  FPropValores := FConsultaPropValores.DataSet;
+  FDsPropValores.DataSet := FPropValores;
   tvPropValores.DataController.DataSource := FDsPropValores;
   // Al filtrar una propiedad queda un único grupo; debe mostrar sus valores.
   tvPropValores.DataController.Groups.FullExpand;
@@ -551,36 +469,18 @@ end;
 
 procedure TfrmModalAddBlockBase.CargarAlmacenes;
 var
-  qry: TUniQuery;
+  aAlmacenes: TAlmacenesCargaMasiva;
+  oAlmacen: TAlmacenCargaMasiva;
   it : TcxCheckListBoxItem;
 begin
   chkLstAlmacenes.Items.Clear;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := FConn;
-    qry.SQL.Text :=
-      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM, TIPO_USO_ALM ' +
-      'FROM fza_almacenes ' +
-      'WHERE ESACTIVO_ALM = ''S'' ' +
-      '  AND (TIPO_USO_ALM IN ' +
-      '(''ESTANDAR'',''ESTANDARD'',''DEPOSITO'',''DEPOSITO'')' +
-      '       OR TIPO_USO_ALM IS NULL) ' +
-      'ORDER BY ORDEN_ALM, NOMBRE_ALM_ALM';
-    qry.Open;
-    while not qry.Eof do
-    begin
-      it := chkLstAlmacenes.Items.Add;
-      it.Text :=
-        qry.FieldByName('CODIGO_ALM_ALM').AsString +
-        ' - ' +
-        qry.FieldByName('NOMBRE_ALM_ALM').AsString;
-      it.ItemObject := TStringList.Create;
-      TStringList(
-        it.ItemObject).Add(qry.FieldByName('CODIGO_ALM_ALM').AsString);
-      qry.Next;
-    end;
-  finally
-    FreeAndNil(qry);
+  aAlmacenes := FServicios.Consultas.ListarAlmacenes;
+  for oAlmacen in aAlmacenes do
+  begin
+    it := chkLstAlmacenes.Items.Add;
+    it.Text := oAlmacen.Codigo + ' - ' + oAlmacen.Nombre;
+    it.ItemObject := TStringList.Create;
+    TStringList(it.ItemObject).Add(oAlmacen.Codigo);
   end;
 end;
 
@@ -725,13 +625,13 @@ var
 begin
   txt := Trim(edtFiltroProveedor.Text);
   if txt = '' then
-    FQryProveedores.Filtered := False
+    FProveedores.Filtered := False
   else
   begin
-    FQryProveedores.Filter :=
+    FProveedores.Filter :=
       Format('RAZON_SOCIAL_PRV LIKE ''%%%s%%''',
              [StringReplace(txt, '''', '''''', [rfReplaceAll])]);
-    FQryProveedores.Filtered := True;
+    FProveedores.Filtered := True;
   end;
 end;
 
@@ -770,7 +670,10 @@ begin
   chkSoloConStock.Checked := False;
   for i := 0 to chkLstAlmacenes.Items.Count - 1 do
     chkLstAlmacenes.Items[i].Checked := False;
-  if FSqlPreview.Active then FSqlPreview.Close;
+  if Assigned(FDatosPreview) and FDatosPreview.Active then
+  begin
+    FDatosPreview.Close;
+  end;
   lblPreviewInfo.Caption := SCaptionCeroArticulos;
   ActualizarContadores;
 end;
@@ -905,291 +808,52 @@ begin
   end;
 end;
 
-function TfrmModalAddBlockBase.StockCombinacionActual: TStockCombinacion;
+function TfrmModalAddBlockBase.StockCombinacionActual:
+  TStockCombinacionCargaMasiva;
 begin
   case rgStockCombinacion.ItemIndex of
-    1: Result := scTodos;
-    2: Result := scSumaPositiva;
+    1:
+      Result := scTodos;
+    2:
+      Result := scSumaPositiva;
   else
     Result := scCualquiera;
   end;
 end;
 
-// ============================================================================
-//   HELPERS
-// ============================================================================
-
-function TfrmModalAddBlockBase.StrArrToCsvSql(const A: TArray<string>): string;
-var
-  i: Integer;
-  s: string;
+function TfrmModalAddBlockBase.RecogerFiltros:
+  TFiltrosCargaMasivaArticulos;
 begin
-  Result := '';
-  for i := 0 to High(A) do
-  begin
-    s := StringReplace(A[i], '''', '''''', [rfReplaceAll]);
-    if Result <> '' then Result := Result + ',';
-    Result := Result + '''' + s + '''';
-  end;
+  Result.SoloActivos := chkSoloActivos.Checked;
+  Result.ExcluirYaCargados := chkExcluirYaCargados.Checked;
+  Result.SoloConStock := chkSoloConStock.Checked;
+  Result.PropagarFamilias := chkPropagarHijos.Checked;
+  Result.SoloProveedorPrincipal := chkSoloPrincipal.Checked;
+  Result.AplicarFechaAlta := chkAplicarFechaAlta.Checked;
+  Result.FiltrarVentas := chkConVenta.Checked;
+  Result.ConVentas := rgConSinVenta.ItemIndex = 0;
+  Result.FechaAltaDesde := dtAltaDesde.Date;
+  Result.FechaAltaHasta := dtAltaHasta.Date;
+  Result.VentaDesde := dtVtaDesde.Date;
+  Result.VentaHasta := dtVtaHasta.Date;
+  Result.NumeroMinimoVentas := spnNumMinVtas.Value;
+  Result.StockCombinacion := StockCombinacionActual;
+  Result.CodigosFamilia := RecogerCodigosFamiliaSeleccionados;
+  Result.CodigosProveedor := RecogerCodigosProveedoresSeleccionados;
+  Result.IdsValorPropiedad := RecogerIdsValorPropiedadSeleccionados;
+  Result.CodigosAlmacen := RecogerCodigosAlmacenesSeleccionados;
 end;
 
-function TfrmModalAddBlockBase.IntArrToCsvSql(const A: TArray<Integer>): string;
-var
-  i: Integer;
+function TfrmModalAddBlockBase.GetConsultasCargaMasiva:
+  IConsultasCargaMasivaArticulos;
 begin
-  Result := '';
-  for i := 0 to High(A) do
-  begin
-    if Result <> '' then Result := Result + ',';
-    Result := Result + IntToStr(A[i]);
-  end;
+  Result := FServicios.Consultas;
 end;
 
-// ============================================================================
-//   CONSTRUCCION SQL
-// ============================================================================
-
-function TfrmModalAddBlockBase.ConstruirSQLPreview: string;
-var
-  sql       : TStringList;
-  arrFam    : TArray<string>;
-  arrProv   : TArray<string>;
-  arrPropV  : TArray<Integer>;
-  arrAlm    : TArray<string>;
-  csvFam, csvProv, csvPropV, csvAlm: string;
-  modoStock : TStockCombinacion;
-  yaCargado : string;
-  excluir   : string;
-  selExtra  : string;
-  whereExtra: string;
+function TfrmModalAddBlockBase.GetInsercionesCargaMasiva:
+  IInsercionesCargaMasivaArticulos;
 begin
-  arrFam   := RecogerCodigosFamiliaSeleccionados;
-  arrProv  := RecogerCodigosProveedoresSeleccionados;
-  arrPropV := RecogerIdsValorPropiedadSeleccionados;
-  arrAlm   := RecogerCodigosAlmacenesSeleccionados;
-
-  csvFam   := StrArrToCsvSql(arrFam);
-  csvProv  := StrArrToCsvSql(arrProv);
-  csvPropV := IntArrToCsvSql(arrPropV);
-  csvAlm   := StrArrToCsvSql(arrAlm);
-
-  modoStock  := StockCombinacionActual;
-  yaCargado  := SubquerYaCargado;
-  excluir    := WhereExcluirYaCargados;
-  selExtra   := ColumnasSelectExtra;
-  whereExtra := FiltrosWhereExtra;
-
-  sql := TStringList.Create;
-  try
-    sql.Add('SELECT a.CODIGO_ART_ART,');
-    sql.Add('       a.DESCRIPCION_ART,');
-    sql.Add('       a.CODIGO_FAM_ART,');
-    sql.Add('       f.NOMBRE_FAM_FAM,');
-    sql.Add('       (SELECT GROUP_CONCAT(ap.CODIGO_PRV_AP)');
-    sql.Add('          FROM fza_articulos_proveedores ap');
-    sql.Add('         WHERE ap.CODIGO_ART_AP = a.CODIGO_ART_ART');
-    sql.Add('       ) AS PROVEEDORES,');
-
-    // STOCK total filtrado por almacenes seleccionados (si hay)
-    sql.Add('       COALESCE((SELECT SUM(s.CANTIDAD_STK)');
-    sql.Add('                   FROM fza_articulos_stockactual s');
-    sql.Add('                   LEFT JOIN fza_articulos_skus sk');
-    sql.Add(
-      '                          ON sk.CODIGO_UNIDAD_SKU = ' +
-      's.CODIGO_UNIDAD_STK');
-    sql.Add(
-      '                  WHERE COALESCE(sk.CODIGO_ART_SKU, ' +
-      's.CODIGO_UNIDAD_STK)');
-    sql.Add('                        = a.CODIGO_ART_ART');
-    if csvAlm <> '' then
-      sql.Add('                    AND s.CODIGO_ALM_STK IN (' + csvAlm + ')');
-    sql.Add('                ), 0) AS STOCK_TOTAL,');
-
-    // Columnas extra del hijo (debe terminar en coma si las hay)
-    if selExtra <> '' then
-      sql.Add('       ' + selExtra);
-
-    // YA_CARGADO: el hijo decide la subquery
-    if yaCargado <> '' then
-      sql.Add('       ' + yaCargado + ' AS YA_CARGADO')
-    else
-      sql.Add('       ''N'' AS YA_CARGADO');
-
-    sql.Add('  FROM fza_articulos a');
-    sql.Add('  LEFT JOIN fza_articulos_familias f');
-    sql.Add('    ON f.CODIGO_FAM_FAM = a.CODIGO_FAM_ART');
-    sql.Add(' WHERE 1 = 1');
-
-    if chkSoloActivos.Checked then
-      sql.Add('   AND a.ESACTIVO_ART = ''S''');
-
-    if chkExcluirYaCargados.Checked and (excluir <> '') then
-      sql.Add('   AND ' + excluir);
-
-    // Filtros extra del hijo
-    if whereExtra <> '' then
-      sql.Add('   AND ' + whereExtra);
-
-    // STOCK
-    if chkSoloConStock.Checked and (csvAlm <> '') then
-    begin
-      case modoStock of
-        scCualquiera:
-          begin
-            sql.Add(
-              '   AND EXISTS (SELECT 1 FROM fza_articulos_stockactual s2');
-            sql.Add('                LEFT JOIN fza_articulos_skus sk2');
-            sql.Add(
-              '                       ON sk2.CODIGO_UNIDAD_SKU = ' +
-              's2.CODIGO_UNIDAD_STK');
-            sql.Add(
-              '                WHERE COALESCE(sk2.CODIGO_ART_SKU, ' +
-              's2.CODIGO_UNIDAD_STK)');
-            sql.Add('                      = a.CODIGO_ART_ART');
-            sql.Add('                  AND s2.CANTIDAD_STK > 0');
-            sql.Add(
-              '                  AND s2.CODIGO_ALM_STK IN (' + csvAlm + '))');
-          end;
-        scTodos:
-          begin
-            sql.Add('   AND (SELECT COUNT(DISTINCT s2.CODIGO_ALM_STK)');
-            sql.Add('          FROM fza_articulos_stockactual s2');
-            sql.Add('          LEFT JOIN fza_articulos_skus sk2');
-            sql.Add(
-              '                 ON sk2.CODIGO_UNIDAD_SKU = ' +
-              's2.CODIGO_UNIDAD_STK');
-            sql.Add(
-              '         WHERE COALESCE(sk2.CODIGO_ART_SKU, ' +
-              's2.CODIGO_UNIDAD_STK)');
-            sql.Add('               = a.CODIGO_ART_ART');
-            sql.Add('           AND s2.CANTIDAD_STK > 0');
-            sql.Add('           AND s2.CODIGO_ALM_STK IN (' + csvAlm + ')');
-            sql.Add('       ) = ' + IntToStr(Length(arrAlm)));
-          end;
-        scSumaPositiva:
-          begin
-            sql.Add('   AND COALESCE((SELECT SUM(s2.CANTIDAD_STK)');
-            sql.Add('                   FROM fza_articulos_stockactual s2');
-            sql.Add('                   LEFT JOIN fza_articulos_skus sk2');
-            sql.Add(
-              '                          ON sk2.CODIGO_UNIDAD_SKU = ' +
-              's2.CODIGO_UNIDAD_STK');
-            sql.Add(
-              '                  WHERE COALESCE(sk2.CODIGO_ART_SKU, ' +
-              's2.CODIGO_UNIDAD_STK)');
-            sql.Add('                        = a.CODIGO_ART_ART');
-            sql.Add(
-              '                    AND s2.CODIGO_ALM_STK IN (' + csvAlm + ')');
-            sql.Add('                ), 0) > 0');
-          end;
-      end;
-    end;
-
-    // FAMILIAS
-    if csvFam <> '' then
-    begin
-      if chkPropagarHijos.Checked then
-      begin
-        sql.Add('   AND a.CODIGO_FAM_ART IN (');
-        sql.Add('     WITH RECURSIVE arbol AS (');
-        sql.Add('       SELECT CODIGO_FAM_FAM, CODIGO_SUBFAMILIA_FAM');
-        sql.Add('         FROM fza_articulos_familias');
-        sql.Add('        WHERE CODIGO_FAM_FAM IN (' + csvFam + ')');
-        sql.Add('       UNION ALL');
-        sql.Add('       SELECT h.CODIGO_FAM_FAM, h.CODIGO_SUBFAMILIA_FAM');
-        sql.Add('         FROM fza_articulos_familias h');
-        sql.Add(
-          '         JOIN arbol a2 ON h.CODIGO_SUBFAMILIA_FAM = ' +
-          'a2.CODIGO_FAM_FAM');
-        sql.Add('     )');
-        sql.Add('     SELECT CODIGO_FAM_FAM FROM arbol');
-        sql.Add('   )');
-      end
-      else
-        sql.Add('   AND a.CODIGO_FAM_ART IN (' + csvFam + ')');
-    end;
-
-    // PROVEEDORES
-    if csvProv <> '' then
-    begin
-      sql.Add('   AND EXISTS (SELECT 1 FROM fza_articulos_proveedores apx');
-      sql.Add('                WHERE apx.CODIGO_ART_AP = a.CODIGO_ART_ART');
-      sql.Add('                  AND apx.CODIGO_PRV_AP IN (' + csvProv + ')');
-      if chkSoloPrincipal.Checked then
-        sql.Add('                  AND apx.ESPROVEEDORPRINCIPAL_AP = ''S''');
-      sql.Add('              )');
-    end;
-
-    // PROPIEDADES
-    if csvPropV <> '' then
-    begin
-      sql.Add('   AND EXISTS (SELECT 1 FROM fza_articulos_propiedades pp');
-      sql.Add('                WHERE pp.CODIGO_ART_ART = a.CODIGO_ART_ART');
-      sql.Add('                  AND pp.ID_PV_ARTPROP IN (' + csvPropV + '))');
-    end;
-
-    // FECHA DE ALTA
-    if chkAplicarFechaAlta.Checked then
-    begin
-      sql.Add('   AND a.INSTANTE_ALTA >= :P_ALTA_DESDE');
-      sql.Add('   AND a.INSTANTE_ALTA <  :P_ALTA_HASTA');
-    end;
-
-    // VENTAS
-    if chkConVenta.Checked then
-    begin
-      if rgConSinVenta.ItemIndex = 0 then
-      begin
-        sql.Add('   AND (SELECT COUNT(*) FROM fza_facturas_lineas fl');
-        sql.Add('         JOIN fza_facturas fc');
-        sql.Add('           ON fc.NUMERO_FAC   = fl.NUMERO_FAC_FACLIN');
-        sql.Add('          AND fc.SERIE_FAC = fl.SERIE_FAC_FACLIN');
-        sql.Add('        WHERE fl.CODIGO_ART_FACLIN = a.CODIGO_ART_ART');
-        sql.Add(
-          '          AND fc.FECHA_FAC BETWEEN :P_VTA_DESDE AND :P_VTA_HASTA');
-        sql.Add('       ) >= :P_NUM_MIN_VTAS');
-      end
-      else
-      begin
-        sql.Add('   AND NOT EXISTS (SELECT 1 FROM fza_facturas_lineas fl');
-        sql.Add('         JOIN fza_facturas fc');
-        sql.Add('           ON fc.NUMERO_FAC   = fl.NUMERO_FAC_FACLIN');
-        sql.Add('          AND fc.SERIE_FAC = fl.SERIE_FAC_FACLIN');
-        sql.Add('        WHERE fl.CODIGO_ART_FACLIN = a.CODIGO_ART_ART');
-        sql.Add(
-          '          AND fc.FECHA_FAC BETWEEN :P_VTA_DESDE AND :P_VTA_HASTA)');
-      end;
-    end;
-
-    sql.Add(' ORDER BY a.CODIGO_FAM_ART, a.CODIGO_ART_ART');
-
-    Result := sql.Text;
-  finally
-    FreeAndNil(sql);
-  end;
-end;
-
-procedure TfrmModalAddBlockBase.AplicarParametros(AQry: TUniQuery);
-
-  function HasParam(const N: string): Boolean;
-  begin
-    Result := AQry.Params.FindParam(N) <> nil;
-  end;
-
-begin
-  if HasParam('P_ALTA_DESDE') then
-    AQry.ParamByName('P_ALTA_DESDE').AsDateTime := dtAltaDesde.Date;
-  if HasParam('P_ALTA_HASTA') then
-    AQry.ParamByName('P_ALTA_HASTA').AsDateTime := dtAltaHasta.Date + 1;
-  if HasParam('P_VTA_DESDE') then
-    AQry.ParamByName('P_VTA_DESDE').AsDateTime := dtVtaDesde.Date;
-  if HasParam('P_VTA_HASTA') then
-    AQry.ParamByName('P_VTA_HASTA').AsDateTime := dtVtaHasta.Date;
-  if HasParam('P_NUM_MIN_VTAS') then
-    AQry.ParamByName('P_NUM_MIN_VTAS').AsInteger := spnNumMinVtas.Value;
-
-  // El hijo añade los suyos (P_TARIFA_xxx, P_INVENTARIO_xxx...)
-  VincularParametrosExtra(AQry);
+  Result := FServicios.Inserciones;
 end;
 
 // ============================================================================
@@ -1198,41 +862,40 @@ end;
 
 procedure TfrmModalAddBlockBase.btnPrevisualizarClick(Sender: TObject);
 var
-  sql      : string;
-  msg      : string;
+  sMensaje: string;
 begin
-  if not ValidarAntesDePrevisualizar(msg) then
+  if not ValidarAntesDePrevisualizar(sMensaje) then
   begin
-    if msg <> '' then ShowMessage(msg);
-    Exit;
-  end;
-
-  if chkSoloConStock.Checked and
-     (Length(RecogerCodigosAlmacenesSeleccionados) = 0) then
+    if sMensaje <> '' then
+    begin
+      ShowMessage(sMensaje);
+    end;
+  end
+  else if chkSoloConStock.Checked and
+          (Length(RecogerCodigosAlmacenesSeleccionados) = 0) then
   begin
     ShowMessage(SErrorAlmacenesSoloStockAddBlock);
     pcFiltros.ActivePage := tsAlmacenes;
-    Exit;
-  end;
-
-  Screen.Cursor := crHourGlass;
-  try
-    sql := ConstruirSQLPreview;
-
-    FSqlPreview.Close;
-    FSqlPreview.Connection := FConn;
-    FSqlPreview.SQL.Text   := sql;
-    AplicarParametros(FSqlPreview);
-    FSqlPreview.Open;
-
-    tvPreview.DataController.DataSource := FDsPreview;
-    ConfigurarPreviewExtra;
-
-    lblPreviewInfo.Caption :=
-      Format(SCaptionArticulosCoincidenFiltro,
-             [FSqlPreview.RecordCount]);
-  finally
-    Screen.Cursor := crDefault;
+  end
+  else
+  begin
+    Screen.Cursor := crHourGlass;
+    try
+      FDsPreview.DataSet := nil;
+      FDatosPreview := nil;
+      FConsultaPreview := FServicios.Consultas.Previsualizar(
+        RecogerFiltros,
+        ContextoCargaMasiva);
+      FDatosPreview := FConsultaPreview.DataSet;
+      FDsPreview.DataSet := FDatosPreview;
+      tvPreview.DataController.DataSource := FDsPreview;
+      ConfigurarPreviewExtra;
+      lblPreviewInfo.Caption := Format(
+        SCaptionArticulosCoincidenFiltro,
+        [FDatosPreview.RecordCount]);
+    finally
+      Screen.Cursor := crDefault;
+    end;
   end;
 end;
 
@@ -1242,31 +905,38 @@ var
   codigos    : TArray<string>;
   pendientes : Integer;
 begin
-  if (not FSqlPreview.Active) or (FSqlPreview.RecordCount = 0) then
+  if (not Assigned(FDatosPreview)) or
+     (not FDatosPreview.Active) or
+     (FDatosPreview.RecordCount = 0) then
   begin
     if MessageDlg(SPreguntaPrevisualizarAddBlock,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       btnPrevisualizarClick(nil);
-      if (not FSqlPreview.Active) or (FSqlPreview.RecordCount = 0) then Exit;
+      if (not Assigned(FDatosPreview)) or
+         (not FDatosPreview.Active) or
+         (FDatosPreview.RecordCount = 0) then
+      begin
+        Exit;
+      end;
     end
     else
       Exit;
   end;
 
   pendientes := 0;
-  FSqlPreview.DisableControls;
+  FDatosPreview.DisableControls;
   try
-    FSqlPreview.First;
-    while not FSqlPreview.Eof do
+    FDatosPreview.First;
+    while not FDatosPreview.Eof do
     begin
-      if FSqlPreview.FieldByName('YA_CARGADO').AsString <> 'S' then
+      if FDatosPreview.FieldByName('YA_CARGADO').AsString <> 'S' then
         Inc(pendientes);
-      FSqlPreview.Next;
+      FDatosPreview.Next;
     end;
-    FSqlPreview.First;
+    FDatosPreview.First;
   finally
-    FSqlPreview.EnableControls;
+    FDatosPreview.EnableControls;
   end;
 
   if pendientes = 0 then

@@ -25,7 +25,7 @@ uses
   Vcl.Dialogs,
   Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ActnList, System.Actions, Vcl.Menus,
   System.DateUtils,
-  Data.DB, Datasnap.DBClient, MemDS, DBAccess,
+  Data.DB, Datasnap.DBClient,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters, cxStyles,
   cxClasses, cxContainer, cxEdit, cxLabel, cxTextEdit, cxButtons,
   cxMaskEdit, cxDropDownEdit, cxCalendar, cxPC, cxNavigator, cxDBData,
@@ -35,7 +35,7 @@ uses
   Uni,
   inMtoFrmBase, inLibArqueo, inLibArqueoTicket,
   inLibArqueoTicketIntf, inLibArqueoPersistencia,
-  UniDataArqueoPersistencia,
+  inLibModalArqueoPersistenciaIntf,
   Vcl.ComCtrls, dxCore,
   cxDateUtils, cxCurrencyEdit, cxRadioGroup,
   JvComponentBase, JvEnterTab, cxLocalization, cxGroupBox;
@@ -65,7 +65,6 @@ type
     tvResIVABASE_IVAS: TcxGridDBColumn;
     lvResIVA: TcxGridLevel;
     dsResIVA: TDataSource;
-    qryResIVA: TUniQuery;
 
     // Resúmenes: paneles y grids (uno por agrupación)
     pnlResEmpleado: TPanel;
@@ -77,7 +76,6 @@ type
     tvResEmpleadoNETO: TcxGridDBColumn;
     lvResEmpleado: TcxGridLevel;
     dsResEmpleado: TDataSource;
-    qryResEmpleado: TUniQuery;
 
     pnlResFP: TPanel;
     lblResFPTit: TcxLabel;
@@ -88,7 +86,6 @@ type
     tvResFPNETO: TcxGridDBColumn;
     lvResFP: TcxGridLevel;
     dsResFP: TDataSource;
-    qryResFP: TUniQuery;
 
     pnlResFam: TPanel;
     lblResFamTit: TcxLabel;
@@ -99,7 +96,6 @@ type
     tvResFamNETO: TcxGridDBColumn;
     lvResFam: TcxGridLevel;
     dsResFam: TDataSource;
-    qryResFam: TUniQuery;
 
     pnlResProp: TPanel;
     lblResPropTit: TcxLabel;
@@ -111,7 +107,6 @@ type
     tvResPropNETO: TcxGridDBColumn;
     lvResProp: TcxGridLevel;
     dsResProp: TDataSource;
-    qryResProp: TUniQuery;
 
     // Cabecera (rango + ventas + accesos)
     lblTituloDesde: TcxLabel;
@@ -263,6 +258,12 @@ type
     FArqueoTarjetasPermitido: Boolean;
     FPuedeVerResumen: Boolean;
     FResumenFamilias: TClientDataSet;
+    FRepositorioPersistencia: IRepositorioModalArqueo;
+    FPersistenciaArqueo: IArqueoPersistencia;
+    FResumenEmpleados: IResultadoModalArqueo;
+    FResumenFormasPago: IResultadoModalArqueo;
+    FResumenPropiedades: IResultadoModalArqueo;
+    FResumenIva: IResultadoModalArqueo;
     function  FechaEditada(AEdit: TcxDateEdit): TDateTime;
     function  FechaDesdeSeleccionada: TDateTime;
     function  FechaHastaSeleccionada: TDateTime;
@@ -271,7 +272,8 @@ type
     procedure ConfigurarResumenes;
     procedure RefrescarResumenes;
     procedure CargarResumenFamilias;
-    procedure AbrirQryConParams(Q: TUniQuery);
+    function ConstruirSolicitudResumen:
+      TSolicitudResumenModalArqueo;
     function  FormatImporte(AValor: Currency): string;
     procedure CargarRecuento(const AArqueo: TArqueoCaja);
     procedure RecalcularTotalesRecuento;
@@ -294,11 +296,10 @@ implementation
 
 {$R *.dfm}
 
-uses inLibPermisosIntf, inLibLog,
+uses inLibPermisosIntf,
      inMtoModalArqueosHistCaja,
      inLibTiraCajaTicket, inLibTiraCajaTicketIntf,
-     inMtoModalTiraCaja, inLibVerifactu,
-     UniDataRectificativasSql, inLibMsgCaja;
+     inMtoModalTiraCaja, inLibVerifactu, inLibMsgCaja;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -319,6 +320,10 @@ begin
   frm := TfrmModalArqueo.Create(AOwner);
   try
     frm.FConn    := AConn;
+    frm.FRepositorioPersistencia :=
+      frm.ContextoRepositoriosPantalla.Caja.CrearRepositorioModalArqueo(AConn);
+    frm.FPersistenciaArqueo :=
+      frm.ContextoRepositoriosPantalla.Caja.CrearPersistenciaArqueoCaja(AConn);
     frm.FEmpresa := AEmpresa;
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
@@ -437,7 +442,8 @@ begin
   inherited;
   if not FPuedeVerResumen then
   begin
-    Log.LogWarning('Intento de imprimir el resumen de arqueo sin permiso');
+    RegistroLog.RegistrarAviso(
+      'Intento de imprimir el resumen de arqueo sin permiso');
     MessageDlg(
       SErrorPermisoResumenArqueoCaja,
       mtWarning,
@@ -450,8 +456,10 @@ begin
     try
       TArqueoTicket.Imprimir(
         PreviewTicket,
-        CrearRepositorioArqueoCaja(FConn),
-        CrearRepositorioArqueoTicket(FConn),
+        ContextoRepositoriosPantalla.TicketsCaja.
+          CrearRepositorioArqueoCaja(FConn),
+        ContextoRepositoriosPantalla.TicketsCaja.
+          CrearRepositorioArqueoTicket(FConn),
         ParametrosCaja,
         FEmpresa,
         FAlmacen,
@@ -501,7 +509,8 @@ begin
   inherited;
   if (FConn = nil) or (not FConn.Connected) then
     Exit;
-  oRepositorio := CrearRepositorioTiraCajaTicket(
+  oRepositorio := ContextoRepositoriosPantalla.TicketsCaja.
+    CrearRepositorioTiraCajaTicket(
     FConn);
   // Series facturadas en el rango; si no hay ninguna, no hay tira que sacar.
   Series := TTiraCajaTicket.ObtenerSeries(
@@ -610,7 +619,8 @@ procedure TfrmModalArqueo.Recalcular;
 begin
   Screen.Cursor := crHourGlass;
   try
-    FArqueoActual := CrearRepositorioArqueoCaja(FConn).Calcular(
+    FArqueoActual := ContextoRepositoriosPantalla.TicketsCaja.
+      CrearRepositorioArqueoCaja(FConn).Calcular(
       FEmpresa,
       FAlmacen,
       FCaja,
@@ -630,55 +640,6 @@ end;
 
 procedure TfrmModalArqueo.ConfigurarResumenes;
 begin
-  // Empleado: 1 fila por CODIGO_EMPLEADO_OPCAJA. Mide unidades de venta
-  // (operaciones distintas) y el neto vendido.
-  qryResEmpleado.SQL.Text :=
-    ' SELECT                                                              ' +
-    '   COALESCE(e.DIMINUTIVO_TICKET_EMPL,                                ' +
-    '            o.CODIGO_EMPLEADO_OPCAJA, ''?'') AS EMPLEADO,            ' +
-    '   COUNT(DISTINCT o.NUMERO_OPERACION_OPCAJA)  AS UDS,                ' +
-    '   COALESCE(SUM(o.IMPORTE_TOTAL_OPCAJA), 0)   AS NETO                ' +
-    '   FROM fza_caja_operaciones o                                       ' +
-    '   LEFT JOIN fza_empleados e                                         ' +
-    '     ON e.CODIGO_EMPL = o.CODIGO_EMPLEADO_OPCAJA                     ' +
-    '  WHERE o.TIPO_OPERACION_OPCAJA   = ''VE''                           ' +
-    '    AND o.CODIGO_EMP_OPCAJA       = :pEMPRESA                        ' +
-    '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                        ' +
-    '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
-    '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                          ' +
-    '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                          ' +
-    SQLExcluirVentaRetirada(
-      'o.CODIGO_EMP_OPCAJA',
-      'o.SERIE_FAC_OPCAJA',
-      'o.NUMERO_FAC_OPCAJA') +
-    '  GROUP BY o.CODIGO_EMPLEADO_OPCAJA, e.DIMINUTIVO_TICKET_EMPL        ' +
-    '  ORDER BY o.CODIGO_EMPLEADO_OPCAJA                                  ';
-
-  // Forma de pago: 1 fila por CODIGO_FP_CFP (EFE/TARJ/BONO/USD/BTC/...). Mide
-  // unidades = nº de pagos, e importe total entregado.
-  qryResFP.SQL.Text :=
-    ' SELECT                                                              ' +
-    '   p.CODIGO_FP_CFP                          AS FP,                   ' +
-    '   COUNT(*)                                 AS UDS,                  ' +
-    '   COALESCE(SUM(p.IMPORTE_ENTREGADO_PAGO),0) AS NETO                 ' +
-    '   FROM fza_caja_pagos        p                                      ' +
-    '   JOIN fza_caja_operaciones  o                                      ' +
-    '     ON o.CODIGO_EMP_OPCAJA       = p.CODIGO_EMP_PAGO                ' +
-    '    AND o.CODIGO_ALM_OPCAJA       = p.CODIGO_ALM_PAGO                ' +
-    '    AND o.CODIGO_CAJA_OPCAJA      = p.CODIGO_CAJA_PAGO               ' +
-    '    AND o.NUMERO_OPERACION_OPCAJA = p.NUMERO_OPERACION_PAGO          ' +
-    '  WHERE p.CODIGO_EMP_PAGO      = :pEMPRESA                           ' +
-    '    AND p.CODIGO_ALM_PAGO      = :pALMACEN                           ' +
-    '    AND p.CODIGO_CAJA_PAGO     = :pCAJA                              ' +
-    '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                          ' +
-    '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                          ' +
-    SQLExcluirVentaRetirada(
-      'o.CODIGO_EMP_OPCAJA',
-      'o.SERIE_FAC_OPCAJA',
-      'o.NUMERO_FAC_OPCAJA') +
-    '  GROUP BY p.CODIGO_FP_CFP                                           ' +
-    '  ORDER BY p.CODIGO_FP_CFP                                           ';
-
   // Familia: dataset en memoria alimentado por el repositorio compartido
   // con el ticket. La profundidad se envía mediante :pNIVELES.
   FResumenFamilias := TClientDataSet.Create(Self);
@@ -695,135 +656,6 @@ begin
   FResumenFamilias.CreateDataSet;
   dsResFam.DataSet := FResumenFamilias;
 
-  // IVA (pestaña Más datos): 4 filas, una por tipo de IVA (Normal, Reducido,
-  // Super Reducido, Exento). Se toman simplificadas y rectificativas para
-  // que las diferencias resten y las sustitutivas aporten el importe corregido.
-  // Filtro por la fecha-hora de la operación. El DISTINCT evita multiplicar
-  // totales cuando una operación tiene varias filas (DE+VE+CB).
-  qryResIVA.SQL.Text :=
-    ' SELECT t.ORD, t.TIPO,                                                ' +
-    '        MAX(CASE t.ORD                                                ' +
-    '              WHEN 1 THEN f.PORCENTAJE_IVAN_FAC                       ' +
-    '              WHEN 2 THEN f.PORCENTAJE_IVAR_FAC                       ' +
-    '              WHEN 3 THEN f.PORCENTAJE_IVAS_FAC                       ' +
-    '              ELSE f.PORCENTAJE_IVAE_FAC END) AS PORC_IVA,            ' +
-    '        COALESCE(SUM(CASE t.ORD                                       ' +
-    '              WHEN 1 THEN f.TOTAL_BASEI_IVAN_FAC                      ' +
-    '              WHEN 2 THEN f.TOTAL_BASEI_IVAR_FAC                      ' +
-    '              WHEN 3 THEN f.TOTAL_BASEI_IVAS_FAC                      ' +
-    '              ELSE f.TOTAL_BASEI_IVAE_FAC END), 0) AS BASE,           ' +
-    '        COALESCE(SUM(CASE t.ORD                                       ' +
-    '              WHEN 1 THEN f.TOTAL_IVAN_FAC                            ' +
-    '              WHEN 2 THEN f.TOTAL_IVAR_FAC                            ' +
-    '              WHEN 3 THEN f.TOTAL_IVAS_FAC                            ' +
-    '              ELSE f.TOTAL_IVAE_FAC END), 0) AS CUOTA_IVA,            ' +
-    '        MAX(CASE t.ORD                                                ' +
-    '              WHEN 1 THEN f.PORCENTAJE_REN_FAC                        ' +
-    '              WHEN 2 THEN f.PORCENTAJE_RER_FAC                        ' +
-    '              WHEN 3 THEN f.PORCENTAJE_RES_FAC                        ' +
-    '              ELSE f.PORCENTAJE_REE_FAC END) AS PORC_RE,              ' +
-    '        COALESCE(SUM(CASE t.ORD                                       ' +
-    '              WHEN 1 THEN f.TOTAL_REN_FAC                             ' +
-    '              WHEN 2 THEN f.TOTAL_RER_FAC                             ' +
-    '              WHEN 3 THEN f.TOTAL_RES_FAC                             ' +
-    '              ELSE f.TOTAL_REE_FAC END), 0) AS CUOTA_RE,              ' +
-    '        COALESCE(SUM(CASE t.ORD                                       ' +
-    '              WHEN 1 THEN COALESCE(f.TOTAL_BASEI_IVAN_FAC, 0) +       ' +
-    '                          COALESCE(f.TOTAL_IVAN_FAC, 0) +             ' +
-    '                          COALESCE(f.TOTAL_REN_FAC, 0)                ' +
-    '              WHEN 2 THEN COALESCE(f.TOTAL_BASEI_IVAR_FAC, 0) +       ' +
-    '                          COALESCE(f.TOTAL_IVAR_FAC, 0) +             ' +
-    '                          COALESCE(f.TOTAL_RER_FAC, 0)                ' +
-    '              WHEN 3 THEN COALESCE(f.TOTAL_BASEI_IVAS_FAC, 0) +       ' +
-    '                          COALESCE(f.TOTAL_IVAS_FAC, 0) +             ' +
-    '                          COALESCE(f.TOTAL_RES_FAC, 0)                ' +
-    '              ELSE COALESCE(f.TOTAL_BASEI_IVAE_FAC, 0) +              ' +
-    '                   COALESCE(f.TOTAL_IVAE_FAC, 0) +                    ' +
-    '                   COALESCE(f.TOTAL_REE_FAC, 0) END), 0)              ' +
-    '          AS BASE_IVAS                                                ' +
-    '   FROM (                                                             ' +
-    '     SELECT DISTINCT                                                  ' +
-    '            f.SERIE_FAC, f.NUMERO_FAC,                                ' +
-    '            f.PORCENTAJE_IVAN_FAC, f.TOTAL_BASEI_IVAN_FAC,            ' +
-    '            f.TOTAL_IVAN_FAC, f.PORCENTAJE_REN_FAC, f.TOTAL_REN_FAC,  ' +
-    '            f.PORCENTAJE_IVAR_FAC, f.TOTAL_BASEI_IVAR_FAC,            ' +
-    '            f.TOTAL_IVAR_FAC, f.PORCENTAJE_RER_FAC, f.TOTAL_RER_FAC,  ' +
-    '            f.PORCENTAJE_IVAS_FAC, f.TOTAL_BASEI_IVAS_FAC,            ' +
-    '            f.TOTAL_IVAS_FAC, f.PORCENTAJE_RES_FAC, f.TOTAL_RES_FAC,  ' +
-    '            f.PORCENTAJE_IVAE_FAC, f.TOTAL_BASEI_IVAE_FAC,            ' +
-    '            f.TOTAL_IVAE_FAC, f.PORCENTAJE_REE_FAC, f.TOTAL_REE_FAC   ' +
-    '       FROM fza_caja_operaciones o                                    ' +
-    '       JOIN fza_facturas f                                            ' +
-    '         ON f.CODIGO_EMP_FAC  = o.CODIGO_EMP_OPCAJA                   ' +
-    '        AND f.CODIGO_ALM_FAC  = o.CODIGO_ALM_OPCAJA                   ' +
-    '        AND f.CODIGO_CAJA_FAC = o.CODIGO_CAJA_OPCAJA                  ' +
-    '        AND f.SERIE_FAC       = o.SERIE_FAC_OPCAJA                    ' +
-    '        AND f.NUMERO_FAC      = o.NUMERO_FAC_OPCAJA                   ' +
-    '      WHERE o.CODIGO_EMP_OPCAJA       = :pEMPRESA                     ' +
-    '        AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                     ' +
-    '        AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                        ' +
-    '        AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                      ' +
-    '        AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                      ' +
-    '        AND f.TIPO_FAC IN (''SIMPLIFICADA'', ''RECTIFICATIVA'')       ' +
-    SQLExcluirVentaRetirada(
-      'o.CODIGO_EMP_OPCAJA',
-      'o.SERIE_FAC_OPCAJA',
-      'o.NUMERO_FAC_OPCAJA') +
-    '   ) f                                                                ' +
-    '   CROSS JOIN (                                                       ' +
-    '     SELECT 1 AS ORD, ''N'' AS TIPO                                   ' +
-    '      UNION ALL SELECT 2, ''R''                                       ' +
-    '      UNION ALL SELECT 3, ''S''                                       ' +
-    '      UNION ALL SELECT 4, ''E''                                       ' +
-    '   ) t                                                                ' +
-    '  GROUP BY t.ORD, t.TIPO                                              ' +
-    '  HAVING BASE <> 0 OR CUOTA_IVA <> 0 OR CUOTA_RE <> 0                 ' +
-    '  ORDER BY t.ORD                                                      ';
-
-  // Propiedad: 1 fila por (propiedad, valor). Suma sobre las líneas de venta
-  // los TOTAL_FACLIN agregados al CODIGO_ART. Si la propiedad es de tipo
-  // LISTA, el valor sale de fza_propiedades_valores.PV; si es libre, de
-  // VALOR_LIBRE_ARTPROP.
-  qryResProp.SQL.Text :=
-    ' SELECT                                                              ' +
-    '   ap.CODIGO_PROP_ARTPROP                                  AS PROP,  ' +
-    '   COALESCE(pv.PV, ap.VALOR_LIBRE_ARTPROP, ''?'')          AS VALOR, ' +
-    '   COUNT(*)                                                AS UDS,   ' +
-    '   COALESCE(SUM(l.TOTAL_FACLIN), 0)                        AS NETO   ' +
-    '   FROM fza_caja_operaciones        o                                ' +
-    '   JOIN fza_facturas_lineas         l                                ' +
-    '     ON l.CODIGO_EMP_FACLIN        = o.CODIGO_EMP_OPCAJA             ' +
-    '    AND l.CODIGO_ALM_FACLIN        = o.CODIGO_ALM_OPCAJA             ' +
-    '    AND l.CODIGO_CAJA_FACLIN       = o.CODIGO_CAJA_OPCAJA            ' +
-    '    AND l.NUMERO_OPERACION_FACLIN  = o.NUMERO_OPERACION_OPCAJA       ' +
-    '   JOIN fza_articulos_propiedades   ap                               ' +
-    '     ON ap.CODIGO_ART_ART = l.CODIGO_ART_FACLIN                      ' +
-    '   LEFT JOIN fza_propiedades_valores pv                              ' +
-    '     ON pv.ID_PV_ARTPROP = ap.ID_PV_ARTPROP                          ' +
-    '  WHERE o.TIPO_OPERACION_OPCAJA   = ''VE''                           ' +
-    '    AND o.CODIGO_EMP_OPCAJA       = :pEMPRESA                        ' +
-    '    AND o.CODIGO_ALM_OPCAJA       = :pALMACEN                        ' +
-    '    AND o.CODIGO_CAJA_OPCAJA      = :pCAJA                           ' +
-    '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE                          ' +
-    '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA                          ' +
-    SQLExcluirVentaRetirada(
-      'o.CODIGO_EMP_OPCAJA',
-      'o.SERIE_FAC_OPCAJA',
-      'o.NUMERO_FAC_OPCAJA') +
-    '  GROUP BY ap.CODIGO_PROP_ARTPROP, VALOR                             ' +
-    '  ORDER BY ap.CODIGO_PROP_ARTPROP, VALOR                             ';
-end;
-
-procedure TfrmModalArqueo.AbrirQryConParams(Q: TUniQuery);
-begin
-  if Q.Active then Q.Close;
-  Q.Connection := FConn;
-  Q.ParamByName('pEMPRESA').AsString := FEmpresa;
-  Q.ParamByName('pALMACEN').AsString := FAlmacen;
-  Q.ParamByName('pCAJA').AsString    := FCaja;
-  Q.ParamByName('pFDESDE').AsDateTime    := FechaDesdeSeleccionada;
-  Q.ParamByName('pFHASTA').AsDateTime    := FechaHastaSeleccionada;
-  Q.Open;
 end;
 
 procedure TfrmModalArqueo.CargarResumenFamilias;
@@ -831,7 +663,8 @@ var
   aLineas: TArray<TResumenSeccionArqueo>;
   iLinea: Integer;
 begin
-  aLineas := CrearRepositorioArqueoTicket(
+  aLineas := ContextoRepositoriosPantalla.TicketsCaja.
+    CrearRepositorioArqueoTicket(
     FConn).ListarResumenSeccion(
       FArqueoActual,
       ParametrosCaja.NivelesFamiliaArqueo);
@@ -854,17 +687,42 @@ begin
   end;
 end;
 
+function TfrmModalArqueo.ConstruirSolicitudResumen:
+  TSolicitudResumenModalArqueo;
+begin
+  Result.Empresa := FEmpresa;
+  Result.Almacen := FAlmacen;
+  Result.Caja := FCaja;
+  Result.FechaDesde := FechaDesdeSeleccionada;
+  Result.FechaHasta := FechaHastaSeleccionada;
+end;
+
 procedure TfrmModalArqueo.RefrescarResumenes;
+var
+  Solicitud: TSolicitudResumenModalArqueo;
 begin
   if FPuedeVerResumen and
      (FConn <> nil) and
      FConn.Connected then
   begin
-    AbrirQryConParams(qryResEmpleado);
-    AbrirQryConParams(qryResFP);
+    Solicitud := ConstruirSolicitudResumen;
+    dsResEmpleado.DataSet := nil;
+    dsResFP.DataSet := nil;
+    dsResProp.DataSet := nil;
+    dsResIVA.DataSet := nil;
+    FResumenEmpleados :=
+      FRepositorioPersistencia.ConsultarResumenEmpleados(Solicitud);
+    FResumenFormasPago :=
+      FRepositorioPersistencia.ConsultarResumenFormasPago(Solicitud);
+    FResumenPropiedades :=
+      FRepositorioPersistencia.ConsultarResumenPropiedades(Solicitud);
+    FResumenIva :=
+      FRepositorioPersistencia.ConsultarResumenIva(Solicitud);
+    dsResEmpleado.DataSet := FResumenEmpleados.DataSet;
+    dsResFP.DataSet := FResumenFormasPago.DataSet;
+    dsResProp.DataSet := FResumenPropiedades.DataSet;
+    dsResIVA.DataSet := FResumenIva.DataSet;
     CargarResumenFamilias;
-    AbrirQryConParams(qryResProp);
-    AbrirQryConParams(qryResIVA);
   end;
 end;
 
@@ -925,7 +783,8 @@ begin
        FormatFloat(',0.00', AArqueo.EfectivoSalidas),
        FormatFloat(',0.00', AArqueo.EfectivoAnterior)]);
   { Grid de recuento: efectivo agrupado y formas de pago sin cajón }
-  Log.LogInfo(Format('CargarRecuento: PagosPorForma=%d filas',
+  RegistroLog.RegistrarInformacion(Format(
+    'CargarRecuento: PagosPorForma=%d filas',
     [Length(AArqueo.PagosPorForma)]));
   tvRecuento.BeginUpdate;
   try
@@ -944,7 +803,8 @@ begin
     iRow := 1;
     for i := 0 to High(AArqueo.PagosPorForma) do
     begin
-      Log.LogInfo(Format('  FP[%d]: %s (%s) EsEfectivo=%s Importe=%.2f',
+      RegistroLog.RegistrarInformacion(Format(
+        '  FP[%d]: %s (%s) EsEfectivo=%s Importe=%.2f',
         [i, AArqueo.PagosPorForma[i].Codigo,
          AArqueo.PagosPorForma[i].Descripcion,
          BoolToStr(AArqueo.PagosPorForma[i].EsEfectivo, True),
@@ -1136,28 +996,13 @@ end;
 // Nombre del empleado de caja activo en fza_empleados ('' si no existe).
 // El vendedor que cierra el arqueo debe estar dado de alta como empleado.
 function TfrmModalArqueo.BuscarNombreVendedor(const ACodigo: string): string;
-var
-  Q: TUniQuery;
 begin
   Result := '';
-  if (FConn <> nil) and FConn.Connected and (Trim(ACodigo) <> '') then
+  if (FConn <> nil) and
+     FConn.Connected and
+     Assigned(FRepositorioPersistencia) then
   begin
-    Q := TUniQuery.Create(nil);
-    try
-      Q.Connection := FConn;
-      Q.SQL.Text :=
-        'SELECT COALESCE(NOMBRE_EMPL, DIMINUTIVO_TICKET_EMPL, ' +
-        '                CODIGO_EMPL) AS NOMBRE ' +
-        '  FROM fza_empleados ' +
-        ' WHERE CODIGO_EMPL   = :pCODIGO ' +
-        '   AND ESACTIVO_EMPL = ''S''';
-      Q.ParamByName('pCODIGO').AsString := Trim(ACodigo);
-      Q.Open;
-      if not Q.IsEmpty then
-        Result := Q.FieldByName('NOMBRE').AsString;
-    finally
-      FreeAndNil(Q);
-    end;
+    Result := FRepositorioPersistencia.BuscarNombreVendedor(ACodigo);
   end;
 end;
 
@@ -1228,33 +1073,14 @@ begin
     Exit;
   end;
   lblVendedorNombre.Caption := sNombreVendedor;
-  // Comprobar doble cierre
-  var qryChk := TUniQuery.Create(nil);
-  try
-    qryChk.Connection := FConn;
-    qryChk.SQL.Text :=
-      'SELECT COUNT(*) AS N FROM fza_caja_arqueos ' +
-      ' WHERE CODIGO_EMP_ARQ  = :E ' +
-      '   AND CODIGO_ALM_ARQ  = :A ' +
-      '   AND CODIGO_CAJA_ARQ = :C ' +
-      '   AND FASE_ARQ = ''CERRADO''' +
-      '   AND FECHA_DESDE_ARQ <= :FH ' +
-      '   AND FECHA_HASTA_ARQ >= :FD ';
-    qryChk.ParamByName('E').AsString  := FEmpresa;
-    qryChk.ParamByName('A').AsString  := FAlmacen;
-    qryChk.ParamByName('C').AsString  := FCaja;
-    qryChk.ParamByName('FD').AsDateTime := FechaDesdeSeleccionada;
-    qryChk.ParamByName('FH').AsDateTime := FechaHastaSeleccionada;
-    qryChk.Open;
-    if qryChk.FieldByName('N').AsInteger > 0 then
-    begin
-      Application.MessageBox(
-        PChar(SErrorArqueoCajaDuplicado),
-        PChar(STituloArqueoCajaDuplicado), MB_OK or MB_ICONWARNING);
-      Exit;
-    end;
-  finally
-    FreeAndNil(qryChk);
+  // Comprobar doble cierre.
+  if FRepositorioPersistencia.ExisteArqueoCerrado(
+       ConstruirSolicitudResumen) then
+  begin
+    Application.MessageBox(
+      PChar(SErrorArqueoCajaDuplicado),
+      PChar(STituloArqueoCajaDuplicado), MB_OK or MB_ICONWARNING);
+    Exit;
   end;
   dEfectivoRecontado := ObtenerEfectivoRecontado;
   if (dEfectivoRecontado = 0)
@@ -1314,7 +1140,7 @@ begin
   Screen.Cursor := crHourGlass;
   try
     TArqueoPersistencia.GrabarArqueo(
-      CrearPersistenciaArqueo(FConn),
+      FPersistenciaArqueo,
       FArqueoActual,
       Lineas,
       dTotalRecuento,
@@ -1332,7 +1158,8 @@ begin
   { Justificante del cierre }
   TArqueoTicket.ImprimirCierre(
     PreviewTicket,
-    CrearRepositorioArqueoTicket(FConn),
+    ContextoRepositoriosPantalla.TicketsCaja.
+      CrearRepositorioArqueoTicket(FConn),
     ContextoSesion,
     FArqueoActual,
     Lineas,

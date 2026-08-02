@@ -23,7 +23,7 @@ uses
   DBClient, cxControls, cxContainer, cxEdit, cxTextEdit, cxLabel, frxExportPDF,
   ExtCtrls, ComCtrls, dxCore, cxDateUtils, cxMaskEdit, cxDropDownEdit,
   cxCalendar, frxDesgn, cxGroupBox, cxRadioGroup, frxExportBaseDialog,
-  frxExportXLSX, MemDS, DBAccess, Uni, UniDataConn,
+  frxExportXLSX,
   inLibGlobalVar, inMtoModalGenImpEle, cxStyles, dxSkinsForm,
   cxClasses, cxLocalization, Vcl.Menus, System.UITypes, JvComponentBase,
   JvEnterTab, dxSkinBasic, dxSkinBlack, dxSkinBlueprint, dxSkinCaramel,
@@ -45,7 +45,7 @@ uses
   dxSkinXmas2008Blue, System.Actions, Vcl.ActnList,
   frxExportBaseImageSettingsDialog, frCoreClasses,
   frLocalization, frxBarcode,
-  frLanguageSpanish, frxSmartMemo;
+  frLanguageSpanish, frxSmartMemo, inLibImpresionPersistenciaIntf;
 type
   TfrmPrint = class(TfrmBase, IEliminadorFormatoImpresion)
     pnl1: TPanel;
@@ -58,14 +58,11 @@ type
     btnEditar: TcxButton;
     frxlsxprtExcel: TfrxXLSXExport;
     btnExcel: TcxButton;
-    unqryPerfiles: TUniQuery;
-    dsPerfiles: TDataSource;
     frxdsgnr1: TfrxDesigner;
     frxReportOrigen: TfrxReport;
     ActionList1: TActionList;
     actSalir: TAction;
     frLocalizationController1: TfrLocalizationController;
-    unqryInformesGuias: TUniQuery;
     procedure btnImprimirClick(Sender: TObject);
     procedure btnSalirClick(Sender: TObject);
     procedure btnPDFClick(Sender: TObject);
@@ -85,31 +82,17 @@ type
     // directo a fza_usuarios_perfiles con sElegido y FScopePerfilFijado.
     FFormatoFijado: Boolean;
     FScopePerfilFijado: string;
-    // Componentes creados dinamicamente al abrir guias runtime. Se
-    // liberan en CerrarGuiasRuntime / FormClose.
-    FGuiasRuntime: TList;
-    // Por cada TUniQuery que modificamos al aplicar guias, guardamos el
-    // SQL.Text original aqui (objeto = TUniQuery, string = SQL previo)
-    // para poder restaurarlo en CerrarGuiasRuntime. Asi el data module
-    // queda igual que como vino tras el cierre del modal.
-    FSqlOriginales: TStringList;
+    FServiciosPersistencia: TServiciosPersistenciaImpresion;
+    FRestauracionesGuias: TInterfaceList;
     FUltimaRutaPdf: string;
     // D22: True si frxrprt1 contiene un formato personalizado
     // cargado del BLOB; False si contiene la plantilla base.
     FInformeEsPersonalizado: Boolean;
     // D22: evita traducir dos veces el informe ya cargado.
     FInformeTraducido: Boolean;
-    // Lee el .frx serializado en VALUE_BLOB_USUPER de la fila identificada
-    // por (Self.Name, aDescripcion) — una vez localizada en unqryPerfiles
-    // por Locate. La query principal ya no trae el BLOB (cientos de KB)
-    // por performance; este helper hace el unico round-trip necesario y
-    // vuelca el contenido en aStream. Devuelve True si se ha cargado.
+    function ContextoFormatos: TContextoFormatosImpresion;
     function LeerBlobFormato(const aDescripcion: string;
                              aStream: TStream): Boolean;
-    // Persiste el .frx (aStream) en fza_usuarios_perfiles via SQL directo,
-    // sin pasar por unqryPerfiles (que no expone el campo BLOB). Decide
-    // INSERT vs UPDATE segun PK (USUARIO_GRUPO_USUPER, KEY_USUPER,
-    // SUBKEY_USUPER). Usado por frxdsgnr1SaveReport.
     procedure GuardarBlobFormato(const aUsuario, aSubKey,
                                   aDescripcion: string;
                                   aStream: TStream;
@@ -171,7 +154,7 @@ implementation
 uses
   inMtoModalGenImpSave, inLibUser, inLibPathTokens,
   System.Generics.Collections, System.Rtti, inLibFotos, inLibVerifactu,
-  inMtoModalInformesGuias, inMtoModalWizardEditar, inLibLog,
+  inMtoModalInformesGuias, inMtoModalWizardEditar,
   inLibInformesGuiasCache, inLibMsgComun, inLibTraduccionesInforme;
 
 {$R *.dfm}
@@ -277,428 +260,162 @@ begin
   AplicarVerifactuEnBanda(ParametrosApp, Component);
 end;
 
-procedure TfrmPrint.AbrirGuiasRuntime(aSoloUsadasEnReport: Boolean);
-
-  procedure CopiarParametros(src, dst: TUniQuery);
-  var
-    k: Integer;
-    pSrc: TUniParam;
-  begin
-    for k := 0 to dst.Params.Count - 1 do
-    begin
-      pSrc := src.Params.FindParam(dst.Params[k].Name);
-      if pSrc <> nil then
-        dst.Params[k].Value := pSrc.Value
-      else
-        dst.Params[k].Clear;
-    end;
-  end;
-
-  function SplitFields(const aStr: string): TArray<string>;
-  var
-    sl: TStringList;
-    k: Integer;
-  begin
-    sl := TStringList.Create;
-    try
-      sl.StrictDelimiter := True;
-      sl.Delimiter := ';';
-      sl.DelimitedText := aStr;
-      SetLength(Result, sl.Count);
-      for k := 0 to sl.Count - 1 do
-        Result[k] := Trim(sl[k]);
-    finally
-      FreeAndNil(sl);
-    end;
-  end;
-
+procedure TfrmPrint.AbrirGuiasRuntime(
+  aSoloUsadasEnReport: Boolean);
 var
-  sDatasetMaster, sTabla, sMaster, sDetail: string;
-  dsMaster: TfrxDBDataset;
-  oDS: TDataSet;
-  uniMaster, qryColsExt, qryTmp: TUniQuery;
-  i, k, nPares, iSuf, iGuia: Integer;
-  sSqlActual, sSqlNuevo, sCol, sAlias, sOn, sSelectExt: string;
-  setCamposMaster: TStringList;
-  arrMaster, arrDetail: TArray<string>;
   arrGuias: TArray<TInformeGuiaItem>;
   sFormatoBuscado: string;
+  sError: string;
+  iGuia: Integer;
+  iDataSet: Integer;
+  oDataSetInforme: TfrxDBDataset;
+  oDataSet: TDataSet;
+  oRestauracion: IRestauracionDatasetInforme;
 begin
-  // Asegurar listas internas. CerrarGuiasRuntime tambien las gestiona.
-  if FGuiasRuntime = nil then
-    FGuiasRuntime := TList.Create
-  else
-    CerrarGuiasRuntime;
-  if FSqlOriginales = nil then
-    FSqlOriginales := TStringList.Create;
-  // El parametro aSoloUsadasEnReport queda como referencia historica:
-  // ahora cada guia enriquece el SQL del TUniQuery del master con un
-  // LEFT JOIN, asi que los campos extra son nativos del master en el
-  // .frx (`[<UserName>."CAMPO"]`) y no hay datasets paralelos que
-  // filtrar.
-  // Las guías se sirven del colaborador precargado al iniciar sesión.
-  if not Assigned(InformesGuiasCache) or
-     (not InformesGuiasCache.Cargada) then
-    Exit;
-  if (sElegido = '') or SameText(sElegido, 'Predeterminado') then
-    sFormatoBuscado := ''
-  else
-    sFormatoBuscado := sElegido;
-  arrGuias := InformesGuiasCache.Obtener(
-    Self.Name,
-    sFormatoBuscado);
-  if Length(arrGuias) = 0 then
-    Exit;
-  qryColsExt := TUniQuery.Create(nil);
-  try
-    qryColsExt.Connection := ConexionPrincipal;
-    qryColsExt.SQL.Text :=
-      'select COLUMN_NAME from information_schema.COLUMNS ' +
-      ' where TABLE_SCHEMA = database() and TABLE_NAME = :TAB ' +
-      ' order by ORDINAL_POSITION';
+  if not Assigned(FRestauracionesGuias) then
+  begin
+    FRestauracionesGuias := TInterfaceList.Create;
+  end;
+  CerrarGuiasRuntime;
+  if Assigned(InformesGuiasCache) and
+     InformesGuiasCache.Cargada then
+  begin
+    if (sElegido = '') or
+       SameText(sElegido, 'Predeterminado') then
+    begin
+      sFormatoBuscado := '';
+    end
+    else
+    begin
+      sFormatoBuscado := sElegido;
+    end;
+    arrGuias := InformesGuiasCache.Obtener(
+      Self.Name,
+      sFormatoBuscado);
     for iGuia := 0 to High(arrGuias) do
     begin
-      sDatasetMaster := arrGuias[iGuia].DatasetMaster;
-      sTabla         := arrGuias[iGuia].Tabla;
-      sMaster        := arrGuias[iGuia].MasterFields;
-      sDetail        := arrGuias[iGuia].DetailFields;
-      try
-        // 1) Localizar el TfrxDBDataset por UserName y resolver
-        //    TDataSet (DataSet directo o via DataSource).
-        dsMaster := nil;
-        for i := 0 to frxrprt1.Datasets.Count - 1 do
-          if (frxrprt1.Datasets[i].DataSet is TfrxDBDataset) and
-             SameText(frxrprt1.Datasets[i].DataSet.UserName,
-                      sDatasetMaster) then
-          begin
-            dsMaster := TfrxDBDataset(frxrprt1.Datasets[i].DataSet);
-            Break;
-          end;
-        if dsMaster = nil then
+      oDataSetInforme := nil;
+      for iDataSet := 0 to frxrprt1.Datasets.Count - 1 do
+      begin
+        if (frxrprt1.Datasets[iDataSet].DataSet is TfrxDBDataset) and
+           SameText(
+             frxrprt1.Datasets[iDataSet].DataSet.UserName,
+             arrGuias[iGuia].DatasetMaster) then
         begin
-          inLibLog.Log.LogWarning(Format(
+          oDataSetInforme := TfrxDBDataset(
+            frxrprt1.Datasets[iDataSet].DataSet);
+        end;
+      end;
+      if not Assigned(oDataSetInforme) then
+      begin
+        RegistroLog.RegistrarAviso(
+          Format(
             'Guia ignorada: master "%s" no esta en el report de %s',
-            [sDatasetMaster, Self.Name]));
-          Continue;
-        end;
-        oDS := dsMaster.DataSet;
-        if (oDS = nil) and (dsMaster.DataSource <> nil) then
-          oDS := dsMaster.DataSource.DataSet;
-        if (oDS <> nil) and (oDS is TClientDataSet) then
-          oDS := RelacionarClientDataSetConQuery(oDS);
-        if (oDS = nil) or not (oDS is TUniQuery) then
+            [arrGuias[iGuia].DatasetMaster, Self.Name]));
+      end
+      else
+      begin
+        oDataSet := oDataSetInforme.DataSet;
+        if not Assigned(oDataSet) and
+           Assigned(oDataSetInforme.DataSource) then
         begin
-          inLibLog.Log.LogWarning(Format(
-            'Guia ignorada: master %s no es TUniQuery', [sDatasetMaster]));
-          Continue;
+          oDataSet := oDataSetInforme.DataSource.DataSet;
         end;
-        uniMaster := TUniQuery(oDS);
-
-        // 2) Guardar SQL.Text original si es la primera vez que tocamos
-        //    este TUniQuery. CerrarGuiasRuntime lo restaurara.
-        if FSqlOriginales.IndexOfObject(uniMaster) < 0 then
-          FSqlOriginales.AddObject(uniMaster.SQL.Text, uniMaster);
-
-        // Limpieza robusta: quitamos whitespace y ';' finales en
-        // bucle, asi cubrimos casos en que el SQL original termina con
-        // ';' + #13#10 / espacios (caso real de unqryLinFacPrint).
-        sSqlActual := TrimRight(uniMaster.SQL.Text);
-        while (sSqlActual <> '') and
-              (sSqlActual[Length(sSqlActual)] = ';') do
+        if oDataSet is TClientDataSet then
         begin
-          SetLength(sSqlActual, Length(sSqlActual) - 1);
-          sSqlActual := TrimRight(sSqlActual);
+          oDataSet := RelacionarClientDataSetConQuery(oDataSet);
         end;
-        if sSqlActual = '' then
-          Continue;
-
-        // 3) Inferir los campos ACTUALES del master (envoltorio
-        //    WHERE 1=0 con parametros copiados del original).
-        setCamposMaster := TStringList.Create;
-        setCamposMaster.CaseSensitive := False;
-        setCamposMaster.Sorted := True;
-        setCamposMaster.Duplicates := dupIgnore;
-        try
-          qryTmp := TUniQuery.Create(nil);
-          try
-            qryTmp.Connection := ConexionPrincipal;
-            qryTmp.SQL.Text :=
-              'select * from (' + sSqlActual + ') X_GUIAS where 1=0';
-            CopiarParametros(uniMaster, qryTmp);
-            qryTmp.Open;
-            for k := 0 to qryTmp.FieldCount - 1 do
-              setCamposMaster.Add(qryTmp.Fields[k].FieldName);
-            qryTmp.Close;
-          finally
-            FreeAndNil(qryTmp);
-          end;
-
-          // 4) Leer columnas de la tabla externa y resolver alias por
-          //    colision (CODIGO_ART -> CODIGO_ART1, CODIGO_ART2...).
-          sSelectExt := '';
-          qryColsExt.Close;
-          qryColsExt.ParamByName('TAB').AsString := sTabla;
-          qryColsExt.Open;
-          while not qryColsExt.Eof do
+        oRestauracion := FServiciosPersistencia.Enriquecedor.Enriquecer(
+          oDataSet,
+          arrGuias[iGuia],
+          sError);
+        if Assigned(oRestauracion) then
+        begin
+          FRestauracionesGuias.Add(oRestauracion);
+          oDataSetInforme.FieldAliases.Clear;
+          if Assigned(oDataSetInforme.DataSource) then
           begin
-            sCol := qryColsExt.FieldByName('COLUMN_NAME').AsString;
-            sAlias := sCol;
-            if setCamposMaster.IndexOf(sAlias) >= 0 then
-            begin
-              iSuf := 1;
-              while setCamposMaster.IndexOf(sCol + IntToStr(iSuf)) >= 0 do
-                Inc(iSuf);
-              sAlias := sCol + IntToStr(iSuf);
-            end;
-            setCamposMaster.Add(sAlias);
-            if sSelectExt <> '' then sSelectExt := sSelectExt + ', ';
-            sSelectExt := sSelectExt +
-              'EXT_GUIA.' + sCol + ' AS ' + sAlias;
-            qryColsExt.Next;
-          end;
-          qryColsExt.Close;
-
-          // 5) Componer ON clause con master/detail fields.
-          arrMaster := SplitFields(sMaster);
-          arrDetail := SplitFields(sDetail);
-          nPares := Length(arrMaster);
-          if Length(arrDetail) < nPares then nPares := Length(arrDetail);
-          sOn := '';
-          for k := 0 to nPares - 1 do
+            var oOrigen := oDataSetInforme.DataSource;
+            oDataSetInforme.DataSource := nil;
+            oDataSetInforme.DataSource := oOrigen;
+          end
+          else if Assigned(oDataSetInforme.DataSet) then
           begin
-            if (Trim(arrMaster[k]) = '') or (Trim(arrDetail[k]) = '') then
-              Continue;
-            if sOn <> '' then sOn := sOn + ' AND ';
-            sOn := sOn + 'EXT_GUIA.' + arrDetail[k] + ' = M_GUIA.' +
-                          arrMaster[k];
+            var oOrigenDatos := oDataSetInforme.DataSet;
+            oDataSetInforme.DataSet := nil;
+            oDataSetInforme.DataSet := oOrigenDatos;
           end;
-          if (sOn = '') or (sSelectExt = '') then
-            Continue;
-
-          // 6) Componer SQL enriquecido y aplicarlo. Los parametros se
-          //    mantienen porque solo cambia SQL.Text.
-          sSqlNuevo :=
-            'SELECT M_GUIA.*, ' + sSelectExt + ' ' +
-            'FROM (' + sSqlActual + ') M_GUIA ' +
-            'LEFT JOIN ' + sTabla + ' EXT_GUIA ON ' + sOn;
-          uniMaster.Close;
-          uniMaster.SQL.Text := sSqlNuevo;
-          // Reabrir el master con el SQL enriquecido para que el report
-          // disponga de los nuevos campos al iterar. Los parametros se
-          // mantienen porque solo cambia SQL.Text.
-          try
-            uniMaster.Open;
-          except
-            on E: Exception do
-              inLibLog.Log.LogError(
-                Format('Apertura del master enriquecido (%s) fallo: %s',
-                       [sDatasetMaster, E.Message]));
-          end;
-          // Equivalente programatico al "Update Fields" del diseñador
-          // FastReport. El .frx guarda en FieldAliases del TfrxDBDataset
-          // la lista estatica de campos conocidos al guardar; al
-          // recargar el informe, FastReport tira de esa lista y no ve
-          // los campos que añade el LEFT JOIN. Vaciarla obliga a leer
-          // los campos dinamicamente del TUniQuery enriquecido en el
-          // siguiente PrepareReport.
-          try
-            dsMaster.FieldAliases.Clear;
-          except
-            // Con alias viejos el disenyador mostrara la lista antigua.
-            on E: Exception do
-              inLibLog.Log.LogWarning(
-                'GenImp: FieldAliases.Clear fallo: ' + E.Message);
-          end;
-          // FastReport cachea internamente los Fields de TfrxDBDataset:
-          // al diseñar despues de un cambio de SQL los campos nuevos no
-          // aparecen hasta pulsar "Update Fields". Forzamos el
-          // reescaneo asignando nil + valor original al binding.
-          try
-            if dsMaster.DataSource <> nil then
-            begin
-              var dsOld := dsMaster.DataSource;
-              dsMaster.DataSource := nil;
-              dsMaster.DataSource := dsOld;
-            end
-            else if dsMaster.DataSet <> nil then
-            begin
-              var dOld := dsMaster.DataSet;
-              dsMaster.DataSet := nil;
-              dsMaster.DataSet := dOld;
-            end;
-          except
-            // Si la version de FastReport no acepta el truco, no es
-            // critico: solo significa que el usuario tendra que pulsar
-            // Update Fields manualmente.
-            on E: Exception do
-              inLibLog.Log.LogWarning(
-                'GenImp: reenganche del dataset FastReport fallo: ' +
-                E.Message);
-          end;
-        finally
-          FreeAndNil(setCamposMaster);
+        end
+        else
+        begin
+          RegistroLog.RegistrarAviso(
+            Format(
+              'Guia ignorada (%s -> %s): %s',
+              [
+                arrGuias[iGuia].DatasetMaster,
+                arrGuias[iGuia].Tabla,
+                sError
+              ]));
         end;
-      except
-        on E: Exception do
-          inLibLog.Log.LogError(
-            Format('Guia (%s -> %s) fallo: %s',
-                   [sDatasetMaster, sTabla, E.Message]));
       end;
     end;
-  finally
-    FreeAndNil(qryColsExt);
   end;
 end;
 
 procedure TfrmPrint.CerrarGuiasRuntime;
 var
-  k, j: Integer;
-  obj: TObject;
-  uniMaster: TUniQuery;
-  bEraAbierto: Boolean;
+  iRestauracion: Integer;
+  oRestauracion: IRestauracionDatasetInforme;
 begin
-  // 1) Restaurar el SQL.Text original de los TUniQuery enriquecidos.
-  //    Conservamos abierto si lo estaba; si Open falla con el SQL
-  //    original (raro pero posible), logueamos y seguimos.
-  if FSqlOriginales <> nil then
+  if Assigned(FRestauracionesGuias) then
   begin
-    for k := 0 to FSqlOriginales.Count - 1 do
+    for iRestauracion := FRestauracionesGuias.Count - 1 downto 0 do
     begin
-      uniMaster := TUniQuery(FSqlOriginales.Objects[k]);
-      if uniMaster = nil then Continue;
+      oRestauracion := IRestauracionDatasetInforme(
+        FRestauracionesGuias[iRestauracion]);
       try
-        bEraAbierto := uniMaster.Active;
-        uniMaster.Close;
-        uniMaster.SQL.Text := FSqlOriginales[k];
-        if bEraAbierto then
-          uniMaster.Open;
+        oRestauracion.Restaurar;
       except
         on E: Exception do
-          inLibLog.Log.LogError(
-            'Restaurar SQL del master fallo: ' + E.Message);
-      end;
-    end;
-    FSqlOriginales.Clear;
-  end;
-
-  // 2) Limpiar componentes auxiliares que pudieran quedar de versiones
-  //    anteriores del runtime (datasets paralelos). En el modelo actual
-  //    FGuiasRuntime no se rellena, pero por defensa borramos lo que
-  //    haya.
-  if FGuiasRuntime <> nil then
-  begin
-    for k := FGuiasRuntime.Count - 1 downto 0 do
-    begin
-      obj := TObject(FGuiasRuntime[k]);
-      if obj is TfrxDBDataset then
-        for j := frxrprt1.Datasets.Count - 1 downto 0 do
-          if frxrprt1.Datasets[j].DataSet = TfrxDataSet(obj) then
-          begin
-            frxrprt1.Datasets.Delete(j);
-            Break;
-          end;
-      obj.Free;
-    end;
-    FGuiasRuntime.Clear;
-  end;
-end;
-
-procedure TfrmPrint.ConsolidarGuiasParaFormato(const aFormato: string);
-var
-  qrySrc, qryChk, qryIns: TUniQuery;
-  mem: TMemoryStream;
-  stl: TStringList;
-  sReport, sCodigo: string;
-begin
-  // Para 'Predeterminado' o vacio no hay nada que atar: las guias se
-  // quedan en su nivel global y los proximos Editar siguen viendolas.
-  if (aFormato = '') or SameText(aFormato, 'Predeterminado') then Exit;
-
-  // Serializa el .frx que acabamos de guardar para detectar referencias.
-  mem := TMemoryStream.Create;
-  stl := TStringList.Create;
-  try
-    frxrprt1.SaveToStream(mem);
-    mem.Position := 0;
-    stl.LoadFromStream(mem);
-    sReport := stl.Text;
-  finally
-    FreeAndNil(stl);
-    FreeAndNil(mem);
-  end;
-
-  qrySrc := TUniQuery.Create(nil);
-  qryChk := TUniQuery.Create(nil);
-  qryIns := TUniQuery.Create(nil);
-  try
-    qrySrc.Connection := ConexionPrincipal;
-    qrySrc.SQL.Text :=
-      'select CODIGO_INFGUI from fza_informes_guias ' +
-      ' where INFORME_INFGUI = :INF and FORMATO_INFGUI = ''''';
-    qrySrc.ParamByName('INF').AsString := Self.Name;
-    qrySrc.Open;
-
-    qryChk.Connection := ConexionPrincipal;
-    qryChk.SQL.Text :=
-      'select 1 from fza_informes_guias ' +
-      ' where INFORME_INFGUI = :INF ' +
-      '   and FORMATO_INFGUI = :FMT ' +
-      '   and CODIGO_INFGUI = :COD';
-
-    qryIns.Connection := ConexionPrincipal;
-    qryIns.SQL.Text :=
-      'insert into fza_informes_guias (' +
-      '  CODIGO_INFGUI, INFORME_INFGUI, FORMATO_INFGUI, ' +
-      '  DATASET_MASTER_INFGUI, TIPO_INFGUI, TABLA_INFGUI, ' +
-      '  SQL_INFGUI, MASTER_FIELDS_INFGUI, DETAIL_FIELDS_INFGUI, ' +
-      '  ORDEN_INFGUI, ESACTIVO_INFGUI, ' +
-      '  INSTANTE_ALTA, USUARIO_ALTA' +
-      ') select ' +
-      '  CODIGO_INFGUI, INFORME_INFGUI, :FMT, ' +
-      '  DATASET_MASTER_INFGUI, TIPO_INFGUI, TABLA_INFGUI, ' +
-      '  SQL_INFGUI, MASTER_FIELDS_INFGUI, DETAIL_FIELDS_INFGUI, ' +
-      '  ORDEN_INFGUI, ESACTIVO_INFGUI, ' +
-      '  now(), :USU ' +
-      ' from fza_informes_guias ' +
-      ' where INFORME_INFGUI = :INF ' +
-      '   and FORMATO_INFGUI = '''' ' +
-      '   and CODIGO_INFGUI = :COD';
-
-    while not qrySrc.Eof do
-    begin
-      sCodigo := qrySrc.FieldByName('CODIGO_INFGUI').AsString;
-      if (Pos('"' + sCodigo + '"',   sReport) > 0) or
-         (Pos('<' + sCodigo + '."',  sReport) > 0) or
-         (Pos('[' + sCodigo + '."',  sReport) > 0) then
-      begin
-        qryChk.Close;
-        qryChk.ParamByName('INF').AsString := Self.Name;
-        qryChk.ParamByName('FMT').AsString := aFormato;
-        qryChk.ParamByName('COD').AsString := sCodigo;
-        qryChk.Open;
-        if qryChk.IsEmpty then
         begin
-          qryIns.ParamByName('FMT').AsString := aFormato;
-          qryIns.ParamByName('USU').AsString := IdentidadSesion.Usuario;
-          qryIns.ParamByName('INF').AsString := Self.Name;
-          qryIns.ParamByName('COD').AsString := sCodigo;
-          qryIns.Execute;
+          RegistroLog.RegistrarError(
+            'Restaurar dataset del informe fallo: ' + E.Message);
         end;
-        qryChk.Close;
       end;
-      qrySrc.Next;
     end;
-  finally
-    FreeAndNil(qryIns);
-    FreeAndNil(qryChk);
-    FreeAndNil(qrySrc);
+    FRestauracionesGuias.Clear;
   end;
-  // Si ConsolidarGuiasParaFormato inserto nuevas filas en fza_informes_guias,
-  // refrescamos el cache para que el proximo AbrirGuiasRuntime las vea.
-  if Assigned(InformesGuiasCache) then
-    InformesGuiasCache.Precargar;
 end;
-
+procedure TfrmPrint.ConsolidarGuiasParaFormato(
+  const aFormato: string);
+var
+  oMemoria: TMemoryStream;
+  oTexto: TStringList;
+begin
+  if (aFormato <> '') and
+     not SameText(aFormato, 'Predeterminado') then
+  begin
+    oMemoria := TMemoryStream.Create;
+    oTexto := TStringList.Create;
+    try
+      frxrprt1.SaveToStream(oMemoria);
+      oMemoria.Position := 0;
+      oTexto.LoadFromStream(oMemoria);
+      FServiciosPersistencia.Guias.Consolidar(
+        Self.Name,
+        aFormato,
+        IdentidadSesion.Usuario,
+        oTexto.Text);
+    finally
+      FreeAndNil(oTexto);
+      FreeAndNil(oMemoria);
+    end;
+    if Assigned(InformesGuiasCache) then
+    begin
+      InformesGuiasCache.Precargar;
+    end;
+  end;
+end;
 procedure TfrmPrint.EditarGuiasParaFormato(const aFormato: string;
                                             aReport: TfrxReport = nil);
 var
@@ -741,12 +458,8 @@ begin
   inherited;
   Self.Hide;
 
-  // NO llamamos Preparar_consulta aqui — el convenio del proyecto es
-  // dejar siempre una consulta valida en el SQL.Text del TUniQuery
-  // del data module (consulta de diseño). Si invocaramos
-  // Preparar_consulta antes del wizard, el SQL.Text quedaria
-  // sobrescrito con la version runtime que necesita parametros que
-  // el usuario quiza no ha rellenado al entrar a Editar.
+  // El diseñador parte siempre de la consulta de diseño del data module.
+  // Preparar_consulta necesita parámetros que pueden no estar informados.
 
   // AfterReportLoaded re-enlaza los datasets del informe via
   // RebindReportDataSetsByDataModule. Lo necesitamos en ambas ramas
@@ -991,6 +704,8 @@ procedure TfrmPrint.CargarFormatos(form:TfrmMtoModalGenImpEle);
 var
   perfilDic: TProfileDicc;
   kvp: TPair<string, TDictValue>;
+  arrFormatos: TFormatosImpresion;
+  iFormato: Integer;
 begin
   // Servimos la lista de formatos desde el cache precargado al login
   // (PrecargarPerfilesUsuario). Asi no se va a BBDD a refrescar; el BLOB
@@ -1008,21 +723,17 @@ begin
   end
   else
   begin
-    // Fallback: si la precarga fallo (FCachePrecargada=False) tiramos del
-    // TUniQuery como antes. No es lo esperado en operacion normal.
-    with unqryPerfiles do
+    arrFormatos := FServiciosPersistencia.Formatos.Listar(
+      ContextoFormatos);
+    for iFormato := 0 to High(arrFormatos) do
     begin
-      Refresh;
-      if RecordCount > 0 then
-      begin
-        First;
-        while not Eof do
-        begin
-          form.lstFormatos.AddItem(FieldByName('VALUE_USUPER').AsString, nil);
-          Next;
-        end;
-        form.lstFormatos.ItemIndex := 0;
-      end;
+      form.lstFormatos.AddItem(
+        arrFormatos[iFormato].Descripcion,
+        nil);
+    end;
+    if form.lstFormatos.Count > 0 then
+    begin
+      form.lstFormatos.ItemIndex := 0;
     end;
   end;
 end;
@@ -1037,12 +748,8 @@ var
   sDefaultSubKey: string;
   i: Integer;
 begin
-  with unqryPerfiles do
-  begin
     sElegido := '';
     sFichaAccion := '';
-    unqryPerfiles.Close;
-    unqryPerfiles.Open;
     sDefaultSubKey := PerfilesLectura.ObtenerSubclavePerfil(
       Self.Name + '_default',
       '');
@@ -1074,7 +781,7 @@ begin
             end;
           end;
         end;
-        if (RecordCount > 0) then
+        if form.lstFormatos.Count > 0 then
           form.ShowModal
         else
           form.sFicha := 'O';
@@ -1141,9 +848,7 @@ begin
       sDescripcion := sElegido;
       memStream := TMemoryStream.Create;
       try
-        // El BLOB del .frx no viene en unqryPerfiles (query solo de
-        // metadatos por performance); LeerBlobFormato hace el unico
-        // round-trip necesario para esta seleccion.
+        // El contenido del formato se carga solo al seleccionarlo.
         if LeerBlobFormato(sDescripcion, memStream) then
         begin
           frxrprt1.LoadFromStream(memStream);
@@ -1166,53 +871,47 @@ begin
       FInformeTraducido := False;
     end;
   end;
-end;
 
-procedure TfrmPrint.DeleteForm(sElegido: String; form:TfrmMtoModalGenImpEle);
+procedure TfrmPrint.DeleteForm(
+  sElegido: String;
+  form: TfrmMtoModalGenImpEle);
 var
-  unqrySol:TUniQuery;
-  sUserProp:string;
-  iButtonSel:Integer;
+  sPropietario: string;
+  iBotonSeleccionado: Integer;
 begin
-  unqrySol := TUniQuery.Create(nil);
-  try
-    unqrySol.Connection := ConexionPrincipal;
-    unqrySol.SQL.Text := 'SELECT USUARIO_GRUPO_USUPER ' +
-                         '  FROM fza_usuarios_perfiles ' +
-                         ' WHERE KEY_USUPER = :NombreReport ' +
-                         '   AND VALUE_USUPER = :Descripcion ';
-    unqrySol.ParamByName('NombreReport').AsString := Self.Name;
-    unqrySol.ParamByName('Descripcion').AsString := sElegido;
-    unqrySol.Open;
-    sUserProp := unqrySol.FindField('USUARIO_GRUPO_USUPER').AsString;
-    if not((IdentidadSesion.GrupoRaiz = 'S') or
-        (IdentidadSesion.Usuario = sUserProp) or
-        (IdentidadSesion.Grupo = sUserProp)) then
-      ShowMessageFmt(SErrorPrivilegiosBorrarFormato, [sUserProp])
-    else
+  sPropietario := FServiciosPersistencia.Formatos.ObtenerPropietario(
+    Self.Name,
+    sElegido);
+  if not (
+    (IdentidadSesion.GrupoRaiz = 'S') or
+    (IdentidadSesion.Usuario = sPropietario) or
+    (IdentidadSesion.Grupo = sPropietario)
+  ) then
+  begin
+    ShowMessageFmt(
+      SErrorPrivilegiosBorrarFormato,
+      [sPropietario]);
+  end
+  else
+  begin
+    iBotonSeleccionado := MessageDlg(
+      SPreguntaBorrarFormato,
+      mtCustom,
+      [mbYes, mbNo],
+      0);
+    if iBotonSeleccionado = mrYes then
     begin
-      iButtonSel := MessageDlg(SPreguntaBorrarFormato,
-                               mtCustom,[mbYes,mbNo], 0);
-      if (iButtonSel = mrYes) then
+      FServiciosPersistencia.Formatos.Eliminar(
+        Self.Name,
+        sElegido);
+      if Assigned(CachePerfiles) then
       begin
-        unqrySol.SQL.Text := 'DELETE  ' +
-                             '  FROM fza_usuarios_perfiles ' +
-                             ' WHERE KEY_USUPER = :NombreReport ' +
-                             '   AND VALUE_USUPER = :Descripcion ';
-        unqrySol.ParamByName('NombreReport').AsString := Self.Name;
-        unqrySol.ParamByName('Descripcion').AsString := sElegido;
-        unqrySol.Execute;
-        // Refrescamos cache para que CargarFormatos no vea el borrado.
-        if Assigned(CachePerfiles) then
-          CachePerfiles.ResincronizarPerfilFormulario(Self.Name);
+        CachePerfiles.ResincronizarPerfilFormulario(Self.Name);
       end;
-      CargarFormatos(form);
     end;
-  finally
-    FreeAndNil(unqrySol);
+    CargarFormatos(form);
   end;
 end;
-
 procedure TfrmPrint.EliminarFormatoImpresion(
   const ANombre: string;
   ASelector: TObject);
@@ -1225,94 +924,45 @@ procedure TfrmPrint.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   inherited;
   Action := caHide;
-  unqryPerfiles.Close;
   CerrarGuiasRuntime;
-  FreeAndNil(FGuiasRuntime);
-  FreeAndNil(FSqlOriginales);
+  FreeAndNil(FRestauracionesGuias);
 end;
 
-function TfrmPrint.LeerBlobFormato(const aDescripcion: string;
-                                    aStream: TStream): Boolean;
-var
-  qry: TUniQuery;
-  fld: TBlobField;
+function TfrmPrint.ContextoFormatos: TContextoFormatosImpresion;
 begin
-  Result := False;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text :=
-      'SELECT VALUE_BLOB_USUPER FROM fza_usuarios_perfiles ' +
-      ' WHERE KEY_USUPER     = :FormName ' +
-      '   AND VALUE_USUPER   = :Descripcion ' +
-      '   AND (USUARIO_GRUPO_USUPER = :Usuario OR ' +
-      '        USUARIO_GRUPO_USUPER = :Grupo   OR ' +
-      '        USUARIO_GRUPO_USUPER = :Todos) ' +
-      ' LIMIT 1';
-    qry.ParamByName('FormName').AsString    := Self.Name;
-    qry.ParamByName('Descripcion').AsString := aDescripcion;
-    qry.ParamByName('Usuario').AsString     := IdentidadSesion.Usuario;
-    qry.ParamByName('Grupo').AsString       := IdentidadSesion.Grupo;
-    qry.ParamByName('Todos').AsString       := oAll;
-    qry.Open;
-    if qry.IsEmpty then
-      Exit;
-    fld := TBlobField(qry.FieldByName('VALUE_BLOB_USUPER'));
-    if fld.IsNull then
-      Exit;
-    fld.SaveToStream(aStream);
-    aStream.Position := 0;
-    Result := True;
-  finally
-    FreeAndNil(qry);
-  end;
+  Result.Informe := Self.Name;
+  Result.Usuario := IdentidadSesion.Usuario;
+  Result.Grupo := IdentidadSesion.Grupo;
+  Result.Todos := oAll;
 end;
 
-procedure TfrmPrint.GuardarBlobFormato(const aUsuario, aSubKey,
-                                        aDescripcion: string;
-                                        aStream: TStream;
-                                        aInsertar: Boolean);
-var
-  qry: TUniQuery;
+function TfrmPrint.LeerBlobFormato(
+  const aDescripcion: string;
+  aStream: TStream
+): Boolean;
 begin
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    if aInsertar then
-      qry.SQL.Text :=
-        'INSERT INTO fza_usuarios_perfiles (' +
-        '  USUARIO_GRUPO_USUPER, KEY_USUPER, SUBKEY_USUPER, ' +
-        '  VALUE_USUPER, VALUE_BLOB_USUPER, ' +
-        '  INSTANTE_ALTA, INSTANTE_MODIF, ' +
-        '  USUARIO_ALTA, USUARIO_MODIF) ' +
-        'VALUES (' +
-        '  :USU, :KEY, :SUB, ' +
-        '  :VAL, :BLOB, ' +
-        '  NOW(), NOW(), ' +
-        '  :USUACT, :USUACT)'
-    else
-      qry.SQL.Text :=
-        'UPDATE fza_usuarios_perfiles SET ' +
-        '  VALUE_USUPER      = :VAL, ' +
-        '  VALUE_BLOB_USUPER = :BLOB, ' +
-        '  INSTANTE_MODIF    = NOW(), ' +
-        '  USUARIO_MODIF     = :USUACT ' +
-        ' WHERE USUARIO_GRUPO_USUPER = :USU ' +
-        '   AND KEY_USUPER           = :KEY ' +
-        '   AND SUBKEY_USUPER        = :SUB';
-    qry.ParamByName('USU').AsString    := aUsuario;
-    qry.ParamByName('KEY').AsString    := Self.Name;
-    qry.ParamByName('SUB').AsString    := aSubKey;
-    qry.ParamByName('VAL').AsString    := aDescripcion;
-    qry.ParamByName('USUACT').AsString := IdentidadSesion.Usuario;
-    aStream.Position := 0;
-    qry.ParamByName('BLOB').LoadFromStream(aStream, ftBlob);
-    qry.Execute;
-  finally
-    FreeAndNil(qry);
-  end;
+  Result := FServiciosPersistencia.Formatos.Leer(
+    ContextoFormatos,
+    aDescripcion,
+    aStream);
 end;
 
+procedure TfrmPrint.GuardarBlobFormato(
+  const aUsuario, aSubKey, aDescripcion: string;
+  aStream: TStream;
+  aInsertar: Boolean);
+var
+  Solicitud: TSolicitudGuardarFormato;
+begin
+  Solicitud.Contexto := ContextoFormatos;
+  Solicitud.UsuarioGrupo := aUsuario;
+  Solicitud.Subclave := aSubKey;
+  Solicitud.Descripcion := aDescripcion;
+  Solicitud.Insertar := aInsertar;
+  FServiciosPersistencia.Formatos.Guardar(
+    Solicitud,
+    aStream);
+end;
 procedure TfrmPrint.TraducirInformeActual;
 begin
   if not FInformeTraducido then
@@ -1345,13 +995,9 @@ begin
   pnl1.Align := alRight;
   pnl1.BringToFront;
   Self.Position := poScreenCenter;
-  unqryPerfiles.ParamByName('FormName').AsString := Self.Name;
-  unqryPerfiles.ParamByName('Usuario').AsString := IdentidadSesion.Usuario;
-  unqryPerfiles.ParamByName('Grupo').AsString := IdentidadSesion.Grupo;
-  unqryPerfiles.ParamByName('Todos').AsString := oAll;
-  unqryPerfiles.KeyFields := 'KEY_USUPER;VALUE_USUPER';
-  unqryPerfiles.Open;
-  FGuiasRuntime := TList.Create;
+  FServiciosPersistencia := ContextoRepositoriosPantalla.Documentos.
+    CrearServiciosPersistenciaImpresion;
+  FRestauracionesGuias := TInterfaceList.Create;
 end;
 
 function TfrmPrint.frxdsgnr1SaveReport(Report: TfrxReport;
@@ -1396,9 +1042,9 @@ begin
     try
       Report.SaveToStream(memStream);
       memStream.Position:=0;
-      // Locate sigue siendo util: la query trae metadatos suficientes
-      // (VALUE_USUPER) para decidir INSERT vs UPDATE sin pedir el BLOB.
-      bExiste := unqryPerfiles.Locate('VALUE_USUPER', sDescripcion, []);
+      bExiste := FServiciosPersistencia.Formatos.Existe(
+        ContextoFormatos,
+        sDescripcion);
       // Si FFormatoFijado=True el wizard ya advirtio al usuario y vamos
       // directos al UPDATE. En modo normal preguntamos confirmacion antes
       // de sobreescribir un formato existente.
@@ -1411,19 +1057,12 @@ begin
       end;
       if (bGuardar) then
       begin
-        // Persistir via SQL directo: unqryPerfiles ya no expone el campo
-        // VALUE_BLOB_USUPER, asi que el flujo Insert/Edit + Post del
-        // dataset no sirve para el BLOB. GuardarBlobFormato hace el
-        // INSERT o UPDATE (segun bExiste) con un unico round-trip.
+        // El repositorio decide entre alta y actualización.
         GuardarBlobFormato(sPermisos,
                            frxrprt1.Name + '_' + sDescripcion,
                            sDescripcion,
                            memStream,
                            not bExiste);
-        // Refrescamos unqryPerfiles para que CargarFormatos vea el alta
-        // / edicion en la proxima invocacion sin un Close+Open implicito.
-        unqryPerfiles.Close;
-        unqryPerfiles.Open;
         // Refrescamos el cache de perfiles del form (lo usa CargarFormatos)
         // para que la lista de formatos refleje el alta inmediatamente.
         if Assigned(CachePerfiles) then
@@ -1435,7 +1074,7 @@ begin
           ConsolidarGuiasParaFormato(sDescripcion);
         except
           on E: Exception do
-            inLibLog.Log.LogError(
+            RegistroLog.RegistrarError(
               Format('Consolidacion de guias fallo para %s/%s: %s',
                      [Self.Name, sDescripcion, E.Message]));
         end;

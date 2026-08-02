@@ -344,18 +344,8 @@
     end
   end
   inherited dsTablaG: TDataSource
-    DataSet = unqryResultados
-  end
-  object unqryResultados: TUniQuery
-    Left = 640
-    Top = 264
-  end
-  object unqryProveedoresBusqueda: TUniQuery
-    Left = 760
-    Top = 264
   end
   object dsProveedoresBusqueda: TDataSource
-    DataSet = unqryProveedoresBusqueda
     Left = 880
     Top = 264
   end

@@ -19,7 +19,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
-  Vcl.Forms, Data.DB, DBAccess, Uni, inLibInformesGuiasCache;
+  Vcl.Forms, Data.DB, DBAccess, Uni, inLibInformesGuiasCache,
+  inLibLogIntf;
 
 type
   TGridGuiaResult = record
@@ -35,7 +36,8 @@ type
 function EnriquecerQueryConGuias(
   const ACache: IInformesGuiasCache;
   const AFormName: string;
-  AQuery: TUniQuery): TGridGuiaResult;
+  AQuery: TUniQuery;
+  const ARegistroLog: IRegistroLog): TGridGuiaResult;
 
 // Muestra un dialogo para elegir que columnas nuevas incorporar al grid.
 function ElegirColumnasNuevas(AOwner: TForm;
@@ -45,7 +47,7 @@ implementation
 
 uses
   Vcl.CheckLst, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Controls, Vcl.Dialogs,
-  inLibLog, inLibMsgComun;
+  inLibMsgComun;
 
 // ============================================================================
 // Enriquecimiento de query con LEFT JOIN
@@ -72,7 +74,8 @@ end;
 function EnriquecerQueryConGuias(
   const ACache: IInformesGuiasCache;
   const AFormName: string;
-  AQuery: TUniQuery): TGridGuiaResult;
+  AQuery: TUniQuery;
+  const ARegistroLog: IRegistroLog): TGridGuiaResult;
 var
   arrGuias: TArray<TInformeGuiaItem>;
   iGuia, k, nPares, iSuf: Integer;
@@ -209,9 +212,10 @@ begin
         end;
       except
         on E: Exception do
-          Log.LogError(Format(
-            'Guia grid (%s -> %s) fallo: %s',
-            [AFormName, sTabla, E.Message]));
+          if Assigned(ARegistroLog) then
+            ARegistroLog.RegistrarError(Format(
+              'Guia grid (%s -> %s) fallo: %s',
+              [AFormName, sTabla, E.Message]));
       end;
     end;
   finally

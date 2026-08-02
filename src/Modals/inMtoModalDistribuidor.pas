@@ -32,7 +32,7 @@ uses
   Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, Vcl.ComCtrls,
   System.Actions, Vcl.ActnList,
   System.Generics.Collections,
-  Data.DB, DBClient, MemDS, DBAccess, Uni,
+  Data.DB, DBClient, Uni,
   cxGraphics, cxLookAndFeels, cxLookAndFeelPainters, cxControls, cxContainer,
   cxEdit, cxTextEdit, cxButtonEdit, cxLabel, cxButtons, cxClasses,
   cxLocalization,
@@ -42,7 +42,8 @@ uses
   inMtoModalAceptCancel, inLibGridTallasInline,
   cxCustomData, cxFilter, cxData, cxDataStorage, cxNavigator,
   dxDateRanges, dxScrollbarAnnotations,
-  JvComponentBase, JvEnterTab, inLibDistribuidorTallas;
+  JvComponentBase, JvEnterTab, inLibDistribuidorTallas,
+  inLibDistribuidorPersistenciaIntf;
 
 type
   TfrmModalDistribuidor = class(TfrmModalAceptCancel)
@@ -70,7 +71,6 @@ type
     // celda editable (T01 del primer almacen) -> sensacion Excel.
     procedure DoShow; override;
   private
-    FConn         : TUniConnection;
     FUsuario      : string;
     FIdAcPivot    : Integer;
     FPosiciones   : TArrPosConjunto;
@@ -83,6 +83,7 @@ type
     FCodigoPrvKit : string;
     FCodigoKit    : string;
     FKitPorPos    : TDictionary<Integer, Double>;
+    FRepositorio  : IRepositorioDistribuidor;
     // Tabla/campos de celdas PARAMETRIZABLES (defaults de sesiones en
     // FormCreate). ConfigurarCeldas permite reutilizar el distribuidor
     // desde otros documentos (PEDCEL / ALBCEL / tabla de pruebas) sin
@@ -105,6 +106,8 @@ type
     procedure AplicarKitEnFilaCds;
     procedure LimpiarFilaCds;
     function  SincronizarCdsConFoco: Boolean;
+    function ConfiguracionPersistencia: TConfiguracionCeldasDistribuidor;
+    function DocumentoPersistencia: TDocumentoDistribuidor;
     procedure ColKitPropertiesButtonClick(Sender: TObject;
                                           AButtonIndex: Integer);
   public
@@ -138,7 +141,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibLog, inLibMsgArticulos,
+  inLibMsgArticulos,
   inLibMsgComun;
 
 type
@@ -215,6 +218,27 @@ begin
   FCantCelFld   := ACant;
 end;
 
+function TfrmModalDistribuidor.ConfiguracionPersistencia:
+  TConfiguracionCeldasDistribuidor;
+begin
+  Result.Tabla := FTablaCel;
+  Result.CampoSerie := FSerieCelFld;
+  Result.CampoNumero := FNumeroCelFld;
+  Result.CampoLinea := FLineaCelFld;
+  Result.CampoFila := FFilaCelFld;
+  Result.CampoAlmacen := FAlmCelFld;
+  Result.CampoAtributoValor := FAvCelFld;
+  Result.CampoCantidad := FCantCelFld;
+end;
+
+function TfrmModalDistribuidor.DocumentoPersistencia:
+  TDocumentoDistribuidor;
+begin
+  Result.Serie := SerieSes;
+  Result.Numero := NumeroSes;
+  Result.Linea := LineaSes;
+end;
+
 procedure TfrmModalDistribuidor.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(FKitPorPos);
@@ -265,7 +289,8 @@ var
   oGestor : TGestorGridTallas;
   oCfg    : TGridTallasConfig;
 begin
-  FConn         := AConn;
+  FRepositorio := ContextoRepositoriosPantalla.Articulos.
+    CrearRepositorioDistribuidor(AConn);
   FUsuario      := AUsuario;
   SerieSes      := ASerie;
   NumeroSes     := ANumero;
@@ -378,89 +403,53 @@ end;
 
 procedure TfrmModalDistribuidor.PoblarFilasYCantidades;
 var
-  oQry  : TUniQuery;
-  sCod  : string;
-  i     : Integer;
-  iIdAv : Integer;
-  rCant : Double;
-  oPos  : TDictionary<Integer, Integer>; // ID_AV -> indice columna
+  aAlmacenes: TAlmacenesDistribuidor;
+  aCeldas: TCeldasDistribuidor;
+  oAlmacen: TAlmacenDistribuidor;
+  oCelda: TCeldaDistribuidor;
+  i: Integer;
+  oPos: TDictionary<Integer, Integer>;
 begin
-  // 1. Una fila por almacen activo. Si en el futuro hay un filtro por
-  //    almacenes del usuario, basta cambiar el WHERE.
   cdsCuadr.DisableControls;
   try
-    oQry := TUniQuery.Create(nil);
-    try
-      oQry.Connection := FConn;
-      // Filtramos por tipo ESTANDAR para no listar almacenes especiales
-      // (DEPOSITO, TRANSITO, TARAS, etc) que no aplican al reparto. El IN
-      // cubre la variante 'ESTANDARD' (typo historico en datos antiguos)
-      // ademas del canonico 'ESTANDAR' que es el DEFAULT del esquema.
-      oQry.SQL.Text :=
-        'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM ' +
-        '  FROM fza_almacenes ' +
-        ' WHERE ESACTIVO_ALM = ''S'' ' +
-        '   AND TIPO_USO_ALM IN (''ESTANDAR'', ''ESTANDARD'') ' +
-        ' ORDER BY CODIGO_ALM_ALM';
-      oQry.Open;
-      while not oQry.Eof do
+    aAlmacenes := FRepositorio.ListarAlmacenes;
+    for oAlmacen in aAlmacenes do
+    begin
+      cdsCuadr.Append;
+      cdsCuadr.FieldByName('CODIGO_ALM').AsString := oAlmacen.Codigo;
+      cdsCuadr.FieldByName('NOMBRE_ALM').AsString := oAlmacen.Nombre;
+      for i := 0 to High(FPosiciones) do
       begin
-        cdsCuadr.Append;
-        cdsCuadr.FieldByName('CODIGO_ALM').AsString :=
-          oQry.FieldByName('CODIGO_ALM_ALM').AsString;
-        cdsCuadr.FieldByName('NOMBRE_ALM').AsString :=
-          oQry.FieldByName('NOMBRE_ALM_ALM').AsString;
-        for i := 0 to High(FPosiciones) do
-          cdsCuadr.FieldByName(Format('T%.2d', [i + 1])).AsFloat := 0;
-        cdsCuadr.Post;
-        oQry.Next;
+        cdsCuadr.FieldByName(Format('T%.2d', [i + 1])).AsFloat := 0;
       end;
-    finally
-      FreeAndNil(oQry);
+      cdsCuadr.Post;
     end;
-    // 2. Volcar las celdas existentes sobre las filas creadas y al
-    //    snapshot para detectar cambios al aceptar.
     oPos := TDictionary<Integer, Integer>.Create;
     try
       for i := 0 to High(FPosiciones) do
+      begin
         oPos.AddOrSetValue(FPosiciones[i].IdAv, i + 1);
-      oQry := TUniQuery.Create(nil);
-      try
-        oQry.Connection := FConn;
-        oQry.SQL.Text :=
-          'SELECT ' + FAlmCelFld + ' AS CODIGO_ALM_CEL, ' +
-          FAvCelFld + ' AS ID_AV_CEL, ' +
-          FCantCelFld + ' AS CANTIDAD_CEL ' +
-          '  FROM ' + FTablaCel + ' ' +
-          ' WHERE ' + FSerieCelFld + '  = :s ' +
-          '   AND ' + FNumeroCelFld + ' = :n ' +
-          '   AND ' + FLineaCelFld + '  = :l';
-        oQry.ParamByName('s').AsString  := SerieSes;
-        oQry.ParamByName('n').AsString  := NumeroSes;
-        oQry.ParamByName('l').AsInteger := LineaSes;
-        oQry.Open;
-        while not oQry.Eof do
+      end;
+      aCeldas := FRepositorio.ListarCeldas(
+        ConfiguracionPersistencia,
+        DocumentoPersistencia);
+      for oCelda in aCeldas do
+      begin
+        if (oCelda.CodigoAlmacen <> '') and
+           oPos.ContainsKey(oCelda.IdAtributoValor) and
+           cdsCuadr.Locate('CODIGO_ALM', oCelda.CodigoAlmacen, []) then
         begin
-          sCod  := oQry.FieldByName('CODIGO_ALM_CEL').AsString;
-          iIdAv := oQry.FieldByName('ID_AV_CEL').AsInteger;
-          rCant := oQry.FieldByName('CANTIDAD_CEL').AsFloat;
-          if (sCod = '') or (not oPos.ContainsKey(iIdAv)) then
-          begin
-            oQry.Next;
-            Continue;
-          end;
-          if cdsCuadr.Locate('CODIGO_ALM', sCod, []) then
-          begin
-            cdsCuadr.Edit;
-            cdsCuadr.FieldByName(Format('T%.2d', [oPos[iIdAv]])).AsFloat :=
-              rCant;
-            cdsCuadr.Post;
-            FSnapshot.AddOrSetValue(ClaveCelda(sCod, oPos[iIdAv]), rCant);
-          end;
-          oQry.Next;
+          cdsCuadr.Edit;
+          cdsCuadr.FieldByName(Format(
+            'T%.2d',
+            [oPos[oCelda.IdAtributoValor]])).AsFloat := oCelda.Cantidad;
+          cdsCuadr.Post;
+          FSnapshot.AddOrSetValue(
+            ClaveCelda(
+              oCelda.CodigoAlmacen,
+              oPos[oCelda.IdAtributoValor]),
+            oCelda.Cantidad);
         end;
-      finally
-        FreeAndNil(oQry);
       end;
     finally
       FreeAndNil(oPos);
@@ -483,9 +472,10 @@ end;
 
 procedure TfrmModalDistribuidor.CargarKit;
 var
-  oQry : TUniQuery;
-  i    : Integer;
-  sVal : string;
+  aValores: TValoresKitDistribuidor;
+  oValor: TValorKitDistribuidor;
+  i: Integer;
+  sVal: string;
 begin
   // Mapea el detalle del kit (texto de talla -> cantidad) a las
   // posiciones del conjunto pivot de la linea. El tallaje kit=linea ya
@@ -493,33 +483,20 @@ begin
   // practicamente todo casa; lo que no (tallas tecleadas a mano en el
   // kit fuera del conjunto) se ignora.
   FKitPorPos.Clear;
-  oQry := TUniQuery.Create(nil);
-  try
-    oQry.Connection := FConn;
-    oQry.SQL.Text :=
-      'SELECT VALOR_DESTINO_PRVKITD, CANTIDAD_PRVKITD ' +
-      '  FROM fza_proveedores_kits_det ' +
-      ' WHERE CODIGO_PRV_PRVKITD = :prv ' +
-      '   AND CODIGO_PRVKIT_PRVKITD = :kit';
-    oQry.ParamByName('prv').AsString := FCodigoPrvKit;
-    oQry.ParamByName('kit').AsString := FCodigoKit;
-    oQry.Open;
-    while not oQry.Eof do
+  aValores := FRepositorio.ListarValoresKit(
+    FCodigoPrvKit,
+    FCodigoKit);
+  for oValor in aValores do
+  begin
+    sVal := Trim(oValor.ValorDestino);
+    for i := 0 to High(FPosiciones) do
     begin
-      sVal := Trim(oQry.FieldByName('VALOR_DESTINO_PRVKITD').AsString);
-      for i := 0 to High(FPosiciones) do
+      if SameText(Trim(FPosiciones[i].Valor), sVal) then
       begin
-        if SameText(Trim(FPosiciones[i].Valor), sVal) then
-        begin
-          FKitPorPos.AddOrSetValue(i + 1,
-            oQry.FieldByName('CANTIDAD_PRVKITD').AsFloat);
-          Break;
-        end;
+        FKitPorPos.AddOrSetValue(i + 1, oValor.Cantidad);
+        Break;
       end;
-      oQry.Next;
     end;
-  finally
-    FreeAndNil(oQry);
   end;
 end;
 
@@ -615,16 +592,17 @@ end;
 
 procedure TfrmModalDistribuidor.PersistirCambios;
 var
-  oQry    : TUniQuery;
-  sCod    : string;
-  i, iRec : Integer;
-  iIdAv   : Integer;
-  rCantN  : Double;
-  rCantO  : Double;
-  sKey    : string;
-  vVal    : Variant;
-  iColCod : Integer;
-  iColT   : array of Integer;
+  sCod: string;
+  i, iRec: Integer;
+  iIdAv: Integer;
+  rCantN: Double;
+  rCantO: Double;
+  sKey: string;
+  vVal: Variant;
+  iColCod: Integer;
+  iColT: array of Integer;
+  oCambio: TCambioCeldaDistribuidor;
+  oCambios: TList<TCambioCeldaDistribuidor>;
 begin
   // IMPORTANTE: leemos del DataController del cxGrid (Values[record,col])
   // NO del cds. El cxGrid mantiene el valor tecleado en el buffer de su
@@ -649,15 +627,14 @@ begin
       iColT[i] := tvCuadr.GetColumnByFieldName(sKey).Index;
   end;
   // DIAGNOSTICO: con appLogAvanzado=True estas lineas salen al log.
-  Log.LogInfo(Format(
+  RegistroLog.RegistrarInformacion(Format(
     '[Distribuidor.PersistirCambios] iColCod=%d records=%d posiciones=%d',
     [iColCod, tvCuadr.DataController.RecordCount, Length(FPosiciones)]));
   for i := 0 to High(iColT) do
-    Log.LogInfo(Format('  iColT[%d]=%d', [i, iColT[i]]));
+    RegistroLog.RegistrarInformacion(Format('  iColT[%d]=%d', [i, iColT[i]]));
   if iColCod < 0 then Exit;
-  oQry := TUniQuery.Create(nil);
+  oCambios := TList<TCambioCeldaDistribuidor>.Create;
   try
-    oQry.Connection := FConn;
     for iRec := 0 to tvCuadr.DataController.RecordCount - 1 do
     begin
       vVal := tvCuadr.DataController.Values[iRec, iColCod];
@@ -673,45 +650,23 @@ begin
         else rCantN := vVal;
         sKey   := ClaveCelda(sCod, i + 1);
         if not FSnapshot.TryGetValue(sKey, rCantO) then rCantO := 0;
-        Log.LogInfo(Format(
+        RegistroLog.RegistrarInformacion(Format(
           '  rec=%d alm=%s pos=%d (T%.2d) idav=%d val_actual=%g snapshot=%g',
           [iRec, sCod, i + 1, i + 1, iIdAv, rCantN, rCantO]));
         if rCantN = rCantO then Continue;
-        if rCantN > 0 then
-        begin
-          oQry.SQL.Text :=
-            'INSERT INTO ' + FTablaCel + ' ' +
-            '  (' + FSerieCelFld + ', ' + FNumeroCelFld + ', ' +
-            FLineaCelFld + ', ' + FFilaCelFld + ', ' +
-            FAlmCelFld + ', ' + FAvCelFld + ', ' + FCantCelFld + ', ' +
-            '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-            'VALUES (:s, :n, :l, 1, :a, :p, :c, NOW(), :u, NOW(), :u) ' +
-            'ON DUPLICATE KEY UPDATE ' + FCantCelFld + ' = :c, ' +
-            '                        INSTANTE_MODIF  = NOW(), ' +
-            '                        USUARIO_MODIF   = :u';
-          oQry.ParamByName('c').AsFloat := rCantN;
-          oQry.ParamByName('u').AsString := FUsuario;
-        end
-        else
-        begin
-          oQry.SQL.Text :=
-            'DELETE FROM ' + FTablaCel + ' ' +
-            ' WHERE ' + FSerieCelFld + ' = :s AND ' +
-            FNumeroCelFld + ' = :n ' +
-            '   AND ' + FLineaCelFld + ' = :l AND ' +
-            FAlmCelFld + ' = :a ' +
-            '   AND ' + FAvCelFld + ' = :p';
-        end;
-        oQry.ParamByName('s').AsString  := SerieSes;
-        oQry.ParamByName('n').AsString  := NumeroSes;
-        oQry.ParamByName('l').AsInteger := LineaSes;
-        oQry.ParamByName('a').AsString  := sCod;
-        oQry.ParamByName('p').AsInteger := iIdAv;
-        oQry.ExecSQL;
+        oCambio.CodigoAlmacen := sCod;
+        oCambio.IdAtributoValor := iIdAv;
+        oCambio.Cantidad := rCantN;
+        oCambios.Add(oCambio);
       end;
     end;
+    FRepositorio.GuardarCambios(
+      ConfiguracionPersistencia,
+      DocumentoPersistencia,
+      FUsuario,
+      oCambios.ToArray);
   finally
-    FreeAndNil(oQry);
+    FreeAndNil(oCambios);
   end;
 end;
 
@@ -729,7 +684,7 @@ begin
     Exit;
   if sFicha <> 'S' then
     Exit;
-  Log.LogInfo(Format(
+  RegistroLog.RegistrarInformacion(Format(
     '[Distribuidor.CloseQuery] sFicha=S serie=%s num=%s lin=%d',
     [SerieSes, NumeroSes, LineaSes]));
   if (tvCuadr.Controller <> nil) and

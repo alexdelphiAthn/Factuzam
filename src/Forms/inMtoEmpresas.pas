@@ -31,7 +31,7 @@ uses
   cxGridBandedTableView, cxGridDBBandedTableView,  cxLocalization,
   cxCurrencyEdit, cxDataControllerConditionalFormattingRulesManagerDialog,
   dxBevel, cxDBNavigator, UniDataEmpresas,  cxGridExportLink,
-  dxDateRanges, MemDS, DBAccess, Uni, cxImage, dxGDIPlusClasses, inMtoGen,
+  dxDateRanges, cxImage, dxGDIPlusClasses, inMtoGen,
   Vcl.Menus, dxSkinsForm, cxButtons, dxSkinsDefaultPainters, cxMemo, cxSpinEdit,
   cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
   System.Actions, Vcl.ActnList, Vcl.PlatformDefaultStyleActnCtrls, Vcl.ActnMan,
@@ -51,7 +51,8 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier, dxSkinValentine,
   dxSkinVisualStudio2013Blue, dxSkinVisualStudio2013Dark, inLibCertificates,
   dxSkinVisualStudio2013Light, dxSkinVS2010, dxSkinWhiteprint, inMtoModalEmpCer,
-  dxSkinXmas2008Blue, JvComponentBase, JvEnterTab, dxShellDialogs, cxDBLabel;
+  dxSkinXmas2008Blue, JvComponentBase, JvEnterTab, dxShellDialogs, cxDBLabel,
+  inLibSeriesEmpresaPersistenciaIntf;
 
 type
   TfrmMtoEmpresas = class(TfrmMtoGen)
@@ -332,6 +333,7 @@ type
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
     function  DataSourcesParaFoto: TArray<TDataSource>; override;
   private
+    FRepositorioSeriesEmpresa: IRepositorioSeriesEmpresa;
     procedure IncorporarCertificados;
     procedure IncorporarCertificadoSeleccionado(
       ATvCertificados: TcxGridTableView);
@@ -351,7 +353,6 @@ uses
   inLibFotos,
   inLibVerifactuInstalacion,
   inLibMsgComun, inLibMsgVentas,
-  inLibValoresAutomaticos,
   inMtoModalSeriesDocumentos;
 
 {$R *.dfm}
@@ -501,121 +502,37 @@ begin
 end;
 
 // Crea una misma serie para todos los tipos de documento conocidos.
-// Idempotente: si ya hay una serie generica solapada para el mismo tipo,// subtipo,serie y empresa,no duplica la fila.
+// No duplica una serie generica solapada para tipo, subtipo y empresa.
 procedure TfrmMtoEmpresas.btnCrearSeriesDocClick(Sender: TObject);
 const
   SUBTIPOS_FACTURA: array[0..2] of string = ('NORMAL', 'SIMPLIFICADA',
                                              'RECTIFICATIVA');
 var
-  sEmpresa : string;
-  sSerie   : string;
-  sTipo    : string;
-  dtDesde  : TDateTime;
-  dtHasta  : TDateTime;
-  iCreadas : Integer;
+  Tipos: TTiposDocumentoEmpresa;
+  TipoListado: string;
+  sEmpresa: string;
+  sSerie: string;
+  sTipo: string;
+  dtDesde: TDateTime;
+  dtHasta: TDateTime;
+  iCreadas: Integer;
   iOmitidas: Integer;
-  qTipos   : TUniQuery;
-  i        : Integer;
-
-  function ExisteSerieSolapada(const ATipo, ASubtipo: string): Boolean;
-  var
-    q: TUniQuery;
-  begin
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := ConexionPrincipal;
-      q.SQL.Text :=
-        'SELECT 1 FROM fza_empresas_series ' +
-        ' WHERE CODIGO_EMP_EMPSER = :emp ' +
-        '   AND TIPO_DOC_EMPSER   = :tip ' +
-        '   AND EMPSER            = :ser ' +
-        '   AND IFNULL(CODIGO_ALM_EMPSER, '''') = '''' ' +
-        '   AND IFNULL(CODIGO_CAJA_EMPSER, '''') = '''' ' +
-        '   AND IFNULL(SUBTIPO_EMPSER, '''') = :sub ' +
-        '   AND (FECHA_DESDE_EMPSER IS NULL ' +
-        '        OR FECHA_DESDE_EMPSER <= :hasta) ' +
-        '   AND (FECHA_HASTA_EMPSER IS NULL ' +
-        '        OR FECHA_HASTA_EMPSER >= :desde) ' +
-        ' LIMIT 1';
-      q.ParamByName('emp').AsString := sEmpresa;
-      q.ParamByName('tip').AsString := ATipo;
-      q.ParamByName('ser').AsString := sSerie;
-      q.ParamByName('sub').AsString := ASubtipo;
-      q.ParamByName('desde').AsDateTime := dtDesde;
-      q.ParamByName('hasta').AsDateTime := dtHasta;
-      q.Open;
-      Result := not q.IsEmpty;
-    finally
-      FreeAndNil(q);
-    end;
-  end;
-
-  procedure InsertarSerie(const ATipo, ASubtipo: string);
-  var
-    q: TUniQuery;
-    sCodigo: string;
-  begin
-    sCodigo := ObtenerSiguienteContador(
-      ConexionPrincipal,
-      'ES',
-      IdentidadSesion.Usuario);
-    if Trim(sCodigo) = '' then
-      raise Exception.Create(SErrorContadorSerieEmpresa);
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := ConexionPrincipal;
-      q.SQL.Text :=
-        'INSERT INTO fza_empresas_series ' +
-        '  (CODIGO_SERIE_EMPSER, CODIGO_EMP_EMPSER, CODIGO_ALM_EMPSER, ' +
-        '   CODIGO_CAJA_EMPSER, EMPSER, TIPO_DOC_EMPSER, SUBTIPO_EMPSER, ' +
-        '   FECHA_DESDE_EMPSER, FECHA_HASTA_EMPSER, ' +
-        '   INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
-        'VALUES (:cod, :emp, NULL, NULL, :ser, :tip, NULLIF(:sub, ''''), ' +
-        '        :desde, :hasta, NOW(), NOW(), :u, :u)';
-      q.ParamByName('cod').AsString := sCodigo;
-      q.ParamByName('emp').AsString := sEmpresa;
-      q.ParamByName('ser').AsString  := sSerie;
-      q.ParamByName('tip').AsString  := ATipo;
-      q.ParamByName('sub').AsString  := ASubtipo;
-      q.ParamByName('desde').AsDateTime := dtDesde;
-      q.ParamByName('hasta').AsDateTime := dtHasta;
-      q.ParamByName('u').AsString    := IdentidadSesion.Usuario;
-      q.ExecSQL;
-      Inc(iCreadas);
-    finally
-      FreeAndNil(q);
-    end;
-  end;
+  i: Integer;
 
   procedure CrearSiFalta(const ATipo, ASubtipo: string);
   begin
-    if ExisteSerieSolapada(ATipo, ASubtipo) then
-      Inc(iOmitidas)
+    if FRepositorioSeriesEmpresa.CrearSerieSiFalta(
+      sEmpresa,
+      sSerie,
+      ATipo,
+      ASubtipo,
+      dtDesde,
+      dtHasta,
+      IdentidadSesion.Usuario) then
+      Inc(iCreadas)
     else
-      InsertarSerie(ATipo, ASubtipo);
+      Inc(iOmitidas);
   end;
-
-  function ConsultaTiposDocumento: TUniQuery;
-  begin
-    Result := TUniQuery.Create(nil);
-    Result.Connection := ConexionPrincipal;
-    Result.SQL.Text :=
-      'SELECT DISTINCT TIPO_DOC FROM (' +
-      ' SELECT CODIGO_TIPO_DOCUMENTO_TD AS TIPO_DOC ' +
-      '   FROM fza_tipos_documentos ' +
-      '  WHERE TRIM(COALESCE(CODIGO_TIPO_DOCUMENTO_TD, '''')) <> '''' ' +
-      ' UNION ' +
-      ' SELECT TIPO_DOC_CON AS TIPO_DOC ' +
-      '   FROM fza_contadores ' +
-      '  WHERE TRIM(COALESCE(TIPO_DOC_CON, '''')) <> '''' ' +
-      ' UNION ' +
-      ' SELECT TIPO_DOC_EMPSER AS TIPO_DOC ' +
-      '   FROM fza_empresas_series ' +
-      '  WHERE TRIM(COALESCE(TIPO_DOC_EMPSER, '''')) <> '''' ' +
-      ') DOC ' +
-      'ORDER BY TIPO_DOC';
-  end;
-
 begin
   inherited;
   if ((dmmEmpresas.unqryTablaG.State = dsInsert) or
@@ -631,22 +548,16 @@ begin
     begin
       iCreadas := 0;
       iOmitidas := 0;
-      qTipos := ConsultaTiposDocumento;
-      try
-        qTipos.Open;
-        while not qTipos.Eof do
+      Tipos := FRepositorioSeriesEmpresa.ListarTiposDocumento;
+      for TipoListado in Tipos do
+      begin
+        sTipo := Trim(TipoListado);
+        CrearSiFalta(sTipo, '');
+        if sTipo = 'FC' then
         begin
-          sTipo := Trim(qTipos.FieldByName('TIPO_DOC').AsString);
-          CrearSiFalta(sTipo, '');
-          if sTipo = 'FC' then
-          begin
-            for i := Low(SUBTIPOS_FACTURA) to High(SUBTIPOS_FACTURA) do
-              CrearSiFalta(sTipo, SUBTIPOS_FACTURA[i]);
-          end;
-          qTipos.Next;
+          for i := Low(SUBTIPOS_FACTURA) to High(SUBTIPOS_FACTURA) do
+            CrearSiFalta(sTipo, SUBTIPOS_FACTURA[i]);
         end;
-      finally
-        FreeAndNil(qTipos);
       end;
       dmmEmpresas.AsegurarSeriesAbierta;
       dmmEmpresas.unqrySeries.Refresh;
@@ -801,6 +712,8 @@ end;
 procedure TfrmMtoEmpresas.CrearTablaPrincipal;
 begin
   inherited;
+  FRepositorioSeriesEmpresa := ContextoRepositoriosPantalla.Configuracion.
+    CrearRepositorioSeriesEmpresa;
   dmmEmpresas := tdmDataModule as TdmEmpresas;
   tvRetenciones.DataController.DataSource := dmmEmpresas.dsRetenciones;
   pcPestana.ActivePage := tsMasDatos;

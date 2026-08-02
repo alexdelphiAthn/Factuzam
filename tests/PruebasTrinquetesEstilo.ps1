@@ -1,4 +1,4 @@
-﻿param(
+param(
   [string]$RaizRepositorio = (Split-Path -Parent $PSScriptRoot),
   [switch]$OmitirLineaBase
 )
@@ -18,6 +18,8 @@ $rutaConsultasUi = Join-Path $RaizRepositorio `
   'scripts\comprobar_consultas_ui.ps1'
 $rutaPruebasDelphi = Join-Path $RaizRepositorio `
   'scripts\ejecutar_pruebas_delphi.ps1'
+$rutaWorkflowCalidad = Join-Path $RaizRepositorio `
+  '.github\workflows\calidad.yml'
 $utf8ConBom = [System.Text.UTF8Encoding]::new($true)
 [System.Text.Encoding]::RegisterProvider(
   [System.Text.CodePagesEncodingProvider]::Instance)
@@ -298,12 +300,33 @@ function Agregar-CasosConsultasUi {
     'begin',
     '  Uno := TUniQuery.Create(nil);',
     '  Dos := TUniQuery . Create (nil);',
+    "  Uno.SQL.Text := 'SELECT 1';",
+    "  Dos . SQL . Text := 'SELECT 2';",
+    "  Uno.SQL.Add(' WHERE 1 = 1');",
+    "  Dos . SQL . Add (' WHERE 2 = 2');",
+    '  TrxUno := TUniTransaction.Create(nil);',
+    '  Conexion.StartTransaction;',
+    '  ProcUno := TUniStoredProc.Create(nil);',
+    '  ProcDos := TUniStoredProc . Create (nil);',
     'end;',
     'end.'
   ) -join "`r`n"
   Escribir-ArchivoPrueba `
     -Ruta (Join-Path $Raiz 'src\Forms\CasosConsultasUi.pas') `
     -Contenido $contenido
+  $contenidoDfm = @(
+    'object frmCasosConsultasUi: TfrmCasosConsultasUi',
+    '  object unqryUno: TUniQuery',
+    "    CommandText = 'SELECT 3'",
+    '  end',
+    '  object unstrdprcDos: TUniStoredProc',
+    "    CommandText = 'SELECT 4'",
+    '  end',
+    'end'
+  ) -join "`r`n"
+  Escribir-ArchivoPrueba `
+    -Ruta (Join-Path $Raiz 'src\Forms\CasosConsultasUi.dfm') `
+    -Contenido $contenidoDfm
 }
 
 function Agregar-ContratosSinUniDAC {
@@ -423,10 +446,58 @@ if (-not $OmitirLineaBase) {
       -Codigo 0 `
       -Textos @(
         'Consultas UI: OK.',
-        'TUniQuery.Create: 173;',
-        'máximo permitido: 173.'
+        'TUniQuery.Create: 35;',
+        'Componentes UniDAC en DFM: 18;',
+        'SQL.Text :=: 68;',
+        'SQL.Add: 0;',
+        'CommandText: 0;',
+        'Transacciones creadas/iniciadas: 5;',
+        'TUniStoredProc.Create: 0;'
       )
   }
+}
+
+Registrar-Prueba 'CI Delphi obligatoria en cada PR' {
+  $workflow = Get-Content -LiteralPath $rutaWorkflowCalidad -Raw
+  $scriptDelphi = Get-Content -LiteralPath $rutaPruebasDelphi -Raw
+  $bloqueCalidad = [regex]::Match(
+    $workflow,
+    '(?ms)^  trinquetes:.*?(?=^  [a-zA-Z0-9_-]+:|\z)').Value
+  $bloqueDelphi = [regex]::Match(
+    $workflow,
+    '(?ms)^  pruebas-delphi:.*?(?=^  [a-zA-Z0-9_-]+:|\z)').Value
+  Confirmar-Condicion `
+    -Condicion $workflow.Contains('pull_request:') `
+    -Mensaje 'El workflow no se ejecuta en pull_request.'
+  Confirmar-Condicion `
+    -Condicion $workflow.Contains('merge_group:') `
+    -Mensaje 'El workflow no protege la cola de integración.'
+  Confirmar-Condicion `
+    -Condicion $bloqueCalidad.Contains(
+      '.\scripts\comprobar_calidad.ps1') `
+    -Mensaje 'El job de trinquetes no ejecuta todos los controles.'
+  Confirmar-Condicion `
+    -Condicion ($bloqueDelphi -ne '') `
+    -Mensaje 'No existe el job obligatorio de Delphi.'
+  Confirmar-Condicion `
+    -Condicion (-not $bloqueDelphi.Contains("`n    if:")) `
+    -Mensaje 'El job Delphi no puede quedar condicionado.'
+  Confirmar-Condicion `
+    -Condicion $bloqueDelphi.Contains(
+      '.\scripts\ejecutar_pruebas_delphi.ps1') `
+    -Mensaje 'El job Delphi no ejecuta su entrada automatizada.'
+  Confirmar-Condicion `
+    -Condicion $scriptDelphi.Contains("'fzam.dproj'") `
+    -Mensaje 'La validación Delphi no compila fzam.dproj.'
+  Confirmar-Condicion `
+    -Condicion $scriptDelphi.Contains("@('Win32', 'Win64')") `
+    -Mensaje 'La validación Delphi no exige Win32 y Win64.'
+  Confirmar-Condicion `
+    -Condicion $scriptDelphi.Contains("'tests\FactuzamTests.dproj'") `
+    -Mensaje 'La validación Delphi no compila DUnitX.'
+  Confirmar-Condicion `
+    -Condicion $scriptDelphi.Contains('Ejecutar-Bateria') `
+    -Mensaje 'La validación Delphi no ejecuta DUnitX.'
 }
 
 $raizConsultasUi = Nueva-RaizPrueba
@@ -437,27 +508,82 @@ try {
       -Ruta $rutaConsultasUi `
       -Argumentos @(
         '-Raiz', $raizConsultasUi,
-        '-MaximoConsultasUi', '2'
+        '-MaximoConsultasUi', '2',
+        '-MaximoComponentesUniDacDfm', '2',
+        '-MaximoAsignacionesSqlText', '2',
+        '-MaximoLlamadasSqlAdd', '2',
+        '-MaximoAsignacionesCommandText', '2',
+        '-MaximoTransaccionesCreadas', '2',
+        '-MaximoProcedimientosCreados', '2'
       )
     Confirmar-Resultado `
       -Resultado $resultado `
       -Codigo 0 `
-      -Textos @('TUniQuery.Create: 2; máximo permitido: 2.')
-  }
-  Registrar-Prueba 'consultas UI: bloquea una aparicion nueva' {
-    $resultado = Ejecutar-Script `
-      -Ruta $rutaConsultasUi `
-      -Argumentos @(
-        '-Raiz', $raizConsultasUi,
-        '-MaximoConsultasUi', '1'
-      )
-    Confirmar-Resultado `
-      -Resultado $resultado `
-      -Codigo 1 `
       -Textos @(
-        'Construcciones TUniQuery.Create en UI: 2;',
-        'máximo permitido: 1.'
+        'TUniQuery.Create: 2; máximo permitido: 2.',
+        'Componentes UniDAC en DFM: 2; máximo permitido: 2.',
+        'SQL.Text :=: 2; máximo permitido: 2.',
+        'SQL.Add: 2; máximo permitido: 2.',
+        'CommandText: 2; máximo permitido: 2.',
+        'Transacciones creadas/iniciadas: 2; máximo permitido: 2.',
+        'TUniStoredProc.Create: 2; máximo permitido: 2.'
       )
+  }
+  $casosTopeConsultasUi = @(
+    [pscustomobject]@{
+      Nombre = 'TUniQuery.Create'
+      Parametro = '-MaximoConsultasUi'
+    },
+    [pscustomobject]@{
+      Nombre = 'Componentes UniDAC en DFM'
+      Parametro = '-MaximoComponentesUniDacDfm'
+    },
+    [pscustomobject]@{
+      Nombre = 'SQL.Text :='
+      Parametro = '-MaximoAsignacionesSqlText'
+    },
+    [pscustomobject]@{
+      Nombre = 'SQL.Add'
+      Parametro = '-MaximoLlamadasSqlAdd'
+    },
+    [pscustomobject]@{
+      Nombre = 'CommandText'
+      Parametro = '-MaximoAsignacionesCommandText'
+    },
+    [pscustomobject]@{
+      Nombre = 'Transacciones creadas/iniciadas'
+      Parametro = '-MaximoTransaccionesCreadas'
+    },
+    [pscustomobject]@{
+      Nombre = 'TUniStoredProc.Create'
+      Parametro = '-MaximoProcedimientosCreados'
+    }
+  )
+  foreach ($caso in $casosTopeConsultasUi) {
+    Registrar-Prueba "consultas UI: bloquea $($caso.Nombre)" {
+      $argumentos = [System.Collections.Generic.List[string]]::new()
+      $argumentos.Add('-Raiz')
+      $argumentos.Add($raizConsultasUi)
+      foreach ($limite in $casosTopeConsultasUi) {
+        $argumentos.Add($limite.Parametro)
+        if ($limite.Parametro -eq $caso.Parametro) {
+          $argumentos.Add('1')
+        }
+        else {
+          $argumentos.Add('2')
+        }
+      }
+      $resultado = Ejecutar-Script `
+        -Ruta $rutaConsultasUi `
+        -Argumentos $argumentos.ToArray()
+      Confirmar-Resultado `
+        -Resultado $resultado `
+        -Codigo 1 `
+        -Textos @(
+          'Accesos directos a datos en UI fuera de tope:',
+          "$($caso.Nombre): 2; máximo permitido: 1."
+        )
+    }
   }
 }
 finally {

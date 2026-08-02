@@ -22,9 +22,10 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   System.UITypes, Vcl.Controls, Vcl.Forms, Vcl.Graphics, Vcl.ExtCtrls,
-  Vcl.Dialogs, Data.DB, MemDS, DBAccess, Uni, cxLookAndFeelPainters,
+  Vcl.Dialogs, Uni, cxLookAndFeelPainters,
   cxGraphics, cxControls, cxContainer, cxEdit, cxLabel, cxButtons,
-  cxCheckBox, cxCheckListBox;
+  cxCheckBox, cxCheckListBox, inMtoFrmBase,
+  inLibFiltroArticulosPersistenciaIntf;
 
 type
   // Callback que cuenta los artículos que saldrían con una combinación de
@@ -35,9 +36,8 @@ type
   TContarArticulosFunc = reference to function(const aTempCsv, aPrvCsv,
     aFamCsv: string): Integer;
 
-  TfrmModalFiltroArt = class(TForm)
+  TfrmModalFiltroArt = class(TfrmBase)
   private
-    FConn: TUniConnection;
     FUmbral: Integer;
     FContar: TContarArticulosFunc;
     // Familia heredada del llamador: no se filtra en este diálogo, solo se
@@ -53,6 +53,7 @@ type
     FbtnCalcular: TcxButton;
     FbtnAceptar: TcxButton;
     FbtnCancelar: TcxButton;
+    FRepositorio: IRepositorioFiltroArticulos;
     procedure ConstruirUI;
     function  CrearCheckList(ALeft, ATop, AWidth, AHeight: Integer;
                             const ATitulo: string): TcxCheckListBox;
@@ -191,77 +192,66 @@ end;
 
 procedure TfrmModalFiltroArt.CargarTemporadas(const aPreCsv: string);
 var
-  qry: TUniQuery;
+  aTemporadas: TTemporadasFiltroArticulos;
   pre: TStringList;
   it: TcxCheckListBoxItem;
+  sTemporada: string;
 begin
   pre := TStringList.Create;
-  qry := TUniQuery.Create(nil);
   try
     pre.Delimiter       := ';';
     pre.StrictDelimiter := True;
     pre.DelimitedText   := aPreCsv;
-    qry.Connection := FConn;
-    qry.SQL.Text :=
-      'SELECT PV FROM fza_propiedades_valores ' +
-      ' WHERE ID_PROP_PV = ''TEMPORADA'' AND ESACTIVO_PV = ''S'' ' +
-      ' ORDER BY PV';
-    qry.Open;
-    while not qry.Eof do
+    aTemporadas := FRepositorio.ListarTemporadas;
+    for sTemporada in aTemporadas do
     begin
       it := FclbTemporada.Items.Add;
-      it.Text := qry.FieldByName('PV').AsString;
+      it.Text := sTemporada;
       if pre.IndexOf(it.Text) >= 0 then
+      begin
         it.State := cbsChecked
+      end
       else
+      begin
         it.State := cbsUnchecked;
-      qry.Next;
+      end;
     end;
-    qry.Close;
   finally
-    FreeAndNil(qry);
     FreeAndNil(pre);
   end;
 end;
 
 procedure TfrmModalFiltroArt.CargarProveedores(const aPreCsv: string);
 var
-  qry: TUniQuery;
+  aProveedores: TProveedoresFiltroArticulos;
+  oProveedor: TProveedorFiltroArticulos;
   pre: TStringList;
   it: TcxCheckListBoxItem;
   cod: string;
 begin
   FCodProv.Clear;
   pre := TStringList.Create;
-  qry := TUniQuery.Create(nil);
   try
     pre.Delimiter       := ';';
     pre.StrictDelimiter := True;
     pre.DelimitedText   := aPreCsv;
-    qry.Connection := FConn;
-    qry.SQL.Text :=
-      'SELECT CODIGO_PRV_PRV, ' +
-      '       COALESCE(NULLIF(RAZON_SOCIAL_PRV, ''''), NOMBRE_PRV, ' +
-      '                CODIGO_PRV_PRV) AS NOM ' +
-      '  FROM fza_proveedores ' +
-      ' WHERE ESACTIVO_PRV = ''S'' ' +
-      ' ORDER BY NOM, CODIGO_PRV_PRV';
-    qry.Open;
-    while not qry.Eof do
+    aProveedores := FRepositorio.ListarProveedores;
+    for oProveedor in aProveedores do
     begin
-      cod := qry.FieldByName('CODIGO_PRV_PRV').AsString;
+      cod := oProveedor.Codigo;
       it := FclbProveedor.Items.Add;
-      it.Text := qry.FieldByName('NOM').AsString + ' (' + cod + ')';
+      it.Text := oProveedor.Nombre + ' (' + cod + ')';
       if pre.IndexOf(cod) >= 0 then
+      begin
         it.State := cbsChecked
+      end
       else
+      begin
         it.State := cbsUnchecked;
+      end;
       FCodProv.Add(cod);
-      qry.Next;
     end;
-    qry.Close;
   finally
-    FreeAndNil(qry);
     FreeAndNil(pre);
   end;
 end;
@@ -354,7 +344,8 @@ begin
   Result := False;
   frm := TfrmModalFiltroArt.Create(AOwner);
   try
-    frm.FConn   := AConn;
+    frm.FRepositorio := frm.ContextoRepositoriosPantalla.Articulos.
+      CrearRepositorioFiltroArticulos(AConn);
     frm.FUmbral := AUmbral;
     frm.FContar := AContar;
     frm.FFamCsv := APreFamCsv;

@@ -1771,14 +1771,6 @@
     Left = 152
     Top = 184
   end
-  inherited unqryPerfiles: TUniQuery
-    Left = 224
-    Top = 184
-  end
-  inherited dsPerfiles: TDataSource
-    Left = 8
-    Top = 8
-  end
   inherited frxdsgnr1: TfrxDesigner
     DefaultOrientation = poLandscape
     Left = 288

@@ -224,7 +224,7 @@ limitación técnica exijan un control VCL distinto.
 | `fxds`   | `TfrxDBDataset`                             | `fxdsEtiquetas`                       |
 | `act`    | `TAction`                                   | `actEmpresas`, `actFacturas`          |
 
-Ojo! NUNCA usar una palabra reservada del lenguaje para nombrar una variable. 
+Ojo! NUNCA usar una palabra reservada del lenguaje para nombrar una variable.
 
 
 ### 5.2 Componentes ligados a un campo de BBDD
@@ -1281,17 +1281,19 @@ La entrada única para ejecutar todos los resguardos es:
 .\scripts\comprobar_calidad.ps1
 ```
 
-La batería completa en un equipo con Delphi se ejecuta en Release para Win32
-y Win64:
+La batería completa en un equipo con Delphi compila `fzam.dproj` y DUnitX en
+Release para Win32 y Win64, y ejecuta las pruebas en ambas plataformas:
 
 ```powershell
 .\scripts\ejecutar_pruebas_delphi.ps1
 ```
 
-`.github/workflows/calidad.yml` ejecuta los trinquetes y sus pruebas en cada
-push y pull request. La opción manual `ejecutar_delphi` añade DUnitX en un
-runner propio con las etiquetas `Windows` y `Delphi`. Ese runner debe usar
-GitHub Actions Runner 2.329.0 o posterior, requisito de `actions/checkout@v6`.
+`.github/workflows/calidad.yml` ejecuta en cada push, pull request y grupo de
+integración tanto los trinquetes como la compilación de `fzam.dproj` y DUnitX
+para Win32 y Win64, seguida de las dos ejecuciones de pruebas. El job Delphi
+no es opcional y usa un runner propio con las etiquetas `Windows` y `Delphi`.
+Ese runner debe usar GitHub Actions Runner 2.329.0 o posterior, requisito de
+`actions/checkout@v6`.
 
 Los resguardos principales cubren:
 

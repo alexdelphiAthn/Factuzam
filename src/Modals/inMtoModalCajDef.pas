@@ -27,7 +27,8 @@ uses
   JvEnterTab, cxCustomData, cxFilter, cxData, cxDataStorage, cxNavigator,
   dxDateRanges, dxScrollbarAnnotations, cxDBData, cxGridLevel,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGridCustomView,
-  cxGrid, MemDS, DBAccess, Uni, System.Actions, Vcl.ActnList;
+  cxGrid, System.Actions, Vcl.ActnList,
+  inLibCajasDefectoPersistenciaIntf;
 type
   TfrmMtoModalCajDef = class(TfrmBase)
     pnl1: TPanel;
@@ -37,7 +38,6 @@ type
     tvAlmacenesCajas: TcxGridDBTableView;
     lvAlmacenCajas: TcxGridLevel;
     DataSource1: TDataSource;
-    qrySeleccion: TUniQuery;
     tvAlmacenesCajasEmpresa: TcxGridDBColumn;
     tvAlmacenesCajasNombreEmpresa: TcxGridDBColumn;
     tvAlmacenesCajasAlmacn: TcxGridDBColumn;
@@ -55,11 +55,18 @@ type
     procedure Action2Execute(Sender: TObject);
     procedure Action1Execute(Sender: TObject);
   private
+    FRepositorioPersistencia: IRepositorioCajasDefecto;
+    FResultado: IResultadoCajasDefecto;
+    FDatos: TDataSet;
   public
     sFicha:string;
     sEmpresa: string;
     sAlmacen: string;
     sCaja:    string;
+    procedure Cargar(const AEmpresaFiltro: string = '');
+    function EmpresaSeleccionada: string;
+    function AlmacenSeleccionado: string;
+    function CajaSeleccionada: string;
     { Public declarations }
   end;
 
@@ -67,7 +74,8 @@ implementation
 
 {$R *.dfm}
 
-uses UniDataConn, inLibFiltroUsuario;
+uses
+  inLibFiltroUsuario;
 
 procedure TfrmMtoModalCajDef.Action1Execute(Sender: TObject);
 begin
@@ -106,25 +114,66 @@ procedure TfrmMtoModalCajDef.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
-  // Restricción por usuario (appRestringirEmpAlmCaja): la selección de
-  // caja solo ofrece la empresa/almacén/caja por defecto del usuario.
-  // Se inyecta aquí porque los callers abren qrySeleccion tras el Create.
-  qrySeleccion.SQL.Text :=
-    InyectarFiltroSql(qrySeleccion.SQL.Text,
-                      SqlFiltroEmpAlmCaja(
-                        ContextoSesion,
-                        ParametrosApp,
-                        'Empresa',
-                        'Almacen',
-                        'Caja'));
+  FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
+    CrearRepositorioCajasDefecto;
+  Cargar;
+end;
+
+procedure TfrmMtoModalCajDef.Cargar(const AEmpresaFiltro: string);
+var
+  Solicitud: TSolicitudCajasDefecto;
+begin
+  Solicitud.EmpresaFiltro := AEmpresaFiltro;
+  Solicitud.EmpresaRestringida :=
+    EmpresaRestringida(ContextoSesion, ParametrosApp);
+  Solicitud.AlmacenRestringido :=
+    AlmacenRestringido(ContextoSesion, ParametrosApp);
+  Solicitud.CajaRestringida :=
+    CajaRestringida(ContextoSesion, ParametrosApp);
+  DataSource1.DataSet := nil;
+  FDatos := nil;
+  FResultado := FRepositorioPersistencia.Consultar(Solicitud);
+  FDatos := FResultado.DataSet;
+  DataSource1.DataSet := FDatos;
+end;
+
+function TfrmMtoModalCajDef.EmpresaSeleccionada: string;
+begin
+  Result := '';
+  if Assigned(FDatos) and not FDatos.IsEmpty then
+  begin
+    Result := FDatos.FieldByName('Empresa').AsString;
+  end;
+end;
+
+function TfrmMtoModalCajDef.AlmacenSeleccionado: string;
+begin
+  Result := '';
+  if Assigned(FDatos) and not FDatos.IsEmpty then
+  begin
+    Result := FDatos.FieldByName('Almacen').AsString;
+  end;
+end;
+
+function TfrmMtoModalCajDef.CajaSeleccionada: string;
+begin
+  Result := '';
+  if Assigned(FDatos) and not FDatos.IsEmpty then
+  begin
+    Result := FDatos.FieldByName('Caja').AsString;
+  end;
 end;
 
 procedure TfrmMtoModalCajDef.FormShow(Sender: TObject);
 begin
   inherited;
-  qrySeleccion.Locate('Empresa;Almacen;Caja',
-                         VarArrayOf([sEmpresa, sAlmacen, sCaja]),
-                         []);
+  if Assigned(FDatos) then
+  begin
+    FDatos.Locate(
+      'Empresa;Almacen;Caja',
+      VarArrayOf([sEmpresa, sAlmacen, sCaja]),
+      []);
+  end;
   if btnAceptar.CanBeFocused then
     btnAceptar.SetFocus;
   tvAlmacenesCajas.ApplyBestFit(nil, True, False);

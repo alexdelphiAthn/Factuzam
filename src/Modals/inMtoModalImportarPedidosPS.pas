@@ -28,8 +28,8 @@ uses
   cxDropDownEdit, cxListBox, cxCheckListBox, cxNavigator,
   cxPropertiesStore, dxSkinsForm,
   System.Generics.Collections,
-  UniDataPedidos, inLibPresta, inLibPrestaImporter, Vcl.Menus,
-  inMtoFrmBase;
+  UniDataPedidos, Vcl.Menus, inMtoFrmBase,
+  inLibImportacionPedidosIntf;
 
 type
   TfrmModalImportarPedidosPS = class(TfrmBase)
@@ -60,10 +60,10 @@ type
     procedure btnImportarClick(Sender: TObject);
     procedure btnCerrarClick(Sender: TObject);
   private
-    FResumen: TPrestaPedidoResumenList;
-    procedure CargarGridDesdeResumen;
+    FResumen: TResumenPedidosImportacion;
+    FCasoUsoImportacion: ICasoUsoImportacionPedidos;
   public
-    dmPedidos: TdmPedidos;
+    procedure Configurar(ADataModule: TdmPedidos);
   end;
 
 implementation
@@ -71,12 +71,36 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsgIntegraciones, inLibMsgVentas;
+  inLibImportacionPedidos,
+  inLibPrestaShopPedidosAdaptador,
+  UniDataImportacionPedidos,
+  inMtoImportacionPedidosVcl;
+
+function CrearContextoImportacionPedidosVcl(
+  AFormulario: TfrmModalImportarPedidosPS
+): TContextoImportacionPedidosVcl;
+begin
+  Result := Default(TContextoImportacionPedidosVcl);
+  Result.Vista := AFormulario.tvPedidos;
+  Result.Estado := AFormulario.lblEstado;
+  Result.Resumen := AFormulario.FResumen;
+  Result.CasoUso := AFormulario.FCasoUsoImportacion;
+  Result.BaseURL := AFormulario.edtBaseURL.Text;
+  Result.ApiKey := AFormulario.edtApiKey.Text;
+  Result.IndiceSeleccion := AFormulario.colSel.Index;
+  Result.IndiceId := AFormulario.colId.Index;
+  Result.IndiceReferencia := AFormulario.colRef.Index;
+  Result.IndiceFecha := AFormulario.colFecha.Index;
+  Result.IndiceCliente := AFormulario.colCliente.Index;
+  Result.IndiceTotal := AFormulario.colTotal.Index;
+  Result.IndiceEstado := AFormulario.colEstado.Index;
+  Result.IndiceImportado := AFormulario.colImportado.Index;
+end;
 
 procedure TfrmModalImportarPedidosPS.FormCreate(Sender: TObject);
 begin
   inherited;
-  FResumen := TPrestaPedidoResumenList.Create;
+  FResumen := TResumenPedidosImportacion.Create;
   // Valores por defecto recuperables desde el servicio de parámetros.
   edtBaseURL.Text := 'http://localhost/api';
   edtApiKey.Text  := '';
@@ -90,98 +114,22 @@ end;
 
 procedure TfrmModalImportarPedidosPS.btnConectarClick(Sender: TObject);
 begin
-  Screen.Cursor := crHourGlass;
-  try
-    lblEstado.Caption := SCaptionConectandoPrestaShop;
-    Application.ProcessMessages;
-    if ListarPedidosResumen(edtBaseURL.Text, edtApiKey.Text, FResumen) then
-    begin
-      CargarGridDesdeResumen;
-      lblEstado.Caption := Format(SCaptionRecuperadosPedidos,
-                                  [FResumen.Count]);
-    end
-    else
-      lblEstado.Caption := SCaptionNoRecuperadosPedidos;
-  finally
-    Screen.Cursor := crDefault;
-  end;
+  TCoordinadorImportacionPedidosVcl.Conectar(
+    CrearContextoImportacionPedidosVcl(Self));
 end;
 
-procedure TfrmModalImportarPedidosPS.CargarGridDesdeResumen;
-var
-  i: Integer;
+procedure TfrmModalImportarPedidosPS.Configurar(
+  ADataModule: TdmPedidos);
 begin
-  tvPedidos.DataController.RecordCount := 0;
-  tvPedidos.DataController.RecordCount := FResumen.Count;
-  for i := 0 to FResumen.Count - 1 do
-  begin
-    tvPedidos.DataController.Values[i, colSel.Index]   := False;
-    tvPedidos.DataController.Values[i, colId.Index]    := FResumen[i].IdPedido;
-    tvPedidos.DataController.Values[i, colRef.Index] := FResumen[i].Referencia;
-    tvPedidos.DataController.Values[i, colFecha.Index] := FResumen[i].Fecha;
-    tvPedidos.DataController.Values[i, colCliente.Index]:= FResumen[i].Cliente;
-    tvPedidos.DataController.Values[i, colTotal.Index] := FResumen[i].Total;
-    tvPedidos.DataController.Values[i, colEstado.Index]:= FResumen[i].Estado;
-    if (dmPedidos <> nil)
-       and dmPedidos.ExistePedidoPrestaShop(FResumen[i].IdPedido) then
-      tvPedidos.DataController.Values[i, colImportado.Index] := 'S'
-    else
-      tvPedidos.DataController.Values[i, colImportado.Index] := 'N';
-  end;
+  FCasoUsoImportacion := CrearCasoUsoImportacionPedidos(
+    CrearFabricaFuentePedidosPrestaShop(RegistroLog),
+    CrearRepositorioImportacionPedidosUniDAC(ADataModule));
 end;
 
 procedure TfrmModalImportarPedidosPS.btnImportarClick(Sender: TObject);
-var
-  i, importados, errores: Integer;
-  conn: TPrestaConn;
-  ord: TOrder;
-  sIdPS: string;
 begin
-  if dmPedidos = nil then
-  begin
-    ShowMessage(SErrorDataModulePedidosNoAsignado);
-    Exit;
-  end;
-  importados := 0;
-  errores    := 0;
-  conn := TPrestaConn.Create(edtBaseURL.Text, edtApiKey.Text);
-  try
-    Screen.Cursor := crHourGlass;
-    for i := 0 to FResumen.Count - 1 do
-    begin
-      if not Boolean(tvPedidos.DataController.Values[i, colSel.Index]) then
-        Continue;
-      sIdPS := FResumen[i].IdPedido;
-      if dmPedidos.ExistePedidoPrestaShop(sIdPS) then
-        Continue;
-      lblEstado.Caption := Format(SCaptionImportandoPedido, [sIdPS]);
-      Application.ProcessMessages;
-      try
-        ord := conn.CargarPedido(sIdPS);
-        try
-          if dmPedidos.ImportarPedidoPrestaShop(ord) then
-          begin
-            Inc(importados);
-            tvPedidos.DataController.Values[i, colImportado.Index] := 'S';
-          end;
-        finally
-          FreeAndNil(ord);
-        end;
-      except
-        on E: Exception do
-        begin
-          Inc(errores);
-          lblEstado.Caption := Format(SCaptionErrorImportandoPedido,
-                                      [sIdPS, E.Message]);
-        end;
-      end;
-    end;
-  finally
-    FreeAndNil(conn);
-    Screen.Cursor := crDefault;
-  end;
-  ShowMessageFmt(SInfoImportacionPedidosFinalizada,
-                 [importados, errores]);
+  TCoordinadorImportacionPedidosVcl.Importar(
+    CrearContextoImportacionPedidosVcl(Self));
 end;
 
 end.

@@ -45,7 +45,7 @@ type
 implementation
 
 uses
-  inLibLog, System.Diagnostics, inLibMsgComun, inLibMsgFacturas;
+  System.Diagnostics, inLibMsgComun, inLibMsgFacturas;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -93,11 +93,12 @@ const
     swQ := TStopwatch.StartNew;
     try
       qry.Open;
-      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+      RegistroLog.RegistrarRendimiento(
+        TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
     except
       on E: Exception do
       begin
-        inLibLog.Log.LogPerf(TAG, Nombre + ' ERROR=' + E.Message,
+        RegistroLog.RegistrarRendimiento(TAG, Nombre + ' ERROR=' + E.Message,
           swQ.ElapsedMilliseconds);
         raise;
       end;
@@ -110,7 +111,7 @@ begin
   sw := TStopwatch.StartNew;
   AbrirConTiempo(unqryFacturas,       'unqryFacturas');
   AbrirConTiempo(unqryFacturasLineas, 'unqryFacturasLineas');
-  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+  RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmFormasdePago.GetCodigoAutoFormasdePago;

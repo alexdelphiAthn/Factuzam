@@ -27,6 +27,12 @@ uses
   inLibDir in 'src\Lib\inLibDir.pas',
   inLibGlobalVar in 'src\Lib\inLibGlobalVar.pas',
   inLibLogIntf in 'src\Lib\inLibLogIntf.pas',
+  inLibRegistroLogNulo in 'src\Lib\inLibRegistroLogNulo.pas',
+  inLibConfigCamposIntf in 'src\Lib\inLibConfigCamposIntf.pas',
+  inLibRepositoriosPantallaIntf in
+    'src\Lib\inLibRepositoriosPantallaIntf.pas',
+  inLibCargaMasivaArticulosPersistenciaIntf in
+    'src\Lib\inLibCargaMasivaArticulosPersistenciaIntf.pas',
   inLibLog in 'src\Lib\inLibLog.pas',
   inLibDiag in 'src\Lib\inLibDiag.pas',
   inLibCadenas in 'src\Lib\inLibCadenas.pas',
@@ -96,6 +102,10 @@ uses
     'src\Lib\inLibFacturasEstadoFiscalPresentacion.pas',
   inLibFacturasOperacionFiscal in
     'src\Lib\inLibFacturasOperacionFiscal.pas',
+  inLibFacturasAplicacionIntf in
+    'src\Lib\inLibFacturasAplicacionIntf.pas',
+  inLibFacturasAplicacion in
+    'src\Lib\inLibFacturasAplicacion.pas',
   inLibFacturasLineasEdicion in
     'src\Lib\inLibFacturasLineasEdicion.pas',
   inLibFacturasConsolidacionPresentacion in
@@ -111,6 +121,10 @@ uses
   inLibDevolucionesCompraStock in 'src\Lib\inLibDevolucionesCompraStock.pas',
   UniDataDevolucionesCompraStockRepositorio in
     'src\DataModules\UniDataDevolucionesCompraStockRepositorio.pas',
+  inLibDevolucionesCompraPersistenciaIntf in
+    'src\Lib\inLibDevolucionesCompraPersistenciaIntf.pas',
+  UniDataDevolucionesCompraRepositorio in
+    'src\DataModules\UniDataDevolucionesCompraRepositorio.pas',
   inLibFacturaPdfBlob in 'src\Lib\inLibFacturaPdfBlob.pas',
   inLibFormatoDocumento in 'src\Lib\inLibFormatoDocumento.pas',
   inLibInformesGuiasCache in 'src\Lib\inLibInformesGuiasCache.pas',
@@ -169,10 +183,18 @@ uses
   inMtoLogon in 'src\Core\inMtoLogon.pas' {frmLogon},
   inMtoPrincipal in 'src\Core\inMtoPrincipal.pas' {frmMtoPrincipal},
   inMtoGen in 'src\Forms\inMtoGen.pas' {frmMtoGen},
+  inMtoBusquedaDatos in
+    'src\Forms\inMtoBusquedaDatos.pas' {frmMtoBusquedaDatos},
   inMtoFacturasBase in 'src\Forms\inMtoFacturasBase.pas' {frmMtoFacturasBase},
+  inMtoFacturasConsolidacionVcl in
+    'src\Forms\inMtoFacturasConsolidacionVcl.pas',
+  inMtoFacturasVistaVcl in 'src\Forms\inMtoFacturasVistaVcl.pas',
+  inMtoFacturasCobrosVcl in 'src\Forms\inMtoFacturasCobrosVcl.pas',
   inMtoFacturasNormal in 'src\Forms\inMtoFacturasNormal.pas' {frmMtoFacturasNormal},
   inMtoFacturasSimplif in 'src\Forms\inMtoFacturasSimplif.pas' {frmMtoFacturasSimplif},
   inMtoArticulos in 'src\Forms\inMtoArticulos.pas' {frmMtoArticulos},
+  inMtoArticulosGuardadoVcl in
+    'src\Forms\inMtoArticulosGuardadoVcl.pas',
   inMtoClientes in 'src\Forms\inMtoClientes.pas' {frmMtoClientes},
   inMtoContadores in 'src\Forms\inMtoContadores.pas' {frmMtoContadores},
   inMtoEmpresas in 'src\Forms\inMtoEmpresas.pas' {frmMtoEmpresas},
@@ -180,8 +202,6 @@ uses
   inMtoFormasdePago in 'src\Forms\inMtoFormasdePago.pas' {frmMtoFormasdePago},
   inMtoGeneradorProcesos in 'src\Forms\inMtoGeneradorProcesos.pas' {frmMtoGeneradorProcesos},
   inMtoGenSearch in 'src\Forms\inMtoGenSearch.pas' {frmMtoSearch},
-  inMtoBusquedaDatos in
-    'src\Forms\inMtoBusquedaDatos.pas' {frmMtoBusquedaDatos},
   inMtoEmpleados in 'src\Forms\inMtoEmpleados.pas' {frmMtoEmpleados},
   inMtoGrupos in 'src\Forms\inMtoGrupos.pas' {frmMtoGrupos},
   inMtoIvas in 'src\Forms\inMtoIvas.pas' {frmMtoIvas},
@@ -237,6 +257,12 @@ uses
   UniDataConn in 'src\DataModules\UniDataConn.pas' {dmConn: TDataModule},
   UniDataComposicionAplicacion in
     'src\DataModules\UniDataComposicionAplicacion.pas',
+  UniDataRepositoriosPantalla in
+    'src\DataModules\UniDataRepositoriosPantalla.pas',
+  UniDataRepositoriosGeneralesPantalla in
+    'src\DataModules\UniDataRepositoriosGeneralesPantalla.pas',
+  UniDataRepositoriosCajaPantalla in
+    'src\DataModules\UniDataRepositoriosCajaPantalla.pas',
   UniDataGen in 'src\DataModules\UniDataGen.pas' {dmBase: TDataModule},
   UniDataArticulos in 'src\DataModules\UniDataArticulos.pas' {dmArticulos: TdmArticulos},
   UniDataClientes in 'src\DataModules\UniDataClientes.pas' {dmClientes: TdmClientes},
@@ -270,12 +296,17 @@ uses
     'src\Modals\inMtoModalSeriesDocumentos.pas' {frmModalSeriesDocumentos},
   inMtoCajaMenu in 'src\Caja\Forms\inMtoCajaMenu.pas' {frmMtoMenuCaja},
   inMtoCajaOpe in 'src\Caja\Forms\inMtoCajaOpe.pas' {frmMtoOpeCaja},
+  inMtoCajaCierreVentaVcl in
+    'src\Caja\Forms\inMtoCajaCierreVentaVcl.pas',
+  inMtoCajaEntradaVcl in 'src\Caja\Forms\inMtoCajaEntradaVcl.pas',
   inMtoCajaImpresorVenta in
     'src\Caja\Forms\inMtoCajaImpresorVenta.pas',
-  inMtoCajaGrabadorVenta in
-    'src\Caja\Forms\inMtoCajaGrabadorVenta.pas',
   UniDataCaja in 'src\Caja\DataModules\UniDataCaja.pas' {dmCajaOpe},
+  UniDataCajaUnidadTrabajo in
+    'src\Caja\DataModules\UniDataCajaUnidadTrabajo.pas',
   inMtoTraspasoOpe in 'src\Caja\Forms\inMtoTraspasoOpe.pas' {frmMtoOpeTraspaso},
+  inLibTraspasoOpePersistenciaIntf in 'src\Caja\Lib\inLibTraspasoOpePersistenciaIntf.pas',
+  UniDataTraspasoOpeRepositorio in 'src\Caja\DataModules\UniDataTraspasoOpeRepositorio.pas',
   UniDataTraspaso in 'src\Caja\DataModules\UniDataTraspaso.pas' {dmTraspaso: TDataModule},
   inLibTraspasoTicketIntf in
     'src\Caja\Lib\inLibTraspasoTicketIntf.pas',
@@ -308,12 +339,18 @@ uses
   inMtoAlmacenes in 'src\Forms\inMtoAlmacenes.pas' {frmMtoAlmacenes},
   UniDataAlmacenes in 'src\DataModules\UniDataAlmacenes.pas' {dmAlmacenes: TDataModule},
   inMtoModalCajDef in 'src\Modals\inMtoModalCajDef.pas' {frmMtoModalCajDef},
+  inLibCajasDefectoPersistenciaIntf in 'src\Lib\inLibCajasDefectoPersistenciaIntf.pas',
+  UniDataCajasDefectoRepositorio in 'src\DataModules\UniDataCajasDefectoRepositorio.pas',
   inLibFormManager in 'src\Lib\inLibFormManager.pas',
   inMtoPreviewExcel in 'src\Core\inMtoPreviewExcel.pas' {frmMtoPreviewExcel},
   inLibDevExcel in 'src\Lib\inLibDevExcel.pas',
   inLibdxSpreadSheetStrs_ESP in 'src\Lib\inLibdxSpreadSheetStrs_ESP.pas',
   inMtoCajaReferenciaPago in 'src\Caja\Forms\inMtoCajaReferenciaPago.pas' {frmCajaReferenciaPago},
   inLibFaseCobro in 'src\Caja\Lib\inLibFaseCobro.pas',
+  inLibFaseCobroPersistenciaIntf in
+    'src\Caja\Lib\inLibFaseCobroPersistenciaIntf.pas',
+  UniDataFaseCobroRepositorio in
+    'src\Caja\DataModules\UniDataFaseCobroRepositorio.pas',
   inLibCajaVentanasIntf in 'src\Caja\Lib\inLibCajaVentanasIntf.pas',
   inLibCajaDatosFactura in 'src\Caja\Lib\inLibCajaDatosFactura.pas',
   inLibCajaTipos in 'src\Caja\Lib\inLibCajaTipos.pas',
@@ -329,6 +366,8 @@ uses
     'src\Caja\Lib\inLibCajaRectificacion.pas',
   inLibCajaOpeComposicion in
     'src\Caja\Lib\inLibCajaOpeComposicion.pas',
+  inLibCajaEntradaIntf in 'src\Caja\Lib\inLibCajaEntradaIntf.pas',
+  inLibCajaEntrada in 'src\Caja\Lib\inLibCajaEntrada.pas',
   inLibCajaCierreVenta in 'src\Caja\Lib\inLibCajaCierreVenta.pas',
   inLibCriptoCurr in 'src\Lib\inLibCriptoCurr.pas',
   inLibJsonSeguro in 'src\Lib\inLibJsonSeguro.pas',
@@ -359,9 +398,19 @@ uses
   inLibGenerarTicketCaja in 'src\Caja\Lib\inLibGenerarTicketCaja.pas',
   inLibTiraCajaTicket in 'src\Caja\Lib\inLibTiraCajaTicket.pas',
   inMtoModalArqueo in 'src\Caja\Modals\inMtoModalArqueo.pas' {frmModalArqueo},
+  inLibModalArqueoPersistenciaIntf in 'src\Caja\Lib\inLibModalArqueoPersistenciaIntf.pas',
+  UniDataModalArqueoRepositorio in 'src\Caja\DataModules\UniDataModalArqueoRepositorio.pas',
   inMtoModalArqueosHistCaja in 'src\Caja\Modals\inMtoModalArqueosHistCaja.pas' {frmModalArqueosHistCaja},
   inMtoModalTiraCaja in 'src\Caja\Modals\inMtoModalTiraCaja.pas' {frmModalTiraCaja},
   inMtoModalImpArqueos in 'src\Caja\Modals\inMtoModalImpArqueos.pas' {frmPrintArqueos},
+  inLibInformesCajaPersistenciaIntf in 'src\Caja\Lib\inLibInformesCajaPersistenciaIntf.pas',
+  UniDataInformesCajaRepositorio in 'src\Caja\DataModules\UniDataInformesCajaRepositorio.pas',
+  inLibGastoCajaPersistenciaIntf in 'src\Caja\Lib\inLibGastoCajaPersistenciaIntf.pas',
+  UniDataGastoCajaRepositorio in 'src\Caja\DataModules\UniDataGastoCajaRepositorio.pas',
+  inLibEntradaCambioPersistenciaIntf in 'src\Caja\Lib\inLibEntradaCambioPersistenciaIntf.pas',
+  UniDataEntradaCambioRepositorio in 'src\Caja\DataModules\UniDataEntradaCambioRepositorio.pas',
+  inLibCajaPagosHistPersistenciaIntf in 'src\Caja\Lib\inLibCajaPagosHistPersistenciaIntf.pas',
+  UniDataCajaPagosHistRepositorio in 'src\Caja\DataModules\UniDataCajaPagosHistRepositorio.pas',
   inMtoModalImpOperaciones in 'src\Caja\Modals\inMtoModalImpOperaciones.pas' {frmPrintOperaciones},
   inMtoModalImpOperacionesVenta in 'src\Caja\Modals\inMtoModalImpOperacionesVenta.pas' {frmPrintOperacionesVenta},
   inMtoModalImpPagos in 'src\Caja\Modals\inMtoModalImpPagos.pas' {frmPrintPagos},
@@ -413,12 +462,42 @@ uses
     'src\Lib\inLibArticulosAtributosBasicos.pas',
   inLibArticulosAtributosBasicosIntf in
     'src\Lib\inLibArticulosAtributosBasicosIntf.pas',
+  inLibArticulosGuardadoIntf in
+    'src\Lib\inLibArticulosGuardadoIntf.pas',
+  inLibArticulosGuardado in
+    'src\Lib\inLibArticulosGuardado.pas',
   inLibArticulosVisibilidad in
     'src\Lib\inLibArticulosVisibilidad.pas',
   inLibStockConsultaInfo in 'src\Lib\inLibStockConsultaInfo.pas',
   inLibInventariosEntrada in 'src\Lib\inLibInventariosEntrada.pas',
+  inLibInventariosEntradaDataSet in
+    'src\Lib\inLibInventariosEntradaDataSet.pas',
+  inLibInventariosAplicacionIntf in
+    'src\Lib\inLibInventariosAplicacionIntf.pas',
+  inLibInventariosAplicacion in
+    'src\Lib\inLibInventariosAplicacion.pas',
   UniDataStockConsultaInfo in
     'src\DataModules\UniDataStockConsultaInfo.pas',
+  inLibStockConsultaPersistenciaIntf in
+    'src\Lib\inLibStockConsultaPersistenciaIntf.pas',
+  inLibStockConsultaEntradaIntf in
+    'src\Lib\inLibStockConsultaEntradaIntf.pas',
+  inLibStockConsultaEntrada in
+    'src\Lib\inLibStockConsultaEntrada.pas',
+  UniDataStockConsultaRepositorio in
+    'src\DataModules\UniDataStockConsultaRepositorio.pas',
+  inLibImpresionPersistenciaIntf in
+    'src\Lib\inLibImpresionPersistenciaIntf.pas',
+  UniDataImpresionGuiasEnriquecedor in
+    'src\DataModules\UniDataImpresionGuiasEnriquecedor.pas',
+  UniDataImpresionRepositorio in
+    'src\DataModules\UniDataImpresionRepositorio.pas',
+  UniDataInformesGuiasRepositorio in
+    'src\DataModules\UniDataInformesGuiasRepositorio.pas',
+  inLibAppParamPersistenciaIntf in
+    'src\Lib\inLibAppParamPersistenciaIntf.pas',
+  UniDataAppParamRepositorio in
+    'src\DataModules\UniDataAppParamRepositorio.pas',
   inLibArticulosVariacionesIntf in
     'src\Lib\inLibArticulosVariacionesIntf.pas',
   UniDataArticulosVariaciones in
@@ -441,6 +520,96 @@ uses
   inLibGenerarTicketIntf in 'src\Lib\inLibGenerarTicketIntf.pas',
   UniDataGenerarTicketRepositorio in
     'src\DataModules\UniDataGenerarTicketRepositorio.pas',
+  inLibBusquedaDatosPersistenciaIntf in
+    'src\Lib\inLibBusquedaDatosPersistenciaIntf.pas',
+  UniDataBusquedaDatosRepositorio in
+    'src\DataModules\UniDataBusquedaDatosRepositorio.pas',
+  inLibGeneracionSkusPersistenciaIntf in
+    'src\Lib\inLibGeneracionSkusPersistenciaIntf.pas',
+  UniDataGeneracionSkusRepositorio in
+    'src\DataModules\UniDataGeneracionSkusRepositorio.pas',
+  inLibDistribuidorPersistenciaIntf in
+    'src\Lib\inLibDistribuidorPersistenciaIntf.pas',
+  UniDataDistribuidorRepositorio in
+    'src\DataModules\UniDataDistribuidorRepositorio.pas',
+  inLibMargenPersistenciaIntf in
+    'src\Lib\inLibMargenPersistenciaIntf.pas',
+  UniDataMargenRepositorio in
+    'src\DataModules\UniDataMargenRepositorio.pas',
+  inLibDestinosFiltrosPersistenciaIntf in
+    'src\Lib\inLibDestinosFiltrosPersistenciaIntf.pas',
+  UniDataDestinosFiltrosRepositorio in
+    'src\DataModules\UniDataDestinosFiltrosRepositorio.pas',
+  inLibFiltroArticulosPersistenciaIntf in
+    'src\Lib\inLibFiltroArticulosPersistenciaIntf.pas',
+  UniDataFiltroArticulosRepositorio in
+    'src\DataModules\UniDataFiltroArticulosRepositorio.pas',
+  inLibGuiasPersistenciaIntf in
+    'src\Lib\inLibGuiasPersistenciaIntf.pas',
+  UniDataGuiasRepositorio in
+    'src\DataModules\UniDataGuiasRepositorio.pas',
+  inLibDestinoEnvioPersistenciaIntf in
+    'src\Lib\inLibDestinoEnvioPersistenciaIntf.pas',
+  UniDataDestinoEnvioRepositorio in
+    'src\DataModules\UniDataDestinoEnvioRepositorio.pas',
+  inLibSeleccionFamiliaPersistenciaIntf in
+    'src\Lib\inLibSeleccionFamiliaPersistenciaIntf.pas',
+  UniDataSeleccionFamiliaRepositorio in
+    'src\DataModules\UniDataSeleccionFamiliaRepositorio.pas',
+  inLibSerieFechaFacturaPersistenciaIntf in
+    'src\Lib\inLibSerieFechaFacturaPersistenciaIntf.pas',
+  UniDataSerieFechaFacturaRepositorio in
+    'src\DataModules\UniDataSerieFechaFacturaRepositorio.pas',
+  inLibSeleccionAlmacenPersistenciaIntf in
+    'src\Lib\inLibSeleccionAlmacenPersistenciaIntf.pas',
+  UniDataSeleccionAlmacenRepositorio in
+    'src\DataModules\UniDataSeleccionAlmacenRepositorio.pas',
+  inLibFacturacionAlbaranesFechasPersistenciaIntf in
+    'src\Lib\inLibFacturacionAlbaranesFechasPersistenciaIntf.pas',
+  UniDataFacturacionAlbaranesFechasRepositorio in
+    'src\DataModules\UniDataFacturacionAlbaranesFechasRepositorio.pas',
+  inLibFacturacionAlbaranesCompraPersistenciaIntf in
+    'src\Lib\inLibFacturacionAlbaranesCompraPersistenciaIntf.pas',
+  UniDataFacturacionAlbaranesCompraRepositorio in
+    'src\DataModules\UniDataFacturacionAlbaranesCompraRepositorio.pas',
+  inLibCargaEfectosRemesaPersistenciaIntf in
+    'src\Lib\inLibCargaEfectosRemesaPersistenciaIntf.pas',
+  UniDataCargaEfectosRemesaRepositorio in
+    'src\DataModules\UniDataCargaEfectosRemesaRepositorio.pas',
+  inLibConsultaFacturasOperacionesPersistenciaIntf in
+    'src\Lib\inLibConsultaFacturasOperacionesPersistenciaIntf.pas',
+  UniDataConsultaFacturasOperacionesRepositorio in
+    'src\DataModules\UniDataConsultaFacturasOperacionesRepositorio.pas',
+  inLibSeriesEmpresaPersistenciaIntf in
+    'src\Lib\inLibSeriesEmpresaPersistenciaIntf.pas',
+  UniDataSeriesEmpresaRepositorio in
+    'src\DataModules\UniDataSeriesEmpresaRepositorio.pas',
+  inLibEntradaAlbaranVentaPersistenciaIntf in
+    'src\Lib\inLibEntradaAlbaranVentaPersistenciaIntf.pas',
+  UniDataEntradaAlbaranVentaRepositorio in
+    'src\DataModules\UniDataEntradaAlbaranVentaRepositorio.pas',
+  inLibClientesPersistenciaIntf in
+    'src\Lib\inLibClientesPersistenciaIntf.pas',
+  UniDataClientesRepositorio in
+    'src\DataModules\UniDataClientesRepositorio.pas',
+  inLibSeleccionBancoEmpresaPersistenciaIntf in
+    'src\Lib\inLibSeleccionBancoEmpresaPersistenciaIntf.pas',
+  UniDataSeleccionBancoEmpresaRepositorio in
+    'src\DataModules\UniDataSeleccionBancoEmpresaRepositorio.pas',
+  inLibOperacionesCajaSkuPersistenciaIntf in
+    'src\Lib\inLibOperacionesCajaSkuPersistenciaIntf.pas',
+  UniDataOperacionesCajaSkuRepositorio in
+    'src\DataModules\UniDataOperacionesCajaSkuRepositorio.pas',
+  inLibListadoVentasPersistenciaIntf in
+    'src\Lib\inLibListadoVentasPersistenciaIntf.pas',
+  UniDataListadoVentasRepositorio in
+    'src\DataModules\UniDataListadoVentasRepositorio.pas',
+  inLibFacturacionTicketPersistenciaIntf in
+    'src\Lib\inLibFacturacionTicketPersistenciaIntf.pas',
+  UniDataFacturacionTicketRepositorio in
+    'src\DataModules\UniDataFacturacionTicketRepositorio.pas',
+  UniDataCargaMasivaArticulosRepositorio in
+    'src\DataModules\UniDataCargaMasivaArticulosRepositorio.pas',
   inLibGenerarTicketBD in 'src\Lib\inLibGenerarTicketBD.pas',
   inLibCorreoTickets in 'src\Lib\inLibCorreoTickets.pas',
   inLibFactuzamApi in 'src\Lib\inLibFactuzamApi.pas',
@@ -515,6 +684,8 @@ uses
   inLibVentasCalendario in 'src\Lib\inLibVentasCalendario.pas',
   inLibLayoutForm in 'src\Lib\inLibLayoutForm.pas',
   inMtoInventarios in 'src\Forms\inMtoInventarios.pas' {frmMtoInventarios},
+  inMtoInventariosEntradaVcl in
+    'src\Forms\inMtoInventariosEntradaVcl.pas',
   UniDataInventarios in 'src\DataModules\UniDataInventarios.pas' {dmInventarios: TDataModule},
   inMtoAtributosConjuntos in 'src\Forms\inMtoAtributosConjuntos.pas' {frmMtoAtributosConjuntos},
   UniDataAtributosConjuntos in 'src\DataModules\UniDataAtributosConjuntos.pas' {dmAtributosConjuntos: TDataModule},
@@ -611,6 +782,8 @@ uses
   inMtoModalFacturarAlbaranesFechas in 'src\Modals\inMtoModalFacturarAlbaranesFechas.pas' {frmModalFacturarAlbaranesFechas},
   inMtoCajaOperacionesHist in 'src\Caja\Forms\inMtoCajaOperacionesHist.pas' {frmMtoCajaOperacionesHist},
   UniDataCajaOperacionesHist in 'src\Caja\DataModules\UniDataCajaOperacionesHist.pas' {dmCajaOperacionesHist: TDataModule},
+  inLibCajaOperacionesHistPersistenciaIntf in 'src\Caja\Lib\inLibCajaOperacionesHistPersistenciaIntf.pas',
+  UniDataCajaOperacionesHistRepositorio in 'src\Caja\DataModules\UniDataCajaOperacionesHistRepositorio.pas',
   inMtoCajaArqueosHist in 'src\Caja\Forms\inMtoCajaArqueosHist.pas' {frmMtoCajaArqueosHist},
   UniDataCajaArqueosHist in 'src\Caja\DataModules\UniDataCajaArqueosHist.pas' {dmCajaArqueosHist: TDataModule},
   inMtoCajaPagosHist in 'src\Caja\Forms\inMtoCajaPagosHist.pas' {frmMtoCajaPagosHist},
@@ -633,6 +806,36 @@ uses
     'src\Lib\inLibOperacionesAplicacionIntf.pas',
   inLibCoordinadorOperacionesAplicacion in
     'src\Lib\inLibCoordinadorOperacionesAplicacion.pas',
+  UniDataCopiasSeguridad in
+    'src\DataModules\UniDataCopiasSeguridad.pas',
+  inMtoRestauracionCopiasVcl in
+    'src\Core\inMtoRestauracionCopiasVcl.pas',
+  inLibRestauracionCopiasConexionIntf in
+    'src\Lib\inLibRestauracionCopiasConexionIntf.pas',
+  inLibRestauracionCopiasConexion in
+    'src\Lib\inLibRestauracionCopiasConexion.pas',
+  UniDataRestauracionCopiasConexion in
+    'src\DataModules\UniDataRestauracionCopiasConexion.pas',
+  inMtoLogonRestauracionVcl in
+    'src\Core\inMtoLogonRestauracionVcl.pas',
+  inLibFusionEfectosIntf in
+    'src\Lib\inLibFusionEfectosIntf.pas',
+  inLibFusionEfectos in
+    'src\Lib\inLibFusionEfectos.pas',
+  UniDataFusionEfectos in
+    'src\DataModules\UniDataFusionEfectos.pas',
+  inMtoFusionEfectosVcl in
+    'src\Forms\inMtoFusionEfectosVcl.pas',
+  inLibImportacionPedidosIntf in
+    'src\Lib\inLibImportacionPedidosIntf.pas',
+  inLibImportacionPedidos in
+    'src\Lib\inLibImportacionPedidos.pas',
+  inLibPrestaShopPedidosAdaptador in
+    'src\Lib\inLibPrestaShopPedidosAdaptador.pas',
+  UniDataImportacionPedidos in
+    'src\DataModules\UniDataImportacionPedidos.pas',
+  inMtoImportacionPedidosVcl in
+    'src\Modals\inMtoImportacionPedidosVcl.pas',
   UniDataComprasSesiones in 'src\DataModules\UniDataComprasSesiones.pas' {dmComprasSesiones: TdmComprasSesiones},
   UniDataComprasSesionesRepositorio in
     'src\DataModules\UniDataComprasSesionesRepositorio.pas',
@@ -672,6 +875,12 @@ uses
   inLibComprasSesionesIntf in 'src\Lib\inLibComprasSesionesIntf.pas',
   inLibComprasSesionesCreacion in
     'src\Lib\inLibComprasSesionesCreacion.pas',
+  inLibComprasSesionesCreacionDataSet in
+    'src\Lib\inLibComprasSesionesCreacionDataSet.pas',
+  inLibComprasSesionesAplicacionIntf in
+    'src\Lib\inLibComprasSesionesAplicacionIntf.pas',
+  inLibComprasSesionesAplicacion in
+    'src\Lib\inLibComprasSesionesAplicacion.pas',
   inLibComprasSesionesMaterializacionIntf in
     'src\Lib\inLibComprasSesionesMaterializacionIntf.pas',
   inLibComprasSesionesLecturasIntf in
@@ -719,6 +928,10 @@ uses
     'src\Lib\inLibArticulosAtributosIntf.pas',
   UniDataArticulosAtributosRepositorio in
     'src\DataModules\UniDataArticulosAtributosRepositorio.pas',
+  inLibArticulosPropiedadesPersistenciaIntf in
+    'src\Lib\inLibArticulosPropiedadesPersistenciaIntf.pas',
+  UniDataArticulosPropiedadesRepositorio in
+    'src\DataModules\UniDataArticulosPropiedadesRepositorio.pas',
   UniDataArticulosAtributosBasicosRepositorio in
     'src\DataModules\UniDataArticulosAtributosBasicosRepositorio.pas',
   inLibAtributosPaleta in 'src\Lib\inLibAtributosPaleta.pas',
@@ -752,12 +965,16 @@ uses
   inLibFotosNube in 'src\Lib\inLibFotosNube.pas',
   inMtoFotoArticulo in 'src\Forms\inMtoFotoArticulo.pas' {frmFotoArticulo},
   inMtoStockConsulta in 'src\Forms\inMtoStockConsulta.pas' {frmStockConsulta},
+  inMtoStockConsultaEntradaVcl in
+    'src\Forms\inMtoStockConsultaEntradaVcl.pas',
   inMtoModalOperacionesCajaSku in
     'src\Modals\inMtoModalOperacionesCajaSku.pas'
     {frmModalOperacionesCajaSku},
   inMtoModalFotoArticulo in 'src\Modals\inMtoModalFotoArticulo.pas',
   inMtoModalFiltroArt in 'src\Modals\inMtoModalFiltroArt.pas',
   inMtoComprasSesiones in 'src\Forms\inMtoComprasSesiones.pas' {frmMtoComprasSesiones},
+  inMtoComprasSesionesMaterializacionVcl in
+    'src\Forms\inMtoComprasSesionesMaterializacionVcl.pas',
   UniDataTarifasCambios in 'src\DataModules\UniDataTarifasCambios.pas' {dmTarifasCambios: TdmTarifasCambios},
   inMtoModalCargarSesionTarifa in 'src\Modals\inMtoModalCargarSesionTarifa.pas' {frmModalCargarSesionTarifa},
   inMtoTarifasCambios in 'src\Forms\inMtoTarifasCambios.pas' {frmMtoTarifasCambios};
@@ -766,6 +983,7 @@ uses
 {$R fondo.res}
 
 function CrearContextoSesionInicial(
+  const ARegistroLog: IRegistroLog;
   out AContextoSesion: IContextoSesionAplicacion;
   out AResultadoLicencia: TResultadoLicenciaAplicacion): Boolean;
 var
@@ -778,6 +996,7 @@ begin
   AResultadoLicencia :=
     TResultadoLicenciaAplicacion.CrearNoComprobada;
   frmLogon := TfrmLogon.Create(Application);
+  frmLogon.AsignarRegistroLog(ARegistroLog);
   try
     if not frmLogon.DebeCerrarAplicacion then
     begin
@@ -809,6 +1028,7 @@ begin
   var ContextoSesionInicial: IContextoSesionAplicacion;
   var GestorContextoCierre: IGestorContextoSesion;
   var Principal: TfrmMtoPrincipal;
+  var RegistroLogAplicacion: IRegistroLog;
   var ResultadoLicenciaInicial: TResultadoLicenciaAplicacion;
 //  {$IFDEF DEBUG}
 //      ReportMemoryLeaksOnShutdown := True;
@@ -827,7 +1047,9 @@ begin
   ConfigurarLecturasAtributosPaleta(LecturasAtributosPaleta);
   Application.MainFormOnTaskbar := True;
   Application.Title := 'Fzam';
+  RegistroLogAplicacion := CrearRegistroLog;
   if CrearContextoSesionInicial(
+    RegistroLogAplicacion,
     ContextoSesionInicial,
     ResultadoLicenciaInicial) then
   begin
@@ -837,6 +1059,7 @@ begin
     Screen.MenuFont.Name := 'Lucida Sans';
     Screen.MenuFont.Size := 11;
     Application.CreateForm(TfrmMtoPrincipal, Principal);
+    Principal.AsignarRegistroLog(RegistroLogAplicacion);
     Principal.AsignarServiciosVisuales(
       CrearBusquedaVisualMto,
       CrearDistribuidorTallasVisualMto,
@@ -870,7 +1093,8 @@ begin
     // workers) y el exe se queda en memoria sin ventanas (visto 14/07/26).
     // Se cierra el log de forma explicita (su finalization ya no correra)
     // y se termina el proceso sin ejecutar las finalizaciones restantes.
-    inLibLog.Log.LogInfo('Salida del proceso');
+    RegistroLogAplicacion.RegistrarInformacion('Salida del proceso');
+    RegistroLogAplicacion := nil;
     inLibLog.LiberarLog;
     ExitProcess(0);
   end;

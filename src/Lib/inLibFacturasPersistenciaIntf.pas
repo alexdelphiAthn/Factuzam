@@ -16,6 +16,9 @@ unit inLibFacturasPersistenciaIntf;
 
 interface
 
+uses
+  System.SysUtils;
+
 type
   TDatosFacturaReapertura = record
     Encontrada: Boolean;
@@ -126,7 +129,12 @@ type
       const ASerie, ANumero, ARutaPdf, AFormato,
         AUsuario: string): Boolean;
   end;
+  IUnidadTrabajoFacturas = interface
+    ['{43061F67-7E98-46F6-8232-E0641724D60A}']
+    procedure Ejecutar(const ATrabajo: TProc);
+  end;
   TPersistenciaFacturas = record
+    UnidadTrabajo: IUnidadTrabajoFacturas;
     Borrado: IRepositorioBorradoFactura;
     Reapertura: IRepositorioReaperturaFactura;
     Consolidacion: IRepositorioConsolidacionFactura;

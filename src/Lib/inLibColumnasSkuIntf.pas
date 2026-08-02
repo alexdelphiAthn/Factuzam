@@ -31,7 +31,7 @@ uses
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
   inLibContextoSesionIntf, inLibArticulosValidadorIntf,
   inLibArticulosAtributosIntf, inLibGenBusq,
-  inLibDistribuidorTallas, inLibModoTallasIntf;
+  inLibDistribuidorTallas, inLibModoTallasIntf, inLibLogIntf;
 
 type
   IModoEntradaGrid = interface;
@@ -90,6 +90,7 @@ type
   TConfigColumnasSku = record
     Servicios: TServiciosColumnasSku;
     ContextoSesion: IContextoSesionAplicacion;
+    RegistroLog: IRegistroLog;
     ValidadorArticulos: IArticulosValidador;
     LookupAtributos: IArticulosAtributosLookup;
     BusquedaVisual: IBusquedaVisual;

@@ -19,7 +19,7 @@ interface
 uses
   SysUtils, Classes, ADODB, DBAccess, Uni, inLibUser, vcl.Controls,
   UniProvider, MySQLUniProvider, DASQLMonitor, UniSQLMonitor,
-  inLibMonitorSQLIntf, inLibParametrosIntf;
+  inLibMonitorSQLIntf, inLibParametrosIntf, inLibLogIntf;
 
 type
   TdmConn = class(TDataModule)
@@ -35,6 +35,8 @@ type
   private
     FParametrosApp: IParametrosAplicacion;
     FReceptorMonitorSQL: IReceptorEventosMonitorSQL;
+    FRegistroLog: IRegistroLog;
+    procedure HeredarRegistroLog;
   public
     destructor Destroy; override;
     procedure AsignarParametrosApp(
@@ -50,8 +52,7 @@ uses inLibDir,
      inLibConfiguracionIni,
      inLibConexionesUniDAC,
      inLibWin,
-     inLibLog,
-  inLibMsgComun, inLibMsgConfiguracion;
+  inLibMsgComun, inLibMsgConfiguracion, inLibRegistroLogNulo;
 
 {$R *.dfm}
 
@@ -77,6 +78,7 @@ begin
        ServicioMonitorSQL) then
     ServicioMonitorSQL.Invalidar;
   FReceptorMonitorSQL := nil;
+  FRegistroLog := nil;
   FParametrosApp := nil;
   inherited;
 end;
@@ -141,7 +143,7 @@ begin
   except
     on E: Exception do
       {$IFDEF DEBUG}
-      inLibLog.Log.LogWarning(
+      FRegistroLog.RegistrarAviso(
         Format(SAvisoColacionSesion, [E.Message]));
       {$ENDIF}
   end;
@@ -154,7 +156,7 @@ begin
     // Si falla (por permisos), no bloqueamos la app, pero queda registrado.
     on E: Exception do
       {$IFDEF DEBUG}
-      inLibLog.Log.LogWarning(
+      FRegistroLog.RegistrarAviso(
         Format(SAvisoTimeoutServidor, [E.Message]));
       {$ENDIF}
   end;
@@ -208,17 +210,30 @@ begin
                                     [E.ErrorCode, E.Message]);
   end;
   // Guardamos en el log siempre el error real
-  inLibLog.Log.LogError(Format('MySQL %d: %s', [E.ErrorCode, E.Message]));
+  FRegistroLog.RegistrarError(
+    Format('MySQL %d: %s', [E.ErrorCode, E.Message]));
   Fail := False;
   raise Exception.Create(sMensaje);
 end;
 
 procedure TdmConn.DataModuleCreate(Sender: TObject);
 begin
+  HeredarRegistroLog;
   // El monitor se queda activo siempre; el filtrado real lo hace TLog
   // segun IsLogTypeEnabled(ltSQL). El estado del monitor lo reajusta
-  // inLibLog.AplicarModosDepuracion cuando se cargan/cambian los flags.
+  // IRegistroLog reajusta el modo al cargar o cambiar los parámetros.
   UniSQLMonitor1.Active := True;
+end;
+
+procedure TdmConn.HeredarRegistroLog;
+var
+  Proveedor: IProveedorRegistroLog;
+begin
+  FRegistroLog := nil;
+  if Supports(Owner, IProveedorRegistroLog, Proveedor) then
+    FRegistroLog := Proveedor.RegistroLog;
+  if not Assigned(FRegistroLog) then
+    FRegistroLog := CrearRegistroLogNulo;
 end;
 
 procedure TdmConn.UniSQLMonitor1SQL(Sender: TObject; Text: string;

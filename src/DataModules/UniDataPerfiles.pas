@@ -20,7 +20,7 @@ uses
   System.SysUtils, System.Generics.Collections,
   Classes, DB, MemDS, inLibUser,
   DBAccess, Uni, inLibAuditoriaDatosIntf, inLibConexionesIntf,
-  inLibContextoSesionIntf, inLibPerfilesUsuarioIntf;
+  inLibContextoSesionIntf, inLibPerfilesUsuarioIntf, inLibLogIntf;
 
 type
   TdmPerfiles = class(
@@ -43,6 +43,7 @@ type
     FAuditoriaDatos: IServicioAuditoriaDatos;
     FConexiones: IServicioConexiones;
     FContextoSesion: IContextoSesionAplicacion;
+    FRegistroLog: IRegistroLog;
     function ClonarPerfilDicc(AOrigen: TProfileDicc): TProfileDicc;
     function CargarPerfilFormDesdeDB(const AFormName: string): TProfileDicc;
     function GetAuditoriaDatos: IServicioAuditoriaDatos;
@@ -53,6 +54,7 @@ type
     procedure HeredarAuditoriaDatos(AOwner: TComponent);
     procedure HeredarConexiones(AOwner: TComponent);
     procedure HeredarContextoSesion(AOwner: TComponent);
+    procedure HeredarRegistroLog(AOwner: TComponent);
     procedure ActualizarAuditoria(DataSet: TDataSet);
     function ObtenerPerfilFormCache(
       const AFormName: string;
@@ -100,7 +102,7 @@ type
 implementation
 
 uses
-  Vcl.Forms, inLibLog, System.SysConst, inLibMsgComun;
+  Vcl.Forms, System.SysConst, inLibMsgComun, inLibRegistroLogNulo;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -111,7 +113,27 @@ begin
   HeredarAuditoriaDatos(AOwner);
   HeredarConexiones(AOwner);
   HeredarContextoSesion(AOwner);
+  HeredarRegistroLog(AOwner);
   inherited Create(AOwner);
+end;
+
+procedure TdmPerfiles.HeredarRegistroLog(AOwner: TComponent);
+var
+  Proveedor: IProveedorRegistroLog;
+begin
+  FRegistroLog := nil;
+  if Supports(AOwner, IProveedorRegistroLog, Proveedor) then
+    FRegistroLog := Proveedor.RegistroLog;
+  if not Assigned(FRegistroLog) and
+     Assigned(Application.MainForm) and
+     (Application.MainForm <> AOwner) and
+     Supports(
+       Application.MainForm,
+       IProveedorRegistroLog,
+       Proveedor) then
+    FRegistroLog := Proveedor.RegistroLog;
+  if not Assigned(FRegistroLog) then
+    FRegistroLog := CrearRegistroLogNulo;
 end;
 
 procedure TdmPerfiles.HeredarAuditoriaDatos(AOwner: TComponent);
@@ -292,7 +314,7 @@ begin
   IdentidadActual := IdentidadSesion;
   if AConn = nil then
     AConn := ConexionPrincipal;
-  Log.LogInfo(Format('PrecargarPerfilesUsuario: INICIO ' +
+  FRegistroLog.RegistrarInformacion(Format('PrecargarPerfilesUsuario: INICIO ' +
                      'usuario="%s" grupo="%s" todos="%s" ' +
                      'connAssigned=%s connConnected=%s',
                      [IdentidadActual.Usuario, IdentidadActual.Grupo,
@@ -303,7 +325,8 @@ begin
   FCachePrecargada := False;
   if (AConn = nil) or (not AConn.Connected) then
   begin
-    Log.LogWarning('PrecargarPerfilesUsuario: ABORTADA, conexion no disponible. ' +
+    FRegistroLog.RegistrarAviso(
+      'PrecargarPerfilesUsuario: ABORTADA, conexion no disponible. ' +
                    'FCachePrecargada queda False');
     Exit;
   end;
@@ -346,12 +369,13 @@ begin
     end;
     FCachePrecargada := True;
     iForms := FCachePerfilesForm.Count;
-    Log.LogInfo(Format('PrecargarPerfilesUsuario: OK ' +
+    FRegistroLog.RegistrarInformacion(Format('PrecargarPerfilesUsuario: OK ' +
                        'filas=%d forms_distintos=%d FCachePrecargada=True',
                        [iFilas, iForms]));
     // Listar los forms cacheados para saber exactamente qué se precargó
     for sKeyForm in FCachePerfilesForm.Keys do
-      Log.LogInfo(Format('PrecargarPerfilesUsuario: cache form="%s" claves=%d',
+      FRegistroLog.RegistrarInformacion(
+        Format('PrecargarPerfilesUsuario: cache form="%s" claves=%d',
                          [sKeyForm, FCachePerfilesForm[sKeyForm].Count]));
   except
     // Si la precarga falla, dejamos FCachePrecargada=False para que los
@@ -360,7 +384,8 @@ begin
     on E: Exception do
     begin
       FCachePerfilesForm.Clear;
-      Log.LogError(Format('PrecargarPerfilesUsuario: EXCEPCION %s: %s ' +
+      FRegistroLog.RegistrarError(
+        Format('PrecargarPerfilesUsuario: EXCEPCION %s: %s ' +
                           'filas_leidas_antes_fallo=%d. ' +
                           'FCachePrecargada queda False, cache vacio',
                           [E.ClassName, E.Message, iFilas]));
@@ -377,7 +402,8 @@ begin
   Result := False;
   if not FCachePrecargada then
   begin
-    Log.LogWarning(Format('ObtenerPerfilFormCache: form="%s" cache NO precargado ' +
+    FRegistroLog.RegistrarAviso(
+      Format('ObtenerPerfilFormCache: form="%s" cache NO precargado ' +
                           '(FCachePrecargada=False), devuelve False', [AFormName]));
     Exit;
   end;
@@ -387,13 +413,15 @@ begin
   if FCachePerfilesForm.TryGetValue(AFormName, Cached) then
   begin
     APerfilDic := ClonarPerfilDicc(Cached);
-    Log.LogInfo(Format('ObtenerPerfilFormCache: form="%s" HIT claves=%d',
+    FRegistroLog.RegistrarInformacion(
+      Format('ObtenerPerfilFormCache: form="%s" HIT claves=%d',
                        [AFormName, Cached.Count]));
   end
   else
   begin
     APerfilDic := TProfileDicc.Create;
-    Log.LogWarning(Format('ObtenerPerfilFormCache: form="%s" MISS ' +
+    FRegistroLog.RegistrarAviso(
+      Format('ObtenerPerfilFormCache: form="%s" MISS ' +
                           '(precargado pero sin entrada), devuelve dicc vacio ' +
                           'con Result=True', [AFormName]));
   end;
@@ -460,7 +488,8 @@ var
 begin
   if not FCachePrecargada then
   begin
-    Log.LogWarning(Format('ResincronizarCachePerfilForm: form="%s" ' +
+    FRegistroLog.RegistrarAviso(
+      Format('ResincronizarCachePerfilForm: form="%s" ' +
                           'cache no precargado, ignorado', [AFormulario]));
     Exit;
   end;
@@ -468,21 +497,24 @@ begin
   if Nuevo.Count > 0 then
   begin
     FCachePerfilesForm.AddOrSetValue(AFormulario, Nuevo);
-    Log.LogInfo(Format('ResincronizarCachePerfilForm: form="%s" actualizado ' +
+    FRegistroLog.RegistrarInformacion(
+      Format('ResincronizarCachePerfilForm: form="%s" actualizado ' +
                        'claves=%d', [AFormulario, Nuevo.Count]));
   end
   else
   begin
     FreeAndNil(Nuevo);
     FCachePerfilesForm.Remove(AFormulario);
-    Log.LogInfo(Format('ResincronizarCachePerfilForm: form="%s" sin filas, ' +
+    FRegistroLog.RegistrarInformacion(
+      Format('ResincronizarCachePerfilForm: form="%s" sin filas, ' +
                        'eliminado del cache', [AFormulario]));
   end;
 end;
 
 procedure TdmPerfiles.InvalidarCachePerfiles;
 begin
-  Log.LogInfo('InvalidarCachePerfiles: limpio cache y marco no precargado');
+  FRegistroLog.RegistrarInformacion(
+    'InvalidarCachePerfiles: limpio cache y marco no precargado');
   FCachePerfilesForm.Clear;
   FCachePrecargada := False;
 end;

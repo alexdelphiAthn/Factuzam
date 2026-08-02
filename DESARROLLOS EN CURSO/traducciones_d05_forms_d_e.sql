@@ -953,9 +953,41 @@ INSERT INTO `fza_traducciones` (
    'Albarán de venta (mayor)...',
    'src/Forms/inMtoDocumentosTrabajo.dfm',
    'S', CURRENT_TIMESTAMP, 'Sistema'),
+  (CONCAT(
+     'inMtoDocumentosTrabajo.TfrmMtoDocumentosTrabajo.',
+     'miEnviarFacturaVentaDTR.Caption'
+   ),
+   'es-ES',
+   'Factura de venta (mayor)...',
+   'src/Forms/inMtoDocumentosTrabajo.dfm',
+   'S', CURRENT_TIMESTAMP, 'Sistema'),
   ('inMtoDocumentosTrabajo.TfrmMtoDocumentosTrabajo.miEnviarTpvDTR.Caption',
    'es-ES',
    'Venta TPV',
+   'src/Forms/inMtoDocumentosTrabajo.dfm',
+   'S', CURRENT_TIMESTAMP, 'Sistema'),
+  (CONCAT(
+     'inMtoDocumentosTrabajo.TfrmMtoDocumentosTrabajo.',
+     'miEnviarPedidoCompraDTR.Caption'
+   ),
+   'es-ES',
+   'Pedido de compra...',
+   'src/Forms/inMtoDocumentosTrabajo.dfm',
+   'S', CURRENT_TIMESTAMP, 'Sistema'),
+  (CONCAT(
+     'inMtoDocumentosTrabajo.TfrmMtoDocumentosTrabajo.',
+     'miEnviarTraspasoCajaDTR.Caption'
+   ),
+   'es-ES',
+   'Traspaso de caja...',
+   'src/Forms/inMtoDocumentosTrabajo.dfm',
+   'S', CURRENT_TIMESTAMP, 'Sistema'),
+  (CONCAT(
+     'inMtoDocumentosTrabajo.TfrmMtoDocumentosTrabajo.',
+     'miEnviarPeticionTraspasoDTR.Caption'
+   ),
+   'es-ES',
+   'Petición de traspaso...',
    'src/Forms/inMtoDocumentosTrabajo.dfm',
    'S', CURRENT_TIMESTAMP, 'Sistema'),
   (CONCAT(

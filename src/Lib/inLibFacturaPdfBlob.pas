@@ -19,7 +19,7 @@ interface
 
 uses
   System.SysUtils, inLibContextoSesionIntf,
-  inLibFacturasPersistenciaIntf;
+  inLibFacturasPersistenciaIntf, inLibLogIntf;
 
 /// <summary>
 /// Vuelca el PDF de ARutaPdf en fza_facturas (PDF_FAC, NOMBRE_PDF_FAC,
@@ -34,23 +34,29 @@ procedure GuardarPdfFacturaEnBlob(
                                   const AContextoSesion:
                                   IContextoSesionAplicacion;
                                   const ASerie, ANumero, ARutaPdf: string;
-                                  const AFormato: string = '');
+                                  const AFormato: string = '';
+                                  const ARegistroLog: IRegistroLog = nil);
 
 implementation
 
 uses
-  System.IOUtils, inLibLog;
+  System.IOUtils, inLibRegistroLogNulo;
 
 procedure GuardarPdfFacturaEnBlob(
                                   const ARepositorio: IRepositorioPdfFactura;
                                   const AContextoSesion:
                                   IContextoSesionAplicacion;
                                   const ASerie, ANumero, ARutaPdf: string;
-                                  const AFormato: string = '');
+                                  const AFormato: string;
+                                  const ARegistroLog: IRegistroLog);
 var
   iTamano:  Int64;
   sFormato: string;
+  RegistroLog: IRegistroLog;
 begin
+  RegistroLog := ARegistroLog;
+  if not Assigned(RegistroLog) then
+    RegistroLog := CrearRegistroLogNulo;
   if FileExists(ARutaPdf) then
   begin
     sFormato := Trim(AFormato);
@@ -64,14 +70,16 @@ begin
            ARutaPdf,
            sFormato,
            AContextoSesion.Identidad.Usuario) then
-        Log.LogInfo('PDF de la factura ' + ASerie + '\' + ANumero +
+        RegistroLog.RegistrarInformacion(
+          'PDF de la factura ' + ASerie + '\' + ANumero +
           ' archivado en fza_facturas (' + IntToStr(iTamano) + ' bytes)')
       else
-        Log.LogError('PDF de ' + ASerie + '\' + ANumero +
+        RegistroLog.RegistrarError('PDF de ' + ASerie + '\' + ANumero +
           ' no archivado: la factura no existe en fza_facturas');
     except
       on E: Exception do
-        Log.LogError('No se pudo archivar el PDF de ' + ASerie + '\' +
+        RegistroLog.RegistrarError(
+          'No se pudo archivar el PDF de ' + ASerie + '\' +
           ANumero + ' en fza_facturas: ' + E.Message);
     end;
   end;

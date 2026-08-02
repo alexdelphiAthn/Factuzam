@@ -17,10 +17,11 @@ unit inLibFacturaExcel;
 interface
 
 uses
-  Uni, DB, dxSpreadSheet, inLibParametrosIntf;
+  Uni, DB, dxSpreadSheet, inLibParametrosIntf, inLibLogIntf;
 
 procedure ExportarFacturaADevExpress(
   const AParametrosApp: IParametrosAplicacion;
+  const ARegistroLog: IRegistroLog;
   AConexion: TUniConnection;
   ASheetControl: TdxSpreadSheet; const QMaster, QLineas: TDataSet);
 
@@ -33,7 +34,7 @@ uses
   dxSpreadSheetCore, dxSpreadSheetTypes, dxSpreadSheetGraphics,
   dxCoreGraphics, dxShellDialogs, dxSpreadSheetStyles,
   dxSpreadSheetContainers, dxHashUtils, dxGDIPlusClasses, dxSmartImage,
-  inLibDevExcel, inLibVerifactu, inLibFormatoDocumento, inLibLog;
+  inLibDevExcel, inLibVerifactu, inLibFormatoDocumento;
 
 const
   COL_DESC = 0;
@@ -49,6 +50,7 @@ type
   TExportadorFacturaDevExpress = class
   private
     FParametrosApp: IParametrosAplicacion;
+    FRegistroLog: IRegistroLog;
     FConexion: TUniConnection;
     FControl: TdxSpreadSheet;
     FMaster: TDataSet;
@@ -86,17 +88,21 @@ type
     procedure ConfigurarColumnas;
   public
     constructor Create(const AParametrosApp: IParametrosAplicacion;
+      const ARegistroLog: IRegistroLog;
       AConexion: TUniConnection; AControl: TdxSpreadSheet;
       const AMaster, ALineas: TDataSet);
     procedure Ejecutar;
   end;
 
 constructor TExportadorFacturaDevExpress.Create(
-  const AParametrosApp: IParametrosAplicacion; AConexion: TUniConnection;
+  const AParametrosApp: IParametrosAplicacion;
+  const ARegistroLog: IRegistroLog;
+  AConexion: TUniConnection;
   AControl: TdxSpreadSheet; const AMaster, ALineas: TDataSet);
 begin
   inherited Create;
   FParametrosApp := AParametrosApp;
+  FRegistroLog := ARegistroLog;
   FConexion := AConexion;
   FControl := AControl;
   FMaster := AMaster;
@@ -225,7 +231,7 @@ begin
       except
         // El QR opcional no impide exportar la factura.
         on E: Exception do
-          inLibLog.Log.LogWarning(
+          FRegistroLog.RegistrarAviso(
             'FacturaExcel: QR Verifactu omitido: ' + E.Message);
       end;
     end;
@@ -563,13 +569,19 @@ end;
 
 procedure ExportarFacturaADevExpress(
   const AParametrosApp: IParametrosAplicacion;
+  const ARegistroLog: IRegistroLog;
   AConexion: TUniConnection;
   ASheetControl: TdxSpreadSheet; const QMaster, QLineas: TDataSet);
 var
   oExportador: TExportadorFacturaDevExpress;
 begin
   oExportador := TExportadorFacturaDevExpress.Create(
-    AParametrosApp, AConexion, ASheetControl, QMaster, QLineas);
+    AParametrosApp,
+    ARegistroLog,
+    AConexion,
+    ASheetControl,
+    QMaster,
+    QLineas);
   try
     oExportador.Ejecutar;
   finally

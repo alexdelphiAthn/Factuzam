@@ -19,7 +19,7 @@ interface
 uses
   inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
-  Uni, inLibUser, inLibLog, cxListView, Vcl.Forms,
+  Uni, inLibUser, cxListView, Vcl.Forms,
   Vcl.ComCtrls, Winapi.Windows, system.strUtils, cxGridDBTableView,
   cxCustomData, cxFilter,
   System.Variants, vcl.Controls, Datasnap.Provider, Datasnap.DBClient,
@@ -526,7 +526,7 @@ begin
       end;
     end;
   end;
-  inLibLog.Log.LogPerf('Articulos.StockAfterScroll',
+  RegistroLog.RegistrarRendimiento('Articulos.StockAfterScroll',
     Format('art=%s | SP=%d ms | RebuildItems=%d ms | Anchos=%d ms | cols=%d',
            [sArt, msSP, msRebuild, msAnchos, tvArticulosStock.ColumnCount]),
     swTotal.ElapsedMilliseconds);
@@ -690,11 +690,12 @@ const
     swQ := TStopwatch.StartNew;
     try
       qry.Open;
-      inLibLog.Log.LogPerf(TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+      RegistroLog.RegistrarRendimiento(
+        TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
     except
       on E: Exception do
       begin
-        inLibLog.Log.LogPerf(TAG,
+        RegistroLog.RegistrarRendimiento(TAG,
           Nombre + ' ERROR=' + E.Message,
           swQ.ElapsedMilliseconds);
         raise;
@@ -738,7 +739,7 @@ begin
   // QuitarEscribiblesVista necesita unqryTarifasArticulos abierto; ahora
   // que la abrimos perezosamente, esa rutina se llama desde
   // AsegurarTarifasAbiertas tras el primer Open.
-  inLibLog.Log.LogPerf(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+  RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
 procedure TdmArticulos.ReactivarControlesTrasAbrir;
@@ -758,12 +759,13 @@ begin
   try
     unqryTarifasArticulos.Open;
     QuitarEscribiblesVista;
-    inLibLog.Log.LogPerf('Articulos.Lazy', 'unqryTarifasArticulos OK',
+    RegistroLog.RegistrarRendimiento(
+      'Articulos.Lazy', 'unqryTarifasArticulos OK',
       sw.ElapsedMilliseconds);
   except
     on E: Exception do
     begin
-      inLibLog.Log.LogPerf('Articulos.Lazy',
+      RegistroLog.RegistrarRendimiento('Articulos.Lazy',
         'unqryTarifasArticulos ERROR=' + E.Message,
         sw.ElapsedMilliseconds);
       raise;
@@ -1384,8 +1386,8 @@ begin
         // BBDD sin las tablas, permisos... ignoramos: la banda saldra
         // blanca, pero la impresion sigue adelante.
         on E: Exception do
-          if Log() <> nil then
-            Log.LogWarning(
+          if RegistroLog <> nil then
+            RegistroLog.RegistrarAviso(
               'EtiquetasArt: mapa de colores HEX no disponible: ' +
               E.Message);
       end;
@@ -1465,8 +1467,9 @@ begin
           sDiag := sDiag + cdsEtiquetasArt.FieldDefs[k].Name + ':' +
                    IntToStr(Ord(cdsEtiquetasArt.FieldDefs[k].DataType)) +
                    '(' + IntToStr(cdsEtiquetasArt.FieldDefs[k].Size) + ') ';
-        if Log() <> nil then
-          Log.LogError('PoblarCdsEtiquetasArt: CreateDataSet fallo (' +
+        if RegistroLog <> nil then
+          RegistroLog.RegistrarError(
+            'PoblarCdsEtiquetasArt: CreateDataSet fallo (' +
                        E.Message + '). Esquema: ' + sDiag);
         for k := 0 to cdsEtiquetasArt.FieldDefs.Count - 1 do
         begin

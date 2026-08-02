@@ -10387,6 +10387,48 @@ begin
       SInfoAlbaranDocumentoTrabajoCreado);
   ARegistrar(
     'inLibMsgVentas.' +
+    'STituloEnviarFacturaVentaDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      STituloEnviarFacturaVentaDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorContadorFacturaVentaDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorContadorFacturaVentaDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SInfoFacturaVentaDocumentoTrabajoCreada',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SInfoFacturaVentaDocumentoTrabajoCreada);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'STituloEnviarPedidoCompraDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      STituloEnviarPedidoCompraDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorContadorPedidoCompraDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorContadorPedidoCompraDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SInfoPedidoCompraDocumentoTrabajoCreado',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SInfoPedidoCompraDocumentoTrabajoCreado);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorEmpresaDocumentoTrabajoNoExiste',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorEmpresaDocumentoTrabajoNoExiste);
+  ARegistrar(
+    'inLibMsgVentas.' +
     'SErrorVentaTpvNoAbiertaDocumentoTrabajo',
     'src/Lib/inLibMsgVentas.pas',
     @inLibMsgVentas.

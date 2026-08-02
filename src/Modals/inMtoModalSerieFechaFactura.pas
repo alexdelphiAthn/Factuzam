@@ -20,12 +20,12 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   System.Variants, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.ExtCtrls, Data.DB, MemDS, DBAccess, Uni,
+  Vcl.ExtCtrls, Data.DB,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxContainer, cxEdit, cxTextEdit, cxMaskEdit, cxDropDownEdit,
   cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox, cxCalendar, cxLabel,
   cxButtons, dxCore, cxDateUtils,
-  inMtoFrmBase;
+  inMtoFrmBase, inLibSerieFechaFacturaPersistenciaIntf;
 
 type
   TSerieFechaFacturaResult = record
@@ -42,12 +42,14 @@ type
     pnlButton:   TPanel;
     btnAceptar:  TcxButton;
     btnCancelar: TcxButton;
-    qrySeries:   TUniQuery;
     dsSeries:    TDataSource;
     procedure btnAceptarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
   private
     FResultado: TSerieFechaFacturaResult;
+    FRepositorio: IRepositorioSerieFechaFactura;
+    FConsultaSeries: IConsultaSeriesFactura;
+    FSeries: TDataSet;
   public
     class function Ejecutar(AOwner: TComponent;
                             const AEmpresa, AAlmacen: string)
@@ -57,7 +59,7 @@ type
 implementation
 
 uses
-  inLibValoresAutomaticos, inLibMsgComun;
+  inLibMsgComun;
 
 {$R *.dfm}
 
@@ -71,19 +73,27 @@ var
 begin
   frm := TfrmModalSerieFechaFactura.Create(AOwner);
   try
-    frm.qrySeries.Connection := frm.ConexionPrincipal;
-    frm.qrySeries.Open;
+    frm.FRepositorio := frm.ContextoRepositoriosPantalla.Documentos.
+      CrearRepositorioSerieFechaFactura;
+    frm.FConsultaSeries := frm.FRepositorio.ConsultarSeries;
+    frm.FSeries := frm.FConsultaSeries.DataSet;
+    frm.dsSeries.DataSet := frm.FSeries;
     // Serie por defecto: la ligada al almacén; si no tiene, la primera
     // serie FC activa (DEFAULT_CON primero)
-    sSerie := ObtenerSeriePropiaAlmacen(frm.ConexionPrincipal, AEmpresa,
-      'FC', AAlmacen);
+    sSerie := frm.FRepositorio.ObtenerSerieAlmacen(AEmpresa, AAlmacen);
     if sSerie = '' then
-      sSerie := frm.qrySeries.FieldByName('SERIE_CON').AsString;
+    begin
+      sSerie := frm.FSeries.FieldByName('SERIE_CON').AsString;
+    end;
     frm.cbbSerie.EditValue := sSerie;
     frm.dtFecha.Date := Trunc(Now);
     frm.ShowModal;
     Result := frm.FResultado;
   finally
+    frm.dsSeries.DataSet := nil;
+    frm.FSeries := nil;
+    frm.FConsultaSeries := nil;
+    frm.FRepositorio := nil;
     FreeAndNil(frm);
   end;
 end;

@@ -1,0 +1,484 @@
+﻿{******************************************************************************}
+{                                                                              }
+{  Modulo:       UniDataBusquedaDatosRepositorio                              }
+{    Tipo:       Adaptador UniDAC                                              }
+{ Version:       1.0.0                                                         }
+{   Fecha:       02/08/2026                                                    }
+{   Autor:       FactuZam                                                      }
+{                                                                              }
+{  Descripcion:                                                                }
+{    Persistencia UniDAC de la busqueda avanzada de articulos y SKU.           }
+{******************************************************************************}
+unit UniDataBusquedaDatosRepositorio;
+
+interface
+
+uses
+  Uni, inLibBusquedaDatosPersistenciaIntf;
+
+function CrearRepositorioBusquedaDatosUniDAC(
+  AConexion: TUniConnection): IRepositorioBusquedaDatos;
+
+implementation
+
+uses
+  System.SysUtils, Data.DB;
+
+const
+  SQL_LISTAR_FAMILIAS =
+    'SELECT CODIGO_FAM_FAM AS COD, ' +
+    'COALESCE(NOMBRE_FAM_FAM, DESCRIPCION_FAM, ' +
+    'CODIGO_FAM_FAM) AS NOM ' +
+    'FROM fza_articulos_familias ' +
+    'WHERE IFNULL(ESACTIVO_FAM, ''S'') = ''S'' ' +
+    'ORDER BY ORDEN_FAM, CODIGO_FAM_FAM';
+  SQL_LISTAR_PROVEEDORES =
+    'SELECT CODIGO_PRV_PRV, RAZON_SOCIAL_PRV ' +
+    'FROM fza_proveedores ' +
+    'WHERE IFNULL(ESACTIVO_PRV, ''S'') = ''S'' ' +
+    'ORDER BY RAZON_SOCIAL_PRV, CODIGO_PRV_PRV';
+  SQL_LISTAR_TEMPORADAS =
+    'SELECT PV AS COD, PV AS NOM ' +
+    'FROM fza_propiedades_valores ' +
+    'WHERE ID_PROP_PV = ''TEMPORADA'' ' +
+    'AND IFNULL(ESACTIVO_PV, ''S'') = ''S'' ' +
+    'ORDER BY PV';
+  SQL_LISTAR_COLORES_PALETA =
+    'SELECT NOMBRE_ATB FROM fza_atributos_basicos ' +
+    'WHERE ID_VA_ATB = ''CO'' AND ESACTIVO_ATB = ''S'' ' +
+    'AND HEX_ATB REGEXP ''^#?[0-9A-Fa-f]{6}$'' ' +
+    'ORDER BY ORDEN_ATB, CODIGO_ATB';
+  SQL_BUSCAR_HEX_COLOR =
+    'SELECT HEX_ATB FROM fza_atributos_basicos ' +
+    'WHERE ID_VA_ATB = ''CO'' AND ESACTIVO_ATB = ''S'' ' +
+    'AND HEX_ATB IS NOT NULL ' +
+    'AND (UPPER(CODIGO_ATB) = :VALOR ' +
+    'OR UPPER(REPLACE(CODIGO_ATB, ''_'', '' '')) = :VALOR ' +
+    'OR UPPER(NOMBRE_ATB) = :VALOR ' +
+    'OR UPPER(DESCRIPCION_ATB) = :VALOR) ' +
+    'ORDER BY ORDEN_ATB, CODIGO_ATB LIMIT 1';
+  SQL_BUSQUEDA_ANTES_DISTANCIA =
+    'SELECT eti.CODIGO_ART_ART, eti.CODIGO_UNIDAD_SKU, ' +
+    'eti.DESCRIPCION_ART, eti.ATR_CO, ' +
+    'pal.CODIGO_ATB AS CODIGO_COLOR_BASICO, ' +
+    'pal.NOMBRE_ATB AS COLOR_BASICO, ' +
+    'pal.HEX_ATB AS HEX_COLOR_BASICO, ';
+  SQL_BUSQUEDA_DESPUES_DISTANCIA =
+    ', eti.ATR_TAL, ' +
+    'COALESCE(stk.CANTIDAD_STOCK, 0) AS CANTIDAD_STOCK, ' +
+    'COALESCE(stk.CANTIDAD_STOCK_ALMACEN, 0) ' +
+    'AS CANTIDAD_STOCK_ALMACEN, stk.ALMACENES_STOCK, ' +
+    'eti.CODIGO_BARRAS_CB, eti.CODIGO_FAM_ART, ' +
+    'eti.NOMBRE_FAM_FAM, eti.CODIGO_PRV_PRV, ' +
+    'eti.RAZON_SOCIAL_PRV, eti.REF_PROVEEDOR, ' +
+    'eti.PROP_TEMPORADA, eti.PROP_MARCA, eti.PROP_MATERIAL, ' +
+    'eti.PROP_GENERO, eti.ATRIBUTOS_TXT, eti.PROPIEDADES_TXT, ' +
+    'eti.ESACTIVO_ART, eti.ESACTIVO_SKU ' +
+    'FROM vi_articulos_skus_etiquetas eti ' +
+    'LEFT JOIN (SELECT sa.CODIGO_UNIDAD_SKU_SA ' +
+    'AS CODIGO_UNIDAD_SKU, atb.CODIGO_ATB, atb.NOMBRE_ATB, ' +
+    'atb.DESCRIPCION_ATB, atb.HEX_ATB ' +
+    'FROM fza_atributos_sku sa ' +
+    'JOIN fza_atributos_valores av ON av.ID_AV = sa.ID_AV_SA ' +
+    'AND av.ID_VA_AV = ''CO'' ' +
+    'JOIN fza_articulos_skus sku ' +
+    'ON sku.CODIGO_UNIDAD_SKU = sa.CODIGO_UNIDAD_SKU_SA ' +
+    'LEFT JOIN fza_articulos_atributos_basicos aab ' +
+    'ON aab.CODIGO_ART_AAB = sku.CODIGO_ART_SKU ' +
+    'AND aab.ID_AV_AAB = av.ID_AV ' +
+    'LEFT JOIN fza_articulos_conjuntos_asign aca ' +
+    'ON aca.CODIGO_ART_ACA = sku.CODIGO_ART_SKU ' +
+    'AND aca.ID_VA_ACA = av.ID_VA_AV ' +
+    'LEFT JOIN fza_atributos_conjuntos_det acd ' +
+    'ON acd.ID_AC_ACD = aca.ID_AC_ACA ' +
+    'AND acd.ID_AV_ACD = av.ID_AV ' +
+    'LEFT JOIN fza_atributos_basicos atb ON atb.ID_ATB = CASE ' +
+    'WHEN aab.CODIGO_ART_AAB IS NOT NULL THEN aab.ID_ATB_AAB ' +
+    'WHEN acd.ID_ATB_ACD IS NOT NULL THEN acd.ID_ATB_ACD ' +
+    'ELSE av.ID_ATB_AV END) pal ' +
+    'ON pal.CODIGO_UNIDAD_SKU = eti.CODIGO_UNIDAD_SKU ' +
+    'LEFT JOIN (SELECT CODIGO_UNIDAD_STK, ' +
+    'SUM(CANTIDAD_STK) AS CANTIDAD_STOCK, ' +
+    'SUM(CASE WHEN CODIGO_ALM_STK = :ALMACEN_DOC ' +
+    'THEN CANTIDAD_STK ELSE 0 END) AS CANTIDAD_STOCK_ALMACEN, ' +
+    'GROUP_CONCAT(DISTINCT CODIGO_ALM_STK ' +
+    'ORDER BY CODIGO_ALM_STK SEPARATOR '', '') AS ALMACENES_STOCK ' +
+    'FROM fza_articulos_stockactual ' +
+    'GROUP BY CODIGO_UNIDAD_STK) stk ' +
+    'ON stk.CODIGO_UNIDAD_STK = eti.CODIGO_UNIDAD_SKU ' +
+    'WHERE 1 = 1';
+
+type
+  TResultadoBusquedaDatosUniDAC = class(
+    TInterfacedObject,
+    IResultadoBusquedaDatos)
+  private
+    FDataSet: TDataSet;
+  public
+    constructor Create(ADataSet: TDataSet);
+    destructor Destroy; override;
+    function DataSet: TDataSet;
+  end;
+
+  TRepositorioBusquedaDatosUniDAC = class(
+    TInterfacedObject,
+    IRepositorioBusquedaDatos)
+  private
+    FConexion: TUniConnection;
+    function ListarOpciones(
+      const ASql: string): TOpcionesBusquedaDatos;
+    function ExpresionCampo(ACampo: Integer): string;
+  public
+    constructor Create(AConexion: TUniConnection);
+    function ListarFamilias: TOpcionesBusquedaDatos;
+    function ConsultarProveedores: IResultadoBusquedaDatos;
+    function ListarTemporadas: TOpcionesBusquedaDatos;
+    function ListarColoresPaleta: TCadenasBusquedaDatos;
+    function BuscarHexColor(
+      const AValor: string): string;
+    function PrepararBusqueda(
+      const ACriterios: TCriteriosBusquedaDatos
+    ): IResultadoBusquedaDatos;
+  end;
+
+constructor TResultadoBusquedaDatosUniDAC.Create(ADataSet: TDataSet);
+begin
+  inherited Create;
+  FDataSet := ADataSet;
+end;
+
+destructor TResultadoBusquedaDatosUniDAC.Destroy;
+begin
+  FreeAndNil(FDataSet);
+  inherited;
+end;
+
+function TResultadoBusquedaDatosUniDAC.DataSet: TDataSet;
+begin
+  Result := FDataSet;
+end;
+
+constructor TRepositorioBusquedaDatosUniDAC.Create(
+  AConexion: TUniConnection);
+begin
+  inherited Create;
+  FConexion := AConexion;
+end;
+
+function TRepositorioBusquedaDatosUniDAC.ListarOpciones(
+  const ASql: string): TOpcionesBusquedaDatos;
+var
+  iOpcion: Integer;
+  oConsulta: TUniQuery;
+begin
+  SetLength(Result, 0);
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := ASql;
+    oConsulta.Open;
+    while not oConsulta.Eof do
+    begin
+      iOpcion := Length(Result);
+      SetLength(Result, iOpcion + 1);
+      Result[iOpcion].Codigo := oConsulta.FieldByName('COD').AsString;
+      Result[iOpcion].Nombre := oConsulta.FieldByName('NOM').AsString;
+      oConsulta.Next;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioBusquedaDatosUniDAC.ListarFamilias:
+  TOpcionesBusquedaDatos;
+begin
+  Result := ListarOpciones(SQL_LISTAR_FAMILIAS);
+end;
+
+function TRepositorioBusquedaDatosUniDAC.ConsultarProveedores:
+  IResultadoBusquedaDatos;
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.ReadOnly := True;
+    oConsulta.SQL.Text := SQL_LISTAR_PROVEEDORES;
+    oConsulta.Open;
+    Result := TResultadoBusquedaDatosUniDAC.Create(oConsulta);
+    oConsulta := nil;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioBusquedaDatosUniDAC.ListarTemporadas:
+  TOpcionesBusquedaDatos;
+begin
+  Result := ListarOpciones(SQL_LISTAR_TEMPORADAS);
+end;
+
+function TRepositorioBusquedaDatosUniDAC.ListarColoresPaleta:
+  TCadenasBusquedaDatos;
+var
+  iColor: Integer;
+  oConsulta: TUniQuery;
+begin
+  SetLength(Result, 0);
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := SQL_LISTAR_COLORES_PALETA;
+    oConsulta.Open;
+    while not oConsulta.Eof do
+    begin
+      iColor := Length(Result);
+      SetLength(Result, iColor + 1);
+      Result[iColor] := oConsulta.FieldByName('NOMBRE_ATB').AsString;
+      oConsulta.Next;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioBusquedaDatosUniDAC.BuscarHexColor(
+  const AValor: string): string;
+var
+  oConsulta: TUniQuery;
+begin
+  Result := '';
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := SQL_BUSCAR_HEX_COLOR;
+    oConsulta.ParamByName('VALOR').AsString := UpperCase(Trim(AValor));
+    oConsulta.Open;
+    if not oConsulta.IsEmpty then
+    begin
+      Result := oConsulta.FieldByName('HEX_ATB').AsString;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioBusquedaDatosUniDAC.ExpresionCampo(
+  ACampo: Integer): string;
+begin
+  case ACampo of
+    CAMPO_ARTICULO:
+      Result := 'eti.CODIGO_ART_ART';
+    CAMPO_SKU:
+      Result := 'eti.CODIGO_UNIDAD_SKU';
+    CAMPO_DESCRIPCION:
+      Result := 'eti.DESCRIPCION_ART';
+    CAMPO_TALLA:
+      Result := 'eti.ATR_TAL';
+    CAMPO_COLOR:
+      Result := 'eti.ATR_CO';
+    CAMPO_COLOR_BASICO:
+      Result :=
+        'CONCAT_WS('' '', pal.CODIGO_ATB, pal.NOMBRE_ATB, ' +
+        'pal.DESCRIPCION_ATB, pal.HEX_ATB)';
+    CAMPO_CODIGO_BARRAS:
+      Result := 'eti.CODIGO_BARRAS_CB';
+    CAMPO_FAMILIA:
+      Result :=
+        'CONCAT_WS('' '', eti.CODIGO_FAM_ART, eti.NOMBRE_FAM_FAM)';
+    CAMPO_PROVEEDOR:
+      Result :=
+        'CONCAT_WS('' '', eti.CODIGO_PRV_PRV, ' +
+        'eti.RAZON_SOCIAL_PRV)';
+    CAMPO_REF_PROVEEDOR:
+      Result := 'eti.REF_PROVEEDOR';
+    CAMPO_TEMPORADA:
+      Result := 'eti.PROP_TEMPORADA';
+    CAMPO_ALMACEN:
+      Result := 'stk.ALMACENES_STOCK';
+    CAMPO_PROPIEDADES:
+      Result :=
+        'CONCAT_WS('' '', eti.ATRIBUTOS_TXT, ' +
+        'eti.PROPIEDADES_TXT)';
+    else
+      Result :=
+        'CONCAT_WS('' '', eti.CODIGO_ART_ART, ' +
+        'eti.CODIGO_UNIDAD_SKU, eti.DESCRIPCION_ART, eti.ATR_CO, ' +
+        'eti.ATR_TAL, eti.CODIGO_BARRAS_CB, eti.CODIGO_FAM_ART, ' +
+        'eti.NOMBRE_FAM_FAM, eti.CODIGO_PRV_PRV, ' +
+        'eti.RAZON_SOCIAL_PRV, eti.REF_PROVEEDOR, ' +
+        'eti.PROP_TEMPORADA, eti.ATRIBUTOS_TXT, ' +
+        'eti.PROPIEDADES_TXT, stk.ALMACENES_STOCK, ' +
+        'pal.CODIGO_ATB, pal.NOMBRE_ATB, pal.HEX_ATB)';
+  end;
+end;
+
+function TRepositorioBusquedaDatosUniDAC.PrepararBusqueda(
+  const ACriterios: TCriteriosBusquedaDatos
+): IResultadoBusquedaDatos;
+var
+  bProximidad: Boolean;
+  oConsulta: TUniQuery;
+  sCampo: string;
+  sComponenteAzul: string;
+  sComponenteRojo: string;
+  sComponenteVerde: string;
+  sDistancia: string;
+  sParametro: string;
+  sValor: string;
+begin
+  bProximidad := ACriterios.Campo = CAMPO_PROXIMIDAD_COLOR;
+  sComponenteRojo :=
+    'CONV(SUBSTRING(REPLACE(pal.HEX_ATB, ''#'', ''''), 1, 2), 16, 10)';
+  sComponenteVerde :=
+    'CONV(SUBSTRING(REPLACE(pal.HEX_ATB, ''#'', ''''), 3, 2), 16, 10)';
+  sComponenteAzul :=
+    'CONV(SUBSTRING(REPLACE(pal.HEX_ATB, ''#'', ''''), 5, 2), 16, 10)';
+  sDistancia := 'ROUND(SQRT(POW(' + sComponenteRojo +
+    ' - :ROJO, 2) + POW(' + sComponenteVerde +
+    ' - :VERDE, 2) + POW(' + sComponenteAzul +
+    ' - :AZUL, 2)), 2)';
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.ReadOnly := True;
+    if bProximidad then
+    begin
+      oConsulta.SQL.Text := SQL_BUSQUEDA_ANTES_DISTANCIA +
+        sDistancia + ' AS DISTANCIA_COLOR' +
+        SQL_BUSQUEDA_DESPUES_DISTANCIA;
+    end
+    else
+    begin
+      oConsulta.SQL.Text := SQL_BUSQUEDA_ANTES_DISTANCIA +
+        'CAST(NULL AS DECIMAL(10, 2)) AS DISTANCIA_COLOR' +
+        SQL_BUSQUEDA_DESPUES_DISTANCIA;
+    end;
+    if ACriterios.Estado = 0 then
+    begin
+      oConsulta.SQL.Add('AND eti.ESACTIVO_ART = ''S''');
+      oConsulta.SQL.Add('AND eti.ESACTIVO_SKU = ''S''');
+    end
+    else if ACriterios.Estado = 2 then
+    begin
+      oConsulta.SQL.Add(
+        'AND (COALESCE(eti.ESACTIVO_ART, ''N'') <> ''S''');
+      oConsulta.SQL.Add(
+        'OR COALESCE(eti.ESACTIVO_SKU, ''N'') <> ''S'')');
+    end;
+    if ACriterios.Stock = 1 then
+    begin
+      oConsulta.SQL.Add('AND COALESCE(stk.CANTIDAD_STOCK, 0) > 0');
+    end
+    else if ACriterios.Stock = 2 then
+    begin
+      oConsulta.SQL.Add('AND COALESCE(stk.CANTIDAD_STOCK, 0) <= 0');
+    end;
+    if ACriterios.Familia <> '' then
+    begin
+      oConsulta.SQL.Add('AND eti.CODIGO_FAM_ART = :FAMILIA');
+    end;
+    if ACriterios.Proveedor <> '' then
+    begin
+      oConsulta.SQL.Add('AND eti.CODIGO_PRV_PRV = :PROVEEDOR');
+    end;
+    if ACriterios.Temporada <> '' then
+    begin
+      oConsulta.SQL.Add('AND eti.PROP_TEMPORADA = :TEMPORADA');
+    end;
+    sValor := Trim(ACriterios.Valor);
+    if bProximidad then
+    begin
+      oConsulta.SQL.Add(
+        'AND pal.HEX_ATB REGEXP ''^#?[0-9A-Fa-f]{6}$''');
+    end
+    else if sValor <> '' then
+    begin
+      sCampo := ExpresionCampo(ACriterios.Campo);
+      if ACriterios.DistinguirMayusculas then
+      begin
+        sCampo := 'BINARY COALESCE(' + sCampo + ', '''')';
+      end
+      else
+      begin
+        sCampo := 'UPPER(COALESCE(' + sCampo + ', ''''))';
+        sValor := UpperCase(sValor);
+      end;
+      sParametro := sValor;
+      case ACriterios.Coincidencia of
+        0:
+          begin
+            oConsulta.SQL.Add('AND ' + sCampo + ' LIKE :BUSQUEDA');
+            sParametro := '%' + sValor + '%';
+          end;
+        1:
+          begin
+            oConsulta.SQL.Add('AND ' + sCampo + ' LIKE :BUSQUEDA');
+            sParametro := sValor + '%';
+          end;
+        2:
+          oConsulta.SQL.Add('AND ' + sCampo + ' = :BUSQUEDA');
+        3:
+          begin
+            oConsulta.SQL.Add('AND ' + sCampo + ' LIKE :BUSQUEDA');
+            sParametro := '%' + sValor;
+          end;
+        4:
+          begin
+            oConsulta.SQL.Add('AND ' + sCampo + ' NOT LIKE :BUSQUEDA');
+            sParametro := '%' + sValor + '%';
+          end;
+      end;
+    end;
+    if bProximidad then
+    begin
+      oConsulta.SQL.Add(
+        'ORDER BY DISTANCIA_COLOR, eti.CODIGO_ART_ART,');
+      oConsulta.SQL.Add('eti.CODIGO_UNIDAD_SKU');
+    end
+    else
+    begin
+      oConsulta.SQL.Add(
+        'ORDER BY eti.CODIGO_ART_ART, eti.ATR_CO, eti.ATR_TAL,');
+      oConsulta.SQL.Add('eti.CODIGO_UNIDAD_SKU');
+    end;
+    oConsulta.SQL.Add('LIMIT ' + IntToStr(ACriterios.Limite));
+    oConsulta.ParamByName('ALMACEN_DOC').AsString := ACriterios.Almacen;
+    if ACriterios.Familia <> '' then
+    begin
+      oConsulta.ParamByName('FAMILIA').AsString := ACriterios.Familia;
+    end;
+    if ACriterios.Proveedor <> '' then
+    begin
+      oConsulta.ParamByName('PROVEEDOR').AsString := ACriterios.Proveedor;
+    end;
+    if ACriterios.Temporada <> '' then
+    begin
+      oConsulta.ParamByName('TEMPORADA').AsString := ACriterios.Temporada;
+    end;
+    if bProximidad then
+    begin
+      oConsulta.ParamByName('ROJO').AsInteger := ACriterios.Rojo;
+      oConsulta.ParamByName('VERDE').AsInteger := ACriterios.Verde;
+      oConsulta.ParamByName('AZUL').AsInteger := ACriterios.Azul;
+    end
+    else if sValor <> '' then
+    begin
+      oConsulta.ParamByName('BUSQUEDA').AsString := sParametro;
+    end;
+    Result := TResultadoBusquedaDatosUniDAC.Create(oConsulta);
+    oConsulta := nil;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function CrearRepositorioBusquedaDatosUniDAC(
+  AConexion: TUniConnection): IRepositorioBusquedaDatos;
+begin
+  Result := TRepositorioBusquedaDatosUniDAC.Create(AConexion);
+end;
+
+end.

@@ -18,14 +18,15 @@ interface
 
 uses
   Uni, inLibParametrosIntf, inLibFacturasServiciosIntf,
-  inLibFacturasPersistenciaIntf, inLibVentasWsColaIntf;
+  inLibFacturasPersistenciaIntf, inLibVentasWsColaIntf, inLibLogIntf;
 
 function CrearServicioReaperturaBorrador(
   const AParametrosApp: IParametrosAplicacion;
   const AParametrosCaja: IParametrosCaja;
   AConexion: TUniConnection;
   const ARepositorio: IRepositorioReaperturaFactura;
-  const ARepositorioVentasWs: IRepositorioVentasWsCola
+  const ARepositorioVentasWs: IRepositorioVentasWsCola;
+  const ARegistroLog: IRegistroLog
 ): IServicioReaperturaBorrador;
 
 implementation
@@ -44,6 +45,7 @@ type
     FConexion: TUniConnection;
     FRepositorio: IRepositorioReaperturaFactura;
     FRepositorioVentasWs: IRepositorioVentasWsCola;
+    FRegistroLog: IRegistroLog;
     function Evaluar(
       const ASerie, ANumero: string;
       const ADatos: TDatosFacturaReapertura
@@ -56,7 +58,8 @@ type
       const AParametrosCaja: IParametrosCaja;
       AConexion: TUniConnection;
       const ARepositorio: IRepositorioReaperturaFactura;
-      const ARepositorioVentasWs: IRepositorioVentasWsCola);
+      const ARepositorioVentasWs: IRepositorioVentasWsCola;
+      const ARegistroLog: IRegistroLog);
     function Validar(
       const ASerie, ANumero: string
     ): TResultadoOperacionFactura;
@@ -69,7 +72,8 @@ constructor TServicioReaperturaBorrador.Create(
   const AParametrosCaja: IParametrosCaja;
   AConexion: TUniConnection;
   const ARepositorio: IRepositorioReaperturaFactura;
-  const ARepositorioVentasWs: IRepositorioVentasWsCola);
+  const ARepositorioVentasWs: IRepositorioVentasWsCola;
+  const ARegistroLog: IRegistroLog);
 begin
   inherited Create;
   if not Assigned(AConexion) then
@@ -81,6 +85,7 @@ begin
   FConexion := AConexion;
   FRepositorio := ARepositorio;
   FRepositorioVentasWs := ARepositorioVentasWs;
+  FRegistroLog := ARegistroLog;
 end;
 
 function TServicioReaperturaBorrador.Evaluar(
@@ -122,7 +127,8 @@ begin
     AUsuario,
     'VENTA_REABIERTA',
     ASerie,
-    ANumero);
+    ANumero,
+    FRegistroLog);
 end;
 
 function TServicioReaperturaBorrador.Validar(
@@ -171,7 +177,8 @@ function CrearServicioReaperturaBorrador(
   const AParametrosCaja: IParametrosCaja;
   AConexion: TUniConnection;
   const ARepositorio: IRepositorioReaperturaFactura;
-  const ARepositorioVentasWs: IRepositorioVentasWsCola
+  const ARepositorioVentasWs: IRepositorioVentasWsCola;
+  const ARegistroLog: IRegistroLog
 ): IServicioReaperturaBorrador;
 begin
   Result := TServicioReaperturaBorrador.Create(
@@ -179,7 +186,8 @@ begin
     AParametrosCaja,
     AConexion,
     ARepositorio,
-    ARepositorioVentasWs);
+    ARepositorioVentasWs,
+    ARegistroLog);
 end;
 
 end.

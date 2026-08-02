@@ -135,7 +135,8 @@ begin
         ParametrosApp.GetPath('appDirExcel');
       fPreview.DialogoGuardar.FileName := NombreSugerido;
       try
-        ExportarFacturaADevExpress(ParametrosApp, ConexionPrincipal,
+        ExportarFacturaADevExpress(
+          ParametrosApp, RegistroLog, ConexionPrincipal,
           fPreview.dxSpreadSheet1,
                                    unqryTablaG,
                                    unqryLinFac);
@@ -208,7 +209,7 @@ begin
       ParametrosCaja,
       CrearRepositorioVentasWsColaUniDAC(ConexionPrincipal),
       IdentidadSesion.Usuario,
-      sSerie, sNumero, ARuta);
+      sSerie, sNumero, ARuta, RegistroLog);
     // Archivado en fza_facturas.PDF_FAC: solo el PDF de UNA factura
     // (rbActual; un rango de fechas mezcla varias en un fichero) y solo
     // si ya salio de borrador (en modo SIN se imprimen borradores)
@@ -221,7 +222,7 @@ begin
       oRepositorioPdf :=
         CrearPersistenciaFacturasUniDAC(ConexionPrincipal).Pdf;
       GuardarPdfFacturaEnBlob(oRepositorioPdf, ContextoSesion,
-        sSerie, sNumero, ARuta, FormatoElegido);
+        sSerie, sNumero, ARuta, FormatoElegido, RegistroLog);
     end;
   end;
 end;

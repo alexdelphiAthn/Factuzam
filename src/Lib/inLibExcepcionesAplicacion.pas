@@ -17,10 +17,12 @@ interface
 
 uses
   inLibContextoSesionIntf,
-  inLibExcepcionesAplicacionIntf;
+  inLibExcepcionesAplicacionIntf,
+  inLibLogIntf;
 
 function CrearGestorExcepcionesAplicacion(
-  const AContextoSesion: IContextoSesionAplicacion
+  const AContextoSesion: IContextoSesionAplicacion;
+  const ARegistroLog: IRegistroLog
 ): IGestorExcepcionesAplicacion;
 
 implementation
@@ -36,8 +38,7 @@ uses
   Vcl.Clipbrd,
   cxMemo,
   inLibGlobalVar,
-  inLibWin,
-  inLibLog;
+  inLibWin;
 
 type
   TGestorExcepcionesAplicacion = class(
@@ -45,6 +46,7 @@ type
     IGestorExcepcionesAplicacion)
   private
     FContextoSesion: IContextoSesionAplicacion;
+    FRegistroLog: IRegistroLog;
     FMemoDetalle: TcxMemo;
     procedure MostrarDetalle(
       const ATexto: string);
@@ -52,25 +54,32 @@ type
       Sender: TObject);
   public
     constructor Create(
-      const AContextoSesion: IContextoSesionAplicacion);
+      const AContextoSesion: IContextoSesionAplicacion;
+      const ARegistroLog: IRegistroLog);
     procedure Gestionar(
       Sender: TObject;
       E: Exception);
   end;
 
 function CrearGestorExcepcionesAplicacion(
-  const AContextoSesion: IContextoSesionAplicacion
+  const AContextoSesion: IContextoSesionAplicacion;
+  const ARegistroLog: IRegistroLog
 ): IGestorExcepcionesAplicacion;
 begin
   Result := TGestorExcepcionesAplicacion.Create(
-    AContextoSesion);
+    AContextoSesion,
+    ARegistroLog);
 end;
 
 constructor TGestorExcepcionesAplicacion.Create(
-  const AContextoSesion: IContextoSesionAplicacion);
+  const AContextoSesion: IContextoSesionAplicacion;
+  const ARegistroLog: IRegistroLog);
 begin
   inherited Create;
+  if not Assigned(ARegistroLog) then
+    raise EArgumentNilException.Create('ARegistroLog');
   FContextoSesion := AContextoSesion;
+  FRegistroLog := ARegistroLog;
 end;
 
 procedure TGestorExcepcionesAplicacion.Gestionar(
@@ -84,7 +93,7 @@ begin
   if EsRuidoEditorInplace(E) then
   begin
     try
-      Log.LogWarning(
+      FRegistroLog.RegistrarAviso(
         'AppException ignorado ' +
         '(editor inplace sin Parent): ' +
         E.Message);
@@ -112,12 +121,12 @@ begin
         Now,
         ExceptAddr);
       try
-        Log.LogError(
+        FRegistroLog.RegistrarError(
           'AppException ' +
           E.ClassName +
           ': ' +
           E.Message);
-        Log.LogError(
+        FRegistroLog.RegistrarError(
           'AppException detalle:' +
           sLineBreak +
           Detalle);
@@ -226,7 +235,7 @@ begin
     except
       on E: Exception do
       begin
-        Log.LogWarning(
+        FRegistroLog.RegistrarAviso(
           'No se pudo copiar al portapapeles: ' +
           E.Message);
       end;

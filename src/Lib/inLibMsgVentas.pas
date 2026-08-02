@@ -208,6 +208,25 @@ resourcestring
   SInfoAlbaranDocumentoTrabajoCreado =
     'Albarán de venta %s/%s creado ABIERTO con %d líneas.' + sLineBreak +
     'Asigna cliente, tarifa y precios en el Mto de albaranes.';
+  STituloEnviarFacturaVentaDocumentoTrabajo =
+    'Enviar a factura de venta';
+  SErrorContadorFacturaVentaDocumentoTrabajo =
+    'El contador de facturas de venta no ha devuelto número para la ' +
+    'serie %s.';
+  SInfoFacturaVentaDocumentoTrabajoCreada =
+    'Factura de venta %s/%s creada en BORRADOR con %d líneas.' +
+    sLineBreak +
+    'Asigna cliente, tarifa, precios e impuestos antes de consolidarla.';
+  STituloEnviarPedidoCompraDocumentoTrabajo =
+    'Enviar a pedido de compra';
+  SErrorContadorPedidoCompraDocumentoTrabajo =
+    'El contador de pedidos de compra no ha devuelto número para la ' +
+    'serie %s.';
+  SInfoPedidoCompraDocumentoTrabajoCreado =
+    'Pedido de compra %s/%s creado ABIERTO con %d líneas.' + sLineBreak +
+    'Asigna proveedor, precios y condiciones de compra.';
+  SErrorEmpresaDocumentoTrabajoNoExiste =
+    'No existe la empresa %s del Documento de Trabajo.';
   SErrorVentaTpvNoAbiertaDocumentoTrabajo =
     'La venta TPV no está abierta.' + sLineBreak +
     'Abre Caja > Ventas y repite "Enviar a... > Venta TPV" para volcar ' +

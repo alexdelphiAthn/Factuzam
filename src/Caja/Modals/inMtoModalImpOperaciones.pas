@@ -26,7 +26,7 @@ uses
   System.DateUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs,
   inMtoModalGenImp, cxGraphics, cxLookAndFeels, cxLookAndFeelPainters,
-  Vcl.Menus, frxDesgn, Data.DB, MemDS, DBAccess, Uni,
+  Vcl.Menus, frxDesgn, Data.DB,
   frxExportXLSX, frxClass, frxDBSet, frxExportBaseDialog, frxExportPDF,
   Vcl.StdCtrls, cxButtons, Vcl.ExtCtrls, cxControls, cxContainer, cxEdit,
   cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar, cxLabel, cxButtonEdit,
@@ -34,11 +34,10 @@ uses
   Vcl.ComCtrls, dxCore, cxStyles, dxSkinsForm, cxClasses, cxLocalization,
   JvComponentBase, JvEnterTab, System.Actions, Vcl.ActnList, frxSmartMemo,
   frLocalization, frLanguageSpanish, frxExportBaseImageSettingsDialog,
-  frCoreClasses;
+  frCoreClasses, inLibInformesCajaPersistenciaIntf;
 
 type
   TfrmPrintOperaciones = class(TfrmPrint)
-    unqryOperacionesPrint: TUniQuery;
     dsOperacionesPrint: TDataSource;
     fxdsOperaciones: TfrxDBDataset;
     lblFechas: TcxLabel;
@@ -62,10 +61,13 @@ type
     // del usuario) una sola vez al abrir; evita pisarlos en el ciclo
     // Hide/Show que hacen los botones del padre (Imprimir / PDF / etc.).
     FInicializado: Boolean;
+    FRepositorioPersistencia: IRepositorioInformesCaja;
+    FResultado: IResultadoInformeCaja;
     // Abre el selector estandar de caja (inMtoModalCajDef sobre la vista
     // vi_cajasdef) acotado a la empresa del usuario y vuelca el almacen y
     // la caja elegidos en bedAlmacen / bedCaja.
     procedure SeleccionarAlmacenCaja;
+    function ConstruirSolicitud: TSolicitudInformeCaja;
   protected
     procedure DoShow; override;
   public
@@ -106,12 +108,7 @@ begin
   // del usuario. De la fila elegida tomamos almacen y caja.
   frm := TfrmMtoModalCajDef.Create(Self);
   try
-    frm.qrySeleccion.Connection := ConexionPrincipal;
-    frm.qrySeleccion.SQL.Text :=
-      ' SELECT * FROM vi_cajasdef WHERE Empresa = :pEMP ' +
-      ' ORDER BY Almacen, Caja ';
-    frm.qrySeleccion.ParamByName('pEMP').AsString := edtEmpresa.Text;
-    frm.qrySeleccion.Open;
+    frm.Cargar(edtEmpresa.Text);
     // Cierra el cronometro SQL antes de entrar en el selector modal.
     CerrarMonitorSQLPendiente;
     frm.sEmpresa := edtEmpresa.Text;
@@ -125,8 +122,8 @@ begin
       frm.ShowModal;
       if frm.sFicha = 'S' then
       begin
-        bedAlmacen.Text := frm.qrySeleccion.FieldByName('Almacen').AsString;
-        bedCaja.Text    := frm.qrySeleccion.FieldByName('Caja').AsString;
+        bedAlmacen.Text := frm.AlmacenSeleccionado;
+        bedCaja.Text    := frm.CajaSeleccionada;
       end;
     finally
       Self.Show;
@@ -154,26 +151,26 @@ begin
   // Filtro por empresa / almacen / caja (los tres exactos) y por la fecha
   // de la operacion. FECHA_OPERACION_OPCAJA es datetime, por eso el rango
   // se aplica sobre DATE(...) para que el BETWEEN sea inclusivo por dia.
-  with unqryOperacionesPrint do
+  if not Assigned(FRepositorioPersistencia) then
   begin
-    Close;
-    Connection := ConexionPrincipal;
-    SQL.Text :=
-      ' SELECT *                                                          ' +
-      '   FROM fza_caja_operaciones                                       ' +
-      '  WHERE CODIGO_EMP_OPCAJA  = :pEMP                                 ' +
-      '    AND CODIGO_ALM_OPCAJA  = :pALM                                 ' +
-      '    AND CODIGO_CAJA_OPCAJA = :pCAJA                                ' +
-      '    AND DATE(FECHA_OPERACION_OPCAJA) BETWEEN :pDESDE AND :pHASTA   ' +
-      '  ORDER BY FECHA_OPERACION_OPCAJA, NUMERO_OPERACION_OPCAJA         ';
-    ParamByName('pEMP').AsString     := edtEmpresa.Text;
-    ParamByName('pALM').AsString     := bedAlmacen.Text;
-    ParamByName('pCAJA').AsString    := bedCaja.Text;
-    ParamByName('pDESDE').AsDateTime := dteDesde.Date;
-    ParamByName('pHASTA').AsDateTime := dteHasta.Date;
-    Open;
+    FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
+      CrearRepositorioInformesCaja;
   end;
+  dsOperacionesPrint.DataSet := nil;
+  FResultado := FRepositorioPersistencia.ConsultarOperaciones(
+    ConstruirSolicitud);
+  dsOperacionesPrint.DataSet := FResultado.DataSet;
   fxdsOperaciones.UpdateBounds;
+end;
+
+function TfrmPrintOperaciones.ConstruirSolicitud:
+  TSolicitudInformeCaja;
+begin
+  Result.Empresa := edtEmpresa.Text;
+  Result.Almacen := bedAlmacen.Text;
+  Result.Caja := bedCaja.Text;
+  Result.FechaDesde := dteDesde.Date;
+  Result.FechaHasta := dteHasta.Date;
 end;
 
 end.
