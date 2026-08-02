@@ -19,12 +19,14 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, System.Actions, Vcl.ActnList,
+  Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, Vcl.ImgList,
+  System.Actions, Vcl.ActnList,
   JvComponentBase, JvEnterTab,
   cxGraphics, cxLookAndFeels, cxLookAndFeelPainters, cxControls, cxClasses,
   cxLocalization, cxContainer, cxEdit, cxButtons, cxTextEdit, cxMaskEdit,
   cxDropDownEdit, cxCalendar, cxCustomListBox, cxCheckListBox,
-  inMtoModalAceptCancel, Vcl.ComCtrls, dxCore, cxDateUtils, cxCheckBox;
+  inMtoModalAceptCancel, Vcl.ComCtrls, dxCore, cxDateUtils, cxCheckBox,
+  inLibArticulosPresentacionIntf;
 
 type
   TfrmMtoModalAddPreciosTar = class(TfrmModalAceptCancel)
@@ -38,8 +40,13 @@ type
     lblTarifas: TLabel;
     chkTarifas: TcxCheckListBox;
     procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+  private
+    FImagenesColores: TImageList;
+    FOpcionesSkus: TOpcionesSkuTarifaArticulo;
+    function CrearMuestraColor(const AHex: string): Integer;
   public
-    procedure CargarSkus(const ASkus: TStrings);
+    procedure CargarSkus(const ASkus: TOpcionesSkuTarifaArticulo);
     procedure CargarTarifas(const ATarifas: TStrings);
     function FechaDesde: TDate;
     function TieneFechaHasta: Boolean;
@@ -52,20 +59,76 @@ implementation
 
 {$R *.dfm}
 
+uses
+  inLibArticulosPresentacion;
+
 procedure TfrmMtoModalAddPreciosTar.FormCreate(Sender: TObject);
 begin
   inherited;
+  FImagenesColores := TImageList.Create(Self);
+  FImagenesColores.Width := 16;
+  FImagenesColores.Height := 16;
+  FImagenesColores.Masked := False;
+  chkSkus.Images := FImagenesColores;
+  chkSkus.ImageLayout := ilAfterChecks;
   dtpDesde.Date := Date;
   dtpHasta.Clear;
 end;
 
-procedure TfrmMtoModalAddPreciosTar.CargarSkus(const ASkus: TStrings);
+procedure TfrmMtoModalAddPreciosTar.FormDestroy(Sender: TObject);
+begin
+  chkSkus.Images := nil;
+  SetLength(FOpcionesSkus, 0);
+  FImagenesColores := nil;
+end;
+
+function TfrmMtoModalAddPreciosTar.CrearMuestraColor(
+  const AHex: string): Integer;
+var
+  iAzul: Integer;
+  iRojo: Integer;
+  iVerde: Integer;
+  oMuestra: TBitmap;
+begin
+  Result := -1;
+  if DescomponerHexAtributo(AHex, iRojo, iVerde, iAzul) then
+  begin
+    oMuestra := TBitmap.Create;
+    try
+      oMuestra.SetSize(FImagenesColores.Width, FImagenesColores.Height);
+      oMuestra.Canvas.Brush.Color := TColor(RGB(iRojo, iVerde, iAzul));
+      oMuestra.Canvas.FillRect(
+        Rect(0, 0, oMuestra.Width, oMuestra.Height));
+      oMuestra.Canvas.Brush.Style := bsClear;
+      oMuestra.Canvas.Pen.Color := clGray;
+      oMuestra.Canvas.Rectangle(
+        0, 0, oMuestra.Width, oMuestra.Height);
+      Result := FImagenesColores.Add(oMuestra, nil);
+    finally
+      FreeAndNil(oMuestra);
+    end;
+  end;
+end;
+
+procedure TfrmMtoModalAddPreciosTar.CargarSkus(
+  const ASkus: TOpcionesSkuTarifaArticulo);
 var
   i: Integer;
+  oItem: TcxCheckListBoxItem;
 begin
   chkSkus.Items.Clear;
-  for i := 0 to ASkus.Count - 1 do
-    chkSkus.Items.Add.Text := ASkus[i];
+  FImagenesColores.Clear;
+  FOpcionesSkus := System.Copy(ASkus, 0, Length(ASkus));
+  for i := 0 to High(FOpcionesSkus) do
+  begin
+    oItem := chkSkus.Items.Add;
+    oItem.Tag := i;
+    oItem.Text := FOpcionesSkus[i].CodigoSku;
+    if FOpcionesSkus[i].Tallas <> '' then
+      oItem.Text := oItem.Text + '    Tallas: ' +
+        FOpcionesSkus[i].Tallas;
+    oItem.ImageIndex := CrearMuestraColor(FOpcionesSkus[i].HexColor);
+  end;
 end;
 
 procedure TfrmMtoModalAddPreciosTar.CargarTarifas(const ATarifas: TStrings);
@@ -99,7 +162,7 @@ begin
   AOut.Clear;
   for i := 0 to chkSkus.Items.Count - 1 do
     if chkSkus.Items[i].Checked then
-      AOut.Add(chkSkus.Items[i].Text);
+      AOut.Add(FOpcionesSkus[chkSkus.Items[i].Tag].CodigoSku);
 end;
 
 procedure TfrmMtoModalAddPreciosTar.ObtenerTarifasSeleccionadas(AOut: TStrings);

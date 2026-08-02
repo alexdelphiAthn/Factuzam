@@ -1366,12 +1366,6 @@ begin
   // Las ventas flotantes conservan referencias a servicios de la sesion.
   // Deben destruirse antes de liberar la composicion que los proporciona.
   LiberarOperacionesCaja;
-  if Assigned(FAppEvents) then
-  begin
-    FAppEvents.OnException := nil;
-    FAppEvents.OnMessage := nil;
-  end;
-  FGestorExcepciones := nil;
   inherited;
   try
     RegistroLog.RegistrarInformacion('Cerrando ventana principal');
@@ -1380,8 +1374,8 @@ begin
     try
       FormManager.CloseAll;
     except
-      on E: Exception do RegistroLog.RegistrarError('Error en CloseAll: ' +
-                                                                     E.Message);
+      on E: Exception do
+        RegistroLog.RegistrarError('Error en CloseAll: ' + E.Message);
     end;
     AsignarFotosArticulos(nil);
     AsignarUnidadesMedida(nil);
@@ -1398,8 +1392,13 @@ begin
     AsignarConexiones(nil);
     AsignarInformesGuiasCache(nil);
     FCoordinadorOperaciones := nil;
-    FGestorExcepciones := nil;
     FreeAndNil(FComposicion);
+    if Assigned(FAppEvents) then
+    begin
+      FAppEvents.OnException := nil;
+      FAppEvents.OnMessage := nil;
+    end;
+    FGestorExcepciones := nil;
   finally
     RegistroLog.RegistrarInformacion('Ventana principal Cerrada');
     Action := caFree;

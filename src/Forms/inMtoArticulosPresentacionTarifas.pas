@@ -353,9 +353,10 @@ procedure TPresentadorTarifasArticulo.AltaMasivaPrecios(
 var
   oModal: TfrmMtoModalAddPreciosTar;
   iCombinacion: Integer;
-  oListaSkus, oListaTarifas: TStringList;
+  oListaTarifas: TStringList;
   oSkusSeleccionados, oTarifasSeleccionadas: TStringList;
-  oCatalogoSkus, oCatalogoTarifas: TArray<string>;
+  oCatalogoSkus: TOpcionesSkuTarifaArticulo;
+  oCatalogoTarifas: TArray<string>;
   oMarca: TBookmark;
   dPrecioPadre: Double;
   oVigencia: TVigenciaTarifa;
@@ -366,16 +367,14 @@ begin
   oModal := TfrmMtoModalAddPreciosTar.Create(APropietario);
   // Evitamos el caFree heredado para poder hacer Free manual.
   oModal.OnClose := nil;
-  oListaSkus := TStringList.Create;
   oListaTarifas := TStringList.Create;
   oSkusSeleccionados := TStringList.Create;
   oTarifasSeleccionadas := TStringList.Create;
   try
-    oCatalogoSkus :=
-      ComponerListaSkusAltaTarifa(FCatalogo.ListarSkus(ACodigoArticulo));
-    for iCombinacion := 0 to High(oCatalogoSkus) do
-      oListaSkus.Add(oCatalogoSkus[iCombinacion]);
-    oModal.CargarSkus(oListaSkus);
+    oCatalogoSkus := ComponerListaSkusAltaTarifa(
+      ACodigoArticulo,
+      FCatalogo.ListarSkus(ACodigoArticulo));
+    oModal.CargarSkus(oCatalogoSkus);
     oCatalogoTarifas := FCatalogo.ListarTarifasActivas;
     for iCombinacion := 0 to High(oCatalogoTarifas) do
       oListaTarifas.Add(oCatalogoTarifas[iCombinacion]);
@@ -426,7 +425,6 @@ begin
   finally
     FreeAndNil(oSkusSeleccionados);
     FreeAndNil(oTarifasSeleccionadas);
-    FreeAndNil(oListaSkus);
     FreeAndNil(oListaTarifas);
     FreeAndNil(oModal);
   end;

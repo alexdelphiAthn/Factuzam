@@ -30,10 +30,28 @@ type
 
   TCodigosBarrasArticulo = TArray<TCodigoBarrasSkuArticulo>;
 
+  // Atributos de un SKU que el alta de tarifas agrupa por color.
+  TDetalleSkuTarifaArticulo = record
+    Color: string;
+    HexColor: string;
+    Talla: string;
+  end;
+  TDetallesSkuTarifaArticulo = TArray<TDetalleSkuTarifaArticulo>;
+
+  // Fila visible del selector: articulo o codigo parcial ARTICULO/COLOR.
+  TOpcionSkuTarifaArticulo = record
+    CodigoSku: string;
+    Color: string;
+    HexColor: string;
+    Tallas: string;
+  end;
+  TOpcionesSkuTarifaArticulo = TArray<TOpcionSkuTarifaArticulo>;
+
   // Catalogos que alimentan el modal de alta masiva de precios.
   ICatalogoAltaTarifasArticulo = interface
     ['{6B0E9E3A-6D1E-4C4E-9E7B-3C0C2F5A5D11}']
-    function ListarSkus(const ACodigoArticulo: string): TArray<string>;
+    function ListarSkus(
+      const ACodigoArticulo: string): TDetallesSkuTarifaArticulo;
     function ListarTarifasActivas: TArray<string>;
   end;
 

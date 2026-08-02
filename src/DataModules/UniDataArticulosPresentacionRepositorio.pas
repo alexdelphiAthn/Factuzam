@@ -38,10 +38,29 @@ uses
 
 const
   SQL_LISTAR_SKUS_ARTICULO =
-    'SELECT CODIGO_UNIDAD_SKU ' +
-    '  FROM fza_articulos_skus ' +
-    ' WHERE CODIGO_ART_SKU = :ART ' +
-    ' ORDER BY CODIGO_UNIDAD_SKU';
+    'SELECT DISTINCT color.AV AS COLOR, ' +
+    '       COALESCE(atb.HEX_ATB, '''') AS HEX_COLOR, ' +
+    '       COALESCE(talla.AV, '''') AS TALLA, ' +
+    '       color.ORDEN_AV AS ORDEN_COLOR, ' +
+    '       COALESCE(talla.ORDEN_AV, 0) AS ORDEN_TALLA ' +
+    '  FROM fza_articulos_skus sku ' +
+    '  JOIN fza_atributos_sku sku_color ' +
+    '    ON sku_color.CODIGO_UNIDAD_SKU_SA = sku.CODIGO_UNIDAD_SKU ' +
+    '  JOIN fza_atributos_valores color ' +
+    '    ON color.ID_AV = sku_color.ID_AV_SA ' +
+    '   AND color.ID_VA_AV = ''CO'' ' +
+    '  LEFT JOIN fza_articulos_atributos_basicos aab ' +
+    '    ON aab.CODIGO_ART_AAB = sku.CODIGO_ART_SKU ' +
+    '   AND aab.ID_AV_AAB = color.ID_AV ' +
+    '  LEFT JOIN fza_atributos_basicos atb ' +
+    '    ON atb.ID_ATB = COALESCE(aab.ID_ATB_AAB, color.ID_ATB_AV) ' +
+    '  LEFT JOIN (fza_atributos_sku sku_talla ' +
+    '  JOIN fza_atributos_valores talla ' +
+    '    ON talla.ID_AV = sku_talla.ID_AV_SA ' +
+    '   AND talla.ID_VA_AV = ''TAL'') ' +
+    '    ON sku_talla.CODIGO_UNIDAD_SKU_SA = sku.CODIGO_UNIDAD_SKU ' +
+    ' WHERE sku.CODIGO_ART_SKU = :ART ' +
+    ' ORDER BY ORDEN_COLOR, COLOR, ORDEN_TALLA, TALLA';
   SQL_LISTAR_TARIFAS_ACTIVAS =
     '  SELECT CODIGO_TAR_ARTTAR ' +
     '    FROM fza_tarifas ' +
@@ -62,7 +81,8 @@ type
     FConexion: TUniConnection;
   public
     constructor Create(AConexion: TUniConnection);
-    function ListarSkus(const ACodigoArticulo: string): TArray<string>;
+    function ListarSkus(
+      const ACodigoArticulo: string): TDetallesSkuTarifaArticulo;
     function ListarTarifasActivas: TArray<string>;
   end;
 
@@ -110,7 +130,7 @@ begin
 end;
 
 function TCatalogoAltaTarifasArticuloUniDAC.ListarSkus(
-  const ACodigoArticulo: string): TArray<string>;
+  const ACodigoArticulo: string): TDetallesSkuTarifaArticulo;
 var
   iFila: Integer;
   oConsulta: TUniQuery;
@@ -126,7 +146,12 @@ begin
     begin
       iFila := Length(Result);
       SetLength(Result, iFila + 1);
-      Result[iFila] := oConsulta.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+      Result[iFila].Color :=
+        oConsulta.FieldByName('COLOR').AsString;
+      Result[iFila].HexColor :=
+        oConsulta.FieldByName('HEX_COLOR').AsString;
+      Result[iFila].Talla :=
+        oConsulta.FieldByName('TALLA').AsString;
       oConsulta.Next;
     end;
   finally

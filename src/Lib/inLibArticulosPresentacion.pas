@@ -41,9 +41,12 @@ function ComponerCsvSeleccion(const AValores: TArray<string>): string;
 // Recuento y detalle de los codigos de barras de un articulo.
 function VerificarCodigosBarrasArticulo(
   const ACodigos: TCodigosBarrasArticulo): TResumenCodigosBarrasArticulo;
-// Lista que ve el modal de alta de precios: la fila del articulo primero.
+// Lista que ve el modal de alta de precios: articulo primero y una fila
+// ARTICULO/COLOR con sus tallas disponibles para cada color.
 function ComponerListaSkusAltaTarifa(
-  const ASkus: TArray<string>): TArray<string>;
+  const ACodigoArticulo: string;
+  const ADetalles: TDetallesSkuTarifaArticulo):
+    TOpcionesSkuTarifaArticulo;
 // Texto visible de FUENTE_ATB ('A', 'C', 'G').
 function EtiquetaFuenteAtributoBasico(const ACodigo: string): string;
 // '#RRGGBB' -> componentes. False si el texto no es un hex valido.
@@ -56,7 +59,7 @@ function EsColorOscuroAtributo(ARojo, AVerde, AAzul: Integer): Boolean;
 implementation
 
 uses
-  System.SysUtils,
+  System.SysUtils, System.Classes,
   inLibEAN13,
   inLibArticulosAltaTarifas,
   inLibMsgArticulos;
@@ -147,23 +150,72 @@ begin
 end;
 
 function ComponerListaSkusAltaTarifa(
-  const ASkus: TArray<string>): TArray<string>;
+  const ACodigoArticulo: string;
+  const ADetalles: TDetallesSkuTarifaArticulo):
+    TOpcionesSkuTarifaArticulo;
 var
-  iSku: Integer;
-  iDestino: Integer;
-  sSku: string;
+  bEncontrada: Boolean;
+  iDetalle: Integer;
+  iOpcion: Integer;
+  sColor: string;
+
+  procedure AnadirTalla(
+    var ATallas: string;
+    const ATalla: string);
+  var
+    oTallas: TStringList;
+    sTalla: string;
+  begin
+    sTalla := Trim(ATalla);
+    if sTalla <> '' then
+    begin
+      oTallas := TStringList.Create;
+      try
+        oTallas.CaseSensitive := False;
+        oTallas.Delimiter := ',';
+        oTallas.StrictDelimiter := True;
+        oTallas.DelimitedText :=
+          StringReplace(ATallas, ', ', ',', [rfReplaceAll]);
+        if oTallas.IndexOf(sTalla) = -1 then
+        begin
+          if ATallas <> '' then
+            ATallas := ATallas + ', ';
+          ATallas := ATallas + sTalla;
+        end;
+      finally
+        FreeAndNil(oTallas);
+      end;
+    end;
+  end;
 begin
   SetLength(Result, 1);
   // La fila del propio articulo siempre encabeza la lista del modal.
-  Result[0] := cSkuFilaArticulo;
-  for iSku := 0 to High(ASkus) do
+  Result[0].CodigoSku := cSkuFilaArticulo;
+  for iDetalle := 0 to High(ADetalles) do
   begin
-    sSku := Trim(ASkus[iSku]);
-    if sSku <> '' then
+    sColor := Trim(ADetalles[iDetalle].Color);
+    if sColor <> '' then
     begin
-      iDestino := Length(Result);
-      SetLength(Result, iDestino + 1);
-      Result[iDestino] := sSku;
+      bEncontrada := False;
+      iOpcion := 1;
+      while (iOpcion < Length(Result)) and (not bEncontrada) do
+      begin
+        bEncontrada := SameText(Result[iOpcion].Color, sColor);
+        if not bEncontrada then
+          Inc(iOpcion);
+      end;
+      if not bEncontrada then
+      begin
+        iOpcion := Length(Result);
+        SetLength(Result, iOpcion + 1);
+        Result[iOpcion].CodigoSku :=
+          Trim(ACodigoArticulo) + '/' + sColor;
+        Result[iOpcion].Color := sColor;
+        Result[iOpcion].HexColor := ADetalles[iDetalle].HexColor;
+      end
+      else if Result[iOpcion].HexColor = '' then
+        Result[iOpcion].HexColor := ADetalles[iDetalle].HexColor;
+      AnadirTalla(Result[iOpcion].Tallas, ADetalles[iDetalle].Talla);
     end;
   end;
 end;

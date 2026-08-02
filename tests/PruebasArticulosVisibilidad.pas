@@ -48,7 +48,7 @@ type
     [Test]
     procedure CodigosBarras_SinFilasNoInformaIncidencias;
     [Test]
-    procedure SkusAltaTarifa_EncabezaConLaFilaDelArticulo;
+    procedure SkusAltaTarifa_AgrupaPorColorYMuestraTallas;
   end;
 
 implementation
@@ -78,6 +78,14 @@ begin
   Result.Codigo := ACodigo;
   Result.Sku := ASku;
   Result.Tipo := ATipo;
+end;
+
+function DetalleSkuTarifa(const AColor, AHex,
+  ATalla: string): TDetalleSkuTarifaArticulo;
+begin
+  Result.Color := AColor;
+  Result.HexColor := AHex;
+  Result.Talla := ATalla;
 end;
 
 procedure TPruebasArticulosVisibilidad.Preparar;
@@ -233,20 +241,28 @@ begin
 end;
 
 procedure TPruebasArticulosVisibilidad.
-  SkusAltaTarifa_EncabezaConLaFilaDelArticulo;
+  SkusAltaTarifa_AgrupaPorColorYMuestraTallas;
 var
-  oLista: TArray<string>;
-  oSkus: TArray<string>;
+  oDetalles: TDetallesSkuTarifaArticulo;
+  oLista: TOpcionesSkuTarifaArticulo;
 begin
-  oSkus := TArray<string>.Create('  ART-1/ROJO/L ', '', '   ');
-  oLista := ComponerListaSkusAltaTarifa(oSkus);
-  Assert.AreEqual(2, Integer(Length(oLista)));
-  Assert.AreEqual(cSkuFilaArticulo, oLista[0]);
-  Assert.AreEqual('ART-1/ROJO/L', oLista[1]);
-  SetLength(oSkus, 0);
-  oLista := ComponerListaSkusAltaTarifa(oSkus);
+  oDetalles := TDetallesSkuTarifaArticulo.Create(
+    DetalleSkuTarifa('AMARILLO', '#FFFF00', '39'),
+    DetalleSkuTarifa('AMARILLO', '#FFFF00', '40'),
+    DetalleSkuTarifa('AMARILLO', '#FFFF00', '39'),
+    DetalleSkuTarifa('ROJO', '#FF0000', '42'));
+  oLista := ComponerListaSkusAltaTarifa('ART-1', oDetalles);
+  Assert.AreEqual(3, Integer(Length(oLista)));
+  Assert.AreEqual(cSkuFilaArticulo, oLista[0].CodigoSku);
+  Assert.AreEqual('ART-1/AMARILLO', oLista[1].CodigoSku);
+  Assert.AreEqual('#FFFF00', oLista[1].HexColor);
+  Assert.AreEqual('39, 40', oLista[1].Tallas);
+  Assert.AreEqual('ART-1/ROJO', oLista[2].CodigoSku);
+  Assert.AreEqual('42', oLista[2].Tallas);
+  SetLength(oDetalles, 0);
+  oLista := ComponerListaSkusAltaTarifa('ART-1', oDetalles);
   Assert.AreEqual(1, Integer(Length(oLista)));
-  Assert.AreEqual(cSkuFilaArticulo, oLista[0]);
+  Assert.AreEqual(cSkuFilaArticulo, oLista[0].CodigoSku);
 end;
 
 end.

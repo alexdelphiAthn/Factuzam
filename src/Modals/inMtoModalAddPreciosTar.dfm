@@ -5,6 +5,7 @@
   StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 566
   ExplicitHeight = 639
+  OnDestroy = FormDestroy
   TextHeight = 19
   inherited pnlButton: TPanel
     Top = 541
@@ -40,7 +41,7 @@
       Margins.Right = 10
       Margins.Bottom = 2
       Align = alTop
-      Caption = ' 1. Seleccione los SKUs:'
+      Caption = ' 1. Seleccione los colores (se muestran sus tallas):'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -15
@@ -49,7 +50,7 @@
       Font.Style = [fsBold]
       Font.Quality = fqClearTypeNatural
       ParentFont = False
-      ExplicitWidth = 191
+      ExplicitWidth = 414
       Transparent = True
     end
     object lblTarifas: TLabel

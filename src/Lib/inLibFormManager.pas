@@ -31,7 +31,8 @@ type
     FClaves: TDictionary<string, TForm>;
     FContratos: TDictionary<TForm, IMantenimientoEmbebido>;
     procedure InternalCloseForm(AForm: TForm;
-                                AForzar: Boolean = False);
+                                AForzar: Boolean = False;
+                                ALiberarAhora: Boolean = False);
     procedure QuitarClave(AForm: TForm);
   protected
     procedure Notification(AComponent: TComponent;
@@ -134,7 +135,8 @@ begin
   while FForms.Count > 0 do
   begin
     F := FForms[FForms.Count - 1];
-    InternalCloseForm(F, True);
+    // Durante el apagado los servicios deben sobrevivir a los formularios.
+    InternalCloseForm(F, True, True);
   end;
 end;
 
@@ -234,7 +236,8 @@ begin
 end;
 
 procedure TEmbeddedFormManager.InternalCloseForm(AForm: TForm;
-                                                AForzar: Boolean);
+                                                AForzar: Boolean;
+                                                ALiberarAhora: Boolean);
 var
   ParentTab: TWinControl;
   oMantenimiento: IMantenimientoEmbebido;
@@ -262,10 +265,13 @@ begin
     QuitarClave(AForm);
     FContratos.Remove(AForm);
     AForm.Parent := nil;
-    // Release, no Free: difiere la destruccion a la cola de mensajes.
-    // Un Free inline aqui (handler de WM_FREECONTROL / cierre con tareas
-    // async vivas) podia liberar el form con mensajes aun pendientes.
-    AForm.Release;
+    if ALiberarAhora then
+      FreeAndNil(AForm)
+    else
+    begin
+      // El cierre normal se difiere porque puede ejecutarse desde un mensaje.
+      AForm.Release;
+    end;
     if (ParentTab <> nil) and
        (ParentTab is TcxTabSheet) and
        not (csDestroying in ParentTab.ComponentState) then
