@@ -36,6 +36,14 @@ type
     procedure GuardarDescripcion_ConservaBasicoResuelto;
     [Test]
     procedure Constructor_ExigeRepositorio;
+    [Test]
+    procedure EtiquetaFuente_TraduceOrigenDelBasico;
+    [Test]
+    procedure Hex_DescomponeYRecomponeElColor;
+    [Test]
+    procedure Hex_RechazaTextoQueNoEsColor;
+    [Test]
+    procedure Hex_DecideElColorDelTextoPorLuminancia;
   end;
 
 implementation
@@ -43,7 +51,8 @@ implementation
 uses
   System.SysUtils,
   inLibArticulosAtributosBasicosIntf,
-  inLibArticulosAtributosBasicos;
+  inLibArticulosAtributosBasicos,
+  inLibArticulosPresentacion;
 
 type
   TRepositorioAtributosBasicosFalso = class(
@@ -282,6 +291,52 @@ begin
       TGestorAtributosBasicosSku.Create(nil);
     end,
     EArgumentNilException);
+end;
+
+procedure TPruebasArticulosAtributosBasicos.
+  EtiquetaFuente_TraduceOrigenDelBasico;
+begin
+  Assert.AreEqual('Artículo', EtiquetaFuenteAtributoBasico('A'));
+  Assert.AreEqual('Conjunto', EtiquetaFuenteAtributoBasico('C'));
+  Assert.AreEqual('Global', EtiquetaFuenteAtributoBasico('G'));
+  Assert.AreEqual('', EtiquetaFuenteAtributoBasico(''));
+  Assert.AreEqual('', EtiquetaFuenteAtributoBasico('X'));
+end;
+
+procedure TPruebasArticulosAtributosBasicos.
+  Hex_DescomponeYRecomponeElColor;
+var
+  iRojo, iVerde, iAzul: Integer;
+begin
+  Assert.IsTrue(DescomponerHexAtributo('#1A2B3C', iRojo, iVerde, iAzul));
+  Assert.AreEqual($1A, iRojo);
+  Assert.AreEqual($2B, iVerde);
+  Assert.AreEqual($3C, iAzul);
+  Assert.AreEqual('#1A2B3C', ComponerHexAtributo(iRojo, iVerde, iAzul));
+  // El valor llega del grid con espacios: se normaliza antes de leerlo.
+  Assert.IsTrue(DescomponerHexAtributo('  #FFFFFF ', iRojo, iVerde, iAzul));
+  Assert.AreEqual(255, iRojo);
+end;
+
+procedure TPruebasArticulosAtributosBasicos.
+  Hex_RechazaTextoQueNoEsColor;
+var
+  iRojo, iVerde, iAzul: Integer;
+begin
+  Assert.IsFalse(DescomponerHexAtributo('', iRojo, iVerde, iAzul));
+  Assert.IsFalse(DescomponerHexAtributo('AZUL', iRojo, iVerde, iAzul));
+  Assert.IsFalse(DescomponerHexAtributo('#12345', iRojo, iVerde, iAzul));
+  Assert.IsFalse(DescomponerHexAtributo('1A2B3C7', iRojo, iVerde, iAzul));
+  Assert.IsFalse(DescomponerHexAtributo('#GG0000', iRojo, iVerde, iAzul));
+end;
+
+procedure TPruebasArticulosAtributosBasicos.
+  Hex_DecideElColorDelTextoPorLuminancia;
+begin
+  Assert.IsTrue(EsColorOscuroAtributo(0, 0, 0));
+  Assert.IsTrue(EsColorOscuroAtributo(0, 0, 255));
+  Assert.IsFalse(EsColorOscuroAtributo(255, 255, 255));
+  Assert.IsFalse(EsColorOscuroAtributo(0, 255, 0));
 end;
 
 initialization

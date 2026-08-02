@@ -980,7 +980,85 @@ uses
     'src\Forms\inMtoComprasSesionesMaterializacionVcl.pas',
   UniDataTarifasCambios in 'src\DataModules\UniDataTarifasCambios.pas' {dmTarifasCambios: TdmTarifasCambios},
   inMtoModalCargarSesionTarifa in 'src\Modals\inMtoModalCargarSesionTarifa.pas' {frmModalCargarSesionTarifa},
-  inMtoTarifasCambios in 'src\Forms\inMtoTarifasCambios.pas' {frmMtoTarifasCambios};
+  inMtoTarifasCambios in 'src\Forms\inMtoTarifasCambios.pas' {frmMtoTarifasCambios},
+  inMtoCajaOpePresentacionVcl in
+    'src\Caja\Forms\inMtoCajaOpePresentacionVcl.pas',
+  inLibCajaOpePresentacion in 'src\Caja\Lib\inLibCajaOpePresentacion.pas',
+  inLibCajaOpePresentacionIntf in
+    'src\Caja\Lib\inLibCajaOpePresentacionIntf.pas',
+  UniDataArticulosPresentacionRepositorio in
+    'src\DataModules\UniDataArticulosPresentacionRepositorio.pas',
+  UniDataFacturasListado in 'src\DataModules\UniDataFacturasListado.pas',
+  UniDataInventariosBusquedas in
+    'src\DataModules\UniDataInventariosBusquedas.pas',
+  inMtoArticulosPresentacionAtributos in
+    'src\Forms\inMtoArticulosPresentacionAtributos.pas',
+  inMtoArticulosPresentacionFiltros in
+    'src\Forms\inMtoArticulosPresentacionFiltros.pas',
+  inMtoArticulosPresentacionStock in
+    'src\Forms\inMtoArticulosPresentacionStock.pas',
+  inMtoArticulosPresentacionTarifas in
+    'src\Forms\inMtoArticulosPresentacionTarifas.pas',
+  inMtoComprasSesionesPresentacionCopiaLineas in
+    'src\Forms\inMtoComprasSesionesPresentacionCopiaLineas.pas',
+  inMtoComprasSesionesPresentacionMaterializacion in
+    'src\Forms\inMtoComprasSesionesPresentacionMaterializacion.pas',
+  inMtoComprasSesionesPresentacionModelo in
+    'src\Forms\inMtoComprasSesionesPresentacionModelo.pas',
+  inMtoComprasSesionesPresentacionPlanificador in
+    'src\Forms\inMtoComprasSesionesPresentacionPlanificador.pas',
+  inMtoComprasSesionesPresentacionProveedor in
+    'src\Forms\inMtoComprasSesionesPresentacionProveedor.pas',
+  inMtoComprasSesionesPresentacionTallas in
+    'src\Forms\inMtoComprasSesionesPresentacionTallas.pas',
+  inMtoFacturasPresentadorCabeceraVcl in
+    'src\Forms\inMtoFacturasPresentadorCabeceraVcl.pas',
+  inMtoFacturasPresentadorLineasVcl in
+    'src\Forms\inMtoFacturasPresentadorLineasVcl.pas',
+  inMtoInventariosPresentacionBusquedas in
+    'src\Forms\inMtoInventariosPresentacionBusquedas.pas',
+  inMtoInventariosPresentacionColumnas in
+    'src\Forms\inMtoInventariosPresentacionColumnas.pas',
+  inMtoInventariosPresentacionEntrada in
+    'src\Forms\inMtoInventariosPresentacionEntrada.pas',
+  inMtoStockConsultaPresentacionArticuloVcl in
+    'src\Forms\inMtoStockConsultaPresentacionArticuloVcl.pas',
+  inMtoStockConsultaPresentacionComposicion in
+    'src\Forms\inMtoStockConsultaPresentacionComposicion.pas',
+  inMtoStockConsultaPresentacionFotosVcl in
+    'src\Forms\inMtoStockConsultaPresentacionFotosVcl.pas',
+  inMtoStockConsultaPresentacionPivoteVcl in
+    'src\Forms\inMtoStockConsultaPresentacionPivoteVcl.pas',
+  inLibArticulosPresentacion in 'src\Lib\inLibArticulosPresentacion.pas',
+  inLibArticulosPresentacionIntf in
+    'src\Lib\inLibArticulosPresentacionIntf.pas',
+  inLibComprasSesionesPresentacion in
+    'src\Lib\inLibComprasSesionesPresentacion.pas',
+  inLibComprasSesionesPresentacionIntf in
+    'src\Lib\inLibComprasSesionesPresentacionIntf.pas',
+  inLibFacturasPresentadorCabecera in
+    'src\Lib\inLibFacturasPresentadorCabecera.pas',
+  inLibFacturasPresentadorDetalle in
+    'src\Lib\inLibFacturasPresentadorDetalle.pas',
+  inLibFacturasPresentadorListado in
+    'src\Lib\inLibFacturasPresentadorListado.pas',
+  inLibInventariosPresentacion in 'src\Lib\inLibInventariosPresentacion.pas',
+  inLibInventariosPresentacionIntf in
+    'src\Lib\inLibInventariosPresentacionIntf.pas',
+  inLibStockConsultaPresentacionCoincidencias in
+    'src\Lib\inLibStockConsultaPresentacionCoincidencias.pas',
+  inLibStockConsultaPresentacionEstados in
+    'src\Lib\inLibStockConsultaPresentacionEstados.pas',
+  inLibStockConsultaPresentacionFotos in
+    'src\Lib\inLibStockConsultaPresentacionFotos.pas',
+  inLibStockConsultaPresentacionHistorial in
+    'src\Lib\inLibStockConsultaPresentacionHistorial.pas',
+  inLibStockConsultaPresentacionPivote in
+    'src\Lib\inLibStockConsultaPresentacionPivote.pas',
+  inLibStockConsultaPresentacionPropiedades in
+    'src\Lib\inLibStockConsultaPresentacionPropiedades.pas',
+  inLibStockConsultaPresentacionVista in
+    'src\Lib\inLibStockConsultaPresentacionVista.pas';
 
 {$R *.res}
 {$R fondo.res}
@@ -1074,11 +1152,11 @@ begin
       ResultadoLicenciaInicial);
     // Diagnóstico: con /teststack se encola una excepción de prueba
     // para verificar JCL stack trace + AppException + log + modal.
-//  if FindCmdLineSwitch('teststack', True) then
-//    TThread.ForceQueue(nil, procedure
-//                            begin
-//                              inLibDiag.ProbarStackTrace;
-//                            end);
+  if FindCmdLineSwitch('teststack', True) then
+    TThread.ForceQueue(nil, procedure
+                            begin
+                              inLibDiag.ProbarStackTrace;
+                            end);
     try
       Application.Run;
     finally

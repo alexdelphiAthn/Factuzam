@@ -1,0 +1,126 @@
+Clases de mayor tamaño:
+
+Clase                      Lineas Metodos Campos Ruta
+-----                      ------ ------- ------ ----
+TfrmMtoPedidosCompra         2661      88     17 src\Forms\inMtoPedidosCompra.pas
+TdmFacturas                  2465      71     23 src\DataModules\UniDataFacturas.pas
+TEditorLineasCajaVcl         2203      74     28 src\Caja\Forms\inMtoCajaOpe.pas
+TdmPedidos                   2144      43      4 src\DataModules\UniDataPedidos.pas
+TfrmMtoGen                   2135     104     14 src\Forms\inMtoGen.pas
+TdmAlbaranes                 2087      40      5 src\DataModules\UniDataAlbaranes.pas
+TfrmMtoDevolucionesCompra    2073      80     14 src\Forms\inMtoDevolucionesCompra.pas
+TfrmMtoPrincipal             2037      87     21 src\Core\inMtoPrincipal.pas
+TdmCajaOpe                   2009      31     12 src\Caja\DataModules\UniDataCaja.pas
+TfrmMtoInventarios           1996      75      9 src\Forms\inMtoInventarios.pas
+TfrmMtoOpeCaja               1946     103     24 src\Caja\Forms\inMtoCajaOpe.pas
+TfrmMtoGeneradorProcesos     1828      67      6 src\Forms\inMtoGeneradorProcesos.pas
+TfrmMtoComprasSesiones       1825      82      7 src\Forms\inMtoComprasSesiones.pas
+TdmInventarios               1824      46     11 src\DataModules\UniDataInventarios.pas
+TfrmMtoArticulos             1810      86     15 src\Forms\inMtoArticulos.pas
+TfrmMtoPedidos               1804      52      9 src\Forms\inMtoPedidos.pas
+TfrmMtoCajaOperacionesHist   1708      57     33 src\Caja\Forms\inMtoCajaOperacionesHist.pas
+TGridArticulosLineas         1596      45     33 src\Lib\inLibGridArticulos.pas
+TfrmMtoFacturasBase          1595      72     12 src\Forms\inMtoFacturasBase.pas
+TfrmMtoOpeTraspaso           1483      46     29 src\Caja\Forms\inMtoTraspasoOpe.pas
+
+Clases-dios vigiladas:
+
+Clase                                   ActualLineas TopeAnteriorLineas ObjetivoLineas ActualMetodos TopeAnteriorMetodos ObjetivoMetodos ActualCampos TopeAnteriorCampos ObjetivoCampos EstadoObjetivo
+-----                                   ------------ ------------------ -------------- ------------- ------------------- --------------- ------------ ------------------ -------------- --------------
+TCachePivoteCompra                               127                127           1200             3                   3              40           20                 20             20 ALCANZADO
+TCorrespondenciaPivoteCompra                     432                432           1200            11                  11              40            3                  3             20 ALCANZADO
+TCreacionAlbaranPedidoCompraUniDAC                62                 62            150             3                   3               6            1                  1              3 ALCANZADO
+TEdicionPivoteCompra                            1170               1170           1200            21                  21              40            9                  9             20 ALCANZADO
+TEstadoEdicionPivoteCompra                        33                 33           1200             3                   3              40            2                  2             20 ALCANZADO
+TfrmMtoArticulos                                1810               3005           2000            86                  97             120           15                                   ALCANZADO
+TfrmMtoComprasSesiones                          1825               3590           2000            82                  99             120            7                                   ALCANZADO
+TfrmMtoFacturasBase                             1595               1779           2000            72                 104             120           12                                   ALCANZADO
+TfrmMtoInventarios                              1996               3029           2000            75                  77             120            9                                   ALCANZADO
+TfrmMtoOpeCaja                                  1946               3894           2000           103                 104             120           24                                   ALCANZADO
+TfrmStockConsulta                               1031               2948           2000            38                  81             120           10                                   ALCANZADO
+TGridPivoteCompra                                259                259           1500            29                  29              45            5                  5             25 ALCANZADO
+TGridPivoteVenta                                 900                900           1500            32                  32              45           10                 10             25 ALCANZADO
+TIncorporacionAlbaranPedidoCompraUniDAC           60                 60            150             3                   3               5            1                  1              3 ALCANZADO
+TModeloPivoteVenta                               727                727           1200            31                  31              40           15                 15             20 ALCANZADO
+TModoEntradaTallas                               448                448           1500            22                  22              45           12                 12             20 ALCANZADO
+TPedidosCompraPendientesUniDAC                    51                 51            150             4                   4               5            1                  1              3 ALCANZADO
+TPedidosCompraUniDAC                             143                143            300             9                   9              15            4                  4              6 ALCANZADO
+TPresentacionPivoteCompra                        705                705           1200            19                  19              40           11                 11             20 ALCANZADO
+TPresentacionPivoteVenta                        1131               1131           1200            40                  40              40           15                 15             20 ALCANZADO
+TRecepcionPedidoCompraUniDAC                     114                114            150             2                   2               5            3                  3              5 ALCANZADO
+TRepositorioPivoteVentaUniDAC                    471                471           1200            15                  15              40            2                  2             20 ALCANZADO
+TValidadorPivoteCompra                           126                126           1200             3                   3              40            3                  3             20 ALCANZADO
+TVistaPivoteVenta                                290                290           1200            10                  10              40            8                  8             20 ALCANZADO
+
+Unidades procedurales vigiladas:
+
+Unidad                                   ActualLineas TopeAnteriorLineas ObjetivoLineas ActualRutinas TopeAnteriorRutinas ObjetivoRutinas EstadoObjetivo Ruta
+------                                   ------------ ------------------ -------------- ------------- ------------------- --------------- -------------- ----
+UniDataAlbaranesCompraMovimientos                 669                672           1200            14                  14              30 ALCANZADO      src\DataModules\UniDataAlbaranesCompraMovimientos.pas
+UniDataArticulosVariaciones                       688                692           1200            43                  43              30 PENDIENTE      src\DataModules\UniDataArticulosVariaciones.pas
+UniDataComprasSesionesAlbaranes                   656                656           1200             9                   9              30 ALCANZADO      src\DataModules\UniDataComprasSesionesAlbaranes.pas
+UniDataComprasSesionesArticulos                   885                885           1200            24                  24              30 ALCANZADO      src\DataModules\UniDataComprasSesionesArticulos.pas
+UniDataComprasSesionesComposicion                  87                 87           1200             1                   1              30 ALCANZADO      src\DataModules\UniDataComprasSesionesComposicion.pas
+UniDataComprasSesionesDocumentosComun              40                 40           1200             1                   1              30 ALCANZADO      src\DataModules\UniDataComprasSesionesDocumentosComun.pas
+UniDataComprasSesionesEstado                      202                203           1200             7                   7              30 ALCANZADO      src\DataModules\UniDataComprasSesionesEstado.pas
+UniDataComprasSesionesMaterializar                209                209            600            12                  12              30 ALCANZADO      src\DataModules\UniDataComprasSesionesMaterializar.pas
+UniDataComprasSesionesPedidos                     736                736           1200            11                  11              30 ALCANZADO      src\DataModules\UniDataComprasSesionesPedidos.pas
+UniDataComprasSesionesReversion                   328                329           1200            11                  11              30 ALCANZADO      src\DataModules\UniDataComprasSesionesReversion.pas
+UniDataComprasSesionesUnidadTrabajo               141                141           1200            10                  10              30 ALCANZADO      src\DataModules\UniDataComprasSesionesUnidadTrabajo.pas
+UniDataDevolucionesCompraMovimientos              456                460           1200            12                  12              30 ALCANZADO      src\DataModules\UniDataDevolucionesCompraMovimientos.pas
+UniDataFacturaeRepositorio                        306                310           1200            21                  21              30 ALCANZADO      src\DataModules\UniDataFacturaeRepositorio.pas
+UniDataFacturasLecturas                           248                252           1200            19                  19              30 ALCANZADO      src\DataModules\UniDataFacturasLecturas.pas
+UniDataFotosRepositorio                           466                466           1200            33                  33              30 PENDIENTE      src\DataModules\UniDataFotosRepositorio.pas
+UniDataPedidosCompraAlbaranComun                  294                294            400             5                   5              10 ALCANZADO      src\DataModules\UniDataPedidosCompraAlbaranComun.pas
+UniDataPedidosCompraCreacionAlbaran               650                650            800            24                  24              30 ALCANZADO      src\DataModules\UniDataPedidosCompraCreacionAlbaran.pas
+UniDataPedidosCompraIncorporacionAlbaran          536                536            700            10                  10              20 ALCANZADO      src\DataModules\UniDataPedidosCompraIncorporacionAlbaran.pas
+UniDataPedidosCompraOperaciones                   177                177            300            19                  19              20 ALCANZADO      src\DataModules\UniDataPedidosCompraOperaciones.pas
+UniDataPedidosCompraPendientes                    352                352            500            13                  13              15 ALCANZADO      src\DataModules\UniDataPedidosCompraPendientes.pas
+UniDataPedidosCompraRecepcion                     145                145            250             5                   5              10 ALCANZADO      src\DataModules\UniDataPedidosCompraRecepcion.pas
+UniDataVentasWsJson                               550                553           1200            19                  19              30 ALCANZADO      src\DataModules\UniDataVentasWsJson.pas
+inLibAlbaranesCompraMovimientos                    64                 68            600             2                   2              30 ALCANZADO      src\Lib\inLibAlbaranesCompraMovimientos.pas
+inLibAlbaranesCompraMovimientosIntf                27                 58            600             0                   2              30 ALCANZADO      src\Lib\inLibAlbaranesCompraMovimientosIntf.pas
+inLibArticulosVariaciones                         136                136            600            10                  10              30 ALCANZADO      src\Lib\inLibArticulosVariaciones.pas
+inLibArticulosVariacionesIntf                      44                 73            600             0                   2              30 ALCANZADO      src\Lib\inLibArticulosVariacionesIntf.pas
+inLibComprasSesionesMaterializacionIntf            70                181           1200             0                   0              30 ALCANZADO      src\Lib\inLibComprasSesionesMaterializacionIntf.pas
+inLibComprasSesionesMaterializar                  300                300            600            10                  10              30 ALCANZADO      src\Lib\inLibComprasSesionesMaterializar.pas
+inLibDevolucionesCompraMovimientos                 52                 56            600             2                   2              30 ALCANZADO      src\Lib\inLibDevolucionesCompraMovimientos.pas
+inLibDevolucionesCompraMovimientosIntf             28                 62            600             0                   2              30 ALCANZADO      src\Lib\inLibDevolucionesCompraMovimientosIntf.pas
+inLibFacturaePersistenciaIntf                      36                 66            600             0                   2              30 ALCANZADO      src\Lib\inLibFacturaePersistenciaIntf.pas
+inLibFacturasLecturasIntf                          45                 74            600             0                   2              30 ALCANZADO      src\Lib\inLibFacturasLecturasIntf.pas
+inLibFotos                                        293               1763           1200            22                  43              30 ALCANZADO      src\Lib\inLibFotos.pas
+inLibFotosPersistenciaIntf                         77                 96            600             0                   2              30 ALCANZADO      src\Lib\inLibFotosPersistenciaIntf.pas
+inLibPedidosCompra                                167                174            600             8                   8              30 ALCANZADO      src\Lib\inLibPedidosCompra.pas
+inLibPedidosCompraIntf                            108                111            600             0                   2              30 ALCANZADO      src\Lib\inLibPedidosCompraIntf.pas
+inLibPivoteVentaCalculo                           208                208           1200            13                  13              30 ALCANZADO      src\Lib\inLibPivoteVentaCalculo.pas
+inLibPivoteVentaIntf                               80                 80           1200             0                   0              30 ALCANZADO      src\Lib\inLibPivoteVentaIntf.pas
+inLibVentasWsJson                                  49                 52            600             1                   1              30 ALCANZADO      src\Lib\inLibVentasWsJson.pas
+inLibVentasWsJsonIntf                              32                 64            600             0                   2              30 ALCANZADO      src\Lib\inLibVentasWsJsonIntf.pas
+inLibVerifactuCola                                204                206            600             9                   9              30 ALCANZADO      src\verifactu\inLibVerifactuCola.pas
+inLibVerifactuColaIntf                             60                 60            600             0                   0              30 ALCANZADO      src\verifactu\inLibVerifactuColaIntf.pas
+inLibVerifactuNoVerifactuExportIntf                34                 64            600             0                   2              30 ALCANZADO      src\verifactu\inLibVerifactuNoVerifactuExportIntf.pas
+inLibVerifactuTipos                                25                 25            600             0                   0              30 ALCANZADO      src\verifactu\inLibVerifactuTipos.pas
+UniDataVerifactuColaProcesador                    400                417            800            17                  17              20 ALCANZADO      src\verifactu\UniDataVerifactuColaProcesador.pas
+UniDataVerifactuColaRepositorio                   282                282           1200            20                  20              30 ALCANZADO      src\verifactu\UniDataVerifactuColaRepositorio.pas
+UniDataVerifactuColaResultados                    309                317            900             3                   5              25 ALCANZADO      src\verifactu\UniDataVerifactuColaResultados.pas
+UniDataVerifactuNoVerifactuExport                 218                222           1200            17                  17              30 ALCANZADO      src\verifactu\UniDataVerifactuNoVerifactuExport.pas
+Tamano de clases: OK. Clases analizadas: 595. Maximos: 2661 lineas, 104 metodos y 37 campos F*. Unidades procedurales vigiladas: 48.
+  Embarcadero Delphi for Win64 compiler version 37.0
+  Copyright (c) 1983,2025 Embarcadero Technologies, Inc.
+src\Caja\Forms\inMtoCajaOpe.pas(499): Hint warning H2219: Private symbol 'ConstruirColumnasDinamicas' declared but never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+src\Caja\Forms\inMtoCajaOpe.pas(506): Hint warning H2219: Private symbol 'RecalcularPrecioDesdeSku' declared but never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+src\Caja\Forms\inMtoCajaOpe.pas(509): Hint warning H2219: Private symbol 'ConsultarStock' declared but never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+src\Caja\Forms\inMtoCajaOpe.pas(519): Hint warning H2219: Private symbol 'RefrescarFotoStock' declared but never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+src\Caja\Forms\inMtoCajaOpe.pas(522): Hint warning H2219: Private symbol 'AbrirPopupAvEnEntrada' declared but never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+src\Caja\Forms\inMtoCajaOpe.pas(523): Hint warning H2219: Private symbol 'RegistrarValorAtributo' declared but never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+src\Caja\Forms\inMtoCajaOpe.pas(525): Hint warning H2219: Private symbol 'FinalizarUltimoAtributo' declared but never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+src\Caja\Forms\inMtoCajaOpe.pas(534): Hint warning H2219: Private symbol 'SolicitarFocoArticuloLineaNueva' declared but never used [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+src\Forms\inMtoInventariosPresentacionColumnas.pas(410): Hint warning H2443: Inline function 'cxTextWidth' has not been expanded because unit 'dxCoreGraphics' is not specified in USES list [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+src\Forms\inMtoComprasSesionesPresentacionCopiaLineas.pas(215): error E2036: Variable required [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+src\Forms\inMtoComprasSesionesPresentacionCopiaLineas.pas(285): error E2250: There is no overloaded version of 'ForceQueue' that can be called with these arguments [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+src\Forms\inMtoComprasSesionesPresentacionCopiaLineas.pas(296): error E2036: Variable required [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+src\Forms\inMtoComprasSesionesPresentacionCopiaLineas.pas(297): error E2015: Operator not applicable to this operand type [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+src\Forms\inMtoComprasSesionesPresentacionCopiaLineas.pas(298): error E2015: Operator not applicable to this operand type [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+src\Forms\inMtoComprasSesionesPresentacionCopiaLineas.pas(332): error E2036: Variable required [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+src\Forms\inMtoComprasSesiones.pas(86): error F2063: Could not compile used unit 'inMtoComprasSesionesPresentacionCopiaLineas.pas' [C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj]
+EXITCODE=

@@ -1,4 +1,4 @@
-﻿object dmConn: TdmConn
+object dmConn: TdmConn
   OnCreate = DataModuleCreate
   Height = 299
   Width = 506
@@ -20,7 +20,6 @@
     OnError = conUniError
     Left = 270
     Top = 150
-    EncryptedPassword = 'A5FF9EFF92FF90FF8DFF9EFFCDFFCFFFCDFFCCFF'
   end
   object mysqlnprvdr1: TMySQLUniProvider
     Left = 190

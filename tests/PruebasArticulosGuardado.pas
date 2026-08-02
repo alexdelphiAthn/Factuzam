@@ -30,13 +30,18 @@ type
     procedure ErrorVariacionesOcurreDespuesDeGuardarDatasets;
     [Test]
     procedure ExitoEjecutaTodasLasCapacidades;
+    [Test]
+    procedure AdaptadorDelegaCadaCapacidadEnSuCallback;
+    [Test]
+    procedure AdaptadorPropagaMensajeDeErrorDeVariaciones;
   end;
 
 implementation
 
 uses
   inLibArticulosGuardado,
-  inLibArticulosGuardadoIntf;
+  inLibArticulosGuardadoIntf,
+  inMtoArticulosGuardadoVcl;
 
 type
   TOperacionesGuardadoArticuloFalsas = class(
@@ -153,6 +158,94 @@ begin
   Assert.AreEqual(1, Operaciones.FGuardadosPropiedades);
   Assert.AreEqual(1, Operaciones.FGuardadosEdiciones);
   Assert.AreEqual(1, Operaciones.FGuardadosVariaciones);
+end;
+
+procedure TPruebasArticulosGuardado.
+  AdaptadorDelegaCadaCapacidadEnSuCallback;
+// El adaptador VCL no recibe el formulario: solo cuatro callbacks. Se
+// prueba sin VCL ni BBDD comprobando que cada puerto llama al suyo.
+var
+  oCallbacks: TCallbacksGuardadoArticulo;
+  oOperaciones: IOperacionesGuardadoArticulo;
+  iValidaciones, iPropiedades, iEdiciones, iVariaciones: Integer;
+  sMensaje: string;
+begin
+  iValidaciones := 0;
+  iPropiedades := 0;
+  iEdiciones := 0;
+  iVariaciones := 0;
+  oCallbacks := Default(TCallbacksGuardadoArticulo);
+  oCallbacks.ValidarPropiedades :=
+    function: string
+    begin
+      Inc(iValidaciones);
+      Result := 'Falta TEMPORADA';
+    end;
+  oCallbacks.GuardarPropiedades :=
+    function(out AMensajeError: string): Boolean
+    begin
+      Inc(iPropiedades);
+      AMensajeError := '';
+      Result := True;
+    end;
+  oCallbacks.GuardarEdicionesPendientes :=
+    procedure
+    begin
+      Inc(iEdiciones);
+    end;
+  oCallbacks.GuardarVariaciones :=
+    function(out AMensajeError: string): Boolean
+    begin
+      Inc(iVariaciones);
+      AMensajeError := '';
+      Result := True;
+    end;
+  oOperaciones := TAdaptadorGuardadoArticuloVcl.Create(oCallbacks);
+  Assert.AreEqual('Falta TEMPORADA', oOperaciones.ValidarPropiedades);
+  Assert.IsTrue(oOperaciones.GuardarPropiedades(sMensaje));
+  oOperaciones.GuardarEdicionesPendientes;
+  Assert.IsTrue(oOperaciones.GuardarVariaciones(sMensaje));
+  Assert.AreEqual(1, iValidaciones);
+  Assert.AreEqual(1, iPropiedades);
+  Assert.AreEqual(1, iEdiciones);
+  Assert.AreEqual(1, iVariaciones);
+end;
+
+procedure TPruebasArticulosGuardado.
+  AdaptadorPropagaMensajeDeErrorDeVariaciones;
+var
+  oCallbacks: TCallbacksGuardadoArticulo;
+  oOperaciones: IOperacionesGuardadoArticulo;
+  oAplicacion: IAplicacionGuardadoArticulo;
+  oResultado: TResultadoGuardadoArticulo;
+begin
+  oCallbacks := Default(TCallbacksGuardadoArticulo);
+  oCallbacks.ValidarPropiedades :=
+    function: string
+    begin
+      Result := '';
+    end;
+  oCallbacks.GuardarPropiedades :=
+    function(out AMensajeError: string): Boolean
+    begin
+      AMensajeError := '';
+      Result := True;
+    end;
+  oCallbacks.GuardarEdicionesPendientes :=
+    procedure
+    begin
+    end;
+  oCallbacks.GuardarVariaciones :=
+    function(out AMensajeError: string): Boolean
+    begin
+      AMensajeError := 'Atributo repetido';
+      Result := False;
+    end;
+  oOperaciones := TAdaptadorGuardadoArticuloVcl.Create(oCallbacks);
+  oAplicacion := CrearAplicacionGuardadoArticulo(oOperaciones);
+  oResultado := oAplicacion.Ejecutar;
+  Assert.AreEqual(Ord(egaGuardadoVariaciones), Ord(oResultado.Error));
+  Assert.AreEqual('Atributo repetido', oResultado.Mensaje);
 end;
 
 initialization

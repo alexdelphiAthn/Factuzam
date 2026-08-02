@@ -31,6 +31,21 @@
 {    = max valores entre los conjuntos referenciados en la sesion.             }
 {    Los rotulos (captions) reflejan el sistema de la linea con foco.          }
 {                                                                              }
+{    El formulario recoge la entrada, delega en un colaborador y presenta      }
+{    el resultado. Los colaboradores se inyectan por constructor con un        }
+{    entorno explicito (datasets, columnas y callbacks); ninguno recibe        }
+{    este formulario ni el contexto general de repositorios:                   }
+{      - TCoordinadorTallasSesion   columnas inline, catalogo de sistemas,     }
+{        selector, pintado, bloqueo y distribuidor por almacen.                }
+{      - TBuscadorModeloProveedorSesion  busqueda incremental de modelos y     }
+{        reutilizacion de articulos al teclear familia / codigo / modelo.      }
+{      - TCoordinadorCopiaLineasSesion   "Otro color" / "Otro precio" y la     }
+{        copia diferida al repetir un modelo.                                  }
+{      - TCoordinadorProveedorSesion  ficha, defectos, kits y color basico.    }
+{      - IAplicacionMaterializacionCompraSesion  orquesta la materializacion.  }
+{    Los tiempos de espera (debounce y aperturas diferidas) viven en           }
+{    IPlanificadorDiferido; aqui no queda ningun TTimer.                       }
+{                                                                              }
 {    Reutiliza:                                                                }
 {      - TdmComprasSesiones (mapeado en fza_winforms).                         }
 {      - inLibComprasSesiones.ResolverCodigoFamilia (atajo familia->codigo).   }
@@ -65,13 +80,13 @@ uses
   dxScrollbarAnnotations,
   JvComponentBase, JvEnterTab,
   inMtoGen,
-  inMtoModalCrearAlbaranSesion,
   inLibGridTallasInline,
-  inLibGestorCopiaLineasCompra,
   inLibComprasSesiones,
-  inLibComprasSesionesIntf,
-  inLibComprasSesionesCreacion,
   inLibComprasSesionesAplicacionIntf,
+  inMtoComprasSesionesPresentacionCopiaLineas,
+  inMtoComprasSesionesPresentacionModelo,
+  inMtoComprasSesionesPresentacionProveedor,
+  inMtoComprasSesionesPresentacionTallas,
   UniDataComprasSesiones, cxBlobEdit, dxShellDialogs, cxRadioGroup, Vcl.Buttons,
   dxDateRanges, cxSplitter;
 
@@ -391,11 +406,6 @@ type
                 Sender: TcxCustomGridTableView;
                 AItem: TcxCustomGridTableItem;
                 var AAllow: Boolean);
-    // ACodigoKit <> '' abre el distribuidor en modo kit (formato
-    // distribuido): botones aplicar/limpiar por almacen + aplicar a todos.
-    procedure AbrirDistribuidor(const ACodigoKit: string = '');
-    procedure CopiarCeldasDistribuidasOtroColor(ALineaOrigen,
-                                                 ALineaDestino: Integer);
     procedure cbbProveedorPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure cbbProveedorKeyUp(Sender: TObject; var Key: Word;
@@ -426,81 +436,36 @@ type
                 ANewItemRecordFocusingChanged: Boolean);
     procedure dsSesionFotosDataChange(Sender: TObject; Field: TField);
   private
-    FGestorTallas : TGestorGridTallas;     // mueve toda la logica reusable
-                                           // de tallas pivotadas a la lib
-    FTallaColumns : array[0..CANT_TALLAS_MAX-1] of TcxGridDBColumn;
-    FBasicosColor : TArray<string>;
-    FQryConjuntosTallas : TUniQuery;
-    // Opciones del selector "Sistema tallas" (listbox 3 columnas, mismo
-    // patron que el de color basico) y diccionario ID_AC -> NOMBRE_AC
-    // que usa el CustomDrawCell para pintar el nombre en vez del ID crudo.
-    FOpcionesTallas  : TArray<TOpcionConjuntoTalla>;
-    FNombresConjunto : TDictionary<Integer, string>;
-    FBmpSwatch    : TBitmap;
     Dmm: TdmComprasSesiones;
-    FGestorCopiaLineas: TGestorCopiaLineasCompra;
     FServicioComprasSesiones: TServicioComprasSesiones;
     FDependencias: TContextoDependenciasComprasSesiones;
-    // --- Busqueda incremental in-cell de la columna "Modelo prov." ---
-    // Desplegable (ExtLookupComboBox) que lista los modelos
-    // (REF_PROVEEDOR_AP) ya existentes del proveedor de la cabecera cuyo
-    // comienzo coincide con lo tecleado. Al elegir uno, la linea se marca
-    // REUSAR del articulo correspondiente: el sistema de tallas queda fijo y
-    // solo se incorporan colores/tallas nuevos al materializar. Mismo patron
-    // runtime que inLibGridArticulos (la lib/form no tiene estos objetos en
-    // el dfm). FModeloPrvCargado guarda el proveedor con el que se cargo la
-    // lista para no relanzar el query si no cambia; FModeloRefPend y
-    // FModeloCodArtPend guardan la fila elegida pendiente de resolver.
-    FModeloBusqQry      : TUniQuery;
-    FModeloBusqDs       : TDataSource;
-    FModeloRepo         : TcxGridViewRepository;
-    FModeloView         : TcxGridDBTableView;
-    FModeloColRef       : TcxGridDBColumn;
-    FModeloColCodArt    : TcxGridDBColumn;
-    FModeloEditRepo     : TcxEditRepository;
-    FModeloCombo        : TcxEditRepositoryExtLookupComboBoxItem;
-    FModeloTimerBusq    : TTimer;
-    FModeloTimerResolve : TTimer;
-    FModeloPrvCargado   : string;
-    FModeloRefPend      : string;
-    FModeloCodArtPend   : string;
-    // --- Pestaña Proveedor + kits ---
-    // FPrvFichaCargado evita reabrir la ficha/kits si el proveedor no ha
-    // cambiado al navegar. FMenuKits es el popup del boton "Aplicar kit"
-    // de la barra de Lineas; FMenuKitsCodigos guarda el CODIGO_PRVKIT de
-    // cada item (el Tag indexa este array).
-    FPrvFichaCargado    : string;
-    FMenuKits           : TPopupMenu;
-    FMenuKitsCodigos    : TArray<string>;
     FEstiloRecepcionVencida: TcxStyle;
-    // --- Copia de linea al repetir modelo tecleado (modal) ---
-    // Al detectar que el modelo tecleado ya esta en otra linea de la
-    // sesion, se pregunta en un modal si copiar la linea completa (otro
-    // color / otro rango de precios). El modal no puede abrirse dentro
-    // del editor in-place del grid: se difiere con FDupTimerModal (mismo
-    // patron que FModeloTimerResolve). El gestor conserva la copia pendiente.
-    FDupTimerModal      : TTimer;
+    // Colaboradores de presentacion. Cada uno recibe por constructor
+    // solo las capacidades que usa (datasets, columnas y callbacks);
+    // ninguno conserva una referencia a este formulario completo.
+    FTallas: TCoordinadorTallasSesion;
+    FModeloPrv: TBuscadorModeloProveedorSesion;
+    FCopiaLineas: TCoordinadorCopiaLineasSesion;
+    FProveedor: TCoordinadorProveedorSesion;
+    function  GestorTallas: TGestorGridTallas;
+    procedure RecargarTallasVisibles;
+    procedure RecargarTallasDiferido;
+    procedure RefrescarColumnasTallas;
+    procedure ReconstruirTallas;
+    procedure CrearColaboradorTallas;
+    procedure CrearColaboradorMaterializacion;
+    procedure CrearColaboradorCopiaLineas;
+    procedure CrearColaboradorModelo;
+    procedure CrearColaboradorProveedor;
+    procedure CrearColaboradores;
+    procedure CrearServicioSesion;
+    procedure EnlazarListasCabecera;
+    procedure EnlazarDetalleSesion;
+    procedure EnlazarPestanaProveedor;
     procedure RefrescarFotoProvisional;
     procedure RefrescarFotosProvisionales;
     procedure LogSes(const ATexto: string);
-    procedure CargarBasicosColor;
-    procedure CargarConjuntosTallas;
-    procedure BuscarProveedor;
-    procedure ActualizarLabelProveedor;
-    procedure RecargarProveedorSesion;
-    procedure CopiarDefectosProveedor;
-    procedure AplicarKitALineaActual(const ACodigoKit: string);
-    procedure MenuKitItemClick(Sender: TObject);
-    function  AplicarDuplicadoDeSesion(const AModelo,
-                ACodigoArt: string): Boolean;
-    function  DispararEditButtonLineaActiva: Boolean;
-    function  TextoBusquedaTallaje(Key: Word; Shift: TShiftState): string;
-    procedure AbrirSelectorTallas(Sender: TObject;
-                const ABusquedaInicial: string = '');
-    procedure CrearColumnasTallas;
-    procedure InicializarGestorTallas;
     procedure RefrescarVisibilidadTipoIva;
-    procedure TallaEditValueChangedHook(Sender: TObject);
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
     procedure GridListaGetContentStyle(Sender: TcxCustomGridTableView;
                 ARecord: TcxCustomGridRecord;
@@ -512,36 +477,7 @@ type
     procedure unqrySesionLinBeforeDeleteHook(DataSet: TDataSet);
     procedure unqrySesionLinAfterDeleteHook(DataSet: TDataSet);
     procedure unqrySesionLinRecargarTallasHook(DataSet: TDataSet);
-    procedure ExpandirCodigoFamiliaActiva(const ACodigoFam: string;
-                const ANombreFam: string = '');
-    procedure ProponerPrecioVenta;
     procedure LogMsg(const S: string);
-    // Busqueda incremental in-cell de modelos del proveedor (columna
-    // "Modelo prov."): crea el desplegable, lo recarga al cambiar de
-    // proveedor y resuelve la eleccion como linea REUSAR.
-    procedure CrearLookupModelo;
-    procedure RecargarModelos;
-    procedure ModeloGetProperties(Sender: TcxCustomGridTableItem;
-                ARecord: TcxCustomGridRecord;
-                var AProperties: TcxCustomEditProperties);
-    procedure ModeloComboChange(Sender: TObject);
-    procedure ModeloComboCloseUp(Sender: TObject);
-    procedure ModeloComboValidate(Sender: TObject;
-                var DisplayValue: Variant; var ErrorText: TCaption;
-                var Error: Boolean);
-    procedure ModeloTimerBusqTimer(Sender: TObject);
-    procedure ModeloTimerResolveTimer(Sender: TObject);
-    // Copia de lineas repetidas: nucleo compartido por los botones
-    // "Otro color" / "Otro precio" (duplican la fila seleccionada) y por
-    // el modal que salta al teclear un modelo repetido (rellena la fila
-    // actual copiando la linea origen). AModo: 'C' = otro color (color
-    // vacio), 'P' = otro rango de precios (coste y PVP vacios).
-    procedure DuplicarLineaActiva(const AModo: string);
-    procedure AplicarCopiaEnLineaActual(const AModo: string);
-    procedure CopiarCantidadesEntreLineas(ALineaOrigen,
-                                           ALineaDestino: Integer);
-    function ObtenerSiguienteLineaCopia(ALineaOrigen: Integer): Integer;
-    procedure DupModalTimerTimer(Sender: TObject);
   protected
     // Interceptamos a nivel de form (KeyPreview heredado = True) para
     // que Ctrl+Enter abra el selector de la columna editbutton enfocada
@@ -564,240 +500,270 @@ uses
   inLibUser,
   inLibFiltroUsuario,
   inLibGenBusq,
-  inMtoModalDistribuidor,
-  inMtoModalDocsCreados,
   inLibShowMto,
   Vcl.Clipbrd,
-  inLibAtributosPaleta,
   inLibFotos,
   inLibValoresAutomaticos,
-  inMtoModalSelFamilia,
   inMtoModalImpSesion,
-  inMtoModalIncidencias,
-  inMtoModalRepetirModelo,
   inLibFotosNube,
   Vcl.Imaging.pngimage,
   inLibComprasImpuestos,
   inLibMsgArticulos, inLibMsgCompras,
-  inLibPresentacionDocumento,
   inLibContextoSesionIntf,
-
-  inLibComprasSesionesAplicacion,
-  inLibComprasSesionesCreacionDataSet,
-  inMtoComprasSesionesMaterializacionVcl,
-  UniDataComprasSesionesOperaciones,
+  inMtoComprasSesionesPresentacionMaterializacion,
   UniDataComprasSesionesComposicion;
-
-const
-  fIdVaColor = 'CO';
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
-
-procedure InicializarMaterializacionCompraSesionVcl(
-  AFormulario: TfrmMtoComprasSesiones);
-var
-  Callbacks: TCallbacksMaterializacionCompraSesion;
-  Adaptador: TAdaptadorMaterializacionCompraSesionVcl;
-  Operaciones: IOperacionesMaterializacionCompraSesion;
-  Vista: IVistaMaterializacionCompraSesion;
-begin
-  Callbacks := Default(TCallbacksMaterializacionCompraSesion);
-  Callbacks.LeerEstado :=
-    function: TEstadoSesionCreacion
-    begin
-      Result := LeerEstadoSesionCreacion(AFormulario.Dmm.unqryTablaG);
-    end;
-  Callbacks.GuardarEdicion :=
-    procedure
-    begin
-      if AFormulario.Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
-        AFormulario.Dmm.unqryTablaG.Post;
-      if AFormulario.Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
-        AFormulario.Dmm.unqrySesionLin.Post;
-    end;
-  Callbacks.NormalizarDuplicados :=
-    function(const AEstado: TEstadoSesionCreacion): Integer
-    begin
-      Result := AFormulario.FServicioComprasSesiones.
-        NormalizarDuplicadosIntraSesion(
-          AFormulario.IdentidadSesion.Usuario,
-          AEstado.Serie,
-          AEstado.Numero);
-    end;
-  Callbacks.Validar :=
-    function(out AIncidencias: TIncidenciasMaterializacionSesion): Boolean
-    var
-      iIncidencia: Integer;
-      Lista: TStringList;
-    begin
-      Lista := TStringList.Create;
-      try
-        Result := AFormulario.FServicioComprasSesiones.
-          ValidarSesionDetallado(Lista);
-        SetLength(AIncidencias, Lista.Count);
-        for iIncidencia := 0 to Lista.Count - 1 do
-          AIncidencias[iIncidencia] := Lista[iIncidencia];
-      finally
-        FreeAndNil(Lista);
-      end;
-    end;
-  Callbacks.CalcularDefectos :=
-    function(const AEstado: TEstadoSesionCreacion):
-      TDefectosDialogoCreacion
-    begin
-      Result := CalcularDefectosDialogoCreacion(
-        AEstado,
-        ObtenerSerieDefecto(
-          AFormulario.ConexionPrincipal,
-          AEstado.Empresa,
-          'AB'),
-        ObtenerSerieDefecto(
-          AFormulario.ConexionPrincipal,
-          AEstado.Empresa,
-          'PC'));
-    end;
-  Callbacks.ActualizarCabecera :=
-    procedure(const AAjustes: TAjustesCreacionElegidos)
-    var
-      Cabecera: TCabeceraSesionActualizada;
-    begin
-      Cabecera := ComponerCabeceraActualizada(AAjustes);
-      EscribirCabeceraSesionCreacion(
-        AFormulario.Dmm.unqryTablaG,
-        Cabecera);
-    end;
-  Callbacks.Materializar :=
-    function(
-      const AAjustes: TAjustesCreacionElegidos;
-      out AResultado: TResultadoMaterializacionSesion): Boolean
-    var
-      Parametros: TParametrosMaterializacionSesion;
-    begin
-      Parametros := ComponerParametrosMaterializacion(
-        AFormulario.IdentidadSesion.Usuario,
-        AAjustes);
-      Screen.Cursor := crHourGlass;
-      try
-        Result := AFormulario.FServicioComprasSesiones.
-          EjecutarMaterializacion(Parametros, AResultado);
-      finally
-        Screen.Cursor := crDefault;
-      end;
-    end;
-  Callbacks.Refrescar :=
-    procedure
-    begin
-      AFormulario.Dmm.unqryTablaG.Refresh;
-      if AFormulario.Dmm.unqrySesDocs.Active then
-        AFormulario.Dmm.unqrySesDocs.Refresh
-      else
-        AFormulario.Dmm.unqrySesDocs.Open;
-      AFormulario.RefrescarFotosProvisionales;
-    end;
-  Callbacks.Registrar :=
-    procedure(const ATexto: string)
-    begin
-      AFormulario.LogSes(ATexto);
-    end;
-  Callbacks.MostrarBloqueo :=
-    procedure(AMotivo: TMotivoBloqueoCreacion)
-    begin
-      case AMotivo of
-        mbcSinCabecera:
-          ShowMessage(SErrorSesionCompraNoActiva);
-        mbcYaMaterializada:
-          ShowMessage(SErrorSesionYaMaterializada);
-      end;
-    end;
-  Callbacks.InformarDuplicados :=
-    procedure(ACantidad: Integer)
-    begin
-      ShowMessage(Format(
-        SInfoDuplicadosSesionMarcadosReusar,
-        [ACantidad]));
-      AFormulario.Dmm.unqrySesionLin.Refresh;
-    end;
-  Callbacks.MostrarIncidencias :=
-    procedure(const AIncidencias: TIncidenciasMaterializacionSesion)
-    var
-      sIncidencia: string;
-      Lista: TStringList;
-    begin
-      Lista := TStringList.Create;
-      try
-        for sIncidencia in AIncidencias do
-          Lista.Add(sIncidencia);
-        TfrmModalIncidencias.Mostrar(
-          AFormulario,
-          'Hay incidencias que impiden materializar la sesion:',
-          Lista);
-      finally
-        FreeAndNil(Lista);
-      end;
-    end;
-  Callbacks.SolicitarAjustes :=
-    function(
-      const AEstado: TEstadoSesionCreacion;
-      const ADefectos: TDefectosDialogoCreacion;
-      out AAjustes: TAjustesCreacionElegidos): Boolean
-    begin
-      Result := TfrmModalCrearAlbaranSesion.Solicitar(
-        AFormulario,
-        AFormulario.Dmm.dsAlmacenes,
-        AFormulario.Dmm.dsTarifas,
-        AFormulario.Dmm.dsTemporadas,
-        AEstado,
-        ADefectos,
-        AAjustes);
-    end;
-  Callbacks.MostrarResultado :=
-    procedure(const AResultado: TResultadoMaterializacionSesion)
-    var
-      DocumentoSeleccionado: TDocumentoMaterializado;
-    begin
-      if Length(AResultado.Documentos) = 0 then
-        ShowMessage(SInfoSesionMaterializadaSinDocumentos)
-      else if TfrmModalDocsCreados.Seleccionar(
-        AFormulario,
-        AResultado.Documentos,
-        DocumentoSeleccionado) then
-      begin
-        if SameText(DocumentoSeleccionado.Tipo, 'Albaran') then
-          ShowMto(
-            Application.MainForm,
-            'AlbaranesCompra',
-            DocumentoSeleccionado.Serie + ',' +
-              DocumentoSeleccionado.Numero)
-        else if SameText(DocumentoSeleccionado.Tipo, 'Pedido') then
-          ShowMto(
-            Application.MainForm,
-            'PedidosCompra',
-            DocumentoSeleccionado.Serie + ',' +
-              DocumentoSeleccionado.Numero);
-      end;
-    end;
-  Callbacks.MostrarError :=
-    procedure(const AMensaje: string)
-    begin
-      TfrmModalIncidencias.MostrarMensaje(
-        AFormulario,
-        'No se pudo materializar la sesion:',
-        '[MATERIALIZAR] ' + AMensaje);
-    end;
-  Adaptador := TAdaptadorMaterializacionCompraSesionVcl.Create(Callbacks);
-  Operaciones := Adaptador;
-  Vista := Adaptador;
-  AFormulario.FDependencias.AplicacionMaterializacion :=
-    CrearAplicacionMaterializacionCompraSesion(Operaciones, Vista);
-end;
 
 procedure TfrmMtoComprasSesiones.LogSes(const ATexto: string);
 begin
   if Assigned(ContextoSesion) then
     ContextoSesion.LogSesion(ATexto);
 end;
+
+// ===========================================================================
+//   Colaboradores de presentacion
+// ===========================================================================
+// El formulario recoge la entrada, delega en el colaborador que
+// corresponde y presenta el resultado. Estos accesores concentran el
+// unico punto por el que se llega al gestor de tallas pivotadas.
+
+function TfrmMtoComprasSesiones.GestorTallas: TGestorGridTallas;
+begin
+  Result := nil;
+  if FTallas <> nil then
+    Result := FTallas.Gestor;
+end;
+
+procedure TfrmMtoComprasSesiones.RecargarTallasVisibles;
+begin
+  if GestorTallas <> nil then
+    GestorTallas.CargarCantidadesTodasLineas;
+end;
+
+// El DataController puede repintar la fila DESPUES del hook y borrar los
+// Values[] no-bound recien cargados: la recarga diferida tiene la ultima
+// palabra.
+procedure TfrmMtoComprasSesiones.RecargarTallasDiferido;
+begin
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      RecargarTallasVisibles;
+    end);
+end;
+
+procedure TfrmMtoComprasSesiones.RefrescarColumnasTallas;
+begin
+  if GestorTallas <> nil then
+  begin
+    GestorTallas.RecalcularMaxColumnas;
+    GestorTallas.CargarCantidadesTodasLineas;
+    GestorTallas.ActualizarCaptionsLineaActiva;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.ReconstruirTallas;
+begin
+  if GestorTallas <> nil then
+  begin
+    GestorTallas.InvalidarCache;
+    RefrescarColumnasTallas;
+  end;
+end;
+
+// Se crea ANTES del inherited: el gestor de tallas necesita sus columnas
+// creadas cuando el ancestro abre el detalle.
+procedure TfrmMtoComprasSesiones.CrearColaboradorTallas;
+var
+  Entorno: TEntornoTallasSesion;
+begin
+  Entorno := Default(TEntornoTallasSesion);
+  Entorno.Conexion := ConexionPrincipal;
+  Entorno.ContextoSesion := ContextoSesion;
+  Entorno.Usuario := IdentidadSesion.Usuario;
+  Entorno.Contenedor := cxgrdLineas;
+  Entorno.Vista := tvLineas;
+  Entorno.ColumnaSelector := dbcLinTallas;
+  Entorno.FuenteCabecera := dsTablaG;
+  Entorno.MaxColumnas := CANT_TALLAS_MAX;
+  Entorno.FijarTallajeDefecto :=
+    procedure(AIdConjunto: Integer)
+    begin
+      if Dmm <> nil then
+        Dmm.TallajeDefectoActual := AIdConjunto;
+    end;
+  Entorno.RefrescarTotalesSesion :=
+    procedure
+    begin
+      if Dmm <> nil then
+        Dmm.RefrescarTotalesSesion;
+    end;
+  FTallas := TCoordinadorTallasSesion.Create(Entorno);
+end;
+
+// El orden importa: el buscador de modelos pide copias de linea al
+// coordinador de copia, y el de proveedor abre el distribuidor del de
+// tallas (ya creado antes del inherited).
+procedure TfrmMtoComprasSesiones.CrearColaboradores;
+begin
+  CrearColaboradorMaterializacion;
+  CrearColaboradorCopiaLineas;
+  CrearColaboradorModelo;
+  CrearColaboradorProveedor;
+end;
+
+procedure TfrmMtoComprasSesiones.CrearColaboradorMaterializacion;
+var
+  EntornoMaterializacion: TEntornoMaterializacionCompraSesion;
+begin
+  EntornoMaterializacion :=
+    Default(TEntornoMaterializacionCompraSesion);
+  EntornoMaterializacion.Propietario := Self;
+  EntornoMaterializacion.Conexion := ConexionPrincipal;
+  EntornoMaterializacion.Servicio := FServicioComprasSesiones;
+  EntornoMaterializacion.Usuario := IdentidadSesion.Usuario;
+  EntornoMaterializacion.Cabecera := Dmm.unqryTablaG;
+  EntornoMaterializacion.Lineas := Dmm.unqrySesionLin;
+  EntornoMaterializacion.Documentos := Dmm.unqrySesDocs;
+  EntornoMaterializacion.FuenteAlmacenes := Dmm.dsAlmacenes;
+  EntornoMaterializacion.FuenteTarifas := Dmm.dsTarifas;
+  EntornoMaterializacion.FuenteTemporadas := Dmm.dsTemporadas;
+  EntornoMaterializacion.Registrar :=
+    procedure(const ATexto: string)
+    begin
+      LogSes(ATexto);
+    end;
+  EntornoMaterializacion.RefrescarFotos :=
+    procedure
+    begin
+      RefrescarFotosProvisionales;
+    end;
+  FDependencias.AplicacionMaterializacion :=
+    CrearAplicacionMaterializacionCompraSesionVcl(EntornoMaterializacion);
+end;
+
+procedure TfrmMtoComprasSesiones.CrearColaboradorCopiaLineas;
+var
+  EntornoCopia: TEntornoCopiaLineasSesion;
+begin
+  // CrearTablaPrincipal puede repetirse al reprocesar perfiles.
+  FreeAndNil(FCopiaLineas);
+  EntornoCopia := Default(TEntornoCopiaLineasSesion);
+  EntornoCopia.Propietario := Self;
+  EntornoCopia.Servicio := FServicioComprasSesiones;
+  EntornoCopia.Usuario := IdentidadSesion.Usuario;
+  EntornoCopia.Cabecera := Dmm.unqryTablaG;
+  EntornoCopia.Lineas := Dmm.unqrySesionLin;
+  EntornoCopia.Vista := tvLineas;
+  EntornoCopia.ColumnasTallas := FTallas.Columnas;
+  EntornoCopia.ColumnaColor := dbcLinColor;
+  EntornoCopia.ColumnaPrecioCompra := dbcLinPrecioCompra;
+  EntornoCopia.ObtenerGestorTallas :=
+    function: TGestorGridTallas
+    begin
+      Result := GestorTallas;
+    end;
+  EntornoCopia.RefrescarTotalesSesion :=
+    procedure
+    begin
+      Dmm.RefrescarTotalesSesion;
+    end;
+  EntornoCopia.RegistrarAviso :=
+    procedure(const ATexto: string)
+    begin
+      LogSes(ATexto);
+    end;
+  FCopiaLineas := TCoordinadorCopiaLineasSesion.Create(EntornoCopia);
+end;
+
+procedure TfrmMtoComprasSesiones.CrearColaboradorModelo;
+var
+  EntornoModelo: TEntornoModeloProveedorSesion;
+begin
+  FreeAndNil(FModeloPrv);
+  EntornoModelo := Default(TEntornoModeloProveedorSesion);
+  EntornoModelo.Propietario := Self;
+  EntornoModelo.Conexion := ConexionPrincipal;
+  EntornoModelo.Servicio := FServicioComprasSesiones;
+  EntornoModelo.Usuario := IdentidadSesion.Usuario;
+  EntornoModelo.Cabecera := Dmm.unqryTablaG;
+  EntornoModelo.Lineas := Dmm.unqrySesionLin;
+  EntornoModelo.Vista := tvLineas;
+  EntornoModelo.ColumnaModelo := dbcLinRefPrv;
+  EntornoModelo.RefrescarTallas :=
+    procedure
+    begin
+      if GestorTallas <> nil then
+      begin
+        GestorTallas.RecalcularMaxColumnas;
+        GestorTallas.ActualizarCaptionsLineaActiva;
+      end;
+    end;
+  EntornoModelo.FijarTallajeDefecto :=
+    procedure(AIdConjunto: Integer)
+    begin
+      Dmm.TallajeDefectoActual := AIdConjunto;
+    end;
+  EntornoModelo.SolicitarCopiaLinea :=
+    procedure(const AModelo: string; ALineaOrigen: Integer;
+      const AColorTexto: string; const AColorBasico: string;
+      AMargen: Double)
+    begin
+      FCopiaLineas.PrepararCopiaPendiente(
+        AModelo, ALineaOrigen, AColorTexto, AColorBasico, AMargen);
+    end;
+  EntornoModelo.RegistrarAviso :=
+    procedure(const ATexto: string)
+    begin
+      LogSes(ATexto);
+    end;
+  FModeloPrv := TBuscadorModeloProveedorSesion.Create(EntornoModelo);
+end;
+
+procedure TfrmMtoComprasSesiones.CrearColaboradorProveedor;
+var
+  EntornoProveedor: TEntornoProveedorSesion;
+begin
+  FreeAndNil(FProveedor);
+  EntornoProveedor := Default(TEntornoProveedorSesion);
+  EntornoProveedor.Conexion := ConexionPrincipal;
+  EntornoProveedor.Servicio := FServicioComprasSesiones;
+  EntornoProveedor.Datos := Dmm;
+  EntornoProveedor.BusquedaVisual := BusquedaVisual;
+  EntornoProveedor.Vista := tvLineas;
+  EntornoProveedor.ColumnaColorBasico := dbcLinColorBasico;
+  EntornoProveedor.BotonKits := btnAplicarKit;
+  EntornoProveedor.ObtenerGestorTallas :=
+    function: TGestorGridTallas
+    begin
+      Result := GestorTallas;
+    end;
+  EntornoProveedor.MostrarNombreProveedor :=
+    procedure(const ATexto: string)
+    begin
+      lblProveedorNombre.Caption := ATexto;
+    end;
+  EntornoProveedor.RefrescarVisibilidadTipoIva :=
+    procedure
+    begin
+      RefrescarVisibilidadTipoIva;
+    end;
+  EntornoProveedor.AbrirDistribuidor :=
+    procedure(const ACodigoKit: string)
+    begin
+      FTallas.AbrirDistribuidor(ACodigoKit);
+    end;
+  EntornoProveedor.Registrar :=
+    procedure(const ATexto: string)
+    begin
+      LogSes(ATexto);
+    end;
+  FProveedor := TCoordinadorProveedorSesion.Create(EntornoProveedor);
+end;
+
 // ===========================================================================
 //   TJvEnterAsTab — apagar mientras el grid tiene foco
 // ===========================================================================
@@ -835,20 +801,10 @@ begin
   LogSes('btnGrabarClick INICIO (delega al inherited)');
   inherited;
   LogSes('btnGrabarClick FIN. master/detail han hecho Post.');
-  // Tras Grabar, cxGrid limpia los Values[] no-bound al redibujar el
-  // row (los Posts del master/detail provocan re-fetch). Recargamos
-  // las cantidades desde la tabla de celdas para que las celdas
-  // talla vuelvan a mostrar lo que el usuario tecleo.
-  if Assigned(FGestorTallas) then FGestorTallas.CargarCantidadesTodasLineas;
-  // La recarga inmediata puede perder contra notificaciones tardias del
-  // DataController (se veia al grabar: las cantidades desaparecian).
-  // Repintado diferido — mismo patron que unqrySesionLinRecargarTallasHook.
-  TThread.ForceQueue(nil,
-    procedure
-    begin
-      if Assigned(FGestorTallas) then
-        FGestorTallas.CargarCantidadesTodasLineas;
-    end);
+  // Tras Grabar, cxGrid limpia los Values[] no-bound al redibujar la
+  // fila (los Posts del master/detail provocan re-fetch).
+  RecargarTallasVisibles;
+  RecargarTallasDiferido;
 end;
 
 // ===========================================================================
@@ -1017,21 +973,29 @@ end;
 procedure TfrmMtoComprasSesiones.CrearTablaPrincipal;
 begin
   inherited;
-  if tdmDataModule = nil then Exit;
-  dmm := tdmDataModule as TdmComprasSesiones;
+  if tdmDataModule <> nil then
+  begin
+    Dmm := tdmDataModule as TdmComprasSesiones;
+    CrearServicioSesion;
+    CrearColaboradores;
+    EnlazarListasCabecera;
+    EnlazarDetalleSesion;
+    EnlazarPestanaProveedor;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.CrearServicioSesion;
+begin
   FreeAndNil(FServicioComprasSesiones);
   FServicioComprasSesiones := CrearServicioComprasSesiones(
     ConexionPrincipal, Dmm, FotosArticulos,
     ContextoRepositoriosPantalla.CatalogoSql,
     ContextoRepositoriosPantalla.IncidenciasSql);
-  InicializarMaterializacionCompraSesionVcl(Self);
-  FreeAndNil(FGestorCopiaLineas);
-  FGestorCopiaLineas := TGestorCopiaLineasCompra.Create(
-    Dmm.unqryTablaG,
-    Dmm.unqrySesionLin,
-    ObtenerSiguienteLineaCopia);
   pkFieldName := 'SERIE_SES;NUMERO_SES';
+end;
 
+procedure TfrmMtoComprasSesiones.EnlazarListasCabecera;
+begin
   cbbEmpresa.Properties.ListSource   := Dmm.dsEmpresas;
   cbbAlmacen.Properties.ListSource   := Dmm.dsAlmacenes;
   cbbTarifa.Properties.ListSource    := Dmm.dsTarifas;
@@ -1040,40 +1004,38 @@ begin
   // ListSource del combo de proveedor (busqueda incremental por nombre).
   // Reutiliza el lookup Dmm.unqryProveedores, ya cargado para el rotulo.
   cbbProveedor.Properties.ListSource := Dmm.dsProveedores;
+end;
 
-  with Dmm do
-  begin
-    unqrySesionLin.MasterFields := 'SERIE_SES;NUMERO_SES';
-    unqrySesionLin.MasterSource := dsTablaG;
-    // Hook AfterPost: cuando el usuario cambia de fila el dataset
-    // hace Post automatico y cxGrid repinta la fila desde el dataset,
-    // limpiando los Values[] no-bound. Re-publicamos las cantidades
-    // de todas las lineas desde la cache de SESCEL.
-    unqrySesionLin.AfterPost    := unqrySesionLinAfterPostHook;
-    unqrySesionLin.BeforeInsert := unqrySesionLinBeforeInsertHook;
-    unqrySesionLin.AfterInsert  := unqrySesionLinAfterInsertHook;
-    unqrySesionLin.BeforeDelete := unqrySesionLinBeforeDeleteHook;
-    unqrySesionLin.AfterDelete  := unqrySesionLinAfterDeleteHook;
-    // Hook AfterRefresh / AfterOpen: cualquier re-fetch de unqrySesionLin
-    // (Refresh explicito, re-fetch master/detail tras cambios en el master,
-    // navegacion entre sesiones, etc.) resetea los Values[] no-bound del
-    // cxGrid. Sin esta recarga las celdas talla quedan en blanco aunque el
-    // SELECT de CargarCantidadesTodasLineas se haya ejecutado antes.
-    unqrySesionLin.AfterRefresh := unqrySesionLinRecargarTallasHook;
-    unqrySesionLin.AfterOpen    := unqrySesionLinRecargarTallasHook;
-    if not unqrySesionLin.Active then unqrySesionLin.Open;
-    if not unqrySesionCel.Active then unqrySesionCel.Open;
-    // Master/detail de la pestania 'Documentos'. Mismo patron que
-    // unqrySesionLin: declaramos MasterSource aqui (no en el dfm).
-    unqrySesDocs.MasterFields := 'SERIE_SES;NUMERO_SES';
-    unqrySesDocs.MasterSource := dsTablaG;
-    if not unqrySesDocs.Active then unqrySesDocs.Open;
-    // Master/detail de la pestaña de fotos provisionales.
-    unqrySesionFotos.MasterFields := 'SERIE_SES;NUMERO_SES';
-    unqrySesionFotos.MasterSource := dsTablaG;
-    if not unqrySesionFotos.Active then
-      unqrySesionFotos.Open;
-  end;
+procedure TfrmMtoComprasSesiones.EnlazarDetalleSesion;
+begin
+  Dmm.unqrySesionLin.MasterFields := 'SERIE_SES;NUMERO_SES';
+  Dmm.unqrySesionLin.MasterSource := dsTablaG;
+  // Hooks del detalle: al cambiar de fila el dataset hace Post
+  // automatico, cxGrid repinta desde el dataset y pierde los Values[]
+  // no-bound de las tallas; hay que volver a publicarlos.
+  Dmm.unqrySesionLin.AfterPost    := unqrySesionLinAfterPostHook;
+  Dmm.unqrySesionLin.BeforeInsert := unqrySesionLinBeforeInsertHook;
+  Dmm.unqrySesionLin.AfterInsert  := unqrySesionLinAfterInsertHook;
+  Dmm.unqrySesionLin.BeforeDelete := unqrySesionLinBeforeDeleteHook;
+  Dmm.unqrySesionLin.AfterDelete  := unqrySesionLinAfterDeleteHook;
+  // Cualquier re-fetch (Refresh explicito, master/detail, navegador)
+  // resetea los Values[] no-bound: se recargan tras el re-fetch.
+  Dmm.unqrySesionLin.AfterRefresh := unqrySesionLinRecargarTallasHook;
+  Dmm.unqrySesionLin.AfterOpen    := unqrySesionLinRecargarTallasHook;
+  if not Dmm.unqrySesionLin.Active then
+    Dmm.unqrySesionLin.Open;
+  if not Dmm.unqrySesionCel.Active then
+    Dmm.unqrySesionCel.Open;
+  // Master/detail de la pestania 'Documentos'.
+  Dmm.unqrySesDocs.MasterFields := 'SERIE_SES;NUMERO_SES';
+  Dmm.unqrySesDocs.MasterSource := dsTablaG;
+  if not Dmm.unqrySesDocs.Active then
+    Dmm.unqrySesDocs.Open;
+  // Master/detail de la pestania de fotos provisionales.
+  Dmm.unqrySesionFotos.MasterFields := 'SERIE_SES;NUMERO_SES';
+  Dmm.unqrySesionFotos.MasterSource := dsTablaG;
+  if not Dmm.unqrySesionFotos.Active then
+    Dmm.unqrySesionFotos.Open;
   tvLineas.DataController.DataSource := Dmm.dsSesionLin;
   tvDocs.DataController.DataSource := Dmm.dsSesDocs;
   tvFotosProvisionales.DataController.DataSource := Dmm.dsSesionFotos;
@@ -1082,38 +1044,26 @@ begin
   // tecla debe entrar al editor/lookup, no a la navegacion incremental.
   tvLineas.OptionsBehavior.AlwaysShowEditor := True;
   tvLineas.OptionsBehavior.IncSearch := False;
-
-  InicializarGestorTallas;
-
-  // Desplegable in-cell de busqueda de modelos del proveedor sobre la
-  // columna "Modelo prov." (se crea una vez; se recarga al posicionarse
-  // en una sesion / cambiar de proveedor en dsTablaGDataChangeHook).
-  if FModeloCombo = nil then CrearLookupModelo;
-  RecargarModelos;
-
-  // Hook OnDataChange del master: cuando el usuario navega de una
-  // sesion a otra (o se posiciona en la primera tras abrir el form),
-  // re-cargamos las cantidades de tallas. Sin esto, las celdas no-bound
-  // quedan vacias hasta que se Postea una linea, aunque los totales
-  // (TOTAL_UNIDADES_SESLIN, bound) si se ven correctos.
+  FTallas.ConfigurarDatos(
+    Dmm.unqryTablaG,
+    Dmm.unqrySesionLin,
+    Dmm.dsSesionLin);
+  FModeloPrv.RecargarModelos;
+  // Al navegar de una sesion a otra hay que recargar las cantidades de
+  // tallas: sin esto las celdas no-bound quedan vacias.
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
+  RefrescarColumnasTallas;
+end;
 
-  if Assigned(FGestorTallas) then
-  begin
-    FGestorTallas.RecalcularMaxColumnas;
-    FGestorTallas.CargarCantidadesTodasLineas;
-    FGestorTallas.ActualizarCaptionsLineaActiva;
-  end;
-  // Pestaña Proveedor: ficha (solo lectura) + kits del proveedor.
+procedure TfrmMtoComprasSesiones.EnlazarPestanaProveedor;
+begin
   dsPrvFicha.DataSet := Dmm.unqryPrvFicha;
   tvPrvKits.DataController.DataSource    := Dmm.dsPrvKits;
   tvPrvKitsDet.DataController.DataSource := Dmm.dsPrvKitsDet;
-  // Desplegable de kits de la cabecera: muestra una etiqueta descriptiva
-  // por kit (nombre + sistema + primera/ultima talla con cantidad).
+  // Desplegable de kits de la cabecera: etiqueta descriptiva por kit.
   cbbKitProv.Properties.ListSource := Dmm.dsPrvKitsCombo;
-  // Pintar el rotulo del proveedor de la sesion enfocada al abrir el form.
-  ActualizarLabelProveedor;
-  RecargarProveedorSesion;
+  FProveedor.ActualizarRotuloProveedor;
+  FProveedor.RecargarProveedorSesion;
   RefrescarVisibilidadTipoIva;
   RefrescarFotoProvisional;
 end;
@@ -1130,17 +1080,17 @@ begin
   // o al cambiar CODIGO_PRV_SES tecleado directamente en el ButtonEdit.
   if (Field = nil) or SameText(Field.FieldName, 'CODIGO_PRV_SES') then
   begin
-    ActualizarLabelProveedor;
+    FProveedor.ActualizarRotuloProveedor;
     // Lista de modelos del desplegable "Modelo prov." acotada al proveedor.
-    RecargarModelos;
-    // Pestaña Proveedor: ficha + kits del proveedor de la sesion.
-    RecargarProveedorSesion;
+    FModeloPrv.RecargarModelos;
+    // Pestana Proveedor: ficha + kits del proveedor de la sesion.
+    FProveedor.RecargarProveedorSesion;
     // Defectos del proveedor (margen %, sistema de tallas) solo cuando el
     // usuario esta cambiando el proveedor en la cabecera, no al navegar.
     if (Field <> nil) and (Dmm <> nil) and
        (Dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
     begin
-      CopiarDefectosProveedor;
+      FProveedor.CopiarDefectosProveedor;
       RefrescarVisibilidadTipoIva;
     end;
   end;
@@ -1175,13 +1125,7 @@ begin
   begin
     RefrescarVisibilidadTipoIva;
     RefrescarFotoProvisional;
-    if FGestorTallas <> nil then
-    begin
-      FGestorTallas.InvalidarCache;
-      FGestorTallas.RecalcularMaxColumnas;
-      FGestorTallas.CargarCantidadesTodasLineas;
-      FGestorTallas.ActualizarCaptionsLineaActiva;
-    end;
+    ReconstruirTallas;
   end;
 end;
 
@@ -1231,43 +1175,22 @@ procedure TfrmMtoComprasSesiones.unqrySesionLinAfterPostHook(
 begin
   Dmm.unqrySesionLinAfterPost(DataSet);
   RefrescarVisibilidadTipoIva;
-  // Cuando el usuario cambia de fila el dataset hace Post automatico:
-  // cxGrid reacciona repintando la fila desde el dataset y eso borra
-  // los Values[] no-bound (tallas) de la fila que abandona. Re-cargamos
-  // las cantidades de todas las lineas desde SESCEL — el SELECT
-  // agregado es barato y el BeginUpdate/EndUpdate del DataController
-  // lo deja en una sola pasada.
-  if Assigned(FGestorTallas) then
-    FGestorTallas.CargarCantidadesTodasLineas;
-  // La notificacion del DataController que repinta la fila abandonada
-  // puede llegar DESPUES de este hook y volver a borrar los Values[]
-  // recien cargados (se veia al cambiar de fila: las cantidades
-  // desaparecian). Repintado diferido con ForceQueue — mismo patron que
-  // unqrySesionLinRecargarTallasHook — para tener la ultima palabra.
-  TThread.ForceQueue(nil,
-    procedure
-    begin
-      if Assigned(FGestorTallas) then
-        FGestorTallas.CargarCantidadesTodasLineas;
-    end);
+  // Al cambiar de fila el dataset hace Post automatico y cxGrid repinta
+  // la fila abandonada, borrando sus Values[] no-bound.
+  RecargarTallasVisibles;
+  RecargarTallasDiferido;
 end;
 
 procedure TfrmMtoComprasSesiones.unqrySesionLinRecargarTallasHook(
                                                       DataSet: TDataSet);
 begin
-  // AfterRefresh / AfterOpen comparten handler. Cualquier re-fetch del
-  // dataset de lineas (Refresh explicito en btnCrearClick / Distribuidor,// re-fetch master/detail al cambiar de cabecera o al Postear el master,// boton Refresh del navegador) borra los Values[] no-bound de las
-  // columnas talla. El SELECT que CargarCantidadesUnaLinea hace para
-  // recuperarlos solo funciona si se ejecuta DESPUES del re-fetch — y la
-  // tabla `fza_compras_sesiones_celdas` ya tiene la cantidad correcta, lo
-  // unico que falta es volver a pintar el grid.
-  // Diferimos con ForceQueue para que el DataController de cxGrid termine
-  // de procesar la notificacion del re-fetch antes de tocar Values[].
+  // AfterRefresh / AfterOpen comparten handler. La tabla de celdas ya
+  // tiene la cantidad correcta: lo unico que falta es volver a pintarla
+  // DESPUES de que el DataController procese el re-fetch.
   TThread.ForceQueue(nil,
     procedure
     begin
-      if Assigned(FGestorTallas) then
-        FGestorTallas.CargarCantidadesTodasLineas;
+      RecargarTallasVisibles;
       RefrescarVisibilidadTipoIva;
     end);
 end;
@@ -1320,21 +1243,12 @@ end;
 procedure TfrmMtoComprasSesiones.unqrySesionLinAfterDeleteHook(
   DataSet: TDataSet);
 begin
-  // Sustituye el handler del DM (que solo llamaba RefrescarTotalesSesion)
-  // y anade la recalculacion de columnas de talla del grid.
   LogSes('AfterDelete: RefrescarTotalesSesion + RecalcularMaxColumnas');
   Dmm.RefrescarTotalesSesion;
   RefrescarVisibilidadTipoIva;
   // Tras el delete el grid se repinta y borra los Values[] no ligados:
-  // ademas de recalcular columnas hay que recargar cantidades y
-  // captions de las lineas que quedan (las tallas "desaparecian").
-  if Assigned(FGestorTallas) then
-  begin
-    FGestorTallas.InvalidarCache;
-    FGestorTallas.RecalcularMaxColumnas;
-    FGestorTallas.CargarCantidadesTodasLineas;
-    FGestorTallas.ActualizarCaptionsLineaActiva;
-  end;
+  // hay que recalcular columnas, cantidades y captions de lo que queda.
+  ReconstruirTallas;
 end;
 
 procedure TfrmMtoComprasSesiones.ResetForm;
@@ -1350,41 +1264,11 @@ begin
   // OJO: TODO lo que vaya a usar el `inherited` (que ejecuta
   // ProcesarPerfiles -> CrearTablaPrincipal -> abre unqrySesionLin -> el
   // grid dispara OnFocusedRecordChanged sobre el gestor de tallas) tiene
-  // que estar creado ANTES del inherited.
-  FBmpSwatch := TBitmap.Create;
-  FNombresConjunto := TDictionary<Integer, string>.Create;
-  // Query que alimenta el selector "Sistema tallas": solo conjuntos del
-  // atributo pivot (ID_VA_AC = 'TAL'), no colores ni otros ejes. Trae
-  // ademas primera y ultima talla (ordenadas por ORDEN_ACD) para
-  // mostrarlas como rango (columnas 'Desde' / 'Hasta') en el listbox.
-  FQryConjuntosTallas := TUniQuery.Create(Self);
-  FQryConjuntosTallas.Connection := ConexionPrincipal;
-  FQryConjuntosTallas.SQL.Text :=
-    'SELECT AC.ID_AC, AC.NOMBRE_AC, ' +
-    '  (SELECT AV.AV FROM fza_atributos_conjuntos_det ACD ' +
-    '     JOIN fza_atributos_valores AV ON AV.ID_AV = ACD.ID_AV_ACD ' +
-    '    WHERE ACD.ID_AC_ACD = AC.ID_AC ' +
-    '    ORDER BY ACD.ORDEN_ACD, AV.AV LIMIT 1) AS PRIMERA, ' +
-    '  (SELECT AV.AV FROM fza_atributos_conjuntos_det ACD ' +
-    '     JOIN fza_atributos_valores AV ON AV.ID_AV = ACD.ID_AV_ACD ' +
-    '    WHERE ACD.ID_AC_ACD = AC.ID_AC ' +
-    '    ORDER BY ACD.ORDEN_ACD DESC, AV.AV DESC LIMIT 1) AS ULTIMA ' +
-    '  FROM fza_atributos_conjuntos AC ' +
-    ' WHERE AC.ESACTIVO_AC = ''S'' ' +
-    '   AND AC.ID_VA_AC = ''TAL'' ' +
-    ' ORDER BY AC.NOMBRE_AC';
-  FQryConjuntosTallas.Open;
-  // Volcar la query a la lista de opciones del selector y al diccionario
-  // ID_AC -> NOMBRE_AC (lo usa CustomDrawCell para mostrar el nombre).
-  CargarConjuntosTallas;
-
-  // CrearColumnasTallas debe correr antes de inherited (CrearTablaPrincipal,// lanzada desde inherited,llama a RecalcularMaxColumnas y
-  // CargarCantidadesTodasLineas del gestor; si las columnas no existen
-  // todavia ambos son no-op).
-  CrearColumnasTallas;
-
+  // que estar creado ANTES del inherited. Las columnas de talla se crean
+  // aqui: si no existen, el recalculo del gestor seria un no-op.
+  CrearColaboradorTallas;
+  FTallas.CrearColumnas;
   inherited;
-
   cxPageControl2.OnChange := cxPageControl2Change;
   tvFotosProvisionales.OnFocusedRecordChanged :=
     tvFotosProvisionalesFocusedRecordChanged;
@@ -1394,11 +1278,10 @@ begin
   for i := 0 to cxGrdDBTabPrin.ItemCount - 1 do
     cxGrdDBTabPrin.Items[i].Styles.OnGetContentStyle :=
       GridListaGetContentStyle;
-
-  // Forzar orden visual de las columnas de lineas (orden fijo pedido por
-  // el usuario). Se hace DESPUES del inherited porque el ancestro restaura
-  // el layout guardado y podria alterar los Index. El bloque de tallas
-  // queda contiguo tras "Sistema tallas"; totales y nro de linea al final.
+  // Orden visual fijo de las columnas de lineas. Se hace DESPUES del
+  // inherited porque el ancestro restaura el layout guardado y podria
+  // alterar los Index. El bloque de tallas queda contiguo tras "Sistema
+  // tallas"; totales y nro de linea al final.
   dbcLinRefPrv.Index       := 0;  // Modelo prov.
   dbcLinCodArt.Index       := 1;  // Codigo de articulo
   dbcLinFamilia.Index      := 2;  // Familia
@@ -1409,18 +1292,13 @@ begin
   dbcLinPrecioVenta.Index  := 7;  // Precio de venta
   dbcLinTallas.Index       := 8;  // Sistema de tallas
   IdxBase := dbcLinTallas.Index;
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-  begin
-    if Assigned(FTallaColumns[i]) then
-      FTallaColumns[i].Index := IdxBase + i + 1;
-  end;
+  FTallas.ReindexarColumnas(IdxBase);
   // Totales y nro de linea, tras el bloque de tallas pivotadas.
-  dbcLinTotalTallas.Index  := IdxBase + CANT_TALLAS_MAX + 1;  // Total tallas
-  dbcLinImporteTotal.Index := IdxBase + CANT_TALLAS_MAX + 2;  // Total importe
-  dbcLinNumero.Index       := IdxBase + CANT_TALLAS_MAX + 3;  // Nro de linea
-
-  CargarBasicosColor;
-
+  dbcLinTotalTallas.Index  := IdxBase + CANT_TALLAS_MAX + 1;
+  dbcLinImporteTotal.Index := IdxBase + CANT_TALLAS_MAX + 2;
+  dbcLinNumero.Index       := IdxBase + CANT_TALLAS_MAX + 3;
+  if FProveedor <> nil then
+    FProveedor.CargarBasicosColor;
   // El contexto distribuye el log de la sesion sin estado global mutable.
   if Supports(ContextoSesion, IGestorContextoSesion, GestorContexto) then
     GestorContexto.AsignarLogSesion(Self.LogMsg);
@@ -1650,68 +1528,30 @@ var
 begin
   if (Dmm <> nil) and Assigned(Dmm.dsSesionFotos) then
     Dmm.dsSesionFotos.OnDataChange := nil;
-  // Cerrar la query del lookup y soltar la connection ANTES del
-  // inherited: TfrmMtoGen.FormDestroy libera el DataModule y, por
-  // los caminos de UniDAC,la ConexionPrincipal global puede quedar en estado
-  // 'not connected' antes de que esta query (Owner=Self) sea
-  // destruida automaticamente al final del proceso. Si la
-  // destrucion automatica encuentra Active=True intenta cerrar el
-  // cursor contra una conexion ya inactiva -> "Connection is not
-  // connected".
-  if Assigned(FQryConjuntosTallas) then
-  begin
-    try
-      if FQryConjuntosTallas.Active then FQryConjuntosTallas.Close;
-    except
-      // Si la conexion ya cayo no podemos hacer nada util aqui.
-      on E: Exception do
-        if RegistroLog <> nil then
-          RegistroLog.RegistrarAviso(
-            'ComprasSesiones.FormDestroy: cierre de query fallo: ' +
-            E.Message);
-    end;
-    FQryConjuntosTallas.Connection := nil;
-    FreeAndNil(FQryConjuntosTallas);
-  end;
-  // Desenganchar antes de liberar el memo que recibe los mensajes.
+  // Desenganchar el log antes de soltar los colaboradores que lo usan.
   if Supports(ContextoSesion, IGestorContextoSesion, GestorContexto) then
     GestorContexto.AsignarLogSesion(nil);
-  FreeAndNil(FNombresConjunto);
   FDependencias := Default(TContextoDependenciasComprasSesiones);
+  // Orden inverso al de creacion: primero los que consultan el gestor de
+  // tallas y el servicio, despues sus proveedores. Los colaboradores
+  // cierran sus propios cursores antes de que TfrmMtoGen.FormDestroy
+  // libere el data module y deje la conexion inactiva.
+  FreeAndNil(FCopiaLineas);
+  FreeAndNil(FModeloPrv);
+  FreeAndNil(FProveedor);
+  FreeAndNil(FTallas);
   FreeAndNil(FServicioComprasSesiones);
-  FreeAndNil(FGestorCopiaLineas);
-  FreeAndNil(FGestorTallas);
-  FreeAndNil(FBmpSwatch);
-  // Objetos runtime del desplegable "Modelo prov." (orden inverso a su
-  // creacion en CrearLookupModelo).
-  FreeAndNil(FDupTimerModal);
-  FreeAndNil(FModeloTimerResolve);
-  FreeAndNil(FModeloTimerBusq);
-  FreeAndNil(FModeloEditRepo);
-  FreeAndNil(FModeloRepo);
-  FreeAndNil(FModeloBusqDs);
-  FreeAndNil(FModeloBusqQry);
   inherited;
 end;
 
-procedure TfrmMtoComprasSesiones.CargarBasicosColor;
-begin
-  FBasicosColor :=
-    FServicioComprasSesiones.ConsultarCodigosBasicosActivos(
-      fIdVaColor);
-end;
-
 // ===========================================================================
-//   Proveedor — busqueda (inMtoGenSearch sobre vi_proveedores) y rotulo
+//   Proveedor y kits — delegacion en TCoordinadorProveedorSesion
 // ===========================================================================
-// Sustituye al antiguo combo de proveedores por un ButtonEdit que abre el
-// buscador generico (TfrmMtoSearch / inMtoGenSearch) sobre vi_proveedores y
-// un rotulo que muestra nombre + razon social del proveedor seleccionado.
 
 procedure TfrmMtoComprasSesiones.cbbProveedorPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 begin
-  BuscarProveedor;
+  FProveedor.BuscarProveedor;
 end;
 
 procedure TfrmMtoComprasSesiones.cbbProveedorKeyUp(Sender: TObject;
@@ -1721,253 +1561,20 @@ begin
   if (Key = VK_RETURN) and (ssCtrl in Shift) then
   begin
     Key := 0;
-    BuscarProveedor;
+    FProveedor.BuscarProveedor;
   end;
-end;
-
-procedure TfrmMtoComprasSesiones.BuscarProveedor;
-var
-  sCodigo : string;
-begin
-  // Abre inMtoGenSearch sobre vi_proveedores y vuelca el CODIGO_PRV_PRV
-  // elegido en CODIGO_PRV_SES de la cabecera de la sesion.
-  if Dmm.unqryTablaG.IsEmpty then
-    MessageDlg(SErrorSesionElegirProveedorNoSeleccionada,
-               mtInformation, [mbOk], 0)
-  else if BusquedaVisual.EjecutarBusqueda(
-    ConexionPrincipal,
-    'Busqueda de proveedores',
-            'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
-            'CODIGO_PRV_PRV', sCodigo, 'frmMtoSesProvSearch') then
-  begin
-    if not (Dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
-      Dmm.unqryTablaG.Edit;
-    Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString := sCodigo;
-    ActualizarLabelProveedor;
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.ActualizarLabelProveedor;
-begin
-  if Assigned(Dmm) then
-    lblProveedorNombre.Caption := TextoProveedorDocumento(
-      Dmm.unqryTablaG, Dmm.unqryProveedores,
-      'CODIGO_PRV_SES')
-  else
-    lblProveedorNombre.Caption := '';
 end;
 
 // ===========================================================================
 //   Pestaña Proveedor — ficha, defectos y kits de cantidades por talla
 // ===========================================================================
 
-procedure TfrmMtoComprasSesiones.RecargarProveedorSesion;
-var
-  sPrv : string;
-begin
-  // Reabre la ficha y los kits solo si el proveedor cambia (o si la query
-  // quedo cerrada tras un ResetForm). Se invoca al navegar de sesion y al
-  // cambiar CODIGO_PRV_SES.
-  sPrv := '';
-  if (Dmm <> nil) and Assigned(Dmm.unqryTablaG) and Dmm.unqryTablaG.Active and
-     (not Dmm.unqryTablaG.IsEmpty) then
-    sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
-  if (Dmm <> nil) and
-     ((not SameText(sPrv, FPrvFichaCargado)) or
-      ((sPrv <> '') and (not Dmm.unqryPrvFicha.Active))) then
-  begin
-    FPrvFichaCargado := sPrv;
-    Dmm.RecargarProveedorSesion(sPrv);
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.CopiarDefectosProveedor;
-begin
-  // Copia a la cabecera los defectos de compras del proveedor recien
-  // elegido. El margen solo pisa cuando el proveedor tiene valor.
-  if (Dmm <> nil) and Dmm.unqryPrvFicha.Active and
-     (not Dmm.unqryPrvFicha.IsEmpty) then
-  begin
-    if Dmm.unqryPrvFicha.FieldByName('PORCENTAJE_MARGEN_PRV').AsFloat > 0 then
-    begin
-      if not (Dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
-        Dmm.unqryTablaG.Edit;
-      Dmm.unqryTablaG.FieldByName('PORCENTAJE_MARGEN_SES').AsFloat :=
-        Dmm.unqryPrvFicha.FieldByName('PORCENTAJE_MARGEN_PRV').AsFloat;
-    end;
-    // Sistema de tallas por defecto del proveedor: NO se copia a ningun
-    // campo de cabecera (la sesion no tiene columna para eso), solo fija
-    // el tallaje-defecto-del-documento en memoria (Dmm.TallajeDefectoActual)
-    // que unqrySesionLinAfterInsert propone a la siguiente linea nueva.
-    if (Dmm.unqryPrvFicha.FindField('ID_AC_TALLAS_PRV') <> nil) and
-       (Dmm.unqryPrvFicha.FieldByName('ID_AC_TALLAS_PRV').AsInteger > 0) then
-      Dmm.TallajeDefectoActual :=
-        Dmm.unqryPrvFicha.FieldByName('ID_AC_TALLAS_PRV').AsInteger;
-    if (Dmm.unqryPrvFicha.FindField('CODIGO_FP_PRV') <> nil) and
-       (Dmm.unqryTablaG.FindField('FORMA_PAGO_SES') <> nil) and
-       (Trim(Dmm.unqryTablaG.FieldByName('FORMA_PAGO_SES').AsString) = '') and
-       (Trim(Dmm.unqryPrvFicha.FieldByName('CODIGO_FP_PRV').AsString) <> '') then
-    begin
-      if not (Dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
-        Dmm.unqryTablaG.Edit;
-      Dmm.unqryTablaG.FieldByName('FORMA_PAGO_SES').AsString :=
-        Trim(Dmm.unqryPrvFicha.FieldByName('CODIGO_FP_PRV').AsString);
-    end;
-    if (Dmm.unqryPrvFicha.FindField(
-       'ESVARIOS_TIPOS_IVA_PRV') <> nil) and
-       (Dmm.unqryTablaG.FindField(
-       'ESVARIOS_TIPOS_IVA_SES') <> nil) then
-    begin
-      if not (Dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
-        Dmm.unqryTablaG.Edit;
-      Dmm.unqryTablaG.FieldByName('ESVARIOS_TIPOS_IVA_SES').AsString :=
-        UpperCase(Trim(
-          Dmm.unqryPrvFicha.FieldByName(
-            'ESVARIOS_TIPOS_IVA_PRV').AsString));
-      if Dmm.unqryTablaG.FieldByName(
-         'ESVARIOS_TIPOS_IVA_SES').AsString = '' then
-        Dmm.unqryTablaG.FieldByName(
-          'ESVARIOS_TIPOS_IVA_SES').AsString := 'N';
-      RefrescarVisibilidadTipoIva;
-    end;
-    if (Dmm.unqryPrvFicha.FindField(
-       'ESIVA_EXENTO_INTRACOMUNITARIO_PRV') <> nil) and
-       (Dmm.unqryTablaG.FindField(
-       'ESIVA_EXENTO_INTRACOMUNITARIO_SES') <> nil) then
-    begin
-      if not (Dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
-        Dmm.unqryTablaG.Edit;
-      Dmm.unqryTablaG.FieldByName(
-        'ESIVA_EXENTO_INTRACOMUNITARIO_SES').AsString :=
-        UpperCase(Trim(Dmm.unqryPrvFicha.FieldByName(
-          'ESIVA_EXENTO_INTRACOMUNITARIO_PRV').AsString));
-      if Dmm.unqryTablaG.FieldByName(
-         'ESIVA_EXENTO_INTRACOMUNITARIO_SES').AsString = '' then
-        Dmm.unqryTablaG.FieldByName(
-          'ESIVA_EXENTO_INTRACOMUNITARIO_SES').AsString := 'N';
-      Dmm.RefrescarTotalesSesion;
-    end;
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.AplicarKitALineaActual(
-  const ACodigoKit: string);
-var
-  sPrv     : string;
-  sResumen : string;
-  iLinea   : Integer;
-  idxRec   : Integer;
-begin
-  sPrv := '';
-  if not Dmm.unqryTablaG.IsEmpty then
-    sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
-  // Formato distribuido: las cantidades viven por almacen, asi que el kit
-  // se aplica desde la matriz de almacenes (distribuidor en modo kit, con
-  // botones aplicar/limpiar por almacen y aplicar en todos). Validamos
-  // antes el tallaje con la misma regla que el modo simple.
-  if (not Dmm.unqryTablaG.IsEmpty) and
-     (Dmm.unqryTablaG.FieldByName(
-                            'ESFORMATO_DISTRIBUIDO_SES').AsString = 'S') then
-  begin
-    if UniDataComprasSesionesOperaciones.ValidarKitSobreLineaActual(
-      Dmm,
-      FServicioComprasSesiones,
-      sPrv,
-      ACodigoKit,
-      sResumen) then
-    begin
-      LogSes(Format('AplicarKit %s -> distribuidor (formato distribuido)',
-                    [ACodigoKit]));
-      AbrirDistribuidor(ACodigoKit);
-    end
-    else
-      MessageDlg(sResumen, mtWarning, [mbOk], 0);
-  end
-  // Formato simple: vuelca las cantidades del kit sobre la linea con foco
-  // y repinta la fila igual que tras teclear a mano (totales + no-bound).
-  else if
-    UniDataComprasSesionesOperaciones.AplicarKitProveedorALinea(
-      Dmm,
-      FGestorTallas,
-      FServicioComprasSesiones,
-      sPrv,
-      ACodigoKit,
-      sResumen) then
-  begin
-    iLinea := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
-    if Assigned(FGestorTallas) then
-    begin
-      FGestorTallas.RefrescarTotalesLineaActual;
-      idxRec := tvLineas.Controller.FocusedRecordIndex;
-      if idxRec >= 0 then
-        FGestorTallas.CargarCantidadesUnaLinea(idxRec, iLinea);
-    end;
-    if Assigned(Dmm) then
-      Dmm.RefrescarTotalesSesion;
-    LogSes(Format('AplicarKit %s sobre linea %d', [ACodigoKit, iLinea]));
-    // Aviso solo si alguna talla del kit no caso con el sistema de la linea.
-    if sResumen <> '' then
-      MessageDlg(sResumen, mtInformation, [mbOk], 0);
-  end
-  else
-    MessageDlg(sResumen, mtWarning, [mbOk], 0);
-end;
-
 procedure TfrmMtoComprasSesiones.btnAplicarKitClick(Sender: TObject);
-var
-  oItem : TMenuItem;
-  pt    : TPoint;
 begin
   inherited;
   // Popup con los kits del proveedor de la sesion; el elegido se aplica
   // sobre la linea con foco del grid de articulos.
-  if Dmm.unqrySesionLin.IsEmpty then
-    MessageDlg(SErrorLineaArticuloSesionNoSeleccionada,
-               mtInformation, [mbOk], 0)
-  else if (not Dmm.unqryPrvKits.Active) or Dmm.unqryPrvKits.IsEmpty then
-    MessageDlg(SErrorProveedorSesionSinKits,
-               mtInformation, [mbOk], 0)
-  else
-  begin
-    if FMenuKits = nil then
-      FMenuKits := TPopupMenu.Create(Self);
-    FMenuKits.Items.Clear;
-    SetLength(FMenuKitsCodigos, 0);
-    Dmm.unqryPrvKits.DisableControls;
-    try
-      Dmm.unqryPrvKits.First;
-      while not Dmm.unqryPrvKits.Eof do
-      begin
-        oItem := TMenuItem.Create(FMenuKits);
-        oItem.Caption := StringReplace(
-          Dmm.unqryPrvKits.FieldByName('CODIGO_PRVKIT').AsString + ' - ' +
-          Dmm.unqryPrvKits.FieldByName('NOMBRE_PRVKIT').AsString,
-          '&', '&&', [rfReplaceAll]);
-        oItem.Tag     := Length(FMenuKitsCodigos);
-        oItem.OnClick := MenuKitItemClick;
-        FMenuKits.Items.Add(oItem);
-        SetLength(FMenuKitsCodigos, Length(FMenuKitsCodigos) + 1);
-        FMenuKitsCodigos[High(FMenuKitsCodigos)] :=
-          Dmm.unqryPrvKits.FieldByName('CODIGO_PRVKIT').AsString;
-        Dmm.unqryPrvKits.Next;
-      end;
-      Dmm.unqryPrvKits.First;
-    finally
-      Dmm.unqryPrvKits.EnableControls;
-    end;
-    pt := btnAplicarKit.ClientToScreen(Point(0, btnAplicarKit.Height));
-    FMenuKits.Popup(pt.X, pt.Y);
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.MenuKitItemClick(Sender: TObject);
-begin
-  if Sender is TMenuItem then
-  begin
-    if (TMenuItem(Sender).Tag >= 0) and
-       (TMenuItem(Sender).Tag <= High(FMenuKitsCodigos)) then
-      AplicarKitALineaActual(FMenuKitsCodigos[TMenuItem(Sender).Tag]);
-  end;
+  FProveedor.MostrarMenuKits;
 end;
 
 procedure TfrmMtoComprasSesiones.btnAplicarKitCabClick(Sender: TObject);
@@ -1975,8 +1582,7 @@ var
   sKit : string;
 begin
   inherited;
-  // Aplica el kit elegido en el desplegable de la cabecera sobre la linea
-  // con foco. El EditValue del lookup es el CODIGO_PRVKIT.
+  // El EditValue del desplegable de la cabecera es el CODIGO_PRVKIT.
   if VarIsNull(cbbKitProv.EditValue) or VarIsClear(cbbKitProv.EditValue) then
     sKit := ''
   else
@@ -1985,19 +1591,19 @@ begin
     MessageDlg(SErrorKitProveedorDesplegableNoSeleccionado,
                mtInformation, [mbOk], 0)
   else
-    AplicarKitALineaActual(sKit);
+    FProveedor.AplicarKitALineaActual(sKit);
 end;
 
 procedure TfrmMtoComprasSesiones.btnAplicarKitProvClick(Sender: TObject);
 begin
   inherited;
-  // Aplica el kit seleccionado en el grid de la pestaña Proveedor sobre
+  // Aplica el kit seleccionado en el grid de la pestana Proveedor sobre
   // la linea con foco del grid de articulos.
   if (not Dmm.unqryPrvKits.Active) or Dmm.unqryPrvKits.IsEmpty then
     MessageDlg(SErrorProveedorSesionSinKits,
                mtInformation, [mbOk], 0)
   else
-    AplicarKitALineaActual(
+    FProveedor.AplicarKitALineaActual(
       Dmm.unqryPrvKits.FieldByName('CODIGO_PRVKIT').AsString);
 end;
 
@@ -2012,517 +1618,6 @@ begin
   ShowMtoCodigoDataSet(Self.Owner, 'Proveedores',
     Dmm.unqryTablaG, 'CODIGO_PRV_SES');
 end;
-
-// ===========================================================================
-//   Creacion y cache de columnas de talla
-// ===========================================================================
-
-procedure TfrmMtoComprasSesiones.CargarConjuntosTallas;
-var
-  iId : Integer;
-  k   : Integer;
-begin
-  // Vuelca FQryConjuntosTallas a FOpcionesTallas (lo consume el selector
-  // listbox de 3 columnas) y a FNombresConjunto (ID_AC -> NOMBRE_AC, lo
-  // usa tvLineasCustomDrawCell para mostrar el nombre del sistema en la
-  // celda en vez del ID numerico que esta bound).
-  SetLength(FOpcionesTallas, 0);
-  if Assigned(FNombresConjunto) then
-    FNombresConjunto.Clear;
-  if (FQryConjuntosTallas = nil) or (not FQryConjuntosTallas.Active) then Exit;
-  SetLength(FOpcionesTallas, FQryConjuntosTallas.RecordCount);
-  k := 0;
-  FQryConjuntosTallas.First;
-  while not FQryConjuntosTallas.Eof do
-  begin
-    iId := FQryConjuntosTallas.FieldByName('ID_AC').AsInteger;
-    FOpcionesTallas[k].IdAc    := iId;
-    FOpcionesTallas[k].Nombre  := FQryConjuntosTallas.FieldByName('NOMBRE_AC').AsString;
-    FOpcionesTallas[k].Primera := FQryConjuntosTallas.FieldByName('PRIMERA').AsString;
-    FOpcionesTallas[k].Ultima  := FQryConjuntosTallas.FieldByName('ULTIMA').AsString;
-    if Assigned(FNombresConjunto) then
-      FNombresConjunto.AddOrSetValue(iId, FOpcionesTallas[k].Nombre);
-    Inc(k);
-    FQryConjuntosTallas.Next;
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.CrearColumnasTallas;
-var
-  i          : Integer;
-  Col        : TcxGridDBColumn;
-  IndiceBase : Integer;
-begin
-  // Crea CANT_TALLAS_MAX columnas inline entre dbcLinTallas y
-  // dbcLinTotalTallas. Patron heredado de inMtoCajaOpe.ConstruirColumnasDinamicas:
-  // BeginUpdate + CreateColumn + asignar Col.Index al final con
-  // IndiceBase = dbcLinTallas.Index. Esto garantiza orden visual
-  // contiguo (predefinirlas en DFM disparaba RLINK32 'Unsupported 16bit
-  // resource' al compilar los descendientes).
-  IndiceBase := dbcLinTallas.Index;
-  tvLineas.BeginUpdate;
-  try
-    for i := 0 to CANT_TALLAS_MAX - 1 do
-    begin
-      Col := tvLineas.CreateColumn;
-      Col.Name    := Format('dbcLinTalla%2.2d', [i + 1]);
-      Col.Tag     := i + 1;
-      Col.Caption := '';
-      Col.Visible := False;
-      Col.Width   := 50;
-      Col.PropertiesClass := TcxCurrencyEditProperties;
-      TcxCurrencyEditProperties(Col.Properties).DisplayFormat := '#,##0';
-      // Cuadrar texto: cabecera y contenido centrados.
-      Col.HeaderAlignmentHorz := taCenter;
-      TcxCurrencyEditProperties(Col.Properties).Alignment.Horz := taCenter;
-      // ValueTypeClass solo se puede asignar a runtime (no serializable
-      // en DFM: dispara EReadError 'Property ValueTypeClass does not
-      // exist' al cargar el form).
-      Col.DataBinding.ValueTypeClass := TcxFloatValueType;
-      Col.Index := IndiceBase + i + 1;
-      FTallaColumns[i] := Col;
-    end;
-  finally
-    tvLineas.EndUpdate;
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.InicializarGestorTallas;
-var
-  cfg     : TGridTallasConfig;
-  i       : Integer;
-  arrCols : TArray<TcxGridDBColumn>;
-begin
-  // Cablea el gestor de tallas pivotadas (libreria reutilizable) con
-  // los nombres de tabla/campos especificos de Sesiones de compra.
-  // Si en el futuro se reusa este patron para Pedidos / Albaranes /
-  // Facturas,basta crear otro form con los sufijos PEDLIN/PEDCEL,// ALBLIN/ALBCEL,etc. y la libreria hace lo mismo sin cambios.
-  if FGestorTallas <> nil then FreeAndNil(FGestorTallas);
-  if Dmm = nil then Exit;
-
-  SetLength(arrCols, CANT_TALLAS_MAX);
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-    arrCols[i] := FTallaColumns[i];
-
-  cfg := Default(TGridTallasConfig);
-  cfg.Conexion           := ConexionPrincipal;
-  cfg.ContextoSesion     := ContextoSesion;
-  cfg.Usuario            := IdentidadSesion.Usuario;
-  cfg.Grid               := tvLineas;
-  cfg.SourceMaster       := dsTablaG;
-  cfg.SourceLineas       := Dmm.dsSesionLin;
-  cfg.ColumnasTallas     := arrCols;
-  cfg.FieldSerieMaster   := 'SERIE_SES';
-  cfg.FieldNumeroMaster  := 'NUMERO_SES';
-  cfg.FieldLinea         := 'LINEA_SESLIN';
-  cfg.FieldConjuntoPivot := 'ID_AC_PIVOT_SESLIN';
-  cfg.FieldPrecioBase    := 'PRECIO_COMPRA_SESLIN';
-  cfg.FieldTotalUds      := 'TOTAL_UNIDADES_SESLIN';
-  cfg.FieldTotalLinea    := 'TOTAL_LINEA_SESLIN';
-  cfg.TablaCeldas        := 'fza_compras_sesiones_celdas';
-  cfg.FieldSerieCel      := 'SERIE_SES_SESCEL';
-  cfg.FieldNumeroCel     := 'NUMERO_SES_SESCEL';
-  cfg.FieldLineaCel      := 'LINEA_SES_SESCEL';
-  cfg.FieldFilaCel       := 'ID_FILA_SES_SESCEL';
-  cfg.FieldAvPivotCel    := 'ID_AV_PIVOT_SESCEL';
-  cfg.FieldCantidadCel   := 'CANTIDAD_SESCEL';
-  cfg.FieldAlmacenCel    := 'CODIGO_ALM_SESCEL';
-  cfg.IdFilaFijo         := 1;
-  cfg.MaxColumnas        := CANT_TALLAS_MAX;
-
-  FGestorTallas := TGestorGridTallas.Create(cfg);
-
-  // Hookear cada talla al form para recalcular linea y cabecera.
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-    if FTallaColumns[i] <> nil then
-      TcxCurrencyEditProperties(FTallaColumns[i].Properties).OnEditValueChanged
-                                       := TallaEditValueChangedHook;
-end;
-
-procedure TfrmMtoComprasSesiones.TallaEditValueChangedHook(Sender: TObject);
-begin
-  if Assigned(FGestorTallas) then
-  begin
-    FGestorTallas.PersistirCeldaActiva(Sender);
-    if Assigned(Dmm) then
-      Dmm.RefrescarTotalesSesion;
-    // El refresco de totales postea cabecera y repinta el grid: el
-    // cxGrid borra los Values[] no ligados de las columnas talla y
-    // las cantidades recien tecleadas "desaparecian". Recargarlas.
-    FGestorTallas.CargarCantidadesTodasLineas;
-  end;
-end;
-
-// ===========================================================================
-//   Busqueda incremental de modelos del proveedor (columna "Modelo prov.")
-// ===========================================================================
-// Monta en runtime un ExtLookupComboBox in-cell (mismo patron probado en
-// inLibGridArticulos) que, al teclear en "Modelo prov.", lista los modelos
-// (REF_PROVEEDOR_AP) ya existentes del proveedor de la cabecera cuyo
-// comienzo coincide. Al elegir uno, la linea se marca REUSAR del articulo:
-// el sistema de tallas queda fijo y al materializar solo se incorporan los
-// colores/tallas nuevos (los precios anteriores se proponen como referencia).
-procedure TfrmMtoComprasSesiones.CrearLookupModelo;
-begin
-  // 1. Query con un modelo por fila: descripcion, sistema de tallas, colores
-  //    ya dados de alta y ultimo precio de compra (referencia visible). El
-  //    filtrado "empieza por" mientras tecleas lo hace IncrementalFiltering
-  //    en cliente; :prv lo fija RecargarModelos.
-  FModeloBusqQry := TUniQuery.Create(nil);
-  FModeloBusqQry.Connection := ConexionPrincipal;
-  FModeloBusqQry.SQL.Text :=
-    'SELECT ap.REF_PROVEEDOR_AP AS REFPRV,' +
-    '       ap.CODIGO_ART_AP    AS CODART,' +
-    '       a.DESCRIPCION_ART   AS DESCRIPCION,' +
-    '       ap.PRECIO_ULT_COMPRA_AP AS PCOMPRA,' +
-    '       COALESCE((SELECT acn.NOMBRE_AC' +
-    '                   FROM fza_articulos_conjuntos_asign aca' +
-    '                   JOIN fza_atributos_conjuntos acn' +
-    '                     ON acn.ID_AC = aca.ID_AC_ACA' +
-    '                  WHERE aca.CODIGO_ART_ACA = a.CODIGO_ART_ART' +
-    '                    AND aca.ID_VA_ACA = ''TAL''' +
-    '                  ORDER BY aca.ID_VA_ACA LIMIT 1), '''') AS SISTEMA,' +
-    '       COALESCE((SELECT GROUP_CONCAT(DISTINCT av.AV ORDER BY av.AV' +
-    '                                     SEPARATOR '', '')' +
-    '                   FROM fza_articulos_skus sk' +
-    '                   JOIN fza_atributos_sku sa' +
-    '                     ON sa.CODIGO_UNIDAD_SKU_SA = sk.CODIGO_UNIDAD_SKU' +
-    '                   JOIN fza_atributos_valores av' +
-    '                     ON av.ID_AV = sa.ID_AV_SA AND av.ID_VA_AV = ''CO''' +
-    '                  WHERE sk.CODIGO_ART_SKU = a.CODIGO_ART_ART' +
-    '                    AND sk.ESACTIVO_SKU = ''S''), '''') AS COLORES' +
-    '  FROM fza_articulos_proveedores ap' +
-    '  JOIN fza_articulos a ON a.CODIGO_ART_ART = ap.CODIGO_ART_AP' +
-    '                       AND a.ESACTIVO_ART = ''S''' +
-    ' WHERE ap.CODIGO_PRV_AP = :prv' +
-    '   AND ap.REF_PROVEEDOR_AP IS NOT NULL' +
-    '   AND ap.REF_PROVEEDOR_AP <> ''''' +
-    ' GROUP BY ap.REF_PROVEEDOR_AP, ap.CODIGO_ART_AP, a.DESCRIPCION_ART,' +
-    '          ap.PRECIO_ULT_COMPRA_AP' +
-    ' ORDER BY ap.REF_PROVEEDOR_AP';
-  FModeloBusqDs := TDataSource.Create(nil);
-  FModeloBusqDs.DataSet := FModeloBusqQry;
-  // 2. View del desplegable, en su propio repositorio (no en pantalla).
-  FModeloRepo := TcxGridViewRepository.Create(nil);
-  FModeloView := FModeloRepo.CreateItem(TcxGridDBTableView)
-                   as TcxGridDBTableView;
-  FModeloView.DataController.DataSource := FModeloBusqDs;
-  FModeloView.DataController.KeyFieldNames := 'REFPRV';
-  FModeloView.OptionsView.GroupByBox := False;
-  FModeloView.OptionsSelection.CellSelect := False;
-  FModeloView.OptionsBehavior.IncSearch := False;
-  FModeloColRef := FModeloView.CreateColumn;
-  FModeloColRef.Caption := SCaptionModeloCompra;
-  FModeloColRef.DataBinding.FieldName := 'REFPRV';
-  FModeloColRef.Width := 130;
-  FModeloColCodArt := FModeloView.CreateColumn;
-  FModeloColCodArt.Caption := SCaptionCodigoCompra;
-  FModeloColCodArt.DataBinding.FieldName := 'CODART';
-  FModeloColCodArt.Width := 110;
-  with FModeloView.CreateColumn do
-  begin
-    Caption := 'Descripcion';
-    DataBinding.FieldName := 'DESCRIPCION';
-    Width := 220;
-  end;
-  with FModeloView.CreateColumn do
-  begin
-    Caption := 'Tallas';
-    DataBinding.FieldName := 'SISTEMA';
-    Width := 110;
-  end;
-  with FModeloView.CreateColumn do
-  begin
-    Caption := 'Colores';
-    DataBinding.FieldName := 'COLORES';
-    Width := 180;
-  end;
-  with FModeloView.CreateColumn do
-  begin
-    Caption := 'Ult. compra';
-    DataBinding.FieldName := 'PCOMPRA';
-    Width := 80;
-  end;
-  // 3. Item de edicion ExtLookupComboBox que usa ese view.
-  FModeloEditRepo := TcxEditRepository.Create(nil);
-  FModeloCombo := FModeloEditRepo.CreateItem(
-                    TcxEditRepositoryExtLookupComboBoxItem)
-                    as TcxEditRepositoryExtLookupComboBoxItem;
-  with FModeloCombo.Properties do
-  begin
-    View := FModeloView;
-    KeyFieldNames := 'REFPRV';
-    ListFieldItem := FModeloColRef;
-    DropDownListStyle := lsEditList;     // permite teclear modelos nuevos
-    IncrementalFiltering := True;        // por defecto filtra "empieza por"
-    DropDownRows := 15;
-    DropDownAutoWidth := True;
-    // No abrir el desplegable en cada tecla: lo abre el debounce ya filtrado.
-    ImmediateDropDownWhenKeyPressed := False;
-    OnCloseUp := ModeloComboCloseUp;
-    // Modelo tecleado a mano y confirmado con Tab/Enter sin pasar por el
-    // desplegable (p. ej. un modelo que solo existe en lineas de ESTA
-    // sesion, aun sin materializar: el desplegable no lo lista). Validate
-    // es el unico evento fiable en ese camino — el texto libre no llega
-    // a EditingValue (ver inLibGridArticulos) — y sin el la linea
-    // repetida quedaba vacia.
-    OnValidate := ModeloComboValidate;
-  end;
-  // 4. La columna "Modelo prov." usa el desplegable solo en celda vacia y
-  //    enfocada; con valor escrito usa el editor de texto del dfm (que
-  //    conserva el match exacto en OnEditValueChanged).
-  dbcLinRefPrv.OnGetProperties := ModeloGetProperties;
-  // 5. Timers: debounce para abrir el desplegable al teclear y resolucion
-  //    diferida al elegir (no tocar el dataset mientras se cierra el editor).
-  FModeloTimerBusq := TTimer.Create(nil);
-  FModeloTimerBusq.Enabled := False;
-  FModeloTimerBusq.Interval := 350;
-  FModeloTimerBusq.OnTimer := ModeloTimerBusqTimer;
-  FModeloTimerResolve := TTimer.Create(nil);
-  FModeloTimerResolve.Enabled := False;
-  FModeloTimerResolve.Interval := 1;
-  FModeloTimerResolve.OnTimer := ModeloTimerResolveTimer;
-  // Modal "modelo repetido" diferido (no puede abrirse dentro del editor
-  // in-place del grid; lo arma AplicarDuplicadoDeSesion).
-  FDupTimerModal := TTimer.Create(nil);
-  FDupTimerModal.Enabled := False;
-  FDupTimerModal.Interval := 1;
-  FDupTimerModal.OnTimer := DupModalTimerTimer;
-  // Sentinela que no casa con ningun proveedor real: fuerza la 1a carga.
-  FModeloPrvCargado := #1;
-end;
-
-// (Re)abre el query del desplegable acotado al proveedor de la cabecera.
-// Solo relanza si cambia el proveedor (o aun no se habia abierto).
-procedure TfrmMtoComprasSesiones.RecargarModelos;
-var
-  sPrv: string;
-begin
-  if FModeloBusqQry = nil then Exit;
-  sPrv := '';
-  if (Dmm <> nil) and (Dmm.unqryTablaG <> nil) and
-     (not Dmm.unqryTablaG.IsEmpty) then
-    sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
-  if (sPrv = FModeloPrvCargado) and FModeloBusqQry.Active then Exit;
-  FModeloPrvCargado := sPrv;
-  if FModeloBusqQry.Active then FModeloBusqQry.Close;
-  FModeloBusqQry.ParamByName('prv').AsString := sPrv;
-  FModeloBusqQry.Open;
-end;
-
-// Editor por celda: celda vacia y enfocada -> ExtLookupComboBox (busqueda
-// incremental); en otro caso, el editor de texto por defecto de la columna.
-procedure TfrmMtoComprasSesiones.ModeloGetProperties(
-  Sender: TcxCustomGridTableItem; ARecord: TcxCustomGridRecord;
-  var AProperties: TcxCustomEditProperties);
-var
-  vVal: Variant;
-  bVacia, bEnfocada: Boolean;
-begin
-  if (ARecord = nil) or (FModeloCombo = nil) then Exit;
-  vVal := ARecord.Values[Sender.Index];
-  bVacia := VarIsNull(vVal) or (Trim(VarToStr(vVal)) = '');
-  bEnfocada := (tvLineas.Controller.FocusedRecord = ARecord) and
-               (tvLineas.Controller.FocusedItem = Sender);
-  if bVacia and bEnfocada then
-    AProperties := FModeloCombo.Properties;
-end;
-
-// OnChange del editor del combo: rearma el debounce que abre el desplegable
-// filtrado por lo tecleado (se engancha en tvLineasInitEdit).
-procedure TfrmMtoComprasSesiones.ModeloComboChange(Sender: TObject);
-begin
-  FModeloTimerBusq.Enabled := False;
-  FModeloTimerBusq.Enabled := True;
-end;
-
-// Al saltar el debounce abre el desplegable ya filtrado por lo tecleado,// como inLibGridArticulos.TimerBusqTimer.
-procedure TfrmMtoComprasSesiones.ModeloTimerBusqTimer(Sender: TObject);
-var
-  Edit  : TcxCustomEdit;
-  Combo : TcxExtLookupComboBox;
-begin
-  FModeloTimerBusq.Enabled := False;
-  if not tvLineas.Controller.EditingController.IsEditing then Exit;
-  Edit := tvLineas.Controller.EditingController.Edit;
-  if not (Edit is TcxExtLookupComboBox) then Exit;
-  Combo := TcxExtLookupComboBox(Edit);
-  if (Trim(VarToStr(Combo.EditingValue)) <> '') and
-     (not Combo.DroppedDown) then
-    Combo.DroppedDown := True;
-end;
-
-// Al cerrar el desplegable con una eleccion: guardamos el modelo y diferimos
-// la resolucion (timer 1ms) para no tocar el dataset mientras se cierra el
-// editor in-place.
-procedure TfrmMtoComprasSesiones.ModeloComboCloseUp(Sender: TObject);
-var
-  Rec : TcxCustomGridRecord;
-begin
-  if not (Sender is TcxCustomEdit) then
-    Exit;
-  FModeloRefPend := VarToStr(TcxCustomEdit(Sender).EditValue);
-  FModeloCodArtPend := '';
-  if (FModeloView <> nil) and (FModeloColCodArt <> nil) then
-  begin
-    Rec := FModeloView.Controller.FocusedRecord;
-    if Rec <> nil then
-      FModeloCodArtPend := VarToStr(
-                            Rec.Values[FModeloColCodArt.Index]);
-  end;
-  if Trim(FModeloRefPend) <> '' then
-  begin
-    FModeloTimerResolve.Enabled := False;
-    FModeloTimerResolve.Enabled := True;
-  end;
-end;
-
-// Confirmacion del valor del combo (Tab/Enter/click fuera). Cubre el
-// modelo tecleado a mano que no paso por el desplegable — texto libre
-// que no llega a EditingValue ni dispara CloseUp — p. ej. un modelo que
-// solo existe en lineas de ESTA sesion, aun sin materializar. No se
-// toca el dataset dentro del Validate (el post del editor esta en
-// curso): se difiere al timer de resolucion. Si CloseUp ya armo la
-// resolucion para este mismo texto, se respeta (lleva el codigo de
-// articulo preferido del desplegable, que aqui no conocemos).
-procedure TfrmMtoComprasSesiones.ModeloComboValidate(Sender: TObject;
-  var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
-var
-  sTexto: string;
-begin
-  Error := False;
-  ErrorText := '';
-  sTexto := Trim(VarToStr(DisplayValue));
-  if (sTexto <> '') and
-     ((not FModeloTimerResolve.Enabled) or (FModeloRefPend <> sTexto)) then
-  begin
-    FModeloRefPend := sTexto;
-    FModeloCodArtPend := '';
-    FModeloTimerResolve.Enabled := False;
-    FModeloTimerResolve.Enabled := True;
-  end;
-end;
-
-function TfrmMtoComprasSesiones.AplicarDuplicadoDeSesion(const AModelo,
-  ACodigoArt: string): Boolean;
-var
-  rDup    : TResolverDuplicadoSesion;
-  sSerie  : string;
-  sNumero : string;
-  iLinea  : Integer;
-begin
-  Result := False;
-  if Dmm = nil then
-    Exit;
-  if Dmm.unqryTablaG.IsEmpty then
-    Exit;
-  if Dmm.unqrySesionLin.IsEmpty then
-    Exit;
-  sSerie := Trim(Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString);
-  sNumero := Trim(Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString);
-  iLinea := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
-  rDup := FServicioComprasSesiones.ResolverDuplicadoIntraSesion(
-    sSerie, sNumero, iLinea, AModelo, ACodigoArt);
-  if not rDup.Encontrado then
-    Exit;
-  if not (Dmm.unqrySesionLin.State in [dsEdit, dsInsert]) then
-    Dmm.unqrySesionLin.Edit;
-  FServicioComprasSesiones.AplicarDuplicadoEnLinea(rDup);
-  if rDup.IdAcPivot > 0 then
-    Dmm.TallajeDefectoActual := rDup.IdAcPivot;
-  if Assigned(FGestorTallas) then
-  begin
-    FGestorTallas.RecalcularMaxColumnas;
-    FGestorTallas.ActualizarCaptionsLineaActiva;
-  end;
-  // Copia completa opcional (otro color / otro rango de precios): la
-  // decide el usuario en un modal que no puede abrirse aqui (seguimos
-  // dentro del editor in-place) — se difiere con el timer. Si los dos
-  // caminos de resolucion disparan seguidos (combo + editor de texto),// el rearme solo deja un modal.
-  if (rDup.LineaOrigen > 0) and Assigned(FGestorCopiaLineas) then
-  begin
-    FGestorCopiaLineas.PrepararCopiaPendiente(
-      AModelo,
-      rDup.LineaOrigen,
-      rDup.ColorTexto,
-      rDup.CodigoAtbColor,
-      rDup.MargenPorcentaje);
-    FDupTimerModal.Enabled := False;
-    FDupTimerModal.Enabled := True;
-  end;
-  Result := True;
-end;
-
-// Resuelve el modelo elegido. El valor es un REF_PROVEEDOR existente del
-// proveedor: ResolverDuplicadoSesion lo localiza por su rama REF y
-// AplicarDuplicadoEnLinea marca la linea REUSAR + precarga descripcion,// familia,sistema de tallas (fijo),coste y PVP de referencia. Si no casa
-// (modelo nuevo tecleado a mano) se deja como linea normal (alta nueva).
-procedure TfrmMtoComprasSesiones.ModeloTimerResolveTimer(Sender: TObject);
-var
-  sRef, sPrv : string;
-  sCodArt    : string;
-  rDup       : TResolverDuplicadoSesion;
-  ds         : TDataSet;
-begin
-  FModeloTimerResolve.Enabled := False;
-  sRef := Trim(FModeloRefPend);
-  sCodArt := Trim(FModeloCodArtPend);
-  FModeloRefPend := '';
-  FModeloCodArtPend := '';
-  if sRef = '' then
-    Exit;
-  if Dmm.unqryTablaG.IsEmpty then
-    Exit;
-  sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
-  if sPrv = '' then
-    Exit;
-  ds := Dmm.unqrySesionLin;
-  if ds.IsEmpty then
-    Exit;
-  if AplicarDuplicadoDeSesion(sRef, sCodArt) then
-  begin
-    if tvLineas.Controller.EditingController.IsEditing then
-      try
-        tvLineas.Controller.EditingController.HideEdit(True);
-      except
-        on E: EInvalidOperation do
-          // Ruido del editor inplace; queda constancia en el log.
-          RegistroLog.RegistrarAviso(
-            'ComprasSesiones.ModeloTimerResolve: HideEdit ' +
-            'ignorado: ' + E.Message);
-      end;
-    Exit;
-  end;
-  rDup := FServicioComprasSesiones.ResolverDuplicado(
-    sRef, sPrv, True, sCodArt);
-  if not rDup.Encontrado then
-    Exit;
-  if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
-  // El modelo tecleado se conserva como REF de la linea (rama REF no la toca).
-  ds.FieldByName('REF_PRV_SESLIN').AsString := sRef;
-  FServicioComprasSesiones.AplicarDuplicadoEnLinea(rDup);
-  if Assigned(FGestorTallas) then
-  begin
-    FGestorTallas.RecalcularMaxColumnas;
-    FGestorTallas.ActualizarCaptionsLineaActiva;
-  end;
-  // Cierra el editor para que la celda muestre el modelo resuelto.
-  if tvLineas.Controller.EditingController.IsEditing then
-    try
-      tvLineas.Controller.EditingController.HideEdit(True);
-    except
-      on E: EInvalidOperation do
-        // Ruido del editor inplace; queda constancia en el log.
-        RegistroLog.RegistrarAviso(
-          'ComprasSesiones.ModeloTimerResolve: HideEdit ' +
-          'ignorado: ' + E.Message);
-    end;
-end;
-
-// Toda la logica reusable de tallas pivotadas (cache de conjuntos,// maximo del documento,recalcular columnas,captions dinamicas,// carga / persistencia de celdas,refresco de totales y validacion)
-// vive ahora en inLibGridTallasInline.TGestorGridTallas — ver
-// InicializarGestorTallas mas abajo. El form solo delega y mantiene
-// la cabecera y los handlers especificos (familia, color, PVP).
 
 // ===========================================================================
 //   Lineas — alta, baja, navegacion
@@ -2709,689 +1804,81 @@ end;
 procedure TfrmMtoComprasSesiones.btnNuevoColorClick(Sender: TObject);
 begin
   inherited;
-  DuplicarLineaActiva('C');
+  FCopiaLineas.DuplicarLineaActiva('C');
 end;
 
 procedure TfrmMtoComprasSesiones.btnOtroPrecioClick(Sender: TObject);
 begin
   inherited;
-  DuplicarLineaActiva('P');
-end;
-
-procedure TfrmMtoComprasSesiones.DuplicarLineaActiva(const AModo: string);
-var
-  arr: TArrPosConjunto;
-  cantidades: TArray<Double>;
-  i: Integer;
-  iSrcIdx: Integer;
-  oModo: TModoCopiaLineaCompra;
-  oResultado: TResultadoCopiaLineaCompra;
-  v: Variant;
-begin
-  // Duplica la linea activa con todos los datos comerciales (codigo,// familia,modelo prov.,descripcion,sistema de tallas). Segun AModo:
-  //   'C' (otro color): precios y cantidades por talla copiados;
-  //       COLOR_TEXTO_SESLIN y CODIGO_ATB_COLOR_SESLIN vacios. Mismo
-  //       articulo en varios colores: clic, cambias color, terminas.
-  //   'P' (otro rango de precios): color copiado; PRECIO_COMPRA_SESLIN
-  //       y PRECIO_VENTA_SESLIN vacios y SIN cantidades — es otro rango
-  //       de precios porque son OTRAS tallas, las del rango anterior no
-  //       aplican: clic, tecleas coste, PVP y cantidades, terminas.
-  oModo := mclOtroColor;
-  if AModo = 'P' then
-    oModo := mclOtroPrecio;
-  if Assigned(FGestorTallas) and
-     Assigned(FGestorCopiaLineas) and
-     Assigned(Dmm) and
-     Assigned(Dmm.unqrySesionLin) and
-     (not Dmm.unqrySesionLin.IsEmpty) and
-     (not Dmm.unqryTablaG.IsEmpty) then
-  begin
-    iSrcIdx := tvLineas.Controller.FocusedRecordIndex;
-    SetLength(cantidades, CANT_TALLAS_MAX);
-    for i := 0 to CANT_TALLAS_MAX - 1 do
-    begin
-      cantidades[i] := 0;
-      if Assigned(FTallaColumns[i]) and (iSrcIdx >= 0) then
-      begin
-        v := tvLineas.DataController.Values[
-          iSrcIdx, FTallaColumns[i].Index];
-        if (not VarIsNull(v)) and
-           (not VarIsEmpty(v)) and
-           VarIsNumeric(v) then
-          cantidades[i] := v;
-      end;
-    end;
-    oResultado := FGestorCopiaLineas.DuplicarLineaActual(oModo);
-    if oResultado.Aplicada then
-    begin
-      if oResultado.CopiarCantidades then
-      begin
-        if Dmm.unqryTablaG.FieldByName(
-             'ESFORMATO_DISTRIBUIDO_SES').AsString = 'S' then
-        begin
-          CopiarCeldasDistribuidasOtroColor(
-            oResultado.LineaOrigen,
-            oResultado.LineaDestino);
-          Dmm.unqrySesionLin.Refresh;
-          Dmm.unqrySesionLin.Locate(
-            'LINEA_SESLIN', oResultado.LineaDestino, []);
-        end
-        else if oResultado.IdConjuntoPivot > 0 then
-        begin
-          arr := FGestorTallas.GetPosicionesConjunto(
-            oResultado.IdConjuntoPivot);
-          for i := 0 to High(arr) do
-          begin
-            if (i <= High(cantidades)) and
-               (cantidades[i] > 0) then
-              FGestorTallas.PersistirCantidad(
-                oResultado.LineaDestino,
-                arr[i].IdAv,
-                cantidades[i]);
-          end;
-        end;
-      end;
-      FGestorTallas.RefrescarTotalesLineaActual;
-      Dmm.RefrescarTotalesSesion;
-      FGestorTallas.RecalcularMaxColumnas;
-      FGestorTallas.CargarCantidadesTodasLineas;
-      if Dmm.unqrySesionLin.Locate(
-           'LINEA_SESLIN', oResultado.LineaDestino, []) then
-        tvLineas.Controller.FocusedRecordIndex :=
-          Dmm.unqrySesionLin.RecNo - 1;
-      if oModo = mclOtroPrecio then
-        tvLineas.Controller.FocusedColumn := dbcLinPrecioCompra
-      else
-        tvLineas.Controller.FocusedColumn := dbcLinColor;
-      if Assigned(tvLineas.Controller.EditingController) then
-        tvLineas.Controller.EditingController.ShowEdit;
-      TThread.ForceQueue(nil,
-        procedure
-        begin
-          if Assigned(FGestorTallas) then
-            FGestorTallas.CargarCantidadesTodasLineas;
-        end);
-    end;
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.CopiarCantidadesEntreLineas(
-  ALineaOrigen, ALineaDestino: Integer);
-var
-  sSerie: string;
-  sNumero: string;
-  Cantidades: TCantidadesPivotSesion;
-  Cantidad: TCantidadPivotSesion;
-begin
-  sSerie := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-  sNumero := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-  if Dmm.unqryTablaG.FieldByName(
-       'ESFORMATO_DISTRIBUIDO_SES').AsString = 'S' then
-    CopiarCeldasDistribuidasOtroColor(
-      ALineaOrigen, ALineaDestino)
-  else
-  begin
-    if Assigned(FServicioComprasSesiones) then
-    begin
-      FServicioComprasSesiones.BorrarCeldasLinea(
-        sSerie, sNumero, ALineaDestino);
-      Cantidades :=
-        FServicioComprasSesiones.ConsultarCantidadesLinea(
-          sSerie, sNumero, ALineaOrigen);
-      for Cantidad in Cantidades do
-      begin
-        if (Cantidad.Cantidad > 0) and
-           Assigned(FGestorTallas) then
-          FGestorTallas.PersistirCantidad(
-            ALineaDestino,
-            Cantidad.IdValorPivot,
-            Cantidad.Cantidad);
-      end;
-    end;
-  end;
-end;
-
-function TfrmMtoComprasSesiones.ObtenerSiguienteLineaCopia(
-  ALineaOrigen: Integer): Integer;
-begin
-  Result := 0;
-  if Assigned(Dmm) and
-     Assigned(Dmm.unqryTablaG) and
-     Assigned(FServicioComprasSesiones) and
-     (not Dmm.unqryTablaG.IsEmpty) then
-    Result :=
-      FServicioComprasSesiones.ObtenerSiguienteLinea(
-        Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
-        Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString,
-        ALineaOrigen);
-end;
-
-procedure TfrmMtoComprasSesiones.AplicarCopiaEnLineaActual(
-  const AModo: string);
-var
-  oModo: TModoCopiaLineaCompra;
-  oResultado: TResultadoCopiaLineaCompra;
-begin
-  // Completa la linea ACTUAL (donde se acaba de teclear el modelo
-  // repetido) como copia de la línea origen conservada por el gestor.
-  // comerciales ya llegaron via AplicarDuplicadoEnLinea (REUSAR); aqui
-  // se anaden margen y, segun modo, color / precios / cantidades:
-  //   'C' (otro color): cantidades por talla copiadas, color vacio.
-  //   'P' (otro rango de precios): color copiado, coste y PVP vacios y
-  //       SIN cantidades — son otras tallas, las teclea el usuario.
-  oModo := mclOtroColor;
-  if AModo = 'P' then
-    oModo := mclOtroPrecio;
-  if Assigned(FGestorCopiaLineas) then
-  begin
-    oResultado := FGestorCopiaLineas.AplicarCopiaPendiente(oModo);
-    if oResultado.Aplicada then
-    begin
-      if oResultado.CopiarCantidades then
-        CopiarCantidadesEntreLineas(
-          oResultado.LineaOrigen,
-          oResultado.LineaDestino);
-      Dmm.unqrySesionLin.Refresh;
-      Dmm.unqrySesionLin.Locate(
-        'LINEA_SESLIN', oResultado.LineaDestino, []);
-      if Assigned(FGestorTallas) then
-      begin
-        FGestorTallas.RecalcularMaxColumnas;
-        FGestorTallas.CargarCantidadesTodasLineas;
-        FGestorTallas.RefrescarTotalesLineaActual;
-      end;
-      Dmm.RefrescarTotalesSesion;
-      if Dmm.unqrySesionLin.Locate(
-           'LINEA_SESLIN', oResultado.LineaDestino, []) then
-        tvLineas.Controller.FocusedRecordIndex :=
-          Dmm.unqrySesionLin.RecNo - 1;
-      if oModo = mclOtroPrecio then
-        tvLineas.Controller.FocusedColumn := dbcLinPrecioCompra
-      else
-        tvLineas.Controller.FocusedColumn := dbcLinColor;
-      if Assigned(tvLineas.Controller.EditingController) then
-        tvLineas.Controller.EditingController.ShowEdit;
-      TThread.ForceQueue(nil,
-        procedure
-        begin
-          if Assigned(FGestorTallas) then
-            FGestorTallas.CargarCantidadesTodasLineas;
-        end);
-    end;
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.DupModalTimerTimer(Sender: TObject);
-var
-  frm     : TfrmModalRepetirModelo;
-  sOpcion : string;
-begin
-  // Pregunta diferida (el modal no puede abrirse dentro del editor
-  // in-place): repetir la linea origen en otro color, en otro rango de
-  // precios, o dejar la herencia REUSAR tal cual (cancelar).
-  FDupTimerModal.Enabled := False;
-  if Assigned(FGestorCopiaLineas) and
-     FGestorCopiaLineas.HayCopiaPendiente and
-     Assigned(Dmm) and
-     (not Dmm.unqrySesionLin.IsEmpty) then
-  begin
-    if tvLineas.Controller.EditingController.IsEditing then
-      try
-        tvLineas.Controller.EditingController.HideEdit(True);
-      except
-        on E: EInvalidOperation do
-          // Ruido del editor inplace; queda constancia en el log.
-          RegistroLog.RegistrarAviso(
-            'ComprasSesiones.DupModalTimer: HideEdit ignorado: ' +
-            E.Message);
-      end;
-    sOpcion := 'N';
-    frm := TfrmModalRepetirModelo.Create(Self);
-    try
-      frm.PrepararMensaje(
-        FGestorCopiaLineas.ModeloPendiente,
-        FGestorCopiaLineas.LineaOrigenPendiente);
-      frm.ShowModal;
-      sOpcion := frm.sOpcion;
-    finally
-      FreeAndNil(frm);
-    end;
-    if (sOpcion = 'C') or (sOpcion = 'P') then
-      AplicarCopiaEnLineaActual(sOpcion);
-  end;
-  if Assigned(FGestorCopiaLineas) then
-    FGestorCopiaLineas.DescartarCopiaPendiente;
+  FCopiaLineas.DuplicarLineaActiva('P');
 end;
 
 // 1. Declaramos la clase cracker para acceder al popup interno
 
-function TfrmMtoComprasSesiones.TextoBusquedaTallaje(Key: Word;
-  Shift: TShiftState): string;
-begin
-  Result := '';
-  if not ((ssCtrl in Shift) or (ssAlt in Shift)) then
-  begin
-    if (Key >= Ord('A')) and (Key <= Ord('Z')) then
-      Result := Chr(Key)
-    else if (Key >= Ord('0')) and (Key <= Ord('9')) then
-      Result := Chr(Key)
-    else if (Key >= VK_NUMPAD0) and (Key <= VK_NUMPAD9) then
-      Result := Chr(Ord('0') + Key - VK_NUMPAD0)
-    else if Key = VK_SPACE then
-      Result := ' ';
-  end;
-end;
-
 procedure TfrmMtoComprasSesiones.tvLineasEditKeyDown(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   AEdit: TcxCustomEdit; var Key: Word; Shift: TShiftState);
-var
-  frmSel : TfrmModalSelFamilia;
-  props  : TcxButtonEditProperties;
-  sBusq  : string;
 begin
   inherited;
-  sBusq := TextoBusquedaTallaje(Key, Shift);
-  if (AItem = dbcLinTallas) and (sBusq <> '') then
+  // El selector de tallaje y el Ctrl+Enter sobre columnas editbutton los
+  // atiende el coordinador de tallas. F3 sobre Familia / Cod. articulo
+  // abre el picker jerarquico de familias.
+  if not FTallas.ProcesarTeclaEditor(AItem, AEdit, Key, Shift) then
   begin
-    AbrirSelectorTallas(AEdit, sBusq);
-    Key := 0;
-  end
-  // Ctrl+Enter sobre cualquier columna 'editbutton' (color basico,// sistema tallas,...) dispara el click de su primer boton,igual que
-  // pulsar el ellipsis '...'. Generico: invoca el OnButtonClick cableado
-  // en esa columna pasando AEdit (el editor en edicion) como Sender.
-  // Normalmente lo atrapa antes el KeyDown del form (KeyPreview); esto es
-  // la red por si la pulsacion llega ya dentro del editor inline.
-  else if (Key = VK_RETURN) and (Shift = [ssCtrl]) and
-          (AItem is TcxGridDBColumn) and
-          (TcxGridDBColumn(AItem).Properties is TcxButtonEditProperties) then
-  begin
-    props := TcxButtonEditProperties(TcxGridDBColumn(AItem).Properties);
-    if (props.Buttons.Count > 0) and Assigned(props.OnButtonClick) then
+    if (Key = VK_F3) and (Shift = []) and
+       ((AItem = dbcLinFamilia) or (AItem = dbcLinCodArt)) then
     begin
-      props.OnButtonClick(AEdit, 0);
+      FModeloPrv.ElegirFamiliaConModal;
       Key := 0;
-    end;
-  end
-  // F3 sobre Familia / Codigo articulo abre el picker jerarquico de familia.
-  else if (Key = VK_F3) and (Shift = []) and
-          ((AItem = dbcLinFamilia) or (AItem = dbcLinCodArt)) then
-  begin
-    frmSel := TfrmModalSelFamilia.Create(Self);
-    try
-      if frmSel.ShowModal = mrOk then
-        ExpandirCodigoFamiliaActiva(frmSel.CodigoFamilia, frmSel.NombreFamilia);
-    finally
-      FreeAndNil(frmSel);
-    end;
-    Key := 0;
-  end;
-end;
-
-function TfrmMtoComprasSesiones.DispararEditButtonLineaActiva: Boolean;
-var
-  ac     : TWinControl;
-  enGrid : Boolean;
-  col    : TcxGridColumn;
-  props  : TcxButtonEditProperties;
-  ed     : TcxCustomEdit;
-begin
-  Result := False;
-  // Solo actuamos si el foco esta dentro del grid de lineas (la celda o
-  // su editor inline). Asi Ctrl+Enter en la cabecera u otra pestania no
-  // dispara nada y sigue su curso normal. Usamos Screen.ActiveControl
-  // (foco real a nivel aplicacion) para que funcione tambien con el Mto
-  // embebido.
-  ac     := Screen.ActiveControl;
-  enGrid := (ac <> nil) and
-            ((ac = cxgrdLineas) or cxgrdLineas.ContainsControl(ac));
-  if enGrid then
-    col := tvLineas.Controller.FocusedColumn
-  else
-    col := nil;
-  if (col <> nil) and (col.Properties is TcxButtonEditProperties) then
-  begin
-    props := TcxButtonEditProperties(col.Properties);
-    if (props.Buttons.Count > 0) and Assigned(props.OnButtonClick) then
-    begin
-      // Garantizar editor activo en la celda para posicionar el popup
-      // justo debajo (si la celda estaba solo enfocada, ShowEdit lo crea).
-      ed := nil;
-      if tvLineas.Controller.EditingController <> nil then
-      begin
-        tvLineas.Controller.EditingController.ShowEdit;
-        ed := tvLineas.Controller.EditingController.Edit;
-      end;
-      props.OnButtonClick(ed, 0);
-      Result := True;
     end;
   end;
 end;
 
 procedure TfrmMtoComprasSesiones.KeyDown(var Key: Word; Shift: TShiftState);
-var
-  ac     : TWinControl;
-  col    : TcxGridColumn;
-  ed     : TcxCustomEdit;
-  enGrid : Boolean;
-  sBusq  : string;
 begin
-  ac     := Screen.ActiveControl;
-  enGrid := (ac <> nil) and
-            ((ac = cxgrdLineas) or cxgrdLineas.ContainsControl(ac));
-  if enGrid then
-    col := tvLineas.Controller.FocusedColumn
-  else
-    col := nil;
-  sBusq := TextoBusquedaTallaje(Key, Shift);
-  if (sBusq <> '') and (col = dbcLinTallas) then
-  begin
-    ed := nil;
-    if tvLineas.Controller.EditingController <> nil then
-    begin
-      tvLineas.Controller.EditingController.ShowEdit;
-      ed := tvLineas.Controller.EditingController.Edit;
-    end;
-    if ed <> nil then
-      AbrirSelectorTallas(ed, sBusq)
-    else
-      AbrirSelectorTallas(ac, sBusq);
-    Key := 0;
-  end
-  // Ctrl+Enter sobre una columna editbutton del grid de lineas abre su
-  // selector (paleta de color / sistema tallas / ...), igual que pulsar
-  // el ellipsis. Con KeyPreview heredado=True este KeyDown corre antes
-  // que la navegacion Enter->Tab del grid y que el FormKeyDown base, que
-  // si no sacarian el foco a la pestania Documentos. Solo lo consumimos
-  // cuando de verdad se ha disparado el selector.
-  else if (Key = VK_RETURN) and (Shift = [ssCtrl]) and
-          DispararEditButtonLineaActiva then
-    Key := 0
-  else
+  // KeyPreview heredado = True: este KeyDown corre antes que la
+  // navegacion Enter->Tab del grid y que el FormKeyDown base.
+  if not FTallas.ProcesarTeclaFormulario(Key, Shift) then
     inherited KeyDown(Key, Shift);
-end;
-
-procedure TfrmMtoComprasSesiones.AbrirSelectorTallas(Sender: TObject;
-  const ABusquedaInicial: string);
-var
-  ds       : TDataSet;
-  Edit     : TWinControl;
-  ScrPt    : TPoint;
-  WidHint  : Integer;
-  IdActual : Integer;
-  IdNuevo  : Integer;
-begin
-  // Mismo patron que el selector de color basico: el ellipsis abre un
-  // listbox owner-drawn sin marco (SeleccionarConjuntoTalla) con las tres
-  // columnas Sistema / Desde / Hasta. Sustituye al antiguo
-  // TcxLookupComboBox (que daba guerra con Enter/Tab/auto-dropdown dentro
-  // del grid). Un click selecciona y cierra; Esc o click fuera cancelan.
-  if Length(FOpcionesTallas) = 0 then
-  begin
-    MessageDlg(SErrorSistemasTallasSesionNoDisponibles,
-               mtInformation, [mbOk], 0);
-    Exit;
-  end;
-  ds := Dmm.unqrySesionLin;
-  if ds.IsEmpty then Exit;
-  // Al reusar un modelo ya existente el sistema de tallas queda fijado al
-  // del articulo: cambiarlo descuadraria los SKUs ya creados. Solo se
-  // permite anadir colores o tallas nuevos sobre ese mismo sistema.
-  if SameText(ds.FieldByName('ACCION_DUPLICADO_SESLIN').AsString, 'REUSAR') then
-  begin
-    MessageDlg(SErrorCambiarSistemaTallasModeloExistente,
-               mtInformation, [mbOk], 0);
-    Exit;
-  end;
-  IdActual := ds.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
-  // Posicionar el popup justo debajo del editor (igual que color basico).
-  ScrPt.X := -1;
-  ScrPt.Y := -1;
-  WidHint := 380;
-  if Sender is TWinControl then
-  begin
-    Edit    := TWinControl(Sender);
-    ScrPt   := Edit.ClientToScreen(Point(0, Edit.Height));
-    WidHint := Edit.Width;
-    if WidHint < 380 then WidHint := 380;
-  end;
-  if not SeleccionarConjuntoTalla(FOpcionesTallas, IdActual, IdNuevo,
-                                  ScrPt.X, ScrPt.Y, WidHint,
-                                  ABusquedaInicial) then
-    Exit;
-  if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
-  ds.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger := IdNuevo;
-  if Sender is TcxCustomEdit then
-    TcxCustomEdit(Sender).EditValue := IdNuevo;
-  // El usuario acaba de elegir el sistema de tallas a mano en esta linea:
-  // pasa a ser el defecto del DOCUMENTO (no el del proveedor) para la
-  // proxima linea nueva que se anada.
-  if Assigned(Dmm) then Dmm.TallajeDefectoActual := IdNuevo;
-  // Validar contra el maximo de columnas inline. Si el conjunto excede
-  // CANT_TALLAS_MAX, el gestor avisa y limpia el campo; reflejamos el
-  // borrado en el editor. Si es valido, recolocar columnas y captions.
-  if Assigned(FGestorTallas) then
-  begin
-    if FGestorTallas.ValidarSistemaSeleccionado then
-    begin
-      FGestorTallas.RecalcularMaxColumnas;
-      FGestorTallas.ActualizarCaptionsLineaActiva;
-    end
-    else if Sender is TcxCustomEdit then
-      TcxCustomEdit(Sender).EditValue := Null;
-  end;
 end;
 
 procedure TfrmMtoComprasSesiones.dbcLinTallasPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 begin
-  AbrirSelectorTallas(Sender, '');
+  FTallas.AbrirSelector(Sender, '');
 end;
 
 procedure TfrmMtoComprasSesiones.btnArbolFamiliasClick(Sender: TObject);
-var
-  frmSel : TfrmModalSelFamilia;
 begin
   inherited;
-  // Mismo modal jerarquico que F3 sobre la columna Familia. Operamos sobre
-  // la linea con foco; si no hay (sesion sin lineas) avisamos.
+  // Mismo modal jerarquico que F3 sobre la columna Familia. Operamos
+  // sobre la linea con foco; si no hay ninguna, avisamos.
   if Dmm.unqrySesionLin.IsEmpty then
-  begin
     MessageDlg(SErrorLineaSesionAsignarFamiliaNoSeleccionada,
-               mtInformation, [mbOk], 0);
-    Exit;
-  end;
-  frmSel := TfrmModalSelFamilia.Create(Self);
-  try
-    if frmSel.ShowModal = mrOk then
-      ExpandirCodigoFamiliaActiva(frmSel.CodigoFamilia, frmSel.NombreFamilia);
-  finally
-    FreeAndNil(frmSel);
-  end;
+               mtInformation, [mbOk], 0)
+  else
+    FModeloPrv.ElegirFamiliaConModal;
 end;
 
 procedure TfrmMtoComprasSesiones.dbcLinFamiliaPropertiesEditValueChanged(
   Sender: TObject);
-var
-  ed       : TcxCustomEdit;
-  sNuevo   : string;
-  sTent    : string;
-  sPrv     : string;
-  rDup     : TResolverDuplicadoSesion;
 begin
   inherited;
-  if not (Sender is TcxCustomEdit) then
-    Exit;
-  ed := TcxCustomEdit(Sender);
-  ed.PostEditValue;
-
-  sNuevo := Trim(Dmm.unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').AsString);
-  if sNuevo = '' then Exit;
-
-  // 1. Reusar datos de otra linea del mismo documento.
-  if AplicarDuplicadoDeSesion('', sNuevo) then
-    Exit;
-
-  // 2. Reusar articulo existente: si lo tecleado coincide con un
-  //    CODIGO_ART_ART,marcamos REUSAR y prerellenamos descripcion,//    familia,sistema de tallas,color base y coste sugerido. Asi el
-  //    usuario solo tiene que poner el color nuevo y las cantidades.
-  sPrv := '';
-  if not Dmm.unqryTablaG.IsEmpty then
-    sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
-  rDup := FServicioComprasSesiones.ResolverDuplicado(
-    sNuevo, sPrv);
-  if rDup.Encontrado then
-  begin
-    FServicioComprasSesiones.AplicarDuplicadoEnLinea(rDup);
-    if Assigned(FGestorTallas) then
-    begin
-      FGestorTallas.RecalcularMaxColumnas;
-      FGestorTallas.ActualizarCaptionsLineaActiva;
-    end;
-    Exit;
-  end;
-
-  // 3. Si no es un CODIGO_ART existente, probar como CODIGO_FAM:
-  //    ResolverCodigoFamilia genera CODIGO_FAM+RELLENO si la familia
-  //    tiene contador activo. Salvaguarda: si ya hay un codigo
-  //    tentativo expandido para la misma familia (p.ej. 'BOLSOS00001'
-  //    cuando sNuevo='BOLSOS'), no consumimos otro contador.
-  sTent  := Dmm.unqrySesionLin.FieldByName(
-                                    'CODIGO_ART_TENTATIVO_SESLIN').AsString;
-  if (sTent <> '') and (Length(sTent) > Length(sNuevo))
-     and SameText(Copy(sTent, 1, Length(sNuevo)), sNuevo) then
-    Exit; // ya parece expandido para la familia actual
-  ExpandirCodigoFamiliaActiva(sNuevo);
+  FModeloPrv.ResolverFamiliaTecleada(Sender);
 end;
 
 procedure TfrmMtoComprasSesiones.dbcLinCodArtPropertiesEditValueChanged(
   Sender: TObject);
-var
-  ed         : TcxCustomEdit;
-  sTecleado  : string;
-  sExpandido : string;
-  ds         : TDataSet;
-  sNombre    : string;
 begin
   inherited;
-  // Permitimos teclear el codigo directamente en la celda 'Cod. articulo'.
-  // Si lo tecleado coincide con una familia con contador activo, se expande
-  // a FAMILIA+RELLENO igual que cuando se teclea en la columna Familia
-  // (p. ej. '0101' con contador 3 -> '0101003'). Si no es familia, se queda
-  // tal cual (codigo manual) y no se toca CODIGO_FAM_SESLIN.
-  if not (Sender is TcxCustomEdit) then Exit;
-  ed := TcxCustomEdit(Sender);
-  ed.PostEditValue;
-
-  ds := Dmm.unqrySesionLin;
-  if ds.IsEmpty then Exit;
-  sTecleado := Trim(ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString);
-  if sTecleado = '' then Exit;
-
-  if AplicarDuplicadoDeSesion('', sTecleado) then
-    Exit;
-
-  // ResolverCodigoFamilia incrementa el contador como efecto colateral si
-  // resuelve: solo se llama una vez por edicion de celda. Si devuelve False
-  // no consume nada y dejamos el codigo manual sin tocar.
-  if not FServicioComprasSesiones.ResolverCodigoFamilia(
-    sTecleado, IdentidadSesion.Usuario, sExpandido) then
-    Exit;
-
-  if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
-  ds.FieldByName('CODIGO_FAM_SESLIN').AsString          := sTecleado;
-  ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString := sExpandido;
-  ed.EditValue := sExpandido;
-
-  // Pre-rellenar descripcion con NOMBRE_FAM_FAM si esta vacia (mismo
-  // comportamiento que ExpandirCodigoFamiliaActiva por simetria con F3
-  // / tipeo en la columna Familia).
-  if ds.FieldByName('DESCRIPCION_SESLIN').AsString <> '' then Exit;
-  sNombre := FServicioComprasSesiones.ObtenerNombreFamilia(
-    sTecleado);
-  if sNombre <> '' then
-    ds.FieldByName('DESCRIPCION_SESLIN').AsString := sNombre;
+  FModeloPrv.ResolverCodigoTecleado(Sender);
 end;
 
 procedure TfrmMtoComprasSesiones.dbcLinRefPrvPropertiesEditValueChanged(
   Sender: TObject);
-var
-  ed   : TcxCustomEdit;
-  sRef : string;
-  sPrv : string;
-  rDup : TResolverDuplicadoSesion;
 begin
   inherited;
-  if not (Sender is TcxCustomEdit) then Exit;
-  ed := TcxCustomEdit(Sender);
-  ed.PostEditValue;
-
-  // Si la cabecera no tiene proveedor todavia no podemos identificar
-  // un duplicado por referencia: salimos en silencio.
-  if Dmm.unqryTablaG.IsEmpty then
-    Exit;
-  sPrv := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_PRV_SES').AsString);
-  if sPrv = '' then
-    Exit;
-  if Dmm.unqrySesionLin.IsEmpty then
-    Exit;
-
-  sRef := Trim(Dmm.unqrySesionLin.FieldByName('REF_PRV_SESLIN').AsString);
-  if sRef = '' then
-    Exit;
-
-  if AplicarDuplicadoDeSesion(sRef, '') then
-    Exit;
-
-  // Buscamos por REF_PROVEEDOR del proveedor de la cabecera. Si match,// marcamos REUSAR (la helper rellena el resto de campos de la linea).
-  rDup := FServicioComprasSesiones.ResolverDuplicado(
-    sRef, sPrv, True);
-  if not rDup.Encontrado then
-    Exit;
-  FServicioComprasSesiones.AplicarDuplicadoEnLinea(rDup);
-  if Assigned(FGestorTallas) then
-  begin
-    FGestorTallas.RecalcularMaxColumnas;
-    FGestorTallas.ActualizarCaptionsLineaActiva;
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.ExpandirCodigoFamiliaActiva(
-  const ACodigoFam: string; const ANombreFam: string);
-var
-  ds         : TDataSet;
-  sExpandido : string;
-  sTentativo : string;
-  sNombre    : string;
-begin
-  // Helper compartido por F3 y OnEditValueChanged de la columna Familia:
-  // pone CODIGO_FAM_SESLIN, intenta expandir a CODIGO_ART_TENTATIVO via
-  // ResolverCodigoFamilia (incrementa CONTADOR_ART_FAM) y prerellena la
-  // descripcion con NOMBRE_FAM_FAM si esta vacia.
-  if Trim(ACodigoFam) = '' then Exit;
-  ds := Dmm.unqrySesionLin;
-  if ds.IsEmpty then Exit;
-  if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
-  ds.FieldByName('CODIGO_FAM_SESLIN').AsString := ACodigoFam;
-  sTentativo := ACodigoFam;
-  if FServicioComprasSesiones.ResolverCodigoFamilia(
-    ACodigoFam, IdentidadSesion.Usuario, sExpandido) then
-    sTentativo := sExpandido;
-  ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString := sTentativo;
-
-  // Descripcion: si esta vacia, copiar NOMBRE_FAM_FAM. Si venimos del
-  // modal F3 ya lo recibimos en ANombreFam (sin query). Si venimos de
-  // tipeo manual la consulta puntual a fza_articulos_familias trae
-  // el nombre para esta linea.
-  if ds.FieldByName('DESCRIPCION_SESLIN').AsString = '' then
-  begin
-    sNombre := ANombreFam;
-    if sNombre = '' then
-      sNombre := FServicioComprasSesiones.ObtenerNombreFamilia(
-        ACodigoFam);
-    if sNombre <> '' then
-      ds.FieldByName('DESCRIPCION_SESLIN').AsString := sNombre;
-  end;
+  FModeloPrv.ResolverReferenciaTecleada(Sender);
 end;
 
 procedure TfrmMtoComprasSesiones.tvLineasFocusedRecordChanged(
@@ -3400,8 +1887,8 @@ procedure TfrmMtoComprasSesiones.tvLineasFocusedRecordChanged(
   ANewItemRecordFocusingChanged: Boolean);
 begin
   inherited;
-  if Assigned(FGestorTallas) then
-    FGestorTallas.ActualizarCaptionsLineaActiva;
+  if GestorTallas <> nil then
+    GestorTallas.ActualizarCaptionsLineaActiva;
   RefrescarFotoProvisional;
 end;
 
@@ -3412,301 +1899,44 @@ end;
 procedure TfrmMtoComprasSesiones.tvLineasInitEdit(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   AEdit: TcxCustomEdit);
-var
-  BE       : TcxButtonEdit;
-  Btn      : TcxEditButton;
-  AvActual : string;
-  Info     : TInfoBasico;
 begin
   inherited;
-  // Estilo Excel: al entrar a una celda el contenido queda seleccionado,// asi una pulsacion lo sustituye y Tab/Enter lo deja como esta.
-  if AEdit is TcxCustomTextEdit then
-    TcxCustomTextEdit(AEdit).SelectAll;
-  // 'Modelo prov.': cuando el editor es el desplegable de busqueda
-  // incremental (celda vacia), enganchamos OnChange para abrir el
-  // desplegable filtrado al teclear (debounce), igual que inLibGridArticulos.
-  if (AItem = dbcLinRefPrv) and (AEdit is TcxExtLookupComboBox) then
-  begin
-    TcxExtLookupComboBox(AEdit).Properties.OnChange := ModeloComboChange;
-    Exit;
-  end;
-  // 'Sistema tallas' ya no es un combo: es un TcxButtonEdit con ellipsis
-  // que abre el listbox de 3 columnas (dbcLinTallasPropertiesButtonClick),// igual que el selector de color basico. No hay popup que auto-desplegar
-  // ni guerra con JvEnterAsTab/DroppedDown dentro del grid.
-  if AItem <> dbcLinColorBasico then Exit;
-  if not (AEdit is TcxButtonEdit) then Exit;
-  BE := TcxButtonEdit(AEdit);
-  if BE.Properties.Buttons.Count = 0 then Exit;
-  Btn := BE.Properties.Buttons[0];
-
-  AvActual := '';
-  if Dmm.unqrySesionLin.Active and (not Dmm.unqrySesionLin.IsEmpty) then
-    AvActual := Dmm.unqrySesionLin.FieldByName(
-                                       'CODIGO_ATB_COLOR_SESLIN').AsString;
-
-  Info := Default(TInfoBasico);
-  if Trim(AvActual) <> '' then
-    ObtenerInfoBasico(ConexionPrincipal,fIdVaColor, AvActual, Info);
-
-  if Info.EsValido and PintarSwatchEnBitmap(FBmpSwatch, Info, 14) then
-  begin
-    Btn.Glyph.Assign(FBmpSwatch);
-    Btn.Kind := bkGlyph;
-  end
-  else
-    Btn.Kind := bkEllipsis;
+  // Estilo Excel: al entrar a una celda el contenido queda seleccionado.
+  SeleccionarTodoEnEditor(AEdit);
+  // 'Modelo prov.': si el editor es el desplegable de busqueda
+  // incremental, el buscador engancha su debounce. En otro caso puede
+  // ser la celda de color basico, que pinta el swatch en su boton.
+  if (FModeloPrv <> nil) and (FProveedor <> nil) and
+     (not FModeloPrv.EngancharEditor(AItem, AEdit)) then
+    FProveedor.PrepararEditorColorBasico(AItem, AEdit);
 end;
 
 procedure TfrmMtoComprasSesiones.tvLineasCustomDrawCell(
   Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
   AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
-var
-  Col      : TcxGridColumn;
-  Info     : TInfoBasico;
-  AvActual : string;
-  colAc    : TcxGridColumn;
-  vAc      : Variant;
-  iAc      : Integer;
-  arr      : TArrPosConjunto;
-  TxtRect  : TRect;
 begin
   inherited;
-  Col := nil;
-  if AViewInfo.GridRecord = nil then Exit;
-  if AViewInfo.Item is TcxGridColumn then
-    Col := TcxGridColumn(AViewInfo.Item);
-  if Col = nil then Exit;
-
-  // ---- Sombreado celdas talla fuera del conjunto de la fila ----
-  // Cada fila puede tener un sistema de tallaje distinto. Las celdas
-  // talla cuyo Tag (posicion 1..N) excede el tamanyo del conjunto pivot
-  // de esa fila no aplican — las pintamos con un sombreado claro para
-  // que el usuario vea que no son editables. El bloqueo de edicion
-  // efectivo se hace en tvLineasEditing.
-  if (Col.Tag >= 1) and (Col.Tag <= CANT_TALLAS_MAX) and
-     (Col = FTallaColumns[Col.Tag - 1]) then
-  begin
-    colAc := tvLineas.GetColumnByFieldName('ID_AC_PIVOT_SESLIN');
-    if colAc <> nil then
-    begin
-      vAc := AViewInfo.GridRecord.Values[colAc.Index];
-      if (not VarIsNull(vAc)) and (not VarIsEmpty(vAc)) and VarIsNumeric(vAc) then
-      begin
-        iAc := vAc;
-        if (iAc > 0) and Assigned(FGestorTallas) then
-        begin
-          arr := FGestorTallas.GetPosicionesConjunto(iAc);
-          if Col.Tag > Length(arr) then
-          begin
-            // Posicion fuera del conjunto de esta fila → sombrear.
-            ACanvas.Brush.Color := $00E8E8E8;  // gris claro
-            ACanvas.FillRect(AViewInfo.Bounds);
-            ADone := True;
-            Exit;
-          end;
-        end;
-      end;
-    end;
-  end;
-
-  // ---- Nombre del sistema de tallas (columna selector) ----
-  // dbcLinTallas esta bound al ID numerico (ID_AC_PIVOT_SESLIN); pintamos
-  // el NOMBRE_AC del conjunto para que la celda muestre el nombre legible
-  // y no el ID crudo. El editor (ellipsis) solo aparece al entrar a la
-  // celda; el resto del tiempo manda este pintado.
-  if Col = dbcLinTallas then
-  begin
-    AvActual := '';
-    vAc := AViewInfo.GridRecord.Values[Col.Index];
-    if (not VarIsNull(vAc)) and (not VarIsEmpty(vAc)) and VarIsNumeric(vAc) then
-    begin
-      iAc := vAc;
-      if (iAc <= 0) or (FNombresConjunto = nil) or
-         (not FNombresConjunto.TryGetValue(iAc, AvActual)) then
-        AvActual := '';
-    end;
-    ACanvas.Brush.Style := bsSolid;
-    ACanvas.Brush.Color := AViewInfo.Params.Color;
-    ACanvas.FillRect(AViewInfo.Bounds);
-    if AvActual <> '' then
-    begin
-      TxtRect := AViewInfo.Bounds;
-      Inc(TxtRect.Left, 4);
-      ACanvas.Font.Assign(AViewInfo.Params.Font);
-      ACanvas.Font.Color := AViewInfo.Params.TextColor;
-      ACanvas.Brush.Style := bsClear;
-      ACanvas.DrawText(AvActual, TxtRect,
-                       DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_END_ELLIPSIS);
-      ACanvas.Brush.Style := bsSolid;
-    end;
-    ADone := True;
-    Exit;
-  end;
-
-  // ---- Swatch de color basico ----
-  if Col <> dbcLinColorBasico then Exit;
-  AvActual := VarToStr(AViewInfo.GridRecord.Values[Col.Index]);
-  if Trim(AvActual) = '' then Exit;
-  Info := Default(TInfoBasico);
-  if not ObtenerInfoBasico(
-    ConexionPrincipal,
-    fIdVaColor,
-    AvActual,
-    Info) then Exit;
-  if not Info.EsValido then Exit;
-  if PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info) then
+  // El sombreado de tallas fuera del conjunto y el nombre del sistema
+  // los pinta el coordinador de tallas; el swatch, el de proveedor.
+  if (FTallas <> nil) and FTallas.DibujarCelda(ACanvas, AViewInfo) then
+    ADone := True
+  else if (FProveedor <> nil) and
+          FProveedor.DibujarCeldaColor(ACanvas, AViewInfo) then
     ADone := True;
 end;
 
 procedure TfrmMtoComprasSesiones.tvLineasEditing(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   var AAllow: Boolean);
-var
-  iAc : Integer;
-  arr : TArrPosConjunto;
 begin
   inherited;
-  // Si la celda es una talla cuya posicion (Tag) excede el tamanyo
-  // del conjunto pivot de la linea con foco, no permitir edicion. Asi
-  // el usuario no puede teclear cantidades en celdas que no aplican
-  // al sistema de tallaje de esa linea.
-  if AItem = nil then Exit;
-  if (AItem.Tag < 1) or (AItem.Tag > CANT_TALLAS_MAX) then Exit;
-  if FGestorTallas = nil then Exit;
-  if Dmm.unqrySesionLin.IsEmpty then Exit;
-
-  iAc := Dmm.unqrySesionLin.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
-  if iAc <= 0 then Exit;
-  arr := FGestorTallas.GetPosicionesConjunto(iAc);
-  if AItem.Tag > Length(arr) then
-  begin
-    AAllow := False;
-    Exit;
-  end;
-  // Modo 'Formato distribuido': bloquear edicion inline y disparar el
-  // modal de distribuidor (que reparte cantidades por almacen). El
-  // grid principal mostrara la SUMA de almacenes por talla — la query
-  // del gestor ya agrupa por pivot sin filtrar por almacen, asi que
-  // solo hay que refrescar despues.
-  if (not Dmm.unqryTablaG.IsEmpty) and
-     (Dmm.unqryTablaG.FieldByName('ESFORMATO_DISTRIBUIDO_SES').AsString = 'S') then
-  begin
-    AAllow := False;
-    AbrirDistribuidor;
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.CopiarCeldasDistribuidasOtroColor(
-  ALineaOrigen, ALineaDestino: Integer);
-begin
-  FServicioComprasSesiones.CopiarCeldasDistribuidas(
-    Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
-    Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString,
-    Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString,
-    IdentidadSesion.Usuario,
-    ALineaOrigen,
-    ALineaDestino);
-end;
-procedure TfrmMtoComprasSesiones.AbrirDistribuidor(
-  const ACodigoKit: string);
-var
-  oForm  : TfrmModalDistribuidor;
-  iLinea : Integer;
-  iAc    : Integer;
-begin
-  if Dmm.unqrySesionLin.IsEmpty then Exit;
-  iLinea := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
-  iAc    := Dmm.unqrySesionLin.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger;
-  if (iLinea <= 0) or (iAc <= 0) then Exit;
-  // Persistir cualquier edicion pendiente para que el modal vea el
-  // estado consistente de la linea (en particular ID_AC_PIVOT_SESLIN).
-  if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
-    Dmm.unqrySesionLin.Post;
-  oForm := TfrmModalDistribuidor.Create(Application);
-  // Evitamos el caFree heredado de TfrmModalAceptCancel para poder hacer
-  // FreeAndNil manual en el finally sin riesgo de doble liberacion.
-  oForm.OnClose := nil;
-  try
-    oForm.Preparar(ConexionPrincipal, IdentidadSesion.Usuario,
-                    Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
-                    Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString,
-                    iLinea, iAc,
-                    Trim(Dmm.unqryTablaG.FieldByName(
-                                              'CODIGO_PRV_SES').AsString),
-                    ACodigoKit);
-    oForm.ShowModal;
-    if oForm.Confirmado then
-    begin
-      // ORDEN CRITICO. El Refresh del dataset resetea el DataController
-      // del cxGrid y borra los Values[] de las columnas no-bound (las
-      // tallas), asi que CargarCantidadesTodasLineas TIENE que ir
-      // DESPUES del Refresh. Si va antes (como estaba), las celdas talla
-      // se pintan y luego el Refresh las deja en blanco.
-      //   1) RefrescarTotalesLineaActual: Edit en memoria sobre la linea
-      //      activa, actualiza TOTAL_UNIDADES_SESLIN / TOTAL_LINEA_SESLIN.
-      //   2) Refresh: posttea el Edit (UPDATE SQL) y re-fetchea -> reset
-      //      del DataController, pierde las tallas no-bound.
-      //   3) InvalidarCache + CargarCantidadesTodasLineas: re-pinta las
-      //      tallas YA con los Values[] correctos, leyendo SUM(CANTIDAD)
-      //      desde fza_compras_sesiones_celdas.
-      if Assigned(FGestorTallas) then
-        FGestorTallas.RefrescarTotalesLineaActual;
-      Dmm.unqrySesionLin.Refresh;
-      if Assigned(FGestorTallas) then
-      begin
-        FGestorTallas.InvalidarCache;
-        FGestorTallas.CargarCantidadesTodasLineas;
-      end;
-      if Assigned(Dmm) then
-        Dmm.RefrescarTotalesSesion;
-    end;
-  finally
-    FreeAndNil(oForm);
-  end;
+  FTallas.AjustarPermisoEdicion(AItem, AAllow);
 end;
 
 procedure TfrmMtoComprasSesiones.dbcLinColorBasicoPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
-var
-  AvActual : string;
-  AvNuevo  : string;
-  ds       : TDataSet;
-  Edit     : TWinControl;
-  ScrPt    : TPoint;
-  WidHint  : Integer;
 begin
-  if Length(FBasicosColor) = 0 then
-  begin
-    MessageDlg(SErrorColoresBasicosSesionNoDisponibles,
-               mtInformation, [mbOk], 0);
-    Exit;
-  end;
-
-  ds := Dmm.unqrySesionLin;
-  if ds.IsEmpty then Exit;
-  AvActual := ds.FieldByName('CODIGO_ATB_COLOR_SESLIN').AsString;
-
-  ScrPt.X := -1; ScrPt.Y := -1;
-  WidHint := 160;
-  if Sender is TWinControl then
-  begin
-    Edit    := TWinControl(Sender);
-    ScrPt   := Edit.ClientToScreen(Point(0, Edit.Height));
-    WidHint := Edit.Width;
-  end;
-
-  if not SeleccionarAvConPaleta(
-    ConexionPrincipal,
-    fIdVaColor,
-    FBasicosColor,
-    AvActual,
-                                AvNuevo, ScrPt.X, ScrPt.Y, WidHint) then
-    Exit;
-
-  if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
-  ds.FieldByName('CODIGO_ATB_COLOR_SESLIN').AsString := AvNuevo;
-  if Sender is TcxCustomEdit then
-    TcxCustomEdit(Sender).EditValue := AvNuevo;
+  FProveedor.ElegirColorBasico(Sender);
 end;
 
 // ===========================================================================
@@ -3719,35 +1949,8 @@ begin
   inherited;
   if Sender is TcxCustomEdit then
     TcxCustomEdit(Sender).PostEditValue;
-  ProponerPrecioVenta;
+  FModeloPrv.ProponerPrecioVenta;
 end;
-
-procedure TfrmMtoComprasSesiones.ProponerPrecioVenta;
-var
-  rCoste, rMargen, rMultiplo, rAjuste, rVenta : Double;
-  ds                                          : TDataSet;
-begin
-  if Dmm.unqryTablaG.IsEmpty then Exit;
-  if Dmm.unqrySesionLin.IsEmpty then Exit;
-
-  ds := Dmm.unqrySesionLin;
-  rCoste    := ds.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat;
-  rMargen   := Dmm.unqryTablaG.FieldByName('PORCENTAJE_MARGEN_SES').AsFloat;
-  rMultiplo := Dmm.unqryTablaG.FieldByName('MULTIPLO_REDONDEO_SES').AsFloat;
-  rAjuste   := Dmm.unqryTablaG.FieldByName('AJUSTE_FINAL_SES').AsFloat;
-
-  rVenta := CalcularPrecioVenta(rCoste, rMargen, rMultiplo, rAjuste);
-  if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
-  ds.FieldByName('PRECIO_VENTA_SESLIN').AsFloat := rVenta;
-end;
-
-// ===========================================================================
-//   Conjunto de tallas (Sistema tallas) cambia -> rebuild de cabeceras
-// ===========================================================================
-
-// La edicion de celdas talla (antiguo TallaCellEditValueChanged) se
-// extrajo a TGestorGridTallas.PersistirCeldaActiva; el handler se
-// engancha automaticamente en InicializarGestorTallas.
 
 initialization
   RegistrarPantalla(TfrmMtoComprasSesiones);

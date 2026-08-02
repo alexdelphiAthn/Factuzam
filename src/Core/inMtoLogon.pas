@@ -1107,32 +1107,19 @@ end;
 
 procedure TfrmLogon.btnChangePassRootClick(Sender: TObject);
 var
-  bAllowChange:Boolean;
-  sOldPass:String;
-  //sNewPass:String;
+  sOldPass: string;
 begin
   inherited;
-  bAllowChange := False;
-  if (FPasswordConexion = 'Zamora2023') then
-    bAllowChange := True
-  else
-  begin
-    sOldPass := InputBox(SEnterPassBBDD, '','');
-  end;
-  if not bAllowChange then
-  begin
-    if ucConexion.Connected then
-      ucConexion.Disconnect;
-    ConfigurarYConectarMySQL(ucConexion,
-                              edtUserBD.Text,
-                              FPasswordConexion,
-                              edtHostName.Text,
-                              edtPortBD.Text,
-                              'information_schema');
-    if ucConexion.Connected = true then
-      bAllowChange := True;
-  end;
-  if bAllowChange then
+  sOldPass := InputBox(SEnterPassBBDD, '', '');
+  if ucConexion.Connected then
+    ucConexion.Disconnect;
+  ConfigurarYConectarMySQL(ucConexion,
+                            edtUserBD.Text,
+                            sOldPass,
+                            edtHostName.Text,
+                            edtPortBD.Text,
+                            'information_schema');
+  if ucConexion.Connected then
   begin
     CambiarPass(ucConexion);
   end

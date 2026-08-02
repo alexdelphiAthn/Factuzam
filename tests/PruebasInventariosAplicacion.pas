@@ -34,9 +34,29 @@ type
     procedure ArticuloSimpleCargaStockSinAtributos;
   end;
 
+  [TestFixture]
+  TPruebasInventariosImportacion = class
+  public
+    [Test]
+    procedure LectorCsvAdmitePuntoYComaEIgual;
+    [Test]
+    procedure LectorCsvAsumeUnaUnidadSinCantidadLegible;
+    [Test]
+    procedure LectorCsvConservaElTextoNormalizado;
+    [Test]
+    procedure UnidadExistenteActualizaRecuentoYConsolida;
+    [Test]
+    procedure UnidadDesconocidaQuedaPendienteDeAlta;
+    [Test]
+    procedure PrecioMedioSoloSeEscribeCuandoLaLineaLoTrae;
+    [Test]
+    procedure ImportacionVaciaNoConsolidaCambios;
+  end;
+
 implementation
 
 uses
+  System.SysUtils,
   inLibArticulosValidadorIntf,
   inLibInventariosAplicacion,
   inLibInventariosAplicacionIntf;
@@ -84,6 +104,83 @@ type
     procedure CargarStock(const ACodigoUnidad: string);
     procedure RellenarAtributos(const ACodigoSku: string);
   end;
+
+  TOperacionesImportacionFalsas = class(
+    TInterfacedObject,
+    IOperacionesImportacionInventario)
+  private
+    FUnidadesConocidas: string;
+    FPendientes: string;
+    FEdiciones: Integer;
+    FConfirmaciones: Integer;
+    FConsolidaciones: Integer;
+    FPreciosEscritos: Integer;
+    FUltimaCantidad: Double;
+    FUltimoPrecio: Double;
+  public
+    function LocalizarUnidad(const ACodigoUnidad: string): Boolean;
+    procedure IniciarEdicionLinea;
+    procedure EscribirCantidadFisica(ACantidad: Double);
+    procedure EscribirPrecioMedioNuevo(APrecio: Double);
+    procedure ConfirmarLinea;
+    procedure ConsolidarCambios;
+    procedure AnadirUnidadPendiente(const ATextoOriginal: string);
+  end;
+
+function LineasDePrueba(
+  const ACodigoUnidad: string;
+  ACantidad, APrecio: Double;
+  ATienePrecio: Boolean): TLineasImportacionInventario;
+begin
+  SetLength(Result, 1);
+  Result[0].CodigoUnidad := ACodigoUnidad;
+  Result[0].Cantidad := ACantidad;
+  Result[0].PrecioMedioNuevo := APrecio;
+  Result[0].TienePrecioMedio := ATienePrecio;
+  Result[0].TextoOriginal := ACodigoUnidad + '=' +
+    FloatToStr(ACantidad);
+end;
+
+function TOperacionesImportacionFalsas.LocalizarUnidad(
+  const ACodigoUnidad: string): Boolean;
+begin
+  Result := (FUnidadesConocidas <> '') and
+            (Pos(ACodigoUnidad, FUnidadesConocidas) > 0);
+end;
+
+procedure TOperacionesImportacionFalsas.IniciarEdicionLinea;
+begin
+  Inc(FEdiciones);
+end;
+
+procedure TOperacionesImportacionFalsas.EscribirCantidadFisica(
+  ACantidad: Double);
+begin
+  FUltimaCantidad := ACantidad;
+end;
+
+procedure TOperacionesImportacionFalsas.EscribirPrecioMedioNuevo(
+  APrecio: Double);
+begin
+  Inc(FPreciosEscritos);
+  FUltimoPrecio := APrecio;
+end;
+
+procedure TOperacionesImportacionFalsas.ConfirmarLinea;
+begin
+  Inc(FConfirmaciones);
+end;
+
+procedure TOperacionesImportacionFalsas.ConsolidarCambios;
+begin
+  Inc(FConsolidaciones);
+end;
+
+procedure TOperacionesImportacionFalsas.AnadirUnidadPendiente(
+  const ATextoOriginal: string);
+begin
+  FPendientes := FPendientes + ATextoOriginal;
+end;
 
 function ResolucionBase: TArtResolucionEntrada;
 begin
@@ -263,7 +360,126 @@ begin
   Assert.AreEqual(0, Operaciones.FAtributosRellenados);
 end;
 
+procedure TPruebasInventariosImportacion.LectorCsvAdmitePuntoYComaEIgual;
+var
+  Lineas: TLineasImportacionInventario;
+begin
+  Lineas := LeerLineasImportacionCsvInventario(
+    TArray<string>.Create('SKU1;3', 'SKU2=4'));
+  Assert.AreEqual(2, Length(Lineas));
+  Assert.AreEqual('SKU1', Lineas[0].CodigoUnidad);
+  Assert.AreEqual(Double(3), Lineas[0].Cantidad, 0.0001);
+  Assert.AreEqual('SKU2', Lineas[1].CodigoUnidad);
+  Assert.AreEqual(Double(4), Lineas[1].Cantidad, 0.0001);
+  Assert.IsFalse(Lineas[0].TienePrecioMedio);
+end;
+
+procedure TPruebasInventariosImportacion.
+  LectorCsvAsumeUnaUnidadSinCantidadLegible;
+var
+  Lineas: TLineasImportacionInventario;
+begin
+  Lineas := LeerLineasImportacionCsvInventario(
+    TArray<string>.Create('SKU1;', 'SKU2;XX'));
+  Assert.AreEqual(Double(1), Lineas[0].Cantidad, 0.0001);
+  Assert.AreEqual(Double(1), Lineas[1].Cantidad, 0.0001);
+end;
+
+procedure TPruebasInventariosImportacion.
+  LectorCsvConservaElTextoNormalizado;
+var
+  Lineas: TLineasImportacionInventario;
+begin
+  // El texto que se guarda para el alta pendiente ya lleva el separador
+  // normalizado a '=', como esperaba CargarDesdeListaSkus.
+  Lineas := LeerLineasImportacionCsvInventario(
+    TArray<string>.Create('SKU1;3'));
+  Assert.AreEqual('SKU1=3', Lineas[0].TextoOriginal);
+  // Una linea sin separador no aporta unidad y se ignora al aplicar.
+  Lineas := LeerLineasImportacionCsvInventario(
+    TArray<string>.Create('BASURA'));
+  Assert.AreEqual('', Lineas[0].CodigoUnidad);
+end;
+
+procedure TPruebasInventariosImportacion.
+  UnidadExistenteActualizaRecuentoYConsolida;
+var
+  Falsas: TOperacionesImportacionFalsas;
+  Operaciones: IOperacionesImportacionInventario;
+  Resumen: TResumenImportacionInventario;
+begin
+  Falsas := TOperacionesImportacionFalsas.Create;
+  // La interfaz mantiene vivo el doble mientras se comprueba.
+  Operaciones := Falsas;
+  Falsas.FUnidadesConocidas := 'SKU1';
+  Resumen := AplicarImportacionInventario(
+    LineasDePrueba('SKU1', 5, 0, False), Operaciones);
+  Assert.AreEqual(1, Resumen.Actualizadas);
+  Assert.AreEqual(0, Resumen.Nuevas);
+  Assert.AreEqual(1, Falsas.FEdiciones);
+  Assert.AreEqual(1, Falsas.FConfirmaciones);
+  Assert.AreEqual(1, Falsas.FConsolidaciones);
+  Assert.AreEqual(Double(5), Falsas.FUltimaCantidad, 0.0001);
+end;
+
+procedure TPruebasInventariosImportacion.
+  UnidadDesconocidaQuedaPendienteDeAlta;
+var
+  Falsas: TOperacionesImportacionFalsas;
+  Operaciones: IOperacionesImportacionInventario;
+  Resumen: TResumenImportacionInventario;
+begin
+  Falsas := TOperacionesImportacionFalsas.Create;
+  Operaciones := Falsas;
+  Resumen := AplicarImportacionInventario(
+    LineasDePrueba('SKU9', 2, 0, False), Operaciones);
+  Assert.AreEqual(0, Resumen.Actualizadas);
+  Assert.AreEqual(1, Resumen.Nuevas);
+  Assert.AreEqual('SKU9=2', Falsas.FPendientes);
+  Assert.AreEqual(0, Falsas.FConsolidaciones);
+end;
+
+procedure TPruebasInventariosImportacion.
+  PrecioMedioSoloSeEscribeCuandoLaLineaLoTrae;
+var
+  SinPrecio: TOperacionesImportacionFalsas;
+  ConPrecio: TOperacionesImportacionFalsas;
+  Operaciones: IOperacionesImportacionInventario;
+begin
+  SinPrecio := TOperacionesImportacionFalsas.Create;
+  Operaciones := SinPrecio;
+  SinPrecio.FUnidadesConocidas := 'SKU1';
+  AplicarImportacionInventario(
+    LineasDePrueba('SKU1', 5, 0, False), Operaciones);
+  Assert.AreEqual(0, SinPrecio.FPreciosEscritos);
+  ConPrecio := TOperacionesImportacionFalsas.Create;
+  Operaciones := ConPrecio;
+  ConPrecio.FUnidadesConocidas := 'SKU1';
+  AplicarImportacionInventario(
+    LineasDePrueba('SKU1', 5, 7.5, True), Operaciones);
+  Assert.AreEqual(1, ConPrecio.FPreciosEscritos);
+  Assert.AreEqual(Double(7.5), ConPrecio.FUltimoPrecio, 0.0001);
+end;
+
+procedure TPruebasInventariosImportacion.
+  ImportacionVaciaNoConsolidaCambios;
+var
+  Falsas: TOperacionesImportacionFalsas;
+  Operaciones: IOperacionesImportacionInventario;
+  Resumen: TResumenImportacionInventario;
+  SinLineas: TLineasImportacionInventario;
+begin
+  Falsas := TOperacionesImportacionFalsas.Create;
+  Operaciones := Falsas;
+  SetLength(SinLineas, 0);
+  Resumen := AplicarImportacionInventario(SinLineas, Operaciones);
+  Assert.AreEqual(0, Resumen.Actualizadas);
+  Assert.AreEqual(0, Resumen.Nuevas);
+  Assert.AreEqual(0, Falsas.FConsolidaciones);
+end;
+
 initialization
   TDUnitX.RegisterTestFixture(TPruebasInventariosAplicacion);
+  TDUnitX.RegisterTestFixture(TPruebasInventariosImportacion);
 
 end.

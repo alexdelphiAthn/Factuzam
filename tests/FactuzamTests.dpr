@@ -439,7 +439,10 @@ uses
     'PruebasExportacionNoVerifactuPersistencia.pas',
   PruebasJsonSeguro in 'PruebasJsonSeguro.pas',
   PruebasTraducciones in 'PruebasTraducciones.pas',
-  PruebasRegistroPantallas in 'PruebasRegistroPantallas.pas';
+  PruebasRegistroPantallas in 'PruebasRegistroPantallas.pas',
+  PruebasFacturasPresentadorCabecera in
+    'PruebasFacturasPresentadorCabecera.pas',
+  PruebasFacturasPresentadorDetalle in 'PruebasFacturasPresentadorDetalle.pas';
 
 var
   oEjecutor: ITestRunner;

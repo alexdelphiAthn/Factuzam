@@ -19,7 +19,7 @@ interface
 uses
   SysUtils, Classes, ADODB, DBAccess, Uni, inLibUser, vcl.Controls,
   UniProvider, MySQLUniProvider, DASQLMonitor, UniSQLMonitor,
-  inLibMonitorSQLIntf, inLibParametrosIntf, inLibLogIntf;
+  inLibMonitorSQLIntf, inLibParametrosIntf, inLibLogIntf, Data.DB;
 
 type
   TdmConn = class(TDataModule)

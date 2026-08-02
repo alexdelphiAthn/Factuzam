@@ -1,9 +1,0 @@
-
-
-C:\DISCO DURO\proyectos\dbComparer\dbcomparer>DBComparer 127.0.0.1:3306\factuzam root\Zamora2023 127.0.0.1:3306\alexzam root\Zamora2023 --with-data-diff --include-tables=fza_valores_defecto > script.sql
-
-
-C:\DISCO DURO\proyectos\dbComparer\dbcomparer>DBComparer 127.0.0.1:3306\factuzam root\Zamora2023 127.0.0.1:3306\alexam root\Zamora2023 --with-triggers  > script.sql
-
-
-C:\DISCO DURO\proyectos\dbComparer\dbcomparer>DBComparer 127.0.0.1:3306\odaverifactu root\Zamora2023 127.0.0.1:3306\parachute root\Zamora2023 > script.sql

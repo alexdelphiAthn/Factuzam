@@ -823,7 +823,6 @@
                     Caption = 'C'#243'digo Proveedor'
                     DataBinding.FieldName = 'CODIGO_PRV_FACLIN'
                     PropertiesClassName = 'TcxTextEditProperties'
-                    Properties.OnEditValueChanged = ctbCODIGO_PROVEEDOR_FACTURA_LINEAPropertiesEditValueChanged
                     Visible = False
                     Width = 163
                   end
@@ -1215,7 +1214,6 @@
                   Properties.EditFormat = '0.00 %'
                   Properties.MaxValue = 100.000000000000000000
                   Properties.ReadOnly = False
-                  Properties.OnEditValueChanged = spnRetencionPropertiesEditValueChanged
                   TabOrder = 3
                   Width = 133
                 end

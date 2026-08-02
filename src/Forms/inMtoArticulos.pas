@@ -41,8 +41,12 @@ uses
   cxDBExtLookupComboBox, cxListView, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   cxDBLabel, dxShellDialogs, inLibArticulosVariaciones, inMtoModalAceptCancel,
   cxCustomListBox, cxCheckListBox, System.UITypes, System.Types,
-  inLibArticulosAtributosBasicosIntf,
-  inLibArticulosGuardadoIntf;
+  inLibArticulosGuardadoIntf,
+  inLibArticulosPresentacionIntf,
+  inMtoArticulosPresentacionAtributos,
+  inMtoArticulosPresentacionStock,
+  inMtoArticulosPresentacionTarifas,
+  inMtoArticulosPresentacionFiltros;
 
 type
   TContextoDependenciasArticulos = record
@@ -471,44 +475,13 @@ type
       var AHintTextRect: TRect);
   private
      procedure BuscarProveedores;
-     procedure IncorporarTarifas;
-     procedure IterateCheckedListArt(lst:TcxListView);
      // Carga perezosa de la pestaña Tarifas: vi_articulos_tarifas tarda
      // ~6s por subqueries DEPENDENT. La abrimos solo cuando el usuario
      // pasa a tsTarifas (ver dmmArticulos.AsegurarTarifasAbiertas).
      procedure PcDetailChange(Sender: TObject);
-     // Stock: ultimo articulo para el que se cargo el grid pivotado.
-     // Asi AsegurarStockAlDia evita reejecutar el SP si el artículo
-     // no ha cambiado desde la ultima visita a la pestaña Stock.
-
      procedure AsegurarStockAlDia;
      procedure CerrarSiNoVisible(qry: TUniQuery; ActivaTarget: TcxTabSheet);
   private
-    // Filtros de carga del Mto Articulos. Definen el SQL de la lista
-    // principal (vi_articulos) y se reaplican en cada cambio. Los
-    // valores activos solo se persisten en fza_usuarios_perfiles cuando
-    // el usuario pulsa "Grabar Grid" (sbGrabarGridClick), siguiendo el
-    // mismo patron que el resto de preferencias del Mto. Claves:
-    // oFiltroEstado, oFiltroConStock, oFiltroTemporadas.
-    FFiltrosArtCargando: Boolean;
-    // Filtros adicionales que aporta el dialogo de precarga (proveedor y
-    // familia). Son de sesion: arrancan vacios en cada apertura del Mto y
-    // no se persisten en el perfil (a diferencia de estado/stock/temporada).
-    // CSV separado por ';' alineado con la convencion de oFiltroTemporadas.
-    FFiltroProvCsv: string;
-    FFiltroFamCsv: string;
-    // True cuando CrearTablaPrincipal detecta que la lista con los filtros
-    // por defecto (solo activos) supera UMBRAL_PRECARGA y, en
-    // vez de abrir el set completo, abre la lista vacia (LIMIT 0). Lo
-    // consume TrasPrecargaAsync para lanzar el dialogo de filtrado y
-    // reabrir ya acotado, sin congelar la apertura del Mto.
-    FPrecargaPendiente: Boolean;
-    procedure CargarTemporadasFiltro;
-    procedure LeerFiltrosPerfil;
-    function  ConstruirSqlArticulos: string;
-    // Lee el estado marcado del ccbFiltroTemporadaArt como CSV ';'.
-    function  CsvTemporadasControl: string;
-    procedure AplicarFiltrosArticulos;
     function  ObtenerFacturaLineaActiva(out ANumero,
                                         ASerie: string): Boolean;
     procedure AbrirFacturaLineaActiva(const ANumero,
@@ -518,6 +491,9 @@ type
                                           const sPermisos: string); override;
     procedure TrasPrecargaAsync; override;
   private
+    // Stock: ultimo articulo para el que se cargo el grid pivotado. Asi
+    // AsegurarStockAlDia evita reejecutar el SP si el articulo no ha
+    // cambiado desde la ultima visita a la pestaña Stock.
     FStockArticuloCargado: string;
     FGestorProp  : TGestorPropiedades;
     FArticuloCargado: string;
@@ -527,25 +503,17 @@ type
     FPnlTopVariaciones:TPanel;
     FScrollVarAtrib : TScrollBox;
     FCbbTipoVariacion   : TcxDBLookupComboBox;
-    // NOMBRE_ATRIBUTO (uppercase) -> ID_ATRIBUTO del articulo actual. Lo usa
-    // tvStock para colorear el nombre del atributo segun la paleta basica.
-    FAtributosStock : TDictionary<string, string>;
-    FGestorAtributosBasicos: IGestorAtributosBasicosSku;
+    // Colaboradores de presentacion. Cada uno recibe solo los controles,
+    // datasets y puertos que necesita; ninguno conoce el formulario.
+    FPresAtributos: TPresentadorAtributosBasicosArticulo;
+    FPresStock: TPresentadorStockArticulo;
+    FPresTarifas: TPresentadorTarifasArticulo;
+    FPresFiltros: TPresentadorFiltrosArticulos;
+    FCodigosBarras: ILecturaCodigosBarrasArticulo;
     FDependencias: TContextoDependenciasArticulos;
-    function AsegurarBasicoFilaActual: Integer;
-    function ObtenerContextoAtributoActual(
-      out AContexto: TContextoAtributoBasicoSku): Boolean;
-    function PreguntarAmbitoBasico(const ACodArt,
-      AValorAv: string;
-      out AAmbito: TAmbitoAtributoBasico): Boolean;
-    // Resuelve el color (atributo 'CO') del SKU seleccionado leyendo el
-    // detalle de atributos del SKU en foco. Devuelve False si no hay color.
-    function ObtenerColorSkuActual(out aCodArt, aColor: string): Boolean;
-    // Activa ('S') o desactiva ('N') en bloque todos los SKU del articulo
-    // que comparten el color del SKU seleccionado.
-    procedure CambiarActivoColorSkus(const aActivo: string);
     procedure InicializarPestanyaVariaciones;
     procedure InicializarPestanyaPropiedades;
+    procedure InicializarPresentadores;
     procedure OnAfterScrollArticulos(DataSet: TDataSet);
     procedure BtnAddPropClick(Sender: TObject);
   public
@@ -580,35 +548,23 @@ uses
   inLibShowMto,
   inLibFotos,
   inLibGenBusq,
-  inMtoModalArtTar,
   inMtoModalGenerarSKUs,
-  inMtoModalAddPreciosTar,
-  inMtoModalCalcularMargen,
   inMtoModalEtiqArt,
-  inMtoModalFiltroArt,
-  inMtoModalGenImpSave, // dialogo de ambito para "Guardar precarga"
-  inLibEAN13,
   inLibArticulosCodigosBarras,
-  inLibArticulosAltaTarifas,
   inLibArticulosAtributosBasicos,
+  inLibArticulosAtributosBasicosIntf,
   inLibArticulosGuardado,
   inMtoArticulosGuardadoVcl,
   inLibArticulosVisibilidad,
+  inLibArticulosPresentacion,
   UniDataArticulosAtributosBasicosRepositorio,
+  UniDataArticulosPresentacionRepositorio,
   UniDataArticulosVariaciones,
-  inLibArticulosFiltro,
-  inLibAtributosPaleta,
+  UniDataFiltroArticulosRepositorio,
   System.Diagnostics,   // TStopwatch
   inLibMsgArticulos, inLibMsgComun;
 
 {$R *.dfm}
-
-const
-  // Tope de filas para la precarga de la lista de articulos. Si con los
-  // filtros por defecto (solo activos) salen mas, no se carga
-  // el set completo: aparece el dialogo de filtrado por temporada/
-  // proveedor/familia para acotar antes de abrir la lista.
-  UMBRAL_PRECARGA = 50000;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -916,229 +872,27 @@ begin
 end;
 
 procedure TfrmMtoArticulos.btnAddSKUClick(Sender: TObject);
-var
-  frmSel: TfrmMtoModalAddPreciosTar;
-  i: Integer;
-  qryTodasTarifas: TUniQuery;
-  qrySkus: TUniQuery;
-  ListaSkus, ListaTarifas: TStringList;
-  SkusSel, TarifasSel: TStringList;
-  Bkm: TBookmark;
-  codArticulo: String;
-  PrecioPadre: Double;
-  sSku: string;
-  Vigencia: TVigenciaTarifa;
-  Existentes: TFilasTarifaExistentes;
-  Combinaciones: TCombinacionesAltaTarifa;
-  Fila: TFilaNuevaTarifa;
 begin
   inherited;
   if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
     dmmArticulos.unqryTablaG.Post;
-
-  CodArticulo :=
-    dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
-
-  frmSel := TfrmMtoModalAddPreciosTar.Create(Self);
-  // evitamos el caFree heredado para poder hacer Free manual
-  frmSel.OnClose := nil;
-  ListaSkus    := TStringList.Create;
-  ListaTarifas := TStringList.Create;
-  SkusSel      := TStringList.Create;
-  TarifasSel   := TStringList.Create;
-  try
-    // --- CARGA DE SKUs ---
-    ListaSkus.Add(cSkuFilaArticulo);
-    qrySkus := TUniQuery.Create(nil);
-    try
-      qrySkus.Connection := dmmArticulos.unqryTablaG.Connection;
-      qrySkus.SQL.Text :=
-        'SELECT CODIGO_UNIDAD_SKU ' +
-        '  FROM fza_articulos_skus ' +
-        ' WHERE CODIGO_ART_SKU = :ART ' +
-        ' ORDER BY CODIGO_UNIDAD_SKU';
-      qrySkus.ParamByName('ART').AsString := CodArticulo;
-      qrySkus.Open;
-      while not qrySkus.Eof do
-      begin
-        sSku := Trim(qrySkus.FieldByName('CODIGO_UNIDAD_SKU').AsString);
-        if sSku <> '' then
-          ListaSkus.Add(sSku);
-        qrySkus.Next;
-      end;
-    finally
-      FreeAndNil(qrySkus);
-    end;
-    frmSel.CargarSkus(ListaSkus);
-
-    // --- CARGA DE TARIFAS ACTIVAS ---
-    qryTodasTarifas := TUniQuery.Create(nil);
-    try
-      qryTodasTarifas.Connection := dmmArticulos.unqryTablaG.Connection;
-      qryTodasTarifas.SQL.Text := '  SELECT CODIGO_TAR_ARTTAR ' +
-                                  '    FROM fza_tarifas ' +
-                                  '   WHERE ESACTIVO_ARTTAR = ''S'' ' +
-                                  'ORDER BY ORDEN_TAR';
-      qryTodasTarifas.Open;
-      while not qryTodasTarifas.Eof do
-      begin
-        ListaTarifas.Add(
-                     qryTodasTarifas.FieldByName('CODIGO_TAR_ARTTAR').AsString);
-        qryTodasTarifas.Next;
-      end;
-    finally
-      FreeAndNil(qryTodasTarifas);
-    end;
-    frmSel.CargarTarifas(ListaTarifas);
-
-    frmSel.ShowModal;
-    if frmSel.sFicha = 'S' then
-    begin
-      frmSel.ObtenerSkusSeleccionados(SkusSel);
-      frmSel.ObtenerTarifasSeleccionadas(TarifasSel);
-      Vigencia.Desde := frmSel.FechaDesde;
-      Vigencia.TieneHasta := frmSel.TieneFechaHasta;
-      if Vigencia.TieneHasta then
-        Vigencia.Hasta := frmSel.FechaHasta
-      else
-        Vigencia.Hasta := 0;
-
-      // Las decisiones (solapamiento de vigencias, ocupacion y herencia
-      // del precio del padre) viven en inLibArticulosAltaTarifas; aqui
-      // queda el dataset y el modal.
-      dmmArticulos.unqryTarifasArticulos.DisableControls;
-      try
-        Bkm := dmmArticulos.unqryTarifasArticulos.GetBookmark;
-        Existentes := LeerFilasTarifaExistentes(
-                        dmmArticulos.unqryTarifasArticulos);
-        if dmmArticulos.unqryTarifasArticulos.BookmarkValid(Bkm) then
-          dmmArticulos.unqryTarifasArticulos.GotoBookmark(Bkm);
-        dmmArticulos.unqryTarifasArticulos.FreeBookmark(Bkm);
-
-        Combinaciones := CalcularCombinacionesAltaTarifas(
-          SkusSel.ToStringArray, TarifasSel.ToStringArray,
-          Existentes, Vigencia);
-        for i := 0 to High(Combinaciones) do
-        begin
-          if Combinaciones[i].EsFilaArticulo then
-            PrecioPadre := 0
-          else
-            PrecioPadre := dmmArticulos.ObtenerPrecioTarifaPadre(
-                                             codArticulo,
-                                             Combinaciones[i].Tarifa);
-          Fila := ComponerFilaNuevaTarifa(
-                    Combinaciones[i], PrecioPadre, Vigencia);
-          EscribirFilaNuevaTarifa(
-            dmmArticulos.unqryTarifasArticulos, Fila);
-        end;
-      finally
-        dmmArticulos.unqryTarifasArticulos.EnableControls;
-      end;
-      dmmArticulos.unqryTarifasArticulos.Refresh;
-      ActualizarVisibilidadColumnaSku;
-    end;
-  finally
-    FreeAndNil(SkusSel);
-    FreeAndNil(TarifasSel);
-    FreeAndNil(ListaSkus);
-    FreeAndNil(ListaTarifas);
-    FreeAndNil(frmSel);
-  end;
+  FPresTarifas.AltaMasivaPrecios(Self,
+    dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString);
 end;
 
 procedure TfrmMtoArticulos.dbcTarifasMARGENButtonClick(Sender: TObject;
   AButtonIndex: Integer);
-var
-  ds         : TDataSet;
-  unicoFld   : TField;
-  unico      : Integer;
-  codigounidad : string;
-  codigoArt  : string;
-  descArt    : string;
-  codigoTar  : string;
-  nombreTar  : string;
-  descSku    : string;
-  coste      : Double;
-  precSalida : Double;
-  res        : TCalcularMargenResult;
 begin
   inherited;
-  ds := dmmArticulos.unqryTarifasArticulos;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty then
-  begin
-    ShowMessage(SErrorPrecioTarifaNoSeleccionado);
-    Exit;
-  end;
-  unicoFld := ds.FindField('CODIGO_UNICO_ARTTAR');
-  if (unicoFld = nil) or unicoFld.IsNull then
-  begin
-    ShowMessage(SErrorPrecioTarifaNoGuardado);
-    Exit;
-  end;
-  unico := unicoFld.AsInteger;
-  if ds.FindField('CODIGO_UNIDAD_ARTTAR') <> nil then
-    codigoUnidad := ds.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString;
-  codigoArt  := ds.FieldByName('CODIGO_ART_ARTTAR').AsString;
-  if ds.FindField('DESCRIPCION_ART') <> nil then
-    descArt := ds.FieldByName('DESCRIPCION_ART').AsString;
-  codigoTar  := ds.FieldByName('CODIGO_TAR_ARTTAR').AsString;
-  if ds.FindField('NOMBRE_TAR_TAR') <> nil then
-    nombreTar := ds.FieldByName('NOMBRE_TAR_TAR').AsString;
-  if ds.FindField('DESCRIPCION_SKU') <> nil then
-    descSku := ds.FieldByName('DESCRIPCION_SKU').AsString;
-  coste      := ds.FieldByName('PRECIO_ULT_COMPRA').AsFloat;
-  precSalida := ds.FieldByName('PRECIO_SALIDA_ARTTAR').AsFloat;
-
-  res := TfrmModalCalcularMargen.Ejecutar(
-    Self,
-    (ds as TUniQuery).Connection,
-    unico,
-    codigoArt,
-    codigoUnidad,
-    descArt,
-    codigoTar,
-    nombreTar,
-    descSku,
-    coste,
-    precSalida);
-  if res.Aceptado then
-  begin
-    ds.Refresh;
-    ActualizarVisibilidadColumnaSku;
-  end;
+  FPresTarifas.AbrirCalculadoraMargen(Self);
 end;
 
 procedure TfrmMtoArticulos.dbcTarifasMARGENGetDisplayText(
   Sender: TcxCustomGridTableItem;
   ARecord: TcxCustomGridRecord;
   var AText: string);
-var
-  DC                 : TcxCustomDataController;
-  RecordIndex        : Integer;
-  ItemCoste, ItemSalida: TcxCustomGridTableItem;
-  vCoste, vSalida    : Variant;
-  coste, salida      : Double;
 begin
-  AText := '';
-  RecordIndex := ARecord.RecordIndex;
-  if RecordIndex < 0 then Exit;
-  DC := tvTarifas.DataController;
-  if DC = nil then Exit;
-  ItemCoste  := tvTarifas.GetColumnByFieldName('PRECIO_ULT_COMPRA');
-  ItemSalida := tvTarifas.GetColumnByFieldName('PRECIO_SALIDA_ARTTAR');
-  if (ItemCoste = nil) or (ItemSalida = nil) then Exit;
-  vCoste  := DC.Values[RecordIndex, ItemCoste.Index];
-  vSalida := DC.Values[RecordIndex, ItemSalida.Index];
-  if VarIsNull(vCoste) or VarIsEmpty(vCoste) then Exit;
-  if VarIsNull(vSalida) or VarIsEmpty(vSalida) then Exit;
-  try
-    coste  := vCoste;
-    salida := vSalida;
-  except
-    Exit;
-  end;
-  if coste > 0 then
-    AText := FormatFloat('0.00" %"', (salida / coste) * 100);
+  FPresTarifas.MostrarMargen(ARecord, AText);
 end;
 
 procedure TfrmMtoArticulos.btnBuscarClick(Sender: TObject);
@@ -1158,8 +912,7 @@ begin
   begin
     dmmArticulos.unqryTarifasArticulos.Post;
   end;
-  //dmmArticulos.unqryTarifasArticulos.Insert;
-  IncorporarTarifas;
+  FPresTarifas.IncorporarTarifas(Self.Owner);
 end;
 
 procedure TfrmMtoArticulos.btnExportarProveedorClick(Sender: TObject);
@@ -1383,130 +1136,31 @@ begin
 end;
 procedure TfrmMtoArticulos.btnVerificarCBClick(Sender: TObject);
 var
-  qry: TUniQuery;
-  CodArticulo, sCodigo, sSku, sTipo, sErrores: string;
-  iOk13, iOk8, iKo, iSkip: Integer;
+  sCodArticulo: string;
+  oResumen: TResumenCodigosBarrasArticulo;
 begin
   inherited;
   if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
     dmmArticulos.unqryTablaG.Post;
-
-  CodArticulo :=
+  sCodArticulo :=
     dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
-  if CodArticulo = '' then
+  if sCodArticulo = '' then
+    ShowMessage(SErrorArticuloNoSeleccionadoVerificarCodigos)
+  else
   begin
-    ShowMessage(SErrorArticuloNoSeleccionadoVerificarCodigos);
-    Exit;
-  end;
-
-  AsegurarSkuArticulo(CodArticulo);
-
-  qry := TUniQuery.Create(nil);
-  iOk13 := 0;
-  iOk8  := 0;
-  iKo   := 0;
-  iSkip := 0;
-  sErrores := '';
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text :=
-      'SELECT cb.CODIGO_BARRAS_CB, cb.CODIGO_UNIDAD_CB, cb.TIPO_CODIGO_CB ' +
-      '  FROM fza_codigos_barras cb '                                       +
-      '  JOIN fza_articulos_skus sku '                                      +
-      '    ON sku.CODIGO_UNIDAD_SKU = cb.CODIGO_UNIDAD_CB '                 +
-      ' WHERE sku.CODIGO_ART_SKU = :CODIGO_ART_ART';
-    qry.ParamByName('CODIGO_ART_ART').AsString := CodArticulo;
-    qry.Open;
-    while not qry.Eof do
-    begin
-      sCodigo := qry.FieldByName('CODIGO_BARRAS_CB').AsString;
-      sSku    := qry.FieldByName('CODIGO_UNIDAD_CB').AsString;
-      sTipo   := qry.FieldByName('TIPO_CODIGO_CB').AsString;
-
-      // Saltamos los placeholders pendientes de rellenar
-      if (sCodigo = '') or (Pos('_FAB_', sCodigo) = 1) then
-        Inc(iSkip)
-      else if (Length(sCodigo) = 13) and EsEAN13Valido(sCodigo) then
-        Inc(iOk13)
-      else if (Length(sCodigo) = 8) and EsEAN8Valido(sCodigo) then
-        Inc(iOk8)
-      else
-      begin
-        Inc(iKo);
-        sErrores := sErrores + sLineBreak +
-          Format(SErrorDetalleCodigoBarrasInvalido,
-            [sCodigo, sSku, sTipo, Length(sCodigo)]);
-      end;
-      qry.Next;
-    end;
-    qry.Close;
-
-    if iKo = 0 then
+    AsegurarSkuArticulo(sCodArticulo);
+    oResumen := VerificarCodigosBarrasArticulo(
+      FCodigosBarras.ListarCodigosBarras(sCodArticulo));
+    if oResumen.Invalidos = 0 then
       ShowMessage(Format(SInfoVerificacionCodigosBarrasCorrecta,
-                         [iOk13, iOk8, iSkip]))
+        [oResumen.Ean13Correctos, oResumen.Ean8Correctos,
+         oResumen.Omitidos]))
     else
       ShowMessage(Format(SAvisoVerificacionCodigosBarras,
-                         [iOk13, iOk8, iKo, iSkip, sErrores]));
-  finally
-    FreeAndNil(qry);
+        [oResumen.Ean13Correctos, oResumen.Ean8Correctos,
+         oResumen.Invalidos, oResumen.Omitidos,
+         oResumen.DetalleErrores]));
   end;
-end;
-
-procedure TfrmMtoArticulos.IncorporarTarifas;
-var
-  formulario : TfrmMtoModalArtTar;
-begin
-  formulario := TfrmMtoModalArtTar.Create(Self.Owner);
-  try
-    formulario.Name := 'frmMtoModalArtTar';
-    formulario.Caption := STituloSeleccionTarifasArticulo;
-    dmmArticulos.FillTarifas(formulario.lstTarifas);
-    formulario.ShowModal;
-    if formulario.sFicha = 'S' then
-      IterateCheckedListArt(formulario.lstTarifas);
-  finally
-    FreeAndNil(formulario);
-  end;
-end;
-
-procedure TfrmMtoArticulos.IterateCheckedListArt(lst: TcxListView);
-var
-  bAdded:Boolean;
-  i: Integer;
-  item: TListItem;
-begin
-  bAdded := False;
-  with dmmArticulos.unqryTarifasArticulos do
-  begin
-    for i := 0 to lst.Items.Count - 1 do
-    begin
-      item := lst.Items[i];
-      if item.Checked then
-      begin
-        // Evita duplicar: el modal consulta la BBDD y no ve las tarifas aun
-        // pendientes de grabar, asi que en cada clic volvia a ofrecer (y
-        // anadir) la misma. Si el articulo ya tiene esa tarifa a nivel padre
-        // (CODIGO_UNIDAD_ARTTAR vacio), incluso pendiente, no la insertamos.
-        if not Locate('CODIGO_TAR_ARTTAR;CODIGO_UNIDAD_ARTTAR',
-                      VarArrayOf([item.Caption, '']),
-                      [loCaseInsensitive]) then
-        begin
-          Insert;
-          FieldByName('CODIGO_TAR_ARTTAR').AsString := item.Caption;
-          FieldByName('ESACTIVO_ARTTAR').AsString := 'S';
-          FieldByName('FECHA_DESDE_ARTTAR').AsDateTime := Now;
-          FieldByName('PRECIO_SALIDA_ARTTAR').AsInteger := 0;
-          FieldByName('PRECIO_FINAL_ARTTAR').AsInteger := 0;
-          FieldByName('CODIGO_UNIDAD_ARTTAR').AsString := '';
-          Post;
-          bAdded := True;
-        end;
-      end;
-    end;
-    Refresh;
-  end;
-  if bAdded then
-    dbcTarifasPRECIOSALIDA.FocusWithSelection;
 end;
 
 // El articulo activo siempre viene de dsTablaG (CODIGO_ART_ART). El
@@ -1589,11 +1243,7 @@ end;
 procedure TfrmMtoArticulos.CrearTablaPrincipal;
 begin
   inherited;
-  if FAtributosStock = nil then
-    FAtributosStock := TDictionary<string, string>.Create;
   dmmArticulos := tdmDataModule as TdmArticulos;
-  FGestorAtributosBasicos := TGestorAtributosBasicosSku.Create(
-    TRepositorioAtributosBasicosSku.Create(ConexionPrincipal));
   // La vista de stock se empuja al DM (ya no la busca con GetOwnerForm).
   dmmArticulos.AsignarVistaStock(tvStock);
   cbbFamilia.Properties.ListSource := dmmArticulos.dsFamiliaArticulos;
@@ -1623,209 +1273,89 @@ begin
   pcDetail.OnChange := PcDetailChange;
   InicializarPestanyaPropiedades;
   InicializarPestanyaVariaciones;
+  InicializarPresentadores;
   InicializarGuardadoArticuloVcl(Self);
   // Filtros de carga (estado, stock, temporadas): poblar la lista de
   // temporadas, leer las preferencias guardadas por usuario y aplicar
-  // el filtro reescribiendo el SQL de unqryTablaG antes de que el
-  // resto de la rutina lea FArticuloCargado / el primer registro.
-  // La persiana se deja desplegada en el .dfm para poder editarla en
-  // diseño; al arrancar el form la colapsamos.
-  pnlContFiltrosArt.Visible := False;
-  pnlFiltrosArt.Height := 22;
-  btnToggleFiltrosArt.Caption := SCaptionFiltrosCargaContraido;
-  CargarTemporadasFiltro;
-  LeerFiltrosPerfil;
-  // Filtros de sesion del dialogo de precarga (proveedor/familia): arrancan
-  // vacios en cada apertura del Mto.
-  FFiltroProvCsv := '';
-  FFiltroFamCsv  := '';
-  FPrecargaPendiente := False;
+  // el filtro reescribiendo el SQL de la lista antes de que el resto de
+  // la rutina lea FArticuloCargado / el primer registro.
+  FPresFiltros.Colapsar;
+  FPresFiltros.CargarTemporadas;
+  FPresFiltros.LeerPerfil(oPerfilDic);
   // Precarga: DE MOMENTO sin dialogo de acotado. Dejamos la lista CERRADA
-  // con el SQL filtrado (por defecto solo activos) y que la
-  // carga la haga AbrirTablaPrincipalAsync en segundo plano, mostrando el
-  // overlay "Cargando datos..." con barra de progreso. Asi se cargan TODOS
-  // los articulos del filtro sin congelar la apertura ni interrumpir con un
-  // aviso. (El gate por umbral + dialogo queda en el codigo, desactivado.)
-  if Assigned(dmmArticulos) and (dmmArticulos.unqryTablaG <> nil) then
-  begin
-    dmmArticulos.unqryTablaG.Close;
-    dmmArticulos.unqryTablaG.SQL.Text := ConstruirSqlArticulos;
-  end;
+  // con el SQL filtrado (por defecto solo activos) y que la carga la haga
+  // AbrirTablaPrincipalAsync en segundo plano, mostrando el overlay
+  // "Cargando datos..." con barra de progreso.
+  FPresFiltros.AplicarSqlEnLista;
 end;
 
-procedure TfrmMtoArticulos.CargarTemporadasFiltro;
+procedure TfrmMtoArticulos.InicializarPresentadores;
+// Raiz de composicion de la pantalla: aqui se resuelven los adaptadores
+// UniDAC y se inyectan a cada colaborador. Las lambdas capturan el data
+// module (oDatos), no el formulario, salvo los dos avisos de vista.
 var
-  qry: TUniQuery;
-  item: TcxCheckComboBoxItem;
+  oControlesFiltro: TControlesFiltroCargaArticulos;
+  oDatos: TdmArticulos;
 begin
-  // Lista de temporadas activas para el filtro multi-seleccion. Se
-  // resuelve contra fza_propiedades_valores (las mismas que ofrece la
-  // ficha del articulo en la pestanya Propiedades para CODIGO_PROP_ARTPROP
-  // = 'TEMPORADA').
-  ccbFiltroTemporadaArt.Properties.Items.Clear;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text :=
-      'SELECT PV FROM fza_propiedades_valores ' +
-      ' WHERE ID_PROP_PV = ''TEMPORADA'' AND ESACTIVO_PV = ''S'' ' +
-      ' ORDER BY PV';
-    qry.Open;
-    while not qry.Eof do
+  oDatos := dmmArticulos;
+  FCodigosBarras :=
+    CrearLecturaCodigosBarrasArticuloUniDAC(ConexionPrincipal);
+  FPresAtributos := TPresentadorAtributosBasicosArticulo.Create(
+    oDatos.unqryDetallesAtributos,
+    oDatos.unqryAtributosBasicosLookup,
+    oDatos.unqrySkus,
+    TGestorAtributosBasicosSku.Create(
+      TRepositorioAtributosBasicosSku.Create(ConexionPrincipal)),
+    IdentidadSesion.Usuario,
+    function(const ACodArt, AColor, AActivo: string): Integer
     begin
-      item := ccbFiltroTemporadaArt.Properties.Items.Add;
-      item.Description := qry.FieldByName('PV').AsString;
-      qry.Next;
-    end;
-  finally
-    FreeAndNil(qry);
-  end;
-end;
-
-procedure TfrmMtoArticulos.LeerFiltrosPerfil;
-var
-  sEstado, sStock, sTempCsv: string;
-  lst: TStringList;
-  i, idx: Integer;
-begin
-  // FFiltrosArtCargando bloquea el OnEditValueChanged de los controles
-  // mientras los inicializamos: sin esta guarda cada AsignacionCargaria
-  // disparara una reaplicacion del SQL (3 Closes/Opens en cadena al
-  // abrir el Mto).
-  FFiltrosArtCargando := True;
-  try
-    // Precarga por defecto: solo activos ('S'), sin exigir stock ('N').
-    // Asi las altas nuevas aparecen en el listado aunque aun no tengan
-    // movimientos ni existencias.
-    sEstado  := Trim(GetPerfilValueDef(oPerfilDic, 'oFiltroEstado',     'S'));
-    sStock   := Trim(GetPerfilValueDef(oPerfilDic, 'oFiltroConStock',   'N'));
-    sTempCsv := GetPerfilValueDef(oPerfilDic, 'oFiltroTemporadas', '');
-
-    if SameText(sEstado, 'T') then
-      cbbFiltroEstadoArt.ItemIndex := 0
-    else if SameText(sEstado, 'N') then
-      cbbFiltroEstadoArt.ItemIndex := 2
-    else
-      cbbFiltroEstadoArt.ItemIndex := 1; // 'S' o cualquier valor desconocido
-
-    chkFiltroConStockArt.Checked := SameText(sStock, 'S');
-
-    // Marcamos las temporadas previamente seleccionadas. Si una temporada
-    // guardada ya no existe (se desactivo en propiedades), simplemente se
-    // ignora — el filtro no la incluira en el IN.
-    lst := TStringList.Create;
-    try
-      lst.Delimiter := ';';
-      lst.StrictDelimiter := True;
-      lst.DelimitedText := sTempCsv;
-      for i := 0 to ccbFiltroTemporadaArt.Properties.Items.Count - 1 do
-      begin
-        idx := lst.IndexOf(
-                         ccbFiltroTemporadaArt.Properties.Items[i].Description);
-        if idx >= 0 then
-          ccbFiltroTemporadaArt.States[i] := cbsChecked
-        else
-          ccbFiltroTemporadaArt.States[i] := cbsUnchecked;
-      end;
-    finally
-      FreeAndNil(lst);
-    end;
-  finally
-    FFiltrosArtCargando := False;
-  end;
+      Result := oDatos.ActualizarSkusColorActivo(ACodArt, AColor, AActivo);
+    end);
+  FPresStock := TPresentadorStockArticulo.Create(tvStock,
+    ConexionPrincipal);
+  FPresTarifas := TPresentadorTarifasArticulo.Create(
+    oDatos.unqryTarifasArticulos,
+    tvTarifas,
+    dbcTarifasPRECIOSALIDA,
+    ConexionPrincipal,
+    CrearCatalogoAltaTarifasArticuloUniDAC(ConexionPrincipal),
+    function(const ACodArt, ACodTar: string): Double
+    begin
+      Result := oDatos.ObtenerPrecioTarifaPadre(ACodArt, ACodTar);
+    end,
+    procedure(ALista: TcxListView)
+    begin
+      oDatos.FillTarifas(ALista);
+    end,
+    procedure
+    begin
+      ActualizarVisibilidadColumnaSku;
+    end);
+  oControlesFiltro.Estado := cbbFiltroEstadoArt;
+  oControlesFiltro.ConStock := chkFiltroConStockArt;
+  oControlesFiltro.Temporadas := ccbFiltroTemporadaArt;
+  oControlesFiltro.Persiana := pnlFiltrosArt;
+  oControlesFiltro.Contenido := pnlContFiltrosArt;
+  oControlesFiltro.Cabecera := btnToggleFiltrosArt;
+  FPresFiltros := TPresentadorFiltrosArticulos.Create(
+    oControlesFiltro,
+    CrearRepositorioFiltroArticulosUniDAC(ConexionPrincipal),
+    CrearListaArticulosPantallaUniDAC(oDatos.unqryTablaG),
+    CrearEscrituraPrecargaArticulosUniDAC(
+      ConexionPrincipal, PerfilesEscritura),
+    procedure
+    begin
+      AbrirTablaPrincipalAsync;
+    end);
 end;
 
 procedure TfrmMtoArticulos.RecogerPerfilesParticulares(var oList: TPerfilList;
                                                      const sPermisos: string);
-var
-  item: TPerfilItem;
-  i: Integer;
-  sEstado, sTemporadas: string;
 begin
-  // Volcamos los filtros de carga al batch del sbGrabarGridClick, asi se
-  // graban junto con el resto de preferencias del Mto y respetan el
-  // ambito (sPermisos) elegido por el usuario en el dialogo de grabar.
-  if not Assigned(cbbFiltroEstadoArt) then Exit;
-
-  item.UserGroup := sPermisos;
-  item.KeyPerfil := Self.Name;
-
-  // Estado: T=Todos, S=Solo activos, N=Solo inactivos
-  case cbbFiltroEstadoArt.ItemIndex of
-    0: sEstado := 'T';
-    2: sEstado := 'N';
-  else
-    sEstado := 'S';
-  end;
-  item.SubKey := 'oFiltroEstado';
-  item.Value  := sEstado;
-  oList.Add(item);
-
-  item.SubKey := 'oFiltroConStock';
-  if chkFiltroConStockArt.Checked then
-    item.Value := 'S'
-  else
-    item.Value := 'N';
-  oList.Add(item);
-
-  // Temporadas: CSV con ';' como separador (StrictDelimiter al leer).
-  sTemporadas := '';
-  for i := 0 to ccbFiltroTemporadaArt.Properties.Items.Count - 1 do
-    if ccbFiltroTemporadaArt.States[i] = cbsChecked then
-    begin
-      if sTemporadas <> '' then sTemporadas := sTemporadas + ';';
-      sTemporadas := sTemporadas +
-                       ccbFiltroTemporadaArt.Properties.Items[i].Description;
-    end;
-  item.SubKey := 'oFiltroTemporadas';
-  item.Value  := sTemporadas;
-  oList.Add(item);
-end;
-
-function TfrmMtoArticulos.CsvTemporadasControl: string;
-var
-  i: Integer;
-begin
-  // Estado marcado del ccbFiltroTemporadaArt como CSV ';'.
-  Result := '';
-  for i := 0 to ccbFiltroTemporadaArt.Properties.Items.Count - 1 do
-    if ccbFiltroTemporadaArt.States[i] = cbsChecked then
-    begin
-      if Result <> '' then Result := Result + ';';
-      Result := Result + ccbFiltroTemporadaArt.Properties.Items[i].Description;
-    end;
-end;
-
-function TfrmMtoArticulos.ConstruirSqlArticulos: string;
-var
-  Filtro: TFiltroArticulos;
-begin
-  case cbbFiltroEstadoArt.ItemIndex of
-    1:
-      Filtro.Estado := efaActivos;
-    2:
-      Filtro.Estado := efaInactivos;
-  else
-    Filtro.Estado := efaTodos;
-  end;
-  Filtro.SoloConStock := chkFiltroConStockArt.Checked;
-  Filtro.TemporadasCsv := CsvTemporadasControl;
-  Filtro.ProveedoresCsv := FFiltroProvCsv;
-  Filtro.FamiliasCsv := FFiltroFamCsv;
-  Result := ConstruirSqlFiltroArticulos(Filtro);
-end;
-procedure TfrmMtoArticulos.AplicarFiltrosArticulos;
-begin
-  // Cambio manual de filtros (estado/stock/temporadas) o boton "Cargar
-  // ahora". DE MOMENTO sin dialogo: se recarga TODA la lista con el filtro
-  // elegido, en segundo plano y con el overlay "Cargando datos..." + barra
-  // de progreso (via la carga async).
-  if Assigned(dmmArticulos) and (dmmArticulos.unqryTablaG <> nil) then
-  begin
-    dmmArticulos.unqryTablaG.Close;
-    dmmArticulos.unqryTablaG.SQL.Text := ConstruirSqlArticulos;
-    AbrirTablaPrincipalAsync;
-  end;
+  // Los filtros de carga se vuelcan al batch del sbGrabarGridClick para
+  // grabarse junto con el resto de preferencias del Mto.
+  if Assigned(FPresFiltros) then
+    FPresFiltros.VolcarPerfil(oList, sPermisos, Self.Name);
 end;
 
 procedure TfrmMtoArticulos.TrasPrecargaAsync;
@@ -1843,34 +1373,12 @@ begin
 end;
 
 procedure TfrmMtoArticulos.PrepararBusquedaExterna(const ABusq: string);
-var
-  i: Integer;
 begin
   // Búsqueda externa (Ctrl+A desde otro Mto): sin filtros de carga
   // para que salgan todos los artículos. Resetear controles y SQL
   // antes de que inherited añada el WHERE de búsqueda vía parser.
-  FFiltrosArtCargando := True;
-  try
-    cbbFiltroEstadoArt.ItemIndex := 0;
-    chkFiltroConStockArt.Checked := False;
-    for i := 0 to ccbFiltroTemporadaArt.Properties.Items.Count - 1 do
-      ccbFiltroTemporadaArt.States[i] := cbsUnchecked;
-  finally
-    FFiltrosArtCargando := False;
-  end;
-  // Tambien los filtros de sesion del dialogo y la bandera de precarga: la
-  // busqueda externa va sin acotar (el WHERE lo impone el parser de Ctrl+A).
-  FFiltroProvCsv := '';
-  FFiltroFamCsv  := '';
-  FPrecargaPendiente := False;
-  if Assigned(dmmArticulos) and (dmmArticulos.unqryTablaG <> nil) then
-  begin
-    dmmArticulos.unqryTablaG.Close;
-    dmmArticulos.unqryTablaG.SQL.Text := ConstruirSqlArticulos;
-  end;
-  pnlContFiltrosArt.Visible := False;
-  pnlFiltrosArt.Height := 22;
-  btnToggleFiltrosArt.Caption := SCaptionFiltrosCargaContraido;
+  if Assigned(FPresFiltros) then
+    FPresFiltros.ReiniciarParaBusquedaExterna;
   inherited;
 end;
 
@@ -1884,23 +1392,8 @@ begin
 end;
 
 procedure TfrmMtoArticulos.btnToggleFiltrosArtClick(Sender: TObject);
-const
-  ALTO_CABECERA = 22;
-  ALTO_CONTENIDO = 44;
 begin
-  // Persiana: arranca cerrada (Visible=False en el DFM) y al pulsar la
-  // cabecera alternamos visibilidad y altura del contenedor padre.
-  pnlContFiltrosArt.Visible := not pnlContFiltrosArt.Visible;
-  if pnlContFiltrosArt.Visible then
-  begin
-    pnlFiltrosArt.Height := ALTO_CABECERA + ALTO_CONTENIDO;
-    btnToggleFiltrosArt.Caption := SCaptionFiltrosCargaExpandido;
-  end
-  else
-  begin
-    pnlFiltrosArt.Height := ALTO_CABECERA;
-    btnToggleFiltrosArt.Caption := SCaptionFiltrosCargaContraido;
-  end;
+  FPresFiltros.AlternarPersiana;
 end;
 
 procedure TfrmMtoArticulos.cbbFiltroEstadoArtPropertiesEditValueChanged(
@@ -1910,22 +1403,22 @@ begin
   // a fza_usuarios_perfiles se hace explicitamente desde sbGrabarGridClick
   // (mismo patron que el resto de ajustes del Mto: ancho de columnas,
   // captions, etc.).
-  if FFiltrosArtCargando then Exit;
-  AplicarFiltrosArticulos;
+  if not FPresFiltros.Cargando then
+    FPresFiltros.AplicarFiltros;
 end;
 
 procedure TfrmMtoArticulos.chkFiltroConStockArtPropertiesEditValueChanged(
                                                               Sender: TObject);
 begin
-  if FFiltrosArtCargando then Exit;
-  AplicarFiltrosArticulos;
+  if not FPresFiltros.Cargando then
+    FPresFiltros.AplicarFiltros;
 end;
 
 procedure TfrmMtoArticulos.ccbFiltroTemporadaArtPropertiesCloseUp(
                                                               Sender: TObject);
 begin
-  if FFiltrosArtCargando then Exit;
-  AplicarFiltrosArticulos;
+  if not FPresFiltros.Cargando then
+    FPresFiltros.AplicarFiltros;
 end;
 
 procedure TfrmMtoArticulos.btnCargarAhoraArtClick(Sender: TObject);
@@ -1933,54 +1426,12 @@ begin
   // Dispara la carga de la lista con los filtros actuales del panel
   // (estado/stock/temporadas) de forma explicita, sin depender del
   // auto-aplicado al cerrar el desplegable de temporadas.
-  AplicarFiltrosArticulos;
+  FPresFiltros.AplicarFiltros;
 end;
 
 procedure TfrmMtoArticulos.btnGuardarPrecargaArtClick(Sender: TObject);
-var
-  formulario: TfrmModalGenImpSave;
-  sPermisos: string;
-  oList: TPerfilList;
 begin
-  // Guarda SOLO los filtros de carga (estado/stock/temporadas) en el perfil.
-  // El cambio ya se aplica en caliente al marcar/desmarcar; este boton lo
-  // hace permanente sin pasar por "Grabar Grid" (que ademas reescribe anchos
-  // de columna y captions). Se pregunta el ambito como en Grabar Grid.
-  sPermisos := '';
-  formulario := TfrmModalGenImpSave.Create(Application);
-  try
-    formulario.edtDescripcion.Enabled := False;
-    formulario.edtNombreOrigen.Text   := Self.Name;
-    formulario.edtDescripcion.Text    := 'Guardar precarga';
-    formulario.ShowModal;
-    if formulario.sFicha = 'S' then
-      sPermisos := formulario.cbbPermisos.Text;
-  finally
-    FreeAndNil(formulario);
-  end;
-  // Solo persistimos si el usuario confirmo el ambito en el dialogo.
-  if sPermisos <> '' then
-  begin
-    Screen.Cursor := crHourGlass;
-    oList := TPerfilList.Create;
-    try
-      // Mismo volcado de filtros que usa Grabar Grid; el upsert de
-      // GrabarPerfiles sobrescribe los valores previos del ámbito.
-      RecogerPerfilesParticulares(oList, sPermisos);
-      ConexionPrincipal.StartTransaction;
-      try
-        PerfilesEscritura.GrabarPerfiles(oList);
-        ConexionPrincipal.Commit;
-      except
-        ConexionPrincipal.Rollback;
-        raise;
-      end;
-    finally
-      FreeAndNil(oList);
-      Screen.Cursor := crDefault;
-    end;
-    ShowMessage(SInfoPrecargaArticuloGuardada);
-  end;
+  FPresFiltros.GuardarPrecarga(Application, Self.Name);
 end;
 
 procedure TfrmMtoArticulos.InicializarPestanyaPropiedades;
@@ -2179,13 +1630,10 @@ begin
   // unqryStockArticulosAfterScroll: el bestfit que hace ese metodo necesita
   // saber qué columnas pintaran swatch para reservarles el ancho del
   // cuadradito.
-  if FAtributosStock <> nil then
+  if Assigned(FPresStock) then
   begin
     swTramo := TStopwatch.StartNew;
-    CargarMapaAtributosArticulo(
-      ConexionPrincipal,
-      CodArticulo,
-      FAtributosStock);
+    FPresStock.CargarMapaArticulo(CodArticulo);
     msMapaAtr := swTramo.ElapsedMilliseconds;
   end;
 
@@ -2282,118 +1730,31 @@ end;
 procedure TfrmMtoArticulos.
                           dbcTarifasPORCEN_DTO_TARIFAPropertiesEditValueChanged(
   Sender: TObject);
-var
-    e: TcxCustomEdit;
 begin
   inherited;
-  if (dmmArticulos <> nil) then
-    with dmmArticulos.unqryTarifasArticulos do
-    begin
-      if ((State = dsInsert) or (State = dsEdit)) then
-      begin
-        e := Sender as TcxCustomEdit;
-        FindField('PORCENTAJE_DTO_ARTTAR').AsString := VarToStr(e.EditingValue);
-        FindField('PRECIO_DTO_ARTTAR').AsFloat :=
-                               (FindField('PRECIO_SALIDA_ARTTAR').AsFloat * (
-                                FindField(
-                                  'PORCENTAJE_DTO_ARTTAR').AsFloat / 100));
-        FindField('PRECIO_FINAL_ARTTAR').AsFloat :=
-                                    ( FindField(
-                                      'PRECIO_SALIDA_ARTTAR').AsFloat -
-                                      FindField('PRECIO_DTO_ARTTAR').AsFloat
-                                    );
-      end;
-    end;
+  FPresTarifas.RecalcularDesdePorcentajeDto(Sender);
 end;
 
 procedure TfrmMtoArticulos.dbcTarifasPRECIOFINALPropertiesEditValueChanged(
   Sender: TObject);
-var
-    e: TcxCustomEdit;
-    pct: Double;
-  begin
+begin
   inherited;
-  if (dmmArticulos <> nil) then
-    with dmmArticulos.unqryTarifasArticulos do
-    begin
-      if ((State = dsInsert) or (State = dsEdit)) then
-      begin
-        e := Sender as TcxCustomEdit;
-        FindField('PRECIO_FINAL_ARTTAR').AsString := VarToStr(e.EditingValue);
-        pct := FindField('PORCENTAJE_DTO_ARTTAR').AsFloat;
-        // Mantener el % fijo: salida = final / (1 - pct/100). Con pct
-        // fuera de (0,100) no se puede derivar la salida (división por
-        // cero o salida negativa): se trata como fila sin descuento.
-        if (pct > 0) and (pct < 100) then
-        begin
-          FindField('PRECIO_SALIDA_ARTTAR').AsFloat :=
-                              (FindField('PRECIO_FINAL_ARTTAR').AsFloat /
-                               (1 - (pct / 100)));
-          FindField('PRECIO_DTO_ARTTAR').AsFloat :=
-                              (FindField('PRECIO_SALIDA_ARTTAR').AsFloat -
-                               FindField('PRECIO_FINAL_ARTTAR').AsFloat);
-        end
-        else
-        begin
-          FindField('PRECIO_SALIDA_ARTTAR').AsString :=
-                                       FindField(
-                                         'PRECIO_FINAL_ARTTAR').AsString;
-          FindField('PRECIO_DTO_ARTTAR').AsFloat := 0;
-          FindField('PORCENTAJE_DTO_ARTTAR').AsFloat := 0;
-        end;
-      end;
-    end;
+  FPresTarifas.RecalcularDesdePrecioFinal(Sender);
 end;
 
 procedure TfrmMtoArticulos.dbcTarifasPRECIOSALIDAPropertiesEditValueChanged(
   Sender: TObject);
-var
-    e: TcxCustomEdit;
 begin
   inherited;
-  if (dmmArticulos <> nil) then
-    with dmmArticulos.unqryTarifasArticulos do
-    begin
-    if ((State = dsInsert) or (State = dsEdit)) then
-      begin
-        e := Sender as TcxCustomEdit;
-        FindField('PRECIO_SALIDA_ARTTAR').AsString := VarToStr(e.EditingValue);
-        FindField('PRECIO_FINAL_ARTTAR').AsFloat :=
-                                    ( FindField(
-                                      'PRECIO_SALIDA_ARTTAR').AsFloat -
-                                      FindField('PRECIO_DTO_ARTTAR').AsFloat
-                                    );
-      end;
-    end;
+  FPresTarifas.RecalcularDesdePrecioSalida(Sender);
 end;
 
 procedure TfrmMtoArticulos.
                           dbcTarifasPRECIO_DTO_TARIFAPropertiesEditValueChanged(
   Sender: TObject);
-var
-    e: TcxCustomEdit;
 begin
   inherited;
-  if (dmmArticulos <> nil) then
-    with dmmArticulos.unqryTarifasArticulos do
-    begin
-      if ((State = dsInsert) or (State = dsEdit)) then
-      begin
-        e := Sender as TcxCustomEdit;
-        FindField('PRECIO_DTO_ARTTAR').AsString := VarToStr(e.EditingValue);
-        if (FindField('PRECIO_SALIDA_ARTTAR').AsFloat <> 0) then
-        begin
-          FindField('PORCENTAJE_DTO_ARTTAR').AsFloat :=
-                             ((FindField('PRECIO_DTO_ARTTAR').AsFloat /
-                               FindField(
-                                 'PRECIO_SALIDA_ARTTAR').AsFloat) * 100);
-          FindField('PRECIO_FINAL_ARTTAR').AsFloat :=
-                                    ( FindField(
-                                      'PRECIO_SALIDA_ARTTAR').AsFloat -
-                                      FindField('PRECIO_DTO_ARTTAR').AsFloat);
-        end;
-      end;
-    end;
+  FPresTarifas.RecalcularDesdePrecioDto(Sender);
 end;
 
 procedure TfrmMtoArticulos.dsTablaGStateChange(Sender: TObject);
@@ -2413,13 +1774,16 @@ end;
 procedure TfrmMtoArticulos.FormDestroy(Sender: TObject);
 begin
   FDependencias := Default(TContextoDependenciasArticulos);
-  FGestorAtributosBasicos := nil;
+  FCodigosBarras := nil;
   inherited;
   if Assigned(FGestorProp) then
     FreeAndNil(FGestorProp);
   if Assigned(FGestorVar) then
     FreeAndNil(FGestorVar);
-  FreeAndNil(FAtributosStock);
+  FreeAndNil(FPresFiltros);
+  FreeAndNil(FPresTarifas);
+  FreeAndNil(FPresStock);
+  FreeAndNil(FPresAtributos);
   dmmArticulos := nil;
 end;
 
@@ -2433,330 +1797,40 @@ procedure TfrmMtoArticulos.tvSkuAtributosBasicosFUENTE_ATBGetDisplayText(
   Sender: TcxCustomGridTableItem; ARecord: TcxCustomGridRecord;
   var AText: string);
 begin
-  // 'A' = override por artículo, 'C' = conjunto del artículo, 'G' = global
-  if AText = 'A' then AText := 'Artículo'
-  else if AText = 'C' then AText := 'Conjunto'
-  else if AText = 'G' then AText := 'Global'
-  else AText := '';
+  FPresAtributos.MostrarFuente(AText);
 end;
 
-function TfrmMtoArticulos.PreguntarAmbitoBasico(
-  const ACodArt, AValorAv: string;
-  out AAmbito: TAmbitoAtributoBasico): Boolean;
-// Cuando el helper del SKU tiene que CREAR un atributo basico nuevo
-// (porque la fila aun no tiene ninguno) preguntamos al usuario que
-// tipo quiere: global (compartido entre articulos) o ad-hoc (exclusivo
-// con prefijo AD_<articulo>_). Si elige cancelar, no se crea nada y
-// la edicion se descarta.
-//
-// MB_YESNOCANCEL nos da 3 botones de serie:
-//   Si       -> Global (Recommended por defecto)
-//   No       -> Ad-hoc (compatibilidad con comportamiento previo)
-//   Cancelar -> Result = False
-var
-  CodGlobal, CodAdHoc, Texto: string;
-begin
-  Result := False;
-  AAmbito := aabGlobal;
-  CodGlobal := StringReplace(Trim(AValorAv), ' ', '_', [rfReplaceAll]);
-  if CodGlobal = '' then
-    CodGlobal := STextoAtributoBasicoSinValor;
-  CodAdHoc  := Format('AD_%s_%s', [ACodArt, CodGlobal]);
-  Texto := Format(SPreguntaCrearAtributoBasicoSku,
-    [CodGlobal, CodAdHoc]);
-  case Application.MessageBox(
-         PChar(Texto),
-         PChar(STituloCrearAtributoBasico),
-         MB_YESNOCANCEL + MB_ICONQUESTION + MB_DEFBUTTON1) of
-    ID_YES:
-      begin
-        AAmbito := aabGlobal;
-        Result := True;
-      end;
-    ID_NO:
-      begin
-        AAmbito := aabAdHoc;
-        Result := True;
-      end;
-  end;
-end;
-
-function TfrmMtoArticulos.ObtenerContextoAtributoActual(
-  out AContexto: TContextoAtributoBasicoSku): Boolean;
-var
-  oDatos: TDataSet;
-begin
-  AContexto := Default(TContextoAtributoBasicoSku);
-  Result := Assigned(FGestorAtributosBasicos) and
-            Assigned(dmmArticulos) and
-            Assigned(dmmArticulos.unqryDetallesAtributos) and
-            dmmArticulos.unqryDetallesAtributos.Active and
-            (not dmmArticulos.unqryDetallesAtributos.IsEmpty);
-  if Result then
-  begin
-    oDatos := dmmArticulos.unqryDetallesAtributos;
-    AContexto.CodigoArticulo := oDatos.FieldByName(
-      'CODIGO_ART_SKU').AsString;
-    AContexto.CodigoSku := oDatos.FieldByName(
-      'CODIGO_UNIDAD_SKU').AsString;
-    AContexto.IdVariacion := oDatos.FieldByName(
-      'ID_VA_AV').AsString;
-    AContexto.ValorAtributo := oDatos.FieldByName(
-      'VALOR_AV').AsString;
-    if not oDatos.FieldByName('ID_AV').IsNull then
-      AContexto.IdValor := oDatos.FieldByName('ID_AV').AsInteger;
-    AContexto.Usuario := IdentidadSesion.Usuario;
-    Result := (AContexto.CodigoArticulo <> '') and
-              (AContexto.CodigoSku <> '') and
-              (AContexto.IdVariacion <> '');
-  end;
-end;
-
-function TfrmMtoArticulos.AsegurarBasicoFilaActual: Integer;
-var
-  oContexto: TContextoAtributoBasicoSku;
-  oDatos: TDataSet;
-  eAmbito: TAmbitoAtributoBasico;
-  bContinuar: Boolean;
-begin
-  Result := 0;
-  if ObtenerContextoAtributoActual(oContexto) then
-  begin
-    oDatos := dmmArticulos.unqryDetallesAtributos;
-    if not oDatos.FieldByName('ID_ATB_AV').IsNull then
-      Result := oDatos.FieldByName('ID_ATB_AV').AsInteger
-    else
-    begin
-      eAmbito := aabAdHoc;
-      bContinuar := Trim(oContexto.ValorAtributo) = '';
-      if not bContinuar then
-        bContinuar := PreguntarAmbitoBasico(
-          oContexto.CodigoArticulo,
-          oContexto.ValorAtributo,
-          eAmbito);
-      if bContinuar then
-        Result := FGestorAtributosBasicos.AsegurarBasico(
-          oContexto,
-          eAmbito);
-    end;
-  end;
-end;
-
-procedure TfrmMtoArticulos.tvSkuAtributosBasicosNOMBRE_ATBPropertiesEditValueChanged(
+procedure TfrmMtoArticulos.
+              tvSkuAtributosBasicosNOMBRE_ATBPropertiesEditValueChanged(
   Sender: TObject);
-var
-  ds   : TDataSet;
-  vNew : Variant;
-  IdAtb: Integer;
 begin
-  if Assigned(dmmArticulos) and
-     dmmArticulos.unqryDetallesAtributos.Active then
-  begin
-    ds := dmmArticulos.unqryDetallesAtributos;
-    if not ds.IsEmpty then
-    begin
-      IdAtb := AsegurarBasicoFilaActual;
-      if IdAtb > 0 then
-      begin
-        vNew := (Sender as TcxCustomEdit).EditingValue;
-        FGestorAtributosBasicos.ActualizarNombre(
-          IdAtb,
-          VarToStr(vNew),
-          IdentidadSesion.Usuario);
-        if ds.State in [dsEdit, dsInsert] then
-          ds.Cancel;
-        ds.Refresh;
-        if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
-          dmmArticulos.unqryAtributosBasicosLookup.Refresh;
-      end
-      else if ds.State in [dsEdit, dsInsert] then
-        ds.Cancel;
-    end;
-  end;
+  FPresAtributos.CambiarNombre(Sender);
 end;
 
-procedure TfrmMtoArticulos.tvSkuAtributosBasicosVALOR_NUM_ATBPropertiesEditValueChanged(
+procedure TfrmMtoArticulos.
+           tvSkuAtributosBasicosVALOR_NUM_ATBPropertiesEditValueChanged(
   Sender: TObject);
-var
-  ds   : TDataSet;
-  vNew : Variant;
-  IdAtb: Integer;
-  oValor: TRealOpcional;
 begin
-  if Assigned(dmmArticulos) and
-     dmmArticulos.unqryDetallesAtributos.Active then
-  begin
-    ds := dmmArticulos.unqryDetallesAtributos;
-    if not ds.IsEmpty then
-    begin
-      IdAtb := AsegurarBasicoFilaActual;
-      if IdAtb > 0 then
-      begin
-        vNew := (Sender as TcxCustomEdit).EditingValue;
-        if VarIsNull(vNew) or
-           (VarToStr(vNew) = '') then
-          oValor := RealNulo
-        else
-          oValor := RealConValor(Double(vNew));
-        FGestorAtributosBasicos.ActualizarValorNumerico(
-          IdAtb,
-          oValor,
-          IdentidadSesion.Usuario);
-        if ds.State in [dsEdit, dsInsert] then
-          ds.Cancel;
-        ds.Refresh;
-        if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
-          dmmArticulos.unqryAtributosBasicosLookup.Refresh;
-      end
-      else if ds.State in [dsEdit, dsInsert] then
-        ds.Cancel;
-    end;
-  end;
+  FPresAtributos.CambiarValorNumerico(Sender);
 end;
 
-procedure TfrmMtoArticulos.tvSkuAtributosBasicosUNIDAD_ATBPropertiesEditValueChanged(
+procedure TfrmMtoArticulos.
+              tvSkuAtributosBasicosUNIDAD_ATBPropertiesEditValueChanged(
   Sender: TObject);
-var
-  ds   : TDataSet;
-  vNew : Variant;
-  IdAtb: Integer;
 begin
-  if Assigned(dmmArticulos) and
-     dmmArticulos.unqryDetallesAtributos.Active then
-  begin
-    ds := dmmArticulos.unqryDetallesAtributos;
-    if not ds.IsEmpty then
-    begin
-      IdAtb := AsegurarBasicoFilaActual;
-      if IdAtb > 0 then
-      begin
-        vNew := (Sender as TcxCustomEdit).EditingValue;
-        FGestorAtributosBasicos.ActualizarUnidad(
-          IdAtb,
-          VarToStr(vNew),
-          IdentidadSesion.Usuario);
-        if ds.State in [dsEdit, dsInsert] then
-          ds.Cancel;
-        ds.Refresh;
-        if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
-          dmmArticulos.unqryAtributosBasicosLookup.Refresh;
-      end
-      else if ds.State in [dsEdit, dsInsert] then
-        ds.Cancel;
-    end;
-  end;
+  FPresAtributos.CambiarUnidad(Sender);
 end;
 
-procedure TfrmMtoArticulos.tvSkuAtributosBasicosDESCRIPCION_AABPropertiesEditValueChanged(
+procedure TfrmMtoArticulos.
+         tvSkuAtributosBasicosDESCRIPCION_AABPropertiesEditValueChanged(
   Sender: TObject);
-var
-  oContexto: TContextoAtributoBasicoSku;
-  oDatos: TDataSet;
-  oDescripcion: TCadenaOpcional;
-  oIdBasico: TEnteroOpcional;
-  vNuevo: Variant;
 begin
-  if ObtenerContextoAtributoActual(oContexto) then
-  begin
-    oDatos := dmmArticulos.unqryDetallesAtributos;
-    if not oDatos.FieldByName('ID_ATB_AV').IsNull then
-      oIdBasico := EnteroConValor(
-        oDatos.FieldByName('ID_ATB_AV').AsInteger)
-    else
-      oIdBasico := EnteroNulo;
-    vNuevo := (Sender as TcxCustomEdit).EditingValue;
-    if VarIsNull(vNuevo) or
-       (VarToStr(vNuevo) = '') then
-      oDescripcion := CadenaNula
-    else
-      oDescripcion := CadenaConValor(VarToStr(vNuevo));
-    FGestorAtributosBasicos.GuardarDescripcion(
-      oContexto,
-      oIdBasico,
-      oDescripcion);
-    if oDatos.State in [dsEdit, dsInsert] then
-      oDatos.Cancel;
-    oDatos.Refresh;
-  end;
-end;
-
-function TfrmMtoArticulos.ObtenerColorSkuActual(out aCodArt,
-  aColor: string): Boolean;
-// Busca en el detalle de atributos del SKU seleccionado la fila del atributo
-// de color ('CO') y devuelve el codigo de articulo y el texto del color. El
-// detalle ya esta master-detalleado al SKU en foco, asi que recorrerlo da los
-// atributos de ese SKU (una fila CO, una TAL, ...).
-var
-  ds : TDataSet;
-  bm : TBookmark;
-begin
-  Result  := False;
-  aCodArt := '';
-  aColor  := '';
-  if (not Assigned(dmmArticulos)) or
-     (not Assigned(dmmArticulos.unqryDetallesAtributos)) or
-     (not dmmArticulos.unqryDetallesAtributos.Active) then Exit;
-  ds := dmmArticulos.unqryDetallesAtributos;
-  if ds.IsEmpty then Exit;
-  ds.DisableControls;
-  bm := ds.GetBookmark;
-  try
-    ds.First;
-    while (not ds.Eof) and (not Result) do
-    begin
-      if SameText(ds.FieldByName('ID_VA_AV').AsString, 'CO') and
-         (ds.FieldByName('VALOR_AV').AsString <> '') then
-      begin
-        aCodArt := ds.FieldByName('CODIGO_ART_SKU').AsString;
-        aColor  := ds.FieldByName('VALOR_AV').AsString;
-        Result  := True;
-      end;
-      if not Result then
-        ds.Next;
-    end;
-  finally
-    if ds.BookmarkValid(bm) then ds.GotoBookmark(bm);
-    ds.FreeBookmark(bm);
-    ds.EnableControls;
-  end;
-end;
-
-procedure TfrmMtoArticulos.CambiarActivoColorSkus(const aActivo: string);
-// Activa/desactiva en bloque todos los SKU del articulo que comparten el color
-// del SKU seleccionado. Lo invocan tanto el menu de boton derecho como el
-// boton lateral.
-var
-  CodArt, Color, sInf, sPP: string;
-  nAfectados: Integer;
-begin
-  if not ObtenerColorSkuActual(CodArt, Color) then
-  begin
-    MessageDlg(SErrorSkuColorNoSeleccionado,
-               mtInformation, [mbOK], 0);
-    Exit;
-  end;
-  if aActivo = 'S' then
-    sInf := STextoActivarSkusColor
-  else
-    sInf := STextoDesactivarSkusColor;
-  if MessageDlg(Format(SPreguntaCambiarActivoSkusColor, [sInf, Color]),
-                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
-  nAfectados := dmmArticulos.ActualizarSkusColorActivo(CodArt, Color, aActivo);
-  // Refrescamos el grid de SKU para reflejar el nuevo estado de ESACTIVO_SKU.
-  if Assigned(dmmArticulos.unqrySkus) and dmmArticulos.unqrySkus.Active then
-    dmmArticulos.unqrySkus.Refresh;
-  if aActivo = 'S' then
-    sPP := STextoSkusColorActivados
-  else
-    sPP := STextoSkusColorDesactivados;
-  MessageDlg(Format(SInfoSkusColorActualizados,
-                    [nAfectados, Color, sPP]),
-             mtInformation, [mbOK], 0);
+  FPresAtributos.CambiarDescripcion(Sender);
 end;
 
 procedure TfrmMtoArticulos.btnColorSkusClick(Sender: TObject);
-// Despliega el mismo menu (activar/desactivar color) que el clic derecho sobre
-// el panel de atributos, anclado bajo el boton lateral.
+// Despliega el mismo menu (activar/desactivar color) que el clic derecho
+// sobre el panel de atributos, anclado bajo el boton lateral.
 var
   pt: TPoint;
 begin
@@ -2766,322 +1840,99 @@ end;
 
 procedure TfrmMtoArticulos.miActivarColorClick(Sender: TObject);
 begin
-  CambiarActivoColorSkus('S');
+  FPresAtributos.CambiarActivoColorSkus('S');
 end;
 
 procedure TfrmMtoArticulos.miDesactivarColorClick(Sender: TObject);
 begin
-  CambiarActivoColorSkus('N');
+  FPresAtributos.CambiarActivoColorSkus('N');
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesInitPopup(
   Sender: TObject);
-// Antes de mostrar el desplegable, filtramos el lookup por ID_VA_ATB para
-// que un atributo CO sólo vea atributos básicos de color, un atributo TAL
-// vea sólo tallas, etc.
-var
-  ds : TDataSet;
-  IdVa: string;
 begin
-  if (not Assigned(dmmArticulos)) or
-     (not Assigned(dmmArticulos.unqryAtributosBasicosLookup)) then Exit;
-  ds := dmmArticulos.unqryDetallesAtributos;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
-  IdVa := ds.FieldByName('ID_VA_AV').AsString;
-  with dmmArticulos.unqryAtributosBasicosLookup do
-  begin
-    if IdVa = '' then
-    begin
-      Filter   := '';
-      Filtered := False;
-    end
-    else
-    begin
-      Filter   := 'ID_VA_ATB = ' + QuotedStr(IdVa);
-      Filtered := True;
-    end;
-  end;
+  FPresAtributos.AbrirDesplegableBasico;
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesCloseUp(
   Sender: TObject);
-// Tras cerrar el desplegable, limpiamos el filtro del lookup. Si lo
-// dejamos puesto (ej. ID_VA_ATB = 'TAL') la grilla no puede resolver
-// el CODIGO_ATB de las filas con otro tipo de atributo (CO, MAT, ...)
-// y la columna "Basico" se ve vacia para esas filas. OnInitPopup
-// vuelve a aplicar el filtro la proxima vez que se abra el desplegable.
 begin
-  if (not Assigned(dmmArticulos)) or
-     (not Assigned(dmmArticulos.unqryAtributosBasicosLookup)) then Exit;
-  with dmmArticulos.unqryAtributosBasicosLookup do
-  begin
-    if Filtered then
-    begin
-      Filter   := '';
-      Filtered := False;
-    end;
-  end;
+  FPresAtributos.CerrarDesplegableBasico;
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesValidate(
   Sender: TObject; var DisplayValue: Variant;
   var ErrorText: TCaption; var Error: Boolean);
-// El combo "Basico" es un TcxLookupComboBox de seleccion estricta. Si el
-// usuario teclea un texto y pulsa Enter/Tab sin elegir nada del desple-
-// gable, ese texto cae aqui en DisplayValue. Aprovechamos para:
-//   1) Buscar match exacto (CODIGO_ATB o NOMBRE_ATB) entre los basicos
-//      de la misma variacion. Si lo hay, devolvemos el CODIGO_ATB y el
-//      combo lo resuelve a su ID via OnEditValueChanged.
-//   2) Si no hay match, preguntamos al usuario Global/Ad-hoc/Cancelar
-//      (PreguntarAmbitoBasico), creamos el basico nuevo en
-//      fza_atributos_basicos y refrescamos el lookup. Luego ponemos
-//      DisplayValue := CODIGO_ATB nuevo para que el combo lo seleccione
-//      y dispare el override automaticamente.
-//   3) Si cancela, marcamos Error para que el combo no asuma el texto
-//      tecleado como un ID huerfano.
-var
-  sTexto: string;
-  sCodigoExistente: string;
-  sCodigoNuevo: string;
-  eAmbito: TAmbitoAtributoBasico;
-  oContexto: TContextoAtributoBasicoSku;
 begin
-  Error := False;
-  sTexto := Trim(VarToStr(DisplayValue));
-  if (sTexto <> '') and
-     ObtenerContextoAtributoActual(oContexto) then
-  begin
-    if FGestorAtributosBasicos.BuscarCodigoActivo(
-         oContexto.IdVariacion,
-         sTexto,
-         sCodigoExistente) then
-      DisplayValue := sCodigoExistente
-    else if PreguntarAmbitoBasico(
-              oContexto.CodigoArticulo,
-              sTexto,
-              eAmbito) then
-    begin
-      sCodigoNuevo := FGestorAtributosBasicos.CrearAtributoBasico(
-        oContexto,
-        sTexto,
-        eAmbito);
-      if Assigned(dmmArticulos.unqryAtributosBasicosLookup) then
-        dmmArticulos.unqryAtributosBasicosLookup.Refresh;
-      DisplayValue := sCodigoNuevo;
-    end
-    else
-    begin
-      Error := True;
-      ErrorText := 'Sin asignar.';
-    end;
-  end;
+  FPresAtributos.ValidarBasico(DisplayValue, ErrorText, Error);
 end;
 
-procedure TfrmMtoArticulos.tvSkuAtributosBasicosID_ATB_AVPropertiesEditValueChanged(
+procedure TfrmMtoArticulos.
+             tvSkuAtributosBasicosID_ATB_AVPropertiesEditValueChanged(
   Sender: TObject);
-// Cuando el usuario elige otro atributo básico desde el SKU del artículo
-// estamos en el contexto de ESTE artículo concreto. Persistimos un
-// override per-artículo en fza_articulos_atributos_basicos: ID_ATB_AAB.
-// La vista resuelve mediante COALESCE(override, conjunto, global) y la
-// elección aquí no contamina ni el conjunto ni el default global.
-//
-// Si el usuario limpia el lookup, guardamos un bloqueo explícito con
-// ID_ATB_AAB nulo para impedir que reaparezca un valor heredado.
-var
-  oContexto: TContextoAtributoBasicoSku;
-  oDatos: TDataSet;
-  oIdBasico: TEnteroOpcional;
-  vNuevo: Variant;
 begin
-  if ObtenerContextoAtributoActual(oContexto) then
-  begin
-    oDatos := dmmArticulos.unqryDetallesAtributos;
-    vNuevo := (Sender as TcxCustomEdit).EditingValue;
-    if VarIsNull(vNuevo) or
-       (VarToStr(vNuevo) = '') then
-      oIdBasico := EnteroNulo
-    else
-      oIdBasico := EnteroConValor(Integer(vNuevo));
-    FGestorAtributosBasicos.GuardarOverride(
-      oContexto,
-      oIdBasico);
-    if oDatos.State in [dsEdit, dsInsert] then
-      oDatos.Cancel;
-    oDatos.Refresh;
-  end;
+  FPresAtributos.CambiarBasico(Sender);
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosHEX_ATBPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 begin
-  tvSkuAtributosBasicosDblClick(Sender);
+  FPresAtributos.ElegirColor;
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosDblClick(Sender: TObject);
-// Abre el selector de color sobre el atributo básico de la fila activa.
-// Si la fila no tiene atributo básico aún, lo creamos al vuelo (ad-hoc
-// per-artículo) para que el usuario pueda asignarle un HEX directamente.
-var
-  ds : TDataSet;
-  IdAtb: Integer;
-  Dlg: TColorDialog;
-  LHex: string;
 begin
-  if Assigned(dmmArticulos) and
-     Assigned(dmmArticulos.unqryDetallesAtributos) and
-     dmmArticulos.unqryDetallesAtributos.Active then
-  begin
-    ds := dmmArticulos.unqryDetallesAtributos;
-    if not ds.IsEmpty then
-    begin
-      IdAtb := AsegurarBasicoFilaActual;
-      if IdAtb > 0 then
-      begin
-        Dlg := TColorDialog.Create(Self);
-        try
-          Dlg.Options := [cdFullOpen, cdAnyColor];
-          LHex := Trim(ds.FieldByName('HEX_ATB').AsString);
-          if (Length(LHex) = 7) and
-             (LHex[1] = '#') then
-          try
-            Dlg.Color := RGB(
-              StrToInt('$' + Copy(LHex, 2, 2)),
-              StrToInt('$' + Copy(LHex, 4, 2)),
-              StrToInt('$' + Copy(LHex, 6, 2)));
-          except
-            Dlg.Color := clWhite;
-          end
-          else
-            Dlg.Color := clWhite;
-          if Dlg.Execute then
-          begin
-            LHex := Format(
-              '#%.2X%.2X%.2X',
-              [GetRValue(Dlg.Color),
-               GetGValue(Dlg.Color),
-               GetBValue(Dlg.Color)]);
-            FGestorAtributosBasicos.ActualizarHex(
-              IdAtb,
-              LHex,
-              IdentidadSesion.Usuario);
-            if ds.State in [dsEdit, dsInsert] then
-              ds.Cancel;
-            ds.Refresh;
-            if Assigned(
-                 dmmArticulos.unqryAtributosBasicosLookup) then
-              dmmArticulos.unqryAtributosBasicosLookup.Refresh;
-          end;
-        finally
-          FreeAndNil(Dlg);
-        end;
-      end;
-    end;
-  end;
+  FPresAtributos.ElegirColor;
 end;
 
 procedure TfrmMtoArticulos.tvSkuAtributosBasicosHEX_ATBCustomDrawCell(
   Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
   AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
-var
-  LHex: string;
-  LColor: TColor;
-  LRect: TRect;
-  LR, LG, LB: Integer;
-  LBrillo: Double;
 begin
-  ADone := False;
-  if AViewInfo = nil then Exit;
-  LHex := Trim(AViewInfo.GridRecord.DisplayTexts[AViewInfo.Item.Index]);
-  if (Length(LHex) <> 7) or (LHex[1] <> '#') then Exit;
-
-  try
-    LR := StrToInt('$' + Copy(LHex, 2, 2));
-    LG := StrToInt('$' + Copy(LHex, 4, 2));
-    LB := StrToInt('$' + Copy(LHex, 6, 2));
-    LColor := RGB(LR, LG, LB);
-  except
-    Exit;
-  end;
-
-  // Fondo de celda (mantiene la selección/zebra del grid).
-  ACanvas.FillRect(AViewInfo.Bounds, AViewInfo.Params.Color);
-
-  // Cuadrado de paleta con el color real.
-  LRect := AViewInfo.Bounds;
-  InflateRect(LRect, -3, -3);
-  ACanvas.Brush.Color := LColor;
-  ACanvas.Pen.Color   := clBlack;
-  ACanvas.Rectangle(LRect);
-
-  // Etiqueta del HEX encima, con texto blanco o negro segun luminancia.
-  LBrillo := (LR * 0.299 + LG * 0.587 + LB * 0.114);
-  ACanvas.Brush.Style := bsClear;
-  if LBrillo < 128 then
-    ACanvas.Font.Color := clWhite
-  else
-    ACanvas.Font.Color := clBlack;
-  ACanvas.DrawText(LHex, LRect, cxAlignCenter or cxAlignVCenter);
-
-  ADone := True;
+  FPresAtributos.PintarCeldaHex(ACanvas, AViewInfo, ADone);
 end;
 
 procedure TfrmMtoArticulos.tvStockCustomDrawCell(Sender: TcxCustomGridTableView;
   ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
   var ADone: Boolean);
-var
-  Info : TInfoBasico;
-  IdVa : string;
 begin
-  if (AViewInfo = nil) or (FAtributosStock = nil) then Exit;
-  if FAtributosStock.Count = 0 then Exit;
-  // El handler se dispara en TODAS las celdas (almacen, tallas, total).
-  // Solo nos interesa pintar swatch en las columnas que mapean a un
-  // atributo del articulo (p.ej. Color), no en las de cantidad. El
-  // nombre de campo casa con NOMBRE_VA — clave en FAtributosStock —
-  // porque el SP de stock pivotado etiqueta la fila desglosada con ese
-  // mismo nombre. Las columnas pivote (S, M, 3, 5, ...) no estan en el
-  // diccionario, asi que no entran aqui.
-  if not FAtributosStock.TryGetValue(
-       UpperCase(Trim(GetItemFieldName(AViewInfo.Item))), IdVa) then Exit;
-  if not ObtenerInfoBasico(
-    ConexionPrincipal,
-    IdVa,
-    AViewInfo.Text,
-    Info) then Exit;
-  if PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info) then
-    ADone := True;
+  FPresStock.PintarCelda(ACanvas, AViewInfo, ADone);
 end;
 
 procedure TfrmMtoArticulos.PcDetailChange(Sender: TObject);
 begin
-  if not Assigned(dmmArticulos) then Exit;
-  // Al entrar a Tarifas: abrir (lazy).
-  if pcDetail.ActivePage = tsTarifas then
-    dmmArticulos.AsegurarTarifasAbiertas
-  else
-    // Si saliendo de Tarifas, cerrar la query. Asi el siguiente cambio
-    // de articulo (master/detail) no dispara un refresh innecesario de
-    // ~2s sobre vi_articulos_tarifas. Reabrira cuando el usuario vuelva
-    // a la pestaña.
-    CerrarSiNoVisible(dmmArticulos.unqryTarifasArticulos, tsTarifas);
-
-  // Stock: si activan la pestaña, refrescar (solo si cambio el articulo).
-  if pcDetail.ActivePage = cxTabSheet3 then
-    AsegurarStockAlDia;
+  if Assigned(dmmArticulos) then
+  begin
+    // Al entrar a Tarifas: abrir (lazy). Al salir, cerrar la query para
+    // que el siguiente cambio de articulo (master/detail) no dispare un
+    // refresh innecesario de ~2s sobre vi_articulos_tarifas.
+    if pcDetail.ActivePage = tsTarifas then
+      dmmArticulos.AsegurarTarifasAbiertas
+    else
+      CerrarSiNoVisible(dmmArticulos.unqryTarifasArticulos, tsTarifas);
+    // Stock: si activan la pestaña, refrescar solo si cambio el articulo.
+    if pcDetail.ActivePage = cxTabSheet3 then
+      AsegurarStockAlDia;
+  end;
 end;
 
 procedure TfrmMtoArticulos.AsegurarStockAlDia;
+var
+  bAlDia: Boolean;
 begin
-  if not Assigned(dmmArticulos) then Exit;
-  if FArticuloCargado = '' then Exit;
-  // Si el stock ya esta cargado para el articulo activo, nada que hacer.
-  if (FStockArticuloCargado = FArticuloCargado)
-     and dmmArticulos.unqryStockArticulos.Active then Exit;
-  // unqryStockArticulosAfterScroll cierra, recarga el SP y reconstruye
-  // las columnas dinamicas del cxGrid tvStock. Ya esta instrumentado
-  // con LogPerf ([PERF:Articulos.StockAfterScroll]).
-  dmmArticulos.unqryStockArticulosAfterScroll(dmmArticulos.unqryTablaG);
-  FStockArticuloCargado := FArticuloCargado;
+  if Assigned(dmmArticulos) and (FArticuloCargado <> '') then
+  begin
+    // Si el stock ya esta cargado para el articulo activo, nada que hacer.
+    bAlDia := (FStockArticuloCargado = FArticuloCargado) and
+              dmmArticulos.unqryStockArticulos.Active;
+    if not bAlDia then
+    begin
+      // unqryStockArticulosAfterScroll cierra, recarga el SP y reconstruye
+      // las columnas dinamicas del cxGrid tvStock.
+      dmmArticulos.unqryStockArticulosAfterScroll(dmmArticulos.unqryTablaG);
+      FStockArticuloCargado := FArticuloCargado;
+    end;
+  end;
 end;
 
 procedure TfrmMtoArticulos.CerrarSiNoVisible(qry: TUniQuery;
@@ -3090,29 +1941,14 @@ begin
   // Solo cerrar si la pestaña target NO esta visible. Util para queries
   // master/detail que se reabren automaticamente al cambiar el master:
   // mientras no se esta viendo, mejor cerrada para ahorrar el refresh.
-  if (qry = nil) or not qry.Active then Exit;
-  if pcDetail.ActivePage = ActivaTarget then Exit;
-  qry.Close;
+  if (qry <> nil) and qry.Active and
+     (pcDetail.ActivePage <> ActivaTarget) then
+    qry.Close;
 end;
 
 procedure TfrmMtoArticulos.EnsancharColumnasStockParaSwatch;
-var
-  i : Integer;
 begin
-  if (tvStock = nil) or (FAtributosStock = nil) then Exit;
-  if FAtributosStock.Count = 0 then Exit;
-  // Solo ensanchamos las columnas que efectivamente van a pintar swatch
-  // (las que mapean a un atributo del articulo). Antes se llamaba a
-  // AjustarAnchoColumnaParaSwatch sobre todas las columnas; si una
-  // talla numerica casaba por coincidencia con un basico HEX, se
-  // ensanchaba en balde.
-  for i := 0 to tvStock.ColumnCount - 1 do
-    if FAtributosStock.ContainsKey(
-         UpperCase(Trim(GetItemFieldName(tvStock.Columns[i])))) then
-      AjustarAnchoColumnaParaSwatch(
-        ConexionPrincipal,
-        tvStock.Columns[i],
-        FAtributosStock);
+  FPresStock.EnsancharColumnasParaSwatch;
 end;
 
 procedure TfrmMtoArticulos.tvStockGetCellHint(Sender: TcxCustomGridTableView;
@@ -3120,15 +1956,10 @@ procedure TfrmMtoArticulos.tvStockGetCellHint(Sender: TcxCustomGridTableView;
   var AHintText: TCaption; var AIsHintMultiLine: Boolean;
   var AHintTextRect: TRect);
 var
-  Info : TInfoBasico;
-  IdVa : string;
+  sHint: string;
 begin
-  if (ACellViewInfo = nil) or (FAtributosStock = nil) then Exit;
-  if FAtributosStock.Count = 0 then Exit;
-  if not FAtributosStock.TryGetValue(
-       UpperCase(Trim(GetItemFieldName(ACellViewInfo.Item))), IdVa) then Exit;
-  if ObtenerInfoBasico(ConexionPrincipal, IdVa, ACellViewInfo.Text, Info) then
-    AHintText := Info.Nombre;
+  if FPresStock.ObtenerHint(ACellViewInfo, sHint) then
+    AHintText := sHint;
 end;
 
 initialization

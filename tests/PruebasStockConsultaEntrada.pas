@@ -34,12 +34,55 @@ type
     procedure CodigoBarrasResueltoAplicaArticuloYSku;
   end;
 
+  [TestFixture]
+  TPruebasStockConsultaCoincidencias = class
+  public
+    [Test]
+    procedure CargarDeduplicaPorArticuloYConservaElPrimerSku;
+    [Test]
+    procedure TextoVisibleOmiteLosTramosVacios;
+    [Test]
+    procedure FilasDesplegableSeLimitaAQuince;
+    [Test]
+    procedure AnchoDesplegableSeAjustaAlMinimoYAlMaximo;
+    [Test]
+    procedure IndiceFueraDeRangoDevuelveVacio;
+  end;
+
+  [TestFixture]
+  TPruebasStockConsultaHistorial = class
+  public
+    [Test]
+    procedure RegistrarIgnoraVaciosYRepeticiones;
+    [Test]
+    procedure NavegarAtrasYAdelanteRecorreLaSecuencia;
+    [Test]
+    procedure RegistrarTrasVolverAtrasTruncaLaRamaFutura;
+    [Test]
+    procedure MoviendoImpideRegistrarLaNavegacion;
+  end;
+
+  [TestFixture]
+  TPruebasStockConsultaEstadoVista = class
+  public
+    [Test]
+    procedure GuardasImpidenReentrarEnLaResolucionDeEntrada;
+    [Test]
+    procedure ClaveUnidadColorCombinaArticuloYColor;
+    [Test]
+    procedure LimpiarDejaLaVistaSinArticulo;
+  end;
+
 implementation
 
 uses
+  System.SysUtils,
   inLibArticulosValidadorIntf,
   inLibStockConsultaEntrada,
-  inLibStockConsultaEntradaIntf;
+  inLibStockConsultaEntradaIntf,
+  inLibStockConsultaPresentacionCoincidencias,
+  inLibStockConsultaPresentacionHistorial,
+  inLibStockConsultaPresentacionVista;
 
 type
   TDobleEntradaStock = class(
@@ -224,7 +267,232 @@ begin
   Assert.AreEqual(0, Doble.FErroresBarras);
 end;
 
+function CoincidenciaCompleta(
+  const ACodigoArticulo, ACodigoSku, ADescripcion, AProveedor,
+        AReferencia: string): TCoincidenciaEntradaStock;
+begin
+  Result := Default(TCoincidenciaEntradaStock);
+  Result.CodigoArticulo := ACodigoArticulo;
+  Result.CodigoSku := ACodigoSku;
+  Result.Descripcion := ADescripcion;
+  Result.Proveedor := AProveedor;
+  Result.ReferenciaProveedor := AReferencia;
+end;
+
+procedure TPruebasStockConsultaCoincidencias.
+  CargarDeduplicaPorArticuloYConservaElPrimerSku;
+var
+  Entradas: TCoincidenciasEntradaStock;
+  Lista: TCoincidenciasArticuloStock;
+begin
+  Entradas := [
+    Coincidencia('ART1', 'SKU1'),
+    Coincidencia('ART1', 'SKU2'),
+    Coincidencia('ART2', 'SKU3')];
+  Lista := TCoincidenciasArticuloStock.Create;
+  try
+    Lista.Cargar(Entradas);
+    Assert.AreEqual(2, Lista.Cuenta);
+    Assert.AreEqual('ART1', Lista.Codigos[0]);
+    Assert.AreEqual('SKU1', Lista.Skus[0]);
+    Assert.AreEqual('ART2', Lista.Codigos[1]);
+    Assert.AreEqual('SKU3', Lista.Skus[1]);
+  finally
+    Lista.Free;
+  end;
+end;
+
+procedure TPruebasStockConsultaCoincidencias.
+  TextoVisibleOmiteLosTramosVacios;
+begin
+  Assert.AreEqual(
+    'ART1 / SKU1 - Camiseta - Prov (ref. R1)',
+    DescribirCoincidenciaStock(
+      CoincidenciaCompleta('ART1', 'SKU1', 'Camiseta', 'Prov', 'R1')));
+  Assert.AreEqual(
+    'ART1 - Camiseta',
+    DescribirCoincidenciaStock(
+      CoincidenciaCompleta('ART1', '', 'Camiseta', '', '')));
+end;
+
+procedure TPruebasStockConsultaCoincidencias.
+  FilasDesplegableSeLimitaAQuince;
+var
+  Entradas: TCoincidenciasEntradaStock;
+  i: Integer;
+  Lista: TCoincidenciasArticuloStock;
+begin
+  SetLength(Entradas, 20);
+  for i := 0 to High(Entradas) do
+    Entradas[i] := Coincidencia('ART' + IntToStr(i), '');
+  Lista := TCoincidenciasArticuloStock.Create;
+  try
+    Lista.Cargar(Entradas);
+    Assert.AreEqual(20, Lista.Cuenta);
+    Assert.AreEqual(15, Lista.FilasDesplegable);
+  finally
+    Lista.Free;
+  end;
+end;
+
+procedure TPruebasStockConsultaCoincidencias.
+  AnchoDesplegableSeAjustaAlMinimoYAlMaximo;
+begin
+  Assert.AreEqual(620, AnchoDesplegableCoincidencias(900, 100));
+  Assert.AreEqual(300, AnchoDesplegableCoincidencias(300, 100));
+  Assert.AreEqual(100, AnchoDesplegableCoincidencias(40, 100));
+end;
+
+procedure TPruebasStockConsultaCoincidencias.
+  IndiceFueraDeRangoDevuelveVacio;
+var
+  Entradas: TCoincidenciasEntradaStock;
+  Lista: TCoincidenciasArticuloStock;
+begin
+  Entradas := [Coincidencia('ART1', 'SKU1')];
+  Lista := TCoincidenciasArticuloStock.Create;
+  try
+    Lista.Cargar(Entradas);
+    Assert.IsFalse(Lista.EsIndiceValido(-1));
+    Assert.IsFalse(Lista.EsIndiceValido(1));
+    Assert.AreEqual('', Lista.Codigos[5]);
+  finally
+    Lista.Free;
+  end;
+end;
+
+procedure TPruebasStockConsultaHistorial.
+  RegistrarIgnoraVaciosYRepeticiones;
+var
+  Historial: THistorialArticulosStock;
+begin
+  Historial := THistorialArticulosStock.Create;
+  try
+    Historial.Registrar('   ');
+    Historial.Registrar('ART1');
+    Historial.Registrar('art1');
+    Assert.AreEqual(1, Historial.Cuenta);
+    Assert.AreEqual(0, Historial.Posicion);
+    Assert.IsFalse(Historial.PuedeAnterior);
+    Assert.IsFalse(Historial.PuedeSiguiente);
+  finally
+    Historial.Free;
+  end;
+end;
+
+procedure TPruebasStockConsultaHistorial.
+  NavegarAtrasYAdelanteRecorreLaSecuencia;
+var
+  Historial: THistorialArticulosStock;
+begin
+  Historial := THistorialArticulosStock.Create;
+  try
+    Historial.Registrar('ART1');
+    Historial.Registrar('ART2');
+    Historial.Registrar('ART3');
+    Assert.AreEqual('ART2', Historial.Anterior);
+    Assert.AreEqual('ART1', Historial.Anterior);
+    Assert.IsFalse(Historial.PuedeAnterior);
+    Assert.AreEqual('', Historial.Anterior);
+    Assert.AreEqual('ART2', Historial.Siguiente);
+    Assert.AreEqual('ART3', Historial.Siguiente);
+    Assert.IsFalse(Historial.PuedeSiguiente);
+  finally
+    Historial.Free;
+  end;
+end;
+
+procedure TPruebasStockConsultaHistorial.
+  RegistrarTrasVolverAtrasTruncaLaRamaFutura;
+var
+  Historial: THistorialArticulosStock;
+begin
+  Historial := THistorialArticulosStock.Create;
+  try
+    Historial.Registrar('ART1');
+    Historial.Registrar('ART2');
+    Historial.Registrar('ART3');
+    Historial.Anterior;
+    Historial.Anterior;
+    Historial.Registrar('ART9');
+    Assert.AreEqual(2, Historial.Cuenta);
+    Assert.AreEqual('ART9', Historial.Actual);
+    Assert.IsFalse(Historial.PuedeSiguiente);
+  finally
+    Historial.Free;
+  end;
+end;
+
+procedure TPruebasStockConsultaHistorial.
+  MoviendoImpideRegistrarLaNavegacion;
+var
+  Historial: THistorialArticulosStock;
+begin
+  Historial := THistorialArticulosStock.Create;
+  try
+    Historial.Registrar('ART1');
+    Historial.Registrar('ART2');
+    Historial.Anterior;
+    Historial.Moviendo := True;
+    Historial.Registrar('ART1');
+    Historial.Moviendo := False;
+    Assert.AreEqual(2, Historial.Cuenta);
+    Assert.AreEqual(0, Historial.Posicion);
+  finally
+    Historial.Free;
+  end;
+end;
+
+procedure TPruebasStockConsultaEstadoVista.
+  GuardasImpidenReentrarEnLaResolucionDeEntrada;
+var
+  Vista: TEstadoVistaStockConsulta;
+begin
+  Vista := Default(TEstadoVistaStockConsulta);
+  Assert.IsTrue(Vista.AdmiteResolverEntrada);
+  Assert.IsTrue(Vista.AdmiteCambioTextoArticulo);
+  Assert.IsTrue(Vista.AdmiteSeleccionCoincidencia);
+  Assert.IsTrue(Vista.AdmiteCambioVista);
+  Vista.ActualizandoArticulo := True;
+  Assert.IsFalse(Vista.AdmiteResolverEntrada);
+  Assert.IsFalse(Vista.AdmiteCambioTextoArticulo);
+  Assert.IsTrue(Vista.AdmiteSeleccionCoincidencia);
+  Vista.ActualizandoArticulo := False;
+  Vista.ResolviendoEntrada := True;
+  Assert.IsFalse(Vista.AdmiteResolverEntrada);
+  Assert.IsFalse(Vista.AdmiteSeleccionCoincidencia);
+  Vista.SilenciandoCambioVista := True;
+  Assert.IsFalse(Vista.AdmiteCambioVista);
+end;
+
+procedure TPruebasStockConsultaEstadoVista.
+  ClaveUnidadColorCombinaArticuloYColor;
+var
+  Vista: TEstadoVistaStockConsulta;
+begin
+  Vista := Default(TEstadoVistaStockConsulta);
+  Vista.FijarArticulo('ART1', 'ART1/AZ/M');
+  Assert.IsTrue(Vista.HayArticulo);
+  Assert.AreEqual('ART1/AZ', Vista.ClaveUnidadColor('AZ'));
+end;
+
+procedure TPruebasStockConsultaEstadoVista.LimpiarDejaLaVistaSinArticulo;
+var
+  Vista: TEstadoVistaStockConsulta;
+begin
+  Vista := Default(TEstadoVistaStockConsulta);
+  Vista.FijarArticulo('ART1', 'SKU1');
+  Vista.ResolviendoEntrada := True;
+  Vista.Limpiar;
+  Assert.IsFalse(Vista.HayArticulo);
+  Assert.AreEqual('', Vista.CodigoSku);
+  Assert.IsTrue(Vista.AdmiteResolverEntrada);
+end;
+
 initialization
   TDUnitX.RegisterTestFixture(TPruebasStockConsultaEntrada);
+  TDUnitX.RegisterTestFixture(TPruebasStockConsultaCoincidencias);
+  TDUnitX.RegisterTestFixture(TPruebasStockConsultaHistorial);
+  TDUnitX.RegisterTestFixture(TPruebasStockConsultaEstadoVista);
 
 end.

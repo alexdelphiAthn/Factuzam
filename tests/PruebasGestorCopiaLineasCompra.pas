@@ -9,7 +9,8 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Pruebas de las reglas de copia de líneas de sesiones de compra.           }
+{    Pruebas de las reglas de copia de líneas de sesiones de compra y de la    }
+{    decisión de presentación que traduce la opción elegida por el usuario.    }
 {******************************************************************************}
 unit PruebasGestorCopiaLineasCompra;
 
@@ -20,6 +21,17 @@ uses
   inLibGestorCopiaLineasCompra;
 
 type
+  [TestFixture]
+  TPruebasDecisionesCopiaLineaSesion = class
+  public
+    [Test]
+    procedure SoloCopianLasOpcionesOtroColorYOtroPrecio;
+    [Test]
+    procedure OtroPrecioDejaElFocoEnElPrecioDeCompra;
+    [Test]
+    procedure CualquierOtraOpcionSeTrataComoOtroColor;
+  end;
+
   [TestFixture]
   TPruebasGestorCopiaLineasCompra = class
   private
@@ -44,7 +56,40 @@ type
 implementation
 
 uses
-  System.SysUtils, Data.DB;
+  System.SysUtils, Data.DB,
+  inLibComprasSesionesPresentacion;
+
+{ TPruebasDecisionesCopiaLineaSesion }
+
+procedure TPruebasDecisionesCopiaLineaSesion.
+  SoloCopianLasOpcionesOtroColorYOtroPrecio;
+begin
+  Assert.IsTrue(EsOpcionCopiaLineaSesion('C'));
+  Assert.IsTrue(EsOpcionCopiaLineaSesion('P'));
+  // 'N' es la salida del modal cuando el usuario cancela: se conserva
+  // la herencia REUSAR y no se copia nada.
+  Assert.IsFalse(EsOpcionCopiaLineaSesion('N'));
+  Assert.IsFalse(EsOpcionCopiaLineaSesion(''));
+end;
+
+procedure TPruebasDecisionesCopiaLineaSesion.
+  OtroPrecioDejaElFocoEnElPrecioDeCompra;
+begin
+  Assert.AreEqual(Ord(mclOtroPrecio), Ord(ModoCopiaLineaSesion('P')));
+  Assert.AreEqual(Ord(dfcPrecioCompra),
+    Ord(DestinoFocoCopiaSesion(mclOtroPrecio)));
+  Assert.AreEqual(Ord(mclOtroColor), Ord(ModoCopiaLineaSesion('C')));
+  Assert.AreEqual(Ord(dfcColor),
+    Ord(DestinoFocoCopiaSesion(mclOtroColor)));
+end;
+
+procedure TPruebasDecisionesCopiaLineaSesion.
+  CualquierOtraOpcionSeTrataComoOtroColor;
+begin
+  // Comportamiento historico del formulario: solo 'P' cambia de modo.
+  Assert.AreEqual(Ord(mclOtroColor), Ord(ModoCopiaLineaSesion('')));
+  Assert.AreEqual(Ord(mclOtroColor), Ord(ModoCopiaLineaSesion('X')));
+end;
 
 procedure TPruebasGestorCopiaLineasCompra.Preparar;
 begin

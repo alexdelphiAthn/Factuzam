@@ -37,12 +37,48 @@ type
     procedure PrecioSku_MuestraColumnasCompra;
     [Test]
     procedure Evaluar_ConservaRegistrosActivos;
+    [Test]
+    procedure FiltroEstado_IdaYVueltaEntrePerfilYCombo;
+    [Test]
+    procedure FiltroEstado_ValorDesconocidoCaeEnSoloActivos;
+    [Test]
+    procedure CsvSeleccion_UneConPuntoYComa;
+    [Test]
+    procedure CodigosBarras_ClasificaValidosInvalidosYPendientes;
+    [Test]
+    procedure CodigosBarras_SinFilasNoInformaIncidencias;
+    [Test]
+    procedure SkusAltaTarifa_EncabezaConLaFilaDelArticulo;
   end;
 
 implementation
 
 uses
-  System.SysUtils, inLibArticulosVisibilidad;
+  System.SysUtils,
+  inLibArticulosVisibilidad,
+  inLibArticulosFiltro,
+  inLibArticulosAltaTarifas,
+  inLibEAN13,
+  inLibArticulosPresentacionIntf,
+  inLibArticulosPresentacion;
+
+function CodigoEan13Valido(const APrefijo12: string): string;
+begin
+  Result := APrefijo12 + CalcularDigitoEAN13(APrefijo12);
+end;
+
+function CodigoEan8Valido(const APrefijo7: string): string;
+begin
+  Result := APrefijo7 + CalcularDigitoEAN8(APrefijo7);
+end;
+
+function FilaCodigoBarras(const ACodigo, ASku,
+  ATipo: string): TCodigoBarrasSkuArticulo;
+begin
+  Result.Codigo := ACodigo;
+  Result.Sku := ASku;
+  Result.Tipo := ATipo;
+end;
 
 procedure TPruebasArticulosVisibilidad.Preparar;
 begin
@@ -110,6 +146,107 @@ begin
   Assert.IsTrue(Visibilidad.MostrarCompraSku);
   Assert.AreEqual(iTarifaActiva, FTarifas.RecNo);
   Assert.AreEqual(iSkuActivo, FSkus.RecNo);
+end;
+
+procedure TPruebasArticulosVisibilidad.
+  FiltroEstado_IdaYVueltaEntrePerfilYCombo;
+var
+  iIndice: Integer;
+begin
+  // T=Todos, S=Solo activos, N=Solo inactivos. El indice del combo es la
+  // unica traduccion entre el perfil guardado y el WHERE del listado.
+  iIndice := IndiceEstadoFiltroDesdeCodigo('T');
+  Assert.AreEqual(0, iIndice);
+  Assert.AreEqual('T', CodigoEstadoFiltroDesdeIndice(iIndice));
+  Assert.AreEqual(Ord(efaTodos),
+    Ord(EstadoFiltroArticulosDesdeIndice(iIndice)));
+  iIndice := IndiceEstadoFiltroDesdeCodigo('S');
+  Assert.AreEqual(1, iIndice);
+  Assert.AreEqual('S', CodigoEstadoFiltroDesdeIndice(iIndice));
+  Assert.AreEqual(Ord(efaActivos),
+    Ord(EstadoFiltroArticulosDesdeIndice(iIndice)));
+  iIndice := IndiceEstadoFiltroDesdeCodigo('N');
+  Assert.AreEqual(2, iIndice);
+  Assert.AreEqual('N', CodigoEstadoFiltroDesdeIndice(iIndice));
+  Assert.AreEqual(Ord(efaInactivos),
+    Ord(EstadoFiltroArticulosDesdeIndice(iIndice)));
+end;
+
+procedure TPruebasArticulosVisibilidad.
+  FiltroEstado_ValorDesconocidoCaeEnSoloActivos;
+begin
+  Assert.AreEqual(1, IndiceEstadoFiltroDesdeCodigo(''));
+  Assert.AreEqual(1, IndiceEstadoFiltroDesdeCodigo('Z'));
+  Assert.AreEqual('S', CodigoEstadoFiltroDesdeIndice(7));
+  Assert.AreEqual(Ord(efaTodos),
+    Ord(EstadoFiltroArticulosDesdeIndice(7)));
+end;
+
+procedure TPruebasArticulosVisibilidad.CsvSeleccion_UneConPuntoYComa;
+var
+  oValores: TArray<string>;
+begin
+  SetLength(oValores, 0);
+  Assert.AreEqual('', ComponerCsvSeleccion(oValores));
+  oValores := TArray<string>.Create('INVIERNO');
+  Assert.AreEqual('INVIERNO', ComponerCsvSeleccion(oValores));
+  oValores := TArray<string>.Create('INVIERNO', 'VERANO');
+  Assert.AreEqual('INVIERNO;VERANO', ComponerCsvSeleccion(oValores));
+end;
+
+procedure TPruebasArticulosVisibilidad.
+  CodigosBarras_ClasificaValidosInvalidosYPendientes;
+var
+  oResumen: TResumenCodigosBarrasArticulo;
+  oCodigos: TCodigosBarrasArticulo;
+begin
+  SetLength(oCodigos, 5);
+  oCodigos[0] :=
+    FilaCodigoBarras(CodigoEan13Valido('840000000001'), 'SKU1', 'EAN13');
+  oCodigos[1] :=
+    FilaCodigoBarras(CodigoEan8Valido('8400001'), 'SKU2', 'EAN8');
+  oCodigos[2] := FilaCodigoBarras('', 'SKU3', 'FAB');
+  oCodigos[3] := FilaCodigoBarras('_FAB_SKU4', 'SKU4', 'FAB');
+  oCodigos[4] := FilaCodigoBarras('1234567890123', 'SKU5', 'EAN13');
+  oResumen := VerificarCodigosBarrasArticulo(oCodigos);
+  Assert.AreEqual(1, oResumen.Ean13Correctos);
+  Assert.AreEqual(1, oResumen.Ean8Correctos);
+  Assert.AreEqual(2, oResumen.Omitidos);
+  Assert.AreEqual(1, oResumen.Invalidos);
+  Assert.IsTrue(Pos('SKU5', oResumen.DetalleErrores) > 0);
+  Assert.IsTrue(Pos('SKU1', oResumen.DetalleErrores) = 0);
+end;
+
+procedure TPruebasArticulosVisibilidad.
+  CodigosBarras_SinFilasNoInformaIncidencias;
+var
+  oResumen: TResumenCodigosBarrasArticulo;
+  oCodigos: TCodigosBarrasArticulo;
+begin
+  SetLength(oCodigos, 0);
+  oResumen := VerificarCodigosBarrasArticulo(oCodigos);
+  Assert.AreEqual(0, oResumen.Ean13Correctos);
+  Assert.AreEqual(0, oResumen.Ean8Correctos);
+  Assert.AreEqual(0, oResumen.Omitidos);
+  Assert.AreEqual(0, oResumen.Invalidos);
+  Assert.AreEqual('', oResumen.DetalleErrores);
+end;
+
+procedure TPruebasArticulosVisibilidad.
+  SkusAltaTarifa_EncabezaConLaFilaDelArticulo;
+var
+  oLista: TArray<string>;
+  oSkus: TArray<string>;
+begin
+  oSkus := TArray<string>.Create('  ART-1/ROJO/L ', '', '   ');
+  oLista := ComponerListaSkusAltaTarifa(oSkus);
+  Assert.AreEqual(2, Length(oLista));
+  Assert.AreEqual(cSkuFilaArticulo, oLista[0]);
+  Assert.AreEqual('ART-1/ROJO/L', oLista[1]);
+  SetLength(oSkus, 0);
+  oLista := ComponerListaSkusAltaTarifa(oSkus);
+  Assert.AreEqual(1, Length(oLista));
+  Assert.AreEqual(cSkuFilaArticulo, oLista[0]);
 end;
 
 end.
