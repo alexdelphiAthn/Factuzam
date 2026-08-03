@@ -55,7 +55,8 @@ uses
   inLibPermisosIntf, inLibVentanaEmbebidaIntf,
   inLibGestorFiltrosMto, inLibGestorPerfilesMto,
   inLibGestorGuiasGridMto, inLibGestorTareasMto,
-  inLibGestorArticulosMto, inLibInteraccionDatosIntf;
+  inLibGestorArticulosMto, inLibInteraccionDatosIntf,
+  inLibMtoGenAplicacionIntf;
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   THackWinControl = class(TWinControl);
@@ -172,7 +173,7 @@ type
     // Se libera en Destroy DESPUES del data module para que los Close
     // implicitos de las queries no queden colgando.
     FConn: TUniConnection;
-    FSqlBaseBusquedaExterna: string;
+    FCasoUsoGuardado: ICasoUsoGuardadoMtoGen;
     // Hooks del dataset principal original (en el data module).
     FBeforeInsertOrig: TDataSetNotifyEvent;
     FBeforeEditOrig: TDataSetNotifyEvent;
@@ -243,8 +244,6 @@ type
     // y la pantalla degrada como siempre.
     FAnfitrionMto: IAnfitrionMantenimiento;
     property ConexionTrabajo: TUniConnection read GetConexionTrabajo;
-    function ConsultaPerfilesLocal: TUniQuery; virtual;
-    procedure AplicarGuiasGrid(AQuery: TUniQuery);
     // Indica si las teclas de navegacion (PgUp, PgDn, Home, End, Ins, F2)
     // deben activar las acciones del TActionList base. Los Mtos con
     // editores multilinea (SynEdit, etc.) sobreescriben para devolver
@@ -258,7 +257,6 @@ type
     // de abrirla (precarga). Idempotente: si el filtro ya esta en la SQL
     // (reapertura, o el propio Mto lo integro en su ConstruirWhere*) no
     // toca nada. Cierra la query si venia activa del DFM streaming.
-    procedure AplicarRestriccionUsuario(unqry: TUniQuery);
     function PuedeAccionMto(AAccion: TAccionPermisoMto): Boolean;
   public
     tdmDataModule:TObject;
@@ -278,6 +276,8 @@ type
     EsInstanciaBusqueda: Boolean;
     procedure SimulateTabKey;
     procedure ProcesarPerfiles;
+    // Contrato de extensión: ContratoHookMtoGen documenta y prueba si
+    // inherited es primero, obligatorio en otro punto, opcional o no aplica.
     procedure AplicarEtiquetas;     virtual;
     procedure CrearTablaPrincipal;  virtual;
     procedure ResetForm;  virtual;
@@ -401,8 +401,6 @@ uses inLibData,
      UniDataGen, uGenericIfThen,
      inMtoFotoArticulo, inMtoStockConsulta,
      inMtoModalGridGuias,
-     inLibFiltroUsuario,    // restricción por empresa/almacén/caja
-     SQLBuilder4D, SQLBuilder4D.Parser, SQLBuilder4D.Parser.GaSQLParser,
      System.Diagnostics,    // TStopwatch para cronometrar carga inicial
      System.TypInfo, inLibDiag,
   inLibMsgComun, inLibMsgConfiguracion;
@@ -478,28 +476,9 @@ begin
     Result := TUniQuery(dsTablaG.DataSet);
 end;
 
-function TfrmMtoGen.ConsultaPerfilesLocal: TUniQuery;
-begin
-  Result := nil;
-end;
-
-procedure TfrmMtoGen.AplicarGuiasGrid(
-  AQuery: TUniQuery);
-begin
-  FGestorGuias.Aplicar(AQuery);
-end;
-
 procedure TfrmMtoGen.AbrirPerfiles(bTabVisible:Boolean);
 begin
-  if tdmDataModule = nil then
-  begin
-    FGestorPerfiles.AbrirPerfiles(
-      bTabVisible,
-      ConsultaPerfilesLocal,
-      '',
-      ConexionTrabajo);
-  end
-  else
+  if tdmDataModule <> nil then
   begin
     tvPerfil.DataController.DataSource :=
       (tdmDataModule as TdmBase).dsPerfiles;
@@ -537,41 +516,27 @@ end;
 
 procedure TfrmMtoGen.btnGrabarClick(Sender: TObject);
 var
-  ConnGrabar: TUniConnection;
+  Resultado: TResultadoGuardadoMtoGen;
 begin
   inherited;
   if tdmDataModule = nil then
     Exit;
-  // Si el Mto tiene conexion propia (Fase 1), la transaccion DEBE ir
-  // contra ella: las queries del data module ya apuntan a FConn via
-  // ReasignarConexion, asi que la transaccion debe usar ConexionTrabajo
-  // para que el commit/rollback afecte a los ApplyUpdates.
-  ConnGrabar := ConexionTrabajo;
+  if FCasoUsoGuardado = nil then
+    FCasoUsoGuardado := CrearCasoUsoGuardadoMtoGenUniDAC(
+      ConexionTrabajo);
   Screen.Cursor := crHourGlass;
   try
     try
-       if not ConnGrabar.InTransaction then
-         ConnGrabar.StartTransaction;
-      GrabarDatasets(tdmDataModule as TDataModule);
-      if ConnGrabar.InTransaction then
-        ConnGrabar.Commit;
-      ShowMessage(SInfoDatosGuardados);
+      Resultado := FCasoUsoGuardado.Ejecutar(
+        procedure
+        begin
+          GrabarDatasets(tdmDataModule as TDataModule);
+        end);
+      if Resultado = rgmGuardado then
+        ShowMessage(SInfoDatosGuardados);
     except
-      on E: EAbort do
-      begin
-        // EAbort es la excepción silenciosa estándar (BeforePost que
-        // llama a Abort cuando el dataset no debe persistirse por la
-        // vía estándar, p. ej. vistas en JOIN que se actualizan a mano).
-        // Cerramos la transacción y salimos sin mensaje.
-        if ConnGrabar.InTransaction then
-          ConnGrabar.Rollback;
-      end;
       on E: Exception do
-      begin
-        if ConnGrabar.InTransaction then
-          ConnGrabar.Rollback;
         raise Exception.Create(Format(SErrorGrabarDatos, [E.Message]));
-      end;
     end;
   finally
     Screen.Cursor := crDefault;
@@ -880,61 +845,12 @@ begin
 end;
 
 procedure TfrmMtoGen.PrepararBusquedaExterna(const ABusq: string);
-var
-  unqry: TUniQuery;
-  aCampos, aValores: TArray<string>;
-  i: Integer;
-  sBase, sWhere: string;
 begin
-  if (ABusq = '') or (pkFieldName = '') then
-    Exit;
-  if (tdmDataModule = nil) or not (tdmDataModule is TdmBase) then
-    Exit;
-  unqry := TdmBase(tdmDataModule).unqryTablaG;
-  if unqry = nil then
-    Exit;
-  unqry.Close;
-  // Guardar SQL base la primera vez; restaurarla en llamadas siguientes
-  // para que los WHERE de busquedas anteriores no se acumulen.
-  if FSqlBaseBusquedaExterna = '' then
-    FSqlBaseBusquedaExterna := unqry.SQL.Text
-  else
-    unqry.SQL.Text := FSqlBaseBusquedaExterna;
-  // PK compuesta: pkFieldName usa ';' (convencion Locate de Delphi),
-  // ABusq usa ',' como separador de valores.
-  aCampos  := pkFieldName.Split([';']);
-  aValores := ABusq.Split([',']);
-  sWhere := '';
-  for i := 0 to High(aCampos) do
-  begin
-    if (i <= High(aValores)) and (Trim(aCampos[i]) <> '') then
-    begin
-      if sWhere <> '' then
-        sWhere := sWhere + ' AND ';
-      sWhere := sWhere + Trim(aCampos[i]) + ' = ' +
-        QuotedStr(Trim(aValores[i]));
-    end;
-  end;
-  if sWhere <> '' then
-  begin
-    // Se envuelve la SELECT base como subconsulta y se filtra fuera, en vez
-    // de parsearla con SQLBuilder4D para inyectarle el WHERE: ese parser no
-    // traga algunas SELECT del modelo (p.ej. Facturas: subconsulta en la
-    // lista de campos + ORDER BY) y lanzaba EgaSQLInvalidParseState — que,
-    // aun capturada, hacia saltar el aviso del depurador. Asi vale para
-    // cualquier SELECT, no se levanta ninguna excepcion y filtra a la fila
-    // buscada. Se quita el ';' final de la SQL base por si lo trae.
-    sBase := TrimRight(FSqlBaseBusquedaExterna);
-    while (sBase <> '') and (sBase[Length(sBase)] = ';') do
-      sBase := TrimRight(Copy(sBase, 1, Length(sBase) - 1));
-    // Al envolverla, UniDAC ve el alias como primera tabla. Conservamos la
-    // tabla real para que el Post no intente actualizar sub_busqueda.
-    if unqry.UpdatingTable = '' then
-      unqry.UpdatingTable := ExtraerTablaDeSQL(
-        FSqlBaseBusquedaExterna);
-    unqry.SQL.Text := 'SELECT * FROM (' + sLineBreak +
-      sBase + sLineBreak + ') sub_busqueda WHERE ' + sWhere;
-  end;
+  if (ABusq <> '') and (pkFieldName <> '') and
+     (tdmDataModule is TdmBase) then
+    TdmBase(tdmDataModule).PrepararBusquedaExterna(
+      pkFieldName,
+      ABusq);
 end;
 
 // La primera pulsacion de cierre desde la ficha vuelve a la lista; el
@@ -1236,7 +1152,9 @@ begin
   // Antes de entrar: restricción por empresa/almacén/caja del usuario.
   // Si cierra una query activa del DFM, el flujo normal de abajo la
   // reabre ya filtrada (yaActiva quedará False).
-  AplicarRestriccionUsuario(unqry);
+  if dmDat.AplicarRestriccionUsuario(SqlRestriccionUsuario) then
+    RegistroLog.RegistrarInformacion(Self.Name +
+      ': precarga restringida por usuario (appRestringirEmpAlmCaja)');
   // unqryTablaG puede llegar abierta por el DFM streaming (Active=True
   // en su DFM, es lo habitual para que componentes del form puedan
   // resolver el field 'CODIGO_ART_ART' en CrearTablaPrincipal). En ese
@@ -1351,24 +1269,6 @@ begin
   Result := '';
 end;
 
-procedure TfrmMtoGen.AplicarRestriccionUsuario(unqry: TUniQuery);
-var
-  sFiltro: string;
-begin
-  sFiltro := SqlRestriccionUsuario;
-  // Idempotente: si el fragmento ya está en la SQL (reapertura del tab,
-  // o el propio Mto lo integró al recomponer su SQL) no se toca nada.
-  if (sFiltro <> '') and (Pos(sFiltro, unqry.SQL.Text) = 0) then
-  begin
-    // Si venía activa del DFM streaming hay que reabrirla ya filtrada
-    if unqry.Active then
-      unqry.Close;
-    unqry.SQL.Text := InyectarFiltroSql(unqry.SQL.Text, sFiltro);
-    RegistroLog.RegistrarInformacion(Self.Name +
-      ': precarga restringida por usuario (appRestringirEmpAlmCaja)');
-  end;
-end;
-
 procedure TfrmMtoGen.AbrirTablaPrincipalSincrono;
 var
   dmDat: TdmBase;
@@ -1383,7 +1283,9 @@ begin
   if unqry = nil then
     Exit;
   // Antes de entrar: restricción por empresa/almacén/caja del usuario
-  AplicarRestriccionUsuario(unqry);
+  if dmDat.AplicarRestriccionUsuario(SqlRestriccionUsuario) then
+    RegistroLog.RegistrarInformacion(Self.Name +
+      ': precarga restringida por usuario (appRestringirEmpAlmCaja)');
   // Modo sincrono: la UI esta congelada durante el Open. Forzamos cursor
   // de reloj global (Screen.Cursor) para que el usuario sepa que la app
   // esta ocupada — no muerta. Self.Cursor solo afecta cuando el raton
@@ -1440,6 +1342,7 @@ var
   bTareasVivas: Boolean;
 begin
   bTareasVivas := False;
+  FCasoUsoGuardado := nil;
   if Assigned(dsTablaG) then
     dsTablaG.DataSet := nil;
   if Assigned(FGestorTareas) then
@@ -1587,7 +1490,6 @@ begin
                                                      Self.Caption + ' Abierta');
   tsFichCab := nil;
   tsFichBut := nil;
-  FSqlBaseBusquedaExterna := '';
   Self.Position  := poScreenCenter;
   swTramo := TStopwatch.StartNew;
   ProcesarPerfiles;

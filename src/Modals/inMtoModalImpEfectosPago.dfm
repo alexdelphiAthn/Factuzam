@@ -1072,16 +1072,9 @@
       end
     end
   end
-  object unqryEfectosPagoPrint: TUniQuery
-    SQL.Strings = (
-      'SELECT 1')
-    Left = 96
-    Top = 16
-  end
   object fxdsEfectosPago: TfrxDBDataset
     UserName = 'EfectosPago'
     CloseDataSource = False
-    DataSet = unqryEfectosPagoPrint
     BCDToCurrency = False
     DataSetOptions = []
     Left = 96

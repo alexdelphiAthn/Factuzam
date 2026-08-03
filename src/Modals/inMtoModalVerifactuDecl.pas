@@ -23,7 +23,7 @@ uses
   Vcl.ExtCtrls, Vcl.OleCtrls, SHDocVw,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxContainer, cxEdit, cxTextEdit, cxMemo, cxButtons, cxLabel,
-  inMtoFrmBase;
+  inMtoFrmBase, inLibInformeVerifactuDeclaracionPersistenciaIntf;
 
 type
   TfrmModalVerifactuDecl = class(TfrmBase)
@@ -41,6 +41,7 @@ type
   private
     FWebDeclaracion: TWebBrowser;
     FHtmlDeclaracion: string;
+    FRepositorioDeclaracion: IRepositorioInformeVerifactuDeclaracion;
     procedure AsegurarVisorHtml;
     procedure ActualizarInstalacion;
     procedure CargarTexto;
@@ -53,9 +54,9 @@ implementation
 
 uses
   System.IOUtils,
-  Data.DB, Uni,
   inLibGlobalVar, inLibVerifactuInstalacion, inLibParametrosIntf,
-  inLibMsgVerifactu, inLibLogIntf;
+  inLibMsgVerifactu, inLibLogIntf,
+  UniDataInformeVerifactuDeclaracionRepositorio;
 
 {$R *.dfm}
 
@@ -156,9 +157,9 @@ begin
 end;
 
 function AnexoEmpresasInstalacionHtml(
-  AConexion: TUniConnection): string;
+  const AEmpresas: TEmpresasInformeVerifactuDeclaracion): string;
 var
-  Qry:       TUniQuery;
+  i:         Integer;
   sFilas:    string;
   sActivo:   string;
   sNumero:   string;
@@ -166,30 +167,15 @@ var
   sCodigoSif:string;
   sEstado:   string;
   sInstante: string;
-  iTotal:    Integer;
 begin
   sFilas := '';
-  iTotal := 0;
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := AConexion;
-    Qry.SQL.Text :=
-      ' SELECT CODIGO_EMP_EMP, RAZON_SOCIAL_EMP, NIF_EMP, ESACTIVO_EMP, ' +
-      '        NUMERO_INSTALACION_EMP, VERSION_INSTALACION_EMP, ' +
-      '        CODIGO_SIF_INSTALACION_EMP, INSTANTE_INSTALACION_EMP ' +
-      ' FROM fza_empresas ' +
-      ' ORDER BY IF(ESACTIVO_EMP = ''S'', 0, 1), ORDEN_EMP, ' +
-      '          CODIGO_EMP_EMP ';
-    Qry.Open;
-    while not Qry.Eof do
-    begin
-      Inc(iTotal);
-      sNumero := Trim(Qry.FieldByName('NUMERO_INSTALACION_EMP').AsString);
-      sVersion := Trim(Qry.FieldByName('VERSION_INSTALACION_EMP').AsString);
-      sCodigoSif :=
-        Trim(Qry.FieldByName('CODIGO_SIF_INSTALACION_EMP').AsString);
+  for i := 0 to Length(AEmpresas) - 1 do
+  begin
+      sNumero := Trim(AEmpresas[i].NumeroInstalacion);
+      sVersion := Trim(AEmpresas[i].VersionInstalacion);
+      sCodigoSif := Trim(AEmpresas[i].CodigoSif);
       sEstado := EstadoEmpresaInstalacion(sNumero, sVersion, sCodigoSif);
-      if Qry.FieldByName('ESACTIVO_EMP').AsString = 'S' then
+      if AEmpresas[i].Activa then
       begin
         sActivo := 'Sí';
       end
@@ -197,14 +183,14 @@ begin
       begin
         sActivo := 'No';
       end;
-      if Qry.FieldByName('INSTANTE_INSTALACION_EMP').IsNull then
+      if not AEmpresas[i].TieneInstanteInstalacion then
       begin
         sInstante := '';
       end
       else
       begin
         sInstante := FormatDateTime('dd/mm/yyyy hh:nn',
-          Qry.FieldByName('INSTANTE_INSTALACION_EMP').AsDateTime);
+          AEmpresas[i].InstanteInstalacion);
       end;
       if sNumero = '' then
       begin
@@ -220,11 +206,11 @@ begin
       end;
       sFilas := sFilas +
         '<tr>' +
-        '<td>' + HtmlTexto(Qry.FieldByName('CODIGO_EMP_EMP').AsString) +
+        '<td>' + HtmlTexto(AEmpresas[i].Codigo) +
         '</td>' +
-        '<td>' + HtmlTexto(Qry.FieldByName('RAZON_SOCIAL_EMP').AsString) +
+        '<td>' + HtmlTexto(AEmpresas[i].RazonSocial) +
         '</td>' +
-        '<td>' + HtmlTexto(Qry.FieldByName('NIF_EMP').AsString) + '</td>' +
+        '<td>' + HtmlTexto(AEmpresas[i].Nif) + '</td>' +
         '<td>' + HtmlTexto(sActivo) + '</td>' +
         '<td>' + HtmlTexto(sNumero) + '</td>' +
         '<td>' + HtmlTexto(sVersion) + '</td>' +
@@ -232,12 +218,8 @@ begin
         '<td>' + HtmlTexto(sInstante) + '</td>' +
         '<td>' + HtmlTexto(sEstado) + '</td>' +
         '</tr>' + sLineBreak;
-      Qry.Next;
-    end;
-  finally
-    FreeAndNil(Qry);
   end;
-  if iTotal = 0 then
+  if Length(AEmpresas) = 0 then
   begin
     sFilas :=
       '<p>No hay empresas configuradas en esta base de datos.</p>';
@@ -263,7 +245,7 @@ begin
 end;
 
 function AgregarAnexoImpresion(
-  AConexion: TUniConnection;
+  const AEmpresas: TEmpresasInformeVerifactuDeclaracion;
   const AHtml: string): string;
 var
   iPosBody: Integer;
@@ -272,7 +254,7 @@ var
 begin
   Result := AHtml;
   sBloque := CssAnexoImpresion +
-    AnexoEmpresasInstalacionHtml(AConexion);
+    AnexoEmpresasInstalacionHtml(AEmpresas);
   sHtmlMin := AnsiLowerCase(Result);
   iPosBody := Pos('</body>', sHtmlMin);
   if iPosBody > 0 then
@@ -381,8 +363,12 @@ begin
       FHtmlDeclaracion := AjustarHtmlParaVisor(
         DescargarHtmlDeclaracion(ParametrosApp, RegistroLog));
     end;
+    if FRepositorioDeclaracion = nil then
+      FRepositorioDeclaracion :=
+        CrearRepositorioInformeVerifactuDeclaracionUniDAC(
+          ConexionPrincipal);
     sHtml := AgregarAnexoImpresion(
-      ConexionPrincipal,
+      FRepositorioDeclaracion.ListarEmpresas,
       FHtmlDeclaracion);
     sArchivo := GuardarHtmlTemporalImpresion(sHtml);
     FWebDeclaracion.Navigate(sArchivo);

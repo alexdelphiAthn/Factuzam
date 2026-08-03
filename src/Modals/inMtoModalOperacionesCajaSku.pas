@@ -27,7 +27,8 @@ uses
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid,
   dxDateRanges, dxScrollbarAnnotations,
   Uni,
-  inMtoFrmBase, inLibOperacionesCajaSkuPersistenciaIntf;
+  inMtoFrmBase, inLibOperacionesCajaSkuPersistenciaIntf,
+  UniDataCajaPantallaComposicion;
 
 type
   TfrmModalOperacionesCajaSku = class(TfrmBase)
@@ -61,9 +62,11 @@ type
     FCodigoSku: string;
     FDescripcionArticulo: string;
     FConsulta: IConsultaOperacionesCajaSku;
+    FRepositorioOperaciones: IRepositorioOperacionesCajaSku;
     FDatos: TDataSet;
     FCallNavegacion: string;
     FBusquedaNavegacion: string;
+    procedure ComponerDependencias;
     procedure ActualizarAcciones;
     procedure ActualizarCabecera;
     procedure CargarOperaciones;
@@ -97,6 +100,7 @@ begin
     frm.FConn := AConn;
     frm.FCodigoSku := ACodigoSku;
     frm.FDescripcionArticulo := ADescripcionArticulo;
+    frm.ComponerDependencias;
     frm.ShowModal;
     if frm.FCallNavegacion <> '' then
     begin
@@ -115,6 +119,15 @@ begin
   finally
     FreeAndNil(frm);
   end;
+end;
+
+procedure TfrmModalOperacionesCajaSku.ComponerDependencias;
+var
+  oComposicion: TComposicionCajaPantalla;
+begin
+  oComposicion := ComponerCajaPantalla(Self);
+  FRepositorioOperaciones := oComposicion.Consultas.
+    CrearRepositorioOperacionesCajaSku(FConn);
 end;
 
 procedure TfrmModalOperacionesCajaSku.FormCreate(Sender: TObject);
@@ -162,14 +175,11 @@ end;
 
 procedure TfrmModalOperacionesCajaSku.CargarOperaciones;
 var
-  Repositorio: IRepositorioOperacionesCajaSku;
   iOperaciones: Integer;
 begin
   if (FConn = nil) or (not FConn.Connected) then
     raise Exception.Create(SErrorConexionOperacionesCajaSkuNoDisponible);
-  Repositorio := ContextoRepositoriosPantalla.Operaciones.
-    CrearRepositorioOperacionesCajaSku(FConn);
-  FConsulta := Repositorio.ConsultarOperaciones(FCodigoSku);
+  FConsulta := FRepositorioOperaciones.ConsultarOperaciones(FCodigoSku);
   FDatos := FConsulta.DataSet;
   dsOperaciones.DataSet := FDatos;
   iOperaciones := 0;

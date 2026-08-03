@@ -134,7 +134,7 @@
       Align = alTop
       AutoSize = False
       Caption = 'Configuraci'#243'n BBDD'
-      TabOrder = 10
+      TabOrder = 9
       Height = 24
       Width = 358
       Transparent = True
@@ -144,7 +144,7 @@
       Top = 30
       AutoSize = False
       Caption = 'Host:'
-      TabOrder = 11
+      TabOrder = 10
       Height = 21
       Width = 312
       Transparent = True
@@ -154,7 +154,7 @@
       Top = 30
       AutoSize = False
       Caption = 'Puerto:'
-      TabOrder = 12
+      TabOrder = 11
       Height = 21
       Width = 72
       Transparent = True
@@ -164,7 +164,7 @@
       Top = 85
       AutoSize = False
       Caption = 'Nombre BD:'
-      TabOrder = 13
+      TabOrder = 12
       Height = 21
       Width = 312
       Transparent = True
@@ -174,7 +174,7 @@
       Top = 140
       AutoSize = False
       Caption = 'Usuario:'
-      TabOrder = 14
+      TabOrder = 13
       Height = 21
       Width = 312
       Transparent = True
@@ -209,16 +209,7 @@
       Properties.EchoMode = eemPassword
       Properties.PasswordChar = '*'
       TabOrder = 4
-      Width = 278
-    end
-    object btnChangePassRoot: TcxButton
-      Left = 306
-      Top = 219
-      Width = 30
-      Height = 30
-      Caption = '...'
-      TabOrder = 5
-      OnClick = btnChangePassRootClick
+      Width = 312
     end
     object btnTest: TcxButton
       Left = 24
@@ -226,7 +217,7 @@
       Width = 144
       Height = 30
       Caption = 'Proba&r Conexi'#243'n'
-      TabOrder = 6
+      TabOrder = 5
       OnClick = btnTestClick
     end
     object btnSubirScript: TcxButton
@@ -235,7 +226,7 @@
       Width = 162
       Height = 30
       Caption = '&Subir script'
-      TabOrder = 7
+      TabOrder = 6
       OnClick = btnSubirScriptClick
     end
     object btnCopiaSeguridad: TcxButton
@@ -244,7 +235,7 @@
       Width = 144
       Height = 30
       Caption = '&Copia seguridad'
-      TabOrder = 8
+      TabOrder = 7
       OnClick = btnCopiaSeguridadClick
     end
     object btnRecover: TcxButton
@@ -253,35 +244,9 @@
       Width = 162
       Height = 30
       Caption = '&Restaurar Copia'
-      TabOrder = 9
+      TabOrder = 8
       OnClick = btnRecoverClick
     end
-  end
-  object MySQLUniProvider1: TMySQLUniProvider
-    Left = 40
-    Top = 312
-  end
-  object ucConexion: TUniConnection
-    ProviderName = 'MySQL'
-    Port = 3307
-    Database = 'factuzam'
-    SpecificOptions.Strings = (
-      'MySQL.UseUnicode=True')
-    Username = 'root'
-    Server = '127.0.0.1'
-    LoginPrompt = False
-    Left = 72
-    Top = 312
-  end
-  object tbUsers: TUniTable
-    TableName = 'fza_usuarios'
-    Connection = ucConexion
-    Left = 136
-    Top = 312
-  end
-  object UniSQLMonitor1: TUniSQLMonitor
-    Left = 168
-    Top = 312
   end
   object JvEnterAsTab1: TJvEnterAsTab
     Left = 274

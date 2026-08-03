@@ -45,6 +45,9 @@ uses
   inLibColumnasSkuIntf,
   inLibGridPivoteVenta,
   inLibAplicacionArticuloCompraIntf,
+  inLibArticulosAtributosIntf,
+  inLibArticulosValidadorIntf,
+  inLibComprasPantallaIntf,
   UniDataFacturasCompra, cxBlobEdit, dxShellDialogs, System.Actions,
   Vcl.ActnList, cxSplitter, inLibDocumento, inLibDocumentoIntf;
 
@@ -198,6 +201,9 @@ type
     FColColorPivot   : TcxGridDBColumn;
     FBasicosColor    : TArray<string>;
     FAplicacionArticuloCompra: IAplicacionArticuloCompra;
+    FValidadorArticulos: IArticulosValidador;
+    FLookupAtributos: IArticulosAtributosLookup;
+    FBusquedaProveedores: IBusquedaProveedoresComprasPantalla;
     // Guarda contra reentrada del toggle desde dsTablaGDataChangeHook
     // disparado por el Edit/Post de PersistirPreferenciaPivote (entre
     // el Edit y el set, la cabecera tiene el ESPIVOTE viejo y el hook
@@ -237,6 +243,7 @@ type
                                 var Error: Boolean);
     function BuscarArticuloFacturaCompra: string;
     function BuscarSkuFacturaCompra(const ACodigoArt: string): string;
+    function BuscarProveedorFacturaCompra(out ACodigo: string): Boolean;
     function ArticuloLineaActivaFacturaCompra: string;
     procedure AplicarArticuloFacturaCompra(const ACodigoArt: string);
     procedure EnfocarSkuFacturaCompra(AAbrirBusqueda: Boolean);
@@ -281,10 +288,6 @@ implementation
 uses
   System.StrUtils,
   inLibFiltroUsuario,
-  inLibArticulosResolverIntf,
-  inLibArticulosValidadorIntf,
-  UniDataArticulosValidadorRepositorio,
-  inLibAplicacionArticuloCompra,
   UniDataAplicacionArticuloCompra,
   inLibGridCantidad,
   inLibColumnasDocumento, UniDataGen,
@@ -304,7 +307,8 @@ uses
   inLibColumnasSku,
   // Composicion del puerto de persistencia del pivote (V2).
   UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio,
-  UniDataColumnasSkuServicios;
+  UniDataColumnasSkuServicios,
+  UniDataComprasPantallaComposicion;
 
 {$R *.dfm}
 
@@ -400,6 +404,9 @@ begin
 end;
 
 procedure TfrmMtoFacturasCompra.FormCreate(Sender: TObject);
+var
+  oEntrada: TEntradaComposicionComprasPantalla;
+  oServicios: TServiciosComprasPantalla;
 begin
   // Columnas no-bound de tallas y atributos ANTES del inherited.
   CrearColumnasTallas;
@@ -412,17 +419,18 @@ begin
   ConfigurarColumnaBotonDocumento(
     FColColorPivot, colLinFaccColorPivotButtonClick);
   inherited;
-  FAplicacionArticuloCompra := CrearAplicacionArticuloCompra(
-    CrearRepositorioLecturasArticuloCompraUniDAC(
-      dmmFacturasCompra.unqryTablaG.Connection,
-      ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
-        dmmFacturasCompra.unqryTablaG.Connection),
-      ContextoRepositoriosPantalla.Articulos.CrearResolverArticulos(
-        dmmFacturasCompra.unqryTablaG.Connection)),
-    CrearPuertoLineaArticuloCompraUniDAC(
-      dmmFacturasCompra.unqryTablaG.Connection,
-      dmmFacturasCompra.unqryTablaG,
-      dmmFacturasCompra.unqryFacturasCompraLineas));
+  oEntrada := Default(TEntradaComposicionComprasPantalla);
+  oEntrada.Tipo := tccFactura;
+  oEntrada.Conexion := ConexionPrincipal;
+  oEntrada.Cabecera := dmmFacturasCompra.unqryTablaG;
+  oEntrada.Lineas := dmmFacturasCompra.unqryFacturasCompraLineas;
+  oServicios := ComponerComprasPantalla(
+    Self,
+    oEntrada);
+  FAplicacionArticuloCompra := oServicios.Documento.AplicacionArticulo;
+  FValidadorArticulos := oServicios.Documento.ValidadorArticulos;
+  FLookupAtributos := oServicios.Documento.LookupAtributos;
+  FBusquedaProveedores := oServicios.Documento.BusquedaProveedores;
   ConfigurarColumnaBusquedaDocumento(
     tvLineasFactura, 'CODIGO_ART_FACCLIN',
     colLineaFaccCODIGO_ARTPropertiesButtonClick,
@@ -495,6 +503,9 @@ end;
 procedure TfrmMtoFacturasCompra.FormDestroy(Sender: TObject);
 begin
   FAplicacionArticuloCompra := nil;
+  FValidadorArticulos := nil;
+  FLookupAtributos := nil;
+  FBusquedaProveedores := nil;
   LiberarModoYGestoresDocumento(
     FModoEntrada, FPivote, FGestorTallas);
   inherited;
@@ -742,8 +753,7 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
   sLineasSinSku := LineasSinSkuRequerido(
-    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
-      dmmFacturasCompra.unqryTablaG.Connection),
+    FValidadorArticulos,
     dmmFacturasCompra.unqryFacturasCompraLineas, 'FACCLIN');
   if (sLineasSinSku <> '') and
      (MessageDlg(Format(SPreguntaGrabarFacturaCompraSinSku,
@@ -921,12 +931,8 @@ begin
   Cfg.RegistroLog := RegistroLog;
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
-  Cfg.ValidadorArticulos :=
-    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
-      dmmFacturasCompra.unqryTablaG.Connection);
-  Cfg.LookupAtributos :=
-    ContextoRepositoriosPantalla.Articulos.CrearLookupAtributosArticulos(
-      dmmFacturasCompra.unqryTablaG.Connection);
+  Cfg.ValidadorArticulos := FValidadorArticulos;
+  Cfg.LookupAtributos := FLookupAtributos;
   if FModoEntradaSel = mcsTallasHorPed then
   begin
     CfgPV := CrearConfigPivoteBandasDocumentoCompra(
@@ -1320,14 +1326,7 @@ begin
     if ds.IsEmpty then
       MessageDlg(SErrorFacturaCompraElegirProveedorNoSeleccionada,
                  mtInformation, [mbOk], 0)
-    else if BusquedaVisual.EjecutarBusqueda(
-      ConexionPrincipal,
-      'Búsqueda de proveedores',
-              'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
-              'CODIGO_PRV_PRV',
-              sCodigo,
-              'frmMtoFaccProvSearch',
-              Self) then
+    else if BuscarProveedorFacturaCompra(sCodigo) then
     begin
       if not (ds.State in [dsInsert, dsEdit]) then
         ds.Edit;
@@ -1336,6 +1335,21 @@ begin
       ActualizarLabelProveedor;
     end;
   end;
+end;
+
+function TfrmMtoFacturasCompra.BuscarProveedorFacturaCompra(
+  out ACodigo: string): Boolean;
+var
+  oConsulta: IConsultaComprasPantalla;
+  oDatos: TDataSet;
+begin
+  ACodigo := '';
+  oConsulta := FBusquedaProveedores.ConsultarProveedores;
+  oDatos := oConsulta.DataSet;
+  Result := BusquedaVisual.EjecutarBusquedaDataSet(
+    'Búsqueda de proveedores', oDatos, 'frmMtoFaccProvSearch', Self);
+  if Result then
+    ACodigo := oDatos.FieldByName('CODIGO_PRV_PRV').AsString;
 end;
 
 procedure TfrmMtoFacturasCompra.cbbCODIGO_PRV_FACCKeyUp(Sender: TObject;

@@ -68,14 +68,23 @@ type
 
 implementation
 
+uses
+  inLibVentasPantallaIntf,
+  UniDataVentasPantallaComposicion;
+
 {$R *.dfm}
 
 procedure TfrmModalSelFamilia.FormCreate(Sender: TObject);
+var
+  oContexto: TContextoSeleccionFamiliaVentasPantalla;
 begin
   inherited;
   Self.Position := poScreenCenter;
-  FRepositorio := ContextoRepositoriosPantalla.Documentos.
-    CrearRepositorioSeleccionFamilia;
+  CrearContextoVentasPantalla(
+    Self,
+    ConexionPrincipal,
+    oContexto);
+  FRepositorio := oContexto.Repositorio;
   FConsulta := FRepositorio.CrearConsulta;
   FFamilias := FConsulta.DataSet;
   dsFamilias.DataSet := FFamilias;

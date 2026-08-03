@@ -101,7 +101,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsgArticulos;
+  inLibMsgArticulos, UniDataConfiguracionPantalla;
 
 // ============================================================================
 //   API pública
@@ -127,8 +127,10 @@ begin
     frm.FCodigoUnicoArttar  := ACodigoUnicoArttar;
     frm.FCodigoArtArt       := ACodigoArt;
     frm.FCodigoUnidadArttar := ACodigoUnidadArttar;
-    frm.FRepositorio        := frm.ContextoRepositoriosPantalla.Articulos.
-      CrearRepositorioMargen(AConn);
+    ComponerConfiguracionPantalla(
+      frm,
+      AConn,
+      frm.FRepositorio);
 
     frm.edtArticulo.Text   := ACodigoArt + ' - ' + ADescArt;
     frm.edtTarifa.Text     := ACodigoTar + ' - ' + ANombreTar;

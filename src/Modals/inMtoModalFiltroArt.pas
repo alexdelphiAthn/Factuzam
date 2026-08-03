@@ -80,7 +80,7 @@ type
 implementation
 
 uses
-  inLibMsgArticulos, inLibMsgComun;
+  inLibMsgArticulos, inLibMsgComun, UniDataConfiguracionPantalla;
 
 constructor TfrmModalFiltroArt.Create(AOwner: TComponent);
 begin
@@ -344,8 +344,7 @@ begin
   Result := False;
   frm := TfrmModalFiltroArt.Create(AOwner);
   try
-    frm.FRepositorio := frm.ContextoRepositoriosPantalla.Articulos.
-      CrearRepositorioFiltroArticulos(AConn);
+    ComponerConfiguracionPantalla(frm, AConn, frm.FRepositorio);
     frm.FUmbral := AUmbral;
     frm.FContar := AContar;
     frm.FFamCsv := APreFamCsv;

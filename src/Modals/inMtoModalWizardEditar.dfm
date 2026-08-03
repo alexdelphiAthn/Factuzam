@@ -383,86 +383,9 @@
     Left = 944
     Top = 504
   end
-  object unqryFormatos: TUniQuery
-    SQL.Strings = (
-      'select VALUE_USUPER'
-      '  from fza_usuarios_perfiles'
-      ' where KEY_USUPER = :KEY'
-      '   and SUBKEY_USUPER <> '#39#39
-      '   and VALUE_USUPER not like '#39'Predet:%'#39
-      '   and (USUARIO_GRUPO_USUPER = :USU'
-      '     or USUARIO_GRUPO_USUPER = :GRP'
-      '     or USUARIO_GRUPO_USUPER = :ALL)'
-      ' order by VALUE_USUPER')
-    Left = 32
-    Top = 504
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'KEY'
-        Value = nil
-      end
-      item
-        DataType = ftUnknown
-        Name = 'USU'
-        Value = nil
-      end
-      item
-        DataType = ftUnknown
-        Name = 'GRP'
-        Value = nil
-      end
-      item
-        DataType = ftUnknown
-        Name = 'ALL'
-        Value = nil
-      end>
-  end
-  object unqryGuias: TUniQuery
-    SQL.Strings = (
-      'select *'
-      '  from fza_informes_guias'
-      ' where INFORME_INFGUI = :INF'
-      ' order by FORMATO_INFGUI, ORDEN_INFGUI, CODIGO_INFGUI')
-    BeforePost = unqryGuiasBeforePost
-    Left = 112
-    Top = 504
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'INF'
-        Value = nil
-      end>
-  end
   object dsGuias: TDataSource
-    DataSet = unqryGuias
     Left = 192
     Top = 504
-  end
-  object unqryTablas: TUniQuery
-    SQL.Strings = (
-      'select TABLE_NAME'
-      '  from information_schema.TABLES'
-      ' where TABLE_SCHEMA = database()'
-      ' order by TABLE_NAME')
-    Left = 432
-    Top = 504
-  end
-  object unqryCamposTabla: TUniQuery
-    SQL.Strings = (
-      'select COLUMN_NAME, COLUMN_KEY'
-      '  from information_schema.COLUMNS'
-      ' where TABLE_SCHEMA = database()'
-      '   and TABLE_NAME = :TAB'
-      ' order by ORDINAL_POSITION')
-    Left = 512
-    Top = 504
-    ParamData = <
-      item
-        DataType = ftUnknown
-        Name = 'TAB'
-        Value = nil
-      end>
   end
   object ActionList1: TActionList
     Left = 272

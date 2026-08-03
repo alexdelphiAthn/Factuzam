@@ -446,12 +446,12 @@ if (-not $OmitirLineaBase) {
       -Codigo 0 `
       -Textos @(
         'Consultas UI: OK.',
-        'TUniQuery.Create: 28;',
-        'Componentes UniDAC en DFM: 18;',
-        'SQL.Text :=: 56;',
+        'TUniQuery.Create: 0;',
+        'Componentes UniDAC en DFM: 0;',
+        'SQL.Text :=: 0;',
         'SQL.Add: 0;',
         'CommandText: 0;',
-        'Transacciones creadas/iniciadas: 4;',
+        'Transacciones creadas/iniciadas: 0;',
         'TUniStoredProc.Create: 0;'
       )
   }

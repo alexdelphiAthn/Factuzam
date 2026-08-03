@@ -64,6 +64,7 @@ uses
   inLibFacturasColumnasPresentacion,
   inLibFacturasLineasEdicion,
   inLibFacturasPresentadorListado,
+  inLibRepositoriosPantallaIntf,
   inMtoFacturasPresentadorCabeceraVcl,
   inMtoFacturasPresentadorLineasVcl;
 
@@ -556,7 +557,9 @@ type
     FPresentadorCabecera: TPresentadorCabeceraFacturaVcl;
     FPresentadorLineas: TPresentadorLineasFacturaVcl;
     FRepositorioLecturas: IRepositorioLecturasFactura;
+    FRepositoriosArticulos: IRepositoriosArticulosPantalla;
     FServiciosFactura: TServiciosFactura;
+    FServiciosSqlPantalla: TServiciosSqlPantalla;
     // === CONTRATO DE ENTRADA ColumnSKUcxGrid ===
     // F1 cicla Auto (desglose) -> SKU -> Tallas horizontal con las
     // lineas de la factura a la vista. El Construir hace ClearItems:
@@ -880,7 +883,7 @@ begin
   Result.CrearResolver :=
     function: IArticulosResolver
     begin
-      Result := AFormulario.ContextoRepositoriosPantalla.Articulos.
+      Result := AFormulario.FRepositoriosArticulos.
         CrearResolverArticulos(AFormulario.ConexionPrincipal);
     end;
   Result.EtiquetaPrendas := AFormulario.lblTotalPrendasFactura;
@@ -1092,11 +1095,11 @@ begin
       AFormulario.ConexionPrincipal,
       TRepositorioFacturas.Create(
         AFormulario.ConexionPrincipal,
-        AFormulario.ContextoRepositoriosPantalla.CatalogoSql,
-        AFormulario.ContextoRepositoriosPantalla.IncidenciasSql),
+        AFormulario.FServiciosSqlPantalla.Catalogo,
+        AFormulario.FServiciosSqlPantalla.Incidencias),
       AFormulario.FRepositorioLecturas,
       AFormulario.FPersistenciaFacturas,
-      AFormulario.ContextoRepositoriosPantalla.Articulos.CrearResolverArticulos(
+      AFormulario.FRepositoriosArticulos.CrearResolverArticulos(
         AFormulario.ConexionPrincipal),
       CrearServicioVerifactuColaUniDAC(
         AFormulario.ConexionPrincipal));
@@ -1124,9 +1127,9 @@ begin
     AFormulario.ConexionPrincipal,
     AFormulario.dmmFacturas.unqryTablaG,
     AFormulario.dmmFacturas.unqryLinFac,
-    AFormulario.ContextoRepositoriosPantalla.Articulos.
+    AFormulario.FRepositoriosArticulos.
       CrearValidadorArticulos(AFormulario.ConexionPrincipal),
-    AFormulario.ContextoRepositoriosPantalla.Articulos.
+    AFormulario.FRepositoriosArticulos.
       CrearResolverArticulos(AFormulario.ConexionPrincipal),
     AFormulario.FRepositorioLecturas);
   FreeAndNil(AFormulario.FPresentadorLineas);
@@ -1282,11 +1285,11 @@ begin
   Result.BusquedaVisual := AFormulario.BusquedaVisual;
   Result.DistribuidorTallasVisual := AFormulario.DistribuidorTallasVisual;
   Result.ValidadorArticulos :=
-    AFormulario.ContextoRepositoriosPantalla.Articulos.
+    AFormulario.FRepositoriosArticulos.
       CrearValidadorArticulos(
         AFormulario.dmmFacturas.unqryTablaG.Connection);
   Result.LookupAtributos :=
-    AFormulario.ContextoRepositoriosPantalla.Articulos.
+    AFormulario.FRepositoriosArticulos.
       CrearLookupAtributosArticulos(
         AFormulario.dmmFacturas.unqryTablaG.Connection);
   if AFormulario.dmmFacturas.unqryTablaG.FindField(
@@ -1498,6 +1501,8 @@ begin
   FreeAndNil(FPresentadorCabecera);
   FreeAndNil(FEditorLineas);
   FDependencias := Default(TContextoDependenciasFacturas);
+  FRepositoriosArticulos := nil;
+  FServiciosSqlPantalla := Default(TServiciosSqlPantalla);
   inherited;
 end;
 procedure TfrmMtoFacturasBase.btnUpdateClienteClick(Sender: TObject);
@@ -1904,6 +1909,10 @@ end;
 
 procedure TfrmMtoFacturasBase.CrearTablaPrincipal;
 begin
+  FServiciosSqlPantalla := ObtenerCompositorSqlPantalla(Self).
+    CrearServiciosSqlPantalla(Name);
+  FRepositoriosArticulos := ObtenerCompositorArticulosPantalla(Self).
+    CrearRepositoriosArticulosPantalla(Name);
   PrepararDependenciasFacturas(Self);
   InicializarDocumento(
     CrearConfiguracionDocumento(tdFactura, sdVenta));
@@ -2260,7 +2269,7 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
   sLineasSinSku := LineasSinSkuRequerido(
-    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
+    FRepositoriosArticulos.CrearValidadorArticulos(
       dmmFacturas.unqryTablaG.Connection),
     dmmFacturas.unqryLinFac, 'FACLIN');
   if (sLineasSinSku <> '') and

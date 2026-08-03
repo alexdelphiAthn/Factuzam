@@ -124,11 +124,15 @@ implementation
 
 uses
   inLibFormatoDocumento,
-  inLibMsgCompras, inLibMsgVentas;
+  inLibMsgCompras, inLibMsgVentas,
+  inLibVentasPantallaIntf,
+  UniDataVentasPantallaComposicion;
 
 {$R *.dfm}
 
 procedure TfrmModalSelAlmacenPedido.FormCreate(Sender: TObject);
+var
+  oContexto: TContextoSeleccionAlmacenVentasPantalla;
 begin
   inherited;
   Self.Position := poScreenCenter;
@@ -148,8 +152,11 @@ begin
   Incorporar           := False;
   AlbaranSerieDestino  := '';
   AlbaranNumDestino    := '';
-  FRepositorio := ContextoRepositoriosPantalla.Documentos.
-    CrearRepositorioSeleccionAlmacen;
+  CrearContextoVentasPantalla(
+    Self,
+    ConexionPrincipal,
+    oContexto);
+  FRepositorio := oContexto.Repositorio;
 end;
 
 procedure TfrmModalSelAlmacenPedido.FormShow(Sender: TObject);

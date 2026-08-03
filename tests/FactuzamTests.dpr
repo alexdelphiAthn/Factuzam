@@ -442,6 +442,28 @@ uses
   PruebasRegistroPantallas in 'PruebasRegistroPantallas.pas',
   PruebasFacturasPresentadorCabecera in
     'PruebasFacturasPresentadorCabecera.pas',
+  inLibMtoGenAplicacionIntf in
+    '..\src\Lib\inLibMtoGenAplicacionIntf.pas',
+  inLibMtoGenAplicacion in
+    '..\src\Lib\inLibMtoGenAplicacion.pas',
+  inLibLogonAplicacionIntf in
+    '..\src\Lib\inLibLogonAplicacionIntf.pas',
+  inLibLogonAplicacion in
+    '..\src\Lib\inLibLogonAplicacion.pas',
+  inLibGeneradorProcesosAplicacion in
+    '..\src\Lib\inLibGeneradorProcesosAplicacion.pas',
+  inLibMovimientosAlmacenAplicacion in
+    '..\src\Lib\inLibMovimientosAlmacenAplicacion.pas',
+  PruebasMtoGenAplicacion in
+    'PruebasMtoGenAplicacion.pas',
+  PruebasLogonAplicacion in
+    'PruebasLogonAplicacion.pas',
+  PruebasGeneradorProcesosAplicacion in
+    'PruebasGeneradorProcesosAplicacion.pas',
+  PruebasMovimientosAlmacenAplicacion in
+    'PruebasMovimientosAlmacenAplicacion.pas',
+  PruebasInformesOla4IA43 in
+    'PruebasInformesOla4IA43.pas',
   PruebasFacturasPresentadorDetalle in 'PruebasFacturasPresentadorDetalle.pas';
 
 var

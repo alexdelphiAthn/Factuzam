@@ -28,7 +28,7 @@ uses
   dxDateRanges, dxScrollbarAnnotations, cxDBData, cxGridLevel,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGridCustomView,
   cxGrid, System.Actions, Vcl.ActnList,
-  inLibCajasDefectoPersistenciaIntf;
+  inLibCajasDefectoPersistenciaIntf, UniDataCajaPantallaComposicion;
 type
   TfrmMtoModalCajDef = class(TfrmBase)
     pnl1: TPanel;
@@ -111,10 +111,13 @@ begin
 end;
 
 procedure TfrmMtoModalCajDef.FormCreate(Sender: TObject);
+var
+  oComposicion: TComposicionCajaPantalla;
 begin
   inherited;
+  oComposicion := ComponerCajaPantalla(Self);
   Self.Position := poScreenCenter;
-  FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
+  FRepositorioPersistencia := oComposicion.Operaciones.
     CrearRepositorioCajasDefecto;
   Cargar;
 end;

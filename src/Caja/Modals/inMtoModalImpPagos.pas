@@ -35,7 +35,8 @@ uses
   Vcl.ComCtrls, dxCore, cxStyles, dxSkinsForm, cxClasses, cxLocalization,
   JvComponentBase, JvEnterTab, System.Actions, Vcl.ActnList, frxSmartMemo,
   frLocalization, frLanguageSpanish, frxExportBaseImageSettingsDialog,
-  frCoreClasses, inLibInformesCajaPersistenciaIntf;
+  frCoreClasses, inLibInformesCajaPersistenciaIntf,
+  UniDataCajaPantallaComposicion;
 
 type
   TfrmPrintPagos = class(TfrmPrint)
@@ -69,6 +70,7 @@ type
     FCodigosFP: TStringList;
     FRepositorioPersistencia: IRepositorioInformesCaja;
     FResultado: IResultadoInformeCaja;
+    procedure ComponerDependencias;
     // Abre el selector estandar de caja (inMtoModalCajDef) acotado a la
     // empresa del usuario y vuelca el almacen y la caja en bedAlmacen/bedCaja.
     procedure SeleccionarAlmacenCaja;
@@ -101,6 +103,7 @@ end;
 procedure TfrmPrintPagos.DoShow;
 begin
   inherited;
+  ComponerDependencias;
   // Por defecto: rango del primer dia del mes en curso hasta hoy, y la
   // empresa / almacen / caja activos del usuario. El usuario puede ampliar
   // las fechas y cambiar almacen / caja con el boton '...' antes de imprimir.
@@ -116,6 +119,18 @@ begin
   end;
 end;
 
+procedure TfrmPrintPagos.ComponerDependencias;
+var
+  oComposicion: TComposicionCajaPantalla;
+begin
+  if not Assigned(FRepositorioPersistencia) then
+  begin
+    oComposicion := ComponerCajaPantalla(Self);
+    FRepositorioPersistencia := oComposicion.Informes.
+      CrearRepositorioInformesCaja;
+  end;
+end;
+
 procedure TfrmPrintPagos.CargarFormasPago;
 var
   FormasPago: TFormasPagoInformeCaja;
@@ -127,11 +142,6 @@ begin
   // defecto no se filtra por forma de pago.
   if FCodigosFP = nil then
     FCodigosFP := TStringList.Create;
-  if not Assigned(FRepositorioPersistencia) then
-  begin
-    FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
-      CrearRepositorioInformesCaja;
-  end;
   clbFormasPago.Items.BeginUpdate;
   try
     clbFormasPago.Items.Clear;
@@ -241,11 +251,6 @@ begin
      (nMarcadas = clbFormasPago.Items.Count) then
   begin
     SetLength(CodigosSeleccionados, 0);
-  end;
-  if not Assigned(FRepositorioPersistencia) then
-  begin
-    FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
-      CrearRepositorioInformesCaja;
   end;
   dsPagosPrint.DataSet := nil;
   FResultado := FRepositorioPersistencia.ConsultarPagos(

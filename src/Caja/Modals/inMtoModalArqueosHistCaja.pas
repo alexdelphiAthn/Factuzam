@@ -35,7 +35,8 @@ uses
   // Acceso a datos
   Uni,
   inMtoFrmBase, inLibArqueoTicket,
-  inLibInformesCajaPersistenciaIntf;
+  inLibInformesCajaPersistenciaIntf, inLibArqueoIntf,
+  inLibArqueoTicketIntf, UniDataCajaPantallaComposicion;
 
 type
   TfrmModalArqueosHistCaja = class(TfrmBase)
@@ -77,6 +78,9 @@ type
     FDatos: TDataSet;
     FRepositorioPersistencia: IRepositorioInformesCaja;
     FResultado: IResultadoInformeCaja;
+    FRepositorioArqueoCaja: IRepositorioArqueoCaja;
+    FRepositorioArqueoTicket: IRepositorioArqueoTicket;
+    procedure ComponerDependencias;
     procedure CargarArqueos;
     function ArqueoSeleccionado: string;
   public
@@ -109,8 +113,7 @@ begin
   Frm := TfrmModalArqueosHistCaja.Create(AOwner);
   try
     Frm.FConn    := AConn;
-    Frm.FRepositorioPersistencia :=
-      Frm.ContextoRepositoriosPantalla.Caja.CrearRepositorioInformesCaja(AConn);
+    Frm.ComponerDependencias;
     Frm.FEmpresa := AEmpresa;
     Frm.FAlmacen := AAlmacen;
     Frm.FCaja    := ACaja;
@@ -118,6 +121,19 @@ begin
   finally
     FreeAndNil(Frm);
   end;
+end;
+
+procedure TfrmModalArqueosHistCaja.ComponerDependencias;
+var
+  oComposicion: TComposicionCajaPantalla;
+begin
+  oComposicion := ComponerCajaPantalla(Self);
+  FRepositorioPersistencia := oComposicion.Informes.
+    CrearRepositorioInformesCaja(FConn);
+  FRepositorioArqueoCaja := oComposicion.Arqueos.
+    CrearRepositorioArqueoCaja(FConn);
+  FRepositorioArqueoTicket := oComposicion.Arqueos.
+    CrearRepositorioArqueoTicket(FConn);
 end;
 
 procedure TfrmModalArqueosHistCaja.FormCreate(Sender: TObject);
@@ -133,6 +149,8 @@ begin
   dsArqueos.DataSet := nil;
   FDatos := nil;
   FResultado := nil;
+  FRepositorioArqueoTicket := nil;
+  FRepositorioArqueoCaja := nil;
   FRepositorioPersistencia := nil;
   inherited;
 end;
@@ -183,10 +201,8 @@ begin
   try
     TArqueoTicket.ImprimirDesdeHistorico(
       PreviewTicket,
-      ContextoRepositoriosPantalla.TicketsCaja.
-        CrearRepositorioArqueoCaja(FConn),
-      ContextoRepositoriosPantalla.TicketsCaja.
-        CrearRepositorioArqueoTicket(FConn),
+      FRepositorioArqueoCaja,
+      FRepositorioArqueoTicket,
       ParametrosCaja,
       FEmpresa,
       FAlmacen,
@@ -212,8 +228,7 @@ begin
   try
     TArqueoTicket.ImprimirCierreDesdeHistorico(
       PreviewTicket,
-      ContextoRepositoriosPantalla.TicketsCaja.
-        CrearRepositorioArqueoTicket(FConn),
+      FRepositorioArqueoTicket,
       ContextoSesion,
       FEmpresa,
       FAlmacen,

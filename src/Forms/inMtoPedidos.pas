@@ -36,7 +36,8 @@ uses
   System.Actions, Vcl.ActnList,
   // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
   inLibColumnasSkuIntf, inLibGridPivoteVenta,
-  inLibDocumento, inLibDocumentoIntf;
+  inLibDocumento, inLibDocumentoIntf,
+  inLibVentasPantallaIntf, inLibVentasPantallaCrearAlbaran;
 
 type
   TfrmMtoPedidos = class(TfrmMtoDocumento)
@@ -258,6 +259,7 @@ type
     // y se limpian en cada teardown ANTES de soltar FModoEntrada.
     FPivoteAlbaranar: IPivoteVentaAlbaranar;
     FPivoteBorrarGrupo: IPivoteVentaBorrarGrupo;
+    FContextoVentas: TContextoPedidosVentasPantalla;
     procedure AsegurarModoEntradaLineas(AMostrarEditor: Boolean);
     procedure ConstruirModoEntrada;
     procedure CrearColumnasHostPedido;
@@ -298,6 +300,23 @@ type
     // hay que recalcular el total de prendas con las lineas del pedido
     // recien enfocado.
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
+    function LeerLineasParaAlbaran(
+      ADataSet: TDataSet): TLineasPedidoParaAlbaran;
+    function PrepararEntregasAlbaran(
+      ADataSet: TDataSet): TPreparacionAlbaranPedido;
+    function PuedeCrearAlbaran(ADataSet: TDataSet): Boolean;
+    function EjecutarCreacionAlbaran(
+      const APreparacion: TPreparacionAlbaranPedido;
+      const ACodigoAlmacen: string;
+      AEsExistente: Boolean;
+      const ASerieExistente, ANumeroExistente: string):
+      TResultadoCreacionAlbaranPedido;
+    procedure LimpiarCantidadesAAlbaranar(ADataSet: TDataSet);
+    procedure MostrarAlbaranCreado(
+      const AResultado: TResultadoCreacionAlbaranPedido;
+      AEsExistente: Boolean;
+      const ACodigoAlmacen: string);
+    procedure CrearAlbaranDesdePedidoActivo;
   protected
     // F1 = alternar modo de entrada (KeyPreview de TfrmBase).
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
@@ -312,17 +331,18 @@ implementation
 uses
   inMtoModalImportarPedidosPS, inLibGridCantidad,
   inMtoModalSelAlmacenAlbaran, inMtoModalDocsCreados, inLibGenBusq,
-  inLibShowMto, inLibFiltroUsuario, Uni, inLibArticulosResolverIntf,
+  inLibShowMto, inLibFiltroUsuario, inLibArticulosResolverIntf,
   inLibArticulosValidadorIntf,
-  UniDataArticulosValidadorRepositorio, inLibVentasImpuestos,
+  inLibVentasImpuestos,
   inLibValoresAutomaticos,
   inLibGridTallasInline,
+  inLibEntradaAlbaranVentaPersistenciaIntf,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku, inLibColumnasDocumento, UniDataGen,
   inLibValidacionDocumento, inLibPresentacionDocumento,
   inLibMsgArticulos, inLibMsgVentas,
   // Composicion del puerto de persistencia del pivote (V2).
-  UniDataPivoteVenta, UniDataColumnasSkuServicios;
+  UniDataPivoteVenta, UniDataVentasPantallaComposicion;
 
 {$R *.dfm}
 
@@ -352,6 +372,7 @@ begin
     FPivoteBorrarGrupo := nil;
     FModoEntrada := nil;
   end;
+  FContextoVentas := Default(TContextoPedidosVentasPantalla);
   inherited;
 end;
 
@@ -389,10 +410,11 @@ end;
 // CODIGOPRODPS_PEDLIN, usado como SKU efectivo en venta mayor).
 function TfrmMtoPedidos.BuscarArticuloPedido: string;
 var
-  qry     : TUniQuery;
-  Campo   : TField;
-  sTarifa : string;
-  dFecha  : TDateTime;
+  oConsulta: IConsultaEntradaAlbaranVenta;
+  oDatos: TDataSet;
+  oCampo: TField;
+  sTarifa: string;
+  dFecha: TDateTime;
 begin
   Result := '';
   if Assigned(dmmPedidos) then
@@ -402,34 +424,21 @@ begin
     dFecha := Date;
     if not dmmPedidos.unqryTablaG.FieldByName('FECHA_PED').IsNull then
       dFecha := dmmPedidos.unqryTablaG.FieldByName('FECHA_PED').AsDateTime;
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := dmmPedidos.unqryTablaG.Connection;
-      qry.SQL.Text :=
-        'SELECT * ' +
-        '  FROM vi_art_busquedas ' +
-        ' WHERE (CODIGO_TAR_ARTTAR = :tarifa ' +
-        '    OR CODIGO_TAR_ARTTAR IS NULL) ' +
-        '   AND FECHA_DESDE_ARTTAR < :fecha ' +
-        '   AND (FECHA_HASTA_ARTTAR IS NULL ' +
-        '        OR FECHA_HASTA_ARTTAR > :fecha)';
-      qry.ParamByName('tarifa').AsString := sTarifa;
-      qry.ParamByName('fecha').AsDateTime := dFecha;
-      if BusquedaVisual.EjecutarBusqueda(
-        ConexionPrincipal,
+    oConsulta := FContextoVentas.EntradaArticulos.ConsultarArticulos(
+      sTarifa,
+      dFecha);
+    oDatos := oConsulta.DataSet;
+    if BusquedaVisual.EjecutarBusquedaDataSet(
         'Búsqueda de Artículos en Líneas de Pedido',
-           qry,
-           'frmMtoArtFacSearch',
-           Self) then
-      begin
-        Campo := qry.FindField('CODIGO_ART_ART');
-        if Campo = nil then
-          Campo := qry.FindField('CODIGO_ART');
-        if Campo <> nil then
-          Result := Campo.AsString;
-      end;
-    finally
-      FreeAndNil(qry);
+        oDatos,
+        'frmMtoArtFacSearch',
+        Self) then
+    begin
+      oCampo := oDatos.FindField('CODIGO_ART_ART');
+      if oCampo = nil then
+        oCampo := oDatos.FindField('CODIGO_ART');
+      if oCampo <> nil then
+        Result := oCampo.AsString;
     end;
   end;
 end;
@@ -450,7 +459,8 @@ end;
 
 function TfrmMtoPedidos.BuscarSkuPedido(const ACodigoArt: string): string;
 var
-  qry : TUniQuery;
+  oConsulta: IConsultaEntradaAlbaranVenta;
+  oDatos: TDataSet;
   sArt: string;
 begin
   Result := '';
@@ -463,36 +473,14 @@ begin
                mtInformation, [mbOk], 0)
   else
   begin
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := dmmPedidos.unqryTablaG.Connection;
-      qry.SQL.Text :=
-        'SELECT SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU, ' +
-        '       GROUP_CONCAT(AV.AV ORDER BY COALESCE(VA.ORDEN_VA, 999), ' +
-        '                    AV.ORDEN_AV SEPARATOR '' / '') AS ATRIBUTOS ' +
-        '  FROM fza_articulos_skus SK ' +
-        '  LEFT JOIN fza_atributos_sku SA ' +
-        '    ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
-        '  LEFT JOIN fza_atributos_valores AV ' +
-        '    ON AV.ID_AV = SA.ID_AV_SA ' +
-        '  LEFT JOIN fza_variaciones_atributos VA ' +
-        '    ON VA.ID_VAR_VA = SK.CODIGO_VAR_SKU ' +
-        '   AND VA.ID_ATB_VA = AV.ID_VA_AV ' +
-        ' WHERE SK.CODIGO_ART_SKU = :art ' +
-        '   AND COALESCE(SK.ESACTIVO_SKU, ''S'') = ''S'' ' +
-        ' GROUP BY SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU ' +
-        ' ORDER BY SK.CODIGO_UNIDAD_SKU';
-      qry.ParamByName('art').AsString := sArt;
-      if BusquedaVisual.EjecutarBusqueda(
-        ConexionPrincipal,
+    oConsulta := FContextoVentas.EntradaArticulos.ConsultarSkus(sArt);
+    oDatos := oConsulta.DataSet;
+    if BusquedaVisual.EjecutarBusquedaDataSet(
         'SKUs del artículo ' + sArt,
-           qry,
-           'frmMtoPedSkuSearch',
-           Self) and (qry.FindField('CODIGO_UNIDAD_SKU') <> nil) then
-        Result := qry.FieldByName('CODIGO_UNIDAD_SKU').AsString;
-    finally
-      FreeAndNil(qry);
-    end;
+        oDatos,
+        'frmMtoPedSkuSearch',
+        Self) and (oDatos.FindField('CODIGO_UNIDAD_SKU') <> nil) then
+      Result := oDatos.FieldByName('CODIGO_UNIDAD_SKU').AsString;
   end;
 end;
 
@@ -567,12 +555,8 @@ begin
         if not dmmPedidos.unqryTablaG.FieldByName('FECHA_PED').IsNull then
           dFecha := dmmPedidos.unqryTablaG.
                       FieldByName('FECHA_PED').AsDateTime;
-        Validador := ContextoRepositoriosPantalla.Articulos.
-          CrearValidadorArticulos(
-                       dmmPedidos.unqryTablaG.Connection);
-        Resolver := ContextoRepositoriosPantalla.Articulos.
-          CrearResolverArticulos(
-          dmmPedidos.unqryTablaG.Connection);
+        Validador := FContextoVentas.ValidadorArticulos;
+        Resolver := FContextoVentas.ResolverArticulos;
         Resolucion := Validador.Resolver(sInput);
         if Resolucion.Encontrado then
         begin
@@ -666,8 +650,7 @@ begin
     if not dmmPedidos.unqryTablaG.FieldByName('FECHA_PED').IsNull then
       dFecha := dmmPedidos.unqryTablaG.
                   FieldByName('FECHA_PED').AsDateTime;
-    Resolver := ContextoRepositoriosPantalla.Articulos.CrearResolverArticulos(
-      dmmPedidos.unqryTablaG.Connection);
+    Resolver := FContextoVentas.ResolverArticulos;
     try
       Datos := Resolver.ResolverDatos(ACodigoArticulo, ACodigoSku,
                                       sTarifa, dFecha);
@@ -749,6 +732,11 @@ begin
   inherited;
   dmmPedidos := TdmPedidos(AsegurarDataModuleDocumento(
     Self, tdmDataModule, TdmPedidos));
+  CrearContextoVentasPantalla(
+    Self,
+    dmmPedidos.unqryTablaG.Connection,
+    dmmPedidos,
+    FContextoVentas);
   ConfigurarTablaPrincipalDocumento(
     dmmPedidos, dsTablaG, tvPedidosLineas,
     dmmPedidos.dsPedidosLineas,
@@ -851,8 +839,7 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (quedan sin precio y no moveran stock al albaranar).
   sLineasSinSku := LineasSinSkuRequerido(
-    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
-      dmmPedidos.unqryTablaG.Connection),
+    FContextoVentas.ValidadorArticulos,
     dmmPedidos.unqryPedidosLineas, 'PEDLIN');
   if (sLineasSinSku = '') or
      (MessageDlg(Format(SPreguntaGrabarPedidoVentaSinSku,
@@ -1359,20 +1346,15 @@ begin
   if FModoEntradaSel <> mcsSku then
     dmmPedidos.DesempaquetarAtributosLineas;
   Cfg := CrearConfigColumnasSkuDocumento(
-    CrearServiciosColumnasSkuUniDAC(
-      dmmPedidos.unqryTablaG.Connection), ContextoSesion,
+    FContextoVentas.ColumnasSku, ContextoSesion,
     tvPedidosLineas, ds, FModoEntradaSel,
     dmmPedidos.unqryTablaG.FieldByName(
       'CODIGO_ALM_PED').AsString, 'PEDLIN');
   Cfg.RegistroLog := RegistroLog;
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
-  Cfg.ValidadorArticulos :=
-    ContextoRepositoriosPantalla.Articulos.
-      CrearValidadorArticulos(dmmPedidos.unqryTablaG.Connection);
-  Cfg.LookupAtributos :=
-    ContextoRepositoriosPantalla.Articulos.
-      CrearLookupAtributosArticulos(dmmPedidos.unqryTablaG.Connection);
+  Cfg.ValidadorArticulos := FContextoVentas.ValidadorArticulos;
+  Cfg.LookupAtributos := FContextoVentas.AtributosArticulos;
   // Precio por SKU para la consolidacion del modo tallas: lineas con
   // precio distinto no fusionan.
   Cfg.ObtenerPrecioSku := PrecioSkuTallas;
@@ -1630,195 +1612,274 @@ begin
     RellenarLineasAlEntregarTodo;
 end;
 
-procedure TfrmMtoPedidos.btnCrearAlbaranClick(Sender: TObject);
+function TfrmMtoPedidos.LeerLineasParaAlbaran(
+  ADataSet: TDataSet): TLineasPedidoParaAlbaran;
 var
-  ds: TDataSet;
-  lst: TList<TPair<string, Currency>>;
-  par: TPair<string, Currency>;
-  fEntrPend, fEntregadaReal: Double;
-  sNumeroAlb, sSerieAlb: string;
-  sEmpresa, sSerie, sNumero, sAlm, sAlmComun, sAlmDefecto: string;
-  EsAlmacenUnico, bAlmInit: Boolean;
-  res: TSelAlmacenAlbaranResult;
-  frmDocs: TfrmModalDocsCreados;
-  bFiltrado, bOk: Boolean;
-  bUsaPivoteAlbaranar: Boolean;
+  bFiltrado: Boolean;
+  iLinea: Integer;
   sLineaFoco: string;
+begin
+  SetLength(Result, 0);
+  bFiltrado := ADataSet.Filtered;
+  sLineaFoco := '';
+  if (not ADataSet.IsEmpty) and
+     (ADataSet.FindField('LINEA_PEDLIN') <> nil) then
+    sLineaFoco := ADataSet.FieldByName('LINEA_PEDLIN').AsString;
+  ADataSet.DisableControls;
+  try
+    try
+      ADataSet.Filtered := False;
+      ADataSet.First;
+      while not ADataSet.Eof do
+      begin
+        iLinea := Length(Result);
+        SetLength(Result, iLinea + 1);
+        Result[iLinea].Linea :=
+          ADataSet.FieldByName('LINEA_PEDLIN').AsString;
+        Result[iLinea].CodigoAlmacen :=
+          ADataSet.FieldByName('CODIGO_ALMACEN_PEDLIN').AsString;
+        Result[iLinea].CantidadEntregada :=
+          ADataSet.FieldByName('CANTIDAD_ENTREGADA_PEDLIN').AsCurrency;
+        if ADataSet.FindField('CANTIDAD_A_ALBARANAR_PEDLIN') <> nil then
+          Result[iLinea].CantidadAAlbaranar := ADataSet.FieldByName(
+            'CANTIDAD_A_ALBARANAR_PEDLIN').AsCurrency;
+        ADataSet.Next;
+      end;
+    finally
+      ADataSet.Filtered := bFiltrado;
+      if sLineaFoco <> '' then
+        ADataSet.Locate('LINEA_PEDLIN', sLineaFoco, []);
+    end;
+  finally
+    ADataSet.EnableControls;
+  end;
+end;
+
+function TfrmMtoPedidos.PrepararEntregasAlbaran(
+  ADataSet: TDataSet): TPreparacionAlbaranPedido;
+var
+  EsAlmacenUnico: Boolean;
+  iEntrega: Integer;
+  oEntregas: TList<TPair<string, Currency>>;
+  sAlmacenComun: string;
+begin
+  if Assigned(FPivoteAlbaranar) then
+  begin
+    Result := Default(TPreparacionAlbaranPedido);
+    oEntregas := TList<TPair<string, Currency>>.Create;
+    try
+      EsAlmacenUnico := True;
+      sAlmacenComun := '';
+      FPivoteAlbaranar.VolcarAAlbaranar(
+        oEntregas,
+        sAlmacenComun,
+        EsAlmacenUnico);
+      SetLength(Result.Entregas, oEntregas.Count);
+      for iEntrega := 0 to oEntregas.Count - 1 do
+      begin
+        Result.Entregas[iEntrega].Linea := oEntregas[iEntrega].Key;
+        Result.Entregas[iEntrega].CantidadTotalEntregada :=
+          oEntregas[iEntrega].Value;
+      end;
+      Result.AlmacenComun := sAlmacenComun;
+      Result.EsAlmacenUnico := EsAlmacenUnico;
+    finally
+      FreeAndNil(oEntregas);
+    end;
+  end
+  else
+    Result := TPreparadorAlbaranPedido.Preparar(
+      LeerLineasParaAlbaran(ADataSet));
+end;
+
+function TfrmMtoPedidos.PuedeCrearAlbaran(
+  ADataSet: TDataSet): Boolean;
+var
   sLineasSinSku: string;
 begin
-  inherited;
-  // Antes de crear, asegurar que el pedido esté guardado
   if dsTablaG.State in dsEditModes then
     dsTablaG.DataSet.Post;
-  ds := dmmPedidos.unqryPedidosLineas;
-  if not ds.Active or (ds.RecordCount = 0) then
+  Result := Assigned(ADataSet) and ADataSet.Active and
+    (ADataSet.RecordCount > 0);
+  if not Result then
+    ShowMessage(SErrorPedidoVentaSinLineas)
+  else
   begin
-    ShowMessage(SErrorPedidoVentaSinLineas);
-    Exit;
+    sLineasSinSku := LineasSinSkuRequerido(
+      FContextoVentas.ValidadorArticulos,
+      ADataSet,
+      'PEDLIN');
+    if sLineasSinSku <> '' then
+      Result := MessageDlg(
+        Format(SPreguntaCrearAlbaranPedidoVentaSinSku, [sLineasSinSku]),
+        mtWarning,
+        [mbYes, mbNo],
+        0) = mrYes;
   end;
-  // Aviso: lineas con articulo con variaciones y sin SKU asignado no
-  // pueden mover stock (los movimientos las saltan).
-  sLineasSinSku := LineasSinSkuRequerido(
-    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
-      dmmPedidos.unqryTablaG.Connection),
-    ds,
-    'PEDLIN');
-  if (sLineasSinSku <> '') and
-     (MessageDlg(Format(SPreguntaCrearAlbaranPedidoVentaSinSku,
-                        [sLineasSinSku]),
-                 mtWarning, [mbYes, mbNo], 0) <> mrYes) then
-    Exit;
-  lst := TList<TPair<string, Currency>>.Create;
-  try
-    // Mientras recogemos las líneas a entregar, vamos comprobando si
-    // todas comparten almacén (CODIGO_ALMACEN_PEDLIN).
-    EsAlmacenUnico := True;
-    bAlmInit       := False;
-    sAlmComun      := '';
-    bUsaPivoteAlbaranar := Assigned(FPivoteAlbaranar);
-    if bUsaPivoteAlbaranar then
-      FPivoteAlbaranar.VolcarAAlbaranar(lst, sAlmComun, EsAlmacenUnico)
-    else
-    begin
-      bFiltrado := ds.Filtered;
-      sLineaFoco := '';
-      if (not ds.IsEmpty) and (ds.FindField('LINEA_PEDLIN') <> nil) then
-        sLineaFoco := ds.FieldByName('LINEA_PEDLIN').AsString;
-      ds.DisableControls;
+end;
+
+function TfrmMtoPedidos.EjecutarCreacionAlbaran(
+  const APreparacion: TPreparacionAlbaranPedido;
+  const ACodigoAlmacen: string;
+  AEsExistente: Boolean;
+  const ASerieExistente, ANumeroExistente: string):
+  TResultadoCreacionAlbaranPedido;
+var
+  Solicitud: TSolicitudCreacionAlbaranPedido;
+begin
+  Solicitud := Default(TSolicitudCreacionAlbaranPedido);
+  Solicitud.SeriePedido := dmmPedidos.unqryTablaG.
+    FieldByName('SERIE_PED').AsString;
+  Solicitud.NumeroPedido := dmmPedidos.unqryTablaG.
+    FieldByName('NUMERO_PED').AsString;
+  Solicitud.CodigoAlmacen := ACodigoAlmacen;
+  Solicitud.EsAlbaranExistente := AEsExistente;
+  Solicitud.SerieAlbaranExistente := ASerieExistente;
+  Solicitud.NumeroAlbaranExistente := ANumeroExistente;
+  Solicitud.Entregas := APreparacion.Entregas;
+  Result := FContextoVentas.CrearAlbaran.Ejecutar(Solicitud);
+end;
+
+procedure TfrmMtoPedidos.LimpiarCantidadesAAlbaranar(
+  ADataSet: TDataSet);
+var
+  bFiltrado: Boolean;
+  sLineaFoco: string;
+begin
+  if Assigned(FPivoteAlbaranar) then
+    FPivoteAlbaranar.LimpiarAAlbaranar
+  else if ADataSet.FindField('CANTIDAD_A_ALBARANAR_PEDLIN') <> nil then
+  begin
+    bFiltrado := ADataSet.Filtered;
+    sLineaFoco := '';
+    if (not ADataSet.IsEmpty) and
+       (ADataSet.FindField('LINEA_PEDLIN') <> nil) then
+      sLineaFoco := ADataSet.FieldByName('LINEA_PEDLIN').AsString;
+    ADataSet.DisableControls;
+    try
       try
-        try
-          ds.Filtered := False;
-          ds.First;
-          while not ds.Eof do
+        ADataSet.Filtered := False;
+        ADataSet.First;
+        while not ADataSet.Eof do
+        begin
+          if ADataSet.FieldByName(
+               'CANTIDAD_A_ALBARANAR_PEDLIN').AsCurrency <> 0 then
           begin
-            // Cantidad marcada para servir desde la pantalla. El proc
-            // calcula la diferencia real frente a lo ya albaranado.
-            if ds.FindField('CANTIDAD_A_ALBARANAR_PEDLIN') <> nil then
-              fEntrPend := ds.FieldByName(
-                'CANTIDAD_A_ALBARANAR_PEDLIN').AsFloat
-            else
-              fEntrPend := 0;
-            if fEntrPend > 0 then
-            begin
-              fEntregadaReal :=
-                ds.FieldByName('CANTIDAD_ENTREGADA_PEDLIN').AsFloat;
-              par.Key   := ds.FieldByName('LINEA_PEDLIN').AsString;
-              par.Value := fEntregadaReal + fEntrPend;
-              lst.Add(par);
-              sAlm := Trim(ds.FieldByName('CODIGO_ALMACEN_PEDLIN').AsString);
-              if not bAlmInit then
-              begin
-                sAlmComun := sAlm;
-                bAlmInit  := True;
-              end
-              else if sAlm <> sAlmComun then
-                EsAlmacenUnico := False;
-            end;
-            ds.Next;
+            ADataSet.Edit;
+            ADataSet.FieldByName(
+              'CANTIDAD_A_ALBARANAR_PEDLIN').AsCurrency := 0;
+            ADataSet.Post;
           end;
-        finally
-          ds.Filtered := bFiltrado;
-          if sLineaFoco <> '' then
-            ds.Locate('LINEA_PEDLIN', sLineaFoco, []);
+          ADataSet.Next;
         end;
       finally
-        ds.EnableControls;
+        ADataSet.Filtered := bFiltrado;
+        if sLineaFoco <> '' then
+          ADataSet.Locate('LINEA_PEDLIN', sLineaFoco, []);
       end;
+    finally
+      ADataSet.EnableControls;
     end;
-    if lst.Count = 0 then
+  end;
+end;
+
+procedure TfrmMtoPedidos.MostrarAlbaranCreado(
+  const AResultado: TResultadoCreacionAlbaranPedido;
+  AEsExistente: Boolean;
+  const ACodigoAlmacen: string);
+var
+  frmDocs: TfrmModalDocsCreados;
+  sNumeroPedido: string;
+  sSeriePedido: string;
+begin
+  sSeriePedido := dmmPedidos.unqryTablaG.
+    FieldByName('SERIE_PED').AsString;
+  sNumeroPedido := dmmPedidos.unqryTablaG.
+    FieldByName('NUMERO_PED').AsString;
+  frmDocs := TfrmModalDocsCreados.Create(Self);
+  frmDocs.OnClose := nil;
+  try
+    if AEsExistente then
+      frmDocs.lblTitulo.Caption := Format(
+        'Líneas añadidas al albarán desde el pedido %s/%s',
+        [sSeriePedido, sNumeroPedido])
+    else
+      frmDocs.lblTitulo.Caption := Format(
+        'Albarán creado desde el pedido %s/%s',
+        [sSeriePedido, sNumeroPedido]);
+    frmDocs.Agregar(
+      'Albarán',
+      AResultado.Serie,
+      AResultado.Numero,
+      ACodigoAlmacen);
+    frmDocs.ShowModal;
+    if frmDocs.Confirmado then
+      ShowMto(
+        Self.Owner,
+        'Albaranes',
+        AResultado.Serie + ',' + AResultado.Numero);
+  finally
+    FreeAndNil(frmDocs);
+  end;
+end;
+
+procedure TfrmMtoPedidos.CrearAlbaranDesdePedidoActivo;
+var
+  APreparacion: TPreparacionAlbaranPedido;
+  ResultadoModal: TSelAlmacenAlbaranResult;
+  ResultadoCreacion: TResultadoCreacionAlbaranPedido;
+  ds: TDataSet;
+  sEmpresa: string;
+  sNumero: string;
+  sSerie: string;
+begin
+  ds := dmmPedidos.unqryPedidosLineas;
+  if PuedeCrearAlbaran(ds) then
+  begin
+    APreparacion := PrepararEntregasAlbaran(ds);
+    if not APreparacion.TieneEntregas then
       ShowMessage(SErrorPedidoVentaSinCantidadAlbaranar)
     else
     begin
-      sSerie  := dmmPedidos.unqryTablaG.FieldByName('SERIE_PED').AsString;
+      sSerie := dmmPedidos.unqryTablaG.FieldByName('SERIE_PED').AsString;
       sNumero := dmmPedidos.unqryTablaG.FieldByName('NUMERO_PED').AsString;
-      sEmpresa := dmmPedidos.unqryTablaG.FieldByName('CODIGO_EMP_PED').AsString;
-      // Si todas las líneas a entregar son del mismo almacén, ese sale
-      // preseleccionado en el modal; si no, el combo va vacío y obliga
-      // a elegir el almacén del albarán.
-      if EsAlmacenUnico and (Trim(sAlmComun) <> '') then
-        sAlmDefecto := sAlmComun
-      else
-        sAlmDefecto := '';
-      res := TfrmModalSelAlmacenAlbaran.Ejecutar(Self, sSerie, sNumero,
-                                                 sEmpresa, sAlmDefecto);
-      if res.Aceptado then
+      sEmpresa := dmmPedidos.unqryTablaG.
+        FieldByName('CODIGO_EMP_PED').AsString;
+      ResultadoModal := TfrmModalSelAlmacenAlbaran.Ejecutar(
+        Self,
+        sSerie,
+        sNumero,
+        sEmpresa,
+        APreparacion.AlmacenDefecto);
+      if ResultadoModal.Aceptado then
       begin
-        // Segun lo elegido en el modal: crear albaran nuevo o anadir las
-        // lineas a un albaran ya existente del propio pedido.
-        if res.EsExistente then
-          bOk := dmmPedidos.CrearAlbaranDesdePedido(sNumeroAlb, sSerieAlb,
-                                                    lst, res.CodigoAlmacen,
-                                                    res.NumeroAlb,
-                                                    res.SerieAlb)
-        else
-          bOk := dmmPedidos.CrearAlbaranDesdePedido(sNumeroAlb, sSerieAlb,
-                                                    lst, res.CodigoAlmacen);
-        if bOk then
+        ResultadoCreacion := EjecutarCreacionAlbaran(
+          APreparacion,
+          ResultadoModal.CodigoAlmacen,
+          ResultadoModal.EsExistente,
+          ResultadoModal.SerieAlb,
+          ResultadoModal.NumeroAlb);
+        if ResultadoCreacion.Creado then
         begin
-          if bUsaPivoteAlbaranar then
-            FPivoteAlbaranar.LimpiarAAlbaranar
-          else if ds.FindField('CANTIDAD_A_ALBARANAR_PEDLIN') <> nil then
-          begin
-            bFiltrado := ds.Filtered;
-            sLineaFoco := '';
-            if (not ds.IsEmpty) and
-               (ds.FindField('LINEA_PEDLIN') <> nil) then
-              sLineaFoco := ds.FieldByName('LINEA_PEDLIN').AsString;
-            ds.DisableControls;
-            try
-              ds.Filtered := False;
-              ds.First;
-              while not ds.Eof do
-              begin
-                if ds.FieldByName('CANTIDAD_A_ALBARANAR_PEDLIN').AsFloat <>
-                   0 then
-                begin
-                  ds.Edit;
-                  ds.FieldByName('CANTIDAD_A_ALBARANAR_PEDLIN').AsFloat := 0;
-                  ds.Post;
-                end;
-                ds.Next;
-              end;
-              ds.Filtered := bFiltrado;
-              if sLineaFoco <> '' then
-                ds.Locate('LINEA_PEDLIN', sLineaFoco, []);
-            finally
-              ds.EnableControls;
-            end;
-          end;
-          // Mostrar el albaran creado / ampliado en un modal estilo
-          // Sesiones, con boton "Ir a documento" para abrir su ficha.
-          frmDocs := TfrmModalDocsCreados.Create(Self);
-          // Bloqueamos el caFree del ancestro (FormClose lo pone) para
-          // poder leer Confirmado tras ShowModal y liberarlo nosotros.
-          frmDocs.OnClose := nil;
-          try
-            if res.EsExistente then
-              frmDocs.lblTitulo.Caption :=
-                Format('Lineas anadidas al albaran desde el pedido %s/%s',
-                       [sSerie, sNumero])
-            else
-              frmDocs.lblTitulo.Caption :=
-                Format('Albaran creado desde el pedido %s/%s',
-                       [sSerie, sNumero]);
-            frmDocs.Agregar('Albaran', sSerieAlb, sNumeroAlb,
-                            res.CodigoAlmacen);
-            frmDocs.ShowModal;
-            if frmDocs.Confirmado then
-              ShowMto(Self.Owner, 'Albaranes', sSerieAlb + ',' + sNumeroAlb);
-          finally
-            FreeAndNil(frmDocs);
-          end;
+          LimpiarCantidadesAAlbaranar(ds);
+          MostrarAlbaranCreado(
+            ResultadoCreacion,
+            ResultadoModal.EsExistente,
+            ResultadoModal.CodigoAlmacen);
         end
-        else if res.EsExistente then
+        else if ResultadoModal.EsExistente then
           ShowMessage(SErrorAnadirAlbaranDesdePedidoVenta)
         else
           ShowMessage(SErrorCrearAlbaranDesdePedidoVenta);
       end;
     end;
-  finally
-    FreeAndNil(lst);
   end;
+end;
+
+procedure TfrmMtoPedidos.btnCrearAlbaranClick(Sender: TObject);
+begin
+  inherited;
+  CrearAlbaranDesdePedidoActivo;
 end;
 
 procedure TfrmMtoPedidos.btnImportarPSClick(Sender: TObject);

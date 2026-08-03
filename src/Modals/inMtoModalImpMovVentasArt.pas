@@ -39,14 +39,17 @@ uses
   cxCheckListBox, cxCheckBox, cxCustomListBox,
   cxClasses, dxSkinsForm, System.Actions, Vcl.ActnList, frxSmartMemo,
   frLocalization, frLanguageSpanish, frCoreClasses,
-  frxExportBaseImageSettingsDialog, JvComponentBase, JvEnterTab, cxLocalization;
+  frxExportBaseImageSettingsDialog, JvComponentBase, JvEnterTab, cxLocalization,
+  inLibInformeMovimientosVentasArticuloPersistenciaIntf;
 
 type
   TfrmPrintMovVentasArt = class(TfrmPrintMultiFiltro)
-    unqryMovVentasPrint: TUniQuery;
     fxdsMovVentas: TfrxDBDataset;
   private
     FInicializado: Boolean;
+    FRepositorioMovimientos:
+      IRepositorioInformeMovimientosVentasArticulo;
+    FResultadoMovimientos: IResultadoInformeMovimientosVentasArticulo;
     FchkIniCompras: TcxCheckBox;   // activa el filtro de inicio de compras
     FdteIniCompras: TcxDateEdit;   // fecha de primera compra a partir de la cual
     FchkSoloVentas: TcxCheckBox;   // 'solo artículos con ventas' en el periodo
@@ -76,7 +79,7 @@ uses
   System.StrUtils, inMtoPreviewExcel, inLibMovVentasArtExcel,
   inLibMsgVentas,
   inLibHojaCalculoIntf, inLibHojaCalculoDevEx, dxSpreadSheet,
-  inLibFotos;
+  inLibFotos, UniDataInformeMovimientosVentasArticuloRepositorio;
 
 { TfrmPrintMovVentasArt }
 
@@ -150,6 +153,7 @@ end;
 
 procedure TfrmPrintMovVentasArt.preparar_consulta;
 var
+  criterios: TCriteriosInformeMovimientosVentasArticulo;
   niveles: TArray<string>;
   function NivelN(idx: Integer): string;
   begin
@@ -161,37 +165,28 @@ var
 begin
   inherited;
   niveles := NivelesAgrupacion;
-  with unqryMovVentasPrint do
-  begin
-    Close;
-    Connection := ConexionPrincipal;
-    SQL.Text :=
-      'CALL PRC_GET_MOV_VENTAS_ART(' +
-      ':pDESDE, :pHASTA, :pINICMP, :pALM, :pFAM, :pPRV, :pTMP, :pART, ' +
-      ':pN1, :pN2, :pN3, :pNFAM, :pSOLOVEN)';
-    ParamByName('pDESDE').AsDateTime := FechaDesde;
-    ParamByName('pHASTA').AsDateTime := FechaHasta;
-    // Inicio compras: solo si el check está marcado; si no, NULL = sin filtro.
-    if (FchkIniCompras <> nil) and FchkIniCompras.Checked
-       and (FdteIniCompras <> nil) then
-      ParamByName('pINICMP').AsDateTime := FdteIniCompras.Date
-    else
-      ParamByName('pINICMP').Clear;
-    ParamByName('pALM').AsString := CSVAlmacenes;
-    ParamByName('pFAM').AsString := CSVFamilias;
-    ParamByName('pPRV').AsString := CSVProveedores;
-    ParamByName('pTMP').AsString := CSVTemporadas;
-    ParamByName('pART').AsString := CSVArticulos;
-    ParamByName('pN1').AsString := NivelN(0);
-    ParamByName('pN2').AsString := NivelN(1);
-    ParamByName('pN3').AsString := NivelN(2);
-    ParamByName('pNFAM').AsInteger := NivelFamilia;
-    if (FchkSoloVentas <> nil) and FchkSoloVentas.Checked then
-      ParamByName('pSOLOVEN').AsString := 'S'
-    else
-      ParamByName('pSOLOVEN').AsString := 'N';
-    Open;
-  end;
+  criterios.FechaDesde := FechaDesde;
+  criterios.FechaHasta := FechaHasta;
+  criterios.UsarInicioCompras := (FchkIniCompras <> nil) and
+    FchkIniCompras.Checked and (FdteIniCompras <> nil);
+  if criterios.UsarInicioCompras then
+    criterios.InicioCompras := FdteIniCompras.Date;
+  criterios.Almacenes := CSVAlmacenes;
+  criterios.Familias := CSVFamilias;
+  criterios.Proveedores := CSVProveedores;
+  criterios.Temporadas := CSVTemporadas;
+  criterios.Articulos := CSVArticulos;
+  criterios.Nivel1 := NivelN(0);
+  criterios.Nivel2 := NivelN(1);
+  criterios.Nivel3 := NivelN(2);
+  criterios.NivelFamilia := NivelFamilia;
+  criterios.SoloVentas := (FchkSoloVentas <> nil) and
+    FchkSoloVentas.Checked;
+  if FRepositorioMovimientos = nil then
+    FRepositorioMovimientos :=
+      CrearRepositorioInformeMovimientosVentasArticuloUniDAC(
+        ConexionPrincipal);
+  FResultadoMovimientos := FRepositorioMovimientos.Preparar(criterios);
   fxdsMovVentas.UpdateBounds;
 end;
 
@@ -200,7 +195,7 @@ begin
   inherited;
   // La foto necesita el DataSet directo del TfrxDBDataset (no solo el
   // DataSource): ver inLibFotos.ObtenerDataSetDeBandaPadre.
-  fxdsMovVentas.DataSet := unqryMovVentasPrint;
+  fxdsMovVentas.DataSet := FResultadoMovimientos.DataSet;
   frxrprt1.DataSets.Clear;
   frxrprt1.DataSets.Add(fxdsMovVentas);
   // Sustituimos el OnBeforePrint del base (fotos) por el nuestro, que encadena
@@ -220,22 +215,25 @@ procedure TfrmPrintMovVentasArt.PrecargarFotosArticulos;
 var
   slCod: TStringList;
 begin
-  if unqryMovVentasPrint.Active and (not unqryMovVentasPrint.IsEmpty) then
+  if (FResultadoMovimientos <> nil) and
+     FResultadoMovimientos.DataSet.Active and
+     (not FResultadoMovimientos.DataSet.IsEmpty) then
   begin
     slCod := TStringList.Create;
     try
       slCod.Sorted := True;
       slCod.Duplicates := dupIgnore;
-      unqryMovVentasPrint.DisableControls;
+      FResultadoMovimientos.DataSet.DisableControls;
       try
-        unqryMovVentasPrint.First;
-        while not unqryMovVentasPrint.Eof do
+        FResultadoMovimientos.DataSet.First;
+        while not FResultadoMovimientos.DataSet.Eof do
         begin
-          slCod.Add(unqryMovVentasPrint.FieldByName('CODIGO_ART_ART').AsString);
-          unqryMovVentasPrint.Next;
+          slCod.Add(FResultadoMovimientos.DataSet.FieldByName(
+            'CODIGO_ART_ART').AsString);
+          FResultadoMovimientos.DataSet.Next;
         end;
       finally
-        unqryMovVentasPrint.EnableControls;
+        FResultadoMovimientos.DataSet.EnableControls;
       end;
       FotosArticulos.PrecargarFotosLote(slCod.ToStringArray);
     finally
@@ -257,9 +255,11 @@ begin
     nivel := 0;
     if (Pos('GroupHeaderG', sNom) = 1) or (Pos('GroupFooterG', sNom) = 1) then
       nivel := StrToIntDef(Copy(sNom, Length(sNom), 1), 0);
-    if (nivel >= 1) and (nivel <= 3) and unqryMovVentasPrint.Active then
+    if (nivel >= 1) and (nivel <= 3) and
+       (FResultadoMovimientos <> nil) and
+       FResultadoMovimientos.DataSet.Active then
       TfrxBand(Component).Visible :=
-        unqryMovVentasPrint.FieldByName(
+        FResultadoMovimientos.DataSet.FieldByName(
           Format('GRUPO%d_ETIQ', [nivel])).AsString <> ''
     else if (sNom = 'GroupHeaderFam') or (sNom = 'GroupFooterFam') then
       // La familia NO agrupa por sí sola: solo se agrupa por familia si se
@@ -286,7 +286,7 @@ begin
       ExportarMovVentasArtExcel(
         oServiciosHoja.Escritor,
         oServiciosHoja.Formateador,
-        unqryMovVentasPrint);
+        FResultadoMovimientos.DataSet);
       fPreview.ShowModal;
     finally
       FreeAndNil(fPreview);

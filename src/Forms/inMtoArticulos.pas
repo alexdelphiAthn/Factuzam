@@ -43,6 +43,7 @@ uses
   cxCustomListBox, cxCheckListBox, System.UITypes, System.Types,
   inLibArticulosGuardadoIntf,
   inLibArticulosPresentacionIntf,
+  inLibRepositoriosPantallaIntf,
   inMtoArticulosPresentacionAtributos,
   inMtoArticulosPresentacionStock,
   inMtoArticulosPresentacionTarifas,
@@ -511,6 +512,7 @@ type
     FPresFiltros: TPresentadorFiltrosArticulos;
     FCodigosBarras: ILecturaCodigosBarrasArticulo;
     FDependencias: TContextoDependenciasArticulos;
+    FRepositoriosArticulos: IRepositoriosArticulosPantalla;
     procedure InicializarPestanyaVariaciones;
     procedure InicializarPestanyaPropiedades;
     procedure InicializarPresentadores;
@@ -1242,6 +1244,8 @@ end;
 
 procedure TfrmMtoArticulos.CrearTablaPrincipal;
 begin
+  FRepositoriosArticulos := ObtenerCompositorArticulosPantalla(Self).
+    CrearRepositoriosArticulosPantalla(Name);
   inherited;
   dmmArticulos := tdmDataModule as TdmArticulos;
   // La vista de stock se empuja al DM (ya no la busca con GetOwnerForm).
@@ -1467,8 +1471,8 @@ begin
   // Crear el gestor
   FGestorProp := TGestorPropiedades.Create(
     FScrollProp,
-    ContextoRepositoriosPantalla.Articulos.
-      CrearServiciosPropiedadesArticulo(ConexionPrincipal),
+    FRepositoriosArticulos.CrearServiciosPropiedadesArticulo(
+      ConexionPrincipal),
     IdentidadSesion.Usuario
   );
 end;
@@ -1774,6 +1778,7 @@ end;
 procedure TfrmMtoArticulos.FormDestroy(Sender: TObject);
 begin
   FDependencias := Default(TContextoDependenciasArticulos);
+  FRepositoriosArticulos := nil;
   FCodigosBarras := nil;
   inherited;
   if Assigned(FGestorProp) then

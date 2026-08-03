@@ -48,7 +48,8 @@ uses
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid,
   inMtoFrmBase, Vcl.Menus, cxStyles, dxDateRanges,
-  dxScrollbarAnnotations, inLibInformesCajaPersistenciaIntf;
+  dxScrollbarAnnotations, inLibInformesCajaPersistenciaIntf,
+  UniDataCajaPantallaComposicion;
 
 type
   // Record con los datos del vale seleccionado que se devuelve al formulario
@@ -157,11 +158,14 @@ begin
 end;
 
 procedure TfrmMtoCajaSeleccionVale.FormCreate(Sender: TObject);
+var
+  oComposicion: TComposicionCajaPantalla;
 begin
   inherited;
+  oComposicion := ComponerCajaPantalla(Self);
   Self.KeyPreview := True;
   Self.OnKeyDown := FormKeyDown;
-  FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
+  FRepositorioPersistencia := oComposicion.Informes.
     CrearRepositorioInformesCaja;
   ConfigurarGrid;
 end;

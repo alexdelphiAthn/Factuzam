@@ -717,18 +717,10 @@
       end
     end
   end
-  object unqryBalancePrint: TUniQuery
-    SQL.Strings = (
-      'CALL PRC_GET_BALANCE_ALMACEN_SIN_TALLAS('
-      '  '#39'A'#39', NULL, NULL, '#39#39', '#39#39', '#39#39', '#39#39', '#39#39', '#39'PVP'#39', '#39'N'#39', '#39#39', '#39#39', '#39#39', '#39#39', 0)')
-    Left = 96
-    Top = 16
-  end
   object fxdsBalance: TfrxDBDataset
     Description = 'Balance'
     UserName = 'Balance'
     CloseDataSource = False
-    DataSet = unqryBalancePrint
     BCDToCurrency = False
     DataSetOptions = []
     Left = 96

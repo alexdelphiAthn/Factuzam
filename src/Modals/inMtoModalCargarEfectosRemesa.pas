@@ -96,7 +96,8 @@ type
 implementation
 
 uses
-  inLibUser, inLibGenBusq, inLibMsgVentas;
+  inLibUser, inLibGenBusq, inLibMsgVentas,
+  UniDataConfiguracionPantalla;
 
 {$R *.dfm}
 
@@ -123,8 +124,10 @@ begin
   FConfirmado := False;
   FRemSeries  := TStringList.Create;
   FRemNumeros := TStringList.Create;
-  FRepositorio := ContextoRepositoriosPantalla.Remesas.
-    CrearRepositorioCargaEfectosRemesa;
+  ComponerConfiguracionPantalla(
+    Self,
+    ConexionPrincipal,
+    FRepositorio);
   FDsEfe := TDataSource.Create(Self);
   tvEfe.DataController.DataSource := FDsEfe;
   rgModo.ItemIndex := 0;

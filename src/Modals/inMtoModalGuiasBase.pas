@@ -107,14 +107,16 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibUser, inLibMsgComun;
+  inLibUser, inLibMsgComun, UniDataConfiguracionPantalla;
 
 procedure TfrmModalGuiasBase.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
-  FRepositorio := ContextoRepositoriosPantalla.Configuracion.
-    CrearRepositorioGuias;
+  ComponerConfiguracionPantalla(
+    Self,
+    ConexionPrincipal,
+    FRepositorio);
 end;
 
 procedure TfrmModalGuiasBase.FormShow(Sender: TObject);

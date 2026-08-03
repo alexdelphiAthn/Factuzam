@@ -95,21 +95,28 @@ implementation
 
 uses
   inLibUser, inLibGenBusq, inLibFormatoDocumento,
-  inLibMsgFacturas, inLibMsgVentas;
+  inLibMsgFacturas, inLibMsgVentas,
+  inLibVentasPantallaIntf,
+  UniDataVentasPantallaComposicion;
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TfrmModalFacturarAlbaranes.FormCreate(Sender: TObject);
+var
+  oContexto: TContextoFacturacionAlbaranesCompraVentasPantalla;
 begin
   inherited;
   Self.Position := poScreenCenter;
   FConfirmado := False;
   FFacSeries  := TStringList.Create;
   FFacNumeros := TStringList.Create;
-  FRepositorio := ContextoRepositoriosPantalla.Documentos.
-    CrearRepositorioFacturacionAlbaranesCompra;
+  CrearContextoVentasPantalla(
+    Self,
+    ConexionPrincipal,
+    oContexto);
+  FRepositorio := oContexto.Repositorio;
   FDsAlb := TDataSource.Create(Self);
   tvAlb.DataController.DataSource := FDsAlb;
   rgModo.ItemIndex := 0;

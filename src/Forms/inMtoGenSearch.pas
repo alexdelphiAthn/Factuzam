@@ -28,8 +28,9 @@ uses
   cxGridTableView, cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, MemDS,
   DBAccess, Uni, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, JvComponentBase, JvEnterTab, dxShellDialogs,
-  cxMaskEdit, cxDropDownEdit, inLibValoresAutomaticos,
-  inMtoModalAltaRapida, inLibDevExp, inLibGenBusq;
+  cxMaskEdit, cxDropDownEdit,
+  inMtoModalAltaRapida, inLibDevExp, inLibGenBusq,
+  inLibMtoGenAplicacionIntf;
 
 type
   TDefCampo = record
@@ -49,8 +50,6 @@ type
   end;
   TfrmMtoSearch = class(TfrmMtoGen)
     pnl1: TPanel;
-    unqryPerfiles: TUniQuery;
-    dsPerfiles: TDataSource;
     btnAltaRapida: TcxButton;
     procedure btnAceptarClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
@@ -64,11 +63,9 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     function MostrarDialogoDinamico(var sCod, sDesc: string): Boolean;
-    function ProcesarValor(const aValor, aTipo: string): Variant;
     procedure AddValorDefecto(const aCampo: string; const aValor: Variant);
     function EjecutarAltaGenerica(sCod, sDesc: string):Boolean;
   protected
-    function ConsultaPerfilesLocal: TUniQuery; override;
     function DebeAjustarColumnasAutomaticamente: Boolean; virtual;
   public
     FConfigAlta: TConfigAltaRapida;
@@ -85,7 +82,7 @@ function CrearBusquedaVisualMto: IBusquedaVisual;
 implementation
 
 uses
-  inLibMsgComun;
+  inLibMsgComun, UniDataGen;
 
 type
   TBusquedaVisualMto = class(TInterfacedObject, IBusquedaVisual)
@@ -173,31 +170,32 @@ function TBusquedaVisualMto.EjecutarBusqueda(
   const AName: string; AParentForm: TCustomForm): Boolean;
 var
   oFormulario: TfrmMtoSearch;
-  qryTemporal: TUniQuery;
+  dsTemporal: TDataSet;
 begin
   Result := False;
   oFormulario := TfrmMtoSearch.Create(nil);
-  qryTemporal := TUniQuery.Create(oFormulario);
+  dsTemporal := CrearConsultaBusquedaMtoGenUniDAC(
+    oFormulario,
+    AConexion,
+    ASql);
   try
     oFormulario.Caption := ACaption;
     oFormulario.Name := AName;
     if Assigned(AParentForm) then
       oFormulario.PopupParent := AParentForm;
-    qryTemporal.Connection := AConexion;
-    qryTemporal.SQL.Text := ASql;
-    oFormulario.dsTablaG.DataSet := qryTemporal;
-    qryTemporal.Open;
+    oFormulario.dsTablaG.DataSet := dsTemporal;
+    dsTemporal.Open;
     oFormulario.ProcesarPerfiles;
     oFormulario.ShowModal;
     if ((oFormulario.sFicha = 'S') and
-        (qryTemporal.RecordCount > 0)) then
+        (dsTemporal.RecordCount > 0)) then
     begin
-      AValorDevuelto := qryTemporal.FieldByName(
+      AValorDevuelto := dsTemporal.FieldByName(
         ACampoResultado).AsString;
       Result := True;
     end;
   finally
-    FreeAndNil(qryTemporal);
+    FreeAndNil(dsTemporal);
     FreeAndNil(oFormulario);
   end;
 end;
@@ -217,11 +215,6 @@ procedure TfrmMtoSearch.AplicarEtiquetas;
 begin
   inherited;
   //AbrirPerfiles(tsPerfil.TabVisible);
-end;
-
-function TfrmMtoSearch.ConsultaPerfilesLocal: TUniQuery;
-begin
-  Result := unqryPerfiles;
 end;
 
 procedure TfrmMtoSearch.btnAceptarClick(Sender: TObject);
@@ -247,8 +240,6 @@ var
   iAncho: Integer;
 begin
   inherited;
-  if Assigned(dsTablaG.DataSet) and (dsTablaG.DataSet is TUniQuery) then
-    AplicarGuiasGrid(TUniQuery(dsTablaG.DataSet));
   // Crear columnas solo para campos que aún no tengan columna
   ds := cxGrdDBTabPrin.DataController.DataSource.DataSet;
   if Assigned(ds) then
@@ -448,68 +439,53 @@ end;
 
 function TfrmMtoSearch.EjecutarAltaGenerica(sCod, sDesc: string): Boolean;
 var
-  Conn: TUniConnection;
-  Qry: TUniQuery;
-  sCodigoFinal: string;
+  Configuracion: TConfiguracionAltaRapidaMtoGen;
+  Resultado: TResultadoAltaRapidaMtoGen;
   i: Integer;
 begin
-  sCodigoFinal := sCod;
-  Conn := ConexionTrabajo;
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := Conn;
-    Conn.StartTransaction;
-    try
-      if ((Trim(sCodigoFinal) = '0') or (Trim(sCodigoFinal) = '')) and
-         (FConfigAlta.TipoDocContador <> '') then
-      begin
-        sCodigoFinal := ObtenerSiguienteContador(
-          ConexionPrincipal,
-          FConfigAlta.TipoDocContador,
-          IdentidadSesion.Usuario);
-        if sCodigoFinal = '' then
-          raise Exception.Create(SErrorContadorAutomaticoBusqueda);
-      end;
-      Qry.SQL.Text := 'SELECT * FROM ' + FConfigAlta.Tabla + ' WHERE 1=0';
-      Qry.Open;
-      Qry.Insert;
-      if Qry.FindField(FConfigAlta.CampoCodigo) <> nil then
-        Qry.FieldByName(FConfigAlta.CampoCodigo).AsString := sCodigoFinal;
-      if Qry.FindField(FConfigAlta.CampoDescripcion) <> nil then
-        Qry.FieldByName(FConfigAlta.CampoDescripcion).AsString := sDesc;
-      for i := 0 to High(FConfigAlta.ValoresDefecto) do
-      begin
-        if Qry.FindField(FConfigAlta.ValoresDefecto[i].NombreCampo) <> nil then
-        begin
-          Qry.FieldByName(FConfigAlta.ValoresDefecto[i].NombreCampo).Value :=
-             FConfigAlta.ValoresDefecto[i].Valor;
-        end;
-      end;
-      ActualizarAuditoria(Qry);
-      Qry.Post;
-      Conn.Commit;
-      Result := True;
-      ShowMessage(Format(SInfoRegistroBusquedaCreado, [sCodigoFinal]));
-      if Assigned(cxGrdDBTabPrin.DataController.DataSource) and
-         (cxGrdDBTabPrin.DataController.DataSource.DataSet.Active) then
-      begin
-        cxGrdDBTabPrin.DataController.DataSource.DataSet.Refresh;
-        if cxGrdDBTabPrin.DataController.DataSource.DataSet.FindField(
-                                            FConfigAlta.CampoCodigo) <> nil then
-          cxGrdDBTabPrin.DataController.DataSource.DataSet.Locate(
-                                     FConfigAlta.CampoCodigo, sCodigoFinal, []);
-      end;
-    except
-      on E: Exception do
-      begin
-        Conn.Rollback;
-        if Qry.State in [dsInsert, dsEdit] then Qry.Cancel;
-        ShowMessage(Format(SErrorInsertarRegistroBusqueda, [E.Message]));
-        Result := False;
-      end;
+  Configuracion := Default(TConfiguracionAltaRapidaMtoGen);
+  Configuracion.Tabla := FConfigAlta.Tabla;
+  Configuracion.CampoCodigo := FConfigAlta.CampoCodigo;
+  Configuracion.CampoDescripcion := FConfigAlta.CampoDescripcion;
+  Configuracion.TipoDocumentoContador := FConfigAlta.TipoDocContador;
+  SetLength(Configuracion.Valores, Length(FConfigAlta.ValoresDefecto));
+  for i := 0 to High(FConfigAlta.ValoresDefecto) do
+  begin
+    Configuracion.Valores[i].Campo :=
+      FConfigAlta.ValoresDefecto[i].NombreCampo;
+    Configuracion.Valores[i].Valor := FConfigAlta.ValoresDefecto[i].Valor;
+    Configuracion.Valores[i].Opciones :=
+      FConfigAlta.ValoresDefecto[i].Opciones;
+  end;
+  Resultado := EjecutarAltaRapidaMtoGenUniDAC(
+    ConexionTrabajo,
+    ConexionPrincipal,
+    Configuracion,
+    sCod,
+    sDesc,
+    IdentidadSesion.Usuario,
+    AuditoriaDatos);
+  Result := Resultado.Exito;
+  if Result then
+  begin
+    ShowMessage(Format(SInfoRegistroBusquedaCreado, [Resultado.Codigo]));
+    if Assigned(cxGrdDBTabPrin.DataController.DataSource) and
+       cxGrdDBTabPrin.DataController.DataSource.DataSet.Active then
+    begin
+      cxGrdDBTabPrin.DataController.DataSource.DataSet.Refresh;
+      if cxGrdDBTabPrin.DataController.DataSource.DataSet.FindField(
+        FConfigAlta.CampoCodigo) <> nil then
+        cxGrdDBTabPrin.DataController.DataSource.DataSet.Locate(
+          FConfigAlta.CampoCodigo,
+          Resultado.Codigo,
+          []);
     end;
-  finally
-    FreeAndNil(Qry);
+  end
+  else
+  begin
+    ShowMessage(Format(
+      SErrorInsertarRegistroBusqueda,
+      [Resultado.Error]));
   end;
 end;
 
@@ -521,7 +497,8 @@ end;
 
 procedure TfrmMtoSearch.CargarDefaultsDesdeBD(const aNombreTabla: string);
 var
-  QryDef, QryCont: TUniQuery;
+  Configuracion: TConfiguracionAltaRapidaMtoGen;
+  i: Integer;
 begin
   FConfigAlta.Activo := True;
   if Assigned(btnAltaRapida) then
@@ -529,58 +506,19 @@ begin
   FConfigAlta.Tabla := aNombreTabla;
   FConfigAlta.TipoDocContador := ''; // Limpiamos valor anterior
   SetLength(FConfigAlta.ValoresDefecto, 0);
-  QryDef := TUniQuery.Create(nil);
-  try
-    QryDef.Connection := ConexionTrabajo;
-    QryDef.SQL.Text := 'SELECT * ' +
-                       'FROM fza_gen_defaults ' +
-                       'WHERE TABLA_OBJETIVO_DEF_VD = :Tabla';
-    QryDef.ParamByName('Tabla').AsString := aNombreTabla;
-    QryDef.Open;
-    while not QryDef.Eof do
-    begin
-      AddValorDefecto(
-        QryDef.FieldByName('CAMPO_OBJETIVO_DEF_VD').AsString,
-        ProcesarValor(QryDef.FieldByName('VALOR_DEF_VD').AsString,
-                      QryDef.FieldByName('TIPO_DATO_DEF_VD').AsString)
-      );
-      FConfigAlta.ValoresDefecto[High(FConfigAlta.ValoresDefecto)].Opciones :=
-         QryDef.FieldByName('VALORES_POSIBLES_DEF_VD').AsString;
-      QryDef.Next;
-    end;
-  finally
-    FreeAndNil(QryDef);
+  CargarConfiguracionAltaRapidaMtoGenUniDAC(
+    ConexionTrabajo,
+    aNombreTabla,
+    Configuracion);
+  FConfigAlta.TipoDocContador := Configuracion.TipoDocumentoContador;
+  for i := 0 to High(Configuracion.Valores) do
+  begin
+    AddValorDefecto(
+      Configuracion.Valores[i].Campo,
+      Configuracion.Valores[i].Valor);
+    FConfigAlta.ValoresDefecto[i].Opciones :=
+      Configuracion.Valores[i].Opciones;
   end;
-  QryCont := TUniQuery.Create(nil);
-  try
-    QryCont.Connection := ConexionTrabajo;
-    QryCont.SQL.Text :=
-      'SELECT TIPO_DOC_CON ' +
-      '  FROM fza_contadores ' +
-      ' WHERE TABLAORIGEN_CONTADOR = :Tabla ' +
-      '   AND SERIE_CON = ''-''';
-    QryCont.ParamByName('Tabla').AsString := aNombreTabla;
-    QryCont.Open;
-    if not QryCont.IsEmpty then
-    begin
-      FConfigAlta.TipoDocContador :=
-                               QryCont.FieldByName('TIPO_DOC_CON').AsString;
-    end;
-  finally
-    FreeAndNil(QryCont);
-  end;
-end;
-
-function TfrmMtoSearch.ProcesarValor(const aValor, aTipo: string): Variant;
-begin
-  if (aTipo = 'INTEGER') then
-    Result := StrToIntDef(aValor, 0)
-  else if (aTipo = 'FLOAT') then
-    Result := StrToFloatDef(aValor, 0.0)
-  else if (aTipo = 'BOOLEAN') then
-    Result := (UpperCase(aValor) = 'TRUE') or (aValor = '1')
-  else
-    Result := aValor;
 end;
 
 end.

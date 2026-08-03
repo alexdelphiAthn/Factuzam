@@ -46,7 +46,11 @@ uses
   inLibGridPivoteCompra,
   // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
   inLibColumnasSkuIntf, inLibGridPivoteVenta,
+  inLibArticulosAtributosIntf,
+  inLibArticulosValidadorIntf,
   inLibAplicacionArticuloCompraIntf,
+  inLibComprasPantallaIntf,
+  inLibPedidosCompraIntf,
   UniDataPedidosCompra, cxBlobEdit, System.Actions, Vcl.ActnList,
   dxShellDialogs, cxSplitter, inLibDocumento, inLibDocumentoIntf;
 
@@ -254,6 +258,12 @@ type
     FColColorProveedorPivot : TcxGridDBColumn;
     FBasicosColor           : TArray<string>;
     FAplicacionArticuloCompra: IAplicacionArticuloCompra;
+    FValidadorArticulos: IArticulosValidador;
+    FLookupAtributos: IArticulosAtributosLookup;
+    FRecepcionPedido: IRecepcionPedidoCompra;
+    FConsultasPedido: IConsultasPedidoCompraPantalla;
+    FBusquedaEmpresas: IBusquedaEmpresasComprasPantalla;
+    FBusquedaProveedores: IBusquedaProveedoresComprasPantalla;
     FAfterPostLineasOriginal: TDataSetNotifyEvent;
     FEstiloRecepcionVencida : TcxStyle;
     // Guarda contra la reentrancia que provoca PersistirPreferenciaPivote:
@@ -392,14 +402,9 @@ uses
   inLibFiltroUsuario,
   inLibAtributosPaleta,
   inLibPedidosCompra,
-  UniDataPedidosCompraRecepcion,
-
   inLibValoresAutomaticos,
-  inLibArticulosResolverIntf,
-  inLibArticulosValidadorIntf,
-  UniDataArticulosValidadorRepositorio,
-  inLibAplicacionArticuloCompra,
   UniDataAplicacionArticuloCompra,
+  UniDataComprasPantallaComposicion,
   inLibGridCantidad,
   inLibColumnasDocumento, UniDataGen,
   inLibBusquedasCompra,
@@ -582,7 +587,9 @@ end;
 
 procedure TfrmMtoPedidosCompra.FormCreate(Sender: TObject);
 var
-  i     : Integer;
+  i: Integer;
+  oEntrada: TEntradaComposicionComprasPantalla;
+  oServicios: TServiciosComprasPantalla;
 begin
   // Mismo orden que albaranes / sesiones: columnas no-bound de tallas
   // y atributos se crean ANTES del inherited.
@@ -599,17 +606,24 @@ begin
     FColColorPivot, colLinPedcColorPivotButtonClick);
   FColColorProveedorPivot := nil;
   inherited;
-  FAplicacionArticuloCompra := CrearAplicacionArticuloCompra(
-    CrearRepositorioLecturasArticuloCompraUniDAC(
-      dmmPedidosCompra.unqryTablaG.Connection,
-      ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
-        dmmPedidosCompra.unqryTablaG.Connection),
-      ContextoRepositoriosPantalla.Articulos.CrearResolverArticulos(
-        dmmPedidosCompra.unqryTablaG.Connection)),
-    CrearPuertoLineaArticuloCompraUniDAC(
-      dmmPedidosCompra.unqryTablaG.Connection,
-      dmmPedidosCompra.unqryTablaG,
-      dmmPedidosCompra.unqryPedidosCompraLineas));
+  oEntrada := Default(TEntradaComposicionComprasPantalla);
+  oEntrada.Tipo := tccPedido;
+  oEntrada.Conexion := dmmPedidosCompra.unqryTablaG.Connection;
+  oEntrada.Cabecera := dmmPedidosCompra.unqryTablaG;
+  oEntrada.Lineas := dmmPedidosCompra.unqryPedidosCompraLineas;
+  oServicios := ComponerComprasPantalla(
+    Self,
+    oEntrada);
+  FAplicacionArticuloCompra :=
+    oServicios.Pedido.Documento.AplicacionArticulo;
+  FValidadorArticulos :=
+    oServicios.Pedido.Documento.ValidadorArticulos;
+  FLookupAtributos := oServicios.Pedido.Documento.LookupAtributos;
+  FRecepcionPedido := oServicios.Pedido.Recepcion;
+  FConsultasPedido := oServicios.Pedido.Consultas;
+  FBusquedaEmpresas := oServicios.Pedido.Documento.BusquedaEmpresas;
+  FBusquedaProveedores :=
+    oServicios.Pedido.Documento.BusquedaProveedores;
   FEstiloRecepcionVencida := TcxStyle.Create(Self);
   FEstiloRecepcionVencida.AssignedValues := [svTextColor];
   FEstiloRecepcionVencida.TextColor := clRed;
@@ -692,6 +706,12 @@ var
   bHuboCambios: Boolean;
 begin
   FAplicacionArticuloCompra := nil;
+  FValidadorArticulos := nil;
+  FLookupAtributos := nil;
+  FRecepcionPedido := nil;
+  FConsultasPedido := nil;
+  FBusquedaEmpresas := nil;
+  FBusquedaProveedores := nil;
   // El modo del contrato se libera ANTES del inherited: su teardown
   // toca el view y el dataset de lineas, que deben seguir vivos (misma
   // leccion que pedidos/facturas de venta, AV al cerrar 08/07/26).
@@ -1160,8 +1180,7 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
   sLineasSinSku := LineasSinSkuRequerido(
-    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
-      dmmPedidosCompra.unqryTablaG.Connection),
+    FValidadorArticulos,
     dmmPedidosCompra.unqryPedidosCompraLineas, 'PEDCLIN');
   if (sLineasSinSku <> '') and
      (MessageDlg(Format(SPreguntaGrabarPedidoCompraSinSku,
@@ -1325,24 +1344,8 @@ end;
 // pedidos_compra.sql se ha aplicado.
 function TfrmMtoPedidosCompra.ColumnaPedidosCompraExiste(
                                        const ANombreColumna: string): Boolean;
-var
-  q: TUniQuery;
 begin
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := ConexionPrincipal;
-    q.SQL.Text :=
-      'SELECT COUNT(*) AS N ' +
-      '  FROM INFORMATION_SCHEMA.COLUMNS ' +
-      ' WHERE TABLE_SCHEMA = DATABASE() ' +
-      '   AND TABLE_NAME   = ''fza_pedidos_compra_lineas'' ' +
-      '   AND COLUMN_NAME  = :c';
-    q.ParamByName('c').AsString := ANombreColumna;
-    q.Open;
-    Result := q.FieldByName('N').AsInteger > 0;
-  finally
-    FreeAndNil(q);
-  end;
+  Result := FConsultasPedido.ColumnaLineasExiste(ANombreColumna);
 end;
 
 procedure TfrmMtoPedidosCompra.actArticulosExecute(Sender: TObject);
@@ -1365,8 +1368,8 @@ end;
 procedure TfrmMtoPedidosCompra.btnCODIGO_EMP_PEDCPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
-  sCodigo : string;
-  ds      : TDataSet;
+  oConsulta: IConsultaComprasPantalla;
+  ds: TDataSet;
 begin
   inherited;
   if Assigned(dmmPedidosCompra) then
@@ -1375,18 +1378,20 @@ begin
     if ds.IsEmpty then
       MessageDlg(SErrorPedidoCompraNecesarioElegirEmpresa,
                  mtInformation, [mbOk], 0)
-    else if BusquedaVisual.EjecutarBusqueda(
-      ConexionPrincipal,
-      'Búsqueda de empresas',
-              'SELECT * FROM fza_empresas ORDER BY RAZON_SOCIAL_EMP',
-              'CODIGO_EMP_EMP',
-              sCodigo,
-              'frmMtoEmpFacSearch',
-              Self) then
+    else
     begin
-      if not (ds.State in [dsInsert, dsEdit]) then
-        ds.Edit;
-      ds.FieldByName('CODIGO_EMP_PEDC').AsString := sCodigo;
+      oConsulta := FBusquedaEmpresas.ConsultarEmpresas;
+      if BusquedaVisual.EjecutarBusquedaDataSet(
+        'Búsqueda de empresas',
+        oConsulta.DataSet,
+        'frmMtoEmpFacSearch',
+        Self) then
+      begin
+        if not (ds.State in [dsInsert, dsEdit]) then
+          ds.Edit;
+        ds.FieldByName('CODIGO_EMP_PEDC').AsString :=
+          oConsulta.DataSet.FieldByName('CODIGO_EMP_EMP').AsString;
+      end;
     end;
   end;
 end;
@@ -1404,8 +1409,8 @@ end;
 procedure TfrmMtoPedidosCompra.cbbCODIGO_PRV_PEDCPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
-  sCodigo : string;
-  ds      : TDataSet;
+  oConsulta: IConsultaComprasPantalla;
+  ds: TDataSet;
 begin
   inherited;
   if Assigned(dmmPedidosCompra) then
@@ -1414,22 +1419,27 @@ begin
     if ds.IsEmpty then
       MessageDlg(SErrorPedidoCompraNecesarioElegirProveedor,
                  mtInformation, [mbOk], 0)
-    else if BusquedaVisual.EjecutarBusqueda(
-      ConexionPrincipal,
-      'Búsqueda de proveedores',
-              'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
-              'CODIGO_PRV_PRV',
-              sCodigo,
-              'frmMtoPedcProvSearch',
-              Self) then
+    else
     begin
-      if not (ds.State in [dsInsert, dsEdit]) then
-        ds.Edit;
-      ds.FieldByName('CODIGO_PRV_PEDC').AsString := sCodigo;
-      AplicarIvaExentoIntracomunitarioProveedor(ConexionPrincipal, ds,
-        'CODIGO_PRV_PEDC', 'ESIVA_EXENTO_INTRACOMUNITARIO_PEDC');
-      dmmPedidosCompra.CalcularTotalesPedidoCompra;
-      ActualizarLabelProveedor;
+      oConsulta := FBusquedaProveedores.ConsultarProveedores;
+      if BusquedaVisual.EjecutarBusquedaDataSet(
+        'Búsqueda de proveedores',
+        oConsulta.DataSet,
+        'frmMtoPedcProvSearch',
+        Self) then
+      begin
+        if not (ds.State in [dsInsert, dsEdit]) then
+          ds.Edit;
+        ds.FieldByName('CODIGO_PRV_PEDC').AsString :=
+          oConsulta.DataSet.FieldByName('CODIGO_PRV_PRV').AsString;
+        AplicarIvaExentoIntracomunitarioProveedor(
+          ConexionPrincipal,
+          ds,
+          'CODIGO_PRV_PEDC',
+          'ESIVA_EXENTO_INTRACOMUNITARIO_PEDC');
+        dmmPedidosCompra.CalcularTotalesPedidoCompra;
+        ActualizarLabelProveedor;
+      end;
     end;
   end;
 end;
@@ -1680,33 +1690,10 @@ end;
 
 function TfrmMtoPedidosCompra.AlmacenEfectivoPrimeraLinea(
                                   const ASerie, ANumero: string): string;
-var
-  q: TUniQuery;
 begin
-  Result := '';
-  if (Trim(ASerie) = '') or (Trim(ANumero) = '') then Exit;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := ConexionPrincipal;
-    q.SQL.Text :=
-      'SELECT IFNULL(NULLIF(L.CODIGO_ALMACEN_PEDCLIN, ''''), ' +
-      '              P.CODIGO_ALM_PEDC) AS ALM ' +
-      '  FROM fza_pedidos_compra_lineas L ' +
-      '  JOIN fza_pedidos_compra P ' +
-      '    ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
-      '   AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
-      ' WHERE L.SERIE_PEDC_PEDCLIN  = :s ' +
-      '   AND L.NUMERO_PEDC_PEDCLIN = :n ' +
-      ' ORDER BY L.LINEA_PEDCLIN ' +
-      ' LIMIT 1';
-    q.ParamByName('s').AsString := ASerie;
-    q.ParamByName('n').AsString := ANumero;
-    q.Open;
-    if not q.Eof then
-      Result := q.FieldByName('ALM').AsString;
-  finally
-    FreeAndNil(q);
-  end;
+  Result := FConsultasPedido.AlmacenEfectivoPrimeraLinea(
+    ASerie,
+    ANumero);
 end;
 
 procedure TfrmMtoPedidosCompra.tvLineasPedidoFocusedRecordChanged(
@@ -2206,9 +2193,9 @@ begin
     ParametrosRecepcion.Incorporar := form.Incorporar;
     ParametrosRecepcion.Celdas := arrCeldas;
     try
-      bOk := CrearRecepcionPedidoCompraUniDAC(
-        ConexionPrincipal).EjecutarRecepcionPedidoCompra(
-          ParametrosRecepcion, ResultadoRecepcion);
+      bOk := FRecepcionPedido.EjecutarRecepcionPedidoCompra(
+        ParametrosRecepcion,
+        ResultadoRecepcion);
       sMsg := ResultadoRecepcion.Mensaje;
       if bOk then
       begin
@@ -2324,12 +2311,8 @@ begin
   Cfg.RegistroLog := RegistroLog;
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
-  Cfg.ValidadorArticulos :=
-    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
-      dmmPedidosCompra.unqryTablaG.Connection);
-  Cfg.LookupAtributos :=
-    ContextoRepositoriosPantalla.Articulos.CrearLookupAtributosArticulos(
-      dmmPedidosCompra.unqryTablaG.Connection);
+  Cfg.ValidadorArticulos := FValidadorArticulos;
+  Cfg.LookupAtributos := FLookupAtributos;
   if FModoEntradaSel = mcsTallasHorPed then
   begin
     CfgPV := CrearConfigPivoteBandasDocumentoCompra(

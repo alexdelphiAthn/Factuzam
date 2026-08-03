@@ -36,7 +36,10 @@ uses
   JvEnterTab, dxShellDialogs, System.Actions, Vcl.ActnList, cxCalendar,
   UniDataConsultaOpe, dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetTypes,
   dxSpreadSheetStyles, dxHashUtils, cxMaskEdit, cxDropDownEdit,
-  inLibCajaOperacionesHistPersistenciaIntf;
+  inLibCajaOperacionesHistPersistenciaIntf,
+  inLibCajaPantallaHistoricosIntf,
+  inLibCajaPantallaDetalleHistorico,
+  UniDataCajaPantallaComposicion;
 
 type
   TfrmMtoCajaOperacionesHist = class(TfrmMtoGen)
@@ -115,6 +118,7 @@ type
     FactExportarOperacionExcel: TAction;
     dmmCajaOperacionesHist: TdmCajaOperacionesHist;
     FRepositorioPersistencia: IRepositorioCajaOperacionesHist;
+    FGrabadorPerfiles: IGrabadorPerfilesHistoricoCaja;
     procedure CargarAnyosFiltro;
     procedure CargarAlmacenesFiltro;
     procedure LeerFiltrosPerfil;
@@ -128,6 +132,25 @@ type
     procedure ActualizarProgresoCarga(const APos, AMax: Integer);
     procedure OcultarProgresoCarga;
     procedure CrearFichaDetalle;
+    function DataSourceDetalleCaja(
+      ADatos: TDatosDetalleCaja): TDataSource;
+    function AccionDetalleCaja(AAccion: TAccionDetalleCaja): TAction;
+    function CrearAccionesDetalleCaja(
+      const AAcciones: TArray<TAccionDetalleCaja>): TArray<TAction>;
+    procedure RegistrarVistaDetalleCaja(
+      ADatos: TDatosDetalleCaja;
+      APagina: TcxTabSheet;
+      AVista: TcxGridDBTableView);
+    procedure RenderizarColumnasDetalleCaja(
+      AVista: TcxGridDBTableView;
+      const AColumnas: TArray<TColumnaDetalleCaja>);
+    procedure RenderizarVistaDetalleCaja(
+      APagina: TcxTabSheet;
+      const AModelo: TVistaDetalleCaja);
+    procedure RenderizarSeccionDetalleCaja(
+      const AModelo: TSeccionDetalleCaja);
+    procedure RenderizarFichaDetalleCaja(
+      const AModelo: TModeloFichaDetalleCaja);
     function  CrearVistaDetalle(var APagina: TcxTabSheet;
                                 const ACaption,
                                       ANombreVista: string;
@@ -269,12 +292,18 @@ begin
 end;
 
 procedure TfrmMtoCajaOperacionesHist.CrearTablaPrincipal;
+var
+  oComposicion: TComposicionCajaPantalla;
 begin
   inherited;
+  oComposicion := ComponerCajaPantalla(Self);
   dmmCajaOperacionesHist := tdmDataModule as TdmCajaOperacionesHist;
-  FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
+  FRepositorioPersistencia := oComposicion.Historicos.
     CrearRepositorioCajaOperacionesHist(
     dmmCajaOperacionesHist.unqryTablaG);
+  FGrabadorPerfiles := oComposicion.Historicos.CrearGrabadorPerfiles(
+    ConexionPrincipal,
+    PerfilesEscritura);
   FdmConsulta := TdmConsultaOpe.Create(
     Self,
     ConexionPrincipal,
@@ -1303,273 +1332,225 @@ begin
   end;
 end;
 
+function TfrmMtoCajaOperacionesHist.DataSourceDetalleCaja(
+  ADatos: TDatosDetalleCaja): TDataSource;
+begin
+  case ADatos of
+    ddcOperacion:
+      Result := FdmConsulta.dsOperacion;
+    ddcPagos:
+      Result := FdmConsulta.dsPagos;
+    ddcVales:
+      Result := FdmConsulta.dsVales;
+    ddcMovimientos:
+      Result := FdmConsulta.dsMovimientos;
+    ddcCliente:
+      Result := FdmConsulta.dsCliente;
+    ddcDepositos:
+      Result := FdmConsulta.dsDepositos;
+    ddcFacturaCabecera:
+      Result := FdmConsulta.dsFactura;
+    ddcFacturaLineas:
+      Result := FdmConsulta.dsFacturaLin;
+  else
+    Result := nil;
+  end;
+end;
+
+function TfrmMtoCajaOperacionesHist.AccionDetalleCaja(
+  AAccion: TAccionDetalleCaja): TAction;
+begin
+  case AAccion of
+    adcIrFactura:
+      Result := actIrFacturaSimplif;
+    adcIrCliente:
+      Result := FactIrCliente;
+    adcIrArticulo:
+      Result := FactIrArticulo;
+    adcIrDeposito:
+      Result := FactIrDeposito;
+    adcIrFormaPago:
+      Result := FactIrFormaPago;
+    adcIrPagoHistorico:
+      Result := FactIrPagoHist;
+    adcIrMovimiento:
+      Result := FactIrMovimiento;
+    adcIrVale:
+      Result := FactIrVale;
+    adcExportarOperacion:
+      Result := FactExportarOperacionExcel;
+  else
+    Result := nil;
+  end;
+end;
+
+function TfrmMtoCajaOperacionesHist.CrearAccionesDetalleCaja(
+  const AAcciones: TArray<TAccionDetalleCaja>): TArray<TAction>;
+var
+  i: Integer;
+begin
+  SetLength(Result, Length(AAcciones));
+  for i := 0 to High(AAcciones) do
+    Result[i] := AccionDetalleCaja(AAcciones[i]);
+end;
+
+procedure TfrmMtoCajaOperacionesHist.RegistrarVistaDetalleCaja(
+  ADatos: TDatosDetalleCaja;
+  APagina: TcxTabSheet;
+  AVista: TcxGridDBTableView);
+begin
+  case ADatos of
+    ddcOperacion:
+      begin
+        FtsDetalleOperacion := APagina;
+        FtvDetalleOperacion := AVista;
+      end;
+    ddcPagos:
+      begin
+        FtsDetallePagos := APagina;
+        FtvDetallePagos := AVista;
+      end;
+    ddcVales:
+      begin
+        FtsDetalleVales := APagina;
+        FtvDetalleVales := AVista;
+      end;
+    ddcMovimientos:
+      begin
+        FtsDetalleMovimientos := APagina;
+        FtvDetalleMovimientos := AVista;
+      end;
+    ddcCliente:
+      begin
+        FtsDetalleCliente := APagina;
+        FtvDetalleCliente := AVista;
+      end;
+    ddcDepositos:
+      begin
+        FtsDetalleDepositos := APagina;
+        FtvDetalleDepositos := AVista;
+      end;
+    ddcFacturaCabecera:
+      begin
+        FtsDetalleFactura := APagina;
+        FtvDetalleFacturaCab := AVista;
+      end;
+    ddcFacturaLineas:
+      FtvDetalleFacturaLin := AVista;
+  end;
+end;
+
+procedure TfrmMtoCajaOperacionesHist.RenderizarColumnasDetalleCaja(
+  AVista: TcxGridDBTableView;
+  const AColumnas: TArray<TColumnaDetalleCaja>);
+var
+  i: Integer;
+begin
+  for i := 0 to High(AColumnas) do
+  begin
+    AnadirColumna(
+      AVista,
+      AColumnas[i].Nombre,
+      AColumnas[i].Titulo,
+      AColumnas[i].Campo,
+      AColumnas[i].Ancho,
+      AColumnas[i].ClasePropiedades,
+      AColumnas[i].Formato,
+      AColumnas[i].Visible);
+  end;
+end;
+
+procedure TfrmMtoCajaOperacionesHist.RenderizarVistaDetalleCaja(
+  APagina: TcxTabSheet;
+  const AModelo: TVistaDetalleCaja);
+var
+  oContenedor: TWinControl;
+  oPanel: TPanel;
+  oVista: TcxGridDBTableView;
+begin
+  oContenedor := APagina;
+  if AModelo.Altura > 0 then
+  begin
+    oPanel := TPanel.Create(Self);
+    oPanel.Parent := APagina;
+    oPanel.Align := alTop;
+    oPanel.Height := AModelo.Altura;
+    oPanel.BevelOuter := bvNone;
+    oContenedor := oPanel;
+  end;
+  oVista := CrearVistaEnContenedor(
+    oContenedor,
+    AModelo.Nombre,
+    DataSourceDetalleCaja(AModelo.Datos));
+  oVista.OptionsView.Footer := AModelo.MostrarPie;
+  RenderizarColumnasDetalleCaja(oVista, AModelo.Columnas);
+  RegistrarVistaDetalleCaja(AModelo.Datos, APagina, oVista);
+end;
+
+procedure TfrmMtoCajaOperacionesHist.RenderizarSeccionDetalleCaja(
+  const AModelo: TSeccionDetalleCaja);
+var
+  aAcciones: TArray<TAction>;
+  i: Integer;
+  oPagina: TcxTabSheet;
+  oVista: TcxGridDBTableView;
+begin
+  oPagina := nil;
+  if (Length(AModelo.Vistas) > 0) and
+     (AModelo.Vistas[0].Altura = 0) then
+  begin
+    oVista := CrearVistaDetalle(
+      oPagina,
+      AModelo.Titulo,
+      AModelo.Vistas[0].Nombre,
+      DataSourceDetalleCaja(AModelo.Vistas[0].Datos));
+    oVista.OptionsView.Footer := AModelo.Vistas[0].MostrarPie;
+    RenderizarColumnasDetalleCaja(oVista, AModelo.Vistas[0].Columnas);
+    RegistrarVistaDetalleCaja(
+      AModelo.Vistas[0].Datos,
+      oPagina,
+      oVista);
+    aAcciones := CrearAccionesDetalleCaja(AModelo.Acciones);
+    CrearBarraAcciones(oPagina, aAcciones);
+    for i := 1 to High(AModelo.Vistas) do
+      RenderizarVistaDetalleCaja(oPagina, AModelo.Vistas[i]);
+  end
+  else
+  begin
+    oPagina := TcxTabSheet.Create(Self);
+    oPagina.PageControl := FpcDetalleCaja;
+    oPagina.Caption := AModelo.Titulo;
+    aAcciones := CrearAccionesDetalleCaja(AModelo.Acciones);
+    CrearBarraAcciones(oPagina, aAcciones);
+    for i := 0 to High(AModelo.Vistas) do
+      RenderizarVistaDetalleCaja(oPagina, AModelo.Vistas[i]);
+  end;
+end;
+
+procedure TfrmMtoCajaOperacionesHist.RenderizarFichaDetalleCaja(
+  const AModelo: TModeloFichaDetalleCaja);
+var
+  i: Integer;
+begin
+  FpcDetalleCaja := TcxPageControl.Create(Self);
+  FpcDetalleCaja.Parent := tsFicha;
+  FpcDetalleCaja.Align := alClient;
+  for i := 0 to High(AModelo) do
+    RenderizarSeccionDetalleCaja(AModelo[i]);
+  FpcDetalleCaja.ActivePage := FtsDetalleOperacion;
+end;
+
 procedure TfrmMtoCajaOperacionesHist.CrearFichaDetalle;
 var
-  pnlFacturaCab: TPanel;
+  aModelo: TModeloFichaDetalleCaja;
 begin
   if not FDetalleCreado then
   begin
     FDetalleCreado := True;
-    FpcDetalleCaja := TcxPageControl.Create(Self);
-    FpcDetalleCaja.Parent := tsFicha;
-    FpcDetalleCaja.Align := alClient;
-
-    FtvDetalleOperacion := CrearVistaDetalle(FtsDetalleOperacion,
-      'Operación', 'tvHistCajaOperacion', FdmConsulta.dsOperacion);
-    CrearBarraAcciones(FtsDetalleOperacion,
-      [FactExportarOperacionExcel]);
-    AnadirColumna(FtvDetalleOperacion, 'colHistOpeFecha', 'Fecha/Hora',
-      'FECHA_OPERACION_OPCAJA', 140, 'TcxDateEditProperties',
-      'dd/mm/yyyy hh:nn:ss');
-    AnadirColumna(FtvDetalleOperacion, 'colHistOpeTipo', 'Tipo',
-      'TIPO_OPERACION_OPCAJA', 60);
-    AnadirColumna(FtvDetalleOperacion, 'colHistOpeImporte', 'Importe',
-      'IMPORTE_TOTAL_OPCAJA', 110, 'TcxCurrencyEditProperties',
-      '#,##0.00 €');
-    AnadirColumna(FtvDetalleOperacion, 'colHistOpeConcepto', 'Concepto',
-      'CONCEPTO_GASTO_INGRESO_OPCAJA', 340);
-    AnadirColumna(FtvDetalleOperacion, 'colHistOpeIdDep', 'Id depósito',
-      'ID_DEPOSITO_OPCAJA', 160);
-    AnadirColumna(FtvDetalleOperacion, 'colHistOpeSerieRef', 'Serie ref.',
-      'SERIE_REF_ORIGEN_OPCAJA', 80);
-    AnadirColumna(FtvDetalleOperacion, 'colHistOpeNroRef', 'Nro ref.',
-      'NUMERO_REF_ORIGEN_OPCAJA', 80);
-    AnadirColumna(FtvDetalleOperacion, 'colHistOpeMotivo', 'Motivo dev.',
-      'MOTIVO_DEVOLUCION_OPCAJA', 130);
-    AnadirColumna(FtvDetalleOperacion, 'colHistOpeEstadoDev', 'Est.Dev.',
-      'ESTADO_DEVOLUCION_OPCAJA', 60);
-
-    FtvDetallePagos := CrearVistaDetalle(FtsDetallePagos,
-      'Pagos', 'tvHistCajaPagos', FdmConsulta.dsPagos);
-    CrearBarraAcciones(FtsDetallePagos,
-      [FactIrPagoHist, FactIrFormaPago, FactExportarOperacionExcel]);
-    FtvDetallePagos.OptionsView.Footer := True;
-    AnadirColumna(FtvDetallePagos, 'colHistPagLinea', 'Línea',
-      'NUMERO_LINEA_PAGO', 96);
-    AnadirColumna(FtvDetallePagos, 'colHistPagCodigo', 'Código',
-      'CODIGO_FP_CFP', 106);
-    AnadirColumna(FtvDetallePagos, 'colHistPagForma', 'Forma de pago',
-      'DESCRIPCION_FORMA_PAGO_CFP', 142);
-    AnadirColumna(FtvDetallePagos, 'colHistPagEntregado', 'Entregado',
-      'IMPORTE_ENTREGADO_PAGO', 146, 'TcxCurrencyEditProperties',
-      '#,##0.00 €');
-    AnadirColumna(FtvDetallePagos, 'colHistPagCambio', 'Cambio',
-      'IMPORTE_CAMBIO_PAGO', 96, 'TcxCurrencyEditProperties',
-      '#,##0.00 €');
-    AnadirColumna(FtvDetallePagos, 'colHistPagNeto', 'Neto',
-      'IMPORTE_NETO_PAGO', 87, 'TcxCurrencyEditProperties',
-      '#,##0.00 €');
-    AnadirColumna(FtvDetallePagos, 'colHistPagDivisa', 'Divisa',
-      'CODIGO_DIVISA_PAGO', 97);
-    AnadirColumna(FtvDetallePagos, 'colHistPagImpDivisa', 'Imp.divisa',
-      'IMPORTE_DIVISA_PAGO', 150, 'TcxCurrencyEditProperties',
-      '#,##0.00000000');
-    AnadirColumna(FtvDetallePagos, 'colHistPagBlockchain', 'Red',
-      'RED_BLOCKCHAIN_PAGO', 65);
-    AnadirColumna(FtvDetallePagos, 'colHistPagReferencia', 'Referencia',
-      'REFERENCIA_FACPAG', 131);
-    AnadirColumna(FtvDetallePagos, 'colHistPagObs', 'Observaciones',
-      'OBSERVACIONES_PAGO', 180);
-
-    FtvDetalleVales := CrearVistaDetalle(FtsDetalleVales,
-      'Vales', 'tvHistCajaVales', FdmConsulta.dsVales);
-    CrearBarraAcciones(FtsDetalleVales,
-      [FactIrVale, FactExportarOperacionExcel]);
-    FtvDetalleVales.OptionsView.Footer := True;
-    AnadirColumna(FtvDetalleVales, 'colHistValRol', 'Rol',
-      'ROL_VL', 70);
-    AnadirColumna(FtvDetalleVales, 'colHistValCodigo', 'Cód. vale',
-      'CODIGO_VL', 180);
-    AnadirColumna(FtvDetalleVales, 'colHistValPin', 'PIN',
-      'PIN_SEGURIDAD_VL', 70);
-    AnadirColumna(FtvDetalleVales, 'colHistValEstado', 'Estado',
-      'ESTADO_VL', 110);
-    AnadirColumna(FtvDetalleVales, 'colHistValNominal', 'Nominal',
-      'IMPORTE_NOMINAL_VL', 100, 'TcxCurrencyEditProperties',
-      '#,##0.00 €');
-    AnadirColumna(FtvDetalleVales, 'colHistValRedimido', 'Redimido',
-      'IMPORTE_REDIMIDO_VL', 100, 'TcxCurrencyEditProperties',
-      '#,##0.00 €');
-    AnadirColumna(FtvDetalleVales, 'colHistValEmision', 'F. Emisión',
-      'FECHA_EMISION_VL', 130, 'TcxDateEditProperties',
-      'dd/mm/yyyy hh:nn');
-    AnadirColumna(FtvDetalleVales, 'colHistValCaducidad', 'F. Caducidad',
-      'FECHA_CADUCIDAD_VL', 110, 'TcxDateEditProperties', 'dd/mm/yyyy');
-    AnadirColumna(FtvDetalleVales, 'colHistValRedencion', 'F. Redención',
-      'FECHA_REDENCION_VL', 130, 'TcxDateEditProperties',
-      'dd/mm/yyyy hh:nn');
-    AnadirColumna(FtvDetalleVales, 'colHistValPadre', 'Vale padre',
-      'CODIGO_PADRE_VL', 140);
-    AnadirColumna(FtvDetalleVales, 'colHistValObs', 'Observaciones',
-      'OBSERVACIONES_VL', 200);
-
-    FtvDetalleMovimientos := CrearVistaDetalle(FtsDetalleMovimientos,
-      'Movimientos', 'tvHistCajaMovimientos', FdmConsulta.dsMovimientos);
-    CrearBarraAcciones(FtsDetalleMovimientos,
-      [FactIrMovimiento, FactIrArticulo, FactExportarOperacionExcel]);
-    AnadirColumna(FtvDetalleMovimientos, 'colHistMovNum', 'Nº Mov',
-      'NUMERO_MOV', 94);
-    AnadirColumna(FtvDetalleMovimientos, 'colHistMovTipoDoc', 'Tipo Doc',
-      'TIPO_DOC_MOV', 132);
-    AnadirColumna(FtvDetalleMovimientos, 'colHistMovLinea', 'Línea',
-      'LINEA_MOV', 90);
-    AnadirColumna(FtvDetalleMovimientos, 'colHistMovAlmacen', 'Almacén',
-      'CODIGO_ALM_MOV', 138);
-    AnadirColumna(FtvDetalleMovimientos, 'colHistMovAlmacenContra',
-      'Contra', 'CODIGO_ALM_CONTRA_MOV', 112);
-    AnadirColumna(FtvDetalleMovimientos, 'colHistMovArticulo', 'Artículo',
-      'CODIGO_ART_MOV', 88);
-    AnadirColumna(FtvDetalleMovimientos, 'colHistMovSku', 'SKU',
-      'CODIGO_UNIDAD_MOV', 126);
-    AnadirColumna(FtvDetalleMovimientos, 'colHistMovDesc', 'Descripción',
-      'DESCRIPCION_ART', 206);
-    AnadirColumna(FtvDetalleMovimientos, 'colHistMovTipo', 'E/S',
-      'TIPO_MOV', 89);
-    AnadirColumna(FtvDetalleMovimientos, 'colHistMovCantidad', 'Cantidad',
-      'CANTIDAD_MOV', 91, 'TcxCurrencyEditProperties', '#,##0.00');
-    AnadirColumna(FtvDetalleMovimientos, 'colHistMovPMP', 'PMP',
-      'PRECIO_MEDIO_MOV', 80, 'TcxCurrencyEditProperties', '#,##0.00 €');
-    AnadirColumna(FtvDetalleMovimientos, 'colHistMovCoste', 'Total coste',
-      'TOTAL_COSTE_MOV', 100, 'TcxCurrencyEditProperties', '#,##0.00 €');
-
-    FtvDetalleCliente := CrearVistaDetalle(FtsDetalleCliente,
-      'Cliente', 'tvHistCajaCliente', FdmConsulta.dsCliente);
-    CrearBarraAcciones(FtsDetalleCliente,
-      [FactIrCliente, FactExportarOperacionExcel]);
-    AnadirColumna(FtvDetalleCliente, 'colHistCliCodigo', 'Código',
-      'CODIGO_CLI_CLI', 80);
-    AnadirColumna(FtvDetalleCliente, 'colHistCliRazon', 'Razón social',
-      'RAZON_SOCIAL_CLI', 250);
-    AnadirColumna(FtvDetalleCliente, 'colHistCliNif', 'NIF', 'NIF_CLI', 100);
-    AnadirColumna(FtvDetalleCliente, 'colHistCliMovil', 'Móvil',
-      'MOVIL_CLI', 100);
-    AnadirColumna(FtvDetalleCliente, 'colHistCliEmail', 'Email',
-      'EMAIL_CLI', 180);
-    AnadirColumna(FtvDetalleCliente, 'colHistCliDir1', 'Dirección',
-      'DIRECCION1_CLI', 200);
-    AnadirColumna(FtvDetalleCliente, 'colHistCliPobl', 'Población',
-      'POBLACION_CLI', 130);
-    AnadirColumna(FtvDetalleCliente, 'colHistCliProv', 'Provincia',
-      'PROVINCIA_CLI', 120);
-    AnadirColumna(FtvDetalleCliente, 'colHistCliCP', 'C.P.',
-      'CODIGO_POSTAL_CLI', 60);
-    AnadirColumna(FtvDetalleCliente, 'colHistCliDeuda', 'Deuda',
-      'TOTAL_DEUDA_CLI', 100, 'TcxCurrencyEditProperties', '#,##0.00 €');
-
-    FtvDetalleDepositos := CrearVistaDetalle(FtsDetalleDepositos,
-      'Depósitos', 'tvHistCajaDepositos', FdmConsulta.dsDepositos);
-    CrearBarraAcciones(FtsDetalleDepositos,
-      [FactIrDeposito, FactIrCliente, FactIrArticulo,
-       FactExportarOperacionExcel]);
-    FtvDetalleDepositos.OptionsView.Footer := True;
-    AnadirColumna(FtvDetalleDepositos, 'colHistDepRol', 'Rol',
-      'ROL_EN_OPERACION', 110, '', '', False);
-    AnadirColumna(FtvDetalleDepositos, 'colHistDepEstado', 'Estado',
-      'ESTADO_DEP', 130);
-    AnadirColumna(FtvDetalleDepositos, 'colHistDepId', 'Id depósito',
-      'ID_DEPOSITO_DEP', 160);
-    AnadirColumna(FtvDetalleDepositos, 'colHistDepCli', 'Cliente',
-      'CODIGO_CLI_DEP', 110);
-    AnadirColumna(FtvDetalleDepositos, 'colHistDepArt', 'Artículo',
-      'CODIGO_ART_DEP', 141);
-    AnadirColumna(FtvDetalleDepositos, 'colHistDepSku', 'SKU',
-      'CODIGO_UNIDAD_DEP', 160);
-    AnadirColumna(FtvDetalleDepositos, 'colHistDepAlm', 'Almacén',
-      'CODIGO_ALM_DEP', 91);
-    AnadirColumna(FtvDetalleDepositos, 'colHistDepCant', 'Cantidad pdte.',
-      'CANTIDAD_PENDIENTE_DEP', 131, 'TcxCurrencyEditProperties',
-      '#,##0.00');
-    AnadirColumna(FtvDetalleDepositos, 'colHistDepPvp', 'Precio venta',
-      'PRECIO_VENTA_DEP', 114, 'TcxCurrencyEditProperties', '#,##0.00 €');
-    AnadirColumna(FtvDetalleDepositos, 'colHistDepPorcIva', '% IVA',
-      'PORCENTAJE_IVA_DEP', 55, 'TcxCurrencyEditProperties', '0.00');
-    AnadirColumna(FtvDetalleDepositos, 'colHistDepAnt', 'Anticipo',
-      'IMPORTE_ANTICIPO_DEP', 90, 'TcxCurrencyEditProperties', '#,##0.00 €');
-    AnadirColumna(FtvDetalleDepositos, 'colHistDepPendiente', 'Pendiente',
-      'IMPORTE_PENDIENTE_DEP', 100, 'TcxCurrencyEditProperties',
-      '#,##0.00 €');
-    AnadirColumna(FtvDetalleDepositos, 'colHistDepFecha', 'Fecha alta',
-      'FECHA_CREACION_DEP', 120, 'TcxDateEditProperties',
-      'dd/mm/yyyy hh:nn');
-    AnadirColumna(FtvDetalleDepositos, 'colHistDepFechaEntrega',
-      'Fecha entrega', 'FECHA_ENTREGA_DEP', 146, 'TcxDateEditProperties',
-      'dd/mm/yyyy');
-    AnadirColumna(FtvDetalleDepositos, 'colHistDepEmpCancel',
-      'Emp. cancel.', 'EMPRESA_CANCEL_DEP', 80, '', '', False);
-    AnadirColumna(FtvDetalleDepositos, 'colHistDepAlmCancel',
-      'Alm. cancel.', 'ALMACEN_CANCEL_DEP', 80, '', '', False);
-    AnadirColumna(FtvDetalleDepositos, 'colHistDepCajCancel',
-      'Caja cancel.', 'CAJA_CANCEL_DEP', 70, '', '', False);
-    AnadirColumna(FtvDetalleDepositos, 'colHistDepNumOpeCancel',
-      'Op. cancel.', 'NUMERO_OPERACION_CANCEL_DEP', 100, '', '', False);
-
-    FtsDetalleFactura := TcxTabSheet.Create(Self);
-    FtsDetalleFactura.PageControl := FpcDetalleCaja;
-    FtsDetalleFactura.Caption := SCaptionTabBorrador;
-    CrearBarraAcciones(FtsDetalleFactura,
-      [actIrFacturaSimplif, FactIrCliente, FactIrArticulo,
-       FactExportarOperacionExcel]);
-    pnlFacturaCab := TPanel.Create(Self);
-    pnlFacturaCab.Parent := FtsDetalleFactura;
-    pnlFacturaCab.Align := alTop;
-    pnlFacturaCab.Height := 70;
-    pnlFacturaCab.BevelOuter := bvNone;
-    FtvDetalleFacturaCab := CrearVistaEnContenedor(pnlFacturaCab,
-      'tvHistCajaFacturaCab', FdmConsulta.dsFactura);
-    FtvDetalleFacturaLin := CrearVistaEnContenedor(FtsDetalleFactura,
-      'tvHistCajaFacturaLin', FdmConsulta.dsFacturaLin);
-    AnadirColumna(FtvDetalleFacturaCab, 'colHistFacSerie', 'Serie',
-      'SERIE_FAC', 80);
-    AnadirColumna(FtvDetalleFacturaCab, 'colHistFacNro', 'Nº',
-      'NUMERO_FAC', 80);
-    AnadirColumna(FtvDetalleFacturaCab, 'colHistFacFecha', 'Fecha',
-      'FECHA_FAC', 100, 'TcxDateEditProperties', 'dd/mm/yyyy');
-    AnadirColumna(FtvDetalleFacturaCab, 'colHistFacTipo', 'Tipo',
-      'TIPO_FAC', 110);
-    AnadirColumna(FtvDetalleFacturaCab, 'colHistFacCliente', 'Cliente',
-      'CODIGO_CLI_FAC', 80);
-    AnadirColumna(FtvDetalleFacturaCab, 'colHistFacRazon', 'Razón social',
-      'RAZON_SOCIAL_CLIENTE_FAC', 220);
-    AnadirColumna(FtvDetalleFacturaCab, 'colHistFacBases', 'Bases',
-      'TOTAL_BASES_FAC', 100, 'TcxCurrencyEditProperties', '#,##0.00 €');
-    AnadirColumna(FtvDetalleFacturaCab, 'colHistFacImp', 'Impuestos',
-      'TOTAL_IMPUESTOS_FAC', 100, 'TcxCurrencyEditProperties',
-      '#,##0.00 €');
-    AnadirColumna(FtvDetalleFacturaCab, 'colHistFacLiq', 'Líquido',
-      'TOTAL_LIQUIDO_FAC', 110, 'TcxCurrencyEditProperties',
-      '#,##0.00 €');
-    AnadirColumna(FtvDetalleFacturaLin, 'colHistFlLinea', 'Lín',
-      'LINEA_FACLIN', 50);
-    AnadirColumna(FtvDetalleFacturaLin, 'colHistFlArt', 'Artículo',
-      'CODIGO_ART_FACLIN', 110);
-    AnadirColumna(FtvDetalleFacturaLin, 'colHistFlSku', 'SKU',
-      'CODIGO_UNIDAD_FACLIN', 160);
-    AnadirColumna(FtvDetalleFacturaLin, 'colHistFlDesc', 'Descripción',
-      'DESCRIPCION_ARTICULO_FACLIN', 280);
-    AnadirColumna(FtvDetalleFacturaLin, 'colHistFlCant', 'Cant.',
-      'CANTIDAD_FACLIN', 70, 'TcxCurrencyEditProperties', '#,##0.00');
-    AnadirColumna(FtvDetalleFacturaLin, 'colHistFlPrSiva', 'P.S.IVA',
-      'PRECIO_VENTA_SIVA_ARTICULO_FACLIN', 90,
-      'TcxCurrencyEditProperties', '#,##0.00 €');
-    AnadirColumna(FtvDetalleFacturaLin, 'colHistFlPrCiva', 'P.C.IVA',
-      'PRECIO_VENTA_CIVA_ARTICULO_FACLIN', 90,
-      'TcxCurrencyEditProperties', '#,##0.00 €');
-    AnadirColumna(FtvDetalleFacturaLin, 'colHistFlDto', '% Dto',
-      'PORCENTAJE_DTO_FACLIN', 60, 'TcxCurrencyEditProperties', '0.00 %');
-    AnadirColumna(FtvDetalleFacturaLin, 'colHistFlTipoIva', 'T.IVA',
-      'TIPO_IVA_ARTICULO_FACLIN', 50);
-    AnadirColumna(FtvDetalleFacturaLin, 'colHistFlPorcIva', '% IVA',
-      'PORCENTAJE_IVA_FACLIN', 60, 'TcxCurrencyEditProperties', '0.00');
-    AnadirColumna(FtvDetalleFacturaLin, 'colHistFlTotSiva', 'Tot. S.IVA',
-      'TOTAL_FAC_SIVA_FACLIN', 100, 'TcxCurrencyEditProperties',
-      '#,##0.00 €');
-    AnadirColumna(FtvDetalleFacturaLin, 'colHistFlTotCiva', 'Tot. C.IVA',
-      'TOTAL_FACLIN', 100, 'TcxCurrencyEditProperties', '#,##0.00 €');
-
-    FpcDetalleCaja.ActivePage := FtsDetalleOperacion;
+    aModelo := CargarModeloFichaDetalleCaja;
+    RenderizarFichaDetalleCaja(aModelo);
   end;
 end;
-
 procedure TfrmMtoCajaOperacionesHist.CerrarFichaOperacion;
 begin
   if Assigned(FdmConsulta) then
@@ -1698,14 +1679,7 @@ begin
     oList := TPerfilList.Create;
     try
       RecogerPerfilesParticulares(oList, sPermisos);
-        ConexionPrincipal.StartTransaction;
-      try
-        PerfilesEscritura.GrabarPerfiles(oList);
-        ConexionPrincipal.Commit;
-      except
-        ConexionPrincipal.Rollback;
-        raise;
-      end;
+      FGrabadorPerfiles.Grabar(oList);
     finally
       FreeAndNil(oList);
       Screen.Cursor := crDefault;
@@ -1752,6 +1726,7 @@ end;
 
 procedure TfrmMtoCajaOperacionesHist.FormDestroy(Sender: TObject);
 begin
+  FGrabadorPerfiles := nil;
   FRepositorioPersistencia := nil;
   inherited;
   FreeAndNil(FdmConsulta);

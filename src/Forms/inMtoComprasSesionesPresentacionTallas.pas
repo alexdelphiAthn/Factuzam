@@ -56,7 +56,6 @@ type
   TCoordinadorTallasSesion = class
   private
     FEntorno: TEntornoTallasSesion;
-    FConsultaConjuntos: TUniQuery;
     FOpciones: TArray<TOpcionConjuntoTalla>;
     FNombres: TDictionary<Integer, string>;
     FColumnas: TArray<TcxGridDBColumn>;
@@ -117,7 +116,8 @@ uses
   cxDataStorage,
   inLibComprasSesionesPresentacion,
   inLibMsgCompras,
-  inMtoModalDistribuidor;
+  inMtoModalDistribuidor,
+  UniDataComprasSesionesPresentacionRepositorio;
 
 const
   // Ancho minimo del popup del selector de sistema de tallaje.
@@ -143,24 +143,6 @@ end;
 destructor TCoordinadorTallasSesion.Destroy;
 begin
   FreeAndNil(FGestor);
-  if Assigned(FConsultaConjuntos) then
-  begin
-    // Cerrar antes de soltar la conexion: al destruir el formulario la
-    // conexion puede quedar inactiva y el cierre tardio del cursor
-    // fallaria con "Connection is not connected".
-    try
-      if FConsultaConjuntos.Active then
-        FConsultaConjuntos.Close;
-    except
-      on E: Exception do
-        if Assigned(FEntorno.ContextoSesion) then
-          FEntorno.ContextoSesion.LogSesion(
-            'ComprasSesiones.Tallas: cierre de catalogo fallo: ' +
-            E.Message);
-    end;
-    FConsultaConjuntos.Connection := nil;
-  end;
-  FreeAndNil(FConsultaConjuntos);
   FreeAndNil(FNombres);
   inherited Destroy;
 end;
@@ -169,53 +151,21 @@ end;
 // ultima talla para mostrarlas como rango en el selector.
 procedure TCoordinadorTallasSesion.AbrirCatalogoConjuntos;
 begin
-  FConsultaConjuntos := TUniQuery.Create(nil);
-  FConsultaConjuntos.Connection := FEntorno.Conexion;
-  FConsultaConjuntos.SQL.Text :=
-    'SELECT AC.ID_AC, AC.NOMBRE_AC, ' +
-    '  (SELECT AV.AV FROM fza_atributos_conjuntos_det ACD ' +
-    '     JOIN fza_atributos_valores AV ON AV.ID_AV = ACD.ID_AV_ACD ' +
-    '    WHERE ACD.ID_AC_ACD = AC.ID_AC ' +
-    '    ORDER BY ACD.ORDEN_ACD, AV.AV LIMIT 1) AS PRIMERA, ' +
-    '  (SELECT AV.AV FROM fza_atributos_conjuntos_det ACD ' +
-    '     JOIN fza_atributos_valores AV ON AV.ID_AV = ACD.ID_AV_ACD ' +
-    '    WHERE ACD.ID_AC_ACD = AC.ID_AC ' +
-    '    ORDER BY ACD.ORDEN_ACD DESC, AV.AV DESC LIMIT 1) AS ULTIMA ' +
-    '  FROM fza_atributos_conjuntos AC ' +
-    ' WHERE AC.ESACTIVO_AC = ''S'' ' +
-    '   AND AC.ID_VA_AC = ''TAL'' ' +
-    ' ORDER BY AC.NOMBRE_AC';
-  FConsultaConjuntos.Open;
+  FOpciones := ListarConjuntosTallasUniDAC(FEntorno.Conexion);
 end;
 
 // Vuelca el catalogo a las opciones del selector y al diccionario
 // ID_AC -> NOMBRE_AC que usa el pintado de la celda.
 procedure TCoordinadorTallasSesion.VolcarCatalogoConjuntos;
 var
-  iId: Integer;
   iOpcion: Integer;
 begin
-  SetLength(FOpciones, 0);
   FNombres.Clear;
-  if Assigned(FConsultaConjuntos) and FConsultaConjuntos.Active then
+  for iOpcion := 0 to Length(FOpciones) - 1 do
   begin
-    SetLength(FOpciones, FConsultaConjuntos.RecordCount);
-    iOpcion := 0;
-    FConsultaConjuntos.First;
-    while not FConsultaConjuntos.Eof do
-    begin
-      iId := FConsultaConjuntos.FieldByName('ID_AC').AsInteger;
-      FOpciones[iOpcion].IdAc := iId;
-      FOpciones[iOpcion].Nombre :=
-        FConsultaConjuntos.FieldByName('NOMBRE_AC').AsString;
-      FOpciones[iOpcion].Primera :=
-        FConsultaConjuntos.FieldByName('PRIMERA').AsString;
-      FOpciones[iOpcion].Ultima :=
-        FConsultaConjuntos.FieldByName('ULTIMA').AsString;
-      FNombres.AddOrSetValue(iId, FOpciones[iOpcion].Nombre);
-      Inc(iOpcion);
-      FConsultaConjuntos.Next;
-    end;
+    FNombres.AddOrSetValue(
+      FOpciones[iOpcion].IdAc,
+      FOpciones[iOpcion].Nombre);
   end;
 end;
 

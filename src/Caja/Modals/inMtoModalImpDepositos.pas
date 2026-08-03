@@ -34,7 +34,8 @@ uses
   Vcl.ComCtrls, dxCore, cxStyles, dxSkinsForm, cxClasses, cxLocalization,
   JvComponentBase, JvEnterTab, System.Actions, Vcl.ActnList, frxSmartMemo,
   frLocalization, frLanguageSpanish, frxExportBaseImageSettingsDialog,
-  frCoreClasses, inLibInformesCajaPersistenciaIntf;
+  frCoreClasses, inLibInformesCajaPersistenciaIntf,
+  UniDataCajaPantallaComposicion;
 
 type
   TfrmPrintDepositos = class(TfrmPrint)
@@ -63,6 +64,7 @@ type
     FInicializado: Boolean;
     FRepositorioPersistencia: IRepositorioInformesCaja;
     FResultado: IResultadoInformeCaja;
+    procedure ComponerDependencias;
     // Abre el selector estandar de caja (inMtoModalCajDef sobre la vista
     // vi_cajasdef) acotado a la empresa del usuario y vuelca el almacen y
     // la caja elegidos en bedAlmacen / bedCaja.
@@ -86,6 +88,7 @@ uses
 procedure TfrmPrintDepositos.DoShow;
 begin
   inherited;
+  ComponerDependencias;
   // Por defecto: rango del primer dia del mes en curso hasta hoy, y la
   // empresa / almacen / caja activos del usuario. El usuario puede ampliar
   // las fechas y cambiar almacen / caja con el boton '...' antes de imprimir.
@@ -97,6 +100,18 @@ begin
     bedAlmacen.Text := UbicacionSesion.Almacen;
     bedCaja.Text    := UbicacionSesion.Caja;
     FInicializado   := True;
+  end;
+end;
+
+procedure TfrmPrintDepositos.ComponerDependencias;
+var
+  oComposicion: TComposicionCajaPantalla;
+begin
+  if not Assigned(FRepositorioPersistencia) then
+  begin
+    oComposicion := ComponerCajaPantalla(Self);
+    FRepositorioPersistencia := oComposicion.Informes.
+      CrearRepositorioInformesCaja;
   end;
 end;
 
@@ -151,11 +166,6 @@ begin
   // Filtro por empresa / almacen / caja (los tres exactos) y por la fecha de
   // creacion del deposito. FECHA_CREACION_DEP es datetime, por eso el rango
   // se aplica sobre DATE(...) para que el BETWEEN sea inclusivo por dia.
-  if not Assigned(FRepositorioPersistencia) then
-  begin
-    FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
-      CrearRepositorioInformesCaja;
-  end;
   dsDepositosPrint.DataSet := nil;
   FResultado := FRepositorioPersistencia.ConsultarDepositos(
     ConstruirSolicitud);

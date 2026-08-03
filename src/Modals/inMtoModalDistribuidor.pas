@@ -142,7 +142,8 @@ implementation
 
 uses
   inLibMsgArticulos,
-  inLibMsgComun;
+  inLibMsgComun,
+  UniDataConfiguracionPantalla;
 
 type
   TDistribuidorTallasVisualMto = class(
@@ -289,8 +290,7 @@ var
   oGestor : TGestorGridTallas;
   oCfg    : TGridTallasConfig;
 begin
-  FRepositorio := ContextoRepositoriosPantalla.Articulos.
-    CrearRepositorioDistribuidor(AConn);
+  ComponerConfiguracionPantalla(Self, AConn, FRepositorio);
   FUsuario      := AUsuario;
   SerieSes      := ASerie;
   NumeroSes     := ANumero;

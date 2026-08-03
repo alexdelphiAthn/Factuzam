@@ -46,7 +46,8 @@ uses
   dxSpreadSheetTypes, dxSpreadSheetGraphics, dxCoreGraphics, dxShellDialogs,
   dxSpreadSheetStyles, dxHashUtils, inLibDevExcel, System.Actions, Vcl.ActnList,
   frLocalization, frLanguageSpanish, frCoreClasses,
-  frxExportBaseImageSettingsDialog, frxSmartMemo;
+  frxExportBaseImageSettingsDialog, frxSmartMemo,
+  inLibInformeFacturaPersistenciaIntf;
 
 type
   TfrmPrintFac = class(TfrmPrint)
@@ -63,6 +64,8 @@ type
     procedure rbRangoFechasClick(Sender: TObject);
     procedure rbActualClick(Sender: TObject);
     procedure btnExcelClick(Sender: TObject);
+  private
+    FPreparadorInforme: IPreparadorInformeFactura;
   protected
     function TraducirContenidoInforme: Boolean; override;
     procedure PdfExportado(const ARuta: string); override;
@@ -87,7 +90,8 @@ uses
   inMtoPreviewExcel, inLibFacturaExcel, inLibVerifactu,
   inLibFormatoDocumento, inLibVentasWsCola, inLibFacturaPdfBlob,
   inLibDir, inLibFacturasPersistenciaIntf,
-  UniDataFacturasOperaciones, UniDataVentasWsCola;
+  UniDataFacturasOperaciones, UniDataVentasWsCola,
+  UniDataInformeFacturaRepositorio;
 
 { TfrmPrintFac }
 
@@ -264,101 +268,21 @@ begin
 end;
 
 procedure TfrmPrintFac.preparar_consulta;
+var
+  criterios: TCriteriosInformeFactura;
 begin
-  with dmFac do
-  begin
-  if rbActual.Checked = true then
-  begin
-    with unqryFacPrint do
-    begin
-      Close;
-      Params.Clear;
-      // vi_facturas_print ya trae TIPO_FAC/FASE_FAC (de fza_facturas.*)
-      // y la consolidación Verifactu por LEFT JOIN (QRCODE_PNG_FACCON…),// así que basta SELECT *: el título por tipo y el QR enlazado por
-      // DataField salen de la propia vista.
-      SQL.Text := 'SELECT * ' +
-                  '  FROM vi_FACTURAS_print' +
-                  ' WHERE NUMERO_FAC = :numfac' +
-                  '   AND SERIE_FAC = :serie';
-      Params.ParamByName('numfac').Value := edtNroFac.text;
-      Params.ParamByName('serie').Value := edtSerie.text;
-    end;
-    unqryFacPrint.Open;
-    //dmmFacturas.fxdsPrintFac.OpenDataSource;
-    fxdsPrintFac.UpdateBounds;
-    with unqryLinFacPrint do
-    begin
-      Close;
-      Params.Clear;
-      SQL.Text :=
-        '  SELECT L.*, ' +
-        '         CASE ' +
-        '           WHEN COALESCE(CHAR_LENGTH(TRIM(' +
-        '                  L.CODIGO_UNIDAD_FACLIN)), 0) > 0 ' +
-        '             THEN CONCAT(L.CODIGO_UNIDAD_FACLIN, CHAR(32), ' +
-        '                       L.DESCRIPCION_ARTICULO_FACLIN) ' +
-        '           ELSE L.DESCRIPCION_ARTICULO_FACLIN ' +
-        '         END AS DESCRIPCION_PRINT_FACLIN ' +
-        '    FROM fza_facturas_lineas L ' +
-        '   WHERE L.NUMERO_FAC_FACLIN = :numfac' +
-        '     AND L.SERIE_FAC_FACLIN = :serie ' +
-        'ORDER BY L.LINEA_FACLIN';
-      Params.ParamByName('numfac').Value := edtNroFac.text;
-      Params.ParamByName('serie').Value := edtSerie.text;
-      end;
-    unqryLinFacPrint.MasterSource := dsFacPrint;
-    unqryLinFacPrint.Open;
-    //dmmFacturas.fxdstPrintLinFac.OpenDataSource;
-    fxdstPrintLinFac.UpdateBounds;
-  end;
-  if rbRangoFechas.Checked = true then
-  begin
-    with unqryFacPrint do
-    begin
-      Close;
-      Params.Clear;
-      SQL.Text := '  SELECT * ' +
-                  '    FROM VI_FACTURAS_PRINT' +
-                  '   WHERE FECHA_FAC >= :fecha_ini ' +
-                  '     AND FECHA_FAC <= :fecha_fin ' +
-                  'ORDER BY NUMERO_FAC';
-      Params.ParamByName('fecha_ini').Value := dedDesde.Date;
-      Params.ParamByName('fecha_fin').Value := dedHasta.Date;
-    end;
-    unqryFacPrint.Open;
-    //dmmFacturas.fxdsPrintFac.OpenDataSource;
-    fxdsPrintFac.UpdateBounds;
-    with unqryLinFacPrint do
-    begin
-      Close;
-      Params.Clear;
-      SQL.Text :=
-        '    SELECT L.*, ' +
-        '           CASE ' +
-        '             WHEN COALESCE(CHAR_LENGTH(TRIM(' +
-        '                    L.CODIGO_UNIDAD_FACLIN)), 0) > 0 ' +
-        '               THEN CONCAT(L.CODIGO_UNIDAD_FACLIN, CHAR(32), ' +
-        '                         L.DESCRIPCION_ARTICULO_FACLIN) ' +
-        '             ELSE L.DESCRIPCION_ARTICULO_FACLIN ' +
-        '           END AS DESCRIPCION_PRINT_FACLIN ' +
-        '      FROM fza_facturas_lineas L ' +
-        'INNER JOIN vi_FACTURAS_print F ' +
-        '        ON F.NUMERO_FAC = L.NUMERO_FAC_FACLIN ' +
-        '       AND F.SERIE_FAC = L.SERIE_FAC_FACLIN ' +
-        '     WHERE F.FECHA_FAC >= :fecha_ini ' +
-        '       AND  F.FECHA_FAC <= :fecha_fin ' +
-        '  order by L.NUMERO_FAC_FACLIN, ' +
-        '           L.SERIE_FAC_FACLIN, ' +
-        '           L.LINEA_FACLIN';
-      Params.ParamByName('fecha_ini').DataType := ftDate;
-      Params.ParamByName('fecha_ini').Value := dedDesde.date;
-      Params.ParamByName('fecha_fin').DataType := ftDate;
-      Params.ParamByName('fecha_fin').Value := dedHasta.date;
-      end;
-    unqryLinFacPrint.Open;
-    fxdstPrintLinFac.UpdateBounds;
-  end;
-  end;
+  criterios.FacturaActual := rbActual.Checked;
+  criterios.Serie := edtSerie.Text;
+  criterios.Numero := edtNroFac.Text;
+  criterios.FechaDesde := dedDesde.Date;
+  criterios.FechaHasta := dedHasta.Date;
+  if FPreparadorInforme = nil then
+    FPreparadorInforme := CrearPreparadorInformeFacturaUniDAC(
+      dmFac.unqryFacPrint,
+      dmFac.unqryLinFacPrint);
+  FPreparadorInforme.Preparar(criterios);
+  dmFac.fxdsPrintFac.UpdateBounds;
+  dmFac.fxdstPrintLinFac.UpdateBounds;
   ConfigurarNombrePDF;
 end;
 

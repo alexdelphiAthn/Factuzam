@@ -26,7 +26,8 @@ uses
   cxRadioGroup, cxButtonEdit, Uni,
   inMtoFrmBase, dxCoreGraphics, Vcl.Menus, cxMaskEdit, cxGroupBox,
   JvComponentBase, JvEnterTab, cxClasses, cxLocalization,
-  inLibCajaVentaIntf, inLibGastoCajaPersistenciaIntf;
+  inLibCajaVentaIntf, inLibGastoCajaPersistenciaIntf,
+  inLibGenerarTicketIntf, UniDataCajaPantallaComposicion;
 
 type
   TfrmModalGastoCaja = class(TfrmBase)
@@ -63,6 +64,8 @@ type
     FFechaOperacion: TDateTime;
     FRepositorioConsultas: IRepositorioConsultasCaja;
     FRepositorioPersistencia: IRepositorioGastoCaja;
+    FLecturasImpresionTicket: ILecturasImpresionTicket;
+    procedure ComponerDependencias;
     procedure BuscarEmpleados;
     procedure ValidarEmpleado;
     procedure Grabar;
@@ -107,12 +110,7 @@ begin
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
     frm.FFechaOperacion := AFechaOperacion;
-    frm.FRepositorioConsultas :=
-      frm.ContextoRepositoriosPantalla.Caja.
-        CrearRepositorioConsultasCaja(AConn);
-    frm.FRepositorioPersistencia :=
-      frm.ContextoRepositoriosPantalla.TicketsCaja.
-        CrearRepositorioGastoCaja(AConn);
+    frm.ComponerDependencias;
     frm.btnEmpleado.Text := frm.IdentidadSesion.Usuario;
     frm.ValidarEmpleado;
     if frm.ShowModal = mrOk then
@@ -139,12 +137,7 @@ begin
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
     frm.FFechaOperacion := AFechaOperacion;
-    frm.FRepositorioConsultas :=
-      frm.ContextoRepositoriosPantalla.Caja.
-        CrearRepositorioConsultasCaja(AConn);
-    frm.FRepositorioPersistencia :=
-      frm.ContextoRepositoriosPantalla.TicketsCaja.
-        CrearRepositorioGastoCaja(AConn);
+    frm.ComponerDependencias;
     frm.btnEmpleado.Text := frm.IdentidadSesion.Usuario;
     frm.ValidarEmpleado;
     frm.txtImporte.Value := Double(AImporte);
@@ -161,6 +154,19 @@ begin
   inherited;
   KeyPreview := True;
   Position := poScreenCenter;
+end;
+
+procedure TfrmModalGastoCaja.ComponerDependencias;
+var
+  oComposicion: TComposicionCajaPantalla;
+begin
+  oComposicion := ComponerCajaPantalla(Self);
+  FRepositorioConsultas := oComposicion.Consultas.
+    CrearRepositorioConsultasCaja(FConn);
+  FRepositorioPersistencia := oComposicion.Tickets.
+    CrearRepositorioGastoCaja(FConn);
+  FLecturasImpresionTicket := oComposicion.Tickets.
+    CrearLecturasImpresionTicketCaja(ConexionPrincipal);
 end;
 
 procedure TfrmModalGastoCaja.btnEmpleadoPropertiesButtonClick(
@@ -280,8 +286,7 @@ begin
   ImprimirTicketOperacionCaja(
     PreviewTicket,
     ConexionPrincipal,
-    ContextoRepositoriosPantalla.TicketsCaja.
-      CrearLecturasImpresionTicketCaja(ConexionPrincipal),
+    FLecturasImpresionTicket,
     FEmpresa,
     FAlmacen,
     FCaja,

@@ -284,6 +284,114 @@ uses
     'src\DataModules\UniDataRepositoriosGeneralesPantalla.pas',
   UniDataRepositoriosCajaPantalla in
     'src\DataModules\UniDataRepositoriosCajaPantalla.pas',
+  UniDataCajaPantallaComposicion in
+    'src\DataModules\UniDataCajaPantallaComposicion.pas',
+  UniDataCajaPantallaHistoricos in
+    'src\DataModules\UniDataCajaPantallaHistoricos.pas',
+  UniDataComprasPantallaComposicion in
+    'src\DataModules\UniDataComprasPantallaComposicion.pas',
+  UniDataComprasPantallaPersistencia in
+    'src\DataModules\UniDataComprasPantallaPersistencia.pas',
+  UniDataConfiguracionPantalla in
+    'src\DataModules\UniDataConfiguracionPantalla.pas',
+  UniDataRepositoriosArticulosPantalla in
+    'src\DataModules\UniDataRepositoriosArticulosPantalla.pas',
+  UniDataRepositoriosConfiguracionAplicacionPantalla in
+    'src\DataModules\UniDataRepositoriosConfiguracionAplicacionPantalla.pas',
+  UniDataRepositoriosConfiguracionPantalla in
+    'src\DataModules\UniDataRepositoriosConfiguracionPantalla.pas',
+  UniDataRepositoriosDocumentosPantalla in
+    'src\DataModules\UniDataRepositoriosDocumentosPantalla.pas',
+  UniDataRepositoriosOperacionesAplicacionPantalla in
+    'src\DataModules\UniDataRepositoriosOperacionesAplicacionPantalla.pas',
+  UniDataRepositoriosOperacionesPantalla in
+    'src\DataModules\UniDataRepositoriosOperacionesPantalla.pas',
+  UniDataRepositoriosRemesasPantalla in
+    'src\DataModules\UniDataRepositoriosRemesasPantalla.pas',
+  UniDataRepositoriosTicketsCajaPantalla in
+    'src\DataModules\UniDataRepositoriosTicketsCajaPantalla.pas',
+  UniDataRepositoriosVentasPantalla in
+    'src\DataModules\UniDataRepositoriosVentasPantalla.pas',
+  UniDataVentasPantallaComposicion in
+    'src\DataModules\UniDataVentasPantallaComposicion.pas',
+  UniDataVentasPantallaFacturasSimplificadas in
+    'src\DataModules\UniDataVentasPantallaFacturasSimplificadas.pas',
+  UniDataVentasPantallaPedidos in
+    'src\DataModules\UniDataVentasPantallaPedidos.pas',
+  inLibCajaPantallaDetalleHistorico in
+    'src\Lib\inLibCajaPantallaDetalleHistorico.pas',
+  inLibCajaPantallaHistoricos in
+    'src\Lib\inLibCajaPantallaHistoricos.pas',
+  inLibCajaPantallaHistoricosIntf in
+    'src\Lib\inLibCajaPantallaHistoricosIntf.pas',
+  inLibComprasPantallaArticuloDevolucion in
+    'src\Lib\inLibComprasPantallaArticuloDevolucion.pas',
+  inLibComprasPantallaIntf in
+    'src\Lib\inLibComprasPantallaIntf.pas',
+  inLibComprasPantallaTransaccion in
+    'src\Lib\inLibComprasPantallaTransaccion.pas',
+  inLibVentasPantallaCrearAlbaran in
+    'src\Lib\inLibVentasPantallaCrearAlbaran.pas',
+  inLibVentasPantallaIntf in
+    'src\Lib\inLibVentasPantallaIntf.pas',
+  UniDataGeneradorProcesosRepositorio in
+    'src\DataModules\UniDataGeneradorProcesosRepositorio.pas',
+  UniDataInformeBalanceSinTallasRepositorio in
+    'src\DataModules\UniDataInformeBalanceSinTallasRepositorio.pas',
+  UniDataInformeBalanceTallasRepositorio in
+    'src\DataModules\UniDataInformeBalanceTallasRepositorio.pas',
+  UniDataInformeDocumentosProveedorRepositorio in
+    'src\DataModules\UniDataInformeDocumentosProveedorRepositorio.pas',
+  UniDataInformeEfectosPagoRepositorio in
+    'src\DataModules\UniDataInformeEfectosPagoRepositorio.pas',
+  UniDataInformeFacturaRepositorio in
+    'src\DataModules\UniDataInformeFacturaRepositorio.pas',
+  UniDataInformeMovimientosVentasArticuloRepositorio in
+    'src\DataModules\UniDataInformeMovimientosVentasArticuloRepositorio.pas',
+  UniDataInformeMultiFiltroRepositorio in
+    'src\DataModules\UniDataInformeMultiFiltroRepositorio.pas',
+  UniDataInformeRecibosFacturaRepositorio in
+    'src\DataModules\UniDataInformeRecibosFacturaRepositorio.pas',
+  UniDataInformeVerifactuDeclaracionRepositorio in
+    'src\DataModules\UniDataInformeVerifactuDeclaracionRepositorio.pas',
+  UniDataLogonRepositorio in
+    'src\DataModules\UniDataLogonRepositorio.pas',
+  UniDataMovimientosAlmacenRepositorio in
+    'src\DataModules\UniDataMovimientosAlmacenRepositorio.pas',
+  UniDataWizardEditarRepositorio in
+    'src\DataModules\UniDataWizardEditarRepositorio.pas',
+  inLibGeneradorProcesosAplicacion in
+    'src\Lib\inLibGeneradorProcesosAplicacion.pas',
+  inLibInformeBalanceSinTallasPersistenciaIntf in
+    'src\Lib\inLibInformeBalanceSinTallasPersistenciaIntf.pas',
+  inLibInformeBalanceTallasPersistenciaIntf in
+    'src\Lib\inLibInformeBalanceTallasPersistenciaIntf.pas',
+  inLibInformeDocumentosProveedorPersistenciaIntf in
+    'src\Lib\inLibInformeDocumentosProveedorPersistenciaIntf.pas',
+  inLibInformeEfectosPagoPersistenciaIntf in
+    'src\Lib\inLibInformeEfectosPagoPersistenciaIntf.pas',
+  inLibInformeFacturaPersistenciaIntf in
+    'src\Lib\inLibInformeFacturaPersistenciaIntf.pas',
+  inLibInformeMovimientosVentasArticuloPersistenciaIntf in
+    'src\Lib\inLibInformeMovimientosVentasArticuloPersistenciaIntf.pas',
+  inLibInformeMultiFiltroPersistenciaIntf in
+    'src\Lib\inLibInformeMultiFiltroPersistenciaIntf.pas',
+  inLibInformeRecibosFacturaPersistenciaIntf in
+    'src\Lib\inLibInformeRecibosFacturaPersistenciaIntf.pas',
+  inLibInformeVerifactuDeclaracionPersistenciaIntf in
+    'src\Lib\inLibInformeVerifactuDeclaracionPersistenciaIntf.pas',
+  inLibLogonAplicacion in
+    'src\Lib\inLibLogonAplicacion.pas',
+  inLibLogonAplicacionIntf in
+    'src\Lib\inLibLogonAplicacionIntf.pas',
+  inLibMovimientosAlmacenAplicacion in
+    'src\Lib\inLibMovimientosAlmacenAplicacion.pas',
+  inLibMtoGenAplicacion in
+    'src\Lib\inLibMtoGenAplicacion.pas',
+  inLibMtoGenAplicacionIntf in
+    'src\Lib\inLibMtoGenAplicacionIntf.pas',
+  inLibWizardEditarPersistenciaIntf in
+    'src\Lib\inLibWizardEditarPersistenciaIntf.pas',
   UniDataGen in 'src\DataModules\UniDataGen.pas' {dmBase: TDataModule},
   UniDataArticulos in 'src\DataModules\UniDataArticulos.pas' {dmArticulos: TdmArticulos},
   UniDataClientes in 'src\DataModules\UniDataClientes.pas' {dmClientes: TdmClientes},
@@ -1076,7 +1184,13 @@ uses
   inLibStockConsultaPresentacionPropiedades in
     'src\Lib\inLibStockConsultaPresentacionPropiedades.pas',
   inLibStockConsultaPresentacionVista in
-    'src\Lib\inLibStockConsultaPresentacionVista.pas';
+    'src\Lib\inLibStockConsultaPresentacionVista.pas',
+  inLibPrincipalCertificadosIntf in
+    'src\Lib\inLibPrincipalCertificadosIntf.pas',
+  UniDataPrincipalCertificadosRepositorio in
+    'src\DataModules\UniDataPrincipalCertificadosRepositorio.pas',
+  UniDataComprasSesionesPresentacionRepositorio in
+    'src\DataModules\UniDataComprasSesionesPresentacionRepositorio.pas';
 
 {$R *.res}
 {$R fondo.res}

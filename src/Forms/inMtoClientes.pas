@@ -462,7 +462,9 @@ uses
   inLibDir,
   inLibIBAN,
   inLibMsgVentas,
-  inLibPermisosIntf;
+  inLibPermisosIntf,
+  inLibVentasPantallaIntf,
+  UniDataVentasPantallaComposicion;
 
 {$R *.dfm}
 
@@ -683,10 +685,14 @@ begin
 end;
 
 procedure TfrmMtoClientes.CrearTablaPrincipal;
+var
+  oContexto: TContextoClientesVentasPantalla;
 begin
   inherited;
-  FRepositorioClientes :=
-    ContextoRepositoriosPantalla.Ventas.CrearRepositorioClientes;
+  CrearContextoVentasPantalla(
+    Self,
+    oContexto);
+  FRepositorioClientes := oContexto.Repositorio;
   FDmmClientes := tdmDataModule as TdmClientes;
   tvFacturacion.DataController.DataSource := FDmmClientes.dsFacturasClientes;
   tvLineasFacturacion.DataController.DataSource :=

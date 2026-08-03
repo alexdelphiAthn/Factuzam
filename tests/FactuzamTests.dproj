@@ -333,6 +333,17 @@
         <DCCReference Include="PruebasTraducciones.pas"/>
 
         <DCCReference Include="PruebasFacturasPresentadorCabecera.pas"/>
+        <DCCReference Include="..\src\Lib\inLibMtoGenAplicacionIntf.pas"/>
+        <DCCReference Include="..\src\Lib\inLibMtoGenAplicacion.pas"/>
+        <DCCReference Include="..\src\Lib\inLibLogonAplicacionIntf.pas"/>
+        <DCCReference Include="..\src\Lib\inLibLogonAplicacion.pas"/>
+        <DCCReference Include="..\src\Lib\inLibGeneradorProcesosAplicacion.pas"/>
+        <DCCReference Include="..\src\Lib\inLibMovimientosAlmacenAplicacion.pas"/>
+        <DCCReference Include="PruebasMtoGenAplicacion.pas"/>
+        <DCCReference Include="PruebasLogonAplicacion.pas"/>
+        <DCCReference Include="PruebasGeneradorProcesosAplicacion.pas"/>
+        <DCCReference Include="PruebasMovimientosAlmacenAplicacion.pas"/>
+        <DCCReference Include="PruebasInformesOla4IA43.pas"/>
         <DCCReference Include="PruebasFacturasPresentadorDetalle.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

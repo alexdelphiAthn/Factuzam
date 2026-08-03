@@ -40,6 +40,7 @@ uses
   inLibPermisosIntf,
   inLibFotos,
   inLibUnidadesMedida,
+  inLibPreviewTicket,
   inLibUnitForm,
   UniDataConn;
 
@@ -49,11 +50,10 @@ type
     FOwner: TComponent;
     FContextoSesion: IContextoSesionAplicacion;
     FRegistroLog: IRegistroLog;
+    FPreviewTicket: IPreviewTicket;
     FRegistroMonitorSQL: IRegistroMonitorSQL;
     FConfigCampos: IConfiguracionCampos;
     FConfigCamposCarga: TConfigCamposCache;
-    FFabricaContextosRepositorios:
-      IFabricaContextosRepositoriosPantalla;
     FDmConn: TdmConn;
     FDmPerfiles: TDataModule;
     FDmFiltros: TDataModule;
@@ -82,12 +82,15 @@ type
       out AError: string): Int64;
     function PrecargarCachesSerie: string;
     function PrecargarCachesParalelo: string;
+    function CrearSqlPantalla(
+      const ANombrePantalla: string): TServiciosSqlPantalla;
     procedure LiberarRegistrosServicios;
   public
     constructor Create(
       AOwner: TComponent;
       const AContextoSesion: IContextoSesionAplicacion;
       const ARegistroLog: IRegistroLog;
+      const APreviewTicket: IPreviewTicket;
       const ARegistroMonitorSQL: IRegistroMonitorSQL;
       const AGestorExcepciones: IGestorExcepcionesAplicacion;
       const APresentacionOperaciones:
@@ -105,6 +108,24 @@ type
     procedure RegistrarCierreFiscal;
     procedure DetenerProcesosSegundoPlano;
     procedure Cerrar;
+    function CrearServiciosSqlPantalla(
+      const ANombrePantalla: string): TServiciosSqlPantalla;
+    function CrearRepositoriosArticulosPantalla(
+      const ANombrePantalla: string): IRepositoriosArticulosPantalla;
+    function CrearRepositoriosConfiguracionPantalla(
+      const ANombrePantalla: string): IRepositoriosConfiguracionPantalla;
+    function CrearRepositoriosDocumentosPantalla(
+      const ANombrePantalla: string): IRepositoriosDocumentosPantalla;
+    function CrearRepositoriosRemesasPantalla(
+      const ANombrePantalla: string): IRepositoriosRemesasPantalla;
+    function CrearRepositoriosOperacionesPantalla(
+      const ANombrePantalla: string): IRepositoriosOperacionesPantalla;
+    function CrearRepositoriosVentasPantalla(
+      const ANombrePantalla: string): IRepositoriosVentasPantalla;
+    function CrearRepositoriosCajaPantalla(
+      const ANombrePantalla: string): IRepositoriosCajaPantalla;
+    function CrearRepositoriosTicketsCajaPantalla(
+      const ANombrePantalla: string): IRepositoriosTicketsCajaPantalla;
     property DmConn: TdmConn read FDmConn;
     property Conexiones: IServicioConexiones read FConexiones;
     property AuditoriaDatos: IServicioAuditoriaDatos
@@ -112,9 +133,6 @@ type
     property MonitorSQL: IServicioMonitorSQL read FMonitorSQL;
     property ConfiguracionCampos: IConfiguracionCampos
       read FConfigCampos;
-    property FabricaContextosRepositoriosPantalla:
-      IFabricaContextosRepositoriosPantalla
-      read FFabricaContextosRepositorios;
     property ParametrosApp: IParametrosAplicacion
       read FServiciosParametrosApp.Lectura;
     property ParametrosCaja: IParametrosCaja
@@ -144,33 +162,18 @@ implementation
 uses
   System.Diagnostics,
   System.Threading,
-  inLibAppParam,
-  inLibCajaParam,
   inLibConexionesUniDAC,
   inLibAuditoriaDatos,
   inLibMonitorSQLUniDAC,
-  inLibTraducciones,
-  inLibPermisos,
-  inLibPermisosUniDAC,
-  inLibCoordinadorOperacionesAplicacion,
-  inLibEnvioErrores,
   inLibVentasWsCola,
   inLibVerifactu,
   inLibVerifactuInstalacion,
   inLibVerifactuCola,
   UniDataVerifactuColaProcesador,
   UniDataVentasWsSesion,
-  UniDataPerfiles,
-  UniDataFiltros,
-  UniDataFotosRepositorio,
-  UniDataArticulosValidadorRepositorio,
-  UniDataInformesGuiasRepositorio,
-  UniDataEnvioErroresEmpresaRepositorio,
-  UniDataErroresEnviosRepositorio,
-  UniDataCatalogoSqlAplicacion,
-  UniDataCopiasSeguridad,
-  UniDataRepositoriosPantalla,
-  inLibCatalogoSqlIntf;
+  UniDataRepositoriosConfiguracionAplicacionPantalla,
+  UniDataRepositoriosOperacionesAplicacionPantalla,
+  UniDataRepositoriosPantalla;
 
 resourcestring
   SErrorServicioConexionesComposicionNoDisponible =
@@ -216,6 +219,7 @@ constructor TComposicionAplicacion.Create(
   AOwner: TComponent;
   const AContextoSesion: IContextoSesionAplicacion;
   const ARegistroLog: IRegistroLog;
+  const APreviewTicket: IPreviewTicket;
   const ARegistroMonitorSQL: IRegistroMonitorSQL;
   const AGestorExcepciones: IGestorExcepcionesAplicacion;
   const APresentacionOperaciones:
@@ -235,13 +239,14 @@ begin
   FOwner := AOwner;
   FContextoSesion := AContextoSesion;
   FRegistroLog := ARegistroLog;
+  FPreviewTicket := APreviewTicket;
   FRegistroMonitorSQL := ARegistroMonitorSQL;
   FGestorExcepciones := AGestorExcepciones;
   FDmConn := TdmConn.Create(FOwner);
-  FRepositorioCopias := CrearRepositorioCopiasSeguridadUniDAC(
+  FRepositorioCopias := CrearRepositorioCopiasAplicacionPantalla(
     FContextoSesion,
     FDmConn.conUni);
-  FOperaciones := TCasoUsoCopiasSeguridad.Create(
+  FOperaciones := CrearOperacionesCopiasAplicacionPantalla(
     FRepositorioCopias,
     APresentacionOperaciones);
   CrearInfraestructura;
@@ -263,8 +268,6 @@ begin
     FMonitorSQL as IReceptorEventosMonitorSQL);
   FDmConn.conUni.Connect;
   FConexiones := TServicioConexionesUniDAC.Create(FDmConn.conUni);
-  FFabricaContextosRepositorios :=
-    TFabricaContextosRepositoriosPantallaUniDAC.Create;
   FConfigCamposCarga := TConfigCamposCache.Create(
     FDmConn.conUni,
     FRegistroLog);
@@ -274,16 +277,120 @@ begin
   FAuditoriaDatos := TServicioAuditoriaDatos.Create(FContextoSesion);
 end;
 
+function TComposicionAplicacion.CrearSqlPantalla(
+  const ANombrePantalla: string): TServiciosSqlPantalla;
+begin
+  Result := CrearServiciosSqlPantallaUniDAC(
+    ANombrePantalla,
+    FServiciosPerfiles.Lectura,
+    FServiciosPerfiles.Escritura,
+    FRegistroLog);
+end;
+
+function TComposicionAplicacion.CrearServiciosSqlPantalla(
+  const ANombrePantalla: string): TServiciosSqlPantalla;
+begin
+  Result := CrearSqlPantalla(ANombrePantalla);
+end;
+
+function TComposicionAplicacion.CrearRepositoriosArticulosPantalla(
+  const ANombrePantalla: string): IRepositoriosArticulosPantalla;
+var
+  oSql: TServiciosSqlPantalla;
+begin
+  oSql := CrearSqlPantalla(ANombrePantalla);
+  Result := CrearRepositoriosArticulosPantallaUniDAC(
+    FDmConn.conUni, FServiciosParametrosCaja.Lectura, oSql);
+end;
+
+function TComposicionAplicacion.CrearRepositoriosConfiguracionPantalla(
+  const ANombrePantalla: string): IRepositoriosConfiguracionPantalla;
+var
+  oSql: TServiciosSqlPantalla;
+begin
+  oSql := CrearSqlPantalla(ANombrePantalla);
+  Result := CrearRepositoriosConfiguracionPantallaUniDAC(
+    FDmConn.conUni, oSql);
+end;
+
+function TComposicionAplicacion.CrearRepositoriosDocumentosPantalla(
+  const ANombrePantalla: string): IRepositoriosDocumentosPantalla;
+var
+  oSql: TServiciosSqlPantalla;
+begin
+  oSql := CrearSqlPantalla(ANombrePantalla);
+  Result := CrearRepositoriosDocumentosPantallaUniDAC(
+    FDmConn.conUni,
+    FServiciosParametrosApp.Lectura,
+    FServiciosParametrosCaja.Lectura,
+    FRegistroLog,
+    oSql);
+end;
+
+function TComposicionAplicacion.CrearRepositoriosRemesasPantalla(
+  const ANombrePantalla: string): IRepositoriosRemesasPantalla;
+var
+  oSql: TServiciosSqlPantalla;
+begin
+  oSql := CrearSqlPantalla(ANombrePantalla);
+  Result := CrearRepositoriosRemesasPantallaUniDAC(
+    FDmConn.conUni, oSql);
+end;
+
+function TComposicionAplicacion.CrearRepositoriosOperacionesPantalla(
+  const ANombrePantalla: string): IRepositoriosOperacionesPantalla;
+var
+  oSql: TServiciosSqlPantalla;
+begin
+  oSql := CrearSqlPantalla(ANombrePantalla);
+  Result := CrearRepositoriosOperacionesPantallaUniDAC(
+    FDmConn.conUni,
+    FServiciosParametrosApp.Lectura,
+    FServiciosParametrosCaja.Lectura,
+    FRegistroLog,
+    oSql);
+end;
+
+function TComposicionAplicacion.CrearRepositoriosVentasPantalla(
+  const ANombrePantalla: string): IRepositoriosVentasPantalla;
+var
+  oSql: TServiciosSqlPantalla;
+begin
+  oSql := CrearSqlPantalla(ANombrePantalla);
+  Result := CrearRepositoriosVentasPantallaUniDAC(FDmConn.conUni, oSql);
+end;
+
+function TComposicionAplicacion.CrearRepositoriosCajaPantalla(
+  const ANombrePantalla: string): IRepositoriosCajaPantalla;
+var
+  oSql: TServiciosSqlPantalla;
+begin
+  oSql := CrearSqlPantalla(ANombrePantalla);
+  Result := CrearRepositoriosCajaPantallaUniDAC(FDmConn.conUni, oSql);
+end;
+
+function TComposicionAplicacion.CrearRepositoriosTicketsCajaPantalla(
+  const ANombrePantalla: string): IRepositoriosTicketsCajaPantalla;
+var
+  oSql: TServiciosSqlPantalla;
+begin
+  oSql := CrearSqlPantalla(ANombrePantalla);
+  Result := CrearRepositoriosTicketsCajaPantallaUniDAC(
+    FDmConn.conUni,
+    FServiciosParametrosApp.Lectura,
+    FServiciosParametrosCaja.Lectura,
+    FContextoSesion,
+    FPreviewTicket,
+    oSql);
+end;
+
 procedure TComposicionAplicacion.CrearPerfiles;
 var
-  oDmPerfiles: TdmPerfiles;
+  oComposicion: TComposicionPerfilesAplicacionPantalla;
 begin
-  oDmPerfiles := TdmPerfiles.Create(FOwner);
-  FDmPerfiles := oDmPerfiles;
-  FServiciosPerfiles := CrearServiciosPerfilesUsuario(
-    oDmPerfiles,
-    oDmPerfiles,
-    oDmPerfiles);
+  oComposicion := CrearPerfilesAplicacionPantalla(FOwner);
+  FDmPerfiles := oComposicion.DataModule;
+  FServiciosPerfiles := oComposicion.Servicios;
 end;
 
 procedure TComposicionAplicacion.CrearParametros(
@@ -294,46 +401,37 @@ begin
   Identidad := FContextoSesion.Identidad;
   FRegistroLog.RegistrarInformacion(
     'Arranque: creando parámetros de aplicación');
-  FServiciosParametrosApp := CrearParametrosAplicacion(
-    FServiciosPerfiles.Lectura,
-    FServiciosPerfiles.Cache,
+  FServiciosParametrosApp := CrearParametrosAplicacionPantalla(
+    FServiciosPerfiles,
     FRegistroLog,
-    Identidad.Usuario,
-    Identidad.Grupo);
+    Identidad);
   FServiciosParametrosApp.GestorLicencia.EstablecerLicencia(
     AResultadoLicencia);
-  FServicioEnvioErrores := CrearServicioEnvioErrores(
+  FServicioEnvioErrores := CrearServicioEnvioErroresAplicacionPantalla(
     FContextoSesion,
     FServiciosParametrosApp.Lectura,
     FRegistroLog,
     FRepositorioCopias,
-    CrearRepositorioDatosEmpresaError(FDmConn.conUni),
-    CrearRepositorioErroresEnvios(FDmConn.conUni));
+    FDmConn.conUni);
   FGestorExcepciones.AsignarServicioEnvioErrores(
     FServicioEnvioErrores);
   FRegistroLog.RegistrarInformacion(
     'Arranque: creando parámetros de caja');
-  FServiciosParametrosCaja := CrearParametrosCaja(
-    FServiciosPerfiles.Lectura,
-    FServiciosPerfiles.Cache,
+  FServiciosParametrosCaja := CrearParametrosCajaPantalla(
+    FServiciosPerfiles,
     FContextoSesion,
-    Identidad.Usuario,
-    Identidad.Grupo);
+    Identidad);
   FDmConn.AsignarParametrosApp(FServiciosParametrosApp.Lectura);
-  FTraducciones := TServicioTraducciones.Create(
+  FTraducciones := CrearTraduccionesAplicacionPantalla(
     FConexiones,
     FRegistroLog,
-    FServiciosParametrosApp.Lectura.GetString(
-      'appIdioma',
-      IDIOMA_ESPANOL));
+    FServiciosParametrosApp.Lectura);
 end;
 
 procedure TComposicionAplicacion.CrearServiciosSesion;
 var
   bCatalogoActivo: Boolean;
-  oCatalogoSql: ICatalogoSql;
-  oDmFiltros: TdmFiltros;
-  oIncidenciasSql: IRegistroIncidenciasSql;
+  oComposicionFiltros: TComposicionFiltrosAplicacionPantalla;
 begin
   bCatalogoActivo := False;
   try
@@ -349,28 +447,15 @@ begin
         'No se pudo leer oGetSQLFromDB de ' + FOwner.Name + ': ' +
         E.Message);
   end;
-  CrearCatalogoSqlAplicacion(
-    FServiciosPerfiles.Lectura,
-    FServiciosPerfiles.Escritura,
-    bCatalogoActivo,
-    oCatalogoSql,
-    oIncidenciasSql,
-    FRegistroLog);
-  FFotos := TFotosArticulos.Create;
-  FFotos.AsignarConexion(
+  FFotos := CrearFotosAplicacionPantalla(
     FDmConn.conUni,
+    FServiciosPerfiles,
     FServiciosParametrosApp.Lectura,
-    TRepositorioArticulosValidador.Create(
-      FDmConn.conUni,
-      oCatalogoSql,
-      oIncidenciasSql),
-    CrearRepositorioFotosUniDAC(FDmConn.conUni));
-  oDmFiltros := TdmFiltros.Create(FOwner);
-  FDmFiltros := oDmFiltros;
-  FServiciosFiltros := CrearServiciosFiltrosGuardados(
-    oDmFiltros,
-    oDmFiltros,
-    oDmFiltros);
+    FRegistroLog,
+    bCatalogoActivo);
+  oComposicionFiltros := CrearFiltrosAplicacionPantalla(FOwner);
+  FDmFiltros := oComposicionFiltros.DataModule;
+  FServiciosFiltros := oComposicionFiltros.Servicios;
   FRegistroPantallas := TfzaWinF.Create(FOwner, FRegistroLog);
   FRegistroPantallas.Charge(FDmConn.conUni);
   FRegistroPantallas.ComprobarRegistradas;
@@ -433,7 +518,6 @@ end;
 
 function TComposicionAplicacion.PrecargarCachesSerie: string;
 var
-  Identidad: TIdentidadPermisos;
   IdentidadSesion: TIdentidadSesion;
   swTotal: TStopwatch;
 begin
@@ -442,23 +526,20 @@ begin
   FRegistroLog.RegistrarInformacion(
     'Arranque: PrecargarCachesSerie INICIO');
   FServiciosPerfiles.Cache.PrecargarPerfilesUsuario;
-  FInformesGuias := TInformesGuiasCache.Create(
-    TLectorInformesGuiasUniDAC.Create(FDmConn.conUni));
+  FInformesGuias := CrearInformesGuiasAplicacionPantalla(
+    FDmConn.conUni);
   FInformesGuias.Precargar;
   FConfigCamposCarga.Precargar;
   IdentidadSesion := FContextoSesion.Identidad;
-  Identidad := TIdentidadPermisos.Crear(
-    IdentidadSesion.Usuario,
-    IdentidadSesion.Grupo,
-    IdentidadSesion.EsAdministrador);
   try
-    FPermisos := TCargadorPermisosUniDAC.Cargar(
+    FPermisos := CargarPermisosAplicacionPantalla(
       FDmConn.conUni,
-      Identidad);
+      IdentidadSesion);
   except
     on E: Exception do
     begin
-      FPermisos := TPermisosAplicacion.CrearNoDisponible(Identidad);
+      FPermisos := CrearPermisosNoDisponiblesPantalla(
+        IdentidadSesion);
       Result := E.ClassName + ': ' + E.Message;
     end;
   end;
@@ -470,8 +551,6 @@ end;
 
 function TComposicionAplicacion.PrecargarCachesParalelo: string;
 var
-  bEsAdministrador: Boolean;
-  Identidad: TIdentidadPermisos;
   IdentidadSesion: TIdentidadSesion;
   PermisosCargados: IPermisosAplicacion;
   swTotal: TStopwatch;
@@ -493,11 +572,6 @@ begin
   FRegistroLog.RegistrarInformacion(
     'Arranque: PrecargarCachesParalelo INICIO');
   IdentidadSesion := FContextoSesion.Identidad;
-  bEsAdministrador := IdentidadSesion.EsAdministrador;
-  Identidad := TIdentidadPermisos.Crear(
-    IdentidadSesion.Usuario,
-    IdentidadSesion.Grupo,
-    bEsAdministrador);
   PermisosCargados := nil;
   msPerfiles := 0;
   msInformes := 0;
@@ -507,15 +581,17 @@ begin
   sErrorInformes := '';
   sErrorConfig := '';
   sErrorPermisos := '';
-  FInformesGuias := TInformesGuiasCache.Create(
-    TLectorInformesGuiasUniDAC.Create(FDmConn.conUni));
+  FInformesGuias := CrearInformesGuiasAplicacionPantalla(
+    FDmConn.conUni);
   tPerfiles := TTask.Run(
     procedure
     begin
       msPerfiles := EjecutarCargaWorker(
         procedure(AConexion: TUniConnection)
         begin
-          TdmPerfiles(FDmPerfiles).PrecargarPerfilesUsuario(AConexion);
+          PrecargarPerfilesAplicacionPantalla(
+            FDmPerfiles,
+            AConexion);
         end,
         sErrorPerfiles);
     end);
@@ -525,8 +601,9 @@ begin
       msInformes := EjecutarCargaWorker(
         procedure(AConexion: TUniConnection)
         begin
-          FInformesGuias.Precargar(
-            TLectorInformesGuiasUniDAC.Create(AConexion));
+          PrecargarInformesGuiasAplicacionPantalla(
+            FInformesGuias,
+            AConexion);
         end,
         sErrorInformes);
     end);
@@ -546,9 +623,9 @@ begin
       msPermisos := EjecutarCargaWorker(
         procedure(AConexion: TUniConnection)
         begin
-          PermisosCargados := TCargadorPermisosUniDAC.Cargar(
+          PermisosCargados := CargarPermisosAplicacionPantalla(
             AConexion,
-            Identidad);
+            IdentidadSesion);
         end,
         sErrorPermisos);
     end);
@@ -557,7 +634,8 @@ begin
     FPermisos := PermisosCargados
   else
   begin
-    FPermisos := TPermisosAplicacion.CrearNoDisponible(Identidad);
+    FPermisos := CrearPermisosNoDisponiblesPantalla(
+      IdentidadSesion);
     if sErrorPermisos = '' then
       sErrorPermisos := 'La carga no devolvió una caché de permisos';
   end;
@@ -736,7 +814,6 @@ begin
     if Assigned(FDmConn) then
       FDmConn.AsignarReceptorMonitorSQL(nil);
     FMonitorSQL := nil;
-    FFabricaContextosRepositorios := nil;
     if Assigned(FConexiones) then
       FConexiones.Invalidar;
     FConexiones := nil;
@@ -745,6 +822,7 @@ begin
     FreeAndNil(FDmConn);
     FGestorExcepciones := nil;
     FRegistroMonitorSQL := nil;
+    FPreviewTicket := nil;
     FRegistroLog := nil;
     FContextoSesion := nil;
     FOwner := nil;

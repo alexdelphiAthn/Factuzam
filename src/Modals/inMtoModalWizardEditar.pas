@@ -30,7 +30,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, System.Actions, Vcl.ActnList,
-  Data.DB, MemDS, DBAccess, Uni,
+  Data.DB,
   inMtoFrmBase, dxCore, dxSkinsForm, dxSkinsCore, dxSkinBlue,
   cxClasses, cxContainer, cxEdit, cxControls, cxLookAndFeels, cxLocalization,
   cxGraphics, cxLookAndFeelPainters, cxButtons, cxStyles, cxLabel, cxTextEdit,
@@ -40,7 +40,8 @@ uses
   dxScrollbarAnnotations, cxDBData, cxGridLevel, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGridCustomView, cxGrid,
   frxClass, frxDBSet,
-  JvComponentBase, JvEnterTab, JvWizard, JvWizardRouteMapNodes;
+  JvComponentBase, JvEnterTab, JvWizard, JvWizardRouteMapNodes,
+  inLibWizardEditarPersistenciaIntf;
 
 type
   TfrmModalWizardEditar = class(TfrmBase)
@@ -74,8 +75,6 @@ type
     pnlAddGuia: TPanel;
     lblCodigoNuevo: TcxLabel;
     btnAddGuia: TcxButton;
-    unqryTablas: TUniQuery;
-    unqryCamposTabla: TUniQuery;
     grdGuias: TcxGrid;
     tvGuias: TcxGridDBTableView;
     lvGuias: TcxGridLevel;
@@ -88,8 +87,6 @@ type
     tvGuiasORDEN: TcxGridDBColumn;
     tvGuiasACTIVO: TcxGridDBColumn;
     // --- Datos ---
-    unqryFormatos: TUniQuery;
-    unqryGuias: TUniQuery;
     dsGuias: TDataSource;
     ActionList1: TActionList;
     actCancelar: TAction;
@@ -117,6 +114,8 @@ type
     // EXT.detail[k] = M.master[k] por posicion, asi que conservar el
     // orden de seleccion del usuario es critico.
     FOrdenDetail: TStringList;
+    FRepositorioWizard: IRepositorioWizardEditar;
+    FResultadoGuias: IResultadoGuiasWizardEditar;
     procedure CargarFormatosExistentes;
     procedure CargarScopes;
     procedure RellenarListDatasets;
@@ -133,15 +132,6 @@ type
     function LimpiarPrefijoPk(const aTexto: string): string;
     function NombreFinal: string;
     function EsFormatoNuevo: Boolean;
-    // Cascada A->C->B para resolver los campos de un master:
-    //  A: TfrxDBDataset.Fields o DataSet.Fields si esta abierto
-    //  C: parsear "FROM <vista>" del SQL y leer information_schema
-    //  B: abrir una query temporal con parametros dummy por tipo
-    function CargarCamposDelInforme(oFrx: TfrxDBDataset): Boolean;
-    function CargarCamposParseandoSql(const aSql: string): Boolean;
-    function CargarCamposAbriendoTemporal(qrySrc: TUniQuery): Boolean;
-    function ExtraerTablaFromSql(const aSql: string): string;
-    procedure RellenarParametrosDummy(qry: TUniQuery);
     function ResolverDataSet(oFrx: TfrxDBDataset): TDataSet;
   public
     // El TfrmPrint rellena ANTES del ShowModal:
@@ -160,7 +150,7 @@ implementation
 
 uses
   UniDataConn, inLibUser, inLibGlobalVar,
-  inLibMsgComun;
+  inLibMsgComun, UniDataWizardEditarRepositorio;
 
 const
   ITEM_NUEVO = '<< Nuevo formato >>';
@@ -195,8 +185,8 @@ end;
 procedure TfrmModalWizardEditar.FormShow(Sender: TObject);
 begin
   inherited;
-  unqryFormatos.Connection := ConexionPrincipal;
-  unqryGuias.Connection    := ConexionPrincipal;
+  FRepositorioWizard := CrearRepositorioWizardEditarUniDAC(
+    ConexionPrincipal);
   edtOrigen.Text := sInforme;
   // Textos del header del wizard y botones habilitados por pagina:
   // los seteamos en codigo para no depender de propiedades anidadas
@@ -239,34 +229,35 @@ procedure TfrmModalWizardEditar.FormClose(Sender: TObject;
                                           var Action: TCloseAction);
 begin
   inherited;
-  if unqryGuias.State in [dsEdit, dsInsert] then
-    unqryGuias.Post;
-  unqryGuias.Close;
+  if (dsGuias.DataSet <> nil) and
+     (dsGuias.DataSet.State in [dsEdit, dsInsert]) then
+    dsGuias.DataSet.Post;
+  if dsGuias.DataSet <> nil then
+    dsGuias.DataSet.Close;
+  dsGuias.DataSet := nil;
+  FResultadoGuias := nil;
   FreeAndNil(FOrdenDetail);
 end;
 
 procedure TfrmModalWizardEditar.CargarFormatosExistentes;
+var
+  formatos: TCadenasWizardEditar;
+  i: Integer;
 begin
-  unqryFormatos.Close;
-  unqryFormatos.ParamByName('KEY').AsString := sInforme;
-  unqryFormatos.ParamByName('USU').AsString := IdentidadSesion.Usuario;
-  unqryFormatos.ParamByName('GRP').AsString := IdentidadSesion.Grupo;
-  unqryFormatos.ParamByName('ALL').AsString := oAll;
-  unqryFormatos.Open;
+  formatos := FRepositorioWizard.ListarFormatos(
+    sInforme,
+    IdentidadSesion.Usuario,
+    IdentidadSesion.Grupo,
+    oAll);
   cbbFormato.Properties.Items.BeginUpdate;
   try
     cbbFormato.Properties.Items.Clear;
     cbbFormato.Properties.Items.Add(ITEM_NUEVO);
-    while not unqryFormatos.Eof do
-    begin
-      cbbFormato.Properties.Items.Add(
-        unqryFormatos.FieldByName('VALUE_USUPER').AsString);
-      unqryFormatos.Next;
-    end;
+    for i := 0 to Length(formatos) - 1 do
+      cbbFormato.Properties.Items.Add(formatos[i]);
   finally
     cbbFormato.Properties.Items.EndUpdate;
   end;
-  unqryFormatos.Close;
 end;
 
 procedure TfrmModalWizardEditar.CargarScopes;
@@ -343,15 +334,9 @@ begin
   lblTituloGuias.Caption :=
     Format(SCaptionGuiasLigadasFormato,
            [sFormato, sScope]);
-  // Aseguro conexion en los TUniQuery del wizard.
-  unqryGuias.Connection         := ConexionPrincipal;
-  unqryTablas.Connection        := ConexionPrincipal;
-  unqryCamposTabla.Connection   := ConexionPrincipal;
-  // Abrir las guias filtradas por (informe, formato elegido) +
-  // las globales del informe.
-  unqryGuias.Close;
-  unqryGuias.ParamByName('INF').AsString := sInforme;
-  unqryGuias.Open;
+  FResultadoGuias := FRepositorioWizard.PrepararGuias(sInforme);
+  dsGuias.DataSet := FResultadoGuias.DataSet;
+  dsGuias.DataSet.BeforePost := unqryGuiasBeforePost;
   // Pintar la lista de UserName del .frx. Al seleccionar uno se
   // pintan sus campos a la derecha y se filtran las guias del grid.
   RellenarListDatasets;
@@ -391,15 +376,10 @@ end;
 
 procedure TfrmModalWizardEditar.RellenarListCampos;
 var
+  campos: TCadenasWizardEditar;
+  i: Integer;
   oFrx: TfrxDBDataset;
-  oDS: TDataSet;
 begin
-  // Cascada: el usuario quiere que los campos salgan, en este orden:
-  //   A) Del informe (DataSet.Fields del TDataSet asociado al
-  //      TfrxDBDataset; resolvemos por DataSource si hace falta).
-  //   C) Parseando el FROM del SQL del TUniQuery y consultando
-  //      information_schema.COLUMNS de la vista origen.
-  //   B) Como ultimo recurso: abrir una query temporal con dummies.
   lstCampos.Items.BeginUpdate;
   try
     lstCampos.Items.Clear;
@@ -407,18 +387,10 @@ begin
        (lstDatasets.ItemIndex >= lstDatasets.Count) then Exit;
     oFrx := TfrxDBDataset(lstDatasets.Items.Objects[lstDatasets.ItemIndex]);
     if oFrx = nil then Exit;
-
-    // A) Del informe (resuelve DataSet via DataSource si hace falta).
-    if CargarCamposDelInforme(oFrx) then Exit;
-
-    oDS := ResolverDataSet(oFrx);
-    if (oDS = nil) or not (oDS is TUniQuery) then Exit;
-
-    // C) Parsear FROM y leer information_schema.
-    if CargarCamposParseandoSql(TUniQuery(oDS).SQL.Text) then Exit;
-
-    // B) Abrir query temporal con dummies.
-    CargarCamposAbriendoTemporal(TUniQuery(oDS));
+    campos := FRepositorioWizard.ResolverCamposDataSet(
+      ResolverDataSet(oFrx));
+    for i := 0 to Length(campos) - 1 do
+      lstCampos.Items.Add.Text := campos[i];
   finally
     lstCampos.Items.EndUpdate;
   end;
@@ -438,194 +410,6 @@ begin
     Result := oFrx.DataSource.DataSet;
 end;
 
-function TfrmModalWizardEditar.CargarCamposDelInforme(
-                                  oFrx: TfrxDBDataset): Boolean;
-var
-  j: Integer;
-  oDS: TDataSet;
-  qry: TUniQuery;
-  bEraAbierto: Boolean;
-  vOriginales: array of Variant;
-begin
-  // A) "Del informe": leer Fields del TDataSet asociado al TfrxDBDataset.
-  //    Si esta cerrado lo abrimos NOSOTROS aqui — rellenando parametros
-  //    con dummies por tipo — leemos los nombres, lo cerramos y
-  //    restauramos los parametros originales para no romper la posterior
-  //    impresion/PDF/Excel. Solo si Open lanza excepcion damos por
-  //    fallido este nivel y caemos a C / B.
-  Result := False;
-  oDS := ResolverDataSet(oFrx);
-  if oDS = nil then Exit;
-  qry := nil;
-  if oDS is TUniQuery then qry := TUniQuery(oDS);
-  bEraAbierto := oDS.Active;
-  try
-    if not bEraAbierto then
-    begin
-      if qry <> nil then
-      begin
-        SetLength(vOriginales, qry.Params.Count);
-        for j := 0 to qry.Params.Count - 1 do
-          vOriginales[j] := qry.Params[j].Value;
-        RellenarParametrosDummy(qry);
-      end;
-      try
-        oDS.Open;
-      except
-        Exit;  // -> el caller intenta C, luego B
-      end;
-    end;
-    for j := 0 to oDS.FieldCount - 1 do
-      lstCampos.Items.Add.Text := oDS.Fields[j].FieldName;
-    Result := oDS.FieldCount > 0;
-  finally
-    // Si nosotros lo abrimos, lo cerramos y restauramos parametros.
-    // Si ya venia abierto, no tocamos.
-    if (not bEraAbierto) and oDS.Active then
-    begin
-      oDS.Close;
-      if (qry <> nil) and (Length(vOriginales) > 0) then
-        for j := 0 to qry.Params.Count - 1 do
-          qry.Params[j].Value := vOriginales[j];
-    end;
-  end;
-end;
-
-function TfrmModalWizardEditar.CargarCamposParseandoSql(
-                                  const aSql: string): Boolean;
-var
-  sTabla: string;
-begin
-  Result := False;
-  sTabla := ExtraerTablaFromSql(aSql);
-  if sTabla = '' then Exit;
-  try
-    unqryCamposTabla.Close;
-    unqryCamposTabla.ParamByName('TAB').AsString := sTabla;
-    unqryCamposTabla.Open;
-    while not unqryCamposTabla.Eof do
-    begin
-      lstCampos.Items.Add.Text :=
-        unqryCamposTabla.FieldByName('COLUMN_NAME').AsString;
-      unqryCamposTabla.Next;
-    end;
-    Result := lstCampos.Items.Count > 0;
-  finally
-    unqryCamposTabla.Close;
-  end;
-end;
-
-function TfrmModalWizardEditar.CargarCamposAbriendoTemporal(
-                                  qrySrc: TUniQuery): Boolean;
-var
-  j: Integer;
-  qryTmp: TUniQuery;
-  sSql: string;
-begin
-  Result := False;
-  qryTmp := nil;
-  try
-    sSql := TrimRight(qrySrc.SQL.Text);
-    while (sSql <> '') and (sSql[Length(sSql)] = ';') do
-    begin
-      SetLength(sSql, Length(sSql) - 1);
-      sSql := TrimRight(sSql);
-    end;
-    if sSql = '' then Exit;
-    qryTmp := TUniQuery.Create(nil);
-    qryTmp.Connection := ConexionPrincipal;
-    // Envoltorio para no traer filas reales aunque los parametros
-    // dummy hagan match.
-    qryTmp.SQL.Text :=
-      'select * from (' + sSql + ') X_FZA_GUIAS where 1=0';
-    RellenarParametrosDummy(qryTmp);
-    try
-      qryTmp.Open;
-      for j := 0 to qryTmp.FieldCount - 1 do
-        lstCampos.Items.Add.Text := qryTmp.Fields[j].FieldName;
-      Result := qryTmp.FieldCount > 0;
-    except
-      // El llamador cae al plan B (parseo del SQL) con Result=False.
-      on E: Exception do
-        RegistroLog.RegistrarAviso(
-          'WizardEditar: apertura temporal de la guia fallo: ' +
-          E.Message);
-    end;
-  finally
-    if qryTmp <> nil then FreeAndNil(qryTmp);
-  end;
-end;
-
-function TfrmModalWizardEditar.ExtraerTablaFromSql(
-                                  const aSql: string): string;
-var
-  sLow: string;
-  i, p, pStart, pEnd: Integer;
-  c: Char;
-begin
-  Result := '';
-  if Trim(aSql) = '' then Exit;
-  sLow := LowerCase(aSql);
-  // Buscar el primer "from" como token (con whitespace antes o BOL,
-  // y whitespace/'(' despues).
-  p := 0;
-  for i := 1 to Length(sLow) - 3 do
-    if (Copy(sLow, i, 4) = 'from') and
-       ((i = 1) or (sLow[i - 1] = ' ') or (sLow[i - 1] = #9) or
-        (sLow[i - 1] = #10) or (sLow[i - 1] = #13)) and
-       ((i + 4 > Length(sLow)) or (sLow[i + 4] = ' ') or
-        (sLow[i + 4] = #9) or (sLow[i + 4] = #10) or
-        (sLow[i + 4] = #13) or (sLow[i + 4] = '(')) then
-    begin
-      p := i;
-      Break;
-    end;
-  if p = 0 then Exit;
-  pStart := p + 4;
-  while (pStart <= Length(sLow)) and
-        ((sLow[pStart] = ' ') or (sLow[pStart] = #9) or
-         (sLow[pStart] = #10) or (sLow[pStart] = #13)) do
-    Inc(pStart);
-  if pStart > Length(sLow) then Exit;
-  // Si arranca con '(' es subquery — no podemos sacar la tabla aqui.
-  if sLow[pStart] = '(' then Exit;
-  pEnd := pStart;
-  while pEnd <= Length(sLow) do
-  begin
-    c := sLow[pEnd];
-    if ((c >= 'a') and (c <= 'z')) or ((c >= '0') and (c <= '9')) or
-       (c = '_') or (c = '`') or (c = '.') then
-      Inc(pEnd)
-    else
-      Break;
-  end;
-  Result := Copy(aSql, pStart, pEnd - pStart);
-  // schema.tabla -> tabla
-  i := LastDelimiter('.', Result);
-  if i > 0 then Result := Copy(Result, i + 1, MaxInt);
-  Result := StringReplace(Result, '`', '', [rfReplaceAll]);
-end;
-
-procedure TfrmModalWizardEditar.RellenarParametrosDummy(qry: TUniQuery);
-var
-  j: Integer;
-begin
-  for j := 0 to qry.Params.Count - 1 do
-    case qry.Params[j].DataType of
-      ftDate, ftDateTime, ftTime, ftTimeStamp:
-        qry.Params[j].AsDateTime := Date;
-      ftInteger, ftSmallint, ftWord, ftLargeint, ftAutoInc:
-        qry.Params[j].AsInteger := 0;
-      ftFloat, ftCurrency, ftBCD, ftFMTBcd:
-        qry.Params[j].AsFloat := 0;
-      ftString, ftWideString, ftFixedChar, ftFixedWideChar,
-        ftMemo, ftWideMemo:
-        qry.Params[j].AsString := '';
-    else
-      qry.Params[j].Clear;
-    end;
-end;
-
 procedure TfrmModalWizardEditar.lstDatasetsClick(Sender: TObject);
 begin
   RellenarListCampos;
@@ -633,18 +417,16 @@ begin
 end;
 
 procedure TfrmModalWizardEditar.RellenarListTablas;
+var
+  i: Integer;
+  tablas: TCadenasWizardEditar;
 begin
+  tablas := FRepositorioWizard.ListarTablas;
   lstTablas.Items.BeginUpdate;
   try
     lstTablas.Items.Clear;
-    unqryTablas.Close;
-    unqryTablas.Open;
-    while not unqryTablas.Eof do
-    begin
-      lstTablas.Items.Add(unqryTablas.FieldByName('TABLE_NAME').AsString);
-      unqryTablas.Next;
-    end;
-    unqryTablas.Close;
+    for i := 0 to Length(tablas) - 1 do
+      lstTablas.Items.Add(tablas[i]);
   finally
     lstTablas.Items.EndUpdate;
   end;
@@ -652,7 +434,8 @@ end;
 
 procedure TfrmModalWizardEditar.RellenarListCamposTabla;
 var
-  sCol, sKey: string;
+  campos: TCamposTablaWizardEditar;
+  i: Integer;
 begin
   lstCamposTabla.Items.BeginUpdate;
   try
@@ -661,21 +444,15 @@ begin
     if FOrdenDetail <> nil then
       FOrdenDetail.Clear;
     if TablaSeleccionada = '' then Exit;
-    unqryCamposTabla.Close;
-    unqryCamposTabla.ParamByName('TAB').AsString := TablaSeleccionada;
-    unqryCamposTabla.Open;
-    while not unqryCamposTabla.Eof do
+    campos := FRepositorioWizard.ListarCamposTabla(TablaSeleccionada);
+    for i := 0 to Length(campos) - 1 do
     begin
-      sCol := unqryCamposTabla.FieldByName('COLUMN_NAME').AsString;
-      sKey := unqryCamposTabla.FieldByName('COLUMN_KEY').AsString;
       // PK marcada con '*' delante, asi salta a la vista.
-      if SameText(sKey, 'PRI') then
-        lstCamposTabla.Items.Add('* ' + sCol)
+      if campos[i].EsClavePrimaria then
+        lstCamposTabla.Items.Add('* ' + campos[i].Nombre)
       else
-        lstCamposTabla.Items.Add('  ' + sCol);
-      unqryCamposTabla.Next;
+        lstCamposTabla.Items.Add('  ' + campos[i].Nombre);
     end;
-    unqryCamposTabla.Close;
   finally
     lstCamposTabla.Items.EndUpdate;
   end;
@@ -754,13 +531,16 @@ var
   sDS: string;
 begin
   sDS := DatasetMasterSeleccionado;
-  unqryGuias.Filtered := False;
-  if sDS = '' then
-    unqryGuias.Filter := ''
-  else
-    unqryGuias.Filter :=
-      'DATASET_MASTER_INFGUI = ' + QuotedStr(sDS);
-  unqryGuias.Filtered := sDS <> '';
+  if dsGuias.DataSet <> nil then
+  begin
+    dsGuias.DataSet.Filtered := False;
+    if sDS = '' then
+      dsGuias.DataSet.Filter := ''
+    else
+      dsGuias.DataSet.Filter :=
+        'DATASET_MASTER_INFGUI = ' + QuotedStr(sDS);
+    dsGuias.DataSet.Filtered := sDS <> '';
+  end;
 end;
 
 function TfrmModalWizardEditar.DatasetMasterSeleccionado: string;
@@ -832,19 +612,19 @@ begin
   // formato, master, tabla), se compone automaticamente.
   sCodigo := Sanitizar(sDS) + '_' + Sanitizar(sTabla);
 
-  if not unqryGuias.Active then unqryGuias.Open;
-  unqryGuias.Append;
-  unqryGuias.FieldByName('CODIGO_INFGUI').AsString         := sCodigo;
-  unqryGuias.FieldByName('INFORME_INFGUI').AsString        := sInforme;
-  unqryGuias.FieldByName('FORMATO_INFGUI').AsString        := sFormato;
-  unqryGuias.FieldByName('DATASET_MASTER_INFGUI').AsString := sDS;
-  unqryGuias.FieldByName('MASTER_FIELDS_INFGUI').AsString  := sCampos;
-  unqryGuias.FieldByName('DETAIL_FIELDS_INFGUI').AsString  := sCampoTabla;
-  unqryGuias.FieldByName('TABLA_INFGUI').AsString          := sTabla;
-  unqryGuias.FieldByName('TIPO_INFGUI').AsString           := 'TABLA';
-  unqryGuias.FieldByName('ESACTIVO_INFGUI').AsString       := 'S';
-  unqryGuias.FieldByName('ORDEN_INFGUI').AsInteger         := 0;
-  unqryGuias.Post;
+  dsGuias.DataSet.Append;
+  dsGuias.DataSet.FieldByName('CODIGO_INFGUI').AsString := sCodigo;
+  dsGuias.DataSet.FieldByName('INFORME_INFGUI').AsString := sInforme;
+  dsGuias.DataSet.FieldByName('FORMATO_INFGUI').AsString := sFormato;
+  dsGuias.DataSet.FieldByName('DATASET_MASTER_INFGUI').AsString := sDS;
+  dsGuias.DataSet.FieldByName('MASTER_FIELDS_INFGUI').AsString := sCampos;
+  dsGuias.DataSet.FieldByName('DETAIL_FIELDS_INFGUI').AsString :=
+    sCampoTabla;
+  dsGuias.DataSet.FieldByName('TABLA_INFGUI').AsString := sTabla;
+  dsGuias.DataSet.FieldByName('TIPO_INFGUI').AsString := 'TABLA';
+  dsGuias.DataSet.FieldByName('ESACTIVO_INFGUI').AsString := 'S';
+  dsGuias.DataSet.FieldByName('ORDEN_INFGUI').AsInteger := 0;
+  dsGuias.DataSet.Post;
 end;
 
 procedure TfrmModalWizardEditar.unqryGuiasBeforePost(DataSet: TDataSet);
@@ -872,8 +652,9 @@ end;
 procedure TfrmModalWizardEditar.wzWizardFinishButtonClick(Sender: TObject);
 begin
   // Aseguramos que cualquier guia en edicion queda persistida.
-  if unqryGuias.State in [dsEdit, dsInsert] then
-    unqryGuias.Post;
+  if (dsGuias.DataSet <> nil) and
+     (dsGuias.DataSet.State in [dsEdit, dsInsert]) then
+    dsGuias.DataSet.Post;
   sFicha := 'S';
   ModalResult := mrOk;
 end;

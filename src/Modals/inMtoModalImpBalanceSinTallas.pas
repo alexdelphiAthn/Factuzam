@@ -35,14 +35,16 @@ uses
   cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar, cxLabel, cxRadioGroup,
   cxCheckListBox, cxCheckBox, cxCustomListBox,
   cxClasses, dxSkinsForm, System.Actions, Vcl.ActnList, frxSmartMemo,
-  frLocalization, frLanguageSpanish, frCoreClasses;
+  frLocalization, frLanguageSpanish, frCoreClasses,
+  inLibInformeBalanceSinTallasPersistenciaIntf;
 
 type
   TfrmPrintBalanceSinTallas = class(TfrmPrintMultiFiltro)
-    unqryBalancePrint: TUniQuery;
     fxdsBalance: TfrxDBDataset;
   private
     FInicializado: Boolean;
+    FRepositorioBalance: IRepositorioInformeBalanceSinTallas;
+    FResultadoBalance: IResultadoInformeBalanceSinTallas;
     FrgModo: TcxRadioGroup;       // 0 = Entre fechas, 1 = Por acumulados
     FrgDetalle: TcxRadioGroup;    // 0 = Simplificado, 1 = Desglosado
     FclbBandas: TcxCheckListBox;  // qué bandas mostrar (sin marcar = todas)
@@ -72,7 +74,8 @@ implementation
 uses
   System.StrUtils, inMtoPreviewExcel, inLibMsgArticulos,
   inLibBalanceSinTallasExcel,
-  dxSpreadSheet, inLibFotos;
+  dxSpreadSheet, inLibFotos,
+  UniDataInformeBalanceSinTallasRepositorio;
 
 { TfrmPrintBalanceSinTallas }
 
@@ -201,6 +204,7 @@ end;
 
 procedure TfrmPrintBalanceSinTallas.preparar_consulta;
 var
+  criterios: TCriteriosInformeBalanceSinTallas;
   niveles: TArray<string>;
   function NivelN(idx: Integer): string;
   begin
@@ -212,39 +216,32 @@ var
 begin
   inherited;
   niveles := NivelesAgrupacion;
-  with unqryBalancePrint do
-  begin
-    Close;
-    Connection := ConexionPrincipal;
-    SQL.Text :=
-      'CALL PRC_GET_BALANCE_ALMACEN_SIN_TALLAS(' +
-      ':pMODO, :pDESDE, :pHASTA, :pALM, :pFAM, :pPRV, :pTMP, :pART, :pTAR, ' +
-      ':pDESG, :pBND, :pN1, :pN2, :pN3, :pNFAM)';
-    if (FrgModo <> nil) and (FrgModo.ItemIndex = 1) then
-      ParamByName('pMODO').AsString := 'A'
-    else
-      ParamByName('pMODO').AsString := 'F';
-    ParamByName('pDESDE').AsDateTime := FechaDesde;
-    ParamByName('pHASTA').AsDateTime := FechaHasta;
-    ParamByName('pALM').AsString := CSVAlmacenes;
-    ParamByName('pFAM').AsString := CSVFamilias;
-    ParamByName('pPRV').AsString := CSVProveedores;
-    ParamByName('pTMP').AsString := CSVTemporadas;
-    // Filtro de artículos (CSV; vacío = todos), nuevo en la pestaña Artículos.
-    ParamByName('pART').AsString := CSVArticulos;
-    ParamByName('pTAR').AsString := ParametrosCaja.TarifaDefecto;
-    if (FrgModo <> nil) and (FrgModo.ItemIndex = 0) and
-       (FrgDetalle <> nil) and (FrgDetalle.ItemIndex = 1) then
-      ParamByName('pDESG').AsString := 'S'
-    else
-      ParamByName('pDESG').AsString := 'N';
-    ParamByName('pBND').AsString := SeleccionadosCSV(FclbBandas);
-    ParamByName('pN1').AsString := NivelN(0);
-    ParamByName('pN2').AsString := NivelN(1);
-    ParamByName('pN3').AsString := NivelN(2);
-    ParamByName('pNFAM').AsInteger := NivelFamilia;
-    Open;
-  end;
+  if (FrgModo <> nil) and (FrgModo.ItemIndex = 1) then
+    criterios.Modo := 'A'
+  else
+    criterios.Modo := 'F';
+  criterios.FechaDesde := FechaDesde;
+  criterios.FechaHasta := FechaHasta;
+  criterios.Almacenes := CSVAlmacenes;
+  criterios.Familias := CSVFamilias;
+  criterios.Proveedores := CSVProveedores;
+  criterios.Temporadas := CSVTemporadas;
+  criterios.Articulos := CSVArticulos;
+  criterios.Tarifa := ParametrosCaja.TarifaDefecto;
+  if (FrgModo <> nil) and (FrgModo.ItemIndex = 0) and
+     (FrgDetalle <> nil) and (FrgDetalle.ItemIndex = 1) then
+    criterios.Desglosado := 'S'
+  else
+    criterios.Desglosado := 'N';
+  criterios.Bandas := SeleccionadosCSV(FclbBandas);
+  criterios.Nivel1 := NivelN(0);
+  criterios.Nivel2 := NivelN(1);
+  criterios.Nivel3 := NivelN(2);
+  criterios.NivelFamilia := NivelFamilia;
+  if FRepositorioBalance = nil then
+    FRepositorioBalance := CrearRepositorioInformeBalanceSinTallasUniDAC(
+      ConexionPrincipal);
+  FResultadoBalance := FRepositorioBalance.Preparar(criterios);
   fxdsBalance.UpdateBounds;
 end;
 
@@ -253,7 +250,7 @@ begin
   inherited;
   // La foto necesita el DataSet directo del TfrxDBDataset (no solo el
   // DataSource): ver inLibFotos.ObtenerDataSetDeBandaPadre.
-  fxdsBalance.DataSet := unqryBalancePrint;
+  fxdsBalance.DataSet := FResultadoBalance.DataSet;
   frxrprt1.DataSets.Clear;
   frxrprt1.DataSets.Add(fxdsBalance);
   // Sustituimos el OnBeforePrint del base (fotos) por el nuestro, que encadena
@@ -273,22 +270,24 @@ procedure TfrmPrintBalanceSinTallas.PrecargarFotosArticulos;
 var
   slCod: TStringList;
 begin
-  if unqryBalancePrint.Active and (not unqryBalancePrint.IsEmpty) then
+  if (FResultadoBalance <> nil) and FResultadoBalance.DataSet.Active and
+     (not FResultadoBalance.DataSet.IsEmpty) then
   begin
     slCod := TStringList.Create;
     try
       slCod.Sorted := True;
       slCod.Duplicates := dupIgnore;
-      unqryBalancePrint.DisableControls;
+      FResultadoBalance.DataSet.DisableControls;
       try
-        unqryBalancePrint.First;
-        while not unqryBalancePrint.Eof do
+        FResultadoBalance.DataSet.First;
+        while not FResultadoBalance.DataSet.Eof do
         begin
-          slCod.Add(unqryBalancePrint.FieldByName('CODIGO_ART_ART').AsString);
-          unqryBalancePrint.Next;
+          slCod.Add(FResultadoBalance.DataSet.FieldByName(
+            'CODIGO_ART_ART').AsString);
+          FResultadoBalance.DataSet.Next;
         end;
       finally
-        unqryBalancePrint.EnableControls;
+        FResultadoBalance.DataSet.EnableControls;
       end;
       FotosArticulos.PrecargarFotosLote(slCod.ToStringArray);
     finally
@@ -310,9 +309,10 @@ begin
     nivel := 0;
     if (Pos('GroupHeaderG', sNom) = 1) or (Pos('GroupFooterG', sNom) = 1) then
       nivel := StrToIntDef(Copy(sNom, Length(sNom), 1), 0);
-    if (nivel >= 1) and (nivel <= 3) and unqryBalancePrint.Active then
+    if (nivel >= 1) and (nivel <= 3) and
+       (FResultadoBalance <> nil) and FResultadoBalance.DataSet.Active then
       TfrxBand(Component).Visible :=
-        unqryBalancePrint.FieldByName(
+        FResultadoBalance.DataSet.FieldByName(
           Format('GRUPO%d_ETIQ', [nivel])).AsString <> ''
     else if (sNom = 'GroupHeaderFam') or (sNom = 'GroupFooterFam') then
       // La familia NO agrupa por sí sola: solo se agrupa por familia si se
@@ -335,7 +335,7 @@ begin
         ParametrosApp.GetPath('appDirExcel');
       fPreview.DialogoGuardar.FileName := 'Balance_almacen_sin_tallas';
       ExportarBalanceSinTallasExcel(
-        fPreview.dxSpreadSheet1, unqryBalancePrint, FotosArticulos);
+        fPreview.dxSpreadSheet1, FResultadoBalance.DataSet, FotosArticulos);
       fPreview.ShowModal;
     finally
       FreeAndNil(fPreview);

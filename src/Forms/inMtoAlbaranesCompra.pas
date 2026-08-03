@@ -44,6 +44,9 @@ uses
   inLibColumnasSkuIntf,
   inLibGridPivoteVenta,
   inLibAplicacionArticuloCompraIntf,
+  inLibArticulosAtributosIntf,
+  inLibArticulosValidadorIntf,
+  inLibComprasPantallaIntf,
   UniDataAlbaranesCompra, cxBlobEdit, dxShellDialogs, System.Actions,
   Vcl.ActnList, cxSplitter, inLibDocumento, inLibDocumentoIntf;
 
@@ -221,6 +224,10 @@ type
     FColColorPivot   : TcxGridDBColumn;
     FBasicosColor    : TArray<string>;
     FAplicacionArticuloCompra: IAplicacionArticuloCompra;
+    FValidadorArticulos: IArticulosValidador;
+    FLookupAtributos: IArticulosAtributosLookup;
+    FBusquedaEmpresas: IBusquedaEmpresasComprasPantalla;
+    FBusquedaProveedores: IBusquedaProveedoresComprasPantalla;
     // Guarda contra reentrada del toggle desde dsTablaGDataChangeHook
     // disparado por el Edit/Post de PersistirPreferenciaPivote (entre
     // el Edit y el set, la cabecera tiene el ESPIVOTE viejo y el hook
@@ -258,6 +265,8 @@ type
                                 var Error: Boolean);
     function BuscarArticuloAlbaranCompra: string;
     function BuscarSkuAlbaranCompra(const ACodigoArt: string): string;
+    function BuscarEmpresaAlbaranCompra(out ACodigo: string): Boolean;
+    function BuscarProveedorAlbaranCompra(out ACodigo: string): Boolean;
     function ArticuloLineaActivaAlbaranCompra: string;
     procedure AplicarArticuloAlbaranCompra(const ACodigoArt: string);
     procedure EnfocarSkuAlbaranCompra(AAbrirBusqueda: Boolean);
@@ -300,10 +309,6 @@ uses
   inLibFiltroUsuario,
 
   inLibValoresAutomaticos,
-  inLibArticulosResolverIntf,
-  inLibArticulosValidadorIntf,
-  UniDataArticulosValidadorRepositorio,
-  inLibAplicacionArticuloCompra,
   UniDataAplicacionArticuloCompra,
   inLibGridCantidad,
   inLibColumnasDocumento, UniDataGen,
@@ -321,7 +326,8 @@ uses
   inLibColumnasSku,
   // Composicion del puerto de persistencia del pivote (V2).
   UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio,
-  UniDataColumnasSkuServicios;
+  UniDataColumnasSkuServicios,
+  UniDataComprasPantallaComposicion;
 
 {$R *.dfm}
 
@@ -495,6 +501,9 @@ begin
 end;
 
 procedure TfrmMtoAlbaranesCompra.FormCreate(Sender: TObject);
+var
+  oEntrada: TEntradaComposicionComprasPantalla;
+  oServicios: TServiciosComprasPantalla;
 begin
   // Columnas no-bound de tallas y atributos ANTES del inherited.
   CrearColumnasTallas;
@@ -507,17 +516,19 @@ begin
   ConfigurarColumnaBotonDocumento(
     FColColorPivot, colLinAlbcColorPivotButtonClick);
   inherited;
-  FAplicacionArticuloCompra := CrearAplicacionArticuloCompra(
-    CrearRepositorioLecturasArticuloCompraUniDAC(
-      dmmAlbaranesCompra.unqryTablaG.Connection,
-      ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
-        dmmAlbaranesCompra.unqryTablaG.Connection),
-      ContextoRepositoriosPantalla.Articulos.CrearResolverArticulos(
-        dmmAlbaranesCompra.unqryTablaG.Connection)),
-    CrearPuertoLineaArticuloCompraUniDAC(
-      dmmAlbaranesCompra.unqryTablaG.Connection,
-      dmmAlbaranesCompra.unqryTablaG,
-      dmmAlbaranesCompra.unqryAlbaranesCompraLineas));
+  oEntrada := Default(TEntradaComposicionComprasPantalla);
+  oEntrada.Tipo := tccAlbaran;
+  oEntrada.Conexion := ConexionPrincipal;
+  oEntrada.Cabecera := dmmAlbaranesCompra.unqryTablaG;
+  oEntrada.Lineas := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
+  oServicios := ComponerComprasPantalla(
+    Self,
+    oEntrada);
+  FAplicacionArticuloCompra := oServicios.Documento.AplicacionArticulo;
+  FValidadorArticulos := oServicios.Documento.ValidadorArticulos;
+  FLookupAtributos := oServicios.Documento.LookupAtributos;
+  FBusquedaEmpresas := oServicios.Documento.BusquedaEmpresas;
+  FBusquedaProveedores := oServicios.Documento.BusquedaProveedores;
   ConfigurarColumnaBusquedaDocumento(
     tvLineasAlbaran, 'CODIGO_UNIDAD_ALBCLIN',
     colLineaAlbcCODIGO_UNIDADPropertiesButtonClick,
@@ -594,6 +605,10 @@ end;
 procedure TfrmMtoAlbaranesCompra.FormDestroy(Sender: TObject);
 begin
   FAplicacionArticuloCompra := nil;
+  FValidadorArticulos := nil;
+  FLookupAtributos := nil;
+  FBusquedaEmpresas := nil;
+  FBusquedaProveedores := nil;
   LiberarModoYGestoresDocumento(
     FModoEntrada, FPivote, FGestorTallas);
   inherited;
@@ -873,8 +888,7 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
   sLineasSinSku := LineasSinSkuRequerido(
-    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
-      dmmAlbaranesCompra.unqryTablaG.Connection),
+    FValidadorArticulos,
     dmmAlbaranesCompra.unqryAlbaranesCompraLineas, 'ALBCLIN');
   if (sLineasSinSku <> '') and
      (MessageDlg(Format(SPreguntaGrabarAlbaranCompraSinSku,
@@ -1056,12 +1070,8 @@ begin
   Cfg.RegistroLog := RegistroLog;
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
-  Cfg.ValidadorArticulos :=
-    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
-      dmmAlbaranesCompra.unqryTablaG.Connection);
-  Cfg.LookupAtributos :=
-    ContextoRepositoriosPantalla.Articulos.CrearLookupAtributosArticulos(
-      dmmAlbaranesCompra.unqryTablaG.Connection);
+  Cfg.ValidadorArticulos := FValidadorArticulos;
+  Cfg.LookupAtributos := FLookupAtributos;
   if FModoEntradaSel = mcsTallasHorPed then
   begin
     CfgPV := CrearConfigPivoteBandasDocumentoCompra(
@@ -1194,6 +1204,36 @@ begin
     ShowMto(Self.Owner, 'Proveedores');
 end;
 
+function TfrmMtoAlbaranesCompra.BuscarEmpresaAlbaranCompra(
+  out ACodigo: string): Boolean;
+var
+  oConsulta: IConsultaComprasPantalla;
+  oDatos: TDataSet;
+begin
+  ACodigo := '';
+  oConsulta := FBusquedaEmpresas.ConsultarEmpresas;
+  oDatos := oConsulta.DataSet;
+  Result := BusquedaVisual.EjecutarBusquedaDataSet(
+    'Búsqueda de empresas', oDatos, 'frmMtoEmpFacSearch', Self);
+  if Result then
+    ACodigo := oDatos.FieldByName('CODIGO_EMP_EMP').AsString;
+end;
+
+function TfrmMtoAlbaranesCompra.BuscarProveedorAlbaranCompra(
+  out ACodigo: string): Boolean;
+var
+  oConsulta: IConsultaComprasPantalla;
+  oDatos: TDataSet;
+begin
+  ACodigo := '';
+  oConsulta := FBusquedaProveedores.ConsultarProveedores;
+  oDatos := oConsulta.DataSet;
+  Result := BusquedaVisual.EjecutarBusquedaDataSet(
+    'Búsqueda de proveedores', oDatos, 'frmMtoAlbcProvSearch', Self);
+  if Result then
+    ACodigo := oDatos.FieldByName('CODIGO_PRV_PRV').AsString;
+end;
+
 procedure TfrmMtoAlbaranesCompra.btnCODIGO_EMP_ALBCPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
@@ -1207,14 +1247,7 @@ begin
     if ds.IsEmpty then
       MessageDlg(SErrorAlbaranCompraNecesarioElegirEmpresa,
                  mtInformation, [mbOk], 0)
-    else if BusquedaVisual.EjecutarBusqueda(
-      ConexionPrincipal,
-      'Búsqueda de empresas',
-              'SELECT * FROM fza_empresas ORDER BY RAZON_SOCIAL_EMP',
-              'CODIGO_EMP_EMP',
-              sCodigo,
-              'frmMtoEmpFacSearch',
-              Self) then
+    else if BuscarEmpresaAlbaranCompra(sCodigo) then
     begin
       if not (ds.State in [dsInsert, dsEdit]) then
         ds.Edit;
@@ -1246,14 +1279,7 @@ begin
     if ds.IsEmpty then
       MessageDlg(SErrorAlbaranCompraNecesarioElegirProveedor,
                  mtInformation, [mbOk], 0)
-    else if BusquedaVisual.EjecutarBusqueda(
-      ConexionPrincipal,
-      'Búsqueda de proveedores',
-              'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
-              'CODIGO_PRV_PRV',
-              sCodigo,
-              'frmMtoAlbcProvSearch',
-              Self) then
+    else if BuscarProveedorAlbaranCompra(sCodigo) then
     begin
       if not (ds.State in [dsInsert, dsEdit]) then
         ds.Edit;

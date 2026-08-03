@@ -18,7 +18,7 @@ unit inMtoStockConsultaPresentacionComposicion;
 interface
 
 uses
-  Uni,
+  System.Classes, Uni,
   inLibArticulosResolverIntf,
   inLibArticulosValidadorIntf,
   inLibDocumentosTrabajo,
@@ -55,7 +55,7 @@ type
   end;
 
 function CrearContextoStockConsulta(
-  const ARepositorios: IContextoRepositoriosPantalla;
+  AOrigen: TComponent;
   AConexion: TUniConnection): TContextoDependenciasStockConsulta;
 
 implementation
@@ -106,24 +106,29 @@ begin
 end;
 
 function CrearContextoStockConsulta(
-  const ARepositorios: IContextoRepositoriosPantalla;
+  AOrigen: TComponent;
   AConexion: TUniConnection): TContextoDependenciasStockConsulta;
 var
+  Articulos: IRepositoriosArticulosPantalla;
+  Documentos: IRepositoriosDocumentosPantalla;
   Servicios: TServiciosStockConsulta;
 begin
   Result := Default(TContextoDependenciasStockConsulta);
-  Servicios := ARepositorios.Articulos.CrearServiciosStockConsulta(
-    AConexion);
+  Articulos := ObtenerCompositorArticulosPantalla(AOrigen).
+    CrearRepositoriosArticulosPantalla(AOrigen.Name);
+  Documentos := ObtenerCompositorDocumentosPantalla(AOrigen).
+    CrearRepositoriosDocumentosPantalla(AOrigen.Name);
+  Servicios := Articulos.CrearServiciosStockConsulta(AConexion);
   Result.Catalogos := Servicios.Catalogos;
   Result.Pivote := Servicios.Pivote;
   Result.InfoCabecera :=
     TLectorInfoCabeceraStockUniData.Create(AConexion);
-  Result.Validador := ARepositorios.Articulos.CrearValidadorArticulos(
+  Result.Validador := Articulos.CrearValidadorArticulos(
     AConexion);
   Result.ResolverArticulos :=
-    ARepositorios.Articulos.CrearResolverArticulos(AConexion);
+    Articulos.CrearResolverArticulos(AConexion);
   Result.DocumentosTrabajo :=
-    ARepositorios.Documentos.CrearRepositoriosDocumentosTrabajo(
+    Documentos.CrearRepositoriosDocumentosTrabajo(
       AConexion);
 end;
 

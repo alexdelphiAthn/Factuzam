@@ -83,6 +83,7 @@ uses
   inLibGridTallasInline,
   inLibComprasSesiones,
   inLibComprasSesionesAplicacionIntf,
+  inLibRepositoriosPantallaIntf,
   inMtoComprasSesionesPresentacionCopiaLineas,
   inMtoComprasSesionesPresentacionModelo,
   inMtoComprasSesionesPresentacionProveedor,
@@ -439,6 +440,7 @@ type
     Dmm: TdmComprasSesiones;
     FServicioComprasSesiones: TServicioComprasSesiones;
     FDependencias: TContextoDependenciasComprasSesiones;
+    FServiciosSqlPantalla: TServiciosSqlPantalla;
     FEstiloRecepcionVencida: TcxStyle;
     // Colaboradores de presentacion. Cada uno recibe por constructor
     // solo las capacidades que usa (datasets, columnas y callbacks);
@@ -972,6 +974,8 @@ end;
 
 procedure TfrmMtoComprasSesiones.CrearTablaPrincipal;
 begin
+  FServiciosSqlPantalla := ObtenerCompositorSqlPantalla(Self).
+    CrearServiciosSqlPantalla(Name);
   inherited;
   if tdmDataModule <> nil then
   begin
@@ -989,8 +993,8 @@ begin
   FreeAndNil(FServicioComprasSesiones);
   FServicioComprasSesiones := CrearServicioComprasSesiones(
     ConexionPrincipal, Dmm, FotosArticulos,
-    ContextoRepositoriosPantalla.CatalogoSql,
-    ContextoRepositoriosPantalla.IncidenciasSql);
+    FServiciosSqlPantalla.Catalogo,
+    FServiciosSqlPantalla.Incidencias);
   pkFieldName := 'SERIE_SES;NUMERO_SES';
 end;
 
@@ -1532,6 +1536,7 @@ begin
   if Supports(ContextoSesion, IGestorContextoSesion, GestorContexto) then
     GestorContexto.AsignarLogSesion(nil);
   FDependencias := Default(TContextoDependenciasComprasSesiones);
+  FServiciosSqlPantalla := Default(TServiciosSqlPantalla);
   // Orden inverso al de creacion: primero los que consultan el gestor de
   // tallas y el servicio, despues sus proveedores. Los colaboradores
   // cierran sus propios cursores antes de que TfrmMtoGen.FormDestroy

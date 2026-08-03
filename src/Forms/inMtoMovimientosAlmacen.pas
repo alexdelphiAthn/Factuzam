@@ -30,7 +30,8 @@ uses
   cxButtons, cxDBNavigator, Vcl.Buttons, dxBevel, cxLabel, cxTextEdit,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, Vcl.ComCtrls,
-  UniDataMovimientosAlmacen, inLibPerfilesUsuarioIntf, MemDS, DBAccess, Uni,
+  UniDataMovimientosAlmacen, inLibPerfilesUsuarioIntf,
+  inLibMovimientosAlmacenAplicacion,
   cxCheckBox, cxCheckComboBox, cxCurrencyEdit, cxSpinEdit, cxBlobEdit,
   dxScrollbarAnnotations, dxCore, cxRadioGroup, Vcl.AppEvnts, JvComponentBase,
   JvEnterTab, dxShellDialogs, System.Actions, Vcl.ActnList;
@@ -97,14 +98,16 @@ type
     FlblProgreso: TcxLabel;
     FbarProgreso: TProgressBar;
     dmmMovimientosAlmacen: TdmMovimientosAlmacen;
+    FLectorMovimientos: ILectorMovimientosAlmacen;
+    FServicioCarga: TServicioCargaMovimientosAlmacen;
     procedure CargarAnyosFiltro;
     procedure CargarAlmacenesFiltro;
     procedure LeerFiltrosPerfil;
-    function  ConstruirWhereMovimientos: string;
-    function  ConstruirSqlMovimientos: string;
-    function  ContarMovimientos: Integer;
+    function ConstruirFiltroMovimientos: TFiltroMovimientosAlmacen;
     procedure AplicarFiltrosMovimientos;
     procedure AbrirConProgreso;
+    function NotificarProgresoCarga(
+      ALeidos, ATotal: Integer): Boolean;
     procedure MostrarProgresoCarga(const AMax: Integer);
     procedure ActualizarProgresoCarga(const APos, AMax: Integer);
     procedure OcultarProgresoCarga;
@@ -121,7 +124,8 @@ implementation
 
 uses
   inLibWin, inLibUser, inLibShowMto, inLibGridCantidad,
-  inLibFiltroUsuario, inLibMsgArticulos, inLibMsgComun;
+  inLibMsgArticulos, inLibMsgComun,
+  UniDataMovimientosAlmacenRepositorio;
 
 {$R *.dfm}
 
@@ -162,6 +166,12 @@ procedure TfrmMtoMovimientosAlmacen.CrearTablaPrincipal;
 begin
   inherited;
   dmmMovimientosAlmacen := tdmDataModule as TdmMovimientosAlmacen;
+  FLectorMovimientos := CrearLectorMovimientosAlmacenUniDAC(
+    dmmMovimientosAlmacen.unqryTablaG,
+    ContextoSesion,
+    ParametrosApp);
+  FServicioCarga := TServicioCargaMovimientosAlmacen.Create(
+    FLectorMovimientos);
   // Cantidad del movimiento con decimales segun la unidad del articulo.
   VincularCantidadGrid(
     cxGrdDBTabPrin.GetColumnByFieldName('CANTIDAD_MOV'),
@@ -179,9 +189,7 @@ begin
   CargarAnyosFiltro;
   CargarAlmacenesFiltro;
   LeerFiltrosPerfil;
-  if Assigned(dmmMovimientosAlmacen) and
-     Assigned(dmmMovimientosAlmacen.unqryTablaG) then
-    dmmMovimientosAlmacen.unqryTablaG.SQL.Text := ConstruirSqlMovimientos;
+  FLectorMovimientos.Preparar(ConstruirFiltroMovimientos);
 end;
 
 procedure TfrmMtoMovimientosAlmacen.ResetForm;
@@ -198,7 +206,8 @@ end;
 
 procedure TfrmMtoMovimientosAlmacen.CargarAnyosFiltro;
 var
-  qry: TUniQuery;
+  Anyos: TArray<Integer>;
+  I: Integer;
   item: TcxCheckComboBoxItem;
   sAnyoActual: string;
   bExisteActual: Boolean;
@@ -206,25 +215,13 @@ begin
   ccbFiltroAnyo.Properties.Items.Clear;
   bExisteActual := False;
   sAnyoActual := IntToStr(YearOf(Date));
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := dmmMovimientosAlmacen.unqryTablaG.Connection;
-    qry.SQL.Text :=
-      'SELECT DISTINCT YEAR(FECHA_MOV) AS ANYO ' +
-      '  FROM fza_movimientos_almacen ' +
-      ' WHERE FECHA_MOV IS NOT NULL ' +
-      ' ORDER BY ANYO DESC';
-    qry.Open;
-    while not qry.Eof do
-    begin
-      item := ccbFiltroAnyo.Properties.Items.Add;
-      item.Description := qry.FieldByName('ANYO').AsString;
-      if item.Description = sAnyoActual then
-        bExisteActual := True;
-      qry.Next;
-    end;
-  finally
-    FreeAndNil(qry);
+  Anyos := FLectorMovimientos.ObtenerAnyos;
+  for I := 0 to Length(Anyos) - 1 do
+  begin
+    item := ccbFiltroAnyo.Properties.Items.Add;
+    item.Description := IntToStr(Anyos[I]);
+    if item.Description = sAnyoActual then
+      bExisteActual := True;
   end;
   // El año en curso es el valor por defecto: lo añadimos aunque no tenga
   // movimientos todavia para que se pueda marcar.
@@ -237,7 +234,8 @@ end;
 
 procedure TfrmMtoMovimientosAlmacen.CargarAlmacenesFiltro;
 var
-  qry: TUniQuery;
+  Almacenes: TArray<TAlmacenFiltroMovimiento>;
+  I: Integer;
   item: TcxCheckComboBoxItem;
 begin
   ccbFiltroAlmacen.Properties.Items.Clear;
@@ -245,33 +243,12 @@ begin
     FCodigosAlmacen := TStringList.Create
   else
     FCodigosAlmacen.Clear;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := dmmMovimientosAlmacen.unqryTablaG.Connection;
-    // Con la restricción por usuario activa el combo solo ofrece su
-    // empresa/almacén (fza_almacenes lleva la empresa en CODIGO_EMP_ALM).
-    qry.SQL.Text :=
-      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM ' +
-      '  FROM fza_almacenes ' +
-      ' WHERE ESACTIVO_ALM = ''S'' ' +
-      SqlFiltroEmpAlmCaja(
-        ContextoSesion,
-        ParametrosApp,
-        'CODIGO_EMP_ALM',
-        'CODIGO_ALM_ALM',
-        '') +
-      ' ORDER BY ORDEN_ALM, CODIGO_ALM_ALM';
-    qry.Open;
-    while not qry.Eof do
-    begin
-      item := ccbFiltroAlmacen.Properties.Items.Add;
-      item.Description := qry.FieldByName('CODIGO_ALM_ALM').AsString +
-                          ' - ' + qry.FieldByName('NOMBRE_ALM_ALM').AsString;
-      FCodigosAlmacen.Add(qry.FieldByName('CODIGO_ALM_ALM').AsString);
-      qry.Next;
-    end;
-  finally
-    FreeAndNil(qry);
+  Almacenes := FLectorMovimientos.ObtenerAlmacenes;
+  for I := 0 to Length(Almacenes) - 1 do
+  begin
+    item := ccbFiltroAlmacen.Properties.Items.Add;
+    item.Description := Almacenes[I].Codigo + ' - ' + Almacenes[I].Nombre;
+    FCodigosAlmacen.Add(Almacenes[I].Codigo);
   end;
 end;
 
@@ -357,93 +334,37 @@ begin
   end;
 end;
 
-function TfrmMtoMovimientosAlmacen.ConstruirWhereMovimientos: string;
+function TfrmMtoMovimientosAlmacen.ConstruirFiltroMovimientos:
+  TFiltroMovimientosAlmacen;
 var
-  sAnyos, sAlm: string;
   i: Integer;
 begin
-  // Años marcados -> IN sobre YEAR(m.FECHA_MOV). Sin nada marcado = todos.
-  sAnyos := '';
+  Result := Default(TFiltroMovimientosAlmacen);
   for i := 0 to ccbFiltroAnyo.Properties.Items.Count - 1 do
   begin
     if ccbFiltroAnyo.States[i] = cbsChecked then
     begin
-      if sAnyos <> '' then
-        sAnyos := sAnyos + ', ';
-      sAnyos := sAnyos + ccbFiltroAnyo.Properties.Items[i].Description;
+      SetLength(Result.Anyos, Length(Result.Anyos) + 1);
+      Result.Anyos[High(Result.Anyos)] := StrToIntDef(
+        ccbFiltroAnyo.Properties.Items[i].Description,
+        0);
     end;
   end;
-  // Almacenes marcados -> IN de codigos sobre m.CODIGO_ALM_MOV.
-  sAlm := '';
   for i := 0 to ccbFiltroAlmacen.Properties.Items.Count - 1 do
   begin
     if (ccbFiltroAlmacen.States[i] = cbsChecked) and
        (i < FCodigosAlmacen.Count) then
     begin
-      if sAlm <> '' then
-        sAlm := sAlm + ', ';
-      sAlm := sAlm + QuotedStr(FCodigosAlmacen[i]);
+      SetLength(Result.Almacenes, Length(Result.Almacenes) + 1);
+      Result.Almacenes[High(Result.Almacenes)] := FCodigosAlmacen[i];
     end;
-  end;
-  Result := ' WHERE 1 = 1';
-  if sAnyos <> '' then
-    Result := Result + ' AND YEAR(m.FECHA_MOV) IN (' + sAnyos + ')';
-  if sAlm <> '' then
-    Result := Result + ' AND m.CODIGO_ALM_MOV IN (' + sAlm + ')';
-  // Restricción por usuario (appRestringirEmpAlmCaja): acota a su
-  // empresa/almacén por encima de lo marcado en los combos.
-  Result := Result + SqlFiltroEmpAlmCaja(
-    ContextoSesion,
-    ParametrosApp,
-    'm.CODIGO_EMP_MOV',
-                                         'm.CODIGO_ALM_MOV', '');
-end;
-
-function TfrmMtoMovimientosAlmacen.ConstruirSqlMovimientos: string;
-begin
-  // Conserva el JOIN con articulos (TIPO_CANTIDAD_ART) que usa el grid para
-  // pintar la cantidad con los decimales correctos.
-  Result := 'SELECT m.*, a.TIPO_CANTIDAD_ART ' +
-            'FROM fza_movimientos_almacen m ' +
-            'LEFT JOIN fza_articulos a ON a.CODIGO_ART_ART = m.CODIGO_ART_MOV' +
-            ConstruirWhereMovimientos +
-            ' ORDER BY m.FECHA_MOV DESC';
-end;
-
-function TfrmMtoMovimientosAlmacen.ContarMovimientos: Integer;
-var
-  qry: TUniQuery;
-begin
-  Result := 0;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := dmmMovimientosAlmacen.unqryTablaG.Connection;
-    qry.SQL.Text := 'SELECT COUNT(*) AS N FROM fza_movimientos_almacen m' +
-                    ConstruirWhereMovimientos;
-    qry.Open;
-    if not qry.IsEmpty then
-      Result := qry.Fields[0].AsInteger;
-  finally
-    FreeAndNil(qry);
   end;
 end;
 
 procedure TfrmMtoMovimientosAlmacen.AplicarFiltrosMovimientos;
-var
-  qry: TUniQuery;
-  sSql: string;
 begin
-  if Assigned(dmmMovimientosAlmacen) and
-     Assigned(dmmMovimientosAlmacen.unqryTablaG) then
-  begin
-    qry := dmmMovimientosAlmacen.unqryTablaG;
-    sSql := ConstruirSqlMovimientos;
-    if Trim(qry.SQL.Text) <> Trim(sSql) then
-    begin
-      qry.SQL.Text := sSql;
-      AbrirConProgreso;
-    end;
-  end;
+  FLectorMovimientos.Preparar(ConstruirFiltroMovimientos);
+  AbrirConProgreso;
 end;
 
 procedure TfrmMtoMovimientosAlmacen.AbrirConProgreso;
@@ -451,64 +372,32 @@ const
   TAM_BLOQUE = 2000;
   MAX_FILAS_CARGA = 200000;
 var
-  qry: TUniQuery;
-  nTotal, nLeidos: Integer;
+  Resultado: TResultadoCargaMovimientos;
   cursorPrev: TCursor;
 begin
-  if Assigned(dmmMovimientosAlmacen) and
-     Assigned(dmmMovimientosAlmacen.unqryTablaG) then
-  begin
-    qry := dmmMovimientosAlmacen.unqryTablaG;
-    cursorPrev := Screen.Cursor;
-    Screen.Cursor := crHourGlass;
-    MostrarProgresoCarga(0);
-    // FetchRows define el tamaño de bloque; al recorrer, UniDAC trae los
-    // registros por bloques (FetchAll por defecto es False) y vamos
-    // avanzando la barra. DisableControls evita que el grid fuerce el
-    // fetch completo de golpe. FetchRows solo se puede fijar con la query
-    // cerrada, asi que lo dejamos puesto (no se restaura).
-    qry.DisableControls;
-    try
-      nTotal := ContarMovimientos;
-      // Tope de seguridad: cargar cientos de miles de filas de golpe
-      // bloquea el grid. Si la seleccion es enorme (p.ej. el año "1900" de
-      // fechas vacias, o todos), avisamos y NO cargamos.
-      if nTotal > MAX_FILAS_CARGA then
-      begin
-        OcultarProgresoCarga;
-        Screen.Cursor := cursorPrev;
-        MessageDlg(Format(SAvisoLimiteRegistrosMovimientosAlmacen,
-          [FormatFloat('#,##0', nTotal)]), mtWarning, [mbOK], 0);
-      end
-      else
-      begin
-        if Assigned(FbarProgreso) then
-        begin
-          if nTotal > 0 then
-            FbarProgreso.Max := nTotal
-          else
-            FbarProgreso.Max := 1;
-        end;
-        qry.Close;
-        qry.FetchRows := TAM_BLOQUE;
-        qry.Open;
-        nLeidos := 0;
-        qry.First;
-        while not qry.Eof do
-        begin
-          Inc(nLeidos);
-          if (nLeidos mod 200) = 0 then
-            ActualizarProgresoCarga(nLeidos, nTotal);
-          qry.Next;
-        end;
-        qry.First;
-      end;
-    finally
-      qry.EnableControls;
-      OcultarProgresoCarga;
-      Screen.Cursor := cursorPrev;
-    end;
+  cursorPrev := Screen.Cursor;
+  Screen.Cursor := crHourGlass;
+  MostrarProgresoCarga(0);
+  try
+    Resultado := FServicioCarga.Cargar(
+      MAX_FILAS_CARGA,
+      TAM_BLOQUE,
+      200,
+      NotificarProgresoCarga);
+    if Resultado.Estado = ecmLimiteSuperado then
+      MessageDlg(Format(SAvisoLimiteRegistrosMovimientosAlmacen,
+        [FormatFloat('#,##0', Resultado.Total)]), mtWarning, [mbOK], 0);
+  finally
+    OcultarProgresoCarga;
+    Screen.Cursor := cursorPrev;
   end;
+end;
+
+function TfrmMtoMovimientosAlmacen.NotificarProgresoCarga(
+  ALeidos, ATotal: Integer): Boolean;
+begin
+  ActualizarProgresoCarga(ALeidos, ATotal);
+  Result := False;
 end;
 
 procedure TfrmMtoMovimientosAlmacen.MostrarProgresoCarga(const AMax: Integer);
@@ -618,9 +507,7 @@ begin
   finally
     FFiltrosCargando := False;
   end;
-  if Assigned(dmmMovimientosAlmacen) and
-     Assigned(dmmMovimientosAlmacen.unqryTablaG) then
-    dmmMovimientosAlmacen.unqryTablaG.SQL.Text := ConstruirSqlMovimientos;
+  FLectorMovimientos.Preparar(ConstruirFiltroMovimientos);
   pnlContFiltros.Visible := False;
   pnlFiltros.Height := 22;
   btnToggleFiltros.Caption := SCaptionFiltrosCargaContraido;
@@ -642,6 +529,8 @@ end;
 procedure TfrmMtoMovimientosAlmacen.FormDestroy(Sender: TObject);
 begin
   inherited;
+  FreeAndNil(FServicioCarga);
+  FLectorMovimientos := nil;
   FreeAndNil(FCodigosAlmacen);
 end;
 

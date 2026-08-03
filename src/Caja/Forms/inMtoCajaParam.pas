@@ -26,7 +26,7 @@ uses
   Vcl.ExtCtrls, inMtoFrmBase, cxDropDownEdit, Vcl.Menus, Vcl.StdCtrls,
   cxButtons, JvComponentBase, JvInspector, JvExControls, System.Actions,
   Vcl.ActnList, Vcl.Printers, System.UITypes, inLibParametrosIntf,
-  inLibAppParamPersistenciaIntf;
+  inLibAppParamPersistenciaIntf, UniDataCajaPantallaComposicion;
 
 type
   // Tipos de punteros necesarios para la generación dinámica en JvInspector
@@ -111,13 +111,15 @@ uses
 
 procedure TfrmMtoCajaParam.FormCreate(Sender: TObject);
 var
+  oComposicion: TComposicionCajaPantalla;
   Proveedor: IProveedorParametrosEdicion;
 begin
   inherited;
+  oComposicion := ComponerCajaPantalla(Self);
   if not Supports(Owner, IProveedorParametrosEdicion, Proveedor) then
     raise Exception.Create(SErrorProveedorParametrosCajaNoConfigurado);
   FParametrosEdicion := Proveedor.ParametrosCajaEdicion;
-  FRepositorioPersistencia := ContextoRepositoriosPantalla.Configuracion.
+  FRepositorioPersistencia := oComposicion.Configuracion.
     CrearRepositorioAppParam;
   if not Assigned(FParametrosEdicion) then
     raise Exception.Create(SErrorParametrosCajaEditablesNoConfigurados);

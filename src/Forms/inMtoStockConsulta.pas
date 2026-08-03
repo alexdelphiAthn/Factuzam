@@ -297,7 +297,7 @@ begin
   // el resto del contexto de dependencias lo completan el lector y los
   // presentadores.
   FDependencias := CrearContextoStockConsulta(
-    ContextoRepositoriosPantalla,
+    Self,
     ConexionPrincipal);
   // Detector del lector. Modo "consumir": las teclas de la rafaga no llegan
   // a btnArt (evita disparar SetArticuloSku en cada tecla del escaneo).

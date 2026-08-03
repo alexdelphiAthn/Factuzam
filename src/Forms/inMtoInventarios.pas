@@ -38,6 +38,7 @@ uses
   // Contrato de entrada de articulos (ColumnSKUcxGrid, en src\Lib).
   inLibColumnasSkuIntf,
   inLibInventariosAplicacionIntf,
+  inLibRepositoriosPantallaIntf,
   inMtoInventariosPresentacionColumnas,
   inMtoInventariosPresentacionEntrada;
 
@@ -247,6 +248,7 @@ type
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FDependencias: TContextoDependenciasInventario;
+    FRepositoriosArticulos: IRepositoriosArticulosPantalla;
 
     // === COLUMNAS DINÁMICAS DE ATRIBUTOS ===
     procedure ActualizarColumnasDinamicas(const ArticuloPadre: string);
@@ -485,6 +487,8 @@ procedure TfrmMtoInventarios.CrearTablaPrincipal;
 var
   emp: string;
 begin
+  FRepositoriosArticulos := ObtenerCompositorArticulosPantalla(Self).
+    CrearRepositoriosArticulosPantalla(Name);
   dmmInventarios := nil;
   inherited;
   dmmInventarios := TdmInventarios(AsegurarDataModuleDocumento(
@@ -528,8 +532,7 @@ begin
     CrearRepositorioRecuentoRemotoInventarioUniDAC(ConexionPrincipal);
   InicializarEntradaInventarioVcl(
     Self,
-    ContextoRepositoriosPantalla.Articulos.
-      CrearValidadorArticulos(ConexionPrincipal));
+    FRepositoriosArticulos.CrearValidadorArticulos(ConexionPrincipal));
 end;
 
 procedure TfrmMtoInventarios.FormCreate(Sender: TObject);
@@ -587,6 +590,7 @@ end;
 procedure TfrmMtoInventarios.FormDestroy(Sender: TObject);
 begin
   FDependencias := Default(TContextoDependenciasInventario);
+  FRepositoriosArticulos := nil;
   // Contrato de entrada: soltar eventos del view y liberar el modo
   // ANTES de que muera el form (evita punteros colgantes en el grid).
   if FModoEntrada <> nil then
@@ -909,11 +913,10 @@ begin
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
-    ContextoRepositoriosPantalla.Articulos.
-      CrearValidadorArticulos(ConexionPrincipal);
+    FRepositoriosArticulos.CrearValidadorArticulos(ConexionPrincipal);
   Cfg.LookupAtributos :=
-    ContextoRepositoriosPantalla.Articulos.
-      CrearLookupAtributosArticulos(ConexionPrincipal);
+    FRepositoriosArticulos.CrearLookupAtributosArticulos(
+      ConexionPrincipal);
   Cfg.Campos.Cantidad := 'CANTIDAD_FISICA_INVLIN';
   // El almacen es de CABECERA en inventario: sin columna de linea.
   Cfg.Campos.Almacen := '';
@@ -1161,8 +1164,8 @@ begin
   // Los valores del SKU van a ATTR1..ATTR5 mapeados por
   // ORDEN_VISUAL_ATRIBUTO (= ORDEN_VA del atributo).
   RellenarAtributosDesdeSkuInventario(
-    ContextoRepositoriosPantalla.Articulos.
-      CrearLookupAtributosArticulos(ConexionPrincipal),
+    FRepositoriosArticulos.CrearLookupAtributosArticulos(
+      ConexionPrincipal),
     dmmInventarios.cdsLineas, Sku);
 end;
 
@@ -1404,8 +1407,8 @@ begin
           (not dmmInventarios.cdsLineas.IsEmpty) then
   begin
     Avs := ValoresAtributoInventario(
-      ContextoRepositoriosPantalla.Articulos.
-        CrearLookupAtributosArticulos(ConexionPrincipal),
+      FRepositoriosArticulos.CrearLookupAtributosArticulos(
+        ConexionPrincipal),
       dmmInventarios.cdsLineas.FieldByName(
         'CODIGO_ART_INVLIN').AsString, Orden);
     if Length(Avs) = 0 then
