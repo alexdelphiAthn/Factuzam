@@ -39,7 +39,11 @@ uses
   cxRadioGroup, cxDBNavigator, Vcl.Buttons, System.UITypes, cxMemo,
   cxCheckBox, cxGroupBox, cxDBLabel, cxButtonEdit, cxGridBandedTableView,
   cxGridDBBandedTableView, System.Generics.Collections,
+  inLibArticulosAtributosIntf,
+  inLibArticulosValidadorIntf,
+  inLibComprasPantallaIntf,
   inLibDevolucionesCompraPersistenciaIntf,
+  inLibDevolucionesCompraStock,
   inLibGridTallasInline,
   inLibGridPivoteCompra,
   inLibColumnasSkuIntf,
@@ -227,8 +231,13 @@ type
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
-    FServiciosPersistencia:
-      TServiciosPersistenciaDevolucionCompra;
+    FAplicacionArticulo: IAplicacionArticuloDevolucionCompra;
+    FValidadorArticulos: IArticulosValidador;
+    FLookupAtributos: IArticulosAtributosLookup;
+    FRepositorioDatos: IRepositorioDatosDevolucionCompra;
+    FPersistenciaStock: IPersistenciaStockDevolucionCompra;
+    FBusquedaEmpresas: IBusquedaEmpresasComprasPantalla;
+    FBusquedaProveedores: IBusquedaProveedoresComprasPantalla;
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
     procedure InicializarGestorYPivote;
@@ -270,6 +279,15 @@ type
                 const ACodigoArticulo: string; AIdAcPivot: Integer);
     procedure DevolverTodoStock;
     procedure AplicarArticuloDevolucion(const ACodigoArt: string);
+    procedure AplicarLineaArticuloDevolucion(
+      const ALinea: TLineaArticuloDevolucionCompra);
+    function RecogerEntradaArticuloDevolucion(
+      const ACodigoArt: string;
+      ALineas: TDataSet): TEntradaArticuloDevolucionCompra;
+    procedure PresentarResultadoArticuloDevolucion(
+      const AResultado: TResultadoArticuloDevolucionCompra;
+      ALineas: TDataSet);
+    procedure EnfocarSkuDevolucion(AAbrirBusqueda: Boolean);
     procedure colLineaDevcCODIGO_UNIDADPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure AsegurarPrimeraLineaDevolucionCompra;
@@ -311,9 +329,6 @@ implementation
 uses
   System.StrUtils,
   inLibFiltroUsuario,
-  inLibArticulosResolverIntf,
-  inLibArticulosValidadorIntf,
-  UniDataArticulosValidadorRepositorio,
   inLibGridCantidad,
   inLibColumnasDocumento, UniDataGen,
   inLibBusquedasCompra,
@@ -322,7 +337,6 @@ uses
   inLibAtributosPaleta,
   UniDataArticulos,
   inLibComprasImpuestos,
-  inLibDevolucionesCompraStock,
   inLibMsgArticulos, inLibMsgCompras,
   inMtoModalImpDevCompra,
   inMtoModalImpDevCompraV,
@@ -332,48 +346,10 @@ uses
   inLibColumnasSku,
   // Composicion del puerto de persistencia del pivote (V2).
   UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio,
-  UniDataColumnasSkuServicios;
+  UniDataColumnasSkuServicios,
+  UniDataComprasPantallaComposicion;
 
 {$R *.dfm}
-
-type
-  TAplicacionArticuloDevolucion = class
-  private
-    FFormulario: TfrmMtoDevolucionesCompra;
-    FDataSet: TDataSet;
-    FCodigoArticulo: string;
-    FCodigoSku: string;
-    FCodigoProveedor: string;
-    FCodigoAlmacen: string;
-    FFecha: TDateTime;
-    FDatos: TArticuloDatos;
-    FIdConjuntoPivot: Integer;
-    FCantidad: Double;
-    function CampoCabeceraString(const Campo: string): string;
-    function FechaCabecera: TDateTime;
-    function ResolverConjuntoPivotArticulo(
-      const CodigoArticulo: string): Integer;
-    function ModeloProveedorArticulo(const CodigoArticulo,
-      CodigoProveedor: string): string;
-    function EsCodigoArticuloExacto(const Codigo: string): Boolean;
-    procedure PonerString(const Campo, Valor: string);
-    procedure PonerFloat(const Campo: string; Valor: Double);
-    procedure PonerInteger(const Campo: string; Valor: Integer);
-    procedure LimpiarCampo(const Campo: string);
-    procedure EnfocarSku(AbrirBusqueda: Boolean);
-    procedure PrepararEdicion;
-    procedure CargarDatosArticulo;
-    procedure ResolverEntradaSku;
-    procedure ResolverArticulo;
-    procedure AplicarCamposArticulo;
-    procedure AplicarCantidades;
-    procedure ActualizarInterfaz;
-    procedure AplicarDatos;
-  public
-    constructor Create(Formulario: TfrmMtoDevolucionesCompra;
-      const Codigo: string);
-    procedure Ejecutar;
-  end;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -423,10 +399,10 @@ begin
 end;
 
 procedure TfrmMtoDevolucionesCompra.FormCreate(Sender: TObject);
+var
+  oEntrada: TEntradaComposicionComprasPantalla;
+  oServicios: TServiciosComprasPantalla;
 begin
-  FServiciosPersistencia :=
-    ContextoRepositoriosPantalla.Documentos.
-      CrearServiciosPersistenciaDevolucionCompra;
   FColorPivotCodigos := TDictionary<string, string>.Create;
   // Columnas no-bound de tallas y atributos ANTES del inherited.
   CrearColumnasTallas;
@@ -451,6 +427,22 @@ begin
     OnEditValueChanged := ColorPivotEditValueChanged;
   end;
   inherited;
+  oEntrada := Default(TEntradaComposicionComprasPantalla);
+  oEntrada.Tipo := tccDevolucion;
+  oEntrada.Conexion := dmmDevolucionesCompra.unqryTablaG.Connection;
+  oEntrada.Cabecera := dmmDevolucionesCompra.unqryTablaG;
+  oEntrada.Lineas :=
+    dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
+  oServicios := ComponerComprasPantalla(
+    Self,
+    oEntrada);
+  FAplicacionArticulo := oServicios.Devolucion.AplicacionArticulo;
+  FValidadorArticulos := oServicios.Devolucion.ValidadorArticulos;
+  FLookupAtributos := oServicios.Devolucion.LookupAtributos;
+  FRepositorioDatos := oServicios.Devolucion.Datos;
+  FPersistenciaStock := oServicios.Devolucion.Stock;
+  FBusquedaEmpresas := oServicios.Devolucion.BusquedaEmpresas;
+  FBusquedaProveedores := oServicios.Devolucion.BusquedaProveedores;
   ConfigurarColumnaBusquedaDocumento(
     tvLineasDevolucion, 'CODIGO_UNIDAD_DEVCLIN',
     colLineaDevcCODIGO_UNIDADPropertiesButtonClick,
@@ -589,7 +581,7 @@ function TfrmMtoDevolucionesCompra.CodigoSkuRepresentanteColor(
   AIdAcPivot: Integer
 ): string;
 begin
-  Result := FServiciosPersistencia.Datos.CodigoSkuRepresentanteColor(
+  Result := FRepositorioDatos.CodigoSkuRepresentanteColor(
     ACodigoArticulo,
     AColor,
     AIdAcPivot);
@@ -622,7 +614,7 @@ begin
           sArticulo := ValorLineaActiva('CODIGO_ART_DEVCLIN');
           if sArticulo <> '' then
           begin
-            arrColores := FServiciosPersistencia.Datos.
+            arrColores := FRepositorioDatos.
               ListarColoresArticulo(sArticulo);
             for iColor := 0 to High(arrColores) do
             begin
@@ -820,7 +812,7 @@ function TfrmMtoDevolucionesCompra.ObtenerColorPivotLineaActual(
   out AColorAv: Integer
 ): Boolean;
 begin
-  Result := FServiciosPersistencia.Datos.ObtenerColorLinea(
+  Result := FRepositorioDatos.ObtenerColorLinea(
     ASerie,
     ANumero,
     ALinea,
@@ -903,7 +895,7 @@ begin
             begin
               oLineas.Close;
             end;
-            iFilas := FServiciosPersistencia.Datos.BorrarGrupoColor(
+            iFilas := FRepositorioDatos.BorrarGrupoColor(
               Grupo);
             if not oLineas.Active then
             begin
@@ -1011,6 +1003,13 @@ end;
 
 procedure TfrmMtoDevolucionesCompra.FormDestroy(Sender: TObject);
 begin
+  FAplicacionArticulo := nil;
+  FValidadorArticulos := nil;
+  FLookupAtributos := nil;
+  FRepositorioDatos := nil;
+  FPersistenciaStock := nil;
+  FBusquedaEmpresas := nil;
+  FBusquedaProveedores := nil;
   LiberarModoYGestoresDocumento(
     FModoEntrada, FPivote, FGestorTallas);
   FreeAndNil(FColorPivotCodigos);
@@ -1407,7 +1406,7 @@ begin
         Parametros.IvaExento :=
           LeerNumeroDataset(dsCab, 'PORCENTAJE_IVAE_DEVC');
         Estado := ConsultarEstadoStockDevolucionCompra(
-          FServiciosPersistencia.Stock,
+          FPersistenciaStock,
           Parametros);
         if Estado <> esdcDisponible then
           MostrarEstadoStockDevolucionCompra(Estado)
@@ -1422,7 +1421,7 @@ begin
             if dsLin.Active then
               dsLin.Close;
             if DevolverTodoStockCompra(
-              FServiciosPersistencia.Stock,
+              FPersistenciaStock,
               Parametros,
               iLineas,
               Estado) then
@@ -1479,8 +1478,7 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
   sLineasSinSku := LineasSinSkuRequerido(
-    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
-      dmmDevolucionesCompra.unqryTablaG.Connection),
+    FValidadorArticulos,
     dmmDevolucionesCompra.unqryDevolucionesCompraLineas, 'DEVCLIN');
   if (sLineasSinSku <> '') and
      (MessageDlg(Format(SPreguntaGrabarDevolucionCompraSinSku,
@@ -1701,12 +1699,8 @@ begin
   Cfg.RegistroLog := RegistroLog;
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
-  Cfg.ValidadorArticulos :=
-    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
-      dmmDevolucionesCompra.unqryTablaG.Connection);
-  Cfg.LookupAtributos :=
-    ContextoRepositoriosPantalla.Articulos.CrearLookupAtributosArticulos(
-      dmmDevolucionesCompra.unqryTablaG.Connection);
+  Cfg.ValidadorArticulos := FValidadorArticulos;
+  Cfg.LookupAtributos := FLookupAtributos;
   if FModoEntradaSel = mcsTallasHorPed then
   begin
     CfgPV := CrearConfigPivoteBandasDocumentoCompra(
@@ -1969,317 +1963,143 @@ begin
   end;
 end;
 
-{ TAplicacionArticuloDevolucion }
-
-constructor TAplicacionArticuloDevolucion.Create(
-  Formulario: TfrmMtoDevolucionesCompra; const Codigo: string);
-begin
-  inherited Create;
-  FFormulario := Formulario;
-  FCodigoArticulo := Trim(Codigo);
-end;
-
-function TAplicacionArticuloDevolucion.CampoCabeceraString(
-  const Campo: string): string;
+procedure TfrmMtoDevolucionesCompra.AplicarLineaArticuloDevolucion(
+  const ALinea: TLineaArticuloDevolucionCompra);
 var
-  CampoDataSet: TField;
+  oCampo: TField;
+  oLineas: TDataSet;
 begin
-  Result := '';
-  if Assigned(FFormulario.dsTablaG) and
-     Assigned(FFormulario.dsTablaG.DataSet) then
+  oLineas := dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
+  oLineas.FieldByName('CODIGO_ART_DEVCLIN').AsString :=
+    ALinea.CodigoArticulo;
+  oLineas.FieldByName('CODIGO_UNIDAD_DEVCLIN').AsString :=
+    ALinea.CodigoSku;
+  oLineas.FieldByName('REF_PRV_DEVCLIN').AsString :=
+    ALinea.ReferenciaProveedor;
+  oLineas.FieldByName('CODIGO_FAM_DEVCLIN').AsString :=
+    ALinea.CodigoFamilia;
+  oLineas.FieldByName('DESCRIPCION_ARTICULO_DEVCLIN').AsString :=
+    ALinea.DescripcionArticulo;
+  oLineas.FieldByName('TIPO_CANTIDAD_ARTICULO_DEVCLIN').AsString :=
+    ALinea.TipoCantidad;
+  oLineas.FieldByName('TIPO_IVA_ARTICULO_DEVCLIN').AsString :=
+    ALinea.TipoIva;
+  oLineas.FieldByName('PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN').AsFloat :=
+    ALinea.PrecioCompra;
+  if ALinea.AsignarAlmacen then
+    oLineas.FieldByName('CODIGO_ALMACEN_DEVCLIN').AsString :=
+      ALinea.CodigoAlmacen;
+  oCampo := oLineas.FindField('ID_AC_PIVOT_DEVCLIN');
+  if oCampo <> nil then
   begin
-    CampoDataSet := FFormulario.dsTablaG.DataSet.FindField(Campo);
-    if CampoDataSet <> nil then
-      Result := Trim(CampoDataSet.AsString);
+    if ALinea.IdConjuntoPivote > 0 then
+      oCampo.AsInteger := ALinea.IdConjuntoPivote
+    else
+      oCampo.Clear;
   end;
+  if ALinea.AsignarCantidad then
+    oLineas.FieldByName('CANTIDAD_DEVCLIN').AsFloat := ALinea.Cantidad;
+  if ALinea.AsignarTotalUnidades then
+    oLineas.FieldByName('TOTAL_UNIDADES_DEVCLIN').AsFloat :=
+      ALinea.TotalUnidades;
+  oLineas.FieldByName('TOTAL_DEVCLIN').AsFloat := ALinea.Total;
 end;
 
-function TAplicacionArticuloDevolucion.FechaCabecera: TDateTime;
+procedure TfrmMtoDevolucionesCompra.EnfocarSkuDevolucion(
+  AAbrirBusqueda: Boolean);
 var
-  Campo: TField;
+  oColumnaSku: TcxGridDBColumn;
 begin
-  Result := Date;
-  if Assigned(FFormulario.dsTablaG) and
-     Assigned(FFormulario.dsTablaG.DataSet) then
-  begin
-    Campo := FFormulario.dsTablaG.DataSet.FindField('FECHA_DEVC');
-    if (Campo <> nil) and (not Campo.IsNull) then
-      Result := Campo.AsDateTime;
-  end;
-end;
-
-function TAplicacionArticuloDevolucion.ResolverConjuntoPivotArticulo(
-  const CodigoArticulo: string
-): Integer;
-begin
-  Result := FFormulario.FServiciosPersistencia.Datos.
-    ResolverConjuntoPivotArticulo(CodigoArticulo);
-end;
-
-function TAplicacionArticuloDevolucion.ModeloProveedorArticulo(
-  const CodigoArticulo, CodigoProveedor: string
-): string;
-begin
-  Result := FFormulario.FServiciosPersistencia.Datos.
-    ModeloProveedorArticulo(
-      CodigoArticulo,
-      CodigoProveedor);
-end;
-
-function TAplicacionArticuloDevolucion.EsCodigoArticuloExacto(
-  const Codigo: string
-): Boolean;
-begin
-  Result := FFormulario.FServiciosPersistencia.Datos.
-    EsCodigoArticuloExacto(Codigo);
-end;
-procedure TAplicacionArticuloDevolucion.PonerString(
-  const Campo, Valor: string);
-var
-  CampoDataSet: TField;
-begin
-  CampoDataSet := FDataSet.FindField(Campo);
-  if CampoDataSet <> nil then
-    CampoDataSet.AsString := Valor;
-end;
-
-procedure TAplicacionArticuloDevolucion.PonerFloat(
-  const Campo: string; Valor: Double);
-var
-  CampoDataSet: TField;
-begin
-  CampoDataSet := FDataSet.FindField(Campo);
-  if CampoDataSet <> nil then
-    CampoDataSet.AsFloat := Valor;
-end;
-
-procedure TAplicacionArticuloDevolucion.PonerInteger(
-  const Campo: string; Valor: Integer);
-var
-  CampoDataSet: TField;
-begin
-  CampoDataSet := FDataSet.FindField(Campo);
-  if CampoDataSet <> nil then
-    CampoDataSet.AsInteger := Valor;
-end;
-
-procedure TAplicacionArticuloDevolucion.LimpiarCampo(
-  const Campo: string);
-var
-  CampoDataSet: TField;
-begin
-  CampoDataSet := FDataSet.FindField(Campo);
-  if CampoDataSet <> nil then
-    CampoDataSet.Clear;
-end;
-
-procedure TAplicacionArticuloDevolucion.EnfocarSku(
-  AbrirBusqueda: Boolean);
-var
-  ColumnaSku: TcxGridDBColumn;
-  Formulario: TfrmMtoDevolucionesCompra;
-begin
-  Formulario := FFormulario;
-  ColumnaSku := Formulario.tvLineasDevolucion.GetColumnByFieldName(
+  oColumnaSku := tvLineasDevolucion.GetColumnByFieldName(
     'CODIGO_UNIDAD_DEVCLIN');
-  if ColumnaSku <> nil then
+  if oColumnaSku <> nil then
   begin
-    ColumnaSku.Visible := True;
-    TThread.ForceQueue(nil,
+    oColumnaSku.Visible := True;
+    TThread.ForceQueue(
+      nil,
       procedure
       begin
-        Formulario.tvLineasDevolucion.Controller.FocusedColumn :=
-          ColumnaSku;
-        Formulario.tvLineasDevolucion.Controller.EditingController.ShowEdit;
-        if AbrirBusqueda then
-          Formulario.colLineaDevcCODIGO_UNIDADPropertiesButtonClick(nil, 0);
+        tvLineasDevolucion.Controller.FocusedColumn := oColumnaSku;
+        tvLineasDevolucion.Controller.EditingController.ShowEdit;
+        if AAbrirBusqueda then
+          colLineaDevcCODIGO_UNIDADPropertiesButtonClick(nil, 0);
       end);
   end;
 end;
 
-procedure TAplicacionArticuloDevolucion.PrepararEdicion;
+function TfrmMtoDevolucionesCompra.RecogerEntradaArticuloDevolucion(
+  const ACodigoArt: string;
+  ALineas: TDataSet): TEntradaArticuloDevolucionCompra;
 begin
-  if FDataSet.IsEmpty then
-    FDataSet.Append;
-  if not (FDataSet.State in dsEditModes) then
-    FDataSet.Edit;
-  FCodigoProveedor := CampoCabeceraString('CODIGO_PRV_DEVC');
-  FCodigoAlmacen := CampoCabeceraString('CODIGO_ALM_DEVC');
-  FFecha := FechaCabecera;
+  Result := Default(TEntradaArticuloDevolucionCompra);
+  Result.CodigoIntroducido := ACodigoArt;
+  Result.CodigoProveedor := LeerTextoDataset(
+    dsTablaG.DataSet,
+    'CODIGO_PRV_DEVC');
+  Result.CodigoAlmacen := LeerTextoDataset(
+    dsTablaG.DataSet,
+    'CODIGO_ALM_DEVC');
+  Result.Fecha := Date;
+  if not dsTablaG.DataSet.FieldByName('FECHA_DEVC').IsNull then
+    Result.Fecha := dsTablaG.DataSet.FieldByName('FECHA_DEVC').AsDateTime;
+  Result.CantidadActual := LeerNumeroDataset(
+    ALineas,
+    'CANTIDAD_DEVCLIN');
 end;
 
-procedure TAplicacionArticuloDevolucion.CargarDatosArticulo;
-var
-  Resolver: IArticulosResolver;
+procedure TfrmMtoDevolucionesCompra.PresentarResultadoArticuloDevolucion(
+  const AResultado: TResultadoArticuloDevolucionCompra;
+  ALineas: TDataSet);
 begin
-  Resolver := FFormulario.ContextoRepositoriosPantalla.Articulos.
-    CrearResolverArticulos(
-    FFormulario.ConexionPrincipal);
-  try
-    FDatos := Resolver.ResolverDatos(
-      FCodigoArticulo, FCodigoSku, '', FFecha,
-      FCodigoAlmacen, FCodigoProveedor);
-    if FDatos.Encontrado and FDatos.RequiereSku then
-      FDatos.UltimoCoste := Resolver.ResolverUltimoCoste(
-        FDatos.CodigoArticulo, FCodigoProveedor, '');
-  finally
-    Resolver := nil;
-  end;
-end;
-
-procedure TAplicacionArticuloDevolucion.ResolverEntradaSku;
-var
-  Validador: IArticulosValidador;
-  Resolucion: TArtResolucionEntrada;
-begin
-  Validador := FFormulario.ContextoRepositoriosPantalla.Articulos.
-    CrearValidadorArticulos(
-    FFormulario.ConexionPrincipal);
-  try
-    Resolucion := Validador.Resolver(FCodigoArticulo);
-  finally
-    Validador := nil;
-  end;
-  if Resolucion.Encontrado then
-  begin
-    FCodigoArticulo := Resolucion.CodigoArticulo;
-    FCodigoSku := Resolucion.CodigoSku;
-    CargarDatosArticulo;
-  end
-  else if Resolucion.Mensaje <> '' then
-    FDatos.Mensaje := Resolucion.Mensaje
-  else
-    FDatos.Mensaje := 'No se encontró el artículo "' +
-      FCodigoArticulo + '".';
-end;
-
-procedure TAplicacionArticuloDevolucion.ResolverArticulo;
-begin
-  FCodigoSku := '';
-  FDatos.Clear;
-  if EsCodigoArticuloExacto(FCodigoArticulo) then
-    CargarDatosArticulo
-  else
-    ResolverEntradaSku;
-end;
-
-procedure TAplicacionArticuloDevolucion.AplicarCamposArticulo;
-var
-  ModeloProveedor: string;
-begin
-  FIdConjuntoPivot := ResolverConjuntoPivotArticulo(
-    FDatos.CodigoArticulo);
-  ModeloProveedor := ModeloProveedorArticulo(
-    FDatos.CodigoArticulo, FCodigoProveedor);
-  if ModeloProveedor = '' then
-    ModeloProveedor := FDatos.UltimoCoste.RefProveedor;
-  PonerString('CODIGO_ART_DEVCLIN', FDatos.CodigoArticulo);
-  PonerString('CODIGO_UNIDAD_DEVCLIN', FDatos.CodigoSku);
-  PonerString('REF_PRV_DEVCLIN', ModeloProveedor);
-  PonerString('CODIGO_FAM_DEVCLIN', FDatos.CodigoFamilia);
-  PonerString(
-    'DESCRIPCION_ARTICULO_DEVCLIN', FDatos.DescripcionArticulo);
-  PonerString(
-    'TIPO_CANTIDAD_ARTICULO_DEVCLIN', FDatos.TipoCantidad);
-  PonerString('TIPO_IVA_ARTICULO_DEVCLIN', FDatos.TipoIVA);
-  PonerFloat(
-    'PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN',
-    FDatos.UltimoCoste.PrecioUltCompra);
-  if FCodigoAlmacen <> '' then
-    PonerString('CODIGO_ALMACEN_DEVCLIN', FCodigoAlmacen);
-  if FIdConjuntoPivot > 0 then
-    PonerInteger('ID_AC_PIVOT_DEVCLIN', FIdConjuntoPivot)
-  else
-    LimpiarCampo('ID_AC_PIVOT_DEVCLIN');
-end;
-
-procedure TAplicacionArticuloDevolucion.AplicarCantidades;
-begin
-  FCantidad := 0;
-  if FDatos.RequiereSku and (FIdConjuntoPivot > 0) then
-  begin
-    PonerFloat('CANTIDAD_DEVCLIN', 0);
-    PonerFloat('TOTAL_UNIDADES_DEVCLIN', 0);
-  end
-  else
-  begin
-    if FDataSet.FindField('CANTIDAD_DEVCLIN') <> nil then
-      FCantidad := FDataSet.FieldByName('CANTIDAD_DEVCLIN').AsFloat;
-    if FCantidad = 0 then
-    begin
-      FCantidad := 1;
-      PonerFloat('CANTIDAD_DEVCLIN', FCantidad);
-    end;
-    if FDatos.CodigoSku <> '' then
-      PonerFloat('TOTAL_UNIDADES_DEVCLIN', FCantidad);
-  end;
-  PonerFloat(
-    'TOTAL_DEVCLIN',
-    FCantidad * FDatos.UltimoCoste.PrecioUltCompra);
-end;
-
-procedure TAplicacionArticuloDevolucion.ActualizarInterfaz;
-begin
-  if FDatos.RequiereSku and (FDatos.CodigoSku = '') and
-     ((FFormulario.FPivote = nil) or
-      (not FFormulario.FPivote.Activo)) then
-    EnfocarSku(True);
-  FFormulario.RefrescarVisibilidadTallas;
-  if FFormulario.FMostrarAtributos then
-    FFormulario.CargarCaptionsAtributosLineaActiva;
-  // El pivote horizontal necesita la línea materializada.
-  if Assigned(FFormulario.FPivote) and
-     FFormulario.FPivote.Activo and
-     (FDataSet.State in dsEditModes) then
-    FDataSet.Post;
-end;
-
-procedure TAplicacionArticuloDevolucion.AplicarDatos;
-begin
-  AplicarCamposArticulo;
-  AplicarCantidades;
-  if FDatos.RequiereSku and (FIdConjuntoPivot > 0) then
-    FFormulario.PrepararColorPendienteArticuloDevolucion(
-      FDatos.CodigoArticulo, FIdConjuntoPivot);
-  ActualizarInterfaz;
-end;
-
-procedure TAplicacionArticuloDevolucion.Ejecutar;
-begin
-  if (FCodigoArticulo <> '') and
-     Assigned(FFormulario.dmmDevolucionesCompra) and
-     (not FFormulario.FAplicandoArticulo) then
-  begin
-    FFormulario.AsegurarCabeceraPersistidaParaLineas;
-    FDataSet := FFormulario.dmmDevolucionesCompra.
-      unqryDevolucionesCompraLineas;
-    if Assigned(FDataSet) and FDataSet.Active then
-    begin
-      FFormulario.FAplicandoArticulo := True;
-      try
-        PrepararEdicion;
-        ResolverArticulo;
-        if FDatos.Encontrado then
-          AplicarDatos
-        else if FDatos.Mensaje <> '' then
-          MessageDlg(FDatos.Mensaje, mtWarning, [mbOk], 0);
-      finally
-        FFormulario.FAplicandoArticulo := False;
-      end;
-    end;
-  end;
+  AplicarLineaArticuloDevolucion(AResultado.Linea);
+  if AResultado.PrepararColor then
+    PrepararColorPendienteArticuloDevolucion(
+      AResultado.Linea.CodigoArticulo,
+      AResultado.Linea.IdConjuntoPivote);
+  RefrescarVisibilidadTallas;
+  if FMostrarAtributos then
+    CargarCaptionsAtributosLineaActiva;
+  if Assigned(FPivote) and FPivote.Activo and
+     (ALineas.State in dsEditModes) then
+    ALineas.Post;
+  if AResultado.RequiereSku and
+     ((FPivote = nil) or (not FPivote.Activo)) then
+    EnfocarSkuDevolucion(True);
 end;
 
 procedure TfrmMtoDevolucionesCompra.AplicarArticuloDevolucion(
   const ACodigoArt: string);
 var
-  Aplicacion: TAplicacionArticuloDevolucion;
+  oEntrada: TEntradaArticuloDevolucionCompra;
+  oLineas: TDataSet;
+  oResultado: TResultadoArticuloDevolucionCompra;
 begin
-  Aplicacion := TAplicacionArticuloDevolucion.Create(Self, ACodigoArt);
-  try
-    Aplicacion.Ejecutar;
-  finally
-    FreeAndNil(Aplicacion);
+  if (Trim(ACodigoArt) <> '') and
+     Assigned(dmmDevolucionesCompra) and
+     (not FAplicandoArticulo) then
+  begin
+    AsegurarCabeceraPersistidaParaLineas;
+    oLineas := dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
+    if Assigned(oLineas) and oLineas.Active then
+    begin
+      FAplicandoArticulo := True;
+      try
+        if oLineas.IsEmpty then
+          oLineas.Append;
+        if not (oLineas.State in dsEditModes) then
+          oLineas.Edit;
+        oEntrada := RecogerEntradaArticuloDevolucion(
+          ACodigoArt,
+          oLineas);
+        oResultado := FAplicacionArticulo.Ejecutar(oEntrada);
+        if oResultado.Aplicado then
+          PresentarResultadoArticuloDevolucion(oResultado, oLineas)
+        else if oResultado.Mensaje <> '' then
+          MessageDlg(oResultado.Mensaje, mtWarning, [mbOk], 0);
+      finally
+        FAplicandoArticulo := False;
+      end;
+    end;
   end;
 end;
 
@@ -2388,8 +2208,8 @@ end;
 procedure TfrmMtoDevolucionesCompra.btnCODIGO_EMP_DEVCPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
-  sCodigo : string;
-  ds      : TDataSet;
+  oConsulta: IConsultaComprasPantalla;
+  ds: TDataSet;
 begin
   inherited;
   if Assigned(dmmDevolucionesCompra) then
@@ -2398,18 +2218,20 @@ begin
     if ds.IsEmpty then
       MessageDlg(SErrorDevolucionCompraElegirEmpresaNoSeleccionada,
                  mtInformation, [mbOk], 0)
-    else if BusquedaVisual.EjecutarBusqueda(
-      ConexionPrincipal,
-      'Búsqueda de empresas',
-              'SELECT * FROM fza_empresas ORDER BY RAZON_SOCIAL_EMP',
-              'CODIGO_EMP_EMP',
-              sCodigo,
-              'frmMtoEmpFacSearch',
-              Self) then
+    else
     begin
-      if not (ds.State in [dsInsert, dsEdit]) then
-        ds.Edit;
-      ds.FieldByName('CODIGO_EMP_DEVC').AsString := sCodigo;
+      oConsulta := FBusquedaEmpresas.ConsultarEmpresas;
+      if BusquedaVisual.EjecutarBusquedaDataSet(
+        'Búsqueda de empresas',
+        oConsulta.DataSet,
+        'frmMtoEmpFacSearch',
+        Self) then
+      begin
+        if not (ds.State in [dsInsert, dsEdit]) then
+          ds.Edit;
+        ds.FieldByName('CODIGO_EMP_DEVC').AsString :=
+          oConsulta.DataSet.FieldByName('CODIGO_EMP_EMP').AsString;
+      end;
     end;
   end;
 end;
@@ -2428,8 +2250,8 @@ end;
 procedure TfrmMtoDevolucionesCompra.cbbCODIGO_PRV_DEVCPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
-  sCodigo : string;
-  ds      : TDataSet;
+  oConsulta: IConsultaComprasPantalla;
+  ds: TDataSet;
 begin
   inherited;
   if Assigned(dmmDevolucionesCompra) then
@@ -2438,22 +2260,27 @@ begin
     if ds.IsEmpty then
       MessageDlg(SErrorDevolucionCompraElegirProveedorNoSeleccionada,
                  mtInformation, [mbOk], 0)
-    else if BusquedaVisual.EjecutarBusqueda(
-      ConexionPrincipal,
-      'Búsqueda de proveedores',
-              'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
-              'CODIGO_PRV_PRV',
-              sCodigo,
-              'frmMtoDevcProvSearch',
-              Self) then
+    else
     begin
-      if not (ds.State in [dsInsert, dsEdit]) then
-        ds.Edit;
-      ds.FieldByName('CODIGO_PRV_DEVC').AsString := sCodigo;
-      AplicarIvaExentoIntracomunitarioProveedor(ConexionPrincipal, ds,
-        'CODIGO_PRV_DEVC', 'ESIVA_EXENTO_INTRACOMUNITARIO_DEVC');
-      dmmDevolucionesCompra.CalcularTotalesDevolucionCompra;
-      ActualizarLabelProveedor;
+      oConsulta := FBusquedaProveedores.ConsultarProveedores;
+      if BusquedaVisual.EjecutarBusquedaDataSet(
+        'Búsqueda de proveedores',
+        oConsulta.DataSet,
+        'frmMtoDevcProvSearch',
+        Self) then
+      begin
+        if not (ds.State in [dsInsert, dsEdit]) then
+          ds.Edit;
+        ds.FieldByName('CODIGO_PRV_DEVC').AsString :=
+          oConsulta.DataSet.FieldByName('CODIGO_PRV_PRV').AsString;
+        AplicarIvaExentoIntracomunitarioProveedor(
+          ConexionPrincipal,
+          ds,
+          'CODIGO_PRV_DEVC',
+          'ESIVA_EXENTO_INTRACOMUNITARIO_DEVC');
+        dmmDevolucionesCompra.CalcularTotalesDevolucionCompra;
+        ActualizarLabelProveedor;
+      end;
     end;
   end;
 end;

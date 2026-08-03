@@ -51,7 +51,9 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsgComun;
+  inLibMsgComun,
+  inLibVentasPantallaIntf,
+  UniDataVentasPantallaComposicion;
 
 class function TfrmModalEnviarDestino.Ejecutar(AOwner: TComponent;
   AConn: TUniConnection; const ATitulo, AEmpresa,
@@ -60,6 +62,7 @@ var
   frm: TfrmModalEnviarDestino;
   aAlmacenes: TValoresDestinoEnvio;
   aSeries: TValoresDestinoEnvio;
+  oContexto: TContextoDestinoEnvioVentasPantalla;
   oRepositorio: IRepositorioDestinoEnvio;
   sValor: string;
 begin
@@ -67,8 +70,11 @@ begin
   frm := TfrmModalEnviarDestino.Create(AOwner);
   try
     frm.Caption := ATitulo;
-    oRepositorio := frm.ContextoRepositoriosPantalla.Documentos.
-      CrearRepositorioDestinoEnvio(AConn);
+    CrearContextoVentasPantalla(
+      frm,
+      AConn,
+      oContexto);
+    oRepositorio := oContexto.Repositorio;
     aAlmacenes := oRepositorio.ListarAlmacenes(AEmpresa);
     for sValor in aAlmacenes do
     begin

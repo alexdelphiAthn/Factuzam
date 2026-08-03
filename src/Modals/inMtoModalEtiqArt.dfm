@@ -788,8 +788,4 @@
       end
     end
   end
-  inherited unqryInformesGuias: TUniQuery
-    Left = 232
-    Top = 224
-  end
 end

@@ -27,7 +27,8 @@ uses
   cxRadioGroup, cxGroupBox, cxTextEdit, cxLabel, UniDataFacturas,
   cxStyles, dxSkinsForm, cxClasses, cxLocalization, JvComponentBase, JvEnterTab,
   System.Actions, Vcl.ActnList, frxSmartMemo, frLocalization, frLanguageSpanish,
-  frxExportBaseImageSettingsDialog, frCoreClasses;
+  frxExportBaseImageSettingsDialog, frCoreClasses,
+  inLibInformeRecibosFacturaPersistenciaIntf;
 
 type
   TfrmPrintRecFac = class(TfrmPrint)
@@ -40,6 +41,8 @@ type
     edtPlazoRecFac: TcxTextEdit;
     procedure rbActualClick(Sender: TObject);
     procedure rbRangoFechasClick(Sender: TObject);
+  private
+    FPreparadorInforme: IPreparadorInformeRecibosFactura;
   public
     procedure preparar_consulta; override;
     procedure AfterReportLoaded; override;
@@ -52,7 +55,7 @@ type
 implementation
 
 uses
-  inLibFormatoDocumento;
+  UniDataInformeRecibosFacturaRepositorio;
 
 {$R *.dfm}
 
@@ -66,63 +69,19 @@ begin
 end;
 
 procedure TfrmPrintRecFac.preparar_consulta;
+var
+  criterios: TCriteriosInformeRecibosFactura;
 begin
   inherited;
-  with dmFac do
-  begin
-  if rbActual.Checked = true then
-  begin
-    with unqryRecibosPrint do
-    begin
-      Params.Clear;
-      SQL.Text := '     SELECT r.*, ' +
-                  ExpresionSqlFormatoDocumento(
-                    'emp.FORMATO_DOCUMENTO_EMP',
-                    'r.SERIE_FAC_REC',
-                    'r.NUMERO_FAC_REC') +
-                  ' AS DOCUMENTO_FACTURA_FORMATO ' +
-                  '       FROM vi_recibos r ' +
-                  '  LEFT JOIN fza_facturas fac ' +
-                  '         ON fac.SERIE_FAC = r.SERIE_FAC_REC ' +
-                  '        AND fac.NUMERO_FAC = r.NUMERO_FAC_REC ' +
-                  '  LEFT JOIN fza_empresas emp ' +
-                  '         ON emp.CODIGO_EMP_EMP = fac.CODIGO_EMP_FAC ' +
-                  '      WHERE NUMERO_FAC_REC = :numfac ' +
-                  '        AND SERIE_FAC_REC = :serie ' +
-                  '        AND NUMERO_PLAZO_REC = :recibo ';
-      Params.ParamByName('numfac').AsString := edtNroFac.text;
-      Params.ParamByName('serie').AsString := edtSerie.text;
-      Params.ParamByName('recibo').AsString := edtPlazoRecFac.text;
-    end;
-    unqryRecibosPrint.Open;
-    fxdsRecibos.UpdateBounds;
-  end;
-  if rbRangoFechas.Checked = true then
-  begin
-    with unqryRecibosPrint do
-    begin
-      Params.Clear;
-      SQL.Text := '     SELECT r.*, ' +
-                  ExpresionSqlFormatoDocumento(
-                    'emp.FORMATO_DOCUMENTO_EMP',
-                    'r.SERIE_FAC_REC',
-                    'r.NUMERO_FAC_REC') +
-                  ' AS DOCUMENTO_FACTURA_FORMATO ' +
-                  '       FROM vi_recibos r ' +
-                  '  LEFT JOIN fza_facturas fac ' +
-                  '         ON fac.SERIE_FAC = r.SERIE_FAC_REC ' +
-                  '        AND fac.NUMERO_FAC = r.NUMERO_FAC_REC ' +
-                  '  LEFT JOIN fza_empresas emp ' +
-                  '         ON emp.CODIGO_EMP_EMP = fac.CODIGO_EMP_FAC ' +
-                  '      WHERE NUMERO_FAC_REC = :numfac ' +
-                  '        AND SERIE_FAC_REC = :serie ' ;
-      Params.ParamByName('numfac').AsString := edtNroFac.text;
-      Params.ParamByName('serie').AsString := edtSerie.text;
-    end;
-    unqryRecibosPrint.Open;
-    fxdsRecibos.UpdateBounds;
-  end;
-  end;
+  criterios.ReciboActual := rbActual.Checked;
+  criterios.Serie := edtSerie.Text;
+  criterios.NumeroFactura := edtNroFac.Text;
+  criterios.NumeroRecibo := edtPlazoRecFac.Text;
+  if FPreparadorInforme = nil then
+    FPreparadorInforme := CrearPreparadorInformeRecibosFacturaUniDAC(
+      dmFac.unqryRecibosPrint);
+  FPreparadorInforme.Preparar(criterios);
+  dmFac.fxdsRecibos.UpdateBounds;
 end;
 
 procedure TfrmPrintRecFac.rbActualClick(Sender: TObject);

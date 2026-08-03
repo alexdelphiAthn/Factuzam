@@ -27,7 +27,8 @@ uses
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxContainer, cxLabel, cxTextEdit, cxMaskEdit,
   cxDropDownEdit, cxCalendar, cxButtons, cxCheckBox, cxCurrencyEdit,
-  JvComponentBase, JvEnterTab, inLibListadoVentasPersistenciaIntf;
+  JvComponentBase, JvEnterTab, inLibListadoVentasPersistenciaIntf,
+  inLibDocumentosTrabajo, inLibArticulosResolverIntf;
 
 type
   TfrmModalListadoVentas = class(TfrmBase)
@@ -62,6 +63,8 @@ type
     dsVentas:              TDataSource;
     pmVentas:              TPopupMenu;
     miAgregarDocumento:    TMenuItem;
+    FDocumentosTrabajo:    TRepositoriosDocumentosTrabajo;
+    FResolverArticulos:    IArticulosResolver;
     procedure CrearInterfaz;
     procedure CrearFiltros;
     procedure CrearGrid;
@@ -94,9 +97,11 @@ implementation
 
 uses
   System.Diagnostics, inLibDevExp, inLibFotos,
-  inLibDocumentosTrabajo, inLibDocumentosTrabajoPresentacion,
+  inLibDocumentosTrabajoPresentacion,
   inMtoFotoArticulo,
-  inLibMsgComun, inLibMsgVentas;
+  inLibMsgComun, inLibMsgVentas,
+  inLibVentasPantallaIntf,
+  UniDataVentasPantallaComposicion;
 
 {$R *.dfm}
 
@@ -105,12 +110,19 @@ begin
 end;
 
 procedure TfrmModalListadoVentas.FormCreate(Sender: TObject);
+var
+  oContexto: TContextoListadoVentasPantalla;
 begin
   inherited;
   Self.Position := poScreenCenter;
   KeyPreview := True;
-  FRepositorio :=
-    ContextoRepositoriosPantalla.Ventas.CrearRepositorioListadoVentas;
+  CrearContextoVentasPantalla(
+    Self,
+    ConexionPrincipal,
+    oContexto);
+  FRepositorio := oContexto.Listado;
+  FDocumentosTrabajo := oContexto.DocumentosTrabajo;
+  FResolverArticulos := oContexto.ResolverArticulos;
   dsVentas := TDataSource.Create(Self);
   CrearInterfaz;
   CargarCombos;
@@ -490,12 +502,10 @@ procedure TfrmModalListadoVentas.miAgregarDocumentoClick(Sender: TObject);
 begin
   try
     AgregarArticuloActivoADocumentoTrabajo(Self, ConexionPrincipal,
-      ContextoRepositoriosPantalla.Documentos.
-        CrearRepositoriosDocumentosTrabajo(ConexionPrincipal),
+      FDocumentosTrabajo,
       CrearInteraccionDocumentosTrabajoVcl,
       BusquedaVisual, ContextoSesion, ParametrosCaja, ResolverArtSkuStock,
-      ContextoRepositoriosPantalla.Articulos.
-        CrearResolverArticulos(ConexionPrincipal));
+      FResolverArticulos);
   except
     on E: Exception do
       MessageDlg(E.Message, mtError, [mbOK], 0);

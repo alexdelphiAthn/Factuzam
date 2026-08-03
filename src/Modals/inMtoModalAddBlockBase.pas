@@ -259,7 +259,8 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibUser, inLibMsgArticulos, inLibMsgComun;
+  inLibUser, inLibMsgArticulos, inLibMsgComun,
+  UniDataConfiguracionPantalla;
 
 // ============================================================================
 //   API publica del hijo
@@ -324,8 +325,7 @@ begin
   Self.Position := poMainFormCenter;
   FBaseResultado.Aceptado := False;
   FPropagandoCheck    := False;
-  FServicios :=
-    ContextoRepositoriosPantalla.Articulos.CrearServicioCargaMasivaArticulos;
+  ComponerConfiguracionPantalla(Self, FServicios);
   FCodigosPropiedades := TStringList.Create;
   FDsFamilias     := TDataSource.Create(Self);
   FDsProveedores  := TDataSource.Create(Self);

@@ -34,7 +34,8 @@ uses
   Vcl.ComCtrls, dxCore, cxStyles, dxSkinsForm, cxClasses, cxLocalization,
   JvComponentBase, JvEnterTab, System.Actions, Vcl.ActnList, frxSmartMemo,
   frLocalization, frLanguageSpanish, frxExportBaseImageSettingsDialog,
-  frCoreClasses, inLibInformesCajaPersistenciaIntf;
+  frCoreClasses, inLibInformesCajaPersistenciaIntf,
+  UniDataCajaPantallaComposicion;
 
 type
   TfrmPrintArqueos = class(TfrmPrint)
@@ -63,6 +64,7 @@ type
     FInicializado: Boolean;
     FRepositorioPersistencia: IRepositorioInformesCaja;
     FResultado: IResultadoInformeCaja;
+    procedure ComponerDependencias;
     // Abre el selector estandar de caja (inMtoModalCajDef sobre la vista
     // vi_cajasdef) acotado a la empresa del usuario y vuelca el almacen y
     // la caja elegidos en bedAlmacen / bedCaja.
@@ -86,6 +88,7 @@ uses
 procedure TfrmPrintArqueos.DoShow;
 begin
   inherited;
+  ComponerDependencias;
   // Por defecto: rango del primer dia del mes en curso hasta hoy, y la
   // empresa / almacen / caja activos del usuario. El usuario puede ampliar
   // las fechas y cambiar almacen / caja con el boton '...' antes de imprimir.
@@ -97,6 +100,18 @@ begin
     bedAlmacen.Text := UbicacionSesion.Almacen;
     bedCaja.Text    := UbicacionSesion.Caja;
     FInicializado   := True;
+  end;
+end;
+
+procedure TfrmPrintArqueos.ComponerDependencias;
+var
+  oComposicion: TComposicionCajaPantalla;
+begin
+  if not Assigned(FRepositorioPersistencia) then
+  begin
+    oComposicion := ComponerCajaPantalla(Self);
+    FRepositorioPersistencia := oComposicion.Informes.
+      CrearRepositorioInformesCaja;
   end;
 end;
 
@@ -151,11 +166,6 @@ begin
   // Filtro por empresa / almacen / caja y por el dia de inicio del arqueo.
   // FECHA_DESDE_ARQ es datetime, asi que el limite superior va abierto al
   // dia siguiente para que el filtro de fecha simple incluya todo el dia.
-  if not Assigned(FRepositorioPersistencia) then
-  begin
-    FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
-      CrearRepositorioInformesCaja;
-  end;
   dsArqueosPrint.DataSet := nil;
   FResultado := FRepositorioPersistencia.ConsultarArqueos(
     ConstruirSolicitud);

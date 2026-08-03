@@ -33,7 +33,9 @@ uses
   dxShellDialogs, UniDataDocumentosTrabajo,
   // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
   inLibColumnasSkuIntf, inLibGridTallasInline,
-  inLibDocumentosTrabajo, inLibCajaVentanasIntf;
+  inLibArticulosAtributosIntf, inLibArticulosValidadorIntf,
+  inLibComprasPantallaIntf, inLibDocumentosTrabajo,
+  inLibCajaVentanasIntf;
 
 type
   TTipoEnvioNumeradoDocumentoTrabajo = (
@@ -120,7 +122,11 @@ type
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
-    FRepositorios: TRepositoriosDocumentosTrabajo;
+    FLecturasDocumentosTrabajo: ILecturasDocumentosTrabajo;
+    FMaterializacionDocumentosTrabajo:
+      IMaterializacionDocumentosTrabajo;
+    FValidadorArticulos: IArticulosValidador;
+    FLookupAtributos: IArticulosAtributosLookup;
     procedure ConstruirModoEntrada;
     procedure CrearColumnasHostDTR;
     procedure MostrarColumnasAtributoGlobalesDTR;
@@ -155,6 +161,7 @@ type
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
     dmmDocumentosTrabajo: TdmDocumentosTrabajo;
+    destructor Destroy; override;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
@@ -173,7 +180,8 @@ uses
   inMtoModalEnviarDestino, inMtoModalCajDef,
   // Listado del documento con una foto de 300 x 300 por línea.
   inMtoPreviewExcel, inLibDocumentosTrabajoExcel, inLibWin,
-  inLibMsgArticulos, inLibMsgCaja, inLibMsgComun, inLibMsgVentas;
+  inLibMsgArticulos, inLibMsgCaja, inLibMsgComun, inLibMsgVentas,
+  UniDataComprasPantallaComposicion;
 
 {$R *.dfm}
 
@@ -182,13 +190,26 @@ begin
 end;
 
 procedure TfrmMtoDocumentosTrabajo.CrearTablaPrincipal;
+var
+  oEntrada: TEntradaComposicionComprasPantalla;
+  oServicios: TServiciosComprasPantalla;
 begin
   inherited;
-  FRepositorios := ContextoRepositoriosPantalla.Documentos.
-    CrearRepositoriosDocumentosTrabajo;
   dmmDocumentosTrabajo := tdmDataModule as TdmDocumentosTrabajo;
   if dmmDocumentosTrabajo <> nil then
   begin
+    oEntrada := Default(TEntradaComposicionComprasPantalla);
+    oEntrada.Tipo := tccDocumentosTrabajo;
+    oEntrada.Conexion := dmmDocumentosTrabajo.unqryTablaG.Connection;
+    oServicios := ComponerComprasPantalla(
+      Self,
+      oEntrada);
+    FLecturasDocumentosTrabajo := oServicios.DocumentosTrabajo.Lecturas;
+    FMaterializacionDocumentosTrabajo :=
+      oServicios.DocumentosTrabajo.Materializacion;
+    FValidadorArticulos :=
+      oServicios.DocumentosTrabajo.ValidadorArticulos;
+    FLookupAtributos := oServicios.DocumentosTrabajo.LookupAtributos;
     dsTablaG.DataSet := dmmDocumentosTrabajo.unqryTablaG;
     tvLineasDTR.DataController.DataSource := dmmDocumentosTrabajo.dsLineas;
     tvCompartidosDTR.DataController.DataSource :=
@@ -202,6 +223,15 @@ begin
   FColsModoConstruido := False;
   cxgrdLineasDTR.OnEnter := GridLineasEnterDTR;
   btnListadoDTR.Visible := PuedeExportar;
+end;
+
+destructor TfrmMtoDocumentosTrabajo.Destroy;
+begin
+  FLookupAtributos := nil;
+  FValidadorArticulos := nil;
+  FMaterializacionDocumentosTrabajo := nil;
+  FLecturasDocumentosTrabajo := nil;
+  inherited;
 end;
 
 procedure TfrmMtoDocumentosTrabajo.GridLineasEnterDTR(Sender: TObject);
@@ -284,12 +314,8 @@ begin
   Cfg.ContextoSesion := ContextoSesion;
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
-  Cfg.ValidadorArticulos :=
-    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
-      dmmDocumentosTrabajo.unqryTablaG.Connection);
-  Cfg.LookupAtributos :=
-    ContextoRepositoriosPantalla.Articulos.CrearLookupAtributosArticulos(
-      dmmDocumentosTrabajo.unqryTablaG.Connection);
+  Cfg.ValidadorArticulos := FValidadorArticulos;
+  Cfg.LookupAtributos := FLookupAtributos;
   Cfg.View := tvLineasDTR;
   Cfg.Cds := ds;
   Cfg.Modo := FModoEntradaSel;
@@ -398,7 +424,7 @@ var
 begin
   // Nombres globales de atributos para ver Color/Talla desde el
   // principio (mismo helper que inventarios / banco de pruebas).
-  Nombres := FRepositorios.Lecturas.ListarNombresAtributos;
+  Nombres := FLecturasDocumentosTrabajo.ListarNombresAtributos;
   iOrden := 1;
   for Nombre in Nombres do
   begin
@@ -609,7 +635,8 @@ begin
     end
     else
     begin
-      Consulta := FRepositorios.Lecturas.ConsultarDestinosCompartir;
+      Consulta :=
+        FLecturasDocumentosTrabajo.ConsultarDestinosCompartir;
       Datos := Consulta.DataSet;
       try
         if BusquedaVisual.EjecutarBusquedaDataSet(
@@ -755,7 +782,7 @@ begin
   // Numero '0' = contador oficial de albaranes de venta (tipo 'AV').
   if sNumero = '0' then
   begin
-    sNumero := FRepositorios.Materializacion.SiguienteContador(
+    sNumero := FMaterializacionDocumentosTrabajo.SiguienteContador(
       sSerie,
       'AV',
       sEmp,
@@ -766,7 +793,7 @@ begin
       Exit;
     end;
   end;
-  iLineas := FRepositorios.Materializacion.CrearAlbaran(
+  iLineas := FMaterializacionDocumentosTrabajo.CrearAlbaran(
     idDtr,
     sEmp,
     sAlm,
@@ -807,7 +834,7 @@ begin
   Result := ANumero;
   if Result = '0' then
   begin
-    Result := FRepositorios.Materializacion.SiguienteContador(
+    Result := FMaterializacionDocumentosTrabajo.SiguienteContador(
       ASerie,
       ATipoContador,
       AEmpresa,
@@ -864,11 +891,13 @@ begin
         iLineas := 0;
         case ATipo of
           tenFacturaVenta:
-            iLineas := FRepositorios.Materializacion.CrearFacturaVenta(
+            iLineas :=
+              FMaterializacionDocumentosTrabajo.CrearFacturaVenta(
               idDtr, sEmp, sAlm, sSerie, sNumero,
               IdentidadSesion.Usuario);
           tenPedidoCompra:
-            iLineas := FRepositorios.Materializacion.CrearPedidoCompra(
+            iLineas :=
+              FMaterializacionDocumentosTrabajo.CrearPedidoCompra(
               idDtr, sEmp, sAlm, sSerie, sNumero,
               IdentidadSesion.Usuario);
         end;
@@ -1140,7 +1169,7 @@ begin
   // de inventarios al grabar: PRC_GET_NEXT_CONT_FACT_SERIE).
   if sNumero = '0' then
   begin
-    sNumero := FRepositorios.Materializacion.SiguienteContador(
+    sNumero := FMaterializacionDocumentosTrabajo.SiguienteContador(
       sSerie,
       'IN',
       sEmp,
@@ -1152,7 +1181,7 @@ begin
       Exit;
     end;
   end;
-  iLineas := FRepositorios.Materializacion.CrearInventario(
+  iLineas := FMaterializacionDocumentosTrabajo.CrearInventario(
     idDtr,
     sEmp,
     sAlm,
@@ -1172,7 +1201,7 @@ begin
   idDtr := PrepararEnvio;
   if idDtr <= 0 then
     Exit;
-  idTarc := FRepositorios.Materializacion.CrearSesionTarifa(
+  idTarc := FMaterializacionDocumentosTrabajo.CrearSesionTarifa(
     idDtr,
     IdentidadSesion.Usuario);
   ShowMessage(Format(SInfoCambioTarifasDocumentoTrabajoCreado,

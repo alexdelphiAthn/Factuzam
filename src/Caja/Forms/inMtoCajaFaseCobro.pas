@@ -33,7 +33,8 @@ uses
   VirtualTable,
   inMtoFrmBase, inLibFacturas, inLibFaseCobro, inLibCajaTipos,
   inLibFaseCobroPersistenciaIntf,
-  inMtoCajaReferenciaPago, System.UITypes, dxGDIPlusClasses, cxImage;
+  inMtoCajaReferenciaPago, System.UITypes, dxGDIPlusClasses, cxImage,
+  UniDataCajaPantallaComposicion;
 
 type
   TTipoImpresionTicket = inLibCajaTipos.TTipoImpresionVenta;
@@ -560,14 +561,17 @@ begin
 end;
 
 procedure TfrmMtoCajaFaseCobro.FormCreate(Sender: TObject);
+var
+  oComposicion: TComposicionCajaPantalla;
 begin
   inherited;
+  oComposicion := ComponerCajaPantalla(Self);
   FActualizandoEmail := False;
   FEmailEnvio := '';
   chkEnviarEmail.Checked := False;
   DibujarIconoEmail;
   ConfigurarTablaVirtual;
-  FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
+  FRepositorioPersistencia := oComposicion.Operaciones.
     CrearRepositorioFaseCobro;
   FDatosCobro := TDatosFaseCobro.Create(
     FRepositorioPersistencia,

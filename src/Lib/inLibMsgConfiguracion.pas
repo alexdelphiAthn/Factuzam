@@ -21,9 +21,6 @@ resourcestring
   SErrorDecryptPass = 'Fallo en la lectura y desencriptación' +
                                   ' de password.';
   SErrorAuthPass = 'La contraseña de usuario no es correcta. ';
-  SErrorPassMatch = 'El password que ha introducido no coincide.';
-  SErrorPassMatchBBDD = 'El password de la BBDD no coincide.';
-  SEnterPassBBDD = 'Introduzca el password actual de la BBDD';
   SScriptSuccess = 'El script se ejecutó exitosamente.';
   SFailLoadScriptBBDD = 'No existe script de creación de BD, ' +
                                'instalación fallida';
@@ -37,12 +34,6 @@ resourcestring
                             ' con nuevos cambios,' + sLineBreak +
                             ' ¿desea proceder con el procedimiento' +
                             ' de actualización?';
-  SPasswordBBDDChanged = 'Password de la BBDD cambiado '+
-                                'correctamente.' + sLineBreak +
-                                'Anote el password: "%s" en un lugar'+
-                                ' seguro para evitar problemas.';
-  SWantDefChgBBDD= '¿Desea cambiar el password por defecto ' +
-                          'de la Base de Datos?';
   SNoConnBBDD = 'No hay conexión con la bbdd';
   SConnSuccBBDD = 'La conexión se estableció exitosamente.';
   SGetPassBBDD = 'Escriba password de la BBDD';
@@ -54,8 +45,6 @@ resourcestring
     'Detalle del error: %s' + sLineBreak + sLineBreak +
     '¿Deseas ignorar el error y continuar con el script?';
   SSolicitudPassBBDD = 'Introduzca password de la BBDD';
-  SSolicitudNuevoPassBBDD =
-    'Introduzca el nuevo password de la BBDD';
   SScriptEjecutado = 'El script se ejecutó exitosamente';
   SScriptNoEjecutado = 'El script no fue ejecutado';
   SErrorConexionServidorBBDD =

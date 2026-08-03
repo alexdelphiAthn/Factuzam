@@ -130,7 +130,8 @@ uses
   inLibComprasSesionesPresentacionIntf,
   inLibMsgCompras,
   inMtoComprasSesionesPresentacionPlanificador,
-  inMtoModalSelFamilia;
+  inMtoModalSelFamilia,
+  UniDataComprasSesionesPresentacionRepositorio;
 
 const
   // Debounce de apertura del desplegable y resolucion inmediata pero
@@ -197,38 +198,7 @@ end;
 // RecargarModelos.
 procedure TBuscadorModeloProveedorSesion.ConstruirConsulta;
 begin
-  FConsulta := TUniQuery.Create(nil);
-  FConsulta.Connection := FEntorno.Conexion;
-  FConsulta.SQL.Text :=
-    'SELECT ap.REF_PROVEEDOR_AP AS REFPRV,' +
-    '       ap.CODIGO_ART_AP    AS CODART,' +
-    '       a.DESCRIPCION_ART   AS DESCRIPCION,' +
-    '       ap.PRECIO_ULT_COMPRA_AP AS PCOMPRA,' +
-    '       COALESCE((SELECT acn.NOMBRE_AC' +
-    '                   FROM fza_articulos_conjuntos_asign aca' +
-    '                   JOIN fza_atributos_conjuntos acn' +
-    '                     ON acn.ID_AC = aca.ID_AC_ACA' +
-    '                  WHERE aca.CODIGO_ART_ACA = a.CODIGO_ART_ART' +
-    '                    AND aca.ID_VA_ACA = ''TAL''' +
-    '                  ORDER BY aca.ID_VA_ACA LIMIT 1), '''') AS SISTEMA,' +
-    '       COALESCE((SELECT GROUP_CONCAT(DISTINCT av.AV ORDER BY av.AV' +
-    '                                     SEPARATOR '', '')' +
-    '                   FROM fza_articulos_skus sk' +
-    '                   JOIN fza_atributos_sku sa' +
-    '                     ON sa.CODIGO_UNIDAD_SKU_SA = sk.CODIGO_UNIDAD_SKU' +
-    '                   JOIN fza_atributos_valores av' +
-    '                     ON av.ID_AV = sa.ID_AV_SA AND av.ID_VA_AV = ''CO''' +
-    '                  WHERE sk.CODIGO_ART_SKU = a.CODIGO_ART_ART' +
-    '                    AND sk.ESACTIVO_SKU = ''S''), '''') AS COLORES' +
-    '  FROM fza_articulos_proveedores ap' +
-    '  JOIN fza_articulos a ON a.CODIGO_ART_ART = ap.CODIGO_ART_AP' +
-    '                       AND a.ESACTIVO_ART = ''S''' +
-    ' WHERE ap.CODIGO_PRV_AP = :prv' +
-    '   AND ap.REF_PROVEEDOR_AP IS NOT NULL' +
-    '   AND ap.REF_PROVEEDOR_AP <> ''''' +
-    ' GROUP BY ap.REF_PROVEEDOR_AP, ap.CODIGO_ART_AP, a.DESCRIPCION_ART,' +
-    '          ap.PRECIO_ULT_COMPRA_AP' +
-    ' ORDER BY ap.REF_PROVEEDOR_AP';
+  FConsulta := CrearConsultaModelosProveedorUniDAC(FEntorno.Conexion);
   FFuente := TDataSource.Create(nil);
   FFuente.DataSet := FConsulta;
 end;

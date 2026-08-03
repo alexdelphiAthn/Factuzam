@@ -182,16 +182,4 @@
     Left = 520
     Top = 256
   end
-  object unqryPerfiles: TUniQuery
-    Connection = dmConn.conUni
-    SQL.Strings = (
-      'SELECT * FROM fza_usuarios_perfiles ')
-    Left = 432
-    Top = 256
-  end
-  object dsPerfiles: TDataSource
-    DataSet = unqryPerfiles
-    Left = 312
-    Top = 264
-  end
 end

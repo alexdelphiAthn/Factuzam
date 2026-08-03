@@ -155,7 +155,9 @@ uses
   inMtoModalGenImpSave, inLibUser, inLibPathTokens,
   System.Generics.Collections, System.Rtti, inLibFotos, inLibVerifactu,
   inMtoModalInformesGuias, inMtoModalWizardEditar,
-  inLibInformesGuiasCache, inLibMsgComun, inLibTraduccionesInforme;
+  inLibInformesGuiasCache, inLibMsgComun, inLibTraduccionesInforme,
+  inLibVentasPantallaIntf,
+  UniDataVentasPantallaComposicion;
 
 {$R *.dfm}
 
@@ -985,6 +987,8 @@ begin
 end;
 
 procedure TfrmPrint.FormCreate(Sender: TObject);
+var
+  oContexto: TContextoImpresionVentasPantalla;
 begin
   inherited;
   if Width > Screen.WorkAreaWidth then
@@ -995,8 +999,11 @@ begin
   pnl1.Align := alRight;
   pnl1.BringToFront;
   Self.Position := poScreenCenter;
-  FServiciosPersistencia := ContextoRepositoriosPantalla.Documentos.
-    CrearServiciosPersistenciaImpresion;
+  CrearContextoVentasPantalla(
+    Self,
+    ConexionPrincipal,
+    oContexto);
+  FServiciosPersistencia := oContexto.Persistencia;
   FRestauracionesGuias := TInterfaceList.Create;
 end;
 

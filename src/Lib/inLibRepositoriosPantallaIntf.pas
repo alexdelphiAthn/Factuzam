@@ -13,7 +13,8 @@ unit inLibRepositoriosPantallaIntf;
 interface
 
 uses
-  Data.DB, Uni, inLibCatalogoSqlIntf, inLibArticulosResolverIntf,
+  System.Classes, Data.DB, Uni, inLibCatalogoSqlIntf,
+  inLibArticulosResolverIntf,
   inLibParametrosIntf, inLibContextoSesionIntf,
   inLibPerfilesUsuarioIntf, inLibLogIntf, inLibPreviewTicket,
   inLibArticulosValidadorIntf, inLibArticulosAtributosIntf,
@@ -51,6 +52,11 @@ uses
   inLibTicketsCajaIntf;
 
 type
+  TServiciosSqlPantalla = record
+    Catalogo: ICatalogoSql;
+    Incidencias: IRegistroIncidenciasSql;
+  end;
+
   IRepositoriosArticulosPantalla = interface
     ['{41046501-116D-42EF-B24D-E64A811DA5D8}']
     function CrearResolverArticulos(
@@ -188,52 +194,176 @@ type
       AConexion: TUniConnection = nil): TRepositoriosTicketsCaja;
   end;
 
-  IContextoRepositoriosPantalla = interface
-    ['{0F2AFBE9-AE28-4DD0-BC28-AD45C3A14965}']
-    function CatalogoSql: ICatalogoSql;
-    function IncidenciasSql: IRegistroIncidenciasSql;
-    function Articulos: IRepositoriosArticulosPantalla;
-    function Configuracion: IRepositoriosConfiguracionPantalla;
-    function Documentos: IRepositoriosDocumentosPantalla;
-    function Remesas: IRepositoriosRemesasPantalla;
-    function Operaciones: IRepositoriosOperacionesPantalla;
-    function Ventas: IRepositoriosVentasPantalla;
-    function Caja: IRepositoriosCajaPantalla;
-    function TicketsCaja: IRepositoriosTicketsCajaPantalla;
+  ICompositorSqlPantalla = interface
+    ['{1D93D3B8-B5B4-43F0-B926-A78AE4F9C81F}']
+    function CrearServiciosSqlPantalla(
+      const ANombrePantalla: string): TServiciosSqlPantalla;
   end;
 
-  IProveedorContextoRepositoriosPantalla = interface
-    ['{C7AF93C9-861B-4486-8BA3-F46B65FC20FA}']
-    function GetContextoRepositoriosPantalla:
-      IContextoRepositoriosPantalla;
-    property ContextoRepositoriosPantalla: IContextoRepositoriosPantalla
-      read GetContextoRepositoriosPantalla;
+  ICompositorArticulosPantalla = interface
+    ['{F689479E-9EB6-478D-BB50-4F28518A25B0}']
+    function CrearRepositoriosArticulosPantalla(
+      const ANombrePantalla: string): IRepositoriosArticulosPantalla;
   end;
 
-  IFabricaContextosRepositoriosPantalla = interface
-    ['{A710190E-74AF-4B57-B259-97B3C688BB20}']
-    function Crear(
-      const ANombrePantalla: string;
-      AConexionPrincipal: TUniConnection;
-      const AParametrosApp: IParametrosAplicacion;
-      const AParametrosCaja: IParametrosCaja;
-      const AContextoSesion: IContextoSesionAplicacion;
-      const APerfilesLectura: ILectorPerfilesUsuario;
-      const APerfilesEscritura: IEscritorPerfilesUsuario;
-      const ARegistroLog: IRegistroLog;
-      const APreviewTicket: IPreviewTicket
-    ): IContextoRepositoriosPantalla;
+  ICompositorConfiguracionPantalla = interface
+    ['{AA5843CE-CB1A-47A8-A713-BECE1B091DE0}']
+    function CrearRepositoriosConfiguracionPantalla(
+      const ANombrePantalla: string): IRepositoriosConfiguracionPantalla;
   end;
 
-  IProveedorFabricaContextosRepositoriosPantalla = interface
-    ['{5CC18BC6-B146-47A6-90EC-B505231F2571}']
-    function GetFabricaContextosRepositoriosPantalla:
-      IFabricaContextosRepositoriosPantalla;
-    property FabricaContextosRepositoriosPantalla:
-      IFabricaContextosRepositoriosPantalla
-      read GetFabricaContextosRepositoriosPantalla;
+  ICompositorDocumentosPantalla = interface
+    ['{C770140A-2594-481E-879A-74DF701D7F8E}']
+    function CrearRepositoriosDocumentosPantalla(
+      const ANombrePantalla: string): IRepositoriosDocumentosPantalla;
   end;
+
+  ICompositorRemesasPantalla = interface
+    ['{8F31BA0C-1F56-4C90-892B-7A0D51F78633}']
+    function CrearRepositoriosRemesasPantalla(
+      const ANombrePantalla: string): IRepositoriosRemesasPantalla;
+  end;
+
+  ICompositorOperacionesPantalla = interface
+    ['{0B3BFAD5-4AE2-41D0-B117-3C09E44C877B}']
+    function CrearRepositoriosOperacionesPantalla(
+      const ANombrePantalla: string): IRepositoriosOperacionesPantalla;
+  end;
+
+  ICompositorVentasPantalla = interface
+    ['{5EE952E8-B49D-41CF-A3D5-1B3DE68D1C02}']
+    function CrearRepositoriosVentasPantalla(
+      const ANombrePantalla: string): IRepositoriosVentasPantalla;
+  end;
+
+  ICompositorCajaPantalla = interface
+    ['{17713D3B-9423-41E4-B09E-C07D55CE4E91}']
+    function CrearRepositoriosCajaPantalla(
+      const ANombrePantalla: string): IRepositoriosCajaPantalla;
+  end;
+
+  ICompositorTicketsCajaPantalla = interface
+    ['{49518DD8-2C20-44EE-A6B5-5E63219518D3}']
+    function CrearRepositoriosTicketsCajaPantalla(
+      const ANombrePantalla: string): IRepositoriosTicketsCajaPantalla;
+  end;
+
+function ObtenerCompositorSqlPantalla(
+  AOrigen: TComponent): ICompositorSqlPantalla;
+function ObtenerCompositorArticulosPantalla(
+  AOrigen: TComponent): ICompositorArticulosPantalla;
+function ObtenerCompositorConfiguracionPantalla(
+  AOrigen: TComponent): ICompositorConfiguracionPantalla;
+function ObtenerCompositorDocumentosPantalla(
+  AOrigen: TComponent): ICompositorDocumentosPantalla;
+function ObtenerCompositorRemesasPantalla(
+  AOrigen: TComponent): ICompositorRemesasPantalla;
+function ObtenerCompositorOperacionesPantalla(
+  AOrigen: TComponent): ICompositorOperacionesPantalla;
+function ObtenerCompositorVentasPantalla(
+  AOrigen: TComponent): ICompositorVentasPantalla;
+function ObtenerCompositorCajaPantalla(
+  AOrigen: TComponent): ICompositorCajaPantalla;
+function ObtenerCompositorTicketsCajaPantalla(
+  AOrigen: TComponent): ICompositorTicketsCajaPantalla;
 
 implementation
+
+uses
+  System.SysUtils, Vcl.Forms;
+
+resourcestring
+  SErrorCompositorPantallaNoDisponible =
+    'La raíz de composición no publica la capacidad solicitada.';
+
+function BuscarCompositor(
+  AOrigen: TComponent;
+  const AIdInterfaz: TGUID): IInterface;
+var
+  oActual: TComponent;
+begin
+  Result := nil;
+  oActual := AOrigen;
+  while Assigned(oActual) and not Assigned(Result) do
+  begin
+    oActual.GetInterface(AIdInterfaz, Result);
+    oActual := oActual.Owner;
+  end;
+  if not Assigned(Result) and Assigned(Application.MainForm) then
+    Application.MainForm.GetInterface(AIdInterfaz, Result);
+  if not Assigned(Result) then
+    raise EInvalidOpException.Create(
+      SErrorCompositorPantallaNoDisponible);
+end;
+
+function ObtenerCompositorSqlPantalla(
+  AOrigen: TComponent): ICompositorSqlPantalla;
+begin
+  Result := BuscarCompositor(
+    AOrigen, ICompositorSqlPantalla) as ICompositorSqlPantalla;
+end;
+
+function ObtenerCompositorArticulosPantalla(
+  AOrigen: TComponent): ICompositorArticulosPantalla;
+begin
+  Result := BuscarCompositor(
+    AOrigen,
+    ICompositorArticulosPantalla) as ICompositorArticulosPantalla;
+end;
+
+function ObtenerCompositorConfiguracionPantalla(
+  AOrigen: TComponent): ICompositorConfiguracionPantalla;
+begin
+  Result := BuscarCompositor(
+    AOrigen,
+    ICompositorConfiguracionPantalla) as ICompositorConfiguracionPantalla;
+end;
+
+function ObtenerCompositorDocumentosPantalla(
+  AOrigen: TComponent): ICompositorDocumentosPantalla;
+begin
+  Result := BuscarCompositor(
+    AOrigen,
+    ICompositorDocumentosPantalla) as ICompositorDocumentosPantalla;
+end;
+
+function ObtenerCompositorRemesasPantalla(
+  AOrigen: TComponent): ICompositorRemesasPantalla;
+begin
+  Result := BuscarCompositor(
+    AOrigen,
+    ICompositorRemesasPantalla) as ICompositorRemesasPantalla;
+end;
+
+function ObtenerCompositorOperacionesPantalla(
+  AOrigen: TComponent): ICompositorOperacionesPantalla;
+begin
+  Result := BuscarCompositor(
+    AOrigen,
+    ICompositorOperacionesPantalla) as ICompositorOperacionesPantalla;
+end;
+
+function ObtenerCompositorVentasPantalla(
+  AOrigen: TComponent): ICompositorVentasPantalla;
+begin
+  Result := BuscarCompositor(
+    AOrigen,
+    ICompositorVentasPantalla) as ICompositorVentasPantalla;
+end;
+
+function ObtenerCompositorCajaPantalla(
+  AOrigen: TComponent): ICompositorCajaPantalla;
+begin
+  Result := BuscarCompositor(
+    AOrigen, ICompositorCajaPantalla) as ICompositorCajaPantalla;
+end;
+
+function ObtenerCompositorTicketsCajaPantalla(
+  AOrigen: TComponent): ICompositorTicketsCajaPantalla;
+begin
+  Result := BuscarCompositor(
+    AOrigen,
+    ICompositorTicketsCajaPantalla) as ICompositorTicketsCajaPantalla;
+end;
 
 end.

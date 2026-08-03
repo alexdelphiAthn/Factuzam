@@ -20,11 +20,10 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, cxLookAndFeelPainters, StdCtrls, ComCtrls, cxButtons, rtti,
-  UniDataConn, inLibUser, ImgList, Buttons, cxControls, cxContainer,
-  Vcl.ExtCtrls, Data.DB, DBAccess, Uni, UniProvider, MySQLUniProvider, DADump,
-  MemDS, cxGraphics, cxLookAndFeels, Vcl.Menus, cxEdit, cxCheckBox,
+  UniDataConn, ImgList, Buttons, cxControls, cxContainer,
+  Vcl.ExtCtrls, Uni, cxGraphics, cxLookAndFeels, Vcl.Menus, cxEdit, cxCheckBox,
   cxTextEdit, dxSkinsCore, inMtoFrmBase, cxClasses, cxLocalization, cxMemo,
-  DASQLMonitor, UniSQLMonitor, System.UITypes, dxShellDialogs, dxSkinBlue,
+  System.UITypes, dxShellDialogs, dxSkinBlue,
   dxCore, cxStyles, dxSkinsForm, dxSkinOffice2007Blue, cxGeometry,
   cxLabel, JvComponentBase, JvEnterTab, JvExControls, JvAnimatedImage,
   JvGIFCtrl, dxSkinBasic, dxSkinBlack, dxSkinBlueprint, dxSkinCaramel,
@@ -42,26 +41,22 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier,
   dxSkinsDefaultPainters, dxSkinValentine, dxSkinVisualStudio2013Blue,
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
-  dxSkinWhiteprint, dxSkinXmas2008Blue, dascript, UniScript,
+  dxSkinWhiteprint, dxSkinXmas2008Blue,
   inLibContextoSesionIntf, inLibLicenciaAplicacion,
   inLibCopiasSeguridadIntf,
-  inLibRestauracionCopiasConexionIntf;
+  inLibRestauracionCopiasConexionIntf,
+  inLibLogonAplicacionIntf;
 
 type
-  EInvalidUser = class(Exception);
   EPassWordCorrupt = class(Exception);
   TfrmLogon = class(TfrmBase)
     lblUsuario: TcxLabel;
     lblContrasena: TcxLabel;
     edtUser: TcxTextEdit;
     edtPass: TcxTextEdit;
-    MySQLUniProvider1: TMySQLUniProvider;
-    ucConexion: TUniConnection;
     chkRememberPassword: TcxCheckBox;
     chkRememberUser: TcxCheckBox;
-    tbUsers: TUniTable;
     chkAuto: TcxCheckBox;
-    UniSQLMonitor1: TUniSQLMonitor;
     pnlBBDD: TPanel;
     pnlLogin: TPanel;
     pnlButtons: TPanel;
@@ -75,7 +70,6 @@ type
     edtNomBD: TcxTextEdit;
     edtUserBD: TcxTextEdit;
     edtPassBD: TcxTextEdit;
-    btnChangePassRoot: TcxButton;
     btnTest: TcxButton;
     btnSubirScript: TcxButton;
     btnCopiaSeguridad: TcxButton;
@@ -98,9 +92,7 @@ type
     procedure btnSubirScriptClick(Sender: TObject);
     procedure btnCopiaSeguridadClick(Sender: TObject);
     procedure btnRecoverClick(Sender: TObject);
-    procedure ucConexionError(Sender: TObject; E: EDAError; var Fail: Boolean);
     procedure edtPassBDExit(Sender: TObject);
-    procedure btnChangePassRootClick(Sender: TObject);
     procedure edtPortBDPropertiesChange(Sender: TObject);
     procedure leerini;
     procedure GetIniValues;
@@ -117,10 +109,12 @@ type
     FResultadoInicioSesion: TResultadoInicioSesion;
     FResultadoLicencia: TResultadoLicenciaAplicacion;
     FCasoUsoRestauracion: ICasoUsoRestauracionConexion;
+    FConexionLogon: TUniConnection;
+    FRepositorioLogon: IRepositorioLogon;
+    FAplicacionLogon: IAplicacionLogon;
     procedure AplicarTraduccionesPantalla;
-    procedure CambiarPass(f:TUniConnection);
-    procedure UniScript1Error(Sender: TObject; E: Exception; SQL: string;
-                              var Action: TErrorAction);
+    function ResolverErrorScriptLogon(
+      const ASentencia, AError: string): TDecisionErrorScriptLogon;
     procedure escribirini;
     procedure SetIniValues;
     procedure BloquearPantallaOperacion;
@@ -143,17 +137,12 @@ type
                                const AError: string;
                                ALogBuffer: TStringList);
     procedure PrepararWorkerRestauracion(AWorker: TThread);
-    function ExisteUser(sNom: string; f: TUniConnection): Boolean;
-    function LoginCorrecto(sNom,
-                           sPassLogin: string;
-                           f: TUniConnection): Boolean;
-    function GetGrupo(sUser: string; conn: TUniConnection;
-      var EsGrupoAdmin: string): string;
     function ConexionAplicacionPreparada: Boolean;
     function LicenciaAplicacionPreparada: Boolean;
     function ProcesarLicenciaAplicacion: Boolean;
     procedure InvalidarResultadoInicioSesion;
   public
+    destructor Destroy; override;
     function IsInitializeAuto:Boolean;
     function DebeCerrarAplicacion:Boolean;
     property ResultadoInicioSesion: TResultadoInicioSesion
@@ -186,7 +175,9 @@ uses  inLibWin,
       inLibBackupWorker,
       inLibRestauracionCopiasConexion,
       UniDataRestauracionCopiasConexion,
-      inMtoLogonRestauracionVcl;
+      inMtoLogonRestauracionVcl,
+      inLibLogonAplicacion,
+      UniDataLogonRepositorio;
 
 function CrearContextoLogonRestauracionVcl(
   AFormulario: TfrmLogon): TContextoLogonRestauracionVcl;
@@ -221,91 +212,65 @@ procedure TfrmLogon.AplicarTraduccionesPantalla;
 begin
   AsignarTraducciones(
     TServicioTraducciones.Create(
-      TServicioConexionesUniDAC.Create(ucConexion),
+      TServicioConexionesUniDAC.Create(FConexionLogon),
       RegistroLog,
       ObtenerIdiomaConfigurado(
-        ucConexion,
+        FConexionLogon,
         edtUser.Text,
         RegistroLog)));
   AplicarIdiomaFastReport(Traducciones.Idioma);
   Traducciones.Aplicar(Self);
 end;
 
-procedure TfrmLogon.UniScript1Error(Sender: TObject;
-                                    E: Exception;
-                                    SQL: string;
-                                    var Action: TErrorAction);
+function TfrmLogon.ResolverErrorScriptLogon(
+  const ASentencia, AError: string): TDecisionErrorScriptLogon;
 var
   Respuesta: Integer;
 begin
-  // Aquí podemos registrar el error en un log o preguntar al usuario
-  Respuesta := MessageDlg(Format(SErrorSentenciaScript, [SQL, E.Message]),
-                          mtError, [mbYes, mbNo], 0);
+  Respuesta := MessageDlg(
+    Format(SErrorSentenciaScript, [ASentencia, AError]),
+    mtError,
+    [mbYes, mbNo],
+    0);
   if Respuesta = mrYes then
-    // Ignora la sentencia fallida y continúa con la número 3
-    Action := eaContinue
+    Result := deslContinuar
   else
-    // Detiene el script y pasa al bloque "except" principal
-    Action := eaFail;
+    Result := deslDetener;
 end;
 
 procedure TfrmLogon.btnSubirScriptClick(Sender: TObject);
-var
-  unqryTestBD: TUniQuery;
-  SqlScript: TUniScript; // <-- Declaramos el nuevo componente
 begin
   FPasswordConexion := InputBox(SSolicitudPassBBDD, '', '');
-  ConfigurarYConectarMySQL(ucConexion, edtUserBD.Text,
+  ConfigurarYConectarMySQL(FConexionLogon, edtUserBD.Text,
     FPasswordConexion,
     edtHostName.Text,
     edtPortBD.Text,
     'information_schema');
 
-  unqryTestBD := TUniQuery.Create(nil);
-  unqryTestBD.Connection := ucConexion;
-  unqryTestBD.SQL.Text := 'SELECT SCHEMA_NAME ' +
-                          '  FROM INFORMATION_SCHEMA.SCHEMATA ' +
-                          ' WHERE SCHEMA_NAME = :BBDD ' ;
-  unqryTestBD.ParamByName('BBDD').AsString := edtNomBD.Text;
-  unqryTestBD.Open;
-
-  if (unqryTestBD.RecordCount > 0) then
+  if ExisteEsquemaLogonUniDAC(FConexionLogon, edtNomBD.Text) then
   begin
-     if ucConexion.Connected = true then
-     begin
-       ucConexion.Disconnect;
-       ConfigurarYConectarMySQL(ucConexion,
-                             edtUserBD.Text,
-                             FPasswordConexion,
-                             edtHostName.Text,
-                             edtPortBD.Text,
-                             edtNomBD.Text);
-     end;
+    if FConexionLogon.Connected then
+      FConexionLogon.Disconnect;
+    ConfigurarYConectarMySQL(
+      FConexionLogon,
+      edtUserBD.Text,
+      FPasswordConexion,
+      edtHostName.Text,
+      edtPortBD.Text,
+      edtNomBD.Text);
   end;
-
   opendialog.Title := STituloCargarScript;
   opendialog.DefaultExtension := 'sql';
   openDialog.DefaultFolder := GetUserDeskFolder;
 
   if openDialog.Execute then
   begin
-    SqlScript := TUniScript.Create(nil);
-    sqlscript.OnError := UniScript1Error;
-    try
-      SqlScript.Connection := ucConexion;
-      SqlScript.NoPreconnect := True; // Crucial para los DELIMITER de MySQL
-
-      // Cargamos el fichero directamente al script
-      SqlScript.SQL.LoadFromFile(opendialog.FileName);
-
-      // Ejecutamos
-      SqlScript.Execute;
-
-      RegistroLog.RegistrarInformacion('El script se ejecutó exitosamente');
-      ShowMessage(SScriptEjecutado);
-    finally
-      FreeAndNil(SqlScript);
-    end;
+    EjecutarScriptLogonUniDAC(
+      FConexionLogon,
+      opendialog.FileName,
+      ResolverErrorScriptLogon);
+    RegistroLog.RegistrarInformacion('El script se ejecutó exitosamente');
+    ShowMessage(SScriptEjecutado);
   end
   else
   begin
@@ -313,9 +278,8 @@ begin
     ShowMessage(SScriptNoEjecutado);
   end;
 
-  FreeAndNil(unqryTestBD);
-  if (ucConexion.Connected = true) then
-    ucConexion.Disconnect;
+  if FConexionLogon.Connected then
+    FConexionLogon.Disconnect;
 end;
 
 procedure TfrmLogon.FormCreate(Sender: TObject);
@@ -323,11 +287,10 @@ var
   CheckResult: TDBStructureCheckResult;
 begin
   InvalidarResultadoInicioSesion;
-  ucConexion.Pooling := True;
-  ucConexion.PoolingOptions.MinPoolSize := 1;
-  ucConexion.PoolingOptions.MaxPoolSize := 50;
-  ucConexion.PoolingOptions.ConnectionLifeTime := 3 * 60;
-  UniSQLMonitor1.Active := False;
+  CrearRepositorioLogonUniDAC(
+    FRepositorioLogon,
+    FConexionLogon);
+  FAplicacionLogon := CrearAplicacionLogon(FRepositorioLogon);
   // Tamano compacto del login (panel BBDD oculto) calculado desde las
   // coordenadas ya escaladas de los controles, para que los botones no se
   // recorten con escalado DPI (el .dfm no trae PixelsPerInch y el tamano
@@ -366,7 +329,7 @@ begin
 
   // --- 1. Conexión a information_schema para validar estructura ---
   try
-    ConfigurarYConectarMySQL(ucConexion,
+    ConfigurarYConectarMySQL(FConexionLogon,
                              edtUserBD.Text,
                              FPasswordConexion,
                              edtHostName.Text,
@@ -388,7 +351,7 @@ begin
   end;
 
   // --- 2. Verificación de estructura ---
-  CheckResult := TDBStructureChecker.Check(ucConexion, edtNomBD.Text);
+  CheckResult := TDBStructureChecker.Check(FConexionLogon, edtNomBD.Text);
 
   if not CheckResult.IsOK then
   begin
@@ -407,17 +370,17 @@ begin
       btnConfClick(Self);
 
     // Desconectamos de information_schema, ya no la necesitamos
-    if ucConexion.Connected then
-      ucConexion.Disconnect;
+    if FConexionLogon.Connected then
+      FConexionLogon.Disconnect;
     Exit;
   end;
 
   // --- 3. Estructura OK: reconectamos al schema real ---
-  if ucConexion.Connected then
-    ucConexion.Disconnect;
+  if FConexionLogon.Connected then
+    FConexionLogon.Disconnect;
 
   try
-    ConfigurarYConectarMySQL(ucConexion,
+    ConfigurarYConectarMySQL(FConexionLogon,
                              edtUserBD.Text,
                              FPasswordConexion,
                              edtHostName.Text,
@@ -462,8 +425,6 @@ begin
         chkAuto.Checked := False;
         EscribirCadenaIni(
           'UserInfo', 'AutoLogin', 'No', GetUserFolder);
-        if tbUsers.Active then
-          tbUsers.Close;
         InvalidarResultadoInicioSesion;
         ModalResult := mrNone;
       end;
@@ -481,15 +442,16 @@ begin
   sPasswordConexion := FPasswordConexion;
   if edtPassBD.Text <> '' then
     sPasswordConexion := edtPassBD.Text;
-  if ucConexion.Connected and SameText(ucConexion.Database, edtNomBD.Text) then
+  if FConexionLogon.Connected and
+     SameText(FConexionLogon.Database, edtNomBD.Text) then
     Result := True
   else
   begin
-    if ucConexion.Connected then
-      ucConexion.Disconnect;
+    if FConexionLogon.Connected then
+      FConexionLogon.Disconnect;
     bServidorConectado := False;
     try
-      ConfigurarYConectarMySQL(ucConexion,
+      ConfigurarYConectarMySQL(FConexionLogon,
                                edtUserBD.Text,
                                sPasswordConexion,
                                edtHostName.Text,
@@ -511,7 +473,7 @@ begin
     end;
     if bServidorConectado then
     begin
-      CheckResult := TDBStructureChecker.Check(ucConexion, edtNomBD.Text);
+      CheckResult := TDBStructureChecker.Check(FConexionLogon, edtNomBD.Text);
       if not CheckResult.IsOK then
       begin
         RegistroLog.RegistrarError('Estructura BBDD no válida: ' +
@@ -523,15 +485,15 @@ begin
           'UserInfo', 'AutoLogin', 'No', GetUserFolder);
         if not pnlBBDD.Visible then
           btnConfClick(Self);
-        if ucConexion.Connected then
-          ucConexion.Disconnect;
+        if FConexionLogon.Connected then
+          FConexionLogon.Disconnect;
       end
       else
       begin
-        if ucConexion.Connected then
-          ucConexion.Disconnect;
+        if FConexionLogon.Connected then
+          FConexionLogon.Disconnect;
         try
-          ConfigurarYConectarMySQL(ucConexion,
+          ConfigurarYConectarMySQL(FConexionLogon,
                                    edtUserBD.Text,
                                    sPasswordConexion,
                                    edtHostName.Text,
@@ -564,7 +526,7 @@ begin
   if ConexionAplicacionPreparada then
   begin
     if FResultadoLicencia.Comprobada and
-       SameText(FResultadoLicencia.BBDD, ucConexion.Database) then
+       SameText(FResultadoLicencia.BBDD, FConexionLogon.Database) then
       Result := True
     else
       Result := ProcesarLicenciaAplicacion;
@@ -584,7 +546,7 @@ var
 begin
   Result := True;
   FResultadoLicencia.Comprobada := False;
-  FResultadoLicencia.BBDD := ucConexion.Database;
+  FResultadoLicencia.BBDD := FConexionLogon.Database;
   FResultadoLicencia.Estado := elaInvalida;
   FResultadoLicencia.Mensaje := '';
   if HayConmutadorRegistroLicencia then
@@ -593,7 +555,7 @@ begin
     FCerrarAplicacion := True;
     InvalidarResultadoInicioSesion;
     try
-      if RegistrarLicenciaAplicacion(ucConexion,
+      if RegistrarLicenciaAplicacion(FConexionLogon,
                                      sCodigo,
                                      iNumeroNifs,
                                      sDetalleNifs,
@@ -630,7 +592,7 @@ begin
   else
   begin
     try
-      if ComprobarLicenciaAplicacion(ucConexion,
+      if ComprobarLicenciaAplicacion(FConexionLogon,
                                      Estado,
                                      sMensaje,
                                      sCodigoEsperado,
@@ -694,7 +656,6 @@ begin
   btnSubirScript.Enabled := False;
   btnCopiaSeguridad.Enabled := False;
   btnRecover.Enabled := False;
-  btnChangePassRoot.Enabled := False;
   edtUser.Enabled := False;
   edtPass.Enabled := False;
   chkRememberUser.Enabled := False;
@@ -718,7 +679,6 @@ begin
   btnSubirScript.Enabled := True;
   btnCopiaSeguridad.Enabled := True;
   btnRecover.Enabled := True;
-  btnChangePassRoot.Enabled := True;
   edtUser.Enabled := True;
   edtPass.Enabled := True;
   chkRememberUser.Enabled := True;
@@ -909,7 +869,7 @@ procedure TfrmLogon.BackupFinalizar(
 begin
   FWorkerOperacion := nil;
   FCasoUsoRestauracion := CrearCasoUsoRestauracionConexion(
-    CrearRepositorioRestauracionConexionUniDAC(ucConexion));
+    CrearRepositorioRestauracionConexionUniDAC(FConexionLogon));
   FCancelaOperacionSolicitada := False;
   OcultarBarraProgreso;
   if AResultado = rcsCancelada then
@@ -976,7 +936,7 @@ var
   iButtonSel: Integer;
   Worker: TBackupWorker;
 begin
-  ConfigurarYConectarMySQL(ucConexion, edtUserBD.Text,
+  ConfigurarYConectarMySQL(FConexionLogon, edtUserBD.Text,
     FPasswordConexion,
     edtHostName.Text,
     edtPortBD.Text,
@@ -1029,7 +989,7 @@ end;
 procedure TfrmLogon.btnTestClick(Sender: TObject);
 begin
   escribirini;
-  ConfigurarYConectarMySQL(ucConexion,
+  ConfigurarYConectarMySQL(FConexionLogon,
                             edtUserBD.Text,
                             FPasswordConexion,
                             edtHostName.Text,
@@ -1039,39 +999,6 @@ begin
   ShowMessage(SConnSuccBBDD);
   Exit;
 end;
-
-procedure TfrmLogon.CambiarPass(f: TUniConnection);
-var
-  qryCommand:TUniQuery;
-  sNewPass:String;
-  sPassEnBD:String;
-begin
-  if not f.Connected then
-    ShowMessage(SNoConnBBDD)
-  else
-  begin
-    if (Application.MessageBox(PWideChar(SWantDefChgBBDD),
-                               PWideChar(SAdvMsg), MB_YESNO ) = ID_YES ) then
-    begin
-      sNewPass := InputBox(SSolicitudNuevoPassBBDD, '', '');
-      qryCommand := TUniQuery.Create(nil);
-      qryCommand.Connection := f;
-      qryCommand.SQL.Text := 'FLUSH PRIVILEGES;';
-      qryCommand.ExecSQL;
-      qryCommand.SQL.Text := 'ALTER USER root@localhost IDENTIFIED BY :PASS;';
-      qryCommand.ParamByName('PASS').AsString := sNewPass;
-      qryCommand.ExecSQL;
-      sPassEnBD := CifrarAES(sNewPass);
-      FPasswordConexion := sNewPass;
-      ShowMessageFmt(SPasswordBBDDChanged, [FPasswordConexion]);
-      RegistroLog.RegistrarInformacion(sPasswordBBDDChanged);
-      EscribirCadenaIni(
-        'ConnData', 'PasswordEn', sPassEnBD, GetUserFolder);
-      FreeAndNil(qryCommand);
-    end;
-  end;
-end;
-
 
 procedure TfrmLogon.btnSalirClick(Sender: TObject);
 begin
@@ -1086,114 +1013,67 @@ begin
   end;
 end;
 
-function TfrmLogon.GetGrupo(sUser: string; conn: TUniConnection;
-  var EsGrupoAdmin: string): string;
+procedure TfrmLogon.btnAceptarClick(Sender: TObject);
 var
-  qryGrupo          : TUniQuery;
-  sResult           : string;
+  Resultado: TResultadoAutenticacionLogon;
 begin
-  qryGrupo := TUniQuery.Create(Self);
-  qryGrupo.SQL.Text := ' SELECT GRUPO_USU, ESGRUPOADMINISTRADOR_USUGRP ' +
-                        '  FROM VI_USUARIOS  ' +
-                        ' WHERE USUARIO_USU = ' + QuotedStr(sUser);
-  qryGrupo.Connection := conn;
-  qryGrupo.Open;
-  sResult := qryGrupo.Fields[0].AsString;
-  EsGrupoAdmin := qryGrupo.Fields[1].AsString;
-  qryGrupo.Close;
-  FreeAndNil(qryGrupo);
-  Result := sResult;
-end;
-
-procedure TfrmLogon.btnChangePassRootClick(Sender: TObject);
-var
-  sOldPass: string;
-begin
-  inherited;
-  sOldPass := InputBox(SEnterPassBBDD, '', '');
-  if ucConexion.Connected then
-    ucConexion.Disconnect;
-  ConfigurarYConectarMySQL(ucConexion,
-                            edtUserBD.Text,
-                            sOldPass,
-                            edtHostName.Text,
-                            edtPortBD.Text,
-                            'information_schema');
-  if ucConexion.Connected then
+  InvalidarResultadoInicioSesion;
+  if not LicenciaAplicacionPreparada then
   begin
-    CambiarPass(ucConexion);
+    if FCerrarAplicacion then
+    begin
+      ModalResult := mrCancel;
+      Close;
+    end
+    else
+      ModalResult := mrNone;
   end
   else
   begin
-    ShowMessage(SErrorPassMatch);
-  end;
-end;
-
-procedure TfrmLogon.btnAceptarClick(Sender: TObject);
-var
-  sGrupoAdmin: string;
-  sGrupoUsuario: string;
-begin
-  InvalidarResultadoInicioSesion;
-  try
-    if not LicenciaAplicacionPreparada then
-    begin
-      if FCerrarAplicacion then
+    Resultado := FAplicacionLogon.Autenticar(
+      edtUser.Text,
+      edtPass.Text);
+    case Resultado.Estado of
+      ealAutenticado:
       begin
-        ModalResult := mrCancel;
-        Close;
-      end
-      else
+        RegistroLog.RegistrarInformacion('Login correcto');
+        FResultadoInicioSesion :=
+          TResultadoInicioSesion.CrearAutenticado(
+            TIdentidadSesion.Crear(
+              Resultado.Usuario,
+              Resultado.Grupo,
+              Resultado.EsGrupoAdministrador),
+            TUbicacionSesion.Crear(
+              Resultado.Empresa,
+              Resultado.Almacen,
+              Resultado.Caja));
+        SetIniValues;
+        PostMessage(Handle, WM_CLOSE, 0, 0);
+        ModalResult := mrOK;
+      end;
+      ealCredencialesInvalidas:
+      begin
+        RegistroLog.RegistrarAviso(SErrorAuthPass);
+        if Sender <> nil then
+          ShowMessage(SErrorAuthPass);
         ModalResult := mrNone;
-    end
-    else if not ExisteUser(edtUser.Text, ucConexion) then
-    begin
-      RegistroLog.RegistrarError(SUsuarioNoExiste);
-      raise EInvalidUser.Create(SUsuarioNoExiste);
-    end
-    else if not LoginCorrecto(edtUser.Text, edtPass.Text, ucConexion) then
-    begin
-      if (Sender <> nil) then
-        ShowMessage(SErrorAuthPass);
-      RegistroLog.RegistrarError(SErrorAuthPass);
-    end
-    else
-    begin
-      RegistroLog.RegistrarInformacion('Login Correcto');
-      tbUsers.Edit;
-      tbUsers.FieldByName('ULTIMO_LOGIN_USU').AsDateTime := Now;
-      tbUsers.Post;
-      sGrupoUsuario := GetGrupo(edtUser.Text, ucConexion, sGrupoAdmin);
-      FResultadoInicioSesion :=
-        TResultadoInicioSesion.CrearAutenticado(
-          TIdentidadSesion.Crear(
-            edtUser.Text,
-            sGrupoUsuario,
-            sGrupoAdmin),
-          TUbicacionSesion.Crear(
-            tbUsers.FieldByName('EMPRESA_DEFECTO_USU').AsString,
-            tbUsers.FieldByName('ALMACEN_DEFECTO_USU').AsString,
-            tbUsers.FieldByName('CAJA_DEFECTO_USU').AsString));
-      tbUsers.Close;
-      SetIniValues;
-      PostMessage(Handle, WM_CLOSE, 0, 0);
-      ModalResult := mrOK;
-    end;
-  except
-    on E: EInvalidUser do
-    begin
-      if (Sender <> nil) then
-        ShowMessage(E.Message);
-      raise; // que la propague el caller (FormCreate) si es auto-login
-    end;
-    on E: Exception do
-    begin
-      RegistroLog.RegistrarError(
-        'Error en login: ' + E.ClassName + ': ' + E.Message);
-      InvalidarResultadoInicioSesion;
-      if tbUsers.Active then
-        tbUsers.Close;
-      raise; // para que FormCreate decida qué hacer
+      end;
+      ealNoDisponible:
+      begin
+        RegistroLog.RegistrarError(
+          'Autenticación no disponible: ' + Resultado.Mensaje);
+        if Sender <> nil then
+          ShowMessage(Resultado.Mensaje);
+        ModalResult := mrNone;
+      end;
+      ealError:
+      begin
+        RegistroLog.RegistrarError(
+          'Error de autenticación: ' + Resultado.Mensaje);
+        if Sender <> nil then
+          ShowMessage(Resultado.Mensaje);
+        ModalResult := mrNone;
+      end;
     end;
   end;
 end;
@@ -1202,31 +1082,6 @@ procedure TfrmLogon.InvalidarResultadoInicioSesion;
 begin
   FResultadoInicioSesion :=
     TResultadoInicioSesion.CrearNoAutenticado;
-end;
-
-function TfrmLogon.ExisteUser(sNom: string; f: TUniConnection): Boolean;
-begin
-  tbUsers.Open;
-  tbUsers.First;
-  Result := tbUsers.Locate('USUARIO_USU', sNom, []);
-end;
-
-function TfrmLogon.LoginCorrecto(sNom, sPassLogin: string;
-                                 f: TUniConnection): Boolean;
-var
-  sPassMd5          : string;
-  sPassBD           : string;
-begin
-  if sPassLogin <> '' then
-  begin
-    sPassMd5 := sMd5(sPassLogin);
-  end;
-  tbUsers.Locate('USUARIO_USU', sNom, []);
-  sPAssBD := tbUsers.FindField('PASSWORD_USU').AsString;
-  if sPassMd5 = sPassBD then
-    Result := True
-  else
-    Result := False;
 end;
 
 procedure TfrmLogon.edtPassBDExit(Sender: TObject);
@@ -1316,12 +1171,6 @@ begin
   escribirini;
 end;
 
-procedure TfrmLogon.ucConexionError(Sender: TObject; E: EDAError;
-  var Fail: Boolean);
-begin
-  Fail := False;
-end;
-
 procedure TfrmLogon.GetIniValues;
 var
   sRememberUser,
@@ -1383,13 +1232,21 @@ begin
   Result := FCerrarAplicacion;
 end;
 
+destructor TfrmLogon.Destroy;
+begin
+  FAplicacionLogon := nil;
+  FRepositorioLogon := nil;
+  FConexionLogon := nil;
+  inherited;
+end;
+
 procedure TfrmLogon.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   SetIniValues;
   AsignarTraducciones(nil);
-  if (ucConexion.Connected = true) then
-    ucConexion.Disconnect;
-  ucConexion.Pooling := false;
+  if (FConexionLogon.Connected = true) then
+    FConexionLogon.Disconnect;
+  FConexionLogon.Pooling := false;
 end;
 
 procedure TfrmLogon.FormCloseQuery(Sender: TObject; var CanClose: Boolean);

@@ -24,7 +24,8 @@ uses
   cxContainer, cxEdit, cxLabel, cxTextEdit, cxButtons, cxCurrencyEdit,
   cxButtonEdit, Uni,
   inMtoFrmBase, inLibCajaVentaIntf,
-  inLibEntradaCambioPersistenciaIntf;
+  inLibEntradaCambioPersistenciaIntf, inLibGenerarTicketIntf,
+  UniDataCajaPantallaComposicion;
 
 type
   TfrmModalEntradaCambio = class(TfrmBase)
@@ -59,6 +60,8 @@ type
     FFechaOperacion: TDateTime;
     FRepositorioConsultas: IRepositorioConsultasCaja;
     FRepositorioEntrada: IRepositorioEntradaCambio;
+    FLecturasImpresionTicket: ILecturasImpresionTicket;
+    procedure ComponerDependencias;
     procedure BuscarEmpleados;
     procedure ValidarEmpleado;
     procedure Grabar;
@@ -95,10 +98,7 @@ begin
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
     frm.FFechaOperacion := AFechaOperacion;
-    frm.FRepositorioConsultas := frm.ContextoRepositoriosPantalla.Caja.
-      CrearRepositorioConsultasCaja(AConn);
-    frm.FRepositorioEntrada := frm.ContextoRepositoriosPantalla.TicketsCaja.
-      CrearRepositorioEntradaCambio(AConn);
+    frm.ComponerDependencias;
     frm.btnEmpleado.Text := frm.IdentidadSesion.Usuario;
     frm.ValidarEmpleado;
     if frm.ShowModal = mrOk then
@@ -106,6 +106,19 @@ begin
   finally
     FreeAndNil(frm);
   end;
+end;
+
+procedure TfrmModalEntradaCambio.ComponerDependencias;
+var
+  oComposicion: TComposicionCajaPantalla;
+begin
+  oComposicion := ComponerCajaPantalla(Self);
+  FRepositorioConsultas := oComposicion.Consultas.
+    CrearRepositorioConsultasCaja(FConn);
+  FRepositorioEntrada := oComposicion.Tickets.
+    CrearRepositorioEntradaCambio(FConn);
+  FLecturasImpresionTicket := oComposicion.Tickets.
+    CrearLecturasImpresionTicketCaja(ConexionPrincipal);
 end;
 
 procedure TfrmModalEntradaCambio.FormCreate(Sender: TObject);
@@ -215,8 +228,7 @@ begin
   ImprimirTicketOperacionCaja(
     PreviewTicket,
     ConexionPrincipal,
-    ContextoRepositoriosPantalla.TicketsCaja.
-      CrearLecturasImpresionTicketCaja(ConexionPrincipal),
+    FLecturasImpresionTicket,
     FEmpresa,
     FAlmacen,
     FCaja,

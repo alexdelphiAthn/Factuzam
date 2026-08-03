@@ -83,7 +83,9 @@ implementation
 
 uses
   inMtoGenSearch, inLibDocumentoFiscal, inLibMsgComun,
-  inLibMsgFacturas, inLibMsgVentas;
+  inLibMsgFacturas, inLibMsgVentas,
+  inLibVentasPantallaIntf,
+  UniDataVentasPantallaComposicion;
 
 {$R *.dfm}
 
@@ -95,6 +97,7 @@ class function TfrmModalFacturarTicket.Ejecutar(
   const AAlmacen: string;
   AFechaTicket: TDateTime): TFacturarTicketResult;
 var
+  oContexto: TContextoFacturacionTicketVentasPantalla;
   oFormulario: TfrmModalFacturarTicket;
   sSerie: string;
 begin
@@ -104,16 +107,16 @@ begin
     oFormulario.FNumeroTicket := ANumeroTicket;
     oFormulario.FEmpresa := AEmpresa;
     oFormulario.edtTicket.Text := ASerieTicket + '\' + ANumeroTicket;
-    oFormulario.FRepositorioSeries :=
-      oFormulario.ContextoRepositoriosPantalla.Documentos.
-        CrearRepositorioSerieFechaFactura;
+    CrearContextoVentasPantalla(
+      oFormulario,
+      oFormulario.ConexionPrincipal,
+      oContexto);
+    oFormulario.FRepositorioSeries := oContexto.Series;
     oFormulario.FConsultaSeries :=
       oFormulario.FRepositorioSeries.ConsultarSeries;
     oFormulario.FSeries := oFormulario.FConsultaSeries.DataSet;
     oFormulario.dsSeries.DataSet := oFormulario.FSeries;
-    oFormulario.FServicioFacturacion :=
-      oFormulario.ContextoRepositoriosPantalla.Documentos.
-        CrearServicioFacturacionTicket;
+    oFormulario.FServicioFacturacion := oContexto.Facturacion;
     sSerie := oFormulario.FRepositorioSeries.ObtenerSerieAlmacen(
       AEmpresa,
       AAlmacen);

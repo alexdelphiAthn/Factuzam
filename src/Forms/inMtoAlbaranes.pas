@@ -36,7 +36,8 @@ uses
   System.Actions, Vcl.ActnList,
   inLibColumnasSkuIntf, inLibGridTallasInline,
   inLibDocumento, inLibDocumentoIntf,
-  inLibEntradaAlbaranVentaPersistenciaIntf;
+  inLibEntradaAlbaranVentaPersistenciaIntf,
+  inLibVentasPantallaIntf;
 
 type
   TfrmMtoAlbaranes = class(TfrmMtoDocumento)
@@ -235,7 +236,7 @@ type
     FModoEntradaSel: TModoColumnasSku;
     FModoEntrada: IModoEntradaGrid;
     FColsModoConstruido: Boolean;
-    FRepositorioEntradaAlbaranVenta: IRepositorioEntradaAlbaranVenta;
+    FContextoVentas: TContextoAlbaranesVentasPantalla;
     function BuscarArticuloAlbaran: string;
     function BuscarSkuAlbaran(const ACodigoArt: string): string;
     function ArticuloLineaActivaAlbaran: string;
@@ -293,7 +294,8 @@ uses
   inLibColumnasSku,
   inLibColumnasDocumento, UniDataGen,
   inLibValidacionDocumento, inLibPresentacionDocumento,
-  inLibMsgArticulos, inLibMsgComun, inLibMsgFacturas, inLibMsgVentas;
+  inLibMsgArticulos, inLibMsgComun, inLibMsgFacturas, inLibMsgVentas,
+  UniDataVentasPantallaComposicion;
 
 {$R *.dfm}
 
@@ -347,7 +349,7 @@ begin
     dFecha := Date;
     if not dmmAlbaranes.unqryTablaG.FieldByName('FECHA_ALB').IsNull then
       dFecha := dmmAlbaranes.unqryTablaG.FieldByName('FECHA_ALB').AsDateTime;
-    Consulta := FRepositorioEntradaAlbaranVenta.ConsultarArticulos(
+    Consulta := FContextoVentas.EntradaArticulos.ConsultarArticulos(
       sTarifa,
       dFecha);
     Datos := Consulta.DataSet;
@@ -397,7 +399,7 @@ begin
                mtInformation, [mbOk], 0)
   else
   begin
-    Consulta := FRepositorioEntradaAlbaranVenta.ConsultarSkus(sArt);
+    Consulta := FContextoVentas.EntradaArticulos.ConsultarSkus(sArt);
     Datos := Consulta.DataSet;
     if BusquedaVisual.EjecutarBusquedaDataSet(
         'SKUs del artículo ' + sArt,
@@ -488,12 +490,8 @@ begin
         if not dmmAlbaranes.unqryTablaG.FieldByName('FECHA_ALB').IsNull then
           dFecha := dmmAlbaranes.unqryTablaG.
                       FieldByName('FECHA_ALB').AsDateTime;
-        Validador := ContextoRepositoriosPantalla.Articulos.
-          CrearValidadorArticulos(
-                       dmmAlbaranes.unqryTablaG.Connection);
-        Resolver := ContextoRepositoriosPantalla.Articulos.
-          CrearResolverArticulos(
-          dmmAlbaranes.unqryTablaG.Connection);
+        Validador := FContextoVentas.ValidadorArticulos;
+        Resolver := FContextoVentas.ResolverArticulos;
         Resolucion := Validador.Resolver(sInput);
         if Resolucion.Encontrado then
         begin
@@ -605,8 +603,7 @@ begin
     if not dmmAlbaranes.unqryTablaG.FieldByName('FECHA_ALB').IsNull then
       dFecha := dmmAlbaranes.unqryTablaG.
                   FieldByName('FECHA_ALB').AsDateTime;
-    Resolver := ContextoRepositoriosPantalla.Articulos.CrearResolverArticulos(
-      dmmAlbaranes.unqryTablaG.Connection);
+    Resolver := FContextoVentas.ResolverArticulos;
     try
       Datos := Resolver.ResolverDatos(ACodigoArticulo, ACodigoSku,
                                       sTarifa, dFecha);
@@ -652,7 +649,7 @@ begin
   if FModoEntradaSel <> mcsSku then
     dmmAlbaranes.DesempaquetarAtributosLineas;
   Cfg := CrearConfigColumnasSkuDocumento(
-    ContextoRepositoriosPantalla.Ventas.CrearServiciosColumnasSku,
+    FContextoVentas.ColumnasSku,
     ContextoSesion,
     tvLineasAlbaran, ds, FModoEntradaSel,
     dmmAlbaranes.unqryTablaG.FieldByName(
@@ -660,12 +657,8 @@ begin
   Cfg.RegistroLog := RegistroLog;
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
-  Cfg.ValidadorArticulos :=
-    ContextoRepositoriosPantalla.Articulos.
-      CrearValidadorArticulos(dmmAlbaranes.unqryTablaG.Connection);
-  Cfg.LookupAtributos :=
-    ContextoRepositoriosPantalla.Articulos.CrearLookupAtributosArticulos(
-      dmmAlbaranes.unqryTablaG.Connection);
+  Cfg.ValidadorArticulos := FContextoVentas.ValidadorArticulos;
+  Cfg.LookupAtributos := FContextoVentas.AtributosArticulos;
   // Precio por SKU para la consolidacion del modo tallas: lineas con
   // precio distinto no fusionan.
   Cfg.ObtenerPrecioSku := PrecioSkuTallasAlb;
@@ -836,11 +829,12 @@ begin
     CrearConfiguracionDocumento(tdAlbaran, sdVenta));
   AsignarVistaLineasDocumento(tvLineasAlbaran);
   inherited;
-  FRepositorioEntradaAlbaranVenta :=
-    ContextoRepositoriosPantalla.Ventas.
-      CrearRepositorioEntradaAlbaranVenta;
   dmmAlbaranes := TdmAlbaranes(AsegurarDataModuleDocumento(
     Self, tdmDataModule, TdmAlbaranes));
+  CrearContextoVentasPantalla(
+    Self,
+    dmmAlbaranes.unqryTablaG.Connection,
+    FContextoVentas);
   ConfigurarTablaPrincipalDocumento(
     dmmAlbaranes, dsTablaG, tvLineasAlbaran,
     dmmAlbaranes.dsAlbaranesLineas,
@@ -914,7 +908,7 @@ begin
       sArticulo := Trim(ds.FieldByName('CODIGO_ART_ALBLIN').AsString);
   end;
   if sArticulo <> '' then
-    Configuracion := FRepositorioEntradaAlbaranVenta.
+    Configuracion := FContextoVentas.EntradaArticulos.
       LeerConfiguracionArticulo(sArticulo);
   PonerVisibleCampo('LOTE_ALBLIN', Configuracion.EsTrazable);
   PonerVisibleCampo(
@@ -1017,8 +1011,7 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
   sLineasSinSku := LineasSinSkuRequerido(
-    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
-      dmmAlbaranes.unqryTablaG.Connection),
+    FContextoVentas.ValidadorArticulos,
     dmmAlbaranes.unqryAlbaranesLineas, 'ALBLIN');
   if (sLineasSinSku = '') or
      (MessageDlg(Format(SPreguntaGrabarAlbaranVentaSinSku,

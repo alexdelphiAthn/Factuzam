@@ -13,8 +13,8 @@ integran en el proyecto.
 
 ## Autoría y derechos
 
-ChatGPT y Claude son herramientas informáticas. Ni los modelos ni OpenAI o
-Anthropic se consideran autores, coautores, colaboradores del repositorio o
+ChatGPT, Claude y Gemini son herramientas informáticas. Ni los modelos ni OpenAI,
+Google o Anthropic se consideran autores, coautores, colaboradores del repositorio o
 titulares de derechos sobre Factuzam por el mero hecho de haber prestado
 asistencia.
 
@@ -44,6 +44,6 @@ versión.
 
 ## Ausencia de patrocinio
 
-La mención de ChatGPT, OpenAI, Claude o Anthropic tiene una finalidad
+La mención de ChatGPT, OpenAI, Claude, Gemini o Anthropic tiene una finalidad
 exclusivamente informativa. No implica patrocinio, certificación, asociación
 comercial ni aprobación de Factuzam por parte de esas entidades.

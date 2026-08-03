@@ -29,6 +29,7 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls,
   inLibPerfilesUsuarioIntf, inLibCajaPagosHistPersistenciaIntf,
+  inLibCajaPantallaHistoricosIntf, UniDataCajaPantallaComposicion,
   cxCheckBox, cxCheckComboBox,
   cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
   Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs;
@@ -71,6 +72,7 @@ type
     FFiltrosCargando: Boolean;
     FCargaInicialHecha: Boolean;
     FRepositorioPersistencia: IRepositorioCajaPagosHist;
+    FGrabadorPerfiles: IGrabadorPerfilesHistoricoCaja;
     procedure CargarAnyosFiltro;
     procedure LeerFiltrosPerfil;
     function ObtenerFiltros: TFiltrosCajaPagosHist;
@@ -116,11 +118,17 @@ begin
 end;
 
 procedure TfrmMtoCajaPagosHist.CrearTablaPrincipal;
+var
+  oComposicion: TComposicionCajaPantalla;
 begin
   inherited;
-  FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
+  oComposicion := ComponerCajaPantalla(Self);
+  FRepositorioPersistencia := oComposicion.Historicos.
     CrearRepositorioCajaPagosHist(
     dsTablaG.DataSet);
+  FGrabadorPerfiles := oComposicion.Historicos.CrearGrabadorPerfiles(
+    ConexionPrincipal,
+    PerfilesEscritura);
   pkFieldName := 'CODIGO_EMP_PAGO;CODIGO_ALM_PAGO;CODIGO_CAJA_PAGO;' +
                  'SERIE_OPERACION_PAGO;NUMERO_OPERACION_PAGO;NUMERO_LINEA_PAGO';
   pnlContFiltrosCaja.Visible := False;
@@ -327,14 +335,7 @@ begin
     oList := TPerfilList.Create;
     try
       RecogerPerfilesParticulares(oList, sPermisos);
-        ConexionPrincipal.StartTransaction;
-      try
-        PerfilesEscritura.GrabarPerfiles(oList);
-        ConexionPrincipal.Commit;
-      except
-        ConexionPrincipal.Rollback;
-        raise;
-      end;
+      FGrabadorPerfiles.Grabar(oList);
     finally
       FreeAndNil(oList);
       Screen.Cursor := crDefault;

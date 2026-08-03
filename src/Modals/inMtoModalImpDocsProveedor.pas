@@ -32,14 +32,16 @@ uses
   System.Actions, Vcl.ActnList, frxSmartMemo, frLocalization,
   frLanguageSpanish, frCoreClasses,
   frxExportBaseImageSettingsDialog, JvComponentBase, JvEnterTab,
-  cxLocalization;
+  cxLocalization, inLibInformeDocumentosProveedorPersistenciaIntf,
+  inLibInformeMultiFiltroPersistenciaIntf;
 
 type
   TfrmPrintDocsProveedor = class(TfrmPrintMultiFiltro)
-    unqryDocsProveedorPrint: TUniQuery;
     fxdsDocsProveedor: TfrxDBDataset;
   private
     FInicializado: Boolean;
+    FRepositorioDocumentos: IRepositorioInformeDocumentosProveedor;
+    FResultadoDocumentos: IResultadoInformeDocumentosProveedor;
     FclbTipos: TcxCheckListBox;
     FclbSeries: TcxCheckListBox;
     procedure CrearControlesPropios;
@@ -49,7 +51,8 @@ type
     function CSVSeries: string;
   protected
     function FiltrosUsados: TFiltrosReport; override;
-    function SQLFiltroProveedores: string; override;
+    function OrigenProveedores:
+      TOrigenProveedoresInformeMultiFiltro; override;
     procedure DoShow; override;
   public
     procedure preparar_consulta; override;
@@ -59,7 +62,8 @@ type
 implementation
 
 uses
-  UniDataDocsProveedorSql, UniDataDocsProveedor;
+  UniDataDocsProveedor,
+  UniDataInformeDocumentosProveedorRepositorio;
 
 {$R *.dfm}
 
@@ -70,9 +74,10 @@ begin
   Result := [frFechas, frAlmacenes, frProveedores, frTemporadas];
 end;
 
-function TfrmPrintDocsProveedor.SQLFiltroProveedores: string;
+function TfrmPrintDocsProveedor.OrigenProveedores:
+  TOrigenProveedoresInformeMultiFiltro;
 begin
-  Result := SqlFiltroProveedoresDocumentosCompra;
+  Result := opmfDocumentosProveedor;
 end;
 
 procedure TfrmPrintDocsProveedor.DoShow;
@@ -145,29 +150,28 @@ begin
 end;
 
 procedure TfrmPrintDocsProveedor.preparar_consulta;
+var
+  criterios: TCriteriosInformeDocumentosProveedor;
 begin
   inherited;
-  with unqryDocsProveedorPrint do
-  begin
-    Close;
-    Connection := ConexionPrincipal;
-    SQL.Text := SqlListadoDocumentosProveedor;
-    ParamByName('pDESDE').AsDateTime := FechaDesde;
-    ParamByName('pHASTA').AsDateTime := FechaHasta;
-    ParamByName('pALM').AsString := CSVAlmacenes;
-    ParamByName('pPRV').AsString := CSVProveedores;
-    ParamByName('pTMP').AsString := CSVTemporadas;
-    ParamByName('pTIP').AsString := CSVTipos;
-    ParamByName('pSER').AsString := CSVSeries;
-    Open;
-  end;
+  criterios.FechaDesde := FechaDesde;
+  criterios.FechaHasta := FechaHasta;
+  criterios.Almacenes := CSVAlmacenes;
+  criterios.Proveedores := CSVProveedores;
+  criterios.Temporadas := CSVTemporadas;
+  criterios.Tipos := CSVTipos;
+  criterios.Series := CSVSeries;
+  if FRepositorioDocumentos = nil then
+    FRepositorioDocumentos :=
+      CrearRepositorioInformeDocumentosProveedorUniDAC(ConexionPrincipal);
+  FResultadoDocumentos := FRepositorioDocumentos.Preparar(criterios);
   fxdsDocsProveedor.UpdateBounds;
 end;
 
 procedure TfrmPrintDocsProveedor.AfterReportLoaded;
 begin
   inherited;
-  fxdsDocsProveedor.DataSet := unqryDocsProveedorPrint;
+  fxdsDocsProveedor.DataSet := FResultadoDocumentos.DataSet;
   frxrprt1.DataSets.Clear;
   frxrprt1.DataSets.Add(fxdsDocsProveedor);
 end;

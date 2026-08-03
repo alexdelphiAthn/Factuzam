@@ -34,11 +34,13 @@ uses
   cxGridTableView, cxGridDBTableView, cxGrid,
   Uni,
   inMtoFrmBase, inLibArqueo, inLibArqueoTicket,
-  inLibArqueoTicketIntf, inLibArqueoPersistencia,
+  inLibArqueoIntf, inLibArqueoTicketIntf, inLibArqueoPersistencia,
+  inLibTiraCajaTicketIntf,
   inLibModalArqueoPersistenciaIntf,
   Vcl.ComCtrls, dxCore,
   cxDateUtils, cxCurrencyEdit, cxRadioGroup,
-  JvComponentBase, JvEnterTab, cxLocalization, cxGroupBox;
+  JvComponentBase, JvEnterTab, cxLocalization, cxGroupBox,
+  UniDataCajaPantallaComposicion;
 
 type
   TfrmModalArqueo = class(TfrmBase)
@@ -260,10 +262,14 @@ type
     FResumenFamilias: TClientDataSet;
     FRepositorioPersistencia: IRepositorioModalArqueo;
     FPersistenciaArqueo: IArqueoPersistencia;
+    FRepositorioArqueoCaja: IRepositorioArqueoCaja;
+    FRepositorioArqueoTicket: IRepositorioArqueoTicket;
+    FRepositorioTiraCaja: IRepositorioTiraCajaTicket;
     FResumenEmpleados: IResultadoModalArqueo;
     FResumenFormasPago: IResultadoModalArqueo;
     FResumenPropiedades: IResultadoModalArqueo;
     FResumenIva: IResultadoModalArqueo;
+    procedure ComponerDependencias;
     function  FechaEditada(AEdit: TcxDateEdit): TDateTime;
     function  FechaDesdeSeleccionada: TDateTime;
     function  FechaHastaSeleccionada: TDateTime;
@@ -298,7 +304,7 @@ implementation
 
 uses inLibPermisosIntf,
      inMtoModalArqueosHistCaja,
-     inLibTiraCajaTicket, inLibTiraCajaTicketIntf,
+     inLibTiraCajaTicket,
      inMtoModalTiraCaja, inLibVerifactu, inLibMsgCaja;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -320,10 +326,7 @@ begin
   frm := TfrmModalArqueo.Create(AOwner);
   try
     frm.FConn    := AConn;
-    frm.FRepositorioPersistencia :=
-      frm.ContextoRepositoriosPantalla.Caja.CrearRepositorioModalArqueo(AConn);
-    frm.FPersistenciaArqueo :=
-      frm.ContextoRepositoriosPantalla.Caja.CrearPersistenciaArqueoCaja(AConn);
+    frm.ComponerDependencias;
     frm.FEmpresa := AEmpresa;
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
@@ -379,6 +382,23 @@ begin
   finally
     FreeAndNil(frm);
   end;
+end;
+
+procedure TfrmModalArqueo.ComponerDependencias;
+var
+  oComposicion: TComposicionCajaPantalla;
+begin
+  oComposicion := ComponerCajaPantalla(Self);
+  FRepositorioPersistencia := oComposicion.Arqueos.
+    CrearRepositorioModalArqueo(FConn);
+  FPersistenciaArqueo := oComposicion.Arqueos.
+    CrearPersistenciaArqueoCaja(FConn);
+  FRepositorioArqueoCaja := oComposicion.Arqueos.
+    CrearRepositorioArqueoCaja(FConn);
+  FRepositorioArqueoTicket := oComposicion.Arqueos.
+    CrearRepositorioArqueoTicket(FConn);
+  FRepositorioTiraCaja := oComposicion.Arqueos.
+    CrearRepositorioTiraCajaTicket(FConn);
 end;
 
 // =============================================================================
@@ -456,10 +476,8 @@ begin
     try
       TArqueoTicket.Imprimir(
         PreviewTicket,
-        ContextoRepositoriosPantalla.TicketsCaja.
-          CrearRepositorioArqueoCaja(FConn),
-        ContextoRepositoriosPantalla.TicketsCaja.
-          CrearRepositorioArqueoTicket(FConn),
+        FRepositorioArqueoCaja,
+        FRepositorioArqueoTicket,
         ParametrosCaja,
         FEmpresa,
         FAlmacen,
@@ -498,7 +516,6 @@ end;
 procedure TfrmModalArqueo.actTiraCajaExecute(Sender: TObject);
 var
   Series, SeleccionSeries: TArray<string>;
-  oRepositorio: IRepositorioTiraCajaTicket;
   bQR, bVerifactu, bCronologico, bExcel: Boolean;
   bIncluirTraspasos: Boolean;
   bIncluirIngresos: Boolean;
@@ -509,12 +526,9 @@ begin
   inherited;
   if (FConn = nil) or (not FConn.Connected) then
     Exit;
-  oRepositorio := ContextoRepositoriosPantalla.TicketsCaja.
-    CrearRepositorioTiraCajaTicket(
-    FConn);
   // Series facturadas en el rango; si no hay ninguna, no hay tira que sacar.
   Series := TTiraCajaTicket.ObtenerSeries(
-    oRepositorio,
+    FRepositorioTiraCaja,
     FEmpresa,
     FAlmacen,
     FCaja,
@@ -547,7 +561,7 @@ begin
       TTiraCajaTicket.ExportarExcel(
         Self,
         ProveedorPreviewExcel,
-        oRepositorio,
+        FRepositorioTiraCaja,
         FEmpresa,
         FAlmacen,
         FCaja,
@@ -564,7 +578,7 @@ begin
       TTiraCajaTicket.Imprimir(
         ParametrosApp,
         PreviewTicket,
-        oRepositorio,
+        FRepositorioTiraCaja,
         FEmpresa,
         FAlmacen,
         FCaja,
@@ -619,8 +633,7 @@ procedure TfrmModalArqueo.Recalcular;
 begin
   Screen.Cursor := crHourGlass;
   try
-    FArqueoActual := ContextoRepositoriosPantalla.TicketsCaja.
-      CrearRepositorioArqueoCaja(FConn).Calcular(
+    FArqueoActual := FRepositorioArqueoCaja.Calcular(
       FEmpresa,
       FAlmacen,
       FCaja,
@@ -663,9 +676,7 @@ var
   aLineas: TArray<TResumenSeccionArqueo>;
   iLinea: Integer;
 begin
-  aLineas := ContextoRepositoriosPantalla.TicketsCaja.
-    CrearRepositorioArqueoTicket(
-    FConn).ListarResumenSeccion(
+  aLineas := FRepositorioArqueoTicket.ListarResumenSeccion(
       FArqueoActual,
       ParametrosCaja.NivelesFamiliaArqueo);
   FResumenFamilias.DisableControls;
@@ -1158,8 +1169,7 @@ begin
   { Justificante del cierre }
   TArqueoTicket.ImprimirCierre(
     PreviewTicket,
-    ContextoRepositoriosPantalla.TicketsCaja.
-      CrearRepositorioArqueoTicket(FConn),
+    FRepositorioArqueoTicket,
     ContextoSesion,
     FArqueoActual,
     Lineas,

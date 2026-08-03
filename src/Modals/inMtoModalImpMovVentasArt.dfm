@@ -1717,20 +1717,10 @@
       end
     end
   end
-  object unqryMovVentasPrint: TUniQuery
-    SQL.Strings = (
-      'CALL PRC_GET_MOV_VENTAS_ART('
-      
-        '  '#39'2026-01-01'#39', '#39'2026-12-31'#39', NULL, '#39#39', '#39#39', '#39#39', '#39#39', '#39#39', '#39#39', '#39#39', ' +
-        #39#39', 0, '#39'N'#39')')
-    Left = 96
-    Top = 16
-  end
   object fxdsMovVentas: TfrxDBDataset
     Description = 'MovVentas'
     UserName = 'MovVentas'
     CloseDataSource = False
-    DataSet = unqryMovVentasPrint
     BCDToCurrency = False
     DataSetOptions = []
     Left = 96

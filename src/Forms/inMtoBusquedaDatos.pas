@@ -29,7 +29,7 @@ uses
   Vcl.Buttons, cxGridCustomTableView, cxGridTableView, cxGridLevel, cxClasses,
   cxGridCustomView, cxGrid, cxPC, cxLookupEdit, cxDBLookupEdit,
   cxDBLookupComboBox, inLibDocumentosTrabajo,
-  inLibBusquedaDatosPersistenciaIntf;
+  inLibArticulosResolverIntf, inLibBusquedaDatosPersistenciaIntf;
 
 type
   TfrmMtoBusquedaDatos = class(TfrmMtoSearch)
@@ -87,6 +87,8 @@ type
     FRepositorioPersistencia: IRepositorioBusquedaDatos;
     FResultadoBusqueda: IResultadoBusquedaDatos;
     FResultadoProveedores: IResultadoBusquedaDatos;
+    FRepositoriosDocumentos: TRepositoriosDocumentosTrabajo;
+    FResolverArticulos: IArticulosResolver;
     procedure InicializarListas;
     procedure CargarFiltrosPrecarga;
     procedure CargarCombo(
@@ -126,7 +128,7 @@ implementation
 
 uses
   inLibShowMto, inLibAtributosPaleta, inLibMsgComun,
-  inLibDocumentosTrabajoPresentacion;
+  inLibDocumentosTrabajoPresentacion, UniDataConfiguracionPantalla;
 
 {$R *.dfm}
 
@@ -163,9 +165,12 @@ end;
 procedure TfrmMtoBusquedaDatos.FormCreate(Sender: TObject);
 begin
   inherited;
-  FRepositorioPersistencia :=
-    ContextoRepositoriosPantalla.Configuracion.
-      CrearRepositorioBusquedaDatos(ConexionPrincipal);
+  ComponerConfiguracionPantalla(
+    Self,
+    ConexionPrincipal,
+    FRepositorioPersistencia,
+    FRepositoriosDocumentos,
+    FResolverArticulos);
   dsTablaG.DataSet := nil;
   dsProveedoresBusqueda.DataSet := nil;
   FColumnasCreadas := False;
@@ -225,12 +230,10 @@ begin
   begin
     try
       AgregarUnidadADocumentoTrabajo(Self, ConexionPrincipal,
-        ContextoRepositoriosPantalla.Documentos.
-          CrearRepositoriosDocumentosTrabajo(ConexionPrincipal),
+        FRepositoriosDocumentos,
         CrearInteraccionDocumentosTrabajoVcl,
         BusquedaVisual, ContextoSesion, ParametrosCaja, linea,
-        ContextoRepositoriosPantalla.Articulos.
-          CrearResolverArticulos(ConexionPrincipal));
+        FResolverArticulos);
     except
       on E: Exception do
       begin

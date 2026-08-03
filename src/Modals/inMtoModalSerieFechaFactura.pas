@@ -59,7 +59,9 @@ type
 implementation
 
 uses
-  inLibMsgComun;
+  inLibMsgComun,
+  inLibVentasPantallaIntf,
+  UniDataVentasPantallaComposicion;
 
 {$R *.dfm}
 
@@ -69,12 +71,16 @@ class function TfrmModalSerieFechaFactura.Ejecutar(AOwner: TComponent;
                                                    : TSerieFechaFacturaResult;
 var
   frm:    TfrmModalSerieFechaFactura;
+  oContexto: TContextoSerieFechaFacturaVentasPantalla;
   sSerie: string;
 begin
   frm := TfrmModalSerieFechaFactura.Create(AOwner);
   try
-    frm.FRepositorio := frm.ContextoRepositoriosPantalla.Documentos.
-      CrearRepositorioSerieFechaFactura;
+    CrearContextoVentasPantalla(
+      frm,
+      frm.ConexionPrincipal,
+      oContexto);
+    frm.FRepositorio := oContexto.Repositorio;
     frm.FConsultaSeries := frm.FRepositorio.ConsultarSeries;
     frm.FSeries := frm.FConsultaSeries.DataSet;
     frm.dsSeries.DataSet := frm.FSeries;

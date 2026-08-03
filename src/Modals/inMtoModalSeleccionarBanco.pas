@@ -73,6 +73,7 @@ type
   private
     // Campos primero (E2169).
     FConn:      TUniConnection;
+    FRepositorio: IRepositorioSeleccionBancoEmpresa;
     FConsulta:  IConsultaBancosEmpresa;
     FDatos:     TDataSet;
     FDs:        TDataSource;
@@ -94,7 +95,8 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsgComun, inLibMsgFacturas;
+  inLibMsgComun, inLibMsgFacturas,
+  UniDataConfiguracionPantalla;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -143,16 +145,13 @@ begin
 end;
 
 procedure TfrmModalSeleccionarBanco.CargarCuentas;
-var
-  Repositorio: IRepositorioSeleccionBancoEmpresa;
 begin
   if FUso = ubePago then
     lblInfo.Caption := SCaptionCuentaEmpresaPagoEfectos
   else
     lblInfo.Caption := SCaptionCuentaEmpresaCobroRecibos;
-  Repositorio := ContextoRepositoriosPantalla.Configuracion.
-    CrearRepositorioSeleccionBancoEmpresa(FConn);
-  FConsulta := Repositorio.ConsultarCuentas(FEmpresa, FUso);
+  ComponerConfiguracionPantalla(Self, FConn, FRepositorio);
+  FConsulta := FRepositorio.ConsultarCuentas(FEmpresa, FUso);
   FDatos := FConsulta.DataSet;
   FDs.DataSet := FDatos;
 end;

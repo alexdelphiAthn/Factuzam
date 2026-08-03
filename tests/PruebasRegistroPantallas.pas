@@ -26,17 +26,37 @@ type
     procedure Pantalla_SeResuelvePorNombreCualificado;
     [Test]
     procedure DataModule_SeResuelveIgnorandoEspaciosYMayusculas;
+    [Test]
+    procedure Compositor_SeResuelvePorLaCadenaDePropietarios;
   end;
 
 implementation
 
 uses
   System.SysUtils, System.Classes, Vcl.Forms,
-  inLibRegistroPantallas;
+  inLibRegistroPantallas, inLibRepositoriosPantallaIntf;
 
 type
   TPantallaRegistroPrueba = class(TForm);
   TDataModuleRegistroPrueba = class(TDataModule);
+  TCompositorArticulosRegistroPrueba = class(
+    TComponent,
+    ICompositorArticulosPantalla)
+  private
+    FNombrePantalla: string;
+  public
+    function CrearRepositoriosArticulosPantalla(
+      const ANombrePantalla: string): IRepositoriosArticulosPantalla;
+    property NombrePantalla: string read FNombrePantalla;
+  end;
+
+function TCompositorArticulosRegistroPrueba.
+  CrearRepositoriosArticulosPantalla(
+  const ANombrePantalla: string): IRepositoriosArticulosPantalla;
+begin
+  FNombrePantalla := ANombrePantalla;
+  Result := nil;
+end;
 
 procedure TPruebasRegistroPantallas.
   Pantalla_SeResuelvePorNombreCualificado;
@@ -59,6 +79,26 @@ begin
     TDataModuleRegistroPrueba.QualifiedClassName) + '  ';
   Assert.IsTrue(
     ClaseDataModule(sNombre) = TDataModuleRegistroPrueba);
+end;
+
+procedure TPruebasRegistroPantallas.
+  Compositor_SeResuelvePorLaCadenaDePropietarios;
+var
+  oCompositor: ICompositorArticulosPantalla;
+  oHijo: TComponent;
+  oRaiz: TCompositorArticulosRegistroPrueba;
+begin
+  oRaiz := TCompositorArticulosRegistroPrueba.Create(nil);
+  try
+    oHijo := TComponent.Create(oRaiz);
+    oCompositor := ObtenerCompositorArticulosPantalla(oHijo);
+    oCompositor.CrearRepositoriosArticulosPantalla(
+      'frmPruebaComposicion');
+    Assert.AreEqual('frmPruebaComposicion', oRaiz.NombrePantalla);
+    oCompositor := nil;
+  finally
+    FreeAndNil(oRaiz);
+  end;
 end;
 
 initialization

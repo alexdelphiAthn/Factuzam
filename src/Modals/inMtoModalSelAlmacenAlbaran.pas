@@ -108,7 +108,9 @@ type
 implementation
 
 uses
-  inLibFormatoDocumento, inLibMsgVentas;
+  inLibFormatoDocumento, inLibMsgVentas,
+  inLibVentasPantallaIntf,
+  UniDataVentasPantallaComposicion;
 
 {$R *.dfm}
 
@@ -143,6 +145,8 @@ begin
 end;
 
 procedure TfrmModalSelAlmacenAlbaran.FormCreate(Sender: TObject);
+var
+  oContexto: TContextoSeleccionAlmacenVentasPantalla;
 begin
   inherited;
   Self.Position  := poScreenCenter;
@@ -157,8 +161,11 @@ begin
   FEsExistente   := False;
   FNumeroAlb     := '';
   FSerieAlb      := '';
-  FRepositorio := ContextoRepositoriosPantalla.Documentos.
-    CrearRepositorioSeleccionAlmacen;
+  CrearContextoVentasPantalla(
+    Self,
+    ConexionPrincipal,
+    oContexto);
+  FRepositorio := oContexto.Repositorio;
 end;
 
 procedure TfrmModalSelAlmacenAlbaran.FormShow(Sender: TObject);
@@ -170,7 +177,6 @@ begin
   FAlbaranes := nil;
   FConsultaAlmacenes := nil;
   FConsultaAlbaranes := nil;
-  FRepositorio := nil;
   lblPedido.Caption := Format(SCaptionCrearAlbaranDesdePedido,
     [FormatearDocumentoEmpresa(ConexionPrincipal, FCodigoEmpresa, FSeriePed,
       FNumPed)]);

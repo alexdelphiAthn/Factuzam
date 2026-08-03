@@ -353,7 +353,7 @@ uses
   inLibFotos,
   inLibVerifactuInstalacion,
   inLibMsgComun, inLibMsgVentas,
-  inMtoModalSeriesDocumentos;
+  inMtoModalSeriesDocumentos, UniDataConfiguracionPantalla;
 
 {$R *.dfm}
 
@@ -712,8 +712,10 @@ end;
 procedure TfrmMtoEmpresas.CrearTablaPrincipal;
 begin
   inherited;
-  FRepositorioSeriesEmpresa := ContextoRepositoriosPantalla.Configuracion.
-    CrearRepositorioSeriesEmpresa;
+  ComponerConfiguracionPantalla(
+    Self,
+    ConexionPrincipal,
+    FRepositorioSeriesEmpresa);
   dmmEmpresas := tdmDataModule as TdmEmpresas;
   tvRetenciones.DataController.DataSource := dmmEmpresas.dsRetenciones;
   pcPestana.ActivePage := tsMasDatos;

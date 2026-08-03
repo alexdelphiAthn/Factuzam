@@ -23,7 +23,7 @@ uses
   inLibAuditoriaDatosIntf, inLibConexionesIntf, inLibContextoSesionIntf,
   inLibPerfilesUsuarioIntf, inLibParametrosIntf,
   inLibFotos, inLibUnidadesMedida, inLibInteraccionDatosIntf,
-  inLibLogIntf;
+  inLibLogIntf, inLibMtoGenAplicacionIntf;
 
 type
   TdmBase = class(
@@ -58,6 +58,7 @@ type
     FRegistroLog: IRegistroLog;
     FFotosArticulos: TFotosArticulos;
     FUnidadesMedida: TUnidadesMedida;
+    FSqlBaseBusquedaExterna: string;
     FOnActivarFicha: TNotifyEvent;
     FOnNotificarMensaje: TNotificarMensajeDatosEvent;
     FOnConfirmarMensaje: TConfirmarMensajeDatosEvent;
@@ -162,6 +163,10 @@ type
     // mantenimiento. Se llama desde el hilo principal mientras la tarea BBDD
     // corre en background.
     procedure CancelarEjecucionActiva;
+    procedure PrepararBusquedaExterna(
+      const ACamposClave, AValoresClave: string);
+    function AplicarRestriccionUsuario(
+      const AFiltro: string): Boolean;
     // Abre las queries detalle/lookup propias del Mto. Default no hace
     // nada; cada TdmXxx override para listar sus queries en el orden
     // adecuado. Lo invoca TfrmMtoGen.AbrirTablaPrincipalAsync DENTRO del
@@ -189,6 +194,22 @@ type
 function AsegurarDataModuleDocumento(
   APropietario: TComponent; var ADataModule: TObject;
   AClaseDataModule: TClaseDataModuleDocumento): TdmBase;
+function CrearConsultaBusquedaMtoGenUniDAC(
+  AOwner: TComponent;
+  AConexion: TUniConnection;
+  const ASql: string): TDataSet;
+function CrearCasoUsoGuardadoMtoGenUniDAC(
+  AConexion: TUniConnection): ICasoUsoGuardadoMtoGen;
+procedure CargarConfiguracionAltaRapidaMtoGenUniDAC(
+  AConexion: TUniConnection;
+  const ANombreTabla: string;
+  out AConfiguracion: TConfiguracionAltaRapidaMtoGen);
+function EjecutarAltaRapidaMtoGenUniDAC(
+  AConexion: TUniConnection;
+  AConexionContadores: TUniConnection;
+  const AConfiguracion: TConfiguracionAltaRapidaMtoGen;
+  const ACodigo, ADescripcion, AUsuario: string;
+  const AAuditoria: IServicioAuditoriaDatos): TResultadoAltaRapidaMtoGen;
 
 //var
 //  dmBase: TdmBase;
@@ -198,9 +219,211 @@ implementation
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 uses
-  Vcl.Forms, inLibData, inLibMsgComun, inLibRegistroLogNulo;
+  Vcl.Forms, inLibData, inLibMsgComun, inLibRegistroLogNulo,
+  inLibDatasets, inLibFiltroUsuario, inLibMtoGenAplicacion,
+  inLibValoresAutomaticos;
 
 {$R *.dfm}
+
+type
+  TUnidadTrabajoMtoGenUniDAC = class(
+    TInterfacedObject,
+    IUnidadTrabajoMtoGen)
+  private
+    FConexion: TUniConnection;
+  public
+    constructor Create(AConexion: TUniConnection);
+    function EstaActiva: Boolean;
+    procedure Iniciar;
+    procedure Confirmar;
+    procedure Revertir;
+  end;
+
+constructor TUnidadTrabajoMtoGenUniDAC.Create(AConexion: TUniConnection);
+begin
+  if AConexion = nil then
+    raise EArgumentNilException.Create('AConexion');
+  inherited Create;
+  FConexion := AConexion;
+end;
+
+function TUnidadTrabajoMtoGenUniDAC.EstaActiva: Boolean;
+begin
+  Result := FConexion.InTransaction;
+end;
+
+procedure TUnidadTrabajoMtoGenUniDAC.Iniciar;
+begin
+  FConexion.StartTransaction;
+end;
+
+procedure TUnidadTrabajoMtoGenUniDAC.Confirmar;
+begin
+  FConexion.Commit;
+end;
+
+procedure TUnidadTrabajoMtoGenUniDAC.Revertir;
+begin
+  FConexion.Rollback;
+end;
+
+function CrearCasoUsoGuardadoMtoGenUniDAC(
+  AConexion: TUniConnection): ICasoUsoGuardadoMtoGen;
+begin
+  Result := CrearCasoUsoGuardadoMtoGen(
+    TUnidadTrabajoMtoGenUniDAC.Create(AConexion));
+end;
+
+function CrearConsultaBusquedaMtoGenUniDAC(
+  AOwner: TComponent;
+  AConexion: TUniConnection;
+  const ASql: string): TDataSet;
+var
+  oConsulta: TUniQuery;
+begin
+  if AConexion = nil then
+    raise EArgumentNilException.Create('AConexion');
+  oConsulta := TUniQuery.Create(AOwner);
+  oConsulta.Connection := AConexion;
+  oConsulta.SQL.Text := ASql;
+  Result := oConsulta;
+end;
+
+function ProcesarValorAltaRapidaMtoGen(
+  const AValor, ATipo: string): Variant;
+begin
+  if SameText(ATipo, 'INTEGER') then
+    Result := StrToIntDef(AValor, 0)
+  else if SameText(ATipo, 'FLOAT') then
+    Result := StrToFloatDef(AValor, 0.0)
+  else if SameText(ATipo, 'BOOLEAN') then
+    Result := SameText(AValor, 'TRUE') or (AValor = '1')
+  else
+    Result := AValor;
+end;
+
+procedure CargarConfiguracionAltaRapidaMtoGenUniDAC(
+  AConexion: TUniConnection;
+  const ANombreTabla: string;
+  out AConfiguracion: TConfiguracionAltaRapidaMtoGen);
+var
+  oConsulta: TUniQuery;
+  iIndice: Integer;
+begin
+  if AConexion = nil then
+    raise EArgumentNilException.Create('AConexion');
+  AConfiguracion := Default(TConfiguracionAltaRapidaMtoGen);
+  AConfiguracion.Tabla := ANombreTabla;
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := AConexion;
+    oConsulta.SQL.Text :=
+      'SELECT CAMPO_OBJETIVO_DEF_VD, VALOR_DEF_VD, ' +
+      'TIPO_DATO_DEF_VD, VALORES_POSIBLES_DEF_VD ' +
+      'FROM fza_gen_defaults ' +
+      'WHERE TABLA_OBJETIVO_DEF_VD = :Tabla';
+    oConsulta.ParamByName('Tabla').AsString := ANombreTabla;
+    oConsulta.Open;
+    while not oConsulta.Eof do
+    begin
+      iIndice := Length(AConfiguracion.Valores);
+      SetLength(AConfiguracion.Valores, iIndice + 1);
+      AConfiguracion.Valores[iIndice].Campo :=
+        oConsulta.FieldByName('CAMPO_OBJETIVO_DEF_VD').AsString;
+      AConfiguracion.Valores[iIndice].Valor :=
+        ProcesarValorAltaRapidaMtoGen(
+          oConsulta.FieldByName('VALOR_DEF_VD').AsString,
+          oConsulta.FieldByName('TIPO_DATO_DEF_VD').AsString);
+      AConfiguracion.Valores[iIndice].Opciones :=
+        oConsulta.FieldByName('VALORES_POSIBLES_DEF_VD').AsString;
+      oConsulta.Next;
+    end;
+    oConsulta.Close;
+    oConsulta.SQL.Text :=
+      'SELECT TIPO_DOC_CON FROM fza_contadores ' +
+      'WHERE TABLAORIGEN_CONTADOR = :Tabla AND SERIE_CON = ''-''';
+    oConsulta.ParamByName('Tabla').AsString := ANombreTabla;
+    oConsulta.Open;
+    if not oConsulta.IsEmpty then
+      AConfiguracion.TipoDocumentoContador :=
+        oConsulta.FieldByName('TIPO_DOC_CON').AsString;
+  finally
+    oConsulta.Free;
+  end;
+end;
+
+function EjecutarAltaRapidaMtoGenUniDAC(
+  AConexion: TUniConnection;
+  AConexionContadores: TUniConnection;
+  const AConfiguracion: TConfiguracionAltaRapidaMtoGen;
+  const ACodigo, ADescripcion, AUsuario: string;
+  const AAuditoria: IServicioAuditoriaDatos): TResultadoAltaRapidaMtoGen;
+var
+  oConsulta: TUniQuery;
+  sCodigoFinal: string;
+  i: Integer;
+  bTransaccionPropia: Boolean;
+begin
+  if AConexion = nil then
+    raise EArgumentNilException.Create('AConexion');
+  Result := Default(TResultadoAltaRapidaMtoGen);
+  sCodigoFinal := ACodigo;
+  oConsulta := TUniQuery.Create(nil);
+  bTransaccionPropia := not AConexion.InTransaction;
+  try
+    try
+      oConsulta.Connection := AConexion;
+      if bTransaccionPropia then
+        AConexion.StartTransaction;
+      if ((Trim(sCodigoFinal) = '0') or
+          (Trim(sCodigoFinal) = '')) and
+         (AConfiguracion.TipoDocumentoContador <> '') then
+      begin
+        sCodigoFinal := ObtenerSiguienteContador(
+          AConexionContadores,
+          AConfiguracion.TipoDocumentoContador,
+          AUsuario);
+        if sCodigoFinal = '' then
+          raise Exception.Create(SErrorContadorAutomaticoBusqueda);
+      end;
+      oConsulta.SQL.Text := 'SELECT * FROM ' + AConfiguracion.Tabla +
+        ' WHERE 1=0';
+      oConsulta.Open;
+      oConsulta.Insert;
+      if oConsulta.FindField(AConfiguracion.CampoCodigo) <> nil then
+        oConsulta.FieldByName(
+          AConfiguracion.CampoCodigo).AsString := sCodigoFinal;
+      if oConsulta.FindField(AConfiguracion.CampoDescripcion) <> nil then
+        oConsulta.FieldByName(
+          AConfiguracion.CampoDescripcion).AsString := ADescripcion;
+      for i := 0 to High(AConfiguracion.Valores) do
+      begin
+        if oConsulta.FindField(AConfiguracion.Valores[i].Campo) <> nil then
+          oConsulta.FieldByName(
+            AConfiguracion.Valores[i].Campo).Value :=
+            AConfiguracion.Valores[i].Valor;
+      end;
+      if AAuditoria <> nil then
+        AAuditoria.Actualizar(oConsulta);
+      oConsulta.Post;
+      if bTransaccionPropia then
+        AConexion.Commit;
+      Result.Exito := True;
+      Result.Codigo := sCodigoFinal;
+    except
+      on E: Exception do
+      begin
+        if bTransaccionPropia and AConexion.InTransaction then
+          AConexion.Rollback;
+        if oConsulta.State in [dsInsert, dsEdit] then
+          oConsulta.Cancel;
+        Result.Error := E.Message;
+      end;
+    end;
+  finally
+    oConsulta.Free;
+  end;
+end;
 
 constructor TdmBase.Create(AOwner: TComponent);
 begin
@@ -666,6 +889,66 @@ begin
         FRegistroLog.RegistrarError('No se pudo cancelar ' + Comp.Name + ': ' +
                               E.Message);
     end;
+  end;
+end;
+
+procedure TdmBase.PrepararBusquedaExterna(
+  const ACamposClave, AValoresClave: string);
+var
+  aCampos: TArray<string>;
+  aValores: TArray<string>;
+  i: Integer;
+  sBase: string;
+  sWhere: string;
+begin
+  if (ACamposClave <> '') and (AValoresClave <> '') and
+     Assigned(unqryTablaG) then
+  begin
+    unqryTablaG.Close;
+    if FSqlBaseBusquedaExterna = '' then
+      FSqlBaseBusquedaExterna := unqryTablaG.SQL.Text
+    else
+      unqryTablaG.SQL.Text := FSqlBaseBusquedaExterna;
+    aCampos := ACamposClave.Split([';']);
+    aValores := AValoresClave.Split([',']);
+    sWhere := '';
+    for i := 0 to High(aCampos) do
+    begin
+      if (i <= High(aValores)) and (Trim(aCampos[i]) <> '') then
+      begin
+        if sWhere <> '' then
+          sWhere := sWhere + ' AND ';
+        sWhere := sWhere + Trim(aCampos[i]) + ' = ' +
+          QuotedStr(Trim(aValores[i]));
+      end;
+    end;
+    if sWhere <> '' then
+    begin
+      sBase := TrimRight(FSqlBaseBusquedaExterna);
+      while (sBase <> '') and (sBase[Length(sBase)] = ';') do
+        sBase := TrimRight(Copy(sBase, 1, Length(sBase) - 1));
+      if unqryTablaG.UpdatingTable = '' then
+        unqryTablaG.UpdatingTable := ExtraerTablaDeSQL(
+          FSqlBaseBusquedaExterna);
+      unqryTablaG.SQL.Text := 'SELECT * FROM (' + sLineBreak +
+        sBase + sLineBreak + ') sub_busqueda WHERE ' + sWhere;
+    end;
+  end;
+end;
+
+function TdmBase.AplicarRestriccionUsuario(
+  const AFiltro: string): Boolean;
+begin
+  Result := False;
+  if Assigned(unqryTablaG) and (AFiltro <> '') and
+     (Pos(AFiltro, unqryTablaG.SQL.Text) = 0) then
+  begin
+    if unqryTablaG.Active then
+      unqryTablaG.Close;
+    unqryTablaG.SQL.Text := InyectarFiltroSql(
+      unqryTablaG.SQL.Text,
+      AFiltro);
+    Result := True;
   end;
 end;
 

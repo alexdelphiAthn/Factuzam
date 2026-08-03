@@ -1006,16 +1006,9 @@
       end
     end
   end
-  object unqryDocsProveedorPrint: TUniQuery
-    SQL.Strings = (
-      'SELECT 1')
-    Left = 96
-    Top = 16
-  end
   object fxdsDocsProveedor: TfrxDBDataset
     UserName = 'DocsProveedor'
     CloseDataSource = False
-    DataSet = unqryDocsProveedorPrint
     BCDToCurrency = False
     DataSetOptions = []
     Left = 96

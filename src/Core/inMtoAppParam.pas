@@ -134,7 +134,7 @@ uses
    inLibLayoutForm, inLibVerifactu, inLibFactuzamApi,
    inLibMsgConfiguracion, inLibTraducciones, inLibTraduccionesIntf,
    inLibTraduccionesDescarga, inMtoModalDescargaTraduccion,
-   inLibLogIntf;
+   inLibLogIntf, UniDataConfiguracionPantalla;
 
 procedure RegistrarCambioConfiguracionVerifactuSeguro(
   const ARegistroLog: IRegistroLog;
@@ -180,8 +180,10 @@ begin
   if not Supports(Owner, IProveedorParametrosEdicion, Proveedor) then
     raise Exception.Create(SErrorProveedorEdicionParametrosNoConfigurado);
   FParametrosEdicion := Proveedor.ParametrosAppEdicion;
-  FRepositorioPersistencia := ContextoRepositoriosPantalla.Configuracion.
-    CrearRepositorioAppParam;
+  ComponerConfiguracionPantalla(
+    Self,
+    ConexionPrincipal,
+    FRepositorioPersistencia);
   if not Assigned(FParametrosEdicion) then
     raise Exception.Create(
       SErrorParametrosAplicacionEditablesNoConfigurados);

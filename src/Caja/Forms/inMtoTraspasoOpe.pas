@@ -36,7 +36,8 @@ uses
   cxLocalization, inLibLectorScanner, cxStyles, cxDBData, cxCustomData,
   cxFilter, cxData, cxDataStorage, cxNavigator, dxDateRanges,
   dxScrollbarAnnotations, inLibCajaVentaIntf, inLibCajaVentanasIntf,
-  inLibTraspasoOpePersistenciaIntf;
+  inLibTraspasoOpePersistenciaIntf, inLibArticulosAtributosIntf,
+  inLibTraspasoTicketIntf, UniDataCajaPantallaComposicion;
 
 type
   TfrmMtoOpeTraspaso = class(TfrmBase, ITraspasoCaja)
@@ -104,6 +105,9 @@ type
     FConsultaStock: IResultadoConsultaCaja;
     FRepositorioConsultas: IRepositorioConsultasCaja;
     FRepositorioPersistencia: IRepositorioTraspasoOpe;
+    FValidadorArticulos: IArticulosValidador;
+    FLookupAtributosArticulos: IArticulosAtributosLookup;
+    FRepositorioTraspasoTicket: IRepositorioTraspasoTicket;
     // Lectura con pistola a nivel de FORMULARIO (igual que inMtoCajaOpe): la
     // mecanica (trama STX/ETX + rafaga por velocidad) la lleva TLectorScanner.
     // En modo "consumir" y pasivo dentro de la rejilla (ahi resuelve la celda
@@ -169,8 +173,11 @@ uses
   inLibMsgCaja, inLibMsgComun;
 
 procedure TfrmMtoOpeTraspaso.FormCreate(Sender: TObject);
+var
+  oComposicion: TComposicionCajaPantalla;
 begin
   inherited;
+  oComposicion := ComponerCajaPantalla(Self);
   KeyPreview := True;
   // Detector del lector de codigo de barras (trama STX/ETX + rafaga por
   // velocidad). Modo "consumir" y pasivo en la rejilla: la lectura en la celda
@@ -183,10 +190,16 @@ begin
   FLector.OnEsControlRejilla := LectorEsControlRejilla;
   FComboCodigos := TStringList.Create;
   FDatos := TdmTraspaso.Create(Self, ConexionPrincipal);
-  FRepositorioConsultas := ContextoRepositoriosPantalla.Caja.
+  FRepositorioConsultas := oComposicion.Consultas.
     CrearRepositorioConsultasCaja;
-  FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
+  FRepositorioPersistencia := oComposicion.Operaciones.
     CrearRepositorioTraspasoOpe;
+  FValidadorArticulos := oComposicion.Operaciones.
+    CrearValidadorArticulos(ConexionPrincipal);
+  FLookupAtributosArticulos := oComposicion.Operaciones.
+    CrearLookupAtributosArticulos(ConexionPrincipal);
+  FRepositorioTraspasoTicket := oComposicion.Tickets.
+    CrearRepositorioTraspasoTicket;
   // Coste/importe solo para administrador: TienePermiso devuelve True siempre a
   // admin; al resto, oculto por defecto (default False) salvo permiso explicito
   // 'caja.verCoste'. Sin sistema de permisos, oculto.
@@ -211,6 +224,9 @@ begin
     FStockDs.DataSet := nil;
   FStockDatos := nil;
   FConsultaStock := nil;
+  FRepositorioTraspasoTicket := nil;
+  FLookupAtributosArticulos := nil;
+  FValidadorArticulos := nil;
   FRepositorioConsultas := nil;
   FRepositorioPersistencia := nil;
   FreeAndNil(FGridCtrl);
@@ -262,10 +278,8 @@ begin
     Campos,
     ContextoSesion,
     BusquedaVisual,
-    ContextoRepositoriosPantalla.Articulos.CrearValidadorArticulos(
-      ConexionPrincipal),
-    ContextoRepositoriosPantalla.Articulos.CrearLookupAtributosArticulos(
-      ConexionPrincipal),
+    FValidadorArticulos,
+    FLookupAtributosArticulos,
     RegistroLog);
   FGridCtrl.OnResuelto := GridResuelto;
   FGridCtrl.Construir;
@@ -1157,7 +1171,7 @@ begin
     if sNum <> '' then
       TTraspasoTicket.ImprimirSolicitud(
         PreviewTicket,
-        ContextoRepositoriosPantalla.TicketsCaja.CrearRepositorioTraspasoTicket,
+        FRepositorioTraspasoTicket,
         sNum,
         sSer,
         ParametrosCaja.ImpresoraCaja);
@@ -1277,9 +1291,7 @@ begin
           // Ticket de la solicitud: cada SKU con stock origen / destino.
           TTraspasoTicket.ImprimirSolicitud(
                                             PreviewTicket,
-                                            ContextoRepositoriosPantalla.
-                                              TicketsCaja.
-                                              CrearRepositorioTraspasoTicket,
+                                            FRepositorioTraspasoTicket,
                                             sNum, sSer,
                                             ParametrosCaja.ImpresoraCaja);
           AplicarModo(mtSolicitar);
@@ -1427,8 +1439,7 @@ begin
             if AConTicket then
               TTraspasoTicket.ImprimirTraspaso(
                 PreviewTicket,
-                ContextoRepositoriosPantalla.TicketsCaja.
-                  CrearRepositorioTraspasoTicket,
+                FRepositorioTraspasoTicket,
                 sNumOp,
                 sOrigen,
                 sDestino,
@@ -1459,8 +1470,7 @@ begin
         if AConTicket then
           TTraspasoTicket.ImprimirTraspaso(
             PreviewTicket,
-            ContextoRepositoriosPantalla.TicketsCaja.
-              CrearRepositorioTraspasoTicket,
+            FRepositorioTraspasoTicket,
             sNumOp,
             sOrigen,
             sDestino,

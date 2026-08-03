@@ -28,7 +28,7 @@ uses
   Vcl.StdCtrls,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxContainer, cxEdit, cxLabel, cxButtons,
-  cxCheckBox, cxCheckComboBox, MemDS, DBAccess, Uni,
+  cxCheckBox, cxCheckComboBox, Uni,
   inLibPerfilesUsuarioIntf, UniDataFacturas, inMtoFacturasBase, cxStyles,
   Data.DB,
   cxDBData, cxCalendar, cxCurrencyEdit, cxTextEdit, cxSpinEdit, cxButtonEdit,
@@ -38,7 +38,8 @@ uses
   cxSplitter, cxGroupBox, cxDBLabel, cxDBEdit, cxImage, Vcl.Buttons,
   cxLookupEdit, cxDBLookupEdit, cxMaskEdit, cxGridBandedTableView,
   cxGridDBBandedTableView, cxGridLevel, cxGridCustomTableView, cxGridTableView,
-  cxGridDBTableView, cxClasses, cxGridCustomView, cxGrid, cxPC;
+  cxGridDBTableView, cxClasses, cxGridCustomView, cxGrid, cxPC,
+  inLibVentasPantallaIntf;
 
 type
   TfrmMtoFacturasSimplif = class(TfrmMtoFacturasBase)
@@ -66,11 +67,11 @@ type
     FPnlProgreso: TPanel;
     FlblProgreso: TcxLabel;
     FbarProgreso: TProgressBar;
+    FRepositorioListado: IRepositorioFacturasSimplificadasPantalla;
     procedure CargarAnyosFiltro;
     procedure CargarAlmacenesFiltro;
     procedure LeerFiltrosPerfil;
-    function  ConstruirWhereFacturas: string;
-    function  ConstruirSqlFacturas: string;
+    function RecogerFiltros: TFiltrosFacturasSimplificadas;
     function  ContarFacturas: Integer;
     procedure AplicarFiltrosFacturas;
     procedure AbrirConProgreso;
@@ -92,7 +93,8 @@ type
 implementation
 
 uses
-  inLibUser, inLibFiltroUsuario, inLibMsgComun, inLibMsgFacturas;
+  inLibUser, inLibMsgComun, inLibMsgFacturas,
+  UniDataVentasPantallaComposicion;
 
 {$R *.dfm}
 
@@ -119,8 +121,18 @@ begin
 end;
 
 procedure TfrmMtoFacturasSimplif.CrearTablaPrincipal;
+var
+  Contexto: TContextoFacturasSimplificadasVentasPantalla;
 begin
   inherited;
+  CrearContextoVentasPantalla(
+    Self,
+    dmmFacturas.unqryTablaG.Connection,
+    dmmFacturas.unqryTablaG,
+    ContextoSesion,
+    ParametrosApp,
+    Contexto);
+  FRepositorioListado := Contexto.Repositorio;
   // Persiana de filtros de carga: arranca colapsada (igual que articulos).
   pnlContFiltros.Visible := False;
   pnlFiltros.Height := 22;
@@ -131,8 +143,7 @@ begin
   CargarAnyosFiltro;
   CargarAlmacenesFiltro;
   LeerFiltrosPerfil;
-  if Assigned(dmmFacturas) and Assigned(dmmFacturas.unqryTablaG) then
-    dmmFacturas.unqryTablaG.SQL.Text := ConstruirSqlFacturas;
+  FRepositorioListado.ConfigurarListado(RecogerFiltros);
 end;
 
 procedure TfrmMtoFacturasSimplif.ResetForm;
@@ -149,7 +160,8 @@ end;
 
 procedure TfrmMtoFacturasSimplif.CargarAnyosFiltro;
 var
-  qry: TUniQuery;
+  Anyos: TArray<Integer>;
+  iAnyo: Integer;
   item: TcxCheckComboBoxItem;
   sAnyoActual: string;
   bExisteActual: Boolean;
@@ -157,25 +169,13 @@ begin
   ccbFiltroAnyo.Properties.Items.Clear;
   bExisteActual := False;
   sAnyoActual := IntToStr(YearOf(Date));
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := dmmFacturas.unqryTablaG.Connection;
-    qry.SQL.Text :=
-      'SELECT DISTINCT YEAR(FECHA_FAC) AS ANYO ' +
-      '  FROM fza_facturas ' +
-      ' WHERE TIPO_FAC = ''SIMPLIFICADA'' AND FECHA_FAC IS NOT NULL ' +
-      ' ORDER BY ANYO DESC';
-    qry.Open;
-    while not qry.Eof do
-    begin
-      item := ccbFiltroAnyo.Properties.Items.Add;
-      item.Description := qry.FieldByName('ANYO').AsString;
-      if item.Description = sAnyoActual then
-        bExisteActual := True;
-      qry.Next;
-    end;
-  finally
-    FreeAndNil(qry);
+  Anyos := FRepositorioListado.ListarAnyos;
+  for iAnyo := 0 to High(Anyos) do
+  begin
+    item := ccbFiltroAnyo.Properties.Items.Add;
+    item.Description := IntToStr(Anyos[iAnyo]);
+    if item.Description = sAnyoActual then
+      bExisteActual := True;
   end;
   // El año en curso es el valor por defecto: lo añadimos aunque no tenga
   // facturas todavia para que se pueda marcar.
@@ -188,7 +188,8 @@ end;
 
 procedure TfrmMtoFacturasSimplif.CargarAlmacenesFiltro;
 var
-  qry: TUniQuery;
+  Almacenes: TAlmacenesFiltroFacturaSimplificada;
+  iAlmacen: Integer;
   item: TcxCheckComboBoxItem;
 begin
   ccbFiltroAlmacen.Properties.Items.Clear;
@@ -196,33 +197,13 @@ begin
     FCodigosAlmacen := TStringList.Create
   else
     FCodigosAlmacen.Clear;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := dmmFacturas.unqryTablaG.Connection;
-    // Con la restricción por usuario activa el combo solo ofrece su
-    // empresa/almacén (fza_almacenes lleva la empresa en CODIGO_EMP_ALM).
-    qry.SQL.Text :=
-      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM ' +
-      '  FROM fza_almacenes ' +
-      ' WHERE ESACTIVO_ALM = ''S'' ' +
-      SqlFiltroEmpAlmCaja(
-        ContextoSesion,
-        ParametrosApp,
-        'CODIGO_EMP_ALM',
-        'CODIGO_ALM_ALM',
-        '') +
-      ' ORDER BY ORDEN_ALM, CODIGO_ALM_ALM';
-    qry.Open;
-    while not qry.Eof do
-    begin
-      item := ccbFiltroAlmacen.Properties.Items.Add;
-      item.Description := qry.FieldByName('CODIGO_ALM_ALM').AsString +
-                          ' - ' + qry.FieldByName('NOMBRE_ALM_ALM').AsString;
-      FCodigosAlmacen.Add(qry.FieldByName('CODIGO_ALM_ALM').AsString);
-      qry.Next;
-    end;
-  finally
-    FreeAndNil(qry);
+  Almacenes := FRepositorioListado.ListarAlmacenes;
+  for iAlmacen := 0 to High(Almacenes) do
+  begin
+    item := ccbFiltroAlmacen.Properties.Items.Add;
+    item.Description := Almacenes[iAlmacen].Codigo + ' - ' +
+      Almacenes[iAlmacen].Nombre;
+    FCodigosAlmacen.Add(Almacenes[iAlmacen].Codigo);
   end;
 end;
 
@@ -309,90 +290,46 @@ begin
   end;
 end;
 
-function TfrmMtoFacturasSimplif.ConstruirWhereFacturas: string;
+function TfrmMtoFacturasSimplif.RecogerFiltros:
+  TFiltrosFacturasSimplificadas;
 var
-  sAnyos, sAlm: string;
+  iFiltro: Integer;
   i: Integer;
 begin
-  // Años marcados -> IN sobre YEAR(FECHA_FAC). Sin nada marcado = todos.
-  sAnyos := '';
+  Result := Default(TFiltrosFacturasSimplificadas);
   for i := 0 to ccbFiltroAnyo.Properties.Items.Count - 1 do
   begin
     if ccbFiltroAnyo.States[i] = cbsChecked then
     begin
-      if sAnyos <> '' then
-        sAnyos := sAnyos + ', ';
-      sAnyos := sAnyos + ccbFiltroAnyo.Properties.Items[i].Description;
+      iFiltro := Length(Result.Anyos);
+      SetLength(Result.Anyos, iFiltro + 1);
+      Result.Anyos[iFiltro] := StrToIntDef(
+        ccbFiltroAnyo.Properties.Items[i].Description,
+        0);
     end;
   end;
-  // Almacenes marcados -> IN de codigos sobre CODIGO_ALM_FAC.
-  sAlm := '';
   for i := 0 to ccbFiltroAlmacen.Properties.Items.Count - 1 do
   begin
     if (ccbFiltroAlmacen.States[i] = cbsChecked) and
        (i < FCodigosAlmacen.Count) then
     begin
-      if sAlm <> '' then
-        sAlm := sAlm + ', ';
-      sAlm := sAlm + QuotedStr(FCodigosAlmacen[i]);
+      iFiltro := Length(Result.Almacenes);
+      SetLength(Result.Almacenes, iFiltro + 1);
+      Result.Almacenes[iFiltro] := FCodigosAlmacen[i];
     end;
   end;
-  Result := ' WHERE 1 = 1';
-  if sAnyos <> '' then
-    Result := Result + ' AND YEAR(FECHA_FAC) IN (' + sAnyos + ')';
-  if sAlm <> '' then
-    Result := Result + ' AND CODIGO_ALM_FAC IN (' + sAlm + ')';
-  // Restricción por usuario (appRestringirEmpAlmCaja): mismo fragmento
-  // que SqlRestriccionUsuario de la base, integrado aquí porque este Mto
-  // recompone su SQL al cambiar los filtros de carga.
-  Result := Result + SqlFiltroEmpAlmCaja(
-    ContextoSesion,
-    ParametrosApp,
-    'CODIGO_EMP_FAC',
-                                         'CODIGO_ALM_FAC',
-                                         'CODIGO_CAJA_FAC');
-end;
-
-function TfrmMtoFacturasSimplif.ConstruirSqlFacturas: string;
-begin
-  Result := 'SELECT * FROM ' + NombreVistaListado +
-            ConstruirWhereFacturas +
-            ' ORDER BY FECHA_FAC DESC, NUMERO_FAC DESC';
 end;
 
 function TfrmMtoFacturasSimplif.ContarFacturas: Integer;
-var
-  qry: TUniQuery;
 begin
-  Result := 0;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := dmmFacturas.unqryTablaG.Connection;
-    qry.SQL.Text := 'SELECT COUNT(*) AS N FROM ' + NombreVistaListado +
-                    ConstruirWhereFacturas;
-    qry.Open;
-    if not qry.IsEmpty then
-      Result := qry.Fields[0].AsInteger;
-  finally
-    FreeAndNil(qry);
-  end;
+  Result := FRepositorioListado.Contar(RecogerFiltros);
 end;
 
 procedure TfrmMtoFacturasSimplif.AplicarFiltrosFacturas;
-var
-  qry: TUniQuery;
-  sSql: string;
 begin
-  if Assigned(dmmFacturas) and Assigned(dmmFacturas.unqryTablaG) then
-  begin
-    qry := dmmFacturas.unqryTablaG;
-    sSql := ConstruirSqlFacturas;
-    if Trim(qry.SQL.Text) <> Trim(sSql) then
-    begin
-      qry.SQL.Text := sSql;
-      AbrirConProgreso;
-    end;
-  end;
+  if Assigned(FRepositorioListado) and
+     FRepositorioListado.ConfigurarListado(RecogerFiltros) then
+    AbrirConProgreso;
 end;
 
 procedure TfrmMtoFacturasSimplif.AbrirConProgreso;
@@ -572,8 +509,8 @@ begin
   finally
     FFiltrosCargando := False;
   end;
-  if Assigned(dmmFacturas) and Assigned(dmmFacturas.unqryTablaG) then
-    dmmFacturas.unqryTablaG.SQL.Text := ConstruirSqlFacturas;
+  if Assigned(FRepositorioListado) then
+    FRepositorioListado.ConfigurarListado(RecogerFiltros);
   pnlContFiltros.Visible := False;
   pnlFiltros.Height := 22;
   btnToggleFiltros.Caption := SCaptionFiltrosCargaContraido;
@@ -590,6 +527,7 @@ end;
 procedure TfrmMtoFacturasSimplif.FormDestroy(Sender: TObject);
 begin
   inherited;
+  FRepositorioListado := nil;
   FreeAndNil(FCodigosAlmacen);
 end;
 

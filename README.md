@@ -43,11 +43,11 @@ otros signos distintivos de Factuzam.
 
 ## Asistencia con inteligencia artificial
 
-Durante el desarrollo se utilizan ChatGPT, de OpenAI, y Claude, de Anthropic,
-como herramientas de asistencia para programación, documentación, revisión y
-análisis. Sus resultados se revisan, modifican e integran bajo responsabilidad
-humana. Estas herramientas y sus proveedores no son autores, coautores ni
-titulares de derechos sobre Factuzam.
+Durante el desarrollo se utilizan ChatGPT, de OpenAI, Gemini de Google y Claude, 
+de Anthropic, como herramientas de asistencia para programación, documentación, 
+revisión y análisis. Sus resultados se revisan, modifican e integran bajo 
+responsabilidad humana. Estas herramientas y sus proveedores no son autores, 
+coautores ni titulares de derechos sobre Factuzam.
 
 El alcance y las reglas de uso se detallan en
 [USO_DE_IA.md](USO_DE_IA.md).

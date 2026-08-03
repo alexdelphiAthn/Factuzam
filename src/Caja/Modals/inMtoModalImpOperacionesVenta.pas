@@ -28,7 +28,7 @@ uses
   frxExportBaseDialog, frxExportPDF, frxSmartMemo, frLocalization,
   frLanguageSpanish, frxExportBaseImageSettingsDialog, frCoreClasses,
   JvComponentBase, JvEnterTab, Vcl.Menus, System.Actions, Vcl.ActnList,
-  inLibInformesCajaPersistenciaIntf;
+  inLibInformesCajaPersistenciaIntf, UniDataCajaPantallaComposicion;
 
 type
   TfrmPrintOperacionesVenta = class(TfrmPrint)
@@ -63,6 +63,7 @@ type
     FRepositorioPersistencia: IRepositorioInformesCaja;
     FResultado: IResultadoInformeCaja;
     FDatos: TDataSet;
+    procedure ComponerDependencias;
     procedure AsegurarUbicacionSeleccionada;
     procedure CargarUbicaciones;
     function ConstruirSolicitud:
@@ -156,11 +157,6 @@ begin
     FAlmacenesUbicacion := TStringList.Create;
   if FCajasUbicacion = nil then
     FCajasUbicacion := TStringList.Create;
-  if not Assigned(FRepositorioPersistencia) then
-  begin
-    FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
-      CrearRepositorioInformesCaja;
-  end;
   clbUbicaciones.Items.BeginUpdate;
   try
     clbUbicaciones.Items.Clear;
@@ -207,6 +203,7 @@ end;
 procedure TfrmPrintOperacionesVenta.DoShow;
 begin
   inherited;
+  ComponerDependencias;
   if not FInicializado then
   begin
     dteDesde.Date := EncodeDate(YearOf(Date), 1, 1);
@@ -231,6 +228,18 @@ begin
       CargarUbicaciones;
     end;
     FInicializado := True;
+  end;
+end;
+
+procedure TfrmPrintOperacionesVenta.ComponerDependencias;
+var
+  oComposicion: TComposicionCajaPantalla;
+begin
+  if not Assigned(FRepositorioPersistencia) then
+  begin
+    oComposicion := ComponerCajaPantalla(Self);
+    FRepositorioPersistencia := oComposicion.Informes.
+      CrearRepositorioInformesCaja;
   end;
 end;
 
@@ -279,11 +288,6 @@ begin
   if dteHasta.Date < dteDesde.Date then
     dteHasta.Date := dteDesde.Date;
   AsegurarUbicacionSeleccionada;
-  if not Assigned(FRepositorioPersistencia) then
-  begin
-    FRepositorioPersistencia := ContextoRepositoriosPantalla.Caja.
-      CrearRepositorioInformesCaja;
-  end;
   dsVentasPrint.DataSet := nil;
   FDatos := nil;
   FResultado := FRepositorioPersistencia.ConsultarOperacionesVenta(

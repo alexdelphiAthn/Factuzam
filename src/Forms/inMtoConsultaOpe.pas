@@ -31,7 +31,10 @@ uses
   cxCurrencyEdit, cxClasses, cxGridCustomView, JvComponentBase, JvEnterTab,
   cxLocalization, Vcl.Menus, inLibCajaTipos, inLibCajaVentanasIntf,
   inLibInteraccionDatosIntf,
-  inLibConsultaFacturasOperacionesPersistenciaIntf;
+  inLibConsultaFacturasOperacionesPersistenciaIntf,
+  inLibEmisionFiscalIntf, inLibGenerarTicketIntf,
+  inLibTraspasoTicketIntf, inLibTicketsCajaIntf,
+  UniDataCajaPantallaComposicion;
 
 type
   TfrmConsultaOpe = class(TfrmBase, IConsultaOperacionesCaja)
@@ -120,6 +123,10 @@ type
     FAlmacen:    string;
     FCaja:       string;
     FRepositorioFacturas: IRepositorioConsultaFacturasOperaciones;
+    FServicioEmisionFiscal: IServicioEmisionFiscal;
+    FRepositorioTraspasoTicket: IRepositorioTraspasoTicket;
+    FRepositoriosTicketsCaja: TRepositoriosTicketsCaja;
+    FLecturasImpresionTicket: ILecturasImpresionTicket;
     // Factura de la operación seleccionada (pestaña Factura)
     procedure NotificarMensajeDesdeDM(
       Sender: TObject;
@@ -171,10 +178,8 @@ uses inLibGenerarTicketBD, inLibGenerarTicketCaja,
      inLibFotos, inMtoFotoArticulo,
      inLibTraspasoTicket, inLibShowMto,
      inLibVerifactu, inMtoModalFacturarTicket,
-     inLibEmisionFiscalIntf,
   inLibCorreoTickets, inLibAtributosPaleta, inLibMsgComun,
-  inLibMsgCaja, inLibMsgConfiguracion, inLibMsgFacturas,
-  inLibTicketsCajaIntf;
+  inLibMsgCaja, inLibMsgConfiguracion, inLibMsgFacturas;
 
 // -----------------------------------------------------------------------------
 procedure TfrmConsultaOpe.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -184,8 +189,11 @@ begin
 end;
 
 procedure TfrmConsultaOpe.FormCreate(Sender: TObject);
+var
+  oComposicion: TComposicionCajaPantalla;
 begin
   inherited;
+  oComposicion := ComponerCajaPantalla(Self);
   FdmConsulta := TdmConsultaOpe.Create(
     Self,
     ConexionPrincipal,
@@ -193,12 +201,19 @@ begin
   FdmConsulta.OnNotificarMensaje := NotificarMensajeDesdeDM;
   FLayout := TLayoutLoader.Create(
     Self.Name, ContextoSesion, PerfilesLectura);
-  FRepositorioFacturas := ContextoRepositoriosPantalla.Operaciones.
+  FRepositorioFacturas := oComposicion.Consultas.
     CrearRepositorioConsultaFacturas;
   FVentasCal := TVentasCalendarioCache.Create(
     ConexionPrincipal,
-    ContextoRepositoriosPantalla.Operaciones.
-      CrearRepositorioVentasCalendario);
+    oComposicion.Consultas.CrearRepositorioVentasCalendario);
+  FServicioEmisionFiscal := oComposicion.Consultas.
+    CrearServicioEmisionFiscal;
+  FRepositorioTraspasoTicket := oComposicion.Tickets.
+    CrearRepositorioTraspasoTicket;
+  FRepositoriosTicketsCaja := oComposicion.Tickets.
+    CrearRepositorioTicketsCaja;
+  FLecturasImpresionTicket := oComposicion.Tickets.
+    CrearLecturasImpresionTicketCaja;
   dtpFecha.Properties.OnGetDayState := dtpFechaGetDayState;
   cxViewMaestro.DataController.DataSource := FdmConsulta.dsMaestro;
   cxViewOpe.DataController.DataSource     := FdmConsulta.dsOperacion;
@@ -244,6 +259,13 @@ end;
 
 procedure TfrmConsultaOpe.FormDestroy(Sender: TObject);
 begin
+  FLecturasImpresionTicket := nil;
+  FRepositoriosTicketsCaja.Impresion := nil;
+  FRepositoriosTicketsCaja.Recordatorios := nil;
+  FRepositoriosTicketsCaja.Tickets := nil;
+  FRepositoriosTicketsCaja.Resguardos := nil;
+  FRepositorioTraspasoTicket := nil;
+  FServicioEmisionFiscal := nil;
   FRepositorioFacturas := nil;
   inherited;
   FreeAndNil(FLayout);
@@ -446,7 +468,6 @@ var
   sSerie: string;
   sNumero: string;
   Resultado: TResultadoEmisionFiscal;
-  Servicio: IServicioEmisionFiscal;
   Solicitud: TSolicitudEmisionFiscal;
 begin
   // Anulación fiscal y retirada operativa de la venta.
@@ -462,8 +483,6 @@ begin
                              [sSerie, sNumero]), mtConfirmation,
                        [mbYes, mbNo], 0) = mrYes then
     begin
-      Servicio := ContextoRepositoriosPantalla.Operaciones.
-        CrearServicioEmisionFiscal;
       Solicitud := TSolicitudEmisionFiscal.ParaOperacion(
         sSerie,
         sNumero,
@@ -472,7 +491,7 @@ begin
         'Anulación',
         True,
         'Anulación encolada desde Buscar operaciones');
-      Resultado := Servicio.Emitir(Solicitud);
+      Resultado := FServicioEmisionFiscal.Emitir(Solicitud);
       ShowMessage(Resultado.Mensaje);
       RefrescarOperaciones;
     end;
@@ -939,10 +958,8 @@ begin
             ParametrosApp,
             PreviewTicket,
             UnidadesMedida,
-            ContextoRepositoriosPantalla.TicketsCaja.
-              CrearRepositorioTraspasoTicket,
-            ContextoRepositoriosPantalla.TicketsCaja.
-              CrearRepositorioTicketsCaja,
+            FRepositorioTraspasoTicket,
+            FRepositoriosTicketsCaja,
             RegistroLog,
             ConexionPrincipal,
             sEmp,
@@ -963,7 +980,6 @@ end;
 procedure TfrmConsultaOpe.ReimprimirOperacion(
   const ANombreImpresora: string);
 var
-  RepositoriosTickets: TRepositoriosTicketsCaja;
   sEmp, sAlm, sCaja, sNumOp, sCliente: string;
 begin
   if not FdmConsulta.qryMaestro.IsEmpty then
@@ -981,21 +997,18 @@ begin
     if FdmConsulta.EsTraspaso then
       TTraspasoTicket.ImprimirTraspasoDesdeBD(
         PreviewTicket,
-        ContextoRepositoriosPantalla.TicketsCaja.
-          CrearRepositorioTraspasoTicket,
+        FRepositorioTraspasoTicket,
         sEmp,
         sAlm, sCaja, sNumOp,
         ANombreImpresora)
     else
     begin
-      RepositoriosTickets := ContextoRepositoriosPantalla.TicketsCaja.
-        CrearRepositorioTicketsCaja;
       if FdmConsulta.TieneFactura then
         ImprimirTicketDesdeBD(
           ParametrosApp,
           PreviewTicket,
           UnidadesMedida,
-          RepositoriosTickets.Tickets,
+          FRepositoriosTicketsCaja.Tickets,
           sEmp,
           sAlm,
           sCaja,
@@ -1004,7 +1017,7 @@ begin
       if FdmConsulta.TieneDepositos then
         ImprimirResguardoDeposito(
           PreviewTicket,
-          RepositoriosTickets.Resguardos,
+          FRepositoriosTicketsCaja.Resguardos,
           sEmp,
           sAlm,
           sCaja,
@@ -1014,8 +1027,7 @@ begin
         ImprimirTicketOperacionCaja(
                                     PreviewTicket,
                                     ConexionPrincipal,
-                                    ContextoRepositoriosPantalla.TicketsCaja.
-                                      CrearLecturasImpresionTicketCaja,
+                                    FLecturasImpresionTicket,
                                     sEmp, sAlm, sCaja,
                                     sNumOp,
                                     ANombreImpresora);
@@ -1026,7 +1038,7 @@ begin
       else if Trim(sCliente) <> '' then
         ImprimirRecordatorio(
           PreviewTicket,
-          RepositoriosTickets.Recordatorios,
+          FRepositoriosTicketsCaja.Recordatorios,
           UbicacionSesion.Empresa,
           sCliente,
           ANombreImpresora);

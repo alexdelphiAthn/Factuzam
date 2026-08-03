@@ -45,45 +45,9 @@ uses
   inLibInformesGuiasCache, inLibTraduccionesIntf,
   inLibLogIntf,
   inLibConfigCamposIntf,
-  inLibCatalogoSqlIntf, inLibArticulosResolverIntf,
-  inLibArticulosValidadorIntf, inLibArticulosAtributosIntf,
-  inLibArticulosPropiedadesPersistenciaIntf,
-  inLibStockConsultaPersistenciaIntf,
-  inLibImpresionPersistenciaIntf,
-  inLibDevolucionesCompraPersistenciaIntf,
-  inLibAppParamPersistenciaIntf,
-  inLibBusquedaDatosPersistenciaIntf,
-  inLibGeneracionSkusPersistenciaIntf,
-  inLibDistribuidorPersistenciaIntf,
-  inLibMargenPersistenciaIntf,
-  inLibDestinosFiltrosPersistenciaIntf,
-  inLibFiltroArticulosPersistenciaIntf,
-  inLibGuiasPersistenciaIntf,
-  inLibDestinoEnvioPersistenciaIntf,
-  inLibSeleccionFamiliaPersistenciaIntf,
-  inLibSerieFechaFacturaPersistenciaIntf,
-  inLibSeleccionAlmacenPersistenciaIntf,
-  inLibFacturacionAlbaranesFechasPersistenciaIntf,
-  inLibFacturacionTicketPersistenciaIntf,
-  inLibDocumentosTrabajo,
-  inLibCajasDefectoPersistenciaIntf,
-  inLibFaseCobroPersistenciaIntf,
-  inLibCajaOperacionesHistPersistenciaIntf,
-  inLibCajaPagosHistPersistenciaIntf,
-  inLibCajaVentaIntf,
-  inLibTraspasoOpePersistenciaIntf,
-  inLibModalArqueoPersistenciaIntf,
-  inLibInformesCajaPersistenciaIntf,
-  inLibGastoCajaPersistenciaIntf,
-  inLibEntradaCambioPersistenciaIntf,
-  inLibGenerarTicketIntf,
-  inLibTraspasoTicketIntf, inLibArqueoIntf,
-  inLibArqueoPersistencia,
-  inLibArqueoTicketIntf, inLibTiraCajaTicketIntf,
-  inLibTicketsCajaIntf, inLibFotos, inLibUnidadesMedida,
+  inLibFotos, inLibUnidadesMedida,
   inLibGenBusq, inLibDistribuidorTallas, inLibLayoutForm,
-  inLibPreviewTicket, inLibPreviewExcel,
-  inLibRepositoriosPantallaIntf;
+  inLibPreviewTicket, inLibPreviewExcel;
 
 type
   TEnterAsTabEstado = record
@@ -111,9 +75,7 @@ type
     IProveedorDistribuidorTallasVisual,
     IProveedorSolicitudPermisoLayout,
     IProveedorPreviewTicket,
-    IContenedorProveedorPreviewExcel,
-    IProveedorContextoRepositoriosPantalla,
-    IProveedorFabricaContextosRepositoriosPantalla
+    IContenedorProveedorPreviewExcel
   )
     Localizer1: TcxLocalizer;
     jvntrstb1: TJvEnterAsTab;
@@ -143,9 +105,6 @@ type
     FProveedorPreviewExcel: IProveedorPreviewExcel;
     FRegistroLog: IRegistroLog;
     FConfiguracionCampos: IConfiguracionCampos;
-    FFabricaContextosRepositorios:
-      IFabricaContextosRepositoriosPantalla;
-    FContextoRepositoriosPantalla: IContextoRepositoriosPantalla;
     FEnterAsTabEstados: array of TEnterAsTabEstado;
     FEnterAsTabTemporalActivo: Boolean;
     function GetPermisos: IPermisosAplicacion;
@@ -176,10 +135,6 @@ type
     function GetProveedorPreviewExcel: IProveedorPreviewExcel;
     function GetRegistroLog: IRegistroLog;
     function GetConfiguracionCampos: IConfiguracionCampos;
-    function GetContextoRepositoriosPantalla:
-      IContextoRepositoriosPantalla;
-    function GetFabricaContextosRepositoriosPantalla:
-      IFabricaContextosRepositoriosPantalla;
     function GetConexionPrincipal: TUniConnection;
     function NormalizarSegmentoClaveTraduccion(
       const ATexto: string): string;
@@ -194,7 +149,6 @@ type
     procedure HeredarTraducciones(AOwner: TComponent);
     procedure HeredarRegistroLog(AOwner: TComponent);
     procedure HeredarConfiguracionCampos(AOwner: TComponent);
-    procedure HeredarFabricaContextosRepositorios(AOwner: TComponent);
     procedure HeredarFotosArticulos(AOwner: TComponent);
     procedure HeredarUnidadesMedida(AOwner: TComponent);
     procedure HeredarBusquedaVisual(AOwner: TComponent);
@@ -203,7 +157,6 @@ type
     procedure HeredarPreviewTicket(AOwner: TComponent);
     procedure HeredarProveedorPreviewExcel(AOwner: TComponent);
     procedure GuardarEnterAsTabDe(AOwner: TComponent);
-    procedure InvalidarContextoRepositoriosPantalla;
     procedure AplicarIdiomaDevExpress;
     procedure TraducirDevExpress(
       const AResStringName: string;
@@ -225,9 +178,6 @@ type
     function TraducirDescripcionParametro(
       const AUnidad: string;
       const AParametro: TParamInfo): string;
-    property ContextoRepositoriosPantalla:
-      IContextoRepositoriosPantalla
-      read GetContextoRepositoriosPantalla;
     property RegistroLog: IRegistroLog read GetRegistroLog;
   public
     { Public declarations }
@@ -264,8 +214,6 @@ type
       const ARegistroLog: IRegistroLog);
     procedure AsignarConfiguracionCampos(
       const AConfiguracionCampos: IConfiguracionCampos);
-    procedure AsignarFabricaContextosRepositoriosPantalla(
-      const AFabrica: IFabricaContextosRepositoriosPantalla);
     procedure AplicarTraduccionActual;
     procedure AsignarFotosArticulos(AFotos: TFotosArticulos);
     procedure AsignarUnidadesMedida(AUnidades: TUnidadesMedida);
@@ -334,10 +282,6 @@ uses
 {$R *.dfm}
 {$R CXLOCALIZATION.res}
 
-resourcestring
-  SErrorFabricaContextosRepositoriosNoConfigurada =
-    'La factoría de contextos de repositorios no está configurada.';
-
 constructor TfrmBase.Create(AOwner: TComponent);
 var
   ProveedorPermisos: IProveedorPermisosAplicacion;
@@ -345,7 +289,6 @@ begin
   FPermisos := nil;
   HeredarRegistroLog(AOwner);
   HeredarConfiguracionCampos(AOwner);
-  HeredarFabricaContextosRepositorios(AOwner);
   if Supports(
        AOwner,
        IProveedorPermisosAplicacion,
@@ -377,7 +320,6 @@ begin
   FPermisos := APermisos;
   HeredarRegistroLog(AOwner);
   HeredarConfiguracionCampos(AOwner);
-  HeredarFabricaContextosRepositorios(AOwner);
   HeredarConexiones(AOwner);
   HeredarAuditoriaDatos(AOwner);
   HeredarMonitorSQL(AOwner);
@@ -406,8 +348,6 @@ end;
 
 destructor TfrmBase.Destroy;
 begin
-  FContextoRepositoriosPantalla := nil;
-  FFabricaContextosRepositorios := nil;
   FRegistroLog := nil;
   FConfiguracionCampos := nil;
   FFotosArticulos := nil;
@@ -843,29 +783,6 @@ begin
     FConfiguracionCampos := Proveedor.ConfiguracionCampos;
 end;
 
-procedure TfrmBase.HeredarFabricaContextosRepositorios(
-  AOwner: TComponent);
-var
-  Proveedor: IProveedorFabricaContextosRepositoriosPantalla;
-begin
-  FFabricaContextosRepositorios := nil;
-  if Supports(
-       AOwner,
-       IProveedorFabricaContextosRepositoriosPantalla,
-       Proveedor) then
-    FFabricaContextosRepositorios :=
-      Proveedor.FabricaContextosRepositoriosPantalla;
-  if not Assigned(FFabricaContextosRepositorios) and
-     Assigned(Application.MainForm) and
-     (Application.MainForm <> AOwner) and
-     Supports(
-       Application.MainForm,
-       IProveedorFabricaContextosRepositoriosPantalla,
-       Proveedor) then
-    FFabricaContextosRepositorios :=
-      Proveedor.FabricaContextosRepositoriosPantalla;
-end;
-
 procedure TfrmBase.AsignarPermisos(
   const APermisos: IPermisosAplicacion);
 begin
@@ -876,7 +793,6 @@ procedure TfrmBase.AsignarConexiones(
   const AConexiones: IServicioConexiones);
 begin
   FConexiones := AConexiones;
-  InvalidarContextoRepositoriosPantalla;
 end;
 
 procedure TfrmBase.AsignarAuditoriaDatos(
@@ -895,7 +811,6 @@ procedure TfrmBase.AsignarContextoSesion(
   const AContextoSesion: IContextoSesionAplicacion);
 begin
   FContextoSesion := AContextoSesion;
-  InvalidarContextoRepositoriosPantalla;
 end;
 
 procedure TfrmBase.AsignarFiltrosGuardados(
@@ -912,7 +827,6 @@ begin
   FPerfilesLectura := AServicios.Lectura;
   FPerfilesEscritura := AServicios.Escritura;
   FCachePerfiles := AServicios.Cache;
-  InvalidarContextoRepositoriosPantalla;
 end;
 
 procedure TfrmBase.AsignarParametros(
@@ -921,7 +835,6 @@ procedure TfrmBase.AsignarParametros(
 begin
   FParametrosApp := AParametrosApp;
   FParametrosCaja := AParametrosCaja;
-  InvalidarContextoRepositoriosPantalla;
 end;
 
 procedure TfrmBase.AsignarInformesGuiasCache(
@@ -947,20 +860,12 @@ begin
     FRegistroLog := ARegistroLog
   else
     FRegistroLog := CrearRegistroLogNulo;
-  InvalidarContextoRepositoriosPantalla;
 end;
 
 procedure TfrmBase.AsignarConfiguracionCampos(
   const AConfiguracionCampos: IConfiguracionCampos);
 begin
   FConfiguracionCampos := AConfiguracionCampos;
-end;
-
-procedure TfrmBase.AsignarFabricaContextosRepositoriosPantalla(
-  const AFabrica: IFabricaContextosRepositoriosPantalla);
-begin
-  FFabricaContextosRepositorios := AFabrica;
-  InvalidarContextoRepositoriosPantalla;
 end;
 
 procedure TfrmBase.AplicarTraduccionActual;
@@ -1040,7 +945,6 @@ begin
   FSolicitudPermisoLayout := ASolicitudPermisoLayout;
   FPreviewTicket := APreviewTicket;
   FProveedorPreviewExcel := AProveedorPreviewExcel;
-  InvalidarContextoRepositoriosPantalla;
 end;
 
 function TfrmBase.GetFiltrosEscritura: IEscritorFiltrosGuardados;
@@ -1149,40 +1053,6 @@ end;
 function TfrmBase.GetConfiguracionCampos: IConfiguracionCampos;
 begin
   Result := FConfiguracionCampos;
-end;
-
-procedure TfrmBase.InvalidarContextoRepositoriosPantalla;
-begin
-  FContextoRepositoriosPantalla := nil;
-end;
-
-function TfrmBase.GetContextoRepositoriosPantalla:
-  IContextoRepositoriosPantalla;
-begin
-  if not Assigned(FContextoRepositoriosPantalla) then
-  begin
-    if not Assigned(FFabricaContextosRepositorios) then
-      raise EInvalidOpException.Create(
-        SErrorFabricaContextosRepositoriosNoConfigurada);
-    FContextoRepositoriosPantalla :=
-      FFabricaContextosRepositorios.Crear(
-        Name,
-        GetConexionPrincipal,
-        FParametrosApp,
-        FParametrosCaja,
-        FContextoSesion,
-        FPerfilesLectura,
-        FPerfilesEscritura,
-        FRegistroLog,
-        FPreviewTicket);
-  end;
-  Result := FContextoRepositoriosPantalla;
-end;
-
-function TfrmBase.GetFabricaContextosRepositoriosPantalla:
-  IFabricaContextosRepositoriosPantalla;
-begin
-  Result := FFabricaContextosRepositorios;
 end;
 
 function TfrmBase.GetConexionPrincipal: TUniConnection;

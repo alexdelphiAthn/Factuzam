@@ -102,7 +102,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsgArticulos;
+  inLibMsgArticulos, UniDataConfiguracionPantalla;
 
 
 procedure TfrmMtoModalGenerarSKUS.GenerarCombinaciones(Nivel: Integer;
@@ -181,8 +181,10 @@ end;
 
 procedure TfrmMtoModalGenerarSKUS.FormShow(Sender: TObject);
 begin
-  FRepositorio := ContextoRepositoriosPantalla.Articulos.
-    CrearRepositorioGeneracionSkus;
+  ComponerConfiguracionPantalla(
+    Self,
+    ConexionPrincipal,
+    FRepositorio);
   FDatos := FRepositorio.PrepararDatos(
     FCodigoArticulo,
     FTipoVariacion);

@@ -730,25 +730,30 @@ $rutaFormularioConsultaOpe =
 $contenidoFormularioConsultaOpe =
   Get-Content -LiteralPath $rutaFormularioConsultaOpe -Raw
 if ($contenidoFormularioConsultaOpe -notmatch
-    '(?s)EnviarDocumentacionOperacion\(.*?' +
-    'CrearRepositorioTraspasoTicket.*?' +
-    'CrearRepositorioTicketsCaja.*?ConexionPrincipal' -or
+    '(?s)FRepositorioTraspasoTicket\s*:=\s*' +
+    'oComposicion\.Tickets\.\s*CrearRepositorioTraspasoTicket' -or
     $contenidoFormularioConsultaOpe -notmatch
-    '(?s)RepositoriosTickets\s*:=\s*' +
-    '(?:ContextoRepositoriosPantalla\.TicketsCaja\.\s*)?' +
-    'CrearRepositorioTicketsCaja' -or
+    '(?s)FRepositoriosTicketsCaja\s*:=\s*' +
+    'oComposicion\.Tickets\.\s*CrearRepositorioTicketsCaja' -or
+    $contenidoFormularioConsultaOpe -notmatch
+    '(?s)FLecturasImpresionTicket\s*:=\s*' +
+    'oComposicion\.Tickets\.\s*CrearLecturasImpresionTicketCaja' -or
+    $contenidoFormularioConsultaOpe -notmatch
+    '(?s)EnviarDocumentacionOperacion\(.*?' +
+    'FRepositorioTraspasoTicket.*?' +
+    'FRepositoriosTicketsCaja.*?ConexionPrincipal' -or
     $contenidoFormularioConsultaOpe -notmatch
     '(?s)ImprimirTicketDesdeBD\(.*?' +
-    'RepositoriosTickets\.Tickets' -or
+    'FRepositoriosTicketsCaja\.Tickets' -or
     $contenidoFormularioConsultaOpe -notmatch
     '(?s)ImprimirResguardoDeposito\(.*?' +
-    'RepositoriosTickets\.Resguardos' -or
+    'FRepositoriosTicketsCaja\.Resguardos' -or
     $contenidoFormularioConsultaOpe -notmatch
     '(?s)ImprimirRecordatorio\(.*?' +
-    'RepositoriosTickets\.Recordatorios' -or
+    'FRepositoriosTicketsCaja\.Recordatorios' -or
     $contenidoFormularioConsultaOpe -notmatch
     '(?s)ImprimirTicketOperacionCaja\(.*?' +
-    'CrearLecturasImpresionTicket') {
+    'FLecturasImpresionTicket') {
   throw 'La consulta de operaciones no conserva el repositorio de tickets.'
 }
 $rutaFormularioCajaOpe =
@@ -1034,34 +1039,25 @@ foreach ($contrato in $contratosCargaPedidoPresta) {
 }
 
 $rutaAplicacionArticuloDevolucion =
-  Join-Path $Raiz 'src\Forms\inMtoDevolucionesCompra.pas'
+  Join-Path $Raiz `
+    'src\Lib\inLibComprasPantallaArticuloDevolucion.pas'
 $contenidoAplicacionArticuloDevolucion =
   Get-Content -LiteralPath $rutaAplicacionArticuloDevolucion -Raw
+$rutaFormularioArticuloDevolucion =
+  Join-Path $Raiz 'src\Forms\inMtoDevolucionesCompra.pas'
+$contenidoFormularioArticuloDevolucion =
+  Get-Content -LiteralPath $rutaFormularioArticuloDevolucion -Raw
 $ayudantesAplicacionArticuloDevolucion = @(
-  'CampoCabeceraString',
-  'FechaCabecera',
-  'ResolverConjuntoPivotArticulo',
-  'ModeloProveedorArticulo',
-  'EsCodigoArticuloExacto',
-  'PonerString',
-  'PonerFloat',
-  'PonerInteger',
-  'LimpiarCampo',
-  'EnfocarSku',
-  'PrepararEdicion',
-  'CargarDatosArticulo',
-  'ResolverEntradaSku',
-  'ResolverArticulo',
-  'AplicarCamposArticulo',
-  'AplicarCantidades',
-  'ActualizarInterfaz',
-  'AplicarDatos',
+  'ResolverEntrada',
+  'CargarDatos',
+  'CrearLinea',
   'Ejecutar'
 )
 $metodosAplicacionArticuloDevolucion =
   Obtener-MetodosPascal -Ruta $rutaAplicacionArticuloDevolucion
 foreach ($nombre in $ayudantesAplicacionArticuloDevolucion) {
-  $nombreCompleto = 'TAplicacionArticuloDevolucion.' + $nombre
+  $nombreCompleto =
+    'TAplicacionArticuloDevolucionCompra.' + $nombre
   $metodo = @(
     $metodosAplicacionArticuloDevolucion |
       Where-Object { $_.Nombre -eq $nombreCompleto }
@@ -1073,47 +1069,62 @@ foreach ($nombre in $ayudantesAplicacionArticuloDevolucion) {
   }
   if ($metodo[0].Lineas -gt $MaximoFlujo) {
     throw (
-      "inMtoDevolucionesCompra.pas`:$($metodo[0].Linea) " +
+      "inLibComprasPantallaArticuloDevolucion.pas:" +
+      "$($metodo[0].Linea) " +
       "$nombre ocupa $($metodo[0].Lineas) lineas; " +
       "maximo permitido: $MaximoFlujo.")
   }
   $referencias = [regex]::Matches(
-    $contenidoAplicacionArticuloDevolucion,
+    $contenidoAplicacionArticuloDevolucion +
+      $contenidoFormularioArticuloDevolucion,
     "\b$nombre\b").Count
   if ($referencias -lt 3) {
     throw "El ayudante de articulo devuelto $nombre no tiene consumidor."
   }
 }
 if ($contenidoAplicacionArticuloDevolucion -notmatch
-    '(?s)TAplicacionArticuloDevolucion\.Ejecutar.*?' +
-    'AsegurarCabeceraPersistidaParaLineas.*?' +
-    'FAplicandoArticulo := True.*?try.*?PrepararEdicion.*?' +
-    'ResolverArticulo.*?if FDatos\.Encontrado then.*?AplicarDatos.*?' +
-    'MessageDlg.*?finally.*?FAplicandoArticulo := False') {
+    '(?s)TAplicacionArticuloDevolucionCompra\.Ejecutar.*?' +
+    'ResolverEntrada.*?CargarDatos.*?' +
+    'ResolverConjuntoPivotArticulo.*?CrearLinea.*?' +
+    'Result\.Aplicado := True') {
   throw 'La aplicacion de articulo devuelto no conserva su secuencia.'
 }
-if ($contenidoAplicacionArticuloDevolucion -notmatch
+if ($contenidoFormularioArticuloDevolucion -notmatch
     '(?s)TfrmMtoDevolucionesCompra\.AplicarArticuloDevolucion.*?' +
-    'TAplicacionArticuloDevolucion\.Create\(Self, ACodigoArt\).*?' +
-    'Aplicacion\.Ejecutar.*?FreeAndNil\(Aplicacion\)') {
+    'AsegurarCabeceraPersistidaParaLineas.*?' +
+    'FAplicandoArticulo := True.*?try.*?' +
+    'RecogerEntradaArticuloDevolucion.*?' +
+    'FAplicacionArticulo\.Ejecutar.*?' +
+    'PresentarResultadoArticuloDevolucion.*?' +
+    'finally.*?FAplicandoArticulo := False') {
   throw 'La fachada de articulo devuelto no coordina su colaborador.'
 }
 $contratosAplicacionArticuloDevolucion = @(
-  'Resolver.ResolverDatos(',
-  'Resolver.ResolverUltimoCoste(',
-  'FDatos.UltimoCoste.RefProveedor',
+  'FResolver.ResolverDatos(',
+  'FResolver.ResolverUltimoCoste(',
+  'FDatos.ModeloProveedorArticulo(',
+  'FDatos.EsCodigoArticuloExacto(',
+  'FDatos.ResolverConjuntoPivotArticulo(',
+  'Result.Total := Result.Cantidad * Result.PrecioCompra',
+  'Result.PrepararColor :='
+)
+foreach ($contrato in $contratosAplicacionArticuloDevolucion) {
+  if (-not $contenidoAplicacionArticuloDevolucion.Contains($contrato)) {
+    throw "La aplicacion de articulo devuelto no conserva: $contrato."
+  }
+}
+$contratosFormularioArticuloDevolucion = @(
   'PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN',
   'ID_AC_PIVOT_DEVCLIN',
   'TOTAL_UNIDADES_DEVCLIN',
-  'FCantidad * FDatos.UltimoCoste.PrecioUltCompra',
   'PrepararColorPendienteArticuloDevolucion(',
   'TThread.ForceQueue(nil',
   'RefrescarVisibilidadTallas',
   'CargarCaptionsAtributosLineaActiva'
 )
-foreach ($contrato in $contratosAplicacionArticuloDevolucion) {
-  if (-not $contenidoAplicacionArticuloDevolucion.Contains($contrato)) {
-    throw "La aplicacion de articulo devuelto no conserva: $contrato."
+foreach ($contrato in $contratosFormularioArticuloDevolucion) {
+  if (-not $contenidoFormularioArticuloDevolucion.Contains($contrato)) {
+    throw "La fachada de articulo devuelto no conserva: $contrato."
   }
 }
 $rutaRepositorioArticuloDevolucion = Join-Path $Raiz `

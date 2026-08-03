@@ -76,17 +76,24 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsgFacturas, inLibMsgVentas;
+  inLibMsgFacturas, inLibMsgVentas,
+  inLibVentasPantallaIntf,
+  UniDataVentasPantallaComposicion;
 
 procedure TfrmModalFacturarAlbaranesFechas.FormCreate(Sender: TObject);
+var
+  oContexto: TContextoFacturacionAlbaranesFechasVentasPantalla;
 begin
   inherited;
   edtSerie.Text   := 'A1';
   dteDesde.Date   := EncodeDate(YearOf(Date), MonthOf(Date), 1);
   dteHasta.Date   := Date;
   chkAgruparPorCliente.Checked := True;
-  FRepositorio := ContextoRepositoriosPantalla.Documentos.
-    CrearRepositorioFacturacionAlbaranesFechas;
+  CrearContextoVentasPantalla(
+    Self,
+    ConexionPrincipal,
+    oContexto);
+  FRepositorio := oContexto.Repositorio;
 end;
 
 procedure TfrmModalFacturarAlbaranesFechas.btnCerrarClick(Sender: TObject);

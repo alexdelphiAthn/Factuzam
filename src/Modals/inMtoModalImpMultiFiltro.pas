@@ -40,7 +40,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.Generics.Collections, Vcl.Graphics, Vcl.Controls,
   Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
-  inMtoModalGenImp, Data.DB, DBAccess, Uni,
+  inMtoModalGenImp, inLibInformeMultiFiltroPersistenciaIntf,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters, cxContainer,
   cxEdit, cxLabel, cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar,
   cxPC, cxCheckListBox, cxCheckBox, cxCustomListBox, cxClasses,
@@ -98,11 +98,12 @@ type
     FAgrupItems     : TObjectList<TItemAgrup>;
     FclbAgrup       : TcxCheckListBox;
     FseNivelFam     : TcxSpinEdit;
+    FRepositorioFiltros: IRepositorioInformeMultiFiltro;
     procedure CrearUIFiltros;
     procedure CrearTabFechas;
     function  CrearTabFiltro(const ACaption: string): TFiltroChecklist;
     procedure CargarFiltro(AFc: TFiltroChecklist;
-                           const ASQL, ACampoCod, ACampoNom: string);
+      const AOpciones: TOpcionesInformeMultiFiltro);
     procedure RefiltrarChecklist(AFc: TFiltroChecklist);
     procedure CargarFiltros;
     function  CodigoDeItem(const AText: string): string;
@@ -135,7 +136,8 @@ type
     function FiltrosUsados: TFiltrosReport; virtual;
     // SQL de proveedores. Los informes de documentos pueden usar otra fuente
     // sin alterar el filtro de proveedor de balances y movimientos.
-    function SQLFiltroProveedores: string; virtual;
+    function OrigenProveedores:
+      TOrigenProveedoresInformeMultiFiltro; virtual;
     procedure DoShow; override;
     // Helpers para checklists "planos" SIN buscador (p. ej. la pestaña de
     // bandas del balance, pequeña): se crea uno y se lee su selección.
@@ -171,7 +173,7 @@ implementation
 {$R *.dfm}
 
 uses
-  System.DateUtils, inLibMsgComun;
+  System.DateUtils, inLibMsgComun, UniDataInformeMultiFiltroRepositorio;
 
 { TFiltroChecklist }
 
@@ -207,15 +209,10 @@ begin
   Result := [frFechas, frAlmacenes, frFamilias, frProveedores, frTemporadas];
 end;
 
-function TfrmPrintMultiFiltro.SQLFiltroProveedores: string;
+function TfrmPrintMultiFiltro.OrigenProveedores:
+  TOrigenProveedoresInformeMultiFiltro;
 begin
-  // Solo proveedores con al menos un articulo: la lista es relevante y corta.
-  Result :=
-    'SELECT p.CODIGO_PRV_PRV AS COD, p.RAZON_SOCIAL_PRV AS NOM ' +
-    '  FROM fza_proveedores p ' +
-    ' WHERE EXISTS (SELECT 1 FROM fza_articulos_proveedores ap ' +
-    '                WHERE ap.CODIGO_PRV_AP = p.CODIGO_PRV_PRV) ' +
-    ' ORDER BY p.RAZON_SOCIAL_PRV, p.CODIGO_PRV_PRV';
+  Result := opmfArticulos;
 end;
 
 procedure TfrmPrintMultiFiltro.DoShow;
@@ -354,36 +351,24 @@ begin
 end;
 
 procedure TfrmPrintMultiFiltro.CargarFiltro(AFc: TFiltroChecklist;
-  const ASQL, ACampoCod, ACampoNom: string);
+  const AOpciones: TOpcionesInformeMultiFiltro);
 var
-  q: TUniQuery;
+  i: Integer;
   sCod, sNom, sLinea: string;
 begin
   if AFc <> nil then
   begin
     AFc.Fuente.Clear;
     AFc.Marcados.Clear;
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := ConexionPrincipal;
-      q.SQL.Text := ASQL;
-      q.Open;
-      while not q.Eof do
-      begin
-        sCod := q.FieldByName(ACampoCod).AsString;
-        if ACampoNom <> '' then
-          sNom := q.FieldByName(ACampoNom).AsString
-        else
-          sNom := '';
+    for i := 0 to Length(AOpciones) - 1 do
+    begin
+        sCod := AOpciones[i].Codigo;
+        sNom := AOpciones[i].Nombre;
         if (sNom <> '') and (sNom <> sCod) then
           sLinea := sCod + ' - ' + sNom
         else
           sLinea := sCod;
         AFc.Fuente.Add(sLinea);
-        q.Next;
-      end;
-    finally
-      FreeAndNil(q);
     end;
     RefiltrarChecklist(AFc);
   end;
@@ -424,28 +409,19 @@ end;
 
 procedure TfrmPrintMultiFiltro.CargarFiltros;
 begin
-  CargarFiltro(FfcAlmacenes,
-    'SELECT CODIGO_ALM_ALM AS COD, NOMBRE_ALM_ALM AS NOM ' +
-    '  FROM fza_almacenes ' +
-    ' WHERE ESACTIVO_ALM = ''S'' ' +
-    ' ORDER BY ORDEN_ALM, CODIGO_ALM_ALM', 'COD', 'NOM');
+  if FRepositorioFiltros = nil then
+    FRepositorioFiltros := CrearRepositorioInformeMultiFiltroUniDAC(
+      ConexionPrincipal);
+  CargarFiltro(FfcAlmacenes, FRepositorioFiltros.ListarAlmacenes);
   // Familias va como árbol (jerarquía padre→subfamilias), no como checklist.
   CargarFamiliasArbol;
-  CargarFiltro(FfcProveedores, SQLFiltroProveedores, 'COD', 'NOM');
+  CargarFiltro(FfcProveedores,
+    FRepositorioFiltros.ListarProveedores(OrigenProveedores));
   // Temporada = valor de la propiedad de artículo 'TEMPORADA' (código=nombre).
-  CargarFiltro(FfcTemporadas,
-    'SELECT PV AS COD ' +
-    '  FROM fza_propiedades_valores ' +
-    ' WHERE ID_PROP_PV = ''TEMPORADA'' ' +
-    '   AND IFNULL(ESACTIVO_PV, ''S'') = ''S'' ' +
-    ' ORDER BY PV', 'COD', '');
+  CargarFiltro(FfcTemporadas, FRepositorioFiltros.ListarTemporadas);
   // Artículos activos (código + descripción). La lista puede ser larga: el
   // buscador de la pestaña acota las filas visibles. Sin marcar nada = todos.
-  CargarFiltro(FfcArticulos,
-    'SELECT CODIGO_ART_ART AS COD, DESCRIPCION_ART AS NOM ' +
-    '  FROM fza_articulos ' +
-    ' WHERE ESACTIVO_ART = ''S'' ' +
-    ' ORDER BY CODIGO_ART_ART', 'COD', 'NOM');
+  CargarFiltro(FfcArticulos, FRepositorioFiltros.ListarArticulos);
 end;
 
 function TfrmPrintMultiFiltro.FiltroPorClb(AClb: TObject): TFiltroChecklist;
@@ -795,7 +771,6 @@ end;
 // tiene padre o si su padre no existe. Guarda anticíclica por código colocado.
 procedure TfrmPrintMultiFiltro.CargarFamiliasArbol;
 var
-  q        : TUniQuery;
   i        : Integer;
   sClave   : string;
   slCod    : TStringList;
@@ -805,6 +780,7 @@ var
   colocados: TStringList;
   hijosDe  : TObjectDictionary<string, TList<Integer>>;
   lst      : TList<Integer>;
+  familias : TFamiliasInformeMultiFiltro;
   procedure AnadirHijos(AParent: TcxTreeListNode; const AClave: string);
   var
     j   : Integer;
@@ -837,28 +813,16 @@ begin
     try
       conocidos.Sorted := True;
       colocados.Sorted := True;
-      q := TUniQuery.Create(nil);
-      try
-        q.Connection := ConexionPrincipal;
-        q.SQL.Text :=
-          'SELECT CODIGO_FAM_FAM AS COD, ' +
-          '       COALESCE(NOMBRE_FAM_FAM, DESCRIPCION_FAM, ' +
-          '                CODIGO_FAM_FAM) AS NOM, ' +
-          '       COALESCE(CODIGO_SUBFAMILIA_FAM, '''') AS PADRE ' +
-          '  FROM fza_articulos_familias ' +
-          ' WHERE IFNULL(ESACTIVO_FAM, ''S'') = ''S'' ' +
-          ' ORDER BY ORDEN_FAM, CODIGO_FAM_FAM';
-        q.Open;
-        while not q.Eof do
-        begin
-          slCod.Add(q.FieldByName('COD').AsString);
-          slNom.Add(q.FieldByName('NOM').AsString);
-          slPad.Add(q.FieldByName('PADRE').AsString);
-          conocidos.Add(q.FieldByName('COD').AsString);
-          q.Next;
-        end;
-      finally
-        FreeAndNil(q);
+      if FRepositorioFiltros = nil then
+        FRepositorioFiltros := CrearRepositorioInformeMultiFiltroUniDAC(
+          ConexionPrincipal);
+      familias := FRepositorioFiltros.ListarFamilias;
+      for i := 0 to Length(familias) - 1 do
+      begin
+        slCod.Add(familias[i].Codigo);
+        slNom.Add(familias[i].Nombre);
+        slPad.Add(familias[i].CodigoPadre);
+        conocidos.Add(familias[i].Codigo);
       end;
       // Mapa clave(padre)→índices de hijos. Clave vacía = familias raíz.
       for i := 0 to slCod.Count - 1 do

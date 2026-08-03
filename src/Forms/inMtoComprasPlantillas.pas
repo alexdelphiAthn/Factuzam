@@ -41,8 +41,9 @@ uses
   cxButtons, cxMaskEdit, cxDropDownEdit, cxLookupEdit, cxDBLookupComboBox,
   cxCheckBox, cxGroupBox, cxNavigator, cxDBNavigator,
   dxDateRanges, dxScrollbarAnnotations, dxBevel,
-  Uni, MemDS, DBAccess, System.UITypes, cxGraphics, cxBlobEdit, cxDBLookupEdit,
-  dxShellDialogs, JvComponentBase, JvEnterTab, cxLocalization, cxRadioGroup;
+  System.UITypes, cxGraphics, cxBlobEdit, cxDBLookupEdit, dxShellDialogs,
+  JvComponentBase, JvEnterTab, cxLocalization, cxRadioGroup,
+  inLibComprasPantallaIntf;
 
 type
   TfrmMtoComprasPlantillas = class(TfrmMtoGen)
@@ -101,22 +102,16 @@ type
     btnAddKit            : TcxButton;
     btnDelKit            : TcxButton;
 
-    // DataSets
-    unqryPlantillas      : TUniQuery;
-    unqryPlantillaProps  : TUniQuery;
-    unqryPlantillaKits   : TUniQuery;
-    unqryPlantillaKitsDet: TUniQuery;
-    dsPlantillaProps     : TDataSource;
-    dsPlantillaKits      : TDataSource;
-    dsPlantillaKitsDet   : TDataSource;
-
     procedure FormCreate(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
     procedure btnAddPropClick(Sender: TObject);
     procedure btnDelPropClick(Sender: TObject);
     procedure btnAddKitClick(Sender: TObject);
     procedure btnDelKitClick(Sender: TObject);
+  private
+    FPersistenciaPlantillas: IPersistenciaPlantillasCompraPantalla;
   public
+    destructor Destroy; override;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
   end;
@@ -124,7 +119,8 @@ type
 implementation
 
 uses
-  inLibWin, inLibUser, inLibMsgCompras;
+  inLibWin, inLibUser, inLibMsgCompras,
+  UniDataComprasPantallaComposicion;
 
 {$R *.dfm}
 
@@ -142,21 +138,31 @@ begin
 end;
 
 procedure TfrmMtoComprasPlantillas.FormCreate(Sender: TObject);
+var
+  oEntrada: TEntradaComposicionComprasPantalla;
+  oServicios: TServiciosComprasPantalla;
 begin
   inherited;
-  unqryPlantillas.Connection       := ConexionPrincipal;
-  unqryPlantillaProps.Connection   := ConexionPrincipal;
-  unqryPlantillaKits.Connection    := ConexionPrincipal;
-  unqryPlantillaKitsDet.Connection := ConexionPrincipal;
-  unqryPlantillas.Open;
-  unqryPlantillaProps.Open;
-  unqryPlantillaKits.Open;
-  unqryPlantillaKitsDet.Open;
+  oEntrada := Default(TEntradaComposicionComprasPantalla);
+  oEntrada.Tipo := tccPlantillas;
+  oEntrada.Conexion := ConexionPrincipal;
+  oEntrada.MaestroPlantillas := dsTablaG;
+  oServicios := ComponerComprasPantalla(nil, oEntrada);
+  FPersistenciaPlantillas := oServicios.Plantillas;
+  dsTablaG.DataSet := FPersistenciaPlantillas.DataSetPlantillas;
+  tvProps.DataController.DataSource :=
+    FPersistenciaPlantillas.DataSourcePropiedades;
+  tvKits.DataController.DataSource :=
+    FPersistenciaPlantillas.DataSourceKits;
+  tvKitsDet.DataController.DataSource :=
+    FPersistenciaPlantillas.DataSourceDetalleKits;
+  FPersistenciaPlantillas.Abrir;
+end;
 
-  dsTablaG.DataSet := unqryPlantillas;
-  tvProps.DataController.DataSource    := dsPlantillaProps;
-  tvKits.DataController.DataSource     := dsPlantillaKits;
-  tvKitsDet.DataController.DataSource  := dsPlantillaKitsDet;
+destructor TfrmMtoComprasPlantillas.Destroy;
+begin
+  FPersistenciaPlantillas := nil;
+  inherited;
 end;
 
 procedure TfrmMtoComprasPlantillas.btnGrabarClick(Sender: TObject);
@@ -169,35 +175,39 @@ end;
 procedure TfrmMtoComprasPlantillas.btnAddPropClick(Sender: TObject);
 begin
   inherited;
-  unqryPlantillaProps.Append;
+  FPersistenciaPlantillas.AnadirPropiedad;
 end;
 
 procedure TfrmMtoComprasPlantillas.btnDelPropClick(Sender: TObject);
 begin
   inherited;
-  if unqryPlantillaProps.IsEmpty then Exit;
-  if MessageDlg(SPreguntaBorrarPropiedadPlantillaCompra,
-                mtConfirmation,
-                [mbYes, mbNo],
-                0) = mrYes then
-    unqryPlantillaProps.Delete;
+  if not FPersistenciaPlantillas.DataSourcePropiedades.DataSet.IsEmpty then
+  begin
+    if MessageDlg(SPreguntaBorrarPropiedadPlantillaCompra,
+                  mtConfirmation,
+                  [mbYes, mbNo],
+                  0) = mrYes then
+      FPersistenciaPlantillas.BorrarPropiedad;
+  end;
 end;
 
 procedure TfrmMtoComprasPlantillas.btnAddKitClick(Sender: TObject);
 begin
   inherited;
-  unqryPlantillaKits.Append;
+  FPersistenciaPlantillas.AnadirKit;
 end;
 
 procedure TfrmMtoComprasPlantillas.btnDelKitClick(Sender: TObject);
 begin
   inherited;
-  if unqryPlantillaKits.IsEmpty then Exit;
-  if MessageDlg(SPreguntaBorrarKitPlantillaCompra,
-                mtConfirmation,
-                [mbYes, mbNo],
-                0) = mrYes then
-    unqryPlantillaKits.Delete;
+  if not FPersistenciaPlantillas.DataSourceKits.DataSet.IsEmpty then
+  begin
+    if MessageDlg(SPreguntaBorrarKitPlantillaCompra,
+                  mtConfirmation,
+                  [mbYes, mbNo],
+                  0) = mrYes then
+      FPersistenciaPlantillas.BorrarKit;
+  end;
 end;
 
 initialization

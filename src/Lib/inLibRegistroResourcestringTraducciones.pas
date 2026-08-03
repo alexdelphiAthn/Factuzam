@@ -6511,24 +6511,6 @@ begin
       SErrorAuthPass);
   ARegistrar(
     'inLibMsgConfiguracion.' +
-    'SErrorPassMatch',
-    'src/Lib/inLibMsgConfiguracion.pas',
-    @inLibMsgConfiguracion.
-      SErrorPassMatch);
-  ARegistrar(
-    'inLibMsgConfiguracion.' +
-    'SErrorPassMatchBBDD',
-    'src/Lib/inLibMsgConfiguracion.pas',
-    @inLibMsgConfiguracion.
-      SErrorPassMatchBBDD);
-  ARegistrar(
-    'inLibMsgConfiguracion.' +
-    'SEnterPassBBDD',
-    'src/Lib/inLibMsgConfiguracion.pas',
-    @inLibMsgConfiguracion.
-      SEnterPassBBDD);
-  ARegistrar(
-    'inLibMsgConfiguracion.' +
     'SScriptSuccess',
     'src/Lib/inLibMsgConfiguracion.pas',
     @inLibMsgConfiguracion.
@@ -6571,18 +6553,6 @@ begin
       SAdviceUpdateBBDD);
   ARegistrar(
     'inLibMsgConfiguracion.' +
-    'SPasswordBBDDChanged',
-    'src/Lib/inLibMsgConfiguracion.pas',
-    @inLibMsgConfiguracion.
-      SPasswordBBDDChanged);
-  ARegistrar(
-    'inLibMsgConfiguracion.' +
-    'SWantDefChgBBDD',
-    'src/Lib/inLibMsgConfiguracion.pas',
-    @inLibMsgConfiguracion.
-      SWantDefChgBBDD);
-  ARegistrar(
-    'inLibMsgConfiguracion.' +
     'SNoConnBBDD',
     'src/Lib/inLibMsgConfiguracion.pas',
     @inLibMsgConfiguracion.
@@ -6617,12 +6587,6 @@ begin
     'src/Lib/inLibMsgConfiguracion.pas',
     @inLibMsgConfiguracion.
       SSolicitudPassBBDD);
-  ARegistrar(
-    'inLibMsgConfiguracion.' +
-    'SSolicitudNuevoPassBBDD',
-    'src/Lib/inLibMsgConfiguracion.pas',
-    @inLibMsgConfiguracion.
-      SSolicitudNuevoPassBBDD);
   ARegistrar(
     'inLibMsgConfiguracion.' +
     'SScriptEjecutado',

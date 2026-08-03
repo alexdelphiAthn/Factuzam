@@ -54,6 +54,7 @@ uses
   inLibCopiasSeguridadIntf,
   inLibExcepcionesAplicacionIntf,
   inLibOperacionesAplicacionIntf,
+  inLibRepositoriosPantallaIntf,
   UniDataComposicionAplicacion;
 
 type
@@ -65,7 +66,16 @@ type
     IAnfitrionMantenimiento,
     IProveedorMenuPantallas,
     IAnfitrionCajaVentanas,
-    IPresentacionOperacionesAplicacion
+    IPresentacionOperacionesAplicacion,
+    ICompositorSqlPantalla,
+    ICompositorArticulosPantalla,
+    ICompositorConfiguracionPantalla,
+    ICompositorDocumentosPantalla,
+    ICompositorRemesasPantalla,
+    ICompositorOperacionesPantalla,
+    ICompositorVentasPantalla,
+    ICompositorCajaPantalla,
+    ICompositorTicketsCajaPantalla
   )
     mnuCaja: TMenuItem;
     mnuMenuCaja: TMenuItem;
@@ -164,6 +174,24 @@ type
     function CrearTraspasoCaja(
       AOwner: TComponent;
       const APermisos: IPermisosAplicacion): ITraspasoCaja;
+    function CrearServiciosSqlPantalla(
+      const ANombrePantalla: string): TServiciosSqlPantalla;
+    function CrearRepositoriosArticulosPantalla(
+      const ANombrePantalla: string): IRepositoriosArticulosPantalla;
+    function CrearRepositoriosConfiguracionPantalla(
+      const ANombrePantalla: string): IRepositoriosConfiguracionPantalla;
+    function CrearRepositoriosDocumentosPantalla(
+      const ANombrePantalla: string): IRepositoriosDocumentosPantalla;
+    function CrearRepositoriosRemesasPantalla(
+      const ANombrePantalla: string): IRepositoriosRemesasPantalla;
+    function CrearRepositoriosOperacionesPantalla(
+      const ANombrePantalla: string): IRepositoriosOperacionesPantalla;
+    function CrearRepositoriosVentasPantalla(
+      const ANombrePantalla: string): IRepositoriosVentasPantalla;
+    function CrearRepositoriosCajaPantalla(
+      const ANombrePantalla: string): IRepositoriosCajaPantalla;
+    function CrearRepositoriosTicketsCajaPantalla(
+      const ANombrePantalla: string): IRepositoriosTicketsCajaPantalla;
   published
     tmr1: TTimer;
     StyleRepository1: TcxStyleRepository;
@@ -373,6 +401,8 @@ uses inLibWin,
   inMtoRestauracionCopiasVcl,
   inMtoModalCargarEfectosRemesa,
   inLibCertificates,
+  inLibPrincipalCertificadosIntf,
+  UniDataPrincipalCertificadosRepositorio,
   inMtoGen,
   inMtoFotoArticulo,
   System.DateUtils,
@@ -456,8 +486,10 @@ procedure TfrmMtoPrincipal.MostrarAvisoCaducidadCertificado;
 const
   DIAS_AVISO_CERTIFICADO = 5;
 var
-  Qry: TUniQuery;
   Avisos: TStringList;
+  Certificado: TCertificadoEmpresaActivo;
+  Certificados: TCertificadosEmpresasActivos;
+  Repositorio: IRepositorioCertificadosEmpresas;
   sEmpresa: string;
   sSerie: string;
   sTitular: string;
@@ -490,72 +522,55 @@ begin
   begin
     Avisos := TStringList.Create;
     try
-      Qry := TUniQuery.Create(nil);
       try
-        try
-          Qry.Connection := ConexionPrincipal;
-          Qry.SQL.Text :=
-            'SELECT CODIGO_EMP_EMP, RAZON_SOCIAL_EMP, ' +
-            '       CODIGO_CERTIFICADO_EMP, TITULAR_CERTIFICADO_EMP, ' +
-            '       FECHA_HASTA_CERTIFICADO_EMP ' +
-            '  FROM fza_empresas ' +
-            ' WHERE IFNULL(ESACTIVO_EMP, ''S'') = ''S'' ' +
-            '   AND IFNULL(CODIGO_CERTIFICADO_EMP, '''') <> '''' ' +
-            ' ORDER BY ORDEN_EMP, CODIGO_EMP_EMP';
-          Qry.Open;
-          while not Qry.Eof do
+        Repositorio := CrearRepositorioCertificadosEmpresasUniDAC(
+          ConexionPrincipal);
+        Certificados := Repositorio.ListarActivos;
+        for Certificado in Certificados do
+        begin
+          sEmpresa := Trim(Certificado.Empresa);
+          if sEmpresa = '' then
+            sEmpresa := Trim(Certificado.CodigoEmpresa);
+          sSerie := Trim(Certificado.Serie);
+          sTitular := Trim(Certificado.Titular);
+          sTitularReal := sTitular;
+          bHayCaducidad := ObtenerCaducidadCertificado(sSerie, sTitular,
+                                                       dCaducidad,
+                                                       sTitularReal);
+          if (not bHayCaducidad) and Certificado.TieneFechaHasta then
           begin
-            sEmpresa := Trim(Qry.FieldByName('RAZON_SOCIAL_EMP').AsString);
-            if sEmpresa = '' then
-              sEmpresa := Trim(Qry.FieldByName('CODIGO_EMP_EMP').AsString);
-            sSerie := Trim(Qry.FieldByName('CODIGO_CERTIFICADO_EMP').AsString);
-            sTitular :=
-              Trim(Qry.FieldByName('TITULAR_CERTIFICADO_EMP').AsString);
+            dCaducidad := Certificado.FechaHasta;
+            bHayCaducidad := dCaducidad > 0;
+          end;
+          if sTitularReal = '' then
             sTitularReal := sTitular;
-            bHayCaducidad := ObtenerCaducidadCertificado(sSerie, sTitular,
-                                                         dCaducidad,
-                                                         sTitularReal);
-            if (not bHayCaducidad) and
-               (not Qry.FieldByName(
-                 'FECHA_HASTA_CERTIFICADO_EMP').IsNull) then
-            begin
-              dCaducidad := Qry.FieldByName(
-                'FECHA_HASTA_CERTIFICADO_EMP').AsDateTime;
-              bHayCaducidad := dCaducidad > 0;
-            end;
-            if sTitularReal = '' then
-              sTitularReal := sTitular;
-            if bHayCaducidad then
-            begin
-              if dCaducidad < Now then
-              begin
-                AgregarAviso(
-                  Format(SAvisoCertificadoCaducado,
-                         [FormatDateTime('dd/mm/yyyy hh:nn', dCaducidad)]));
-              end
-              else if dCaducidad < IncDay(Now, DIAS_AVISO_CERTIFICADO) then
-              begin
-                iDias := Trunc(dCaducidad - Now);
-                AgregarAviso(
-                  Format(SAvisoCertificadoProximoCaducar,
-                         [FormatDateTime('dd/mm/yyyy hh:nn', dCaducidad),
-                          TextoDias(iDias)]));
-              end;
-            end;
-            Qry.Next;
-          end;
-          if Avisos.Count > 0 then
+          if bHayCaducidad then
           begin
-            MessageDlg(Format(SAvisoCertificadosCaducidad, [Avisos.Text]),
-                       mtWarning, [mbOK], 0);
+            if dCaducidad < Now then
+            begin
+              AgregarAviso(
+                Format(SAvisoCertificadoCaducado,
+                       [FormatDateTime('dd/mm/yyyy hh:nn', dCaducidad)]));
+            end
+            else if dCaducidad < IncDay(Now, DIAS_AVISO_CERTIFICADO) then
+            begin
+              iDias := Trunc(dCaducidad - Now);
+              AgregarAviso(
+                Format(SAvisoCertificadoProximoCaducar,
+                       [FormatDateTime('dd/mm/yyyy hh:nn', dCaducidad),
+                        TextoDias(iDias)]));
+            end;
           end;
-        except
-          on E: Exception do
-            RegistroLog.RegistrarAviso('No se pudo comprobar la caducidad de ' +
-              'certificados al arrancar: ' + E.Message);
         end;
-      finally
-        FreeAndNil(Qry);
+        if Avisos.Count > 0 then
+        begin
+          MessageDlg(Format(SAvisoCertificadosCaducidad, [Avisos.Text]),
+                     mtWarning, [mbOK], 0);
+        end;
+      except
+        on E: Exception do
+          RegistroLog.RegistrarAviso('No se pudo comprobar la caducidad de ' +
+            'certificados al arrancar: ' + E.Message);
       end;
     finally
       FreeAndNil(Avisos);
@@ -618,6 +633,67 @@ begin
   Result := FComposicion.ParametrosCajaEdicion;
 end;
 
+function TfrmMtoPrincipal.CrearServiciosSqlPantalla(
+  const ANombrePantalla: string): TServiciosSqlPantalla;
+begin
+  Result := FComposicion.CrearServiciosSqlPantalla(ANombrePantalla);
+end;
+
+function TfrmMtoPrincipal.CrearRepositoriosArticulosPantalla(
+  const ANombrePantalla: string): IRepositoriosArticulosPantalla;
+begin
+  Result := FComposicion.CrearRepositoriosArticulosPantalla(
+    ANombrePantalla);
+end;
+
+function TfrmMtoPrincipal.CrearRepositoriosConfiguracionPantalla(
+  const ANombrePantalla: string): IRepositoriosConfiguracionPantalla;
+begin
+  Result := FComposicion.CrearRepositoriosConfiguracionPantalla(
+    ANombrePantalla);
+end;
+
+function TfrmMtoPrincipal.CrearRepositoriosDocumentosPantalla(
+  const ANombrePantalla: string): IRepositoriosDocumentosPantalla;
+begin
+  Result := FComposicion.CrearRepositoriosDocumentosPantalla(
+    ANombrePantalla);
+end;
+
+function TfrmMtoPrincipal.CrearRepositoriosRemesasPantalla(
+  const ANombrePantalla: string): IRepositoriosRemesasPantalla;
+begin
+  Result := FComposicion.CrearRepositoriosRemesasPantalla(
+    ANombrePantalla);
+end;
+
+function TfrmMtoPrincipal.CrearRepositoriosOperacionesPantalla(
+  const ANombrePantalla: string): IRepositoriosOperacionesPantalla;
+begin
+  Result := FComposicion.CrearRepositoriosOperacionesPantalla(
+    ANombrePantalla);
+end;
+
+function TfrmMtoPrincipal.CrearRepositoriosVentasPantalla(
+  const ANombrePantalla: string): IRepositoriosVentasPantalla;
+begin
+  Result := FComposicion.CrearRepositoriosVentasPantalla(
+    ANombrePantalla);
+end;
+
+function TfrmMtoPrincipal.CrearRepositoriosCajaPantalla(
+  const ANombrePantalla: string): IRepositoriosCajaPantalla;
+begin
+  Result := FComposicion.CrearRepositoriosCajaPantalla(ANombrePantalla);
+end;
+
+function TfrmMtoPrincipal.CrearRepositoriosTicketsCajaPantalla(
+  const ANombrePantalla: string): IRepositoriosTicketsCajaPantalla;
+begin
+  Result := FComposicion.CrearRepositoriosTicketsCajaPantalla(
+    ANombrePantalla);
+end;
+
 procedure TfrmMtoPrincipal.PrepararContextoAplicacion(
   const AContextoSesion: IContextoSesionAplicacion;
   out AIdentidad: TIdentidadSesion;
@@ -663,6 +739,7 @@ begin
     Self,
     ContextoSesion,
     RegistroLog,
+    PreviewTicket,
     TRegistroMonitorSQLLog.Create(
       RegistroLog,
       TVisorMonitorSQLMemo.Create(cxMemo1)),
@@ -673,8 +750,6 @@ begin
   AsignarMonitorSQL(FComposicion.MonitorSQL);
   RegistroLog.AsignarMonitorSQL(FComposicion.MonitorSQL);
   AsignarConexiones(FComposicion.Conexiones);
-  AsignarFabricaContextosRepositoriosPantalla(
-    FComposicion.FabricaContextosRepositoriosPantalla);
   AsignarUnidadesMedida(FComposicion.Unidades);
   AsignarAuditoriaDatos(FComposicion.AuditoriaDatos);
   tmr1Timer(nil);

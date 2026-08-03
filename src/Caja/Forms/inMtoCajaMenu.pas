@@ -30,7 +30,7 @@ uses
   inMtoModalCajDef, JvTFManager, JvTFGlance, JvTFMonths, Vcl.ComCtrls,
   JvExComCtrls, JvMonthCalendar, cxCalendar, CommCtrl,
   inLibVentasCalendario, System.Actions, Vcl.ActnList, dxGDIPlusClasses,
-  cxImage, inLibPermisosIntf;
+  cxImage, inLibPermisosIntf, UniDataCajaPantallaComposicion;
 
 type
   TfrmMtoMenuCaja = class(TfrmBase, IReceptorFechaCaja)
@@ -247,8 +247,11 @@ begin
 end;
 
 procedure TfrmMtoMenuCaja.FormCreate(Sender: TObject);
+var
+  oComposicion: TComposicionCajaPantalla;
 begin
   inherited;
+  oComposicion := ComponerCajaPantalla(Self);
   Self.Position := poScreenCenter;
   // forzar mes actual (evita fecha cacheada en DFM)
   calMes.Date := Date;
@@ -269,8 +272,7 @@ begin
   // calendario
   FVentasCal := TVentasCalendarioCache.Create(
     ConexionPrincipal,
-    ContextoRepositoriosPantalla.Operaciones.
-      CrearRepositorioVentasCalendario);
+    oComposicion.Consultas.CrearRepositorioVentasCalendario);
 
   if ParametrosCaja.GetBool('vgerShowCajaSelection', True) then
     AbrirSelectorCaja

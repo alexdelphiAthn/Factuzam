@@ -19,7 +19,7 @@ interface
 uses
   inLibRegistroPantallas,
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, cxGraphics, cxControls, cxLookAndFeels, Math, strUtils, DAScript,
+  Dialogs, cxGraphics, cxControls, cxLookAndFeels, Math, strUtils,
   cxLookAndFeelPainters, cxStyles, dxSkinsCore, System.Generics.Collections,
   dxSkinscxPCPainter, cxCustomData, cxFilter, cxData, cxDataStorage,
   cxEdit, cxNavigator, DB, cxDBData, cxContainer,
@@ -30,14 +30,14 @@ uses
   cxMaskEdit, cxDropDownEdit, cxDBEdit, cxLabel,
   cxGridBandedTableView, cxGridDBBandedTableView,  cxLocalization,
   dxBevel, cxDBNavigator, cxGridExportLink, SynEditSearch,
-  dxDateRanges, MemDS, DBAccess, Uni, cxImage, dxGDIPlusClasses, inMtoGen,
+  dxDateRanges, cxImage, dxGDIPlusClasses, inMtoGen,
   Vcl.Menus, dxSkinsForm, cxButtons, dxSkinsDefaultPainters, cxMemo, cxSpinEdit,
   cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
-  cxSplitter, SynEditHighlighter, SynHighlighterSQL, SynEdit, UniScript,
+  cxSplitter, SynEditHighlighter, SynHighlighterSQL, SynEdit,
   UniDataGeneradorProcesos, cxCurrencyEdit, SynEditKeyCmds,
   SynDBEdit, SynEditTypes, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs, JvExComCtrls, JvDBTreeView, System.Actions, Vcl.ActnList,
-  System.UITypes;
+  System.UITypes, inLibGeneradorProcesosAplicacion;
 
 const
   ecSelColumnMode = 2577;
@@ -185,6 +185,7 @@ type
     procedure tsSQLShow(Sender: TObject);
   public
     dmmGeneradorProcesos: TdmGeneradorProcesos;
+    destructor Destroy; override;
     procedure CargarArbol;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -197,6 +198,10 @@ type
     FSearchEngine: TSynEditSearch;
     FEditorActualBusqueda: TCustomSynEdit;
     FAppEvents: TApplicationEvents;
+    FRepositorioProcesos: IRepositorioGeneradorProcesos;
+    FCatalogoProcesos: ICatalogoGeneradorProcesos;
+    FServicioProcesos: TServicioGeneradorProcesos;
+    FDatosVistaFija: TDataSet;
     // Suscritos a los avisos del DM (el DM ya no toca la UI).
     procedure NuevoProcesoDesdeDM(Sender: TObject);
     procedure ProcesoCambiadoDesdeDM(Sender: TObject);
@@ -222,26 +227,17 @@ type
     procedure EditorExit(Sender: TObject);
     procedure SafeSetScrollBar(SB: TScrollBar;
                                AMax, APageSize, APosition: Integer);
-    procedure UniScript1Error(Sender: TObject;
-                              E: Exception;
-                              SQL: string;
-                              var Action: TErrorAction);
-    procedure ScriptAfterExecute(Sender: TObject; SQL: string);
-    function PrimeraLineaUtil(const ASQL: string): string;
-    function SentenciaDevuelveFilas(const ASQL: string): Boolean;
-    procedure TrocearScript(const ASQL: string;
-                            slSentencias: TStrings);
     procedure LimpiarPestanasResultado;
     function CrearPestanaResultado(const ACaption: string): TcxTabSheet;
     function CrearPestanaVistaDatos(const ACaption: string;
-                                    AQuery: TUniQuery): TcxTabSheet;
+                                    ADatos: TDataSet): TcxTabSheet;
     function CrearPestanaComando(const ACaption: string;
                                  const ATexto: string): TcxTabSheet;
-    function EjecutarSentenciaEnPestana(const ASQL: string;
-                                        var AVistas: Integer;
-                                        var AComandos: Integer;
-                                        var ASeguir: Boolean): TcxTabSheet;
-    procedure EjecutarScriptPorPestanas(slSentencias: TStrings);
+    function ConfirmarContinuacionProceso(
+      const AResultado: IResultadoSentenciaProceso;
+      AIndice: Integer): Boolean;
+    procedure PresentarEjecucionProceso(
+      const AEjecucion: TResultadoEjecucionProceso);
     procedure CopiarVistaPortapapeles(AVista: TcxGridDBTableView);
     procedure btnCopiarDatosDinClick(Sender: TObject);
   end;
@@ -257,7 +253,8 @@ uses
   inLibDir,
   inLibMsgComun, inLibMsgConfiguracion,
   Vcl.Clipbrd,
-  ts.Editor.CodeFormatters;
+  ts.Editor.CodeFormatters,
+  UniDataGeneradorProcesosRepositorio;
 
 {$R *.dfm}
 
@@ -548,37 +545,6 @@ begin
   ActivarEnterComoTab(True);
 end;
 
-procedure TfrmMtoGeneradorProcesos.ScriptAfterExecute(Sender: TObject;
-                                                      SQL: string);
-begin
-  // Detenemos el cronómetro lo antes posible
-    cxmResul.Lines.Add(Format(' -- [OK] Filas afectadas: %d ',
-                              [(Sender as TUniScript).RowsAffected]));
-    cxmResul.Lines.Add('--------------------------------------------------');
-end;
-
-procedure TfrmMtoGeneradorProcesos.UniScript1Error(Sender: TObject;
-                                           E: Exception;
-                                           SQL: string;
-                                           var Action: TErrorAction);
-var
-  Respuesta: Integer;
-begin
-    cxmResul.Lines.Add('  [ERROR] ' + E.Message );
-    cxmResul.Lines.Add('--------------------------------------------------');
-    Application.ProcessMessages;
-  // Aquí podemos registrar el error en un log o preguntar al usuario
-  var MsgCorta := E.Message;
-  if Length(MsgCorta) > 20 then
-    MsgCorta := Copy(MsgCorta, 1, 20) + '...';
-  Respuesta := MessageDlg(Format(SPreguntaIgnorarErrorScript, [MsgCorta]),
-                          mtError, [mbYes, mbNo], 0);
-  if Respuesta = mrYes then
-    Action := eaContinue  // Ignora la sentencia fallida
-  else
-    Action := eaFail;     // Detiene el script
-end;
-
 procedure TfrmMtoGeneradorProcesos.SafeSetScrollBar(SB: TScrollBar;
                                            AMax, APageSize, APosition: Integer);
 begin
@@ -786,87 +752,15 @@ begin
   tvMetadatostvVista.OptionsData.Appending := True;
 end;
 
-function TfrmMtoGeneradorProcesos.PrimeraLineaUtil(const ASQL: string): string;
-var
-  i: Integer;
-  sLinea: string;
-  slLineas: TStringList;
-begin
-  // Primera linea con contenido que no sea comentario '--': sirve para
-  // clasificar la sentencia y para descartar fragmentos solo-comentario
-  Result := '';
-  slLineas := TStringList.Create;
-  try
-    slLineas.Text := ASQL;
-    for i := 0 to slLineas.Count - 1 do
-    begin
-      sLinea := Trim(slLineas[i]);
-      if ((Result = '') and (sLinea <> '') and (Pos('--', sLinea) <> 1)) then
-        Result := sLinea;
-    end;
-  finally
-    FreeAndNil(slLineas);
-  end;
-end;
-
-function TfrmMtoGeneradorProcesos.SentenciaDevuelveFilas(
-  const ASQL: string): Boolean;
-var
-  sUpper: string;
-begin
-  // EXPLAIN / DESCRIBE / DESC devuelven resultset igual que un SELECT, asi
-  // que los tratamos como tal para que el usuario pueda inspeccionar el plan
-  // de ejecucion desde el generador.
-  sUpper := UpperCase(PrimeraLineaUtil(ASQL));
-  Result := (Pos('SELECT', sUpper) = 1) or
-            (Pos('CALL', sUpper) = 1) or
-            (Pos('SHOW', sUpper) = 1) or
-            (Pos('EXPLAIN ', sUpper) = 1) or
-            (Pos('DESCRIBE ', sUpper) = 1) or
-            (Pos('DESC ', sUpper) = 1);
-end;
-
-procedure TfrmMtoGeneradorProcesos.TrocearScript(const ASQL: string;
-                                                 slSentencias: TStrings);
-var
-  uScript: TUniScript;
-  i: Integer;
-  sSentencia: string;
-begin
-  slSentencias.Clear;
-  // Los scripts con DELIMITER (procedimientos) no se trocean: los ejecuta
-  // enteros TUniScript por el camino clasico de comandos
-  if Pos('DELIMITER ', UpperCase(ASQL)) > 0 then
-    slSentencias.Add(ASQL)
-  else
-  begin
-    uScript := TUniScript.Create(nil);
-    try
-      try
-        uScript.Connection := ConexionPrincipal;
-        uScript.SQL.Text := ASQL;
-        // El parser de TUniScript respeta comentarios y literales al trocear
-        for i := 0 to uScript.Statements.Count - 1 do
-        begin
-          sSentencia := Trim(uScript.Statements[i].SQL);
-          if PrimeraLineaUtil(sSentencia) <> '' then
-            slSentencias.Add(sSentencia);
-        end;
-      except
-        // Si el parser no puede trocear, ejecutamos el script entero
-        slSentencias.Clear;
-        slSentencias.Add(ASQL);
-      end;
-    finally
-      FreeAndNil(uScript);
-    end;
-  end;
-end;
-
 procedure TfrmMtoGeneradorProcesos.LimpiarPestanasResultado;
 var
   i: Integer;
 begin
+  if Assigned(FDatosVistaFija) then
+  begin
+    dmmGeneradorProcesos.dsVista.DataSet := nil;
+    FreeAndNil(FDatosVistaFija);
+  end;
   // Reset automatico: eliminamos las pestañas de resultados de la ejecucion
   // anterior; cada pestaña libera su grid y su query al destruirse
   for i := pcPestana.PageCount - 1 downto 0 do
@@ -892,7 +786,7 @@ end;
 
 function TfrmMtoGeneradorProcesos.CrearPestanaVistaDatos(
   const ACaption: string;
-  AQuery: TUniQuery): TcxTabSheet;
+  ADatos: TDataSet): TcxTabSheet;
 var
   dsDatos: TDataSource;
   grdDatos: TcxGrid;
@@ -902,10 +796,10 @@ var
   btnCopiar: TcxButton;
 begin
   Result := CrearPestanaResultado(ACaption);
-  // La pestaña pasa a ser propietaria de la query y la libera con ella
-  Result.InsertComponent(AQuery);
+  // La pestaña pasa a ser propietaria del dataset y lo libera con ella.
+  Result.InsertComponent(ADatos);
   dsDatos := TDataSource.Create(Result);
-  dsDatos.DataSet := AQuery;
+  dsDatos.DataSet := ADatos;
   grdDatos := TcxGrid.Create(Result);
   grdDatos.Parent := Result;
   grdDatos.Align := alClient;
@@ -1023,269 +917,123 @@ begin
   CopiarVistaPortapapeles(tvVista);
 end;
 
-function TfrmMtoGeneradorProcesos.EjecutarSentenciaEnPestana(
-  const ASQL: string;
-  var AVistas: Integer;
-  var AComandos: Integer;
-  var ASeguir: Boolean): TcxTabSheet;
+function TfrmMtoGeneradorProcesos.ConfirmarContinuacionProceso(
+  const AResultado: IResultadoSentenciaProceso;
+  AIndice: Integer): Boolean;
 var
-  qryDatos: TUniQuery;
-  startTime: TDateTime;
-  sFormatteddt, sError, sCaption: string;
-  bConResultado, bConFilas: Boolean;
+  MensajeCorto: string;
 begin
-  bConResultado := SentenciaDevuelveFilas(ASQL);
-  bConFilas := False;
-  sError := '';
-  qryDatos := TUniQuery.Create(nil);
-  try
-    qryDatos.Connection := ConexionPrincipal;
-    qryDatos.SQL.Text := ASQL;
-    startTime := Now;
-    try
-      if bConResultado then
+  MensajeCorto := AResultado.MensajeError;
+  if Length(MensajeCorto) > 60 then
+    MensajeCorto := Copy(MensajeCorto, 1, 60) + '...';
+  Result := MessageDlg(
+    Format(
+      SPreguntaIgnorarErrorComandoScript,
+      ['Command' + IntToStr(AIndice + 1), MensajeCorto]),
+    mtError,
+    [mbYes, mbNo],
+    0) = mrYes;
+end;
+
+procedure TfrmMtoGeneradorProcesos.PresentarEjecucionProceso(
+  const AEjecucion: TResultadoEjecucionProceso);
+var
+  Comandos: Integer;
+  Datos: TDataSet;
+  I: Integer;
+  PrimeraPestana: TcxTabSheet;
+  Resultado: IResultadoSentenciaProceso;
+  Titulo: string;
+  Vistas: Integer;
+begin
+  Comandos := 0;
+  Vistas := 0;
+  PrimeraPestana := nil;
+  for I := 0 to Length(AEjecucion.Resultados) - 1 do
+  begin
+    Resultado := AEjecucion.Resultados[I];
+    if Resultado.Correcto and Resultado.TieneDatos then
+    begin
+      Inc(Vistas);
+      Titulo := 'VistaDatos' + IntToStr(Vistas);
+      Datos := ExtraerDatosResultadoProceso(Resultado);
+      if Assigned(Datos) then
       begin
-        qryDatos.Open;
-        bConFilas := qryDatos.FieldCount > 0;
-      end
-      else
-        qryDatos.Execute;
-    except on E: Exception do
-      sError := E.Message;
-    end;
-    // Si el Open fallo por no devolver filas, reintentamos como comando,
-    // igual que hace el caso de sentencia unica
-    if ((sError <> '') and bConResultado) then
-    begin
-      try
-        qryDatos.Execute;
-        sError := '';
-      except on E: Exception do
-        sError := E.Message;
+        if Length(AEjecucion.Resultados) = 1 then
+        begin
+          FDatosVistaFija := Datos;
+          tsVistaDatos.InsertComponent(FDatosVistaFija);
+          dmmGeneradorProcesos.dsVista.DataSet := FDatosVistaFija;
+          tvVista.ClearItems;
+          tvVista.DataController.CreateAllItems();
+          tvVista.ApplyBestFit();
+          PrimeraPestana := tsVistaDatos;
+        end
+        else if not Assigned(PrimeraPestana) then
+          PrimeraPestana := CrearPestanaVistaDatos(Titulo, Datos)
+        else
+          CrearPestanaVistaDatos(Titulo, Datos);
       end;
-    end;
-    DateTimeToString(sFormatteddt, 'ss:zzz', (Now - startTime));
-    if sError <> '' then
-    begin
-      Inc(AComandos);
-      sCaption := 'Command' + IntToStr(AComandos);
-      cxmResul.Lines.Add('-- [ERROR] ' + sCaption + ': ' + sError);
-      Result := CrearPestanaComando(sCaption,
-                                    ASQL + sLineBreak + sLineBreak +
-                                    '-- [ERROR] ' + sError);
-      var sMsgCorta := sError;
-      if Length(sMsgCorta) > 60 then
-        sMsgCorta := Copy(sMsgCorta, 1, 60) + '...';
-      // Preguntamos si seguimos con el resto del script
-      ASeguir := MessageDlg(Format(SPreguntaIgnorarErrorComandoScript,
-                                  [sCaption, sMsgCorta]),
-                            mtError, [mbYes, mbNo], 0) = mrYes;
+      cxmResul.Lines.Add(Format(
+        '%s: %d registros en %d ms',
+        [Titulo, Resultado.Filas, Resultado.Milisegundos]));
     end
     else
     begin
-      if bConFilas then
+      Inc(Comandos);
+      Titulo := 'Command' + IntToStr(Comandos);
+      if Resultado.Correcto then
       begin
-        Inc(AVistas);
-        sCaption := 'VistaDatos' + IntToStr(AVistas);
-        cxmResul.Lines.Add(sCaption + ': ' +
-                           IntToStr(qryDatos.RecordCount) +
-                           ' registros en ' + sFormatteddt + ' seg:ms');
-        Result := CrearPestanaVistaDatos(sCaption, qryDatos);
-        // La query ya pertenece a la pestaña: no liberarla en el finally
-        qryDatos := nil;
+        CrearPestanaComando(
+          Titulo,
+          Format(
+            '-- [OK] Filas afectadas: %d en %d ms',
+            [Resultado.Filas, Resultado.Milisegundos]));
+        cxmResul.Lines.Add(Format(
+          '%s: %d filas afectadas en %d ms',
+          [Titulo, Resultado.Filas, Resultado.Milisegundos]));
       end
       else
       begin
-        Inc(AComandos);
-        sCaption := 'Command' + IntToStr(AComandos);
-        cxmResul.Lines.Add(sCaption + ': ' +
-                           IntToStr(qryDatos.RowsAffected) +
-                           ' filas afectadas en ' + sFormatteddt + ' seg:ms');
-        Result := CrearPestanaComando(sCaption,
-                                      ASQL + sLineBreak + sLineBreak +
-                                      '-- [OK] Filas afectadas: ' +
-                                      IntToStr(qryDatos.RowsAffected) +
-                                      ' en ' + sFormatteddt + ' seg:ms');
+        CrearPestanaComando(
+          Titulo,
+          '-- [ERROR] ' + Resultado.MensajeError);
+        cxmResul.Lines.Add(
+          '-- [ERROR] ' + Titulo + ': ' + Resultado.MensajeError);
       end;
     end;
-  finally
-    FreeAndNil(qryDatos);
   end;
-end;
-
-procedure TfrmMtoGeneradorProcesos.EjecutarScriptPorPestanas(
-  slSentencias: TStrings);
-var
-  i, iVistas, iComandos: Integer;
-  bSeguir: Boolean;
-  tsPrimera, tsNueva: TcxTabSheet;
-begin
-  iVistas := 0;
-  iComandos := 0;
-  bSeguir := True;
-  tsPrimera := nil;
-  cxmResul.Lines.Add('-- Script con ' + IntToStr(slSentencias.Count) +
-                     ' sentencias (' +
-                     FormatDateTime('hh:nn:ss.zzz', Now) + ')');
-  for i := 0 to slSentencias.Count - 1 do
-  begin
-    if bSeguir then
-    begin
-      tsNueva := EjecutarSentenciaEnPestana(slSentencias[i],
-                                            iVistas,
-                                            iComandos,
-                                            bSeguir);
-      if ((tsPrimera = nil) and (tsNueva <> nil)) then
-        tsPrimera := tsNueva;
-    end;
-  end;
+  if Assigned(PrimeraPestana) then
+    pcPestana.ActivePage := PrimeraPestana;
+  if AEjecucion.Cancelada then
+    cxmResul.Lines.Add('-- Ejecución cancelada por el usuario.');
   cxmResul.Lines.Add('--------------------------------------------------');
-  // Mostramos la primera pestaña de resultados creada
-  if tsPrimera <> nil then
-    pcPestana.ActivePage := tsPrimera;
 end;
 
 procedure TfrmMtoGeneradorProcesos.btnEjecutarClick(Sender: TObject);
 var
-  startTime: TDateTime;
-  iRowsAffected: Integer;
-  sFormatteddt, sSQL: String;
-  bIsSelect: Boolean;
-  uScript: TUniScript;
-  slSentencias: TStringList;
+  EditorActivo: TCustomSynEdit;
+  Ejecucion: TResultadoEjecucionProceso;
+  Script: string;
 begin
   inherited;
-  if ((
-    dsTablaG.DataSet.State = dsInsert) or (
-      dsTablaG.DataSet.State = dsEdit)) then
+  if dsTablaG.DataSet.State in [dsInsert, dsEdit] then
     dsTablaG.DataSet.Post;
-  with dmmGeneradorProcesos do
+  if syndtEstructura.Focused then
+    EditorActivo := syndtEstructura
+  else
+    EditorActivo := DBSynEdit1;
+  if Trim(EditorActivo.SelText) <> '' then
+    Script := EditorActivo.SelText
+  else
+    Script := EditorActivo.Lines.Text;
+  if Trim(Script) <> '' then
   begin
-    // 1. Editor activo: el que tiene el foco si es uno de los SynEdit; si no,
-    //    el principal (DBSynEdit1). Asi no nos comemos selecciones residuales
-    //    de syndtEstructura cuando el usuario esta editando en DBSynEdit1.
-    var ActiveEditor: TCustomSynEdit;
-    if syndtEstructura.Focused then
-      ActiveEditor := syndtEstructura
-    else
-      ActiveEditor := DBSynEdit1;
-    // 2. Si hay seleccion en el editor activo, ejecutamos solo eso.
-    //    Si no, ejecutamos todo el texto VISIBLE de ese editor (no el del
-    //    campo del dataset, que puede estar desfasado respecto a lo escrito).
-    if Trim(ActiveEditor.SelText) <> '' then
-      sSQL := ActiveEditor.SelText
-    else
-      sSQL := ActiveEditor.Lines.Text;
-    sSQL := Trim(sSQL);
-    // Si está totalmente vacío, salimos para evitar errores de base de datos
-    if sSQL = '' then
-      Exit;
-    // Reset automatico: quitamos las pestañas de la ejecucion anterior
     LimpiarPestanasResultado;
-    // Con varias sentencias, cada una se ejecuta en su propia pestaña
-    // (VistaDatosN / CommandN); con una sola se mantiene el comportamiento
-    // clasico sobre la pestaña fija VistaDatos
-    slSentencias := TStringList.Create;
-    try
-      TrocearScript(sSQL, slSentencias);
-      if slSentencias.Count > 1 then
-        EjecutarScriptPorPestanas(slSentencias)
-      else
-      begin
-        bIsSelect := SentenciaDevuelveFilas(sSQL);
-        if bIsSelect then
-        begin
-          unqryVista.Close;
-          tvVista.ClearItems;
-          unqryVista.SQL.Text := sSQL;
-          try
-            startTime := Now;
-            unqryVista.Open; // Intentamos abrir como Dataset
-            // Verificamos si realmente devolvió columnas (útil para CALLs
-            // que no devuelven nada)
-            if unqryVista.FieldCount > 0 then
-            begin
-              DateTimeToString(sformatteddt, 'ss:zzz', (Now - startTime));
-              cxmResul.Lines.Add('Procedimiento/Consulta ejecutada. ' +
-                                 IntToStr(unqryVista.RecordCount) +
-                                 ' registros en ' + sformatteddt +
-                                 ' seg:ms');
-              if unqryVista.RecordCount > 0 then
-              begin
-                pcPestana.ActivePage := tsVistaDatos;
-                tvVista.DataController.CreateAllItems();
-                tvVista.ApplyBestFit();
-              end;
-            end
-            else
-            begin
-              // Si es un CALL que no devuelve filas, actua como comando
-              iRowsAffected := unqryVista.RowsAffected;
-              cxmResul.Lines.Add('-- Comando(' +
-                                 FormatDateTime('hh:nn:ss.zzz', Now) +
-                                 '): ' + sLineBreak + sSQL + sLineBreak +
-                                 ' -- ejecutado con éxito. ' +
-                                 'Filas afectadas: ' +
-                                 IntToStr(iRowsAffected));
-            end;
-          except on E: Exception do
-            begin
-              // Si falla el Open por no ser un SELECT/Resultset,
-              // reintentamos como comando
-              try
-                unqryVista.Execute;
-                cxmResul.Lines.Add('-- Comando(' +
-                                   FormatDateTime('hh:nn:ss.zzz', Now) +
-                                   '): ' + sLineBreak + sSQL + sLineBreak +
-                                   ' -- ejecutado correctamente ' +
-                                   '(sin filas de retorno).');
-              except on E2: Exception do
-                begin
-                  cxmResul.Lines.Add('-- Error(' +
-                                     FormatDateTime('hh:nn:ss.zzz', Now) +
-                                     '): ' + sLineBreak + sSQL + sLineBreak +
-                                     '-- ' + E2.Message);
-                  ShowMessage(Format(SErrorEjecucionProceso, [E2.Message]));
-                end;
-              end;
-            end;
-          end;
-        end
-        else
-        begin
-          uScript := TUniScript.Create(nil);
-          uScript.Connection := ConexionPrincipal;
-          uScript.OnError := UniScript1Error;
-          uScript.AfterExecute := ScriptAfterExecute;
-          try
-            // Comandos directos (INSERT, UPDATE, DELETE)
-            uScript.SQL.Text := sSQL;
-            try
-              startTime := Now;
-              uScript.Execute;
-              iRowsAffected := uScript.RowsAffected;
-              DateTimeToString(sformatteddt, 'ss:zzz', (Now - startTime));
-              var sCommand := Copy(sSQL, 1, 20);
-              if sSQL.Length > 20 then
-                sCommand := sCommand + '...';
-              cxmResul.Lines.Add('Comando:' + sCommand + ' ejecutado. ' +
-                                 IntToStr(iRowsAffected) +
-                                 ' registros afectados en ' + sformatteddt +
-                                 ' seg:ms');
-            except on E: Exception do
-              begin
-                cxmResul.Lines.Add(E.Message);
-                ShowMessage(Format(SErrorComandoSqlProceso, [E.Message]));
-              end;
-            end;
-          finally
-            FreeAndNil(uScript);
-          end;
-        end;
-      end;
-    finally
-      FreeAndNil(slSentencias);
-    end;
+    Ejecucion := FServicioProcesos.Ejecutar(
+      Script,
+      ConfirmarContinuacionProceso);
+    PresentarEjecucionProceso(Ejecucion);
   end;
 end;
 
@@ -1315,16 +1063,7 @@ begin
   inherited;
   Screen.Cursor := crHourGlass;
   try
-    with dmmGeneradorProcesos do
-    begin
-      unstrdprcRefresh.ParamByName('pDATABASENAME').AsString :=
-                                                    ConexionPrincipal.Database;
-      unstrdprcRefresh.ExecProc;
-      if not unqryMetadatos.Active then
-        unqryMetadatos.Open
-      else
-        unqryMetadatos.Refresh;
-    end;
+    FCatalogoProcesos.Refrescar(ConexionPrincipal.Database);
     CargarArbol;
   finally
     Screen.Cursor := crDefault;
@@ -1430,6 +1169,16 @@ begin
   syndtEstructura.BeginUpdate;
   inherited;
   dmmGeneradorProcesos := tdmDataModule as TdmGeneradorProcesos;
+  CrearRepositorioGeneradorProcesosUniDAC(
+    ConexionPrincipal,
+    dmmGeneradorProcesos.unqryMetadatos,
+    dmmGeneradorProcesos.unqryEstructura,
+    dmmGeneradorProcesos.unqryContenido,
+    dmmGeneradorProcesos.unstrdprcRefresh,
+    FRepositorioProcesos,
+    FCatalogoProcesos);
+  FServicioProcesos := TServicioGeneradorProcesos.Create(
+    FRepositorioProcesos);
   dmmGeneradorProcesos.OnNuevoProceso := NuevoProcesoDesdeDM;
   dmmGeneradorProcesos.OnProcesoCambiado := ProcesoCambiadoDesdeDM;
   tvMetadatostvVista.DataController.DataSource :=
@@ -1451,77 +1200,68 @@ begin
   LimpiarPestanasResultado;
 end;
 
+destructor TfrmMtoGeneradorProcesos.Destroy;
+begin
+  FreeAndNil(FServicioProcesos);
+  FRepositorioProcesos := nil;
+  FCatalogoProcesos := nil;
+  inherited;
+end;
+
 procedure TfrmMtoGeneradorProcesos.cxdbtxtdtNOMBRE_METADATOPropertiesChange(
   Sender: TObject);
 var
-  // <--- Sustituimos sExec por el interfaz del formateador
+  Estructura: string;
   Formatter: ICodeFormatter;
+  Nombre: string;
+  Tipo: string;
 begin
   inherited;
   sbVertCentro.Position := 1;
-  with dmmGeneradorProcesos do
+  pcMetadato.ActivePage := tsEstructura;
+  Tipo := dmmGeneradorProcesos.unqryMetadatos.FieldByName(
+    'PARENT_META').AsString;
+  Nombre := dmmGeneradorProcesos.unqryMetadatos.FieldByName(
+    'NOMBRE_META_META').AsString;
+  Estructura := FCatalogoProcesos.CargarEstructura(Tipo, Nombre);
+  if Tipo = '1' then
+    syndtEstructura.Lines.Text := Estructura
+  else if Tipo = '2' then
   begin
-    pcMetadato.ActivePage := tsEstructura;
-    if ((unqryMetadatos.FieldByName('PARENT_META').AsString = '1')) then
-    begin
-      unqryEstructura.SQL.Text := 'SHOW CREATE TABLE ' +
-                         unqryMetadatos.FieldByName(
-                           'NOMBRE_META_META').AsString;
-      unqryEstructura.Open;
-      syndtEstructura.Lines.Text :=
-                           unqryEstructura.FieldByName('Create Table').AsString;
-    end
-      else
-    if ((unqryMetadatos.FieldByName('PARENT_META').AsString = '2')) then
-    begin
-      unqryEstructura.SQL.Text := 'SHOW CREATE VIEW ' +
-                         unqryMetadatos.FieldByName(
-                           'NOMBRE_META_META').AsString;
-      unqryEstructura.Open;
-      mmoSalida.Lines.Text :=
-                      Trim(unqryEstructura.FieldByName('Create View').AsString);
-      mmoSalida.Lines.Text := StringReplace(mmoSalida.Lines.Text,
-                           'ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` '+
-                           'SQL SECURITY DEFINER',
-                           '',
-                           [rfReplaceAll]);
-      mmoSalida.Lines.Text := StringReplace(mmoSalida.Lines.Text,
-                           ' separator '',''',
-                           '',
-                           [rfReplaceAll, rfIgnoreCase]);
-      var sSQL := mmoSalida.Lines.Text;
-      sSQL := StringReplace(sSQL, '`', '', [rfReplaceAll]);
-
-      // 3. Normalizar espacios múltiples
-      while Pos('  ', sSQL) > 0 do
-        sSQL := StringReplace(sSQL, '  ', ' ', [rfReplaceAll]);
-      // --- NUEVO CÓDIGO CON LA LIBRERÍA NATIVA ---
-      Formatter := GetSQLFormatter;
-      syndtEstructura.Lines.Text := Formatter.Format(sSQL);
-      // -------------------------------------------
-    end
-    else
-    if ((unqryMetadatos.FieldByName('PARENT_META').AsString = '3')) then
-    begin
-      unqryEstructura.SQL.Text := 'SHOW CREATE PROCEDURE ' +
-                         unqryMetadatos.FieldByName(
-                           'NOMBRE_META_META').AsString;
-      unqryEstructura.Open;
-      // Quitamos el DEFINER y pasamos por el formateador, igual que las vistas.
-      // No tocamos backticks ni espacios dobles para no alterar literales del
-      // cuerpo del procedure.
-      var sSQLProc := StringReplace(unqryEstructura.FieldByName(
-                                                 'Create Procedure').AsString,
-                                                 ' DEFINER=`root`@`localhost`',
-                                                 '',
-                                                 [rfReplaceAll]);
-      Formatter := GetSQLFormatter;
-      syndtEstructura.Lines.Text := Formatter.Format(sSQLProc);
-    end
-      else
-        syndtEstructura.Lines.Clear;
-    syndtEstructuraStatusChange(nil, [scAll]);
+    Estructura := StringReplace(
+      Estructura,
+      'ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` ' +
+      'SQL SECURITY DEFINER',
+      '',
+      [rfReplaceAll]);
+    Estructura := StringReplace(
+      Estructura,
+      ' separator '',''',
+      '',
+      [rfReplaceAll, rfIgnoreCase]);
+    Estructura := StringReplace(Estructura, '`', '', [rfReplaceAll]);
+    while Pos('  ', Estructura) > 0 do
+      Estructura := StringReplace(
+        Estructura,
+        '  ',
+        ' ',
+        [rfReplaceAll]);
+    Formatter := GetSQLFormatter;
+    syndtEstructura.Lines.Text := Formatter.Format(Estructura);
   end;
+  if Tipo = '3' then
+  begin
+    Estructura := StringReplace(
+      Estructura,
+      ' DEFINER=`root`@`localhost`',
+      '',
+      [rfReplaceAll]);
+    Formatter := GetSQLFormatter;
+    syndtEstructura.Lines.Text := Formatter.Format(Estructura);
+  end;
+  if not ((Tipo = '1') or (Tipo = '2') or (Tipo = '3')) then
+    syndtEstructura.Lines.Clear;
+  syndtEstructuraStatusChange(nil, [scAll]);
 end;
 
 function TfrmMtoGeneradorProcesos.PermitirNavegacionTeclas: Boolean;
@@ -1794,77 +1534,41 @@ end;
 
 procedure TfrmMtoGeneradorProcesos.TreeView1DblClick(Sender: TObject);
 var
-  nodo: TTreeNode;
-  iCodigo: Integer;
-  sProcName: string;
-  sCallText: string;
-  qryParams: TUniQuery;
+  Codigo: Integer;
+  Llamada: string;
+  Nombre: string;
+  Nodo: TTreeNode;
+  Tipo: string;
 begin
-  nodo := tvMetadatos.Selected;
-  if nodo = nil then Exit;
-  iCodigo := NativeInt(nodo.Data);
-  dmmGeneradorProcesos.unqryMetadatos.Locate('CODIGO_META_META', iCodigo, []);
-  with dmmGeneradorProcesos do
+  Nodo := tvMetadatos.Selected;
+  if Assigned(Nodo) then
   begin
-    // Si es una Tabla (1) o Vista (2), mostramos los datos
-    if ((unqryMetadatos.FieldByName('PARENT_META').AsString = '1') or
-        (unqryMetadatos.FieldByName('PARENT_META').AsString = '2')) then
+    Codigo := NativeInt(Nodo.Data);
+    dmmGeneradorProcesos.unqryMetadatos.Locate(
+      'CODIGO_META_META',
+      Codigo,
+      []);
+    Tipo := dmmGeneradorProcesos.unqryMetadatos.FieldByName(
+      'PARENT_META').AsString;
+    Nombre := dmmGeneradorProcesos.unqryMetadatos.FieldByName(
+      'NOMBRE_META_META').AsString;
+    if (Tipo = '1') or (Tipo = '2') then
     begin
       pcMetadato.ActivePage := tsContenido;
       tvMetadatostvVista.ClearItems;
-      unqryContenido.Close;
-      unqryContenido.SQL.Text := 'SELECT * FROM ' +
-                         unqryMetadatos.FieldByName(
-                           'NOMBRE_META_META').AsString;
-      unqryContenido.Open;
+      FCatalogoProcesos.CargarContenido(Nombre);
       tvMetadatostvVista.DataController.CreateAllItems();
       tvMetadatostvVista.ApplyBestFit();
     end
-    // Si es un Procedimiento Almacenado (3), generamos el CALL
-    else if (unqryMetadatos.FieldByName('PARENT_META').AsString = '3') then
+    else if Tipo = '3' then
     begin
-      sProcName := unqryMetadatos.FieldByName('NOMBRE_META_META').AsString;
-      sCallText := 'CALL ' + sProcName + '(';
-      // Creamos un TUniQuery temporal para leer los parámetros del
-      // procedimiento
-      qryParams := TUniQuery.Create(nil);
-      try
-        // Usamos la misma conexión de tus metadatos
-        qryParams.Connection := unqryMetadatos.Connection;
-        // Consultamos la tabla del sistema para obtener los parámetros
-        qryParams.SQL.Text :=
-          'SELECT PARAMETER_NAME, DTD_IDENTIFIER ' +
-          'FROM information_schema.parameters ' +
-          'WHERE SPECIFIC_NAME = :ProcName AND ROUTINE_TYPE = ''PROCEDURE'' ' +
-          'ORDER BY ORDINAL_POSITION';
-        qryParams.ParamByName('ProcName').AsString := sProcName;
-        qryParams.Open;
-        // Construimos el esquema de parámetros comentados
-        while not qryParams.Eof do
-        begin
-          sCallText := sCallText + '/* ' +
-                       qryParams.FieldByName('PARAMETER_NAME').AsString + ' ' +
-                       qryParams.FieldByName('DTD_IDENTIFIER').AsString + ' */';
-          qryParams.Next;
-          if not qryParams.Eof then
-            sCallText := sCallText + ', ';
-        end;
-        sCallText := sCallText + ');';
-      finally
-        FreeAndNil(qryParams);
-      end;
-      // Ponemos el dataset principal en modo Inserción
+      Llamada := FCatalogoProcesos.GenerarLlamadaProcedimiento(Nombre);
       if not (dsTablaG.DataSet.State in [dsInsert, dsEdit]) then
-        dsTablaG.DataSet.Append; // Usar Append o Insert según prefieras
-      // Asignamos el nombre al proceso (opcional)
-      unqryTablaG.FieldByName('NOMBRE_GENERADOR_PROCESO_GP').AsString :=
-        'Ejecutar ' + sProcName;
-      // Asignamos el comando SQL generado al campo memo del editor
-      unqryTablaG.FieldByName('PROCESO_GENERADOR_PROCESO_GP').AsString :=
-        sCallText;
-//      DBsynEdit1.Text := sCallText;
-      // Foco visual: cambiamos a la pestaña de SQL y damos foco al editor
-      // SynEdit
+        dsTablaG.DataSet.Append;
+      dmmGeneradorProcesos.unqryTablaG.FieldByName(
+        'NOMBRE_GENERADOR_PROCESO_GP').AsString := 'Ejecutar ' + Nombre;
+      dmmGeneradorProcesos.unqryTablaG.FieldByName(
+        'PROCESO_GENERADOR_PROCESO_GP').AsString := Llamada;
       pcPestana.ActivePage := tsSQL;
       if DBsynEdit1.CanFocus then
         DBsynEdit1.SetFocus;

@@ -117,7 +117,8 @@ implementation
 
 uses
   System.NetEncoding, inLibContextoSesionIntf, inLibGenBusq,
-  inMtoModalGuardarFiltro, inLibMsgComun;
+  inMtoModalGuardarFiltro, inLibMsgComun,
+  UniDataConfiguracionPantalla;
 
 type
   TcxFilterControlAcceso = class(TcxFilterControl)
@@ -154,8 +155,10 @@ begin
     frm.FVista := AVista;
     frm.FVistaComponente := AVistaComponente;
     frm.FFiltroActualBase64 := AFiltroActualBase64;
-    frm.FRepositorioDestinos := frm.ContextoRepositoriosPantalla.Configuracion.
-      CrearRepositorioDestinosFiltros;
+    ComponerConfiguracionPantalla(
+      frm,
+      frm.ConexionPrincipal,
+      frm.FRepositorioDestinos);
     frm.CargarDatos;
     frm.ShowModal;
     Result := frm.FResultado;
