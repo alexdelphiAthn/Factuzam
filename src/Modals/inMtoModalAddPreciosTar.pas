@@ -124,10 +124,13 @@ begin
     oItem := chkSkus.Items.Add;
     oItem.Tag := i;
     oItem.Text := FOpcionesSkus[i].CodigoSku;
-    if FOpcionesSkus[i].Tallas <> '' then
-      oItem.Text := oItem.Text + '    Tallas: ' +
-        FOpcionesSkus[i].Tallas;
-    oItem.ImageIndex := CrearMuestraColor(FOpcionesSkus[i].HexColor);
+    if FOpcionesSkus[i].EsTalla then
+      oItem.Text := '    ' + oItem.Text + '    Talla: ' +
+        FOpcionesSkus[i].Talla;
+    if FOpcionesSkus[i].EsTalla then
+      oItem.ImageIndex := -1
+    else
+      oItem.ImageIndex := CrearMuestraColor(FOpcionesSkus[i].HexColor);
   end;
 end;
 

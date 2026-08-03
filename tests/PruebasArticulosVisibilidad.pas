@@ -48,7 +48,7 @@ type
     [Test]
     procedure CodigosBarras_SinFilasNoInformaIncidencias;
     [Test]
-    procedure SkusAltaTarifa_AgrupaPorColorYMuestraTallas;
+    procedure SkusAltaTarifa_OrdenaColorAntesDeSusTallas;
   end;
 
 implementation
@@ -80,9 +80,10 @@ begin
   Result.Tipo := ATipo;
 end;
 
-function DetalleSkuTarifa(const AColor, AHex,
-  ATalla: string): TDetalleSkuTarifaArticulo;
+function DetalleSkuTarifa(const ACodigoSku, AColor,
+  AHex, ATalla: string): TDetalleSkuTarifaArticulo;
 begin
+  Result.CodigoSku := ACodigoSku;
   Result.Color := AColor;
   Result.HexColor := AHex;
   Result.Talla := ATalla;
@@ -241,24 +242,36 @@ begin
 end;
 
 procedure TPruebasArticulosVisibilidad.
-  SkusAltaTarifa_AgrupaPorColorYMuestraTallas;
+  SkusAltaTarifa_OrdenaColorAntesDeSusTallas;
 var
   oDetalles: TDetallesSkuTarifaArticulo;
   oLista: TOpcionesSkuTarifaArticulo;
 begin
   oDetalles := TDetallesSkuTarifaArticulo.Create(
-    DetalleSkuTarifa('AMARILLO', '#FFFF00', '39'),
-    DetalleSkuTarifa('AMARILLO', '#FFFF00', '40'),
-    DetalleSkuTarifa('AMARILLO', '#FFFF00', '39'),
-    DetalleSkuTarifa('ROJO', '#FF0000', '42'));
+    DetalleSkuTarifa('ART-1/AMARILLO/39',
+      'AMARILLO', '#FFFF00', '39'),
+    DetalleSkuTarifa('ART-1/AMARILLO/40',
+      'AMARILLO', '#FFFF00', '40'),
+    DetalleSkuTarifa('ART-1/AMARILLO/39',
+      'AMARILLO', '#FFFF00', '39'),
+    DetalleSkuTarifa('ART-1/ROJO/42',
+      'ROJO', '#FF0000', '42'));
   oLista := ComponerListaSkusAltaTarifa('ART-1', oDetalles);
-  Assert.AreEqual(3, Integer(Length(oLista)));
+  Assert.AreEqual(6, Integer(Length(oLista)));
   Assert.AreEqual(cSkuFilaArticulo, oLista[0].CodigoSku);
   Assert.AreEqual('ART-1/AMARILLO', oLista[1].CodigoSku);
   Assert.AreEqual('#FFFF00', oLista[1].HexColor);
-  Assert.AreEqual('39, 40', oLista[1].Tallas);
-  Assert.AreEqual('ART-1/ROJO', oLista[2].CodigoSku);
-  Assert.AreEqual('42', oLista[2].Tallas);
+  Assert.IsFalse(oLista[1].EsTalla);
+  Assert.AreEqual('ART-1/AMARILLO/39', oLista[2].CodigoSku);
+  Assert.AreEqual('39', oLista[2].Talla);
+  Assert.IsTrue(oLista[2].EsTalla);
+  Assert.AreEqual('ART-1/AMARILLO/40', oLista[3].CodigoSku);
+  Assert.AreEqual('40', oLista[3].Talla);
+  Assert.AreEqual('ART-1/ROJO', oLista[4].CodigoSku);
+  Assert.IsFalse(oLista[4].EsTalla);
+  Assert.AreEqual('ART-1/ROJO/42', oLista[5].CodigoSku);
+  Assert.AreEqual('42', oLista[5].Talla);
+  Assert.IsTrue(oLista[5].EsTalla);
   SetLength(oDetalles, 0);
   oLista := ComponerListaSkusAltaTarifa('ART-1', oDetalles);
   Assert.AreEqual(1, Integer(Length(oLista)));

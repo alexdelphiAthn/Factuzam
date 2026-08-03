@@ -38,7 +38,8 @@ uses
 
 const
   SQL_LISTAR_SKUS_ARTICULO =
-    'SELECT DISTINCT color.AV AS COLOR, ' +
+    'SELECT DISTINCT sku.CODIGO_UNIDAD_SKU AS CODIGO_SKU, ' +
+    '       color.AV AS COLOR, ' +
     '       COALESCE(atb.HEX_ATB, '''') AS HEX_COLOR, ' +
     '       COALESCE(talla.AV, '''') AS TALLA, ' +
     '       color.ORDEN_AV AS ORDEN_COLOR, ' +
@@ -60,7 +61,7 @@ const
     '   AND talla.ID_VA_AV = ''TAL'') ' +
     '    ON sku_talla.CODIGO_UNIDAD_SKU_SA = sku.CODIGO_UNIDAD_SKU ' +
     ' WHERE sku.CODIGO_ART_SKU = :ART ' +
-    ' ORDER BY ORDEN_COLOR, COLOR, ORDEN_TALLA, TALLA';
+    ' ORDER BY ORDEN_COLOR, COLOR, ORDEN_TALLA, TALLA, CODIGO_SKU';
   SQL_LISTAR_TARIFAS_ACTIVAS =
     '  SELECT CODIGO_TAR_ARTTAR ' +
     '    FROM fza_tarifas ' +
@@ -146,6 +147,8 @@ begin
     begin
       iFila := Length(Result);
       SetLength(Result, iFila + 1);
+      Result[iFila].CodigoSku :=
+        oConsulta.FieldByName('CODIGO_SKU').AsString;
       Result[iFila].Color :=
         oConsulta.FieldByName('COLOR').AsString;
       Result[iFila].HexColor :=

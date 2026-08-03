@@ -41,8 +41,8 @@ function ComponerCsvSeleccion(const AValores: TArray<string>): string;
 // Recuento y detalle de los codigos de barras de un articulo.
 function VerificarCodigosBarrasArticulo(
   const ACodigos: TCodigosBarrasArticulo): TResumenCodigosBarrasArticulo;
-// Lista que ve el modal de alta de precios: articulo primero y una fila
-// ARTICULO/COLOR con sus tallas disponibles para cada color.
+// Lista que ve el modal de alta de precios: articulo, ARTICULO/COLOR y,
+// debajo de cada color, sus SKU de talla seleccionables.
 function ComponerListaSkusAltaTarifa(
   const ACodigoArticulo: string;
   const ADetalles: TDetallesSkuTarifaArticulo):
@@ -59,7 +59,7 @@ function EsColorOscuroAtributo(ARojo, AVerde, AAzul: Integer): Boolean;
 implementation
 
 uses
-  System.SysUtils, System.Classes,
+  System.SysUtils,
   inLibEAN13,
   inLibArticulosAltaTarifas,
   inLibMsgArticulos;
@@ -154,37 +154,27 @@ function ComponerListaSkusAltaTarifa(
   const ADetalles: TDetallesSkuTarifaArticulo):
     TOpcionesSkuTarifaArticulo;
 var
-  bEncontrada: Boolean;
   iDetalle: Integer;
   iOpcion: Integer;
+  sCodigoColor: string;
+  sCodigoDetalle: string;
   sColor: string;
+  sTalla: string;
 
-  procedure AnadirTalla(
-    var ATallas: string;
-    const ATalla: string);
+  function IndiceOpcion(
+    const AOpciones: TOpcionesSkuTarifaArticulo;
+    const ACodigoSku: string): Integer;
   var
-    oTallas: TStringList;
-    sTalla: string;
+    iBusqueda: Integer;
   begin
-    sTalla := Trim(ATalla);
-    if sTalla <> '' then
+    Result := -1;
+    iBusqueda := 0;
+    while (iBusqueda < Length(AOpciones)) and (Result = -1) do
     begin
-      oTallas := TStringList.Create;
-      try
-        oTallas.CaseSensitive := False;
-        oTallas.Delimiter := ',';
-        oTallas.StrictDelimiter := True;
-        oTallas.DelimitedText :=
-          StringReplace(ATallas, ', ', ',', [rfReplaceAll]);
-        if oTallas.IndexOf(sTalla) = -1 then
-        begin
-          if ATallas <> '' then
-            ATallas := ATallas + ', ';
-          ATallas := ATallas + sTalla;
-        end;
-      finally
-        FreeAndNil(oTallas);
-      end;
+      if SameText(AOpciones[iBusqueda].CodigoSku, ACodigoSku) then
+        Result := iBusqueda
+      else
+        Inc(iBusqueda);
     end;
   end;
 begin
@@ -196,26 +186,32 @@ begin
     sColor := Trim(ADetalles[iDetalle].Color);
     if sColor <> '' then
     begin
-      bEncontrada := False;
-      iOpcion := 1;
-      while (iOpcion < Length(Result)) and (not bEncontrada) do
-      begin
-        bEncontrada := SameText(Result[iOpcion].Color, sColor);
-        if not bEncontrada then
-          Inc(iOpcion);
-      end;
-      if not bEncontrada then
+      sCodigoColor := Trim(ACodigoArticulo) + '/' + sColor;
+      iOpcion := IndiceOpcion(Result, sCodigoColor);
+      if iOpcion = -1 then
       begin
         iOpcion := Length(Result);
         SetLength(Result, iOpcion + 1);
-        Result[iOpcion].CodigoSku :=
-          Trim(ACodigoArticulo) + '/' + sColor;
+        Result[iOpcion].CodigoSku := sCodigoColor;
         Result[iOpcion].Color := sColor;
         Result[iOpcion].HexColor := ADetalles[iDetalle].HexColor;
       end
       else if Result[iOpcion].HexColor = '' then
         Result[iOpcion].HexColor := ADetalles[iDetalle].HexColor;
-      AnadirTalla(Result[iOpcion].Tallas, ADetalles[iDetalle].Talla);
+      sCodigoDetalle := Trim(ADetalles[iDetalle].CodigoSku);
+      sTalla := Trim(ADetalles[iDetalle].Talla);
+      if (sTalla <> '') and (sCodigoDetalle <> '') and
+         (not SameText(sCodigoDetalle, sCodigoColor)) and
+         (IndiceOpcion(Result, sCodigoDetalle) = -1) then
+      begin
+        iOpcion := Length(Result);
+        SetLength(Result, iOpcion + 1);
+        Result[iOpcion].CodigoSku := sCodigoDetalle;
+        Result[iOpcion].Color := sColor;
+        Result[iOpcion].HexColor := ADetalles[iDetalle].HexColor;
+        Result[iOpcion].Talla := sTalla;
+        Result[iOpcion].EsTalla := True;
+      end;
     end;
   end;
 end;

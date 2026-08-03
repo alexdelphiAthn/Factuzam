@@ -41,7 +41,7 @@
       Margins.Right = 10
       Margins.Bottom = 2
       Align = alTop
-      Caption = ' 1. Seleccione los colores (se muestran sus tallas):'
+      Caption = ' 1. Seleccione el art'#237'culo, un color o una talla:'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -15

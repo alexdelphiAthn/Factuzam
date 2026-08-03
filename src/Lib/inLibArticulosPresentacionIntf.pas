@@ -32,6 +32,7 @@ type
 
   // Atributos de un SKU que el alta de tarifas agrupa por color.
   TDetalleSkuTarifaArticulo = record
+    CodigoSku: string;
     Color: string;
     HexColor: string;
     Talla: string;
@@ -43,7 +44,8 @@ type
     CodigoSku: string;
     Color: string;
     HexColor: string;
-    Tallas: string;
+    Talla: string;
+    EsTalla: Boolean;
   end;
   TOpcionesSkuTarifaArticulo = TArray<TOpcionSkuTarifaArticulo>;
 
