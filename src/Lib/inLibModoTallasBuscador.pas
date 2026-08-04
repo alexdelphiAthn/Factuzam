@@ -117,6 +117,8 @@ begin
 end;
 
 procedure TBuscadorSkusTallas.CrearVista;
+var
+  Columna: TcxGridDBColumn;
 begin
   FOrigen := TDataSource.Create(nil);
   FOrigen.DataSet := FBusqueda.Dataset;
@@ -149,57 +151,49 @@ begin
   FColInput.Options.FilteringPopup := False;
   FColInput.Options.IncSearch := False;
   FColInput.Options.Grouping := False;
-  with FVista.CreateColumn do
-  begin
-    Caption := SCaptionColDescripcion;
-    DataBinding.FieldName := 'DESCRIPCION';
-    Width := 220;
-  end;
-  with FVista.CreateColumn do
-  begin
-    Caption := SCaptionColCodigoBarras;
-    DataBinding.FieldName := 'CODBARRAS';
-    // 130: un EAN13 completo (el reparto de DropDownAutoWidth podia
-    // dejarla corta y el codigo parecia truncado).
-    Width := 130;
-  end;
-  with FVista.CreateColumn do
-  begin
-    Caption := SCaptionColRefProveedor;
-    DataBinding.FieldName := 'REFPRV';
-    Width := 110;
-  end;
-  with FVista.CreateColumn do
-  begin
-    Caption := SCaptionColStock;
-    DataBinding.FieldName := 'STOCK';
-    Width := 60;
-  end;
+  Columna := FVista.CreateColumn;
+  Columna.Caption := SCaptionColDescripcion;
+  Columna.DataBinding.FieldName := 'DESCRIPCION';
+  Columna.Width := 220;
+  Columna := FVista.CreateColumn;
+  Columna.Caption := SCaptionColCodigoBarras;
+  Columna.DataBinding.FieldName := 'CODBARRAS';
+  // 130: un EAN13 completo (el reparto de DropDownAutoWidth podia
+  // dejarla corta y el codigo parecia truncado).
+  Columna.Width := 130;
+  Columna := FVista.CreateColumn;
+  Columna.Caption := SCaptionColRefProveedor;
+  Columna.DataBinding.FieldName := 'REFPRV';
+  Columna.Width := 110;
+  Columna := FVista.CreateColumn;
+  Columna.Caption := SCaptionColStock;
+  Columna.DataBinding.FieldName := 'STOCK';
+  Columna.Width := 60;
 end;
 
 procedure TBuscadorSkusTallas.CrearCombo;
+var
+  Propiedades: TcxExtLookupComboBoxProperties;
 begin
   FRepoEditores := TcxEditRepository.Create(nil);
   FCombo := FRepoEditores.CreateItem(
               TcxEditRepositoryExtLookupComboBoxItem)
               as TcxEditRepositoryExtLookupComboBoxItem;
-  with FCombo.Properties do
-  begin
-    View := FVista;
-    KeyFieldNames := 'SKU';
-    ListFieldItem := FColInput;
-    DropDownListStyle := lsEditList;
-    IncrementalFiltering := False;
-    AutoSearchOnPopup := False;
-    DropDownRows := 15;
-    DropDownAutoWidth := True;
-    ImmediateDropDownWhenKeyPressed := False;
-    OnInitPopup := ComboInitPopup;
-    OnCloseUp := ComboCloseUp;
-    // En el repositorio: los clones de properties heredan el evento (el
-    // hook por editor se pierde con AlwaysShowEditor).
-    OnChange := ComboChange;
-  end;
+  Propiedades := FCombo.Properties;
+  Propiedades.View := FVista;
+  Propiedades.KeyFieldNames := 'SKU';
+  Propiedades.ListFieldItem := FColInput;
+  Propiedades.DropDownListStyle := lsEditList;
+  Propiedades.IncrementalFiltering := False;
+  Propiedades.AutoSearchOnPopup := False;
+  Propiedades.DropDownRows := 15;
+  Propiedades.DropDownAutoWidth := True;
+  Propiedades.ImmediateDropDownWhenKeyPressed := False;
+  Propiedades.OnInitPopup := ComboInitPopup;
+  Propiedades.OnCloseUp := ComboCloseUp;
+  // En el repositorio: los clones de properties heredan el evento (el
+  // hook por editor se pierde con AlwaysShowEditor).
+  Propiedades.OnChange := ComboChange;
 end;
 
 procedure TBuscadorSkusTallas.Construir;

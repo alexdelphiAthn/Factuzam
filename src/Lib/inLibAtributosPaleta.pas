@@ -73,7 +73,8 @@ function HexToColor(const AHex: string): TColor;
 // se cae al valor crudo del campo via GridRecord.
 function PintarCeldaConCuadradoColor(ACanvas: TcxCanvas;
                                      AViewInfo: TcxGridTableDataCellViewInfo;
-                                     const AInfo: TInfoBasico): Boolean; overload;
+                                     const AInfo: TInfoBasico): Boolean;
+                                     overload;
 function PintarCeldaConCuadradoColor(ACanvas: TcxCanvas;
                                      AViewInfo: TcxGridTableDataCellViewInfo;
                                      const AInfo: TInfoBasico;
@@ -173,7 +174,8 @@ procedure RellenarImageListPaleta(AConexion: TUniConnection;
                                   AImages: TCustomImageList;
                                   const AIdVa: string;
                                   const AAvs: array of string;
-                                  AAvToImageIndex: TDictionary<string, Integer>);
+                                  AAvToImageIndex: TDictionary<string,
+                                  Integer>);
 
 // Pinta un cuadradito de color en ABmp (lo redimensiona a ALado x ALado).
 // Devuelve True si pinto algo (AInfo valido); False si no, y deja ABmp sin
@@ -396,7 +398,8 @@ begin
   if (Texto = '') and (AViewInfo.GridRecord <> nil) then
     Texto := VarToStr(AViewInfo.GridRecord.Values[AViewInfo.Item.Index]);
 
-  // Fondo de la celda con el color "natural" (selección/foco respetado por Params)
+  // Fondo de la celda con el color natural (selección/foco respetado por
+  // Params)
   ACanvas.Brush.Color := AViewInfo.Params.Color;
   ACanvas.FillRect(Bounds);
 
@@ -628,7 +631,8 @@ procedure RellenarImageListPaleta(AConexion: TUniConnection;
                                   AImages: TCustomImageList;
                                   const AIdVa: string;
                                   const AAvs: array of string;
-                                  AAvToImageIndex: TDictionary<string, Integer>);
+                                  AAvToImageIndex: TDictionary<string,
+                                  Integer>);
 const
   LADO = 14;
 var

@@ -1,4 +1,4 @@
-/// GDI+ library API access
+﻿/// GDI+ library API access
 // - adds GIF, TIF, PNG and JPG pictures read/write support as standard TGraphic
 // - make available most useful GDI+ drawing methods
 // - allows Antialiased rending of any EMF file using GDI+

@@ -475,11 +475,17 @@ end;
 procedure TdmPedidosCompra.unqryTablaGAfterInsert(DataSet: TDataSet);
 var
   sSerie: string;
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryTablaG.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryTablaG.FindField(ANombre);
+  end;
 begin
   inherited;
-  with unqryTablaG do
-  begin
-    FieldByName('NUMERO_PEDC').AsString := '0';
+  FieldByName('NUMERO_PEDC').AsString := '0';
     sSerie := ObtenerSerieDefecto(
       ConexionPrincipal,
       UbicacionSesion.Empresa,
@@ -511,10 +517,9 @@ begin
     AplicarRecargoComprasEmpresa(
       CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
       'CODIGO_EMP_PEDC', 'ESIVA_RECARGO_COMPRAS_PEDC');
-    AplicarPorcentajesIvaCompra(
-      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
-      'PEDC');
-  end;
+  AplicarPorcentajesIvaCompra(
+    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
+    'PEDC');
   RefrescarAlmacenes(
     DataSet.FieldByName('CODIGO_EMP_PEDC').AsString);
 end;
@@ -538,11 +543,14 @@ begin
 end;
 
 procedure TdmPedidosCompra.CopiarEmpresaaPedidoCompra(DataSet: TDataSet);
-begin
-  with unqryTablaG do
+  function FindField(const ANombre: string): TField;
   begin
-    if (State <> dsEdit) and (State <> dsInsert) then
-      Edit;
+    Result := unqryTablaG.FindField(ANombre);
+  end;
+begin
+  if (unqryTablaG.State <> dsEdit) and
+     (unqryTablaG.State <> dsInsert) then
+    unqryTablaG.Edit;
     FindField('CODIGO_EMP_PEDC').AsString :=
       DataSet.FindField('CODIGO_EMP_EMP').AsString;
     FindField('RAZON_SOCIAL_EMPRESA_PEDC').AsString :=
@@ -565,9 +573,8 @@ begin
       DataSet.FindField('CODIGO_PAI_EMP').AsString;
     FindField('NOMBRE_PAI_EMPRESA_PEDC').AsString :=
       DataSet.FindField('NOMBRE_PAI_EMP').AsString;
-    FindField('CODIGO_POSTAL_EMPRESA_PEDC').AsString :=
-      DataSet.FindField('CODIGO_POSTAL_EMP').AsString;
-  end;
+  FindField('CODIGO_POSTAL_EMPRESA_PEDC').AsString :=
+    DataSet.FindField('CODIGO_POSTAL_EMP').AsString;
 end;
 
 procedure TdmPedidosCompra.ValidarAlmacenCabecera;
@@ -632,6 +639,7 @@ end;
 procedure TdmPedidosCompra.unqryTablaGBeforeDelete(DataSet: TDataSet);
 var
   sSerie, sNumero: string;
+  q: TUniQuery;
 begin
   inherited;
   // Limpiar pendientes de recibir antes de borrar la cabecera para no
@@ -652,28 +660,34 @@ begin
       sSerie, sNumero);
   // Borrar lineas asociadas para que no se queden huerfanas (no hay
   // FK con CASCADE).
-  with TUniQuery.Create(nil) do
+  q := TUniQuery.Create(nil);
   try
-    Connection := ConexionPrincipal;
-    SQL.Text :=
+    q.Connection := ConexionPrincipal;
+    q.SQL.Text :=
       'DELETE FROM fza_pedidos_compra_lineas ' +
       ' WHERE SERIE_PEDC_PEDCLIN  = :s ' +
       '   AND NUMERO_PEDC_PEDCLIN = :n';
-    ParamByName('s').AsString := sSerie;
-    ParamByName('n').AsString := sNumero;
-    ExecSQL;
+    q.ParamByName('s').AsString := sSerie;
+    q.ParamByName('n').AsString := sNumero;
+    q.ExecSQL;
   finally
-    Free;
+    FreeAndNil(q);
   end;
 end;
 
 procedure TdmPedidosCompra.unqryPedidosCompraLineasAfterInsert(
                                                        DataSet: TDataSet);
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryPedidosCompraLineas.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryPedidosCompraLineas.FindField(ANombre);
+  end;
 begin
   inherited;
-  with unqryPedidosCompraLineas do
-  begin
-    FieldByName('NUMERO_PEDC_PEDCLIN').AsString :=
+  FieldByName('NUMERO_PEDC_PEDCLIN').AsString :=
       unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
     FieldByName('SERIE_PEDC_PEDCLIN').AsString :=
       unqryTablaG.FieldByName('SERIE_PEDC').AsString;
@@ -693,15 +707,22 @@ begin
         unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
     FieldByName('USUARIO_ALTA').AsString    := IdentidadSesion.Usuario;
     FieldByName('INSTANTE_ALTA').AsDateTime := Now;
-    FieldByName('USUARIO_MODIF').AsString   := IdentidadSesion.Usuario;
-    FieldByName('INSTANTE_MODIF').AsDateTime:= Now;
-  end;
+  FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
+  FieldByName('INSTANTE_MODIF').AsDateTime := Now;
 end;
 
 procedure TdmPedidosCompra.unqryPedidosCompraLineasBeforePost(
                                                        DataSet: TDataSet);
 var
   sSku, sArt: string;
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryPedidosCompraLineas.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryPedidosCompraLineas.FindField(ANombre);
+  end;
 begin
   inherited;
   // Desempaquetado ATTR en curso: post descriptivo, sin logica fiscal.
@@ -728,10 +749,8 @@ begin
     Abort;
   end;
   AsignarNumeroLineaPedidoCompra(DataSet);
-  with unqryPedidosCompraLineas do
-  begin
-    // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
-    NormalizarArticuloSkuEnDataSet(ConexionPrincipal,
+  // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
+  NormalizarArticuloSkuEnDataSet(ConexionPrincipal,
       unqryPedidosCompraLineas, 'CODIGO_ART_PEDCLIN',
       'CODIGO_UNIDAD_PEDCLIN');
     if (FindField('CANTIDAD_PEDCLIN') <> nil) and
@@ -770,10 +789,9 @@ begin
         unqrySkusPedc.Close;
       end;
     end;
-    PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionPrincipal),
-      unqryTablaG,
-      unqryPedidosCompraLineas, 'PEDC', 'PEDCLIN', 'TOTAL_PEDCLIN');
-  end;
+  PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionPrincipal),
+    unqryTablaG,
+    unqryPedidosCompraLineas, 'PEDC', 'PEDCLIN', 'TOTAL_PEDCLIN');
 end;
 
 procedure TdmPedidosCompra.AsignarNumeroLineaPedidoCompra(DataSet: TDataSet);
@@ -851,8 +869,9 @@ begin
   inherited;
   // Borrar la fila concreta de fza_articulos_pdte_recibir antes de
   // borrar la linea: la PK incluye LINEA_PDR asi que es seguro.
-  sSerie  := unqryPedidosCompraLineas.FieldByName('SERIE_PEDC_PEDCLIN').AsString;
-  sNumero := unqryPedidosCompraLineas.FieldByName('NUMERO_PEDC_PEDCLIN').AsString;
+  sSerie := unqryPedidosCompraLineas.FieldByName('SERIE_PEDC_PEDCLIN').AsString;
+  sNumero :=
+    unqryPedidosCompraLineas.FieldByName('NUMERO_PEDC_PEDCLIN').AsString;
   sLinea  := unqryPedidosCompraLineas.FieldByName('LINEA_PEDCLIN').AsString;
   if (sSerie = '') or (sNumero = '') then Exit;
   CrearPendientesPedidoCompraUniDAC(
@@ -1189,31 +1208,35 @@ var
   iNumero: Int64;
   sNumero: string;
 begin
-  with unstrdprcGetContadorPedc do
-  begin
-    Params.Clear;
-    Params.CreateParam(ftString, 'pserie',            ptInput);
-    Params.CreateParam(ftString, 'ptipodoc',          ptInput);
-    Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
-    Params.CreateParam(ftString, 'pUSUARIOMODIF',     ptInput);
-    Params.CreateParam(ftString, 'pcont',             ptOutput);
-    ParamByName('pserie').AsString :=
-      unqryTablaG.FieldByName('SERIE_PEDC').AsString;
-    ParamByName('ptipodoc').AsString :=
-      CrearConfiguracionDocumento(
-        tdPedido, sdCompra).TipoContador;
-    ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
-    ParamByName('pEMPRESA_CONTADOR').AsString :=
-      unqryTablaG.FieldByName('CODIGO_EMP_PEDC').AsString;
-    ExecProc;
-    sNumero := Trim(ParamByName('pcont').AsString);
-    if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
-       (iNumero <= 0) then
-      raise Exception.Create(Format(SErrorContadorPedidoCompra,
-        [unqryTablaG.FieldByName('SERIE_PEDC').AsString,
-         unqryTablaG.FieldByName('CODIGO_EMP_PEDC').AsString]));
-    unqryTablaG.FieldByName('NUMERO_PEDC').AsString := sNumero;
-  end;
+  unstrdprcGetContadorPedc.Params.Clear;
+  unstrdprcGetContadorPedc.Params.CreateParam(
+    ftString, 'pserie', ptInput);
+  unstrdprcGetContadorPedc.Params.CreateParam(
+    ftString, 'ptipodoc', ptInput);
+  unstrdprcGetContadorPedc.Params.CreateParam(
+    ftString, 'pEMPRESA_CONTADOR', ptInput);
+  unstrdprcGetContadorPedc.Params.CreateParam(
+    ftString, 'pUSUARIOMODIF', ptInput);
+  unstrdprcGetContadorPedc.Params.CreateParam(
+    ftString, 'pcont', ptOutput);
+  unstrdprcGetContadorPedc.ParamByName('pserie').AsString :=
+    unqryTablaG.FieldByName('SERIE_PEDC').AsString;
+  unstrdprcGetContadorPedc.ParamByName('ptipodoc').AsString :=
+    CrearConfiguracionDocumento(tdPedido, sdCompra).TipoContador;
+  unstrdprcGetContadorPedc.ParamByName('pUSUARIOMODIF').AsString :=
+    IdentidadSesion.Usuario;
+  unstrdprcGetContadorPedc.ParamByName(
+    'pEMPRESA_CONTADOR').AsString :=
+    unqryTablaG.FieldByName('CODIGO_EMP_PEDC').AsString;
+  unstrdprcGetContadorPedc.ExecProc;
+  sNumero := Trim(
+    unstrdprcGetContadorPedc.ParamByName('pcont').AsString);
+  if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
+     (iNumero <= 0) then
+    raise Exception.Create(Format(SErrorContadorPedidoCompra,
+      [unqryTablaG.FieldByName('SERIE_PEDC').AsString,
+       unqryTablaG.FieldByName('CODIGO_EMP_PEDC').AsString]));
+  unqryTablaG.FieldByName('NUMERO_PEDC').AsString := sNumero;
 end;
 
 procedure TdmPedidosCompra.DesempaquetarAtributosLineas;

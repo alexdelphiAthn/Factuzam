@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 -- Vistas para la impresion de la factura de compra
 -- Analogo a las vistas *_print de compras, contra el modelo de facturas
 -- de compra (cabecera + lineas; sin tabla de celdas separada - los SKUs

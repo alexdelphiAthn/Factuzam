@@ -1,4 +1,4 @@
-unit SynEditActionsResource;
+﻿unit SynEditActionsResource;
 
 interface
 

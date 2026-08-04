@@ -1,4 +1,4 @@
-unit SynOmniSetupDialog;
+﻿unit SynOmniSetupDialog;
 
 interface
 

@@ -1,4 +1,4 @@
-/// wrapper around FPC typinfo.pp unit for SynCommons.pas and mORMot.pas
+﻿/// wrapper around FPC typinfo.pp unit for SynCommons.pas and mORMot.pas
 // - this unit is a part of the freeware Synopse mORMot framework,
 // licensed under a MPL/GPL/LGPL tri-license; version 1.18
 unit SynFPCTypInfo;

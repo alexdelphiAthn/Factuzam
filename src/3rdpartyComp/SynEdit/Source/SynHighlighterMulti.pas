@@ -1,4 +1,4 @@
-{-------------------------------------------------------------------------------
+ï»¿{-------------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -11,7 +11,7 @@ the specific language governing rights and limitations under the License.
 The Original Code is: SynHighlighterMulti.pas, released 2000-06-23.
 The Original Code is based on mwMultiSyn.pas by Willo van der Merwe, part of the
 mwEdit component suite.
-Unicode translation by Maël Hörz.
+Unicode translation by MaÃ«l HÃ¶rz.
 
 Contributors to the SynEdit and mwEdit projects are listed in the
 Contributors.txt file.

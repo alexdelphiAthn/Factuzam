@@ -402,7 +402,8 @@ begin
                                  IfThen(AResul.EsTrazable, 'S', 'N');
 
   // TIPO_LINEA segun ESVARIACION.
-  if AResul.EsVariacion then sTipoLinea := 'MATRIZ' else sTipoLinea := 'ESCALAR';
+  if AResul.EsVariacion then sTipoLinea :=
+    'MATRIZ' else sTipoLinea := 'ESCALAR';
   ds.FieldByName('TIPO_LINEA_SESLIN').AsString := sTipoLinea;
 
   // Ejes de variacion (pivot=tallas, fila=color).

@@ -1,4 +1,4 @@
-object SynEditKeystrokesEditorForm: TSynEditKeystrokesEditorForm
+﻿object SynEditKeystrokesEditorForm: TSynEditKeystrokesEditorForm
   Left = 300
   Top = 241
   BorderIcons = [biSystemMenu, biMaximize]

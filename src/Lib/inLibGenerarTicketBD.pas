@@ -137,6 +137,47 @@ type
     destructor Destroy; override;
     procedure Ejecutar;
   end;
+  TConfiguracionTicketVenta = record
+    ParametrosApp: IParametrosAplicacion;
+    Preview: IPreviewTicket;
+    Unidades: TUnidadesMedida;
+    Repositorio: IRepositorioTicketsVentaCaja;
+    CodigoEmpresa: string;
+    CodigoAlmacen: string;
+    CodigoCaja: string;
+    NumeroOperacion: string;
+    NombreImpresora: string;
+    RutasPDF: TStrings;
+    SoloPDF: Boolean;
+    ImprimirCodigoBarras: Boolean;
+  end;
+  TGeneradorTicketVenta = class
+  private
+    FConfiguracion: TConfiguracionTicketVenta;
+    FContexto: TContextoOperacionTicketCaja;
+    FCabecera: TCabeceraTicketCaja;
+    FTicket: TTicketTermico;
+    FProteccionIdioma: IInterface;
+    FFechaOperacion: TDateTime;
+    FDocumentoFactura: string;
+    FTextoQr: string;
+    FTieneFactura: Boolean;
+    procedure CargarDatos;
+    procedure EscribirQr;
+    procedure EscribirIdentificacion;
+    procedure EscribirEmpresa;
+    procedure EscribirLineas;
+    procedure EscribirPagos;
+    procedure EscribirVales;
+    procedure EscribirImpuestos;
+    procedure EscribirPie;
+    procedure EscribirCodigoBarras;
+    procedure GenerarSalida;
+  public
+    constructor Create(const AConfiguracion: TConfiguracionTicketVenta);
+    destructor Destroy; override;
+    procedure Ejecutar;
+  end;
 
 constructor TGeneradorResguardoDeposito.Create(
   const APreview: IPreviewTicket;
@@ -428,6 +469,317 @@ begin
   end;
 end;
 
+constructor TGeneradorTicketVenta.Create(
+  const AConfiguracion: TConfiguracionTicketVenta);
+begin
+  inherited Create;
+  FConfiguracion := AConfiguracion;
+  FTicket := TTicketTermico.Create(FConfiguracion.NombreImpresora);
+end;
+
+destructor TGeneradorTicketVenta.Destroy;
+begin
+  FreeAndNil(FTicket);
+  FProteccionIdioma := nil;
+  FConfiguracion.Repositorio := nil;
+  FConfiguracion.Preview := nil;
+  FConfiguracion.ParametrosApp := nil;
+  inherited;
+end;
+
+procedure TGeneradorTicketVenta.CargarDatos;
+begin
+  if not Assigned(FConfiguracion.Repositorio) then
+    raise Exception.Create(SErrorOperacionCajaNoEncontrada);
+  FContexto.Empresa := FConfiguracion.CodigoEmpresa;
+  FContexto.Almacen := FConfiguracion.CodigoAlmacen;
+  FContexto.Caja := FConfiguracion.CodigoCaja;
+  FContexto.Operacion := FConfiguracion.NumeroOperacion;
+  FCabecera := FConfiguracion.Repositorio.ObtenerCabeceraTicket(FContexto);
+  if not FCabecera.Encontrada then
+    raise Exception.Create(SErrorOperacionCajaNoEncontrada);
+  FFechaOperacion := FCabecera.FechaOperacion;
+  if (Frac(FFechaOperacion) = 0) and
+     (FCabecera.InstanteAlta <> 0) then
+    FFechaOperacion := Trunc(FFechaOperacion) +
+      Frac(FCabecera.InstanteAlta);
+  FTieneFactura := (FCabecera.SerieFactura <> '') and
+    (FCabecera.NumeroFactura <> '');
+  FDocumentoFactura := FormatearDocumento(
+    FCabecera.FormatoDocumento,
+    FCabecera.SerieFactura,
+    FCabecera.NumeroFactura);
+  FTextoQr := '';
+  if (not SinVerifactuActivo(FConfiguracion.ParametrosApp)) and
+     FTieneFactura then
+    FTextoQr := ConstruirUrlQR(
+      FConfiguracion.ParametrosApp,
+      FCabecera.NifEmpresaFactura,
+      FCabecera.SerieFactura,
+      FCabecera.NumeroFactura,
+      FCabecera.FechaFactura,
+      FCabecera.TotalLiquido);
+end;
+
+procedure TGeneradorTicketVenta.EscribirQr;
+begin
+  if FTextoQr <> '' then
+  begin
+    FTicket.Alinear(alCentro);
+    FTicket.SaltarLineas(1);
+    FTicket.EscribirLinea('QR tributario:');
+    FTicket.ImprimirQRNativo(FTextoQr, 6, 49);
+    if VerifactuActivo(FConfiguracion.ParametrosApp) then
+    begin
+      FTicket.EscribirLinea('VERI*FACTU - Factura verificable');
+      FTicket.EscribirLinea('en la sede electrónica de la AEAT');
+    end;
+    FTicket.Alinear(alIzquierda);
+  end;
+end;
+
+procedure TGeneradorTicketVenta.EscribirIdentificacion;
+begin
+  FTicket.SaltarLineas(1);
+  FTicket.Negrita(True);
+  if FTieneFactura then
+    FTicket.EscribirLinea(
+      Format(STicketFacturaSimplificadaNumero, [FDocumentoFactura]))
+  else
+    FTicket.EscribirLinea(
+      Format(
+        STicketOperacionNumero,
+        [FConfiguracion.NumeroOperacion]));
+  FTicket.Negrita(False);
+  FTicket.SaltarLineas(1);
+end;
+
+procedure TGeneradorTicketVenta.EscribirEmpresa;
+begin
+  FTicket.Alinear(alCentro);
+  FTicket.EscribirLinea(FCabecera.RazonSocialEmpresa);
+  FTicket.EscribirLinea(FCabecera.DireccionEmpresa);
+  FTicket.EscribirLinea(
+    FCabecera.CodigoPostalEmpresa + ' ' + FCabecera.PoblacionEmpresa);
+  FTicket.EscribirLinea(
+    Format(STicketCifNif, [FCabecera.NifEmpresaFactura]));
+  if Trim(FCabecera.MovilEmpresa) <> '' then
+    FTicket.EscribirLinea(
+      Format(STicketTelefono, [FCabecera.MovilEmpresa]));
+  FTicket.SaltarLineas(1);
+  FTicket.Alinear(alIzquierda);
+  FTicket.TextoColumnas(
+    STicketEtiquetaOperacionNumero,
+    FConfiguracion.NumeroOperacion);
+  FTicket.SaltarLineas(1);
+  FTicket.TextoColumnas(
+    FormatDateTime('dd/mm/yyyy hh:nn', FFechaOperacion),
+    Format(
+      STicketFormatoTienda,
+      [LPAD(FConfiguracion.CodigoEmpresa, 3),
+       LPAD(FConfiguracion.CodigoAlmacen, 3),
+       LPAD(FConfiguracion.CodigoCaja, 2)]));
+end;
+
+procedure TGeneradorTicketVenta.EscribirLineas;
+var
+  i: Integer;
+  sArticulo: string;
+  sCantidad: string;
+  oLineas: TArray<TLineaTicketCaja>;
+begin
+  if FTieneFactura then
+  begin
+    FTicket.LineaSeparadora('-');
+    FTicket.EscribirLinea(STicketCabeceraArticulos);
+    FTicket.LineaSeparadora('-');
+    oLineas := FConfiguracion.Repositorio.ListarLineasTicket(
+      FCabecera.SerieFactura,
+      FCabecera.NumeroFactura);
+    for i := 0 to High(oLineas) do
+    begin
+      sArticulo := Format(
+        '%-26s',
+        [Copy(oLineas[i].CodigoUnidad, 1, 26)]);
+      if Assigned(FConfiguracion.Unidades) then
+        sCantidad := FConfiguracion.Unidades.Formatear(
+          oLineas[i].Cantidad,
+          oLineas[i].TipoCantidad)
+      else
+        sCantidad := FormatFloat('0', oLineas[i].Cantidad);
+      sCantidad := Format('%4s', [sCantidad]);
+      FTicket.TextoColumnas(
+        sArticulo + sCantidad,
+        FormatFloat('#,##0.00', oLineas[i].Total) + ' €');
+      FTicket.EscribirLinea(Copy(oLineas[i].Descripcion, 1, 42));
+    end;
+    FTicket.LineaSeparadora('-');
+    FTicket.SaltarLineas(1);
+    FTicket.Negrita(True);
+    FTicket.TextoColumnas(
+      STicketAPagar,
+      FormatFloat('#,##0.00', FCabecera.TotalLiquido) + ' €');
+    FTicket.Negrita(False);
+  end;
+end;
+
+procedure TGeneradorTicketVenta.EscribirPagos;
+var
+  dTotalCambio: Currency;
+  i: Integer;
+  oPagos: TArray<TPagoTicketCaja>;
+begin
+  FTicket.Alinear(alIzquierda);
+  FTicket.Negrita(True);
+  dTotalCambio := 0;
+  oPagos := FConfiguracion.Repositorio.ListarPagosTicket(FContexto);
+  for i := 0 to High(oPagos) do
+  begin
+    dTotalCambio := dTotalCambio + oPagos[i].ImporteCambio;
+    if oPagos[i].ImporteEntregado <> 0 then
+      FTicket.TextoColumnas(
+        UpperCase(oPagos[i].CodigoFormaPago),
+        FormatFloat('#,##0.00', oPagos[i].ImporteEntregado) + ' €');
+  end;
+  if dTotalCambio > 0 then
+    FTicket.TextoColumnas(
+      STicketCambioEfectivo,
+      FormatFloat('#,##0.00', dTotalCambio) + ' €');
+  FTicket.Negrita(False);
+end;
+
+procedure TGeneradorTicketVenta.EscribirVales;
+var
+  i: Integer;
+  oVales: TArray<TValeTicketCaja>;
+begin
+  oVales := FConfiguracion.Repositorio.ListarValesTicket(FContexto);
+  for i := 0 to High(oVales) do
+  begin
+    FTicket.SaltarLineas(1);
+    FTicket.Negrita(True);
+    FTicket.TextoColumnas(
+      STicketValeEmitidoFavor,
+      FormatFloat('#,##0.00', oVales[i].ImporteNominal) + ' €');
+    if Length(STicketCodigoValeEmitidoEspacio + oVales[i].Codigo) <= 42 then
+      FTicket.TextoColumnas(
+        STicketCodigoValeEmitidoEspacio,
+        oVales[i].Codigo)
+    else
+    begin
+      FTicket.EscribirLinea(STicketCodigoValeEmitido);
+      FTicket.EscribirLinea(oVales[i].Codigo);
+    end;
+    FTicket.Negrita(False);
+  end;
+end;
+
+procedure TGeneradorTicketVenta.EscribirImpuestos;
+begin
+  FTicket.SaltarLineas(1);
+  if FTieneFactura then
+  begin
+    if FCabecera.TotalIvaNormal > 0 then
+    begin
+      FTicket.TextoColumnas(
+        STicketBaseImponible,
+        FormatFloat('#,##0.00', FCabecera.BaseIvaNormal) + ' €');
+      FTicket.TextoColumnas(
+        Format(
+          STicketTotalIvaFormato,
+          [FCabecera.PorcentajeIvaNormal]),
+        FormatFloat('#,##0.00', FCabecera.TotalIvaNormal) + ' €');
+    end;
+    if FCabecera.TotalIvaReducido > 0 then
+    begin
+      FTicket.TextoColumnas(
+        STicketBaseImponibleReducida,
+        FormatFloat('#,##0.00', FCabecera.BaseIvaReducido) + ' €');
+      FTicket.TextoColumnas(
+        Format(
+          STicketTotalIvaFormato,
+          [FCabecera.PorcentajeIvaReducido]),
+        FormatFloat('#,##0.00', FCabecera.TotalIvaReducido) + ' €');
+    end;
+  end;
+end;
+
+procedure TGeneradorTicketVenta.EscribirPie;
+begin
+  FTicket.SaltarLineas(2);
+  FTicket.Alinear(alCentro);
+  FTicket.EscribirLinea(
+    Format(STicketLeAtendio, [FCabecera.DiminutivoVendedor]));
+  FTicket.EscribirLinea(STicketIvaIncluido);
+  FTicket.EscribirLinea(STicketGraciasVisita);
+  if Trim(FCabecera.TextoLegalEmpresa) <> '' then
+  begin
+    FTicket.SaltarLineas(1);
+    FTicket.EscribirLinea(FCabecera.TextoLegalEmpresa);
+  end;
+  EscribirPieTicket(
+    FTicket,
+    FConfiguracion.Repositorio.ListarPieTicket(
+      FConfiguracion.CodigoEmpresa));
+end;
+
+procedure TGeneradorTicketVenta.EscribirCodigoBarras;
+var
+  sCodigoBarras: string;
+begin
+  if FConfiguracion.ImprimirCodigoBarras and FTieneFactura then
+  begin
+    sCodigoBarras :=
+      FConfiguracion.Repositorio.ObtenerCodigoBarrasTicket(
+        FCabecera.SerieFactura,
+        FCabecera.NumeroFactura);
+    if sCodigoBarras <> '' then
+    begin
+      FTicket.SaltarLineas(1);
+      FTicket.ImprimirEAN13Nativo(sCodigoBarras);
+    end;
+  end;
+end;
+
+procedure TGeneradorTicketVenta.GenerarSalida;
+var
+  sComandosEsc: string;
+  sRutaFicheroPdf: string;
+begin
+  FTicket.CortarPapel;
+  FTicket.AbrirCajon;
+  sComandosEsc := FTicket.ObtenerComandos;
+  sRutaFicheroPdf := GetUserFolderTickets + 'TicketBD_' +
+    FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
+  ImprimirOPrevisualizarTicket(
+    FConfiguracion.Preview,
+    FTicket,
+    sComandosEsc,
+    sRutaFicheroPdf,
+    FConfiguracion.NombreImpresora,
+    FConfiguracion.SoloPDF);
+  if (FConfiguracion.RutasPDF <> nil) and
+     FileExists(sRutaFicheroPdf) then
+    FConfiguracion.RutasPDF.Add(sRutaFicheroPdf);
+end;
+
+procedure TGeneradorTicketVenta.Ejecutar;
+begin
+  CargarDatos;
+  FProteccionIdioma := ProtegerDocumentoVentaEspanol;
+  FTicket.Inicializar;
+  EscribirQr;
+  EscribirIdentificacion;
+  EscribirEmpresa;
+  EscribirLineas;
+  EscribirPagos;
+  EscribirVales;
+  EscribirImpuestos;
+  EscribirPie;
+  EscribirCodigoBarras;
+  GenerarSalida;
+end;
+
 procedure ImprimirResguardoDeposito(
   const APreview: IPreviewTicket;
   const ARepositorio: IRepositorioResguardosCaja;
@@ -471,263 +823,27 @@ procedure ImprimirTicketDesdeBD(
   ASoloPDF: Boolean;
   AImprimirCodigoBarras: Boolean);
 var
-  bTieneFactura: Boolean;
-  dFechaOperacion: TDateTime;
-  dTotalCambio: Currency;
-  i: Integer;
-  sArt: string;
-  sCodigoBarras: string;
-  sComandosEsc: string;
-  sDocumentoFac: string;
-  sQrTexto: string;
-  sRutaFicheroPdf: string;
-  sUds: string;
-  sUnidad: string;
-  oCabecera: TCabeceraTicketCaja;
-  oContexto: TContextoOperacionTicketCaja;
-  oLineas: TArray<TLineaTicketCaja>;
-  oPagos: TArray<TPagoTicketCaja>;
-  oProteccionIdioma: IInterface;
-  oTicket: TTicketTermico;
-  oVales: TArray<TValeTicketCaja>;
+  oConfiguracion: TConfiguracionTicketVenta;
+  oGenerador: TGeneradorTicketVenta;
 begin
-  if not Assigned(ARepositorio) then
-    raise Exception.Create(SErrorOperacionCajaNoEncontrada);
-  oContexto.Empresa := ACodigoEmpresa;
-  oContexto.Almacen := ACodigoAlmacen;
-  oContexto.Caja := ACodigoCaja;
-  oContexto.Operacion := ANumeroOperacion;
-  oCabecera := ARepositorio.ObtenerCabeceraTicket(oContexto);
-  if not oCabecera.Encontrada then
-    raise Exception.Create(SErrorOperacionCajaNoEncontrada);
-  dFechaOperacion := oCabecera.FechaOperacion;
-  if (Frac(dFechaOperacion) = 0) and
-     (oCabecera.InstanteAlta <> 0) then
-    dFechaOperacion :=
-      Trunc(dFechaOperacion) + Frac(oCabecera.InstanteAlta);
-  bTieneFactura :=
-    (oCabecera.SerieFactura <> '') and
-    (oCabecera.NumeroFactura <> '');
-  sDocumentoFac := FormatearDocumento(
-    oCabecera.FormatoDocumento,
-    oCabecera.SerieFactura,
-    oCabecera.NumeroFactura);
-  sQrTexto := '';
-  if (not SinVerifactuActivo(AParametrosApp)) and bTieneFactura then
-    sQrTexto := ConstruirUrlQR(
-      AParametrosApp,
-      oCabecera.NifEmpresaFactura,
-      oCabecera.SerieFactura,
-      oCabecera.NumeroFactura,
-      oCabecera.FechaFactura,
-      oCabecera.TotalLiquido);
-  oProteccionIdioma := ProtegerDocumentoVentaEspanol;
-  oTicket := TTicketTermico.Create(ANombreImpresora);
+  oConfiguracion := Default(TConfiguracionTicketVenta);
+  oConfiguracion.ParametrosApp := AParametrosApp;
+  oConfiguracion.Preview := APreview;
+  oConfiguracion.Unidades := AUnidades;
+  oConfiguracion.Repositorio := ARepositorio;
+  oConfiguracion.CodigoEmpresa := ACodigoEmpresa;
+  oConfiguracion.CodigoAlmacen := ACodigoAlmacen;
+  oConfiguracion.CodigoCaja := ACodigoCaja;
+  oConfiguracion.NumeroOperacion := ANumeroOperacion;
+  oConfiguracion.NombreImpresora := ANombreImpresora;
+  oConfiguracion.RutasPDF := ARutasPDF;
+  oConfiguracion.SoloPDF := ASoloPDF;
+  oConfiguracion.ImprimirCodigoBarras := AImprimirCodigoBarras;
+  oGenerador := TGeneradorTicketVenta.Create(oConfiguracion);
   try
-    oTicket.Inicializar;
-    if sQrTexto <> '' then
-    begin
-      oTicket.Alinear(alCentro);
-      oTicket.SaltarLineas(1);
-      oTicket.EscribirLinea('QR tributario:');
-      oTicket.ImprimirQRNativo(sQrTexto, 6, 49);
-      if VerifactuActivo(AParametrosApp) then
-      begin
-        oTicket.Alinear(alCentro);
-        oTicket.EscribirLinea('VERI*FACTU - Factura verificable');
-        oTicket.EscribirLinea('en la sede electrónica de la AEAT');
-      end;
-      oTicket.Alinear(alIzquierda);
-    end;
-    oTicket.SaltarLineas(1);
-    oTicket.Negrita(True);
-    if bTieneFactura then
-      oTicket.EscribirLinea(
-        Format(
-          STicketFacturaSimplificadaNumero,
-          [sDocumentoFac]))
-    else
-      oTicket.EscribirLinea(
-        Format(
-          STicketOperacionNumero,
-          [ANumeroOperacion]));
-    oTicket.Negrita(False);
-    oTicket.SaltarLineas(1);
-    oTicket.Alinear(alCentro);
-    oTicket.EscribirLinea(oCabecera.RazonSocialEmpresa);
-    oTicket.EscribirLinea(oCabecera.DireccionEmpresa);
-    oTicket.EscribirLinea(
-      oCabecera.CodigoPostalEmpresa + ' ' +
-      oCabecera.PoblacionEmpresa);
-    oTicket.EscribirLinea(
-      Format(
-        STicketCifNif,
-        [oCabecera.NifEmpresaFactura]));
-    if Trim(oCabecera.MovilEmpresa) <> '' then
-      oTicket.EscribirLinea(
-        Format(
-          STicketTelefono,
-          [oCabecera.MovilEmpresa]));
-    oTicket.SaltarLineas(1);
-    oTicket.Alinear(alIzquierda);
-    oTicket.TextoColumnas(
-      STicketEtiquetaOperacionNumero,
-      ANumeroOperacion);
-    oTicket.SaltarLineas(1);
-    oTicket.TextoColumnas(
-      FormatDateTime('dd/mm/yyyy hh:nn', dFechaOperacion),
-      Format(
-        STicketFormatoTienda,
-        [LPAD(ACodigoEmpresa, 3),
-         LPAD(ACodigoAlmacen, 3),
-         LPAD(ACodigoCaja, 2)]));
-    if bTieneFactura then
-    begin
-      oTicket.LineaSeparadora('-');
-      oTicket.EscribirLinea(STicketCabeceraArticulos);
-      oTicket.LineaSeparadora('-');
-      oLineas := ARepositorio.ListarLineasTicket(
-        oCabecera.SerieFactura,
-        oCabecera.NumeroFactura);
-      for i := 0 to High(oLineas) do
-      begin
-        sArt := Format(
-          '%-26s',
-          [Copy(oLineas[i].CodigoUnidad, 1, 26)]);
-        sUnidad := oLineas[i].TipoCantidad;
-        if Assigned(AUnidades) then
-          sUds := AUnidades.Formatear(
-            oLineas[i].Cantidad,
-            sUnidad)
-        else
-          sUds := FormatFloat('0', oLineas[i].Cantidad);
-        sUds := Format('%4s', [sUds]);
-        oTicket.TextoColumnas(
-          sArt + sUds,
-          FormatFloat('#,##0.00', oLineas[i].Total) + ' €');
-        oTicket.EscribirLinea(
-          Copy(oLineas[i].Descripcion, 1, 42));
-      end;
-      oTicket.LineaSeparadora('-');
-      oTicket.SaltarLineas(1);
-      oTicket.Alinear(alIzquierda);
-      oTicket.Negrita(True);
-      oTicket.TextoColumnas(
-        STicketAPagar,
-        FormatFloat('#,##0.00', oCabecera.TotalLiquido) + ' €');
-      oTicket.Negrita(False);
-    end;
-    oTicket.Alinear(alIzquierda);
-    oTicket.Negrita(True);
-    dTotalCambio := 0;
-    oPagos := ARepositorio.ListarPagosTicket(oContexto);
-    for i := 0 to High(oPagos) do
-    begin
-      dTotalCambio := dTotalCambio + oPagos[i].ImporteCambio;
-      if oPagos[i].ImporteEntregado <> 0 then
-        oTicket.TextoColumnas(
-          UpperCase(oPagos[i].CodigoFormaPago),
-          FormatFloat(
-            '#,##0.00',
-            oPagos[i].ImporteEntregado) + ' €');
-    end;
-    if dTotalCambio > 0 then
-      oTicket.TextoColumnas(
-        STicketCambioEfectivo,
-        FormatFloat('#,##0.00', dTotalCambio) + ' €');
-    oTicket.Negrita(False);
-    oVales := ARepositorio.ListarValesTicket(oContexto);
-    for i := 0 to High(oVales) do
-    begin
-      oTicket.SaltarLineas(1);
-      oTicket.Negrita(True);
-      oTicket.TextoColumnas(
-        STicketValeEmitidoFavor,
-        FormatFloat('#,##0.00', oVales[i].ImporteNominal) + ' €');
-      if Length(
-           STicketCodigoValeEmitidoEspacio +
-           oVales[i].Codigo) <= 42 then
-        oTicket.TextoColumnas(
-          STicketCodigoValeEmitidoEspacio,
-          oVales[i].Codigo)
-      else
-      begin
-        oTicket.EscribirLinea(STicketCodigoValeEmitido);
-        oTicket.EscribirLinea(oVales[i].Codigo);
-      end;
-      oTicket.Negrita(False);
-    end;
-    oTicket.SaltarLineas(1);
-    if bTieneFactura then
-    begin
-      if oCabecera.TotalIvaNormal > 0 then
-      begin
-        oTicket.TextoColumnas(
-          STicketBaseImponible,
-          FormatFloat('#,##0.00', oCabecera.BaseIvaNormal) + ' €');
-        oTicket.TextoColumnas(
-          Format(
-            STicketTotalIvaFormato,
-            [oCabecera.PorcentajeIvaNormal]),
-          FormatFloat('#,##0.00', oCabecera.TotalIvaNormal) + ' €');
-      end;
-      if oCabecera.TotalIvaReducido > 0 then
-      begin
-        oTicket.TextoColumnas(
-          STicketBaseImponibleReducida,
-          FormatFloat('#,##0.00', oCabecera.BaseIvaReducido) + ' €');
-        oTicket.TextoColumnas(
-          Format(
-            STicketTotalIvaFormato,
-            [oCabecera.PorcentajeIvaReducido]),
-          FormatFloat('#,##0.00', oCabecera.TotalIvaReducido) + ' €');
-      end;
-    end;
-    oTicket.SaltarLineas(2);
-    oTicket.Alinear(alCentro);
-    oTicket.EscribirLinea(
-      Format(
-        STicketLeAtendio,
-        [oCabecera.DiminutivoVendedor]));
-    oTicket.EscribirLinea(STicketIvaIncluido);
-    oTicket.EscribirLinea(STicketGraciasVisita);
-    if Trim(oCabecera.TextoLegalEmpresa) <> '' then
-    begin
-      oTicket.SaltarLineas(1);
-      oTicket.EscribirLinea(oCabecera.TextoLegalEmpresa);
-    end;
-    EscribirPieTicket(
-      oTicket,
-      ARepositorio.ListarPieTicket(ACodigoEmpresa));
-    // Código de barras EAN-13 del ticket (parámetro de caja) para
-    // localizarlo al escanear en devoluciones (F4)
-    if AImprimirCodigoBarras and bTieneFactura then
-    begin
-      sCodigoBarras := ARepositorio.ObtenerCodigoBarrasTicket(
-        oCabecera.SerieFactura, oCabecera.NumeroFactura);
-      if sCodigoBarras <> '' then
-      begin
-        oTicket.SaltarLineas(1);
-        oTicket.ImprimirEAN13Nativo(sCodigoBarras);
-      end;
-    end;
-    oTicket.CortarPapel;
-    oTicket.AbrirCajon;
-    sComandosEsc := oTicket.ObtenerComandos;
-    sRutaFicheroPdf :=
-      GetUserFolderTickets + 'TicketBD_' +
-      FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-    ImprimirOPrevisualizarTicket(
-      APreview,
-      oTicket,
-      sComandosEsc,
-      sRutaFicheroPdf,
-      ANombreImpresora,
-      ASoloPDF);
-    if (ARutasPDF <> nil) and FileExists(sRutaFicheroPdf) then
-      ARutasPDF.Add(sRutaFicheroPdf);
+    oGenerador.Ejecutar;
   finally
-    FreeAndNil(oTicket);
+    FreeAndNil(oGenerador);
   end;
 end;
 

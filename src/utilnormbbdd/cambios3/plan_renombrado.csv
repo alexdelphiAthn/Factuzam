@@ -1,4 +1,4 @@
-﻿tabla,columna_actual,columna_nueva,cambia,definicion
+tabla,columna_actual,columna_nueva,cambia,definicion
 fza_almacenes,CODIGO_ALMACEN_ALM,CODIGO_ALM,SI,varchar(10) NOT NULL
 fza_almacenes,CODIGO_EMPRESA_ALM,CODIGO_EMP_ALM,SI,varchar(20) NOT NULL
 fza_almacenes,ESACTIVO_ALM,ESACTIVO_ALM,NO,varchar(1) NULL DEFAULT 'S'

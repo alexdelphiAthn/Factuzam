@@ -293,18 +293,17 @@ end;
 procedure TfrmMtoProveedores.btnIraArticuloClick(Sender: TObject);
 begin
   inherited;
-  with FDmmProveedores do
-  begin
-    if ((pcPestanas.ActivePage = tsArticulos)) then
+  if pcPestanas.ActivePage = tsArticulos then
+    ShowMto(Self.Owner,
+            'Articulos',
+            FDmmProveedores.unqryArticulos.FieldByName(
+              'CODIGO_ART_ART').AsString)
+  else
+    if pcPestanas.ActivePage = tsVentas then
       ShowMto(Self.Owner,
               'Articulos',
-              unqryArticulos.FieldByName('CODIGO_ART_ART').AsString)
-    else
-      if ((pcPestanas.ActivePage = tsVentas)) then
-        ShowMto(Self.Owner,
-                'Articulos',
-             unqryLinFacturasArticulos.FieldByName('CODIGO_ART_ART').AsString);
-  end;
+              FDmmProveedores.unqryLinFacturasArticulos.FieldByName(
+                'CODIGO_ART_ART').AsString);
 end;
 
 procedure TfrmMtoProveedores.btnIraClienteClick(Sender: TObject);

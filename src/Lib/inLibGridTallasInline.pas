@@ -586,7 +586,8 @@ begin
   iLinea := Lineas.FieldByName(FCfg.FieldLinea).AsInteger;
   iAc    := Lineas.FieldByName(FCfg.FieldConjuntoPivot).AsInteger;
   arr    := GetPosicionesConjunto(iAc);
-  LogSes(Format('Tallas.PersistirCeldaActiva: linea=%d pos=%d/%d iAc=%d Lineas.State=%d',
+  LogSes(Format(
+    'Tallas.PersistirCeldaActiva: linea=%d pos=%d/%d iAc=%d Lineas.State=%d',
                 [iLinea, iPos, Length(arr), iAc, Ord(Lineas.State)]));
   if iPos > Length(arr) then
   begin

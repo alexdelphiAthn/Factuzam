@@ -19,7 +19,8 @@ unit inMtoCajaSeleccionVale;
 
   Flujo:
   - Se carga el grid con vales de estado PENDIENTE (y no caducados).
-  - El usuario puede filtrar por código/barras escribiendo en el campo de búsqueda.
+  - El usuario puede filtrar por código/barras escribiendo en el campo de
+    búsqueda.
   - Al seleccionar un vale y pulsar Aceptar (o doble clic / Enter), se devuelve
     el vale al formulario llamante mediante el record TValeSeleccionado.
   - Se admite el paso de un PIN de seguridad (CVV) como validación extra.

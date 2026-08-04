@@ -1,4 +1,4 @@
-program SQLBuilder4DParserTests;
+﻿program SQLBuilder4DParserTests;
 {
 
   Delphi DUnit Test Project

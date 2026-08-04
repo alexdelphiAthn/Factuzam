@@ -1,4 +1,4 @@
-﻿Archivo;Linea;NombreAntiguo;NombreNuevo;Texto
+Archivo;Linea;NombreAntiguo;NombreNuevo;Texto
 "C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoAppParam.pas";409;"SUBKEY_PERFILES";"SUBKEY_USUPER";"SubKey   := qry.FieldByName('SUBKEY_PERFILES').AsString;"
 "C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoAppParam.pas";410;"VALUE_PERFILES";"VALUE_USUPER";"ValorStr := qry.FieldByName('VALUE_PERFILES').AsString;"
 "C:\DISCO_DURO\proyectos\Factuzam\src\Core\inMtoAppParam.pas";587;"USUARIO_GRUPO_PERFILES";"USUARIO_GRUPO_USUPER";"'SELECT DISTINCT USUARIO_GRUPO_PERFILES ' +"

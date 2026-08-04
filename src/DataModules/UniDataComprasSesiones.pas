@@ -113,7 +113,8 @@ type
     dsEmpresas: TDataSource;
     unqryFormasPago: TUniQuery;
     dsFormasPago: TDataSource;
-    // Lookup de temporadas (fza_propiedades_valores con ID_PROP_PV='TEMPORADA').
+    // Lookup de temporadas (fza_propiedades_valores con
+    // ID_PROP_PV='TEMPORADA').
     // Una por sesion; se propaga a fza_articulos_propiedades al materializar.
     unqryTemporadas: TUniQuery;
     dsTemporadas: TDataSource;
@@ -571,7 +572,8 @@ begin
     '        WHERE D.CODIGO_PRV_PRVKITD = K.CODIGO_PRV_PRVKIT ' +
     '          AND D.CODIGO_PRVKIT_PRVKITD = K.CODIGO_PRVKIT ' +
     '          AND D.CANTIDAD_PRVKITD > 0 ' +
-    '        ORDER BY D.ORDEN_PRVKITD, D.VALOR_DESTINO_PRVKITD LIMIT 1), ''''), ' +
+    '        ORDER BY D.ORDEN_PRVKITD, D.VALOR_DESTINO_PRVKITD LIMIT 1), ' +
+    '''''), ' +
     '    ''...'', ' +
     '    IFNULL((SELECT CONCAT(D.VALOR_DESTINO_PRVKITD, ''('', ' +
     '              TRIM(TRAILING ''.'' FROM TRIM(TRAILING ''0'' FROM ' +
@@ -584,7 +586,8 @@ begin
     '                 D.VALOR_DESTINO_PRVKITD DESC LIMIT 1), ''''))) ' +
     '    AS ETIQUETA_KIT ' +
     '  FROM fza_proveedores_kits K ' +
-    '  LEFT JOIN fza_atributos_conjuntos AC ON AC.ID_AC = K.ID_AC_TALLAS_PRVKIT ' +
+    '  LEFT JOIN fza_atributos_conjuntos AC ON AC.ID_AC = ' +
+    'K.ID_AC_TALLAS_PRVKIT ' +
     ' WHERE K.CODIGO_PRV_PRVKIT = :prv ' +
     ' ORDER BY K.ORDEN_PRVKIT, K.CODIGO_PRVKIT';
   unqryProveedores.Connection       := ConexionPrincipal;
@@ -653,11 +656,17 @@ begin
 end;
 
 procedure TdmComprasSesiones.unqryTablaGAfterInsert(DataSet: TDataSet);
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryTablaG.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryTablaG.FindField(ANombre);
+  end;
 begin
   inherited;
-  with unqryTablaG do
-  begin
-    FieldByName('FECHA_SES').AsDateTime := Date;
+  FieldByName('FECHA_SES').AsDateTime := Date;
     FieldByName('ESTADO_SES').AsString  := 'BORRADOR';
     FieldByName('MONEDA_SES').AsString  := 'EUR';
     FieldByName('TIPO_IVA_SES').AsString := 'N';
@@ -719,9 +728,8 @@ begin
       if sSerieDef <> '' then
         FieldByName('SERIE_SES').AsString := sSerieDef;
     end;
-    FieldByName('USUARIO_ALTA').AsString := IdentidadSesion.Usuario;
-    FieldByName('INSTANTE_ALTA').AsDateTime := Now;
-  end;
+  FieldByName('USUARIO_ALTA').AsString := IdentidadSesion.Usuario;
+  FieldByName('INSTANTE_ALTA').AsDateTime := Now;
   RefrescarAlmacenes(
     DataSet.FieldByName('CODIGO_EMP_SES').AsString);
 end;
@@ -733,7 +741,8 @@ var
 begin
   AjustarCamposDerivadosCabecera;
   inherited;
-  LogSes(Format('DM.unqryTablaGBeforePost: state=%d, SERIE=%s NUMERO=%s CONTADOR_LINEAS=%d',
+  LogSes(Format(
+    'DM.unqryTablaGBeforePost: state=%d, SERIE=%s NUMERO=%s CONTADOR_LINEAS=%d',
                 [Ord(unqryTablaG.State),
                  unqryTablaG.FieldByName('SERIE_SES').AsString,
                  unqryTablaG.FieldByName('NUMERO_SES').AsString,
@@ -779,6 +788,14 @@ var
   iNuevaLinea : Integer;
   sSerie      : string;
   sNumero     : string;
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqrySesionLin.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqrySesionLin.FindField(ANombre);
+  end;
 begin
   inherited;
   // Pedimos la siguiente LINEA al helper generico (inLibContadorLineas).
@@ -798,8 +815,10 @@ begin
   begin
     // Cabecera no localizada (caso raro: master aun no posteado, sin
     // SERIE/NUMERO). Fallback al patron antiguo CONTADOR+10 en memoria.
-    iNuevaLinea := unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger + 10;
-    LogSes(Format('  helper devolvio 0 (cabecera sin SERIE/NUMERO?), fallback LINEA=%d',
+    iNuevaLinea :=
+      unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger + 10;
+    LogSes(Format(
+      '  helper devolvio 0 (cabecera sin SERIE/NUMERO?), fallback LINEA=%d',
                   [iNuevaLinea]));
   end;
   LogSes(Format('DM.unqrySesionLinAfterInsert: nueva LINEA=%d', [iNuevaLinea]));
@@ -813,9 +832,7 @@ begin
   end;
   unqryTablaG.FieldByName('CONTADOR_LINEAS_SES').AsInteger := iNuevaLinea;
 
-  with unqrySesionLin do
-  begin
-    FieldByName('SERIE_SES_SESLIN').AsString  :=
+  FieldByName('SERIE_SES_SESLIN').AsString  :=
       unqryTablaG.FieldByName('SERIE_SES').AsString;
     FieldByName('NUMERO_SES_SESLIN').AsString :=
       unqryTablaG.FieldByName('NUMERO_SES').AsString;
@@ -843,10 +860,9 @@ begin
     // viene del proveedor al elegirlo, o del ultimo que el usuario eligio a
     // mano en una linea. Solo se propone; el usuario lo puede cambiar en la
     // linea igual que siempre.
-    if (FTallajeDefectoActual > 0) and
-       (FindField('ID_AC_PIVOT_SESLIN') <> nil) then
-      FieldByName('ID_AC_PIVOT_SESLIN').AsInteger := FTallajeDefectoActual;
-  end;
+  if (FTallajeDefectoActual > 0) and
+     (FindField('ID_AC_PIVOT_SESLIN') <> nil) then
+    FieldByName('ID_AC_PIVOT_SESLIN').AsInteger := FTallajeDefectoActual;
 end;
 
 procedure TdmComprasSesiones.unqrySesionLinBeforePost(DataSet: TDataSet);
@@ -857,10 +873,12 @@ var
   sNuevo  : string;
 begin
   inherited;
-  LogSes(Format('DM.unqrySesionLinBeforePost: state=%d, LINEA=%d, COD_TENT=%s, FAM=%s',
+  LogSes(Format(
+    'DM.unqrySesionLinBeforePost: state=%d, LINEA=%d, COD_TENT=%s, FAM=%s',
                 [Ord(unqrySesionLin.State),
                  unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger,
-                 unqrySesionLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString,
+                 unqrySesionLin.FieldByName(
+                   'CODIGO_ART_TENTATIVO_SESLIN').AsString,
                  unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').AsString]));
   // Linea sin articulo: cancelar silenciosamente. El cxGrid hace Post
   // automatico al navegar con flechas; si la linea es un placeholder
@@ -947,7 +965,8 @@ begin
       unqrySesionLin.FieldByName('ESDUPLICADO_SESLIN').AsString := 'N';
   end;
   CalcularTotalesLineaActual;
-  unqrySesionLin.FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
+  unqrySesionLin.FieldByName('USUARIO_MODIF').AsString :=
+    IdentidadSesion.Usuario;
   unqrySesionLin.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
 end;
 
@@ -1033,7 +1052,7 @@ begin
   try
     q.Connection := ConexionPrincipal;
     q.SQL.Text :=
-      'SELECT COUNT(*) AS N FROM fza_empresas_series ' +
+      'SELECT COUNT(*) AS N FROM vi_empresas_series ' +
       ' WHERE TIPO_DOC_EMPSER = ''SE'' ' +
       '   AND CODIGO_EMP_EMPSER = :emp ' +
       '   AND EMPSER = :ser';
@@ -1083,22 +1102,26 @@ begin
   sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString);
   if (sSerie = '') or (sEmpresa = '') then
     Exit;
-  with unstrdprcGetContadorSesion do
-  begin
-    Params.Clear;
-    Params.CreateParam(ftString, 'pserie',           ptInput);
-    Params.CreateParam(ftString, 'pTipoDoc',         ptInput);
-    Params.CreateParam(ftString, 'pEMPRESA_CONTADOR',ptInput);
-    Params.CreateParam(ftString, 'pUSUARIOMODIF',    ptInput);
-    Params.CreateParam(ftString, 'pcont',            ptOutput);
-    ParamByName('pserie').AsString            := sSerie;
-    ParamByName('pTipoDoc').AsString          := 'SE';
-    ParamByName('pEMPRESA_CONTADOR').AsString := sEmpresa;
-    ParamByName('pUSUARIOMODIF').AsString     := IdentidadSesion.Usuario;
-    ExecProc;
-    unqryTablaG.FieldByName('NUMERO_SES').AsString :=
-                                                  ParamByName('pcont').AsString;
-  end;
+  unstrdprcGetContadorSesion.Params.Clear;
+  unstrdprcGetContadorSesion.Params.CreateParam(
+    ftString, 'pserie', ptInput);
+  unstrdprcGetContadorSesion.Params.CreateParam(
+    ftString, 'pTipoDoc', ptInput);
+  unstrdprcGetContadorSesion.Params.CreateParam(
+    ftString, 'pEMPRESA_CONTADOR', ptInput);
+  unstrdprcGetContadorSesion.Params.CreateParam(
+    ftString, 'pUSUARIOMODIF', ptInput);
+  unstrdprcGetContadorSesion.Params.CreateParam(
+    ftString, 'pcont', ptOutput);
+  unstrdprcGetContadorSesion.ParamByName('pserie').AsString := sSerie;
+  unstrdprcGetContadorSesion.ParamByName('pTipoDoc').AsString := 'SE';
+  unstrdprcGetContadorSesion.ParamByName(
+    'pEMPRESA_CONTADOR').AsString := sEmpresa;
+  unstrdprcGetContadorSesion.ParamByName('pUSUARIOMODIF').AsString :=
+    IdentidadSesion.Usuario;
+  unstrdprcGetContadorSesion.ExecProc;
+  unqryTablaG.FieldByName('NUMERO_SES').AsString :=
+    unstrdprcGetContadorSesion.ParamByName('pcont').AsString;
 end;
 
 procedure TdmComprasSesiones.ChequearDuplicado(const ACodigoArt: string;

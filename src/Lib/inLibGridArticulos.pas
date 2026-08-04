@@ -29,7 +29,8 @@ unit inLibGridArticulos;
 interface
 
 uses
-  Winapi.Windows, System.SysUtils, System.Classes, System.Variants, System.Types,
+  Winapi.Windows, System.SysUtils, System.Classes, System.Variants,
+  System.Types,
   System.StrUtils, System.Generics.Collections, Data.DB, Uni, Vcl.Controls,
   Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Forms, cxGraphics,
   cxEdit, cxTextEdit, cxButtonEdit, cxGrid,
@@ -301,24 +302,21 @@ begin
   // dbNavigator pequeno embebido: navegar + insertar + borrar (el resto
   // oculto). Insertar/borrar lineas tambien desde aqui.
   FView.Navigator.Visible := True;
-  with FView.Navigator.Buttons do
-  begin
-    First.Visible := True;
-    Prior.Visible := True;
-    Next.Visible := True;
-    Last.Visible := True;
-    Insert.Visible := True;
-    Delete.Visible := True;
-    PriorPage.Visible := False;
-    NextPage.Visible := False;
-    Edit.Visible := False;
-    Post.Visible := False;
-    Cancel.Visible := False;
-    Refresh.Visible := False;
-    SaveBookmark.Visible := False;
-    GotoBookmark.Visible := False;
-    Filter.Visible := False;
-  end;
+  FView.Navigator.Buttons.First.Visible := True;
+  FView.Navigator.Buttons.Prior.Visible := True;
+  FView.Navigator.Buttons.Next.Visible := True;
+  FView.Navigator.Buttons.Last.Visible := True;
+  FView.Navigator.Buttons.Insert.Visible := True;
+  FView.Navigator.Buttons.Delete.Visible := True;
+  FView.Navigator.Buttons.PriorPage.Visible := False;
+  FView.Navigator.Buttons.NextPage.Visible := False;
+  FView.Navigator.Buttons.Edit.Visible := False;
+  FView.Navigator.Buttons.Post.Visible := False;
+  FView.Navigator.Buttons.Cancel.Visible := False;
+  FView.Navigator.Buttons.Refresh.Visible := False;
+  FView.Navigator.Buttons.SaveBookmark.Visible := False;
+  FView.Navigator.Buttons.GotoBookmark.Visible := False;
+  FView.Navigator.Buttons.Filter.Visible := False;
 end;
 
 procedure TGridArticulosLineas.MostrarColumnasAtributosArticulo(
@@ -401,24 +399,25 @@ begin
 end;
 
 procedure TGridArticulosLineas.CrearColumnaArticulo;
+var
+  Propiedades: TcxButtonEditProperties;
+  Boton: TcxEditButton;
 begin
   FColArticulo := FView.CreateColumn;
   FColArticulo.Caption := SCaptionColArticuloSku;
   FColArticulo.DataBinding.FieldName := FCampos.CodigoArt;
   FColArticulo.Width := 220;
   FColArticulo.PropertiesClass := TcxButtonEditProperties;
-  with TcxButtonEditProperties(FColArticulo.Properties) do
-  begin
-    Buttons.Clear;
-    with Buttons.Add do
-      Kind := bkEllipsis;
-    // Las lineas ya resueltas no se editan encima: se borra la linea o se usa
-    // el boton. Las lineas nuevas usan el combo editable por OnGetProperties.
-    ReadOnly := True;
-    OnValidate := FBusqueda.ArticuloValidate;
-    // El boton (ellipsis) abre el buscador de SKU.
-    OnButtonClick := FBusqueda.ArticuloButtonClick;
-  end;
+  Propiedades := TcxButtonEditProperties(FColArticulo.Properties);
+  Propiedades.Buttons.Clear;
+  Boton := Propiedades.Buttons.Add;
+  Boton.Kind := bkEllipsis;
+  // Las lineas ya resueltas no se editan encima: se borra la linea o se usa
+  // el boton. Las lineas nuevas usan el combo editable por OnGetProperties.
+  Propiedades.ReadOnly := True;
+  Propiedades.OnValidate := FBusqueda.ArticuloValidate;
+  // El boton (ellipsis) abre el buscador de SKU.
+  Propiedades.OnButtonClick := FBusqueda.ArticuloButtonClick;
   // Editor por registro: si la celda esta vacia y enfocada, se usa el
   // ExtLookupComboBox con busqueda incremental; si no, el ButtonEdit de
   // arriba. Mismo patron que inMtoCajaOpe.tvArticuloGetProperties.
@@ -476,6 +475,8 @@ procedure TGridArticulosLineas.CrearColumnasAtributo;
 var
   i: Integer;
   Col: TcxGridDBColumn;
+  Propiedades: TcxButtonEditProperties;
+  Boton: TcxEditButton;
 begin
   for i := 1 to 5 do
   begin
@@ -490,17 +491,13 @@ begin
     // caja. No usamos combo: el editor combo in-place del cxGrid se desparenta
     // y lanza EInvalidOperation.
     Col.PropertiesClass := TcxButtonEditProperties;
-    with TcxButtonEditProperties(Col.Properties) do
-    begin
-      ReadOnly := True;
-      Buttons.Clear;
-      with Buttons.Add do
-      begin
-        Default := True;
-        Kind := bkEllipsis;
-      end;
-      OnButtonClick := AtributoButtonClick;
-    end;
+    Propiedades := TcxButtonEditProperties(Col.Properties);
+    Propiedades.ReadOnly := True;
+    Propiedades.Buttons.Clear;
+    Boton := Propiedades.Buttons.Add;
+    Boton.Default := True;
+    Boton.Kind := bkEllipsis;
+    Propiedades.OnButtonClick := AtributoButtonClick;
     // Pinta el cuadradito de color en la celda (como caja/inventario).
     Col.OnCustomDrawCell := AtributoCustomDrawCell;
     FColAtributo[i] := Col;
@@ -557,7 +554,8 @@ end;
 // Muestra/oculta las columnas de atributo segun la variacion del articulo y
 // fija NUM_ATRIBUTOS + los nombres. Los valores del desplegable se cargan por
 // fila en ViewInitEdit.
-procedure TGridArticulosLineas.ActualizarColumnasAtributo(const ACodArt: string);
+procedure TGridArticulosLineas.ActualizarColumnasAtributo(
+  const ACodArt: string);
 var
   Atribs: TArray<TArticuloAtributo>;
   i: Integer;

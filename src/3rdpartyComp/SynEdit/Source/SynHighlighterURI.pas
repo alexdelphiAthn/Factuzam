@@ -1,4 +1,4 @@
-{-------------------------------------------------------------------------------
+ï»¿{-------------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -9,8 +9,8 @@ WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
 the specific language governing rights and limitations under the License.
 
 The Original Code is: SynHighlighterURI.pas, released 2003-04-10.
-The initial author of this file is Maël Hörz.
-Unicode translation by Maël Hörz.
+The initial author of this file is MaÃ«l HÃ¶rz.
+Unicode translation by MaÃ«l HÃ¶rz.
 All Rights Reserved.
 
 Contributors to the SynEdit project are listed in the Contributors.txt file.
@@ -28,7 +28,7 @@ of this file under either the MPL or the GPL.
 -------------------------------------------------------------------------------}
 {
 @abstract(Provides an URI syntax highlighter for SynEdit)
-@author(Maël Hörz)
+@author(MaÃ«l HÃ¶rz)
 @created(2003)
 @lastmod(2004-03-19)
 http://www.mh-net.de.vu

@@ -193,7 +193,8 @@ begin
                                   [lst.Count]);
       Application.ProcessMessages;
       generadas := dmmAlbaranes.FacturarAlbaranesLista(lst,
-                                                       chkAgruparPorCliente.Checked);
+                                                       chkAgruparPorCliente
+                                                       .Checked);
       lblEstado.Caption := Format(SCaptionGeneradosBorradores,
                                   [generadas]);
       ShowMessageFmt(SInfoBorradoresGenerados,

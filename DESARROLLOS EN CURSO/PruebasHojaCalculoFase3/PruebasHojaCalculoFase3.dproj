@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{382F67D2-9705-46EB-BC16-20EB82C7DA6C}</ProjectGuid>
         <MainSource>PruebasHojaCalculoFase3.dpr</MainSource>

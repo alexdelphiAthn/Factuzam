@@ -1,4 +1,4 @@
-﻿Aplicar cambios al codigo fuente
+Aplicar cambios al codigo fuente
 ================================
 
 Generado por Factuzam Normalizer.

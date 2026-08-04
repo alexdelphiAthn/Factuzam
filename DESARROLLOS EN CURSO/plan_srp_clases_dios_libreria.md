@@ -1,4 +1,4 @@
-﻿# Anexo SRP — Descomposición de las clases-dios de librería
+# Anexo SRP — Descomposición de las clases-dios de librería
 
 Fecha de la línea base: 30/07/2026.
 

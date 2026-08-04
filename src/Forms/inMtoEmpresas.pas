@@ -294,6 +294,7 @@ type
     dbmSeriesCODIGO_ALMACEN_SERIE: TcxGridDBColumn;
     dbmSeriesCODIGO_CAJA_SERIE: TcxGridDBColumn;
     dbmSeriesSERIE_SERIE: TcxGridDBColumn;
+    tvSeriesSERIE_TOKENIZADA_EMPSER: TcxGridDBColumn;
     dbmSeriesTIPODOC_SERIE: TcxGridDBColumn;
     dbmSeriesSUBITPO_SERIE: TcxGridDBColumn;
     dbmSeriesFECHA_DESDE_SERIE: TcxGridDBColumn;
@@ -305,6 +306,7 @@ type
     txtVERSION_INSTALACION_EMP: TcxDBTextEdit;
     btnGenerarInstalacionSif: TcxButton;
     chkRecargoEquivalenciaCompras: TcxDBCheckBox;
+    chkESTOKENS_CALENDARIO_NATURAL_EMP: TcxDBCheckBox;
     procedure tsFichaEnter(Sender: TObject);
     procedure chkAplicaRetencionesPropertiesChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -433,16 +435,16 @@ end;
 procedure TfrmMtoEmpresas.btnIraFacturaClick(Sender: TObject);
 var
   sNroFactura, sSerieFactura:String;
+  DataSetFactura: TDataSet;
 begin
   inherited;
-  with tvFacturacion.DataController.DataSet do
-  begin
-    if ((not(FieldByName('NUMERO_FAC').IsNull)) and
-        (not(FieldByName('SERIE_FAC').IsNull))
+  DataSetFactura := tvFacturacion.DataController.DataSet;
+    if ((not(DataSetFactura.FieldByName('NUMERO_FAC').IsNull)) and
+        (not(DataSetFactura.FieldByName('SERIE_FAC').IsNull))
        ) then
        begin
-          sNroFactura := FieldByName('NUMERO_FAC').AsString;
-          sSerieFactura := FieldByName('SERIE_FAC').AsString;
+          sNroFactura := DataSetFactura.FieldByName('NUMERO_FAC').AsString;
+          sSerieFactura := DataSetFactura.FieldByName('SERIE_FAC').AsString;
           ShowMto(Self.Owner,
                   ResolverCallFactura(
                     CrearResolutorDestinoFacturaUniDAC(
@@ -454,82 +456,75 @@ begin
      else
        ShowMto(Self.Owner,
                'Facturas');
-  end;
 end;
 
 procedure TfrmMtoEmpresas.btnAddIRPFClick(Sender: TObject);
 begin
   inherited;
-  with dmmEmpresas do
-  begin
-    if ((unqryTablaG.State = dsInsert) or
-        (unqryTablaG.State = dsEdit)) then
-      unqryTablaG.Post;
-    if ((unqryRetenciones.State = dsInsert) or
-        (unqryRetenciones.State = dsEdit)) then
-      unqryRetenciones.Post;
-    unqryRetenciones.Insert;
-  end;
+  if ((dmmEmpresas.unqryTablaG.State = dsInsert) or
+      (dmmEmpresas.unqryTablaG.State = dsEdit)) then
+    dmmEmpresas.unqryTablaG.Post;
+  if ((dmmEmpresas.unqryRetenciones.State = dsInsert) or
+      (dmmEmpresas.unqryRetenciones.State = dsEdit)) then
+    dmmEmpresas.unqryRetenciones.Post;
+  dmmEmpresas.unqryRetenciones.Insert;
 end;
 
 procedure TfrmMtoEmpresas.btnAddSerieClick(Sender: TObject);
 begin
   inherited;
-  with dmmEmpresas do
-  begin
-    if ((unqryTablaG.State = dsInsert) or
-        (unqryTablaG.State = dsEdit)) then
-      unqryTablaG.Post;
-    if ((unqrySeries.State = dsInsert) or
-        (unqrySeries.State = dsEdit)) then
-      unqrySeries.Post;
-    unqrySeries.Insert;
-  end;
+  if ((dmmEmpresas.unqryTablaG.State = dsInsert) or
+      (dmmEmpresas.unqryTablaG.State = dsEdit)) then
+    dmmEmpresas.unqryTablaG.Post;
+  if ((dmmEmpresas.unqrySeries.State = dsInsert) or
+      (dmmEmpresas.unqrySeries.State = dsEdit)) then
+    dmmEmpresas.unqrySeries.Post;
+  dmmEmpresas.unqrySeries.Insert;
 end;
 
 procedure TfrmMtoEmpresas.btnAddBancoClick(Sender: TObject);
 begin
   inherited;
-  with dmmEmpresas do
-  begin
-    AsegurarBancosAbierta;
-    if ((unqryTablaG.State = dsInsert) or
-        (unqryTablaG.State = dsEdit)) then
-      unqryTablaG.Post;
-    if ((unqryBancos.State = dsInsert) or
-        (unqryBancos.State = dsEdit)) then
-      unqryBancos.Post;
-    unqryBancos.Insert;
-  end;
+  dmmEmpresas.AsegurarBancosAbierta;
+  if ((dmmEmpresas.unqryTablaG.State = dsInsert) or
+      (dmmEmpresas.unqryTablaG.State = dsEdit)) then
+    dmmEmpresas.unqryTablaG.Post;
+  if ((dmmEmpresas.unqryBancos.State = dsInsert) or
+      (dmmEmpresas.unqryBancos.State = dsEdit)) then
+    dmmEmpresas.unqryBancos.Post;
+  dmmEmpresas.unqryBancos.Insert;
 end;
 
-// Crea una misma serie para todos los tipos de documento conocidos.
-// No duplica una serie generica solapada para tipo, subtipo y empresa.
+// Crea una serie tokenizada para todos los tipos de documento conocidos.
+// El almacen se aplica a todos; la caja, solo a los tipos indicados.
 procedure TfrmMtoEmpresas.btnCrearSeriesDocClick(Sender: TObject);
 const
   SUBTIPOS_FACTURA: array[0..2] of string = ('NORMAL', 'SIMPLIFICADA',
                                              'RECTIFICATIVA');
+  SUFIJOS_FACTURA: array[0..2] of string = ('N', '', 'R');
 var
   Tipos: TTiposDocumentoEmpresa;
-  TipoListado: string;
+  TipoListado: TTipoDocumentoEmpresa;
+  sAlmacen: string;
+  sCaja: string;
+  sCajaTipo: string;
   sEmpresa: string;
-  sSerie: string;
+  sSerieTokenizada: string;
   sTipo: string;
-  dtDesde: TDateTime;
-  dtHasta: TDateTime;
   iCreadas: Integer;
   iOmitidas: Integer;
   i: Integer;
 
-  procedure CrearSiFalta(const ATipo, ASubtipo: string);
+  procedure CrearSiFalta(
+    const ATipo, ASubtipo, ACajaTipo, ASerieTokenizada: string);
   begin
     if FRepositorioSeriesEmpresa.CrearSerieSiFalta(
       sEmpresa,
-      sSerie,
+      sAlmacen,
+      ACajaTipo,
+      ASerieTokenizada,
       ATipo,
       ASubtipo,
-      dtDesde,
-      dtHasta,
       IdentidadSesion.Usuario) then
       Inc(iCreadas)
     else
@@ -545,21 +540,41 @@ begin
     ShowMessage(SErrorEmpresaCrearSeriesNoSeleccionada)
   else
   begin
-    if TfrmModalSeriesDocumentos.Ejecutar(Self, sSerie,
-                                          dtDesde, dtHasta) then
+    if dsTablaG.DataSet.FieldByName(
+         'ESTOKENS_CALENDARIO_NATURAL_EMP').AsString <> 'S' then
+    begin
+      ShowMessage(SErrorSerieTokenizadaCalendarioNoNatural);
+    end
+    else if TfrmModalSeriesDocumentos.Ejecutar(
+      Self,
+      ConexionPrincipal,
+      sEmpresa,
+      sAlmacen,
+      sCaja,
+      sSerieTokenizada) then
     begin
       iCreadas := 0;
       iOmitidas := 0;
       Tipos := FRepositorioSeriesEmpresa.ListarTiposDocumento;
       for TipoListado in Tipos do
       begin
-        sTipo := Trim(TipoListado);
-        CrearSiFalta(sTipo, '');
+        sTipo := Trim(TipoListado.Codigo);
+        sCajaTipo := '';
+        if TipoListado.UsaCaja then
+        begin
+          sCajaTipo := sCaja;
+        end;
         if sTipo = 'FC' then
         begin
           for i := Low(SUBTIPOS_FACTURA) to High(SUBTIPOS_FACTURA) do
-            CrearSiFalta(sTipo, SUBTIPOS_FACTURA[i]);
-        end;
+            CrearSiFalta(
+              sTipo,
+              SUBTIPOS_FACTURA[i],
+              sCajaTipo,
+              sSerieTokenizada + SUFIJOS_FACTURA[i]);
+        end
+        else
+          CrearSiFalta(sTipo, '', sCajaTipo, sSerieTokenizada);
       end;
       dmmEmpresas.AsegurarSeriesAbierta;
       dmmEmpresas.unqrySeries.Refresh;
@@ -604,17 +619,16 @@ begin
   sCodigoEmpresa := '';
   if Assigned(dmmEmpresas) then
   begin
-    with dmmEmpresas.unqryTablaG do
+    if dmmEmpresas.unqryTablaG.Active and
+       (not dmmEmpresas.unqryTablaG.IsEmpty) then
     begin
-      if Active and (not IsEmpty) then
+      if (dmmEmpresas.unqryTablaG.State = dsInsert) or
+         (dmmEmpresas.unqryTablaG.State = dsEdit) then
       begin
-        if (State = dsInsert) or
-           (State = dsEdit) then
-        begin
-          Post;
-        end;
-        sCodigoEmpresa := Trim(FieldByName('CODIGO_EMP_EMP').AsString);
+        dmmEmpresas.unqryTablaG.Post;
       end;
+      sCodigoEmpresa := Trim(
+        dmmEmpresas.unqryTablaG.FieldByName('CODIGO_EMP_EMP').AsString);
     end;
   end;
   if sCodigoEmpresa = '' then
@@ -629,12 +643,10 @@ begin
         ParametrosApp,
         ConexionPrincipal,
         IdentidadSesion.Usuario, sCodigoEmpresa);
-      with dmmEmpresas.unqryTablaG do
-      begin
-        Close;
-        Open;
-        Locate('CODIGO_EMP_EMP', oEstado.CodigoEmpresa, []);
-      end;
+      dmmEmpresas.unqryTablaG.Close;
+      dmmEmpresas.unqryTablaG.Open;
+      dmmEmpresas.unqryTablaG.Locate(
+        'CODIGO_EMP_EMP', oEstado.CodigoEmpresa, []);
       ShowMessage(Format(SInfoInstalacionSifEmpresaDisponible,
                          [oEstado.RazonSocial, oEstado.Numero]));
     finally
@@ -783,10 +795,10 @@ end;
 procedure TfrmMtoEmpresas.btnIraClienteClick(Sender: TObject);
 begin
   inherited;
-  with tvFacturacion.DataController.DataSet do
   ShowMto(Self.Owner,
           'Clientes',
-          FieldByName('CODIGO_CLI_FAC').AsString);
+          tvFacturacion.DataController.DataSet.FieldByName(
+            'CODIGO_CLI_FAC').AsString);
 end;
 
 procedure TfrmMtoEmpresas.FormCreate(Sender: TObject);
@@ -820,19 +832,20 @@ begin
   oRegistro := ATvCertificados.Controller.FocusedRecord;
   if Assigned(oRegistro) then
   begin
-    with dmmEmpresas.unqryTablaG do
-    begin
-      Edit;
-      FieldByName('CODIGO_CERTIFICADO_EMP').AsString :=
+    dmmEmpresas.unqryTablaG.Edit;
+    dmmEmpresas.unqryTablaG.FieldByName(
+      'CODIGO_CERTIFICADO_EMP').AsString :=
         VarToStr(oRegistro.Values[COLUMNA_CER_NROSERIE]);
-      FieldByName('TITULAR_CERTIFICADO_EMP').AsString :=
+    dmmEmpresas.unqryTablaG.FieldByName(
+      'TITULAR_CERTIFICADO_EMP').AsString :=
         VarToStr(oRegistro.Values[COLUMNA_CER_TITULAR]);
-      FieldByName('TIPO_CERTIFICADO_EMP').AsString :=
+    dmmEmpresas.unqryTablaG.FieldByName(
+      'TIPO_CERTIFICADO_EMP').AsString :=
         VarToStr(oRegistro.Values[COLUMNA_CER_TIPO]);
-      FieldByName('FECHA_HASTA_CERTIFICADO_EMP').AsString :=
+    dmmEmpresas.unqryTablaG.FieldByName(
+      'FECHA_HASTA_CERTIFICADO_EMP').AsString :=
         VarToStr(oRegistro.Values[COLUMNA_CER_FECHAHASTA]);
-      Post;
-    end;
+    dmmEmpresas.unqryTablaG.Post;
   end;
 end;
 

@@ -1,4 +1,4 @@
-inherited TextReplaceDialog: TTextReplaceDialog
+﻿inherited TextReplaceDialog: TTextReplaceDialog
   Caption = 'Replace text'
   ClientHeight = 206
   OldCreateOrder = True

@@ -1,4 +1,4 @@
-﻿-- ========================================
+-- ========================================
 -- Backup generado: 31/07/2026 6:32:56
 -- Base de datos: Factuzam
 -- Demo regenerada: 31/07/2026 08:10:53 desde factuzam_original.sql; datos demo conservados.
@@ -18498,7 +18498,8 @@ INSERT INTO `fza_traducciones` (`ID_TRAD`, `CLAVE_TRAD`, `IDIOMA_TRAD`, `TEXTO_T
   (7366, 'DevExpress.scxInvalidCellDimension', 'es-ES', 'Dimensión de celda inválida', 'CXLOCALIZATION.res', 'S', '2026-07-30 17:58:25', 'root', '2026-07-31 06:28:38', 'root'),
   (7367, 'DevExpress.cxSFilterOperatorThisYear', 'es-ES', 'es este año', 'CXLOCALIZATION.res', 'S', '2026-07-30 17:58:25', 'root', '2026-07-31 06:28:38', 'root'),
   (7368, 'DevExpress.dxSBAR_COLOR_STR_0', 'es-ES', 'Negro', 'CXLOCALIZATION.res', 'S', '2026-07-30 17:58:25', 'root', '2026-07-31 06:28:38', 'root'),
-  (7372, 'Vcl.Consts.SErrorLoadingFile', 'es-ES', 'Error al cargar el archivo de configuración previamente guardado: %s¿Desea eliminarlo?', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 17:58:25', 'root', '2026-07-31 06:28:38', 'root'),
+  (7372, 'Vcl.Consts.SErrorLoadingFile', 'es-ES', 'Error al cargar el archivo de configuración previamente guardado: %s
+¿Desea eliminarlo?', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 17:58:25', 'root', '2026-07-31 06:28:38', 'root'),
   (7376, 'DevExpress.scxUDAssociated', 'es-ES', ' ya está asociado con', 'CXLOCALIZATION.res', 'S', '2026-07-30 17:58:25', 'root', '2026-07-31 06:28:38', 'root'),
   (7377, 'Vcl.Consts.SOutOfRange', 'es-ES', 'El valor debe estar entre %dy %d', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 17:58:25', 'root', '2026-07-31 06:28:38', 'root'),
   (7378, 'Vcl.Consts.SDdeMemErr', 'es-ES', 'Se produjo un error cuando DDE se quedó sin memoria ($0%x)', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 17:58:25', 'root', '2026-07-31 06:28:38', 'root'),
@@ -18651,7 +18652,8 @@ INSERT INTO `fza_traducciones` (`ID_TRAD`, `CLAVE_TRAD`, `IDIOMA_TRAD`, `TEXTO_T
   (7750, 'DevExpress.scxWeekday', 'es-ES', 'día laboral', 'CXLOCALIZATION.res', 'S', '2026-07-30 17:58:25', 'root', '2026-07-31 06:28:38', 'root'),
   (7752, 'DevExpress.dxSBAR_COLOR_STR_11', 'es-ES', 'Amarillo', 'CXLOCALIZATION.res', 'S', '2026-07-30 17:58:25', 'root', '2026-07-31 06:28:38', 'root'),
   (7754, 'DevExpress.scxSEditRepositoryRichEditItem', 'es-ES', 'RichEdit|Control RichEdit', 'CXLOCALIZATION.res', 'S', '2026-07-30 17:58:25', 'root', '2026-07-31 06:28:38', 'root'),
-  (7757, 'Vcl.Consts.SActionBarStyleMissing', 'es-ES', 'No hay unidad de estilo ActionBand presente en la cláusula de usos.Su aplicación debe incluir XPStyleActnCtrls, StdStyleActnCtrls o una unidad de estilo ActionBand de terceros en su cláusula de usos', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 17:58:25', 'root', '2026-07-31 06:28:38', 'root'),
+  (7757, 'Vcl.Consts.SActionBarStyleMissing', 'es-ES', 'No hay unidad de estilo ActionBand presente en la cláusula de usos.
+Su aplicación debe incluir XPStyleActnCtrls, StdStyleActnCtrls o una unidad de estilo ActionBand de terceros en su cláusula de usos', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 17:58:25', 'root', '2026-07-31 06:28:38', 'root'),
   (7758, 'DevExpress.scxMonths', 'es-ES', 'mes(es)', 'CXLOCALIZATION.res', 'S', '2026-07-30 17:58:25', 'root', '2026-07-31 06:28:38', 'root'),
   (7759, 'DevExpress.cxSEditPopupCircularReferencingError', 'es-ES', 'Referencia circular no permitida', 'CXLOCALIZATION.res', 'S', '2026-07-30 17:58:25', 'root', '2026-07-31 06:28:38', 'root'),
   (7761, 'Vcl.Consts.SRelativePanelCircularDependency', 'es-ES', 'Error de Panel relativo: Se detectó dependencia circular. No se pudo completar el diseño', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 17:58:25', 'root', '2026-07-31 06:28:38', 'root'),
@@ -25707,7 +25709,8 @@ INSERT INTO `fza_traducciones` (`ID_TRAD`, `CLAVE_TRAD`, `IDIOMA_TRAD`, `TEXTO_T
   (17965, 'inMtoVerifactuLog.TfrmMtoVerifactuLog.cxGrdDBTabPrinUSUARIO_LOG.Caption', 'en-GB', 'User', 'src/verifactu/inMtoVerifactuLog.dfm', 'S', '2026-07-30 19:25:51', 'root', '2026-07-30 20:35:04', 'D21'),
   (17966, 'inMtoVerifactuLog.TfrmMtoVerifactuLog.cxGrdDBTabPrinVERSION_LOG.Caption', 'en-GB', 'Version', 'src/verifactu/inMtoVerifactuLog.dfm', 'S', '2026-07-30 19:25:51', 'root', '2026-07-30 20:35:04', 'D21'),
   (17967, 'Vcl.Consts.SAbortButton', 'en-GB', 'Abort', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 19:25:51', 'root', '2026-07-30 20:35:04', 'D21'),
-  (17968, 'Vcl.Consts.SActionBarStyleMissing', 'en-GB', 'No ActionBand style unit present in the uses clause.Your application must include either XPStyleActnCtrls, StdStyleActnCtrls or a third party ActionBand style unit in its uses clause', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 19:25:51', 'root', '2026-07-30 20:35:04', 'D21'),
+  (17968, 'Vcl.Consts.SActionBarStyleMissing', 'en-GB', 'No ActionBand style unit present in the uses clause.
+Your application must include either XPStyleActnCtrls, StdStyleActnCtrls or a third party ActionBand style unit in its uses clause', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 19:25:51', 'root', '2026-07-30 20:35:04', 'D21'),
   (17969, 'Vcl.Consts.SActionManagerNotAssigned', 'en-GB', '%s ActionManager property has not been assigned', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 19:25:51', 'root', '2026-07-30 20:35:04', 'D21'),
   (17970, 'Vcl.Consts.SAddRemoveButtons', 'en-GB', '&Add or Remove Buttons', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 19:25:51', 'root', '2026-07-30 20:35:04', 'D21'),
   (17971, 'Vcl.Consts.SAllActions', 'en-GB', '(All Actions)', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 19:25:51', 'root', '2026-07-30 20:35:04', 'D21'),
@@ -25795,7 +25798,8 @@ INSERT INTO `fza_traducciones` (`ID_TRAD`, `CLAVE_TRAD`, `IDIOMA_TRAD`, `TEXTO_T
   (18052, 'Vcl.Consts.SEncodingLabel', 'en-GB', 'Encoding:', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 19:25:51', 'root', '2026-07-30 20:35:04', 'D21'),
   (18053, 'Vcl.Consts.SErrorActionManagerNotAssigned', 'en-GB', 'ActionManager must first be assigned', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 19:25:51', 'root', '2026-07-30 20:35:04', 'D21'),
   (18054, 'Vcl.Consts.SErrorDownloadingURL', 'en-GB', 'Error downloading URL: %s', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 19:25:51', 'root', '2026-07-30 20:35:04', 'D21'),
-  (18055, 'Vcl.Consts.SErrorLoadingFile', 'en-GB', 'Error loading previously saved settings file: %sWould you like to delete it?', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 19:25:51', 'root', '2026-07-30 20:35:04', 'D21'),
+  (18055, 'Vcl.Consts.SErrorLoadingFile', 'en-GB', 'Error loading previously saved settings file: %s
+Would you like to delete it?', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 19:25:51', 'root', '2026-07-30 20:35:04', 'D21'),
   (18056, 'Vcl.Consts.SErrorSettingCount', 'en-GB', 'Error setting %s.Count', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 19:25:51', 'root', '2026-07-30 20:35:04', 'D21'),
   (18057, 'Vcl.Consts.SErrorSettingPath', 'en-GB', 'Error setting path: "%s"', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 19:25:51', 'root', '2026-07-30 20:35:04', 'D21'),
   (18058, 'Vcl.Consts.SExecute', 'en-GB', 'execute', 'src/vcl37/Vcl.Consts.pas', 'S', '2026-07-30 19:25:51', 'root', '2026-07-30 20:35:04', 'D21'),

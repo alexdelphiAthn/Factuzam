@@ -30,14 +30,20 @@
       'WHERE'
       '  `ID_DEPOSITO_DEP` = :`ID_DEPOSITO_DEP`')
     SQLRecCount.Strings = (
-      'SELECT COUNT(*) FROM fza_depositos_cliente')
+      'SELECT COUNT(*) FROM fza_depositos_cliente'
+      'WHERE CODIGO_EMP_DEP = :EMPRESA'
+      'AND CODIGO_ALM_DEP = :ALMACEN'
+      'AND CODIGO_CAJA_DEP = :CAJA')
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT *'
       'FROM fza_depositos_cliente'
+      'WHERE CODIGO_EMP_DEP = :EMPRESA'
+      'AND CODIGO_ALM_DEP = :ALMACEN'
+      'AND CODIGO_CAJA_DEP = :CAJA'
       'ORDER BY FECHA_CREACION_DEP DESC'
       '')
-    Active = True
+    Active = False
     Left = 24
   end
 end

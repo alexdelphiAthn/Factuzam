@@ -1,4 +1,4 @@
-﻿# Fase 6AA — diagnóstico de metadata de `TfrmMtoGen`
+# Fase 6AA — diagnóstico de metadata de `TfrmMtoGen`
 
 Fecha: 28/07/2026. D2.6, sexto fascículo y recorrido D2 terminados.
 Sin commit.

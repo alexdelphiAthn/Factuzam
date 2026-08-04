@@ -670,13 +670,10 @@ end;
 procedure TLinFac.CopyToObjectFac;
 begin
   //if not Assigned(_unqryFac) then Exit;
-  with _unqryFac do
-  begin
-    _dPorIvaN := FieldByName(fPorIvaN).AsFloat;
-    _dPorIvaR := FieldByName(fPorIVAR).AsFloat;
-    _dPorIvaS := FieldByName(fPorIVAS).AsFloat;
-    _dPorIVAE := FieldByName(fPorIVAE).AsFloat;
-  end;
+  _dPorIvaN := _unqryFac.FieldByName(fPorIvaN).AsFloat;
+  _dPorIvaR := _unqryFac.FieldByName(fPorIVAR).AsFloat;
+  _dPorIvaS := _unqryFac.FieldByName(fPorIVAS).AsFloat;
+  _dPorIVAE := _unqryFac.FieldByName(fPorIVAE).AsFloat;
 end;
 
 procedure TLinFac.SetInit(AUnqryLin: TDataset);
@@ -848,13 +845,19 @@ end;
 procedure TLinFac.SetTipoIva(const Value: String);
 var
   dPorcen: Currency;
+  function FieldByName(const Nombre: string): TField;
+  begin
+    Result := _unqryFac.FieldByName(Nombre);
+  end;
+  function FindField(const Nombre: string): TField;
+  begin
+    Result := _unqryFac.FindField(Nombre);
+  end;
 begin
   _sTipIVa := Value;
   dPorcen := 0;
   if Assigned(_unqryFac) then
   begin
-    with _unqryFac do
-    begin
       case IndexStr(_sTipIVA, ['N', 'R', 'S', 'E']) of
         0: if FindField(fPorIvaN) <> nil then
              dPorcen := FieldByName(fPorIvaN).AsCurrency;
@@ -865,7 +868,6 @@ begin
         3: if FindField(fPorIVAE) <> nil then
              dPorcen := FieldByName(fPorIVAE).AsCurrency;
       end;
-    end;
   end;
   Self.PorIva := dPorcen;
 end;
@@ -946,9 +948,15 @@ begin
 end;
 
 procedure TFacturaTotales.LeerDatosFactura;
-begin
-  with _unqryFac do
+  function FieldByName(const Nombre: string): TField;
   begin
+    Result := _unqryFac.FieldByName(Nombre);
+  end;
+  function FindField(const Nombre: string): TField;
+  begin
+    Result := _unqryFac.FindField(Nombre);
+  end;
+begin
     _fechaFactura      := FieldByName('FECHA_FAC').AsDateTime;
     _codigoEmpresa := FieldByName('CODIGO_EMP_FAC').AsString;
     _configuracion.EsFacturaSimplificada :=
@@ -981,16 +989,17 @@ begin
     _grupoZonaIVA := FieldByName('GRUPO_ZONA_IVA_EMPRESA_FAC').AsString;
     _CodigoIVA    := FieldByName('CODIGO_IVA_FAC').AsString;
     _dPorRetencion := FieldByName('PORCENTAJE_RETENCION_FAC').AsFloat;
-  end;
   LeerPorcentajesDesdeFactura;
 end;
 
 procedure TFacturaTotales.LeerPorcentajesDesdeFactura;
+  function FieldByName(const Nombre: string): TField;
+  begin
+    Result := _unqryFac.FieldByName(Nombre);
+  end;
 begin
   if not Assigned(_unqryFac) or not _unqryFac.Active then
     Exit;
-  with _unqryFac do
-  begin
     _porcentajes.IVANormal := FieldByName('PORCENTAJE_IVAN_FAC').AsFloat;
     _porcentajes.IVAReducido := FieldByName('PORCENTAJE_IVAR_FAC').AsFloat;
     _porcentajes.IVASuperReducido := FieldByName('PORCENTAJE_IVAS_FAC').AsFloat;
@@ -1000,7 +1009,6 @@ begin
     _porcentajes.REcReducido := FieldByName('PORCENTAJE_RER_FAC').AsFloat;
     _porcentajes.REcSuperReducido := FieldByName('PORCENTAJE_RES_FAC').AsFloat;
     _porcentajes.REcExento := FieldByName('PORCENTAJE_REE_FAC').AsFloat;
-  end;
 end;
 
 procedure TFacturaTotales.CargarConfiguracionIVA(sGrupoZona: string);
@@ -1364,10 +1372,17 @@ begin
 end;
 
 procedure TFacturaTotales.ActualizarTotalesEnDataSet;
-begin
-  with _unqryFac do
+  function FieldByName(const Nombre: string): TField;
   begin
-    if State = dsBrowse then Edit;
+    Result := _unqryFac.FieldByName(Nombre);
+  end;
+  function FindField(const Nombre: string): TField;
+  begin
+    Result := _unqryFac.FindField(Nombre);
+  end;
+begin
+    if _unqryFac.State = dsBrowse then
+      _unqryFac.Edit;
     // Bases imponibles
     FieldByName('TOTAL_BASEI_IVAN_FAC').AsFloat :=
                                          _totales.IVAN.BaseImponible;
@@ -1412,7 +1427,6 @@ begin
     FieldByName('PORCENTAJE_IVAS_FAC').AsFloat :=
                                               _porcentajes.IVASuperReducido;
     FieldByName('PORCENTAJE_IVAE_FAC').AsFloat := _porcentajes.IVAExento;
-  end;
 end;
 
 procedure TFacturaTotales.ValidarConfiguracion;

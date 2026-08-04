@@ -295,7 +295,8 @@ type
     procedure unqryLineasAfterOpenHook(DataSet: TDataSet);
     procedure PersistirPreferenciaPivote;
     function  RecogerCeldasARecibirVertical(
-                                const ACodigoAlm: string): TArray<TCeldaARecibir>;
+                                const ACodigoAlm: string):
+                                TArray<TCeldaARecibir>;
     // Hook unificado para OnEditValueChanged de columnas talla: en
     // pivote lo resuelve la libreria de compras; fuera de pivote
     // delega en el gestor de tallas como antes.
@@ -1854,7 +1855,8 @@ begin
   if (dmmPedidosCompra = nil) or (colLineaPedcARecibir = nil) then Exit;
   ds := dmmPedidosCompra.unqryPedidosCompraLineas;
   if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
-  sAlmCab := dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
+  sAlmCab :=
+    dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
   idxCol := colLineaPedcARecibir.Index;
   bk := ds.GetBookmark;
   ds.DisableControls;
@@ -1892,7 +1894,8 @@ begin
 end;
 
 function TfrmMtoPedidosCompra.RecogerCeldasARecibirVertical(
-                                  const ACodigoAlm: string): TArray<TCeldaARecibir>;
+                                  const ACodigoAlm: string):
+                                  TArray<TCeldaARecibir>;
 var
   ds: TUniQuery;
   res: TList<TCeldaARecibir>;
@@ -1907,7 +1910,8 @@ begin
   if (dmmPedidosCompra = nil) or (colLineaPedcARecibir = nil) then Exit;
   ds := dmmPedidosCompra.unqryPedidosCompraLineas;
   if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
-  sAlmCab := dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
+  sAlmCab :=
+    dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
   idxCol := colLineaPedcARecibir.Index;
   res := TList<TCeldaARecibir>.Create;
   bk := ds.GetBookmark;
@@ -2158,7 +2162,8 @@ begin
     // La temporada del pedido se hereda en el modal. Si la cabecera no
     // tiene (NULL) cae a 0 y el combo queda en blanco.
     form.IdPvTemporadaDefecto :=
-      dmmPedidosCompra.unqryTablaG.FieldByName('ID_PV_TEMPORADA_PEDC').AsInteger;
+      dmmPedidosCompra.unqryTablaG.FieldByName(
+        'ID_PV_TEMPORADA_PEDC').AsInteger;
     // Almacen por defecto del modal: el de la primera celda con
     // cantidad 'A recibir' > 0 (sea en pivote expandido o en modo
     // vertical). Si el usuario no ha tecleado nada todavia, caemos al
@@ -2233,7 +2238,8 @@ begin
         dmmPedidosCompra.unqryTablaG.Refresh;
         dmmPedidosCompra.unqryPedidosCompraLineas.Refresh;
         // Refrescar el grid de la pestania "Albaranes" para que aparezca
-        // el albaran recien creado / incorporado (es detail del pedido,// no se refresca solo al hacer Refresh del master).
+        // el albaran recien creado / incorporado (es detail del pedido,// no se
+        // refresca solo al hacer Refresh del master).
         if dmmPedidosCompra.unqryAlbaranesPedc.Active then
           dmmPedidosCompra.unqryAlbaranesPedc.Close;
         dmmPedidosCompra.unqryAlbaranesPedc.Open;

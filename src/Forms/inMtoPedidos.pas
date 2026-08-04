@@ -1224,7 +1224,8 @@ var
 begin
   inherited;
   // Al salir del grid hacia la cabecera, la linea vacia auto-anadida
-  // (AsegurarPrimeraLineaPedido) se cancela. Si quedara en dsInsert,// cualquier Edit de la cabecera (p.ej. elegir almacen) fuerza su Post
+  // (AsegurarPrimeraLineaPedido) se cancela. Si quedara en dsInsert,//
+  // cualquier Edit de la cabecera (p.ej. elegir almacen) fuerza su Post
   // via CheckBrowseMode del master-detail y choca con la guarda de
   // linea sin articulo (bucle contador del 07/07/2026).
   if Assigned(dmmPedidos) then
@@ -1322,7 +1323,8 @@ begin
     tvPedidosLineas.OnFocusedRecordChanged := nil;
     tvPedidosLineas.OnFocusedItemChanged := nil;
     tvPedidosLineas.OnCustomDrawCell := nil;
-    // Las columnas del modo saliente guardan handlers (OnGetProperties,// OnCustomDrawCell...) del objeto que se libera en la linea de abajo.
+    // Las columnas del modo saliente guardan handlers (OnGetProperties,//
+    // OnCustomDrawCell...) del objeto que se libera en la linea de abajo.
     // Se eliminan ANTES: el repintado que provoca DesempaquetarAtributos-
     // Lineas llamaria a un modo muerto (AV en ArtGetProperties 07/07/26).
     tvPedidosLineas.ClearItems;
@@ -1438,16 +1440,17 @@ procedure TfrmMtoPedidos.CrearColumnasHostPedido;
     Result.Options.Editing := AEditable;
   end;
   procedure FormatearMoneda(ACol: TcxGridDBColumn);
+  var
+    Propiedades: TcxCurrencyEditProperties;
   begin
     ACol.PropertiesClass := TcxCurrencyEditProperties;
-    with TcxCurrencyEditProperties(ACol.Properties) do
-    begin
-      DisplayFormat := '0.00 ' + #8364;
-      UseDisplayFormatWhenEditing := True;
-    end;
+    Propiedades := TcxCurrencyEditProperties(ACol.Properties);
+    Propiedades.DisplayFormat := '0.00 ' + #8364;
+    Propiedades.UseDisplayFormatWhenEditing := True;
   end;
 var
   ColCant, ColTipo, ColLinea, ColAAlbaranar, ColImpIncl: TcxGridDBColumn;
+  PropiedadesCheck: TcxCheckBoxProperties;
 begin
   // Columnas propias del pedido tras el ClearItems del contrato.
   ColLinea := Col('Línea', 'LINEA_PEDLIN', 60, False);
@@ -1472,12 +1475,10 @@ begin
   Col('Tarifa', 'CODIGO_TAR_PEDLIN', 70, False);
   ColImpIncl := Col('Imp. incl.', 'ESIMP_INCL_TARIFA_PEDLIN', 75, False);
   ColImpIncl.PropertiesClass := TcxCheckBoxProperties;
-  with TcxCheckBoxProperties(ColImpIncl.Properties) do
-  begin
-    ReadOnly := True;
-    ValueChecked := 'S';
-    ValueUnchecked := 'N';
-  end;
+  PropiedadesCheck := TcxCheckBoxProperties(ColImpIncl.Properties);
+  PropiedadesCheck.ReadOnly := True;
+  PropiedadesCheck.ValueChecked := 'S';
+  PropiedadesCheck.ValueUnchecked := 'N';
   FormatearMoneda(Col('Total', 'TOTAL_PEDLIN', 95, False));
   Col('Almacén', 'CODIGO_ALMACEN_PEDLIN', 75, True);
   // Orden normal del documento: la LINEA delante del bloque de
@@ -1496,7 +1497,8 @@ end;
 procedure TfrmMtoPedidos.ModoEntradaResuelto(const ACodArt, ASku,
   ADescripcion: string; ACompleto: Boolean);
 begin
-  // El flujo fiscal clasico del pedido (tarifa de cabecera,IVA,// precios,total y CODIGOPRODPS para el albaraneado) se reaprovecha
+  // El flujo fiscal clasico del pedido (tarifa de cabecera,IVA,// precios,total
+  // y CODIGOPRODPS para el albaraneado) se reaprovecha
   // tal cual: AplicarArticuloPedido acepta articulo o SKU.
   if ACompleto and (ASku <> '') then
     AplicarArticuloPedido(ASku);

@@ -39,6 +39,13 @@ type
                                AValorRedondeo: Double;
                                AValorMenos: Double;
                                EsRedondearArriba: Boolean): Double;
+    procedure ConfigurarConsultasAplicacion(
+      AConsultaBusca, AConsultaMarca, AConsultaUnico: TUniQuery);
+    function AplicarLineaTarifa(
+      AConsultaBusca, AConsultaExec, AConsultaMarca,
+      AConsultaUnico: TUniQuery): Boolean;
+    procedure AplicarVentanaDescuento(AConsulta: TUniQuery);
+    procedure MarcarSesionAplicada(AConsulta: TUniQuery);
     procedure ConfigurarQueries;
   public
     unqryLineas  : TUniQuery;
@@ -348,213 +355,235 @@ begin
   end;
 end;
 
+procedure TdmTarifasCambios.ConfigurarConsultasAplicacion(
+  AConsultaBusca, AConsultaMarca, AConsultaUnico: TUniQuery);
+begin
+  AConsultaBusca.SQL.Text :=
+    'SELECT CODIGO_UNICO_ARTTAR ' +
+    'FROM fza_articulos_tarifas ' +
+    'WHERE CODIGO_ART_ARTTAR = :ART ' +
+    'AND COALESCE(CODIGO_UNIDAD_ARTTAR, '''') = :SKU ' +
+    'AND CODIGO_TAR_ARTTAR = :TAR ' +
+    'AND ESACTIVO_ARTTAR = ''S'' ' +
+    'ORDER BY FECHA_DESDE_ARTTAR DESC, CODIGO_UNICO_ARTTAR DESC ' +
+    'LIMIT 1';
+  AConsultaMarca.SQL.Text :=
+    'UPDATE fza_tarifas_cambios_lineas SET ' +
+    'ESTADO_TARCLIN = ''APLICADA'', MENSAJE_TARCLIN = :MENSAJE, ' +
+    'CODIGO_UNICO_ARTTAR_TARCLIN = :UNICO, ' +
+    'INSTANTE_APLICACION_TARCLIN = NOW(), USUARIO_MODIF = :USUARIO, ' +
+    'INSTANTE_MODIF = NOW() WHERE ID_TARCLIN = :ID';
+  AConsultaUnico.SQL.Text :=
+    'SELECT LAST_INSERT_ID() AS CODIGO_UNICO_ARTTAR';
+end;
+
+function TdmTarifasCambios.AplicarLineaTarifa(
+  AConsultaBusca, AConsultaExec, AConsultaMarca,
+  AConsultaUnico: TUniQuery): Boolean;
+var
+  EsInsertar: Boolean;
+  iUnico: Integer;
+  sArticulo: string;
+  sSku: string;
+  sTarifa: string;
+begin
+  Result := False;
+  if SameText(unqryLineas.FieldByName(
+    'ESAPLICAR_TARCLIN').AsString, 'S') then
+  begin
+    sArticulo := unqryLineas.FieldByName('CODIGO_ART_TARCLIN').AsString;
+    sSku := unqryLineas.FieldByName(
+      'CODIGO_UNIDAD_SKU_TARCLIN').AsString;
+    sTarifa := unqryLineas.FieldByName(
+      'CODIGO_TAR_DESTINO_TARCLIN').AsString;
+    AConsultaBusca.Close;
+    AConsultaBusca.ParamByName('ART').AsString := sArticulo;
+    AConsultaBusca.ParamByName('SKU').AsString := sSku;
+    AConsultaBusca.ParamByName('TAR').AsString := sTarifa;
+    AConsultaBusca.Open;
+    EsInsertar := AConsultaBusca.IsEmpty;
+    if EsInsertar then
+    begin
+      iUnico := 0;
+      AConsultaExec.SQL.Text :=
+        'INSERT INTO fza_articulos_tarifas ' +
+        '(CODIGO_ART_ARTTAR, CODIGO_UNIDAD_ARTTAR, ' +
+        'CODIGO_TAR_ARTTAR, ESACTIVO_ARTTAR, PRECIO_SALIDA_ARTTAR, ' +
+        'PRECIO_FINAL_ARTTAR, PRECIO_DTO_ARTTAR, ' +
+        'PORCENTAJE_DTO_ARTTAR, FECHA_DESDE_ARTTAR, ' +
+        'FECHA_HASTA_ARTTAR, USUARIO_ALTA, USUARIO_MODIF, ' +
+        'INSTANTE_ALTA) VALUES (:ART, :SKU, :TAR, ''S'', :SALIDA, ' +
+        ':FINAL, :DTO, :PORC_DTO, :DESDE, :HASTA, :USUARIO, ' +
+        ':USUARIO, NOW())';
+      AConsultaExec.ParamByName('ART').AsString := sArticulo;
+      AConsultaExec.ParamByName('SKU').AsString := sSku;
+      AConsultaExec.ParamByName('TAR').AsString := sTarifa;
+    end
+    else
+    begin
+      iUnico := AConsultaBusca.FieldByName(
+        'CODIGO_UNICO_ARTTAR').AsInteger;
+      AConsultaExec.SQL.Text :=
+        'UPDATE fza_articulos_tarifas SET ' +
+        'PRECIO_SALIDA_ARTTAR = :SALIDA, PRECIO_FINAL_ARTTAR = :FINAL, ' +
+        'PRECIO_DTO_ARTTAR = :DTO, PORCENTAJE_DTO_ARTTAR = :PORC_DTO, ' +
+        'FECHA_DESDE_ARTTAR = :DESDE, FECHA_HASTA_ARTTAR = :HASTA, ' +
+        'USUARIO_MODIF = :USUARIO, INSTANTE_MODIF = NOW() ' +
+        'WHERE CODIGO_UNICO_ARTTAR = :UNICO';
+      AConsultaExec.ParamByName('UNICO').AsInteger := iUnico;
+    end;
+    AConsultaExec.ParamByName('SALIDA').AsFloat :=
+      LeerFloatLinea('PRECIO_NUEVO_TARCLIN');
+    AConsultaExec.ParamByName('FINAL').AsFloat :=
+      LeerFloatLinea('PRECIO_FINAL_NUEVO_TARCLIN');
+    AConsultaExec.ParamByName('DTO').AsFloat :=
+      LeerFloatLinea('PRECIO_DTO_NUEVO_TARCLIN');
+    AConsultaExec.ParamByName('PORC_DTO').AsFloat :=
+      LeerFloatLinea('PORCENTAJE_DTO_NUEVO_TARCLIN');
+    if CampoCabecera('FECHA_DESDE_TARC').IsNull then
+      AConsultaExec.ParamByName('DESDE').AsDateTime := Date
+    else
+      AConsultaExec.ParamByName('DESDE').AsDateTime :=
+        CampoCabecera('FECHA_DESDE_TARC').AsDateTime;
+    if CampoCabecera('FECHA_HASTA_TARC').IsNull then
+      AConsultaExec.ParamByName('HASTA').Clear
+    else
+      AConsultaExec.ParamByName('HASTA').AsDateTime :=
+        CampoCabecera('FECHA_HASTA_TARC').AsDateTime;
+    AConsultaExec.ParamByName('USUARIO').AsString :=
+      IdentidadSesion.Usuario;
+    AConsultaExec.Execute;
+    if EsInsertar then
+    begin
+      AConsultaUnico.Close;
+      AConsultaUnico.Open;
+      iUnico := AConsultaUnico.FieldByName(
+        'CODIGO_UNICO_ARTTAR').AsInteger;
+    end;
+    AConsultaMarca.ParamByName('MENSAJE').AsString := 'Aplicada';
+    AConsultaMarca.ParamByName('UNICO').AsInteger := iUnico;
+    AConsultaMarca.ParamByName('USUARIO').AsString :=
+      IdentidadSesion.Usuario;
+    AConsultaMarca.ParamByName('ID').AsInteger :=
+      unqryLineas.FieldByName('ID_TARCLIN').AsInteger;
+    AConsultaMarca.Execute;
+    Result := True;
+  end;
+end;
+
+procedure TdmTarifasCambios.AplicarVentanaDescuento(
+  AConsulta: TUniQuery);
+var
+  fDesde: TField;
+  fHasta: TField;
+begin
+  fDesde := unqryTablaG.FindField('FECHA_DESDE_DTO_TARC');
+  fHasta := unqryTablaG.FindField('FECHA_HASTA_DTO_TARC');
+  if Assigned(fDesde) and Assigned(fHasta) and
+    ((not fDesde.IsNull) or (not fHasta.IsNull)) then
+  begin
+    AConsulta.SQL.Text :=
+      'UPDATE fza_tarifas SET FECHA_DESDE_DTO_TAR = :DESDE_DTO, ' +
+      'FECHA_HASTA_DTO_TAR = :HASTA_DTO, USUARIO_MODIF = :USUARIO, ' +
+      'INSTANTE_MODIF = NOW() WHERE CODIGO_TAR_ARTTAR = :TAR';
+    if fDesde.IsNull then
+      AConsulta.ParamByName('DESDE_DTO').Clear
+    else
+      AConsulta.ParamByName('DESDE_DTO').AsDateTime := fDesde.AsDateTime;
+    if fHasta.IsNull then
+      AConsulta.ParamByName('HASTA_DTO').Clear
+    else
+      AConsulta.ParamByName('HASTA_DTO').AsDateTime := fHasta.AsDateTime;
+    AConsulta.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
+    AConsulta.ParamByName('TAR').AsString :=
+      unqryTablaG.FieldByName('CODIGO_TAR_DESTINO_TARC').AsString;
+    AConsulta.Execute;
+  end;
+end;
+
+procedure TdmTarifasCambios.MarcarSesionAplicada(
+  AConsulta: TUniQuery);
+begin
+  AConsulta.SQL.Text :=
+    'UPDATE fza_tarifas_cambios SET ESTADO_TARC = ''APLICADA'', ' +
+    'INSTANTE_APLICACION_TARC = NOW(), USUARIO_APLICACION_TARC = ' +
+    ':USUARIO, USUARIO_MODIF = :USUARIO, INSTANTE_MODIF = NOW() ' +
+    'WHERE CODIGO_TARC = :CODIGO';
+  AConsulta.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
+  AConsulta.ParamByName('CODIGO').AsInteger :=
+    unqryTablaG.FieldByName('CODIGO_TARC').AsInteger;
+  AConsulta.Execute;
+end;
+
 function TdmTarifasCambios.AplicarSesionActual(
   out AMensaje: string): Integer;
 var
-  qryBusca   : TUniQuery;
-  qryExec    : TUniQuery;
-  qryMarca   : TUniQuery;
-  qryUnico   : TUniQuery;
-  oConnLocal : TUniConnection;
-  iUnico     : Integer;
-  sArt       : string;
-  sSku       : string;
-  sTar       : string;
-  dSalida    : Double;
-  dFinal     : Double;
-  dDto       : Double;
-  dPorcDto   : Double;
-  EsInsertar : Boolean;
-  fDesdeDto  : TField;
-  fHastaDto  : TField;
+  EsTransaccionPropia: Boolean;
+  oConexion: TUniConnection;
+  qryBusca: TUniQuery;
+  qryExec: TUniQuery;
+  qryMarca: TUniQuery;
+  qryUnico: TUniQuery;
 begin
   Result := 0;
   AMensaje := '';
   if (not unqryTablaG.Active) or unqryTablaG.IsEmpty then
     AMensaje := 'No hay ninguna sesion activa.'
   else if SameText(unqryTablaG.FieldByName('ESTADO_TARC').AsString,
-                   'APLICADA') then
+    'APLICADA') then
     AMensaje := 'La sesion ya esta aplicada.'
   else if (not unqryLineas.Active) or unqryLineas.IsEmpty then
     AMensaje := 'La sesion no tiene lineas.'
   else
   begin
-    qryBusca := TUniQuery.Create(nil);
-    qryExec := TUniQuery.Create(nil);
-    qryMarca := TUniQuery.Create(nil);
-    qryUnico := TUniQuery.Create(nil);
+    qryBusca := nil;
+    qryExec := nil;
+    qryMarca := nil;
+    qryUnico := nil;
     try
-      oConnLocal := unqryTablaG.Connection as TUniConnection;
-      qryBusca.Connection := unqryTablaG.Connection;
-      qryExec.Connection := unqryTablaG.Connection;
-      qryMarca.Connection := unqryTablaG.Connection;
-      qryUnico.Connection := unqryTablaG.Connection;
-      qryBusca.SQL.Text :=
-        'SELECT CODIGO_UNICO_ARTTAR ' +
-        '  FROM fza_articulos_tarifas ' +
-        ' WHERE CODIGO_ART_ARTTAR = :ART ' +
-        '   AND COALESCE(CODIGO_UNIDAD_ARTTAR, '''') = :SKU ' +
-        '   AND CODIGO_TAR_ARTTAR = :TAR ' +
-        '   AND ESACTIVO_ARTTAR = ''S'' ' +
-        ' ORDER BY FECHA_DESDE_ARTTAR DESC, CODIGO_UNICO_ARTTAR DESC ' +
-        ' LIMIT 1';
-      qryMarca.SQL.Text :=
-        'UPDATE fza_tarifas_cambios_lineas SET ' +
-        '  ESTADO_TARCLIN = ''APLICADA'', ' +
-        '  MENSAJE_TARCLIN = :MENSAJE, ' +
-        '  CODIGO_UNICO_ARTTAR_TARCLIN = :UNICO, ' +
-        '  INSTANTE_APLICACION_TARCLIN = NOW(), ' +
-        '  USUARIO_MODIF = :USUARIO, ' +
-        '  INSTANTE_MODIF = NOW() ' +
-        'WHERE ID_TARCLIN = :ID';
-      qryUnico.SQL.Text :=
-        'SELECT LAST_INSERT_ID() AS CODIGO_UNICO_ARTTAR';
-      oConnLocal.StartTransaction;
+      qryBusca := TUniQuery.Create(nil);
+      qryExec := TUniQuery.Create(nil);
+      qryMarca := TUniQuery.Create(nil);
+      qryUnico := TUniQuery.Create(nil);
+      oConexion := unqryTablaG.Connection as TUniConnection;
+      qryBusca.Connection := oConexion;
+      qryExec.Connection := oConexion;
+      qryMarca.Connection := oConexion;
+      qryUnico.Connection := oConexion;
+      ConfigurarConsultasAplicacion(qryBusca, qryMarca, qryUnico);
+      EsTransaccionPropia := not oConexion.InTransaction;
+      if EsTransaccionPropia then
+        oConexion.StartTransaction;
       try
         unqryLineas.DisableControls;
         try
           unqryLineas.First;
           while not unqryLineas.Eof do
           begin
-            if SameText(unqryLineas.FieldByName(
-                        'ESAPLICAR_TARCLIN').AsString, 'S') then
-            begin
-              sArt := unqryLineas.FieldByName('CODIGO_ART_TARCLIN').AsString;
-              sSku := unqryLineas.FieldByName(
-                                      'CODIGO_UNIDAD_SKU_TARCLIN').AsString;
-              sTar := unqryLineas.FieldByName(
-                                      'CODIGO_TAR_DESTINO_TARCLIN').AsString;
-              dSalida := LeerFloatLinea('PRECIO_NUEVO_TARCLIN');
-              dFinal := LeerFloatLinea('PRECIO_FINAL_NUEVO_TARCLIN');
-              dDto := LeerFloatLinea('PRECIO_DTO_NUEVO_TARCLIN');
-              dPorcDto := LeerFloatLinea('PORCENTAJE_DTO_NUEVO_TARCLIN');
-              qryBusca.Close;
-              qryBusca.ParamByName('ART').AsString := sArt;
-              qryBusca.ParamByName('SKU').AsString := sSku;
-              qryBusca.ParamByName('TAR').AsString := sTar;
-              qryBusca.Open;
-              EsInsertar := False;
-              if not qryBusca.IsEmpty then
-              begin
-                iUnico := qryBusca.FieldByName('CODIGO_UNICO_ARTTAR')
-                                   .AsInteger;
-                qryExec.SQL.Text :=
-                  'UPDATE fza_articulos_tarifas SET ' +
-                  '  PRECIO_SALIDA_ARTTAR = :SALIDA, ' +
-                  '  PRECIO_FINAL_ARTTAR = :FINAL, ' +
-                  '  PRECIO_DTO_ARTTAR = :DTO, ' +
-                  '  PORCENTAJE_DTO_ARTTAR = :PORC_DTO, ' +
-                  '  FECHA_DESDE_ARTTAR = :DESDE, ' +
-                  '  FECHA_HASTA_ARTTAR = :HASTA, ' +
-                  '  USUARIO_MODIF = :USUARIO, ' +
-                  '  INSTANTE_MODIF = NOW() ' +
-                  'WHERE CODIGO_UNICO_ARTTAR = :UNICO';
-                qryExec.ParamByName('UNICO').AsInteger := iUnico;
-              end
-              else
-              begin
-                iUnico := 0;
-                EsInsertar := True;
-                qryExec.SQL.Text :=
-                  'INSERT INTO fza_articulos_tarifas ' +
-                  ' (CODIGO_ART_ARTTAR, CODIGO_UNIDAD_ARTTAR, ' +
-                  '  CODIGO_TAR_ARTTAR, ESACTIVO_ARTTAR, ' +
-                  '  PRECIO_SALIDA_ARTTAR, PRECIO_FINAL_ARTTAR, ' +
-                  '  PRECIO_DTO_ARTTAR, PORCENTAJE_DTO_ARTTAR, ' +
-                  '  FECHA_DESDE_ARTTAR, FECHA_HASTA_ARTTAR, ' +
-                  '  USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA) ' +
-                  'VALUES (:ART, :SKU, :TAR, ''S'', :SALIDA, :FINAL, ' +
-                  '        :DTO, :PORC_DTO, :DESDE, :HASTA, ' +
-                  '        :USUARIO, :USUARIO, NOW())';
-                qryExec.ParamByName('ART').AsString := sArt;
-                qryExec.ParamByName('SKU').AsString := sSku;
-                qryExec.ParamByName('TAR').AsString := sTar;
-              end;
-              qryExec.ParamByName('SALIDA').AsFloat := dSalida;
-              qryExec.ParamByName('FINAL').AsFloat := dFinal;
-              qryExec.ParamByName('DTO').AsFloat := dDto;
-              qryExec.ParamByName('PORC_DTO').AsFloat := dPorcDto;
-              if CampoCabecera('FECHA_DESDE_TARC').IsNull then
-                qryExec.ParamByName('DESDE').AsDateTime := Date
-              else
-                qryExec.ParamByName('DESDE').AsDateTime :=
-                  CampoCabecera('FECHA_DESDE_TARC').AsDateTime;
-              if CampoCabecera('FECHA_HASTA_TARC').IsNull then
-                qryExec.ParamByName('HASTA').Clear
-              else
-                qryExec.ParamByName('HASTA').AsDateTime :=
-                  CampoCabecera('FECHA_HASTA_TARC').AsDateTime;
-              qryExec.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
-              qryExec.Execute;
-              if EsInsertar then
-              begin
-                qryUnico.Close;
-                qryUnico.Open;
-                iUnico := qryUnico.FieldByName('CODIGO_UNICO_ARTTAR')
-                                   .AsInteger;
-              end;
-              qryMarca.ParamByName('MENSAJE').AsString := 'Aplicada';
-              qryMarca.ParamByName('UNICO').AsInteger := iUnico;
-              qryMarca.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
-              qryMarca.ParamByName('ID').AsInteger :=
-                unqryLineas.FieldByName('ID_TARCLIN').AsInteger;
-              qryMarca.Execute;
+            if AplicarLineaTarifa(
+              qryBusca, qryExec, qryMarca, qryUnico) then
               Inc(Result);
-            end;
             unqryLineas.Next;
           end;
         finally
           unqryLineas.EnableControls;
         end;
-        // Ventana de aplicacion del descuento (cabecera de tarifa): si la
-        // sesion informa alguna de las dos fechas, se fija en la tarifa
-        // destino. Defensivo: si la BBDD aun no tiene las columnas de ventana
-        // (script no aplicado) no hace nada. Si ambas quedan vacias, no se
-        // toca la ventana actual de la tarifa.
-        fDesdeDto := unqryTablaG.FindField('FECHA_DESDE_DTO_TARC');
-        fHastaDto := unqryTablaG.FindField('FECHA_HASTA_DTO_TARC');
-        if (fDesdeDto <> nil) and (fHastaDto <> nil) and
-           ((not fDesdeDto.IsNull) or (not fHastaDto.IsNull)) then
-        begin
-          qryExec.SQL.Text :=
-            'UPDATE fza_tarifas SET ' +
-            '  FECHA_DESDE_DTO_TAR = :DESDE_DTO, ' +
-            '  FECHA_HASTA_DTO_TAR = :HASTA_DTO, ' +
-            '  USUARIO_MODIF = :USUARIO, ' +
-            '  INSTANTE_MODIF = NOW() ' +
-            'WHERE CODIGO_TAR_ARTTAR = :TAR';
-          if fDesdeDto.IsNull then
-            qryExec.ParamByName('DESDE_DTO').Clear
-          else
-            qryExec.ParamByName('DESDE_DTO').AsDateTime := fDesdeDto.AsDateTime;
-          if fHastaDto.IsNull then
-            qryExec.ParamByName('HASTA_DTO').Clear
-          else
-            qryExec.ParamByName('HASTA_DTO').AsDateTime := fHastaDto.AsDateTime;
-          qryExec.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
-          qryExec.ParamByName('TAR').AsString :=
-            unqryTablaG.FieldByName('CODIGO_TAR_DESTINO_TARC').AsString;
-          qryExec.Execute;
-        end;
-        qryExec.SQL.Text :=
-          'UPDATE fza_tarifas_cambios SET ' +
-          '  ESTADO_TARC = ''APLICADA'', ' +
-          '  INSTANTE_APLICACION_TARC = NOW(), ' +
-          '  USUARIO_APLICACION_TARC = :USUARIO, ' +
-          '  USUARIO_MODIF = :USUARIO, ' +
-          '  INSTANTE_MODIF = NOW() ' +
-          'WHERE CODIGO_TARC = :CODIGO';
-        qryExec.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
-        qryExec.ParamByName('CODIGO').AsInteger :=
-          unqryTablaG.FieldByName('CODIGO_TARC').AsInteger;
-        qryExec.Execute;
-        oConnLocal.Commit;
+        AplicarVentanaDescuento(qryExec);
+        MarcarSesionAplicada(qryExec);
+        if EsTransaccionPropia then
+          oConexion.Commit;
       except
         on E: Exception do
         begin
-          oConnLocal.Rollback;
-          AMensaje := E.Message;
-          Result := 0;
+          if EsTransaccionPropia and oConexion.InTransaction then
+            oConexion.Rollback;
+          if EsTransaccionPropia then
+          begin
+            AMensaje := E.Message;
+            Result := 0;
+          end
+          else
+            raise;
         end;
       end;
       unqryTablaG.Refresh;

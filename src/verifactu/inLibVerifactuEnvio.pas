@@ -325,6 +325,283 @@ end;
 //   Carga de datos: factura, certificado de la empresa y cadena
 // ===========================================================================
 
+procedure ConfigurarConsultaFactura(
+  AQry: TUniQuery;
+  const ASerie, ANumero: string);
+begin
+  AQry.SQL.Text :=
+    ' SELECT f.CODIGO_EMP_FAC, f.NIF_EMPRESA_FAC, ' +
+    '        f.RAZON_SOCIAL_EMPRESA_FAC, ' +
+    '        f.FECHA_FAC, f.TIPO_FAC, f.TIPO_RECTIFICATIVA_FAC, ' +
+    '        f.NIF_CLIENTE_FAC, f.RAZON_SOCIAL_CLIENTE_FAC, ' +
+    '        f.TOTAL_IMPUESTOS_FAC, f.TOTAL_LIQUIDO_FAC, ' +
+    '        f.TOTAL_RETENCION_FAC, ' +
+    '        f.PORCENTAJE_IVAN_FAC, f.TOTAL_BASEI_IVAN_FAC, ' +
+    '        f.TOTAL_IVAN_FAC, f.PORCENTAJE_REN_FAC, f.TOTAL_REN_FAC, ' +
+    '        f.PORCENTAJE_IVAR_FAC, f.TOTAL_BASEI_IVAR_FAC, ' +
+    '        f.TOTAL_IVAR_FAC, f.PORCENTAJE_RER_FAC, f.TOTAL_RER_FAC, ' +
+    '        f.PORCENTAJE_IVAS_FAC, f.TOTAL_BASEI_IVAS_FAC, ' +
+    '        f.TOTAL_IVAS_FAC, f.PORCENTAJE_RES_FAC, f.TOTAL_RES_FAC, ' +
+    '        f.PORCENTAJE_IVAE_FAC, f.TOTAL_BASEI_IVAE_FAC, ' +
+    '        f.TOTAL_IVAE_FAC, f.TIPO_OPER_VFACTU_FAC, ' +
+    '        f.CODIGO_PAI_CLIENTE_FAC, pc.COD_ALPHA2_PAI, ' +
+    '        pc.ESMIEMBRO_UE_PAI, vo.CLAVE_REGIMEN_VFO, ' +
+    '        vo.CALIFICACION_VFO, vo.OPERACION_EXENTA_VFO, ' +
+    '        vo.ESREPERCUTE_IVA_VFO, e.CODIGO_CERTIFICADO_EMP, ' +
+    '        e.TITULAR_CERTIFICADO_EMP, e.NUMERO_INSTALACION_EMP, ' +
+    '        e.VERSION_INSTALACION_EMP, e.CODIGO_SIF_INSTALACION_EMP ' +
+    ' FROM fza_facturas f ' +
+    ' LEFT JOIN fza_empresas e ' +
+    '        ON e.CODIGO_EMP_EMP = f.CODIGO_EMP_FAC ' +
+    ' LEFT JOIN fza_paises pc ' +
+    '        ON pc.CODIGO_PAI_PAI = f.CODIGO_PAI_CLIENTE_FAC ' +
+    ' LEFT JOIN fza_verifactu_operaciones vo ' +
+    '        ON vo.CODIGO_VFO = f.TIPO_OPER_VFACTU_FAC ' +
+    ' WHERE f.SERIE_FAC = :SERIE AND f.NUMERO_FAC = :NUMERO';
+  AQry.ParamByName('SERIE').AsString := ASerie;
+  AQry.ParamByName('NUMERO').AsString := ANumero;
+end;
+
+procedure InicializarRectificacion(var ADatos: TDatosFacturaRegistro);
+begin
+  ADatos.TipoRectificativa := '';
+  ADatos.RectSerie := '';
+  ADatos.RectNumero := '';
+  ADatos.RectFecha := '';
+  ADatos.RectBase := 0;
+  ADatos.RectCuota := 0;
+  ADatos.RectCuotaRe := 0;
+  ADatos.TieneImporteRectificacion := False;
+end;
+
+procedure CargarIdentificacionFactura(
+  AQry: TUniQuery;
+  const ATipoFactura: string;
+  var ADatos: TDatosFacturaRegistro);
+begin
+  ADatos.CodigoEmpresa :=
+    Trim(AQry.FieldByName('CODIGO_EMP_FAC').AsString);
+  ADatos.NifEmisor := NormalizarNifVerifactu(
+    AQry.FieldByName('NIF_EMPRESA_FAC').AsString);
+  ADatos.NombreEmisor :=
+    Trim(AQry.FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsString);
+  ADatos.NumeroInstalacion :=
+    Trim(AQry.FieldByName('NUMERO_INSTALACION_EMP').AsString);
+  ADatos.VersionInstalacion :=
+    Trim(AQry.FieldByName('VERSION_INSTALACION_EMP').AsString);
+  ADatos.CodigoSifInstalacion :=
+    Trim(AQry.FieldByName('CODIGO_SIF_INSTALACION_EMP').AsString);
+  ADatos.FechaFac := AQry.FieldByName('FECHA_FAC').AsDateTime;
+  ADatos.FechaExpedicion :=
+    FormatDateTime('dd-mm-yyyy', ADatos.FechaFac);
+  ADatos.TipoFactura := TipoFacturaVerifactu(ATipoFactura);
+  InicializarRectificacion(ADatos);
+  if SameText(ATipoFactura, 'RECTIFICATIVA') then
+  begin
+    ADatos.TipoRectificativa := UpperCase(Trim(
+      AQry.FieldByName('TIPO_RECTIFICATIVA_FAC').AsString));
+    if ADatos.TipoRectificativa = '' then
+      ADatos.TipoRectificativa := 'I';
+    if (ADatos.TipoRectificativa <> 'I') and
+       (ADatos.TipoRectificativa <> 'S') then
+      raise Exception.Create(
+        'El tipo fiscal de rectificativa debe ser I o S.');
+  end;
+  ADatos.NifCliente := NormalizarNifVerifactu(
+    AQry.FieldByName('NIF_CLIENTE_FAC').AsString);
+  ADatos.NombreCliente :=
+    Trim(AQry.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString);
+end;
+
+procedure CargarImportesYCertificado(
+  AQry: TUniQuery;
+  var ADatos: TDatosFacturaRegistro);
+begin
+  ADatos.CuotaTotal :=
+    AQry.FieldByName('TOTAL_IMPUESTOS_FAC').AsCurrency;
+  // Verifactu comunica el bruto de IVA, antes de descontar la retención.
+  ADatos.ImporteTotal :=
+    AQry.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency +
+    AQry.FieldByName('TOTAL_RETENCION_FAC').AsCurrency;
+  ADatos.SerialCert :=
+    Trim(AQry.FieldByName('CODIGO_CERTIFICADO_EMP').AsString);
+  ADatos.TitularCert :=
+    Trim(AQry.FieldByName('TITULAR_CERTIFICADO_EMP').AsString);
+end;
+
+procedure CargarOperacionFiscal(
+  AQry: TUniQuery;
+  var ADatos: TDatosFacturaRegistro);
+begin
+  ADatos.OpDefinida :=
+    (Trim(AQry.FieldByName('TIPO_OPER_VFACTU_FAC').AsString) <> '') and
+    (not AQry.FieldByName('CLAVE_REGIMEN_VFO').IsNull);
+  ADatos.OpClaveRegimen :=
+    Trim(AQry.FieldByName('CLAVE_REGIMEN_VFO').AsString);
+  ADatos.OpCalificacion :=
+    Trim(AQry.FieldByName('CALIFICACION_VFO').AsString);
+  ADatos.OpOperExenta :=
+    Trim(AQry.FieldByName('OPERACION_EXENTA_VFO').AsString);
+  ADatos.OpRepercuteIva := not SameText(
+    Trim(AQry.FieldByName('ESREPERCUTE_IVA_VFO').AsString), 'N');
+  ADatos.PaisClienteISO2 :=
+    Trim(AQry.FieldByName('COD_ALPHA2_PAI').AsString);
+  ADatos.EsClienteUE := SameText(
+    Trim(AQry.FieldByName('ESMIEMBRO_UE_PAI').AsString), 'S');
+  ADatos.EsClienteExtr := (ADatos.PaisClienteISO2 <> '') and
+    (not SameText(ADatos.PaisClienteISO2, 'ES')) and
+    (Trim(AQry.FieldByName('CODIGO_PAI_CLIENTE_FAC').AsString) <> '724');
+end;
+
+procedure CargarBandasIva(
+  AQry: TUniQuery;
+  var ADatos: TDatosFacturaRegistro);
+begin
+  ADatos.Bandas[0].Porcentaje :=
+    AQry.FieldByName('PORCENTAJE_IVAN_FAC').AsCurrency;
+  ADatos.Bandas[0].Base :=
+    AQry.FieldByName('TOTAL_BASEI_IVAN_FAC').AsCurrency;
+  ADatos.Bandas[0].Cuota :=
+    AQry.FieldByName('TOTAL_IVAN_FAC').AsCurrency;
+  ADatos.Bandas[0].PorcentajeRe :=
+    AQry.FieldByName('PORCENTAJE_REN_FAC').AsCurrency;
+  ADatos.Bandas[0].CuotaRe :=
+    AQry.FieldByName('TOTAL_REN_FAC').AsCurrency;
+  ADatos.Bandas[0].EsExenta := False;
+  ADatos.Bandas[1].Porcentaje :=
+    AQry.FieldByName('PORCENTAJE_IVAR_FAC').AsCurrency;
+  ADatos.Bandas[1].Base :=
+    AQry.FieldByName('TOTAL_BASEI_IVAR_FAC').AsCurrency;
+  ADatos.Bandas[1].Cuota :=
+    AQry.FieldByName('TOTAL_IVAR_FAC').AsCurrency;
+  ADatos.Bandas[1].PorcentajeRe :=
+    AQry.FieldByName('PORCENTAJE_RER_FAC').AsCurrency;
+  ADatos.Bandas[1].CuotaRe :=
+    AQry.FieldByName('TOTAL_RER_FAC').AsCurrency;
+  ADatos.Bandas[1].EsExenta := False;
+  ADatos.Bandas[2].Porcentaje :=
+    AQry.FieldByName('PORCENTAJE_IVAS_FAC').AsCurrency;
+  ADatos.Bandas[2].Base :=
+    AQry.FieldByName('TOTAL_BASEI_IVAS_FAC').AsCurrency;
+  ADatos.Bandas[2].Cuota :=
+    AQry.FieldByName('TOTAL_IVAS_FAC').AsCurrency;
+  ADatos.Bandas[2].PorcentajeRe :=
+    AQry.FieldByName('PORCENTAJE_RES_FAC').AsCurrency;
+  ADatos.Bandas[2].CuotaRe :=
+    AQry.FieldByName('TOTAL_RES_FAC').AsCurrency;
+  ADatos.Bandas[2].EsExenta := False;
+  ADatos.Bandas[3].Porcentaje :=
+    AQry.FieldByName('PORCENTAJE_IVAE_FAC').AsCurrency;
+  ADatos.Bandas[3].Base :=
+    AQry.FieldByName('TOTAL_BASEI_IVAE_FAC').AsCurrency;
+  ADatos.Bandas[3].Cuota :=
+    AQry.FieldByName('TOTAL_IVAE_FAC').AsCurrency;
+  ADatos.Bandas[3].PorcentajeRe := 0;
+  ADatos.Bandas[3].CuotaRe := 0;
+  ADatos.Bandas[3].EsExenta := True;
+end;
+
+procedure ConfigurarConsultaAntecesoraRelacion(
+  AQry: TUniQuery;
+  const ASerie, ANumero: string);
+begin
+  AQry.Close;
+  AQry.SQL.Text :=
+    ' SELECT o.SERIE_FAC, o.NUMERO_FAC, o.TIPO_FAC, ' +
+    '        DATE_FORMAT(o.FECHA_FAC, ''%d-%m-%Y'') AS FECHA_TXT, ' +
+    '        COALESCE(o.TOTAL_BASES_FAC, 0) AS BASE_RECT, ' +
+    '        COALESCE(o.TOTAL_IVAN_FAC, 0) + ' +
+    '        COALESCE(o.TOTAL_IVAR_FAC, 0) + ' +
+    '        COALESCE(o.TOTAL_IVAS_FAC, 0) + ' +
+    '        COALESCE(o.TOTAL_IVAE_FAC, 0) AS CUOTA_RECT, ' +
+    '        COALESCE(o.TOTAL_REN_FAC, 0) + ' +
+    '        COALESCE(o.TOTAL_RER_FAC, 0) + ' +
+    '        COALESCE(o.TOTAL_RES_FAC, 0) + ' +
+    '        COALESCE(o.TOTAL_REE_FAC, 0) AS CUOTA_RE_RECT ' +
+    ' FROM fza_facturas_relaciones r ' +
+    ' JOIN fza_facturas o ' +
+    '   ON o.SERIE_FAC = r.SERIE_FAC_ORIGEN_FACREL ' +
+    '  AND o.NUMERO_FAC = r.NUMERO_FAC_ORIGEN_FACREL ' +
+    ' WHERE r.SERIE_FAC_FACREL = :SERIE ' +
+    '   AND r.NUMERO_FAC_FACREL = :NUMERO ' +
+    ' ORDER BY r.ID_FACREL DESC LIMIT 1';
+  AQry.ParamByName('SERIE').AsString := ASerie;
+  AQry.ParamByName('NUMERO').AsString := ANumero;
+end;
+
+procedure ConfigurarConsultaAntecesoraAbono(
+  AQry: TUniQuery;
+  const ASerie, ANumero: string);
+begin
+  AQry.Close;
+  AQry.SQL.Text :=
+    ' SELECT SERIE_FAC, NUMERO_FAC, TIPO_FAC, ' +
+    '        DATE_FORMAT(FECHA_FAC, ''%d-%m-%Y'') AS FECHA_TXT, ' +
+    '        COALESCE(TOTAL_BASES_FAC, 0) AS BASE_RECT, ' +
+    '        COALESCE(TOTAL_IVAN_FAC, 0) + ' +
+    '        COALESCE(TOTAL_IVAR_FAC, 0) + ' +
+    '        COALESCE(TOTAL_IVAS_FAC, 0) + ' +
+    '        COALESCE(TOTAL_IVAE_FAC, 0) AS CUOTA_RECT, ' +
+    '        COALESCE(TOTAL_REN_FAC, 0) + ' +
+    '        COALESCE(TOTAL_RER_FAC, 0) + ' +
+    '        COALESCE(TOTAL_RES_FAC, 0) + ' +
+    '        COALESCE(TOTAL_REE_FAC, 0) AS CUOTA_RE_RECT ' +
+    ' FROM fza_facturas ' +
+    ' WHERE SERIE_FAC_ABONO_FAC = :SERIE ' +
+    '   AND NUMERO_FAC_ABONO_FAC = :NUMERO LIMIT 1';
+  AQry.ParamByName('SERIE').AsString := ASerie;
+  AQry.ParamByName('NUMERO').AsString := ANumero;
+end;
+
+procedure AplicarAntecesora(
+  AQry: TUniQuery;
+  const ATipoFactura: string;
+  var ADatos: TDatosFacturaRegistro);
+begin
+  if SameText(ATipoFactura, 'RECTIFICATIVA') then
+  begin
+    if SameText(AQry.FieldByName('TIPO_FAC').AsString, 'SIMPLIFICADA') then
+      ADatos.TipoFactura := 'R5'
+    else
+      ADatos.TipoFactura := 'R1';
+    ADatos.RectSerie := AQry.FieldByName('SERIE_FAC').AsString;
+    ADatos.RectNumero := AQry.FieldByName('NUMERO_FAC').AsString;
+    ADatos.RectFecha := AQry.FieldByName('FECHA_TXT').AsString;
+    ADatos.RectBase := AQry.FieldByName('BASE_RECT').AsCurrency;
+    ADatos.RectCuota := AQry.FieldByName('CUOTA_RECT').AsCurrency;
+    ADatos.RectCuotaRe := AQry.FieldByName('CUOTA_RE_RECT').AsCurrency;
+    ADatos.TieneImporteRectificacion := True;
+  end
+  else if SameText(
+    AQry.FieldByName('TIPO_FAC').AsString, 'SIMPLIFICADA') then
+  begin
+    ADatos.TipoFactura := 'F3';
+    ADatos.RectSerie := AQry.FieldByName('SERIE_FAC').AsString;
+    ADatos.RectNumero := AQry.FieldByName('NUMERO_FAC').AsString;
+    ADatos.RectFecha := AQry.FieldByName('FECHA_TXT').AsString;
+  end;
+end;
+
+procedure CargarAntecesora(
+  AQry: TUniQuery;
+  const ASerie, ANumero, ATipoFactura: string;
+  var ADatos: TDatosFacturaRegistro);
+begin
+  if SameText(ATipoFactura, 'RECTIFICATIVA') or
+     SameText(ATipoFactura, 'NORMAL') then
+  begin
+    ConfigurarConsultaAntecesoraRelacion(AQry, ASerie, ANumero);
+    AQry.Open;
+    if AQry.IsEmpty then
+    begin
+      ConfigurarConsultaAntecesoraAbono(AQry, ASerie, ANumero);
+      AQry.Open;
+    end;
+    if not AQry.IsEmpty then
+      AplicarAntecesora(AQry, ATipoFactura, ADatos);
+  end;
+end;
+
 function CargarDatosFactura(AConn: TUniConnection;
                             const ASerie, ANumero: string;
                             out ADatos: TDatosFacturaRegistro): Boolean;
@@ -335,40 +612,7 @@ begin
   Qry := TUniQuery.Create(nil);
   try
     Qry.Connection := AConn;
-    Qry.SQL.Text :=
-      ' SELECT f.CODIGO_EMP_FAC, f.NIF_EMPRESA_FAC, ' +
-      '        f.RAZON_SOCIAL_EMPRESA_FAC, ' +
-      '        f.FECHA_FAC, f.TIPO_FAC, f.TIPO_RECTIFICATIVA_FAC, ' +
-      '        f.NIF_CLIENTE_FAC, ' +
-      '        f.RAZON_SOCIAL_CLIENTE_FAC, ' +
-      '        f.TOTAL_IMPUESTOS_FAC, f.TOTAL_LIQUIDO_FAC, ' +
-      '        f.TOTAL_RETENCION_FAC, ' +
-      '        f.PORCENTAJE_IVAN_FAC, f.TOTAL_BASEI_IVAN_FAC, ' +
-      '        f.TOTAL_IVAN_FAC, f.PORCENTAJE_REN_FAC, f.TOTAL_REN_FAC, ' +
-      '        f.PORCENTAJE_IVAR_FAC, f.TOTAL_BASEI_IVAR_FAC, ' +
-      '        f.TOTAL_IVAR_FAC, f.PORCENTAJE_RER_FAC, f.TOTAL_RER_FAC, ' +
-      '        f.PORCENTAJE_IVAS_FAC, f.TOTAL_BASEI_IVAS_FAC, ' +
-      '        f.TOTAL_IVAS_FAC, f.PORCENTAJE_RES_FAC, f.TOTAL_RES_FAC, ' +
-      '        f.PORCENTAJE_IVAE_FAC, f.TOTAL_BASEI_IVAE_FAC, ' +
-      '        f.TOTAL_IVAE_FAC, ' +
-      '        f.TIPO_OPER_VFACTU_FAC, f.CODIGO_PAI_CLIENTE_FAC, ' +
-      '        pc.COD_ALPHA2_PAI, pc.ESMIEMBRO_UE_PAI, ' +
-      '        vo.CLAVE_REGIMEN_VFO, vo.CALIFICACION_VFO, ' +
-      '        vo.OPERACION_EXENTA_VFO, vo.ESREPERCUTE_IVA_VFO, ' +
-      '        e.CODIGO_CERTIFICADO_EMP, e.TITULAR_CERTIFICADO_EMP, ' +
-      '        e.NUMERO_INSTALACION_EMP, e.VERSION_INSTALACION_EMP, ' +
-      '        e.CODIGO_SIF_INSTALACION_EMP ' +
-      ' FROM fza_facturas f ' +
-      ' LEFT JOIN fza_empresas e ' +
-      '        ON e.CODIGO_EMP_EMP = f.CODIGO_EMP_FAC ' +
-      ' LEFT JOIN fza_paises pc ' +
-      '        ON pc.CODIGO_PAI_PAI = f.CODIGO_PAI_CLIENTE_FAC ' +
-      ' LEFT JOIN fza_verifactu_operaciones vo ' +
-      '        ON vo.CODIGO_VFO = f.TIPO_OPER_VFACTU_FAC ' +
-      ' WHERE f.SERIE_FAC  = :SERIE ' +
-      '   AND f.NUMERO_FAC = :NUMERO';
-    Qry.ParamByName('SERIE').AsString  := ASerie;
-    Qry.ParamByName('NUMERO').AsString := ANumero;
+    ConfigurarConsultaFactura(Qry, ASerie, ANumero);
     Qry.Open;
     // Si la fila de la cola no apunta a una factura real (huérfana,
     // p.ej. 0\0) se devuelve False sin lanzar excepción: el llamador
@@ -377,210 +621,12 @@ begin
     Result := not Qry.IsEmpty;
     if Result then
     begin
-      ADatos.CodigoEmpresa :=
-        Trim(Qry.FieldByName('CODIGO_EMP_FAC').AsString);
-      ADatos.NifEmisor :=
-        NormalizarNifVerifactu(Qry.FieldByName('NIF_EMPRESA_FAC').AsString);
-      ADatos.NombreEmisor :=
-        Trim(Qry.FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsString);
-      ADatos.NumeroInstalacion :=
-        Trim(Qry.FieldByName('NUMERO_INSTALACION_EMP').AsString);
-      ADatos.VersionInstalacion :=
-        Trim(Qry.FieldByName('VERSION_INSTALACION_EMP').AsString);
-      ADatos.CodigoSifInstalacion :=
-        Trim(Qry.FieldByName('CODIGO_SIF_INSTALACION_EMP').AsString);
-      ADatos.FechaFac        := Qry.FieldByName('FECHA_FAC').AsDateTime;
-      ADatos.FechaExpedicion :=
-        FormatDateTime('dd-mm-yyyy', ADatos.FechaFac);
       sTipoFac := Qry.FieldByName('TIPO_FAC').AsString;
-      ADatos.TipoFactura := TipoFacturaVerifactu(sTipoFac);
-      ADatos.TipoRectificativa := '';
-      ADatos.RectSerie   := '';
-      ADatos.RectNumero  := '';
-      ADatos.RectFecha   := '';
-      ADatos.RectBase    := 0;
-      ADatos.RectCuota   := 0;
-      ADatos.RectCuotaRe := 0;
-      ADatos.TieneImporteRectificacion := False;
-      if SameText(sTipoFac, 'RECTIFICATIVA') then
-      begin
-        ADatos.TipoRectificativa := UpperCase(Trim(
-          Qry.FieldByName('TIPO_RECTIFICATIVA_FAC').AsString));
-        if ADatos.TipoRectificativa = '' then
-          ADatos.TipoRectificativa := 'I';
-        if (ADatos.TipoRectificativa <> 'I') and
-           (ADatos.TipoRectificativa <> 'S') then
-          raise Exception.Create(
-            'El tipo fiscal de rectificativa debe ser I o S.');
-      end;
-      ADatos.NifCliente :=
-        NormalizarNifVerifactu(Qry.FieldByName('NIF_CLIENTE_FAC').AsString);
-      ADatos.NombreCliente :=
-        Trim(Qry.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString);
-      ADatos.CuotaTotal   :=
-        Qry.FieldByName('TOTAL_IMPUESTOS_FAC').AsCurrency;
-      // ImporteTotal Verifactu = importe BRUTO (base + IVA + recargo), sin
-      // descontar el IRPF. Verifactu solo informa a efectos de IVA: la
-      // retencion no se comunica ni resta del total (a diferencia del
-      // liquido a pagar). Reconstruimos el bruto sumando la retencion al
-      // liquido (TOTAL_LIQUIDO_FAC = bases + impuestos - retencion). Asi el
-      // total cuadra con la suma del desglose que valida la AEAT.
-      ADatos.ImporteTotal :=
-        Qry.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency +
-        Qry.FieldByName('TOTAL_RETENCION_FAC').AsCurrency;
-      ADatos.SerialCert :=
-        Trim(Qry.FieldByName('CODIGO_CERTIFICADO_EMP').AsString);
-      ADatos.TitularCert :=
-        Trim(Qry.FieldByName('TITULAR_CERTIFICADO_EMP').AsString);
-      // Calificacion de la operacion (catalogo) y residencia fiscal del
-      // cliente. El cliente es extranjero si su pais no es Espana (724 / ES);
-      // en ese caso se identifica por IDOtro (pais + NIF-IVA), no por NIF.
-      // OpDefinida = hay tipo asignado y existe en el catalogo (clave regimen
-      // no nula tras el LEFT JOIN).
-      ADatos.OpDefinida :=
-        (Trim(Qry.FieldByName('TIPO_OPER_VFACTU_FAC').AsString) <> '') and
-        (not Qry.FieldByName('CLAVE_REGIMEN_VFO').IsNull);
-      ADatos.OpClaveRegimen :=
-        Trim(Qry.FieldByName('CLAVE_REGIMEN_VFO').AsString);
-      ADatos.OpCalificacion :=
-        Trim(Qry.FieldByName('CALIFICACION_VFO').AsString);
-      ADatos.OpOperExenta :=
-        Trim(Qry.FieldByName('OPERACION_EXENTA_VFO').AsString);
-      ADatos.OpRepercuteIva :=
-        not SameText(Trim(Qry.FieldByName('ESREPERCUTE_IVA_VFO').AsString), 'N');
-      ADatos.PaisClienteISO2 :=
-        Trim(Qry.FieldByName('COD_ALPHA2_PAI').AsString);
-      ADatos.EsClienteUE :=
-        SameText(Trim(Qry.FieldByName('ESMIEMBRO_UE_PAI').AsString), 'S');
-      ADatos.EsClienteExtr :=
-        (ADatos.PaisClienteISO2 <> '') and
-        (not SameText(ADatos.PaisClienteISO2, 'ES')) and
-        (Trim(Qry.FieldByName('CODIGO_PAI_CLIENTE_FAC').AsString) <> '724');
-      // Banda N (normal)
-      ADatos.Bandas[0].Porcentaje :=
-        Qry.FieldByName('PORCENTAJE_IVAN_FAC').AsCurrency;
-      ADatos.Bandas[0].Base :=
-        Qry.FieldByName('TOTAL_BASEI_IVAN_FAC').AsCurrency;
-      ADatos.Bandas[0].Cuota := Qry.FieldByName('TOTAL_IVAN_FAC').AsCurrency;
-      ADatos.Bandas[0].PorcentajeRe :=
-        Qry.FieldByName('PORCENTAJE_REN_FAC').AsCurrency;
-      ADatos.Bandas[0].CuotaRe := Qry.FieldByName('TOTAL_REN_FAC').AsCurrency;
-      ADatos.Bandas[0].EsExenta := False;
-      // Banda R (reducido)
-      ADatos.Bandas[1].Porcentaje :=
-        Qry.FieldByName('PORCENTAJE_IVAR_FAC').AsCurrency;
-      ADatos.Bandas[1].Base :=
-        Qry.FieldByName('TOTAL_BASEI_IVAR_FAC').AsCurrency;
-      ADatos.Bandas[1].Cuota := Qry.FieldByName('TOTAL_IVAR_FAC').AsCurrency;
-      ADatos.Bandas[1].PorcentajeRe :=
-        Qry.FieldByName('PORCENTAJE_RER_FAC').AsCurrency;
-      ADatos.Bandas[1].CuotaRe := Qry.FieldByName('TOTAL_RER_FAC').AsCurrency;
-      ADatos.Bandas[1].EsExenta := False;
-      // Banda S (superreducido)
-      ADatos.Bandas[2].Porcentaje :=
-        Qry.FieldByName('PORCENTAJE_IVAS_FAC').AsCurrency;
-      ADatos.Bandas[2].Base :=
-        Qry.FieldByName('TOTAL_BASEI_IVAS_FAC').AsCurrency;
-      ADatos.Bandas[2].Cuota := Qry.FieldByName('TOTAL_IVAS_FAC').AsCurrency;
-      ADatos.Bandas[2].PorcentajeRe :=
-        Qry.FieldByName('PORCENTAJE_RES_FAC').AsCurrency;
-      ADatos.Bandas[2].CuotaRe := Qry.FieldByName('TOTAL_RES_FAC').AsCurrency;
-      ADatos.Bandas[2].EsExenta := False;
-      // Banda E (exento)
-      ADatos.Bandas[3].Porcentaje :=
-        Qry.FieldByName('PORCENTAJE_IVAE_FAC').AsCurrency;
-      ADatos.Bandas[3].Base :=
-        Qry.FieldByName('TOTAL_BASEI_IVAE_FAC').AsCurrency;
-      ADatos.Bandas[3].Cuota := Qry.FieldByName('TOTAL_IVAE_FAC').AsCurrency;
-      ADatos.Bandas[3].PorcentajeRe := 0;
-      ADatos.Bandas[3].CuotaRe      := 0;
-      ADatos.Bandas[3].EsExenta     := True;
-      // Antecesora (la original de una rectificativa o el ticket
-      // sustituido por una F3): primero por el histórico de relaciones
-      // (fza_facturas_relaciones, soporta varias rectificaciones de la
-      // misma factura) y, si no hay fila, por el enlace ABONO inverso.
-      // Decide R1/R5/F3 y aporta FacturasRectificadas / Sustituidas.
-      if SameText(sTipoFac, 'RECTIFICATIVA') or
-         SameText(sTipoFac, 'NORMAL') then
-      begin
-        Qry.Close;
-        Qry.SQL.Text :=
-          ' SELECT o.SERIE_FAC, o.NUMERO_FAC, o.TIPO_FAC, ' +
-          '        DATE_FORMAT(o.FECHA_FAC, ''%d-%m-%Y'') AS FECHA_TXT, ' +
-          '        COALESCE(o.TOTAL_BASES_FAC, 0) AS BASE_RECT, ' +
-          '        COALESCE(o.TOTAL_IVAN_FAC, 0) + ' +
-          '        COALESCE(o.TOTAL_IVAR_FAC, 0) + ' +
-          '        COALESCE(o.TOTAL_IVAS_FAC, 0) + ' +
-          '        COALESCE(o.TOTAL_IVAE_FAC, 0) AS CUOTA_RECT, ' +
-          '        COALESCE(o.TOTAL_REN_FAC, 0) + ' +
-          '        COALESCE(o.TOTAL_RER_FAC, 0) + ' +
-          '        COALESCE(o.TOTAL_RES_FAC, 0) + ' +
-          '        COALESCE(o.TOTAL_REE_FAC, 0) AS CUOTA_RE_RECT ' +
-          ' FROM fza_facturas_relaciones r ' +
-          ' JOIN fza_facturas o ' +
-          '   ON o.SERIE_FAC  = r.SERIE_FAC_ORIGEN_FACREL ' +
-          '  AND o.NUMERO_FAC = r.NUMERO_FAC_ORIGEN_FACREL ' +
-          ' WHERE r.SERIE_FAC_FACREL  = :SERIE ' +
-          '   AND r.NUMERO_FAC_FACREL = :NUMERO ' +
-          ' ORDER BY r.ID_FACREL DESC ' +
-          ' LIMIT 1';
-        Qry.ParamByName('SERIE').AsString  := ASerie;
-        Qry.ParamByName('NUMERO').AsString := ANumero;
-        Qry.Open;
-        if Qry.IsEmpty then
-        begin
-          Qry.Close;
-          Qry.SQL.Text :=
-            ' SELECT SERIE_FAC, NUMERO_FAC, TIPO_FAC, ' +
-            '        DATE_FORMAT(FECHA_FAC, ''%d-%m-%Y'') AS FECHA_TXT, ' +
-            '        COALESCE(TOTAL_BASES_FAC, 0) AS BASE_RECT, ' +
-            '        COALESCE(TOTAL_IVAN_FAC, 0) + ' +
-            '        COALESCE(TOTAL_IVAR_FAC, 0) + ' +
-            '        COALESCE(TOTAL_IVAS_FAC, 0) + ' +
-            '        COALESCE(TOTAL_IVAE_FAC, 0) AS CUOTA_RECT, ' +
-            '        COALESCE(TOTAL_REN_FAC, 0) + ' +
-            '        COALESCE(TOTAL_RER_FAC, 0) + ' +
-            '        COALESCE(TOTAL_RES_FAC, 0) + ' +
-            '        COALESCE(TOTAL_REE_FAC, 0) AS CUOTA_RE_RECT ' +
-            ' FROM fza_facturas ' +
-            ' WHERE SERIE_FAC_ABONO_FAC  = :SERIE ' +
-            '   AND NUMERO_FAC_ABONO_FAC = :NUMERO ' +
-            ' LIMIT 1';
-          Qry.ParamByName('SERIE').AsString  := ASerie;
-          Qry.ParamByName('NUMERO').AsString := ANumero;
-          Qry.Open;
-        end;
-        if not Qry.IsEmpty then
-        begin
-          if SameText(sTipoFac, 'RECTIFICATIVA') then
-          begin
-            if SameText(Qry.FieldByName('TIPO_FAC').AsString,
-                        'SIMPLIFICADA') then
-              ADatos.TipoFactura := 'R5'
-            else
-              ADatos.TipoFactura := 'R1';
-            ADatos.RectSerie  := Qry.FieldByName('SERIE_FAC').AsString;
-            ADatos.RectNumero := Qry.FieldByName('NUMERO_FAC').AsString;
-            ADatos.RectFecha  := Qry.FieldByName('FECHA_TXT').AsString;
-            ADatos.RectBase   :=
-              Qry.FieldByName('BASE_RECT').AsCurrency;
-            ADatos.RectCuota  :=
-              Qry.FieldByName('CUOTA_RECT').AsCurrency;
-            ADatos.RectCuotaRe :=
-              Qry.FieldByName('CUOTA_RE_RECT').AsCurrency;
-            ADatos.TieneImporteRectificacion := True;
-          end
-          else if SameText(Qry.FieldByName('TIPO_FAC').AsString,
-                           'SIMPLIFICADA') then
-          begin
-            // Factura completa emitida en sustitución de un ticket
-            ADatos.TipoFactura := 'F3';
-            ADatos.RectSerie  := Qry.FieldByName('SERIE_FAC').AsString;
-            ADatos.RectNumero := Qry.FieldByName('NUMERO_FAC').AsString;
-            ADatos.RectFecha  := Qry.FieldByName('FECHA_TXT').AsString;
-          end;
-        end;
-      end;
+      CargarIdentificacionFactura(Qry, sTipoFac, ADatos);
+      CargarImportesYCertificado(Qry, ADatos);
+      CargarOperacionFiscal(Qry, ADatos);
+      CargarBandasIva(Qry, ADatos);
+      CargarAntecesora(Qry, ASerie, ANumero, sTipoFac, ADatos);
     end;
   finally
     FreeAndNil(Qry);

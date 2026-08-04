@@ -112,6 +112,13 @@ type
     // puramente descriptivo que NO debe disparar la logica fiscal ni
     // la sincronizacion de movimientos (cascada por linea al navegar).
     FDesempaquetandoAtributos: Boolean;
+    procedure EjecutarCrearFacturaInicio(const ANumeroAlbaran,
+      ASerieAlbaran: string; out ANumeroFactura, ASerieFactura: string);
+    procedure EjecutarCrearFacturaLinea(const ANumeroFactura,
+      ASerieFactura, ANumeroAlbaran, ASerieAlbaran,
+      ALineaAlbaran: string);
+    procedure EjecutarCrearFacturaFin(const ANumeroFactura,
+      ASerieFactura, ANumeroAlbaran, ASerieAlbaran: string);
     procedure ProcesarCabeceraPosteada;
     procedure ProcesarLineasPosteadas;
     procedure NegarMovimientosFacturaDesdeAlbaran(const ASerie,
@@ -369,11 +376,17 @@ end;
 procedure TdmAlbaranes.unqryTablaGAfterInsert(DataSet: TDataSet);
 var
   sSerie: string;
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryTablaG.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryTablaG.FindField(ANombre);
+  end;
 begin
   inherited;
-  with unqryTablaG do
-  begin
-    FieldByName('NUMERO_ALB').AsString  := '0';
+  FieldByName('NUMERO_ALB').AsString := '0';
     // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='AV'
     // (mismo criterio que compras); fallback historico 'A1'
     sSerie := ObtenerSerieDefecto(
@@ -401,9 +414,8 @@ begin
     FieldByName('ESIMP_INCL_TARIFA_CLIENTE_ALB').Clear;
     if Trim(UbicacionSesion.Empresa) <> '' then
       BuscarEmpresa(UbicacionSesion.Empresa);
-    if FindField('CODIGO_ALM_ALB') <> nil then
-      FieldByName('CODIGO_ALM_ALB').AsString := UbicacionSesion.Almacen;
-  end;
+  if FindField('CODIGO_ALM_ALB') <> nil then
+    FieldByName('CODIGO_ALM_ALB').AsString := UbicacionSesion.Almacen;
   RefrescarAlmacenes(
     DataSet.FieldByName('CODIGO_EMP_ALB').AsString);
 end;
@@ -544,11 +556,17 @@ begin
 end;
 
 procedure TdmAlbaranes.unqryAlbaranesLineasAfterInsert(DataSet: TDataSet);
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryAlbaranesLineas.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryAlbaranesLineas.FindField(ANombre);
+  end;
 begin
   inherited;
-  with unqryAlbaranesLineas do
-  begin
-    FieldByName('LINEA_ALBLIN').AsString := '0000';
+  FieldByName('LINEA_ALBLIN').AsString := '0000';
     FieldByName('NUMERO_ALB_ALBLIN').AsString :=
                                   unqryTablaG.FieldByName(
                                     'NUMERO_ALB').AsString;
@@ -579,9 +597,8 @@ begin
       FieldByName('INSTANTE_ALTA').AsDateTime := Now;
     if FindField('USUARIO_MODIF') <> nil then
       FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
-    if FindField('INSTANTE_MODIF') <> nil then
-      FieldByName('INSTANTE_MODIF').AsDateTime := Now;
-  end;
+  if FindField('INSTANTE_MODIF') <> nil then
+    FieldByName('INSTANTE_MODIF').AsDateTime := Now;
 end;
 
 procedure TdmAlbaranes.NormalizarCamposOpcionalesLinea(DataSet: TDataSet);
@@ -609,7 +626,8 @@ begin
         '       (SELECT COUNT(*) ' +
         '          FROM fza_articulos_skus sk ' +
         '         WHERE sk.CODIGO_ART_SKU = a.CODIGO_ART_ART ' +
-        '           AND COALESCE(sk.ESACTIVO_SKU, ''S'') = ''S'') AS NUM_SKUS ' +
+        '           AND COALESCE(sk.ESACTIVO_SKU, ''S'') = ''S'') AS NUM_SKUS '
+          +
         '  FROM fza_articulos a ' +
         ' WHERE a.CODIGO_ART_ART = :art';
       q.ParamByName('art').AsString := sArticulo;
@@ -643,7 +661,8 @@ procedure TdmAlbaranes.SincronizarAlmacenLinea(DataSet: TDataSet);
 var
   sAlmacen: string;
 begin
-  if (DataSet <> nil) and (DataSet.FindField('CODIGO_ALMACEN_ALBLIN') <> nil) and
+  if (DataSet <> nil) and (DataSet.FindField('CODIGO_ALMACEN_ALBLIN') <> nil)
+     and
      (unqryTablaG.FindField('CODIGO_ALM_ALB') <> nil) then
   begin
     sAlmacen := Trim(unqryTablaG.FieldByName('CODIGO_ALM_ALB').AsString);
@@ -709,6 +728,14 @@ end;
 procedure TdmAlbaranes.unqryAlbaranesLineasBeforePost(DataSet: TDataSet);
 var
   sSku, sArt: string;
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryAlbaranesLineas.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryAlbaranesLineas.FindField(ANombre);
+  end;
 begin
   inherited;
   // Desempaquetado ATTR en curso: post descriptivo, sin logica fiscal.
@@ -721,10 +748,8 @@ begin
     raise Exception.Create(SErrorLineaAlbaranSinArticulo);
   AsignarNumeroLineaAlbaran(DataSet);
   SincronizarAlmacenLinea(DataSet);
-  with unqryAlbaranesLineas do
-  begin
-    // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
-    NormalizarArticuloSkuEnDataSet(ConexionPrincipal,
+  // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
+  NormalizarArticuloSkuEnDataSet(ConexionPrincipal,
       unqryAlbaranesLineas, 'CODIGO_ART_ALBLIN',
       'CODIGO_UNIDAD_ALBLIN');
     NormalizarCamposOpcionalesLinea(DataSet);
@@ -758,15 +783,14 @@ begin
       FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
     if FindField('INSTANTE_MODIF') <> nil then
       FieldByName('INSTANTE_MODIF').AsDateTime := Now;
-    if DataSet.State = dsInsert then
-    begin
-      if (FindField('USUARIO_ALTA') <> nil) and
-         (FieldByName('USUARIO_ALTA').AsString = '') then
-        FieldByName('USUARIO_ALTA').AsString := IdentidadSesion.Usuario;
-      if (FindField('INSTANTE_ALTA') <> nil) and
-         FieldByName('INSTANTE_ALTA').IsNull then
-        FieldByName('INSTANTE_ALTA').AsDateTime := Now;
-    end;
+  if DataSet.State = dsInsert then
+  begin
+    if (FindField('USUARIO_ALTA') <> nil) and
+       (FieldByName('USUARIO_ALTA').AsString = '') then
+      FieldByName('USUARIO_ALTA').AsString := IdentidadSesion.Usuario;
+    if (FindField('INSTANTE_ALTA') <> nil) and
+       FieldByName('INSTANTE_ALTA').IsNull then
+      FieldByName('INSTANTE_ALTA').AsDateTime := Now;
   end;
 end;
 
@@ -904,32 +928,35 @@ var
   iNumero: Int64;
   sNumero: string;
 begin
-  with unstrdprcGetContadorAlbaran do
-  begin
-    Params.Clear;
-    Params.CreateParam(ftString, 'pserie',            ptInput);
-    Params.CreateParam(ftString, 'ptipodoc',          ptInput);
-    Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
-    Params.CreateParam(ftString, 'pUSUARIOMODIF',     ptInput);
-    Params.CreateParam(ftString, 'pcont',             ptOutput);
-    ParamByName('pserie').AsString    :=
-      unqryTablaG.FieldByName('SERIE_ALB').AsString;
-    ParamByName('ptipodoc').AsString :=
-      CrearConfiguracionDocumento(
-        tdAlbaran, sdVenta).TipoContador;
-    ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
-    ParamByName('pEMPRESA_CONTADOR').AsString :=
-                                  unqryTablaG.FieldByName(
-                                    'CODIGO_EMP_ALB').AsString;
-    ExecProc;
-    sNumero := Trim(ParamByName('pcont').AsString);
-    if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
-       (iNumero <= 0) then
-      raise Exception.Create(Format(SErrorContadorAlbaran,
-        [unqryTablaG.FieldByName('SERIE_ALB').AsString,
-         unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString]));
-    unqryTablaG.FieldByName('NUMERO_ALB').AsString := sNumero;
-  end;
+  unstrdprcGetContadorAlbaran.Params.Clear;
+  unstrdprcGetContadorAlbaran.Params.CreateParam(
+    ftString, 'pserie', ptInput);
+  unstrdprcGetContadorAlbaran.Params.CreateParam(
+    ftString, 'ptipodoc', ptInput);
+  unstrdprcGetContadorAlbaran.Params.CreateParam(
+    ftString, 'pEMPRESA_CONTADOR', ptInput);
+  unstrdprcGetContadorAlbaran.Params.CreateParam(
+    ftString, 'pUSUARIOMODIF', ptInput);
+  unstrdprcGetContadorAlbaran.Params.CreateParam(
+    ftString, 'pcont', ptOutput);
+  unstrdprcGetContadorAlbaran.ParamByName('pserie').AsString :=
+    unqryTablaG.FieldByName('SERIE_ALB').AsString;
+  unstrdprcGetContadorAlbaran.ParamByName('ptipodoc').AsString :=
+    CrearConfiguracionDocumento(tdAlbaran, sdVenta).TipoContador;
+  unstrdprcGetContadorAlbaran.ParamByName('pUSUARIOMODIF').AsString :=
+    IdentidadSesion.Usuario;
+  unstrdprcGetContadorAlbaran.ParamByName(
+    'pEMPRESA_CONTADOR').AsString :=
+    unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString;
+  unstrdprcGetContadorAlbaran.ExecProc;
+  sNumero := Trim(
+    unstrdprcGetContadorAlbaran.ParamByName('pcont').AsString);
+  if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
+     (iNumero <= 0) then
+    raise Exception.Create(Format(SErrorContadorAlbaran,
+      [unqryTablaG.FieldByName('SERIE_ALB').AsString,
+       unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString]));
+  unqryTablaG.FieldByName('NUMERO_ALB').AsString := sNumero;
 end;
 
 procedure TdmAlbaranes.CalcularTotalesAlbaran;
@@ -1353,11 +1380,18 @@ end;
 procedure TdmAlbaranes.CopiarEmpresaaAlbaran(DataSet: TDataSet);
 var
   sAlmacen: string;
-begin
-  with unqryTablaG do
+  function FindField(const ANombre: string): TField;
   begin
-    if (State <> dsEdit) and (State <> dsInsert) then
-      Edit;
+    Result := unqryTablaG.FindField(ANombre);
+  end;
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryTablaG.FieldByName(ANombre);
+  end;
+begin
+  if (unqryTablaG.State <> dsEdit) and
+     (unqryTablaG.State <> dsInsert) then
+    unqryTablaG.Edit;
     FindField('CODIGO_EMP_ALB').AsString             :=
       DataSet.FindField('CODIGO_EMP_EMP').AsString;
     FindField('RAZON_SOCIAL_EMPRESA_ALB').AsString   :=
@@ -1384,19 +1418,20 @@ begin
       DataSet.FindField('CODIGO_PAI_EMP').AsString;
     FindField('GRUPO_ZONA_IVA_EMPRESA_ALB').AsString :=
       DataSet.FindField('GRUPO_ZONA_IVA_EMP').AsString;
-    if FindField('CODIGO_ALM_ALB') <> nil then
-    begin
-      RefrescarAlmacenes(DataSet.FindField('CODIGO_EMP_EMP').AsString);
-      sAlmacen := Trim(FieldByName('CODIGO_ALM_ALB').AsString);
-      if (sAlmacen <> '') and
-         unqryAlmacenesAlb.Locate('CODIGO_ALM_ALM', sAlmacen, []) then
-        FieldByName('CODIGO_ALM_ALB').AsString := sAlmacen
-      else if (Trim(UbicacionSesion.Almacen) <> '') and
-              unqryAlmacenesAlb.Locate('CODIGO_ALM_ALM', UbicacionSesion.Almacen, []) then
-        FieldByName('CODIGO_ALM_ALB').AsString := UbicacionSesion.Almacen
-      else
-        FieldByName('CODIGO_ALM_ALB').Clear;
-    end;
+  if FindField('CODIGO_ALM_ALB') <> nil then
+  begin
+    RefrescarAlmacenes(DataSet.FindField('CODIGO_EMP_EMP').AsString);
+    sAlmacen := Trim(FieldByName('CODIGO_ALM_ALB').AsString);
+    if (sAlmacen <> '') and
+       unqryAlmacenesAlb.Locate('CODIGO_ALM_ALM', sAlmacen, []) then
+      FieldByName('CODIGO_ALM_ALB').AsString := sAlmacen
+    else if (Trim(UbicacionSesion.Almacen) <> '') and
+            unqryAlmacenesAlb.Locate('CODIGO_ALM_ALM',
+                                     UbicacionSesion.Almacen,
+                                     []) then
+      FieldByName('CODIGO_ALM_ALB').AsString := UbicacionSesion.Almacen
+    else
+      FieldByName('CODIGO_ALM_ALB').Clear;
   end;
   // La serie acompana a la empresa emisora (fza_empresas_series).
   // Cubre las dos rutas: codigo tecleado (BuscarEmpresa) y modal.
@@ -1434,11 +1469,14 @@ end;
 procedure TdmAlbaranes.CopiarClienteaAlbaran(DataSet: TDataSet);
 var
   sTarifa: string;
-begin
-  with unqryTablaG do
+  function FindField(const ANombre: string): TField;
   begin
-    if (State <> dsEdit) and (State <> dsInsert) then
-      Edit;
+    Result := unqryTablaG.FindField(ANombre);
+  end;
+begin
+  if (unqryTablaG.State <> dsEdit) and
+     (unqryTablaG.State <> dsInsert) then
+    unqryTablaG.Edit;
     FindField('CODIGO_CLI_ALB').AsString          :=
       DataSet.FindField('CODIGO_CLI_CLI').AsString;
     FindField('RAZON_SOCIAL_CLIENTE_ALB').AsString:=
@@ -1473,9 +1511,8 @@ begin
     sTarifa := Trim(DataSet.FindField('TARIFA_ARTICULO_CLI').AsString);
     if sTarifa = '' then
       sTarifa := ParametrosCaja.TarifaDefecto;
-    FindField('TARIFA_ARTICULO_CLIENTE_ALB').AsString := sTarifa;
-    ActualizarImpuestosTarifaCabecera(sTarifa);
-  end;
+  FindField('TARIFA_ARTICULO_CLIENTE_ALB').AsString := sTarifa;
+  ActualizarImpuestosTarifaCabecera(sTarifa);
   AplicarPorcentajesIvaVenta(
     CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG, 'ALB');
 end;
@@ -1757,6 +1794,94 @@ begin
   end;
 end;
 
+procedure TdmAlbaranes.EjecutarCrearFacturaInicio(
+  const ANumeroAlbaran, ASerieAlbaran: string;
+  out ANumeroFactura, ASerieFactura: string);
+begin
+  unstrdprcCrearFacturaInicio.Params.Clear;
+  unstrdprcCrearFacturaInicio.Params.CreateParam(
+    ftString, 'p_NUMERO_ALB', ptInput);
+  unstrdprcCrearFacturaInicio.Params.CreateParam(
+    ftString, 'p_SERIE_ALB', ptInput);
+  unstrdprcCrearFacturaInicio.Params.CreateParam(
+    ftString, 'p_USUARIO', ptInput);
+  unstrdprcCrearFacturaInicio.Params.CreateParam(
+    ftString, 'p_NUMERO_FAC', ptOutput);
+  unstrdprcCrearFacturaInicio.Params.CreateParam(
+    ftString, 'p_SERIE_FAC', ptOutput);
+  unstrdprcCrearFacturaInicio.ParamByName('p_NUMERO_ALB').AsString :=
+    ANumeroAlbaran;
+  unstrdprcCrearFacturaInicio.ParamByName('p_SERIE_ALB').AsString :=
+    ASerieAlbaran;
+  unstrdprcCrearFacturaInicio.ParamByName('p_USUARIO').AsString :=
+    IdentidadSesion.Usuario;
+  unstrdprcCrearFacturaInicio.ExecProc;
+  ANumeroFactura := unstrdprcCrearFacturaInicio.ParamByName(
+    'p_NUMERO_FAC').AsString;
+  ASerieFactura := unstrdprcCrearFacturaInicio.ParamByName(
+    'p_SERIE_FAC').AsString;
+end;
+
+procedure TdmAlbaranes.EjecutarCrearFacturaLinea(
+  const ANumeroFactura, ASerieFactura, ANumeroAlbaran,
+  ASerieAlbaran, ALineaAlbaran: string);
+begin
+  unstrdprcCrearFacturaLinea.Params.Clear;
+  unstrdprcCrearFacturaLinea.Params.CreateParam(
+    ftString, 'p_NUMERO_FAC', ptInput);
+  unstrdprcCrearFacturaLinea.Params.CreateParam(
+    ftString, 'p_SERIE_FAC', ptInput);
+  unstrdprcCrearFacturaLinea.Params.CreateParam(
+    ftString, 'p_NUMERO_ALB', ptInput);
+  unstrdprcCrearFacturaLinea.Params.CreateParam(
+    ftString, 'p_SERIE_ALB', ptInput);
+  unstrdprcCrearFacturaLinea.Params.CreateParam(
+    ftString, 'p_LINEA_ALB', ptInput);
+  unstrdprcCrearFacturaLinea.Params.CreateParam(
+    ftString, 'p_USUARIO', ptInput);
+  unstrdprcCrearFacturaLinea.ParamByName('p_NUMERO_FAC').AsString :=
+    ANumeroFactura;
+  unstrdprcCrearFacturaLinea.ParamByName('p_SERIE_FAC').AsString :=
+    ASerieFactura;
+  unstrdprcCrearFacturaLinea.ParamByName('p_NUMERO_ALB').AsString :=
+    ANumeroAlbaran;
+  unstrdprcCrearFacturaLinea.ParamByName('p_SERIE_ALB').AsString :=
+    ASerieAlbaran;
+  unstrdprcCrearFacturaLinea.ParamByName('p_LINEA_ALB').AsString :=
+    ALineaAlbaran;
+  unstrdprcCrearFacturaLinea.ParamByName('p_USUARIO').AsString :=
+    IdentidadSesion.Usuario;
+  unstrdprcCrearFacturaLinea.ExecProc;
+end;
+
+procedure TdmAlbaranes.EjecutarCrearFacturaFin(
+  const ANumeroFactura, ASerieFactura, ANumeroAlbaran,
+  ASerieAlbaran: string);
+begin
+  unstrdprcCrearFacturaFin.Params.Clear;
+  unstrdprcCrearFacturaFin.Params.CreateParam(
+    ftString, 'p_NUMERO_FAC', ptInput);
+  unstrdprcCrearFacturaFin.Params.CreateParam(
+    ftString, 'p_SERIE_FAC', ptInput);
+  unstrdprcCrearFacturaFin.Params.CreateParam(
+    ftString, 'p_NUMERO_ALB', ptInput);
+  unstrdprcCrearFacturaFin.Params.CreateParam(
+    ftString, 'p_SERIE_ALB', ptInput);
+  unstrdprcCrearFacturaFin.Params.CreateParam(
+    ftString, 'p_USUARIO', ptInput);
+  unstrdprcCrearFacturaFin.ParamByName('p_NUMERO_FAC').AsString :=
+    ANumeroFactura;
+  unstrdprcCrearFacturaFin.ParamByName('p_SERIE_FAC').AsString :=
+    ASerieFactura;
+  unstrdprcCrearFacturaFin.ParamByName('p_NUMERO_ALB').AsString :=
+    ANumeroAlbaran;
+  unstrdprcCrearFacturaFin.ParamByName('p_SERIE_ALB').AsString :=
+    ASerieAlbaran;
+  unstrdprcCrearFacturaFin.ParamByName('p_USUARIO').AsString :=
+    IdentidadSesion.Usuario;
+  unstrdprcCrearFacturaFin.ExecProc;
+end;
+
 function TdmAlbaranes.CrearFacturaDesdeAlbaran(out sNumeroFac,
                                                sSerieFac: string;
                                                aLineas: TList<string>): Boolean;
@@ -1781,21 +1906,8 @@ begin
   try
 
   // 1) Cabecera de la factura
-  with unstrdprcCrearFacturaInicio do
-  begin
-    Params.Clear;
-    Params.CreateParam(ftString, 'p_NUMERO_ALB', ptInput);
-    Params.CreateParam(ftString, 'p_SERIE_ALB',  ptInput);
-    Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
-    Params.CreateParam(ftString, 'p_NUMERO_FAC', ptOutput);
-    Params.CreateParam(ftString, 'p_SERIE_FAC',  ptOutput);
-    ParamByName('p_NUMERO_ALB').AsString := sNumeroAlb;
-    ParamByName('p_SERIE_ALB').AsString  := sSerieAlb;
-    ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
-    ExecProc;
-    sNumeroFac := ParamByName('p_NUMERO_FAC').AsString;
-    sSerieFac  := ParamByName('p_SERIE_FAC').AsString;
-  end;
+  EjecutarCrearFacturaInicio(
+    sNumeroAlb, sSerieAlb, sNumeroFac, sSerieFac);
   NegarMovimientosFacturaDesdeAlbaran(sSerieFac, sNumeroFac);
 
   // 2) Líneas: las indicadas, o todas las pendientes si no se pasa lista.
@@ -1809,26 +1921,12 @@ begin
       begin
         if (ds.FindField('ESFACTURADA_ALBLIN') = nil) or
            (ds.FieldByName('ESFACTURADA_ALBLIN').AsString <> 'S') then
-        begin
-          with unstrdprcCrearFacturaLinea do
-          begin
-            Params.Clear;
-            Params.CreateParam(ftString, 'p_NUMERO_FAC', ptInput);
-            Params.CreateParam(ftString, 'p_SERIE_FAC',  ptInput);
-            Params.CreateParam(ftString, 'p_NUMERO_ALB', ptInput);
-            Params.CreateParam(ftString, 'p_SERIE_ALB',  ptInput);
-            Params.CreateParam(ftString, 'p_LINEA_ALB',  ptInput);
-            Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
-            ParamByName('p_NUMERO_FAC').AsString := sNumeroFac;
-            ParamByName('p_SERIE_FAC').AsString  := sSerieFac;
-            ParamByName('p_NUMERO_ALB').AsString := sNumeroAlb;
-            ParamByName('p_SERIE_ALB').AsString  := sSerieAlb;
-            ParamByName('p_LINEA_ALB').AsString  :=
-              ds.FieldByName('LINEA_ALBLIN').AsString;
-            ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
-            ExecProc;
-          end;
-        end;
+          EjecutarCrearFacturaLinea(
+            sNumeroFac,
+            sSerieFac,
+            sNumeroAlb,
+            sSerieAlb,
+            ds.FieldByName('LINEA_ALBLIN').AsString);
         ds.Next;
       end;
     finally
@@ -1840,43 +1938,19 @@ begin
     for i := 0 to aLineas.Count - 1 do
     begin
       sLinea := aLineas[i];
-      if sLinea = '' then Continue;
-      with unstrdprcCrearFacturaLinea do
-      begin
-        Params.Clear;
-        Params.CreateParam(ftString, 'p_NUMERO_FAC', ptInput);
-        Params.CreateParam(ftString, 'p_SERIE_FAC',  ptInput);
-        Params.CreateParam(ftString, 'p_NUMERO_ALB', ptInput);
-        Params.CreateParam(ftString, 'p_SERIE_ALB',  ptInput);
-        Params.CreateParam(ftString, 'p_LINEA_ALB',  ptInput);
-        Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
-        ParamByName('p_NUMERO_FAC').AsString := sNumeroFac;
-        ParamByName('p_SERIE_FAC').AsString  := sSerieFac;
-        ParamByName('p_NUMERO_ALB').AsString := sNumeroAlb;
-        ParamByName('p_SERIE_ALB').AsString  := sSerieAlb;
-        ParamByName('p_LINEA_ALB').AsString  := sLinea;
-        ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
-        ExecProc;
-      end;
+      if sLinea <> '' then
+        EjecutarCrearFacturaLinea(
+          sNumeroFac,
+          sSerieFac,
+          sNumeroAlb,
+          sSerieAlb,
+          sLinea);
     end;
   end;
 
   // 3) Recalcular totales y estado del albarán.
-  with unstrdprcCrearFacturaFin do
-  begin
-    Params.Clear;
-    Params.CreateParam(ftString, 'p_NUMERO_FAC', ptInput);
-    Params.CreateParam(ftString, 'p_SERIE_FAC',  ptInput);
-    Params.CreateParam(ftString, 'p_NUMERO_ALB', ptInput);
-    Params.CreateParam(ftString, 'p_SERIE_ALB',  ptInput);
-    Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
-    ParamByName('p_NUMERO_FAC').AsString := sNumeroFac;
-    ParamByName('p_SERIE_FAC').AsString  := sSerieFac;
-    ParamByName('p_NUMERO_ALB').AsString := sNumeroAlb;
-    ParamByName('p_SERIE_ALB').AsString  := sSerieAlb;
-    ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
-    ExecProc;
-  end;
+  EjecutarCrearFacturaFin(
+    sNumeroFac, sSerieFac, sNumeroAlb, sSerieAlb);
 
     if bTransPropia and ConexionPrincipal.InTransaction then
       ConexionPrincipal.Commit;
@@ -1897,8 +1971,9 @@ begin
   Result := True;
 end;
 
-function TdmAlbaranes.FacturarAlbaranesLista(aListaAlbaranes: TStrings;
-                                             bAgruparPorCliente: Boolean): Integer;
+function TdmAlbaranes.FacturarAlbaranesLista(
+  aListaAlbaranes: TStrings;
+  bAgruparPorCliente: Boolean): Integer;
 var
   i, iSep: Integer;
   sLin, sSer, sNum, sCliActual, sCliAlb: string;
@@ -1961,21 +2036,8 @@ begin
          (sCliAlb <> sCliActual) then
       begin
         // Crear nueva cabecera
-        with unstrdprcCrearFacturaInicio do
-        begin
-          Params.Clear;
-          Params.CreateParam(ftString, 'p_NUMERO_ALB', ptInput);
-          Params.CreateParam(ftString, 'p_SERIE_ALB',  ptInput);
-          Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
-          Params.CreateParam(ftString, 'p_NUMERO_FAC', ptOutput);
-          Params.CreateParam(ftString, 'p_SERIE_FAC',  ptOutput);
-          ParamByName('p_NUMERO_ALB').AsString := sNum;
-          ParamByName('p_SERIE_ALB').AsString  := sSer;
-          ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
-          ExecProc;
-          sNumFac := ParamByName('p_NUMERO_FAC').AsString;
-          sSerFac := ParamByName('p_SERIE_FAC').AsString;
-        end;
+        EjecutarCrearFacturaInicio(
+          sNum, sSer, sNumFac, sSerFac);
         NegarMovimientosFacturaDesdeAlbaran(sSerFac, sNumFac);
         sNumFacActual := sNumFac;
         sSerFacActual := sSerFac;
@@ -1995,45 +2057,19 @@ begin
       qLin.Open;
       while not qLin.Eof do
       begin
-        with unstrdprcCrearFacturaLinea do
-        begin
-          Params.Clear;
-          Params.CreateParam(ftString, 'p_NUMERO_FAC', ptInput);
-          Params.CreateParam(ftString, 'p_SERIE_FAC',  ptInput);
-          Params.CreateParam(ftString, 'p_NUMERO_ALB', ptInput);
-          Params.CreateParam(ftString, 'p_SERIE_ALB',  ptInput);
-          Params.CreateParam(ftString, 'p_LINEA_ALB',  ptInput);
-          Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
-          ParamByName('p_NUMERO_FAC').AsString := sNumFac;
-          ParamByName('p_SERIE_FAC').AsString  := sSerFac;
-          ParamByName('p_NUMERO_ALB').AsString := sNum;
-          ParamByName('p_SERIE_ALB').AsString  := sSer;
-          ParamByName('p_LINEA_ALB').AsString  :=
-            qLin.FieldByName('LINEA_ALBLIN').AsString;
-          ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
-          ExecProc;
-        end;
+        EjecutarCrearFacturaLinea(
+          sNumFac,
+          sSerFac,
+          sNum,
+          sSer,
+          qLin.FieldByName('LINEA_ALBLIN').AsString);
         qLin.Next;
       end;
       qLin.Close;
 
       // Cerrar el albarán: marcar como facturado si no quedan líneas
       // pendientes.
-      with unstrdprcCrearFacturaFin do
-      begin
-        Params.Clear;
-        Params.CreateParam(ftString, 'p_NUMERO_FAC', ptInput);
-        Params.CreateParam(ftString, 'p_SERIE_FAC',  ptInput);
-        Params.CreateParam(ftString, 'p_NUMERO_ALB', ptInput);
-        Params.CreateParam(ftString, 'p_SERIE_ALB',  ptInput);
-        Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
-        ParamByName('p_NUMERO_FAC').AsString := sNumFac;
-        ParamByName('p_SERIE_FAC').AsString  := sSerFac;
-        ParamByName('p_NUMERO_ALB').AsString := sNum;
-        ParamByName('p_SERIE_ALB').AsString  := sSer;
-        ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
-        ExecProc;
-      end;
+      EjecutarCrearFacturaFin(sNumFac, sSerFac, sNum, sSer);
     end;
 
       if bTransPropia and ConexionPrincipal.InTransaction then
@@ -2067,6 +2103,7 @@ var
   qLineas: TUniQuery;
   qExiste: TUniQuery;
   qFechaMov: TUniQuery;
+  Procedimiento: TUniStoredProc;
   sNumeroAlb, sSerieAlb, sEmpresa, sCliente: string;
   sAlmacenCabecera: string;
   sLinea, sSku, sAlmacen, sArticulo, sNumeroMov: string;
@@ -2086,7 +2123,8 @@ begin
       dFechaAlb := unqryTablaG.FieldByName('FECHA_ALB').AsDateTime;
   sAlmacenCabecera := '';
   if unqryTablaG.FindField('CODIGO_ALM_ALB') <> nil then
-    sAlmacenCabecera := Trim(unqryTablaG.FieldByName('CODIGO_ALM_ALB').AsString);
+    sAlmacenCabecera :=
+      Trim(unqryTablaG.FieldByName('CODIGO_ALM_ALB').AsString);
 
   qLineas := TUniQuery.Create(nil);
   qExiste := TUniQuery.Create(nil);
@@ -2142,58 +2180,85 @@ begin
         qExiste.Open;
         if qExiste.FieldByName('N').AsInteger = 0 then
         begin
-          with unstrdprcInsertarMovAlb do
-          begin
-            Connection := unqryTablaG.Connection;
-            Params.Clear;
-            Params.CreateParam(ftString, 'p_NUMERO_MOV',          ptInput);
-            Params.CreateParam(ftString, 'p_TIPO_DOC_MOV',        ptInput);
-            Params.CreateParam(ftString, 'p_SERIE_DOC_MOV',       ptInput);
-            Params.CreateParam(ftString, 'p_NRO_DOC_MOV',         ptInput);
-            Params.CreateParam(ftString, 'p_LINEA_MOV',           ptInput);
-            Params.CreateParam(ftString, 'p_CODIGO_EMPRESA_MOV',  ptInput);
-            Params.CreateParam(ftString, 'p_CODIGO_ALMACEN_MOV',  ptInput);
-            Params.CreateParam(ftString,
-                               'p_CODIGO_ALMACEN_CONTRA_MOV',
-                               ptInput);
-            Params.CreateParam(ftString, 'p_CODIGO_UNIDAD_MOV',   ptInput);
-            Params.CreateParam(ftString, 'p_TIPO_MOVIMIENTO_MOV', ptInput);
-            Params.CreateParam(ftBCD,    'p_CANTIDAD_MOV',        ptInput);
-            Params.CreateParam(ftBCD,    'p_PRECIO_MEDIO_MOV',    ptInput);
-            Params.CreateParam(ftBCD,    'p_TOTAL_COSTE_MOV',     ptInput);
-            Params.CreateParam(ftString, 'p_USUARIO',             ptInput);
-            Params.CreateParam(ftString, 'p_ALMACEN_DOC',         ptInput);
-            Params.CreateParam(ftString, 'p_NUMOP_DOC',           ptInput);
-            Params.CreateParam(ftString, 'p_CODIGO_CAJA_DOC_MOV', ptInput);
-            Params.CreateParam(ftString, 'p_CODCLIENTE',          ptInput);
-            Params.CreateParam(ftString, 'p_CODARTICULO',         ptInput);
-            sNumeroMov := ObtenerSiguienteContador(
-              ConexionPrincipal,
-              'MV',
-              IdentidadSesion.Usuario);
-            ParamByName('p_NUMERO_MOV').AsString          := sNumeroMov;
-            ParamByName('p_TIPO_DOC_MOV').AsString :=
-              EstrategiaAlbaranVenta.TipoDocumentoMovimientoStock;
-            ParamByName('p_SERIE_DOC_MOV').AsString       := sSerieAlb;
-            ParamByName('p_NRO_DOC_MOV').AsString         := sNumeroAlb;
-            ParamByName('p_LINEA_MOV').AsString           := sLinea;
-            ParamByName('p_CODIGO_EMPRESA_MOV').AsString  := sEmpresa;
-            ParamByName('p_CODIGO_ALMACEN_MOV').AsString  := sAlmacen;
-            ParamByName('p_CODIGO_ALMACEN_CONTRA_MOV').Clear;
-            ParamByName('p_CODIGO_UNIDAD_MOV').AsString   := sSku;
-            ParamByName('p_TIPO_MOVIMIENTO_MOV').AsString :=
-              EstrategiaAlbaranVenta.TipoMovimientoStock;
-            ParamByName('p_CANTIDAD_MOV').AsFloat         := fCantidad;
-            ParamByName('p_PRECIO_MEDIO_MOV').AsFloat     := 0;
-            ParamByName('p_TOTAL_COSTE_MOV').AsFloat      := 0;
-            ParamByName('p_USUARIO').AsString             := IdentidadSesion.Usuario;
-            ParamByName('p_ALMACEN_DOC').AsString         := sAlmacen;
-            ParamByName('p_NUMOP_DOC').AsString           := '';
-            ParamByName('p_CODIGO_CAJA_DOC_MOV').AsString := '';
-            ParamByName('p_CODCLIENTE').AsString          := sCliente;
-            ParamByName('p_CODARTICULO').AsString         := sArticulo;
-            ExecProc;
-          end;
+          Procedimiento := unstrdprcInsertarMovAlb;
+          Procedimiento.Connection := unqryTablaG.Connection;
+          Procedimiento.Params.Clear;
+          Procedimiento.Params.CreateParam(
+            ftString, 'p_NUMERO_MOV', ptInput);
+          Procedimiento.Params.CreateParam(
+            ftString, 'p_TIPO_DOC_MOV', ptInput);
+          Procedimiento.Params.CreateParam(
+            ftString, 'p_SERIE_DOC_MOV', ptInput);
+          Procedimiento.Params.CreateParam(
+            ftString, 'p_NRO_DOC_MOV', ptInput);
+          Procedimiento.Params.CreateParam(
+            ftString, 'p_LINEA_MOV', ptInput);
+          Procedimiento.Params.CreateParam(
+            ftString, 'p_CODIGO_EMPRESA_MOV', ptInput);
+          Procedimiento.Params.CreateParam(
+            ftString, 'p_CODIGO_ALMACEN_MOV', ptInput);
+          Procedimiento.Params.CreateParam(
+            ftString, 'p_CODIGO_ALMACEN_CONTRA_MOV', ptInput);
+          Procedimiento.Params.CreateParam(
+            ftString, 'p_CODIGO_UNIDAD_MOV', ptInput);
+          Procedimiento.Params.CreateParam(
+            ftString, 'p_TIPO_MOVIMIENTO_MOV', ptInput);
+          Procedimiento.Params.CreateParam(
+            ftBCD, 'p_CANTIDAD_MOV', ptInput);
+          Procedimiento.Params.CreateParam(
+            ftBCD, 'p_PRECIO_MEDIO_MOV', ptInput);
+          Procedimiento.Params.CreateParam(
+            ftBCD, 'p_TOTAL_COSTE_MOV', ptInput);
+          Procedimiento.Params.CreateParam(
+            ftString, 'p_USUARIO', ptInput);
+          Procedimiento.Params.CreateParam(
+            ftString, 'p_ALMACEN_DOC', ptInput);
+          Procedimiento.Params.CreateParam(
+            ftString, 'p_NUMOP_DOC', ptInput);
+          Procedimiento.Params.CreateParam(
+            ftString, 'p_CODIGO_CAJA_DOC_MOV', ptInput);
+          Procedimiento.Params.CreateParam(
+            ftString, 'p_CODCLIENTE', ptInput);
+          Procedimiento.Params.CreateParam(
+            ftString, 'p_CODARTICULO', ptInput);
+          sNumeroMov := ObtenerSiguienteContador(
+            ConexionPrincipal,
+            'MV',
+            IdentidadSesion.Usuario);
+          Procedimiento.ParamByName('p_NUMERO_MOV').AsString :=
+            sNumeroMov;
+          Procedimiento.ParamByName('p_TIPO_DOC_MOV').AsString :=
+            EstrategiaAlbaranVenta.TipoDocumentoMovimientoStock;
+          Procedimiento.ParamByName('p_SERIE_DOC_MOV').AsString :=
+            sSerieAlb;
+          Procedimiento.ParamByName('p_NRO_DOC_MOV').AsString :=
+            sNumeroAlb;
+          Procedimiento.ParamByName('p_LINEA_MOV').AsString := sLinea;
+          Procedimiento.ParamByName('p_CODIGO_EMPRESA_MOV').AsString :=
+            sEmpresa;
+          Procedimiento.ParamByName('p_CODIGO_ALMACEN_MOV').AsString :=
+            sAlmacen;
+          Procedimiento.ParamByName(
+            'p_CODIGO_ALMACEN_CONTRA_MOV').Clear;
+          Procedimiento.ParamByName('p_CODIGO_UNIDAD_MOV').AsString :=
+            sSku;
+          Procedimiento.ParamByName('p_TIPO_MOVIMIENTO_MOV').AsString :=
+            EstrategiaAlbaranVenta.TipoMovimientoStock;
+          Procedimiento.ParamByName('p_CANTIDAD_MOV').AsFloat :=
+            fCantidad;
+          Procedimiento.ParamByName('p_PRECIO_MEDIO_MOV').AsFloat := 0;
+          Procedimiento.ParamByName('p_TOTAL_COSTE_MOV').AsFloat := 0;
+          Procedimiento.ParamByName('p_USUARIO').AsString :=
+            IdentidadSesion.Usuario;
+          Procedimiento.ParamByName('p_ALMACEN_DOC').AsString :=
+            sAlmacen;
+          Procedimiento.ParamByName('p_NUMOP_DOC').AsString := '';
+          Procedimiento.ParamByName('p_CODIGO_CAJA_DOC_MOV').AsString :=
+            '';
+          Procedimiento.ParamByName('p_CODCLIENTE').AsString := sCliente;
+          Procedimiento.ParamByName('p_CODARTICULO').AsString :=
+            sArticulo;
+          Procedimiento.ExecProc;
           qFechaMov.ParamByName('pFECHA').AsDateTime := dFechaAlb;
           qFechaMov.ParamByName('pNUMMOV').AsString := sNumeroMov;
           qFechaMov.ExecSQL;

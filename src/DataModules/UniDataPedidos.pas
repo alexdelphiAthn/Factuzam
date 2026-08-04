@@ -159,7 +159,8 @@ uses
   UniDataContadorLineasRepositorio, JclDebug,
   inLibData, UniDataAlmacenesEmpresaRepositorio,
   inLibMsgArticulos, inLibMsgVentas,
-  inLibDocumento, inLibDocumentoIntf, inLibLogIntf;
+  inLibDocumento, inLibDocumentoIntf, inLibLogIntf,
+  UniDataPedidosPrestaShopEscrituras;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -466,11 +467,17 @@ end;
 procedure TdmPedidos.unqryTablaGAfterInsert(DataSet: TDataSet);
 var
   sSerie: string;
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryTablaG.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryTablaG.FindField(ANombre);
+  end;
 begin
   inherited;
-  with unqryTablaG do
-  begin
-    FieldByName('FECHA_PED').AsDateTime := Date;
+  FieldByName('FECHA_PED').AsDateTime := Date;
     if Trim(UbicacionSesion.Empresa) <> '' then
       FieldByName('CODIGO_EMP_PED').AsString := UbicacionSesion.Empresa
     else
@@ -496,9 +503,8 @@ begin
       FieldByName('ESCONSOLIDADO_PED').AsString := 'N';
     if Trim(UbicacionSesion.Empresa) <> '' then
       BuscarEmpresa(UbicacionSesion.Empresa);
-    if FindField('CODIGO_ALM_PED') <> nil then
-      FieldByName('CODIGO_ALM_PED').AsString := UbicacionSesion.Almacen;
-  end;
+  if FindField('CODIGO_ALM_PED') <> nil then
+    FieldByName('CODIGO_ALM_PED').AsString := UbicacionSesion.Almacen;
   RefrescarAlmacenes(
     DataSet.FieldByName('CODIGO_EMP_PED').AsString);
 end;
@@ -560,11 +566,17 @@ end;
 procedure TdmPedidos.unqryPedidosLineasAfterInsert(DataSet: TDataSet);
 var
   i: Integer;
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryPedidosLineas.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryPedidosLineas.FindField(ANombre);
+  end;
 begin
   inherited;
-  with unqryPedidosLineas do
-  begin
-    FieldByName('LINEA_PEDLIN').AsString := '0000';
+  FieldByName('LINEA_PEDLIN').AsString := '0000';
     // Columnas del contrato ColumnSKUcxGrid: NOT NULL en BBDD con
     // DEFAULT de servidor que UniDAC no conoce (llegan via vista).
     // Sin inicializarlas aqui el Post lanza "must have a value".
@@ -612,9 +624,8 @@ begin
       FieldByName('INSTANTE_ALTA').AsDateTime := Now;
     if FindField('USUARIO_MODIF') <> nil then
       FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
-    if FindField('INSTANTE_MODIF') <> nil then
-      FieldByName('INSTANTE_MODIF').AsDateTime := Now;
-  end;
+  if FindField('INSTANTE_MODIF') <> nil then
+    FieldByName('INSTANTE_MODIF').AsDateTime := Now;
 end;
 
 var
@@ -681,6 +692,14 @@ end;
 procedure TdmPedidos.unqryPedidosLineasBeforePost(DataSet: TDataSet);
 var
   fCantidad, fEntregada, fPendiente, fAAlbaranar: Double;
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryPedidosLineas.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryPedidosLineas.FindField(ANombre);
+  end;
 begin
   inherited;
   // Guarda ColumnSKUcxGrid (bucle 07/07/2026): un Post de linea sin
@@ -697,9 +716,7 @@ begin
     'CODIGO_ART_PEDLIN', 'CODIGOPRODPS_PEDLIN', 'CODBAR_ART_PEDLIN');
   RecalcularEntregasLinea;
   // El total de la línea siempre se mantiene coherente
-  with unqryPedidosLineas do
-  begin
-    fCantidad  := FieldByName('CANTIDAD_PEDLIN').AsFloat;
+  fCantidad := FieldByName('CANTIDAD_PEDLIN').AsFloat;
     if FindField('CANTIDAD_ENTREGADA_PEDLIN') <> nil then
       fEntregada := FieldByName('CANTIDAD_ENTREGADA_PEDLIN').AsFloat
     else
@@ -732,15 +749,14 @@ begin
       FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
     if FindField('INSTANTE_MODIF') <> nil then
       FieldByName('INSTANTE_MODIF').AsDateTime := Now;
-    if DataSet.State = dsInsert then
-    begin
-      if (FindField('USUARIO_ALTA') <> nil) and
-         (FieldByName('USUARIO_ALTA').AsString = '') then
-        FieldByName('USUARIO_ALTA').AsString := IdentidadSesion.Usuario;
-      if (FindField('INSTANTE_ALTA') <> nil) and
-         FieldByName('INSTANTE_ALTA').IsNull then
-        FieldByName('INSTANTE_ALTA').AsDateTime := Now;
-    end;
+  if DataSet.State = dsInsert then
+  begin
+    if (FindField('USUARIO_ALTA') <> nil) and
+       (FieldByName('USUARIO_ALTA').AsString = '') then
+      FieldByName('USUARIO_ALTA').AsString := IdentidadSesion.Usuario;
+    if (FindField('INSTANTE_ALTA') <> nil) and
+       FieldByName('INSTANTE_ALTA').IsNull then
+      FieldByName('INSTANTE_ALTA').AsDateTime := Now;
   end;
 end;
 
@@ -889,10 +905,16 @@ end;
 procedure TdmPedidos.RecalcularEntregasLinea;
 var
   fCant, fEntr, fPend, fAAlbaranar: Double;
-begin
-  with unqryPedidosLineas do
+  function FieldByName(const ANombre: string): TField;
   begin
-    fCant := FieldByName('CANTIDAD_PEDLIN').AsFloat;
+    Result := unqryPedidosLineas.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryPedidosLineas.FindField(ANombre);
+  end;
+begin
+  fCant := FieldByName('CANTIDAD_PEDLIN').AsFloat;
     if FindField('CANTIDAD_ENTREGADA_PEDLIN') <> nil then
     begin
       fEntr := FieldByName('CANTIDAD_ENTREGADA_PEDLIN').AsFloat;
@@ -921,34 +943,35 @@ begin
           FieldByName('ESENTREGADA_PEDLIN').AsString := 'S'
         else
           FieldByName('ESENTREGADA_PEDLIN').AsString := 'N';
-      end;
     end;
   end;
 end;
 
 procedure TdmPedidos.GetCodigoAutoPedido;
 begin
-  with unstrdprcGetContadorPedido do
-  begin
-    Params.Clear;
-    Params.CreateParam(ftString, 'pserie',            ptInput);
-    Params.CreateParam(ftString, 'ptipodoc',          ptInput);
-    Params.CreateParam(ftString, 'pcont',             ptOutput);
-    Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
-    Params.CreateParam(ftString, 'pUSUARIOMODIF',     ptInput);
-    ParamByName('pserie').AsString    :=
-      unqryTablaG.FieldByName('SERIE_PED').AsString;
-    ParamByName('ptipodoc').AsString :=
-      CrearConfiguracionDocumento(
-        tdPedido, sdVenta).TipoContador;
-    ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
-    ParamByName('pEMPRESA_CONTADOR').AsString :=
-                                 unqryTablaG.FieldByName(
-                                   'CODIGO_EMP_PED').AsString;
-    ExecProc;
-    unqryTablaG.FieldByName('NUMERO_PED').AsString :=
-                                                  ParamByName('pcont').AsString;
-  end;
+  unstrdprcGetContadorPedido.Params.Clear;
+  unstrdprcGetContadorPedido.Params.CreateParam(
+    ftString, 'pserie', ptInput);
+  unstrdprcGetContadorPedido.Params.CreateParam(
+    ftString, 'ptipodoc', ptInput);
+  unstrdprcGetContadorPedido.Params.CreateParam(
+    ftString, 'pcont', ptOutput);
+  unstrdprcGetContadorPedido.Params.CreateParam(
+    ftString, 'pEMPRESA_CONTADOR', ptInput);
+  unstrdprcGetContadorPedido.Params.CreateParam(
+    ftString, 'pUSUARIOMODIF', ptInput);
+  unstrdprcGetContadorPedido.ParamByName('pserie').AsString :=
+    unqryTablaG.FieldByName('SERIE_PED').AsString;
+  unstrdprcGetContadorPedido.ParamByName('ptipodoc').AsString :=
+    CrearConfiguracionDocumento(tdPedido, sdVenta).TipoContador;
+  unstrdprcGetContadorPedido.ParamByName('pUSUARIOMODIF').AsString :=
+    IdentidadSesion.Usuario;
+  unstrdprcGetContadorPedido.ParamByName(
+    'pEMPRESA_CONTADOR').AsString :=
+    unqryTablaG.FieldByName('CODIGO_EMP_PED').AsString;
+  unstrdprcGetContadorPedido.ExecProc;
+  unqryTablaG.FieldByName('NUMERO_PED').AsString :=
+    unstrdprcGetContadorPedido.ParamByName('pcont').AsString;
 end;
 
 procedure TdmPedidos.CalcularTotalesPedido;
@@ -1180,11 +1203,14 @@ begin
 end;
 
 procedure TdmPedidos.CopiarEmpresaaPedido(DataSet: TDataSet);
-begin
-  with unqryTablaG do
+  function FindField(const ANombre: string): TField;
   begin
-    if (State <> dsEdit) and (State <> dsInsert) then
-      Edit;
+    Result := unqryTablaG.FindField(ANombre);
+  end;
+begin
+  if (unqryTablaG.State <> dsEdit) and
+     (unqryTablaG.State <> dsInsert) then
+    unqryTablaG.Edit;
     FindField('CODIGO_EMP_PED').AsString             :=
       DataSet.FindField('CODIGO_EMP_EMP').AsString;
     FindField('RAZON_SOCIAL_EMPRESA_PED').AsString   :=
@@ -1213,10 +1239,8 @@ begin
       DataSet.FindField('GRUPO_ZONA_IVA_EMP').AsString;
     FindField('ESRETENCIONES_EMPRESA_PED').AsString  :=
       DataSet.FindField('ESRETENCIONES_EMP').AsString;
-    FindField('ESREGIMENESPECIALAGRICOLA_EMPRESA_PED').AsString :=
-                            DataSet.FindField(
-                              'ESREGIMENESPECIALAGRICOLA_EMP').AsString;
-  end;
+  FindField('ESREGIMENESPECIALAGRICOLA_EMPRESA_PED').AsString :=
+    DataSet.FindField('ESREGIMENESPECIALAGRICOLA_EMP').AsString;
   // La serie acompana a la empresa emisora (fza_empresas_series).
   // Cubre las dos rutas: codigo tecleado (BuscarEmpresa) y modal.
   ProponerSerieEmpresa(DataSet.FindField('CODIGO_EMP_EMP').AsString);
@@ -1253,11 +1277,14 @@ end;
 procedure TdmPedidos.CopiarClienteaPedido(DataSet: TDataSet);
 var
   sTarifa: string;
-begin
-  with unqryTablaG do
+  function FindField(const ANombre: string): TField;
   begin
-    if (State <> dsEdit) and (State <> dsInsert) then
-      Edit;
+    Result := unqryTablaG.FindField(ANombre);
+  end;
+begin
+  if (unqryTablaG.State <> dsEdit) and
+     (unqryTablaG.State <> dsInsert) then
+    unqryTablaG.Edit;
     FindField('CODIGO_CLI_PED').AsString                  :=
       DataSet.FindField('CODIGO_CLI_CLI').AsString;
     FindField('RAZON_SOCIAL_CLIENTE_FISCAL_PED').AsString :=
@@ -1298,12 +1325,11 @@ begin
       sTarifa := ParametrosCaja.TarifaDefecto;
     FindField('TARIFA_ARTICULO_CLIENTE_PED').AsString := sTarifa;
     ActualizarImpuestosTarifaCabecera(sTarifa);
-    if (FindField('FORMA_PAGO_PED') <> nil) and
-       (DataSet.FindField('CODIGO_FP_CLI') <> nil) and
-       (Trim(DataSet.FindField('CODIGO_FP_CLI').AsString) <> '') then
-      FindField('FORMA_PAGO_PED').AsString :=
-        Trim(DataSet.FindField('CODIGO_FP_CLI').AsString);
-  end;
+  if (FindField('FORMA_PAGO_PED') <> nil) and
+     (DataSet.FindField('CODIGO_FP_CLI') <> nil) and
+     (Trim(DataSet.FindField('CODIGO_FP_CLI').AsString) <> '') then
+    FindField('FORMA_PAGO_PED').AsString :=
+      Trim(DataSet.FindField('CODIGO_FP_CLI').AsString);
   AplicarPorcentajesIvaVenta(
     CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG, 'PED');
 end;
@@ -1675,21 +1701,28 @@ begin
     end
     else
     begin
-      with unstrdprcCrearAlbaranInicio do
-      begin
-        Params.Clear;
-        Params.CreateParam(ftString, 'p_NUMERO_PED', ptInput);
-        Params.CreateParam(ftString, 'p_SERIE_PED',  ptInput);
-        Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
-        Params.CreateParam(ftString, 'p_NUMERO_ALB', ptOutput);
-        Params.CreateParam(ftString, 'p_SERIE_ALB',  ptOutput);
-        ParamByName('p_NUMERO_PED').AsString := sNumeroPed;
-        ParamByName('p_SERIE_PED').AsString  := sSeriePed;
-        ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
-        ExecProc;
-        sNumeroAlb := ParamByName('p_NUMERO_ALB').AsString;
-        sSerieAlb  := ParamByName('p_SERIE_ALB').AsString;
-      end;
+      unstrdprcCrearAlbaranInicio.Params.Clear;
+      unstrdprcCrearAlbaranInicio.Params.CreateParam(
+        ftString, 'p_NUMERO_PED', ptInput);
+      unstrdprcCrearAlbaranInicio.Params.CreateParam(
+        ftString, 'p_SERIE_PED', ptInput);
+      unstrdprcCrearAlbaranInicio.Params.CreateParam(
+        ftString, 'p_USUARIO', ptInput);
+      unstrdprcCrearAlbaranInicio.Params.CreateParam(
+        ftString, 'p_NUMERO_ALB', ptOutput);
+      unstrdprcCrearAlbaranInicio.Params.CreateParam(
+        ftString, 'p_SERIE_ALB', ptOutput);
+      unstrdprcCrearAlbaranInicio.ParamByName(
+        'p_NUMERO_PED').AsString := sNumeroPed;
+      unstrdprcCrearAlbaranInicio.ParamByName(
+        'p_SERIE_PED').AsString := sSeriePed;
+      unstrdprcCrearAlbaranInicio.ParamByName('p_USUARIO').AsString :=
+        IdentidadSesion.Usuario;
+      unstrdprcCrearAlbaranInicio.ExecProc;
+      sNumeroAlb := unstrdprcCrearAlbaranInicio.ParamByName(
+        'p_NUMERO_ALB').AsString;
+      sSerieAlb := unstrdprcCrearAlbaranInicio.ParamByName(
+        'p_SERIE_ALB').AsString;
       CopiarFormaPagoPedidoAAlbaran(sSeriePed, sNumeroPed, sSerieAlb,
         sNumeroAlb, True);
     end;
@@ -1699,45 +1732,67 @@ begin
     begin
       par := aLineas[i];
       if par.Value > 0 then
-      with unstrdprcCrearAlbaranLinea do
       begin
-        Params.Clear;
-        Params.CreateParam(ftString,    'p_NUMERO_ALB', ptInput);
-        Params.CreateParam(ftString,    'p_SERIE_ALB',  ptInput);
-        Params.CreateParam(ftString,    'p_NUMERO_PED', ptInput);
-        Params.CreateParam(ftString,    'p_SERIE_PED',  ptInput);
-        Params.CreateParam(ftString,    'p_LINEA_PED',  ptInput);
-        Params.CreateParam(ftBCD,       'p_CANTIDAD',   ptInput);
-        Params.CreateParam(ftString,    'p_CODIGO_ALM', ptInput);
-        Params.CreateParam(ftString,    'p_USUARIO',    ptInput);
-        ParamByName('p_NUMERO_ALB').AsString := sNumeroAlb;
-        ParamByName('p_SERIE_ALB').AsString  := sSerieAlb;
-        ParamByName('p_NUMERO_PED').AsString := sNumeroPed;
-        ParamByName('p_SERIE_PED').AsString  := sSeriePed;
-        ParamByName('p_LINEA_PED').AsString  := par.Key;
-        ParamByName('p_CANTIDAD').AsCurrency := par.Value;
-        ParamByName('p_CODIGO_ALM').AsString := ACodigoAlmacen;
-        ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
-        ExecProc;
+        unstrdprcCrearAlbaranLinea.Params.Clear;
+        unstrdprcCrearAlbaranLinea.Params.CreateParam(
+          ftString, 'p_NUMERO_ALB', ptInput);
+        unstrdprcCrearAlbaranLinea.Params.CreateParam(
+          ftString, 'p_SERIE_ALB', ptInput);
+        unstrdprcCrearAlbaranLinea.Params.CreateParam(
+          ftString, 'p_NUMERO_PED', ptInput);
+        unstrdprcCrearAlbaranLinea.Params.CreateParam(
+          ftString, 'p_SERIE_PED', ptInput);
+        unstrdprcCrearAlbaranLinea.Params.CreateParam(
+          ftString, 'p_LINEA_PED', ptInput);
+        unstrdprcCrearAlbaranLinea.Params.CreateParam(
+          ftBCD, 'p_CANTIDAD', ptInput);
+        unstrdprcCrearAlbaranLinea.Params.CreateParam(
+          ftString, 'p_CODIGO_ALM', ptInput);
+        unstrdprcCrearAlbaranLinea.Params.CreateParam(
+          ftString, 'p_USUARIO', ptInput);
+        unstrdprcCrearAlbaranLinea.ParamByName(
+          'p_NUMERO_ALB').AsString := sNumeroAlb;
+        unstrdprcCrearAlbaranLinea.ParamByName(
+          'p_SERIE_ALB').AsString := sSerieAlb;
+        unstrdprcCrearAlbaranLinea.ParamByName(
+          'p_NUMERO_PED').AsString := sNumeroPed;
+        unstrdprcCrearAlbaranLinea.ParamByName(
+          'p_SERIE_PED').AsString := sSeriePed;
+        unstrdprcCrearAlbaranLinea.ParamByName(
+          'p_LINEA_PED').AsString := par.Key;
+        unstrdprcCrearAlbaranLinea.ParamByName(
+          'p_CANTIDAD').AsCurrency := par.Value;
+        unstrdprcCrearAlbaranLinea.ParamByName(
+          'p_CODIGO_ALM').AsString := ACodigoAlmacen;
+        unstrdprcCrearAlbaranLinea.ParamByName('p_USUARIO').AsString :=
+          IdentidadSesion.Usuario;
+        unstrdprcCrearAlbaranLinea.ExecProc;
       end;
     end;
 
     // 3) Recalcular totales del albarán y refrescar estado del pedido
-    with unstrdprcCrearAlbaranFin do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'p_NUMERO_ALB', ptInput);
-      Params.CreateParam(ftString, 'p_SERIE_ALB',  ptInput);
-      Params.CreateParam(ftString, 'p_NUMERO_PED', ptInput);
-      Params.CreateParam(ftString, 'p_SERIE_PED',  ptInput);
-      Params.CreateParam(ftString, 'p_USUARIO',    ptInput);
-      ParamByName('p_NUMERO_ALB').AsString := sNumeroAlb;
-      ParamByName('p_SERIE_ALB').AsString  := sSerieAlb;
-      ParamByName('p_NUMERO_PED').AsString := sNumeroPed;
-      ParamByName('p_SERIE_PED').AsString  := sSeriePed;
-      ParamByName('p_USUARIO').AsString    := IdentidadSesion.Usuario;
-      ExecProc;
-    end;
+    unstrdprcCrearAlbaranFin.Params.Clear;
+    unstrdprcCrearAlbaranFin.Params.CreateParam(
+      ftString, 'p_NUMERO_ALB', ptInput);
+    unstrdprcCrearAlbaranFin.Params.CreateParam(
+      ftString, 'p_SERIE_ALB', ptInput);
+    unstrdprcCrearAlbaranFin.Params.CreateParam(
+      ftString, 'p_NUMERO_PED', ptInput);
+    unstrdprcCrearAlbaranFin.Params.CreateParam(
+      ftString, 'p_SERIE_PED', ptInput);
+    unstrdprcCrearAlbaranFin.Params.CreateParam(
+      ftString, 'p_USUARIO', ptInput);
+    unstrdprcCrearAlbaranFin.ParamByName(
+      'p_NUMERO_ALB').AsString := sNumeroAlb;
+    unstrdprcCrearAlbaranFin.ParamByName(
+      'p_SERIE_ALB').AsString := sSerieAlb;
+    unstrdprcCrearAlbaranFin.ParamByName(
+      'p_NUMERO_PED').AsString := sNumeroPed;
+    unstrdprcCrearAlbaranFin.ParamByName(
+      'p_SERIE_PED').AsString := sSeriePed;
+    unstrdprcCrearAlbaranFin.ParamByName('p_USUARIO').AsString :=
+      IdentidadSesion.Usuario;
+    unstrdprcCrearAlbaranFin.ExecProc;
 
     if bTransPropia then
       ConexionPrincipal.Commit;
@@ -1777,17 +1832,18 @@ end;
 
 function TdmPedidos.ObtenerContador(const sTipo: string): string;
 begin
-  with unstrdprcGetContador do
-  begin
-    Params.Clear;
-    Params.CreateParam(ftString, 'ptipodoc',       ptInput);
-    Params.CreateParam(ftString, 'pcont',          ptOutput);
-    Params.CreateParam(ftString, 'pUSUARIO_MODIF', ptInput);
-    ParamByName('ptipodoc').AsString := sTipo;
-    ParamByName('pUSUARIO_MODIF').AsString := IdentidadSesion.Usuario;
-    ExecProc;
-    Result := ParamByName('pcont').AsString;
-  end;
+  unstrdprcGetContador.Params.Clear;
+  unstrdprcGetContador.Params.CreateParam(
+    ftString, 'ptipodoc', ptInput);
+  unstrdprcGetContador.Params.CreateParam(
+    ftString, 'pcont', ptOutput);
+  unstrdprcGetContador.Params.CreateParam(
+    ftString, 'pUSUARIO_MODIF', ptInput);
+  unstrdprcGetContador.ParamByName('ptipodoc').AsString := sTipo;
+  unstrdprcGetContador.ParamByName('pUSUARIO_MODIF').AsString :=
+    IdentidadSesion.Usuario;
+  unstrdprcGetContador.ExecProc;
+  Result := unstrdprcGetContador.ParamByName('pcont').AsString;
 end;
 
 function TdmPedidos.ResolverCodigoCliente(aOrder: TOrder): string;
@@ -1974,222 +2030,73 @@ end;
 
 function TdmPedidos.ImportarPedidoPrestaShop(aOrder: TOrder): Boolean;
 var
-  qIns: TUniQuery;
-  qLin: TUniQuery;
-  qMsg: TUniQuery;
-  i: Integer;
-  sNumero, sSerie, sCodigoCli: string;
-  sEmpresa, sAlmacen: string;
-  lp: TLineaPed;
-  tm: TMensaje;
-  bTxOwned: Boolean;
-  oValidador: IArticulosValidador;
   aCodArt: TArray<string>;
+  i: Integer;
+  oEntrada: TEntradaPedidoPrestaShop;
+  oEscrituras: TPedidosPrestaShopEscrituras;
+  oValidador: IArticulosValidador;
+  sAlmacen: string;
+  sCodigoCli: string;
+  sEmpresa: string;
+  sNumero: string;
+  sSerie: string;
 begin
   Result := False;
-  if aOrder = nil then Exit;
-  if ExistePedidoPrestaShop(aOrder.idPedido) then Exit;
-  sEmpresa := Trim(UbicacionSesion.Empresa);
-  if sEmpresa = '' then
-    sEmpresa := '0';
-  sAlmacen := Trim(UbicacionSesion.Almacen);
-  if sAlmacen = '' then
+  if Assigned(aOrder) and not ExistePedidoPrestaShop(aOrder.idPedido) then
   begin
-    NotificarAdvertencia(SAvisoAlmacenSalidaPedidoObligatorio);
-    Abort;
-  end;
-
-  // Reservar número usando el procedimiento de contadores
-  unqryTablaG.Insert;
-  try
-    // La serie la propone el AfterInsert (fza_empresas_series tipo 'PE',
-    // fallback 'A1'); no se machaca aqui
-    unqryTablaG.FieldByName('FECHA_PED').AsDateTime        := Date;
-    if unqryTablaG.FindField('ESTADO_PED') <> nil then
-      unqryTablaG.FieldByName('ESTADO_PED').AsString       := 'IMPORTADO';
-    unqryTablaG.FieldByName('CODIGO_EMP_PED').AsString     := sEmpresa;
-    if unqryTablaG.FindField('CODIGO_ALM_PED') <> nil then
-      unqryTablaG.FieldByName('CODIGO_ALM_PED').AsString   := sAlmacen;
-    unqryTablaG.FieldByName('CODIGO_CLI_PED').AsString     := '0';
-    GetCodigoAutoPedido;
-    sNumero := unqryTablaG.FieldByName('NUMERO_PED').AsString;
-    sSerie  := unqryTablaG.FieldByName('SERIE_PED').AsString;
-    unqryTablaG.Cancel;
-  except
-    unqryTablaG.Cancel;
-    raise;
-  end;
-
-  // Resolver/crear cliente y articulos ANTES de la tx: los contadores
-  // (PRC_GET_NEXT_CONT) hacen COMMIT propio y romperian la tx del pedido.
-  sCodigoCli := ResolverCodigoCliente(aOrder);
-  oValidador := TRepositorioArticulosValidador.Create(
-    ConexionPrincipal);
-  SetLength(aCodArt, aOrder.LineasPedido.Count);
-  for i := 0 to aOrder.LineasPedido.Count - 1 do
-    aCodArt[i] := ResolverCodigoArticulo(
-      oValidador,
-      aOrder.LineasPedido[i]);
-  oValidador := nil;
-
-  qIns := TUniQuery.Create(nil);
-  qLin := TUniQuery.Create(nil);
-  qMsg := TUniQuery.Create(nil);
-  try
-    // Importacion atomica: cabecera + lineas + mensajes, todo o nada
-    bTxOwned := not ConexionPrincipal.InTransaction;
-    if bTxOwned then
-      ConexionPrincipal.StartTransaction;
+    sEmpresa := Trim(UbicacionSesion.Empresa);
+    if sEmpresa = '' then
+      sEmpresa := '0';
+    sAlmacen := Trim(UbicacionSesion.Almacen);
+    if sAlmacen = '' then
+    begin
+      NotificarAdvertencia(SAvisoAlmacenSalidaPedidoObligatorio);
+      Abort;
+    end;
+    unqryTablaG.Insert;
     try
-      qIns.Connection := ConexionPrincipal;
-      qIns.SQL.Text :=
-        'INSERT INTO fza_pedidos (NUMERO_PED, SERIE_PED, FECHA_PED, '
-          +
-        'ESTADO_PED, CODIGO_EMP_PED, CODIGO_ALM_PED, CODIGO_CLI_PED, ' +
-        ' IDPS_PED, FECHAPS_PED, REFERENCIAPS_PED, ' +
-        ' FORMAPAGOPS_PED, TRANSPORTISTAPS_PED, ESTADOPEDIDOPS_PED, ' +
-        ' EMAIL_CLIENTE_PED, NIF_CLIENTE_PED, ' +
-        ' NOMBRE_CLI_ENVIO_PED, MOVIL_CLIENTE_ENVIO_PED, ' +
-        ' DIRECCION1_CLIENTE_ENVIO_PED, DIRECCION2_CLIENTE_ENVIO_PED, ' +
-        ' POBLACION_CLIENTE_ENVIO_PED, PROVINCIA_CLIENTE_ENVIO_PED, ' +
-        ' CODIGO_POSTAL_CLIENTE_ENVIO_PED, ' +
-        ' RAZON_SOCIAL_CLIENTE_FISCAL_PED, MOVIL_CLIENTE_FISCAL_PED, ' +
-        ' DIRECCION1_CLIENTE_FISCAL_PED, DIRECCION2_CLIENTE_FISCAL_PED, ' +
-        ' POBLACION_CLIENTE_FISCAL_PED, PROVINCIA_CLIENTE_FISCAL_PED, ' +
-        ' CODIGO_POSTAL_CLIENTE_FISCAL_PED, ' +
-        ' TOTAL_LIQUIDO_PED, TOTAL_PAGADOREALPS_PED, ' +
-        ' INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-        'VALUES (:NUMERO, :SERIE, :FECHA, :ESTADO, :CODEMP, :CODALM, ' +
-        '        :CODCLI, ' +
-        '        :IDPS, :FECHAPS, :REFPS, ' +
-        '        :FORMAPAGO, :TRANSP, :ESTADOPS, ' +
-        '        :EMAILCLI, :NIFCLI, ' +
-        '        :NOMENV, :MOVENV, :DIR1ENV, :DIR2ENV, ' +
-        '        :POBLENV, :PROVENV, :CPENV, ' +
-        '        :RSFIS, :MOVFIS, :DIR1FIS, :DIR2FIS, ' +
-        '        :POBLFIS, :PROVFIS, :CPFIS, ' +
-        '        :TOTAL, :PAGADO, ' +
-        '        NOW(), :USU, :USU)';
-      qIns.ParamByName('NUMERO').AsString  := sNumero;
-      qIns.ParamByName('SERIE').AsString   := sSerie;
-      qIns.ParamByName('FECHA').AsDateTime := Date;
-      qIns.ParamByName('ESTADO').AsString  := 'IMPORTADO';
-      qIns.ParamByName('CODEMP').AsString  := sEmpresa;
-      qIns.ParamByName('CODALM').AsString  := sAlmacen;
-      qIns.ParamByName('CODCLI').AsString  := sCodigoCli;
-      qIns.ParamByName('IDPS').AsString    := aOrder.idPedido;
-      qIns.ParamByName('FECHAPS').AsString := aOrder.FechaCreacion;
-      qIns.ParamByName('REFPS').AsString   := aOrder.ReferenciaCliente;
-      qIns.ParamByName('FORMAPAGO').AsString := aOrder.FormaPago;
-      qIns.ParamByName('TRANSP').AsString    := aOrder.Transportista;
-      qIns.ParamByName('ESTADOPS').AsString  := aOrder.EstadoPedido;
-      qIns.ParamByName('EMAILCLI').AsString  := aOrder.custMail;
-      qIns.ParamByName('NIFCLI').AsString    := aOrder.DniDel;
-      qIns.ParamByName('NOMENV').AsString    :=
-        aOrder.FirstnameDel + ' ' + aOrder.LastNameDel;
-      qIns.ParamByName('MOVENV').AsString    := aOrder.PhoneDel;
-      qIns.ParamByName('DIR1ENV').AsString   := aOrder.Address1Del;
-      qIns.ParamByName('DIR2ENV').AsString   := aOrder.Address2Del;
-      qIns.ParamByName('POBLENV').AsString   := aOrder.CityDel;
-      qIns.ParamByName('PROVENV').AsString   := aOrder.NameStateDel;
-      qIns.ParamByName('CPENV').AsString     := aOrder.PostcodeDel;
-      qIns.ParamByName('RSFIS').AsString     := aOrder.CompanyBil;
-      qIns.ParamByName('MOVFIS').AsString    := aOrder.PhoneBil;
-      qIns.ParamByName('DIR1FIS').AsString   := aOrder.Address1Bil;
-      qIns.ParamByName('DIR2FIS').AsString   := aOrder.Address2Bil;
-      qIns.ParamByName('POBLFIS').AsString   := aOrder.CityBil;
-      qIns.ParamByName('PROVFIS').AsString   := aOrder.NameStateBil;
-      qIns.ParamByName('CPFIS').AsString     := aOrder.PostcodeBil;
-      qIns.ParamByName('TOTAL').AsCurrency   := aOrder.TotalPedCIVA;
-      qIns.ParamByName('PAGADO').AsCurrency  := aOrder.TotalPagadoReal;
-      qIns.ParamByName('USU').AsString       := IdentidadSesion.Usuario;
-      qIns.Execute;
-      // Lineas
-      qLin.Connection := ConexionPrincipal;
-      qLin.SQL.Text :=
-        'INSERT INTO fza_pedidos_lineas (NUMERO_PED_PEDLIN, ' +
-        'SERIE_PED_PEDLIN, LINEA_PEDLIN, ' +
-        ' IDLINEAPS_PEDLIN, IDPRODPS_PEDLIN, CODIGOPRODPS_PEDLIN, ' +
-        'IDATRIBPRODPS_PEDLIN, ' +
-        ' CODIGO_ART_PEDLIN, CODBAR_ART_PEDLIN, ' +
-        'DESCRIPCION_ARTICULO_PEDLIN, ' +
-        ' CANTIDAD_PEDLIN, CANTIDAD_ENTREGADA_PEDLIN, ' +
-        'CANTIDAD_A_ALBARANAR_PEDLIN, CANTIDAD_PENDIENTE_PEDLIN, ' +
-        'ESENTREGADA_PEDLIN, ' +
-        ' CODIGO_ALMACEN_PEDLIN, ' +
-        ' PRECIO_VENTA_SIVA_ARTICULO_PEDLIN, ' +
-        'PRECIO_VENTA_CIVA_ARTICULO_PEDLIN, TOTAL_PEDLIN, ' +
-        ' INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-        'VALUES (:NUMERO, :SERIE, :LIN, ' +
-        '        :IDLPS, :IDPPS, :REFPROD, :IDATRIB, ' +
-        '        :CODART, :EAN13, :DESCR, ' +
-        '        :CANT, 0, 0, :CANT, ''N'', ' +
-        '        :CODALM, ' +
-        '        :PSIVA, :PCIVA, :TOT, ' +
-        '        NOW(), :USU, :USU)';
-      for i := 0 to aOrder.LineasPedido.Count - 1 do
-      begin
-        lp := aOrder.LineasPedido[i];
-        qLin.ParamByName('NUMERO').AsString  := sNumero;
-        qLin.ParamByName('SERIE').AsString   := sSerie;
-        qLin.ParamByName('LIN').AsString     := Format('%.4d', [(i + 1) * 10]);
-        qLin.ParamByName('IDLPS').AsString   := lp.idLinea;
-        qLin.ParamByName('IDPPS').AsString   := lp.idProducto;
-        qLin.ParamByName('REFPROD').AsString := lp.sRefProd;
-        qLin.ParamByName('IDATRIB').AsString := lp.sRefAtrib;
-        qLin.ParamByName('CODART').AsString  := aCodArt[i];
-        qLin.ParamByName('EAN13').AsString   := lp.sCodEAN13;
-        qLin.ParamByName('DESCR').AsString   := lp.sDescripcion;
-        qLin.ParamByName('CANT').AsFloat     := StrToFloatDef(lp.sCantidad, 1);
-        qLin.ParamByName('CODALM').AsString  := sAlmacen;
-        qLin.ParamByName('PSIVA').AsCurrency := lp.cPrecioSIVA;
-        qLin.ParamByName('PCIVA').AsCurrency := lp.cPrecioCIVA;
-        qLin.ParamByName('TOT').AsCurrency   :=
-          lp.cPrecioCIVA * StrToFloatDef(lp.sCantidad, 1);
-        qLin.ParamByName('USU').AsString     := IdentidadSesion.Usuario;
-        qLin.Execute;
-      end;
-      // Mensajes (si hay)
-      qMsg.Connection := ConexionPrincipal;
-      qMsg.SQL.Text :=
-        'INSERT INTO fza_pedidos_mensajes (IDPS_MENSAJES_PEDMSG, ' +
-        'IDMENSAJEPS_PEDMSG, ' +
-        ' IDEMPLEADOPS_PEDMSG, MENSAJEPS_PEDMSG, FECHAPS_PEDMSG, ' +
-        ' INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-        'VALUES (:HILO, :IDM, :IDE, :MSG, :FECHA, NOW(), :USU, :USU)';
-      for tm in aOrder.MensajesPedido.LMensajes do
-      begin
-        qMsg.ParamByName('HILO').AsString  :=
-          aOrder.MensajesPedido.idCustomer_Threat;
-        qMsg.ParamByName('IDM').AsString   := tm.idMensaje;
-        qMsg.ParamByName('IDE').AsString   := tm.idEmpleado;
-        qMsg.ParamByName('MSG').AsString   := tm.Texto;
-        qMsg.ParamByName('FECHA').AsDateTime := tm.InstanteMsg;
-        qMsg.ParamByName('USU').AsString   := IdentidadSesion.Usuario;
-        // El error de duplicado (mismo mensaje) no aborta la tx en InnoDB
-        try
-          qMsg.Execute;
-        except
-          // Si el mensaje ya existe (hilo PK), saltar
-          on E: Exception do
-            if RegistroLog <> nil then
-              RegistroLog.RegistrarInformacion(
-                'ImportarPedidoPrestaShop: mensaje ' + tm.idMensaje +
-                ' omitido: ' + E.Message);
-        end;
-      end;
-      if bTxOwned then
-        ConexionPrincipal.Commit;
-      Result := True;
+      unqryTablaG.FieldByName('FECHA_PED').AsDateTime := Date;
+      if Assigned(unqryTablaG.FindField('ESTADO_PED')) then
+        unqryTablaG.FieldByName('ESTADO_PED').AsString := 'IMPORTADO';
+      unqryTablaG.FieldByName('CODIGO_EMP_PED').AsString := sEmpresa;
+      if Assigned(unqryTablaG.FindField('CODIGO_ALM_PED')) then
+        unqryTablaG.FieldByName('CODIGO_ALM_PED').AsString := sAlmacen;
+      unqryTablaG.FieldByName('CODIGO_CLI_PED').AsString := '0';
+      GetCodigoAutoPedido;
+      sNumero := unqryTablaG.FieldByName('NUMERO_PED').AsString;
+      sSerie := unqryTablaG.FieldByName('SERIE_PED').AsString;
+      unqryTablaG.Cancel;
     except
-      if bTxOwned and ConexionPrincipal.InTransaction then
-        ConexionPrincipal.Rollback;
+      unqryTablaG.Cancel;
       raise;
     end;
-  finally
-    FreeAndNil(qIns);
-    FreeAndNil(qLin);
-    FreeAndNil(qMsg);
+    sCodigoCli := ResolverCodigoCliente(aOrder);
+    oValidador := TRepositorioArticulosValidador.Create(
+      ConexionPrincipal);
+    SetLength(aCodArt, aOrder.LineasPedido.Count);
+    for i := 0 to aOrder.LineasPedido.Count - 1 do
+      aCodArt[i] := ResolverCodigoArticulo(
+        oValidador,
+        aOrder.LineasPedido[i]);
+    oValidador := nil;
+    oEntrada := Default(TEntradaPedidoPrestaShop);
+    oEntrada.Pedido := aOrder;
+    oEntrada.Numero := sNumero;
+    oEntrada.Serie := sSerie;
+    oEntrada.CodigoCliente := sCodigoCli;
+    oEntrada.Empresa := sEmpresa;
+    oEntrada.Almacen := sAlmacen;
+    oEntrada.CodigosArticulo := aCodArt;
+    oEscrituras := TPedidosPrestaShopEscrituras.Create(
+      ConexionPrincipal,
+      IdentidadSesion.Usuario,
+      RegistroLog);
+    try
+      oEscrituras.Ejecutar(oEntrada);
+      Result := True;
+    finally
+      FreeAndNil(oEscrituras);
+    end;
   end;
 end;
 

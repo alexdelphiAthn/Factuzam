@@ -210,7 +210,8 @@ type
 
     // INSERCION REAL — el corazon especifico de cada hijo
     function  EjecutarInsercion(out ANumInsertados: Integer;
-                                out ACodigos: TArray<string>): Boolean; virtual; abstract;
+                                out ACodigos: TArray<string>): Boolean;
+                                virtual; abstract;
 
     // === API que los hijos pueden invocar ===================================
 
@@ -710,7 +711,8 @@ end;
 //   RECOGIDA DE SELECCIONES
 // ============================================================================
 
-function TfrmModalAddBlockBase.RecogerCodigosFamiliaSeleccionados: TArray<string>;
+function TfrmModalAddBlockBase.
+  RecogerCodigosFamiliaSeleccionados: TArray<string>;
 var
   lst: TList<string>;
 
@@ -742,7 +744,8 @@ begin
   end;
 end;
 
-function TfrmModalAddBlockBase.RecogerCodigosProveedoresSeleccionados: TArray<string>;
+function TfrmModalAddBlockBase.
+  RecogerCodigosProveedoresSeleccionados: TArray<string>;
 var
   lst: TList<string>;
   i, n, recIdx: Integer;
@@ -763,7 +766,8 @@ begin
   end;
 end;
 
-function TfrmModalAddBlockBase.RecogerIdsValorPropiedadSeleccionados: TArray<Integer>;
+function TfrmModalAddBlockBase.
+  RecogerIdsValorPropiedadSeleccionados: TArray<Integer>;
 var
   lst: TList<Integer>;
   i, n, recIdx: Integer;
@@ -787,7 +791,8 @@ begin
   end;
 end;
 
-function TfrmModalAddBlockBase.RecogerCodigosAlmacenesSeleccionados: TArray<string>;
+function TfrmModalAddBlockBase.
+  RecogerCodigosAlmacenesSeleccionados: TArray<string>;
 var
   lst: TList<string>;
   i: Integer;

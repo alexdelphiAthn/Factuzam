@@ -26,7 +26,8 @@ unit inMtoModalArticulosPropiedades;
     3. Llamar a GuardarPropiedades dentro de btnGrabarClick
     4. Llamar a AbrirSelectorPropiedades desde el botón "+ Añadir propiedad"
 
-  El gestor inyecta controles en un TScrollBox que debe existir en tsPropiedades.
+  El gestor inyecta controles en un TScrollBox que debe existir en
+  tsPropiedades.
   El botón de añadir y el scroll se crean dinámicamente si no existen.
 }
 
@@ -311,7 +312,8 @@ end;
 { Helpers internos                                                            }
 { ═══════════════════════════════════════════════════════════════════════════ }
 
-function TGestorPropiedades.TipoDesdeCadena(const ATipo: string): TTipoValorProp;
+function TGestorPropiedades.TipoDesdeCadena(
+  const ATipo: string): TTipoValorProp;
 begin
   if      ATipo = 'LISTA'    then Result := tvpLista
   else if ATipo = 'NUMERO'   then Result := tvpNumero
@@ -416,7 +418,8 @@ begin
 end;
 
 procedure TGestorPropiedades.CargarPropiedadesPorFamilia(
-                                                   const ACodigoFamilia: string);
+                                                   const ACodigoFamilia:
+                                                   string);
 var
   EstaVacia: Boolean;
   i: Integer;

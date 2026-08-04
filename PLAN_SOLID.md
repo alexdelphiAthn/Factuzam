@@ -1,4 +1,4 @@
-﻿# PLAN SOLID — prioridades P0–P5
+# PLAN SOLID — prioridades P0–P5
 
 Hoja de ruta vigente para llevar Factuzam a un código que pueda defenderse
 en una revisión de ingeniería exigente. El libro de estilo define cómo debe

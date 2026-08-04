@@ -63,7 +63,8 @@ type
     // True si origen y destino pertenecen a la misma magnitud (convertibles).
     function MismaMagnitud(const AOrigen, ADestino: string): Boolean;
     // Convierte un valor entre unidades de la misma magnitud. Si no son
-    // convertibles (magnitud distinta o desconocida) devuelve el valor tal cual.
+    // convertibles (magnitud distinta o desconocida) devuelve el valor tal
+    // cual.
     function Convertir(const AValor: Double;
                        const AOrigen, ADestino: string): Double;
     // Decimales que se aplican cuando la unidad es vacia o desconocida.
@@ -208,7 +209,8 @@ begin
   Result := FormatFloat(Mascara(ACodigo), AValor);
 end;
 
-function TUnidadesMedida.MismaMagnitud(const AOrigen, ADestino: string): Boolean;
+function TUnidadesMedida.MismaMagnitud(const AOrigen,
+                                       ADestino: string): Boolean;
 var
   oOri, oDes: TUnidadInfo;
 begin

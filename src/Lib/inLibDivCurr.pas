@@ -134,18 +134,18 @@ type
 
     /// Igual que GetRates pero devuelve el objeto completo (hoy)
     function GetLatest(const ABase: string = 'EUR';
-                       const ATargets: TArray<string> = nil): TFrankfurterResult;
+      const ATargets: TArray<string> = nil): TFrankfurterResult;
 
     /// Tasas de una fecha histórica concreta
     function GetHistorical(const ADate: TDate;
-                           const ABase: string = 'EUR';
-                           const ATargets: TArray<string> = nil): TFrankfurterResult;
+      const ABase: string = 'EUR';
+      const ATargets: TArray<string> = nil): TFrankfurterResult;
 
     /// Serie de tasas entre dos fechas
     /// Devuelve un diccionario TDate → (código → tasa)
     function GetSeries(const AStartDate, AEndDate: TDate;
-                       const ABase: string = 'EUR';
-                       const ATargets: TArray<string> = nil): TFrankfurterSeries;
+      const ABase: string = 'EUR';
+      const ATargets: TArray<string> = nil): TFrankfurterSeries;
 
     /// Convierte un importe de una divisa a otra (usa la API directamente)
     function ConvertAmount(AAmount: Double;
@@ -327,13 +327,13 @@ begin
 end;
 
 function TFrankfurterAPI.GetRates(const ABase: string;
-                                   const ATargets: TArray<string>): TFrankfurterResult;
+  const ATargets: TArray<string>): TFrankfurterResult;
 begin
   Result := GetLatest(ABase, ATargets);
 end;
 
 function TFrankfurterAPI.GetLatest(const ABase: string;
-                                    const ATargets: TArray<string>): TFrankfurterResult;
+  const ATargets: TArray<string>): TFrankfurterResult;
 var
   URL  : string;
   JSON : TJSONObject;
@@ -353,8 +353,8 @@ begin
 end;
 
 function TFrankfurterAPI.GetHistorical(const ADate: TDate;
-                                        const ABase: string;
-                                        const ATargets: TArray<string>): TFrankfurterResult;
+  const ABase: string;
+  const ATargets: TArray<string>): TFrankfurterResult;
 var
   DateStr : string;
   URL     : string;
@@ -376,8 +376,8 @@ begin
 end;
 
 function TFrankfurterAPI.GetSeries(const AStartDate, AEndDate: TDate;
-                                    const ABase: string;
-                                    const ATargets: TArray<string>): TFrankfurterSeries;
+  const ABase: string;
+  const ATargets: TArray<string>): TFrankfurterSeries;
 var
   StartStr : string;
   EndStr   : string;

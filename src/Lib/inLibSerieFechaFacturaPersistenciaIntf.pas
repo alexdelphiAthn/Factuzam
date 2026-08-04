@@ -24,7 +24,8 @@ type
 
   IRepositorioSerieFechaFactura = interface
     ['{99FD843E-0215-4C71-A403-33D504CB7B4C}']
-    function ConsultarSeries: IConsultaSeriesFactura;
+    function ConsultarSeries(
+      const AEmpresa: string): IConsultaSeriesFactura;
     function ObtenerSerieAlmacen(
       const AEmpresa: string;
       const AAlmacen: string): string;

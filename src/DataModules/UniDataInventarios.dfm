@@ -381,7 +381,7 @@
   object unqrySeries: TUniQuery
     SQL.Strings = (
       'SELECT DISTINCT EMPSER'
-      'FROM fza_empresas_series'
+      'FROM vi_empresas_series'
       'WHERE TIPO_DOC_EMPSER = '#39'IN'#39
       'ORDER BY EMPSER')
     Left = 650

@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{0E2CD2D7-EC70-47E0-B9A0-3D48203A10A6}</ProjectGuid>
         <MainSource>gaSQLParser.dpk</MainSource>

@@ -1,7 +1,7 @@
 ﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoModalSepaRemesaVenta                                    }
-{    Tipo:       Modal                                                          }
+{    Tipo:       Modal                                                         }
 { Versión:       1.0.0                                                         }
 {   Fecha:       23/06/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }

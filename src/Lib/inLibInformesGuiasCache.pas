@@ -157,7 +157,8 @@ begin
 end;
 
 function TInformesGuiasCache.Obtener(const aInforme,
-                                     aFormato: string): TArray<TInformeGuiaItem>;
+                                     aFormato: string):
+                                     TArray<TInformeGuiaItem>;
 var
   lst:  TListaGuias;
   i, n: Integer;

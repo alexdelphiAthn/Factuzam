@@ -1,4 +1,4 @@
-program FileHash;
+﻿program FileHash;
 
 uses
   Forms,

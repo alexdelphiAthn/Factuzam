@@ -1,4 +1,4 @@
-﻿# TAREAS IA SOLID — ejecución sin unidades concurrentes
+# TAREAS IA SOLID — ejecución sin unidades concurrentes
 
 Catálogo listo para repartir el plan `PLAN_SOLID.md` entre sesiones de IA.
 Las tareas están organizadas por olas. **Solo las tareas de una misma ola se

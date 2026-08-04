@@ -1,4 +1,4 @@
-{ ******************************************************* }
+ï»¿{ ******************************************************* }
 { }
 { Advanced SQL statement parser }
 { Classes for parsing "Select ..." statements }
@@ -285,16 +285,16 @@ begin
   (*
     SELECT [TRANSACTION transaction]
     [DISTINCT | ALL]
-    {* | <val> [, <val> …]}
-    [INTO : var [, : var …]]
-    FROM <tableref> [, <tableref> …]
+    {* | <val> [, <val> â€¦]}
+    [INTO : var [, : var â€¦]]
+    FROM <tableref> [, <tableref> â€¦]
     [WHERE <search_condition>]
-    [GROUP BY col [COLLATE collation] [, col [COLLATE collation] …]
+    [GROUP BY col [COLLATE collation] [, col [COLLATE collation] â€¦]
     [HAVING <search_condition>]
     [UNION <select_expr> [ALL]]
     [PLAN <plan_expr>]
     [ORDER BY <order_list>]
-    [FOR UPDATE [OF col [, col …]]];
+    [FOR UPDATE [OF col [, col â€¦]]];
   *)
   Result := StatementState;
   if IsTokenStatementTerminator(CurrentToken) then

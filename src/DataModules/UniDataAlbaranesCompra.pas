@@ -424,11 +424,17 @@ end;
 procedure TdmAlbaranesCompra.unqryTablaGAfterInsert(DataSet: TDataSet);
 var
   sSerie: string;
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryTablaG.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryTablaG.FindField(ANombre);
+  end;
 begin
   inherited;
-  with unqryTablaG do
-  begin
-    FieldByName('NUMERO_ALBC').AsString := '0';
+  FieldByName('NUMERO_ALBC').AsString := '0';
     // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='AB'
     sSerie := ObtenerSerieDefecto(
       ConexionPrincipal,
@@ -466,10 +472,9 @@ begin
     AplicarRecargoComprasEmpresa(
       CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
       'CODIGO_EMP_ALBC', 'ESIVA_RECARGO_COMPRAS_ALBC');
-    AplicarPorcentajesIvaCompra(
-      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
-      'ALBC');
-  end;
+  AplicarPorcentajesIvaCompra(
+    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
+    'ALBC');
   RefrescarAlmacenes(
     DataSet.FieldByName('CODIGO_EMP_ALBC').AsString);
 end;
@@ -493,11 +498,14 @@ begin
 end;
 
 procedure TdmAlbaranesCompra.CopiarEmpresaaAlbaranCompra(DataSet: TDataSet);
-begin
-  with unqryTablaG do
+  function FindField(const ANombre: string): TField;
   begin
-    if (State <> dsEdit) and (State <> dsInsert) then
-      Edit;
+    Result := unqryTablaG.FindField(ANombre);
+  end;
+begin
+  if (unqryTablaG.State <> dsEdit) and
+     (unqryTablaG.State <> dsInsert) then
+    unqryTablaG.Edit;
     FindField('CODIGO_EMP_ALBC').AsString :=
       DataSet.FindField('CODIGO_EMP_EMP').AsString;
     FindField('RAZON_SOCIAL_EMPRESA_ALBC').AsString :=
@@ -520,9 +528,8 @@ begin
       DataSet.FindField('CODIGO_PAI_EMP').AsString;
     FindField('NOMBRE_PAI_EMPRESA_ALBC').AsString :=
       DataSet.FindField('NOMBRE_PAI_EMP').AsString;
-    FindField('CODIGO_POSTAL_EMPRESA_ALBC').AsString :=
-      DataSet.FindField('CODIGO_POSTAL_EMP').AsString;
-  end;
+  FindField('CODIGO_POSTAL_EMPRESA_ALBC').AsString :=
+    DataSet.FindField('CODIGO_POSTAL_EMP').AsString;
 end;
 
 procedure TdmAlbaranesCompra.ValidarAlmacenCabecera;
@@ -667,11 +674,17 @@ end;
 
 procedure TdmAlbaranesCompra.unqryAlbaranesCompraLineasAfterInsert(
                                                        DataSet: TDataSet);
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryAlbaranesCompraLineas.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryAlbaranesCompraLineas.FindField(ANombre);
+  end;
 begin
   inherited;
-  with unqryAlbaranesCompraLineas do
-  begin
-    FieldByName('NUMERO_ALBC_ALBCLIN').AsString :=
+  FieldByName('NUMERO_ALBC_ALBCLIN').AsString :=
       unqryTablaG.FieldByName('NUMERO_ALBC').AsString;
     FieldByName('SERIE_ALBC_ALBCLIN').AsString :=
       unqryTablaG.FieldByName('SERIE_ALBC').AsString;
@@ -684,9 +697,8 @@ begin
     // tambien sobrescribimos USUARIO_MODIF para que refleje la ultima edicion.
     FieldByName('USUARIO_ALTA').AsString    := IdentidadSesion.Usuario;
     FieldByName('INSTANTE_ALTA').AsDateTime := Now;
-    FieldByName('USUARIO_MODIF').AsString   := IdentidadSesion.Usuario;
-    FieldByName('INSTANTE_MODIF').AsDateTime:= Now;
-  end;
+  FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
+  FieldByName('INSTANTE_MODIF').AsDateTime := Now;
 end;
 
 // True si la linea tiene celdas del pivote antiguo (linea consolidada):
@@ -724,6 +736,14 @@ procedure TdmAlbaranesCompra.unqryAlbaranesCompraLineasBeforePost(
                                                        DataSet: TDataSet);
 var
   sSku, sArt: string;
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryAlbaranesCompraLineas.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryAlbaranesCompraLineas.FindField(ANombre);
+  end;
 begin
   inherited;
   // Desempaquetado ATTR en curso: post descriptivo, sin logica fiscal.
@@ -762,10 +782,8 @@ begin
     Abort;
   end;
   AsignarNumeroLineaAlbaranCompra(DataSet);
-  with unqryAlbaranesCompraLineas do
-  begin
-    // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
-    NormalizarArticuloSkuEnDataSet(ConexionPrincipal,
+  // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
+  NormalizarArticuloSkuEnDataSet(ConexionPrincipal,
       unqryAlbaranesCompraLineas, 'CODIGO_ART_ALBCLIN',
       'CODIGO_UNIDAD_ALBCLIN');
     if (FindField('CANTIDAD_ALBCLIN') <> nil) and
@@ -809,10 +827,9 @@ begin
         unqrySkusAlbc.Close;
       end;
     end;
-    PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionPrincipal),
-      unqryTablaG,
-      unqryAlbaranesCompraLineas, 'ALBC', 'ALBCLIN', 'TOTAL_ALBCLIN');
-  end;
+  PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionPrincipal),
+    unqryTablaG,
+    unqryAlbaranesCompraLineas, 'ALBC', 'ALBCLIN', 'TOTAL_ALBCLIN');
 end;
 
 procedure TdmAlbaranesCompra.AsignarNumeroLineaAlbaranCompra(
@@ -879,31 +896,35 @@ var
   iNumero: Int64;
   sNumero: string;
 begin
-  with unstrdprcGetContadorAlbc do
-  begin
-    Params.Clear;
-    Params.CreateParam(ftString, 'pserie',            ptInput);
-    Params.CreateParam(ftString, 'ptipodoc',          ptInput);
-    Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
-    Params.CreateParam(ftString, 'pUSUARIOMODIF',     ptInput);
-    Params.CreateParam(ftString, 'pcont',             ptOutput);
-    ParamByName('pserie').AsString :=
-      unqryTablaG.FieldByName('SERIE_ALBC').AsString;
-    ParamByName('ptipodoc').AsString :=
-      CrearConfiguracionDocumento(
-        tdAlbaran, sdCompra).TipoContador;
-    ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
-    ParamByName('pEMPRESA_CONTADOR').AsString :=
-      unqryTablaG.FieldByName('CODIGO_EMP_ALBC').AsString;
-    ExecProc;
-    sNumero := Trim(ParamByName('pcont').AsString);
-    if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
-       (iNumero <= 0) then
-      raise Exception.Create(Format(SErrorContadorAlbaranCompra,
-        [unqryTablaG.FieldByName('SERIE_ALBC').AsString,
-         unqryTablaG.FieldByName('CODIGO_EMP_ALBC').AsString]));
-    unqryTablaG.FieldByName('NUMERO_ALBC').AsString := sNumero;
-  end;
+  unstrdprcGetContadorAlbc.Params.Clear;
+  unstrdprcGetContadorAlbc.Params.CreateParam(
+    ftString, 'pserie', ptInput);
+  unstrdprcGetContadorAlbc.Params.CreateParam(
+    ftString, 'ptipodoc', ptInput);
+  unstrdprcGetContadorAlbc.Params.CreateParam(
+    ftString, 'pEMPRESA_CONTADOR', ptInput);
+  unstrdprcGetContadorAlbc.Params.CreateParam(
+    ftString, 'pUSUARIOMODIF', ptInput);
+  unstrdprcGetContadorAlbc.Params.CreateParam(
+    ftString, 'pcont', ptOutput);
+  unstrdprcGetContadorAlbc.ParamByName('pserie').AsString :=
+    unqryTablaG.FieldByName('SERIE_ALBC').AsString;
+  unstrdprcGetContadorAlbc.ParamByName('ptipodoc').AsString :=
+    CrearConfiguracionDocumento(tdAlbaran, sdCompra).TipoContador;
+  unstrdprcGetContadorAlbc.ParamByName('pUSUARIOMODIF').AsString :=
+    IdentidadSesion.Usuario;
+  unstrdprcGetContadorAlbc.ParamByName(
+    'pEMPRESA_CONTADOR').AsString :=
+    unqryTablaG.FieldByName('CODIGO_EMP_ALBC').AsString;
+  unstrdprcGetContadorAlbc.ExecProc;
+  sNumero := Trim(
+    unstrdprcGetContadorAlbc.ParamByName('pcont').AsString);
+  if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
+     (iNumero <= 0) then
+    raise Exception.Create(Format(SErrorContadorAlbaranCompra,
+      [unqryTablaG.FieldByName('SERIE_ALBC').AsString,
+       unqryTablaG.FieldByName('CODIGO_EMP_ALBC').AsString]));
+  unqryTablaG.FieldByName('NUMERO_ALBC').AsString := sNumero;
 end;
 
 procedure TdmAlbaranesCompra.CalcularTotalesAlbaranCompra;
@@ -1085,7 +1106,8 @@ begin
         'SELECT DISTINCT L.CODIGO_ALMACEN_ALBCLIN AS COD, ' +
         '       COALESCE(A.NOMBRE_ALM_ALM, L.CODIGO_ALMACEN_ALBCLIN) AS NOM ' +
         '  FROM fza_albaranes_compra_lineas L ' +
-        '  LEFT JOIN fza_almacenes A ON A.CODIGO_ALM_ALM = L.CODIGO_ALMACEN_ALBCLIN ' +
+        '  LEFT JOIN fza_almacenes A ON A.CODIGO_ALM_ALM = ' +
+        'L.CODIGO_ALMACEN_ALBCLIN ' +
         ' WHERE L.SERIE_ALBC_ALBCLIN = :s AND L.NUMERO_ALBC_ALBCLIN = :n ' +
         '   AND COALESCE(L.CODIGO_ALMACEN_ALBCLIN, '''') <> '''' ' +
         ' ORDER BY COD';

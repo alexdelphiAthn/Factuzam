@@ -1,4 +1,4 @@
-﻿-- D23: catálogo catalán (ca-ES) completo de las 7.163 claves activas.
+-- D23: catálogo catalán (ca-ES) completo de las 7.163 claves activas.
 -- Traducción automática pendiente de revisión visual (como D21).
 -- Fuente: español del repo (DFM, FastReport, resourcestrings) y,
 -- para DevExpress/VCL, el catálogo en-GB de D21.

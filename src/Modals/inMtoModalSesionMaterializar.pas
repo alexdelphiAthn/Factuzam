@@ -47,8 +47,10 @@ type
     FESGeneraPedido  : Boolean;
     FESGeneraAlbaran : Boolean;
   public
-    property ESGeneraPedido  : Boolean read FESGeneraPedido  write FESGeneraPedido;
-    property ESGeneraAlbaran : Boolean read FESGeneraAlbaran write FESGeneraAlbaran;
+    property ESGeneraPedido: Boolean read FESGeneraPedido
+      write FESGeneraPedido;
+    property ESGeneraAlbaran: Boolean read FESGeneraAlbaran
+      write FESGeneraAlbaran;
   end;
 
 implementation

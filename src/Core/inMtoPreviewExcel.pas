@@ -150,6 +150,7 @@ var
   sFormato: string;
   sExt: string;
   oDialogo: TFileSaveDialog;
+  oTipoFichero: TFileTypeItem;
 begin
   inherited;
   sFormato := VALOR_FORMATO_DEFECTO;
@@ -169,11 +170,10 @@ begin
     else if Assigned(ParametrosApp) then
       oDialogo.DefaultFolder := ParametrosApp.GetPath('appDirExcel');
     oDialogo.DefaultExtension := sExt;
-    with oDialogo.FileTypes.Add do
-    begin
-      DisplayName := Format(SCaptionFiltroArchivo, [sExt]);
-      FileMask := '*.' + sExt;
-    end;
+    oTipoFichero := oDialogo.FileTypes.Add;
+    oTipoFichero.DisplayName :=
+      Format(SCaptionFiltroArchivo, [sExt]);
+    oTipoFichero.FileMask := '*.' + sExt;
     oDialogo.FileName := DialogoGuardar.FileName;
     if oDialogo.Execute(Self.Handle) then
       dxSpreadSheet1.SaveToFile(oDialogo.FileName);

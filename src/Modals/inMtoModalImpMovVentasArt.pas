@@ -51,7 +51,8 @@ type
       IRepositorioInformeMovimientosVentasArticulo;
     FResultadoMovimientos: IResultadoInformeMovimientosVentasArticulo;
     FchkIniCompras: TcxCheckBox;   // activa el filtro de inicio de compras
-    FdteIniCompras: TcxDateEdit;   // fecha de primera compra a partir de la cual
+    // fecha de primera compra a partir de la cual
+    FdteIniCompras: TcxDateEdit;
     FchkSoloVentas: TcxCheckBox;   // 'solo artículos con ventas' en el periodo
     // Crea el control de "Inicio compras" sobre la pestaña de fechas.
     procedure CrearControlesPropios;

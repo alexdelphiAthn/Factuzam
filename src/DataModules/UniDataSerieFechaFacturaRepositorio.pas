@@ -26,15 +26,35 @@ uses
 
 const
   SQL_CONSULTAR_SERIES =
-    'SELECT DISTINCT SERIE_CON, DEFAULT_CON FROM fza_contadores ' +
-    'WHERE TIPO_DOC_CON = ''FC'' AND ESACTIVO_CON = ''S'' ' +
-    'ORDER BY DEFAULT_CON DESC';
+    'SELECT SERIES.SERIE_CON, ' +
+    '       MAX(SERIES.DEFAULT_CON) AS DEFAULT_CON ' +
+    '  FROM (SELECT SERIE_CON, DEFAULT_CON ' +
+    '          FROM fza_contadores ' +
+    '         WHERE TIPO_DOC_CON = ''FC'' ' +
+    '           AND ESACTIVO_CON = ''S'' ' +
+    '           AND EMPRESA_CON IN (:EMP, ''-'') ' +
+    '         UNION ALL ' +
+    '        SELECT EMPSER AS SERIE_CON, ''N'' AS DEFAULT_CON ' +
+    '          FROM vi_empresas_series ' +
+    '         WHERE CODIGO_EMP_EMPSER = :EMP ' +
+    '           AND TIPO_DOC_EMPSER = ''FC'' ' +
+    '           AND (SUBTIPO_EMPSER = ''NORMAL'' ' +
+    '                OR IFNULL(SUBTIPO_EMPSER, '''') = '''') ' +
+    '           AND (FECHA_DESDE_EMPSER IS NULL ' +
+    '                OR FECHA_DESDE_EMPSER <= CURDATE()) ' +
+    '           AND (FECHA_HASTA_EMPSER IS NULL ' +
+    '                OR FECHA_HASTA_EMPSER >= CURDATE())) SERIES ' +
+    ' GROUP BY SERIES.SERIE_CON ' +
+    ' ORDER BY DEFAULT_CON DESC, SERIES.SERIE_CON';
   SQL_OBTENER_SERIE_ALMACEN =
-    'SELECT EMPSER FROM fza_empresas_series ' +
+    'SELECT EMPSER FROM vi_empresas_series ' +
     'WHERE CODIGO_EMP_EMPSER = :EMP AND TIPO_DOC_EMPSER = ''FC'' ' +
     'AND CODIGO_ALM_EMPSER = :ALM ' +
+    'AND (SUBTIPO_EMPSER = ''NORMAL'' ' +
+    '     OR IFNULL(SUBTIPO_EMPSER, '''') = '''') ' +
     'AND (FECHA_DESDE_EMPSER IS NULL OR FECHA_DESDE_EMPSER <= CURDATE()) ' +
     'AND (FECHA_HASTA_EMPSER IS NULL OR FECHA_HASTA_EMPSER >= CURDATE()) ' +
+    'ORDER BY CASE WHEN SUBTIPO_EMPSER = ''NORMAL'' THEN 0 ELSE 1 END ' +
     'LIMIT 1';
 
 type
@@ -56,7 +76,8 @@ type
     FConexion: TUniConnection;
   public
     constructor Create(AConexion: TUniConnection);
-    function ConsultarSeries: IConsultaSeriesFactura;
+    function ConsultarSeries(
+      const AEmpresa: string): IConsultaSeriesFactura;
     function ObtenerSerieAlmacen(
       const AEmpresa: string;
       const AAlmacen: string): string;
@@ -86,8 +107,8 @@ begin
   FConexion := AConexion;
 end;
 
-function TRepositorioSerieFechaFacturaUniDAC.ConsultarSeries:
-  IConsultaSeriesFactura;
+function TRepositorioSerieFechaFacturaUniDAC.ConsultarSeries(
+  const AEmpresa: string): IConsultaSeriesFactura;
 var
   oConsulta: TUniQuery;
 begin
@@ -95,6 +116,7 @@ begin
   try
     oConsulta.Connection := FConexion;
     oConsulta.SQL.Text := SQL_CONSULTAR_SERIES;
+    oConsulta.ParamByName('EMP').AsString := AEmpresa;
     oConsulta.Open;
     Result := TConsultaSeriesFacturaUniDAC.Create(oConsulta);
   except

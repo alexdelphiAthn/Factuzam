@@ -1,4 +1,4 @@
-﻿# Fase 6AB — datasets y claves de `inLibtb`
+# Fase 6AB — datasets y claves de `inLibtb`
 
 Fecha: 28/07/2026. D3.1, primer fascículo de nueve. Sin commit.
 

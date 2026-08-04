@@ -1,4 +1,4 @@
-object TestPrintPreviewDlg: TTestPrintPreviewDlg
+﻿object TestPrintPreviewDlg: TTestPrintPreviewDlg
   Left = 297
   Top = 170
   Caption = 'Print Preview'

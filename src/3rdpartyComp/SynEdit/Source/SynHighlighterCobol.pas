@@ -1,4 +1,4 @@
-{-------------------------------------------------------------------------------
+ï»¿{-------------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -13,7 +13,7 @@ The original code is: SynHighlighterCobol.pas, released 2002-08-26.
 Description: COBOL Syntax Parser/Highlighter
 The author of this file is Andrey Ustinov.
 Copyright (c) 2002 Software Mining, http://www.softwaremining.com/.
-Unicode translation by Maël Hörz.
+Unicode translation by MaÃ«l HÃ¶rz.
 All rights reserved.
 
 Contributors to the SynEdit and mwEdit projects are listed in the

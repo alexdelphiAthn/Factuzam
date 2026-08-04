@@ -1,4 +1,4 @@
-{*******************************************************}
+ï»¿{*******************************************************}
 {                                                       }
 {       Advanced SQL statement parser                   }
 {       Classes for parsing "Insert ..." statements     }
@@ -136,11 +136,11 @@ var
   TokenStr: string;
 begin
   (*
-  INSERT [TRANSACTION transaction] INTO <object> [( col [, col …])]
-  {VALUES ( <val> [, <val> …]) | <select_expr>};
+  INSERT [TRANSACTION transaction] INTO <object> [( col [, col â€¦])]
+  {VALUES ( <val> [, <val> â€¦]) | <select_expr>};
   <object> = tablename | viewname
   <val> = {: variable | <constant> | <expr>
-  | <function> | udf ([ <val> [, <val> …]])
+  | <function> | udf ([ <val> [, <val> â€¦]])
   | NULL | USER | RDB$DB_KEY | ?
   } [COLLATE collation]
   <constant> = num | ' string' | charsetname ' string'

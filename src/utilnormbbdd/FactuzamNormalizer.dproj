@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{F6783CF6-8688-4C39-A99D-FD3C4FCCD4FC}</ProjectGuid>
         <MainSource>FactuzamNormalizer.dpr</MainSource>

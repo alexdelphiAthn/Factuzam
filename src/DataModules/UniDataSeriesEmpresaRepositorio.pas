@@ -26,32 +26,55 @@ uses
 
 const
   SQL_TIPOS_DOCUMENTO =
-    'SELECT DISTINCT TIPO_DOC FROM (' +
-    'SELECT CODIGO_TIPO_DOCUMENTO_TD AS TIPO_DOC ' +
-    'FROM fza_tipos_documentos ' +
-    'WHERE TRIM(COALESCE(CODIGO_TIPO_DOCUMENTO_TD, '''')) <> '''' ' +
-    'UNION SELECT TIPO_DOC_CON AS TIPO_DOC FROM fza_contadores ' +
-    'WHERE TRIM(COALESCE(TIPO_DOC_CON, '''')) <> '''' ' +
-    'UNION SELECT TIPO_DOC_EMPSER AS TIPO_DOC FROM fza_empresas_series ' +
-    'WHERE TRIM(COALESCE(TIPO_DOC_EMPSER, '''')) <> '''') DOC ' +
-    'ORDER BY TIPO_DOC';
+    'SELECT DOC.TIPO_DOC, ' +
+    '       CASE ' +
+    '         WHEN DOC.TIPO_DOC IN (''AB'', ''AE'', ''AV'', ''PC'', ''PE'') ' +
+    '           OR LOWER(COALESCE(TD.TABLA_ORIGEN_TIPO_DOCUMENTO_TD, ' +
+    '                    '''')) LIKE ''%albaran%'' ' +
+    '           OR LOWER(COALESCE(TD.TABLA_ORIGEN_TIPO_DOCUMENTO_TD, ' +
+    '                    '''')) LIKE ''%pedido%'' ' +
+    '         THEN ''N'' ' +
+    '         WHEN DOC.TIPO_DOC IN ' +
+    '              (''VE'', ''DE'', ''DV'', ''TR'', ''TA'') ' +
+    '         THEN ''S'' ELSE ''N'' ' +
+    '       END AS ESCAJA ' +
+    '  FROM (SELECT CODIGO_TIPO_DOCUMENTO_TD AS TIPO_DOC ' +
+    '          FROM fza_tipos_documentos ' +
+    '         WHERE TRIM(COALESCE(CODIGO_TIPO_DOCUMENTO_TD, '''')) <> '''' ' +
+    '         UNION SELECT TIPO_DOC_CON FROM fza_contadores ' +
+    '         WHERE TRIM(COALESCE(TIPO_DOC_CON, '''')) <> '''' ' +
+    '         UNION SELECT TIPO_DOC_EMPSER FROM fza_empresas_series ' +
+    '         WHERE TRIM(COALESCE(TIPO_DOC_EMPSER, '''')) <> '''' ' +
+    '         UNION SELECT ''VE'' ' +
+    '         UNION SELECT ''DE'' ' +
+    '         UNION SELECT ''DV'' ' +
+    '         UNION SELECT ''TR'' ' +
+    '         UNION SELECT ''TA'') DOC ' +
+    '  LEFT JOIN fza_tipos_documentos TD ' +
+    '    ON TD.CODIGO_TIPO_DOCUMENTO_TD = DOC.TIPO_DOC ' +
+    ' ORDER BY DOC.TIPO_DOC';
   SQL_EXISTE_SERIE_SOLAPADA =
     'SELECT 1 FROM fza_empresas_series ' +
     'WHERE CODIGO_EMP_EMPSER = :EMP AND TIPO_DOC_EMPSER = :TIPO ' +
-    'AND EMPSER = :SERIE AND IFNULL(CODIGO_ALM_EMPSER, '''') = '''' ' +
-    'AND IFNULL(CODIGO_CAJA_EMPSER, '''') = '''' ' +
+    'AND IFNULL(CODIGO_ALM_EMPSER, '''') = :ALMACEN ' +
+    'AND IFNULL(CODIGO_CAJA_EMPSER, '''') = :CAJA ' +
+    'AND IFNULL(SERIE_TOKENIZADA_EMPSER, '''') = :SERIE_TOKENIZADA ' +
     'AND IFNULL(SUBTIPO_EMPSER, '''') = :SUBTIPO ' +
-    'AND (FECHA_DESDE_EMPSER IS NULL OR FECHA_DESDE_EMPSER <= :HASTA) ' +
-    'AND (FECHA_HASTA_EMPSER IS NULL OR FECHA_HASTA_EMPSER >= :DESDE) ' +
     'LIMIT 1';
   SQL_INSERTAR_SERIE =
     'INSERT INTO fza_empresas_series (CODIGO_SERIE_EMPSER, ' +
     'CODIGO_EMP_EMPSER, CODIGO_ALM_EMPSER, CODIGO_CAJA_EMPSER, EMPSER, ' +
-    'TIPO_DOC_EMPSER, SUBTIPO_EMPSER, FECHA_DESDE_EMPSER, ' +
-    'FECHA_HASTA_EMPSER, INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, ' +
-    'USUARIO_MODIF) VALUES (:CODIGO, :EMP, NULL, NULL, :SERIE, :TIPO, ' +
-    'NULLIF(:SUBTIPO, ''''), :DESDE, :HASTA, NOW(), NOW(), :USUARIO, ' +
-    ':USUARIO)';
+    'SERIE_TOKENIZADA_EMPSER, TIPO_DOC_EMPSER, SUBTIPO_EMPSER, ' +
+    'FECHA_DESDE_EMPSER, FECHA_HASTA_EMPSER, INSTANTE_ALTA, ' +
+    'INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) VALUES ' +
+    '(:CODIGO, :EMP, :ALMACEN, NULLIF(:CAJA, ''''), ' +
+    'REPLACE(REPLACE(REPLACE(REPLACE(TRIM(:SERIE_TOKENIZADA), ' +
+    '''yyyy'', CAST(YEAR(CURDATE()) AS CHAR)), ' +
+    '''mm'', DATE_FORMAT(CURDATE(), ''%m'')), ' +
+    '''dd'', DATE_FORMAT(CURDATE(), ''%d'')), ' +
+    '''q'', CAST(QUARTER(CURDATE()) AS CHAR)), ' +
+    ':SERIE_TOKENIZADA, :TIPO, NULLIF(:SUBTIPO, ''''), NULL, NULL, ' +
+    'NOW(), NOW(), :USUARIO, :USUARIO)';
 
 type
   TRepositorioSeriesEmpresaUniDAC = class(
@@ -60,18 +83,18 @@ type
   private
     FConexion: TUniConnection;
     function ExisteSerieSolapada(
-      const AEmpresa, ASerie, ATipo, ASubtipo: string;
-      AFechaDesde, AFechaHasta: TDateTime): Boolean;
+      const AEmpresa, AAlmacen, ACaja, ASerieTokenizada: string;
+      const ATipo, ASubtipo: string): Boolean;
     procedure InsertarSerie(
-      const AEmpresa, ASerie, ATipo, ASubtipo: string;
-      AFechaDesde, AFechaHasta: TDateTime;
+      const AEmpresa, AAlmacen, ACaja, ASerieTokenizada: string;
+      const ATipo, ASubtipo: string;
       const AUsuario: string);
   public
     constructor Create(AConexion: TUniConnection);
     function ListarTiposDocumento: TTiposDocumentoEmpresa;
     function CrearSerieSiFalta(
-      const AEmpresa, ASerie, ATipo, ASubtipo: string;
-      AFechaDesde, AFechaHasta: TDateTime;
+      const AEmpresa, AAlmacen, ACaja, ASerieTokenizada: string;
+      const ATipo, ASubtipo: string;
       const AUsuario: string): Boolean;
   end;
 
@@ -99,7 +122,10 @@ begin
     begin
       Posicion := Length(Result);
       SetLength(Result, Posicion + 1);
-      Result[Posicion] := Consulta.FieldByName('TIPO_DOC').AsString;
+      Result[Posicion].Codigo :=
+        Consulta.FieldByName('TIPO_DOC').AsString;
+      Result[Posicion].UsaCaja :=
+        Consulta.FieldByName('ESCAJA').AsString = 'S';
       Consulta.Next;
     end;
   finally
@@ -108,8 +134,8 @@ begin
 end;
 
 function TRepositorioSeriesEmpresaUniDAC.ExisteSerieSolapada(
-  const AEmpresa, ASerie, ATipo, ASubtipo: string;
-  AFechaDesde, AFechaHasta: TDateTime): Boolean;
+  const AEmpresa, AAlmacen, ACaja, ASerieTokenizada: string;
+  const ATipo, ASubtipo: string): Boolean;
 var
   Consulta: TUniQuery;
 begin
@@ -118,11 +144,12 @@ begin
     Consulta.Connection := FConexion;
     Consulta.SQL.Text := SQL_EXISTE_SERIE_SOLAPADA;
     Consulta.ParamByName('EMP').AsString := AEmpresa;
+    Consulta.ParamByName('ALMACEN').AsString := AAlmacen;
+    Consulta.ParamByName('CAJA').AsString := ACaja;
     Consulta.ParamByName('TIPO').AsString := ATipo;
-    Consulta.ParamByName('SERIE').AsString := ASerie;
+    Consulta.ParamByName('SERIE_TOKENIZADA').AsString :=
+      ASerieTokenizada;
     Consulta.ParamByName('SUBTIPO').AsString := ASubtipo;
-    Consulta.ParamByName('DESDE').AsDateTime := AFechaDesde;
-    Consulta.ParamByName('HASTA').AsDateTime := AFechaHasta;
     Consulta.Open;
     Result := not Consulta.IsEmpty;
   finally
@@ -131,8 +158,8 @@ begin
 end;
 
 procedure TRepositorioSeriesEmpresaUniDAC.InsertarSerie(
-  const AEmpresa, ASerie, ATipo, ASubtipo: string;
-  AFechaDesde, AFechaHasta: TDateTime;
+  const AEmpresa, AAlmacen, ACaja, ASerieTokenizada: string;
+  const ATipo, ASubtipo: string;
   const AUsuario: string);
 var
   Codigo: string;
@@ -147,11 +174,12 @@ begin
     Consulta.SQL.Text := SQL_INSERTAR_SERIE;
     Consulta.ParamByName('CODIGO').AsString := Codigo;
     Consulta.ParamByName('EMP').AsString := AEmpresa;
-    Consulta.ParamByName('SERIE').AsString := ASerie;
+    Consulta.ParamByName('ALMACEN').AsString := AAlmacen;
+    Consulta.ParamByName('CAJA').AsString := ACaja;
+    Consulta.ParamByName('SERIE_TOKENIZADA').AsString :=
+      ASerieTokenizada;
     Consulta.ParamByName('TIPO').AsString := ATipo;
     Consulta.ParamByName('SUBTIPO').AsString := ASubtipo;
-    Consulta.ParamByName('DESDE').AsDateTime := AFechaDesde;
-    Consulta.ParamByName('HASTA').AsDateTime := AFechaHasta;
     Consulta.ParamByName('USUARIO').AsString := AUsuario;
     Consulta.Execute;
   finally
@@ -160,25 +188,25 @@ begin
 end;
 
 function TRepositorioSeriesEmpresaUniDAC.CrearSerieSiFalta(
-  const AEmpresa, ASerie, ATipo, ASubtipo: string;
-  AFechaDesde, AFechaHasta: TDateTime;
+  const AEmpresa, AAlmacen, ACaja, ASerieTokenizada: string;
+  const ATipo, ASubtipo: string;
   const AUsuario: string): Boolean;
 begin
   Result := not ExisteSerieSolapada(
     AEmpresa,
-    ASerie,
+    AAlmacen,
+    ACaja,
+    ASerieTokenizada,
     ATipo,
-    ASubtipo,
-    AFechaDesde,
-    AFechaHasta);
+    ASubtipo);
   if Result then
     InsertarSerie(
       AEmpresa,
-      ASerie,
+      AAlmacen,
+      ACaja,
+      ASerieTokenizada,
       ATipo,
       ASubtipo,
-      AFechaDesde,
-      AFechaHasta,
       AUsuario);
 end;
 

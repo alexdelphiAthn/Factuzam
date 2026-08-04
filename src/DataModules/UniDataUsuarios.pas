@@ -53,16 +53,13 @@ var
   unqrySol:TUniQuery;
 begin
   unqrySol := TUniQuery.Create(Self);
-  with unqrySol do
-  begin
-    Connection := ConexionPrincipal;
-    SQL.Text :=  'SELECT * '+
-                 '  FROM fza_usuarios_grupos ' +
-                 ' WHERE GRUPO_USUGRP = :grupo ';
-    ParamByName('grupo').AsString := sUsuario;
-    Open;
-    Result := unqrySol.RecordCount > 0;
-  end;
+  unqrySol.Connection := ConexionPrincipal;
+  unqrySol.SQL.Text := 'SELECT * ' +
+    '  FROM fza_usuarios_grupos ' +
+    ' WHERE GRUPO_USUGRP = :grupo ';
+  unqrySol.ParamByName('grupo').AsString := sUsuario;
+  unqrySol.Open;
+  Result := unqrySol.RecordCount > 0;
   FreeAndNil(unqrySol);
 end;
 
@@ -115,25 +112,22 @@ begin
      (Trim(unqryTablaG.FindField('USUARIO_USU').AsString) = '') then
     Abort;
   bError := False;
-  with unqryTablaG do
+  sUsuario := Trim(unqryTablaG.FindField('USUARIO_USU').AsString);
+  if (sUsuario = '') or
+     SimbolosProhibidos(sUsuario, PerfilesLectura) then
   begin
-    sUsuario := Trim(FindField('USUARIO_USU').AsString);
-    if (sUsuario = '') or
-       SimbolosProhibidos(sUsuario, PerfilesLectura) then
-    begin
-      NotificarError(Format(SErrorNombreUsuario, [sUsuario]));
-      bError := True;
-    end;
-    if (UsuarioEsGrupo(sUsuario)) then
-    begin
-      NotificarError(Format(
-        SErrorUsuarioCoincideGrupo,
-        [sUsuario]));
-      bError := True;
-    end;
-    if bError then
-      Abort;
+    NotificarError(Format(SErrorNombreUsuario, [sUsuario]));
+    bError := True;
   end;
+  if UsuarioEsGrupo(sUsuario) then
+  begin
+    NotificarError(Format(
+      SErrorUsuarioCoincideGrupo,
+      [sUsuario]));
+    bError := True;
+  end;
+  if bError then
+    Abort;
 end;
 
 initialization

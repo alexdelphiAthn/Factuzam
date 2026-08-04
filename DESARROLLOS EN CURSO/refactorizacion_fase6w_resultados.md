@@ -1,4 +1,4 @@
-﻿# Fase 6W — perfiles de pantalla de `TfrmMtoGen`
+# Fase 6W — perfiles de pantalla de `TfrmMtoGen`
 
 Fecha: 28/07/2026. D2.2 y segundo fascículo de D2 terminados.
 Sin commit.

@@ -27,10 +27,10 @@ uses
   dxSpreadSheet, dxSpreadSheetCore, cxGraphics, Vcl.Graphics,
   dxSpreadSheetTypes, dxSpreadSheetGraphics, dxCoreGraphics,
   dxSpreadSheetStyles, dxHashUtils,
-  inLibDevExcel;
+  inLibDevExcel, inLibExportacionCompraModelo;
 
 const
-  MAX_TALLAS = 20;
+  MAX_TALLAS = MAX_TALLAS_EXPORTACION_COMPRA;
   FMT_EUR = '#,##0.00" '#$20AC'"';
 
 type
@@ -444,33 +444,241 @@ end;
 
 function ContarTallasConDatos(const QGuias: TDataSet): Integer;
 var
-  i, iMax: Integer;
-  sField: string;
+  aTallas: TArray<string>;
+  iTalla: Integer;
+  iUltima: Integer;
+  sCampo: string;
 begin
-  // Recorre los sistemas de tallas y determina cuantas columnas T tienen dato
-  iMax := 0;
-  if (QGuias = nil) or (not QGuias.Active) or QGuias.IsEmpty then
+  Result := 0;
+  SetLength(aTallas, MAX_TALLAS);
+  if (QGuias <> nil) and QGuias.Active and (not QGuias.IsEmpty) then
   begin
-    Result := 0;
-    Exit;
-  end;
-  QGuias.First;
-  while not QGuias.Eof do
-  begin
-    for i := MAX_TALLAS downto 1 do
+    QGuias.First;
+    while not QGuias.Eof do
     begin
-      sField := Format('T%.2d', [i]);
-      if (QGuias.FindField(sField) <> nil) and
-         (Trim(QGuias.FieldByName(sField).AsString) <> '') then
+      for iTalla := 1 to MAX_TALLAS do
       begin
-        if i > iMax then
-          iMax := i;
-        Break;
+        sCampo := Format('T%.2d', [iTalla]);
+        aTallas[iTalla - 1] := '';
+        if (QGuias.FindField(sCampo) <> nil) and
+           (not QGuias.FieldByName(sCampo).IsNull) then
+          aTallas[iTalla - 1] := QGuias.FieldByName(sCampo).AsString;
+      end;
+      iUltima := UltimaTallaInformada(aTallas);
+      if iUltima > Result then
+        Result := iUltima;
+      QGuias.Next;
+    end;
+  end;
+end;
+
+procedure PintarGuiasCompraHorizontal(Sheet: TdxSpreadSheetTableView;
+  const QGuias: TDataSet; const AColumnas: TColumnasCompraHorizontal;
+  ANumTallas: Integer; var AFila: Integer);
+var
+  iTalla: Integer;
+  sCampo: string;
+begin
+  if (QGuias <> nil) and QGuias.Active and (not QGuias.IsEmpty) then
+  begin
+    QGuias.First;
+    while not QGuias.Eof do
+    begin
+      W(Sheet, AFila, AColumnas.Sistema,
+        QGuias.FieldByName('NOMBRE_CORTO_AC').AsString,
+        True, ssahCenter);
+      Sheet.Cells[AFila, AColumnas.Sistema].Style.Brush.BackgroundColor :=
+        $00E8E8E8;
+      W(Sheet, AFila, AColumnas.PrecioCompra,
+        QGuias.FieldByName('NOMBRE_AC').AsString);
+      Sheet.Cells[AFila,
+        AColumnas.PrecioCompra].Style.Brush.BackgroundColor := $00E8E8E8;
+      for iTalla := 1 to ANumTallas do
+      begin
+        sCampo := Format('T%.2d', [iTalla]);
+        if (QGuias.FindField(sCampo) <> nil) and
+           (Trim(QGuias.FieldByName(sCampo).AsString) <> '') then
+        begin
+          W(Sheet, AFila, AColumnas.PrimeraTalla + iTalla - 1,
+            QGuias.FieldByName(sCampo).AsString, True, ssahCenter);
+          Sheet.Cells[AFila, AColumnas.PrimeraTalla + iTalla - 1]
+            .Style.Font.Size := 9;
+          Sheet.Cells[AFila, AColumnas.PrimeraTalla + iTalla - 1]
+            .Style.Brush.BackgroundColor := $00E8E8E8;
+        end;
+      end;
+      Inc(AFila);
+      QGuias.Next;
+    end;
+  end;
+end;
+
+procedure PintarCabeceraLineasHorizontal(
+  Sheet: TdxSpreadSheetTableView;
+  const AColumnas: TColumnasCompraHorizontal;
+  ANumTallas, AFila: Integer);
+var
+  iColumna: Integer;
+  iTalla: Integer;
+begin
+  W(Sheet, AFila, AColumnas.Articulo, 'Cod. Art.', True, ssahCenter);
+  W(Sheet, AFila, AColumnas.Referencia, 'Ref. Prv.', True, ssahCenter);
+  W(Sheet, AFila, AColumnas.Descripcion, 'Descripcion', True, ssahCenter);
+  W(Sheet, AFila, AColumnas.Color, 'Color', True, ssahCenter);
+  W(Sheet, AFila, AColumnas.Sistema, 'Sis.', True, ssahCenter);
+  W(Sheet, AFila, AColumnas.PrecioCompra,
+    'Pr. Compra', True, ssahRight);
+  if AColumnas.PrecioVenta >= 0 then
+    W(Sheet, AFila, AColumnas.PrecioVenta,
+      'Pr. Venta', True, ssahRight);
+  for iTalla := 1 to ANumTallas do
+    W(Sheet, AFila, AColumnas.PrimeraTalla + iTalla - 1,
+      Format('T%.2d', [iTalla]), True, ssahCenter);
+  W(Sheet, AFila, AColumnas.Unidades, 'Uds.', True, ssahRight);
+  W(Sheet, AFila, AColumnas.Importe, 'Importe', True, ssahRight);
+  for iColumna := 0 to AColumnas.Ultima do
+  begin
+    if Sheet.Cells[AFila, iColumna] <> nil then
+    begin
+      Sheet.Cells[AFila, iColumna].Style.Font.Color := clWhite;
+      Sheet.Cells[AFila,
+        iColumna].Style.Brush.BackgroundColor := $00666666;
+      Sheet.Cells[AFila,
+        iColumna].Style.Borders[bBottom].Style := sscbsThin;
+    end;
+  end;
+end;
+
+procedure PintarFilaCompraHorizontal(Sheet: TdxSpreadSheetTableView;
+  const QLineas: TDataSet; const AColumnas: TColumnasCompraHorizontal;
+  ANumTallas, AFila: Integer);
+var
+  iTalla: Integer;
+  rValor: Double;
+  sCampo: string;
+begin
+  W(Sheet, AFila, AColumnas.Articulo,
+    QLineas.FieldByName('CODIGO_ART').AsString);
+  W(Sheet, AFila, AColumnas.Referencia,
+    QLineas.FieldByName('REF_PRV').AsString);
+  W(Sheet, AFila, AColumnas.Descripcion,
+    QLineas.FieldByName('DESCRIPCION').AsString);
+  W(Sheet, AFila, AColumnas.Color,
+    QLineas.FieldByName('COLOR_TEXTO').AsString);
+  W(Sheet, AFila, AColumnas.Sistema,
+    QLineas.FieldByName('NOMBRE_CORTO_AC').AsString, False, ssahCenter);
+  rValor := QLineas.FieldByName('PRECIO_COMPRA').AsFloat;
+  W(Sheet, AFila, AColumnas.PrecioCompra, rValor, False, ssahRight);
+  Sheet.Cells[AFila,
+    AColumnas.PrecioCompra].Style.DataFormat.FormatCode := FMT_EUR;
+  if AColumnas.PrecioVenta >= 0 then
+  begin
+    rValor := QLineas.FieldByName('PRECIO_VENTA').AsFloat;
+    W(Sheet, AFila, AColumnas.PrecioVenta, rValor, False, ssahRight);
+    Sheet.Cells[AFila,
+      AColumnas.PrecioVenta].Style.DataFormat.FormatCode := FMT_EUR;
+  end;
+  for iTalla := 1 to ANumTallas do
+  begin
+    sCampo := Format('T%.2d', [iTalla]);
+    if QLineas.FindField(sCampo) <> nil then
+    begin
+      rValor := QLineas.FieldByName(sCampo).AsFloat;
+      if rValor > 0 then
+      begin
+        W(Sheet, AFila, AColumnas.PrimeraTalla + iTalla - 1,
+          rValor, False, ssahCenter);
+        Sheet.Cells[AFila, AColumnas.PrimeraTalla + iTalla - 1]
+          .Style.DataFormat.FormatCode := '0';
       end;
     end;
-    QGuias.Next;
   end;
-  Result := iMax;
+  rValor := QLineas.FieldByName('TOTAL_UNIDADES').AsFloat;
+  W(Sheet, AFila, AColumnas.Unidades, rValor, False, ssahRight);
+  Sheet.Cells[AFila,
+    AColumnas.Unidades].Style.DataFormat.FormatCode := '0';
+  rValor := QLineas.FieldByName('TOTAL_LINEA').AsFloat;
+  W(Sheet, AFila, AColumnas.Importe, rValor, False, ssahRight);
+  Sheet.Cells[AFila,
+    AColumnas.Importe].Style.DataFormat.FormatCode := FMT_EUR;
+end;
+
+procedure PintarLineasCompraHorizontal(Sheet: TdxSpreadSheetTableView;
+  const QLineas: TDataSet; const AColumnas: TColumnasCompraHorizontal;
+  ANumTallas: Integer; var AFila: Integer);
+begin
+  if (QLineas <> nil) and QLineas.Active and (not QLineas.IsEmpty) then
+  begin
+    QLineas.DisableControls;
+    try
+      QLineas.First;
+      while not QLineas.Eof do
+      begin
+        PintarFilaCompraHorizontal(
+          Sheet, QLineas, AColumnas, ANumTallas, AFila);
+        Inc(AFila);
+        QLineas.Next;
+      end;
+    finally
+      QLineas.EnableControls;
+    end;
+  end;
+end;
+
+procedure PintarTotalesCompraHorizontal(Sheet: TdxSpreadSheetTableView;
+  const AColumnas: TColumnasCompraHorizontal; ANumTallas: Integer;
+  AFilaInicio, AFilaFin: Integer; var AFila: Integer);
+var
+  iColumna: Integer;
+  iTalla: Integer;
+begin
+  if AFilaFin >= AFilaInicio then
+  begin
+    Inc(AFila);
+    W(Sheet, AFila, AColumnas.Sistema, 'TOTALES', True, ssahRight);
+    for iTalla := 1 to ANumTallas do
+    begin
+      iColumna := AColumnas.PrimeraTalla + iTalla - 1;
+      WFormula(Sheet, AFila, iColumna,
+        '=SUM(' + GetRef(AFilaInicio, iColumna) + ':' +
+        GetRef(AFilaFin, iColumna) + ')', '0');
+      Sheet.Cells[AFila, iColumna].Style.Font.Style := [fsBold];
+    end;
+    WFormula(Sheet, AFila, AColumnas.Unidades,
+      '=SUM(' + GetRef(AFilaInicio, AColumnas.Unidades) + ':' +
+      GetRef(AFilaFin, AColumnas.Unidades) + ')', '0');
+    Sheet.Cells[AFila, AColumnas.Unidades].Style.Font.Style := [fsBold];
+    WFormula(Sheet, AFila, AColumnas.Importe,
+      '=SUM(' + GetRef(AFilaInicio, AColumnas.Importe) + ':' +
+      GetRef(AFilaFin, AColumnas.Importe) + ')', FMT_EUR);
+    Sheet.Cells[AFila, AColumnas.Importe].Style.Font.Style := [fsBold];
+    Sheet.Cells[AFila, AColumnas.Importe].Style.Font.Size := 13;
+    for iColumna := AColumnas.Sistema to AColumnas.Ultima do
+    begin
+      if Sheet.Cells[AFila, iColumna] <> nil then
+        Sheet.Cells[AFila,
+          iColumna].Style.Borders[bTop].Style := sscbsThin;
+    end;
+  end;
+end;
+
+procedure ConfigurarAnchosCompraHorizontal(Sheet: TdxSpreadSheetTableView;
+  const AColumnas: TColumnasCompraHorizontal; ANumTallas: Integer);
+var
+  iTalla: Integer;
+begin
+  Sheet.Columns[AColumnas.Articulo].Size := 90;
+  Sheet.Columns[AColumnas.Referencia].Size := 70;
+  Sheet.Columns[AColumnas.Descripcion].Size := 180;
+  Sheet.Columns[AColumnas.Color].Size := 90;
+  Sheet.Columns[AColumnas.Sistema].Size := 50;
+  Sheet.Columns[AColumnas.PrecioCompra].Size := 75;
+  if AColumnas.PrecioVenta >= 0 then
+    Sheet.Columns[AColumnas.PrecioVenta].Size := 75;
+  for iTalla := 0 to ANumTallas - 1 do
+    Sheet.Columns[AColumnas.PrimeraTalla + iTalla].Size := 38;
+  Sheet.Columns[AColumnas.Unidades].Size := 55;
+  Sheet.Columns[AColumnas.Importe].Size := 80;
 end;
 
 // ===== Exportacion horizontal ===============================================
@@ -482,215 +690,38 @@ procedure ExportarDocCompraHorizontal(
   const ACfg: TDocCompraCabCfg);
 var
   Sheet: TdxSpreadSheetTableView;
-  iRow, c, i, iNumTallas: Integer;
-  iFilaInicioGuias, iFilaFinGuias: Integer;
-  iFilaHeaders, iFilaInicioLineas, iFilaFinLineas: Integer;
-  // Columnas fijas
-  COL_ART, COL_REF, COL_DESC, COL_COLOR, COL_SIS: Integer;
-  COL_PV: Integer;    // precio venta (solo sesiones)
-  COL_T01: Integer;   // primera columna de talla
-  COL_UDS, COL_IMP: Integer;
-  iColMax: Integer;
-  rVal: Double;
-  sField: string;
+  oColumnas: TColumnasCompraHorizontal;
+  iRow: Integer;
+  iNumTallas: Integer;
+  iFilaInicioLineas: Integer;
+  iFilaFinLineas: Integer;
 begin
   ASheetControl.ClearAll;
-  iNumTallas := ContarTallasConDatos(QGuias);
-  if iNumTallas = 0 then
-    iNumTallas := 10;
-  // Definir columnas
-  COL_ART   := 0;
-  COL_REF   := 1;
-  COL_DESC  := 2;
-  COL_COLOR := 3;
-  COL_SIS   := 4;
-  var COL_PC := 5; // precio compra siempre visible
-  if ACfg.MostrarPrecioVenta then
-  begin
-    COL_PV  := 6;
-    COL_T01 := 7;
-  end
-  else
-  begin
-    COL_PV  := -1;
-    COL_T01 := 6;
-  end;
-  COL_UDS := COL_T01 + iNumTallas;
-  COL_IMP := COL_UDS + 1;
-  iColMax := COL_IMP;
+  iNumTallas := NormalizarNumeroTallasCompra(
+    ContarTallasConDatos(QGuias));
+  oColumnas := CalcularColumnasCompraHorizontal(
+    iNumTallas, ACfg.MostrarPrecioVenta);
   Sheet := ASheetControl.AddSheet(ACfg.Titulo,
     TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
   Sheet.BeginUpdate;
   try
-  // --- Cabecera ---
-  PintarCabeceraDoc(AConexion, Sheet, QMaster, ACfg, iColMax, iRow);
-  // --- Guias de tallas (justo encima de las cabeceras de columna) ---
-  Inc(iRow);
-  iFilaInicioGuias := iRow;
-  if (QGuias <> nil) and QGuias.Active and (not QGuias.IsEmpty) then
-  begin
-    QGuias.First;
-    while not QGuias.Eof do
-    begin
-      // Sistema en la zona de columnas fijas
-      W(Sheet, iRow, COL_SIS,
-        QGuias.FieldByName('NOMBRE_CORTO_AC').AsString, True, ssahCenter);
-      Sheet.Cells[iRow, COL_SIS].Style.Brush.BackgroundColor := $00E8E8E8;
-      // Nombre completo del sistema
-      var COL_PC_LOCAL := COL_SIS + 1;
-      W(Sheet, iRow, COL_PC_LOCAL,
-        QGuias.FieldByName('NOMBRE_AC').AsString, False, ssahLeft);
-      Sheet.Cells[iRow, COL_PC_LOCAL].Style.Brush.BackgroundColor := $00E8E8E8;
-      // Etiquetas de talla alineadas con T01..Txx
-      for i := 1 to iNumTallas do
-      begin
-        sField := Format('T%.2d', [i]);
-        if (QGuias.FindField(sField) <> nil) and
-           (Trim(QGuias.FieldByName(sField).AsString) <> '') then
-        begin
-          W(Sheet, iRow, COL_T01 + i - 1,
-            QGuias.FieldByName(sField).AsString, True, ssahCenter);
-          Sheet.Cells[iRow, COL_T01 + i - 1].Style.Font.Size := 9;
-          Sheet.Cells[iRow, COL_T01 + i - 1].Style.Brush.BackgroundColor :=
-            $00E8E8E8;
-        end;
-      end;
-      Inc(iRow);
-      QGuias.Next;
-    end;
-  end;
-  iFilaFinGuias := iRow - 1;
-  // --- Cabecera de lineas ---
-  iFilaHeaders := iRow;
-  W(Sheet, iRow, COL_ART,   'Cod. Art.',    True, ssahCenter);
-  W(Sheet, iRow, COL_REF,   'Ref. Prv.',    True, ssahCenter);
-  W(Sheet, iRow, COL_DESC,  'Descripcion',  True, ssahCenter);
-  W(Sheet, iRow, COL_COLOR, 'Color',        True, ssahCenter);
-  W(Sheet, iRow, COL_SIS,   'Sis.',         True, ssahCenter);
-  W(Sheet, iRow, COL_PC,   'Pr. Compra',   True, ssahRight);
-  if COL_PV >= 0 then
-    W(Sheet, iRow, COL_PV,  'Pr. Venta',    True, ssahRight);
-  for i := 1 to iNumTallas do
-    W(Sheet, iRow, COL_T01 + i - 1,
-      Format('T%.2d', [i]), True, ssahCenter);
-  W(Sheet, iRow, COL_UDS,   'Uds.',    True, ssahRight);
-  W(Sheet, iRow, COL_IMP,   'Importe', True, ssahRight);
-  // Fondo gris oscuro para la cabecera
-  for c := 0 to iColMax do
-    if Sheet.Cells[iRow, c] <> nil then
-    begin
-      Sheet.Cells[iRow, c].Style.Font.Color := clWhite;
-      Sheet.Cells[iRow, c].Style.Brush.BackgroundColor := $00666666;
-      Sheet.Cells[iRow, c].Style.Borders[bBottom].Style := sscbsThin;
-    end;
-  // --- Datos de lineas ---
-  Inc(iRow);
-  iFilaInicioLineas := iRow;
-  if (QLineas <> nil) and QLineas.Active and (not QLineas.IsEmpty) then
-  begin
-    QLineas.DisableControls;
-    try
-    QLineas.First;
-    while not QLineas.Eof do
-    begin
-      W(Sheet, iRow, COL_ART,
-        QLineas.FieldByName('CODIGO_ART').AsString);
-      W(Sheet, iRow, COL_REF,
-        QLineas.FieldByName('REF_PRV').AsString);
-      W(Sheet, iRow, COL_DESC,
-        QLineas.FieldByName('DESCRIPCION').AsString);
-      W(Sheet, iRow, COL_COLOR,
-        QLineas.FieldByName('COLOR_TEXTO').AsString);
-      W(Sheet, iRow, COL_SIS,
-        QLineas.FieldByName('NOMBRE_CORTO_AC').AsString, False, ssahCenter);
-      // Precio compra
-      rVal := QLineas.FieldByName('PRECIO_COMPRA').AsFloat;
-      W(Sheet, iRow, COL_PC, rVal, False, ssahRight);
-      Sheet.Cells[iRow, COL_PC].Style.DataFormat.FormatCode := FMT_EUR;
-      if COL_PV >= 0 then
-      begin
-        rVal := QLineas.FieldByName('PRECIO_VENTA').AsFloat;
-        W(Sheet, iRow, COL_PV, rVal, False, ssahRight);
-        Sheet.Cells[iRow, COL_PV].Style.DataFormat.FormatCode := FMT_EUR;
-      end;
-      // Tallas T01..T20
-      for i := 1 to iNumTallas do
-      begin
-        sField := Format('T%.2d', [i]);
-        if QLineas.FindField(sField) <> nil then
-        begin
-          rVal := QLineas.FieldByName(sField).AsFloat;
-          if rVal > 0 then
-          begin
-            W(Sheet, iRow, COL_T01 + i - 1, rVal, False, ssahCenter);
-            Sheet.Cells[iRow, COL_T01 + i - 1].Style.DataFormat.FormatCode :=
-              '0';
-          end;
-        end;
-      end;
-      // Total unidades
-      rVal := QLineas.FieldByName('TOTAL_UNIDADES').AsFloat;
-      W(Sheet, iRow, COL_UDS, rVal, False, ssahRight);
-      Sheet.Cells[iRow, COL_UDS].Style.DataFormat.FormatCode := '0';
-      // Importe
-      rVal := QLineas.FieldByName('TOTAL_LINEA').AsFloat;
-      W(Sheet, iRow, COL_IMP, rVal, False, ssahRight);
-      Sheet.Cells[iRow, COL_IMP].Style.DataFormat.FormatCode := FMT_EUR;
-      Inc(iRow);
-      QLineas.Next;
-    end;
-    finally
-      QLineas.EnableControls;
-    end;
-  end;
-  iFilaFinLineas := iRow - 1;
-  // --- Fila de totales con formulas SUM ---
-  if iFilaFinLineas >= iFilaInicioLineas then
-  begin
+    PintarCabeceraDoc(
+      AConexion, Sheet, QMaster, ACfg, oColumnas.Ultima, iRow);
     Inc(iRow);
-    W(Sheet, iRow, COL_SIS, 'TOTALES', True, ssahRight);
-    // SUM de cada columna talla
-    for i := 1 to iNumTallas do
-    begin
-      c := COL_T01 + i - 1;
-      WFormula(Sheet, iRow, c,
-        '=SUM(' + GetRef(iFilaInicioLineas, c) + ':' +
-                  GetRef(iFilaFinLineas, c) + ')',
-        '0');
-      Sheet.Cells[iRow, c].Style.Font.Style := [fsBold];
-    end;
-    // SUM total unidades
-    WFormula(Sheet, iRow, COL_UDS,
-      '=SUM(' + GetRef(iFilaInicioLineas, COL_UDS) + ':' +
-                GetRef(iFilaFinLineas, COL_UDS) + ')',
-      '0');
-    Sheet.Cells[iRow, COL_UDS].Style.Font.Style := [fsBold];
-    // SUM importe
-    WFormula(Sheet, iRow, COL_IMP,
-      '=SUM(' + GetRef(iFilaInicioLineas, COL_IMP) + ':' +
-                GetRef(iFilaFinLineas, COL_IMP) + ')',
-      FMT_EUR);
-    Sheet.Cells[iRow, COL_IMP].Style.Font.Style := [fsBold];
-    Sheet.Cells[iRow, COL_IMP].Style.Font.Size := 13;
-    // Borde superior en fila de totales
-    for c := COL_SIS to iColMax do
-      if Sheet.Cells[iRow, c] <> nil then
-        Sheet.Cells[iRow, c].Style.Borders[bTop].Style := sscbsThin;
-  end;
-  PintarTotalesFiscalesCompra(Sheet, QMaster, iRow, COL_ART);
-  // --- Anchos de columna ---
-  Sheet.Columns[COL_ART].Size   := 90;
-  Sheet.Columns[COL_REF].Size   := 70;
-  Sheet.Columns[COL_DESC].Size  := 180;
-  Sheet.Columns[COL_COLOR].Size := 90;
-  Sheet.Columns[COL_SIS].Size   := 50;
-  Sheet.Columns[COL_PC].Size   := 75;
-  if COL_PV >= 0 then
-    Sheet.Columns[COL_PV].Size := 75;
-  for i := 0 to iNumTallas - 1 do
-    Sheet.Columns[COL_T01 + i].Size := 38;
-  Sheet.Columns[COL_UDS].Size := 55;
-  Sheet.Columns[COL_IMP].Size := 80;
+    PintarGuiasCompraHorizontal(
+      Sheet, QGuias, oColumnas, iNumTallas, iRow);
+    PintarCabeceraLineasHorizontal(
+      Sheet, oColumnas, iNumTallas, iRow);
+    Inc(iRow);
+    iFilaInicioLineas := iRow;
+    PintarLineasCompraHorizontal(
+      Sheet, QLineas, oColumnas, iNumTallas, iRow);
+    iFilaFinLineas := iRow - 1;
+    PintarTotalesCompraHorizontal(Sheet, oColumnas, iNumTallas,
+      iFilaInicioLineas, iFilaFinLineas, iRow);
+    PintarTotalesFiscalesCompra(
+      Sheet, QMaster, iRow, oColumnas.Articulo);
+    ConfigurarAnchosCompraHorizontal(Sheet, oColumnas, iNumTallas);
   finally
     Sheet.EndUpdate;
   end;
@@ -698,128 +729,158 @@ end;
 
 // ===== Exportacion vertical (una fila por SKU) ==============================
 
+const
+  V_COL_LINEA = 0;
+  V_COL_ART = 1;
+  V_COL_SKU = 2;
+  V_COL_REF = 3;
+  V_COL_DESC = 4;
+  V_COL_CANT = 5;
+  V_COL_PREC = 6;
+  V_COL_TOTAL = 7;
+
+procedure PintarCabeceraLineasVertical(Sheet: TdxSpreadSheetTableView;
+  AFila: Integer);
+var
+  iColumna: Integer;
+begin
+  W(Sheet, AFila, V_COL_LINEA, 'Linea', True, ssahCenter);
+  W(Sheet, AFila, V_COL_ART, 'Articulo', True, ssahCenter);
+  W(Sheet, AFila, V_COL_SKU, 'SKU', True, ssahCenter);
+  W(Sheet, AFila, V_COL_REF, 'Ref. Prv.', True, ssahCenter);
+  W(Sheet, AFila, V_COL_DESC, 'Descripcion', True, ssahCenter);
+  W(Sheet, AFila, V_COL_CANT, 'Cant.', True, ssahRight);
+  W(Sheet, AFila, V_COL_PREC, 'Precio', True, ssahRight);
+  W(Sheet, AFila, V_COL_TOTAL, 'Total', True, ssahRight);
+  for iColumna := V_COL_LINEA to V_COL_TOTAL do
+  begin
+    if Sheet.Cells[AFila, iColumna] <> nil then
+    begin
+      Sheet.Cells[AFila, iColumna].Style.Font.Color := clWhite;
+      Sheet.Cells[AFila,
+        iColumna].Style.Brush.BackgroundColor := $00666666;
+      Sheet.Cells[AFila,
+        iColumna].Style.Borders[bBottom].Style := sscbsThin;
+    end;
+  end;
+end;
+
+procedure PintarFilaCompraVertical(Sheet: TdxSpreadSheetTableView;
+  const QLineas: TDataSet; AFila: Integer);
+var
+  rValor: Double;
+begin
+  W(Sheet, AFila, V_COL_LINEA,
+    CampoTextoPrimero(QLineas, ['LINEA_ALBCLIN', 'LINEA_DEVCLIN']),
+    False, ssahCenter);
+  W(Sheet, AFila, V_COL_ART,
+    CampoTextoPrimero(QLineas,
+      ['CODIGO_ART_ALBCLIN', 'CODIGO_ART_DEVCLIN']));
+  W(Sheet, AFila, V_COL_SKU,
+    CampoTextoPrimero(QLineas,
+      ['CODIGO_UNIDAD_ALBCLIN', 'CODIGO_UNIDAD_DEVCLIN']));
+  W(Sheet, AFila, V_COL_REF,
+    CampoTextoPrimero(QLineas,
+      ['REF_PRV_ALBCLIN', 'REF_PRV_DEVCLIN']));
+  W(Sheet, AFila, V_COL_DESC,
+    CampoTextoPrimero(QLineas,
+      ['DESCRIPCION_ARTICULO_ALBCLIN',
+       'DESCRIPCION_ARTICULO_DEVCLIN']));
+  rValor := CampoFloatPrimero(QLineas,
+    ['CANTIDAD_ALBCLIN', 'CANTIDAD_DEVCLIN']);
+  W(Sheet, AFila, V_COL_CANT, rValor, False, ssahRight);
+  Sheet.Cells[AFila,
+    V_COL_CANT].Style.DataFormat.FormatCode := '#,##0.##';
+  rValor := CampoFloatPrimero(QLineas,
+    ['PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN',
+     'PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN']);
+  W(Sheet, AFila, V_COL_PREC, rValor, False, ssahRight);
+  Sheet.Cells[AFila, V_COL_PREC].Style.DataFormat.FormatCode := FMT_EUR;
+  WFormula(Sheet, AFila, V_COL_TOTAL,
+    '=' + GetRef(AFila, V_COL_CANT) + '*' +
+    GetRef(AFila, V_COL_PREC), FMT_EUR);
+end;
+
+procedure PintarLineasCompraVertical(Sheet: TdxSpreadSheetTableView;
+  const QLineas: TDataSet; var AFila: Integer);
+begin
+  if (QLineas <> nil) and QLineas.Active and (not QLineas.IsEmpty) then
+  begin
+    QLineas.DisableControls;
+    try
+      QLineas.First;
+      while not QLineas.Eof do
+      begin
+        PintarFilaCompraVertical(Sheet, QLineas, AFila);
+        Inc(AFila);
+        QLineas.Next;
+      end;
+    finally
+      QLineas.EnableControls;
+    end;
+  end;
+end;
+
+procedure PintarTotalesCompraVertical(Sheet: TdxSpreadSheetTableView;
+  const QMaster: TDataSet; AFilaInicio, AFilaFin: Integer;
+  var AFila: Integer);
+begin
+  if AFilaFin >= AFilaInicio then
+  begin
+    Inc(AFila);
+    W(Sheet, AFila, V_COL_PREC, 'Total Base:', True, ssahRight);
+    WFormula(Sheet, AFila, V_COL_TOTAL,
+      '=SUM(' + GetRef(AFilaInicio, V_COL_TOTAL) + ':' +
+      GetRef(AFilaFin, V_COL_TOTAL) + ')', FMT_EUR);
+    Sheet.Cells[AFila, V_COL_TOTAL].Style.Font.Style := [fsBold];
+    W(Sheet, AFila, V_COL_DESC, 'Total Uds:', True, ssahRight);
+    WFormula(Sheet, AFila, V_COL_CANT,
+      '=SUM(' + GetRef(AFilaInicio, V_COL_CANT) + ':' +
+      GetRef(AFilaFin, V_COL_CANT) + ')', '0');
+    Sheet.Cells[AFila, V_COL_CANT].Style.Font.Style := [fsBold];
+    PintarTotalesFiscalesCompra(Sheet, QMaster, AFila, V_COL_LINEA);
+  end;
+end;
+
+procedure ConfigurarAnchosCompraVertical(Sheet: TdxSpreadSheetTableView);
+begin
+  Sheet.Columns[V_COL_LINEA].Size := 45;
+  Sheet.Columns[V_COL_ART].Size := 90;
+  Sheet.Columns[V_COL_SKU].Size := 140;
+  Sheet.Columns[V_COL_REF].Size := 80;
+  Sheet.Columns[V_COL_DESC].Size := 220;
+  Sheet.Columns[V_COL_CANT].Size := 55;
+  Sheet.Columns[V_COL_PREC].Size := 75;
+  Sheet.Columns[V_COL_TOTAL].Size := 85;
+end;
+
 procedure ExportarDocCompraVertical(
   AConexion: TUniConnection;
   ASheetControl: TdxSpreadSheet;
   const QMaster, QLineas: TDataSet;
   const ACfg: TDocCompraCabCfg);
-const
-  COL_LINEA = 0;
-  COL_ART   = 1;
-  COL_SKU   = 2;
-  COL_REF   = 3;
-  COL_DESC  = 4;
-  COL_CANT  = 5;
-  COL_PREC  = 6;
-  COL_TOTAL = 7;
 var
   Sheet: TdxSpreadSheetTableView;
   iRow: Integer;
-  iFilaInicioLineas, iFilaFinLineas: Integer;
-  c: Integer;
-  rVal: Double;
+  iFilaInicioLineas: Integer;
+  iFilaFinLineas: Integer;
 begin
   ASheetControl.ClearAll;
   Sheet := ASheetControl.AddSheet(ACfg.Titulo,
     TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
   Sheet.BeginUpdate;
   try
-  // --- Cabecera ---
-  PintarCabeceraDoc(AConexion, Sheet, QMaster, ACfg, COL_TOTAL, iRow);
-  // --- Cabecera de lineas ---
-  Inc(iRow, 2);
-  W(Sheet, iRow, COL_LINEA, 'Linea',        True, ssahCenter);
-  W(Sheet, iRow, COL_ART,   'Articulo',     True, ssahCenter);
-  W(Sheet, iRow, COL_SKU,   'SKU',          True, ssahCenter);
-  W(Sheet, iRow, COL_REF,   'Ref. Prv.',    True, ssahCenter);
-  W(Sheet, iRow, COL_DESC,  'Descripcion',  True, ssahCenter);
-  W(Sheet, iRow, COL_CANT,  'Cant.',        True, ssahRight);
-  W(Sheet, iRow, COL_PREC,  'Precio',       True, ssahRight);
-  W(Sheet, iRow, COL_TOTAL, 'Total',        True, ssahRight);
-  for c := COL_LINEA to COL_TOTAL do
-    if Sheet.Cells[iRow, c] <> nil then
-    begin
-      Sheet.Cells[iRow, c].Style.Font.Color := clWhite;
-      Sheet.Cells[iRow, c].Style.Brush.BackgroundColor := $00666666;
-      Sheet.Cells[iRow, c].Style.Borders[bBottom].Style := sscbsThin;
-    end;
-  // --- Datos ---
-  Inc(iRow);
-  iFilaInicioLineas := iRow;
-  if (QLineas <> nil) and QLineas.Active and (not QLineas.IsEmpty) then
-  begin
-    QLineas.DisableControls;
-    try
-    QLineas.First;
-    while not QLineas.Eof do
-    begin
-      W(Sheet, iRow, COL_LINEA,
-        CampoTextoPrimero(QLineas, ['LINEA_ALBCLIN', 'LINEA_DEVCLIN']),
-        False, ssahCenter);
-      W(Sheet, iRow, COL_ART,
-        CampoTextoPrimero(QLineas,
-          ['CODIGO_ART_ALBCLIN', 'CODIGO_ART_DEVCLIN']));
-      W(Sheet, iRow, COL_SKU,
-        CampoTextoPrimero(QLineas,
-          ['CODIGO_UNIDAD_ALBCLIN', 'CODIGO_UNIDAD_DEVCLIN']));
-      W(Sheet, iRow, COL_REF,
-        CampoTextoPrimero(QLineas, ['REF_PRV_ALBCLIN', 'REF_PRV_DEVCLIN']));
-      W(Sheet, iRow, COL_DESC,
-        CampoTextoPrimero(QLineas,
-          ['DESCRIPCION_ARTICULO_ALBCLIN',
-           'DESCRIPCION_ARTICULO_DEVCLIN']));
-      // Cantidad
-      rVal := CampoFloatPrimero(QLineas,
-        ['CANTIDAD_ALBCLIN', 'CANTIDAD_DEVCLIN']);
-      W(Sheet, iRow, COL_CANT, rVal, False, ssahRight);
-      Sheet.Cells[iRow, COL_CANT].Style.DataFormat.FormatCode := '#,##0.##';
-      // Precio compra sin IVA
-      rVal := CampoFloatPrimero(QLineas,
-        ['PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN',
-         'PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN']);
-      W(Sheet, iRow, COL_PREC, rVal, False, ssahRight);
-      Sheet.Cells[iRow, COL_PREC].Style.DataFormat.FormatCode := FMT_EUR;
-      // Total linea (formula)
-      WFormula(Sheet, iRow, COL_TOTAL,
-        '=' + GetRef(iRow, COL_CANT) + '*' + GetRef(iRow, COL_PREC),
-        FMT_EUR);
-      Inc(iRow);
-      QLineas.Next;
-    end;
-    finally
-      QLineas.EnableControls;
-    end;
-  end;
-  iFilaFinLineas := iRow - 1;
-  // --- Totales ---
-  if iFilaFinLineas >= iFilaInicioLineas then
-  begin
+    PintarCabeceraDoc(
+      AConexion, Sheet, QMaster, ACfg, V_COL_TOTAL, iRow);
+    Inc(iRow, 2);
+    PintarCabeceraLineasVertical(Sheet, iRow);
     Inc(iRow);
-    // Total base imponible
-    W(Sheet, iRow, COL_PREC, 'Total Base:', True, ssahRight);
-    WFormula(Sheet, iRow, COL_TOTAL,
-      '=SUM(' + GetRef(iFilaInicioLineas, COL_TOTAL) + ':' +
-                GetRef(iFilaFinLineas, COL_TOTAL) + ')',
-      FMT_EUR);
-    Sheet.Cells[iRow, COL_TOTAL].Style.Font.Style := [fsBold];
-    // Total unidades
-    W(Sheet, iRow, COL_DESC, 'Total Uds:', True, ssahRight);
-    WFormula(Sheet, iRow, COL_CANT,
-      '=SUM(' + GetRef(iFilaInicioLineas, COL_CANT) + ':' +
-                GetRef(iFilaFinLineas, COL_CANT) + ')',
-      '0');
-    Sheet.Cells[iRow, COL_CANT].Style.Font.Style := [fsBold];
-    PintarTotalesFiscalesCompra(Sheet, QMaster, iRow, COL_LINEA);
-  end;
-  // --- Anchos de columna ---
-  Sheet.Columns[COL_LINEA].Size := 45;
-  Sheet.Columns[COL_ART].Size   := 90;
-  Sheet.Columns[COL_SKU].Size   := 140;
-  Sheet.Columns[COL_REF].Size   := 80;
-  Sheet.Columns[COL_DESC].Size  := 220;
-  Sheet.Columns[COL_CANT].Size  := 55;
-  Sheet.Columns[COL_PREC].Size  := 75;
-  Sheet.Columns[COL_TOTAL].Size := 85;
+    iFilaInicioLineas := iRow;
+    PintarLineasCompraVertical(Sheet, QLineas, iRow);
+    iFilaFinLineas := iRow - 1;
+    PintarTotalesCompraVertical(
+      Sheet, QMaster, iFilaInicioLineas, iFilaFinLineas, iRow);
+    ConfigurarAnchosCompraVertical(Sheet);
   finally
     Sheet.EndUpdate;
   end;

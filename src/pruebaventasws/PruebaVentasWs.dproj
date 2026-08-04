@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ProjectGuid>{7A6C1E2D-4B58-4C3A-9E71-2F0D5B8C61A4}</ProjectGuid>
     <MainSource>PruebaVentasWs.dpr</MainSource>

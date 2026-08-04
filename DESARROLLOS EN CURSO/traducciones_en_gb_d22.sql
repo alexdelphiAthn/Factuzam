@@ -1,4 +1,4 @@
-﻿-- D22-B: catálogo en-GB de los literales FastReport (D22-A).
+-- D22-B: catálogo en-GB de los literales FastReport (D22-A).
 -- Traducción automática pendiente de revisión visual.
 -- Idempotente: ON DUPLICATE KEY UPDATE sobre UQ_TRAD_CLAVE_IDIOMA.
 SET NAMES utf8mb4;

@@ -1,4 +1,4 @@
-﻿-- D22-A: literales de plantillas FastReport predeterminadas.
+-- D22-A: literales de plantillas FastReport predeterminadas.
 -- Generado por generar_traducciones_fastreport.ps1.
 SET NAMES utf8mb4;
 INSERT INTO fza_traducciones (

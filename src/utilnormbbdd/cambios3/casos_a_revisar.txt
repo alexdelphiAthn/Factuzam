@@ -1,4 +1,4 @@
-﻿# Informe de auditoría (pasada B - revisar manualmente)
+# Informe de auditoría (pasada B - revisar manualmente)
 # Generado: 2026-05-04 08:53:25
 # Total ocurrencias: 7026
 # Formato: ARCHIVO | LINEA | OLD -> NEW | CONTEXTO | MOTIVO | TEXTO

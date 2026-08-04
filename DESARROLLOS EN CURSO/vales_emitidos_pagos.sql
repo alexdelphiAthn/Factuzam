@@ -1,4 +1,4 @@
-﻿-- Apuntes de pago para vales emitidos ya migrados.
+-- Apuntes de pago para vales emitidos ya migrados.
 -- Idempotente: no duplica un apunte VALE negativo existente.
 INSERT INTO `fza_caja_formas_pago`
   (`CODIGO_FP_CFP`,

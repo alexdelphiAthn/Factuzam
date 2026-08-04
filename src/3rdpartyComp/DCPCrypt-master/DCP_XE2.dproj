@@ -1,4 +1,4 @@
-﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 		<PropertyGroup>
 			<ProjectGuid>{ae9b70a6-b2c2-45a0-ba7b-2448a376d73f}</ProjectGuid>
 			<MainSource>DCP_XE2.dpk</MainSource>

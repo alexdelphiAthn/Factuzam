@@ -1,4 +1,4 @@
-unit SynEditDocumentManager;
+﻿unit SynEditDocumentManager;
 
 interface
 

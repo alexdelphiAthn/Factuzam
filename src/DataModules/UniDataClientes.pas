@@ -357,16 +357,13 @@ begin
   (* if ((unqryRetenciones.State = dsInsert) or
       (unqryRetenciones.State = dsEdit)) then
          unqryRetenciones.Post; *)
-  with unqryTablaG do
+  if Trim(unqryTablaG.FindField('RAZON_SOCIAL_CLI').AsString) = '' then
   begin
-    if (Trim(FindField('RAZON_SOCIAL_CLI').AsString) = '') then
-    begin
-      raise ERangeError.CreateFmt(SErrorRazonSocialCliente,
-                                 [FindField('RAZON_SOCIAL_CLI').AsString]);
-    end
-    else
-      GetCodigoAutoCliente;
-  end;
+    raise ERangeError.CreateFmt(SErrorRazonSocialCliente,
+      [unqryTablaG.FindField('RAZON_SOCIAL_CLI').AsString]);
+  end
+  else
+    GetCodigoAutoCliente;
 end;
 initialization
   RegistrarDataModule(TdmClientes);

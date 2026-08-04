@@ -1,4 +1,4 @@
-﻿# Fase 6AE — configuración de conexiones UniDAC
+# Fase 6AE — configuración de conexiones UniDAC
 
 Fecha: 28/07/2026. D3.4, cuarto fascículo de nueve. Sin commit.
 

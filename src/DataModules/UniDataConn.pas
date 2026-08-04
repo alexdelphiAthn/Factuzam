@@ -103,20 +103,17 @@ begin
     'ConnData', 'Puerto', '3310', GetUserFolder);
   sUser := LeerCadenaIni(
     'ConnData', 'User', 'root', GetUserFolder);
-  with Conuni do
-  begin
-    Pooling := True;
-    PoolingOptions.Validate := False;
-    PoolingOptions.ConnectionLifetime := 0;
-    SpecificOptions.Values['MySQL.Interactive'] := 'True';
-    SpecificOptions.Values['ConnectionTimeout'] := '30';
+  Conuni.Pooling := True;
+  Conuni.PoolingOptions.Validate := False;
+  Conuni.PoolingOptions.ConnectionLifetime := 0;
+  Conuni.SpecificOptions.Values['MySQL.Interactive'] := 'True';
+  Conuni.SpecificOptions.Values['ConnectionTimeout'] := '30';
     // 3. LA CLAVE: AUTO-RECONEXIÓN (LocalFailover)
     // Esto hace que si se cae la red o el servidor patea la conexión,
     // UniDAC se reconecta sola y reintenta la consulta sin dar error al
     // usuario.
-    Options.LocalFailover := True;
-    Options.DisconnectedMode := True;
-  end;
+  Conuni.Options.LocalFailover := True;
+  Conuni.Options.DisconnectedMode := True;
   ConfigurarConexionMySQL(
     conUni, sUser, sPasswordEn, sHostName, sPort, sDatabase);
 end;

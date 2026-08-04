@@ -284,7 +284,9 @@ begin
   Result := 0.0;
   Client := THTTPClient.Create;
   try
-    Response := Client.Get('https://api.binance.com/api/v3/ticker/price?symbol=' + UpperCase(SymbolPair));
+    Response := Client.Get(
+      'https://api.binance.com/api/v3/ticker/price?symbol=' +
+      UpperCase(SymbolPair));
 
     if Response.StatusCode = 200 then
     begin
@@ -490,7 +492,8 @@ function TCoinGeckoAPI.GetPrices(const ACoinIDs: TArray<string>;
                                   const ACurrencies: TArray<string>;
                                   AIncludeMarketCap : Boolean;
                                   AInclude24hVol    : Boolean;
-                                  AInclude24hChange : Boolean): TArray<TCoinPrice>;
+                                  AInclude24hChange: Boolean):
+                                  TArray<TCoinPrice>;
 var
   URL       : string;
   Raw       : string;

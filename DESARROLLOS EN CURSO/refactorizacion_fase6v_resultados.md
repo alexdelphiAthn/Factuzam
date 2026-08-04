@@ -1,4 +1,4 @@
-﻿# Fase 6V — filtros guardados de `TfrmMtoGen`
+# Fase 6V — filtros guardados de `TfrmMtoGen`
 
 Fecha: 28/07/2026. D2.1 y primer fascículo de D2 terminados.
 Sin commit.

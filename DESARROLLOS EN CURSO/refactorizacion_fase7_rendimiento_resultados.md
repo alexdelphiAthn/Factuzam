@@ -1,4 +1,4 @@
-﻿# Fase 7 — rendimiento del recálculo de venta
+# Fase 7 — rendimiento del recálculo de venta
 
 Fecha: 29/07/2026. Sin commit.
 

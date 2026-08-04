@@ -1,4 +1,4 @@
-/// filter/database/cache/buffer/security/search/multithread/OS features
+﻿/// filter/database/cache/buffer/security/search/multithread/OS features
 // - as a complement to SynCommons, which tended to increase too much
 // - licensed under a MPL/GPL/LGPL tri-license; version 1.18
 unit SynTable;

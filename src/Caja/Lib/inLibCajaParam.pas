@@ -294,10 +294,10 @@ begin
                      tpInteger,
                      '2');
 
-  // ----------------------------------------------------------------------------------
+  // --------------------------------------------------------------------------
   // Una vez registrada toda la estructura en memoria, le decimos a la librería
   // que se conecte a la base de datos y cargue los valores reales del usuario.
-  // ----------------------------------------------------------------------------------
+  // --------------------------------------------------------------------------
   Inicializar(AUsuario, AGrupo);
 end;
 

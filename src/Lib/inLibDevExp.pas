@@ -198,6 +198,7 @@ procedure ExportarExcel(
 var
   saveDialog: TFileSaveDialog;
   oFormato: TFormatoExcel;
+  oTipoFichero: TFileTypeItem;
   sExt: string;
 begin
   oFormato := FormatoExcelDesde(
@@ -208,11 +209,9 @@ begin
     saveDialog.Title := STituloGuardarListadoExcel;
     saveDialog.DefaultFolder := AParametrosApp.GetPath('appDirExcel');
     saveDialog.DefaultExtension := sExt;
-    with saveDialog.FileTypes.Add do
-    begin
-      DisplayName := 'Archivo ' + sExt;
-      FileMask := '*.' + sExt;
-    end;
+    oTipoFichero := saveDialog.FileTypes.Add;
+    oTipoFichero.DisplayName := 'Archivo ' + sExt;
+    oTipoFichero.FileMask := '*.' + sExt;
     saveDialog.FileName := AsNomFile;
     if saveDialog.Execute then
     begin
@@ -842,6 +841,206 @@ begin
   end;
 end;
 
+procedure RestaurarAparienciaColumnas(
+  AView: TcxCustomGridTableView;
+  const ANombreVista: string;
+  var APerfil: TProfileDicc;
+  const AConfiguracionCampos: IConfiguracionCampos);
+var
+  oItem: TcxGridColumn;
+  iItem: Integer;
+  sCampo: string;
+  sSubClave: string;
+  sValor: string;
+begin
+  for iItem := 0 to AView.ItemCount - 1 do
+  begin
+    oItem := AView.Items[iItem] as TcxGridColumn;
+    sCampo := GetItemFieldName(oItem);
+    if sCampo <> '' then
+    begin
+      sSubClave := ANombreVista + '_' + sCampo;
+      oItem.Visible := SameText(
+        GetPerfilSubKeyValueDef(
+          APerfil, sSubClave, 'Visible', 'True'), 'True');
+      sValor := GetPerfilSubKeyValueDef(
+        APerfil, sSubClave, 'Caption', '');
+      if sValor <> '' then
+        oItem.Caption := sValor
+      else if Assigned(AConfiguracionCampos) and
+              AConfiguracionCampos.Cargada and
+              (AConfiguracionCampos.ObtenerTitulo(sCampo) <> '') then
+        oItem.Caption := AConfiguracionCampos.ObtenerTitulo(sCampo);
+      sValor := GetPerfilSubKeyValueDef(
+        APerfil, sSubClave, 'Width', '');
+      if sValor <> '' then
+        oItem.Width := StrToIntDef(sValor, oItem.Width)
+      else if Assigned(AConfiguracionCampos) and
+              AConfiguracionCampos.Cargada and
+              (AConfiguracionCampos.ObtenerAncho(sCampo) > 0) then
+        oItem.Width := AConfiguracionCampos.ObtenerAncho(sCampo);
+      oItem.SortOrder := TcxDataSortOrder(StrToIntDef(
+        GetPerfilSubKeyValueDef(
+          APerfil, sSubClave, 'SortOrder', '0'), 0));
+      if Ord(oItem.SortOrder) <> 0 then
+        oItem.SortIndex := StrToIntDef(
+          GetPerfilSubKeyValueDef(
+            APerfil, sSubClave, 'SortIndex', '-1'), -1);
+    end;
+  end;
+end;
+
+procedure RestaurarIndicesColumnas(
+  AView: TcxCustomGridTableView;
+  const ANombreVista: string;
+  var APerfil: TProfileDicc;
+  const ARegistroLog: IRegistroLog);
+var
+  oItem: TcxGridColumn;
+  iItem: Integer;
+  iIndice: Integer;
+  iMaximo: Integer;
+  sCampo: string;
+  sValor: string;
+begin
+  iMaximo := AView.ItemCount - 1;
+  if not (AView is TcxGridDBBandedTableView) then
+  begin
+    for iItem := 0 to AView.ItemCount - 1 do
+    begin
+      oItem := AView.Items[iItem] as TcxGridColumn;
+      sCampo := GetItemFieldName(oItem);
+      if sCampo <> '' then
+      begin
+        sValor := GetPerfilSubKeyValueDef(
+          APerfil, ANombreVista + '_' + sCampo, 'Index', '');
+        if sValor <> '' then
+        begin
+          iIndice := StrToIntDef(sValor, oItem.Index);
+          if iIndice > iMaximo then
+          begin
+            ARegistroLog.RegistrarAviso(Format(
+              '  columna %s: Index guardado=%d > max=%d, ajustado',
+              [sCampo, iIndice, iMaximo]));
+            iIndice := iMaximo;
+          end;
+          if iIndice < 0 then
+            iIndice := 0;
+          oItem.Index := iIndice;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure RestaurarPosicionColumnaBanded(
+  AColumna: TcxGridDBBandedColumn;
+  const ACampo, ASubClave: string;
+  var APerfil: TProfileDicc;
+  AMaximoBandas: Integer;
+  const ARegistroLog: IRegistroLog);
+var
+  iBanda: Integer;
+  iColumna: Integer;
+  iFila: Integer;
+begin
+  iBanda := StrToIntDef(
+    GetPerfilSubKeyValueDef(APerfil, ASubClave, 'BandIndex', ''),
+    AColumna.Position.BandIndex);
+  iColumna := StrToIntDef(
+    GetPerfilSubKeyValueDef(APerfil, ASubClave, 'ColIndex', ''),
+    AColumna.Position.ColIndex);
+  iFila := StrToIntDef(
+    GetPerfilSubKeyValueDef(APerfil, ASubClave, 'RowIndex', ''),
+    AColumna.Position.RowIndex);
+  if (AMaximoBandas > 0) and (iBanda >= AMaximoBandas) then
+  begin
+    ARegistroLog.RegistrarAviso(Format(
+      '  columna banded %s: BandIndex=%d >= bands=%d, ajustado a %d',
+      [ACampo, iBanda, AMaximoBandas, AMaximoBandas - 1]));
+    iBanda := AMaximoBandas - 1;
+  end;
+  if iBanda < 0 then
+    iBanda := 0;
+  if iColumna < 0 then
+    iColumna := 0;
+  if iFila < 0 then
+    iFila := 0;
+  ARegistroLog.RegistrarInformacion(Format(
+    '  banded %s: band=%d col=%d row=%d',
+    [ACampo, iBanda, iColumna, iFila]));
+  AColumna.Position.BandIndex := iBanda;
+  AColumna.Position.ColIndex := iColumna;
+  AColumna.Position.RowIndex := iFila;
+end;
+
+procedure RestaurarPosicionesBanded(
+  AView: TcxCustomGridTableView;
+  const ANombreVista: string;
+  var APerfil: TProfileDicc;
+  const ARegistroLog: IRegistroLog);
+var
+  oItem: TcxGridColumn;
+  iItem: Integer;
+  iMaximoBandas: Integer;
+  sCampo: string;
+begin
+  iMaximoBandas := 0;
+  if AView is TcxGridDBBandedTableView then
+    iMaximoBandas := TcxGridDBBandedTableView(AView).Bands.Count;
+  for iItem := 0 to AView.ItemCount - 1 do
+  begin
+    oItem := AView.Items[iItem] as TcxGridColumn;
+    sCampo := GetItemFieldName(oItem);
+    if (sCampo <> '') and (oItem is TcxGridDBBandedColumn) then
+      RestaurarPosicionColumnaBanded(
+        TcxGridDBBandedColumn(oItem), sCampo,
+        ANombreVista + '_' + sCampo, APerfil, iMaximoBandas,
+        ARegistroLog);
+  end;
+end;
+
+procedure RestaurarFiltroColumnas(
+  AView: TcxCustomGridTableView;
+  const ANombreVista: string;
+  var APerfil: TProfileDicc);
+var
+  oFlujo: TMemoryStream;
+  oTexto: TStringStream;
+  sFiltroBase64: string;
+begin
+  sFiltroBase64 := GetPerfilValueTextDef(
+    APerfil, ANombreVista + '_Filtro', '');
+  if sFiltroBase64 <> '' then
+  begin
+    oTexto := TStringStream.Create(sFiltroBase64);
+    oFlujo := TMemoryStream.Create;
+    try
+      oTexto.Position := 0;
+      System.NetEncoding.TNetEncoding.Base64.Decode(oTexto, oFlujo);
+      oFlujo.Position := 0;
+      AView.DataController.Filter.LoadFromStream(oFlujo);
+    finally
+      FreeAndNil(oTexto);
+      FreeAndNil(oFlujo);
+    end;
+  end;
+end;
+
+procedure RestaurarAnchoGrid(
+  AView: TcxCustomGridTableView;
+  var APerfil: TProfileDicc);
+var
+  sSubClave: string;
+begin
+  if Assigned(AView.Control) then
+  begin
+    sSubClave := AView.Name + '_GridTotalWidth';
+    AView.Control.Width := StrToIntDef(
+      GetPerfilValueDef(APerfil, sSubClave, ''), AView.Control.Width);
+  end;
+end;
+
 procedure PonerAnchosTitulos(AcxgrdtvVista: TcxCustomGridTableView;
                              AsDes: string;
                              var oPerfilDic: TProfileDicc;
@@ -849,160 +1048,26 @@ procedure PonerAnchosTitulos(AcxgrdtvVista: TcxCustomGridTableView;
                                IConfiguracionCampos;
                              const ARegistroLog: IRegistroLog);
 var
-  oItem: TcxGridColumn;
-  i, iIdx, iBand, iCol, iRow: Integer;
-  sName, sColumnName, sSubKey, sFiltroBase64, sVal: string;
-  LStream: TMemoryStream;
-  BStream: TStringStream;
-  iMaxIdx: Integer;
-  oBanded: TcxGridDBBandedColumn;
-  iMaxBands: Integer;
+  sNombreVista: string;
 begin
   AcxgrdtvVista.BeginUpdate;
   try
-    sName := AcxgrdtvVista.Name;
-    iMaxIdx := AcxgrdtvVista.ItemCount - 1;
+    sNombreVista := AcxgrdtvVista.Name;
     ARegistroLog.RegistrarInformacion(
       Format('PonerAnchosTitulos: vista=%s items=%d form=%s',
-                       [sName, AcxgrdtvVista.ItemCount, AsDes]));
+        [sNombreVista, AcxgrdtvVista.ItemCount, AsDes]));
+    RestaurarAparienciaColumnas(
+      AcxgrdtvVista, sNombreVista, oPerfilDic, AConfiguracionCampos);
 
-    // 1. Restaurar Visibilidad, Caption, Ancho y Ordenación de datos
-    for i := 0 to AcxgrdtvVista.ItemCount - 1 do
-    begin
-      oItem := AcxgrdtvVista.Items[i] as TcxGridColumn;
-      sColumnName := GetItemFieldName(oItem);
-      if sColumnName = '' then
-        Continue;
-      sSubKey := sName + '_' + sColumnName;
-      oItem.Visible := SameText(
-        GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Visible', 'True'),
-        'True');
-      // Caption: perfil usuario > config_campos > design-time
-      sVal := GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Caption', '');
-      if sVal <> '' then
-        oItem.Caption := sVal
-      else if Assigned(AConfiguracionCampos) and
-              AConfiguracionCampos.Cargada and
-              (AConfiguracionCampos.ObtenerTitulo(sColumnName) <> '') then
-        oItem.Caption := AConfiguracionCampos.ObtenerTitulo(sColumnName);
-      // Ancho: perfil usuario > config_campos > design-time
-      sVal := GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Width', '');
-      if sVal <> '' then
-        oItem.Width := StrToIntDef(sVal, oItem.Width)
-      else if Assigned(AConfiguracionCampos) and
-              AConfiguracionCampos.Cargada and
-              (AConfiguracionCampos.ObtenerAncho(sColumnName) > 0) then
-        oItem.Width := AConfiguracionCampos.ObtenerAncho(sColumnName);
-      oItem.SortOrder := TcxDataSortOrder(StrToIntDef(
-        GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'SortOrder', '0'), 0));
-      if Ord(oItem.SortOrder) <> 0 then
-        oItem.SortIndex := StrToIntDef(
-          GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'SortIndex', '-1'), -1);
-    end;
+    RestaurarIndicesColumnas(
+      AcxgrdtvVista, sNombreVista, oPerfilDic, ARegistroLog);
 
-    // 2. Restaurar la posición física de las columnas (Index).
-    // Para banded grids, el Index general puede causar desorden si el
-    // perfil tiene columnas que ya no existen; en ese caso solo aplicamos
-    // BandIndex/ColIndex/RowIndex (paso 3) y dejamos el Index original.
-    if not (AcxgrdtvVista is TcxGridDBBandedTableView) then
-    begin
-      for i := 0 to AcxgrdtvVista.ItemCount - 1 do
-      begin
-        oItem := AcxgrdtvVista.Items[i] as TcxGridColumn;
-        sColumnName := GetItemFieldName(oItem);
-        if sColumnName = '' then
-          Continue;
-        sSubKey := sName + '_' + sColumnName;
-        sVal := GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'Index', '');
-        if sVal = '' then
-          Continue;
-        iIdx := StrToIntDef(sVal, oItem.Index);
-        if iIdx > iMaxIdx then
-        begin
-          ARegistroLog.RegistrarAviso(Format(
-            '  columna %s: Index guardado=%d > max=%d, ajustado',
-            [sColumnName, iIdx, iMaxIdx]));
-          iIdx := iMaxIdx;
-        end;
-        if iIdx < 0 then
-          iIdx := 0;
-        oItem.Index := iIdx;
-      end;
-    end;
+    RestaurarPosicionesBanded(
+      AcxgrdtvVista, sNombreVista, oPerfilDic, ARegistroLog);
 
-    // 3. Para columnas banded, restaurar Position.BandIndex / ColIndex /
-    // RowIndex con protección contra índices fuera de rango.
-    iMaxBands := 0;
-    if AcxgrdtvVista is TcxGridDBBandedTableView then
-      iMaxBands := TcxGridDBBandedTableView(AcxgrdtvVista).Bands.Count;
-    for i := 0 to AcxgrdtvVista.ItemCount - 1 do
-    begin
-      oItem := AcxgrdtvVista.Items[i] as TcxGridColumn;
-      sColumnName := GetItemFieldName(oItem);
-      if sColumnName = '' then
-        Continue;
-      if not (oItem is TcxGridDBBandedColumn) then
-        Continue;
-      oBanded := TcxGridDBBandedColumn(oItem);
-      sSubKey := sName + '_' + sColumnName;
-      iBand := StrToIntDef(
-        GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'BandIndex', ''),
-        oBanded.Position.BandIndex);
-      iCol  := StrToIntDef(
-        GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'ColIndex',  ''),
-        oBanded.Position.ColIndex);
-      iRow  := StrToIntDef(
-        GetPerfilSubKeyValueDef(oPerfilDic, sSubKey, 'RowIndex',  ''),
-        oBanded.Position.RowIndex);
-      // Protección contra BandIndex inválido
-      if (iMaxBands > 0) and (iBand >= iMaxBands) then
-      begin
-        ARegistroLog.RegistrarAviso(Format(
-          '  columna banded %s: BandIndex=%d >= bands=%d, ajustado a %d',
-          [sColumnName, iBand, iMaxBands, iMaxBands - 1]));
-        iBand := iMaxBands - 1;
-      end;
-      if iBand < 0 then
-        iBand := 0;
-      if iCol < 0 then
-        iCol := 0;
-      if iRow < 0 then
-        iRow := 0;
-      ARegistroLog.RegistrarInformacion(
-        Format('  banded %s: band=%d col=%d row=%d',
-                         [sColumnName, iBand, iCol, iRow]));
-      oBanded.Position.BandIndex := iBand;
-      oBanded.Position.ColIndex  := iCol;
-      oBanded.Position.RowIndex  := iRow;
-    end;
-
-    // 3. Restaurar el Filtro (Desde VALUE_TEXT_USUPER)
-    // Se requiere una función que lea el ValueText del diccionario
-    sFiltroBase64 := GetPerfilValueTextDef(oPerfilDic, sName + '_Filtro', '');
-
-    if sFiltroBase64 <> '' then
-    begin
-      BStream := TStringStream.Create(sFiltroBase64);
-      LStream := TMemoryStream.Create;
-      try
-        BStream.Position := 0;
-        System.NetEncoding.TNetEncoding.Base64.Decode(BStream, LStream);
-        LStream.Position := 0;
-        AcxgrdtvVista.DataController.Filter.LoadFromStream(LStream);
-      finally
-        FreeAndNil(BStream);
-        FreeAndNil(LStream);
-      end;
-    end;
-
-    // Restaurar el ancho general del componente TcxGrid contenedor
-    if Assigned(AcxgrdtvVista.Control) then
-    begin
-      sSubKey := AcxgrdtvVista.Name + '_GridTotalWidth';
-      AcxgrdtvVista.Control.Width :=
-                         StrToIntDef(GetPerfilValueDef(oPerfilDic, sSubKey, ''),
-                                     AcxgrdtvVista.Control.Width);
-    end;
+    RestaurarFiltroColumnas(
+      AcxgrdtvVista, sNombreVista, oPerfilDic);
+    RestaurarAnchoGrid(AcxgrdtvVista, oPerfilDic);
   finally
     AcxgrdtvVista.EndUpdate;
   end;
@@ -1012,18 +1077,18 @@ procedure BusqAllGrid(var AdbTvGen: TcxGridDBTableView; AsDatoBusq: String);
 var
   i: Integer;
   oListaBusqueda: TcxFilterCriteriaItemList;
+  oFiltro: TcxDataFilterCriteria;
 begin
   if AsDatoBusq <> ''
   then
   begin
-    with AdbTvGen.DataController.Filter do
-    begin
-      BeginUpdate;
-      Options := Options + [fcoCaseInsensitive];
-      try
-        Root.Clear;
-        Root.BoolOperatorKind := fboAnd;
-        oListaBusqueda := Root.AddItemList(fboOr);
+    oFiltro := AdbTvGen.DataController.Filter;
+    oFiltro.BeginUpdate;
+    oFiltro.Options := oFiltro.Options + [fcoCaseInsensitive];
+    try
+      oFiltro.Root.Clear;
+      oFiltro.Root.BoolOperatorKind := fboAnd;
+      oListaBusqueda := oFiltro.Root.AddItemList(fboOr);
         for i := 0 to AdbTvGen.ColumnCount - 1 do
         begin
           if AdbTvGen.Columns[i].DataBinding.Field <> nil then
@@ -1049,11 +1114,10 @@ begin
               '%' + AsDatoBusq + '%');
           end;
         end;
-      finally
-        EndUpdate;
-      end;
-      Active := True;
+    finally
+      oFiltro.EndUpdate;
     end;
+    oFiltro.Active := True;
   end
   else
   begin
@@ -1070,6 +1134,7 @@ procedure BusqEnTodoElGrid(AGrid: TcxGrid; AsDatoBusq: String);
     sTextoBuscar: String;
     FieldType: TFieldType;
     oListaBusqueda: TcxFilterCriteriaItemList;
+    oFiltro: TcxDataFilterCriteria;
   begin
     if AsDatoBusq = '' then
     begin
@@ -1101,14 +1166,13 @@ procedure BusqEnTodoElGrid(AGrid: TcxGrid; AsDatoBusq: String);
     end;
     // Si entramos en modo temporal pero no hay texto a buscar, salimos
     if bModoTemporal and (Trim(sTextoBuscar) = '') then Exit;
-    with AView.DataController.Filter do
-    begin
-      BeginUpdate;
-      try
-        Options := Options + [fcoCaseInsensitive];
-        Root.Clear;
-        Root.BoolOperatorKind := fboAnd;
-        oListaBusqueda := Root.AddItemList(fboOr);
+    oFiltro := AView.DataController.Filter;
+    oFiltro.BeginUpdate;
+    try
+      oFiltro.Options := oFiltro.Options + [fcoCaseInsensitive];
+      oFiltro.Root.Clear;
+      oFiltro.Root.BoolOperatorKind := fboAnd;
+      oListaBusqueda := oFiltro.Root.AddItemList(fboOr);
         for i := 0 to AView.ColumnCount - 1 do
         begin
           if (AView.Columns[i].DataBinding.Field <> nil) then
@@ -1141,11 +1205,10 @@ procedure BusqEnTodoElGrid(AGrid: TcxGrid; AsDatoBusq: String);
             end;
           end;
         end;
-      finally
-        EndUpdate;
-      end;
-      Active := True;
+    finally
+      oFiltro.EndUpdate;
     end;
+    oFiltro.Active := True;
   end;
   procedure ProcesarNivel(ALevel: TcxGridLevel);
   var
@@ -1175,6 +1238,7 @@ var
   iPrincipal:Integer;
   frmMto:TControl;
   tsNew: TcxTabSheet;
+  oControlador: TcxGridDBDataController;
 begin
   iPrincipal := ApcPrincipal.ActivePageIndex;
   tsNew := ApcPrincipal.Pages[iPrincipal];
@@ -1185,13 +1249,14 @@ begin
     then
     begin
       // ShowMessage((frmMto.Components[i] as TcxGridDBTableView).Name);
-      with ((frmMto.Components[i] as TcxGridDBTableView).DataController) do
-      if ((DataSource <> nil) and
-           ((DataSet.State = dsInsert) or
-            (DataSet.State = dsEdit))) then
+      oControlador := (frmMto.Components[i] as
+        TcxGridDBTableView).DataController;
+      if ((oControlador.DataSource <> nil) and
+           ((oControlador.DataSet.State = dsInsert) or
+            (oControlador.DataSet.State = dsEdit))) then
       begin
           //poner aquí un mensaje para preguntar al usuario
-        DataSet.Cancel;
+        oControlador.DataSet.Cancel;
       end;
     end;
   end;

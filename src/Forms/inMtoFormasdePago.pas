@@ -151,13 +151,16 @@ type
     tvFacturacionESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURA: TcxGridDBColumn;
     tvLineasFacturacion: TcxGridDBTableView;
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1LINEA_LINEA: TcxGridDBColumn;
-    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CODIGO_ARTICULO_LINEA: TcxGridDBColumn;
-    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1DESCRIPCION_ARTICULO_LINEA: TcxGridDBColumn;
+    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CODIGO_ARTICULO_LINEA:
+      TcxGridDBColumn;
+    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1DESCRIPCION_ARTICULO_LINEA:
+      TcxGridDBColumn;
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CANTIDAD_LINEA: TcxGridDBColumn;
     tvLineasFacturacionTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA: TcxGridDBColumn;
     tvLineasFacturacionPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA: TcxGridDBColumn;
     tvLineasFacturacionPORCEN_IVA_FACTURA_LINEA: TcxGridDBColumn;
-    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1PRECIOVENTA_ARTICULO_LINEA: TcxGridDBColumn;
+    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1PRECIOVENTA_ARTICULO_LINEA:
+      TcxGridDBColumn;
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1SUM_TOTAL_LINEA: TcxGridDBColumn;
     tvLineasFacturacionFECHA_ENTREGA_FACTURA_LINEA: TcxGridDBColumn;
     cxgrdlvlFacturas: TcxGridLevel;
@@ -275,27 +278,29 @@ end;
 procedure TfrmMtoFormasdePago.btnIraFacturaClick(Sender: TObject);
 begin
   inherited;
-  with tvFacturacion.DataController.DataSource.DataSet do
-  begin
-    ShowMto(Self.Owner,
-            ResolverCallFactura(
-              CrearResolutorDestinoFacturaUniDAC(
-                ConexionPrincipal),
-              FieldByName('NUMERO_FAC').AsString,
-              FieldByName('SERIE_FAC').AsString),
-            FieldByName('NUMERO_FAC').AsString + ',' +
-            FieldByName('SERIE_FAC').AsString);
-  end;
+  ShowMto(Self.Owner,
+          ResolverCallFactura(
+            CrearResolutorDestinoFacturaUniDAC(
+              ConexionPrincipal),
+            tvFacturacion.DataController.DataSource.DataSet.FieldByName(
+              'NUMERO_FAC').AsString,
+            tvFacturacion.DataController.DataSource.DataSet.FieldByName(
+              'SERIE_FAC').AsString),
+          tvFacturacion.DataController.DataSource.DataSet.FieldByName(
+            'NUMERO_FAC').AsString + ',' +
+          tvFacturacion.DataController.DataSource.DataSet.FieldByName(
+            'SERIE_FAC').AsString);
 end;
 
 procedure TfrmMtoFormasdePago.actFacturasExecute(Sender: TObject);
 begin
   inherited;
-  with tvFacturacion.DataController.DataSet do
-    if (
+  if (
         (pcPestana.ActivePage = tsVentas)        and
-        (not(FieldByName('NUMERO_FAC').IsNull))  and
-        (not(FieldByName('SERIE_FAC').IsNull))
+        (not(tvFacturacion.DataController.DataSet.FieldByName(
+          'NUMERO_FAC').IsNull)) and
+        (not(tvFacturacion.DataController.DataSet.FieldByName(
+          'SERIE_FAC').IsNull))
        ) then
       btnIraFacturaClick(Sender)
     else
@@ -344,10 +349,10 @@ end;
 procedure TfrmMtoFormasdePago.btnIraClienteClick(Sender: TObject);
 begin
   inherited;
-  with tvFacturacion.DataController.DataSet do
-    ShowMto(Self.Owner,
-            'Clientes',
-            FieldByName('CODIGO_CLI_FAC').AsString);
+  ShowMto(Self.Owner,
+          'Clientes',
+          tvFacturacion.DataController.DataSet.FieldByName(
+            'CODIGO_CLI_FAC').AsString);
 end;
 
 procedure TfrmMtoFormasdePago.btnIraEmpresaClick(Sender: TObject);

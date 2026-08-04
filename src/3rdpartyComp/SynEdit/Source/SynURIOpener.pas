@@ -1,4 +1,4 @@
-{-------------------------------------------------------------------------------
+ï»¿{-------------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -9,8 +9,8 @@ WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
 the specific language governing rights and limitations under the License.
 
 The Original Code is: SynURIOpener.pas, released 2003-09-25.
-The Initial Author of this file is Maël Hörz.
-Unicode translation by Maël Hörz.
+The Initial Author of this file is MaÃ«l HÃ¶rz.
+Unicode translation by MaÃ«l HÃ¶rz.
 All Rights Reserved.
 
 Contributors to the SynEdit project are listed in the Contributors.txt file.
@@ -31,7 +31,7 @@ located at http://SynEdit.SourceForge.net
 -------------------------------------------------------------------------------}
 {
 @abstract(Plugin for SynEdit to make links (URIs) clickable)
-@author(Maël Hörz)
+@author(MaÃ«l HÃ¶rz)
 @created(2003)
 @lastmod(2004-03-19)
 The SynURIOpener unit extends SynEdit to make links highlighted by SynURISyn

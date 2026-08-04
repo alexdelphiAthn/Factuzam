@@ -1,4 +1,4 @@
-﻿# Fase 6AC — series, contadores y valores automáticos
+# Fase 6AC — series, contadores y valores automáticos
 
 Fecha: 28/07/2026. D3.2, segundo fascículo de nueve. Sin commit.
 

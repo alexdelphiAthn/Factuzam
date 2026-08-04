@@ -145,6 +145,7 @@ uses
 
   System.Diagnostics,
   inLibCadenas, inLibDatasets,
+  inLibLogIntf,
   UniDataValoresAutomaticosRepositorio,
   inLibMsgArticulos;
 
@@ -153,6 +154,191 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+const
+  // Construimos manualmente la lista IN (...) con los codigos elegidos.
+  // Los codigos vienen de fza_almacenes (validados al cargar el checklist),
+  // asi que no llegan de entrada de usuario libre.
+  cSqlEtiquetasArt =
+    'SELECT eti.*, '                                                          +
+    '       COALESCE(prc.PRECIO_SALIDA_ARTTAR, prc_pad.PRECIO_SALIDA_ARTTAR)' +
+    '         AS PRECIO_SALIDA_ARTTAR,'                                       +
+    '       COALESCE(prc.PRECIO_FINAL_ARTTAR,  prc_pad.PRECIO_FINAL_ARTTAR) ' +
+    '         AS PRECIO_FINAL_ARTTAR,'                                        +
+    '       COALESCE(prc.PRECIO_DTO_ARTTAR,    prc_pad.PRECIO_DTO_ARTTAR)   ' +
+    '         AS PRECIO_DTO_ARTTAR,'                                          +
+    '       COALESCE(prc.PORCENTAJE_DTO_ARTTAR,'                              +
+    '                prc_pad.PORCENTAJE_DTO_ARTTAR)'                          +
+    '         AS PORCENTAJE_DTO_ARTTAR,'                                      +
+    '       CASE WHEN prc.CODIGO_UNICO_ARTTAR IS NOT NULL'                    +
+    '            THEN ''ESPECIFICO_SKU'' ELSE ''PADRE'' END'                  +
+    '         AS ORIGEN_PRECIO,'                                              +
+    '       :CODIGO_TAR_ARTTAR AS CODIGO_TAR_ARTTAR,'                         +
+    '       tar.NOMBRE_TAR_TAR     AS NOMBRE_TAR_TAR,'                        +
+    '       tar.ESIMP_INCL_TAR     AS ESIMP_INCL_TAR,'                        +
+    '       :FECHA_APLICACION      AS FECHA_APLICACION,'                      +
+    '       COALESCE(stk.STOCK_FILTRADO, 0) AS STOCK_FILTRADO'                +
+    '  FROM vi_articulos_skus_etiquetas eti'                                  +
+    '  LEFT JOIN fza_tarifas tar'                                             +
+    '    ON tar.CODIGO_TAR_ARTTAR = :CODIGO_TAR_ARTTAR'                       +
+    '  LEFT JOIN fza_articulos_tarifas prc'                                   +
+    '    ON  prc.CODIGO_ART_ARTTAR   = eti.CODIGO_ART_ART'                    +
+    '    AND prc.CODIGO_UNIDAD_ARTTAR= eti.CODIGO_UNIDAD_SKU'                 +
+    '    AND prc.CODIGO_TAR_ARTTAR   = :CODIGO_TAR_ARTTAR'                    +
+    '    AND prc.ESACTIVO_ARTTAR     = ''S'''                                 +
+    '    AND COALESCE(prc.FECHA_DESDE_ARTTAR, ''0000-01-01'')'                +
+    '                                  <= :FECHA_APLICACION'                  +
+    '    AND COALESCE(prc.FECHA_HASTA_ARTTAR, ''9999-12-31'')'                +
+    '                                  >= :FECHA_APLICACION'                  +
+    '  LEFT JOIN fza_articulos_tarifas prc_pad'                               +
+    '    ON  prc_pad.CODIGO_ART_ARTTAR   = eti.CODIGO_ART_ART'                +
+    '    AND COALESCE(prc_pad.CODIGO_UNIDAD_ARTTAR, '''') = '''''             +
+    '    AND prc_pad.CODIGO_TAR_ARTTAR   = :CODIGO_TAR_ARTTAR'                +
+    '    AND prc_pad.ESACTIVO_ARTTAR     = ''S'''                             +
+    '    AND COALESCE(prc_pad.FECHA_DESDE_ARTTAR, ''0000-01-01'')'            +
+    '                                  <= :FECHA_APLICACION'                  +
+    '    AND COALESCE(prc_pad.FECHA_HASTA_ARTTAR, ''9999-12-31'')'            +
+    '                                  >= :FECHA_APLICACION'                  +
+    '  LEFT JOIN ('                                                           +
+    '       SELECT CODIGO_UNIDAD_STK,'                                        +
+    '              SUM(CANTIDAD_STK) AS STOCK_FILTRADO'                       +
+    '         FROM fza_articulos_stockactual'                                 +
+    '        %ALMACEN_FILTER%'                                                +
+    '        GROUP BY CODIGO_UNIDAD_STK'                                      +
+    '       ) stk'                                                            +
+    '    ON stk.CODIGO_UNIDAD_STK = eti.CODIGO_UNIDAD_SKU'                    +
+    ' WHERE (:CODIGO_ART_ART = ''''  OR eti.CODIGO_ART_ART = :CODIGO_ART_ART)'+
+    '   %SKU_FILTER%'                                                         +
+    '   AND eti.ESACTIVO_SKU = ''S'''                                         +
+    '   AND eti.ESACTIVO_ART = ''S'''                                         +
+    ' ORDER BY eti.CODIGO_ART_ART, eti.CODIGO_UNIDAD_SKU';
+  cSqlHexEtiquetas =
+    'SELECT sa.CODIGO_UNIDAD_SKU_SA AS CODIGO_UNIDAD_SKU,' +
+    '       atb.HEX_ATB             AS HEX_ATR_CO ' +
+    '  FROM fza_atributos_sku sa' +
+    '  JOIN fza_articulos_skus sk' +
+    '    ON sk.CODIGO_UNIDAD_SKU = sa.CODIGO_UNIDAD_SKU_SA' +
+    '  JOIN fza_atributos_valores av' +
+    '    ON av.ID_AV     = sa.ID_AV_SA' +
+    '   AND av.ID_VA_AV  = ''CO''' +
+    '  JOIN fza_articulos_atributos_basicos aab' +
+    '    ON aab.CODIGO_ART_AAB = sk.CODIGO_ART_SKU' +
+    '   AND aab.ID_AV_AAB     = av.ID_AV' +
+    '  JOIN fza_atributos_basicos atb' +
+    '    ON atb.ID_ATB = aab.ID_ATB_AAB';
+
+function TipoSeguroCdsEtiquetas(ATipo: TFieldType): TFieldType;
+begin
+  case ATipo of
+    ftString, ftFixedChar:
+      Result := ftString;
+    ftWideString, ftFixedWideChar:
+      Result := ftWideString;
+    ftBoolean:
+      Result := ftBoolean;
+    ftShortint, ftByte, ftSmallint:
+      Result := ftSmallint;
+    ftWord, ftInteger, ftAutoInc:
+      Result := ftInteger;
+    ftLongWord, ftLargeint:
+      Result := ftLargeint;
+    ftSingle, ftFloat, ftExtended:
+      Result := ftFloat;
+    ftCurrency:
+      Result := ftCurrency;
+    ftBCD, ftFMTBcd:
+      Result := ftFMTBcd;
+    ftDate:
+      Result := ftDate;
+    ftTime:
+      Result := ftTime;
+    ftDateTime, ftTimeStamp, ftTimeStampOffset:
+      Result := ftDateTime;
+    ftMemo, ftWideMemo, ftFmtMemo:
+      Result := ftWideString;
+    ftBlob, ftGraphic, ftBytes, ftVarBytes:
+      Result := ftBlob;
+    ftGuid:
+      Result := ftGuid;
+  else
+    Result := ftWideString;
+  end;
+end;
+
+function CargarMapaHexEtiquetas(
+  AConexion: TUniConnection;
+  const ARegistroLog: IRegistroLog): TDictionary<string, string>;
+var
+  oConsulta: TUniQuery;
+  sCodigoSku: string;
+begin
+  Result := TDictionary<string, string>.Create;
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := AConexion;
+    oConsulta.SQL.Text := cSqlHexEtiquetas;
+    try
+      oConsulta.Open;
+      while not oConsulta.Eof do
+      begin
+        sCodigoSku := oConsulta.FieldByName(
+          'CODIGO_UNIDAD_SKU').AsString;
+        if sCodigoSku <> '' then
+          Result.AddOrSetValue(
+            sCodigoSku,
+            oConsulta.FieldByName('HEX_ATR_CO').AsString);
+        oConsulta.Next;
+      end;
+      oConsulta.Close;
+    except
+      on E: Exception do
+      begin
+        if Assigned(ARegistroLog) then
+          ARegistroLog.RegistrarAviso(
+            'EtiquetasArt: mapa de colores HEX no disponible: ' +
+            E.Message);
+      end;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure CopiarFilasEtiquetas(
+  AOrigen: TDataSet;
+  ADestino: TClientDataSet;
+  AIndiceCodigoSku: Integer;
+  AMapaHex: TDictionary<string, string>);
+var
+  i: Integer;
+  sCodigoSku: string;
+  sHex: string;
+begin
+  if AOrigen.Active and not AOrigen.IsEmpty then
+  begin
+    ADestino.DisableControls;
+    try
+      AOrigen.First;
+      while not AOrigen.Eof do
+      begin
+        ADestino.Append;
+        for i := 0 to AOrigen.FieldCount - 1 do
+          ADestino.Fields[i].Value := AOrigen.Fields[i].Value;
+        if AIndiceCodigoSku >= 0 then
+        begin
+          sCodigoSku := AOrigen.Fields[AIndiceCodigoSku].AsString;
+          if (sCodigoSku <> '') and
+             AMapaHex.TryGetValue(sCodigoSku, sHex) then
+            ADestino.FieldByName('HEX_ATR_CO').AsString := sHex;
+        end;
+        ADestino.Post;
+        AOrigen.Next;
+      end;
+    finally
+      ADestino.EnableControls;
+    end;
+  end;
+end;
 
 function TdmArticulos.ArticuloTieneProvPrin(sArt:String):Boolean;
 var
@@ -400,14 +586,17 @@ end;
 procedure TdmArticulos.unqryProveedoresArticulosBeforePost(DataSet: TDataSet);
 begin
   inherited;
-  with unqryProveedoresArticulos do
-  if (State = dsInsert) then
-    if Trim(FindField('ESPROVEEDORPRINCIPAL').AsString) = 'S' then
+  if unqryProveedoresArticulos.State = dsInsert then
+    if Trim(unqryProveedoresArticulos.FindField(
+      'ESPROVEEDORPRINCIPAL').AsString) = 'S' then
     begin
-      if (ArticuloTieneProvPrin(FindField('CODIGO_ART_ART').AsString)) then
+      if ArticuloTieneProvPrin(
+        unqryProveedoresArticulos.FindField(
+          'CODIGO_ART_ART').AsString) then
       begin
         raise ERangeError.CreateFmt(SErrorProveedorPrincipalArticulo,
-                                   [FindField('CODIGO_ART_ART').AsString]);
+          [unqryProveedoresArticulos.FindField(
+            'CODIGO_ART_ART').AsString]);
       end;
     end;
   ActualizarAuditoria(DataSet);
@@ -503,28 +692,30 @@ begin
         else if not SameText(nombre, 'Almacen')
                 and (col.DataBinding.Field <> nil)
                 and (col.DataBinding.Field.DataType in [ftString, ftWideString,
-                                                        ftMemo, ftWideMemo]) then
+                                                        ftMemo,
+                                                        ftWideMemo]) then
           colGrupo := col;
       end;
       bOcultarCeros := Assigned(ParametrosApp)
                        and ParametrosApp.GetBool(
                          'appStockOcultarCeros',
                          True);
-      with tvArticulosStock.DataController.Filter do
-      begin
-        BeginUpdate;
-        try
-          Root.Clear;
-          Root.BoolOperatorKind := fboAnd;
-          if colGrupo <> nil then
-            Root.AddItem(colGrupo as TObject, foNotEqual, '-', '-');
-          if bOcultarCeros and (colTotal <> nil) then
-            Root.AddItem(colTotal as TObject, foNotEqual, 0, '0');
-        finally
-          EndUpdate;
-        end;
-        Active := (colGrupo <> nil) or (bOcultarCeros and (colTotal <> nil));
+      tvArticulosStock.DataController.Filter.BeginUpdate;
+      try
+        tvArticulosStock.DataController.Filter.Root.Clear;
+        tvArticulosStock.DataController.Filter.Root.BoolOperatorKind :=
+          fboAnd;
+        if colGrupo <> nil then
+          tvArticulosStock.DataController.Filter.Root.AddItem(
+            colGrupo as TObject, foNotEqual, '-', '-');
+        if bOcultarCeros and (colTotal <> nil) then
+          tvArticulosStock.DataController.Filter.Root.AddItem(
+            colTotal as TObject, foNotEqual, 0, '0');
+      finally
+        tvArticulosStock.DataController.Filter.EndUpdate;
       end;
+      tvArticulosStock.DataController.Filter.Active :=
+        (colGrupo <> nil) or (bOcultarCeros and (colTotal <> nil));
     end;
   end;
   RegistroLog.RegistrarRendimiento('Articulos.StockAfterScroll',
@@ -537,24 +728,21 @@ procedure TdmArticulos.unqryTablaGAfterDelete(DataSet: TDataSet);
 var
   qryBorrarLineas : TUniQuery;
 begin
-  with qryBorrarLineas do
-  begin
-    qryBorrarLineas := TUniQuery.Create(Self);
-    Connection := ConexionPrincipal;
-    SQL.Text := 'DELETE ' +
-                '  FROM fza_articulos_proveedores ' +
-                ' WHERE CODIGO_ART_AP = :Articulo ;';
-    Params.ParamByName('Articulo').AsString :=
-                            unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
-    ExecSQL;
-    SQL.Text := 'DELETE ' +
-                '  FROM fza_articulos_tarifas ' +
-                ' WHERE CODIGO_ART_ARTTAR = :Articulo ;';
-    Params.ParamByName('Articulo').AsString :=
-                            unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
-    ExecSQL;
-    Free;
-  end;
+  qryBorrarLineas := TUniQuery.Create(Self);
+  qryBorrarLineas.Connection := ConexionPrincipal;
+  qryBorrarLineas.SQL.Text := 'DELETE ' +
+    '  FROM fza_articulos_proveedores ' +
+    ' WHERE CODIGO_ART_AP = :Articulo ;';
+  qryBorrarLineas.Params.ParamByName('Articulo').AsString :=
+    unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+  qryBorrarLineas.ExecSQL;
+  qryBorrarLineas.SQL.Text := 'DELETE ' +
+    '  FROM fza_articulos_tarifas ' +
+    ' WHERE CODIGO_ART_ARTTAR = :Articulo ;';
+  qryBorrarLineas.Params.ParamByName('Articulo').AsString :=
+    unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+  qryBorrarLineas.ExecSQL;
+  qryBorrarLineas.Free;
 //  end;
 end;
 
@@ -621,20 +809,19 @@ end;
 
 procedure TdmArticulos.CopiarProveedoraArticulo(dtProveedores: TDataset);
 begin
-  with unqryProveedoresArticulos do
-  begin
-    if (State = dsBrowse) then
-      Insert;
-    FindField('CODIGO_PRV_PRV').AsString :=
-                           dtProveedores.FindField('CODIGO_PRV_PRV').AsString;
-    FindField('RAZON_SOCIAL_PRV').AsString :=
-                      dtProveedores.FindField('RAZON_SOCIAL_PRV').AsString;
-    if RecordCount = 0 then
-      FindField('ESPROVEEDORPRINCIPAL').AsString := 'S'
-    else
-      FindField('ESPROVEEDORPRINCIPAL').AsString := 'N';
-    Post;
-  end;
+  if unqryProveedoresArticulos.State = dsBrowse then
+    unqryProveedoresArticulos.Insert;
+  unqryProveedoresArticulos.FindField('CODIGO_PRV_PRV').AsString :=
+    dtProveedores.FindField('CODIGO_PRV_PRV').AsString;
+  unqryProveedoresArticulos.FindField('RAZON_SOCIAL_PRV').AsString :=
+    dtProveedores.FindField('RAZON_SOCIAL_PRV').AsString;
+  if unqryProveedoresArticulos.RecordCount = 0 then
+    unqryProveedoresArticulos.FindField(
+      'ESPROVEEDORPRINCIPAL').AsString := 'S'
+  else
+    unqryProveedoresArticulos.FindField(
+      'ESPROVEEDORPRINCIPAL').AsString := 'N';
+  unqryProveedoresArticulos.Post;
 end;
 
 procedure TdmArticulos.DataModuleCreate(Sender: TObject);
@@ -810,25 +997,25 @@ var
   Itm: TListItem;
 begin
   lst.Clear;
-  with unqryTarifas do
+  if ContainsText(unqryTarifas.SQL.Text, ':CODIGO_ART_ART') then
+    unqryTarifas.ParamByName('CODIGO_ART_ART').AsString :=
+      unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+  unqryTarifas.Open;
+  unqryTarifas.First;
+  while not unqryTarifas.Eof do
   begin
-    if ContainsText(SQL.Text, ':CODIGO_ART_ART') then
-      ParamByName('CODIGO_ART_ART').AsString :=
-                            unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
-    Open;
-    First;
-    while not (Eof) do
-    begin
-      Itm := lst.Items.Add;
-      Itm.Caption := FindField('CODIGO_TAR_ARTTAR').AsString;
-      Itm.SubItems.Add(FindField('NOMBRE_TAR_TAR').AsString);
-      if SameText(FindField('CODIGO_TAR_ARTTAR').AsString,
-                  ParametrosCaja.TarifaDefecto) then
-        Itm.Checked := True;
-      Next;
-    end;
-    Close;
+    Itm := lst.Items.Add;
+    Itm.Caption :=
+      unqryTarifas.FindField('CODIGO_TAR_ARTTAR').AsString;
+    Itm.SubItems.Add(
+      unqryTarifas.FindField('NOMBRE_TAR_TAR').AsString);
+    if SameText(
+      unqryTarifas.FindField('CODIGO_TAR_ARTTAR').AsString,
+      ParametrosCaja.TarifaDefecto) then
+      Itm.Checked := True;
+    unqryTarifas.Next;
   end;
+  unqryTarifas.Close;
 end;
 
 procedure TdmArticulos.GetCodigoAutoArticulo;
@@ -858,18 +1045,16 @@ begin
   if (DataSet.State = dsInsert) and
      (Trim(unqryTablaG.FindField('DESCRIPCION_ART').AsString) = '') then
     Abort;
-  with unqryTablaG do
+  var sDescripcion :=
+    Trim(unqryTablaG.FindField('DESCRIPCION_ART').AsString);
+  if (sDescripcion = '') or
+     SimbolosProhibidos(sDescripcion, PerfilesLectura) then
   begin
-    var sDescripcion := Trim(FindField('DESCRIPCION_ART').AsString);
-    if (sDescripcion = '') or
-       SimbolosProhibidos(sDescripcion, PerfilesLectura) then
-    begin
-      raise ERangeError.CreateFmt(SErrorDescripcionArticulo,
-                                 [FindField('DESCRIPCION_ART').AsString]);
-    end
-    else
-      GetCodigoAutoArticulo;
-  end;
+    raise ERangeError.CreateFmt(SErrorDescripcionArticulo,
+      [unqryTablaG.FindField('DESCRIPCION_ART').AsString]);
+  end
+  else
+    GetCodigoAutoArticulo;
 end;
 
 procedure TdmArticulos.unqryTarifasArticulosBeforePost(DataSet: TDataSet);
@@ -879,13 +1064,19 @@ var
   oldPrecio, newPrecio: Double;
   esActivo: string;
   vOld: Variant;
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryTarifasArticulos.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryTarifasArticulos.FindField(ANombre);
+  end;
 begin
   inherited;
-  with unqryTarifasArticulos do
-  begin
-    // 1. Averiguamos el ID del registro actual.
+  // 1. Averiguamos el ID del registro actual.
     // Si estamos insertando uno nuevo, le damos un valor que no existe (-1)
-    if State = dsInsert then
+    if unqryTarifasArticulos.State = dsInsert then
     begin
       FieldByName('CODIGO_UNICO_ARTTAR').Required := False;
       FieldByName('CODIGO_UNICO_ARTTAR').AutoGenerateValue := arAutoInc;
@@ -903,7 +1094,7 @@ begin
     newPrecio := FindField('PRECIO_SALIDA_ARTTAR').AsFloat;
     esActivo  := FindField('ESACTIVO_ARTTAR').AsString;
 
-    if State = dsInsert then
+    if unqryTarifasArticulos.State = dsInsert then
     begin
       // En alta, si nace a 0 lo dejamos inactivo por defecto (sin preguntar).
       // Las altas con precio>0 conservan el ESACTIVO que les haya puesto el
@@ -911,7 +1102,7 @@ begin
       if newPrecio = 0 then
         FindField('ESACTIVO_ARTTAR').AsString := 'N';
     end
-    else if State = dsEdit then
+    else if unqryTarifasArticulos.State = dsEdit then
     begin
       vOld := FindField('PRECIO_SALIDA_ARTTAR').OldValue;
       if VarIsNull(vOld) or VarIsEmpty(vOld) then
@@ -994,9 +1185,8 @@ begin
       FindField('PORCENTAJE_DTO_ARTTAR').AsFloat := 0;
     end;
 
-    if ((State = dsInsert) or (State = dsEdit)) then
-      ActualizarAuditoria(DataSet);
-  end;
+  if unqryTarifasArticulos.State in [dsInsert, dsEdit] then
+    ActualizarAuditoria(DataSet);
 end;
 
 function TdmArticulos.ReconstruirStock: string;
@@ -1017,8 +1207,8 @@ begin
   end;
 end;
 
-function TdmArticulos.ObtenerPrecioTarifaPadre(const aCodArt,
-                                                     aCodTarifa: string): Double;
+function TdmArticulos.ObtenerPrecioTarifaPadre(
+  const aCodArt, aCodTarifa: string): Double;
 var
   qry: TUniQuery;
 begin
@@ -1106,63 +1296,6 @@ procedure TdmArticulos.CrearDataSetEtiquetasArt(const aCodigoArt,
                                                       aAlmacenesCsv: string;
                                                       aFechaTarifa: TDateTime;
                                                       const aSkusCsv: string);
-const
-  // Construimos manualmente la lista IN (...) con los codigos elegidos.
-  // Los codigos vienen de fza_almacenes (validados al cargar el checklist),
-  // asi que no llegan de entrada de usuario libre.
-  cSqlEtiq =
-    'SELECT eti.*, '                                                          +
-    '       COALESCE(prc.PRECIO_SALIDA_ARTTAR, prc_pad.PRECIO_SALIDA_ARTTAR)' +
-    '         AS PRECIO_SALIDA_ARTTAR,'                                       +
-    '       COALESCE(prc.PRECIO_FINAL_ARTTAR,  prc_pad.PRECIO_FINAL_ARTTAR) ' +
-    '         AS PRECIO_FINAL_ARTTAR,'                                        +
-    '       COALESCE(prc.PRECIO_DTO_ARTTAR,    prc_pad.PRECIO_DTO_ARTTAR)   ' +
-    '         AS PRECIO_DTO_ARTTAR,'                                          +
-    '       COALESCE(prc.PORCENTAJE_DTO_ARTTAR,'                              +
-    '                prc_pad.PORCENTAJE_DTO_ARTTAR)'                          +
-    '         AS PORCENTAJE_DTO_ARTTAR,'                                      +
-    '       CASE WHEN prc.CODIGO_UNICO_ARTTAR IS NOT NULL'                    +
-    '            THEN ''ESPECIFICO_SKU'' ELSE ''PADRE'' END'                  +
-    '         AS ORIGEN_PRECIO,'                                              +
-    '       :CODIGO_TAR_ARTTAR AS CODIGO_TAR_ARTTAR,'                         +
-    '       tar.NOMBRE_TAR_TAR     AS NOMBRE_TAR_TAR,'                        +
-    '       tar.ESIMP_INCL_TAR     AS ESIMP_INCL_TAR,'                        +
-    '       :FECHA_APLICACION      AS FECHA_APLICACION,'                      +
-    '       COALESCE(stk.STOCK_FILTRADO, 0) AS STOCK_FILTRADO'                +
-    '  FROM vi_articulos_skus_etiquetas eti'                                  +
-    '  LEFT JOIN fza_tarifas tar'                                             +
-    '    ON tar.CODIGO_TAR_ARTTAR = :CODIGO_TAR_ARTTAR'                       +
-    '  LEFT JOIN fza_articulos_tarifas prc'                                   +
-    '    ON  prc.CODIGO_ART_ARTTAR   = eti.CODIGO_ART_ART'                    +
-    '    AND prc.CODIGO_UNIDAD_ARTTAR= eti.CODIGO_UNIDAD_SKU'                 +
-    '    AND prc.CODIGO_TAR_ARTTAR   = :CODIGO_TAR_ARTTAR'                    +
-    '    AND prc.ESACTIVO_ARTTAR     = ''S'''                                 +
-    '    AND COALESCE(prc.FECHA_DESDE_ARTTAR, ''0000-01-01'')'                +
-    '                                  <= :FECHA_APLICACION'                  +
-    '    AND COALESCE(prc.FECHA_HASTA_ARTTAR, ''9999-12-31'')'                +
-    '                                  >= :FECHA_APLICACION'                  +
-    '  LEFT JOIN fza_articulos_tarifas prc_pad'                               +
-    '    ON  prc_pad.CODIGO_ART_ARTTAR   = eti.CODIGO_ART_ART'                +
-    '    AND COALESCE(prc_pad.CODIGO_UNIDAD_ARTTAR, '''') = '''''             +
-    '    AND prc_pad.CODIGO_TAR_ARTTAR   = :CODIGO_TAR_ARTTAR'                +
-    '    AND prc_pad.ESACTIVO_ARTTAR     = ''S'''                             +
-    '    AND COALESCE(prc_pad.FECHA_DESDE_ARTTAR, ''0000-01-01'')'            +
-    '                                  <= :FECHA_APLICACION'                  +
-    '    AND COALESCE(prc_pad.FECHA_HASTA_ARTTAR, ''9999-12-31'')'            +
-    '                                  >= :FECHA_APLICACION'                  +
-    '  LEFT JOIN ('                                                           +
-    '       SELECT CODIGO_UNIDAD_STK,'                                        +
-    '              SUM(CANTIDAD_STK) AS STOCK_FILTRADO'                       +
-    '         FROM fza_articulos_stockactual'                                 +
-    '        %ALMACEN_FILTER%'                                                +
-    '        GROUP BY CODIGO_UNIDAD_STK'                                      +
-    '       ) stk'                                                            +
-    '    ON stk.CODIGO_UNIDAD_STK = eti.CODIGO_UNIDAD_SKU'                    +
-    ' WHERE (:CODIGO_ART_ART = ''''  OR eti.CODIGO_ART_ART = :CODIGO_ART_ART)'+
-    '   %SKU_FILTER%'                                                         +
-    '   AND eti.ESACTIVO_SKU = ''S'''                                         +
-    '   AND eti.ESACTIVO_ART = ''S'''                                         +
-    ' ORDER BY eti.CODIGO_ART_ART, eti.CODIGO_UNIDAD_SKU';
 var
   sSql, sFiltroAlm: string;
   i: Integer;
@@ -1196,7 +1329,7 @@ begin
       sFiltroAlm := 'WHERE CODIGO_ALM_STK IN (' + sFiltroAlm + ')';
   end;
 
-  sSql := StringReplace(cSqlEtiq,
+  sSql := StringReplace(cSqlEtiquetasArt,
                         '%ALMACEN_FILTER%',
                         sFiltroAlm,
                         [rfReplaceAll]);
@@ -1292,110 +1425,18 @@ begin
 end;
 
 procedure TdmArticulos.PoblarCdsEtiquetasArtDesdeUniQuery;
-const
-  // Cadena articulo -> color basico -> HEX. JOINs sencillos sobre tablas
-  // base; no usa la vista vi_articulos_skus_etiquetas para evitar el coste
-  // de repetir todo el pipeline de SKUs/proveedores/codigos de barras.
-  cSqlHex =
-    'SELECT sa.CODIGO_UNIDAD_SKU_SA AS CODIGO_UNIDAD_SKU,'                    +
-    '       atb.HEX_ATB             AS HEX_ATR_CO '                           +
-    '  FROM fza_atributos_sku sa'                                             +
-    '  JOIN fza_articulos_skus sk'                                            +
-    '    ON sk.CODIGO_UNIDAD_SKU = sa.CODIGO_UNIDAD_SKU_SA'                   +
-    '  JOIN fza_atributos_valores av'                                         +
-    '    ON av.ID_AV     = sa.ID_AV_SA'                                       +
-    '   AND av.ID_VA_AV  = ''CO'''                                            +
-    '  JOIN fza_articulos_atributos_basicos aab'                              +
-    '    ON aab.CODIGO_ART_AAB = sk.CODIGO_ART_SKU'                           +
-    '   AND aab.ID_AV_AAB     = av.ID_AV'                                     +
-    '  JOIN fza_atributos_basicos atb'                                        +
-    '    ON atb.ID_ATB = aab.ID_ATB_AAB';
 var
-  qryHex: TUniQuery;
   oHexMap: TDictionary<string, string>;
-  fldDef, fdOrig: TFieldDef;
-  sCodSku, sHex, sDiag: string;
-  k, iCodSkuIdxOrig: Integer;
-  // Mapea cualquier TFieldType al subconjunto que el motor MIDAS del
-  // TClientDataSet admite en CreateDataSet. Las columnas calculadas desde
-  // parametros y ciertos tipos de MariaDB (ftSingle, ftExtended, ftShortint,
-  // ftByte, ftTimeStampOffset, ftUnknown...) hacen que CreateDataSet lance
-  // 'Invalid field type'; aqui los reconducimos a un equivalente seguro.
-  function TipoSeguroCds(aTipo: TFieldType): TFieldType;
-  begin
-    case aTipo of
-      ftString, ftFixedChar:
-        Result := ftString;
-      ftWideString, ftFixedWideChar:
-        Result := ftWideString;
-      ftBoolean:
-        Result := ftBoolean;
-      ftShortint, ftByte, ftSmallint:
-        Result := ftSmallint;
-      ftWord, ftInteger, ftAutoInc:
-        Result := ftInteger;
-      ftLongWord, ftLargeint:
-        Result := ftLargeint;
-      ftSingle, ftFloat, ftExtended:
-        Result := ftFloat;
-      ftCurrency:
-        Result := ftCurrency;
-      ftBCD, ftFMTBcd:
-        Result := ftFMTBcd;
-      ftDate:
-        Result := ftDate;
-      ftTime:
-        Result := ftTime;
-      ftDateTime, ftTimeStamp, ftTimeStampOffset:
-        Result := ftDateTime;
-      ftMemo, ftWideMemo, ftFmtMemo:
-        Result := ftWideString;
-      ftBlob, ftGraphic, ftBytes, ftVarBytes:
-        Result := ftBlob;
-      ftGuid:
-        Result := ftGuid;
-    else
-      // ftUnknown y tipos exoticos (ftADT, ftArray, ftCursor, ftVariant,
-      // ftDataSet...): el disenyador solo necesita el nombre del campo, asi
-      // que lo exponemos como texto.
-      Result := ftWideString;
-    end;
-  end;
+  fldDef: TFieldDef;
+  fdOrig: TFieldDef;
+  sDiag: string;
+  iCodSkuIdxOrig: Integer;
+  k: Integer;
 begin
-  // 1) Mapa CODIGO_UNIDAD_SKU -> HEX_ATB en memoria. Una sola query.
-  oHexMap := TDictionary<string, string>.Create;
+  oHexMap := CargarMapaHexEtiquetas(
+    unqryArtPrint.Connection,
+    RegistroLog);
   try
-    qryHex := TUniQuery.Create(nil);
-    try
-      qryHex.Connection := unqryArtPrint.Connection;
-      qryHex.SQL.Text   := cSqlHex;
-      try
-        qryHex.Open;
-        try
-          while not qryHex.Eof do
-          begin
-            sCodSku := qryHex.FieldByName('CODIGO_UNIDAD_SKU').AsString;
-            sHex    := qryHex.FieldByName('HEX_ATR_CO').AsString;
-            if sCodSku <> '' then
-              oHexMap.AddOrSetValue(sCodSku, sHex);
-            qryHex.Next;
-          end;
-        finally
-          qryHex.Close;
-        end;
-      except
-        // BBDD sin las tablas, permisos... ignoramos: la banda saldra
-        // blanca, pero la impresion sigue adelante.
-        on E: Exception do
-          if RegistroLog <> nil then
-            RegistroLog.RegistrarAviso(
-              'EtiquetasArt: mapa de colores HEX no disponible: ' +
-              E.Message);
-      end;
-    finally
-      qryHex.Free;
-    end;
-
     // 2) Reconstruir el cds desde cero copiando el esquema de unqryArtPrint
     //    + HEX_ATR_CO. Evita el TDataSetProvider, que con esta combinacion
     //    UniDAC + JOINs devuelve un Variant Null y dispara
@@ -1415,7 +1456,7 @@ begin
         fdOrig            := unqryArtPrint.FieldDefs[k];
         fldDef            := cdsEtiquetasArt.FieldDefs.AddFieldDef;
         fldDef.Name       := fdOrig.Name;
-        fldDef.DataType   := TipoSeguroCds(fdOrig.DataType);
+        fldDef.DataType   := TipoSeguroCdsEtiquetas(fdOrig.DataType);
         fldDef.Required   := False;
         fldDef.Attributes := [];
         case fldDef.DataType of
@@ -1487,31 +1528,13 @@ begin
       cdsEtiquetasArt.Fields[k].Required := False;
     end;
 
-    if (not unqryArtPrint.Active) or unqryArtPrint.IsEmpty then Exit;
-
-    // 3) Volcar filas de unqryArtPrint -> cdsEtiquetasArt + HEX por SKU.
-    cdsEtiquetasArt.DisableControls;
-    try
-      unqryArtPrint.First;
-      while not unqryArtPrint.Eof do
-      begin
-        cdsEtiquetasArt.Append;
-        for k := 0 to unqryArtPrint.FieldCount - 1 do
-          cdsEtiquetasArt.Fields[k].Value := unqryArtPrint.Fields[k].Value;
-        if iCodSkuIdxOrig >= 0 then
-        begin
-          sCodSku := unqryArtPrint.Fields[iCodSkuIdxOrig].AsString;
-          if (sCodSku <> '') and oHexMap.TryGetValue(sCodSku, sHex) then
-            cdsEtiquetasArt.FieldByName('HEX_ATR_CO').AsString := sHex;
-        end;
-        cdsEtiquetasArt.Post;
-        unqryArtPrint.Next;
-      end;
-    finally
-      cdsEtiquetasArt.EnableControls;
-    end;
+    CopiarFilasEtiquetas(
+      unqryArtPrint,
+      cdsEtiquetasArt,
+      iCodSkuIdxOrig,
+      oHexMap);
   finally
-    oHexMap.Free;
+    FreeAndNil(oHexMap);
   end;
 end;
 

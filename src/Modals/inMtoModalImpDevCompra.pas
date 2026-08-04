@@ -9,9 +9,10 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripcion:                                                                }
-{    Modal de impresion de un devolucion de compra. Hereda del modal generico     }
+{    Modal de impresion de un devolucion de compra. Hereda del modal generico  }
 {    TfrmPrint. Misma logica que inMtoModalImpSesion pero contra los datasets  }
-{    de devoluciones (TdmDevolucionesCompra.PrepararPrint y los fxds* asociados).    }
+{    de devoluciones (TdmDevolucionesCompra.PrepararPrint y los fxds*          }
+{    asociados).                                                               }
 {    La orientacion (horizontal / vertical) la decide el llamador via la       }
 {    propiedad Orientacion; el report .fr3 embebido en frxrprt1 se disena      }
 {    a mano con el FastReport designer.                                        }

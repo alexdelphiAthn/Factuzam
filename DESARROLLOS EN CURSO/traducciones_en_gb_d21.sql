@@ -1,4 +1,4 @@
-﻿-- D21: catálogo inglés completo.
+-- D21: catálogo inglés completo.
 -- Script idempotente generado desde las 6.863 claves activas es-ES.
 SET NAMES utf8mb4;
 INSERT INTO fza_traducciones (

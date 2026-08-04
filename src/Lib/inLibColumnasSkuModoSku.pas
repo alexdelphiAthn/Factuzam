@@ -270,6 +270,9 @@ begin
 end;
 
 procedure TModoEntradaSku.CrearLookupBusqueda;
+var
+  Columna: TcxGridDBColumn;
+  Propiedades: TcxExtLookupComboBoxProperties;
 begin
   // 1. Query del desplegable. Filtrado EN SERVIDOR: cada tecleo (con
   //    debounce) consulta el top-100 cuyo CODIGO_UNIDAD_SKU empieza por lo
@@ -304,43 +307,37 @@ begin
   FBusqColInput.Options.FilteringPopup := False;
   FBusqColInput.Options.IncSearch := False;
   FBusqColInput.Options.Grouping := False;
-  with FBusqView.CreateColumn do
-  begin
-    Caption := 'Descripción';
-    DataBinding.FieldName := 'DESCRIPCION';
-    Width := 240;
-  end;
-  with FBusqView.CreateColumn do
-  begin
-    Caption := 'Stock';
-    DataBinding.FieldName := 'STOCK';
-    Width := 60;
-  end;
+  Columna := FBusqView.CreateColumn;
+  Columna.Caption := 'Descripción';
+  Columna.DataBinding.FieldName := 'DESCRIPCION';
+  Columna.Width := 240;
+  Columna := FBusqView.CreateColumn;
+  Columna.Caption := 'Stock';
+  Columna.DataBinding.FieldName := 'STOCK';
+  Columna.Width := 60;
   // 3. Item de edicion ExtLookupComboBox sobre ese view.
   FEditRepo := TcxEditRepository.Create(nil);
   FRepCombo := FEditRepo.CreateItem(TcxEditRepositoryExtLookupComboBoxItem)
                  as TcxEditRepositoryExtLookupComboBoxItem;
-  with FRepCombo.Properties do
-  begin
-    View := FBusqView;
-    KeyFieldNames := 'SKU';
-    ListFieldItem := FBusqColInput;
-    DropDownListStyle := lsEditList;
-    AutoSearchOnPopup := False;
-    // El dataset ya trae solo coincidencias (filtro en servidor); el
-    // filtro incremental cliente se desactiva.
-    IncrementalFiltering := False;
-    DropDownRows := 15;
-    DropDownAutoWidth := True;
-    // No abrir al teclear: el desplegable se abre por debounce o F4;
-    // si se abriera, las teclas irian al edit del dropdown.
-    ImmediateDropDownWhenKeyPressed := False;
-    OnInitPopup := ComboBusqInitPopup;
-    OnCloseUp := ComboBusqCloseUp;
-    // En el repositorio: con AlwaysShowEditor, el hook por editor de
-    // InitEdit cae en un clon muerto de las properties.
-    OnChange := SkuChange;
-  end;
+  Propiedades := FRepCombo.Properties;
+  Propiedades.View := FBusqView;
+  Propiedades.KeyFieldNames := 'SKU';
+  Propiedades.ListFieldItem := FBusqColInput;
+  Propiedades.DropDownListStyle := lsEditList;
+  Propiedades.AutoSearchOnPopup := False;
+  // El dataset ya trae solo coincidencias (filtro en servidor); el
+  // filtro incremental cliente se desactiva.
+  Propiedades.IncrementalFiltering := False;
+  Propiedades.DropDownRows := 15;
+  Propiedades.DropDownAutoWidth := True;
+  // No abrir al teclear: el desplegable se abre por debounce o F4;
+  // si se abriera, las teclas irian al edit del dropdown.
+  Propiedades.ImmediateDropDownWhenKeyPressed := False;
+  Propiedades.OnInitPopup := ComboBusqInitPopup;
+  Propiedades.OnCloseUp := ComboBusqCloseUp;
+  // En el repositorio: con AlwaysShowEditor, el hook por editor de
+  // InitEdit cae en un clon muerto de las properties.
+  Propiedades.OnChange := SkuChange;
 end;
 
 procedure TModoEntradaSku.AbrirBusquedaFiltrada(const ATexto: string);

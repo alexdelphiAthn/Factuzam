@@ -1,4 +1,4 @@
-program FileEncrypt;
+﻿program FileEncrypt;
 
 uses
   Forms,

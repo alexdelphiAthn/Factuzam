@@ -1,4 +1,4 @@
-unit SQLBuilder4D.Parser.GaSQLParser;
+﻿unit SQLBuilder4D.Parser.GaSQLParser;
 
 interface
 

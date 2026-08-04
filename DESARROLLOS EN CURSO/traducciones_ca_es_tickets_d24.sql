@@ -1,4 +1,4 @@
-﻿-- D24: traducción catalana de todos los tickets térmicos.
+-- D24: traducción catalana de todos los tickets térmicos.
 -- Generado por generar_traducciones_tickets.ps1.
 -- Idempotente: actualiza la pareja clave/idioma si ya existe.
 SET NAMES utf8mb4;

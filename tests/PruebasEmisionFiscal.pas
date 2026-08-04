@@ -36,13 +36,18 @@ type
     procedure Solicitud_AltaPermiteOmitirEvento;
     [Test]
     procedure Solicitud_ConsolidacionUsaAlta;
+    [Test]
+    procedure Reintento_AumentaEsperaSinSuperarTope;
+    [Test]
+    procedure Reintento_AgotadoQuedaEnError;
   end;
 
 implementation
 
 uses
   inLibVerifactu, inLibVerifactuTipos,
-  inLibEmisionFiscalIntf, inLibEmisionFiscal;
+  inLibEmisionFiscalIntf, inLibEmisionFiscal,
+  inLibVerifactuReintentos;
 
 procedure TPruebasEmisionFiscal.Factoria_SeleccionaVerifactu;
 var
@@ -144,6 +149,24 @@ begin
   Assert.IsTrue(Solicitud.BorrarMovimientos);
   Assert.IsTrue(Solicitud.RegistrarEvento);
   Assert.IsNotEmpty(Solicitud.DescripcionEvento);
+end;
+
+procedure TPruebasEmisionFiscal.
+  Reintento_AumentaEsperaSinSuperarTope;
+begin
+  Assert.AreEqual(60, CalcularEsperaReintentoVerifactu(0));
+  Assert.AreEqual(120, CalcularEsperaReintentoVerifactu(1));
+  Assert.AreEqual(1920, CalcularEsperaReintentoVerifactu(30));
+end;
+
+procedure TPruebasEmisionFiscal.Reintento_AgotadoQuedaEnError;
+begin
+  Assert.AreEqual(
+    'PENDIENTE',
+    CalcularEstadoReintentoVerifactu(8, 10));
+  Assert.AreEqual(
+    'ERROR',
+    CalcularEstadoReintentoVerifactu(9, 10));
 end;
 
 initialization

@@ -1,4 +1,4 @@
-{*******************************************************************}
+Ôªø{*******************************************************************}
 {                                                                   }
 {   FSynHighlightProp                                               }
 {                                                                   }
@@ -27,11 +27,11 @@
 {                                                                   }
 {*******************************************************************}
 {                                                                   }
-{   Il contenuto di questo file Ë protetto dalle leggi              }
+{   Il contenuto di questo file √® protetto dalle leggi              }
 {   internazionali sul Copyright. Sono vietate la riproduzione, il  }
 {   reverse-engineering e la distribuzione non autorizzate di tutto }
 {   o parte del codice contenuto in questo file. Ogni infrazione    }
-{   sar‡ perseguita civilmente e penalmente a termini di legge.     }
+{   sar√† perseguita civilmente e penalmente a termini di legge.     }
 {                                                                   }
 {   RESTRIZIONI                                                     }
 {                                                                   }

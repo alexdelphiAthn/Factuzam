@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{531F456B-AB9A-4968-A541-0C969FBB5931}</ProjectGuid>
         <MainSource>FactuzamMigrator.dpr</MainSource>

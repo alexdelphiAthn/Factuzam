@@ -165,14 +165,17 @@ begin
 end;
 
 procedure TdmTraspaso.ConfigurarEstructuraCabecera;
+  procedure Add(const ANombre: string; ATipo: TFieldType;
+    ATamano: Integer = 0; ARequerido: Boolean = False);
+  begin
+    cdsCabecera.FieldDefs.Add(ANombre, ATipo, ATamano, ARequerido);
+  end;
 begin
   if cdsCabecera.Active then
     cdsCabecera.Close;
   cdsCabecera.FieldDefs.Clear;
   cdsCabecera.IndexDefs.Clear;
-  with cdsCabecera.FieldDefs do
-  begin
-    Add('CODIGO_EMP', ftString, 20);
+  Add('CODIGO_EMP', ftString, 20);
     Add('CODIGO_ALM_ORIGEN', ftString, 10);
     Add('CODIGO_ALM_DESTINO', ftString, 10);
     Add('CODIGO_CAJA', ftString, 10);
@@ -181,20 +184,22 @@ begin
     Add('SERIE_SOL', ftString, 20);
     Add('FECHA', ftDateTime, 0);
     Add('CONTADOR_LINEAS', ftInteger, 0);
-    Add('TOTAL', ftCurrency, 0);
-  end;
+  Add('TOTAL', ftCurrency, 0);
   cdsCabecera.CreateDataSet;
 end;
 
 procedure TdmTraspaso.ConfigurarEstructuraLineas;
+  procedure Add(const ANombre: string; ATipo: TFieldType;
+    ATamano: Integer = 0; ARequerido: Boolean = False);
+  begin
+    cdsLineas.FieldDefs.Add(ANombre, ATipo, ATamano, ARequerido);
+  end;
 begin
   if cdsLineas.Active then
     cdsLineas.Close;
   cdsLineas.FieldDefs.Clear;
   cdsLineas.IndexDefs.Clear;
-  with cdsLineas.FieldDefs do
-  begin
-    Add('LINEA', ftString, 4);
+  Add('LINEA', ftString, 4);
     Add('CODIGO_ART', ftString, 20);
     Add('CODIGO_UNIDAD', ftString, 50);
     Add('DESCRIPCION', ftString, 100);
@@ -216,8 +221,7 @@ begin
     Add('PRECIO_COSTE', ftCurrency, 0);
     Add('TOTAL', ftCurrency, 0);
     Add('STOCK_ORIGEN', ftFloat, 0);
-    Add('MOTIVO', ftString, 255);
-  end;
+  Add('MOTIVO', ftString, 255);
   cdsLineas.CreateDataSet;
 end;
 
@@ -373,7 +377,7 @@ begin
   // Serie configurada para este tipo de documento (prefiere la de la caja /
   // almacén; si no, la de empresa). Fallback: el propio tipo de documento.
   qryAux.SQL.Text :=
-    'SELECT EMPSER FROM fza_empresas_series' +
+    'SELECT EMPSER FROM vi_empresas_series' +
     ' WHERE CODIGO_EMP_EMPSER = :EMP AND TIPO_DOC_EMPSER = :TIPO' +
     '   AND (CODIGO_ALM_EMPSER = :ALM OR CODIGO_ALM_EMPSER IS NULL' +
     '        OR CODIGO_ALM_EMPSER = '''')' +
@@ -530,7 +534,8 @@ begin
     uspMov.ParamByName('p_TIPO_MOVIMIENTO_MOV').AsString := ATipoMov;
     uspMov.ParamByName('p_CANTIDAD_MOV').AsFloat := Abs(ACantidad);
     uspMov.ParamByName('p_PRECIO_MEDIO_MOV').AsCurrency := ACoste;
-    uspMov.ParamByName('p_TOTAL_COSTE_MOV').AsCurrency := ACoste * Abs(ACantidad);
+    uspMov.ParamByName('p_TOTAL_COSTE_MOV').AsCurrency :=
+      ACoste * Abs(ACantidad);
     uspMov.ParamByName('p_USUARIO').AsString := AUsuario;
     uspMov.ParamByName('p_ALMACEN_DOC').AsString := AAlmacenDoc;
     uspMov.ParamByName('p_NUMOP_DOC').AsString := ANumOperacion;
@@ -649,7 +654,8 @@ begin
   else
     sTipoDoc := 'TA';
   // Empresa del almacen destino (para que su movimiento de entrada quede en su
-  // empresa cuando es un traspaso entre empresas; si no se resuelve, la propia).
+  // empresa cuando es un traspaso entre empresas; si no se resuelve, la
+  // propia).
   if Trim(sEmpContra) <> '' then
     sEmpDestino := sEmpContra
   else

@@ -213,12 +213,18 @@ type
     Property FormaPago:String         read GetFormaPago  write SetFormaPago;
     Property TotalPedCIVA:Currency read GetTotalPedCIVA write SetTotalPedCIVA;
     Property TotalPedSIVA:Currency read GetTotalPedSIVA write SetTotalPedSIVA;
-    Property TotalPagadoReal:Currency read GetTotalPagadoReal  write SetTotalPagadoReal;
-    Property TotalProdSIVA:Currency   read GetTotalProdSIVA  write SetTotalProdSIVA;
-    Property TotalProdCIVA:Currency   read GetTotalProdCIVA  write SetTotalProdCIVA;
-    Property TotalPortesCIVA:Currency read GetTotalPortesCIVA  write SetTotalPortesCIVA;
-    Property TotalPortesSIVA:Currency read GetTotalPortesSIVA  write SetTotalPortesSIVA;
-    Property ReferenciaCliente:String read GetReferenciaCliente  write SetReferenciaCliente;
+    property TotalPagadoReal: Currency read GetTotalPagadoReal
+      write SetTotalPagadoReal;
+    property TotalProdSIVA: Currency read GetTotalProdSIVA
+      write SetTotalProdSIVA;
+    property TotalProdCIVA: Currency read GetTotalProdCIVA
+      write SetTotalProdCIVA;
+    property TotalPortesCIVA: Currency read GetTotalPortesCIVA
+      write SetTotalPortesCIVA;
+    property TotalPortesSIVA: Currency read GetTotalPortesSIVA
+      write SetTotalPortesSIVA;
+    property ReferenciaCliente: string read GetReferenciaCliente
+      write SetReferenciaCliente;
     Property Transportista:String read GetTransportista  write SetTransportista;
     Property EstadoPedido:String read GetEstadoPedido  write SetEstadoPedido;
     { public declarations }
@@ -449,22 +455,19 @@ end;
 
 procedure TOrder.PutAdressDelinbil;
 begin
-  with Self._custAddDel do
-  begin
-    Self._custAddBil.idAddress   := idAddress ;
-    Self._custAddBil.Firstname   := Firstname ;
-    Self._custAddBil.Lastname    := Lastname  ;
-    Self._custAddBil.Address1    := Address1  ;
-    Self._custAddBil.Address2    := Address2  ;
-    Self._custAddBil.Postcode    := Postcode  ;
-    Self._custAddBil.City        := City      ;
-    Self._custAddBil.Phone       := Phone     ;
-    Self._custAddBil.Phone_mo    := Phone_mo  ;
-    Self._custAddBil.Dni         := Dni       ;
-    Self._custAddBil.Company     := Company   ;
-    Self._custAddBil.Vat_number  := Vat_number;
-    Self._custAddBil.NameState   := NameState;
-  end;
+  Self._custAddBil.idAddress := Self._custAddDel.idAddress;
+  Self._custAddBil.Firstname := Self._custAddDel.Firstname;
+  Self._custAddBil.Lastname := Self._custAddDel.Lastname;
+  Self._custAddBil.Address1 := Self._custAddDel.Address1;
+  Self._custAddBil.Address2 := Self._custAddDel.Address2;
+  Self._custAddBil.Postcode := Self._custAddDel.Postcode;
+  Self._custAddBil.City := Self._custAddDel.City;
+  Self._custAddBil.Phone := Self._custAddDel.Phone;
+  Self._custAddBil.Phone_mo := Self._custAddDel.Phone_mo;
+  Self._custAddBil.Dni := Self._custAddDel.Dni;
+  Self._custAddBil.Company := Self._custAddDel.Company;
+  Self._custAddBil.Vat_number := Self._custAddDel.Vat_number;
+  Self._custAddBil.NameState := Self._custAddDel.NameState;
 end;
 
 procedure TOrder.SetAddress1Bil(const Value: String);
@@ -688,8 +691,8 @@ begin
        '-------Datos generales del pedido--------------' + sLineBreak +
        'Nombre Cliente: ' + Self._custName + sLineBreak +
        'Email Cliente: ' + Self._custMail + sLineBreak +
-       'Fecha de creación: ' + FormatDateTime('dd/mm/yyyy hh:nn:ss',
-                                              Self._dFechaCreacion) + sLineBreak +
+        'Fecha de creación: ' + FormatDateTime('dd/mm/yyyy hh:nn:ss',
+          Self._dFechaCreacion) + sLineBreak +
        'Forma de pago: ' + Self._FormaPago + sLineBreak +
        'Total Pagado Real: ' + CurrToStrF(Self._TotalPagadoReal,
                                           ffCurrency,

@@ -684,16 +684,15 @@ begin
   Result.GenerarRecibos :=
     procedure
     begin
-      with AFormulario.dmmFacturas.unstrdprcGetRecibos do
-      begin
-        ParamByName('pNRO_FACTURA').AsString :=
+      AFormulario.dmmFacturas.unstrdprcGetRecibos.ParamByName(
+        'pNRO_FACTURA').AsString :=
           AFormulario.dsTablaG.DataSet.FieldByName(fnrofac).AsString;
-        ParamByName('pSERIE_FACTURA').AsString :=
+      AFormulario.dmmFacturas.unstrdprcGetRecibos.ParamByName(
+        'pSERIE_FACTURA').AsString :=
           AFormulario.dsTablaG.DataSet.FieldByName(fseriefac).AsString;
-        ParamByName('pUSUARIO').AsString :=
-          AFormulario.IdentidadSesion.Usuario;
-        ExecProc;
-      end;
+      AFormulario.dmmFacturas.unstrdprcGetRecibos.ParamByName(
+        'pUSUARIO').AsString := AFormulario.IdentidadSesion.Usuario;
+      AFormulario.dmmFacturas.unstrdprcGetRecibos.ExecProc;
       AFormulario.dmmFacturas.unqryRecibos.Close;
       AFormulario.dmmFacturas.unqryRecibos.Open;
     end;
@@ -726,61 +725,62 @@ var
   Configuracion: TConfiguracionCobrosFactura;
   Controles: TControlesCobrosFactura;
 begin
-  with AFormulario do
-  begin
-  Configuracion := CrearConfiguracionCobrosFactura(TipoFacturaFiltro);
+  Configuracion := CrearConfiguracionCobrosFactura(
+    AFormulario.TipoFacturaFiltro);
   Controles := Default(TControlesCobrosFactura);
-  Controles.AplicarOrigenDatos := Assigned(dmmFacturas);
-  Controles.Vista := tvRecibos;
-  if Assigned(dmmFacturas) then
+  Controles.AplicarOrigenDatos := Assigned(AFormulario.dmmFacturas);
+  Controles.Vista := AFormulario.tvRecibos;
+  if Assigned(AFormulario.dmmFacturas) then
   begin
-    Controles.DataSourceRecibos := dmmFacturas.dsRecibos;
-    Controles.DataSourceEfectos := dmmFacturas.dsEfectosVenta;
+    Controles.DataSourceRecibos := AFormulario.dmmFacturas.dsRecibos;
+    Controles.DataSourceEfectos := AFormulario.dmmFacturas.dsEfectosVenta;
   end;
-  Controles.Pestana := tsRecibos;
-  Controles.BotonGenerar := btnGenerarRecibos;
-  Controles.BotonGenerarSecundario := btnGenerarRecibos2;
-  Controles.BotonImprimir := btnImprimirRecibo;
-  Controles.BotonPendiente := btnReciboEmitido;
-  Controles.BotonCobrado := btnReciboPagado;
-  Controles.BotonDevuelto := btnReciboDevuelto;
+  Controles.Pestana := AFormulario.tsRecibos;
+  Controles.BotonGenerar := AFormulario.btnGenerarRecibos;
+  Controles.BotonGenerarSecundario := AFormulario.btnGenerarRecibos2;
+  Controles.BotonImprimir := AFormulario.btnImprimirRecibo;
+  Controles.BotonPendiente := AFormulario.btnReciboEmitido;
+  Controles.BotonCobrado := AFormulario.btnReciboPagado;
+  Controles.BotonDevuelto := AFormulario.btnReciboDevuelto;
   Controles.Columnas[ccfNumeroFactura] :=
-    cxgrdbclmnRecibosNRO_FACTURA_RECIBO;
+    AFormulario.cxgrdbclmnRecibosNRO_FACTURA_RECIBO;
   Controles.Columnas[ccfSerieFactura] :=
-    cxgrdbclmnRecibosSERIE_FACTURA_RECIBO;
+    AFormulario.cxgrdbclmnRecibosSERIE_FACTURA_RECIBO;
   Controles.Columnas[ccfNumeroPlazo] :=
-    cxgrdbclmnRecibosNRO_PLAZO_RECIBO;
+    AFormulario.cxgrdbclmnRecibosNRO_PLAZO_RECIBO;
   Controles.Columnas[ccfFormaPago] :=
-    cxgrdbclmnRecibosFORMA_PAGO_ORIGEN_RECIBO;
+    AFormulario.cxgrdbclmnRecibosFORMA_PAGO_ORIGEN_RECIBO;
   Controles.Columnas[ccfDescripcionFormaPago] :=
-    cxgrdbclmnRecibosFORMA_PAGO_DESCRIPCION_ORIGEN_RECIBO;
-  Controles.Columnas[ccfImporte] := cxgrdbclmnRecibosEUROS_RECIBO;
-  Controles.Columnas[ccfEstado] := cxgrdbclmnRecibosESTADO_RECIBO;
+    AFormulario.cxgrdbclmnRecibosFORMA_PAGO_DESCRIPCION_ORIGEN_RECIBO;
+  Controles.Columnas[ccfImporte] :=
+    AFormulario.cxgrdbclmnRecibosEUROS_RECIBO;
+  Controles.Columnas[ccfEstado] :=
+    AFormulario.cxgrdbclmnRecibosESTADO_RECIBO;
   Controles.Columnas[ccfFechaExpedicion] :=
-    cxgrdbclmnRecibosFECHA_EXPEDICION_RECIBO;
+    AFormulario.cxgrdbclmnRecibosFECHA_EXPEDICION_RECIBO;
   Controles.Columnas[ccfFechaVencimiento] :=
-    cxgrdbclmnRecibosFECHA_VENCIMIENTO_RECIBO;
-  Controles.Columnas[ccfIban] := cxgrdbclmnRecibosIBAN_CLIENTE_RECIBO;
+    AFormulario.cxgrdbclmnRecibosFECHA_VENCIMIENTO_RECIBO;
+  Controles.Columnas[ccfIban] :=
+    AFormulario.cxgrdbclmnRecibosIBAN_CLIENTE_RECIBO;
   Controles.Columnas[ccfFechaPago] :=
-    cxgrdbclmnRecibosFECHA_PAGO_RECIBO;
+    AFormulario.cxgrdbclmnRecibosFECHA_PAGO_RECIBO;
   Controles.Columnas[ccfLocalidad] :=
-    cxgrdbclmnRecibosLOCALIDAD_EXPEDICION_RECIBO;
+    AFormulario.cxgrdbclmnRecibosLOCALIDAD_EXPEDICION_RECIBO;
   Controles.Columnas[ccfCodigoCliente] :=
-    cxgrdbclmnRecibosCODIGO_CLIENTE_RECIBO;
+    AFormulario.cxgrdbclmnRecibosCODIGO_CLIENTE_RECIBO;
   Controles.Columnas[ccfRazonSocialCliente] :=
-    cxgrdbclmnRecibosRAZONSOCIAL_CLIENTE_RECIBO;
+    AFormulario.cxgrdbclmnRecibosRAZONSOCIAL_CLIENTE_RECIBO;
   Controles.Columnas[ccfDireccionCliente] :=
-    cxgrdbclmnRecibosDIRECCION1_CLIENTE_RECIBO;
+    AFormulario.cxgrdbclmnRecibosDIRECCION1_CLIENTE_RECIBO;
   Controles.Columnas[ccfPoblacionCliente] :=
-    cxgrdbclmnRecibosPOBLACION_CLIENTE_RECIBO;
+    AFormulario.cxgrdbclmnRecibosPOBLACION_CLIENTE_RECIBO;
   Controles.Columnas[ccfProvinciaCliente] :=
-    cxgrdbclmnRecibosPROVINCIA_CLIENTE_RECIBO;
+    AFormulario.cxgrdbclmnRecibosPROVINCIA_CLIENTE_RECIBO;
   Controles.Columnas[ccfCodigoPostalCliente] :=
-    cxgrdbclmnRecibosCPOSTAL_CLIENTE_RECIBO;
+    AFormulario.cxgrdbclmnRecibosCPOSTAL_CLIENTE_RECIBO;
   Controles.Columnas[ccfImporteLetra] :=
-    cxgrdbclmnRecibosIMPORTE_LETRA_RECIBO;
+    AFormulario.cxgrdbclmnRecibosIMPORTE_LETRA_RECIBO;
   TPresentacionCobrosFactura.Aplicar(Configuracion, Controles);
-  end;
 end;
 
 function CrearContextoDetalleFacturaVcl(
@@ -1514,27 +1514,23 @@ end;
 procedure TfrmMtoFacturasBase.btnUpdateClienteClick(Sender: TObject);
 begin
   inherited;
-  with dmmFacturas.unqryTablaG do
-  begin
-    if (FieldByName('CODIGO_CLI_FAC').AsString = '0') then
-      dmmFacturas.GetCodigoAutoCliente;
-    dmmFacturas.CrearCliente;
-    ShowMessageFmt(SCliToTbl,
-                   [FieldByName('CODIGO_CLI_FAC').AsString]);
-  end;
+  if dmmFacturas.unqryTablaG.FieldByName(
+       'CODIGO_CLI_FAC').AsString = '0' then
+    dmmFacturas.GetCodigoAutoCliente;
+  dmmFacturas.CrearCliente;
+  ShowMessageFmt(SCliToTbl,
+    [dmmFacturas.unqryTablaG.FieldByName('CODIGO_CLI_FAC').AsString]);
 end;
 procedure TfrmMtoFacturasBase.btnUpdateEmpresaClick(Sender: TObject);
 begin
   inherited;
-  with dmmFacturas.unqryTablaG do
-  begin
-    if (FieldByName('CODIGO_EMP_FAC').AsString = '0') then
-      dmmFacturas.GetCodigoAutoEmpresa;
-    dmmFacturas.CrearEmpresa;
-    ShowMessageFmt(SEmpToTbl,
-              [FieldByName('CODIGO_EMP_FAC').AsString]);
-  end;
- end;
+  if dmmFacturas.unqryTablaG.FieldByName(
+       'CODIGO_EMP_FAC').AsString = '0' then
+    dmmFacturas.GetCodigoAutoEmpresa;
+  dmmFacturas.CrearEmpresa;
+  ShowMessageFmt(SEmpToTbl,
+    [dmmFacturas.unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString]);
+end;
 procedure TfrmMtoFacturasBase.sbNuevaFacturaClick(Sender: TObject);
 var
   sEmpresaDef:String;

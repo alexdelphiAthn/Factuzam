@@ -52,20 +52,17 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TdmIvas.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  with unqryTablaG do
-  begin
-    FindField('CODIGO_IVA').AsString := '0';
-    FindField('IVA_IVAGRP').AsString := '0';
-    FindField('PORCENTAJE_EXENTO_IVA').AsString := '0';
-    FindField('PORCENTAJE_EXENTO_RE_IVA').AsString := '0';
-    FindField('PORCENTAJE_NORMAL_IVA').AsString := '0';
-    FindField('PORCENTAJE_NORMAL_RE_IVA').AsString := '0';
-    FindField('PORCENTAJE_REDUCIDO_IVA').AsString := '0';
-    FindField('PORCENTAJE_REDUCIDO_RE_IVA').AsString := '0';
-    FindField('PORCENTAJE_SUPERREDUCIDO_IVA').AsString := '0';
-    FindField('PORCENTAJE_SUPERREDUCIDO_RE_IVA').AsString := '0';
-    FindField('FECHA_DESDE_IVA').AsDateTime := Now;
-  end;
+  unqryTablaG.FindField('CODIGO_IVA').AsString := '0';
+  unqryTablaG.FindField('IVA_IVAGRP').AsString := '0';
+  unqryTablaG.FindField('PORCENTAJE_EXENTO_IVA').AsString := '0';
+  unqryTablaG.FindField('PORCENTAJE_EXENTO_RE_IVA').AsString := '0';
+  unqryTablaG.FindField('PORCENTAJE_NORMAL_IVA').AsString := '0';
+  unqryTablaG.FindField('PORCENTAJE_NORMAL_RE_IVA').AsString := '0';
+  unqryTablaG.FindField('PORCENTAJE_REDUCIDO_IVA').AsString := '0';
+  unqryTablaG.FindField('PORCENTAJE_REDUCIDO_RE_IVA').AsString := '0';
+  unqryTablaG.FindField('PORCENTAJE_SUPERREDUCIDO_IVA').AsString := '0';
+  unqryTablaG.FindField('PORCENTAJE_SUPERREDUCIDO_RE_IVA').AsString := '0';
+  unqryTablaG.FindField('FECHA_DESDE_IVA').AsDateTime := Now;
 end;
 
 procedure TdmIvas.unqryTablaGBeforePost(DataSet: TDataSet);
@@ -80,52 +77,48 @@ begin
      (Trim(unqryTablaG.FindField('CODIGO_IVA').AsString) = '') then
     Abort;
   bError := False;
-  with unqryTablaG do
+  sCodigo := Trim(unqryTablaG.FindField('CODIGO_IVA').AsString);
+  if (sCodigo = '') or
+     SimbolosProhibidos(sCodigo, PerfilesLectura) then
   begin
-    sCodigo := Trim(FindField('CODIGO_IVA').AsString);
-    if (sCodigo = '') or
-       SimbolosProhibidos(sCodigo, PerfilesLectura) then
+    NotificarError(Format(SErrorCodigoIva, [sCodigo]));
+    bError := True;
+  end;
+  if (unqryTablaG.FindField('IVA_IVAGRP').AsString = '0') or
+     not ExisteGrupoZonaIVA(
+       unqryTablaG.FindField('IVA_IVAGRP').AsString) then
+  begin
+    NotificarError(Format(
+      SErrorGrupoIvaNoExiste,
+      [unqryTablaG.FindField('IVA_IVAGRP').AsString]));
+    bError := True;
+  end;
+  if not bError then
+  begin
+    if not bError then
     begin
-      NotificarError(Format(SErrorCodigoIva, [sCodigo]));
-      bError := True;
+      unqrySol := TUniQuery.Create(nil);
+      unqrySol.Connection := ConexionPrincipal;
+      unqrySol.SQL.Text := 'SELECT * ' +
+        '  FROM vi_ivas ' +
+        ' WHERE IVA_IVAGRP = :IVA_IVAGRP';
+      unqrySol.ParamByName('IVA_IVAGRP').AsString :=
+        unqryTablaG.FindField('IVA_IVAGRP').AsString;
+      unqrySol.Open;
     end;
-    if ((FindField('IVA_IVAGRP').AsString = '0') or
-        (not ExisteGrupoZonaIVA(FindField('IVA_IVAGRP').AsString))) then
+    if not bError and
+       not ExistePeriodoUnico(
+         unqrySol,
+         unqryTablaG.FindField('FECHA_DESDE_IVA'),
+         unqryTablaG.FindField('FECHA_HASTA_IVA')) then
     begin
-      NotificarError(Format(
-        SErrorGrupoIvaNoExiste,
-        [FindField('IVA_IVAGRP').AsString]));
-      bError := True;
+      raise ERangeError.CreateFmt(SErrorRangoFechasIva,
+        [unqryTablaG.FindField('DESCRIPCION_IVA_IVAGRP').AsString]);
     end;
-    if (not(bError)) then
+    if Assigned(unqrySol) then
     begin
-      with unqryTablaG do
-      begin
-        if (not(bError)) then
-        begin
-          unqrySol := TUniQuery.Create(nil);
-          unqrySol.Connection := ConexionPrincipal;
-          unqrySol.SQL.Text := 'SELECT * ' +
-                               '  FROM vi_ivas ' +
-                               ' WHERE IVA_IVAGRP = :IVA_IVAGRP';
-          unqrySol.ParamByName('IVA_IVAGRP').AsString :=
-                                           FindField('IVA_IVAGRP').AsString;
-          unqrySol.Open;
-        end;
-        if ((not(bError)) and
-             not(ExistePeriodoUnico(unqrySol,
-                                    FindField('FECHA_DESDE_IVA'),
-                                    FindField('FECHA_HASTA_IVA')))) then
-        begin
-          raise ERangeError.CreateFmt(SErrorRangoFechasIva,
-            [FindField('DESCRIPCION_IVA_IVAGRP').AsString]);
-        end;
-      end;
-      if (assigned(unqrySol)) then
-      begin
-        unqrySol.Close;
-        FreeAndNil(unqrySol);
-      end;
+      unqrySol.Close;
+      FreeAndNil(unqrySol);
     end;
   end;
   if bError then
@@ -188,18 +181,17 @@ procedure TdmIvas.GetCodigoAutoIva;
 begin
   if unqryTablaG.FindField('CODIGO_IVA').AsString = '0' then
   begin
-    with unstrdprcContador do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-      ParamByName('pUSUARIO_MODIF').AsString := IdentidadSesion.Usuario;
-      ParamByName('ptipodoc').AsString :=  'IV';
-      ExecProc;
-      unqryTablaG.FindField('CODIGO_IVA').AsString :=
-                                                  ParamByName('pcont').AsString;
-    end;
+    unstrdprcContador.Params.Clear;
+    unstrdprcContador.Params.CreateParam(ftString, 'ptipodoc', ptInput);
+    unstrdprcContador.Params.CreateParam(ftInteger, 'pcont', ptOutput);
+    unstrdprcContador.Params.CreateParam(
+      ftInteger, 'pUSUARIO_MODIF', ptInput);
+    unstrdprcContador.ParamByName('pUSUARIO_MODIF').AsString :=
+      IdentidadSesion.Usuario;
+    unstrdprcContador.ParamByName('ptipodoc').AsString := 'IV';
+    unstrdprcContador.ExecProc;
+    unqryTablaG.FindField('CODIGO_IVA').AsString :=
+      unstrdprcContador.ParamByName('pcont').AsString;
   end;
 end;
 

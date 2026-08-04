@@ -98,13 +98,18 @@ type
     cxgrdbclmnArticulosUSUARIOMODIF: TcxGridDBColumn;
     tvLineasFacturacion: TcxGridDBTableView;
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1LINEA_LINEA: TcxGridDBColumn;
-    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CODIGO_ARTICULO_LINEA: TcxGridDBColumn;
-    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1DESCRIPCION_ARTICULO_LINEA: TcxGridDBColumn;
-    cxgrdbclmnLineasFacturacionTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA: TcxGridDBColumn;
+    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CODIGO_ARTICULO_LINEA:
+      TcxGridDBColumn;
+    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1DESCRIPCION_ARTICULO_LINEA:
+      TcxGridDBColumn;
+    cxgrdbclmnLineasFacturacionTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA:
+      TcxGridDBColumn;
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CANTIDAD_LINEA: TcxGridDBColumn;
-    cxgrdbclmnLineasFacturacionPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA: TcxGridDBColumn;
+    cxgrdbclmnLineasFacturacionPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA:
+      TcxGridDBColumn;
     cxgrdbclmnLineasFacturacionPORCEN_IVA_FACTURA_LINEA: TcxGridDBColumn;
-    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1PRECIOVENTA_ARTICULO_LINEA: TcxGridDBColumn;
+    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1PRECIOVENTA_ARTICULO_LINEA:
+      TcxGridDBColumn;
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1SUM_TOTAL_LINEA: TcxGridDBColumn;
     cxgrdbclmnLineasFacturacionFECHA_ENTREGA_FACTURA_LINEA: TcxGridDBColumn;
     cxgrdbclmnLineasFacturacionTIPOIVA_ARTICULO_FACTURA_LINEA: TcxGridDBColumn;
@@ -171,37 +176,35 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TfrmMtoTarifas.actFamiliasExecute(Sender: TObject);
 begin
   inherited;  //Control + N Familias
-  with dmmTarifas.unqryArticulosTarifas do
-  begin
     if (
         (pcPestana.ActivePage = tsArticulos) and
-         (not(FieldByName('CODIGO_FAM_ART').IsNull))
+         (not(dmmTarifas.unqryArticulosTarifas.FieldByName(
+           'CODIGO_FAM_ART').IsNull))
        ) then
       ShowMto(Self.Owner,
               'Familias',
-              FieldByName('CODIGO_FAM_ART').AsString)
+              dmmTarifas.unqryArticulosTarifas.FieldByName(
+                'CODIGO_FAM_ART').AsString)
       else
         ShowMto(Self.Owner,
                 'Familias');
-  end;
 end;
 
 procedure TfrmMtoTarifas.actProveedoresExecute(Sender: TObject);
 begin
   inherited; // Control + P Proveedores
-  with dmmTarifas.unqryArticulosTarifas do
-  begin
     if (
         (pcPestana.ActivePage = tsArticulos) and
-        (not(FieldByName('CODIGO_PRV_PRV').IsNull))
+        (not(dmmTarifas.unqryArticulosTarifas.FieldByName(
+          'CODIGO_PRV_PRV').IsNull))
        ) then
       ShowMto(Self.Owner,
               'Proveedores',
-              FieldByName('CODIGO_PRV_PRV').AsString)
+              dmmTarifas.unqryArticulosTarifas.FieldByName(
+                'CODIGO_PRV_PRV').AsString)
       else
         ShowMto(Self.Owner,
                 'Proveedores');
-  end;
 end;
 
 procedure TfrmMtoTarifas.btnAddBlockClick(Sender: TObject);
@@ -243,19 +246,18 @@ end;
 procedure TfrmMtoTarifas.btnIraArticuloClick(Sender: TObject);
 begin
   inherited;  //CONTROL + A Articulos
-    with dmmTarifas.unqryArticulosTarifas do
-  begin
     if (
         (pcPestana.ActivePage = tsArticulos) and
-        (not(FieldByName('CODIGO_ART_ARTTAR').Isnull))
+        (not(dmmTarifas.unqryArticulosTarifas.FieldByName(
+          'CODIGO_ART_ARTTAR').Isnull))
        ) then
       ShowMto(Self.Owner,
               'Articulos',
-              FieldByName('CODIGO_ART_ARTTAR').AsString)
+              dmmTarifas.unqryArticulosTarifas.FieldByName(
+                'CODIGO_ART_ARTTAR').AsString)
       else
         ShowMto(Self.Owner,
                 'Articulos');
-  end;
 end;
 
 procedure TfrmMtoTarifas.CrearTablaPrincipal;

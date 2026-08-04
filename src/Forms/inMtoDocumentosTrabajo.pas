@@ -398,6 +398,8 @@ procedure TfrmMtoDocumentosTrabajo.CrearColumnasHostDTR;
     Result.Width := AAncho;
     Result.Options.Editing := AEditable;
   end;
+var
+  Columna: TcxGridDBColumn;
 begin
   // Columnas propias del documento tras el ClearItems del contrato.
   Col('Almacén', 'CODIGO_ALM_DTL', 70, True);
@@ -406,11 +408,11 @@ begin
   Col('Familia', 'DESCRIPCION_FAM', 160, False);
   Col('Proveedor', 'NOMBRE_PRV', 180, False);
   Col('Temporada', 'TEMPORADA_ART', 110, False);
-  with Col('Stock', 'CANTIDAD_STOCK_DTL', 80, False) do
-    HeaderAlignmentHorz := taRightJustify;
-  with Col('Cantidad', 'CANTIDAD_DTL', 80,
-           FModoEntradaSel <> mcsTallasInline) do
-    HeaderAlignmentHorz := taRightJustify;
+  Columna := Col('Stock', 'CANTIDAD_STOCK_DTL', 80, False);
+  Columna.HeaderAlignmentHorz := taRightJustify;
+  Columna := Col('Cantidad', 'CANTIDAD_DTL', 80,
+    FModoEntradaSel <> mcsTallasInline);
+  Columna.HeaderAlignmentHorz := taRightJustify;
   Col('Origen', 'ORIGEN_DTL', 80, False);
   Col('Instante stock', 'INSTANTE_STOCK_DTL', 120, False);
 end;

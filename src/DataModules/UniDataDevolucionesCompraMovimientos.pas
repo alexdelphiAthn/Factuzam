@@ -113,7 +113,11 @@ var
   iCount: Integer;
   rCantidad, rPrecio, rTotal: Double;
 begin
-  LeerCabeceraDevolucion(AConn, ASerieDevc, ANumDevc, sCodigoEmp, sCodigoAlmCab);
+  LeerCabeceraDevolucion(AConn,
+                         ASerieDevc,
+                         ANumDevc,
+                         sCodigoEmp,
+                         sCodigoAlmCab);
   // Defensa: si la devolucion no tiene almacen ni en cabecera ni en
   // lineas/celdas, no podemos generar movimientos. Lo detectamos linea
   // a linea (mas abajo) para no abortar el resto.
@@ -158,11 +162,15 @@ begin
       '       CASE WHEN IFNULL(A.TOTAL_BRUTO_DEVC, 0) > 0 THEN ' +
       '              GREATEST(0, 1 - CASE ' +
       '                WHEN IFNULL(A.TOTAL_DTO_COMERCIAL_DEVC, 0) <> 0 ' +
-      '                THEN IFNULL(A.TOTAL_DTO_COMERCIAL_DEVC, 0) / A.TOTAL_BRUTO_DEVC ' +
-      '                ELSE IFNULL(A.PORCENTAJE_DTO_COMERCIAL_DEVC, 0) / 100 END) ' +
-      '            ELSE GREATEST(0, 1 - IFNULL(A.PORCENTAJE_DTO_COMERCIAL_DEVC, 0) / 100) ' +
+      '                THEN IFNULL(A.TOTAL_DTO_COMERCIAL_DEVC, 0) / ' +
+      'A.TOTAL_BRUTO_DEVC ' +
+      '                ELSE IFNULL(A.PORCENTAJE_DTO_COMERCIAL_DEVC, 0) / 100 ' +
+      'END) ' +
+      '            ELSE GREATEST(0, 1 - ' +
+      'IFNULL(A.PORCENTAJE_DTO_COMERCIAL_DEVC, 0) / 100) ' +
       '       END AS PRECIO, ' +
-      '       IFNULL(NULLIF(L.CODIGO_ALMACEN_DEVCLIN, ''''), :alm_cab1) AS ALMACEN ' +
+      '       IFNULL(NULLIF(L.CODIGO_ALMACEN_DEVCLIN, ''''), :alm_cab1) AS ' +
+      'ALMACEN ' +
       '  FROM fza_devoluciones_compra_lineas L ' +
       '  JOIN fza_devoluciones_compra A ' +
       '    ON A.SERIE_DEVC = L.SERIE_DEVC_DEVCLIN ' +
@@ -186,12 +194,16 @@ begin
       '       CASE WHEN IFNULL(A.TOTAL_BRUTO_DEVC, 0) > 0 THEN ' +
       '              GREATEST(0, 1 - CASE ' +
       '                WHEN IFNULL(A.TOTAL_DTO_COMERCIAL_DEVC, 0) <> 0 ' +
-      '                THEN IFNULL(A.TOTAL_DTO_COMERCIAL_DEVC, 0) / A.TOTAL_BRUTO_DEVC ' +
-      '                ELSE IFNULL(A.PORCENTAJE_DTO_COMERCIAL_DEVC, 0) / 100 END) ' +
-      '            ELSE GREATEST(0, 1 - IFNULL(A.PORCENTAJE_DTO_COMERCIAL_DEVC, 0) / 100) ' +
+      '                THEN IFNULL(A.TOTAL_DTO_COMERCIAL_DEVC, 0) / ' +
+      'A.TOTAL_BRUTO_DEVC ' +
+      '                ELSE IFNULL(A.PORCENTAJE_DTO_COMERCIAL_DEVC, 0) / 100 ' +
+      'END) ' +
+      '            ELSE GREATEST(0, 1 - ' +
+      'IFNULL(A.PORCENTAJE_DTO_COMERCIAL_DEVC, 0) / 100) ' +
       '       END AS PRECIO, ' +
       '       IFNULL(NULLIF(C.CODIGO_ALM_DEVCCEL, ''''), ' +
-      '              IFNULL(NULLIF(L.CODIGO_ALMACEN_DEVCLIN, ''''), :alm_cab2)) AS ALMACEN ' +
+      '              IFNULL(NULLIF(L.CODIGO_ALMACEN_DEVCLIN, ''''), ' +
+      ':alm_cab2)) AS ALMACEN ' +
       '  FROM fza_devoluciones_compra_lineas L ' +
       '  JOIN fza_devoluciones_compra A ' +
       '    ON A.SERIE_DEVC = L.SERIE_DEVC_DEVCLIN ' +
@@ -381,7 +393,8 @@ begin
         '   AND L.NUMERO_DEVC_DEVCLIN = :n1 ' +
         '   AND IFNULL(NULLIF(L.CODIGO_ALMACEN_DEVCLIN, ''''), ' +
         '              (SELECT CODIGO_ALM_DEVC FROM fza_devoluciones_compra ' +
-        '                WHERE SERIE_DEVC = :s1b AND NUMERO_DEVC = :n1b)) = :alm1 ' +
+        '                WHERE SERIE_DEVC = :s1b AND NUMERO_DEVC = :n1b)) = ' +
+        ':alm1 ' +
         '   AND L.CODIGO_UNIDAD_DEVCLIN IS NOT NULL ' +
         '   AND L.CODIGO_UNIDAD_DEVCLIN <> '''' ' +
         'UNION ' +
@@ -396,8 +409,10 @@ begin
         '   AND L.NUMERO_DEVC_DEVCLIN = :n2 ' +
         '   AND IFNULL(NULLIF(C.CODIGO_ALM_DEVCCEL, ''''), ' +
         '              IFNULL(NULLIF(L.CODIGO_ALMACEN_DEVCLIN, ''''), ' +
-        '                    (SELECT CODIGO_ALM_DEVC FROM fza_devoluciones_compra ' +
-        '                      WHERE SERIE_DEVC = :s2b AND NUMERO_DEVC = :n2b))) = :alm2 ' +
+        '                    (SELECT CODIGO_ALM_DEVC FROM ' +
+        'fza_devoluciones_compra ' +
+        '                      WHERE SERIE_DEVC = :s2b AND NUMERO_DEVC = ' +
+        ':n2b))) = :alm2 ' +
         '   AND L.CODIGO_UNIDAD_DEVCLIN IS NOT NULL ' +
         '   AND L.CODIGO_UNIDAD_DEVCLIN <> '''' ';
       qExec.ParamByName('s1').AsString    := ASerieDevc;

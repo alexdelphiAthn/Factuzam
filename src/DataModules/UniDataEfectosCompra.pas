@@ -1,7 +1,7 @@
 ﻿{******************************************************************************}
 {                                                                              }
-{  Módulo:       UniDataEfectosCompra                                           }
-{    Tipo:       Data Module                                                    }
+{  Módulo:       UniDataEfectosCompra                                          }
+{    Tipo:       Data Module                                                   }
 { Versión:       1.0.0                                                         }
 {   Fecha:       10/06/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
@@ -18,7 +18,7 @@ interface
 uses
   inLibRegistroPantallas,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
-  inLibUser, UniDataConn;
+  inLibUser, UniDataConn, inLibEfectosCalculo;
 
 type
   TClaveEfectoCompra = record
@@ -32,7 +32,28 @@ type
   TdmEfectosCompra = class(TdmBase)
     procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
   private
-    { Private declarations }
+    procedure PrepararClavesFusion(
+      AConsulta: TUniQuery;
+      const AClaves: TClavesEfectoCompra);
+    function LeerResumenFusion(
+      AConsulta: TUniQuery): TResumenFusionEfectos;
+    procedure ValidarResumenFusion(
+      const AResumen: TResumenFusionEfectos;
+      ACantidadEsperada: Integer);
+    function ObtenerNumeroFusion(
+      AConsulta: TUniQuery;
+      const ASerie, ANumero: string): Integer;
+    procedure InsertarEfectoFusionado(
+      AConsulta: TUniQuery;
+      const AClaveOrigen: TClaveEfectoCompra;
+      ANuevoEfecto: Integer;
+      const AReferencia: string);
+    function ConciliarEfectosOrigen(
+      AConsulta: TUniQuery;
+      const ASerie, ANumero: string;
+      ANuevoEfecto: Integer;
+      const AReferencia: string): Integer;
+    procedure RefrescarCartera;
   public
     // Concilia un pago sobre el efecto y refresca la cartera. Si el pago es
     // parcial, la BBDD divide el efecto en pagado y pendiente.
@@ -79,29 +100,219 @@ begin
     raise Exception.Create(SErrorBorrarEfectoCompraPagado);
 end;
 
+procedure TdmEfectosCompra.PrepararClavesFusion(
+  AConsulta: TUniQuery;
+  const AClaves: TClavesEfectoCompra);
+var
+  i: Integer;
+begin
+  AConsulta.SQL.Text :=
+    'CREATE TEMPORARY TABLE IF NOT EXISTS tmp_efec_fusion (' +
+    '  SERIE_FACC varchar(20) NOT NULL, ' +
+    '  NUMERO_FACC varchar(20) NOT NULL, ' +
+    '  NUMERO_EFEC int NOT NULL, ' +
+    '  PRIMARY KEY (SERIE_FACC, NUMERO_FACC, NUMERO_EFEC)) ' +
+    'ENGINE=MEMORY';
+  AConsulta.ExecSQL;
+  AConsulta.SQL.Text := 'DELETE FROM tmp_efec_fusion';
+  AConsulta.ExecSQL;
+  AConsulta.SQL.Text :=
+    'INSERT INTO tmp_efec_fusion ' +
+    '  (SERIE_FACC, NUMERO_FACC, NUMERO_EFEC) ' +
+    'VALUES (:serie, :numero, :efecto)';
+  for i := 0 to Length(AClaves) - 1 do
+  begin
+    AConsulta.ParamByName('serie').AsString := AClaves[i].SerieFac;
+    AConsulta.ParamByName('numero').AsString := AClaves[i].NumeroFac;
+    AConsulta.ParamByName('efecto').AsInteger := AClaves[i].NumeroEfec;
+    AConsulta.ExecSQL;
+  end;
+end;
+
+function TdmEfectosCompra.LeerResumenFusion(
+  AConsulta: TUniQuery): TResumenFusionEfectos;
+begin
+  AConsulta.SQL.Text :=
+    'SELECT COUNT(*) AS VALIDOS, ' +
+    '       COUNT(DISTINCT COALESCE(E.CODIGO_EMP_EFEC, '''')) ' +
+    '         AS EMPRESAS, ' +
+    '       COUNT(DISTINCT COALESCE(E.CODIGO_PRV_EFEC, '''')) ' +
+    '         AS TERCEROS, ' +
+    '       COALESCE(SUM(COALESCE(E.IMPORTE_PENDIENTE_EFEC, 0)), 0) ' +
+    '         AS TOTAL ' +
+    '  FROM fza_efectos_compra E ' +
+    '  JOIN tmp_efec_fusion T ' +
+    '    ON T.SERIE_FACC = E.SERIE_FACC_EFEC ' +
+    '   AND T.NUMERO_FACC = E.NUMERO_FACC_EFEC ' +
+    '   AND T.NUMERO_EFEC = E.NUMERO_EFEC ' +
+    ' WHERE COALESCE(E.ESTADO_EFEC, '''') IN ('''', ''PENDIENTE'') ' +
+    '   AND COALESCE(E.IMPORTE_PAGADO_EFEC, 0) <= 0.0001 ' +
+    '   AND COALESCE(E.IMPORTE_PENDIENTE_EFEC, 0) > 0.0001 ' +
+    '   AND COALESCE(E.ESCONCILIADO_EFEC, ''N'') <> ''S'' ' +
+    '   AND COALESCE(E.SERIE_REMC_EFEC, '''') = '''' ' +
+    '   AND COALESCE(E.NUMERO_REMC_EFEC, '''') = '''' ' +
+    '   AND COALESCE(E.SERIE_FACC_CONCILIACION_EFEC, '''') = ''''';
+  AConsulta.Open;
+  Result.CantidadValidos := AConsulta.FieldByName('VALIDOS').AsInteger;
+  Result.CantidadEmpresas := AConsulta.FieldByName('EMPRESAS').AsInteger;
+  Result.CantidadTerceros := AConsulta.FieldByName('TERCEROS').AsInteger;
+  Result.ImportePendiente := AConsulta.FieldByName('TOTAL').AsFloat;
+  AConsulta.Close;
+end;
+
+procedure TdmEfectosCompra.ValidarResumenFusion(
+  const AResumen: TResumenFusionEfectos;
+  ACantidadEsperada: Integer);
+begin
+  case TCalculoFusionEfectos.Validar(AResumen, ACantidadEsperada) of
+    efeCantidadInvalida:
+      raise Exception.Create(SErrorFusionarEfectosCompraEstado);
+    efeOrigenInvalido:
+      raise Exception.Create(SErrorFusionarEfectosCompraOrigen);
+    efeSinImportePendiente:
+      raise Exception.Create(SErrorFusionarEfectosCompraSinPendiente);
+  end;
+end;
+
+function TdmEfectosCompra.ObtenerNumeroFusion(
+  AConsulta: TUniQuery;
+  const ASerie, ANumero: string): Integer;
+begin
+  AConsulta.SQL.Text :=
+    'SELECT NUMERO_EFEC ' +
+    '  FROM fza_efectos_compra ' +
+    ' WHERE SERIE_FACC_EFEC = :serie ' +
+    '   AND NUMERO_FACC_EFEC = :numero ' +
+    ' FOR UPDATE';
+  AConsulta.ParamByName('serie').AsString := ASerie;
+  AConsulta.ParamByName('numero').AsString := ANumero;
+  AConsulta.Open;
+  AConsulta.Close;
+  AConsulta.SQL.Text :=
+    'SELECT COALESCE(MAX(NUMERO_EFEC), 0) + 1 AS NUEVO ' +
+    '  FROM fza_efectos_compra ' +
+    ' WHERE SERIE_FACC_EFEC = :serie ' +
+    '   AND NUMERO_FACC_EFEC = :numero';
+  AConsulta.ParamByName('serie').AsString := ASerie;
+  AConsulta.ParamByName('numero').AsString := ANumero;
+  AConsulta.Open;
+  Result := AConsulta.FieldByName('NUEVO').AsInteger;
+  AConsulta.Close;
+end;
+
+procedure TdmEfectosCompra.InsertarEfectoFusionado(
+  AConsulta: TUniQuery;
+  const AClaveOrigen: TClaveEfectoCompra;
+  ANuevoEfecto: Integer;
+  const AReferencia: string);
+begin
+  AConsulta.SQL.Text :=
+    'INSERT INTO fza_efectos_compra ' +
+    '  (SERIE_FACC_EFEC, NUMERO_FACC_EFEC, NUMERO_EFEC, ' +
+    '   CODIGO_EMP_EFEC, CODIGO_PRV_EFEC, RAZON_SOCIAL_PRV_EFEC, ' +
+    '   NIF_PRV_EFEC, CODIGO_TEFE_EFEC, ESTADO_EFEC, ' +
+    '   ORDEN_PLAZO_EFEC, FECHA_EMISION_EFEC, ' +
+    '   FECHA_VENCIMIENTO_EFEC, FECHA_PAGO_EFEC, TIPO_PAGO_EFEC, ' +
+    '   REFERENCIA_PAGO_EFEC, ENTIDAD_PAGO_EFEC, ' +
+    '   ESCONCILIADO_EFEC, IMPORTE_EFEC, IMPORTE_PAGADO_EFEC, ' +
+    '   IMPORTE_PENDIENTE_EFEC, SERIE_REMC_EFEC, NUMERO_REMC_EFEC, ' +
+    '   ENTIDAD_EFEC, OFICINA_EFEC, DIGITO_CONTROL_EFEC, ' +
+    '   CUENTA_EFEC, IBAN_EFEC, CODIGO_EMPBAN_EFEC, IBAN_EMP_EFEC, ' +
+    '   DOC_EXTERNO_EFEC, REFERENCIA_DOCUMENTO_EFEC, ' +
+    '   OBSERVACIONES_EFEC, INSTANTE_ALTA, USUARIO_ALTA, ' +
+    '   INSTANTE_MODIF, USUARIO_MODIF) ' +
+    'SELECT H.SERIE_FACC_EFEC, H.NUMERO_FACC_EFEC, :nuevo, ' +
+    '       H.CODIGO_EMP_EFEC, H.CODIGO_PRV_EFEC, ' +
+    '       H.RAZON_SOCIAL_PRV_EFEC, H.NIF_PRV_EFEC, ' +
+    '       H.CODIGO_TEFE_EFEC, ''PENDIENTE'', H.ORDEN_PLAZO_EFEC, ' +
+    '       A.FECHA_EMISION, A.FECHA_VENCIMIENTO, NULL, NULL, NULL, ' +
+    '       NULL, ''N'', A.TOTAL, 0, A.TOTAL, NULL, NULL, ' +
+    '       H.ENTIDAD_EFEC, H.OFICINA_EFEC, H.DIGITO_CONTROL_EFEC, ' +
+    '       H.CUENTA_EFEC, H.IBAN_EFEC, H.CODIGO_EMPBAN_EFEC, ' +
+    '       H.IBAN_EMP_EFEC, H.DOC_EXTERNO_EFEC, :referencia, ' +
+    '       LEFT(CONCAT(''Agrupa efectos: '', A.REFERENCIAS), 1000), ' +
+    '       NOW(), :usuario, NOW(), :usuario ' +
+    '  FROM fza_efectos_compra H ' +
+    '  JOIN (SELECT MIN(E.FECHA_EMISION_EFEC) AS FECHA_EMISION, ' +
+    '               MAX(E.FECHA_VENCIMIENTO_EFEC) AS FECHA_VENCIMIENTO, ' +
+    '               SUM(COALESCE(E.IMPORTE_PENDIENTE_EFEC, 0)) ' +
+    '                 AS TOTAL, ' +
+    '               GROUP_CONCAT(CONCAT(E.SERIE_FACC_EFEC, ''/'', ' +
+    '                 E.NUMERO_FACC_EFEC, ''/'', E.NUMERO_EFEC) ' +
+    '                 ORDER BY E.FECHA_VENCIMIENTO_EFEC, ' +
+    '                          E.SERIE_FACC_EFEC, E.NUMERO_FACC_EFEC, ' +
+    '                          E.NUMERO_EFEC SEPARATOR '', '') ' +
+    '                 AS REFERENCIAS ' +
+    '          FROM fza_efectos_compra E ' +
+    '          JOIN tmp_efec_fusion T ' +
+    '            ON T.SERIE_FACC = E.SERIE_FACC_EFEC ' +
+    '           AND T.NUMERO_FACC = E.NUMERO_FACC_EFEC ' +
+    '           AND T.NUMERO_EFEC = E.NUMERO_EFEC) A ' +
+    ' WHERE H.SERIE_FACC_EFEC = :serie ' +
+    '   AND H.NUMERO_FACC_EFEC = :numero ' +
+    '   AND H.NUMERO_EFEC = :efecto';
+  AConsulta.ParamByName('nuevo').AsInteger := ANuevoEfecto;
+  AConsulta.ParamByName('referencia').AsString := AReferencia;
+  AConsulta.ParamByName('usuario').AsString := IdentidadSesion.Usuario;
+  AConsulta.ParamByName('serie').AsString := AClaveOrigen.SerieFac;
+  AConsulta.ParamByName('numero').AsString := AClaveOrigen.NumeroFac;
+  AConsulta.ParamByName('efecto').AsInteger := AClaveOrigen.NumeroEfec;
+  AConsulta.ExecSQL;
+end;
+
+function TdmEfectosCompra.ConciliarEfectosOrigen(
+  AConsulta: TUniQuery;
+  const ASerie, ANumero: string;
+  ANuevoEfecto: Integer;
+  const AReferencia: string): Integer;
+begin
+  AConsulta.SQL.Text :=
+    'UPDATE fza_efectos_compra E ' +
+    '  JOIN tmp_efec_fusion T ' +
+    '    ON T.SERIE_FACC = E.SERIE_FACC_EFEC ' +
+    '   AND T.NUMERO_FACC = E.NUMERO_FACC_EFEC ' +
+    '   AND T.NUMERO_EFEC = E.NUMERO_EFEC ' +
+    '   SET E.ESTADO_EFEC = ''CONCILIADO'', ' +
+    '       E.IMPORTE_PENDIENTE_EFEC = 0, ' +
+    '       E.ESCONCILIADO_EFEC = ''S'', ' +
+    '       E.REFERENCIA_DOCUMENTO_EFEC = :referencia, ' +
+    '       E.SERIE_FACC_CONCILIACION_EFEC = :serie_dst, ' +
+    '       E.NUMERO_FACC_CONCILIACION_EFEC = :numero_dst, ' +
+    '       E.NUMERO_EFEC_CONCILIACION_EFEC = :efecto_dst, ' +
+    '       E.OBSERVACIONES_EFEC = LEFT(CONCAT(' +
+    '         COALESCE(NULLIF(E.OBSERVACIONES_EFEC, ''''), ''''), ' +
+    '         CASE WHEN COALESCE(E.OBSERVACIONES_EFEC, '''') = '''' ' +
+    '              THEN '''' ELSE '' | '' END, ' +
+    '         ''Conciliado en '', :referencia), 1000), ' +
+    '       E.INSTANTE_MODIF = NOW(), ' +
+    '       E.USUARIO_MODIF = :usuario';
+  AConsulta.ParamByName('referencia').AsString := AReferencia;
+  AConsulta.ParamByName('serie_dst').AsString := ASerie;
+  AConsulta.ParamByName('numero_dst').AsString := ANumero;
+  AConsulta.ParamByName('efecto_dst').AsInteger := ANuevoEfecto;
+  AConsulta.ParamByName('usuario').AsString := IdentidadSesion.Usuario;
+  AConsulta.ExecSQL;
+  Result := AConsulta.RowsAffected;
+end;
+
+procedure TdmEfectosCompra.RefrescarCartera;
+begin
+  if Assigned(unqryTablaG) and unqryTablaG.Active then
+  begin
+    unqryTablaG.Close;
+    unqryTablaG.Open;
+  end;
+end;
+
 function TdmEfectosCompra.FusionarEfectosPendientes(
   const AClaves: TClavesEfectoCompra; out AReferencia: string): Integer;
 var
   q: TUniQuery;
-  bTxOwned: Boolean;
-  i: Integer;
-  iValidos: Integer;
-  iEmpresas: Integer;
-  iProveedores: Integer;
+  EsTransaccionPropia: Boolean;
   iNuevoEfec: Integer;
-  dTotal: Double;
+  oResumen: TResumenFusionEfectos;
   sSerieDestino: string;
   sNumeroDestino: string;
-
-  procedure RefrescarCartera;
-  begin
-    if (unqryTablaG <> nil) and unqryTablaG.Active then
-    begin
-      unqryTablaG.Close;
-      unqryTablaG.Open;
-    end;
-  end;
-
 begin
   Result := 0;
   AReferencia := '';
@@ -110,172 +321,40 @@ begin
     q := TUniQuery.Create(nil);
     try
       q.Connection := ConexionPrincipal;
-      bTxOwned := not ConexionPrincipal.InTransaction;
-      if bTxOwned then
+      EsTransaccionPropia := not ConexionPrincipal.InTransaction;
+      if EsTransaccionPropia then
         ConexionPrincipal.StartTransaction;
       try
-      q.SQL.Text :=
-        'CREATE TEMPORARY TABLE IF NOT EXISTS tmp_efec_fusion (' +
-        '  SERIE_FACC varchar(20) NOT NULL, ' +
-        '  NUMERO_FACC varchar(20) NOT NULL, ' +
-        '  NUMERO_EFEC int NOT NULL, ' +
-        '  PRIMARY KEY (SERIE_FACC, NUMERO_FACC, NUMERO_EFEC)) ' +
-        'ENGINE=MEMORY';
-      q.ExecSQL;
-      q.SQL.Text := 'DELETE FROM tmp_efec_fusion';
-      q.ExecSQL;
-      q.SQL.Text :=
-        'INSERT INTO tmp_efec_fusion ' +
-        '  (SERIE_FACC, NUMERO_FACC, NUMERO_EFEC) ' +
-        'VALUES (:serie, :numero, :efecto)';
-      for i := 0 to Length(AClaves) - 1 do
-      begin
-        q.ParamByName('serie').AsString := AClaves[i].SerieFac;
-        q.ParamByName('numero').AsString := AClaves[i].NumeroFac;
-        q.ParamByName('efecto').AsInteger := AClaves[i].NumeroEfec;
+        PrepararClavesFusion(q, AClaves);
+        oResumen := LeerResumenFusion(q);
+        ValidarResumenFusion(oResumen, Length(AClaves));
+        sSerieDestino := AClaves[0].SerieFac;
+        sNumeroDestino := AClaves[0].NumeroFac;
+        iNuevoEfec := ObtenerNumeroFusion(
+          q,
+          sSerieDestino,
+          sNumeroDestino);
+        AReferencia := TCalculoFusionEfectos.CrearReferencia(
+          sSerieDestino,
+          sNumeroDestino,
+          iNuevoEfec);
+        InsertarEfectoFusionado(
+          q,
+          AClaves[0],
+          iNuevoEfec,
+          AReferencia);
+        Result := ConciliarEfectosOrigen(
+          q,
+          sSerieDestino,
+          sNumeroDestino,
+          iNuevoEfec,
+          AReferencia);
+        q.SQL.Text := 'DROP TEMPORARY TABLE IF EXISTS tmp_efec_fusion';
         q.ExecSQL;
-      end;
-      q.SQL.Text :=
-        'SELECT COUNT(*) AS VALIDOS, ' +
-        '       COUNT(DISTINCT COALESCE(E.CODIGO_EMP_EFEC, '''')) ' +
-        '         AS EMPRESAS, ' +
-        '       COUNT(DISTINCT COALESCE(E.CODIGO_PRV_EFEC, '''')) ' +
-        '         AS PROVEEDORES, ' +
-        '       COALESCE(SUM(COALESCE(E.IMPORTE_PENDIENTE_EFEC, 0)), 0) ' +
-        '         AS TOTAL ' +
-        '  FROM fza_efectos_compra E ' +
-        '  JOIN tmp_efec_fusion T ' +
-        '    ON T.SERIE_FACC = E.SERIE_FACC_EFEC ' +
-        '   AND T.NUMERO_FACC = E.NUMERO_FACC_EFEC ' +
-        '   AND T.NUMERO_EFEC = E.NUMERO_EFEC ' +
-        ' WHERE COALESCE(E.ESTADO_EFEC, '''') IN ('''', ''PENDIENTE'') ' +
-        '   AND COALESCE(E.IMPORTE_PAGADO_EFEC, 0) <= 0.0001 ' +
-        '   AND COALESCE(E.IMPORTE_PENDIENTE_EFEC, 0) > 0.0001 ' +
-        '   AND COALESCE(E.ESCONCILIADO_EFEC, ''N'') <> ''S'' ' +
-        '   AND COALESCE(E.SERIE_REMC_EFEC, '''') = '''' ' +
-        '   AND COALESCE(E.NUMERO_REMC_EFEC, '''') = '''' ' +
-        '   AND COALESCE(E.SERIE_FACC_CONCILIACION_EFEC, '''') = ''''';
-      q.Open;
-      iValidos := q.FieldByName('VALIDOS').AsInteger;
-      iEmpresas := q.FieldByName('EMPRESAS').AsInteger;
-      iProveedores := q.FieldByName('PROVEEDORES').AsInteger;
-      dTotal := q.FieldByName('TOTAL').AsFloat;
-      q.Close;
-      if iValidos <> Length(AClaves) then
-        raise Exception.Create(SErrorFusionarEfectosCompraEstado);
-      if (iEmpresas <> 1) or (iProveedores <> 1) then
-        raise Exception.Create(SErrorFusionarEfectosCompraOrigen);
-      if dTotal <= 0.0001 then
-        raise Exception.Create(SErrorFusionarEfectosCompraSinPendiente);
-      sSerieDestino := AClaves[0].SerieFac;
-      sNumeroDestino := AClaves[0].NumeroFac;
-      q.SQL.Text :=
-        'SELECT NUMERO_EFEC ' +
-        '  FROM fza_efectos_compra ' +
-        ' WHERE SERIE_FACC_EFEC = :serie ' +
-        '   AND NUMERO_FACC_EFEC = :numero ' +
-        ' FOR UPDATE';
-      q.ParamByName('serie').AsString := sSerieDestino;
-      q.ParamByName('numero').AsString := sNumeroDestino;
-      q.Open;
-      q.Close;
-      q.SQL.Text :=
-        'SELECT COALESCE(MAX(NUMERO_EFEC), 0) + 1 AS NUEVO ' +
-        '  FROM fza_efectos_compra ' +
-        ' WHERE SERIE_FACC_EFEC = :serie ' +
-        '   AND NUMERO_FACC_EFEC = :numero';
-      q.ParamByName('serie').AsString := sSerieDestino;
-      q.ParamByName('numero').AsString := sNumeroDestino;
-      q.Open;
-      iNuevoEfec := q.FieldByName('NUEVO').AsInteger;
-      q.Close;
-      AReferencia := Format('CONC %s/%s/%d',
-        [sSerieDestino, sNumeroDestino, iNuevoEfec]);
-      q.SQL.Text :=
-        'INSERT INTO fza_efectos_compra ' +
-        '  (SERIE_FACC_EFEC, NUMERO_FACC_EFEC, NUMERO_EFEC, ' +
-        '   CODIGO_EMP_EFEC, CODIGO_PRV_EFEC, RAZON_SOCIAL_PRV_EFEC, ' +
-        '   NIF_PRV_EFEC, CODIGO_TEFE_EFEC, ESTADO_EFEC, ' +
-        '   ORDEN_PLAZO_EFEC, FECHA_EMISION_EFEC, ' +
-        '   FECHA_VENCIMIENTO_EFEC, FECHA_PAGO_EFEC, TIPO_PAGO_EFEC, ' +
-        '   REFERENCIA_PAGO_EFEC, ENTIDAD_PAGO_EFEC, ' +
-        '   ESCONCILIADO_EFEC, IMPORTE_EFEC, IMPORTE_PAGADO_EFEC, ' +
-        '   IMPORTE_PENDIENTE_EFEC, SERIE_REMC_EFEC, NUMERO_REMC_EFEC, ' +
-        '   ENTIDAD_EFEC, OFICINA_EFEC, DIGITO_CONTROL_EFEC, ' +
-        '   CUENTA_EFEC, IBAN_EFEC, CODIGO_EMPBAN_EFEC, IBAN_EMP_EFEC, ' +
-        '   DOC_EXTERNO_EFEC, REFERENCIA_DOCUMENTO_EFEC, ' +
-        '   OBSERVACIONES_EFEC, INSTANTE_ALTA, USUARIO_ALTA, ' +
-        '   INSTANTE_MODIF, USUARIO_MODIF) ' +
-        'SELECT H.SERIE_FACC_EFEC, H.NUMERO_FACC_EFEC, :nuevo, ' +
-        '       H.CODIGO_EMP_EFEC, H.CODIGO_PRV_EFEC, ' +
-        '       H.RAZON_SOCIAL_PRV_EFEC, H.NIF_PRV_EFEC, ' +
-        '       H.CODIGO_TEFE_EFEC, ''PENDIENTE'', H.ORDEN_PLAZO_EFEC, ' +
-        '       A.FECHA_EMISION, A.FECHA_VENCIMIENTO, NULL, NULL, NULL, ' +
-        '       NULL, ''N'', A.TOTAL, 0, A.TOTAL, NULL, NULL, ' +
-        '       H.ENTIDAD_EFEC, H.OFICINA_EFEC, H.DIGITO_CONTROL_EFEC, ' +
-        '       H.CUENTA_EFEC, H.IBAN_EFEC, H.CODIGO_EMPBAN_EFEC, ' +
-        '       H.IBAN_EMP_EFEC, H.DOC_EXTERNO_EFEC, :referencia, ' +
-        '       LEFT(CONCAT(''Agrupa efectos: '', A.REFERENCIAS), 1000), ' +
-        '       NOW(), :usuario, NOW(), :usuario ' +
-        '  FROM fza_efectos_compra H ' +
-        '  JOIN (SELECT MIN(E.FECHA_EMISION_EFEC) AS FECHA_EMISION, ' +
-        '               MAX(E.FECHA_VENCIMIENTO_EFEC) AS FECHA_VENCIMIENTO, ' +
-        '               SUM(COALESCE(E.IMPORTE_PENDIENTE_EFEC, 0)) ' +
-        '                 AS TOTAL, ' +
-        '               GROUP_CONCAT(CONCAT(E.SERIE_FACC_EFEC, ''/'', ' +
-        '                 E.NUMERO_FACC_EFEC, ''/'', E.NUMERO_EFEC) ' +
-        '                 ORDER BY E.FECHA_VENCIMIENTO_EFEC, ' +
-        '                          E.SERIE_FACC_EFEC, E.NUMERO_FACC_EFEC, ' +
-        '                          E.NUMERO_EFEC SEPARATOR '', '') ' +
-        '                 AS REFERENCIAS ' +
-        '          FROM fza_efectos_compra E ' +
-        '          JOIN tmp_efec_fusion T ' +
-        '            ON T.SERIE_FACC = E.SERIE_FACC_EFEC ' +
-        '           AND T.NUMERO_FACC = E.NUMERO_FACC_EFEC ' +
-        '           AND T.NUMERO_EFEC = E.NUMERO_EFEC) A ' +
-        ' WHERE H.SERIE_FACC_EFEC = :serie ' +
-        '   AND H.NUMERO_FACC_EFEC = :numero ' +
-        '   AND H.NUMERO_EFEC = :efecto';
-      q.ParamByName('nuevo').AsInteger := iNuevoEfec;
-      q.ParamByName('referencia').AsString := AReferencia;
-      q.ParamByName('usuario').AsString := IdentidadSesion.Usuario;
-      q.ParamByName('serie').AsString := sSerieDestino;
-      q.ParamByName('numero').AsString := sNumeroDestino;
-      q.ParamByName('efecto').AsInteger := AClaves[0].NumeroEfec;
-      q.ExecSQL;
-      q.SQL.Text :=
-        'UPDATE fza_efectos_compra E ' +
-        '  JOIN tmp_efec_fusion T ' +
-        '    ON T.SERIE_FACC = E.SERIE_FACC_EFEC ' +
-        '   AND T.NUMERO_FACC = E.NUMERO_FACC_EFEC ' +
-        '   AND T.NUMERO_EFEC = E.NUMERO_EFEC ' +
-        '   SET E.ESTADO_EFEC = ''CONCILIADO'', ' +
-        '       E.IMPORTE_PENDIENTE_EFEC = 0, ' +
-        '       E.ESCONCILIADO_EFEC = ''S'', ' +
-        '       E.REFERENCIA_DOCUMENTO_EFEC = :referencia, ' +
-        '       E.SERIE_FACC_CONCILIACION_EFEC = :serie_dst, ' +
-        '       E.NUMERO_FACC_CONCILIACION_EFEC = :numero_dst, ' +
-        '       E.NUMERO_EFEC_CONCILIACION_EFEC = :efecto_dst, ' +
-        '       E.OBSERVACIONES_EFEC = LEFT(CONCAT(' +
-        '         COALESCE(NULLIF(E.OBSERVACIONES_EFEC, ''''), ''''), ' +
-        '         CASE WHEN COALESCE(E.OBSERVACIONES_EFEC, '''') = '''' ' +
-        '              THEN '''' ELSE '' | '' END, ' +
-        '         ''Conciliado en '', :referencia), 1000), ' +
-        '       E.INSTANTE_MODIF = NOW(), ' +
-        '       E.USUARIO_MODIF = :usuario';
-      q.ParamByName('referencia').AsString := AReferencia;
-      q.ParamByName('serie_dst').AsString := sSerieDestino;
-      q.ParamByName('numero_dst').AsString := sNumeroDestino;
-      q.ParamByName('efecto_dst').AsInteger := iNuevoEfec;
-      q.ParamByName('usuario').AsString := IdentidadSesion.Usuario;
-      q.ExecSQL;
-      Result := q.RowsAffected;
-      q.SQL.Text := 'DROP TEMPORARY TABLE IF EXISTS tmp_efec_fusion';
-      q.ExecSQL;
-      if bTxOwned then
-        ConexionPrincipal.Commit;
+        if EsTransaccionPropia then
+          ConexionPrincipal.Commit;
       except
-        if bTxOwned and ConexionPrincipal.InTransaction then
+        if EsTransaccionPropia and ConexionPrincipal.InTransaction then
           ConexionPrincipal.Rollback;
         raise;
       end;

@@ -339,6 +339,8 @@ procedure TPresentacionPivoteVenta.CrearColumnas;
 var
   i: Integer;
   oCol: TcxGridDBColumn;
+  PropiedadesArticulo: TcxButtonEditProperties;
+  BotonArticulo: TcxEditButton;
 begin
   FCfg.View.BeginUpdate;
   try
@@ -352,14 +354,12 @@ begin
     FColArticulo.Width := 160;
     FColArticulo.Options.Editing := True;
     FColArticulo.PropertiesClass := TcxButtonEditProperties;
-    with TcxButtonEditProperties(FColArticulo.Properties) do
-    begin
-      Buttons.Clear;
-      with Buttons.Add do
-        Kind := bkEllipsis;
-      OnButtonClick := ArticuloButtonClick;
-      OnValidate := ArticuloValidate;
-    end;
+    PropiedadesArticulo := TcxButtonEditProperties(FColArticulo.Properties);
+    PropiedadesArticulo.Buttons.Clear;
+    BotonArticulo := PropiedadesArticulo.Buttons.Add;
+    BotonArticulo.Kind := bkEllipsis;
+    PropiedadesArticulo.OnButtonClick := ArticuloButtonClick;
+    PropiedadesArticulo.OnValidate := ArticuloValidate;
     FColColor := FCfg.View.CreateColumn;
     FColColor.Caption := 'Color';
     FColColor.Width := 125;

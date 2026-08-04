@@ -16,7 +16,7 @@
 {                                                                              }
 {    Es autocontenido: la consulta, el datasource y el TfrxDBDataset viven     }
 {    en este propio formulario, sin depender de un data module externo. Lee    }
-{    de la vista vi_caja_pagos (DESARROLLOS EN CURSO/vista_caja_pagos.sql).     }
+{    de la vista vi_caja_pagos (DESARROLLOS EN CURSO/vista_caja_pagos.sql).    }
 {******************************************************************************}
 unit inMtoModalImpPagos;
 

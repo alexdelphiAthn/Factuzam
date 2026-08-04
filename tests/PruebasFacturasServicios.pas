@@ -48,13 +48,21 @@ type
     procedure Fiscal_ExportacionSinIvaRechazaCuota;
     [Test]
     procedure Fiscal_ClienteExtranjeroExigeNif;
+    [Test]
+    procedure Cobro_RedondeoInferiorACentimoNoGeneraCambio;
+    [Test]
+    procedure CobroParcial_PriorizaDepositoExistente;
+    [Test]
+    procedure Borrado_ErrorDePersistenciaEjecutaRollback;
   end;
 
 implementation
 
 uses
   inLibFacturasServiciosIntf,
-  inLibFacturasValidacionFiscal;
+  inLibFacturasValidacionFiscal,
+  inLibFaseCobroCalculo,
+  UniDataFacturas;
 
 type
   TRepositorioFacturasPrueba = class(
@@ -85,6 +93,20 @@ type
       read FExisteOperacion write FExisteOperacion;
     property Operacion: TOperacionFiscalFactura
       read FOperacion write FOperacion;
+  end;
+  TServicioBorradoFacturaPrueba = class(
+    TInterfacedObject,
+    IServicioBorradoFactura)
+  private
+    FReversiones: Integer;
+  public
+    function Validar(
+      const ASerie, ANumero, AFase: string): TResultadoBorradoFactura;
+    function Preparar(
+      const ASerie, ANumero, AFase: string): TResultadoBorradoFactura;
+    procedure Confirmar;
+    procedure Revertir;
+    property Reversiones: Integer read FReversiones;
   end;
 
 function TRepositorioFacturasPrueba.ExisteSerieOtraEmpresa(
@@ -127,6 +149,27 @@ end;
 procedure TRepositorioFacturasPrueba.GuardarEmpresa(
   const ASolicitud: TSolicitudEmpresaFactura);
 begin
+end;
+
+function TServicioBorradoFacturaPrueba.Validar(
+  const ASerie, ANumero, AFase: string): TResultadoBorradoFactura;
+begin
+  Result := Default(TResultadoBorradoFactura);
+end;
+
+function TServicioBorradoFacturaPrueba.Preparar(
+  const ASerie, ANumero, AFase: string): TResultadoBorradoFactura;
+begin
+  Result := Default(TResultadoBorradoFactura);
+end;
+
+procedure TServicioBorradoFacturaPrueba.Confirmar;
+begin
+end;
+
+procedure TServicioBorradoFacturaPrueba.Revertir;
+begin
+  Inc(FReversiones);
 end;
 
 procedure TPruebasFacturasServicios.
@@ -388,6 +431,56 @@ begin
     end;
   end;
   Assert.IsTrue(ErrorCapturado);
+end;
+
+procedure TPruebasFacturasServicios.
+  Cobro_RedondeoInferiorACentimoNoGeneraCambio;
+var
+  oEntrada: TEntradaTotalesCobro;
+  oResultado: TResultadoTotalesCobro;
+begin
+  oEntrada := Default(TEntradaTotalesCobro);
+  oEntrada.ImporteBruto := 10;
+  oEntrada.TotalEntregado := 10.005;
+  oEntrada.TotalEntregadoConCambio := 10.005;
+  oResultado := TCalculadorFaseCobro.CalcularTotales(oEntrada);
+  Assert.AreEqual(Currency(0), oResultado.ImportePendiente);
+  Assert.AreEqual(Currency(0), oResultado.ImporteCambio);
+end;
+
+procedure TPruebasFacturasServicios.
+  CobroParcial_PriorizaDepositoExistente;
+var
+  oLineas: TArray<TLineaCobroParcial>;
+begin
+  SetLength(oLineas, 2);
+  oLineas[0].IdDeposito := 'DEP-1';
+  oLineas[0].VieneDeDeposito := 'S';
+  oLineas[0].AccionDeposito := 'COBRAR';
+  oLineas[0].Descripcion := 'Prenda depositada';
+  oLineas[0].Total := 20;
+  oLineas[0].AnticipoPrevio := 5;
+  oLineas[0].PorcentajeIva := 21;
+  oLineas[1].Descripcion := 'Prenda nueva';
+  oLineas[1].Total := 10;
+  oLineas[1].PorcentajeIva := 21;
+  TCalculadorCobroParcial.Transformar(oLineas, 10);
+  Assert.AreEqual('AUMENTAR_DEP', oLineas[0].AccionDeposito);
+  Assert.AreEqual(Currency(10), oLineas[0].Total);
+  Assert.AreEqual('NUEVO_DEP', oLineas[1].AccionDeposito);
+  Assert.AreEqual(Currency(0), oLineas[1].Total);
+end;
+
+procedure TPruebasFacturasServicios.
+  Borrado_ErrorDePersistenciaEjecutaRollback;
+var
+  oServicioObjeto: TServicioBorradoFacturaPrueba;
+  oServicio: IServicioBorradoFactura;
+begin
+  oServicioObjeto := TServicioBorradoFacturaPrueba.Create;
+  oServicio := oServicioObjeto;
+  RevertirBorradoFactura(oServicio);
+  Assert.AreEqual(1, oServicioObjeto.Reversiones);
 end;
 
 initialization

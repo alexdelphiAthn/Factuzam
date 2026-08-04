@@ -63,18 +63,17 @@ procedure TdmTarifas.GetCodigoAutoFamilia;
 begin
   if unqryTablaG.FindField('CODIGO_TAR_ARTTAR').AsString = '0' then
   begin
-    with unstrdprcContador do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-      ParamByName('pUSUARIO_MODIF').AsString := IdentidadSesion.Usuario;
-      ParamByName('ptipodoc').AsString :=  'TF';
-      ExecProc;
-      unqryTablaG.FindField('CODIGO_TAR_ARTTAR').AsString :=
-        ParamByName('pcont').AsString;
-    end;
+    unstrdprcContador.Params.Clear;
+    unstrdprcContador.Params.CreateParam(ftString, 'ptipodoc', ptInput);
+    unstrdprcContador.Params.CreateParam(ftInteger, 'pcont', ptOutput);
+    unstrdprcContador.Params.CreateParam(
+      ftInteger, 'pUSUARIO_MODIF', ptInput);
+    unstrdprcContador.ParamByName('pUSUARIO_MODIF').AsString :=
+      IdentidadSesion.Usuario;
+    unstrdprcContador.ParamByName('ptipodoc').AsString := 'TF';
+    unstrdprcContador.ExecProc;
+    unqryTablaG.FindField('CODIGO_TAR_ARTTAR').AsString :=
+      unstrdprcContador.ParamByName('pcont').AsString;
   end;
 end;
 

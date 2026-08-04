@@ -1,6 +1,6 @@
 ﻿{******************************************************************************}
 {                                                                              }
-{  Módulo:       inMtoDevolucionesCompra                                          }
+{  Módulo:       inMtoDevolucionesCompra                                       }
 {    Tipo:       Formulario (Mto)                                              }
 { Versión:       1.0.0                                                         }
 {   Fecha:       22/05/2026                                                    }
@@ -9,12 +9,12 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Mantenimiento de devoluciones de COMPRA.                                     }
-{    Cabecera + lineas sobre fza_devoluciones_compra. Espejo simplificado         }
-{    de inMtoDevoluciones adaptado a documento de compra (proveedor en            }
+{    Mantenimiento de devoluciones de COMPRA.                                  }
+{    Cabecera + lineas sobre fza_devoluciones_compra. Espejo simplificado      }
+{    de inMtoDevoluciones adaptado a documento de compra (proveedor en         }
 {    lugar de cliente, precio de compra en lugar de venta).                    }
 {                                                                              }
-{    Movimientos de stock: el data module (UniDataDevolucionesCompra)             }
+{    Movimientos de stock: el data module (UniDataDevolucionesCompra)          }
 {    reconstruye los movimientos DC desde las lineas actuales del              }
 {    documento para mantener el kardex sincronizado tras correcciones.         }
 {    La generacion de factura sigue pendiente para un hito posterior.          }
@@ -405,6 +405,7 @@ procedure TfrmMtoDevolucionesCompra.FormCreate(Sender: TObject);
 var
   oEntrada: TEntradaComposicionComprasPantalla;
   oServicios: TServiciosComprasPantalla;
+  PropiedadesColor: TcxComboBoxProperties;
 begin
   FColorPivotCodigos := TDictionary<string, string>.Create;
   // Columnas no-bound de tallas y atributos ANTES del inherited.
@@ -417,18 +418,16 @@ begin
     tvLineasDevolucion, 'colLinDevcColorPivot', 110);
   FColColorPivot.DataBinding.ValueTypeClass := TcxStringValueType;
   FColColorPivot.PropertiesClass := TcxComboBoxProperties;
-  with TcxComboBoxProperties(FColColorPivot.Properties) do
-  begin
-    DropDownListStyle := lsEditList;
-    ImmediatePost := True;
-    ImmediateDropDownWhenActivated := True;
-    ImmediateDropDownWhenKeyPressed := True;
-    IncrementalFiltering := True;
-    PostPopupValueOnTab := True;
-    OnInitPopup := ColorPivotInitPopup;
-    OnDrawItem := ColorPivotDrawItem;
-    OnEditValueChanged := ColorPivotEditValueChanged;
-  end;
+  PropiedadesColor := TcxComboBoxProperties(FColColorPivot.Properties);
+  PropiedadesColor.DropDownListStyle := lsEditList;
+  PropiedadesColor.ImmediatePost := True;
+  PropiedadesColor.ImmediateDropDownWhenActivated := True;
+  PropiedadesColor.ImmediateDropDownWhenKeyPressed := True;
+  PropiedadesColor.IncrementalFiltering := True;
+  PropiedadesColor.PostPopupValueOnTab := True;
+  PropiedadesColor.OnInitPopup := ColorPivotInitPopup;
+  PropiedadesColor.OnDrawItem := ColorPivotDrawItem;
+  PropiedadesColor.OnEditValueChanged := ColorPivotEditValueChanged;
   inherited;
   oEntrada := Default(TEntradaComposicionComprasPantalla);
   oEntrada.Tipo := tccDevolucion;
@@ -674,7 +673,8 @@ begin
          (not FActualizandoColorPivot) and
          (tvLineasDevolucion.Controller.EditingController <> nil) then
       begin
-        CargarOpcionesColorPivot(TcxComboBoxProperties(FColColorPivot.Properties));
+        CargarOpcionesColorPivot(TcxComboBoxProperties(
+          FColColorPivot.Properties));
         tvLineasDevolucion.Controller.EditingController.ShowEdit;
         Edit := tvLineasDevolucion.Controller.EditingController.Edit;
         ConfigurarEditorColorPivot(Edit);
@@ -1183,10 +1183,13 @@ begin
   end;
   if dmmDevolucionesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
     dmmDevolucionesCompra.unqryTablaG.Post;
-  if dmmDevolucionesCompra.unqryDevolucionesCompraLineas.State in [dsEdit, dsInsert] then
+  if dmmDevolucionesCompra.unqryDevolucionesCompraLineas.State in
+     [dsEdit, dsInsert] then
     dmmDevolucionesCompra.unqryDevolucionesCompraLineas.Post;
-  sSerie  := dmmDevolucionesCompra.unqryTablaG.FieldByName('SERIE_DEVC').AsString;
-  sNumero := dmmDevolucionesCompra.unqryTablaG.FieldByName('NUMERO_DEVC').AsString;
+  sSerie  :=
+    dmmDevolucionesCompra.unqryTablaG.FieldByName('SERIE_DEVC').AsString;
+  sNumero :=
+    dmmDevolucionesCompra.unqryTablaG.FieldByName('NUMERO_DEVC').AsString;
   form := TfrmPrintDevCompra.Create(Application);
   try
     form.dmDevc        := dmmDevolucionesCompra;
@@ -1215,10 +1218,13 @@ begin
   end;
   if dmmDevolucionesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
     dmmDevolucionesCompra.unqryTablaG.Post;
-  if dmmDevolucionesCompra.unqryDevolucionesCompraLineas.State in [dsEdit, dsInsert] then
+  if dmmDevolucionesCompra.unqryDevolucionesCompraLineas.State in
+     [dsEdit, dsInsert] then
     dmmDevolucionesCompra.unqryDevolucionesCompraLineas.Post;
-  sSerie  := dmmDevolucionesCompra.unqryTablaG.FieldByName('SERIE_DEVC').AsString;
-  sNumero := dmmDevolucionesCompra.unqryTablaG.FieldByName('NUMERO_DEVC').AsString;
+  sSerie  :=
+    dmmDevolucionesCompra.unqryTablaG.FieldByName('SERIE_DEVC').AsString;
+  sNumero :=
+    dmmDevolucionesCompra.unqryTablaG.FieldByName('NUMERO_DEVC').AsString;
   form := TfrmPrintDevCompraV.Create(Application);
   try
     form.dmDevc        := dmmDevolucionesCompra;
@@ -1249,8 +1255,10 @@ begin
   end;
   if dmmDevolucionesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
     dmmDevolucionesCompra.unqryTablaG.Post;
-  sSerie  := dmmDevolucionesCompra.unqryTablaG.FieldByName('SERIE_DEVC').AsString;
-  sNumero := dmmDevolucionesCompra.unqryTablaG.FieldByName('NUMERO_DEVC').AsString;
+  sSerie  :=
+    dmmDevolucionesCompra.unqryTablaG.FieldByName('SERIE_DEVC').AsString;
+  sNumero :=
+    dmmDevolucionesCompra.unqryTablaG.FieldByName('NUMERO_DEVC').AsString;
   // El modal reutiliza el dataset de etiquetas del DM de articulos
   // (cdsEtiquetasArt, fxdsEtiquetasArt) para que el mismo .fr3 sirva
   // en ambos sitios. Creamos un DM temporal porque el form de
@@ -2138,7 +2146,8 @@ begin
   end;
 end;
 
-procedure TfrmMtoDevolucionesCompra.colLineaDevcCODIGO_UNIDADPropertiesButtonClick(
+procedure TfrmMtoDevolucionesCompra.
+  colLineaDevcCODIGO_UNIDADPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
   sArt: string;

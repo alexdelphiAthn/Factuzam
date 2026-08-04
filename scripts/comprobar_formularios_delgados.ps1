@@ -1,4 +1,4 @@
-﻿param(
+param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot)
 )
 

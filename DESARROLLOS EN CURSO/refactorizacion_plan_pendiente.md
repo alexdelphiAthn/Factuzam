@@ -1,4 +1,4 @@
-﻿# Plan de lo PENDIENTE — refactorización Factuzam
+# Plan de lo PENDIENTE — refactorización Factuzam
 
 Fecha: 26/07/2026. Parte de `refactorizacion_estado.md` (grupos B a E) y
 de la auditoría `refactorizacion_pendiente.md`. El grupo A ya está hecho

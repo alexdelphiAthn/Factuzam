@@ -105,7 +105,8 @@ begin
       '        OR IFNULL(CODIGO_CAJA_EMPSER, '''') = '''') ' +
       '   AND TIPO_DOC_EMPSER = ''FC'' ' +
       '   AND SUBTIPO_EMPSER = :SUBTIPO ' +
-      '   AND FECHA_DESDE_EMPSER <= :FECHA ' +
+      '   AND (FECHA_DESDE_EMPSER <= :FECHA ' +
+      '        OR FECHA_DESDE_EMPSER IS NULL) ' +
       '   AND (FECHA_HASTA_EMPSER >= :FECHA ' +
       '        OR FECHA_HASTA_EMPSER IS NULL)';
     oConsulta.ParamByName('EMPRESA').AsString :=

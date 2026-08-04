@@ -1,4 +1,4 @@
-﻿# Coincidencias en código fuente (pasada estricta)
+# Coincidencias en código fuente (pasada estricta)
 # Generado: 2026-05-04 08:52:59
 # Total coincidencias: 8862
 # Estos cambios SE APLICAN cuando pulsas "Aplicar reemplazos (con .bak)".

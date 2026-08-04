@@ -1,4 +1,4 @@
-﻿param(
+param(
   [string]$Ruta = 'src',
   [string]$Salida =
     'DESARROLLOS EN CURSO/traducciones_d22_fastreport.sql',

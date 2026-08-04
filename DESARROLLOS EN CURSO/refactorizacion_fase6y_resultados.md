@@ -1,4 +1,4 @@
-﻿# Fase 6Y — tareas y overlay de `TfrmMtoGen`
+# Fase 6Y — tareas y overlay de `TfrmMtoGen`
 
 Fecha: 28/07/2026. D2.4 y cuarto fascículo de D2 terminados.
 Sin commit.

@@ -87,7 +87,7 @@ begin
     try
       oConsulta.Connection := FConexion;
       oConsulta.SQL.Text :=
-        'SELECT EMPSER FROM fza_empresas_series ' +
+        'SELECT EMPSER FROM vi_empresas_series ' +
         ' WHERE CODIGO_EMP_EMPSER = :emp ' +
         '   AND TIPO_DOC_EMPSER = :tip ' +
         '   AND CODIGO_ALM_EMPSER = :alm ' +
@@ -137,7 +137,7 @@ begin
       try
         oConsulta.Connection := FConexion;
         oConsulta.SQL.Text :=
-          'SELECT EMPSER FROM fza_empresas_series ' +
+          'SELECT EMPSER FROM vi_empresas_series ' +
           ' WHERE CODIGO_EMP_EMPSER = :emp ' +
           '   AND TIPO_DOC_EMPSER = :tip ' +
           SQL_VIGENCIA_SERIE +
@@ -173,7 +173,7 @@ begin
     try
       oConsulta.Connection := FConexion;
       oConsulta.SQL.Text :=
-        'SELECT DISTINCT EMPSER FROM fza_empresas_series ' +
+        'SELECT DISTINCT EMPSER FROM vi_empresas_series ' +
         ' WHERE CODIGO_EMP_EMPSER = :emp ' +
         '   AND TIPO_DOC_EMPSER = :tip ' +
         SQL_VIGENCIA_SERIE +

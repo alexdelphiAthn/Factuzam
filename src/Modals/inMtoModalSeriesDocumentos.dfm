@@ -1,7 +1,7 @@
 ﻿inherited frmModalSeriesDocumentos: TfrmModalSeriesDocumentos
   BorderStyle = bsDialog
   Caption = 'Añadir serie a todos'
-  ClientHeight = 210
+  ClientHeight = 250
   ClientWidth = 430
   Position = poScreenCenter
   OnCreate = FormCreate
@@ -10,7 +10,7 @@
     Left = 0
     Top = 0
     Width = 430
-    Height = 160
+    Height = 200
     Align = alClient
     BevelOuter = bvNone
     ParentBackground = False
@@ -18,57 +18,104 @@
     object lblTitulo: TcxLabel
       Left = 16
       Top = 10
-      Caption = 'Serie común para todos los documentos'
+      Caption = 'Serie para todos los documentos de una ubicaci'#243'n'
       Style.TextColor = clNavy
       Style.Font.Size = 10
       Style.Font.Style = [fsBold]
       TabOrder = 6
       Transparent = True
     end
-    object lblSerie: TcxLabel
+    object lblAlmacen: TcxLabel
       Left = 16
       Top = 46
-      Caption = 'Serie'
+      Caption = 'Almac'#233'n'
       TabOrder = 7
       Transparent = True
     end
-    object txtSerie: TcxTextEdit
+    object cbbAlmacen: TcxLookupComboBox
       Left = 130
       Top = 44
-      Properties.MaxLength = 12
+      Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
+      Properties.ListColumns = <
+        item
+          Caption = 'C'#243'digo'
+          Width = 70
+          FieldName = 'CODIGO_ALM_ALM'
+        end
+        item
+          Caption = 'Almac'#233'n'
+          FieldName = 'NOMBRE_ALM_ALM'
+        end>
+      Properties.ListOptions.ShowHeader = False
+      Properties.ListSource = dsAlmacenes
+      Properties.OnEditValueChanged = cbbAlmacenPropertiesEditValueChanged
       TabOrder = 0
-      Width = 120
+      Width = 280
     end
-    object lblFechaDesde: TcxLabel
+    object lblCaja: TcxLabel
       Left = 16
       Top = 82
-      Caption = 'Fecha inicio'
+      Caption = 'Caja'
       TabOrder = 8
       Transparent = True
     end
-    object dteFechaDesde: TcxDateEdit
+    object cbbCaja: TcxLookupComboBox
       Left = 130
       Top = 80
+      Properties.KeyFieldNames = 'CODIGO_CAJA_ALMCAJ'
+      Properties.ListColumns = <
+        item
+          Caption = 'C'#243'digo'
+          Width = 70
+          FieldName = 'CODIGO_CAJA_ALMCAJ'
+        end
+        item
+          Caption = 'Caja'
+          FieldName = 'DESCRIPCION_ALMCAJ'
+        end>
+      Properties.ListOptions.ShowHeader = False
+      Properties.ListSource = dsCajas
       TabOrder = 1
-      Width = 120
+      Width = 280
     end
-    object lblFechaHasta: TcxLabel
+    object lblSerieTokenizada: TcxLabel
       Left = 16
       Top = 118
-      Caption = 'Fecha fin'
+      Caption = 'Serie tokenizada base'
       TabOrder = 9
       Transparent = True
     end
-    object dteFechaHasta: TcxDateEdit
+    object txtSerieTokenizada: TcxTextEdit
       Left = 130
       Top = 116
+      Properties.MaxLength = 11
       TabOrder = 2
-      Width = 120
+      Width = 180
+    end
+    object lblLeyendaTokens: TcxLabel
+      Left = 16
+      Top = 150
+      Caption =
+        'Tokens: yyyy = a'#241'o | q = trimestre | mm = mes | dd = d'#237'a'
+      Style.TextColor = clGrayText
+      Style.Font.Size = 8
+      TabOrder = 10
+      Transparent = True
+    end
+    object lblLeyendaSubtipos: TcxLabel
+      Left = 16
+      Top = 174
+      Caption =
+        'Facturas: base simplificada | +N normal | +R rectificativa'
+      Style.TextColor = clGrayText
+      Style.Font.Size = 8
+      TabOrder = 11
+      Transparent = True
     end
   end
   object pnlBotones: TPanel [1]
     Left = 0
-    Top = 160
+    Top = 200
     Width = 430
     Height = 50
     Align = alBottom
@@ -96,7 +143,7 @@
   end
   object alAcciones: TActionList
     Left = 16
-    Top = 168
+    Top = 208
     object actAceptar: TAction
       Caption = 'Aceptar (F12)'
       ShortCut = 123
@@ -107,5 +154,46 @@
       ShortCut = 27
       OnExecute = actCancelarExecute
     end
+  end
+  object unqryAlmacenes: TUniQuery
+    SQL.Strings = (
+      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM'
+      '  FROM fza_almacenes'
+      ' WHERE CODIGO_EMP_ALM = :EMPRESA'
+      '   AND ESACTIVO_ALM = '#39'S'#39
+      ' ORDER BY COALESCE(ORDEN_ALM, 2147483647), CODIGO_ALM_ALM')
+    Left = 48
+    Top = 168
+    ParamData = <
+      item
+        DataType = ftString
+        Name = 'EMPRESA'
+        ParamType = ptInput
+      end>
+  end
+  object dsAlmacenes: TDataSource
+    DataSet = unqryAlmacenes
+    Left = 96
+    Top = 168
+  end
+  object unqryCajas: TUniQuery
+    SQL.Strings = (
+      'SELECT CODIGO_CAJA_ALMCAJ, DESCRIPCION_ALMCAJ'
+      '  FROM fza_almacenes_cajas'
+      ' WHERE CODIGO_ALM_ALMCAJ = :ALMACEN'
+      ' ORDER BY CODIGO_CAJA_ALMCAJ')
+    Left = 336
+    Top = 168
+    ParamData = <
+      item
+        DataType = ftString
+        Name = 'ALMACEN'
+        ParamType = ptInput
+      end>
+  end
+  object dsCajas: TDataSource
+    DataSet = unqryCajas
+    Left = 384
+    Top = 168
   end
 end

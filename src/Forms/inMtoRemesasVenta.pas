@@ -1,7 +1,7 @@
 ﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoRemesasVenta                                             }
-{    Tipo:       Formulario (Mto)                                               }
+{    Tipo:       Formulario (Mto)                                              }
 { Versión:       1.0.0                                                         }
 {   Fecha:       10/06/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }

@@ -1,4 +1,4 @@
-{-------------------------------------------------------------------------------
+ï»¿{-------------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -12,7 +12,7 @@ Code template generated with SynGen.
 The original code is: SynHighlighterEiffel.pas, released 2004-03-08.
 Description: Eiffel Syntax Parser/Highlighter
 The initial author of this file is Massimo Maria Ghisalberti (nissl).
-Unicode translation by Maël Hörz.
+Unicode translation by MaÃ«l HÃ¶rz.
 Copyright (c) 2004, all rights reserved.
 
 Contributors to the SynEdit and mwEdit projects are listed in the

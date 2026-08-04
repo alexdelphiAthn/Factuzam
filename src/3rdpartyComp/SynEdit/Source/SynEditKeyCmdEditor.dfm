@@ -1,4 +1,4 @@
-object SynEditKeystrokeEditorForm: TSynEditKeystrokeEditorForm
+﻿object SynEditKeystrokeEditorForm: TSynEditKeystrokeEditorForm
   Left = 424
   Top = 306
   BorderStyle = bsDialog

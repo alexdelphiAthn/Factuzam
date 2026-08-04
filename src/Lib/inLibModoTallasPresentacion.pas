@@ -235,6 +235,7 @@ procedure TPresentacionModoTallas.CrearColumnasTalla;
 var
   i: Integer;
   Columna: TcxGridDBColumn;
+  Propiedades: TcxCurrencyEditProperties;
 begin
   // N columnas de talla no-bound: Tag = posicion 1..N del conjunto.
   // MISMO mecanismo que sesiones de compra (CrearColumnasTallas):
@@ -250,32 +251,28 @@ begin
     Columna.Visible := False;
     Columna.DataBinding.ValueTypeClass := TcxFloatValueType;
     Columna.PropertiesClass := TcxCurrencyEditProperties;
-    with TcxCurrencyEditProperties(Columna.Properties) do
-    begin
-      DisplayFormat := '#,##0';
-      OnEditValueChanged := CeldaTallaCambiada;
-    end;
+    Propiedades := TcxCurrencyEditProperties(Columna.Properties);
+    Propiedades.DisplayFormat := '#,##0';
+    Propiedades.OnEditValueChanged := CeldaTallaCambiada;
     FCfgTallas.ColumnasTallas[i - 1] := Columna;
   end;
 end;
 
 procedure TPresentacionModoTallas.CrearColumnasOcultas;
+var
+  Columna: TcxGridDBColumn;
 begin
   // Columnas OCULTAS bound a LINEA e ID_AC_PIVOT: el gestor las lee del
   // DataController (GetColumnByFieldName) para cargar las celdas fila a
   // fila. Sin ellas, la carga se salta en silencio.
-  with FConfig.View.CreateColumn do
-  begin
-    DataBinding.FieldName := FCfgTallas.FieldLinea;
-    Visible := False;
-    Options.Editing := False;
-  end;
-  with FConfig.View.CreateColumn do
-  begin
-    DataBinding.FieldName := FCfgTallas.FieldConjuntoPivot;
-    Visible := False;
-    Options.Editing := False;
-  end;
+  Columna := FConfig.View.CreateColumn;
+  Columna.DataBinding.FieldName := FCfgTallas.FieldLinea;
+  Columna.Visible := False;
+  Columna.Options.Editing := False;
+  Columna := FConfig.View.CreateColumn;
+  Columna.DataBinding.FieldName := FCfgTallas.FieldConjuntoPivot;
+  Columna.Visible := False;
+  Columna.Options.Editing := False;
 end;
 
 procedure TPresentacionModoTallas.EngancharEventosVista;

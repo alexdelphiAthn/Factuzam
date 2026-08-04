@@ -1,4 +1,4 @@
-﻿param(
+param(
   [string]$RaizProyecto = (Get-Location).Path
 )
 

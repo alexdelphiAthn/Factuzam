@@ -146,10 +146,12 @@ type
     // Pestaña de agrupaciones: dimensiones (código + etiqueta) que se pueden
     // marcar y reordenar. AConNivelFamilia añade un spin de nivel de familia.
     // NivelesAgrupacion devuelve los códigos marcados en el orden elegido (el
-    // primero = grupo más externo). NivelFamilia da el valor del spin (0 si no).
+    // primero = grupo más externo). NivelFamilia da el valor del spin (0 si
+    // no).
     function  CrearTabAgrupacion(const ACaption: string;
                                  const ACods, AEtiqs: array of string;
-                                 AConNivelFamilia: Boolean = False): TcxCheckListBox;
+                                 AConNivelFamilia: Boolean = False):
+                                 TcxCheckListBox;
     function  NivelesAgrupacion: TArray<string>;
     function  NivelFamilia: Integer;
     // Para que el descendiente añada controles propios (modo/detalle) sobre
@@ -629,7 +631,8 @@ end;
 procedure TfrmPrintMultiFiltro.AgrupClickCheck(Sender: TObject;
   AIndex: Integer; APrevState, ANewState: TcxCheckBoxState);
 begin
-  if (FAgrupItems <> nil) and (AIndex >= 0) and (AIndex < FAgrupItems.Count) then
+  if (FAgrupItems <> nil) and (AIndex >= 0)
+     and (AIndex < FAgrupItems.Count) then
     FAgrupItems[AIndex].Marcado := (ANewState = cbsChecked);
 end;
 

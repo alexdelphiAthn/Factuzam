@@ -56,6 +56,7 @@ type
     procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
   private
     function ConfirmarCambioCriticoEmpresa(const sAccion: string): Boolean;
+    procedure ValidarSerieTokenizada;
     { Private declarations }
   public
     procedure GetCodigoAutoEmpresa;
@@ -117,6 +118,10 @@ procedure TdmEmpresas.unqryRetencionesBeforePost(DataSet: TDataSet);
 var
   unqrySol: TUniQuery;
   bSinErrores:Boolean;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryRetenciones.FindField(ANombre);
+  end;
 begin
   inherited;
   if ( (unqryTablaG.State = dsInsert) or
@@ -124,36 +129,33 @@ begin
    ) then
     unqryTablaG.Post;
   bSinErrores := True;
-  with unqryRetenciones do
+  if (FindField('PORCENTAJE_EMPRET').AsInteger <= 0) or
+     FindField('PORCENTAJE_EMPRET').IsNull then
   begin
-    if ((FindField('PORCENTAJE_EMPRET').AsInteger <= 0) or
-        (FindField('PORCENTAJE_EMPRET').IsNull)) then
-    begin
-      raise ERangeError.CreateFmt(SErrorPorcentajeRetencionEmpresa,
-                                 [FindField('PORCENTAJE_EMPRET').AsInteger]);
-      bSinErrores := False;
-    end;
-    if (bSinErrores) then
-    begin
-      unqrySol := TUniQuery.Create(nil);
-      unqrySol.Connection := ConexionPrincipal;
-      unqrySol.SQL.Text := 'SELECT * ' +
-                           '  FROM vi_empresas_retenciones ' +
-                           ' WHERE CODIGO_EMP_EMPRET = :CODIGO_EMP_EMP';
-      unqrySol.ParamByName('CODIGO_EMP_EMP').AsString :=
-                                 FindField('CODIGO_EMP_EMPRET').AsString;
-      unqrySol.Open;
-    end;
-    if ((bSinErrores) and  not(ExistePeriodoUnico(
-                                            unqrySol,
-                                            FindField('FECHA_DESDE_EMPRET'),
-                                            FindField('FECHA_HASTA_EMPRET')))
-       ) then
-    begin
-      raise ERangeError.CreateFmt(SErrorRetencionesEmpresaConcurrentes,
-                                 [FindField('CODIGO_EMP_EMPRET').AsString]);
-      bSinErrores := False;
-    end;
+    raise ERangeError.CreateFmt(SErrorPorcentajeRetencionEmpresa,
+      [FindField('PORCENTAJE_EMPRET').AsInteger]);
+    bSinErrores := False;
+  end;
+  if bSinErrores then
+  begin
+    unqrySol := TUniQuery.Create(nil);
+    unqrySol.Connection := ConexionPrincipal;
+    unqrySol.SQL.Text := 'SELECT * ' +
+      '  FROM vi_empresas_retenciones ' +
+      ' WHERE CODIGO_EMP_EMPRET = :CODIGO_EMP_EMP';
+    unqrySol.ParamByName('CODIGO_EMP_EMP').AsString :=
+      FindField('CODIGO_EMP_EMPRET').AsString;
+    unqrySol.Open;
+  end;
+  if bSinErrores and
+     not ExistePeriodoUnico(
+       unqrySol,
+       FindField('FECHA_DESDE_EMPRET'),
+       FindField('FECHA_HASTA_EMPRET')) then
+  begin
+    raise ERangeError.CreateFmt(SErrorRetencionesEmpresaConcurrentes,
+      [FindField('CODIGO_EMP_EMPRET').AsString]);
+    bSinErrores := False;
   end;
   if (assigned(unqrySol)) then
   begin
@@ -180,6 +182,10 @@ var
   unqrySol: TUniQuery;
   bSinErrores:Boolean;
 //  sCodigoSerie:String;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqrySeries.FindField(ANombre);
+  end;
 begin
   inherited;
   if ( (unqryTablaG.State = dsInsert) or
@@ -187,36 +193,34 @@ begin
    ) then
     unqryTablaG.Post;
   bSinErrores := True;
-  with unqrySeries do
+  ValidarSerieTokenizada;
+  if (FindField('EMPSER').AsString = '') or
+     FindField('EMPSER').IsNull or
+     SimbolosProhibidos(
+       FindField('EMPSER').AsString,
+       PerfilesLectura) then
   begin
-    if (FindField('EMPSER').AsString = '') or
-       (FindField('EMPSER').IsNull) or
-       SimbolosProhibidos(
-         FindField('EMPSER').AsString,
-         PerfilesLectura) then
-    begin
-      raise ERangeError.CreateFmt(SErrorSerieEmpresa,
-                                 [FindField('EMPSER').AsString]);
-      bSinErrores := False;
-    end;
+    raise ERangeError.CreateFmt(SErrorSerieEmpresa,
+      [FindField('EMPSER').AsString]);
+    bSinErrores := False;
+  end;
 //    if (State = dsEdit) then
 //      sCodigoSerie := FindField('CODIGO_SERIE_EMPSER').AsString
 //    else
 //      sCodigoSerie := '';
-    if (bSinErrores) then
-    begin
-      unqrySol := TUniQuery.Create(nil);
-      unqrySol.Connection := ConexionPrincipal;
-      unqrySol.SQL.Text := 'SELECT * ' +
-                           '  FROM vi_empresas_series ' +
-                           ' WHERE CODIGO_EMP_EMPSER = :CODIGO_EMP_EMP';
+  if bSinErrores then
+  begin
+    unqrySol := TUniQuery.Create(nil);
+    unqrySol.Connection := ConexionPrincipal;
+    unqrySol.SQL.Text := 'SELECT * ' +
+      '  FROM vi_empresas_series ' +
+      ' WHERE CODIGO_EMP_EMPSER = :CODIGO_EMP_EMP';
 //      if (sCodigoSerie <> '') then
 // unqrySol.SQL.Text := unqrySol.SQL.Text + ' AND CODIGO_SERIE_EMPSER <> ' +
 //                                                                 sCodigoSerie;
-      unqrySol.ParamByName('CODIGO_EMP_EMP').AsString :=
-                                 FindField('CODIGO_EMP_EMPSER').AsString;
-      unqrySol.Open;
-    end;
+    unqrySol.ParamByName('CODIGO_EMP_EMP').AsString :=
+      FindField('CODIGO_EMP_EMPSER').AsString;
+    unqrySol.Open;
   end;
   if (assigned(unqrySol)) then
   begin
@@ -247,14 +251,16 @@ procedure TdmEmpresas.unqryBancosBeforePost(DataSet: TDataSet);
 var
   sIban, sCCC, sBanco, sDC, sCuenta: string;
   stErr: TStringList;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryBancos.FindField(ANombre);
+  end;
 begin
   inherited;
   if ( (unqryTablaG.State = dsInsert) or
        (unqryTablaG.State = dsEdit) ) then
     unqryTablaG.Post;
-  with unqryBancos do
-  begin
-    sIban := Trim(FindField('IBAN_EMPBAN').AsString);
+  sIban := Trim(FindField('IBAN_EMPBAN').AsString);
     // El IBAN es opcional, pero si viene se valida y se descompone.
     if (sIban <> '') then
     begin
@@ -277,7 +283,6 @@ begin
         FindField('CUENTA_EMPBAN').AsString         := sCuenta;
         FindField('CODIGO_BAN_EMPBAN').AsString     := Copy(sBanco, 1, 4);
       end;
-    end;
   end;
   ActualizarAuditoria(DataSet);
   GetCodigoAutoBanco;
@@ -288,29 +293,26 @@ var
   qryBorrarLineas : TUniQuery;
 begin
   qryBorrarLineas := TUniQuery.Create(Self);
-  with qryBorrarLineas do
-  begin
-    Connection := ConexionPrincipal;
-    SQL.Text := 'DELETE ' +
-                '  FROM fza_empresas_retenciones ' +
-                ' WHERE CODIGO_EMP_EMPRET = :Empresa ;';
-    Params.ParamByName('Empresa').AsString :=
-                             unqryTablaG.FieldByName('CODIGO_EMP_EMP').AsString;
-    ExecSQL;
-    SQL.Text := 'DELETE ' +
-                '  FROM fza_empresas_series ' +
-                ' WHERE CODIGO_EMP_EMPSER = :Empresa ;';
-    Params.ParamByName('Empresa').AsString :=
-                             unqryTablaG.FieldByName('CODIGO_EMP_EMP').AsString;
-    ExecSQL;
-    SQL.Text := 'DELETE ' +
-                '  FROM fza_empresas_bancos ' +
-                ' WHERE CODIGO_EMP_EMPBAN = :Empresa ;';
-    Params.ParamByName('Empresa').AsString :=
-                             unqryTablaG.FieldByName('CODIGO_EMP_EMP').AsString;
-    ExecSQL;
-    Free;
-  end;
+  qryBorrarLineas.Connection := ConexionPrincipal;
+  qryBorrarLineas.SQL.Text := 'DELETE ' +
+    '  FROM fza_empresas_retenciones ' +
+    ' WHERE CODIGO_EMP_EMPRET = :Empresa ;';
+  qryBorrarLineas.Params.ParamByName('Empresa').AsString :=
+    unqryTablaG.FieldByName('CODIGO_EMP_EMP').AsString;
+  qryBorrarLineas.ExecSQL;
+  qryBorrarLineas.SQL.Text := 'DELETE ' +
+    '  FROM fza_empresas_series ' +
+    ' WHERE CODIGO_EMP_EMPSER = :Empresa ;';
+  qryBorrarLineas.Params.ParamByName('Empresa').AsString :=
+    unqryTablaG.FieldByName('CODIGO_EMP_EMP').AsString;
+  qryBorrarLineas.ExecSQL;
+  qryBorrarLineas.SQL.Text := 'DELETE ' +
+    '  FROM fza_empresas_bancos ' +
+    ' WHERE CODIGO_EMP_EMPBAN = :Empresa ;';
+  qryBorrarLineas.Params.ParamByName('Empresa').AsString :=
+    unqryTablaG.FieldByName('CODIGO_EMP_EMP').AsString;
+  qryBorrarLineas.ExecSQL;
+  qryBorrarLineas.Free;
 end;
 
 procedure TdmEmpresas.unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -329,6 +331,87 @@ begin
       FORMATO_DOCUMENTO_DEFECTO;
   if unqryTablaG.FindField('ESIVA_RECARGO_COMPRAS_EMP') <> nil then
     unqryTablaG.FindField('ESIVA_RECARGO_COMPRAS_EMP').AsString := 'N';
+  unqryTablaG.FieldByName(
+    'ESTOKENS_CALENDARIO_NATURAL_EMP').AsString := 'N';
+end;
+
+procedure TdmEmpresas.ValidarSerieTokenizada;
+const
+  TOKEN_EJERCICIO = 'yyyy';
+  TOKEN_TRIMESTRE = 'q';
+  TOKEN_MES = 'mm';
+  TOKEN_DIA = 'dd';
+var
+  iAnioActual: Word;
+  iDiaActual: Word;
+  iDias: Integer;
+  iEjercicios: Integer;
+  iMesActual: Word;
+  iMeses: Integer;
+  iTrimestres: Integer;
+  sSerieResuelta: string;
+  sSerieTokenizada: string;
+begin
+  sSerieTokenizada := Trim(
+    unqrySeries.FieldByName('SERIE_TOKENIZADA_EMPSER').AsString);
+  unqrySeries.FieldByName('SERIE_TOKENIZADA_EMPSER').AsString :=
+    sSerieTokenizada;
+  if sSerieTokenizada <> '' then
+  begin
+    iEjercicios := ContarOcurrenciasAnsi(
+      sSerieTokenizada,
+      TOKEN_EJERCICIO);
+    iTrimestres := ContarOcurrenciasAnsi(
+      sSerieTokenizada,
+      TOKEN_TRIMESTRE);
+    iMeses := ContarOcurrenciasAnsi(
+      sSerieTokenizada,
+      TOKEN_MES);
+    iDias := ContarOcurrenciasAnsi(
+      sSerieTokenizada,
+      TOKEN_DIA);
+    if (iEjercicios > 1) or
+       (iTrimestres > 1) or
+       (iMeses > 1) or
+       (iDias > 1) or
+       (iEjercicios + iTrimestres + iMeses + iDias = 0) then
+    begin
+      raise ERangeError.CreateFmt(
+        SErrorSerieTokenizadaEmpresa,
+        [sSerieTokenizada]);
+    end;
+    if unqryTablaG.FieldByName(
+         'ESTOKENS_CALENDARIO_NATURAL_EMP').AsString <> 'S' then
+    begin
+      raise ERangeError.Create(
+        SErrorSerieTokenizadaCalendarioNoNatural);
+    end;
+    if Trim(unqrySeries.FieldByName('EMPSER').AsString) = '' then
+    begin
+      DecodeDate(Date, iAnioActual, iMesActual, iDiaActual);
+      sSerieResuelta := StringReplace(
+        sSerieTokenizada,
+        TOKEN_EJERCICIO,
+        Format('%.4d', [iAnioActual]),
+        [rfReplaceAll]);
+      sSerieResuelta := StringReplace(
+        sSerieResuelta,
+        TOKEN_MES,
+        Format('%.2d', [iMesActual]),
+        [rfReplaceAll]);
+      sSerieResuelta := StringReplace(
+        sSerieResuelta,
+        TOKEN_DIA,
+        Format('%.2d', [iDiaActual]),
+        [rfReplaceAll]);
+      sSerieResuelta := StringReplace(
+        sSerieResuelta,
+        TOKEN_TRIMESTRE,
+        IntToStr(((iMesActual - 1) div 3) + 1),
+        [rfReplaceAll]);
+      unqrySeries.FieldByName('EMPSER').AsString := sSerieResuelta;
+    end;
+  end;
 end;
 
 procedure TdmEmpresas.unqryTablaGAfterPost(DataSet: TDataSet);
@@ -614,6 +697,10 @@ procedure TdmEmpresas.unqryTablaGBeforePost(DataSet: TDataSet);
 var
   bError:Boolean;
   sCodigoEmpresa, sRazonSocial:String;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryTablaG.FindField(ANombre);
+  end;
 begin
   inherited;
   // Insert vacío (accidental): cancelar sin error
@@ -624,9 +711,7 @@ begin
   if ((unqryRetenciones.State = dsInsert) or
       (unqryRetenciones.State = dsEdit)) then
          unqryRetenciones.Post;
-  with unqryTablaG do
-  begin
-    if FindField('FORMATO_DOCUMENTO_EMP') <> nil then
+  if FindField('FORMATO_DOCUMENTO_EMP') <> nil then
     begin
       if Trim(FindField('FORMATO_DOCUMENTO_EMP').AsString) = '' then
         FindField('FORMATO_DOCUMENTO_EMP').AsString :=
@@ -658,11 +743,10 @@ begin
       raise ERangeError.CreateFmt(SErrorCodigoEmpresa,
                                  [sCodigoEmpresa]);
     end;
-    if bError then
-      Abort
-    else
-      GetCodigoAutoEmpresa;
-  end;
+  if bError then
+    Abort
+  else
+    GetCodigoAutoEmpresa;
 end;
 
 procedure TdmEmpresas.GetCodigoAutoRetencion;

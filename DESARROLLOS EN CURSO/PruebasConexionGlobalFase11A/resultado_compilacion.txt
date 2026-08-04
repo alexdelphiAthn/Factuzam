@@ -1,4 +1,4 @@
-﻿Compilacion Fase XI-A - 2026-07-25 06:46:40
+Compilacion Fase XI-A - 2026-07-25 06:46:40
 Proyecto: C:\DISCO_DURO\proyectos\Factuzam\fzam.dproj
 Salida temporal: C:\Users\V3607\AppData\Local\Temp\fzam_fase11a_34872
 

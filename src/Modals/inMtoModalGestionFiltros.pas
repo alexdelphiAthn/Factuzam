@@ -15,7 +15,7 @@
 {    Compartir con un usuario concreto o con el propio grupo está abierto a    }
 {    cualquier propietario; compartir con otro grupo distinto o con Todos      }
 {    los usuarios requiere pertenecer al grupo administrador                   }
-{    (`ContextoSesion.Identidad.EsAdministrador`).                              }
+{    (`ContextoSesion.Identidad.EsAdministrador`).                             }
 {******************************************************************************}
 unit inMtoModalGestionFiltros;
 

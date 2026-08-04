@@ -549,7 +549,8 @@ begin
       if FDatos.cdsLineas.State in [dsEdit, dsInsert] then
         FDatos.cdsLineas.Cancel;
       if (not FDatos.cdsLineas.IsEmpty) and
-         (Trim(FDatos.cdsLineas.FieldByName('CODIGO_UNIDAD').AsString) = sKey) then
+         (Trim(FDatos.cdsLineas.FieldByName(
+           'CODIGO_UNIDAD').AsString) = sKey) then
         FDatos.cdsLineas.Delete;
       AsegurarLineaNueva;
       ActualizarTotal;
@@ -726,7 +727,8 @@ begin
   btnF11.Visible := AModo <> mtSolicitar;
   // Edicion del grid por modo. Al teclear lineas (traspaso / solicitar) todo el
   // grid es editable. Al atender, las lineas vienen de la solicitud: solo se
-  // editan las uds a servir y, si se deniega (0), el motivo; el resto bloqueado.
+  // editan las uds a servir y, si se deniega (0), el motivo; el resto
+  // bloqueado.
   FView.OptionsData.Inserting := AModo <> mtAtender;
   FView.OptionsData.Deleting := AModo <> mtAtender;
   FView.OptionsData.Editing := True;
@@ -1209,7 +1211,9 @@ var
 begin
   // Deniega TODA la solicitud cargada (atajo F4): pide un motivo, lo marca en
   // cada linea (servir 0) y la resuelve como DENEGADO TOTAL sin mover stock. El
-  // solicitante lo vera en su historico (F7). Para denegar solo algunas lineas,// sirve unas con cantidad y deja otras a 0 con su motivo,y pulsa F12.
+  // solicitante lo vera en su historico (F7). Para denegar solo algunas
+  // lineas,// sirve unas con cantidad y deja otras a 0 con su motivo,y pulsa
+  // F12.
   if FModo <> mtAtender then
     ShowMessage(SErrorDenegarSolicitudTraspasoModoNoValido)
   else if Trim(FDatos.cdsCabecera.FieldByName('NUMERO_SOL').AsString) = '' then
@@ -1263,7 +1267,8 @@ var
   Datos: TDataSet;
 begin
   // Historico (solo consulta) de las peticiones que YO he hecho (soy el
-  // destino que pide): numero,serie,fecha,a quien pedi (origen) y estado,// para saber si se han servido/denegado. Reutiliza el buscador de
+  // destino que pide): numero,serie,fecha,a quien pedi (origen) y estado,//
+  // para saber si se han servido/denegado. Reutiliza el buscador de
   // solicitudes; los titulos los pone el formateador (fza_config_campos).
   Datos := FDatos.QueryMisPeticiones(FAlmacen);
   try
@@ -1332,7 +1337,8 @@ var
   Consulta: IResultadoConsultaCaja;
   Datos: TDataSet;
 begin
-  // Buscador de empleados (mismos datos y rejilla que la caja). Al elegir uno,// su codigo va al campo y se valida para mostrar el nombre.
+  // Buscador de empleados (mismos datos y rejilla que la caja). Al elegir
+  // uno,// su codigo va al campo y se valida para mostrar el nombre.
   Consulta := FRepositorioConsultas.ConsultarEmpleados;
   Datos := Consulta.DataSet;
   if BusquedaVisual.EjecutarBusquedaDataSet(

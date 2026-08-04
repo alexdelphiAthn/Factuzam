@@ -1,4 +1,4 @@
-﻿# Informe de pruebas: monitor SQL, fase VI
+# Informe de pruebas: monitor SQL, fase VI
 
 Fecha: 24/07/2026
 

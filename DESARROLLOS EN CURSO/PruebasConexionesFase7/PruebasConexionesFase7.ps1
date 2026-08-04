@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Stop'
 
 $raiz = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $rutaBase = Join-Path $raiz 'src\DataModules\UniDataGen.pas'

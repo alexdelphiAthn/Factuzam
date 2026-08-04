@@ -64,7 +64,8 @@ type
     function  TextoExcluirYaCargados: string; override;
 
     function  EjecutarInsercion(out ANumInsertados: Integer;
-                                out ACodigos: TArray<string>): Boolean; override;
+                                out ACodigos: TArray<string>): Boolean;
+                                override;
 
   public
     class function Ejecutar(

@@ -1,4 +1,4 @@
-unit SQLBuilder4D;
+﻿unit SQLBuilder4D;
 
 interface
 

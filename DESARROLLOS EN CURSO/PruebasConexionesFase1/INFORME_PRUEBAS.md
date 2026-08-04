@@ -1,4 +1,4 @@
-﻿# Informe de pruebas: conexiones, fase I
+# Informe de pruebas: conexiones, fase I
 
 Fecha: 24/07/2026
 

@@ -1,4 +1,4 @@
-﻿# Plan de extracción de literales y futura traducción
+# Plan de extracción de literales y futura traducción
 
 Fecha de inicio: 27/07/2026.
 

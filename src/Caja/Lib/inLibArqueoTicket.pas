@@ -284,10 +284,10 @@ begin
   ATicket.Negrita(False);
 end;
 
-class procedure TArqueoTicket.EscribirDevolucionesPorFP(ATicket: TTicketTermico;
-                                                       const ARepositorio:
-                                                       IRepositorioArqueoTicket;
-                                                       const AArqueo: TArqueoCaja);
+class procedure TArqueoTicket.EscribirDevolucionesPorFP(
+  ATicket: TTicketTermico;
+  const ARepositorio: IRepositorioArqueoTicket;
+  const AArqueo: TArqueoCaja);
 var
   aLineas: TArray<TDevolucionFormaPagoArqueo>;
   iLinea: Integer;
@@ -404,10 +404,10 @@ begin
   end;
 end;
 
-class procedure TArqueoTicket.EscribirResumenEmpleado(ATicket: TTicketTermico;
-                                                     const ARepositorio:
-                                                     IRepositorioArqueoTicket;
-                                                     const AArqueo: TArqueoCaja);
+class procedure TArqueoTicket.EscribirResumenEmpleado(
+  ATicket: TTicketTermico;
+  const ARepositorio: IRepositorioArqueoTicket;
+  const AArqueo: TArqueoCaja);
 var
   aLineas: TArray<TResumenEmpleadoArqueo>;
   iLinea: Integer;
@@ -434,10 +434,10 @@ begin
   end;
 end;
 
-class procedure TArqueoTicket.EscribirResumenFormaPago(ATicket: TTicketTermico;
-                                                      const ARepositorio:
-                                                      IRepositorioArqueoTicket;
-                                                      const AArqueo: TArqueoCaja);
+class procedure TArqueoTicket.EscribirResumenFormaPago(
+  ATicket: TTicketTermico;
+  const ARepositorio: IRepositorioArqueoTicket;
+  const AArqueo: TArqueoCaja);
 var
   aLineas: TArray<TResumenFormaPagoArqueo>;
   iLinea: Integer;

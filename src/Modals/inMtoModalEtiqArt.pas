@@ -73,7 +73,9 @@ type
     DM: TdmArticulos;
     procedure preparar_consulta; override;
     procedure AfterReportLoaded; override;
-    function RelacionarClientDataSetConQuery(aCDS: TDataSet): TDataSet; override; // <-- AÑADIR
+    // <-- AÑADIR
+    function RelacionarClientDataSetConQuery(aCDS: TDataSet): TDataSet;
+    override;
     procedure OnGuiasAplicadas; override;
     property CrearDataSetExterno: TCrearDataSetEtiquetasProc
       read FCrearDataSetExterno write FCrearDataSetExterno;
@@ -102,7 +104,8 @@ begin
   inherited;
   if Assigned(DM) then
   begin
-    // 1. Si está cerrado (ej: al entrar a Diseñar), forzamos la estructura de columnas
+    // 1. Si está cerrado (ej: al entrar a Diseñar), forzamos la estructura de
+    // columnas
     if not DM.cdsEtiquetasArt.Active then
       DM.CrearDataSetEtiquetasArt('DUMMY_DISENO', '', '', Date);
 
@@ -115,7 +118,8 @@ begin
     frxrprt1.DataSets.Clear;
     frxrprt1.DataSets.Add(DM.fxdsEtiquetasArt);
 
-    // 4. SOLUCIÓN AL "PREDETERMINADO VACÍO": Re-enlazamos componentes por Nombre vía RTTI
+    // 4. SOLUCIÓN AL PREDETERMINADO VACÍO : Re-enlazamos componentes por Nombre
+    // vía RTTI
     ctx := TRttiContext.Create;
     try
       for i := 0 to frxrprt1.AllObjects.Count - 1 do
@@ -126,7 +130,8 @@ begin
         propDs   := rType.GetProperty('DataSet');
         propName := rType.GetProperty('DataSetName');
 
-        if (propDs <> nil) and (propName <> nil) and propName.IsReadable and propDs.IsWritable then
+        if (propDs <> nil) and (propName <> nil) and propName.IsReadable
+           and propDs.IsWritable then
         begin
           dsName := propName.GetValue(obj).AsString;
           if SameText(dsName, 'EtiquetasArt') then
@@ -139,9 +144,11 @@ begin
   end;
 end;
 
-function TfrmPrintEtiqArt.RelacionarClientDataSetConQuery(aCDS: TDataSet): TDataSet;
+function TfrmPrintEtiqArt.RelacionarClientDataSetConQuery(
+  aCDS: TDataSet): TDataSet;
 begin
-  // Le decimos a la clase base que cuando vea el ClientDataSet, aplique el LEFT JOIN a la Query física
+  // Le decimos a la clase base que cuando vea el ClientDataSet, aplique el LEFT
+  // JOIN a la Query física
   if Assigned(DM) then
     Result := DM.unqryArtPrint
   else
@@ -184,7 +191,8 @@ end;
 
 //procedure TfrmPrintEtiqArt.AfterReportLoaded;
 //begin
-//  // 1. Llamamos al inherited para mantener la lógica base (como la carga de fotos)
+// // 1. Llamamos al inherited para mantener la lógica base (como la carga de
+// fotos)
 //  inherited;
 //
 //  if Assigned(DM) then
@@ -194,8 +202,10 @@ end;
 //    // Inicializamos su estructura llamando a tu método del DataModule.
 //    if not DM.cdsEtiquetasArt.Active then
 //    begin
-//      // Usamos un código de artículo inexistente para que la base de datos responda
-//      // en 0 milisegundos, pero genere el catálogo completo de columnas en el dataset.
+// // Usamos un código de artículo inexistente para que la base de datos
+// responda
+// // en 0 milisegundos, pero genere el catálogo completo de columnas en el
+// dataset.
 //      DM.CrearDataSetEtiquetasArt('DUMMY_DISENO', '', '', Date);
 //    end;
 //
@@ -203,8 +213,10 @@ end;
 //    RebindReportDataSetsByDataModule(frxrprt1, DM);
 //
 //    // 4. FORZAR ACTUALIZACIÓN EN EL DISEÑADOR:
-//    // Al vaciar los FieldAliases, obligamos a FastReport a descartar su caché estática
-//    // y re-escanear en vivo los campos del ClientDataSet que acabamos de estructurar.
+// // Al vaciar los FieldAliases, obligamos a FastReport a descartar su caché
+// estática
+// // y re-escanear en vivo los campos del ClientDataSet que acabamos de
+// estructurar.
 //    DM.fxdsEtiquetasArt.DataSet := nil;
 //    DM.fxdsEtiquetasArt.DataSet := DM.cdsEtiquetasArt;
 //    DM.fxdsEtiquetasArt.FieldAliases.Clear;

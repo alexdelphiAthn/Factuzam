@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{9118AB4F-7E69-40F6-A0FE-F88497185CDD}</ProjectGuid>
         <MainSource>VentasFzam.dpr</MainSource>

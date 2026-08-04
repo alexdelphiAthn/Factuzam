@@ -7,7 +7,7 @@
 {                                                                              }
 {  Descripcion:                                                                }
 {    Modal de impresion de etiquetas de un PEDIDO DE COMPRA. Reutiliza la      }
-{    misma base de etiquetas de articulos y el mismo informe que albaranes,     }
+{    misma base de etiquetas de articulos y el mismo informe que albaranes,    }
 {    pero filtra los SKUs por las lineas del pedido.                           }
 {******************************************************************************}
 unit inMtoModalEtiqPed;

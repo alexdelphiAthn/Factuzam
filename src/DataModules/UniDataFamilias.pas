@@ -155,33 +155,31 @@ procedure TdmFamilias.GetCodigoAutoFamilia;
 begin
   if (unqryTablaG.FindField('CODIGO_FAM_FAM').AsString = '0') then
   begin
-    with unstrdprcContador do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-      ParamByName('pUSUARIO_MODIF').AsString := IdentidadSesion.Usuario;
-      ParamByName('ptipodoc').AsString :=  'FA';
-      ExecProc;
-      unqryTablaG.FindField('CODIGO_FAM_FAM').AsString :=
-                                                  ParamByName('pcont').AsString;
-    end;
+    unstrdprcContador.Params.Clear;
+    unstrdprcContador.Params.CreateParam(ftString, 'ptipodoc', ptInput);
+    unstrdprcContador.Params.CreateParam(ftInteger, 'pcont', ptOutput);
+    unstrdprcContador.Params.CreateParam(
+      ftInteger, 'pUSUARIO_MODIF', ptInput);
+    unstrdprcContador.ParamByName('pUSUARIO_MODIF').AsString :=
+      IdentidadSesion.Usuario;
+    unstrdprcContador.ParamByName('ptipodoc').AsString := 'FA';
+    unstrdprcContador.ExecProc;
+    unqryTablaG.FindField('CODIGO_FAM_FAM').AsString :=
+      unstrdprcContador.ParamByName('pcont').AsString;
   end;
   if (unqryTablaG.FindField('ORDEN_FAM').AsString = '0') then
   begin
-    with unstrdprcContador do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-      ParamByName('pUSUARIO_MODIF').AsString := IdentidadSesion.Usuario;
-      ParamByName('ptipodoc').AsString :=  'FO';
-      ExecProc;
-      unqryTablaG.FindField('ORDEN_FAM').AsString :=
-                                                  ParamByName('pcont').AsString;
-    end;
+    unstrdprcContador.Params.Clear;
+    unstrdprcContador.Params.CreateParam(ftString, 'ptipodoc', ptInput);
+    unstrdprcContador.Params.CreateParam(ftInteger, 'pcont', ptOutput);
+    unstrdprcContador.Params.CreateParam(
+      ftInteger, 'pUSUARIO_MODIF', ptInput);
+    unstrdprcContador.ParamByName('pUSUARIO_MODIF').AsString :=
+      IdentidadSesion.Usuario;
+    unstrdprcContador.ParamByName('ptipodoc').AsString := 'FO';
+    unstrdprcContador.ExecProc;
+    unqryTablaG.FindField('ORDEN_FAM').AsString :=
+      unstrdprcContador.ParamByName('pcont').AsString;
   end;
 end;
 
@@ -212,24 +210,19 @@ begin
   if (DataSet.State = dsInsert) and
      (Trim(unqryTablaG.FindField('NOMBRE_FAM_FAM').AsString) = '') then
     Abort;
-  with unqryTablaG do
+  if Trim(unqryTablaG.FindField('NOMBRE_FAM_FAM').AsString) = '' then
   begin
-    if Trim(FindField('NOMBRE_FAM_FAM').AsString) = '' then
-    begin
-      raise ERangeError.CreateFmt(SErrorNombreFamilia,
-                                 [FindField('NOMBRE_FAM_FAM').AsString]);
-    end
-    else
-    if (FindField('CODIGO_FAM_FAM').AsString =
-        FindField('CODIGO_SUBFAMILIA_FAM').AsString) then
-    begin
-      raise ERangeError.CreateFmt(SErrorFamiliaPadreIgualHija,
-                                 [FindField('CODIGO_SUBFAMILIA_FAM').AsString]);
-    end
-    else
-      if (FindField('CODIGO_FAM_FAM').AsString = '0') then
-        GetCodigoAutoFamilia;
-  end;
+    raise ERangeError.CreateFmt(SErrorNombreFamilia,
+      [unqryTablaG.FindField('NOMBRE_FAM_FAM').AsString]);
+  end
+  else if unqryTablaG.FindField('CODIGO_FAM_FAM').AsString =
+    unqryTablaG.FindField('CODIGO_SUBFAMILIA_FAM').AsString then
+  begin
+    raise ERangeError.CreateFmt(SErrorFamiliaPadreIgualHija,
+      [unqryTablaG.FindField('CODIGO_SUBFAMILIA_FAM').AsString]);
+  end
+  else if unqryTablaG.FindField('CODIGO_FAM_FAM').AsString = '0' then
+    GetCodigoAutoFamilia;
 end;
 initialization
   RegistrarDataModule(TdmFamilias);

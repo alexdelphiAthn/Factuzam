@@ -1,4 +1,4 @@
-﻿param(
+param(
   [string]$Raiz = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
   [int]$MaximoMiembros = 10
 )

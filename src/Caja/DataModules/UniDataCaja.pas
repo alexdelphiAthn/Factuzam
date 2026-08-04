@@ -179,10 +179,13 @@ type
                                         AFechaOperacion: TDateTime;
                                         out IdGenerado:string);
     procedure CerrarDepositoCliente(QryTrx: TUniQuery;
-                                    const ACliente, ASku, AUsuario: string;
-                                    out AIdDeposito: string);
+                                    const AIdDeposito, AEmpresa,
+                                          AAlmacen, ACaja,
+                                          AUsuario: string);
     procedure AumentarAnticipoDeposito(QryTrx: TUniQuery;
-                                       const ACliente, ASku, AUsuario: string;
+                                       const AIdDeposito, AEmpresa,
+                                             AAlmacen, ACaja,
+                                             AUsuario: string;
                                        ANuevoAbono: Currency);
     procedure InsertarCabeceraFactura(
             QryTrx:          TUniQuery;
@@ -385,6 +388,7 @@ uses UniDataValoresAutomaticosRepositorio,
      inLibFacturas,
      inLibVerifactu,
      inLibVerifactuCola,
+     inLibFaseCobroCalculo,
      inLibEmisionFiscalIntf,
      inLibEmisionFiscal,
      UniDataVerifactuColaRepositorio,
@@ -561,10 +565,12 @@ begin
 end;
 
 function LeerLineaActual(cdsLineas:TDataset): TDatosLineaFactura;
-begin
-  with cdsLineas do
+  function FieldByName(const ANombre: string): TField;
   begin
-    Result.Linea               := FieldByName('LINEA_FACLIN').AsString;
+    Result := cdsLineas.FieldByName(ANombre);
+  end;
+begin
+  Result.Linea               := FieldByName('LINEA_FACLIN').AsString;
     Result.Articulo            := FieldByName('CODIGO_ART_FACLIN').AsString;
     Result.Sku                 := FieldByName('CODIGO_UNIDAD_FACLIN').AsString;
     Result.Descripcion := FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString;
@@ -594,8 +600,7 @@ begin
     Result.AccionDeposito      := FieldByName('ACCION_DEPOSITO').AsString;
     Result.PrecioOriginalDep   := FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency;
     Result.AnticipoPrevio      := FieldByName('ANTICIPO_PREVIO').AsCurrency;
-    Result.IdDeposito          := FieldByName('ID_DEPOSITO_DEP').AsString;
-  end;
+  Result.IdDeposito          := FieldByName('ID_DEPOSITO_DEP').AsString;
 end;
 
 // =============================================================================
@@ -610,7 +615,11 @@ var
   TipoIVA, EsImpIncl, Descripcion: string;
   PorcIVA: Currency;
   FechaCreacion: TDateTime;
+  Ubicacion: TUbicacionSesion;
 begin
+  if not Assigned(FContextoSesion) then
+    raise Exception.Create(SErrorContextoSesionCajaNoConfigurado);
+  Ubicacion := FContextoSesion.Ubicacion;
   QryDep := TUniQuery.Create(nil);
   try
     QryDep.Connection := FConexion;
@@ -630,8 +639,14 @@ begin
         '  LEFT JOIN fza_articulos a '         +
         '    ON a.CODIGO_ART_ART = d.CODIGO_ART_DEP ' +
         ' WHERE d.CODIGO_CLI_DEP = :CLI '  +
+        '   AND d.CODIGO_EMP_DEP = :EMPRESA ' +
+        '   AND d.CODIGO_ALM_DEP = :ALMACEN ' +
+        '   AND d.CODIGO_CAJA_DEP = :CAJA ' +
         '   AND d.ESTADO_DEP = ''PENDIENTE''';
     QryDep.ParamByName('CLI').AsString := ACodigoCliente;
+    QryDep.ParamByName('EMPRESA').AsString := Ubicacion.Empresa;
+    QryDep.ParamByName('ALMACEN').AsString := Ubicacion.Almacen;
+    QryDep.ParamByName('CAJA').AsString := Ubicacion.Caja;
     QryDep.Open;
     if QryDep.IsEmpty then Exit;
     cdsLineas.DisableControls;
@@ -649,7 +664,7 @@ begin
         PorcIVA := QryDep.FieldByName('PORCENTAJE_IVA_DEP').AsCurrency;
         EsImpIncl         := QryDep.FieldByName('ESIMP_INCL_DEP').AsString;
         Descripcion       := QryDep.FieldByName('DESCRIPCION_ART').AsString;
-        FechaCreacion     := QryDep.FieldByName('FECHA_CREACION_DEP').AsDateTime;
+        FechaCreacion := QryDep.FieldByName('FECHA_CREACION_DEP').AsDateTime;
         // ── LÍNEA 1: LA PRENDA ───────────────────────────────────────────
         // *** SIN FOnRellenarArticulo ni FOnRellenarAtributos ***
         // Todo viene del SELECT, cero queries adicionales por fila
@@ -738,212 +753,162 @@ begin
 end;
 
 procedure TdmCajaOpe.CerrarDepositoCliente(QryTrx: TUniQuery;
-                                           const ACliente,
-                                                 ASku,
-                                                 AUsuario: string;
-                                           out AIdDeposito:string);
+                                           const AIdDeposito,
+                                                 AEmpresa,
+                                                 AAlmacen,
+                                                 ACaja,
+                                                 AUsuario: string);
 var
-  SpTrx: TUniStoredProc;
+  Consulta: TUniQuery;
+  Cliente: string;
+  DeudaAnterior: Currency;
 begin
-  SpTrx := TUniStoredProc.Create(nil);
+  Consulta := TUniQuery.Create(nil);
   try
-    SpTrx.Connection := QryTrx.Connection;
-    SpTrx.StoredProcName := 'PRC_FZA_DEPOSITOS_UPDATE';
-    SpTrx.PrepareSQL;
-    SpTrx.ParamByName('SKU').AsString          := ASku;
-    SpTrx.ParamByName('CLI').AsString          := ACliente;
-    SpTrx.ParamByName('ESTADO').AsString       := 'CERRADO';
-    SpTrx.ParamByName('INC_ANTICIPO').AsCurrency := 0;
-    SpTrx.ParamByName('USUARIO').AsString      := AUsuario;
-    SpTrx.Execute;
-    AIdDeposito := SpTrx.ParamByName('P_ID_DEPOSITO').AsString;
-  finally
-    FreeAndNil(SpTrx);
-  end;
-
-end;
-
-procedure TdmCajaOpe.TransformarLineasParaCobroParcial(cdsLineas: TDataSet;
-                                                     DineroEntregado: Currency);
-var
-  TotalLinea, DineroDisponible: Currency;
-  VieneDeDep, AccionDep: string;
-  AnticipoRecuperado: Currency;
-
-  procedure EliminarLineaAbono(const AIdDeposito: string);
-  var
-    Bkm: TBookmark;
-  begin
-    if Trim(AIdDeposito) = '' then Exit;
-    Bkm := (cdsLineas as TClientDataSet).GetBookmark;
-    cdsLineas.First;
-    while not cdsLineas.Eof do
+    Consulta.Connection := QryTrx.Connection;
+    Consulta.SQL.Text :=
+      'SELECT CODIGO_CLI_DEP, ' +
+      '       (PRECIO_VENTA_DEP * ' +
+      '        COALESCE(CANTIDAD_PENDIENTE_DEP, 1)) - ' +
+      '       COALESCE(IMPORTE_ANTICIPO_DEP, 0) AS DEUDA_ANTERIOR ' +
+      'FROM fza_depositos_cliente ' +
+      'WHERE ID_DEPOSITO_DEP = :ID ' +
+      'AND CODIGO_EMP_DEP = :EMPRESA ' +
+      'AND CODIGO_ALM_DEP = :ALMACEN ' +
+      'AND CODIGO_CAJA_DEP = :CAJA ' +
+      'AND ESTADO_DEP = ''PENDIENTE'' ' +
+      'FOR UPDATE';
+    Consulta.ParamByName('ID').AsString := AIdDeposito;
+    Consulta.ParamByName('EMPRESA').AsString := AEmpresa;
+    Consulta.ParamByName('ALMACEN').AsString := AAlmacen;
+    Consulta.ParamByName('CAJA').AsString := ACaja;
+    Consulta.Open;
+    if not Consulta.IsEmpty then
     begin
-      if (cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'A') and
-         (cdsLineas.FieldByName('ID_DEPOSITO_DEP').AsString = AIdDeposito) then
-      begin
-        cdsLineas.Delete;
-        Break;
-      end;
-      cdsLineas.Next;
-    end;
-    if (cdsLineas as TClientDataSet).BookmarkValid(Bkm) then
-      (cdsLineas as TClientDataSet).GotoBookmark(Bkm);
-    (cdsLineas as TClientDataSet).FreeBookmark(Bkm);
-  end;
-
-  procedure ProcesarLinea;
-  var
-    AnticipoPrevio: Currency;
-    SkuLinea, TipoIVALinea, EsImpInclLinea, IdDepLinea: string;
-    PorcIVALinea: Currency;
-    DineroReal: Currency;
-  begin
-    IdDepLinea     := cdsLineas.FieldByName('ID_DEPOSITO_DEP').AsString;
-    TotalLinea     := cdsLineas.FieldByName('TOTAL_FACLIN').AsCurrency;
-    AnticipoPrevio := cdsLineas.FieldByName('ANTICIPO_PREVIO').AsCurrency;
-    SkuLinea       := cdsLineas.FieldByName(
-                                        'CODIGO_UNIDAD_FACLIN').AsString;
-    TipoIVALinea   := cdsLineas.FieldByName(
-                                     'TIPO_IVA_ARTICULO_FACLIN').AsString;
-    PorcIVALinea   := cdsLineas.FieldByName(
-                                         'PORCENTAJE_IVA_FACLIN').AsCurrency;
-    EsImpInclLinea := cdsLineas.FieldByName(
-                                    'ESIMP_INCL_TARIFA_FACLIN').AsString;
-    DineroReal := DineroDisponible + AnticipoPrevio;
-    if DineroReal >= TotalLinea then
-    begin
-      DineroDisponible := DineroDisponible - (TotalLinea - AnticipoPrevio);
-      cdsLineas.Next;
+      Cliente := Consulta.FieldByName('CODIGO_CLI_DEP').AsString;
+      DeudaAnterior :=
+        Consulta.FieldByName('DEUDA_ANTERIOR').AsCurrency;
+      Consulta.Close;
+      Consulta.SQL.Text :=
+        'UPDATE fza_depositos_cliente ' +
+        'SET ESTADO_DEP = ''CERRADO'', ' +
+        '    USUARIO_MODIF = :USUARIO, INSTANTE_MODIF = NOW() ' +
+        'WHERE ID_DEPOSITO_DEP = :ID ' +
+        'AND CODIGO_EMP_DEP = :EMPRESA ' +
+        'AND CODIGO_ALM_DEP = :ALMACEN ' +
+        'AND CODIGO_CAJA_DEP = :CAJA ' +
+        'AND ESTADO_DEP = ''PENDIENTE''';
+      Consulta.ParamByName('USUARIO').AsString := AUsuario;
+      Consulta.ParamByName('ID').AsString := AIdDeposito;
+      Consulta.ParamByName('EMPRESA').AsString := AEmpresa;
+      Consulta.ParamByName('ALMACEN').AsString := AAlmacen;
+      Consulta.ParamByName('CAJA').AsString := ACaja;
+      Consulta.Execute;
+      Consulta.SQL.Text :=
+        'UPDATE fza_clientes ' +
+        'SET TOTAL_DEUDA_CLI = COALESCE(TOTAL_DEUDA_CLI, 0) - :DEUDA ' +
+        'WHERE CODIGO_CLI_CLI = :CLIENTE';
+      Consulta.ParamByName('DEUDA').AsCurrency := DeudaAnterior;
+      Consulta.ParamByName('CLIENTE').AsString := Cliente;
+      Consulta.Execute;
     end
     else
-    begin
-      cdsLineas.Edit;
-      if cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'S' then
-        cdsLineas.FieldByName('ACCION_DEPOSITO').AsString := 'AUMENTAR_DEP'
-      else
-        cdsLineas.FieldByName('ACCION_DEPOSITO').AsString := 'NUEVO_DEP';
-      var sDesc :=
-           cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString;
-      if Pos('Abono ', sDesc) <> 1 then
-        cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString :=
-                                                      'Abono a cuenta ' + sDesc;
-      cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency := TotalLinea;
-      cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency :=
-                                                               DineroDisponible;
-      cdsLineas.FieldByName(
-      'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := DineroDisponible;
-      if PorcIVALinea = 0 then
-        cdsLineas.FieldByName(
-          'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency :=
-                                                                DineroDisponible
-      else
-        cdsLineas.FieldByName(
-          'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency :=
-            DineroDisponible / (1 + (PorcIVALinea / 100));
-
-      cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat         := 1;
-      cdsLineas.FieldByName('PORCENTAJE_DTO_FACLIN').AsFloat       := 0;
-      cdsLineas.FieldByName('PRECIO_DTO_FACLIN').AsCurrency    := 0;
-      cdsLineas.FieldByName('TOTAL_FACLIN').AsCurrency         :=
-                                                               DineroDisponible;
-      cdsLineas.FieldByName('TOTAL_FAC_SIVA_FACLIN').AsCurrency     :=
-          cdsLineas.FieldByName(
-                          'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency;
-      cdsLineas.Post;
-      EliminarLineaAbono(IdDepLinea);
-      DineroDisponible := 0;
-      cdsLineas.Next;
-    end;
+      raise Exception.Create(SErrorOperacionCajaNoEncontrada);
+  finally
+    FreeAndNil(Consulta);
   end;
+end;
 
+function LeerLineasCobroParcial(
+  ALineas: TDataSet): TArray<TLineaCobroParcial>;
+var
+  i: Integer;
 begin
-  DineroDisponible := DineroEntregado;
+  SetLength(Result, 0);
+  ALineas.First;
+  while not ALineas.Eof do
+  begin
+    i := Length(Result);
+    SetLength(Result, i + 1);
+    Result[i].IdDeposito :=
+      ALineas.FieldByName('ID_DEPOSITO_DEP').AsString;
+    Result[i].VieneDeDeposito :=
+      ALineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
+    Result[i].AccionDeposito :=
+      ALineas.FieldByName('ACCION_DEPOSITO').AsString;
+    Result[i].Descripcion :=
+      ALineas.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString;
+    Result[i].Total :=
+      ALineas.FieldByName('TOTAL_FACLIN').AsCurrency;
+    Result[i].AnticipoPrevio :=
+      ALineas.FieldByName('ANTICIPO_PREVIO').AsCurrency;
+    Result[i].PorcentajeIva :=
+      ALineas.FieldByName('PORCENTAJE_IVA_FACLIN').AsCurrency;
+    ALineas.Next;
+  end;
+end;
+
+procedure EscribirLineaCobroParcial(
+  ALineas: TDataSet;
+  const ALinea: TLineaCobroParcial);
+begin
+  ALineas.Edit;
+  ALineas.FieldByName('ACCION_DEPOSITO').AsString :=
+    ALinea.AccionDeposito;
+  ALineas.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString :=
+    ALinea.Descripcion;
+  ALineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency :=
+    ALinea.PrecioOriginal;
+  ALineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency :=
+    ALinea.PrecioSalida;
+  ALineas.FieldByName(
+    'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency :=
+    ALinea.PrecioConIva;
+  ALineas.FieldByName(
+    'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency :=
+    ALinea.PrecioSinIva;
+  ALineas.FieldByName('CANTIDAD_FACLIN').AsFloat := 1;
+  ALineas.FieldByName('PORCENTAJE_DTO_FACLIN').AsFloat := 0;
+  ALineas.FieldByName('PRECIO_DTO_FACLIN').AsCurrency := 0;
+  ALineas.FieldByName('TOTAL_FACLIN').AsCurrency := ALinea.Total;
+  ALineas.FieldByName('TOTAL_FAC_SIVA_FACLIN').AsCurrency :=
+    ALinea.TotalSinIva;
+  ALineas.Post;
+end;
+
+procedure AplicarLineasCobroParcial(
+  ADataSet: TDataSet;
+  const ALineas: TArray<TLineaCobroParcial>);
+var
+  i: Integer;
+begin
+  i := 0;
+  ADataSet.First;
+  while (not ADataSet.Eof) and (i <= High(ALineas)) do
+  begin
+    if ALineas[i].Eliminar then
+      ADataSet.Delete
+    else
+    begin
+      if ALineas[i].Modificada then
+        EscribirLineaCobroParcial(ADataSet, ALineas[i]);
+      ADataSet.Next;
+    end;
+    Inc(i);
+  end;
+end;
+
+procedure TdmCajaOpe.TransformarLineasParaCobroParcial(
+  cdsLineas: TDataSet;
+  DineroEntregado: Currency);
+var
+  oLineas: TArray<TLineaCobroParcial>;
+begin
   cdsLineas.DisableControls;
   try
-    // =========================================================================
-    // PASO 0: Sumar SOLO abonos de devoluciones reales
-    // =========================================================================
-    cdsLineas.First;
-    while not cdsLineas.Eof do
-    begin
-      if (cdsLineas.FieldByName('TOTAL_FACLIN').AsCurrency < 0) and
-         (cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString <> 'A') then
-        DineroDisponible := DineroDisponible -
-                        cdsLineas.FieldByName('TOTAL_FACLIN').AsCurrency;
-      cdsLineas.Next;
-    end;
-    // =========================================================================
-    // PASO 0.5: Cancelaciones explícitas de la interfaz
-    // =========================================================================
-    cdsLineas.First;
-    while not cdsLineas.Eof do
-    begin
-      VieneDeDep := cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
-      AccionDep  := cdsLineas.FieldByName('ACCION_DEPOSITO').AsString;
-      if (VieneDeDep = 'S') and (AccionDep = 'CANCELAR') then
-      begin
-        AnticipoRecuperado :=
-          cdsLineas.FieldByName('ANTICIPO_PREVIO').AsCurrency;
-        if AnticipoRecuperado > 0 then
-          DineroDisponible := DineroDisponible + AnticipoRecuperado;
-      end;
-      cdsLineas.Next;
-    end;
-    // =========================================================================
-    // PASO 1: Prioridad absoluta — depósitos existentes del cliente
-    // =========================================================================
-    cdsLineas.First;
-    while not cdsLineas.Eof do
-    begin
-      VieneDeDep := cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
-      AccionDep  := cdsLineas.FieldByName('ACCION_DEPOSITO').AsString;
-
-      if (VieneDeDep = 'S') and (AccionDep = 'COBRAR') and
-         (cdsLineas.FieldByName('TOTAL_FACLIN').AsCurrency > 0) then
-      begin
-        ProcesarLinea;
-      end
-      else
-        cdsLineas.Next;
-    end;
-    // =========================================================================
-    // PASO 2: Prendas nuevas de hoy
-    // =========================================================================
-    cdsLineas.First;
-    while not cdsLineas.Eof do
-    begin
-      VieneDeDep := cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
-      AccionDep  := cdsLineas.FieldByName('ACCION_DEPOSITO').AsString;
-      if (VieneDeDep <> 'S') and (VieneDeDep <> 'A') and
-           ((AccionDep = 'COBRAR') or (AccionDep = '')) and
-           (cdsLineas.FieldByName('TOTAL_FACLIN').AsCurrency > 0) then
-      begin
-        if DineroDisponible > 0 then
-          ProcesarLinea
-        else
-        begin
-          // Sin dinero pero la prenda se aparta → NUEVO_DEP con anticipo 0
-          cdsLineas.Edit;
-          cdsLineas.FieldByName('ACCION_DEPOSITO').AsString      := 'NUEVO_DEP';
-          cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency    :=
-                        cdsLineas.FieldByName('TOTAL_FACLIN').AsCurrency;
-          cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency   := 0;
-          cdsLineas.FieldByName(
-            'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := 0;
-          cdsLineas.FieldByName(
-            'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
-          cdsLineas.FieldByName('TOTAL_FACLIN').AsCurrency          := 0;
-          cdsLineas.FieldByName('TOTAL_FAC_SIVA_FACLIN').AsCurrency      := 0;
-          cdsLineas.FieldByName('PORCENTAJE_DTO_FACLIN').AsFloat        := 0;
-          cdsLineas.FieldByName('PRECIO_DTO_FACLIN').AsCurrency     := 0;
-          cdsLineas.Post;
-          cdsLineas.Next;
-        end;
-      end
-      else
-        cdsLineas.Next;
-    end;
+    oLineas := LeerLineasCobroParcial(cdsLineas);
+    TCalculadorCobroParcial.Transformar(oLineas, DineroEntregado);
+    AplicarLineasCobroParcial(cdsLineas, oLineas);
   finally
     cdsLineas.EnableControls;
   end;
@@ -1042,27 +1007,69 @@ begin
 end;
 
 procedure TdmCajaOpe.AumentarAnticipoDeposito(QryTrx: TUniQuery;
-                                              const ACliente,
-                                                    ASku,
+                                              const AIdDeposito,
+                                                    AEmpresa,
+                                                    AAlmacen,
+                                                    ACaja,
                                                     AUsuario: string;
                                               ANuevoAbono: Currency);
 var
-  SpTrx:TUniStoredProc;
+  Consulta: TUniQuery;
+  Cliente: string;
 begin
-  if ANuevoAbono <= 0 then Exit;
-  SpTrx := TUniStoredProc.Create(nil);
-  try
-    SpTrx.Connection := QryTrx.Connection;
-    SpTrx.StoredProcName := 'PRC_FZA_DEPOSITOS_UPDATE';
-    SpTrx.PrepareSQL;
-    SpTrx.ParamByName('SKU').AsString            := ASku;
-    SpTrx.ParamByName('CLI').AsString            := ACliente;
-    SpTrx.ParamByName('ESTADO').Clear;
-    SpTrx.ParamByName('INC_ANTICIPO').AsCurrency := ANuevoAbono;
-    SpTrx.ParamByName('USUARIO').AsString        := AUsuario;
-    SpTrx.Execute;
-  finally
-    FreeAndNil(SpTrx);
+  if ANuevoAbono > 0 then
+  begin
+    Consulta := TUniQuery.Create(nil);
+    try
+      Consulta.Connection := QryTrx.Connection;
+      Consulta.SQL.Text :=
+        'SELECT CODIGO_CLI_DEP ' +
+        'FROM fza_depositos_cliente ' +
+        'WHERE ID_DEPOSITO_DEP = :ID ' +
+        'AND CODIGO_EMP_DEP = :EMPRESA ' +
+        'AND CODIGO_ALM_DEP = :ALMACEN ' +
+        'AND CODIGO_CAJA_DEP = :CAJA ' +
+        'AND ESTADO_DEP = ''PENDIENTE'' ' +
+        'FOR UPDATE';
+      Consulta.ParamByName('ID').AsString := AIdDeposito;
+      Consulta.ParamByName('EMPRESA').AsString := AEmpresa;
+      Consulta.ParamByName('ALMACEN').AsString := AAlmacen;
+      Consulta.ParamByName('CAJA').AsString := ACaja;
+      Consulta.Open;
+      if not Consulta.IsEmpty then
+      begin
+        Cliente := Consulta.FieldByName('CODIGO_CLI_DEP').AsString;
+        Consulta.Close;
+        Consulta.SQL.Text :=
+          'UPDATE fza_depositos_cliente ' +
+          'SET IMPORTE_ANTICIPO_DEP = ' +
+          '    COALESCE(IMPORTE_ANTICIPO_DEP, 0) + :ABONO, ' +
+          '    USUARIO_MODIF = :USUARIO, INSTANTE_MODIF = NOW() ' +
+          'WHERE ID_DEPOSITO_DEP = :ID ' +
+          'AND CODIGO_EMP_DEP = :EMPRESA ' +
+          'AND CODIGO_ALM_DEP = :ALMACEN ' +
+          'AND CODIGO_CAJA_DEP = :CAJA ' +
+          'AND ESTADO_DEP = ''PENDIENTE''';
+        Consulta.ParamByName('ABONO').AsCurrency := ANuevoAbono;
+        Consulta.ParamByName('USUARIO').AsString := AUsuario;
+        Consulta.ParamByName('ID').AsString := AIdDeposito;
+        Consulta.ParamByName('EMPRESA').AsString := AEmpresa;
+        Consulta.ParamByName('ALMACEN').AsString := AAlmacen;
+        Consulta.ParamByName('CAJA').AsString := ACaja;
+        Consulta.Execute;
+        Consulta.SQL.Text :=
+          'UPDATE fza_clientes ' +
+          'SET TOTAL_DEUDA_CLI = COALESCE(TOTAL_DEUDA_CLI, 0) - :ABONO ' +
+          'WHERE CODIGO_CLI_CLI = :CLIENTE';
+        Consulta.ParamByName('ABONO').AsCurrency := ANuevoAbono;
+        Consulta.ParamByName('CLIENTE').AsString := Cliente;
+        Consulta.Execute;
+      end
+      else
+        raise Exception.Create(SErrorOperacionCajaNoEncontrada);
+    finally
+      FreeAndNil(Consulta);
+    end;
   end;
 end;
 
@@ -1566,8 +1573,8 @@ begin
   if ALinea.AccionDeposito = 'AUMENTAR_DEP' then
   begin
     FDataModule.AumentarAnticipoDeposito(
-      FQuery, FCabecera.CodigoCliente, ALinea.Sku,
-      FUsuario, ALinea.TotalCIva);
+      FQuery, ALinea.IdDeposito, FEmpresa, FAlmacen,
+      FCaja, FUsuario, ALinea.TotalCIva);
     if ALinea.TotalCIva > 0 then
       FDataModule.InsertarOperacionCaja(
         FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
@@ -1613,11 +1620,11 @@ begin
     sNumeroMovimiento := '';
   if ALinea.VieneDeDeposito = 'S' then
   begin
-    sIdDeposito := '';
+    sIdDeposito := ALinea.IdDeposito;
     sAlmacenOrigen := FAlmacenDeposito;
     FDataModule.CerrarDepositoCliente(
-      FQuery, FCabecera.CodigoCliente, ALinea.Sku,
-      FUsuario, sIdDeposito);
+      FQuery, sIdDeposito, FEmpresa, FAlmacen,
+      FCaja, FUsuario);
     dImporteCierre := ALinea.PrecioOriginalDep;
     if dImporteCierre = 0 then
       dImporteCierre := ALinea.TotalCIva;
@@ -2145,7 +2152,7 @@ begin
   try
     Qry.Connection := FDataModule.FConexion;
     Qry.SQL.Text :=
-      'SELECT EMPSER FROM fza_empresas_series' +
+      'SELECT EMPSER FROM vi_empresas_series' +
       ' WHERE CODIGO_EMP_EMPSER = :EMP AND TIPO_DOC_EMPSER = :TIPO' +
       '   AND (CODIGO_ALM_EMPSER = :ALM OR CODIGO_ALM_EMPSER IS NULL' +
       '        OR CODIGO_ALM_EMPSER = '''')' +
@@ -2659,45 +2666,46 @@ procedure TdmCajaOpe.cdsLineasAfterInsert(DataSet: TDataSet);
 var
   NuevoNumero: Integer;
 begin
-  with cdsLineas do
-  begin
-    if not DataSet.ControlsDisabled then
-      AplicarValoresPorDefecto(
-        FConexion,
-        cdsLineas,
-        'fza_facturas_lineas');
-    FieldByName('SERIE_FAC_FACLIN').AsString := '0';
-    FieldByName('NUMERO_FAC_FACLIN').AsString := '0';
-    NuevoNumero := cdsCabecera.FieldByName('CONTADOR_LINEAS_FAC').AsInteger
-                                                                          + 10 ;
-    cdsCabecera.Edit;
-    cdsCabecera.FieldByName('CONTADOR_LINEAS_FAC').AsInteger := NuevoNumero;
-    FieldByName('LINEA_FACLIN').AsString :=
-                                                  Format('%.4d', [NuevoNumero]);
-    FieldByName('CODIGO_VENDEDOR_FACLIN').AsString :=
-                      cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString;
-    FindField('PORCENTAJE_IVA_FACLIN').AsCurrency := GetTipoIVA(
-          FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString);
-  end;
+  if not DataSet.ControlsDisabled then
+    AplicarValoresPorDefecto(
+      FConexion,
+      cdsLineas,
+      'fza_facturas_lineas');
+  cdsLineas.FieldByName('SERIE_FAC_FACLIN').AsString := '0';
+  cdsLineas.FieldByName('NUMERO_FAC_FACLIN').AsString := '0';
+  NuevoNumero :=
+    cdsCabecera.FieldByName('CONTADOR_LINEAS_FAC').AsInteger + 10;
+  cdsCabecera.Edit;
+  cdsCabecera.FieldByName('CONTADOR_LINEAS_FAC').AsInteger :=
+    NuevoNumero;
+  cdsLineas.FieldByName('LINEA_FACLIN').AsString :=
+    Format('%.4d', [NuevoNumero]);
+  cdsLineas.FieldByName('CODIGO_VENDEDOR_FACLIN').AsString :=
+    cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString;
+  cdsLineas.FindField('PORCENTAJE_IVA_FACLIN').AsCurrency :=
+    GetTipoIVA(
+      cdsLineas.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString);
 end;
 
 function TdmCajaOpe.GetTipoIVA(sTipoIVA: string): Currency;
 var
   fPorcen:Currency;
 begin
-  with cdsCabecera do
-  begin
   case IndexStr(sTipoIVA, ['N', 'R', 'S', 'E']) of
-    0: fPorcen := FindField('PORCENTAJE_IVAN_FAC').AsCurrency;
-    1: fPorcen := FindField('PORCENTAJE_IVAR_FAC').AsCurrency;
-    2: fPorcen := FindField('PORCENTAJE_IVAS_FAC').AsCurrency;
-    3: fPorcen := FindField('PORCENTAJE_IVAE_FAC').AsCurrency;
+    0: fPorcen := cdsCabecera.FindField(
+      'PORCENTAJE_IVAN_FAC').AsCurrency;
+    1: fPorcen := cdsCabecera.FindField(
+      'PORCENTAJE_IVAR_FAC').AsCurrency;
+    2: fPorcen := cdsCabecera.FindField(
+      'PORCENTAJE_IVAS_FAC').AsCurrency;
+    3: fPorcen := cdsCabecera.FindField(
+      'PORCENTAJE_IVAE_FAC').AsCurrency;
     else
     begin
-      fPorcen := FindField('PORCENTAJE_IVAN_FAC').AsCurrency;
+      fPorcen := cdsCabecera.FindField(
+        'PORCENTAJE_IVAN_FAC').AsCurrency;
       cdsLineas.FindField('TIPO_IVA_ARTICULO_FACLIN').AsString := 'N';
     end;
-  end;
   end;
   Result := fPorcen;
 end;
@@ -2735,13 +2743,18 @@ begin
 end;
 
 procedure TdmCajaOpe.ConfigurarEstructuraCabecera;
+var
+  Indice: TIndexDef;
+  procedure Add(const ANombre: string; ATipo: TFieldType;
+    ATamano: Integer = 0; ARequerido: Boolean = False);
+  begin
+    cdsCabecera.FieldDefs.Add(ANombre, ATipo, ATamano, ARequerido);
+  end;
 begin
   if cdsCabecera.Active then cdsCabecera.Close;
   cdsCabecera.FieldDefs.Clear;
   cdsCabecera.IndexDefs.Clear;
-  with cdsCabecera.FieldDefs do
-  begin
-    Add('SERIE_FAC', ftString, 20, True);
+  Add('SERIE_FAC', ftString, 20, True);
     Add('NUMERO_FAC', ftString, 20, True);
     Add('FECHA_FAC', ftDate, 0);
     Add('ESCONSOLIDADA_FAC', ftString, 1);
@@ -2832,25 +2845,27 @@ begin
     Add('INSTANTE_MODIF', ftDateTime, 0);
     Add('INSTANTE_ALTA', ftDateTime, 0);
     Add('USUARIO_ALTA', ftString, 100);
-    Add('USUARIO_MODIF', ftString, 100);
-  end;
-  with cdsCabecera.IndexDefs.AddIndexDef do
-  begin
-    Name := 'PK_CABECERA';
-    Fields := 'SERIE_FAC;NUMERO_FAC';
-    Options := [ixPrimary, ixUnique];
-  end;
+  Add('USUARIO_MODIF', ftString, 100);
+  Indice := cdsCabecera.IndexDefs.AddIndexDef;
+  Indice.Name := 'PK_CABECERA';
+  Indice.Fields := 'SERIE_FAC;NUMERO_FAC';
+  Indice.Options := [ixPrimary, ixUnique];
   cdsCabecera.CreateDataSet;
 end;
 
 procedure TdmCajaOpe.ConfigurarEstructuraLineas;
+var
+  Indice: TIndexDef;
+  procedure Add(const ANombre: string; ATipo: TFieldType;
+    ATamano: Integer = 0; ARequerido: Boolean = False);
+  begin
+    cdsLineas.FieldDefs.Add(ANombre, ATipo, ATamano, ARequerido);
+  end;
 begin
   if cdsLineas.Active then cdsLineas.Close;
   cdsLineas.FieldDefs.Clear;
   cdsLineas.IndexDefs.Clear;
-  with cdsLineas.FieldDefs do
-  begin
-    Add('VIENE_DE_DEPOSITO', ftString, 1);
+  Add('VIENE_DE_DEPOSITO', ftString, 1);
     Add('ID_DEPOSITO_DEP', ftString, 20);
     Add('PRECIO_ORIGINAL_DEP', ftCurrency);
     Add('ACCION_DEPOSITO', ftString, 15); // Valores: 'COBRAR' o 'CANCELAR'
@@ -2905,14 +2920,12 @@ begin
     Add('INSTANTE_MODIF', ftDateTime, 0);
     Add('INSTANTE_ALTA', ftDateTime, 0);
     Add('USUARIO_ALTA', ftString, 100);
-    Add('USUARIO_MODIF', ftString, 100);
-  end;
-  with cdsLineas.IndexDefs.AddIndexDef do
-  begin
-    Name := 'PRIMARY_KEY';
-    Fields := 'SERIE_FAC_FACLIN;NUMERO_FAC_FACLIN;LINEA_FACLIN';
-    Options := [ixPrimary, ixUnique];
-  end;
+  Add('USUARIO_MODIF', ftString, 100);
+  Indice := cdsLineas.IndexDefs.AddIndexDef;
+  Indice.Name := 'PRIMARY_KEY';
+  Indice.Fields :=
+    'SERIE_FAC_FACLIN;NUMERO_FAC_FACLIN;LINEA_FACLIN';
+  Indice.Options := [ixPrimary, ixUnique];
   cdsLineas.CreateDataSet;
   cdsLineas.IndexName := 'PRIMARY_KEY';
 end;

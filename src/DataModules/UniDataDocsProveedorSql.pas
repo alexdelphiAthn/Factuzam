@@ -63,10 +63,12 @@ begin
 end;
 
 procedure AgregarCabecera(AConstructor: TConstructorSql);
-begin
-  with AConstructor do
+  procedure Agregar(const ATexto: string);
   begin
-    Agregar('SELECT D.TIPO_DOC,');
+    AConstructor.Agregar(ATexto);
+  end;
+begin
+  Agregar('SELECT D.TIPO_DOC,');
     Agregar('       D.TIPO_DOC_NOMBRE,');
     Agregar('       D.ORDEN_TIPO_DOC,');
     Agregar('       D.CODIGO_PRV,');
@@ -85,15 +87,16 @@ begin
     Agregar('       D.IVA_DOC AS TOTAL_IVA_DOC,');
     Agregar('       D.RE_DOC AS TOTAL_RE_DOC,');
     Agregar('       D.LIQUIDO_DOC AS TOTAL_LIQUIDO_DOC');
-    Agregar('  FROM (');
-  end;
+  Agregar('  FROM (');
 end;
 
 procedure AgregarPedido(AConstructor: TConstructorSql);
-begin
-  with AConstructor do
+  procedure Agregar(const ATexto: string);
   begin
-    Agregar('  SELECT ''PED'' AS TIPO_DOC,');
+    AConstructor.Agregar(ATexto);
+  end;
+begin
+  Agregar('  SELECT ''PED'' AS TIPO_DOC,');
     Agregar('         ''Pedido'' AS TIPO_DOC_NOMBRE,');
     Agregar('         1 AS ORDEN_TIPO_DOC,');
     Agregar('         P.CODIGO_PRV_PEDC AS CODIGO_PRV,');
@@ -142,15 +145,16 @@ begin
     Agregar('     AND SDT.NUMERO_SESDOC = P.NUMERO_PEDC');
     Agregar('   WHERE P.FECHA_PEDC >= :pDESDE');
     Agregar('     AND P.FECHA_PEDC <= :pHASTA');
-    Agregar('  UNION ALL');
-  end;
+  Agregar('  UNION ALL');
 end;
 
 procedure AgregarAlbaran(AConstructor: TConstructorSql);
-begin
-  with AConstructor do
+  procedure Agregar(const ATexto: string);
   begin
-    Agregar('  SELECT ''ALB'' AS TIPO_DOC,');
+    AConstructor.Agregar(ATexto);
+  end;
+begin
+  Agregar('  SELECT ''ALB'' AS TIPO_DOC,');
     Agregar('         ''Albaran'' AS TIPO_DOC_NOMBRE,');
     Agregar('         2 AS ORDEN_TIPO_DOC,');
     Agregar('         A.CODIGO_PRV_ALBC AS CODIGO_PRV,');
@@ -202,15 +206,16 @@ begin
     Agregar('     AND SDT.NUMERO_SESDOC = A.NUMERO_ALBC');
     Agregar('   WHERE A.FECHA_ALBC >= :pDESDE');
     Agregar('     AND A.FECHA_ALBC <= :pHASTA');
-    Agregar('  UNION ALL');
-  end;
+  Agregar('  UNION ALL');
 end;
 
 procedure AgregarFactura(AConstructor: TConstructorSql);
-begin
-  with AConstructor do
+  procedure Agregar(const ATexto: string);
   begin
-    Agregar('  SELECT ''FAC'' AS TIPO_DOC,');
+    AConstructor.Agregar(ATexto);
+  end;
+begin
+  Agregar('  SELECT ''FAC'' AS TIPO_DOC,');
     Agregar('         ''Factura'' AS TIPO_DOC_NOMBRE,');
     Agregar('         3 AS ORDEN_TIPO_DOC,');
     Agregar('         F.CODIGO_PRV_FACC AS CODIGO_PRV,');
@@ -277,15 +282,16 @@ begin
     Agregar('     AND FT.NUMERO_FAC_ALBC = F.NUMERO_FACC');
     Agregar('   WHERE F.FECHA_FACC >= :pDESDE');
     Agregar('     AND F.FECHA_FACC <= :pHASTA');
-    Agregar('  UNION ALL');
-  end;
+  Agregar('  UNION ALL');
 end;
 
 procedure AgregarDevolucion(AConstructor: TConstructorSql);
-begin
-  with AConstructor do
+  procedure Agregar(const ATexto: string);
   begin
-    Agregar('  SELECT ''DEV'' AS TIPO_DOC,');
+    AConstructor.Agregar(ATexto);
+  end;
+begin
+  Agregar('  SELECT ''DEV'' AS TIPO_DOC,');
     Agregar('         ''Devolucion'' AS TIPO_DOC_NOMBRE,');
     Agregar('         4 AS ORDEN_TIPO_DOC,');
     Agregar('         V.CODIGO_PRV_DEVC AS CODIGO_PRV,');
@@ -356,15 +362,16 @@ begin
     Agregar('     AND FT.NUMERO_FAC_ALBC = V.NUMERO_FAC_DEVC');
     Agregar('   WHERE V.FECHA_DEVC >= :pDESDE');
     Agregar('     AND V.FECHA_DEVC <= :pHASTA');
-    Agregar('       ) D');
-  end;
+  Agregar('       ) D');
 end;
 
 procedure AgregarFiltrosYOrden(AConstructor: TConstructorSql);
-begin
-  with AConstructor do
+  procedure Agregar(const ATexto: string);
   begin
-    Agregar(' WHERE D.TEMPORADA <> ''''');
+    AConstructor.Agregar(ATexto);
+  end;
+begin
+  Agregar(' WHERE D.TEMPORADA <> ''''');
     Agregar('   AND (:pTIP = '''' OR FIND_IN_SET(D.TIPO_DOC, :pTIP))');
     Agregar('   AND (:pSER = '''' OR FIND_IN_SET(D.SERIE_DOC, :pSER))');
     Agregar('   AND (:pALM = '''' OR FIND_IN_SET(D.CODIGO_ALM, :pALM))');
@@ -376,8 +383,7 @@ begin
     Agregar('          D.CODIGO_PRV,');
     Agregar('          D.FECHA_DOC,');
     Agregar('          D.SERIE_DOC,');
-    Agregar('          D.NUMERO_DOC');
-  end;
+  Agregar('          D.NUMERO_DOC');
 end;
 
 function SqlListadoDocumentosProveedor: string;

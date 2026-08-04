@@ -9,8 +9,8 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Captura de serie y rango de fechas para alta masiva de series por         }
-{    empresa en todos los tipos de documento.                                  }
+{    Captura de ubicación y serie tokenizada para el alta masiva de series   }
+{    de empresa en todos los tipos de documento.                              }
 {******************************************************************************}
 unit inMtoModalSeriesDocumentos;
 
@@ -19,10 +19,11 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.UITypes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.ExtCtrls, Vcl.ActnList, System.Actions,
+  Vcl.Dialogs, Vcl.ExtCtrls, Vcl.ActnList, System.Actions, Data.DB,
+  DBAccess, Uni,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxContainer, cxEdit, cxLabel, cxTextEdit, cxButtons, cxMaskEdit,
-  cxDropDownEdit, cxCalendar,
+  cxDropDownEdit, cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox,
   inMtoFrmBase;
 
 type
@@ -30,29 +31,42 @@ type
     pnlPrincipal: TPanel;
     pnlBotones: TPanel;
     lblTitulo: TcxLabel;
-    lblSerie: TcxLabel;
-    txtSerie: TcxTextEdit;
-    lblFechaDesde: TcxLabel;
-    dteFechaDesde: TcxDateEdit;
-    lblFechaHasta: TcxLabel;
-    dteFechaHasta: TcxDateEdit;
+    lblAlmacen: TcxLabel;
+    cbbAlmacen: TcxLookupComboBox;
+    lblCaja: TcxLabel;
+    cbbCaja: TcxLookupComboBox;
+    lblSerieTokenizada: TcxLabel;
+    txtSerieTokenizada: TcxTextEdit;
+    lblLeyendaTokens: TcxLabel;
+    lblLeyendaSubtipos: TcxLabel;
     btnAceptar: TcxButton;
     btnCancelar: TcxButton;
     alAcciones: TActionList;
     actAceptar: TAction;
     actCancelar: TAction;
+    unqryAlmacenes: TUniQuery;
+    dsAlmacenes: TDataSource;
+    unqryCajas: TUniQuery;
+    dsCajas: TDataSource;
     procedure actAceptarExecute(Sender: TObject);
     procedure actCancelarExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure cbbAlmacenPropertiesEditValueChanged(Sender: TObject);
   private
-    FSerie: string;
-    FFechaDesde: TDateTime;
-    FFechaHasta: TDateTime;
+    FAlmacen: string;
+    FCaja: string;
+    FSerieTokenizada: string;
+    procedure CargarCajas;
+    function EsSerieTokenizadaValida(
+      const ASerieTokenizada: string): Boolean;
   public
-    class function Ejecutar(AOwner: TComponent;
-                            out ASerie: string;
-                            out AFechaDesde: TDateTime;
-                            out AFechaHasta: TDateTime): Boolean;
+    class function Ejecutar(
+      AOwner: TComponent;
+      AConexion: TUniConnection;
+      const AEmpresa: string;
+      out AAlmacen: string;
+      out ACaja: string;
+      out ASerieTokenizada: string): Boolean;
   end;
 
 implementation
@@ -60,7 +74,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsgComun;
+  inLibCadenas, inLibMsgComun;
 
 procedure ForceReferenceToClass(C: TClass);
 begin
@@ -68,23 +82,34 @@ end;
 
 class function TfrmModalSeriesDocumentos.Ejecutar(
   AOwner: TComponent;
-  out ASerie: string;
-  out AFechaDesde: TDateTime;
-  out AFechaHasta: TDateTime): Boolean;
+  AConexion: TUniConnection;
+  const AEmpresa: string;
+  out AAlmacen: string;
+  out ACaja: string;
+  out ASerieTokenizada: string): Boolean;
 var
   frm: TfrmModalSeriesDocumentos;
 begin
   Result := False;
-  ASerie := '';
-  AFechaDesde := 0;
-  AFechaHasta := 0;
+  AAlmacen := '';
+  ACaja := '';
+  ASerieTokenizada := '';
   frm := TfrmModalSeriesDocumentos.Create(AOwner);
   try
+    frm.unqryAlmacenes.Connection := AConexion;
+    frm.unqryCajas.Connection := AConexion;
+    frm.unqryAlmacenes.ParamByName('EMPRESA').AsString := AEmpresa;
+    frm.unqryAlmacenes.Open;
+    if not frm.unqryAlmacenes.IsEmpty then
+    begin
+      frm.cbbAlmacen.EditValue := frm.unqryAlmacenes.FieldByName(
+        'CODIGO_ALM_ALM').AsString;
+    end;
     if frm.ShowModal = mrOk then
     begin
-      ASerie := frm.FSerie;
-      AFechaDesde := frm.FFechaDesde;
-      AFechaHasta := frm.FFechaHasta;
+      AAlmacen := frm.FAlmacen;
+      ACaja := frm.FCaja;
+      ASerieTokenizada := frm.FSerieTokenizada;
       Result := True;
     end;
   finally
@@ -93,63 +118,108 @@ begin
 end;
 
 procedure TfrmModalSeriesDocumentos.FormCreate(Sender: TObject);
-var
-  iAnio: Word;
-  iMes: Word;
-  iDia: Word;
 begin
   inherited;
   KeyPreview := True;
   Position := poScreenCenter;
-  DecodeDate(Date, iAnio, iMes, iDia);
-  dteFechaDesde.EditValue := EncodeDate(iAnio, 1, 1);
-  dteFechaHasta.EditValue := EncodeDate(iAnio, 12, 31);
 end;
 
 procedure TfrmModalSeriesDocumentos.actAceptarExecute(Sender: TObject);
 var
-  sSerie: string;
-  dtDesde: TDateTime;
-  dtHasta: TDateTime;
+  sAlmacen: string;
+  sCaja: string;
+  sSerieTokenizada: string;
 begin
-  sSerie := Trim(txtSerie.Text);
-  if sSerie = '' then
+  sAlmacen := Trim(VarToStr(cbbAlmacen.EditValue));
+  sCaja := Trim(VarToStr(cbbCaja.EditValue));
+  sSerieTokenizada := Trim(txtSerieTokenizada.Text);
+  if sAlmacen = '' then
   begin
-    MessageDlg(SErrorSerieDocumentoNoIndicada, mtWarning, [mbOk], 0);
-    txtSerie.SetFocus;
+    MessageDlg(
+      SErrorAlmacenSerieTokenizadaNoIndicado,
+      mtWarning,
+      [mbOk],
+      0);
+    cbbAlmacen.SetFocus;
   end
-  else if VarIsNull(dteFechaDesde.EditValue) or
-          VarIsEmpty(dteFechaDesde.EditValue) then
+  else if sCaja = '' then
   begin
-    MessageDlg(SErrorFechaInicioDocumentoNoIndicada,
-               mtWarning, [mbOk], 0);
-    dteFechaDesde.SetFocus;
+    MessageDlg(
+      SErrorCajaSerieTokenizadaNoIndicada,
+      mtWarning,
+      [mbOk],
+      0);
+    cbbCaja.SetFocus;
   end
-  else if VarIsNull(dteFechaHasta.EditValue) or
-          VarIsEmpty(dteFechaHasta.EditValue) then
+  else if sSerieTokenizada = '' then
   begin
-    MessageDlg(SErrorFechaFinDocumentoNoIndicada,
-               mtWarning, [mbOk], 0);
-    dteFechaHasta.SetFocus;
+    MessageDlg(
+      SErrorSerieDocumentoNoIndicada,
+      mtWarning,
+      [mbOk],
+      0);
+    txtSerieTokenizada.SetFocus;
+  end
+  else if not EsSerieTokenizadaValida(sSerieTokenizada) then
+  begin
+    MessageDlg(
+      Format(SErrorSerieTokenizadaEmpresa, [sSerieTokenizada]),
+      mtWarning,
+      [mbOk],
+      0);
+    txtSerieTokenizada.SetFocus;
   end
   else
   begin
-    dtDesde := VarToDateTime(dteFechaDesde.EditValue);
-    dtHasta := VarToDateTime(dteFechaHasta.EditValue);
-    if dtHasta < dtDesde then
+    FAlmacen := sAlmacen;
+    FCaja := sCaja;
+    FSerieTokenizada := sSerieTokenizada;
+    ModalResult := mrOk;
+  end;
+end;
+
+procedure TfrmModalSeriesDocumentos.CargarCajas;
+var
+  sAlmacen: string;
+begin
+  sAlmacen := Trim(VarToStr(cbbAlmacen.EditValue));
+  cbbCaja.EditValue := Null;
+  unqryCajas.Close;
+  if sAlmacen <> '' then
+  begin
+    unqryCajas.ParamByName('ALMACEN').AsString := sAlmacen;
+    unqryCajas.Open;
+    if not unqryCajas.IsEmpty then
     begin
-      MessageDlg(SErrorRangoFechasDocumentoNoValido,
-                 mtWarning, [mbOk], 0);
-      dteFechaHasta.SetFocus;
-    end
-    else
-    begin
-      FSerie := sSerie;
-      FFechaDesde := dtDesde;
-      FFechaHasta := dtHasta;
-      ModalResult := mrOk;
+      cbbCaja.EditValue := unqryCajas.FieldByName(
+        'CODIGO_CAJA_ALMCAJ').AsString;
     end;
   end;
+end;
+
+procedure TfrmModalSeriesDocumentos.cbbAlmacenPropertiesEditValueChanged(
+  Sender: TObject);
+begin
+  CargarCajas;
+end;
+
+function TfrmModalSeriesDocumentos.EsSerieTokenizadaValida(
+  const ASerieTokenizada: string): Boolean;
+var
+  iDias: Integer;
+  iEjercicios: Integer;
+  iMeses: Integer;
+  iTrimestres: Integer;
+begin
+  iEjercicios := ContarOcurrenciasAnsi(ASerieTokenizada, 'yyyy');
+  iTrimestres := ContarOcurrenciasAnsi(ASerieTokenizada, 'q');
+  iMeses := ContarOcurrenciasAnsi(ASerieTokenizada, 'mm');
+  iDias := ContarOcurrenciasAnsi(ASerieTokenizada, 'dd');
+  Result := (iEjercicios <= 1) and
+            (iTrimestres <= 1) and
+            (iMeses <= 1) and
+            (iDias <= 1) and
+            (iEjercicios + iTrimestres + iMeses + iDias > 0);
 end;
 
 procedure TfrmModalSeriesDocumentos.actCancelarExecute(Sender: TObject);

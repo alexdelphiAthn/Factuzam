@@ -1,4 +1,4 @@
-{-------------------------------------------------------------------------------
+ï»¿{-------------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -12,7 +12,7 @@ The Original Code is: SynHighlighterJava.pas, released 2000-04-10.
 The Original Code is based on the DcjSynJava.pas file from the
 mwEdit component suite by Martin Waldenburg and other developers, the Initial
 Author of this file is Michael Trier.
-Unicode translation by Maël Hörz.
+Unicode translation by MaÃ«l HÃ¶rz.
 All Rights Reserved.
 
 Contributors to the SynEdit and mwEdit projects are listed in the
@@ -991,7 +991,7 @@ begin
         ',': CommaProc;
         '=': EqualProc;
         '>': GreaterProc;
-//        'A'..'Z', 'a'..'z', '_', '$', 'L'..'Ö', 'Ø'..'ö', 'ø'..'ÿ': IdentProc;  //Fiala
+//        'A'..'Z', 'a'..'z', '_', '$', 'L'..'Ã–', 'Ã˜'..'Ã¶', 'Ã¸'..'Ã¿': IdentProc;  //Fiala
         '_': IdentProc;                                                         //Fiala
         #10: LFProc;
         '<': LowerProc;
@@ -1104,7 +1104,7 @@ begin
   Result := IsCharAlphaNumeric(AChar) or CharInSet(AChar, ['_', '$']);       //Fiala
 (*
   case AChar of
-    '_', '$', '0'..'9', 'a'..'z', 'A'..'Z', 'L'..'Ö', 'Ø'..'ö', 'ø'..'ÿ':
+    '_', '$', '0'..'9', 'a'..'z', 'A'..'Z', 'L'..'Ã–', 'Ã˜'..'Ã¶', 'Ã¸'..'Ã¿':
       Result := True;
     else
       Result := False;

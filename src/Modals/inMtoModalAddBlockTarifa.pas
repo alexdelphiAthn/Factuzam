@@ -94,7 +94,8 @@ type
     procedure ConfigurarPreviewExtra; override;
 
     function  EjecutarInsercion(out ANumInsertados: Integer;
-                                out ACodigos: TArray<string>): Boolean; override;
+                                out ACodigos: TArray<string>): Boolean;
+                                override;
 
   private
     procedure CargarTarifas;

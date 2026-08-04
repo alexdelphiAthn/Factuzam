@@ -200,7 +200,8 @@ type
     procedure AplicarInventario;
     // Camino partido en 3 para Fase 2 (background). El llamador (el form)
     // ejecuta Pre y Refrescar en el main thread (tocan grids) y deja el
-    // SP en TfrmMtoGen.EjecutarEnBackground. Ver TfrmMtoInventarios.btnAplicarClick.
+    // SP en TfrmMtoGen.EjecutarEnBackground. Ver
+    // TfrmMtoInventarios.btnAplicarClick.
     procedure PreAplicarValidaciones;
     procedure EjecutarSPAplicar;
     procedure RefrescarTrasAplicar;
@@ -548,7 +549,8 @@ begin
   inherited;
   // Pre-rellenamos los datos por defecto del usuario logueado al crear un
   // inventario nuevo, igual que hace facturas:
-  //   - empresa/almacen del usuario (UbicacionSesion.Empresa/UbicacionSesion.Almacen, cargados en login)
+  // - empresa/almacen del usuario
+  // (UbicacionSesion.Empresa/UbicacionSesion.Almacen, cargados en login)
   //   - serie por defecto de la empresa para tipo IN
   //   - NUMERO_INV='0' como marcador para que BeforePost asigne el contador
   //     real desde fza_contadores via PRC_GET_NEXT_CONT_FACT_SERIE.
@@ -562,7 +564,8 @@ begin
   DataSet.FieldByName('NUMERO_INV').AsString   := '0';
   if Trim(UbicacionSesion.Empresa) <> '' then
     DataSet.FieldByName('SERIE_INV').AsString  :=
-                                       ObtenerSeriePorDefecto(UbicacionSesion.Empresa, 'IN');
+                                       ObtenerSeriePorDefecto(
+                                         UbicacionSesion.Empresa, 'IN');
   CargarAlmacenesPorEmpresa(
     DataSet.FieldByName('CODIGO_EMP_INV').AsString);
 end;
@@ -624,7 +627,7 @@ begin
     qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT EMPSER ' +
-      '  FROM fza_empresas_series ' +
+      '  FROM vi_empresas_series ' +
       ' WHERE CODIGO_EMP_EMPSER = :EMPRESA ' +
       '   AND TIPO_DOC_EMPSER  = :TIPO ' +
       '   AND (FECHA_DESDE_EMPSER IS NULL OR FECHA_DESDE_EMPSER <= NOW()) ' +

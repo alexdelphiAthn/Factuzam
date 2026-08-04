@@ -2028,12 +2028,13 @@ begin
     // se cancelan los datasets en edicion de los grids de ESTE form.
     for i := 0 to ComponentCount - 1 do
       if Components[i] is TcxGridDBTableView then
-        with TcxGridDBTableView(Components[i]).DataController do
-        begin
-          if (DataSource <> nil) and (DataSet <> nil) and
-             (DataSet.State in [dsEdit, dsInsert]) then
-            DataSet.Cancel;
-        end;
+        if (TcxGridDBTableView(Components[i]).DataController.DataSource <>
+            nil) and
+           (TcxGridDBTableView(Components[i]).DataController.DataSet <>
+            nil) and
+           (TcxGridDBTableView(Components[i]).DataController.DataSet.State in
+            [dsEdit, dsInsert]) then
+          TcxGridDBTableView(Components[i]).DataController.DataSet.Cancel;
 end;
 
 procedure TfrmMtoGen.sbExportExcelClick(Sender: TObject);

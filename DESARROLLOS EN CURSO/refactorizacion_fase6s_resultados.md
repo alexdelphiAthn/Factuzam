@@ -1,4 +1,4 @@
-﻿# Fase 6S — modo de entrada y contexto de foto
+# Fase 6S — modo de entrada y contexto de foto
 
 Fecha: 27/07/2026. D1.3 y decimonoveno fascículo de D1 terminados.
 Sin commit.

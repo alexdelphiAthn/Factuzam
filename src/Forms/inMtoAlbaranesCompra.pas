@@ -781,7 +781,8 @@ begin
   end;
   if dmmAlbaranesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
     dmmAlbaranesCompra.unqryTablaG.Post;
-  if dmmAlbaranesCompra.unqryAlbaranesCompraLineas.State in [dsEdit, dsInsert] then
+  if dmmAlbaranesCompra.unqryAlbaranesCompraLineas.State in
+     [dsEdit, dsInsert] then
     dmmAlbaranesCompra.unqryAlbaranesCompraLineas.Post;
   sSerie  := dmmAlbaranesCompra.unqryTablaG.FieldByName('SERIE_ALBC').AsString;
   sNumero := dmmAlbaranesCompra.unqryTablaG.FieldByName('NUMERO_ALBC').AsString;
@@ -813,7 +814,8 @@ begin
   end;
   if dmmAlbaranesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
     dmmAlbaranesCompra.unqryTablaG.Post;
-  if dmmAlbaranesCompra.unqryAlbaranesCompraLineas.State in [dsEdit, dsInsert] then
+  if dmmAlbaranesCompra.unqryAlbaranesCompraLineas.State in
+     [dsEdit, dsInsert] then
     dmmAlbaranesCompra.unqryAlbaranesCompraLineas.Post;
   sSerie  := dmmAlbaranesCompra.unqryTablaG.FieldByName('SERIE_ALBC').AsString;
   sNumero := dmmAlbaranesCompra.unqryTablaG.FieldByName('NUMERO_ALBC').AsString;

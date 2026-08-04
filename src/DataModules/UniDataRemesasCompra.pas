@@ -1,7 +1,7 @@
 ﻿{******************************************************************************}
 {                                                                              }
-{  Módulo:       UniDataRemesasCompra                                           }
-{    Tipo:       Data Module                                                    }
+{  Módulo:       UniDataRemesasCompra                                          }
+{    Tipo:       Data Module                                                   }
 { Versión:       1.0.0                                                         }
 {   Fecha:       10/06/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }

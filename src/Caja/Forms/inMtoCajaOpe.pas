@@ -1917,22 +1917,21 @@ end;
 procedure TEditorLineasCajaVcl.CerrarBusquedaArticulo(Sender: TObject);
 var
   Combo: TcxExtLookupComboBox;
+  Vista: TcxGridDBTableView;
 begin
   if Sender is TcxExtLookupComboBox then
   begin
     Combo := TcxExtLookupComboBox(Sender);
     if Combo.Properties.View is TcxGridDBTableView then
     begin
-      with TcxGridDBTableView(Combo.Properties.View) do
-      begin
-        BeginUpdate;
-        try
-          Controller.IncSearchingText := '';
-          DataController.Filter.Clear;
-          DataController.Filter.Active := False;
-        finally
-          EndUpdate;
-        end;
+      Vista := TcxGridDBTableView(Combo.Properties.View);
+      Vista.BeginUpdate;
+      try
+        Vista.Controller.IncSearchingText := '';
+        Vista.DataController.Filter.Clear;
+        Vista.DataController.Filter.Active := False;
+      finally
+        Vista.EndUpdate;
       end;
     end;
   end;
@@ -2423,6 +2422,8 @@ var
   Col: TcxGridDBColumn;
   MaxAtributos: Integer;
   IndiceBase:Integer;
+  Propiedades: TcxButtonEditProperties;
+  Boton: TcxEditButton;
 begin
   MaxAtributos := 5;
   IndiceBase := tvArticulo.Index;
@@ -2441,17 +2442,13 @@ begin
       // InitEdit cuando el AV actual tiene swatch en la paleta basica). El
       // click abre SeleccionarAvConPaleta — mismo patron que inMtoInventarios.
       Col.PropertiesClass := TcxButtonEditProperties;
-      with TcxButtonEditProperties(Col.Properties) do
-      begin
-        ReadOnly := True;
-        Buttons.Clear;
-        with Buttons.Add do
-        begin
-          Default := True;
-          Kind := bkEllipsis;
-        end;
-        OnButtonClick := SeleccionarAtributo;
-      end;
+      Propiedades := TcxButtonEditProperties(Col.Properties);
+      Propiedades.ReadOnly := True;
+      Propiedades.Buttons.Clear;
+      Boton := Propiedades.Buttons.Add;
+      Boton.Default := True;
+      Boton.Kind := bkEllipsis;
+      Propiedades.OnButtonClick := SeleccionarAtributo;
       Col.Index := IndiceBase + i;
     end;
   finally
@@ -3918,7 +3915,8 @@ end;
 procedure TEditorLineasCajaVcl.NotificarCambioLinea(
   Sender: TObject; AField: TField);
 begin
-  // Solo refrescamos cuando cambia el registro activo (Field = nil),// no en cada cambio de columna.
+  // Solo refrescamos cuando cambia el registro activo (Field = nil),// no en
+  // cada cambio de columna.
   if AField = nil then
   begin
     RefrescarFotoStock;
@@ -4098,18 +4096,13 @@ begin
   // descuento de facto). Con descuentos denegados, el precio de tarifa
   // queda intocable.
   tvPrecioUni.Options.Editing := PermiteDescuentos;
-  with dbtvBusq.DataController do
-  begin
-    DataModeController.GridMode := True;
-    DataModeController.SyncMode := False;
-    Filter.AutoDataSetFilter := False;
-    Options := Options - [dcoImmediatePost, dcoGroupsAlwaysExpanded];
-  end;
-  with dbtvBusq.OptionsBehavior do
-  begin
-    IncSearch := False;
-    IncSearchItem := nil;
-  end;
+  dbtvBusq.DataController.DataModeController.GridMode := True;
+  dbtvBusq.DataController.DataModeController.SyncMode := False;
+  dbtvBusq.DataController.Filter.AutoDataSetFilter := False;
+  dbtvBusq.DataController.Options := dbtvBusq.DataController.Options -
+    [dcoImmediatePost, dcoGroupsAlwaysExpanded];
+  dbtvBusq.OptionsBehavior.IncSearch := False;
+  dbtvBusq.OptionsBehavior.IncSearchItem := nil;
   repSoloTexto.Properties.OnValidate := tvArticuloPropertiesValidate;
   repComboBox.Properties.OnCloseUp   := tvArticuloPropertiesCloseUp;
 end;
@@ -4480,7 +4473,8 @@ begin
     tvLineasOpe.Controller.FocusedColumn := SigCol;
     tvLineasOpe.Controller.EditingController.ShowEdit;
   end;
-//  LogPerfCaja('CajaOpe.AvanzarAtrib',//    Format('tag=%d | total=%d ms',//           [Integer(Msg.WParam),sw.ElapsedMilliseconds]));
+// LogPerfCaja('CajaOpe.AvanzarAtrib',// Format('tag=%d | total=%d ms',//
+// [Integer(Msg.WParam),sw.ElapsedMilliseconds]));
 end;
 
 procedure TfrmMtoOpeCaja.GuardarLayoutCaja;

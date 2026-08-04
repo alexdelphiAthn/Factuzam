@@ -6,9 +6,9 @@
 {   Fecha:       23/05/2026                                                    }
 {                                                                              }
 {  Descripcion:                                                                }
-{    Modal de impresion de etiquetas de un ALBARAN DE COMPRA. Clon              }
-{    simplificado de inMtoModalEtiqArt: misma estructura de TfrmPrint y         }
-{    mismo dataset de etiquetas (cdsEtiquetasArt en TdmArticulos), pero         }
+{    Modal de impresion de etiquetas de un ALBARAN DE COMPRA. Clon             }
+{    simplificado de inMtoModalEtiqArt: misma estructura de TfrmPrint y        }
+{    mismo dataset de etiquetas (cdsEtiquetasArt en TdmArticulos), pero        }
 {    los SKUs vienen filtrados por las lineas del albaran. El listado          }
 {    de almacenes que se pinta esta limitado a los almacenes que aparecen      }
 {    en las lineas (no toda la red), porque un albaran puede tener varios.     }
@@ -62,7 +62,8 @@ type
     Numero:   string;
     procedure preparar_consulta; override;
     procedure AfterReportLoaded; override;
-    function  RelacionarClientDataSetConQuery(aCDS: TDataSet): TDataSet; override;
+    function  RelacionarClientDataSetConQuery(aCDS: TDataSet): TDataSet;
+    override;
     procedure OnGuiasAplicadas; override;
   end;
 
@@ -104,7 +105,9 @@ begin
   if Assigned(DMArt) then
   begin
     Idx := -1;
-    DMArt.CargarTarifasEtiquetas(cbbTarifa.Properties.Items, FCodigosTarifa, Idx);
+    DMArt.CargarTarifasEtiquetas(cbbTarifa.Properties.Items,
+                                 FCodigosTarifa,
+                                 Idx);
     if Idx >= 0 then cbbTarifa.ItemIndex := Idx;
   end;
   // Almacenes: solo los que aparecen en las lineas del albaran. Usamos

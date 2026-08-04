@@ -1,4 +1,4 @@
-﻿Temporada;varchar;5
+Temporada;varchar;5
 Nombre;varchar;30
 FechaInicial;smalldatetime;NULL
 FechaFinal;smalldatetime;NULL

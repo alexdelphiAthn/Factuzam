@@ -291,15 +291,15 @@ begin
 end;
 
 procedure TExportadorFacturaDevExpress.EscribirLinea;
+var
+  Celda: TdxSpreadSheetCell;
 begin
   Inc(FFila);
-  with FHoja.CreateCell(FFila, COL_DESC) do
-  begin
-    AsString := FLineas.FieldByName(
-      'DESCRIPCION_ARTICULO_FACLIN').AsString;
-    Style.WordWrap := True;
-    Style.AlignVert := ssavTop;
-  end;
+  Celda := FHoja.CreateCell(FFila, COL_DESC);
+  Celda.AsString := FLineas.FieldByName(
+    'DESCRIPCION_ARTICULO_FACLIN').AsString;
+  Celda.Style.WordWrap := True;
+  Celda.Style.AlignVert := ssavTop;
   W(FHoja, FFila, COL_CANT,
     FLineas.FieldByName('CANTIDAD_FACLIN').AsFloat, False, ssahRight);
   FHoja.Cells[FFila, COL_CANT].Style.AlignVert := ssavTop;
@@ -456,29 +456,26 @@ procedure TExportadorFacturaDevExpress.EscribirResumen(
 var
   sFormula: string;
   sRefImpuestos, sRefRetenciones, sRefTotalBase: string;
+  Celda: TdxSpreadSheetCell;
 begin
   Inc(FFila, 2);
   W(FHoja, FFila, COL_PIVA, 'Total Base Imponible:', True, ssahRight);
-  with FHoja.CreateCell(FFila, COL_TOTAL) do
-  begin
-    SetText('=SUM(' + GetRef(AFilaInicioTabla + 1, COL_DESC) + ':' +
-      GetRef(AFilaFinTabla, COL_DESC) + ')', True);
-    Style.DataFormat.FormatCode := '#,##0.00" €"';
-    Style.AlignHorz := ssahRight;
-  end;
+  Celda := FHoja.CreateCell(FFila, COL_TOTAL);
+  Celda.SetText('=SUM(' + GetRef(AFilaInicioTabla + 1, COL_DESC) + ':' +
+    GetRef(AFilaFinTabla, COL_DESC) + ')', True);
+  Celda.Style.DataFormat.FormatCode := '#,##0.00" €"';
+  Celda.Style.AlignHorz := ssahRight;
   sRefTotalBase := GetRef(FFila, COL_TOTAL);
   Inc(FFila);
   W(FHoja, FFila, COL_PIVA, 'Total Impuestos (IVA+RE):',
     True, ssahRight);
-  with FHoja.CreateCell(FFila, COL_TOTAL) do
-  begin
-    SetText('=SUM(' + GetRef(AFilaInicioTabla + 1, COL_PRECIO) + ':' +
-      GetRef(AFilaFinTabla, COL_PRECIO) + ')+' +
-      'SUM(' + GetRef(AFilaInicioTabla + 1, COL_TOTAL) + ':' +
-      GetRef(AFilaFinTabla, COL_TOTAL) + ')', True);
-    Style.DataFormat.FormatCode := '#,##0.00" €"';
-    Style.AlignHorz := ssahRight;
-  end;
+  Celda := FHoja.CreateCell(FFila, COL_TOTAL);
+  Celda.SetText('=SUM(' + GetRef(AFilaInicioTabla + 1, COL_PRECIO) + ':' +
+    GetRef(AFilaFinTabla, COL_PRECIO) + ')+' +
+    'SUM(' + GetRef(AFilaInicioTabla + 1, COL_TOTAL) + ':' +
+    GetRef(AFilaFinTabla, COL_TOTAL) + ')', True);
+  Celda.Style.DataFormat.FormatCode := '#,##0.00" €"';
+  Celda.Style.AlignHorz := ssahRight;
   sRefImpuestos := GetRef(FFila, COL_TOTAL);
   sRefRetenciones := '';
   if Abs(CampoNumero('TOTAL_RETENCION_FAC')) > 0.001 then
@@ -487,47 +484,41 @@ begin
     W(FHoja, FFila, COL_BASEI, CampoNumero('PORCENTAJE_RETENCION_FAC'));
     WFormula(FHoja, FFila, COL_PIVA, '="Retención IRPF ("&' +
       GetRef(FFila, COL_BASEI) + '&"%):"');
-    with FHoja.CreateCell(FFila, COL_TOTAL) do
-    begin
-      SetText('=-(' + sRefTotalBase + '*' +
-        GetRef(FFila, COL_BASEI) + '/100)', True);
-      Style.Font.Color := clRed;
-      Style.AlignHorz := ssahRight;
-      Style.DataFormat.FormatCode := '#,##0.00" €"';
-    end;
+    Celda := FHoja.CreateCell(FFila, COL_TOTAL);
+    Celda.SetText('=-(' + sRefTotalBase + '*' +
+      GetRef(FFila, COL_BASEI) + '/100)', True);
+    Celda.Style.Font.Color := clRed;
+    Celda.Style.AlignHorz := ssahRight;
+    Celda.Style.DataFormat.FormatCode := '#,##0.00" €"';
     sRefRetenciones := GetRef(FFila, COL_TOTAL);
   end;
   Inc(FFila);
   W(FHoja, FFila, COL_PIVA, 'TOTAL A PAGAR:', True, ssahRight);
-  with FHoja.CreateCell(FFila, COL_TOTAL) do
-  begin
-    sFormula := '=' + sRefTotalBase + '+' + sRefImpuestos;
-    if sRefRetenciones <> '' then
-      sFormula := sFormula + '+' + sRefRetenciones;
-    SetText(sFormula, True);
-    Style.Font.Style := [fsBold];
-    Style.Font.Size := 14;
-    Style.DataFormat.FormatCode := '#,##0.00" €"';
-    Style.AlignHorz := ssahRight;
-  end;
+  Celda := FHoja.CreateCell(FFila, COL_TOTAL);
+  sFormula := '=' + sRefTotalBase + '+' + sRefImpuestos;
+  if sRefRetenciones <> '' then
+    sFormula := sFormula + '+' + sRefRetenciones;
+  Celda.SetText(sFormula, True);
+  Celda.Style.Font.Style := [fsBold];
+  Celda.Style.Font.Size := 14;
+  Celda.Style.DataFormat.FormatCode := '#,##0.00" €"';
+  Celda.Style.AlignHorz := ssahRight;
 end;
 
 procedure TExportadorFacturaDevExpress.EscribirFormaPago;
+var
+  Celda: TdxSpreadSheetCell;
 begin
   Inc(FFila, 2);
-  with FHoja.CreateCell(FFila, COL_DESC) do
-  begin
-    AsString := 'Forma de Pago:';
-    Style.Font.Style := [fsBold];
-    Style.AlignVert := ssavCenter;
-  end;
-  with FHoja.CreateCell(FFila, COL_CANT) do
-  begin
-    AsString := CampoTexto('FORMA_PAGO_FAC');
-    Style.AlignVert := ssavCenter;
-    Style.AlignHorz := ssahLeft;
-    Style.WordWrap := False;
-  end;
+  Celda := FHoja.CreateCell(FFila, COL_DESC);
+  Celda.AsString := 'Forma de Pago:';
+  Celda.Style.Font.Style := [fsBold];
+  Celda.Style.AlignVert := ssavCenter;
+  Celda := FHoja.CreateCell(FFila, COL_CANT);
+  Celda.AsString := CampoTexto('FORMA_PAGO_FAC');
+  Celda.Style.AlignVert := ssavCenter;
+  Celda.Style.AlignHorz := ssahLeft;
+  Celda.Style.WordWrap := False;
   Merge(FHoja, FFila, COL_CANT, 4, 1);
 end;
 

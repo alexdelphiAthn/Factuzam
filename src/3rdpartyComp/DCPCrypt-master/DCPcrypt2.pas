@@ -1,4 +1,4 @@
-{ ****************************************************************************** }
+﻿{ ****************************************************************************** }
 { * DCPcrypt v2.1 written by David Barton (crypto@cityinthesky.co.uk) ********** }
 { * MODIFICATIONS BY WARREN POSTMA FOR VERSION 2.1 : XE, XE2+ support          * }
 { * Also, Unicode support fixes, and removal of "overloading".                 *)

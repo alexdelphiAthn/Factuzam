@@ -92,7 +92,8 @@ class function TfrmModalTiraCaja.Ejecutar(AOwner: TComponent;
                                           out AIncluirTraspasos: Boolean;
                                           out AIncluirIngresos: Boolean;
                                           out AIncluirGastos: Boolean;
-                                          out AIncluirCredito: Boolean): Boolean;
+                                          out AIncluirCredito: Boolean):
+                                          Boolean;
 var
   Frm: TfrmModalTiraCaja;
   Item: TcxCheckComboBoxItem;

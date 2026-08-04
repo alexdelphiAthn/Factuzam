@@ -1,4 +1,4 @@
-{-------------------------------------------------------------------------------
+ï»¿{-------------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -12,7 +12,7 @@ The Original Code is: SynHighlighterRuby.pas, released 2001-11-13.
 The Initial Author of this file is Stefan Ascher.
 Portions by Jan Verhoeven (http://jansfreeware.com/jfdelphi.htm)
 "Heredoc" syntax highlighting implementation by Marko Njezic.
-Unicode translation by Maël Hörz.
+Unicode translation by MaÃ«l HÃ¶rz.
 All Rights Reserved.
 
 Contributors to the SynEdit and mwEdit projects are listed in the
@@ -456,9 +456,9 @@ begin
 //
 //%q and %Q start delimited single- and double-quoted strings.
 //
-//%q/general single-quoted string/ » general single-quoted string
-//%Q!general double-quoted string! » general double-quoted string
-//%Q{Seconds/day: #{24*60*60}}     » Seconds/day: 86400
+//%q/general single-quoted string/ Â» general single-quoted string
+//%Q!general double-quoted string! Â» general double-quoted string
+//%Q{Seconds/day: #{24*60*60}}     Â» Seconds/day: 86400
 //
 //The character following the ``q'' or ``Q'' is the delimiter. If it is an
 //opening bracket, brace, parenthesis, or less-than sign, the string is read

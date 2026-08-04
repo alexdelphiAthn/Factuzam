@@ -786,13 +786,15 @@ begin
 //  bPopupAbierto := False;
 //  if (tvLineas.Controller.EditingController <> nil) and
 //     (tvLineas.Controller.EditingController.Edit <> nil) and
-//     (tvLineas.Controller.EditingController.Edit is TcxCustomDropDownEdit) then
+// (tvLineas.Controller.EditingController.Edit is TcxCustomDropDownEdit) then
 //  begin
-//    bPopupAbierto := TcxCustomDropDownEdit(tvLineas.Controller.EditingController.Edit).DroppedDown;
+// bPopupAbierto := TcxCustomDropDownEdit(
+//   tvLineas.Controller.EditingController.Edit).DroppedDown;
 //  end;
 //
 //  // Si salimos del grid porque se ha abierto el popup del combo de tallas,
-//  // NO reactivamos el EnterAsTab. Así permitimos que el Enter nativo llegue al combo
+// // NO reactivamos el EnterAsTab. Así permitimos que el Enter nativo llegue al
+// combo
 //  // para confirmar la selección.
 //  if not bPopupAbierto then
 //    inLibGridTallasInline.ActivarEnterComoTab(Self, True);
@@ -1632,7 +1634,8 @@ end;
 procedure TfrmMtoComprasSesiones.btnAddLineaClick(Sender: TObject);
 begin
   inherited;
-  // BeforeInsert se encarga de preparar el master (Post si pendiente,// Edit si Browse,Abort si IsEmpty).
+  // BeforeInsert se encarga de preparar el master (Post si pendiente,// Edit si
+  // Browse,Abort si IsEmpty).
   LogSes('btnAddLineaClick: detail.Insert');
   Dmm.unqrySesionLin.Insert;
   LogSes(Format('btnAddLineaClick FIN. LINEA_SESLIN=%d',

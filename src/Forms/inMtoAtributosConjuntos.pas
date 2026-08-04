@@ -149,7 +149,8 @@ begin
   (tvValoresID_AV_ACD.Properties as TcxLookupComboBoxProperties).ListSource :=
                                           dmmAtributosConjuntos.dsValoresLookup;
   (tvValoresID_ATB_ACD.Properties as TcxLookupComboBoxProperties).ListSource :=
-                                   dmmAtributosConjuntos.dsAtributosBasicosLookup;
+                                   dmmAtributosConjuntos
+                                   .dsAtributosBasicosLookup;
   cbbID_VAR_AC.Properties.ListSource :=
                                      dmmAtributosConjuntos.dsVariacionesLookup;
   cbbID_VA_AC.Properties.ListSource :=
@@ -238,10 +239,12 @@ end;
 procedure TfrmMtoAtributosConjuntos.actArticuloExecute(Sender: TObject);
 begin
   inherited;
-  with dmmAtributosConjuntos.dsArticulosConjunto.DataSet do
   if ((pcDetail.ActivePage = tsArticulos) and
-      (not FieldByName('CODIGO_ART_ART').IsNull)) then
-    ShowMto(Self.Owner, 'Articulos', FieldByName('CODIGO_ART_ART').AsString)
+      (not dmmAtributosConjuntos.dsArticulosConjunto.DataSet.FieldByName(
+        'CODIGO_ART_ART').IsNull)) then
+    ShowMto(Self.Owner, 'Articulos',
+      dmmAtributosConjuntos.dsArticulosConjunto.DataSet.FieldByName(
+        'CODIGO_ART_ART').AsString)
   else
     ShowMto(Self.Owner, 'Articulos');
 end;

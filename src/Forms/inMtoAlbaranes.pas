@@ -575,7 +575,8 @@ end;
 procedure TfrmMtoAlbaranes.ModoEntradaResuelto(const ACodArt, ASku,
   ADescripcion: string; ACompleto: Boolean);
 begin
-  // El flujo fiscal clasico del albaran (tarifa de cabecera,IVA,// precios,total) se reaprovecha tal cual: AplicarArticuloAlbaran
+  // El flujo fiscal clasico del albaran (tarifa de cabecera,IVA,//
+  // precios,total) se reaprovecha tal cual: AplicarArticuloAlbaran
   // acepta articulo o SKU.
   if ACompleto and (ASku <> '') then
     AplicarArticuloAlbaran(ASku);
@@ -732,6 +733,7 @@ var
   bHayTrazables: Boolean;
   ds: TDataSet;
   Bm: TBookmark;
+  PropiedadesCheck: TcxCheckBoxProperties;
 begin
   // Columnas propias del albaran tras el ClearItems del contrato.
   ColLinea := Col('Línea', 'LINEA_ALBLIN', 60, False);
@@ -748,12 +750,10 @@ begin
   Col('Tarifa', 'CODIGO_TAR_ALBLIN', 70, False);
   ColImpIncl := Col('Imp. incl.', 'ESIMP_INCL_TARIFA_ALBLIN', 75, False);
   ColImpIncl.PropertiesClass := TcxCheckBoxProperties;
-  with TcxCheckBoxProperties(ColImpIncl.Properties) do
-  begin
-    ReadOnly := True;
-    ValueChecked := 'S';
-    ValueUnchecked := 'N';
-  end;
+  PropiedadesCheck := TcxCheckBoxProperties(ColImpIncl.Properties);
+  PropiedadesCheck.ReadOnly := True;
+  PropiedadesCheck.ValueChecked := 'S';
+  PropiedadesCheck.ValueUnchecked := 'N';
   Col('Total', 'TOTAL_ALBLIN', 95, False);
   Col('Almacén', 'CODIGO_ALMACEN_ALBLIN', 75, True);
   ColLote := Col('Lote', 'LOTE_ALBLIN', 80, True);
@@ -815,7 +815,8 @@ var
   end;
 begin
   // Al salir del grid hacia la cabecera, la linea vacia auto-anadida
-  // (AsegurarPrimeraLineaAlbaran) se cancela: si quedara en dsInsert,// cualquier Edit de la cabecera la postearia via CheckBrowseMode del
+  // (AsegurarPrimeraLineaAlbaran) se cancela: si quedara en dsInsert,//
+  // cualquier Edit de la cabecera la postearia via CheckBrowseMode del
   // master-detail y chocaria con la guarda de linea sin articulo.
   if Assigned(dmmAlbaranes) then
   begin
@@ -870,7 +871,8 @@ begin
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
   ActualizarColumnasOpcionalesLinea;
   ActualizarLabelPrendas;
-  // Primera construccion del contrato al abrir la pantalla: sin ella,// hasta entrar en el grid se veian las columnas del dfm.
+  // Primera construccion del contrato al abrir la pantalla: sin ella,// hasta
+  // entrar en el grid se veian las columnas del dfm.
   if dmmAlbaranes.unqryAlbaranesLineas.Active then
     ConstruirModoEntrada;
 end;

@@ -9,9 +9,9 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripcion:                                                                }
-{    Modal de impresion VERTICAL del devolucion de compra. Estilo factura:        }
+{    Modal de impresion VERTICAL del devolucion de compra. Estilo factura:     }
 {    una fila por SKU sin pivotar tallas. Hereda de TfrmPrint igual que        }
-{    el modal horizontal pero usa LineasDevolucionSku (no LineasDevolucion) y        }
+{    el modal horizontal pero usa LineasDevolucionSku (no LineasDevolucion) y  }
 {    tiene su propio diseno FastReport embebido (a disenar con el FR          }
 {    designer la primera vez que se abra).                                     }
 {******************************************************************************}

@@ -11,7 +11,7 @@
 {  Descripción:                                                                }
 {    Modal de impresión del histórico de arqueos de caja (FastReport).         }
 {    Informe A4 horizontal con los principales números de cada cierre. El      }
-{    usuario puede retocar el formato con el diseñador (botón Editar) y         }
+{    usuario puede retocar el formato con el diseñador (botón Editar) y        }
 {    guardarlo como formato propio igual que el resto de informes.             }
 {                                                                              }
 {    Es autocontenido: la consulta, el datasource y el TfrxDBDataset viven     }

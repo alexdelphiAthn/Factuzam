@@ -744,7 +744,8 @@ begin
     raise ERangeError.Create(SErrorCabeceraDocumentoTrabajoSinGrabar);
   end;
   sTipo := NormalizarTipoDestino(sDestino, ATipo);
-  if SameText(sTipo, 'USUARIO') and SameText(sDestino, IdentidadSesion.Usuario) then
+  if SameText(sTipo,
+              'USUARIO') and SameText(sDestino, IdentidadSesion.Usuario) then
   begin
     raise ERangeError.Create(SErrorCompartirDocumentoTrabajoConsigoMismo);
   end;
@@ -867,7 +868,8 @@ begin
   begin
     DataSet.FieldByName('USUARIO_DTR').AsString := IdentidadSesion.Usuario;
   end;
-  if not SameText(DataSet.FieldByName('USUARIO_DTR').AsString, IdentidadSesion.Usuario) then
+  if not SameText(DataSet.FieldByName('USUARIO_DTR').AsString,
+                  IdentidadSesion.Usuario) then
   begin
     raise ERangeError.Create(SErrorCambiarPropietarioDocumentoTrabajo);
   end;
@@ -1078,7 +1080,8 @@ begin
   end;
   sTipo := NormalizarTipoDestino(
     sDestino, DataSet.FieldByName('TIPO_DESTINO_DTC').AsString);
-  if SameText(sTipo, 'USUARIO') and SameText(sDestino, IdentidadSesion.Usuario) then
+  if SameText(sTipo,
+              'USUARIO') and SameText(sDestino, IdentidadSesion.Usuario) then
   begin
     raise ERangeError.Create(SErrorCompartirDocumentoTrabajoConsigoMismo);
   end;

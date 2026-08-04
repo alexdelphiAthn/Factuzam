@@ -333,7 +333,8 @@ begin
         Ticket.EscribirLinea(STicketArticulos);
         Ticket.LineaSeparadora('-');
         // Lineas: movimientos de salida (la salida del origen). La descripcion
-        // viene denormalizada en el propio movimiento (DESCRIPCION_ARTICULO_MOV).
+        // viene denormalizada en el propio movimiento
+        // (DESCRIPCION_ARTICULO_MOV).
         Lineas := ARepositorio.ListarLineasTraspaso(
           AEmpresa,
           AAlmacen,

@@ -1,4 +1,4 @@
-program SQLBuilder4DTests;
+﻿program SQLBuilder4DTests;
 {
 
   Delphi DUnit Test Project

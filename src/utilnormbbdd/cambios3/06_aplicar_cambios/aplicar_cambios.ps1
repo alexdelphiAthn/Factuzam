@@ -1,4 +1,4 @@
-﻿<#
+<#
   aplicar_cambios.ps1  (v3)
   Aplica los renombrados de columnas definidos en aplicar_cambios.csv
   a los ficheros .pas y .dfm de una carpeta (recursivo).

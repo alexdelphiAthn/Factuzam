@@ -1,4 +1,4 @@
-﻿# Informe de pruebas: refactorización de permisos
+# Informe de pruebas: refactorización de permisos
 
 Fecha: 23/07/2026
 

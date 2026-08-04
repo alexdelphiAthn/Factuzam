@@ -59,15 +59,14 @@ begin
   inherited;
   // Insert vacío (accidental): cancelar sin error
   if (DataSet.State = dsInsert) and
-     (Trim(unqryTablaG.FindField('DESCRIPCION_FORMA_PAGO_CFP').AsString) = '') then
+     (Trim(unqryTablaG.FindField(
+       'DESCRIPCION_FORMA_PAGO_CFP').AsString) = '') then
     Abort;
-  with unqryTablaG do
-  begin
-    if Trim(FindField('CODIGO_FP_CFP').AsString) = '' then
-      raise ERangeError.Create(SErrorCodigoFormaPagoCajaObligatorio);
-    if Trim(FindField('DESCRIPCION_FORMA_PAGO_CFP').AsString) = '' then
-      raise ERangeError.Create(SErrorDescripcionFormaPagoCajaObligatoria);
-  end;
+  if Trim(unqryTablaG.FindField('CODIGO_FP_CFP').AsString) = '' then
+    raise ERangeError.Create(SErrorCodigoFormaPagoCajaObligatorio);
+  if Trim(unqryTablaG.FindField(
+    'DESCRIPCION_FORMA_PAGO_CFP').AsString) = '' then
+    raise ERangeError.Create(SErrorDescripcionFormaPagoCajaObligatoria);
 end;
 
 initialization

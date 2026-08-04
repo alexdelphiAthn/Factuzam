@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = 'Stop'
+$ErrorActionPreference = 'Stop'
 
 $raiz = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $rutaContrato = Join-Path $raiz 'src\Lib\inLibMonitorSQLIntf.pas'

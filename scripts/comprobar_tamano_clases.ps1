@@ -1,4 +1,4 @@
-﻿param(
+param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [ValidateRange(0, [int]::MaxValue)]
   [int]$MaximoLineasPorClase = 3894,

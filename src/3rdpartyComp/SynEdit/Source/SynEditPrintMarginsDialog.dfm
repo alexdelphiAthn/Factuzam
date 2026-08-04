@@ -1,4 +1,4 @@
-object SynEditPrintMarginsDlg: TSynEditPrintMarginsDlg
+﻿object SynEditPrintMarginsDlg: TSynEditPrintMarginsDlg
   Left = 244
   Top = 189
   ActiveControl = CBUnits

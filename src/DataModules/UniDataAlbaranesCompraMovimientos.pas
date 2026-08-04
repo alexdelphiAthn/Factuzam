@@ -127,23 +127,34 @@ begin
       '        SELECT A.CODIGO_PRV_ALBC AS CODIGO_PRV, ' +
       '               L.CODIGO_ART_ALBCLIN AS CODIGO_ART, ' +
       '               COALESCE(TRIM(L.REF_PRV_ALBCLIN), '''') AS REF_PRV, ' +
-      '               CASE WHEN IFNULL(A.ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ''N'') <> ''S'' ' +
-      '                     AND IFNULL(A.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' ' +
+      '               CASE WHEN IFNULL(A.ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ' +
+      '''N'') <> ''S'' ' +
+      '                     AND IFNULL(A.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') ' +
+      '= ''S'' ' +
       '                    THEN L.PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN * ' +
       '                      (1 + (IFNULL(L.PORCENTAJE_IVA_ALBCLIN, 0) + ' +
-      '                        CASE IFNULL(L.TIPO_IVA_ARTICULO_ALBCLIN, ''N'') ' +
-      '                          WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) ' +
-      '                          WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
-      '                          WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
-      '                          WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) ' +
+      '                        CASE IFNULL(L.TIPO_IVA_ARTICULO_ALBCLIN, ''N'') '
+        +
+      '                          WHEN ''N'' THEN ' +
+      'IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) ' +
+      '                          WHEN ''R'' THEN ' +
+      'IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
+      '                          WHEN ''S'' THEN ' +
+      'IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
+      '                          WHEN ''E'' THEN ' +
+      'IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) ' +
       '                          ELSE 0 END) / 100) ' +
       '                    ELSE L.PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN END * ' +
       '               CASE WHEN IFNULL(A.TOTAL_BRUTO_ALBC, 0) > 0 THEN ' +
       '                      GREATEST(0, 1 - CASE ' +
-      '                        WHEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) <> 0 ' +
-      '                        THEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) / A.TOTAL_BRUTO_ALBC ' +
-      '                        ELSE IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100 END) ' +
-      '                    ELSE GREATEST(0, 1 - IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100) ' +
+      '                        WHEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) <> 0 '
+        +
+      '                        THEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) / ' +
+      'A.TOTAL_BRUTO_ALBC ' +
+      '                        ELSE IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, ' +
+      '0) / 100 END) ' +
+      '                    ELSE GREATEST(0, 1 - ' +
+      'IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100) ' +
       '               END AS PRECIO ' +
       '          FROM fza_albaranes_compra_lineas L ' +
       '          JOIN fza_albaranes_compra A ' +
@@ -158,23 +169,31 @@ begin
       '           AND (IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
       '                OR EXISTS ( ' +
       '                   SELECT 1 FROM fza_albaranes_compra_celdas C ' +
-      '                    WHERE C.SERIE_ALBC_ALBCCEL  = L.SERIE_ALBC_ALBCLIN ' +
-      '                      AND C.NUMERO_ALBC_ALBCCEL = L.NUMERO_ALBC_ALBCLIN ' +
+      '                    WHERE C.SERIE_ALBC_ALBCCEL  = L.SERIE_ALBC_ALBCLIN '
+        +
+      '                      AND C.NUMERO_ALBC_ALBCCEL = L.NUMERO_ALBC_ALBCLIN '
+        +
       '                      AND CAST(C.LINEA_ALBC_ALBCCEL AS UNSIGNED) ' +
       '                          = CAST(L.LINEA_ALBCLIN AS UNSIGNED) ' +
       '                      AND C.CANTIDAD_ALBCCEL > 0)) ' +
       '           AND NOT EXISTS ( ' +
       '                 SELECT 1 FROM fza_albaranes_compra_lineas L2 ' +
       '                  WHERE L2.SERIE_ALBC_ALBCLIN  = L.SERIE_ALBC_ALBCLIN ' +
-      '                    AND L2.NUMERO_ALBC_ALBCLIN = L.NUMERO_ALBC_ALBCLIN ' +
+      '                    AND L2.NUMERO_ALBC_ALBCLIN = L.NUMERO_ALBC_ALBCLIN '
+        +
       '                    AND L2.CODIGO_ART_ALBCLIN  = L.CODIGO_ART_ALBCLIN ' +
       '                    AND (IFNULL(L2.CANTIDAD_ALBCLIN, 0) > 0 ' +
       '                         OR EXISTS ( ' +
-      '                            SELECT 1 FROM fza_albaranes_compra_celdas C2 ' +
-      '                             WHERE C2.SERIE_ALBC_ALBCCEL  = L2.SERIE_ALBC_ALBCLIN ' +
-      '                               AND C2.NUMERO_ALBC_ALBCCEL = L2.NUMERO_ALBC_ALBCLIN ' +
-      '                               AND CAST(C2.LINEA_ALBC_ALBCCEL AS UNSIGNED) ' +
-      '                                   = CAST(L2.LINEA_ALBCLIN AS UNSIGNED) ' +
+      '                            SELECT 1 FROM fza_albaranes_compra_celdas ' +
+      'C2 ' +
+      '                             WHERE C2.SERIE_ALBC_ALBCCEL  = ' +
+      'L2.SERIE_ALBC_ALBCLIN ' +
+      '                               AND C2.NUMERO_ALBC_ALBCCEL = ' +
+      'L2.NUMERO_ALBC_ALBCLIN ' +
+      '                               AND CAST(C2.LINEA_ALBC_ALBCCEL AS ' +
+      'UNSIGNED) ' +
+      '                                   = CAST(L2.LINEA_ALBCLIN AS UNSIGNED) '
+        +
       '                               AND C2.CANTIDAD_ALBCCEL > 0)) ' +
       '                    AND L2.LINEA_ALBCLIN > L.LINEA_ALBCLIN) ' +
       '       ) X ' +
@@ -213,23 +232,34 @@ begin
       '  FROM ( ' +
       '        SELECT L.CODIGO_UNIDAD_ALBCLIN AS CODIGO_SKU, ' +
       '               COALESCE(A.FECHA_ALBC, CURRENT_DATE) AS FECHA_ALBC, ' +
-      '               CASE WHEN IFNULL(A.ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ''N'') <> ''S'' ' +
-      '                     AND IFNULL(A.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' ' +
+      '               CASE WHEN IFNULL(A.ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ' +
+      '''N'') <> ''S'' ' +
+      '                     AND IFNULL(A.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') ' +
+      '= ''S'' ' +
       '                    THEN L.PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN * ' +
       '                      (1 + (IFNULL(L.PORCENTAJE_IVA_ALBCLIN, 0) + ' +
-      '                        CASE IFNULL(L.TIPO_IVA_ARTICULO_ALBCLIN, ''N'') ' +
-      '                          WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) ' +
-      '                          WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
-      '                          WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
-      '                          WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) ' +
+      '                        CASE IFNULL(L.TIPO_IVA_ARTICULO_ALBCLIN, ''N'') '
+        +
+      '                          WHEN ''N'' THEN ' +
+      'IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) ' +
+      '                          WHEN ''R'' THEN ' +
+      'IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
+      '                          WHEN ''S'' THEN ' +
+      'IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
+      '                          WHEN ''E'' THEN ' +
+      'IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) ' +
       '                          ELSE 0 END) / 100) ' +
       '                    ELSE L.PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN END * ' +
       '               CASE WHEN IFNULL(A.TOTAL_BRUTO_ALBC, 0) > 0 THEN ' +
       '                      GREATEST(0, 1 - CASE ' +
-      '                        WHEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) <> 0 ' +
-      '                        THEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) / A.TOTAL_BRUTO_ALBC ' +
-      '                        ELSE IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100 END) ' +
-      '                    ELSE GREATEST(0, 1 - IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100) ' +
+      '                        WHEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) <> 0 '
+        +
+      '                        THEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) / ' +
+      'A.TOTAL_BRUTO_ALBC ' +
+      '                        ELSE IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, ' +
+      '0) / 100 END) ' +
+      '                    ELSE GREATEST(0, 1 - ' +
+      'IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100) ' +
       '               END AS PRECIO ' +
       '          FROM fza_albaranes_compra_lineas L ' +
       '          JOIN fza_albaranes_compra A ' +
@@ -242,23 +272,32 @@ begin
       '           AND (IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
       '                OR EXISTS ( ' +
       '                   SELECT 1 FROM fza_albaranes_compra_celdas C ' +
-      '                    WHERE C.SERIE_ALBC_ALBCCEL  = L.SERIE_ALBC_ALBCLIN ' +
-      '                      AND C.NUMERO_ALBC_ALBCCEL = L.NUMERO_ALBC_ALBCLIN ' +
+      '                    WHERE C.SERIE_ALBC_ALBCCEL  = L.SERIE_ALBC_ALBCLIN '
+        +
+      '                      AND C.NUMERO_ALBC_ALBCCEL = L.NUMERO_ALBC_ALBCLIN '
+        +
       '                      AND CAST(C.LINEA_ALBC_ALBCCEL AS UNSIGNED) ' +
       '                          = CAST(L.LINEA_ALBCLIN AS UNSIGNED) ' +
       '                      AND C.CANTIDAD_ALBCCEL > 0)) ' +
       '           AND NOT EXISTS ( ' +
       '                 SELECT 1 FROM fza_albaranes_compra_lineas L2 ' +
       '                  WHERE L2.SERIE_ALBC_ALBCLIN  = L.SERIE_ALBC_ALBCLIN ' +
-      '                    AND L2.NUMERO_ALBC_ALBCLIN = L.NUMERO_ALBC_ALBCLIN ' +
-      '                    AND L2.CODIGO_UNIDAD_ALBCLIN = L.CODIGO_UNIDAD_ALBCLIN ' +
+      '                    AND L2.NUMERO_ALBC_ALBCLIN = L.NUMERO_ALBC_ALBCLIN '
+        +
+      '                    AND L2.CODIGO_UNIDAD_ALBCLIN = ' +
+      'L.CODIGO_UNIDAD_ALBCLIN ' +
       '                    AND (IFNULL(L2.CANTIDAD_ALBCLIN, 0) > 0 ' +
       '                         OR EXISTS ( ' +
-      '                            SELECT 1 FROM fza_albaranes_compra_celdas C2 ' +
-      '                             WHERE C2.SERIE_ALBC_ALBCCEL  = L2.SERIE_ALBC_ALBCLIN ' +
-      '                               AND C2.NUMERO_ALBC_ALBCCEL = L2.NUMERO_ALBC_ALBCLIN ' +
-      '                               AND CAST(C2.LINEA_ALBC_ALBCCEL AS UNSIGNED) ' +
-      '                                   = CAST(L2.LINEA_ALBCLIN AS UNSIGNED) ' +
+      '                            SELECT 1 FROM fza_albaranes_compra_celdas ' +
+      'C2 ' +
+      '                             WHERE C2.SERIE_ALBC_ALBCCEL  = ' +
+      'L2.SERIE_ALBC_ALBCLIN ' +
+      '                               AND C2.NUMERO_ALBC_ALBCCEL = ' +
+      'L2.NUMERO_ALBC_ALBCLIN ' +
+      '                               AND CAST(C2.LINEA_ALBC_ALBCCEL AS ' +
+      'UNSIGNED) ' +
+      '                                   = CAST(L2.LINEA_ALBCLIN AS UNSIGNED) '
+        +
       '                               AND C2.CANTIDAD_ALBCCEL > 0)) ' +
       '                    AND L2.LINEA_ALBCLIN > L.LINEA_ALBCLIN) ' +
       '       ) X ' +
@@ -335,25 +374,34 @@ begin
       '       L.CODIGO_UNIDAD_ALBCLIN             AS SKU, ' +
       '       L.CODIGO_ART_ALBCLIN                AS ARTICULO, ' +
       '       L.CANTIDAD_ALBCLIN                  AS CANTIDAD, ' +
-      '       CASE WHEN IFNULL(A.ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ''N'') <> ''S'' ' +
+      '       CASE WHEN IFNULL(A.ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ''N'') ' +
+      '<> ''S'' ' +
       '             AND IFNULL(A.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' ' +
       '            THEN L.PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN * ' +
       '              (1 + (IFNULL(L.PORCENTAJE_IVA_ALBCLIN, 0) + ' +
       '                CASE IFNULL(L.TIPO_IVA_ARTICULO_ALBCLIN, ''N'') ' +
-      '                  WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) ' +
-      '                  WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
-      '                  WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
-      '                  WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) ' +
+      '                  WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) '
+        +
+      '                  WHEN ''R'' THEN ' +
+      'IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
+      '                  WHEN ''S'' THEN ' +
+      'IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
+      '                  WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) '
+        +
       '                  ELSE 0 END) / 100) ' +
       '            ELSE L.PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN END * ' +
       '       CASE WHEN IFNULL(A.TOTAL_BRUTO_ALBC, 0) > 0 THEN ' +
       '              GREATEST(0, 1 - CASE ' +
       '                WHEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) <> 0 ' +
-      '                THEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) / A.TOTAL_BRUTO_ALBC ' +
-      '                ELSE IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100 END) ' +
-      '            ELSE GREATEST(0, 1 - IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100) ' +
+      '                THEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) / ' +
+      'A.TOTAL_BRUTO_ALBC ' +
+      '                ELSE IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100 ' +
+      'END) ' +
+      '            ELSE GREATEST(0, 1 - ' +
+      'IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100) ' +
       '       END AS PRECIO, ' +
-      '       IFNULL(NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), :alm_cab1) AS ALMACEN ' +
+      '       IFNULL(NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), :alm_cab1) AS ' +
+      'ALMACEN ' +
       '  FROM fza_albaranes_compra_lineas L ' +
       '  JOIN fza_albaranes_compra A ' +
       '    ON A.SERIE_ALBC  = L.SERIE_ALBC_ALBCLIN ' +
@@ -374,26 +422,35 @@ begin
       '       L.CODIGO_UNIDAD_ALBCLIN             AS SKU, ' +
       '       L.CODIGO_ART_ALBCLIN                AS ARTICULO, ' +
       '       C.CANTIDAD_ALBCCEL                  AS CANTIDAD, ' +
-      '       CASE WHEN IFNULL(A.ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ''N'') <> ''S'' ' +
+      '       CASE WHEN IFNULL(A.ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ''N'') ' +
+      '<> ''S'' ' +
       '             AND IFNULL(A.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' ' +
       '            THEN L.PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN * ' +
       '              (1 + (IFNULL(L.PORCENTAJE_IVA_ALBCLIN, 0) + ' +
       '                CASE IFNULL(L.TIPO_IVA_ARTICULO_ALBCLIN, ''N'') ' +
-      '                  WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) ' +
-      '                  WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
-      '                  WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
-      '                  WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) ' +
+      '                  WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) '
+        +
+      '                  WHEN ''R'' THEN ' +
+      'IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
+      '                  WHEN ''S'' THEN ' +
+      'IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
+      '                  WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) '
+        +
       '                  ELSE 0 END) / 100) ' +
       '            ELSE L.PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN END * ' +
       '       CASE WHEN IFNULL(A.TOTAL_BRUTO_ALBC, 0) > 0 THEN ' +
       '              GREATEST(0, 1 - CASE ' +
       '                WHEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) <> 0 ' +
-      '                THEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) / A.TOTAL_BRUTO_ALBC ' +
-      '                ELSE IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100 END) ' +
-      '            ELSE GREATEST(0, 1 - IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100) ' +
+      '                THEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) / ' +
+      'A.TOTAL_BRUTO_ALBC ' +
+      '                ELSE IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100 ' +
+      'END) ' +
+      '            ELSE GREATEST(0, 1 - ' +
+      'IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100) ' +
       '       END AS PRECIO, ' +
       '       IFNULL(NULLIF(C.CODIGO_ALM_ALBCCEL, ''''), ' +
-      '              IFNULL(NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), :alm_cab2)) AS ALMACEN ' +
+      '              IFNULL(NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
+      ':alm_cab2)) AS ALMACEN ' +
       '  FROM fza_albaranes_compra_lineas L ' +
       '  JOIN fza_albaranes_compra A ' +
       '    ON A.SERIE_ALBC  = L.SERIE_ALBC_ALBCLIN ' +
@@ -595,7 +652,8 @@ begin
         '   AND L.NUMERO_ALBC_ALBCLIN = :n1 ' +
         '   AND IFNULL(NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
         '              (SELECT CODIGO_ALM_ALBC FROM fza_albaranes_compra ' +
-        '                WHERE SERIE_ALBC = :s1b AND NUMERO_ALBC = :n1b)) = :alm1 ' +
+        '                WHERE SERIE_ALBC = :s1b AND NUMERO_ALBC = :n1b)) = ' +
+        ':alm1 ' +
         '   AND L.CODIGO_UNIDAD_ALBCLIN IS NOT NULL ' +
         '   AND L.CODIGO_UNIDAD_ALBCLIN <> '''' ' +
         'UNION ' +
@@ -610,8 +668,10 @@ begin
         '   AND L.NUMERO_ALBC_ALBCLIN = :n2 ' +
         '   AND IFNULL(NULLIF(C.CODIGO_ALM_ALBCCEL, ''''), ' +
         '              IFNULL(NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
-        '                    (SELECT CODIGO_ALM_ALBC FROM fza_albaranes_compra ' +
-        '                      WHERE SERIE_ALBC = :s2b AND NUMERO_ALBC = :n2b))) = :alm2 ' +
+        '                    (SELECT CODIGO_ALM_ALBC FROM fza_albaranes_compra '
+          +
+        '                      WHERE SERIE_ALBC = :s2b AND NUMERO_ALBC = ' +
+        ':n2b))) = :alm2 ' +
         '   AND L.CODIGO_UNIDAD_ALBCLIN IS NOT NULL ' +
         '   AND L.CODIGO_UNIDAD_ALBCLIN <> '''' ';
       qExec.ParamByName('s1').AsString    := ASerieAlbc;

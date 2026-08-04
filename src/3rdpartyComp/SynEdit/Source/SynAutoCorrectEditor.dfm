@@ -1,4 +1,4 @@
-object frmAutoCorrectEditor: TfrmAutoCorrectEditor
+﻿object frmAutoCorrectEditor: TfrmAutoCorrectEditor
   Left = 210
   Top = 111
   BorderStyle = bsDialog

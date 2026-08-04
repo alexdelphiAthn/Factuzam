@@ -1,4 +1,4 @@
-﻿Reversion de ficheros ajenos - 2026-07-25 06:46:17
+Reversion de ficheros ajenos - 2026-07-25 06:46:17
 index.lock huerfano eliminado.
 
 Devolviendo a su estado original:

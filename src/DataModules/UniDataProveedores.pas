@@ -241,14 +241,12 @@ end;
 procedure TdmProveedores.unqryKitsAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  with unqryKits do
-  begin
-    FieldByName('CODIGO_PRV_PRVKIT').AsString :=
-      unqryTablaG.FieldByName('CODIGO_PRV_PRV').AsString;
-    FieldByName('ORDEN_PRVKIT').AsInteger   := 0;
-    FieldByName('USUARIO_ALTA').AsString    := IdentidadSesion.Usuario;
-    FieldByName('INSTANTE_ALTA').AsDateTime := Now;
-  end;
+  unqryKits.FieldByName('CODIGO_PRV_PRVKIT').AsString :=
+    unqryTablaG.FieldByName('CODIGO_PRV_PRV').AsString;
+  unqryKits.FieldByName('ORDEN_PRVKIT').AsInteger := 0;
+  unqryKits.FieldByName('USUARIO_ALTA').AsString :=
+    IdentidadSesion.Usuario;
+  unqryKits.FieldByName('INSTANTE_ALTA').AsDateTime := Now;
 end;
 
 procedure TdmProveedores.unqryKitsBeforePost(DataSet: TDataSet);
@@ -318,17 +316,15 @@ begin
   finally
     FreeAndNil(q);
   end;
-  with unqryKitsDet do
-  begin
-    FieldByName('CODIGO_PRV_PRVKITD').AsString :=
-      unqryKits.FieldByName('CODIGO_PRV_PRVKIT').AsString;
-    FieldByName('CODIGO_PRVKIT_PRVKITD').AsString :=
-      unqryKits.FieldByName('CODIGO_PRVKIT').AsString;
-    FieldByName('CANTIDAD_PRVKITD').AsFloat   := 0;
-    FieldByName('ORDEN_PRVKITD').AsInteger    := iOrden;
-    FieldByName('USUARIO_ALTA').AsString      := IdentidadSesion.Usuario;
-    FieldByName('INSTANTE_ALTA').AsDateTime   := Now;
-  end;
+  unqryKitsDet.FieldByName('CODIGO_PRV_PRVKITD').AsString :=
+    unqryKits.FieldByName('CODIGO_PRV_PRVKIT').AsString;
+  unqryKitsDet.FieldByName('CODIGO_PRVKIT_PRVKITD').AsString :=
+    unqryKits.FieldByName('CODIGO_PRVKIT').AsString;
+  unqryKitsDet.FieldByName('CANTIDAD_PRVKITD').AsFloat := 0;
+  unqryKitsDet.FieldByName('ORDEN_PRVKITD').AsInteger := iOrden;
+  unqryKitsDet.FieldByName('USUARIO_ALTA').AsString :=
+    IdentidadSesion.Usuario;
+  unqryKitsDet.FieldByName('INSTANTE_ALTA').AsDateTime := Now;
 end;
 
 procedure TdmProveedores.unqryKitsDetBeforePost(DataSet: TDataSet);
@@ -336,7 +332,7 @@ begin
   inherited;
   if Trim(unqryKitsDet.FieldByName('VALOR_DESTINO_PRVKITD').AsString) = '' then
     raise Exception.Create(SErrorTallaDestinoKitProveedorObligatoria);
-  unqryKitsDet.FieldByName('USUARIO_MODIF').AsString    := IdentidadSesion.Usuario;
+  unqryKitsDet.FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
   unqryKitsDet.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
 end;
 

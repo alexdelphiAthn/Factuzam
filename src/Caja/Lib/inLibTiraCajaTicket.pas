@@ -65,7 +65,8 @@ type
                                       const AOperacion:
                                       TOperacionTiraCaja;
                                       AImprimirQR: Boolean);
-    // Render de una operación de traspaso saliente (cursor maestro posicionado):
+    // Render de una operación de traspaso saliente (cursor maestro
+    // posicionado):
     // cabecera (referencia + fecha) + almacén destino + detalle de artículos
     // (SKU, descripción, cantidad) de fza_movimientos_almacen. Con AValorar
     // (permiso caja.verCoste) añade el coste por línea y el total a coste, que

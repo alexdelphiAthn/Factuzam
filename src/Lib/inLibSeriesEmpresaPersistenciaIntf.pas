@@ -16,14 +16,19 @@ uses
   System.SysUtils;
 
 type
-  TTiposDocumentoEmpresa = TArray<string>;
+  TTipoDocumentoEmpresa = record
+    Codigo: string;
+    UsaCaja: Boolean;
+  end;
+
+  TTiposDocumentoEmpresa = TArray<TTipoDocumentoEmpresa>;
 
   IRepositorioSeriesEmpresa = interface
     ['{B4C6F463-62C4-42AE-A36A-696017F3BED3}']
     function ListarTiposDocumento: TTiposDocumentoEmpresa;
     function CrearSerieSiFalta(
-      const AEmpresa, ASerie, ATipo, ASubtipo: string;
-      AFechaDesde, AFechaHasta: TDateTime;
+      const AEmpresa, AAlmacen, ACaja, ASerieTokenizada: string;
+      const ATipo, ASubtipo: string;
       const AUsuario: string): Boolean;
   end;
 

@@ -186,24 +186,33 @@ begin
       '       L.CODIGO_ART_PEDCLIN, ' +
       '       IFNULL(NULLIF(L.CODIGO_ALMACEN_PEDCLIN, ''''), ' +
       '              P.CODIGO_ALM_PEDC) AS ALM_EFE, ' +
-      '       L.CANTIDAD_PEDCLIN - IFNULL(L.CANTIDAD_RECIBIDA_PEDCLIN,0) AS PENDIENTE, ' +
-      '       CASE WHEN IFNULL(P.ESIVA_EXENTO_INTRACOMUNITARIO_PEDC, ''N'') <> ''S'' ' +
+      '       L.CANTIDAD_PEDCLIN - IFNULL(L.CANTIDAD_RECIBIDA_PEDCLIN,0) AS ' +
+      'PENDIENTE, ' +
+      '       CASE WHEN IFNULL(P.ESIVA_EXENTO_INTRACOMUNITARIO_PEDC, ''N'') ' +
+      '<> ''S'' ' +
       '             AND IFNULL(P.ESIVA_RECARGO_COMPRAS_PEDC, ''N'') = ''S'' ' +
       '            THEN L.PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN * ' +
       '              (1 + (IFNULL(L.PORCENTAJE_IVA_PEDCLIN, 0) + ' +
       '                CASE IFNULL(L.TIPO_IVA_ARTICULO_PEDCLIN, ''N'') ' +
-      '                  WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) ' +
-      '                  WHEN ''R'' THEN IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
-      '                  WHEN ''S'' THEN IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
-      '                  WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) ' +
+      '                  WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) '
+        +
+      '                  WHEN ''R'' THEN ' +
+      'IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
+      '                  WHEN ''S'' THEN ' +
+      'IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
+      '                  WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) '
+        +
       '                  ELSE 0 END) / 100) ' +
       '            ELSE L.PRECIO_COMPRA_SIVA_ARTICULO_PEDCLIN END * ' +
       '       CASE WHEN IFNULL(P.TOTAL_BRUTO_PEDC, 0) > 0 THEN ' +
       '              GREATEST(0, 1 - CASE ' +
       '                WHEN IFNULL(P.TOTAL_DTO_COMERCIAL_PEDC, 0) <> 0 ' +
-      '                THEN IFNULL(P.TOTAL_DTO_COMERCIAL_PEDC, 0) / P.TOTAL_BRUTO_PEDC ' +
-      '                ELSE IFNULL(P.PORCENTAJE_DTO_COMERCIAL_PEDC, 0) / 100 END) ' +
-      '            ELSE GREATEST(0, 1 - IFNULL(P.PORCENTAJE_DTO_COMERCIAL_PEDC, 0) / 100) ' +
+      '                THEN IFNULL(P.TOTAL_DTO_COMERCIAL_PEDC, 0) / ' +
+      'P.TOTAL_BRUTO_PEDC ' +
+      '                ELSE IFNULL(P.PORCENTAJE_DTO_COMERCIAL_PEDC, 0) / 100 ' +
+      'END) ' +
+      '            ELSE GREATEST(0, 1 - ' +
+      'IFNULL(P.PORCENTAJE_DTO_COMERCIAL_PEDC, 0) / 100) ' +
       '       END AS PRECIO, ' +
       '       P.CODIGO_PRV_PEDC, P.CODIGO_EMP_PEDC, ' +
       '       P.FECHA_PEDC, P.FECHA_PREVISTA_PEDC ' +

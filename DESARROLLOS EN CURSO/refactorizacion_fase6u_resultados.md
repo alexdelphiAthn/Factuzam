@@ -1,4 +1,4 @@
-﻿# Fase 6U — restricción de usuario por documento
+# Fase 6U — restricción de usuario por documento
 
 Fecha: 28/07/2026. D1.5 y vigésimo primer fascículo de D1 terminados.
 Sin commit.

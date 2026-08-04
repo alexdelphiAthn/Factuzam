@@ -282,22 +282,22 @@ begin
             FBools.Add(pBool);
             pBool^ := SameText(Param.ValorPorDefecto,
                                'True') or (Param.ValorPorDefecto = '1');
-            with TJvInspectorVarData.New(CatItem,
-                                         Param.Nombre,
-                                         TypeInfo(Boolean),
-                                         pBool) do
-              DisplayName := DescripcionTraducida;
+            ItemCombo := TJvInspectorVarData.New(CatItem,
+                                                 Param.Nombre,
+                                                 TypeInfo(Boolean),
+                                                 pBool);
+            ItemCombo.DisplayName := DescripcionTraducida;
           end;
         tpInteger:
           begin
             New(pInt);
             FInts.Add(pInt);
             pInt^ := StrToIntDef(Param.ValorPorDefecto, 0);
-            with TJvInspectorVarData.New(CatItem,
-                                         Param.Nombre,
-                                         TypeInfo(Integer),
-                                         pInt) do
-              DisplayName := DescripcionTraducida;
+            ItemCombo := TJvInspectorVarData.New(CatItem,
+                                                 Param.Nombre,
+                                                 TypeInfo(Integer),
+                                                 pInt);
+            ItemCombo.DisplayName := DescripcionTraducida;
           end;
         tpString:
           begin
@@ -537,8 +537,10 @@ var
 begin
   ConstruirInspector;
   cmbGrupoUsuario.Properties.Items.Clear;
-  // Todo usuario gestiona sus propios parametros (IdentidadSesion.Usuario) y los de su
-  // grupo (IdentidadSesion.Grupo), y puede consultar los de 'Todos' (oAll) en modo
+  // Todo usuario gestiona sus propios parametros (IdentidadSesion.Usuario) y
+  // los de su
+  // grupo (IdentidadSesion.Grupo), y puede consultar los de 'Todos' (oAll) en
+  // modo
   // solo lectura (lo aplica cmbGrupoUsuarioPropertiesChange).
   cmbGrupoUsuario.Properties.Items.Add(IdentidadSesion.Usuario);
   cmbGrupoUsuario.Properties.Items.Add(IdentidadSesion.Grupo);
@@ -641,7 +643,8 @@ begin
     // 'Todos' (y cualquier otro sujeto) solo los ve en modo lectura. Los
     // administradores editan todo.
     bSoloLectura := (IdentidadSesion.GrupoRaiz <> 'S') and
-                    (not SameText(cmbGrupoUsuario.Text, IdentidadSesion.Usuario)) and
+                    (not SameText(cmbGrupoUsuario.Text,
+                                  IdentidadSesion.Usuario)) and
                     (not SameText(cmbGrupoUsuario.Text, IdentidadSesion.Grupo));
     JvInspector1.ReadOnly := bSoloLectura;
     btnGuardar.Enabled    := not bSoloLectura;

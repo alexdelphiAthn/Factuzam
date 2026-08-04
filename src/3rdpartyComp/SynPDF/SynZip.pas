@@ -1,4 +1,4 @@
-/// low-level access to ZLib compression (1.2.5 engine version)
+﻿/// low-level access to ZLib compression (1.2.5 engine version)
 // - this unit is a part of the freeware Synopse framework,
 // licensed under a MPL/GPL/LGPL tri-license; version 1.18
 unit SynZip;

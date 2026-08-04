@@ -1,4 +1,4 @@
-{-------------------------------------------------------------------------------
+ï»¿{-------------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -13,7 +13,7 @@ The original code is: SynHighlighterLDraw.pas, released 2003-04-12.
 Description: LDraw Parser/Highlighter
 The initial author of this file is Orion Pobursky.
 Copyright (c) 2003, all rights reserved.
-Unicode translation by Maël Hörz.
+Unicode translation by MaÃ«l HÃ¶rz.
 
 Contributors to the SynEdit and mwEdit projects are listed in the
 Contributors.txt file.

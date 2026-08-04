@@ -1,4 +1,4 @@
-unit SQLBuilder4D.UnitTest;
+﻿unit SQLBuilder4D.UnitTest;
 
 interface
 

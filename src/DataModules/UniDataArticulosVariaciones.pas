@@ -324,6 +324,7 @@ procedure TGestorVariacionesUniDAC.CargarVariaciones(
   const CodigoArticulo: string);
 var
   q: TUniQuery;
+  Etiqueta: TcxLabel;
 begin
   FCodigoArticulo := CodigoArticulo;
   FTipoVariacion  := '';
@@ -357,14 +358,13 @@ begin
     if FTipoVariacion = '' then
     begin
       // Artículo sin variaciones — mostrar mensaje
-      with TcxLabel.Create(FPanelAtributos) do
-      begin
-        Parent  := FPanelAtributos;
-        Left    := MARGEN_H;
-        Top     := MARGEN_V;
-        Caption := 'Este artículo no tiene variaciones activadas.';
-        Transparent := True;
-      end;
+      Etiqueta := TcxLabel.Create(FPanelAtributos);
+      Etiqueta.Parent := FPanelAtributos;
+      Etiqueta.Left := MARGEN_H;
+      Etiqueta.Top := MARGEN_V;
+      Etiqueta.Caption :=
+        'Este artículo no tiene variaciones activadas.';
+      Etiqueta.Transparent := True;
     end
     else
     begin

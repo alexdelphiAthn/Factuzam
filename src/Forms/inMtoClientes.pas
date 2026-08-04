@@ -708,7 +708,8 @@ begin
   cbbPaises.Properties.ListSource := FDmmClientes.dsPaises;
   pcPestanas.ActivePage := tsDomicilioFiscal;
   Self.pkFieldName := 'CODIGO_CLI_CLI';
-  // Carga perezosa de sub-pestañas detail (default = tsDomicilioFiscal,// que no usa query detail). Historia/Depositos se abren solo cuando
+  // Carga perezosa de sub-pestañas detail (default = tsDomicilioFiscal,// que
+  // no usa query detail). Historia/Depositos se abren solo cuando
   // el usuario activa su pestaña.
   pcPestanas.OnChange := PcPestanasChange;
   btnNuevoCliente.Enabled := PuedeAccionMto(apmInsertar);
@@ -740,10 +741,10 @@ end;
 procedure TfrmMtoClientes.btnIrAArticuloPresClick(Sender: TObject);
 begin
   inherited;
-  with tvDepositosCliente.DataController.DataSet do
-    ShowMto(Self.Owner,
-            'Articulos',
-            FieldByName('CODIGO_ART_DEP').AsString);
+  ShowMto(Self.Owner,
+          'Articulos',
+          tvDepositosCliente.DataController.DataSet.FieldByName(
+            'CODIGO_ART_DEP').AsString);
 end;
 
 procedure TfrmMtoClientes.dsTablaGStateChange(Sender: TObject);

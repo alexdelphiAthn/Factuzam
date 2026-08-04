@@ -1,4 +1,4 @@
-﻿# Fase 6Z — dominio de artículos de `TfrmMtoGen`
+# Fase 6Z — dominio de artículos de `TfrmMtoGen`
 
 Fecha: 28/07/2026. D2.5 y quinto fascículo de D2 terminados.
 Sin commit.

@@ -1,4 +1,4 @@
-﻿# Fase 6AD — cadenas, perfiles y símbolos prohibidos
+# Fase 6AD — cadenas, perfiles y símbolos prohibidos
 
 Fecha: 28/07/2026. D3.3, tercer fascículo de nueve. Sin commit.
 

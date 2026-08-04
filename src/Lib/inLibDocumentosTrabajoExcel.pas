@@ -64,10 +64,30 @@ const
   cFormatoPrecio = '#,##0.00" €"';
   cColorCabecera = $00666666;
 
-procedure ExportarDocumentoTrabajoExcel(
-  ASheetControl: TdxSpreadSheet;
-  const QCabecera, QLineas: TDataSet;
-  AFotos: TFotosArticulos);
+type
+  TExportadorDocumentoTrabajo = class
+  private
+    FControl: TdxSpreadSheet;
+    FCabecera: TDataSet;
+    FLineas: TDataSet;
+    FFotos: TFotosArticulos;
+    FHoja: TdxSpreadSheetTableView;
+    FFotosLinea: TDictionary<string, TFotoInfo>;
+    FFila: Integer;
+    function TextoCodigoNombre(const ACodigo, ANombre: string): string;
+    procedure EscribirFecha(AFila, AColumna: Integer; ACampo: TField);
+    procedure IncrustarFoto(AFila: Integer; const ACodArt, ACodSku: string);
+    procedure EscribirCabeceraDocumento;
+    procedure EscribirCabeceraLineas;
+    procedure EscribirLinea;
+    procedure ProcesarLineas;
+    procedure ConfigurarAnchos;
+  public
+    constructor Create(AControl: TdxSpreadSheet;
+      const ACabecera, ALineas: TDataSet; AFotos: TFotosArticulos);
+    procedure Ejecutar;
+  end;
+
 const
   COL_FOTO = 0;
   COL_LINEA = 1;
@@ -87,266 +107,298 @@ const
   COL_ORIGEN = 15;
   COL_INSTANTE_STOCK = 16;
   COL_MAX = COL_INSTANTE_STOCK;
-var
-  Sheet: TdxSpreadSheetTableView;
-  oFotosLinea: TDictionary<string, TFotoInfo>;
-  iRow: Integer;
-  BmLineas: TBookmark;
 
-  function TextoCodigoNombre(const ACodigo, ANombre: string): string;
-  begin
-    Result := Trim(ACodigo);
-    if Trim(ANombre) <> '' then
-    begin
-      if Result <> '' then
-      begin
-        Result := Result + ' - ';
-      end;
-      Result := Result + Trim(ANombre);
-    end;
-  end;
-
-  procedure EscribirFecha(AFila, AColumna: Integer; ACampo: TField);
-  begin
-    if (ACampo <> nil) and (not ACampo.IsNull) then
-    begin
-      W(Sheet, AFila, AColumna, ACampo.AsDateTime);
-      Sheet.Cells[AFila, AColumna].Style.DataFormat.FormatCode :=
-        'dd/mm/yyyy hh:mm';
-    end;
-  end;
-
-  procedure IncrustarFoto(AFila: Integer; const ACodArt, ACodSku: string);
-  var
-    info: TFotoInfo;
-    sClave: string;
-    sRuta: string;
-    img: TdxSmartImage;
-    Pic: TdxSpreadSheetPictureContainer;
-    Celda: TdxSpreadSheetCell;
-    iAncho: Integer;
-    iAlto: Integer;
-    iIzquierda: Integer;
-    iArriba: Integer;
-  begin
-    info := Default(TFotoInfo);
-    sClave := ACodArt + #1 + ACodSku;
-    if Assigned(AFotos) and
-       (not oFotosLinea.TryGetValue(sClave, info)) then
-    begin
-      info := AFotos.Resolver(ACodArt, ACodSku);
-      oFotosLinea.Add(sClave, info);
-    end;
-    sRuta := '';
-    if Assigned(AFotos) then
-      sRuta := AFotos.RutaFoto(info, frPx300);
-    if (sRuta <> '') and FileExists(sRuta) then
-    begin
-      img := TdxSmartImage.Create;
-      try
-        img.LoadFromFile(sRuta);
-        iAncho := img.Width;
-        iAlto := img.Height;
-        if (iAncho > cTamanoFoto) or (iAlto > cTamanoFoto) then
-        begin
-          if iAncho >= iAlto then
-          begin
-            iAlto := Round(iAlto * cTamanoFoto / iAncho);
-            iAncho := cTamanoFoto;
-          end
-          else
-          begin
-            iAncho := Round(iAncho * cTamanoFoto / iAlto);
-            iAlto := cTamanoFoto;
-          end;
-        end;
-        iIzquierda := (cTamanoFoto - iAncho) div 2;
-        iArriba := (cTamanoFoto - iAlto) div 2;
-        Celda := Sheet.CreateCell(AFila, COL_FOTO);
-        Pic := Sheet.Containers.Add(TdxSpreadSheetPictureContainer)
-          as TdxSpreadSheetPictureContainer;
-        Pic.Picture.Image := img;
-        Pic.RelativeResize := True;
-        Pic.AnchorType := catOneCell;
-        Pic.AnchorPoint1.Cell := Celda;
-        Pic.AnchorPoint1.Offset := Point(iIzquierda, iArriba);
-        Pic.AnchorPoint2.Cell := Celda;
-        Pic.AnchorPoint2.Offset := Point(iIzquierda + iAncho,
-                                         iArriba + iAlto);
-      finally
-        FreeAndNil(img);
-      end;
-    end
-    else
-    begin
-      W(Sheet, AFila, COL_FOTO, 'Sin foto', False, ssahCenter);
-    end;
-  end;
-
-  procedure EscribirCabeceraLineas;
-  var
-    c: Integer;
-  begin
-    W(Sheet, iRow, COL_FOTO, 'Foto 300 x 300', True, ssahCenter);
-    W(Sheet, iRow, COL_LINEA, 'Línea', True, ssahCenter);
-    W(Sheet, iRow, COL_ARTICULO, 'Artículo', True, ssahCenter);
-    W(Sheet, iRow, COL_SKU, 'SKU', True, ssahCenter);
-    W(Sheet, iRow, COL_ALMACEN, 'Almacén', True, ssahCenter);
-    W(Sheet, iRow, COL_DESCRIPCION_ART, 'Descripción artículo',
-      True, ssahCenter);
-    W(Sheet, iRow, COL_MODELO, 'Modelo', True, ssahCenter);
-    W(Sheet, iRow, COL_FAMILIA, 'Familia', True, ssahCenter);
-    W(Sheet, iRow, COL_PROVEEDOR, 'Proveedor', True, ssahCenter);
-    W(Sheet, iRow, COL_TEMPORADA, 'Temporada', True, ssahCenter);
-    W(Sheet, iRow, COL_TARIFA, 'Tarifa', True, ssahCenter);
-    W(Sheet, iRow, COL_PRECIO_TARIFA, 'Precio tarifa',
-      True, ssahRight);
-    W(Sheet, iRow, COL_DESCRIPCION_SKU, 'Descripción unidad',
-      True, ssahCenter);
-    W(Sheet, iRow, COL_STOCK, 'Stock', True, ssahRight);
-    W(Sheet, iRow, COL_CANTIDAD, 'Cantidad', True, ssahRight);
-    W(Sheet, iRow, COL_ORIGEN, 'Origen', True, ssahCenter);
-    W(Sheet, iRow, COL_INSTANTE_STOCK, 'Instante stock',
-      True, ssahCenter);
-    for c := 0 to COL_MAX do
-    begin
-      Sheet.Cells[iRow, c].Style.Font.Color := clWhite;
-      Sheet.Cells[iRow, c].Style.Brush.BackgroundColor := cColorCabecera;
-      Sheet.Cells[iRow, c].Style.Borders[bBottom].Style := sscbsThin;
-    end;
-  end;
-
-  procedure EscribirLinea;
-  begin
-    Sheet.CreateCell(iRow, COL_FOTO);
-    Sheet.Rows[iRow].Size := cTamanoFoto;
-    IncrustarFoto(iRow,
-                  QLineas.FieldByName(fcodArtDtl).AsString,
-                  QLineas.FieldByName(fcodUnidadDtl).AsString);
-    W(Sheet, iRow, COL_LINEA,
-      QLineas.FieldByName(flineaDtl).AsString, False, ssahCenter);
-    W(Sheet, iRow, COL_ARTICULO,
-      QLineas.FieldByName(fcodArtDtl).AsString);
-    W(Sheet, iRow, COL_SKU,
-      QLineas.FieldByName(fcodUnidadDtl).AsString);
-    W(Sheet, iRow, COL_ALMACEN,
-      QLineas.FieldByName(fcodAlmDtl).AsString);
-    W(Sheet, iRow, COL_DESCRIPCION_ART,
-      QLineas.FieldByName(fdescripcionArtDtl).AsString);
-    if QLineas.FindField(frefProveedor) <> nil then
-    begin
-      W(Sheet, iRow, COL_MODELO,
-        QLineas.FieldByName(frefProveedor).AsString);
-    end;
-    W(Sheet, iRow, COL_FAMILIA,
-      TextoCodigoNombre(
-        QLineas.FieldByName(fcodFamilia).AsString,
-        QLineas.FieldByName(ffamilia).AsString));
-    W(Sheet, iRow, COL_PROVEEDOR,
-      TextoCodigoNombre(
-        QLineas.FieldByName(fcodProveedor).AsString,
-        QLineas.FieldByName(fproveedor).AsString));
-    W(Sheet, iRow, COL_TEMPORADA,
-      QLineas.FieldByName(ftemporada).AsString);
-    W(Sheet, iRow, COL_TARIFA,
-      TextoCodigoNombre(
-        QLineas.FieldByName(fcodTarifa).AsString,
-        QLineas.FieldByName(ftarifa).AsString));
-    W(Sheet, iRow, COL_PRECIO_TARIFA,
-      QLineas.FieldByName(fprecioTarifa).AsFloat, False, ssahRight);
-    Sheet.Cells[iRow, COL_PRECIO_TARIFA].Style.DataFormat.FormatCode :=
-      cFormatoPrecio;
-    W(Sheet, iRow, COL_DESCRIPCION_SKU,
-      QLineas.FieldByName(fdescripcionUnidadDtl).AsString);
-    W(Sheet, iRow, COL_STOCK,
-      QLineas.FieldByName(fcantidadStockDtl).AsFloat, False, ssahRight);
-    Sheet.Cells[iRow, COL_STOCK].Style.DataFormat.FormatCode :=
-      cFormatoCantidad;
-    W(Sheet, iRow, COL_CANTIDAD,
-      QLineas.FieldByName(fcantidadDtl).AsFloat, False, ssahRight);
-    Sheet.Cells[iRow, COL_CANTIDAD].Style.DataFormat.FormatCode :=
-      cFormatoCantidad;
-    W(Sheet, iRow, COL_ORIGEN,
-      QLineas.FieldByName(forigenDtl).AsString, False, ssahCenter);
-    EscribirFecha(iRow, COL_INSTANTE_STOCK,
-                  QLineas.FindField(finstanteStockDtl));
-  end;
-
+constructor TExportadorDocumentoTrabajo.Create(AControl: TdxSpreadSheet;
+  const ACabecera, ALineas: TDataSet; AFotos: TFotosArticulos);
 begin
-  ASheetControl.ClearAll;
-  Sheet := ASheetControl.AddSheet('Documento de trabajo',
-    TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
-  oFotosLinea := TDictionary<string, TFotoInfo>.Create;
-  Sheet.BeginUpdate;
-  try
-    iRow := 1;
-    W(Sheet, iRow, 0, 'DOCUMENTO DE TRABAJO', True);
-    Sheet.Cells[iRow, 0].Style.Font.Size := 16;
-    Merge(Sheet, iRow, 0, COL_MAX + 1, 1);
-    Inc(iRow, 2);
-    W(Sheet, iRow, 0, 'ID:', True);
-    W(Sheet, iRow, 1, QCabecera.FieldByName(fidDtr).AsLargeInt);
-    W(Sheet, iRow, 3, 'Título:', True);
-    W(Sheet, iRow, 4, QCabecera.FieldByName(ftituloDtr).AsString);
-    Merge(Sheet, iRow, 4, 4, 1);
-    Inc(iRow);
-    W(Sheet, iRow, 0, 'Tipo:', True);
-    W(Sheet, iRow, 1, QCabecera.FieldByName(ftipoDtr).AsString);
-    W(Sheet, iRow, 3, 'Estado:', True);
-    W(Sheet, iRow, 4, QCabecera.FieldByName(festadoDtr).AsString);
-    W(Sheet, iRow, 6, 'Propietario:', True);
-    W(Sheet, iRow, 7, QCabecera.FieldByName(fusuarioDtr).AsString);
-    Inc(iRow);
-    W(Sheet, iRow, 0, 'Empresa:', True);
-    W(Sheet, iRow, 1, QCabecera.FieldByName(fcodEmpDtr).AsString);
-    W(Sheet, iRow, 3, 'Almacén:', True);
-    W(Sheet, iRow, 4, QCabecera.FieldByName(fcodAlmDtr).AsString);
-    W(Sheet, iRow, 6, 'Fecha:', True);
-    EscribirFecha(iRow, 7, QCabecera.FindField(finstanteDtr));
-    Inc(iRow, 2);
-    EscribirCabeceraLineas;
-    Inc(iRow);
-    if (QLineas <> nil) and QLineas.Active and (not QLineas.IsEmpty) then
-    begin
-      BmLineas := QLineas.GetBookmark;
-      QLineas.DisableControls;
-      try
-        QLineas.First;
-        while not QLineas.Eof do
+  inherited Create;
+  FControl := AControl;
+  FCabecera := ACabecera;
+  FLineas := ALineas;
+  FFotos := AFotos;
+end;
+
+function TExportadorDocumentoTrabajo.TextoCodigoNombre(
+  const ACodigo, ANombre: string): string;
+begin
+  Result := Trim(ACodigo);
+  if Trim(ANombre) <> '' then
+  begin
+    if Result <> '' then
+      Result := Result + ' - ';
+    Result := Result + Trim(ANombre);
+  end;
+end;
+
+procedure TExportadorDocumentoTrabajo.EscribirFecha(
+  AFila, AColumna: Integer; ACampo: TField);
+begin
+  if (ACampo <> nil) and (not ACampo.IsNull) then
+  begin
+    W(FHoja, AFila, AColumna, ACampo.AsDateTime);
+    FHoja.Cells[AFila, AColumna].Style.DataFormat.FormatCode :=
+      'dd/mm/yyyy hh:mm';
+  end;
+end;
+
+procedure TExportadorDocumentoTrabajo.IncrustarFoto(AFila: Integer;
+  const ACodArt, ACodSku: string);
+var
+  oInfo: TFotoInfo;
+  sClave: string;
+  sRuta: string;
+  oImagen: TdxSmartImage;
+  oFoto: TdxSpreadSheetPictureContainer;
+  oCelda: TdxSpreadSheetCell;
+  iAncho: Integer;
+  iAlto: Integer;
+  iIzquierda: Integer;
+  iArriba: Integer;
+begin
+  oInfo := Default(TFotoInfo);
+  sClave := ACodArt + #1 + ACodSku;
+  if Assigned(FFotos) and
+     (not FFotosLinea.TryGetValue(sClave, oInfo)) then
+  begin
+    oInfo := FFotos.Resolver(ACodArt, ACodSku);
+    FFotosLinea.Add(sClave, oInfo);
+  end;
+  sRuta := '';
+  if Assigned(FFotos) then
+    sRuta := FFotos.RutaFoto(oInfo, frPx300);
+  if (sRuta <> '') and FileExists(sRuta) then
+  begin
+    oImagen := TdxSmartImage.Create;
+    try
+      oImagen.LoadFromFile(sRuta);
+      iAncho := oImagen.Width;
+      iAlto := oImagen.Height;
+      if (iAncho > cTamanoFoto) or (iAlto > cTamanoFoto) then
+      begin
+        if iAncho >= iAlto then
         begin
-          EscribirLinea;
-          Inc(iRow);
-          QLineas.Next;
-        end;
-      finally
-        if QLineas.BookmarkValid(BmLineas) then
+          iAlto := Round(iAlto * cTamanoFoto / iAncho);
+          iAncho := cTamanoFoto;
+        end
+        else
         begin
-          QLineas.GotoBookmark(BmLineas);
+          iAncho := Round(iAncho * cTamanoFoto / iAlto);
+          iAlto := cTamanoFoto;
         end;
-        QLineas.FreeBookmark(BmLineas);
-        QLineas.EnableControls;
       end;
+      iIzquierda := (cTamanoFoto - iAncho) div 2;
+      iArriba := (cTamanoFoto - iAlto) div 2;
+      oCelda := FHoja.CreateCell(AFila, COL_FOTO);
+      oFoto := FHoja.Containers.Add(TdxSpreadSheetPictureContainer)
+        as TdxSpreadSheetPictureContainer;
+      oFoto.Picture.Image := oImagen;
+      oFoto.RelativeResize := True;
+      oFoto.AnchorType := catOneCell;
+      oFoto.AnchorPoint1.Cell := oCelda;
+      oFoto.AnchorPoint1.Offset := Point(iIzquierda, iArriba);
+      oFoto.AnchorPoint2.Cell := oCelda;
+      oFoto.AnchorPoint2.Offset := Point(iIzquierda + iAncho,
+                                        iArriba + iAlto);
+    finally
+      FreeAndNil(oImagen);
     end;
-    Sheet.Columns[COL_FOTO].Size := cTamanoFoto;
-    Sheet.Columns[COL_LINEA].Size := 55;
-    Sheet.Columns[COL_ARTICULO].Size := 110;
-    Sheet.Columns[COL_SKU].Size := 170;
-    Sheet.Columns[COL_ALMACEN].Size := 80;
-    Sheet.Columns[COL_DESCRIPCION_ART].Size := 220;
-    Sheet.Columns[COL_MODELO].Size := 120;
-    Sheet.Columns[COL_FAMILIA].Size := 160;
-    Sheet.Columns[COL_PROVEEDOR].Size := 180;
-    Sheet.Columns[COL_TEMPORADA].Size := 110;
-    Sheet.Columns[COL_TARIFA].Size := 120;
-    Sheet.Columns[COL_PRECIO_TARIFA].Size := 90;
-    Sheet.Columns[COL_DESCRIPCION_SKU].Size := 180;
-    Sheet.Columns[COL_STOCK].Size := 75;
-    Sheet.Columns[COL_CANTIDAD].Size := 80;
-    Sheet.Columns[COL_ORIGEN].Size := 80;
-    Sheet.Columns[COL_INSTANTE_STOCK].Size := 125;
+  end
+  else
+    W(FHoja, AFila, COL_FOTO, 'Sin foto', False, ssahCenter);
+end;
+
+procedure TExportadorDocumentoTrabajo.EscribirCabeceraDocumento;
+begin
+  FFila := 1;
+  W(FHoja, FFila, 0, 'DOCUMENTO DE TRABAJO', True);
+  FHoja.Cells[FFila, 0].Style.Font.Size := 16;
+  Merge(FHoja, FFila, 0, COL_MAX + 1, 1);
+  Inc(FFila, 2);
+  W(FHoja, FFila, 0, 'ID:', True);
+  W(FHoja, FFila, 1, FCabecera.FieldByName(fidDtr).AsLargeInt);
+  W(FHoja, FFila, 3, 'Título:', True);
+  W(FHoja, FFila, 4, FCabecera.FieldByName(ftituloDtr).AsString);
+  Merge(FHoja, FFila, 4, 4, 1);
+  Inc(FFila);
+  W(FHoja, FFila, 0, 'Tipo:', True);
+  W(FHoja, FFila, 1, FCabecera.FieldByName(ftipoDtr).AsString);
+  W(FHoja, FFila, 3, 'Estado:', True);
+  W(FHoja, FFila, 4, FCabecera.FieldByName(festadoDtr).AsString);
+  W(FHoja, FFila, 6, 'Propietario:', True);
+  W(FHoja, FFila, 7, FCabecera.FieldByName(fusuarioDtr).AsString);
+  Inc(FFila);
+  W(FHoja, FFila, 0, 'Empresa:', True);
+  W(FHoja, FFila, 1, FCabecera.FieldByName(fcodEmpDtr).AsString);
+  W(FHoja, FFila, 3, 'Almacén:', True);
+  W(FHoja, FFila, 4, FCabecera.FieldByName(fcodAlmDtr).AsString);
+  W(FHoja, FFila, 6, 'Fecha:', True);
+  EscribirFecha(FFila, 7, FCabecera.FindField(finstanteDtr));
+  Inc(FFila, 2);
+end;
+
+procedure TExportadorDocumentoTrabajo.EscribirCabeceraLineas;
+var
+  iColumna: Integer;
+begin
+  W(FHoja, FFila, COL_FOTO, 'Foto 300 x 300', True, ssahCenter);
+  W(FHoja, FFila, COL_LINEA, 'Línea', True, ssahCenter);
+  W(FHoja, FFila, COL_ARTICULO, 'Artículo', True, ssahCenter);
+  W(FHoja, FFila, COL_SKU, 'SKU', True, ssahCenter);
+  W(FHoja, FFila, COL_ALMACEN, 'Almacén', True, ssahCenter);
+  W(FHoja, FFila, COL_DESCRIPCION_ART, 'Descripción artículo',
+    True, ssahCenter);
+  W(FHoja, FFila, COL_MODELO, 'Modelo', True, ssahCenter);
+  W(FHoja, FFila, COL_FAMILIA, 'Familia', True, ssahCenter);
+  W(FHoja, FFila, COL_PROVEEDOR, 'Proveedor', True, ssahCenter);
+  W(FHoja, FFila, COL_TEMPORADA, 'Temporada', True, ssahCenter);
+  W(FHoja, FFila, COL_TARIFA, 'Tarifa', True, ssahCenter);
+  W(FHoja, FFila, COL_PRECIO_TARIFA, 'Precio tarifa', True, ssahRight);
+  W(FHoja, FFila, COL_DESCRIPCION_SKU, 'Descripción unidad',
+    True, ssahCenter);
+  W(FHoja, FFila, COL_STOCK, 'Stock', True, ssahRight);
+  W(FHoja, FFila, COL_CANTIDAD, 'Cantidad', True, ssahRight);
+  W(FHoja, FFila, COL_ORIGEN, 'Origen', True, ssahCenter);
+  W(FHoja, FFila, COL_INSTANTE_STOCK, 'Instante stock',
+    True, ssahCenter);
+  for iColumna := 0 to COL_MAX do
+  begin
+    FHoja.Cells[FFila, iColumna].Style.Font.Color := clWhite;
+    FHoja.Cells[FFila, iColumna].Style.Brush.BackgroundColor :=
+      cColorCabecera;
+    FHoja.Cells[FFila, iColumna].Style.Borders[bBottom].Style :=
+      sscbsThin;
+  end;
+end;
+
+procedure TExportadorDocumentoTrabajo.EscribirLinea;
+begin
+  FHoja.CreateCell(FFila, COL_FOTO);
+  FHoja.Rows[FFila].Size := cTamanoFoto;
+  IncrustarFoto(FFila,
+                FLineas.FieldByName(fcodArtDtl).AsString,
+                FLineas.FieldByName(fcodUnidadDtl).AsString);
+  W(FHoja, FFila, COL_LINEA,
+    FLineas.FieldByName(flineaDtl).AsString, False, ssahCenter);
+  W(FHoja, FFila, COL_ARTICULO,
+    FLineas.FieldByName(fcodArtDtl).AsString);
+  W(FHoja, FFila, COL_SKU,
+    FLineas.FieldByName(fcodUnidadDtl).AsString);
+  W(FHoja, FFila, COL_ALMACEN,
+    FLineas.FieldByName(fcodAlmDtl).AsString);
+  W(FHoja, FFila, COL_DESCRIPCION_ART,
+    FLineas.FieldByName(fdescripcionArtDtl).AsString);
+  if FLineas.FindField(frefProveedor) <> nil then
+    W(FHoja, FFila, COL_MODELO,
+      FLineas.FieldByName(frefProveedor).AsString);
+  W(FHoja, FFila, COL_FAMILIA,
+    TextoCodigoNombre(FLineas.FieldByName(fcodFamilia).AsString,
+      FLineas.FieldByName(ffamilia).AsString));
+  W(FHoja, FFila, COL_PROVEEDOR,
+    TextoCodigoNombre(FLineas.FieldByName(fcodProveedor).AsString,
+      FLineas.FieldByName(fproveedor).AsString));
+  W(FHoja, FFila, COL_TEMPORADA,
+    FLineas.FieldByName(ftemporada).AsString);
+  W(FHoja, FFila, COL_TARIFA,
+    TextoCodigoNombre(FLineas.FieldByName(fcodTarifa).AsString,
+      FLineas.FieldByName(ftarifa).AsString));
+  W(FHoja, FFila, COL_PRECIO_TARIFA,
+    FLineas.FieldByName(fprecioTarifa).AsFloat, False, ssahRight);
+  FHoja.Cells[FFila, COL_PRECIO_TARIFA].Style.DataFormat.FormatCode :=
+    cFormatoPrecio;
+  W(FHoja, FFila, COL_DESCRIPCION_SKU,
+    FLineas.FieldByName(fdescripcionUnidadDtl).AsString);
+  W(FHoja, FFila, COL_STOCK,
+    FLineas.FieldByName(fcantidadStockDtl).AsFloat, False, ssahRight);
+  FHoja.Cells[FFila, COL_STOCK].Style.DataFormat.FormatCode :=
+    cFormatoCantidad;
+  W(FHoja, FFila, COL_CANTIDAD,
+    FLineas.FieldByName(fcantidadDtl).AsFloat, False, ssahRight);
+  FHoja.Cells[FFila, COL_CANTIDAD].Style.DataFormat.FormatCode :=
+    cFormatoCantidad;
+  W(FHoja, FFila, COL_ORIGEN,
+    FLineas.FieldByName(forigenDtl).AsString, False, ssahCenter);
+  EscribirFecha(FFila, COL_INSTANTE_STOCK,
+                FLineas.FindField(finstanteStockDtl));
+end;
+
+procedure TExportadorDocumentoTrabajo.ProcesarLineas;
+var
+  oMarcador: TBookmark;
+begin
+  if (FLineas <> nil) and FLineas.Active and (not FLineas.IsEmpty) then
+  begin
+    oMarcador := FLineas.GetBookmark;
+    FLineas.DisableControls;
+    try
+      FLineas.First;
+      while not FLineas.Eof do
+      begin
+        EscribirLinea;
+        Inc(FFila);
+        FLineas.Next;
+      end;
+    finally
+      if FLineas.BookmarkValid(oMarcador) then
+        FLineas.GotoBookmark(oMarcador);
+      FLineas.FreeBookmark(oMarcador);
+      FLineas.EnableControls;
+    end;
+  end;
+end;
+
+procedure TExportadorDocumentoTrabajo.ConfigurarAnchos;
+begin
+  FHoja.Columns[COL_FOTO].Size := cTamanoFoto;
+  FHoja.Columns[COL_LINEA].Size := 55;
+  FHoja.Columns[COL_ARTICULO].Size := 110;
+  FHoja.Columns[COL_SKU].Size := 170;
+  FHoja.Columns[COL_ALMACEN].Size := 80;
+  FHoja.Columns[COL_DESCRIPCION_ART].Size := 220;
+  FHoja.Columns[COL_MODELO].Size := 120;
+  FHoja.Columns[COL_FAMILIA].Size := 160;
+  FHoja.Columns[COL_PROVEEDOR].Size := 180;
+  FHoja.Columns[COL_TEMPORADA].Size := 110;
+  FHoja.Columns[COL_TARIFA].Size := 120;
+  FHoja.Columns[COL_PRECIO_TARIFA].Size := 90;
+  FHoja.Columns[COL_DESCRIPCION_SKU].Size := 180;
+  FHoja.Columns[COL_STOCK].Size := 75;
+  FHoja.Columns[COL_CANTIDAD].Size := 80;
+  FHoja.Columns[COL_ORIGEN].Size := 80;
+  FHoja.Columns[COL_INSTANTE_STOCK].Size := 125;
+end;
+
+procedure TExportadorDocumentoTrabajo.Ejecutar;
+begin
+  FControl.ClearAll;
+  FHoja := FControl.AddSheet('Documento de trabajo',
+    TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
+  FFotosLinea := TDictionary<string, TFotoInfo>.Create;
+  FHoja.BeginUpdate;
+  try
+    EscribirCabeceraDocumento;
+    EscribirCabeceraLineas;
+    Inc(FFila);
+    ProcesarLineas;
+    ConfigurarAnchos;
   finally
-    Sheet.EndUpdate;
-    FreeAndNil(oFotosLinea);
+    FHoja.EndUpdate;
+    FreeAndNil(FFotosLinea);
+  end;
+end;
+
+procedure ExportarDocumentoTrabajoExcel(
+  ASheetControl: TdxSpreadSheet;
+  const QCabecera, QLineas: TDataSet;
+  AFotos: TFotosArticulos);
+var
+  oExportador: TExportadorDocumentoTrabajo;
+begin
+  oExportador := TExportadorDocumentoTrabajo.Create(
+    ASheetControl, QCabecera, QLineas, AFotos);
+  try
+    oExportador.Ejecutar;
+  finally
+    FreeAndNil(oExportador);
   end;
 end;
 

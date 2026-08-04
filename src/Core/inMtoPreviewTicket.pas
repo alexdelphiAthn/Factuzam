@@ -1088,7 +1088,8 @@ begin
 
         Printer.BeginDoc;
         try
-          // 1. Obtener los puntos por pulgada (DPI) de la impresora seleccionada
+          // 1. Obtener los puntos por pulgada (DPI) de la impresora
+          // seleccionada
           DPI_X := GetDeviceCaps(Printer.Handle, LOGPIXELSX);
           DPI_Y := GetDeviceCaps(Printer.Handle, LOGPIXELSY);
 
@@ -1100,9 +1101,13 @@ begin
           AnchoImp := Printer.PageWidth div 2;
           AltoImp := MulDiv(bmp.Height, AnchoImp, bmp.Width);
 
-          // 4. Dibujar desplazando el rectángulo inicial a las coordenadas del margen
+          // 4. Dibujar desplazando el rectángulo inicial a las coordenadas del
+          // margen
           Printer.Canvas.StretchDraw(
-            Rect(MargenIzq, MargenSup, MargenIzq + AnchoImp, MargenSup + AltoImp),
+            Rect(MargenIzq,
+                 MargenSup,
+                 MargenIzq + AnchoImp,
+                 MargenSup + AltoImp),
             bmp);
         finally
           Printer.EndDoc;

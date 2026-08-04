@@ -1,4 +1,4 @@
-﻿# Fase 6T — creación de la tabla principal
+# Fase 6T — creación de la tabla principal
 
 Fecha: 27/07/2026. D1.4 y vigésimo fascículo de D1 terminados.
 Sin commit realizado por Codex.

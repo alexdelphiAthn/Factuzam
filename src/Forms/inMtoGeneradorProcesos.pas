@@ -93,14 +93,19 @@ type
     tvMetadatostvVista: TcxGridDBTableView;
     tvVistaDatos: TcxGridDBTableView;
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1LINEA_LINEA1: TcxGridDBColumn;
-    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CODIGO_ARTICULO_LINEA1: TcxGridDBColumn;
-    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1DESCRIPCION_ARTICULO_LINEA1: TcxGridDBColumn;
+    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CODIGO_ARTICULO_LINEA1:
+      TcxGridDBColumn;
+    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1DESCRIPCION_ARTICULO_LINEA1:
+      TcxGridDBColumn;
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CANTIDAD_LINEA1: TcxGridDBColumn;
-    cxgrdbclmnLineasFacturacionTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA1: TcxGridDBColumn;
-    cxgrdbclmnLineasFacturacionPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA1: TcxGridDBColumn;
+    cxgrdbclmnLineasFacturacionTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA1:
+      TcxGridDBColumn;
+    cxgrdbclmnLineasFacturacionPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA1:
+      TcxGridDBColumn;
     cxgrdbclmnLineasFacturacionPORCEN_IVA_FACTURA_LINEA1: TcxGridDBColumn;
     cxgrdbclmnLineasFacturacionTIPOIVA_ARTICULO_FACTURA_LINEA1: TcxGridDBColumn;
-    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1PRECIOVENTA_ARTICULO_LINEA1: TcxGridDBColumn;
+    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1PRECIOVENTA_ARTICULO_LINEA1:
+      TcxGridDBColumn;
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1SUM_TOTAL_LINEA1: TcxGridDBColumn;
     cxgrdbclmnLineasFacturacionFECHA_ENTREGA_FACTURA_LINEA1: TcxGridDBColumn;
     cxgrdlvlMetadatoslv11: TcxGridLevel;
@@ -111,14 +116,20 @@ type
     tvVista: TcxGridDBTableView;
     tvVistaContenido: TcxGridDBTableView;
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1LINEA_LINEA11: TcxGridDBColumn;
-    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CODIGO_ARTICULO_LINEA11: TcxGridDBColumn;
-    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1DESCRIPCION_ARTICULO_LINEA11: TcxGridDBColumn;
+    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CODIGO_ARTICULO_LINEA11:
+      TcxGridDBColumn;
+    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1DESCRIPCION_ARTICULO_LINEA11:
+      TcxGridDBColumn;
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1CANTIDAD_LINEA11: TcxGridDBColumn;
-    cxgrdbclmnLineasFacturacionTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA11: TcxGridDBColumn;
-    cxgrdbclmnLineasFacturacionPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA11: TcxGridDBColumn;
+    cxgrdbclmnLineasFacturacionTIPO_CANTIDAD_ARTICULO_FACTURA_LINEA11:
+      TcxGridDBColumn;
+    cxgrdbclmnLineasFacturacionPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA11:
+      TcxGridDBColumn;
     cxgrdbclmnLineasFacturacionPORCEN_IVA_FACTURA_LINEA11: TcxGridDBColumn;
-    cxgrdbclmnLineasFacturacionTIPOIVA_ARTICULO_FACTURA_LINEA11: TcxGridDBColumn;
-    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1PRECIOVENTA_ARTICULO_LINEA11: TcxGridDBColumn;
+    cxgrdbclmnLineasFacturacionTIPOIVA_ARTICULO_FACTURA_LINEA11:
+      TcxGridDBColumn;
+    cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1PRECIOVENTA_ARTICULO_LINEA11:
+      TcxGridDBColumn;
     cxgrdbclmncxgrdbtblvwcxgrd1DBTableView1SUM_TOTAL_LINEA11: TcxGridDBColumn;
     cxgrdbclmnLineasFacturacionFECHA_ENTREGA_FACTURA_LINEA11: TcxGridDBColumn;
     lvVista: TcxGridLevel;
@@ -428,30 +439,28 @@ begin
     // Nos pasamos a la pestaña de la lista de procesos
     pcPantalla.ActivePage := tsLista;
 
-    with dsTablaG.DataSet do
-    begin
-      DisableControls;
-      try
-        Filtered := False;
+    dsTablaG.DataSet.DisableControls;
+    try
+      dsTablaG.DataSet.Filtered := False;
         // Filtramos por el contenido del proceso o por el nombre
-        Filter := 'PROCESO_GENERADOR_PROCESO_GP LIKE '
-          + QuotedStr('%' + TextoBuscar + '%') +
-                  ' OR NOMBRE_GENERADOR_PROCESO_GP LIKE '
-                    + QuotedStr('%' + TextoBuscar + '%');
-        Filtered := True;
+      dsTablaG.DataSet.Filter := 'PROCESO_GENERADOR_PROCESO_GP LIKE '
+        + QuotedStr('%' + TextoBuscar + '%') +
+        ' OR NOMBRE_GENERADOR_PROCESO_GP LIKE '
+        + QuotedStr('%' + TextoBuscar + '%');
+      dsTablaG.DataSet.Filtered := True;
 
-        if RecordCount = 0 then
-        begin
-          MessageDlg(Format(SInfoProcesosBusquedaNoEncontrados,
-                            [TextoBuscar]),
-                     mtInformation,
-                     [mbOK],
-                     0);
-          Filtered := False; // Quitamos el filtro si no hay resultados
-        end;
-      finally
-        EnableControls;
+      if dsTablaG.DataSet.RecordCount = 0 then
+      begin
+        MessageDlg(Format(SInfoProcesosBusquedaNoEncontrados,
+                          [TextoBuscar]),
+                   mtInformation,
+                   [mbOK],
+                   0);
+        // Quitamos el filtro si no hay resultados.
+        dsTablaG.DataSet.Filtered := False;
       end;
+    finally
+      dsTablaG.DataSet.EnableControls;
     end;
   end;
 end;
@@ -603,14 +612,14 @@ begin
   begin
     if tvMetadatos.Selected <> nil then
     begin
-      with dmmGeneradorProcesos do
-      begin
         sNombreMetadato :=
-          unqryMetadatos.FieldByName('NOMBRE_META_META').AsString;
+          dmmGeneradorProcesos.unqryMetadatos.FieldByName(
+            'NOMBRE_META_META').AsString;
 
         // Comprobamos si el metadato actual es un procedimiento (tipo 3)
         bEsProcedimiento :=
-          (unqryMetadatos.FieldByName('PARENT_META').AsString = '3');
+          (dmmGeneradorProcesos.unqryMetadatos.FieldByName(
+            'PARENT_META').AsString = '3');
 
         // Recogemos el script completo
         sScriptCompleto := Trim(syndtEstructura.Lines.Text);
@@ -656,20 +665,21 @@ begin
         // -------------------------------------------------------------
 
         // Ponemos la tabla en modo inserción
-        if not (dsTablaG.DataSet.State in [dsInsert, dsEdit]) then
+        if not (dsTablaG.DataSet.State in
+          [dsInsert, dsEdit]) then
           dsTablaG.DataSet.Append;
 
         // Volcamos todo al editor principal
-        unqryTablaG.FieldByName('NOMBRE_GENERADOR_PROCESO_GP').AsString :=
-          'Modificar ' + sNombreMetadato;
-        unqryTablaG.FieldByName('PROCESO_GENERADOR_PROCESO_GP').AsString :=
-          sScriptCompleto;
+        dmmGeneradorProcesos.unqryTablaG.FieldByName(
+          'NOMBRE_GENERADOR_PROCESO_GP').AsString :=
+            'Modificar ' + sNombreMetadato;
+        dmmGeneradorProcesos.unqryTablaG.FieldByName(
+          'PROCESO_GENERADOR_PROCESO_GP').AsString := sScriptCompleto;
 
         // Cambiamos de pestaña y damos foco
         pcPestana.ActivePage := tsSQL;
         if DBSynEdit1.CanFocus then
           DBSynEdit1.SetFocus;
-      end;
     end;
   end;
 end;
@@ -712,20 +722,19 @@ begin
     try
       slScript.LoadFromFile(dlgAbrir.FileName);
 
-      with dmmGeneradorProcesos do
-      begin
-        pcPestana.ActivePage := tsSQL;
-        if not (dsTablaG.DataSet.State in [dsInsert, dsEdit]) then
-          dsTablaG.DataSet.Append;
+      pcPestana.ActivePage := tsSQL;
+      if not (dsTablaG.DataSet.State in
+        [dsInsert, dsEdit]) then
+        dsTablaG.DataSet.Append;
 
-        unqryTablaG.FieldByName('NOMBRE_GENERADOR_PROCESO_GP').AsString :=
+      dmmGeneradorProcesos.unqryTablaG.FieldByName(
+        'NOMBRE_GENERADOR_PROCESO_GP').AsString :=
           ChangeFileExt(ExtractFileName(dlgAbrir.FileName), '');
-        unqryTablaG.FieldByName('PROCESO_GENERADOR_PROCESO_GP').AsString :=
-          slScript.Text;
+      dmmGeneradorProcesos.unqryTablaG.FieldByName(
+        'PROCESO_GENERADOR_PROCESO_GP').AsString := slScript.Text;
 
-        if DBSynEdit1.CanFocus then
-          DBSynEdit1.SetFocus;
-      end;
+      if DBSynEdit1.CanFocus then
+        DBSynEdit1.SetFocus;
     finally
       FreeAndNil(slScript);
     end;
@@ -1336,55 +1345,37 @@ begin
 end;
 
 procedure TfrmMtoGeneradorProcesos.FormShow(Sender: TObject);
+  procedure CrearAccion(const Atajo: TShortCut; Ejecutar,
+    Actualizar: TNotifyEvent);
+  var
+    Accion: TAction;
+  begin
+    Accion := TAction.Create(Self);
+    Accion.ActionList := alGenerador;
+    Accion.ShortCut := Atajo;
+    Accion.OnExecute := Ejecutar;
+    if Assigned(Actualizar) then
+      Accion.OnUpdate := Actualizar;
+  end;
 begin
   inherited;
   // [Ctrl + X] Cortar
-  with TAction.Create(Self) do
-  begin
-    ActionList := alGenerador;
-    ShortCut := TextToShortCut('Ctrl+X');
-    OnExecute := ActionCortarExecute;
-    OnUpdate  := ActionEditoresUpdate;
-  end;
+  CrearAccion(TextToShortCut('Ctrl+X'),
+    ActionCortarExecute, ActionEditoresUpdate);
   // [Ctrl + C] Copiar
-  with TAction.Create(Self) do
-  begin
-    ActionList := alGenerador;
-    ShortCut := TextToShortCut('Ctrl+C');
-    OnExecute := ActionCopiarExecute;
-    OnUpdate  := ActionEditoresUpdate;
-  end;
+  CrearAccion(TextToShortCut('Ctrl+C'),
+    ActionCopiarExecute, ActionEditoresUpdate);
   // [Ctrl + V] Pegar
-  with TAction.Create(Self) do
-  begin
-    ActionList := alGenerador;
-    ShortCut := TextToShortCut('Ctrl+V');
-    OnExecute := ActionPegarExecute;
-    OnUpdate  := ActionEditoresUpdate;
-  end;
-  with TAction.Create(Self) do
-  begin
-    ActionList := alGenerador;
-    ShortCut := TextToShortCut('Ctrl+Z');
-    OnExecute := ActionDeshacerExecute;
-    OnUpdate  := ActionEditoresUpdate;
-  end;
+  CrearAccion(TextToShortCut('Ctrl+V'),
+    ActionPegarExecute, ActionEditoresUpdate);
+  CrearAccion(TextToShortCut('Ctrl+Z'),
+    ActionDeshacerExecute, ActionEditoresUpdate);
   // [Shift + Ctrl + Z] Rehacer
-  with TAction.Create(Self) do
-  begin
-    ActionList := alGenerador;
-    ShortCut := TextToShortCut('Shift+Ctrl+Z');
-    OnExecute := ActionRehacerExecute;
-    OnUpdate  := ActionEditoresUpdate;
-  end;
+  CrearAccion(TextToShortCut('Shift+Ctrl+Z'),
+    ActionRehacerExecute, ActionEditoresUpdate);
   // [Ctrl + Y] Borrar Línea
-  with TAction.Create(Self) do
-  begin
-    ActionList := alGenerador;
-    ShortCut := TextToShortCut('Ctrl+Y');
-    OnExecute := ActionBorrarLineaExecute;
-    OnUpdate  := ActionEditoresUpdate;
-  end;
+  CrearAccion(TextToShortCut('Ctrl+Y'),
+    ActionBorrarLineaExecute, ActionEditoresUpdate);
   if not Assigned(FAppEvents) then
   begin
     FAppEvents := TApplicationEvents.Create(Self);
@@ -1425,34 +1416,15 @@ begin
   syndtEstructura.Visible := True;
   if DBsynEdit1.CanFocus then
     DBsynEdit1.SetFocus;
-  with TAction.Create(Self) do
-  begin
-    ActionList := alGenerador;
-    ShortCut := TextToShortCut('Ctrl+F');
-    OnExecute := ActionBuscarExecute;
-  end;
-  with TAction.Create(Self) do
-  begin
-    ActionList := alGenerador;
-    ShortCut := TextToShortCut('Ctrl+R');
-    OnExecute := ActionReemplazarExecute;
-  end;
-  with TAction.Create(Self) do
-  begin
-    ActionList := alGenerador;
-    ShortCut := TextToShortCut('Ctrl+Shift+F');
-    OnExecute := ActionBuscarGlobalExecute;
-  end;
+  CrearAccion(TextToShortCut('Ctrl+F'), ActionBuscarExecute, nil);
+  CrearAccion(TextToShortCut('Ctrl+R'), ActionReemplazarExecute, nil);
+  CrearAccion(TextToShortCut('Ctrl+Shift+F'),
+    ActionBuscarGlobalExecute, nil);
   // [Ctrl + /] Comentar línea(s)
   actComentar.ShortCut := scCtrl or VK_DIVIDE;
   actComentar.OnExecute := ActionComentarExecute;
   // [Ctrl + Enter] Siguiente control
-  with TAction.Create(Self) do
-  begin
-    ActionList := alGenerador;
-    ShortCut := scCtrl or VK_RETURN;
-    OnExecute := ActionSiguienteControlExecute;
-  end;
+  CrearAccion(scCtrl or VK_RETURN, ActionSiguienteControlExecute, nil);
   if DBsynEdit1.CanFocus then
     DBsynEdit1.SetFocus;
 end;

@@ -1118,6 +1118,7 @@ function TfrmMtoPrincipal.SolicitarDestinoCopia(
 var
   bCifrada: Boolean;
   sExtension: string;
+  oTipoFichero: TFileTypeItem;
 begin
   ARutaFichero := '';
   AContrasena := '';
@@ -1134,18 +1135,16 @@ begin
   saveDialog.Options := saveDialog.Options +
     [fdoStrictFileTypes, fdoOverwritePrompt];
   saveDialog.FileTypes.Clear;
-  with saveDialog.FileTypes.Add do
+  oTipoFichero := saveDialog.FileTypes.Add;
+  if bCifrada then
   begin
-    if bCifrada then
-    begin
-      DisplayName := SCaptionFiltroCopiasCifradas;
-      FileMask := '*.crypt';
-    end
-    else
-    begin
-      DisplayName := SCaptionFiltroArchivosSql;
-      FileMask := '*.sql';
-    end;
+    oTipoFichero.DisplayName := SCaptionFiltroCopiasCifradas;
+    oTipoFichero.FileMask := '*.crypt';
+  end
+  else
+  begin
+    oTipoFichero.DisplayName := SCaptionFiltroArchivosSql;
+    oTipoFichero.FileMask := '*.sql';
   end;
   saveDialog.FileName := 'copiaseguridad' +
     FormatDateTime('_dd_mm_yyyy_HH_nn_ss', Now) +

@@ -26,6 +26,9 @@ uses
    UniDataGen, frCoreClasses, inLibArticulosResolverIntf,
    inLibFacturasServiciosIntf;
 
+procedure RevertirBorradoFactura(
+  const AServicio: IServicioBorradoFactura);
+
 type
   TdmFacturas = class(TdmBase)
     dsLinFac: TDataSource;
@@ -288,6 +291,13 @@ const
     'XML_FAC'
   );
 
+procedure RevertirBorradoFactura(
+  const AServicio: IServicioBorradoFactura);
+begin
+  if Assigned(AServicio) then
+    AServicio.Revertir;
+end;
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TdmFacturas.ConfigurarServicios(
@@ -413,37 +423,76 @@ begin
   FValidadorFiscal.Validar(Solicitud);
 end;
 
-function TdmFacturas.GetSubtipoSerieEmpresa(sSerie,
-                                            sEmpresa:string;
-                                            dtFecha:TDateTime): string;
+function TdmFacturas.GetSubtipoSerieEmpresa(
+  sSerie, sEmpresa: string;
+  dtFecha: TDateTime): string;
 var
   unqrySol: TUniQuery;
 begin
   Result := '';
-  if ((sSerie = '') or (sEmpresa = '')) then
-    Exit;
-  unqrySol := TUniQuery.Create(nil);
-  try
-    with unqrySol do
-    begin
-      Connection := ConexionPrincipal;
-      SQL.Text := 'SELECT SUBTIPO_EMPSER ' +
-                  '  FROM fza_empresas_series ' +
-                  ' WHERE EMPSER = :Serie ' +
-                  '   AND CODIGO_EMP_EMPSER = :Empresa ' +
-                  '   AND (FECHA_DESDE_EMPSER <= :Fecha ' +
-                  '        AND (FECHA_HASTA_EMPSER >= :Fecha ' +
-                  '             OR FECHA_HASTA_EMPSER IS NULL)) ';
-      ParamByName('Serie').AsString := sSerie;
-      ParamByName('Empresa').AsString := sEmpresa;
-      ParamByName('Fecha').AsDateTime := dtFecha;
-      Open;
-      if (RecordCount <> 0) then
-        Result := FieldByName('SUBTIPO_EMPSER').AsString;
-      Close;
+  if (sSerie <> '') and
+     (sEmpresa <> '') then
+  begin
+    unqrySol := TUniQuery.Create(nil);
+    try
+      unqrySol.Connection := ConexionPrincipal;
+      unqrySol.SQL.Text :=
+        'SELECT S.SUBTIPO_EMPSER ' +
+        '  FROM fza_empresas_series S ' +
+        ' INNER JOIN fza_empresas E ' +
+        '    ON E.CODIGO_EMP_EMP = S.CODIGO_EMP_EMPSER ' +
+        ' WHERE S.CODIGO_EMP_EMPSER = :EMPRESA ' +
+        '   AND (S.EMPSER = :SERIE ' +
+        '        OR (E.ESTOKENS_CALENDARIO_NATURAL_EMP = ''S'' ' +
+        '        AND NULLIF(TRIM(S.SERIE_TOKENIZADA_EMPSER), '''') ' +
+        '            IS NOT NULL ' +
+        '        AND (LOCATE(BINARY ''yyyy'', BINARY ' +
+        '             TRIM(S.SERIE_TOKENIZADA_EMPSER)) > 0 ' +
+        '          OR LOCATE(BINARY ''q'', BINARY ' +
+        '             TRIM(S.SERIE_TOKENIZADA_EMPSER)) > 0 ' +
+        '          OR LOCATE(BINARY ''mm'', BINARY ' +
+        '             TRIM(S.SERIE_TOKENIZADA_EMPSER)) > 0 ' +
+        '          OR LOCATE(BINARY ''dd'', BINARY ' +
+        '             TRIM(S.SERIE_TOKENIZADA_EMPSER)) > 0) ' +
+        '        AND CHAR_LENGTH(TRIM(S.SERIE_TOKENIZADA_EMPSER)) - ' +
+        '            CHAR_LENGTH(REPLACE(' +
+        '            TRIM(S.SERIE_TOKENIZADA_EMPSER), ' +
+        '            ''yyyy'', '''')) IN (0, 4) ' +
+        '        AND CHAR_LENGTH(TRIM(S.SERIE_TOKENIZADA_EMPSER)) - ' +
+        '            CHAR_LENGTH(REPLACE(' +
+        '            TRIM(S.SERIE_TOKENIZADA_EMPSER), ' +
+        '            ''q'', '''')) IN (0, 1) ' +
+        '        AND CHAR_LENGTH(TRIM(S.SERIE_TOKENIZADA_EMPSER)) - ' +
+        '            CHAR_LENGTH(REPLACE(' +
+        '            TRIM(S.SERIE_TOKENIZADA_EMPSER), ' +
+        '            ''mm'', '''')) IN (0, 2) ' +
+        '        AND CHAR_LENGTH(TRIM(S.SERIE_TOKENIZADA_EMPSER)) - ' +
+        '            CHAR_LENGTH(REPLACE(' +
+        '            TRIM(S.SERIE_TOKENIZADA_EMPSER), ' +
+        '            ''dd'', '''')) IN (0, 2) ' +
+        '        AND REPLACE(REPLACE(REPLACE(REPLACE(' +
+        '            TRIM(S.SERIE_TOKENIZADA_EMPSER), ' +
+        '            ''yyyy'', CAST(YEAR(:FECHA) AS CHAR)), ' +
+        '            ''mm'', DATE_FORMAT(:FECHA, ''%m'')), ' +
+        '            ''dd'', DATE_FORMAT(:FECHA, ''%d'')), ' +
+        '            ''q'', CAST(QUARTER(:FECHA) AS CHAR)) = :SERIE)) ' +
+        '   AND (S.FECHA_DESDE_EMPSER IS NULL ' +
+        '        OR S.FECHA_DESDE_EMPSER <= :FECHA) ' +
+        '   AND (S.FECHA_HASTA_EMPSER IS NULL ' +
+        '        OR S.FECHA_HASTA_EMPSER >= :FECHA) ' +
+        ' LIMIT 1';
+      unqrySol.ParamByName('SERIE').AsString := sSerie;
+      unqrySol.ParamByName('EMPRESA').AsString := sEmpresa;
+      unqrySol.ParamByName('FECHA').AsDateTime := dtFecha;
+      unqrySol.Open;
+      if not unqrySol.IsEmpty then
+      begin
+        Result := unqrySol.FieldByName(
+          'SUBTIPO_EMPSER').AsString;
+      end;
+    finally
+      FreeAndNil(unqrySol);
     end;
-  finally
-    FreeAndNil(unqrySol);
   end;
 end;
 
@@ -455,24 +504,21 @@ begin
   sResul := '';
   if ( ((unqryTablaG.State = dsEdit) or
         (unqryTablaG.State = dsInsert))
-     ) then
+    ) then
   begin
     unqrySol := TUniQuery.Create(Self);
-    with unqrySol do
+    unqrySol.Connection := ConexionPrincipal;
+    unqrySol.SQL.Text := 'SELECT EMPRESA_DEFECTO_USU ' +
+                        '  FROM fza_usuarios ' +
+                        ' WHERE USUARIO_USU = :Usuario ';
+    unqrySol.ParamByName('Usuario').AsString := IdentidadSesion.Usuario;
+    unqrySol.Open;
+    if unqrySol.RecordCount <> 0 then
     begin
-      Connection := ConexionPrincipal;
-      SQL.Text := 'SELECT EMPRESA_DEFECTO_USU ' +
-                  '  FROM fza_usuarios ' +
-                  ' WHERE USUARIO_USU = :Usuario ';
-      ParamByName('Usuario').AsString := IdentidadSesion.Usuario;
-      Open;
-      if RecordCount <> 0 then
-      begin
-        sResul := FieldByName('EMPRESA_DEFECTO_USU').AsString;
-      end;
-      Close;
-      FreeAndNil(unqrySol);
+      sResul := unqrySol.FieldByName('EMPRESA_DEFECTO_USU').AsString;
     end;
+    unqrySol.Close;
+    FreeAndNil(unqrySol);
   end;
   Result := sResul;
 end;
@@ -481,10 +527,9 @@ procedure TdmFacturas.CrearTablaSeries(sEmpresa,
                                        sCliente:string;
                                        dtFecha:TDateTime);
 begin
-  with unqrySeriesEditCombo do
-  begin
-    Connection := ConexionPrincipal;
-    SQL.Text := 'SELECT SERIE_CON_CLI AS SERIE_CON ' +
+  unqrySeriesEditCombo.Connection := ConexionPrincipal;
+  unqrySeriesEditCombo.SQL.Text :=
+                'SELECT SERIE_CON_CLI AS SERIE_CON ' +
                 '  FROM vi_clientes                              ' +
                 ' WHERE (SERIE_CON_CLI IS NOT NULL      ' +
                 '        AND SERIE_CON_CLI <> '''')     ' +
@@ -493,22 +538,28 @@ begin
                 'SELECT EMPSER AS SERIE_CON            ' +
                 '  FROM vi_empresas_series                       ' +
                 ' WHERE CODIGO_EMP_EMPSER = :EMPRESA          ' +
-                '   AND (FECHA_DESDE_EMPSER <= :FECHA             ' +
-                '        AND (FECHA_HASTA_EMPSER >= :FECHA        ' +
-                '             OR FECHA_HASTA_EMPSER IS NULL ))    ' +
+                '   AND TIPO_DOC_EMPSER = ''FC''               ' +
+                '   AND (SUBTIPO_EMPSER = :SUBTIPO             ' +
+                '        OR IFNULL(SUBTIPO_EMPSER, '''') = '''') ' +
+                '   AND (FECHA_DESDE_EMPSER IS NULL            ' +
+                '        OR FECHA_DESDE_EMPSER <= :FECHA)      ' +
+                '   AND (FECHA_HASTA_EMPSER IS NULL            ' +
+                '        OR FECHA_HASTA_EMPSER >= :FECHA)      ' +
                 ' UNION                                          ' +
                 'SELECT SERIE_CON AS SERIE_CON         ' +
                 '  FROM vi_contadores                            ' +
                 ' WHERE ESACTIVO_CON = ''S''                  ' +
+                '   AND TIPO_DOC_CON = ''FC''                 ' +
                 '   AND EMPRESA_CON = :EMPRESA              ';
-    Prepare;
-    Params.ParamByName('EMPRESA').AsSTring := sEmpresa;
-    Params.ParamByName('FECHA').AsDateTime := dtFecha;
-    Params.ParamByName('CLIENTE').AsString := sCliente;
-    if unqrySeriesEditCombo.Active then
-      unqrySeriesEditCombo.Close;
-    unqrySeriesEditCombo.Open;
-  end;
+  unqrySeriesEditCombo.Prepare;
+  unqrySeriesEditCombo.Params.ParamByName('EMPRESA').AsSTring := sEmpresa;
+  unqrySeriesEditCombo.Params.ParamByName('FECHA').AsDateTime := dtFecha;
+  unqrySeriesEditCombo.Params.ParamByName('CLIENTE').AsString := sCliente;
+  unqrySeriesEditCombo.Params.ParamByName('SUBTIPO').AsString :=
+    FTipoFacturaDefecto;
+  if unqrySeriesEditCombo.Active then
+    unqrySeriesEditCombo.Close;
+  unqrySeriesEditCombo.Open;
 end;
 
 procedure TdmFacturas.AsignarIVA(s:string; unqryT:TUniQuery);
@@ -518,57 +569,49 @@ begin
   if ( (s <> '') ) then
   begin
     unqrySol := TUniQuery.Create(Self);
-    with unqrySol do
+    unqrySol.Connection := ConexionPrincipal;
+    unqrySol.SQL.Text :=  'SELECT *  ' +
+                         '  FROM vi_ivas ' +
+                         ' WHERE IVA_IVAGRP = :grupo ' +
+                         '   AND FECHA_DESDE_IVA <= :fecha_ini ' +
+                         '   AND (    FECHA_HASTA_IVA >= :fecha_fin ' +
+                         '         OR FECHA_HASTA_IVA IS NULL)';
+    unqrySol.ParamByName('grupo').AsString := s;
+    unqrySol.ParamByName('fecha_ini').AsDateTime :=
+      unqryT.FieldByName('FECHA_FAC').AsDateTime;
+    unqrySol.ParamByName('fecha_fin').AsDateTime :=
+      unqryT.FieldByName('FECHA_FAC').AsDateTime;
+    unqrySol.Open;
+    if unqrySol.RecordCount > 0 then
     begin
-      Connection := ConexionPrincipal;
-      SQL.Text :=  'SELECT *  ' +
-                   '  FROM vi_ivas ' +
-                   ' WHERE IVA_IVAGRP = :grupo ' +
-                   '   AND FECHA_DESDE_IVA <= :fecha_ini ' +
-                   '   AND (    FECHA_HASTA_IVA >= :fecha_fin ' +
-                   '         OR FECHA_HASTA_IVA IS NULL)';
-      ParamByName('grupo').AsString := s;
-      ParamByName('fecha_ini').AsDateTime :=
-                              unqryT.FieldByName('FECHA_FAC').AsDateTime;
-      ParamByName('fecha_fin').AsDateTime :=
-                              unqryT.FieldByName('FECHA_FAC').AsDateTime;
-      Open;
-      if (unqrySol.RecordCount > 0) then
-      begin
-         unqryT.FindField('PORCENTAJE_IVAN_FAC').AsString :=
-                              FieldByName('PORCENTAJE_NORMAL_IVA').AsString;
+      unqryT.FindField('PORCENTAJE_IVAN_FAC').AsString :=
+        unqrySol.FieldByName('PORCENTAJE_NORMAL_IVA').AsString;
          unqryT.FindField('PORCENTAJE_REN_FAC').AsString :=
-                              FieldByName('PORCENTAJE_NORMAL_RE_IVA').AsString;
+        unqrySol.FieldByName('PORCENTAJE_NORMAL_RE_IVA').AsString;
          unqryT.FindField('PORCENTAJE_IVAR_FAC').AsString :=
-                              FieldByName('PORCENTAJE_REDUCIDO_IVA').AsString;
+        unqrySol.FieldByName('PORCENTAJE_REDUCIDO_IVA').AsString;
          unqryT.FindField('PORCENTAJE_RER_FAC').AsString :=
-                              FieldByName(
-                                'PORCENTAJE_REDUCIDO_RE_IVA').AsString;
+        unqrySol.FieldByName('PORCENTAJE_REDUCIDO_RE_IVA').AsString;
          unqryT.FindField('PORCENTAJE_IVAS_FAC').AsString :=
-                              FieldByName(
-                                'PORCENTAJE_SUPERREDUCIDO_IVA').AsString;
+        unqrySol.FieldByName('PORCENTAJE_SUPERREDUCIDO_IVA').AsString;
          unqryT.FindField('PORCENTAJE_RES_FAC').AsString :=
-                             FieldByName(
-                               'PORCENTAJE_SUPERREDUCIDO_RE_IVA').AsString;
+        unqrySol.FieldByName('PORCENTAJE_SUPERREDUCIDO_RE_IVA').AsString;
          unqryT.FindField('PORCENTAJE_IVAE_FAC').AsString :=
-                              FieldByName('PORCENTAJE_EXENTO_IVA').AsString;
+        unqrySol.FieldByName('PORCENTAJE_EXENTO_IVA').AsString;
          unqryT.FindField('PORCENTAJE_REE_FAC').AsString :=
-                              FieldByName('PORCENTAJE_EXENTO_RE_IVA').AsString;
+        unqrySol.FieldByName('PORCENTAJE_EXENTO_RE_IVA').AsString;
          unqryT.FindField('ESIRPF_IMP_INCL_ZONA_IVA_FAC').AsString :=
-                              FieldByName(
-                                'ESIRPF_IMP_INCL_IVA_IVAGRP').AsString;
+        unqrySol.FieldByName('ESIRPF_IMP_INCL_IVA_IVAGRP').AsString;
          unqryT.FindField('ESAPLICA_RE_ZONA_IVA_FAC').AsString :=
-                              FieldByName('ESAPLICA_RE_IVA_IVAGRP').AsString;
+        unqrySol.FieldByName('ESAPLICA_RE_IVA_IVAGRP').AsString;
          unqryT.FindField('CODIGO_IVA_FAC').AsString :=
-                              FieldByName('CODIGO_IVA').AsString;
+        unqrySol.FieldByName('CODIGO_IVA').AsString;
          unqryT.FindField('ESIVAAGRICOLA_ZONA_IVA_FAC').AsString :=
-                              FieldByName('ESIVAAGRICOLA_IVA_IVAGRP').AsString;
+        unqrySol.FieldByName('ESIVAAGRICOLA_IVA_IVAGRP').AsString;
          unqryT.FindField('PALABRA_REPORTS_ZONA_IVA_FAC').AsString :=
-                              FieldByName(
-                                'PALABRA_REPORTS_IVA_IVAGRP').AsString;
-         Close;
-         FreeAndNil(unqrySol);
-      end;
+        unqrySol.FieldByName('PALABRA_REPORTS_IVA_IVAGRP').AsString;
+      unqrySol.Close;
+      FreeAndNil(unqrySol);
     end;
   end;
 end;
@@ -637,12 +680,14 @@ end;
 procedure TdmFacturas.CalcularRetencionesEmpresa;
 var
   unqrySol:TUniQuery;
-begin
-  with unqryTablaG do
+  function FindField(const Nombre: string): TField;
   begin
-    unqrySol := TUniQuery.Create(Self);
-    try
-      unqrySol.Connection := ConexionPrincipal;
+    Result := unqryTablaG.FindField(Nombre);
+  end;
+begin
+  unqrySol := TUniQuery.Create(Self);
+  try
+    unqrySol.Connection := ConexionPrincipal;
       unqrySol.SQL.Text := 'SELECT * '+
                            '  FROM fza_empresas_retenciones ' +
                            ' WHERE CODIGO_EMP_EMPRET = :empresa ' +
@@ -653,16 +698,15 @@ begin
       unqrySol.ParamByName('empresa').AsString :=
                                      FindField('CODIGO_EMP_FAC').AsString;
       unqrySol.ParamByName('fecha').AsDateTime :=
-                                          FieldByName('FECHA_FAC').AsDateTime;
+        unqryTablaG.FieldByName('FECHA_FAC').AsDateTime;
       unqrySol.Open;
       if ((unqrySol.RecordCount > 0) and
           (FindField('PORCENTAJE_RETENCION_FAC').AsFloat = 0)) then
         FindField('PORCENTAJE_RETENCION_FAC').AsFloat :=
                         unqrySol.FindField('PORCENTAJE_EMPRET').AsFloat;
-      unqrySol.Close;
-    finally
-      FreeAndNil(unqrySol);
-    end;
+    unqrySol.Close;
+  finally
+    FreeAndNil(unqrySol);
   end;
 end;
 
@@ -678,13 +722,17 @@ var
   iPorcen:Integer;
   bDtoVig    : Boolean;
   dFinalEf   : Double;
-begin
-  with dsLinFac.Dataset do
+  Lineas: TDataSet;
+  function FindField(const Nombre: string): TField;
   begin
-     if ( (State <> dsEdit) and
-          (State <> dsInsert)
-        ) then
-       Edit;
+    Result := Lineas.FindField(Nombre);
+  end;
+begin
+  Lineas := dsLinFac.Dataset;
+     if ( (Lineas.State <> dsEdit) and
+          (Lineas.State <> dsInsert)
+         ) then
+       Lineas.Edit;
      FindField('CODIGO_ART_FACLIN').AsString :=
                                   DataSet.FindField('CODIGO_ART_ART').AsString;
      FindField('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString :=
@@ -759,15 +807,19 @@ begin
      // Cantidad por defecto = 1
      if FindField('CANTIDAD_FACLIN') <> nil then
        FindField('CANTIDAD_FACLIN').AsCurrency := 1;
-  end;
 end;
 
 procedure TdmFacturas.CopiarClienteaFactura(DataSet:TDataSet);
-begin
-    with unqryTablaG do
+var
+  Factura: TDataSet;
+  function FindField(const Nombre: string): TField;
   begin
-    if ((State <> dsEdit) and (State <> dsInsert)) then
-      Edit;
+    Result := Factura.FindField(Nombre);
+  end;
+begin
+  Factura := unqryTablaG;
+    if ((Factura.State <> dsEdit) and (Factura.State <> dsInsert)) then
+      Factura.Edit;
     FindField('CODIGO_CLI_FAC').AsString :=
                                    DataSet.FindField('CODIGO_CLI_CLI').AsString;
     FindField('RAZON_SOCIAL_CLIENTE_FAC').AsString :=
@@ -851,17 +903,21 @@ begin
     end;
     if (FindField('ESRETENCIONES_CLIENTE_FAC').AsString <> 'S') then
       unqryTablaG.FindField('PORCENTAJE_RETENCION_FAC').AsFloat := 0;
-    if ((State = dsInsert) and Assigned(FOnSeriesCambiadas)) then
+    if ((Factura.State = dsInsert) and Assigned(FOnSeriesCambiadas)) then
       FOnSeriesCambiadas(Self);
-  end;
 end;
 
 procedure TdmFacturas.CopiarEmpresaaFactura(DataSet:TDataSet);
-begin
-  with unqryTablaG do
+var
+  Factura: TDataSet;
+  function FindField(const Nombre: string): TField;
   begin
-      if ((State <> dsEdit) and (State <> dsInsert)) then
-        Edit;
+    Result := Factura.FindField(Nombre);
+  end;
+begin
+  Factura := unqryTablaG;
+      if ((Factura.State <> dsEdit) and (Factura.State <> dsInsert)) then
+        Factura.Edit;
       FindField('CODIGO_EMP_FAC').AsString :=
                                    Dataset.FindField('CODIGO_EMP_EMP').AsString;
       FindField('RAZON_SOCIAL_EMPRESA_FAC').AsString :=
@@ -899,9 +955,8 @@ begin
       begin
         CalcularRetencionesEmpresa;
       end;
-     if ((State = dsInsert) and Assigned(FOnSeriesCambiadas)) then
+     if ((Factura.State = dsInsert) and Assigned(FOnSeriesCambiadas)) then
        FOnSeriesCambiadas(Self);
-   end;
 end;
 
 procedure TdmFacturas.CrearCliente;
@@ -1666,45 +1721,42 @@ begin
   sResul := '';
   qryIVAAG := TUniQuery.Create(Self);
   try
-    with qryIVAAG do
-    begin
-      Connection := ConexionPrincipal;
-        SQL.Text := 'SELECT IVA_IVAGRP ' +
-                    '  FROM vi_ivas_empresa ' +
-                    ' WHERE ESIVAAGRICOLA_IVA_IVAGRP = :pAGRICOLA ' +
-                    '   AND CODIGO_EMP_EMP = :pEMPRESA ' +
-                    '   AND FECHA_DESDE_IVA <= :pFECHA '     +
-                    '   AND (FECHA_HASTA_IVA IS NULL  '   +
-                    '       OR FECHA_HASTA_IVA > :pFECHA)'+
-                    ' LIMIT 1;'  ;
-        ParamByName('pAGRICOLA').AsString := 'S';
-        ParamByName('pFECHA').AsDateTime :=
-                            unqryTablaG.FieldByName('FECHA_FAC').AsDateTime;
-        ParamByName('pEMPRESA').AsString :=
-                     unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString;
-    Open;
-    if (qryIVAAG.RecordCount > 0) then
-      sResul := Fields[0].AsString
+    qryIVAAG.Connection := ConexionPrincipal;
+    qryIVAAG.SQL.Text := 'SELECT IVA_IVAGRP ' +
+                        '  FROM vi_ivas_empresa ' +
+                        ' WHERE ESIVAAGRICOLA_IVA_IVAGRP = :pAGRICOLA ' +
+                        '   AND CODIGO_EMP_EMP = :pEMPRESA ' +
+                        '   AND FECHA_DESDE_IVA <= :pFECHA ' +
+                        '   AND (FECHA_HASTA_IVA IS NULL ' +
+                        '       OR FECHA_HASTA_IVA > :pFECHA)' +
+                        ' LIMIT 1;';
+    qryIVAAG.ParamByName('pAGRICOLA').AsString := 'S';
+    qryIVAAG.ParamByName('pFECHA').AsDateTime :=
+      unqryTablaG.FieldByName('FECHA_FAC').AsDateTime;
+    qryIVAAG.ParamByName('pEMPRESA').AsString :=
+      unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString;
+    qryIVAAG.Open;
+    if qryIVAAG.RecordCount > 0 then
+      sResul := qryIVAAG.Fields[0].AsString
     else
     begin
-        Close;
-        SQL.Text := 'SELECT IVA_IVAGRP ' +
-                    '  FROM vi_ivas_empresa ' +
-                    ' WHERE ESIVAAGRICOLA_IVA_IVAGRP = :pAGRICOLA ' +
-                    '   AND ESDEFAULT_IVA_IVAGRP = :pDEFAULT ' +
-                    '   AND FECHA_DESDE_IVA <= :pFECHA '     +
-                    '   AND ( FECHA_HASTA_IVA IS NULL  '   +
-                    '        OR FECHA_HASTA_IVA > :pFECHA)'+
-                    ' LIMIT 1;'  ;
-        ParamByName('pAGRICOLA').AsString := 'S';
-        ParamByName('pDEFAULT').AsString := 'S';
-        ParamByName('pFECHA').AsDateTime :=
-                            unqryTablaG.FieldByName('FECHA_FAC').AsDateTime;
-       Open;
-       sResul := Fields[0].AsString;
-      end;
-      Close;
+      qryIVAAG.Close;
+      qryIVAAG.SQL.Text := 'SELECT IVA_IVAGRP ' +
+                          '  FROM vi_ivas_empresa ' +
+                          ' WHERE ESIVAAGRICOLA_IVA_IVAGRP = :pAGRICOLA ' +
+                          '   AND ESDEFAULT_IVA_IVAGRP = :pDEFAULT ' +
+                          '   AND FECHA_DESDE_IVA <= :pFECHA ' +
+                          '   AND ( FECHA_HASTA_IVA IS NULL ' +
+                          '        OR FECHA_HASTA_IVA > :pFECHA)' +
+                          ' LIMIT 1;';
+      qryIVAAG.ParamByName('pAGRICOLA').AsString := 'S';
+      qryIVAAG.ParamByName('pDEFAULT').AsString := 'S';
+      qryIVAAG.ParamByName('pFECHA').AsDateTime :=
+        unqryTablaG.FieldByName('FECHA_FAC').AsDateTime;
+      qryIVAAG.Open;
+      sResul := qryIVAAG.Fields[0].AsString;
     end;
+    qryIVAAG.Close;
   finally
     FreeAndNil(qryIVAAG);
   end;
@@ -1714,9 +1766,11 @@ end;
 function TdmFacturas.GetTipoIVA(sTipoIVA: string): Currency;
 var
   fPorcen:Currency;
-begin
-  with unqryTablaG do
+  function FindField(const Nombre: string): TField;
   begin
+    Result := unqryTablaG.FindField(Nombre);
+  end;
+begin
   case IndexStr(sTipoIVA, ['N', 'R', 'S', 'E']) of
     0: fPorcen := FindField('PORCENTAJE_IVAN_FAC').AsCurrency;
     1: fPorcen := FindField('PORCENTAJE_IVAR_FAC').AsCurrency;
@@ -1729,7 +1783,6 @@ begin
       unqryLinFac.FindField('TIPO_IVA_ARTICULO_FACLIN').AsString := 'N';
     end;
   end;
-  end;
   Result := fPorcen;
 end;
 
@@ -1737,26 +1790,29 @@ procedure TdmFacturas.GetCodigoAutoFactura;
 begin
   if (unqryTablaG.FindField('NUMERO_FAC').AsString = '0') then
   begin
-    with unstrdprcGetContadorFactura do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'pserie', ptInput);
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftString, 'pcont', ptOutput);
-      Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
-      Params.CreateParam(ftString, 'pUSUARIOMODIF', ptInput);
-      ParamByName('pserie').AsString :=
-                                unqryTablaG.FindField('SERIE_FAC').AsString;
-      ParamByName('ptipodoc').AsString :=
-        CrearConfiguracionDocumento(
-          tdFactura, sdVenta).TipoContador;
-      ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
-      ParamByName('pEMPRESA_CONTADOR').AsString :=
-                       unqryTablaG.FindField('CODIGO_EMP_FAC').AsString;
-      ExecProc;
-      unqryTablaG.FindField('NUMERO_FAC').AsString :=
-                                                  ParamByName('pcont').AsString;
-    end;
+    unstrdprcGetContadorFactura.Params.Clear;
+    unstrdprcGetContadorFactura.Params.CreateParam(
+      ftString, 'pserie', ptInput);
+    unstrdprcGetContadorFactura.Params.CreateParam(
+      ftString, 'ptipodoc', ptInput);
+    unstrdprcGetContadorFactura.Params.CreateParam(
+      ftString, 'pcont', ptOutput);
+    unstrdprcGetContadorFactura.Params.CreateParam(
+      ftString, 'pEMPRESA_CONTADOR', ptInput);
+    unstrdprcGetContadorFactura.Params.CreateParam(
+      ftString, 'pUSUARIOMODIF', ptInput);
+    unstrdprcGetContadorFactura.ParamByName('pserie').AsString :=
+      unqryTablaG.FindField('SERIE_FAC').AsString;
+    unstrdprcGetContadorFactura.ParamByName('ptipodoc').AsString :=
+      CrearConfiguracionDocumento(tdFactura, sdVenta).TipoContador;
+    unstrdprcGetContadorFactura.ParamByName('pUSUARIOMODIF').AsString :=
+      IdentidadSesion.Usuario;
+    unstrdprcGetContadorFactura.ParamByName(
+      'pEMPRESA_CONTADOR').AsString :=
+        unqryTablaG.FindField('CODIGO_EMP_FAC').AsString;
+    unstrdprcGetContadorFactura.ExecProc;
+    unqryTablaG.FindField('NUMERO_FAC').AsString :=
+      unstrdprcGetContadorFactura.ParamByName('pcont').AsString;
   end;
 end;
 
@@ -1851,7 +1907,7 @@ begin
   if (unqryTablaG.FindField('CODIGO_CLI_FAC').AsString = '0') then
   begin
     //bEsNuevoCliente := True;
-//    with unstrdprcGetContador do
+//    Llamada antigua a unstrdprcGetContador:
 //    begin
 //      Params.Clear;
 //      Params.CreateParam(ftString, 'ptipodoc', ptInput);
@@ -1955,7 +2011,7 @@ procedure TdmFacturas.GetCodigoAutoEmpresa;
 begin
   if unqryTablaG.FindField('CODIGO_EMP_FAC').AsString = '0' then
   begin
-//    with unstrdprcGetContador do
+//    Llamada antigua a unstrdprcGetContador:
 //    begin
 //      Params.Clear;
 //      Params.CreateParam(ftString, 'ptipodoc', ptInput);
@@ -2036,19 +2092,16 @@ end;
 procedure TdmFacturas.unqryLinFacAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  with unqryLinFac do
-  begin
-    AplicarValoresPorDefecto(
-      ConexionPrincipal,
-      unqryLinFac,
-      'fza_facturas_lineas');
-    // Limpiar nro de línea para que BeforePost llame al SP de contador
-    FindField(fnrolin).AsString := '0';
-    FindField(fporiva).AsCurrency := GetTipoIVA(
-          FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString);
-    FieldByName(fimpcl).AsString :=
-          unqryTablaG.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString;
-  end;
+  AplicarValoresPorDefecto(
+    ConexionPrincipal,
+    unqryLinFac,
+    'fza_facturas_lineas');
+  // Limpiar nro de línea para que BeforePost llame al SP de contador
+  unqryLinFac.FindField(fnrolin).AsString := '0';
+  unqryLinFac.FindField(fporiva).AsCurrency := GetTipoIVA(
+    unqryLinFac.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString);
+  unqryLinFac.FieldByName(fimpcl).AsString :=
+    unqryTablaG.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString;
 end;
 
 procedure TdmFacturas.unqryLinFacBeforePost(DataSet: TDataSet);
@@ -2059,57 +2112,62 @@ var
   sNumLin: string;
   sNumero: string;
   sSerie: string;
+  function FieldByName(const Nombre: string): TField;
+  begin
+    Result := unqryLinFac.FieldByName(Nombre);
+  end;
+  function FindField(const Nombre: string): TField;
+  begin
+    Result := unqryLinFac.FindField(Nombre);
+  end;
 begin
   inherited;
   // Desempaquetado ATTR en curso: post descriptivo, sin logica de
   // numeracion ni fiscal.
   if FDesempaquetandoAtributos then
     Exit;
-  with unqryLinFac do
+  // Salvaguarda si la linea llega con un SKU/codigo de barras sin pasar
+  // por el editor de articulo del formulario.
+  NormalizarArticuloSkuEnDataSet(ConexionPrincipal, unqryLinFac,
+    'CODIGO_ART_FACLIN', 'CODIGO_UNIDAD_FACLIN');
+  if FieldByName(fdesart).AsString = '' then
   begin
-    // Salvaguarda si la linea llega con un SKU/codigo de barras sin pasar
-    // por el editor de articulo del formulario.
-    NormalizarArticuloSkuEnDataSet(ConexionPrincipal, unqryLinFac,
-      'CODIGO_ART_FACLIN', 'CODIGO_UNIDAD_FACLIN');
-    if (FieldByName(fdesart).AsString = '') then
+    DataSet.Cancel;
+    Abort;
+  end;
+  sNumLin := Trim(FindField(fnrolin).AsString);
+  sNumero := Trim(unqryTablaG.FieldByName(fnrofac).AsString);
+  sSerie  := Trim(unqryTablaG.FieldByName(fseriefac).AsString);
+  if (sNumLin = '0') or
+     (sNumLin = '') or
+     ((DataSet.State = dsInsert) and
+      LineaDocExiste(CrearContadorLineasDocumento(ConexionPrincipal),
+        LIN_FACTURAS, sSerie, sNumero,
+        sNumLin)) then
+  begin
+    iNuevaLinea := GetSiguienteLineaDocLibreSiguiente(
+      CrearContadorLineasDocumento(ConexionPrincipal),
+      CONT_FACTURAS, LIN_FACTURAS, sSerie, sNumero);
+    if iNuevaLinea > 0 then
+      sNuevoNroLinea := Format('%.3d', [iNuevaLinea])
+    else
     begin
-      DataSet.Cancel;
-      Abort;
+      unstdGetContadorLinea.ParamByName('pnumfac').AsString := sNumero;
+      unstdGetContadorLinea.ParamByName('pserie').AsString := sSerie;
+      unstdGetContadorLinea.ExecProc;
+      sNuevoNroLinea :=
+        unstdGetContadorLinea.ParamByName('presul').AsString;
     end;
-    sNumLin := Trim(FindField(fnrolin).AsString);
-    sNumero := Trim(unqryTablaG.FieldByName(fnrofac).AsString);
-    sSerie  := Trim(unqryTablaG.FieldByName(fseriefac).AsString);
-    if (sNumLin = '0') or
-       (sNumLin = '') or
-       ((DataSet.State = dsInsert) and
-        LineaDocExiste(CrearContadorLineasDocumento(ConexionPrincipal),
-          LIN_FACTURAS, sSerie, sNumero,
-          sNumLin)) then
+    FindField(fnrolin).AsString := sNuevoNroLinea;
+    // Sincronizar el contador en el dataset de cabecera para que un
+    // Post posterior de la cabecera no sobreescriba el valor correcto
+    if unqryTablaG.FindField('CONTADOR_LINEAS_FAC') <> nil then
     begin
-      iNuevaLinea := GetSiguienteLineaDocLibreSiguiente(
-        CrearContadorLineasDocumento(ConexionPrincipal),
-        CONT_FACTURAS, LIN_FACTURAS, sSerie, sNumero);
-      if iNuevaLinea > 0 then
-        sNuevoNroLinea := Format('%.3d', [iNuevaLinea])
-      else
-      begin
-        unstdGetContadorLinea.ParamByName('pnumfac').AsString := sNumero;
-        unstdGetContadorLinea.ParamByName('pserie').AsString := sSerie;
-        unstdGetContadorLinea.ExecProc;
-        sNuevoNroLinea :=
-                         unstdGetContadorLinea.ParamByName('presul').AsString;
-      end;
-      FindField(fnrolin).AsString := sNuevoNroLinea;
-      // Sincronizar el contador en el dataset de cabecera para que un
-      // Post posterior de la cabecera no sobreescriba el valor correcto
-      if unqryTablaG.FindField('CONTADOR_LINEAS_FAC') <> nil then
-      begin
-        iContadorBD := StrToIntDef(sNuevoNroLinea, 0) + 10;
-        if unqryTablaG.State = dsBrowse then
-          unqryTablaG.Edit;
-        unqryTablaG.FieldByName('CONTADOR_LINEAS_FAC').AsString :=
-                                                Format('%.3d', [iContadorBD]);
-      end;
+      iContadorBD := StrToIntDef(sNuevoNroLinea, 0) + 10;
+      if unqryTablaG.State = dsBrowse then
+        unqryTablaG.Edit;
+      unqryTablaG.FieldByName('CONTADOR_LINEAS_FAC').AsString :=
+        Format('%.3d', [iContadorBD]);
     end;
   end;
   if DataSet.State in [dsEdit, dsInsert] then
@@ -2160,15 +2218,20 @@ end;
 procedure TdmFacturas.unqryTablaGDeleteErrorTx(DataSet: TDataSet;
   E: EDatabaseError; var Action: TDataAction);
 begin
-  if Assigned(FServicioBorrado) then
-    FServicioBorrado.Revertir;
+  RevertirBorradoFactura(FServicioBorrado);
 end;
 
 procedure TdmFacturas.unqryTablaGAfterInsert(DataSet: TDataSet);
+  function FieldByName(const Nombre: string): TField;
+  begin
+    Result := unqryTablaG.FieldByName(Nombre);
+  end;
+  function FindField(const Nombre: string): TField;
+  begin
+    Result := unqryTablaG.FindField(Nombre);
+  end;
 begin
   inherited;
-  with unqryTablaG do
-  begin
     AplicarValoresPorDefecto(ConexionPrincipal, unqryTablaG, 'fza_facturas');
 //    FieldByName('NUMERO_FAC').AsString := '0';
 //    FieldByName('CODIGO_CLI_FAC').AsString := '0';
@@ -2204,7 +2267,6 @@ begin
     if (FindField('ESMUEVE_STOCK_FAC') <> nil) and
        unqryAlmacenesFac.Active and unqryAlmacenesFac.IsEmpty then
       FieldByName('ESMUEVE_STOCK_FAC').AsString := 'N';
-  end;
 end;
 
 procedure TdmFacturas.unqryLinFacBeforeEdit(DataSet: TDataSet);
@@ -2254,6 +2316,8 @@ begin
 end;
 
 procedure TdmFacturas.unqryLinFacAfterPost(DataSet: TDataSet);
+var
+  Procedimiento: TUniStoredProc;
 begin
   inherited;
   // Los posts del desempaquetado ATTR no crean articulos ni alteran
@@ -2263,54 +2327,53 @@ begin
   if not FCalculandoFactura and
      SameText(unqryTablaG.FieldByName(fcreart).AsString, 'S') then
   begin
-    with  unstdCrearArticuloLin do
-    begin
-      ParamByName('pCODIGO_ARTICULO').AsString :=
-                                      unqryLinFac.FieldByName(fcodart).AsString;
-      ParamByName('pDESCRIPCION_ARTICULO').AsString :=
-                                      unqryLinFac.FieldByName(fdesart).AsString;
-      ParamByName('pTIPOIVA_ARTICULO').AsString :=
-                                      unqryLinFac.FieldByName(ftipiva).AsString;
-      ParamByName('pTIPO_CANTIDAD_ARTICULO').AsString :=
-                                    unqryLinFac.FieldByName(ftipocant).AsString;
-      ParamByName('pESACTIVO_FIJO_ARTICULO').AsString :=
-                                      unqryTablaG.FieldByName(factfij).AsString;
-      ParamByName('pCODIGO_FAMILIA').AsString :=
-                                      unqryLinFac.FieldByName(fcodfam).AsString;
-      ParamByName('pNOMBRE_FAMILIA').AsString :=
-                                      unqryLinFac.FieldByName(fnomfam).AsString;
-      ParamByName('pCODIGO_PROVEEDOR').AsString :=
-                                     unqryLinFac.FieldByName(fcodprov).AsString;
-      ParamByName('pRAZONSOCIAL_PROVEEDOR').AsString :=
-                                     unqryLinFac.FieldByName(frazprov).AsString;
-      ParamByName('pESPROVEEDORPRINCIPAL').AsString :=
-                                       unqryLinFac.FieldByName(fpprov).AsString;
-      ParamByName('pPRECIO_ULT_COMPRA').AsCurrency :=
-                                  unqryLinFac.FieldByName(fprecultc).AsCurrency;
+    Procedimiento := unstdCrearArticuloLin;
+    Procedimiento.ParamByName('pCODIGO_ARTICULO').AsString :=
+      unqryLinFac.FieldByName(fcodart).AsString;
+    Procedimiento.ParamByName('pDESCRIPCION_ARTICULO').AsString :=
+      unqryLinFac.FieldByName(fdesart).AsString;
+    Procedimiento.ParamByName('pTIPOIVA_ARTICULO').AsString :=
+      unqryLinFac.FieldByName(ftipiva).AsString;
+    Procedimiento.ParamByName('pTIPO_CANTIDAD_ARTICULO').AsString :=
+      unqryLinFac.FieldByName(ftipocant).AsString;
+    Procedimiento.ParamByName('pESACTIVO_FIJO_ARTICULO').AsString :=
+      unqryTablaG.FieldByName(factfij).AsString;
+    Procedimiento.ParamByName('pCODIGO_FAMILIA').AsString :=
+      unqryLinFac.FieldByName(fcodfam).AsString;
+    Procedimiento.ParamByName('pNOMBRE_FAMILIA').AsString :=
+      unqryLinFac.FieldByName(fnomfam).AsString;
+    Procedimiento.ParamByName('pCODIGO_PROVEEDOR').AsString :=
+      unqryLinFac.FieldByName(fcodprov).AsString;
+    Procedimiento.ParamByName('pRAZONSOCIAL_PROVEEDOR').AsString :=
+      unqryLinFac.FieldByName(frazprov).AsString;
+    Procedimiento.ParamByName('pESPROVEEDORPRINCIPAL').AsString :=
+      unqryLinFac.FieldByName(fpprov).AsString;
+    Procedimiento.ParamByName('pPRECIO_ULT_COMPRA').AsCurrency :=
+      unqryLinFac.FieldByName(fprecultc).AsCurrency;
 //      ParamByName('pFECHA_FACTURA').AsString :=
 //                                 unqryTablaG.FieldByName(ffechfac).AsString;
-      ParamByName('pCODIGO_TARIFA').AsString :=
-                                 unqryLinFac.FieldByName(fcodtariflin).AsString;
-      ParamByName('pPRECIOSALIDA_TARIFA').AsCurrency :=
-                                 unqryLinFac.FieldByName(fpreciosal).AsCurrency;
-      if SameText(unqryLinFac.FieldByName(fimpcl).AsString, 'S')  then
-        ParamByName('pPRECIOFINAL_TARIFA').AsCurrency :=
-                                    unqryLinFac.FieldByName(fpreciva).AsCurrency
-      else
-        ParamByName('pPRECIOFINAL_TARIFA').AsCurrency :=
-                                   unqryLinFac.FieldByName(fpresiva).AsCurrency;
-      ParamByName('pPRECIO_DTO_TARIFA').AsCurrency :=
-                                    unqryLinFac.FieldByName(fpordto).AsCurrency;
-      ParamByName('pPORCEN_DTO_TARIFA').AsCurrency :=
-                                    unqryLinFac.FieldByName(fpordto).AsCurrency;
-      ParamByName('pUSUARIO').AsString         := IdentidadSesion.Usuario;
+    Procedimiento.ParamByName('pCODIGO_TARIFA').AsString :=
+      unqryLinFac.FieldByName(fcodtariflin).AsString;
+    Procedimiento.ParamByName('pPRECIOSALIDA_TARIFA').AsCurrency :=
+      unqryLinFac.FieldByName(fpreciosal).AsCurrency;
+    if SameText(unqryLinFac.FieldByName(fimpcl).AsString, 'S') then
+      Procedimiento.ParamByName('pPRECIOFINAL_TARIFA').AsCurrency :=
+        unqryLinFac.FieldByName(fpreciva).AsCurrency
+    else
+      Procedimiento.ParamByName('pPRECIOFINAL_TARIFA').AsCurrency :=
+        unqryLinFac.FieldByName(fpresiva).AsCurrency;
+    Procedimiento.ParamByName('pPRECIO_DTO_TARIFA').AsCurrency :=
+      unqryLinFac.FieldByName(fpordto).AsCurrency;
+    Procedimiento.ParamByName('pPORCEN_DTO_TARIFA').AsCurrency :=
+      unqryLinFac.FieldByName(fpordto).AsCurrency;
+    Procedimiento.ParamByName('pUSUARIO').AsString :=
+      IdentidadSesion.Usuario;
 //      ParamByName('pUSUARIO').AsString         := IdentidadSesion.Usuario;
       //ParamByName('pINSTANTEMODIF').AsDateTime := Now;
       // ojo!!!! HAY UN TEMAZO DE UNIDAC CON EL PASO DE TIMESTAMPS POR PARÁMETRO
       //  ParamByName('pINSTANTEMODIF').AsString :=
       //                             FormatDateTime('YYYY-MM-DD hh:mm:ss', Now);
-      ExecProc;
-    end;
+    Procedimiento.ExecProc;
   end;
   if not FCalculandoFactura and FRecalculoFacturaPendiente then
   begin
@@ -2359,9 +2422,11 @@ procedure TdmFacturas.ValidarCabeceraBeforePost(DataSet: TDataSet);
 var
   bValidar: Boolean;
   dtUltima: TDateTime;
-begin
-  with unqryTablaG do
+  function FieldByName(const Nombre: string): TField;
   begin
+    Result := unqryTablaG.FieldByName(Nombre);
+  end;
+begin
     if ExisteSerieEmpresa(
          FieldByName(fseriefac).AsString,
          FieldByName(fcodemp).AsString,
@@ -2473,9 +2538,9 @@ begin
     begin
       RegistrarAdvertencia(SAvisoFechaBorradorFutura, True);
     end;
-    if State in [dsEdit, dsInsert] then
+    if unqryTablaG.State in [dsEdit, dsInsert] then
     begin
-      if (State = dsInsert) and
+      if (unqryTablaG.State = dsInsert) and
          ParametrosApp.Licencia.Comprobada and
          (FieldByName('FECHA_FAC').AsString <> '') then
       begin
@@ -2503,7 +2568,7 @@ begin
       end;
       // El salto de numeracion es un aviso y no bloquea la grabacion.
       if bValidar and
-         (State = dsInsert) and
+         (unqryTablaG.State = dsInsert) and
          HayHuecoNumeracion(
            FieldByName('SERIE_FAC').AsString,
            FieldByName('CODIGO_EMP_FAC').AsString,
@@ -2517,7 +2582,6 @@ begin
       end;
       ActualizarAuditoria(DataSet);
     end;
-  end;
 end;
 
 initialization

@@ -326,11 +326,8 @@ begin
   sFicha := 'N';
   FConfigAlta.Activo := False;
   SetLength(FConfigAlta.ValoresDefecto, 0);
-  with btnAltaRapida do
-  begin
-    OnClick := btnAltaRapidaClick;
-    Visible := False;
-  end;
+  btnAltaRapida.OnClick := btnAltaRapidaClick;
+  btnAltaRapida.Visible := False;
 end;
 
 procedure TfrmMtoSearch.FormKeyDown(Sender: TObject; var Key: Word;

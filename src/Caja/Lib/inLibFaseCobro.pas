@@ -32,7 +32,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections, System.Math,
-  Data.DB, VirtualTable, inLibFacturas, inLibFaseCobroPersistenciaIntf;
+  Data.DB, VirtualTable, inLibFacturas, inLibFaseCobroPersistenciaIntf,
+  inLibFaseCobroCalculo;
 
 type
   TDatosCliente = record
@@ -121,6 +122,11 @@ type
     FOnRecalculado: TNotifyEvent;
     FOnRequiereReferencia: TFunc<TFormaPagoInfo, TDatosReferencia, Boolean>;
     procedure CalcularTotales;
+    procedure AplicarResultadoTotales(
+      const AResultado: TResultadoTotalesCobro);
+    function LeerEntradaTotales: TEntradaTotalesCobro;
+    procedure LimpiarPagosCubiertosPorVales(
+      var AEntrada: TEntradaTotalesCobro);
     procedure InicializarTotalesPorDefecto;
     function ValidarDeuda: TResultadoValidacion;
     function ValidarVale: TResultadoValidacion;
@@ -158,7 +164,8 @@ type
     procedure Recalcular;
     property ImporteBruto: Currency read FImporteBruto;
     property ImporteDescuentoLineal: Currency read FImporteDescuentoLineal;
-    property PorcentajeDescuentoGlobal: Currency read FPorcentajeDescuentoGlobal;
+    property PorcentajeDescuentoGlobal: Currency
+      read FPorcentajeDescuentoGlobal;
     property ImporteDescuentoGlobal: Currency read FImporteDescuentoGlobal;
     property ImporteTotalPagar: Currency read FImporteTotalPagar;
     property ImporteEntregado: Currency read FImporteEntregado;
@@ -510,172 +517,129 @@ begin
     Result := ADefault;
 end;
 
-procedure TDatosFaseCobro.CalcularTotales;
-var
-  BaseImponible: Currency;
-  TotalEntregado, TotalEntregadoConCambio: Currency;
-  TotalValesRecogidos: Currency;
-  bookmark: TBookmark;
-  CambioCalculado: Currency;
-  CodigoForma: string;
-  ImporteEntregado: Currency;
+procedure TDatosFaseCobro.AplicarResultadoTotales(
+  const AResultado: TResultadoTotalesCobro);
 begin
-  // Cerrojo de seguridad: Prevención de recursión infinita
-  if FCalculandoTotales then Exit;
-  FCalculandoTotales := True;
+  FImporteDescuentoGlobal := AResultado.ImporteDescuentoGlobal;
+  FImporteTotalPagar := AResultado.ImporteTotalPagar;
+  FImporteEntregado := AResultado.ImporteEntregado;
+  FImportePendiente := AResultado.ImportePendiente;
+  FImporteCambio := AResultado.ImporteCambio;
+  FImporteValeRecogido := AResultado.ImporteValeRecogido;
+  FImporteValeEmitido := AResultado.ImporteValeEmitido;
+end;
+
+function TDatosFaseCobro.LeerEntradaTotales: TEntradaTotalesCobro;
+var
+  oMarcador: TBookmark;
+  sCodigoForma: string;
+  dImporte: Currency;
+begin
+  Result := Default(TEntradaTotalesCobro);
+  Result.ImporteBruto := FImporteBruto;
+  Result.DescuentoLineal := FImporteDescuentoLineal;
+  Result.PorcentajeDescuento := FPorcentajeDescuentoGlobal;
+  Result.ImporteDejarCuenta := FImporteDejarCuenta;
+  Result.ImporteValeEmitido := FImporteValeEmitido;
+  FMemTablePagos.DisableControls;
+  oMarcador := FMemTablePagos.GetBookmark;
   try
-    if not Assigned(FMemTablePagos) or
-       not FMemTablePagos.Active or
-       (FMemTablePagos.FieldCount = 0) then
+    FMemTablePagos.First;
+    while not FMemTablePagos.Eof do
     begin
-      InicializarTotalesPorDefecto;
-      Exit;
+      sCodigoForma := ObtenerStringSafe('CODIGO_FP_CFP', '');
+      dImporte := ObtenerCurrencySafe('IMPORTE_ENTREGADO', 0);
+      if sCodigoForma = 'VALE' then
+        Result.TotalValesRecogidos :=
+          Result.TotalValesRecogidos + dImporte
+      else if sCodigoForma <> '' then
+      begin
+        Result.TotalEntregado := Result.TotalEntregado + dImporte;
+        if (Abs(dImporte) > 0.001) and
+           (ObtenerStringSafe(
+              'ESDEVUELVE_CAMBIO_FORMA_PAGO_CFP', 'N') = 'S') then
+          Result.TotalEntregadoConCambio :=
+            Result.TotalEntregadoConCambio + dImporte;
+      end;
+      FMemTablePagos.Next;
     end;
-    // Cálculos básicos
-    BaseImponible := FImporteBruto - FImporteDescuentoLineal;
-    if Abs(FPorcentajeDescuentoGlobal) > 0.001 then
-      FImporteDescuentoGlobal :=
-        BaseImponible * (FPorcentajeDescuentoGlobal / 100)
-    else
-      FImporteDescuentoGlobal := 0;
-    FImporteTotalPagar := BaseImponible - FImporteDescuentoGlobal;
-    TotalEntregado := 0;
-    TotalValesRecogidos := 0;
-    TotalEntregadoConCambio := 0;
-    if FMemTablePagos.IsEmpty then
-    begin
-      FImporteValeRecogido := 0;
-      FImporteEntregado := 0;
-      FImportePendiente := FImporteTotalPagar;
-      FImporteCambio := 0;
-      FImporteValeEmitido := 0;
-      if Assigned(FOnRecalculado) then FOnRecalculado(Self);
-      Exit;
-    end;
-    // PASADA 1: Recorrer pagos y sumar
+  finally
+    if FMemTablePagos.BookmarkValid(oMarcador) then
+      FMemTablePagos.GotoBookmark(oMarcador);
+    FMemTablePagos.FreeBookmark(oMarcador);
+    FMemTablePagos.EnableControls;
+  end;
+end;
+
+procedure TDatosFaseCobro.LimpiarPagosCubiertosPorVales(
+  var AEntrada: TEntradaTotalesCobro);
+var
+  dBase: Currency;
+  dDescuento: Currency;
+  oMarcador: TBookmark;
+begin
+  dBase := AEntrada.ImporteBruto - AEntrada.DescuentoLineal;
+  dDescuento := 0;
+  if Abs(AEntrada.PorcentajeDescuento) > 0.001 then
+    dDescuento := dBase * (AEntrada.PorcentajeDescuento / 100);
+  if (AEntrada.TotalValesRecogidos >= dBase - dDescuento) and
+     (dBase - dDescuento > 0) and
+     (AEntrada.TotalEntregado <> 0) then
+  begin
     FMemTablePagos.DisableControls;
+    oMarcador := FMemTablePagos.GetBookmark;
     try
-      bookmark := FMemTablePagos.GetBookmark;
-      try
-        FMemTablePagos.First;
-        while not FMemTablePagos.Eof do
+      FMemTablePagos.First;
+      while not FMemTablePagos.Eof do
+      begin
+        if (FMemTablePagos.FieldByName(
+              'CODIGO_FP_CFP').AsString <> 'VALE') and
+           (FMemTablePagos.FieldByName(
+              'IMPORTE_ENTREGADO').AsCurrency <> 0) then
         begin
-          CodigoForma := ObtenerStringSafe('CODIGO_FP_CFP', '');
-          if CodigoForma.IsEmpty then
-          begin
-            FMemTablePagos.Next;
-            Continue;
-          end;
-          ImporteEntregado := ObtenerCurrencySafe('IMPORTE_ENTREGADO', 0);
-          if CodigoForma = 'VALE' then
-          begin
-            TotalValesRecogidos := TotalValesRecogidos + ImporteEntregado;
-          end
-          else
-          begin
-            TotalEntregado := TotalEntregado + ImporteEntregado;
-            if (Abs(ImporteEntregado) > 0.001) and
-               (ObtenerStringSafe('ESDEVUELVE_CAMBIO_FORMA_PAGO_CFP',
-                                  'N') = 'S') then
-            begin
-              TotalEntregadoConCambio := TotalEntregadoConCambio +
-                                                               ImporteEntregado;
-            end;
-          end;
-          FMemTablePagos.Next;
+          FMemTablePagos.Edit;
+          FMemTablePagos.FieldByName(
+            'IMPORTE_ENTREGADO').AsCurrency := 0;
+          FMemTablePagos.Post;
         end;
-        // REGLA DE NEGOCIO: Si los vales recogidos ya cubren todo el importe,
-        // cualquier otra forma de pago introducida se borra automáticamente.
-        if (TotalValesRecogidos >= FImporteTotalPagar) and
-           (FImporteTotalPagar > 0) and
-           (TotalEntregado <> 0) then
-        begin
-          TotalEntregado := 0;
-          TotalEntregadoConCambio := 0;
-          FMemTablePagos.First;
-          while not FMemTablePagos.Eof do
-          begin
-            if (FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString <> 'VALE')
-                                                                            and
-               (FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency <> 0)
-                                                                            then
-            begin
-              FMemTablePagos.Edit;
-              FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency := 0;
-              FMemTablePagos.Post;
-            end;
-            FMemTablePagos.Next;
-          end;
-        end;
-      finally
-        if FMemTablePagos.BookmarkValid(bookmark) then
-          FMemTablePagos.GotoBookmark(bookmark);
-        FMemTablePagos.FreeBookmark(bookmark);
+        FMemTablePagos.Next;
       end;
     finally
+      if FMemTablePagos.BookmarkValid(oMarcador) then
+        FMemTablePagos.GotoBookmark(oMarcador);
+      FMemTablePagos.FreeBookmark(oMarcador);
       FMemTablePagos.EnableControls;
     end;
-    FImporteValeRecogido := TotalValesRecogidos;
-    // PASADA 2: Lógica de totales y cambio
-    if FImporteTotalPagar < -0.001 then
-    begin
-      FImporteEntregado := 0;
-      FImporteCambio    := 0;
-      var ImporteADevolver: Currency := Abs(FImporteTotalPagar);
-      var DevueltoPorFormas: Currency := 0;
-      if TotalEntregado < -0.001 then
-        DevueltoPorFormas := Abs(TotalEntregado);
-      if DevueltoPorFormas >= ImporteADevolver then
+    AEntrada.TotalEntregado := 0;
+    AEntrada.TotalEntregadoConCambio := 0;
+  end;
+end;
+
+procedure TDatosFaseCobro.CalcularTotales;
+var
+  oEntrada: TEntradaTotalesCobro;
+  oResultado: TResultadoTotalesCobro;
+begin
+  if not FCalculandoTotales then
+  begin
+    FCalculandoTotales := True;
+    try
+      if Assigned(FMemTablePagos) and
+         FMemTablePagos.Active and
+         (FMemTablePagos.FieldCount > 0) then
       begin
-        FImporteValeEmitido := 0;
-        FImportePendiente   := 0;
+        oEntrada := LeerEntradaTotales;
+        LimpiarPagosCubiertosPorVales(oEntrada);
+        oResultado := TCalculadorFaseCobro.CalcularTotales(oEntrada);
+        AplicarResultadoTotales(oResultado);
+        if Assigned(FOnRecalculado) then
+          FOnRecalculado(Self);
       end
       else
-      begin
-        var RestanteSinFormas: Currency := ImporteADevolver - DevueltoPorFormas;
-        if FImporteValeEmitido >= RestanteSinFormas then
-          FImportePendiente := 0
-        else
-          FImportePendiente := RestanteSinFormas - FImporteValeEmitido;
-      end;
-    end
-    else
-    begin
-      FImporteEntregado := TotalEntregado + FImporteValeRecogido;
-      if FImporteEntregado >= FImporteTotalPagar - 0.001 then  // Tolerancia
-      begin
-        FImportePendiente := 0;
-        CambioCalculado := FImporteEntregado - FImporteTotalPagar;
-        if Abs(CambioCalculado) < 0.01 then
-          CambioCalculado := 0;
-        // REGLA MATEMÁTICA ANTI-BLANQUEO:
-        // El cajón NUNCA devolverá en Cambio (efectivo) más cantidad
-        // de la que el cliente puso físicamente en la mesa.
-        if CambioCalculado > TotalEntregadoConCambio then
-        begin
-          FImporteCambio := TotalEntregadoConCambio;
-          FImporteValeEmitido := CambioCalculado - TotalEntregadoConCambio;
-        end
-        else
-        begin
-          FImporteCambio := CambioCalculado;
-          FImporteValeEmitido := 0;
-        end;
-      end
-      else
-      begin
-        FImportePendiente :=
-          FImporteTotalPagar - FImporteEntregado - FImporteDejarCuenta;
-        if Abs(FImportePendiente) < 0.01 then FImportePendiente := 0;
-        FImporteCambio := 0;
-        FImporteValeEmitido := 0;
-      end;
+        InicializarTotalesPorDefecto;
+    finally
+      FCalculandoTotales := False;
     end;
-    if Assigned(FOnRecalculado) then
-      FOnRecalculado(Self);
-  finally
-    // Liberamos el cerrojo
-    FCalculandoTotales := False;
   end;
 end;
 
@@ -835,7 +799,8 @@ begin
             Item.Observaciones := '';
             Item.ImporteCambio := 0;
             EsDevuelveCambio := FMemTablePagos.FieldByName(
-                                    'ESDEVUELVE_CAMBIO_FORMA_PAGO_CFP').AsString = 'S';
+                                    'ESDEVUELVE_CAMBIO_FORMA_PAGO_CFP')
+                                    .AsString = 'S';
             if (RestanteCambio > 0) and EsDevuelveCambio then
             begin
               Item.ImporteCambio := RestanteCambio;

@@ -760,10 +760,10 @@ procedure TfrmMtoArticulos.actEmpresasExecute(Sender: TObject);
 begin
   inherited;
   // Ctrl+Alt+E -> Empresas.
-   with tvLinFac.DataController.DataSet do
     if (
         (pcDetail.ActivePage = tsLineasFactura)        and
-        (not(FieldByName('CODIGO_EMP_FACLIN').IsNull))
+        (not(tvLinFac.DataController.DataSet.FieldByName(
+          'CODIGO_EMP_FACLIN').IsNull))
        ) then
       btnIraEmpresaClick(Sender)
     else
@@ -830,12 +830,11 @@ procedure TfrmMtoArticulos.actFamiliasExecute(Sender: TObject);
 begin
   inherited;
   //Control + N     -> Familias
-  with dsTablaG.DataSet do
-    if ((not(FieldByName('CODIGO_FAM_ART').IsNull))
+    if ((not(dsTablaG.DataSet.FieldByName('CODIGO_FAM_ART').IsNull))
        ) then
       ShowMto(Self.Owner,
               'Familias',
-              FieldByName('CODIGO_FAM_ART').AsString)
+              dsTablaG.DataSet.FieldByName('CODIGO_FAM_ART').AsString)
     else
       ShowMto(Self.Owner,
               'Familias');
@@ -844,10 +843,10 @@ end;
 procedure TfrmMtoArticulos.actProveedoresExecute(Sender: TObject);
 begin  //control + P -> proveedores
   inherited;
-  with tvProveedores.DataController.DataSet do
     if (
         (pcDetail.ActivePage = tsProveedores) and
-        (not(FieldByName('CODIGO_PRV_PRV').IsNull))
+        (not(tvProveedores.DataController.DataSet.FieldByName(
+          'CODIGO_PRV_PRV').IsNull))
        ) then
       btnIraProveedorClick(Sender)
     else
@@ -859,10 +858,10 @@ procedure TfrmMtoArticulos.actTarifasExecute(Sender: TObject);
 begin
   inherited;
   //Control + T -> Tarifas
-  with tvTarifas.DataController.DataSet do
     if (
         (pcDetail.ActivePage = tsTarifas) and
-        (not(FieldByName('CODIGO_TAR_ARTTAR').IsNull))
+        (not(tvTarifas.DataController.DataSet.FieldByName(
+          'CODIGO_TAR_ARTTAR').IsNull))
        ) then
       btnIraTarifaClick(Sender)
     else
@@ -872,9 +871,9 @@ end;
 
 procedure TfrmMtoArticulos.btnAddProveedorClick(Sender: TObject);
 begin
-  with dmmArticulos do
-    if ((unqryTablaG.State = dsInsert) or (unqryTablaG.State = dsEdit)) then
-    unqryTablaG.Post;
+  if (dmmArticulos.unqryTablaG.State = dsInsert) or
+     (dmmArticulos.unqryTablaG.State = dsEdit) then
+    dmmArticulos.unqryTablaG.Post;
   BuscarProveedores;
 end;
 
@@ -945,10 +944,10 @@ end;
 procedure TfrmMtoArticulos.btnIraClienteClick(Sender: TObject);
 begin
   inherited;
-    with tvLinFac.DataController.DataSet do
   ShowMto(Self.Owner,
           'Clientes',
-          FieldByName('CODIGO_CLIENTE_FACTURA_LINEA').AsString);
+          tvLinFac.DataController.DataSet.FieldByName(
+            'CODIGO_CLIENTE_FACTURA_LINEA').AsString);
 end;
 
 procedure TfrmMtoArticulos.btnIraEmpresaClick(Sender: TObject);
@@ -1274,7 +1273,8 @@ begin
                                             dmmArticulos.dsDetallesAtributos;
   (tvSkuAtributosBasicosID_ATB_AV.Properties as TcxLookupComboBoxProperties)
                           .ListSource := dmmArticulos.dsAtributosBasicosLookup;
-  tvMovimientos.DataController.DataSource := dmmArticulos.dsMovimientosArticulos;
+  tvMovimientos.DataController.DataSource :=
+    dmmArticulos.dsMovimientosArticulos;
   pkFieldName := 'CODIGO_ART_ART';
   dmmArticulos.unqryTablaG.AfterScroll := OnAfterScrollArticulos;
   // Carga perezosa de Tarifas: solo abrir unqryTarifasArticulos cuando

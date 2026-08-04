@@ -30,7 +30,7 @@ const
     'WHERE (:EMP = '''' OR CODIGO_EMP_ALM = :EMP) ' +
     'ORDER BY CODIGO_ALM_ALM';
   SQL_LISTAR_SERIES =
-    'SELECT EMPSER FROM fza_empresas_series ' +
+    'SELECT EMPSER FROM vi_empresas_series ' +
     'WHERE CODIGO_EMP_EMPSER = :EMP ' +
     'AND TIPO_DOC_EMPSER = :TIPO ' +
     'AND (FECHA_DESDE_EMPSER IS NULL OR FECHA_DESDE_EMPSER <= NOW()) ' +

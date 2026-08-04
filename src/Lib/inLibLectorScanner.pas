@@ -37,7 +37,8 @@ type
     FLongitudMinima: Integer;
     FConsumirRafaga: Boolean;
     FOmitirEnRejilla: Boolean;
-    // --- Estado interno del detector ------------------------------------------
+    // --- Estado interno del detector
+    // ------------------------------------------
     FHandle: HWND;
     FLeyendoTrama: Boolean;
     FBufferTrama: string;
@@ -50,7 +51,8 @@ type
     FEsperaEco: Boolean;
     FRejillaEditaba: Boolean;
     FCodigoPend: string;
-    // --- Eventos ---------------------------------------------------------------
+    // --- Eventos
+    // ---------------------------------------------------------------
     FOnCodigoLeido: TEventoCodigoLeido;
     FOnLecturaIniciada: TNotifyEvent;
     FOnRejillaEditando: TConsultaBooleana;
@@ -219,7 +221,8 @@ begin
   end
   else if FActivo and (not (FOmitirEnRejilla and EnRejilla)) then
   begin
-    // --- Detector por velocidad de tecleo -------------------------------------
+    // --- Detector por velocidad de tecleo
+    // -------------------------------------
     ahora := GetTickCount;
     delta := ahora - FTick;
     FTick := ahora;

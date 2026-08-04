@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{043ED411-EE1A-4AA2-B74D-2ED61ACAFD50}</ProjectGuid>
         <MainSource>RendimientoMotorFiscalVenta.dpr</MainSource>

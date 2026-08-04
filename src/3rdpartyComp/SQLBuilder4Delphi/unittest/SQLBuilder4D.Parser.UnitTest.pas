@@ -1,4 +1,4 @@
-unit SQLBuilder4D.Parser.UnitTest;
+﻿unit SQLBuilder4D.Parser.UnitTest;
 
 interface
 

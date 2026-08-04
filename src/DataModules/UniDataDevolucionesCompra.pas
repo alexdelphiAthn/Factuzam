@@ -1,6 +1,6 @@
 ﻿{******************************************************************************}
 {                                                                              }
-{  Módulo:       UniDataDevolucionesCompra                                        }
+{  Módulo:       UniDataDevolucionesCompra                                     }
 {    Tipo:       Data Module                                                   }
 { Versión:       1.0.0                                                         }
 {   Fecha:       22/05/2026                                                    }
@@ -265,11 +265,17 @@ end;
 procedure TdmDevolucionesCompra.unqryTablaGAfterInsert(DataSet: TDataSet);
 var
   sSerie: string;
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryTablaG.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryTablaG.FindField(ANombre);
+  end;
 begin
   inherited;
-  with unqryTablaG do
-  begin
-    FieldByName('NUMERO_DEVC').AsString := '0';
+  FieldByName('NUMERO_DEVC').AsString := '0';
     // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='DC'
     sSerie := ObtenerSerieDefecto(
       ConexionPrincipal,
@@ -298,10 +304,9 @@ begin
     AplicarRecargoComprasEmpresa(
       CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
       'CODIGO_EMP_DEVC', 'ESIVA_RECARGO_COMPRAS_DEVC');
-    AplicarPorcentajesIvaCompra(
-      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
-      'DEVC');
-  end;
+  AplicarPorcentajesIvaCompra(
+    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
+    'DEVC');
   RefrescarAlmacenes(
     DataSet.FieldByName('CODIGO_EMP_DEVC').AsString);
 end;
@@ -416,11 +421,17 @@ end;
 
 procedure TdmDevolucionesCompra.unqryDevolucionesCompraLineasAfterInsert(
                                                        DataSet: TDataSet);
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryDevolucionesCompraLineas.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryDevolucionesCompraLineas.FindField(ANombre);
+  end;
 begin
   inherited;
-  with unqryDevolucionesCompraLineas do
-  begin
-    FieldByName('NUMERO_DEVC_DEVCLIN').AsString :=
+  FieldByName('NUMERO_DEVC_DEVCLIN').AsString :=
       unqryTablaG.FieldByName('NUMERO_DEVC').AsString;
     FieldByName('SERIE_DEVC_DEVCLIN').AsString :=
       unqryTablaG.FieldByName('SERIE_DEVC').AsString;
@@ -433,15 +444,22 @@ begin
     // tambien sobrescribimos USUARIO_MODIF para que refleje la ultima edicion.
     FieldByName('USUARIO_ALTA').AsString    := IdentidadSesion.Usuario;
     FieldByName('INSTANTE_ALTA').AsDateTime := Now;
-    FieldByName('USUARIO_MODIF').AsString   := IdentidadSesion.Usuario;
-    FieldByName('INSTANTE_MODIF').AsDateTime:= Now;
-  end;
+  FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
+  FieldByName('INSTANTE_MODIF').AsDateTime := Now;
 end;
 
 procedure TdmDevolucionesCompra.unqryDevolucionesCompraLineasBeforePost(
                                                        DataSet: TDataSet);
 var
   sSku, sArt: string;
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryDevolucionesCompraLineas.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryDevolucionesCompraLineas.FindField(ANombre);
+  end;
 begin
   inherited;
   // Desempaquetado ATTR en curso: post descriptivo, sin logica fiscal.
@@ -467,10 +485,8 @@ begin
     Abort;
   end;
   AsignarNumeroLineaDevolucionCompra(DataSet);
-  with unqryDevolucionesCompraLineas do
-  begin
-    // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
-    NormalizarArticuloSkuEnDataSet(ConexionPrincipal,
+  // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
+  NormalizarArticuloSkuEnDataSet(ConexionPrincipal,
       unqryDevolucionesCompraLineas, 'CODIGO_ART_DEVCLIN',
       'CODIGO_UNIDAD_DEVCLIN');
     if (Trim(FieldByName('NUMERO_DEVC_DEVCLIN').AsString) = '') or
@@ -517,10 +533,9 @@ begin
         unqrySkusDevc.Close;
       end;
     end;
-    PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionPrincipal),
-      unqryTablaG,
-      unqryDevolucionesCompraLineas, 'DEVC', 'DEVCLIN', 'TOTAL_DEVCLIN');
-  end;
+  PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionPrincipal),
+    unqryTablaG,
+    unqryDevolucionesCompraLineas, 'DEVC', 'DEVCLIN', 'TOTAL_DEVCLIN');
 end;
 
 procedure TdmDevolucionesCompra.AsignarNumeroLineaDevolucionCompra(
@@ -590,31 +605,35 @@ var
   iNumero: Int64;
   sNumero: string;
 begin
-  with unstrdprcGetContadorDevc do
-  begin
-    Params.Clear;
-    Params.CreateParam(ftString, 'pserie',            ptInput);
-    Params.CreateParam(ftString, 'ptipodoc',          ptInput);
-    Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
-    Params.CreateParam(ftString, 'pUSUARIOMODIF',     ptInput);
-    Params.CreateParam(ftString, 'pcont',             ptOutput);
-    ParamByName('pserie').AsString :=
-      unqryTablaG.FieldByName('SERIE_DEVC').AsString;
-    ParamByName('ptipodoc').AsString :=
-      CrearConfiguracionDocumento(
-        tdDevolucion, sdCompra).TipoContador;
-    ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
-    ParamByName('pEMPRESA_CONTADOR').AsString :=
-      unqryTablaG.FieldByName('CODIGO_EMP_DEVC').AsString;
-    ExecProc;
-    sNumero := Trim(ParamByName('pcont').AsString);
-    if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
-       (iNumero <= 0) then
-      raise Exception.Create(Format(SErrorContadorDevolucionCompra,
-        [unqryTablaG.FieldByName('SERIE_DEVC').AsString,
-         unqryTablaG.FieldByName('CODIGO_EMP_DEVC').AsString]));
-    unqryTablaG.FieldByName('NUMERO_DEVC').AsString := sNumero;
-  end;
+  unstrdprcGetContadorDevc.Params.Clear;
+  unstrdprcGetContadorDevc.Params.CreateParam(
+    ftString, 'pserie', ptInput);
+  unstrdprcGetContadorDevc.Params.CreateParam(
+    ftString, 'ptipodoc', ptInput);
+  unstrdprcGetContadorDevc.Params.CreateParam(
+    ftString, 'pEMPRESA_CONTADOR', ptInput);
+  unstrdprcGetContadorDevc.Params.CreateParam(
+    ftString, 'pUSUARIOMODIF', ptInput);
+  unstrdprcGetContadorDevc.Params.CreateParam(
+    ftString, 'pcont', ptOutput);
+  unstrdprcGetContadorDevc.ParamByName('pserie').AsString :=
+    unqryTablaG.FieldByName('SERIE_DEVC').AsString;
+  unstrdprcGetContadorDevc.ParamByName('ptipodoc').AsString :=
+    CrearConfiguracionDocumento(tdDevolucion, sdCompra).TipoContador;
+  unstrdprcGetContadorDevc.ParamByName('pUSUARIOMODIF').AsString :=
+    IdentidadSesion.Usuario;
+  unstrdprcGetContadorDevc.ParamByName(
+    'pEMPRESA_CONTADOR').AsString :=
+    unqryTablaG.FieldByName('CODIGO_EMP_DEVC').AsString;
+  unstrdprcGetContadorDevc.ExecProc;
+  sNumero := Trim(
+    unstrdprcGetContadorDevc.ParamByName('pcont').AsString);
+  if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
+     (iNumero <= 0) then
+    raise Exception.Create(Format(SErrorContadorDevolucionCompra,
+      [unqryTablaG.FieldByName('SERIE_DEVC').AsString,
+       unqryTablaG.FieldByName('CODIGO_EMP_DEVC').AsString]));
+  unqryTablaG.FieldByName('NUMERO_DEVC').AsString := sNumero;
 end;
 
 procedure TdmDevolucionesCompra.CalcularTotalesDevolucionCompra;
@@ -797,7 +816,8 @@ begin
         'SELECT DISTINCT L.CODIGO_ALMACEN_DEVCLIN AS COD, ' +
         '       COALESCE(A.NOMBRE_ALM_ALM, L.CODIGO_ALMACEN_DEVCLIN) AS NOM ' +
         '  FROM fza_devoluciones_compra_lineas L ' +
-        '  LEFT JOIN fza_almacenes A ON A.CODIGO_ALM_ALM = L.CODIGO_ALMACEN_DEVCLIN ' +
+        '  LEFT JOIN fza_almacenes A ON A.CODIGO_ALM_ALM = ' +
+        'L.CODIGO_ALMACEN_DEVCLIN ' +
         ' WHERE L.SERIE_DEVC_DEVCLIN = :s AND L.NUMERO_DEVC_DEVCLIN = :n ' +
         '   AND COALESCE(L.CODIGO_ALMACEN_DEVCLIN, '''') <> '''' ' +
         ' ORDER BY COD';

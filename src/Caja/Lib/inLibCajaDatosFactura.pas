@@ -90,11 +90,17 @@ implementation
 
 function LeerCabeceraFactura(
   ADataSet: TDataSet): TDatosCabeceraFactura;
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := ADataSet.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := ADataSet.FindField(ANombre);
+  end;
 begin
   Result := Default(TDatosCabeceraFactura);
-  with ADataSet do
-  begin
-    Result.Fecha := FieldByName('FECHA_FAC').AsDateTime;
+  Result.Fecha := FieldByName('FECHA_FAC').AsDateTime;
     Result.CodigoCliente := FieldByName('CODIGO_CLI_FAC').AsString;
     Result.RazonSocialEmp :=
       FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsString;
@@ -189,9 +195,8 @@ begin
       FieldByName('PORCENTAJE_RETENCION_FAC').AsCurrency;
     Result.TotalLiquido :=
       FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency;
-    Result.FormaPago := FieldByName('FORMA_PAGO_FAC').AsString;
-    Result.Comentarios := FieldByName('COMENTARIOS_FAC').AsString;
-  end;
+  Result.FormaPago := FieldByName('FORMA_PAGO_FAC').AsString;
+  Result.Comentarios := FieldByName('COMENTARIOS_FAC').AsString;
 end;
 
 end.

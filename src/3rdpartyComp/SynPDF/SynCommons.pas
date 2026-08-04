@@ -1,4 +1,4 @@
-/// common functions used by most Synopse projects
+﻿/// common functions used by most Synopse projects
 // - this unit is a part of the freeware Synopse mORMot framework,
 // licensed under a MPL/GPL/LGPL tri-license; version 1.18
 unit SynCommons;

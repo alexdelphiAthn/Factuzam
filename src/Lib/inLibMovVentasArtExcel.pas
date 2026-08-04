@@ -65,24 +65,60 @@ const
   N_NIVELES   = 3;
 
 type
-  // Acumulador de las magnitudes BASE (sumables) de un grupo / total. Los
-  // porcentajes y márgenes se derivan de estas sumas, no se acumulan.
   TAcum = record
-    UniEnt : Double;
-    ImpEnt : Double;
-    UdsVta : Double;
-    ImpVta : Double;
-    ImpCos : Double;
-    Benef  : Double;
-    VtaEnt : Double;
+    UniEnt: Double;
+    ImpEnt: Double;
+    UdsVta: Double;
+    ImpVta: Double;
+    ImpCos: Double;
+    Benef: Double;
+    VtaEnt: Double;
     procedure Reset;
     procedure Add(const Q: TDataSet);
+  end;
+  TExportadorMovVentasArt = class
+  private
+    FEscritor: IEscritorHojaCalculo;
+    FFormateador: IFormateadorHojaCalculo;
+    FDatos: TDataSet;
+    FFila: Integer;
+    FGrupoCodigos: array[1..N_NIVELES] of string;
+    FGrupoEtiquetas: array[1..N_NIVELES] of string;
+    FGrupoUsado: array[1..N_NIVELES] of Boolean;
+    FGrupoAcumulado: array[1..N_NIVELES] of TAcum;
+    FTotalAcumulado: TAcum;
+    procedure EscribirValor(AColumna: Integer; const AValor: Variant;
+      ANegrita: Boolean = False;
+      AAlineacion: TAlineacionCelda = acIzquierda;
+      const AFormato: string = '');
+    procedure EscribirNumero(AColumna: Integer; AValor: Double;
+      const AFormato: string; AOcultarCero: Boolean);
+    function CampoTexto(const ANombre: string): string;
+    procedure EscribirCabeceraColumnas;
+    procedure EscribirTotales(const AAcumulado: TAcum;
+      const AEtiqueta: string; AColorFondo: Cardinal);
+    procedure AbrirGrupo(ANivel: Integer);
+    procedure EmitirResumenGrupo(ANivel: Integer);
+    procedure DetectarAgrupaciones;
+    procedure EscribirDetalle;
+    procedure AcumularFila;
+    procedure ProcesarDatos;
+    procedure ConfigurarAnchos;
+  public
+    constructor Create(const AEscritor: IEscritorHojaCalculo;
+      const AFormateador: IFormateadorHojaCalculo; ADatos: TDataSet);
+    procedure Ejecutar;
   end;
 
 procedure TAcum.Reset;
 begin
-  UniEnt := 0; ImpEnt := 0; UdsVta := 0; ImpVta := 0;
-  ImpCos := 0; Benef := 0; VtaEnt := 0;
+  UniEnt := 0;
+  ImpEnt := 0;
+  UdsVta := 0;
+  ImpVta := 0;
+  ImpCos := 0;
+  Benef := 0;
+  VtaEnt := 0;
 end;
 
 procedure TAcum.Add(const Q: TDataSet);
@@ -92,8 +128,302 @@ begin
   UdsVta := UdsVta + Q.FieldByName('UDS_VENTA').AsFloat;
   ImpVta := ImpVta + Q.FieldByName('IMP_VENTA').AsFloat;
   ImpCos := ImpCos + Q.FieldByName('IMP_COSTE').AsFloat;
-  Benef  := Benef  + Q.FieldByName('BENEFICIO').AsFloat;
+  Benef := Benef + Q.FieldByName('BENEFICIO').AsFloat;
   VtaEnt := VtaEnt + Q.FieldByName('VENTA_ENT').AsFloat;
+end;
+
+constructor TExportadorMovVentasArt.Create(
+  const AEscritor: IEscritorHojaCalculo;
+  const AFormateador: IFormateadorHojaCalculo;
+  ADatos: TDataSet);
+begin
+  inherited Create;
+  FEscritor := AEscritor;
+  FFormateador := AFormateador;
+  FDatos := ADatos;
+end;
+
+procedure TExportadorMovVentasArt.EscribirValor(AColumna: Integer;
+  const AValor: Variant; ANegrita: Boolean;
+  AAlineacion: TAlineacionCelda; const AFormato: string);
+begin
+  FEscritor.Escribir(FFila, AColumna, AValor);
+  if ANegrita then
+    FFormateador.Negrita(FFila, AColumna);
+  FFormateador.Alinear(FFila, AColumna, AAlineacion);
+  if AFormato <> '' then
+    FFormateador.AplicarFormato(FFila, AColumna, AFormato);
+end;
+
+procedure TExportadorMovVentasArt.EscribirNumero(AColumna: Integer;
+  AValor: Double; const AFormato: string; AOcultarCero: Boolean);
+begin
+  if (not AOcultarCero) or (AValor <> 0) then
+    EscribirValor(AColumna, AValor, False, acDerecha, AFormato);
+end;
+
+function TExportadorMovVentasArt.CampoTexto(const ANombre: string): string;
+var
+  oCampo: TField;
+begin
+  oCampo := FDatos.FindField(ANombre);
+  if oCampo <> nil then
+    Result := oCampo.AsString
+  else
+    Result := '';
+end;
+
+procedure TExportadorMovVentasArt.EscribirCabeceraColumnas;
+const
+  TITULOS: array[0..COL_MAX] of string = (
+    'Artículo', 'Uni.Ent.', 'Imp.Ent.', 'Uds Vta', 'Imp Venta',
+    'Imp Coste', 'Beneficio', '% Bnf', 'Venta-Ent', 'VentEnt%',
+    'Margen 1', 'Margen 2', '% V.dto', '% Vlast');
+var
+  iColumna: Integer;
+begin
+  for iColumna := 0 to COL_MAX do
+  begin
+    EscribirValor(iColumna, TITULOS[iColumna], True);
+    if iColumna > COL_ART then
+      FFormateador.Alinear(FFila, iColumna, acDerecha);
+    if FEscritor.CeldaExiste(FFila, iColumna) then
+    begin
+      FFormateador.FondoCelda(FFila, iColumna, CL_CABECERA);
+      FFormateador.BordeCelda(
+        FFila, iColumna, lbInferior, ebFino);
+    end;
+  end;
+end;
+
+procedure TExportadorMovVentasArt.EscribirTotales(
+  const AAcumulado: TAcum; const AEtiqueta: string;
+  AColorFondo: Cardinal);
+var
+  iColumna: Integer;
+begin
+  EscribirValor(COL_ART, AEtiqueta, True);
+  EscribirNumero(COL_UNIENT, AAcumulado.UniEnt, FMT_NUM_HZ, False);
+  EscribirNumero(COL_IMPENT, AAcumulado.ImpEnt, FMT_EUR_HZ, False);
+  EscribirNumero(COL_UDSVTA, AAcumulado.UdsVta, FMT_NUM_HZ, False);
+  EscribirNumero(COL_IMPVTA, AAcumulado.ImpVta, FMT_EUR_HZ, False);
+  EscribirNumero(COL_IMPCOS, AAcumulado.ImpCos, FMT_EUR_HZ, False);
+  EscribirNumero(COL_BENEF, AAcumulado.Benef, FMT_EUR_HZ, False);
+  if AAcumulado.ImpCos <> 0 then
+    EscribirNumero(COL_PCTBNF,
+      AAcumulado.Benef / AAcumulado.ImpCos * 100, FMT_PCT, False);
+  EscribirNumero(COL_VTAENT, AAcumulado.VtaEnt, FMT_EUR_HZ, False);
+  if AAcumulado.ImpEnt <> 0 then
+    EscribirNumero(COL_VENTENT,
+      AAcumulado.VtaEnt / AAcumulado.ImpEnt * 100, FMT_PCT, False);
+  if AAcumulado.ImpVta <> 0 then
+  begin
+    EscribirNumero(COL_MARG1,
+      AAcumulado.Benef / AAcumulado.ImpVta * 100, FMT_PCT, False);
+    EscribirNumero(COL_MARG2,
+      AAcumulado.VtaEnt / AAcumulado.ImpVta * 100, FMT_PCT, False);
+  end;
+  if AAcumulado.UniEnt <> 0 then
+    EscribirNumero(COL_PCTVDTO,
+      AAcumulado.UdsVta / AAcumulado.UniEnt * 100, FMT_PCT, False);
+  if AAcumulado.ImpEnt <> 0 then
+    EscribirNumero(COL_PCTVLAST,
+      AAcumulado.ImpVta / AAcumulado.ImpEnt * 100, FMT_PCT, False);
+  for iColumna := 0 to COL_MAX do
+  begin
+    if FEscritor.CeldaExiste(FFila, iColumna) then
+    begin
+      FFormateador.Negrita(FFila, iColumna);
+      FFormateador.FondoCelda(FFila, iColumna, AColorFondo);
+      FFormateador.BordeCelda(
+        FFila, iColumna, lbSuperior, ebFino);
+    end;
+  end;
+  Inc(FFila);
+end;
+
+procedure TExportadorMovVentasArt.AbrirGrupo(ANivel: Integer);
+var
+  iColumna: Integer;
+begin
+  if FGrupoUsado[ANivel] then
+  begin
+    EscribirValor(COL_ART,
+      StringOfChar(' ', (ANivel - 1) * 2) + FGrupoEtiquetas[ANivel],
+      True);
+    FFormateador.TamanoFuente(FFila, COL_ART, 12);
+    for iColumna := 0 to COL_MAX do
+    begin
+      if FEscritor.CeldaExiste(FFila, iColumna) then
+      begin
+        FFormateador.FondoCelda(FFila, iColumna, CL_GRUPO_H);
+        FFormateador.BordeCelda(
+          FFila, iColumna, lbInferior, ebFino);
+      end;
+    end;
+    Inc(FFila);
+    EscribirCabeceraColumnas;
+    Inc(FFila);
+  end;
+  FGrupoAcumulado[ANivel].Reset;
+end;
+
+procedure TExportadorMovVentasArt.EmitirResumenGrupo(ANivel: Integer);
+begin
+  if FGrupoUsado[ANivel] then
+    EscribirTotales(FGrupoAcumulado[ANivel],
+      'TOTAL ' + FGrupoEtiquetas[ANivel], CL_GRUPO_T);
+  FGrupoAcumulado[ANivel].Reset;
+end;
+
+procedure TExportadorMovVentasArt.DetectarAgrupaciones;
+var
+  iNivel: Integer;
+  iNivelCambio: Integer;
+begin
+  FGrupoUsado[1] := CampoTexto('GRUPO1_ETIQ') <> '';
+  FGrupoUsado[2] := CampoTexto('GRUPO2_ETIQ') <> '';
+  FGrupoUsado[3] := CampoTexto('GRUPO3_ETIQ') <> '';
+  iNivelCambio := N_NIVELES + 1;
+  for iNivel := 1 to N_NIVELES do
+  begin
+    if (iNivelCambio > N_NIVELES) and FGrupoUsado[iNivel] and
+       (CampoTexto(Format('GRUPO%d_COD', [iNivel])) <>
+        FGrupoCodigos[iNivel]) then
+      iNivelCambio := iNivel;
+  end;
+  if iNivelCambio <= N_NIVELES then
+  begin
+    if FGrupoCodigos[1] <> #1 then
+    begin
+      for iNivel := N_NIVELES downto iNivelCambio do
+        EmitirResumenGrupo(iNivel);
+    end;
+    for iNivel := iNivelCambio to N_NIVELES do
+    begin
+      FGrupoCodigos[iNivel] :=
+        CampoTexto(Format('GRUPO%d_COD', [iNivel]));
+      FGrupoEtiquetas[iNivel] :=
+        CampoTexto(Format('GRUPO%d_ETIQ', [iNivel]));
+      AbrirGrupo(iNivel);
+    end;
+  end;
+end;
+
+procedure TExportadorMovVentasArt.EscribirDetalle;
+begin
+  EscribirValor(COL_ART,
+    FDatos.FieldByName('CODIGO_ART_ART').AsString + '  ' +
+    FDatos.FieldByName('DESCRIPCION_ART').AsString);
+  EscribirNumero(COL_UNIENT,
+    FDatos.FieldByName('UNI_ENT_TOT').AsFloat, FMT_NUM, True);
+  EscribirNumero(COL_IMPENT,
+    FDatos.FieldByName('IMP_ENT_TOT').AsFloat, FMT_EUR, True);
+  EscribirNumero(COL_UDSVTA,
+    FDatos.FieldByName('UDS_VENTA').AsFloat, FMT_NUM, True);
+  EscribirNumero(COL_IMPVTA,
+    FDatos.FieldByName('IMP_VENTA').AsFloat, FMT_EUR, True);
+  EscribirNumero(COL_IMPCOS,
+    FDatos.FieldByName('IMP_COSTE').AsFloat, FMT_EUR, True);
+  EscribirNumero(COL_BENEF,
+    FDatos.FieldByName('BENEFICIO').AsFloat, FMT_EUR, True);
+  EscribirNumero(COL_PCTBNF,
+    FDatos.FieldByName('PCT_BNFCO').AsFloat, FMT_PCT, True);
+  EscribirNumero(COL_VTAENT,
+    FDatos.FieldByName('VENTA_ENT').AsFloat, FMT_EUR, True);
+  EscribirNumero(COL_VENTENT,
+    FDatos.FieldByName('VENT_ENT').AsFloat, FMT_PCT, True);
+  EscribirNumero(COL_MARG1,
+    FDatos.FieldByName('MARGEN1').AsFloat, FMT_PCT, True);
+  EscribirNumero(COL_MARG2,
+    FDatos.FieldByName('MARGEN2').AsFloat, FMT_PCT, True);
+  EscribirNumero(COL_PCTVDTO,
+    FDatos.FieldByName('PCT_VDTO').AsFloat, FMT_PCT, True);
+  EscribirNumero(COL_PCTVLAST,
+    FDatos.FieldByName('PCT_VLAST').AsFloat, FMT_PCT, True);
+end;
+
+procedure TExportadorMovVentasArt.AcumularFila;
+var
+  iNivel: Integer;
+begin
+  FTotalAcumulado.Add(FDatos);
+  for iNivel := 1 to N_NIVELES do
+  begin
+    if FGrupoUsado[iNivel] then
+      FGrupoAcumulado[iNivel].Add(FDatos);
+  end;
+end;
+
+procedure TExportadorMovVentasArt.ProcesarDatos;
+var
+  iNivel: Integer;
+begin
+  if (FDatos <> nil) and FDatos.Active and (not FDatos.IsEmpty) then
+  begin
+    FDatos.DisableControls;
+    try
+      FDatos.First;
+      while not FDatos.Eof do
+      begin
+        DetectarAgrupaciones;
+        EscribirDetalle;
+        AcumularFila;
+        Inc(FFila);
+        FDatos.Next;
+      end;
+      if FGrupoCodigos[1] <> #1 then
+      begin
+        for iNivel := N_NIVELES downto 1 do
+          EmitirResumenGrupo(iNivel);
+      end;
+      EscribirTotales(FTotalAcumulado, 'TOTAL GENERAL', CL_GRUPO_H);
+      FFormateador.BordeCelda(
+        FFila - 1, COL_ART, lbInferior, ebFino);
+    finally
+      FDatos.EnableControls;
+    end;
+  end;
+end;
+
+procedure TExportadorMovVentasArt.ConfigurarAnchos;
+var
+  iColumna: Integer;
+begin
+  FFormateador.AnchoColumna(COL_ART, 240);
+  for iColumna := COL_UNIENT to COL_MAX do
+    FFormateador.AnchoColumna(iColumna, 72);
+end;
+
+procedure TExportadorMovVentasArt.Ejecutar;
+var
+  iNivel: Integer;
+begin
+  FEscritor.NuevaHoja('Ventas');
+  for iNivel := 1 to N_NIVELES do
+  begin
+    FGrupoCodigos[iNivel] := #1;
+    FGrupoEtiquetas[iNivel] := '';
+    FGrupoUsado[iNivel] := False;
+    FGrupoAcumulado[iNivel].Reset;
+  end;
+  FTotalAcumulado.Reset;
+  FEscritor.IniciarLote;
+  try
+    FFila := 1;
+    EscribirValor(
+      COL_ART,
+      'MOVIMIENTOS DE VENTAS POR ARTICULOS Y FECHAS',
+      True);
+    FFormateador.TamanoFuente(FFila, COL_ART, 14);
+    Inc(FFila, 2);
+    EscribirCabeceraColumnas;
+    Inc(FFila);
+    ProcesarDatos;
+    ConfigurarAnchos;
+  finally
+    FEscritor.FinalizarLote;
+  end;
 end;
 
 procedure ExportarMovVentasArtExcel(
@@ -101,284 +431,14 @@ procedure ExportarMovVentasArtExcel(
   const AFormateador: IFormateadorHojaCalculo;
   const QDatos: TDataSet);
 var
-  iRow, c, lvl, nivelCambio: Integer;
-  grpCods : array[1..N_NIVELES] of string;
-  grpEtqs : array[1..N_NIVELES] of string;
-  grpUsado: array[1..N_NIVELES] of Boolean;
-  grpAcum : array[1..N_NIVELES] of TAcum;
-  totAcum : TAcum;
-
-  procedure EscValor(
-    ACol: Integer;
-    const AValor: Variant;
-    ANegrita: Boolean = False;
-    AAlineacion: TAlineacionCelda = acIzquierda;
-    const AFormato: string = '');
-  begin
-    AEscritor.Escribir(iRow, ACol, AValor);
-    if ANegrita then
-      AFormateador.Negrita(iRow, ACol);
-    AFormateador.Alinear(iRow, ACol, AAlineacion);
-    if AFormato <> '' then
-      AFormateador.AplicarFormato(iRow, ACol, AFormato);
-  end;
-
-  procedure EscNum(ACol: Integer; AVal: Double; const AFmt: string;
-                   AOcultarCero: Boolean);
-  begin
-    if (not AOcultarCero) or (AVal <> 0) then
-      EscValor(ACol, AVal, False, acDerecha, AFmt);
-  end;
-
-  function CampoStr(const AName: string): string;
-  var
-    fld: TField;
-  begin
-    fld := QDatos.FindField(AName);
-    if fld <> nil then
-      Result := fld.AsString
-    else
-      Result := '';
-  end;
-
-  // Cabecera de columnas (se repite por grupo / al inicio).
-  procedure CabeceraColumnas;
-  var
-    cc: Integer;
-  begin
-    EscValor(COL_ART, 'Art' + #237 + 'culo', True);
-    EscValor(COL_UNIENT, 'Uni.Ent.', True, acDerecha);
-    EscValor(COL_IMPENT, 'Imp.Ent.', True, acDerecha);
-    EscValor(COL_UDSVTA, 'Uds Vta', True, acDerecha);
-    EscValor(COL_IMPVTA, 'Imp Venta', True, acDerecha);
-    EscValor(COL_IMPCOS, 'Imp Coste', True, acDerecha);
-    EscValor(COL_BENEF, 'Beneficio', True, acDerecha);
-    EscValor(COL_PCTBNF, '% Bnf', True, acDerecha);
-    EscValor(COL_VTAENT, 'Venta-Ent', True, acDerecha);
-    EscValor(COL_VENTENT, 'VentEnt%', True, acDerecha);
-    EscValor(COL_MARG1, 'Margen 1', True, acDerecha);
-    EscValor(COL_MARG2, 'Margen 2', True, acDerecha);
-    EscValor(COL_PCTVDTO, '% V.dto', True, acDerecha);
-    EscValor(COL_PCTVLAST, '% Vlast', True, acDerecha);
-    for cc := 0 to COL_MAX do
-      if AEscritor.CeldaExiste(iRow, cc) then
-      begin
-        AFormateador.FondoCelda(iRow, cc, CL_CABECERA);
-        AFormateador.BordeCelda(iRow, cc, lbInferior, ebFino);
-      end;
-  end;
-
-  // Escribe una fila de totales (sumas base + porcentajes recalculados).
-  procedure EscribirTotales(const A: TAcum; const ALabel: string;
-                            AColorFondo: Cardinal);
-  var
-    cc: Integer;
-  begin
-    EscValor(COL_ART, ALabel, True);
-    EscNum(COL_UNIENT, A.UniEnt, FMT_NUM_HZ, False);
-    EscNum(COL_IMPENT, A.ImpEnt, FMT_EUR_HZ, False);
-    EscNum(COL_UDSVTA, A.UdsVta, FMT_NUM_HZ, False);
-    EscNum(COL_IMPVTA, A.ImpVta, FMT_EUR_HZ, False);
-    EscNum(COL_IMPCOS, A.ImpCos, FMT_EUR_HZ, False);
-    EscNum(COL_BENEF,  A.Benef,  FMT_EUR_HZ, False);
-    if A.ImpCos <> 0 then
-      EscNum(COL_PCTBNF, A.Benef / A.ImpCos * 100, FMT_PCT, False);
-    EscNum(COL_VTAENT, A.VtaEnt, FMT_EUR_HZ, False);
-    if A.ImpEnt <> 0 then
-      EscNum(COL_VENTENT, A.VtaEnt / A.ImpEnt * 100, FMT_PCT, False);
-    if A.ImpVta <> 0 then
-    begin
-      EscNum(COL_MARG1, A.Benef / A.ImpVta * 100, FMT_PCT, False);
-      EscNum(COL_MARG2, A.VtaEnt / A.ImpVta * 100, FMT_PCT, False);
-    end;
-    if A.UniEnt <> 0 then
-      EscNum(COL_PCTVDTO, A.UdsVta / A.UniEnt * 100, FMT_PCT, False);
-    if A.ImpEnt <> 0 then
-      EscNum(COL_PCTVLAST, A.ImpVta / A.ImpEnt * 100, FMT_PCT, False);
-    for cc := 0 to COL_MAX do
-      if AEscritor.CeldaExiste(iRow, cc) then
-      begin
-        AFormateador.Negrita(iRow, cc);
-        AFormateador.FondoCelda(iRow, cc, AColorFondo);
-        AFormateador.BordeCelda(iRow, cc, lbSuperior, ebFino);
-      end;
-    Inc(iRow);
-  end;
-
-  // Cabecera de un nivel de grupo (sangrada). Reinicia su acumulador.
-  procedure AbrirGrupo(ANivel: Integer);
-  var
-    cc: Integer;
-  begin
-    if grpUsado[ANivel] then
-    begin
-      EscValor(
-        0,
-        StringOfChar(' ', (ANivel - 1) * 2) + grpEtqs[ANivel],
-        True);
-      AFormateador.TamanoFuente(iRow, 0, 12);
-      for cc := 0 to COL_MAX do
-        if AEscritor.CeldaExiste(iRow, cc) then
-        begin
-          AFormateador.FondoCelda(iRow, cc, CL_GRUPO_H);
-          AFormateador.BordeCelda(iRow, cc, lbInferior, ebFino);
-        end;
-      Inc(iRow);
-      CabeceraColumnas;
-      Inc(iRow);
-    end;
-    grpAcum[ANivel].Reset;
-  end;
-
-  procedure EmitirResumenGrupo(ANivel: Integer);
-  begin
-    if grpUsado[ANivel] then
-      EscribirTotales(grpAcum[ANivel], 'TOTAL ' + grpEtqs[ANivel], CL_GRUPO_T);
-    grpAcum[ANivel].Reset;
-  end;
-
+  oExportador: TExportadorMovVentasArt;
 begin
-  AEscritor.NuevaHoja('Ventas');
-  for lvl := 1 to N_NIVELES do
-  begin
-    grpCods[lvl]  := #1;
-    grpEtqs[lvl]  := '';
-    grpUsado[lvl] := False;
-    grpAcum[lvl].Reset;
-  end;
-  totAcum.Reset;
-  AEscritor.IniciarLote;
+  oExportador := TExportadorMovVentasArt.Create(
+    AEscritor, AFormateador, QDatos);
   try
-    iRow := 1;
-    EscValor(
-      0,
-      'MOVIMIENTOS DE VENTAS POR ARTICULOS Y FECHAS',
-      True);
-    AFormateador.TamanoFuente(iRow, 0, 14);
-    Inc(iRow, 2);
-    CabeceraColumnas;
-    Inc(iRow);
-    if (QDatos <> nil) and QDatos.Active and (not QDatos.IsEmpty) then
-    begin
-      QDatos.DisableControls;
-      try
-        QDatos.First;
-        while not QDatos.Eof do
-        begin
-          // Agrupaciones: detectar el nivel de corte, cerrar y abrir grupos.
-          grpUsado[1] := CampoStr('GRUPO1_ETIQ') <> '';
-          grpUsado[2] := CampoStr('GRUPO2_ETIQ') <> '';
-          grpUsado[3] := CampoStr('GRUPO3_ETIQ') <> '';
-          nivelCambio := N_NIVELES + 1;
-          for lvl := 1 to N_NIVELES do
-            if (nivelCambio > N_NIVELES) and grpUsado[lvl] and
-               (CampoStr(Format('GRUPO%d_COD', [lvl])) <> grpCods[lvl]) then
-              nivelCambio := lvl;
-          if nivelCambio <= N_NIVELES then
-          begin
-            if grpCods[1] <> #1 then
-              for lvl := N_NIVELES downto nivelCambio do
-                EmitirResumenGrupo(lvl);
-            for lvl := nivelCambio to N_NIVELES do
-            begin
-              grpCods[lvl] := CampoStr(Format('GRUPO%d_COD', [lvl]));
-              grpEtqs[lvl] := CampoStr(Format('GRUPO%d_ETIQ', [lvl]));
-              AbrirGrupo(lvl);
-            end;
-          end;
-          // Fila de detalle del artículo (código + descripción + magnitudes).
-          EscValor(
-            COL_ART,
-            QDatos.FieldByName('CODIGO_ART_ART').AsString + '  ' +
-            QDatos.FieldByName('DESCRIPCION_ART').AsString);
-          EscNum(
-            COL_UNIENT,
-            QDatos.FieldByName('UNI_ENT_TOT').AsFloat,
-            FMT_NUM,
-            True);
-          EscNum(
-            COL_IMPENT,
-            QDatos.FieldByName('IMP_ENT_TOT').AsFloat,
-            FMT_EUR,
-            True);
-          EscNum(
-            COL_UDSVTA,
-            QDatos.FieldByName('UDS_VENTA').AsFloat,
-            FMT_NUM,
-            True);
-          EscNum(
-            COL_IMPVTA,
-            QDatos.FieldByName('IMP_VENTA').AsFloat,
-            FMT_EUR,
-            True);
-          EscNum(
-            COL_IMPCOS,
-            QDatos.FieldByName('IMP_COSTE').AsFloat,
-            FMT_EUR,
-            True);
-          EscNum(
-            COL_BENEF,
-            QDatos.FieldByName('BENEFICIO').AsFloat,
-            FMT_EUR,
-            True);
-          EscNum(
-            COL_PCTBNF,
-            QDatos.FieldByName('PCT_BNFCO').AsFloat,
-            FMT_PCT,
-            True);
-          EscNum(
-            COL_VTAENT,
-            QDatos.FieldByName('VENTA_ENT').AsFloat,
-            FMT_EUR,
-            True);
-          EscNum(
-            COL_VENTENT,
-            QDatos.FieldByName('VENT_ENT').AsFloat,
-            FMT_PCT,
-            True);
-          EscNum(
-            COL_MARG1,
-            QDatos.FieldByName('MARGEN1').AsFloat,
-            FMT_PCT,
-            True);
-          EscNum(
-            COL_MARG2,
-            QDatos.FieldByName('MARGEN2').AsFloat,
-            FMT_PCT,
-            True);
-          EscNum(
-            COL_PCTVDTO,
-            QDatos.FieldByName('PCT_VDTO').AsFloat,
-            FMT_PCT,
-            True);
-          EscNum(
-            COL_PCTVLAST,
-            QDatos.FieldByName('PCT_VLAST').AsFloat,
-            FMT_PCT,
-            True);
-          totAcum.Add(QDatos);
-          for lvl := 1 to N_NIVELES do
-            if grpUsado[lvl] then
-              grpAcum[lvl].Add(QDatos);
-          Inc(iRow);
-          QDatos.Next;
-        end;
-        if grpCods[1] <> #1 then
-          for lvl := N_NIVELES downto 1 do
-            EmitirResumenGrupo(lvl);
-        // Total general.
-        EscribirTotales(totAcum, 'TOTAL GENERAL', CL_GRUPO_H);
-        AFormateador.BordeCelda(iRow - 1, 0, lbInferior, ebFino);
-      finally
-        QDatos.EnableControls;
-      end;
-    end;
-    // Anchos de columna.
-    AFormateador.AnchoColumna(COL_ART, 240);
-    for c := COL_UNIENT to COL_MAX do
-      AFormateador.AnchoColumna(c, 72);
+    oExportador.Ejecutar;
   finally
-    AEscritor.FinalizarLote;
+    FreeAndNil(oExportador);
   end;
 end;
 

@@ -283,11 +283,8 @@ var
 begin
   tmpProgram := trim(ACommando);
   FillChar(tmpStartupInfo, SizeOf(tmpStartupInfo), 0);
-  with tmpStartupInfo do
-  begin
-    cb := SizeOf(TStartupInfo);
-    wShowWindow := SW_HIDE;
-  end;
+  tmpStartupInfo.cb := SizeOf(TStartupInfo);
+  tmpStartupInfo.wShowWindow := SW_HIDE;
   if CreateProcess(nil, pchar(tmpProgram), nil, nil, true, CREATE_NO_WINDOW,
     nil, nil, tmpStartupInfo, tmpProcessInformation) then
   begin
@@ -370,15 +367,15 @@ begin
       APerfilesUsuario.GrabarPerfil(sUser, dmmModule.Name,
                                   (oControl.Components[i] as TUniQuery).Name,
                                   'SQL',
-                                  (
-                                    oControl.Components[i] as TUniQuery).SQL.Text)
+                                  (oControl.Components[i] as
+                                    TUniQuery).SQL.Text)
     else
       if ( Pos('unstrdprc', oControl.Components[i].Name) > 0 )  then
         APerfilesUsuario.GrabarPerfil(sUser, dmmModule.Name,
                        (oControl.Components[i] as TUniStoredProc).Name,
                        'Procedure',
-                       (
-                         oControl.Components[i] as TUniStoredProc).StoredProcName);
+                       (oControl.Components[i] as
+                         TUniStoredProc).StoredProcName);
 end;
 
 procedure SetLabelForm(oControl:TComponent; var oPerfilDic : TProfileDicc);

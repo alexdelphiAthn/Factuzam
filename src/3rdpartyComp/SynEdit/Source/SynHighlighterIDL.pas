@@ -1,4 +1,4 @@
-{-------------------------------------------------------------------------------
+ï»¿{-------------------------------------------------------------------------------
 The contents of this file are subject to the Mozilla Public License
 Version 1.1 (the "License"); you may not use this file except in compliance
 with the License. You may obtain a copy of the License at
@@ -12,7 +12,7 @@ Code template generated with SynGen.
 The original code is: SynHighlighterIDL.pas, released 2001-10-15.
 Description: CORBA IDL Parser/Highlighter
 The initial author of this file is P.L. Polak.
-Unicode translation by Maël Hörz.
+Unicode translation by MaÃ«l HÃ¶rz.
 Copyright (c) 2001, all rights reserved.
 
 Contributors to the SynEdit and mwEdit projects are listed in the

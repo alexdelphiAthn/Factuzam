@@ -23,7 +23,8 @@ uses
 
 // Vincula una columna de cantidad a su columna de unidad de medida: la celda
 // mostrara los decimales que correspondan a la unidad de esa fila y el editor
-// admitira decimales. AColUnidad puede ser nil (entonces decimales por defecto).
+// admitira decimales. AColUnidad puede ser nil (entonces decimales por
+// defecto).
 procedure VincularCantidadGrid(AColCantidad, AColUnidad: TcxGridDBColumn;
   AUnidades: TUnidadesMedida);
 

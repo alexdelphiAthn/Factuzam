@@ -404,7 +404,8 @@ begin
   begin
     FRegistroLog.RegistrarAviso(
       Format('ObtenerPerfilFormCache: form="%s" cache NO precargado ' +
-                          '(FCachePrecargada=False), devuelve False', [AFormName]));
+                          '(FCachePrecargada=False), devuelve False',
+                          [AFormName]));
     Exit;
   end;
   // Servimos siempre un clon: el caller (TLayoutLoader, etc.) hace
@@ -422,7 +423,8 @@ begin
     APerfilDic := TProfileDicc.Create;
     FRegistroLog.RegistrarAviso(
       Format('ObtenerPerfilFormCache: form="%s" MISS ' +
-                          '(precargado pero sin entrada), devuelve dicc vacio ' +
+                          '(precargado pero sin entrada), devuelve dicc vacio '
+                            +
                           'con Result=True', [AFormName]));
   end;
   Result := True;
@@ -555,36 +557,31 @@ var
 begin
   IdentidadActual := IdentidadSesion;
   Result := AValorPredeterminado;
-  with unqryPerfiles do
-  begin
-    Close;
-    // Delegamos la jerarquía al motor SQL. El que quede primero será el de
-    // mayor prioridad.
-    SQL.Text := '  SELECT VALUE_USUPER ' +
-                '    FROM fza_usuarios_perfiles ' +
-                '   WHERE KEY_USUPER = :key ' +
-                '     AND SUBKEY_USUPER = :subkey ' +
-                '     AND USUARIO_GRUPO_USUPER IN (:user, :group, :todos) ' +
-                '     AND TYPE_BLOB_USUPER IS NULL ' +
-                'ORDER BY CASE USUARIO_GRUPO_USUPER ' +
-                '            WHEN :user THEN 1 ' +
-                '            WHEN :group THEN 2 ' +
-                '            WHEN :todos THEN 3 ' +
-                '         END';
-    ParamByName('user').AsString := IdentidadActual.Usuario;
-    ParamByName('group').AsString := IdentidadActual.Grupo;
-    ParamByName('todos').AsString := PERFIL_TODOS;
-    ParamByName('key').AsString := AClave;
-    ParamByName('subkey').AsString := ASubclave;
-    Open;
-
-    // Como está ordenado por prioridad, si hay registros, el primero es el
-    // correcto
-    if not IsEmpty then
-      Result := FieldByName('VALUE_USUPER').AsString;
-
-    Close;
-  end;
+  unqryPerfiles.Close;
+  // Delegamos la jerarquía al motor SQL. El que quede primero será el de
+  // mayor prioridad.
+  unqryPerfiles.SQL.Text := '  SELECT VALUE_USUPER ' +
+    '    FROM fza_usuarios_perfiles ' +
+    '   WHERE KEY_USUPER = :key ' +
+    '     AND SUBKEY_USUPER = :subkey ' +
+    '     AND USUARIO_GRUPO_USUPER IN (:user, :group, :todos) ' +
+    '     AND TYPE_BLOB_USUPER IS NULL ' +
+    'ORDER BY CASE USUARIO_GRUPO_USUPER ' +
+    '            WHEN :user THEN 1 ' +
+    '            WHEN :group THEN 2 ' +
+    '            WHEN :todos THEN 3 ' +
+    '         END';
+  unqryPerfiles.ParamByName('user').AsString := IdentidadActual.Usuario;
+  unqryPerfiles.ParamByName('group').AsString := IdentidadActual.Grupo;
+  unqryPerfiles.ParamByName('todos').AsString := PERFIL_TODOS;
+  unqryPerfiles.ParamByName('key').AsString := AClave;
+  unqryPerfiles.ParamByName('subkey').AsString := ASubclave;
+  unqryPerfiles.Open;
+  // Como está ordenado por prioridad, si hay registros, el primero es el
+  // correcto
+  if not unqryPerfiles.IsEmpty then
+    Result := unqryPerfiles.FieldByName('VALUE_USUPER').AsString;
+  unqryPerfiles.Close;
 end;
 
 function TdmPerfiles.ObtenerSubclavePerfil(
@@ -594,29 +591,24 @@ var
 begin
   IdentidadActual := IdentidadSesion;
   Result := AValorPredeterminado;
-  with unqryPerfiles do
-  begin
-    Close;
-    SQL.Text := '  SELECT SUBKEY_USUPER ' +
-                '    FROM fza_usuarios_perfiles ' +
-                '   WHERE KEY_USUPER = :key ' +
-                '     AND USUARIO_GRUPO_USUPER IN (:user, :group, :todos) ' +
-                'ORDER BY CASE USUARIO_GRUPO_USUPER ' +
-                '            WHEN :user THEN 1 ' +
-                '            WHEN :group THEN 2 ' +
-                '            WHEN :todos THEN 3 ' +
-                '         END';
-    ParamByName('key').AsString := AClave;
-    ParamByName('user').AsString := IdentidadActual.Usuario;
-    ParamByName('group').AsString := IdentidadActual.Grupo;
-    ParamByName('todos').AsString := PERFIL_TODOS;
-    Open;
-
-    if not IsEmpty then
-      Result := FieldByName('SUBKEY_USUPER').AsString;
-
-    Close;
-  end;
+  unqryPerfiles.Close;
+  unqryPerfiles.SQL.Text := '  SELECT SUBKEY_USUPER ' +
+    '    FROM fza_usuarios_perfiles ' +
+    '   WHERE KEY_USUPER = :key ' +
+    '     AND USUARIO_GRUPO_USUPER IN (:user, :group, :todos) ' +
+    'ORDER BY CASE USUARIO_GRUPO_USUPER ' +
+    '            WHEN :user THEN 1 ' +
+    '            WHEN :group THEN 2 ' +
+    '            WHEN :todos THEN 3 ' +
+    '         END';
+  unqryPerfiles.ParamByName('key').AsString := AClave;
+  unqryPerfiles.ParamByName('user').AsString := IdentidadActual.Usuario;
+  unqryPerfiles.ParamByName('group').AsString := IdentidadActual.Grupo;
+  unqryPerfiles.ParamByName('todos').AsString := PERFIL_TODOS;
+  unqryPerfiles.Open;
+  if not unqryPerfiles.IsEmpty then
+    Result := unqryPerfiles.FieldByName('SUBKEY_USUPER').AsString;
+  unqryPerfiles.Close;
 end;
 
 procedure TdmPerfiles.GrabarPerfil(

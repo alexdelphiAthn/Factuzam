@@ -69,7 +69,7 @@ uses
   cxCalendar, cxCheckBox, cxCurrencyEdit, cxCustomData, cxData,
   cxDataStorage, cxDropDownEdit, cxEdit,
   cxGridCustomTableView, cxGridTableView, cxGridDBDataDefinitions,
-  cxLookupEdit, cxDBLookupComboBox, cxMemo, cxSpinEdit,
+  cxLookupEdit, cxDBLookupComboBox, cxLookupDBGrid, cxMemo, cxSpinEdit,
   inLibGridCantidad;
 
 function NuevaColumna(
@@ -101,6 +101,10 @@ procedure CrearColumnasIdentidad(
   const AConfiguracion: TConfiguracionColumnasFactura;
   var AColumnas: TColumnasFactura;
   out AVendedor: TcxGridDBColumn);
+var
+  PropiedadesArticulo: TcxButtonEditProperties;
+  BotonArticulo: TcxEditButton;
+  PropiedadesSku: TcxComboBoxProperties;
 begin
   AColumnas.Linea := NuevaColumna(
     AConfiguracion.Vista,
@@ -125,15 +129,12 @@ begin
       152,
       True);
     AColumnas.Articulo.PropertiesClass := TcxButtonEditProperties;
-    with TcxButtonEditProperties(AColumnas.Articulo.Properties) do
-    begin
-      Buttons.Clear;
-      with Buttons.Add do
-      begin
-        Default := True;
-        Kind := bkEllipsis;
-      end;
-    end;
+    PropiedadesArticulo :=
+      TcxButtonEditProperties(AColumnas.Articulo.Properties);
+    PropiedadesArticulo.Buttons.Clear;
+    BotonArticulo := PropiedadesArticulo.Buttons.Add;
+    BotonArticulo.Default := True;
+    BotonArticulo.Kind := bkEllipsis;
     AColumnas.Sku := NuevaColumna(
       AConfiguracion.Vista,
       'SKU',
@@ -142,11 +143,9 @@ begin
       True);
     AColumnas.Sku.Visible := False;
     AColumnas.Sku.PropertiesClass := TcxComboBoxProperties;
-    with TcxComboBoxProperties(AColumnas.Sku.Properties) do
-    begin
-      ImmediatePost := True;
-      PostPopupValueOnTab := True;
-    end;
+    PropiedadesSku := TcxComboBoxProperties(AColumnas.Sku.Properties);
+    PropiedadesSku.ImmediatePost := True;
+    PropiedadesSku.PostPopupValueOnTab := True;
   end;
   AColumnas.DescripcionVariacion := NuevaColumna(
     AConfiguracion.Vista,
@@ -209,6 +208,8 @@ end;
 procedure CrearColumnasDescripcionCantidad(
   const AConfiguracion: TConfiguracionColumnasFactura;
   var AColumnas: TColumnasFactura);
+var
+  PropiedadesDescripcion: TcxMemoProperties;
 begin
   AColumnas.DescripcionArticulo := NuevaColumna(
     AConfiguracion.Vista,
@@ -219,13 +220,11 @@ begin
   if AConfiguracion.DescripcionAmpliada then
   begin
     AColumnas.DescripcionArticulo.PropertiesClass := TcxMemoProperties;
-    with TcxMemoProperties(
-      AColumnas.DescripcionArticulo.Properties) do
-    begin
-      VisibleLineCount := 3;
-      MaxLength := 1000;
-      ScrollBars := ssBoth;
-    end;
+    PropiedadesDescripcion := TcxMemoProperties(
+      AColumnas.DescripcionArticulo.Properties);
+    PropiedadesDescripcion.VisibleLineCount := 3;
+    PropiedadesDescripcion.MaxLength := 1000;
+    PropiedadesDescripcion.ScrollBars := ssBoth;
   end;
   if not AConfiguracion.Tallas then
   begin
@@ -254,6 +253,9 @@ end;
 procedure CrearColumnasPrecios(
   const AConfiguracion: TConfiguracionColumnasFactura;
   var AColumnas: TColumnasFactura);
+var
+  PropiedadesDescuento: TcxSpinEditProperties;
+  PropiedadesImpuestos: TcxCheckBoxProperties;
 begin
   AColumnas.PrecioSalida := NuevaColumna(
     AConfiguracion.Vista,
@@ -270,13 +272,11 @@ begin
     True);
   AColumnas.PorcentajeDescuento.PropertiesClass :=
     TcxSpinEditProperties;
-  with TcxSpinEditProperties(
-    AColumnas.PorcentajeDescuento.Properties) do
-  begin
-    DisplayFormat := '0.00 %';
-    EditFormat := '0.00 %';
-    MaxValue := 100;
-  end;
+  PropiedadesDescuento := TcxSpinEditProperties(
+    AColumnas.PorcentajeDescuento.Properties);
+  PropiedadesDescuento.DisplayFormat := '0.00 %';
+  PropiedadesDescuento.EditFormat := '0.00 %';
+  PropiedadesDescuento.MaxValue := 100;
   AColumnas.PrecioDescuento := NuevaColumna(
     AConfiguracion.Vista,
     'Menos Dto',
@@ -302,18 +302,20 @@ begin
   AColumnas.ImpuestosIncluidos.Visible := False;
   AColumnas.ImpuestosIncluidos.PropertiesClass :=
     TcxCheckBoxProperties;
-  with TcxCheckBoxProperties(
-    AColumnas.ImpuestosIncluidos.Properties) do
-  begin
-    ReadOnly := True;
-    ValueChecked := 'S';
-    ValueUnchecked := 'N';
-  end;
+  PropiedadesImpuestos := TcxCheckBoxProperties(
+    AColumnas.ImpuestosIncluidos.Properties);
+  PropiedadesImpuestos.ReadOnly := True;
+  PropiedadesImpuestos.ValueChecked := 'S';
+  PropiedadesImpuestos.ValueUnchecked := 'N';
 end;
 
 procedure CrearColumnasImpuestos(
   const AConfiguracion: TConfiguracionColumnasFactura;
   var AColumnas: TColumnasFactura);
+var
+  PropiedadesTipoIva: TcxLookupComboBoxProperties;
+  ColumnaTipoIva: TcxLookupDBGridColumn;
+  PropiedadesPorcentaje: TcxSpinEditProperties;
 begin
   AColumnas.TipoIva := NuevaColumna(
     AConfiguracion.Vista,
@@ -322,18 +324,15 @@ begin
     109,
     True);
   AColumnas.TipoIva.PropertiesClass := TcxLookupComboBoxProperties;
-  with TcxLookupComboBoxProperties(AColumnas.TipoIva.Properties) do
-  begin
-    DropDownListStyle := lsFixedList;
-    KeyFieldNames := 'CODIGO_ABREVIATURA_IVA_IVATIP';
-    with ListColumns.Add do
-    begin
-      Caption := 'Tipo de IVA';
-      FieldName := 'NOMBRE_TIPO_IVA_IVATIP';
-    end;
-    ListOptions.ShowHeader := False;
-    ListSource := AConfiguracion.DataSourceIvas;
-  end;
+  PropiedadesTipoIva :=
+    TcxLookupComboBoxProperties(AColumnas.TipoIva.Properties);
+  PropiedadesTipoIva.DropDownListStyle := lsFixedList;
+  PropiedadesTipoIva.KeyFieldNames := 'CODIGO_ABREVIATURA_IVA_IVATIP';
+  ColumnaTipoIva := PropiedadesTipoIva.ListColumns.Add;
+  ColumnaTipoIva.Caption := 'Tipo de IVA';
+  ColumnaTipoIva.FieldName := 'NOMBRE_TIPO_IVA_IVATIP';
+  PropiedadesTipoIva.ListOptions.ShowHeader := False;
+  PropiedadesTipoIva.ListSource := AConfiguracion.DataSourceIvas;
   AColumnas.PorcentajeIva := NuevaColumna(
     AConfiguracion.Vista,
     '% IVA',
@@ -341,11 +340,10 @@ begin
     79,
     True);
   AColumnas.PorcentajeIva.PropertiesClass := TcxSpinEditProperties;
-  with TcxSpinEditProperties(AColumnas.PorcentajeIva.Properties) do
-  begin
-    DisplayFormat := '0.00 %';
-    EditFormat := '0.00 %';
-  end;
+  PropiedadesPorcentaje :=
+    TcxSpinEditProperties(AColumnas.PorcentajeIva.Properties);
+  PropiedadesPorcentaje.DisplayFormat := '0.00 %';
+  PropiedadesPorcentaje.EditFormat := '0.00 %';
   AColumnas.PrecioVentaConIva := NuevaColumna(
     AConfiguracion.Vista,
     'Precio Ud. con IVA',
@@ -373,6 +371,8 @@ end;
 procedure CrearColumnaFecha(
   const AConfiguracion: TConfiguracionColumnasFactura;
   var AColumnas: TColumnasFactura);
+var
+  PropiedadesFecha: TcxDateEditProperties;
 begin
   AColumnas.FechaEntrega := NuevaColumna(
     AConfiguracion.Vista,
@@ -381,12 +381,11 @@ begin
     100,
     True);
   AColumnas.FechaEntrega.PropertiesClass := TcxDateEditProperties;
-  with TcxDateEditProperties(AColumnas.FechaEntrega.Properties) do
-  begin
-    DateButtons := [btnClear, btnToday];
-    DisplayFormat := 'dd/mm/yyyy';
-    EditFormat := 'dd/mm/yyyy';
-  end;
+  PropiedadesFecha :=
+    TcxDateEditProperties(AColumnas.FechaEntrega.Properties);
+  PropiedadesFecha.DateButtons := [btnClear, btnToday];
+  PropiedadesFecha.DisplayFormat := 'dd/mm/yyyy';
+  PropiedadesFecha.EditFormat := 'dd/mm/yyyy';
   AColumnas.FechaEntrega.Visible :=
     AConfiguracion.MostrarFechaEntrega;
 end;
@@ -394,36 +393,34 @@ end;
 procedure CrearSumarios(
   const AConfiguracion: TConfiguracionColumnasFactura;
   const AColumnas: TColumnasFactura);
+var
+  Resumen: TcxDataSummary;
+  Sumario: TcxGridDBTableSummaryItem;
 begin
-  with AConfiguracion.Vista.DataController.Summary do
-  begin
-    BeginUpdate;
-    try
-      FooterSummaryItems.Clear;
-      with TcxGridDBTableSummaryItem(FooterSummaryItems.Add) do
-      begin
-        Kind := skSum;
-        Format := '##,##.00 ' + #8364;
-        Column := AColumnas.TotalConIva;
-      end;
-      if AColumnas.Cantidad <> nil then
-      begin
-        with TcxGridDBTableSummaryItem(FooterSummaryItems.Add) do
-        begin
-          Kind := skSum;
-          Format := '#,##.00';
-          Column := AColumnas.Cantidad;
-        end;
-      end;
-      with TcxGridDBTableSummaryItem(FooterSummaryItems.Add) do
-      begin
-        Kind := skSum;
-        Format := '##,##.00 ' + #8364;
-        Column := AColumnas.TotalSinIva;
-      end;
-    finally
-      EndUpdate;
+  Resumen := AConfiguracion.Vista.DataController.Summary;
+  Resumen.BeginUpdate;
+  try
+    Resumen.FooterSummaryItems.Clear;
+    Sumario := TcxGridDBTableSummaryItem(
+      Resumen.FooterSummaryItems.Add);
+    Sumario.Kind := skSum;
+    Sumario.Format := '##,##.00 ' + #8364;
+    Sumario.Column := AColumnas.TotalConIva;
+    if AColumnas.Cantidad <> nil then
+    begin
+      Sumario := TcxGridDBTableSummaryItem(
+        Resumen.FooterSummaryItems.Add);
+      Sumario.Kind := skSum;
+      Sumario.Format := '#,##.00';
+      Sumario.Column := AColumnas.Cantidad;
     end;
+    Sumario := TcxGridDBTableSummaryItem(
+      Resumen.FooterSummaryItems.Add);
+    Sumario.Kind := skSum;
+    Sumario.Format := '##,##.00 ' + #8364;
+    Sumario.Column := AColumnas.TotalSinIva;
+  finally
+    Resumen.EndUpdate;
   end;
 end;
 

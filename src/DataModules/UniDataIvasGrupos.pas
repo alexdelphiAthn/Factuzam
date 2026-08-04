@@ -46,15 +46,12 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TdmIvasGrupos.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  with unqryTablaG do
-  begin
-    FindField('IVA_IVAGRP').AsString := '0';
-    FindField('ESIRPF_IMP_INCL_IVA_IVAGRP').AsString := 'N';
-    FindField('ESIVAAGRICOLA_IVA_IVAGRP').AsString := 'N';
-    FindField('ESAPLICA_RE_IVA_IVAGRP').AsString := 'S';
-    FindField('ESDEFAULT_IVA_IVAGRP').AsString := 'N';
-    FindField('PALABRA_REPORTS_IVA_IVAGRP').AsString := 'IVA';
-  end;
+  unqryTablaG.FindField('IVA_IVAGRP').AsString := '0';
+  unqryTablaG.FindField('ESIRPF_IMP_INCL_IVA_IVAGRP').AsString := 'N';
+  unqryTablaG.FindField('ESIVAAGRICOLA_IVA_IVAGRP').AsString := 'N';
+  unqryTablaG.FindField('ESAPLICA_RE_IVA_IVAGRP').AsString := 'S';
+  unqryTablaG.FindField('ESDEFAULT_IVA_IVAGRP').AsString := 'N';
+  unqryTablaG.FindField('PALABRA_REPORTS_IVA_IVAGRP').AsString := 'IVA';
 end;
 
 procedure TdmIvasGrupos.unqryTablaGBeforePost(DataSet: TDataSet);
@@ -67,10 +64,9 @@ begin
   if (DataSet.State = dsInsert) and
      (Trim(unqryTablaG.FindField('DESCRIPCION_IVA_IVAGRP').AsString) = '') then
     Abort;
-  with unqryTablaG do
-  begin
-    sCodigo := Trim(FindField('IVA_IVAGRP').AsString);
-    sDescripcion := Trim(FindField('DESCRIPCION_IVA_IVAGRP').AsString);
+  sCodigo := Trim(unqryTablaG.FindField('IVA_IVAGRP').AsString);
+  sDescripcion :=
+    Trim(unqryTablaG.FindField('DESCRIPCION_IVA_IVAGRP').AsString);
     if (sDescripcion = '') or
        SimbolosProhibidos(sDescripcion, PerfilesLectura) then
       raise ERangeError.CreateFmt(SErrorDescripcionGrupoIva,
@@ -79,7 +75,7 @@ begin
        SimbolosProhibidos(sCodigo, PerfilesLectura) then
       raise ERangeError.CreateFmt(SErrorCodigoGrupoIva,
                                   [sCodigo]);
-    if (FindField('ESDEFAULT_IVA_IVAGRP').AsString = 'S') then
+    if unqryTablaG.FindField('ESDEFAULT_IVA_IVAGRP').AsString = 'S' then
     begin
       unqrySol := TUniQuery.Create(nil);
       try
@@ -97,8 +93,7 @@ begin
         FreeAndNil(unqrySol);
       end;
     end;
-    GetCodigoAutoIvaGrupo;
-  end;
+  GetCodigoAutoIvaGrupo;
 end;
 
 procedure TdmIvasGrupos.DataModuleCreate(Sender: TObject);

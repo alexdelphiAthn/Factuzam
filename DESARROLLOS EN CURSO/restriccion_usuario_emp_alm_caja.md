@@ -1,4 +1,4 @@
-﻿# Restricción de consulta por empresa/almacén/caja del usuario
+# Restricción de consulta por empresa/almacén/caja del usuario
 
 Parámetro que limita al usuario a consultar solo los documentos y
 operaciones de su empresa/almacén/caja por defecto (`fza_usuarios`).

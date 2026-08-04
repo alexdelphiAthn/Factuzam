@@ -507,7 +507,9 @@ var
   s: string;
 begin
   s := aTexto;
-  if (Length(s) >= 2) and ((Copy(s, 1, 2) = '* ') or (Copy(s, 1, 2) = '  ')) then
+  if (Length(s) >= 2) and ((Copy(s,
+                                 1,
+                                 2) = '* ') or (Copy(s, 1, 2) = '  ')) then
     Delete(s, 1, 2);
   Result := Trim(s);
 end;

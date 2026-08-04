@@ -51,7 +51,9 @@ type
     procedure CortarPapel(AParcial: Boolean = False);
     procedure AbrirCajon;
 
-    procedure TextoColumnas(const AIzq, ADer: string; AAncho: Integer=N_CHAR_LIN);
+    procedure TextoColumnas(const AIzq,
+                            ADer: string;
+                            AAncho: Integer=N_CHAR_LIN);
     procedure Imprimir;
     procedure Limpiar;
     procedure ImprimirQRNativo(const ATexto: string;
@@ -340,7 +342,8 @@ begin
   FComandos.Clear;
 end;
 
-procedure EnviarComandoRAW(const ANombreImpresora: string; const ADatos: string);
+procedure EnviarComandoRAW(const ANombreImpresora: string;
+                           const ADatos: string);
 var
   hPrinter: THandle;
   DocInfo: TDocInfo1;

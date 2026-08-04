@@ -1,4 +1,4 @@
-﻿-- Catálogo de textos españoles extraídos de los DFM.
+-- Catálogo de textos españoles extraídos de los DFM.
 -- Generado por generar_traducciones_dfm.ps1.
 INSERT INTO `fza_traducciones` (
   `CLAVE_TRAD`, `IDIOMA_TRAD`, `TEXTO_TRAD`, `CONTEXTO_TRAD`,

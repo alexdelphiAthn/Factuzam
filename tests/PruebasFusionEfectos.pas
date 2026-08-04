@@ -26,12 +26,19 @@ type
     procedure Ejecutar_EntregaClavesYDevuelveResultado;
     [Test]
     procedure Ejecutar_UnaClaveNoInvocaRepositorio;
+    [Test]
+    procedure Validar_ResumenCorrectoEsValido;
+    [Test]
+    procedure Validar_CantidadDistintaRechazaLaFusion;
+    [Test]
+    procedure CrearReferencia_UsaElDestinoCalculado;
   end;
 
 implementation
 
 uses
   System.SysUtils,
+  inLibEfectosCalculo,
   inLibFusionEfectos,
   inLibFusionEfectosIntf;
 
@@ -116,6 +123,43 @@ begin
   end;
   Assert.IsTrue(bExcepcionCapturada);
   Assert.IsFalse(oRepositorio.Invocado);
+end;
+
+procedure TPruebasFusionEfectos.Validar_ResumenCorrectoEsValido;
+var
+  oResumen: TResumenFusionEfectos;
+begin
+  oResumen := Default(TResumenFusionEfectos);
+  oResumen.CantidadValidos := 2;
+  oResumen.CantidadEmpresas := 1;
+  oResumen.CantidadTerceros := 1;
+  oResumen.ImportePendiente := 25.50;
+  Assert.AreEqual(
+    Integer(efeValida),
+    Integer(TCalculoFusionEfectos.Validar(oResumen, 2)));
+end;
+
+procedure TPruebasFusionEfectos.
+  Validar_CantidadDistintaRechazaLaFusion;
+var
+  oResumen: TResumenFusionEfectos;
+begin
+  oResumen := Default(TResumenFusionEfectos);
+  oResumen.CantidadValidos := 1;
+  oResumen.CantidadEmpresas := 1;
+  oResumen.CantidadTerceros := 1;
+  oResumen.ImportePendiente := 25.50;
+  Assert.AreEqual(
+    Integer(efeCantidadInvalida),
+    Integer(TCalculoFusionEfectos.Validar(oResumen, 2)));
+end;
+
+procedure TPruebasFusionEfectos.
+  CrearReferencia_UsaElDestinoCalculado;
+begin
+  Assert.AreEqual(
+    'CONC F/42/3',
+    TCalculoFusionEfectos.CrearReferencia('F', '42', 3));
 end;
 
 initialization

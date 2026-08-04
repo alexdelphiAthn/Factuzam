@@ -118,33 +118,31 @@ procedure TdmFormasdePago.GetCodigoAutoFormasdePago;
 begin
   if unqryTablaG.FindField('CODIGO_FP_FP').AsString = '0' then
   begin
-    with unstrdprcContador do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-      ParamByName('pUSUARIO_MODIF').AsString := IdentidadSesion.Usuario;
-      ParamByName('ptipodoc').AsString :=  'PG';
-      ExecProc;
-      unqryTablaG.FindField('CODIGO_FP_FP').AsString :=
-                                                  ParamByName('pcont').AsString;
-    end;
+    unstrdprcContador.Params.Clear;
+    unstrdprcContador.Params.CreateParam(ftString, 'ptipodoc', ptInput);
+    unstrdprcContador.Params.CreateParam(ftInteger, 'pcont', ptOutput);
+    unstrdprcContador.Params.CreateParam(
+      ftInteger, 'pUSUARIO_MODIF', ptInput);
+    unstrdprcContador.ParamByName('pUSUARIO_MODIF').AsString :=
+      IdentidadSesion.Usuario;
+    unstrdprcContador.ParamByName('ptipodoc').AsString := 'PG';
+    unstrdprcContador.ExecProc;
+    unqryTablaG.FindField('CODIGO_FP_FP').AsString :=
+      unstrdprcContador.ParamByName('pcont').AsString;
   end;
   if unqryTablaG.FindField('ORDEN_FORMA_PAGO_FP').AsString = '0' then
   begin
-    with unstrdprcContador do
-    begin
-      Params.Clear;
-      Params.CreateParam(ftString, 'ptipodoc', ptInput);
-      Params.CreateParam(ftInteger, 'pcont', ptOutput);
-      Params.CreateParam(ftInteger, 'pUSUARIO_MODIF', ptInput);
-      ParamByName('pUSUARIO_MODIF').AsString := IdentidadSesion.Usuario;
-      ParamByName('ptipodoc').AsString :=  'GO';
-      ExecProc;
-      unqryTablaG.FindField('ORDEN_FORMA_PAGO_FP').AsString :=
-                                                  ParamByName('pcont').AsString;
-    end;
+    unstrdprcContador.Params.Clear;
+    unstrdprcContador.Params.CreateParam(ftString, 'ptipodoc', ptInput);
+    unstrdprcContador.Params.CreateParam(ftInteger, 'pcont', ptOutput);
+    unstrdprcContador.Params.CreateParam(
+      ftInteger, 'pUSUARIO_MODIF', ptInput);
+    unstrdprcContador.ParamByName('pUSUARIO_MODIF').AsString :=
+      IdentidadSesion.Usuario;
+    unstrdprcContador.ParamByName('ptipodoc').AsString := 'GO';
+    unstrdprcContador.ExecProc;
+    unqryTablaG.FindField('ORDEN_FORMA_PAGO_FP').AsString :=
+      unstrdprcContador.ParamByName('pcont').AsString;
   end;
 end;
 
@@ -183,16 +181,15 @@ begin
   inherited;
   // Insert vacío (accidental): cancelar sin error
   if (DataSet.State = dsInsert) and
-     (Trim(unqryTablaG.FindField('DESCRIPCION_FORMA_PAGO_FP').AsString) = '') then
+     (Trim(unqryTablaG.FindField(
+       'DESCRIPCION_FORMA_PAGO_FP').AsString) = '') then
     Abort;
-  with unqryTablaG do
-  begin
-    if Trim(FindField('DESCRIPCION_FORMA_PAGO_FP').AsString) = '' then
-      raise ERangeError.CreateFmt(SErrorDescripcionFormaPago,
-        [FindField('DESCRIPCION_FORMA_PAGO_FP').AsString]);
-    NormalizarCodigoFacturaeFormaPago(DataSet);
-    GetCodigoAutoFormasdePago;
-  end;
+  if Trim(unqryTablaG.FindField(
+    'DESCRIPCION_FORMA_PAGO_FP').AsString) = '' then
+    raise ERangeError.CreateFmt(SErrorDescripcionFormaPago,
+      [unqryTablaG.FindField('DESCRIPCION_FORMA_PAGO_FP').AsString]);
+  NormalizarCodigoFacturaeFormaPago(DataSet);
+  GetCodigoAutoFormasdePago;
 end;
 
 initialization

@@ -114,9 +114,12 @@ begin
   // que F5 en el menu de caja). Rellena los tres campos de forma coherente.
   frm := TfrmMtoModalCajDef.Create(Application);
   try
-    frm.sEmpresa := dmmUsuarios.unqryTablaG.FieldByName('EMPRESA_DEFECTO_USU').AsString;
-    frm.sAlmacen := dmmUsuarios.unqryTablaG.FieldByName('ALMACEN_DEFECTO_USU').AsString;
-    frm.sCaja    := dmmUsuarios.unqryTablaG.FieldByName('CAJA_DEFECTO_USU').AsString;
+    frm.sEmpresa :=
+      dmmUsuarios.unqryTablaG.FieldByName('EMPRESA_DEFECTO_USU').AsString;
+    frm.sAlmacen :=
+      dmmUsuarios.unqryTablaG.FieldByName('ALMACEN_DEFECTO_USU').AsString;
+    frm.sCaja    :=
+      dmmUsuarios.unqryTablaG.FieldByName('CAJA_DEFECTO_USU').AsString;
     frm.ShowModal;
     if (frm.sFicha = 'S') then
     begin

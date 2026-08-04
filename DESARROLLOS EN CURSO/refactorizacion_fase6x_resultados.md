@@ -1,4 +1,4 @@
-﻿# Fase 6X — guías de grid de `TfrmMtoGen`
+# Fase 6X — guías de grid de `TfrmMtoGen`
 
 Fecha: 28/07/2026. D2.3 y tercer fascículo de D2 terminados.
 Sin commit.

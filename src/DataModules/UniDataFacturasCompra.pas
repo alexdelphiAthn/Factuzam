@@ -101,7 +101,8 @@ type
     // ACodEmpban estampa la cuenta de la empresa (cargo) en los efectos.
     function GenerarEfectos(const ACodEmpban: string = '';
                             const AIbanEmp: string = ''): Integer;
-    // Cuenta de la empresa (cargo) por defecto del proveedor (CODIGO_EMPBAN_PRV)
+    // Cuenta de la empresa (cargo) por defecto del proveedor
+    // (CODIGO_EMPBAN_PRV)
     // para pre-seleccionarla en el modal de seleccion de banco. '' si no tiene.
     function GetBancoDefectoProveedor(const ACodigoPrv: string): string;
     // Forma de pago por defecto del proveedor (CODIGO_FP_PRV). '' si no tiene.
@@ -459,11 +460,17 @@ end;
 procedure TdmFacturasCompra.unqryTablaGAfterInsert(DataSet: TDataSet);
 var
   sSerie: string;
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryTablaG.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryTablaG.FindField(ANombre);
+  end;
 begin
   inherited;
-  with unqryTablaG do
-  begin
-    FieldByName('NUMERO_FACC').AsString := '0';
+  FieldByName('NUMERO_FACC').AsString := '0';
     // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='FP'
     sSerie := ObtenerSerieDefecto(
       ConexionPrincipal,
@@ -495,8 +502,7 @@ begin
     AplicarPorcentajesIvaCompra(
       CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
       'FACC');
-    RefrescarAlmacenes(FieldByName('CODIGO_EMP_FACC').AsString);
-  end;
+  RefrescarAlmacenes(FieldByName('CODIGO_EMP_FACC').AsString);
   FTransicionEstadoFacc := '';
 end;
 
@@ -674,11 +680,17 @@ end;
 
 procedure TdmFacturasCompra.unqryFacturasCompraLineasAfterInsert(
                                                        DataSet: TDataSet);
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryFacturasCompraLineas.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryFacturasCompraLineas.FindField(ANombre);
+  end;
 begin
   inherited;
-  with unqryFacturasCompraLineas do
-  begin
-    FieldByName('NUMERO_FACC_FACCLIN').AsString :=
+  FieldByName('NUMERO_FACC_FACCLIN').AsString :=
       unqryTablaG.FieldByName('NUMERO_FACC').AsString;
     FieldByName('SERIE_FACC_FACCLIN').AsString :=
       unqryTablaG.FieldByName('SERIE_FACC').AsString;
@@ -691,15 +703,22 @@ begin
     // tambien sobrescribimos USUARIO_MODIF para que refleje la ultima edicion.
     FieldByName('USUARIO_ALTA').AsString    := IdentidadSesion.Usuario;
     FieldByName('INSTANTE_ALTA').AsDateTime := Now;
-    FieldByName('USUARIO_MODIF').AsString   := IdentidadSesion.Usuario;
-    FieldByName('INSTANTE_MODIF').AsDateTime:= Now;
-  end;
+  FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
+  FieldByName('INSTANTE_MODIF').AsDateTime := Now;
 end;
 
 procedure TdmFacturasCompra.unqryFacturasCompraLineasBeforePost(
                                                        DataSet: TDataSet);
 var
   sSku, sArt: string;
+  function FieldByName(const ANombre: string): TField;
+  begin
+    Result := unqryFacturasCompraLineas.FieldByName(ANombre);
+  end;
+  function FindField(const ANombre: string): TField;
+  begin
+    Result := unqryFacturasCompraLineas.FindField(ANombre);
+  end;
 begin
   inherited;
   // Desempaquetado ATTR en curso: post descriptivo, sin logica fiscal.
@@ -725,10 +744,8 @@ begin
     Abort;
   end;
   AsignarNumeroLineaFacturaCompra(DataSet);
-  with unqryFacturasCompraLineas do
-  begin
-    // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
-    NormalizarArticuloSkuEnDataSet(ConexionPrincipal,
+  // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
+  NormalizarArticuloSkuEnDataSet(ConexionPrincipal,
       unqryFacturasCompraLineas, 'CODIGO_ART_FACCLIN',
       'CODIGO_UNIDAD_FACCLIN');
     if (FindField('CANTIDAD_FACCLIN') <> nil) and
@@ -772,10 +789,9 @@ begin
         unqrySkusFacc.Close;
       end;
     end;
-    PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionPrincipal),
-      unqryTablaG,
-      unqryFacturasCompraLineas, 'FACC', 'FACCLIN', 'TOTAL_FACCLIN');
-  end;
+  PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionPrincipal),
+    unqryTablaG,
+    unqryFacturasCompraLineas, 'FACC', 'FACCLIN', 'TOTAL_FACCLIN');
 end;
 
 procedure TdmFacturasCompra.AsignarNumeroLineaFacturaCompra(
@@ -836,31 +852,35 @@ var
   iNumero: Int64;
   sNumero: string;
 begin
-  with unstrdprcGetContadorFacc do
-  begin
-    Params.Clear;
-    Params.CreateParam(ftString, 'pserie',            ptInput);
-    Params.CreateParam(ftString, 'ptipodoc',          ptInput);
-    Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
-    Params.CreateParam(ftString, 'pUSUARIOMODIF',     ptInput);
-    Params.CreateParam(ftString, 'pcont',             ptOutput);
-    ParamByName('pserie').AsString :=
-      unqryTablaG.FieldByName('SERIE_FACC').AsString;
-    ParamByName('ptipodoc').AsString :=
-      CrearConfiguracionDocumento(
-        tdFactura, sdCompra).TipoContador;
-    ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
-    ParamByName('pEMPRESA_CONTADOR').AsString :=
-      unqryTablaG.FieldByName('CODIGO_EMP_FACC').AsString;
-    ExecProc;
-    sNumero := Trim(ParamByName('pcont').AsString);
-    if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
-       (iNumero <= 0) then
-      raise Exception.Create(Format(SErrorContadorFacturaCompra,
-        [unqryTablaG.FieldByName('SERIE_FACC').AsString,
-         unqryTablaG.FieldByName('CODIGO_EMP_FACC').AsString]));
-    unqryTablaG.FieldByName('NUMERO_FACC').AsString := sNumero;
-  end;
+  unstrdprcGetContadorFacc.Params.Clear;
+  unstrdprcGetContadorFacc.Params.CreateParam(
+    ftString, 'pserie', ptInput);
+  unstrdprcGetContadorFacc.Params.CreateParam(
+    ftString, 'ptipodoc', ptInput);
+  unstrdprcGetContadorFacc.Params.CreateParam(
+    ftString, 'pEMPRESA_CONTADOR', ptInput);
+  unstrdprcGetContadorFacc.Params.CreateParam(
+    ftString, 'pUSUARIOMODIF', ptInput);
+  unstrdprcGetContadorFacc.Params.CreateParam(
+    ftString, 'pcont', ptOutput);
+  unstrdprcGetContadorFacc.ParamByName('pserie').AsString :=
+    unqryTablaG.FieldByName('SERIE_FACC').AsString;
+  unstrdprcGetContadorFacc.ParamByName('ptipodoc').AsString :=
+    CrearConfiguracionDocumento(tdFactura, sdCompra).TipoContador;
+  unstrdprcGetContadorFacc.ParamByName('pUSUARIOMODIF').AsString :=
+    IdentidadSesion.Usuario;
+  unstrdprcGetContadorFacc.ParamByName(
+    'pEMPRESA_CONTADOR').AsString :=
+    unqryTablaG.FieldByName('CODIGO_EMP_FACC').AsString;
+  unstrdprcGetContadorFacc.ExecProc;
+  sNumero := Trim(
+    unstrdprcGetContadorFacc.ParamByName('pcont').AsString);
+  if (sNumero = '') or (not TryStrToInt64(sNumero, iNumero)) or
+     (iNumero <= 0) then
+    raise Exception.Create(Format(SErrorContadorFacturaCompra,
+      [unqryTablaG.FieldByName('SERIE_FACC').AsString,
+       unqryTablaG.FieldByName('CODIGO_EMP_FACC').AsString]));
+  unqryTablaG.FieldByName('NUMERO_FACC').AsString := sNumero;
 end;
 
 procedure TdmFacturasCompra.CalcularTotalesFacturaCompra;
@@ -917,7 +937,8 @@ begin
         'SELECT DISTINCT L.CODIGO_ALMACEN_FACCLIN AS COD, ' +
         '       COALESCE(A.NOMBRE_ALM_ALM, L.CODIGO_ALMACEN_FACCLIN) AS NOM ' +
         '  FROM fza_facturas_compra_lineas L ' +
-        '  LEFT JOIN fza_almacenes A ON A.CODIGO_ALM_ALM = L.CODIGO_ALMACEN_FACCLIN ' +
+        '  LEFT JOIN fza_almacenes A ON A.CODIGO_ALM_ALM = ' +
+        'L.CODIGO_ALMACEN_FACCLIN ' +
         ' WHERE L.SERIE_FACC_FACCLIN = :s AND L.NUMERO_FACC_FACCLIN = :n ' +
         '   AND COALESCE(L.CODIGO_ALMACEN_FACCLIN, '''') <> '''' ' +
         ' ORDER BY COD';

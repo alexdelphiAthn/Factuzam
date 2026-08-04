@@ -126,31 +126,31 @@ class procedure TEscritorHojaCalculoDevEx.EscribirCeldaDx(
   const ATabla: TdxSpreadSheetTableView; AFila, ACol: Integer;
   const AValor: Variant; ANegrita: Boolean;
   ADxAlineacion: TdxSpreadSheetDataAlignHorz);
+var
+  Celda: TdxSpreadSheetCell;
 begin
-  with ATabla.CreateCell(AFila, ACol) do
-  begin
-    AsVariant := AValor;
-    if ANegrita then
-      Style.Font.Style := [fsBold]
-    else
-      Style.Font.Style := [];
-    Style.AlignHorz := ADxAlineacion;
-    Style.AlignVert := ssavCenter;
-  end;
+  Celda := ATabla.CreateCell(AFila, ACol);
+  Celda.AsVariant := AValor;
+  if ANegrita then
+    Celda.Style.Font.Style := [fsBold]
+  else
+    Celda.Style.Font.Style := [];
+  Celda.Style.AlignHorz := ADxAlineacion;
+  Celda.Style.AlignVert := ssavCenter;
 end;
 
 class procedure TEscritorHojaCalculoDevEx.EscribirFormulaDx(
   const ATabla: TdxSpreadSheetTableView; AFila, ACol: Integer;
   const AFormula, AFormato: string);
+var
+  Celda: TdxSpreadSheetCell;
 begin
-  with ATabla.CreateCell(AFila, ACol) do
-  begin
-    // SetText(..., True) es crítico para que interprete la fórmula.
-    SetText(AFormula, True);
-    Style.AlignHorz := ssahRight;
-    if AFormato <> '' then
-      Style.DataFormat.FormatCode := AFormato;
-  end;
+  Celda := ATabla.CreateCell(AFila, ACol);
+  // SetText(..., True) es crítico para que interprete la fórmula.
+  Celda.SetText(AFormula, True);
+  Celda.Style.AlignHorz := ssahRight;
+  if AFormato <> '' then
+    Celda.Style.DataFormat.FormatCode := AFormato;
 end;
 
 class procedure TEscritorHojaCalculoDevEx.PintarCuadroDx(

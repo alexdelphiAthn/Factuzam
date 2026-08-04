@@ -1,17 +1,17 @@
 ﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibVerifactuNoVerifactuVerify                               }
-{    Tipo:       Libreria                                                       }
-{ Version:       1.0.0                                                          }
-{   Fecha:       15/06/2026                                                     }
-{   Autor:       Alejandro Laorden Hidalgo                                      }
+{    Tipo:       Libreria                                                      }
+{ Version:       1.0.0                                                         }
+{   Fecha:       15/06/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
-{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.      }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripcion:                                                                }
-{    Verificacion local de ficheros NO VERI*FACTU exportados por Factuzam.      }
-{    Comprueba estructura, cadena de eventos, hashes internos y coherencia      }
-{    basica de firmas guardadas, sin invocar procesos externos.                 }
+{    Verificacion local de ficheros NO VERI*FACTU exportados por Factuzam.     }
+{    Comprueba estructura, cadena de eventos, hashes internos y coherencia     }
+{    basica de firmas guardadas, sin invocar procesos externos.                }
 {******************************************************************************}
 unit inLibVerifactuNoVerifactuVerify;
 

@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{E93654F6-79B6-4847-ADDE-B833A998DC6D}</ProjectGuid>
         <MainSource>FactuzamTests.dpr</MainSource>
