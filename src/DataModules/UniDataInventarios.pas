@@ -624,7 +624,7 @@ begin
     qry.Connection := ConexionPrincipal;
     qry.SQL.Text :=
       'SELECT EMPSER ' +
-      '  FROM fza_empresas_series ' +
+      '  FROM vi_empresas_series ' +
       ' WHERE CODIGO_EMP_EMPSER = :EMPRESA ' +
       '   AND TIPO_DOC_EMPSER  = :TIPO ' +
       '   AND (FECHA_DESDE_EMPSER IS NULL OR FECHA_DESDE_EMPSER <= NOW()) ' +

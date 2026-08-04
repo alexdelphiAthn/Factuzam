@@ -373,7 +373,7 @@ begin
   // Serie configurada para este tipo de documento (prefiere la de la caja /
   // almacén; si no, la de empresa). Fallback: el propio tipo de documento.
   qryAux.SQL.Text :=
-    'SELECT EMPSER FROM fza_empresas_series' +
+    'SELECT EMPSER FROM vi_empresas_series' +
     ' WHERE CODIGO_EMP_EMPSER = :EMP AND TIPO_DOC_EMPSER = :TIPO' +
     '   AND (CODIGO_ALM_EMPSER = :ALM OR CODIGO_ALM_EMPSER IS NULL' +
     '        OR CODIGO_ALM_EMPSER = '''')' +

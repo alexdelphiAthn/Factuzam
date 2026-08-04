@@ -53,6 +53,13 @@ resourcestring
     'la empresa %s';
   SErrorSerieEmpresa =
     '%s no es un valor válido  para serie por Empresa ';
+  SErrorSerieTokenizadaEmpresa =
+    'La serie tokenizada %s debe contener yyyy, q, mm, dd o una ' +
+    'combinación de ellos, sin repetir ningún token. Ejemplos: ' +
+    'A1.yyyy, yyyy.Tq.A1 y yyyy.mm.dd.';
+  SErrorSerieTokenizadaCalendarioNoNatural =
+    'La empresa debe tener marcado "Hacer coincidir calendario natural ' +
+    'con tokens" antes de usar una serie tokenizada.';
   SErrorIbanEmpresa =
     'IBAN no válido para el banco de la empresa: %s';
   SErrorRazonSocialEmpresa =
@@ -353,6 +360,10 @@ resourcestring
     'seleccion determina el pareo con los Master fields (k=1,2,...).';
   SErrorSerieDocumentoNoIndicada =
     'Introduzca la serie.';
+  SErrorAlmacenSerieTokenizadaNoIndicado =
+    'Seleccione el almacén de la serie tokenizada.';
+  SErrorCajaSerieTokenizadaNoIndicada =
+    'Seleccione la caja de la serie tokenizada.';
   SErrorFechaInicioDocumentoNoIndicada =
     'Introduzca la fecha de inicio.';
   SErrorFechaFinDocumentoNoIndicada =

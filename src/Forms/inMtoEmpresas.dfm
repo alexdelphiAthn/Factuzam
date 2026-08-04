@@ -1266,8 +1266,13 @@
                       DataBinding.FieldName = 'CODIGO_CAJA_EMPSER'
                     end
                     object dbmSeriesSERIE_SERIE: TcxGridDBColumn
-                      Caption = 'Serie'
+                      Caption = 'Serie base'
                       DataBinding.FieldName = 'EMPSER'
+                    end
+                    object tvSeriesSERIE_TOKENIZADA_EMPSER: TcxGridDBColumn
+                      Caption = 'Serie tokenizada'
+                      DataBinding.FieldName = 'SERIE_TOKENIZADA_EMPSER'
+                      Width = 115
                     end
                     object dbmSeriesTIPODOC_SERIE: TcxGridDBColumn
                       Caption = 'Tipo Doc'
@@ -1928,6 +1933,18 @@
               Properties.ValidateOnEnter = False
               TabOrder = 9
               Width = 333
+            end
+            object chkESTOKENS_CALENDARIO_NATURAL_EMP: TcxDBCheckBox
+              Left = 552
+              Top = 88
+              Caption = 'Hacer coincidir calendario natural con tokens'
+              DataBinding.DataField = 'ESTOKENS_CALENDARIO_NATURAL_EMP'
+              DataBinding.DataSource = dsTablaG
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Style.TransparentBorder = False
+              TabOrder = 10
+              Transparent = True
             end
           end
         end

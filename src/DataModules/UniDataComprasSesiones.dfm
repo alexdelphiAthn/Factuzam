@@ -870,7 +870,7 @@
   object unqryEmpresaSeries: TUniQuery
     SQL.Strings = (
       'SELECT EMPSER, SUBTIPO_EMPSER, CODIGO_ALM_EMPSER'
-      '  FROM fza_empresas_series'
+      '  FROM vi_empresas_series'
       ' WHERE TIPO_DOC_EMPSER = '#39'SE'#39
       '   AND CODIGO_EMP_EMPSER = :CODIGO_EMP_SES'
       '   AND (FECHA_HASTA_EMPSER IS NULL'

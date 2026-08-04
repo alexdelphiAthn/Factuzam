@@ -56,6 +56,7 @@ type
     procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
   private
     function ConfirmarCambioCriticoEmpresa(const sAccion: string): Boolean;
+    procedure ValidarSerieTokenizada;
     { Private declarations }
   public
     procedure GetCodigoAutoEmpresa;
@@ -189,6 +190,7 @@ begin
   bSinErrores := True;
   with unqrySeries do
   begin
+    ValidarSerieTokenizada;
     if (FindField('EMPSER').AsString = '') or
        (FindField('EMPSER').IsNull) or
        SimbolosProhibidos(
@@ -329,6 +331,87 @@ begin
       FORMATO_DOCUMENTO_DEFECTO;
   if unqryTablaG.FindField('ESIVA_RECARGO_COMPRAS_EMP') <> nil then
     unqryTablaG.FindField('ESIVA_RECARGO_COMPRAS_EMP').AsString := 'N';
+  unqryTablaG.FieldByName(
+    'ESTOKENS_CALENDARIO_NATURAL_EMP').AsString := 'N';
+end;
+
+procedure TdmEmpresas.ValidarSerieTokenizada;
+const
+  TOKEN_EJERCICIO = 'yyyy';
+  TOKEN_TRIMESTRE = 'q';
+  TOKEN_MES = 'mm';
+  TOKEN_DIA = 'dd';
+var
+  iAnioActual: Word;
+  iDiaActual: Word;
+  iDias: Integer;
+  iEjercicios: Integer;
+  iMesActual: Word;
+  iMeses: Integer;
+  iTrimestres: Integer;
+  sSerieResuelta: string;
+  sSerieTokenizada: string;
+begin
+  sSerieTokenizada := Trim(
+    unqrySeries.FieldByName('SERIE_TOKENIZADA_EMPSER').AsString);
+  unqrySeries.FieldByName('SERIE_TOKENIZADA_EMPSER').AsString :=
+    sSerieTokenizada;
+  if sSerieTokenizada <> '' then
+  begin
+    iEjercicios := ContarOcurrenciasAnsi(
+      sSerieTokenizada,
+      TOKEN_EJERCICIO);
+    iTrimestres := ContarOcurrenciasAnsi(
+      sSerieTokenizada,
+      TOKEN_TRIMESTRE);
+    iMeses := ContarOcurrenciasAnsi(
+      sSerieTokenizada,
+      TOKEN_MES);
+    iDias := ContarOcurrenciasAnsi(
+      sSerieTokenizada,
+      TOKEN_DIA);
+    if (iEjercicios > 1) or
+       (iTrimestres > 1) or
+       (iMeses > 1) or
+       (iDias > 1) or
+       (iEjercicios + iTrimestres + iMeses + iDias = 0) then
+    begin
+      raise ERangeError.CreateFmt(
+        SErrorSerieTokenizadaEmpresa,
+        [sSerieTokenizada]);
+    end;
+    if unqryTablaG.FieldByName(
+         'ESTOKENS_CALENDARIO_NATURAL_EMP').AsString <> 'S' then
+    begin
+      raise ERangeError.Create(
+        SErrorSerieTokenizadaCalendarioNoNatural);
+    end;
+    if Trim(unqrySeries.FieldByName('EMPSER').AsString) = '' then
+    begin
+      DecodeDate(Date, iAnioActual, iMesActual, iDiaActual);
+      sSerieResuelta := StringReplace(
+        sSerieTokenizada,
+        TOKEN_EJERCICIO,
+        Format('%.4d', [iAnioActual]),
+        [rfReplaceAll]);
+      sSerieResuelta := StringReplace(
+        sSerieResuelta,
+        TOKEN_MES,
+        Format('%.2d', [iMesActual]),
+        [rfReplaceAll]);
+      sSerieResuelta := StringReplace(
+        sSerieResuelta,
+        TOKEN_DIA,
+        Format('%.2d', [iDiaActual]),
+        [rfReplaceAll]);
+      sSerieResuelta := StringReplace(
+        sSerieResuelta,
+        TOKEN_TRIMESTRE,
+        IntToStr(((iMesActual - 1) div 3) + 1),
+        [rfReplaceAll]);
+      unqrySeries.FieldByName('EMPSER').AsString := sSerieResuelta;
+    end;
+  end;
 end;
 
 procedure TdmEmpresas.unqryTablaGAfterPost(DataSet: TDataSet);

@@ -25,6 +25,8 @@ type
   TdmDepositosCliente = class(TdmBase)
   private
     { Private declarations }
+  protected
+    procedure DoCreate; override;
   public
     { Public declarations }
   end;
@@ -34,6 +36,18 @@ implementation
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
+
+procedure TdmDepositosCliente.DoCreate;
+begin
+  inherited;
+  unqryTablaG.Close;
+  unqryTablaG.ParamByName('EMPRESA').AsString :=
+    UbicacionSesion.Empresa;
+  unqryTablaG.ParamByName('ALMACEN').AsString :=
+    UbicacionSesion.Almacen;
+  unqryTablaG.ParamByName('CAJA').AsString :=
+    UbicacionSesion.Caja;
+end;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 

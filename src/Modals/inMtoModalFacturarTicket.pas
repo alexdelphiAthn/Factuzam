@@ -113,7 +113,7 @@ begin
       oContexto);
     oFormulario.FRepositorioSeries := oContexto.Series;
     oFormulario.FConsultaSeries :=
-      oFormulario.FRepositorioSeries.ConsultarSeries;
+      oFormulario.FRepositorioSeries.ConsultarSeries(AEmpresa);
     oFormulario.FSeries := oFormulario.FConsultaSeries.DataSet;
     oFormulario.dsSeries.DataSet := oFormulario.FSeries;
     oFormulario.FServicioFacturacion := oContexto.Facturacion;

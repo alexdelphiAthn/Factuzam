@@ -179,10 +179,13 @@ type
                                         AFechaOperacion: TDateTime;
                                         out IdGenerado:string);
     procedure CerrarDepositoCliente(QryTrx: TUniQuery;
-                                    const ACliente, ASku, AUsuario: string;
-                                    out AIdDeposito: string);
+                                    const AIdDeposito, AEmpresa,
+                                          AAlmacen, ACaja,
+                                          AUsuario: string);
     procedure AumentarAnticipoDeposito(QryTrx: TUniQuery;
-                                       const ACliente, ASku, AUsuario: string;
+                                       const AIdDeposito, AEmpresa,
+                                             AAlmacen, ACaja,
+                                             AUsuario: string;
                                        ANuevoAbono: Currency);
     procedure InsertarCabeceraFactura(
             QryTrx:          TUniQuery;
@@ -610,7 +613,11 @@ var
   TipoIVA, EsImpIncl, Descripcion: string;
   PorcIVA: Currency;
   FechaCreacion: TDateTime;
+  Ubicacion: TUbicacionSesion;
 begin
+  if not Assigned(FContextoSesion) then
+    raise Exception.Create(SErrorContextoSesionCajaNoConfigurado);
+  Ubicacion := FContextoSesion.Ubicacion;
   QryDep := TUniQuery.Create(nil);
   try
     QryDep.Connection := FConexion;
@@ -630,8 +637,14 @@ begin
         '  LEFT JOIN fza_articulos a '         +
         '    ON a.CODIGO_ART_ART = d.CODIGO_ART_DEP ' +
         ' WHERE d.CODIGO_CLI_DEP = :CLI '  +
+        '   AND d.CODIGO_EMP_DEP = :EMPRESA ' +
+        '   AND d.CODIGO_ALM_DEP = :ALMACEN ' +
+        '   AND d.CODIGO_CAJA_DEP = :CAJA ' +
         '   AND d.ESTADO_DEP = ''PENDIENTE''';
     QryDep.ParamByName('CLI').AsString := ACodigoCliente;
+    QryDep.ParamByName('EMPRESA').AsString := Ubicacion.Empresa;
+    QryDep.ParamByName('ALMACEN').AsString := Ubicacion.Almacen;
+    QryDep.ParamByName('CAJA').AsString := Ubicacion.Caja;
     QryDep.Open;
     if QryDep.IsEmpty then Exit;
     cdsLineas.DisableControls;
@@ -738,29 +751,70 @@ begin
 end;
 
 procedure TdmCajaOpe.CerrarDepositoCliente(QryTrx: TUniQuery;
-                                           const ACliente,
-                                                 ASku,
-                                                 AUsuario: string;
-                                           out AIdDeposito:string);
+                                           const AIdDeposito,
+                                                 AEmpresa,
+                                                 AAlmacen,
+                                                 ACaja,
+                                                 AUsuario: string);
 var
-  SpTrx: TUniStoredProc;
+  Consulta: TUniQuery;
+  Cliente: string;
+  DeudaAnterior: Currency;
 begin
-  SpTrx := TUniStoredProc.Create(nil);
+  Consulta := TUniQuery.Create(nil);
   try
-    SpTrx.Connection := QryTrx.Connection;
-    SpTrx.StoredProcName := 'PRC_FZA_DEPOSITOS_UPDATE';
-    SpTrx.PrepareSQL;
-    SpTrx.ParamByName('SKU').AsString          := ASku;
-    SpTrx.ParamByName('CLI').AsString          := ACliente;
-    SpTrx.ParamByName('ESTADO').AsString       := 'CERRADO';
-    SpTrx.ParamByName('INC_ANTICIPO').AsCurrency := 0;
-    SpTrx.ParamByName('USUARIO').AsString      := AUsuario;
-    SpTrx.Execute;
-    AIdDeposito := SpTrx.ParamByName('P_ID_DEPOSITO').AsString;
+    Consulta.Connection := QryTrx.Connection;
+    Consulta.SQL.Text :=
+      'SELECT CODIGO_CLI_DEP, ' +
+      '       (PRECIO_VENTA_DEP * ' +
+      '        COALESCE(CANTIDAD_PENDIENTE_DEP, 1)) - ' +
+      '       COALESCE(IMPORTE_ANTICIPO_DEP, 0) AS DEUDA_ANTERIOR ' +
+      'FROM fza_depositos_cliente ' +
+      'WHERE ID_DEPOSITO_DEP = :ID ' +
+      'AND CODIGO_EMP_DEP = :EMPRESA ' +
+      'AND CODIGO_ALM_DEP = :ALMACEN ' +
+      'AND CODIGO_CAJA_DEP = :CAJA ' +
+      'AND ESTADO_DEP = ''PENDIENTE'' ' +
+      'FOR UPDATE';
+    Consulta.ParamByName('ID').AsString := AIdDeposito;
+    Consulta.ParamByName('EMPRESA').AsString := AEmpresa;
+    Consulta.ParamByName('ALMACEN').AsString := AAlmacen;
+    Consulta.ParamByName('CAJA').AsString := ACaja;
+    Consulta.Open;
+    if not Consulta.IsEmpty then
+    begin
+      Cliente := Consulta.FieldByName('CODIGO_CLI_DEP').AsString;
+      DeudaAnterior :=
+        Consulta.FieldByName('DEUDA_ANTERIOR').AsCurrency;
+      Consulta.Close;
+      Consulta.SQL.Text :=
+        'UPDATE fza_depositos_cliente ' +
+        'SET ESTADO_DEP = ''CERRADO'', ' +
+        '    USUARIO_MODIF = :USUARIO, INSTANTE_MODIF = NOW() ' +
+        'WHERE ID_DEPOSITO_DEP = :ID ' +
+        'AND CODIGO_EMP_DEP = :EMPRESA ' +
+        'AND CODIGO_ALM_DEP = :ALMACEN ' +
+        'AND CODIGO_CAJA_DEP = :CAJA ' +
+        'AND ESTADO_DEP = ''PENDIENTE''';
+      Consulta.ParamByName('USUARIO').AsString := AUsuario;
+      Consulta.ParamByName('ID').AsString := AIdDeposito;
+      Consulta.ParamByName('EMPRESA').AsString := AEmpresa;
+      Consulta.ParamByName('ALMACEN').AsString := AAlmacen;
+      Consulta.ParamByName('CAJA').AsString := ACaja;
+      Consulta.Execute;
+      Consulta.SQL.Text :=
+        'UPDATE fza_clientes ' +
+        'SET TOTAL_DEUDA_CLI = COALESCE(TOTAL_DEUDA_CLI, 0) - :DEUDA ' +
+        'WHERE CODIGO_CLI_CLI = :CLIENTE';
+      Consulta.ParamByName('DEUDA').AsCurrency := DeudaAnterior;
+      Consulta.ParamByName('CLIENTE').AsString := Cliente;
+      Consulta.Execute;
+    end
+    else
+      raise Exception.Create(SErrorOperacionCajaNoEncontrada);
   finally
-    FreeAndNil(SpTrx);
+    FreeAndNil(Consulta);
   end;
-
 end;
 
 procedure TdmCajaOpe.TransformarLineasParaCobroParcial(cdsLineas: TDataSet;
@@ -1042,27 +1096,69 @@ begin
 end;
 
 procedure TdmCajaOpe.AumentarAnticipoDeposito(QryTrx: TUniQuery;
-                                              const ACliente,
-                                                    ASku,
+                                              const AIdDeposito,
+                                                    AEmpresa,
+                                                    AAlmacen,
+                                                    ACaja,
                                                     AUsuario: string;
                                               ANuevoAbono: Currency);
 var
-  SpTrx:TUniStoredProc;
+  Consulta: TUniQuery;
+  Cliente: string;
 begin
-  if ANuevoAbono <= 0 then Exit;
-  SpTrx := TUniStoredProc.Create(nil);
-  try
-    SpTrx.Connection := QryTrx.Connection;
-    SpTrx.StoredProcName := 'PRC_FZA_DEPOSITOS_UPDATE';
-    SpTrx.PrepareSQL;
-    SpTrx.ParamByName('SKU').AsString            := ASku;
-    SpTrx.ParamByName('CLI').AsString            := ACliente;
-    SpTrx.ParamByName('ESTADO').Clear;
-    SpTrx.ParamByName('INC_ANTICIPO').AsCurrency := ANuevoAbono;
-    SpTrx.ParamByName('USUARIO').AsString        := AUsuario;
-    SpTrx.Execute;
-  finally
-    FreeAndNil(SpTrx);
+  if ANuevoAbono > 0 then
+  begin
+    Consulta := TUniQuery.Create(nil);
+    try
+      Consulta.Connection := QryTrx.Connection;
+      Consulta.SQL.Text :=
+        'SELECT CODIGO_CLI_DEP ' +
+        'FROM fza_depositos_cliente ' +
+        'WHERE ID_DEPOSITO_DEP = :ID ' +
+        'AND CODIGO_EMP_DEP = :EMPRESA ' +
+        'AND CODIGO_ALM_DEP = :ALMACEN ' +
+        'AND CODIGO_CAJA_DEP = :CAJA ' +
+        'AND ESTADO_DEP = ''PENDIENTE'' ' +
+        'FOR UPDATE';
+      Consulta.ParamByName('ID').AsString := AIdDeposito;
+      Consulta.ParamByName('EMPRESA').AsString := AEmpresa;
+      Consulta.ParamByName('ALMACEN').AsString := AAlmacen;
+      Consulta.ParamByName('CAJA').AsString := ACaja;
+      Consulta.Open;
+      if not Consulta.IsEmpty then
+      begin
+        Cliente := Consulta.FieldByName('CODIGO_CLI_DEP').AsString;
+        Consulta.Close;
+        Consulta.SQL.Text :=
+          'UPDATE fza_depositos_cliente ' +
+          'SET IMPORTE_ANTICIPO_DEP = ' +
+          '    COALESCE(IMPORTE_ANTICIPO_DEP, 0) + :ABONO, ' +
+          '    USUARIO_MODIF = :USUARIO, INSTANTE_MODIF = NOW() ' +
+          'WHERE ID_DEPOSITO_DEP = :ID ' +
+          'AND CODIGO_EMP_DEP = :EMPRESA ' +
+          'AND CODIGO_ALM_DEP = :ALMACEN ' +
+          'AND CODIGO_CAJA_DEP = :CAJA ' +
+          'AND ESTADO_DEP = ''PENDIENTE''';
+        Consulta.ParamByName('ABONO').AsCurrency := ANuevoAbono;
+        Consulta.ParamByName('USUARIO').AsString := AUsuario;
+        Consulta.ParamByName('ID').AsString := AIdDeposito;
+        Consulta.ParamByName('EMPRESA').AsString := AEmpresa;
+        Consulta.ParamByName('ALMACEN').AsString := AAlmacen;
+        Consulta.ParamByName('CAJA').AsString := ACaja;
+        Consulta.Execute;
+        Consulta.SQL.Text :=
+          'UPDATE fza_clientes ' +
+          'SET TOTAL_DEUDA_CLI = COALESCE(TOTAL_DEUDA_CLI, 0) - :ABONO ' +
+          'WHERE CODIGO_CLI_CLI = :CLIENTE';
+        Consulta.ParamByName('ABONO').AsCurrency := ANuevoAbono;
+        Consulta.ParamByName('CLIENTE').AsString := Cliente;
+        Consulta.Execute;
+      end
+      else
+        raise Exception.Create(SErrorOperacionCajaNoEncontrada);
+    finally
+      FreeAndNil(Consulta);
+    end;
   end;
 end;
 
@@ -1566,8 +1662,8 @@ begin
   if ALinea.AccionDeposito = 'AUMENTAR_DEP' then
   begin
     FDataModule.AumentarAnticipoDeposito(
-      FQuery, FCabecera.CodigoCliente, ALinea.Sku,
-      FUsuario, ALinea.TotalCIva);
+      FQuery, ALinea.IdDeposito, FEmpresa, FAlmacen,
+      FCaja, FUsuario, ALinea.TotalCIva);
     if ALinea.TotalCIva > 0 then
       FDataModule.InsertarOperacionCaja(
         FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
@@ -1613,11 +1709,11 @@ begin
     sNumeroMovimiento := '';
   if ALinea.VieneDeDeposito = 'S' then
   begin
-    sIdDeposito := '';
+    sIdDeposito := ALinea.IdDeposito;
     sAlmacenOrigen := FAlmacenDeposito;
     FDataModule.CerrarDepositoCliente(
-      FQuery, FCabecera.CodigoCliente, ALinea.Sku,
-      FUsuario, sIdDeposito);
+      FQuery, sIdDeposito, FEmpresa, FAlmacen,
+      FCaja, FUsuario);
     dImporteCierre := ALinea.PrecioOriginalDep;
     if dImporteCierre = 0 then
       dImporteCierre := ALinea.TotalCIva;
@@ -2145,7 +2241,7 @@ begin
   try
     Qry.Connection := FDataModule.FConexion;
     Qry.SQL.Text :=
-      'SELECT EMPSER FROM fza_empresas_series' +
+      'SELECT EMPSER FROM vi_empresas_series' +
       ' WHERE CODIGO_EMP_EMPSER = :EMP AND TIPO_DOC_EMPSER = :TIPO' +
       '   AND (CODIGO_ALM_EMPSER = :ALM OR CODIGO_ALM_EMPSER IS NULL' +
       '        OR CODIGO_ALM_EMPSER = '''')' +

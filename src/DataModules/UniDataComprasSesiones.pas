@@ -1033,7 +1033,7 @@ begin
   try
     q.Connection := ConexionPrincipal;
     q.SQL.Text :=
-      'SELECT COUNT(*) AS N FROM fza_empresas_series ' +
+      'SELECT COUNT(*) AS N FROM vi_empresas_series ' +
       ' WHERE TIPO_DOC_EMPSER = ''SE'' ' +
       '   AND CODIGO_EMP_EMPSER = :emp ' +
       '   AND EMPSER = :ser';

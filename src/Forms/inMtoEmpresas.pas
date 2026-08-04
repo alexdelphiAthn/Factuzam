@@ -294,6 +294,7 @@ type
     dbmSeriesCODIGO_ALMACEN_SERIE: TcxGridDBColumn;
     dbmSeriesCODIGO_CAJA_SERIE: TcxGridDBColumn;
     dbmSeriesSERIE_SERIE: TcxGridDBColumn;
+    tvSeriesSERIE_TOKENIZADA_EMPSER: TcxGridDBColumn;
     dbmSeriesTIPODOC_SERIE: TcxGridDBColumn;
     dbmSeriesSUBITPO_SERIE: TcxGridDBColumn;
     dbmSeriesFECHA_DESDE_SERIE: TcxGridDBColumn;
@@ -305,6 +306,7 @@ type
     txtVERSION_INSTALACION_EMP: TcxDBTextEdit;
     btnGenerarInstalacionSif: TcxButton;
     chkRecargoEquivalenciaCompras: TcxDBCheckBox;
+    chkESTOKENS_CALENDARIO_NATURAL_EMP: TcxDBCheckBox;
     procedure tsFichaEnter(Sender: TObject);
     procedure chkAplicaRetencionesPropertiesChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -503,33 +505,35 @@ begin
   end;
 end;
 
-// Crea una misma serie para todos los tipos de documento conocidos.
-// No duplica una serie generica solapada para tipo, subtipo y empresa.
+// Crea una serie tokenizada para todos los tipos de documento conocidos.
+// El almacen se aplica a todos; la caja, solo a los tipos indicados.
 procedure TfrmMtoEmpresas.btnCrearSeriesDocClick(Sender: TObject);
 const
   SUBTIPOS_FACTURA: array[0..2] of string = ('NORMAL', 'SIMPLIFICADA',
                                              'RECTIFICATIVA');
 var
   Tipos: TTiposDocumentoEmpresa;
-  TipoListado: string;
+  TipoListado: TTipoDocumentoEmpresa;
+  sAlmacen: string;
+  sCaja: string;
+  sCajaTipo: string;
   sEmpresa: string;
-  sSerie: string;
+  sSerieTokenizada: string;
   sTipo: string;
-  dtDesde: TDateTime;
-  dtHasta: TDateTime;
   iCreadas: Integer;
   iOmitidas: Integer;
   i: Integer;
 
-  procedure CrearSiFalta(const ATipo, ASubtipo: string);
+  procedure CrearSiFalta(
+    const ATipo, ASubtipo, ACajaTipo: string);
   begin
     if FRepositorioSeriesEmpresa.CrearSerieSiFalta(
       sEmpresa,
-      sSerie,
+      sAlmacen,
+      ACajaTipo,
+      sSerieTokenizada,
       ATipo,
       ASubtipo,
-      dtDesde,
-      dtHasta,
       IdentidadSesion.Usuario) then
       Inc(iCreadas)
     else
@@ -545,20 +549,35 @@ begin
     ShowMessage(SErrorEmpresaCrearSeriesNoSeleccionada)
   else
   begin
-    if TfrmModalSeriesDocumentos.Ejecutar(Self, sSerie,
-                                          dtDesde, dtHasta) then
+    if dsTablaG.DataSet.FieldByName(
+         'ESTOKENS_CALENDARIO_NATURAL_EMP').AsString <> 'S' then
+    begin
+      ShowMessage(SErrorSerieTokenizadaCalendarioNoNatural);
+    end
+    else if TfrmModalSeriesDocumentos.Ejecutar(
+      Self,
+      ConexionPrincipal,
+      sEmpresa,
+      sAlmacen,
+      sCaja,
+      sSerieTokenizada) then
     begin
       iCreadas := 0;
       iOmitidas := 0;
       Tipos := FRepositorioSeriesEmpresa.ListarTiposDocumento;
       for TipoListado in Tipos do
       begin
-        sTipo := Trim(TipoListado);
-        CrearSiFalta(sTipo, '');
+        sTipo := Trim(TipoListado.Codigo);
+        sCajaTipo := '';
+        if TipoListado.UsaCaja then
+        begin
+          sCajaTipo := sCaja;
+        end;
+        CrearSiFalta(sTipo, '', sCajaTipo);
         if sTipo = 'FC' then
         begin
           for i := Low(SUBTIPOS_FACTURA) to High(SUBTIPOS_FACTURA) do
-            CrearSiFalta(sTipo, SUBTIPOS_FACTURA[i]);
+            CrearSiFalta(sTipo, SUBTIPOS_FACTURA[i], sCajaTipo);
         end;
       end;
       dmmEmpresas.AsegurarSeriesAbierta;

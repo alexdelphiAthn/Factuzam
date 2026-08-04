@@ -413,37 +413,76 @@ begin
   FValidadorFiscal.Validar(Solicitud);
 end;
 
-function TdmFacturas.GetSubtipoSerieEmpresa(sSerie,
-                                            sEmpresa:string;
-                                            dtFecha:TDateTime): string;
+function TdmFacturas.GetSubtipoSerieEmpresa(
+  sSerie, sEmpresa: string;
+  dtFecha: TDateTime): string;
 var
   unqrySol: TUniQuery;
 begin
   Result := '';
-  if ((sSerie = '') or (sEmpresa = '')) then
-    Exit;
-  unqrySol := TUniQuery.Create(nil);
-  try
-    with unqrySol do
-    begin
-      Connection := ConexionPrincipal;
-      SQL.Text := 'SELECT SUBTIPO_EMPSER ' +
-                  '  FROM fza_empresas_series ' +
-                  ' WHERE EMPSER = :Serie ' +
-                  '   AND CODIGO_EMP_EMPSER = :Empresa ' +
-                  '   AND (FECHA_DESDE_EMPSER <= :Fecha ' +
-                  '        AND (FECHA_HASTA_EMPSER >= :Fecha ' +
-                  '             OR FECHA_HASTA_EMPSER IS NULL)) ';
-      ParamByName('Serie').AsString := sSerie;
-      ParamByName('Empresa').AsString := sEmpresa;
-      ParamByName('Fecha').AsDateTime := dtFecha;
-      Open;
-      if (RecordCount <> 0) then
-        Result := FieldByName('SUBTIPO_EMPSER').AsString;
-      Close;
+  if (sSerie <> '') and
+     (sEmpresa <> '') then
+  begin
+    unqrySol := TUniQuery.Create(nil);
+    try
+      unqrySol.Connection := ConexionPrincipal;
+      unqrySol.SQL.Text :=
+        'SELECT S.SUBTIPO_EMPSER ' +
+        '  FROM fza_empresas_series S ' +
+        ' INNER JOIN fza_empresas E ' +
+        '    ON E.CODIGO_EMP_EMP = S.CODIGO_EMP_EMPSER ' +
+        ' WHERE S.CODIGO_EMP_EMPSER = :EMPRESA ' +
+        '   AND (S.EMPSER = :SERIE ' +
+        '        OR (E.ESTOKENS_CALENDARIO_NATURAL_EMP = ''S'' ' +
+        '        AND NULLIF(TRIM(S.SERIE_TOKENIZADA_EMPSER), '''') ' +
+        '            IS NOT NULL ' +
+        '        AND (LOCATE(BINARY ''yyyy'', BINARY ' +
+        '             TRIM(S.SERIE_TOKENIZADA_EMPSER)) > 0 ' +
+        '          OR LOCATE(BINARY ''q'', BINARY ' +
+        '             TRIM(S.SERIE_TOKENIZADA_EMPSER)) > 0 ' +
+        '          OR LOCATE(BINARY ''mm'', BINARY ' +
+        '             TRIM(S.SERIE_TOKENIZADA_EMPSER)) > 0 ' +
+        '          OR LOCATE(BINARY ''dd'', BINARY ' +
+        '             TRIM(S.SERIE_TOKENIZADA_EMPSER)) > 0) ' +
+        '        AND CHAR_LENGTH(TRIM(S.SERIE_TOKENIZADA_EMPSER)) - ' +
+        '            CHAR_LENGTH(REPLACE(' +
+        '            TRIM(S.SERIE_TOKENIZADA_EMPSER), ' +
+        '            ''yyyy'', '''')) IN (0, 4) ' +
+        '        AND CHAR_LENGTH(TRIM(S.SERIE_TOKENIZADA_EMPSER)) - ' +
+        '            CHAR_LENGTH(REPLACE(' +
+        '            TRIM(S.SERIE_TOKENIZADA_EMPSER), ' +
+        '            ''q'', '''')) IN (0, 1) ' +
+        '        AND CHAR_LENGTH(TRIM(S.SERIE_TOKENIZADA_EMPSER)) - ' +
+        '            CHAR_LENGTH(REPLACE(' +
+        '            TRIM(S.SERIE_TOKENIZADA_EMPSER), ' +
+        '            ''mm'', '''')) IN (0, 2) ' +
+        '        AND CHAR_LENGTH(TRIM(S.SERIE_TOKENIZADA_EMPSER)) - ' +
+        '            CHAR_LENGTH(REPLACE(' +
+        '            TRIM(S.SERIE_TOKENIZADA_EMPSER), ' +
+        '            ''dd'', '''')) IN (0, 2) ' +
+        '        AND REPLACE(REPLACE(REPLACE(REPLACE(' +
+        '            TRIM(S.SERIE_TOKENIZADA_EMPSER), ' +
+        '            ''yyyy'', CAST(YEAR(:FECHA) AS CHAR)), ' +
+        '            ''mm'', DATE_FORMAT(:FECHA, ''%m'')), ' +
+        '            ''dd'', DATE_FORMAT(:FECHA, ''%d'')), ' +
+        '            ''q'', CAST(QUARTER(:FECHA) AS CHAR)) = :SERIE)) ' +
+        '   AND (S.FECHA_DESDE_EMPSER IS NULL ' +
+        '        OR S.FECHA_DESDE_EMPSER <= :FECHA) ' +
+        '   AND (S.FECHA_HASTA_EMPSER IS NULL ' +
+        '        OR S.FECHA_HASTA_EMPSER >= :FECHA) ' +
+        ' LIMIT 1';
+      unqrySol.ParamByName('SERIE').AsString := sSerie;
+      unqrySol.ParamByName('EMPRESA').AsString := sEmpresa;
+      unqrySol.ParamByName('FECHA').AsDateTime := dtFecha;
+      unqrySol.Open;
+      if not unqrySol.IsEmpty then
+      begin
+        Result := unqrySol.FieldByName(
+          'SUBTIPO_EMPSER').AsString;
+      end;
+    finally
+      FreeAndNil(unqrySol);
     end;
-  finally
-    FreeAndNil(unqrySol);
   end;
 end;
 

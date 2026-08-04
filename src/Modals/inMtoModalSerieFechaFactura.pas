@@ -81,7 +81,7 @@ begin
       frm.ConexionPrincipal,
       oContexto);
     frm.FRepositorio := oContexto.Repositorio;
-    frm.FConsultaSeries := frm.FRepositorio.ConsultarSeries;
+    frm.FConsultaSeries := frm.FRepositorio.ConsultarSeries(AEmpresa);
     frm.FSeries := frm.FConsultaSeries.DataSet;
     frm.dsSeries.DataSet := frm.FSeries;
     // Serie por defecto: la ligada al almacén; si no tiene, la primera
