@@ -14,6 +14,22 @@ implementation
 uses
   Data.DB;
 
+type
+  TPreparadorInformeFacturaUniDAC = class(
+    TInterfacedObject,
+    IPreparadorInformeFactura)
+  private
+    FConsultaFactura: TUniQuery;
+    FConsultaLineas: TUniQuery;
+    procedure PrepararActual(const ACriterios: TCriteriosInformeFactura);
+    procedure PrepararRango(const ACriterios: TCriteriosInformeFactura);
+  public
+    constructor Create(
+      AConsultaFactura: TUniQuery;
+      AConsultaLineas: TUniQuery);
+    procedure Preparar(const ACriterios: TCriteriosInformeFactura);
+  end;
+
 function SQLCamposOperacionCaja: string;
 begin
   Result :=
@@ -30,7 +46,8 @@ begin
   Result :=
     'LEFT JOIN (SELECT FO.ID_OPCAJA_FACOP, FO.SERIE_FAC_FACOP, ' +
     'FO.NUMERO_FAC_FACOP, O.NUMERO_OPERACION_OPCAJA, ' +
-    'COALESCE(O.FECHA_OP_DIA_OPCAJA, ' +
+    'O.CODIGO_EMP_OPCAJA, O.CODIGO_ALM_OPCAJA, ' +
+    'O.CODIGO_CAJA_OPCAJA, COALESCE(O.FECHA_OP_DIA_OPCAJA, ' +
     'DATE(O.FECHA_OPERACION_OPCAJA)) AS FECHA_OPERACION_OPCAJA ' +
     'FROM fza_facturas_operaciones_caja FO ' +
     'INNER JOIN fza_caja_operaciones O ' +
@@ -38,25 +55,12 @@ begin
     'WHERE O.TIPO_OPERACION_OPCAJA = ''TA'') OC ' +
     'ON OC.SERIE_FAC_FACOP = L.SERIE_FAC_FACLIN ' +
     'AND OC.NUMERO_FAC_FACOP = L.NUMERO_FAC_FACLIN ' +
+    'AND OC.CODIGO_EMP_OPCAJA = L.CODIGO_EMP_FACLIN ' +
+    'AND OC.CODIGO_ALM_OPCAJA = L.CODIGO_ALM_FACLIN ' +
+    'AND OC.CODIGO_CAJA_OPCAJA = L.CODIGO_CAJA_FACLIN ' +
     'AND OC.NUMERO_OPERACION_OPCAJA = ' +
     'L.NUMERO_OPERACION_FACLIN ';
 end;
-
-type
-  TPreparadorInformeFacturaUniDAC = class(
-    TInterfacedObject,
-    IPreparadorInformeFactura)
-  private
-    FConsultaFactura: TUniQuery;
-    FConsultaLineas: TUniQuery;
-    procedure PrepararActual(const ACriterios: TCriteriosInformeFactura);
-    procedure PrepararRango(const ACriterios: TCriteriosInformeFactura);
-  public
-    constructor Create(
-      AConsultaFactura: TUniQuery;
-      AConsultaLineas: TUniQuery);
-    procedure Preparar(const ACriterios: TCriteriosInformeFactura);
-  end;
 
 constructor TPreparadorInformeFacturaUniDAC.Create(
   AConsultaFactura: TUniQuery;

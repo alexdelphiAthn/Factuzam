@@ -1049,6 +1049,7 @@ function TSQLScanner.DoIdentifier : TSQLToken;
           end;
           'a' .. 'z',
           'A' .. 'Z',
+          '_',
           '@',
           '$':  // SOPORTE MARIADB: '$$' como marcador de DELIMITER
           Result := DoIdentifier;

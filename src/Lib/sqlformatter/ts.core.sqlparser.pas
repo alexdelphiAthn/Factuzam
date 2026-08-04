@@ -2133,12 +2133,19 @@ begin
   end
   else if (DT = sdtCstring) then
     UnexpectedToken;
-  if (CurrentToken = tsqlCharacter) then // Character set NNN
+  if (CurrentToken = tsqlCharacter) or
+     ((CurrentToken = tsqlIdentifier) and
+      SameText(CurrentTokenString, 'CHARSET')) then
   begin
     if (DT = sdtCstring) then
       UnexpectedToken;
-    GetNextToken;
-    Consume(tsqlSet);
+    if CurrentToken = tsqlCharacter then
+    begin
+      GetNextToken;
+      Consume(tsqlSet);
+    end
+    else
+      GetNextToken;
     Expect(tsqlIdentifier);
     ACharset := CurrentTokenString;
     GetNextToken;
@@ -2975,6 +2982,9 @@ end;
 
 function TSQLParser.ParseExprLevel6(AParent : TSQLElement;
   EO : TExpressionOptions) : TSQLExpression;
+var
+  oBinaria: TSQLBinaryExpression;
+  oIntercalacion: TSQLIdentifierExpression;
 begin
   if (CurrentToken = tsqlBraceOpen) then
   begin
@@ -3003,6 +3013,22 @@ begin
   end
   else
     Result := ParseExprPrimitive(AParent, EO);
+  while CurrentToken = tsqlCollate do
+  begin
+    GetNextToken;
+    Expect(tsqlIdentifier);
+    oBinaria := TSQLBinaryExpression(
+      CreateElement(TSQLBinaryExpression, AParent));
+    oBinaria.Left := Result;
+    oBinaria.Operation := boCollate;
+    oIntercalacion := TSQLIdentifierExpression(
+      CreateElement(TSQLIdentifierExpression, oBinaria));
+    oIntercalacion.Identifier := CreateIdentifier(
+      oIntercalacion, CurrentTokenString);
+    oBinaria.Right := oIntercalacion;
+    Result := oBinaria;
+    GetNextToken;
+  end;
 end;
 
 function TSQLParser.ParseIdentifierList(AParent : TSQLElement;
@@ -3227,6 +3253,7 @@ var
   C : TSQLElementClass;
   E : TSQLExtractElement;
   WhenNode: TSQLCaseWhenNode;
+  LiteralJuegoCaracteres: TSQLCharsetStringLiteral;
 begin
   Result := nil;
   try
@@ -3396,7 +3423,20 @@ begin
             N := 'IF'
           else
             N := CurrentTokenString;
-          if (GetNextToken <> tsqlBraceOpen) then
+          GetNextToken;
+          if (N <> '') and (N[1] = '_') and
+             (CurrentToken = tsqlString) then
+          begin
+            Result := TSQLLiteralExpression(
+              CreateElement(TSQLLiteralExpression, AParent));
+            LiteralJuegoCaracteres := TSQLCharsetStringLiteral(
+              CreateElement(TSQLCharsetStringLiteral, Result));
+            LiteralJuegoCaracteres.Charset := N;
+            LiteralJuegoCaracteres.Value := CurrentTokenString;
+            TSQLLiteralExpression(Result).Literal := LiteralJuegoCaracteres;
+            GetNextToken;
+          end
+          else if CurrentToken <> tsqlBraceOpen then
           begin
             if (eoCheckConstraint in EO) and not(eoTableConstraint in EO) then
               Error(SErrUnexpectedToken, [CurrentTokenString]);
@@ -5472,4 +5512,3 @@ begin
 end;
 
 end.
-

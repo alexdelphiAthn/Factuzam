@@ -178,6 +178,18 @@ type
     property Value: TSQLStringType read FValue write FValue;
   end;
 
+  { TSQLCharsetStringLiteral }
+
+  TSQLCharsetStringLiteral = class(TSQLStringLiteral)
+  private
+    FCharset: TSQLStringType;
+
+  public
+    function GetAsSQL(Options: TSQLFormatOptions;
+      AIndent: Integer = 0): TSQLStringType; override;
+    property Charset: TSQLStringType read FCharset write FCharset;
+  end;
+
   { TSQLIdentifierElement }
 
   TSQLIdentifierName = class(TSQLElement)
@@ -337,7 +349,7 @@ type
 
   TSQLBinaryOperation = (boAnd, boOr, boEQ, boLT, boGT, boLE, boGE, boNE,
     boConcat, boAdd, boSubtract, boMultiply, boDivide, boIn,
-    boIs, boIsNot, boLike, boContaining, boStarting);
+    boIs, boIsNot, boLike, boContaining, boStarting, boCollate);
 
   { TSQLBinaryExpression }
 
@@ -2250,6 +2262,14 @@ begin
   Result := SQLFormatString(Value, Options);
 end;
 
+{ TSQLCharsetStringLiteral }
+
+function TSQLCharsetStringLiteral.GetAsSQL(Options: TSQLFormatOptions;
+  AIndent: Integer): TSQLStringType;
+begin
+  Result := Charset + inherited GetAsSQL(Options, AIndent);
+end;
+
 { TSQLElement }
 
 constructor TSQLElement.Create(AParent: TSQLElement);
@@ -2386,7 +2406,11 @@ begin
     (sfoIndentHaving in Options));
   if Assigned(Union) then
     NewLinePending := NewLinePending or (sfoUnionOnSeparateLine in Options);
-  AddExpression('UNION', Union, (sfoUnionOnSeparateLine in Options), False);
+  if UnionAll then
+    AddExpression(
+      'UNION ALL', Union, (sfoUnionOnSeparateLine in Options), False)
+  else
+    AddExpression('UNION', Union, (sfoUnionOnSeparateLine in Options), False);
   if Assigned(Plan) then
     NewLinePending := NewLinePending or (sfoPlanOnSeparateLine in Options);
   AddExpression('PLAN', Plan, (sfoPlanOnSeparateLine in Options),
@@ -2663,7 +2687,7 @@ const
   Opcodes: array [TSQLBinaryOperation] of string =
     ('AND', 'OR', '=', '<', '>', '<=', '>=', '<>',
     '||', '+', '-', '*', '/', 'IN',
-    'IS', 'IS NOT', 'LIKE', 'CONTAINING', 'STARTING WITH');
+    'IS', 'IS NOT', 'LIKE', 'CONTAINING', 'STARTING WITH', 'COLLATE');
 var
   L, R, S: TSQLStringType;
 begin

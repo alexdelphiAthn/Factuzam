@@ -320,6 +320,33 @@ begin
     FreeAndNil(q);
   end;
 end;
+procedure PrepararInsercionMovimiento(AConn: TUniConnection;
+                                      AProcedimiento: TUniStoredProc);
+begin
+  AProcedimiento.Connection := AConn;
+  AProcedimiento.StoredProcName := 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT';
+  AProcedimiento.Params.Clear;
+  AProcedimiento.Params.CreateParam(ftString, 'p_NUMERO_MOV', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_TIPO_DOC_MOV', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_SERIE_DOC_MOV', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_NRO_DOC_MOV', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_LINEA_MOV', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_CODIGO_EMPRESA_MOV', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_CODIGO_ALMACEN_MOV', ptInput);
+  AProcedimiento.Params.CreateParam(ftString,
+    'p_CODIGO_ALMACEN_CONTRA_MOV', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_CODIGO_UNIDAD_MOV', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_TIPO_MOVIMIENTO_MOV', ptInput);
+  AProcedimiento.Params.CreateParam(ftBCD, 'p_CANTIDAD_MOV', ptInput);
+  AProcedimiento.Params.CreateParam(ftBCD, 'p_PRECIO_MEDIO_MOV', ptInput);
+  AProcedimiento.Params.CreateParam(ftBCD, 'p_TOTAL_COSTE_MOV', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_USUARIO', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_ALMACEN_DOC', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_NUMOP_DOC', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_CODIGO_CAJA_DOC_MOV', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_CODCLIENTE', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_CODARTICULO', ptInput);
+end;
 // Genera movimientos de entrada (TIPO_DOC_MOV='AC', TIPO_MOV='E') para
 // todas las celdas con cantidad > 0 del albaran, o para sus lineas
 // cuando no haya celdas. AConn debe estar viva; la transaccion la
@@ -373,55 +400,7 @@ begin
     //   B) Celdas con cantidad > 0: una entrada por celda.
     // Asi cubrimos el flujo de materializacion (que solo escribe
     // lineas) y el de edicion manual con tallas (que escribe celdas).
-    qSrc.SQL.Text :=
-      'SELECT L.LINEA_ALBCLIN                     AS LINEA, ' +
-      '       L.CODIGO_UNIDAD_ALBCLIN             AS SKU, ' +
-      '       L.CODIGO_ART_ALBCLIN                AS ARTICULO, ' +
-      '       L.CANTIDAD_ALBCLIN                  AS CANTIDAD, ' +
-      '       CASE WHEN IFNULL(A.ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ''N'') ' +
-      '<> ''S'' ' +
-      '             AND IFNULL(A.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' ' +
-      '            THEN L.PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN * ' +
-      '              (1 + (IFNULL(L.PORCENTAJE_IVA_ALBCLIN, 0) + ' +
-      '                CASE IFNULL(L.TIPO_IVA_ARTICULO_ALBCLIN, ''N'') ' +
-      '                  WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) '
-        +
-      '                  WHEN ''R'' THEN ' +
-      'IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
-      '                  WHEN ''S'' THEN ' +
-      'IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
-      '                  WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) '
-        +
-      '                  ELSE 0 END) / 100) ' +
-      '            ELSE L.PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN END * ' +
-      '       CASE WHEN IFNULL(A.TOTAL_BRUTO_ALBC, 0) > 0 THEN ' +
-      '              GREATEST(0, 1 - CASE ' +
-      '                WHEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) <> 0 ' +
-      '                THEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) / ' +
-      'A.TOTAL_BRUTO_ALBC ' +
-      '                ELSE IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100 ' +
-      'END) ' +
-      '            ELSE GREATEST(0, 1 - ' +
-      'IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100) ' +
-      '       END AS PRECIO, ' +
-      '       IFNULL(NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), :alm_cab1) AS ' +
-      'ALMACEN ' +
-      '  FROM fza_albaranes_compra_lineas L ' +
-      '  JOIN fza_albaranes_compra A ' +
-      '    ON A.SERIE_ALBC  = L.SERIE_ALBC_ALBCLIN ' +
-      '   AND A.NUMERO_ALBC = L.NUMERO_ALBC_ALBCLIN ' +
-      '  LEFT JOIN fza_ivas V ON V.CODIGO_IVA = A.CODIGO_IVA_ALBC ' +
-      ' WHERE L.SERIE_ALBC_ALBCLIN  = :s1 ' +
-      '   AND L.NUMERO_ALBC_ALBCLIN = :n1 ' +
-      '   AND IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
-      '   AND NOT EXISTS ( ' +
-      '         SELECT 1 FROM fza_albaranes_compra_celdas C ' +
-      '          WHERE C.SERIE_ALBC_ALBCCEL  = L.SERIE_ALBC_ALBCLIN ' +
-      '            AND C.NUMERO_ALBC_ALBCCEL = L.NUMERO_ALBC_ALBCLIN ' +
-      '            AND CAST(C.LINEA_ALBC_ALBCCEL AS UNSIGNED) ' +
-      '                = CAST(L.LINEA_ALBCLIN AS UNSIGNED) ' +
-      '            AND C.CANTIDAD_ALBCCEL    > 0) ' +
-      SqlOrigenCeldasAlbaranCompra;
+    qSrc.SQL.Text := SqlOrigenMovimientosAlbaranCompra;
     qSrc.ParamByName('s1').AsString      := ASerieAlbc;
     qSrc.ParamByName('n1').AsString      := ANumAlbc;
     qSrc.ParamByName('alm_cab1').AsString := sCodigoAlmCab;
@@ -429,30 +408,7 @@ begin
     qSrc.ParamByName('n2').AsString      := ANumAlbc;
     qSrc.ParamByName('alm_cab2').AsString := sCodigoAlmCab;
     qSrc.Open;
-    // Stored proc reutilizable: declaramos params una vez y reasignamos
-    // los valores en cada vuelta para no crear/destruir N veces.
-    spIns.Connection := AConn;
-    spIns.StoredProcName := 'PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT';
-    spIns.Params.Clear;
-    spIns.Params.CreateParam(ftString, 'p_NUMERO_MOV',                ptInput);
-    spIns.Params.CreateParam(ftString, 'p_TIPO_DOC_MOV',              ptInput);
-    spIns.Params.CreateParam(ftString, 'p_SERIE_DOC_MOV',             ptInput);
-    spIns.Params.CreateParam(ftString, 'p_NRO_DOC_MOV',               ptInput);
-    spIns.Params.CreateParam(ftString, 'p_LINEA_MOV',                 ptInput);
-    spIns.Params.CreateParam(ftString, 'p_CODIGO_EMPRESA_MOV',        ptInput);
-    spIns.Params.CreateParam(ftString, 'p_CODIGO_ALMACEN_MOV',        ptInput);
-    spIns.Params.CreateParam(ftString, 'p_CODIGO_ALMACEN_CONTRA_MOV', ptInput);
-    spIns.Params.CreateParam(ftString, 'p_CODIGO_UNIDAD_MOV',         ptInput);
-    spIns.Params.CreateParam(ftString, 'p_TIPO_MOVIMIENTO_MOV',       ptInput);
-    spIns.Params.CreateParam(ftBCD,    'p_CANTIDAD_MOV',              ptInput);
-    spIns.Params.CreateParam(ftBCD,    'p_PRECIO_MEDIO_MOV',          ptInput);
-    spIns.Params.CreateParam(ftBCD,    'p_TOTAL_COSTE_MOV',           ptInput);
-    spIns.Params.CreateParam(ftString, 'p_USUARIO',                   ptInput);
-    spIns.Params.CreateParam(ftString, 'p_ALMACEN_DOC',               ptInput);
-    spIns.Params.CreateParam(ftString, 'p_NUMOP_DOC',                 ptInput);
-    spIns.Params.CreateParam(ftString, 'p_CODIGO_CAJA_DOC_MOV',       ptInput);
-    spIns.Params.CreateParam(ftString, 'p_CODCLIENTE',                ptInput);
-    spIns.Params.CreateParam(ftString, 'p_CODARTICULO',               ptInput);
+    PrepararInsercionMovimiento(AConn, spIns);
     iCount := 0;
     while not qSrc.Eof do
     begin
@@ -517,58 +473,15 @@ begin
     FreeAndNil(spIns);
   end;
 end;
-// Recalcula PMP+stock para un (empresa, almacen) usando la temp table
-// global tmp_skus_recalc que el llamante debe haber poblado con los
-// SKUs afectados. Encapsula la llamada al SP del sistema.
-procedure RecalcularPmpAlmacen(AConn: TUniConnection;
-                               const ACodigoEmp, ACodigoAlm: string);
-var
-  spRecalc: TUniStoredProc;
-begin
-  spRecalc := TUniStoredProc.Create(nil);
-  try
-    spRecalc.Connection := AConn;
-    spRecalc.StoredProcName := 'SP_RECALCULAR_PMP_LOTE_ALMACEN';
-    spRecalc.Params.Clear;
-    spRecalc.Params.CreateParam(ftString, 'p_EMPRESA', ptInput);
-    spRecalc.Params.CreateParam(ftString, 'p_ALMACEN', ptInput);
-    spRecalc.ParamByName('p_EMPRESA').AsString := ACodigoEmp;
-    spRecalc.ParamByName('p_ALMACEN').AsString := ACodigoAlm;
-    spRecalc.ExecProc;
-  finally
-    FreeAndNil(spRecalc);
-  end;
-end;
 procedure RevertirMovimientosDesdeAlbaranCompra(AConn: TUniConnection;
-                                                const ASerieAlbc, ANumAlbc,
-                                                      AUsuario: string);
+                                                 const ASerieAlbc, ANumAlbc,
+                                                       AUsuario: string);
 var
-  qPares, qSkus, qExec: TUniQuery;
-  sEmp, sAlm: string;
+  qExec: TUniQuery;
 begin
-  qPares := TUniQuery.Create(nil);
-  qSkus  := TUniQuery.Create(nil);
   qExec  := TUniQuery.Create(nil);
   try
-    qPares.Connection := AConn;
-    qSkus.Connection  := AConn;
     qExec.Connection  := AConn;
-    // 1. Pares (empresa, almacen) afectados ANTES de borrar nada.
-    qPares.SQL.Text :=
-      'SELECT DISTINCT CODIGO_EMP_MOV, CODIGO_ALM_MOV ' +
-      '  FROM fza_movimientos_almacen ' +
-      ' WHERE TIPO_DOC_MOV   = :t ' +
-      '   AND SERIE_DOC_MOV  = :s ' +
-      '   AND NUMERO_DOC_MOV = :n';
-    qPares.ParamByName('t').AsString :=
-      EstrategiaAlbaranCompra.TipoDocumentoMovimientoStock;
-    qPares.ParamByName('s').AsString := ASerieAlbc;
-    qPares.ParamByName('n').AsString := ANumAlbc;
-    qPares.Open;
-    if not qPares.Eof then
-    begin
-    // 2. Borrar los movimientos llamando al SP, que decrementa
-    //    CANTIDAD_STK + acumuladores por subtipo en una transacción.
     qExec.SQL.Text :=
       'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC(:t, :s, :n)';
     qExec.ParamByName('t').AsString :=
@@ -576,78 +489,7 @@ begin
     qExec.ParamByName('s').AsString := ASerieAlbc;
     qExec.ParamByName('n').AsString := ANumAlbc;
     qExec.ExecSQL;
-    // 3. Para cada par (empresa, almacen): poblar la temp tmp_skus_recalc
-    //    con los SKUs que estuvieron en ese almacen (antes los teniamos
-    //    en movimientos, pero como ya borramos, los sacamos de las
-    //    lineas/celdas del propio albaran) y llamar al SP de recalculo.
-    qPares.First;
-    while not qPares.Eof do
-    begin
-      sEmp := qPares.FieldByName('CODIGO_EMP_MOV').AsString;
-      sAlm := qPares.FieldByName('CODIGO_ALM_MOV').AsString;
-      // Reset de la temp (la conexion es persistente entre statements
-      // pero la temp puede no existir aun la primera vuelta).
-      qExec.SQL.Text := 'DROP TEMPORARY TABLE IF EXISTS tmp_skus_recalc';
-      qExec.ExecSQL;
-      qExec.SQL.Text :=
-        'CREATE TEMPORARY TABLE tmp_skus_recalc (' +
-        '  sku VARCHAR(50) NOT NULL PRIMARY KEY) ENGINE=InnoDB';
-      qExec.ExecSQL;
-      // SKUs distintos del albaran asociados a este almacen. Cubrimos
-      // ambas fuentes (celda con almacen propio y linea con almacen
-      // de cabecera) con el mismo IFNULL de antes.
-      qExec.SQL.Text :=
-        'INSERT INTO tmp_skus_recalc (sku) ' +
-        'SELECT DISTINCT L.CODIGO_UNIDAD_ALBCLIN ' +
-        '  FROM fza_albaranes_compra_lineas L ' +
-        ' WHERE L.SERIE_ALBC_ALBCLIN  = :s1 ' +
-        '   AND L.NUMERO_ALBC_ALBCLIN = :n1 ' +
-        '   AND IFNULL(NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
-        '              (SELECT CODIGO_ALM_ALBC FROM fza_albaranes_compra ' +
-        '                WHERE SERIE_ALBC = :s1b AND NUMERO_ALBC = :n1b)) = ' +
-        ':alm1 ' +
-        '   AND L.CODIGO_UNIDAD_ALBCLIN IS NOT NULL ' +
-        '   AND L.CODIGO_UNIDAD_ALBCLIN <> '''' ' +
-        'UNION ' +
-        'SELECT DISTINCT L.CODIGO_UNIDAD_ALBCLIN ' +
-        '  FROM fza_albaranes_compra_lineas L ' +
-        '  JOIN fza_albaranes_compra_celdas C ' +
-        '    ON C.SERIE_ALBC_ALBCCEL  = L.SERIE_ALBC_ALBCLIN ' +
-        '   AND C.NUMERO_ALBC_ALBCCEL = L.NUMERO_ALBC_ALBCLIN ' +
-        '   AND CAST(C.LINEA_ALBC_ALBCCEL AS UNSIGNED) ' +
-        '       = CAST(L.LINEA_ALBCLIN AS UNSIGNED) ' +
-        ' WHERE L.SERIE_ALBC_ALBCLIN  = :s2 ' +
-        '   AND L.NUMERO_ALBC_ALBCLIN = :n2 ' +
-        '   AND IFNULL(NULLIF(C.CODIGO_ALM_ALBCCEL, ''''), ' +
-        '              IFNULL(NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
-        '                    (SELECT CODIGO_ALM_ALBC FROM fza_albaranes_compra '
-          +
-        '                      WHERE SERIE_ALBC = :s2b AND NUMERO_ALBC = ' +
-        ':n2b))) = :alm2 ' +
-        '   AND L.CODIGO_UNIDAD_ALBCLIN IS NOT NULL ' +
-        '   AND L.CODIGO_UNIDAD_ALBCLIN <> '''' ';
-      qExec.ParamByName('s1').AsString    := ASerieAlbc;
-      qExec.ParamByName('n1').AsString    := ANumAlbc;
-      qExec.ParamByName('s1b').AsString   := ASerieAlbc;
-      qExec.ParamByName('n1b').AsString   := ANumAlbc;
-      qExec.ParamByName('alm1').AsString  := sAlm;
-      qExec.ParamByName('s2').AsString    := ASerieAlbc;
-      qExec.ParamByName('n2').AsString    := ANumAlbc;
-      qExec.ParamByName('s2b').AsString   := ASerieAlbc;
-      qExec.ParamByName('n2b').AsString   := ANumAlbc;
-      qExec.ParamByName('alm2').AsString  := sAlm;
-      qExec.ExecSQL;
-      // Recalcular PMP+stock del almacen para todos los SKUs en la temp.
-      RecalcularPmpAlmacen(AConn, sEmp, sAlm);
-      // Limpieza
-      qExec.SQL.Text := 'DROP TEMPORARY TABLE IF EXISTS tmp_skus_recalc';
-      qExec.ExecSQL;
-      qPares.Next;
-    end;
-    end;
   finally
-    FreeAndNil(qPares);
-    FreeAndNil(qSkus);
     FreeAndNil(qExec);
   end;
 end;

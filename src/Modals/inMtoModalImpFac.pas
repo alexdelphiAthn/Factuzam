@@ -69,6 +69,8 @@ type
   protected
     function TraducirContenidoInforme: Boolean; override;
     procedure PdfExportado(const ARuta: string); override;
+    procedure ReportBeforePrintFactura(
+      Component: TfrxReportComponent);
   public
     class procedure ArchivarFacturaConsolidada(
       ADataModule: TdmFacturas;
@@ -165,6 +167,26 @@ begin
      (not dmFac.unqryFacPrint.IsEmpty) then
     AplicarVerifactuEnReportDirecto(ParametrosApp, frxrprt1,
       dmFac.unqryFacPrint);
+  frxrprt1.OnBeforePrint := ReportBeforePrintFactura;
+end;
+
+procedure TfrmPrintFac.ReportBeforePrintFactura(
+  Component: TfrxReportComponent);
+var
+  oCampo: TField;
+begin
+  ReportBeforePrintConQR(Component);
+  if (Component <> nil) and
+     SameText(Component.Name, 'GroupHeaderOperacionCaja') then
+  begin
+    Component.Visible := False;
+    if (dmFac <> nil) and dmFac.unqryLinFacPrint.Active then
+    begin
+      oCampo := dmFac.unqryLinFacPrint.FindField('ESFACTURA_TA_CAJA');
+      if oCampo <> nil then
+        Component.Visible := SameText(oCampo.AsString, 'S');
+    end;
+  end;
 end;
 
 procedure TfrmPrintFac.AplicarSkuDescripcionReport(AReport: TfrxReport);

@@ -459,9 +459,7 @@ begin
     AValidador,
     Operaciones);
 end;
-
 { TfrmMtoInventarios }
-
 // dsTablaG apunta a la cabecera del inventario. El articulo activo
 // vive en la linea seleccionada del sub-grid tvLineas (CODIGO_ART_INVLIN
 // / CODIGO_UNIDAD_INVLIN).
@@ -541,7 +539,6 @@ begin
     Self,
     FRepositoriosArticulos.CrearValidadorArticulos(ConexionPrincipal));
 end;
-
 procedure TfrmMtoInventarios.FormCreate(Sender: TObject);
 var
   ColumnasSku: TColumnasSkuInventario;
@@ -577,7 +574,6 @@ begin
   // Inicialmente ocultas las columnas dinámicas
   ActualizarColumnasDinamicas('');
 end;
-
 procedure TfrmMtoInventarios.AplicarEtiquetas;
 begin
   inherited;
@@ -593,7 +589,6 @@ begin
     ActualizarColumnasDinamicas('');
   end;
 end;
-
 procedure TfrmMtoInventarios.FormDestroy(Sender: TObject);
 begin
   FDependencias := Default(TContextoDependenciasInventario);
@@ -627,13 +622,11 @@ begin
     tvMovs.DataController.DataSource := nil;
   dmmInventarios := nil;
 end;
-
 procedure TfrmMtoInventarios.ResetForm;
 begin
   inherited;
   pcDetail.ActivePage := tsDetalle;
 end;
-
 function TfrmMtoInventarios.AsegurarCabeceraPersistidaParaLineas: Boolean;
 var
   dsCab: TDataSet;
@@ -667,7 +660,6 @@ begin
     end;
   end;
 end;
-
 procedure TfrmMtoInventarios.AsegurarPrimeraLineaInventario;
 var
   dsLin: TDataSet;
@@ -694,7 +686,6 @@ begin
     end;
   end;
 end;
-
 procedure TfrmMtoInventarios.cxgrdLineasEnter(Sender: TObject);
 begin
   inherited;
@@ -713,7 +704,6 @@ begin
   if (FModoEntrada <> nil) and PuedeEditar then
     FModoEntrada.MostrarEditor;
 end;
-
 procedure TfrmMtoInventarios.pcDetailChange(Sender: TObject);
 var
   ds: TDataSet;
@@ -756,13 +746,11 @@ begin
   end;
   ActualizarEstadoUI;
 end;
-
 procedure TfrmMtoInventarios.dsTablaGStateChange(Sender: TObject);
 begin
   inherited;
   ActualizarEstadoUI;
 end;
-
 procedure TfrmMtoInventarios.dsTablaGDataChange(Sender: TObject; Field: TField);
 var
   emp: string;
@@ -792,7 +780,6 @@ begin
     end;
   end;
 end;
-
 function TfrmMtoInventarios.EstadoActual: string;
 begin
   Result := '';
@@ -800,7 +787,6 @@ begin
      (not dsTablaG.DataSet.IsEmpty) then
     Result := dsTablaG.DataSet.FieldByName('ESTADO_INV').AsString;
 end;
-
 function TfrmMtoInventarios.PuedeEditar: Boolean;
 begin
   Result := EstadoActual = 'ABIERTO';

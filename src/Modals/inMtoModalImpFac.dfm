@@ -982,6 +982,92 @@
     Style = <>
     inherited Page1: TfrxReportPage
       LeftMargin = 10.000000000000000000
+      object GroupHeaderOperacionCaja: TfrxGroupHeader
+        FillType = ftBrush
+        FillGap.Top = 0
+        FillGap.Left = 0
+        FillGap.Bottom = 0
+        FillGap.Right = 0
+        Frame.Typ = []
+        Height = 24.000000000000000000
+        Top = 488.000000000000000000
+        Width = 737.008350000000000000
+        Condition = 'Lineas Facturas."ID_OPERACION_CAJA_FACTURA"'
+        ReprintOnNewPage = True
+        Visible = False
+        object MemoFondoOperacionCaja: TfrxMemoView
+          AllowVectorExport = True
+          Width = 724.000000000000000000
+          Height = 22.000000000000000000
+          Color = 15395562
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
+          Memo.UTF8W = (
+            'Operaci'#243'n origen')
+          Padding.Left = 5
+          ParentFont = False
+        end
+        object MemoDocumentoOperacionCaja: TfrxMemoView
+          AllowVectorExport = True
+          Left = 116.000000000000000000
+          Top = 2.000000000000000000
+          Width = 430.000000000000000000
+          Height = 18.000000000000000000
+          DataField = 'DOCUMENTO_OPERACION_CAJA'
+          DataSet = dmFacturas.fxdstPrintLinFac
+          DataSetName = 'Lineas Facturas'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
+          Memo.UTF8W = (
+            '[Lineas Facturas."DOCUMENTO_OPERACION_CAJA"]')
+          ParentFont = False
+        end
+        object MemoEtiquetaFechaOperacionCaja: TfrxMemoView
+          AllowVectorExport = True
+          Left = 550.000000000000000000
+          Top = 2.000000000000000000
+          Width = 42.000000000000000000
+          Height = 18.000000000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
+          Memo.UTF8W = (
+            'Fecha:')
+          ParentFont = False
+        end
+        object MemoFechaOperacionCaja: TfrxMemoView
+          AllowVectorExport = True
+          Left = 594.000000000000000000
+          Top = 2.000000000000000000
+          Width = 120.000000000000000000
+          Height = 18.000000000000000000
+          DataField = 'FECHA_OPERACION_CAJA'
+          DataSet = dmFacturas.fxdstPrintLinFac
+          DataSetName = 'Lineas Facturas'
+          DisplayFormat.FormatStr = 'dd/mm/yyyy'
+          DisplayFormat.Kind = fkDateTime
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -11
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = []
+          Memo.UTF8W = (
+            '[Lineas Facturas."FECHA_OPERACION_CAJA"]')
+          ParentFont = False
+        end
+      end
       object DetailData1: TfrxDetailData
         FillType = ftBrush
         FillGap.Top = 0

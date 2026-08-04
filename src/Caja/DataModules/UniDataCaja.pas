@@ -2209,8 +2209,7 @@ end;
 procedure TGrabacionFacturaCaja.GenerarTraspasoAutomaticoDevolucion;
 var
   oStoredProc: TUniStoredProc;
-  sTipoDoc: string;
-  sSerieDoc: string;
+  sTipoDoc, sSerieDoc: string;
   sNumeroDoc: string;
   sNumOperacion: string;
   sLinea: string;

@@ -32,6 +32,8 @@ type
     procedure FormateaCallMariaDB;
     [Test]
     procedure FormateaTablaCualificadaYFuncionDatabase;
+    [Test]
+    procedure FormateaVistaConJuegoCaracteresMariaDB;
   end;
 
 implementation
@@ -165,6 +167,36 @@ begin
     sResultado.Contains('INFORMATION_SCHEMA.COLUMNS'),
     sResultado);
   Assert.IsTrue(sResultado.Contains('database()'), sResultado);
+end;
+
+procedure TPruebasFormateadorSQL.FormateaVistaConJuegoCaracteresMariaDB;
+var
+  oFormateador: ICodeFormatter;
+  sResultado: string;
+  sSql: string;
+begin
+  sSql :=
+    'CREATE VIEW `vi_prueba` AS ' +
+    'SELECT _utf8mb4''CODIGO'' COLLATE utf8mb4_spanish_ci AS `TIPO`, ' +
+    'CAST(NULL AS CHAR CHARSET utf8mb4) ' +
+    'COLLATE utf8mb4_spanish_ci AS `CODIGO` FROM `tabla_a` ' +
+    'UNION ALL SELECT _utf8mb4''SKU'' COLLATE ' +
+    'utf8mb4_spanish_ci AS `TIPO`, CAST(NULL AS CHAR CHARSET utf8mb4) ' +
+    'COLLATE utf8mb4_spanish_ci AS `CODIGO` FROM `tabla_b`;';
+  oFormateador := GetSQLFormatter;
+  sResultado := oFormateador.Format(sSql);
+  Assert.IsFalse(
+    sResultado.StartsWith('/* ERROR DEL PARSER:'),
+    sResultado);
+  Assert.IsTrue(
+    sResultado.Contains(
+      '_utf8mb4''CODIGO'' collate utf8mb4_spanish_ci'),
+    sResultado);
+  Assert.IsTrue(
+    sResultado.Contains(
+      'cast(null as char character set utf8mb4) collate'),
+    sResultado);
+  Assert.IsTrue(sResultado.Contains('union all select'), sResultado);
 end;
 
 initialization
