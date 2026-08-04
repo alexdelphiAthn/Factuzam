@@ -155,16 +155,18 @@ begin
   XmlDoc.Active := True;
   Node := XmlDoc.DocumentElement;
   NodeOrders := Node.ChildNodes['orders'];
-  if not Assigned(NodeOrders) then Exit;
-  for i := 0 to NodeOrders.ChildNodes.Count - 1 do
+  if Assigned(NodeOrders) then
   begin
-    Node := NodeOrders.ChildNodes.Get(i);
-    if Node.HasAttribute('id') then
+    for i := 0 to NodeOrders.ChildNodes.Count - 1 do
     begin
-      if (idsCsv <> '') then
-        idsCsv := idsCsv + ',';
-      idsCsv := idsCsv + VarToStr(Node.Attributes['id']);
-      Inc(Result);
+      Node := NodeOrders.ChildNodes.Get(i);
+      if Node.HasAttribute('id') then
+      begin
+        if idsCsv <> '' then
+          idsCsv := idsCsv + ',';
+        idsCsv := idsCsv + VarToStr(Node.Attributes['id']);
+        Inc(Result);
+      end;
     end;
   end;
 end;
@@ -522,40 +524,43 @@ var
   res:  TPrestaPedidoResumen;
 begin
   Result := False;
-  if aLista = nil then Exit;
-  aLista.Clear;
-  Conn := TPrestaConn.Create(aBaseURL, aApiKey, ARegistroLog);
-  try
-    Conn.ListarPedidosResumen(ids);
-    if ids = '' then Exit;
-    arr := ids.Split([',']);
-    for i := 0 to High(arr) do
-    begin
-      try
-        Ord := Conn.CargarPedido(arr[i]);
-        try
-          res.IdPedido   := Ord.idPedido;
-          res.Referencia := Ord.ReferenciaCliente;
-          res.Fecha      := Ord.FechaCreacion;
-          res.Cliente    := Ord.custName;
-          res.Total      := CurrToStrF(Ord.TotalPedCIVA, ffNumber, 2);
-          res.Estado     := Ord.EstadoPedido;
-          aLista.Add(res);
-        finally
-          FreeAndNil(Ord);
+  if aLista <> nil then
+  begin
+    aLista.Clear;
+    Conn := TPrestaConn.Create(aBaseURL, aApiKey, ARegistroLog);
+    try
+      Conn.ListarPedidosResumen(ids);
+      if ids <> '' then
+      begin
+        arr := ids.Split([',']);
+        for i := 0 to High(arr) do
+        begin
+          try
+            Ord := Conn.CargarPedido(arr[i]);
+            try
+              res.IdPedido := Ord.idPedido;
+              res.Referencia := Ord.ReferenciaCliente;
+              res.Fecha := Ord.FechaCreacion;
+              res.Cliente := Ord.custName;
+              res.Total := CurrToStrF(Ord.TotalPedCIVA, ffNumber, 2);
+              res.Estado := Ord.EstadoPedido;
+              aLista.Add(res);
+            finally
+              FreeAndNil(Ord);
+            end;
+          except
+            on E: Exception do
+              if Assigned(ARegistroLog) then
+                ARegistroLog.RegistrarError(
+                  'PrestaImporter: pedido ' + arr[i] + ' omitido: ' +
+                  E.Message);
+          end;
         end;
-      except
-        // Saltar pedidos individuales con error sin abortar el lote.
-        on E: Exception do
-          if Assigned(ARegistroLog) then
-            ARegistroLog.RegistrarError(
-            'PrestaImporter: pedido ' + arr[i] + ' omitido: ' +
-            E.Message);
+        Result := True;
       end;
+    finally
+      FreeAndNil(Conn);
     end;
-    Result := True;
-  finally
-    FreeAndNil(Conn);
   end;
 end;
 

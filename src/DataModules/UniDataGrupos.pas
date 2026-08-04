@@ -57,19 +57,21 @@ var
   swQ: TStopwatch;
 begin
   inherited;
-  if unqryUsuariosGrupo.Active then Exit;
-  swQ := TStopwatch.StartNew;
-  try
-    unqryUsuariosGrupo.Open;
-    RegistroLog.RegistrarRendimiento('Grupos.AbrirDetalles',
-      'unqryUsuariosGrupo OK', swQ.ElapsedMilliseconds);
-  except
-    on E: Exception do
-    begin
+  if not unqryUsuariosGrupo.Active then
+  begin
+    swQ := TStopwatch.StartNew;
+    try
+      unqryUsuariosGrupo.Open;
       RegistroLog.RegistrarRendimiento('Grupos.AbrirDetalles',
-        'unqryUsuariosGrupo ERROR=' + E.Message,
-        swQ.ElapsedMilliseconds);
-      raise;
+        'unqryUsuariosGrupo OK', swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+      begin
+        RegistroLog.RegistrarRendimiento('Grupos.AbrirDetalles',
+          'unqryUsuariosGrupo ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
+        raise;
+      end;
     end;
   end;
 end;

@@ -122,36 +122,39 @@ var
   LHex: string;
   fld : TField;
 begin
-  if (dsTablaG.DataSet = nil) or (not dsTablaG.DataSet.Active) then Exit;
-  fld := dsTablaG.DataSet.FindField('HEX_ATB');
-  if fld = nil then Exit;
-
-  Dlg := TColorDialog.Create(Self);
-  try
-    Dlg.Options := [cdFullOpen, cdAnyColor];
-    LHex := Trim(fld.AsString);
-    if (Length(LHex) = 7) and (LHex[1] = '#') then
-    try
-      Dlg.Color := RGB(
-        StrToInt('$' + Copy(LHex, 2, 2)),
-        StrToInt('$' + Copy(LHex, 4, 2)),
-        StrToInt('$' + Copy(LHex, 6, 2)));
-    except
-      Dlg.Color := clWhite;
-    end
-    else
-      Dlg.Color := clWhite;
-
-    if not Dlg.Execute then Exit;
-
-    if not (dsTablaG.DataSet.State in [dsEdit, dsInsert]) then
-      dsTablaG.DataSet.Edit;
-    fld.AsString := Format('#%.2X%.2X%.2X',
-                           [GetRValue(Dlg.Color),
-                            GetGValue(Dlg.Color),
-                            GetBValue(Dlg.Color)]);
-  finally
-    FreeAndNil(Dlg);
+  if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active then
+  begin
+    fld := dsTablaG.DataSet.FindField('HEX_ATB');
+    if fld <> nil then
+    begin
+      Dlg := TColorDialog.Create(Self);
+      try
+        Dlg.Options := [cdFullOpen, cdAnyColor];
+        LHex := Trim(fld.AsString);
+        if (Length(LHex) = 7) and (LHex[1] = '#') then
+        try
+          Dlg.Color := RGB(
+            StrToInt('$' + Copy(LHex, 2, 2)),
+            StrToInt('$' + Copy(LHex, 4, 2)),
+            StrToInt('$' + Copy(LHex, 6, 2)));
+        except
+          Dlg.Color := clWhite;
+        end
+        else
+          Dlg.Color := clWhite;
+        if Dlg.Execute then
+        begin
+          if not (dsTablaG.DataSet.State in [dsEdit, dsInsert]) then
+            dsTablaG.DataSet.Edit;
+          fld.AsString := Format(
+            '#%.2X%.2X%.2X',
+            [GetRValue(Dlg.Color), GetGValue(Dlg.Color),
+             GetBValue(Dlg.Color)]);
+        end;
+      finally
+        FreeAndNil(Dlg);
+      end;
+    end;
   end;
 end;
 
@@ -163,32 +166,44 @@ var
   LR, LG, LB: Integer;
   LRect: TRect;
   LBrillo: Double;
+  bColorValido: Boolean;
 begin
   ADone := False;
-  if AViewInfo = nil then Exit;
-  LHex := Trim(AViewInfo.GridRecord.DisplayTexts[AViewInfo.Item.Index]);
-  if (Length(LHex) <> 7) or (LHex[1] <> '#') then Exit;
-  try
-    LR := StrToInt('$' + Copy(LHex, 2, 2));
-    LG := StrToInt('$' + Copy(LHex, 4, 2));
-    LB := StrToInt('$' + Copy(LHex, 6, 2));
-  except
-    Exit;
+  LR := 0;
+  LG := 0;
+  LB := 0;
+  bColorValido := AViewInfo <> nil;
+  if bColorValido then
+  begin
+    LHex := Trim(
+      AViewInfo.GridRecord.DisplayTexts[AViewInfo.Item.Index]);
+    bColorValido := (Length(LHex) = 7) and (LHex[1] = '#');
   end;
-  ACanvas.FillRect(AViewInfo.Bounds, AViewInfo.Params.Color);
-  LRect := AViewInfo.Bounds;
-  InflateRect(LRect, -3, -3);
-  ACanvas.Brush.Color := RGB(LR, LG, LB);
-  ACanvas.Pen.Color   := clBlack;
-  ACanvas.Rectangle(LRect);
-  LBrillo := LR * 0.299 + LG * 0.587 + LB * 0.114;
-  ACanvas.Brush.Style := bsClear;
-  if LBrillo < 128 then
-    ACanvas.Font.Color := clWhite
-  else
-    ACanvas.Font.Color := clBlack;
-  ACanvas.DrawText(LHex, LRect, cxAlignCenter or cxAlignVCenter);
-  ADone := True;
+  if bColorValido then
+    try
+      LR := StrToInt('$' + Copy(LHex, 2, 2));
+      LG := StrToInt('$' + Copy(LHex, 4, 2));
+      LB := StrToInt('$' + Copy(LHex, 6, 2));
+    except
+      bColorValido := False;
+    end;
+  if bColorValido then
+  begin
+    ACanvas.FillRect(AViewInfo.Bounds, AViewInfo.Params.Color);
+    LRect := AViewInfo.Bounds;
+    InflateRect(LRect, -3, -3);
+    ACanvas.Brush.Color := RGB(LR, LG, LB);
+    ACanvas.Pen.Color := clBlack;
+    ACanvas.Rectangle(LRect);
+    LBrillo := LR * 0.299 + LG * 0.587 + LB * 0.114;
+    ACanvas.Brush.Style := bsClear;
+    if LBrillo < 128 then
+      ACanvas.Font.Color := clWhite
+    else
+      ACanvas.Font.Color := clBlack;
+    ACanvas.DrawText(LHex, LRect, cxAlignCenter or cxAlignVCenter);
+    ADone := True;
+  end;
 end;
 
 initialization

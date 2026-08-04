@@ -804,11 +804,11 @@ var
   rARec  : Double;
 begin
   Result := 0;
-  if (dmmPedidosCompra = nil) or (colLineaPedcARecibir = nil) then
-    Exit;
-  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty then
-    Exit;
+  if (dmmPedidosCompra <> nil) and (colLineaPedcARecibir <> nil) then
+  begin
+    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+    if (ds <> nil) and ds.Active and not ds.IsEmpty then
+    begin
   idxCol := colLineaPedcARecibir.Index;
   bk := ds.GetBookmark;
   ds.DisableControls;
@@ -835,6 +835,8 @@ begin
       ds.GotoBookmark(bk);
     ds.FreeBookmark(bk);
     ds.EnableControls;
+  end;
+    end;
   end;
 end;
 
@@ -1038,49 +1040,44 @@ var
   sMensaje: string;
 begin
   inherited;
-  if (dmmPedidosCompra = nil) or (FPivote = nil) then Exit;
+  if (dmmPedidosCompra <> nil) and (FPivote <> nil) and
+     not FInToggleClick then
+  begin
   // Guardia de reentrada: bloquea el auto-toggle del data-change hook
   // mientras PersistirPreferenciaPivote esta editando+posting la cabecera.
   // Sin esto, el Edit dispara OnDataChange con la cabecera todavia con
   // el valor viejo, el hook ve discrepancia con Activo y vuelve a llamar
   // a este handler.
-  if FInToggleClick then Exit;
   FInToggleClick := True;
   try
     if not FPivote.Activo then
     begin
-      if not PuedeActivarTallasHorizontal(sMensaje) then
+      if PuedeActivarTallasHorizontal(sMensaje) then
       begin
-        // Sender=nil => apertura automatica por preferencia guardada.
-        // Si el documento no es pivotable dejamos
-        // la vista vertical en silencio; solo avisamos cuando el usuario
-        // pulsa el boton expresamente (Sender<>nil).
+        FPivote.Activar;
+        if Assigned(colLineaPedcARecibir) then
+          colLineaPedcARecibir.Visible := False;
+        ActualizarCaptionModoLineas;
+        BestFitConSwatch;
         if Sender <> nil then
-          MessageDlg(sMensaje, mtWarning, [mbOk], 0);
-        Exit;
-      end;
-      FPivote.Activar;
+          PersistirPreferenciaPivote;
+      end
+      else if Sender <> nil then
+        MessageDlg(sMensaje, mtWarning, [mbOk], 0);
     end
     else
+    begin
       FPivote.Desactivar;
-    // La columna no-bound "A recibir" se ve en modo vertical y se
-    // oculta en pivote (en horizontal la entrada de cantidades se
-    // hace celda a celda en las columnas talla, no en una columna
-    // aparte).
-    if Assigned(colLineaPedcARecibir) then
-      colLineaPedcARecibir.Visible := not FPivote.Activo;
-    ActualizarCaptionModoLineas;
-    // BestFit tras togglear: ajustamos automaticamente el ancho de
-    // todas las columnas al contenido. Sin esto algunas (Color con
-    // textos largos como "Verde botella", articulo, descripcion...)
-    // quedan truncadas.
-    BestFitConSwatch;
-    // Sender=nil: llamada automatica desde el data-change hook, no
-    // re-escribir la preferencia en la cabecera.
-    if Sender <> nil then
-      PersistirPreferenciaPivote;
+      if Assigned(colLineaPedcARecibir) then
+        colLineaPedcARecibir.Visible := True;
+      ActualizarCaptionModoLineas;
+      BestFitConSwatch;
+      if Sender <> nil then
+        PersistirPreferenciaPivote;
+    end;
   finally
     FInToggleClick := False;
+  end;
   end;
 end;
 
@@ -1129,16 +1126,16 @@ var
 begin
   inherited;
   if (FPivote = nil) or (not FPivote.Activo) or (not FPivote.Expandido) then
-  begin
     MessageDlg(SErrorExpandirRecibidosNoActivo,
-               mtInformation, [mbOk], 0);
-    Exit;
+               mtInformation, [mbOk], 0)
+  else
+  begin
+    iCeldas := FPivote.RecibirFilaEntera;
+    RefrescarCantidadAAlbaranar;
+    if iCeldas = 0 then
+      MessageDlg(SInfoTallasPendientesRecibirNoDisponibles,
+                 mtInformation, [mbOk], 0);
   end;
-  iCeldas := FPivote.RecibirFilaEntera;
-  RefrescarCantidadAAlbaranar;
-  if iCeldas = 0 then
-    MessageDlg(SInfoTallasPendientesRecibirNoDisponibles,
-               mtInformation, [mbOk], 0);
 end;
 
 // Rellena de una sola pasada TODO el pedido con las cantidades
@@ -1151,8 +1148,8 @@ var
   iRellenadas: Integer;
 begin
   inherited;
-  if dmmPedidosCompra = nil then
-    Exit;
+  if dmmPedidosCompra <> nil then
+  begin
   if FColsModoConstruido then
     // Contrato construido: volcar el pendiente de cada linea al campo
     // "A recibir" (los Post rearman la recarga del pivote de tallas).
@@ -1173,6 +1170,7 @@ begin
   if iRellenadas = 0 then
     MessageDlg(SInfoPedidoCompraSinPendientesRecibir,
                mtInformation, [mbOk], 0);
+  end;
 end;
 
 procedure TfrmMtoPedidosCompra.btnNuevoClick(Sender: TObject);
@@ -1193,25 +1191,24 @@ begin
   sLineasSinSku := LineasSinSkuRequerido(
     FValidadorArticulos,
     dmmPedidosCompra.unqryPedidosCompraLineas, 'PEDCLIN');
-  if (sLineasSinSku <> '') and
+  if (sLineasSinSku = '') or
      (MessageDlg(Format(SPreguntaGrabarPedidoCompraSinSku,
                         [sLineasSinSku]),
-                 mtWarning, [mbYes, mbNo], 0) <> mrYes) then
-    Exit;
-  if Assigned(FPivote) and FPivote.Activo and
-     (not FPivote.Expandido) then
-    FPivote.PersistirCantidadesPendientes;
-  inherited;
-  if dsTablaG.State in dsEditModes then
+                 mtWarning, [mbYes, mbNo], 0) = mrYes) then
   begin
-    dmmPedidosCompra.CalcularTotalesPedidoCompra;
-    dsTablaG.DataSet.Post;
+    if Assigned(FPivote) and FPivote.Activo and
+       not FPivote.Expandido then
+      FPivote.PersistirCantidadesPendientes;
+    inherited;
+    if dsTablaG.State in dsEditModes then
+    begin
+      dmmPedidosCompra.CalcularTotalesPedidoCompra;
+      dsTablaG.DataSet.Post;
+    end;
+    if Assigned(FPivote) and FPivote.Activo then
+      FPivote.RecargarYRepublicar;
+    RefrescarCantidadAAlbaranar;
   end;
-  // Tras Grabar, cxGrid borra los Values[] no-bound al repintar.
-  // RecargarYRepublicar lo solventa.
-  if Assigned(FPivote) and FPivote.Activo then
-    FPivote.RecargarYRepublicar;
-  RefrescarCantidadAAlbaranar;
 end;
 
 procedure TfrmMtoPedidosCompra.btnIraalbaranClick(Sender: TObject);
@@ -1237,7 +1234,8 @@ begin
     dmmPedidosCompra.RefrescarAlmacenes(
       dmmPedidosCompra.unqryTablaG.FieldByName(
         'CODIGO_EMP_PEDC').AsString);
-  if Field <> nil then Exit;
+  if Field = nil then
+  begin
   // Contrato de entrada: al navegar de pedido, las lineas llegan
   // recargadas por el master-detail. En desglose basta desempaquetar
   // SKU->ATTR; el modo tallas re-pivota su cache reconstruyendo
@@ -1267,6 +1265,7 @@ begin
       dmmPedidosCompra.DesempaquetarAtributosLineas;
   end;
   RefrescarCantidadAAlbaranar;
+  end;
 end;
 
 // Clave serie|numero de la cabecera activa: identifica el pedido para
@@ -1330,23 +1329,16 @@ procedure TfrmMtoPedidosCompra.BestFitConSwatch;
 var
   i: Integer;
 begin
-  if tvLineasPedido = nil then Exit;
-  // Con el contrato construido los anchos los fijan el modo y
-  // CrearColumnasHostPedidoCompra; ApplyBestFit encogeria las columnas
-  // de talla del pivote (mide sin el custom-draw).
-  if FColsModoConstruido then Exit;
-  tvLineasPedido.ApplyBestFit;
-  if Assigned(FColColorPivot) and FColColorPivot.Visible then
-    FColColorPivot.Width := FColColorPivot.Width + ANCHO_SWATCH_PX;
-  // Suelo de ancho para las columnas talla: ApplyBestFit las mide por el
-  // Value numerico corto e ignora el custom-draw (rotulo de talla +
-  // sub-cifras), dejandolas tan estrechas que el rotulo "36"/"38" se corta
-  // a "3". Restauramos el ancho minimo legible sin impedir que BestFit las
-  // ensanche cuando el contenido lo pida.
-  for i := 0 to CANT_TALLAS_MAX - 1 do
-    if Assigned(FTallaColumns[i]) and FTallaColumns[i].Visible and
-       (FTallaColumns[i].Width < ANCHO_TALLA_PX) then
-      FTallaColumns[i].Width := ANCHO_TALLA_PX;
+  if (tvLineasPedido <> nil) and not FColsModoConstruido then
+  begin
+    tvLineasPedido.ApplyBestFit;
+    if Assigned(FColColorPivot) and FColColorPivot.Visible then
+      FColColorPivot.Width := FColColorPivot.Width + ANCHO_SWATCH_PX;
+    for i := 0 to CANT_TALLAS_MAX - 1 do
+      if Assigned(FTallaColumns[i]) and FTallaColumns[i].Visible and
+         (FTallaColumns[i].Width < ANCHO_TALLA_PX) then
+        FTallaColumns[i].Width := ANCHO_TALLA_PX;
+  end;
 end;
 
 // Comprueba via INFORMATION_SCHEMA si una columna existe en
@@ -1605,22 +1597,25 @@ var
   sNumero: string;
   sSerie: string;
 begin
-  if not Assigned(dmmPedidosCompra) then
-    Exit;
-  dsCab := dmmPedidosCompra.unqryTablaG;
-  dsLin := dmmPedidosCompra.unqryPedidosCompraLineas;
-  if (dsCab = nil) or (dsLin = nil) or (not dsCab.Active) or
-     (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
-    Exit;
-  AsegurarCabeceraPersistidaParaLineas;
-  sNumero := Trim(dsCab.FieldByName('NUMERO_PEDC').AsString);
-  sSerie  := Trim(dsCab.FieldByName('SERIE_PEDC').AsString);
-  if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
-    Exit;
-  if not dsLin.Active then
-    dsLin.Open;
-  if dsLin.IsEmpty and (not (dsLin.State in dsEditModes)) then
-    dsLin.Append;
+  if Assigned(dmmPedidosCompra) then
+  begin
+    dsCab := dmmPedidosCompra.unqryTablaG;
+    dsLin := dmmPedidosCompra.unqryPedidosCompraLineas;
+    if (dsCab <> nil) and (dsLin <> nil) and dsCab.Active and
+       (not dsCab.IsEmpty or (dsCab.State in dsEditModes)) then
+    begin
+      AsegurarCabeceraPersistidaParaLineas;
+      sNumero := Trim(dsCab.FieldByName('NUMERO_PEDC').AsString);
+      sSerie := Trim(dsCab.FieldByName('SERIE_PEDC').AsString);
+      if (sNumero <> '') and (sNumero <> '0') and (sSerie <> '') then
+      begin
+        if not dsLin.Active then
+          dsLin.Open;
+        if dsLin.IsEmpty and not (dsLin.State in dsEditModes) then
+          dsLin.Append;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmMtoPedidosCompra.colLinPedcColorPivotButtonClick(
@@ -1852,9 +1847,11 @@ var
   sAlmLin, sAlmCab: string;
 begin
   Result := '';
-  if (dmmPedidosCompra = nil) or (colLineaPedcARecibir = nil) then Exit;
-  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
+  if (dmmPedidosCompra <> nil) and (colLineaPedcARecibir <> nil) then
+  begin
+    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+    if (ds <> nil) and ds.Active and not ds.IsEmpty then
+    begin
   sAlmCab :=
     dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
   idxCol := colLineaPedcARecibir.Index;
@@ -1863,7 +1860,7 @@ begin
   try
     recIdx := 0;
     ds.First;
-    while not ds.Eof do
+    while (Result = '') and not ds.Eof do
     begin
       vARec := tvLineasPedido.DataController.Values[recIdx, idxCol];
       rARec := 0;
@@ -1881,15 +1878,17 @@ begin
           Result := sAlmLin
         else
           Result := sAlmCab;
-        Exit;
       end;
       Inc(recIdx);
       ds.Next;
     end;
   finally
-    if Assigned(bk) then ds.GotoBookmark(bk);
+    if Assigned(bk) then
+      ds.GotoBookmark(bk);
     ds.FreeBookmark(bk);
     ds.EnableControls;
+  end;
+    end;
   end;
 end;
 
@@ -1907,9 +1906,11 @@ var
   sAlmLin, sAlmCab, sAlmEfe: string;
 begin
   Result := nil;
-  if (dmmPedidosCompra = nil) or (colLineaPedcARecibir = nil) then Exit;
-  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
+  if (dmmPedidosCompra <> nil) and (colLineaPedcARecibir <> nil) then
+  begin
+    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+    if (ds <> nil) and ds.Active and not ds.IsEmpty then
+    begin
   sAlmCab :=
     dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
   idxCol := colLineaPedcARecibir.Index;
@@ -1957,6 +1958,8 @@ begin
     ds.EnableControls;
     FreeAndNil(res);
   end;
+    end;
+  end;
 end;
 
 // Recorre todas las lineas del pedido en modo vertical y vuelca en la
@@ -1973,11 +1976,11 @@ var
   rPdte  : Double;
 begin
   Result := 0;
-  if (dmmPedidosCompra = nil) or (colLineaPedcARecibir = nil) then
-    Exit;
-  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty then
-    Exit;
+  if (dmmPedidosCompra <> nil) and (colLineaPedcARecibir <> nil) then
+  begin
+    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+    if (ds <> nil) and ds.Active and not ds.IsEmpty then
+    begin
   idxCol := colLineaPedcARecibir.Index;
   bk := ds.GetBookmark;
   ds.DisableControls;
@@ -2005,6 +2008,8 @@ begin
       ds.GotoBookmark(bk);
     ds.FreeBookmark(bk);
     ds.EnableControls;
+  end;
+    end;
   end;
 end;
 
@@ -2093,33 +2098,37 @@ begin
   inherited;
   if not PuedeImprimir then
     Abort;
-  if dmmPedidosCompra = nil then
-    Exit;
-  if dmmPedidosCompra.unqryTablaG.IsEmpty then
+  if dmmPedidosCompra <> nil then
   begin
-    ShowMessage(SErrorPedidoCompraNoActivo);
-    Exit;
-  end;
-  if dmmPedidosCompra.unqryTablaG.State in [dsEdit, dsInsert] then
-    dmmPedidosCompra.unqryTablaG.Post;
-  if dmmPedidosCompra.unqryPedidosCompraLineas.State in [dsEdit, dsInsert] then
-    dmmPedidosCompra.unqryPedidosCompraLineas.Post;
-  sSerie  := dmmPedidosCompra.unqryTablaG.FieldByName('SERIE_PEDC').AsString;
-  sNumero := dmmPedidosCompra.unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
-  dmArt := TdmArticulos.Create(nil);
-  try
-    form := TfrmPrintEtiqPed.Create(Application);
-    try
-      form.DMArt  := dmArt;
-      form.DMPedc := dmmPedidosCompra;
-      form.Serie  := sSerie;
-      form.Numero := sNumero;
-      form.ShowModal;
-    finally
-      FreeAndNil(form);
+    if dmmPedidosCompra.unqryTablaG.IsEmpty then
+      ShowMessage(SErrorPedidoCompraNoActivo)
+    else
+    begin
+      if dmmPedidosCompra.unqryTablaG.State in [dsEdit, dsInsert] then
+        dmmPedidosCompra.unqryTablaG.Post;
+      if dmmPedidosCompra.unqryPedidosCompraLineas.State in
+         [dsEdit, dsInsert] then
+        dmmPedidosCompra.unqryPedidosCompraLineas.Post;
+      sSerie := dmmPedidosCompra.unqryTablaG.FieldByName(
+        'SERIE_PEDC').AsString;
+      sNumero := dmmPedidosCompra.unqryTablaG.FieldByName(
+        'NUMERO_PEDC').AsString;
+      dmArt := TdmArticulos.Create(nil);
+      try
+        form := TfrmPrintEtiqPed.Create(Application);
+        try
+          form.DMArt := dmArt;
+          form.DMPedc := dmmPedidosCompra;
+          form.Serie := sSerie;
+          form.Numero := sNumero;
+          form.ShowModal;
+        finally
+          FreeAndNil(form);
+        end;
+      finally
+        FreeAndNil(dmArt);
+      end;
     end;
-  finally
-    FreeAndNil(dmArt);
   end;
 end;
 
@@ -2136,12 +2145,12 @@ var
   ResultadoRecepcion: TResultadoRecepcionPedidoCompra;
 begin
   inherited;
-  if dmmPedidosCompra = nil then Exit;
-  if dmmPedidosCompra.unqryTablaG.IsEmpty then
+  if dmmPedidosCompra <> nil then
   begin
-    ShowMessage(SErrorPedidoCompraNoActivoCrearAlbaran);
-    Exit;
-  end;
+  if dmmPedidosCompra.unqryTablaG.IsEmpty then
+    ShowMessage(SErrorPedidoCompraNoActivoCrearAlbaran)
+  else
+  begin
   if dmmPedidosCompra.unqryTablaG.State in [dsEdit, dsInsert] then
     dmmPedidosCompra.unqryTablaG.Post;
   if dmmPedidosCompra.unqryPedidosCompraLineas.State in [dsEdit, dsInsert] then
@@ -2178,8 +2187,8 @@ begin
       form.CodigoAlmacenDefecto :=
         AlmacenEfectivoPrimeraLinea(sSerie, sNumero);
     form.ShowModal;
-    if not form.Aceptado then Exit;
-    if Trim(form.CodigoAlmacen) = '' then Exit;
+    if form.Aceptado and (Trim(form.CodigoAlmacen) <> '') then
+    begin
     // Decidir flujo: si el pivote esta expandido leemos celdas via lib;
     // si no, miramos la columna "A recibir" del modo vertical. Si no
     // hay tecleos en ninguno, caemos al flujo clasico (pendientes
@@ -2276,8 +2285,11 @@ begin
                    mtError, [mbOk], 0);
       end;
     end;
+    end;
   finally
     FreeAndNil(form);
+  end;
+  end;
   end;
 end;
 
@@ -2294,12 +2306,12 @@ var
   bDegradarASku: Boolean;
   ModoEfectivo: TModoColumnasSku;
 begin
-  if (dmmPedidosCompra = nil) or (csDestroying in ComponentState) or
-     FConstruyendoModo then
-    Exit;
-  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-  if not ds.Active then
-    Exit;
+  if (dmmPedidosCompra <> nil) and
+     not (csDestroying in ComponentState) and not FConstruyendoModo then
+  begin
+    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+    if ds.Active then
+    begin
   FConstruyendoModo := True;
   // Registrar para que pedido se construye: el hook de DataChange solo
   // reconstruye el modo bandas cuando esta clave cambia.
@@ -2418,6 +2430,8 @@ begin
   end
   else
     RefrescarCantidadAAlbaranar;
+    end;
+  end;
 end;
 
 procedure TfrmMtoPedidosCompra.MostrarColumnasAtributoGlobalesPedc;
@@ -2553,12 +2567,12 @@ var
   sAlmLin, sAlmCab, sAlmEfe: string;
 begin
   Result := nil;
-  if dmmPedidosCompra = nil then
-    Exit;
-  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty or
-     (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') = nil) then
-    Exit;
+  if dmmPedidosCompra <> nil then
+  begin
+    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+    if (ds <> nil) and ds.Active and not ds.IsEmpty and
+       (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') <> nil) then
+    begin
   sAlmCab :=
     dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
   res := TList<TCeldaARecibir>.Create;
@@ -2596,6 +2610,8 @@ begin
     ds.EnableControls;
     FreeAndNil(res);
   end;
+    end;
+  end;
 end;
 
 procedure TfrmMtoPedidosCompra.LimpiarARecibirCampoAlmacen(
@@ -2605,12 +2621,12 @@ var
   bk: TBookmark;
   sAlmLin, sAlmCab, sAlmEfe: string;
 begin
-  if dmmPedidosCompra = nil then
-    Exit;
-  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty or
-     (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') = nil) then
-    Exit;
+  if dmmPedidosCompra <> nil then
+  begin
+    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+    if (ds <> nil) and ds.Active and not ds.IsEmpty and
+       (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') <> nil) then
+    begin
   sAlmCab :=
     dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
   bk := ds.GetBookmark;
@@ -2641,6 +2657,8 @@ begin
     ds.FreeBookmark(bk);
     ds.EnableControls;
   end;
+    end;
+  end;
 end;
 
 function TfrmMtoPedidosCompra.TotalARecibirCampo: Double;
@@ -2649,13 +2667,13 @@ var
   bk: TBookmark;
 begin
   Result := 0;
-  if dmmPedidosCompra = nil then
-    Exit;
-  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty or
-     (ds.State in dsEditModes) or
-     (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') = nil) then
-    Exit;
+  if dmmPedidosCompra <> nil then
+  begin
+    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+    if (ds <> nil) and ds.Active and not ds.IsEmpty and
+       not (ds.State in dsEditModes) and
+       (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') <> nil) then
+    begin
   bk := ds.GetBookmark;
   ds.DisableControls;
   try
@@ -2672,6 +2690,8 @@ begin
     ds.FreeBookmark(bk);
     ds.EnableControls;
   end;
+    end;
+  end;
 end;
 
 function TfrmMtoPedidosCompra.PrimerAlmacenARecibirCampo: string;
@@ -2681,12 +2701,12 @@ var
   sAlmCab: string;
 begin
   Result := '';
-  if dmmPedidosCompra = nil then
-    Exit;
-  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty or
-     (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') = nil) then
-    Exit;
+  if dmmPedidosCompra <> nil then
+  begin
+    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+    if (ds <> nil) and ds.Active and not ds.IsEmpty and
+       (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') <> nil) then
+    begin
   sAlmCab :=
     dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
   bk := ds.GetBookmark;
@@ -2710,6 +2730,8 @@ begin
     ds.FreeBookmark(bk);
     ds.EnableControls;
   end;
+    end;
+  end;
 end;
 
 function TfrmMtoPedidosCompra.RellenarARecibirCampoTodo: Integer;
@@ -2719,12 +2741,12 @@ var
   rPdte: Double;
 begin
   Result := 0;
-  if dmmPedidosCompra = nil then
-    Exit;
-  ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty or
-     (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') = nil) then
-    Exit;
+  if dmmPedidosCompra <> nil then
+  begin
+    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
+    if (ds <> nil) and ds.Active and not ds.IsEmpty and
+       (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') <> nil) then
+    begin
   if ds.State in dsEditModes then
     ds.Post;
   bk := ds.GetBookmark;
@@ -2753,6 +2775,8 @@ begin
       ds.GotoBookmark(bk);
     ds.FreeBookmark(bk);
     ds.EnableControls;
+  end;
+    end;
   end;
 end;
 

@@ -1126,37 +1126,31 @@ var
   sMensaje: string;
 begin
   inherited;
-  if (dmmDevolucionesCompra = nil) or (FPivote = nil) then Exit;
-  // Guardia de reentrada: ver comentario en el campo FInToggleClick.
-  if FInToggleClick then Exit;
-  FInToggleClick := True;
-  try
-    // Toggle alterna entre vista plana (1 fila por SKU) y vista pivote
-    // (1 fila representante por articulo+color, columnas talla con la
-    // cantidad de cada SKU). El modelo BBDD no cambia: el filtro vive
-    // en cliente y lo gestiona la libreria.
-    if not FPivote.Activo then
-    begin
-      if not PuedeActivarTallasHorizontal(sMensaje) then
+  if (dmmDevolucionesCompra <> nil) and (FPivote <> nil) and
+     not FInToggleClick then
+  begin
+    FInToggleClick := True;
+    try
+      if not FPivote.Activo then
       begin
-        // Sender=nil => apertura automatica por preferencia guardada.
-        // Si el documento no es pivotable dejamos
-        // la vista vertical en silencio; solo avisamos cuando el usuario
-        // pulsa el boton expresamente (Sender<>nil).
-        if Sender <> nil then
+        if PuedeActivarTallasHorizontal(sMensaje) then
+        begin
+          FPivote.Activar;
+          if Sender <> nil then
+            PersistirPreferenciaPivote;
+        end
+        else if Sender <> nil then
           MessageDlg(sMensaje, mtWarning, [mbOk], 0);
-        Exit;
+      end
+      else
+      begin
+        FPivote.Desactivar;
+        if Sender <> nil then
+          PersistirPreferenciaPivote;
       end;
-      FPivote.Activar;
-    end
-    else
-      FPivote.Desactivar;
-    // Sender=nil: llamada automatica desde el data-change hook; no
-    // re-escribir la preferencia.
-    if Sender <> nil then
-      PersistirPreferenciaPivote;
-  finally
-    FInToggleClick := False;
+    finally
+      FInToggleClick := False;
+    end;
   end;
 end;
 
@@ -1175,29 +1169,31 @@ begin
   inherited;
   if not PuedeImprimir then
     Abort;
-  if dmmDevolucionesCompra = nil then Exit;
-  if dmmDevolucionesCompra.unqryTablaG.IsEmpty then
+  if dmmDevolucionesCompra <> nil then
   begin
-    ShowMessage(SErrorDevolucionCompraSinImpresionActiva);
-    Exit;
-  end;
-  if dmmDevolucionesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
-    dmmDevolucionesCompra.unqryTablaG.Post;
-  if dmmDevolucionesCompra.unqryDevolucionesCompraLineas.State in
-     [dsEdit, dsInsert] then
-    dmmDevolucionesCompra.unqryDevolucionesCompraLineas.Post;
-  sSerie  :=
-    dmmDevolucionesCompra.unqryTablaG.FieldByName('SERIE_DEVC').AsString;
-  sNumero :=
-    dmmDevolucionesCompra.unqryTablaG.FieldByName('NUMERO_DEVC').AsString;
-  form := TfrmPrintDevCompra.Create(Application);
-  try
-    form.dmDevc        := dmmDevolucionesCompra;
-    form.edtSerie.Text := sSerie;
-    form.edtNumero.Text:= sNumero;
-    form.ShowModal;
-  finally
-    FreeAndNil(form);
+    if dmmDevolucionesCompra.unqryTablaG.IsEmpty then
+      ShowMessage(SErrorDevolucionCompraSinImpresionActiva)
+    else
+    begin
+      if dmmDevolucionesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
+        dmmDevolucionesCompra.unqryTablaG.Post;
+      if dmmDevolucionesCompra.unqryDevolucionesCompraLineas.State in
+         [dsEdit, dsInsert] then
+        dmmDevolucionesCompra.unqryDevolucionesCompraLineas.Post;
+      sSerie := dmmDevolucionesCompra.unqryTablaG.FieldByName(
+        'SERIE_DEVC').AsString;
+      sNumero := dmmDevolucionesCompra.unqryTablaG.FieldByName(
+        'NUMERO_DEVC').AsString;
+      form := TfrmPrintDevCompra.Create(Application);
+      try
+        form.dmDevc := dmmDevolucionesCompra;
+        form.edtSerie.Text := sSerie;
+        form.edtNumero.Text := sNumero;
+        form.ShowModal;
+      finally
+        FreeAndNil(form);
+      end;
+    end;
   end;
 end;
 
@@ -1210,29 +1206,31 @@ begin
   inherited;
   if not PuedeImprimir then
     Abort;
-  if dmmDevolucionesCompra = nil then Exit;
-  if dmmDevolucionesCompra.unqryTablaG.IsEmpty then
+  if dmmDevolucionesCompra <> nil then
   begin
-    ShowMessage(SErrorDevolucionCompraSinImpresionActiva);
-    Exit;
-  end;
-  if dmmDevolucionesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
-    dmmDevolucionesCompra.unqryTablaG.Post;
-  if dmmDevolucionesCompra.unqryDevolucionesCompraLineas.State in
-     [dsEdit, dsInsert] then
-    dmmDevolucionesCompra.unqryDevolucionesCompraLineas.Post;
-  sSerie  :=
-    dmmDevolucionesCompra.unqryTablaG.FieldByName('SERIE_DEVC').AsString;
-  sNumero :=
-    dmmDevolucionesCompra.unqryTablaG.FieldByName('NUMERO_DEVC').AsString;
-  form := TfrmPrintDevCompraV.Create(Application);
-  try
-    form.dmDevc        := dmmDevolucionesCompra;
-    form.edtSerie.Text := sSerie;
-    form.edtNumero.Text:= sNumero;
-    form.ShowModal;
-  finally
-    FreeAndNil(form);
+    if dmmDevolucionesCompra.unqryTablaG.IsEmpty then
+      ShowMessage(SErrorDevolucionCompraSinImpresionActiva)
+    else
+    begin
+      if dmmDevolucionesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
+        dmmDevolucionesCompra.unqryTablaG.Post;
+      if dmmDevolucionesCompra.unqryDevolucionesCompraLineas.State in
+         [dsEdit, dsInsert] then
+        dmmDevolucionesCompra.unqryDevolucionesCompraLineas.Post;
+      sSerie := dmmDevolucionesCompra.unqryTablaG.FieldByName(
+        'SERIE_DEVC').AsString;
+      sNumero := dmmDevolucionesCompra.unqryTablaG.FieldByName(
+        'NUMERO_DEVC').AsString;
+      form := TfrmPrintDevCompraV.Create(Application);
+      try
+        form.dmDevc := dmmDevolucionesCompra;
+        form.edtSerie.Text := sSerie;
+        form.edtNumero.Text := sNumero;
+        form.ShowModal;
+      finally
+        FreeAndNil(form);
+      end;
+    end;
   end;
 end;
 
@@ -1247,18 +1245,18 @@ begin
   inherited;
   if not PuedeImprimir then
     Abort;
-  if dmmDevolucionesCompra = nil then Exit;
-  if dmmDevolucionesCompra.unqryTablaG.IsEmpty then
+  if dmmDevolucionesCompra <> nil then
   begin
-    ShowMessage(SErrorDevolucionCompraNoActiva);
-    Exit;
-  end;
-  if dmmDevolucionesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
-    dmmDevolucionesCompra.unqryTablaG.Post;
-  sSerie  :=
-    dmmDevolucionesCompra.unqryTablaG.FieldByName('SERIE_DEVC').AsString;
-  sNumero :=
-    dmmDevolucionesCompra.unqryTablaG.FieldByName('NUMERO_DEVC').AsString;
+    if dmmDevolucionesCompra.unqryTablaG.IsEmpty then
+      ShowMessage(SErrorDevolucionCompraNoActiva)
+    else
+    begin
+      if dmmDevolucionesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
+        dmmDevolucionesCompra.unqryTablaG.Post;
+      sSerie := dmmDevolucionesCompra.unqryTablaG.FieldByName(
+        'SERIE_DEVC').AsString;
+      sNumero := dmmDevolucionesCompra.unqryTablaG.FieldByName(
+        'NUMERO_DEVC').AsString;
   // El modal reutiliza el dataset de etiquetas del DM de articulos
   // (cdsEtiquetasArt, fxdsEtiquetasArt) para que el mismo .fr3 sirva
   // en ambos sitios. Creamos un DM temporal porque el form de
@@ -1267,20 +1265,22 @@ begin
   // conexion. No necesitamos AbrirDetalles ni OpenTables — las queries
   // de print (unqryTarifasPrint, unqryArtPrint) se abren bajo demanda
   // desde el modal / CrearDataSetEtiquetasArt.
-  dmArt := TdmArticulos.Create(nil);
-  try
-    form := TfrmPrintEtiqDev.Create(Application);
+      dmArt := TdmArticulos.Create(nil);
     try
-      form.DMArt  := dmArt;
-      form.DMDevc := dmmDevolucionesCompra;
-      form.Serie  := sSerie;
-      form.Numero := sNumero;
-      form.ShowModal;
+      form := TfrmPrintEtiqDev.Create(Application);
+      try
+        form.DMArt := dmArt;
+        form.DMDevc := dmmDevolucionesCompra;
+        form.Serie := sSerie;
+        form.Numero := sNumero;
+        form.ShowModal;
+      finally
+        FreeAndNil(form);
+      end;
     finally
-      FreeAndNil(form);
+      FreeAndNil(dmArt);
     end;
-  finally
-    FreeAndNil(dmArt);
+    end;
   end;
 end;
 
@@ -1497,24 +1497,23 @@ begin
   sLineasSinSku := LineasSinSkuRequerido(
     FValidadorArticulos,
     dmmDevolucionesCompra.unqryDevolucionesCompraLineas, 'DEVCLIN');
-  if (sLineasSinSku <> '') and
+  if (sLineasSinSku = '') or
      (MessageDlg(Format(SPreguntaGrabarDevolucionCompraSinSku,
                         [sLineasSinSku]),
-                 mtWarning, [mbYes, mbNo], 0) <> mrYes) then
-    Exit;
-  if Assigned(FPivote) and FPivote.Activo and
-     (not FPivote.Expandido) then
-    FPivote.PersistirCantidadesPendientes;
-  inherited;
-  if dsTablaG.State in dsEditModes then
+                 mtWarning, [mbYes, mbNo], 0) = mrYes) then
   begin
-    dmmDevolucionesCompra.CalcularTotalesDevolucionCompra;
-    dsTablaG.DataSet.Post;
+    if Assigned(FPivote) and FPivote.Activo and
+       not FPivote.Expandido then
+      FPivote.PersistirCantidadesPendientes;
+    inherited;
+    if dsTablaG.State in dsEditModes then
+    begin
+      dmmDevolucionesCompra.CalcularTotalesDevolucionCompra;
+      dsTablaG.DataSet.Post;
+    end;
+    if Assigned(FPivote) and FPivote.Activo then
+      FPivote.RecargarYRepublicar;
   end;
-  // Tras Grabar, cxGrid borra los Values[] no-bound al repintar.
-  // RecargarYRepublicar lo solventa.
-  if Assigned(FPivote) and FPivote.Activo then
-    FPivote.RecargarYRepublicar;
 end;
 
 // Actualiza la cabecera y delega el modo al navegar entre devoluciones.
@@ -1695,11 +1694,12 @@ var
   bDegradarASku: Boolean;
   ModoEfectivo: TModoColumnasSku;
 begin
-  if (dmmDevolucionesCompra = nil) or (csDestroying in ComponentState) then
-    Exit;
-  ds := dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
-  if not ds.Active then
-    Exit;
+  if (dmmDevolucionesCompra <> nil) and
+     not (csDestroying in ComponentState) then
+  begin
+    ds := dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
+    if ds.Active then
+    begin
   PrepararReconstruccionModoDocumento(tvLineasDevolucion, ds,
     FModoEntrada, FTallaColumns, FAtribColumns, FColColorPivot);
   // Solo el DESGLOSE liga columnas a ATTRn: desempaquetar SKU->ATTR
@@ -1766,6 +1766,8 @@ begin
       '&1_Líneas', '&1_Líneas ', True, ModoEfectivo, False);
     if not (ModoEfectivo in [mcsSku, mcsTallasHorPed]) then
       MostrarColumnasAtributoGlobalesDevc;
+  end;
+    end;
   end;
 end;
 
@@ -2189,22 +2191,25 @@ var
   sNumero: string;
   sSerie: string;
 begin
-  if not Assigned(dmmDevolucionesCompra) then
-    Exit;
-  dsCab := dmmDevolucionesCompra.unqryTablaG;
-  dsLin := dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
-  if (dsCab = nil) or (dsLin = nil) or (not dsCab.Active) or
-     (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
-    Exit;
-  AsegurarCabeceraPersistidaParaLineas;
-  sNumero := Trim(dsCab.FieldByName('NUMERO_DEVC').AsString);
-  sSerie  := Trim(dsCab.FieldByName('SERIE_DEVC').AsString);
-  if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
-    Exit;
-  if not dsLin.Active then
-    dsLin.Open;
-  if dsLin.IsEmpty and (not (dsLin.State in dsEditModes)) then
-    dsLin.Append;
+  if Assigned(dmmDevolucionesCompra) then
+  begin
+    dsCab := dmmDevolucionesCompra.unqryTablaG;
+    dsLin := dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
+    if (dsCab <> nil) and (dsLin <> nil) and dsCab.Active and
+       (not dsCab.IsEmpty or (dsCab.State in dsEditModes)) then
+    begin
+      AsegurarCabeceraPersistidaParaLineas;
+      sNumero := Trim(dsCab.FieldByName('NUMERO_DEVC').AsString);
+      sSerie := Trim(dsCab.FieldByName('SERIE_DEVC').AsString);
+      if (sNumero <> '') and (sNumero <> '0') and (sSerie <> '') then
+      begin
+        if not dsLin.Active then
+          dsLin.Open;
+        if dsLin.IsEmpty and not (dsLin.State in dsEditModes) then
+          dsLin.Append;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmMtoDevolucionesCompra.actArticulosExecute(Sender: TObject);

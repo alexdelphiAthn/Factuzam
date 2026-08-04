@@ -8,6 +8,71 @@ credencial y permisos propios; no se conecta directamente a MariaDB.
 
 ---
 
+## Factuzam Fotos Nube: fotografiar artículos desde Android
+
+**Factuzam Fotos Nube** permite hacer fotos con la cámara del móvil —o
+elegirlas de la galería—, asociarlas a un **artículo y color** y subirlas
+por lotes al servicio de fotos. Después pueden descargarse e integrarse en
+el catálogo desde Factuzam.
+
+![Captura y cola de Factuzam Fotos Nube](img/13-fotos-nube-capturar.png)
+
+### Configuración inicial
+
+En la pestaña **Configuración** indica:
+
+| Campo | Contenido |
+|-------|-----------|
+| **URL** | Dirección del servicio `upload_foto.php` facilitada por el administrador. |
+| **API key** | Credencial de acceso al servicio de fotos. |
+| **Carpeta de cliente** | Identificador de la instalación en el servidor. Debe existir previamente; no se crea desde el móvil para evitar duplicados por errores de escritura. |
+| **Resolución máxima** | Tamaño máximo del lado mayor. El valor predeterminado es **1000 px** y el límite de seguridad es 4000 px. |
+
+Pulsa **Guardar configuración**. Los valores quedan en el almacenamiento
+privado de la aplicación; la pantalla muestra la ruta de su fichero de
+configuración.
+
+![Configuración de Factuzam Fotos Nube](img/13-fotos-nube-configuracion.png)
+
+> La API key es una credencial. No la incluyas legible en capturas, correos
+> ni incidencias: enmascárala antes de compartir la pantalla.
+
+### Capturar y subir un lote
+
+1. Escribe el **código exacto del artículo**.
+2. Escribe el **color**. Debe coincidir con el texto de color que forma el
+   SKU en Factuzam, no con el color básico usado solo para clasificar.
+3. Pulsa **Hacer foto** o **Elegir de galería**. La imagen se reduce a la
+   resolución configurada y se añade a la cola como **Pendiente**.
+4. Repite el proceso para todos los artículos y colores del lote.
+5. Pulsa **Subir todas**. Cada elemento pasa por **Subiendo...** y termina
+   en **Subida OK** o **Error**. El registro inferior muestra el resultado.
+
+Si hay varias imágenes del mismo artículo/color, la app les asigna los
+índices 1, 2, 3... en el orden de la cola. Por ejemplo, la primera foto de
+`BLUSA01` en `011-AZ` se publica como la imagen 1 de ese grupo.
+
+Para que el emparejamiento sea fiable, Factuzam sanea el color con la misma
+regla que el SKU: mayúsculas, espacios convertidos en guiones y sin símbolos
+como `/`, `%` o `€`. Si el proveedor llama al color `011-AZ` y su color
+básico es `AZUL`, en la app se escribe **011-AZ**.
+
+### Incorporar las fotos al catálogo de Factuzam
+
+La subida al servidor no sustituye automáticamente la foto local. En el
+puesto Windows:
+
+1. Configura el servicio y la carpeta compartida de fotos en
+   *Otros ▸ Parámetros del entorno ▸ Fotos/Servicios web*.
+2. Abre el artículo o la línea de una sesión de compra.
+3. Usa **Bajar fotos del servidor**. Factuzam descarga las imágenes,
+   relaciona el color con el SKU y crea sus copias de 300 px, 600 px y
+   resolución real en `appDirFotos`.
+4. Comprueba el resultado con `[Ctrl]+[F]` o en la
+   [Consulta de stocks](08-menu-ayuda.md#consulta-de-stocks).
+
+---
+
 ## VentasFzam: ventas del día en el móvil
 
 **VentasFzam** es una aplicación de consulta en modo **solo lectura**. Permite

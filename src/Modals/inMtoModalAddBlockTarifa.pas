@@ -228,14 +228,14 @@ end;
 
 function TfrmModalAddBlockTarifa.ObtenerCodigoTarifaOrigen: string;
 begin
-  if not chkCopiarDeTarifa.Checked then
+  if chkCopiarDeTarifa.Checked then
   begin
+    Result := Trim(cbxTarifaOrigen.Text);
+    if Pos(' - ', Result) > 0 then
+      Result := Copy(Result, 1, Pos(' - ', Result) - 1);
+  end
+  else
     Result := '';
-    Exit;
-  end;
-  Result := Trim(cbxTarifaOrigen.Text);
-  if Pos(' - ', Result) > 0 then
-    Result := Copy(Result, 1, Pos(' - ', Result) - 1);
 end;
 
 function TfrmModalAddBlockTarifa.AlcanceAjusteActual: TAjusteAlcance;
@@ -259,32 +259,20 @@ begin
   AMensaje := '';
 
   if ObtenerCodigoTarifaActual = '' then
+    AMensaje := SErrorTarifaDestinoAddBlockNoSeleccionada
+  else if chkCopiarDeTarifa.Checked and
+          (ObtenerCodigoTarifaOrigen = '') then
+    AMensaje := SErrorTarifaOrigenAddBlockNoSeleccionada
+  else if chkCopiarDeTarifa.Checked and
+          SameText(ObtenerCodigoTarifaOrigen,
+            ObtenerCodigoTarifaActual) then
+    AMensaje := SErrorTarifasAddBlockCoincidentes
+  else if chkAjustarPrecio.Checked and (spnMultiplo.Value <= 0) then
+    AMensaje := SErrorMultiploAjusteAddBlockNoValido
+  else
   begin
-    AMensaje := SErrorTarifaDestinoAddBlockNoSeleccionada;
-    Exit;
+    Result := True;
   end;
-
-  if chkCopiarDeTarifa.Checked then
-  begin
-    if ObtenerCodigoTarifaOrigen = '' then
-    begin
-      AMensaje := SErrorTarifaOrigenAddBlockNoSeleccionada;
-      Exit;
-    end;
-    if SameText(ObtenerCodigoTarifaOrigen, ObtenerCodigoTarifaActual) then
-    begin
-      AMensaje := SErrorTarifasAddBlockCoincidentes;
-      Exit;
-    end;
-  end;
-
-  if chkAjustarPrecio.Checked and (spnMultiplo.Value <= 0) then
-  begin
-    AMensaje := SErrorMultiploAjusteAddBlockNoValido;
-    Exit;
-  end;
-
-  Result := True;
 end;
 
 function TfrmModalAddBlockTarifa.ContextoCargaMasiva:

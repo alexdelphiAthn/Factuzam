@@ -75,6 +75,12 @@ descuento, neto del artículo, ingresos, vendedor, formas de pago y documento.
 Los resultados se ordenan por fecha y operación, con
 totales por caja y por fecha.
 
+> Este acceso depende del permiso de menú del perfil. Si **TPV ▸ Listados**
+> no aparece, el administrador debe habilitarlo en el perfil; como consulta
+> en pantalla puede usarse el
+> [Histórico de Operaciones](#historico-de-operaciones), aunque no sustituye
+> al informe A4.
+
 ---
 
 ## Menú de Caja
@@ -565,6 +571,12 @@ cuadrar el datáfono.
 | **F8** | **Histórico** de arqueos anteriores. |
 | **F2** | **Grabar Arqueo y emitir justificante** desde la pestaña Recuento. |
 
+El botón **Resumen (F11)** emite el ticket de arqueo con el periodo, las
+operaciones, los totales de venta y cobro y los resúmenes por sección,
+temporada, empleado, forma de pago y serie.
+
+![Resumen imprimible del arqueo](img/05-caja-arqueo-resumen-ticket.png)
+
 > Haz el arqueo **al cierre de cada jornada**. El «Efectivo anterior» enlaza
 > con el arqueo previo, de modo que los descuadres no se arrastran sin ser
 > detectados.
@@ -593,6 +605,8 @@ la propuesta del sistema y el usuario confirma el total en **Recontado**. Con
 el parámetro activado no se muestran las propuestas ni las diferencias de
 efectivo o tarjetas; el recuento se introduce sin esos totalizadores.
 
+![Recuento y diferencias del arqueo](img/05-caja-arqueo-recuento.png)
+
 ### Tira de Caja (F7)
 
 La **Tira de Caja** imprime o exporta un detalle de lo ocurrido en el rango del
@@ -601,6 +615,17 @@ incluyen traspasos salientes, ingresos por caja, gastos por caja y ventas a
 crédito.
 
 ![Tira de caja](img/05-caja-tira-caja.png)
+
+**Imprimir** genera la tira en formato de ticket, con el detalle de cada
+documento, su forma de pago y los totales del periodo.
+
+![Tira de caja en formato de ticket](img/05-caja-tira-caja-ticket.png)
+
+**Ver Excel** abre una previsualización tabular con cada documento y línea,
+SKU, descripción, cantidad, importe y subtotales. Desde esa vista se puede
+guardar el Excel si se necesita adjuntarlo o trabajarlo fuera de Factuzam.
+
+![Resultado de la tira de caja en la previsualización Excel](img/05-caja-tira-caja-resultado.png)
 
 Úsala cuando el responsable quiera revisar el detalle antes del cierre o
 adjuntar una relación de movimientos al arqueo.

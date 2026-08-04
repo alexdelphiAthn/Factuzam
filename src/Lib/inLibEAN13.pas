@@ -77,15 +77,14 @@ end;
 function EsEAN8Valido(const ACodigo: string): Boolean;
 begin
   // Un EAN-8 estándar tiene exactamente 8 caracteres
-  if Length(ACodigo) <> 8 then
-    Exit(False);
-
-  try
-    // Calculamos el dígito sobre los primeros 7 y comparamos con el 8º
-    Result := (CalcularDigitoEAN8(Copy(ACodigo, 1, 7)) = ACodigo[8]);
-  except
-    // Si hay letras o caracteres raros, devolvemos False
-    Result := False;
+  Result := False;
+  if Length(ACodigo) = 8 then
+  begin
+    try
+      Result := CalcularDigitoEAN8(Copy(ACodigo, 1, 7)) = ACodigo[8];
+    except
+      Result := False;
+    end;
   end;
 end;
 
@@ -134,15 +133,14 @@ end;
 function EsEAN13Valido(const ACodigo: string): Boolean;
 begin
   // Un EAN-13 estándar tiene exactamente 13 caracteres
-  if Length(ACodigo) <> 13 then
-    Exit(False);
-
-  try
-    // Calculamos el dígito sobre los primeros 12 y comparamos con el 13º
-    Result := (CalcularDigitoEAN13(Copy(ACodigo, 1, 12)) = ACodigo[13]);
-  except
-    // Si contiene caracteres no numéricos y lanza la excepción, no es válido
-    Result := False;
+  Result := False;
+  if Length(ACodigo) = 13 then
+  begin
+    try
+      Result := CalcularDigitoEAN13(Copy(ACodigo, 1, 12)) = ACodigo[13];
+    except
+      Result := False;
+    end;
   end;
 end;
 

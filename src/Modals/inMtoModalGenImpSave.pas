@@ -119,19 +119,16 @@ procedure TfrmModalGenImpSave.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
-  with cbbPermisos.Properties.Items do
-  begin
-    BeginUpdate;
-    try
-      Clear;
-      Add(IdentidadSesion.Usuario);
-      Add(IdentidadSesion.Grupo);
-      if (IdentidadSesion.GrupoRaiz = 'S') then
-        Add(oAll);
-      cbbpermisos.Text := IdentidadSesion.Usuario;
-    finally
-      EndUpdate;
-    end;
+  cbbPermisos.Properties.Items.BeginUpdate;
+  try
+    cbbPermisos.Properties.Items.Clear;
+    cbbPermisos.Properties.Items.Add(IdentidadSesion.Usuario);
+    cbbPermisos.Properties.Items.Add(IdentidadSesion.Grupo);
+    if IdentidadSesion.GrupoRaiz = 'S' then
+      cbbPermisos.Properties.Items.Add(oAll);
+    cbbpermisos.Text := IdentidadSesion.Usuario;
+  finally
+    cbbPermisos.Properties.Items.EndUpdate;
   end;
 end;
 

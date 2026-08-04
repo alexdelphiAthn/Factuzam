@@ -88,6 +88,10 @@ uses
     '..\src\Lib\inLibFacturasEstadoFiscalPresentacion.pas',
   inLibFacturasOperacionFiscal in
     '..\src\Lib\inLibFacturasOperacionFiscal.pas',
+  inLibFacturasIncidenciaFiscalIntf in
+    '..\src\Lib\inLibFacturasIncidenciaFiscalIntf.pas',
+  inLibFacturasIncidenciaFiscal in
+    '..\src\Lib\inLibFacturasIncidenciaFiscal.pas',
   inLibFacturasAplicacionIntf in
     '..\src\Lib\inLibFacturasAplicacionIntf.pas',
   inLibFacturasAplicacion in
@@ -184,6 +188,10 @@ uses
     '..\src\DataModules\UniDataComprasSesionesUnidadTrabajo.pas',
   UniDataVerifactuColaRepositorio in
     '..\src\verifactu\UniDataVerifactuColaRepositorio.pas',
+  inLibVerifactuSubsanacionIntf in
+    '..\src\verifactu\inLibVerifactuSubsanacionIntf.pas',
+  UniDataVerifactuSubsanacionRepositorio in
+    '..\src\verifactu\UniDataVerifactuSubsanacionRepositorio.pas',
   inLibVerifactuEsquemaIntf in
     '..\src\verifactu\inLibVerifactuEsquemaIntf.pas',
   UniDataVerifactuEsquema in
@@ -194,6 +202,8 @@ uses
     '..\src\verifactu\UniDataVerifactuColaProcesador.pas',
   UniDataVerifactuColaResultados in
     '..\src\verifactu\UniDataVerifactuColaResultados.pas',
+  UniDataVerifactuSubsanacionResultados in
+    '..\src\verifactu\UniDataVerifactuSubsanacionResultados.pas',
   inLibVerifactuReintentos in
     '..\src\verifactu\inLibVerifactuReintentos.pas',
   UniDataVerifactuColaOperaciones in
@@ -306,6 +316,12 @@ uses
     '..\src\Lib\inLibPivoteVentaComposicionIntf.pas',
   inLibPivoteVentaModelo in
     '..\src\Lib\inLibPivoteVentaModelo.pas',
+  inLibHojaCalculoIntf in
+    '..\src\Lib\inLibHojaCalculoIntf.pas',
+  inLibMovVentasArtExcel in
+    '..\src\Lib\inLibMovVentasArtExcel.pas',
+  inLibExportacionCompraModelo in
+    '..\src\Lib\inLibExportacionCompraModelo.pas',
   PruebasAtributosPaleta in 'PruebasAtributosPaleta.pas',
   PruebasColumnasDocumento in 'PruebasColumnasDocumento.pas',
   PruebasFiltroUsuario in 'PruebasFiltroUsuario.pas',
@@ -381,6 +397,7 @@ uses
     'PruebasComprasSesionesAplicacion.pas',
   DoblesPivoteVenta in 'DoblesPivoteVenta.pas',
   PruebasPivoteVenta in 'PruebasPivoteVenta.pas',
+  PruebasExportadores in 'PruebasExportadores.pas',
   PruebasValidacionTallasCompra in
     'PruebasValidacionTallasCompra.pas',
   PruebasPresentacionDocumento in
@@ -403,6 +420,8 @@ uses
     'PruebasFacturasEstadoFiscalPresentacion.pas',
   PruebasFacturasOperacionFiscal in
     'PruebasFacturasOperacionFiscal.pas',
+  PruebasFacturasIncidenciaFiscal in
+    'PruebasFacturasIncidenciaFiscal.pas',
   PruebasFacturasConsolidacionPresentacion in
     'PruebasFacturasConsolidacionPresentacion.pas',
   PruebasFacturasConsolidacion in

@@ -390,30 +390,30 @@ procedure TfrmModalCrearAlbaranSesion.btnGenerarClick(Sender: TObject);
 begin
   inherited;
   if (not GetGenAlbaran) and (not GetGenPedido) then
-  begin
-    ShowMessage(SErrorTipoDocumentoSesionNoSeleccionado);
-    Exit;
-  end;
-  if GetGenAlbaran and (Trim(cbbSerieAlb.Text) = '') then
+    ShowMessage(SErrorTipoDocumentoSesionNoSeleccionado)
+  else if GetGenAlbaran and (Trim(cbbSerieAlb.Text) = '') then
   begin
     ShowMessage(SErrorSerieAlbaranSesionNoIndicada);
-    if cbbSerieAlb.CanFocus then cbbSerieAlb.SetFocus;
-    Exit;
-  end;
-  if GetGenPedido and (Trim(cbbSeriePed.Text) = '') then
+    if cbbSerieAlb.CanFocus then
+      cbbSerieAlb.SetFocus;
+  end
+  else if GetGenPedido and (Trim(cbbSeriePed.Text) = '') then
   begin
     ShowMessage(SErrorSeriePedidoSesionNoIndicada);
-    if cbbSeriePed.CanFocus then cbbSeriePed.SetFocus;
-    Exit;
-  end;
-  if (GetGenAlbaran or GetGenPedido) and (GetAlmacen = '') then
+    if cbbSeriePed.CanFocus then
+      cbbSeriePed.SetFocus;
+  end
+  else if (GetGenAlbaran or GetGenPedido) and (GetAlmacen = '') then
   begin
     ShowMessage(SErrorAlmacenDestinoSesionNoIndicado);
-    if cbbAlmacen.CanFocus then cbbAlmacen.SetFocus;
-    Exit;
+    if cbbAlmacen.CanFocus then
+      cbbAlmacen.SetFocus;
+  end
+  else
+  begin
+    FConfirmed := True;
+    ModalResult := mrOk;
   end;
-  FConfirmed := True;
-  ModalResult := mrOk;
 end;
 
 procedure TfrmModalCrearAlbaranSesion.btnSalirClick(Sender: TObject);

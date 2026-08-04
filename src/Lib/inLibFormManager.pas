@@ -147,9 +147,9 @@ begin
   Result := nil;
   for F in FForms do
   begin
-    if (F.Parent is TcxTabSheet) and
+    if (Result = nil) and (F.Parent is TcxTabSheet) and
        (Trim(TcxTabSheet(F.Parent).Caption) = Trim(ATitle)) then
-      Exit(F);
+      Result := F;
   end;
 end;
 
@@ -221,16 +221,17 @@ var
   F: TForm;
 begin
   ActiveSheet := FPageControl.ActivePage;
-  if ActiveSheet = nil then Exit;
-
-  // Buscamos qué formulario tiene como Parent a esta ActiveSheet
-  for I := FForms.Count - 1 downto 0 do
+  if ActiveSheet <> nil then
   begin
-    F := FForms[I];
-    if F.Parent = ActiveSheet then
+    // Se busca el formulario alojado en la pestaña activa.
+    for I := FForms.Count - 1 downto 0 do
     begin
-      InternalCloseForm(F);
-      Break;
+      F := FForms[I];
+      if F.Parent = ActiveSheet then
+      begin
+        InternalCloseForm(F);
+        Break;
+      end;
     end;
   end;
 end;
@@ -241,47 +242,43 @@ procedure TEmbeddedFormManager.InternalCloseForm(AForm: TForm;
 var
   ParentTab: TWinControl;
   oMantenimiento: IMantenimientoEmbebido;
+  bInterceptar: Boolean;
 begin
-  if (AForm = nil) or (PPointer(AForm)^ = nil) then
-    Exit;
-  try
-    if csDestroying in AForm.ComponentState then
-    begin
-      FForms.Remove(AForm);
-      Exit;
+  if (AForm <> nil) and (PPointer(AForm)^ <> nil) then
+  begin
+    try
+      if csDestroying in AForm.ComponentState then
+        FForms.Remove(AForm)
+      else
+      begin
+        bInterceptar := False;
+        if (not AForzar) and
+           FContratos.TryGetValue(AForm, oMantenimiento) then
+          bInterceptar := oMantenimiento.InterceptarCierre;
+        if not bInterceptar then
+        begin
+          SendMessage(FPageControl.Handle, WM_SETREDRAW, WPARAM(False), 0);
+          SendMessage(AForm.Handle, WM_SETREDRAW, WPARAM(False), 0);
+          AForm.Hide;
+          ParentTab := AForm.Parent;
+          FForms.Remove(AForm);
+          QuitarClave(AForm);
+          FContratos.Remove(AForm);
+          AForm.Parent := nil;
+          if ALiberarAhora then
+            FreeAndNil(AForm)
+          else
+            AForm.Release;
+          if (ParentTab <> nil) and (ParentTab is TcxTabSheet) and
+             not (csDestroying in ParentTab.ComponentState) then
+            FreeAndNil(ParentTab);
+        end;
+      end;
+    finally
+      SendMessage(FPageControl.Handle, WM_SETREDRAW, WPARAM(True), 0);
+      RedrawWindow(FPageControl.Handle, nil, 0,
+        RDW_ERASE or RDW_FRAME or RDW_INVALIDATE or RDW_ALLCHILDREN);
     end;
-    // La ventana decide si intercepta el cierre (p.ej. volver de la
-    // ficha a la lista); este gestor ya no conoce TfrmMtoGen.
-    if (not AForzar) and
-       FContratos.TryGetValue(AForm, oMantenimiento) and
-       oMantenimiento.InterceptarCierre then
-      Exit;
-    // Congela todo antes de tocar nada
-    SendMessage(FPageControl.Handle, WM_SETREDRAW, WPARAM(False), 0);
-    SendMessage(AForm.Handle, WM_SETREDRAW, WPARAM(False), 0);
-    AForm.Hide;
-    ParentTab := AForm.Parent;
-    FForms.Remove(AForm);
-    QuitarClave(AForm);
-    FContratos.Remove(AForm);
-    AForm.Parent := nil;
-    if ALiberarAhora then
-      FreeAndNil(AForm)
-    else
-    begin
-      // El cierre normal se difiere porque puede ejecutarse desde un mensaje.
-      AForm.Release;
-    end;
-    if (ParentTab <> nil) and
-       (ParentTab is TcxTabSheet) and
-       not (csDestroying in ParentTab.ComponentState) then
-      FreeAndNil(ParentTab);
-  finally
-    // Restaura y repinta de golpe
-    SendMessage(FPageControl.Handle, WM_SETREDRAW, WPARAM(True), 0);
-    RedrawWindow(FPageControl.Handle, nil, 0,
-                 RDW_ERASE or RDW_FRAME or
-                 RDW_INVALIDATE or RDW_ALLCHILDREN);
   end;
 end;
 

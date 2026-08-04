@@ -281,36 +281,38 @@ begin
      (FDatos.Bof and FDatos.Eof) then
   begin
     ShowMessage(SErrorValeCajaNoSeleccionado);
-    Exit;
-  end;
-  bPinObligatorio :=
-    ParametrosCaja.GetBool('vgerRecuperaValePIN', False);
-  PinIntroducido  := Trim(edtPin.Text);
-  PinReal := FDatos.FieldByName('PIN_SEGURIDAD_VL').AsString;
-  if bPinObligatorio and (PinReal <> '') then
+  end
+  else
   begin
-    if PinIntroducido = '' then
+    bPinObligatorio :=
+      ParametrosCaja.GetBool('vgerRecuperaValePIN', False);
+    PinIntroducido := Trim(edtPin.Text);
+    PinReal := FDatos.FieldByName('PIN_SEGURIDAD_VL').AsString;
+    if bPinObligatorio and (PinReal <> '') and
+       (PinIntroducido = '') then
     begin
       ShowMessage(SErrorPinValeCajaNoIndicado);
       edtPin.SetFocus;
-      Exit;
-    end;
-    if not SameText(PinIntroducido, PinReal) then
+    end
+    else if bPinObligatorio and (PinReal <> '') and
+            not SameText(PinIntroducido, PinReal) then
     begin
       ShowMessage(SErrorPinValeCajaIncorrecto);
       edtPin.Text := '';
       edtPin.SetFocus;
-      Exit;
+    end
+    else
+    begin
+      FValeSeleccionado.CodigoVale :=
+        FDatos.FieldByName('CODIGO_VL').AsString;
+      FValeSeleccionado.PinSeguridad := PinReal;
+      FValeSeleccionado.Importe :=
+        FDatos.FieldByName('IMPORTE_NOMINAL_VL').AsCurrency;
+      FValeSeleccionado.Descripcion :=
+        FValeSeleccionado.CodigoVale;
+      Result := True;
     end;
   end;
-  // Rellenar el record de salida
-  FValeSeleccionado.CodigoVale :=
-    FDatos.FieldByName('CODIGO_VL').AsString;
-  FValeSeleccionado.PinSeguridad := PinReal;
-  FValeSeleccionado.Importe      :=
-    FDatos.FieldByName('IMPORTE_NOMINAL_VL').AsCurrency;
-  FValeSeleccionado.Descripcion  := FValeSeleccionado.CodigoVale;
-  Result := True;
 end;
 
 procedure TfrmMtoCajaSeleccionVale.btnAceptarClick(Sender: TObject);

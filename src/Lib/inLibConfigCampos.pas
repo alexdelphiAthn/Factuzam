@@ -142,18 +142,15 @@ end;
 function TConfigCamposCache.Existe(const aCampo: string;
                                    const aTabla: string): Boolean;
 begin
-  if not FCargada then
+  Result := False;
+  if FCargada then
   begin
-    Result := False;
-    Exit;
+    if aTabla <> '' then
+      Result := FPorTablaCampo.ContainsKey(
+        LowerCase(aTabla + '.' + aCampo));
+    if not Result then
+      Result := FPorCampo.ContainsKey(LowerCase(aCampo));
   end;
-  if aTabla <> '' then
-    if FPorTablaCampo.ContainsKey(LowerCase(aTabla + '.' + aCampo)) then
-    begin
-      Result := True;
-      Exit;
-    end;
-  Result := FPorCampo.ContainsKey(LowerCase(aCampo));
 end;
 
 function TConfigCamposCache.ObtenerTitulo(const aCampo: string;
@@ -162,18 +159,17 @@ var
   item: TConfigCampoItem;
 begin
   Result := '';
-  if not FCargada then
-    Exit;
-  // Busqueda exacta por tabla+campo
-  if (aTabla <> '') and
-     FPorTablaCampo.TryGetValue(LowerCase(aTabla + '.' + aCampo), item) then
+  if FCargada then
   begin
-    Result := item.TituloVisual;
-    Exit;
+    // Busqueda exacta por tabla+campo
+    if (aTabla <> '') and
+       FPorTablaCampo.TryGetValue(
+         LowerCase(aTabla + '.' + aCampo), item) then
+      Result := item.TituloVisual
+    // Fallback: solo por campo
+    else if FPorCampo.TryGetValue(LowerCase(aCampo), item) then
+      Result := item.TituloVisual;
   end;
-  // Fallback: solo por campo
-  if FPorCampo.TryGetValue(LowerCase(aCampo), item) then
-    Result := item.TituloVisual;
 end;
 
 function TConfigCamposCache.ObtenerAncho(const aCampo: string;
@@ -182,16 +178,15 @@ var
   item: TConfigCampoItem;
 begin
   Result := 0;
-  if not FCargada then
-    Exit;
-  if (aTabla <> '') and
-     FPorTablaCampo.TryGetValue(LowerCase(aTabla + '.' + aCampo), item) then
+  if FCargada then
   begin
-    Result := item.AnchoColumna;
-    Exit;
+    if (aTabla <> '') and
+       FPorTablaCampo.TryGetValue(
+         LowerCase(aTabla + '.' + aCampo), item) then
+      Result := item.AnchoColumna
+    else if FPorCampo.TryGetValue(LowerCase(aCampo), item) then
+      Result := item.AnchoColumna;
   end;
-  if FPorCampo.TryGetValue(LowerCase(aCampo), item) then
-    Result := item.AnchoColumna;
 end;
 
 function TConfigCamposCache.GetCargada: Boolean;

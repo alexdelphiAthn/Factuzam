@@ -183,8 +183,8 @@ var
   bTransPropia  : Boolean;
 begin
   Result := 0;
-  if (sSerie = '') or (sNumero = '') then Exit;
-
+  if (sSerie <> '') and (sNumero <> '') then
+  begin
   bTransPropia := not AConexion.InTransaction;
   if bTransPropia then
     AConexion.StartTransaction;
@@ -238,6 +238,7 @@ begin
   finally
     FreeAndNil(q);
   end;
+  end;
 end;
 
 function MaxLineaDoc(AConexion: TUniConnection;
@@ -279,7 +280,8 @@ var
   bTransPropia  : Boolean;
 begin
   Result := 0;
-  if (sSerie = '') or (sNumero = '') then Exit;
+  if (sSerie <> '') and (sNumero <> '') then
+  begin
   bTransPropia := not AConexion.InTransaction;
   if bTransPropia then
     AConexion.StartTransaction;
@@ -335,6 +337,7 @@ begin
   finally
     FreeAndNil(q);
   end;
+  end;
 end;
 
 function GetSiguienteLineaDocLibreSiguiente(
@@ -351,7 +354,8 @@ var
   bTransPropia  : Boolean;
 begin
   Result := 0;
-  if (sSerie = '') or (sNumero = '') then Exit;
+  if (sSerie <> '') and (sNumero <> '') then
+  begin
   bTransPropia := not AConexion.InTransaction;
   if bTransPropia then
     AConexion.StartTransaction;
@@ -409,6 +413,7 @@ begin
   finally
     FreeAndNil(q);
   end;
+  end;
 end;
 
 function LineaDocExiste(
@@ -420,24 +425,26 @@ var
   q: TUniQuery;
 begin
   Result := False;
-  if (sSerie = '') or (sNumero = '') or (sLinea = '') then Exit;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := AConexion;
-    q.SQL.Text :=
-      'SELECT 1 AS EXISTE ' +
-      '  FROM ' + Lineas.TablaLin + ' ' +
-      ' WHERE ' + Lineas.ColSerieLin  + ' = :pserie ' +
-      '   AND ' + Lineas.ColNumeroLin + ' = :pnumero ' +
-      '   AND ' + Lineas.ColLinea     + ' = :plinea ' +
-      ' LIMIT 1';
-    q.ParamByName('pserie').AsString  := sSerie;
-    q.ParamByName('pnumero').AsString := sNumero;
-    q.ParamByName('plinea').AsString  := sLinea;
-    q.Open;
-    Result := not q.Eof;
-  finally
-    FreeAndNil(q);
+  if (sSerie <> '') and (sNumero <> '') and (sLinea <> '') then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := AConexion;
+      q.SQL.Text :=
+        'SELECT 1 AS EXISTE ' +
+        '  FROM ' + Lineas.TablaLin + ' ' +
+        ' WHERE ' + Lineas.ColSerieLin  + ' = :pserie ' +
+        '   AND ' + Lineas.ColNumeroLin + ' = :pnumero ' +
+        '   AND ' + Lineas.ColLinea     + ' = :plinea ' +
+        ' LIMIT 1';
+      q.ParamByName('pserie').AsString  := sSerie;
+      q.ParamByName('pnumero').AsString := sNumero;
+      q.ParamByName('plinea').AsString  := sLinea;
+      q.Open;
+      Result := not q.Eof;
+    finally
+      FreeAndNil(q);
+    end;
   end;
 end;
 

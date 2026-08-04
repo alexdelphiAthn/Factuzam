@@ -202,13 +202,16 @@ procedure TfrmMtoPropiedades.actGoArticuloExecute(Sender: TObject);
 var
   sCodArt: string;
 begin
-  if (dmmPropiedades = nil) or (dmmPropiedades.unqryArticulos = nil) then Exit;
-  if not dmmPropiedades.unqryArticulos.Active then Exit;
-  if dmmPropiedades.unqryArticulos.IsEmpty then Exit;
-  sCodArt :=
-    dmmPropiedades.unqryArticulos.FieldByName('CODIGO_ART_ART').AsString;
-  if sCodArt <> '' then
-    ShowMto(Self.Owner, 'Articulos', sCodArt);
+  if (dmmPropiedades <> nil) and
+     (dmmPropiedades.unqryArticulos <> nil) and
+     dmmPropiedades.unqryArticulos.Active and
+     not dmmPropiedades.unqryArticulos.IsEmpty then
+  begin
+    sCodArt :=
+      dmmPropiedades.unqryArticulos.FieldByName('CODIGO_ART_ART').AsString;
+    if sCodArt <> '' then
+      ShowMto(Self.Owner, 'Articulos', sCodArt);
+  end;
 end;
 
 initialization

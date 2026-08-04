@@ -338,15 +338,14 @@ begin
   begin
     Key := 0;
     btnAceptarClick(Self);
-    Exit;
-  end;
-  if (Key = VK_ESCAPE) and (Shift = []) then
+  end
+  else if (Key = VK_ESCAPE) and (Shift = []) then
   begin
     Key := 0;
     btnCancelarClick(Self);
-    Exit;
-  end;
-  inherited;
+  end
+  else
+    inherited;
 end;
 
 function TfrmMtoSearch.MostrarDialogoDinamico(var sCod, sDesc: string): Boolean;
@@ -425,12 +424,12 @@ procedure TfrmMtoSearch.btnAltaRapidaClick(Sender: TObject);
 var
   sCodigo, sDescripcion: string;
 begin
-  if not FConfigAlta.Activo then Exit;
-  sCodigo := '0';
-  sDescripcion := '';
-  if MostrarDialogoDinamico(sCodigo, sDescripcion) then
+  if FConfigAlta.Activo then
   begin
-    EjecutarAltaGenerica(sCodigo, sDescripcion);
+    sCodigo := '0';
+    sDescripcion := '';
+    if MostrarDialogoDinamico(sCodigo, sDescripcion) then
+      EjecutarAltaGenerica(sCodigo, sDescripcion);
   end;
 end;
 

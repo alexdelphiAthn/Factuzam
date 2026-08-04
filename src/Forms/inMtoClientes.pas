@@ -720,11 +720,13 @@ end;
 
 procedure TfrmMtoClientes.PcPestanasChange(Sender: TObject);
 begin
-  if not Assigned(FDmmClientes) then Exit;
-  if pcPestanas.ActivePage = tsHistoriaFacturacion then
-    FDmmClientes.AsegurarHistoriaFacturacionAbierta
-  else if pcPestanas.ActivePage = tsPrestamos then
-    FDmmClientes.AsegurarDepositosAbierta;
+  if Assigned(FDmmClientes) then
+  begin
+    if pcPestanas.ActivePage = tsHistoriaFacturacion then
+      FDmmClientes.AsegurarHistoriaFacturacionAbierta
+    else if pcPestanas.ActivePage = tsPrestamos then
+      FDmmClientes.AsegurarDepositosAbierta;
+  end;
 end;
 
 procedure TfrmMtoClientes.cxButton4Click(Sender: TObject);
@@ -772,13 +774,13 @@ var
   sCodCli: string;
 begin
   Result := 0;
-  if (dsTablaG.DataSet = nil) or (not dsTablaG.DataSet.Active) or
-     dsTablaG.DataSet.IsEmpty then
-    Exit;
-  sCodCli := dsTablaG.DataSet.FieldByName('CODIGO_CLI_CLI').AsString;
-  if sCodCli = '' then
-    Exit;
-  Result := FRepositorioClientes.ContarDocumentos(sCodCli);
+  if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
+     not dsTablaG.DataSet.IsEmpty then
+  begin
+    sCodCli := dsTablaG.DataSet.FieldByName('CODIGO_CLI_CLI').AsString;
+    if sCodCli <> '' then
+      Result := FRepositorioClientes.ContarDocumentos(sCodCli);
+  end;
 end;
 
 function TfrmMtoClientes.DescripcionHijos: string;

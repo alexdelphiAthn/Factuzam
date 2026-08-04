@@ -600,25 +600,25 @@ var
 begin
   if Assigned(FCoordinadorOperaciones) and
      FCoordinadorOperaciones.EnCurso then
-  begin
-    Done := True;
-    Exit;
-  end;
-  EstadoTeclas := '';
-  if (GetKeyState(VK_CAPITAL) and 1) <> 0 then
-    EstadoTeclas := EstadoTeclas + 'CAPS  ';
-  if (GetKeyState(VK_NUMLOCK) and 1) <> 0 then
-    EstadoTeclas := EstadoTeclas + 'NUM  ';
-  if (GetKeyState(VK_SCROLL) and 1) <> 0 then
-    EstadoTeclas := EstadoTeclas + 'SCRL  ';
-  if (GetKeyState(VK_INSERT) and 1) <> 0 then
-    EstadoTeclas := EstadoTeclas + 'OVR'
+    Done := True
   else
-    EstadoTeclas := EstadoTeclas + 'INS';
-  EstadoTeclas := Trim(EstadoTeclas);
-  if jvStatusBar1.Panels[0].Text <> EstadoTeclas then
-    jvStatusBar1.Panels[0].Text := EstadoTeclas;
-  ActualizarFondoLogo;
+  begin
+    EstadoTeclas := '';
+    if (GetKeyState(VK_CAPITAL) and 1) <> 0 then
+      EstadoTeclas := EstadoTeclas + 'CAPS  ';
+    if (GetKeyState(VK_NUMLOCK) and 1) <> 0 then
+      EstadoTeclas := EstadoTeclas + 'NUM  ';
+    if (GetKeyState(VK_SCROLL) and 1) <> 0 then
+      EstadoTeclas := EstadoTeclas + 'SCRL  ';
+    if (GetKeyState(VK_INSERT) and 1) <> 0 then
+      EstadoTeclas := EstadoTeclas + 'OVR'
+    else
+      EstadoTeclas := EstadoTeclas + 'INS';
+    EstadoTeclas := Trim(EstadoTeclas);
+    if jvStatusBar1.Panels[0].Text <> EstadoTeclas then
+      jvStatusBar1.Panels[0].Text := EstadoTeclas;
+    ActualizarFondoLogo;
+  end;
 end;
 
 procedure TfrmMtoPrincipal.FormCreate(Sender: TObject);
@@ -963,27 +963,29 @@ procedure TfrmMtoPrincipal.CentrarLogoFondoBg;
 var
   cw, ch, w, h, cx, cy: Integer;
 begin
-  if imgFondoLogo = nil then
-    Exit;
-  // Trabajamos sobre el cliente de pcPrincipal (donde reparentamos los
-  // controles), no sobre Panel1. Asi al cambiar el tamano de la ventana
-  // FormResize recoloca todo respecto al area cliente real.
-  cw := pcPrincipal.ClientWidth;
-  ch := pcPrincipal.ClientHeight;
-  // Logo: ~33% del ancho, max 380, min 180, manteniendo aspect 520x130.
-  w := cw div 3;
-  if w > 380 then w := 380;
-  if w < 180 then w := 180;
-  h := Round(w * 130 / 520);
-  cx := (cw - w) div 2;
-  cy := (ch - h - 80) div 2;
-  if cy < 20 then cy := 20;
-  imgFondoLogo.Anchors := [];
-  imgFondoLogo.SetBounds(cx, cy, w, h);
-  if FLogoBgNombre <> nil then
-    TcxLabel(FLogoBgNombre).SetBounds(0, cy + h + 8, cw, 26);
-  if FLogoBgVersion <> nil then
-    TcxLabel(FLogoBgVersion).SetBounds(0, cy + h + 38, cw, 20);
+  if imgFondoLogo <> nil then
+  begin
+    // Trabajamos sobre el cliente real de pcPrincipal
+    cw := pcPrincipal.ClientWidth;
+    ch := pcPrincipal.ClientHeight;
+    // Logo: ~33% del ancho, max 380, min 180, manteniendo aspect 520x130.
+    w := cw div 3;
+    if w > 380 then
+      w := 380;
+    if w < 180 then
+      w := 180;
+    h := Round(w * 130 / 520);
+    cx := (cw - w) div 2;
+    cy := (ch - h - 80) div 2;
+    if cy < 20 then
+      cy := 20;
+    imgFondoLogo.Anchors := [];
+    imgFondoLogo.SetBounds(cx, cy, w, h);
+    if FLogoBgNombre <> nil then
+      TcxLabel(FLogoBgNombre).SetBounds(0, cy + h + 8, cw, 26);
+    if FLogoBgVersion <> nil then
+      TcxLabel(FLogoBgVersion).SetBounds(0, cy + h + 38, cw, 20);
+  end;
 end;
 
 procedure TfrmMtoPrincipal.FormResize(Sender: TObject);
@@ -995,29 +997,25 @@ procedure TfrmMtoPrincipal.CerrarSplashInicio(aMinimoMs: Integer);
 var
   iElapsedMs, iEsperaMs: Integer;
 begin
-  if FSplashInicio = nil then
-    Exit;
-  // Si ya ha pasado el suelo minimo, cierre inmediato. Si no, dormimos
-  // lo que falte. Sleep simple: el splash no se anima durante la espera
-  // pero la VCL no se cuelga porque estamos en el ultimo paso de
-  // FormCreate; Application.Run procesara mensajes despues.
-  iElapsedMs := Round((Now - FSplashTimestamp) * 86400000);
-  if iElapsedMs < aMinimoMs then
+  if FSplashInicio <> nil then
   begin
-    iEsperaMs := aMinimoMs - iElapsedMs;
-    Application.ProcessMessages;
-    Sleep(iEsperaMs);
+    iElapsedMs := Round((Now - FSplashTimestamp) * 86400000);
+    if iElapsedMs < aMinimoMs then
+    begin
+      iEsperaMs := aMinimoMs - iElapsedMs;
+      Application.ProcessMessages;
+      Sleep(iEsperaMs);
+    end;
+    try
+      TfrmSplash(FSplashInicio).Close;
+    except
+      // Si el form ya estaba liberado por algun motivo, lo ignoramos.
+      on E: Exception do
+        RegistroLog.RegistrarAviso(
+          'Principal: cierre del splash de inicio fallo: ' + E.Message);
+    end;
+    FreeAndNil(FSplashInicio);
   end;
-  try
-    TfrmSplash(FSplashInicio).Close;
-  except
-    // Si el form ya estaba liberado por algun motivo, lo ignoramos.
-    on E: Exception do
-      RegistroLog.RegistrarAviso(
-        'Principal: cierre del splash de inicio fallo: ' +
-        E.Message);
-  end;
-  FreeAndNil(FSplashInicio);
 end;
 
 // El Picture.Data del .dfm trae un envoltorio TdxSmartImage que el TImage
@@ -1033,11 +1031,13 @@ var
   i: Integer;
   oRes: TResourceStream;
   oPng: TPngImage;
+  Cargado: Boolean;
 begin
   // 1) Recurso RCDATA 'FONDO' embebido en el .exe via {$R fondo.res} en
   //    fzam.dpr. Es el camino preferente porque no depende de tener el
   //    fichero al lado del .exe. Si el recurso no esta presente (porque
   //    se compilo sin fondo.res) caemos a las rutas relativas de disco.
+  Cargado := False;
   try
     oRes := TResourceStream.Create(HInstance, 'FONDO', RT_RCDATA);
     try
@@ -1048,7 +1048,7 @@ begin
         RegistroLog.RegistrarInformacion(
           'CargarFondoLogo: OK desde recurso FONDO ' +
                              '(' + IntToStr(oRes.Size) + ' bytes)');
-        Exit;
+        Cargado := True;
       finally
         oPng.Free;
       end;
@@ -1063,27 +1063,33 @@ begin
   end;
   // 2) Fallback a fichero suelto: para builds Debug donde fondo.png
   //    vive en la raiz del repo (..\..ondo.png desde Win32/Debug).
-  sBase := inLibDir.DirApp;
-  RegistroLog.RegistrarInformacion('CargarFondoLogo: base="' + sBase + '"');
-  for i := 0 to High(CRutas) do
+  if not Cargado then
   begin
-    sRuta := sBase + CRutas[i];
-    if FileExists(sRuta) then
+    sBase := inLibDir.DirApp;
+    RegistroLog.RegistrarInformacion(
+      'CargarFondoLogo: base="' + sBase + '"');
+    i := 0;
+    while (i <= High(CRutas)) and not Cargado do
     begin
-      try
-        imgFondoLogo.Picture.LoadFromFile(sRuta);
+      sRuta := sBase + CRutas[i];
+      if FileExists(sRuta) then
+      begin
+        try
+          imgFondoLogo.Picture.LoadFromFile(sRuta);
+          Cargado := True;
+          RegistroLog.RegistrarInformacion(
+            'CargarFondoLogo: OK desde "' + sRuta + '"');
+        except
+          on E: Exception do
+            RegistroLog.RegistrarAviso(
+              'No se pudo cargar fondo ' + sRuta + ': ' + E.Message);
+        end;
+      end
+      else
         RegistroLog.RegistrarInformacion(
-          'CargarFondoLogo: OK desde "' + sRuta + '"');
-        Exit;
-      except
-        on E: Exception do
-          RegistroLog.RegistrarAviso('No se pudo cargar fondo ' + sRuta +
-                                  ': ' + E.Message);
-      end;
-    end
-    else
-      RegistroLog.RegistrarInformacion(
-        'CargarFondoLogo: no existe "' + sRuta + '"');
+          'CargarFondoLogo: no existe "' + sRuta + '"');
+      Inc(i);
+    end;
   end;
 end;
 
@@ -1519,17 +1525,13 @@ end;
 procedure TfrmMtoPrincipal.FormShow(Sender: TObject);
 begin
   if FException then
-  begin
     PostMessage(Handle, wm_Close, 0, 0);
-    Exit;
+  if not FException then
+  begin
+    // Garantiza el z-order y la visibilidad con el formulario ya visible
+    imgFondoLogo.BringToFront;
+    ActualizarFondoLogo;
   end;
-  // Defensivo: tras todo el init de FormCreate, garantizamos que el logo
-  // este encima de pcPrincipal (z-order) y que ActualizarFondoLogo haya
-  // decidido visibilidad ya con el form fisicamente visible en pantalla.
-  // Si CargarFondoLogo no encontro el png, esto es no-op (Picture.Graphic
-  // sigue nil y ActualizarFondoLogo deja Visible=False).
-  imgFondoLogo.BringToFront;
-  ActualizarFondoLogo;
 end;
 
 procedure TfrmMtoPrincipal.AbrirCajonDesdePresentacion;
@@ -1624,6 +1626,7 @@ var
   iPageActive: Integer;
   bFound: Boolean;
 begin
+  Result := False;
   // F9 sola (sin Ctrl/Alt/Mayus ni autorrepeticion) -> abrir el cajon
   // portamonedas, mismo criterio que AppMessage. Via redundante: cubre el
   // foco en el principal y sus pestañas embebidas aunque Application.OnMessage
@@ -1638,115 +1641,105 @@ begin
   begin
     AbrirCajonDesdePresentacion;
     Result := True;
-    Exit;
-  end;
+  end
   // Alt+F4 -> cerrar aplicacion
-  if (Message.CharCode = VK_F4)
-     and (HiWord(Message.KeyData) and KF_ALTDOWN <> 0) then
+  else if (Message.CharCode = VK_F4) and
+          (HiWord(Message.KeyData) and KF_ALTDOWN <> 0) then
   begin
     Self.Close;
     Result := True;
-    Exit;
-  end;
+  end
   // Ctrl+F4 -> cerrar pestaña activa o ventana flotante
-  if (Message.CharCode = VK_F4)
-     and (GetKeyState(VK_CONTROL) < 0)
-     and (HiWord(Message.KeyData) and KF_ALTDOWN = 0) then
+  else if (Message.CharCode = VK_F4) and
+          (GetKeyState(VK_CONTROL) < 0) and
+          (HiWord(Message.KeyData) and KF_ALTDOWN = 0) then
   begin
     // Ventana flotante (no modal): cerrarla
     if Assigned(Screen.ActiveForm) and
        (Screen.ActiveForm <> Self) and
        (Screen.ActiveForm.Parent = nil) then
-    begin
-      Screen.ActiveForm.Close;
-      Result := True;
-      Exit;
-    end;
-    // Pestaña embebida
-    if (pcPrincipal.PageCount > 0) then
+      Screen.ActiveForm.Close
+    else if pcPrincipal.PageCount > 0 then
       FormManager.CloseActiveForm;
     Result := True;
-    Exit;
-  end;
+  end
   // ESC -> cerrar pestaña activa o salir
-  if (Message.CharCode = VK_ESCAPE) then
+  else if Message.CharCode = VK_ESCAPE then
   begin
     if Application.ModalLevel > 0 then
-    begin
-      Result := inherited IsShortCut(Message);
-      Exit;
-    end;
-    if Assigned(Screen.ActiveForm) and
-       (Screen.ActiveForm <> Self) and
-       (Screen.ActiveForm.Parent = nil) then
-    begin
-      Result := inherited IsShortCut(Message);
-      Exit;
-    end;
-    if (pcPrincipal.PageCount = 0) then
+      Result := inherited IsShortCut(Message)
+    else if Assigned(Screen.ActiveForm) and
+            (Screen.ActiveForm <> Self) and
+            (Screen.ActiveForm.Parent = nil) then
+      Result := inherited IsShortCut(Message)
+    else if pcPrincipal.PageCount = 0 then
     begin
       PostMessage(Self.Handle, WM_CLOSE, 0, 0);
       Result := True;
-      Exit;
     end
     else
     begin
       FormManager.CloseActiveForm;
       Result := True;
-      Exit;
     end;
-  end;
-  // Ventana no embebida (modal top-level) -> delegar a sus ActionLists
-  ActiveForm := Screen.ActiveForm;
-  if Assigned(ActiveForm) and
-     (ActiveForm <> Self) and
-     (ActiveForm.Parent = nil) then
+  end
+  else
   begin
-    Result := False;
-    for I := 0 to ActiveForm.ComponentCount - 1 do
+    // Ventana no embebida: delegar a sus ActionLists
+    ActiveForm := Screen.ActiveForm;
+    if Assigned(ActiveForm) and
+       (ActiveForm <> Self) and
+       (ActiveForm.Parent = nil) then
     begin
-      Component := ActiveForm.Components[I];
-      if Component is TActionList then
+      Result := False;
+      for I := 0 to ActiveForm.ComponentCount - 1 do
       begin
-        if TActionList(Component).IsShortCut(Message) then
+        Component := ActiveForm.Components[I];
+        if Component is TActionList then
         begin
-          Result := True;
-          Break;
-        end;
-      end;
-    end;
-    Exit;
-  end;
-  // Enrutar a los TActionList del formulario hijo en la pestaña activa.
-  // Recorre TODOS los ActionList del hijo (base + propios del Mto).
-  bFound := False;
-  if (Self.pcPrincipal.PageCount > 0) then
-  begin
-    iPageActive := pcPrincipal.ActivePageIndex;
-    if (iPageActive >= 0) then
-    begin
-      ts := (Self.pcPrincipal.Pages[iPageActive] as TcxTabSheet);
-      if (ts.ControlCount > 0) and (ts.Controls[0] is TForm) then
-      begin
-        for I := 0 to (ts.Controls[0] as TForm).ComponentCount - 1 do
-        begin
-          Component := (ts.Controls[0] as TForm).Components[I];
-          if (Component is TActionList) then
+          if TActionList(Component).IsShortCut(Message) then
           begin
-            if TActionList(Component).IsShortCut(Message) then
-            begin
-              bFound := True;
-              Break;
-            end;
+            Result := True;
+            Break;
           end;
         end;
       end;
     end;
+    if not (Assigned(ActiveForm) and
+            (ActiveForm <> Self) and
+            (ActiveForm.Parent = nil)) then
+    begin
+      // Enrutar a los ActionList del formulario hijo de la pestaña activa
+      bFound := False;
+      if Self.pcPrincipal.PageCount > 0 then
+      begin
+        iPageActive := pcPrincipal.ActivePageIndex;
+        if iPageActive >= 0 then
+        begin
+          ts := Self.pcPrincipal.Pages[iPageActive] as TcxTabSheet;
+          if (ts.ControlCount > 0) and (ts.Controls[0] is TForm) then
+          begin
+            for I := 0 to (ts.Controls[0] as TForm).ComponentCount - 1 do
+            begin
+              Component := (ts.Controls[0] as TForm).Components[I];
+              if Component is TActionList then
+              begin
+                if TActionList(Component).IsShortCut(Message) then
+                begin
+                  bFound := True;
+                  Break;
+                end;
+              end;
+            end;
+          end;
+        end;
+      end;
+      if bFound then
+        Result := True
+      else
+        Result := inherited IsShortCut(Message);
+    end;
   end;
-  if bFound then
-    Result := True
-  else
-    Result := inherited IsShortCut(Message);
 end;
 
 procedure TfrmMtoPrincipal.mnuEjecutarScriptClick(Sender: TObject);
@@ -1839,9 +1832,11 @@ end;
 procedure TfrmMtoPrincipal.mnuMenuCajaClick(Sender: TObject);
 begin
   inherited;
-  if not mnuMenuCaja.Visible then Exit;
-  MostrarMenuCaja(Permisos);
-  Self.WindowState := wsMinimized;
+  if mnuMenuCaja.Visible then
+  begin
+    MostrarMenuCaja(Permisos);
+    Self.WindowState := wsMinimized;
+  end;
 end;
 
 procedure TfrmMtoPrincipal.AbrirUrlAyuda(const AUrl: string);
@@ -2165,16 +2160,18 @@ begin
       FormularioFoto.VincularDataSources([], nil);
       FormularioFoto.SetArticuloSku('', '');
     end;
-    Exit;
   end;
-  ts := pcPrincipal.Pages[pcPrincipal.ActivePageIndex] as TcxTabSheet;
-  if (ts.ControlCount = 0) or not (ts.Controls[0] is TfrmMtoGen) then
+  if pcPrincipal.ActivePageIndex >= 0 then
   begin
-    if (FormularioFoto <> nil) and FormularioFoto.Visible then
-      FormularioFoto.VincularDataSources([], nil);
-    Exit;
+    ts := pcPrincipal.Pages[pcPrincipal.ActivePageIndex] as TcxTabSheet;
+    if (ts.ControlCount = 0) or not (ts.Controls[0] is TfrmMtoGen) then
+    begin
+      if (FormularioFoto <> nil) and FormularioFoto.Visible then
+        FormularioFoto.VincularDataSources([], nil);
+    end
+    else
+      EngancharFotoAlMto(ts.Controls[0]);
   end;
-  EngancharFotoAlMto(ts.Controls[0]);
 end;
 
 // --- IAnfitrionPantallas -------------------------------------------
@@ -2297,14 +2294,15 @@ begin
   // que siga el contexto). NO la abrimos automaticamente: el usuario
   // decide cuando aparece.
   FormularioFoto := FotoFlotanteActual;
-  if FormularioFoto = nil then Exit;
-  if not FormularioFoto.Visible then Exit;
-  if not (AMto is TfrmMtoGen) then Exit;
-  frmActivo := TfrmMtoGen(AMto);
-  frmActivo.ResolverArtSkuActivo(sArt, sSku);
-  FormularioFoto.VincularDataSources(frmActivo.DataSourcesParaFoto,
-                                     frmActivo.ResolverArtSkuActivo);
-  FormularioFoto.SetArticuloSku(sArt, sSku);
+  if (FormularioFoto <> nil) and FormularioFoto.Visible and
+     (AMto is TfrmMtoGen) then
+  begin
+    frmActivo := TfrmMtoGen(AMto);
+    frmActivo.ResolverArtSkuActivo(sArt, sSku);
+    FormularioFoto.VincularDataSources(frmActivo.DataSourcesParaFoto,
+                                       frmActivo.ResolverArtSkuActivo);
+    FormularioFoto.SetArticuloSku(sArt, sSku);
+  end;
 end;
 
 // Reenvío compatible con TApplicationEvents.OnException.

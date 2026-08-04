@@ -814,6 +814,25 @@ SELECT t.orden AS orden_aplicacion,
                        WHERE TABLE_SCHEMA = DATABASE()
                          AND TABLE_NAME = 'vi_pedidos'
                          AND COLUMN_NAME = 'NOMBRE_ALM_PED')
+    UNION ALL
+    SELECT 530, 'verifactu_resolucion_incidencias.sql',
+           'subsanación AceptadoConErrores y rectificativa R4',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_facturas'
+                     AND COLUMN_NAME = 'TIPO_FACTURA_VERIFACTU_FAC')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_verifactu_cola'
+                         AND COLUMN_NAME = 'MOTIVO_VFCOLA')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_facturas_consolidaciones'
+                         AND COLUMN_NAME = 'ESTADO_ORIGINAL_FACCON')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_facturas_consolidaciones'
+                         AND COLUMN_NAME = 'INSTANTE_SUBSANACION_FACCON')
   ) t
  ORDER BY t.aplicado, t.orden;
 -- Scripts solo-datos, no detectables por esquema. Son idempotentes:

@@ -644,11 +644,11 @@ var
   CfgT: TGridTallasConfig;
   ds: TDataSet;
 begin
-  if (dmmAlbaranes = nil) or (csDestroying in ComponentState) then
-    Exit;
-  ds := dmmAlbaranes.unqryAlbaranesLineas;
-  if not ds.Active then
-    Exit;
+  if (dmmAlbaranes <> nil) and not (csDestroying in ComponentState) then
+  begin
+    ds := dmmAlbaranes.unqryAlbaranesLineas;
+    if ds.Active then
+    begin
   DesmontarModoEntradaDocumento(tvLineasAlbaran, ds, FModoEntrada);
   // Desglose y tallas ensenyan atributos: desempaquetar SKU->ATTR
   // (columnas reales _ALBLIN; idempotente por comparacion).
@@ -713,6 +713,8 @@ begin
     begin
       tsLineasAlbaran.Caption := SCaptionLineasDesglose;
       MostrarColumnasAtributoGlobalesAlb;
+    end;
+  end;
     end;
   end;
 end;
@@ -904,8 +906,8 @@ var
 begin
   // Con el contrato construido, las columnas del dfm que esta rutina
   // muestra/oculta han muerto en el ClearItems: las gestiona el modo.
-  if FColsModoConstruido then
-    Exit;
+  if not FColsModoConstruido then
+  begin
   sArticulo := '';
   Configuracion := Default(TConfiguracionArticuloAlbaranVenta);
   if (dmmAlbaranes <> nil) and
@@ -929,6 +931,7 @@ begin
   PonerVisibleCampo('DESCRIPCION_VARIACION_ALBLIN',
     Configuracion.EsVariacion or (Configuracion.NumeroSkus > 1));
   PonerVisibleCampo('CODIGO_ALMACEN_ALBLIN', False);
+  end;
 end;
 
 procedure TfrmMtoAlbaranes.unqryLineasAfterPostHook(DataSet: TDataSet);
@@ -1302,22 +1305,25 @@ var
   sNumero: string;
   sSerie: string;
 begin
-  if not Assigned(dmmAlbaranes) then
-    Exit;
-  dsCab := dmmAlbaranes.unqryTablaG;
-  dsLin := dmmAlbaranes.unqryAlbaranesLineas;
-  if (dsCab = nil) or (dsLin = nil) or (not dsCab.Active) or
-     (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
-    Exit;
-  AsegurarCabeceraPersistidaParaLineas;
-  sNumero := Trim(dsCab.FieldByName('NUMERO_ALB').AsString);
-  sSerie  := Trim(dsCab.FieldByName('SERIE_ALB').AsString);
-  if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
-    Exit;
-  if not dsLin.Active then
-    dsLin.Open;
-  if dsLin.IsEmpty and (not (dsLin.State in dsEditModes)) then
-    dsLin.Append;
+  if Assigned(dmmAlbaranes) then
+  begin
+    dsCab := dmmAlbaranes.unqryTablaG;
+    dsLin := dmmAlbaranes.unqryAlbaranesLineas;
+    if (dsCab <> nil) and (dsLin <> nil) and dsCab.Active and
+       (not dsCab.IsEmpty or (dsCab.State in dsEditModes)) then
+    begin
+      AsegurarCabeceraPersistidaParaLineas;
+      sNumero := Trim(dsCab.FieldByName('NUMERO_ALB').AsString);
+      sSerie := Trim(dsCab.FieldByName('SERIE_ALB').AsString);
+      if (sNumero <> '') and (sNumero <> '0') and (sSerie <> '') then
+      begin
+        if not dsLin.Active then
+          dsLin.Open;
+        if dsLin.IsEmpty and not (dsLin.State in dsEditModes) then
+          dsLin.Append;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmMtoAlbaranes.cxgrdLineasAlbaranEnter(Sender: TObject);
@@ -1367,23 +1373,27 @@ var
   sNumFac, sSerFac, sLinea, sFacturada: string;
   i, iLineaCol, iFactCol: Integer;
   rec: TcxCustomGridRecord;
+  bContinuar: Boolean;
 begin
   inherited;
   if dsTablaG.State in dsEditModes then
     dsTablaG.DataSet.Post;
   ds := dmmAlbaranes.unqryAlbaranesLineas;
-  if not ds.Active or (ds.RecordCount = 0) then
+  bContinuar := ds.Active and (ds.RecordCount > 0);
+  if not bContinuar then
   begin
-    ShowMessage(SErrorAlbaranVentaSinLineas);
-    Exit;
+    ShowMessage(SErrorAlbaranVentaSinLineas)
   end;
-  if tvLineasAlbaran.Controller.SelectedRowCount = 0 then
+  if bContinuar and
+     (tvLineasAlbaran.Controller.SelectedRowCount = 0) then
   begin
     ShowMessage(SAvisoSeleccionarLineasBorradorAlbaran);
-    Exit;
+    bContinuar := False;
   end;
-  lst := TList<string>.Create;
-  try
+  if bContinuar then
+  begin
+    lst := TList<string>.Create;
+    try
     iLineaCol := -1;
     iFactCol  := -1;
     if tvLineasAlbaran.GetColumnByFieldName('LINEA_ALBLIN') <> nil then
@@ -1391,34 +1401,35 @@ begin
     if tvLineasAlbaran.GetColumnByFieldName('ESFACTURADA_ALBLIN') <> nil then
       iFactCol :=
         tvLineasAlbaran.GetColumnByFieldName('ESFACTURADA_ALBLIN').Index;
-    if iLineaCol < 0 then Exit;
-
-    for i := 0 to tvLineasAlbaran.Controller.SelectedRowCount - 1 do
-    begin
-      rec := tvLineasAlbaran.Controller.SelectedRows[i];
-      sLinea := VarToStr(rec.Values[iLineaCol]);
-      if iFactCol >= 0 then
-        sFacturada := VarToStr(rec.Values[iFactCol])
-      else
-        sFacturada := 'N';
-      if (sLinea <> '') and (sFacturada <> 'S') then
-        lst.Add(sLinea);
+      if iLineaCol >= 0 then
+      begin
+        for i := 0 to tvLineasAlbaran.Controller.SelectedRowCount - 1 do
+        begin
+          rec := tvLineasAlbaran.Controller.SelectedRows[i];
+          sLinea := VarToStr(rec.Values[iLineaCol]);
+          if iFactCol >= 0 then
+            sFacturada := VarToStr(rec.Values[iFactCol])
+          else
+            sFacturada := 'N';
+          if (sLinea <> '') and (sFacturada <> 'S') then
+            lst.Add(sLinea);
+        end;
+      end;
+      if lst.Count = 0 then
+        ShowMessage(SAvisoLineasAlbaranConBorrador)
+      else if MessageDlg(Format(
+        SPreguntaGenerarBorradorLineasAlbaran, [lst.Count]),
+        mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+      begin
+        if dmmAlbaranes.CrearFacturaDesdeAlbaran(
+          sNumFac, sSerFac, lst) then
+          ShowMessageFmt(SInfoBorradorFacturaCreado, [sSerFac, sNumFac])
+        else
+          ShowMessage(SErrorCrearBorradorFactura);
+      end;
+    finally
+      FreeAndNil(lst);
     end;
-
-    if lst.Count = 0 then
-    begin
-      ShowMessage(SAvisoLineasAlbaranConBorrador);
-      Exit;
-    end;
-    if MessageDlg(Format(SPreguntaGenerarBorradorLineasAlbaran,
-                         [lst.Count]),
-                  mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
-    if dmmAlbaranes.CrearFacturaDesdeAlbaran(sNumFac, sSerFac, lst) then
-      ShowMessageFmt(SInfoBorradorFacturaCreado, [sSerFac, sNumFac])
-    else
-      ShowMessage(SErrorCrearBorradorFactura);
-  finally
-    FreeAndNil(lst);
   end;
 end;
 
@@ -1431,16 +1442,16 @@ begin
     dsTablaG.DataSet.Post;
   if not dmmAlbaranes.unqryAlbaranesLineas.Active or
      (dmmAlbaranes.unqryAlbaranesLineas.RecordCount = 0) then
+    ShowMessage(SErrorAlbaranVentaSinLineas)
+  else if MessageDlg(SPreguntaGenerarBorradorTodoAlbaran,
+    mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
-    ShowMessage(SErrorAlbaranVentaSinLineas);
-    Exit;
+    if dmmAlbaranes.CrearFacturaDesdeAlbaran(
+      sNumFac, sSerFac, nil) then
+      ShowMessageFmt(SInfoBorradorFacturaCreado, [sSerFac, sNumFac])
+    else
+      ShowMessage(SErrorCrearBorradorFactura);
   end;
-  if MessageDlg(SPreguntaGenerarBorradorTodoAlbaran,
-                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
-  if dmmAlbaranes.CrearFacturaDesdeAlbaran(sNumFac, sSerFac, nil) then
-    ShowMessageFmt(SInfoBorradorFacturaCreado, [sSerFac, sNumFac])
-  else
-    ShowMessage(SErrorCrearBorradorFactura);
 end;
 
 procedure TfrmMtoAlbaranes.btnFacturarPorFechasClick(Sender: TObject);

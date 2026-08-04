@@ -88,7 +88,9 @@ var
   BaseReal  : string;
   i         : Integer;
 begin
-  if APath = '' then Exit('');
+  Result := '';
+  if APath <> '' then
+  begin
   Result    := APath;
   Ruta      := ExcludeTrailingPathDelimiter(APath);
   MejorTok  := '';
@@ -98,17 +100,18 @@ begin
   for i := 0 to High(AMap) do
   begin
     BaseReal := ExcludeTrailingPathDelimiter(ResolveToken(AMap[i]));
-    if BaseReal = '' then Continue;
-
-    // Coincidencia exacta o Ruta empieza por BaseReal + separador
-    if SameText(Ruta, BaseReal) or
-       StartsText(IncludeTrailingPathDelimiter(BaseReal), Ruta) then
+    if BaseReal <> '' then
     begin
-      // Nos quedamos con la base más larga (más específica)
-      if Length(BaseReal) > Length(MejorBase) then
+      // Coincidencia exacta o Ruta empieza por BaseReal + separador
+      if SameText(Ruta, BaseReal) or
+         StartsText(IncludeTrailingPathDelimiter(BaseReal), Ruta) then
       begin
-        MejorBase := BaseReal;
-        MejorTok  := AMap[i].Token;
+        // Nos quedamos con la base más larga (más específica)
+        if Length(BaseReal) > Length(MejorBase) then
+        begin
+          MejorBase := BaseReal;
+          MejorTok  := AMap[i].Token;
+        end;
       end;
     end;
   end;
@@ -119,6 +122,7 @@ begin
       Result := MejorTok
     else
       Result := MejorTok + Copy(Ruta, Length(MejorBase) + 1, MaxInt);
+  end;
   end;
 end;
 
@@ -132,15 +136,16 @@ var
   Base  : string;
 begin
   Result := APath;
-  if Result = '' then Exit;
-
-  AMap := BuildMap;
-  for i := 0 to High(AMap) do
-    if ContainsText(Result, AMap[i].Token) then
-    begin
-      Base := ExcludeTrailingPathDelimiter(ResolveToken(AMap[i]));
-      Result := ReplaceText(Result, AMap[i].Token, Base);
-    end;
+  if Result <> '' then
+  begin
+    AMap := BuildMap;
+    for i := 0 to High(AMap) do
+      if ContainsText(Result, AMap[i].Token) then
+      begin
+        Base := ExcludeTrailingPathDelimiter(ResolveToken(AMap[i]));
+        Result := ReplaceText(Result, AMap[i].Token, Base);
+      end;
+  end;
 end;
 
 end.

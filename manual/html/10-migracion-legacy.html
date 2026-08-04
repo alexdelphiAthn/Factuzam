@@ -66,8 +66,7 @@ termine la anterior (catálogos → maestros → variantes → documentos).</p>
 botones, pensada para crear la base nueva sin depender de ficheros
 externos:</p>
 <ol><li><strong>Extraer esqueleto de BBDD viva…</strong> — conecta a una base <code>factuzam</code> de referencia y genera un <code>.sql</code> con toda la estructura (tablas, vistas, procedimientos) y los <strong>datos de las tablas de sistema</strong> (países, tipos de IVA, ventanas, metadatos…). Las tablas de negocio (artículos, clientes, facturas…) van vacías porque las rellenará la migración.</li><li><strong>Crear BBDD destino</strong> — crea la base de datos indicada en el panel Destino con juego de caracteres <code>utf8mb4</code> y cotejamiento <code>utf8mb4_spanish_ci</code>.</li><li><strong>Cargar esqueleto en destino…</strong> — vuelca el <code>.sql</code> del paso 1 en la base recién creada.</li></ol>
-<p><img src="img/10-migrator-preparar.png" alt="Sección Preparar BBDD destino" loading="lazy">
-<em>▢ Captura pendiente — Botones de extracción y carga del esqueleto.</em></p>
+<p><img src="img/10-migrator-preparar.png" alt="Sección Preparar BBDD destino" loading="lazy"></p>
 <blockquote><p>Alternativa: crear la base destino desde <code>factuzam_original.sql</code> como
 en la <a href="09-instalacion-windows.html#3-crear-la-base-de-datos-inicial">instalación</a>.
 En ese caso, asegúrate de aplicar también los <strong>scripts de esquema</strong>
@@ -120,7 +119,7 @@ datos antiguos <strong>en solo lectura</strong> como referencia histórica.</p><
 <hr>
 <p><a href="09-instalacion-windows.html">◀ Instalación en Windows</a> · <a href="index.html">Índice</a> · <a href="11-verifactu.html">Siguiente ▶ Verifactu (AEAT)</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 31/07/2026</footer>
+<footer>Manual de Factuzam · generado el 04/08/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

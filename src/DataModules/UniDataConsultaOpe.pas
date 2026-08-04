@@ -499,8 +499,9 @@ begin
     FRegistroLog.RegistrarInformacion(
       Format('CargarDetalleOperacion: SKIP (misma op "%s")',
                        [sClave]));
-    Exit;
-  end;
+  end
+  else
+  begin
   FRegistroLog.RegistrarInformacion(
     Format('CargarDetalleOperacion: cargando op "%s" (prev="%s")',
                      [sClave, FUltimaClaveHijas]));
@@ -570,6 +571,7 @@ begin
     AbrirSeguro(qryFacturaLin, 'Lineas de Facturas');
   end;
   FUltimaClaveHijas := sClave;
+  end;
 end;
 
 procedure TdmConsultaOpe.RefrescarPestanasHijas;
@@ -580,9 +582,8 @@ begin
   begin
     FRegistroLog.RegistrarInformacion(
       'RefrescarPestanasHijas: BLOQUEADA por FCargando=True');
-    Exit;
   end;
-  if qryMaestro.IsEmpty then
+  if (not FCargando) and qryMaestro.IsEmpty then
   begin
     if FUltimaClaveHijas <> '' then
     begin
@@ -593,22 +594,19 @@ begin
     else
       FRegistroLog.RegistrarInformacion(
         'RefrescarPestanasHijas: maestro vacio (no-op, ya cerradas)');
-    Exit;
   end;
-  sEmp    := qryMaestro.FieldByName('CODIGO_EMP_OPCAJA').AsString;
-  sAlm    := qryMaestro.FieldByName('CODIGO_ALM_OPCAJA').AsString;
-  sCaja   := qryMaestro.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
-  sNumOp  := qryMaestro.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
-  sCli    := qryMaestro.FieldByName('CLIENTE').AsString;
-  sSerie  := qryMaestro.FieldByName('SERIE_FAC').AsString;
-  sNroFac := qryMaestro.FieldByName('NUMERO_FAC').AsString;
-  CargarDetalleOperacion(sEmp,
-                         sAlm,
-                         sCaja,
-                         sNumOp,
-                         sCli,
-                         sSerie,
-                         sNroFac);
+  if (not FCargando) and (not qryMaestro.IsEmpty) then
+  begin
+    sEmp    := qryMaestro.FieldByName('CODIGO_EMP_OPCAJA').AsString;
+    sAlm    := qryMaestro.FieldByName('CODIGO_ALM_OPCAJA').AsString;
+    sCaja   := qryMaestro.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
+    sNumOp  := qryMaestro.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
+    sCli    := qryMaestro.FieldByName('CLIENTE').AsString;
+    sSerie  := qryMaestro.FieldByName('SERIE_FAC').AsString;
+    sNroFac := qryMaestro.FieldByName('NUMERO_FAC').AsString;
+    CargarDetalleOperacion(sEmp, sAlm, sCaja, sNumOp,
+                           sCli, sSerie, sNroFac);
+  end;
 end;
 
 // -----------------------------------------------------------------------------
@@ -632,8 +630,9 @@ begin
     FRegistroLog.RegistrarInformacion(
       Format('CargarMaestro: SKIP (mismos params "%s")',
                        [sClaveMaestro]));
-    Exit;
-  end;
+  end
+  else
+  begin
   FRegistroLog.RegistrarInformacion(
     Format('CargarMaestro: fecha=%s emp="%s" alm="%s" caja="%s" ' +
                      'txt="%s" (prev="%s")',
@@ -669,6 +668,7 @@ begin
   // Una vez cargado el maestro, refrescamos las pestañas hijas con la
   // primera fila (si hay).
   RefrescarPestanasHijas;
+  end;
 end;
 
 procedure TdmConsultaOpe.InvalidarCacheMaestro;
@@ -743,10 +743,11 @@ var
   sTipos: string;
 begin
   Result := False;
-  if qryMaestro.IsEmpty then
-    Exit;
-  sTipos := qryMaestro.FieldByName('TIPOS_OP').AsString;
-  Result := (Pos('EC', sTipos) > 0) or (Pos('GC', sTipos) > 0);
+  if not qryMaestro.IsEmpty then
+  begin
+    sTipos := qryMaestro.FieldByName('TIPOS_OP').AsString;
+    Result := (Pos('EC', sTipos) > 0) or (Pos('GC', sTipos) > 0);
+  end;
 end;
 
 function TdmConsultaOpe.EsTraspaso: Boolean;
@@ -754,10 +755,11 @@ var
   sTipos: string;
 begin
   Result := False;
-  if qryMaestro.IsEmpty then
-    Exit;
-  sTipos := qryMaestro.FieldByName('TIPOS_OP').AsString;
-  Result := (Pos('TR', sTipos) > 0) or (Pos('TA', sTipos) > 0);
+  if not qryMaestro.IsEmpty then
+  begin
+    sTipos := qryMaestro.FieldByName('TIPOS_OP').AsString;
+    Result := (Pos('TR', sTipos) > 0) or (Pos('TA', sTipos) > 0);
+  end;
 end;
 
 end.

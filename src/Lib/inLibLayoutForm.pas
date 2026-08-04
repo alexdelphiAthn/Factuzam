@@ -202,7 +202,8 @@ procedure TLayoutLoader.RestaurarGeometria(AForm: TForm);
 var
   Estado: TWindowState;
 begin
-  if not FDisponible then Exit;
+  if FDisponible then
+  begin
   AForm.Left   := StrToIntDef(
     GetPerfilValueDef(FPerfil, 'Left',   IntToStr(AForm.Left)),   AForm.Left);
   AForm.Top    := StrToIntDef(
@@ -215,6 +216,7 @@ begin
     GetPerfilValueDef(FPerfil, 'WindowState', '0'), 0));
   if Estado = wsMinimized then Estado := wsNormal;
   AForm.WindowState := Estado;
+  end;
 end;
 
 function TLayoutLoader.RestaurarValor(const AClave, ADefault: string): string;
@@ -227,10 +229,12 @@ procedure TLayoutLoader.RestaurarAlturaPanel(const AClave: string;
 var
   H: Integer;
 begin
-  if not FDisponible then Exit;
-  H := StrToIntDef(GetPerfilValueDef(FPerfil, AClave, '0'), 0);
-  if H > AMinimo then
-    APanel.Height := H;
+  if FDisponible then
+  begin
+    H := StrToIntDef(GetPerfilValueDef(FPerfil, AClave, '0'), 0);
+    if H > AMinimo then
+      APanel.Height := H;
+  end;
 end;
 
 procedure TLayoutLoader.RestaurarAnchoPanel(const AClave: string;
@@ -238,10 +242,12 @@ procedure TLayoutLoader.RestaurarAnchoPanel(const AClave: string;
 var
   W: Integer;
 begin
-  if not FDisponible then Exit;
-  W := StrToIntDef(GetPerfilValueDef(FPerfil, AClave, '0'), 0);
-  if W > AMinimo then
-    APanel.Width := W;
+  if FDisponible then
+  begin
+    W := StrToIntDef(GetPerfilValueDef(FPerfil, AClave, '0'), 0);
+    if W > AMinimo then
+      APanel.Width := W;
+  end;
 end;
 
 procedure TLayoutLoader.RestaurarGrid(const APrefijoClave: string;
@@ -251,20 +257,24 @@ var
   Col: TcxGridDBColumn;
   Clave: string;
 begin
-  if not FDisponible then Exit;
+  if FDisponible then
+  begin
   AView.BeginUpdate;
   try
     for i := 0 to AView.ColumnCount - 1 do
     begin
       Col := AView.Columns[i] as TcxGridDBColumn;
-      if Col.DataBinding.FieldName = '' then Continue;
-      Clave := APrefijoClave + '_Col_' + Col.DataBinding.FieldName;
-      Ancho := StrToIntDef(GetPerfilValueDef(FPerfil, Clave, '0'), 0);
-      if Ancho > 10 then
-        Col.Width := Ancho;
+      if Col.DataBinding.FieldName <> '' then
+      begin
+        Clave := APrefijoClave + '_Col_' + Col.DataBinding.FieldName;
+        Ancho := StrToIntDef(GetPerfilValueDef(FPerfil, Clave, '0'), 0);
+        if Ancho > 10 then
+          Col.Width := Ancho;
+      end;
     end;
   finally
     AView.EndUpdate;
+  end;
   end;
 end;
 
@@ -273,11 +283,12 @@ procedure TLayoutLoader.RestaurarDividerInspector(const AClave: string;
 var
   D: Integer;
 begin
-  if not FDisponible then
-    Exit;
-  D := StrToIntDef(GetPerfilValueDef(FPerfil, AClave, '0'), 0);
-  if D > AMinimo then
-    AInspector.Divider := D;
+  if FDisponible then
+  begin
+    D := StrToIntDef(GetPerfilValueDef(FPerfil, AClave, '0'), 0);
+    if D > AMinimo then
+      AInspector.Divider := D;
+  end;
 end;
 
 // =============================================================================
@@ -343,9 +354,9 @@ begin
   for i := 0 to AView.ColumnCount - 1 do
   begin
     Col := AView.Columns[i] as TcxGridDBColumn;
-    if Col.DataBinding.FieldName = '' then Continue;
-    SetClave(APrefijoClave + '_Col_' + Col.DataBinding.FieldName,
-             IntToStr(Col.Width));
+    if Col.DataBinding.FieldName <> '' then
+      SetClave(APrefijoClave + '_Col_' + Col.DataBinding.FieldName,
+               IntToStr(Col.Width));
   end;
 end;
 

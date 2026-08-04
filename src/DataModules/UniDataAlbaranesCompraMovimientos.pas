@@ -31,18 +31,16 @@
 {    ampliar ResolverSkuCelda en el bucle de celdas.                           }
 {******************************************************************************}
 unit UniDataAlbaranesCompraMovimientos;
-
 interface
-
 uses
   Uni, inLibAlbaranesCompraMovimientosIntf;
 function CrearMovimientosAlbaranCompraUniDAC(
   AConexion: TUniConnection): IMovimientosAlbaranCompra;
 implementation
-
 uses
   System.SysUtils, Data.DB, inLibDocumento, inLibDocumentoIntf,
-  UniDataValoresAutomaticosRepositorio, inLibMsgCompras;
+  UniDataValoresAutomaticosRepositorio, inLibMsgCompras,
+  UniDataAlbaranesCompraMovimientosSql;
 type
   TMovimientosAlbaranCompraUniDAC = class(
     TInterfacedObject,
@@ -56,17 +54,13 @@ type
     procedure RevertirDesdeAlbaran(
       const ASerieAlbc, ANumAlbc, AUsuario: string);
   end;
-
 function EstrategiaAlbaranCompra: IEstrategiaDocumento;
 begin
   Result := CrearEstrategiaDocumento(
     CrearConfiguracionDocumento(tdAlbaran, sdCompra));
 end;
-
-// Carga los datos minimos del albaran necesarios para construir los
-// movimientos: empresa (para el parametro p_CODIGO_EMPRESA_MOV) y
-// almacen por defecto de la cabecera (fallback cuando linea/celda no
-// llevan almacen propio).
+// Carga empresa, fecha y almacén de respaldo para los movimientos.
+// El almacén de línea o celda siempre tiene prioridad.
 procedure LeerCabeceraAlbaran(AConn: TUniConnection;
                               const ASerieAlbc, ANumAlbc: string;
                               out ACodigoEmp, ACodigoAlmCab: string;
@@ -417,54 +411,7 @@ begin
       '            AND CAST(C.LINEA_ALBC_ALBCCEL AS UNSIGNED) ' +
       '                = CAST(L.LINEA_ALBCLIN AS UNSIGNED) ' +
       '            AND C.CANTIDAD_ALBCCEL    > 0) ' +
-      'UNION ALL ' +
-      'SELECT L.LINEA_ALBCLIN                     AS LINEA, ' +
-      '       L.CODIGO_UNIDAD_ALBCLIN             AS SKU, ' +
-      '       L.CODIGO_ART_ALBCLIN                AS ARTICULO, ' +
-      '       C.CANTIDAD_ALBCCEL                  AS CANTIDAD, ' +
-      '       CASE WHEN IFNULL(A.ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ''N'') ' +
-      '<> ''S'' ' +
-      '             AND IFNULL(A.ESIVA_RECARGO_COMPRAS_ALBC, ''N'') = ''S'' ' +
-      '            THEN L.PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN * ' +
-      '              (1 + (IFNULL(L.PORCENTAJE_IVA_ALBCLIN, 0) + ' +
-      '                CASE IFNULL(L.TIPO_IVA_ARTICULO_ALBCLIN, ''N'') ' +
-      '                  WHEN ''N'' THEN IFNULL(V.PORCENTAJE_NORMAL_RE_IVA, 0) '
-        +
-      '                  WHEN ''R'' THEN ' +
-      'IFNULL(V.PORCENTAJE_REDUCIDO_RE_IVA, 0) ' +
-      '                  WHEN ''S'' THEN ' +
-      'IFNULL(V.PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) ' +
-      '                  WHEN ''E'' THEN IFNULL(V.PORCENTAJE_EXENTO_RE_IVA, 0) '
-        +
-      '                  ELSE 0 END) / 100) ' +
-      '            ELSE L.PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN END * ' +
-      '       CASE WHEN IFNULL(A.TOTAL_BRUTO_ALBC, 0) > 0 THEN ' +
-      '              GREATEST(0, 1 - CASE ' +
-      '                WHEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) <> 0 ' +
-      '                THEN IFNULL(A.TOTAL_DTO_COMERCIAL_ALBC, 0) / ' +
-      'A.TOTAL_BRUTO_ALBC ' +
-      '                ELSE IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100 ' +
-      'END) ' +
-      '            ELSE GREATEST(0, 1 - ' +
-      'IFNULL(A.PORCENTAJE_DTO_COMERCIAL_ALBC, 0) / 100) ' +
-      '       END AS PRECIO, ' +
-      '       IFNULL(NULLIF(C.CODIGO_ALM_ALBCCEL, ''''), ' +
-      '              IFNULL(NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
-      ':alm_cab2)) AS ALMACEN ' +
-      '  FROM fza_albaranes_compra_lineas L ' +
-      '  JOIN fza_albaranes_compra A ' +
-      '    ON A.SERIE_ALBC  = L.SERIE_ALBC_ALBCLIN ' +
-      '   AND A.NUMERO_ALBC = L.NUMERO_ALBC_ALBCLIN ' +
-      '  LEFT JOIN fza_ivas V ON V.CODIGO_IVA = A.CODIGO_IVA_ALBC ' +
-      '  JOIN fza_albaranes_compra_celdas C ' +
-      '    ON C.SERIE_ALBC_ALBCCEL  = L.SERIE_ALBC_ALBCLIN ' +
-      '   AND C.NUMERO_ALBC_ALBCCEL = L.NUMERO_ALBC_ALBCLIN ' +
-      '   AND CAST(C.LINEA_ALBC_ALBCCEL AS UNSIGNED) ' +
-      '       = CAST(L.LINEA_ALBCLIN AS UNSIGNED) ' +
-      ' WHERE L.SERIE_ALBC_ALBCLIN  = :s2 ' +
-      '   AND L.NUMERO_ALBC_ALBCLIN = :n2 ' +
-      '   AND C.CANTIDAD_ALBCCEL    > 0 ' +
-      ' ORDER BY LINEA';
+      SqlOrigenCeldasAlbaranCompra;
     qSrc.ParamByName('s1').AsString      := ASerieAlbc;
     qSrc.ParamByName('n1').AsString      := ANumAlbc;
     qSrc.ParamByName('alm_cab1').AsString := sCodigoAlmCab;
@@ -513,13 +460,10 @@ begin
       // Lineas sin SKU no pueden mover stock; las saltamos. No es
       // fatal porque pueden ser lineas de servicio o lineas en
       // construccion. Lo mismo para sin almacen efectivo.
-      if (sCodigoSku = '') or (sCodigoAlm = '') then
+      if (sCodigoSku <> '') and (sCodigoAlm <> '') then
       begin
-        qSrc.Next;
-        Continue;
-      end;
-      sNumeroMov := ObtenerSiguienteContador(
-        AConn, 'MV', AUsuario);
+        sNumeroMov := ObtenerSiguienteContador(
+          AConn, 'MV', AUsuario);
       // LINEA_ALBCLIN ya viene en formato '0010', '0020', etc. Lo
       // reusamos tal cual como LINEA_MOV.
       sLinea := qSrc.FieldByName('LINEA').AsString;
@@ -548,7 +492,8 @@ begin
       qFechaMov.ParamByName('f').AsDateTime := dFechaAlbc;
       qFechaMov.ParamByName('m').AsString := sNumeroMov;
       qFechaMov.ExecSQL;
-      Inc(iCount);
+        Inc(iCount);
+      end;
       qSrc.Next;
     end;
     if iCount = 0 then
@@ -613,8 +558,8 @@ begin
     qPares.ParamByName('s').AsString := ASerieAlbc;
     qPares.ParamByName('n').AsString := ANumAlbc;
     qPares.Open;
-    if qPares.Eof then
-      Exit;  // nada que revertir
+    if not qPares.Eof then
+    begin
     // 2. Borrar los movimientos llamando al SP, que decrementa
     //    CANTIDAD_STK + acumuladores por subtipo en una transacción.
     qExec.SQL.Text :=
@@ -692,15 +637,13 @@ begin
       qExec.ExecSQL;
       qPares.Next;
     end;
+    end;
   finally
     FreeAndNil(qPares);
     FreeAndNil(qSkus);
     FreeAndNil(qExec);
   end;
 end;
-// ===========================================================================
-//   TMovimientosAlbaranCompraUniDAC — adaptador del contrato
-// ===========================================================================
 constructor TMovimientosAlbaranCompraUniDAC.Create(
   AConexion: TUniConnection);
 begin

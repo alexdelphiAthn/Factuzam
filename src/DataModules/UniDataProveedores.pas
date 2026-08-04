@@ -116,7 +116,8 @@ const
   procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
   var swQ: TStopwatch;
   begin
-    if qry.Active then Exit;
+    if not qry.Active then
+    begin
     swQ := TStopwatch.StartNew;
     try
       qry.Open;
@@ -129,6 +130,7 @@ const
           swQ.ElapsedMilliseconds);
         raise;
       end;
+    end;
     end;
   end;
 
@@ -145,7 +147,8 @@ end;
 procedure TdmProveedores.AsegurarArticulosAbierta;
 var swQ: TStopwatch;
 begin
-  if unqryArticulos.Active then Exit;
+  if not unqryArticulos.Active then
+  begin
   swQ := TStopwatch.StartNew;
   try
     unqryArticulos.Open;
@@ -159,12 +162,14 @@ begin
       raise;
     end;
   end;
+  end;
 end;
 
 procedure TdmProveedores.AsegurarVentasAbierta;
 var swQ: TStopwatch;
 begin
-  if unqryLinFacturasArticulos.Active then Exit;
+  if not unqryLinFacturasArticulos.Active then
+  begin
   swQ := TStopwatch.StartNew;
   try
     unqryLinFacturasArticulos.Open;
@@ -180,12 +185,14 @@ begin
       raise;
     end;
   end;
+  end;
 end;
 
 procedure TdmProveedores.AsegurarComprasAbierta;
 var swQ: TStopwatch;
 begin
-  if unqryKits.Active then Exit;
+  if not unqryKits.Active then
+  begin
   swQ := TStopwatch.StartNew;
   try
     unqryConjuntosTallas.Open;
@@ -201,12 +208,14 @@ begin
       raise;
     end;
   end;
+  end;
 end;
 
 procedure TdmProveedores.AsegurarPagosAbierta;
 var swQ: TStopwatch;
 begin
-  if unqryFormaPago.Active and unqryEmpresasBancos.Active then Exit;
+  if not (unqryFormaPago.Active and unqryEmpresasBancos.Active) then
+  begin
   swQ := TStopwatch.StartNew;
   try
     if not unqryFormaPago.Active then
@@ -222,6 +231,7 @@ begin
         'unqryPagos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
       raise;
     end;
+  end;
   end;
 end;
 

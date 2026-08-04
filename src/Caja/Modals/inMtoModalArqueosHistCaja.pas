@@ -166,16 +166,17 @@ end;
 
 procedure TfrmModalArqueosHistCaja.CargarArqueos;
 begin
-  if (FConn = nil) or (not FConn.Connected) then
-    Exit;
-  dsArqueos.DataSet := nil;
-  FDatos := nil;
-  FResultado := FRepositorioPersistencia.ConsultarArqueosHistorico(
-    FEmpresa,
-    FAlmacen,
-    FCaja);
-  FDatos := FResultado.DataSet;
-  dsArqueos.DataSet := FDatos;
+  if (FConn <> nil) and FConn.Connected then
+  begin
+    dsArqueos.DataSet := nil;
+    FDatos := nil;
+    FResultado := FRepositorioPersistencia.ConsultarArqueosHistorico(
+      FEmpresa,
+      FAlmacen,
+      FCaja);
+    FDatos := FResultado.DataSet;
+    dsArqueos.DataSet := FDatos;
+  end;
 end;
 
 function TfrmModalArqueosHistCaja.ArqueoSeleccionado: string;
@@ -195,22 +196,24 @@ begin
   if sCod = '' then
   begin
     ShowMessage(SErrorArqueoCajaNoSeleccionado);
-    Exit;
-  end;
-  Screen.Cursor := crHourGlass;
-  try
-    TArqueoTicket.ImprimirDesdeHistorico(
-      PreviewTicket,
-      FRepositorioArqueoCaja,
-      FRepositorioArqueoTicket,
-      ParametrosCaja,
-      FEmpresa,
-      FAlmacen,
-      FCaja,
-      sCod,
-      ParametrosCaja.ImpresoraCaja);
-  finally
-    Screen.Cursor := crDefault;
+  end
+  else
+  begin
+    Screen.Cursor := crHourGlass;
+    try
+      TArqueoTicket.ImprimirDesdeHistorico(
+        PreviewTicket,
+        FRepositorioArqueoCaja,
+        FRepositorioArqueoTicket,
+        ParametrosCaja,
+        FEmpresa,
+        FAlmacen,
+        FCaja,
+        sCod,
+        ParametrosCaja.ImpresoraCaja);
+    finally
+      Screen.Cursor := crDefault;
+    end;
   end;
 end;
 
@@ -222,21 +225,23 @@ begin
   if sCod = '' then
   begin
     ShowMessage(SErrorArqueoCajaNoSeleccionado);
-    Exit;
-  end;
-  Screen.Cursor := crHourGlass;
-  try
-    TArqueoTicket.ImprimirCierreDesdeHistorico(
-      PreviewTicket,
-      FRepositorioArqueoTicket,
-      ContextoSesion,
-      FEmpresa,
-      FAlmacen,
-      FCaja,
-      sCod,
-      ParametrosCaja.ImpresoraCaja);
-  finally
-    Screen.Cursor := crDefault;
+  end
+  else
+  begin
+    Screen.Cursor := crHourGlass;
+    try
+      TArqueoTicket.ImprimirCierreDesdeHistorico(
+        PreviewTicket,
+        FRepositorioArqueoTicket,
+        ContextoSesion,
+        FEmpresa,
+        FAlmacen,
+        FCaja,
+        sCod,
+        ParametrosCaja.ImpresoraCaja);
+    finally
+      Screen.Cursor := crDefault;
+    end;
   end;
 end;
 

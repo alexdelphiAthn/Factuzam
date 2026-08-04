@@ -155,44 +155,11 @@
       OnExecute = actCancelarExecute
     end
   end
-  object unqryAlmacenes: TUniQuery
-    SQL.Strings = (
-      'SELECT CODIGO_ALM_ALM, NOMBRE_ALM_ALM'
-      '  FROM fza_almacenes'
-      ' WHERE CODIGO_EMP_ALM = :EMPRESA'
-      '   AND ESACTIVO_ALM = '#39'S'#39
-      ' ORDER BY COALESCE(ORDEN_ALM, 2147483647), CODIGO_ALM_ALM')
-    Left = 48
-    Top = 168
-    ParamData = <
-      item
-        DataType = ftString
-        Name = 'EMPRESA'
-        ParamType = ptInput
-      end>
-  end
   object dsAlmacenes: TDataSource
-    DataSet = unqryAlmacenes
     Left = 96
     Top = 168
   end
-  object unqryCajas: TUniQuery
-    SQL.Strings = (
-      'SELECT CODIGO_CAJA_ALMCAJ, DESCRIPCION_ALMCAJ'
-      '  FROM fza_almacenes_cajas'
-      ' WHERE CODIGO_ALM_ALMCAJ = :ALMACEN'
-      ' ORDER BY CODIGO_CAJA_ALMCAJ')
-    Left = 336
-    Top = 168
-    ParamData = <
-      item
-        DataType = ftString
-        Name = 'ALMACEN'
-        ParamType = ptInput
-      end>
-  end
   object dsCajas: TDataSource
-    DataSet = unqryCajas
     Left = 384
     Top = 168
   end

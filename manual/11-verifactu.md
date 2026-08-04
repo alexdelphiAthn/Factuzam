@@ -208,7 +208,8 @@ sobre un documento **ya consolidado**:
 |------------|--------|----------|
 | Anular una venta inexistente o errónea | **Anular (Verifactu)** | Encola un *registro de anulación*. La factura pasa a **CANCELADA**. |
 | Corregir importes o conceptos | **Rectificar** | Crea una **factura rectificativa por diferencias** (corrección en negativo) o **sustitutiva** (documento correcto en positivo), siempre ligada a la original. |
-| El registro se comunicó con errores | **Subsanar (Verifactu)** | Reenvía el registro corregido (*subsanación*), p. ej. tras un «aceptado con errores». |
+| La AEAT aceptó el registro con errores, pero la factura expedida es correcta | **Resolver incidencia ▸ Subsanar el registro** | Reenvía el registro corregido con el indicador de subsanación, sin crear otra factura. |
+| El NIF u otro dato incorrecto figura en la factura expedida | **Resolver incidencia ▸ Emitir rectificativa R4** | Crea una rectificativa sustitutiva con el destinatario correcto y la enlaza con la original. |
 | Un cliente pide factura nominativa de su ticket | **Facturar ticket (F3)** | Crea una **factura normal** en sustitución de la simplificada, copiando sus líneas, a nombre del cliente. |
 | El cliente se identifica en el momento de la venta | **Factura (F8)** en la fase de cobro | Graba la venta directamente como **factura normal** (no ticket); exige cliente con NIF e imprime en A4/PDF. |
 
@@ -231,6 +232,29 @@ originales y añade el ajuste con su signo.
 El procedimiento paso a paso está en
 [Caja ▸ Rectificar un ticket](05-menu-caja.md#rectificar-un-ticket-por-diferencias-o-sustitutiva).
 
+### Resolver un «Aceptado con errores» en Venta Mayor
+
+En **Factura Venta Mayor**, abre la pestaña **Verifactu** de la factura. El
+botón **Resolver incidencia** aparece únicamente si el último registro está
+en **Aceptado con errores** y no hay ya una subsanación en curso.
+
+El modal muestra el código y la descripción comunicados por la AEAT y pide
+elegir uno de estos dos casos:
+
+1. **La factura expedida es correcta.** Indica el motivo y usa
+   **Subsanar el registro**. Factuzam encola un nuevo registro de alta con
+   `<Subsanacion>S</Subsanacion>`. No modifica ni sustituye la factura.
+2. **El dato incorrecto figura en la factura expedida.** Elige el cliente
+   correcto, la serie y la fecha. Factuzam crea y encola una rectificativa
+   sustitutiva **R4**, vinculada a la factura original.
+
+Por tanto, un error de NIF puede provocar un **Aceptado con errores**, pero
+eso no decide por sí solo el tratamiento. Si el NIF correcto ya estaba en la
+factura y solo se construyó mal el registro remitido, se subsana. Si la
+factura entregada al cliente contiene el NIF equivocado, se emite la R4.
+La respuesta, el XML y la firma del alta original se conservan en el
+histórico cuando la subsanación se acepta.
+
 ![Botones de acciones fiscales en Facturas](img/11-acciones.png)
 
 Cada una de estas operaciones **se vuelve a encolar** y se comunica a la
@@ -250,9 +274,12 @@ cuál). La lista muestra además una columna **«Cola Verifactu»** con el
 **Una factura se queda en `ERROR` en la cola.** Abre *Verifactu ▸ Cola de
 Envíos* y lee el **mensaje de error** de la fila. Causas habituales:
 
-- **«[1100] NIF»** — falta el **NIF del SIF** en los parámetros, o el NIF de
-  la empresa/cliente está mal formado (con guiones o longitud distinta de
-  9). Corrige y **reprocesa** la fila.
+- **«[1100] NIF» en una fila `ERROR` no aceptada** — falta el **NIF del
+  SIF** en los parámetros, o el NIF de la empresa/cliente está mal formado.
+  Corrige la causa y **reprocesa** la fila.
+- **Error de NIF en `Aceptado con errores`** — usa **Resolver incidencia**.
+  Subsanar solo corresponde si la factura expedida ya era correcta; si el
+  NIF equivocado está en la factura, crea la rectificativa R4.
 - **Certificado** — el número de serie del certificado de la empresa no es
   válido o no está en el almacén de Windows del equipo.
 - **En PRE** — el NIF no está censado en el entorno de pruebas o no guarda
@@ -274,7 +301,7 @@ aplicación lo da por bueno. No hay que hacer nada.
 - Con Verifactu **activo**, no tienes que hacer nada especial: vende y
   factura con normalidad; el QR y el envío son automáticos.
 - Si una factura está mal, **no la borres**: usa **Rectificar**, **Anular**
-  o **Subsanar** según el caso.
+  o **Resolver incidencia** según el caso.
 - Vigila de vez en cuando *Verifactu ▸ Cola de Envíos*: si todo está en
   **ENVIADA**, vas al día; si ves **ERROR**, revisa el mensaje y reprocesa.
 - Ante cualquier incidencia con la AEAT, ten a mano la **versión** del

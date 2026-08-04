@@ -124,9 +124,10 @@ almacén de referencia para el stock). Las líneas recogen:
 | **Cantidad** | Unidades de trabajo de la línea (al leer un código, entra 1 por defecto). |
 | **Origen** | De dónde salió la línea: entrada manual, carga por filtros, consulta de stock… |
 
-Las líneas se teclean igual que en Inventarios: con `[F1]` se alterna el
-modo de entrada **Desglose** (artículo + atributos) → **SKU** (lectura
-directa de código) → **Tallas horizontal** (rejilla de tallas en columnas).
+Las líneas se teclean igual que en Inventarios: con `[F1]` se recorre
+**Auto (desglose)** → **SKU** → **Tallas en línea**. El cambio solo actúa
+en la pestaña **Líneas**; consulta la explicación común de los
+[modos de líneas con F1](01-conceptos-comunes.md#cambiar-la-presentacion-de-las-lineas-con-f1).
 
 ### Botones de la pantalla
 
@@ -185,6 +186,12 @@ El filtro permite trabajar por:
 
 La pestaña **Familias** se muestra como árbol. Marcar una familia incluye
 también sus subfamilias.
+
+La vista preliminar presenta por artículo y color las tallas en columnas y
+separa las bandas de existencias, entradas y ventas, con cantidades, precios e
+importes.
+
+![Resultado del balance de almacén por tallas](img/06-balance-horizontal-resultado.png)
 
 ### Balance de Almacén sin tallas
 

@@ -165,24 +165,22 @@ var
   it:   TInformeGuiaItem;
 begin
   SetLength(Result, 0);
-  if not FCargada then
-    Exit;
-  if not FPorInforme.TryGetValue(LowerCase(aInforme), lst) then
-    Exit;
-  SetLength(Result, lst.Count);
-  n := 0;
-  for i := 0 to lst.Count - 1 do
+  if FCargada and
+     FPorInforme.TryGetValue(LowerCase(aInforme), lst) then
   begin
-    it := lst[i];
-    // Replica el filtro del SELECT original: guia global ('' = aplica a
-    // cualquier formato) o atada exactamente al formato pasado.
-    if (it.Formato = '') or SameText(it.Formato, aFormato) then
+    SetLength(Result, lst.Count);
+    n := 0;
+    for i := 0 to lst.Count - 1 do
     begin
-      Result[n] := it;
-      Inc(n);
+      it := lst[i];
+      if (it.Formato = '') or SameText(it.Formato, aFormato) then
+      begin
+        Result[n] := it;
+        Inc(n);
+      end;
     end;
+    SetLength(Result, n);
   end;
-  SetLength(Result, n);
 end;
 
 end.

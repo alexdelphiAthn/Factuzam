@@ -946,9 +946,8 @@ var
 begin
   Views := FLecturas.Objetos.GetViews;
   try
-    if Views.Count = 0 then
-      Exit;
-      
+    if Views.Count > 0 then
+    begin
     FWriter.AddComment('');
     FWriter.AddComment('========================================');
     FWriter.AddComment('VISTAS');
@@ -967,6 +966,7 @@ begin
       FWriter.AddCommand(FCreacion.GenerateCreateViewSQL(ViewDef));
       FWriter.AddCommand('');
     end;
+    end;
   finally
     Views.Free;
   end;
@@ -981,9 +981,8 @@ begin
   Triggers := FLecturas.Objetos.GetTriggers;
 
   // Al ser un Array Dinámico, usamos Length() en lugar de .Count
-  if Length(Triggers) = 0 then
-    Exit;
-
+  if Length(Triggers) > 0 then
+  begin
   FWriter.AddComment('');
   FWriter.AddComment('========================================');
   FWriter.AddComment('TRIGGERS');
@@ -1005,6 +1004,7 @@ begin
     FWriter.AddCommand(FCreacion.GenerateCreateTriggerSQL(TriggerDef));
     FWriter.AddCommand('');
   end;
+  end;
 end;
 
 procedure TDBBackupEngine.BackupProcedures;
@@ -1015,9 +1015,8 @@ var
 begin
   Procedures := FLecturas.Objetos.GetProcedures;
   try
-    if Procedures.Count = 0 then
-      Exit;
-      
+    if Procedures.Count > 0 then
+    begin
     FWriter.AddComment('');
     FWriter.AddComment('========================================');
     FWriter.AddComment('PROCEDIMIENTOS ALMACENADOS');
@@ -1036,6 +1035,7 @@ begin
       FWriter.AddCommand(FCreacion.GenerateCreateProcedureSQL(ProcDef));
       FWriter.AddCommand('');
     end;
+    end;
   finally
     Procedures.Free;
   end;
@@ -1049,9 +1049,8 @@ var
 begin
   Functions := FLecturas.Objetos.GetFunctions;
   try
-    if Functions.Count = 0 then
-      Exit;
-      
+    if Functions.Count > 0 then
+    begin
     FWriter.AddComment('');
     FWriter.AddComment('========================================');
     FWriter.AddComment('FUNCIONES');
@@ -1069,6 +1068,7 @@ begin
       FuncDef := FLecturas.Objetos.GetFunctionDefinition(Functions[i]);
       FWriter.AddCommand(FCreacion.GenerateCreateFunctionSQL(FuncDef));
       FWriter.AddCommand('');
+    end;
     end;
   finally
     Functions.Free;

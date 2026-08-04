@@ -16,7 +16,7 @@ unit UniDataComprasSesionesRepositorio;
 interface
 
 uses
-  Uni, inLibCatalogoSqlIntf, inLibComprasSesionesIntf,
+  System.Classes, Uni, inLibCatalogoSqlIntf, inLibComprasSesionesIntf,
   UniDataComprasSesiones;
 
 type
@@ -62,6 +62,9 @@ type
     function EjecutarConsultarCantidadesLinea(
       const ASql, ASerie, ANumero: string;
       ALinea: Integer): TCantidadesPivotSesion;
+    procedure ValidarMatricesSesion(
+      const ASerie, ANumero: string;
+      AIncidencias: TStrings);
   public
     constructor Create(
       AConexion: TUniConnection;
@@ -116,7 +119,7 @@ type
 implementation
 
 uses
-  System.Classes, System.StrUtils, System.SysUtils, Data.DB,
+  System.StrUtils, System.SysUtils, Data.DB,
   inLibCatalogoSqlEjecucion,
   inLibMsgArticulos, inLibMsgCompras,
   UniDataComprasSesionesOperaciones;
@@ -1227,60 +1230,7 @@ begin
             AConsulta.Next;
           end;
         end);
-      EjecutarConsultaValidacionSesion(
-        FConexion,
-        DefinicionValidarMatricesSinCantidades,
-        FCatalogoSql,
-        FIncidenciasSql,
-        sSerie,
-        sNumero,
-        oIncidencias,
-        procedure(
-          AConsulta: TUniQuery;
-          AResultado: TStrings)
-        begin
-          while not AConsulta.Eof do
-          begin
-            AnadirIncidenciaSesion(
-              AResultado,
-              AConsulta.FieldByName(
-                'LINEA_SESLIN').AsInteger,
-              STipoIncidenciaCantidades,
-              Format(
-                SErrorLineaMatrizSinCantidades,
-                [AConsulta.FieldByName(
-                   'CODIGO_ART_TENTATIVO_SESLIN').AsString,
-                 AConsulta.FieldByName(
-                   'DESCRIPCION_SESLIN').AsString]));
-            AConsulta.Next;
-          end;
-        end);
-      EjecutarConsultaValidacionSesion(
-        FConexion,
-        DefinicionValidarMatricesSinTallaje,
-        FCatalogoSql,
-        FIncidenciasSql,
-        sSerie,
-        sNumero,
-        oIncidencias,
-        procedure(
-          AConsulta: TUniQuery;
-          AResultado: TStrings)
-        begin
-          while not AConsulta.Eof do
-          begin
-            AnadirIncidenciaSesion(
-              AResultado,
-              AConsulta.FieldByName(
-                'LINEA_SESLIN').AsInteger,
-              STipoIncidenciaSistemaTallas,
-              Format(
-                SErrorLineaMatrizSinSistemaTallas,
-                [AConsulta.FieldByName(
-                   'CODIGO_ART_TENTATIVO_SESLIN').AsString]));
-            AConsulta.Next;
-          end;
-        end);
+      ValidarMatricesSesion(sSerie, sNumero, oIncidencias);
     end;
     SetLength(Result, oIncidencias.Count);
     for iIncidencia := 0 to oIncidencias.Count - 1 do
@@ -1288,6 +1238,63 @@ begin
   finally
     FreeAndNil(oIncidencias);
   end;
+end;
+
+procedure TRepositorioComprasSesiones.ValidarMatricesSesion(
+  const ASerie, ANumero: string;
+  AIncidencias: TStrings);
+begin
+  EjecutarConsultaValidacionSesion(
+    FConexion,
+    DefinicionValidarMatricesSinCantidades,
+    FCatalogoSql,
+    FIncidenciasSql,
+    ASerie,
+    ANumero,
+    AIncidencias,
+    procedure(
+      AConsulta: TUniQuery;
+      AResultado: TStrings)
+    begin
+      while not AConsulta.Eof do
+      begin
+        AnadirIncidenciaSesion(
+          AResultado,
+          AConsulta.FieldByName('LINEA_SESLIN').AsInteger,
+          STipoIncidenciaCantidades,
+          Format(
+            SErrorLineaMatrizSinCantidades,
+            [AConsulta.FieldByName(
+               'CODIGO_ART_TENTATIVO_SESLIN').AsString,
+             AConsulta.FieldByName('DESCRIPCION_SESLIN').AsString]));
+        AConsulta.Next;
+      end;
+    end);
+  EjecutarConsultaValidacionSesion(
+    FConexion,
+    DefinicionValidarMatricesSinTallaje,
+    FCatalogoSql,
+    FIncidenciasSql,
+    ASerie,
+    ANumero,
+    AIncidencias,
+    procedure(
+      AConsulta: TUniQuery;
+      AResultado: TStrings)
+    begin
+      while not AConsulta.Eof do
+      begin
+        AnadirIncidenciaSesion(
+          AResultado,
+          AConsulta.FieldByName('LINEA_SESLIN').AsInteger,
+          STipoIncidenciaSistemaTallas,
+          Format(
+            SErrorLineaMatrizSinSistemaTallas,
+            [AConsulta.FieldByName(
+               'CODIGO_ART_TENTATIVO_SESLIN').AsString]));
+        AConsulta.Next;
+      end;
+    end);
 end;
 
 function TRepositorioComprasSesiones.

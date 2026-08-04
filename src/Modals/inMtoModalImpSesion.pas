@@ -70,9 +70,9 @@ var
   fPreview: TfrmMtoPreviewExcel;
   cfg: TDocCompraCabCfg;
 begin
-  if dmSesion = nil then
-    Exit;
-  dmSesion.PrepararPrint(edtSerie.Text, edtNumero.Text);
+  if dmSesion <> nil then
+  begin
+    dmSesion.PrepararPrint(edtSerie.Text, edtNumero.Text);
   cfg := Default(TDocCompraCabCfg);
   cfg.Titulo         := 'SESION DE COMPRA';
   cfg.EtiquetaIzq    := 'EMPRESA';
@@ -117,6 +117,7 @@ begin
   finally
     FreeAndNil(fPreview);
   end;
+  end;
 end;
 
 procedure TfrmPrintSesion.FormCreate(Sender: TObject);
@@ -131,9 +132,8 @@ end;
 
 procedure TfrmPrintSesion.preparar_consulta;
 begin
-  if dmSesion = nil then
-    Exit;
-  dmSesion.PrepararPrint(edtSerie.Text, edtNumero.Text);
+  if dmSesion <> nil then
+    dmSesion.PrepararPrint(edtSerie.Text, edtNumero.Text);
 end;
 
 procedure TfrmPrintSesion.AfterReportLoaded;

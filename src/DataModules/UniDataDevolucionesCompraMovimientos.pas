@@ -35,16 +35,12 @@
 {    ampliar ResolverSkuCelda en el bucle de celdas.                           }
 {******************************************************************************}
 unit UniDataDevolucionesCompraMovimientos;
-
 interface
-
 uses
   Uni, inLibDevolucionesCompraMovimientosIntf;
 function CrearMovimientosDevolucionCompraUniDAC(
   AConexion: TUniConnection): IMovimientosDevolucionCompra;
-
 implementation
-
 uses
   System.SysUtils, Data.DB, DBAccess, inLibDocumento,
   inLibDocumentoIntf, UniDataValoresAutomaticosRepositorio,
@@ -62,13 +58,11 @@ type
     procedure RevertirDesdeDevolucion(
       const ASerieDevc, ANumDevc, AUsuario: string);
   end;
-
 function EstrategiaDevolucionCompra: IEstrategiaDocumento;
 begin
   Result := CrearEstrategiaDocumento(
     CrearConfiguracionDocumento(tdDevolucion, sdCompra));
 end;
-
 // Carga los datos minimos del devolucion necesarios para construir los
 // movimientos: empresa (para el parametro p_CODIGO_EMPRESA_MOV) y
 // almacen por defecto de la cabecera (fallback cuando linea/celda no
@@ -101,7 +95,6 @@ begin
     FreeAndNil(q);
   end;
 end;
-
 procedure GenerarMovimientosDesdeDevolucionCompra(AConn: TUniConnection;
                                                const ASerieDevc, ANumDevc,
                                                      AUsuario: string);
@@ -260,13 +253,10 @@ begin
       // Lineas sin SKU no pueden mover stock; las saltamos. No es
       // fatal porque pueden ser lineas de servicio o lineas en
       // construccion. Lo mismo para sin almacen efectivo.
-      if (sCodigoSku = '') or (sCodigoAlm = '') then
+      if (sCodigoSku <> '') and (sCodigoAlm <> '') then
       begin
-        qSrc.Next;
-        Continue;
-      end;
-      sNumeroMov := ObtenerSiguienteContador(
-        AConn, 'MV', AUsuario);
+        sNumeroMov := ObtenerSiguienteContador(
+          AConn, 'MV', AUsuario);
       // LINEA_DEVCLIN ya viene en formato '0010', '0020', etc. Lo
       // reusamos tal cual como LINEA_MOV.
       sLinea := qSrc.FieldByName('LINEA').AsString;
@@ -292,7 +282,8 @@ begin
       spIns.ParamByName('p_CODCLIENTE').AsString          := '';
       spIns.ParamByName('p_CODARTICULO').AsString         := sCodigoArt;
       spIns.ExecProc;
-      Inc(iCount);
+        Inc(iCount);
+      end;
       qSrc.Next;
     end;
     if iCount = 0 then
@@ -304,7 +295,6 @@ begin
     FreeAndNil(spIns);
   end;
 end;
-
 // Recalcula PMP+stock para un (empresa, almacen) usando la temp table
 // global tmp_skus_recalc que el llamante debe haber poblado con los
 // SKUs afectados. Encapsula la llamada al SP del sistema.
@@ -327,7 +317,6 @@ begin
     FreeAndNil(spRecalc);
   end;
 end;
-
 procedure RevertirMovimientosDesdeDevolucionCompra(AConn: TUniConnection;
                                                 const ASerieDevc, ANumDevc,
                                                       AUsuario: string);
@@ -354,8 +343,8 @@ begin
     qPares.ParamByName('s').AsString := ASerieDevc;
     qPares.ParamByName('n').AsString := ANumDevc;
     qPares.Open;
-    if qPares.Eof then
-      Exit;  // nada que revertir
+    if not qPares.Eof then
+    begin
     // 2. Borrar los movimientos llamando al SP, que decrementa
     //    CANTIDAD_STK + acumuladores por subtipo en una transacción.
     qExec.SQL.Text :=
@@ -433,13 +422,13 @@ begin
       qExec.ExecSQL;
       qPares.Next;
     end;
+    end;
   finally
     FreeAndNil(qPares);
     FreeAndNil(qSkus);
     FreeAndNil(qExec);
   end;
 end;
-
 constructor TMovimientosDevolucionCompraUniDAC.Create(
   AConexion: TUniConnection);
 begin
@@ -448,25 +437,21 @@ begin
   inherited Create;
   FConexion := AConexion;
 end;
-
 procedure TMovimientosDevolucionCompraUniDAC.GenerarDesdeDevolucion(
   const ASerieDevc, ANumDevc, AUsuario: string);
 begin
   GenerarMovimientosDesdeDevolucionCompra(
     FConexion, ASerieDevc, ANumDevc, AUsuario);
 end;
-
 procedure TMovimientosDevolucionCompraUniDAC.RevertirDesdeDevolucion(
   const ASerieDevc, ANumDevc, AUsuario: string);
 begin
   RevertirMovimientosDesdeDevolucionCompra(
     FConexion, ASerieDevc, ANumDevc, AUsuario);
 end;
-
 function CrearMovimientosDevolucionCompraUniDAC(
   AConexion: TUniConnection): IMovimientosDevolucionCompra;
 begin
   Result := TMovimientosDevolucionCompraUniDAC.Create(AConexion);
 end;
-
 end.

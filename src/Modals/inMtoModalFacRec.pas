@@ -96,54 +96,58 @@ var
   IsError : Boolean;
   Servicio: IServicioEmisionFiscal;
   ServicioCola: IServicioVerifactuCola;
+  Procedimiento: TUniStoredProc;
 begin
   IsError := False;
   if not Assigned(dmFac) then
     raise EArgumentNilException.Create(
       'Data module de facturas no asignado.');
-  with dmFac do
-  begin
     if chkAbonar.Checked and not IsError then
     begin
       SavedCursor := Screen.Cursor;
       try
         Screen.Cursor:=crHourglass;
         begin
-          with unstrdprcCrearFacturaAbono do
-          begin
+          Procedimiento := dmFac.unstrdprcCrearFacturaAbono;
              //connection.StartTransaction;
-             ParamByName('pidseriefactura').AsString :=  edtSerieOrigen.Text;
-             ParamByName('pidnumfactura').AsString :=  edtNumFacOrigen.Text;
-             ParamByName('pidcodigo_empresa').AsString :=
-                     unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString;
-             ParamByName('pidseriefacturaabono').AsString :=
-                                                           cmbSerieFactura.Text;
-             ParamByName('pfechafacturaabono').AsDate :=  dtFecha.Date;
-             ParamByName('pfechafacturaabono').AsDate :=  dtFecha.Date;
-             ParamByName('pfechafacturaabono').AsDate :=  dtFecha.Date;
-             ParamByName('pUSUARIO').AsString := IdentidadSesion.Usuario;
+          Procedimiento.ParamByName('pidseriefactura').AsString :=
+            edtSerieOrigen.Text;
+          Procedimiento.ParamByName('pidnumfactura').AsString :=
+            edtNumFacOrigen.Text;
+          Procedimiento.ParamByName('pidcodigo_empresa').AsString :=
+            dmFac.unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString;
+          Procedimiento.ParamByName('pidseriefacturaabono').AsString :=
+            cmbSerieFactura.Text;
+          Procedimiento.ParamByName('pfechafacturaabono').AsDate :=
+            dtFecha.Date;
+          Procedimiento.ParamByName('pfechafacturaabono').AsDate :=
+            dtFecha.Date;
+          Procedimiento.ParamByName('pfechafacturaabono').AsDate :=
+            dtFecha.Date;
+          Procedimiento.ParamByName('pUSUARIO').AsString :=
+            dmFac.IdentidadSesion.Usuario;
              //ParamByName('pINSTANTEMODIF').AsDateTime := Now;
-             ExecProc;
+          Procedimiento.ExecProc;
              //connection.Commit;
-             edtSerieFacAbono.Text :=
-                                   ParamByName('pidseriefacturaabono').AsString;
-             edtNumFacAbono.Text := ParamByName('pidnumfacturaabono').AsString;
+          edtSerieFacAbono.Text := Procedimiento.ParamByName(
+            'pidseriefacturaabono').AsString;
+          edtNumFacAbono.Text := Procedimiento.ParamByName(
+            'pidnumfacturaabono').AsString;
              // Rectificativa Verifactu: marcar tipo, enlazar con la
              // original y encolar el registro R1/R5
              ServicioCola := CrearServicioVerifactuColaUniDAC(
-               ConexionPrincipal);
+               dmFac.ConexionPrincipal);
              Servicio := CrearServicioEmisionFiscal(
-               ParametrosApp,
-               ParametrosCaja,
-               ConexionPrincipal,
+               dmFac.ParametrosApp,
+               dmFac.ParametrosCaja,
+               dmFac.ConexionPrincipal,
                ServicioCola);
-             TVerifactuCola.EncolarRectificativa(ParametrosApp,
-               ParametrosCaja, ServicioCola, Servicio,
-               IdentidadSesion.Usuario,
+             TVerifactuCola.EncolarRectificativa(dmFac.ParametrosApp,
+               dmFac.ParametrosCaja, ServicioCola, Servicio,
+               dmFac.IdentidadSesion.Usuario,
                edtSerieOrigen.Text, edtNumFacOrigen.Text,
                edtSerieFacAbono.Text, edtNumFacAbono.Text, 'I');
-             unqryTablaG.Refresh;
-          end;
+          dmFac.unqryTablaG.Refresh;
         end;
       finally
           Screen.Cursor := SavedCursor;
@@ -154,25 +158,29 @@ begin
       SavedCursor := Screen.Cursor;
       try
         Screen.Cursor:=crHourglass;
-        with dmFac.unstrdprcDuplicarFactura do
-        begin
-         ParamByName('pidseriefactura').AsString :=  edtSerieOrigen.Text;
-         ParamByName('pidnumfactura').AsString :=  edtNumFacOrigen.Text;
-         ParamByName('pidcodigo_empresa').AsString :=
-                    unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString;
-         ParamByName('pUSUARIO').AsString := IdentidadSesion.Usuario;
-         ParamByName('pidseriefacturaabono').AsString :=  cmbSerieFactura.Text;
-         ParamByName('pfechafacturaabono').AsDate :=  dtFecha.Date;
-         ExecProc;
-         edtSerieFacAbono.Text := ParamByName('pidseriefacturaabono').AsString;
-         edtNumFacAbono.Text := ParamByName('pidnumfacturaabono').AsString;
-         dmFac.unqryTablaG.Refresh;
-        end;
+        Procedimiento := dmFac.unstrdprcDuplicarFactura;
+        Procedimiento.ParamByName('pidseriefactura').AsString :=
+          edtSerieOrigen.Text;
+        Procedimiento.ParamByName('pidnumfactura').AsString :=
+          edtNumFacOrigen.Text;
+        Procedimiento.ParamByName('pidcodigo_empresa').AsString :=
+          dmFac.unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString;
+        Procedimiento.ParamByName('pUSUARIO').AsString :=
+          dmFac.IdentidadSesion.Usuario;
+        Procedimiento.ParamByName('pidseriefacturaabono').AsString :=
+          cmbSerieFactura.Text;
+        Procedimiento.ParamByName('pfechafacturaabono').AsDate :=
+          dtFecha.Date;
+        Procedimiento.ExecProc;
+        edtSerieFacAbono.Text := Procedimiento.ParamByName(
+          'pidseriefacturaabono').AsString;
+        edtNumFacAbono.Text := Procedimiento.ParamByName(
+          'pidnumfacturaabono').AsString;
+        dmFac.unqryTablaG.Refresh;
       finally
         Screen.Cursor:=SavedCursor;
       end;
     end;
-  end;
 end;
 
 procedure TfrmGenFacRec.chkAbonarClick(Sender: TObject);
@@ -198,16 +206,15 @@ begin
     raise EArgumentNilException.Create(
       'Data module de facturas no asignado.');
   dmFac := ADM;
-  with dmFac do
-  begin
-    if not unqrySeries.Active then
-      unqrySeries.Open;
-    cmbSerieFactura.Properties.ListSource := dsSeries;
-    cmbSerieFactura.Text :=
-      cmbSerieFactura.Properties.ListSource.DataSet.Fields[0].AsString;
-    edtNumFacOrigen.Text := unqryTablaG.FieldByName('NUMERO_FAC').AsString;
-    edtSerieOrigen.Text := unqryTablaG.FieldByName('SERIE_FAC').AsString;
-  end;
+  if not dmFac.unqrySeries.Active then
+    dmFac.unqrySeries.Open;
+  cmbSerieFactura.Properties.ListSource := dmFac.dsSeries;
+  cmbSerieFactura.Text :=
+    cmbSerieFactura.Properties.ListSource.DataSet.Fields[0].AsString;
+  edtNumFacOrigen.Text :=
+    dmFac.unqryTablaG.FieldByName('NUMERO_FAC').AsString;
+  edtSerieOrigen.Text :=
+    dmFac.unqryTablaG.FieldByName('SERIE_FAC').AsString;
 end;
 
 end.

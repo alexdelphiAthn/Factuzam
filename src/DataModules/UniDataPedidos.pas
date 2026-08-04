@@ -1672,8 +1672,8 @@ var
 begin
   Result := False;
   sNumeroAlb := ''; sSerieAlb := '';
-  if (aLineas = nil) or (aLineas.Count = 0) then Exit;
-
+  if (aLineas <> nil) and (aLineas.Count > 0) then
+  begin
   // Asegura que los procedimientos existen (idempotente y barato).
   // OJO: es DDL (CREATE PROCEDURE) y debe quedar FUERA de la
   // transaccion: el DDL hace commit implicito en MySQL/MariaDB.
@@ -1811,6 +1811,7 @@ begin
   unqryAlbaranes.Close;     unqryAlbaranes.Open;
   unqryTablaG.RefreshRecord;
   Result := True;
+  end;
 end;
 
 function TdmPedidos.ExistePedidoPrestaShop(const sIdPS: string): Boolean;
@@ -1853,8 +1854,8 @@ var
   sDir1, sDir2, sPobl, sProv, sCP, sMovil, sOrden: string;
 begin
   Result := '0';
-  if aOrder = nil then
-    Exit;
+  if aOrder <> nil then
+  begin
   // Identificadores de busqueda: se prioriza el domicilio fiscal (Bil)
   sNif := aOrder.Vat_numberBil;
   if sNif = '' then
@@ -1943,6 +1944,7 @@ begin
     end;
   finally
     FreeAndNil(q);
+  end;
   end;
 end;
 

@@ -240,18 +240,19 @@ begin
       PChar(SErrorEmpleadoGastoCajaNoIndicado),
       PChar(STituloAvisoCaja), MB_OK or MB_ICONWARNING);
     btnEmpleado.SetFocus;
-    Exit;
-  end;
-  if txtImporte.Value <= 0 then
+  end
+  else if txtImporte.Value <= 0 then
   begin
     Application.MessageBox(
       PChar(SErrorImporteGastoCajaNoValido),
       PChar(STituloAvisoCaja), MB_OK or MB_ICONWARNING);
     txtImporte.SetFocus;
-    Exit;
+  end
+  else
+  begin
+    Grabar;
+    ModalResult := mrOk;
   end;
-  Grabar;
-  ModalResult := mrOk;
 end;
 
 procedure TfrmModalGastoCaja.actCancelarExecute(Sender: TObject);

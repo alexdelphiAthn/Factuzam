@@ -175,19 +175,52 @@ gestiona como cualquier otra foto del catálogo mediante
 <hr>
 <h2 id="pedidos">Pedidos</h2>
 <p>Mantenimiento de <strong>Pedidos de Compra</strong>. Registra lo que se ha <strong>encargado</strong>
-a un proveedor (todavía no ha llegado, no mueve stock).</p>
+a un proveedor. Mientras solo exista el pedido, la cantidad figura como
+<strong>pendiente de recibir</strong> y no aumenta las existencias.</p>
 <p><img src="img/03-pedidos-compra.png" alt="Pedidos de compra" loading="lazy"></p>
 <p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[P]</code></p>
-<p>Un pedido tiene una <strong>cabecera</strong> (proveedor, fecha, almacén de destino,
-forma de pago) y un <strong>detalle de líneas</strong> (artículo/SKU, cantidades por
-talla, precio). Desde el pedido se puede generar el <strong>albarán de compra</strong>
-cuando llega la mercancía.</p>
-<p>En la recepción, la columna <strong>A recibir</strong> no permite superar lo pendiente:
-si tecleas más unidades de las pedidas, la aplicación ajusta el valor al
-máximo disponible. Esto se aplica tanto en el modo vertical como en el
-pivote de tallas.</p>
-<p>El botón <strong>Crear albarán</strong> permite dos flujos:</p>
-<ul><li>Crear un <strong>albarán nuevo</strong> con las cantidades pendientes o con las cantidades introducidas en <strong>A recibir</strong>.</li><li><strong>Incorporar</strong> esas líneas a un albarán ya existente del mismo pedido, si se está recibiendo mercancía en varias tandas.</li></ul>
+<p>Un pedido tiene una <strong>cabecera</strong> (empresa, proveedor, serie/número, fechas,
+temporada y almacén de destino predeterminado) y un <strong>detalle de líneas</strong>
+(artículo/SKU, almacén efectivo, cantidad pedida, recibida, pendiente,
+precio e impuestos). Los indicadores de cabecera resumen <strong>Pedida</strong>,
+<strong>Recibida</strong>, <strong>Pendiente</strong> y <strong>A albaranar</strong>. En la lista, un pedido con
+cantidad pendiente y <strong>fecha tope de recepción vencida</strong> aparece resaltado.</p>
+<h3 id="presentacion-de-las-lineas-y-cantidades-a-recibir">Presentación de las líneas y cantidades a recibir</h3>
+<p>Dentro de <strong>Líneas</strong>, <code>[F1]</code> recorre cuatro presentaciones:</p>
+<ol><li><strong>Auto (desglose)</strong> — artículo y atributos en columnas separadas.</li><li><strong>SKU</strong> — una línea por variante.</li><li><strong>Tallas en línea</strong> — tallas como columnas de entrada.</li><li><strong>Tallas horizontales</strong> — grupos por artículo/color con las bandas <strong>Pedido</strong>, <strong>A recibir</strong> y <strong>Pendiente</strong>.</li></ol>
+<p>La pantalla suele abrir en <strong>Tallas en línea</strong>; si ese modo no puede
+construirse, pasa a SKU. El botón <strong>Expandir recibidos</strong> salta directamente
+a <strong>Tallas horizontales</strong>. Consulta también la explicación general de
+<a href="01-conceptos-comunes.html#cambiar-la-presentacion-de-las-lineas-con-f1">los modos con F1</a>.</p>
+<p><img src="img/03-pedidos-recepcion-tallas.png" alt="Pedido de compra en tallas horizontales con sus bandas de recepción" loading="lazy"></p>
+<p>Para preparar una recepción:</p>
+<ul><li>Escribe en <strong>A recibir</strong> solo las unidades que han llegado. Se puede informar por línea o por talla, según el modo activo.</li><li><strong>Recibir Todo</strong> copia a <strong>A recibir</strong> todo lo que queda pendiente en el pedido. Después todavía puedes corregir una línea o una talla.</li><li>Factuzam no permite que <strong>A recibir</strong> supere <code>Pedida − Recibida</code>: reduce automáticamente el exceso al máximo pendiente y emite un aviso sonoro.</li><li>Si una línea tiene un artículo con variaciones pero no tiene SKU, al grabar se muestra un aviso: esa línea no puede mover stock correctamente.</li></ul>
+<blockquote><p><strong>Importante:</strong> si pulsas <strong>Crear albarán</strong> sin haber informado ninguna
+cantidad en <strong>A recibir</strong>, Factuzam aplica el flujo clásico y recibe <strong>todo
+lo pendiente del almacén elegido</strong>. Informa cantidades antes si la entrega
+es parcial.</p></blockquote>
+<h3 id="recibir-el-pedido-crear-o-ampliar-un-albaran">Recibir el pedido: crear o ampliar un albarán</h3>
+<ol><li>Revisa <strong>A recibir</strong> y pulsa <strong>Crear albarán</strong>.</li><li>Elige el <strong>almacén destino</strong>. Se puede seleccionar cualquier almacén activo; solo se procesan las líneas cuya ubicación efectiva coincide con el almacén elegido.</li><li>Para un albarán nuevo, confirma la <strong>serie</strong> propuesta para ese almacén, la <strong>referencia del proveedor</strong>, la <strong>fecha de recepción</strong> y la <strong>temporada</strong>.</li><li>Si la entrega continúa un albarán anterior, marca <strong>Incorporar a un albarán ya existente de este pedido</strong> y selecciona el documento destino.</li><li>Acepta con <code>[F12]</code>. Factuzam crea o amplía el albarán, mueve el stock, actualiza las cantidades recibidas y pendientes del pedido y recalcula su estado en una sola operación.</li></ol>
+<p><img src="img/03-pedidos-incorporar-albaran.png" alt="Incorporación de una recepción a un albarán existente" loading="lazy"></p>
+<p>Después de una recepción correcta, las cantidades <strong>A recibir</strong> del almacén
+procesado se limpian; las de otros almacenes permanecen para poder continuar
+con la siguiente tienda o recepción. Un resumen muestra el albarán resultante
+y permite <strong>Ir a documento</strong>.</p>
+<p>El estado del pedido se mantiene automáticamente:</p>
+<table>
+<thead><tr>
+<th>Estado</th>
+<th>Significado</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>ABIERTO</strong></td><td>Todavía no se ha recibido ninguna unidad.</td></tr>
+<tr><td><strong>PARCIAL</strong></td><td>Se ha recibido una parte y queda mercancía pendiente.</td></tr>
+<tr><td><strong>RECIBIDO</strong></td><td>Ya no queda cantidad pendiente.</td></tr>
+<tr><td><strong>CANCELADO</strong></td><td>El pedido no se continuará recibiendo.</td></tr>
+</tbody>
+</table>
+<p>La recepción es transaccional: si falla la creación, la incorporación o el
+movimiento de stock, Factuzam deshace el conjunto y deja el pedido como estaba.</p>
 <p><img src="img/03-pedidos-crear-albaran.png" alt="Crear albarán desde pedido de compra" loading="lazy"></p>
 <hr>
 <h2 id="albaranes">Albaranes</h2>
@@ -295,6 +328,10 @@ alimentarla con vencimientos filtrados por proveedor, vencimiento o estado.</p>
 <p>Listado de documentos de proveedor para revisar pedidos, albaranes,
 devoluciones, borradores y vencimientos dentro de un rango de fechas o por
 proveedor.</p>
+<p>La vista preliminar agrupa los documentos por tipo y proveedor, presenta
+líneas, base, IVA, recargo de equivalencia y total, e incluye subtotales por
+proveedor, por tipo de documento y un total general.</p>
+<p><img src="img/03-listado-documentos-proveedor-resultado.png" alt="Vista preliminar del listado de documentos proveedor" loading="lazy"></p>
 <hr>
 <h2 id="listados-listado-de-efectos-de-pago">Listados ▸ Listado de efectos de pago</h2>
 <p>Listado de la <strong>cartera de pagos a proveedor</strong>: los efectos (vencimientos)
@@ -307,7 +344,7 @@ Es el complemento de impresión de las pantallas
 <hr>
 <p><a href="02-menu-archivo.html">◀ Menú Archivo</a> · <a href="index.html">Índice</a> · <a href="04-menu-ventas-mayor.html">Siguiente ▶ Menú Ventas Mayor</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 31/07/2026</footer>
+<footer>Manual de Factuzam · generado el 04/08/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

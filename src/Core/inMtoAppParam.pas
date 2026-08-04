@@ -266,14 +266,21 @@ function TfrmMtoAppParam.ObtenerCategoria(
 var
   i: Integer;
 begin
-  for i := 0 to JvInspector1.Root.Count - 1 do
+  Result := nil;
+  i := 0;
+  while (i < JvInspector1.Root.Count) and (Result = nil) do
+  begin
     if (JvInspector1.Root.Items[i] is TJvInspectorCustomCategoryItem) and
        SameText(JvInspector1.Root.Items[i].DisplayName, NombreCat) then
-      Exit(TJvInspectorCustomCategoryItem(JvInspector1.Root.Items[i]));
-
-  Result := TJvInspectorCustomCategoryItem.Create(JvInspector1.Root, nil);
-  Result.DisplayName := NombreCat;
-  Result.Expanded    := True;
+      Result := TJvInspectorCustomCategoryItem(JvInspector1.Root.Items[i]);
+    Inc(i);
+  end;
+  if Result = nil then
+  begin
+    Result := TJvInspectorCustomCategoryItem.Create(JvInspector1.Root, nil);
+    Result.DisplayName := NombreCat;
+    Result.Expanded    := True;
+  end;
 end;
 
 procedure TfrmMtoAppParam.ConstruirInspector;
@@ -612,28 +619,23 @@ begin
     else
       LSkinName := ParametrosApp.GetString('appTema');
 
-    if Trim(LSkinName) = '' then
-      Exit;
-
-    // 2. Usar el manager global nativo que SÍ existe en tu versión
-    if cxLookAndFeelPaintersManager.GetPainter(LSkinName, LPainter) then
+    if Trim(LSkinName) <> '' then
     begin
-      // 3. Extraer la información interna del Skin de forma segura
-      if LPainter.GetPainterData(LPainterInfo) then
+      // 2. Usar el manager global nativo disponible en esta versión
+      if cxLookAndFeelPaintersManager.GetPainter(LSkinName, LPainter) then
       begin
-        // 4. Ahora SÍ podemos acceder a .Skin y a sus Paletas sin que Delphi se
-        // queje
-        if Assigned(LPainterInfo.Skin)
-           and (LPainterInfo.Skin.ColorPalettes.Count > 0) then
+        // 3. Extraer la información interna del Skin de forma segura
+        if LPainter.GetPainterData(LPainterInfo) then
         begin
-          for I := 0 to LPainterInfo.Skin.ColorPalettes.Count - 1 do
+          if Assigned(LPainterInfo.Skin) and
+             (LPainterInfo.Skin.ColorPalettes.Count > 0) then
           begin
-            Strings.Add(LPainterInfo.Skin.ColorPalettes[I].Name);
+            for I := 0 to LPainterInfo.Skin.ColorPalettes.Count - 1 do
+              Strings.Add(LPainterInfo.Skin.ColorPalettes[I].Name);
           end;
         end;
       end;
     end;
-
   finally
     Strings.EndUpdate;
   end;
@@ -684,16 +686,14 @@ procedure TfrmMtoAppParam.InspectorItemEdit(Sender: TJvCustomInspector;
 var
   Dir: string;
 begin
-  if (Item = nil) or not StartsText('appDir', Item.Name) then
-    Exit;
-
-  // El valor guardado puede ya contener un token: lo expandimos
-  // para que SelectDirectory arranque en la carpeta real
-  Dir := ExpandPathTokens(DisplayStr);
-
-  if SelectDirectory('Seleccione una carpeta', '', Dir,
-                     [sdNewUI, sdNewFolder]) then
-    DisplayStr := PathToToken(Dir);   // guardamos con token
+  if (Item <> nil) and StartsText('appDir', Item.Name) then
+  begin
+    // El valor guardado puede contener un token: se expande para el diálogo
+    Dir := ExpandPathTokens(DisplayStr);
+    if SelectDirectory('Seleccione una carpeta', '', Dir,
+                       [sdNewUI, sdNewFolder]) then
+      DisplayStr := PathToToken(Dir);
+  end;
 end;
 
 
@@ -880,7 +880,8 @@ var
   PuedeEditar: Boolean;
 begin
   JvInspector1.SaveValues;
-  if cmbGrupoUsuario.ItemIndex = -1 then Exit;
+  if cmbGrupoUsuario.ItemIndex >= 0 then
+  begin
   sUsuarioGrupo := cmbGrupoUsuario.Text;
 
   GuardadosCount := 0;
@@ -891,9 +892,8 @@ begin
     for i := 0 to JvInspector1.Root.Count - 1 do
     begin
       NodoPrincipal := JvInspector1.Root.Items[i];
-      if not (NodoPrincipal is TJvInspectorCustomCategoryItem) then
-        Continue;
-
+      if NodoPrincipal is TJvInspectorCustomCategoryItem then
+      begin
       for j := 0 to NodoPrincipal.Count - 1 do
       begin
         ParamItem := NodoPrincipal.Items[j];
@@ -931,6 +931,7 @@ begin
         end
         else if CambioReal and (not PuedeEditar) then
           Inc(IgnoradosCount);
+      end;
       end;
     end;
     if Length(ValoresGuardar) > 0 then
@@ -987,6 +988,7 @@ begin
                          [IgnoradosCount]))
     else
       ShowMessage(SInfoSinCambiosParametros);
+  end;
 end;
 
 // -----------------------------------------------------------------------
@@ -1118,12 +1120,9 @@ begin
   inherited;
   // Solo pedimos confirmación si hay cambios reales sin guardar
   if not HayCambiosPendientes then
-  begin
-    Close;
-    Exit;
-  end;
-  if MessageDlg(SPreguntaSalirSinGuardar,
-                mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    Close
+  else if MessageDlg(SPreguntaSalirSinGuardar,
+                     mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     Close;
 end;
 
@@ -1137,42 +1136,38 @@ begin
   // Recorremos los items igual que en btnGuardarClick comparando contra los
   // valores capturados al cargar; basta un cambio para devolver True
   Result := False;
-  if FValoresOriginales = nil then
-    Exit;
-  JvInspector1.SaveValues;
-  for i := 0 to JvInspector1.Root.Count - 1 do
+  if FValoresOriginales <> nil then
   begin
-    NodoPrincipal := JvInspector1.Root.Items[i];
-    if not (NodoPrincipal is TJvInspectorCustomCategoryItem) then
-      Continue;
-    for j := 0 to NodoPrincipal.Count - 1 do
+    JvInspector1.SaveValues;
+    for i := 0 to JvInspector1.Root.Count - 1 do
     begin
-      ParamItem := NodoPrincipal.Items[j];
-      if ParamItem.Data <> nil then
-        case ParamItem.Data.TypeInfo.Kind of
-          tkEnumeration:
-            if ParamItem.Data.AsOrdinal <> 0 then
-              ValorActual := 'True'
+      NodoPrincipal := JvInspector1.Root.Items[i];
+      if NodoPrincipal is TJvInspectorCustomCategoryItem then
+      begin
+        for j := 0 to NodoPrincipal.Count - 1 do
+        begin
+          ParamItem := NodoPrincipal.Items[j];
+          if ParamItem.Data <> nil then
+            case ParamItem.Data.TypeInfo.Kind of
+              tkEnumeration:
+                if ParamItem.Data.AsOrdinal <> 0 then
+                  ValorActual := 'True'
+                else
+                  ValorActual := 'False';
+              tkInteger:
+                ValorActual := IntToStr(ParamItem.Data.AsOrdinal);
             else
-              ValorActual := 'False';
-          tkInteger:
-            ValorActual := IntToStr(ParamItem.Data.AsOrdinal);
-        else
-          ValorActual := ParamItem.Data.AsString;
-        end
-      else
-        ValorActual := '';
-      if UsuarioPuedeEditarParametro(ParamItem.Name) and
-         FValoresOriginales.ContainsKey(ParamItem.Name) then
-      begin
-        if not SameText(FValoresOriginales[ParamItem.Name], ValorActual) then
-          Exit(True);
-      end
-      else if UsuarioPuedeEditarParametro(ParamItem.Name) then
-      begin
-        // Item nuevo no capturado: lo consideramos cambio si no está vacío
-        if ValorActual <> '' then
-          Exit(True);
+              ValorActual := ParamItem.Data.AsString;
+            end
+          else
+            ValorActual := '';
+          if UsuarioPuedeEditarParametro(ParamItem.Name) and
+             FValoresOriginales.ContainsKey(ParamItem.Name) then
+            Result := Result or not SameText(
+              FValoresOriginales[ParamItem.Name], ValorActual)
+          else if UsuarioPuedeEditarParametro(ParamItem.Name) then
+            Result := Result or (ValorActual <> '');
+        end;
       end;
     end;
   end;
@@ -1194,25 +1189,24 @@ begin
     end;
 
     if usuarios.Count = 0 then
+      ShowMessage(SAvisoSinUsuariosParametrosGuardados)
+    else
     begin
-      ShowMessage(SAvisoSinUsuariosParametrosGuardados);
-      Exit;
-    end;
-
-    sUsuario := usuarios[0];
-    if InputQuery(STituloCambiarUsuario,
-                  Format(SSolicitudCambiarUsuario, [usuarios.CommaText]),
-                  sUsuario) then
-    begin
-      if usuarios.IndexOf(sUsuario) < 0 then
-        ShowMessage(Format(SErrorUsuarioNoEncontrado, [sUsuario]))
-      else
+      sUsuario := usuarios[0];
+      if InputQuery(STituloCambiarUsuario,
+                    Format(SSolicitudCambiarUsuario, [usuarios.CommaText]),
+                    sUsuario) then
       begin
-        CargarParametros(JvInspector1, sUsuario, '');
-        if cmbGrupoUsuario.Properties.Items.IndexOf(sUsuario) < 0 then
-          cmbGrupoUsuario.Properties.Items.Add(sUsuario);
-        cmbGrupoUsuario.ItemIndex :=
-          cmbGrupoUsuario.Properties.Items.IndexOf(sUsuario);
+        if usuarios.IndexOf(sUsuario) < 0 then
+          ShowMessage(Format(SErrorUsuarioNoEncontrado, [sUsuario]))
+        else
+        begin
+          CargarParametros(JvInspector1, sUsuario, '');
+          if cmbGrupoUsuario.Properties.Items.IndexOf(sUsuario) < 0 then
+            cmbGrupoUsuario.Properties.Items.Add(sUsuario);
+          cmbGrupoUsuario.ItemIndex :=
+            cmbGrupoUsuario.Properties.Items.IndexOf(sUsuario);
+        end;
       end;
     end;
   finally
@@ -1252,15 +1246,18 @@ var
   Encontrado: TJvCustomInspectorItem;
 begin
   Result := nil;
-  for i := 0 to ItemPadre.Count - 1 do
+  i := 0;
+  while (i < ItemPadre.Count) and (Result = nil) do
   begin
     if SameText(ItemPadre.Items[i].Name, Nombre) then
-      Exit(ItemPadre.Items[i]);
-    if ItemPadre.Items[i] is TJvInspectorCustomCategoryItem then
+      Result := ItemPadre.Items[i]
+    else if ItemPadre.Items[i] is TJvInspectorCustomCategoryItem then
     begin
       Encontrado := BuscarItemPorNombre(ItemPadre.Items[i], Nombre);
-      if Encontrado <> nil then Exit(Encontrado);
+      if Encontrado <> nil then
+        Result := Encontrado;
     end;
+    Inc(i);
   end;
 end;
 

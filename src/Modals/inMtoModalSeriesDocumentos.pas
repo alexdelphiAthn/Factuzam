@@ -24,7 +24,7 @@ uses
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxContainer, cxEdit, cxLabel, cxTextEdit, cxButtons, cxMaskEdit,
   cxDropDownEdit, cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox,
-  inMtoFrmBase;
+  inMtoFrmBase, UniDataSeriesDocumentosRepositorio;
 
 type
   TfrmModalSeriesDocumentos = class(TfrmBase)
@@ -44,9 +44,7 @@ type
     alAcciones: TActionList;
     actAceptar: TAction;
     actCancelar: TAction;
-    unqryAlmacenes: TUniQuery;
     dsAlmacenes: TDataSource;
-    unqryCajas: TUniQuery;
     dsCajas: TDataSource;
     procedure actAceptarExecute(Sender: TObject);
     procedure actCancelarExecute(Sender: TObject);
@@ -55,6 +53,7 @@ type
   private
     FAlmacen: string;
     FCaja: string;
+    FRepositorio: TRepositorioSeriesDocumentos;
     FSerieTokenizada: string;
     procedure CargarCajas;
     function EsSerieTokenizadaValida(
@@ -96,13 +95,14 @@ begin
   ASerieTokenizada := '';
   frm := TfrmModalSeriesDocumentos.Create(AOwner);
   try
-    frm.unqryAlmacenes.Connection := AConexion;
-    frm.unqryCajas.Connection := AConexion;
-    frm.unqryAlmacenes.ParamByName('EMPRESA').AsString := AEmpresa;
-    frm.unqryAlmacenes.Open;
-    if not frm.unqryAlmacenes.IsEmpty then
+    frm.FRepositorio := TRepositorioSeriesDocumentos.Create(
+      frm, AConexion);
+    frm.dsAlmacenes.DataSet := frm.FRepositorio.Almacenes;
+    frm.dsCajas.DataSet := frm.FRepositorio.Cajas;
+    frm.FRepositorio.AbrirAlmacenes(AEmpresa);
+    if not frm.FRepositorio.Almacenes.IsEmpty then
     begin
-      frm.cbbAlmacen.EditValue := frm.unqryAlmacenes.FieldByName(
+      frm.cbbAlmacen.EditValue := frm.FRepositorio.Almacenes.FieldByName(
         'CODIGO_ALM_ALM').AsString;
     end;
     if frm.ShowModal = mrOk then
@@ -184,14 +184,13 @@ var
 begin
   sAlmacen := Trim(VarToStr(cbbAlmacen.EditValue));
   cbbCaja.EditValue := Null;
-  unqryCajas.Close;
+  FRepositorio.Cajas.Close;
   if sAlmacen <> '' then
   begin
-    unqryCajas.ParamByName('ALMACEN').AsString := sAlmacen;
-    unqryCajas.Open;
-    if not unqryCajas.IsEmpty then
+    FRepositorio.AbrirCajas(sAlmacen);
+    if not FRepositorio.Cajas.IsEmpty then
     begin
-      cbbCaja.EditValue := unqryCajas.FieldByName(
+      cbbCaja.EditValue := FRepositorio.Cajas.FieldByName(
         'CODIGO_CAJA_ALMCAJ').AsString;
     end;
   end;

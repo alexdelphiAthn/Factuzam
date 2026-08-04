@@ -614,9 +614,11 @@ var
   cod: string;
 begin
   idx := cbxPropiedad.ItemIndex;
-  if (idx < 0) or (idx >= FCodigosPropiedades.Count) then Exit;
-  cod := FCodigosPropiedades[idx];
-  CargarValoresPropiedad(cod);
+  if (idx >= 0) and (idx < FCodigosPropiedades.Count) then
+  begin
+    cod := FCodigosPropiedades[idx];
+    CargarValoresPropiedad(cod);
+  end;
 end;
 
 procedure TfrmModalAddBlockBase.edtFiltroProveedorPropertiesChange(
@@ -658,25 +660,24 @@ var
   i: Integer;
 begin
   if MessageDlg(SPreguntaLimpiarFiltrosAddBlock, mtConfirmation,
-                [mbYes, mbNo], 0) <> mrYes then
-    Exit;
-  btnQuitarSelFamiliasClick(nil);
-  tvProveedores.DataController.ClearSelection;
-  tvPropValores.DataController.ClearSelection;
-  cbxPropiedad.ItemIndex := 0;
-  CargarValoresPropiedad('');
-  edtFiltroProveedor.Text := '';
-  chkAplicarFechaAlta.Checked := False;
-  chkConVenta.Checked := False;
-  chkSoloConStock.Checked := False;
-  for i := 0 to chkLstAlmacenes.Items.Count - 1 do
-    chkLstAlmacenes.Items[i].Checked := False;
-  if Assigned(FDatosPreview) and FDatosPreview.Active then
+    [mbYes, mbNo], 0) = mrYes then
   begin
-    FDatosPreview.Close;
+    btnQuitarSelFamiliasClick(nil);
+    tvProveedores.DataController.ClearSelection;
+    tvPropValores.DataController.ClearSelection;
+    cbxPropiedad.ItemIndex := 0;
+    CargarValoresPropiedad('');
+    edtFiltroProveedor.Text := '';
+    chkAplicarFechaAlta.Checked := False;
+    chkConVenta.Checked := False;
+    chkSoloConStock.Checked := False;
+    for i := 0 to chkLstAlmacenes.Items.Count - 1 do
+      chkLstAlmacenes.Items[i].Checked := False;
+    if Assigned(FDatosPreview) and FDatosPreview.Active then
+      FDatosPreview.Close;
+    lblPreviewInfo.Caption := SCaptionCeroArticulos;
+    ActualizarContadores;
   end;
-  lblPreviewInfo.Caption := SCaptionCeroArticulos;
-  ActualizarContadores;
 end;
 
 procedure TfrmModalAddBlockBase.ActualizarContadores;
@@ -909,7 +910,10 @@ var
   numIns     : Integer;
   codigos    : TArray<string>;
   pendientes : Integer;
+  bContinuar : Boolean;
 begin
+  bContinuar := True;
+  pendientes := 0;
   if (not Assigned(FDatosPreview)) or
      (not FDatosPreview.Active) or
      (FDatosPreview.RecordCount = 0) then
@@ -918,43 +922,40 @@ begin
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       btnPrevisualizarClick(nil);
-      if (not Assigned(FDatosPreview)) or
-         (not FDatosPreview.Active) or
-         (FDatosPreview.RecordCount = 0) then
-      begin
-        Exit;
-      end;
+      bContinuar := Assigned(FDatosPreview) and FDatosPreview.Active and
+        (FDatosPreview.RecordCount > 0);
     end
     else
-      Exit;
+      bContinuar := False;
   end;
-
-  pendientes := 0;
-  FDatosPreview.DisableControls;
-  try
-    FDatosPreview.First;
-    while not FDatosPreview.Eof do
-    begin
-      if FDatosPreview.FieldByName('YA_CARGADO').AsString <> 'S' then
-        Inc(pendientes);
-      FDatosPreview.Next;
-    end;
-    FDatosPreview.First;
-  finally
-    FDatosPreview.EnableControls;
-  end;
-
-  if pendientes = 0 then
+  if bContinuar then
   begin
-    ShowMessage(SInfoArticulosYaCargadosAddBlock);
-    Exit;
+    pendientes := 0;
+    FDatosPreview.DisableControls;
+    try
+      FDatosPreview.First;
+      while not FDatosPreview.Eof do
+      begin
+        if FDatosPreview.FieldByName('YA_CARGADO').AsString <> 'S' then
+          Inc(pendientes);
+        FDatosPreview.Next;
+      end;
+      FDatosPreview.First;
+    finally
+      FDatosPreview.EnableControls;
+    end;
+    if pendientes = 0 then
+    begin
+      ShowMessage(SInfoArticulosYaCargadosAddBlock);
+      bContinuar := False;
+    end;
   end;
-
-  if MessageDlg(TextoConfirmacion(pendientes),
-                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
-    Exit;
-
-  if EjecutarInsercion(numIns, codigos) then
+  if bContinuar then
+  begin
+    bContinuar := MessageDlg(TextoConfirmacion(pendientes),
+      mtConfirmation, [mbYes, mbNo], 0) = mrYes;
+  end;
+  if bContinuar and EjecutarInsercion(numIns, codigos) then
   begin
     FBaseResultado.Aceptado         := True;
     FBaseResultado.NumInsertados    := numIns;

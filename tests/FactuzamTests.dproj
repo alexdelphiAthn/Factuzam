@@ -110,6 +110,9 @@
         <DCCReference
             Include="..\src\Lib\inLibFacturasEstadoFiscalPresentacion.pas"/>
         <DCCReference Include="..\src\Lib\inLibFacturasOperacionFiscal.pas"/>
+        <DCCReference
+            Include="..\src\Lib\inLibFacturasIncidenciaFiscalIntf.pas"/>
+        <DCCReference Include="..\src\Lib\inLibFacturasIncidenciaFiscal.pas"/>
         <DCCReference Include="..\src\Lib\inLibFacturasAplicacionIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibFacturasAplicacion.pas"/>
         <DCCReference
@@ -192,6 +195,10 @@
         <DCCReference Include="..\src\DataModules\UniDataVentasWsSesion.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataColumnasSkuServicios.pas"/>
         <DCCReference Include="..\src\verifactu\UniDataVerifactuColaRepositorio.pas"/>
+        <DCCReference
+            Include="..\src\verifactu\inLibVerifactuSubsanacionIntf.pas"/>
+        <DCCReference
+            Include="..\src\verifactu\UniDataVerifactuSubsanacionRepositorio.pas"/>
         <DCCReference Include="..\src\verifactu\inLibVerifactuEsquemaIntf.pas"/>
         <DCCReference Include="..\src\verifactu\UniDataVerifactuEsquema.pas"/>
         <DCCReference
@@ -200,6 +207,8 @@
             Include="..\src\verifactu\UniDataVerifactuNoVerifactuExport.pas"/>
         <DCCReference Include="..\src\verifactu\UniDataVerifactuColaProcesador.pas"/>
         <DCCReference Include="..\src\verifactu\UniDataVerifactuColaResultados.pas"/>
+        <DCCReference
+            Include="..\src\verifactu\UniDataVerifactuSubsanacionResultados.pas"/>
         <DCCReference Include="..\src\verifactu\inLibVerifactuReintentos.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataCatalogoSqlValidacion.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataFacturasRepositorio.pas"/>
@@ -254,6 +263,9 @@
         <DCCReference Include="..\src\Lib\inLibPivoteVentaIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibPivoteVentaComposicionIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibPivoteVentaModelo.pas"/>
+        <DCCReference Include="..\src\Lib\inLibHojaCalculoIntf.pas"/>
+        <DCCReference Include="..\src\Lib\inLibMovVentasArtExcel.pas"/>
+        <DCCReference Include="..\src\Lib\inLibExportacionCompraModelo.pas"/>
         <DCCReference Include="PruebasAtributosPaleta.pas"/>
         <DCCReference Include="PruebasColumnasDocumento.pas"/>
         <DCCReference Include="PruebasFiltroUsuario.pas"/>
@@ -295,6 +307,7 @@
         <DCCReference Include="PruebasFacturasCobrosPresentacion.pas"/>
         <DCCReference Include="PruebasFacturasEstadoFiscalPresentacion.pas"/>
         <DCCReference Include="PruebasFacturasOperacionFiscal.pas"/>
+        <DCCReference Include="PruebasFacturasIncidenciaFiscal.pas"/>
         <DCCReference
             Include="PruebasFacturasConsolidacionPresentacion.pas"/>
         <DCCReference Include="PruebasFacturasConsolidacion.pas"/>
@@ -330,6 +343,7 @@
         <DCCReference Include="PruebasInventariosAplicacion.pas"/>
         <DCCReference Include="DoblesPivoteVenta.pas"/>
         <DCCReference Include="PruebasPivoteVenta.pas"/>
+        <DCCReference Include="PruebasExportadores.pas"/>
         <DCCReference Include="PruebasTraducciones.pas"/>
 
         <DCCReference Include="PruebasFacturasPresentadorCabecera.pas"/>

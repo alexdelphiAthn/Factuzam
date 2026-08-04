@@ -114,6 +114,8 @@ begin
 end;
 
 procedure TfrmModalDocsCreados.PrepararEstructura;
+var
+  Columna: TcxGridDBColumn;
 begin
   // ClientDataSet en memoria + columnas del grid. Estructura fija
   // (TIPO/SERIE/NUMERO/ALMACEN), no depende de datos externos.
@@ -125,30 +127,22 @@ begin
   cdsDocs.FieldDefs.Add('ALMACEN', ftString, 20);
   cdsDocs.CreateDataSet;
   tvDocs.ClearItems;
-  with tvDocs.CreateColumn do
-  begin
-    DataBinding.FieldName := 'TIPO';
-    Caption := 'Tipo';
-    Width := 110;
-  end;
-  with tvDocs.CreateColumn do
-  begin
-    DataBinding.FieldName := 'SERIE';
-    Caption := 'Serie';
-    Width := 80;
-  end;
-  with tvDocs.CreateColumn do
-  begin
-    DataBinding.FieldName := 'NUMERO';
-    Caption := 'Numero';
-    Width := 120;
-  end;
-  with tvDocs.CreateColumn do
-  begin
-    DataBinding.FieldName := 'ALMACEN';
-    Caption := 'Almacen';
-    Width := 140;
-  end;
+  Columna := tvDocs.CreateColumn;
+  Columna.DataBinding.FieldName := 'TIPO';
+  Columna.Caption := 'Tipo';
+  Columna.Width := 110;
+  Columna := tvDocs.CreateColumn;
+  Columna.DataBinding.FieldName := 'SERIE';
+  Columna.Caption := 'Serie';
+  Columna.Width := 80;
+  Columna := tvDocs.CreateColumn;
+  Columna.DataBinding.FieldName := 'NUMERO';
+  Columna.Caption := 'Numero';
+  Columna.Width := 120;
+  Columna := tvDocs.CreateColumn;
+  Columna.DataBinding.FieldName := 'ALMACEN';
+  Columna.Caption := 'Almacen';
+  Columna.Width := 140;
 end;
 
 procedure TfrmModalDocsCreados.Agregar(const ATipo, ASerie, ANumero,
@@ -187,15 +181,12 @@ end;
 function TfrmModalDocsCreados.CloseQuery: Boolean;
 begin
   Result := inherited CloseQuery;
-  if not Result then
-    Exit;
-  if sFicha <> 'S' then
-    Exit;
-  if cdsDocs.IsEmpty then
-    Exit;
-  FSelTipo   := cdsDocs.FieldByName('TIPO').AsString;
-  FSelSerie  := cdsDocs.FieldByName('SERIE').AsString;
-  FSelNumero := cdsDocs.FieldByName('NUMERO').AsString;
+  if Result and (sFicha = 'S') and (not cdsDocs.IsEmpty) then
+  begin
+    FSelTipo   := cdsDocs.FieldByName('TIPO').AsString;
+    FSelSerie  := cdsDocs.FieldByName('SERIE').AsString;
+    FSelNumero := cdsDocs.FieldByName('NUMERO').AsString;
+  end;
 end;
 
 end.

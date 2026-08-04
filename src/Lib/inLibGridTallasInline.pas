@@ -320,21 +320,21 @@ begin
   // indicado. Cacheado en FConjuntoPos para no re-consultar por cada
   // refresco / edicion.
   Result := nil;
-  if FConjuntoPos = nil then Exit;
-  if FConjuntoPos.TryGetValue(AIdAc, Result) then Exit;
-  // Ids negativos = conjuntos VIRTUALES (RegistrarConjuntoVirtual):
-  // solo existen en cache, no hay fila en BBDD que consultar.
-  if AIdAc <= 0 then Exit;
-
-  aPersistidas := FCfg.Persistencia.ConsultarPosicionesConjunto(AIdAc);
-  SetLength(arr, Length(aPersistidas));
-  for i := 0 to High(aPersistidas) do
+  if FConjuntoPos <> nil then
   begin
-    arr[i].IdAv := aPersistidas[i].IdAv;
-    arr[i].Valor := aPersistidas[i].Valor;
+    if not FConjuntoPos.TryGetValue(AIdAc, Result) and (AIdAc > 0) then
+    begin
+      aPersistidas := FCfg.Persistencia.ConsultarPosicionesConjunto(AIdAc);
+      SetLength(arr, Length(aPersistidas));
+      for i := 0 to High(aPersistidas) do
+      begin
+        arr[i].IdAv := aPersistidas[i].IdAv;
+        arr[i].Valor := aPersistidas[i].Valor;
+      end;
+      FConjuntoPos.Add(AIdAc, arr);
+      Result := arr;
+    end;
   end;
-  FConjuntoPos.Add(AIdAc, arr);
-  Result := arr;
 end;
 
 function TGestorGridTallas.MaxLongConjuntos: Integer;
@@ -352,34 +352,38 @@ begin
   // no asume nombres de parametros del master.
   Result := 0;
   ds := Lineas;
-  if (ds = nil) or not ds.Active or ds.IsEmpty then Exit;
-
-  vistos := TList<Integer>.Create;
-  bk := ds.GetBookmark;
-  ds.DisableControls;
-  try
-    ds.First;
-    while not ds.Eof do
-    begin
-      iAc := ds.FieldByName(FCfg.FieldConjuntoPivot).AsInteger;
-      if (iAc > 0) and (not vistos.Contains(iAc)) then
+  if (ds <> nil) and ds.Active and not ds.IsEmpty then
+  begin
+    vistos := TList<Integer>.Create;
+    bk := ds.GetBookmark;
+    ds.DisableControls;
+    try
+      ds.First;
+      while not ds.Eof do
       begin
-        vistos.Add(iAc);
-        arr := GetPosicionesConjunto(iAc);
-        if Length(arr) > Result then Result := Length(arr);
+        iAc := ds.FieldByName(FCfg.FieldConjuntoPivot).AsInteger;
+        if (iAc > 0) and (not vistos.Contains(iAc)) then
+        begin
+          vistos.Add(iAc);
+          arr := GetPosicionesConjunto(iAc);
+          if Length(arr) > Result then
+            Result := Length(arr);
+        end;
+        ds.Next;
       end;
-      ds.Next;
+    finally
+      if Assigned(bk) then
+      begin
+        if ds.BookmarkValid(bk) then
+          ds.GotoBookmark(bk);
+        ds.FreeBookmark(bk);
+      end;
+      ds.EnableControls;
+      FreeAndNil(vistos);
     end;
-  finally
-    if Assigned(bk) then
-    begin
-      if ds.BookmarkValid(bk) then ds.GotoBookmark(bk);
-      ds.FreeBookmark(bk);
-    end;
-    ds.EnableControls;
-    FreeAndNil(vistos);
   end;
-  if Result > FCfg.MaxColumnas then Result := FCfg.MaxColumnas;
+  if Result > FCfg.MaxColumnas then
+    Result := FCfg.MaxColumnas;
 end;
 
 procedure TGestorGridTallas.RecalcularMaxColumnas;
@@ -389,10 +393,13 @@ begin
   iMax := MaxLongConjuntos;
   for i := 0 to High(FCfg.ColumnasTallas) do
   begin
-    if FCfg.ColumnasTallas[i] = nil then Continue;
-    FCfg.ColumnasTallas[i].Visible := (i < iMax);
-    if i < iMax then
-      FCfg.ColumnasTallas[i].Caption := Format(SCaptionColTallaN, [i + 1]);
+    if FCfg.ColumnasTallas[i] <> nil then
+    begin
+      FCfg.ColumnasTallas[i].Visible := (i < iMax);
+      if i < iMax then
+        FCfg.ColumnasTallas[i].Caption :=
+          Format(SCaptionColTallaN, [i + 1]);
+    end;
   end;
 end;
 
@@ -404,22 +411,25 @@ var
   i    : Integer;
 begin
   ds := Lineas;
-  if (ds = nil) or not ds.Active or ds.IsEmpty then Exit;
-  iAc := ds.FieldByName(FCfg.FieldConjuntoPivot).AsInteger;
-  // Linea sin sistema asignado todavia (linea nueva en blanco, p.ej.):
-  // dejar las captions tal cual estaban. Si las sobrescribimos a la
-  // generica 'Talla N' al pasar por una linea vacia, perdemos el
-  // contexto visual de la linea anterior que el usuario seguia viendo.
-  if iAc <= 0 then Exit;
-  arr := GetPosicionesConjunto(iAc);
-  for i := 0 to High(FCfg.ColumnasTallas) do
+  if (ds <> nil) and ds.Active and not ds.IsEmpty then
   begin
-    if FCfg.ColumnasTallas[i] = nil then Continue;
-    if not FCfg.ColumnasTallas[i].Visible then Continue;
-    if i < Length(arr) then
-      FCfg.ColumnasTallas[i].Caption := arr[i].Valor
-    else
-      FCfg.ColumnasTallas[i].Caption := Format(SCaptionColTallaN, [i + 1]);
+    iAc := ds.FieldByName(FCfg.FieldConjuntoPivot).AsInteger;
+    if iAc > 0 then
+    begin
+      arr := GetPosicionesConjunto(iAc);
+      for i := 0 to High(FCfg.ColumnasTallas) do
+      begin
+        if (FCfg.ColumnasTallas[i] <> nil) and
+           FCfg.ColumnasTallas[i].Visible then
+        begin
+          if i < Length(arr) then
+            FCfg.ColumnasTallas[i].Caption := arr[i].Valor
+          else
+            FCfg.ColumnasTallas[i].Caption :=
+              Format(SCaptionColTallaN, [i + 1]);
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -439,22 +449,27 @@ begin
   //     con todos los Values[] que hayamos asignado en memoria.
   //   - Leer LINEA por Values[recordIdx, colLinea.Index] saca el dato
   //     sin tocar el cursor del dataset y sin disparar refrescos.
-  if (Lineas = nil) or not Lineas.Active or Lineas.IsEmpty then Exit;
-  colLinea := FCfg.Grid.GetColumnByFieldName(FCfg.FieldLinea);
-  if colLinea = nil then Exit;
-
-  FCfg.Grid.DataController.BeginUpdate;
-  try
-    for i := 0 to FCfg.Grid.DataController.RecordCount - 1 do
+  if (Lineas <> nil) and Lineas.Active and not Lineas.IsEmpty then
+  begin
+    colLinea := FCfg.Grid.GetColumnByFieldName(FCfg.FieldLinea);
+    if colLinea <> nil then
     begin
-      vLinea := FCfg.Grid.DataController.Values[i, colLinea.Index];
-      if VarIsNull(vLinea) or VarIsEmpty(vLinea) then Continue;
-      iLinea := vLinea;
-      if iLinea > 0 then
-        CargarCantidadesUnaLinea(i, iLinea);
+      FCfg.Grid.DataController.BeginUpdate;
+      try
+        for i := 0 to FCfg.Grid.DataController.RecordCount - 1 do
+        begin
+          vLinea := FCfg.Grid.DataController.Values[i, colLinea.Index];
+          if not VarIsNull(vLinea) and not VarIsEmpty(vLinea) then
+          begin
+            iLinea := vLinea;
+            if iLinea > 0 then
+              CargarCantidadesUnaLinea(i, iLinea);
+          end;
+        end;
+      finally
+        FCfg.Grid.DataController.EndUpdate;
+      end;
     end;
-  finally
-    FCfg.Grid.DataController.EndUpdate;
   end;
 end;
 
@@ -469,23 +484,31 @@ var
   vAc: Variant;
 begin
   colAc := FCfg.Grid.GetColumnByFieldName(FCfg.FieldConjuntoPivot);
-  if colAc = nil then Exit;
-  vAc := FCfg.Grid.DataController.Values[ARecordIndex, colAc.Index];
-  if VarIsNull(vAc) or VarIsEmpty(vAc) then Exit;
-  iAc := vAc;
-  arr := GetPosicionesConjunto(iAc);
-  if Length(arr) = 0 then Exit;
-  aCeldas := FCfg.Persistencia.ConsultarCeldasLinea(ALinea);
-  for i := 0 to High(arr) do
+  if colAc <> nil then
   begin
-    rCantidad := 0;
-    for iCelda := 0 to High(aCeldas) do
-      if aCeldas[iCelda].IdAv = arr[i].IdAv then
-        rCantidad := rCantidad + aCeldas[iCelda].Cantidad;
-    if (i <= High(FCfg.ColumnasTallas)) and
-       Assigned(FCfg.ColumnasTallas[i]) then
-      FCfg.Grid.DataController.Values[
-        ARecordIndex, FCfg.ColumnasTallas[i].Index] := rCantidad;
+    vAc := FCfg.Grid.DataController.Values[ARecordIndex, colAc.Index];
+    if not VarIsNull(vAc) and not VarIsEmpty(vAc) then
+    begin
+      iAc := vAc;
+      arr := GetPosicionesConjunto(iAc);
+      if Length(arr) > 0 then
+      begin
+        aCeldas := FCfg.Persistencia.ConsultarCeldasLinea(ALinea);
+        for i := 0 to High(arr) do
+        begin
+          rCantidad := 0;
+          for iCelda := 0 to High(aCeldas) do
+          begin
+            if aCeldas[iCelda].IdAv = arr[i].IdAv then
+              rCantidad := rCantidad + aCeldas[iCelda].Cantidad;
+          end;
+          if (i <= High(FCfg.ColumnasTallas)) and
+             Assigned(FCfg.ColumnasTallas[i]) then
+            FCfg.Grid.DataController.Values[
+              ARecordIndex, FCfg.ColumnasTallas[i].Index] := rCantidad;
+        end;
+      end;
+    end;
   end;
 end;
 procedure TGestorGridTallas.PersistirCantidad(
@@ -508,30 +531,34 @@ var
   rPrecio, rTotal: Double;
 begin
   ds := Lineas;
-  if (ds = nil) or ds.IsEmpty then Exit;
-  iLinea := ds.FieldByName(FCfg.FieldLinea).AsInteger;
-  if iLinea <= 0 then Exit;
-  aCeldas := FCfg.Persistencia.ConsultarCeldasLinea(iLinea);
-  rTotal := 0;
-  for i := 0 to High(aCeldas) do
-    rTotal := rTotal + aCeldas[i].Cantidad;
-  rPrecio := 0;
-  if (FCfg.FieldPrecioBase <> '') and
-     Assigned(ds.FindField(FCfg.FieldPrecioBase)) then
-    rPrecio := ds.FieldByName(FCfg.FieldPrecioBase).AsFloat;
-  FCfg.Grid.DataController.BeginUpdate;
-  try
-    if not (ds.State in [dsEdit, dsInsert]) then
-      ds.Edit;
-    if (FCfg.FieldTotalUds <> '') and
-       Assigned(ds.FindField(FCfg.FieldTotalUds)) then
-      ds.FieldByName(FCfg.FieldTotalUds).AsFloat := rTotal;
-    if (FCfg.FieldTotalLinea <> '') and
-       Assigned(ds.FindField(FCfg.FieldTotalLinea)) then
-      ds.FieldByName(FCfg.FieldTotalLinea).AsFloat :=
-        rTotal * rPrecio;
-  finally
-    FCfg.Grid.DataController.EndUpdate;
+  if (ds <> nil) and not ds.IsEmpty then
+  begin
+    iLinea := ds.FieldByName(FCfg.FieldLinea).AsInteger;
+    if iLinea > 0 then
+    begin
+      aCeldas := FCfg.Persistencia.ConsultarCeldasLinea(iLinea);
+      rTotal := 0;
+      for i := 0 to High(aCeldas) do
+        rTotal := rTotal + aCeldas[i].Cantidad;
+      rPrecio := 0;
+      if (FCfg.FieldPrecioBase <> '') and
+         Assigned(ds.FindField(FCfg.FieldPrecioBase)) then
+        rPrecio := ds.FieldByName(FCfg.FieldPrecioBase).AsFloat;
+      FCfg.Grid.DataController.BeginUpdate;
+      try
+        if not (ds.State in [dsEdit, dsInsert]) then
+          ds.Edit;
+        if (FCfg.FieldTotalUds <> '') and
+           Assigned(ds.FindField(FCfg.FieldTotalUds)) then
+          ds.FieldByName(FCfg.FieldTotalUds).AsFloat := rTotal;
+        if (FCfg.FieldTotalLinea <> '') and
+           Assigned(ds.FindField(FCfg.FieldTotalLinea)) then
+          ds.FieldByName(FCfg.FieldTotalLinea).AsFloat :=
+            rTotal * rPrecio;
+      finally
+        FCfg.Grid.DataController.EndUpdate;
+      end;
+    end;
   end;
 end;
 function TGestorGridTallas.ValidarSistemaSeleccionado: Boolean;
@@ -540,19 +567,24 @@ var
   arr : TArrPosConjunto;
 begin
   Result := True;
-  if Lineas = nil then Exit;
-  if Lineas.IsEmpty then Exit;
-  iAc := Lineas.FieldByName(FCfg.FieldConjuntoPivot).AsInteger;
-  if iAc <= 0 then Exit;
-  arr := GetPosicionesConjunto(iAc);
-  if Length(arr) <= FCfg.MaxColumnas then Exit;
-
-  MessageDlg(Format(SAvisoSistemaTallasSuperaMaximo,
-    [Length(arr), FCfg.MaxColumnas]),
-    mtError, [mbOk], 0);
-  if not (Lineas.State in [dsEdit, dsInsert]) then Lineas.Edit;
-  Lineas.FieldByName(FCfg.FieldConjuntoPivot).Clear;
-  Result := False;
+  if (Lineas <> nil) and not Lineas.IsEmpty then
+  begin
+    iAc := Lineas.FieldByName(FCfg.FieldConjuntoPivot).AsInteger;
+    if iAc > 0 then
+    begin
+      arr := GetPosicionesConjunto(iAc);
+      if Length(arr) > FCfg.MaxColumnas then
+      begin
+        MessageDlg(Format(SAvisoSistemaTallasSuperaMaximo,
+          [Length(arr), FCfg.MaxColumnas]),
+          mtError, [mbOk], 0);
+        if not (Lineas.State in [dsEdit, dsInsert]) then
+          Lineas.Edit;
+        Lineas.FieldByName(FCfg.FieldConjuntoPivot).Clear;
+        Result := False;
+      end;
+    end;
+  end;
 end;
 
 procedure TGestorGridTallas.PersistirCeldaActiva(ASender: TObject);
@@ -567,57 +599,44 @@ var
   vEdit  : Variant;
   idxRec : Integer;
 begin
-  if not (ASender is TcxCustomEdit) then Exit;
-  ed := TcxCustomEdit(ASender);
-  ed.PostEditValue;
-
-  // El FocusedItem del grid (TcxCustomGridTableItem) es la base de
-  // todas las columnas; nos basta su Tag para identificar la posicion
-  // de la celda. Asi evitamos depender del tipo concreto TcxGridColumn /
-  // TcxGridDBColumn (que en este build no resuelve desde la libreria
-  // por algun fallo de scope incluso con cxGridTableView en uses).
-  item := FCfg.Grid.Controller.FocusedItem;
-  if item = nil then Exit;
-  iPos := item.Tag;
-  if (iPos < 1) or (iPos > FCfg.MaxColumnas) then Exit;
-  if Lineas = nil then Exit;
-  if Lineas.IsEmpty then Exit;
-
-  iLinea := Lineas.FieldByName(FCfg.FieldLinea).AsInteger;
-  iAc    := Lineas.FieldByName(FCfg.FieldConjuntoPivot).AsInteger;
-  arr    := GetPosicionesConjunto(iAc);
-  LogSes(Format(
-    'Tallas.PersistirCeldaActiva: linea=%d pos=%d/%d iAc=%d Lineas.State=%d',
-                [iLinea, iPos, Length(arr), iAc, Ord(Lineas.State)]));
-  if iPos > Length(arr) then
+  if ASender is TcxCustomEdit then
   begin
-    LogSes('  guard: iPos fuera del conjunto pivot, salida');
-    Exit;
+    ed := TcxCustomEdit(ASender);
+    ed.PostEditValue;
+    item := FCfg.Grid.Controller.FocusedItem;
+    if item <> nil then
+    begin
+      iPos := item.Tag;
+      if (iPos >= 1) and (iPos <= FCfg.MaxColumnas) and
+         (Lineas <> nil) and not Lineas.IsEmpty then
+      begin
+        iLinea := Lineas.FieldByName(FCfg.FieldLinea).AsInteger;
+        iAc := Lineas.FieldByName(FCfg.FieldConjuntoPivot).AsInteger;
+        arr := GetPosicionesConjunto(iAc);
+        LogSes(Format(
+          'Tallas.PersistirCeldaActiva: linea=%d pos=%d/%d ' +
+          'iAc=%d Lineas.State=%d',
+          [iLinea, iPos, Length(arr), iAc, Ord(Lineas.State)]));
+        if iPos > Length(arr) then
+          LogSes('  guard: iPos fuera del conjunto pivot, salida')
+        else
+        begin
+          vEdit := ed.EditValue;
+          if VarIsNull(vEdit) or VarIsClear(vEdit) then
+            rCant := 0
+          else
+            rCant := vEdit;
+          idxRec := FCfg.Grid.Controller.FocusedRecordIndex;
+          PersistirCantidad(iLinea, arr[iPos - 1].IdAv, rCant);
+          RefrescarTotalesLineaActual;
+          if idxRec >= 0 then
+            CargarCantidadesUnaLinea(idxRec, iLinea);
+          if Assigned(FCfg.Grid) and Assigned(FCfg.Grid.Site) then
+            FCfg.Grid.Site.Invalidate;
+        end;
+      end;
+    end;
   end;
-
-  vEdit := ed.EditValue;
-  if VarIsNull(vEdit) or VarIsClear(vEdit) then
-    rCant := 0
-  else
-    rCant := vEdit;
-
-  // Capturamos el record idx visual ANTES de tocar totales: el
-  // RefrescarTotales hace ds.Edit + asignaciones de campos bound,
-  // y cxGrid reacciona repintando la fila desde el dataset, lo que
-  // borra los Values[] no-bound de esa fila (tallas en blanco).
-  // Re-inyectamos esa misma fila justo despues para neutralizarlo.
-  idxRec := FCfg.Grid.Controller.FocusedRecordIndex;
-
-  PersistirCantidad(iLinea, arr[iPos - 1].IdAv, rCant);
-  RefrescarTotalesLineaActual;
-  if idxRec >= 0 then
-    CargarCantidadesUnaLinea(idxRec, iLinea);
-
-  // Sin este Invalidate el valor queda correcto en el DataController
-  // pero la celda no se repinta hasta el siguiente evento natural
-  // (p.ej. cambiar de fila). Mismo patron que inLibGridPivoteCompra.pas.
-  if Assigned(FCfg.Grid) and Assigned(FCfg.Grid.Site) then
-    FCfg.Grid.Site.Invalidate;
 end;
 
 // =============================================================================
@@ -629,14 +648,19 @@ procedure ActivarEnterComoTab(AForm: TForm; AActivo: Boolean);
   var
     i : Integer;
   begin
-    if not Assigned(AOwner) then Exit;
-    for i := 0 to AOwner.ComponentCount - 1 do
-      if AOwner.Components[i] is TJvEnterAsTab then
-        TJvEnterAsTab(AOwner.Components[i]).EnterAsTab := AActivo;
+    if Assigned(AOwner) then
+    begin
+      for i := 0 to AOwner.ComponentCount - 1 do
+      begin
+        if AOwner.Components[i] is TJvEnterAsTab then
+          TJvEnterAsTab(AOwner.Components[i]).EnterAsTab := AActivo;
+      end;
+    end;
   end;
 begin
   CambiarEn(AForm);
-  if Assigned(AForm) then CambiarEn(AForm.Owner);
+  if Assigned(AForm) then
+    CambiarEn(AForm.Owner);
   CambiarEn(Application.MainForm);
 end;
 
@@ -785,8 +809,9 @@ var
   r : TRect;
 begin
   LB := Control as TListBox;
-  if (Index < 0) or (Index >= Length(FOpciones)) then Exit;
-  op := FOpciones[Index];
+  if (Index >= 0) and (Index < Length(FOpciones)) then
+  begin
+    op := FOpciones[Index];
   if odSelected in State then
     LB.Canvas.Brush.Color := clHighlight
   else
@@ -818,8 +843,9 @@ begin
   LB.Canvas.MoveTo(ARect.Left + xH, ARect.Top);
   LB.Canvas.LineTo(ARect.Left + xH, ARect.Bottom);
   LB.Canvas.Brush.Style := bsSolid;
-  if odFocused in State then
-    LB.Canvas.DrawFocusRect(ARect);
+    if odFocused in State then
+      LB.Canvas.DrawFocusRect(ARect);
+  end;
 end;
 
 procedure TfrmSelConjTallaAux.ListBoxMouseDown(Sender: TObject;
@@ -827,12 +853,14 @@ procedure TfrmSelConjTallaAux.ListBoxMouseDown(Sender: TObject;
 var
   Idx : Integer;
 begin
-  if Button <> mbLeft then Exit;
-  Idx := FListBox.ItemAtPos(Point(X, Y), True);
-  if Idx >= 0 then
+  if Button = mbLeft then
   begin
-    FListBox.ItemIndex := Idx;
-    ModalResult := mrOk;
+    Idx := FListBox.ItemAtPos(Point(X, Y), True);
+    if Idx >= 0 then
+    begin
+      FListBox.ItemIndex := Idx;
+      ModalResult := mrOk;
+    end;
   end;
 end;
 
@@ -994,22 +1022,24 @@ var
 begin
   AIdAc  := 0;
   Result := False;
-  if Length(AOpciones) = 0 then Exit;
-  F := TfrmSelConjTallaAux.CreateConOpciones(AOpciones, AIdAcActual,
-                                             AScreenLeft, AScreenTop,
-                                             AWidthHint, ABusquedaInicial);
-  try
-    if F.ShowModal = mrOk then
-    begin
-      if (F.FListBox.ItemIndex >= 0) and
-         (F.FListBox.ItemIndex < Length(F.FOpciones)) then
+  if Length(AOpciones) > 0 then
+  begin
+    F := TfrmSelConjTallaAux.CreateConOpciones(
+      AOpciones, AIdAcActual, AScreenLeft, AScreenTop,
+      AWidthHint, ABusquedaInicial);
+    try
+      if F.ShowModal = mrOk then
       begin
-        AIdAc  := F.FOpciones[F.FListBox.ItemIndex].IdAc;
-        Result := True;
+        if (F.FListBox.ItemIndex >= 0) and
+           (F.FListBox.ItemIndex < Length(F.FOpciones)) then
+        begin
+          AIdAc := F.FOpciones[F.FListBox.ItemIndex].IdAc;
+          Result := True;
+        end;
       end;
+    finally
+      F.Free;
     end;
-  finally
-    F.Free;
   end;
 end;
 

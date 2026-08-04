@@ -2415,6 +2415,16 @@
                   TabOrder = 16
                   OnClick = btnVolverBorradorClick
                 end
+                object btnVerifactuResolverIncidencia: TcxButton
+                  Left = 859
+                  Top = 133
+                  Width = 175
+                  Height = 34
+                  Caption = 'Resolver incidencia'
+                  TabOrder = 17
+                  Visible = False
+                  OnClick = btnVerifactuFacturarClick
+                end
               end
             end
             object tsRegistro: TcxTabSheet

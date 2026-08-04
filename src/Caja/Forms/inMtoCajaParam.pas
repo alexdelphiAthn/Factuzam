@@ -238,14 +238,22 @@ var
   i: Integer;
 begin
   // Busca si la categoría ya existe; si no, la crea al vuelo
+  Result := nil;
   for i := 0 to JvInspector1.Root.Count - 1 do
-    if (JvInspector1.Root.Items[i] is TJvInspectorCustomCategoryItem) and
+  begin
+    if (Result = nil) and
+       (JvInspector1.Root.Items[i] is TJvInspectorCustomCategoryItem) and
        SameText(JvInspector1.Root.Items[i].DisplayName, NombreCat) then
-      Exit(TJvInspectorCustomCategoryItem(JvInspector1.Root.Items[i]));
-
-  Result := TJvInspectorCustomCategoryItem.Create(JvInspector1.Root, nil);
-  Result.DisplayName := NombreCat;
-  Result.Expanded := True; // Expandir por defecto
+      Result := TJvInspectorCustomCategoryItem(
+        JvInspector1.Root.Items[i]);
+  end;
+  if Result = nil then
+  begin
+    Result := TJvInspectorCustomCategoryItem.Create(
+      JvInspector1.Root, nil);
+    Result.DisplayName := NombreCat;
+    Result.Expanded := True;
+  end;
 end;
 
 procedure TfrmMtoCajaParam.ConstruirInspector;
@@ -610,11 +618,16 @@ begin
   Result := nil;
   for i := 0 to ItemPadre.Count - 1 do
   begin
-    if SameText(ItemPadre.Items[i].Name, Nombre) then Exit(ItemPadre.Items[i]);
-    if ItemPadre.Items[i] is TJvInspectorCustomCategoryItem then
+    if Result = nil then
     begin
-      Encontrado := BuscarItemPorNombre(ItemPadre.Items[i], Nombre);
-      if Encontrado <> nil then Exit(Encontrado);
+      if SameText(ItemPadre.Items[i].Name, Nombre) then
+        Result := ItemPadre.Items[i]
+      else if ItemPadre.Items[i] is TJvInspectorCustomCategoryItem then
+      begin
+        Encontrado := BuscarItemPorNombre(ItemPadre.Items[i], Nombre);
+        if Encontrado <> nil then
+          Result := Encontrado;
+      end;
     end;
   end;
 end;
@@ -664,14 +677,9 @@ begin
   inherited;
   // Solo pedimos confirmación si hay cambios reales sin guardar
   if not HayCambiosPendientes then
-  begin
-    Close;
-    Exit;
-  end;
-  if MessageDlg(SPreguntaSalirParametrosCajaSinGuardar,
-                mtConfirmation,
-                [mbYes, mbNo],
-                0) = mrYes then
+    Close
+  else if MessageDlg(SPreguntaSalirParametrosCajaSinGuardar,
+    mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     Close;
 end;
 
@@ -684,41 +692,45 @@ begin
   // Recorremos los items igual que en btnGuardarClick comparando contra los
   // valores capturados al cargar; basta un cambio para devolver True
   Result := False;
-  if FValoresOriginales = nil then
-    Exit;
-  JvInspector1.SaveValues;
-  for i := 0 to JvInspector1.Root.Count - 1 do
+  if FValoresOriginales <> nil then
   begin
-    NodoPrincipal := JvInspector1.Root.Items[i];
-    if not (NodoPrincipal is TJvInspectorCustomCategoryItem) then
-      Continue;
-    for j := 0 to NodoPrincipal.Count - 1 do
+    JvInspector1.SaveValues;
+    for i := 0 to JvInspector1.Root.Count - 1 do
     begin
-      ParamItem := NodoPrincipal.Items[j];
-      if ParamItem.Data <> nil then
-        case ParamItem.Data.TypeInfo.Kind of
-          tkEnumeration:
-            if ParamItem.Data.AsOrdinal <> 0 then
-              ValorActual := 'True'
-            else
-              ValorActual := 'False';
-          tkInteger:
-            ValorActual := IntToStr(ParamItem.Data.AsOrdinal);
-        else
-          ValorActual := ParamItem.Data.AsString;
-        end
-      else
-        ValorActual := '';
-      if FValoresOriginales.ContainsKey(ParamItem.Name) then
+      if not Result then
       begin
-        if not SameText(FValoresOriginales[ParamItem.Name], ValorActual) then
-          Exit(True);
-      end
-      else
-      begin
-        // Item nuevo no capturado: lo consideramos cambio si no está vacío
-        if ValorActual <> '' then
-          Exit(True);
+        NodoPrincipal := JvInspector1.Root.Items[i];
+        if NodoPrincipal is TJvInspectorCustomCategoryItem then
+        begin
+          for j := 0 to NodoPrincipal.Count - 1 do
+          begin
+            if not Result then
+            begin
+              ParamItem := NodoPrincipal.Items[j];
+              if ParamItem.Data <> nil then
+              begin
+                case ParamItem.Data.TypeInfo.Kind of
+                  tkEnumeration:
+                    if ParamItem.Data.AsOrdinal <> 0 then
+                      ValorActual := 'True'
+                    else
+                      ValorActual := 'False';
+                  tkInteger:
+                    ValorActual := IntToStr(ParamItem.Data.AsOrdinal);
+                else
+                  ValorActual := ParamItem.Data.AsString;
+                end;
+              end
+              else
+                ValorActual := '';
+              if FValoresOriginales.ContainsKey(ParamItem.Name) then
+                Result := not SameText(
+                  FValoresOriginales[ParamItem.Name], ValorActual)
+              else
+                Result := ValorActual <> '';
+            end;
+          end;
+        end;
       end;
     end;
   end;
@@ -742,25 +754,25 @@ begin
     if usuarios.Count = 0 then
     begin
       ShowMessage(SInfoUsuariosParametrosCajaNoEncontrados);
-      Exit;
-    end;
-
-    sUsuario := usuarios[0];
-    if InputQuery(STituloCambiarUsuarioParametrosCaja,
-                  Format(SSolicitudCambiarUsuarioParametrosCaja,
-                    [usuarios.CommaText]),
-                  sUsuario) then
+    end
+    else
     begin
-      if usuarios.IndexOf(sUsuario) < 0 then
-        ShowMessage(Format(SErrorUsuarioParametrosCajaNoEncontrado,
-          [sUsuario]))
-      else
+      sUsuario := usuarios[0];
+      if InputQuery(STituloCambiarUsuarioParametrosCaja,
+        Format(SSolicitudCambiarUsuarioParametrosCaja,
+          [usuarios.CommaText]), sUsuario) then
       begin
-        CargarParametros(JvInspector1, sUsuario, '');
-        if cmbGrupoUsuario.Properties.Items.IndexOf(sUsuario) < 0 then
-          cmbGrupoUsuario.Properties.Items.Add(sUsuario);
-        cmbGrupoUsuario.ItemIndex :=
-          cmbGrupoUsuario.Properties.Items.IndexOf(sUsuario);
+        if usuarios.IndexOf(sUsuario) < 0 then
+          ShowMessage(Format(SErrorUsuarioParametrosCajaNoEncontrado,
+            [sUsuario]))
+        else
+        begin
+          CargarParametros(JvInspector1, sUsuario, '');
+          if cmbGrupoUsuario.Properties.Items.IndexOf(sUsuario) < 0 then
+            cmbGrupoUsuario.Properties.Items.Add(sUsuario);
+          cmbGrupoUsuario.ItemIndex :=
+            cmbGrupoUsuario.Properties.Items.IndexOf(sUsuario);
+        end;
       end;
     end;
   finally

@@ -297,8 +297,8 @@ end;
 
 procedure TfrmPrintEtiqArt.RestaurarLayout;
 begin
-  if not FLayout.Disponible then Exit;
-  FLayout.RestaurarGeometria(Self);
+  if FLayout.Disponible then
+    FLayout.RestaurarGeometria(Self);
 end;
 
 procedure TfrmPrintEtiqArt.GuardarLayout;

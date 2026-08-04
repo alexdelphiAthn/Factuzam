@@ -16,6 +16,8 @@ el resto se puede pasar sin salir a internet.
 2. Ejecutar `DESARROLLOS EN CURSO/verifactu_cola.sql`,
    `DESARROLLOS EN CURSO/verifactu_cadena.sql` y
    `DESARROLLOS EN CURSO/verifactu_menu.sql` en la BBDD de pruebas.
+   Ejecutar también `verifactu_resolucion_incidencias.sql` dos veces y
+   comprobar que la segunda ejecución solo informa de columnas existentes.
 3. Datos mínimos: empresa con NIF real de pruebas (p. ej. `B12345678`),
    serie de facturación de caja (tipo `FC`), un artículo con tarifa y
    stock, cliente contado.

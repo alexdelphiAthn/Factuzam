@@ -277,18 +277,17 @@ begin
   begin
     GuardarLayout;
     Key := 0;
-    Exit;
-  end;
+  end
   // Ctrl+F12 -> resetear layout
-  if (Key = VK_F12) and (ssCtrl in Shift) and not (ssAlt in Shift) then
+  else if (Key = VK_F12) and (ssCtrl in Shift) and
+     not (ssAlt in Shift) then
   begin
     ResetearLayout(
       Self.Name, PerfilesEscritura, SolicitudPermisoLayout);
     Key := 0;
-    Exit;
-  end;
+  end
   // F11 -> mostrar / ocultar panel de controles (alternativa al boton).
-  if Key = VK_F11 then
+  else if Key = VK_F11 then
   begin
     ToggleControles;
     Key := 0;
@@ -465,35 +464,34 @@ begin
     begin
       lblNivel.Visible    := False;
       cbbNivelSku.Visible := False;
-      Exit;
-    end;
-    lblNivel.Visible    := True;
-    cbbNivelSku.Visible := True;
-    prefijos := GenerarPrefijosSku(FCodigoSku);
-    for i := 0 to High(prefijos) do
-      cbbNivelSku.Properties.Items.Add(prefijos[i]);
-    if cbbNivelSku.Properties.Items.Count = 0 then Exit;
-
-    // Default: nivel con `appNumAtributosFoto` atributos. La cantidad
-    // de segmentos del SKU completo = numero de '/' + 1 = articulo +
-    // N atributos. El prefijo cuyo numero de '/' = appNumAtributosFoto
-    // es el que tiene exactamente esa cantidad de atributos.
-    iNumAtribsCfg := ParametrosApp.GetInt('appNumAtributosFoto', 1);
-    iIdxDefault   := 0;
-    for i := 0 to cbbNivelSku.Properties.Items.Count - 1 do
+    end
+    else
     begin
-      // Numero de atributos = numero de '/' en la clave
-      iSegmentos := 0;
-      var sCl: string := cbbNivelSku.Properties.Items[i];
-      for var c: Char in sCl do
-        if c = '/' then Inc(iSegmentos);
-      if iSegmentos = iNumAtribsCfg then
+      lblNivel.Visible := True;
+      cbbNivelSku.Visible := True;
+      prefijos := GenerarPrefijosSku(FCodigoSku);
+      for i := 0 to High(prefijos) do
+        cbbNivelSku.Properties.Items.Add(prefijos[i]);
+      if cbbNivelSku.Properties.Items.Count > 0 then
       begin
-        iIdxDefault := i;
-        Break;
+        iNumAtribsCfg := ParametrosApp.GetInt('appNumAtributosFoto', 1);
+        iIdxDefault := 0;
+        for i := 0 to cbbNivelSku.Properties.Items.Count - 1 do
+        begin
+          iSegmentos := 0;
+          var sCl: string := cbbNivelSku.Properties.Items[i];
+          for var c: Char in sCl do
+            if c = '/' then
+              Inc(iSegmentos);
+          if iSegmentos = iNumAtribsCfg then
+          begin
+            iIdxDefault := i;
+            Break;
+          end;
+        end;
+        cbbNivelSku.ItemIndex := iIdxDefault;
       end;
     end;
-    cbbNivelSku.ItemIndex := iIdxDefault;
   finally
     cbbNivelSku.Properties.Items.EndUpdate;
   end;
@@ -515,19 +513,19 @@ begin
   FreeAndNil(FGpImagen);
   FRutaFotoActual := '';
   imgFoto.Picture.Assign(nil);
-  if not FUltimaInfo.Encontrada then Exit;
-  FRutaFotoActual := FotosArticulos.RutaFoto(
-    FUltimaInfo, ResolucionElegida);
-  if FRutaFotoActual = '' then Exit;
-  // Las tres copias son PNG. Cargamos via GDI+ y pintamos con remuestreo
-  // bicubico de alta calidad (escala a la medida del control sin pixelar).
-  FGpImagen := TGPImage.Create(FRutaFotoActual);
-  if (FGpImagen = nil) or (FGpImagen.GetLastStatus <> Ok) then
+  if FUltimaInfo.Encontrada then
   begin
-    FreeAndNil(FGpImagen);
-    Exit;
+    FRutaFotoActual := FotosArticulos.RutaFoto(
+      FUltimaInfo, ResolucionElegida);
+    if FRutaFotoActual <> '' then
+    begin
+      FGpImagen := TGPImage.Create(FRutaFotoActual);
+      if (FGpImagen = nil) or (FGpImagen.GetLastStatus <> Ok) then
+        FreeAndNil(FGpImagen)
+      else
+        PintarFotoGDIPlus;
+    end;
   end;
-  PintarFotoGDIPlus;
 end;
 
 procedure TfrmFotoArticulo.PintarFotoGDIPlus;
@@ -537,21 +535,25 @@ var
   cw, ch, iw, ih, dw, dh, dx, dy: Integer;
   rEscala: Double;
 begin
-  if FGpImagen = nil then Exit;
-  cw := imgFoto.Width;
-  ch := imgFoto.Height;
-  iw := Integer(FGpImagen.GetWidth);
-  ih := Integer(FGpImagen.GetHeight);
-  if (cw < 1) or (ch < 1) or (iw < 1) or (ih < 1) then Exit;
+  if FGpImagen <> nil then
+  begin
+    cw := imgFoto.Width;
+    ch := imgFoto.Height;
+    iw := Integer(FGpImagen.GetWidth);
+    ih := Integer(FGpImagen.GetHeight);
+    if (cw >= 1) and (ch >= 1) and (iw >= 1) and (ih >= 1) then
+    begin
   // Encaje proporcional dentro del control, centrado (sin recortar).
   if (cw / iw) <= (ch / ih) then
     rEscala := cw / iw
   else
     rEscala := ch / ih;
   dw := Round(iw * rEscala);
-  if dw < 1 then dw := 1;
+  if dw < 1 then
+    dw := 1;
   dh := Round(ih * rEscala);
-  if dh < 1 then dh := 1;
+  if dh < 1 then
+    dh := 1;
   dx := (cw - dw) div 2;
   dy := (ch - dh) div 2;
   bmp := TBitmap.Create;
@@ -573,6 +575,8 @@ begin
   finally
     bmp.Free;
   end;
+    end;
+  end;
 end;
 
 procedure TfrmFotoArticulo.Resize;
@@ -593,84 +597,95 @@ end;
 // ---------------------------------------------------------------------
 
 procedure TfrmFotoArticulo.btnCambiarArtClick(Sender: TObject);
+var
+  bGuardada: Boolean;
 begin
   inherited;
   if FCodigoArt = '' then
+    ShowMessage(SErrorFotoArticuloNoActivo)
+  else if dlgAbrirFoto.Execute then
   begin
-    ShowMessage(SErrorFotoArticuloNoActivo);
-    Exit;
-  end;
-  if not dlgAbrirFoto.Execute then Exit;
-  try
-    FotosArticulos.Guardar(FCodigoArt, '', dlgAbrirFoto.FileName,
-      IdentidadSesion.Usuario);
-  except
-    on E: Exception do
-    begin
-      ShowMessage(Format(SErrorGuardarFotoArticulo, [E.Message]));
-      Exit;
+    bGuardada := True;
+    try
+      FotosArticulos.Guardar(FCodigoArt, '', dlgAbrirFoto.FileName,
+        IdentidadSesion.Usuario);
+    except
+      on E: Exception do
+      begin
+        bGuardada := False;
+        ShowMessage(Format(SErrorGuardarFotoArticulo, [E.Message]));
+      end;
     end;
+    if bGuardada then
+      SetArticuloSku(FCodigoArt, FCodigoSku);
   end;
-  SetArticuloSku(FCodigoArt, FCodigoSku);
 end;
 
 procedure TfrmFotoArticulo.btnCambiarSkuClick(Sender: TObject);
 var
   sClave: string;
+  bGuardada: Boolean;
 begin
   inherited;
+  sClave := '';
   if FCodigoSku = '' then
+    ShowMessage(SErrorFotoSkuNoActivo)
+  else
   begin
-    ShowMessage(SErrorFotoSkuNoActivo);
-    Exit;
-  end;
-  sClave := ClaveNivelSeleccionado;
-  if sClave = '' then
-  begin
-    ShowMessage(SErrorNivelAtributosFotoNoSeleccionado);
-    Exit;
-  end;
-  if not dlgAbrirFoto.Execute then Exit;
-  try
-    FotosArticulos.Guardar(FCodigoArt, sClave, dlgAbrirFoto.FileName,
-      IdentidadSesion.Usuario);
-  except
-    on E: Exception do
+    sClave := ClaveNivelSeleccionado;
+    if sClave = '' then
+      ShowMessage(SErrorNivelAtributosFotoNoSeleccionado)
+    else if dlgAbrirFoto.Execute then
     begin
-      ShowMessage(Format(SErrorGuardarFotoArticulo, [E.Message]));
-      Exit;
+      bGuardada := True;
+      try
+        FotosArticulos.Guardar(FCodigoArt, sClave, dlgAbrirFoto.FileName,
+          IdentidadSesion.Usuario);
+      except
+        on E: Exception do
+        begin
+          bGuardada := False;
+          ShowMessage(Format(SErrorGuardarFotoArticulo, [E.Message]));
+        end;
+      end;
+      if bGuardada then
+        SetArticuloSku(FCodigoArt, FCodigoSku);
     end;
   end;
-  SetArticuloSku(FCodigoArt, FCodigoSku);
 end;
 
 procedure TfrmFotoArticulo.btnQuitarClick(Sender: TObject);
 begin
   inherited;
-  if not FUltimaInfo.Encontrada then Exit;
-  if MessageDlg(SPreguntaEliminarFotoActual, mtConfirmation,
-                [mbYes, mbNo], 0) <> mrYes then Exit;
-  // Borramos exactamente la fila que resolvio (articulo, prefijo o SKU)
-  FotosArticulos.Eliminar(FCodigoArt, FUltimaInfo.ClaveResuelta);
-  SetArticuloSku(FCodigoArt, FCodigoSku);
+  if FUltimaInfo.Encontrada and
+     (MessageDlg(SPreguntaEliminarFotoActual, mtConfirmation,
+      [mbYes, mbNo], 0) = mrYes) then
+  begin
+    FotosArticulos.Eliminar(FCodigoArt, FUltimaInfo.ClaveResuelta);
+    SetArticuloSku(FCodigoArt, FCodigoSku);
+  end;
 end;
 
 procedure TfrmFotoArticulo.btnRotarIzqClick(Sender: TObject);
 begin
   inherited;
-  if not FUltimaInfo.Encontrada then Exit;
-  FotosArticulos.Rotar(FCodigoArt, FCodigoSku, False,
-    IdentidadSesion.Usuario);
-  SetArticuloSku(FCodigoArt, FCodigoSku);
+  if FUltimaInfo.Encontrada then
+  begin
+    FotosArticulos.Rotar(FCodigoArt, FCodigoSku, False,
+      IdentidadSesion.Usuario);
+    SetArticuloSku(FCodigoArt, FCodigoSku);
+  end;
 end;
 
 procedure TfrmFotoArticulo.btnRotarDerClick(Sender: TObject);
 begin
   inherited;
-  if not FUltimaInfo.Encontrada then Exit;
-  FotosArticulos.Rotar(FCodigoArt, FCodigoSku, True,
-    IdentidadSesion.Usuario);
-  SetArticuloSku(FCodigoArt, FCodigoSku);
+  if FUltimaInfo.Encontrada then
+  begin
+    FotosArticulos.Rotar(FCodigoArt, FCodigoSku, True,
+      IdentidadSesion.Usuario);
+    SetArticuloSku(FCodigoArt, FCodigoSku);
+  end;
 end;
 
 procedure TfrmFotoArticulo.btnLayoutClick(Sender: TObject);
@@ -699,14 +714,16 @@ begin
       TList<TPair<TDataSource, TDataChangeEvent>>.Create;
   for ds in ADataSources do
   begin
-    if ds = nil then Continue;
-    FHooksDataSource.Add(
-      TPair<TDataSource, TDataChangeEvent>.Create(ds, ds.OnDataChange));
-    ds.OnDataChange := OnPadreDataChange;
-    // VCL nos avisara con Notification(opRemove) cuando este
-    // DataSource se libere, asi podemos limpiar el hook a tiempo
-    // (p.ej. cuando se cierra el Mto que lo posee).
-    ds.FreeNotification(Self);
+    if ds <> nil then
+    begin
+      FHooksDataSource.Add(
+        TPair<TDataSource, TDataChangeEvent>.Create(ds, ds.OnDataChange));
+      ds.OnDataChange := OnPadreDataChange;
+      // VCL nos avisara con Notification(opRemove) cuando este
+      // DataSource se libere, asi podemos limpiar el hook a tiempo
+      // (p.ej. cuando se cierra el Mto que lo posee).
+      ds.FreeNotification(Self);
+    end;
   end;
 end;
 
@@ -714,15 +731,12 @@ procedure TfrmFotoArticulo.DesengancharDataSource(ADataSource: TDataSource);
 var
   i: Integer;
 begin
-  if (ADataSource = nil) or (FHooksDataSource = nil) then Exit;
-  for i := FHooksDataSource.Count - 1 downto 0 do
-    if FHooksDataSource[i].Key = ADataSource then
-    begin
-      // Restauramos el handler previo si el DataSource sigue vivo.
-      // Si el DataSource se esta liberando (lo descubrimos via
-      // Notification), no tocamos el OnDataChange — ya esta muerto.
-      FHooksDataSource.Delete(i);
-    end;
+  if (ADataSource <> nil) and (FHooksDataSource <> nil) then
+  begin
+    for i := FHooksDataSource.Count - 1 downto 0 do
+      if FHooksDataSource[i].Key = ADataSource then
+        FHooksDataSource.Delete(i);
+  end;
 end;
 
 procedure TfrmFotoArticulo.Notification(AComponent: TComponent;

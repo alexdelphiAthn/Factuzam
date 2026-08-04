@@ -227,11 +227,9 @@ begin
     // Al devolver True, le decimos a Delphi: "Ya me he encargado de esta tecla,
     // córtala aquí y NO la pases al formulario principal".
     Result := True;
-    Exit;
-  end;
-
-  // Para el resto de teclas, comportamiento normal
-  Result := inherited IsShortCut(Message);
+  end
+  else
+    Result := inherited IsShortCut(Message);
 end;
 
 procedure TfrmSelPropiedades.CargarLista;
@@ -369,51 +367,51 @@ begin
   // Guard de reentrada: dos cargas solapadas (p.ej. dos AfterScroll casi
   // simultaneos) comparten FSlots y el LimpiarControles de una vacia la
   // lista mientras la otra la recorre -> EArgumentOutOfRangeException.
-  if FCargando then
-    Exit;
-  FCargando := True;
-  try
-    FCodigoArticulo := ACodigoArticulo;
-    LimpiarControles;
-    FModificado := False;
-    if ACodigoArticulo = '' then Exit;
-    oDefiniciones := FServicios.Lectura.ListarAsignadas(ACodigoArticulo);
-    for oDefinicion in oDefiniciones do
-    begin
-      S := Default(TSlotProp);
-      S.CodigoPropiedad := oDefinicion.Codigo;
-      S.NombrePropiedad := oDefinicion.Nombre;
-      S.TipoValor := TipoDesdeCadena(oDefinicion.TipoValor);
-      S.Nivel := oDefinicion.Nivel;
-      S.EsRequerido := oDefinicion.EsRequerido;
-      S.IdValorPV := oDefinicion.IdValor;
-      S.ValorLibre := oDefinicion.ValorLibre;
-      S.OriginalIdValorPV := S.IdValorPV;
-      S.OriginalValorLibre := S.ValorLibre;
-      S.Ctrl := nil;
-      S.Opciones := nil;
-      S.Eliminar := False;
-      FSlots.Add(S);
-    end;
-    // ── 2. Opciones para slots tipo LISTA ────────────────────────────────
-    for i := 0 to FSlots.Count - 1 do
-    begin
-      if FSlots[i].TipoValor = tvpLista then
+  if not FCargando then
+  begin
+    FCargando := True;
+    try
+      FCodigoArticulo := ACodigoArticulo;
+      LimpiarControles;
+      FModificado := False;
+      if ACodigoArticulo <> '' then
       begin
-        S := FSlots[i];
-        S.Opciones := TDictionary<Integer, string>.Create;
-        oOpciones := FServicios.Lectura.ListarOpciones(
-          S.CodigoPropiedad);
-        for oOpcion in oOpciones do
+        oDefiniciones := FServicios.Lectura.ListarAsignadas(ACodigoArticulo);
+        for oDefinicion in oDefiniciones do
         begin
-          S.Opciones.Add(oOpcion.IdValor, oOpcion.Valor);
+          S := Default(TSlotProp);
+          S.CodigoPropiedad := oDefinicion.Codigo;
+          S.NombrePropiedad := oDefinicion.Nombre;
+          S.TipoValor := TipoDesdeCadena(oDefinicion.TipoValor);
+          S.Nivel := oDefinicion.Nivel;
+          S.EsRequerido := oDefinicion.EsRequerido;
+          S.IdValorPV := oDefinicion.IdValor;
+          S.ValorLibre := oDefinicion.ValorLibre;
+          S.OriginalIdValorPV := S.IdValorPV;
+          S.OriginalValorLibre := S.ValorLibre;
+          S.Ctrl := nil;
+          S.Opciones := nil;
+          S.Eliminar := False;
+          FSlots.Add(S);
         end;
-        FSlots[i] := S;
+        for i := 0 to FSlots.Count - 1 do
+        begin
+          if FSlots[i].TipoValor = tvpLista then
+          begin
+            S := FSlots[i];
+            S.Opciones := TDictionary<Integer, string>.Create;
+            oOpciones := FServicios.Lectura.ListarOpciones(
+              S.CodigoPropiedad);
+            for oOpcion in oOpciones do
+              S.Opciones.Add(oOpcion.IdValor, oOpcion.Valor);
+            FSlots[i] := S;
+          end;
+        end;
+        ReconstruirVista;
       end;
+    finally
+      FCargando := False;
     end;
-    ReconstruirVista;
-  finally
-    FCargando := False;
   end;
 end;
 
@@ -430,8 +428,8 @@ var
   oOpciones: TArray<TOpcionPropiedadArticulo>;
   S: TSlotProp;
 begin
-  if ACodigoFamilia = '' then Exit;
-
+  if ACodigoFamilia <> '' then
+  begin
   for i := 0 to FSlots.Count - 1 do
   begin
     S := FSlots[i];
@@ -518,6 +516,7 @@ begin
     end;
   end;
   ReconstruirVista;
+  end;
 end;
 
 procedure TGestorPropiedades.ReconstruirVista;
@@ -543,18 +542,20 @@ begin
   for i := 0 to FSlots.Count - 1 do
   begin
     S := FSlots[i];
-    if S.Eliminar then Continue;
-    case S.TipoValor of
-      tvpLista      : CrearFilaLista   (S, Top);
-      tvpTextoLibre : CrearFilaTexto   (S, Top);
-      tvpNumero     : CrearFilaNumero  (S, Top);
-      tvpBooleano   : CrearFilaBooleano(S, Top);
+    if not S.Eliminar then
+    begin
+      case S.TipoValor of
+        tvpLista      : CrearFilaLista   (S, Top);
+        tvpTextoLibre : CrearFilaTexto   (S, Top);
+        tvpNumero     : CrearFilaNumero  (S, Top);
+        tvpBooleano   : CrearFilaBooleano(S, Top);
+      end;
+      CrearBtnEliminar(i, Top);
+      if (S.Nivel = 'COLOR') or (S.Nivel = 'SKU') then
+        CrearBtnPorUnidad(i, Top);
+      FSlots[i] := S;
+      Inc(Top, ALTO_FILA + MARGEN_V);
     end;
-    CrearBtnEliminar(i, Top);
-    if (S.Nivel = 'COLOR') or (S.Nivel = 'SKU') then
-      CrearBtnPorUnidad(i, Top);
-    FSlots[i] := S;
-    Inc(Top, ALTO_FILA + MARGEN_V);
   end;
 end;
 
@@ -705,21 +706,22 @@ var
   S  : TSlotProp;
 begin
   idx := (Sender as TcxButton).Tag;
-  if (idx < 0) or (idx >= FSlots.Count) then Exit;
-
-  if MessageDlg(Format(SPreguntaQuitarPropiedadArticulo,
-                       [FSlots[idx].NombrePropiedad]),
-                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
-  S := FSlots[idx];
-  S.Eliminar := True;
-  FSlots[idx] := S;
-  FModificado := True;
-  TThread.ForceQueue(nil,
-    procedure
-    begin
-      ReconstruirVista;
-    end
-  );
+  if (idx >= 0) and (idx < FSlots.Count) and
+     (MessageDlg(Format(SPreguntaQuitarPropiedadArticulo,
+       [FSlots[idx].NombrePropiedad]),
+       mtConfirmation, [mbYes, mbNo], 0) = mrYes) then
+  begin
+    S := FSlots[idx];
+    S.Eliminar := True;
+    FSlots[idx] := S;
+    FModificado := True;
+    TThread.ForceQueue(nil,
+      procedure
+      begin
+        ReconstruirVista;
+      end
+    );
+  end;
 end;
 
 procedure TGestorPropiedades.CrearBtnPorUnidad(ASlotIdx, ATop: Integer);
@@ -793,59 +795,59 @@ begin
   if FCodigoArticulo = '' then
   begin
     ShowMessage(SErrorArticuloNoGuardadoAnadirPropiedades);
-    Exit;
-  end;
-  Excluidos := TStringList.Create;
-  try
-    for i := 0 to FSlots.Count - 1 do
-      if not FSlots[i].Eliminar then
-        Excluidos.Add(FSlots[i].CodigoPropiedad);
-    dlg := TfrmSelPropiedades.Create(
-      nil,
-      FServicios.Lectura,
-      Excluidos);
+  end
+  else
+  begin
+    Excluidos := TStringList.Create;
     try
-      if dlg.ShowModal <> mrOk then Exit;
-      if dlg.CodigosSeleccionados.Count = 0 then Exit;
-      for cod in dlg.CodigosSeleccionados do
-      begin
-        if FServicios.Lectura.Buscar(cod, oDefinicion) then
+      for i := 0 to FSlots.Count - 1 do
+        if not FSlots[i].Eliminar then
+          Excluidos.Add(FSlots[i].CodigoPropiedad);
+      dlg := TfrmSelPropiedades.Create(
+        nil,
+        FServicios.Lectura,
+        Excluidos);
+      try
+        if (dlg.ShowModal = mrOk) and
+           (dlg.CodigosSeleccionados.Count > 0) then
         begin
-          S := Default(TSlotProp);
-          S.CodigoPropiedad := oDefinicion.Codigo;
-          S.NombrePropiedad := oDefinicion.Nombre;
-          S.TipoValor := TipoDesdeCadena(oDefinicion.TipoValor);
-          S.Nivel := oDefinicion.Nivel;
-          S.EsRequerido     := False;
-          S.IdValorPV       := 0;
-          S.ValorLibre      := '';
-          S.OriginalIdValorPV  := S.IdValorPV;
-          S.OriginalValorLibre := S.ValorLibre;
-          S.Ctrl            := nil;
-          S.Opciones        := nil;
-          S.Eliminar        := False;
-          if S.TipoValor = tvpLista then
+          for cod in dlg.CodigosSeleccionados do
           begin
-            S.Opciones := TDictionary<Integer, string>.Create;
-            oOpciones := FServicios.Lectura.ListarOpciones(
-              S.CodigoPropiedad);
-            for oOpcion in oOpciones do
+            if FServicios.Lectura.Buscar(cod, oDefinicion) then
             begin
-              S.Opciones.Add(
-                oOpcion.IdValor,
-                oOpcion.Valor);
+              S := Default(TSlotProp);
+              S.CodigoPropiedad := oDefinicion.Codigo;
+              S.NombrePropiedad := oDefinicion.Nombre;
+              S.TipoValor := TipoDesdeCadena(oDefinicion.TipoValor);
+              S.Nivel := oDefinicion.Nivel;
+              S.EsRequerido := False;
+              S.IdValorPV := 0;
+              S.ValorLibre := '';
+              S.OriginalIdValorPV := S.IdValorPV;
+              S.OriginalValorLibre := S.ValorLibre;
+              S.Ctrl := nil;
+              S.Opciones := nil;
+              S.Eliminar := False;
+              if S.TipoValor = tvpLista then
+              begin
+                S.Opciones := TDictionary<Integer, string>.Create;
+                oOpciones := FServicios.Lectura.ListarOpciones(
+                  S.CodigoPropiedad);
+                for oOpcion in oOpciones do
+                  S.Opciones.Add(oOpcion.IdValor, oOpcion.Valor);
+              end;
+              FSlots.Add(S);
+              FModificado := True;
             end;
           end;
-          FSlots.Add(S);
-          FModificado := True;
+          ReconstruirVista;
         end;
+      finally
+        FreeAndNil(dlg);
       end;
-      ReconstruirVista;
     finally
-      FreeAndNil(dlg);
+      FreeAndNil(Excluidos);
     end;
-  finally
-    FreeAndNil(Excluidos);
   end;
 end;
 
@@ -859,8 +861,8 @@ begin
   for i := 0 to FSlots.Count - 1 do
   begin
     S := FSlots[i];
-    if S.Eliminar then Continue;
-    if S.EsRequerido and Assigned(S.Ctrl) then
+    if (Result = '') and (not S.Eliminar) and S.EsRequerido and
+       Assigned(S.Ctrl) then
     begin
       TieneValor := False;
       case S.TipoValor of
@@ -872,11 +874,8 @@ begin
           TieneValor := True;
       end;
       if not TieneValor then
-      begin
         Result := Format(SErrorPropiedadObligatoriaFamilia,
-                         [S.NombrePropiedad]);
-        Exit;
-      end;
+          [S.NombrePropiedad]);
     end;
   end;
 end;
@@ -894,47 +893,46 @@ begin
   begin
     S := FSlots[i];
     if S.Eliminar then
+      DeleteSlot(S.CodigoPropiedad)
+    else if Assigned(S.Ctrl) then
     begin
-      DeleteSlot(S.CodigoPropiedad);
-      Continue;
+      case S.TipoValor of
+        tvpLista:
+        begin
+          if (S.Ctrl as TcxComboBox).ItemIndex > 0 then
+            S.IdValorPV := Integer(
+              (S.Ctrl as TcxComboBox).Properties.Items.Objects[
+                (S.Ctrl as TcxComboBox).ItemIndex])
+          else
+            S.IdValorPV := 0;
+          S.ValorLibre := '';
+        end;
+        tvpTextoLibre:
+        begin
+          S.IdValorPV  := 0;
+          S.ValorLibre := Trim((S.Ctrl as TcxTextEdit).Text);
+        end;
+        tvpNumero:
+        begin
+          S.IdValorPV  := 0;
+          S.ValorLibre := FloatToStr((S.Ctrl as TcxSpinEdit).Value);
+        end;
+        tvpBooleano:
+        begin
+          S.IdValorPV  := 0;
+          S.ValorLibre := TGenUtils.IfThen<String>(
+            (S.Ctrl as TcxCheckBox).Checked, 'S', 'N');
+        end;
+      end;
+      if (S.IdValorPV <> S.OriginalIdValorPV) or
+         (S.ValorLibre <> S.OriginalValorLibre) then
+      begin
+        UpsertSlot(S);
+        S.OriginalIdValorPV  := S.IdValorPV;
+        S.OriginalValorLibre := S.ValorLibre;
+      end;
+      FSlots[i] := S;
     end;
-    if not Assigned(S.Ctrl) then Continue;
-    case S.TipoValor of
-      tvpLista:
-      begin
-        if (S.Ctrl as TcxComboBox).ItemIndex > 0 then
-          S.IdValorPV := Integer(
-            (S.Ctrl as TcxComboBox).Properties.Items.Objects[
-              (S.Ctrl as TcxComboBox).ItemIndex])
-        else
-          S.IdValorPV := 0;
-        S.ValorLibre := '';
-      end;
-      tvpTextoLibre:
-      begin
-        S.IdValorPV  := 0;
-        S.ValorLibre := Trim((S.Ctrl as TcxTextEdit).Text);
-      end;
-      tvpNumero:
-      begin
-        S.IdValorPV  := 0;
-        S.ValorLibre := FloatToStr((S.Ctrl as TcxSpinEdit).Value);
-      end;
-      tvpBooleano:
-      begin
-        S.IdValorPV  := 0;
-        S.ValorLibre :=
-            TGenUtils.IfThen<String>((S.Ctrl as TcxCheckBox).Checked, 'S', 'N');
-      end;
-    end;
-    if (S.IdValorPV <> S.OriginalIdValorPV) or
-       (S.ValorLibre <> S.OriginalValorLibre) then
-    begin
-      UpsertSlot(S);
-      S.OriginalIdValorPV  := S.IdValorPV;
-      S.OriginalValorLibre := S.ValorLibre;
-    end;
-    FSlots[i] := S;
   end;
   FModificado := False;
   Result := True;

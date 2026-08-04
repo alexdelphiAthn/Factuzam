@@ -329,40 +329,42 @@ var
   FormaPagoInfo: TFormaPagoInfo;
   CodigoFormaPago: string;
   DatosRef: TDatosReferencia;
+  bContinuar: Boolean;
 begin
   Result := False;
-  if not Assigned(FMemTablePagos) then
-    Exit;
-//  if not FMemTablePagos.Locate('NUMERO_LINEA', ALineaPago, []) then
-//    Exit;
-  CodigoFormaPago := FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString;
-  FormaPagoInfo := ObtenerFormaPagoInfo(CodigoFormaPago);
-  DatosRef := ADatosRef;
-  if FormaPagoInfo.RequiereReferencia and DatosRef.Referencia.IsEmpty then
+  if Assigned(FMemTablePagos) then
   begin
-    if Assigned(FOnRequiereReferencia) then
+    CodigoFormaPago := FMemTablePagos.FieldByName(
+      'CODIGO_FP_CFP').AsString;
+    FormaPagoInfo := ObtenerFormaPagoInfo(CodigoFormaPago);
+    DatosRef := ADatosRef;
+    bContinuar := True;
+    if FormaPagoInfo.RequiereReferencia and
+       DatosRef.Referencia.IsEmpty then
     begin
-      if not FOnRequiereReferencia(FormaPagoInfo, DatosRef) then
-        Exit;
-    end
-    else
+      if Assigned(FOnRequiereReferencia) then
+        bContinuar := FOnRequiereReferencia(FormaPagoInfo, DatosRef)
+      else
+        DatosRef.Init;
+    end;
+    if bContinuar then
     begin
-      DatosRef.Init;
+      FMemTablePagos.Edit;
+      FMemTablePagos.FieldByName(
+        'IMPORTE_ENTREGADO').AsCurrency := AImporte;
+      FMemTablePagos.FieldByName(
+        'CODIGO_DIVISA').AsString := DatosRef.CodigoDivisa;
+      FMemTablePagos.FieldByName(
+        'FACTOR_CAMBIO').AsCurrency := DatosRef.FactorCambio;
+      FMemTablePagos.FieldByName(
+        'IMPORTE_DIVISA').AsCurrency := DatosRef.ImporteDivisa;
+      FMemTablePagos.FieldByName(
+        'REFERENCIA').AsString := DatosRef.Referencia;
+      FMemTablePagos.Post;
+      Recalcular;
+      Result := True;
     end;
   end;
-  FMemTablePagos.Edit;
-  FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency := AImporte;
-  FMemTablePagos.FieldByName('CODIGO_DIVISA').AsString := DatosRef.CodigoDivisa;
-  FMemTablePagos.FieldByName('FACTOR_CAMBIO').AsCurrency :=
-                                                          DatosRef.FactorCambio;
-  FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsCurrency :=
-                                                         DatosRef.ImporteDivisa;
-//  FMemTablePagos.FieldByName('RED_BLOCKCHAIN_PAGO').AsString :=
-//DatosRef.RedBlockchain;
-  FMemTablePagos.FieldByName('REFERENCIA').AsString := DatosRef.Referencia;
-  FMemTablePagos.Post;
-  Recalcular;
-  Result := True;
 end;
 
 procedure TDatosFaseCobro.AplicarDescuentoGlobal(APorcentaje: Currency);
@@ -389,19 +391,14 @@ function TDatosFaseCobro.EstablecerDejarEnCuenta(
 var
   NuevaDeuda: Currency;
 begin
+  Result := TResultadoValidacion.OK;
   if not FHayCliente then
-  begin
     Result := TResultadoValidacion.Error(
-      'No se puede dejar en cuenta sin cliente asignado.');
-    Exit;
-  end;
-  if not FPermiteDeuda then
-  begin
+      'No se puede dejar en cuenta sin cliente asignado.')
+  else if not FPermiteDeuda then
     Result := TResultadoValidacion.Error(
-      'El cliente no tiene permitido dejar cantidades en cuenta.');
-    Exit;
-  end;
-  if FDatosCliente.LimiteCredito > 0 then
+      'El cliente no tiene permitido dejar cantidades en cuenta.')
+  else if FDatosCliente.LimiteCredito > 0 then
   begin
     NuevaDeuda := FDatosCliente.DeudaActual + AImporte;
     if NuevaDeuda > FDatosCliente.LimiteCredito then
@@ -413,12 +410,13 @@ begin
                'Límite: %m',
                [FDatosCliente.DeudaActual, NuevaDeuda,
                 FDatosCliente.LimiteCredito]));
-      Exit;
     end;
   end;
-  FImporteDejarCuenta := AImporte;
-  Recalcular;
-  Result := TResultadoValidacion.OK;
+  if Result.Valido then
+  begin
+    FImporteDejarCuenta := AImporte;
+    Recalcular;
+  end;
 end;
 
 function TDatosFaseCobro.EsDevolucionEconomica: Boolean;
@@ -435,14 +433,14 @@ end;
 function TDatosFaseCobro.EmitirVale(AImporte: Currency): TResultadoValidacion;
 begin
   if AImporte <= 0 then
-  begin
     Result := TResultadoValidacion.Error('El importe del vale no puede ser' +
-                                         ' cero o menor que cero.');
-    Exit;
+                                         ' cero o menor que cero.')
+  else
+  begin
+    FImporteValeEmitido := Abs(AImporte);
+    Recalcular;
+    Result := TResultadoValidacion.OK;
   end;
-  FImporteValeEmitido := Abs(AImporte);
-  Recalcular;
-  Result := TResultadoValidacion.OK;
 end;
 
 procedure TDatosFaseCobro.RegistrarValeRecogido(ACodigoVale: string;
@@ -450,8 +448,9 @@ procedure TDatosFaseCobro.RegistrarValeRecogido(ACodigoVale: string;
 var
   ValeAplicado: TValeAplicado;
 begin
-  if not Assigned(FMemTablePagos) then Exit;
-  FMemTablePagos.Append;
+  if Assigned(FMemTablePagos) then
+  begin
+    FMemTablePagos.Append;
   FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString := 'VALE';
   FMemTablePagos.FieldByName('DESCRIPCION_FORMA_PAGO_CFP').AsString :=
     ACodigoVale;
@@ -474,7 +473,8 @@ begin
   ValeAplicado.CodigoVale      := ACodigoVale;
   ValeAplicado.PinSeguridad    := '';
   ValeAplicado.ImporteAplicado := AImporte;
-  FValesRecogidos.Add(ValeAplicado);
+    FValesRecogidos.Add(ValeAplicado);
+  end;
 end;
 
 function TDatosFaseCobro.TieneArticulosDevueltos: Boolean;
@@ -491,15 +491,12 @@ var
   Field: TField;
 begin
   Result := ADefault;
-
-  if not Assigned(FMemTablePagos) then Exit;
-  if not FMemTablePagos.Active then Exit;
-
-  Field := FMemTablePagos.FindField(ANombreCampo);
-  if Assigned(Field) and not Field.IsNull then
-    Result := Field.AsCurrency
-  else
-    Result := ADefault;
+  if Assigned(FMemTablePagos) and FMemTablePagos.Active then
+  begin
+    Field := FMemTablePagos.FindField(ANombreCampo);
+    if Assigned(Field) and not Field.IsNull then
+      Result := Field.AsCurrency;
+  end;
 end;
 
 function TDatosFaseCobro.ObtenerStringSafe(const ANombreCampo: string;
@@ -508,13 +505,12 @@ var
   Field: TField;
 begin
   Result := ADefault;
-  if not Assigned(FMemTablePagos) then Exit;
-  if not FMemTablePagos.Active then Exit;
-  Field := FMemTablePagos.FindField(ANombreCampo);
-  if Assigned(Field) and not Field.IsNull then
-    Result := Field.AsString
-  else
-    Result := ADefault;
+  if Assigned(FMemTablePagos) and FMemTablePagos.Active then
+  begin
+    Field := FMemTablePagos.FindField(ANombreCampo);
+    if Assigned(Field) and not Field.IsNull then
+      Result := Field.AsString;
+  end;
 end;
 
 procedure TDatosFaseCobro.AplicarResultadoTotales(
@@ -664,22 +660,16 @@ end;
 
 function TDatosFaseCobro.ValidarDeuda: TResultadoValidacion;
 begin
+  Result := TResultadoValidacion.OK;
   if FImporteDejarCuenta > 0 then
   begin
     if not FHayCliente then
-    begin
       Result := TResultadoValidacion.Error(
-        'No se puede dejar importe en cuenta sin cliente.');
-      Exit;
-    end;
-    if not FPermiteDeuda then
-    begin
+        'No se puede dejar importe en cuenta sin cliente.')
+    else if not FPermiteDeuda then
       Result := TResultadoValidacion.Error(
         'El cliente no permite dejar cantidades en cuenta.');
-      Exit;
-    end;
   end;
-  Result := TResultadoValidacion.OK;
 end;
 
 function TDatosFaseCobro.ValidarVale: TResultadoValidacion;
@@ -688,38 +678,38 @@ var
   CodigoVale: string;
 begin
   Result := TResultadoValidacion.OK;
-  if not Assigned(FMemTablePagos) or
-     not FMemTablePagos.Active or
-     FMemTablePagos.IsEmpty then
-    Exit;
-  FMemTablePagos.DisableControls;
-  Bookmark := FMemTablePagos.GetBookmark;
-  try
-    FMemTablePagos.First;
-    while not FMemTablePagos.Eof do
-    begin
-      // Solo validamos líneas VALE realmente usadas como pago (importe <> 0).
-      // La línea fija de forma de pago VALE sin importe es una entrada vacía
-      // del grid: validarla provocaba el error con código vacío al pulsar F12.
-      if (FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString = 'VALE') and
-         (FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency <> 0) then
+  if Assigned(FMemTablePagos) and
+     FMemTablePagos.Active and
+     not FMemTablePagos.IsEmpty then
+  begin
+    FMemTablePagos.DisableControls;
+    Bookmark := FMemTablePagos.GetBookmark;
+    try
+      FMemTablePagos.First;
+      while not FMemTablePagos.Eof do
       begin
-        CodigoVale := FMemTablePagos.FieldByName('REFERENCIA').AsString;
-        if not FRepositorio.ExisteValePendiente(CodigoVale) then
+        if (FMemTablePagos.FieldByName(
+             'CODIGO_FP_CFP').AsString = 'VALE') and
+           (FMemTablePagos.FieldByName(
+             'IMPORTE_ENTREGADO').AsCurrency <> 0) then
         begin
-          Result := TResultadoValidacion.Error(
-            'El vale introducido (' + CodigoVale + ') no existe en la base ' +
-            ' de datos o ha sido recogido o anulado.');
-          Break; // Salimos del bucle al primer error
+          CodigoVale := FMemTablePagos.FieldByName('REFERENCIA').AsString;
+          if not FRepositorio.ExisteValePendiente(CodigoVale) then
+          begin
+            Result := TResultadoValidacion.Error(
+              'El vale introducido (' + CodigoVale + ') no existe en la ' +
+              'base de datos o ha sido recogido o anulado.');
+            Break;
+          end;
         end;
+        FMemTablePagos.Next;
       end;
-      FMemTablePagos.Next;
+    finally
+      if FMemTablePagos.BookmarkValid(Bookmark) then
+        FMemTablePagos.GotoBookmark(Bookmark);
+      FMemTablePagos.FreeBookmark(Bookmark);
+      FMemTablePagos.EnableControls;
     end;
-  finally
-    if FMemTablePagos.BookmarkValid(Bookmark) then
-      FMemTablePagos.GotoBookmark(Bookmark);
-    FMemTablePagos.FreeBookmark(Bookmark);
-    FMemTablePagos.EnableControls;
   end;
 end;
 
@@ -736,28 +726,27 @@ begin
                [FImportePendiente]))
     else
       Result := TResultadoValidacion.OK;
-    Exit;
-  end;
-  Result := ValidarDeuda;
-  if not Result.Valido then
-    Exit;
-  Result := ValidarVale;
-  if not Result.Valido then
-    Exit;
-  TotalCobrado := FImporteEntregado + FImporteDejarCuenta;
-  if (TotalCobrado = 0) and (FImporteTotalPagar > 0) then
+  end
+  else
   begin
-    Result := TResultadoValidacion.Error('No se ha indicado ningún pago.');
-    Exit;
+    Result := ValidarDeuda;
+    if Result.Valido then
+      Result := ValidarVale;
+    if Result.Valido then
+    begin
+      TotalCobrado := FImporteEntregado + FImporteDejarCuenta;
+      if (TotalCobrado = 0) and (FImporteTotalPagar > 0) then
+        Result := TResultadoValidacion.Error(
+          'No se ha indicado ningún pago.')
+      else if (FImportePendiente > 0.01) and
+              (FImporteDejarCuenta = 0) then
+        Result := TResultadoValidacion.Advertencia(
+          Format('Cobro incompleto. Pendiente: %m' + sLineBreak +
+                 '¿Desea dejarlo en cuenta?', [FImportePendiente]))
+      else
+        Result := TResultadoValidacion.OK;
+    end;
   end;
-  if (FImportePendiente > 0.01) and (FImporteDejarCuenta = 0) then
-  begin
-    Result := TResultadoValidacion.Advertencia(
-      Format('Cobro incompleto. Pendiente: %m' + sLineBreak +
-             '¿Desea dejarlo en cuenta?', [FImportePendiente]));
-    Exit;
-  end;
-  Result := TResultadoValidacion.OK;
 end;
 
 function TDatosFaseCobro.ObtenerDatosPagosParaGrabar: TArray<TFormaPagoItem>;

@@ -137,11 +137,13 @@ begin
   begin
     FCodigoFamilia := '';
     ModalResult := mrCancel;
-    Exit;
+  end
+  else
+  begin
+    FCodigoFamilia := FFamilias.FieldByName('CODIGO_FAM_FAM').AsString;
+    FNombreFamilia := FFamilias.FieldByName('NOMBRE_FAM_FAM').AsString;
+    ModalResult := mrOk;
   end;
-  FCodigoFamilia := FFamilias.FieldByName('CODIGO_FAM_FAM').AsString;
-  FNombreFamilia := FFamilias.FieldByName('NOMBRE_FAM_FAM').AsString;
-  ModalResult := mrOk;
 end;
 
 procedure TfrmModalSelFamilia.btnCancelarClick(Sender: TObject);

@@ -1,0 +1,337 @@
+-- Resolución de incidencias VERI*FACTU aceptadas con errores.
+-- Conserva el alta original al subsanar y tipifica las rectificativas R4.
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_facturas'
+     AND COLUMN_NAME = 'TIPO_FACTURA_VERIFACTU_FAC'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_facturas
+     ADD COLUMN TIPO_FACTURA_VERIFACTU_FAC varchar(2) NULL DEFAULT NULL
+     COMMENT ''F1, F2, F3, R1, R2, R3, R4 o R5''
+     AFTER TIPO_RECTIFICATIVA_FAC',
+  'SELECT ''TIPO_FACTURA_VERIFACTU_FAC ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_facturas_consolidaciones'
+     AND COLUMN_NAME = 'REQUEST_ID_ORIGINAL_FACCON'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_facturas_consolidaciones
+     ADD COLUMN REQUEST_ID_ORIGINAL_FACCON varchar(255) NULL DEFAULT NULL',
+  'SELECT ''REQUEST_ID_ORIGINAL_FACCON ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_facturas_consolidaciones'
+     AND COLUMN_NAME = 'CHAIN_NUMBER_ORIGINAL_FACCON'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_facturas_consolidaciones
+     ADD COLUMN CHAIN_NUMBER_ORIGINAL_FACCON varchar(100) NULL DEFAULT NULL',
+  'SELECT ''CHAIN_NUMBER_ORIGINAL_FACCON ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_facturas_consolidaciones'
+     AND COLUMN_NAME = 'CHAIN_HASH_ORIGINAL_FACCON'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_facturas_consolidaciones
+     ADD COLUMN CHAIN_HASH_ORIGINAL_FACCON varchar(255) NULL DEFAULT NULL',
+  'SELECT ''CHAIN_HASH_ORIGINAL_FACCON ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_facturas_consolidaciones'
+     AND COLUMN_NAME = 'SERIE_CERTIFICADO_ORIGINAL_FACCON'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_facturas_consolidaciones
+     ADD COLUMN SERIE_CERTIFICADO_ORIGINAL_FACCON varchar(128) NULL DEFAULT NULL',
+  'SELECT ''SERIE_CERTIFICADO_ORIGINAL_FACCON ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_facturas_consolidaciones'
+     AND COLUMN_NAME = 'TITULAR_CERTIFICADO_ORIGINAL_FACCON'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_facturas_consolidaciones
+     ADD COLUMN TITULAR_CERTIFICADO_ORIGINAL_FACCON varchar(1000) NULL DEFAULT NULL',
+  'SELECT ''TITULAR_CERTIFICADO_ORIGINAL_FACCON ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_facturas_consolidaciones'
+     AND COLUMN_NAME = 'HUELLA_CERTIFICADO_ORIGINAL_FACCON'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_facturas_consolidaciones
+     ADD COLUMN HUELLA_CERTIFICADO_ORIGINAL_FACCON char(40) NULL DEFAULT NULL',
+  'SELECT ''HUELLA_CERTIFICADO_ORIGINAL_FACCON ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_verifactu_cola'
+     AND COLUMN_NAME = 'MOTIVO_VFCOLA'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_verifactu_cola
+     ADD COLUMN MOTIVO_VFCOLA varchar(500) NULL DEFAULT NULL
+     AFTER MENSAJE_ERROR_VFCOLA',
+  'SELECT ''MOTIVO_VFCOLA ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_facturas_consolidaciones'
+     AND COLUMN_NAME = 'CODIGO_ERROR_AEAT_FACCON'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_facturas_consolidaciones
+     ADD COLUMN CODIGO_ERROR_AEAT_FACCON varchar(20) NULL DEFAULT NULL
+     AFTER ESTADO_FACCON',
+  'SELECT ''CODIGO_ERROR_AEAT_FACCON ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_facturas_consolidaciones'
+     AND COLUMN_NAME = 'DESCRIPCION_ERROR_AEAT_FACCON'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_facturas_consolidaciones
+     ADD COLUMN DESCRIPCION_ERROR_AEAT_FACCON text NULL DEFAULT NULL
+     AFTER CODIGO_ERROR_AEAT_FACCON',
+  'SELECT ''DESCRIPCION_ERROR_AEAT_FACCON ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_facturas_consolidaciones'
+     AND COLUMN_NAME = 'ESTADO_ORIGINAL_FACCON'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_facturas_consolidaciones
+     ADD COLUMN ESTADO_ORIGINAL_FACCON varchar(30) NULL DEFAULT NULL
+     AFTER DESCRIPCION_ERROR_AEAT_FACCON',
+  'SELECT ''ESTADO_ORIGINAL_FACCON ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_facturas_consolidaciones'
+     AND COLUMN_NAME = 'CODIGO_ERROR_ORIGINAL_FACCON'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_facturas_consolidaciones
+     ADD COLUMN CODIGO_ERROR_ORIGINAL_FACCON varchar(20) NULL DEFAULT NULL
+     AFTER ESTADO_ORIGINAL_FACCON',
+  'SELECT ''CODIGO_ERROR_ORIGINAL_FACCON ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_facturas_consolidaciones'
+     AND COLUMN_NAME = 'DESCRIPCION_ERROR_ORIGINAL_FACCON'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_facturas_consolidaciones
+     ADD COLUMN DESCRIPCION_ERROR_ORIGINAL_FACCON text NULL DEFAULT NULL
+     AFTER CODIGO_ERROR_ORIGINAL_FACCON',
+  'SELECT ''DESCRIPCION_ERROR_ORIGINAL_FACCON ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_facturas_consolidaciones'
+     AND COLUMN_NAME = 'RESPUESTA_ORIGINAL_FACCON'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_facturas_consolidaciones
+     ADD COLUMN RESPUESTA_ORIGINAL_FACCON longtext NULL DEFAULT NULL
+     AFTER DESCRIPCION_ERROR_ORIGINAL_FACCON',
+  'SELECT ''RESPUESTA_ORIGINAL_FACCON ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_facturas_consolidaciones'
+     AND COLUMN_NAME = 'PETICION_ORIGINAL_FACCON'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_facturas_consolidaciones
+     ADD COLUMN PETICION_ORIGINAL_FACCON longtext NULL DEFAULT NULL
+     AFTER RESPUESTA_ORIGINAL_FACCON',
+  'SELECT ''PETICION_ORIGINAL_FACCON ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_facturas_consolidaciones'
+     AND COLUMN_NAME = 'REGISTRO_XML_ORIGINAL_FACCON'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_facturas_consolidaciones
+     ADD COLUMN REGISTRO_XML_ORIGINAL_FACCON longtext NULL DEFAULT NULL
+     AFTER PETICION_ORIGINAL_FACCON',
+  'SELECT ''REGISTRO_XML_ORIGINAL_FACCON ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_facturas_consolidaciones'
+     AND COLUMN_NAME = 'FIRMA_DIGITAL_ORIGINAL_FACCON'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_facturas_consolidaciones
+     ADD COLUMN FIRMA_DIGITAL_ORIGINAL_FACCON longtext NULL DEFAULT NULL
+     AFTER REGISTRO_XML_ORIGINAL_FACCON',
+  'SELECT ''FIRMA_DIGITAL_ORIGINAL_FACCON ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_facturas_consolidaciones'
+     AND COLUMN_NAME = 'MOTIVO_SUBSANACION_FACCON'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_facturas_consolidaciones
+     ADD COLUMN MOTIVO_SUBSANACION_FACCON varchar(500) NULL DEFAULT NULL
+     AFTER FIRMA_DIGITAL_ORIGINAL_FACCON',
+  'SELECT ''MOTIVO_SUBSANACION_FACCON ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_facturas_consolidaciones'
+     AND COLUMN_NAME = 'INSTANTE_SUBSANACION_FACCON'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_facturas_consolidaciones
+     ADD COLUMN INSTANTE_SUBSANACION_FACCON datetime NULL DEFAULT NULL
+     AFTER MOTIVO_SUBSANACION_FACCON',
+  'SELECT ''INSTANTE_SUBSANACION_FACCON ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteCol := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_facturas_consolidaciones'
+     AND COLUMN_NAME = 'USUARIO_SUBSANACION_FACCON'
+);
+SET @sSql := IF(
+  @sExisteCol = 0,
+  'ALTER TABLE fza_facturas_consolidaciones
+     ADD COLUMN USUARIO_SUBSANACION_FACCON varchar(50) NULL DEFAULT NULL
+     AFTER INSTANTE_SUBSANACION_FACCON',
+  'SELECT ''USUARIO_SUBSANACION_FACCON ya existe; se omite'' AS info'
+);
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;

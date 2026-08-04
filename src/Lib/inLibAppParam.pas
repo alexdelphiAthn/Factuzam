@@ -31,6 +31,7 @@ type
     FBloqueoLicencia: TCriticalSection;
     FRegistroLog: IRegistroLog;
     FResultadoLicencia: TResultadoLicenciaAplicacion;
+    procedure InicializarParametrosVerifactu;
     procedure InicializarParametrosApp(
       const AUsuario, AGrupo: string);
   protected
@@ -117,6 +118,79 @@ begin
   finally
     FBloqueoLicencia.Release;
   end;
+end;
+
+procedure TParametrosAplicacion.InicializarParametrosVerifactu;
+begin
+  // Subsistema Verifactu (AEAT). Los consumen el QR del ticket
+  // (inLibVerifactu) y el hilo de la cola (inLibVerifactuCola); se leen
+  // en caliente, así que puede activarse sin reiniciar la aplicación.
+  RegistrarParametro('Verifactu', 'appVerifactuModo',
+    'Modo fiscal: SIN, VERIFACTU o NO_VERIFACTU',
+    tpString, 'SIN');
+  RegistrarParametro('Verifactu', 'appVerifactuActivo',
+    'Activar SIF (False fuerza modo SIN y no imprime QR)',
+    tpBoolean, 'False');
+  RegistrarParametro('Verifactu', 'appVerifactuFirmaCertificado',
+    'Firmar registros y eventos con certificado de empresa',
+    tpBoolean, 'False');
+  RegistrarParametro('Verifactu', 'appVerifactuNtpServidores',
+    'Servidores NTP para validar el reloj fiscal NO VERI*FACTU',
+    tpString, 'time.google.com,time.windows.com,pool.ntp.org');
+  RegistrarParametro('Verifactu', 'appVerifactuNtpTimeoutMs',
+    'Timeout por servidor NTP para control del reloj fiscal',
+    tpInteger, '1500');
+  RegistrarParametro('Verifactu', 'appVerifactuNtpMargenSegundos',
+    'Margen máximo admitido del reloj fiscal en segundos',
+    tpInteger, '60');
+  RegistrarParametro('Verifactu', 'appVerifactuEntorno',
+    'Entorno AEAT: PRE (pruebas) o PRO (producción)', tpString, 'PRE');
+  RegistrarParametro('Verifactu', 'appVerifactuUrlQRPre',
+    'URL de cotejo del QR en preproducción', tpString,
+    'https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQR');
+  RegistrarParametro('Verifactu', 'appVerifactuUrlQRPro',
+    'URL de cotejo del QR en producción', tpString,
+    'https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR');
+  RegistrarParametro('Verifactu', 'appNoVerifactuUrlQRPre',
+    'URL de remisión del QR NO VERI*FACTU en preproducción', tpString,
+    'https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQRNoVerifactu');
+  RegistrarParametro('Verifactu', 'appNoVerifactuUrlQRPro',
+    'URL de remisión del QR NO VERI*FACTU en producción', tpString,
+    'https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/' +
+    'ValidarQRNoVerifactu');
+  RegistrarParametro('Verifactu', 'appVerifactuSegundosCiclo',
+    'Segundos entre ciclos del hilo de la cola Verifactu',
+    tpInteger, '60');
+  RegistrarParametro('Verifactu', 'appVerifactuMaxIntentos',
+    'Reintentos de envío antes de marcar ERROR definitivo',
+    tpInteger, '10');
+  // Endpoints SOAP del envío de registros. Con certificado de sello
+  // electrónico usar www10/prewww10 en lugar de www1/prewww1.
+  RegistrarParametro('Verifactu', 'appVerifactuUrlEnvioPre',
+    'URL del servicio SOAP de envío en preproducción', tpString,
+    'https://prewww1.aeat.es/wlpl/TIKE-CONT/ws/SistemaFacturacion/' +
+    'VerifactuSOAP');
+  RegistrarParametro('Verifactu', 'appVerifactuUrlEnvioPro',
+    'URL del servicio SOAP de envío en producción', tpString,
+    'https://www1.agenciatributaria.gob.es/wlpl/TIKE-CONT/ws/' +
+    'SistemaFacturacion/VerifactuSOAP');
+  // Bloque SistemaInformatico del registro (datos del productor del SIF)
+  RegistrarParametro('Verifactu', 'appVerifactuSifNombreRazon',
+    'Productor del software (SistemaInformatico.NombreRazon)', tpString,
+    'Alejandro Laorden Hidalgo');
+  RegistrarParametro('Verifactu', 'appVerifactuSifNif',
+    'NIF del productor del software (SistemaInformatico.NIF)', tpString,
+    '');
+  RegistrarParametro('Verifactu', 'appVerifactuSifDireccion',
+    'Dirección postal del productor del software', tpString,
+    '');
+  RegistrarParametro('Verifactu', 'appVerifactuDeclaracionLugar',
+    'Lugar de suscripción de la declaración responsable', tpString, '');
+  RegistrarParametro('Verifactu', 'appVerifactuDeclaracionFecha',
+    'Fecha de suscripción de la declaración responsable', tpString, '');
+  RegistrarParametro('Verifactu', 'appVerifactuDescripcionOpe',
+    'Texto de DescripcionOperacion del registro de alta', tpString,
+    'Venta');
 end;
 
 procedure TParametrosAplicacion.InicializarParametrosApp(
@@ -231,75 +305,7 @@ begin
     tpBoolean, 'False');
 
   // --- Verifactu ---
-  // Subsistema Verifactu (AEAT). Los consumen el QR del ticket
-  // (inLibVerifactu) y el hilo de la cola (inLibVerifactuCola); se leen
-  // en caliente, así que puede activarse sin reiniciar la aplicación.
-  RegistrarParametro('Verifactu', 'appVerifactuModo',
-    'Modo fiscal: SIN, VERIFACTU o NO_VERIFACTU',
-    tpString, 'SIN');
-  RegistrarParametro('Verifactu', 'appVerifactuActivo',
-    'Activar SIF (False fuerza modo SIN y no imprime QR)',
-    tpBoolean, 'False');
-  RegistrarParametro('Verifactu', 'appVerifactuFirmaCertificado',
-    'Firmar registros y eventos con certificado de empresa',
-    tpBoolean, 'False');
-  RegistrarParametro('Verifactu', 'appVerifactuNtpServidores',
-    'Servidores NTP para validar el reloj fiscal NO VERI*FACTU',
-    tpString, 'time.google.com,time.windows.com,pool.ntp.org');
-  RegistrarParametro('Verifactu', 'appVerifactuNtpTimeoutMs',
-    'Timeout por servidor NTP para control del reloj fiscal',
-    tpInteger, '1500');
-  RegistrarParametro('Verifactu', 'appVerifactuNtpMargenSegundos',
-    'Margen máximo admitido del reloj fiscal en segundos',
-    tpInteger, '60');
-  RegistrarParametro('Verifactu', 'appVerifactuEntorno',
-    'Entorno AEAT: PRE (pruebas) o PRO (producción)', tpString, 'PRE');
-  RegistrarParametro('Verifactu', 'appVerifactuUrlQRPre',
-    'URL de cotejo del QR en preproducción', tpString,
-    'https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQR');
-  RegistrarParametro('Verifactu', 'appVerifactuUrlQRPro',
-    'URL de cotejo del QR en producción', tpString,
-    'https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR');
-  RegistrarParametro('Verifactu', 'appNoVerifactuUrlQRPre',
-    'URL de remisión del QR NO VERI*FACTU en preproducción', tpString,
-    'https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQRNoVerifactu');
-  RegistrarParametro('Verifactu', 'appNoVerifactuUrlQRPro',
-    'URL de remisión del QR NO VERI*FACTU en producción', tpString,
-    'https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/' +
-    'ValidarQRNoVerifactu');
-  RegistrarParametro('Verifactu', 'appVerifactuSegundosCiclo',
-    'Segundos entre ciclos del hilo de la cola Verifactu',
-    tpInteger, '60');
-  RegistrarParametro('Verifactu', 'appVerifactuMaxIntentos',
-    'Reintentos de envío antes de marcar ERROR definitivo',
-    tpInteger, '10');
-  // Endpoints SOAP del envío de registros. Con certificado de sello
-  // electrónico usar www10/prewww10 en lugar de www1/prewww1.
-  RegistrarParametro('Verifactu', 'appVerifactuUrlEnvioPre',
-    'URL del servicio SOAP de envío en preproducción', tpString,
-    'https://prewww1.aeat.es/wlpl/TIKE-CONT/ws/SistemaFacturacion/' +
-    'VerifactuSOAP');
-  RegistrarParametro('Verifactu', 'appVerifactuUrlEnvioPro',
-    'URL del servicio SOAP de envío en producción', tpString,
-    'https://www1.agenciatributaria.gob.es/wlpl/TIKE-CONT/ws/' +
-    'SistemaFacturacion/VerifactuSOAP');
-  // Bloque SistemaInformatico del registro (datos del productor del SIF)
-  RegistrarParametro('Verifactu', 'appVerifactuSifNombreRazon',
-    'Productor del software (SistemaInformatico.NombreRazon)', tpString,
-    'Alejandro Laorden Hidalgo');
-  RegistrarParametro('Verifactu', 'appVerifactuSifNif',
-    'NIF del productor del software (SistemaInformatico.NIF)', tpString,
-    '');
-  RegistrarParametro('Verifactu', 'appVerifactuSifDireccion',
-    'Dirección postal del productor del software', tpString,
-    '');
-  RegistrarParametro('Verifactu', 'appVerifactuDeclaracionLugar',
-    'Lugar de suscripción de la declaración responsable', tpString, '');
-  RegistrarParametro('Verifactu', 'appVerifactuDeclaracionFecha',
-    'Fecha de suscripción de la declaración responsable', tpString, '');
-  RegistrarParametro('Verifactu', 'appVerifactuDescripcionOpe',
-    'Texto de DescripcionOperacion del registro de alta', tpString,
-    'Venta');
+  InicializarParametrosVerifactu;
 
   // --- Log --- (los 4 switches de depuración y traza, agrupados)
   // Modo debug general: activa LogPerf (cronómetros) y detalles MySQL en

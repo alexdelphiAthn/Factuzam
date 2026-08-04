@@ -1140,25 +1140,28 @@ var
   sNumero: string;
   sSerie: string;
 begin
-  if not Assigned(dmmPedidos) then
-    Exit;
-  dsCab := dmmPedidos.unqryTablaG;
-  dsLin := dmmPedidos.unqryPedidosLineas;
-  if (dsCab = nil) or (dsLin = nil) or (not dsCab.Active) or
-     (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
-    Exit;
-  AsegurarCabeceraPersistidaParaLineas;
-  sNumero := Trim(dsCab.FieldByName('NUMERO_PED').AsString);
-  sSerie  := Trim(dsCab.FieldByName('SERIE_PED').AsString);
-  if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
-    Exit;
-  if not dsLin.Active then
-    dmmPedidos.AbrirDetalles;
-  if dsLin.Active and dsLin.IsEmpty and
-     (not (dsLin.State in dsEditModes)) then
+  if Assigned(dmmPedidos) then
   begin
-    PrepararModoAltaLineas;
-    dsLin.Append;
+    dsCab := dmmPedidos.unqryTablaG;
+    dsLin := dmmPedidos.unqryPedidosLineas;
+    if (dsCab <> nil) and (dsLin <> nil) and dsCab.Active and
+       (not dsCab.IsEmpty or (dsCab.State in dsEditModes)) then
+    begin
+      AsegurarCabeceraPersistidaParaLineas;
+      sNumero := Trim(dsCab.FieldByName('NUMERO_PED').AsString);
+      sSerie := Trim(dsCab.FieldByName('SERIE_PED').AsString);
+      if (sNumero <> '') and (sNumero <> '0') and (sSerie <> '') then
+      begin
+        if not dsLin.Active then
+          dmmPedidos.AbrirDetalles;
+        if dsLin.Active and dsLin.IsEmpty and
+           not (dsLin.State in dsEditModes) then
+        begin
+          PrepararModoAltaLineas;
+          dsLin.Append;
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -1269,11 +1272,11 @@ var
   CfgPV: TGridPivoteVentaConfig;
   ds: TDataSet;
 begin
-  if (dmmPedidos = nil) or (csDestroying in ComponentState) then
-    Exit;
-  ds := dmmPedidos.unqryPedidosLineas;
-  if not ds.Active then
-    Exit;
+  if (dmmPedidos <> nil) and not (csDestroying in ComponentState) then
+  begin
+    ds := dmmPedidos.unqryPedidosLineas;
+    if ds.Active then
+    begin
   // Teardown del modo anterior (patron DTR/inventarios).
   tvPedidosLineas.BeginUpdate;
   try
@@ -1425,6 +1428,8 @@ begin
     begin
       tsLineasPedido.Caption := '&1_Líneas [Desglose]';
       MostrarColumnasAtributoGlobalesPed;
+    end;
+  end;
     end;
   end;
 end;

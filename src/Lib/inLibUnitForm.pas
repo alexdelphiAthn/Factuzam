@@ -349,11 +349,8 @@ begin
   Result := '';
   for ofzaForm in FList do
   begin
-    if ofzaForm.UnitForm.Contains(sUnitName) then
-    begin
+    if (Result = '') and ofzaForm.UnitForm.Contains(sUnitName) then
       Result := ofzaForm.DataUnit;
-      Exit;
-    end;
   end;
 end;
 
@@ -364,11 +361,8 @@ begin
   Result := nil;
   for ofzaForm in FList do
   begin
-    if ofzaForm.Call = sCall then
-    begin
+    if (Result = nil) and (ofzaForm.Call = sCall) then
       Result := ofzaForm;
-      Exit;
-    end;
   end;
 end;
 
@@ -381,21 +375,23 @@ begin
   aList := TList<Integer>.Create;
   for ofzaForm in FList do
   begin
-    if Trim(ofzaForm.ShortCut) = '' then Continue;
-    try
-      // TextToShortCut hace toda la magia.
-      // Convierte 'Ctrl+F1' en el entero correcto (ej: 16496)
-      // Convierte 'F5' en el entero correcto (ej: 116)
-      sc := TextToShortCut(ofzaForm.ShortCut);
-      if sc <> 0 then
-        aList.Add(sc);
-    except
-      // Si hay un texto mal formado en la BD, lo ignoramos para no
-      // romper el programa, pero queda constancia en el log.
-      on E: Exception do
-        FRegistroLog.RegistrarAviso(
-          'Atajo "' + ofzaForm.ShortCut + '" invalido: ' +
-          E.Message);
+    if Trim(ofzaForm.ShortCut) <> '' then
+    begin
+      try
+        // TextToShortCut hace toda la magia.
+        // Convierte 'Ctrl+F1' en el entero correcto (ej: 16496)
+        // Convierte 'F5' en el entero correcto (ej: 116)
+        sc := TextToShortCut(ofzaForm.ShortCut);
+        if sc <> 0 then
+          aList.Add(sc);
+      except
+        // Si hay un texto mal formado en la BD, lo ignoramos para no
+        // romper el programa, pero queda constancia en el log.
+        on E: Exception do
+          FRegistroLog.RegistrarAviso(
+            'Atajo "' + ofzaForm.ShortCut + '" invalido: ' +
+            E.Message);
+      end;
     end;
   end;
   Result := aList;

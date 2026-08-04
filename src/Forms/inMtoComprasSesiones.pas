@@ -1238,13 +1238,14 @@ begin
   // Limpiar SESCEL de la linea ANTES del delete. No hay FK cascade
   // en BBDD; el patron es delete-on-app. Idempotente.
   iLinea := DataSet.FieldByName('LINEA_SESLIN').AsInteger;
-  if iLinea <= 0 then
-    Exit;
-  LogSes(Format('BeforeDelete: limpiando SESCEL linea=%d', [iLinea]));
-  FServicioComprasSesiones.BorrarCeldasLinea(
-    Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
-    Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString,
-    iLinea);
+  if iLinea > 0 then
+  begin
+    LogSes(Format('BeforeDelete: limpiando SESCEL linea=%d', [iLinea]));
+    FServicioComprasSesiones.BorrarCeldasLinea(
+      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString,
+      Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString,
+      iLinea);
+  end;
 end;
 
 procedure TfrmMtoComprasSesiones.unqrySesionLinAfterDeleteHook(
@@ -1646,21 +1647,18 @@ procedure TfrmMtoComprasSesiones.btnDelLineaClick(Sender: TObject);
 begin
   inherited;
   if Dmm.unqrySesionLin.IsEmpty then
+    LogSes('btnDelLineaClick: detail vacio, salida')
+  else if MessageDlg(SPreguntaBorrarLineaSesionCompra,
+    mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    LogSes('btnDelLineaClick: cancelado por el usuario')
+  else
   begin
-    LogSes('btnDelLineaClick: detail vacio, salida');
-    Exit;
+    LogSes(Format('btnDelLineaClick: linea=%d',
+      [Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger]));
+    // BeforeDelete limpia SESCEL, AfterDelete recalcula columnas y totales
+    Dmm.unqrySesionLin.Delete;
+    LogSes('btnDelLineaClick FIN');
   end;
-  if MessageDlg(SPreguntaBorrarLineaSesionCompra,
-                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
-  begin
-    LogSes('btnDelLineaClick: cancelado por el usuario');
-    Exit;
-  end;
-  LogSes(Format('btnDelLineaClick: linea=%d',
-                [Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger]));
-  // BeforeDelete limpia SESCEL, AfterDelete recalcula columnas y totales
-  Dmm.unqrySesionLin.Delete;
-  LogSes('btnDelLineaClick FIN');
 end;
 
 procedure TfrmMtoComprasSesiones.btnFotoClick(Sender: TObject);
@@ -1740,40 +1738,38 @@ begin
   begin
     LogSes('  cabecera vacia, salida');
     ShowMessage(SErrorSesionCompraNoActiva);
-    Exit;
-  end;
-  if Dmm.unqryTablaG.FieldByName('ESTADO_SES').AsString <> 'CERRADA' then
+  end
+  else if Dmm.unqryTablaG.FieldByName(
+    'ESTADO_SES').AsString <> 'CERRADA' then
   begin
     LogSes('  sesion no esta CERRADA, abortar');
     ShowMessage(SErrorSesionNoCerradaParaReversion);
-    Exit;
-  end;
-  if MessageDlg(SPreguntaRevertirSesionCompra,
-                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+  end
+  else if MessageDlg(SPreguntaRevertirSesionCompra,
+    mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    LogSes('  cancelado por el usuario')
+  else
   begin
-    LogSes('  cancelado por el usuario');
-    Exit;
-  end;
-
-  LogSes('  RevertirMaterializacion');
-  Screen.Cursor := crHourGlass;
-  try
-    if FServicioComprasSesiones.RevertirMaterializacion(
-      IdentidadSesion.Usuario, sErr) then
-    begin
-      LogSes('  reversion OK, master.Refresh');
-      ShowMessage(SInfoSesionRevertida);
-      Dmm.unqryTablaG.Refresh;
-    end
-    else
-    begin
-      LogSes('  reversion KO: ' + sErr);
-      ShowMessage(Format(SErrorRevertirSesionCompra, [sErr]));
+    LogSes('  RevertirMaterializacion');
+    Screen.Cursor := crHourGlass;
+    try
+      if FServicioComprasSesiones.RevertirMaterializacion(
+        IdentidadSesion.Usuario, sErr) then
+      begin
+        LogSes('  reversion OK, master.Refresh');
+        ShowMessage(SInfoSesionRevertida);
+        Dmm.unqryTablaG.Refresh;
+      end
+      else
+      begin
+        LogSes('  reversion KO: ' + sErr);
+        ShowMessage(Format(SErrorRevertirSesionCompra, [sErr]));
+      end;
+    finally
+      Screen.Cursor := crDefault;
     end;
-  finally
-    Screen.Cursor := crDefault;
+    LogSes('btnRevertirClick FIN');
   end;
-  LogSes('btnRevertirClick FIN');
 end;
 
 procedure TfrmMtoComprasSesiones.btnImprimirClick(Sender: TObject);
@@ -1786,27 +1782,25 @@ begin
   if not PuedeImprimir then
     Abort;
   if Dmm.unqryTablaG.IsEmpty then
+    ShowMessage(SErrorSesionActivaImprimirNoDisponible)
+  else
   begin
-    ShowMessage(SErrorSesionActivaImprimirNoDisponible);
-    Exit;
-  end;
-  // Persistir cualquier edicion pendiente para que el report vea los
-  // ultimos cambios (los TfrxDBDataset leen directamente de las vistas SQL).
-  if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
-    Dmm.unqryTablaG.Post;
-  if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
-    Dmm.unqrySesionLin.Post;
-
-  sSerie  := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-  sNumero := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-  form := TfrmPrintSesion.Create(Application);
-  try
-    form.dmSesion       := Dmm;
-    form.edtSerie.Text  := sSerie;
-    form.edtNumero.Text := sNumero;
-    form.ShowModal;
-  finally
-    FreeAndNil(form);
+    // Persistir cualquier edicion pendiente para que el informe la vea.
+    if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
+      Dmm.unqryTablaG.Post;
+    if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
+      Dmm.unqrySesionLin.Post;
+    sSerie := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    sNumero := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    form := TfrmPrintSesion.Create(Application);
+    try
+      form.dmSesion := Dmm;
+      form.edtSerie.Text := sSerie;
+      form.edtNumero.Text := sNumero;
+      form.ShowModal;
+    finally
+      FreeAndNil(form);
+    end;
   end;
 end;
 

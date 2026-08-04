@@ -470,7 +470,8 @@ begin
   begin
     oItem := AcxgrdtvVista.Items[i] as TcxGridColumn;
     sColumnName := GetItemFieldName(oItem);
-    if sColumnName = '' then Continue;
+    if sColumnName <> '' then
+    begin
     if (oItem.Visible) then
       sValue := 'True'
     else
@@ -506,6 +507,7 @@ begin
         sVistaName + '_' + sColumnName + '_RowIndex',
         IntToStr(TcxGridDBBandedColumn(oItem).Position.RowIndex));
     end;
+    end;
   end;
 end;
 
@@ -527,67 +529,63 @@ begin
     ARegistroLog.RegistrarInformacion(
       Format('RestaurarFocoGrid: vista=%s SKIP (dataset no activo)',
       [AcxgrdtvVista.Name]));
-    Exit;
-  end;
-
-  sCamposClave := oDBDataCtrl.KeyFieldNames;
-  if (sCamposClave <> '') and
-     (not CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave)) then
+  end
+  else
   begin
-    ARegistroLog.RegistrarAviso(
-      Format('RestaurarFocoGrid: vista=%s clave="%s" ' +
-      'no disponible en la consulta activa',
-      [AcxgrdtvVista.Name, sCamposClave]));
-    oDBDataCtrl.KeyFieldNames := '';
-    sCamposClave := '';
-  end;
-  if sCamposClave = '' then
-  begin
-    sCamposClave :=
-      inLibDatasets.ObtenerClavePrimaria(
-        oDBDataCtrl.DataSet);
-    if (sCamposClave <> '') and
-       CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave) then
-      oDBDataCtrl.KeyFieldNames := sCamposClave;
+    sCamposClave := oDBDataCtrl.KeyFieldNames;
     if (sCamposClave <> '') and
        (not CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave)) then
     begin
       ARegistroLog.RegistrarAviso(
         Format('RestaurarFocoGrid: vista=%s clave="%s" ' +
-        'descartada porque faltan campos',
+        'no disponible en la consulta activa',
         [AcxgrdtvVista.Name, sCamposClave]));
+      oDBDataCtrl.KeyFieldNames := '';
       sCamposClave := '';
     end;
-  end;
-
-  if sCamposClave = '' then
-  begin
-    ARegistroLog.RegistrarAviso(
-      Format('RestaurarFocoGrid: vista=%s SKIP (sin clave primaria)',
-      [AcxgrdtvVista.Name]));
-    Exit;
-  end;
-
-  sFocusedIDString := GetPerfilValueDef(oPerfilDic,
-                                        AcxgrdtvVista.Name + '_FocusedID', '');
-
-  ARegistroLog.RegistrarInformacion(
-    Format('RestaurarFocoGrid: vista=%s clave="%s" valorGuardado="%s"',
-    [AcxgrdtvVista.Name, sCamposClave, sFocusedIDString]));
-
-  if sFocusedIDString <> '' then
-  begin
-    vLocateValues :=
-      inLibDatasets.StrToKeyValues(
-        sFocusedIDString, sCamposClave);
-    bFound := oDBDataCtrl.DataSet.Locate(
-      sCamposClave,
-      vLocateValues,
-      []
-    );
-    ARegistroLog.RegistrarInformacion(
-      Format('RestaurarFocoGrid: Locate(%s, %s) = %s',
-      [sCamposClave, sFocusedIDString, BoolToStr(bFound, True)]));
+    if sCamposClave = '' then
+    begin
+      sCamposClave :=
+        inLibDatasets.ObtenerClavePrimaria(
+          oDBDataCtrl.DataSet);
+      if (sCamposClave <> '') and
+         CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave) then
+        oDBDataCtrl.KeyFieldNames := sCamposClave;
+      if (sCamposClave <> '') and
+         (not CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave)) then
+      begin
+        ARegistroLog.RegistrarAviso(
+          Format('RestaurarFocoGrid: vista=%s clave="%s" ' +
+          'descartada porque faltan campos',
+          [AcxgrdtvVista.Name, sCamposClave]));
+        sCamposClave := '';
+      end;
+    end;
+    if sCamposClave = '' then
+    begin
+      ARegistroLog.RegistrarAviso(
+        Format('RestaurarFocoGrid: vista=%s SKIP (sin clave primaria)',
+        [AcxgrdtvVista.Name]));
+    end
+    else
+    begin
+      sFocusedIDString := GetPerfilValueDef(oPerfilDic,
+        AcxgrdtvVista.Name + '_FocusedID', '');
+      ARegistroLog.RegistrarInformacion(
+        Format('RestaurarFocoGrid: vista=%s clave="%s" ' +
+        'valorGuardado="%s"',
+        [AcxgrdtvVista.Name, sCamposClave, sFocusedIDString]));
+      if sFocusedIDString <> '' then
+      begin
+        vLocateValues := inLibDatasets.StrToKeyValues(
+          sFocusedIDString, sCamposClave);
+        bFound := oDBDataCtrl.DataSet.Locate(
+          sCamposClave, vLocateValues, []);
+        ARegistroLog.RegistrarInformacion(
+          Format('RestaurarFocoGrid: Locate(%s, %s) = %s',
+          [sCamposClave, sFocusedIDString, BoolToStr(bFound, True)]));
+      end;
+    end;
   end;
 end;
 
@@ -622,112 +620,94 @@ begin
   var sCamposClave: string;
   var vValoresClave: Variant;
   oDBDataCtrl := GetDBDataController(AcxgrdtvVista);
-  if (oDBDataCtrl = nil) or
-     not Assigned(oDBDataCtrl.DataSet) or
-     not oDBDataCtrl.DataSet.Active then
-    Exit;
-
-  // Obtenemos la clave (con la función que vimos antes de UniDAC)
-  sCamposClave := oDBDataCtrl.KeyFieldNames;
-  if (sCamposClave <> '') and
-     (not CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave)) then
+  if (oDBDataCtrl <> nil) and
+     Assigned(oDBDataCtrl.DataSet) and
+     oDBDataCtrl.DataSet.Active then
   begin
-    ARegistroLog.RegistrarAviso(
-      Format('CollectSettingsColumnProfile: vista=%s ' +
-      'clave="%s" no disponible en la consulta activa',
-      [AcxgrdtvVista.Name, sCamposClave]));
-    oDBDataCtrl.KeyFieldNames := '';
-    sCamposClave := '';
-  end;
-  if sCamposClave = '' then
-  begin
-    sCamposClave :=
-      inLibDatasets.ObtenerClavePrimaria(
-        oDBDataCtrl.DataSet);
-    if (sCamposClave <> '') and
-       CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave) then
-      oDBDataCtrl.KeyFieldNames := sCamposClave;
+    // Obtenemos la clave primaria disponible en la consulta.
+    sCamposClave := oDBDataCtrl.KeyFieldNames;
     if (sCamposClave <> '') and
        (not CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave)) then
     begin
       ARegistroLog.RegistrarAviso(
         Format('CollectSettingsColumnProfile: vista=%s ' +
-        'clave="%s" descartada porque faltan campos',
+        'clave="%s" no disponible en la consulta activa',
         [AcxgrdtvVista.Name, sCamposClave]));
+      oDBDataCtrl.KeyFieldNames := '';
       sCamposClave := '';
     end;
-  end;
-
-  if sCamposClave <> '' then
-  begin
-    vValoresClave := oDBDataCtrl.GetKeyFieldsValues;
-
-    if not VarIsNull(vValoresClave) and not VarIsEmpty(vValoresClave) then
+    if sCamposClave = '' then
     begin
-      // USAMOS LA NUEVA FUNCIÓN AQUÍ:
-      Add(
-        AcxgrdtvVista.Name + '_FocusedID',
-        inLibDatasets.KeyValuesToStr(
-          vValoresClave));
+      sCamposClave := inLibDatasets.ObtenerClavePrimaria(
+        oDBDataCtrl.DataSet);
+      if (sCamposClave <> '') and
+         CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave) then
+        oDBDataCtrl.KeyFieldNames := sCamposClave;
+      if (sCamposClave <> '') and
+         (not CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave)) then
+      begin
+        ARegistroLog.RegistrarAviso(
+          Format('CollectSettingsColumnProfile: vista=%s ' +
+          'clave="%s" descartada porque faltan campos',
+          [AcxgrdtvVista.Name, sCamposClave]));
+        sCamposClave := '';
+      end;
     end;
-  end;
-  // 1. Recolección de propiedades de columnas (Para el Batch)
-  for i := 0 to AcxgrdtvVista.ItemCount - 1 do
-  begin
-    oItem := AcxgrdtvVista.Items[i] as TcxGridColumn;
-    sColumnName := GetItemFieldName(oItem);
-    if sColumnName = '' then Continue;
-    sPrefix := sVistaName + '_' + sColumnName + '_';
-
-    Add(sPrefix + 'Visible',
-        TGenUtils.IfThen<String>(oItem.Visible, 'True', 'False'));
-    Add(sPrefix + 'Index',    IntToStr(oItem.Index));
-    Add(sPrefix + 'Width',    IntToStr(oItem.Width));
-    Add(sPrefix + 'Caption',  oItem.Caption);
-    Add(sPrefix + 'SortOrder', IntToStr(Ord(oItem.SortOrder)));
-    Add(sPrefix + 'SortIndex', IntToStr(oItem.SortIndex));
-    if oItem is TcxGridDBBandedColumn then
+    if sCamposClave <> '' then
     begin
-      Add(sPrefix + 'BandIndex',
-          IntToStr(TcxGridDBBandedColumn(oItem).Position.BandIndex));
-      Add(sPrefix + 'ColIndex',
-          IntToStr(TcxGridDBBandedColumn(oItem).Position.ColIndex));
-      Add(sPrefix + 'RowIndex',
-          IntToStr(TcxGridDBBandedColumn(oItem).Position.RowIndex));
+      vValoresClave := oDBDataCtrl.GetKeyFieldsValues;
+      if not VarIsNull(vValoresClave) and not VarIsEmpty(vValoresClave) then
+      begin
+        Add(AcxgrdtvVista.Name + '_FocusedID',
+          inLibDatasets.KeyValuesToStr(vValoresClave));
+      end;
     end;
-  end;
-  if AcxgrdtvVista.DataController.Filter.IsEmpty then
-  begin
-    // No hay filtro: Mandamos un texto vacío para borrar cualquier filtro
-    // previo en la BBDD
-    APerfilesUsuario.GrabarPerfil(
-      AsProfile,
-      sName,
-      sVistaName + '_Filtro',
-      '',
-      '');
-  end
-  else
-  begin
-    // 2. Grabación inmediata del Filtro (Caso especial: Texto Largo)
-    LStream := TMemoryStream.Create;
-    BStream := TStringStream.Create('');
-    try
-      AcxgrdtvVista.DataController.Filter.SaveToStream(LStream);
-      LStream.Position := 0;
-      TNetEncoding.Base64.Encode(LStream, BStream);
-
-      // Grabamos directamente usando tu función del DataModule
-      // psValue lo pasamos vacío (''), el Base64 va a psValueText
+    // Recolección de propiedades de columnas para el lote.
+    for i := 0 to AcxgrdtvVista.ItemCount - 1 do
+    begin
+      oItem := AcxgrdtvVista.Items[i] as TcxGridColumn;
+      sColumnName := GetItemFieldName(oItem);
+      if sColumnName <> '' then
+      begin
+        sPrefix := sVistaName + '_' + sColumnName + '_';
+        Add(sPrefix + 'Visible',
+          TGenUtils.IfThen<String>(oItem.Visible, 'True', 'False'));
+        Add(sPrefix + 'Index', IntToStr(oItem.Index));
+        Add(sPrefix + 'Width', IntToStr(oItem.Width));
+        Add(sPrefix + 'Caption', oItem.Caption);
+        Add(sPrefix + 'SortOrder', IntToStr(Ord(oItem.SortOrder)));
+        Add(sPrefix + 'SortIndex', IntToStr(oItem.SortIndex));
+        if oItem is TcxGridDBBandedColumn then
+        begin
+          Add(sPrefix + 'BandIndex',
+            IntToStr(TcxGridDBBandedColumn(oItem).Position.BandIndex));
+          Add(sPrefix + 'ColIndex',
+            IntToStr(TcxGridDBBandedColumn(oItem).Position.ColIndex));
+          Add(sPrefix + 'RowIndex',
+            IntToStr(TcxGridDBBandedColumn(oItem).Position.RowIndex));
+        end;
+      end;
+    end;
+    if AcxgrdtvVista.DataController.Filter.IsEmpty then
+    begin
       APerfilesUsuario.GrabarPerfil(
-        AsProfile,
-        sName,
-        sVistaName + '_Filtro',
-        '',
-        BStream.DataString);
-    finally
-      FreeAndNil(LStream);
-      FreeAndNil(BStream);
+        AsProfile, sName, sVistaName + '_Filtro', '', '');
+    end
+    else
+    begin
+      LStream := TMemoryStream.Create;
+      BStream := TStringStream.Create('');
+      try
+        AcxgrdtvVista.DataController.Filter.SaveToStream(LStream);
+        LStream.Position := 0;
+        TNetEncoding.Base64.Encode(LStream, BStream);
+        APerfilesUsuario.GrabarPerfil(
+          AsProfile, sName, sVistaName + '_Filtro', '',
+          BStream.DataString);
+      finally
+        FreeAndNil(LStream);
+        FreeAndNil(BStream);
+      end;
     end;
   end;
 end;
@@ -750,7 +730,8 @@ begin
   begin
     oItem := AcxgrdtvVista.Items[i] as TcxGridColumn;
     sColumnName := GetItemFieldName(oItem);
-    if sColumnName = '' then Continue;
+    if sColumnName <> '' then
+    begin
 
     // 1. Guardar Visibilidad
     if (oItem.Visible) then sValue := 'True' else sValue := 'False';
@@ -805,6 +786,7 @@ begin
       APerfilesUsuario.GrabarPerfil(AsProfile, sName,
         sVistaName + '_' + sColumnName + '_RowIndex',
         IntToStr(TcxGridDBBandedColumn(oItem).Position.RowIndex));
+    end;
     end;
   end;
   // 6. GUARDAR EL FILTRO DE LA VISTA COMPLETA (Binario -> Base64)
@@ -1141,38 +1123,35 @@ procedure BusqEnTodoElGrid(AGrid: TcxGrid; AsDatoBusq: String);
       AView.DataController.Filter.Root.Clear;
       AView.DataController.Filter.Root.BoolOperatorKind := fboAnd;
       AView.DataController.Filter.Active := False;
-      Exit;
-    end;
-    // --- LÓGICA DE DETECCIÓN INTELIGENTE ---
-    bModoTemporal := False;
-    sTextoBuscar := AsDatoBusq;
-    // 1. Comodines de limpieza ("//" para fecha, "::" para hora)
-    if Pos('//', AsDatoBusq) > 0 then
-    begin
-      bModoTemporal := True;
-      sTextoBuscar := StringReplace(AsDatoBusq, '//', '', [rfReplaceAll]);
     end
-    else if Pos('::', AsDatoBusq) > 0 then
+    else
     begin
-      bModoTemporal := True;
-      sTextoBuscar := StringReplace(AsDatoBusq, '::', '', [rfReplaceAll]);
-    end
-    // 2. Separadores estándar ("/" para fecha, ":" para hora)
-    else if (Pos('/', AsDatoBusq) > 0) or (Pos(':', AsDatoBusq) > 0) then
-    begin
-      bModoTemporal := True;
-      // Aquí NO borramos nada. Buscamos "23:00" o "12/05" tal cual.
+      bModoTemporal := False;
       sTextoBuscar := AsDatoBusq;
-    end;
-    // Si entramos en modo temporal pero no hay texto a buscar, salimos
-    if bModoTemporal and (Trim(sTextoBuscar) = '') then Exit;
-    oFiltro := AView.DataController.Filter;
-    oFiltro.BeginUpdate;
-    try
-      oFiltro.Options := oFiltro.Options + [fcoCaseInsensitive];
-      oFiltro.Root.Clear;
-      oFiltro.Root.BoolOperatorKind := fboAnd;
-      oListaBusqueda := oFiltro.Root.AddItemList(fboOr);
+      if Pos('//', AsDatoBusq) > 0 then
+      begin
+        bModoTemporal := True;
+        sTextoBuscar := StringReplace(
+          AsDatoBusq, '//', '', [rfReplaceAll]);
+      end
+      else if Pos('::', AsDatoBusq) > 0 then
+      begin
+        bModoTemporal := True;
+        sTextoBuscar := StringReplace(
+          AsDatoBusq, '::', '', [rfReplaceAll]);
+      end
+      else if (Pos('/', AsDatoBusq) > 0) or
+              (Pos(':', AsDatoBusq) > 0) then
+        bModoTemporal := True;
+      if not (bModoTemporal and (Trim(sTextoBuscar) = '')) then
+      begin
+        oFiltro := AView.DataController.Filter;
+        oFiltro.BeginUpdate;
+        try
+          oFiltro.Options := oFiltro.Options + [fcoCaseInsensitive];
+          oFiltro.Root.Clear;
+          oFiltro.Root.BoolOperatorKind := fboAnd;
+          oListaBusqueda := oFiltro.Root.AddItemList(fboOr);
         for i := 0 to AView.ColumnCount - 1 do
         begin
           if (AView.Columns[i].DataBinding.Field <> nil) then
@@ -1205,10 +1184,12 @@ procedure BusqEnTodoElGrid(AGrid: TcxGrid; AsDatoBusq: String);
             end;
           end;
         end;
-    finally
-      oFiltro.EndUpdate;
+        finally
+          oFiltro.EndUpdate;
+        end;
+        oFiltro.Active := True;
+      end;
     end;
-    oFiltro.Active := True;
   end;
   procedure ProcesarNivel(ALevel: TcxGridLevel);
   var
@@ -1222,13 +1203,15 @@ procedure BusqEnTodoElGrid(AGrid: TcxGrid; AsDatoBusq: String);
 var
   i: Integer;
 begin
-  if AGrid = nil then Exit;
-  AGrid.BeginUpdate;
-  try
-    for i := 0 to AGrid.Levels.Count - 1 do
-      ProcesarNivel(AGrid.Levels[i]);
-  finally
-    AGrid.EndUpdate;
+  if AGrid <> nil then
+  begin
+    AGrid.BeginUpdate;
+    try
+      for i := 0 to AGrid.Levels.Count - 1 do
+        ProcesarNivel(AGrid.Levels[i]);
+    finally
+      AGrid.EndUpdate;
+    end;
   end;
 end;
 

@@ -1467,19 +1467,21 @@ end;
 procedure TdmFacturas.AsegurarRecibosAbierta;
 var swQ: TStopwatch;
 begin
-  if unqryRecibos.Active then Exit;
-  swQ := TStopwatch.StartNew;
-  try
-    RellenarParamsDesdeMaestro(unqryRecibos);
-    unqryRecibos.Open;
-    RegistroLog.RegistrarRendimiento('Facturas.Lazy', 'unqryRecibos OK',
-      swQ.ElapsedMilliseconds);
-  except
-    on E: Exception do
-    begin
-      RegistroLog.RegistrarRendimiento('Facturas.Lazy',
-        'unqryRecibos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
-      raise;
+  if not unqryRecibos.Active then
+  begin
+    swQ := TStopwatch.StartNew;
+    try
+      RellenarParamsDesdeMaestro(unqryRecibos);
+      unqryRecibos.Open;
+      RegistroLog.RegistrarRendimiento('Facturas.Lazy', 'unqryRecibos OK',
+        swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+      begin
+        RegistroLog.RegistrarRendimiento('Facturas.Lazy',
+          'unqryRecibos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+        raise;
+      end;
     end;
   end;
 end;
@@ -1602,19 +1604,21 @@ end;
 procedure TdmFacturas.AsegurarConsolidacionAbierta;
 var swQ: TStopwatch;
 begin
-  if unqryConsolidacion.Active then Exit;
-  swQ := TStopwatch.StartNew;
-  try
-    RellenarParamsDesdeMaestro(unqryConsolidacion);
-    unqryConsolidacion.Open;
-    RegistroLog.RegistrarRendimiento('Facturas.Lazy', 'unqryConsolidacion OK',
-      swQ.ElapsedMilliseconds);
-  except
-    on E: Exception do
-    begin
-      RegistroLog.RegistrarRendimiento('Facturas.Lazy',
-        'unqryConsolidacion ERROR=' + E.Message, swQ.ElapsedMilliseconds);
-      raise;
+  if not unqryConsolidacion.Active then
+  begin
+    swQ := TStopwatch.StartNew;
+    try
+      RellenarParamsDesdeMaestro(unqryConsolidacion);
+      unqryConsolidacion.Open;
+      RegistroLog.RegistrarRendimiento(
+        'Facturas.Lazy', 'unqryConsolidacion OK', swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+      begin
+        RegistroLog.RegistrarRendimiento('Facturas.Lazy',
+          'unqryConsolidacion ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+        raise;
+      end;
     end;
   end;
 end;
@@ -1622,19 +1626,21 @@ end;
 procedure TdmFacturas.AsegurarErroresAbierta;
 var swQ: TStopwatch;
 begin
-  if unqryErrores.Active then Exit;
-  swQ := TStopwatch.StartNew;
-  try
-    RellenarParamsDesdeMaestro(unqryErrores);
-    unqryErrores.Open;
-    RegistroLog.RegistrarRendimiento('Facturas.Lazy', 'unqryErrores OK',
-      swQ.ElapsedMilliseconds);
-  except
-    on E: Exception do
-    begin
-      RegistroLog.RegistrarRendimiento('Facturas.Lazy',
-        'unqryErrores ERROR=' + E.Message, swQ.ElapsedMilliseconds);
-      raise;
+  if not unqryErrores.Active then
+  begin
+    swQ := TStopwatch.StartNew;
+    try
+      RellenarParamsDesdeMaestro(unqryErrores);
+      unqryErrores.Open;
+      RegistroLog.RegistrarRendimiento('Facturas.Lazy', 'unqryErrores OK',
+        swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+      begin
+        RegistroLog.RegistrarRendimiento('Facturas.Lazy',
+          'unqryErrores ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+        raise;
+      end;
     end;
   end;
 end;
@@ -1642,19 +1648,21 @@ end;
 procedure TdmFacturas.AsegurarMovimientosFacAbierta;
 var swQ: TStopwatch;
 begin
-  if unqryMovimientosFac.Active then Exit;
-  swQ := TStopwatch.StartNew;
-  try
-    RellenarParamsDesdeMaestro(unqryMovimientosFac);
-    unqryMovimientosFac.Open;
-    RegistroLog.RegistrarRendimiento('Facturas.Lazy', 'unqryMovimientosFac OK',
-      swQ.ElapsedMilliseconds);
-  except
-    on E: Exception do
-    begin
-      RegistroLog.RegistrarRendimiento('Facturas.Lazy',
-        'unqryMovimientosFac ERROR=' + E.Message, swQ.ElapsedMilliseconds);
-      raise;
+  if not unqryMovimientosFac.Active then
+  begin
+    swQ := TStopwatch.StartNew;
+    try
+      RellenarParamsDesdeMaestro(unqryMovimientosFac);
+      unqryMovimientosFac.Open;
+      RegistroLog.RegistrarRendimiento(
+        'Facturas.Lazy', 'unqryMovimientosFac OK', swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+      begin
+        RegistroLog.RegistrarRendimiento('Facturas.Lazy',
+          'unqryMovimientosFac ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+        raise;
+      end;
     end;
   end;
 end;
@@ -2124,8 +2132,8 @@ begin
   inherited;
   // Desempaquetado ATTR en curso: post descriptivo, sin logica de
   // numeracion ni fiscal.
-  if FDesempaquetandoAtributos then
-    Exit;
+  if not FDesempaquetandoAtributos then
+  begin
   // Salvaguarda si la linea llega con un SKU/codigo de barras sin pasar
   // por el editor de articulo del formulario.
   NormalizarArticuloSkuEnDataSet(ConexionPrincipal, unqryLinFac,
@@ -2172,6 +2180,7 @@ begin
   end;
   if DataSet.State in [dsEdit, dsInsert] then
     ActualizarAuditoria(DataSet);
+  end;
 end;
 
 procedure TdmFacturas.unqryTablaGBeforeDelete(DataSet: TDataSet);
@@ -2322,8 +2331,8 @@ begin
   inherited;
   // Los posts del desempaquetado ATTR no crean articulos ni alteran
   // importes: salir sin efectos de negocio.
-  if FDesempaquetandoAtributos then
-    Exit;
+  if not FDesempaquetandoAtributos then
+  begin
   if not FCalculandoFactura and
      SameText(unqryTablaG.FieldByName(fcreart).AsString, 'S') then
   begin
@@ -2379,6 +2388,7 @@ begin
   begin
     FRecalculoFacturaPendiente := False;
     NotificarResultadoOperacion(CalcularFactura);
+  end;
   end;
 end;
 

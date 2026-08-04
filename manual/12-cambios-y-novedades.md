@@ -13,6 +13,11 @@ un mapa rápido de cambios.
 
 | Novedad | Dónde verlo |
 |---------|-------------|
+| `[F1]` cambia la presentación de líneas entre Auto/desglose, SKU y los modos de tallas; el ciclo se adapta a cada tipo de documento. | [Conceptos comunes ▸ Modos de líneas con F1](01-conceptos-comunes.md#cambiar-la-presentacion-de-las-lineas-con-f1) |
+| Pedidos de compra con recepción parcial por línea o talla, **Recibir Todo**, bandas Pedido/A recibir/Pendiente e incorporación a un albarán existente. | [Compras ▸ Pedidos](03-menu-compras.md#pedidos) |
+| **Consulta de stocks de Factuzam** con `[Ctrl]+[U]`: existencias y pendientes por color, talla y almacén, estados desglosados, fotos relacionadas y envío a Documentos de Trabajo. | [Ayuda ▸ Consulta de stocks](08-menu-ayuda.md#consulta-de-stocks) |
+| Aplicación Android **Factuzam Fotos Nube** para capturar fotos por artículo/color, encolarlas y subirlas por lotes al servidor. | [Aplicaciones móviles ▸ Fotos Nube](13-aplicaciones-moviles.md#factuzam-fotos-nube-fotografiar-articulos-desde-android) |
+| **Administración de errores enviados a soporte**: evidencias protegidas, conversación, seguimiento por usuario y propuestas verificadas de script o actualización. | [Ayuda ▸ Envío de errores](08-menu-ayuda.md#envio-de-errores-administracion-y-seguimiento) |
 | Interfaz traducible desde un catálogo central, selector por parámetro, respaldo en español y editor independiente de traducciones. | [Otros ▸ Idioma y traducciones](07-menu-otros.md#idioma-y-traducciones) |
 | Rectificación de tickets **por diferencias** o mediante documento **sustitutivo**, con trazabilidad fiscal y tratamiento coherente de ventas y stock. | [Caja ▸ Rectificar un ticket](05-menu-caja.md#rectificar-un-ticket-por-diferencias-o-sustitutiva) |
 | Sesiones de compra con **foto provisional**, vista previa y migración automática de la imagen al artículo o SKU materializado. | [Compras ▸ Fotos de la sesión](03-menu-compras.md#7-fotos-de-la-sesion) |

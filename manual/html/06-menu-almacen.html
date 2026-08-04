@@ -103,9 +103,10 @@ almacén de referencia para el stock). Las líneas recogen:</p>
 <tr><td><strong>Origen</strong></td><td>De dónde salió la línea: entrada manual, carga por filtros, consulta de stock…</td></tr>
 </tbody>
 </table>
-<p>Las líneas se teclean igual que en Inventarios: con <code>[F1]</code> se alterna el
-modo de entrada <strong>Desglose</strong> (artículo + atributos) → <strong>SKU</strong> (lectura
-directa de código) → <strong>Tallas horizontal</strong> (rejilla de tallas en columnas).</p>
+<p>Las líneas se teclean igual que en Inventarios: con <code>[F1]</code> se recorre
+<strong>Auto (desglose)</strong> → <strong>SKU</strong> → <strong>Tallas en línea</strong>. El cambio solo actúa
+en la pestaña <strong>Líneas</strong>; consulta la explicación común de los
+<a href="01-conceptos-comunes.html#cambiar-la-presentacion-de-las-lineas-con-f1">modos de líneas con F1</a>.</p>
 <h3 id="botones-de-la-pantalla">Botones de la pantalla</h3>
 <table>
 <thead><tr>
@@ -131,7 +132,11 @@ puede reutilizar o enviar a varios destinos.</p>
 </tr></thead>
 <tbody>
 <tr><td><strong>Albarán de venta (mayor)...</strong></td><td>Un <strong>albarán de venta ABIERTO</strong> con las líneas y cantidades del documento (número del contador oficial o el que indiques). Los precios entran a 0: asigna cliente, tarifa y precios en el Mto de albaranes.</td></tr>
+<tr><td><strong>Factura de venta (mayor)...</strong></td><td>Una <strong>factura de venta en BORRADOR</strong> con las líneas y cantidades del documento (número del contador oficial o el que indiques). Asigna cliente, tarifa, precios e impuestos antes de consolidarla.</td></tr>
 <tr><td><strong>Venta TPV</strong></td><td>Vuelca los SKUs con sus cantidades en la <strong>venta de caja en curso</strong>. Requiere tener abierta <em>Caja ▸ Ventas</em>; los precios los resuelve el TPV con su tarifa.</td></tr>
+<tr><td><strong>Pedido de compra...</strong></td><td>Un <strong>pedido de compra ABIERTO</strong> con las líneas y cantidades del documento. Asigna proveedor, precios y condiciones de compra antes de tramitarlo.</td></tr>
+<tr><td><strong>Traspaso de caja...</strong></td><td>Abre la operativa habitual de <strong>Caja ▸ Traspasos</strong> en modo traspaso, con los artículos y cantidades precargados. El origen es la ubicación de Caja activa; allí se eligen almacén destino y empleado y se mantienen las validaciones de stock.</td></tr>
+<tr><td><strong>Petición de traspaso...</strong></td><td>Abre la misma operativa en modo petición, con los artículos y cantidades precargados. Allí se elige el almacén al que se solicita la mercancía; la petición no mueve stock hasta que se atiende.</td></tr>
 <tr><td><strong>Inventario...</strong></td><td>Un <strong>inventario ABIERTO</strong> donde la cantidad del documento entra como <strong>cantidad física</strong> y el stock apuntado como teórica. Después usa <em>Recalcular teórico/PMP</em> en Inventarios antes de aplicar.</td></tr>
 <tr><td><strong>Sesión de cambio de tarifas</strong></td><td>Una <strong>sesión de cambios de tarifa en BORRADOR</strong> con un artículo por línea. Abre <em>Tarifas ▸ Cambios</em> para elegir tarifas origen/destino, regla de cálculo y aplicar.</td></tr>
 </tbody>
@@ -154,6 +159,10 @@ familia, fechas…), se previsualiza y se imprime/exporta.</p>
 <ul><li><strong>Modo</strong>: entre fechas o por acumulados.</li><li><strong>Bandas</strong>: existencias iniciales, entradas, ventas, existencias finales y, en modo desglosado, subtipos de movimiento.</li><li><strong>Almacenes, familias, proveedores, temporadas y artículos</strong>.</li><li><strong>Agrupaciones</strong> reordenables por almacén, proveedor, familia o temporada.</li></ul>
 <p>La pestaña <strong>Familias</strong> se muestra como árbol. Marcar una familia incluye
 también sus subfamilias.</p>
+<p>La vista preliminar presenta por artículo y color las tallas en columnas y
+separa las bandas de existencias, entradas y ventas, con cantidades, precios e
+importes.</p>
+<p><img src="img/06-balance-horizontal-resultado.png" alt="Resultado del balance de almacén por tallas" loading="lazy"></p>
 <h3 id="balance-de-almacen-sin-tallas">Balance de Almacén sin tallas</h3>
 <p>Informe de existencias <strong>agregado por artículo</strong>, sin abrir el detalle de
 tallas. Vista resumida del stock cuando no interesa el desglose por
@@ -199,7 +208,7 @@ se suman ni se promedian los porcentajes de cada artículo.</p>
 <hr>
 <p><a href="05-menu-caja.html">◀ Menú Caja</a> · <a href="index.html">Índice</a> · <a href="07-menu-otros.html">Siguiente ▶ Menú Otros</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 31/07/2026</footer>
+<footer>Manual de Factuzam · generado el 04/08/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

@@ -257,11 +257,12 @@ var
     vCelda: Variant;
   begin
     Result := '';
-    if (ACol < 0) then
-      Exit;
-    vCelda := ALector.LeerCelda(ARow, ACol);
-    if not VarIsNull(vCelda) then
-      Result := Trim(VarToStr(vCelda));
+    if ACol >= 0 then
+    begin
+      vCelda := ALector.LeerCelda(ARow, ACol);
+      if not VarIsNull(vCelda) then
+        Result := Trim(VarToStr(vCelda));
+    end;
   end;
 
 begin
@@ -297,38 +298,39 @@ begin
   if iLastRow < iFilaInicio then
   begin
     AMsg := 'La hoja está vacía o no tiene datos.';
-    Exit;
-  end;
-  iLeidas := 0;
-  iVacias := 0;
-  for r := iFilaInicio to iLastRow do
+  end
+  else
   begin
-    sSku := CellText(r, iColSku);
-    if sSku = '' then
+    iLeidas := 0;
+    iVacias := 0;
+    for r := iFilaInicio to iLastRow do
     begin
-      Inc(iVacias);
-      Continue;
+      sSku := CellText(r, iColSku);
+      if sSku = '' then
+        Inc(iVacias)
+      else
+      begin
+        sCant := CellText(r, iColCant);
+        if sCant = '' then
+          sCant := '1';
+        ALista.Add(sSku + '=' + sCant);
+        lin := Default(TLineaImportada);
+        lin.Sku := sSku;
+        lin.Cantidad := StrToFloatDef(sCant, 1);
+        sPmp := CellText(r, iColPmp);
+        if sPmp <> '' then
+        begin
+          lin.PmpNuevo := StrToFloatDef(sPmp, 0);
+          lin.TienePmp := True;
+        end;
+        SetLength(ALineas, Length(ALineas) + 1);
+        ALineas[High(ALineas)] := lin;
+        Inc(iLeidas);
+      end;
     end;
-    sCant := CellText(r, iColCant);
-    if sCant = '' then
-      sCant := '1';
-    // Lista SKU=CANTIDAD para CargarDesdeListaSkus (SKUs nuevos)
-    ALista.Add(sSku + '=' + sCant);
-    // Registro completo con PMP
-    lin := Default(TLineaImportada);
-    lin.Sku := sSku;
-    lin.Cantidad := StrToFloatDef(sCant, 1);
-    sPmp := CellText(r, iColPmp);
-    if sPmp <> '' then
-    begin
-      lin.PmpNuevo := StrToFloatDef(sPmp, 0);
-      lin.TienePmp := True;
-    end;
-    SetLength(ALineas, Length(ALineas) + 1);
-    ALineas[High(ALineas)] := lin;
-    Inc(iLeidas);
+    AMsg := Format('Leidas %d lineas (%d vacias ignoradas).',
+      [iLeidas, iVacias]);
   end;
-  AMsg := Format('Leidas %d lineas (%d vacias ignoradas).', [iLeidas, iVacias]);
 end;
 
 end.

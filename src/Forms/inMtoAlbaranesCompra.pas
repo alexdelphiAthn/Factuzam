@@ -724,37 +724,31 @@ var
   sMensaje: string;
 begin
   inherited;
-  if (dmmAlbaranesCompra = nil) or (FPivote = nil) then Exit;
-  // Guardia de reentrada: ver comentario en el campo FInToggleClick.
-  if FInToggleClick then Exit;
-  FInToggleClick := True;
-  try
-    // Toggle alterna entre vista plana (1 fila por SKU) y vista pivote
-    // (1 fila representante por articulo+color, columnas talla con la
-    // cantidad de cada SKU). El modelo BBDD no cambia: el filtro vive
-    // en cliente y lo gestiona la libreria.
-    if not FPivote.Activo then
-    begin
-      if not PuedeActivarTallasHorizontal(sMensaje) then
+  if (dmmAlbaranesCompra <> nil) and (FPivote <> nil) and
+     not FInToggleClick then
+  begin
+    FInToggleClick := True;
+    try
+      if not FPivote.Activo then
       begin
-        // Sender=nil => apertura automatica por preferencia guardada.
-        // Si el documento no es pivotable dejamos
-        // la vista vertical en silencio; solo avisamos cuando el usuario
-        // pulsa el boton expresamente (Sender<>nil).
-        if Sender <> nil then
+        if PuedeActivarTallasHorizontal(sMensaje) then
+        begin
+          FPivote.Activar;
+          if Sender <> nil then
+            PersistirPreferenciaPivote;
+        end
+        else if Sender <> nil then
           MessageDlg(sMensaje, mtWarning, [mbOk], 0);
-        Exit;
+      end
+      else
+      begin
+        FPivote.Desactivar;
+        if Sender <> nil then
+          PersistirPreferenciaPivote;
       end;
-      FPivote.Activar;
-    end
-    else
-      FPivote.Desactivar;
-    // Sender=nil: llamada automatica desde el data-change hook; no
-    // re-escribir la preferencia.
-    if Sender <> nil then
-      PersistirPreferenciaPivote;
-  finally
-    FInToggleClick := False;
+    finally
+      FInToggleClick := False;
+    end;
   end;
 end;
 
@@ -773,27 +767,31 @@ begin
   inherited;
   if not PuedeImprimir then
     Abort;
-  if dmmAlbaranesCompra = nil then Exit;
-  if dmmAlbaranesCompra.unqryTablaG.IsEmpty then
+  if dmmAlbaranesCompra <> nil then
   begin
-    ShowMessage(SErrorAlbaranCompraSinImpresionActivo);
-    Exit;
-  end;
-  if dmmAlbaranesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
-    dmmAlbaranesCompra.unqryTablaG.Post;
-  if dmmAlbaranesCompra.unqryAlbaranesCompraLineas.State in
-     [dsEdit, dsInsert] then
-    dmmAlbaranesCompra.unqryAlbaranesCompraLineas.Post;
-  sSerie  := dmmAlbaranesCompra.unqryTablaG.FieldByName('SERIE_ALBC').AsString;
-  sNumero := dmmAlbaranesCompra.unqryTablaG.FieldByName('NUMERO_ALBC').AsString;
-  form := TfrmPrintAlbCompra.Create(Application);
-  try
-    form.dmAlbc        := dmmAlbaranesCompra;
-    form.edtSerie.Text := sSerie;
-    form.edtNumero.Text:= sNumero;
-    form.ShowModal;
-  finally
-    FreeAndNil(form);
+    if dmmAlbaranesCompra.unqryTablaG.IsEmpty then
+      ShowMessage(SErrorAlbaranCompraSinImpresionActivo)
+    else
+    begin
+      if dmmAlbaranesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
+        dmmAlbaranesCompra.unqryTablaG.Post;
+      if dmmAlbaranesCompra.unqryAlbaranesCompraLineas.State in
+         [dsEdit, dsInsert] then
+        dmmAlbaranesCompra.unqryAlbaranesCompraLineas.Post;
+      sSerie := dmmAlbaranesCompra.unqryTablaG.FieldByName(
+        'SERIE_ALBC').AsString;
+      sNumero := dmmAlbaranesCompra.unqryTablaG.FieldByName(
+        'NUMERO_ALBC').AsString;
+      form := TfrmPrintAlbCompra.Create(Application);
+      try
+        form.dmAlbc := dmmAlbaranesCompra;
+        form.edtSerie.Text := sSerie;
+        form.edtNumero.Text := sNumero;
+        form.ShowModal;
+      finally
+        FreeAndNil(form);
+      end;
+    end;
   end;
 end;
 
@@ -806,27 +804,31 @@ begin
   inherited;
   if not PuedeImprimir then
     Abort;
-  if dmmAlbaranesCompra = nil then Exit;
-  if dmmAlbaranesCompra.unqryTablaG.IsEmpty then
+  if dmmAlbaranesCompra <> nil then
   begin
-    ShowMessage(SErrorAlbaranCompraSinImpresionActivo);
-    Exit;
-  end;
-  if dmmAlbaranesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
-    dmmAlbaranesCompra.unqryTablaG.Post;
-  if dmmAlbaranesCompra.unqryAlbaranesCompraLineas.State in
-     [dsEdit, dsInsert] then
-    dmmAlbaranesCompra.unqryAlbaranesCompraLineas.Post;
-  sSerie  := dmmAlbaranesCompra.unqryTablaG.FieldByName('SERIE_ALBC').AsString;
-  sNumero := dmmAlbaranesCompra.unqryTablaG.FieldByName('NUMERO_ALBC').AsString;
-  form := TfrmPrintAlbCompraV.Create(Application);
-  try
-    form.dmAlbc        := dmmAlbaranesCompra;
-    form.edtSerie.Text := sSerie;
-    form.edtNumero.Text:= sNumero;
-    form.ShowModal;
-  finally
-    FreeAndNil(form);
+    if dmmAlbaranesCompra.unqryTablaG.IsEmpty then
+      ShowMessage(SErrorAlbaranCompraSinImpresionActivo)
+    else
+    begin
+      if dmmAlbaranesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
+        dmmAlbaranesCompra.unqryTablaG.Post;
+      if dmmAlbaranesCompra.unqryAlbaranesCompraLineas.State in
+         [dsEdit, dsInsert] then
+        dmmAlbaranesCompra.unqryAlbaranesCompraLineas.Post;
+      sSerie := dmmAlbaranesCompra.unqryTablaG.FieldByName(
+        'SERIE_ALBC').AsString;
+      sNumero := dmmAlbaranesCompra.unqryTablaG.FieldByName(
+        'NUMERO_ALBC').AsString;
+      form := TfrmPrintAlbCompraV.Create(Application);
+      try
+        form.dmAlbc := dmmAlbaranesCompra;
+        form.edtSerie.Text := sSerie;
+        form.edtNumero.Text := sNumero;
+        form.ShowModal;
+      finally
+        FreeAndNil(form);
+      end;
+    end;
   end;
 end;
 
@@ -841,16 +843,18 @@ begin
   inherited;
   if not PuedeImprimir then
     Abort;
-  if dmmAlbaranesCompra = nil then Exit;
-  if dmmAlbaranesCompra.unqryTablaG.IsEmpty then
+  if dmmAlbaranesCompra <> nil then
   begin
-    ShowMessage(SErrorAlbaranCompraNoActivo);
-    Exit;
-  end;
-  if dmmAlbaranesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
-    dmmAlbaranesCompra.unqryTablaG.Post;
-  sSerie  := dmmAlbaranesCompra.unqryTablaG.FieldByName('SERIE_ALBC').AsString;
-  sNumero := dmmAlbaranesCompra.unqryTablaG.FieldByName('NUMERO_ALBC').AsString;
+    if dmmAlbaranesCompra.unqryTablaG.IsEmpty then
+      ShowMessage(SErrorAlbaranCompraNoActivo)
+    else
+    begin
+      if dmmAlbaranesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
+        dmmAlbaranesCompra.unqryTablaG.Post;
+      sSerie := dmmAlbaranesCompra.unqryTablaG.FieldByName(
+        'SERIE_ALBC').AsString;
+      sNumero := dmmAlbaranesCompra.unqryTablaG.FieldByName(
+        'NUMERO_ALBC').AsString;
   // El modal reutiliza el dataset de etiquetas del DM de articulos
   // (cdsEtiquetasArt, fxdsEtiquetasArt) para que el mismo .fr3 sirva
   // en ambos sitios. Creamos un DM temporal porque el form de
@@ -859,20 +863,22 @@ begin
   // conexion. No necesitamos AbrirDetalles ni OpenTables — las queries
   // de print (unqryTarifasPrint, unqryArtPrint) se abren bajo demanda
   // desde el modal / CrearDataSetEtiquetasArt.
-  dmArt := TdmArticulos.Create(nil);
-  try
-    form := TfrmPrintEtiqAlb.Create(Application);
+      dmArt := TdmArticulos.Create(nil);
     try
-      form.DMArt  := dmArt;
-      form.DMAlbc := dmmAlbaranesCompra;
-      form.Serie  := sSerie;
-      form.Numero := sNumero;
-      form.ShowModal;
+      form := TfrmPrintEtiqAlb.Create(Application);
+      try
+        form.DMArt := dmArt;
+        form.DMAlbc := dmmAlbaranesCompra;
+        form.Serie := sSerie;
+        form.Numero := sNumero;
+        form.ShowModal;
+      finally
+        FreeAndNil(form);
+      end;
     finally
-      FreeAndNil(form);
+      FreeAndNil(dmArt);
     end;
-  finally
-    FreeAndNil(dmArt);
+    end;
   end;
 end;
 
@@ -901,24 +907,23 @@ begin
   sLineasSinSku := LineasSinSkuRequerido(
     FValidadorArticulos,
     dmmAlbaranesCompra.unqryAlbaranesCompraLineas, 'ALBCLIN');
-  if (sLineasSinSku <> '') and
+  if (sLineasSinSku = '') or
      (MessageDlg(Format(SPreguntaGrabarAlbaranCompraSinSku,
-                 [sLineasSinSku]),
-                 mtWarning, [mbYes, mbNo], 0) <> mrYes) then
-    Exit;
-  if Assigned(FPivote) and FPivote.Activo and
-     (not FPivote.Expandido) then
-    FPivote.PersistirCantidadesPendientes;
-  inherited;
-  if dsTablaG.State in dsEditModes then
+                  [sLineasSinSku]),
+                  mtWarning, [mbYes, mbNo], 0) = mrYes) then
   begin
-    dmmAlbaranesCompra.CalcularTotalesAlbaranCompra;
-    dsTablaG.DataSet.Post;
+    if Assigned(FPivote) and FPivote.Activo and
+       not FPivote.Expandido then
+      FPivote.PersistirCantidadesPendientes;
+    inherited;
+    if dsTablaG.State in dsEditModes then
+    begin
+      dmmAlbaranesCompra.CalcularTotalesAlbaranCompra;
+      dsTablaG.DataSet.Post;
+    end;
+    if Assigned(FPivote) and FPivote.Activo then
+      FPivote.RecargarYRepublicar;
   end;
-  // Tras Grabar, cxGrid borra los Values[] no-bound al repintar.
-  // RecargarYRepublicar lo solventa.
-  if Assigned(FPivote) and FPivote.Activo then
-    FPivote.RecargarYRepublicar;
 end;
 
 // Actualiza la cabecera y delega el modo al navegar entre albaranes.
@@ -1055,11 +1060,12 @@ var
   bDegradarASku: Boolean;
   ModoEfectivo: TModoColumnasSku;
 begin
-  if (dmmAlbaranesCompra = nil) or (csDestroying in ComponentState) then
-    Exit;
-  ds := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
-  if not ds.Active then
-    Exit;
+  if (dmmAlbaranesCompra <> nil) and
+     not (csDestroying in ComponentState) then
+  begin
+    ds := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
+    if ds.Active then
+    begin
   // Expansion/consolidacion en bloque (una linea por SKU): totales y
   // movimientos se recalculan UNA vez al finalizar en vez de por cada
   // post de linea (cascada de segundos al entrar al modo).
@@ -1134,6 +1140,8 @@ begin
   end;
   finally
     dmmAlbaranesCompra.FinalizarReorganizacionLineas;
+  end;
+    end;
   end;
 end;
 
@@ -1455,22 +1463,25 @@ var
   sNumero: string;
   sSerie: string;
 begin
-  if not Assigned(dmmAlbaranesCompra) then
-    Exit;
-  dsCab := dmmAlbaranesCompra.unqryTablaG;
-  dsLin := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
-  if (dsCab = nil) or (dsLin = nil) or (not dsCab.Active) or
-     (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
-    Exit;
-  AsegurarCabeceraPersistidaParaLineas;
-  sNumero := Trim(dsCab.FieldByName('NUMERO_ALBC').AsString);
-  sSerie  := Trim(dsCab.FieldByName('SERIE_ALBC').AsString);
-  if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
-    Exit;
-  if not dsLin.Active then
-    dsLin.Open;
-  if dsLin.IsEmpty and (not (dsLin.State in dsEditModes)) then
-    dsLin.Append;
+  if Assigned(dmmAlbaranesCompra) then
+  begin
+    dsCab := dmmAlbaranesCompra.unqryTablaG;
+    dsLin := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
+    if (dsCab <> nil) and (dsLin <> nil) and dsCab.Active and
+       (not dsCab.IsEmpty or (dsCab.State in dsEditModes)) then
+    begin
+      AsegurarCabeceraPersistidaParaLineas;
+      sNumero := Trim(dsCab.FieldByName('NUMERO_ALBC').AsString);
+      sSerie := Trim(dsCab.FieldByName('SERIE_ALBC').AsString);
+      if (sNumero <> '') and (sNumero <> '0') and (sSerie <> '') then
+      begin
+        if not dsLin.Active then
+          dsLin.Open;
+        if dsLin.IsEmpty and not (dsLin.State in dsEditModes) then
+          dsLin.Append;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmMtoAlbaranesCompra.colLinAlbcColorPivotButtonClick(

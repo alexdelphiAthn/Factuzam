@@ -394,13 +394,14 @@ begin
     finally
       CloseFile(F);
     end;
-    Exit;
   end;
   // === IMPRESIÓN REAL ===
-  if not OpenPrinter(PChar(ANombreImpresora), hPrinter, nil) then
-    raise Exception.CreateFmt(SErrorAbrirImpresoraTicket,
-                              [ANombreImpresora]);
-  try
+  if (ANombreImpresora <> 'DEBUG') and (ANombreImpresora <> '') then
+  begin
+    if not OpenPrinter(PChar(ANombreImpresora), hPrinter, nil) then
+      raise Exception.CreateFmt(SErrorAbrirImpresoraTicket,
+                                [ANombreImpresora]);
+    try
     DocInfo.pDocName := 'Ticket Fzam';
     DocInfo.pOutputFile := nil;
     DocInfo.pDatatype := 'RAW';
@@ -458,8 +459,9 @@ begin
         raise;
       end;
     end;
-  finally
-    ClosePrinter(hPrinter);
+    finally
+      ClosePrinter(hPrinter);
+    end;
   end;
 end;
 

@@ -1,9 +1,9 @@
 param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoSentenciasSql = 78,
+  [int]$MaximoSentenciasSql = 0,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoUnidadesConSql = 35,
+  [int]$MaximoUnidadesConSql = 0,
   [switch]$MostrarTodos,
   [string]$RutaInventario = ''
 )
@@ -151,6 +151,17 @@ function Obtener-TipoSqlLiteral {
       $literal.Value.Length - 2
     ).Replace("''", "'")
   }
+  $fragmentos = @($literales | ForEach-Object { $_.Trim() })
+  $soloClasificadores = ($fragmentos.Count -gt 0) -and
+    (@(
+      $fragmentos |
+        Where-Object {
+          $_ -notmatch '^(?i:SELECT|CALL|SHOW|EXPLAIN|DESCRIBE|DESC)$'
+        }
+    ).Count -eq 0)
+  if ($soloClasificadores) {
+    return ''
+  }
   $sql = ($literales -join ' ').Trim()
   $patron =
     '(?is)\b(SELECT|INSERT|UPDATE|DELETE|REPLACE|CALL|' +
@@ -279,12 +290,27 @@ foreach ($archivo in $archivos) {
     })
   }
 }
-$totalSentencias = (
-  $mediciones |
-    Measure-Object Sentencias -Sum
-).Sum
-if ($null -eq $totalSentencias) {
-  $totalSentencias = 0
+$totalSentencias = 0
+$totalesTipo = [ordered]@{
+  Select = 0
+  Insert = 0
+  Update = 0
+  Delete = 0
+  Replace = 0
+  Call = 0
+  Ddl = 0
+}
+if ($mediciones.Count -gt 0) {
+  $totalSentencias = [int](
+    $mediciones |
+      Measure-Object Sentencias -Sum
+  ).Sum
+  foreach ($tipo in @($totalesTipo.Keys)) {
+    $totalesTipo[$tipo] = [int](
+      $mediciones |
+        Measure-Object $tipo -Sum
+    ).Sum
+  }
 }
 $unidadesConSql = $mediciones.Count
 $ordenadas = @(
@@ -310,13 +336,13 @@ Write-Output ''
 Write-Output 'Totales por tipo:'
 Write-Output (
   [pscustomobject]@{
-    Select = [int]($mediciones | Measure-Object Select -Sum).Sum
-    Insert = [int]($mediciones | Measure-Object Insert -Sum).Sum
-    Update = [int]($mediciones | Measure-Object Update -Sum).Sum
-    Delete = [int]($mediciones | Measure-Object Delete -Sum).Sum
-    Replace = [int]($mediciones | Measure-Object Replace -Sum).Sum
-    Call = [int]($mediciones | Measure-Object Call -Sum).Sum
-    Ddl = [int]($mediciones | Measure-Object Ddl -Sum).Sum
+    Select = $totalesTipo.Select
+    Insert = $totalesTipo.Insert
+    Update = $totalesTipo.Update
+    Delete = $totalesTipo.Delete
+    Replace = $totalesTipo.Replace
+    Call = $totalesTipo.Call
+    Ddl = $totalesTipo.Ddl
   } |
     Format-Table -AutoSize |
     Out-String

@@ -114,6 +114,42 @@ navegación</strong> con los botones estándar. Sus acciones son siempre las mis
 tiene el foco. <strong>Grabar</strong> dispone de dos atajos equivalentes: <code>[F12]</code>
 (botón <strong>Grabar registro</strong> del navegador) y <code>[Alt]+[G]</code> (botón
 <strong>Grabar</strong> de acción, ver abajo).</p></blockquote>
+<h3 id="cambiar-la-presentacion-de-las-lineas-con-f1">Cambiar la presentación de las líneas con F1</h3>
+<p>En la pestaña <strong>Líneas</strong> de los documentos compatibles, <code>[F1]</code> ya no abre
+la ayuda: cambia la forma de introducir y consultar artículos, SKU y tallas.
+Cada pulsación avanza al modo siguiente y, al terminar el ciclo, vuelve al
+primero. La pestaña indica el modo que está activo.</p>
+<table>
+<thead><tr>
+<th>Modo</th>
+<th>Cuándo resulta más cómodo</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Auto (desglose)</strong></td><td>Muestra por separado los atributos que componen el SKU, como color y talla.</td></tr>
+<tr><td><strong>SKU</strong></td><td>Permite trabajar directamente con el código de la variante o con su código de barras.</td></tr>
+<tr><td><strong>Tallas en línea</strong></td><td>Presenta las tallas como columnas editables dentro de la línea.</td></tr>
+<tr><td><strong>Tallas horizontales</strong></td><td>Agrupa por artículo/color. En los pedidos añade bandas como <strong>Pedido</strong>, <strong>A recibir/A albaranar</strong> y <strong>Pendiente</strong>.</td></tr>
+</tbody>
+</table>
+<p>El ciclo depende del documento:</p>
+<table>
+<thead><tr>
+<th>Documento</th>
+<th>Ciclo de <code>[F1]</code></th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Inventarios</strong></td><td>Auto → SKU.</td></tr>
+<tr><td><strong>Albaranes de venta</strong> y <strong>Documentos de Trabajo</strong></td><td>Auto → SKU → Tallas en línea.</td></tr>
+<tr><td><strong>Pedidos de compra</strong></td><td>Auto → SKU → Tallas en línea → Tallas horizontales.</td></tr>
+<tr><td><strong>Pedidos y facturas de venta</strong>; <strong>albaranes, facturas y devoluciones de compra</strong></td><td>Auto → SKU → Tallas horizontales.</td></tr>
+</tbody>
+</table>
+<p><code>[F1]</code> solo actúa cuando estás en <strong>Líneas</strong> y se pulsa sin <code>[Ctrl]</code>,
+<code>[Alt]</code> ni <code>[Mayús]</code>. No cambia cantidades por sí solo: reorganiza la misma
+información para facilitar la entrada y la revisión. En facturas de venta
+queda inactivo mientras esté habilitada la creación de artículos desde la
+propia factura. Las <strong>Sesiones de compra</strong> conservan su operativa específica.</p>
+<p><img src="img/01-f1-modos-lineas.png" alt="Los modos de líneas de un documento recorridos con F1" loading="lazy"></p>
 <h3 id="foto-flotante-del-articulo-sku">Foto flotante del artículo / SKU</h3>
 <p><code>[Ctrl]+[F]</code> abre una ventana flotante con la foto del artículo o SKU que
 esté activo en la pantalla. Si cambias de pestaña, de documento o de línea,
@@ -282,7 +318,7 @@ trazabilidad y soporte.</p>
 <hr>
 <p><a href="00-acceso-y-primeros-pasos.html">◀ Acceso</a> · <a href="index.html">Índice</a> · <a href="02-menu-archivo.html">Siguiente ▶ Menú Archivo</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 31/07/2026</footer>
+<footer>Manual de Factuzam · generado el 04/08/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

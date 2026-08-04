@@ -78,7 +78,6 @@ externos:
    base recién creada.
 
 ![Sección Preparar BBDD destino](img/10-migrator-preparar.png)
-*▢ Captura pendiente — Botones de extracción y carga del esqueleto.*
 
 > Alternativa: crear la base destino desde `factuzam_original.sql` como
 > en la [instalación](09-instalacion-windows.md#3-crear-la-base-de-datos-inicial).

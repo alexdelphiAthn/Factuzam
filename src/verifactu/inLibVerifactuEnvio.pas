@@ -29,6 +29,8 @@ type
     Ok:                Boolean;
     MensajeError:      string;
     EstadoRegistro:    string;    // Correcto / AceptadoConErrores
+    CodigoError:       string;    // Código de validación del registro
+    DescripcionError:  string;    // Descripción de validación del registro
     EsperaSegundos:    Integer;   // TiempoEsperaEnvio devuelto por AEAT
     RequestId:         string;    // CSV del envío aceptado
     QueueId:           Integer;   // lo rellena la cola con su ID
@@ -125,6 +127,7 @@ type
     FechaFac:        TDateTime;
     FechaExpedicion: string;  // dd-mm-yyyy
     TipoFactura:     string;  // F1 / F2 / R1 / R5
+    TipoFacturaRectificativa: string; // R1..R5 explícito de la factura
     NifCliente:      string;
     NombreCliente:   string;
     // Factura original rectificada (solo en R1/R5)
@@ -333,6 +336,7 @@ begin
     ' SELECT f.CODIGO_EMP_FAC, f.NIF_EMPRESA_FAC, ' +
     '        f.RAZON_SOCIAL_EMPRESA_FAC, ' +
     '        f.FECHA_FAC, f.TIPO_FAC, f.TIPO_RECTIFICATIVA_FAC, ' +
+    '        f.TIPO_FACTURA_VERIFACTU_FAC, ' +
     '        f.NIF_CLIENTE_FAC, f.RAZON_SOCIAL_CLIENTE_FAC, ' +
     '        f.TOTAL_IMPUESTOS_FAC, f.TOTAL_LIQUIDO_FAC, ' +
     '        f.TOTAL_RETENCION_FAC, ' +
@@ -364,6 +368,7 @@ end;
 
 procedure InicializarRectificacion(var ADatos: TDatosFacturaRegistro);
 begin
+  ADatos.TipoFacturaRectificativa := '';
   ADatos.TipoRectificativa := '';
   ADatos.RectSerie := '';
   ADatos.RectNumero := '';
@@ -398,6 +403,13 @@ begin
   InicializarRectificacion(ADatos);
   if SameText(ATipoFactura, 'RECTIFICATIVA') then
   begin
+    ADatos.TipoFacturaRectificativa := UpperCase(Trim(
+      AQry.FieldByName('TIPO_FACTURA_VERIFACTU_FAC').AsString));
+    if (ADatos.TipoFacturaRectificativa <> '') and
+       (not MatchText(ADatos.TipoFacturaRectificativa,
+         ['R1', 'R2', 'R3', 'R4', 'R5'])) then
+      raise Exception.Create(
+        'El tipo VERI*FACTU de la rectificativa no es válido.');
     ADatos.TipoRectificativa := UpperCase(Trim(
       AQry.FieldByName('TIPO_RECTIFICATIVA_FAC').AsString));
     if ADatos.TipoRectificativa = '' then
@@ -560,7 +572,10 @@ procedure AplicarAntecesora(
 begin
   if SameText(ATipoFactura, 'RECTIFICATIVA') then
   begin
-    if SameText(AQry.FieldByName('TIPO_FAC').AsString, 'SIMPLIFICADA') then
+    if ADatos.TipoFacturaRectificativa <> '' then
+      ADatos.TipoFactura := ADatos.TipoFacturaRectificativa
+    else if SameText(
+      AQry.FieldByName('TIPO_FAC').AsString, 'SIMPLIFICADA') then
       ADatos.TipoFactura := 'R5'
     else
       ADatos.TipoFactura := 'R1';
@@ -1248,6 +1263,8 @@ begin
   AResultado.EsperaSegundos := 0;
   AResultado.MensajeError   := '';
   AResultado.EstadoRegistro := '';
+  AResultado.CodigoError    := '';
+  AResultado.DescripcionError := '';
   AResultado.RequestId      := '';
   AResultado.IssuerIrsId    := '';
   AResultado.FechaExpedicion := '';
@@ -1443,6 +1460,8 @@ begin
       sEstadoRegistro := ExtraerEtiqueta(sCuerpo, 'EstadoRegistro');
       sCodigoErr      := ExtraerEtiqueta(sCuerpo, 'CodigoErrorRegistro');
       sDescErr        := ExtraerEtiqueta(sCuerpo, 'DescripcionErrorRegistro');
+      Result.CodigoError := sCodigoErr;
+      Result.DescripcionError := sDescErr;
       Result.EsperaSegundos :=
         StrToIntDef(ExtraerEtiqueta(sCuerpo, 'TiempoEsperaEnvio'), 0);
       // Si no viene línea de respuesta, manda el estado global del envío

@@ -280,17 +280,17 @@ begin
   s := Trim(AHex);
   if (Length(s) = 7) and (s[1] = '#') then
   begin
-    if not TryStrToInt('$' + Copy(s, 2, 2), r) then Exit;
-    if not TryStrToInt('$' + Copy(s, 4, 2), g) then Exit;
-    if not TryStrToInt('$' + Copy(s, 6, 2), b) then Exit;
-    Result := RGB(r, g, b);
+    if TryStrToInt('$' + Copy(s, 2, 2), r) and
+       TryStrToInt('$' + Copy(s, 4, 2), g) and
+       TryStrToInt('$' + Copy(s, 6, 2), b) then
+      Result := RGB(r, g, b);
   end
   else if (Length(s) = 4) and (s[1] = '#') then
   begin
-    if not TryStrToInt('$' + s[2] + s[2], r) then Exit;
-    if not TryStrToInt('$' + s[3] + s[3], g) then Exit;
-    if not TryStrToInt('$' + s[4] + s[4], b) then Exit;
-    Result := RGB(r, g, b);
+    if TryStrToInt('$' + s[2] + s[2], r) and
+       TryStrToInt('$' + s[3] + s[3], g) and
+       TryStrToInt('$' + s[4] + s[4], b) then
+      Result := RGB(r, g, b);
   end;
 end;
 
@@ -356,12 +356,14 @@ function ObtenerInfoBasico(AConexion: TUniConnection;
 begin
   AInfo  := Default(TInfoBasico);
   Result := False;
-  if (Trim(AIdVA) = '') or (Trim(ACodigoATB) = '') then Exit;
-  if not GCacheCargado then
-    CargarCache(AConexion, GLecturasPersistencia);
-  if not GCacheCargado then Exit;
-  if GCache.TryGetValue(ClaveCache(AIdVA, ACodigoATB), AInfo) then
-    Result := AInfo.EsValido;
+  if (Trim(AIdVA) <> '') and (Trim(ACodigoATB) <> '') then
+  begin
+    if not GCacheCargado then
+      CargarCache(AConexion, GLecturasPersistencia);
+    if GCacheCargado and
+       GCache.TryGetValue(ClaveCache(AIdVA, ACodigoATB), AInfo) then
+      Result := AInfo.EsValido;
+  end;
 end;
 
 function PintarCeldaConCuadradoColor(ACanvas: TcxCanvas;
@@ -388,8 +390,8 @@ var
   Alto, TopY : Integer;
 begin
   Result := False;
-  if (ACanvas = nil) or (AViewInfo = nil) or not AInfo.EsValido then Exit;
-
+  if (ACanvas <> nil) and (AViewInfo <> nil) and AInfo.EsValido then
+  begin
   Bounds := AViewInfo.Bounds;
   if ATexto <> '' then
     Texto := ATexto
@@ -436,7 +438,8 @@ begin
                    DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_END_ELLIPSIS);
   ACanvas.Brush.Style := bsSolid;
 
-  Result := True;
+    Result := True;
+  end;
 end;
 
 function PintarCeldaConTextoColor(ACanvas: TcxCanvas;
@@ -447,8 +450,8 @@ var
   Texto : string;
 begin
   Result := False;
-  if (ACanvas = nil) or (AViewInfo = nil) or not AInfo.EsValido then Exit;
-
+  if (ACanvas <> nil) and (AViewInfo <> nil) and AInfo.EsValido then
+  begin
   Bounds := AViewInfo.Bounds;
   Texto  := AViewInfo.Text;
 
@@ -465,7 +468,8 @@ begin
                    DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_END_ELLIPSIS);
   ACanvas.Brush.Style := bsSolid;
 
-  Result := True;
+    Result := True;
+  end;
 end;
 
 procedure CargarMapaAtributosArticulo(AConexion: TUniConnection;
@@ -513,22 +517,22 @@ var
   sTexto : string;
 begin
   Result := False;
-  if (ACanvas = nil) or (AViewInfo = nil) then Exit;
-  // Rescatar el texto de forma segura
-  sTexto := AViewInfo.Text;
-  if (sTexto = '') and
-     (AViewInfo.GridRecord <> nil) and
-     (AViewInfo.Item <> nil) then
-    sTexto := VarToStr(AViewInfo.GridRecord.Values[AViewInfo.Item.Index]);
-  if ADict <> nil then
-    Dict := ADict
-  else
-    Dict := ObtenerMapaAtributosGlobal(AConexion);
-  if (Dict = nil) or (Dict.Count = 0) then Exit;
-  if not BuscarInfoBasicoEnArticulo(
-    AConexion, sTexto, Dict, Info) then Exit;
-  // Pasamos sTexto explicitly a la función de pintado
-  Result := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto);
+  if (ACanvas <> nil) and (AViewInfo <> nil) then
+  begin
+    sTexto := AViewInfo.Text;
+    if (sTexto = '') and
+       (AViewInfo.GridRecord <> nil) and
+       (AViewInfo.Item <> nil) then
+      sTexto := VarToStr(AViewInfo.GridRecord.Values[AViewInfo.Item.Index]);
+    if ADict <> nil then
+      Dict := ADict
+    else
+      Dict := ObtenerMapaAtributosGlobal(AConexion);
+    if (Dict <> nil) and (Dict.Count > 0) and
+       BuscarInfoBasicoEnArticulo(AConexion, sTexto, Dict, Info) then
+      Result := PintarCeldaConCuadradoColor(
+        ACanvas, AViewInfo, Info, sTexto);
+  end;
 end;
 
 function PintarCeldaSwatchArticuloSiAplica(
@@ -568,31 +572,35 @@ var
 begin
   AInfo  := Default(TInfoBasico);
   Result := False;
-  if ADict = nil then Exit;
-  Texto := Trim(ATexto);
-  if Texto = '' then Exit;
-
-  // 1) Probamos con el texto entero
-  for IdVa in ADict.Values do
-    if ObtenerInfoBasico(AConexion, IdVa, Texto, AInfo) then
-      Exit(True);
-
-  // 2) Si el texto es un SKU compuesto (ej: ART/COLOR/TALLA),
-  // extraemos CADA segmento y lo comprobamos.
-  if Pos('/', Texto) > 0 then
+  if ADict <> nil then
   begin
-    Segmentos := Texto.Split(['/']);
-    // Empezamos desde el final hacia el principio, pero ahora
-    // revisamos todos (el color suele estar en el medio).
-    for i := High(Segmentos) downto 0 do
+    Texto := Trim(ATexto);
+    if Texto <> '' then
     begin
-      Segmento := Trim(Segmentos[i]);
-      if Segmento <> '' then
+      for IdVa in ADict.Values do
       begin
-        for IdVa in ADict.Values do
-          if ObtenerInfoBasico(
-            AConexion, IdVa, Segmento, AInfo) then
-            Exit(True);
+        if not Result then
+          Result := ObtenerInfoBasico(AConexion, IdVa, Texto, AInfo);
+      end;
+      if not Result and (Pos('/', Texto) > 0) then
+      begin
+        Segmentos := Texto.Split(['/']);
+        for i := High(Segmentos) downto 0 do
+        begin
+          if not Result then
+          begin
+            Segmento := Trim(Segmentos[i]);
+            if Segmento <> '' then
+            begin
+              for IdVa in ADict.Values do
+              begin
+                if not Result then
+                  Result := ObtenerInfoBasico(
+                    AConexion, IdVa, Segmento, AInfo);
+              end;
+            end;
+          end;
+        end;
       end;
     end;
   end;
@@ -609,20 +617,29 @@ var
   Info  : TInfoBasico;
 begin
   Result := False;
-  if (AColumn = nil) or (ADict = nil) or (ADict.Count = 0) then Exit;
-  Tabla := AColumn.GridView as TcxCustomGridTableView;
-  if (Tabla = nil) or (Tabla.DataController = nil) then Exit;
-  n := Tabla.DataController.RecordCount;
-  if n = 0 then Exit;
-  for i := 0 to n - 1 do
+  if (AColumn <> nil) and (ADict <> nil) and (ADict.Count > 0) then
   begin
-    v := Tabla.DataController.Values[i, AColumn.Index];
-    if VarIsNull(v) or VarIsClear(v) then Continue;
-    if BuscarInfoBasicoEnArticulo(
-      AConexion, VarToStr(v), ADict, Info) then
+    Tabla := AColumn.GridView as TcxCustomGridTableView;
+    if (Tabla <> nil) and (Tabla.DataController <> nil) then
     begin
-      AColumn.Width := AColumn.Width + ANCHO_SWATCH_PX;
-      Exit(True);
+      n := Tabla.DataController.RecordCount;
+      if n > 0 then
+      begin
+        for i := 0 to n - 1 do
+        begin
+          if not Result then
+          begin
+            v := Tabla.DataController.Values[i, AColumn.Index];
+            if not VarIsNull(v) and not VarIsClear(v) and
+               BuscarInfoBasicoEnArticulo(
+                 AConexion, VarToStr(v), ADict, Info) then
+            begin
+              AColumn.Width := AColumn.Width + ANCHO_SWATCH_PX;
+              Result := True;
+            end;
+          end;
+        end;
+      end;
     end;
   end;
 end;
@@ -641,44 +658,43 @@ var
   Info : TInfoBasico;
   Bmp : TBitmap;
 begin
-  if AImages = nil then Exit;
-  AImages.Clear;
-  if AAvToImageIndex <> nil then
-    AAvToImageIndex.Clear;
-  if (Trim(AIdVa) = '') or (Length(AAvs) = 0) then Exit;
-
-  // El tamano de los iconos del ImageList tiene que coincidir con el lado del
-  // swatch para que DevExpress los pinte sin escalar.
-  AImages.Width  := LADO;
-  AImages.Height := LADO;
-
-  Bmp := TBitmap.Create;
-  try
-    Bmp.PixelFormat := pf24bit;
-    Bmp.SetSize(LADO, LADO);
-    for i := 0 to High(AAvs) do
+  if AImages <> nil then
+  begin
+    AImages.Clear;
+    if AAvToImageIndex <> nil then
+      AAvToImageIndex.Clear;
+    if (Trim(AIdVa) <> '') and (Length(AAvs) > 0) then
     begin
-      Av := AAvs[i];
-      if not ObtenerInfoBasico(
-        AConexion, AIdVa, Av, Info) then Continue;
-
-      Bmp.Canvas.Brush.Style := bsSolid;
-      Bmp.Canvas.Brush.Color := Info.Color;
-      Bmp.Canvas.FillRect(Rect(0, 0, LADO, LADO));
-      Bmp.Canvas.Brush.Style := bsClear;
-      Bmp.Canvas.Pen.Color   := clBlack;
-      Bmp.Canvas.Pen.Width   := 1;
-      Bmp.Canvas.Rectangle(0, 0, LADO, LADO);
-
-      Idx := AImages.Add(Bmp, nil);
-      if (Idx >= 0) and (AAvToImageIndex <> nil) then
-      begin
-        Clave := UpperCase(Trim(Av));
-        AAvToImageIndex.AddOrSetValue(Clave, Idx);
+      AImages.Width := LADO;
+      AImages.Height := LADO;
+      Bmp := TBitmap.Create;
+      try
+        Bmp.PixelFormat := pf24bit;
+        Bmp.SetSize(LADO, LADO);
+        for i := 0 to High(AAvs) do
+        begin
+          Av := AAvs[i];
+          if ObtenerInfoBasico(AConexion, AIdVa, Av, Info) then
+          begin
+            Bmp.Canvas.Brush.Style := bsSolid;
+            Bmp.Canvas.Brush.Color := Info.Color;
+            Bmp.Canvas.FillRect(Rect(0, 0, LADO, LADO));
+            Bmp.Canvas.Brush.Style := bsClear;
+            Bmp.Canvas.Pen.Color := clBlack;
+            Bmp.Canvas.Pen.Width := 1;
+            Bmp.Canvas.Rectangle(0, 0, LADO, LADO);
+            Idx := AImages.Add(Bmp, nil);
+            if (Idx >= 0) and (AAvToImageIndex <> nil) then
+            begin
+              Clave := UpperCase(Trim(Av));
+              AAvToImageIndex.AddOrSetValue(Clave, Idx);
+            end;
+          end;
+        end;
+      finally
+        FreeAndNil(Bmp);
       end;
     end;
-  finally
-    FreeAndNil(Bmp);
   end;
 end;
 
@@ -686,17 +702,19 @@ function PintarSwatchEnBitmap(ABmp: TBitmap; const AInfo: TInfoBasico;
                               ALado: Integer): Boolean;
 begin
   Result := False;
-  if (ABmp = nil) or (not AInfo.EsValido) or (ALado < 4) then Exit;
-  ABmp.PixelFormat := pf24bit;
-  ABmp.SetSize(ALado, ALado);
-  ABmp.Canvas.Brush.Style := bsSolid;
-  ABmp.Canvas.Brush.Color := AInfo.Color;
-  ABmp.Canvas.FillRect(System.Types.Rect(0, 0, ALado, ALado));
-  ABmp.Canvas.Brush.Style := bsClear;
-  ABmp.Canvas.Pen.Color   := clBlack;
-  ABmp.Canvas.Pen.Width   := 1;
-  ABmp.Canvas.Rectangle(0, 0, ALado, ALado);
-  Result := True;
+  if (ABmp <> nil) and AInfo.EsValido and (ALado >= 4) then
+  begin
+    ABmp.PixelFormat := pf24bit;
+    ABmp.SetSize(ALado, ALado);
+    ABmp.Canvas.Brush.Style := bsSolid;
+    ABmp.Canvas.Brush.Color := AInfo.Color;
+    ABmp.Canvas.FillRect(System.Types.Rect(0, 0, ALado, ALado));
+    ABmp.Canvas.Brush.Style := bsClear;
+    ABmp.Canvas.Pen.Color := clBlack;
+    ABmp.Canvas.Pen.Width := 1;
+    ABmp.Canvas.Rectangle(0, 0, ALado, ALado);
+    Result := True;
+  end;
 end;
 
 { TfrmSelPalAvAux }
@@ -930,8 +948,9 @@ var
   HayColor  : Boolean;
 begin
   LB := Control as TListBox;
-  if (Index < 0) or (Index >= LB.Items.Count) then Exit;
-  Av := LB.Items[Index];
+  if (Index >= 0) and (Index < LB.Items.Count) then
+  begin
+    Av := LB.Items[Index];
 
   // Fondo (respeta seleccion)
   if odSelected in State then
@@ -989,8 +1008,9 @@ begin
                           DT_END_ELLIPSIS);
   LB.Canvas.Brush.Style := bsSolid;
 
-  if odFocused in State then
-    LB.Canvas.DrawFocusRect(ARect);
+    if odFocused in State then
+      LB.Canvas.DrawFocusRect(ARect);
+  end;
 end;
 
 procedure TfrmSelPalAvAux.ListBoxMouseDown(Sender: TObject;
@@ -998,12 +1018,14 @@ procedure TfrmSelPalAvAux.ListBoxMouseDown(Sender: TObject;
 var
   Idx: Integer;
 begin
-  if Button <> mbLeft then Exit;
-  Idx := FListBox.ItemAtPos(System.Types.Point(X, Y), True);
-  if Idx >= 0 then
+  if Button = mbLeft then
   begin
-    FListBox.ItemIndex := Idx;
-    ModalResult := mrOk;
+    Idx := FListBox.ItemAtPos(System.Types.Point(X, Y), True);
+    if Idx >= 0 then
+    begin
+      FListBox.ItemIndex := Idx;
+      ModalResult := mrOk;
+    end;
   end;
 end;
 
@@ -1053,29 +1075,31 @@ var
 begin
   AValor := '';
   Result := False;
-  if Length(AAvs) = 0 then Exit;
-  F := TfrmSelPalAvAux.CreateConOpciones(
-    AConexion,
-    GLecturasPersistencia,
-    AIdVa,
-    AAvs,
-    AValorActual,
-    AScreenLeft,
-    AScreenTop,
-    AWidthHint,
-    ACodArt);
-  try
-    if F.ShowModal = mrOk then
-    begin
-      if (F.FListBox.ItemIndex >= 0) and
-         (F.FListBox.ItemIndex < Length(F.FAvs)) then
+  if Length(AAvs) > 0 then
+  begin
+    F := TfrmSelPalAvAux.CreateConOpciones(
+      AConexion,
+      GLecturasPersistencia,
+      AIdVa,
+      AAvs,
+      AValorActual,
+      AScreenLeft,
+      AScreenTop,
+      AWidthHint,
+      ACodArt);
+    try
+      if F.ShowModal = mrOk then
       begin
-        AValor := F.FAvs[F.FListBox.ItemIndex];
-        Result := True;
+        if (F.FListBox.ItemIndex >= 0) and
+           (F.FListBox.ItemIndex < Length(F.FAvs)) then
+        begin
+          AValor := F.FAvs[F.FListBox.ItemIndex];
+          Result := True;
+        end;
       end;
+    finally
+      F.Free;
     end;
-  finally
-    F.Free;
   end;
 end;
 

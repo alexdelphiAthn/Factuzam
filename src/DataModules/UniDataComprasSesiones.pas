@@ -1006,13 +1006,13 @@ begin
   // actualmente en edición sumando las celdas de fza_compras_sesiones_celdas.
   // Se invoca desde unqrySesionLinBeforePost para que los totales se
   // persistan correctamente cuando el usuario graba la sesión.
-  if unqrySesionLin.IsEmpty then Exit;
+  if not unqrySesionLin.IsEmpty then
+  begin
   iLinea  := unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
   sSerie  := unqrySesionLin.FieldByName('SERIE_SES_SESLIN').AsString;
   sNumero := unqrySesionLin.FieldByName('NUMERO_SES_SESLIN').AsString;
-  if iLinea <= 0 then Exit;
-  if (sSerie = '') or (sNumero = '') then Exit;
-
+  if (iLinea > 0) and (sSerie <> '') and (sNumero <> '') then
+  begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := ConexionPrincipal;
@@ -1036,6 +1036,8 @@ begin
   unqrySesionLin.FieldByName('TOTAL_UNIDADES_SESLIN').AsFloat := rTotalUds;
   unqrySesionLin.FieldByName('TOTAL_LINEA_SESLIN').AsFloat    :=
                                                             rTotalUds * rPrecio;
+  end;
+  end;
 end;
 
 procedure TdmComprasSesiones.AsegurarSerieEnEmpresasSeries(
@@ -1059,30 +1061,30 @@ begin
     q.ParamByName('emp').AsString := AEmpresa;
     q.ParamByName('ser').AsString := ASerie;
     q.Open;
-    if q.FieldByName('N').AsInteger > 0 then Exit;
-    q.Close;
-
-    // PK de la nueva fila: contador 'ES' (mismo que pantalla Empresas)
-    sCodigoSer := ObtenerSiguienteContador(
-      ConexionPrincipal,
-      'ES',
-      IdentidadSesion.Usuario);
-    if Trim(sCodigoSer) = '' then
-      raise Exception.Create(SErrorCodigoSerieEmpresa);
-
-    q.SQL.Text :=
-      'INSERT INTO fza_empresas_series ' +
-      '  (CODIGO_SERIE_EMPSER, CODIGO_EMP_EMPSER, EMPSER, TIPO_DOC_EMPSER, ' +
-      '   SUBTIPO_EMPSER, FECHA_DESDE_EMPSER, FECHA_HASTA_EMPSER, ' +
-      '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-      'VALUES ' +
-      '  (:cod, :emp, :ser, ''SE'', ' +
-      '   ''NORMAL'', CURDATE(), NULL, NOW(), :u, NOW(), :u)';
-    q.ParamByName('cod').AsString := sCodigoSer;
-    q.ParamByName('emp').AsString := AEmpresa;
-    q.ParamByName('ser').AsString := ASerie;
-    q.ParamByName('u').AsString   := IdentidadSesion.Usuario;
-    q.ExecSQL;
+    if q.FieldByName('N').AsInteger = 0 then
+    begin
+      q.Close;
+      // PK de la nueva fila: contador 'ES' (mismo que pantalla Empresas)
+      sCodigoSer := ObtenerSiguienteContador(
+        ConexionPrincipal,
+        'ES',
+        IdentidadSesion.Usuario);
+      if Trim(sCodigoSer) = '' then
+        raise Exception.Create(SErrorCodigoSerieEmpresa);
+      q.SQL.Text :=
+        'INSERT INTO fza_empresas_series ' +
+        '  (CODIGO_SERIE_EMPSER, CODIGO_EMP_EMPSER, EMPSER, ' +
+        'TIPO_DOC_EMPSER, SUBTIPO_EMPSER, FECHA_DESDE_EMPSER, ' +
+        'FECHA_HASTA_EMPSER, INSTANTE_ALTA, USUARIO_ALTA, ' +
+        'INSTANTE_MODIF, USUARIO_MODIF) ' +
+        'VALUES (:cod, :emp, :ser, ''SE'', ''NORMAL'', CURDATE(), ' +
+        'NULL, NOW(), :u, NOW(), :u)';
+      q.ParamByName('cod').AsString := sCodigoSer;
+      q.ParamByName('emp').AsString := AEmpresa;
+      q.ParamByName('ser').AsString := ASerie;
+      q.ParamByName('u').AsString   := IdentidadSesion.Usuario;
+      q.ExecSQL;
+    end;
   finally
     FreeAndNil(q);
   end;
@@ -1100,8 +1102,8 @@ begin
   // claro de "elige una serie primero".
   sSerie   := Trim(unqryTablaG.FieldByName('SERIE_SES').AsString);
   sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString);
-  if (sSerie = '') or (sEmpresa = '') then
-    Exit;
+  if (sSerie <> '') and (sEmpresa <> '') then
+  begin
   unstrdprcGetContadorSesion.Params.Clear;
   unstrdprcGetContadorSesion.Params.CreateParam(
     ftString, 'pserie', ptInput);
@@ -1122,6 +1124,7 @@ begin
   unstrdprcGetContadorSesion.ExecProc;
   unqryTablaG.FieldByName('NUMERO_SES').AsString :=
     unstrdprcGetContadorSesion.ParamByName('pcont').AsString;
+  end;
 end;
 
 procedure TdmComprasSesiones.ChequearDuplicado(const ACodigoArt: string;

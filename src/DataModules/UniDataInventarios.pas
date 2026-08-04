@@ -256,38 +256,27 @@ begin
   // previa que se cancelo despues de grabar lineas (registro fantasma).
   if (FCodigoEmpresa = '') or (FNumero = '') or (FNumero = '0') then
   begin
-    if cdsLineas.Active then cdsLineas.EmptyDataSet;
-    Exit;
+    if cdsLineas.Active then
+      cdsLineas.EmptyDataSet;
+  end
+  else if not (cdsLineas.Active and
+              (cdsLineas.State in [dsInsert, dsEdit])) then
+  begin
+    // No se recarga durante un Insert o Edit para evitar reentradas.
+    unqryLineas.Close;
+    unqryLineas.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
+    unqryLineas.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
+    unqryLineas.ParamByName('SERIE').AsString   := FSerie;
+    unqryLineas.ParamByName('NUMERO').AsString  := FNumero;
+    unqryLineas.Open;
+    if cdsLineas.Active then
+      cdsLineas.Close;
+    cdsLineas.Open;
+    ForzarRequiredFalseEnCdsLineas;
+    FLineasDesempaquetadas := False;
+    if FDesempaquetarAlCargar then
+      DesempaquetarAtributosDesdeSku;
   end;
-
-  // Defensa contra reentrada: cdsLineasBeforeInsert puede llamar a
-  // unqryTablaG.Post mientras cdsLineas esta a punto de entrar en dsInsert.
-  // Si en esa secuencia AfterScroll/Refresh acaba reentrando aqui, cerrar
-  // cdsLineas a mitad de un Insert deja el dataset en un estado inconsistente.
-  if cdsLineas.Active and (cdsLineas.State in [dsInsert, dsEdit]) then
-    Exit;
-
-  unqryLineas.Close;
-  unqryLineas.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
-  unqryLineas.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
-  unqryLineas.ParamByName('SERIE').AsString   := FSerie;
-  unqryLineas.ParamByName('NUMERO').AsString  := FNumero;
-  unqryLineas.Open;
-  if cdsLineas.Active then cdsLineas.Close;
-  cdsLineas.Open;
-  // El Open vuelve a inicializar Required a partir del provider
-  // (poIncFieldProps default True). Lo deshacemos.
-  ForzarRequiredFalseEnCdsLineas;
-
-  // Lineas recien cargadas: los ATTR1..ATTR5_VALOR aun no estan rellenos.
-  // El form decide cuando llamar a DesempaquetarAtributosDesdeSku (solo si
-  // el usuario activa "Ver atributos en columnas") para no comerse N
-  // Edit/Post en cada apertura.
-  FLineasDesempaquetadas := False;
-  // Contrato de entrada en desglose: los ATTR se rellenan AQUI, en la
-  // misma recarga, venga de donde venga (ver FDesempaquetarAlCargar).
-  if FDesempaquetarAlCargar then
-    DesempaquetarAtributosDesdeSku;
 end;
 
 procedure TdmInventarios.DesempaquetarAtributosDesdeSku;
@@ -297,56 +286,50 @@ var
   i: Integer;
   Bm: TBookmark;
 begin
-  if (not cdsLineas.Active) or cdsLineas.IsEmpty then
-    Exit;
-  // Idempotente: si ya se desempaqueto para las lineas actualmente
-  // cargadas, no relanzar el bucle. Si CargarLineasInventario recarga
-  // las lineas, resetea FLineasDesempaquetadas y volvemos a entrar.
-  if FLineasDesempaquetadas then
-    Exit;
-  FDesempaquetando := True;
-  Bm := cdsLineas.GetBookmark;
-  cdsLineas.DisableControls;
-  try
-    cdsLineas.First;
-    while not cdsLineas.Eof do
-    begin
-      Sku := cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString;
-      if Sku <> '' then
+  if cdsLineas.Active and (not cdsLineas.IsEmpty) and
+     (not FLineasDesempaquetadas) then
+  begin
+    FDesempaquetando := True;
+    Bm := cdsLineas.GetBookmark;
+    cdsLineas.DisableControls;
+    try
+      cdsLineas.First;
+      while not cdsLineas.Eof do
       begin
-        Partes := Sku.Split(['/']);
-        if Length(Partes) > 1 then
+        Sku := cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString;
+        if Sku <> '' then
         begin
-          if not (cdsLineas.State in [dsEdit, dsInsert]) then
-            cdsLineas.Edit;
-          // Tantos atributos como segmentos haya tras el código de artículo.
-          // Sin esto, GenerarSkuFinal itera 0 veces sobre las líneas cargadas
-          // de BBDD y el SKU se queda obsoleto al cambiar Color/Talla.
-          cdsLineas.FieldByName('NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger :=
-                                                          Length(Partes) - 1;
-          for i := 1 to 5 do
+          Partes := Sku.Split(['/']);
+          if Length(Partes) > 1 then
           begin
-            if i < Length(Partes) then
-              ValorAtr := Partes[i]
-            else
-              ValorAtr := '';
-            cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString :=
-              ValorAtr;
+            if not (cdsLineas.State in [dsEdit, dsInsert]) then
+              cdsLineas.Edit;
+            cdsLineas.FieldByName(
+              'NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger :=
+              Length(Partes) - 1;
+            for i := 1 to 5 do
+            begin
+              if i < Length(Partes) then
+                ValorAtr := Partes[i]
+              else
+                ValorAtr := '';
+              cdsLineas.FieldByName(
+                'ATTR' + IntToStr(i) + '_VALOR').AsString := ValorAtr;
+            end;
+            cdsLineas.Post;
           end;
-          // AfterPost ya no enviara a BD (FDesempaquetando=True)
-          cdsLineas.Post;
         end;
+        cdsLineas.Next;
       end;
-      cdsLineas.Next;
+      cdsLineas.MergeChangeLog;
+      FLineasDesempaquetadas := True;
+    finally
+      if cdsLineas.BookmarkValid(Bm) then
+        cdsLineas.GotoBookmark(Bm);
+      cdsLineas.FreeBookmark(Bm);
+      cdsLineas.EnableControls;
+      FDesempaquetando := False;
     end;
-    cdsLineas.MergeChangeLog;
-    FLineasDesempaquetadas := True;
-  finally
-    if cdsLineas.BookmarkValid(Bm) then
-      cdsLineas.GotoBookmark(Bm);
-    cdsLineas.FreeBookmark(Bm);
-    cdsLineas.EnableControls;
-    FDesempaquetando := False;
   end;
 end;
 
@@ -429,11 +412,13 @@ procedure TdmInventarios.ForzarRequiredFalseEnCdsLineas;
 var
   i: Integer;
 begin
-  if cdsLineas = nil then Exit;
-  for i := 0 to cdsLineas.FieldCount - 1 do
-    cdsLineas.Fields[i].Required := False;
-  for i := 0 to cdsLineas.FieldDefs.Count - 1 do
-    cdsLineas.FieldDefs[i].Required := False;
+  if cdsLineas <> nil then
+  begin
+    for i := 0 to cdsLineas.FieldCount - 1 do
+      cdsLineas.Fields[i].Required := False;
+    for i := 0 to cdsLineas.FieldDefs.Count - 1 do
+      cdsLineas.FieldDefs[i].Required := False;
+  end;
 end;
 
 function TdmInventarios.ExisteColumnaInventarios(const ACampo: string): Boolean;
@@ -648,46 +633,47 @@ procedure TdmInventarios.GetCodigoAutoInventario;
 var
   sp: TUniStoredProc;
 begin
-  if unqryTablaG.FindField('NUMERO_INV').AsString <> '0' then Exit;
-  sp := TUniStoredProc.Create(nil);
-  try
-    sp.Connection := ConexionPrincipal;
-    sp.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
-    sp.Params.Clear;
-    sp.Params.CreateParam(ftString, 'pserie',           ptInput);
-    sp.Params.CreateParam(ftString, 'ptipodoc',         ptInput);
-    sp.Params.CreateParam(ftString, 'pEMPRESA_CONTADOR',ptInput);
-    sp.Params.CreateParam(ftString, 'pUSUARIOMODIF',    ptInput);
-    sp.Params.CreateParam(ftString, 'pcont',            ptOutput);
-    sp.ParamByName('pserie').AsString :=
-                            unqryTablaG.FindField('SERIE_INV').AsString;
-    sp.ParamByName('ptipodoc').AsString := 'IN';
-    sp.ParamByName('pEMPRESA_CONTADOR').AsString :=
-                            unqryTablaG.FindField('CODIGO_EMP_INV').AsString;
-    sp.ParamByName('pUSUARIOMODIF').AsString := IdentidadSesion.Usuario;
-    sp.ExecProc;
-    unqryTablaG.FindField('NUMERO_INV').AsString :=
-                                              sp.ParamByName('pcont').AsString;
-  finally
-    FreeAndNil(sp);
+  if unqryTablaG.FindField('NUMERO_INV').AsString = '0' then
+  begin
+    sp := TUniStoredProc.Create(nil);
+    try
+      sp.Connection := ConexionPrincipal;
+      sp.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
+      sp.Params.Clear;
+      sp.Params.CreateParam(ftString, 'pserie', ptInput);
+      sp.Params.CreateParam(ftString, 'ptipodoc', ptInput);
+      sp.Params.CreateParam(ftString, 'pEMPRESA_CONTADOR', ptInput);
+      sp.Params.CreateParam(ftString, 'pUSUARIOMODIF', ptInput);
+      sp.Params.CreateParam(ftString, 'pcont', ptOutput);
+      sp.ParamByName('pserie').AsString :=
+        unqryTablaG.FindField('SERIE_INV').AsString;
+      sp.ParamByName('ptipodoc').AsString := 'IN';
+      sp.ParamByName('pEMPRESA_CONTADOR').AsString :=
+        unqryTablaG.FindField('CODIGO_EMP_INV').AsString;
+      sp.ParamByName('pUSUARIOMODIF').AsString :=
+        IdentidadSesion.Usuario;
+      sp.ExecProc;
+      unqryTablaG.FindField('NUMERO_INV').AsString :=
+        sp.ParamByName('pcont').AsString;
+    finally
+      FreeAndNil(sp);
+    end;
   end;
 end;
 
 procedure TdmInventarios.CargarMovimientosRegularizacion;
 begin
   unqryMovsRegul.Close;
-  if (FCodigoEmpresa = '') or (FCodigoAlmacen = '') or
-     (FSerie = '') or (FNumero = '') then Exit;
-
-  // Los movimientos de regularización solo existen si el inventario ya
-  // ha sido APLICADO. Si el estado es ABIERTO o CANCELADO, no consultamos.
-  if GetEstadoInventario <> 'APLICADO' then Exit;
-
-  unqryMovsRegul.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
-  unqryMovsRegul.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
-  unqryMovsRegul.ParamByName('SERIE').AsString   := FSerie;
-  unqryMovsRegul.ParamByName('NUMERO').AsString  := FNumero;
-  unqryMovsRegul.Open;
+  if (FCodigoEmpresa <> '') and (FCodigoAlmacen <> '') and
+     (FSerie <> '') and (FNumero <> '') and
+     (GetEstadoInventario = 'APLICADO') then
+  begin
+    unqryMovsRegul.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
+    unqryMovsRegul.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
+    unqryMovsRegul.ParamByName('SERIE').AsString   := FSerie;
+    unqryMovsRegul.ParamByName('NUMERO').AsString  := FNumero;
+    unqryMovsRegul.Open;
+  end;
 end;
 
 function TdmInventarios.GenerarSiguienteLinea: string;
@@ -786,30 +772,29 @@ var
   Bookmark: TBookmark;
 begin
   Result := False;
-  if not cdsLineas.Active then
+  if cdsLineas.Active then
   begin
-    Exit;
-  end;
-
-  Bookmark := cdsLineas.GetBookmark;
-  cdsLineas.DisableControls;
-  try
-    cdsLineas.First;
-    while not cdsLineas.Eof do
-    begin
-      if SameText(cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString,
-                  ASku) then
+    Bookmark := cdsLineas.GetBookmark;
+    cdsLineas.DisableControls;
+    try
+      cdsLineas.First;
+      while not cdsLineas.Eof do
       begin
-        Result := True;
-        Break;
+        if SameText(
+          cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString,
+          ASku) then
+        begin
+          Result := True;
+          Break;
+        end;
+        cdsLineas.Next;
       end;
-      cdsLineas.Next;
+    finally
+      if cdsLineas.BookmarkValid(Bookmark) then
+        cdsLineas.GotoBookmark(Bookmark);
+      cdsLineas.FreeBookmark(Bookmark);
+      cdsLineas.EnableControls;
     end;
-  finally
-    if cdsLineas.BookmarkValid(Bookmark) then
-      cdsLineas.GotoBookmark(Bookmark);
-    cdsLineas.FreeBookmark(Bookmark);
-    cdsLineas.EnableControls;
   end;
 end;
 
@@ -823,15 +808,18 @@ begin
   // queda incompleto, lo que el llamante interpreta para decidir si ya hay
   // que recalcular teoricas/PMP).
   Result := AArticuloBase;
-  if not cdsLineas.Active then Exit;
-  if cdsLineas.FindField('NUM_ATRIBUTOS_REQ_INV_LINEA') = nil then Exit;
-  NumAttr := cdsLineas.FieldByName('NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger;
-  for i := 1 to NumAttr do
+  if cdsLineas.Active and
+     (cdsLineas.FindField('NUM_ATRIBUTOS_REQ_INV_LINEA') <> nil) then
   begin
-    ValorAttr :=
-      cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString;
-    if Trim(ValorAttr) <> '' then
-      Result := Result + '/' + ValorAttr;
+    NumAttr := cdsLineas.FieldByName(
+      'NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger;
+    for i := 1 to NumAttr do
+    begin
+      ValorAttr :=
+        cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString;
+      if Trim(ValorAttr) <> '' then
+        Result := Result + '/' + ValorAttr;
+    end;
   end;
 end;
 
@@ -960,7 +948,8 @@ var
 begin
   // Validamos antes de Post para dar un mensaje claro en lugar del cryptico
   // "Field value required" del TClientDataSet.
-  if FDesempaquetando then Exit;
+  if not FDesempaquetando then
+  begin
   // Belt-and-suspenders: aunque ya forzamos Required:=False en
   // DataModuleCreate y tras cada cdsLineas.Open, el cds puede recibir
   // un poIncFieldProps reactivado por alguna llamada interna durante
@@ -1035,10 +1024,10 @@ begin
   // la conversion (lineas con unidad=padre y pivote aun 0, p.ej.
   // DEMO-CAMISA sin SKU). El des-pivote regenera lineas por SKU
   // completo, que si pasan las validaciones cuando el modo se apaga.
-  if FModoPivoteActivo or
-     ((DataSet.FindField('ID_AC_PIVOT_INVLIN') <> nil) and
-      (DataSet.FieldByName('ID_AC_PIVOT_INVLIN').AsInteger > 0)) then
-    Exit;
+  if (not FModoPivoteActivo) and
+     ((DataSet.FindField('ID_AC_PIVOT_INVLIN') = nil) or
+      (DataSet.FieldByName('ID_AC_PIVOT_INVLIN').AsInteger <= 0)) then
+  begin
 
   // BACKSTOP: si el artículo tiene atributos requeridos, reconstruimos el SKU
   // a partir de ATTRn_VALOR aquí mismo. Así, aunque OnAtributoChanged falle
@@ -1081,17 +1070,19 @@ begin
                                                           '_VALOR').AsString;
     CrearSkuDesdeLinea(CodArticulo, CodSku, Atribs);
   end;
+  end;
+  end;
 end;
 
 procedure TdmInventarios.cdsLineasAfterPost(DataSet: TDataSet);
 begin
   // Durante el desempaquetado de atributos in-memory NO debemos enviar
   // cambios a BD: esos campos no existen en fza_inventarios_lineas.
-  if FDesempaquetando then
-    Exit;
-
-  if cdsLineas.ChangeCount > 0 then
-    cdsLineas.ApplyUpdates(0);
+  if not FDesempaquetando then
+  begin
+    if cdsLineas.ChangeCount > 0 then
+      cdsLineas.ApplyUpdates(0);
+  end;
 end;
 
 procedure TdmInventarios.cdsLineasBeforeDelete(DataSet: TDataSet);
@@ -1114,24 +1105,26 @@ begin
   // Exigimos que la cabecera tenga un NUMERO_INV definitivo. Si sigue
   // en dsInsert con NUMERO_INV='0' (marcador), cdsLineasNewRecord
   // copiaria ese '0' y la linea quedaria huerfana.
-  if (unqryTablaG = nil) or (not unqryTablaG.Active) then Exit;
-  if unqryTablaG.State in [dsInsert, dsEdit] then
+  if (unqryTablaG <> nil) and unqryTablaG.Active then
   begin
-    try
-      unqryTablaG.Post;
-    except
-      on E: Exception do
-      begin
-        raise Exception.Create(Format(SErrorAnadirLineaCabeceraInventario,
-                                      [E.Message]));
+    if unqryTablaG.State in [dsInsert, dsEdit] then
+    begin
+      try
+        unqryTablaG.Post;
+      except
+        on E: Exception do
+        begin
+          raise Exception.Create(Format(
+            SErrorAnadirLineaCabeceraInventario, [E.Message]));
+        end;
       end;
+      SetClavesActivas(
+        unqryTablaG.FieldByName('CODIGO_EMP_INV').AsString,
+        unqryTablaG.FieldByName('CODIGO_ALM_INV').AsString,
+        unqryTablaG.FieldByName('SERIE_INV').AsString,
+        unqryTablaG.FieldByName('NUMERO_INV').AsString
+      );
     end;
-    SetClavesActivas(
-      unqryTablaG.FieldByName('CODIGO_EMP_INV').AsString,
-      unqryTablaG.FieldByName('CODIGO_ALM_INV').AsString,
-      unqryTablaG.FieldByName('SERIE_INV').AsString,
-      unqryTablaG.FieldByName('NUMERO_INV').AsString
-    );
   end;
 end;
 
@@ -1594,50 +1587,47 @@ begin
     qry.ParamByName('ALMACEN').AsString  := FCodigoAlmacen;
     qry.Open;
 
-    if qry.IsEmpty then Exit;
-
-    cdsLineas.DisableControls;
-    try
-      while not qry.Eof do
-      begin
-        Sku := qry.FieldByName('CODIGO_UNIDAD_SKU').AsString;
-        if (Sku <> '') and (not ExisteLineaConSku(Sku)) then
+    if not qry.IsEmpty then
+    begin
+      cdsLineas.DisableControls;
+      try
+        while not qry.Eof do
         begin
-          cdsLineas.Append;
-          cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString     :=
-            qry.FieldByName('CODIGO_ART_SKU').AsString;
-          cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString  := Sku;
-          cdsLineas.FieldByName('DESCRIPCION_ARTICULO_INVLIN').AsString :=
-            qry.FieldByName('DESCRIPCION_ART').AsString;
-          cdsLineas.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency   :=
-            qry.FieldByName('CANTIDAD_TEORICA').AsCurrency;
-          // Recuento por defecto = teorica (igual que
-          // CargarPorFamilia/Proveedor):
-          // diferencia 0. Si el usuario hace el recuento real lo sobreescribe.
-          cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency    :=
-            qry.FieldByName('CANTIDAD_TEORICA').AsCurrency;
-          cdsLineas.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency       :=
-            qry.FieldByName('PMP').AsCurrency;
-          cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency :=
-            qry.FieldByName('PMP').AsCurrency;
-          cdsLineas.Post;
-          Inc(Result);
+          Sku := qry.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+          if (Sku <> '') and (not ExisteLineaConSku(Sku)) then
+          begin
+            cdsLineas.Append;
+            cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString :=
+              qry.FieldByName('CODIGO_ART_SKU').AsString;
+            cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString := Sku;
+            cdsLineas.FieldByName(
+              'DESCRIPCION_ARTICULO_INVLIN').AsString :=
+              qry.FieldByName('DESCRIPCION_ART').AsString;
+            cdsLineas.FieldByName(
+              'CANTIDAD_TEORICA_INVLIN').AsCurrency :=
+              qry.FieldByName('CANTIDAD_TEORICA').AsCurrency;
+            // El recuento parte de la cantidad teorica.
+            cdsLineas.FieldByName(
+              'CANTIDAD_FISICA_INVLIN').AsCurrency :=
+              qry.FieldByName('CANTIDAD_TEORICA').AsCurrency;
+            cdsLineas.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency :=
+              qry.FieldByName('PMP').AsCurrency;
+            cdsLineas.FieldByName(
+              'PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency :=
+              qry.FieldByName('PMP').AsCurrency;
+            cdsLineas.Post;
+            Inc(Result);
+          end;
+          qry.Next;
         end;
-        qry.Next;
+        if Result > 0 then
+        begin
+          cdsLineas.ApplyUpdates(0);
+          FLineasDesempaquetadas := False;
+        end;
+      finally
+        cdsLineas.EnableControls;
       end;
-      if Result > 0 then
-      begin
-        cdsLineas.ApplyUpdates(0);
-        // Las lineas nuevas no tienen ATTR1..5_VALOR rellenos. Invalidamos
-        // el flag para que el form, si tiene el toggle "Ver atributos"
-        // activo, relance DesempaquetarAtributosDesdeSku (con su barra
-        // de progreso si toca) en el siguiente FocusedRecordChanged.
-        // Si el toggle esta off no perdemos nada: las columnas SKU1..5
-        // estan ocultas.
-        FLineasDesempaquetadas := False;
-      end;
-    finally
-      cdsLineas.EnableControls;
     end;
   finally
     FreeAndNil(qry);
@@ -1649,18 +1639,20 @@ var
   qry: TUniQuery;
 begin
   Result := False;
-  if Trim(ASku) = '' then Exit;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text := 'SELECT 1 FROM fza_articulos_skus ' +
-                    ' WHERE CODIGO_UNIDAD_SKU = :SKU LIMIT 1';
-    qry.ParamByName('SKU').AsString := ASku;
-    qry.Open;
-    Result := not qry.IsEmpty;
-    qry.Close;
-  finally
-    FreeAndNil(qry);
+  if Trim(ASku) <> '' then
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := ConexionPrincipal;
+      qry.SQL.Text := 'SELECT 1 FROM fza_articulos_skus ' +
+                      ' WHERE CODIGO_UNIDAD_SKU = :SKU LIMIT 1';
+      qry.ParamByName('SKU').AsString := ASku;
+      qry.Open;
+      Result := not qry.IsEmpty;
+      qry.Close;
+    finally
+      FreeAndNil(qry);
+    end;
   end;
 end;
 
@@ -1701,8 +1693,8 @@ begin
     for i := 0 to High(AAtributos) do
     begin
       ValorAtrib := Trim(AAtributos[i]);
-      if ValorAtrib = '' then Continue;
-
+      if ValorAtrib <> '' then
+      begin
       qry.SQL.Text :=
         'SELECT v.ID_AV ' +
         '  FROM fza_atributos_valores v ' +
@@ -1735,6 +1727,7 @@ begin
       qry.ParamByName('IDAV').AsInteger := IdAv;
       qry.ParamByName('USR').AsString   := FUsuario;
       qry.ExecSQL;
+      end;
     end;
 
     Result := True;
@@ -1771,13 +1764,13 @@ begin
   // (ver dfm: tabla fza_empresas_series filtrada por CODIGO_EMP_EMPSER).
   unqrySeries.Close;
   if ACodigoEmpresa = '' then
+    unqrySeries.Open
+  else
   begin
+    if unqrySeries.Params.FindParam('EMPRESA') <> nil then
+      unqrySeries.ParamByName('EMPRESA').AsString := ACodigoEmpresa;
     unqrySeries.Open;
-    Exit;
   end;
-  if unqrySeries.Params.FindParam('EMPRESA') <> nil then
-    unqrySeries.ParamByName('EMPRESA').AsString := ACodigoEmpresa;
-  unqrySeries.Open;
 end;
 
 procedure TdmInventarios.CargarDesdeListaSkus(ALista: TStringList);
@@ -1808,14 +1801,16 @@ begin
         Sku := Trim(ALista.Names[i]);
         if Sku = '' then
           Sku := Trim(ALista[i]);
-        if Sku = '' then Continue;
-
+        if Sku <> '' then
+        begin
         CANTIDAD := StrToCurrDef(ALista.ValueFromIndex[i], 1);
 
         qry.Close;
         qry.ParamByName('SKU').AsString := Sku;
         qry.Open;
-        if qry.IsEmpty then Continue; // ignorar SKUs que no existen
+        // Ignorar SKUs que no existen.
+        if not qry.IsEmpty then
+        begin
         ArticuloPadre := qry.FieldByName('CODIGO_ART_SKU').AsString;
 
         RellenarDatosSku(Sku, PMP, PMP); // PMP en variable temporal
@@ -1856,6 +1851,8 @@ begin
             unqryStockActual.FieldByName('PRECIO_MEDIO_STK').AsCurrency;
           AsegurarFechaRecuentoLinea;
           cdsLineas.Post;
+        end;
+        end;
         end;
       end;
       cdsLineas.ApplyUpdates(0);

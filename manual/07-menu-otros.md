@@ -236,7 +236,6 @@ para edición masiva o revisión rápida de muchos permisos a la vez.
 ## Hacer Copia de Seguridad
 
 ![Diálogo de copia de seguridad](img/07-copia-seguridad.png)
-*▢ Captura pendiente — Diálogo de copia de seguridad.*
 
 **Atajo de menú:** `[Ctrl]+[Y]`
 
@@ -312,7 +311,6 @@ fichero). El menú contextual del editor ofrece además *Seleccionar Todo*,
    haga falta.
 
 ![Resultado de un listado en VistaDatos](img/07-generador-listado.png)
-*▢ Captura pendiente — Pestaña VistaDatos con un resultado y el botón Exp. Excel.*
 
 > El botón **Editar Grid** habilita la edición directa del resultado sobre
 > la base de datos. Es útil para correcciones puntuales, pero **modifica

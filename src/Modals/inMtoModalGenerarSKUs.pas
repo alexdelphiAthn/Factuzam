@@ -203,6 +203,7 @@ var
   i: Integer;
   BmMaestro: TBookmark;
   DimensionesSinValores: TStringList;
+  bValido: Boolean;
 begin
   if tvMaestro.DataController.IsEditing then
     tvMaestro.DataController.Post;
@@ -261,37 +262,38 @@ begin
     end;
     DimensionesSinValores := TStringList.Create;
     try
+      bValido := True;
       for i := 0 to FDimensiones.Count - 1 do
         if FDimensiones[i].Valores.Count = 0 then
           DimensionesSinValores.Add(FDimensiones[i].NombreAtributo);
-
       if FDimensiones.Count = 0 then
       begin
         ShowMessage(SErrorDimensionesSkuNoDefinidas);
-        Exit;
-      end;
-
-      if DimensionesSinValores.Count = FDimensiones.Count then
+        bValido := False;
+      end
+      else if DimensionesSinValores.Count = FDimensiones.Count then
       begin
         ShowMessage(SErrorValoresSkuNoSeleccionados);
-        Exit;
-      end;
-
-      if DimensionesSinValores.Count > 0 then
+        bValido := False;
+      end
+      else if DimensionesSinValores.Count > 0 then
       begin
         ShowMessage(Format(SErrorValoresDimensionesSkuIncompletos,
-                           [DimensionesSinValores.CommaText]));
-        Exit;
+          [DimensionesSinValores.CommaText]));
+        bValido := False;
       end;
     finally
       FreeAndNil(DimensionesSinValores);
     end;
-    GenerarCombinaciones(0, '', '');
-    ShowMessage(SInfoCombinacionesSkuGeneradas);
+    if bValido then
+    begin
+      GenerarCombinaciones(0, '', '');
+      ShowMessage(SInfoCombinacionesSkuGeneradas);
+      inherited;
+    end;
   finally
     FreeAndNil(DimDict);
   end;
-  inherited;
 end;
 
 procedure TfrmMtoModalGenerarSKUS.btnCancelarClick(Sender: TObject);
@@ -314,79 +316,76 @@ var
   IdConjuntoAsignado, IdNuevoValor, OrdenVal, OrdenSugerido: Integer;
   Respuesta: Integer;
   oConjunto: TConjuntoAtributoSku;
+  bContinuar: Boolean;
 begin
   // 1. INPUTS DEL USUARIO
   NuevoNombre := Trim(InputBox(STituloAnadirValorSku,
     SSolicitudNombreValorSku, ''));
-  if NuevoNombre = '' then
-    Exit;
-  // 2. DIMENSIÓN SELECCIONADA (Ej: 'CO' para Color)
-  IdAtrSel := FMaestro.FieldByName('ID_ATB_VA').AsString;
-  oConjunto := FRepositorio.ObtenerConjuntoAtributo(
-    FCodigoArticulo,
-    IdAtrSel);
-  IdConjuntoAsignado := oConjunto.Id;
-  NombreConjunto := oConjunto.Nombre;
-  OrdenSugerido := CalcularSiguienteOrdenValor(
-    IdAtrSel,
-    IdConjuntoAsignado);
-  OrdenStr := Trim(InputBox(
-    STituloAnadirValorSku,
-    SSolicitudOrdenNuevoValorSku,
-    IntToStr(OrdenSugerido)));
-  if OrdenStr = '' then
+  if NuevoNombre <> '' then
   begin
-    Exit;
-  end;
-  OrdenVal := StrToIntDef(OrdenStr, OrdenSugerido);
-  IdNuevoValor := FRepositorio.AsegurarValor(
-    IdAtrSel,
-    NuevoNombre,
-    OrdenVal);
-  if IdConjuntoAsignado > 0 then
-  begin
-    Respuesta := MessageDlg(
-      Format(
-        SPreguntaGuardarValorSkuGlobal,
-        [NuevoNombre, NombreConjunto]),
-      mtConfirmation,
-      [mbYes, mbNo, mbCancel],
-      0);
-    if Respuesta = mrCancel then
+    // 2. Dimension seleccionada, por ejemplo CO para Color.
+    IdAtrSel := FMaestro.FieldByName('ID_ATB_VA').AsString;
+    oConjunto := FRepositorio.ObtenerConjuntoAtributo(
+      FCodigoArticulo,
+      IdAtrSel);
+    IdConjuntoAsignado := oConjunto.Id;
+    NombreConjunto := oConjunto.Nombre;
+    OrdenSugerido := CalcularSiguienteOrdenValor(
+      IdAtrSel,
+      IdConjuntoAsignado);
+    OrdenStr := Trim(InputBox(
+      STituloAnadirValorSku,
+      SSolicitudOrdenNuevoValorSku,
+      IntToStr(OrdenSugerido)));
+    if OrdenStr <> '' then
     begin
-      Exit;
-    end
-    else if Respuesta = mrYes then
-    begin
-      FRepositorio.GuardarValorEnConjunto(
-        IdConjuntoAsignado,
-        IdNuevoValor,
+      OrdenVal := StrToIntDef(OrdenStr, OrdenSugerido);
+      IdNuevoValor := FRepositorio.AsegurarValor(
+        IdAtrSel,
+        NuevoNombre,
         OrdenVal);
-    end;
-  end
-  else
-  begin
-    Respuesta := MessageDlg(
-      Format(SPreguntaUsarValorSkuTemporal, [NuevoNombre]),
-      mtConfirmation,
-      [mbYes, mbNo],
-      0);
-    if Respuesta <> mrYes then
-    begin
-      Exit;
+      if IdConjuntoAsignado > 0 then
+      begin
+        Respuesta := MessageDlg(
+          Format(SPreguntaGuardarValorSkuGlobal,
+            [NuevoNombre, NombreConjunto]),
+          mtConfirmation,
+          [mbYes, mbNo, mbCancel],
+          0);
+        bContinuar := Respuesta <> mrCancel;
+        if Respuesta = mrYes then
+        begin
+          FRepositorio.GuardarValorEnConjunto(
+            IdConjuntoAsignado,
+            IdNuevoValor,
+            OrdenVal);
+        end;
+      end
+      else
+      begin
+        Respuesta := MessageDlg(
+          Format(SPreguntaUsarValorSkuTemporal, [NuevoNombre]),
+          mtConfirmation,
+          [mbYes, mbNo],
+          0);
+        bContinuar := Respuesta = mrYes;
+      end;
+      if bContinuar then
+      begin
+        FDetalle.Append;
+        FDetalle.FieldByName('ID_ATB_VA').AsString := IdAtrSel;
+        FDetalle.FieldByName('ID_AC').AsInteger := IdNuevoValor;
+        FDetalle.FieldByName('NOMBRE_AC').AsString := NuevoNombre;
+        if FDetalle.FindField('ORDEN_AV') <> nil then
+        begin
+          FDetalle.FieldByName('ORDEN_AV').ReadOnly := False;
+          FDetalle.FieldByName('ORDEN_AV').AsInteger := OrdenVal;
+        end;
+        FDetalle.FieldByName('ASIGNADO').AsInteger := 1;
+        FDetalle.Post;
+      end;
     end;
   end;
-  FDetalle.Append;
-  FDetalle.FieldByName('ID_ATB_VA').AsString := IdAtrSel;
-  FDetalle.FieldByName('ID_AC').AsInteger := IdNuevoValor;
-  FDetalle.FieldByName('NOMBRE_AC').AsString := NuevoNombre;
-  if FDetalle.FindField('ORDEN_AV') <> nil then
-  begin
-    FDetalle.FieldByName('ORDEN_AV').ReadOnly := False;
-    FDetalle.FieldByName('ORDEN_AV').AsInteger := OrdenVal;
-  end;
-  FDetalle.FieldByName('ASIGNADO').AsInteger := 1;
-  FDetalle.Post;
 end;
 
 procedure TfrmMtoModalGenerarSKUS.RecargarMaestro;
@@ -429,51 +428,47 @@ var
   NombreVal, OrdenStr, IdAtr, NombreConjunto: string;
   bGuardar: Boolean;
 begin
-  if not FDetalle.Active or FDetalle.IsEmpty then Exit;
-
-  // 1. Obtener los datos de la fila seleccionada
-  IdVal := FDetalle.FieldByName('ID_AC').AsInteger;
-  NombreVal := FDetalle.FieldByName('NOMBRE_AC').AsString;
-  OrdenActual := FDetalle.FieldByName('ORDEN_AV').AsInteger;
-  IdAtr := FDetalle.FieldByName('ID_ATB_VA').AsString;
-
-  if IdVal <= 0 then Exit;
-
-  // 2. Solicitar el nuevo orden al usuario
-  OrdenStr := Trim(InputBox(STituloCambiarOrdenValorSku,
-    Format(SSolicitudOrdenValorSku, [NombreVal]),
-    IntToStr(OrdenActual)));
-
-  if OrdenStr = '' then Exit;
-  Orden := StrToIntDef(OrdenStr, -1);
-
-  if Orden < 0 then
+  if FDetalle.Active and (not FDetalle.IsEmpty) then
   begin
-    ShowMessage(SErrorOrdenValorSkuNoValido);
-    Exit;
-  end;
-
-  NombreConjunto := FRepositorio.ObtenerNombreConjunto(
-    FCodigoArticulo,
-    IdAtr);
-  bGuardar := True;
-  if Trim(NombreConjunto) <> '' then
-  begin
-    if MessageDlg(
-      Format(SPreguntaCambiarOrdenValorSkuGlobal, [NombreConjunto]),
-      mtWarning,
-      [mbYes, mbNo],
-      0) <> mrYes then
+    IdVal := FDetalle.FieldByName('ID_AC').AsInteger;
+    NombreVal := FDetalle.FieldByName('NOMBRE_AC').AsString;
+    OrdenActual := FDetalle.FieldByName('ORDEN_AV').AsInteger;
+    IdAtr := FDetalle.FieldByName('ID_ATB_VA').AsString;
+    if IdVal > 0 then
     begin
-      bGuardar := False;
+      OrdenStr := Trim(InputBox(STituloCambiarOrdenValorSku,
+        Format(SSolicitudOrdenValorSku, [NombreVal]),
+        IntToStr(OrdenActual)));
+      if OrdenStr <> '' then
+      begin
+        Orden := StrToIntDef(OrdenStr, -1);
+        if Orden < 0 then
+          ShowMessage(SErrorOrdenValorSkuNoValido)
+        else
+        begin
+          NombreConjunto := FRepositorio.ObtenerNombreConjunto(
+            FCodigoArticulo,
+            IdAtr);
+          bGuardar := True;
+          if Trim(NombreConjunto) <> '' then
+          begin
+            bGuardar := MessageDlg(
+              Format(SPreguntaCambiarOrdenValorSkuGlobal,
+                [NombreConjunto]),
+              mtWarning,
+              [mbYes, mbNo],
+              0) = mrYes;
+          end;
+          if bGuardar then
+          begin
+            FRepositorio.GuardarOrdenValor(IdVal, Orden);
+            FDetalle.Edit;
+            FDetalle.FieldByName('ORDEN_AV').AsInteger := Orden;
+            FDetalle.Post;
+          end;
+        end;
+      end;
     end;
-  end;
-  if bGuardar then
-  begin
-    FRepositorio.GuardarOrdenValor(IdVal, Orden);
-    FDetalle.Edit;
-    FDetalle.FieldByName('ORDEN_AV').AsInteger := Orden;
-    FDetalle.Post;
   end;
 end;
 
@@ -482,23 +477,29 @@ var
   IdAtr, NombreAtr, OrdenStr: string;
   Orden, OrdenActual: Integer;
 begin
-  if not FMaestro.Active or FMaestro.IsEmpty then Exit;
-  IdAtr := FMaestro.FieldByName('ID_ATB_VA').AsString;
-  NombreAtr := FMaestro.FieldByName('NOMBRE_ATRIBUTO').AsString;
-  OrdenActual := FMaestro.FieldByName('ORDEN_ACA').AsInteger;
-  if IdAtr = '' then Exit;
-  OrdenStr := Trim(InputBox(STituloCambiarOrdenAtributoSku,
-    Format(SSolicitudOrdenAtributoSku, [NombreAtr]),
-    IntToStr(OrdenActual)));
-  if OrdenStr = '' then Exit;
-  Orden := StrToIntDef(OrdenStr, -1);
-  if Orden <= 0 then
+  if FMaestro.Active and (not FMaestro.IsEmpty) then
   begin
-    ShowMessage(SErrorOrdenAtributoSkuNoValido);
-    Exit;
+    IdAtr := FMaestro.FieldByName('ID_ATB_VA').AsString;
+    NombreAtr := FMaestro.FieldByName('NOMBRE_ATRIBUTO').AsString;
+    OrdenActual := FMaestro.FieldByName('ORDEN_ACA').AsInteger;
+    if IdAtr <> '' then
+    begin
+      OrdenStr := Trim(InputBox(STituloCambiarOrdenAtributoSku,
+        Format(SSolicitudOrdenAtributoSku, [NombreAtr]),
+        IntToStr(OrdenActual)));
+      if OrdenStr <> '' then
+      begin
+        Orden := StrToIntDef(OrdenStr, -1);
+        if Orden <= 0 then
+          ShowMessage(SErrorOrdenAtributoSkuNoValido)
+        else
+        begin
+          GuardarOrdenAtributo(IdAtr, Orden);
+          RecargarMaestro;
+        end;
+      end;
+    end;
   end;
-  GuardarOrdenAtributo(IdAtr, Orden);
-  RecargarMaestro;
 end;
 
 constructor TDimensionSKU.Create;

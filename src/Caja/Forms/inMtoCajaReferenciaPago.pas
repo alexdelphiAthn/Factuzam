@@ -288,54 +288,48 @@ begin
     ShowMessage(SErrorReferenciaPagoCajaNoIndicada);
     if edtReferencia.CanFocus then
       edtReferencia.SetFocus;
-    Exit;
-  end;
-  // Validar divisa si está activada
-  if FDatosResultado.EsDivisa then
+  end
+  else if FDatosResultado.EsDivisa and
+          (edtFactorCambio.Value <= 0) then
   begin
-    if edtFactorCambio.Value <= 0 then
-    begin
-      ShowMessage(SErrorFactorCambioCajaNoValido);
-      if edtFactorCambio.CanFocus then
-        edtFactorCambio.SetFocus;
-      Exit;
-    end;
-  end;
-  // Validar blockchain si es cripto
-  if FDatosResultado.EsCripto then
+    ShowMessage(SErrorFactorCambioCajaNoValido);
+    if edtFactorCambio.CanFocus then
+      edtFactorCambio.SetFocus;
+  end
+  else if FDatosResultado.EsCripto and
+          (Trim(edtTxHash.Text) = '') then
   begin
-    if Trim(edtTxHash.Text) = '' then
-    begin
-      ShowMessage(SErrorHashBlockchainCajaNoIndicado);
-      if edtTxHash.CanFocus then
-        edtTxHash.SetFocus;
-      Exit;
-    end;
-  end;
-  Result := True;
+    ShowMessage(SErrorHashBlockchainCajaNoIndicado);
+    if edtTxHash.CanFocus then
+      edtTxHash.SetFocus;
+  end
+  else
+    Result := True;
 end;
 
 procedure TfrmCajaReferenciaPago.btnAceptarClick(Sender: TObject);
 var
   CodigoDivisa: string;
 begin
-  if not ValidarDatos then Exit;
-  FDatosResultado.Referencia := Trim(edtReferencia.Text);
-  if FDatosResultado.EsDivisa then
+  if ValidarDatos then
   begin
-    CodigoDivisa := Copy(txtDivisa.Text, 1, 3);
-    FDatosResultado.CodigoDivisa  := CodigoDivisa;
-    FDatosResultado.FactorCambio  := edtFactorCambio.Value;
-    FDatosResultado.ImporteDivisa := edtImporteDivisa.Value;
-    FDatosResultado.ImporteEuros  := edtImporteEuros.Value;
+    FDatosResultado.Referencia := Trim(edtReferencia.Text);
+    if FDatosResultado.EsDivisa then
+    begin
+      CodigoDivisa := Copy(txtDivisa.Text, 1, 3);
+      FDatosResultado.CodigoDivisa := CodigoDivisa;
+      FDatosResultado.FactorCambio := edtFactorCambio.Value;
+      FDatosResultado.ImporteDivisa := edtImporteDivisa.Value;
+      FDatosResultado.ImporteEuros := edtImporteEuros.Value;
+    end;
+    if FDatosResultado.EsCripto then
+    begin
+      FDatosResultado.RedBlockchain := cbbRedBlockchain.Text;
+      if Trim(edtTxHash.Text) <> '' then
+        FDatosResultado.Referencia := Trim(edtTxHash.Text);
+    end;
+    ModalResult := mrOk;
   end;
-  if FDatosResultado.EsCripto then
-  begin
-    FDatosResultado.RedBlockchain := cbbRedBlockchain.Text;
-    if Trim(edtTxHash.Text) <> '' then
-      FDatosResultado.Referencia := Trim(edtTxHash.Text);
-  end;
-  ModalResult := mrOk;
 end;
 
 procedure TfrmCajaReferenciaPago.btnCancelarClick(Sender: TObject);
@@ -352,22 +346,23 @@ var
 begin
   Moneda := UpperCase(Copy(txtDivisa.Text, 1, 3));
   PrecioEnEuros := GetPriceBinance(Moneda + 'EUR');
-  if PrecioEnEuros <= 0 then
-    Exit;
-  FactorCalculado  := 1 / PrecioEnEuros;
-  ImporteCalculado := FPendienteEuros / PrecioEnEuros;
-  edtFactorCambio.Value  := FactorCalculado;
-  if FRellenarDesdeEuros then
-    edtImporteDivisa.Value := ImporteCalculado;
-  edtImporteEuros.Value := edtImporteDivisa.Value * (1/FactorCalculado);
-  var sDivisa := Copy(txtDivisa.Text, 1, 3);
-  lblEquivale.Caption  := Format(SCaptionEquivalenciaEurDivisa,
-                                 [FactorCalculado, sDivisa]);
-  lblEquivale2.Caption := Format(SCaptionEquivalenciaDivisaEur,
-                                 [sDivisa, 1 / FactorCalculado]);
-  FDatosResultado.FactorCambio  := FactorCalculado;
-  FDatosResultado.ImporteDivisa := edtImporteDivisa.Value;
-  FDatosResultado.ImporteEuros  := FPendienteEuros;
+  if PrecioEnEuros > 0 then
+  begin
+    FactorCalculado := 1 / PrecioEnEuros;
+    ImporteCalculado := FPendienteEuros / PrecioEnEuros;
+    edtFactorCambio.Value := FactorCalculado;
+    if FRellenarDesdeEuros then
+      edtImporteDivisa.Value := ImporteCalculado;
+    edtImporteEuros.Value := edtImporteDivisa.Value * (1 / FactorCalculado);
+    var sDivisa := Copy(txtDivisa.Text, 1, 3);
+    lblEquivale.Caption := Format(SCaptionEquivalenciaEurDivisa,
+      [FactorCalculado, sDivisa]);
+    lblEquivale2.Caption := Format(SCaptionEquivalenciaDivisaEur,
+      [sDivisa, 1 / FactorCalculado]);
+    FDatosResultado.FactorCambio := FactorCalculado;
+    FDatosResultado.ImporteDivisa := edtImporteDivisa.Value;
+    FDatosResultado.ImporteEuros := FPendienteEuros;
+  end;
 end;
 
 procedure TfrmCajaReferenciaPago.GetDivisa;

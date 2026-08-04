@@ -1,7 +1,7 @@
 param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
-  [int]$MaximoFlujo = 100,
-  [int]$MaximoMetodosMayoresDe200 = 28
+  [int]$MaximoFlujo = 92,
+  [int]$MaximoMetodosMayoresDe200 = 0
 )
 
 Set-StrictMode -Version Latest
@@ -1149,10 +1149,18 @@ foreach ($contrato in $contratosRepositorioArticuloDevolucion) {
 $exclusiones = @(
   '\3rdpartyComp\',
   '\Lib3par\',
-  '\sqlformatter\',
+  '\Lib\sqlformatter\',
+  '\apps_fmx\',
+  '\certapiweb\',
+  '\fotos_nube\',
+  '\otras pruebas\',
+  '\pruebaventasws\',
+  '\utilfmt80\',
   '\utilmigsqlsrv\',
   '\utilnormbbdd\',
-  '\pruebas prestashop\'
+  '\pruebas prestashop\',
+  '\vcl\',
+  '\vcl37\'
 )
 # Solo estas rutinas generadas quedan fuera de la deuda escrita a mano.
 $metodosGenerados = @(

@@ -325,6 +325,9 @@ end;
 procedure TfrmModalDistribuidor.PrepararEstructura;
 var
   i: Integer;
+  Columna: TcxGridDBColumn;
+  Propiedades: TcxButtonEditProperties;
+  Boton: TcxEditButton;
 begin
   // Construimos un ClientDataSet en memoria con columnas:
   //   CODIGO_ALM | NOMBRE_ALM | T01..TN (Float)
@@ -344,22 +347,18 @@ begin
   // hace que Enter/Tab/Flechas las SALTEN, asi siempre caes en una talla
   // editable. Visualmente siguen apareciendo, solo no se puede aterrizar
   // en ellas via teclado ni click.
-  with tvCuadr.CreateColumn do
-  begin
-    DataBinding.FieldName := 'CODIGO_ALM';
-    Caption := 'Almacen';
-    Options.Editing  := False;
-    Options.Focusing := False;
-    Width := 70;
-  end;
-  with tvCuadr.CreateColumn do
-  begin
-    DataBinding.FieldName := 'NOMBRE_ALM';
-    Caption := 'Nombre';
-    Options.Editing  := False;
-    Options.Focusing := False;
-    Width := 160;
-  end;
+  Columna := tvCuadr.CreateColumn;
+  Columna.DataBinding.FieldName := 'CODIGO_ALM';
+  Columna.Caption := 'Almacen';
+  Columna.Options.Editing := False;
+  Columna.Options.Focusing := False;
+  Columna.Width := 70;
+  Columna := tvCuadr.CreateColumn;
+  Columna.DataBinding.FieldName := 'NOMBRE_ALM';
+  Columna.Caption := 'Nombre';
+  Columna.Options.Editing := False;
+  Columna.Options.Focusing := False;
+  Columna.Width := 160;
   // Modo kit: columna de acciones (no-bound) con dos botones por
   // almacen — "Aplicar" vuelca la curva del kit sobre esa fila y
   // "Limpiar" pone a 0 todas sus tallas. isebAlways pinta los botones
@@ -369,39 +368,33 @@ begin
   // editor o el segundo boton sale truncado.
   if FCodigoKit <> '' then
   begin
-    with tvCuadr.CreateColumn do
-    begin
-      Caption := Format(SCaptionColKit, [FCodigoKit]);
-      PropertiesClass := TcxButtonEditProperties;
-      with TcxButtonEditProperties(Properties) do
-      begin
-        ReadOnly := True;
-        Buttons[0].Kind    := bkText;
-        Buttons[0].Caption := SCaptionAplicar;
-        Buttons[0].Default := False;
-        Buttons[0].Width   := 78;
-        with Buttons.Add do
-        begin
-          Kind    := bkText;
-          Caption := SCaptionLimpiar;
-          Width   := 78;
-        end;
-        OnButtonClick := ColKitPropertiesButtonClick;
-      end;
-      Options.ShowEditButtons := isebAlways;
-      // Tag=-1: DoShow la salta al decidir el foco inicial (que debe
-      // caer en la primera talla, no en los botones).
-      Tag   := -1;
-      Width := 190;
-    end;
+    Columna := tvCuadr.CreateColumn;
+    Columna.Caption := Format(SCaptionColKit, [FCodigoKit]);
+    Columna.PropertiesClass := TcxButtonEditProperties;
+    Propiedades := TcxButtonEditProperties(Columna.Properties);
+    Propiedades.ReadOnly := True;
+    Propiedades.Buttons[0].Kind := bkText;
+    Propiedades.Buttons[0].Caption := SCaptionAplicar;
+    Propiedades.Buttons[0].Default := False;
+    Propiedades.Buttons[0].Width := 78;
+    Boton := Propiedades.Buttons.Add;
+    Boton.Kind := bkText;
+    Boton.Caption := SCaptionLimpiar;
+    Boton.Width := 78;
+    Propiedades.OnButtonClick := ColKitPropertiesButtonClick;
+    Columna.Options.ShowEditButtons := isebAlways;
+    // Tag=-1: DoShow la salta al decidir el foco inicial (que debe
+    // caer en la primera talla, no en los botones).
+    Columna.Tag := -1;
+    Columna.Width := 190;
   end;
   for i := 0 to High(FPosiciones) do
-    with tvCuadr.CreateColumn do
-    begin
-      DataBinding.FieldName := Format('T%.2d', [i + 1]);
-      Caption := FPosiciones[i].Valor;
-      Width := 55;
-    end;
+  begin
+    Columna := tvCuadr.CreateColumn;
+    Columna.DataBinding.FieldName := Format('T%.2d', [i + 1]);
+    Columna.Caption := FPosiciones[i].Valor;
+    Columna.Width := 55;
+  end;
 end;
 
 procedure TfrmModalDistribuidor.PoblarFilasYCantidades;
@@ -635,32 +628,45 @@ begin
     [iColCod, tvCuadr.DataController.RecordCount, Length(FPosiciones)]));
   for i := 0 to High(iColT) do
     RegistroLog.RegistrarInformacion(Format('  iColT[%d]=%d', [i, iColT[i]]));
-  if iColCod < 0 then Exit;
+  if iColCod >= 0 then
+  begin
   oCambios := TList<TCambioCeldaDistribuidor>.Create;
   try
     for iRec := 0 to tvCuadr.DataController.RecordCount - 1 do
     begin
       vVal := tvCuadr.DataController.Values[iRec, iColCod];
-      if VarIsNull(vVal) or VarIsEmpty(vVal) then Continue;
-      sCod := VarToStr(vVal);
-      if sCod = '' then Continue;
-      for i := 0 to High(FPosiciones) do
+      if not VarIsNull(vVal) and not VarIsEmpty(vVal) then
       begin
-        if iColT[i] < 0 then Continue;
-        iIdAv  := FPosiciones[i].IdAv;
-        vVal   := tvCuadr.DataController.Values[iRec, iColT[i]];
-        if VarIsNull(vVal) or VarIsEmpty(vVal) then rCantN := 0
-        else rCantN := vVal;
-        sKey   := ClaveCelda(sCod, i + 1);
-        if not FSnapshot.TryGetValue(sKey, rCantO) then rCantO := 0;
-        RegistroLog.RegistrarInformacion(Format(
-          '  rec=%d alm=%s pos=%d (T%.2d) idav=%d val_actual=%g snapshot=%g',
-          [iRec, sCod, i + 1, i + 1, iIdAv, rCantN, rCantO]));
-        if rCantN = rCantO then Continue;
-        oCambio.CodigoAlmacen := sCod;
-        oCambio.IdAtributoValor := iIdAv;
-        oCambio.Cantidad := rCantN;
-        oCambios.Add(oCambio);
+        sCod := VarToStr(vVal);
+        if sCod <> '' then
+        begin
+          for i := 0 to High(FPosiciones) do
+          begin
+            if iColT[i] >= 0 then
+            begin
+              iIdAv  := FPosiciones[i].IdAv;
+              vVal   := tvCuadr.DataController.Values[iRec, iColT[i]];
+              if VarIsNull(vVal) or VarIsEmpty(vVal) then
+                rCantN := 0
+              else
+                rCantN := vVal;
+              sKey := ClaveCelda(sCod, i + 1);
+              if not FSnapshot.TryGetValue(sKey, rCantO) then
+                rCantO := 0;
+              RegistroLog.RegistrarInformacion(Format(
+                '  rec=%d alm=%s pos=%d (T%.2d) idav=%d ' +
+                'val_actual=%g snapshot=%g',
+                [iRec, sCod, i + 1, i + 1, iIdAv, rCantN, rCantO]));
+              if rCantN <> rCantO then
+              begin
+                oCambio.CodigoAlmacen := sCod;
+                oCambio.IdAtributoValor := iIdAv;
+                oCambio.Cantidad := rCantN;
+                oCambios.Add(oCambio);
+              end;
+            end;
+          end;
+        end;
       end;
     end;
     FRepositorio.GuardarCambios(
@@ -670,6 +676,7 @@ begin
       oCambios.ToArray);
   finally
     FreeAndNil(oCambios);
+  end;
   end;
 end;
 
@@ -683,21 +690,20 @@ begin
   // y el editor sigue activo, asi que la ultima celda en edicion baja
   // correctamente al DataController antes de leerla.
   Result := inherited CloseQuery;
-  if not Result then
-    Exit;
-  if sFicha <> 'S' then
-    Exit;
-  RegistroLog.RegistrarInformacion(Format(
-    '[Distribuidor.CloseQuery] sFicha=S serie=%s num=%s lin=%d',
-    [SerieSes, NumeroSes, LineaSes]));
-  if (tvCuadr.Controller <> nil) and
-     (tvCuadr.Controller.EditingController <> nil) then
-    tvCuadr.Controller.EditingController.HideEdit(True);
-  tvCuadr.DataController.UpdateData;
-  tvCuadr.DataController.Post(False);
-  if cdsCuadr.State in [dsEdit, dsInsert] then
-    cdsCuadr.Post;
-  PersistirCambios;
+  if Result and (sFicha = 'S') then
+  begin
+    RegistroLog.RegistrarInformacion(Format(
+      '[Distribuidor.CloseQuery] sFicha=S serie=%s num=%s lin=%d',
+      [SerieSes, NumeroSes, LineaSes]));
+    if (tvCuadr.Controller <> nil) and
+       (tvCuadr.Controller.EditingController <> nil) then
+      tvCuadr.Controller.EditingController.HideEdit(True);
+    tvCuadr.DataController.UpdateData;
+    tvCuadr.DataController.Post(False);
+    if cdsCuadr.State in [dsEdit, dsInsert] then
+      cdsCuadr.Post;
+    PersistirCambios;
+  end;
 end;
 
 procedure TfrmModalDistribuidor.btnCancelarClick(Sender: TObject);

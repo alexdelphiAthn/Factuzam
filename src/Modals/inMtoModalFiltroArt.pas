@@ -281,21 +281,23 @@ procedure TfrmModalFiltroArt.ActualizarResultado;
 var
   n: Integer;
 begin
-  if not Assigned(FContar) then Exit;
-  Screen.Cursor := crHourGlass;
-  try
-    n := FContar(CsvMarcados(FclbTemporada, nil),
-                 CsvMarcados(FclbProveedor, FCodProv),
-                 FFamCsv);
-  finally
-    Screen.Cursor := crDefault;
+  if Assigned(FContar) then
+  begin
+    Screen.Cursor := crHourGlass;
+    try
+      n := FContar(CsvMarcados(FclbTemporada, nil),
+                   CsvMarcados(FclbProveedor, FCodProv),
+                   FFamCsv);
+    finally
+      Screen.Cursor := crDefault;
+    end;
+    FlblResultado.Caption := Format(SCaptionSeCargaranArticulos,
+                                    [n, FUmbral]);
+    if n > FUmbral then
+      FlblResultado.Style.TextColor := clRed
+    else
+      FlblResultado.Style.TextColor := clGreen;
   end;
-  FlblResultado.Caption := Format(SCaptionSeCargaranArticulos,
-                                  [n, FUmbral]);
-  if n > FUmbral then
-    FlblResultado.Style.TextColor := clRed
-  else
-    FlblResultado.Style.TextColor := clGreen;
 end;
 
 procedure TfrmModalFiltroArt.CalcularClick(Sender: TObject);

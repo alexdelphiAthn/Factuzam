@@ -247,9 +247,9 @@ var
   oPair: TPair<string, TDictValue>;
 begin
   Result := TProfileDicc.Create;
-  if AOrigen = nil then Exit;
-  for oPair in AOrigen do
-    Result.AddOrSetValue(oPair.Key, oPair.Value);
+  if AOrigen <> nil then
+    for oPair in AOrigen do
+      Result.AddOrSetValue(oPair.Key, oPair.Value);
 end;
 
 function TdmPerfiles.CargarPerfilFormDesdeDB(
@@ -328,8 +328,9 @@ begin
     FRegistroLog.RegistrarAviso(
       'PrecargarPerfilesUsuario: ABORTADA, conexion no disponible. ' +
                    'FCachePrecargada queda False');
-    Exit;
   end;
+  if (AConn <> nil) and AConn.Connected then
+  begin
   iFilas := 0;
   try
     qry := TUniQuery.Create(nil);
@@ -391,6 +392,7 @@ begin
                           [E.ClassName, E.Message, iFilas]));
     end;
   end;
+  end;
 end;
 
 function TdmPerfiles.ObtenerPerfilFormCache(const AFormName: string;
@@ -406,28 +408,27 @@ begin
       Format('ObtenerPerfilFormCache: form="%s" cache NO precargado ' +
                           '(FCachePrecargada=False), devuelve False',
                           [AFormName]));
-    Exit;
-  end;
-  // Servimos siempre un clon: el caller (TLayoutLoader, etc.) hace
-  // FreeAndNil de FPerfil en su Destroy. Si devolviéramos la referencia
-  // cacheada, la siguiente apertura del mismo form crashearía.
-  if FCachePerfilesForm.TryGetValue(AFormName, Cached) then
-  begin
-    APerfilDic := ClonarPerfilDicc(Cached);
-    FRegistroLog.RegistrarInformacion(
-      Format('ObtenerPerfilFormCache: form="%s" HIT claves=%d',
-                       [AFormName, Cached.Count]));
   end
   else
   begin
-    APerfilDic := TProfileDicc.Create;
-    FRegistroLog.RegistrarAviso(
-      Format('ObtenerPerfilFormCache: form="%s" MISS ' +
-                          '(precargado pero sin entrada), devuelve dicc vacio '
-                            +
-                          'con Result=True', [AFormName]));
+    // Servimos siempre un clon: el consumidor libera su copia
+    if FCachePerfilesForm.TryGetValue(AFormName, Cached) then
+    begin
+      APerfilDic := ClonarPerfilDicc(Cached);
+      FRegistroLog.RegistrarInformacion(
+        Format('ObtenerPerfilFormCache: form="%s" HIT claves=%d',
+                         [AFormName, Cached.Count]));
+    end
+    else
+    begin
+      APerfilDic := TProfileDicc.Create;
+      FRegistroLog.RegistrarAviso(
+        Format('ObtenerPerfilFormCache: form="%s" MISS ' +
+               '(precargado pero sin entrada), devuelve dicc vacio ' +
+               'con Result=True', [AFormName]));
+    end;
+    Result := True;
   end;
-  Result := True;
 end;
 
 function TdmPerfiles.CargarPerfilFormulario(
@@ -493,23 +494,25 @@ begin
     FRegistroLog.RegistrarAviso(
       Format('ResincronizarCachePerfilForm: form="%s" ' +
                           'cache no precargado, ignorado', [AFormulario]));
-    Exit;
-  end;
-  Nuevo := CargarPerfilFormDesdeDB(AFormulario);
-  if Nuevo.Count > 0 then
-  begin
-    FCachePerfilesForm.AddOrSetValue(AFormulario, Nuevo);
-    FRegistroLog.RegistrarInformacion(
-      Format('ResincronizarCachePerfilForm: form="%s" actualizado ' +
-                       'claves=%d', [AFormulario, Nuevo.Count]));
   end
   else
   begin
-    FreeAndNil(Nuevo);
-    FCachePerfilesForm.Remove(AFormulario);
-    FRegistroLog.RegistrarInformacion(
-      Format('ResincronizarCachePerfilForm: form="%s" sin filas, ' +
-                       'eliminado del cache', [AFormulario]));
+    Nuevo := CargarPerfilFormDesdeDB(AFormulario);
+    if Nuevo.Count > 0 then
+    begin
+      FCachePerfilesForm.AddOrSetValue(AFormulario, Nuevo);
+      FRegistroLog.RegistrarInformacion(
+        Format('ResincronizarCachePerfilForm: form="%s" actualizado ' +
+                         'claves=%d', [AFormulario, Nuevo.Count]));
+    end
+    else
+    begin
+      FreeAndNil(Nuevo);
+      FCachePerfilesForm.Remove(AFormulario);
+      FRegistroLog.RegistrarInformacion(
+        Format('ResincronizarCachePerfilForm: form="%s" sin filas, ' +
+                         'eliminado del cache', [AFormulario]));
+    end;
   end;
 end;
 
@@ -638,8 +641,8 @@ var
   oClavesAfectadas: TList<string>;
   sClave: string;
 begin
-  if (APerfiles = nil) or (APerfiles.Count = 0) then Exit;
-
+  if (APerfiles <> nil) and (APerfiles.Count > 0) then
+  begin
   // El usuario que está grabando, para USUARIO_ALTA / USUARIO_MODIF
   sUsuarioActual := IdentidadSesion.Usuario;
 
@@ -708,6 +711,7 @@ begin
       ResincronizarPerfilFormulario(sClave);
   finally
     FreeAndNil(oClavesAfectadas);
+  end;
   end;
 end;
 

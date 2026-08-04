@@ -12,12 +12,9 @@
 {    Operaciones comunes para finalizar albaranes originados en pedidos.      }
 {******************************************************************************}
 unit UniDataPedidosCompraAlbaranComun;
-
 interface
-
 uses
   Uni;
-
 procedure RecalcularTotalesAlbaranCompra(AConn: TUniConnection;
   const ASerieAlbc, ANumAlbc, AUsuario: string);
 procedure CerrarAlbaranCompra(AConexion: TUniConnection;
@@ -34,15 +31,12 @@ procedure RegenerarMovimientosYCerrarAlbaranCompra(
   AConn: TUniConnection;
   const ASerieAlbc, ANumAlbc, ASeriePedc, ANumPedc,
     AUsuario: string; AIdPvTemporada: Integer);
-
 implementation
-
 uses
   System.SysUtils, Data.DB, DBAccess,
   inLibAlbaranesCompraMovimientos,
   UniDataAlbaranesCompraMovimientos,
   UniDataPedidosCompraPendientes;
-
 procedure RecalcularTotalesAlbaranCompra(AConn: TUniConnection;
                                   const ASerieAlbc, ANumAlbc,
                                         AUsuario: string);
@@ -172,8 +166,6 @@ begin
     FreeAndNil(q);
   end;
 end;
-
-
 procedure CerrarAlbaranCompra(
   AConexion: TUniConnection;
   const ASerieAlbaran, ANumeroAlbaran, AUsuario: string);
@@ -196,7 +188,6 @@ begin
     FreeAndNil(Query);
   end;
 end;
-
 procedure AplicarTemporadaArticulosAlbaran(
   AConexion: TUniConnection;
   const ASerieAlbaran, ANumeroAlbaran, AUsuario: string;
@@ -231,7 +222,6 @@ begin
     end;
   end;
 end;
-
 procedure FinalizarAlbaranCreado(
   AConexion: TUniConnection;
   const ASeriePedido, ANumeroPedido, ASerieAlbaran,
@@ -254,8 +244,6 @@ begin
     AConexion, ASerieAlbaran, ANumeroAlbaran,
     AUsuario, AIdPvTemporada);
 end;
-
-
 procedure RegenerarMovimientosYCerrarAlbaranCompra(AConn: TUniConnection;
                                   const ASerieAlbc, ANumAlbc,
                                         ASeriePedc, ANumPedc,
@@ -264,38 +252,17 @@ procedure RegenerarMovimientosYCerrarAlbaranCompra(AConn: TUniConnection;
 var
   qIns: TUniQuery;
 begin
-  // 1. Recalcular totales del albaran sobre TODAS sus lineas.
   RecalcularTotalesAlbaranCompra(AConn, ASerieAlbc, ANumAlbc, AUsuario);
-  // 2. Revertir movimientos previos (no-op si no hay) y regenerarlos
-  //    para TODAS las lineas (viejas + nuevas).
   inLibAlbaranesCompraMovimientos.RevertirMovimientosDesdeAlbaranCompra(
     CrearMovimientosAlbaranCompraUniDAC(AConn),
     ASerieAlbc, ANumAlbc, AUsuario);
   inLibAlbaranesCompraMovimientos.GenerarMovimientosDesdeAlbaranCompra(
     CrearMovimientosAlbaranCompraUniDAC(AConn),
     ASerieAlbc, ANumAlbc, AUsuario);
-  // 3. Asegurar estado CERRADO.
-  qIns := TUniQuery.Create(nil);
-  try
-    qIns.Connection := AConn;
-    qIns.SQL.Text :=
-      'UPDATE fza_albaranes_compra ' +
-      '   SET ESTADO_ALBC    = ''CERRADO'', ' +
-      '       USUARIO_MODIF  = :u, ' +
-      '       INSTANTE_MODIF = NOW() ' +
-      ' WHERE SERIE_ALBC = :s AND NUMERO_ALBC = :n';
-    qIns.ParamByName('s').AsString := ASerieAlbc;
-    qIns.ParamByName('n').AsString := ANumAlbc;
-    qIns.ParamByName('u').AsString := AUsuario;
-    qIns.ExecSQL;
-  finally
-    FreeAndNil(qIns);
-  end;
-  // 4. Resincronizar pendientes + recalcular estado del pedido.
+  CerrarAlbaranCompra(AConn, ASerieAlbc, ANumAlbc, AUsuario);
   GenerarPdteRecibirDesdePedidoInterno(
     AConn, ASeriePedc, ANumPedc, AUsuario);
   RecalcularEstadoPedido(AConn, ASeriePedc, ANumPedc, AUsuario);
-  // 5. Temporada explicita del modal (si la hay).
   if AIdPvTemporada > 0 then
   begin
     qIns := TUniQuery.Create(nil);
@@ -312,31 +279,8 @@ begin
     finally
       FreeAndNil(qIns);
     end;
-    qIns := TUniQuery.Create(nil);
-    try
-      qIns.Connection := AConn;
-      qIns.SQL.Text :=
-        'INSERT INTO fza_articulos_propiedades ' +
-        '  (CODIGO_ART_ART, CODIGO_PROP_ARTPROP, ID_PV_ARTPROP, ' +
-        '   VALOR_LIBRE_ARTPROP, INSTANTE_ALTA, USUARIO_ALTA) ' +
-        'SELECT DISTINCT L.CODIGO_ART_ALBCLIN, ''TEMPORADA'', :pv, ' +
-        '       NULL, NOW(), :u ' +
-        '  FROM fza_albaranes_compra_lineas L ' +
-        ' WHERE L.SERIE_ALBC_ALBCLIN  = :s ' +
-        '   AND L.NUMERO_ALBC_ALBCLIN = :n ' +
-        '   AND L.CODIGO_ART_ALBCLIN IS NOT NULL ' +
-        '   AND L.CODIGO_ART_ALBCLIN <> '''' ' +
-        'ON DUPLICATE KEY UPDATE ID_PV_ARTPROP = :pv';
-      qIns.ParamByName('pv').AsInteger := AIdPvTemporada;
-      qIns.ParamByName('u').AsString   := AUsuario;
-      qIns.ParamByName('s').AsString   := ASerieAlbc;
-      qIns.ParamByName('n').AsString   := ANumAlbc;
-      qIns.ExecSQL;
-    finally
-      FreeAndNil(qIns);
-    end;
+    AplicarTemporadaArticulosAlbaran(
+      AConn, ASerieAlbc, ANumAlbc, AUsuario, AIdPvTemporada);
   end;
 end;
-
-
 end.

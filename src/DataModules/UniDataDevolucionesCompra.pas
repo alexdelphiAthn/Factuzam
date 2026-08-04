@@ -204,7 +204,8 @@ const
   var
     swQ: TStopwatch;
   begin
-    if qry.Active then Exit;
+    if not qry.Active then
+    begin
     swQ := TStopwatch.StartNew;
     try
       qry.Open;
@@ -218,6 +219,7 @@ const
           swQ.ElapsedMilliseconds);
         raise;
       end;
+    end;
     end;
   end;
 
@@ -463,8 +465,8 @@ var
 begin
   inherited;
   // Desempaquetado ATTR en curso: post descriptivo, sin logica fiscal.
-  if FDesempaquetandoAtributos then
-    Exit;
+  if not FDesempaquetandoAtributos then
+  begin
   // Linea vacia (sin articulo ni SKU): cancelar silenciosamente. El cxGrid
   // hace Post automatico al navegar con flechas (OptionsData.Appending); si
   // la linea es un placeholder vacio que el usuario creo sin querer, el Post
@@ -536,6 +538,7 @@ begin
   PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionPrincipal),
     unqryTablaG,
     unqryDevolucionesCompraLineas, 'DEVC', 'DEVCLIN', 'TOTAL_DEVCLIN');
+  end;
 end;
 
 procedure TdmDevolucionesCompra.AsignarNumeroLineaDevolucionCompra(
@@ -640,12 +643,13 @@ procedure TdmDevolucionesCompra.CalcularTotalesDevolucionCompra;
 begin
   // Los posts del desempaquetado ATTR no alteran importes: saltar el
   // recalculo por linea (cascada de consultas de IVA al navegar).
-  if FDesempaquetandoAtributos then
-    Exit;
-  CalcularTotalesDocumentoCompra(
-    CrearLecturasImpuestos(unqryTablaG.Connection), unqryTablaG,
-    unqryDevolucionesCompraLineas, 'DEVC', 'TOTAL_DEVCLIN',
-    'TIPO_IVA_ARTICULO_DEVCLIN', 'PORCENTAJE_IVA_DEVCLIN');
+  if not FDesempaquetandoAtributos then
+  begin
+    CalcularTotalesDocumentoCompra(
+      CrearLecturasImpuestos(unqryTablaG.Connection), unqryTablaG,
+      unqryDevolucionesCompraLineas, 'DEVC', 'TOTAL_DEVCLIN',
+      'TIPO_IVA_ARTICULO_DEVCLIN', 'PORCENTAJE_IVA_DEVCLIN');
+  end;
 end;
 
 function TdmDevolucionesCompra.TotalPrendasDevolucion: Double;
@@ -693,24 +697,26 @@ var
 begin
   // Los posts del desempaquetado ATTR no tocan cantidades ni SKUs:
   // saltar el borrado/recreacion de movimientos y recalculo de PMP.
-  if FDesempaquetandoAtributos then
-    Exit;
-  if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
+  if not FDesempaquetandoAtributos then
   begin
-    sSerie := Trim(unqryTablaG.FieldByName('SERIE_DEVC').AsString);
-    sNumero := Trim(unqryTablaG.FieldByName('NUMERO_DEVC').AsString);
-    if (sSerie <> '') and (sNumero <> '') and (sNumero <> '0') then
+    if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
     begin
-      inLibDevolucionesCompraMovimientos.
-        RevertirMovimientosDesdeDevolucionCompra(
-          CrearMovimientosDevolucionCompraUniDAC(unqryTablaG.Connection),
-          sSerie, sNumero, IdentidadSesion.Usuario);
-      if HayLineasMovimiento(sSerie, sNumero) then
+      sSerie := Trim(unqryTablaG.FieldByName('SERIE_DEVC').AsString);
+      sNumero := Trim(unqryTablaG.FieldByName('NUMERO_DEVC').AsString);
+      if (sSerie <> '') and (sNumero <> '') and (sNumero <> '0') then
+      begin
         inLibDevolucionesCompraMovimientos.
-          GenerarMovimientosDesdeDevolucionCompra(
+          RevertirMovimientosDesdeDevolucionCompra(
             CrearMovimientosDevolucionCompraUniDAC(unqryTablaG.Connection),
             sSerie, sNumero, IdentidadSesion.Usuario);
-      RefrescarMovimientosProveedor;
+        if HayLineasMovimiento(sSerie, sNumero) then
+          inLibDevolucionesCompraMovimientos.
+            GenerarMovimientosDesdeDevolucionCompra(
+              CrearMovimientosDevolucionCompraUniDAC(
+                unqryTablaG.Connection),
+              sSerie, sNumero, IdentidadSesion.Usuario);
+        RefrescarMovimientosProveedor;
+      end;
     end;
   end;
 end;
@@ -804,39 +810,43 @@ var
   oLv   : TcxListView;
   oItem : TListItem;
 begin
-  if not (ALV is TcxListView) then Exit;
-  oLv := TcxListView(ALV);
-  oLv.Items.BeginUpdate;
-  try
-    oLv.Items.Clear;
-    oQry := TUniQuery.Create(nil);
+  if ALV is TcxListView then
+  begin
+    oLv := TcxListView(ALV);
+    oLv.Items.BeginUpdate;
     try
-      oQry.Connection := ConexionPrincipal;
-      oQry.SQL.Text :=
-        'SELECT DISTINCT L.CODIGO_ALMACEN_DEVCLIN AS COD, ' +
-        '       COALESCE(A.NOMBRE_ALM_ALM, L.CODIGO_ALMACEN_DEVCLIN) AS NOM ' +
-        '  FROM fza_devoluciones_compra_lineas L ' +
-        '  LEFT JOIN fza_almacenes A ON A.CODIGO_ALM_ALM = ' +
-        'L.CODIGO_ALMACEN_DEVCLIN ' +
-        ' WHERE L.SERIE_DEVC_DEVCLIN = :s AND L.NUMERO_DEVC_DEVCLIN = :n ' +
-        '   AND COALESCE(L.CODIGO_ALMACEN_DEVCLIN, '''') <> '''' ' +
-        ' ORDER BY COD';
-      oQry.ParamByName('s').AsString := ASerie;
-      oQry.ParamByName('n').AsString := ANumero;
-      oQry.Open;
-      while not oQry.Eof do
-      begin
-        oItem := oLv.Items.Add;
-        oItem.Caption := oQry.FieldByName('COD').AsString;
-        oItem.SubItems.Add(oQry.FieldByName('NOM').AsString);
-        oItem.Checked := True;
-        oQry.Next;
+      oLv.Items.Clear;
+      oQry := TUniQuery.Create(nil);
+      try
+        oQry.Connection := ConexionPrincipal;
+        oQry.SQL.Text :=
+          'SELECT DISTINCT L.CODIGO_ALMACEN_DEVCLIN AS COD, ' +
+          '       COALESCE(A.NOMBRE_ALM_ALM, ' +
+          'L.CODIGO_ALMACEN_DEVCLIN) AS NOM ' +
+          '  FROM fza_devoluciones_compra_lineas L ' +
+          '  LEFT JOIN fza_almacenes A ON A.CODIGO_ALM_ALM = ' +
+          'L.CODIGO_ALMACEN_DEVCLIN ' +
+          ' WHERE L.SERIE_DEVC_DEVCLIN = :s ' +
+          'AND L.NUMERO_DEVC_DEVCLIN = :n ' +
+          '   AND COALESCE(L.CODIGO_ALMACEN_DEVCLIN, '''') <> '''' ' +
+          ' ORDER BY COD';
+        oQry.ParamByName('s').AsString := ASerie;
+        oQry.ParamByName('n').AsString := ANumero;
+        oQry.Open;
+        while not oQry.Eof do
+        begin
+          oItem := oLv.Items.Add;
+          oItem.Caption := oQry.FieldByName('COD').AsString;
+          oItem.SubItems.Add(oQry.FieldByName('NOM').AsString);
+          oItem.Checked := True;
+          oQry.Next;
+        end;
+      finally
+        FreeAndNil(oQry);
       end;
     finally
-      FreeAndNil(oQry);
+      oLv.Items.EndUpdate;
     end;
-  finally
-    oLv.Items.EndUpdate;
   end;
 end;
 
@@ -853,12 +863,16 @@ begin
   // mismo .fr3 sirva en ambos modales. La query base filtra YA en
   // servidor por SKU IN (...) — la version anterior cargaba todos y
   // filtraba en cliente, tardaba 10 s sobre una BBDD con muchos SKUs.
-  if not (ADmArt is TdmArticulos) then Exit;
-  oDmArt := TdmArticulos(ADmArt);
-  sSkus  := ObtenerSkusDevolucionCsv(ASerie, ANumero);
-  if sSkus = '' then Exit;
-  oDmArt.CrearDataSetEtiquetasArt('', ACodTarifa, AAlmacenesCsv,
-                                  AFecha, sSkus);
+  if ADmArt is TdmArticulos then
+  begin
+    oDmArt := TdmArticulos(ADmArt);
+    sSkus  := ObtenerSkusDevolucionCsv(ASerie, ANumero);
+    if sSkus <> '' then
+    begin
+      oDmArt.CrearDataSetEtiquetasArt('', ACodTarifa, AAlmacenesCsv,
+        AFecha, sSkus);
+    end;
+  end;
 end;
 
 function TdmDevolucionesCompra.ObtenerSkusDevolucionCsv(

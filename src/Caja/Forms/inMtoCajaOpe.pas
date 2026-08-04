@@ -1668,9 +1668,10 @@ begin
   // Solo pintamos swatch en la primera columna (Codigo "CODART/COLOR").
   // Las columnas pivotadas de talla traen cantidades y no queremos
   // cuadradito al lado de cada numero — basta con la del codigo.
-  if (AViewInfo = nil) or (AViewInfo.Item = nil) then Exit;
-  if AViewInfo.Item.VisibleIndex <> 0 then Exit;
-  if PintarCeldaSwatchSiAplica(ConexionPrincipal,ACanvas, AViewInfo, nil) then
+  if (AViewInfo <> nil) and (AViewInfo.Item <> nil) and
+     (AViewInfo.Item.VisibleIndex = 0) and
+     PintarCeldaSwatchSiAplica(
+       ConexionPrincipal, ACanvas, AViewInfo, nil) then
     ADone := True;
 end;
 
@@ -1741,9 +1742,11 @@ end;
 procedure TEditorLineasCajaVcl.CancelarLinea;
 var
   VieneDeDep: string;
+  bCancelar: Boolean;
 begin
   if (DatosCaja.cdsLineas.Active) then
   begin
+    bCancelar := True;
     // NUEVO: Bloqueo de borrado por atajo
     if not DatosCaja.cdsLineas.IsEmpty then
     begin
@@ -1752,19 +1755,20 @@ begin
       if EsLineaDeposito(VieneDeDep) then
       begin
         ShowMessage(SErrorLineaDepositoCajaNoCancelable);
-        Exit;
+        bCancelar := False;
       end;
     end;
-    if (DatosCaja.cdsLineas.State = dsInsert) then
-      DatosCaja.cdsLineas.Cancel
-    else if not DatosCaja.cdsLineas.IsEmpty then
-      DatosCaja.cdsLineas.Delete;
-    GridRecalc(ConexionPrincipal, FRepositorioFacturas, nil,
-               tvLineasOpe,
-               DatosCaja.cdsLineas,
-               DatosCaja.cdsCabecera,
-               ActualizarLabelTotal);
-    AsegurarLineaNueva;
+    if bCancelar then
+    begin
+      if DatosCaja.cdsLineas.State = dsInsert then
+        DatosCaja.cdsLineas.Cancel
+      else if not DatosCaja.cdsLineas.IsEmpty then
+        DatosCaja.cdsLineas.Delete;
+      GridRecalc(ConexionPrincipal, FRepositorioFacturas, nil,
+        tvLineasOpe, DatosCaja.cdsLineas, DatosCaja.cdsCabecera,
+        ActualizarLabelTotal);
+      AsegurarLineaNueva;
+    end;
   end;
 end;
 
@@ -1888,21 +1892,23 @@ var
   EsLaCeldaFocale: Boolean;
   ValorActual: Variant;
 begin
-  if (ARecord = nil) or (tvLineasOpe.Controller = nil) then
-    Exit;
-  ValorActual := ARecord.Values[Sender.Index];
-  if (not VarIsNull(ValorActual)) and (Trim(VarToStr(ValorActual)) <> '') then
+  if (ARecord <> nil) and (tvLineasOpe.Controller <> nil) then
   begin
-    AProperties := repSoloTexto.Properties;
-    Exit;
+    ValorActual := ARecord.Values[Sender.Index];
+    if (not VarIsNull(ValorActual)) and
+       (Trim(VarToStr(ValorActual)) <> '') then
+      AProperties := repSoloTexto.Properties
+    else
+    begin
+      EsLaCeldaFocale :=
+        (tvLineasOpe.Controller.FocusedRecord = ARecord) and
+        (tvLineasOpe.Controller.FocusedItem = Sender);
+      if EsLaCeldaFocale then
+        AProperties := repComboBox.Properties
+      else
+        AProperties := repSoloTexto.Properties;
+    end;
   end;
-  EsLaCeldaFocale := (tvLineasOpe.Controller.FocusedRecord = ARecord)
-                     and
-                     (tvLineasOpe.Controller.FocusedItem = Sender);
-  if EsLaCeldaFocale then
-    AProperties := repComboBox.Properties
-  else
-    AProperties := repSoloTexto.Properties;
 end;
 
 procedure TEditorLineasCajaVcl.CambiarArticulo(Sender: TObject);
@@ -1943,22 +1949,26 @@ function TEditorLineasCajaVcl.BuscarArticulo: string;
   // TDateField / TSQLTimeStampField segun como UniDAC mapea la columna).
   procedure ConfigCampo(F: TField; const ALabel, AFormat: string);
   begin
-    if F = nil then Exit;
-    if ALabel <> '' then
-      F.DisplayLabel := ALabel;
-    if AFormat = '' then Exit;
-    if F is TFloatField then
-      TFloatField(F).DisplayFormat := AFormat
-    else if F is TBCDField then
-      TBCDField(F).DisplayFormat := AFormat
-    else if F is TFMTBCDField then
-      TFMTBCDField(F).DisplayFormat := AFormat
-    else if F is TDateField then
-      TDateField(F).DisplayFormat := AFormat
-    else if F is TDateTimeField then
-      TDateTimeField(F).DisplayFormat := AFormat
-    else if F is TSQLTimeStampField then
-      TSQLTimeStampField(F).DisplayFormat := AFormat;
+    if F <> nil then
+    begin
+      if ALabel <> '' then
+        F.DisplayLabel := ALabel;
+      if AFormat <> '' then
+      begin
+        if F is TFloatField then
+          TFloatField(F).DisplayFormat := AFormat
+        else if F is TBCDField then
+          TBCDField(F).DisplayFormat := AFormat
+        else if F is TFMTBCDField then
+          TFMTBCDField(F).DisplayFormat := AFormat
+        else if F is TDateField then
+          TDateField(F).DisplayFormat := AFormat
+        else if F is TDateTimeField then
+          TDateTimeField(F).DisplayFormat := AFormat
+        else if F is TSQLTimeStampField then
+          TSQLTimeStampField(F).DisplayFormat := AFormat;
+      end;
+    end;
   end;
 begin
   // El repositorio entrega la consulta ya abierta. Aqui solo se aplican
@@ -2179,8 +2189,8 @@ var
   VieneDeDep: string;
   CantOriginal, NuevaCant: Double;
 begin
-  if (DatosCaja = nil) or not DatosCaja.cdsLineas.Active then
-    Exit;
+  if (DatosCaja <> nil) and DatosCaja.cdsLineas.Active then
+  begin
   VieneDeDep := DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
   if VieneDeDep = 'S' then
   begin
@@ -2244,6 +2254,7 @@ begin
             'CODIGO_ART_FACLIN').AsString);
       if FSkuPendienteVentaOrigen <> '' then
         PostMessage(Handle, WM_PREGUNTAR_VENTA_ORIGEN, 0, 0);
+    end;
     end;
   end;
 end;
@@ -2320,38 +2331,43 @@ var
   CodArt       : string;
   FechaFactura : TDateTime;
 begin
-  if Trim(ASku) = '' then Exit;
-  CodTarifa    := DatosCaja.cdsCabecera.FieldByName(
-                                       'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-  FechaFactura := DatosCaja.cdsCabecera.FieldByName('FECHA_FAC').AsDateTime;
-  CodArt       := DatosCaja.cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString;
-
-  Resolver := RepositoriosArticulosPantalla.CrearResolverArticulos(
-    ConexionPrincipal);
-  try
-    Precio := Resolver.ResolverPrecio(CodArt, ASku, CodTarifa, FechaFactura);
-    if not Precio.TieneRegistro then Exit;
-
-    DatosCaja.cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString :=
-                                                IfThen(Precio.EsImpIncl,
-                                                       'S',
-                                                       'N');
-    DatosCaja.cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency :=
-                                                Precio.PrecioSalida;
-    DatosCaja.cdsLineas.FieldByName('CANTIDAD_FACLIN').AsCurrency := 1;
-    DatosCaja.cdsLineas.FieldByName('PORCENTAJE_DTO_FACLIN').AsFloat :=
-                                                Precio.PorcentajeDto;
-
-    DatosCaja.cdsLineas.FieldByName('PRECIO_DTO_FACLIN').AsCurrency := 0;
-    DatosCaja.cdsLineas.FieldByName(
-                          'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := 0;
-    DatosCaja.cdsLineas.FieldByName(
-                          'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
-    GridRecalc(ConexionPrincipal, FRepositorioFacturas, nil,
-               tvLineasOpe, DatosCaja.cdsLineas,
-               DatosCaja.cdsCabecera, ActualizarLabelTotal);
-  finally
-    Resolver := nil;
+  if Trim(ASku) <> '' then
+  begin
+    CodTarifa := DatosCaja.cdsCabecera.FieldByName(
+      'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
+    FechaFactura := DatosCaja.cdsCabecera.FieldByName(
+      'FECHA_FAC').AsDateTime;
+    CodArt := DatosCaja.cdsLineas.FieldByName(
+      'CODIGO_ART_FACLIN').AsString;
+    Resolver := RepositoriosArticulosPantalla.CrearResolverArticulos(
+      ConexionPrincipal);
+    try
+      Precio := Resolver.ResolverPrecio(
+        CodArt, ASku, CodTarifa, FechaFactura);
+      if Precio.TieneRegistro then
+      begin
+        DatosCaja.cdsLineas.FieldByName(
+          'ESIMP_INCL_TARIFA_FACLIN').AsString :=
+            IfThen(Precio.EsImpIncl, 'S', 'N');
+        DatosCaja.cdsLineas.FieldByName(
+          'PRECIO_SALIDA_FACLIN').AsCurrency := Precio.PrecioSalida;
+        DatosCaja.cdsLineas.FieldByName(
+          'CANTIDAD_FACLIN').AsCurrency := 1;
+        DatosCaja.cdsLineas.FieldByName(
+          'PORCENTAJE_DTO_FACLIN').AsFloat := Precio.PorcentajeDto;
+        DatosCaja.cdsLineas.FieldByName(
+          'PRECIO_DTO_FACLIN').AsCurrency := 0;
+        DatosCaja.cdsLineas.FieldByName(
+          'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := 0;
+        DatosCaja.cdsLineas.FieldByName(
+          'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
+        GridRecalc(ConexionPrincipal, FRepositorioFacturas, nil,
+          tvLineasOpe, DatosCaja.cdsLineas,
+          DatosCaja.cdsCabecera, ActualizarLabelTotal);
+      end;
+    finally
+      Resolver := nil;
+    end;
   end;
 end;
 
@@ -2658,39 +2674,37 @@ var
   sCodPadre, sSku, VieneDeDep: string;
   EsDeposito: boolean;
 begin
-  if not DatosCaja.cdsLineas.Active then Exit;
-  if FActualizandoDepositos then Exit;
-  if ARegistroActual = nil then Exit;
-  if ARegistroActual.IsNewItemRecord then
+  if DatosCaja.cdsLineas.Active and not FActualizandoDepositos and
+     (ARegistroActual <> nil) then
   begin
-    // La línea nueva conserva el último stock mostrado y queda lista para
-    // recibir un código de barras.
-    btnF3.Enabled := True;
-    btnF8.Enabled := True;
-    SolicitarFocoArticuloLineaNueva;
-  end
-  else if not DatosCaja.cdsLineas.IsEmpty then
-  begin
-    VieneDeDep := DatosCaja.cdsLineas.FieldByName(
-      'VIENE_DE_DEPOSITO').AsString;
-    // Deshabilitar F3 y F8 (eliminar) visualmente en líneas de depósito
-    EsDeposito := (VieneDeDep = 'S') or (VieneDeDep = 'A');
-    btnF3.Enabled := not EsDeposito;
-    btnF8.Enabled := not EsDeposito;
-    sCodPadre := DatosCaja.cdsLineas.FieldByName(
-      'CODIGO_ART_FACLIN').AsString;
-    sSku := DatosCaja.cdsLineas.FieldByName(
-      'CODIGO_UNIDAD_FACLIN').AsString;
-    if sCodPadre <> '' then
-      ActualizarColumnasDinamicas(sCodPadre);
-    if (Pos('/', sSku) > 0) and
-       (Trim(DatosCaja.cdsLineas.FieldByName(
-         'ATTR1_VALOR').AsString) = '') then
-      RellenarAtributosDesdeSku(sSku);
-    if Trim(sSku) <> '' then
-      ConsultarStock(sSku)
-    else if Trim(sCodPadre) <> '' then
-      ConsultarStock(sCodPadre);
+    if ARegistroActual.IsNewItemRecord then
+    begin
+      btnF3.Enabled := True;
+      btnF8.Enabled := True;
+      SolicitarFocoArticuloLineaNueva;
+    end
+    else if not DatosCaja.cdsLineas.IsEmpty then
+    begin
+      VieneDeDep := DatosCaja.cdsLineas.FieldByName(
+        'VIENE_DE_DEPOSITO').AsString;
+      EsDeposito := (VieneDeDep = 'S') or (VieneDeDep = 'A');
+      btnF3.Enabled := not EsDeposito;
+      btnF8.Enabled := not EsDeposito;
+      sCodPadre := DatosCaja.cdsLineas.FieldByName(
+        'CODIGO_ART_FACLIN').AsString;
+      sSku := DatosCaja.cdsLineas.FieldByName(
+        'CODIGO_UNIDAD_FACLIN').AsString;
+      if sCodPadre <> '' then
+        ActualizarColumnasDinamicas(sCodPadre);
+      if (Pos('/', sSku) > 0) and
+         (Trim(DatosCaja.cdsLineas.FieldByName(
+           'ATTR1_VALOR').AsString) = '') then
+        RellenarAtributosDesdeSku(sSku);
+      if Trim(sSku) <> '' then
+        ConsultarStock(sSku)
+      else if Trim(sCodPadre) <> '' then
+        ConsultarStock(sCodPadre);
+    end;
   end;
 end;
 
@@ -2793,7 +2807,6 @@ begin
     begin
       DatosCaja.cdsLineas.Cancel;
       AKey := 0;
-      Exit;
     end;
     if DatosCaja.cdsLineas.RecordCount > 0 then
     begin
@@ -2817,7 +2830,6 @@ begin
     begin
       DatosCaja.cdsLineas.Cancel;
       AKey := 0;
-      Exit;
     end;
   end;
 end;
@@ -2832,14 +2844,16 @@ end;
 
 procedure TEditorLineasCajaVcl.EntrarRejilla(Sender: TObject);
 begin
-  if not DatosCaja.cdsLineas.Active then Exit;
-  if DatosCaja.cdsLineas.State = dsBrowse then
+  if DatosCaja.cdsLineas.Active then
   begin
-    DatosCaja.cdsLineas.Append;
-    tvLineasOpe.Controller.FocusedColumn := tvArticulo;
-    tvLineasOpe.Controller.EditingController.ShowEdit;
+    if DatosCaja.cdsLineas.State = dsBrowse then
+    begin
+      DatosCaja.cdsLineas.Append;
+      tvLineasOpe.Controller.FocusedColumn := tvArticulo;
+      tvLineasOpe.Controller.EditingController.ShowEdit;
+    end;
+    jvEnterTab.EnterAsTab := False;
   end;
-  jvEnterTab.EnterAsTab := False;
 end;
 
 procedure TEditorLineasCajaVcl.SalirRejilla(Sender: TObject);
@@ -2852,7 +2866,9 @@ var
   LCtrl: TWinControl;
   CodigoBuscado: string;
   CurrentEdit: TcxCustomEdit;
+  bContinuar: Boolean;
 begin
+  bContinuar := True;
   if tvLineasOpe.Controller.FocusedItem <> nil then
   if (tvLineasOpe.Controller.FocusedItem.Tag > 0) then
   begin
@@ -2871,98 +2887,81 @@ begin
        if (CurrentEdit is TcxButtonEdit) then
        begin
          tvLineasOpeAvButtonClick(CurrentEdit, 0);
-         Exit;
+         bContinuar := False;
        end;
     end;
   end;
-  LCtrl := Screen.ActiveControl;
-  if (LCtrl = btnCodigoEmpleado) or (LCtrl.Parent = btnCodigoEmpleado) then
+  if bContinuar then
   begin
-    BuscarEmpleados;
-  end
-  else if (LCtrl = btnCodigoCliente) or (LCtrl.Parent = btnCodigoCliente) then
-  begin
-    BuscarClientes;
-  end
-  else
-  begin
-    if DatosCaja.cdsLineas.Active and not DatosCaja.cdsLineas.IsEmpty then
+    LCtrl := Screen.ActiveControl;
+    if (LCtrl = btnCodigoEmpleado) or
+       (LCtrl.Parent = btnCodigoEmpleado) then
+      BuscarEmpleados
+    else if (LCtrl = btnCodigoCliente) or
+            (LCtrl.Parent = btnCodigoCliente) then
+      BuscarClientes
+    else
     begin
-      var VieneDeDep :=
-                  DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
-      if (VieneDeDep = 'S') or (VieneDeDep = 'A') then
-        Exit;
-    end;
-    CodigoBuscado := BuscarArticulo;
-    if CodigoBuscado <> '' then
-    begin
-      if DatosCaja.cdsLineas.State = dsBrowse then
+      if DatosCaja.cdsLineas.Active and
+         not DatosCaja.cdsLineas.IsEmpty then
       begin
-        if DatosCaja.cdsLineas.IsEmpty then
-          DatosCaja.cdsLineas.Append
-        else
-          DatosCaja.cdsLineas.Edit;
+        var VieneDeDep := DatosCaja.cdsLineas.FieldByName(
+          'VIENE_DE_DEPOSITO').AsString;
+        bContinuar := (VieneDeDep <> 'S') and (VieneDeDep <> 'A');
       end;
-      if RellenarDatosArticuloEnDataset(CodigoBuscado) then
+      if bContinuar then
       begin
-        var CodArticulo := DatosCaja.cdsLineas.FieldByName(
-                                      'CODIGO_ART_FACLIN').AsString;
-        var SkuDetectado := DatosCaja.cdsLineas.FieldByName(
-               'CODIGO_UNIDAD_FACLIN').AsString; // <-- Rescatamos el SKU
-        // Validación parametrizada del SKU resuelto en la búsqueda. Si el SKU
-        // no existe o no tiene stock (según parámetros), descartamos la línea.
-        if (Trim(SkuDetectado) <> '') and (SkuDetectado <> CodArticulo) and
-           not ValidarSkuParaVenta(SkuDetectado) then
+        CodigoBuscado := BuscarArticulo;
+        if CodigoBuscado <> '' then
         begin
-          EliminarLineaVentaPorValidacion(DatosCaja.cdsLineas);
-          Exit;
-        end;
-        ActualizarColumnasDinamicas(CodArticulo);
-        var NumAtributos := FEditorLineas.NumeroAtributosActual;
-        if (Trim(SkuDetectado) <> '') and (NumAtributos > 0) then
-        begin
-           RellenarAtributosDesdeSku(SkuDetectado);
-        end;
-        cxgrdLineasOpe.SetFocus;
-        // Comprobamos si es un SKU completo (el código de unidad es distinto al
-        // padre)
-        var EsSkuCompleto := (Trim(SkuDetectado) <> '')
-           and (SkuDetectado <> CodArticulo);
-        // Supongamos que lees tu parámetro global así (ajusta el nombre a tu
-        // variable real)
-        var AutoPasarLinea :=
-          ParametrosCaja.GetBool('vgerMoverLineaIdentif', False);
-        // Si necesita atributos Y NO ES un SKU ya cerrado, nos paramos en la
-        // columna de atributos
-        if (NumAtributos > 0) and not EsSkuCompleto then
-        begin
-          var PrimeraCol := ObtenerColumnaPorTag(1);
-          if PrimeraCol <> nil then
+          if DatosCaja.cdsLineas.State = dsBrowse then
           begin
-            PrimeraCol.Visible := True;
-            tvLineasOpe.Controller.FocusedColumn := PrimeraCol;
-            tvLineasOpe.Controller.EditingController.ShowEdit;
+            if DatosCaja.cdsLineas.IsEmpty then
+              DatosCaja.cdsLineas.Append
+            else
+              DatosCaja.cdsLineas.Edit;
           end;
-        end
-        else
-        begin
-          // El artículo ya está completo (sea simple o un SKU cerrado)
-          if AutoPasarLinea then
+          if RellenarDatosArticuloEnDataset(CodigoBuscado) then
           begin
-            // Forzamos el guardado de la línea actual (si está en edición) para
-            // evitar que se pierda
-            if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
-              DatosCaja.cdsLineas.Post;
-
-            // Creamos línea nueva y ponemos el foco en el buscador de artículos
-            DatosCaja.cdsLineas.Append;
-            tvLineasOpe.Controller.FocusedColumn := tvArticulo;
-            tvLineasOpe.Controller.EditingController.ShowEdit;
-          end
-          else
-          begin
-            // Si el parámetro está desactivado, el cajero decide. Lo normal es
-            // dejarle en Cantidad.
+            var CodArticulo := DatosCaja.cdsLineas.FieldByName(
+              'CODIGO_ART_FACLIN').AsString;
+            var SkuDetectado := DatosCaja.cdsLineas.FieldByName(
+              'CODIGO_UNIDAD_FACLIN').AsString;
+            if (Trim(SkuDetectado) <> '') and
+               (SkuDetectado <> CodArticulo) and
+               not ValidarSkuParaVenta(SkuDetectado) then
+              EliminarLineaVentaPorValidacion(DatosCaja.cdsLineas)
+            else
+            begin
+              ActualizarColumnasDinamicas(CodArticulo);
+              var NumAtributos := FEditorLineas.NumeroAtributosActual;
+              if (Trim(SkuDetectado) <> '') and
+                 (NumAtributos > 0) then
+                RellenarAtributosDesdeSku(SkuDetectado);
+              cxgrdLineasOpe.SetFocus;
+              var EsSkuCompleto := (Trim(SkuDetectado) <> '') and
+                (SkuDetectado <> CodArticulo);
+              var AutoPasarLinea := ParametrosCaja.GetBool(
+                'vgerMoverLineaIdentif', False);
+              if (NumAtributos > 0) and not EsSkuCompleto then
+              begin
+                var PrimeraCol := ObtenerColumnaPorTag(1);
+                if PrimeraCol <> nil then
+                begin
+                  PrimeraCol.Visible := True;
+                  tvLineasOpe.Controller.FocusedColumn := PrimeraCol;
+                  tvLineasOpe.Controller.EditingController.ShowEdit;
+                end;
+              end
+              else if AutoPasarLinea then
+              begin
+                if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
+                  DatosCaja.cdsLineas.Post;
+                DatosCaja.cdsLineas.Append;
+                tvLineasOpe.Controller.FocusedColumn := tvArticulo;
+                tvLineasOpe.Controller.EditingController.ShowEdit;
+              end;
+            end;
           end;
         end;
       end;
@@ -3165,7 +3164,9 @@ end;
 procedure TfrmMtoOpeCaja.actEliminarLineaExecute(Sender: TObject);
 var
   VieneDeDep: string;
+  bEliminar: Boolean;
 begin
+  bEliminar := True;
   // NUEVO: Bloqueo de borrado
   if DatosCaja.cdsLineas.Active and not DatosCaja.cdsLineas.IsEmpty then
   begin
@@ -3173,16 +3174,17 @@ begin
     if (VieneDeDep = 'S') or (VieneDeDep = 'A') then
     begin
       ShowMessage(SErrorLineaDepositoCajaNoEliminable);
-      Exit;
+      bEliminar := False;
     end;
   end;
-
-  if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
-    DatosCaja.cdsLineas.Cancel
-  else
-    if DatosCaja.cdsLineas.State in [dsBrowse] then
+  if bEliminar then
+  begin
+    if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
+      DatosCaja.cdsLineas.Cancel
+    else if DatosCaja.cdsLineas.State = dsBrowse then
       DatosCaja.cdsLineas.Delete;
-  AsegurarLineaNueva;
+    AsegurarLineaNueva;
+  end;
 end;
 
 procedure TfrmMtoOpeCaja.actGuardarLayoutExecute(Sender: TObject);
@@ -3209,11 +3211,13 @@ begin
   Layout := TLayoutLoader.Create(
     Self.Name, ContextoSesion, PerfilesLectura);
   try
-    if not Layout.Disponible then Exit;
-    Layout.RestaurarGeometria(Self);
-    Layout.RestaurarAlturaPanel('StockPanelHeight', pnlBusqueda, 30);
-    Layout.RestaurarAnchoPanel('FotoStockWidth',   pnlFotoStock, 50);
-    Layout.RestaurarGrid('Lineas', tvLineasOpe);
+    if Layout.Disponible then
+    begin
+      Layout.RestaurarGeometria(Self);
+      Layout.RestaurarAlturaPanel('StockPanelHeight', pnlBusqueda, 30);
+      Layout.RestaurarAnchoPanel('FotoStockWidth', pnlFotoStock, 50);
+      Layout.RestaurarGrid('Lineas', tvLineasOpe);
+    end;
   finally
     FreeAndNil(Layout);
   end;
@@ -3247,11 +3251,9 @@ var
 begin
   // --- OPTIMIZACIÓN: Si es el mismo tipo de artículo, no repintamos ---
   Cacheado := SameText(AArticulo, FUltimoArticuloPadre);
-  if Cacheado then
+  if not Cacheado then
   begin
-    Exit;
-  end;
-  FUltimoArticuloPadre := AArticulo;
+    FUltimoArticuloPadre := AArticulo;
   SetLength(aNombresAtributos, 0);
   if (AArticulo <> '') and (AArticulo <> 'ACUENTA') then
   begin
@@ -3298,8 +3300,8 @@ begin
     end;
   finally
     tvLineasOpe.EndUpdate;
+    end;
   end;
-//  tvLineasOpe.ApplyBestFit(nil, True, False);
 end;
 
 procedure TfrmMtoOpeCaja.ActualizarLabelTotal(Sender: TObject;
@@ -3709,9 +3711,9 @@ begin
   if (Trim(sCodigoCliente) = '') or (Trim(sCodigoCliente) = '0') then
   begin
     ShowMessage(SErrorClienteDepositosCajaNoSeleccionado);
-    Exit;
-  end;
-
+  end
+  else
+  begin
   // 1. Matar la edición activa limpiamente (Evita el error de
   // Artículo no encontrado en la línea en blanco)
   if (tvLineasOpe.Controller.EditingController <> nil) and
@@ -3768,6 +3770,7 @@ begin
     ActualizarLabelTotal(nil, Totales.Totales.TotalLiquido);
   finally
     FreeAndNil(Totales);
+    end;
   end;
 end;
 
@@ -4174,10 +4177,12 @@ begin
   // parentar; ClientToScreen dentro de tvLineasOpeAvButtonClick pediria
   // Handle -> Parent -> EInvalidOperation. PostMessage hace que el handler
   // retorne y cxGrid acabe la colocacion antes de abrir el popup.
-  if not (Sender is TcxCustomEdit) then Exit;
-  BE := TcxCustomEdit(Sender);
-  BE.OnEnter := nil;
-  PostMessage(Formulario.Handle, WM_ABRIR_POPUP_AV, 0, 0);
+  if Sender is TcxCustomEdit then
+  begin
+    BE := TcxCustomEdit(Sender);
+    BE.OnEnter := nil;
+    PostMessage(Formulario.Handle, WM_ABRIR_POPUP_AV, 0, 0);
+  end;
 end;
 
 procedure TEditorLineasCajaVcl.AbrirPopupAtributo;
@@ -4194,11 +4199,13 @@ begin
   begin
     FswArtAPopup.Stop;
   end;
-  if not tvLineasOpe.Controller.EditingController.IsEditing then Exit;
-  CurrentEdit := tvLineasOpe.Controller.EditingController.Edit;
-  if (CurrentEdit is TcxButtonEdit)
-     and (CurrentEdit.Tag >= 1) and (CurrentEdit.Tag <= 5) then
-    SeleccionarAtributo(CurrentEdit, 0);
+  if tvLineasOpe.Controller.EditingController.IsEditing then
+  begin
+    CurrentEdit := tvLineasOpe.Controller.EditingController.Edit;
+    if (CurrentEdit is TcxButtonEdit) and
+       (CurrentEdit.Tag >= 1) and (CurrentEdit.Tag <= 5) then
+      SeleccionarAtributo(CurrentEdit, 0);
+  end;
 end;
 
 procedure TEditorLineasCajaVcl.RegistrarValorAtributo(
@@ -4213,42 +4220,43 @@ begin
   // (validar SKU, consultar stock, avanzar foco) se hace fuera para no
   // mover el foco con el editor todavia activo: ver tvLineasOpeAvButtonClick.
   // Sustituye al antiguo OnAtributoChanged del TcxComboBox.
-  if (AOrden < 1) or (AOrden > 5) then Exit;
-  if not DatosCaja.cdsLineas.Active then Exit;
-  if DatosCaja.cdsLineas.IsEmpty then Exit;
-  if DatosCaja.cdsLineas.State = dsBrowse then
-    DatosCaja.cdsLineas.Edit;
-  if not (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then Exit;
-
-  DatosCaja.cdsLineas.FieldByName(
-    'ATTR' + IntToStr(AOrden) + '_VALOR').AsString := AValorNuevo;
-
-  SkuNuevo := DatosCaja.GenerarSkuFinal(
-                DatosCaja.cdsLineas.FieldByName(
-                  'CODIGO_ART_FACLIN').AsString);
-  if Trim(SkuNuevo) = '' then
-    SkuNuevo := DatosCaja.cdsLineas.FieldByName(
-                  'CODIGO_ART_FACLIN').AsString;
-  DatosCaja.cdsLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString := SkuNuevo;
-
-  NumAtributosRequeridos := DatosCaja.cdsLineas.FieldByName(
-                              'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
-  if SkuLineaCajaAdmitePrecio(SkuNuevo, NumAtributosRequeridos) then
-    RecalcularPrecioDesdeSku(SkuNuevo);
+  if (AOrden >= 1) and (AOrden <= 5) and
+     DatosCaja.cdsLineas.Active and not DatosCaja.cdsLineas.IsEmpty then
+  begin
+    if DatosCaja.cdsLineas.State = dsBrowse then
+      DatosCaja.cdsLineas.Edit;
+    if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
+    begin
+      DatosCaja.cdsLineas.FieldByName(
+        'ATTR' + IntToStr(AOrden) + '_VALOR').AsString := AValorNuevo;
+      SkuNuevo := DatosCaja.GenerarSkuFinal(
+        DatosCaja.cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString);
+      if Trim(SkuNuevo) = '' then
+        SkuNuevo := DatosCaja.cdsLineas.FieldByName(
+          'CODIGO_ART_FACLIN').AsString;
+      DatosCaja.cdsLineas.FieldByName(
+        'CODIGO_UNIDAD_FACLIN').AsString := SkuNuevo;
+      NumAtributosRequeridos := DatosCaja.cdsLineas.FieldByName(
+        'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
+      if SkuLineaCajaAdmitePrecio(
+        SkuNuevo, NumAtributosRequeridos) then
+        RecalcularPrecioDesdeSku(SkuNuevo);
+    end;
+  end;
 end;
 
 procedure TEditorLineasCajaVcl.FinalizarUltimoAtributo;
 var
   SkuNuevo : string;
   EstabaInsertando : Boolean;
+  bContinuar: Boolean;
 begin
   // Logica que antes vivia inline en cxGrid1DBTableView1EditKeyDown cuando
   // se confirmaba el ultimo atributo de la linea. Encapsulada para poder
   // invocarla desde tvLineasOpeAvButtonClick (popup) sin duplicar codigo.
-  if FProcesandoAtributo then Exit;
-  if not DatosCaja.cdsLineas.Active then Exit;
-  if DatosCaja.cdsLineas.IsEmpty then Exit;
-
+  if not FProcesandoAtributo and DatosCaja.cdsLineas.Active and
+     not DatosCaja.cdsLineas.IsEmpty then
+  begin
   // Defensivo: aseguramos que no queda un inplace editor activo antes de
   // empezar a hacer Cancel/Append. Los broadcasts del data link (sobre
   // todo tras el ShowMessage de "no hay stock") intentarian refrescar el
@@ -4258,61 +4266,61 @@ begin
   if tvLineasOpe.Controller.EditingController.IsEditing then
     tvLineasOpe.Controller.EditingController.HideEdit(False);
 
-  FProcesandoAtributo := True;
-  DatosCaja.cdsLineas.DisableControls;
-  try
-    EstabaInsertando := (DatosCaja.cdsLineas.State = dsInsert);
-    SkuNuevo := DatosCaja.cdsLineas.FieldByName(
-                                       'CODIGO_UNIDAD_FACLIN').AsString;
-
-    if EstabaInsertando and ConsolidarSiExiste(SkuNuevo) then
-    begin
-      if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
-        DatosCaja.cdsLineas.Cancel;
-      if not DatosCaja.cdsLineas.IsEmpty then
-        if DatosCaja.cdsLineas.FieldByName(
-                   'CODIGO_UNIDAD_FACLIN').AsString = SkuNuevo then
+    bContinuar := True;
+    FProcesandoAtributo := True;
+    DatosCaja.cdsLineas.DisableControls;
+    try
+      EstabaInsertando := (DatosCaja.cdsLineas.State = dsInsert);
+      SkuNuevo := DatosCaja.cdsLineas.FieldByName(
+        'CODIGO_UNIDAD_FACLIN').AsString;
+      if EstabaInsertando and ConsolidarSiExiste(SkuNuevo) then
+      begin
+        if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
+          DatosCaja.cdsLineas.Cancel;
+        if not DatosCaja.cdsLineas.IsEmpty and
+           (DatosCaja.cdsLineas.FieldByName(
+             'CODIGO_UNIDAD_FACLIN').AsString = SkuNuevo) then
           DatosCaja.cdsLineas.Delete;
+        DatosCaja.cdsLineas.EnableControls;
+        DatosCaja.cdsLineas.Append;
+        tvLineasOpe.Controller.FocusedColumn := tvArticulo;
+        tvLineasOpe.Controller.EditingController.ShowEdit;
+        bContinuar := False;
+      end;
+      if bContinuar and not ValidarSkuParaVenta(SkuNuevo) then
+      begin
+        if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
+          DatosCaja.cdsLineas.Cancel;
+        if not DatosCaja.cdsLineas.IsEmpty and
+           (DatosCaja.cdsLineas.FieldByName(
+             'CODIGO_UNIDAD_FACLIN').AsString = SkuNuevo) then
+          DatosCaja.cdsLineas.Delete;
+        DatosCaja.cdsLineas.EnableControls;
+        DatosCaja.cdsLineas.Append;
+        tvLineasOpe.Controller.FocusedColumn := tvArticulo;
+        tvLineasOpe.Controller.EditingController.ShowEdit;
+        bContinuar := False;
+      end;
+      if bContinuar then
+        ConsultarStock(SkuNuevo);
+    finally
+      FProcesandoAtributo := False;
       DatosCaja.cdsLineas.EnableControls;
-      DatosCaja.cdsLineas.Append;
-      tvLineasOpe.Controller.FocusedColumn := tvArticulo;
-      tvLineasOpe.Controller.EditingController.ShowEdit;
-      Exit;
     end;
-
-    if not ValidarSkuParaVenta(SkuNuevo) then
+    if bContinuar then
     begin
-      if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
-        DatosCaja.cdsLineas.Cancel;
-      if not DatosCaja.cdsLineas.IsEmpty
-         and (DatosCaja.cdsLineas.FieldByName(
-                      'CODIGO_UNIDAD_FACLIN').AsString = SkuNuevo) then
-        DatosCaja.cdsLineas.Delete;
-      DatosCaja.cdsLineas.EnableControls;
-      //dbtvStock.ClearItems;
-      DatosCaja.cdsLineas.Append;
-      tvLineasOpe.Controller.FocusedColumn := tvArticulo;
+      if ParametrosCaja.GetBool('vgerMoverLineaIdentif', True) then
+      begin
+        if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
+          DatosCaja.cdsLineas.Post;
+        DatosCaja.cdsLineas.Append;
+        tvLineasOpe.Controller.FocusedColumn := tvArticulo;
+      end
+      else
+        tvLineasOpe.Controller.FocusedColumn := tvDescripcion;
       tvLineasOpe.Controller.EditingController.ShowEdit;
-      Exit;
     end;
-
-    ConsultarStock(SkuNuevo);
-  finally
-    FProcesandoAtributo := False;
-    DatosCaja.cdsLineas.EnableControls;
   end;
-
-  if ParametrosCaja.GetBool('vgerMoverLineaIdentif', True) then
-  begin
-    if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
-      DatosCaja.cdsLineas.Post;
-    DatosCaja.cdsLineas.Append;
-    tvLineasOpe.Controller.FocusedColumn := tvArticulo;
-  end
-  else
-    tvLineasOpe.Controller.FocusedColumn := tvDescripcion;
-
-  tvLineasOpe.Controller.EditingController.ShowEdit;
 end;
 
 procedure TEditorLineasCajaVcl.SeleccionarAtributo(
@@ -4330,113 +4338,108 @@ var
   EditCtrl  : TWinControl;
   ScrPt     : TPoint;
   WidHint   : Integer;
+  bContinuar: Boolean;
 begin
   // Click en el boton de una columna de atributo (Color, Talla, ...): abre
   // el popup SeleccionarAvConPaleta con cuadraditos de paleta. Mismo flujo
   // que inMtoInventarios.tvLineasSkuPropertiesButtonClick.
   Col := tvLineasOpe.Controller.FocusedColumn;
-  if Col = nil then Exit;
-  Orden := Col.Tag;
-  if (Orden < 1) or (Orden > 5) then Exit;
-  if not DatosCaja.cdsLineas.Active then Exit;
-  if DatosCaja.cdsLineas.IsEmpty then Exit;
-
-  ArtPadre  := DatosCaja.cdsLineas.FieldByName(
-                 'CODIGO_ART_FACLIN').AsString;
-  AvActual  := DatosCaja.cdsLineas.FieldByName(
-                 'ATTR' + IntToStr(Orden) + '_VALOR').AsString;
-  NombreAtb := DatosCaja.cdsLineas.FieldByName(
-                 'ATTR' + IntToStr(Orden) + '_NOMBRE').AsString;
-
-  CargarAvsValidosArticulo(
-    ArtPadre,
-    Orden,
-    FRepositoriosArticulosPantalla.
-      CrearLookupAtributosArticulos(ConexionPrincipal),
-    Avs);
-  if Length(Avs) = 0 then
+  bContinuar := Col <> nil;
+  Orden := 0;
+  if bContinuar then
+    Orden := Col.Tag;
+  bContinuar := bContinuar and (Orden >= 1) and (Orden <= 5) and
+    DatosCaja.cdsLineas.Active and not DatosCaja.cdsLineas.IsEmpty;
+  if bContinuar then
   begin
-    ShowMessage(SErrorValoresAtributoCajaNoDefinidos);
-    Exit;
+    ArtPadre := DatosCaja.cdsLineas.FieldByName(
+      'CODIGO_ART_FACLIN').AsString;
+    AvActual := DatosCaja.cdsLineas.FieldByName(
+      'ATTR' + IntToStr(Orden) + '_VALOR').AsString;
+    NombreAtb := DatosCaja.cdsLineas.FieldByName(
+      'ATTR' + IntToStr(Orden) + '_NOMBRE').AsString;
+    CargarAvsValidosArticulo(
+      ArtPadre,
+      Orden,
+      FRepositoriosArticulosPantalla.
+        CrearLookupAtributosArticulos(ConexionPrincipal),
+      Avs);
+    if Length(Avs) = 0 then
+    begin
+      ShowMessage(SErrorValoresAtributoCajaNoDefinidos);
+      bContinuar := False;
+    end;
   end;
-
-  IdVa := '';
-  Mapa := ObtenerMapaAtributosGlobal(ConexionPrincipal);
-  if Mapa <> nil then
-    Mapa.TryGetValue(UpperCase(Trim(NombreAtb)), IdVa);
-
-  // Posicion del popup justo debajo del editor. SeleccionarAvConPaleta
-  // acepta (-1, -1) para auto-centrar; lo usamos como fallback. cxGrid
-  // mantiene los TcxButtonEdit en un pool y a veces el editor inplace que
-  // recibimos en Sender (sea via OnButtonClick, OnEnter via
-  // AbrirPopupAvEnEntrada, o F3 via actBuscarEmpleadosExecute) llega sin
-  // Parent en la pasada — ClientToScreen pide Handle, Handle pide Parent
-  // y salta EInvalidOperation. Comprobamos HasParent y, por si hay carrera
-  // entre el check y la llamada, envolvemos en try/except.
-  ScrPt.X := -1; ScrPt.Y := -1;
-  WidHint := 120;
-  if (Sender is TWinControl) and TWinControl(Sender).HasParent then
+  if bContinuar then
   begin
-    EditCtrl := TWinControl(Sender);
-    try
-      ScrPt   := EditCtrl.ClientToScreen(Point(0, EditCtrl.Height));
-      WidHint := EditCtrl.Width;
-    except
-      on E: EInvalidOperation do
-      begin
-        ScrPt.X := -1;
-        ScrPt.Y := -1;
-        WidHint := 120;
+    IdVa := '';
+    Mapa := ObtenerMapaAtributosGlobal(ConexionPrincipal);
+    if Mapa <> nil then
+      Mapa.TryGetValue(UpperCase(Trim(NombreAtb)), IdVa);
+    // Posicion del popup justo debajo del editor. SeleccionarAvConPaleta
+    // acepta (-1, -1) para auto-centrar; lo usamos como fallback. cxGrid
+    // mantiene los TcxButtonEdit en un pool y a veces el editor inplace que
+    // recibimos en Sender (sea via OnButtonClick, OnEnter via
+    // AbrirPopupAvEnEntrada, o F3 via actBuscarEmpleadosExecute) llega sin
+    // Parent en la pasada — ClientToScreen pide Handle, Handle pide Parent
+    // y salta EInvalidOperation. Comprobamos HasParent y, por si hay carrera
+    // entre el check y la llamada, envolvemos en try/except.
+    ScrPt.X := -1;
+    ScrPt.Y := -1;
+    WidHint := 120;
+    if (Sender is TWinControl) and TWinControl(Sender).HasParent then
+    begin
+      EditCtrl := TWinControl(Sender);
+      try
+        ScrPt := EditCtrl.ClientToScreen(Point(0, EditCtrl.Height));
+        WidHint := EditCtrl.Width;
+      except
+        on E: EInvalidOperation do
+        begin
+          ScrPt.X := -1;
+          ScrPt.Y := -1;
+          WidHint := 120;
+        end;
       end;
     end;
-  end;
-
-  if not SeleccionarAvConPaleta(ConexionPrincipal,IdVa, Avs, AvActual, AvNuevo,
-                                 ScrPt.X, ScrPt.Y, WidHint, ArtPadre) then
-    Exit;
-
-  RegistrarValorAtributo(Orden, AvNuevo);
-
-  // Reflejamos el AV nuevo en el editor para que el usuario lo vea sin
-  // tener que esperar a que se reabra la celda. Solo si Sender sigue
-  // parentado: durante el modal SeleccionarAvConPaleta cxGrid puede
-  // haberle quitado el Parent al editor inplace (perdida de foco) y un
-  // EditValue := X sobre un control sin parent dispara EInvalidOperation
-  // 'no tiene ventana principal'.
-  if (Sender is TcxCustomEdit) and TWinControl(Sender).HasParent then
-  begin
-    try
-      TcxCustomEdit(Sender).EditValue := AvNuevo;
-    except
-      on E: EInvalidOperation do
-        // Defensivo: si cxGrid desparenta el editor entre el HasParent
-        // de arriba y el set EditValue, seguimos sin pintar — el data
-        // link ya tiene el valor via RegistrarValorAtributo.
-        RegistroLog.RegistrarAviso(
-          'CajaOpe: EditValue del editor inplace ignorado: ' +
-          E.Message);
+    if SeleccionarAvConPaleta(
+      ConexionPrincipal, IdVa, Avs, AvActual, AvNuevo,
+      ScrPt.X, ScrPt.Y, WidHint, ArtPadre) then
+    begin
+      RegistrarValorAtributo(Orden, AvNuevo);
+      // Reflejamos el AV nuevo en el editor para que el usuario lo vea sin
+      // tener que esperar a que se reabra la celda. Solo si Sender sigue
+      // parentado: durante el modal SeleccionarAvConPaleta cxGrid puede
+      // haberle quitado el Parent al editor inplace (perdida de foco) y un
+      // EditValue := X sobre un control sin parent dispara EInvalidOperation
+      // 'no tiene ventana principal'.
+      if (Sender is TcxCustomEdit) and TWinControl(Sender).HasParent then
+      begin
+        try
+          TcxCustomEdit(Sender).EditValue := AvNuevo;
+        except
+          on E: EInvalidOperation do
+            // Defensivo: si cxGrid desparenta el editor entre el HasParent
+            // de arriba y el set EditValue, seguimos sin pintar — el data
+            // link ya tiene el valor via RegistrarValorAtributo.
+            RegistroLog.RegistrarAviso(
+              'CajaOpe: EditValue del editor inplace ignorado: ' +
+              E.Message);
+        end;
+      end;
+      // Cerramos el editor inplace antes de tocar cdsLineas o cambiar foco.
+      if tvLineasOpe.Controller.EditingController.IsEditing then
+        tvLineasOpe.Controller.EditingController.HideEdit(False);
+      // Diferimos para soltar el callstack del OnButtonClick y permitir que
+      // cxGrid termine de limpiar el editor inplace antes de cambiar datos.
+      if PasoTrasAtributoLineaCaja(Orden, FNumAtributosActual) =
+         palFinalizar then
+        PostMessage(Formulario.Handle, WM_FINALIZAR_ATRIB_CAJA, 0, 0)
+      else
+        PostMessage(
+          Formulario.Handle, WM_AVANZAR_ATRIB_CAJA, Orden + 1, 0);
     end;
   end;
-
-  // Cerramos el editor inplace ANTES de tocar cdsLineas / cambiar foco. Usamos
-  // HideEdit(False) porque RegistrarValorAtributo ya escribio el campo: pedir
-  // PostEditValue (HideEdit(True)) sobre un editor que cxGrid pudo
-  // desparentar durante el popup vuelve a disparar EInvalidOperation.
-  if tvLineasOpe.Controller.EditingController.IsEditing then
-    tvLineasOpe.Controller.EditingController.HideEdit(False);
-
-  // Diferimos via PostMessage para soltar el callstack del OnButtonClick.
-  // Asi cxGrid termina de limpiar el editor inplace (que ya HideEdit'amos)
-  // antes de que FinalizarUltimoAtributo abra el ShowMessage de "no hay
-  // stock" o haga Cancel/Append. Si lo hacemos en linea, los DataChange
-  // del EnableControls/Append intentan refrescar el TcxButtonEdit que
-  // cxGrid todavia tiene en su pool con Parent = nil -> EInvalidOperation.
-  if PasoTrasAtributoLineaCaja(Orden, FNumAtributosActual) =
-     palFinalizar then
-    PostMessage(Formulario.Handle, WM_FINALIZAR_ATRIB_CAJA, 0, 0)
-  else
-    PostMessage(Formulario.Handle, WM_AVANZAR_ATRIB_CAJA, Orden + 1, 0);
-
 end;
 
 procedure TEditorLineasCajaVcl.FinalizarAtributos;
@@ -4498,30 +4501,28 @@ end;
 function TfrmMtoOpeCaja.IntentarCerrar: Boolean;
 begin
   Result := True;
-  if (csDestroying in ComponentState) then Exit;
-  if (DatosCaja.cdsLineas.Active) and (not DatosCaja.cdsLineas.IsEmpty) then
+  if not (csDestroying in ComponentState) then
   begin
-    if not Visible then
+    if DatosCaja.cdsLineas.Active and not DatosCaja.cdsLineas.IsEmpty then
     begin
-      Show;
-      BringToFront;
-    end;
-    if MessageDlg(
-      Format(SPreguntaEliminarOperacionCajaPendiente, [Self.Tag]),
-                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-    begin
-      if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
-        DatosCaja.cdsLineas.Cancel;
-      Close;
+      if not Visible then
+      begin
+        Show;
+        BringToFront;
+      end;
+      if MessageDlg(
+        Format(SPreguntaEliminarOperacionCajaPendiente, [Self.Tag]),
+        mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+      begin
+        if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
+          DatosCaja.cdsLineas.Cancel;
+        Close;
+      end
+      else
+        Result := False;
     end
     else
-    begin
-      Result := False;
-    end;
-  end
-  else
-  begin
-    Close;
+      Close;
   end;
 end;
 
@@ -4532,11 +4533,9 @@ var
 begin
   Result := nil;
   for i:= 0 to tvLineasOpe.ColumnCount - 1 do
-    if (tvLineasOpe.Columns[i].Tag = ANumeroColumna) then
-    begin
+    if (Result = nil) and
+       (tvLineasOpe.Columns[i].Tag = ANumeroColumna) then
       Result := (tvLineasOpe.Columns[i] as TcxGridDBColumn);
-      Exit;
-    end;
 end;
 
 procedure TfrmMtoOpeCaja.Timer1Timer(Sender: TObject);

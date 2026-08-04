@@ -205,28 +205,87 @@ materializar:
 ## Pedidos
 
 Mantenimiento de **Pedidos de Compra**. Registra lo que se ha **encargado**
-a un proveedor (todavía no ha llegado, no mueve stock).
+a un proveedor. Mientras solo exista el pedido, la cantidad figura como
+**pendiente de recibir** y no aumenta las existencias.
 
 ![Pedidos de compra](img/03-pedidos-compra.png)
 
 **Atajo de menú:** `[Shift]+[Ctrl]+[P]`
 
-Un pedido tiene una **cabecera** (proveedor, fecha, almacén de destino,
-forma de pago) y un **detalle de líneas** (artículo/SKU, cantidades por
-talla, precio). Desde el pedido se puede generar el **albarán de compra**
-cuando llega la mercancía.
+Un pedido tiene una **cabecera** (empresa, proveedor, serie/número, fechas,
+temporada y almacén de destino predeterminado) y un **detalle de líneas**
+(artículo/SKU, almacén efectivo, cantidad pedida, recibida, pendiente,
+precio e impuestos). Los indicadores de cabecera resumen **Pedida**,
+**Recibida**, **Pendiente** y **A albaranar**. En la lista, un pedido con
+cantidad pendiente y **fecha tope de recepción vencida** aparece resaltado.
 
-En la recepción, la columna **A recibir** no permite superar lo pendiente:
-si tecleas más unidades de las pedidas, la aplicación ajusta el valor al
-máximo disponible. Esto se aplica tanto en el modo vertical como en el
-pivote de tallas.
+### Presentación de las líneas y cantidades a recibir
 
-El botón **Crear albarán** permite dos flujos:
+Dentro de **Líneas**, `[F1]` recorre cuatro presentaciones:
 
-- Crear un **albarán nuevo** con las cantidades pendientes o con las
-  cantidades introducidas en **A recibir**.
-- **Incorporar** esas líneas a un albarán ya existente del mismo pedido,
-  si se está recibiendo mercancía en varias tandas.
+1. **Auto (desglose)** — artículo y atributos en columnas separadas.
+2. **SKU** — una línea por variante.
+3. **Tallas en línea** — tallas como columnas de entrada.
+4. **Tallas horizontales** — grupos por artículo/color con las bandas
+   **Pedido**, **A recibir** y **Pendiente**.
+
+La pantalla suele abrir en **Tallas en línea**; si ese modo no puede
+construirse, pasa a SKU. El botón **Expandir recibidos** salta directamente
+a **Tallas horizontales**. Consulta también la explicación general de
+[los modos con F1](01-conceptos-comunes.md#cambiar-la-presentacion-de-las-lineas-con-f1).
+
+![Pedido de compra en tallas horizontales con sus bandas de recepción](img/03-pedidos-recepcion-tallas.png)
+
+Para preparar una recepción:
+
+- Escribe en **A recibir** solo las unidades que han llegado. Se puede
+  informar por línea o por talla, según el modo activo.
+- **Recibir Todo** copia a **A recibir** todo lo que queda pendiente en el
+  pedido. Después todavía puedes corregir una línea o una talla.
+- Factuzam no permite que **A recibir** supere
+  `Pedida − Recibida`: reduce automáticamente el exceso al máximo pendiente
+  y emite un aviso sonoro.
+- Si una línea tiene un artículo con variaciones pero no tiene SKU, al
+  grabar se muestra un aviso: esa línea no puede mover stock correctamente.
+
+> **Importante:** si pulsas **Crear albarán** sin haber informado ninguna
+> cantidad en **A recibir**, Factuzam aplica el flujo clásico y recibe **todo
+> lo pendiente del almacén elegido**. Informa cantidades antes si la entrega
+> es parcial.
+
+### Recibir el pedido: crear o ampliar un albarán
+
+1. Revisa **A recibir** y pulsa **Crear albarán**.
+2. Elige el **almacén destino**. Se puede seleccionar cualquier almacén
+   activo; solo se procesan las líneas cuya ubicación efectiva coincide con
+   el almacén elegido.
+3. Para un albarán nuevo, confirma la **serie** propuesta para ese almacén,
+   la **referencia del proveedor**, la **fecha de recepción** y la
+   **temporada**.
+4. Si la entrega continúa un albarán anterior, marca **Incorporar a un
+   albarán ya existente de este pedido** y selecciona el documento destino.
+5. Acepta con `[F12]`. Factuzam crea o amplía el albarán, mueve el stock,
+   actualiza las cantidades recibidas y pendientes del pedido y recalcula su
+   estado en una sola operación.
+
+![Incorporación de una recepción a un albarán existente](img/03-pedidos-incorporar-albaran.png)
+
+Después de una recepción correcta, las cantidades **A recibir** del almacén
+procesado se limpian; las de otros almacenes permanecen para poder continuar
+con la siguiente tienda o recepción. Un resumen muestra el albarán resultante
+y permite **Ir a documento**.
+
+El estado del pedido se mantiene automáticamente:
+
+| Estado | Significado |
+|--------|-------------|
+| **ABIERTO** | Todavía no se ha recibido ninguna unidad. |
+| **PARCIAL** | Se ha recibido una parte y queda mercancía pendiente. |
+| **RECIBIDO** | Ya no queda cantidad pendiente. |
+| **CANCELADO** | El pedido no se continuará recibiendo. |
+
+La recepción es transaccional: si falla la creación, la incorporación o el
+movimiento de stock, Factuzam deshace el conjunto y deja el pedido como estaba.
 
 ![Crear albarán desde pedido de compra](img/03-pedidos-crear-albaran.png)
 
@@ -376,6 +435,12 @@ alimentarla con vencimientos filtrados por proveedor, vencimiento o estado.
 Listado de documentos de proveedor para revisar pedidos, albaranes,
 devoluciones, borradores y vencimientos dentro de un rango de fechas o por
 proveedor.
+
+La vista preliminar agrupa los documentos por tipo y proveedor, presenta
+líneas, base, IVA, recargo de equivalencia y total, e incluye subtotales por
+proveedor, por tipo de documento y un total general.
+
+![Vista preliminar del listado de documentos proveedor](img/03-listado-documentos-proveedor-resultado.png)
 
 ---
 

@@ -12,12 +12,9 @@
 {    Sincronización de pendientes y estado de pedidos de compra.              }
 {******************************************************************************}
 unit UniDataPedidosCompraPendientes;
-
 interface
-
 uses
   Uni, inLibPedidosCompraIntf;
-
 function CrearPendientesPedidoCompraUniDAC(
   AConexion: TUniConnection): IPedidosCompraPendientes;
 procedure RecalcularEstadoPedido(AConn: TUniConnection;
@@ -30,12 +27,9 @@ procedure BorrarPdteRecibirDesdePedidoInterno(
   const ASeriePedc, ANumPedc, ALinea: string);
 function CalcularPendienteTotalInterno(AConn: TUniConnection;
   const ASeriePedc, ANumPedc: string): Double;
-
 implementation
-
 uses
   System.SysUtils, Data.DB, DBAccess;
-
 type
   TPedidosCompraPendientesUniDAC = class(
     TInterfacedObject, IPedidosCompraPendientes)
@@ -51,7 +45,6 @@ type
     function CalcularPendienteTotal(
       const ASeriePedc, ANumPedc: string): Double;
   end;
-
 // Recalcula ESTADO_PEDC en funcion de la cantidad pendiente total.
 // Reglas:
 //   * Pedido sin lineas o cancelado por el usuario: no se toca.
@@ -123,7 +116,6 @@ begin
     FreeAndNil(q);
   end;
 end;
-
 procedure BorrarPdteRecibirDesdePedidoInterno(AConn: TUniConnection;
                                         const ASeriePedc, ANumPedc: string;
                                         const ALinea: string);
@@ -158,7 +150,6 @@ begin
     FreeAndNil(q);
   end;
 end;
-
 procedure GenerarPdteRecibirDesdePedidoInterno(AConn: TUniConnection;
                                          const ASeriePedc, ANumPedc,
                                                AUsuario: string);
@@ -174,7 +165,6 @@ begin
   // diff y los pedidos no suelen tener mas de unas decenas de lineas.
   BorrarPdteRecibirDesdePedidoInterno(
     AConn, ASeriePedc, ANumPedc, '');
-
   q    := TUniQuery.Create(nil);
   qIns := TUniQuery.Create(nil);
   try
@@ -293,8 +283,6 @@ begin
     FreeAndNil(qIns);
   end;
 end;
-
-
 function CalcularPendienteTotalInterno(AConn: TUniConnection;
                                  const ASeriePedc, ANumPedc: string): Double;
 var
@@ -317,18 +305,15 @@ begin
     FreeAndNil(q);
   end;
 end;
-
 // Mayor numero de linea (LINEA_ALBCLIN) ya presente en un albaran de
 // compra; 0 si no tiene lineas. Sirve para continuar la numeracion al
 // incorporar lineas a un albaran existente.
-
 constructor TPedidosCompraPendientesUniDAC.Create(
   AConexion: TUniConnection);
 begin
   inherited Create;
   FConexion := AConexion;
 end;
-
 procedure TPedidosCompraPendientesUniDAC.
   GenerarPdteRecibirDesdePedido(
   const ASeriePedc, ANumPedc, AUsuario: string);
@@ -336,7 +321,6 @@ begin
   GenerarPdteRecibirDesdePedidoInterno(
     FConexion, ASeriePedc, ANumPedc, AUsuario);
 end;
-
 procedure TPedidosCompraPendientesUniDAC.
   BorrarPdteRecibirDesdePedido(
   const ASeriePedc, ANumPedc, ALinea: string);
@@ -344,18 +328,15 @@ begin
   BorrarPdteRecibirDesdePedidoInterno(
     FConexion, ASeriePedc, ANumPedc, ALinea);
 end;
-
 function TPedidosCompraPendientesUniDAC.CalcularPendienteTotal(
   const ASeriePedc, ANumPedc: string): Double;
 begin
   Result := CalcularPendienteTotalInterno(
     FConexion, ASeriePedc, ANumPedc);
 end;
-
 function CrearPendientesPedidoCompraUniDAC(
   AConexion: TUniConnection): IPedidosCompraPendientes;
 begin
   Result := TPedidosCompraPendientesUniDAC.Create(AConexion);
 end;
-
 end.

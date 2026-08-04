@@ -283,32 +283,29 @@ var
   i, LineStart, LineEnd: Integer;
 begin
   if DBSynEdit1.Focused then
-    Editor := DBSynEdit1
-  else
-    Exit;
-
-  Editor.BeginUpdate;
-  Editor.Lines.BeginUpdate;
-  try
-    if Editor.SelAvail then
-    begin
-      LineStart := Editor.BlockBegin.Line;
-      LineEnd   := Editor.BlockEnd.Line;
-      if Editor.BlockEnd.Char = 1 then
-        Dec(LineEnd);
-    end
-    else
-    begin
-      LineStart := Editor.CaretY;
-      LineEnd   := Editor.CaretY;
+  begin
+    Editor := DBSynEdit1;
+    Editor.BeginUpdate;
+    Editor.Lines.BeginUpdate;
+    try
+      if Editor.SelAvail then
+      begin
+        LineStart := Editor.BlockBegin.Line;
+        LineEnd := Editor.BlockEnd.Line;
+        if Editor.BlockEnd.Char = 1 then
+          Dec(LineEnd);
+      end
+      else
+      begin
+        LineStart := Editor.CaretY;
+        LineEnd := Editor.CaretY;
+      end;
+      for i := LineStart to LineEnd do
+        Editor.Lines[i - 1] := '-- ' + Editor.Lines[i - 1];
+    finally
+      Editor.Lines.EndUpdate;
+      Editor.EndUpdate;
     end;
-
-    for i := LineStart to LineEnd do
-      Editor.Lines[i - 1] := '-- ' + Editor.Lines[i - 1];
-
-  finally
-    Editor.Lines.EndUpdate;
-    Editor.EndUpdate;
   end;
 end;
 
@@ -393,16 +390,17 @@ var
 begin
   Dialog := Sender as TFindDialog;
 
-  // Si por lo que sea no hay un editor memorizado, salimos
-  if not Assigned(FEditorActualBusqueda) then Exit;
-
-  Opciones := [];
-  if frMatchCase in Dialog.Options then Include(Opciones, ssoMatchCase);
-  if not (frDown in Dialog.Options) then Include(Opciones, ssoBackwards);
-
-  // Buscamos en el editor que memorizamos
-  if FEditorActualBusqueda.SearchReplace(Dialog.FindText, '', Opciones) = 0 then
-    MessageDlg(SInfoTextoNoEncontrado, mtInformation, [mbOK], 0);
+  if Assigned(FEditorActualBusqueda) then
+  begin
+    Opciones := [];
+    if frMatchCase in Dialog.Options then
+      Include(Opciones, ssoMatchCase);
+    if not (frDown in Dialog.Options) then
+      Include(Opciones, ssoBackwards);
+    if FEditorActualBusqueda.SearchReplace(
+      Dialog.FindText, '', Opciones) = 0 then
+      MessageDlg(SInfoTextoNoEncontrado, mtInformation, [mbOK], 0);
+  end;
 end;
 
 procedure TfrmMtoGeneradorProcesos.DoReplace(Sender: TObject);
@@ -412,18 +410,19 @@ var
 begin
   Dialog := Sender as TReplaceDialog;
 
-  if not Assigned(FEditorActualBusqueda) then Exit;
-
-  Opciones := [ssoReplace];
-  if frMatchCase in Dialog.Options then Include(Opciones, ssoMatchCase);
-  if not (frDown in Dialog.Options) then Include(Opciones, ssoBackwards);
-  if frReplaceAll in Dialog.Options then Include(Opciones, ssoReplaceAll);
-
-  // Reemplazamos en el editor que memorizamos
-  if FEditorActualBusqueda.SearchReplace(Dialog.FindText,
-                                         Dialog.ReplaceText,
-                                         Opciones) = 0 then
-    MessageDlg(SInfoTextoNoEncontrado, mtInformation, [mbOK], 0);
+  if Assigned(FEditorActualBusqueda) then
+  begin
+    Opciones := [ssoReplace];
+    if frMatchCase in Dialog.Options then
+      Include(Opciones, ssoMatchCase);
+    if not (frDown in Dialog.Options) then
+      Include(Opciones, ssoBackwards);
+    if frReplaceAll in Dialog.Options then
+      Include(Opciones, ssoReplaceAll);
+    if FEditorActualBusqueda.SearchReplace(
+      Dialog.FindText, Dialog.ReplaceText, Opciones) = 0 then
+      MessageDlg(SInfoTextoNoEncontrado, mtInformation, [mbOK], 0);
+  end;
 end;
 
 procedure TfrmMtoGeneradorProcesos.BuscarGlobal;
@@ -433,9 +432,8 @@ begin
   if InputQuery(STituloBusquedaGlobal,
                 SSolicitudTextoBusquedaGlobal,
                 TextoBuscar) then
+  if Trim(TextoBuscar) <> '' then
   begin
-    if Trim(TextoBuscar) = '' then Exit;
-
     // Nos pasamos a la pestaña de la lista de procesos
     pcPantalla.ActivePage := tsLista;
 
@@ -469,8 +467,8 @@ procedure TfrmMtoGeneradorProcesos.CrearMenuContextual;
 var
   Item: TMenuItem;
 begin
-  if Assigned(FPopMenuEditores) then Exit;
-
+  if not Assigned(FPopMenuEditores) then
+  begin
   // Creamos el componente menú
   FPopMenuEditores := TPopupMenu.Create(Self);
 
@@ -524,6 +522,7 @@ begin
   // Asignamos el menú a tus dos editores
   DBSynEdit1.PopupMenu := FPopMenuEditores;
   syndtEstructura.PopupMenu := FPopMenuEditores;
+  end;
 end;
 
 procedure TfrmMtoGeneradorProcesos.ActivarEnterComoTab(Activo: Boolean);
@@ -625,13 +624,11 @@ begin
         sScriptCompleto := Trim(syndtEstructura.Lines.Text);
 
         if sScriptCompleto = '' then
-        begin
           ShowMessage(SErrorMetadatoSinScript);
-          Exit;
-        end;
-
-        // 3. INYECTAMOS EL "OR REPLACE" MÁGICAMENTE
-        sScriptCompleto := StringReplace(sScriptCompleto,
+        if sScriptCompleto <> '' then
+        begin
+          // 3. INYECTAMOS EL "OR REPLACE" MÁGICAMENTE
+          sScriptCompleto := StringReplace(sScriptCompleto,
                      'CREATE TABLE', 'CREATE OR REPLACE TABLE', [rfIgnoreCase]);
         sScriptCompleto := StringReplace(sScriptCompleto,
                        'CREATE VIEW', 'CREATE OR REPLACE VIEW', [rfIgnoreCase]);
@@ -680,6 +677,7 @@ begin
         pcPestana.ActivePage := tsSQL;
         if DBSynEdit1.CanFocus then
           DBSynEdit1.SetFocus;
+        end;
     end;
   end;
 end;
@@ -715,28 +713,24 @@ begin
     dlgAbrir.Filter     := SCaptionFiltroScriptsSql;
     dlgAbrir.DefaultExt := 'sql';
     dlgAbrir.Options    := dlgAbrir.Options + [ofFileMustExist];
-    if not dlgAbrir.Execute then
-      Exit;
-
-    slScript := TStringList.Create;
-    try
-      slScript.LoadFromFile(dlgAbrir.FileName);
-
-      pcPestana.ActivePage := tsSQL;
-      if not (dsTablaG.DataSet.State in
-        [dsInsert, dsEdit]) then
-        dsTablaG.DataSet.Append;
-
-      dmmGeneradorProcesos.unqryTablaG.FieldByName(
-        'NOMBRE_GENERADOR_PROCESO_GP').AsString :=
-          ChangeFileExt(ExtractFileName(dlgAbrir.FileName), '');
-      dmmGeneradorProcesos.unqryTablaG.FieldByName(
-        'PROCESO_GENERADOR_PROCESO_GP').AsString := slScript.Text;
-
-      if DBSynEdit1.CanFocus then
-        DBSynEdit1.SetFocus;
-    finally
-      FreeAndNil(slScript);
+    if dlgAbrir.Execute then
+    begin
+      slScript := TStringList.Create;
+      try
+        slScript.LoadFromFile(dlgAbrir.FileName);
+        pcPestana.ActivePage := tsSQL;
+        if not (dsTablaG.DataSet.State in [dsInsert, dsEdit]) then
+          dsTablaG.DataSet.Append;
+        dmmGeneradorProcesos.unqryTablaG.FieldByName(
+          'NOMBRE_GENERADOR_PROCESO_GP').AsString :=
+            ChangeFileExt(ExtractFileName(dlgAbrir.FileName), '');
+        dmmGeneradorProcesos.unqryTablaG.FieldByName(
+          'PROCESO_GENERADOR_PROCESO_GP').AsString := slScript.Text;
+        if DBSynEdit1.CanFocus then
+          DBSynEdit1.SetFocus;
+      finally
+        FreeAndNil(slScript);
+      end;
     end;
   finally
     FreeAndNil(dlgAbrir);
@@ -1287,20 +1281,17 @@ procedure TfrmMtoGeneradorProcesos.FormKeyDown(Sender: TObject;
                                                Shift: TShiftState);
 begin
   // Passthrough de RETURN para editores SynEdit
-  if (Key = VK_RETURN) then
-  begin
-    if DBSynEdit1.Focused or syndtEstructura.Focused then
-      Exit;
-  end;
-  inherited;
+  if not ((Key = VK_RETURN) and
+     (DBSynEdit1.Focused or syndtEstructura.Focused)) then
+    inherited;
 end;
 
 procedure TfrmMtoGeneradorProcesos.FormKeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  if (ActiveControl is TSynEdit) or (ActiveControl is TDBSynEdit) then
-    Exit;
-  inherited;
+  if not ((ActiveControl is TSynEdit) or
+     (ActiveControl is TDBSynEdit)) then
+    inherited;
 end;
 
 procedure TfrmMtoGeneradorProcesos.ActionBuscarGlobalExecute(Sender: TObject);
@@ -1491,17 +1482,13 @@ begin
   sbVertCentro.PageSize := 1;
   sbVertCentro.Max      := 1;
   sbVertCentro.Position := 0;
-  // Si no hay nodo seleccionado (por ejemplo, al limpiar el árbol), salimos
-  if Node = nil then Exit;
-
-  // Recuperamos el código guardado en la propiedad Data del nodo
-  iCodigo := NativeInt(Node.Data);
-
-  // Posicionar el dataset de metadatos en el registro correspondiente
-  dmmGeneradorProcesos.unqryMetadatos.Locate('CODIGO_META_META', iCodigo, []);
-
-  // Llama a tu lógica existente para actualizar la interfaz/datos
-  cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender);
+  if Node <> nil then
+  begin
+    iCodigo := NativeInt(Node.Data);
+    dmmGeneradorProcesos.unqryMetadatos.Locate(
+      'CODIGO_META_META', iCodigo, []);
+    cxdbtxtdtNOMBRE_METADATOPropertiesChange(Sender);
+  end;
 end;
 
 procedure TfrmMtoGeneradorProcesos.TreeView1DblClick(Sender: TObject);

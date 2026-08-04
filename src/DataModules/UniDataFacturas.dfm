@@ -2005,10 +2005,18 @@
       'SELECT COUNT(*) FROM fza_facturas_consolidaciones')
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT * FROM fza_facturas_consolidaciones'
-      'WHERE NUMERO_FAC_FACCON = :NUMERO_FAC'
-      'AND SERIE_FAC_FACCON = :SERIE_FAC'
-      'ORDER BY ID_FACCON DESC')
+      'SELECT fc.*, '
+      '       (SELECT q.ESTADO_VFCOLA '
+      '          FROM fza_verifactu_cola q '
+      '         WHERE q.SERIE_FAC_VFCOLA = fc.SERIE_FAC_FACCON '
+      '           AND q.NUMERO_FAC_VFCOLA = fc.NUMERO_FAC_FACCON '
+      '           AND q.TIPO_OPERACION_VFCOLA = '#39'SUBSANACION'#39' '
+      '         ORDER BY q.ID_VFCOLA DESC LIMIT 1) '
+      '         AS ESTADO_SUBSANACION '
+      'FROM fza_facturas_consolidaciones fc '
+      'WHERE fc.NUMERO_FAC_FACCON = :NUMERO_FAC '
+      '  AND fc.SERIE_FAC_FACCON = :SERIE_FAC '
+      'ORDER BY fc.ID_FACCON DESC')
     MasterSource = frmMtoFacturasBase.dsTablaG
     MasterFields = 'SERIE_FAC;NUMERO_FAC'
     DetailFields = 'SERIE_FAC_FACCON;NUMERO_FAC_FACCON'

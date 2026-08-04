@@ -58,19 +58,21 @@ var
   swQ: TStopwatch;
 begin
   inherited;
-  if unqryAtributosLookup.Active then Exit;
-  swQ := TStopwatch.StartNew;
-  try
-    unqryAtributosLookup.Open;
-    RegistroLog.RegistrarRendimiento('AtributosBasicos.AbrirDetalles',
-      'unqryAtributosLookup OK', swQ.ElapsedMilliseconds);
-  except
-    on E: Exception do
-    begin
+  if not unqryAtributosLookup.Active then
+  begin
+    swQ := TStopwatch.StartNew;
+    try
+      unqryAtributosLookup.Open;
       RegistroLog.RegistrarRendimiento('AtributosBasicos.AbrirDetalles',
-        'unqryAtributosLookup ERROR=' + E.Message,
-        swQ.ElapsedMilliseconds);
-      raise;
+        'unqryAtributosLookup OK', swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+      begin
+        RegistroLog.RegistrarRendimiento('AtributosBasicos.AbrirDetalles',
+          'unqryAtributosLookup ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
+        raise;
+      end;
     end;
   end;
 end;

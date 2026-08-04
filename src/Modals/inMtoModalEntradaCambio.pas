@@ -186,18 +186,19 @@ begin
       PChar(SErrorEmpleadoEntradaCambioNoIndicado),
       PChar(STituloAvisoEntradaCambio), MB_OK or MB_ICONWARNING);
     btnEmpleado.SetFocus;
-    Exit;
-  end;
-  if txtImporte.Value <= 0 then
+  end
+  else if txtImporte.Value <= 0 then
   begin
     Application.MessageBox(
       PChar(SErrorImporteEntradaCambioNoValido),
       PChar(STituloAvisoEntradaCambio), MB_OK or MB_ICONWARNING);
     txtImporte.SetFocus;
-    Exit;
+  end
+  else
+  begin
+    Grabar;
+    ModalResult := mrOk;
   end;
-  Grabar;
-  ModalResult := mrOk;
 end;
 
 procedure TfrmModalEntradaCambio.actCancelarExecute(Sender: TObject);

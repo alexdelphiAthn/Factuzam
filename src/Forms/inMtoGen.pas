@@ -519,27 +519,28 @@ var
   Resultado: TResultadoGuardadoMtoGen;
 begin
   inherited;
-  if tdmDataModule = nil then
-    Exit;
-  if FCasoUsoGuardado = nil then
-    FCasoUsoGuardado := CrearCasoUsoGuardadoMtoGenUniDAC(
-      ConexionTrabajo);
-  Screen.Cursor := crHourGlass;
-  try
+  if tdmDataModule <> nil then
+  begin
+    if FCasoUsoGuardado = nil then
+      FCasoUsoGuardado := CrearCasoUsoGuardadoMtoGenUniDAC(
+        ConexionTrabajo);
+    Screen.Cursor := crHourGlass;
     try
-      Resultado := FCasoUsoGuardado.Ejecutar(
-        procedure
-        begin
-          GrabarDatasets(tdmDataModule as TDataModule);
-        end);
-      if Resultado = rgmGuardado then
-        ShowMessage(SInfoDatosGuardados);
-    except
-      on E: Exception do
-        raise Exception.Create(Format(SErrorGrabarDatos, [E.Message]));
+      try
+        Resultado := FCasoUsoGuardado.Ejecutar(
+          procedure
+          begin
+            GrabarDatasets(tdmDataModule as TDataModule);
+          end);
+        if Resultado = rgmGuardado then
+          ShowMessage(SInfoDatosGuardados);
+      except
+        on E: Exception do
+          raise Exception.Create(Format(SErrorGrabarDatos, [E.Message]));
+      end;
+    finally
+      Screen.Cursor := crDefault;
     end;
-  finally
-    Screen.Cursor := crDefault;
   end;
 end;
 
@@ -549,26 +550,24 @@ var
   formMain: TCustomForm;
 begin
   inherited;
-  if not (Self.Parent is TcxTabSheet) then
-    Exit;
-  if (tdmDataModule <> nil) and
-     CheckOpenDatasets(tdmDataModule as TDataModule) then
+  if Self.Parent is TcxTabSheet then
   begin
-    if Application.MessageBox(PChar(SPreguntaGrabarCambiosPendientes),
-                              PChar(STituloMensajeAdvertenciaGen),
-                              MB_YESNO + MB_ICONQUESTION) = ID_YES then
+    if (tdmDataModule <> nil) and
+       CheckOpenDatasets(tdmDataModule as TDataModule) then
     begin
-      btnGrabarClick(Sender);
-      ShowMessage(SInfoCambiosGrabados);
-    end
-    else
-    begin
-      CancelarDatasets(tdmDataModule as TDataModule);
-      ShowMessage(SInfoCambiosCancelados);
+      if Application.MessageBox(PChar(SPreguntaGrabarCambiosPendientes),
+        PChar(STituloMensajeAdvertenciaGen),
+        MB_YESNO + MB_ICONQUESTION) = ID_YES then
+      begin
+        btnGrabarClick(Sender);
+        ShowMessage(SInfoCambiosGrabados);
+      end
+      else
+      begin
+        CancelarDatasets(tdmDataModule as TDataModule);
+        ShowMessage(SInfoCambiosCancelados);
+      end;
     end;
-  end;
-  if (Self.Parent is TcxTabSheet) then
-  begin
     ts := TcxTabSheet(Self.Parent);
     formMain := Application.MainForm;
     PostMessage(formMain.Handle, WM_FREECONTROL, 0, LParam(ts));
@@ -657,11 +656,11 @@ procedure TfrmMtoGen.InstalarGuardianBorrado;
 var
   ds: TDataSet;
 begin
-  if FGuardianBorradoInstalado then
-    Exit;
-  ds := dsTablaG.DataSet;
-  if ds = nil then
-    Exit;
+  if not FGuardianBorradoInstalado then
+  begin
+    ds := dsTablaG.DataSet;
+    if ds <> nil then
+    begin
   // Encadenamos los handlers originales del data module.
   FBeforeInsertOrig := ds.BeforeInsert;
   FBeforeEditOrig := ds.BeforeEdit;
@@ -680,6 +679,8 @@ begin
   if Assigned(cxGrdDBTabPrin) and Assigned(cxGrdDBTabPrin.Navigator) then
     cxGrdDBTabPrin.Navigator.Buttons.ConfirmDelete := False;
   FGuardianBorradoInstalado := True;
+    end;
+  end;
 end;
 
 procedure TfrmMtoGen.GuardianBeforeInsert(DataSet: TDataSet);
@@ -1150,13 +1151,14 @@ var
   unqry: TUniQuery;
   sw: TStopwatch;
   yaActiva: Boolean;
+  bSinError: Boolean;
 begin
-  if (tdmDataModule = nil) or not (tdmDataModule is TdmBase) then
-    Exit;
-  dmDat := TdmBase(tdmDataModule);
-  unqry := dmDat.unqryTablaG;
-  if unqry = nil then
-    Exit;
+  if (tdmDataModule <> nil) and (tdmDataModule is TdmBase) then
+  begin
+    dmDat := TdmBase(tdmDataModule);
+    unqry := dmDat.unqryTablaG;
+    if unqry <> nil then
+    begin
   // Antes de entrar: restricción por empresa/almacén/caja del usuario.
   // Si cierra una query activa del DFM, el flujo normal de abajo la
   // reabre ya filtrada (yaActiva quedará False).
@@ -1199,13 +1201,14 @@ begin
       // El form puede haberse cerrado mientras carga (otro tab, btnSalir,
       // cierre de app). En csDestroying los componentes ya pueden estar
       // liberados; salir limpio sin tocar nada.
-      if csDestroying in ComponentState then
-        Exit;
+      if not (csDestroying in ComponentState) then
+      begin
       // Reactivar SIEMPRE (tambien con error) para no dejar el contador
       // de DisableControls desbalanceado. Estamos en main thread.
       if Assigned(unqry) then
         unqry.EnableControls;
-      if ErrMsg = '' then
+      bSinError := ErrMsg = '';
+      if bSinError then
         RegistroLog.RegistrarRendimiento('Carga/async', Self.Name + ' | OK',
           sw.ElapsedMilliseconds)
       else
@@ -1213,10 +1216,9 @@ begin
         RegistroLog.RegistrarRendimiento('Carga/async',
           Self.Name + ' | error=' + ErrMsg,
           sw.ElapsedMilliseconds);
-        // No mostramos ShowMessage aqui — molesta si pasa al abrir
-        // varios tabs en cadena. El error queda en el log.
-        Exit;
       end;
+      if bSinError then
+      begin
       // (a) Detalles en MAIN thread con overlay aun visible. Bloquea
       // el main thread mientras corre (no podemos evitarlo: DevExpress
       // no permite operaciones de dataset en thread sin colgarse), pero
@@ -1262,7 +1264,11 @@ begin
       // intervenir tras la carga normal (p.ej. Articulos: dialogo de
       // filtrado si se supero el umbral de filas) lo hacen aqui.
       TrasPrecargaAsync;
+      end;
+      end;
     end);
+    end;
+  end;
 end;
 
 procedure TfrmMtoGen.TrasPrecargaAsync;
@@ -1284,12 +1290,12 @@ var
   sw: TStopwatch;
   CursorPrev: TCursor;
 begin
-  if (tdmDataModule = nil) or not (tdmDataModule is TdmBase) then
-    Exit;
-  dmDat := TdmBase(tdmDataModule);
-  unqry := dmDat.unqryTablaG;
-  if unqry = nil then
-    Exit;
+  if (tdmDataModule <> nil) and (tdmDataModule is TdmBase) then
+  begin
+    dmDat := TdmBase(tdmDataModule);
+    unqry := dmDat.unqryTablaG;
+    if unqry <> nil then
+    begin
   // Antes de entrar: restricción por empresa/almacén/caja del usuario
   if dmDat.AplicarRestriccionUsuario(SqlRestriccionUsuario) then
     RegistroLog.RegistrarInformacion(Self.Name +
@@ -1335,6 +1341,8 @@ begin
     end;
   finally
     Screen.Cursor := CursorPrev;
+  end;
+    end;
   end;
 end;
 
@@ -1530,17 +1538,16 @@ begin
     if Assigned(FAnfitrionMto) then
       FAnfitrionMto.CancelarEdicionesPantallas;
     Key := 0;
-  end;
+  end
   // RETURN sin control activo -> simular Tab
-  if ((Key = VK_RETURN) and (ActiveControl = nil)) then
+  else if (Key = VK_RETURN) and (ActiveControl = nil) then
   begin
     Key := 0;
     SimulateTabKey;
-    Exit;
-  end;
+  end
   // Ctrl+Inicio / Ctrl+Fin -> primer / ultimo registro del grid.
   // En editores de texto dejamos el comportamiento nativo del control.
-  if (Key in [VK_HOME, VK_END]) and (ssCtrl in Shift) and
+  else if (Key in [VK_HOME, VK_END]) and (ssCtrl in Shift) and
      not (ssAlt in Shift) and PuedeCambiarRegistroPorTecla then
   begin
     // Usar DataController para respetar la ordenacion del grid
@@ -1550,24 +1557,24 @@ begin
       cxGrdDBTabPrin.DataController.FocusedRowIndex :=
         cxGrdDBTabPrin.DataController.RowCount - 1;
     Key := 0;
-    Exit;
-  end;
+  end
   // Alt+F12 -> Guardar layout (equivalente al botón sbGrabarGrid)
-  if (Key = VK_F12) and (ssAlt in Shift) and not (ssCtrl in Shift) then
+  else if (Key = VK_F12) and (ssAlt in Shift) and
+     not (ssCtrl in Shift) then
   begin
     sbGrabarGridClick(nil);
     Key := 0;
-    Exit;
-  end;
+  end
   // Ctrl+F12 -> Resetear layout (equivalente al botón sbResetGrid)
-  if (Key = VK_F12) and (ssCtrl in Shift) and not (ssAlt in Shift) then
+  else if (Key = VK_F12) and (ssCtrl in Shift) and
+     not (ssAlt in Shift) then
   begin
     sbResetGridClick(nil);
     Key := 0;
-    Exit;
-  end;
+  end
   // Ctrl+F10 -> BestFit anchos de columna
-  if (Key = VK_F10) and (ssCtrl in Shift) and not (ssAlt in Shift) then
+  else if (Key = VK_F10) and (ssCtrl in Shift) and
+     not (ssAlt in Shift) then
   begin
     sbBestFitClick(nil);
     Key := 0;
@@ -1726,10 +1733,9 @@ begin
       Result := abContinuar
     else
       Result := abCancelar;
-    Exit;
-  end;
+  end
   // Caso 2: tabla no desactivable pero tiene hijos -> avisar y Si/No.
-  if not bDesactivable then
+  else if not bDesactivable then
   begin
     sMsg := Format(SPreguntaEliminarRegistroConHijos,
                    [iHijos, sDescHijos]);
@@ -1739,23 +1745,25 @@ begin
       Result := abContinuar
     else
       Result := abCancelar;
-    Exit;
-  end;
+  end
   // Caso 3 y 4: tabla desactivable, con o sin hijos.
-  if iHijos > 0 then
-    sMsg := Format(SAvisoDesactivarRegistroConHijos,
-                   [iHijos, sDescHijos])
   else
-    sMsg := SAvisoDesactivarRegistroSinHijos;
-  sMsg := sMsg + STextoOpcionesBorradoRegistro;
-  iResp := Application.MessageBox(PChar(sMsg),
-             PChar(STituloConfirmarEliminacion),
-             MB_YESNOCANCEL + MB_ICONQUESTION + MB_DEFBUTTON1);
-  case iResp of
-    ID_YES:    Result := abDesactivar;
-    ID_NO:     Result := abContinuar;
-  else
-    Result := abCancelar;
+  begin
+    if iHijos > 0 then
+      sMsg := Format(SAvisoDesactivarRegistroConHijos,
+                     [iHijos, sDescHijos])
+    else
+      sMsg := SAvisoDesactivarRegistroSinHijos;
+    sMsg := sMsg + STextoOpcionesBorradoRegistro;
+    iResp := Application.MessageBox(PChar(sMsg),
+               PChar(STituloConfirmarEliminacion),
+               MB_YESNOCANCEL + MB_ICONQUESTION + MB_DEFBUTTON1);
+    case iResp of
+      ID_YES: Result := abDesactivar;
+      ID_NO: Result := abContinuar;
+    else
+      Result := abCancelar;
+    end;
   end;
 end;
 

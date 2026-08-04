@@ -1,45 +1,45 @@
 param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoLineasPorClase = 3894,
+  [int]$MaximoLineasPorClase = 2684,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoMetodosPorClase = 104,
+  [int]$MaximoMetodosPorClase = 101,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoCamposPorClase = 40,
+  [int]$MaximoCamposPorClase = 37,
   [hashtable]$LimitesClases = @{
     TfrmMtoComprasSesiones = @{
-      Lineas = 3590
-      Metodos = 99
+      Lineas = 1827
+      Metodos = 82
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
     }
     TfrmMtoFacturasBase = @{
-      Lineas = 1779
-      Metodos = 104
+      Lineas = 1601
+      Metodos = 72
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
     }
     TfrmMtoOpeCaja = @{
-      Lineas = 3894
-      Metodos = 104
+      Lineas = 1918
+      Metodos = 95
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
     }
     TfrmMtoArticulos = @{
-      Lineas = 3005
-      Metodos = 97
+      Lineas = 1811
+      Metodos = 86
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
     }
     TfrmStockConsulta = @{
-      Lineas = 2948
-      Metodos = 81
+      Lineas = 1031
+      Metodos = 38
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
     }
     TfrmMtoInventarios = @{
-      Lineas = 3029
-      Metodos = 77
+      Lineas = 1980
+      Metodos = 75
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
     }
@@ -68,7 +68,7 @@ param(
       ObjetivoCampos = 6
     }
     TPedidosCompraPendientesUniDAC = @{
-      Lineas = 51
+      Lineas = 46
       Metodos = 4
       Campos = 1
       ObjetivoLineas = 150
@@ -190,32 +190,32 @@ param(
   },
   [hashtable]$LimitesUnidades = @{
     'src\Lib\inLibVentasWsJson.pas' = @{
-      Lineas = 52
+      Lineas = 49
       Rutinas = 1
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
     }
     'src\Lib\inLibVentasWsJsonIntf.pas' = @{
-      Lineas = 64
-      Rutinas = 2
+      Lineas = 32
+      Rutinas = 0
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataVentasWsJson.pas' = @{
-      Lineas = 553
+      Lineas = 550
       Rutinas = 19
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
     }
     'src\Lib\inLibPedidosCompra.pas' = @{
-      Lineas = 174
+      Lineas = 167
       Rutinas = 8
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
     }
     'src\Lib\inLibPedidosCompraIntf.pas' = @{
-      Lineas = 111
-      Rutinas = 2
+      Lineas = 108
+      Rutinas = 0
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
     }
@@ -226,13 +226,13 @@ param(
       ObjetivoRutinas = 20
     }
     'src\DataModules\UniDataPedidosCompraPendientes.pas' = @{
-      Lineas = 352
+      Lineas = 342
       Rutinas = 13
       ObjetivoLineas = 500
       ObjetivoRutinas = 15
     }
     'src\DataModules\UniDataPedidosCompraAlbaranComun.pas' = @{
-      Lineas = 294
+      Lineas = 286
       Rutinas = 5
       ObjetivoLineas = 400
       ObjetivoRutinas = 10
@@ -244,8 +244,8 @@ param(
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataPedidosCompraIncorporacionAlbaran.pas' = @{
-      Lineas = 536
-      Rutinas = 10
+      Lineas = 158
+      Rutinas = 9
       ObjetivoLineas = 700
       ObjetivoRutinas = 20
     }
@@ -256,14 +256,14 @@ param(
       ObjetivoRutinas = 10
     }
     'src\Lib\inLibAlbaranesCompraMovimientos.pas' = @{
-      Lineas = 68
+      Lineas = 64
       Rutinas = 2
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
     }
     'src\Lib\inLibAlbaranesCompraMovimientosIntf.pas' = @{
-      Lineas = 58
-      Rutinas = 2
+      Lineas = 27
+      Rutinas = 0
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
     }
@@ -274,19 +274,19 @@ param(
       ObjetivoRutinas = 30
     }
     'src\Lib\inLibDevolucionesCompraMovimientos.pas' = @{
-      Lineas = 56
+      Lineas = 52
       Rutinas = 2
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
     }
     'src\Lib\inLibDevolucionesCompraMovimientosIntf.pas' = @{
-      Lineas = 62
-      Rutinas = 2
+      Lineas = 28
+      Rutinas = 0
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataDevolucionesCompraMovimientos.pas' = @{
-      Lineas = 460
+      Lineas = 457
       Rutinas = 12
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
@@ -298,26 +298,26 @@ param(
       ObjetivoRutinas = 30
     }
     'src\Lib\inLibArticulosVariacionesIntf.pas' = @{
-      Lineas = 73
-      Rutinas = 2
+      Lineas = 44
+      Rutinas = 0
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataArticulosVariaciones.pas' = @{
-      Lineas = 692
+      Lineas = 688
       Rutinas = 43
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
     }
     'src\Lib\inLibFotos.pas' = @{
-      Lineas = 1763
-      Rutinas = 43
+      Lineas = 293
+      Rutinas = 22
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
     }
     'src\Lib\inLibFotosPersistenciaIntf.pas' = @{
-      Lineas = 96
-      Rutinas = 2
+      Lineas = 77
+      Rutinas = 0
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
     }
@@ -328,37 +328,37 @@ param(
       ObjetivoRutinas = 30
     }
     'src\Lib\inLibFacturasLecturasIntf.pas' = @{
-      Lineas = 74
-      Rutinas = 2
+      Lineas = 45
+      Rutinas = 0
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataFacturasLecturas.pas' = @{
-      Lineas = 252
+      Lineas = 248
       Rutinas = 19
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
     }
     'src\verifactu\inLibVerifactuNoVerifactuExportIntf.pas' = @{
-      Lineas = 64
-      Rutinas = 2
+      Lineas = 34
+      Rutinas = 0
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
     }
     'src\verifactu\UniDataVerifactuNoVerifactuExport.pas' = @{
-      Lineas = 222
+      Lineas = 218
       Rutinas = 17
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
     }
     'src\Lib\inLibFacturaePersistenciaIntf.pas' = @{
-      Lineas = 66
-      Rutinas = 2
+      Lineas = 36
+      Rutinas = 0
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataFacturaeRepositorio.pas' = @{
-      Lineas = 310
+      Lineas = 306
       Rutinas = 21
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
@@ -388,7 +388,7 @@ param(
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataComprasSesionesEstado.pas' = @{
-      Lineas = 203
+      Lineas = 202
       Rutinas = 7
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
@@ -406,7 +406,7 @@ param(
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataComprasSesionesReversion.pas' = @{
-      Lineas = 329
+      Lineas = 328
       Rutinas = 11
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
@@ -418,7 +418,7 @@ param(
       ObjetivoRutinas = 30
     }
     'src\Lib\inLibComprasSesionesMaterializacionIntf.pas' = @{
-      Lineas = 181
+      Lineas = 70
       Rutinas = 0
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
@@ -442,7 +442,7 @@ param(
       ObjetivoRutinas = 30
     }
     'src\verifactu\inLibVerifactuCola.pas' = @{
-      Lineas = 206
+      Lineas = 204
       Rutinas = 9
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
@@ -466,14 +466,14 @@ param(
       ObjetivoRutinas = 30
     }
     'src\verifactu\UniDataVerifactuColaProcesador.pas' = @{
-      Lineas = 417
+      Lineas = 400
       Rutinas = 17
       ObjetivoLineas = 800
       ObjetivoRutinas = 20
     }
     'src\verifactu\UniDataVerifactuColaResultados.pas' = @{
-      Lineas = 317
-      Rutinas = 5
+      Lineas = 313
+      Rutinas = 3
       ObjetivoLineas = 900
       ObjetivoRutinas = 25
     }

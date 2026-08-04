@@ -157,12 +157,11 @@ var
   sCampo: string;
 begin
   lbCamposTabla.Items.Clear;
-  if sTabla = '' then
-    Exit;
-  aCampos := FRepositorio.ListarCamposTabla(sTabla);
-  for sCampo in aCampos do
+  if sTabla <> '' then
   begin
-    lbCamposTabla.Items.Add(sCampo);
+    aCampos := FRepositorio.ListarCamposTabla(sTabla);
+    for sCampo in aCampos do
+      lbCamposTabla.Items.Add(sCampo);
   end;
 end;
 
@@ -175,20 +174,22 @@ begin
   if sTabla = '' then
   begin
     mmoResumen.Lines.Add('Selecciona una tabla.');
-    Exit;
-  end;
-  sMaster := '';
-  sDetail := '';
-  if lbCamposMaster.ItemIndex >= 0 then
-    sMaster := ObtenerCampoMasterSeleccionado;
-  if lbCamposTabla.ItemIndex >= 0 then
-    sDetail := lbCamposTabla.Items[lbCamposTabla.ItemIndex];
-  mmoResumen.Lines.Add('LEFT JOIN ' + sTabla);
-  if (sMaster <> '') and (sDetail <> '') then
-    mmoResumen.Lines.Add('  ON ' + sDetail + ' = ' + sMaster)
+  end
   else
-    mmoResumen.Lines.Add('  (selecciona campo master y detail)');
-  AutoGenerarCodigo;
+  begin
+    sMaster := '';
+    sDetail := '';
+    if lbCamposMaster.ItemIndex >= 0 then
+      sMaster := ObtenerCampoMasterSeleccionado;
+    if lbCamposTabla.ItemIndex >= 0 then
+      sDetail := lbCamposTabla.Items[lbCamposTabla.ItemIndex];
+    mmoResumen.Lines.Add('LEFT JOIN ' + sTabla);
+    if (sMaster <> '') and (sDetail <> '') then
+      mmoResumen.Lines.Add('  ON ' + sDetail + ' = ' + sMaster)
+    else
+      mmoResumen.Lines.Add('  (selecciona campo master y detail)');
+    AutoGenerarCodigo;
+  end;
 end;
 
 procedure TfrmModalGuiasBase.AutoGenerarCodigo;
@@ -272,46 +273,45 @@ begin
   begin
     ShowMessage(SErrorCodigoGuiaNoIndicado);
     edtCodigo.SetFocus;
-    Exit;
-  end;
-  if sTabla = '' then
+  end
+  else if sTabla = '' then
   begin
     ShowMessage(SErrorTablaExternaGuiaNoSeleccionada);
-    Exit;
-  end;
-  if lbCamposMaster.ItemIndex < 0 then
+  end
+  else if lbCamposMaster.ItemIndex < 0 then
   begin
     ShowMessage(SErrorCampoMasterGuiaNoSeleccionado);
-    Exit;
-  end;
-  if lbCamposTabla.ItemIndex < 0 then
+  end
+  else if lbCamposTabla.ItemIndex < 0 then
   begin
     ShowMessage(SErrorCampoDetailGuiaNoSeleccionado);
-    Exit;
+  end
+  else
+  begin
+    sMaster := ObtenerCampoMasterSeleccionado;
+    sDetail := lbCamposTabla.Items[lbCamposTabla.ItemIndex];
+    FGuias.Append;
+    FGuias.FieldByName('CODIGO_INFGUI').AsString := sCodigo;
+    FGuias.FieldByName('INFORME_INFGUI').AsString := ObtenerClaveInforme;
+    FGuias.FieldByName('FORMATO_INFGUI').AsString := ObtenerFormatoSugerido;
+    FGuias.FieldByName('DATASET_MASTER_INFGUI').AsString :=
+      ObtenerDatasetMaster;
+    FGuias.FieldByName('TIPO_INFGUI').AsString := 'TABLA';
+    FGuias.FieldByName('TABLA_INFGUI').AsString := sTabla;
+    FGuias.FieldByName('MASTER_FIELDS_INFGUI').AsString := sMaster;
+    FGuias.FieldByName('DETAIL_FIELDS_INFGUI').AsString := sDetail;
+    FGuias.FieldByName('ORDEN_INFGUI').AsInteger := FGuias.RecordCount;
+    FGuias.FieldByName('ESACTIVO_INFGUI').AsString := 'S';
+    FGuias.FieldByName('INSTANTE_ALTA').AsDateTime := Now;
+    FGuias.FieldByName('USUARIO_ALTA').AsString := IdentidadSesion.Usuario;
+    FGuias.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
+    FGuias.FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
+    ConfigurarGuiaNueva;
+    FGuias.Post;
+    ShowMessage(Format(SInfoGuiaAnadida,
+      [sCodigo, sTabla, sDetail, sMaster]));
+    edtCodigo.Text := '';
   end;
-  sMaster := ObtenerCampoMasterSeleccionado;
-  sDetail := lbCamposTabla.Items[lbCamposTabla.ItemIndex];
-  FGuias.Append;
-  FGuias.FieldByName('CODIGO_INFGUI').AsString := sCodigo;
-  FGuias.FieldByName('INFORME_INFGUI').AsString := ObtenerClaveInforme;
-  FGuias.FieldByName('FORMATO_INFGUI').AsString := ObtenerFormatoSugerido;
-  FGuias.FieldByName('DATASET_MASTER_INFGUI').AsString :=
-    ObtenerDatasetMaster;
-  FGuias.FieldByName('TIPO_INFGUI').AsString := 'TABLA';
-  FGuias.FieldByName('TABLA_INFGUI').AsString := sTabla;
-  FGuias.FieldByName('MASTER_FIELDS_INFGUI').AsString := sMaster;
-  FGuias.FieldByName('DETAIL_FIELDS_INFGUI').AsString := sDetail;
-  FGuias.FieldByName('ORDEN_INFGUI').AsInteger := FGuias.RecordCount;
-  FGuias.FieldByName('ESACTIVO_INFGUI').AsString := 'S';
-  FGuias.FieldByName('INSTANTE_ALTA').AsDateTime := Now;
-  FGuias.FieldByName('USUARIO_ALTA').AsString := IdentidadSesion.Usuario;
-  FGuias.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
-  FGuias.FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
-  ConfigurarGuiaNueva;
-  FGuias.Post;
-  ShowMessage(Format(SInfoGuiaAnadida,
-    [sCodigo, sTabla, sDetail, sMaster]));
-  edtCodigo.Text := '';
 end;
 
 procedure TfrmModalGuiasBase.btnEliminarClick(Sender: TObject);
@@ -319,9 +319,8 @@ begin
   if FGuias.IsEmpty then
   begin
     ShowMessage(SInfoGuiasEliminarNoEncontradas);
-    Exit;
-  end;
-  if MessageDlg(
+  end
+  else if MessageDlg(
     Format(SPreguntaEliminarGuia,
       [FGuias.FieldByName('CODIGO_INFGUI').AsString]),
     mtConfirmation, [mbYes, mbNo], 0) = mrYes then

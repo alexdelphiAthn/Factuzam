@@ -334,27 +334,27 @@ begin
   begin
     AbrirFacturaActiva;
     Key := 0;
-    Exit;
-  end;
+  end
   // Ctrl + A -> ficha del articulo del movimiento activo (pestana Movimientos).
-  if (Key = Ord('A')) and (ssCtrl in Shift) and not (ssShift in Shift) and
+  else if (Key = Ord('A')) and (ssCtrl in Shift) and
+     not (ssShift in Shift) and
      not (ssAlt in Shift) then
   begin
     AbrirArticuloDeMovimiento;
     Key := 0;
-    Exit;
-  end;
+  end
   // Ctrl + M -> ficha del movimiento de almacen activo (pestana Movimientos).
-  if (Key = Ord('M')) and (ssCtrl in Shift) and not (ssShift in Shift) and
+  else if (Key = Ord('M')) and (ssCtrl in Shift) and
+     not (ssShift in Shift) and
      not (ssAlt in Shift) then
   begin
     AbrirMovimientoActivo;
     Key := 0;
-    Exit;
-  end;
+  end
   // Ctrl + F (sin Shift) -> Foto del articulo / SKU de la linea de factura
   // activa. Toggle: si la foto ya esta visible, ocultarla.
-  if (Key = Ord('F')) and (ssCtrl in Shift) and not (ssShift in Shift) and
+  else if (Key = Ord('F')) and (ssCtrl in Shift) and
+     not (ssShift in Shift) and
      not (ssAlt in Shift) then
   begin
     FormularioFoto := FotoFlotanteActual;
@@ -373,17 +373,19 @@ begin
       end;
     end;
     Key := 0;
-    Exit;
-  end;
-  case Key of
-    VK_ESCAPE: Close;
-    VK_F5:     RecargarMaestro;
-    VK_F12:
-      if (ssAlt in Shift) and not (ssCtrl in Shift) then
-        GuardarLayout
-      else if (ssCtrl in Shift) and not (ssAlt in Shift) then
-        ResetearLayout(
-          Self.Name, PerfilesEscritura, SolicitudPermisoLayout);
+  end
+  else
+  begin
+    case Key of
+      VK_ESCAPE: Close;
+      VK_F5: RecargarMaestro;
+      VK_F12:
+        if (ssAlt in Shift) and not (ssCtrl in Shift) then
+          GuardarLayout
+        else if (ssCtrl in Shift) and not (ssAlt in Shift) then
+          ResetearLayout(
+            Self.Name, PerfilesEscritura, SolicitudPermisoLayout);
+    end;
   end;
 end;
 
@@ -392,8 +394,9 @@ procedure TfrmConsultaOpe.ResolverArtSkuDeFacLin(out ACodArt,
 begin
   ACodArt := '';
   ACodSku := '';
-  if not Assigned(FdmConsulta) then Exit;
-  LeerArtSkuDeDataSet(FdmConsulta.dsFacturaLin.DataSet, ACodArt, ACodSku);
+  if Assigned(FdmConsulta) then
+    LeerArtSkuDeDataSet(
+      FdmConsulta.dsFacturaLin.DataSet, ACodArt, ACodSku);
 end;
 
 // Ctrl + A: abre la ficha del articulo (Mto Articulos) del movimiento
@@ -403,12 +406,16 @@ var
   ds  : TDataSet;
   sArt: string;
 begin
-  if not Assigned(FdmConsulta) then Exit;
-  ds := FdmConsulta.dsMovimientos.DataSet;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
-  sArt := ds.FieldByName('CODIGO_ART_MOV').AsString;
-  if sArt <> '' then
-    ShowMto(Application.MainForm, 'Articulos', sArt);
+  if Assigned(FdmConsulta) then
+  begin
+    ds := FdmConsulta.dsMovimientos.DataSet;
+    if (ds <> nil) and ds.Active and not ds.IsEmpty then
+    begin
+      sArt := ds.FieldByName('CODIGO_ART_MOV').AsString;
+      if sArt <> '' then
+        ShowMto(Application.MainForm, 'Articulos', sArt);
+    end;
+  end;
 end;
 
 // Ctrl + M: abre el Mto de Movimientos de Almacen posicionado en el
@@ -418,12 +425,16 @@ var
   ds     : TDataSet;
   sNumMov: string;
 begin
-  if not Assigned(FdmConsulta) then Exit;
-  ds := FdmConsulta.dsMovimientos.DataSet;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
-  sNumMov := ds.FieldByName('NUMERO_MOV').AsString;
-  if sNumMov <> '' then
-    ShowMto(Application.MainForm, 'MovimientosAlmacen', sNumMov);
+  if Assigned(FdmConsulta) then
+  begin
+    ds := FdmConsulta.dsMovimientos.DataSet;
+    if (ds <> nil) and ds.Active and not ds.IsEmpty then
+    begin
+      sNumMov := ds.FieldByName('NUMERO_MOV').AsString;
+      if sNumMov <> '' then
+        ShowMto(Application.MainForm, 'MovimientosAlmacen', sNumMov);
+    end;
+  end;
 end;
 
 // Ctrl + Shift + F: abre la factura SIMPLIFICADA que se muestra en la
@@ -435,13 +446,18 @@ var
   sNum: string;
   sSer: string;
 begin
-  if not Assigned(FdmConsulta) then Exit;
-  ds := FdmConsulta.dsFactura.DataSet;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty then Exit;
-  sNum := ds.FieldByName('NUMERO_FAC').AsString;
-  sSer := ds.FieldByName('SERIE_FAC').AsString;
-  if (sNum <> '') and (sSer <> '') then
-    ShowMto(Application.MainForm, 'FacturasSimplif', sNum + ',' + sSer);
+  if Assigned(FdmConsulta) then
+  begin
+    ds := FdmConsulta.dsFactura.DataSet;
+    if (ds <> nil) and ds.Active and not ds.IsEmpty then
+    begin
+      sNum := ds.FieldByName('NUMERO_FAC').AsString;
+      sSer := ds.FieldByName('SERIE_FAC').AsString;
+      if (sNum <> '') and (sSer <> '') then
+        ShowMto(
+          Application.MainForm, 'FacturasSimplif', sNum + ',' + sSer);
+    end;
+  end;
 end;
 
 function TfrmConsultaOpe.FacturaSeleccionada(out ASerie,
@@ -669,19 +685,25 @@ var
   sRuta: string;
   png: TPngImage;
 begin
-  if not Assigned(imgFotoConsulta) then Exit;
-  imgFotoConsulta.Picture.Assign(nil);
-  ResolverArtSkuDeFacLin(sArt, sSku);
-  if sArt = '' then Exit;
-  info := FotosArticulos.Resolver(sArt, sSku);
-  sRuta := FotosArticulos.RutaFoto(info, frPx300);
-  if sRuta = '' then Exit;
-  png := TPngImage.Create;
-  try
-    png.LoadFromFile(sRuta);
-    imgFotoConsulta.Picture.Assign(png);
-  finally
-    FreeAndNil(png);
+  if Assigned(imgFotoConsulta) then
+  begin
+    imgFotoConsulta.Picture.Assign(nil);
+    ResolverArtSkuDeFacLin(sArt, sSku);
+    if sArt <> '' then
+    begin
+      info := FotosArticulos.Resolver(sArt, sSku);
+      sRuta := FotosArticulos.RutaFoto(info, frPx300);
+      if sRuta <> '' then
+      begin
+        png := TPngImage.Create;
+        try
+          png.LoadFromFile(sRuta);
+          imgFotoConsulta.Picture.Assign(png);
+        finally
+          FreeAndNil(png);
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -726,19 +748,19 @@ end;
 procedure TfrmConsultaOpe.RestaurarLayout;
 begin
   if not FLayout.Disponible then
+    RegistroLog.RegistrarInformacion(
+      'RestaurarLayout: SKIP (FLayout no disponible)')
+  else
   begin
     RegistroLog.RegistrarInformacion(
-      'RestaurarLayout: SKIP (FLayout no disponible)');
-    Exit;
+      'RestaurarLayout: aplicando geometria + 9 grids');
+    FLayout.RestaurarGeometria(Self);
+    FLayout.RestaurarAlturaPanel('PnlMaestroHeight', pnlMaestro, 80);
+    FLayout.RestaurarAnchoPanel('FotoConsultaWidth', pnlFotoConsulta, 50);
+    FLayout.RestaurarGrid('Maestro', cxViewMaestro);
+    AplicarAnchosPestanasHijas;
+    RegistroLog.RegistrarInformacion('RestaurarLayout: FIN');
   end;
-  RegistroLog.RegistrarInformacion(
-    'RestaurarLayout: aplicando geometria + 9 grids');
-  FLayout.RestaurarGeometria(Self);
-  FLayout.RestaurarAlturaPanel('PnlMaestroHeight', pnlMaestro, 80);
-  FLayout.RestaurarAnchoPanel('FotoConsultaWidth', pnlFotoConsulta, 50);
-  FLayout.RestaurarGrid('Maestro', cxViewMaestro);
-  AplicarAnchosPestanasHijas;
-  RegistroLog.RegistrarInformacion('RestaurarLayout: FIN');
 end;
 
 // Encaja el formulario en el area de trabajo del monitor actual. En
@@ -770,15 +792,17 @@ end;
 
 procedure TfrmConsultaOpe.AplicarAnchosPestanasHijas;
 begin
-  if not FLayout.Disponible then Exit;
-  FLayout.RestaurarGrid('Operacion',   cxViewOpe);
-  FLayout.RestaurarGrid('Pagos',       cxViewPagos);
-  FLayout.RestaurarGrid('Vales',       cxViewVales);
-  FLayout.RestaurarGrid('Movimientos', cxViewMov);
-  FLayout.RestaurarGrid('Cliente',     cxViewCli);
-  FLayout.RestaurarGrid('Depositos',   cxViewDep);
-  FLayout.RestaurarGrid('FacturaCab',  cxViewFacCab);
-  FLayout.RestaurarGrid('FacturaLin',  cxViewFacLin);
+  if FLayout.Disponible then
+  begin
+    FLayout.RestaurarGrid('Operacion', cxViewOpe);
+    FLayout.RestaurarGrid('Pagos', cxViewPagos);
+    FLayout.RestaurarGrid('Vales', cxViewVales);
+    FLayout.RestaurarGrid('Movimientos', cxViewMov);
+    FLayout.RestaurarGrid('Cliente', cxViewCli);
+    FLayout.RestaurarGrid('Depositos', cxViewDep);
+    FLayout.RestaurarGrid('FacturaCab', cxViewFacCab);
+    FLayout.RestaurarGrid('FacturaLin', cxViewFacLin);
+  end;
 end;
 
 procedure TfrmConsultaOpe.GuardarLayout;
@@ -810,23 +834,23 @@ end;
 procedure TfrmConsultaOpe.RecargarMaestro;
 begin
   if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
+    RegistroLog.RegistrarInformacion(
+      'RecargarMaestro: SKIP (contexto vacio)')
+  else
   begin
-    RegistroLog.RegistrarInformacion('RecargarMaestro: SKIP (contexto vacio)');
-    Exit;
-  end;
-  RegistroLog.RegistrarInformacion(
-    Format('RecargarMaestro: emp="%s" alm="%s" caja="%s" ' +
-                     'fecha=%s txt="%s"',
-                     [FEmpresa, FAlmacen, FCaja, DateToStr(dtpFecha.Date),
-                      Trim(edtBuscar.Text)]));
-  Screen.Cursor := crHourGlass;
-  try
-    FdmConsulta.CargarMaestro(dtpFecha.Date,
-                              FEmpresa, FAlmacen, FCaja,
-                              Trim(edtBuscar.Text));
-    AjustarVisibilidadPestanas;
-  finally
-    Screen.Cursor := crDefault;
+    RegistroLog.RegistrarInformacion(
+      Format('RecargarMaestro: emp="%s" alm="%s" caja="%s" ' +
+        'fecha=%s txt="%s"',
+        [FEmpresa, FAlmacen, FCaja, DateToStr(dtpFecha.Date),
+         Trim(edtBuscar.Text)]));
+    Screen.Cursor := crHourGlass;
+    try
+      FdmConsulta.CargarMaestro(
+        dtpFecha.Date, FEmpresa, FAlmacen, FCaja, Trim(edtBuscar.Text));
+      AjustarVisibilidadPestanas;
+    finally
+      Screen.Cursor := crDefault;
+    end;
   end;
 end;
 

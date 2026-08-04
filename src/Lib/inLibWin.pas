@@ -555,7 +555,10 @@ procedure CargarCaptions(oControl:TComponent;
       PropTypeInf : PTypeInfo;
       SetList : TStrings;
       SetName,SetVal : string;
+      Encontrada: Boolean;
     begin
+      Result := '';
+      Encontrada := False;
       Count := GetPropList(Component.ClassInfo, tkAny, nil);
       Size  := Count * SizeOf(Pointer);
       GetMem(PropList, Size);
@@ -567,7 +570,8 @@ procedure CargarCaptions(oControl:TComponent;
          PropInfo := PropList^[I];
           if not (PropInfo^.PropType^.Kind = tkMethod) then
           begin
-            if SameText(String(PropInfo^.Name), APropName) then
+            if (not Encontrada) and
+               SameText(String(PropInfo^.Name), APropName) then
             begin
 
               if (PropInfo^.PropType^.Kind = tkSet) then
@@ -595,7 +599,7 @@ procedure CargarCaptions(oControl:TComponent;
               end else
                 Result := System.Variants.VarToStr(GetPropValue(Component,
                                                    String(PropInfo^.Name)));
-              Exit;
+              Encontrada := True;
             end;
           end;
         end;
@@ -658,7 +662,6 @@ begin
 
   except
     Raise Exception.Create(SErrorImagenNoExiste);
-    Exit;
   end;
   AmemStream := TMemoryStream.Create;
   //jpegimg   := TJPEGImage.Create;

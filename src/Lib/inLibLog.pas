@@ -427,9 +427,8 @@ procedure TLog.LogSQLExt(const ASQL: string; AElapsedMs: Int64; ARows: Integer;
 var
   SQLOneLine, sEstado, sFilas, sLinea: string;
 begin
-  if not (ltSQL in FLogFlags) then
-    Exit;
-
+  if ltSQL in FLogFlags then
+  begin
   SQLOneLine := StringReplace(ASQL, sLineBreak, ' ', [rfReplaceAll]);
   SQLOneLine := Trim(SQLOneLine);
 
@@ -453,21 +452,21 @@ begin
     sLinea := sLinea + ' | error=' + AError;
 
   WriteToLog(sLinea, ltSQL);
+  end;
 end;
 
 procedure TLog.LogEvento(const AUnidad, AObjeto, AEvento, ADetalle: string);
 var
   sLinea: string;
 begin
-  if not (ltAvanzado in FLogFlags) then
-    Exit;
-
-  sLinea := Format('EVT: %s | %s | %s', [AUnidad, AObjeto, AEvento]);
-  if ADetalle <> '' then
-    sLinea := sLinea + ' | ' +
-              StringReplace(ADetalle, sLineBreak, ' ', [rfReplaceAll]);
-
-  WriteToLog(sLinea, ltAvanzado);
+  if ltAvanzado in FLogFlags then
+  begin
+    sLinea := Format('EVT: %s | %s | %s', [AUnidad, AObjeto, AEvento]);
+    if ADetalle <> '' then
+      sLinea := sLinea + ' | ' +
+        StringReplace(ADetalle, sLineBreak, ' ', [rfReplaceAll]);
+    WriteToLog(sLinea, ltAvanzado);
+  end;
 end;
 
 procedure TLog.LogPerf(const ATag, ADetalle: string; AElapsedMs: Int64);

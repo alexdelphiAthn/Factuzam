@@ -202,40 +202,48 @@ var
   curObj: TObject;
   newDs: TfrxDBDataset;
 begin
-  if (Report = nil) or (DM = nil) then Exit;
-  Map := TDictionary<string, TfrxDBDataset>.Create;
-  ctx := TRttiContext.Create;
-  try
-    for i := 0 to DM.ComponentCount - 1 do
-    begin
-      comp := DM.Components[i];
-      if (comp is TfrxDBDataset) and
-         (TfrxDBDataset(comp).UserName <> '') then
-        Map.AddOrSetValue(TfrxDBDataset(comp).UserName,
-                          TfrxDBDataset(comp));
+  if (Report <> nil) and (DM <> nil) then
+  begin
+    Map := TDictionary<string, TfrxDBDataset>.Create;
+    ctx := TRttiContext.Create;
+    try
+      for i := 0 to DM.ComponentCount - 1 do
+      begin
+        comp := DM.Components[i];
+        if (comp is TfrxDBDataset) and
+           (TfrxDBDataset(comp).UserName <> '') then
+          Map.AddOrSetValue(TfrxDBDataset(comp).UserName,
+            TfrxDBDataset(comp));
+      end;
+      if Map.Count > 0 then
+      begin
+        Report.DataSets.Clear;
+        for ds in Map.Values do
+          Report.DataSets.Add(ds);
+        for i := 0 to Report.AllObjects.Count - 1 do
+        begin
+          obj := TfrxComponent(Report.AllObjects[i]);
+          rType := ctx.GetType(obj.ClassType);
+          prop := rType.GetProperty('DataSet');
+          if (prop <> nil) and prop.IsReadable and prop.IsWritable then
+          begin
+            curVal := prop.GetValue(obj);
+            if not curVal.IsEmpty then
+            begin
+              curObj := curVal.AsObject;
+              if (curObj is TfrxDBDataset) and
+                 Map.TryGetValue(
+                   TfrxDBDataset(curObj).UserName, newDs) and
+                 (newDs <> curObj) then
+                prop.SetValue(obj, newDs);
+            end;
+          end;
+        end;
+      end;
+    finally
+      ctx.Free;
+      FreeAndNil(Map);
     end;
-    if Map.Count = 0 then Exit;
-    Report.DataSets.Clear;
-    for ds in Map.Values do
-      Report.DataSets.Add(ds);
-    for i := 0 to Report.AllObjects.Count - 1 do
-    begin
-      obj := TfrxComponent(Report.AllObjects[i]);
-      rType := ctx.GetType(obj.ClassType);
-      prop := rType.GetProperty('DataSet');
-      if (prop = nil) or (not prop.IsReadable) or
-         (not prop.IsWritable) then Continue;
-      curVal := prop.GetValue(obj);
-      if curVal.IsEmpty then Continue;
-      curObj := curVal.AsObject;
-      if (curObj is TfrxDBDataset) and
-         Map.TryGetValue(TfrxDBDataset(curObj).UserName, newDs) and
-         (newDs <> curObj) then
-        prop.SetValue(obj, newDs);
-    end;
-  finally
-    ctx.Free;
-    FreeAndNil(Map);
   end;
 end;
 
@@ -475,12 +483,8 @@ begin
   iRespuesta := MessageDlg(
     SPreguntaEditarCamposExtraInforme,
     mtConfirmation, [mbYes, mbNo, mbCancel], 0);
-  if iRespuesta = mrCancel then
+  if iRespuesta <> mrCancel then
   begin
-    Self.Show;
-    Exit;
-  end;
-
   bAceptado := False;
 
   if iRespuesta = mrYes then
@@ -566,6 +570,7 @@ begin
       CerrarGuiasRuntime;
       FFormatoFijado := False;
     end;
+  end;
   end;
   Self.Show;
 end;

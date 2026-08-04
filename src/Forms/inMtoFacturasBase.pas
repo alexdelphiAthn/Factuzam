@@ -445,6 +445,7 @@ type
     btnVerifactuAnular: TcxButton;
     btnVerifactuFacturar: TcxButton;
     btnVolverBorrador: TcxButton;
+    btnVerifactuResolverIncidencia: TcxButton;
     procedure sbGrabarClick(Sender: TObject);
     procedure btnUpdateClienteClick(Sender: TObject);
     procedure sbNuevaFacturaClick(Sender: TObject);
@@ -604,6 +605,8 @@ uses
   inLibFacturasCobrosPresentacion,
   inLibFacturasEstadoFiscalPresentacion,
   inLibFacturasOperacionFiscal,
+  inLibFacturasIncidenciaFiscal,
+  inLibFacturasIncidenciaFiscalIntf,
   inLibFacturasConsolidacionPresentacion,
   inLibFacturasPresentadorDetalle,
   inLibGridCantidad,
@@ -612,6 +615,7 @@ uses
   inLibArticulosResolverIntf,
   inMtoGenSearch,
   inMtoModalFacRec,
+  inMtoModalResolverIncidenciaVerifactu,
   inMtoModalImpRecFac,
   inMtoModalImpFac,
   inMtoModalRegistrarPago,
@@ -619,8 +623,12 @@ uses
   inLibUser,
   inLibVerifactu,
   inLibVerifactuTipos,
+  inLibVerifactuColaIntf,
+  inLibVerifactuSubsanacionIntf,
   inLibEmisionFiscal,
   UniDataVerifactuColaRepositorio,
+  UniDataVerifactuSubsanacionRepositorio,
+  UniDataFacturasIncidenciaFiscal,
   UniDataFacturasRepositorio,
   UniDataFacturasLecturas,
   UniDataFacturasListado,
@@ -642,6 +650,11 @@ uses
   inLibPresentacionDocumento,
   // Composicion del puerto de persistencia del pivote (V2).
   UniDataPivoteVenta, UniDataColumnasSkuServicios;
+
+procedure ActualizarBotonResolverIncidencia(
+  AFormulario: TfrmMtoFacturasBase); forward;
+procedure ResolverIncidenciaVerifactu(
+  AFormulario: TfrmMtoFacturasBase); forward;
 
 function CrearContextoConsolidacionFacturaVcl(
   AFormulario: TfrmMtoFacturasBase
@@ -1849,28 +1862,24 @@ var
   sFiltro: string;
 begin
   inherited;
-  if (dsTablaG.Dataset = nil) then
-    Exit;
-  if ((dsTablaG.DataSet.State <> dsEdit) and
-      (dsTablaG.DataSet.State <> dsInsert)) then
-    Exit;
-  // El descendiente (Normal / Simplif) fija el TIPO_FAC del formulario
-  // y manda sobre el SUBTIPO_EMPSER de la serie: una factura abierta en
-  // "Ventas Mayor > Facturas" debe ser NORMAL aunque la serie por
-  // defecto esté marcada como SIMPLIFICADA en fza_empresas_series.
-  sFiltro := TipoFacturaFiltro;
-  if (sFiltro <> '') then
-    sSubtipo := sFiltro
-  else
+  if (dsTablaG.Dataset <> nil) and
+     (dsTablaG.DataSet.State in [dsEdit, dsInsert]) then
   begin
-    sSubtipo := dmmFacturas.GetSubtipoSerieEmpresa(
-                  dsTablaG.DataSet.FindField(fseriefac).AsString,
-                  dsTablaG.DataSet.FindField(fcodemp).AsString,
-                  dsTablaG.DataSet.FindField(ffechfac).AsDateTime);
-    if (sSubtipo = '') then
-      sSubtipo := 'NORMAL';
+    // El formulario descendiente fija el tipo y manda sobre la serie.
+    sFiltro := TipoFacturaFiltro;
+    if sFiltro <> '' then
+      sSubtipo := sFiltro
+    else
+    begin
+      sSubtipo := dmmFacturas.GetSubtipoSerieEmpresa(
+        dsTablaG.DataSet.FindField(fseriefac).AsString,
+        dsTablaG.DataSet.FindField(fcodemp).AsString,
+        dsTablaG.DataSet.FindField(ffechfac).AsDateTime);
+      if sSubtipo = '' then
+        sSubtipo := 'NORMAL';
+    end;
+    dsTablaG.DataSet.FindField(ftipofac).AsString := sSubtipo;
   end;
-  dsTablaG.DataSet.FindField(ftipofac).AsString := sSubtipo;
 end;
 
 procedure TfrmMtoFacturasBase.cbbTARIFA_ARTICULOS_CLIENTESPropertiesChange(
@@ -1895,13 +1904,14 @@ var
   sNum, sSerie: string;
 begin
   Result := 0;
-  if (dsTablaG.DataSet = nil) or (not dsTablaG.DataSet.Active) or
-     dsTablaG.DataSet.IsEmpty then
-    Exit;
-  sNum   := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
-  sSerie := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
-  Result := inLibFacturas.ContarLineasFactura(
-    FRepositorioLecturas, sSerie, sNum);
+  if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
+     not dsTablaG.DataSet.IsEmpty then
+  begin
+    sNum := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
+    sSerie := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
+    Result := inLibFacturas.ContarLineasFactura(
+      FRepositorioLecturas, sSerie, sNum);
+  end;
 end;
 
 function TfrmMtoFacturasBase.DescripcionHijos: string;
@@ -1954,6 +1964,7 @@ begin
   dsTablaG.OnDataChange := dsTablaGDataChange;
   PrepararConsultaListadoFacturaVcl(Self);
   FPresentadorCabecera.ActualizarBloqueoEdicion;
+  ActualizarBotonResolverIncidencia(Self);
 end;
 
 function TfrmMtoFacturasBase.NombreVistaListado: string;
@@ -2022,33 +2033,120 @@ begin
         'Anulación'));
 end;
 
+procedure ActualizarBotonResolverIncidencia(
+  AFormulario: TfrmMtoFacturasBase);
+var
+  sEstadoRegistro: string;
+  sEstadoSubsanacion: string;
+begin
+  AFormulario.btnVerifactuResolverIncidencia.Visible := False;
+  if SameText(AFormulario.TipoFacturaFiltro, 'NORMAL') and
+     Assigned(AFormulario.dmmFacturas) and
+     AFormulario.dmmFacturas.unqryConsolidacion.Active and
+     (not AFormulario.dmmFacturas.unqryConsolidacion.IsEmpty) then
+  begin
+    sEstadoRegistro := AFormulario.dmmFacturas.unqryConsolidacion.
+      FieldByName('ESTADO_FACCON').AsString;
+    sEstadoSubsanacion := '';
+    if Assigned(AFormulario.dmmFacturas.unqryConsolidacion.FindField(
+       'ESTADO_SUBSANACION')) then
+      sEstadoSubsanacion := AFormulario.dmmFacturas.unqryConsolidacion.
+        FieldByName('ESTADO_SUBSANACION').AsString;
+    AFormulario.btnVerifactuResolverIncidencia.Visible :=
+      PuedeResolverIncidenciaFiscal(
+        sEstadoRegistro,
+        sEstadoSubsanacion,
+        True);
+  end;
+end;
+
+procedure ResolverIncidenciaVerifactu(
+  AFormulario: TfrmMtoFacturasBase);
+var
+  Emision: IServicioEmisionFiscal;
+  Cola: IServicioVerifactuCola;
+  Repositorio: IRepositorioIncidenciaFiscalFactura;
+  Servicio: IServicioIncidenciaFiscalFactura;
+  Subsanacion: IServicioVerifactuSubsanacion;
+  Resultado: TResultadoResolucionIncidenciaFiscal;
+  sNumero: string;
+  sSerie: string;
+begin
+  if Assigned(AFormulario.dsTablaG.DataSet) and
+     AFormulario.dsTablaG.DataSet.Active and
+     (not AFormulario.dsTablaG.DataSet.IsEmpty) then
+  begin
+    sSerie := AFormulario.dsTablaG.DataSet.FieldByName(
+      'SERIE_FAC').AsString;
+    sNumero := AFormulario.dsTablaG.DataSet.FieldByName(
+      'NUMERO_FAC').AsString;
+    Cola := CrearServicioVerifactuColaUniDAC(
+      AFormulario.ConexionPrincipal,
+      AFormulario.RegistroLog);
+    Subsanacion := CrearServicioVerifactuSubsanacionUniDAC(
+      AFormulario.ConexionPrincipal);
+    Emision := CrearServicioEmisionFiscal(
+      AFormulario.ParametrosApp,
+      AFormulario.ParametrosCaja,
+      AFormulario.ConexionPrincipal,
+      Cola);
+    Repositorio := CrearRepositorioIncidenciaFiscalFacturaUniDAC(
+      AFormulario.ConexionPrincipal);
+    Servicio := CrearServicioIncidenciaFiscalFactura(
+      Repositorio,
+      Cola,
+      Subsanacion,
+      Emision,
+      AFormulario.ParametrosApp,
+      AFormulario.ParametrosCaja,
+      AFormulario.IdentidadSesion.Usuario);
+    Resultado := TfrmModalResolverIncidenciaVerifactu.Ejecutar(
+      AFormulario,
+      Servicio,
+      sSerie,
+      sNumero);
+    if Resultado.EsCorrecto then
+    begin
+      ShowMessage(Resultado.Mensaje);
+      AFormulario.dsTablaG.DataSet.Refresh;
+      AFormulario.dmmFacturas.unqryConsolidacion.Refresh;
+      ActualizarBotonResolverIncidencia(AFormulario);
+    end;
+  end;
+end;
+
 procedure TfrmMtoFacturasBase.btnVerifactuFacturarClick(Sender: TObject);
 var
   oRes:    TFacturarTicketResult;
   sSerie:  string;
   sNumero: string;
 begin
-  //Factura completa (F3) en sustitución del ticket seleccionado
-  sSerie  := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
-  sNumero := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
-  if Trim(sNumero) = '' then
-    ShowMessage(SErrorBorradorListaNoSeleccionado)
-  else if not SameText(dsTablaG.DataSet.FieldByName(
-                         'TIPO_FAC').AsString, 'SIMPLIFICADA') then
-    ShowMessage(SErrorFacturarTicketRequiereSimplificado)
+  if Sender = btnVerifactuResolverIncidencia then
+    ResolverIncidenciaVerifactu(Self)
   else
   begin
-    oRes := TfrmModalFacturarTicket.Ejecutar(Self, sSerie, sNumero,
-              dsTablaG.DataSet.FieldByName('CODIGO_EMP_FAC').AsString,
-              dsTablaG.DataSet.FieldByName('CODIGO_ALM_FAC').AsString,
-              dsTablaG.DataSet.FieldByName('FECHA_FAC').AsDateTime);
-    if oRes.Aceptado then
+    // Factura completa F3 en sustitución del ticket seleccionado.
+    sSerie := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
+    sNumero := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
+    if Trim(sNumero) = '' then
+    ShowMessage(SErrorBorradorListaNoSeleccionado)
+    else if not SameText(dsTablaG.DataSet.FieldByName(
+                         'TIPO_FAC').AsString, 'SIMPLIFICADA') then
+      ShowMessage(SErrorFacturarTicketRequiereSimplificado)
+    else
     begin
-      ShowMessage(Format(SInfoBorradorSustitucionTicketCreado,
-                         [oRes.SerieNueva, oRes.NumeroNueva,
-                          sSerie, sNumero,
-                          ModoVerifactuTexto(ParametrosApp)]));
-      dsTablaG.DataSet.Refresh;
+      oRes := TfrmModalFacturarTicket.Ejecutar(Self, sSerie, sNumero,
+                dsTablaG.DataSet.FieldByName('CODIGO_EMP_FAC').AsString,
+                dsTablaG.DataSet.FieldByName('CODIGO_ALM_FAC').AsString,
+                dsTablaG.DataSet.FieldByName('FECHA_FAC').AsDateTime);
+      if oRes.Aceptado then
+      begin
+        ShowMessage(Format(SInfoBorradorSustitucionTicketCreado,
+                           [oRes.SerieNueva, oRes.NumeroNueva,
+                            sSerie, sNumero,
+                            ModoVerifactuTexto(ParametrosApp)]));
+        dsTablaG.DataSet.Refresh;
+      end;
     end;
   end;
 end;
@@ -2169,6 +2267,7 @@ begin
      Assigned(FPresentadorLineas) then
   begin
     FPresentadorCabecera.ActualizarBloqueoEdicion;
+    ActualizarBotonResolverIncidencia(Self);
     // Cada factura lleva su propio modo creacion y su propio total de
     // prendas: se re-evaluan al navegar.
     FPresentadorLineas.ReaplicarVisibilidad;
@@ -2274,23 +2373,26 @@ begin
     FRepositoriosArticulos.CrearValidadorArticulos(
       dmmFacturas.unqryTablaG.Connection),
     dmmFacturas.unqryLinFac, 'FACLIN');
-  if (sLineasSinSku <> '') and
+  if (sLineasSinSku = '') or
      (MessageDlg(Format(SPreguntaGrabarFacturaVentaSinSku,
                         [sLineasSinSku]),
-                 mtWarning, [mbYes, mbNo], 0) <> mrYes) then
-    Exit;
-  inLibFacturas.GuardarCambiosPendientesFactura(
-    dmmFacturas.unqryTablaG.Connection,
-    dmmFacturas.unqryTablaG,
-    dmmFacturas.dsLinFac.DataSet,
-    dmmFacturas.dsRecibos.DataSet);
-  if dmmFacturas.dsRecibos.DataSet.Active then
-    dmmFacturas.dsRecibos.DataSet.Refresh;
+                 mtWarning, [mbYes, mbNo], 0) = mrYes) then
+  begin
+    inLibFacturas.GuardarCambiosPendientesFactura(
+      dmmFacturas.unqryTablaG.Connection,
+      dmmFacturas.unqryTablaG,
+      dmmFacturas.dsLinFac.DataSet,
+      dmmFacturas.dsRecibos.DataSet);
+    if dmmFacturas.dsRecibos.DataSet.Active then
+      dmmFacturas.dsRecibos.DataSet.Refresh;
+  end;
 end;
 
 procedure TfrmMtoFacturasBase.tvLineasFacturaKeyDown(Sender: TObject;
                                                  var Key: Word;
                                                  Shift: TShiftState);
+var
+  bInsertar: Boolean;
 begin
   inherited;
   // Defensa: el editor inplace del cxGrid puede llegar sin Parent durante
@@ -2302,6 +2404,7 @@ begin
     if (Key = VK_RETURN) and (Shift <> [ssCtrl]) and
        (dmmFacturas.dsLinFac.DataSet.RecordCount = 0) then
     begin
+      bInsertar := True;
       if dmmFacturas.unqryTablaG.State in [dsInsert, dsEdit] then
       begin
         try
@@ -2310,11 +2413,12 @@ begin
           on E: Exception do
           begin
             ShowMessage(Format(SErrorCompletarDatosBorrador, [E.Message]));
-            Exit;
+            bInsertar := False;
           end;
         end;
       end;
-      tvLineasFactura.DataController.Insert;
+      if bInsertar then
+        tvLineasFactura.DataController.Insert;
     end;
   except
     on E: EInvalidOperation do
@@ -2557,8 +2661,11 @@ end;
 procedure TfrmMtoFacturasBase.PcDetailChange(Sender: TObject);
 begin
   if Assigned(dmmFacturas) then
+  begin
     ActivarDetalleFacturaVcl(
       CrearContextoDetalleFacturaVcl(Self));
+    ActualizarBotonResolverIncidencia(Self);
+  end;
 end;
 
 initialization

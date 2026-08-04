@@ -105,6 +105,37 @@ En artículos y documentos aparecen además botones específicos:
 > (botón **Grabar registro** del navegador) y `[Alt]+[G]` (botón
 > **Grabar** de acción, ver abajo).
 
+### Cambiar la presentación de las líneas con F1
+
+En la pestaña **Líneas** de los documentos compatibles, `[F1]` ya no abre
+la ayuda: cambia la forma de introducir y consultar artículos, SKU y tallas.
+Cada pulsación avanza al modo siguiente y, al terminar el ciclo, vuelve al
+primero. La pestaña indica el modo que está activo.
+
+| Modo | Cuándo resulta más cómodo |
+|------|---------------------------|
+| **Auto (desglose)** | Muestra por separado los atributos que componen el SKU, como color y talla. |
+| **SKU** | Permite trabajar directamente con el código de la variante o con su código de barras. |
+| **Tallas en línea** | Presenta las tallas como columnas editables dentro de la línea. |
+| **Tallas horizontales** | Agrupa por artículo/color. En los pedidos añade bandas como **Pedido**, **A recibir/A albaranar** y **Pendiente**. |
+
+El ciclo depende del documento:
+
+| Documento | Ciclo de `[F1]` |
+|-----------|-----------------|
+| **Inventarios** | Auto → SKU. |
+| **Albaranes de venta** y **Documentos de Trabajo** | Auto → SKU → Tallas en línea. |
+| **Pedidos de compra** | Auto → SKU → Tallas en línea → Tallas horizontales. |
+| **Pedidos y facturas de venta**; **albaranes, facturas y devoluciones de compra** | Auto → SKU → Tallas horizontales. |
+
+`[F1]` solo actúa cuando estás en **Líneas** y se pulsa sin `[Ctrl]`,
+`[Alt]` ni `[Mayús]`. No cambia cantidades por sí solo: reorganiza la misma
+información para facilitar la entrada y la revisión. En facturas de venta
+queda inactivo mientras esté habilitada la creación de artículos desde la
+propia factura. Las **Sesiones de compra** conservan su operativa específica.
+
+![Los modos de líneas de un documento recorridos con F1](img/01-f1-modos-lineas.png)
+
 ### Foto flotante del artículo / SKU
 
 `[Ctrl]+[F]` abre una ventana flotante con la foto del artículo o SKU que

@@ -434,15 +434,17 @@ end;
 
 procedure TfrmMtoProveedores.PcPestanasChange(Sender: TObject);
 begin
-  if not Assigned(FDmmProveedores) then Exit;
-  if pcPestanas.ActivePage = tsArticulos then
-    FDmmProveedores.AsegurarArticulosAbierta
-  else if pcPestanas.ActivePage = tsVentas then
-    FDmmProveedores.AsegurarVentasAbierta
-  else if pcPestanas.ActivePage = tsCompras then
-    FDmmProveedores.AsegurarComprasAbierta
-  else if pcPestanas.ActivePage = tsPagos then
-    FDmmProveedores.AsegurarPagosAbierta;
+  if Assigned(FDmmProveedores) then
+  begin
+    if pcPestanas.ActivePage = tsArticulos then
+      FDmmProveedores.AsegurarArticulosAbierta
+    else if pcPestanas.ActivePage = tsVentas then
+      FDmmProveedores.AsegurarVentasAbierta
+    else if pcPestanas.ActivePage = tsCompras then
+      FDmmProveedores.AsegurarComprasAbierta
+    else if pcPestanas.ActivePage = tsPagos then
+      FDmmProveedores.AsegurarPagosAbierta;
+  end;
 end;
 
 // ===========================================================================

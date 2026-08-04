@@ -889,23 +889,22 @@ begin
   // Solo si el form ya es visible: AplicarModo se llama tambien desde
   // PrepararValores (antes del ShowModal), y enfocar/abrir modal sobre una
   // ventana invisible lanza EInvalidOperation.
-  if not Showing then
-    Exit;
-  case FModo of
-    mtSolicitar:
-      if cboDestino.CanFocus then
-        cboDestino.SetFocus;
-    mtAtender:
-      AbrirModalSolicitudes;
-    mtTraspaso:
-      if (FGrid <> nil) and FGrid.CanFocus then
-      begin
-        FGrid.SetFocus;
-        // Dejar el editor de articulo abierto para que el lector no pierda la
-        // primera cifra (la celda ya esta en edicion al empezar a escanear).
-        if FGridCtrl <> nil then
-          FGridCtrl.MostrarEditorArticulo;
-      end;
+  if Showing then
+  begin
+    case FModo of
+      mtSolicitar:
+        if cboDestino.CanFocus then
+          cboDestino.SetFocus;
+      mtAtender:
+        AbrirModalSolicitudes;
+      mtTraspaso:
+        if (FGrid <> nil) and FGrid.CanFocus then
+        begin
+          FGrid.SetFocus;
+          if FGridCtrl <> nil then
+            FGridCtrl.MostrarEditorArticulo;
+        end;
+    end;
   end;
 end;
 
@@ -1187,20 +1186,19 @@ procedure TfrmMtoOpeTraspaso.CerrarSolicitudCargada;
 begin
   // Cierra la solicitud cargada (parcial) dejando lineas sin atender. Solo
   // tiene sentido en modo Atender con una solicitud traida.
-  if FModo <> mtAtender then
-    Exit;
-  if Trim(FDatos.cdsCabecera.FieldByName('NUMERO_SOL').AsString) = '' then
+  if FModo = mtAtender then
   begin
-    ShowMessage(SErrorSolicitudTraspasoCerrarNoCargada);
-    Exit;
-  end;
-  if MessageDlg(SPreguntaCerrarSolicitudTraspaso,
-                mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-  begin
-    if FDatos.CerrarSolicitud then
+    if Trim(
+      FDatos.cdsCabecera.FieldByName('NUMERO_SOL').AsString) = '' then
+      ShowMessage(SErrorSolicitudTraspasoCerrarNoCargada)
+    else if MessageDlg(SPreguntaCerrarSolicitudTraspaso,
+      mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
-      ShowMessage(SInfoSolicitudTraspasoCerrada);
-      AplicarModo(mtAtender);
+      if FDatos.CerrarSolicitud then
+      begin
+        ShowMessage(SInfoSolicitudTraspasoCerrada);
+        AplicarModo(mtAtender);
+      end;
     end;
   end;
 end;

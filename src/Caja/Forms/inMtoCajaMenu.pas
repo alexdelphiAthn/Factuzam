@@ -249,8 +249,10 @@ end;
 procedure TfrmMtoMenuCaja.FormCreate(Sender: TObject);
 var
   oComposicion: TComposicionCajaPantalla;
+  bContinuar: Boolean;
 begin
   inherited;
+  bContinuar := True;
   oComposicion := ComponerCajaPantalla(Self);
   Self.Position := poScreenCenter;
   // forzar mes actual (evita fecha cacheada en DFM)
@@ -284,7 +286,7 @@ begin
     if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
     begin
       ShowMessage(SErrorAsignarUbicacionCaja);
-      Exit;
+      bContinuar := False;
     end
     else
     begin
@@ -294,30 +296,29 @@ begin
     end;
   end;
 
-  // Forzar repintado para que el calendario marque el mes actual con los días
-  // con ventas
-  calMes.Invalidate;
-
-  FOriginalF5Color := lblF5.Style.TextColor;
-  FOriginalVentasColor := lblVentas.Style.TextColor;
-  FOriginalF10Color := lblF10.Style.TextColor;
-  FOriginalBuscarModificarColor := lblBuscarModificar.Style.TextColor;
-  FOriginalF6Color := lblF6.Style.TextColor;
-  FOriginalEntradaCambioColor := lblEntradaCambio.Style.TextColor;
-  FOriginalF7Color := lblF7.Style.TextColor;
-  FOriginalGastosCajaColor := lblGastosCaja.Style.TextColor;
-  FOriginalF11Color := lblF11.Style.TextColor;
-  FOriginalArqueoColor := lblArqueo.Style.TextColor;
-  FOriginalF3Color := lblF3.Style.TextColor;
-  FOriginalTraspasosColor := lblTraspasos.Style.TextColor;
-  ActualizarFechaCaja(Now);
-  clkHora.OnDblClick := clkHoraDblClick;
-  FOriginalESCColor := lblESC.Style.TextColor;
-  FOriginalSalirColor := lblSalir.Style.TextColor;
-
-  InitMenuItems;
-  FSelectedIndex := -1;
-  SetSelectedIndex(0);
+  if bContinuar then
+  begin
+    calMes.Invalidate;
+    FOriginalF5Color := lblF5.Style.TextColor;
+    FOriginalVentasColor := lblVentas.Style.TextColor;
+    FOriginalF10Color := lblF10.Style.TextColor;
+    FOriginalBuscarModificarColor := lblBuscarModificar.Style.TextColor;
+    FOriginalF6Color := lblF6.Style.TextColor;
+    FOriginalEntradaCambioColor := lblEntradaCambio.Style.TextColor;
+    FOriginalF7Color := lblF7.Style.TextColor;
+    FOriginalGastosCajaColor := lblGastosCaja.Style.TextColor;
+    FOriginalF11Color := lblF11.Style.TextColor;
+    FOriginalArqueoColor := lblArqueo.Style.TextColor;
+    FOriginalF3Color := lblF3.Style.TextColor;
+    FOriginalTraspasosColor := lblTraspasos.Style.TextColor;
+    ActualizarFechaCaja(Now);
+    clkHora.OnDblClick := clkHoraDblClick;
+    FOriginalESCColor := lblESC.Style.TextColor;
+    FOriginalSalirColor := lblSalir.Style.TextColor;
+    InitMenuItems;
+    FSelectedIndex := -1;
+    SetSelectedIndex(0);
+  end;
 end;
 
 procedure TfrmMtoMenuCaja.FormDestroy(Sender: TObject);
@@ -418,19 +419,21 @@ begin
   if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
   begin
     ShowMessage(SErrorUbicacionCajaBuscarOperacionesNoAsignada);
-    Exit;
-  end;
-  oAnfitrion := ExigirAnfitrionCaja(Application.MainForm);
-  oConsulta :=
-    oAnfitrion.CrearConsultaOperacionesCaja(Application, Permisos);
-  oFormulario := oConsulta.FormularioConsultaCaja;
-  try
-    oFormulario.PopupParent := Self;
-    oConsulta.PrepararValores(FEmpresa, FAlmacen, FCaja, FFechaCaja);
-    oFormulario.Show;
-  except
-    FreeAndNil(oFormulario);
-    raise;
+  end
+  else
+  begin
+    oAnfitrion := ExigirAnfitrionCaja(Application.MainForm);
+    oConsulta :=
+      oAnfitrion.CrearConsultaOperacionesCaja(Application, Permisos);
+    oFormulario := oConsulta.FormularioConsultaCaja;
+    try
+      oFormulario.PopupParent := Self;
+      oConsulta.PrepararValores(FEmpresa, FAlmacen, FCaja, FFechaCaja);
+      oFormulario.Show;
+    except
+      FreeAndNil(oFormulario);
+      raise;
+    end;
   end;
 end;
 
@@ -601,35 +604,37 @@ var
   Cnt: Integer;
 begin
   Cnt := Length(FMenuItems);
-  if Cnt = 0 then Exit;
-
-  // Wrap circular: -1 va al último, Cnt vuelve al primero
-  NewIndex := ((NewIndex mod Cnt) + Cnt) mod Cnt;
-  if NewIndex = FSelectedIndex then Exit;
-
-  if (FSelectedIndex >= 0) and (FSelectedIndex < Cnt) then
-    RestoreMenuItemColors(FMenuItems[FSelectedIndex].KeyLabel,
-                          FMenuItems[FSelectedIndex].DescLabel,
-                          FMenuItems[FSelectedIndex].OriginalKeyColor,
-                          FMenuItems[FSelectedIndex].OriginalDescColor);
-
-  FSelectedIndex := NewIndex;
-
-  ChangeMenuItemColors(FMenuItems[FSelectedIndex].KeyLabel,
-                       FMenuItems[FSelectedIndex].DescLabel,
-                       FMenuItems[FSelectedIndex].HoverColor);
+  if Cnt > 0 then
+  begin
+    NewIndex := ((NewIndex mod Cnt) + Cnt) mod Cnt;
+    if NewIndex <> FSelectedIndex then
+    begin
+      if (FSelectedIndex >= 0) and (FSelectedIndex < Cnt) then
+        RestoreMenuItemColors(FMenuItems[FSelectedIndex].KeyLabel,
+          FMenuItems[FSelectedIndex].DescLabel,
+          FMenuItems[FSelectedIndex].OriginalKeyColor,
+          FMenuItems[FSelectedIndex].OriginalDescColor);
+      FSelectedIndex := NewIndex;
+      ChangeMenuItemColors(FMenuItems[FSelectedIndex].KeyLabel,
+        FMenuItems[FSelectedIndex].DescLabel,
+        FMenuItems[FSelectedIndex].HoverColor);
+    end;
+  end;
 end;
 
 procedure TfrmMtoMenuCaja.ExecuteSelectedItem;
 var
   Item: TMenuItem;
 begin
-  if (FSelectedIndex < 0) or (FSelectedIndex >= Length(FMenuItems)) then Exit;
-  Item := FMenuItems[FSelectedIndex];
-  if Assigned(Item.DescLabel.OnClick) then
-    Item.DescLabel.OnClick(Item.DescLabel)
-  else if Assigned(Item.KeyLabel.OnClick) then
-    Item.KeyLabel.OnClick(Item.KeyLabel);
+  if (FSelectedIndex >= 0) and
+     (FSelectedIndex < Length(FMenuItems)) then
+  begin
+    Item := FMenuItems[FSelectedIndex];
+    if Assigned(Item.DescLabel.OnClick) then
+      Item.DescLabel.OnClick(Item.DescLabel)
+    else if Assigned(Item.KeyLabel.OnClick) then
+      Item.KeyLabel.OnClick(Item.KeyLabel);
+  end;
 end;
 
 // F5 - Ventas
@@ -797,15 +802,17 @@ begin
   if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
   begin
     ShowMessage(SErrorUbicacionCajaArqueoNoAsignada);
-    Exit;
+  end
+  else
+  begin
+    TfrmModalArqueo.Ejecutar(Self,
+      ConexionPrincipal,
+      FEmpresa,
+      FAlmacen,
+      FCaja,
+      DateOf(FFechaCaja),
+      DateOf(FFechaCaja));
   end;
-  TfrmModalArqueo.Ejecutar(Self,
-                           ConexionPrincipal,
-                           FEmpresa,
-                           FAlmacen,
-                           FCaja,
-                           DateOf(FFechaCaja),
-                           DateOf(FFechaCaja));
 end;
 
 procedure TfrmMtoMenuCaja.lblArqueoMouseEnter(Sender: TObject);

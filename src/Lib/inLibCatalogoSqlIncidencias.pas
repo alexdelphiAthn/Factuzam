@@ -17,6 +17,7 @@ interface
 
 uses
   System.Generics.Collections,
+  System.SyncObjs,
   inLibCatalogoSqlIntf;
 
 type
@@ -24,6 +25,7 @@ type
     TInterfacedObject,
     IRegistroIncidenciasSql)
   private
+    FBloqueo: TCriticalSection;
     FIncidencias: TDictionary<string, string>;
   public
     constructor Create;
@@ -42,25 +44,27 @@ uses
 constructor TRegistroIncidenciasSql.Create;
 begin
   inherited Create;
+  FBloqueo := TCriticalSection.Create;
   FIncidencias := TDictionary<string, string>.Create;
 end;
 
 destructor TRegistroIncidenciasSql.Destroy;
 begin
   FreeAndNil(FIncidencias);
+  FreeAndNil(FBloqueo);
   inherited;
 end;
 
 procedure TRegistroIncidenciasSql.Registrar(
   const AClavePerfil, ACausa: string);
 begin
-  TMonitor.Enter(Self);
+  FBloqueo.Acquire;
   try
     FIncidencias.AddOrSetValue(
       UpperCase(AClavePerfil),
       ACausa);
   finally
-    TMonitor.Exit(Self);
+    FBloqueo.Release;
   end;
 end;
 
@@ -68,13 +72,13 @@ function TRegistroIncidenciasSql.ObtenerUltimaCausa(
   const AClavePerfil: string): string;
 begin
   Result := '';
-  TMonitor.Enter(Self);
+  FBloqueo.Acquire;
   try
     FIncidencias.TryGetValue(
       UpperCase(AClavePerfil),
       Result);
   finally
-    TMonitor.Exit(Self);
+    FBloqueo.Release;
   end;
 end;
 

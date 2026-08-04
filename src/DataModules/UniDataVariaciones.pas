@@ -77,18 +77,21 @@ const
   procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
   var swQ: TStopwatch;
   begin
-    if qry.Active then Exit;
-    swQ := TStopwatch.StartNew;
-    try
-      qry.Open;
-      RegistroLog.RegistrarRendimiento(
-        TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-    except
-      on E: Exception do
-      begin
-        RegistroLog.RegistrarRendimiento(TAG, Nombre + ' ERROR=' + E.Message,
-          swQ.ElapsedMilliseconds);
-        raise;
+    if not qry.Active then
+    begin
+      swQ := TStopwatch.StartNew;
+      try
+        qry.Open;
+        RegistroLog.RegistrarRendimiento(
+          TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
+      except
+        on E: Exception do
+        begin
+          RegistroLog.RegistrarRendimiento(
+            TAG, Nombre + ' ERROR=' + E.Message,
+            swQ.ElapsedMilliseconds);
+          raise;
+        end;
       end;
     end;
   end;

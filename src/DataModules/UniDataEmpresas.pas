@@ -525,7 +525,8 @@ const
   var
     swQ: TStopwatch;
   begin
-    if qry.Active then Exit;
+    if not qry.Active then
+    begin
     swQ := TStopwatch.StartNew;
     try
       qry.Open;
@@ -539,6 +540,7 @@ const
           swQ.ElapsedMilliseconds);
         raise;
       end;
+    end;
     end;
   end;
 
@@ -558,7 +560,8 @@ end;
 procedure TdmEmpresas.AsegurarRetencionesAbierta;
 var swQ: TStopwatch;
 begin
-  if unqryRetenciones.Active then Exit;
+  if not unqryRetenciones.Active then
+  begin
   swQ := TStopwatch.StartNew;
   try
     unqryRetenciones.Open;
@@ -572,12 +575,14 @@ begin
       raise;
     end;
   end;
+  end;
 end;
 
 procedure TdmEmpresas.AsegurarSeriesAbierta;
 var swQ: TStopwatch;
 begin
-  if unqrySeries.Active then Exit;
+  if not unqrySeries.Active then
+  begin
   swQ := TStopwatch.StartNew;
   try
     unqrySeries.Open;
@@ -591,12 +596,14 @@ begin
       raise;
     end;
   end;
+  end;
 end;
 
 procedure TdmEmpresas.AsegurarBancosAbierta;
 var swQ: TStopwatch;
 begin
-  if unqryBancos.Active then Exit;
+  if not unqryBancos.Active then
+  begin
   swQ := TStopwatch.StartNew;
   try
     unqryBancos.Open;
@@ -610,6 +617,7 @@ begin
       raise;
     end;
   end;
+  end;
 end;
 
 procedure TdmEmpresas.AsegurarHistoriaFacturacionAbierta;
@@ -617,8 +625,9 @@ var swQ: TStopwatch;
 begin
   // Las dos queries van en pareja: cabecera + lineas de facturas
   // emitidas a la empresa.
-  if unqryFacturasEmpresas.Active
-     and unqryFacturasLineasEmpresas.Active then Exit;
+  if not (unqryFacturasEmpresas.Active and
+          unqryFacturasLineasEmpresas.Active) then
+  begin
   swQ := TStopwatch.StartNew;
   try
     if not unqryFacturasEmpresas.Active then
@@ -635,6 +644,7 @@ begin
         swQ.ElapsedMilliseconds);
       raise;
     end;
+  end;
   end;
 end;
 

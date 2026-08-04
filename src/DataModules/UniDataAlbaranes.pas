@@ -314,7 +314,8 @@ const
   var
     swQ: TStopwatch;
   begin
-    if qry.Active then Exit;
+    if not qry.Active then
+    begin
     swQ := TStopwatch.StartNew;
     try
       qry.Open;
@@ -328,6 +329,7 @@ const
           swQ.ElapsedMilliseconds);
         raise;
       end;
+    end;
     end;
   end;
 
@@ -739,8 +741,8 @@ var
 begin
   inherited;
   // Desempaquetado ATTR en curso: post descriptivo, sin logica fiscal.
-  if FDesempaquetandoAtributos then
-    Exit;
+  if not FDesempaquetandoAtributos then
+  begin
   // Guarda ColumnSKUcxGrid (leccion de pedidos, bucle 07/07/2026): un
   // Post de linea sin articulo ni SKU no debe llegar a BBDD ni
   // consumir contador de lineas.
@@ -791,6 +793,7 @@ begin
     if (FindField('INSTANTE_ALTA') <> nil) and
        FieldByName('INSTANTE_ALTA').IsNull then
       FieldByName('INSTANTE_ALTA').AsDateTime := Now;
+  end;
   end;
 end;
 
@@ -1541,6 +1544,75 @@ begin
   end;
 end;
 
+function SqlCrearFacturaInicio: string;
+begin
+  Result :=
+    'CREATE PROCEDURE PRC_ALB_CREAR_FACTURA_INICIO(' +
+    '  IN  p_NUMERO_ALB varchar(20),' +
+    '  IN  p_SERIE_ALB  varchar(20),' +
+    '  IN  p_USUARIO    varchar(100),' +
+    '  OUT p_NUMERO_FAC varchar(20),' +
+    '  OUT p_SERIE_FAC  varchar(20)' +
+    ') BEGIN ' +
+    '  DECLARE v_serie  varchar(20); ' +
+    '  DECLARE v_numero varchar(20); ' +
+    '  SELECT SERIE_ALB INTO v_serie FROM fza_albaranes ' +
+    '   WHERE NUMERO_ALB = p_NUMERO_ALB AND SERIE_ALB = p_SERIE_ALB; ' +
+    '  SELECT LPAD(IFNULL(MAX(CAST(NUMERO_FAC AS UNSIGNED)), 0) + 1, 6, ' +
+    '''0'') ' +
+    '    INTO v_numero FROM fza_facturas WHERE SERIE_FAC = v_serie; ' +
+    '  INSERT INTO fza_facturas ( ' +
+    '    NUMERO_FAC, SERIE_FAC, FECHA_FAC, FASE_FAC, TIPO_FAC, ' +
+    '    CODIGO_EMP_FAC, RAZON_SOCIAL_EMPRESA_FAC, NIF_EMPRESA_FAC, ' +
+    '    MOVIL_EMPRESA_FAC, EMAIL_EMPRESA_FAC, ' +
+    '    DIRECCION1_EMPRESA_FAC, DIRECCION2_EMPRESA_FAC, ' +
+    '    POBLACION_EMPRESA_FAC, PROVINCIA_EMPRESA_FAC, ' +
+    '    CODIGO_PAI_EMPRESA_FAC, NOMBRE_PAI_EMPRESA_FAC, ' +
+    '    CODIGO_POSTAL_EMPRESA_FAC, GRUPO_ZONA_IVA_EMPRESA_FAC, ' +
+    '    CODIGO_CLI_FAC, RAZON_SOCIAL_CLIENTE_FAC, NIF_CLIENTE_FAC, ' +
+    '    MOVIL_CLIENTE_FAC, EMAIL_CLIENTE_FAC, ' +
+    '    DIRECCION1_CLIENTE_FAC, DIRECCION2_CLIENTE_FAC, ' +
+    '    POBLACION_CLIENTE_FAC, PROVINCIA_CLIENTE_FAC, ' +
+    '    CODIGO_POSTAL_CLIENTE_FAC, ' +
+    '    CODIGO_PAI_CLIENTE_FAC, NOMBRE_PAI_CLIENTE_FAC, ' +
+    '    CODIGO_IVA_FAC, ' +
+    '    ESIVA_RECARGO_CLIENTE_FAC, ESIVA_EXENTO_CLIENTE_FAC, ' +
+    '    ESINTRACOMUNITARIO_CLIENTE_FAC, ' +
+    '    TARIFA_ARTICULO_CLIENTE_FAC, ESIMP_INCL_TARIFA_CLIENTE_FAC, ' +
+    '    PORCENTAJE_IVAN_FAC, PORCENTAJE_IVAR_FAC, ' +
+    '    PORCENTAJE_IVAS_FAC, PORCENTAJE_IVAE_FAC, ' +
+    '    FORMA_PAGO_FAC, CONTADOR_LINEAS_FAC, ' +
+    '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+    '  SELECT v_numero, v_serie, CURRENT_DATE(), ''BORRADOR'', ''NORMAL'', ' +
+    '         A.CODIGO_EMP_ALB, A.RAZON_SOCIAL_EMPRESA_ALB, ' +
+    'A.NIF_EMPRESA_ALB, ' +
+    '         A.MOVIL_EMPRESA_ALB, A.EMAIL_EMPRESA_ALB, ' +
+    '         A.DIRECCION1_EMPRESA_ALB, A.DIRECCION2_EMPRESA_ALB, ' +
+    '         A.POBLACION_EMPRESA_ALB, A.PROVINCIA_EMPRESA_ALB, ' +
+    '         A.CODIGO_PAI_EMPRESA_ALB, A.NOMBRE_PAI_EMPRESA_ALB, ' +
+    '         A.CODIGO_POSTAL_EMPRESA_ALB, A.GRUPO_ZONA_IVA_EMPRESA_ALB, ' +
+    '         A.CODIGO_CLI_ALB, A.RAZON_SOCIAL_CLIENTE_ALB, ' +
+    'A.NIF_CLIENTE_ALB, ' +
+    '         A.MOVIL_CLIENTE_ALB, A.EMAIL_CLIENTE_ALB, ' +
+    '         A.DIRECCION1_CLIENTE_ALB, A.DIRECCION2_CLIENTE_ALB, ' +
+    '         A.POBLACION_CLIENTE_ALB, A.PROVINCIA_CLIENTE_ALB, ' +
+    '         A.CODIGO_POSTAL_CLIENTE_ALB, ' +
+    '         A.CODIGO_PAI_CLIENTE_ALB, A.NOMBRE_PAI_CLIENTE_ALB, ' +
+    '         A.CODIGO_IVA_ALB, ' +
+    '         A.ESIVA_RECARGO_CLIENTE_ALB, A.ESIVA_EXENTO_CLIENTE_ALB, ' +
+    '         A.ESINTRACOMUNITARIO_CLIENTE_ALB, ' +
+    '         A.TARIFA_ARTICULO_CLIENTE_ALB, ' +
+    'A.ESIMP_INCL_TARIFA_CLIENTE_ALB, ' +
+    '         A.PORCENTAJE_IVAN_ALB, A.PORCENTAJE_IVAR_ALB, ' +
+    '         A.PORCENTAJE_IVAS_ALB, A.PORCENTAJE_IVAE_ALB, ' +
+    '         A.FORMA_PAGO_ALB, ''0'', NOW(), p_USUARIO, p_USUARIO ' +
+    '    FROM fza_albaranes A ' +
+    '   WHERE A.NUMERO_ALB = p_NUMERO_ALB AND A.SERIE_ALB = p_SERIE_ALB; ' +
+    '  SET p_NUMERO_FAC = v_numero; ' +
+    '  SET p_SERIE_FAC  = v_serie; ' +
+    'END';
+end;
+
 procedure TdmAlbaranes.InstalarProcedimientos;
 var
   q: TUniSQL;
@@ -1552,10 +1624,11 @@ var
   end;
 
 begin
-  if FProcsInstalados then Exit;
-  q := TUniSQL.Create(nil);
-  try
-    q.Connection := ConexionPrincipal;
+  if not FProcsInstalados then
+  begin
+    q := TUniSQL.Create(nil);
+    try
+      q.Connection := ConexionPrincipal;
 
     // Columna de seguimiento de facturación a nivel de línea (idempotente).
     Run('ALTER TABLE fza_albaranes_lineas ' +
@@ -1584,71 +1657,7 @@ begin
     // PRC_ALB_CREAR_FACTURA_INICIO: cabecera factura clonando del primer
     // albarán.
     Run('DROP PROCEDURE IF EXISTS PRC_ALB_CREAR_FACTURA_INICIO');
-    Run(
-      'CREATE PROCEDURE PRC_ALB_CREAR_FACTURA_INICIO(' +
-      '  IN  p_NUMERO_ALB varchar(20),' +
-      '  IN  p_SERIE_ALB  varchar(20),' +
-      '  IN  p_USUARIO    varchar(100),' +
-      '  OUT p_NUMERO_FAC varchar(20),' +
-      '  OUT p_SERIE_FAC  varchar(20)' +
-      ') BEGIN ' +
-      '  DECLARE v_serie  varchar(20); ' +
-      '  DECLARE v_numero varchar(20); ' +
-      '  SELECT SERIE_ALB INTO v_serie FROM fza_albaranes ' +
-      '   WHERE NUMERO_ALB = p_NUMERO_ALB AND SERIE_ALB = p_SERIE_ALB; ' +
-      '  SELECT LPAD(IFNULL(MAX(CAST(NUMERO_FAC AS UNSIGNED)), 0) + 1, 6, ' +
-      '''0'') ' +
-      '    INTO v_numero FROM fza_facturas WHERE SERIE_FAC = v_serie; ' +
-      '  INSERT INTO fza_facturas ( ' +
-      '    NUMERO_FAC, SERIE_FAC, FECHA_FAC, FASE_FAC, TIPO_FAC, ' +
-      '    CODIGO_EMP_FAC, RAZON_SOCIAL_EMPRESA_FAC, NIF_EMPRESA_FAC, ' +
-      '    MOVIL_EMPRESA_FAC, EMAIL_EMPRESA_FAC, ' +
-      '    DIRECCION1_EMPRESA_FAC, DIRECCION2_EMPRESA_FAC, ' +
-      '    POBLACION_EMPRESA_FAC, PROVINCIA_EMPRESA_FAC, ' +
-      '    CODIGO_PAI_EMPRESA_FAC, NOMBRE_PAI_EMPRESA_FAC, ' +
-      '    CODIGO_POSTAL_EMPRESA_FAC, GRUPO_ZONA_IVA_EMPRESA_FAC, ' +
-      '    CODIGO_CLI_FAC, RAZON_SOCIAL_CLIENTE_FAC, NIF_CLIENTE_FAC, ' +
-      '    MOVIL_CLIENTE_FAC, EMAIL_CLIENTE_FAC, ' +
-      '    DIRECCION1_CLIENTE_FAC, DIRECCION2_CLIENTE_FAC, ' +
-      '    POBLACION_CLIENTE_FAC, PROVINCIA_CLIENTE_FAC, ' +
-      '    CODIGO_POSTAL_CLIENTE_FAC, ' +
-      '    CODIGO_PAI_CLIENTE_FAC, NOMBRE_PAI_CLIENTE_FAC, ' +
-      '    CODIGO_IVA_FAC, ' +
-      '    ESIVA_RECARGO_CLIENTE_FAC, ESIVA_EXENTO_CLIENTE_FAC, ' +
-      '    ESINTRACOMUNITARIO_CLIENTE_FAC, ' +
-      '    TARIFA_ARTICULO_CLIENTE_FAC, ESIMP_INCL_TARIFA_CLIENTE_FAC, ' +
-      '    PORCENTAJE_IVAN_FAC, PORCENTAJE_IVAR_FAC, ' +
-      '    PORCENTAJE_IVAS_FAC, PORCENTAJE_IVAE_FAC, ' +
-      '    FORMA_PAGO_FAC, CONTADOR_LINEAS_FAC, ' +
-      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-      '  SELECT v_numero, v_serie, CURRENT_DATE(), ''BORRADOR'', ''NORMAL'', ' +
-      '         A.CODIGO_EMP_ALB, A.RAZON_SOCIAL_EMPRESA_ALB, ' +
-      'A.NIF_EMPRESA_ALB, ' +
-      '         A.MOVIL_EMPRESA_ALB, A.EMAIL_EMPRESA_ALB, ' +
-      '         A.DIRECCION1_EMPRESA_ALB, A.DIRECCION2_EMPRESA_ALB, ' +
-      '         A.POBLACION_EMPRESA_ALB, A.PROVINCIA_EMPRESA_ALB, ' +
-      '         A.CODIGO_PAI_EMPRESA_ALB, A.NOMBRE_PAI_EMPRESA_ALB, ' +
-      '         A.CODIGO_POSTAL_EMPRESA_ALB, A.GRUPO_ZONA_IVA_EMPRESA_ALB, ' +
-      '         A.CODIGO_CLI_ALB, A.RAZON_SOCIAL_CLIENTE_ALB, ' +
-      'A.NIF_CLIENTE_ALB, ' +
-      '         A.MOVIL_CLIENTE_ALB, A.EMAIL_CLIENTE_ALB, ' +
-      '         A.DIRECCION1_CLIENTE_ALB, A.DIRECCION2_CLIENTE_ALB, ' +
-      '         A.POBLACION_CLIENTE_ALB, A.PROVINCIA_CLIENTE_ALB, ' +
-      '         A.CODIGO_POSTAL_CLIENTE_ALB, ' +
-      '         A.CODIGO_PAI_CLIENTE_ALB, A.NOMBRE_PAI_CLIENTE_ALB, ' +
-      '         A.CODIGO_IVA_ALB, ' +
-      '         A.ESIVA_RECARGO_CLIENTE_ALB, A.ESIVA_EXENTO_CLIENTE_ALB, ' +
-      '         A.ESINTRACOMUNITARIO_CLIENTE_ALB, ' +
-      '         A.TARIFA_ARTICULO_CLIENTE_ALB, ' +
-      'A.ESIMP_INCL_TARIFA_CLIENTE_ALB, ' +
-      '         A.PORCENTAJE_IVAN_ALB, A.PORCENTAJE_IVAR_ALB, ' +
-      '         A.PORCENTAJE_IVAS_ALB, A.PORCENTAJE_IVAE_ALB, ' +
-      '         A.FORMA_PAGO_ALB, ''0'', NOW(), p_USUARIO, p_USUARIO ' +
-      '    FROM fza_albaranes A ' +
-      '   WHERE A.NUMERO_ALB = p_NUMERO_ALB AND A.SERIE_ALB = p_SERIE_ALB; ' +
-      '  SET p_NUMERO_FAC = v_numero; ' +
-      '  SET p_SERIE_FAC  = v_serie; ' +
-      'END');
+    Run(SqlCrearFacturaInicio);
 
     // PRC_ALB_CREAR_FACTURA_LINEA: copia una línea concreta a la factura.
     Run('DROP PROCEDURE IF EXISTS PRC_ALB_CREAR_FACTURA_LINEA');
@@ -1788,9 +1797,10 @@ begin
       '  END IF; ' +
       'END');
 
-    FProcsInstalados := True;
-  finally
-    FreeAndNil(q);
+      FProcsInstalados := True;
+    finally
+      FreeAndNil(q);
+    end;
   end;
 end;
 
@@ -1983,8 +1993,9 @@ var
   bTransPropia: Boolean;
 begin
   Result := 0;
-  if (aListaAlbaranes = nil) or (aListaAlbaranes.Count = 0) then Exit;
-  InstalarProcedimientos;
+  if (aListaAlbaranes <> nil) and (aListaAlbaranes.Count > 0) then
+  begin
+    InstalarProcedimientos;
 
   qCli := TUniQuery.Create(nil);
   qLin := TUniQuery.Create(nil);
@@ -2013,7 +2024,8 @@ begin
     begin
       sLin := aListaAlbaranes[i];
       iSep := Pos('|', sLin);
-      if iSep <= 0 then Continue;
+      if iSep > 0 then
+      begin
       sSer := Copy(sLin, 1, iSep - 1);
       sNum := Copy(sLin, iSep + 1, MaxInt);
 
@@ -2022,11 +2034,8 @@ begin
       qCli.ParamByName('pNUM').AsString := sNum;
       qCli.ParamByName('pSER').AsString := sSer;
       qCli.Open;
-      if qCli.Eof then
+      if not qCli.Eof then
       begin
-        qCli.Close;
-        Continue;
-      end;
       sCliAlb := qCli.FieldByName('CODIGO_CLI_ALB').AsString;
       qCli.Close;
 
@@ -2070,6 +2079,10 @@ begin
       // Cerrar el albarán: marcar como facturado si no quedan líneas
       // pendientes.
       EjecutarCrearFacturaFin(sNumFac, sSerFac, sNum, sSer);
+      end
+      else
+        qCli.Close;
+      end;
     end;
 
       if bTransPropia and ConexionPrincipal.InTransaction then
@@ -2085,7 +2098,8 @@ begin
   end;
 
   // Refrescar la pantalla del albarán activo.
-  if unqryTablaG.Active then unqryTablaG.Refresh;
+  if unqryTablaG.Active then
+    unqryTablaG.Refresh;
   if unqryAlbaranesLineas.Active then
   begin
     unqryAlbaranesLineas.Close;
@@ -2095,6 +2109,7 @@ begin
   begin
     unqryFacturas.Close;
     unqryFacturas.Open;
+  end;
   end;
 end;
 
@@ -2111,11 +2126,13 @@ var
   fCantidad: Double;
 begin
   Result := 0;
-  if not unqryTablaG.Active then Exit;
-  sNumeroAlb := unqryTablaG.FieldByName('NUMERO_ALB').AsString;
-  sSerieAlb  := unqryTablaG.FieldByName('SERIE_ALB').AsString;
-  if (sNumeroAlb = '') or (sNumeroAlb = '0') then Exit;
-  sEmpresa := unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString;
+  if unqryTablaG.Active then
+  begin
+    sNumeroAlb := unqryTablaG.FieldByName('NUMERO_ALB').AsString;
+    sSerieAlb  := unqryTablaG.FieldByName('SERIE_ALB').AsString;
+    if (sNumeroAlb <> '') and (sNumeroAlb <> '0') then
+    begin
+      sEmpresa := unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString;
   sCliente := unqryTablaG.FieldByName('CODIGO_CLI_ALB').AsString;
   dFechaAlb := Date;
   if unqryTablaG.FindField('FECHA_ALB') <> nil then
@@ -2285,6 +2302,8 @@ begin
   begin
     unqryMovimientosAlb.Close;
     unqryMovimientosAlb.Open;
+  end;
+    end;
   end;
 end;
 

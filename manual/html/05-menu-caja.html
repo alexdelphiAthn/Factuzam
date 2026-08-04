@@ -68,6 +68,11 @@ en Etiquetas), talla, proveedor, modelo, descripción, cantidad, bruto,
 descuento, neto del artículo, ingresos, vendedor, formas de pago y documento.
 Los resultados se ordenan por fecha y operación, con
 totales por caja y por fecha.</p>
+<blockquote><p>Este acceso depende del permiso de menú del perfil. Si <strong>TPV ▸ Listados</strong>
+no aparece, el administrador debe habilitarlo en el perfil; como consulta
+en pantalla puede usarse el
+<a href="#historico-de-operaciones">Histórico de Operaciones</a>, aunque no sustituye
+al informe A4.</p></blockquote>
 <hr>
 <h2 id="menu-de-caja">Menú de Caja</h2>
 <p><strong>Atajo de menú:</strong> <code>[F5]</code></p>
@@ -450,6 +455,10 @@ cuadrar el datáfono.</p>
 <tr><td><strong>F2</strong></td><td><strong>Grabar Arqueo y emitir justificante</strong> desde la pestaña Recuento.</td></tr>
 </tbody>
 </table>
+<p>El botón <strong>Resumen (F11)</strong> emite el ticket de arqueo con el periodo, las
+operaciones, los totales de venta y cobro y los resúmenes por sección,
+temporada, empleado, forma de pago y serie.</p>
+<p><img src="img/05-caja-arqueo-resumen-ticket.png" alt="Resumen imprimible del arqueo" loading="lazy"></p>
 <blockquote><p>Haz el arqueo <strong>al cierre de cada jornada</strong>. El «Efectivo anterior» enlaza
 con el arqueo previo, de modo que los descuadres no se arrastran sin ser
 detectados.</p></blockquote>
@@ -478,12 +487,20 @@ de grabar.</p>
 la propuesta del sistema y el usuario confirma el total en <strong>Recontado</strong>. Con
 el parámetro activado no se muestran las propuestas ni las diferencias de
 efectivo o tarjetas; el recuento se introduce sin esos totalizadores.</p>
+<p><img src="img/05-caja-arqueo-recuento.png" alt="Recuento y diferencias del arqueo" loading="lazy"></p>
 <h3 id="tira-de-caja-f7">Tira de Caja (F7)</h3>
 <p>La <strong>Tira de Caja</strong> imprime o exporta un detalle de lo ocurrido en el rango del
 arqueo. Permite seleccionar series de facturas simplificadas y decidir si se
 incluyen traspasos salientes, ingresos por caja, gastos por caja y ventas a
 crédito.</p>
 <p><img src="img/05-caja-tira-caja.png" alt="Tira de caja" loading="lazy"></p>
+<p><strong>Imprimir</strong> genera la tira en formato de ticket, con el detalle de cada
+documento, su forma de pago y los totales del periodo.</p>
+<p><img src="img/05-caja-tira-caja-ticket.png" alt="Tira de caja en formato de ticket" loading="lazy"></p>
+<p><strong>Ver Excel</strong> abre una previsualización tabular con cada documento y línea,
+SKU, descripción, cantidad, importe y subtotales. Desde esa vista se puede
+guardar el Excel si se necesita adjuntarlo o trabajarlo fuera de Factuzam.</p>
+<p><img src="img/05-caja-tira-caja-resultado.png" alt="Resultado de la tira de caja en la previsualización Excel" loading="lazy"></p>
 <p>Úsala cuando el responsable quiera revisar el detalle antes del cierre o
 adjuntar una relación de movimientos al arqueo.</p>
 <p>Desde <strong>Histórico (F8)</strong> puedes reimprimir duplicados del ticket de arqueo
@@ -866,7 +883,7 @@ para casos en los que el ticket ya se cerró.</p></blockquote>
 <hr>
 <p><a href="04-menu-ventas-mayor.html">◀ Menú Ventas Mayor</a> · <a href="index.html">Índice</a> · <a href="06-menu-almacen.html">Siguiente ▶ Menú Almacén</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 31/07/2026</footer>
+<footer>Manual de Factuzam · generado el 04/08/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

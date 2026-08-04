@@ -767,30 +767,28 @@ var
   emp: string;
 begin
   inherited;
-  if (csDestroying in ComponentState) then Exit;
-
-  // Si cambia el registro activo, recargamos el lookup de almacenes
-  if (Field = nil) or
-     ((Field <> nil) and (Field.FieldName = 'CODIGO_EMP_INV')) then
+  if not (csDestroying in ComponentState) then
   begin
-    if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
-       not dsTablaG.DataSet.IsEmpty then
+    // Si cambia el registro activo, recargamos el lookup de almacenes
+    if (Field = nil) or (Field.FieldName = 'CODIGO_EMP_INV') then
     begin
-      emp := dsTablaG.DataSet.FieldByName('CODIGO_EMP_INV').AsString;
-      if dmmInventarios <> nil then
+      if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
+         not dsTablaG.DataSet.IsEmpty then
       begin
-        RefrescarLookupsCabeceraEmpresa(emp);
+        emp := dsTablaG.DataSet.FieldByName('CODIGO_EMP_INV').AsString;
+        if dmmInventarios <> nil then
+          RefrescarLookupsCabeceraEmpresa(emp);
       end;
     end;
-  end;
-  if Field = nil then
-  begin
-    ActualizarEstadoUI;
-    // Recargar lineas cuando cambia el registro activo y la pestana
-    // Detalle esta visible (navegacion entre inventarios desde la ficha
-    // o entrada desde la lista).
-    if pcDetail.ActivePage = tsDetalle then
-      CargarLineasYRefrescar;
+    if Field = nil then
+    begin
+      ActualizarEstadoUI;
+      // Recargar lineas cuando cambia el registro activo y la pestana
+      // Detalle esta visible (navegacion entre inventarios desde la ficha
+      // o entrada desde la lista).
+      if pcDetail.ActivePage = tsDetalle then
+        CargarLineasYRefrescar;
+    end;
   end;
 end;
 
@@ -840,48 +838,31 @@ var
   ds: TDataSet;
 begin
   ds := dsTablaG.DataSet;
-  if (ds = nil) or (not ds.Active) or ds.IsEmpty then
-    Exit;
-
-  // IMPORTANTE: tras un Post de cabecera nueva, AfterScroll NO siempre se
-  // dispara (no hay cambio de registro real). Si no resincronizamos las
-  // claves del data module con los valores actuales de la cabecera, las
-  // líneas recién insertadas por la modal de carga no se ven, porque
-  // unqryLineas se reabre con parámetros desactualizados.
-  dmmInventarios.SetClavesActivas(
-    ds.FieldByName('CODIGO_EMP_INV').AsString,
-    ds.FieldByName('CODIGO_ALM_INV').AsString,
-    ds.FieldByName('SERIE_INV').AsString,
-    ds.FieldByName('NUMERO_INV').AsString
-  );
-  dmmInventarios.CargarLineasInventario;
-  // Inventario recargado: las columnas de atributo (vista) se recalculan para
-  // las lineas nuevas.
-  FGestorColumnas.VistaAplicada := False;
-  if dmmInventarios.cdsLineas.Active and
-     not dmmInventarios.cdsLineas.IsEmpty then
+  if (ds <> nil) and ds.Active and not ds.IsEmpty then
   begin
-    // CargarLineasInventario ha reseteado LineasDesempaquetadas. Si el
-    // usuario tiene el toggle activo, hay que volver a desempaquetar
-    // antes de pintar las columnas (con barra de progreso si >150 lineas).
-    if FGestorColumnas.MostrarAtributos and
-       (not dmmInventarios.LineasDesempaquetadas) then
-      AsegurarDesempaquetadoAtributos;
-    // El ultimo padre puede coincidir con el de la cabecera anterior;
-    // lo limpiamos para forzar la reconstruccion de captions.
-    FGestorColumnas.UltimoArticuloPadre := '';
-    ActualizarColumnasDinamicas(dmmInventarios.cdsLineas.FieldByName(
-                                                 'CODIGO_ART_INVLIN').AsString);
+    // Resincronizar las claves cubre el Post sin AfterScroll de una cabecera.
+    dmmInventarios.SetClavesActivas(
+      ds.FieldByName('CODIGO_EMP_INV').AsString,
+      ds.FieldByName('CODIGO_ALM_INV').AsString,
+      ds.FieldByName('SERIE_INV').AsString,
+      ds.FieldByName('NUMERO_INV').AsString);
+    dmmInventarios.CargarLineasInventario;
+    FGestorColumnas.VistaAplicada := False;
+    if dmmInventarios.cdsLineas.Active and
+       not dmmInventarios.cdsLineas.IsEmpty then
+    begin
+      if FGestorColumnas.MostrarAtributos and
+         not dmmInventarios.LineasDesempaquetadas then
+        AsegurarDesempaquetadoAtributos;
+      FGestorColumnas.UltimoArticuloPadre := '';
+      ActualizarColumnasDinamicas(
+        dmmInventarios.cdsLineas.FieldByName(
+          'CODIGO_ART_INVLIN').AsString);
+    end;
+    if Assigned(tvLineas) then
+      tvLineas.DataController.Refresh;
+    ConstruirModoEntrada;
   end;
-  // En modo DisconnectedMode + Pooling el cxGrid no siempre resincroniza su
-  // DataController solo con el Open de cdsLineas, y las lineas recien cargadas
-  // (carga masiva, Excel, familia/proveedor) no se ven hasta salir y volver a
-  // entrar. Forzamos el refresco del grid para que aparezcan al momento.
-  if Assigned(tvLineas) then
-    tvLineas.DataController.Refresh;
-  // Contrato de entrada (ColumnSKUcxGrid): reconstruye sus columnas
-  // sobre las lineas recien cargadas (modo elegido con F1).
-  ConstruirModoEntrada;
 end;
 
 procedure TfrmMtoInventarios.ConstruirModoEntrada;
@@ -889,10 +870,9 @@ var
   Cfg: TConfigColumnasSku;
   i: Integer;
 begin
-  if (dmmInventarios = nil) or
-     (not dmmInventarios.cdsLineas.Active) or
-     (csDestroying in ComponentState) then
-    Exit;
+  if (dmmInventarios <> nil) and dmmInventarios.cdsLineas.Active and
+     not (csDestroying in ComponentState) then
+  begin
   // Conversion en marcha: BeforePost no debe exigir SKU cerrado a los
   // Posts intermedios del pivote/des-pivote (lineas consolidadas o
   // con unidad=padre).
@@ -962,6 +942,7 @@ begin
   dmmInventarios.ModoPivoteActivo := False;
   if PuedeEditar then
     FModoEntrada.MostrarEditor;
+  end;
 end;
 
 procedure TfrmMtoInventarios.CrearColumnasHostInventario;
@@ -1296,14 +1277,12 @@ procedure TfrmMtoInventarios.tvLineasFocusedRecordChanged(
 var
   ArtPadre: string;
 begin
-  if (AFocusedRecord = nil) or (dmmInventarios = nil) or
-     (not dmmInventarios.cdsLineas.Active) or
-     dmmInventarios.cdsLineas.IsEmpty then
-    Exit;
-
-  ArtPadre :=
-    dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString;
-
+  if (AFocusedRecord <> nil) and (dmmInventarios <> nil) and
+     dmmInventarios.cdsLineas.Active and
+     not dmmInventarios.cdsLineas.IsEmpty then
+  begin
+    ArtPadre :=
+      dmmInventarios.cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString;
   // PREVENCION DEL ERROR FATAL DEL CXGRID:
   // DevExpress lanza "RecordIndex out of range" si modificamos la
   // visibilidad de las columnas (BeginUpdate/EndUpdate sobre el view) o
@@ -1316,16 +1295,16 @@ begin
     procedure
     begin
       // Salvaguarda por si el form se cierra antes de que el queue corra.
-      if (Self = nil) or (csDestroying in ComponentState) then Exit;
-      if (dmmInventarios = nil) or (not dmmInventarios.cdsLineas.Active) then
-        Exit;
-
-      if FGestorColumnas.MostrarAtributos and
-         (not dmmInventarios.LineasDesempaquetadas) then
-        AsegurarDesempaquetadoAtributos;
-
-      ActualizarColumnasDinamicas(ArtPadre);
+      if (Self <> nil) and not (csDestroying in ComponentState) and
+         (dmmInventarios <> nil) and dmmInventarios.cdsLineas.Active then
+      begin
+        if FGestorColumnas.MostrarAtributos and
+           not dmmInventarios.LineasDesempaquetadas then
+          AsegurarDesempaquetadoAtributos;
+        ActualizarColumnasDinamicas(ArtPadre);
+      end;
     end);
+  end;
 end;
 
 

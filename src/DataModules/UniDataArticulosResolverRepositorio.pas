@@ -493,8 +493,8 @@ var
   oDefinicion: TDefinicionSql;
 begin
   Result.Clear;
-  if ACodigoArt = '' then
-    Exit;
+  if ACodigoArt <> '' then
+  begin
   Result.CodigoTarifa := ACodigoTarifa;
   if AFecha = 0 then
     dFecha := Now
@@ -548,6 +548,7 @@ begin
       Result.PorcentajeDto      := 0;
       Result.DescuentoAplicable := False;
     end;
+  end;
   end;
 end;
 
@@ -725,11 +726,9 @@ var
 begin
   Result.Clear;
   if ACodigoArt = '' then
-  begin
     Result.Mensaje := SErrorCodigoArticuloResolverObligatorio;
-    Exit;
-  end;
-
+  if ACodigoArt <> '' then
+  begin
   iNumSkus := ContarSkusActivos(ACodigoArt, sUnico);
   sSku     := ACodigoSku;
 
@@ -766,10 +765,9 @@ begin
       end,
       FIncidenciasSql);
     if oConsulta.IsEmpty then
-    begin
       Result.Mensaje := Format(SErrorArticuloResolverNoExiste, [ACodigoArt]);
-      Exit;
-    end;
+    if not oConsulta.IsEmpty then
+    begin
     Result.CodigoArticulo := oConsulta.FieldByName(
       'CODIGO_ART_ART').AsString;
     Result.CodigoSku := oConsulta.FieldByName(
@@ -801,42 +799,42 @@ begin
     Result.TipoVariacion := oConsulta.FieldByName(
       'TIPO_VARIACION_ART').AsString;
     Result.TieneSku            := iNumSkus > 0;
+    end;
   finally
     FreeAndNil(oConsulta);
   end;
 
   Result.Encontrado := Result.CodigoArticulo <> '';
-  if not Result.Encontrado then Exit;
-
-  // Si no tenemos SKU concreto (artículo padre con varios SKUs), dejamos
-  // sin tocar precio/PMP/coste: el llamante pedirá talla/color y volverá.
-  if Result.RequiereSku then
+  if Result.Encontrado then
   begin
-    Result.Mensaje := Format(SAvisoArticuloResolverRequiereSku,
-                             [ACodigoArt]);
-    Exit;
+    // Si hay varios SKU, el llamante pedirá talla/color y volverá
+    if Result.RequiereSku then
+      Result.Mensaje := Format(SAvisoArticuloResolverRequiereSku,
+                               [ACodigoArt])
+    else
+    begin
+      // Tarifa solicitada
+      sTarifa := ACodigoTarifa;
+      if sTarifa = '' then
+        sTarifa := TarifaDefault;
+      if sTarifa <> '' then
+        Result.PrecioPedido := ResolverPrecio(
+          ACodigoArt, sSku, sTarifa, AFecha);
+      // Tarifa por defecto del sistema (si difiere)
+      sTarDef := TarifaDefault;
+      if (sTarDef <> '') and (sTarDef <> sTarifa) then
+        Result.PrecioTarifaDefault :=
+          ResolverPrecio(ACodigoArt, sSku, sTarDef, AFecha)
+      else
+        Result.PrecioTarifaDefault := Result.PrecioPedido;
+      // Coste y PMP
+      Result.UltimoCoste := ResolverUltimoCoste(
+        ACodigoArt, ACodigoProveedor, Result.CodigoSku);
+      if Result.CodigoSku <> '' then
+        Result.PMP := ResolverPMP(Result.CodigoSku, ACodigoAlmacen);
+    end;
   end;
-
-  // Tarifa solicitada
-  sTarifa := ACodigoTarifa;
-  if sTarifa = '' then sTarifa := TarifaDefault;
-  if sTarifa <> '' then
-    Result.PrecioPedido := ResolverPrecio(ACodigoArt, sSku, sTarifa, AFecha);
-
-  // Tarifa por defecto del sistema (si difiere)
-  sTarDef := TarifaDefault;
-  if (sTarDef <> '') and (sTarDef <> sTarifa) then
-    Result.PrecioTarifaDefault :=
-                          ResolverPrecio(ACodigoArt, sSku, sTarDef, AFecha)
-  else
-    Result.PrecioTarifaDefault := Result.PrecioPedido;
-
-  // Coste y PMP. Si tenemos SKU resuelto, el coste sale de la tabla por SKU
-  // (con fallback al proveedor); si no, del proveedor principal.
-  Result.UltimoCoste := ResolverUltimoCoste(ACodigoArt, ACodigoProveedor,
-                                            Result.CodigoSku);
-  if Result.CodigoSku <> '' then
-    Result.PMP := ResolverPMP(Result.CodigoSku, ACodigoAlmacen);
+  end;
 end;
 
 function TRepositorioArticulosResolver.ListarSkus(

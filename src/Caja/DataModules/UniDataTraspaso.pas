@@ -992,17 +992,18 @@ begin
   sNum := cdsCabecera.FieldByName('NUMERO_SOL').AsString;
   sSer := cdsCabecera.FieldByName('SERIE_SOL').AsString;
   Result := False;
-  if (Trim(sNum) = '') or (Trim(sSer) = '') then
-    Exit;
-  qryAux.SQL.Text :=
-    'UPDATE fza_traspasos_solicitudes' +
-    '   SET ESTADO_TRSOL = ''CERRADA'', USUARIO_MODIF = :USU' +
-    ' WHERE NUMERO_TRSOL = :NUM AND SERIE_TRSOL = :SER';
-  qryAux.ParamByName('USU').AsString := IdentidadSesion.Usuario;
-  qryAux.ParamByName('NUM').AsString := sNum;
-  qryAux.ParamByName('SER').AsString := sSer;
-  qryAux.ExecSQL;
-  Result := True;
+  if (Trim(sNum) <> '') and (Trim(sSer) <> '') then
+  begin
+    qryAux.SQL.Text :=
+      'UPDATE fza_traspasos_solicitudes' +
+      '   SET ESTADO_TRSOL = ''CERRADA'', USUARIO_MODIF = :USU' +
+      ' WHERE NUMERO_TRSOL = :NUM AND SERIE_TRSOL = :SER';
+    qryAux.ParamByName('USU').AsString := IdentidadSesion.Usuario;
+    qryAux.ParamByName('NUM').AsString := sNum;
+    qryAux.ParamByName('SER').AsString := sSer;
+    qryAux.ExecSQL;
+    Result := True;
+  end;
 end;
 
 function TdmTraspaso.GrabarDenegacion: Boolean;

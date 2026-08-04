@@ -359,8 +359,8 @@ var
   oDefinicion: TDefinicionSql;
 begin
   Result := nil;
-  if ACodigoArticulo = '' then Exit;
-
+  if ACodigoArticulo <> '' then
+  begin
   Lst := TList<TArticuloAtributo>.Create;
   q := TUniQuery.Create(nil);
   try
@@ -403,6 +403,7 @@ begin
   end;
   Result := Lst.ToArray;
   FreeAndNil(Lst);
+  end;
 end;
 
 function TRepositorioArticulosAtributos.ObtenerPropiedades(
@@ -415,8 +416,8 @@ var
   oDefinicion: TDefinicionSql;
 begin
   Result := nil;
-  if ACodigoArticulo = '' then Exit;
-
+  if ACodigoArticulo <> '' then
+  begin
   Lst := TList<TArticuloPropiedad>.Create;
   q := TUniQuery.Create(nil);
   try
@@ -463,6 +464,7 @@ begin
   end;
   Result := Lst.ToArray;
   FreeAndNil(Lst);
+  end;
 end;
 
 function TRepositorioArticulosAtributos.ObtenerAtributosDeSku(
@@ -474,8 +476,8 @@ var
   oDefinicion: TDefinicionSql;
 begin
   Result := nil;
-  if ACodigoSku = '' then Exit;
-
+  if ACodigoSku <> '' then
+  begin
   Lst := TList<TArticuloAtributoValor>.Create;
   q := TUniQuery.Create(nil);
   try
@@ -510,6 +512,7 @@ begin
   finally
     FreeAndNil(q);
     FreeAndNil(Lst);
+  end;
   end;
 end;
 

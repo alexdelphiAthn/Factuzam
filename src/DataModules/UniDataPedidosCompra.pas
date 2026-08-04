@@ -626,14 +626,16 @@ begin
   // ve el estado real.
   sSerie  := unqryTablaG.FieldByName('SERIE_PEDC').AsString;
   sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
-  if (sSerie = '') or (sNumero = '') then Exit;
-  // Reorganizacion en bloque en curso: se pospone al Finalizar.
-  if FReorganizandoLineas > 0 then
-    FReorganizacionPendiente := True
-  else
-    CrearPendientesPedidoCompraUniDAC(
-      ConexionPrincipal).GenerarPdteRecibirDesdePedido(
-        sSerie, sNumero, IdentidadSesion.Usuario);
+  if (sSerie <> '') and (sNumero <> '') then
+  begin
+    // Reorganizacion en bloque en curso: se pospone al Finalizar.
+    if FReorganizandoLineas > 0 then
+      FReorganizacionPendiente := True
+    else
+      CrearPendientesPedidoCompraUniDAC(
+        ConexionPrincipal).GenerarPdteRecibirDesdePedido(
+          sSerie, sNumero, IdentidadSesion.Usuario);
+  end;
 end;
 
 procedure TdmPedidosCompra.unqryTablaGBeforeDelete(DataSet: TDataSet);
@@ -648,30 +650,31 @@ begin
   // pueden quedar tambien huerfanas. Las borramos a mano.
   sSerie  := unqryTablaG.FieldByName('SERIE_PEDC').AsString;
   sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
-  if (sSerie = '') or (sNumero = '') then Exit;
-  if not SolicitarConfirmacion(
-    Format(SPreguntaBorrarPedidoCompra,
-      [sSerie, sNumero])) then
+  if (sSerie <> '') and (sNumero <> '') then
   begin
-    Abort;
-  end;
-  CrearPendientesPedidoCompraUniDAC(
-    ConexionPrincipal).BorrarPdteRecibirDesdePedido(
-      sSerie, sNumero);
-  // Borrar lineas asociadas para que no se queden huerfanas (no hay
-  // FK con CASCADE).
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := ConexionPrincipal;
-    q.SQL.Text :=
-      'DELETE FROM fza_pedidos_compra_lineas ' +
-      ' WHERE SERIE_PEDC_PEDCLIN  = :s ' +
-      '   AND NUMERO_PEDC_PEDCLIN = :n';
-    q.ParamByName('s').AsString := sSerie;
-    q.ParamByName('n').AsString := sNumero;
-    q.ExecSQL;
-  finally
-    FreeAndNil(q);
+    if not SolicitarConfirmacion(
+      Format(SPreguntaBorrarPedidoCompra,
+        [sSerie, sNumero])) then
+    begin
+      Abort;
+    end;
+    CrearPendientesPedidoCompraUniDAC(
+      ConexionPrincipal).BorrarPdteRecibirDesdePedido(
+        sSerie, sNumero);
+    // Borrar lineas asociadas para evitar registros huerfanos.
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := ConexionPrincipal;
+      q.SQL.Text :=
+        'DELETE FROM fza_pedidos_compra_lineas ' +
+        ' WHERE SERIE_PEDC_PEDCLIN  = :s ' +
+        '   AND NUMERO_PEDC_PEDCLIN = :n';
+      q.ParamByName('s').AsString := sSerie;
+      q.ParamByName('n').AsString := sNumero;
+      q.ExecSQL;
+    finally
+      FreeAndNil(q);
+    end;
   end;
 end;
 
@@ -726,8 +729,8 @@ var
 begin
   inherited;
   // Desempaquetado ATTR en curso: post descriptivo, sin logica fiscal.
-  if FDesempaquetandoAtributos then
-    Exit;
+  if not FDesempaquetandoAtributos then
+  begin
   // Linea vacia (sin articulo ni SKU): cancelar silenciosamente. El cxGrid
   // hace Post automatico al navegar con flechas (OptionsData.Appending); si
   // la linea es un placeholder vacio que el usuario creo sin querer, se
@@ -792,6 +795,7 @@ begin
   PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionPrincipal),
     unqryTablaG,
     unqryPedidosCompraLineas, 'PEDC', 'PEDCLIN', 'TOTAL_PEDCLIN');
+  end;
 end;
 
 procedure TdmPedidosCompra.AsignarNumeroLineaPedidoCompra(DataSet: TDataSet);
@@ -852,13 +856,15 @@ begin
   // regenerar TODO el pedido por cada linea multiplica el coste.
   sSerie  := unqryTablaG.FieldByName('SERIE_PEDC').AsString;
   sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
-  if (sSerie = '') or (sNumero = '') then Exit;
-  if FReorganizandoLineas > 0 then
-    FReorganizacionPendiente := True
-  else
-    CrearPendientesPedidoCompraUniDAC(
-      ConexionPrincipal).GenerarPdteRecibirDesdePedido(
-        sSerie, sNumero, IdentidadSesion.Usuario);
+  if (sSerie <> '') and (sNumero <> '') then
+  begin
+    if FReorganizandoLineas > 0 then
+      FReorganizacionPendiente := True
+    else
+      CrearPendientesPedidoCompraUniDAC(
+        ConexionPrincipal).GenerarPdteRecibirDesdePedido(
+          sSerie, sNumero, IdentidadSesion.Usuario);
+  end;
 end;
 
 procedure TdmPedidosCompra.unqryPedidosCompraLineasBeforeDelete(
@@ -873,10 +879,12 @@ begin
   sNumero :=
     unqryPedidosCompraLineas.FieldByName('NUMERO_PEDC_PEDCLIN').AsString;
   sLinea  := unqryPedidosCompraLineas.FieldByName('LINEA_PEDCLIN').AsString;
-  if (sSerie = '') or (sNumero = '') then Exit;
-  CrearPendientesPedidoCompraUniDAC(
-    ConexionPrincipal).BorrarPdteRecibirDesdePedido(
-      sSerie, sNumero, sLinea);
+  if (sSerie <> '') and (sNumero <> '') then
+  begin
+    CrearPendientesPedidoCompraUniDAC(
+      ConexionPrincipal).BorrarPdteRecibirDesdePedido(
+        sSerie, sNumero, sLinea);
+  end;
 end;
 
 function TdmPedidosCompra.ObtenerAlmacenesSql(
@@ -924,54 +932,54 @@ var
   oLv: TcxListView;
   oItem: TListItem;
 begin
-  if not (ALV is TcxListView) then
-    Exit;
-  oLv := TcxListView(ALV);
-  oLv.Items.BeginUpdate;
-  try
-    oLv.Items.Clear;
-    oQry := TUniQuery.Create(nil);
+  if ALV is TcxListView then
+  begin
+    oLv := TcxListView(ALV);
+    oLv.Items.BeginUpdate;
     try
-      oQry.Connection := ConexionPrincipal;
-      oQry.SQL.Text :=
-        'SELECT X.COD, COALESCE(A.NOMBRE_ALM_ALM, X.COD) AS NOM ' +
-        '  FROM ( ' +
-        '        SELECT DISTINCT ' + cAlmacenEf + ' AS COD ' +
-        '          FROM fza_pedidos_compra_lineas L ' +
-        '          JOIN fza_pedidos_compra P ' +
-        '            ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
-        '           AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
-        // LINEA de celda sin relleno ('10') vs LINEA de linea rellena
-        // ('0010'): el cruce varchar-varchar fallaba como texto, el
-        // valor se compara en numerico (cantidades desorbitadas,
-        // 10/07/26).
-        '          LEFT JOIN fza_pedidos_compra_celdas C ' +
-        '            ON C.SERIE_PEDC_PEDCCEL = L.SERIE_PEDC_PEDCLIN ' +
-        '           AND C.NUMERO_PEDC_PEDCCEL = L.NUMERO_PEDC_PEDCLIN ' +
-        '           AND CAST(C.LINEA_PEDC_PEDCCEL AS UNSIGNED) = ' +
-        '               CAST(L.LINEA_PEDCLIN AS UNSIGNED) ' +
-        '         WHERE L.SERIE_PEDC_PEDCLIN = :s ' +
-        '           AND L.NUMERO_PEDC_PEDCLIN = :n ' +
-        '       ) X ' +
-        '  LEFT JOIN fza_almacenes A ON A.CODIGO_ALM_ALM = X.COD ' +
-        ' WHERE COALESCE(X.COD, '''') <> '''' ' +
-        ' ORDER BY X.COD';
-      oQry.ParamByName('s').AsString := ASerie;
-      oQry.ParamByName('n').AsString := ANumero;
-      oQry.Open;
-      while not oQry.Eof do
-      begin
-        oItem := oLv.Items.Add;
-        oItem.Caption := oQry.FieldByName('COD').AsString;
-        oItem.SubItems.Add(oQry.FieldByName('NOM').AsString);
-        oItem.Checked := True;
-        oQry.Next;
+      oLv.Items.Clear;
+      oQry := TUniQuery.Create(nil);
+      try
+        oQry.Connection := ConexionPrincipal;
+        oQry.SQL.Text :=
+          'SELECT X.COD, COALESCE(A.NOMBRE_ALM_ALM, X.COD) AS NOM ' +
+          '  FROM ( ' +
+          '        SELECT DISTINCT ' + cAlmacenEf + ' AS COD ' +
+          '          FROM fza_pedidos_compra_lineas L ' +
+          '          JOIN fza_pedidos_compra P ' +
+          '            ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
+          '           AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
+          // Las lineas de celda se comparan como numeros.
+          '          LEFT JOIN fza_pedidos_compra_celdas C ' +
+          '            ON C.SERIE_PEDC_PEDCCEL = ' +
+          'L.SERIE_PEDC_PEDCLIN ' +
+          '           AND C.NUMERO_PEDC_PEDCCEL = ' +
+          'L.NUMERO_PEDC_PEDCLIN ' +
+          '           AND CAST(C.LINEA_PEDC_PEDCCEL AS UNSIGNED) = ' +
+          '               CAST(L.LINEA_PEDCLIN AS UNSIGNED) ' +
+          '         WHERE L.SERIE_PEDC_PEDCLIN = :s ' +
+          '           AND L.NUMERO_PEDC_PEDCLIN = :n ' +
+          '       ) X ' +
+          '  LEFT JOIN fza_almacenes A ON A.CODIGO_ALM_ALM = X.COD ' +
+          ' WHERE COALESCE(X.COD, '''') <> '''' ' +
+          ' ORDER BY X.COD';
+        oQry.ParamByName('s').AsString := ASerie;
+        oQry.ParamByName('n').AsString := ANumero;
+        oQry.Open;
+        while not oQry.Eof do
+        begin
+          oItem := oLv.Items.Add;
+          oItem.Caption := oQry.FieldByName('COD').AsString;
+          oItem.SubItems.Add(oQry.FieldByName('NOM').AsString);
+          oItem.Checked := True;
+          oQry.Next;
+        end;
+      finally
+        FreeAndNil(oQry);
       end;
     finally
-      FreeAndNil(oQry);
+      oLv.Items.EndUpdate;
     end;
-  finally
-    oLv.Items.EndUpdate;
   end;
 end;
 
@@ -1317,44 +1325,36 @@ var
 begin
   // Los posts del desempaquetado ATTR no alteran importes: saltar el
   // recalculo por linea (cascada de consultas de IVA al navegar).
-  if FDesempaquetandoAtributos then
-    Exit;
-  // Reorganizacion en bloque en curso: un unico recalculo al Finalizar
-  // (cada pasada consulta el IVA articulo a articulo y edita la
-  // cabecera, forzando posts encadenados del master-detail).
-  if FReorganizandoLineas > 0 then
+  if not FDesempaquetandoAtributos then
   begin
-    FReorganizacionPendiente := True;
-    Exit;
-  end;
-  if not FCalculandoTotales then
-  begin
-    FCalculandoTotales := True;
-    try
-      CalcularTotalesDocumentoCompra(
-        CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
-        unqryPedidosCompraLineas, 'PEDC', 'TOTAL_PEDCLIN',
-        'TIPO_IVA_ARTICULO_PEDCLIN', 'PORCENTAJE_IVA_PEDCLIN');
-      // Nº de prendas: TOTAL_PRENDAS_PEDC es columna calculada de la
-      // vista (SUM de CANTIDAD_PEDCLIN) y solo se lee al abrir la
-      // cabecera. Se replica aqui en cliente para refrescarla al
-      // momento. No esta en el SQLUpdate explicito de la cabecera,
-      // asi que nunca viaja a BBDD.
-      oCampoPrendas := unqryTablaG.FindField('TOTAL_PRENDAS_PEDC');
-      if oCampoPrendas <> nil then
-      begin
-        rPrendas := TotalPrendasLineasCompra(unqryPedidosCompraLineas,
-          'TIPO_IVA_ARTICULO_PEDCLIN');
-        if oCampoPrendas.IsNull or
-           (Abs(oCampoPrendas.AsFloat - rPrendas) > 0.000001) then
+    // La reorganizacion pospone un unico recalculo hasta finalizar.
+    if FReorganizandoLineas > 0 then
+      FReorganizacionPendiente := True
+    else if not FCalculandoTotales then
+    begin
+      FCalculandoTotales := True;
+      try
+        CalcularTotalesDocumentoCompra(
+          CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
+          unqryPedidosCompraLineas, 'PEDC', 'TOTAL_PEDCLIN',
+          'TIPO_IVA_ARTICULO_PEDCLIN', 'PORCENTAJE_IVA_PEDCLIN');
+        // La vista calcula prendas al abrir; se actualizan en cliente.
+        oCampoPrendas := unqryTablaG.FindField('TOTAL_PRENDAS_PEDC');
+        if oCampoPrendas <> nil then
         begin
-          if not (unqryTablaG.State in [dsEdit, dsInsert]) then
-            unqryTablaG.Edit;
-          oCampoPrendas.AsFloat := rPrendas;
+          rPrendas := TotalPrendasLineasCompra(unqryPedidosCompraLineas,
+            'TIPO_IVA_ARTICULO_PEDCLIN');
+          if oCampoPrendas.IsNull or
+             (Abs(oCampoPrendas.AsFloat - rPrendas) > 0.000001) then
+          begin
+            if not (unqryTablaG.State in [dsEdit, dsInsert]) then
+              unqryTablaG.Edit;
+            oCampoPrendas.AsFloat := rPrendas;
+          end;
         end;
+      finally
+        FCalculandoTotales := False;
       end;
-    finally
-      FCalculandoTotales := False;
     end;
   end;
 end;

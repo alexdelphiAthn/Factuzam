@@ -171,32 +171,34 @@ var
   dsName: string;
 begin
   inherited;
-  if not Assigned(DMArt) then Exit;
-  if not DMArt.cdsEtiquetasArt.Active then
-    DMArt.CrearDataSetEtiquetasArt('DUMMY_DISENO', '', '', Date);
-  DMArt.fxdsEtiquetasArt.DataSet := nil;
-  DMArt.fxdsEtiquetasArt.DataSet := DMArt.cdsEtiquetasArt;
-  DMArt.fxdsEtiquetasArt.FieldAliases.Clear;
-  frxrprt1.DataSets.Clear;
-  frxrprt1.DataSets.Add(DMArt.fxdsEtiquetasArt);
-  ctx := TRttiContext.Create;
-  try
-    for i := 0 to frxrprt1.AllObjects.Count - 1 do
-    begin
-      obj := TfrxComponent(frxrprt1.AllObjects[i]);
-      rType := ctx.GetType(obj.ClassType);
-      propDs   := rType.GetProperty('DataSet');
-      propName := rType.GetProperty('DataSetName');
-      if (propDs <> nil) and (propName <> nil) and propName.IsReadable and
-          propDs.IsWritable then
+  if Assigned(DMArt) then
+  begin
+    if not DMArt.cdsEtiquetasArt.Active then
+      DMArt.CrearDataSetEtiquetasArt('DUMMY_DISENO', '', '', Date);
+    DMArt.fxdsEtiquetasArt.DataSet := nil;
+    DMArt.fxdsEtiquetasArt.DataSet := DMArt.cdsEtiquetasArt;
+    DMArt.fxdsEtiquetasArt.FieldAliases.Clear;
+    frxrprt1.DataSets.Clear;
+    frxrprt1.DataSets.Add(DMArt.fxdsEtiquetasArt);
+    ctx := TRttiContext.Create;
+    try
+      for i := 0 to frxrprt1.AllObjects.Count - 1 do
       begin
-        dsName := propName.GetValue(obj).AsString;
-        if SameText(dsName, 'EtiquetasArt') then
-          propDs.SetValue(obj, DMArt.fxdsEtiquetasArt);
+        obj := TfrxComponent(frxrprt1.AllObjects[i]);
+        rType := ctx.GetType(obj.ClassType);
+        propDs   := rType.GetProperty('DataSet');
+        propName := rType.GetProperty('DataSetName');
+        if (propDs <> nil) and (propName <> nil) and propName.IsReadable and
+            propDs.IsWritable then
+        begin
+          dsName := propName.GetValue(obj).AsString;
+          if SameText(dsName, 'EtiquetasArt') then
+            propDs.SetValue(obj, DMArt.fxdsEtiquetasArt);
+        end;
       end;
+    finally
+      ctx.Free;
     end;
-  finally
-    ctx.Free;
   end;
 end;
 

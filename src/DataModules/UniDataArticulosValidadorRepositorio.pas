@@ -436,10 +436,12 @@ var
   sCodigoArticulo: string;
   sCodigoSku: string;
   sUnico: string;
+  DatosEncontrados: Boolean;
 begin
-  if R.CodigoArticulo = '' then Exit;
+  if R.CodigoArticulo <> '' then
+  begin
   sCodigoArticulo := R.CodigoArticulo;
-
+  DatosEncontrados := False;
   q := TUniQuery.Create(nil);
   try
     q.Connection := FConexion;
@@ -462,15 +464,19 @@ begin
     begin
       R.Encontrado := False;
       R.Mensaje := Format(SErrorArticuloNoExiste, [R.CodigoArticulo]);
-      Exit;
+    end
+    else
+    begin
+      R.EsActivoArticulo := q.FieldByName('ESACTIVO_ART').AsString = 'S';
+      R.EsVariacion      := q.FieldByName('ESVARIACION_ART').AsString = 'S';
+      R.NumAtributosReq  := q.FieldByName('NUM_ATR_REQ').AsInteger;
+      DatosEncontrados := True;
     end;
-    R.EsActivoArticulo := q.FieldByName('ESACTIVO_ART').AsString = 'S';
-    R.EsVariacion      := q.FieldByName('ESVARIACION_ART').AsString = 'S';
-    R.NumAtributosReq  := q.FieldByName('NUM_ATR_REQ').AsInteger;
   finally
     FreeAndNil(q);
   end;
-
+  if DatosEncontrados then
+  begin
   // Contamos SKUs activos del artículo. Si hay sólo uno (caso típico de
   // servicios y artículos sin variación: SKU autocreado con mismo código),
   // lo resolvemos automáticamente y NO marcamos RequiereSku.
@@ -547,6 +553,8 @@ begin
   // Política: si el artículo tiene SKUs y todavía no hay uno → exige SKU.
   // (Si arriba autorresolvimos al único SKU, R.CodigoSku ya no estará vacío.)
   R.RequiereSku := R.TieneSku and (R.CodigoSku = '');
+  end;
+  end;
 end;
 
 procedure TRepositorioArticulosValidador.RellenarProveedorMatch(
@@ -604,15 +612,16 @@ var
   sEnt: string;
   sSoloCodigoBarras: string;
   sTipo: string;
+  CoincidenciaEncontrada: Boolean;
 begin
   Result.Clear;
   Result.EntradaOriginal := AEntrada;
   sEnt := NormalizarEntradaLector(AEntrada);
   if sEnt = '' then
-  begin
     Result.Mensaje := SErrorEntradaArticuloVacia;
-    Exit;
-  end;
+  if sEnt <> '' then
+  begin
+  CoincidenciaEncontrada := False;
   if ASoloCodigoBarras then
     sSoloCodigoBarras := 'S'
   else
@@ -642,17 +651,21 @@ begin
         Result.Mensaje := Format(SErrorCodigoBarrasNoEncontrado, [sEnt])
       else
         Result.Mensaje := Format(SErrorArticuloEntradaNoEncontrado, [sEnt]);
-      Exit;
+    end
+    else
+    begin
+      Result.CodigoArticulo      := q.FieldByName('CODIGO_PADRE').AsString;
+      Result.CodigoSku           := q.FieldByName('CODIGO_SKU').AsString;
+      Result.DescripcionArticulo := q.FieldByName('DESCRIPCION_ART').AsString;
+      Result.TipoArticulo        := q.FieldByName('TIPO_ART').AsString;
+      sTipo := q.FieldByName('TIPO_COINCIDENCIA').AsString;
+      CoincidenciaEncontrada := True;
     end;
-    Result.CodigoArticulo      := q.FieldByName('CODIGO_PADRE').AsString;
-    Result.CodigoSku           := q.FieldByName('CODIGO_SKU').AsString;
-    Result.DescripcionArticulo := q.FieldByName('DESCRIPCION_ART').AsString;
-    Result.TipoArticulo        := q.FieldByName('TIPO_ART').AsString;
-    sTipo                      := q.FieldByName('TIPO_COINCIDENCIA').AsString;
   finally
     FreeAndNil(q);
   end;
-
+  if CoincidenciaEncontrada then
+  begin
   if      sTipo = 'CODIGO'      then Result.Tipo := atcCodigoArt
   else if sTipo = 'SKU'         then Result.Tipo := atcCodigoSku
   else if sTipo = 'EAN'         then Result.Tipo := atcCodigoBarras
@@ -685,6 +698,8 @@ begin
     else
       Result.Mensaje := Format(SErrorArticuloSinSkusActivos,
                                [Result.CodigoArticulo]);
+  end;
+  end;
   end;
 end;
 

@@ -532,15 +532,11 @@ begin
   begin
     _sMensajeError := SErrorPorcentajeIvaFueraRango;
     raise Exception.Create(_sMensajeError);
-    Result := False;
-    Exit;
   end;
   if (_dPreSiva < 0) or (_dPreCiva < 0) then
   begin
     _sMensajeError := SErrorPrecioFacturaNegativo;
     raise Exception.Create(_sMensajeError);
-    Result := False;
-    Exit;
   end;
 end;
 
@@ -998,8 +994,8 @@ procedure TFacturaTotales.LeerPorcentajesDesdeFactura;
     Result := _unqryFac.FieldByName(Nombre);
   end;
 begin
-  if not Assigned(_unqryFac) or not _unqryFac.Active then
-    Exit;
+  if Assigned(_unqryFac) and _unqryFac.Active then
+  begin
     _porcentajes.IVANormal := FieldByName('PORCENTAJE_IVAN_FAC').AsFloat;
     _porcentajes.IVAReducido := FieldByName('PORCENTAJE_IVAR_FAC').AsFloat;
     _porcentajes.IVASuperReducido := FieldByName('PORCENTAJE_IVAS_FAC').AsFloat;
@@ -1009,20 +1005,23 @@ begin
     _porcentajes.REcReducido := FieldByName('PORCENTAJE_RER_FAC').AsFloat;
     _porcentajes.REcSuperReducido := FieldByName('PORCENTAJE_RES_FAC').AsFloat;
     _porcentajes.REcExento := FieldByName('PORCENTAJE_REE_FAC').AsFloat;
+  end;
 end;
 
 procedure TFacturaTotales.CargarConfiguracionIVA(sGrupoZona: string);
 var
   Qry: TDataSet;
 begin
-  if sGrupoZona = '' then Exit;
-  Qry := RepositorioLecturas.BuscarConfiguracionIva(
-    sGrupoZona,
-    _fechaFactura);
-  try
-    if not Qry.IsEmpty then
-    begin
-      if _unqryFac.State = dsBrowse then _unqryFac.Edit;
+  if sGrupoZona <> '' then
+  begin
+    Qry := RepositorioLecturas.BuscarConfiguracionIva(
+      sGrupoZona,
+      _fechaFactura);
+    try
+      if not Qry.IsEmpty then
+      begin
+        if _unqryFac.State = dsBrowse then
+          _unqryFac.Edit;
       // Asignación al DataSet de la Factura (Persistencia)
       _unqryFac.FieldByName('PORCENTAJE_IVAN_FAC').AsFloat :=
         Qry.FieldByName('PORCENTAJE_NORMAL_IVA').AsFloat;
@@ -1057,10 +1056,11 @@ begin
       _grupoZonaIVA                       := sGrupoZona;
       _codigoIVA := Qry.FieldByName('CODIGO_IVA').AsString;
       // Sincroniza _porcentajes con los nuevos valores del DataSet
-      LeerPorcentajesDesdeFactura;
+        LeerPorcentajesDesdeFactura;
+      end;
+    finally
+      FreeAndNil(Qry);
     end;
-  finally
-    FreeAndNil(Qry);
   end;
 end;
 
@@ -1455,69 +1455,74 @@ var
   lineaActual: TLinFac;
   WasInsert, WasEdit, WasEmptyInsert: Boolean;
 begin
-  if not Assigned(_unqryLineas) or not _unqryLineas.Active then
-    Exit;
-
-  _unqryLineas.DisableControls;
-  try
-    WasInsert := (_unqryLineas.State = dsInsert);
-    WasEdit := (_unqryLineas.State = dsEdit);
-    WasEmptyInsert := False;
+  if Assigned(_unqryLineas) and _unqryLineas.Active then
+  begin
+    _unqryLineas.DisableControls;
+    try
+      WasInsert := (_unqryLineas.State = dsInsert);
+      WasEdit := (_unqryLineas.State = dsEdit);
+      WasEmptyInsert := False;
     // ======================================================================
     // 1. PREPARAMOS EL DATASET PARA CALCULAR (SIN ERRORES)
     // ======================================================================
-    if WasInsert or WasEdit then
-    begin
-      if Trim(_unqryLineas.FieldByName(fcodart).AsString) = '' then
+      if WasInsert or WasEdit then
       begin
-        WasEmptyInsert := True;
-        _unqryLineas.Cancel;
+        if Trim(_unqryLineas.FieldByName(fcodart).AsString) = '' then
+        begin
+          WasEmptyInsert := True;
+          _unqryLineas.Cancel;
+        end
+        else
+          _unqryLineas.Post;
       end
       else
-        _unqryLineas.Post;
-    end;
-    if _unqryLineas.IsEmpty then
-    begin
-      if WasEmptyInsert then _unqryLineas.Append;
-      Exit;
-    end;
+        WasEmptyInsert := False;
+      if _unqryLineas.IsEmpty then
+      begin
+        if WasEmptyInsert then
+          _unqryLineas.Append;
+      end
+      else
+      begin
     // ======================================================================
     // 2. HACEMOS LA SUMA FISCAL
     // ======================================================================
-    bookmark := _unqryLineas.GetBookmark;
-    _unqryLineas.First;
-    SetLength(_lineasMotorFiscal, _unqryLineas.RecordCount);
-    iIndiceMotor := 0;
-    lineaActual := TLinFac.Create(_unqryLineas, _unqryFac, False);
-    try
-      while not _unqryLineas.Eof do
-      begin
-        lineaActual.CopyToObjectLin;
-        if _configuracion.IVAExento then
-          lineaActual.TipoIva := 'E';
-        lineaActual.PorIva :=
-          ObtenerPorcentajePorTipo(lineaActual.TipoIva);
-        lineaActual.CalcularLinea;
-        AcumularTotalesPorTipoIVA(lineaActual, iIndiceMotor);
-        lineaActual.CopyToDataSetLin;
-        Inc(iIndiceMotor);
-        _unqryLineas.Next;
+        bookmark := _unqryLineas.GetBookmark;
+        _unqryLineas.First;
+        SetLength(_lineasMotorFiscal, _unqryLineas.RecordCount);
+        iIndiceMotor := 0;
+        lineaActual := TLinFac.Create(_unqryLineas, _unqryFac, False);
+        try
+          while not _unqryLineas.Eof do
+          begin
+            lineaActual.CopyToObjectLin;
+            if _configuracion.IVAExento then
+              lineaActual.TipoIva := 'E';
+            lineaActual.PorIva :=
+              ObtenerPorcentajePorTipo(lineaActual.TipoIva);
+            lineaActual.CalcularLinea;
+            AcumularTotalesPorTipoIVA(lineaActual, iIndiceMotor);
+            lineaActual.CopyToDataSetLin;
+            Inc(iIndiceMotor);
+            _unqryLineas.Next;
+          end;
+        finally
+          FreeAndNil(lineaActual);
+        end;
+        SetLength(_lineasMotorFiscal, iIndiceMotor);
+        if _unqryLineas.BookmarkValid(bookmark) then
+        begin
+          _unqryLineas.GotoBookmark(bookmark);
+          _unqryLineas.FreeBookmark(bookmark);
+        end;
+        if WasEmptyInsert then
+          _unqryLineas.Append
+        else if WasEdit then
+          _unqryLineas.Edit;
       end;
     finally
-      FreeAndNil(lineaActual);
+      _unqryLineas.EnableControls;
     end;
-    SetLength(_lineasMotorFiscal, iIndiceMotor);
-    if _unqryLineas.BookmarkValid(bookmark) then
-    begin
-      _unqryLineas.GotoBookmark(bookmark);
-      _unqryLineas.FreeBookmark(bookmark);
-    end;
-    if WasEmptyInsert then
-      _unqryLineas.Append
-    else if WasEdit then
-      _unqryLineas.Edit;
-  finally
-    _unqryLineas.EnableControls;
   end;
 end;
 
@@ -1564,17 +1569,17 @@ var
   sCodCli: string;
 begin
   sCodCli := _unqryFac.FieldByName('CODIGO_CLI_FAC').AsString;
-  if (sCodCli = '') or
-     (sCodCli = '0') or
-     (sCodCli = 'VENTA CONTADO') or //no hay cliente
-     (_unqryFac.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString <> '') then
-    Exit;
-  Qry := RepositorioLecturas.BuscarClienteConTarifa(sCodCli);
-  try
-    if not Qry.IsEmpty then
-    begin
-      if (_unqryFac.State = dsBrowse) then
-        _unqryFac.Edit;
+  if (sCodCli <> '') and
+     (sCodCli <> '0') and
+     (sCodCli <> 'VENTA CONTADO') and
+     (_unqryFac.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString = '') then
+  begin
+    Qry := RepositorioLecturas.BuscarClienteConTarifa(sCodCli);
+    try
+      if not Qry.IsEmpty then
+      begin
+        if _unqryFac.State = dsBrowse then
+          _unqryFac.Edit;
       _unqryFac.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString :=
                                 Qry.FieldByName('RAZON_SOCIAL_CLI').AsString;
       _unqryFac.FieldByName('NIF_CLIENTE_FAC').AsString         :=
@@ -1613,12 +1618,14 @@ begin
                           Qry.FieldByName('CODIGO_FP_CLI').AsString;
       _unqryFac.FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString :=
                             Qry.FieldByName('TARIFA_ARTICULO_CLI').AsString;
-      if Qry.FindField('ESIMP_INCL_TAR').AsString <> '' then
-        _unqryFac.FieldByName('ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString :=
-                                    Qry.FindField('ESIMP_INCL_TAR').AsString;
+        if Qry.FindField('ESIMP_INCL_TAR').AsString <> '' then
+          _unqryFac.FieldByName(
+            'ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString :=
+              Qry.FindField('ESIMP_INCL_TAR').AsString;
+      end;
+    finally
+      FreeAndNil(Qry);
     end;
-  finally
-    FreeAndNil(Qry);
   end;
 end;
 
@@ -1626,16 +1633,16 @@ procedure TFacturaTotales.VerificarYCompletarDatosEmpresa;
 var
   Qry: TDataSet;
 begin
-  if (_unqryFac.FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsString <> '') then
-    Exit;
-  if _codigoEmpresa = '' then
-    Exit;
-  Qry := RepositorioLecturas.BuscarEmpresa(_codigoEmpresa);
-  try
-    if not Qry.IsEmpty then
-    begin
-      if (_unqryFac.State = dsBrowse) then
-        _unqryFac.Edit;
+  if (_unqryFac.FieldByName(
+       'RAZON_SOCIAL_EMPRESA_FAC').AsString = '') and
+     (_codigoEmpresa <> '') then
+  begin
+    Qry := RepositorioLecturas.BuscarEmpresa(_codigoEmpresa);
+    try
+      if not Qry.IsEmpty then
+      begin
+        if _unqryFac.State = dsBrowse then
+          _unqryFac.Edit;
       _unqryFac.FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsString :=
                                 Qry.FieldByName('RAZON_SOCIAL_EMP').AsString;
       _unqryFac.FieldByName('NIF_EMPRESA_FAC').AsString         :=
@@ -1670,10 +1677,11 @@ begin
                         Qry.FieldByName('TEXTO_LEGAL_FACTURA_EMP').AsString;
       var sGrupo := _unqryFac.FieldByName(
                                      'GRUPO_ZONA_IVA_EMPRESA_FAC').AsString;
-      CargarConfiguracionIVA(sGrupo);
+        CargarConfiguracionIVA(sGrupo);
+      end;
+    finally
+      FreeAndNil(Qry);
     end;
-  finally
-    FreeAndNil(Qry);
   end;
 end;
 end.

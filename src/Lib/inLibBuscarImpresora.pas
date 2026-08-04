@@ -64,6 +64,7 @@ var
   CacheValida: Boolean;
 begin
   Result := '';
+  CacheValida := False;
   Partes := TStringList.Create;
   Partes.Delimiter := ',';
   Partes.StrictDelimiter := True;
@@ -93,10 +94,7 @@ begin
                              SameText(PatronBusqueda, 'DEBUG')) or
                             (Printer.Printers.IndexOf(ImpresoraCache) >= 0));
             if CacheValida then
-            begin
               Result := ImpresoraCache;
-              Exit;
-            end;
           end;
         end;
       finally
@@ -104,10 +102,13 @@ begin
       end;
     end;
     // 2. Si la caché no existe o no es válida, buscar la impresora
-    if SameText(PatronBusqueda, 'DEBUG') then
-      Result := 'DEBUG'
-    else
-      Result := BuscarImpresoraPorPatrones(PatronBusqueda);
+    if not CacheValida then
+    begin
+      if SameText(PatronBusqueda, 'DEBUG') then
+        Result := 'DEBUG'
+      else
+        Result := BuscarImpresoraPorPatrones(PatronBusqueda);
+    end;
   finally
     FreeAndNil(Partes);
   end;
@@ -150,29 +151,31 @@ begin
   try
     // Separar los patrones de búsqueda
     ListaSubcadenas := SepararSubcadenas(Patrones);
-    if ListaSubcadenas.Count = 0 then
-      Exit;
-    // Obtener lista de impresoras instaladas
-    ListaImpresoras := ObtenerListaImpresoras;
-    if ListaImpresoras.Count = 0 then
-      Exit;
-    for i := 0 to ListaImpresoras.Count - 1 do
+    if ListaSubcadenas.Count > 0 then
     begin
-      NombreImpresora := ListaImpresoras[i];
-      CoincideConTodos := True;
-      for j := 0 to ListaSubcadenas.Count - 1 do
+      // Obtener lista de impresoras instaladas
+      ListaImpresoras := ObtenerListaImpresoras;
+      if ListaImpresoras.Count > 0 then
       begin
-        Subcadena := ListaSubcadenas[j];
-        if not ContainsText(NombreImpresora, Subcadena) then
+        for i := 0 to ListaImpresoras.Count - 1 do
         begin
-          CoincideConTodos := False;
-          Break;
+          if Result = '' then
+          begin
+            NombreImpresora := ListaImpresoras[i];
+            CoincideConTodos := True;
+            for j := 0 to ListaSubcadenas.Count - 1 do
+            begin
+              Subcadena := ListaSubcadenas[j];
+              if not ContainsText(NombreImpresora, Subcadena) then
+              begin
+                CoincideConTodos := False;
+                Break;
+              end;
+            end;
+            if CoincideConTodos then
+              Result := NombreImpresora;
+          end;
         end;
-      end;
-      if CoincideConTodos then
-      begin
-        Result := NombreImpresora;
-        Exit;
       end;
     end;
   finally
@@ -311,8 +314,10 @@ var
   Contenido, SoloNumeros: string;
   NombreUpper, ContenidoUpper: string;
   PosSession: Integer;
+  Encontrada: Boolean;
 begin
   Result := '0';
+  Encontrada := False;
   NombreUpper := UpperCase(NombreImpresora);
   PosSession := Pos(' EN SESI', NombreUpper); // Cubre "EN SESIÓN"
   if PosSession = 0 then
@@ -329,48 +334,50 @@ begin
     if SoloNumeros <> '' then
     begin
       Result := SoloNumeros;
-      Exit;
+      Encontrada := True;
     end;
   end;
-  PosCierra := 0;
-  PosAbre := 0;
-  for i := Length(NombreImpresora) downto 1 do
+  if not Encontrada then
   begin
-    if NombreImpresora[i] = ')' then
+    PosCierra := 0;
+    PosAbre := 0;
+    for i := Length(NombreImpresora) downto 1 do
     begin
-      PosCierra := i;
-      Break;
-    end;
-  end;
-  if PosCierra > 0 then
-  begin
-    for i := PosCierra - 1 downto 1 do
-    begin
-      if NombreImpresora[i] = '(' then
+      if NombreImpresora[i] = ')' then
       begin
-        PosAbre := i;
+        PosCierra := i;
         Break;
       end;
     end;
-  end;
-  if (PosAbre > 0) and (PosCierra > PosAbre) then
-  begin
-    Contenido := Copy(NombreImpresora, PosAbre + 1, PosCierra - PosAbre - 1);
-    ContenidoUpper := UpperCase(Contenido);
-    if (Pos('COPIA', ContenidoUpper) > 0) or
-       (Pos('COPY', ContenidoUpper) > 0) then
+    if PosCierra > 0 then
     begin
-      Result := '0';
-      Exit;
+      for i := PosCierra - 1 downto 1 do
+      begin
+        if NombreImpresora[i] = '(' then
+        begin
+          PosAbre := i;
+          Break;
+        end;
+      end;
     end;
-    SoloNumeros := '';
-    for i := 1 to Length(Contenido) do
+    if (PosAbre > 0) and (PosCierra > PosAbre) then
     begin
-      if CharInSet(Contenido[i], ['0'..'9']) then
-        SoloNumeros := SoloNumeros + Contenido[i];
+      Contenido := Copy(NombreImpresora, PosAbre + 1,
+        PosCierra - PosAbre - 1);
+      ContenidoUpper := UpperCase(Contenido);
+      if not ((Pos('COPIA', ContenidoUpper) > 0) or
+              (Pos('COPY', ContenidoUpper) > 0)) then
+      begin
+        SoloNumeros := '';
+        for i := 1 to Length(Contenido) do
+        begin
+          if CharInSet(Contenido[i], ['0'..'9']) then
+            SoloNumeros := SoloNumeros + Contenido[i];
+        end;
+        if SoloNumeros <> '' then
+          Result := SoloNumeros;
+      end;
     end;
-    if SoloNumeros <> '' then
-      Result := SoloNumeros;
   end;
 end;
 

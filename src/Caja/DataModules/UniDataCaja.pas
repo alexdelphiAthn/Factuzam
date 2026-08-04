@@ -648,12 +648,13 @@ begin
     QryDep.ParamByName('ALMACEN').AsString := Ubicacion.Almacen;
     QryDep.ParamByName('CAJA').AsString := Ubicacion.Caja;
     QryDep.Open;
-    if QryDep.IsEmpty then Exit;
-    cdsLineas.DisableControls;
-    try
-      while not QryDep.Eof do
-      begin
-        IdDeposito        := QryDep.FieldByName('ID_DEPOSITO_DEP').AsString;
+    if not QryDep.IsEmpty then
+    begin
+      cdsLineas.DisableControls;
+      try
+        while not QryDep.Eof do
+        begin
+          IdDeposito := QryDep.FieldByName('ID_DEPOSITO_DEP').AsString;
         Articulo          := QryDep.FieldByName('CODIGO_ART_DEP').AsString;
         Sku               := QryDep.FieldByName('CODIGO_UNIDAD_DEP').AsString;
         CantidadPendiente :=
@@ -739,14 +740,15 @@ begin
             'Uds';
           cdsLineas.Post;
         end;
-        QryDep.Next;
+          QryDep.Next;
+        end;
+      finally
+        cdsLineas.EnableControls;
       end;
-    finally
-      cdsLineas.EnableControls;
+      // Recalculo una sola vez al final, fuera del bucle.
+      if Assigned(FOnRecalcularLineas) then
+        FOnRecalcularLineas;
     end;
-    // Recalculo UNA SOLA VEZ al final, fuera del bucle.
-    if Assigned(FOnRecalcularLineas) then
-      FOnRecalcularLineas;
   finally
     FreeAndNil(QryDep);
   end;
@@ -2588,37 +2590,40 @@ var
 begin
   LabelDestino := '';
   Result := False;
-  if Trim(Codigo) = '' then
-    Exit;
-  if TipoEntidad = 'EMPLEADOS' then
+  if Trim(Codigo) <> '' then
   begin
-    SQLStr := 'SELECT DIMINUTIVO_TICKET_EMPL ' +
-              '  FROM fza_empleados ' +
-              ' WHERE CODIGO_EMPL = :COD';
-    FieldToGet := 'DIMINUTIVO_TICKET_EMPL';
-  end
-  else if TipoEntidad = 'CLIENTES' then
-  begin
-    SQLStr := 'SELECT RAZON_SOCIAL_CLI ' +
-              '  FROM fza_clientes ' +
-              ' WHERE CODIGO_CLI_CLI = :COD';
-    FieldToGet := 'RAZON_SOCIAL_CLI';
-  end
-  else
-    Exit;
-  unqry := TUniQuery.Create(nil);
-  try
-    unqry.Connection := FConexion;
-    unqry.SQL.Text := SQLStr;
-    unqry.ParamByName('COD').AsString := Codigo;
-    unqry.Open;
-    if not unqry.IsEmpty then
+    SQLStr := '';
+    if TipoEntidad = 'EMPLEADOS' then
     begin
-      LabelDestino := unqry.FieldByName(FieldToGet).AsString;
-      Result := True;
+      SQLStr := 'SELECT DIMINUTIVO_TICKET_EMPL ' +
+                '  FROM fza_empleados ' +
+                ' WHERE CODIGO_EMPL = :COD';
+      FieldToGet := 'DIMINUTIVO_TICKET_EMPL';
+    end
+    else if TipoEntidad = 'CLIENTES' then
+    begin
+      SQLStr := 'SELECT RAZON_SOCIAL_CLI ' +
+                '  FROM fza_clientes ' +
+                ' WHERE CODIGO_CLI_CLI = :COD';
+      FieldToGet := 'RAZON_SOCIAL_CLI';
     end;
-  finally
-    FreeAndNil(unqry);
+    if SQLStr <> '' then
+    begin
+      unqry := TUniQuery.Create(nil);
+      try
+        unqry.Connection := FConexion;
+        unqry.SQL.Text := SQLStr;
+        unqry.ParamByName('COD').AsString := Codigo;
+        unqry.Open;
+        if not unqry.IsEmpty then
+        begin
+          LabelDestino := unqry.FieldByName(FieldToGet).AsString;
+          Result := True;
+        end;
+      finally
+        FreeAndNil(unqry);
+      end;
+    end;
   end;
 end;
 
@@ -2735,11 +2740,13 @@ begin
     Abort;
   Requeridos :=
     DataSet.FieldByName('NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger;
-  if Requeridos = 0 then
-    Exit;
-  SkuActual := Trim(DataSet.FieldByName('CODIGO_UNIDAD_FACLIN').AsString);
-  if Pos('/', SkuActual) = 0 then
-    Abort;
+  if Requeridos > 0 then
+  begin
+    SkuActual := Trim(
+      DataSet.FieldByName('CODIGO_UNIDAD_FACLIN').AsString);
+    if Pos('/', SkuActual) = 0 then
+      Abort;
+  end;
 end;
 
 procedure TdmCajaOpe.ConfigurarEstructuraCabecera;
@@ -2985,73 +2992,9 @@ begin
       [ACodigoVale, FilasAfectadas]);
 end;
 
-procedure TdmCajaOpe.InsertarCabeceraFactura(
-            QryTrx:          TUniQuery;
-            // — identificación —
-            const ASerie:    string;
-            const ANro:      string;
-            AFecha:          TDateTime;
-            const ATipo:     string;
-            const AFase:     string;
-            // — empresa emisora —
-            const AEmpresa,
-                  ARazonSocialEmp,
-                  ANifEmp,
-                  AMovilEmp,
-                  AEmailEmp,
-                  ADireccion1Emp,
-                  ADireccion2Emp,
-                  APoblacionEmp,
-                  AProvinciaEmp,
-                  ACPostalEmp,
-                  ACodigoPaisEmp,
-                  ANombrePaisEmp: string;
-            AEsRetencionesEmp:    string;   // 'S'/'N'
-            AGrupoZonaIvaEmp:     string;
-            // — cliente —
-            const ACliente,
-                  ARazonSocialCli,
-                  ANifCli,
-                  AMovilCli,
-                  AEmailCli,
-                  ADireccion1Cli,
-                  ADireccion2Cli,
-                  APoblacionCli,
-                  AProvinciaCli,
-                  ACPostalCli,
-                  ACodigoPaisCli,
-                  ANombrePaisCli: string;
-            const ACodigoOficinaContable,
-                  ACodigoOrganoGestor,
-                  ACodigoUnidadTramitadora: string;
-            const ACodigoIva,
-                  ATarifa:       string;
-            AEsIvaRecargo,
-            AEsIvaExento,
-            AEsImpInclTarifa:    string;   // 'S'/'N'
-            // — totales fiscales —
-            APorcIvaN,  ATotalIvaN,  APorcReN,  ATotalReN,  ABaseIN:   Currency;
-            APorcIvaR,  ATotalIvaR,  APorcReR,  ATotalReR,  ABaseIR:   Currency;
-            APorcIvaS,  ATotalIvaS,  APorcReS,  ATotalReS,  ABaseIS:   Currency;
-            APorcIvaE,  ATotalIvaE,  APorcReE,  ATotalReE,  ABaseIE:   Currency;
-            ATotalBases,
-            ATotalImpuestos,
-            ATotalRetencion,
-            APorcRetencion,
-            ATotalLiquido:       Currency;
-            const AFormaPago:    string;
-            // — referencias —
-            const AComentarios:  string;
-            const ASeriAbono,
-                  ANroAbono:     string;
-            // — caja —
-            const AAlmacen,
-                  ACaja,
-                  ACajero:       string;
-            ANumOperacion:       String;
-            const AUsuario:      string);
+procedure ConfigurarSqlInsertarCabeceraFacturaCaja(AConsulta: TUniQuery);
 begin
-  QryTrx.SQL.Text :=
+  AConsulta.SQL.Text :=
     'INSERT INTO fza_facturas (' +
     '  SERIE_FAC, NUMERO_FAC, FECHA_FAC,' +
     '  TIPO_FAC, FASE_FAC,' +
@@ -3125,6 +3068,75 @@ begin
     '  NULLIF(:CAJERO, ''''), NULLIF(:NUMOP, ''''),' +
     '  ''N'', ''N'', ''N'',' +
     '  :USUARIO, :USUARIO, NOW())';
+end;
+
+procedure TdmCajaOpe.InsertarCabeceraFactura(
+            QryTrx:          TUniQuery;
+            // — identificación —
+            const ASerie:    string;
+            const ANro:      string;
+            AFecha:          TDateTime;
+            const ATipo:     string;
+            const AFase:     string;
+            // — empresa emisora —
+            const AEmpresa,
+                  ARazonSocialEmp,
+                  ANifEmp,
+                  AMovilEmp,
+                  AEmailEmp,
+                  ADireccion1Emp,
+                  ADireccion2Emp,
+                  APoblacionEmp,
+                  AProvinciaEmp,
+                  ACPostalEmp,
+                  ACodigoPaisEmp,
+                  ANombrePaisEmp: string;
+            AEsRetencionesEmp:    string;   // 'S'/'N'
+            AGrupoZonaIvaEmp:     string;
+            // — cliente —
+            const ACliente,
+                  ARazonSocialCli,
+                  ANifCli,
+                  AMovilCli,
+                  AEmailCli,
+                  ADireccion1Cli,
+                  ADireccion2Cli,
+                  APoblacionCli,
+                  AProvinciaCli,
+                  ACPostalCli,
+                  ACodigoPaisCli,
+                  ANombrePaisCli: string;
+            const ACodigoOficinaContable,
+                  ACodigoOrganoGestor,
+                  ACodigoUnidadTramitadora: string;
+            const ACodigoIva,
+                  ATarifa:       string;
+            AEsIvaRecargo,
+            AEsIvaExento,
+            AEsImpInclTarifa:    string;   // 'S'/'N'
+            // — totales fiscales —
+            APorcIvaN,  ATotalIvaN,  APorcReN,  ATotalReN,  ABaseIN:   Currency;
+            APorcIvaR,  ATotalIvaR,  APorcReR,  ATotalReR,  ABaseIR:   Currency;
+            APorcIvaS,  ATotalIvaS,  APorcReS,  ATotalReS,  ABaseIS:   Currency;
+            APorcIvaE,  ATotalIvaE,  APorcReE,  ATotalReE,  ABaseIE:   Currency;
+            ATotalBases,
+            ATotalImpuestos,
+            ATotalRetencion,
+            APorcRetencion,
+            ATotalLiquido:       Currency;
+            const AFormaPago:    string;
+            // — referencias —
+            const AComentarios:  string;
+            const ASeriAbono,
+                  ANroAbono:     string;
+            // — caja —
+            const AAlmacen,
+                  ACaja,
+                  ACajero:       string;
+            ANumOperacion:       String;
+            const AUsuario:      string);
+begin
+  ConfigurarSqlInsertarCabeceraFacturaCaja(QryTrx);
 
   // — identificación —
   QryTrx.ParamByName('SERIE').AsString    := ASerie;

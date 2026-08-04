@@ -1135,33 +1135,34 @@ procedure TFormVisualizador.btnImprimirTicketClick(Sender: TObject);
 var
   pd: TPrintDialog;
   NombreImpresoraElegida: string;
+  ImprimirTicket: Boolean;
 begin
+  ImprimirTicket := False;
   if FComandos = '' then
-  begin
     ShowMessage(SAvisoSinComandosESCPOSImpresora);
-    Exit;
+  if FComandos <> '' then
+  begin
+    // 1. Mostrar diálogo para elegir la impresora
+    pd := TPrintDialog.Create(Self);
+    try
+      ImprimirTicket := pd.Execute;
+      if ImprimirTicket then
+        NombreImpresoraElegida := Printer.Printers[Printer.PrinterIndex];
+    finally
+      FreeAndNil(pd);
+    end;
   end;
-
-  // 1. Mostrar diálogo para elegir la impresora
-  pd := TPrintDialog.Create(Self);
-  try
-    if not pd.Execute then
-      Exit; // Si el usuario cancela, salimos
-
-    // Obtener el nombre exacto de la impresora seleccionada
-    NombreImpresoraElegida := Printer.Printers[Printer.PrinterIndex];
-  finally
-    FreeAndNil(pd);
-  end;
-
-  // 2. Usar tu librería para enviar el ticket de forma nativa
-  try
-    EnviarComandoRAW(NombreImpresoraElegida, FComandos);
-    ShowMessage(Format(SInfoTicketEnviadoImpresora,
-                       [NombreImpresoraElegida]));
-  except
-    on E: Exception do
-      ShowMessage(Format(SErrorImprimir, [E.Message]));
+  if ImprimirTicket then
+  begin
+    // 2. Usar la librería para enviar el ticket de forma nativa
+    try
+      EnviarComandoRAW(NombreImpresoraElegida, FComandos);
+      ShowMessage(Format(SInfoTicketEnviadoImpresora,
+                         [NombreImpresoraElegida]));
+    except
+      on E: Exception do
+        ShowMessage(Format(SErrorImprimir, [E.Message]));
+    end;
   end;
 end;
 

@@ -175,11 +175,15 @@ begin
   if (AEmpresa = FEmpresa) and
      (AAlmacen = FAlmacen) and
      (ACaja    = FCaja) then
-    Exit;
-  FEmpresa := AEmpresa;
-  FAlmacen := AAlmacen;
-  FCaja    := ACaja;
-  InvalidarTodo;
+  begin
+  end
+  else
+  begin
+    FEmpresa := AEmpresa;
+    FAlmacen := AAlmacen;
+    FCaja := ACaja;
+    InvalidarTodo;
+  end;
 end;
 
 procedure TVentasCalendarioCache.InvalidarTodo;
@@ -229,9 +233,11 @@ var
   VentaDia: TVentasDia;
   F: TDate;
 begin
-  if not ContextoValido then Exit;
+  if ContextoValido then
+  begin
   IdMes := CodigoMes(AYear, AMonth);
-  if FMesesCargados.Contains(IdMes) then Exit;
+  if not FMesesCargados.Contains(IdMes) then
+  begin
   PrimerDia := EncodeDate(AYear, AMonth, 1);
   UltimoDia := IncMonth(PrimerDia, 1);
   Dias := FRepositorio.CargarDiasConVentas(
@@ -250,6 +256,8 @@ begin
     FDias.AddOrSetValue(F, VentaDia);
   end;
   FMesesCargados.Add(IdMes);
+  end;
+  end;
 end;
 
 function TVentasCalendarioCache.HasSales(const AFecha: TDate): Boolean;
@@ -300,15 +308,16 @@ var
 begin
   F := DateOf(ADate);
   CargarMes(YearOf(F), MonthOf(F));
-  if not FDias.ContainsKey(F) then
-    Exit;
-  if Assigned(AFont) then
+  if FDias.ContainsKey(F) then
   begin
-    AFont.Style := AFont.Style + FEstiloFuenteConVentas;
-    if FUsarColorFuente then
-      AFont.Color := FColorFuenteConVentas;
+    if Assigned(AFont) then
+    begin
+      AFont.Style := AFont.Style + FEstiloFuenteConVentas;
+      if FUsarColorFuente then
+        AFont.Color := FColorFuenteConVentas;
+    end;
+    ABackgroundColor := FColorFondoConVentas;
   end;
-  ABackgroundColor := FColorFondoConVentas;
 end;
 
 end.

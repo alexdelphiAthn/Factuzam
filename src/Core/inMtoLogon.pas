@@ -288,6 +288,7 @@ end;
 procedure TfrmLogon.FormCreate(Sender: TObject);
 var
   CheckResult: TDBStructureCheckResult;
+  ContinuarCreacion: Boolean;
 begin
   InvalidarResultadoInicioSesion;
   CrearRepositorioLogonUniDAC(
@@ -331,6 +332,7 @@ begin
   end;
 
   // --- 1. Conexión a information_schema para validar estructura ---
+  ContinuarCreacion := True;
   try
     ConfigurarYConectarMySQL(FConexionLogon,
                              edtUserBD.Text,
@@ -349,89 +351,92 @@ begin
         'UserInfo', 'AutoLogin', 'No', GetUserFolder);
       if not pnlBBDD.Visible then
         btnConfClick(Self);
-      Exit;
+      ContinuarCreacion := False;
     end;
   end;
-
-  // --- 2. Verificación de estructura ---
-  CheckResult := UniDataDBStructureRepositorio.TDBStructureChecker.Check(
-    FConexionLogon,
-    edtNomBD.Text);
-
-  if not CheckResult.IsOK then
+  if ContinuarCreacion then
   begin
-    RegistroLog.RegistrarError('Estructura BBDD no válida: ' +
-                          CheckResult.FormattedMessage);
-    ShowMessage(Format(SErrorEstructuraBBDD,
-                       [CheckResult.FormattedMessage]));
-
-    // Desactivamos auto-login para no entrar en bucle
-    chkAuto.Checked := False;
-    EscribirCadenaIni(
-      'UserInfo', 'AutoLogin', 'No', GetUserFolder);
-
-    // Abrimos el panel de configuración
-    if not pnlBBDD.Visible then
-      btnConfClick(Self);
-
-    // Desconectamos de information_schema, ya no la necesitamos
-    if FConexionLogon.Connected then
-      FConexionLogon.Disconnect;
-    Exit;
-  end;
-
-  // --- 3. Estructura OK: reconectamos al schema real ---
-  if FConexionLogon.Connected then
-    FConexionLogon.Disconnect;
-
-  try
-    ConfigurarYConectarMySQL(FConexionLogon,
-                             edtUserBD.Text,
-                             FPasswordConexion,
-                             edtHostName.Text,
-                             edtPortBD.Text,
-                             edtNomBD.Text);
-  except
-    on E: Exception do
+    // --- 2. Verificación de estructura ---
+    CheckResult := UniDataDBStructureRepositorio.TDBStructureChecker.Check(
+      FConexionLogon,
+      edtNomBD.Text);
+    if not CheckResult.IsOK then
     begin
-      RegistroLog.RegistrarError('Fallo al conectar a ' + edtNomBD.Text + ': ' +
-                            E.ClassName + ': ' + E.Message);
-      ShowMessage(Format(SErrorConexionBBDD,
-                         [edtNomBD.Text, E.Message]));
+      RegistroLog.RegistrarError('Estructura BBDD no válida: ' +
+                            CheckResult.FormattedMessage);
+      ShowMessage(Format(SErrorEstructuraBBDD,
+                         [CheckResult.FormattedMessage]));
+      // Desactivamos auto-login para no entrar en bucle
       chkAuto.Checked := False;
       EscribirCadenaIni(
         'UserInfo', 'AutoLogin', 'No', GetUserFolder);
+      // Abrimos el panel de configuración
       if not pnlBBDD.Visible then
         btnConfClick(Self);
-      Exit;
+      // Desconectamos de information_schema, ya no la necesitamos
+      if FConexionLogon.Connected then
+        FConexionLogon.Disconnect;
+      ContinuarCreacion := False;
     end;
   end;
-
-  AplicarTraduccionesPantalla;
-  if not ProcesarLicenciaAplicacion then
-    Exit;
-
-  // --- /relogin: reinicio desde 'Invocar login'. Vacia la contrasena
-  // recordada para forzar que se introduzca de nuevo (el auto-login ya
-  // queda neutralizado en IsInitializeAuto). ---
-  if FindCmdLineSwitch('relogin', True) then
-    edtPass.Text := '';
-  // --- 4. Auto-login protegido ---
-  if IsInitializeAuto then
+  if ContinuarCreacion then
   begin
+    // --- 3. Estructura OK: reconectamos al schema real ---
+    if FConexionLogon.Connected then
+      FConexionLogon.Disconnect;
     try
-      btnAceptarClick(Self);
+      ConfigurarYConectarMySQL(FConexionLogon,
+                               edtUserBD.Text,
+                               FPasswordConexion,
+                               edtHostName.Text,
+                               edtPortBD.Text,
+                               edtNomBD.Text);
     except
       on E: Exception do
       begin
-        RegistroLog.RegistrarError('Fallo en auto-login: ' +
-                              E.ClassName + ': ' + E.Message);
-        ShowMessage(Format(SErrorInicioAutomatico, [E.Message]));
+        RegistroLog.RegistrarError(
+          'Fallo al conectar a ' + edtNomBD.Text + ': ' +
+          E.ClassName + ': ' + E.Message);
+        ShowMessage(Format(SErrorConexionBBDD,
+                           [edtNomBD.Text, E.Message]));
         chkAuto.Checked := False;
         EscribirCadenaIni(
           'UserInfo', 'AutoLogin', 'No', GetUserFolder);
-        InvalidarResultadoInicioSesion;
-        ModalResult := mrNone;
+        if not pnlBBDD.Visible then
+          btnConfClick(Self);
+        ContinuarCreacion := False;
+      end;
+    end;
+  end;
+  if ContinuarCreacion then
+  begin
+    AplicarTraduccionesPantalla;
+    ContinuarCreacion := ProcesarLicenciaAplicacion;
+  end;
+  if ContinuarCreacion then
+  begin
+    // --- /relogin: reinicio desde 'Invocar login'. Vacia la contrasena
+    // recordada para forzar que se introduzca de nuevo (el auto-login ya
+    // queda neutralizado en IsInitializeAuto). ---
+    if FindCmdLineSwitch('relogin', True) then
+      edtPass.Text := '';
+    // --- 4. Auto-login protegido ---
+    if IsInitializeAuto then
+    begin
+      try
+        btnAceptarClick(Self);
+      except
+        on E: Exception do
+        begin
+          RegistroLog.RegistrarError('Fallo en auto-login: ' +
+                                E.ClassName + ': ' + E.Message);
+          ShowMessage(Format(SErrorInicioAutomatico, [E.Message]));
+          chkAuto.Checked := False;
+          EscribirCadenaIni(
+            'UserInfo', 'AutoLogin', 'No', GetUserFolder);
+          InvalidarResultadoInicioSesion;
+          ModalResult := mrNone;
+        end;
       end;
     end;
   end;
@@ -855,21 +860,22 @@ var
   iValor: Integer;
   iTotal: Integer;
 begin
-  if (FProgressBar = nil) or (not FProgressBar.Visible) then
-    Exit;
-  iValor := APaso;
-  iTotal := ATotal;
-  if AFilasGlobalTotal > 0 then
+  if (FProgressBar <> nil) and FProgressBar.Visible then
   begin
-    iValor := AFilaGlobal;
-    iTotal := AFilasGlobalTotal;
+    iValor := APaso;
+    iTotal := ATotal;
+    if AFilasGlobalTotal > 0 then
+    begin
+      iValor := AFilaGlobal;
+      iTotal := AFilasGlobalTotal;
+    end;
+    FProgressBar.Max := 100;
+    FProgressBar.Position := PorcentajeProgreso(iValor, iTotal);
+    FProgressLabel.Caption := TextoProgreso(AEtapa, iValor, iTotal);
+    FProgressLabel.Hint := FProgressLabel.Caption;
+    FProgressBar.Update;
+    FProgressLabel.Update;
   end;
-  FProgressBar.Max := 100;
-  FProgressBar.Position := PorcentajeProgreso(iValor, iTotal);
-  FProgressLabel.Caption := TextoProgreso(AEtapa, iValor, iTotal);
-  FProgressLabel.Hint := FProgressLabel.Caption;
-  FProgressBar.Update;
-  FProgressLabel.Update;
 end;
 
 procedure TfrmLogon.BackupFinalizar(
@@ -1006,7 +1012,6 @@ begin
                             edtNomBD.Text);
   RegistroLog.RegistrarInformacion(SconnSuccBBDD);
   ShowMessage(SConnSuccBBDD);
-  Exit;
 end;
 
 procedure TfrmLogon.btnSalirClick(Sender: TObject);

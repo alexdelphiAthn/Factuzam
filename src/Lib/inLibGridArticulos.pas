@@ -354,37 +354,33 @@ begin
     // Sugerencias en vivo: al teclear se rearma el debounce que abre el
     // desplegable filtrado (igual que inMtoCajaOpe). El lector (STX/ETX)
     // consume sus teclas en ArticuloKeyPress, asi que no dispara el OnChange.
-    Exit;
+  end
+  else if (AItem <> nil) and (AItem.Tag >= 1) and
+          (AItem.Tag <= 5) and (AEdit is TcxButtonEdit) then
+  begin
+    BE := TcxButtonEdit(AEdit);
+    BE.Tag := AItem.Tag;
+    if (not FCds.Active) or FCds.IsEmpty then
+      BE.OnEnter := nil
+    else if Trim(
+      FCds.FieldByName(FCampos.AttrValor[AItem.Tag]).AsString) = '' then
+      BE.OnEnter := AtributoEnter
+    else
+      BE.OnEnter := nil;
   end;
-  if (AItem = nil) or (AItem.Tag < 1) or (AItem.Tag > 5) then
-    Exit;
-  if not (AEdit is TcxButtonEdit) then
-    Exit;
-  BE := TcxButtonEdit(AEdit);
-  BE.Tag := AItem.Tag;
-  if (not FCds.Active) or FCds.IsEmpty then
-    BE.OnEnter := nil
-  else if Trim(FCds.FieldByName(FCampos.AttrValor[AItem.Tag]).AsString) = ''
-  then
-    BE.OnEnter := AtributoEnter
-  else
-    BE.OnEnter := nil;
 end;
 
 // OnEnter single-shot de una celda de atributo vacia: difiere la apertura de
 // la paleta (timer 1ms) para que el editor in-place termine de parentar.
 procedure TGridArticulosLineas.AtributoEnter(Sender: TObject);
 begin
-  if not (Sender is TcxButtonEdit) then
-    Exit;
-  // Si la paleta ya se esta abriendo (el propio AbrirPaletaOrden ha hecho
-  // ShowEdit para posicionarse), no reprogramar otra apertura.
-  if FEnPaleta then
-    Exit;
-  TcxButtonEdit(Sender).OnEnter := nil;
-  FOrdenPopupPend := TcxButtonEdit(Sender).Tag;
-  FTimerPopup.Enabled := False;
-  FTimerPopup.Enabled := True;
+  if (Sender is TcxButtonEdit) and not FEnPaleta then
+  begin
+    TcxButtonEdit(Sender).OnEnter := nil;
+    FOrdenPopupPend := TcxButtonEdit(Sender).Tag;
+    FTimerPopup.Enabled := False;
+    FTimerPopup.Enabled := True;
+  end;
 end;
 
 procedure TGridArticulosLineas.TimerPopupTimer(Sender: TObject);
@@ -608,27 +604,28 @@ var
   bTodos: Boolean;
 begin
   n := FCds.FieldByName(FCampos.NumAtributos).AsInteger;
-  if n = 0 then
-    Exit;
-  bTodos := True;
-  for i := 1 to n do
+  if n > 0 then
   begin
-    if FCds.FieldByName(FCampos.AttrValor[i]).AsString = '' then
+    bTodos := True;
+    for i := 1 to n do
     begin
-      Avs := FLookup.ObtenerAvsEnSkus(ACodArt, i);
-      if Length(Avs) = 1 then
-        FCds.FieldByName(FCampos.AttrValor[i]).AsString := Avs[0].Valor
-      else
-        bTodos := False;
+      if FCds.FieldByName(FCampos.AttrValor[i]).AsString = '' then
+      begin
+        Avs := FLookup.ObtenerAvsEnSkus(ACodArt, i);
+        if Length(Avs) = 1 then
+          FCds.FieldByName(FCampos.AttrValor[i]).AsString := Avs[0].Valor
+        else
+          bTodos := False;
+      end;
     end;
-  end;
-  if bTodos then
-  begin
-    sSku := GenerarSku;
-    FCds.FieldByName(FCampos.CodigoUnidad).AsString := sSku;
-    if Assigned(FOnResuelto) then
-      FOnResuelto(ACodArt, sSku,
-                  FCds.FieldByName(FCampos.Descripcion).AsString, True);
+    if bTodos then
+    begin
+      sSku := GenerarSku;
+      FCds.FieldByName(FCampos.CodigoUnidad).AsString := sSku;
+      if Assigned(FOnResuelto) then
+        FOnResuelto(ACodArt, sSku,
+          FCds.FieldByName(FCampos.Descripcion).AsString, True);
+    end;
   end;
 end;
 
@@ -641,13 +638,16 @@ var
   Partes: TArray<string>;
   i: Integer;
 begin
-  if (ASku = '') or (not StartsText(ACodArt + '/', ASku)) then
-    Exit;
-  sResto := Copy(ASku, Length(ACodArt) + 2, MaxInt);
-  Partes := sResto.Split(['/']);
-  for i := 0 to High(Partes) do
-    if i < 5 then
-      FCds.FieldByName(FCampos.AttrValor[i + 1]).AsString := Partes[i];
+  if (ASku <> '') and StartsText(ACodArt + '/', ASku) then
+  begin
+    sResto := Copy(ASku, Length(ACodArt) + 2, MaxInt);
+    Partes := sResto.Split(['/']);
+    for i := 0 to High(Partes) do
+    begin
+      if i < 5 then
+        FCds.FieldByName(FCampos.AttrValor[i + 1]).AsString := Partes[i];
+    end;
+  end;
 end;
 
 function TGridArticulosLineas.ResolverEntrada(const AEntrada: string): Boolean;
@@ -660,68 +660,62 @@ begin
   Result := False;
   // Quita STX/ETX/CR/LF que mete el lector de codigo de barras.
   sEntrada := FBusqueda.LimpiarEntrada(AEntrada);
-  if sEntrada = '' then
-    Exit;
-  R := FValidador.Resolver(sEntrada);
-  if not R.Encontrado then
+  if sEntrada <> '' then
   begin
-    // Codigo fuera de catalogo: si el documento lo admite, se acepta
-    // como linea libre (sin SKU ni atributos: no mueve stock) y el host
-    // completa fiscalidad y precios en su OnResuelto.
-    if FAceptarNoCatalogo then
+    R := FValidador.Resolver(sEntrada);
+    if not R.Encontrado then
     begin
-      if not CdsEditando then
-        FCds.Edit;
-      FCds.FieldByName(FCampos.CodigoArt).AsString := sEntrada;
-      FCds.FieldByName(FCampos.CodigoUnidad).AsString := '';
-      FCds.FieldByName(FCampos.Descripcion).AsString := '';
-      ActualizarColumnasAtributo(sEntrada);
-      if Assigned(FOnResuelto) then
-        FOnResuelto(sEntrada, '', '', True);
-      Result := True;
-    end;
-    Exit;
-  end;
-  sCodArt := R.CodigoArticulo;
-  sSku := R.CodigoSku;
-  sDesc := R.DescripcionArticulo;
-  // Completo = la entrada ya trajo un SKU cerrado (no requiere elegir talla).
-  bCompleto := (sSku <> '') and (not R.RequiereSku);
-  // SKU cerrado repetido (p.ej. segunda lectura de pistola): acumular
-  // cantidad en la linea que ya lo tiene, en vez de duplicar linea.
-  if bCompleto and AcumularLineaExistente(sCodArt, sSku, sDesc) then
-    Result := True
-  else
-  begin
-    if not CdsEditando then
-      FCds.Edit;
-    // Si la linea tenia OTRO articulo, sus valores de talla/color no valen
-    // para el nuevo: se limpian para no heredar atributos (generarian un SKU
-    // cruzado tipo ART_NUEVO/COLOR_VIEJO, que existe pero sin stock).
-    if not SameText(Trim(FCds.FieldByName(FCampos.CodigoArt).AsString),
-                    sCodArt) then
-    begin
-      for i := 1 to 5 do
-        FCds.FieldByName(FCampos.AttrValor[i]).AsString := '';
-    end;
-    FCds.FieldByName(FCampos.CodigoArt).AsString := sCodArt;
-    FCds.FieldByName(FCampos.Descripcion).AsString := sDesc;
-    // Muestra SIEMPRE las columnas de talla/color del articulo (aunque el SKU
-    // venga ya cerrado, para que el usuario vea color/talla).
-    ActualizarColumnasAtributo(sCodArt);
-    if bCompleto then
-    begin
-      FCds.FieldByName(FCampos.CodigoUnidad).AsString := sSku;
-      RellenarAtributosDesdeSku(sCodArt, sSku);
-      if Assigned(FOnResuelto) then
-        FOnResuelto(sCodArt, sSku, sDesc, True);
+      // Codigo fuera de catalogo: se admite como linea libre si procede.
+      if FAceptarNoCatalogo then
+      begin
+        if not CdsEditando then
+          FCds.Edit;
+        FCds.FieldByName(FCampos.CodigoArt).AsString := sEntrada;
+        FCds.FieldByName(FCampos.CodigoUnidad).AsString := '';
+        FCds.FieldByName(FCampos.Descripcion).AsString := '';
+        ActualizarColumnasAtributo(sEntrada);
+        if Assigned(FOnResuelto) then
+          FOnResuelto(sEntrada, '', '', True);
+        Result := True;
+      end;
     end
     else
     begin
-      FCds.FieldByName(FCampos.CodigoUnidad).AsString := sCodArt;
-      AutoCompletarAtributosUnicos(sCodArt);
+      sCodArt := R.CodigoArticulo;
+      sSku := R.CodigoSku;
+      sDesc := R.DescripcionArticulo;
+      bCompleto := (sSku <> '') and (not R.RequiereSku);
+      if bCompleto and AcumularLineaExistente(sCodArt, sSku, sDesc) then
+        Result := True
+      else
+      begin
+        if not CdsEditando then
+          FCds.Edit;
+        if not SameText(
+          Trim(FCds.FieldByName(FCampos.CodigoArt).AsString),
+          sCodArt) then
+        begin
+          for i := 1 to 5 do
+            FCds.FieldByName(FCampos.AttrValor[i]).AsString := '';
+        end;
+        FCds.FieldByName(FCampos.CodigoArt).AsString := sCodArt;
+        FCds.FieldByName(FCampos.Descripcion).AsString := sDesc;
+        ActualizarColumnasAtributo(sCodArt);
+        if bCompleto then
+        begin
+          FCds.FieldByName(FCampos.CodigoUnidad).AsString := sSku;
+          RellenarAtributosDesdeSku(sCodArt, sSku);
+          if Assigned(FOnResuelto) then
+            FOnResuelto(sCodArt, sSku, sDesc, True);
+        end
+        else
+        begin
+          FCds.FieldByName(FCampos.CodigoUnidad).AsString := sCodArt;
+          AutoCompletarAtributosUnicos(sCodArt);
+        end;
+        Result := True;
+      end;
     end;
-    Result := True;
   end;
 end;
 
@@ -777,9 +771,7 @@ var
   Col: TcxGridColumn;
 begin
   Col := FView.Controller.FocusedColumn;
-  if Col = nil then
-    Exit;
-  if (Col.Tag >= 1) and (Col.Tag <= 5) then
+  if (Col <> nil) and (Col.Tag >= 1) and (Col.Tag <= 5) then
     AbrirPaletaOrden(Col.Tag);
 end;
 
@@ -796,86 +788,83 @@ var
   AvsStr: TArray<string>;
   Mapa: TDictionary<string, string>;
 begin
-  if (AOrden < 1) or (AOrden > 5) then
-    Exit;
-  if (not FCds.Active) or FCds.IsEmpty then
-    Exit;
-  sArtPadre := FCds.FieldByName(FCampos.CodigoArt).AsString;
-  sAvActual := FCds.FieldByName(FCampos.AttrValor[AOrden]).AsString;
-  sNombreAtb := FCds.FieldByName(FCampos.AttrNombre[AOrden]).AsString;
-  Avs := FLookup.ObtenerAvsEnSkus(sArtPadre, AOrden);
-  if Length(Avs) = 0 then
+  if (AOrden >= 1) and (AOrden <= 5) and
+     FCds.Active and not FCds.IsEmpty then
   begin
-    ShowMessage(SErrorValoresAtributoNoDefinidos);
-    Exit;
-  end;
-  SetLength(AvsStr, Length(Avs));
-  for i := 0 to High(Avs) do
-    AvsStr[i] := Avs[i].Valor;
-  sIdVa := '';
-  Mapa := ObtenerMapaAtributosGlobal(FConn);
-  if Mapa <> nil then
-    Mapa.TryGetValue(UpperCase(Trim(sNombreAtb)), sIdVa);
-  // Asegura el editor in-place visible en la celda del atributo para situar la
-  // paleta justo debajo. La apertura automatica (al avanzar desde el atributo
-  // anterior) solo enfoca la columna, sin abrir editor, y entonces la paleta
-  // salia centrada/lejos. Forzamos FocusedColumn + ShowEdit; FEnPaleta evita
-  // que el OnEnter del editor (AtributoEnter) reprograme otra apertura.
-  FEnPaleta := True;
-  try
-    Col := ColumnaPorTag(AOrden);
-    if (Col <> nil) and (FView.Controller.FocusedColumn <> Col) then
-      FView.Controller.FocusedColumn := Col;
-    if not FView.Controller.EditingController.IsEditing then
-      try
-        FView.Controller.EditingController.ShowEdit;
-      except
-        // Si aun no puede parentarse el editor, seguimos: se auto-centrara.
-        on E: Exception do
-          if Assigned(FRegistroLog) then
-            FRegistroLog.RegistrarAviso(
-            'GridArticulos.AbrirPaletaOrden: ShowEdit ignorado: ' +
-            E.Message);
-      end;
-    // Posicion bajo el editor in-place; si aun no esta parentado, auto-centrar
-    // (evita EInvalidOperation en ClientToScreen).
-    ScrX := -1;
-    ScrY := -1;
-    WidHint := 120;
-    Edit := nil;
-    if FView.Controller.EditingController.IsEditing then
-      Edit := FView.Controller.EditingController.Edit;
-    if (Edit <> nil) and Edit.HasParent then
-      try
-        ScrX := Edit.ClientToScreen(Point(0, Edit.Height)).X;
-        ScrY := Edit.ClientToScreen(Point(0, Edit.Height)).Y;
-        WidHint := Edit.Width;
-      except
-        on E: EInvalidOperation do
-        begin
-          ScrX := -1;
-          ScrY := -1;
-          WidHint := 120;
-        end;
-      end;
-    if not SeleccionarAvConPaleta(FConn, sIdVa, AvsStr, sAvActual, sAvNuevo,
-                                  ScrX, ScrY, WidHint) then
-      Exit;
-    if FCds.State = dsBrowse then
-      FCds.Edit;
-    if FCds.State in [dsEdit, dsInsert] then
+    sArtPadre := FCds.FieldByName(FCampos.CodigoArt).AsString;
+    sAvActual := FCds.FieldByName(FCampos.AttrValor[AOrden]).AsString;
+    sNombreAtb := FCds.FieldByName(FCampos.AttrNombre[AOrden]).AsString;
+    Avs := FLookup.ObtenerAvsEnSkus(sArtPadre, AOrden);
+    if Length(Avs) = 0 then
+      ShowMessage(SErrorValoresAtributoNoDefinidos)
+    else
     begin
-      FCds.FieldByName(FCampos.AttrValor[AOrden]).AsString := sAvNuevo;
-      AplicarSkuYAvisar;
-      // Si quedan atributos por elegir, salta al siguiente y abre su paleta;
-      // asi no se pasa a la siguiente fila con el SKU incompleto. Si ya estan
-      // todos (SKU cerrado y el host anyadio una linea nueva), deja el editor
-      // de articulo abierto para encadenar la siguiente entrada, como en caja.
-      if not AvanzarSiguienteAtributo then
-        MostrarEditorArticulo;
+      SetLength(AvsStr, Length(Avs));
+      for i := 0 to High(Avs) do
+        AvsStr[i] := Avs[i].Valor;
+      sIdVa := '';
+      Mapa := ObtenerMapaAtributosGlobal(FConn);
+      if Mapa <> nil then
+        Mapa.TryGetValue(UpperCase(Trim(sNombreAtb)), sIdVa);
+      FEnPaleta := True;
+      try
+        Col := ColumnaPorTag(AOrden);
+        if (Col <> nil) and (FView.Controller.FocusedColumn <> Col) then
+          FView.Controller.FocusedColumn := Col;
+        if not FView.Controller.EditingController.IsEditing then
+        begin
+          try
+            FView.Controller.EditingController.ShowEdit;
+          except
+            on E: Exception do
+            begin
+              if Assigned(FRegistroLog) then
+                FRegistroLog.RegistrarAviso(
+                  'GridArticulos.AbrirPaletaOrden: ShowEdit ignorado: ' +
+                  E.Message);
+            end;
+          end;
+        end;
+        ScrX := -1;
+        ScrY := -1;
+        WidHint := 120;
+        Edit := nil;
+        if FView.Controller.EditingController.IsEditing then
+          Edit := FView.Controller.EditingController.Edit;
+        if (Edit <> nil) and Edit.HasParent then
+        begin
+          try
+            ScrX := Edit.ClientToScreen(Point(0, Edit.Height)).X;
+            ScrY := Edit.ClientToScreen(Point(0, Edit.Height)).Y;
+            WidHint := Edit.Width;
+          except
+            on E: EInvalidOperation do
+            begin
+              ScrX := -1;
+              ScrY := -1;
+              WidHint := 120;
+            end;
+          end;
+        end;
+        if SeleccionarAvConPaleta(
+          FConn, sIdVa, AvsStr, sAvActual, sAvNuevo,
+          ScrX, ScrY, WidHint) then
+        begin
+          if FCds.State = dsBrowse then
+            FCds.Edit;
+          if FCds.State in [dsEdit, dsInsert] then
+          begin
+            FCds.FieldByName(FCampos.AttrValor[AOrden]).AsString :=
+              sAvNuevo;
+            AplicarSkuYAvisar;
+            if not AvanzarSiguienteAtributo then
+              MostrarEditorArticulo;
+          end;
+        end;
+      finally
+        FEnPaleta := False;
+      end;
     end;
-  finally
-    FEnPaleta := False;
   end;
 end;
 
@@ -885,31 +874,26 @@ var
   Col: TcxGridDBColumn;
 begin
   Result := False;
-  if (not FCds.Active) or FCds.IsEmpty then
-    Exit;
-  n := FCds.FieldByName(FCampos.NumAtributos).AsInteger;
-  for i := 1 to n do
+  if FCds.Active and not FCds.IsEmpty then
   begin
-    if Trim(FCds.FieldByName(FCampos.AttrValor[i]).AsString) = '' then
+    n := FCds.FieldByName(FCampos.NumAtributos).AsInteger;
+    for i := 1 to n do
     begin
-      Col := ColumnaPorTag(i);
-      if Col <> nil then
+      if Trim(FCds.FieldByName(FCampos.AttrValor[i]).AsString) = '' then
       begin
-        // La columna nace oculta y puede seguir asi si el host aun no
-        // la re-rotulo: si el articulo la necesita, se fuerza visible.
-        // Sin esto no habia salto ni paleta y el Enter (con EnterAsTab
-        // ya restaurado) se escapaba del grid hacia los totales.
-        if not Col.Visible then
-          Col.Visible := True;
-        FView.Controller.FocusedColumn := Col;
-        // Diferimos abrir la paleta (timer 1ms): la modal anterior aun se
-        // esta cerrando y el editor de la nueva celda no esta parentado.
-        FOrdenPopupPend := i;
-        FTimerPopup.Enabled := False;
-        FTimerPopup.Enabled := True;
-        Result := True;
+        Col := ColumnaPorTag(i);
+        if Col <> nil then
+        begin
+          if not Col.Visible then
+            Col.Visible := True;
+          FView.Controller.FocusedColumn := Col;
+          FOrdenPopupPend := i;
+          FTimerPopup.Enabled := False;
+          FTimerPopup.Enabled := True;
+          Result := True;
+        end;
+        Break;
       end;
-      Break;
     end;
   end;
 end;

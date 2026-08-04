@@ -442,31 +442,27 @@ begin
   fldCB  := DataSet.FindField('CODIGO_BARRAS_CB');
   fldAct := DataSet.FindField('ESACTIVO_SKU');
   fldSku := DataSet.FindField('CODIGO_UNIDAD_SKU');
-  if fldSku = nil then Exit;
-
-  sSku := fldSku.AsString;
-
-  if DataSet.State = dsInsert then
+  if fldSku <> nil then
   begin
-    if Trim(sSku) = '' then
-      raise ERangeError.Create(SErrorCodigoSkuCodigoBarrasObligatorio);
-    if (fldCB = nil) then
-      raise ERangeError.Create(SErrorCampoCodigoBarrasAusente);
-    ActualizarAuditoria(DataSet);
-    Exit; // El framework lanza SQLInsert
+    sSku := fldSku.AsString;
+    if DataSet.State = dsInsert then
+    begin
+      if Trim(sSku) = '' then
+        raise ERangeError.Create(SErrorCodigoSkuCodigoBarrasObligatorio);
+      if fldCB = nil then
+        raise ERangeError.Create(SErrorCampoCodigoBarrasAusente);
+      ActualizarAuditoria(DataSet);
+    end
+    else if DataSet.State = dsEdit then
+    begin
+      ActualizarAuditoria(DataSet);
+      bChangedActivo := (fldAct <> nil) and
+        (VarToStr(fldAct.OldValue) <> fldAct.AsString);
+      // ESACTIVO_SKU pertenece a fza_articulos_skus.
+      if bChangedActivo then
+        ActualizarSkuActivo(sSku, fldAct.AsString);
+    end;
   end;
-
-  if DataSet.State <> dsEdit then Exit;
-
-  ActualizarAuditoria(DataSet);
-
-  bChangedActivo := (fldAct <> nil) and
-                    (VarToStr(fldAct.OldValue) <> fldAct.AsString);
-
-  // ESACTIVO_SKU vive en fza_articulos_skus, no en fza_codigos_barras.
-  // El SQLUpdate del framework no lo tocaría: lo actualizamos a mano.
-  if bChangedActivo then
-    ActualizarSkuActivo(sSku, fldAct.AsString);
 end;
 
 procedure TdmArticulos.unqrySkusBeforePost(DataSet: TDataSet);
@@ -522,34 +518,36 @@ procedure TdmArticulos.UpsertCosteSku(const aSku: string;
 var
   qry: TUniQuery;
 begin
-  if Trim(aSku) = '' then Exit;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text :=
-      'INSERT INTO fza_articulos_skus_costes '                              +
-      '       (CODIGO_UNIDAD_SKU_SKUC, PRECIO_ULT_COMPRA_SKUC, '            +
-      '        FECHA_ULT_COMPRA_SKUC, '                                     +
-      '        INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) '                +
-      'VALUES (:SKU, :PRECIO, :FECHA, '                                     +
-      '        CURRENT_TIMESTAMP, :USR, :USR) '                             +
-      'ON DUPLICATE KEY UPDATE '                                            +
-      '   PRECIO_ULT_COMPRA_SKUC = VALUES(PRECIO_ULT_COMPRA_SKUC), '        +
-      '   FECHA_ULT_COMPRA_SKUC  = VALUES(FECHA_ULT_COMPRA_SKUC), '         +
-      '   USUARIO_MODIF          = VALUES(USUARIO_MODIF)';
-    qry.ParamByName('SKU').AsString := aSku;
-    if (aPrecioField <> nil) and not aPrecioField.IsNull then
-      qry.ParamByName('PRECIO').AsFloat := aPrecioField.AsFloat
-    else
-      qry.ParamByName('PRECIO').Clear;
-    if (aFechaField <> nil) and not aFechaField.IsNull then
-      qry.ParamByName('FECHA').AsDateTime := aFechaField.AsDateTime
-    else
-      qry.ParamByName('FECHA').Clear;
-    qry.ParamByName('USR').AsString := IdentidadSesion.Usuario;
-    qry.ExecSQL;
-  finally
-    FreeAndNil(qry);
+  if Trim(aSku) <> '' then
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := ConexionPrincipal;
+      qry.SQL.Text :=
+        'INSERT INTO fza_articulos_skus_costes ' +
+        '       (CODIGO_UNIDAD_SKU_SKUC, PRECIO_ULT_COMPRA_SKUC, ' +
+        '        FECHA_ULT_COMPRA_SKUC, ' +
+        '        INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+        'VALUES (:SKU, :PRECIO, :FECHA, ' +
+        '        CURRENT_TIMESTAMP, :USR, :USR) ' +
+        'ON DUPLICATE KEY UPDATE ' +
+        '   PRECIO_ULT_COMPRA_SKUC = VALUES(PRECIO_ULT_COMPRA_SKUC), ' +
+        '   FECHA_ULT_COMPRA_SKUC  = VALUES(FECHA_ULT_COMPRA_SKUC), ' +
+        '   USUARIO_MODIF          = VALUES(USUARIO_MODIF)';
+      qry.ParamByName('SKU').AsString := aSku;
+      if (aPrecioField <> nil) and not aPrecioField.IsNull then
+        qry.ParamByName('PRECIO').AsFloat := aPrecioField.AsFloat
+      else
+        qry.ParamByName('PRECIO').Clear;
+      if (aFechaField <> nil) and not aFechaField.IsNull then
+        qry.ParamByName('FECHA').AsDateTime := aFechaField.AsDateTime
+      else
+        qry.ParamByName('FECHA').Clear;
+      qry.ParamByName('USR').AsString := IdentidadSesion.Usuario;
+      qry.ExecSQL;
+    finally
+      FreeAndNil(qry);
+    end;
   end;
 end;
 
@@ -557,17 +555,19 @@ procedure TdmArticulos.EliminarCosteSku(const aSku: string);
 var
   qry: TUniQuery;
 begin
-  if Trim(aSku) = '' then Exit;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := ConexionPrincipal;
-    qry.SQL.Text :=
-      'DELETE FROM fza_articulos_skus_costes ' +
-      ' WHERE CODIGO_UNIDAD_SKU_SKUC = :SKU';
-    qry.ParamByName('SKU').AsString := aSku;
-    qry.ExecSQL;
-  finally
-    FreeAndNil(qry);
+  if Trim(aSku) <> '' then
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := ConexionPrincipal;
+      qry.SQL.Text :=
+        'DELETE FROM fza_articulos_skus_costes ' +
+        ' WHERE CODIGO_UNIDAD_SKU_SKUC = :SKU';
+      qry.ParamByName('SKU').AsString := aSku;
+      qry.ExecSQL;
+    finally
+      FreeAndNil(qry);
+    end;
   end;
 end;
 
@@ -624,21 +624,24 @@ var
   msSP, msRebuild, msAnchos: Int64;
 begin
   inherited;
-  if DataSet.ControlsDisabled then Exit;
-  if not DataSet.Active or DataSet.IsEmpty then Exit;
-  swTotal := TStopwatch.StartNew;
-  msSP := 0; msRebuild := 0; msAnchos := 0;
-  unqryStockArticulos.Close;
-  sArt := unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
-  unqryStockArticulos.ParamByName('CODIGO_ART_ART').AsString := sArt;
-  tvArticulosStock := FVistaStock;
-  if tvArticulosStock = nil then
-    Exit;
-  if sArt <> '' then
+  if (not DataSet.ControlsDisabled) and DataSet.Active and
+     (not DataSet.IsEmpty) then
   begin
-    swTramo := TStopwatch.StartNew;
-    unqryStockArticulos.Open;
-    msSP := swTramo.ElapsedMilliseconds;
+    swTotal := TStopwatch.StartNew;
+    msSP := 0;
+    msRebuild := 0;
+    msAnchos := 0;
+    unqryStockArticulos.Close;
+    sArt := unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+    unqryStockArticulos.ParamByName('CODIGO_ART_ART').AsString := sArt;
+    tvArticulosStock := FVistaStock;
+    if tvArticulosStock <> nil then
+    begin
+      if sArt <> '' then
+      begin
+        swTramo := TStopwatch.StartNew;
+        unqryStockArticulos.Open;
+        msSP := swTramo.ElapsedMilliseconds;
 
 //    swTramo := TStopwatch.StartNew;
     tvArticulosStock.BeginUpdate;
@@ -650,8 +653,9 @@ begin
     end;
 //    msRebuild := swTramo.ElapsedMilliseconds;
 
-    if unqryStockArticulos.Active and (tvArticulosStock.ColumnCount > 0) then
-    begin
+        if unqryStockArticulos.Active and
+           (tvArticulosStock.ColumnCount > 0) then
+        begin
 //      swTramo := TStopwatch.StartNew;
       // Asignamos anchos fijos segun el nombre del campo. Las columnas
       // especiales (Almacen, Color, Total) tienen su valor concreto;
@@ -714,14 +718,18 @@ begin
       finally
         tvArticulosStock.DataController.Filter.EndUpdate;
       end;
-      tvArticulosStock.DataController.Filter.Active :=
-        (colGrupo <> nil) or (bOcultarCeros and (colTotal <> nil));
+          tvArticulosStock.DataController.Filter.Active :=
+            (colGrupo <> nil) or (bOcultarCeros and (colTotal <> nil));
+        end;
+      end;
+      RegistroLog.RegistrarRendimiento('Articulos.StockAfterScroll',
+        Format('art=%s | SP=%d ms | RebuildItems=%d ms | ' +
+          'Anchos=%d ms | cols=%d',
+          [sArt, msSP, msRebuild, msAnchos,
+           tvArticulosStock.ColumnCount]),
+        swTotal.ElapsedMilliseconds);
     end;
   end;
-  RegistroLog.RegistrarRendimiento('Articulos.StockAfterScroll',
-    Format('art=%s | SP=%d ms | RebuildItems=%d ms | Anchos=%d ms | cols=%d',
-           [sArt, msSP, msRebuild, msAnchos, tvArticulosStock.ColumnCount]),
-    swTotal.ElapsedMilliseconds);
 end;
 
 procedure TdmArticulos.unqryTablaGAfterDelete(DataSet: TDataSet);
@@ -874,7 +882,8 @@ const
   var
     swQ: TStopwatch;
   begin
-    if qry.Active then Exit;
+    if not qry.Active then
+    begin
     swQ := TStopwatch.StartNew;
     try
       qry.Open;
@@ -888,6 +897,7 @@ const
           swQ.ElapsedMilliseconds);
         raise;
       end;
+    end;
     end;
   end;
 
@@ -942,21 +952,23 @@ procedure TdmArticulos.AsegurarTarifasAbiertas;
 var
   sw: TStopwatch;
 begin
-  if unqryTarifasArticulos.Active then Exit;
-  sw := TStopwatch.StartNew;
-  try
-    unqryTarifasArticulos.Open;
-    QuitarEscribiblesVista;
-    RegistroLog.RegistrarRendimiento(
-      'Articulos.Lazy', 'unqryTarifasArticulos OK',
-      sw.ElapsedMilliseconds);
-  except
-    on E: Exception do
-    begin
-      RegistroLog.RegistrarRendimiento('Articulos.Lazy',
-        'unqryTarifasArticulos ERROR=' + E.Message,
+  if not unqryTarifasArticulos.Active then
+  begin
+    sw := TStopwatch.StartNew;
+    try
+      unqryTarifasArticulos.Open;
+      QuitarEscribiblesVista;
+      RegistroLog.RegistrarRendimiento(
+        'Articulos.Lazy', 'unqryTarifasArticulos OK',
         sw.ElapsedMilliseconds);
-      raise;
+    except
+      on E: Exception do
+      begin
+        RegistroLog.RegistrarRendimiento('Articulos.Lazy',
+          'unqryTarifasArticulos ERROR=' + E.Message,
+          sw.ElapsedMilliseconds);
+        raise;
+      end;
     end;
   end;
 end;
@@ -978,7 +990,10 @@ const
   begin
     Result := False;
     for s in CamposEscribibles do
-      if SameText(s, NombreCampo) then Exit(True);
+    begin
+      if SameText(s, NombreCampo) then
+        Result := True;
+    end;
   end;
 
 var
@@ -1318,9 +1333,12 @@ begin
       sFiltroAlm := '';
       for i := 0 to lstCod.Count - 1 do
       begin
-        if Trim(lstCod[i]) = '' then Continue;
-        if sFiltroAlm <> '' then sFiltroAlm := sFiltroAlm + ',';
-        sFiltroAlm := sFiltroAlm + QuotedStr(Trim(lstCod[i]));
+        if Trim(lstCod[i]) <> '' then
+        begin
+          if sFiltroAlm <> '' then
+            sFiltroAlm := sFiltroAlm + ',';
+          sFiltroAlm := sFiltroAlm + QuotedStr(Trim(lstCod[i]));
+        end;
       end;
     finally
       FreeAndNil(lstCod);
@@ -1376,51 +1394,51 @@ var
   i, j, k, iStock, iStockIdx, iOriginales: Integer;
   Filas: array of array of Variant;
 begin
-  if (not cdsEtiquetasArt.Active) or cdsEtiquetasArt.IsEmpty then Exit;
-  if cdsEtiquetasArt.FindField(aFldStock) = nil then Exit;
-  iStockIdx := cdsEtiquetasArt.FieldByName(aFldStock).Index;
-
-  cdsEtiquetasArt.DisableControls;
-  cdsEtiquetasArt.DisableConstraints;
-  // Los TField vienen marcados como ReadOnly desde el DataSetProvider; sin
-  // esto, el Fields[j].Value := ... peta con
-  // 'Field xxx cannot be modified'.
-  for j := 0 to cdsEtiquetasArt.FieldCount - 1 do
+  if cdsEtiquetasArt.Active and (not cdsEtiquetasArt.IsEmpty) and
+     (cdsEtiquetasArt.FindField(aFldStock) <> nil) then
   begin
-    cdsEtiquetasArt.Fields[j].ReadOnly := False;
-    cdsEtiquetasArt.Fields[j].Required := False;
-  end;
-  try
-    // Volcamos los originales a memoria, vaciamos el cds y lo
-    // reconstruimos replicando cada fila por su stock.
-    iOriginales := cdsEtiquetasArt.RecordCount;
-    SetLength(Filas, iOriginales);
-    cdsEtiquetasArt.First;
-    for i := 0 to iOriginales - 1 do
+    iStockIdx := cdsEtiquetasArt.FieldByName(aFldStock).Index;
+    cdsEtiquetasArt.DisableControls;
+    cdsEtiquetasArt.DisableConstraints;
+    // Los campos del proveedor se hacen escribibles para reconstruirlos.
+    for j := 0 to cdsEtiquetasArt.FieldCount - 1 do
     begin
-      SetLength(Filas[i], cdsEtiquetasArt.FieldCount);
-      for j := 0 to cdsEtiquetasArt.FieldCount - 1 do
-        Filas[i][j] := cdsEtiquetasArt.Fields[j].Value;
-      cdsEtiquetasArt.Next;
+      cdsEtiquetasArt.Fields[j].ReadOnly := False;
+      cdsEtiquetasArt.Fields[j].Required := False;
     end;
-
-    cdsEtiquetasArt.EmptyDataSet;
-
-    for i := 0 to iOriginales - 1 do
-    begin
-      if VarIsNull(Filas[i][iStockIdx]) then Continue;
-      iStock := Trunc(Double(Filas[i][iStockIdx]));
-      if iStock <= 0 then Continue;
-      for k := 1 to iStock do
+    try
+      // Se vuelcan los originales y se replica cada fila por su stock.
+      iOriginales := cdsEtiquetasArt.RecordCount;
+      SetLength(Filas, iOriginales);
+      cdsEtiquetasArt.First;
+      for i := 0 to iOriginales - 1 do
       begin
-        cdsEtiquetasArt.Append;
+        SetLength(Filas[i], cdsEtiquetasArt.FieldCount);
         for j := 0 to cdsEtiquetasArt.FieldCount - 1 do
-          cdsEtiquetasArt.Fields[j].Value := Filas[i][j];
-        cdsEtiquetasArt.Post;
+          Filas[i][j] := cdsEtiquetasArt.Fields[j].Value;
+        cdsEtiquetasArt.Next;
       end;
+      cdsEtiquetasArt.EmptyDataSet;
+      for i := 0 to iOriginales - 1 do
+      begin
+        if not VarIsNull(Filas[i][iStockIdx]) then
+        begin
+          iStock := Trunc(Double(Filas[i][iStockIdx]));
+          if iStock > 0 then
+          begin
+            for k := 1 to iStock do
+            begin
+              cdsEtiquetasArt.Append;
+              for j := 0 to cdsEtiquetasArt.FieldCount - 1 do
+                cdsEtiquetasArt.Fields[j].Value := Filas[i][j];
+              cdsEtiquetasArt.Post;
+            end;
+          end;
+        end;
+      end;
+    finally
+      cdsEtiquetasArt.EnableControls;
     end;
-  finally
-    cdsEtiquetasArt.EnableControls;
   end;
 end;
 

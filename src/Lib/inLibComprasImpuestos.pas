@@ -574,11 +574,11 @@ var
   bFiltroActivo: Boolean;
 begin
   Result := 0;
-  if not (Assigned(ALineas) and ALineas.Active) then
-    Exit;
-  sSufijoLinea := SufijoLineaFiscalDesdeCampo(ACampoTipoIvaLinea);
-  if sSufijoLinea = '' then
-    Exit;
+  if Assigned(ALineas) and ALineas.Active then
+  begin
+    sSufijoLinea := SufijoLineaFiscalDesdeCampo(ACampoTipoIvaLinea);
+    if sSufijoLinea <> '' then
+    begin
   bk := ALineas.GetBookmark;
   bFiltroActivo := ALineas.Filtered;
   try
@@ -608,6 +608,8 @@ begin
       ALineas.GotoBookmark(bk);
     ALineas.FreeBookmark(bk);
     ALineas.EnableControls;
+  end;
+    end;
   end;
 end;
 

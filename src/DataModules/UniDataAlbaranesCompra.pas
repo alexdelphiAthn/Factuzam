@@ -390,7 +390,8 @@ const
   var
     swQ: TStopwatch;
   begin
-    if qry.Active then Exit;
+    if not qry.Active then
+    begin
     swQ := TStopwatch.StartNew;
     try
       qry.Open;
@@ -404,6 +405,7 @@ const
           swQ.ElapsedMilliseconds);
         raise;
       end;
+    end;
     end;
   end;
 
@@ -747,8 +749,8 @@ var
 begin
   inherited;
   // Desempaquetado ATTR en curso: post descriptivo, sin logica fiscal.
-  if FDesempaquetandoAtributos then
-    Exit;
+  if not FDesempaquetandoAtributos then
+  begin
   // Modelo contrato (una linea por SKU): TOTAL_UNIDADES acompana a
   // CANTIDAD. La vista de cabecera lo prefiere al contar prendas y se
   // quedaba con el valor antiguo al editar cantidades en el pivote.
@@ -830,6 +832,7 @@ begin
   PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionPrincipal),
     unqryTablaG,
     unqryAlbaranesCompraLineas, 'ALBC', 'ALBCLIN', 'TOTAL_ALBCLIN');
+  end;
 end;
 
 procedure TdmAlbaranesCompra.AsignarNumeroLineaAlbaranCompra(
@@ -934,35 +937,31 @@ var
 begin
   // Los posts del desempaquetado ATTR no alteran importes: saltar el
   // recalculo por linea (cascada de consultas de IVA al navegar).
-  if FDesempaquetandoAtributos then
-    Exit;
-  // Reorganizacion en bloque en curso: un unico recalculo al Finalizar
-  // (cada pasada consulta el IVA articulo a articulo y edita la
-  // cabecera, forzando posts encadenados del master-detail).
-  if FReorganizandoLineas > 0 then
+  if not FDesempaquetandoAtributos then
   begin
-    FReorganizacionPendiente := True;
-    Exit;
-  end;
-  CalcularTotalesDocumentoCompra(
-    CrearLecturasImpuestos(unqryTablaG.Connection), unqryTablaG,
-    unqryAlbaranesCompraLineas, 'ALBC', 'TOTAL_ALBCLIN',
-    'TIPO_IVA_ARTICULO_ALBCLIN', 'PORCENTAJE_IVA_ALBCLIN');
-  // Nº de prendas: TOTAL_PRENDAS_ALBC es columna calculada de la vista
-  // y solo se lee al abrir la cabecera. Se replica aqui en cliente con
-  // la misma regla COALESCE para refrescarla al momento. No esta en
-  // CAMPOS_ALBC, asi que SQLUpdate/SQLInsert nunca la envian a BBDD.
-  oCampoPrendas := unqryTablaG.FindField('TOTAL_PRENDAS_ALBC');
-  if oCampoPrendas <> nil then
-  begin
-    rPrendas := TotalPrendasLineasCompra(unqryAlbaranesCompraLineas,
-      'TIPO_IVA_ARTICULO_ALBCLIN', 'TOTAL_UNIDADES_ALBCLIN');
-    if oCampoPrendas.IsNull or
-       (Abs(oCampoPrendas.AsFloat - rPrendas) > 0.000001) then
+    // Reorganizacion en bloque en curso: un unico recalculo al Finalizar.
+    if FReorganizandoLineas > 0 then
+      FReorganizacionPendiente := True
+    else
     begin
-      if not (unqryTablaG.State in [dsEdit, dsInsert]) then
-        unqryTablaG.Edit;
-      oCampoPrendas.AsFloat := rPrendas;
+      CalcularTotalesDocumentoCompra(
+        CrearLecturasImpuestos(unqryTablaG.Connection), unqryTablaG,
+        unqryAlbaranesCompraLineas, 'ALBC', 'TOTAL_ALBCLIN',
+        'TIPO_IVA_ARTICULO_ALBCLIN', 'PORCENTAJE_IVA_ALBCLIN');
+      // La vista calcula prendas al abrir; aqui se actualizan en cliente.
+      oCampoPrendas := unqryTablaG.FindField('TOTAL_PRENDAS_ALBC');
+      if oCampoPrendas <> nil then
+      begin
+        rPrendas := TotalPrendasLineasCompra(unqryAlbaranesCompraLineas,
+          'TIPO_IVA_ARTICULO_ALBCLIN', 'TOTAL_UNIDADES_ALBCLIN');
+        if oCampoPrendas.IsNull or
+           (Abs(oCampoPrendas.AsFloat - rPrendas) > 0.000001) then
+        begin
+          if not (unqryTablaG.State in [dsEdit, dsInsert]) then
+            unqryTablaG.Edit;
+          oCampoPrendas.AsFloat := rPrendas;
+        end;
+      end;
     end;
   end;
 end;
@@ -1006,30 +1005,29 @@ var
 begin
   // Los posts del desempaquetado ATTR no tocan cantidades ni SKUs:
   // saltar el borrado/recreacion de movimientos y recalculo de PMP.
-  if FDesempaquetandoAtributos then
-    Exit;
-  // Reorganizacion en bloque en curso: revertir y regenerar TODOS los
-  // movimientos (con PMP) por cada linea multiplica el coste; se
-  // pospone a FinalizarReorganizacionLineas.
-  if FReorganizandoLineas > 0 then
+  if not FDesempaquetandoAtributos then
   begin
-    FReorganizacionPendiente := True;
-    Exit;
-  end;
-  if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
-  begin
-    sSerie := Trim(unqryTablaG.FieldByName('SERIE_ALBC').AsString);
-    sNumero := Trim(unqryTablaG.FieldByName('NUMERO_ALBC').AsString);
-    if (sSerie <> '') and (sNumero <> '') and (sNumero <> '0') then
+    // La reorganizacion pospone la regeneracion completa de movimientos.
+    if FReorganizandoLineas > 0 then
+      FReorganizacionPendiente := True
+    else if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
     begin
-      inLibAlbaranesCompraMovimientos.RevertirMovimientosDesdeAlbaranCompra(
-        CrearMovimientosAlbaranCompraUniDAC(unqryTablaG.Connection),
-        sSerie, sNumero, IdentidadSesion.Usuario);
-      if HayLineasMovimiento(sSerie, sNumero) then
-        inLibAlbaranesCompraMovimientos.GenerarMovimientosDesdeAlbaranCompra(
+      sSerie := Trim(unqryTablaG.FieldByName('SERIE_ALBC').AsString);
+      sNumero := Trim(unqryTablaG.FieldByName('NUMERO_ALBC').AsString);
+      if (sSerie <> '') and (sNumero <> '') and (sNumero <> '0') then
+      begin
+        inLibAlbaranesCompraMovimientos.
+          RevertirMovimientosDesdeAlbaranCompra(
           CrearMovimientosAlbaranCompraUniDAC(unqryTablaG.Connection),
           sSerie, sNumero, IdentidadSesion.Usuario);
-      RefrescarMovimientosProveedor;
+        if HayLineasMovimiento(sSerie, sNumero) then
+          inLibAlbaranesCompraMovimientos.
+            GenerarMovimientosDesdeAlbaranCompra(
+              CrearMovimientosAlbaranCompraUniDAC(
+                unqryTablaG.Connection),
+              sSerie, sNumero, IdentidadSesion.Usuario);
+        RefrescarMovimientosProveedor;
+      end;
     end;
   end;
 end;
@@ -1094,39 +1092,43 @@ var
   oLv   : TcxListView;
   oItem : TListItem;
 begin
-  if not (ALV is TcxListView) then Exit;
-  oLv := TcxListView(ALV);
-  oLv.Items.BeginUpdate;
-  try
-    oLv.Items.Clear;
-    oQry := TUniQuery.Create(nil);
+  if ALV is TcxListView then
+  begin
+    oLv := TcxListView(ALV);
+    oLv.Items.BeginUpdate;
     try
-      oQry.Connection := ConexionPrincipal;
-      oQry.SQL.Text :=
-        'SELECT DISTINCT L.CODIGO_ALMACEN_ALBCLIN AS COD, ' +
-        '       COALESCE(A.NOMBRE_ALM_ALM, L.CODIGO_ALMACEN_ALBCLIN) AS NOM ' +
-        '  FROM fza_albaranes_compra_lineas L ' +
-        '  LEFT JOIN fza_almacenes A ON A.CODIGO_ALM_ALM = ' +
-        'L.CODIGO_ALMACEN_ALBCLIN ' +
-        ' WHERE L.SERIE_ALBC_ALBCLIN = :s AND L.NUMERO_ALBC_ALBCLIN = :n ' +
-        '   AND COALESCE(L.CODIGO_ALMACEN_ALBCLIN, '''') <> '''' ' +
-        ' ORDER BY COD';
-      oQry.ParamByName('s').AsString := ASerie;
-      oQry.ParamByName('n').AsString := ANumero;
-      oQry.Open;
-      while not oQry.Eof do
-      begin
-        oItem := oLv.Items.Add;
-        oItem.Caption := oQry.FieldByName('COD').AsString;
-        oItem.SubItems.Add(oQry.FieldByName('NOM').AsString);
-        oItem.Checked := True;
-        oQry.Next;
+      oLv.Items.Clear;
+      oQry := TUniQuery.Create(nil);
+      try
+        oQry.Connection := ConexionPrincipal;
+        oQry.SQL.Text :=
+          'SELECT DISTINCT L.CODIGO_ALMACEN_ALBCLIN AS COD, ' +
+          '       COALESCE(A.NOMBRE_ALM_ALM, ' +
+          'L.CODIGO_ALMACEN_ALBCLIN) AS NOM ' +
+          '  FROM fza_albaranes_compra_lineas L ' +
+          '  LEFT JOIN fza_almacenes A ON A.CODIGO_ALM_ALM = ' +
+          'L.CODIGO_ALMACEN_ALBCLIN ' +
+          ' WHERE L.SERIE_ALBC_ALBCLIN = :s ' +
+          'AND L.NUMERO_ALBC_ALBCLIN = :n ' +
+          '   AND COALESCE(L.CODIGO_ALMACEN_ALBCLIN, '''') <> '''' ' +
+          ' ORDER BY COD';
+        oQry.ParamByName('s').AsString := ASerie;
+        oQry.ParamByName('n').AsString := ANumero;
+        oQry.Open;
+        while not oQry.Eof do
+        begin
+          oItem := oLv.Items.Add;
+          oItem.Caption := oQry.FieldByName('COD').AsString;
+          oItem.SubItems.Add(oQry.FieldByName('NOM').AsString);
+          oItem.Checked := True;
+          oQry.Next;
+        end;
+      finally
+        FreeAndNil(oQry);
       end;
     finally
-      FreeAndNil(oQry);
+      oLv.Items.EndUpdate;
     end;
-  finally
-    oLv.Items.EndUpdate;
   end;
 end;
 
@@ -1143,12 +1145,16 @@ begin
   // mismo .fr3 sirva en ambos modales. La query base filtra YA en
   // servidor por SKU IN (...) — la version anterior cargaba todos y
   // filtraba en cliente, tardaba 10 s sobre una BBDD con muchos SKUs.
-  if not (ADmArt is TdmArticulos) then Exit;
-  oDmArt := TdmArticulos(ADmArt);
-  sSkus  := ObtenerSkusAlbaranCsv(ASerie, ANumero);
-  if sSkus = '' then Exit;
-  oDmArt.CrearDataSetEtiquetasArt('', ACodTarifa, AAlmacenesCsv,
-                                  AFecha, sSkus);
+  if ADmArt is TdmArticulos then
+  begin
+    oDmArt := TdmArticulos(ADmArt);
+    sSkus  := ObtenerSkusAlbaranCsv(ASerie, ANumero);
+    if sSkus <> '' then
+    begin
+      oDmArt.CrearDataSetEtiquetasArt('', ACodTarifa, AAlmacenesCsv,
+        AFecha, sSkus);
+    end;
+  end;
 end;
 
 function TdmAlbaranesCompra.ObtenerSkusAlbaranCsv(

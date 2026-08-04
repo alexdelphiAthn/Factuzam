@@ -370,11 +370,11 @@ var
   ds: TDataSet;
   sTipoLinea: string;
 begin
-  if not AResul.Encontrado then Exit;
-  if ADM = nil then Exit;
-  ds := ADM.unqrySesionLin;
-  if ds = nil then Exit;
-  if ds.IsEmpty then Exit;
+  ds := nil;
+  if ADM <> nil then
+    ds := ADM.unqrySesionLin;
+  if AResul.Encontrado and (ds <> nil) and (not ds.IsEmpty) then
+  begin
   if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
 
   // Marca REUSAR + codigo del articulo a reutilizar.
@@ -435,6 +435,7 @@ begin
     ds.FieldByName('REF_PRV_SESLIN').AsString := AResul.RefProveedor;
   if (AResul.Origen = 'SES') and (AResul.RefProveedor <> '') then
     ds.FieldByName('REF_PRV_SESLIN').AsString := AResul.RefProveedor;
+  end;
 end;
 
 function NormalizarDuplicadosIntraSesion(AConn: TUniConnection;

@@ -153,7 +153,8 @@ const
   var
     swQ: TStopwatch;
   begin
-    if qry.Active then Exit;
+    if not qry.Active then
+    begin
     swQ := TStopwatch.StartNew;
     try
       qry.Open;
@@ -167,6 +168,7 @@ const
           swQ.ElapsedMilliseconds);
         raise;
       end;
+    end;
     end;
   end;
 
@@ -187,8 +189,9 @@ end;
 procedure TdmClientes.AsegurarHistoriaFacturacionAbierta;
 var swQ: TStopwatch;
 begin
-  if unqryFacturasClientes.Active
-     and unqryFacturasLineasClientes.Active then Exit;
+  if not (unqryFacturasClientes.Active and
+          unqryFacturasLineasClientes.Active) then
+  begin
   swQ := TStopwatch.StartNew;
   try
     if not unqryFacturasClientes.Active then
@@ -206,12 +209,14 @@ begin
       raise;
     end;
   end;
+  end;
 end;
 
 procedure TdmClientes.AsegurarDepositosAbierta;
 var swQ: TStopwatch;
 begin
-  if unqryDepositos.Active then Exit;
+  if not unqryDepositos.Active then
+  begin
   swQ := TStopwatch.StartNew;
   try
     unqryDepositos.Open;
@@ -224,6 +229,7 @@ begin
         'unqryDepositos ERROR=' + E.Message, swQ.ElapsedMilliseconds);
       raise;
     end;
+  end;
   end;
 end;
 

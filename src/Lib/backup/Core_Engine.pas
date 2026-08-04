@@ -185,8 +185,8 @@ begin
         SkipTable := True;
       if (FOptions.ExcludeTables.IndexOf(SourceTables[i]) >= 0) then
         SkipTable := True;
-      if SkipTable then
-        Continue;
+      if not SkipTable then
+      begin
       if TargetTables.IndexOf(SourceTables[i]) = -1 then
       begin
         // Tabla nueva - Crear completa
@@ -199,6 +199,7 @@ begin
       begin
         // Tabla existente - Comparar estructura
         CompareTableStructure(SourceTables[i]);
+      end;
       end;
     end;
     // --- INTEGRACIÓN DE DATOS ---
@@ -246,8 +247,8 @@ var
   begin
     Result := -1;
     for k := 0 to List.Count - 1 do
-      if SameText(List[k].ColumnName, Name) then
-        Exit(k);
+      if (Result < 0) and SameText(List[k].ColumnName, Name) then
+        Result := k;
   end;
 
 begin
@@ -490,8 +491,9 @@ begin
     if PKCols.Count = 0 then
     begin
       FWriter.AddComment(Format(TRes.MsgWarnNoPK, [TableName]));
-      Exit;
-    end;
+    end
+    else
+    begin
     FWriter.AddComment(TRes.MsgSyncData  + TableName +
                        (IfThen(HasIdentity, TRes.MsgWithIdentity, '')));
     // =========================================================================
@@ -534,8 +536,8 @@ begin
             for i := 0 to SourceData.FieldCount - 1 do
             begin
               // Saltamos la PK (no se actualiza)
-              if (PKCols.IndexOf(SourceData.Fields[i].FieldName) >= 0) then
-                Continue;
+              if PKCols.IndexOf(SourceData.Fields[i].FieldName) < 0 then
+              begin
               // Verificamos si el campo existe en destino y si el valor es
               // diferente
               if (TargetData.FindField(
@@ -555,7 +557,8 @@ begin
                                 ' = ' +
                                 FSql.Valores.ValueToSQL(
                                   SourceData.Fields[i]);
-                 end;
+                  end;
+              end;
               end;
             end;
             if SetClause <> '' then
@@ -606,6 +609,7 @@ begin
       finally
         TargetData.Free;
       end;
+    end;
     end;
   finally
     TableStruct.Free;
@@ -684,8 +688,8 @@ begin
     for var i := 0 to High(TargetIndexes) do
     begin
       // No borrar PRIMARY KEY aquí (se maneja diferente)
-      if TargetIndexes[i].IsPrimary then
-        Continue;
+      if not TargetIndexes[i].IsPrimary then
+      begin
       Found := False;
       for var j := 0 to High(SourceIndexes) do
       begin
@@ -700,7 +704,8 @@ begin
         FWriter.AddComment(TRes.MsgDelIndex + TableName + '.' +
                           TargetIndexes[i].IndexName);
         FWriter.AddCommand(FSql.Eliminacion.GenerateDropIndexSQL(TableName,
-                                                   TargetIndexes[i].IndexName));
+                          TargetIndexes[i].IndexName));
+      end;
       end;
     end;
   end;

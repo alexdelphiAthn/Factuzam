@@ -502,9 +502,9 @@ begin
   inherited;
   // Pantalla de histórico de arqueos de esta caja: reemite duplicados del
   // ticket o del cierre ya grabados, sin recalcular.
-  if (FConn = nil) or (not FConn.Connected) then
-    Exit;
-  TfrmModalArqueosHistCaja.Ejecutar(Self, FConn, FEmpresa, FAlmacen, FCaja);
+  if (FConn <> nil) and FConn.Connected then
+    TfrmModalArqueosHistCaja.Ejecutar(
+      Self, FConn, FEmpresa, FAlmacen, FCaja);
 end;
 
 procedure TfrmModalArqueo.btnTiraCajaClick(Sender: TObject);
@@ -522,79 +522,59 @@ var
   bIncluirGastos: Boolean;
   bIncluirCredito: Boolean;
   bVerCoste: Boolean;
+  bContinuar: Boolean;
 begin
   inherited;
-  if (FConn = nil) or (not FConn.Connected) then
-    Exit;
-  // Series facturadas en el rango; si no hay ninguna, no hay tira que sacar.
-  Series := TTiraCajaTicket.ObtenerSeries(
-    FRepositorioTiraCaja,
-    FEmpresa,
-    FAlmacen,
-    FCaja,
-    FechaDesdeSeleccionada,
-    FechaHastaSeleccionada);
-  if Length(Series) = 0 then
+  bVerCoste := False;
+  bContinuar := (FConn <> nil) and FConn.Connected;
+  if bContinuar then
   begin
-    Application.MessageBox(
-      PChar(SInfoOperacionesFacturadasArqueoCajaNoEncontradas),
-      PChar(STituloTiraCaja), MB_OK or MB_ICONINFORMATION);
-    Exit;
+    Series := TTiraCajaTicket.ObtenerSeries(
+      FRepositorioTiraCaja, FEmpresa, FAlmacen, FCaja,
+      FechaDesdeSeleccionada, FechaHastaSeleccionada);
+    if Length(Series) = 0 then
+    begin
+      Application.MessageBox(
+        PChar(SInfoOperacionesFacturadasArqueoCajaNoEncontradas),
+        PChar(STituloTiraCaja), MB_OK or MB_ICONINFORMATION);
+      bContinuar := False;
+    end;
   end;
-  // El QR solo aplica con Verifactu activo (envío PRE o PRO).
-  bVerifactu := VerifactuActivo(ParametrosApp);
-  bQR        := False;
-  bVerCoste := Assigned(Permisos) and
-               Permisos.TienePermiso(
-                 PERMISO_CAJA_VER_COSTE,
-                 paDenegar);
-  // El diálogo se muestra siempre: serie (multi-selección), agrupamiento, QR,
-  // los bloques opcionales y la elección entre Imprimir y Ver Excel.
-  if not TfrmModalTiraCaja.Ejecutar(Self, FCaja, Series, bVerifactu,
-                                    SeleccionSeries, bQR, bCronologico, bExcel,
-                                    bIncluirTraspasos, bIncluirIngresos,
-                                    bIncluirGastos, bIncluirCredito) then
-    Exit;
-  Screen.Cursor := crHourGlass;
-  try
-    if bExcel then
-      TTiraCajaTicket.ExportarExcel(
-        Self,
-        ProveedorPreviewExcel,
-        FRepositorioTiraCaja,
-        FEmpresa,
-        FAlmacen,
-        FCaja,
-        FechaDesdeSeleccionada,
-        FechaHastaSeleccionada,
-        SeleccionSeries,
-        bCronologico,
-        bIncluirTraspasos,
-        bIncluirIngresos,
-        bIncluirGastos,
-        bIncluirCredito,
-        bVerCoste)
-    else
-      TTiraCajaTicket.Imprimir(
-        ParametrosApp,
-        PreviewTicket,
-        FRepositorioTiraCaja,
-        FEmpresa,
-        FAlmacen,
-        FCaja,
-        FechaDesdeSeleccionada,
-        FechaHastaSeleccionada,
-        SeleccionSeries,
-        bQR,
-        ParametrosCaja.ImpresoraCaja,
-        bCronologico,
-        bIncluirTraspasos,
-        bIncluirIngresos,
-        bIncluirGastos,
-        bIncluirCredito,
-        bVerCoste);
-  finally
-    Screen.Cursor := crDefault;
+  if bContinuar then
+  begin
+    bVerifactu := VerifactuActivo(ParametrosApp);
+    bQR := False;
+    bVerCoste := Assigned(Permisos) and
+      Permisos.TienePermiso(PERMISO_CAJA_VER_COSTE, paDenegar);
+    bContinuar := TfrmModalTiraCaja.Ejecutar(
+      Self, FCaja, Series, bVerifactu,
+      SeleccionSeries, bQR, bCronologico, bExcel,
+      bIncluirTraspasos, bIncluirIngresos,
+      bIncluirGastos, bIncluirCredito);
+  end;
+  if bContinuar then
+  begin
+    Screen.Cursor := crHourGlass;
+    try
+      if bExcel then
+        TTiraCajaTicket.ExportarExcel(
+          Self, ProveedorPreviewExcel, FRepositorioTiraCaja,
+          FEmpresa, FAlmacen, FCaja,
+          FechaDesdeSeleccionada, FechaHastaSeleccionada,
+          SeleccionSeries, bCronologico, bIncluirTraspasos,
+          bIncluirIngresos, bIncluirGastos, bIncluirCredito,
+          bVerCoste)
+      else
+        TTiraCajaTicket.Imprimir(
+          ParametrosApp, PreviewTicket, FRepositorioTiraCaja,
+          FEmpresa, FAlmacen, FCaja,
+          FechaDesdeSeleccionada, FechaHastaSeleccionada,
+          SeleccionSeries, bQR, ParametrosCaja.ImpresoraCaja,
+          bCronologico, bIncluirTraspasos, bIncluirIngresos,
+          bIncluirGastos, bIncluirCredito, bVerCoste);
+    finally
+      Screen.Cursor := crDefault;
+    end;
   end;
 end;
 
@@ -926,30 +906,32 @@ var
   v: Variant;
   oEdit: TcxCustomEdit;
 begin
-  if AItem <> tvRecuentoImporte then
-    Exit;
-  iRow := tvRecuento.DataController.FocusedRecordIndex;
-  if iRow < 0 then
-    Exit;
-  dSistema := 0;
-  v := tvRecuento.DataController.Values[
-         iRow, tvRecuentoSistema.Index];
-  if not VarIsNull(v) then
-    dSistema := Double(v);
-  dRecuento := 0;
-  oEdit := tvRecuento.Controller.EditingController.Edit;
-  if Assigned(oEdit) then
+  if AItem = tvRecuentoImporte then
   begin
-    v := oEdit.EditValue;
-    if not VarIsNull(v) then
-      dRecuento := Double(v);
+    iRow := tvRecuento.DataController.FocusedRecordIndex;
+    if iRow >= 0 then
+    begin
+      dSistema := 0;
+      v := tvRecuento.DataController.Values[
+        iRow, tvRecuentoSistema.Index];
+      if not VarIsNull(v) then
+        dSistema := Double(v);
+      dRecuento := 0;
+      oEdit := tvRecuento.Controller.EditingController.Edit;
+      if Assigned(oEdit) then
+      begin
+        v := oEdit.EditValue;
+        if not VarIsNull(v) then
+          dRecuento := Double(v);
+      end;
+      dDif := dRecuento - dSistema;
+      tvRecuento.DataController.Values[
+        iRow, tvRecuentoDiferencia.Index] := dDif;
+      tvRecuento.DataController.Values[
+        iRow, tvRecuentoImporte.Index] := dRecuento;
+      RecalcularTotalesRecuento;
+    end;
   end;
-  dDif := dRecuento - dSistema;
-  tvRecuento.DataController.Values[
-    iRow, tvRecuentoDiferencia.Index] := dDif;
-  tvRecuento.DataController.Values[
-    iRow, tvRecuentoImporte.Index] := dRecuento;
-  RecalcularTotalesRecuento;
 end;
 
 procedure TfrmModalArqueo.tvRecuentoKeyDown(Sender: TObject;
@@ -1056,60 +1038,70 @@ var
   sObs, sDesglose, sConceptoRet: string;
   sVendedor, sNombreVendedor: string;
   v: Variant;
+  bContinuar: Boolean;
 begin
-  if (FConn = nil) or (not FConn.Connected) then
-    Exit;
-  // Vendedor obligatorio: quien cierra estampa su número de empleado de
-  // caja (fza_empleados), sea o no el usuario logado en el programa
-  sVendedor := Trim(txtVendedorCodigo.Text);
-  if sVendedor = '' then
+  dEfectivoRecontado := 0;
+  bContinuar := (FConn <> nil) and FConn.Connected;
+  if bContinuar then
   begin
-    Application.MessageBox(
-      PChar(SErrorVendedorArqueoCajaNoIndicado),
-      PChar(STituloVendedorArqueoCajaObligatorio),
-      MB_OK or MB_ICONWARNING);
-    pcArqueo.ActivePage := tsRecuento;
-    txtVendedorCodigo.SetFocus;
-    Exit;
+    sVendedor := Trim(txtVendedorCodigo.Text);
+    if sVendedor = '' then
+    begin
+      Application.MessageBox(
+        PChar(SErrorVendedorArqueoCajaNoIndicado),
+        PChar(STituloVendedorArqueoCajaObligatorio),
+        MB_OK or MB_ICONWARNING);
+      pcArqueo.ActivePage := tsRecuento;
+      txtVendedorCodigo.SetFocus;
+      bContinuar := False;
+    end;
   end;
-  sNombreVendedor := BuscarNombreVendedor(sVendedor);
-  if sNombreVendedor = '' then
+  if bContinuar then
   begin
-    Application.MessageBox(
-      PChar(SErrorVendedorArqueoCajaNoValido),
-      PChar(STituloVendedorArqueoCajaNoValido),
-      MB_OK or MB_ICONWARNING);
-    pcArqueo.ActivePage := tsRecuento;
-    txtVendedorCodigo.SetFocus;
-    Exit;
+    sNombreVendedor := BuscarNombreVendedor(sVendedor);
+    if sNombreVendedor = '' then
+    begin
+      Application.MessageBox(
+        PChar(SErrorVendedorArqueoCajaNoValido),
+        PChar(STituloVendedorArqueoCajaNoValido),
+        MB_OK or MB_ICONWARNING);
+      pcArqueo.ActivePage := tsRecuento;
+      txtVendedorCodigo.SetFocus;
+      bContinuar := False;
+    end
+    else
+      lblVendedorNombre.Caption := sNombreVendedor;
   end;
-  lblVendedorNombre.Caption := sNombreVendedor;
-  // Comprobar doble cierre.
-  if FRepositorioPersistencia.ExisteArqueoCerrado(
+  if bContinuar and FRepositorioPersistencia.ExisteArqueoCerrado(
        ConstruirSolicitudResumen) then
   begin
     Application.MessageBox(
       PChar(SErrorArqueoCajaDuplicado),
       PChar(STituloArqueoCajaDuplicado), MB_OK or MB_ICONWARNING);
-    Exit;
+    bContinuar := False;
   end;
-  dEfectivoRecontado := ObtenerEfectivoRecontado;
-  if (dEfectivoRecontado = 0)
-     and (tvRecuento.DataController.RecordCount = 0) then
+  if bContinuar then
   begin
-    Application.MessageBox(
-      PChar(SErrorRecuentoArqueoCajaNoDisponible),
-      PChar(STituloAvisoCaja), MB_OK or MB_ICONWARNING);
-    Exit;
+    dEfectivoRecontado := ObtenerEfectivoRecontado;
+    if (dEfectivoRecontado = 0) and
+       (tvRecuento.DataController.RecordCount = 0) then
+    begin
+      Application.MessageBox(
+        PChar(SErrorRecuentoArqueoCajaNoDisponible),
+        PChar(STituloAvisoCaja), MB_OK or MB_ICONWARNING);
+      bContinuar := False;
+    end;
   end;
-  if Application.MessageBox(
+  if bContinuar and (Application.MessageBox(
        PChar(Format(SPreguntaGrabarArqueoCaja,
          [FormatDateTime('dd/mm/yyyy hh:nn:ss', FechaDesdeSeleccionada),
           FormatDateTime('dd/mm/yyyy hh:nn:ss', FechaHastaSeleccionada)])),
        PChar(STituloConfirmarArqueoCaja),
-       MB_YESNO or MB_ICONQUESTION) <> IDYES then
-    Exit;
-  dRetirada := Currency(txtRetiradaImporte.Value);
+       MB_YESNO or MB_ICONQUESTION) <> IDYES) then
+    bContinuar := False;
+  if bContinuar then
+  begin
+    dRetirada := Currency(txtRetiradaImporte.Value);
   dDejo     := dEfectivoRecontado - dRetirada;
   if dDejo < 0 then
     dDejo := 0;
@@ -1167,22 +1159,23 @@ begin
     Screen.Cursor := crDefault;
   end;
   { Justificante del cierre }
-  TArqueoTicket.ImprimirCierre(
-    PreviewTicket,
-    FRepositorioArqueoTicket,
-    ContextoSesion,
-    FArqueoActual,
-    Lineas,
-    dTotalSistema,
-    dTotalRecuento,
-    dDiferenciaTotal,
-    dRetirada,
-    sConceptoRet,
-    dDejo,
-    sDesglose,
-    sObs,
-    sVendedor + ' - ' + sNombreVendedor,
-    ParametrosCaja.ImpresoraCaja);
+    TArqueoTicket.ImprimirCierre(
+      PreviewTicket,
+      FRepositorioArqueoTicket,
+      ContextoSesion,
+      FArqueoActual,
+      Lineas,
+      dTotalSistema,
+      dTotalRecuento,
+      dDiferenciaTotal,
+      dRetirada,
+      sConceptoRet,
+      dDejo,
+      sDesglose,
+      sObs,
+      sVendedor + ' - ' + sNombreVendedor,
+      ParametrosCaja.ImpresoraCaja);
+  end;
 end;
 
 initialization

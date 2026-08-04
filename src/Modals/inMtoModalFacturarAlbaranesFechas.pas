@@ -169,42 +169,45 @@ begin
   if dmmAlbaranes = nil then
   begin
     ShowMessage(SErrorDataModuleAlbaranesNoAsignado);
-    Exit;
-  end;
-  lst := TStringList.Create;
-  try
-    for i := 0 to tvAlbaranes.DataController.RecordCount - 1 do
-    begin
-      if not Boolean(tvAlbaranes.DataController.Values[i, colSel.Index]) then
-        Continue;
-      sNumAlb :=
-        VarToStr(tvAlbaranes.DataController.Values[i, colNumero.Index]);
-      sSerAlb := VarToStr(tvAlbaranes.DataController.Values[i, colSerie.Index]);
-      lst.Add(sSerAlb + '|' + sNumAlb);
-    end;
-    if lst.Count = 0 then
-    begin
-      ShowMessage(SErrorAlbaranesNoSeleccionados);
-      Exit;
-    end;
-    Screen.Cursor := crHourGlass;
+  end
+  else
+  begin
+    lst := TStringList.Create;
     try
-      lblEstado.Caption := Format(SCaptionCreandoBorradoresAlbaranes,
-                                  [lst.Count]);
-      Application.ProcessMessages;
-      generadas := dmmAlbaranes.FacturarAlbaranesLista(lst,
-                                                       chkAgruparPorCliente
-                                                       .Checked);
-      lblEstado.Caption := Format(SCaptionGeneradosBorradores,
-                                  [generadas]);
-      ShowMessageFmt(SInfoBorradoresGenerados,
-                     [generadas]);
-      btnBuscarClick(nil);
+      for i := 0 to tvAlbaranes.DataController.RecordCount - 1 do
+      begin
+        if Boolean(
+          tvAlbaranes.DataController.Values[i, colSel.Index]) then
+        begin
+          sNumAlb := VarToStr(
+            tvAlbaranes.DataController.Values[i, colNumero.Index]);
+          sSerAlb := VarToStr(
+            tvAlbaranes.DataController.Values[i, colSerie.Index]);
+          lst.Add(sSerAlb + '|' + sNumAlb);
+        end;
+      end;
+      if lst.Count = 0 then
+        ShowMessage(SErrorAlbaranesNoSeleccionados)
+      else
+      begin
+        Screen.Cursor := crHourGlass;
+        try
+          lblEstado.Caption := Format(
+            SCaptionCreandoBorradoresAlbaranes, [lst.Count]);
+          Application.ProcessMessages;
+          generadas := dmmAlbaranes.FacturarAlbaranesLista(lst,
+            chkAgruparPorCliente.Checked);
+          lblEstado.Caption := Format(SCaptionGeneradosBorradores,
+            [generadas]);
+          ShowMessageFmt(SInfoBorradoresGenerados, [generadas]);
+          btnBuscarClick(nil);
+        finally
+          Screen.Cursor := crDefault;
+        end;
+      end;
     finally
-      Screen.Cursor := crDefault;
+      FreeAndNil(lst);
     end;
-  finally
-    FreeAndNil(lst);
   end;
 end;
 

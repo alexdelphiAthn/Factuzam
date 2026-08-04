@@ -749,15 +749,17 @@ end;
 
 procedure TfrmMtoEmpresas.PcPestanaChange(Sender: TObject);
 begin
-  if not Assigned(dmmEmpresas) then Exit;
-  if pcPestana.ActivePage = tsRetenciones then
-    dmmEmpresas.AsegurarRetencionesAbierta
-  else if pcPestana.ActivePage = tsSeries then
-    dmmEmpresas.AsegurarSeriesAbierta
-  else if pcPestana.ActivePage = tsBancos then
-    dmmEmpresas.AsegurarBancosAbierta
-  else if pcPestana.ActivePage = tsHistoriaFacturacion then
-    dmmEmpresas.AsegurarHistoriaFacturacionAbierta;
+  if Assigned(dmmEmpresas) then
+  begin
+    if pcPestana.ActivePage = tsRetenciones then
+      dmmEmpresas.AsegurarRetencionesAbierta
+    else if pcPestana.ActivePage = tsSeries then
+      dmmEmpresas.AsegurarSeriesAbierta
+    else if pcPestana.ActivePage = tsBancos then
+      dmmEmpresas.AsegurarBancosAbierta
+    else if pcPestana.ActivePage = tsHistoriaFacturacion then
+      dmmEmpresas.AsegurarHistoriaFacturacionAbierta;
+  end;
 end;
 
 procedure TfrmMtoEmpresas.dsTablaGStateChange(Sender: TObject);

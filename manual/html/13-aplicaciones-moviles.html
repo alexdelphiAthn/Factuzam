@@ -20,6 +20,46 @@
 información o capturar datos fuera del puesto Windows. Cada app usa una
 credencial y permisos propios; no se conecta directamente a MariaDB.</p>
 <hr>
+<h2 id="factuzam-fotos-nube-fotografiar-articulos-desde-android">Factuzam Fotos Nube: fotografiar artículos desde Android</h2>
+<p><strong>Factuzam Fotos Nube</strong> permite hacer fotos con la cámara del móvil —o
+elegirlas de la galería—, asociarlas a un <strong>artículo y color</strong> y subirlas
+por lotes al servicio de fotos. Después pueden descargarse e integrarse en
+el catálogo desde Factuzam.</p>
+<p><img src="img/13-fotos-nube-capturar.png" alt="Captura y cola de Factuzam Fotos Nube" loading="lazy"></p>
+<h3 id="configuracion-inicial">Configuración inicial</h3>
+<p>En la pestaña <strong>Configuración</strong> indica:</p>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Contenido</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>URL</strong></td><td>Dirección del servicio <code>upload_foto.php</code> facilitada por el administrador.</td></tr>
+<tr><td><strong>API key</strong></td><td>Credencial de acceso al servicio de fotos.</td></tr>
+<tr><td><strong>Carpeta de cliente</strong></td><td>Identificador de la instalación en el servidor. Debe existir previamente; no se crea desde el móvil para evitar duplicados por errores de escritura.</td></tr>
+<tr><td><strong>Resolución máxima</strong></td><td>Tamaño máximo del lado mayor. El valor predeterminado es <strong>1000 px</strong> y el límite de seguridad es 4000 px.</td></tr>
+</tbody>
+</table>
+<p>Pulsa <strong>Guardar configuración</strong>. Los valores quedan en el almacenamiento
+privado de la aplicación; la pantalla muestra la ruta de su fichero de
+configuración.</p>
+<p><img src="img/13-fotos-nube-configuracion.png" alt="Configuración de Factuzam Fotos Nube" loading="lazy"></p>
+<blockquote><p>La API key es una credencial. No la incluyas legible en capturas, correos
+ni incidencias: enmascárala antes de compartir la pantalla.</p></blockquote>
+<h3 id="capturar-y-subir-un-lote">Capturar y subir un lote</h3>
+<ol><li>Escribe el <strong>código exacto del artículo</strong>.</li><li>Escribe el <strong>color</strong>. Debe coincidir con el texto de color que forma el SKU en Factuzam, no con el color básico usado solo para clasificar.</li><li>Pulsa <strong>Hacer foto</strong> o <strong>Elegir de galería</strong>. La imagen se reduce a la resolución configurada y se añade a la cola como <strong>Pendiente</strong>.</li><li>Repite el proceso para todos los artículos y colores del lote.</li><li>Pulsa <strong>Subir todas</strong>. Cada elemento pasa por <strong>Subiendo...</strong> y termina en <strong>Subida OK</strong> o <strong>Error</strong>. El registro inferior muestra el resultado.</li></ol>
+<p>Si hay varias imágenes del mismo artículo/color, la app les asigna los
+índices 1, 2, 3... en el orden de la cola. Por ejemplo, la primera foto de
+<code>BLUSA01</code> en <code>011-AZ</code> se publica como la imagen 1 de ese grupo.</p>
+<p>Para que el emparejamiento sea fiable, Factuzam sanea el color con la misma
+regla que el SKU: mayúsculas, espacios convertidos en guiones y sin símbolos
+como <code>/</code>, <code>%</code> o <code>€</code>. Si el proveedor llama al color <code>011-AZ</code> y su color
+básico es <code>AZUL</code>, en la app se escribe <strong>011-AZ</strong>.</p>
+<h3 id="incorporar-las-fotos-al-catalogo-de-factuzam">Incorporar las fotos al catálogo de Factuzam</h3>
+<p>La subida al servidor no sustituye automáticamente la foto local. En el
+puesto Windows:</p>
+<ol><li>Configura el servicio y la carpeta compartida de fotos en <em>Otros ▸ Parámetros del entorno ▸ Fotos/Servicios web</em>.</li><li>Abre el artículo o la línea de una sesión de compra.</li><li>Usa <strong>Bajar fotos del servidor</strong>. Factuzam descarga las imágenes, relaciona el color con el SKU y crea sus copias de 300 px, 600 px y resolución real en <code>appDirFotos</code>.</li><li>Comprueba el resultado con <code>[Ctrl]+[F]</code> o en la <a href="08-menu-ayuda.html#consulta-de-stocks">Consulta de stocks</a>.</li></ol>
+<hr>
 <h2 id="ventasfzam-ventas-del-dia-en-el-movil">VentasFzam: ventas del día en el móvil</h2>
 <p><strong>VentasFzam</strong> es una aplicación de consulta en modo <strong>solo lectura</strong>. Permite
 seguir las ventas diarias desde el teléfono sin abrir el TPV y sin riesgo de
@@ -72,7 +112,7 @@ controlan desde Factuzam; el móvil no regulariza el stock por sí solo.</p>
 <hr>
 <p><a href="12-cambios-y-novedades.html">◀ Cambios y novedades</a> · <a href="index.html">Índice</a> · <a href="14-arquitectura-y-desarrollo.html">Siguiente ▶ Arquitectura y desarrollo</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 31/07/2026</footer>
+<footer>Manual de Factuzam · generado el 04/08/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

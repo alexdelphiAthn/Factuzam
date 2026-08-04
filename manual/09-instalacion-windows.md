@@ -92,7 +92,6 @@ países, tipos de IVA, ventanas, usuario inicial…).
 4. Pulsa **Probar Conexión** para verificar.
 
 ![Login con configuración de BBDD y Subir Script](img/09-subir-script.png)
-*▢ Captura pendiente — Panel Configuración BBDD con el botón de carga de script.*
 
 **Opción B — por línea de comandos:**
 
@@ -147,7 +146,6 @@ FLUSH PRIVILEGES;
   [Otros ▸ Usuarios, Grupos y Perfiles](07-menu-otros.md#usuarios-grupos-y-perfiles).
 
 ![Primer inicio de sesión](img/09-primer-login.png)
-*▢ Captura pendiente — Primer login como Administrador.*
 
 ---
 

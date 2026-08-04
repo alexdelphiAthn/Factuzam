@@ -1,17 +1,17 @@
 param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoConsultasUi = 35,
+  [int]$MaximoConsultasUi = 0,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoComponentesUniDacDfm = 18,
+  [int]$MaximoComponentesUniDacDfm = 0,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoAsignacionesSqlText = 68,
+  [int]$MaximoAsignacionesSqlText = 0,
   [ValidateRange(0, [int]::MaxValue)]
   [int]$MaximoLlamadasSqlAdd = 0,
   [ValidateRange(0, [int]::MaxValue)]
   [int]$MaximoAsignacionesCommandText = 0,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoTransaccionesCreadas = 5,
+  [int]$MaximoTransaccionesCreadas = 0,
   [ValidateRange(0, [int]::MaxValue)]
   [int]$MaximoProcedimientosCreados = 0,
   [switch]$MostrarTodos

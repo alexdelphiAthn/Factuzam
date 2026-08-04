@@ -728,18 +728,15 @@ begin
     ShowMessage(SErrorArticuloSinTipoVariacion);
     // Mandamos al usuario al combo para que lo elija
     FCbbTipoVariacion.SetFocus;
-    Exit;
   end;
-
-  // 4. Llamamos a nuestra pantalla mágica
-  if TfrmMtoModalGenerarSKUs.Ejecutar(CodArticulo, TipoVariacion) then
+  if (CodArticulo <> '') and (TipoVariacion <> '') then
   begin
-    // Si la pantalla devuelve True, refrescamos los datasets afectados.
+    TfrmMtoModalGenerarSKUs.Ejecutar(CodArticulo, TipoVariacion);
+    dmmArticulos.unqrySkus.Close;
+    dmmArticulos.unqrySkus.Open;
+    dmmArticulos.unqryVariacionesArticulos.Close;
+    dmmArticulos.unqryVariacionesArticulos.Open;
   end;
-  dmmArticulos.unqrySkus.Close;
-  dmmArticulos.unqrySkus.Open;
-  dmmArticulos.unqryVariacionesArticulos.Close;
-  dmmArticulos.unqryVariacionesArticulos.Open;
 end;
 
 procedure TfrmMtoArticulos.actClientesExecute(Sender: TObject);
@@ -1039,36 +1036,40 @@ end;
 procedure TfrmMtoArticulos.btnReconstruirStockClick(Sender: TObject);
 var
   sMensaje: string;
+  bReconstruido: Boolean;
 begin
   inherited;
   if Application.MessageBox(
        PChar(SPreguntaReconstruirStock),
        PChar(STituloReconstruirStock),
-       MB_YESNO + MB_ICONQUESTION) <> ID_YES then
-    Exit;
-
-  Screen.Cursor := crHourGlass;
-  try
+       MB_YESNO + MB_ICONQUESTION) = ID_YES then
+  begin
+    bReconstruido := True;
+    Screen.Cursor := crHourGlass;
     try
-      sMensaje := dmmArticulos.ReconstruirStock;
-      if dmmArticulos.unqryTablaG.Active and
-         (not dmmArticulos.unqryTablaG.IsEmpty) then
-        dmmArticulos.unqryStockArticulosAfterScroll(dmmArticulos.unqryTablaG);
-    except
-      on E: Exception do
-      begin
-        Screen.Cursor := crDefault;
-        ShowMessage(Format(SErrorReconstruirStock, [E.Message]));
-        Exit;
+      try
+        sMensaje := dmmArticulos.ReconstruirStock;
+        if dmmArticulos.unqryTablaG.Active and
+           not dmmArticulos.unqryTablaG.IsEmpty then
+          dmmArticulos.unqryStockArticulosAfterScroll(
+            dmmArticulos.unqryTablaG);
+      except
+        on E: Exception do
+        begin
+          bReconstruido := False;
+          ShowMessage(Format(SErrorReconstruirStock, [E.Message]));
+        end;
       end;
+    finally
+      Screen.Cursor := crDefault;
     end;
-  finally
-    Screen.Cursor := crDefault;
+    if bReconstruido then
+    begin
+      if sMensaje = '' then
+        sMensaje := SInfoStockReconstruido;
+      ShowMessage(sMensaje);
+    end;
   end;
-
-  if sMensaje = '' then
-    sMensaje := SInfoStockReconstruido;
-  ShowMessage(sMensaje);
 end;
 
 procedure TfrmMtoArticulos.btnImprimirEtiquetasClick(Sender: TObject);
@@ -1079,20 +1080,18 @@ begin
   if not PuedeImprimir then
     Abort;
   if (not dsTablaG.Dataset.Active) or dsTablaG.Dataset.IsEmpty then
+    ShowMessage(SErrorArticuloNoSeleccionadoImprimirEtiquetas)
+  else
   begin
-    ShowMessage(SErrorArticuloNoSeleccionadoImprimirEtiquetas);
-    Exit;
-  end;
-  formulario := TfrmPrintEtiqArt.Create(Application);
-  try
-    // Pasamos el DM de ESTA instancia al modal (campo de instancia,
-    // no global, asi funciona aunque haya dos Mtos abiertos).
-    formulario.DM := dmmArticulos;
-    formulario.edtCodArt.Text :=
-                        dsTablaG.Dataset.FieldByName('CODIGO_ART_ART').AsString;
-    formulario.ShowModal;
-  finally
-    FreeAndNil(formulario);
+    formulario := TfrmPrintEtiqArt.Create(Application);
+    try
+      formulario.DM := dmmArticulos;
+      formulario.edtCodArt.Text := dsTablaG.Dataset.FieldByName(
+        'CODIGO_ART_ART').AsString;
+      formulario.ShowModal;
+    finally
+      FreeAndNil(formulario);
+    end;
   end;
 end;
 
@@ -1183,24 +1182,28 @@ procedure TfrmMtoArticulos.ResolverArtSkuActivo(out ACodArt,
     ds: TDataSet;
   begin
     Result := '';
-    if not Assigned(AGrid.DataController.DataSource) then Exit;
-    ds := AGrid.DataController.DataSource.DataSet;
-    // Reutilizamos la lista canonica de aliases (CODIGO_UNIDAD_*).
-    var sArt: string := '';
-    inLibFotos.LeerArtSkuDeDataSet(ds, sArt, Result);
+    if Assigned(AGrid.DataController.DataSource) then
+    begin
+      ds := AGrid.DataController.DataSource.DataSet;
+      // Reutilizamos la lista canonica de aliases (CODIGO_UNIDAD_*).
+      var sArt: string := '';
+      inLibFotos.LeerArtSkuDeDataSet(ds, sArt, Result);
+    end;
   end;
 
 begin
   inherited ResolverArtSkuActivo(ACodArt, ACodSku);
   // Si el inherited ya devolvio SKU (improbable en este Mto), no
   // tocamos. Si no, miramos la pestana activa.
-  if ACodSku <> '' then Exit;
-  if pcDetail.ActivePage = tsSkuMto then
-    ACodSku := LeerSkuDeGrid(tvSkuMto)
-  else if pcDetail.ActivePage = cxTabSheet3 then       // 8_Stock
-    ACodSku := LeerSkuDeGrid(tvStock)
-  else if pcDetail.ActivePage = tsMovimientos then     // 9_Movimientos
-    ACodSku := LeerSkuDeGrid(tvMovimientos);
+  if ACodSku = '' then
+  begin
+    if pcDetail.ActivePage = tsSkuMto then
+      ACodSku := LeerSkuDeGrid(tvSkuMto)
+    else if pcDetail.ActivePage = cxTabSheet3 then
+      ACodSku := LeerSkuDeGrid(tvStock)
+    else if pcDetail.ActivePage = tsMovimientos then
+      ACodSku := LeerSkuDeGrid(tvMovimientos);
+  end;
 end;
 
 function TfrmMtoArticulos.DataSourcesParaFoto: TArray<TDataSource>;
@@ -1561,14 +1564,13 @@ var
   swTotal, swTramo: TStopwatch;
   msCargarProp, msCargarVar, msActVisVar, msAseguraSku,
   msRefSkus, msRefVarArt, msMapaAtr, msStockAS, msActVisCol: Int64;
+  bProcesar: Boolean;
 begin
-  if DataSet.ControlsDisabled then
-    Exit;
-  if dmmArticulos.unqrySkus.Active = False then
-    Exit;
+  bProcesar := not DataSet.ControlsDisabled and
+    dmmArticulos.unqrySkus.Active;
   // 1. Si estamos creando un artículo nuevo, limpiamos la pantalla una sola vez
   // y salimos
-  if DataSet.State = dsInsert then
+  if bProcesar and (DataSet.State = dsInsert) then
   begin
     if FArticuloCargado <> '' then
     begin
@@ -1579,19 +1581,20 @@ begin
         FGestorVar.CargarVariaciones('');
       ActualizarVisibilidadVariaciones;
     end;
-    Exit;
+    bProcesar := False;
   end;
-
   // 2. Si estamos editando, ignoramos los scrolls fantasma
-  if DataSet.State = dsEdit then Exit;
-
-  CodArticulo := DataSet.FieldByName('CODIGO_ART_ART').AsString;
-
+  if bProcesar and (DataSet.State = dsEdit) then
+    bProcesar := False;
+  CodArticulo := '';
+  if bProcesar then
+    CodArticulo := DataSet.FieldByName('CODIGO_ART_ART').AsString;
   // 3. EL ESCUDO: Si el artículo es exactamente el mismo que ya está dibujado,
   // ¡no hagas nada!
-  if FArticuloCargado = CodArticulo then
-    Exit;
-
+  if bProcesar and (FArticuloCargado = CodArticulo) then
+    bProcesar := False;
+  if bProcesar then
+  begin
   // Actualizamos nuestra memoria
   FArticuloCargado := CodArticulo;
 
@@ -1673,6 +1676,7 @@ begin
             msAseguraSku, msRefSkus, msRefVarArt, msMapaAtr, msStockAS,
             msActVisCol]),
     swTotal.ElapsedMilliseconds);
+  end;
 end;
 
 procedure TfrmMtoArticulos.cxButton11Click(Sender: TObject);
@@ -1689,35 +1693,24 @@ procedure TfrmMtoArticulos.cxDBComboBox1PropertiesEditValueChanged(
   Sender: TObject);
 begin
   inherited;
-  if (csLoading in ComponentState) or (csDestroying in ComponentState) then
-    Exit;
-  if not Assigned(dmmArticulos) or not Assigned(dmmArticulos.unqryTablaG) then
-    Exit;
-  if not dmmArticulos.unqryTablaG.Active then
-    Exit;
-  // Refrescamos visibilidad de stock/movimientos según el nuevo TIPO_ART
-  ActualizarVisibilidadVariaciones;
+  if not (csLoading in ComponentState) and
+     not (csDestroying in ComponentState) and Assigned(dmmArticulos) and
+     Assigned(dmmArticulos.unqryTablaG) and
+     dmmArticulos.unqryTablaG.Active then
+    ActualizarVisibilidadVariaciones;
 end;
 
 procedure TfrmMtoArticulos.cxDBCheckBox1PropertiesEditValueChanged(
   Sender: TObject);
 begin
   inherited;
-  // 1. Comprobaciones básicas del estado del formulario
-  if (csLoading in ComponentState) or (csDestroying in ComponentState) then
-    Exit;
-  // 2. Asegurar que los objetos de datos existen
-  if not Assigned(dmmArticulos) or not Assigned(dmmArticulos.unqryTablaG) then
-    Exit;
-  // 3. Comprobar que el dataset está activo, no está vacío y no está bloqueado
-  if dmmArticulos.unqryTablaG.IsEmpty then
-    Exit;
-  if dmmArticulos.unqryTablaG.ControlsDisabled then
-    Exit;
-  if not dmmArticulos.unqryTablaG.Active then
-    Exit;
-  // 4. Validar el estado de edición y la interacción REAL del usuario
-  if (dmmArticulos.unqryTablaG.State in [dsEdit, dsInsert]) then
+  if not (csLoading in ComponentState) and
+     not (csDestroying in ComponentState) and Assigned(dmmArticulos) and
+     Assigned(dmmArticulos.unqryTablaG) and
+     dmmArticulos.unqryTablaG.Active and
+     not dmmArticulos.unqryTablaG.IsEmpty and
+     not dmmArticulos.unqryTablaG.ControlsDisabled and
+     (dmmArticulos.unqryTablaG.State in [dsEdit, dsInsert]) then
   begin
     // El Focus garantiza que el evento lo ha disparado el usuario y no un
     // refresco del dataset

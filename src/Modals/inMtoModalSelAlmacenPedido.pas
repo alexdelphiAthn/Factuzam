@@ -42,7 +42,7 @@ uses
   cxLocalization, cxButtons, cxControls, cxContainer, cxEdit,
   cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage,
   cxNavigator, cxTextEdit, cxLabel, cxCalendar,
-  cxMaskEdit, cxDropDownEdit, cxLookupEdit, cxDBLookupEdit,
+  cxMaskEdit, cxDropDownEdit, cxLookupEdit, cxDBLookupEdit, cxLookupDBGrid,
   cxDBLookupComboBox, cxCheckBox,
   cxDBData, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid,
@@ -268,6 +268,8 @@ begin
 end;
 
 procedure TfrmModalSelAlmacenPedido.ConfigurarLookupTemporada;
+var
+  Columna: TcxLookupDBGridColumn;
 begin
   FConsultaTemporadas := FRepositorio.ConsultarTemporadas;
   FTemporadas := FConsultaTemporadas.DataSet;
@@ -275,12 +277,10 @@ begin
   cbbTemporada.Properties.ListSource    := dsTemporadas;
   cbbTemporada.Properties.KeyFieldNames := 'ID_PV_ARTPROP';
   cbbTemporada.Properties.ListColumns.Clear;
-  with cbbTemporada.Properties.ListColumns.Add do
-  begin
-    FieldName := 'PV';
-    Caption   := 'Temporada';
-    Width     := 240;
-  end;
+  Columna := cbbTemporada.Properties.ListColumns.Add;
+  Columna.FieldName := 'PV';
+  Columna.Caption := 'Temporada';
+  Columna.Width := 240;
 end;
 
 procedure TfrmModalSelAlmacenPedido.CargarAlbaranesExistentes;
@@ -339,57 +339,67 @@ procedure TfrmModalSelAlmacenPedido.btnAceptarClick(Sender: TObject);
 var
   vAlm: Variant;
   vTmp: Variant;
+  bValido: Boolean;
 begin
   inherited;
   // Almacen siempre obligatorio (define que lineas se reciben).
   vAlm := cbbAlmacen.EditValue;
-  if VarIsNull(vAlm) or VarIsEmpty(vAlm) or (Trim(VarToStr(vAlm)) = '') then
+  bValido := not VarIsNull(vAlm) and not VarIsEmpty(vAlm) and
+    (Trim(VarToStr(vAlm)) <> '');
+  if not bValido then
   begin
     MessageDlg(SErrorAlmacenPedidoNoSeleccionado,
-               mtInformation, [mbOk], 0);
-    if cbbAlmacen.CanFocus then cbbAlmacen.SetFocus;
-    Exit;
+      mtInformation, [mbOk], 0);
+    if cbbAlmacen.CanFocus then
+      cbbAlmacen.SetFocus;
   end;
-  // Temporada: aplica a las lineas tanto si se crea como si se incorpora.
-  vTmp := cbbTemporada.EditValue;
-  if VarIsNull(vTmp) or VarIsEmpty(vTmp) then
-    IdPvTemporada := 0
-  else
-    IdPvTemporada := StrToIntDef(VarToStr(vTmp), 0);
-  if chkIncorporar.Checked then
+  if bValido then
   begin
-    // Modo incorporar: hace falta el albaran destino seleccionado en el
-    // grid (el cursor del dataset sigue a la fila con foco).
-    if FAlbaranes.IsEmpty then
+    // Temporada: aplica tanto al alta como a la incorporacion.
+    vTmp := cbbTemporada.EditValue;
+    if VarIsNull(vTmp) or VarIsEmpty(vTmp) then
+      IdPvTemporada := 0
+    else
+      IdPvTemporada := StrToIntDef(VarToStr(vTmp), 0);
+    if chkIncorporar.Checked then
     begin
-      MessageDlg(SInfoAlbaranesIncorporarNoDisponibles,
-                 mtInformation, [mbOk], 0);
-      Exit;
-    end;
-    AlbaranSerieDestino := FAlbaranes.FieldByName('SERIE_ALBC').AsString;
-    AlbaranNumDestino   := FAlbaranes.FieldByName('NUMERO_ALBC').AsString;
-    Incorporar    := True;
-    CodigoAlmacen := VarToStr(vAlm);
-    Aceptado      := True;
-    PostMessage(Handle, WM_CLOSE, 0, 0);
-  end
-  else
-  begin
-    // Modo clasico: crear albaran nuevo (requiere serie).
-    if Trim(cbbSerieAlb.Text) = '' then
+      // Incorporar requiere un albaran destino seleccionado.
+      if FAlbaranes.IsEmpty then
+        MessageDlg(SInfoAlbaranesIncorporarNoDisponibles,
+          mtInformation, [mbOk], 0)
+      else
+      begin
+        AlbaranSerieDestino :=
+          FAlbaranes.FieldByName('SERIE_ALBC').AsString;
+        AlbaranNumDestino :=
+          FAlbaranes.FieldByName('NUMERO_ALBC').AsString;
+        Incorporar := True;
+        CodigoAlmacen := VarToStr(vAlm);
+        Aceptado := True;
+        PostMessage(Handle, WM_CLOSE, 0, 0);
+      end;
+    end
+    else
     begin
-      MessageDlg(SErrorSerieAlbaranPedidoNoIndicada,
-                 mtInformation, [mbOk], 0);
-      if cbbSerieAlb.CanFocus then cbbSerieAlb.SetFocus;
-      Exit;
+      // El alta de un albaran nuevo requiere serie.
+      if Trim(cbbSerieAlb.Text) = '' then
+      begin
+        MessageDlg(SErrorSerieAlbaranPedidoNoIndicada,
+          mtInformation, [mbOk], 0);
+        if cbbSerieAlb.CanFocus then
+          cbbSerieAlb.SetFocus;
+      end
+      else
+      begin
+        Incorporar := False;
+        CodigoAlmacen := VarToStr(vAlm);
+        SerieAlbaran := Trim(cbbSerieAlb.Text);
+        RefProveedor := Trim(txtRefPrv.Text);
+        FechaRecepcion := dteFecha.Date;
+        Aceptado := True;
+        PostMessage(Handle, WM_CLOSE, 0, 0);
+      end;
     end;
-    Incorporar     := False;
-    CodigoAlmacen  := VarToStr(vAlm);
-    SerieAlbaran   := Trim(cbbSerieAlb.Text);
-    RefProveedor   := Trim(txtRefPrv.Text);
-    FechaRecepcion := dteFecha.Date;
-    Aceptado       := True;
-    PostMessage(Handle, WM_CLOSE, 0, 0);
   end;
 end;
 

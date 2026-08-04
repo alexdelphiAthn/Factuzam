@@ -191,9 +191,12 @@ empresa/almacén/caja). La consulta de series de fase de cobro acepta
 ahora las series genéricas de empresa (almacén/caja vacíos) además de
 las propias del puesto.
 
-El botón **Subsanar** se ha retirado de la interfaz (el motor de la
-cola y el envío siguen soportando el tipo `SUBSANACION` por si hiciera
-falta reexponerlo, p. ej. ante «aceptado con errores»).
+En Factura Venta Mayor, el botón **Resolver incidencia** se muestra solo
+para consolidaciones `VERIFACTU_ACEPT_ERR` sin una subsanación activa. El
+modal separa dos tratamientos: `SUBSANACION` si la factura expedida es
+correcta, y rectificativa sustitutiva `R4` si el dato incorrecto aparece en
+la factura. Requiere el script idempotente
+`verifactu_resolucion_incidencias.sql`.
 
 ### Botones de cobro F10 / F11
 
@@ -237,8 +240,11 @@ operan sobre el borrador seleccionado:
   con intentos a 0).
 
 El motor de subsanación (`SUBSANACION`, reenvío del `RegistroAlta` con
-`<Subsanacion>S</Subsanacion>`) sigue disponible en la cola aunque ya
-no tiene botón propio: la rectificativa es el camino preferido.
+`<Subsanacion>S</Subsanacion>`) solo admite facturas cuyo último estado es
+`VERIFACTU_ACEPT_ERR`. Al aceptarse, congela el estado, petición, respuesta,
+XML, firma, cadena y certificado originales y guarda la nueva respuesta en
+la consolidación. La R4 conserva la trazabilidad mediante la relación
+`RECTIFICA` y el enlace de abono de la factura original.
 
 **Histórico de relaciones** (`fza_facturas_relaciones`, script
 `verifactu_relaciones.sql`): cada rectificativa (RECTIFICA) y cada F3

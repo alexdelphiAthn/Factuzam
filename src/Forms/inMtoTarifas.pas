@@ -211,34 +211,29 @@ procedure TfrmMtoTarifas.btnAddBlockClick(Sender: TObject);
 var
   res        : TAddBlockTarifaResult;
   codigoTar  : string;
+  bContinuar : Boolean;
 begin
   inherited;
-
-  if (dsTablaG.DataSet = nil) or (dsTablaG.DataSet.IsEmpty) then
-  begin
+  bContinuar := (dsTablaG.DataSet <> nil) and
+    not dsTablaG.DataSet.IsEmpty;
+  if not bContinuar then
     ShowMessage(SErrorTarifaNoSeleccionada);
-    Exit;
-  end;
-
-  if dsTablaG.State in [dsInsert, dsEdit] then
+  if bContinuar and (dsTablaG.State in [dsInsert, dsEdit]) then
   begin
-    if MessageDlg(SPreguntaGuardarTarifaAntesContinuar,
-                  mtConfirmation, [mbYes, mbNo, mbCancel], 0) = mrYes then
-      dsTablaG.DataSet.Post
-    else
-      Exit;
+    bContinuar := MessageDlg(SPreguntaGuardarTarifaAntesContinuar,
+      mtConfirmation, [mbYes, mbNo, mbCancel], 0) = mrYes;
+    if bContinuar then
+      dsTablaG.DataSet.Post;
   end;
-
-  codigoTar := dsTablaG.DataSet.FieldByName('CODIGO_TAR_ARTTAR').AsString;
-
-  res := TfrmModalAddBlockTarifa.Ejecutar(
-           Self,
-           codigoTar);
-
-  if res.Aceptado then
+  if bContinuar then
   begin
-    dmmTarifas.unqryArticulosTarifas.Close;
-    dmmTarifas.unqryArticulosTarifas.Open;
+    codigoTar := dsTablaG.DataSet.FieldByName('CODIGO_TAR_ARTTAR').AsString;
+    res := TfrmModalAddBlockTarifa.Ejecutar(Self, codigoTar);
+    if res.Aceptado then
+    begin
+      dmmTarifas.unqryArticulosTarifas.Close;
+      dmmTarifas.unqryArticulosTarifas.Open;
+    end;
   end;
 end;
 

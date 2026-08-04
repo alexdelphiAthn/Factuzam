@@ -271,12 +271,12 @@ var
   i: Integer;
   ds: TDataSet;
 begin
-  if (dmmDocumentosTrabajo = nil) or
-     (csDestroying in ComponentState) then
-    Exit;
-  ds := dmmDocumentosTrabajo.unqryLineas;
-  if not ds.Active then
-    Exit;
+  if (dmmDocumentosTrabajo <> nil) and
+     not (csDestroying in ComponentState) then
+  begin
+    ds := dmmDocumentosTrabajo.unqryLineas;
+    if ds.Active then
+    begin
   // Teardown del modo anterior (patron inventarios).
   if tvLineasDTR.Controller.EditingController.IsEditing then
     try
@@ -386,6 +386,8 @@ begin
   end;
   // El guardian de ambito (solo propietario edita) se conserva.
   AplicarEstadoAmbito;
+    end;
+  end;
 end;
 
 procedure TfrmMtoDocumentosTrabajo.CrearColumnasHostDTR;
@@ -767,43 +769,39 @@ var
   iLineas: Integer;
   ds: TDataSet;
   sEmp, sAlm, sSerie, sNumero: string;
+  bContinuar: Boolean;
 begin
   idDtr := PrepararEnvio;
-  if idDtr <= 0 then
-    Exit;
-  ds := dmmDocumentosTrabajo.unqryTablaG;
-  sEmp := ds.FieldByName('CODIGO_EMP_DTR').AsString;
-  sAlm := ds.FieldByName('CODIGO_ALM_DTR').AsString;
-  sSerie := '';
-  sNumero := '0';
-  if not TfrmModalEnviarDestino.Ejecutar(Self,
-           dmmDocumentosTrabajo.unqryTablaG.Connection,
-           'Enviar a albarán de venta', sEmp, 'AV',
-           sAlm, sSerie, sNumero) then
-    Exit;
-  // Numero '0' = contador oficial de albaranes de venta (tipo 'AV').
-  if sNumero = '0' then
+  bContinuar := idDtr > 0;
+  if bContinuar then
   begin
-    sNumero := FMaterializacionDocumentosTrabajo.SiguienteContador(
-      sSerie,
-      'AV',
-      sEmp,
-      IdentidadSesion.Usuario);
-    if (sNumero = '') or (sNumero = '0') then
+    ds := dmmDocumentosTrabajo.unqryTablaG;
+    sEmp := ds.FieldByName('CODIGO_EMP_DTR').AsString;
+    sAlm := ds.FieldByName('CODIGO_ALM_DTR').AsString;
+    sSerie := '';
+    sNumero := '0';
+    bContinuar := TfrmModalEnviarDestino.Ejecutar(
+      Self, dmmDocumentosTrabajo.unqryTablaG.Connection,
+      'Enviar a albarán de venta', sEmp, 'AV',
+      sAlm, sSerie, sNumero);
+    if bContinuar and (sNumero = '0') then
     begin
-      ShowMessage(Format(SErrorContadorAlbaranDocumentoTrabajo, [sSerie]));
-      Exit;
+      sNumero := FMaterializacionDocumentosTrabajo.SiguienteContador(
+        sSerie, 'AV', sEmp, IdentidadSesion.Usuario);
+      bContinuar := (sNumero <> '') and (sNumero <> '0');
+      if not bContinuar then
+        ShowMessage(Format(
+          SErrorContadorAlbaranDocumentoTrabajo, [sSerie]));
+    end;
+    if bContinuar then
+    begin
+      iLineas := FMaterializacionDocumentosTrabajo.CrearAlbaran(
+        idDtr, sEmp, sAlm, sSerie, sNumero,
+        IdentidadSesion.Usuario);
+      ShowMessage(Format(SInfoAlbaranDocumentoTrabajoCreado,
+        [sSerie, sNumero, iLineas]));
     end;
   end;
-  iLineas := FMaterializacionDocumentosTrabajo.CrearAlbaran(
-    idDtr,
-    sEmp,
-    sAlm,
-    sSerie,
-    sNumero,
-    IdentidadSesion.Usuario);
-  ShowMessage(Format(SInfoAlbaranDocumentoTrabajoCreado,
-                     [sSerie, sNumero, iLineas]));
 end;
 
 procedure TfrmMtoDocumentosTrabajo.ConfigurarEnvioNumerado(
@@ -1151,47 +1149,38 @@ var
   iLineas: Integer;
   ds: TDataSet;
   sEmp, sAlm, sSerie, sNumero: string;
+  bContinuar: Boolean;
 begin
   idDtr := PrepararEnvio;
-  if idDtr <= 0 then
-    Exit;
-  ds := dmmDocumentosTrabajo.unqryTablaG;
-  sEmp := ds.FieldByName('CODIGO_EMP_DTR').AsString;
-  sAlm := ds.FieldByName('CODIGO_ALM_DTR').AsString;
-  sSerie := '';
-  // '0' = numero pendiente: el contador del Mto de inventarios asigna
-  // el definitivo al grabar la cabecera.
-  sNumero := '0';
-  if not TfrmModalEnviarDestino.Ejecutar(Self,
-           dmmDocumentosTrabajo.unqryTablaG.Connection,
-           'Enviar a inventario', sEmp, 'IN',
-           sAlm, sSerie, sNumero) then
-    Exit;
-  // Numero '0' = pedirlo al contador oficial (mismo SP que usa el Mto
-  // de inventarios al grabar: PRC_GET_NEXT_CONT_FACT_SERIE).
-  if sNumero = '0' then
+  bContinuar := idDtr > 0;
+  if bContinuar then
   begin
-    sNumero := FMaterializacionDocumentosTrabajo.SiguienteContador(
-      sSerie,
-      'IN',
-      sEmp,
-      IdentidadSesion.Usuario);
-    if (sNumero = '') or (sNumero = '0') then
+    ds := dmmDocumentosTrabajo.unqryTablaG;
+    sEmp := ds.FieldByName('CODIGO_EMP_DTR').AsString;
+    sAlm := ds.FieldByName('CODIGO_ALM_DTR').AsString;
+    sSerie := '';
+    sNumero := '0';
+    bContinuar := TfrmModalEnviarDestino.Ejecutar(
+      Self, dmmDocumentosTrabajo.unqryTablaG.Connection,
+      'Enviar a inventario', sEmp, 'IN', sAlm, sSerie, sNumero);
+    if bContinuar and (sNumero = '0') then
     begin
-      ShowMessage(Format(SErrorContadorInventarioDocumentoTrabajo,
-                         [sSerie]));
-      Exit;
+      sNumero := FMaterializacionDocumentosTrabajo.SiguienteContador(
+        sSerie, 'IN', sEmp, IdentidadSesion.Usuario);
+      bContinuar := (sNumero <> '') and (sNumero <> '0');
+      if not bContinuar then
+        ShowMessage(Format(
+          SErrorContadorInventarioDocumentoTrabajo, [sSerie]));
+    end;
+    if bContinuar then
+    begin
+      iLineas := FMaterializacionDocumentosTrabajo.CrearInventario(
+        idDtr, sEmp, sAlm, sSerie, sNumero,
+        IdentidadSesion.Usuario);
+      ShowMessage(Format(SInfoInventarioDocumentoTrabajoCreado,
+        [sSerie, sNumero, sAlm, iLineas]));
     end;
   end;
-  iLineas := FMaterializacionDocumentosTrabajo.CrearInventario(
-    idDtr,
-    sEmp,
-    sAlm,
-    sSerie,
-    sNumero,
-    IdentidadSesion.Usuario);
-  ShowMessage(Format(SInfoInventarioDocumentoTrabajoCreado,
-                     [sSerie, sNumero, sAlm, iLineas]));
 end;
 
 procedure TfrmMtoDocumentosTrabajo.miEnviarTarifasDTRClick(
@@ -1201,13 +1190,13 @@ var
   idTarc: Int64;
 begin
   idDtr := PrepararEnvio;
-  if idDtr <= 0 then
-    Exit;
-  idTarc := FMaterializacionDocumentosTrabajo.CrearSesionTarifa(
-    idDtr,
-    IdentidadSesion.Usuario);
-  ShowMessage(Format(SInfoCambioTarifasDocumentoTrabajoCreado,
-                     [idTarc]));
+  if idDtr > 0 then
+  begin
+    idTarc := FMaterializacionDocumentosTrabajo.CrearSesionTarifa(
+      idDtr, IdentidadSesion.Usuario);
+    ShowMessage(Format(SInfoCambioTarifasDocumentoTrabajoCreado,
+      [idTarc]));
+  end;
 end;
 
 procedure TfrmMtoDocumentosTrabajo.pcAmbitoDTRChange(Sender: TObject);

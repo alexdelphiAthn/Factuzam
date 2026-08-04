@@ -63,9 +63,9 @@ var
   fPreview: TfrmMtoPreviewExcel;
   cfg: TDocCompraCabCfg;
 begin
-  if dmDevc = nil then
-    Exit;
-  dmDevc.PrepararPrintSku(edtSerie.Text, edtNumero.Text);
+  if dmDevc <> nil then
+  begin
+    dmDevc.PrepararPrintSku(edtSerie.Text, edtNumero.Text);
   cfg := Default(TDocCompraCabCfg);
   cfg.Titulo         := 'DEVOLUCION A PROVEEDOR';
   cfg.EtiquetaIzq    := 'ALMACEN SALIDA';
@@ -109,6 +109,7 @@ begin
   finally
     FreeAndNil(fPreview);
   end;
+  end;
 end;
 
 procedure TfrmPrintDevCompraV.FormCreate(Sender: TObject);
@@ -119,8 +120,8 @@ end;
 
 procedure TfrmPrintDevCompraV.preparar_consulta;
 begin
-  if dmDevc = nil then Exit;
-  dmDevc.PrepararPrintSku(edtSerie.Text, edtNumero.Text);
+  if dmDevc <> nil then
+    dmDevc.PrepararPrintSku(edtSerie.Text, edtNumero.Text);
 end;
 
 procedure TfrmPrintDevCompraV.AfterReportLoaded;

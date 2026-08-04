@@ -24,19 +24,33 @@ $nombresLf = @(
   'touch', 'entornopre'
 )
 $nombresCrLf = @('.gitattributes')
-$prefijosSinControlTexto = @('DESARROLLOS EN CURSO\migracion\')
+$directoriosIgnorados = @(
+  '.git', '__history', '__recovery', '$tmp', 'Android64', 'Win32', 'Win64',
+  'Debug', 'Release', 'bin', 'build', 'dcu'
+)
+$prefijosSinControlTexto = @(
+  'DESARROLLOS EN CURSO\migracion\',
+  'src\3rdpartyComp\',
+  'factuzam_original.sql'
+)
 $utf8Estricto = [System.Text.UTF8Encoding]::new($false, $true)
 
-function Obtener-ArchivosVersionables {
-  $salida = & git -C $Raiz -c core.quotepath=false ls-files -z `
-    --cached --others --exclude-standard
-  if ($LASTEXITCODE -ne 0) {
-    throw 'No se pudo obtener la lista de archivos versionables.'
-  }
-  $texto = $salida -join "`n"
+function Obtener-ArchivosActuales {
   return @(
-    $texto.Split([char]0, [System.StringSplitOptions]::RemoveEmptyEntries) |
-      ForEach-Object { $_.Replace('/', '\') } |
+    Get-ChildItem -LiteralPath $Raiz -File -Recurse -Force |
+      ForEach-Object {
+        $rutaRelativa = [System.IO.Path]::GetRelativePath(
+          $Raiz,
+          $_.FullName).Replace('/', '\')
+        $partes = $rutaRelativa.Split('\')
+        $ignorar = @(
+          $partes |
+            Where-Object { $directoriosIgnorados -contains $_ }
+        ).Count -gt 0
+        if (-not $ignorar) {
+          $rutaRelativa
+        }
+      } |
       Sort-Object -Unique
   )
 }
@@ -185,7 +199,7 @@ function Guardar-LineaBase {
 }
 
 $problemas = [System.Collections.Generic.List[object]]::new()
-$archivos = Obtener-ArchivosVersionables
+$archivos = Obtener-ArchivosActuales
 foreach ($ruta in $archivos) {
   Obtener-ProblemasArchivo -RutaRelativa $ruta -Problemas $problemas
 }

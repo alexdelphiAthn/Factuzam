@@ -53,24 +53,26 @@ begin
   if FReport = nil then
   begin
     lbCamposMaster.Items.Add('(Report no disponible)');
-    Exit;
-  end;
-  for i := 0 to FReport.Datasets.Count - 1 do
+  end
+  else
   begin
-    if not (FReport.Datasets[i].DataSet is TfrxDBDataset) then
-      Continue;
-    oFrx := TfrxDBDataset(FReport.Datasets[i].DataSet);
-    sUserName := oFrx.UserName;
-    if sUserName = '' then
-      sUserName := '(sin nombre)';
-    oDS := oFrx.DataSet;
-    if (oDS = nil) or (not oDS.Active) or (oDS.FieldCount = 0) then
+    for i := 0 to FReport.Datasets.Count - 1 do
     begin
-      lbCamposMaster.Items.Add(sUserName + '  (sin campos)');
-      Continue;
+      if FReport.Datasets[i].DataSet is TfrxDBDataset then
+      begin
+        oFrx := TfrxDBDataset(FReport.Datasets[i].DataSet);
+        sUserName := oFrx.UserName;
+        if sUserName = '' then
+          sUserName := '(sin nombre)';
+        oDS := oFrx.DataSet;
+        if (oDS = nil) or (not oDS.Active) or (oDS.FieldCount = 0) then
+          lbCamposMaster.Items.Add(sUserName + '  (sin campos)')
+        else
+          for j := 0 to oDS.FieldCount - 1 do
+            lbCamposMaster.Items.Add(
+              sUserName + '.' + oDS.Fields[j].FieldName);
+      end;
     end;
-    for j := 0 to oDS.FieldCount - 1 do
-      lbCamposMaster.Items.Add(sUserName + '.' + oDS.Fields[j].FieldName);
   end;
 end;
 
@@ -100,12 +102,13 @@ var
 begin
   // Extraer el UserName del dataset (parte antes del punto)
   Result := '';
-  if lbCamposMaster.ItemIndex < 0 then
-    Exit;
-  sItem := lbCamposMaster.Items[lbCamposMaster.ItemIndex];
-  iDot := Pos('.', sItem);
-  if iDot > 0 then
-    Result := Copy(sItem, 1, iDot - 1);
+  if lbCamposMaster.ItemIndex >= 0 then
+  begin
+    sItem := lbCamposMaster.Items[lbCamposMaster.ItemIndex];
+    iDot := Pos('.', sItem);
+    if iDot > 0 then
+      Result := Copy(sItem, 1, iDot - 1);
+  end;
 end;
 
 function TfrmModalInformesGuias.ObtenerFormatoSugerido: string;
@@ -120,14 +123,15 @@ var
 begin
   // Extraer el nombre del campo (parte despues del punto)
   Result := '';
-  if lbCamposMaster.ItemIndex < 0 then
-    Exit;
-  sItem := lbCamposMaster.Items[lbCamposMaster.ItemIndex];
-  iDot := Pos('.', sItem);
-  if iDot > 0 then
-    Result := Copy(sItem, iDot + 1, MaxInt)
-  else
-    Result := sItem;
+  if lbCamposMaster.ItemIndex >= 0 then
+  begin
+    sItem := lbCamposMaster.Items[lbCamposMaster.ItemIndex];
+    iDot := Pos('.', sItem);
+    if iDot > 0 then
+      Result := Copy(sItem, iDot + 1, MaxInt)
+    else
+      Result := sItem;
+  end;
 end;
 
 end.

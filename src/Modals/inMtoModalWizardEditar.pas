@@ -313,19 +313,21 @@ begin
   begin
     ShowMessage(SErrorNombreFormatoWizardNoIndicado);
     Stop := True;
-    Exit;
-  end;
-  if SameText(NombreFinal, ITEM_NUEVO) then
+  end
+  else if SameText(NombreFinal, ITEM_NUEVO) then
   begin
     ShowMessage(SErrorNombreFormatoWizardNoModificado);
     Stop := True;
-    Exit;
+  end
+  else
+  begin
+    // Fijar la informacion del paso 1 antes de mostrar paso 2.
+    sFormato := NombreFinal;
+    sScope := cbbScope.Text;
+    if sScope = '' then
+      sScope := IdentidadSesion.Usuario;
+    bExiste := not EsFormatoNuevo;
   end;
-  // Fijar la informacion del paso 1 antes de mostrar paso 2.
-  sFormato := NombreFinal;
-  sScope   := cbbScope.Text;
-  if sScope = '' then sScope := IdentidadSesion.Usuario;
-  bExiste  := not EsFormatoNuevo;
 end;
 
 procedure TfrmModalWizardEditar.pgGuiasShow(Sender: TObject);
@@ -360,14 +362,18 @@ begin
   lstDatasets.Items.BeginUpdate;
   try
     lstDatasets.Items.Clear;
-    if FReport = nil then Exit;
-    for i := 0 to FReport.Datasets.Count - 1 do
+    if FReport <> nil then
     begin
-      if not (FReport.Datasets[i].DataSet is TfrxDBDataset) then Continue;
-      oFrx := TfrxDBDataset(FReport.Datasets[i].DataSet);
-      sUserName := oFrx.UserName;
-      if sUserName = '' then Continue;
-      lstDatasets.Items.AddObject(sUserName, oFrx);
+      for i := 0 to FReport.Datasets.Count - 1 do
+      begin
+        if FReport.Datasets[i].DataSet is TfrxDBDataset then
+        begin
+          oFrx := TfrxDBDataset(FReport.Datasets[i].DataSet);
+          sUserName := oFrx.UserName;
+          if sUserName <> '' then
+            lstDatasets.Items.AddObject(sUserName, oFrx);
+        end;
+      end;
     end;
   finally
     lstDatasets.Items.EndUpdate;
@@ -383,14 +389,19 @@ begin
   lstCampos.Items.BeginUpdate;
   try
     lstCampos.Items.Clear;
-    if (lstDatasets.ItemIndex < 0) or
-       (lstDatasets.ItemIndex >= lstDatasets.Count) then Exit;
-    oFrx := TfrxDBDataset(lstDatasets.Items.Objects[lstDatasets.ItemIndex]);
-    if oFrx = nil then Exit;
-    campos := FRepositorioWizard.ResolverCamposDataSet(
-      ResolverDataSet(oFrx));
-    for i := 0 to Length(campos) - 1 do
-      lstCampos.Items.Add.Text := campos[i];
+    if (lstDatasets.ItemIndex >= 0) and
+       (lstDatasets.ItemIndex < lstDatasets.Count) then
+    begin
+      oFrx := TfrxDBDataset(
+        lstDatasets.Items.Objects[lstDatasets.ItemIndex]);
+      if oFrx <> nil then
+      begin
+        campos := FRepositorioWizard.ResolverCamposDataSet(
+          ResolverDataSet(oFrx));
+        for i := 0 to Length(campos) - 1 do
+          lstCampos.Items.Add.Text := campos[i];
+      end;
+    end;
   finally
     lstCampos.Items.EndUpdate;
   end;
@@ -443,15 +454,16 @@ begin
     // Cambio de tabla externa = reset del orden de seleccion previo.
     if FOrdenDetail <> nil then
       FOrdenDetail.Clear;
-    if TablaSeleccionada = '' then Exit;
-    campos := FRepositorioWizard.ListarCamposTabla(TablaSeleccionada);
-    for i := 0 to Length(campos) - 1 do
+    if TablaSeleccionada <> '' then
     begin
-      // PK marcada con '*' delante, asi salta a la vista.
-      if campos[i].EsClavePrimaria then
-        lstCamposTabla.Items.Add('* ' + campos[i].Nombre)
-      else
-        lstCamposTabla.Items.Add('  ' + campos[i].Nombre);
+      campos := FRepositorioWizard.ListarCamposTabla(TablaSeleccionada);
+      for i := 0 to Length(campos) - 1 do
+      begin
+        if campos[i].EsClavePrimaria then
+          lstCamposTabla.Items.Add('* ' + campos[i].Nombre)
+        else
+          lstCamposTabla.Items.Add('  ' + campos[i].Nombre);
+      end;
     end;
   finally
     lstCamposTabla.Items.EndUpdate;
@@ -473,23 +485,26 @@ begin
   // 2) Anadimos los recien seleccionados al final de la lista, asi
   //    el orden de seleccion del usuario se preserva (lo necesita el
   //    pareo posicional master[k]=detail[k] del ON clause).
-  if FOrdenDetail = nil then
-    Exit;
-  for i := FOrdenDetail.Count - 1 downto 0 do
+  if FOrdenDetail <> nil then
   begin
-    sCampo := FOrdenDetail[i];
-    idx := lstCamposTabla.Items.IndexOf('* ' + sCampo);
-    if idx < 0 then
-      idx := lstCamposTabla.Items.IndexOf('  ' + sCampo);
-    if (idx < 0) or (not lstCamposTabla.Selected[idx]) then
-      FOrdenDetail.Delete(i);
-  end;
-  for i := 0 to lstCamposTabla.Items.Count - 1 do
-  begin
-    if not lstCamposTabla.Selected[i] then Continue;
-    sCampo := LimpiarPrefijoPk(lstCamposTabla.Items[i]);
-    if FOrdenDetail.IndexOf(sCampo) < 0 then
-      FOrdenDetail.Add(sCampo);
+    for i := FOrdenDetail.Count - 1 downto 0 do
+    begin
+      sCampo := FOrdenDetail[i];
+      idx := lstCamposTabla.Items.IndexOf('* ' + sCampo);
+      if idx < 0 then
+        idx := lstCamposTabla.Items.IndexOf('  ' + sCampo);
+      if (idx < 0) or (not lstCamposTabla.Selected[idx]) then
+        FOrdenDetail.Delete(i);
+    end;
+    for i := 0 to lstCamposTabla.Items.Count - 1 do
+    begin
+      if lstCamposTabla.Selected[i] then
+      begin
+        sCampo := LimpiarPrefijoPk(lstCamposTabla.Items[i]);
+        if FOrdenDetail.IndexOf(sCampo) < 0 then
+          FOrdenDetail.Add(sCampo);
+      end;
+    end;
   end;
 end;
 
@@ -520,11 +535,14 @@ var
   i: Integer;
 begin
   Result := '';
-  if FOrdenDetail = nil then Exit;
-  for i := 0 to FOrdenDetail.Count - 1 do
+  if FOrdenDetail <> nil then
   begin
-    if Result <> '' then Result := Result + aSep;
-    Result := Result + FOrdenDetail[i];
+    for i := 0 to FOrdenDetail.Count - 1 do
+    begin
+      if Result <> '' then
+        Result := Result + aSep;
+      Result := Result + FOrdenDetail[i];
+    end;
   end;
 end;
 
@@ -587,46 +605,31 @@ begin
   sCampoTabla := CamposTablaMarcadosCsv;
 
   if sDS = '' then
+    ShowMessage(SErrorDatasetMasterWizardNoSeleccionado)
+  else if sCampos = '' then
+    ShowMessage(SErrorCamposMasterWizardNoSeleccionados)
+  else if sTabla = '' then
+    ShowMessage(SErrorTablaExternaWizardNoSeleccionada)
+  else if sCampoTabla = '' then
+    ShowMessage(SErrorCamposTablaExternaWizardNoSeleccionados)
+  else
   begin
-    ShowMessage(SErrorDatasetMasterWizardNoSeleccionado);
-    Exit;
+    // El codigo interno identifica master y tabla de forma estable.
+    sCodigo := Sanitizar(sDS) + '_' + Sanitizar(sTabla);
+    dsGuias.DataSet.Append;
+    dsGuias.DataSet.FieldByName('CODIGO_INFGUI').AsString := sCodigo;
+    dsGuias.DataSet.FieldByName('INFORME_INFGUI').AsString := sInforme;
+    dsGuias.DataSet.FieldByName('FORMATO_INFGUI').AsString := sFormato;
+    dsGuias.DataSet.FieldByName('DATASET_MASTER_INFGUI').AsString := sDS;
+    dsGuias.DataSet.FieldByName('MASTER_FIELDS_INFGUI').AsString := sCampos;
+    dsGuias.DataSet.FieldByName('DETAIL_FIELDS_INFGUI').AsString :=
+      sCampoTabla;
+    dsGuias.DataSet.FieldByName('TABLA_INFGUI').AsString := sTabla;
+    dsGuias.DataSet.FieldByName('TIPO_INFGUI').AsString := 'TABLA';
+    dsGuias.DataSet.FieldByName('ESACTIVO_INFGUI').AsString := 'S';
+    dsGuias.DataSet.FieldByName('ORDEN_INFGUI').AsInteger := 0;
+    dsGuias.DataSet.Post;
   end;
-  if sCampos = '' then
-  begin
-    ShowMessage(SErrorCamposMasterWizardNoSeleccionados);
-    Exit;
-  end;
-  if sTabla = '' then
-  begin
-    ShowMessage(SErrorTablaExternaWizardNoSeleccionada);
-    Exit;
-  end;
-  if sCampoTabla = '' then
-  begin
-    ShowMessage(SErrorCamposTablaExternaWizardNoSeleccionados);
-    Exit;
-  end;
-
-  // El UserName en el .frx ES el del dataset master (no inventamos otro):
-  // las guias enriquecen el master via LEFT JOIN en runtime, y los nuevos
-  // campos quedan disponibles como [<DATASET_MASTER>."CAMPO"]. El
-  // CODIGO_INFGUI es un identificador interno unico por (informe,
-  // formato, master, tabla), se compone automaticamente.
-  sCodigo := Sanitizar(sDS) + '_' + Sanitizar(sTabla);
-
-  dsGuias.DataSet.Append;
-  dsGuias.DataSet.FieldByName('CODIGO_INFGUI').AsString := sCodigo;
-  dsGuias.DataSet.FieldByName('INFORME_INFGUI').AsString := sInforme;
-  dsGuias.DataSet.FieldByName('FORMATO_INFGUI').AsString := sFormato;
-  dsGuias.DataSet.FieldByName('DATASET_MASTER_INFGUI').AsString := sDS;
-  dsGuias.DataSet.FieldByName('MASTER_FIELDS_INFGUI').AsString := sCampos;
-  dsGuias.DataSet.FieldByName('DETAIL_FIELDS_INFGUI').AsString :=
-    sCampoTabla;
-  dsGuias.DataSet.FieldByName('TABLA_INFGUI').AsString := sTabla;
-  dsGuias.DataSet.FieldByName('TIPO_INFGUI').AsString := 'TABLA';
-  dsGuias.DataSet.FieldByName('ESACTIVO_INFGUI').AsString := 'S';
-  dsGuias.DataSet.FieldByName('ORDEN_INFGUI').AsInteger := 0;
-  dsGuias.DataSet.Post;
 end;
 
 procedure TfrmModalWizardEditar.unqryGuiasBeforePost(DataSet: TDataSet);

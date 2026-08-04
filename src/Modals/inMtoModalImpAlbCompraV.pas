@@ -63,9 +63,9 @@ var
   fPreview: TfrmMtoPreviewExcel;
   cfg: TDocCompraCabCfg;
 begin
-  if dmAlbc = nil then
-    Exit;
-  dmAlbc.PrepararPrintSku(edtSerie.Text, edtNumero.Text);
+  if dmAlbc <> nil then
+  begin
+    dmAlbc.PrepararPrintSku(edtSerie.Text, edtNumero.Text);
   cfg := Default(TDocCompraCabCfg);
   cfg.Titulo         := 'ALBARAN DE COMPRA';
   cfg.EtiquetaIzq    := 'ALMACEN DESTINO';
@@ -109,6 +109,7 @@ begin
   finally
     FreeAndNil(fPreview);
   end;
+  end;
 end;
 
 procedure TfrmPrintAlbCompraV.FormCreate(Sender: TObject);
@@ -119,8 +120,8 @@ end;
 
 procedure TfrmPrintAlbCompraV.preparar_consulta;
 begin
-  if dmAlbc = nil then Exit;
-  dmAlbc.PrepararPrintSku(edtSerie.Text, edtNumero.Text);
+  if dmAlbc <> nil then
+    dmAlbc.PrepararPrintSku(edtSerie.Text, edtNumero.Text);
 end;
 
 procedure TfrmPrintAlbCompraV.AfterReportLoaded;

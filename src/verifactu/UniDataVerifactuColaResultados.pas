@@ -37,7 +37,7 @@ implementation
 uses
   System.SysUtils, System.Classes, Data.DB, inLibVerifactu,
   inLibRelojFiscal, inLibVentasWsCola, inLibVerifactuReintentos,
-  UniDataVentasWsCola;
+  UniDataVentasWsCola, UniDataVerifactuSubsanacionResultados;
 procedure AsignarResultadoComun(AQry: TUniQuery;
   const AResultado: TResultadoEnvioVerifactu);
 begin
@@ -71,10 +71,10 @@ begin
     sFase := cFaseFacturaVerifactuOk;
   if SameText(AResultado.EstadoRegistro, 'AceptadoConErrores') then
     sEstadoFaccon := 'VERIFACTU_ACEPT_ERR'
-  else if SameText(AResultado.EstadoRegistro, 'Duplicado') then
-    sEstadoFaccon := 'VERIFACTU_DUPLICADO'
   else if ATipoOperacion = 'SUBSANACION' then
     sEstadoFaccon := 'VERIFACTU_SUBSANADO'
+  else if SameText(AResultado.EstadoRegistro, 'Duplicado') then
+    sEstadoFaccon := 'VERIFACTU_DUPLICADO'
   else
     sEstadoFaccon := 'VERIFACTU_PROCESADO';
   Qry := TUniQuery.Create(nil);
@@ -126,33 +126,15 @@ begin
     end;
     if ATipoOperacion = 'SUBSANACION' then
     begin
-      // La subsanación reescribe la consolidación del alta; si no
-      // existiera (alta nunca consolidada) se inserta entera abajo
-      Qry.SQL.Text :=
-        ' UPDATE fza_facturas_consolidaciones ' +
-        ' SET REQUEST_ID_CONSOLIDACION_FACCON = ' +
-        '       IFNULL(NULLIF(:REQUESTID, ''''), ' +
-        '              REQUEST_ID_CONSOLIDACION_FACCON), ' +
-        '     CHAIN_NUMBER_FACCON = :CHAINNUM, CHAIN_HASH_FACCON = :CHAINHASH, '
-          +
-        '     ESTADO_FACCON = :ESTADO, ' +
-        '     RESPUESTA_COMPLETA_FACCON = :RESPUESTA, ' +
-        '     PETICION_COMPLETA_FACCON = :PETICION, ' +
-        '     REGISTRO_XML_FACCON = :REGISTROXML, FIRMA_DIGITAL_FACCON = ' +
-        ':FIRMA, ' +
-        '     SERIE_CERTIFICADO_FACCON = :SERIECERT, ' +
-        '     TITULAR_CERTIFICADO_FACCON = :TITULARCERT, ' +
-        '     HUELLA_CERTIFICADO_FACCON = :HUELLACERT, ' +
-        '     FECHA_PROCESAMIENTO_FACCON = NOW() ' +
-        ' WHERE SERIE_FAC_FACCON  = :SERIE ' +
-        '   AND NUMERO_FAC_FACCON = :NUMERO';
-      Qry.ParamByName('REQUESTID').AsString := AResultado.RequestId;
-      AsignarResultadoComun(Qry, AResultado);
-      Qry.ParamByName('ESTADO').AsString    := sEstadoFaccon;
-      Qry.ParamByName('SERIE').AsString  := ASerie;
-      Qry.ParamByName('NUMERO').AsString := ANumero;
-      Qry.Execute;
-      bInsertarAlta := (Qry.RowsAffected = 0);
+      GuardarResultadoSubsanacion(
+        AConexion,
+        AIdCola,
+        ASerie,
+        ANumero,
+        AUsuario,
+        sEstadoFaccon,
+        AResultado);
+      bInsertarAlta := False;
     end;
     if bInsertarAlta then
     begin
@@ -165,6 +147,8 @@ begin
         '  CHAIN_NUMBER_FACCON, CHAIN_HASH_FACCON, ' +
         '  VERIFACTU_URL_FACCON, QRCODE_BASE64_FACCON, ' +
         '  QRCODE_PNG_FACCON, FECHA_PROCESAMIENTO_FACCON, ESTADO_FACCON, ' +
+        '  CODIGO_ERROR_AEAT_FACCON, ' +
+        '  DESCRIPCION_ERROR_AEAT_FACCON, ' +
         '  RESPUESTA_COMPLETA_FACCON, PETICION_COMPLETA_FACCON, ' +
         '  REGISTRO_XML_FACCON, FIRMA_DIGITAL_FACCON, ' +
         '  SERIE_CERTIFICADO_FACCON, TITULAR_CERTIFICADO_FACCON, ' +
@@ -174,7 +158,8 @@ begin
         '        NULLIF(:ISSUERID, ''''), :ISSUEDTIME, ' +
         '        NULLIF(:CHAINNUM, ''''), NULLIF(:CHAINHASH, ''''), ' +
         '        NULLIF(:URL, ''''), NULLIF(:QRBASE64, ''''), ' +
-        '        :QRPNG, NOW(), :ESTADO, NULLIF(:RESPUESTA, ''''), ' +
+        '        :QRPNG, NOW(), :ESTADO, NULLIF(:CODERROR, ''''), ' +
+        '        NULLIF(:DESCERROR, ''''), NULLIF(:RESPUESTA, ''''), ' +
         '        NULLIF(:PETICION, ''''), :REGISTROXML, :FIRMA, ' +
         '        :SERIECERT, :TITULARCERT, :HUELLACERT ' +
         ' FROM fza_facturas_consolidaciones';
@@ -204,6 +189,8 @@ begin
         Qry.ParamByName('QRPNG').Clear;
       Qry.ParamByName('ESTADO').AsString    := sEstadoFaccon;
       AsignarResultadoComun(Qry, AResultado);
+      Qry.ParamByName('CODERROR').AsString := AResultado.CodigoError;
+      Qry.ParamByName('DESCERROR').AsString := AResultado.DescripcionError;
       Qry.Execute;
     end;
     // Estado fiscal de la factura

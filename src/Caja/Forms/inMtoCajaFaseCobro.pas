@@ -656,27 +656,24 @@ var
   Importe: Currency;
   EsDivisa, EsCripto: Boolean;
 begin
-  // Protección: no permitir borrar líneas de vales
-  if (DataSet.State = dsEdit) and
-     (DataSet.FieldByName('CODIGO_FP_CFP').AsString = 'VALE') then
+  if not ((DataSet.State = dsEdit) and
+     (DataSet.FieldByName('CODIGO_FP_CFP').AsString = 'VALE')) then
   begin
-    // Si es un vale, solo permitir cambiar el importe a 0 para "desactivarlo"
-    // pero mejor aún, impedirlo totalmente
-    Exit; // O puedes decidir si permites editar vales o no
-  end;
-
-  Importe := DataSet.FieldByName('IMPORTE_ENTREGADO').AsCurrency;
-  EsDivisa := DataSet.FieldByName('ESDIVISA_FORMA_PAGO_CFP').AsString = 'S';
-  EsCripto := DataSet.FieldByName('ESCRIPTO_FORMA_PAGO_CFP').AsString = 'S';
-  if Abs(Importe) < 0.01 then
-  begin
-    DataSet.FieldByName('REFERENCIA').AsString := '';
+    Importe := DataSet.FieldByName('IMPORTE_ENTREGADO').AsCurrency;
+    EsDivisa :=
+      DataSet.FieldByName('ESDIVISA_FORMA_PAGO_CFP').AsString = 'S';
+    EsCripto :=
+      DataSet.FieldByName('ESCRIPTO_FORMA_PAGO_CFP').AsString = 'S';
+    if Abs(Importe) < 0.01 then
+    begin
+      DataSet.FieldByName('REFERENCIA').AsString := '';
 //    DataSet.FieldByName('CODIGO_DIVISA').AsString := 'EUR';
-    DataSet.FieldByName('FACTOR_CAMBIO').AsCurrency := 1;
-    DataSet.FieldByName('IMPORTE_DIVISA').AsFloat := 0;
-    DataSet.FieldByName('IMPORTE_CAMBIO').AsCurrency := 0;
-    if EsDivisa or EsCripto then
-      DataSet.FieldByName('ESIMPORTE_DIVISA').AsString := 'S';
+      DataSet.FieldByName('FACTOR_CAMBIO').AsCurrency := 1;
+      DataSet.FieldByName('IMPORTE_DIVISA').AsFloat := 0;
+      DataSet.FieldByName('IMPORTE_CAMBIO').AsCurrency := 0;
+      if EsDivisa or EsCripto then
+        DataSet.FieldByName('ESIMPORTE_DIVISA').AsString := 'S';
+    end;
   end;
 end;
 
@@ -753,17 +750,20 @@ procedure TfrmMtoCajaFaseCobro.RellenarPendienteEnFormaActual;
 var
   Pendiente: Currency;
 begin
-  if not (FMemTablePagos.Active and not FMemTablePagos.IsEmpty) then
-    Exit;
-  if FDatosCobro.EsDevolucionEconomica then
-    Pendiente := FDatosCobro.ImporteDevolucionPendiente
-  else
-    Pendiente := FDatosCobro.ImportePendiente;
-  if Pendiente <= 0.01 then Exit;
-  if FDatosCobro.EsDevolucionEconomica then
-    EscribirImporteEnFormaActual(-Pendiente)
-  else
-    EscribirImporteEnFormaActual(Pendiente);
+  if FMemTablePagos.Active and not FMemTablePagos.IsEmpty then
+  begin
+    if FDatosCobro.EsDevolucionEconomica then
+      Pendiente := FDatosCobro.ImporteDevolucionPendiente
+    else
+      Pendiente := FDatosCobro.ImportePendiente;
+    if Pendiente > 0.01 then
+    begin
+      if FDatosCobro.EsDevolucionEconomica then
+        EscribirImporteEnFormaActual(-Pendiente)
+      else
+        EscribirImporteEnFormaActual(Pendiente);
+    end;
+  end;
 end;
 
 procedure TfrmMtoCajaFaseCobro.ConfigurarTablaVirtual;
@@ -789,15 +789,16 @@ begin
     TcxCustomEdit(Sender).PostEditValue;
     ImporteActual := FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat;
   end;
-  if Abs(ImporteActual) < 0.0000000001 then
-    Exit;
-  if FDatosCobro.EsDevolucionEconomica then
+  if Abs(ImporteActual) >= 0.0000000001 then
   begin
-    FDatosCobro.Recalcular; // actualiza pendiente antes de abrir diálogo
-    EscribirImporteEnFormaActual(-Abs(ImporteActual));
-  end
-  else
-    EscribirImporteEnFormaActual(ImporteActual);
+    if FDatosCobro.EsDevolucionEconomica then
+    begin
+      FDatosCobro.Recalcular;
+      EscribirImporteEnFormaActual(-Abs(ImporteActual));
+    end
+    else
+      EscribirImporteEnFormaActual(ImporteActual);
+  end;
 end;
 
 procedure TfrmMtoCajaFaseCobro.AjustarFormatoEditorActivo;
@@ -811,38 +812,37 @@ begin
   EsDivisa :=
     (FMemTablePagos.FieldByName('ESDIVISA_FORMA_PAGO_CFP').AsString = 'S');
   ActiveEdit := dbtvFormasPago.Controller.EditingController.Edit;
-  if not Assigned(ActiveEdit) then Exit;
-  if not (ActiveEdit is TcxCurrencyEdit) then Exit;
-  EditProps := TcxCurrencyEditProperties(
-                 TcxCurrencyEdit(ActiveEdit).ActiveProperties);
-  if EsCripto then
+  if Assigned(ActiveEdit) and (ActiveEdit is TcxCurrencyEdit) then
   begin
-    EditProps.DecimalPlaces := 9;
-    EditProps.DisplayFormat := '#,##0.#########';
-    EditProps.EditFormat    := '#########0.#########';
-  end
-  else
-    if EsDivisa then
+    EditProps := TcxCurrencyEditProperties(
+      TcxCurrencyEdit(ActiveEdit).ActiveProperties);
+    if EsCripto then
+    begin
+      EditProps.DecimalPlaces := 9;
+      EditProps.DisplayFormat := '#,##0.#########';
+      EditProps.EditFormat := '#########0.#########';
+    end
+    else if EsDivisa then
     begin
       EditProps.DecimalPlaces := 2;
       EditProps.DisplayFormat := ',0.00';
-      EditProps.EditFormat    := ',0.00';
+      EditProps.EditFormat := ',0.00';
     end
     else
     begin
       EditProps.DecimalPlaces := 2;
       EditProps.DisplayFormat := ',0.00 €';
-      EditProps.EditFormat    := ',0.00 €';
+      EditProps.EditFormat := ',0.00 €';
     end;
+  end;
 end;
 
 procedure TfrmMtoCajaFaseCobro.dbtvFormasPagoEditChanged(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem);
 begin
   inherited;
-  if AItem <> dbmImporte then
-    Exit;
-  AjustarFormatoEditorActivo;
+  if AItem = dbmImporte then
+    AjustarFormatoEditorActivo;
 end;
 
 procedure TfrmMtoCajaFaseCobro.dbtvFormasPagoEditing(
@@ -928,7 +928,8 @@ var
   vImporte, vEsDivisa: Variant;
 begin
   RecordIndex := ARecord.RecordIndex;
-  if RecordIndex < 0 then Exit;
+  if RecordIndex >= 0 then
+  begin
   var DC := dbtvFormasPago.DataController;
   IdxDivisa  := DC.GetItemByFieldName('ESDIVISA_FORMA_PAGO_CFP').Index;
   IdxCripto  := DC.GetItemByFieldName('ESCRIPTO_FORMA_PAGO_CFP').Index;
@@ -956,25 +957,28 @@ begin
       if (vEsDivisa = 'N') then
         AText := FormatCurr(',0.00 €', Importe);
     end;
+    end;
   end;
 end;
 
 procedure TfrmMtoCajaFaseCobro.CargarDatosDesdeFactura(TotalesFactura:
                                                        TFacturaTotales);
 begin
-if TotalesFactura = nil then Exit;
-  FDatosCobro.CargarDatosFactura(TotalesFactura);
-  txtCantidadLineas.Text := FormatFloat('0.##',
-                                        TotalesFactura.Totales.TotalCantidades);
-  txtBrutoLineas.Value := TotalesFactura.Totales.TotalBruto;
-  txtTotalDtoLineal.Value := TotalesFactura.Totales.TotalDescuentosLineas;
-  if TotalesFactura.Totales.TotalBruto <> 0 then
-    txtPorcenDtoLineal.Text := FormatFloat('0.## %',
-                             (TotalesFactura.Totales.TotalDescuentosLineas /
-                              TotalesFactura.Totales.TotalBruto) * 100)
-  else
-    txtPorcenDtoLineal.Text := '0 %';
-  FDatosCobro.Recalcular;
+  if TotalesFactura <> nil then
+  begin
+    FDatosCobro.CargarDatosFactura(TotalesFactura);
+    txtCantidadLineas.Text := FormatFloat('0.##',
+      TotalesFactura.Totales.TotalCantidades);
+    txtBrutoLineas.Value := TotalesFactura.Totales.TotalBruto;
+    txtTotalDtoLineal.Value := TotalesFactura.Totales.TotalDescuentosLineas;
+    if TotalesFactura.Totales.TotalBruto <> 0 then
+      txtPorcenDtoLineal.Text := FormatFloat('0.## %',
+        (TotalesFactura.Totales.TotalDescuentosLineas /
+         TotalesFactura.Totales.TotalBruto) * 100)
+    else
+      txtPorcenDtoLineal.Text := '0 %';
+    FDatosCobro.Recalcular;
+  end;
 end;
 
 procedure TfrmMtoCajaFaseCobro.AlRecalcularDatos(Sender: TObject);
@@ -1086,13 +1090,14 @@ end;
 procedure TfrmMtoCajaFaseCobro.txtValeEmitidoPropertiesEditValueChanged(
   Sender: TObject);
 begin
-  if not FDatosCobro.EsDevolucionEconomica then Exit;
-  if FActualizandoVale then Exit;
-  FActualizandoVale := True;
-  try
-    FDatosCobro.EmitirVale(txtValeEmitido.Value);
-  finally
-    FActualizandoVale := False;
+  if FDatosCobro.EsDevolucionEconomica and not FActualizandoVale then
+  begin
+    FActualizandoVale := True;
+    try
+      FDatosCobro.EmitirVale(txtValeEmitido.Value);
+    finally
+      FActualizandoVale := False;
+    end;
   end;
 end;
 
@@ -1124,28 +1129,24 @@ begin
   if not FDatosCobro.PuedeDejarEnCuenta then
   begin
     ShowMessage(SErrorCreditoClienteCajaNoPermitido);
-    Exit;
-  end;
-  // 2. Comprobar que realmente hay algo que prestar
-  if (FDatosCobro.ImportePendiente <= 0) and
-     (not FDatosCobro.EsDevolucionEconomica) and
-     (FDatosCobro.ImporteTotalPagar > 0) then
+  end
+  else if (FDatosCobro.ImportePendiente <= 0) and
+          (not FDatosCobro.EsDevolucionEconomica) and
+          (FDatosCobro.ImporteTotalPagar > 0) then
   begin
     ShowMessage(SErrorImporteCreditoCajaNoPendiente);
-    Exit;
-  end;
-  // 3. Aplicar TODO el total pendiente a la cuenta del cliente
-  Res := FDatosCobro.EstablecerDejarEnCuenta(FDatosCobro.ImportePendiente);
-  if not Res.Valido then
-  begin
-    // Muestra el error de la librería (ej: "Límite de crédito excedido...")
-    ShowMessage(Res.Mensaje);
   end
   else
   begin
-    // 4. Éxito: Reflejar en la interfaz visual para que se vea el cuadre
-    ActualizarInterfaz;
-    btnConTicketClick(Sender);
+    Res := FDatosCobro.EstablecerDejarEnCuenta(
+      FDatosCobro.ImportePendiente);
+    if not Res.Valido then
+      ShowMessage(Res.Mensaje)
+    else
+    begin
+      ActualizarInterfaz;
+      btnConTicketClick(Sender);
+    end;
   end;
 end;
 

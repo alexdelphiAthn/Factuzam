@@ -132,21 +132,18 @@ begin
   fPreview := TfrmMtoPreviewExcel.Create(Self);
   try
     fPreview.PopupParent := Self;
-    with dmFac do
-    begin
-      NombreSugerido := ObtenerNombreFactura(unqryTablaG);
-      fPreview.DialogoGuardar.InitialDir :=
-        ParametrosApp.GetPath('appDirExcel');
-      fPreview.DialogoGuardar.FileName := NombreSugerido;
-      try
-        ExportarFacturaADevExpress(
-          ParametrosApp, RegistroLog, ConexionPrincipal,
-          fPreview.dxSpreadSheet1,
-                                   unqryTablaG,
-                                   unqryLinFac);
-      finally
-        Screen.Cursor := crDefault;
-      end;
+    NombreSugerido := ObtenerNombreFactura(dmFac.unqryTablaG);
+    fPreview.DialogoGuardar.InitialDir :=
+      ParametrosApp.GetPath('appDirExcel');
+    fPreview.DialogoGuardar.FileName := NombreSugerido;
+    try
+      ExportarFacturaADevExpress(
+        ParametrosApp, RegistroLog, ConexionPrincipal,
+        fPreview.dxSpreadSheet1,
+        dmFac.unqryTablaG,
+        dmFac.unqryLinFac);
+    finally
+      Screen.Cursor := crDefault;
     end;
     fPreview.ShowModal;
   finally

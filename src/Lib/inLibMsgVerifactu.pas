@@ -307,6 +307,57 @@ resourcestring
     '%s registrada y firmada en NO VERI*FACTU.';
   SInfoAccionFiscalSinVerifactu =
     '%s registrada en modo SIN VERIFACTU.';
+  SErrorIncidenciaFacturaNoSeleccionada =
+    'Seleccione una factura para resolver la incidencia VERI*FACTU.';
+  SErrorIncidenciaSoloVentaMayor =
+    'La resolución guiada solo está disponible para facturas de venta ' +
+    'mayor.';
+  SErrorIncidenciaNoAceptadaConErrores =
+    'Solo se puede resolver por esta vía un registro aceptado con errores.';
+  SErrorIncidenciaSubsanacionActiva =
+    'Ya existe una subsanación pendiente, procesándose o enviada.';
+  SErrorIncidenciaMotivoObligatorio =
+    'Indique el motivo de la corrección.';
+  SErrorIncidenciaClienteObligatorio =
+    'Seleccione el cliente correcto para emitir la rectificativa R4.';
+  SErrorIncidenciaSerieRectificativaObligatoria =
+    'Indique la serie de la factura rectificativa.';
+  SErrorIncidenciaFechaRectificativaObligatoria =
+    'Indique la fecha de la factura rectificativa.';
+  SErrorIncidenciaClienteNoEncontrado =
+    'No existe el cliente %s.';
+  SErrorIncidenciaClienteSinNif =
+    'El cliente %s no tiene identificación fiscal.';
+  SErrorIncidenciaRectificativaExistente =
+    'La factura %s\%s ya tiene asociada la rectificativa %s\%s.';
+  SErrorIncidenciaCrearRectificativa =
+    'No se pudo crear la factura rectificativa R4.';
+  SErrorIncidenciaEncolarSubsanacion =
+    'No se pudo encolar la subsanación. Revise que el registro continúe ' +
+    'aceptado con errores y que no exista otra subsanación activa.';
+  SErrorIncidenciaEstadoCambio =
+    'La subsanación ya no parte de un registro aceptado con errores.';
+  SInfoIncidenciaSubsanacionEncolada =
+    'Subsanación encolada. La factura original permanece inalterada.';
+  SInfoIncidenciaRectificativaCreada =
+    'Rectificativa R4 %s\%s creada y encolada.';
+  STituloResolverIncidenciaVerifactu =
+    'Resolver incidencia VERI*FACTU';
+  STextoIncidenciaSubsanar =
+    'La factura expedida es correcta: subsanar el registro enviado';
+  STextoIncidenciaRectificar =
+    'El dato incorrecto figura en la factura: emitir rectificativa R4';
+  STextoIncidenciaCargarCliente = 'Cargar cliente';
+  STextoIncidenciaResolver = 'Resolver';
+  STextoIncidenciaCancelar = 'Cancelar';
+  STextoIncidenciaFactura = 'Factura original';
+  STextoIncidenciaErrorAeat = 'Incidencia comunicada por la AEAT';
+  STextoIncidenciaDecision = 'Tratamiento de la incidencia';
+  STextoIncidenciaMotivo = 'Motivo de la corrección';
+  STextoIncidenciaClienteActual = 'Destinatario de la factura';
+  STextoIncidenciaClienteCorrecto = 'Destinatario correcto';
+  STextoIncidenciaSerieRectificativa = 'Serie rectificativa';
+  STextoIncidenciaFechaRectificativa = 'Fecha rectificativa';
   SInfoBorradorVerifactuPendiente =
     'Borrador %s\%s en VERIFACTU_PENDIENTE: el QR ya puede imprimirse y ' +
     'el envío a la AEAT queda en la cola Verifactu.';

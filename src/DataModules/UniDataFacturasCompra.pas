@@ -220,7 +220,8 @@ const
   var
     swQ: TStopwatch;
   begin
-    if qry.Active then Exit;
+    if not qry.Active then
+    begin
     swQ := TStopwatch.StartNew;
     try
       qry.Open;
@@ -234,6 +235,7 @@ const
           swQ.ElapsedMilliseconds);
         raise;
       end;
+    end;
     end;
   end;
 
@@ -347,20 +349,21 @@ var
   q: TUniQuery;
 begin
   Result := '';
-  if ACodigoPrv = '' then
-    Exit;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := ConexionPrincipal;
-    q.SQL.Text := 'SELECT CODIGO_EMPBAN_PRV ' +
-                  '  FROM fza_proveedores ' +
-                  ' WHERE CODIGO_PRV_PRV = :prv';
-    q.ParamByName('prv').AsString := ACodigoPrv;
-    q.Open;
-    if not q.IsEmpty then
-      Result := q.FieldByName('CODIGO_EMPBAN_PRV').AsString;
-  finally
-    FreeAndNil(q);
+  if ACodigoPrv <> '' then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := ConexionPrincipal;
+      q.SQL.Text := 'SELECT CODIGO_EMPBAN_PRV ' +
+                    '  FROM fza_proveedores ' +
+                    ' WHERE CODIGO_PRV_PRV = :prv';
+      q.ParamByName('prv').AsString := ACodigoPrv;
+      q.Open;
+      if not q.IsEmpty then
+        Result := q.FieldByName('CODIGO_EMPBAN_PRV').AsString;
+    finally
+      FreeAndNil(q);
+    end;
   end;
 end;
 
@@ -370,20 +373,21 @@ var
   q: TUniQuery;
 begin
   Result := '';
-  if (ACodigoPrv = '') or (ACodigoPrv = '0') then
-    Exit;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := ConexionPrincipal;
-    q.SQL.Text := 'SELECT CODIGO_FP_PRV ' +
-                  '  FROM fza_proveedores ' +
-                  ' WHERE CODIGO_PRV_PRV = :prv';
-    q.ParamByName('prv').AsString := ACodigoPrv;
-    q.Open;
-    if not q.IsEmpty then
-      Result := q.FieldByName('CODIGO_FP_PRV').AsString;
-  finally
-    FreeAndNil(q);
+  if (ACodigoPrv <> '') and (ACodigoPrv <> '0') then
+  begin
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := ConexionPrincipal;
+      q.SQL.Text := 'SELECT CODIGO_FP_PRV ' +
+                    '  FROM fza_proveedores ' +
+                    ' WHERE CODIGO_PRV_PRV = :prv';
+      q.ParamByName('prv').AsString := ACodigoPrv;
+      q.Open;
+      if not q.IsEmpty then
+        Result := q.FieldByName('CODIGO_FP_PRV').AsString;
+    finally
+      FreeAndNil(q);
+    end;
   end;
 end;
 
@@ -531,42 +535,44 @@ begin
   // previo al Edit. Guardamos la transicion para aplicarla en
   // AfterPost cuando la cabecera ya este persistida.
   FTransicionEstadoFacc := '';
-  if unqryTablaG.State <> dsEdit then
-    Exit;
-  fEstado := unqryTablaG.FindField('ESTADO_FACC');
-  if fEstado = nil then
-    Exit;
-  sEstadoNuevo    := UpperCase(Trim(fEstado.AsString));
-  sEstadoAnterior := UpperCase(Trim(VarToStr(fEstado.OldValue)));
-  if sEstadoNuevo = sEstadoAnterior then
-    Exit;
-  if (sEstadoAnterior = 'ABIERTA') and (sEstadoNuevo = 'CERRADA') then
-    FTransicionEstadoFacc := 'CERRAR'
-  else if (sEstadoAnterior = 'CERRADA') and (sEstadoNuevo = 'ABIERTA') then
-    FTransicionEstadoFacc := 'ABRIR';
-  // Pre-validacion del cierre: si vamos a cerrar y no hay lineas con
-  // cantidad > 0, abortamos el Post para no dejar la factura CERRADA
-  // sin movimientos. Mejor abortar aqui que en AfterPost (donde la
-  // cabecera ya estaria persistida con el estado nuevo).
-  if FTransicionEstadoFacc = 'CERRAR' then
+  if unqryTablaG.State = dsEdit then
   begin
-    qChk := TUniQuery.Create(nil);
-    try
-      qChk.Connection := ConexionPrincipal;
-      qChk.SQL.Text :=
-        'SELECT COUNT(*) AS N FROM fza_facturas_compra_lineas ' +
-        ' WHERE SERIE_FACC_FACCLIN  = :s ' +
-        '   AND NUMERO_FACC_FACCLIN = :n ' +
-        '   AND IFNULL(CANTIDAD_FACCLIN, 0) > 0';
-      qChk.ParamByName('s').AsString :=
-        unqryTablaG.FieldByName('SERIE_FACC').AsString;
-      qChk.ParamByName('n').AsString :=
-        unqryTablaG.FieldByName('NUMERO_FACC').AsString;
-      qChk.Open;
-      if qChk.FieldByName('N').AsInteger = 0 then
-        raise Exception.Create(SErrorCerrarFacturaCompraSinLineas);
-    finally
-      FreeAndNil(qChk);
+    fEstado := unqryTablaG.FindField('ESTADO_FACC');
+    if fEstado <> nil then
+    begin
+      sEstadoNuevo := UpperCase(Trim(fEstado.AsString));
+      sEstadoAnterior := UpperCase(Trim(VarToStr(fEstado.OldValue)));
+      if sEstadoNuevo <> sEstadoAnterior then
+      begin
+        if (sEstadoAnterior = 'ABIERTA') and
+           (sEstadoNuevo = 'CERRADA') then
+          FTransicionEstadoFacc := 'CERRAR'
+        else if (sEstadoAnterior = 'CERRADA') and
+                (sEstadoNuevo = 'ABIERTA') then
+          FTransicionEstadoFacc := 'ABRIR';
+        // El cierre exige al menos una linea con cantidad positiva.
+        if FTransicionEstadoFacc = 'CERRAR' then
+        begin
+          qChk := TUniQuery.Create(nil);
+          try
+            qChk.Connection := ConexionPrincipal;
+            qChk.SQL.Text :=
+              'SELECT COUNT(*) AS N FROM fza_facturas_compra_lineas ' +
+              ' WHERE SERIE_FACC_FACCLIN  = :s ' +
+              '   AND NUMERO_FACC_FACCLIN = :n ' +
+              '   AND IFNULL(CANTIDAD_FACCLIN, 0) > 0';
+            qChk.ParamByName('s').AsString :=
+              unqryTablaG.FieldByName('SERIE_FACC').AsString;
+            qChk.ParamByName('n').AsString :=
+              unqryTablaG.FieldByName('NUMERO_FACC').AsString;
+            qChk.Open;
+            if qChk.FieldByName('N').AsInteger = 0 then
+              raise Exception.Create(SErrorCerrarFacturaCompraSinLineas);
+          finally
+            FreeAndNil(qChk);
+          end;
+        end;
+      end;
     end;
   end;
 end;
@@ -722,8 +728,8 @@ var
 begin
   inherited;
   // Desempaquetado ATTR en curso: post descriptivo, sin logica fiscal.
-  if FDesempaquetandoAtributos then
-    Exit;
+  if not FDesempaquetandoAtributos then
+  begin
   // Linea vacia (sin articulo ni SKU): cancelar silenciosamente. El cxGrid
   // hace Post automatico al navegar con flechas (OptionsData.Appending); si
   // la linea es un placeholder vacio que el usuario creo sin querer, el Post
@@ -792,6 +798,7 @@ begin
   PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionPrincipal),
     unqryTablaG,
     unqryFacturasCompraLineas, 'FACC', 'FACCLIN', 'TOTAL_FACCLIN');
+  end;
 end;
 
 procedure TdmFacturasCompra.AsignarNumeroLineaFacturaCompra(
@@ -887,12 +894,13 @@ procedure TdmFacturasCompra.CalcularTotalesFacturaCompra;
 begin
   // Los posts del desempaquetado ATTR no alteran importes: saltar el
   // recalculo por linea (cascada de consultas de IVA al navegar).
-  if FDesempaquetandoAtributos then
-    Exit;
-  CalcularTotalesDocumentoCompra(
-    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
-    unqryFacturasCompraLineas, 'FACC', 'TOTAL_FACCLIN',
-    'TIPO_IVA_ARTICULO_FACCLIN', 'PORCENTAJE_IVA_FACCLIN');
+  if not FDesempaquetandoAtributos then
+  begin
+    CalcularTotalesDocumentoCompra(
+      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
+      unqryFacturasCompraLineas, 'FACC', 'TOTAL_FACCLIN',
+      'TIPO_IVA_ARTICULO_FACCLIN', 'PORCENTAJE_IVA_FACCLIN');
+  end;
 end;
 
 function TdmFacturasCompra.TotalPrendasFactura: Double;
@@ -925,39 +933,43 @@ var
   oLv   : TcxListView;
   oItem : TListItem;
 begin
-  if not (ALV is TcxListView) then Exit;
-  oLv := TcxListView(ALV);
-  oLv.Items.BeginUpdate;
-  try
-    oLv.Items.Clear;
-    oQry := TUniQuery.Create(nil);
+  if ALV is TcxListView then
+  begin
+    oLv := TcxListView(ALV);
+    oLv.Items.BeginUpdate;
     try
-      oQry.Connection := ConexionPrincipal;
-      oQry.SQL.Text :=
-        'SELECT DISTINCT L.CODIGO_ALMACEN_FACCLIN AS COD, ' +
-        '       COALESCE(A.NOMBRE_ALM_ALM, L.CODIGO_ALMACEN_FACCLIN) AS NOM ' +
-        '  FROM fza_facturas_compra_lineas L ' +
-        '  LEFT JOIN fza_almacenes A ON A.CODIGO_ALM_ALM = ' +
-        'L.CODIGO_ALMACEN_FACCLIN ' +
-        ' WHERE L.SERIE_FACC_FACCLIN = :s AND L.NUMERO_FACC_FACCLIN = :n ' +
-        '   AND COALESCE(L.CODIGO_ALMACEN_FACCLIN, '''') <> '''' ' +
-        ' ORDER BY COD';
-      oQry.ParamByName('s').AsString := ASerie;
-      oQry.ParamByName('n').AsString := ANumero;
-      oQry.Open;
-      while not oQry.Eof do
-      begin
-        oItem := oLv.Items.Add;
-        oItem.Caption := oQry.FieldByName('COD').AsString;
-        oItem.SubItems.Add(oQry.FieldByName('NOM').AsString);
-        oItem.Checked := True;
-        oQry.Next;
+      oLv.Items.Clear;
+      oQry := TUniQuery.Create(nil);
+      try
+        oQry.Connection := ConexionPrincipal;
+        oQry.SQL.Text :=
+          'SELECT DISTINCT L.CODIGO_ALMACEN_FACCLIN AS COD, ' +
+          '       COALESCE(A.NOMBRE_ALM_ALM, ' +
+          'L.CODIGO_ALMACEN_FACCLIN) AS NOM ' +
+          '  FROM fza_facturas_compra_lineas L ' +
+          '  LEFT JOIN fza_almacenes A ON A.CODIGO_ALM_ALM = ' +
+          'L.CODIGO_ALMACEN_FACCLIN ' +
+          ' WHERE L.SERIE_FACC_FACCLIN = :s ' +
+          'AND L.NUMERO_FACC_FACCLIN = :n ' +
+          '   AND COALESCE(L.CODIGO_ALMACEN_FACCLIN, '''') <> '''' ' +
+          ' ORDER BY COD';
+        oQry.ParamByName('s').AsString := ASerie;
+        oQry.ParamByName('n').AsString := ANumero;
+        oQry.Open;
+        while not oQry.Eof do
+        begin
+          oItem := oLv.Items.Add;
+          oItem.Caption := oQry.FieldByName('COD').AsString;
+          oItem.SubItems.Add(oQry.FieldByName('NOM').AsString);
+          oItem.Checked := True;
+          oQry.Next;
+        end;
+      finally
+        FreeAndNil(oQry);
       end;
     finally
-      FreeAndNil(oQry);
+      oLv.Items.EndUpdate;
     end;
-  finally
-    oLv.Items.EndUpdate;
   end;
 end;
 
@@ -974,12 +986,16 @@ begin
   // mismo .fr3 sirva en ambos modales. La query base filtra YA en
   // servidor por SKU IN (...) — la version anterior cargaba todos y
   // filtraba en cliente, tardaba 10 s sobre una BBDD con muchos SKUs.
-  if not (ADmArt is TdmArticulos) then Exit;
-  oDmArt := TdmArticulos(ADmArt);
-  sSkus  := ObtenerSkusFacturaCsv(ASerie, ANumero);
-  if sSkus = '' then Exit;
-  oDmArt.CrearDataSetEtiquetasArt('', ACodTarifa, AAlmacenesCsv,
-                                  AFecha, sSkus);
+  if ADmArt is TdmArticulos then
+  begin
+    oDmArt := TdmArticulos(ADmArt);
+    sSkus  := ObtenerSkusFacturaCsv(ASerie, ANumero);
+    if sSkus <> '' then
+    begin
+      oDmArt.CrearDataSetEtiquetasArt('', ACodTarifa, AAlmacenesCsv,
+        AFecha, sSkus);
+    end;
+  end;
 end;
 
 function TdmFacturasCompra.ObtenerSkusFacturaCsv(

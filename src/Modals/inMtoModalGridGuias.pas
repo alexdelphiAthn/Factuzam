@@ -41,10 +41,9 @@ var
   i: Integer;
 begin
   lbCamposMaster.Items.Clear;
-  if (FDataSet = nil) or (not FDataSet.Active) then
-    Exit;
-  for i := 0 to FDataSet.FieldCount - 1 do
-    lbCamposMaster.Items.Add(FDataSet.Fields[i].FieldName);
+  if (FDataSet <> nil) and FDataSet.Active then
+    for i := 0 to FDataSet.FieldCount - 1 do
+      lbCamposMaster.Items.Add(FDataSet.Fields[i].FieldName);
 end;
 
 function TfrmModalGridGuias.ObtenerClaveInforme: string;

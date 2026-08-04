@@ -182,51 +182,45 @@ var
   LIdVar, LIdVa: string;
   LValor, LNombre, LOrden: Variant;
 begin
-  if (dmmAtributosConjuntos = nil) or (dsTablaG = nil) or
-     (dsTablaG.DataSet = nil) or (not dsTablaG.DataSet.Active) or
-     (not dmmAtributosConjuntos.unqryVariacionesLookup.Active) or
-     (not dmmAtributosConjuntos.unqryAtributosLookup.Active) then
-    Exit;
-
-  LIdVar := dsTablaG.DataSet.FieldByName('ID_VAR_AC').AsString;
-  if LIdVar = '' then
-    lblIdVarDesc.Caption := ''
-  else
+  if (dmmAtributosConjuntos <> nil) and (dsTablaG <> nil) and
+     (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
+     dmmAtributosConjuntos.unqryVariacionesLookup.Active and
+     dmmAtributosConjuntos.unqryAtributosLookup.Active then
   begin
-    LValor := dmmAtributosConjuntos.unqryVariacionesLookup.Lookup(
-                                       'CODIGO_VAR', LIdVar, 'NOMBRE_VAR');
-    if VarIsNull(LValor) then
+    LIdVar := dsTablaG.DataSet.FieldByName('ID_VAR_AC').AsString;
+    if LIdVar = '' then
       lblIdVarDesc.Caption := ''
     else
-      lblIdVarDesc.Caption := VarToStr(LValor);
-  end;
-
-  LIdVa := dsTablaG.DataSet.FieldByName('ID_VA_AC').AsString;
-  if (LIdVar = '') or (LIdVa = '') then
-  begin
+    begin
+      LValor := dmmAtributosConjuntos.unqryVariacionesLookup.Lookup(
+        'CODIGO_VAR', LIdVar, 'NOMBRE_VAR');
+      if VarIsNull(LValor) then
+        lblIdVarDesc.Caption := ''
+      else
+        lblIdVarDesc.Caption := VarToStr(LValor);
+    end;
     lblIdVaDesc.Caption := '';
-    Exit;
+    LIdVa := dsTablaG.DataSet.FieldByName('ID_VA_AC').AsString;
+    if (LIdVar <> '') and (LIdVa <> '') then
+    begin
+      LValor := dmmAtributosConjuntos.unqryAtributosLookup.Lookup(
+        'ID_VAR_VA;ID_ATB_VA', VarArrayOf([LIdVar, LIdVa]),
+        'NOMBRE_VA;ORDEN_VA');
+      if VarIsArray(LValor) then
+      begin
+        LNombre := LValor[0];
+        LOrden := LValor[1];
+        if VarIsNull(LNombre) then
+          LNombre := '';
+        if VarIsNull(LOrden) then
+          lblIdVaDesc.Caption := VarToStr(LNombre)
+        else
+          lblIdVaDesc.Caption := Format(
+            SCaptionNombreOrden,
+            [VarToStr(LNombre), VarToStr(LOrden)]);
+      end;
+    end;
   end;
-
-  LValor := dmmAtributosConjuntos.unqryAtributosLookup.Lookup(
-                                          'ID_VAR_VA;ID_ATB_VA',
-                                          VarArrayOf([LIdVar, LIdVa]),
-                                          'NOMBRE_VA;ORDEN_VA');
-  if not VarIsArray(LValor) then
-  begin
-    lblIdVaDesc.Caption := '';
-    Exit;
-  end;
-
-  LNombre := LValor[0];
-  LOrden  := LValor[1];
-  if VarIsNull(LNombre) then
-    LNombre := '';
-  if VarIsNull(LOrden) then
-    lblIdVaDesc.Caption := VarToStr(LNombre)
-  else
-    lblIdVaDesc.Caption :=
-      Format(SCaptionNombreOrden, [VarToStr(LNombre), VarToStr(LOrden)]);
 end;
 
 procedure TfrmMtoAtributosConjuntos.dsTablaGStateChange(Sender: TObject);

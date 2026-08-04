@@ -620,37 +620,31 @@ var
   sMensaje: string;
 begin
   inherited;
-  if (dmmFacturasCompra = nil) or (FPivote = nil) then Exit;
-  // Guardia de reentrada: ver comentario en el campo FInToggleClick.
-  if FInToggleClick then Exit;
-  FInToggleClick := True;
-  try
-    // Toggle alterna entre vista plana (1 fila por SKU) y vista pivote
-    // (1 fila representante por articulo+color, columnas talla con la
-    // cantidad de cada SKU). El modelo BBDD no cambia: el filtro vive
-    // en cliente y lo gestiona la libreria.
-    if not FPivote.Activo then
-    begin
-      if not PuedeActivarTallasHorizontal(sMensaje) then
+  if (dmmFacturasCompra <> nil) and (FPivote <> nil) and
+     not FInToggleClick then
+  begin
+    FInToggleClick := True;
+    try
+      if not FPivote.Activo then
       begin
-        // Sender=nil => apertura automatica por preferencia guardada.
-        // Si el documento no es pivotable dejamos
-        // la vista vertical en silencio; solo avisamos cuando el usuario
-        // pulsa el boton expresamente (Sender<>nil).
-        if Sender <> nil then
+        if PuedeActivarTallasHorizontal(sMensaje) then
+        begin
+          FPivote.Activar;
+          if Sender <> nil then
+            PersistirPreferenciaPivote;
+        end
+        else if Sender <> nil then
           MessageDlg(sMensaje, mtWarning, [mbOk], 0);
-        Exit;
+      end
+      else
+      begin
+        FPivote.Desactivar;
+        if Sender <> nil then
+          PersistirPreferenciaPivote;
       end;
-      FPivote.Activar;
-    end
-    else
-      FPivote.Desactivar;
-    // Sender=nil: llamada automatica desde el data-change hook; no
-    // re-escribir la preferencia.
-    if Sender <> nil then
-      PersistirPreferenciaPivote;
-  finally
-    FInToggleClick := False;
+    finally
+      FInToggleClick := False;
+    end;
   end;
 end;
 
@@ -763,24 +757,23 @@ begin
   sLineasSinSku := LineasSinSkuRequerido(
     FValidadorArticulos,
     dmmFacturasCompra.unqryFacturasCompraLineas, 'FACCLIN');
-  if (sLineasSinSku <> '') and
+  if (sLineasSinSku = '') or
      (MessageDlg(Format(SPreguntaGrabarFacturaCompraSinSku,
                         [sLineasSinSku]),
-                 mtWarning, [mbYes, mbNo], 0) <> mrYes) then
-    Exit;
-  if Assigned(FPivote) and FPivote.Activo and
-     (not FPivote.Expandido) then
-    FPivote.PersistirCantidadesPendientes;
-  inherited;
-  if dsTablaG.State in dsEditModes then
+                 mtWarning, [mbYes, mbNo], 0) = mrYes) then
   begin
-    dmmFacturasCompra.CalcularTotalesFacturaCompra;
-    dsTablaG.DataSet.Post;
+    if Assigned(FPivote) and FPivote.Activo and
+       not FPivote.Expandido then
+      FPivote.PersistirCantidadesPendientes;
+    inherited;
+    if dsTablaG.State in dsEditModes then
+    begin
+      dmmFacturasCompra.CalcularTotalesFacturaCompra;
+      dsTablaG.DataSet.Post;
+    end;
+    if Assigned(FPivote) and FPivote.Activo then
+      FPivote.RecargarYRepublicar;
   end;
-  // Tras Grabar, cxGrid borra los Values[] no-bound al repintar.
-  // RecargarYRepublicar lo solventa.
-  if Assigned(FPivote) and FPivote.Activo then
-    FPivote.RecargarYRepublicar;
 end;
 
 // Actualiza la cabecera y delega el modo al navegar entre facturas.
@@ -918,11 +911,12 @@ var
   bDegradarASku: Boolean;
   ModoEfectivo: TModoColumnasSku;
 begin
-  if (dmmFacturasCompra = nil) or (csDestroying in ComponentState) then
-    Exit;
-  ds := dmmFacturasCompra.unqryFacturasCompraLineas;
-  if not ds.Active then
-    Exit;
+  if (dmmFacturasCompra <> nil) and
+     not (csDestroying in ComponentState) then
+  begin
+    ds := dmmFacturasCompra.unqryFacturasCompraLineas;
+    if ds.Active then
+    begin
   PrepararReconstruccionModoDocumento(tvLineasFactura, ds,
     FModoEntrada, FTallaColumns, FAtribColumns, FColColorPivot);
   // Solo el DESGLOSE liga columnas a ATTRn: desempaquetar SKU->ATTR
@@ -989,6 +983,8 @@ begin
       'Líneas', 'Líneas ', True, ModoEfectivo, False);
     if not (ModoEfectivo in [mcsSku, mcsTallasHorPed]) then
       MostrarColumnasAtributoGlobalesFacc;
+  end;
+    end;
   end;
 end;
 
@@ -1078,22 +1074,25 @@ var
   sNumero: string;
   sSerie: string;
 begin
-  if not Assigned(dmmFacturasCompra) then
-    Exit;
-  dsCab := dmmFacturasCompra.unqryTablaG;
-  dsLin := dmmFacturasCompra.unqryFacturasCompraLineas;
-  if (dsCab = nil) or (dsLin = nil) or (not dsCab.Active) or
-     (dsCab.IsEmpty and not (dsCab.State in dsEditModes)) then
-    Exit;
-  AsegurarCabeceraPersistidaParaLineas;
-  sNumero := Trim(dsCab.FieldByName('NUMERO_FACC').AsString);
-  sSerie  := Trim(dsCab.FieldByName('SERIE_FACC').AsString);
-  if (sNumero = '') or (sNumero = '0') or (sSerie = '') then
-    Exit;
-  if not dsLin.Active then
-    dsLin.Open;
-  if dsLin.IsEmpty and (not (dsLin.State in dsEditModes)) then
-    dsLin.Append;
+  if Assigned(dmmFacturasCompra) then
+  begin
+    dsCab := dmmFacturasCompra.unqryTablaG;
+    dsLin := dmmFacturasCompra.unqryFacturasCompraLineas;
+    if (dsCab <> nil) and (dsLin <> nil) and dsCab.Active and
+       (not dsCab.IsEmpty or (dsCab.State in dsEditModes)) then
+    begin
+      AsegurarCabeceraPersistidaParaLineas;
+      sNumero := Trim(dsCab.FieldByName('NUMERO_FACC').AsString);
+      sSerie := Trim(dsCab.FieldByName('SERIE_FACC').AsString);
+      if (sNumero <> '') and (sNumero <> '0') and (sSerie <> '') then
+      begin
+        if not dsLin.Active then
+          dsLin.Open;
+        if dsLin.IsEmpty and not (dsLin.State in dsEditModes) then
+          dsLin.Append;
+      end;
+    end;
+  end;
 end;
 
 function TfrmMtoFacturasCompra.PuedeActivarTallasHorizontal(

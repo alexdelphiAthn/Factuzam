@@ -191,37 +191,23 @@ begin
   inherited;
 
   if edtCoste.Value <= 0 then
+    ShowMessage(SErrorPrecioCosteMargenNoValido)
+  else if edtMargen.Value <= 0 then
+    ShowMessage(SErrorMargenNoValido)
+  else if edtAjuste.Value < 0 then
+    ShowMessage(SErrorAjusteMargenNoValido)
+  else
   begin
-    ShowMessage(SErrorPrecioCosteMargenNoValido);
-    Exit;
-  end;
-
-  if edtMargen.Value <= 0 then
-  begin
-    ShowMessage(SErrorMargenNoValido);
-    Exit;
-  end;
-
-  if edtAjuste.Value < 0 then
-  begin
-    ShowMessage(SErrorAjusteMargenNoValido);
-    Exit;
-  end;
-
-  FResultado.PrecioCoste       := edtCoste.Value;
-  FResultado.PrecioSalidaFinal := CalcularPrecioSalida;
-
-  if FCodigoUnicoArttar > 0 then
-  begin
-    if not PersistirCambios(msg) then
+    FResultado.PrecioCoste := edtCoste.Value;
+    FResultado.PrecioSalidaFinal := CalcularPrecioSalida;
+    if (FCodigoUnicoArttar > 0) and (not PersistirCambios(msg)) then
+      ShowMessage(SErrorGuardarCambiosMargen + msg)
+    else
     begin
-      ShowMessage(SErrorGuardarCambiosMargen + msg);
-      Exit;
+      FResultado.Aceptado := True;
+      Close;
     end;
   end;
-
-  FResultado.Aceptado := True;
-  Close;
 end;
 
 procedure TfrmModalCalcularMargen.RecalcularPrecioSalida(Sender: TObject);
@@ -238,25 +224,19 @@ var
   bruto, ajuste, menos: Double;
 begin
   Result := 0;
-  if edtCoste.Value <= 0 then Exit;
-  if edtMargen.Value <= 0 then Exit;
-
-  // precio = coste * margen / 100
-  // margen 100 -> coste tal cual; 120 -> coste*1.20; 250 -> coste*2.50; 400 ->
-  // coste*4
-  bruto := edtCoste.Value * edtMargen.Value / 100;
-
-  ajuste := edtAjuste.Value;
-  if ajuste > 0 then
-    // Redondea hacia arriba al siguiente múltiplo del ajuste
-    bruto := Ceil(bruto / ajuste) * ajuste;
-
-  menos := edtMenos.Value;
-  bruto := bruto - menos;
-  if bruto < 0 then
-    bruto := 0;
-
-  Result := Round(bruto * 100) / 100;
+  if (edtCoste.Value > 0) and (edtMargen.Value > 0) then
+  begin
+    // Margen 100 mantiene el coste; 120 lo multiplica por 1,20.
+    bruto := edtCoste.Value * edtMargen.Value / 100;
+    ajuste := edtAjuste.Value;
+    if ajuste > 0 then
+      bruto := Ceil(bruto / ajuste) * ajuste;
+    menos := edtMenos.Value;
+    bruto := bruto - menos;
+    if bruto < 0 then
+      bruto := 0;
+    Result := Round(bruto * 100) / 100;
+  end;
 end;
 
 // ============================================================================
