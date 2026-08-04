@@ -9,8 +9,9 @@ el esquema de datos y los procedimientos de instalación pueden cambiar.
 
 ## Funcionalidad
 
-- Creación y gestión de facturas.
-- Funciones de facturación electrónica y VeriFactu en desarrollo.
+- Creación y gestión de tickets, y todo tipo de documentos pedidos, albaranes, facturas.
+- Gestión efectiva de tallas y colores, propiedades, atributos genéricos de hasta 5 dimensiones.
+- Funciones de facturación electrónica y VeriFactu.
 - Búsqueda avanzada y filtros personalizables.
 - Edición y personalización de informes.
 - Perfiles de pantallas e informes por usuario y grupo.
