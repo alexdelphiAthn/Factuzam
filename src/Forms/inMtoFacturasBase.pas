@@ -23,6 +23,7 @@ uses
   dxSkinscxPCPainter, cxCustomData, cxFilter, cxData, cxDataStorage,
   cxEdit, cxNavigator, DB, cxDBData, cxContainer, System.UITypes,
   System.Generics.Collections,
+  inMtoFacturasIncidenciaFiscalVcl,
   cxCheckBox, cxTextEdit, cxGridLevel, cxClasses,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, ComCtrls, StdCtrls, Buttons, ExtCtrls,
@@ -445,7 +446,7 @@ type
     btnVerifactuAnular: TcxButton;
     btnVerifactuFacturar: TcxButton;
     btnVolverBorrador: TcxButton;
-    btnVerifactuResolverIncidencia: TcxButton;
+    btnVerifactuResolverIncidencia: TcxResolverIncidenciaVerifactuButton;
     procedure sbGrabarClick(Sender: TObject);
     procedure btnUpdateClienteClick(Sender: TObject);
     procedure sbNuevaFacturaClick(Sender: TObject);
@@ -605,8 +606,6 @@ uses
   inLibFacturasCobrosPresentacion,
   inLibFacturasEstadoFiscalPresentacion,
   inLibFacturasOperacionFiscal,
-  inLibFacturasIncidenciaFiscal,
-  inLibFacturasIncidenciaFiscalIntf,
   inLibFacturasConsolidacionPresentacion,
   inLibFacturasPresentadorDetalle,
   inLibGridCantidad,
@@ -615,7 +614,6 @@ uses
   inLibArticulosResolverIntf,
   inMtoGenSearch,
   inMtoModalFacRec,
-  inMtoModalResolverIncidenciaVerifactu,
   inMtoModalImpRecFac,
   inMtoModalImpFac,
   inMtoModalRegistrarPago,
@@ -624,11 +622,8 @@ uses
   inLibVerifactu,
   inLibVerifactuTipos,
   inLibVerifactuColaIntf,
-  inLibVerifactuSubsanacionIntf,
   inLibEmisionFiscal,
   UniDataVerifactuColaRepositorio,
-  UniDataVerifactuSubsanacionRepositorio,
-  UniDataFacturasIncidenciaFiscal,
   UniDataFacturasRepositorio,
   UniDataFacturasLecturas,
   UniDataFacturasListado,
@@ -650,11 +645,6 @@ uses
   inLibPresentacionDocumento,
   // Composicion del puerto de persistencia del pivote (V2).
   UniDataPivoteVenta, UniDataColumnasSkuServicios;
-
-procedure ActualizarBotonResolverIncidencia(
-  AFormulario: TfrmMtoFacturasBase); forward;
-procedure ResolverIncidenciaVerifactu(
-  AFormulario: TfrmMtoFacturasBase); forward;
 
 function CrearContextoConsolidacionFacturaVcl(
   AFormulario: TfrmMtoFacturasBase
@@ -1964,15 +1954,11 @@ begin
   dsTablaG.OnDataChange := dsTablaGDataChange;
   PrepararConsultaListadoFacturaVcl(Self);
   FPresentadorCabecera.ActualizarBloqueoEdicion;
-  ActualizarBotonResolverIncidencia(Self);
 end;
-
 function TfrmMtoFacturasBase.NombreVistaListado: string;
 begin
   Result := 'vi_facturas';
 end;
-
-
 procedure TfrmMtoFacturasBase.btnVolverBorradorClick(Sender: TObject);
 var
   sSerie: string;
@@ -2021,7 +2007,6 @@ begin
     end;
   end;
 end;
-
 procedure TfrmMtoFacturasBase.btnVerifactuAnularClick(Sender: TObject);
 begin
   // Anulación fiscal de la factura activa según modo Verifactu.
@@ -2032,135 +2017,44 @@ begin
         'ANULACION',
         'Anulación'));
 end;
-
-procedure ActualizarBotonResolverIncidencia(
-  AFormulario: TfrmMtoFacturasBase);
-var
-  sEstadoRegistro: string;
-  sEstadoSubsanacion: string;
-begin
-  AFormulario.btnVerifactuResolverIncidencia.Visible := False;
-  if SameText(AFormulario.TipoFacturaFiltro, 'NORMAL') and
-     Assigned(AFormulario.dmmFacturas) and
-     AFormulario.dmmFacturas.unqryConsolidacion.Active and
-     (not AFormulario.dmmFacturas.unqryConsolidacion.IsEmpty) then
-  begin
-    sEstadoRegistro := AFormulario.dmmFacturas.unqryConsolidacion.
-      FieldByName('ESTADO_FACCON').AsString;
-    sEstadoSubsanacion := '';
-    if Assigned(AFormulario.dmmFacturas.unqryConsolidacion.FindField(
-       'ESTADO_SUBSANACION')) then
-      sEstadoSubsanacion := AFormulario.dmmFacturas.unqryConsolidacion.
-        FieldByName('ESTADO_SUBSANACION').AsString;
-    AFormulario.btnVerifactuResolverIncidencia.Visible :=
-      PuedeResolverIncidenciaFiscal(
-        sEstadoRegistro,
-        sEstadoSubsanacion,
-        True);
-  end;
-end;
-
-procedure ResolverIncidenciaVerifactu(
-  AFormulario: TfrmMtoFacturasBase);
-var
-  Emision: IServicioEmisionFiscal;
-  Cola: IServicioVerifactuCola;
-  Repositorio: IRepositorioIncidenciaFiscalFactura;
-  Servicio: IServicioIncidenciaFiscalFactura;
-  Subsanacion: IServicioVerifactuSubsanacion;
-  Resultado: TResultadoResolucionIncidenciaFiscal;
-  sNumero: string;
-  sSerie: string;
-begin
-  if Assigned(AFormulario.dsTablaG.DataSet) and
-     AFormulario.dsTablaG.DataSet.Active and
-     (not AFormulario.dsTablaG.DataSet.IsEmpty) then
-  begin
-    sSerie := AFormulario.dsTablaG.DataSet.FieldByName(
-      'SERIE_FAC').AsString;
-    sNumero := AFormulario.dsTablaG.DataSet.FieldByName(
-      'NUMERO_FAC').AsString;
-    Cola := CrearServicioVerifactuColaUniDAC(
-      AFormulario.ConexionPrincipal,
-      AFormulario.RegistroLog);
-    Subsanacion := CrearServicioVerifactuSubsanacionUniDAC(
-      AFormulario.ConexionPrincipal);
-    Emision := CrearServicioEmisionFiscal(
-      AFormulario.ParametrosApp,
-      AFormulario.ParametrosCaja,
-      AFormulario.ConexionPrincipal,
-      Cola);
-    Repositorio := CrearRepositorioIncidenciaFiscalFacturaUniDAC(
-      AFormulario.ConexionPrincipal);
-    Servicio := CrearServicioIncidenciaFiscalFactura(
-      Repositorio,
-      Cola,
-      Subsanacion,
-      Emision,
-      AFormulario.ParametrosApp,
-      AFormulario.ParametrosCaja,
-      AFormulario.IdentidadSesion.Usuario);
-    Resultado := TfrmModalResolverIncidenciaVerifactu.Ejecutar(
-      AFormulario,
-      Servicio,
-      sSerie,
-      sNumero);
-    if Resultado.EsCorrecto then
-    begin
-      ShowMessage(Resultado.Mensaje);
-      AFormulario.dsTablaG.DataSet.Refresh;
-      AFormulario.dmmFacturas.unqryConsolidacion.Refresh;
-      ActualizarBotonResolverIncidencia(AFormulario);
-    end;
-  end;
-end;
-
 procedure TfrmMtoFacturasBase.btnVerifactuFacturarClick(Sender: TObject);
 var
   oRes:    TFacturarTicketResult;
   sSerie:  string;
   sNumero: string;
 begin
-  if Sender = btnVerifactuResolverIncidencia then
-    ResolverIncidenciaVerifactu(Self)
+  // Factura completa F3 en sustitución del ticket seleccionado.
+  sSerie := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
+  sNumero := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
+  if Trim(sNumero) = '' then
+    ShowMessage(SErrorBorradorListaNoSeleccionado)
+  else if not SameText(dsTablaG.DataSet.FieldByName(
+                         'TIPO_FAC').AsString, 'SIMPLIFICADA') then
+    ShowMessage(SErrorFacturarTicketRequiereSimplificado)
   else
   begin
-    // Factura completa F3 en sustitución del ticket seleccionado.
-    sSerie := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
-    sNumero := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
-    if Trim(sNumero) = '' then
-    ShowMessage(SErrorBorradorListaNoSeleccionado)
-    else if not SameText(dsTablaG.DataSet.FieldByName(
-                         'TIPO_FAC').AsString, 'SIMPLIFICADA') then
-      ShowMessage(SErrorFacturarTicketRequiereSimplificado)
-    else
+    oRes := TfrmModalFacturarTicket.Ejecutar(Self, sSerie, sNumero,
+              dsTablaG.DataSet.FieldByName('CODIGO_EMP_FAC').AsString,
+              dsTablaG.DataSet.FieldByName('CODIGO_ALM_FAC').AsString,
+              dsTablaG.DataSet.FieldByName('FECHA_FAC').AsDateTime);
+    if oRes.Aceptado then
     begin
-      oRes := TfrmModalFacturarTicket.Ejecutar(Self, sSerie, sNumero,
-                dsTablaG.DataSet.FieldByName('CODIGO_EMP_FAC').AsString,
-                dsTablaG.DataSet.FieldByName('CODIGO_ALM_FAC').AsString,
-                dsTablaG.DataSet.FieldByName('FECHA_FAC').AsDateTime);
-      if oRes.Aceptado then
-      begin
-        ShowMessage(Format(SInfoBorradorSustitucionTicketCreado,
-                           [oRes.SerieNueva, oRes.NumeroNueva,
-                            sSerie, sNumero,
-                            ModoVerifactuTexto(ParametrosApp)]));
-        dsTablaG.DataSet.Refresh;
-      end;
+      ShowMessage(Format(SInfoBorradorSustitucionTicketCreado,
+                         [oRes.SerieNueva, oRes.NumeroNueva,
+                          sSerie, sNumero,
+                          ModoVerifactuTexto(ParametrosApp)]));
+      dsTablaG.DataSet.Refresh;
     end;
   end;
 end;
-
 function TfrmMtoFacturasBase.TipoFacturaFiltro: string;
 begin
   Result := '';
 end;
-
 function TfrmMtoFacturasBase.AbrirListadoAlCrear: Boolean;
 begin
   Result := True;
 end;
-
 procedure TfrmMtoFacturasBase.AplicarEtiquetas;
 begin
   inherited;
@@ -2170,7 +2064,6 @@ begin
     FPresentadorLineas.ReaplicarVisibilidad;
   AplicarOrigenCobrosFacturaVcl(Self);
 end;
-
 procedure TfrmMtoFacturasBase.chkCrearArticulosPropertiesChange(
   Sender: TObject);
 begin
@@ -2196,7 +2089,6 @@ begin
     end;
   end;
 end;
-
 procedure TfrmMtoFacturasBase.chkDescripcion_ampliadaPropertiesChange(
   Sender: TObject);
 var
@@ -2217,7 +2109,6 @@ begin
     ctbDESCRIPCION_ARTICULO_FACTURA_LINEA.PropertiesClassName :=
       'TcxTextEditProperties';
 end;
-
 procedure TfrmMtoFacturasBase.
                    chkESREGIMENESPECIALAGRICOLA_EMPRESA_FACTURAPropertiesChange(
   Sender: TObject);
@@ -2267,7 +2158,10 @@ begin
      Assigned(FPresentadorLineas) then
   begin
     FPresentadorCabecera.ActualizarBloqueoEdicion;
-    ActualizarBotonResolverIncidencia(Self);
+    ActualizarBotonResolverIncidenciaVcl(
+      btnVerifactuResolverIncidencia,
+      TipoFacturaFiltro,
+      dmmFacturas.unqryConsolidacion);
     // Cada factura lleva su propio modo creacion y su propio total de
     // prendas: se re-evaluan al navegar.
     FPresentadorLineas.ReaplicarVisibilidad;
@@ -2664,7 +2558,10 @@ begin
   begin
     ActivarDetalleFacturaVcl(
       CrearContextoDetalleFacturaVcl(Self));
-    ActualizarBotonResolverIncidencia(Self);
+    ActualizarBotonResolverIncidenciaVcl(
+      btnVerifactuResolverIncidencia,
+      TipoFacturaFiltro,
+      dmmFacturas.unqryConsolidacion);
   end;
 end;
 

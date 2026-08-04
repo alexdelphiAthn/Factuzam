@@ -323,6 +323,7 @@
         <DCCReference Include="src\Forms\inMtoFacturasBase.pas">
             <Form>frmMtoFacturasBase</Form>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoFacturasIncidenciaFiscalVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoFacturasConsolidacionVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoFacturasVistaVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoFacturasCobrosVcl.pas"/>

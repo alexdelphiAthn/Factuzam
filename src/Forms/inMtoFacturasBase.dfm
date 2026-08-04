@@ -2415,7 +2415,7 @@
                   TabOrder = 16
                   OnClick = btnVolverBorradorClick
                 end
-                object btnVerifactuResolverIncidencia: TcxButton
+                object btnVerifactuResolverIncidencia: TcxResolverIncidenciaVerifactuButton
                   Left = 859
                   Top = 133
                   Width = 175
@@ -2423,7 +2423,6 @@
                   Caption = 'Resolver incidencia'
                   TabOrder = 17
                   Visible = False
-                  OnClick = btnVerifactuFacturarClick
                 end
               end
             end

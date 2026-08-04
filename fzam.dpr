@@ -201,6 +201,8 @@ uses
   inMtoBusquedaDatos in
     'src\Forms\inMtoBusquedaDatos.pas' {frmMtoBusquedaDatos},
   inMtoFacturasBase in 'src\Forms\inMtoFacturasBase.pas' {frmMtoFacturasBase},
+  inMtoFacturasIncidenciaFiscalVcl in
+    'src\Forms\inMtoFacturasIncidenciaFiscalVcl.pas',
   inMtoFacturasConsolidacionVcl in
     'src\Forms\inMtoFacturasConsolidacionVcl.pas',
   inMtoFacturasVistaVcl in 'src\Forms\inMtoFacturasVistaVcl.pas',
