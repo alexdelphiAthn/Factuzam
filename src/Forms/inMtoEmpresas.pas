@@ -511,7 +511,7 @@ procedure TfrmMtoEmpresas.btnCrearSeriesDocClick(Sender: TObject);
 const
   SUBTIPOS_FACTURA: array[0..2] of string = ('NORMAL', 'SIMPLIFICADA',
                                              'RECTIFICATIVA');
-  SUFIJOS_FACTURA: array[0..2] of string = ('N', 'S', 'R');
+  SUFIJOS_FACTURA: array[0..2] of string = ('N', '', 'R');
 var
   Tipos: TTiposDocumentoEmpresa;
   TipoListado: TTipoDocumentoEmpresa;

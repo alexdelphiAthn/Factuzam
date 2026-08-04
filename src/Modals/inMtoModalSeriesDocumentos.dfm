@@ -106,7 +106,7 @@
       Left = 16
       Top = 174
       Caption =
-        'Facturas: +N normal | +S simplificada | +R rectificativa'
+        'Facturas: base simplificada | +N normal | +R rectificativa'
       Style.TextColor = clGrayText
       Style.Font.Size = 8
       TabOrder = 11

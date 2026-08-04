@@ -44,11 +44,11 @@ fechas. La combinación puede repetirse para asignar una serie distinta a cada
 almacén y caja. La máscara base admite hasta 11 caracteres porque las facturas
 reservan el último para distinguir su subtipo.
 
-Para `FC` no se crea una serie genérica. Se crean tres series independientes
-añadiendo `N` para `NORMAL`, `S` para `SIMPLIFICADA` y `R` para
+Para `FC` se crean tres series independientes. La máscara base se reserva para
+`SIMPLIFICADA`, la más habitual; se añade `N` para `NORMAL` y `R` para
 `RECTIFICATIVA`. Por ejemplo, la máscara `Tq.A1.yyyy` produce en el tercer
-trimestre de 2026 las series `T3.A1.2026N`, `T3.A1.2026S` y `T3.A1.2026R`.
-Los demás tipos documentales conservan la máscara sin sufijo.
+trimestre de 2026 las series `T3.A1.2026`, `T3.A1.2026N` y `T3.A1.2026R`.
+Los demás tipos documentales también conservan la máscara sin sufijo.
 
 El almacén se guarda en todas las series creadas. La caja solo se guarda en
 los tipos `VE`, `DE`, `DV`, `TR` y `TA`. Los pedidos y albaranes reciben la
