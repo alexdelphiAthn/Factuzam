@@ -4,7 +4,7 @@ Factuzam es una aplicación de escritorio para Windows orientada a la
 facturación y gestión empresarial de venta retail o minorista en España. 
 El proyecto está desarrollado con Delphi VCL y utiliza MariaDB como base de datos.
 
-El proyecto se encuentra en una etapa temprana de desarrollo. Las interfaces,
+El proyecto se encuentra en una etapa beta de pruebas. Las interfaces,
 el esquema de datos y los procedimientos de instalación pueden cambiar.
 
 ## Funcionalidad
