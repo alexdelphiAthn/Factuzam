@@ -791,13 +791,11 @@ function TfrmMtoInventarios.PuedeEditar: Boolean;
 begin
   Result := EstadoActual = 'ABIERTO';
 end;
-
 procedure TfrmMtoInventarios.ActualizarEstadoUI;
 begin
   // Con el inventario APLICADO o CANCELADO el grid es solo lectura.
   HabilitarEdicionLineas(PuedeEditar);
 end;
-
 procedure TfrmMtoInventarios.HabilitarEdicionLineas(Habilitado: Boolean);
 begin
   // Si está APLICADO o CANCELADO, el grid de líneas es solo lectura

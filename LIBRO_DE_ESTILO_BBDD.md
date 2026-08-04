@@ -99,6 +99,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_empresas_bancos`                | `EMPBAN`  |
 | `fza_empresas_retenciones`           | `EMPRET`  |
 | `fza_empresas_series`                | `EMPSER`  |
+| `fza_facturacion_caja_periodos`      | `FACPER`  |
 | `fza_facturas`                       | `FAC`     |
 | `fza_facturas_compra`                | `FACC`    |
 | `fza_facturas_compra_celdas`         | `FACCCEL` |

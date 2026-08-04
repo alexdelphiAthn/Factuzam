@@ -366,9 +366,6 @@ var
 begin
   LeerCabeceraAlbaran(AConn, ASerieAlbc, ANumAlbc, sCodigoEmp, sCodigoAlmCab,
                       dFechaAlbc);
-  // Defensa: si el albaran no tiene almacen ni en cabecera ni en
-  // lineas/celdas, no podemos generar movimientos. Lo detectamos linea
-  // a linea (mas abajo) para no abortar el resto.
   // Sanidad: bloquear doble generacion. Si ya hay movs del albaran, no
   // generamos otra vez. La reversion debe llamarse explicita antes.
   qChk := TUniQuery.Create(nil);

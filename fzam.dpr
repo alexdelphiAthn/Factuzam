@@ -876,6 +876,8 @@ uses
     'src\DataModules\UniDataAlbaranesCompraMovimientos.pas',
   UniDataAlbaranesCompraMovimientosSql in
     'src\DataModules\UniDataAlbaranesCompraMovimientosSql.pas',
+  UniDataDevolucionesCompraMovimientosSql in
+    'src\DataModules\UniDataDevolucionesCompraMovimientosSql.pas',
   UniDataDevolucionesCompraMovimientos in
     'src\DataModules\UniDataDevolucionesCompraMovimientos.pas',
   inMtoDevolucionesCompra in 'src\Forms\inMtoDevolucionesCompra.pas' {frmMtoDevolucionesCompra},
@@ -1340,7 +1342,25 @@ uses
   inLibValidacionDocumentoLecturasIntf in
     'src\Lib\inLibValidacionDocumentoLecturasIntf.pas',
   inLibValoresAutomaticosPersistenciaIntf in
-    'src\Lib\inLibValoresAutomaticosPersistenciaIntf.pas';
+    'src\Lib\inLibValoresAutomaticosPersistenciaIntf.pas',
+  inLibFacturasProformaIntf in
+    'src\Caja\Lib\inLibFacturasProformaIntf.pas',
+  inLibFacturasProforma in
+    'src\Caja\Lib\inLibFacturasProforma.pas',
+  UniDataFacturasProformaRepositorio in
+    'src\Caja\DataModules\UniDataFacturasProformaRepositorio.pas',
+  UniDataFacturasProforma in
+    'src\Caja\DataModules\UniDataFacturasProforma.pas'
+    {dmFacturasProforma: TDataModule},
+  inMtoFacturasProforma in
+    'src\Caja\Forms\inMtoFacturasProforma.pas'
+    {frmMtoFacturasProforma},
+  UniDataInformeFacturasProforma in
+    'src\Caja\DataModules\UniDataInformeFacturasProforma.pas'
+    {dmInformeFacturasProforma: TDataModule},
+  inMtoModalImpFacturasProforma in
+    'src\Caja\Modals\inMtoModalImpFacturasProforma.pas'
+    {frmPrintFacturasProforma};
 
 {$R *.res}
 {$R fondo.res}

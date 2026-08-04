@@ -26,8 +26,8 @@ uses
   cxDataStorage, cxEdit, cxNavigator, cxDBData, cxGridLevel,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxContainer, cxLabel, cxTextEdit,
-  cxMaskEdit, cxDropDownEdit, cxCalendar, cxLookupEdit, cxButtons,
-  cxRadioGroup, cxPC, dxSkinsCore, dxSkinsDefaultPainters,
+  cxMaskEdit, cxDropDownEdit, cxCalendar, cxLookupEdit, cxDBLookupEdit,
+  cxDBLookupComboBox, cxButtons, cxRadioGroup, cxPC, dxSkinsCore,
   dxSkinscxPCPainter, dxScrollbarAnnotations, dxDateRanges, dxCore,
   UniDataFacturasProforma, inLibFacturasProformaIntf, inMtoGen;
 
@@ -55,9 +55,17 @@ type
     function PrepararSolicitud: TSolicitudFacturacionCaja;
     function ConfirmarGeneracion(
       AModalidad: TModalidadFacturacionCaja): Boolean;
+    function ConfirmarRevisionPeriodo(
+      const ARevision: TRevisionPeriodoFacturacionCaja): Boolean;
     function TextoResultado(
       const AResultado: TResultadoFacturacionCaja): string;
-    procedure EjecutarGeneracion;
+    function RevisarPeriodo(
+      AModalidad: TModalidadFacturacionCaja;
+      const ASolicitud: TSolicitudFacturacionCaja
+    ): TRevisionPeriodoFacturacionCaja;
+    procedure EjecutarGeneracion(
+      AModalidad: TModalidadFacturacionCaja;
+      const ASolicitud: TSolicitudFacturacionCaja);
     procedure ImprimirSeleccion;
     procedure btnGenerarClick(Sender: TObject);
     procedure btnRefrescarClick(Sender: TObject);
@@ -85,6 +93,14 @@ resourcestring
     'Las facturas de traspasos TA se imprimen desde Facturas normales.';
   SErrorReferenciaProformaCajaInvalida =
     'No se ha podido identificar la proforma seleccionada.';
+  SAvisoPeriodoFacturacionCajaDuplicado =
+    'Ya existe un registro con el mismo periodo, empresa y modalidad.';
+  SAvisoPeriodoFacturacionCajaSolapado =
+    'El periodo indicado se solapa con otro registro de facturación.';
+  SInfoIdempotenciaFacturacionCaja =
+    'Las operaciones e ítems ya vinculados no volverán a facturarse.';
+  SPreguntaContinuarPeriodoFacturacionCaja =
+    '¿Desea revisar igualmente las operaciones pendientes y continuar?';
 
 implementation
 
@@ -225,6 +241,8 @@ begin
   if cxGrdDBTabPrin.ColumnCount = 0 then
   begin
     CrearColumna('TIPO_DOCUMENTO', 'Tipo', 55);
+    CrearColumna('ID_PERIODO', 'Id. periodo', 80);
+    CrearColumna('ESTADO_PERIODO', 'Estado periodo', 110);
     CrearColumna('SERIE_DOCUMENTO', 'Serie', 80);
     CrearColumna('NUMERO_DOCUMENTO', 'Número', 100);
     CrearColumna('FECHA_DOCUMENTO', 'Fecha', 90);
@@ -286,6 +304,33 @@ begin
     sPregunta, mtConfirmation, [mbYes, mbNo], 0) = mrYes;
 end;
 
+function TfrmMtoFacturasProforma.ConfirmarRevisionPeriodo(
+  const ARevision: TRevisionPeriodoFacturacionCaja): Boolean;
+var
+  sAviso: string;
+begin
+  Result := True;
+  if ARevision.EsDuplicado or ARevision.EsSolapado then
+  begin
+    sAviso := '';
+    if ARevision.EsDuplicado then
+      sAviso := SAvisoPeriodoFacturacionCajaDuplicado;
+    if ARevision.EsSolapado then
+    begin
+      if sAviso <> '' then
+        sAviso := sAviso + sLineBreak;
+      sAviso := sAviso + SAvisoPeriodoFacturacionCajaSolapado;
+    end;
+    if Trim(ARevision.Descripcion) <> '' then
+      sAviso := sAviso + sLineBreak + Trim(ARevision.Descripcion);
+    sAviso := sAviso + sLineBreak + sLineBreak +
+      SInfoIdempotenciaFacturacionCaja + sLineBreak +
+      SPreguntaContinuarPeriodoFacturacionCaja;
+    Result := MessageDlg(
+      sAviso, mtWarning, [mbYes, mbNo], 0) = mrYes;
+  end;
+end;
+
 function TfrmMtoFacturasProforma.TextoResultado(
   const AResultado: TResultadoFacturacionCaja): string;
 begin
@@ -305,19 +350,33 @@ begin
   end;
 end;
 
-procedure TfrmMtoFacturasProforma.EjecutarGeneracion;
+function TfrmMtoFacturasProforma.RevisarPeriodo(
+  AModalidad: TModalidadFacturacionCaja;
+  const ASolicitud: TSolicitudFacturacionCaja
+): TRevisionPeriodoFacturacionCaja;
 var
-  eModalidad: TModalidadFacturacionCaja;
-  oServicio : TFacturadorOperacionesCaja;
-  oSolicitud: TSolicitudFacturacionCaja;
-  oResultado: TResultadoFacturacionCaja;
+  oServicio: TFacturadorOperacionesCaja;
 begin
-  eModalidad := ObtenerModalidad;
-  oSolicitud := PrepararSolicitud;
   oServicio := TFacturadorOperacionesCaja.Create(
     dmmFacturasProforma.CrearRepositorio);
   try
-    oResultado := oServicio.Ejecutar(eModalidad, oSolicitud);
+    Result := oServicio.RevisarPeriodo(AModalidad, ASolicitud);
+  finally
+    FreeAndNil(oServicio);
+  end;
+end;
+
+procedure TfrmMtoFacturasProforma.EjecutarGeneracion(
+  AModalidad: TModalidadFacturacionCaja;
+  const ASolicitud: TSolicitudFacturacionCaja);
+var
+  oResultado: TResultadoFacturacionCaja;
+  oServicio : TFacturadorOperacionesCaja;
+begin
+  oServicio := TFacturadorOperacionesCaja.Create(
+    dmmFacturasProforma.CrearRepositorio);
+  try
+    oResultado := oServicio.Ejecutar(AModalidad, ASolicitud);
     dmmFacturasProforma.RefrescarDocumentos;
     ShowMessage(TextoResultado(oResultado));
   finally
@@ -328,21 +387,24 @@ end;
 procedure TfrmMtoFacturasProforma.btnGenerarClick(Sender: TObject);
 var
   eModalidad: TModalidadFacturacionCaja;
+  oRevision : TRevisionPeriodoFacturacionCaja;
+  oSolicitud: TSolicitudFacturacionCaja;
 begin
   eModalidad := ObtenerModalidad;
-  if ConfirmarGeneracion(eModalidad) then
-  begin
-    btnGenerar.Enabled := False;
+  oSolicitud := PrepararSolicitud;
+  btnGenerar.Enabled := False;
+  try
     try
-      try
-        EjecutarGeneracion;
-      except
-        on E: Exception do
-          ShowMessage(E.Message);
-      end;
-    finally
-      btnGenerar.Enabled := True;
+      oRevision := RevisarPeriodo(eModalidad, oSolicitud);
+      if ConfirmarRevisionPeriodo(oRevision) and
+         ConfirmarGeneracion(eModalidad) then
+        EjecutarGeneracion(eModalidad, oSolicitud);
+    except
+      on E: Exception do
+        ShowMessage(E.Message);
     end;
+  finally
+    btnGenerar.Enabled := True;
   end;
 end;
 

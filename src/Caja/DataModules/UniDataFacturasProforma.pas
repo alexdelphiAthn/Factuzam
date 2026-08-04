@@ -72,10 +72,14 @@ begin
   unqryTablaG.SQL.Text :=
     'SELECT CONCAT(''VE-'', P.ID_PROCAJ) AS CLAVE_DOCUMENTO, ' +
     '       ''VE'' AS TIPO_DOCUMENTO, P.SERIE_PROCAJ AS SERIE_DOCUMENTO, ' +
+    '       P.ID_FACPER_PROCAJ AS ID_PERIODO, ' +
+    '       FP.ESTADO_FACPER AS ESTADO_PERIODO, ' +
     '       P.NUMERO_PROCAJ AS NUMERO_DOCUMENTO, ' +
     '       P.FECHA_PROCAJ AS FECHA_DOCUMENTO, ' +
-    '       P.FECHA_DESDE_PROCAJ AS FECHA_DESDE, ' +
-    '       P.FECHA_HASTA_PROCAJ AS FECHA_HASTA, ' +
+    '       COALESCE(FP.FECHA_DESDE_FACPER, ' +
+    '                P.FECHA_DESDE_PROCAJ) AS FECHA_DESDE, ' +
+    '       COALESCE(FP.FECHA_HASTA_FACPER, ' +
+    '                P.FECHA_HASTA_PROCAJ) AS FECHA_HASTA, ' +
     '       P.CODIGO_EMP_PROCAJ AS CODIGO_EMPRESA, ' +
     '       E.RAZON_SOCIAL_EMP AS EMPRESA_DESTINO, ' +
     '       P.ESTADO_PROCAJ AS ESTADO_DOCUMENTO, ' +
@@ -89,14 +93,20 @@ begin
     '  FROM fza_proformas_caja P ' +
     '  LEFT JOIN fza_empresas E ' +
     '    ON E.CODIGO_EMP_EMP = P.CODIGO_EMP_PROCAJ ' +
+    '  LEFT JOIN fza_facturacion_caja_periodos FP ' +
+    '    ON FP.ID_FACPER = P.ID_FACPER_PROCAJ ' +
     'UNION ALL ' +
     'SELECT CONCAT(''TA-'', MIN(M.ID_FACOP)) AS CLAVE_DOCUMENTO, ' +
     '       ''TA'' AS TIPO_DOCUMENTO, ' +
     '       M.SERIE_FAC_FACOP AS SERIE_DOCUMENTO, ' +
+    '       MIN(M.ID_FACPER_FACOP) AS ID_PERIODO, ' +
+    '       MIN(FP.ESTADO_FACPER) AS ESTADO_PERIODO, ' +
     '       M.NUMERO_FAC_FACOP AS NUMERO_DOCUMENTO, ' +
     '       F.FECHA_FAC AS FECHA_DOCUMENTO, ' +
-    '       MIN(DATE(O.FECHA_OPERACION_OPCAJA)) AS FECHA_DESDE, ' +
-    '       MAX(DATE(O.FECHA_OPERACION_OPCAJA)) AS FECHA_HASTA, ' +
+    '       COALESCE(MIN(FP.FECHA_DESDE_FACPER), ' +
+    '                MIN(DATE(O.FECHA_OPERACION_OPCAJA))) AS FECHA_DESDE, ' +
+    '       COALESCE(MAX(FP.FECHA_HASTA_FACPER), ' +
+    '                MAX(DATE(O.FECHA_OPERACION_OPCAJA))) AS FECHA_HASTA, ' +
     '       M.CODIGO_EMP_ORIGEN_FACOP AS CODIGO_EMPRESA, ' +
     '       E.RAZON_SOCIAL_EMP AS EMPRESA_DESTINO, ' +
     '       M.ESTADO_FACOP AS ESTADO_DOCUMENTO, ' +
@@ -112,6 +122,8 @@ begin
     '    ON O.ID_OPCAJA = M.ID_OPCAJA_FACOP ' +
     '  LEFT JOIN fza_empresas E ' +
     '    ON E.CODIGO_EMP_EMP = M.CODIGO_EMP_DESTINO_FACOP ' +
+    '  LEFT JOIN fza_facturacion_caja_periodos FP ' +
+    '    ON FP.ID_FACPER = M.ID_FACPER_FACOP ' +
     ' GROUP BY M.SERIE_FAC_FACOP, M.NUMERO_FAC_FACOP, F.FECHA_FAC, ' +
     '          M.CODIGO_EMP_ORIGEN_FACOP, E.RAZON_SOCIAL_EMP, ' +
     '          M.ESTADO_FACOP, F.TOTAL_BASES_FAC, ' +

@@ -80,7 +80,9 @@ CALL PRC_FZA_MOVIMIENTOS_RECALCULAR_DOCUMENTO('AC', 'ZP', '3');
 CALL tmp_pmp_assert((
   SELECT ABS(CANTIDAD_MOV - 15) < 0.000001
     FROM fza_movimientos_almacen
-   WHERE NUMERO_MOV = 'IV-9001-00000001S'),
+   WHERE TIPO_DOC_MOV = 'IN' AND TIPO_MOV = 'S'
+     AND SERIE_DOC_MOV = 'ZP' AND NUMERO_DOC_MOV = '9001'
+     AND LINEA_MOV = '00000001'),
   'El ajuste no absorbe el AC anterior al recuento');
 CALL tmp_pmp_assert((
   SELECT ABS(CANTIDAD_STK - 6) < 0.000001
@@ -104,7 +106,9 @@ CALL PRC_FZA_MOVIMIENTOS_RECALCULAR_DOCUMENTO('DC', 'ZP', '4');
 CALL tmp_pmp_assert((
   SELECT ABS(CANTIDAD_MOV - 12) < 0.000001
     FROM fza_movimientos_almacen
-   WHERE NUMERO_MOV = 'IV-9001-00000001S'),
+   WHERE TIPO_DOC_MOV = 'IN' AND TIPO_MOV = 'S'
+     AND SERIE_DOC_MOV = 'ZP' AND NUMERO_DOC_MOV = '9001'
+     AND LINEA_MOV = '00000001'),
   'El ajuste no absorbe la DC anterior al recuento');
 CALL tmp_pmp_assert((
   SELECT ABS(CANTIDAD_STK - 6) < 0.000001
@@ -148,7 +152,9 @@ CALL PRC_FZA_MOVIMIENTOS_RECALCULAR_DOCUMENTO('AC', 'ZM', '2');
 CALL tmp_pmp_assert((
   SELECT ABS(PRECIO_COSTE_UNITARIO_MOV - 7) < 0.000001
     FROM fza_movimientos_almacen
-   WHERE NUMERO_MOV = 'IV-9002-00000001E'),
+   WHERE TIPO_DOC_MOV = 'IN' AND TIPO_MOV = 'E'
+     AND SERIE_DOC_MOV = 'ZM' AND NUMERO_DOC_MOV = '9002'
+     AND LINEA_MOV = '00000001'),
   'El recalculo no respeta el PMP manual del inventario');
 CALL tmp_pmp_assert((
   SELECT ABS(CANTIDAD_STK - 8) < 0.000001 AND

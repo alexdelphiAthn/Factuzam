@@ -366,6 +366,9 @@
         <DCCReference Include="PruebasGenerarTicketCaja.pas"/>
         <DCCReference Include="PruebasInventarioNube.pas"/>
         <DCCReference Include="PruebasSepaRemesasVenta.pas"/>
+        <DCCReference Include="..\src\Caja\Lib\inLibFacturasProformaIntf.pas"/>
+        <DCCReference Include="..\src\Caja\Lib\inLibFacturasProforma.pas"/>
+        <DCCReference Include="PruebasFacturasProforma.pas"/>
         <DCCReference Include="..\src\Lib\backup\Backup.Engine.pas"/>
         <DCCReference Include="..\src\Lib\backup\Backup.Types.pas"/>
         <DCCReference Include="..\src\Lib\backup\Core_Engine.pas"/>

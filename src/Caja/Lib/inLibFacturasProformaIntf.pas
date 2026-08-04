@@ -38,8 +38,18 @@ type
     Descripcion        : string;
   end;
 
+  TRevisionPeriodoFacturacionCaja = record
+    EsDuplicado: Boolean;
+    EsSolapado : Boolean;
+    Descripcion: string;
+  end;
+
   IRepositorioFacturasProforma = interface
     ['{374AE17A-F446-4AB7-9527-1911DB4047D6}']
+    function RevisarPeriodo(
+      AModalidad: TModalidadFacturacionCaja;
+      const ASolicitud: TSolicitudFacturacionCaja
+    ): TRevisionPeriodoFacturacionCaja;
     function GenerarVenta(
       const ASolicitud: TSolicitudFacturacionCaja
     ): TResultadoFacturacionCaja;

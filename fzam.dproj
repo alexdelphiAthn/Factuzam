@@ -1152,6 +1152,7 @@
         </DCCReference>
         <DCCReference Include="src\DataModules\UniDataAlbaranesCompraMovimientos.pas"/>
         <DCCReference Include="src\DataModules\UniDataAlbaranesCompraMovimientosSql.pas"/>
+        <DCCReference Include="src\DataModules\UniDataDevolucionesCompraMovimientosSql.pas"/>
         <DCCReference Include="src\DataModules\UniDataDevolucionesCompraMovimientos.pas"/>
         <DCCReference Include="src\Forms\inMtoDevolucionesCompra.pas">
             <Form>frmMtoDevolucionesCompra</Form>
@@ -1555,6 +1556,23 @@
         <DCCReference Include="src\Lib\inLibUnidadesMedidaPersistenciaIntf.pas"/>
         <DCCReference Include="src\Lib\inLibValidacionDocumentoLecturasIntf.pas"/>
         <DCCReference Include="src\Lib\inLibValoresAutomaticosPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibFacturasProformaIntf.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibFacturasProforma.pas"/>
+        <DCCReference Include="src\Caja\DataModules\UniDataFacturasProformaRepositorio.pas"/>
+        <DCCReference Include="src\Caja\DataModules\UniDataFacturasProforma.pas">
+            <Form>dmFacturasProforma</Form>
+            <DesignClass>TdmFacturasProforma</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Caja\Forms\inMtoFacturasProforma.pas">
+            <Form>frmMtoFacturasProforma</Form>
+        </DCCReference>
+        <DCCReference Include="src\Caja\DataModules\UniDataInformeFacturasProforma.pas">
+            <Form>dmInformeFacturasProforma</Form>
+            <DesignClass>TdmInformeFacturasProforma</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Caja\Modals\inMtoModalImpFacturasProforma.pas">
+            <Form>frmPrintFacturasProforma</Form>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

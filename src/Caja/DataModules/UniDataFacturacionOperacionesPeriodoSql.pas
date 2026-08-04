@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {  Módulo: UniDataFacturacionOperacionesPeriodoSql                            }
 {  Tipo: Catálogo SQL                                                         }
 {  Descripción: SQL de facturación periódica de operaciones TPV.              }
@@ -74,13 +74,16 @@ begin
     '    SELECT o.ID_OPCAJA, o.FECHA_OPERACION_OPCAJA,',
     '           o.IMPORTE_TOTAL_OPCAJA,',
     '           SHA2(CONCAT_WS(''|'', ''VE'', o.ID_OPCAJA,',
-    '             DATE_FORMAT(o.INSTANTE_MODIF, ''%Y%m%d%H%i%s%f''),',
-    '             DATE_FORMAT(f.INSTANTE_MODIF, ''%Y%m%d%H%i%s%f''),',
+    '             DATE_FORMAT(o.FECHA_OPERACION_OPCAJA, ''%Y%m%d%H%i%s''),',
+    '             o.IMPORTE_TOTAL_OPCAJA,',
     '             COALESCE((',
     '               SELECT GROUP_CONCAT(CONCAT_WS('':'',',
-    '                 fl.LINEA_FACLIN, COALESCE(fl.CODIGO_UNIDAD_FACLIN, ''''),',
-    '                 fl.CANTIDAD_FACLIN, fl.TOTAL_FACLIN,',
-    '                 DATE_FORMAT(fl.INSTANTE_MODIF, ''%Y%m%d%H%i%s%f''))',
+    '                 fl.LINEA_FACLIN, ' +
+    'COALESCE(fl.CODIGO_UNIDAD_FACLIN, ''''),',
+    '                 COALESCE(fl.CODIGO_ART_FACLIN, ''''),',
+    '                 fl.CANTIDAD_FACLIN,',
+    '                 fl.PRECIO_VENTA_CIVA_ARTICULO_FACLIN,',
+    '                 fl.TOTAL_FACLIN)',
     '                 ORDER BY fl.LINEA_FACLIN SEPARATOR ''|'' )',
     '                 FROM fza_facturas_lineas fl',
     '                WHERE fl.SERIE_FAC_FACLIN = o.SERIE_FAC_OPCAJA',
@@ -128,12 +131,14 @@ begin
     '             AS CODIGO_EMP_DESTINO,',
     '           o.FECHA_OPERACION_OPCAJA, o.IMPORTE_TOTAL_OPCAJA,',
     '           SHA2(CONCAT_WS(''|'', ''TA'', o.ID_OPCAJA,',
-    '             DATE_FORMAT(o.INSTANTE_MODIF, ''%Y%m%d%H%i%s%f''),',
+    '             o.CODIGO_EMP_CONTRA_OPCAJA,',
+    '             DATE_FORMAT(o.FECHA_OPERACION_OPCAJA, ''%Y%m%d%H%i%s''),',
+    '             o.IMPORTE_TOTAL_OPCAJA,',
     '             COALESCE((',
     '               SELECT GROUP_CONCAT(CONCAT_WS('':'', m.NUMERO_MOV,',
-    '                 m.LINEA_MOV, m.CODIGO_UNIDAD_MOV, m.CANTIDAD_MOV,',
-    '                 m.TOTAL_COSTE_MOV,',
-    '                 DATE_FORMAT(m.INSTANTE_MODIF, ''%Y%m%d%H%i%s%f''))',
+    '                 m.LINEA_MOV, m.CODIGO_ART_MOV,',
+    '                 m.CODIGO_UNIDAD_MOV, m.CANTIDAD_MOV,',
+    '                 m.PRECIO_COSTE_UNITARIO_MOV, m.TOTAL_COSTE_MOV)',
     '                 ORDER BY m.LINEA_MOV, m.NUMERO_MOV SEPARATOR ''|'')',
     '                 FROM fza_movimientos_almacen m',
     '                WHERE m.TIPO_DOC_MOV IN (''TA'', ''AT'')',
@@ -585,6 +590,8 @@ begin
     '   AND d.FECHA_DOCUMENTO_CFPER >= :DESDE',
     '   AND d.FECHA_DOCUMENTO_CFPER < DATE_ADD(:HASTA, INTERVAL 1 DAY)',
     '   AND d.ESTADO_PROCESO_CFPER = ''COMPLETADO''',
+    '   AND (ABS(l.TOTAL_LINEA_CFLIN) > 0.000001',
+    '        OR ABS(l.CANTIDAD_DOCUMENTO_CFLIN) > 0.000001)',
     ' ORDER BY d.FECHA_DOCUMENTO_CFPER, d.ID_CFPER, l.ID_CFLIN'
   ]);
 end;

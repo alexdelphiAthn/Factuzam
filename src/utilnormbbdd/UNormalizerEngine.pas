@@ -254,6 +254,7 @@ begin
   AddSuf('fza_empresas_bancos',                 'EMPBAN');
   AddSuf('fza_empresas_retenciones',            'EMPRET');
   AddSuf('fza_empresas_series',                 'EMPSER');
+  AddSuf('fza_facturacion_caja_periodos',       'FACPER');
   AddSuf('fza_facturas',                        'FAC');
   AddSuf('fza_facturas_compra',                 'FACC');
   AddSuf('fza_facturas_compra_celdas',          'FACCCEL');

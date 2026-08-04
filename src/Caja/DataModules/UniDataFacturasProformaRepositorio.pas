@@ -25,13 +25,26 @@ type
     IRepositorioFacturasProforma)
   private
     FConexion: TUniConnection;
+    procedure ActualizarPeriodo(
+      AIdPeriodo: Int64;
+      const AEstado: string;
+      const AResultado: TResultadoFacturacionCaja;
+      const AUsuario: string);
     procedure AsignarSolicitud(
       AConsulta: TUniQuery;
       const ASolicitud: TSolicitudFacturacionCaja);
     function ContarCandidatasVenta(
       const ASolicitud: TSolicitudFacturacionCaja): Integer;
+    function ContarLineasTraspaso(
+      const ASolicitud: TSolicitudFacturacionCaja;
+      const AEmpresaOrigen: string;
+      const AAlmacenOrigen: string): Integer;
+    function CrearPeriodo(
+      const AModalidad: string;
+      const ASolicitud: TSolicitudFacturacionCaja): Int64;
     function GenerarFacturaTraspaso(
       const ASolicitud: TSolicitudFacturacionCaja;
+      AIdPeriodo: Int64;
       const AEmpresaOrigen: string;
       const AAlmacenOrigen: string): Integer;
     function ObtenerIdentidad: Int64;
@@ -46,6 +59,10 @@ type
       const AFecha: TDateTime): string;
   public
     constructor Create(AConexion: TUniConnection);
+    function RevisarPeriodo(
+      AModalidad: TModalidadFacturacionCaja;
+      const ASolicitud: TSolicitudFacturacionCaja
+    ): TRevisionPeriodoFacturacionCaja;
     function GenerarVenta(
       const ASolicitud: TSolicitudFacturacionCaja
     ): TResultadoFacturacionCaja;
@@ -62,6 +79,29 @@ uses
   Data.DB;
 
 const
+  SQL_REVISAR_PERIODO =
+    'SELECT COALESCE(SUM(CASE WHEN FECHA_DESDE_FACPER = :DESDE ' +
+    'AND FECHA_HASTA_FACPER = :HASTA THEN 1 ELSE 0 END), 0) ' +
+    'AS DUPLICADOS, COUNT(*) AS SOLAPADOS ' +
+    'FROM fza_facturacion_caja_periodos ' +
+    'WHERE MODALIDAD_FACPER = :MODALIDAD ' +
+    'AND CODIGO_EMP_DESTINO_FACPER = :EMPRESA ' +
+    'AND ESTADO_FACPER <> ''SIN_DOCUMENTOS'' ' +
+    'AND FECHA_DESDE_FACPER <= :HASTA ' +
+    'AND FECHA_HASTA_FACPER >= :DESDE';
+  SQL_INSERTAR_PERIODO =
+    'INSERT INTO fza_facturacion_caja_periodos (' +
+    'MODALIDAD_FACPER, CODIGO_EMP_DESTINO_FACPER, ' +
+    'FECHA_DESDE_FACPER, FECHA_HASTA_FACPER, ESTADO_FACPER, ' +
+    'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
+    'VALUES (:MODALIDAD, :EMPRESA, :DESDE, :HASTA, ''ABIERTO'', ' +
+    'NOW(), NOW(), :USUARIO, :USUARIO)';
+  SQL_ACTUALIZAR_PERIODO =
+    'UPDATE fza_facturacion_caja_periodos SET ESTADO_FACPER = :ESTADO, ' +
+    'CANTIDAD_DOCUMENTOS_FACPER = :DOCUMENTOS, ' +
+    'CANTIDAD_OPERACIONES_FACPER = :OPERACIONES, ' +
+    'CANTIDAD_AJUSTES_FACPER = :AJUSTES, INSTANTE_MODIF = NOW(), ' +
+    'USUARIO_MODIF = :USUARIO WHERE ID_FACPER = :ID_PERIODO';
   SQL_CONTAR_CANDIDATAS_VENTA =
     'SELECT COUNT(*) AS CANTIDAD FROM (' +
     'SELECT O.ID_OPCAJA FROM fza_caja_operaciones O ' +
@@ -111,7 +151,7 @@ const
     ' P.LINEA_FAC_ORIGEN_PROCLIN)) X';
   SQL_INSERTAR_PROFORMA =
     'INSERT INTO fza_proformas_caja (' +
-    'NUMERO_PROCAJ, SERIE_PROCAJ, FECHA_PROCAJ, ' +
+    'ID_FACPER_PROCAJ, NUMERO_PROCAJ, SERIE_PROCAJ, FECHA_PROCAJ, ' +
     'FECHA_DESDE_PROCAJ, FECHA_HASTA_PROCAJ, TIPO_PROCAJ, ' +
     'ESTADO_PROCAJ, CODIGO_EMP_PROCAJ, ' +
     'RAZON_SOCIAL_EMPRESA_PROCAJ, NIF_EMPRESA_PROCAJ, ' +
@@ -121,7 +161,7 @@ const
     'NOMBRE_PAI_EMPRESA_PROCAJ, CODIGO_CLI_PROCAJ, ' +
     'RAZON_SOCIAL_CLIENTE_PROCAJ, INSTANTE_ALTA, INSTANTE_MODIF, ' +
     'USUARIO_ALTA, USUARIO_MODIF) ' +
-    'SELECT :NUMERO, :SERIE, :HASTA, :DESDE, :HASTA, ''VE'', ' +
+    'SELECT :ID_PERIODO, :NUMERO, :SERIE, :HASTA, :DESDE, :HASTA, ''VE'', ' +
     '''EMITIDA'', E.CODIGO_EMP_EMP, E.RAZON_SOCIAL_EMP, E.NIF_EMP, ' +
     'E.DIRECCION1_EMP, E.DIRECCION2_EMP, E.CODIGO_POSTAL_EMP, ' +
     'E.POBLACION_EMP, E.PROVINCIA_EMP, E.CODIGO_PAI_EMP, ' +
@@ -134,7 +174,7 @@ const
     'MAX(CAST(LINEA_PROCLIN AS UNSIGNED)), 0) ' +
     'FROM fza_proformas_caja_lineas WHERE ID_PROCAJ_PROCLIN = :ID)';
   SQL_INSERTAR_LINEAS_VENTA =
-    'INSERT INTO fza_proformas_caja_lineas (' +
+    'INSERT IGNORE INTO fza_proformas_caja_lineas (' +
     'ID_PROCAJ_PROCLIN, LINEA_PROCLIN, ID_OPCAJA_PROCLIN, ' +
     'TIPO_VINCULO_PROCLIN, SERIE_FAC_ORIGEN_PROCLIN, ' +
     'NUMERO_FAC_ORIGEN_PROCLIN, LINEA_FAC_ORIGEN_PROCLIN, ' +
@@ -177,7 +217,7 @@ const
     'ORDER BY COALESCE(O.FECHA_OP_DIA_OPCAJA, ' +
     'DATE(O.FECHA_OPERACION_OPCAJA)), O.ID_OPCAJA, L.LINEA_FACLIN';
   SQL_INSERTAR_AJUSTES_VENTA =
-    'INSERT INTO fza_proformas_caja_lineas (' +
+    'INSERT IGNORE INTO fza_proformas_caja_lineas (' +
     'ID_PROCAJ_PROCLIN, LINEA_PROCLIN, ID_OPCAJA_PROCLIN, ' +
     'TIPO_VINCULO_PROCLIN, ID_PROCAJ_ORIGEN_PROCLIN, ' +
     'LINEA_PROCAJ_ORIGEN_PROCLIN, SERIE_FAC_ORIGEN_PROCLIN, ' +
@@ -248,7 +288,7 @@ const
     'FROM fza_proformas_caja_lineas WHERE ID_PROCAJ_PROCLIN = :ID';
   SQL_GRUPOS_TRASPASO =
     'SELECT O.CODIGO_EMP_OPCAJA AS EMPRESA, ' +
-    'MIN(O.CODIGO_ALM_OPCAJA) AS ALMACEN ' +
+    'O.CODIGO_ALM_OPCAJA AS ALMACEN ' +
     'FROM fza_caja_operaciones O ' +
     'WHERE O.TIPO_OPERACION_OPCAJA = ''TA'' ' +
     ' AND O.ESTRASPASO_OPCAJA = ''S'' ' +
@@ -265,8 +305,26 @@ const
     ' AND M.CODIGO_ALM_DOC_MOV = O.CODIGO_ALM_OPCAJA ' +
     ' AND M.CODIGO_CAJA_DOC_MOV = O.CODIGO_CAJA_OPCAJA ' +
     ' AND M.NUMERO_OPERACION_DOC_MOV = O.NUMERO_OPERACION_OPCAJA) ' +
-    'GROUP BY O.CODIGO_EMP_OPCAJA ' +
-    'ORDER BY O.CODIGO_EMP_OPCAJA';
+    'GROUP BY O.CODIGO_EMP_OPCAJA, O.CODIGO_ALM_OPCAJA ' +
+    'ORDER BY O.CODIGO_EMP_OPCAJA, O.CODIGO_ALM_OPCAJA';
+  SQL_CONTAR_LINEAS_TRASPASO =
+    'SELECT COUNT(*) AS CANTIDAD FROM fza_caja_operaciones O ' +
+    'JOIN fza_movimientos_almacen M ' +
+    ' ON M.CODIGO_EMP_MOV = O.CODIGO_EMP_OPCAJA ' +
+    ' AND M.CODIGO_ALM_DOC_MOV = O.CODIGO_ALM_OPCAJA ' +
+    ' AND M.CODIGO_CAJA_DOC_MOV = O.CODIGO_CAJA_OPCAJA ' +
+    ' AND M.NUMERO_OPERACION_DOC_MOV = O.NUMERO_OPERACION_OPCAJA ' +
+    'WHERE O.TIPO_OPERACION_OPCAJA = ''TA'' ' +
+    ' AND O.ESTRASPASO_OPCAJA = ''S'' ' +
+    ' AND O.CODIGO_EMP_OPCAJA = :ORIGEN ' +
+    ' AND O.CODIGO_ALM_OPCAJA = :ALMACEN ' +
+    ' AND O.CODIGO_EMP_CONTRA_OPCAJA = :EMPRESA ' +
+    ' AND COALESCE(O.FECHA_OP_DIA_OPCAJA, ' +
+    ' DATE(O.FECHA_OPERACION_OPCAJA)) BETWEEN :DESDE AND :HASTA ' +
+    ' AND M.TIPO_DOC_MOV = ''TA'' AND M.TIPO_MOV = ''S'' ' +
+    ' AND M.ESACTIVO_MOV = ''S'' ' +
+    ' AND NOT EXISTS (SELECT 1 FROM fza_facturas_operaciones_caja X ' +
+    ' WHERE X.ID_OPCAJA_FACOP = O.ID_OPCAJA)';
   SQL_OBTENER_SERIE_FACTURA =
     'SELECT S.EMPSER FROM vi_empresas_series S ' +
     'WHERE S.CODIGO_EMP_EMPSER = :ORIGEN ' +
@@ -281,10 +339,19 @@ const
     'ORDER BY (S.CODIGO_ALM_EMPSER = :ALMACEN) DESC, ' +
     'S.FECHA_DESDE_EMPSER DESC LIMIT 1';
   SQL_OBTENER_SERIE_CONTADOR =
-    'SELECT SERIE_CON FROM fza_contadores ' +
-    'WHERE TIPO_DOC_CON = ''FC'' AND EMPRESA_CON = :ORIGEN ' +
-    'AND ESACTIVO_CON = ''S'' ' +
-    'ORDER BY (DEFAULT_CON = ''S'') DESC, SERIE_CON LIMIT 1';
+    'SELECT S.EMPSER FROM vi_empresas_series S ' +
+    'LEFT JOIN fza_contadores C ON C.TIPO_DOC_CON = ''FC'' ' +
+    ' AND C.EMPRESA_CON = S.CODIGO_EMP_EMPSER ' +
+    ' AND C.SERIE_CON = S.EMPSER AND C.ESACTIVO_CON = ''S'' ' +
+    'WHERE S.CODIGO_EMP_EMPSER = :ORIGEN ' +
+    ' AND S.TIPO_DOC_EMPSER = ''FC'' ' +
+    ' AND S.SUBTIPO_EMPSER = ''NORMAL'' ' +
+    ' AND (S.FECHA_DESDE_EMPSER IS NULL ' +
+    ' OR S.FECHA_DESDE_EMPSER <= :FECHA) ' +
+    ' AND (S.FECHA_HASTA_EMPSER IS NULL ' +
+    ' OR S.FECHA_HASTA_EMPSER >= :FECHA) ' +
+    'ORDER BY (C.DEFAULT_CON = ''S'') DESC, ' +
+    'S.FECHA_DESDE_EMPSER DESC, S.EMPSER LIMIT 1';
   SQL_INSERTAR_FACTURA_TA =
     'INSERT INTO fza_facturas (' +
     'NUMERO_FAC, SERIE_FAC, FECHA_FAC, ESCONSOLIDADA_FAC, ' +
@@ -364,25 +431,30 @@ const
     'M.CODIGO_ART_MOV, M.CODIGO_UNIDAD_MOV, A.CODIGO_FAM_ART, ' +
     'COALESCE(A.TIPO_ART, ''ESTANDAR''), ' +
     'COALESCE(A.TIPO_CANTIDAD_ART, ''Uds''), M.CANTIDAD_MOV, ' +
-    'COALESCE(M.DESCRIPCION_ARTICULO_MOV, A.DESCRIPCION_ART), ''N'', ' +
-    'M.PRECIO_COSTE_UNITARIO_MOV, COALESCE(A.TIPO_IVA_ART, ''N''), ' +
+    'LEFT(COALESCE(M.DESCRIPCION_ARTICULO_MOV, A.DESCRIPCION_ART), ' +
+    '100), ''N'', COALESCE(M.PRECIO_COSTE_UNITARIO_MOV, 0), ' +
+    'COALESCE(A.TIPO_IVA_ART, ''N''), ' +
     'CASE COALESCE(A.TIPO_IVA_ART, ''N'') ' +
     ' WHEN ''R'' THEN I.PORCENTAJE_REDUCIDO_IVA ' +
     ' WHEN ''S'' THEN I.PORCENTAJE_SUPERREDUCIDO_IVA ' +
     ' WHEN ''E'' THEN I.PORCENTAJE_EXENTO_IVA ' +
     ' ELSE I.PORCENTAJE_NORMAL_IVA END, ' +
-    'M.PRECIO_COSTE_UNITARIO_MOV * (1 + (CASE ' +
+    'COALESCE(M.PRECIO_COSTE_UNITARIO_MOV, 0) * (1 + (CASE ' +
     'COALESCE(A.TIPO_IVA_ART, ''N'') ' +
     ' WHEN ''R'' THEN I.PORCENTAJE_REDUCIDO_IVA ' +
     ' WHEN ''S'' THEN I.PORCENTAJE_SUPERREDUCIDO_IVA ' +
     ' WHEN ''E'' THEN I.PORCENTAJE_EXENTO_IVA ' +
     ' ELSE I.PORCENTAJE_NORMAL_IVA END) / 100), ' +
-    'M.TOTAL_COSTE_MOV * (1 + (CASE COALESCE(A.TIPO_IVA_ART, ''N'') ' +
+    'COALESCE(M.TOTAL_COSTE_MOV, M.CANTIDAD_MOV * ' +
+    'M.PRECIO_COSTE_UNITARIO_MOV, 0) * (1 + (CASE ' +
+    'COALESCE(A.TIPO_IVA_ART, ''N'') ' +
     ' WHEN ''R'' THEN I.PORCENTAJE_REDUCIDO_IVA ' +
     ' WHEN ''S'' THEN I.PORCENTAJE_SUPERREDUCIDO_IVA ' +
     ' WHEN ''E'' THEN I.PORCENTAJE_EXENTO_IVA ' +
     ' ELSE I.PORCENTAJE_NORMAL_IVA END) / 100), ' +
-    'M.TOTAL_COSTE_MOV, NOW(), NOW(), :USUARIO, :USUARIO, ' +
+    'COALESCE(M.TOTAL_COSTE_MOV, M.CANTIDAD_MOV * ' +
+    'M.PRECIO_COSTE_UNITARIO_MOV, 0), NOW(), NOW(), ' +
+    ':USUARIO, :USUARIO, ' +
     'O.CODIGO_ALM_OPCAJA, O.CODIGO_CAJA_OPCAJA, ' +
     'O.NUMERO_OPERACION_OPCAJA, M.NUMERO_MOV ' +
     'FROM fza_caja_operaciones O ' +
@@ -398,6 +470,7 @@ const
     'WHERE O.TIPO_OPERACION_OPCAJA = ''TA'' ' +
     ' AND O.ESTRASPASO_OPCAJA = ''S'' ' +
     ' AND O.CODIGO_EMP_OPCAJA = :ORIGEN ' +
+    ' AND O.CODIGO_ALM_OPCAJA = :ALMACEN ' +
     ' AND O.CODIGO_EMP_CONTRA_OPCAJA = :EMPRESA ' +
     ' AND COALESCE(O.FECHA_OP_DIA_OPCAJA, ' +
     ' DATE(O.FECHA_OPERACION_OPCAJA)) BETWEEN :DESDE AND :HASTA ' +
@@ -408,13 +481,15 @@ const
     'ORDER BY COALESCE(O.FECHA_OP_DIA_OPCAJA, ' +
     'DATE(O.FECHA_OPERACION_OPCAJA)), O.ID_OPCAJA, M.LINEA_MOV';
   SQL_ENLAZAR_OPERACIONES_TA =
-    'INSERT INTO fza_facturas_operaciones_caja (' +
-    'ID_OPCAJA_FACOP, SERIE_FAC_FACOP, NUMERO_FAC_FACOP, ' +
+    'INSERT IGNORE INTO fza_facturas_operaciones_caja (' +
+    'ID_FACPER_FACOP, ID_OPCAJA_FACOP, SERIE_FAC_FACOP, ' +
+    'NUMERO_FAC_FACOP, ' +
     'CODIGO_EMP_ORIGEN_FACOP, CODIGO_EMP_DESTINO_FACOP, ' +
     'NUMERO_OPERACION_FACOP, FECHA_OPERACION_FACOP, ' +
     'IMPORTE_OPERACION_FACOP, ESTADO_FACOP, INSTANTE_ALTA, ' +
     'INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
-    'SELECT O.ID_OPCAJA, :SERIE, :NUMERO, O.CODIGO_EMP_OPCAJA, ' +
+    'SELECT :ID_PERIODO, O.ID_OPCAJA, :SERIE, :NUMERO, ' +
+    'O.CODIGO_EMP_OPCAJA, ' +
     'O.CODIGO_EMP_CONTRA_OPCAJA, O.NUMERO_OPERACION_OPCAJA, ' +
     'COALESCE(O.FECHA_OP_DIA_OPCAJA, DATE(O.FECHA_OPERACION_OPCAJA)), ' +
     'O.IMPORTE_TOTAL_OPCAJA, ''FACTURADA'', NOW(), NOW(), ' +
@@ -422,6 +497,7 @@ const
     'WHERE O.TIPO_OPERACION_OPCAJA = ''TA'' ' +
     ' AND O.ESTRASPASO_OPCAJA = ''S'' ' +
     ' AND O.CODIGO_EMP_OPCAJA = :ORIGEN ' +
+    ' AND O.CODIGO_ALM_OPCAJA = :ALMACEN ' +
     ' AND O.CODIGO_EMP_CONTRA_OPCAJA = :EMPRESA ' +
     ' AND COALESCE(O.FECHA_OP_DIA_OPCAJA, ' +
     ' DATE(O.FECHA_OPERACION_OPCAJA)) BETWEEN :DESDE AND :HASTA ' +
@@ -451,6 +527,33 @@ constructor TRepositorioFacturasProformaUniDAC.Create(
 begin
   inherited Create;
   FConexion := AConexion;
+end;
+
+procedure TRepositorioFacturasProformaUniDAC.ActualizarPeriodo(
+  AIdPeriodo: Int64;
+  const AEstado: string;
+  const AResultado: TResultadoFacturacionCaja;
+  const AUsuario: string);
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := SQL_ACTUALIZAR_PERIODO;
+    oConsulta.ParamByName('ID_PERIODO').AsLargeInt := AIdPeriodo;
+    oConsulta.ParamByName('ESTADO').AsString := AEstado;
+    oConsulta.ParamByName('DOCUMENTOS').AsInteger :=
+      AResultado.CantidadDocumentos;
+    oConsulta.ParamByName('OPERACIONES').AsInteger :=
+      AResultado.CantidadOperaciones;
+    oConsulta.ParamByName('AJUSTES').AsInteger :=
+      AResultado.CantidadAjustes;
+    oConsulta.ParamByName('USUARIO').AsString := AUsuario;
+    oConsulta.Execute;
+  finally
+    FreeAndNil(oConsulta);
+  end;
 end;
 
 procedure TRepositorioFacturasProformaUniDAC.AsignarSolicitud(
@@ -486,6 +589,91 @@ begin
     oConsulta.Connection := FConexion;
     oConsulta.SQL.Text := SQL_CONTAR_CANDIDATAS_VENTA;
     AsignarSolicitud(oConsulta, ASolicitud);
+    oConsulta.Open;
+    Result := oConsulta.FieldByName('CANTIDAD').AsInteger;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioFacturasProformaUniDAC.CrearPeriodo(
+  const AModalidad: string;
+  const ASolicitud: TSolicitudFacturacionCaja): Int64;
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := SQL_INSERTAR_PERIODO;
+    AsignarSolicitud(oConsulta, ASolicitud);
+    oConsulta.ParamByName('MODALIDAD').AsString := AModalidad;
+    oConsulta.Execute;
+    Result := ObtenerIdentidad;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioFacturasProformaUniDAC.RevisarPeriodo(
+  AModalidad: TModalidadFacturacionCaja;
+  const ASolicitud: TSolicitudFacturacionCaja
+): TRevisionPeriodoFacturacionCaja;
+var
+  sModalidad: string;
+  iDuplicados: Integer;
+  iSolapados: Integer;
+  oConsulta: TUniQuery;
+begin
+  Result := Default(TRevisionPeriodoFacturacionCaja);
+  if AModalidad = mfcVenta then
+  begin
+    sModalidad := 'VE';
+  end
+  else
+  begin
+    sModalidad := 'TA';
+  end;
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := SQL_REVISAR_PERIODO;
+    AsignarSolicitud(oConsulta, ASolicitud);
+    oConsulta.ParamByName('MODALIDAD').AsString := sModalidad;
+    oConsulta.Open;
+    iDuplicados := oConsulta.FieldByName('DUPLICADOS').AsInteger;
+    iSolapados := oConsulta.FieldByName('SOLAPADOS').AsInteger;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+  Result.EsDuplicado := iDuplicados > 0;
+  Result.EsSolapado := iSolapados > iDuplicados;
+  if Result.EsDuplicado then
+  begin
+    Result.Descripcion :=
+      'Ya existe una generación con el mismo periodo y modalidad.';
+  end
+  else if Result.EsSolapado then
+  begin
+    Result.Descripcion :=
+      'El periodo se solapa con una generación anterior.';
+  end;
+end;
+
+function TRepositorioFacturasProformaUniDAC.ContarLineasTraspaso(
+  const ASolicitud: TSolicitudFacturacionCaja;
+  const AEmpresaOrigen: string;
+  const AAlmacenOrigen: string): Integer;
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := SQL_CONTAR_LINEAS_TRASPASO;
+    AsignarSolicitud(oConsulta, ASolicitud);
+    oConsulta.ParamByName('ORIGEN').AsString := AEmpresaOrigen;
+    oConsulta.ParamByName('ALMACEN').AsString := AAlmacenOrigen;
     oConsulta.Open;
     Result := oConsulta.FieldByName('CANTIDAD').AsInteger;
   finally
@@ -557,6 +745,7 @@ begin
     begin
       oConsulta.SQL.Text := SQL_OBTENER_SERIE_CONTADOR;
       oConsulta.ParamByName('ORIGEN').AsString := AEmpresa;
+      oConsulta.ParamByName('FECHA').AsDate := Trunc(AFecha);
       oConsulta.Open;
       if not oConsulta.IsEmpty then
       begin
@@ -578,6 +767,7 @@ function TRepositorioFacturasProformaUniDAC.GenerarVenta(
   const ASolicitud: TSolicitudFacturacionCaja
 ): TResultadoFacturacionCaja;
 var
+  iIdPeriodo: Int64;
   iIdProforma: Int64;
   sNumero: string;
   sSerie: string;
@@ -597,8 +787,10 @@ begin
       oConsulta.Connection := FConexion;
       FConexion.StartTransaction;
       try
+        iIdPeriodo := CrearPeriodo('VE', ASolicitud);
         oConsulta.SQL.Text := SQL_INSERTAR_PROFORMA;
         AsignarSolicitud(oConsulta, ASolicitud);
+        oConsulta.ParamByName('ID_PERIODO').AsLargeInt := iIdPeriodo;
         oConsulta.ParamByName('SERIE').AsString := sSerie;
         oConsulta.ParamByName('NUMERO').AsString := sNumero;
         oConsulta.Execute;
@@ -633,17 +825,24 @@ begin
         Result.CantidadAjustes :=
           oConsulta.FieldByName('AJUSTES').AsInteger;
         oConsulta.Close;
-        if Result.CantidadOperaciones = 0 then
+        if Result.CantidadOperaciones > 0 then
         begin
-          raise Exception.Create(
-            'Las operaciones ya habían sido procesadas por otra sesión.');
+          Result.CantidadDocumentos := 1;
+          Result.Descripcion := Format(
+            'Proforma %s/%s generada con %d operaciones y %d ajustes.',
+            [sSerie, sNumero, Result.CantidadOperaciones,
+             Result.CantidadAjustes]);
+          ActualizarPeriodo(
+            iIdPeriodo,
+            'CERRADO',
+            Result,
+            ASolicitud.Usuario);
+          FConexion.Commit;
+        end
+        else
+        begin
+          FConexion.Rollback;
         end;
-        FConexion.Commit;
-        Result.CantidadDocumentos := 1;
-        Result.Descripcion := Format(
-          'Proforma %s/%s generada con %d operaciones y %d ajustes.',
-          [sSerie, sNumero, Result.CantidadOperaciones,
-           Result.CantidadAjustes]);
       except
         if FConexion.InTransaction then
         begin
@@ -659,6 +858,7 @@ end;
 
 function TRepositorioFacturasProformaUniDAC.GenerarFacturaTraspaso(
   const ASolicitud: TSolicitudFacturacionCaja;
+  AIdPeriodo: Int64;
   const AEmpresaOrigen: string;
   const AAlmacenOrigen: string): Integer;
 var
@@ -668,81 +868,96 @@ var
   oConsulta: TUniQuery;
 begin
   Result := 0;
-  sSerie := ObtenerSerieFactura(
+  iLineas := ContarLineasTraspaso(
+    ASolicitud,
     AEmpresaOrigen,
-    AAlmacenOrigen,
-    ASolicitud.FechaHasta);
-  sNumero := ObtenerNumeroDocumento(
-    sSerie,
-    'FC',
-    AEmpresaOrigen,
-    ASolicitud.Usuario);
-  oConsulta := TUniQuery.Create(nil);
-  try
-    oConsulta.Connection := FConexion;
-    FConexion.StartTransaction;
+    AAlmacenOrigen);
+  if iLineas > 9999 then
+  begin
+    raise Exception.CreateFmt(
+      'La factura TA de %s/%s tendría %d líneas; el máximo es 9999.',
+      [AEmpresaOrigen, AAlmacenOrigen, iLineas]);
+  end;
+  if iLineas > 0 then
+  begin
+    sSerie := ObtenerSerieFactura(
+      AEmpresaOrigen,
+      AAlmacenOrigen,
+      ASolicitud.FechaHasta);
+    sNumero := ObtenerNumeroDocumento(
+      sSerie,
+      'FC',
+      AEmpresaOrigen,
+      ASolicitud.Usuario);
+    oConsulta := TUniQuery.Create(nil);
     try
-      oConsulta.SQL.Text := SQL_INSERTAR_FACTURA_TA;
-      AsignarSolicitud(oConsulta, ASolicitud);
-      oConsulta.ParamByName('ORIGEN').AsString := AEmpresaOrigen;
-      oConsulta.ParamByName('SERIE').AsString := sSerie;
-      oConsulta.ParamByName('NUMERO').AsString := sNumero;
-      oConsulta.Execute;
-      if oConsulta.RowsAffected = 0 then
-      begin
-        raise Exception.CreateFmt(
-          'No se pudo crear la factura TA de la empresa %s.',
-          [AEmpresaOrigen]);
+      oConsulta.Connection := FConexion;
+      FConexion.StartTransaction;
+      try
+        oConsulta.SQL.Text := SQL_INSERTAR_FACTURA_TA;
+        AsignarSolicitud(oConsulta, ASolicitud);
+        oConsulta.ParamByName('ORIGEN').AsString := AEmpresaOrigen;
+        oConsulta.ParamByName('SERIE').AsString := sSerie;
+        oConsulta.ParamByName('NUMERO').AsString := sNumero;
+        oConsulta.Execute;
+        if oConsulta.RowsAffected = 0 then
+        begin
+          raise Exception.CreateFmt(
+            'No se pudo crear la factura TA de la empresa %s.',
+            [AEmpresaOrigen]);
+        end;
+        oConsulta.SQL.Text := SQL_INICIAR_LINEA_FACTURA;
+        oConsulta.Execute;
+        oConsulta.SQL.Text := SQL_INSERTAR_LINEAS_TA;
+        AsignarSolicitud(oConsulta, ASolicitud);
+        oConsulta.ParamByName('ORIGEN').AsString := AEmpresaOrigen;
+        oConsulta.ParamByName('ALMACEN').AsString := AAlmacenOrigen;
+        oConsulta.ParamByName('SERIE').AsString := sSerie;
+        oConsulta.ParamByName('NUMERO').AsString := sNumero;
+        oConsulta.Execute;
+        iLineas := oConsulta.RowsAffected;
+        if iLineas > 0 then
+        begin
+          oConsulta.SQL.Text := SQL_ENLAZAR_OPERACIONES_TA;
+          AsignarSolicitud(oConsulta, ASolicitud);
+          oConsulta.ParamByName('ID_PERIODO').AsLargeInt := AIdPeriodo;
+          oConsulta.ParamByName('ORIGEN').AsString := AEmpresaOrigen;
+          oConsulta.ParamByName('ALMACEN').AsString := AAlmacenOrigen;
+          oConsulta.ParamByName('SERIE').AsString := sSerie;
+          oConsulta.ParamByName('NUMERO').AsString := sNumero;
+          oConsulta.Execute;
+          oConsulta.SQL.Text := SQL_CONTAR_OPERACIONES_FACTURA;
+          oConsulta.ParamByName('SERIE').AsString := sSerie;
+          oConsulta.ParamByName('NUMERO').AsString := sNumero;
+          oConsulta.Open;
+          Result := oConsulta.FieldByName('CANTIDAD').AsInteger;
+          oConsulta.Close;
+        end;
+        if Result > 0 then
+        begin
+          oConsulta.SQL.Text := SQL_RECALCULAR_FACTURA;
+          oConsulta.ParamByName('SERIE').AsString := sSerie;
+          oConsulta.ParamByName('NUMERO').AsString := sNumero;
+          oConsulta.Execute;
+          if FConexion.InTransaction then
+          begin
+            FConexion.Commit;
+          end;
+        end
+        else
+        begin
+          FConexion.Rollback;
+        end;
+      except
+        if FConexion.InTransaction then
+        begin
+          FConexion.Rollback;
+        end;
+        raise;
       end;
-      oConsulta.SQL.Text := SQL_INICIAR_LINEA_FACTURA;
-      oConsulta.Execute;
-      oConsulta.SQL.Text := SQL_INSERTAR_LINEAS_TA;
-      AsignarSolicitud(oConsulta, ASolicitud);
-      oConsulta.ParamByName('ORIGEN').AsString := AEmpresaOrigen;
-      oConsulta.ParamByName('SERIE').AsString := sSerie;
-      oConsulta.ParamByName('NUMERO').AsString := sNumero;
-      oConsulta.Execute;
-      iLineas := oConsulta.RowsAffected;
-      if iLineas = 0 then
-      begin
-        raise Exception.CreateFmt(
-          'No hay líneas TA pendientes para la empresa %s.',
-          [AEmpresaOrigen]);
-      end;
-      oConsulta.SQL.Text := SQL_ENLAZAR_OPERACIONES_TA;
-      AsignarSolicitud(oConsulta, ASolicitud);
-      oConsulta.ParamByName('ORIGEN').AsString := AEmpresaOrigen;
-      oConsulta.ParamByName('SERIE').AsString := sSerie;
-      oConsulta.ParamByName('NUMERO').AsString := sNumero;
-      oConsulta.Execute;
-      oConsulta.SQL.Text := SQL_CONTAR_OPERACIONES_FACTURA;
-      oConsulta.ParamByName('SERIE').AsString := sSerie;
-      oConsulta.ParamByName('NUMERO').AsString := sNumero;
-      oConsulta.Open;
-      Result := oConsulta.FieldByName('CANTIDAD').AsInteger;
-      oConsulta.Close;
-      if Result = 0 then
-      begin
-        raise Exception.Create(
-          'No se pudo enlazar ninguna operación TA con la factura.');
-      end;
-      oConsulta.SQL.Text := SQL_RECALCULAR_FACTURA;
-      oConsulta.ParamByName('SERIE').AsString := sSerie;
-      oConsulta.ParamByName('NUMERO').AsString := sNumero;
-      oConsulta.Execute;
-      if FConexion.InTransaction then
-      begin
-        FConexion.Commit;
-      end;
-    except
-      if FConexion.InTransaction then
-      begin
-        FConexion.Rollback;
-      end;
-      raise;
+    finally
+      FreeAndNil(oConsulta);
     end;
-  finally
-    FreeAndNil(oConsulta);
   end;
 end;
 
@@ -750,6 +965,7 @@ function TRepositorioFacturasProformaUniDAC.GenerarTraspasos(
   const ASolicitud: TSolicitudFacturacionCaja
 ): TResultadoFacturacionCaja;
 var
+  iIdPeriodo: Int64;
   iIndice: Integer;
   iOperaciones: Integer;
   aGrupos: TArray<TGrupoTraspaso>;
@@ -775,20 +991,50 @@ begin
   finally
     FreeAndNil(oConsulta);
   end;
-  for iIndice := 0 to High(aGrupos) do
+  if Length(aGrupos) > 0 then
   begin
-    iOperaciones := GenerarFacturaTraspaso(
-      ASolicitud,
-      aGrupos[iIndice].Empresa,
-      aGrupos[iIndice].Almacen);
-    Inc(Result.CantidadDocumentos);
-    Inc(Result.CantidadOperaciones, iOperaciones);
-  end;
-  if Result.CantidadDocumentos > 0 then
-  begin
-    Result.Descripcion := Format(
-      '%d facturas TA generadas en borrador con %d operaciones.',
-      [Result.CantidadDocumentos, Result.CantidadOperaciones]);
+    iIdPeriodo := CrearPeriodo('TA', ASolicitud);
+    try
+      for iIndice := 0 to High(aGrupos) do
+      begin
+        iOperaciones := GenerarFacturaTraspaso(
+          ASolicitud,
+          iIdPeriodo,
+          aGrupos[iIndice].Empresa,
+          aGrupos[iIndice].Almacen);
+        if iOperaciones > 0 then
+        begin
+          Inc(Result.CantidadDocumentos);
+          Inc(Result.CantidadOperaciones, iOperaciones);
+        end;
+      end;
+      if Result.CantidadDocumentos > 0 then
+      begin
+        Result.Descripcion := Format(
+          '%d facturas TA generadas en borrador con %d operaciones.',
+          [Result.CantidadDocumentos, Result.CantidadOperaciones]);
+        ActualizarPeriodo(
+          iIdPeriodo,
+          'CERRADO',
+          Result,
+          ASolicitud.Usuario);
+      end
+      else
+      begin
+        ActualizarPeriodo(
+          iIdPeriodo,
+          'SIN_DOCUMENTOS',
+          Result,
+          ASolicitud.Usuario);
+      end;
+    except
+      ActualizarPeriodo(
+        iIdPeriodo,
+        'ERROR',
+        Result,
+        ASolicitud.Usuario);
+      raise;
+    end;
   end;
 end;
 

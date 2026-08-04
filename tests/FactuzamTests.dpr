@@ -491,6 +491,11 @@ uses
   PruebasGenerarTicketCaja in 'PruebasGenerarTicketCaja.pas',
   PruebasInventarioNube in 'PruebasInventarioNube.pas',
   PruebasSepaRemesasVenta in 'PruebasSepaRemesasVenta.pas',
+  inLibFacturasProformaIntf in
+    '..\src\Caja\Lib\inLibFacturasProformaIntf.pas',
+  inLibFacturasProforma in
+    '..\src\Caja\Lib\inLibFacturasProforma.pas',
+  PruebasFacturasProforma in 'PruebasFacturasProforma.pas',
   Backup.Engine in '..\src\Lib\backup\Backup.Engine.pas',
   Backup.Types in '..\src\Lib\backup\Backup.Types.pas',
   Core_Engine in '..\src\Lib\backup\Core_Engine.pas',

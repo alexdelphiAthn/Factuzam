@@ -994,7 +994,6 @@
         Width = 737.008350000000000000
         Condition = 'Lineas Facturas."ID_OPERACION_CAJA_FACTURA"'
         ReprintOnNewPage = True
-        Visible = False
         object MemoFondoOperacionCaja: TfrxMemoView
           AllowVectorExport = True
           Width = 724.000000000000000000

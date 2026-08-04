@@ -23,6 +23,8 @@ type
   TFacturadorOperacionesCaja = class
   private
     FRepositorio: IRepositorioFacturasProforma;
+    procedure ValidarModalidad(
+      AModalidad: TModalidadFacturacionCaja);
     procedure ValidarSolicitud(
       const ASolicitud: TSolicitudFacturacionCaja);
   public
@@ -32,6 +34,10 @@ type
       AModalidad: TModalidadFacturacionCaja;
       const ASolicitud: TSolicitudFacturacionCaja
     ): TResultadoFacturacionCaja;
+    function RevisarPeriodo(
+      AModalidad: TModalidadFacturacionCaja;
+      const ASolicitud: TSolicitudFacturacionCaja
+    ): TRevisionPeriodoFacturacionCaja;
   end;
 
 resourcestring
@@ -78,21 +84,37 @@ begin
       SErrorUsuarioFacturacionCajaObligatorio);
 end;
 
+procedure TFacturadorOperacionesCaja.ValidarModalidad(
+  AModalidad: TModalidadFacturacionCaja);
+begin
+  if not (AModalidad in [mfcVenta, mfcTraspaso]) then
+    raise EArgumentOutOfRangeException.Create(
+      SErrorModalidadFacturacionCajaInvalida);
+end;
+
 function TFacturadorOperacionesCaja.Ejecutar(
   AModalidad: TModalidadFacturacionCaja;
   const ASolicitud: TSolicitudFacturacionCaja
 ): TResultadoFacturacionCaja;
 begin
   ValidarSolicitud(ASolicitud);
+  ValidarModalidad(AModalidad);
   case AModalidad of
     mfcVenta:
       Result := FRepositorio.GenerarVenta(ASolicitud);
     mfcTraspaso:
       Result := FRepositorio.GenerarTraspasos(ASolicitud);
-  else
-    raise EArgumentOutOfRangeException.Create(
-      SErrorModalidadFacturacionCajaInvalida);
   end;
+end;
+
+function TFacturadorOperacionesCaja.RevisarPeriodo(
+  AModalidad: TModalidadFacturacionCaja;
+  const ASolicitud: TSolicitudFacturacionCaja
+): TRevisionPeriodoFacturacionCaja;
+begin
+  ValidarSolicitud(ASolicitud);
+  ValidarModalidad(AModalidad);
+  Result := FRepositorio.RevisarPeriodo(AModalidad, ASolicitud);
 end;
 
 end.

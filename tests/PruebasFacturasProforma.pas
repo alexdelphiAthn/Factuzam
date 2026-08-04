@@ -27,6 +27,8 @@ type
     [Test]
     procedure Traspaso_UsaRepositorioDeFacturas;
     [Test]
+    procedure RevisionPeriodo_SeDelegaAlRepositorio;
+    [Test]
     procedure PeriodoInverso_EsRechazado;
     [Test]
     procedure EmpresaDestinoVacia_EsRechazada;
@@ -48,8 +50,13 @@ type
   private
     FGeneracionesVenta   : Integer;
     FGeneracionesTraspaso: Integer;
+    FRevisionesPeriodo   : Integer;
     FUltimaSolicitud     : TSolicitudFacturacionCaja;
   public
+    function RevisarPeriodo(
+      AModalidad: TModalidadFacturacionCaja;
+      const ASolicitud: TSolicitudFacturacionCaja
+    ): TRevisionPeriodoFacturacionCaja;
     function GenerarVenta(
       const ASolicitud: TSolicitudFacturacionCaja
     ): TResultadoFacturacionCaja;
@@ -58,6 +65,7 @@ type
     ): TResultadoFacturacionCaja;
     property GeneracionesVenta: Integer read FGeneracionesVenta;
     property GeneracionesTraspaso: Integer read FGeneracionesTraspaso;
+    property RevisionesPeriodo: Integer read FRevisionesPeriodo;
     property UltimaSolicitud: TSolicitudFacturacionCaja
       read FUltimaSolicitud;
   end;
@@ -82,6 +90,19 @@ begin
   Result.CantidadOperaciones := 3;
   Result.CantidadAjustes := 1;
   Result.Descripcion := 'Proforma interna';
+end;
+
+function TRepositorioFacturasProformaFalso.RevisarPeriodo(
+  AModalidad: TModalidadFacturacionCaja;
+  const ASolicitud: TSolicitudFacturacionCaja
+): TRevisionPeriodoFacturacionCaja;
+begin
+  Inc(FRevisionesPeriodo);
+  FUltimaSolicitud := ASolicitud;
+  Result := Default(TRevisionPeriodoFacturacionCaja);
+  Result.EsDuplicado := AModalidad = mfcVenta;
+  Result.EsSolapado := True;
+  Result.Descripcion := 'Periodo ya registrado';
 end;
 
 function TRepositorioFacturasProformaFalso.GenerarTraspasos(
@@ -135,6 +156,27 @@ begin
     Assert.AreEqual(1, Repositorio.GeneracionesTraspaso);
     Assert.AreEqual(2, Resultado.CantidadDocumentos);
     Assert.AreEqual(4, Resultado.CantidadOperaciones);
+  finally
+    Servicio.Free;
+  end;
+end;
+
+procedure TPruebasFacturasProforma.RevisionPeriodo_SeDelegaAlRepositorio;
+var
+  Repositorio: TRepositorioFacturasProformaFalso;
+  Servicio   : TFacturadorOperacionesCaja;
+  Revision   : TRevisionPeriodoFacturacionCaja;
+begin
+  Repositorio := TRepositorioFacturasProformaFalso.Create;
+  Servicio := TFacturadorOperacionesCaja.Create(Repositorio);
+  try
+    Revision := Servicio.RevisarPeriodo(
+      mfcVenta,
+      CrearSolicitudValida);
+    Assert.AreEqual(1, Repositorio.RevisionesPeriodo);
+    Assert.IsTrue(Revision.EsDuplicado);
+    Assert.IsTrue(Revision.EsSolapado);
+    Assert.AreEqual('Periodo ya registrado', Revision.Descripcion);
   finally
     Servicio.Free;
   end;
