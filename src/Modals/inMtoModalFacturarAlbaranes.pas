@@ -95,6 +95,7 @@ implementation
 
 uses
   inLibUser, inLibGenBusq, inLibFormatoDocumento,
+  UniDataFormatoDocumentoRepositorio,
   inLibMsgFacturas, inLibMsgVentas,
   inLibVentasPantallaIntf,
   UniDataVentasPantallaComposicion;
@@ -200,8 +201,8 @@ begin
     FFacSeries.Add(Factura.Serie);
     FFacNumeros.Add(Factura.Numero);
     cbbFacExistente.Properties.Items.Add(
-      FormatearDocumentoEmpresa(ConexionPrincipal, AEmp,
-        Factura.Serie,
+      FormatearDocumento(CrearFormatoDocumentoLecturas(
+        ConexionPrincipal).LeerFormatoEmpresa(AEmp), Factura.Serie,
         Factura.Numero) + '   (' +
       FormatDateTime('dd/mm/yyyy', Factura.Fecha) + ')');
   end;

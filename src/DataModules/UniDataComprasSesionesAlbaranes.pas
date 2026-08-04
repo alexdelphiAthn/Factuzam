@@ -34,7 +34,7 @@ uses
   inLibAlbaranesCompraMovimientos,
   UniDataAlbaranesCompraMovimientos,
   inLibMsgCompras,
-  inLibValoresAutomaticos,
+  UniDataValoresAutomaticosRepositorio,
   UniDataComprasSesionesArticulos,
   UniDataComprasSesionesDocumentosComun,
   UniDataComprasSesionesOperaciones;

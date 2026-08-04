@@ -579,14 +579,15 @@ uses
   inLibGridCantidad,
   inLibUser,
 
-  inLibDevExp, inLibValoresAutomaticos, inLibFacturas,
+  inLibDevExp, inLibValoresAutomaticos,
+  UniDataValoresAutomaticosRepositorio, inLibFacturas,
   inMtoModalGenImpSave, inLibLayoutForm,
   inLibArticulosValidadorIntf, inLibArticulosResolverIntf,
   inLibArticulosAtributosIntf,
   inLibAtributosPaleta,
   inLibShowMto,
   inMtoStockConsulta,
-  inLibCorreoTickets,
+  inLibCorreoTickets, UniDataCorreoTicketsRepositorio,
   inLibCajaVentaCliente,
   inLibCajaVentaOperacion,
   inLibCajaOpeComposicion,
@@ -596,6 +597,7 @@ uses
   // Raiz de composicion de la ventana de caja: el adaptador UniData* se
   // construye aqui y se inyecta en la factoria de dominio.
   UniDataCajaConsultasRepositorio,
+  UniDataCajaStockRepositorio,
   inMtoCajaImpresorVenta,
   inMtoCajaCierreVentaVcl,
   UniDataCajaUnidadTrabajo,
@@ -834,8 +836,8 @@ begin
     ADatosCaja);
   oPersistenciaFacturas := CrearPersistenciaFacturasUniDAC(AConexion);
   Result := CrearServiciosOperacionCaja(
-    AConexion,
     AParametrosCaja,
+    CrearCajaStockRepositorio(AConexion),
     AContextoSesion,
     oImpresor,
     oUnidadTrabajo,
@@ -3615,6 +3617,12 @@ begin
         FRepositoriosTicketsCajaPantalla.CrearRepositorioTicketsCaja,
         RegistroLog,
         ConexionPrincipal,
+        CrearCorreoTicketsLecturas(ConexionPrincipal).
+          CargarDatosOperacion(
+            FCodigoEmpresa,
+            FCodigoAlmacen,
+            FCodigoCaja,
+            AResultado.NumeroGenerado),
         FCodigoEmpresa,
         FCodigoAlmacen,
         FCodigoCaja,

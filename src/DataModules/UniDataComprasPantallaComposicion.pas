@@ -53,6 +53,7 @@ uses
   inLibDevolucionesCompraPersistenciaIntf,
   inLibDocumentosTrabajo,
   UniDataAplicacionArticuloCompra,
+  UniDataBusquedasCompraRepositorio,
   UniDataComprasPantallaPersistencia,
   UniDataDevolucionesCompraRepositorio,
   UniDataDocumentosTrabajoRepositorio,
@@ -91,6 +92,8 @@ begin
       AEntrada.Conexion,
       AEntrada.Cabecera,
       AEntrada.Lineas));
+  Result.BusquedasArticulos := CrearBusquedasCompraPersistenciaUniDAC(
+    AEntrada.Conexion);
 end;
 
 procedure AsignarBusquedas(
@@ -178,6 +181,8 @@ begin
       Result.Devolucion.ValidadorArticulos,
       oResolver,
       Result.Devolucion.Datos);
+  Result.Devolucion.BusquedasArticulos :=
+    CrearBusquedasCompraPersistenciaUniDAC(AEntrada.Conexion);
   AsignarBusquedas(
     AEntrada.Conexion,
     Result.Devolucion.BusquedaEmpresas,

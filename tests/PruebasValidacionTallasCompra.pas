@@ -21,6 +21,11 @@ uses
 type
   [TestFixture]
   TPruebasValidacionTallasCompra = class
+  private
+    FAseguramientos: Integer;
+    FValidaciones: Integer;
+    function ValidarPivote(var AMensaje: string): Boolean;
+    procedure AsegurarCabecera;
   public
     [Test]
     procedure Configuracion_GeneraCamposDocumento;
@@ -31,7 +36,7 @@ type
     [Test]
     procedure PersistenciaVenta_RecreaLineaVacia;
     [Test]
-    procedure Sql_UsaTablaYCamposConfigurados;
+    procedure TallasHorizontal_UsaLecturasInyectadas;
   end;
 
 implementation
@@ -39,7 +44,48 @@ implementation
 uses
   System.SysUtils, Data.DB, Datasnap.DBClient,
   inLibDocumento, inLibDocumentoIntf,
-  inLibValidacionDocumento;
+  inLibValidacionDocumento,
+  inLibValidacionDocumentoLecturasIntf;
+
+type
+  TLecturasValidacionDocumentoPrueba = class(
+    TInterfacedObject,
+    IValidacionDocumentoLecturas)
+  private
+    FArticulos: TArray<string>;
+  public
+    constructor Create(const AArticulos: TArray<string>);
+    function ListarArticulosSinSistemaTallas(
+      const AConfiguracion: TConfiguracionDocumento;
+      const ASerie, ANumero: string): TArray<string>;
+  end;
+
+constructor TLecturasValidacionDocumentoPrueba.Create(
+  const AArticulos: TArray<string>);
+begin
+  inherited Create;
+  FArticulos := Copy(AArticulos);
+end;
+
+function TLecturasValidacionDocumentoPrueba.
+  ListarArticulosSinSistemaTallas(
+  const AConfiguracion: TConfiguracionDocumento;
+  const ASerie, ANumero: string): TArray<string>;
+begin
+  Result := Copy(FArticulos);
+end;
+
+procedure TPruebasValidacionTallasCompra.AsegurarCabecera;
+begin
+  Inc(FAseguramientos);
+end;
+
+function TPruebasValidacionTallasCompra.ValidarPivote(
+  var AMensaje: string): Boolean;
+begin
+  Inc(FValidaciones);
+  Result := True;
+end;
 
 function ConfiguracionPedido: TConfiguracionDocumento;
 begin
@@ -213,20 +259,39 @@ begin
 end;
 
 procedure TPruebasValidacionTallasCompra.
-  Sql_UsaTablaYCamposConfigurados;
+  TallasHorizontal_UsaLecturasInyectadas;
 var
-  sSql: string;
+  oCabecera: TClientDataSet;
+  oConfiguracion: TConfiguracionDocumento;
+  oLecturas: IValidacionDocumentoLecturas;
+  sMensaje: string;
 begin
-  sSql := SqlArticulosSinSistemaTallasCompra(
-    ConfiguracionPedido);
-  Assert.IsTrue(Pos(
-    'FROM fza_pedidos_compra_lineas L', sSql) > 0);
-  Assert.IsTrue(Pos(
-    'L.SERIE_PEDC_PEDCLIN = :serie', sSql) > 0);
-  Assert.IsTrue(Pos(
-    'L.NUMERO_PEDC_PEDCLIN = :numero', sSql) > 0);
-  Assert.IsTrue(Pos(
-    'L.ID_AC_PIVOT_PEDCLIN IS NULL', sSql) > 0);
+  FAseguramientos := 0;
+  FValidaciones := 0;
+  oConfiguracion := ConfiguracionPedido;
+  oCabecera := TClientDataSet.Create(nil);
+  try
+    oCabecera.FieldDefs.Add(
+      oConfiguracion.CampoSerieCabecera, ftString, 10);
+    oCabecera.FieldDefs.Add(
+      oConfiguracion.CampoNumeroCabecera, ftString, 10);
+    oCabecera.CreateDataSet;
+    oCabecera.AppendRecord(['P', '15']);
+    oLecturas := TLecturasValidacionDocumentoPrueba.Create(['ART1']);
+    Assert.IsFalse(PuedeActivarTallasHorizontalCompra(
+      oCabecera, nil, oLecturas, oConfiguracion,
+      AsegurarCabecera, ValidarPivote, sMensaje));
+    Assert.IsTrue(Pos('ART1', sMensaje) > 0);
+    Assert.AreEqual(0, FValidaciones);
+    oLecturas := TLecturasValidacionDocumentoPrueba.Create([]);
+    Assert.IsTrue(PuedeActivarTallasHorizontalCompra(
+      oCabecera, nil, oLecturas, oConfiguracion,
+      AsegurarCabecera, ValidarPivote, sMensaje));
+    Assert.AreEqual(1, FValidaciones);
+    Assert.AreEqual(0, FAseguramientos);
+  finally
+    oCabecera.Free;
+  end;
 end;
 
 end.

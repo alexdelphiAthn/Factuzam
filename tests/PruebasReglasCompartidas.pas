@@ -27,9 +27,9 @@ type
     [Test]
     procedure Perfil_DevuelveValorConfiguradoOPredeterminado;
     [Test]
-    procedure FiltroArticulos_EscapaValoresCsv;
+    procedure FiltroArticulos_SeparaValoresCsv;
     [Test]
-    procedure FiltroArticulos_ComponeSoloReglasSolicitadas;
+    procedure FiltroArticulos_IgnoraValoresVacios;
   end;
 
 implementation
@@ -85,35 +85,27 @@ begin
   end;
 end;
 
-procedure TPruebasReglasCompartidas.FiltroArticulos_EscapaValoresCsv;
+procedure TPruebasReglasCompartidas.FiltroArticulos_SeparaValoresCsv;
+var
+  aValores: TArray<string>;
 begin
-  Assert.AreEqual(
-    '''VERANO'', ''O''''HARA''',
-    ConvertirCsvEnListaSql('VERANO; O''HARA ; ;'));
+  aValores := SepararValoresFiltroArticulos(
+    'VERANO; O''HARA ; ;');
+  Assert.AreEqual(2, Integer(Length(aValores)));
+  Assert.AreEqual('VERANO', aValores[0]);
+  Assert.AreEqual('O''HARA', aValores[1]);
 end;
 
 procedure TPruebasReglasCompartidas.
-  FiltroArticulos_ComponeSoloReglasSolicitadas;
+  FiltroArticulos_IgnoraValoresVacios;
 var
-  Filtro: TFiltroArticulos;
-  sSql: string;
+  aValores: TArray<string>;
 begin
-  Filtro.Estado := efaActivos;
-  Filtro.SoloConStock := True;
-  Filtro.TemporadasCsv := 'VERANO';
-  Filtro.ProveedoresCsv := '';
-  Filtro.FamiliasCsv := '0101;0102';
-  sSql := ConstruirSqlFiltroArticulos(Filtro);
-  Assert.IsTrue(Pos(
-    'vi_articulos.ESACTIVO_ART = ''S''', sSql) > 0);
-  Assert.IsTrue(Pos(
-    'EXISTS (SELECT 1 FROM fza_articulos_skus', sSql) > 0);
-  Assert.IsTrue(Pos(
-    'vi_articulos.TEMPORADA_ART IN (''VERANO'')', sSql) > 0);
-  Assert.IsTrue(Pos(
-    'vi_articulos.CODIGO_FAM_ART IN (''0101'', ''0102'')',
-    sSql) > 0);
-  Assert.IsTrue(Pos('CODIGO_PRV_AP IN', sSql) = 0);
+  aValores := SepararValoresFiltroArticulos(
+    ' ;0101;; 0102;');
+  Assert.AreEqual(2, Integer(Length(aValores)));
+  Assert.AreEqual('0101', aValores[0]);
+  Assert.AreEqual('0102', aValores[1]);
 end;
 
 initialization

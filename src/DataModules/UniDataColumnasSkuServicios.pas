@@ -29,7 +29,7 @@ uses
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   inLibAtributosPaleta, inLibGridArticulos,
   inLibColumnasSkuModoDesglose, inLibModoTallasIntf,
-  UniDataModoTallas;
+  UniDataModoTallas, UniDataGridArticulosRepositorio;
 
 type
   TServiciosColumnasSkuUniDAC = class(
@@ -140,6 +140,8 @@ begin
     Campos,
     AConfig.ContextoSesion,
     AConfig.BusquedaVisual,
+    CrearBusquedaSkusTallas(FConexion),
+    CrearConsultaArticulosGridUniDAC(FConexion),
     AConfig.ValidadorArticulos,
     AConfig.LookupAtributos,
     AConfig.RegistroLog);

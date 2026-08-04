@@ -67,7 +67,7 @@ type
 implementation
 
 uses
-  inLibWin, inLibShowMto,
+  inLibWin, inLibShowMto, UniDataDestinoFacturaRepositorio,
   inLibMsgVerifactu, inLibVerifactuNoVerifactuExport,
   inLibVerifactuNoVerifactuVerify,
   UniDataVerifactuNoVerifactuExport;
@@ -127,7 +127,10 @@ begin
     // navega cuando la línea tiene serie y número.
     if (Trim(sSerie) <> '') and (Trim(sNumero) <> '') then
     begin
-      sCall := ResolverCallFactura(ConexionPrincipal,sNumero, sSerie);
+      sCall := ResolverCallFactura(
+        CrearResolutorDestinoFacturaUniDAC(ConexionPrincipal),
+        sNumero,
+        sSerie);
       ShowMto(Self.Owner, sCall, sNumero + ',' + sSerie);
     end;
   end;

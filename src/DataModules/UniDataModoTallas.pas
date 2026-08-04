@@ -27,7 +27,8 @@ type
                                         IPersistenciaRederivacionTallas,
                                         IPersistenciaDesmontajeTallas,
                                         IPersistenciaEntradaTallas,
-                                        IPersistenciaPresentacionTallas)
+                                        IPersistenciaPresentacionTallas,
+                                        IPersistenciaGridTallasInline)
   private
     FConexion: TUniConnection;
     FCfg: TConfigPersistenciaTallas;
@@ -56,6 +57,10 @@ type
     function ConsultarTotalesPorLinea: TArray<TTotalLineaTallas>;
     function ConsultarCeldasDocumento: TArray<TCeldaTallas>;
     function ConsultarCeldasLinea(ALinea: Integer): TArray<TCeldaTallas>;
+    function ConsultarPosicionesConjunto(
+      AIdConjunto: Integer): TArray<TPosicionConjuntoTallas>;
+    procedure FijarCantidadCelda(ALinea, AIdAv: Integer;
+      ACantidad: Double; const AAlmacen: string);
     function LineaTieneCeldas(ALinea: Integer): Boolean;
     procedure SumarEnCelda(ALinea, AIdAv: Integer; ACantidad: Double;
       const AAlmacen: string);
@@ -91,6 +96,9 @@ function CrearPersistenciaModoTallas(
   const ACfg: TConfigPersistenciaTallas): TServiciosPersistenciaModoTallas;
 function CrearBusquedaSkusTallas(
   AConexion: TUniConnection): IBusquedaSkusTallas;
+function CrearPersistenciaGridTallasInline(
+  AConexion: TUniConnection;
+  const ACfg: TConfigPersistenciaTallas): IPersistenciaGridTallasInline;
 
 implementation
 
@@ -439,6 +447,89 @@ begin
     Result := LeerCeldas(Consulta, False);
   finally
     FreeAndNil(Consulta);
+  end;
+end;
+
+function TPersistenciaModoTallasUniDAC.ConsultarPosicionesConjunto(
+  AIdConjunto: Integer): TArray<TPosicionConjuntoTallas>;
+var
+  iIndice: Integer;
+  oConsulta: TUniQuery;
+begin
+  Result := nil;
+  if AIdConjunto > 0 then
+  begin
+    oConsulta := NuevaConsulta;
+    try
+      oConsulta.SQL.Text :=
+        'SELECT ACD.ID_AV_ACD, AV.AV AS VALOR ' +
+        '  FROM fza_atributos_conjuntos_det ACD ' +
+        '  JOIN fza_atributos_valores AV ' +
+        '    ON AV.ID_AV = ACD.ID_AV_ACD ' +
+        ' WHERE ACD.ID_AC_ACD = :p ' +
+        ' ORDER BY ACD.ORDEN_ACD, AV.AV';
+      oConsulta.ParamByName('p').AsInteger := AIdConjunto;
+      oConsulta.Open;
+      while not oConsulta.Eof do
+      begin
+        iIndice := Length(Result);
+        SetLength(Result, iIndice + 1);
+        Result[iIndice].IdAv :=
+          oConsulta.FieldByName('ID_AV_ACD').AsInteger;
+        Result[iIndice].Valor :=
+          oConsulta.FieldByName('VALOR').AsString;
+        oConsulta.Next;
+      end;
+    finally
+      oConsulta.Free;
+    end;
+  end;
+end;
+
+procedure TPersistenciaModoTallasUniDAC.FijarCantidadCelda(
+  ALinea, AIdAv: Integer; ACantidad: Double;
+  const AAlmacen: string);
+var
+  oConsulta: TUniQuery;
+  sAlmacen: string;
+begin
+  if (ALinea > 0) and (AIdAv > 0) then
+  begin
+    oConsulta := NuevaConsulta;
+    try
+      sAlmacen := '';
+      if FCfg.CampoAlmacenCel <> '' then
+        sAlmacen := ' AND ' + FCfg.CampoAlmacenCel + ' = :a';
+      if ACantidad <= 0 then
+        oConsulta.SQL.Text :=
+          'DELETE FROM ' + FCfg.TablaCeldas +
+          ' WHERE ' + FCfg.CampoSerieCel + ' = :s' +
+          WhereNumero('') + WhereDocExtra +
+          ' AND ' + FCfg.CampoLineaCel + ' = :l' +
+          ' AND ' + FCfg.CampoFilaCel + ' = :f' +
+          ' AND ' + FCfg.CampoAvPivotCel + ' = :p' + sAlmacen
+      else
+      begin
+        oConsulta.SQL.Text := SqlUpsertCelda(
+          FCfg.CampoAlmacenCel <> '');
+        oConsulta.SQL.Text := StringReplace(
+          oConsulta.SQL.Text,
+          FCfg.CampoCantidadCel + ' = ' +
+          FCfg.CampoCantidadCel + ' + :c',
+          FCfg.CampoCantidadCel + ' = :c', []);
+        oConsulta.ParamByName('c').AsFloat := ACantidad;
+        oConsulta.ParamByName('u').AsString := FCfg.Usuario;
+      end;
+      ParamsDocumento(oConsulta);
+      oConsulta.ParamByName('l').AsInteger := ALinea;
+      oConsulta.ParamByName('f').AsInteger := FCfg.IdFilaFijo;
+      oConsulta.ParamByName('p').AsInteger := AIdAv;
+      if FCfg.CampoAlmacenCel <> '' then
+        oConsulta.ParamByName('a').AsString := AAlmacen;
+      oConsulta.ExecSQL;
+    finally
+      oConsulta.Free;
+    end;
   end;
 end;
 
@@ -828,12 +919,23 @@ begin
   Result.Desmontaje := Persistencia;
   Result.Entrada := Persistencia;
   Result.Presentacion := Persistencia;
+  Result.GridInline := Persistencia;
 end;
 
 function CrearBusquedaSkusTallas(
   AConexion: TUniConnection): IBusquedaSkusTallas;
 begin
   Result := TBusquedaSkusTallasUniDAC.Create(AConexion);
+end;
+
+function CrearPersistenciaGridTallasInline(
+  AConexion: TUniConnection;
+  const ACfg: TConfigPersistenciaTallas): IPersistenciaGridTallasInline;
+var
+  oServicios: TServiciosPersistenciaModoTallas;
+begin
+  oServicios := CrearPersistenciaModoTallas(AConexion, ACfg);
+  Result := oServicios.GridInline;
 end;
 
 end.

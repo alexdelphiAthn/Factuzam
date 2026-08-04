@@ -140,13 +140,14 @@ type
 implementation
 
 uses
-  inLibValoresAutomaticos, inLibContadorLineas,
+  inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
+  inLibContadorLineas,
   UniDataContadorLineasRepositorio,
   System.Diagnostics, System.UITypes,
   inLibAlbaranesCompraMovimientos,
   UniDataAlbaranesCompraMovimientos,
-  inLibComprasImpuestos,
-  inLibData,
+  inLibComprasImpuestos, UniDataImpuestosRepositorio,
+  inLibData, UniDataAlmacenesEmpresaRepositorio,
   inLibArticulosValidadorIntf,
   UniDataArticulosValidadorRepositorio,
   inLibMsgCompras, inLibMsgVentas,
@@ -462,9 +463,11 @@ begin
       FieldByName('ESDEPOSITO_ALBC').AsString := 'N';
     if FindField('ESIVA_EXENTO_INTRACOMUNITARIO_ALBC') <> nil then
       FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_ALBC').AsString := 'N';
-    AplicarRecargoComprasEmpresa(ConexionPrincipal, unqryTablaG,
+    AplicarRecargoComprasEmpresa(
+      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
       'CODIGO_EMP_ALBC', 'ESIVA_RECARGO_COMPRAS_ALBC');
-    AplicarPorcentajesIvaCompra(ConexionPrincipal, unqryTablaG,
+    AplicarPorcentajesIvaCompra(
+      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
       'ALBC');
   end;
   RefrescarAlmacenes(
@@ -554,7 +557,8 @@ begin
   if (unqryTablaG.FieldByName('NUMERO_ALBC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_ALBC').AsString = '') then
     GetCodigoAutoAlbaranCompra;
-  AplicarPorcentajesIvaCompra(ConexionPrincipal, unqryTablaG,
+  AplicarPorcentajesIvaCompra(
+    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
     'ALBC');
   CalcularTotalesAlbaranCompra;
 end;
@@ -805,7 +809,8 @@ begin
         unqrySkusAlbc.Close;
       end;
     end;
-    PrepararLineaFiscalCompra(ConexionPrincipal, unqryTablaG,
+    PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionPrincipal),
+      unqryTablaG,
       unqryAlbaranesCompraLineas, 'ALBC', 'ALBCLIN', 'TOTAL_ALBCLIN');
   end;
 end;
@@ -918,7 +923,8 @@ begin
     FReorganizacionPendiente := True;
     Exit;
   end;
-  CalcularTotalesDocumentoCompra(unqryTablaG.Connection, unqryTablaG,
+  CalcularTotalesDocumentoCompra(
+    CrearLecturasImpuestos(unqryTablaG.Connection), unqryTablaG,
     unqryAlbaranesCompraLineas, 'ALBC', 'TOTAL_ALBCLIN',
     'TIPO_IVA_ARTICULO_ALBCLIN', 'PORCENTAJE_IVA_ALBCLIN');
   // Nº de prendas: TOTAL_PRENDAS_ALBC es columna calculada de la vista

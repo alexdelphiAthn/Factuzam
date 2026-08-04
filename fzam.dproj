@@ -426,6 +426,9 @@
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalContrasenaCopia.pas"/>
         <DCCReference Include="src\Modals\inMtoModalErrorAplicacion.pas"/>
+        <DCCReference Include="src\Modals\inMtoModalProcesosAuxiliaresBBDD.pas">
+            <Form>frmModalProcesosAuxiliaresBBDD</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalMensajeTexto.pas"/>
         <DCCReference Include="src\Forms\inMtoErroresEnvios.pas">
             <Form>frmMtoErroresEnvios</Form>
@@ -544,6 +547,7 @@
         <DCCReference Include="src\Lib\inLibVentasPantallaCrearAlbaran.pas"/>
         <DCCReference Include="src\Lib\inLibVentasPantallaIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataGeneradorProcesosRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataMetadatosBBDDRepositorio.pas"/>
         <DCCReference Include="src\DataModules\UniDataInformeBalanceSinTallasRepositorio.pas"/>
         <DCCReference Include="src\DataModules\UniDataInformeBalanceTallasRepositorio.pas"/>
         <DCCReference Include="src\DataModules\UniDataInformeDocumentosProveedorRepositorio.pas"/>
@@ -557,6 +561,7 @@
         <DCCReference Include="src\DataModules\UniDataMovimientosAlmacenRepositorio.pas"/>
         <DCCReference Include="src\DataModules\UniDataWizardEditarRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibGeneradorProcesosAplicacion.pas"/>
+        <DCCReference Include="src\Lib\inLibMetadatosBBDDIntf.pas"/>
         <DCCReference Include="src\Lib\inLibInformeBalanceSinTallasPersistenciaIntf.pas"/>
         <DCCReference Include="src\Lib\inLibInformeBalanceTallasPersistenciaIntf.pas"/>
         <DCCReference Include="src\Lib\inLibInformeDocumentosProveedorPersistenciaIntf.pas"/>
@@ -602,6 +607,10 @@
         <DCCReference Include="src\DataModules\UniDataGeneradorProcesos.pas">
             <Form>dmGeneradorProcesos</Form>
             <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataMetadatosBBDD.pas">
+            <Form>dmMetadatosBBDD</Form>
+            <DesignClass>TdmMetadatosBBDD</DesignClass>
         </DCCReference>
         <DCCReference Include="src\DataModules\UniDataEmpleados.pas">
             <Form>dmEmpleados</Form>

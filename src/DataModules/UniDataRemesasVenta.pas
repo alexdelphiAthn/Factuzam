@@ -59,7 +59,7 @@ type
 implementation
 
 uses
-  inLibMsgVentas;
+  inLibMsgVentas, UniDataSepaRemesasVentaRepositorio;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -828,8 +828,10 @@ begin
   begin
     sSerieRem := unqryTablaG.FieldByName('SERIE_REMV').AsString;
     sNumeroRem := unqryTablaG.FieldByName('NUMERO_REMV').AsString;
-    rSepa := GenerarSepaRemesaVenta(ConexionPrincipal, sSerieRem,
-      sNumeroRem, AArchivo);
+    rSepa := GenerarSepaRemesaVenta(
+      CrearSepaRemesasVentaLecturas(ConexionPrincipal).
+        CargarRemesaValidada(sSerieRem, sNumeroRem),
+      AArchivo);
     q := TUniQuery.Create(nil);
     try
       q.Connection := ConexionPrincipal;

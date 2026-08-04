@@ -16,7 +16,8 @@ unit inLibLicenciaAplicacion;
 interface
 
 uses
-  SysUtils, Classes, Uni;
+  SysUtils, Classes,
+  inLibLicenciaAplicacionPersistenciaIntf;
 
 type
   TEstadoLicenciaAplicacion = (elaValida,
@@ -38,32 +39,49 @@ type
       const AMensaje: string): TResultadoLicenciaAplicacion; static;
   end;
 
+  EErrorPersistenciaLicenciaAplicacion = class(Exception)
+  private
+    FError: TErrorPersistenciaLicencia;
+  public
+    constructor Create(AError: TErrorPersistenciaLicencia;
+      const ADetalle: string);
+    property Error: TErrorPersistenciaLicencia read FError;
+  end;
+
 const
   LIMITE_FACTURAS_DEMO_DIA     = 10;
 
 function RutaIniLicenciaAplicacion: string;
-function RegistrarLicenciaAplicacion(AConexion: TUniConnection;
+function RegistrarLicenciaAplicacion(
+                                     const ARepositorio:
+                                     IRepositorioLicenciaAplicacion;
                                      out ACodigo: string;
                                      out ANumeroNifs: Integer;
                                      out ADetalleNifs: string;
                                      out ARutaIni: string): Boolean;
-function ComprobarLicenciaAplicacion(AConexion: TUniConnection;
+function ComprobarLicenciaAplicacion(
+                                     const ARepositorio:
+                                     IRepositorioLicenciaAplicacion;
                                      out AEstado: TEstadoLicenciaAplicacion;
                                      out AMensaje: string;
                                      out ACodigoEsperado: string;
                                      out ACodigoGuardado: string): Boolean;
 function HayConmutadorRegistroLicencia: Boolean;
 function EstadoLicenciaEsDemo(AEstado: TEstadoLicenciaAplicacion): Boolean;
-function ContarFacturasDemoDia(AConexion: TUniConnection;
+function ContarFacturasDemoDia(
+                               const ARepositorio:
+                               IRepositorioLicenciaAplicacion;
                                AFecha: TDateTime): Integer;
-procedure ValidarLimiteDemoFacturas(AConexion: TUniConnection;
+procedure ValidarLimiteDemoFacturas(
+                                    const ARepositorio:
+                                    IRepositorioLicenciaAplicacion;
                                     AEstado: TEstadoLicenciaAplicacion;
                                     AFecha: TDateTime);
 
 implementation
 
 uses
-  DB, MemDS, DBAccess, IniFiles, Math, System.Hash,
+  IniFiles, Math, System.Hash,
   inLibConfiguracionIni, inLibDir, inLibMsgConfiguracion,
   inLibMsgFacturas;
 
@@ -83,6 +101,14 @@ begin
   Result.BBDD := ABBDD;
   Result.Estado := AEstado;
   Result.Mensaje := AMensaje;
+end;
+
+constructor EErrorPersistenciaLicenciaAplicacion.Create(
+  AError: TErrorPersistenciaLicencia;
+  const ADetalle: string);
+begin
+  inherited Create(ADetalle);
+  FError := AError;
 end;
 
 const
@@ -124,36 +150,40 @@ begin
   Result := (AEstado = elaInvalida) or (AEstado = elaNoEncontrada);
 end;
 
-function ContarFacturasDemoDia(AConexion: TUniConnection;
+function ContarFacturasDemoDia(
+                               const ARepositorio:
+                               IRepositorioLicenciaAplicacion;
                                AFecha: TDateTime): Integer;
 var
-  Qry: TUniQuery;
+  oResultado: TResultadoConteoFacturas;
 begin
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := AConexion;
-    Qry.SQL.Text :=
-      'SELECT COUNT(*) AS TOTAL ' +
-      '  FROM fza_facturas ' +
-      ' WHERE FECHA_FAC = :FECHA';
-    Qry.ParamByName('FECHA').AsDate := Trunc(AFecha);
-    Qry.Open;
-    Result := Qry.FieldByName('TOTAL').AsInteger;
-  finally
-    FreeAndNil(Qry);
+  if not Assigned(ARepositorio) then
+  begin
+    raise EErrorPersistenciaLicenciaAplicacion.Create(
+      eplConexionNoDisponible,
+      'No se ha configurado el repositorio de licencia.');
   end;
+  oResultado := ARepositorio.ContarFacturasDia(AFecha);
+  if not oResultado.Exito then
+  begin
+    raise EErrorPersistenciaLicenciaAplicacion.Create(
+      oResultado.Error, oResultado.Detalle);
+  end;
+  Result := oResultado.Total;
 end;
 
-procedure ValidarLimiteDemoFacturas(AConexion: TUniConnection;
+procedure ValidarLimiteDemoFacturas(
+                                    const ARepositorio:
+                                    IRepositorioLicenciaAplicacion;
                                     AEstado: TEstadoLicenciaAplicacion;
                                     AFecha: TDateTime);
 var
   iFacturas: Integer;
 begin
-  if (AConexion <> nil) and AConexion.Connected and
+  if Assigned(ARepositorio) and
      EstadoLicenciaEsDemo(AEstado) then
   begin
-    iFacturas := ContarFacturasDemoDia(AConexion, AFecha);
+    iFacturas := ContarFacturasDemoDia(ARepositorio, AFecha);
     if iFacturas >= LIMITE_FACTURAS_DEMO_DIA then
     begin
       raise Exception.Create(Format(SErrorLimiteDemoFacturas,
@@ -237,30 +267,30 @@ begin
   Result := HashACodigoCorto(sHash, 6);
 end;
 
-procedure CargarNifsEmpresas(AConexion: TUniConnection; ANifs: TStrings);
+procedure CargarNifsEmpresas(
+  const ARepositorio: IRepositorioLicenciaAplicacion;
+  ANifs: TStrings);
 var
-  Qry: TUniQuery;
-  sNif: string;
+  i: Integer;
+  oResultado: TResultadoNifsLicencia;
 begin
   ANifs.Clear;
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := AConexion;
-    Qry.SQL.Text :=
-      'SELECT DISTINCT TRIM(NIF_EMP) AS NIF_EMP ' +
-      '  FROM fza_empresas ' +
-      ' WHERE IFNULL(TRIM(NIF_EMP), '''') <> '''' ' +
-      ' ORDER BY NIF_EMP';
-    Qry.Open;
-    while not Qry.Eof do
-    begin
-      sNif := Trim(Qry.FieldByName('NIF_EMP').AsString);
-      if sNif <> '' then
-        ANifs.Add(sNif);
-      Qry.Next;
-    end;
-  finally
-    FreeAndNil(Qry);
+  if not Assigned(ARepositorio) then
+  begin
+    raise EErrorPersistenciaLicenciaAplicacion.Create(
+      eplConexionNoDisponible,
+      'No se ha configurado el repositorio de licencia.');
+  end;
+  oResultado := ARepositorio.CargarNifsEmpresas;
+  if not oResultado.Exito then
+  begin
+    raise EErrorPersistenciaLicenciaAplicacion.Create(
+      oResultado.Error, oResultado.Detalle);
+  end;
+  for i := 0 to Length(oResultado.Nifs) - 1 do
+  begin
+    if Trim(oResultado.Nifs[i]) <> '' then
+      ANifs.Add(Trim(oResultado.Nifs[i]));
   end;
 end;
 
@@ -303,7 +333,9 @@ begin
   end;
 end;
 
-function RegistrarLicenciaAplicacion(AConexion: TUniConnection;
+function RegistrarLicenciaAplicacion(
+                                     const ARepositorio:
+                                     IRepositorioLicenciaAplicacion;
                                      out ACodigo: string;
                                      out ANumeroNifs: Integer;
                                      out ADetalleNifs: string;
@@ -318,7 +350,7 @@ begin
   ARutaIni := RutaIniLicenciaAplicacion;
   Nifs := TStringList.Create;
   try
-    CargarNifsEmpresas(AConexion, Nifs);
+    CargarNifsEmpresas(ARepositorio, Nifs);
     ANumeroNifs := Nifs.Count;
     if ANumeroNifs = 0 then
       ADetalleNifs := SErrorNifEmpresaLicenciaNoConfigurado
@@ -334,7 +366,9 @@ begin
   end;
 end;
 
-function ComprobarLicenciaAplicacion(AConexion: TUniConnection;
+function ComprobarLicenciaAplicacion(
+                                     const ARepositorio:
+                                     IRepositorioLicenciaAplicacion;
                                      out AEstado: TEstadoLicenciaAplicacion;
                                      out AMensaje: string;
                                      out ACodigoEsperado: string;
@@ -349,7 +383,7 @@ begin
   ACodigoGuardado := '';
   Nifs := TStringList.Create;
   try
-    CargarNifsEmpresas(AConexion, Nifs);
+    CargarNifsEmpresas(ARepositorio, Nifs);
     if Nifs.Count = 0 then
     begin
       AEstado := elaSinNifEmpresa;

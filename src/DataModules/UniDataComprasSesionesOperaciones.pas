@@ -100,7 +100,6 @@ implementation
 
 uses
   System.StrUtils,
-  inLibComprasSesionesReglas,
   inLibMsgArticulos, inLibMsgCompras;
 
 procedure BorrarCeldasLineaSesion(AConn: TUniConnection;
@@ -356,8 +355,8 @@ function ResolverCodigoFamilia(AConn: TUniConnection;
                                 const ACodigoTecleado, AUsuario: string;
                                 out ACodigoGenerado: string): Boolean;
 begin
-  Result := inLibComprasSesionesReglas.ResolverCodigoFamilia(
-    AConn, ACodigoTecleado, AUsuario, ACodigoGenerado);
+  Result := TdmComprasSesiones.ResolverCodigoFamiliaConexion(AConn,
+    ACodigoTecleado, AUsuario, ACodigoGenerado);
 end;
 
 // ---------------------------------------------------------------------------

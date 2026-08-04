@@ -27,7 +27,7 @@
 {      - Carga las cantidades desde la tabla de celdas a los Values[] de las   }
 {        columnas no-bound del grid con DisableControls + bookmark             }
 {        (CargarCantidadesTodasLineas / UnaLinea).                             }
-{      - Persiste el cambio de una celda via UPSERT (DELETE si <= 0).          }
+{      - Persiste el cambio de una celda mediante el puerto inyectado.         }
 {      - Recalcula totales de la linea sumando la tabla de celdas              }
 {        (RefrescarTotalesLinea).                                              }
 {      - Valida que el sistema seleccionado no exceda Cfg.MaxColumnas y, si    }
@@ -60,11 +60,11 @@ uses
   Winapi.Windows, System.SysUtils, System.Classes, System.Variants,
   System.Generics.Collections,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, System.UITypes,
-  Data.DB, DBAccess, Uni,
+  Data.DB, Uni,
   cxControls, cxClasses, cxEdit, cxTextEdit, cxCurrencyEdit, cxCustomData,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
   JvEnterTab,
-  inLibContextoSesionIntf;
+  inLibContextoSesionIntf, inLibModoTallasIntf;
 
 type
   TPosConjunto = record
@@ -89,6 +89,7 @@ type
   TGridTallasConfig = record
     // -- objetos del form --
     Conexion         : TUniConnection;
+    Persistencia     : IPersistenciaGridTallasInline;
     ContextoSesion   : IContextoSesionAplicacion;
     Usuario          : string;
     Grid             : TcxGridDBTableView;
@@ -138,24 +139,7 @@ type
   private
     FCfg         : TGridTallasConfig;
     FConjuntoPos : TDictionary<Integer, TArrPosConjunto>;
-    function  Master: TDataSet;
     function  Lineas: TDataSet;
-    function  SerieDoc: string;
-    function  NumeroDoc: string;
-    // Clave de documento extra (CamposDocExtra*): clausulas ' AND
-    // campo = :xN', columnas/valores para INSERT y relleno de los
-    // parametros :xN desde el master. Con los arrays vacios devuelven
-    // '' y no cambian nada (sesiones).
-    function  WhereDocExtra: string;
-    function  ColsInsertDocExtra: string;
-    function  ValsInsertDocExtra: string;
-    procedure ParamsDocExtra(AQuery: TUniQuery);
-    // Par NUMERO opcional (FieldNumeroCel = '' en documentos de clave
-    // simple): clausula/columna/valor/parametro solo si esta definido.
-    function  WhereNumero: string;
-    function  ColsInsertNumero: string;
-    function  ValsInsertNumero: string;
-    procedure ParamNumero(AQuery: TUniQuery);
     procedure LogSes(const ATexto: string);
   public
     constructor Create(const ACfg: TGridTallasConfig);
@@ -193,8 +177,7 @@ type
     procedure CargarCantidadesTodasLineas;
     procedure CargarCantidadesUnaLinea(ARecordIndex, ALinea: Integer);
 
-    // Persiste una cantidad en la tabla de celdas (UPSERT si > 0,
-    // DELETE si <= 0).
+    // Persiste una cantidad mediante el puerto de celdas.
     procedure PersistirCantidad(ALinea, AIdAv: Integer; ACantidad: Double);
 
     // Recalcula totales de la linea actual: SUM(CANTIDAD) y
@@ -213,6 +196,9 @@ type
 
     property Cfg: TGridTallasConfig read FCfg;
   end;
+
+function CrearConfigPersistenciaTallasInline(
+  const AConfig: TGridTallasConfig): TConfigPersistenciaTallas;
 
 // =============================================================================
 //   Helpers que no necesitan estado pero suelen ir junto al gestor
@@ -256,13 +242,45 @@ uses
 
 { TGestorGridTallas }
 
+function CrearConfigPersistenciaTallasInline(
+  const AConfig: TGridTallasConfig): TConfigPersistenciaTallas;
+begin
+  Result := Default(TConfigPersistenciaTallas);
+  if Assigned(AConfig.SourceMaster) then
+    Result.Master := AConfig.SourceMaster.DataSet;
+  Result.Usuario := AConfig.Usuario;
+  Result.CampoSerieMaster := AConfig.FieldSerieMaster;
+  Result.CampoNumeroMaster := AConfig.FieldNumeroMaster;
+  Result.CamposDocExtraMaster := AConfig.CamposDocExtraMaster;
+  Result.TablaCeldas := AConfig.TablaCeldas;
+  Result.CampoSerieCel := AConfig.FieldSerieCel;
+  Result.CampoNumeroCel := AConfig.FieldNumeroCel;
+  Result.CampoLineaCel := AConfig.FieldLineaCel;
+  Result.CampoFilaCel := AConfig.FieldFilaCel;
+  Result.CampoAvPivotCel := AConfig.FieldAvPivotCel;
+  Result.CampoCantidadCel := AConfig.FieldCantidadCel;
+  Result.CampoAlmacenCel := AConfig.FieldAlmacenCel;
+  Result.CamposDocExtraCel := AConfig.CamposDocExtraCel;
+  Result.IdFilaFijo := AConfig.IdFilaFijo;
+end;
+
 constructor TGestorGridTallas.Create(const ACfg: TGridTallasConfig);
 begin
   inherited Create;
   FCfg := ACfg;
+  if not Assigned(FCfg.Persistencia) then
+    raise EArgumentNilException.Create('ACfg.Persistencia');
   if FCfg.MaxColumnas <= 0 then FCfg.MaxColumnas := 20;
   if FCfg.IdFilaFijo  <= 0 then FCfg.IdFilaFijo  := 1;
   FConjuntoPos := TDictionary<Integer, TArrPosConjunto>.Create;
+end;
+
+function TGestorGridTallas.Lineas: TDataSet;
+begin
+  if Assigned(FCfg.SourceLineas) then
+    Result := FCfg.SourceLineas.DataSet
+  else
+    Result := nil;
 end;
 
 procedure TGestorGridTallas.LogSes(const ATexto: string);
@@ -275,112 +293,6 @@ destructor TGestorGridTallas.Destroy;
 begin
   FreeAndNil(FConjuntoPos);
   inherited;
-end;
-
-function TGestorGridTallas.Master: TDataSet;
-begin
-  if Assigned(FCfg.SourceMaster) then
-    Result := FCfg.SourceMaster.DataSet
-  else
-    Result := nil;
-end;
-
-function TGestorGridTallas.Lineas: TDataSet;
-begin
-  if Assigned(FCfg.SourceLineas) then
-    Result := FCfg.SourceLineas.DataSet
-  else
-    Result := nil;
-end;
-
-function TGestorGridTallas.SerieDoc: string;
-var
-  ds : TDataSet;
-begin
-  Result := '';
-  ds := Master;
-  if (ds <> nil) and ds.Active and (not ds.IsEmpty) then
-    Result := ds.FieldByName(FCfg.FieldSerieMaster).AsString;
-end;
-
-function TGestorGridTallas.NumeroDoc: string;
-var
-  ds : TDataSet;
-begin
-  Result := '';
-  ds := Master;
-  if (FCfg.FieldNumeroMaster <> '') and
-     (ds <> nil) and ds.Active and (not ds.IsEmpty) then
-    Result := ds.FieldByName(FCfg.FieldNumeroMaster).AsString;
-end;
-
-function TGestorGridTallas.WhereNumero: string;
-begin
-  Result := '';
-  if FCfg.FieldNumeroCel <> '' then
-    Result := '   AND ' + FCfg.FieldNumeroCel + ' = :n ';
-end;
-
-function TGestorGridTallas.ColsInsertNumero: string;
-begin
-  Result := '';
-  if FCfg.FieldNumeroCel <> '' then
-    Result := FCfg.FieldNumeroCel + ', ';
-end;
-
-function TGestorGridTallas.ValsInsertNumero: string;
-begin
-  Result := '';
-  if FCfg.FieldNumeroCel <> '' then
-    Result := ':n, ';
-end;
-
-procedure TGestorGridTallas.ParamNumero(AQuery: TUniQuery);
-begin
-  if FCfg.FieldNumeroCel <> '' then
-    AQuery.ParamByName('n').AsString := NumeroDoc;
-end;
-
-function TGestorGridTallas.WhereDocExtra: string;
-var
-  i : Integer;
-begin
-  Result := '';
-  for i := 0 to High(FCfg.CamposDocExtraCel) do
-    Result := Result + ' AND ' + FCfg.CamposDocExtraCel[i] +
-              ' = :x' + IntToStr(i) + ' ';
-end;
-
-function TGestorGridTallas.ColsInsertDocExtra: string;
-var
-  i : Integer;
-begin
-  // Devuelve 'CAMPO, ' por cada clave extra, para intercalar en la
-  // lista de columnas del INSERT (tras SERIE y NUMERO).
-  Result := '';
-  for i := 0 to High(FCfg.CamposDocExtraCel) do
-    Result := Result + FCfg.CamposDocExtraCel[i] + ', ';
-end;
-
-function TGestorGridTallas.ValsInsertDocExtra: string;
-var
-  i : Integer;
-begin
-  Result := '';
-  for i := 0 to High(FCfg.CamposDocExtraCel) do
-    Result := Result + ':x' + IntToStr(i) + ', ';
-end;
-
-procedure TGestorGridTallas.ParamsDocExtra(AQuery: TUniQuery);
-var
-  ds : TDataSet;
-  i  : Integer;
-begin
-  ds := Master;
-  if ds <> nil then
-    for i := 0 to High(FCfg.CamposDocExtraMaster) do
-      AQuery.ParamByName('x' + IntToStr(i)).AsString :=
-        ds.FieldByName(FCfg.CamposDocExtraMaster[i]).AsString;
 end;
 
 procedure TGestorGridTallas.InvalidarCache;
@@ -400,10 +312,9 @@ end;
 function TGestorGridTallas.GetPosicionesConjunto(AIdAc: Integer)
                                                 : TArrPosConjunto;
 var
-  q      : TUniQuery;
-  arr    : TArrPosConjunto;
-  i      : Integer;
-  posReg : TPosConjunto;
+  aPersistidas: TArray<TPosicionConjuntoTallas>;
+  arr: TArrPosConjunto;
+  i: Integer;
 begin
   // Devuelve la lista ordenada de (ID_AV, VALOR) del conjunto pivot
   // indicado. Cacheado en FConjuntoPos para no re-consultar por cada
@@ -415,29 +326,12 @@ begin
   // solo existen en cache, no hay fila en BBDD que consultar.
   if AIdAc <= 0 then Exit;
 
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FCfg.Conexion;
-    q.SQL.Text :=
-      'SELECT ACD.ID_AV_ACD, AV.AV AS VALOR ' +
-      '  FROM fza_atributos_conjuntos_det ACD ' +
-      '  JOIN fza_atributos_valores AV ON AV.ID_AV = ACD.ID_AV_ACD ' +
-      ' WHERE ACD.ID_AC_ACD = :p ' +
-      ' ORDER BY ACD.ORDEN_ACD, AV.AV';
-    q.ParamByName('p').AsInteger := AIdAc;
-    q.Open;
-    SetLength(arr, q.RecordCount);
-    i := 0;
-    while not q.Eof do
-    begin
-      posReg.IdAv  := q.FieldByName('ID_AV_ACD').AsInteger;
-      posReg.Valor := q.FieldByName('VALOR').AsString;
-      arr[i] := posReg;
-      Inc(i);
-      q.Next;
-    end;
-  finally
-    FreeAndNil(q);
+  aPersistidas := FCfg.Persistencia.ConsultarPosicionesConjunto(AIdAc);
+  SetLength(arr, Length(aPersistidas));
+  for i := 0 to High(aPersistidas) do
+  begin
+    arr[i].IdAv := aPersistidas[i].IdAv;
+    arr[i].Valor := aPersistidas[i].Valor;
   end;
   FConjuntoPos.Add(AIdAc, arr);
   Result := arr;
@@ -546,8 +440,6 @@ begin
   //   - Leer LINEA por Values[recordIdx, colLinea.Index] saca el dato
   //     sin tocar el cursor del dataset y sin disparar refrescos.
   if (Lineas = nil) or not Lineas.Active or Lineas.IsEmpty then Exit;
-  if SerieDoc = '' then Exit;
-
   colLinea := FCfg.Grid.GetColumnByFieldName(FCfg.FieldLinea);
   if colLinea = nil then Exit;
 
@@ -566,232 +458,82 @@ begin
   end;
 end;
 
-procedure TGestorGridTallas.CargarCantidadesUnaLinea(ARecordIndex,
-                                                    ALinea: Integer);
+procedure TGestorGridTallas.CargarCantidadesUnaLinea(
+  ARecordIndex, ALinea: Integer);
 var
-  q     : TUniQuery;
-  iAc   : Integer;
-  arr   : TArrPosConjunto;
-  i     : Integer;
-  iIdAv : Integer;
-  rCant : Double;
-  colAc : TcxGridDBColumn;
-  vAc   : Variant;
+  aCeldas: TArray<TCeldaTallas>;
+  arr: TArrPosConjunto;
+  colAc: TcxGridDBColumn;
+  i, iCelda, iAc: Integer;
+  rCantidad: Double;
+  vAc: Variant;
 begin
-  // Leemos ID_AC_PIVOT del DataController (no del cursor del dataset:
-  // la iteracion de CargarCantidadesTodasLineas no mueve el cursor,
-  // asi que FieldByName devolveria siempre el conjunto de la linea
-  // con foco, no el de la linea ARecordIndex).
   colAc := FCfg.Grid.GetColumnByFieldName(FCfg.FieldConjuntoPivot);
   if colAc = nil then Exit;
   vAc := FCfg.Grid.DataController.Values[ARecordIndex, colAc.Index];
   if VarIsNull(vAc) or VarIsEmpty(vAc) then Exit;
   iAc := vAc;
-
   arr := GetPosicionesConjunto(iAc);
   if Length(arr) = 0 then Exit;
-
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FCfg.Conexion;
-    q.SQL.Text :=
-      'SELECT ' + FCfg.FieldAvPivotCel + ', ' +
-      '       SUM(' + FCfg.FieldCantidadCel + ') AS TOTAL ' +
-      '  FROM ' + FCfg.TablaCeldas + ' ' +
-      ' WHERE ' + FCfg.FieldSerieCel  + ' = :s ' +
-      WhereNumero +
-      '   AND ' + FCfg.FieldLineaCel  + ' = :l ' +
-      WhereDocExtra +
-      ' GROUP BY ' + FCfg.FieldAvPivotCel;
-    q.ParamByName('s').AsString  := SerieDoc;
-    ParamNumero(q);
-    q.ParamByName('l').AsInteger := ALinea;
-    ParamsDocExtra(q);
-    q.Open;
-    while not q.Eof do
-    begin
-      iIdAv := q.FieldByName(FCfg.FieldAvPivotCel).AsInteger;
-      rCant := q.FieldByName('TOTAL').AsFloat;
-      for i := 0 to High(arr) do
-        if arr[i].IdAv = iIdAv then
-        begin
-          if (i <= High(FCfg.ColumnasTallas)) and
-             (FCfg.ColumnasTallas[i] <> nil) then
-            FCfg.Grid.DataController.Values[
-              ARecordIndex, FCfg.ColumnasTallas[i].Index] := rCant;
-          Break;
-        end;
-      q.Next;
-    end;
-  finally
-    FreeAndNil(q);
+  aCeldas := FCfg.Persistencia.ConsultarCeldasLinea(ALinea);
+  for i := 0 to High(arr) do
+  begin
+    rCantidad := 0;
+    for iCelda := 0 to High(aCeldas) do
+      if aCeldas[iCelda].IdAv = arr[i].IdAv then
+        rCantidad := rCantidad + aCeldas[iCelda].Cantidad;
+    if (i <= High(FCfg.ColumnasTallas)) and
+       Assigned(FCfg.ColumnasTallas[i]) then
+      FCfg.Grid.DataController.Values[
+        ARecordIndex, FCfg.ColumnasTallas[i].Index] := rCantidad;
   end;
 end;
-
-procedure TGestorGridTallas.PersistirCantidad(ALinea, AIdAv: Integer;
-                                              ACantidad: Double);
-var
-  q : TUniQuery;
+procedure TGestorGridTallas.PersistirCantidad(
+  ALinea, AIdAv: Integer; ACantidad: Double);
 begin
-  // Upsert / delete sobre la tabla de celdas para (linea, fila=fijo,
-  // pivot, almacen=vacio).
-  LogSes(Format('Tallas.PersistirCantidad: doc=%s/%s linea=%d idAv=%d cantidad=%g',
-                [SerieDoc, NumeroDoc, ALinea, AIdAv, ACantidad]));
-  if (ALinea <= 0) or (AIdAv <= 0) then
-  begin
+  LogSes(Format(
+    'Tallas.PersistirCantidad: linea=%d idAv=%d cantidad=%g',
+    [ALinea, AIdAv, ACantidad]));
+  if (ALinea > 0) and (AIdAv > 0) then
+    FCfg.Persistencia.FijarCantidadCelda(
+      ALinea, AIdAv, ACantidad, '')
+  else
     LogSes('  guard: ALinea<=0 o AIdAv<=0, salida');
-    Exit;
-  end;
-  if SerieDoc = '' then
-  begin
-    LogSes('  guard: SerieDoc vacia, salida');
-    Exit;
-  end;
-
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FCfg.Conexion;
-    if ACantidad <= 0 then
-    begin
-      q.SQL.Text :=
-        'DELETE FROM ' + FCfg.TablaCeldas + ' ' +
-        ' WHERE ' + FCfg.FieldSerieCel   + ' = :s ' +
-        WhereNumero +
-        '   AND ' + FCfg.FieldLineaCel   + ' = :l ' +
-        '   AND ' + FCfg.FieldFilaCel    + ' = :f ' +
-        '   AND ' + FCfg.FieldAvPivotCel + ' = :p';
-      // Almacen por celda solo si el documento lo usa: el record
-      // documenta FieldAlmacenCel "(puede ser '')" pero el SQL lo
-      // metia siempre y con vacio generaba sintaxis invalida (#42000).
-      if FCfg.FieldAlmacenCel <> '' then
-        q.SQL.Text := q.SQL.Text +
-          '   AND ' + FCfg.FieldAlmacenCel + ' = :a';
-      q.SQL.Text := q.SQL.Text + WhereDocExtra;
-    end
-    else
-    begin
-      // Auditoria estandar (libro de estilo bbdd §3.7): las 4
-      // columnas INSTANTE_ALTA/MODIF y USUARIO_ALTA/MODIF son NOT NULL
-      // sin default. Hay que rellenarlas TODAS en el INSERT;
-      // ON DUPLICATE KEY UPDATE solo refresca las MODIF, las ALTA se
-      // conservan. Antes solo rellenabamos MODIF y MariaDB rechazaba
-      // el insert por 'Field USUARIO_ALTA doesnt have a default value'.
-      // Columna de almacen solo si el documento la usa (ver DELETE).
-      if FCfg.FieldAlmacenCel <> '' then
-        q.SQL.Text :=
-          'INSERT INTO ' + FCfg.TablaCeldas + ' (' +
-          FCfg.FieldSerieCel   + ', ' +
-          ColsInsertNumero +
-          ColsInsertDocExtra +
-          FCfg.FieldLineaCel   + ', ' +
-          FCfg.FieldFilaCel    + ', ' +
-          FCfg.FieldAvPivotCel + ', ' +
-          FCfg.FieldAlmacenCel + ', ' +
-          FCfg.FieldCantidadCel +
-          ', INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF,' +
-          ' USUARIO_MODIF) ' +
-          'VALUES (:s, ' + ValsInsertNumero + ValsInsertDocExtra +
-          ':l, :f, :p, :a, :c, NOW(), :u, NOW(), :u) ' +
-          'ON DUPLICATE KEY UPDATE ' +
-          FCfg.FieldCantidadCel + ' = :c, ' +
-          'INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u'
-      else
-        q.SQL.Text :=
-          'INSERT INTO ' + FCfg.TablaCeldas + ' (' +
-          FCfg.FieldSerieCel   + ', ' +
-          ColsInsertNumero +
-          ColsInsertDocExtra +
-          FCfg.FieldLineaCel   + ', ' +
-          FCfg.FieldFilaCel    + ', ' +
-          FCfg.FieldAvPivotCel + ', ' +
-          FCfg.FieldCantidadCel +
-          ', INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF,' +
-          ' USUARIO_MODIF) ' +
-          'VALUES (:s, ' + ValsInsertNumero + ValsInsertDocExtra +
-          ':l, :f, :p, :c, NOW(), :u, NOW(), :u) ' +
-          'ON DUPLICATE KEY UPDATE ' +
-          FCfg.FieldCantidadCel + ' = :c, ' +
-          'INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u';
-      q.ParamByName('c').AsFloat  := ACantidad;
-      q.ParamByName('u').AsString := FCfg.Usuario;
-    end;
-    q.ParamByName('s').AsString  := SerieDoc;
-    ParamNumero(q);
-    q.ParamByName('l').AsInteger := ALinea;
-    q.ParamByName('f').AsInteger := FCfg.IdFilaFijo;
-    q.ParamByName('p').AsInteger := AIdAv;
-    if FCfg.FieldAlmacenCel <> '' then
-      q.ParamByName('a').AsString := '';
-    // Clave de documento extra (vacia en sesiones): en el DELETE va en
-    // el WHERE y en el INSERT en columnas/VALUES; mismos :xN.
-    ParamsDocExtra(q);
-    q.ExecSQL;
-  finally
-    FreeAndNil(q);
-  end;
 end;
-
 procedure TGestorGridTallas.RefrescarTotalesLineaActual;
 var
-  q     : TUniQuery;
-  rTot  : Double;
-  rPr   : Double;
-  ds    : TDataSet;
-  iLinea: Integer;
+  aCeldas: TArray<TCeldaTallas>;
+  ds: TDataSet;
+  i, iLinea: Integer;
+  rPrecio, rTotal: Double;
 begin
   ds := Lineas;
   if (ds = nil) or ds.IsEmpty then Exit;
   iLinea := ds.FieldByName(FCfg.FieldLinea).AsInteger;
   if iLinea <= 0 then Exit;
-  if SerieDoc = '' then Exit;
-
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FCfg.Conexion;
-    q.SQL.Text :=
-      'SELECT COALESCE(SUM(' + FCfg.FieldCantidadCel + '), 0) AS TOTAL ' +
-      '  FROM ' + FCfg.TablaCeldas + ' ' +
-      ' WHERE ' + FCfg.FieldSerieCel  + ' = :s ' +
-      WhereNumero +
-      '   AND ' + FCfg.FieldLineaCel  + ' = :l' +
-      WhereDocExtra;
-    q.ParamByName('s').AsString  := SerieDoc;
-    ParamNumero(q);
-    q.ParamByName('l').AsInteger := iLinea;
-    ParamsDocExtra(q);
-    q.Open;
-    rTot := q.FieldByName('TOTAL').AsFloat;
-  finally
-    FreeAndNil(q);
-  end;
-  // Campos OPCIONALES: documentos sin precio por linea (documentos de
-  // trabajo) dejan FieldPrecioBase/FieldTotalLinea en ''.
-  rPr := 0;
+  aCeldas := FCfg.Persistencia.ConsultarCeldasLinea(iLinea);
+  rTotal := 0;
+  for i := 0 to High(aCeldas) do
+    rTotal := rTotal + aCeldas[i].Cantidad;
+  rPrecio := 0;
   if (FCfg.FieldPrecioBase <> '') and
-     (ds.FindField(FCfg.FieldPrecioBase) <> nil) then
-    rPr := ds.FieldByName(FCfg.FieldPrecioBase).AsFloat;
-  // BeginUpdate/EndUpdate del DataController para que el cxGrid no
-  // re-renderice la fila tras el ds.Edit y las asignaciones de campos
-  // bound — el re-render limpia los Values[] no-bound de TODAS las
-  // celdas talla de TODAS las lineas. Sin esta envoltura, en cuanto el
-  // usuario teclea una cantidad y disparamos RefrescarTotales, las
-  // tallas se borran visualmente (los datos siguen bien en SESCEL).
+     Assigned(ds.FindField(FCfg.FieldPrecioBase)) then
+    rPrecio := ds.FieldByName(FCfg.FieldPrecioBase).AsFloat;
   FCfg.Grid.DataController.BeginUpdate;
   try
-    if not (ds.State in [dsEdit, dsInsert]) then ds.Edit;
+    if not (ds.State in [dsEdit, dsInsert]) then
+      ds.Edit;
     if (FCfg.FieldTotalUds <> '') and
-       (ds.FindField(FCfg.FieldTotalUds) <> nil) then
-      ds.FieldByName(FCfg.FieldTotalUds).AsFloat := rTot;
+       Assigned(ds.FindField(FCfg.FieldTotalUds)) then
+      ds.FieldByName(FCfg.FieldTotalUds).AsFloat := rTotal;
     if (FCfg.FieldTotalLinea <> '') and
-       (ds.FindField(FCfg.FieldTotalLinea) <> nil) then
-      ds.FieldByName(FCfg.FieldTotalLinea).AsFloat := rTot * rPr;
+       Assigned(ds.FindField(FCfg.FieldTotalLinea)) then
+      ds.FieldByName(FCfg.FieldTotalLinea).AsFloat :=
+        rTotal * rPrecio;
   finally
     FCfg.Grid.DataController.EndUpdate;
   end;
-  // Sin Post — lo decide el Mto cuando el usuario Graba o cambia
-  // de fila.
 end;
-
 function TGestorGridTallas.ValidarSistemaSeleccionado: Boolean;
 var
   iAc : Integer;

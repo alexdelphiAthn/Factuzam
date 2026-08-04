@@ -1,12 +1,33 @@
-﻿unit Backup.Types;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       Backup.Types                                                  }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       04/08/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo.                                    }
+{  SPDX-License-Identifier: MPL-2.0                                            }
+{  Descripción:                                                                }
+{    Tipos compartidos por la generación y restauración de copias.             }
+{******************************************************************************}
+unit Backup.Types;
 
 interface
 
 
 uses
-  System.Classes, System.Generics.Collections;
+  System.Classes, System.Generics.Collections, System.SysUtils;
 
 type
+  TConfiguracionConexionBackup = record
+    Host: string;
+    Puerto: Integer;
+    BaseDatos: string;
+    Usuario: string;
+    Contrasena: string;
+  end;
+
   TBackupOptions = record
     WithData: Boolean;              // Incluir datos o solo estructura
     WithTriggers: Boolean;          // Incluir triggers
@@ -72,7 +93,7 @@ end;
 
 destructor TTableInfo.Destroy;
 begin
-  Columns.Free;
+  FreeAndNil(Columns);
   inherited Destroy;
 end;
 

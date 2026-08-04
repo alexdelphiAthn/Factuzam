@@ -17,9 +17,46 @@ interface
 
 uses
   System.Classes, Data.DB, Datasnap.DBClient,
-  DUnitX.TestFramework;
+  DUnitX.TestFramework,
+  inLibDatasetsPersistenciaIntf,
+  inLibDBStructurePersistenciaIntf,
+  inLibAlmacenesEmpresaPersistenciaIntf;
 
 type
+  TRepositorioMetadatosDoble = class(
+    TInterfacedObject, IRepositorioMetadatosDatasets)
+  public
+    TablaSolicitada: string;
+    Columnas: TArray<string>;
+    function ObtenerColumnasClavePrimaria(
+      const ATabla: string): TArray<string>;
+  end;
+
+  TRepositorioEstructuraDoble = class(
+    TInterfacedObject, IRepositorioEstructuraBBDD)
+  public
+    EsquemaExiste: Boolean;
+    TablaExiste: Boolean;
+    VistaExiste: Boolean;
+    ErrorLectura: Boolean;
+    function ExisteEsquema(const AEsquema: string): Boolean;
+    function ExisteTabla(const AEsquema, ATabla: string): Boolean;
+    function ExisteVista(const AEsquema, AVista: string): Boolean;
+  end;
+
+  TRepositorioAlmacenesDoble = class(
+    TInterfacedObject, IRepositorioAlmacenesEmpresa)
+  public
+    Pertenece: Boolean;
+    PrimerAlmacen: string;
+    AlmacenDeposito: string;
+    function AlmacenPerteneceEmpresa(const AEmpresa,
+      AAlmacen: string): Boolean;
+    function PrimerAlmacenEmpresa(const AEmpresa: string): string;
+    function ObtenerAlmacenDepositoEmpresa(
+      const AEmpresa: string): string;
+  end;
+
   [TestFixture]
   TPruebasDatasets = class
   private
@@ -41,6 +78,14 @@ type
     [Test]
     procedure ClavePrimaria_UsaProviderFlags;
     [Test]
+    procedure ClavePrimaria_UsaRepositorioMetadatos;
+    [Test]
+    procedure Estructura_SeparaComprobacionYPresentacion;
+    [Test]
+    procedure Estructura_ErrorConservaTipo;
+    [Test]
+    procedure Almacen_ResuelveConRepositorioEspecifico;
+    [Test]
     procedure EstadoDatasets_GrabaYCancela;
     [Test]
     procedure PeriodoUnico_UnRegistroEsValido;
@@ -52,7 +97,55 @@ implementation
 
 uses
   System.SysUtils, System.Variants,
-  inLibDatasets;
+  inLibDatasets, inLibDBStructure, inLibData;
+
+function TRepositorioMetadatosDoble.ObtenerColumnasClavePrimaria(
+  const ATabla: string): TArray<string>;
+begin
+  TablaSolicitada := ATabla;
+  Result := Columnas;
+end;
+
+function TRepositorioEstructuraDoble.ExisteEsquema(
+  const AEsquema: string): Boolean;
+begin
+  if ErrorLectura then
+  begin
+    raise ELecturaEstructuraBBDD.Create(
+      eleConsultaFallida, 'fallo simulado');
+  end;
+  Result := EsquemaExiste;
+end;
+
+function TRepositorioEstructuraDoble.ExisteTabla(
+  const AEsquema, ATabla: string): Boolean;
+begin
+  Result := TablaExiste;
+end;
+
+function TRepositorioEstructuraDoble.ExisteVista(
+  const AEsquema, AVista: string): Boolean;
+begin
+  Result := VistaExiste;
+end;
+
+function TRepositorioAlmacenesDoble.AlmacenPerteneceEmpresa(
+  const AEmpresa, AAlmacen: string): Boolean;
+begin
+  Result := Pertenece;
+end;
+
+function TRepositorioAlmacenesDoble.PrimerAlmacenEmpresa(
+  const AEmpresa: string): string;
+begin
+  Result := PrimerAlmacen;
+end;
+
+function TRepositorioAlmacenesDoble.ObtenerAlmacenDepositoEmpresa(
+  const AEmpresa: string): string;
+begin
+  Result := AlmacenDeposito;
+end;
 
 procedure TPruebasDatasets.Preparar;
 begin
@@ -138,6 +231,79 @@ begin
     'ID;SERIE',
     inLibDatasets.ObtenerClavePrimaria(
       FDataSet));
+end;
+
+procedure TPruebasDatasets.
+  ClavePrimaria_UsaRepositorioMetadatos;
+var
+  oDoble: TRepositorioMetadatosDoble;
+  oRepositorio: IRepositorioMetadatosDatasets;
+begin
+  oDoble := TRepositorioMetadatosDoble.Create;
+  oRepositorio := oDoble;
+  oDoble.Columnas := TArray<string>.Create(
+    'CODIGO_EMP', 'CODIGO_DOC');
+  Assert.AreEqual(
+    'CODIGO_EMP;CODIGO_DOC',
+    inLibDatasets.ObtenerClavePrimariaPorMetadatos(
+      'fza_documentos', oRepositorio));
+  Assert.AreEqual('fza_documentos', oDoble.TablaSolicitada);
+end;
+
+procedure TPruebasDatasets.
+  Estructura_SeparaComprobacionYPresentacion;
+var
+  oDoble: TRepositorioEstructuraDoble;
+  oRepositorio: IRepositorioEstructuraBBDD;
+  oResultado: TDBStructureCheckResult;
+  sPresentacion: string;
+begin
+  oDoble := TRepositorioEstructuraDoble.Create;
+  oRepositorio := oDoble;
+  oDoble.EsquemaExiste := True;
+  oDoble.TablaExiste := True;
+  oDoble.VistaExiste := False;
+  oResultado := TDBStructureChecker.Check(
+    oRepositorio, 'factuzam');
+  Assert.AreEqual(
+    Ord(dbsMissingObjects), Ord(oResultado.Status));
+  sPresentacion := TDBStructureResultFormatter.Formatear(
+    oResultado);
+  Assert.IsTrue(Pos('Vista: VI_USUARIOS', sPresentacion) > 0);
+end;
+
+procedure TPruebasDatasets.
+  Estructura_ErrorConservaTipo;
+var
+  oDoble: TRepositorioEstructuraDoble;
+  oRepositorio: IRepositorioEstructuraBBDD;
+  oResultado: TDBStructureCheckResult;
+begin
+  oDoble := TRepositorioEstructuraDoble.Create;
+  oRepositorio := oDoble;
+  oDoble.ErrorLectura := True;
+  oResultado := TDBStructureChecker.Check(
+    oRepositorio, 'factuzam');
+  Assert.AreEqual(
+    Ord(dbsConnectionError), Ord(oResultado.Status));
+  Assert.AreEqual(
+    Ord(eleConsultaFallida), Ord(oResultado.Error));
+end;
+
+procedure TPruebasDatasets.
+  Almacen_ResuelveConRepositorioEspecifico;
+var
+  oDoble: TRepositorioAlmacenesDoble;
+  oRepositorio: IRepositorioAlmacenesEmpresa;
+begin
+  oDoble := TRepositorioAlmacenesDoble.Create;
+  oRepositorio := oDoble;
+  oDoble.Pertenece := False;
+  oDoble.PrimerAlmacen := 'A2';
+  Assert.AreEqual(
+    'A2',
+    inLibData.ResolverAlmacenEmpresa(
+      oRepositorio, 'EMP', 'A1'));
 end;
 
 procedure TPruebasDatasets.

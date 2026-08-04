@@ -19,17 +19,11 @@ interface
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
-  DBAccess, Uni, inLibConfigCamposIntf, inLibLogIntf;
+  inLibConfigCamposIntf, inLibLogIntf,
+  inLibConfigCamposPersistenciaIntf;
 
 type
-  TConfigCampoItem = record
-    Tabla: string;
-    Campo: string;
-    TituloVisual: string;
-    AnchoColumna: Integer;
-    OrdenVisual: Integer;
-    Visible: Boolean;
-  end;
+  TConfigCampoItem = TConfigCampoPersistido;
 
   TConfigCamposCache = class(TInterfacedObject, IConfiguracionCampos)
   private
@@ -39,16 +33,17 @@ type
     FPorCampo: TDictionary<string, TConfigCampoItem>;
     // Diccionario indexado por TABLA.CAMPO para resolucion exacta.
     FPorTablaCampo: TDictionary<string, TConfigCampoItem>;
-    FConexion: TUniConnection;
+    FRepositorio: IRepositorioConfigCampos;
     FCargada: Boolean;
     FRegistroLog: IRegistroLog;
     function GetCargada: Boolean;
   public
     constructor Create(
-      AConexion: TUniConnection;
+      const ARepositorio: IRepositorioConfigCampos;
       const ARegistroLog: IRegistroLog);
     destructor Destroy; override;
-    procedure Precargar(AConn: TUniConnection = nil);
+    procedure Precargar(
+      const ARepositorio: IRepositorioConfigCampos = nil);
     procedure Invalidar;
     // Busca primero por tabla+campo exacto; si no encuentra, por campo solo.
     function ObtenerTitulo(const aCampo: string;
@@ -63,13 +58,13 @@ type
 implementation
 
 constructor TConfigCamposCache.Create(
-  AConexion: TUniConnection;
+  const ARepositorio: IRepositorioConfigCampos;
   const ARegistroLog: IRegistroLog);
 begin
   inherited Create;
   if not Assigned(ARegistroLog) then
     raise EArgumentNilException.Create('ARegistroLog');
-  FConexion := AConexion;
+  FRepositorio := ARepositorio;
   FRegistroLog := ARegistroLog;
   FPorCampo := TDictionary<string, TConfigCampoItem>.Create;
   FPorTablaCampo := TDictionary<string, TConfigCampoItem>.Create;
@@ -78,6 +73,7 @@ end;
 
 destructor TConfigCamposCache.Destroy;
 begin
+  FRepositorio := nil;
   FRegistroLog := nil;
   FreeAndNil(FPorCampo);
   FreeAndNil(FPorTablaCampo);
@@ -91,59 +87,54 @@ begin
   FCargada := False;
 end;
 
-procedure TConfigCamposCache.Precargar(AConn: TUniConnection = nil);
+procedure TConfigCamposCache.Precargar(
+  const ARepositorio: IRepositorioConfigCampos);
 var
-  qry: TUniQuery;
+  i: Integer;
   item: TConfigCampoItem;
+  oRepositorio: IRepositorioConfigCampos;
+  oResultado: TResultadoConfigCampos;
   sKey: string;
 begin
   FPorCampo.Clear;
   FPorTablaCampo.Clear;
   FCargada := False;
-  if AConn = nil then
-    AConn := FConexion;
-  if (AConn = nil) or (not AConn.Connected) then
-    Exit;
-  try
-    qry := TUniQuery.Create(nil);
+  oRepositorio := ARepositorio;
+  if not Assigned(oRepositorio) then
+    oRepositorio := FRepositorio;
+  if Assigned(oRepositorio) then
+  begin
     try
-      qry.Connection := AConn;
-      qry.SQL.Text :=
-        'SELECT TABLA_OBJETIVO_CC, OBJETIVO_CC, TITULO_VISUAL_CC, ' +
-        '       ANCHO_COLUMNA_CC, ORDEN_VISUAL_CC, VISIBLE_CC '    +
-        '  FROM fza_config_campos '                                 +
-        ' ORDER BY TABLA_OBJETIVO_CC, ORDEN_VISUAL_CC';
-      qry.Open;
-      while not qry.Eof do
+      oResultado := oRepositorio.CargarCampos;
+      if oResultado.Exito then
       begin
-        item.Tabla        := qry.FieldByName('TABLA_OBJETIVO_CC').AsString;
-        item.Campo        := qry.FieldByName('OBJETIVO_CC').AsString;
-        item.TituloVisual := qry.FieldByName('TITULO_VISUAL_CC').AsString;
-        item.AnchoColumna := qry.FieldByName('ANCHO_COLUMNA_CC').AsInteger;
-        item.OrdenVisual  := qry.FieldByName('ORDEN_VISUAL_CC').AsInteger;
-        item.Visible      := qry.FieldByName('VISIBLE_CC').AsString = 'S';
-        // Indice por tabla.campo
-        sKey := LowerCase(item.Tabla + '.' + item.Campo);
-        FPorTablaCampo.AddOrSetValue(sKey, item);
-        // Indice por campo solo (el ultimo gana si hay duplicados)
-        FPorCampo.AddOrSetValue(LowerCase(item.Campo), item);
-        qry.Next;
+        for i := 0 to Length(oResultado.Elementos) - 1 do
+        begin
+          item := oResultado.Elementos[i];
+          sKey := LowerCase(item.Tabla + '.' + item.Campo);
+          FPorTablaCampo.AddOrSetValue(sKey, item);
+          FPorCampo.AddOrSetValue(LowerCase(item.Campo), item);
+        end;
+        FCargada := True;
+        FRegistroLog.RegistrarInformacion(
+          Format(
+            'ConfigCamposCache: precargados %d campos',
+            [FPorTablaCampo.Count]));
+      end
+      else
+      begin
+        FRegistroLog.RegistrarError(
+          'ConfigCamposCache.Precargar: ' +
+          oResultado.Detalle);
       end;
-    finally
-      FreeAndNil(qry);
-    end;
-    FCargada := True;
-    FRegistroLog.RegistrarInformacion(
-      Format(
-        'ConfigCamposCache: precargados %d campos',
-        [FPorTablaCampo.Count]));
-  except
-    on E: Exception do
-    begin
-      FPorCampo.Clear;
-      FPorTablaCampo.Clear;
-      FRegistroLog.RegistrarError(
-        'ConfigCamposCache.Precargar: ' + E.Message);
+    except
+      on E: Exception do
+      begin
+        FPorCampo.Clear;
+        FPorTablaCampo.Clear;
+        FRegistroLog.RegistrarError(
+          'ConfigCamposCache.Precargar: ' + E.Message);
+      end;
     end;
   end;
 end;

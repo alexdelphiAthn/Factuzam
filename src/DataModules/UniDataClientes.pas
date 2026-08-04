@@ -72,7 +72,7 @@ type
 implementation
 
 uses
-  inLibValoresAutomaticos,
+  UniDataValoresAutomaticosRepositorio,
 
   System.Diagnostics,
   inLibMsgArticulos, inLibMsgComun, inLibMsgFacturas,

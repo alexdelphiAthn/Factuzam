@@ -143,7 +143,8 @@ implementation
 uses
   inLibMsgArticulos,
   inLibMsgComun,
-  UniDataConfiguracionPantalla;
+  UniDataConfiguracionPantalla,
+  UniDataModoTallas;
 
 type
   TDistribuidorTallasVisualMto = class(
@@ -303,6 +304,8 @@ begin
   // posiciones del conjunto pivot (T01..T20 con su AV).
   oCfg := Default(TGridTallasConfig);
   oCfg.Conexion := AConn;
+  oCfg.Persistencia := CrearPersistenciaGridTallasInline(
+    AConn, CrearConfigPersistenciaTallasInline(oCfg));
   oGestor := TGestorGridTallas.Create(oCfg);
   try
     FPosiciones := oGestor.GetPosicionesConjunto(AIdAcPivot);

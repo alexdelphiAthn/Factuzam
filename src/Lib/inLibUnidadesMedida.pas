@@ -19,8 +19,8 @@ unit inLibUnidadesMedida;
 interface
 
 uses
-  System.Generics.Collections, System.Generics.Defaults, System.SysUtils, Uni,
-  inLibLogIntf;
+  System.Generics.Collections, System.Generics.Defaults, System.SysUtils,
+  inLibLogIntf, inLibUnidadesMedidaPersistenciaIntf;
 
 type
   TUnidadInfo = class
@@ -35,15 +35,19 @@ type
 
   TUnidadesMedida = class
   private
-    FConexion: TUniConnection;
+    FRepositorio: IRepositorioUnidadesMedida;
     FUnidades: TObjectDictionary<string, TUnidadInfo>;
     FDecimalesPorDefecto: Integer;
     FRegistroLog: IRegistroLog;
   public
     constructor Create; overload;
     constructor Create(const ARegistroLog: IRegistroLog); overload;
+    constructor Create(
+      const ARepositorio: IRepositorioUnidadesMedida;
+      const ARegistroLog: IRegistroLog); overload;
     destructor Destroy; override;
-    procedure AsignarConexion(AConexion: TUniConnection);
+    procedure AsignarRepositorio(
+      const ARepositorio: IRepositorioUnidadesMedida);
     // (Re)carga la cache desde fza_unidades_medida. Tolera tabla ausente o
     // conexion cerrada: deja la cache vacia y aplican los valores por defecto.
     procedure Cargar;
@@ -85,7 +89,7 @@ constructor TUnidadesMedida.Create;
 begin
   inherited;
   FRegistroLog := CrearRegistroLogNulo;
-  FConexion := nil;
+  FRepositorio := nil;
   FUnidades := TObjectDictionary<string, TUnidadInfo>.Create(
     [doOwnsValues],
     TIStringComparer.Ordinal);
@@ -97,59 +101,61 @@ constructor TUnidadesMedida.Create(
 begin
   inherited Create;
   FRegistroLog := ARegistroLog;
-  FConexion := nil;
+  FRepositorio := nil;
   // Comparador sin distincion de mayusculas: 'Uds' y 'uds' son la misma unidad.
   FUnidades := TObjectDictionary<string, TUnidadInfo>.Create([doOwnsValues],
                                                   TIStringComparer.Ordinal);
   FDecimalesPorDefecto := 0;
 end;
 
+constructor TUnidadesMedida.Create(
+  const ARepositorio: IRepositorioUnidadesMedida;
+  const ARegistroLog: IRegistroLog);
+begin
+  Create(ARegistroLog);
+  FRepositorio := ARepositorio;
+end;
+
 destructor TUnidadesMedida.Destroy;
 begin
+  FRepositorio := nil;
   FRegistroLog := nil;
   FreeAndNil(FUnidades);
   inherited;
 end;
 
-procedure TUnidadesMedida.AsignarConexion(AConexion: TUniConnection);
+procedure TUnidadesMedida.AsignarRepositorio(
+  const ARepositorio: IRepositorioUnidadesMedida);
 begin
-  FConexion := AConexion;
+  FRepositorio := ARepositorio;
 end;
 
 procedure TUnidadesMedida.Cargar;
 var
-  qry: TUniQuery;
+  i: Integer;
+  oDatos: TArray<TUnidadMedidaPersistida>;
   oInfo: TUnidadInfo;
   sCod: string;
 begin
   FUnidades.Clear;
-  if (FConexion = nil) or (not FConexion.Connected) then
-    Exit;
-  qry := TUniQuery.Create(nil);
-  try
+  if Assigned(FRepositorio) then
+  begin
     try
-      qry.Connection := FConexion;
-      qry.SQL.Text :=
-        'SELECT CODIGO_UNIMED, DESCRIPCION_UNIMED, DECIMALES_UNIMED,' +
-        '       MAGNITUD_UNIMED, ESBASE_UNIMED, FACTOR_BASE_UNIMED' +
-        '  FROM fza_unidades_medida';
-      qry.Open;
-      while not qry.Eof do
+      oDatos := FRepositorio.CargarUnidades;
+      for i := 0 to Length(oDatos) - 1 do
       begin
-        sCod := Trim(qry.FieldByName('CODIGO_UNIMED').AsString);
+        sCod := Trim(oDatos[i].Codigo);
         if sCod <> '' then
         begin
           oInfo := TUnidadInfo.Create;
-          oInfo.Codigo      := sCod;
-          oInfo.Descripcion := qry.FieldByName('DESCRIPCION_UNIMED').AsString;
-          oInfo.Decimales   := qry.FieldByName('DECIMALES_UNIMED').AsInteger;
-          oInfo.Magnitud    := qry.FieldByName('MAGNITUD_UNIMED').AsString;
-          oInfo.EsBase      := SameText(
-                            qry.FieldByName('ESBASE_UNIMED').AsString, 'S');
-          oInfo.FactorBase  := qry.FieldByName('FACTOR_BASE_UNIMED').AsFloat;
+          oInfo.Codigo := sCod;
+          oInfo.Descripcion := oDatos[i].Descripcion;
+          oInfo.Decimales := oDatos[i].Decimales;
+          oInfo.Magnitud := oDatos[i].Magnitud;
+          oInfo.EsBase := oDatos[i].EsBase;
+          oInfo.FactorBase := oDatos[i].FactorBase;
           FUnidades.AddOrSetValue(sCod, oInfo);
         end;
-        qry.Next;
       end;
     except
       // Tabla aun no creada o error de lectura: no rompemos el arranque,
@@ -160,8 +166,6 @@ begin
           'inLibUnidadesMedida.Cargar: ' + E.Message);
       end;
     end;
-  finally
-    FreeAndNil(qry);
   end;
 end;
 

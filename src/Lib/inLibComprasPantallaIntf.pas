@@ -21,6 +21,7 @@ uses
   inLibArticulosAtributosIntf,
   inLibArticulosResolverIntf,
   inLibArticulosValidadorIntf,
+  inLibBusquedasCompraPersistenciaIntf,
   inLibDevolucionesCompraPersistenciaIntf,
   inLibDevolucionesCompraStock,
   inLibDocumentosTrabajo,
@@ -118,6 +119,7 @@ type
     LookupAtributos: IArticulosAtributosLookup;
     BusquedaEmpresas: IBusquedaEmpresasComprasPantalla;
     BusquedaProveedores: IBusquedaProveedoresComprasPantalla;
+    BusquedasArticulos: IBusquedasCompraPersistencia;
   end;
 
   TServiciosPedidoCompraPantalla = record
@@ -134,6 +136,7 @@ type
     Stock: IPersistenciaStockDevolucionCompra;
     BusquedaEmpresas: IBusquedaEmpresasComprasPantalla;
     BusquedaProveedores: IBusquedaProveedoresComprasPantalla;
+    BusquedasArticulos: IBusquedasCompraPersistencia;
   end;
 
   TServiciosDocumentosTrabajoPantalla = record

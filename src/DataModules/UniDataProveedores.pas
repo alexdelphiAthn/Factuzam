@@ -84,7 +84,8 @@ implementation
 
 uses
   inLibDocumentoFiscal,
-  inLibValoresAutomaticos, System.Diagnostics, inLibMsgCompras;
+  UniDataValoresAutomaticosRepositorio, System.Diagnostics,
+  inLibMsgCompras;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 

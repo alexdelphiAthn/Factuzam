@@ -251,7 +251,6 @@ begin
   TotalFormateado := StringReplace(TotalFormateado, ',', '_', [rfReplaceAll]);
   TotalFormateado := StringReplace(TotalFormateado, '.', '_', [rfReplaceAll]);
   sDocumento := FormatearDocumentoDataSet(
-    ConexionPrincipal,
     ADataSet,
     'SERIE_FAC',
     'NUMERO_FAC');

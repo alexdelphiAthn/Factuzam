@@ -226,6 +226,7 @@ type
     UsuariosGruposyPerfiles1: TMenuItem;
     HacerCopiadeSeguridad1: TMenuItem;
     mnuEjecutarScript: TMenuItem;
+    mnuProcesosAuxiliaresBBDD: TMenuItem;
     mnuGeneradorProcesos: TMenuItem;
     mnuUsuarios: TMenuItem;
     mnuEmpleados: TMenuItem;
@@ -257,6 +258,7 @@ type
     // OnClick del item = MenuGenericoClick (sin handler nuevo).
     procedure MenuGenericoClick(Sender: TObject);
     procedure mnuEjecutarScriptClick(Sender: TObject);
+    procedure mnuProcesosAuxiliaresBBDDClick(Sender: TObject);
     procedure tmr1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -400,6 +402,7 @@ uses inLibWin,
   inMtoModalFacturarAlbaranes,
   inMtoRestauracionCopiasVcl,
   inMtoModalCargarEfectosRemesa,
+  inMtoModalProcesosAuxiliaresBBDD,
   inLibCertificates,
   inLibPrincipalCertificadosIntf,
   UniDataPrincipalCertificadosRepositorio,
@@ -1922,6 +1925,14 @@ procedure TfrmMtoPrincipal.mnuManualWebClick(Sender: TObject);
 begin
   inherited;
   AbrirUrlAyuda(URL_MANUAL_WEB);
+end;
+
+procedure TfrmMtoPrincipal.mnuProcesosAuxiliaresBBDDClick(
+  Sender: TObject);
+begin
+  inherited;
+  if mnuProcesosAuxiliaresBBDD.Visible then
+    TfrmModalProcesosAuxiliaresBBDD.Ejecutar(Self);
 end;
 
 procedure TfrmMtoPrincipal.MenuGenericoClick(Sender: TObject);

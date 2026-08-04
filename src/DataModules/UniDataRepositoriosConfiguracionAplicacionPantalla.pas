@@ -74,11 +74,12 @@ implementation
 
 uses
   inLibAppParam, inLibCajaParam, inLibPermisos,
-  inLibPermisosUniDAC, inLibTraducciones,
+  inLibTraducciones,
   UniDataArticulosValidadorRepositorio,
   UniDataCatalogoSqlAplicacion, UniDataFiltros,
   UniDataFotosRepositorio, UniDataInformesGuiasRepositorio,
-  UniDataPerfiles;
+  UniDataPerfiles, UniDataPermisosRepositorio,
+  UniDataTraduccionesRepositorio;
 
 function CrearPerfilesAplicacionPantalla(
   AOwner: TComponent): TComposicionPerfilesAplicacionPantalla;
@@ -126,7 +127,7 @@ function CrearTraduccionesAplicacionPantalla(
   const AParametrosApp: IParametrosAplicacion): IServicioTraducciones;
 begin
   Result := TServicioTraducciones.Create(
-    AConexiones,
+    TLectorCatalogoTraduccionesUniDAC.Create(AConexiones),
     ARegistroLog,
     AParametrosApp.GetString('appIdioma', IDIOMA_ESPANOL));
 end;
@@ -193,7 +194,7 @@ function CargarPermisosAplicacionPantalla(
   AConexion: TUniConnection;
   const AIdentidad: TIdentidadSesion): IPermisosAplicacion;
 begin
-  Result := TCargadorPermisosUniDAC.Cargar(
+  Result := UniDataPermisosRepositorio.TCargadorPermisosUniDAC.Cargar(
     AConexion,
     CrearIdentidadPermisos(AIdentidad));
 end;

@@ -117,7 +117,8 @@ uses
   inLibComprasSesionesPresentacion,
   inLibMsgCompras,
   inMtoModalDistribuidor,
-  UniDataComprasSesionesPresentacionRepositorio;
+  UniDataComprasSesionesPresentacionRepositorio,
+  UniDataModoTallas;
 
 const
   // Ancho minimo del popup del selector de sistema de tallaje.
@@ -252,6 +253,9 @@ begin
   Configuracion.FieldAlmacenCel := 'CODIGO_ALM_SESCEL';
   Configuracion.IdFilaFijo := 1;
   Configuracion.MaxColumnas := FEntorno.MaxColumnas;
+  Configuracion.Persistencia := CrearPersistenciaGridTallasInline(
+    FEntorno.Conexion,
+    CrearConfigPersistenciaTallasInline(Configuracion));
   FGestor := TGestorGridTallas.Create(Configuracion);
   for iColumna := 0 to High(FColumnas) do
   begin

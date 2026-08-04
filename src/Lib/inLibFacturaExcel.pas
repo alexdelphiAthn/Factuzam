@@ -164,7 +164,7 @@ var
   cCaracter: Char;
   sNombreHoja: string;
 begin
-  FDocumento := FormatearDocumentoDataSet(FConexion, FMaster,
+  FDocumento := FormatearDocumentoDataSet(FMaster,
     'SERIE_FAC', 'NUMERO_FAC');
   if FDocumento <> '' then
   begin

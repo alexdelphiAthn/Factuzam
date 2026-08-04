@@ -178,7 +178,8 @@ uses inLibGenerarTicketBD, inLibGenerarTicketCaja,
      inLibFotos, inMtoFotoArticulo,
      inLibTraspasoTicket, inLibShowMto,
      inLibVerifactu, inMtoModalFacturarTicket,
-  inLibCorreoTickets, inLibAtributosPaleta, inLibMsgComun,
+  inLibCorreoTickets, UniDataCorreoTicketsRepositorio,
+  inLibAtributosPaleta, inLibMsgComun,
   inLibMsgCaja, inLibMsgConfiguracion, inLibMsgFacturas;
 
 // -----------------------------------------------------------------------------
@@ -936,8 +937,8 @@ begin
         FieldByName('CODIGO_CAJA_OPCAJA').AsString;
       sNumOp := FdmConsulta.qryMaestro.
         FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
-      Datos := ObtenerDatosCorreoOperacion(ConexionPrincipal, sEmp, sAlm,
-        sCaja, sNumOp);
+      Datos := CrearCorreoTicketsLecturas(ConexionPrincipal).
+        CargarDatosOperacion(sEmp, sAlm, sCaja, sNumOp);
       sEmail := Datos.EmailCliente;
       bContinuar := Datos.Encontrada;
       if not bContinuar then
@@ -962,6 +963,7 @@ begin
             FRepositoriosTicketsCaja,
             RegistroLog,
             ConexionPrincipal,
+            Datos,
             sEmp,
             sAlm,
             sCaja, sNumOp,

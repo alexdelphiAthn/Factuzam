@@ -177,6 +177,9 @@ type
   public
     property TallajeDefectoActual: Integer read FTallajeDefectoActual
                                             write FTallajeDefectoActual;
+    class function ResolverCodigoFamiliaConexion(AConn: TUniConnection;
+      const ACodigoTecleado, AUsuario: string;
+      out ACodigoGenerado: string): Boolean; static;
     procedure GetCodigoAutoSesion;
     procedure AsegurarSerieEnEmpresasSeries(const AEmpresa, ASerie: string);
     procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
@@ -205,17 +208,72 @@ implementation
 
 uses
   System.Variants,
-  inLibValoresAutomaticos,
+  inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   inLibComprasSesionesReglas,
   inLibContadorLineas,
   UniDataContadorLineasRepositorio,
-  inLibComprasImpuestos,
-  inLibData,
+  inLibComprasImpuestos, UniDataImpuestosRepositorio,
+  inLibData, UniDataAlmacenesEmpresaRepositorio,
   inLibMsgCompras;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
+
+class function TdmComprasSesiones.ResolverCodigoFamiliaConexion(
+  AConn: TUniConnection; const ACodigoTecleado, AUsuario: string;
+  out ACodigoGenerado: string): Boolean;
+var
+  iContador: Integer;
+  iLongitud: Integer;
+  oConsulta: TUniQuery;
+  sNumero: string;
+begin
+  Result := False;
+  ACodigoGenerado := '';
+  if Trim(ACodigoTecleado) <> '' then
+  begin
+    oConsulta := TUniQuery.Create(nil);
+    try
+      oConsulta.Connection := AConn;
+      oConsulta.SQL.Text :=
+        'SELECT CONTADOR_ART_FAM, ESCONTADOR_ART_FAM, ' +
+        '       IFNULL(PAD_ART_FAM, 5) AS PAD_ART_FAM ' +
+        '  FROM fza_articulos_familias ' +
+        ' WHERE CODIGO_FAM_FAM = :p ' +
+        '   AND ESACTIVO_FAM = ''S'' ' +
+        ' FOR UPDATE';
+      oConsulta.ParamByName('p').AsString := ACodigoTecleado;
+      oConsulta.Open;
+      if not oConsulta.IsEmpty and
+         (oConsulta.FieldByName('ESCONTADOR_ART_FAM').AsString = 'S') then
+      begin
+        iContador :=
+          oConsulta.FieldByName('CONTADOR_ART_FAM').AsInteger + 1;
+        iLongitud := oConsulta.FieldByName('PAD_ART_FAM').AsInteger;
+        if iLongitud < 1 then
+          iLongitud := 5;
+        oConsulta.Close;
+        sNumero := IntToStr(iContador);
+        while Length(sNumero) < iLongitud do
+          sNumero := '0' + sNumero;
+        ACodigoGenerado := ACodigoTecleado + sNumero;
+        oConsulta.SQL.Text :=
+          'UPDATE fza_articulos_familias SET ' +
+          '  CONTADOR_ART_FAM = :c, ' +
+          '  INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u ' +
+          ' WHERE CODIGO_FAM_FAM = :p';
+        oConsulta.ParamByName('c').AsInteger := iContador;
+        oConsulta.ParamByName('u').AsString := AUsuario;
+        oConsulta.ParamByName('p').AsString := ACodigoTecleado;
+        oConsulta.ExecSQL;
+        Result := True;
+      end;
+    finally
+      oConsulta.Free;
+    end;
+  end;
+end;
 
 procedure TdmComprasSesiones.LogSes(const ATexto: string);
 begin
@@ -630,9 +688,11 @@ begin
       FieldByName('CODIGO_EMP_SES').AsString := UbicacionSesion.Empresa;
     if Trim(UbicacionSesion.Almacen) <> '' then
       FieldByName('CODIGO_ALM_SES').AsString := UbicacionSesion.Almacen;
-    AplicarRecargoComprasEmpresa(ConexionPrincipal, unqryTablaG,
+    AplicarRecargoComprasEmpresa(
+      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
       'CODIGO_EMP_SES', 'ESIVA_RECARGO_COMPRAS_SES');
-    AplicarPorcentajesIvaCompra(ConexionPrincipal, unqryTablaG, 'SES');
+    AplicarPorcentajesIvaCompra(
+      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG, 'SES');
     // Si solo hay una variacion definida, preseleccionarla. Es el caso
     // mayoritario (la mayoria de instalaciones solo tienen 'TC').
     if unqryVariaciones.Active and (unqryVariaciones.RecordCount = 1) then
@@ -848,8 +908,8 @@ begin
   // numero de la serie e incrementar el contador.
   if sTecla <> '' then
   begin
-    if inLibComprasSesionesReglas.ResolverCodigoFamilia(
-         ConexionPrincipal, sTecla, IdentidadSesion.Usuario, sNuevo) then
+    if ResolverCodigoFamiliaConexion(ConexionPrincipal, sTecla,
+        IdentidadSesion.Usuario, sNuevo) then
     begin
       unqrySesionLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString :=
                                                                          sNuevo;
@@ -1080,7 +1140,8 @@ begin
        (UpperCase(Trim(unqryTablaG.FieldByName(
          'ESVARIOS_TIPOS_IVA_SES').AsString)) = 'S') then
       sCampoTipoIvaLinea := 'TIPO_IVA_SESLIN';
-    CalcularTotalesDocumentoCompra(ConexionPrincipal, unqryTablaG,
+    CalcularTotalesDocumentoCompra(
+      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
       unqrySesionLin, 'SES', 'TOTAL_LINEA_SESLIN',
       sCampoTipoIvaLinea, 'PORCENTAJE_IVA_SESLIN');
     if EstadoInicial <> dsInsert then

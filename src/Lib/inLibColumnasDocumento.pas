@@ -163,8 +163,6 @@ procedure AplicarNombresAtributosDocumento(
   const ANombres: array of string);
 procedure AplicarNombresAtributosGlobalesDocumento(
   AVista: TcxGridDBTableView; const ANombres: array of string);
-procedure MostrarColumnasAtributoGlobalesDocumento(
-  AConexion: TUniConnection; AVista: TcxGridDBTableView);
 procedure CargarCaptionsAtributosDocumento(AConsulta: TUniQuery;
   ALineas: TDataSet; const ACampoArticulo: string;
   const AColumnas: array of TcxGridDBColumn);
@@ -773,42 +771,6 @@ begin
       end;
       Inc(iNombre);
       Inc(iOrden);
-    end;
-  end;
-end;
-
-procedure MostrarColumnasAtributoGlobalesDocumento(
-  AConexion: TUniConnection; AVista: TcxGridDBTableView);
-var
-  aNombres: TArray<string>;
-  iIndice: Integer;
-  oConsulta: TUniQuery;
-begin
-  if Assigned(AConexion) and Assigned(AVista) then
-  begin
-    oConsulta := TUniQuery.Create(nil);
-    try
-      oConsulta.Connection := AConexion;
-      oConsulta.SQL.Text :=
-        'SELECT COALESCE(NOMBRE_VA, ID_ATB_VA) AS NOMBRE,' +
-        '       MIN(ORDEN_VA) AS ORDEN' +
-        '  FROM fza_variaciones_atributos' +
-        ' GROUP BY COALESCE(NOMBRE_VA, ID_ATB_VA)' +
-        ' ORDER BY ORDEN, NOMBRE LIMIT 5';
-      oConsulta.Open;
-      SetLength(aNombres, 0);
-      while (not oConsulta.Eof) and (Length(aNombres) < 5) do
-      begin
-        iIndice := Length(aNombres);
-        SetLength(aNombres, iIndice + 1);
-        aNombres[iIndice] :=
-          oConsulta.FieldByName('NOMBRE').AsString;
-        oConsulta.Next;
-      end;
-      AplicarNombresAtributosGlobalesDocumento(
-        AVista, aNombres);
-    finally
-      FreeAndNil(oConsulta);
     end;
   end;
 end;

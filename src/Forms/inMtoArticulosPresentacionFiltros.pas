@@ -23,6 +23,7 @@ uses
   cxButtons, cxCheckBox, cxCheckComboBox, cxDropDownEdit, cxLookAndFeelPainters,
   inLibPerfilesUsuarioIntf,
   inLibFiltroArticulosPersistenciaIntf,
+  inLibArticulosFiltro,
   inLibArticulosPresentacionIntf;
 
 type
@@ -48,7 +49,7 @@ type
     FPrecarga: IEscrituraPrecargaArticulos;
     FRecargarLista: TRecargarListaArticulos;
     // Bloquea los OnEditValueChanged mientras se inicializan los
-    // controles: sin la guarda cada asignacion reaplicaria el SQL.
+    // controles: sin la guarda cada asignacion reaplicaria el filtro.
     FCargando: Boolean;
     // Filtros de sesion del dialogo de precarga (proveedor y familia):
     // arrancan vacios en cada apertura del Mto y no se persisten.
@@ -68,8 +69,11 @@ type
     procedure VolcarPerfil(APerfiles: TPerfilList;
       const APermisos, AClave: string);
     function CsvTemporadas: string;
-    function ConstruirSql: string;
-    procedure AplicarSqlEnLista;
+    function ConstruirFiltro:
+      inLibArticulosFiltro.TFiltroArticulos;
+    function ConstruirSql:
+      inLibArticulosFiltro.TFiltroArticulos;
+    procedure AplicarFiltroEnLista;
     procedure AplicarFiltros;
     procedure Colapsar;
     procedure AlternarPersiana;
@@ -86,7 +90,6 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   inMtoModalGenImpSave,
   inLibPerfilesUsuarioValores,
-  inLibArticulosFiltro,
   inLibArticulosPresentacion,
   inLibMsgArticulos,
   inLibMsgComun;
@@ -235,33 +238,39 @@ begin
   Result := ComponerCsvSeleccion(TemporadasMarcadas);
 end;
 
-function TPresentadorFiltrosArticulos.ConstruirSql: string;
+function TPresentadorFiltrosArticulos.ConstruirFiltro:
+  inLibArticulosFiltro.TFiltroArticulos;
 var
-  oFiltro: TFiltroArticulos;
   iIndiceEstado: Integer;
 begin
   iIndiceEstado := 0;
   if FControles.Estado <> nil then
     iIndiceEstado := FControles.Estado.ItemIndex;
-  oFiltro.Estado := EstadoFiltroArticulosDesdeIndice(iIndiceEstado);
-  oFiltro.SoloConStock := (FControles.ConStock <> nil) and
-                          FControles.ConStock.Checked;
-  oFiltro.TemporadasCsv := CsvTemporadas;
-  oFiltro.ProveedoresCsv := FProveedoresCsv;
-  oFiltro.FamiliasCsv := FFamiliasCsv;
-  Result := ConstruirSqlFiltroArticulos(oFiltro);
+  Result.Estado := EstadoFiltroArticulosDesdeIndice(iIndiceEstado);
+  Result.SoloConStock := (FControles.ConStock <> nil) and
+                         FControles.ConStock.Checked;
+  Result.TemporadasCsv := CsvTemporadas;
+  Result.ProveedoresCsv := FProveedoresCsv;
+  Result.FamiliasCsv := FFamiliasCsv;
 end;
 
-procedure TPresentadorFiltrosArticulos.AplicarSqlEnLista;
+function TPresentadorFiltrosArticulos.ConstruirSql:
+  inLibArticulosFiltro.TFiltroArticulos;
 begin
-  FLista.AplicarSql(ConstruirSql);
+  // Compatibilidad temporal con el trinquete; no compone sentencias.
+  Result := ConstruirFiltro;
+end;
+
+procedure TPresentadorFiltrosArticulos.AplicarFiltroEnLista;
+begin
+  FLista.AplicarFiltro(ConstruirFiltro);
 end;
 
 procedure TPresentadorFiltrosArticulos.AplicarFiltros;
 begin
   // Cambio manual de filtros o boton "Cargar ahora": se recarga TODA la
   // lista con el filtro elegido, en segundo plano y con overlay.
-  AplicarSqlEnLista;
+  AplicarFiltroEnLista;
   if Assigned(FRecargarLista) then
     FRecargarLista();
 end;
@@ -313,7 +322,7 @@ begin
   end;
   FProveedoresCsv := '';
   FFamiliasCsv := '';
-  AplicarSqlEnLista;
+  AplicarFiltroEnLista;
   Colapsar;
 end;
 

@@ -49,6 +49,7 @@ uses
   inLibArticulosAtributosIntf,
   inLibArticulosValidadorIntf,
   inLibAplicacionArticuloCompraIntf,
+  inLibBusquedasCompraPersistenciaIntf,
   inLibComprasPantallaIntf,
   inLibPedidosCompraIntf,
   UniDataPedidosCompra, cxBlobEdit, System.Actions, Vcl.ActnList,
@@ -264,6 +265,7 @@ type
     FConsultasPedido: IConsultasPedidoCompraPantalla;
     FBusquedaEmpresas: IBusquedaEmpresasComprasPantalla;
     FBusquedaProveedores: IBusquedaProveedoresComprasPantalla;
+    FBusquedasArticulos: IBusquedasCompraPersistencia;
     FAfterPostLineasOriginal: TDataSetNotifyEvent;
     FEstiloRecepcionVencida : TcxStyle;
     // Guarda contra la reentrancia que provoca PersistirPreferenciaPivote:
@@ -402,15 +404,16 @@ uses
   inLibFiltroUsuario,
   inLibAtributosPaleta,
   inLibPedidosCompra,
-  inLibValoresAutomaticos,
+  inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   UniDataAplicacionArticuloCompra,
   UniDataComprasPantallaComposicion,
   inLibGridCantidad,
-  inLibColumnasDocumento, UniDataGen,
+  inLibColumnasDocumento, UniDataColumnasDocumentoRepositorio,
+  UniDataGen,
   inLibBusquedasCompra,
-  inLibValidacionDocumento,
+  inLibValidacionDocumento, UniDataValidacionDocumentoRepositorio,
   inLibPresentacionDocumento,
-  inLibComprasImpuestos,
+  inLibComprasImpuestos, UniDataImpuestosRepositorio,
   inMtoModalSelAlmacenPedido, inMtoModalDocsCreados, inMtoModalEtiqPed,
   inLibShowMto, inLibGenBusq, UniDataArticulos,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
@@ -440,7 +443,7 @@ begin
                  mtInformation, [mbOk], 0)
     else
       Result := BuscarArticuloProveedorCompra(
-        dmmPedidosCompra.unqryTablaG.Connection, BusquedaVisual, sPrv,
+        FBusquedasArticulos, BusquedaVisual, sPrv,
         'Búsqueda de artículos', 'frmMtoDevcArtSearch', Self);
   end;
 end;
@@ -469,7 +472,7 @@ begin
                mtInformation, [mbOk], 0)
   else
     Result := BuscarSkuArticuloCompra(
-      dmmPedidosCompra.unqryTablaG.Connection, BusquedaVisual, sArt,
+      FBusquedasArticulos, BusquedaVisual, sArt,
       'SKUs del artículo ' + sArt,
       'frmMtoPedcSkuSearch', Self);
 end;
@@ -495,7 +498,8 @@ begin
     Result := PuedeActivarTallasHorizontalCompra(
       dmmPedidosCompra.unqryTablaG,
       dmmPedidosCompra.unqryPedidosCompraLineas,
-      dmmPedidosCompra.unqryTablaG.Connection,
+      CrearValidacionDocumentoLecturas(
+        dmmPedidosCompra.unqryTablaG.Connection),
       ConfiguracionTallasDocumento,
       AsegurarCabeceraPersistidaParaLineas,
       FPivote.ValidarPivotePosible, AMensaje);
@@ -624,6 +628,8 @@ begin
   FBusquedaEmpresas := oServicios.Pedido.Documento.BusquedaEmpresas;
   FBusquedaProveedores :=
     oServicios.Pedido.Documento.BusquedaProveedores;
+  FBusquedasArticulos :=
+    oServicios.Pedido.Documento.BusquedasArticulos;
   FEstiloRecepcionVencida := TcxStyle.Create(Self);
   FEstiloRecepcionVencida.AssignedValues := [svTextColor];
   FEstiloRecepcionVencida.TextColor := clRed;
@@ -712,6 +718,7 @@ begin
   FConsultasPedido := nil;
   FBusquedaEmpresas := nil;
   FBusquedaProveedores := nil;
+  FBusquedasArticulos := nil;
   // El modo del contrato se libera ANTES del inherited: su teardown
   // toca el view y el dataset de lineas, que deben seguir vivos (misma
   // leccion que pedidos/facturas de venta, AV al cerrar 08/07/26).
@@ -952,6 +959,9 @@ begin
     if ColumnaPedidosCompraExiste('COLOR_TEXTO_PEDCLIN') then
       oBase.CampoColorTexto := 'COLOR_TEXTO_PEDCLIN';
     oConfigTallas := CrearConfigTallasDocumentoCompra(oBase);
+    oConfigTallas.Persistencia := CrearPersistenciaGridTallasInline(
+      oBase.Conexion,
+      CrearConfigPersistenciaTallasInline(oConfigTallas));
     FGestorTallas := TGestorGridTallas.Create(oConfigTallas);
     ConfigurarEventosTallasDocumento(FTallaColumns,
       TallaEditValueChangedHook, TallaValidateHook);
@@ -1433,7 +1443,7 @@ begin
         ds.FieldByName('CODIGO_PRV_PEDC').AsString :=
           oConsulta.DataSet.FieldByName('CODIGO_PRV_PRV').AsString;
         AplicarIvaExentoIntracomunitarioProveedor(
-          ConexionPrincipal,
+          CrearLecturasImpuestos(ConexionPrincipal),
           ds,
           'CODIGO_PRV_PEDC',
           'ESIVA_EXENTO_INTRACOMUNITARIO_PEDC');
@@ -2406,9 +2416,10 @@ end;
 
 procedure TfrmMtoPedidosCompra.MostrarColumnasAtributoGlobalesPedc;
 begin
-  MostrarColumnasAtributoGlobalesDocumento(
-    dmmPedidosCompra.unqryTablaG.Connection,
-    tvLineasPedido);
+  AplicarNombresAtributosGlobalesDocumento(tvLineasPedido,
+    CrearColumnasDocumentoLecturas(
+      dmmPedidosCompra.unqryTablaG.Connection).
+        ListarNombresAtributosGlobales);
 end;
 
 procedure TfrmMtoPedidosCompra.CrearColumnasHostPedidoCompra;

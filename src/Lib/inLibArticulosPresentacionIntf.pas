@@ -18,7 +18,7 @@ unit inLibArticulosPresentacionIntf;
 interface
 
 uses
-  inLibPerfilesUsuarioIntf;
+  inLibPerfilesUsuarioIntf, inLibArticulosFiltro;
 
 type
   // Fila de fza_codigos_barras tal como la necesita la verificacion.
@@ -68,7 +68,7 @@ type
   // adaptador es el unico que toca el SQL del dataset.
   IListaArticulosPantalla = interface
     ['{9F41C7D6-5B78-4E0B-9D3E-4A0E6F7A8B33}']
-    procedure AplicarSql(const ASql: string);
+    procedure AplicarFiltro(const AFiltro: TFiltroArticulos);
   end;
 
   // Unidad de trabajo de la precarga: la transaccion es del adaptador.

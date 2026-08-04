@@ -16,10 +16,28 @@ unit PruebasGestorPerfilesMto;
 interface
 
 uses
-  System.Generics.Collections, Vcl.Forms, Data.DB, DUnitX.TestFramework,
-  cxLabel, inLibPerfilesUsuarioIntf, inLibGestorPerfilesMto;
+  System.SysUtils, System.Generics.Collections, Vcl.Forms, Data.DB,
+  DUnitX.TestFramework,
+  cxLabel, inLibPerfilesUsuarioIntf, inLibGestorPerfilesMto,
+  inLibPerfilesMtoPersistenciaIntf;
 
 type
+  TPersistenciaPerfilesPrueba = class(
+    TInterfacedObject,
+    IPersistenciaPerfilesMto)
+  private
+    FAperturas: Integer;
+    FGuardados: Integer;
+    FUltimoFormulario: string;
+  public
+    procedure GuardarAtomico(const AGuardado: TProc);
+    procedure AbrirPerfiles(
+      const AFormulario, ADataModule: string);
+    property Aperturas: Integer read FAperturas;
+    property Guardados: Integer read FGuardados;
+    property UltimoFormulario: string read FUltimoFormulario;
+  end;
+
   TServicioPerfilesPrueba = class(
     TInterfacedObject,
     ILectorPerfilesUsuario,
@@ -68,6 +86,8 @@ type
     FServicioObjeto: TServicioPerfilesPrueba;
     FServicioLectura: ILectorPerfilesUsuario;
     FServicioEscritura: IEscritorPerfilesUsuario;
+    FPersistenciaObjeto: TPersistenciaPerfilesPrueba;
+    FPersistencia: IPersistenciaPerfilesMto;
     FGestor: TGestorPerfilesMto;
     FReseteos: Integer;
     FBorradosGuias: Integer;
@@ -96,12 +116,30 @@ type
     procedure Construccion_IncluyeComunesYParticular;
     [Test]
     procedure Reset_RecorreGridsYBorraGuias;
+    [Test]
+    procedure Guardado_DelegaLoteSinConexion;
+    [Test]
+    procedure Apertura_DelegaSinExponerConsulta;
   end;
 
 implementation
 
 uses
-  System.SysUtils, cxGridDBTableView;
+  cxGridDBTableView;
+
+procedure TPersistenciaPerfilesPrueba.GuardarAtomico(
+  const AGuardado: TProc);
+begin
+  Inc(FGuardados);
+  AGuardado;
+end;
+
+procedure TPersistenciaPerfilesPrueba.AbrirPerfiles(
+  const AFormulario, ADataModule: string);
+begin
+  Inc(FAperturas);
+  FUltimoFormulario := AFormulario;
+end;
 
 constructor TServicioPerfilesPrueba.Create;
 begin
@@ -212,11 +250,16 @@ begin
     nil, nil,
     SolicitarDestino, RecogerParticular,
     ResetearGrid, BorrarGuias);
+  FPersistenciaObjeto := TPersistenciaPerfilesPrueba.Create;
+  FPersistencia := FPersistenciaObjeto;
+  FGestor.AsignarPersistencia(FPersistencia);
 end;
 
 procedure TPruebasGestorPerfilesMto.Limpiar;
 begin
   FreeAndNil(FGestor);
+  FPersistencia := nil;
+  FPersistenciaObjeto := nil;
   FServicioLectura := nil;
   FServicioEscritura := nil;
   FServicioObjeto := nil;
@@ -327,6 +370,26 @@ begin
   Assert.AreEqual('tvPrueba', FUltimoGrid);
   Assert.AreEqual(1, FBorradosGuias);
   Assert.IsTrue(FDescripcionEditable);
+end;
+
+procedure TPruebasGestorPerfilesMto.
+  Guardado_DelegaLoteSinConexion;
+begin
+  FGestor.GrabarLayout('Grabar grids');
+  Assert.AreEqual(1, FPersistenciaObjeto.Guardados);
+  Assert.AreEqual(1, FServicioObjeto.Eliminaciones);
+  Assert.AreEqual(7, Integer(FServicioObjeto.Grabados.Count));
+  Assert.AreEqual(
+    'Particular', FServicioObjeto.Grabados[6].SubKey);
+end;
+
+procedure TPruebasGestorPerfilesMto.
+  Apertura_DelegaSinExponerConsulta;
+begin
+  FGestor.AbrirPerfiles(True, 'dmPrueba');
+  Assert.AreEqual(1, FPersistenciaObjeto.Aperturas);
+  Assert.AreEqual(
+    'frmPrueba', FPersistenciaObjeto.UltimoFormulario);
 end;
 
 end.

@@ -34,7 +34,8 @@ function CrearEscrituraPrecargaArticulosUniDAC(
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils, System.Classes,
+  inLibArticulosFiltro;
 
 const
   SQL_LISTAR_SKUS_ARTICULO =
@@ -105,7 +106,7 @@ type
     FConsulta: TUniQuery;
   public
     constructor Create(AConsulta: TUniQuery);
-    procedure AplicarSql(const ASql: string);
+    procedure AplicarFiltro(const AFiltro: TFiltroArticulos);
   end;
 
   TEscrituraPrecargaArticulosUniDAC = class(
@@ -231,13 +232,80 @@ begin
   FConsulta := AConsulta;
 end;
 
-procedure TListaArticulosPantallaUniDAC.AplicarSql(const ASql: string);
+procedure TListaArticulosPantallaUniDAC.AplicarFiltro(
+  const AFiltro: TFiltroArticulos);
+var
+  aFamilias, aProveedores, aTemporadas: TArray<string>;
+  oSql: TStringBuilder;
+  procedure AgregarLista(AConstructor: TStringBuilder;
+    const ACampo, APrefijo: string; const AValores: TArray<string>);
+  var
+    iIndice: Integer;
+  begin
+    if Length(AValores) > 0 then
+    begin
+      AConstructor.Append('  AND ' + ACampo + ' IN (');
+      for iIndice := 0 to High(AValores) do
+      begin
+        if iIndice > 0 then
+          AConstructor.Append(', ');
+        AConstructor.Append(':' + APrefijo + IntToStr(iIndice));
+      end;
+      AConstructor.AppendLine(')');
+    end;
+  end;
+  procedure AplicarParametros(const APrefijo: string;
+    const AValores: TArray<string>);
+  var
+    iIndice: Integer;
+  begin
+    for iIndice := 0 to High(AValores) do
+      FConsulta.ParamByName(APrefijo + IntToStr(iIndice)).AsString :=
+        AValores[iIndice];
+  end;
 begin
-  // La pantalla decide el filtro; el SQL del dataset solo se toca aqui.
   if FConsulta <> nil then
   begin
-    FConsulta.Close;
-    FConsulta.SQL.Text := ASql;
+    aTemporadas := SepararValoresFiltroArticulos(
+      AFiltro.TemporadasCsv);
+    aProveedores := SepararValoresFiltroArticulos(
+      AFiltro.ProveedoresCsv);
+    aFamilias := SepararValoresFiltroArticulos(AFiltro.FamiliasCsv);
+    oSql := TStringBuilder.Create;
+    try
+      oSql.AppendLine('SELECT * FROM vi_articulos');
+      oSql.AppendLine('WHERE 1 = 1');
+      case AFiltro.Estado of
+        efaActivos:
+          oSql.AppendLine(
+            '  AND vi_articulos.ESACTIVO_ART = ''S''');
+        efaInactivos:
+          oSql.AppendLine(
+            '  AND vi_articulos.ESACTIVO_ART = ''N''');
+      end;
+      if AFiltro.SoloConStock then
+        oSql.AppendLine(
+          '  AND EXISTS (SELECT 1 FROM fza_articulos_skus sk ' +
+          ' JOIN fza_articulos_stockactual stk ' +
+          '   ON stk.CODIGO_UNIDAD_STK = sk.CODIGO_UNIDAD_SKU ' +
+          ' WHERE sk.CODIGO_ART_SKU = ' +
+          'vi_articulos.CODIGO_ART_ART ' +
+          '   AND stk.CANTIDAD_STK > 0)');
+      AgregarLista(oSql, 'vi_articulos.TEMPORADA_ART',
+        'TEMP', aTemporadas);
+      AgregarLista(oSql, 'vi_articulos.CODIGO_PRV_AP',
+        'PRV', aProveedores);
+      AgregarLista(oSql, 'vi_articulos.CODIGO_FAM_ART',
+        'FAM', aFamilias);
+      oSql.AppendLine('ORDER BY vi_articulos.ORDEN_ART');
+      FConsulta.Close;
+      FConsulta.SQL.Text := oSql.ToString;
+      AplicarParametros('TEMP', aTemporadas);
+      AplicarParametros('PRV', aProveedores);
+      AplicarParametros('FAM', aFamilias);
+    finally
+      oSql.Free;
+    end;
   end;
 end;
 

@@ -18,10 +18,10 @@ interface
 uses
   System.Classes, Vcl.Forms, Vcl.Menus, Uni, cxGrid,
   cxGridDBTableView, inLibInformesGuiasCache,
-  inLibGridColumnChooser, inLibLogIntf;
+  inLibGridColumnChooser, inLibGuiasGridPersistenciaIntf,
+  inLibLogIntf;
 
 type
-  TObtenerConexionGuiasMto = function: TUniConnection of object;
   TObtenerConsultaGuiasMto = function: TUniQuery of object;
   TEjecutarModalGuiasMto = procedure of object;
 
@@ -31,7 +31,7 @@ type
     FGrid: TcxGrid;
     FVista: TcxGridDBTableView;
     FCache: IInformesGuiasCache;
-    FObtenerConexion: TObtenerConexionGuiasMto;
+    FPersistencia: IPersistenciaGuiasGrid;
     FObtenerConsulta: TObtenerConsultaGuiasMto;
     FEjecutarModal: TEjecutarModalGuiasMto;
     FMenu: TPopupMenu;
@@ -40,7 +40,6 @@ type
     FCamposGuiaTabla: TStringList;
     FColumnasVisibles: TStringList;
     FRegistroLog: IRegistroLog;
-    function Conexion: TUniConnection;
     function BuscarColumna(
       const ACampo: string): TcxGridDBColumn;
     function AbrirConsultaEnriquecida(
@@ -66,11 +65,12 @@ type
       AGrid: TcxGrid;
       AVista: TcxGridDBTableView;
       const ACache: IInformesGuiasCache;
-      AObtenerConexion: TObtenerConexionGuiasMto;
       AObtenerConsulta: TObtenerConsultaGuiasMto;
       AEjecutarModal: TEjecutarModalGuiasMto;
       const ARegistroLog: IRegistroLog = nil);
     destructor Destroy; override;
+    procedure AsignarPersistencia(
+      const APersistencia: IPersistenciaGuiasGrid);
     procedure Aplicar(AConsulta: TUniQuery);
     procedure BorrarGuias;
     procedure ReaplicarVisibilidad;
@@ -100,7 +100,6 @@ constructor TGestorGuiasGridMto.Create(
   AGrid: TcxGrid;
   AVista: TcxGridDBTableView;
   const ACache: IInformesGuiasCache;
-  AObtenerConexion: TObtenerConexionGuiasMto;
   AObtenerConsulta: TObtenerConsultaGuiasMto;
   AEjecutarModal: TEjecutarModalGuiasMto;
   const ARegistroLog: IRegistroLog);
@@ -110,7 +109,7 @@ begin
   FGrid := AGrid;
   FVista := AVista;
   FCache := ACache;
-  FObtenerConexion := AObtenerConexion;
+  FPersistencia := nil;
   FObtenerConsulta := AObtenerConsulta;
   FEjecutarModal := AEjecutarModal;
   FRegistroLog := ARegistroLog;
@@ -135,18 +134,15 @@ begin
   FreeAndNil(FColumnasVisibles);
   FreeAndNil(FCamposGuiaTabla);
   FreeAndNil(FCamposGuia);
+  FPersistencia := nil;
   FCache := nil;
   inherited;
 end;
 
-function TGestorGuiasGridMto.Conexion: TUniConnection;
+procedure TGestorGuiasGridMto.AsignarPersistencia(
+  const APersistencia: IPersistenciaGuiasGrid);
 begin
-  Result := nil;
-  if Assigned(FObtenerConexion) then
-    Result := FObtenerConexion;
-  if not Assigned(Result) then
-    raise Exception.Create(
-      SErrorConexionTrabajoNoDisponible);
+  FPersistencia := APersistencia;
 end;
 
 function TGestorGuiasGridMto.BuscarColumna(
@@ -259,7 +255,8 @@ begin
   if Assigned(AConsulta) then
   begin
     oResultado := EnriquecerQueryConGuias(
-      FCache, FFormulario.Name, AConsulta, FRegistroLog);
+      FPersistencia, FCache, FFormulario.Name,
+      AConsulta, FRegistroLog);
     try
       if oResultado.Exito and
          (oResultado.CamposNuevos.Count > 0) then
@@ -285,21 +282,11 @@ begin
 end;
 
 procedure TGestorGuiasGridMto.BorrarGuias;
-var
-  oConsulta: TUniQuery;
 begin
-  oConsulta := TUniQuery.Create(nil);
-  try
-    oConsulta.Connection := Conexion;
-    oConsulta.SQL.Text :=
-      'DELETE FROM fza_informes_guias ' +
-      ' WHERE INFORME_INFGUI = :INF';
-    oConsulta.ParamByName('INF').AsString :=
-      'GRID:' + FFormulario.Name;
-    oConsulta.Execute;
-  finally
-    FreeAndNil(oConsulta);
-  end;
+  if not Assigned(FPersistencia) then
+    raise Exception.Create(
+      SErrorPersistenciaGuiasNoConfigurada);
+  FPersistencia.Borrar('GRID:' + FFormulario.Name);
   if Assigned(FCache) then
     FCache.Invalidar;
 end;
@@ -515,24 +502,21 @@ end;
 procedure TGestorGuiasGridMto.GuardarColumnasVisibles(
   AColumnas: TStringList);
 var
-  oConsulta: TUniQuery;
+  oColumnas: TStringList;
 begin
-  oConsulta := TUniQuery.Create(nil);
+  if not Assigned(FPersistencia) then
+    raise Exception.Create(
+      SErrorPersistenciaGuiasNoConfigurada);
+  oColumnas := TStringList.Create;
   try
-    oConsulta.Connection := Conexion;
-    oConsulta.SQL.Text :=
-      'UPDATE fza_informes_guias ' +
-      '   SET COLUMNAS_VISIBLES_INFGUI = :VIS ' +
-      ' WHERE INFORME_INFGUI = :INF';
-    AColumnas.StrictDelimiter := True;
-    AColumnas.Delimiter := ';';
-    oConsulta.ParamByName('VIS').AsString :=
-      AColumnas.DelimitedText;
-    oConsulta.ParamByName('INF').AsString :=
-      'GRID:' + FFormulario.Name;
-    oConsulta.Execute;
+    oColumnas.Assign(AColumnas);
+    oColumnas.StrictDelimiter := True;
+    oColumnas.Delimiter := ';';
+    FPersistencia.GuardarColumnasVisibles(
+      'GRID:' + FFormulario.Name,
+      oColumnas.DelimitedText);
   finally
-    FreeAndNil(oConsulta);
+    FreeAndNil(oColumnas);
   end;
 end;
 
@@ -561,7 +545,8 @@ begin
       oConsulta.SQL.Text := FSqlOriginal;
     end;
     oResultado := EnriquecerQueryConGuias(
-      FCache, FFormulario.Name, oConsulta, FRegistroLog);
+      FPersistencia, FCache, FFormulario.Name,
+      oConsulta, FRegistroLog);
     try
       if oResultado.Exito and
          (oResultado.CamposNuevos.Count > 0) then

@@ -177,7 +177,10 @@ uses  inLibWin,
       UniDataRestauracionCopiasConexion,
       inMtoLogonRestauracionVcl,
       inLibLogonAplicacion,
-      UniDataLogonRepositorio;
+      UniDataLogonRepositorio,
+      UniDataTraduccionesRepositorio,
+      UniDataDBStructureRepositorio,
+      UniDataLicenciaAplicacionRepositorio;
 
 function CrearContextoLogonRestauracionVcl(
   AFormulario: TfrmLogon): TContextoLogonRestauracionVcl;
@@ -212,10 +215,10 @@ procedure TfrmLogon.AplicarTraduccionesPantalla;
 begin
   AsignarTraducciones(
     TServicioTraducciones.Create(
-      TServicioConexionesUniDAC.Create(FConexionLogon),
+      TLectorCatalogoTraduccionesUniDAC.Create(FConexionLogon),
       RegistroLog,
       ObtenerIdiomaConfigurado(
-        FConexionLogon,
+        TLectorIdiomaConfiguradoUniDAC.Create(FConexionLogon),
         edtUser.Text,
         RegistroLog)));
   AplicarIdiomaFastReport(Traducciones.Idioma);
@@ -351,7 +354,9 @@ begin
   end;
 
   // --- 2. Verificación de estructura ---
-  CheckResult := TDBStructureChecker.Check(FConexionLogon, edtNomBD.Text);
+  CheckResult := UniDataDBStructureRepositorio.TDBStructureChecker.Check(
+    FConexionLogon,
+    edtNomBD.Text);
 
   if not CheckResult.IsOK then
   begin
@@ -473,7 +478,9 @@ begin
     end;
     if bServidorConectado then
     begin
-      CheckResult := TDBStructureChecker.Check(FConexionLogon, edtNomBD.Text);
+      CheckResult := UniDataDBStructureRepositorio.TDBStructureChecker.Check(
+        FConexionLogon,
+        edtNomBD.Text);
       if not CheckResult.IsOK then
       begin
         RegistroLog.RegistrarError('Estructura BBDD no válida: ' +
@@ -555,7 +562,8 @@ begin
     FCerrarAplicacion := True;
     InvalidarResultadoInicioSesion;
     try
-      if RegistrarLicenciaAplicacion(FConexionLogon,
+      if UniDataLicenciaAplicacionRepositorio.RegistrarLicenciaAplicacion(
+                                     FConexionLogon,
                                      sCodigo,
                                      iNumeroNifs,
                                      sDetalleNifs,
@@ -592,7 +600,8 @@ begin
   else
   begin
     try
-      if ComprobarLicenciaAplicacion(FConexionLogon,
+      if UniDataLicenciaAplicacionRepositorio.ComprobarLicenciaAplicacion(
+                                     FConexionLogon,
                                      Estado,
                                      sMensaje,
                                      sCodigoEsperado,

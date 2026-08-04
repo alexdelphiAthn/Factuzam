@@ -141,11 +141,12 @@ type
 implementation
 
 uses
-  inLibValoresAutomaticos, inLibContadorLineas,
+  inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
+  inLibContadorLineas,
   UniDataContadorLineasRepositorio,
   System.Diagnostics, System.UITypes,
-  inLibComprasImpuestos,
-  inLibData,
+  inLibComprasImpuestos, UniDataImpuestosRepositorio,
+  inLibData, UniDataAlmacenesEmpresaRepositorio,
   inLibArticulosValidadorIntf,
   UniDataArticulosValidadorRepositorio,
   inLibMsgCompras, inLibDocumento, inLibDocumentoIntf;
@@ -393,8 +394,8 @@ begin
   begin
     if unqryTablaG.FindField('ESIVA_EXENTO_INTRACOMUNITARIO_FACC') <> nil then
       unqryTablaG.FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_FACC').AsString :=
-        ObtenerIvaExentoIntracomunitarioProveedor(ConexionPrincipal,
-          ACodigoPrv);
+        ObtenerIvaExentoIntracomunitarioProveedor(
+          CrearLecturasImpuestos(ConexionPrincipal), ACodigoPrv);
     if (ACodigoPrv <> '') and (ACodigoPrv <> '0') then
     begin
       sFp := GetFormaPagoDefectoProveedor(ACodigoPrv);
@@ -488,9 +489,11 @@ begin
       FieldByName('ESPIVOTE_HORIZONTAL_FACC').AsString := 'N';
     if FindField('ESIVA_EXENTO_INTRACOMUNITARIO_FACC') <> nil then
       FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_FACC').AsString := 'N';
-    AplicarRecargoComprasEmpresa(ConexionPrincipal, unqryTablaG,
+    AplicarRecargoComprasEmpresa(
+      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
       'CODIGO_EMP_FACC', 'ESIVA_RECARGO_COMPRAS_FACC');
-    AplicarPorcentajesIvaCompra(ConexionPrincipal, unqryTablaG,
+    AplicarPorcentajesIvaCompra(
+      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
       'FACC');
     RefrescarAlmacenes(FieldByName('CODIGO_EMP_FACC').AsString);
   end;
@@ -511,7 +514,8 @@ begin
   if (unqryTablaG.FieldByName('NUMERO_FACC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_FACC').AsString = '') then
     GetCodigoAutoFacturaCompra;
-  AplicarPorcentajesIvaCompra(ConexionPrincipal, unqryTablaG,
+  AplicarPorcentajesIvaCompra(
+    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
     'FACC');
   CalcularTotalesFacturaCompra;
   // Deteccion de transicion de ESTADO_FACC. Solo aplica en modo Edit
@@ -768,7 +772,8 @@ begin
         unqrySkusFacc.Close;
       end;
     end;
-    PrepararLineaFiscalCompra(ConexionPrincipal, unqryTablaG,
+    PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionPrincipal),
+      unqryTablaG,
       unqryFacturasCompraLineas, 'FACC', 'FACCLIN', 'TOTAL_FACCLIN');
   end;
 end;
@@ -864,7 +869,8 @@ begin
   // recalculo por linea (cascada de consultas de IVA al navegar).
   if FDesempaquetandoAtributos then
     Exit;
-  CalcularTotalesDocumentoCompra(ConexionPrincipal, unqryTablaG,
+  CalcularTotalesDocumentoCompra(
+    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
     unqryFacturasCompraLineas, 'FACC', 'TOTAL_FACCLIN',
     'TIPO_IVA_ARTICULO_FACCLIN', 'PORCENTAJE_IVA_FACCLIN');
 end;

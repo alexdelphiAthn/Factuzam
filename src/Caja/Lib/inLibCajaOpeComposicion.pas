@@ -20,15 +20,16 @@ unit inLibCajaOpeComposicion;
 interface
 
 uses
-  Uni, inLibParametrosIntf,
+  inLibParametrosIntf,
   inLibContextoSesionIntf,
   inLibCajaVentaIntf,
+  inLibCajaStockPersistenciaIntf,
   inLibFacturasPersistenciaIntf, inLibVentasWsColaIntf,
   inLibLogIntf;
 
 function CrearServiciosOperacionCaja(
-  AConexion: TUniConnection;
   const AParametrosCaja: IParametrosCaja;
+  const ACajaStockPersistencia: ICajaStockPersistencia;
   const AContextoSesion: IContextoSesionAplicacion;
   const AImpresor: IImpresorVenta;
   const AUnidadTrabajo: IUnidadTrabajoVentaCaja;
@@ -47,8 +48,8 @@ uses
   inLibCajaCierreVenta;
 
 function CrearServiciosOperacionCaja(
-  AConexion: TUniConnection;
   const AParametrosCaja: IParametrosCaja;
+  const ACajaStockPersistencia: ICajaStockPersistencia;
   const AContextoSesion: IContextoSesionAplicacion;
   const AImpresor: IImpresorVenta;
   const AUnidadTrabajo: IUnidadTrabajoVentaCaja;
@@ -64,7 +65,7 @@ begin
       Result.RepositorioConsultas);
   Result.PoliticaStock :=
     TPoliticaStockVenta.Create(
-      AConexion,
+      ACajaStockPersistencia,
       AParametrosCaja);
   Result.RepartidorDescuento :=
     TRepartidorDescuento.Create;

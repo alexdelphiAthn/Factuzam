@@ -505,11 +505,11 @@ uses
   inLibShowMto,
   Vcl.Clipbrd,
   inLibFotos,
-  inLibValoresAutomaticos,
+  inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   inMtoModalImpSesion,
   inLibFotosNube,
   Vcl.Imaging.pngimage,
-  inLibComprasImpuestos,
+  inLibComprasImpuestos, UniDataImpuestosRepositorio,
   inLibMsgArticulos, inLibMsgCompras,
   inLibContextoSesionIntf,
   inMtoComprasSesionesPresentacionMaterializacion,
@@ -1101,7 +1101,8 @@ begin
   if (Field <> nil) and SameText(Field.FieldName, 'CODIGO_EMP_SES') and
      (Dmm <> nil) and (Dmm.unqryTablaG.State in [dsInsert, dsEdit]) then
   begin
-    AplicarRecargoComprasEmpresa(ConexionPrincipal, Dmm.unqryTablaG,
+    AplicarRecargoComprasEmpresa(
+      CrearLecturasImpuestos(ConexionPrincipal), Dmm.unqryTablaG,
       'CODIGO_EMP_SES', 'ESIVA_RECARGO_COMPRAS_SES');
     Dmm.RefrescarTotalesSesion;
   end;

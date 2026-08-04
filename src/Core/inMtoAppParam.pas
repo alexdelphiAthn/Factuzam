@@ -133,8 +133,9 @@ uses
   FileCtrl, inLibPathTokens,               // SelectDirectory
    inLibLayoutForm, inLibVerifactu, inLibFactuzamApi,
    inLibMsgConfiguracion, inLibTraducciones, inLibTraduccionesIntf,
-   inLibTraduccionesDescarga, inMtoModalDescargaTraduccion,
-   inLibLogIntf, UniDataConfiguracionPantalla;
+   inMtoModalDescargaTraduccion, inLibLogIntf,
+   UniDataConfiguracionPantalla,
+   UniDataTraduccionesDescargaRepositorio;
 
 procedure RegistrarCambioConfiguracionVerifactuSeguro(
   const ARegistroLog: IRegistroLog;
@@ -529,7 +530,8 @@ begin
               ValorParametroInspector('appApiToken', ''));
             bAplicado := TfrmModalDescargaTraduccion.Ejecutar(
               Self,
-              ConexionPrincipal,
+              TInstaladorTraduccionesUniDAC.Create(
+                ConexionPrincipal),
               sUrlBase,
               sToken,
               sIdioma,

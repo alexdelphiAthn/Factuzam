@@ -16,19 +16,26 @@ unit inLibData;
 
 interface
 uses
-  Uni, System.SysUtils, System.Variants, Data.DB;
+  Uni, System.SysUtils, System.Variants, Data.DB,
+  inLibAlmacenesEmpresaPersistenciaIntf;
 
-function AlmacenPerteneceEmpresa(AConexion: TUniConnection;
+function AlmacenPerteneceEmpresa(
+  const ARepositorio: IRepositorioAlmacenesEmpresa;
   const AEmpresa, AAlmacen: string): Boolean;
-function PrimerAlmacenEmpresa(AConexion: TUniConnection;
+function PrimerAlmacenEmpresa(
+  const ARepositorio: IRepositorioAlmacenesEmpresa;
   const AEmpresa: string): string;
-function ResolverAlmacenEmpresa(AConexion: TUniConnection;
+function ResolverAlmacenEmpresa(
+  const ARepositorio: IRepositorioAlmacenesEmpresa;
   const AEmpresa, AAlmacen: string): string;
-procedure AjustarEmpresaAlmacenDataSet(AConexion: TUniConnection;
+procedure AjustarEmpresaAlmacenDataSet(
+  const ARepositorio: IRepositorioAlmacenesEmpresa;
   ADataSet: TDataSet; const ACampoEmpresa, ACampoAlmacen: string);
-procedure AjustarEmpresasAlmacenesDocumento(AConexion: TUniConnection;
+procedure AjustarEmpresasAlmacenesDocumento(
+  const ARepositorio: IRepositorioAlmacenesEmpresa;
   ADataSet: TDataSet);
-function ObtenerAlmacenDepositoEmpresa(AConexion: TUniConnection;
+function ObtenerAlmacenDepositoEmpresa(
+  const ARepositorio: IRepositorioAlmacenesEmpresa;
   const AEmpresa: string): string;
 // Locate generico sobre la clave primaria (uno o varios campos
 // separados por coma). Lo usan TfrmMtoGen.LocalizarYEnfocar y las
@@ -81,91 +88,66 @@ begin
   end;
 end;
 
-function AlmacenPerteneceEmpresa(AConexion: TUniConnection;
+function AlmacenPerteneceEmpresa(
+  const ARepositorio: IRepositorioAlmacenesEmpresa;
   const AEmpresa, AAlmacen: string): Boolean;
-var
-  QryAlm: TUniQuery;
 begin
   Result := False;
-  if (AConexion <> nil) and (Trim(AEmpresa) <> '') and
+  if Assigned(ARepositorio) and
+     (Trim(AEmpresa) <> '') and
      (Trim(AAlmacen) <> '') then
   begin
-    QryAlm := TUniQuery.Create(nil);
-    try
-      QryAlm.Connection := AConexion;
-      QryAlm.SQL.Text :=
-        'SELECT 1 ' +
-        '  FROM fza_almacenes ' +
-        ' WHERE CODIGO_EMP_ALM = :EMPRESA ' +
-        '   AND CODIGO_ALM_ALM = :ALMACEN ' +
-        ' LIMIT 1';
-      QryAlm.ParamByName('EMPRESA').AsString := Trim(AEmpresa);
-      QryAlm.ParamByName('ALMACEN').AsString := Trim(AAlmacen);
-      QryAlm.Open;
-      Result := not QryAlm.IsEmpty;
-    finally
-      FreeAndNil(QryAlm);
-    end;
+    Result := ARepositorio.AlmacenPerteneceEmpresa(
+      Trim(AEmpresa), Trim(AAlmacen));
   end;
 end;
 
-function PrimerAlmacenEmpresa(AConexion: TUniConnection;
+function PrimerAlmacenEmpresa(
+  const ARepositorio: IRepositorioAlmacenesEmpresa;
   const AEmpresa: string): string;
-var
-  QryAlm: TUniQuery;
 begin
   Result := '';
-  if (AConexion <> nil) and (Trim(AEmpresa) <> '') then
+  if Assigned(ARepositorio) and
+     (Trim(AEmpresa) <> '') then
   begin
-    QryAlm := TUniQuery.Create(nil);
-    try
-      QryAlm.Connection := AConexion;
-      QryAlm.SQL.Text :=
-        'SELECT CODIGO_ALM_ALM ' +
-        '  FROM fza_almacenes ' +
-        ' WHERE CODIGO_EMP_ALM = :EMPRESA ' +
-        '   AND COALESCE(ESACTIVO_ALM, ''S'') = ''S'' ' +
-        ' ORDER BY COALESCE(ORDEN_ALM, 2147483647), CODIGO_ALM_ALM ' +
-        ' LIMIT 1';
-      QryAlm.ParamByName('EMPRESA').AsString := Trim(AEmpresa);
-      QryAlm.Open;
-      if not QryAlm.IsEmpty then
-        Result := QryAlm.FieldByName('CODIGO_ALM_ALM').AsString;
-    finally
-      FreeAndNil(QryAlm);
-    end;
+    Result := ARepositorio.PrimerAlmacenEmpresa(
+      Trim(AEmpresa));
   end;
 end;
 
-function ResolverAlmacenEmpresa(AConexion: TUniConnection;
+function ResolverAlmacenEmpresa(
+  const ARepositorio: IRepositorioAlmacenesEmpresa;
   const AEmpresa, AAlmacen: string): string;
 begin
   Result := Trim(AAlmacen);
-  if (AConexion <> nil) and (Trim(AEmpresa) <> '') and
+  if Assigned(ARepositorio) and
+     (Trim(AEmpresa) <> '') and
      (Trim(AEmpresa) <> '0') and
-     not AlmacenPerteneceEmpresa(AConexion, AEmpresa, AAlmacen) then
+     not AlmacenPerteneceEmpresa(
+       ARepositorio, AEmpresa, AAlmacen) then
   begin
-    Result := PrimerAlmacenEmpresa(AConexion, AEmpresa);
+    Result := PrimerAlmacenEmpresa(ARepositorio, AEmpresa);
     if Result = '' then
       raise Exception.Create(Format(SErrorEmpresaSinAlmacenActivo,
                                     [Trim(AEmpresa)]));
   end;
 end;
 
-procedure AjustarEmpresaAlmacenDataSet(AConexion: TUniConnection;
+procedure AjustarEmpresaAlmacenDataSet(
+  const ARepositorio: IRepositorioAlmacenesEmpresa;
   ADataSet: TDataSet; const ACampoEmpresa, ACampoAlmacen: string);
 var
   CampoAlmacen: TField;
   CampoEmpresa: TField;
   AlmacenCorrecto: string;
 begin
-  if (ADataSet <> nil) and (AConexion <> nil) then
+  if Assigned(ADataSet) and Assigned(ARepositorio) then
   begin
     CampoEmpresa := ADataSet.FindField(ACampoEmpresa);
     CampoAlmacen := ADataSet.FindField(ACampoAlmacen);
     if (CampoEmpresa <> nil) and (CampoAlmacen <> nil) then
     begin
-      AlmacenCorrecto := ResolverAlmacenEmpresa(AConexion,
+      AlmacenCorrecto := ResolverAlmacenEmpresa(ARepositorio,
         CampoEmpresa.AsString, CampoAlmacen.AsString);
       if not SameText(Trim(CampoAlmacen.AsString), AlmacenCorrecto) then
         CampoAlmacen.AsString := AlmacenCorrecto;
@@ -173,81 +155,69 @@ begin
   end;
 end;
 
-procedure AjustarEmpresasAlmacenesDocumento(AConexion: TUniConnection;
+procedure AjustarEmpresasAlmacenesDocumento(
+  const ARepositorio: IRepositorioAlmacenesEmpresa;
   ADataSet: TDataSet);
 begin
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_ALB', 'CODIGO_ALM_ALB');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_PED', 'CODIGO_ALM_PED');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_FAC', 'CODIGO_ALM_FAC');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_ALBC', 'CODIGO_ALM_ALBC');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_PEDC', 'CODIGO_ALM_PEDC');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_FACC', 'CODIGO_ALM_FACC');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_DEVC', 'CODIGO_ALM_DEVC');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_SES', 'CODIGO_ALM_SES');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_SESDOC', 'CODIGO_ALM_SESDOC');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_INV', 'CODIGO_ALM_INV');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_DTR', 'CODIGO_ALM_DTR');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_PDR', 'CODIGO_ALM_PDR');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_DEP', 'CODIGO_ALM_DEP');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_ARQ', 'CODIGO_ALM_ARQ');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_PAGO', 'CODIGO_ALM_PAGO');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_OPCAJA', 'CODIGO_ALM_OPCAJA');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_CONTRA_OPCAJA', 'CODIGO_ALM_CONTRA_OPCAJA');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_EMI_VL', 'CODIGO_ALM_EMI_VL');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_RED_VL', 'CODIGO_ALM_RED_VL');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_TRSOL', 'CODIGO_ALM_ORIGEN_TRSOL');
-  AjustarEmpresaAlmacenDataSet(AConexion, ADataSet,
+  AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_CONTRA_TRSOL', 'CODIGO_ALM_DESTINO_TRSOL');
 end;
 
-function ObtenerAlmacenDepositoEmpresa(AConexion: TUniConnection;
+function ObtenerAlmacenDepositoEmpresa(
+  const ARepositorio: IRepositorioAlmacenesEmpresa;
   const AEmpresa: string): string;
-var
-  QryAlm: TUniQuery;
 begin
   Result := '';
-  QryAlm := TUniQuery.Create(nil);
-  try
-    // Usamos la conexión global del sistema
-    QryAlm.Connection := AConexion;
-    QryAlm.SQL.Text :=
-      'SELECT CODIGO_ALM_ALM ' +
-      '  FROM fza_almacenes ' +
-      ' WHERE CODIGO_EMP_ALM = :EMP ' +
-      '   AND ESACTIVO_ALM = ''S'' ' +
-      '   AND TIPO_USO_ALM IN (''DEPÓSITO'', ''DEPOSITO'') ' +
-      ' LIMIT 1';
-    QryAlm.ParamByName('EMP').AsString := AEmpresa;
-    QryAlm.Open;
-    if not QryAlm.IsEmpty then
-      Result := QryAlm.FieldByName('CODIGO_ALM_ALM').AsString
-    else
-      // Lanzamos excepción para que la transacción de caja se detenga si hay un
-      // error de configuración
-      raise Exception.Create(Format(SErrorAlmacenDepositosEmpresaNoEncontrado,
-                                    [AEmpresa]));
-  finally
-    FreeAndNil(QryAlm);
+  if Assigned(ARepositorio) then
+  begin
+    Result := ARepositorio.ObtenerAlmacenDepositoEmpresa(
+      AEmpresa);
+  end;
+  if Result = '' then
+  begin
+    raise Exception.Create(Format(
+      SErrorAlmacenDepositosEmpresaNoEncontrado,
+      [AEmpresa]));
   end;
 end;
 

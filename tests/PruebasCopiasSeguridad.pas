@@ -6,8 +6,8 @@
 {   Fecha:       29/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
-{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
-{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo.                                    }
+{  SPDX-License-Identifier: MPL-2.0                                            }
 {  Descripción:                                                                }
 {    Pruebas de la política de protección y restauración de copias.            }
 {******************************************************************************}
@@ -38,6 +38,14 @@ type
     procedure Coordinador_CancelacionTipada_NoNecesitaTexto;
     [Test]
     procedure Coordinador_FalloTipado_NoInterpretaTexto;
+    [Test]
+    procedure Streaming_RespetaDelimitadores;
+    [Test]
+    procedure Streaming_RespetaComentarios;
+    [Test]
+    procedure Streaming_EjecutaSentenciaParcialFinal;
+    [Test]
+    procedure Streaming_CancelacionDetieneSentencias;
   end;
 
 implementation
@@ -45,6 +53,8 @@ implementation
 uses
   System.Classes,
   System.SysUtils,
+  Backup.Engine,
+  inLibBackupPersistenciaIntf,
   inLibCopiasSeguridadIntf,
   inLibCopiasSeguridadReglas,
   inLibOperacionesAplicacionIntf,
@@ -114,6 +124,126 @@ type
     property Resultado: TResultadoCopiaSeguridad read FResultado;
     property Tipo: TTipoOperacionAplicacion read FTipo;
   end;
+  TPersistenciaRestauracionFalsa = class(
+    TInterfacedObject,
+    IPersistenciaRestauracionBackup)
+  private
+    FSentencias: TStringList;
+    FTablasNormalizadas: TStringList;
+    FPreparada: Boolean;
+    FValidada: Boolean;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure PrepararDestino;
+    procedure EjecutarSentencia(const ASentencia: string);
+    procedure NormalizarBaseDatos;
+    function ObtenerTablasConColacionNoValida: TArray<string>;
+    procedure NormalizarTabla(const ANombreTabla: string);
+    procedure ValidarEstructura;
+    property Sentencias: TStringList read FSentencias;
+    property Preparada: Boolean read FPreparada;
+    property Validada: Boolean read FValidada;
+  end;
+  TCancelacionStreamingFalsa = class
+  private
+    FPersistencia: TPersistenciaRestauracionFalsa;
+  public
+    constructor Create(APersistencia: TPersistenciaRestauracionFalsa);
+    procedure Comprobar;
+  end;
+
+procedure EjecutarSQLDePrueba(
+  const ASQL: string;
+  const APersistencia: IPersistenciaRestauracionBackup;
+  AComprobarCancelacion: TComprobarCancelacionBackupEvent = nil);
+var
+  oEjecutor: TEjecutorRestauracionSQL;
+  oFlujo: TStringStream;
+  oLog: TStringList;
+begin
+  oFlujo := TStringStream.Create(ASQL, TEncoding.UTF8);
+  try
+    oLog := TStringList.Create;
+    try
+      oEjecutor := TEjecutorRestauracionSQL.Create(
+        APersistencia,
+        AComprobarCancelacion,
+        nil,
+        oLog);
+      try
+        oEjecutor.Ejecutar(oFlujo);
+      finally
+        FreeAndNil(oEjecutor);
+      end;
+    finally
+      FreeAndNil(oLog);
+    end;
+  finally
+    FreeAndNil(oFlujo);
+  end;
+end;
+
+constructor TPersistenciaRestauracionFalsa.Create;
+begin
+  inherited Create;
+  FSentencias := TStringList.Create;
+  FTablasNormalizadas := TStringList.Create;
+end;
+
+destructor TPersistenciaRestauracionFalsa.Destroy;
+begin
+  FreeAndNil(FTablasNormalizadas);
+  FreeAndNil(FSentencias);
+  inherited Destroy;
+end;
+
+procedure TPersistenciaRestauracionFalsa.PrepararDestino;
+begin
+  FPreparada := True;
+end;
+
+procedure TPersistenciaRestauracionFalsa.EjecutarSentencia(
+  const ASentencia: string);
+begin
+  FSentencias.Add(Trim(ASentencia));
+end;
+
+procedure TPersistenciaRestauracionFalsa.NormalizarBaseDatos;
+begin
+end;
+
+function TPersistenciaRestauracionFalsa.
+  ObtenerTablasConColacionNoValida: TArray<string>;
+begin
+  Result := nil;
+end;
+
+procedure TPersistenciaRestauracionFalsa.NormalizarTabla(
+  const ANombreTabla: string);
+begin
+  FTablasNormalizadas.Add(ANombreTabla);
+end;
+
+procedure TPersistenciaRestauracionFalsa.ValidarEstructura;
+begin
+  FValidada := True;
+end;
+
+constructor TCancelacionStreamingFalsa.Create(
+  APersistencia: TPersistenciaRestauracionFalsa);
+begin
+  inherited Create;
+  FPersistencia := APersistencia;
+end;
+
+procedure TCancelacionStreamingFalsa.Comprobar;
+begin
+  if FPersistencia.Sentencias.Count >= 1 then
+  begin
+    raise EAbort.Create('Cancelada por la prueba');
+  end;
+end;
 
 constructor TServicioCopiasFalso.Create(
   AResultado: TResultadoCopiaSeguridad;
@@ -346,6 +476,112 @@ begin
     Integer(rcsFallida),
     Integer(oPresentacion.Resultado));
   Assert.IsFalse(oCoordinador.EnCurso);
+end;
+
+procedure TPruebasCopiasSeguridad.Streaming_RespetaDelimitadores;
+var
+  oPersistencia: IPersistenciaRestauracionBackup;
+  oPersistenciaFalsa: TPersistenciaRestauracionFalsa;
+  sSQL: string;
+begin
+  oPersistenciaFalsa := TPersistenciaRestauracionFalsa.Create;
+  oPersistencia := oPersistenciaFalsa;
+  sSQL :=
+    'DELIMITER $$' + sLineBreak +
+    'CREATE PROCEDURE PRUEBA()' + sLineBreak +
+    'BEGIN' + sLineBreak +
+    '  SELECT ''texto;$$'';' + sLineBreak +
+    'END$$' + sLineBreak +
+    'DELIMITER ;' + sLineBreak +
+    'INSERT INTO TABLA VALUES (1);';
+  EjecutarSQLDePrueba(sSQL, oPersistencia);
+  Assert.AreEqual(2, oPersistenciaFalsa.Sentencias.Count);
+  Assert.Contains(
+    oPersistenciaFalsa.Sentencias[0],
+    'CREATE PROCEDURE PRUEBA()');
+  Assert.Contains(
+    oPersistenciaFalsa.Sentencias[0],
+    'SELECT ''texto;$$'';');
+  Assert.AreEqual(
+    'INSERT INTO TABLA VALUES (1)',
+    oPersistenciaFalsa.Sentencias[1]);
+  Assert.IsTrue(oPersistenciaFalsa.Preparada);
+  Assert.IsTrue(oPersistenciaFalsa.Validada);
+end;
+
+procedure TPruebasCopiasSeguridad.Streaming_RespetaComentarios;
+var
+  oPersistencia: IPersistenciaRestauracionBackup;
+  oPersistenciaFalsa: TPersistenciaRestauracionFalsa;
+  sSQL: string;
+begin
+  oPersistenciaFalsa := TPersistenciaRestauracionFalsa.Create;
+  oPersistencia := oPersistenciaFalsa;
+  sSQL :=
+    '-- comentario inicial ;' + sLineBreak +
+    '/* comentario de bloque ; */' + sLineBreak +
+    'CREATE TABLE TABLA (ID INTEGER); -- comentario ;' + sLineBreak +
+    '# comentario entre sentencias ;' + sLineBreak +
+    '/*!40000 ALTER TABLE TABLA DISABLE KEYS */;' + sLineBreak +
+    'INSERT INTO TABLA VALUES (1);';
+  EjecutarSQLDePrueba(sSQL, oPersistencia);
+  Assert.AreEqual(3, oPersistenciaFalsa.Sentencias.Count);
+  Assert.Contains(
+    oPersistenciaFalsa.Sentencias[0],
+    'CREATE TABLE TABLA');
+  Assert.AreEqual(
+    '/*!40000 ALTER TABLE TABLA DISABLE KEYS */',
+    oPersistenciaFalsa.Sentencias[1]);
+  Assert.AreEqual(
+    'INSERT INTO TABLA VALUES (1)',
+    oPersistenciaFalsa.Sentencias[2]);
+end;
+
+procedure TPruebasCopiasSeguridad.
+  Streaming_EjecutaSentenciaParcialFinal;
+var
+  oPersistencia: IPersistenciaRestauracionBackup;
+  oPersistenciaFalsa: TPersistenciaRestauracionFalsa;
+begin
+  oPersistenciaFalsa := TPersistenciaRestauracionFalsa.Create;
+  oPersistencia := oPersistenciaFalsa;
+  EjecutarSQLDePrueba(
+    'INSERT INTO TABLA VALUES (1)',
+    oPersistencia);
+  Assert.AreEqual(1, oPersistenciaFalsa.Sentencias.Count);
+  Assert.AreEqual(
+    'INSERT INTO TABLA VALUES (1)',
+    oPersistenciaFalsa.Sentencias[0]);
+end;
+
+procedure TPruebasCopiasSeguridad.
+  Streaming_CancelacionDetieneSentencias;
+var
+  bCancelada: Boolean;
+  oCancelacion: TCancelacionStreamingFalsa;
+  oPersistencia: IPersistenciaRestauracionBackup;
+  oPersistenciaFalsa: TPersistenciaRestauracionFalsa;
+begin
+  oPersistenciaFalsa := TPersistenciaRestauracionFalsa.Create;
+  oPersistencia := oPersistenciaFalsa;
+  oCancelacion := TCancelacionStreamingFalsa.Create(oPersistenciaFalsa);
+  try
+    bCancelada := False;
+    try
+      EjecutarSQLDePrueba(
+        'INSERT INTO TABLA VALUES (1);' + sLineBreak +
+        'INSERT INTO TABLA VALUES (2);',
+        oPersistencia,
+        oCancelacion.Comprobar);
+    except
+      on E: EAbort do
+        bCancelada := True;
+    end;
+    Assert.IsTrue(bCancelada);
+    Assert.AreEqual(1, oPersistenciaFalsa.Sentencias.Count);
+  finally
+    FreeAndNil(oCancelacion);
+  end;
 end;
 
 initialization

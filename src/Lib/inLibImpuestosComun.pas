@@ -20,7 +20,7 @@ unit inLibImpuestosComun;
 interface
 
 uses
-  System.SysUtils, Data.DB, DBAccess, Uni;
+  System.SysUtils, Data.DB, inLibImpuestosLecturasIntf;
 
 function CampoFloat(ADataSet: TDataSet; const ACampo: string): Double;
 function CampoString(ADataSet: TDataSet; const ACampo: string): string;
@@ -34,13 +34,16 @@ procedure PonerString(ADataSet: TDataSet; const ACampo, AValor: string);
 function TipoIvaValido(const ATipoIva: string): Boolean;
 function NormalizarTipoIva(const ATipoIva: string): string;
 function IndiceTipoIva(const ATipoIva: string): Integer;
-function LeerPorcentajesIvaPorCodigo(AConn: TUniConnection;
+function LeerPorcentajesIvaPorCodigo(
+  const ALecturas: ILecturasImpuestos;
   const ACodigoIva: string; out AIvaN, AIvaR, AIvaS, AIvaE,
   ARecN, ARecR, ARecS, ARecE: Double): Boolean;
-function LeerPorcentajesIvaPorEmpresa(AConn: TUniConnection;
+function LeerPorcentajesIvaPorEmpresa(
+  const ALecturas: ILecturasImpuestos;
   const ACodigoEmp: string; out ACodigoIva: string; out AIvaN, AIvaR,
   AIvaS, AIvaE, ARecN, ARecR, ARecS, ARecE: Double): Boolean;
-function ObtenerTipoIvaArticulo(AConn: TUniConnection;
+function ObtenerTipoIvaArticulo(
+  const ALecturas: ILecturasImpuestos;
   const ACodigoArt: string): string;
 function PorcentajeIvaCabecera(ACabecera: TDataSet;
   const ASufijoCabecera, ATipoIva: string): Double;
@@ -177,138 +180,87 @@ begin
     Result := 3;
 end;
 
-function LeerPorcentajesIvaPorCodigo(AConn: TUniConnection;
+procedure CopiarPorcentajes(
+  const APorcentajes: TPorcentajesImpuestos;
+  out AIvaN, AIvaR, AIvaS, AIvaE,
+  ARecN, ARecR, ARecS, ARecE: Double);
+begin
+  AIvaN := APorcentajes.IvaNormal;
+  AIvaR := APorcentajes.IvaReducido;
+  AIvaS := APorcentajes.IvaSuperReducido;
+  AIvaE := APorcentajes.IvaExento;
+  ARecN := APorcentajes.RecargoNormal;
+  ARecR := APorcentajes.RecargoReducido;
+  ARecS := APorcentajes.RecargoSuperReducido;
+  ARecE := APorcentajes.RecargoExento;
+end;
+
+procedure LimpiarPorcentajes(
+  out AIvaN, AIvaR, AIvaS, AIvaE,
+  ARecN, ARecR, ARecS, ARecE: Double);
+begin
+  AIvaN := 0;
+  AIvaR := 0;
+  AIvaS := 0;
+  AIvaE := 0;
+  ARecN := 0;
+  ARecR := 0;
+  ARecS := 0;
+  ARecE := 0;
+end;
+
+function LeerPorcentajesIvaPorCodigo(
+  const ALecturas: ILecturasImpuestos;
   const ACodigoIva: string; out AIvaN, AIvaR, AIvaS, AIvaE,
   ARecN, ARecR, ARecS, ARecE: Double): Boolean;
 var
-  q: TUniQuery;
+  oPorcentajes: TPorcentajesImpuestos;
 begin
   Result := False;
-  AIvaN := 0;
-  AIvaR := 0;
-  AIvaS := 0;
-  AIvaE := 0;
-  ARecN := 0;
-  ARecR := 0;
-  ARecS := 0;
-  ARecE := 0;
-  if (AConn <> nil) and (Trim(ACodigoIva) <> '') and
+  LimpiarPorcentajes(AIvaN, AIvaR, AIvaS, AIvaE,
+    ARecN, ARecR, ARecS, ARecE);
+  if Assigned(ALecturas) and (Trim(ACodigoIva) <> '') and
      (Trim(ACodigoIva) <> '0') then
   begin
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := AConn;
-      q.SQL.Text :=
-        'SELECT IFNULL(PORCENTAJE_NORMAL_IVA, 0) AS IVAN, ' +
-        '       IFNULL(PORCENTAJE_REDUCIDO_IVA, 0) AS IVAR, ' +
-        '       IFNULL(PORCENTAJE_SUPERREDUCIDO_IVA, 0) AS IVAS, ' +
-        '       IFNULL(PORCENTAJE_EXENTO_IVA, 0) AS IVAE, ' +
-        '       IFNULL(PORCENTAJE_NORMAL_RE_IVA, 0) AS REN, ' +
-        '       IFNULL(PORCENTAJE_REDUCIDO_RE_IVA, 0) AS RER, ' +
-        '       IFNULL(PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) AS RES, ' +
-        '       IFNULL(PORCENTAJE_EXENTO_RE_IVA, 0) AS REE ' +
-        '  FROM fza_ivas ' +
-        ' WHERE CODIGO_IVA = :iva';
-      q.ParamByName('iva').AsString := ACodigoIva;
-      q.Open;
-      Result := not q.Eof;
-      if Result then
-      begin
-        AIvaN := q.FieldByName('IVAN').AsFloat;
-        AIvaR := q.FieldByName('IVAR').AsFloat;
-        AIvaS := q.FieldByName('IVAS').AsFloat;
-        AIvaE := q.FieldByName('IVAE').AsFloat;
-        ARecN := q.FieldByName('REN').AsFloat;
-        ARecR := q.FieldByName('RER').AsFloat;
-        ARecS := q.FieldByName('RES').AsFloat;
-        ARecE := q.FieldByName('REE').AsFloat;
-      end;
-    finally
-      FreeAndNil(q);
-    end;
+    Result := ALecturas.LeerPorCodigo(ACodigoIva, oPorcentajes);
+    if Result then
+      CopiarPorcentajes(oPorcentajes, AIvaN, AIvaR, AIvaS, AIvaE,
+        ARecN, ARecR, ARecS, ARecE);
   end;
 end;
 
-function LeerPorcentajesIvaPorEmpresa(AConn: TUniConnection;
+function LeerPorcentajesIvaPorEmpresa(
+  const ALecturas: ILecturasImpuestos;
   const ACodigoEmp: string; out ACodigoIva: string; out AIvaN, AIvaR,
   AIvaS, AIvaE, ARecN, ARecR, ARecS, ARecE: Double): Boolean;
 var
-  q: TUniQuery;
+  oPorcentajes: TPorcentajesImpuestos;
 begin
   Result := False;
   ACodigoIva := '';
-  AIvaN := 0;
-  AIvaR := 0;
-  AIvaS := 0;
-  AIvaE := 0;
-  ARecN := 0;
-  ARecR := 0;
-  ARecS := 0;
-  ARecE := 0;
-  if (AConn <> nil) and (Trim(ACodigoEmp) <> '') and
+  LimpiarPorcentajes(AIvaN, AIvaR, AIvaS, AIvaE,
+    ARecN, ARecR, ARecS, ARecE);
+  if Assigned(ALecturas) and (Trim(ACodigoEmp) <> '') and
      (Trim(ACodigoEmp) <> '0') then
   begin
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := AConn;
-      q.SQL.Text :=
-        'SELECT CODIGO_IVA, ' +
-        '       IFNULL(PORCENTAJE_NORMAL_IVA, 0) AS IVAN, ' +
-        '       IFNULL(PORCENTAJE_REDUCIDO_IVA, 0) AS IVAR, ' +
-        '       IFNULL(PORCENTAJE_SUPERREDUCIDO_IVA, 0) AS IVAS, ' +
-        '       IFNULL(PORCENTAJE_EXENTO_IVA, 0) AS IVAE, ' +
-        '       IFNULL(PORCENTAJE_NORMAL_RE_IVA, 0) AS REN, ' +
-        '       IFNULL(PORCENTAJE_REDUCIDO_RE_IVA, 0) AS RER, ' +
-        '       IFNULL(PORCENTAJE_SUPERREDUCIDO_RE_IVA, 0) AS RES, ' +
-        '       IFNULL(PORCENTAJE_EXENTO_RE_IVA, 0) AS REE ' +
-        '  FROM vi_ivas_empresa ' +
-        ' WHERE CODIGO_EMP_EMP = :emp ' +
-        '   AND ESDEFAULT_IVA_IVAGRP = ''S'' ' +
-        ' LIMIT 1';
-      q.ParamByName('emp').AsString := ACodigoEmp;
-      q.Open;
-      Result := not q.Eof;
-      if Result then
-      begin
-        ACodigoIva := q.FieldByName('CODIGO_IVA').AsString;
-        AIvaN := q.FieldByName('IVAN').AsFloat;
-        AIvaR := q.FieldByName('IVAR').AsFloat;
-        AIvaS := q.FieldByName('IVAS').AsFloat;
-        AIvaE := q.FieldByName('IVAE').AsFloat;
-        ARecN := q.FieldByName('REN').AsFloat;
-        ARecR := q.FieldByName('RER').AsFloat;
-        ARecS := q.FieldByName('RES').AsFloat;
-        ARecE := q.FieldByName('REE').AsFloat;
-      end;
-    finally
-      FreeAndNil(q);
+    Result := ALecturas.LeerPorEmpresa(ACodigoEmp, oPorcentajes);
+    if Result then
+    begin
+      ACodigoIva := oPorcentajes.CodigoIva;
+      CopiarPorcentajes(oPorcentajes, AIvaN, AIvaR, AIvaS, AIvaE,
+        ARecN, ARecR, ARecS, ARecE);
     end;
   end;
 end;
 
-function ObtenerTipoIvaArticulo(AConn: TUniConnection;
+function ObtenerTipoIvaArticulo(
+  const ALecturas: ILecturasImpuestos;
   const ACodigoArt: string): string;
-var
-  q: TUniQuery;
 begin
   Result := '';
-  if (AConn <> nil) and (Trim(ACodigoArt) <> '') then
-  begin
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := AConn;
-      q.SQL.Text :=
-        'SELECT TIPO_IVA_ART ' +
-        '  FROM fza_articulos ' +
-        ' WHERE CODIGO_ART_ART = :art';
-      q.ParamByName('art').AsString := ACodigoArt;
-      q.Open;
-      if not q.Eof then
-        Result := UpperCase(Trim(q.FieldByName('TIPO_IVA_ART').AsString));
-    finally
-      FreeAndNil(q);
-    end;
-  end;
+  if Assigned(ALecturas) and (Trim(ACodigoArt) <> '') then
+    Result := UpperCase(Trim(
+      ALecturas.LeerTipoIvaArticulo(ACodigoArt)));
   if not TipoIvaValido(Result) then
     Result := '';
 end;

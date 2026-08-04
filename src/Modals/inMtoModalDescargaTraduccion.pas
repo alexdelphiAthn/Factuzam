@@ -21,8 +21,8 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxContainer, cxEdit, cxLabel, cxProgressBar,
-  Uni,
-  inMtoFrmBase;
+  inMtoFrmBase,
+  inLibTraduccionesDescargaPersistenciaIntf;
 
 const
   cMensajeEjecutarTraduccion = WM_APP + 117;
@@ -39,11 +39,11 @@ type
     procedure FormShow(Sender: TObject);
   private
     FAplicarIdioma: TAplicarIdiomaTraduccion;
-    FConexion: TUniConnection;
     FDescargar: Boolean;
     FError: string;
     FIdioma: string;
     FIniciado: Boolean;
+    FInstalador: IInstaladorTraduccionesPersistencia;
     FProcesando: Boolean;
     FToken: string;
     FUrlBase: string;
@@ -56,7 +56,7 @@ type
   public
     class function Ejecutar(
       AOwner: TComponent;
-      AConexion: TUniConnection;
+      const AInstalador: IInstaladorTraduccionesPersistencia;
       const AUrlBase, AToken, AIdioma: string;
       ADescargar: Boolean;
       AAplicarIdioma: TAplicarIdiomaTraduccion;
@@ -72,7 +72,7 @@ uses
 
 class function TfrmModalDescargaTraduccion.Ejecutar(
   AOwner: TComponent;
-  AConexion: TUniConnection;
+  const AInstalador: IInstaladorTraduccionesPersistencia;
   const AUrlBase, AToken, AIdioma: string;
   ADescargar: Boolean;
   AAplicarIdioma: TAplicarIdiomaTraduccion;
@@ -83,9 +83,9 @@ begin
   oFormulario := TfrmModalDescargaTraduccion.Create(AOwner);
   try
     oFormulario.FAplicarIdioma := AAplicarIdioma;
-    oFormulario.FConexion := AConexion;
     oFormulario.FDescargar := ADescargar;
     oFormulario.FIdioma := AIdioma;
+    oFormulario.FInstalador := AInstalador;
     oFormulario.FToken := AToken;
     oFormulario.FUrlBase := AUrlBase;
     oFormulario.FProcesando := True;
@@ -116,7 +116,7 @@ begin
   try
     if FDescargar then
       TInstaladorTraducciones.DescargarEInstalar(
-        FConexion,
+        FInstalador,
         FUrlBase,
         FToken,
         FIdioma,

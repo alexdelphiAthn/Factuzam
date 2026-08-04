@@ -144,7 +144,8 @@ implementation
 uses
 
   System.Diagnostics,
-  inLibCadenas, inLibDatasets, inLibValoresAutomaticos,
+  inLibCadenas, inLibDatasets,
+  UniDataValoresAutomaticosRepositorio,
   inLibMsgArticulos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -560,7 +561,7 @@ end;
 procedure TdmArticulos.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
-  inLibValoresAutomaticos.AplicarValoresPorDefecto(
+  UniDataValoresAutomaticosRepositorio.AplicarValoresPorDefecto(
     ConexionPrincipal, unqryTablaG, 'fza_articulos');
   unqryTablaG.FindField('CODIGO_FAM_ART').AsString :=
                                    ObtenerValorPorDefecto(
@@ -835,7 +836,7 @@ begin
   if unqryTablaG.FindField('CODIGO_ART_ART').AsString = '0' then
   begin
     unqryTablaG.FindField('CODIGO_ART_ART').AsString :=
-                          inLibValoresAutomaticos.ObtenerSiguienteContador(
+                          ObtenerSiguienteContador(
                                                    ConexionPrincipal,
                                                    'AR',
                                                    IdentidadSesion.Usuario);
@@ -843,7 +844,7 @@ begin
   if unqryTablaG.FindField('ORDEN_ART').AsString = '0' then
   begin
       unqryTablaG.FindField('ORDEN_ART').AsString :=
-                          inLibValoresAutomaticos.ObtenerSiguienteContador(
+                          ObtenerSiguienteContador(
                                                    ConexionPrincipal,
                                                    'AO',
                                                    IdentidadSesion.Usuario);

@@ -290,9 +290,13 @@ uses
   inMtoModalFacturarAlbaranesFechas, inLibGridCantidad,
   inLibGenBusq, inLibShowMto, inLibFiltroUsuario,
   inLibArticulosResolverIntf, inLibArticulosValidadorIntf,
-  inLibVentasImpuestos, inLibValoresAutomaticos, inLibUser,
+  inLibVentasImpuestos, UniDataImpuestosRepositorio,
+  inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
+  UniDataDestinoFacturaRepositorio,
+  inLibUser,
   inLibColumnasSku,
-  inLibColumnasDocumento, UniDataGen,
+  inLibColumnasDocumento, UniDataColumnasDocumentoRepositorio,
+  UniDataGen,
   inLibValidacionDocumento, inLibPresentacionDocumento,
   inLibMsgArticulos, inLibMsgComun, inLibMsgFacturas, inLibMsgVentas,
   UniDataVentasPantallaComposicion;
@@ -547,7 +551,8 @@ begin
                          Precio.PrecioFinal);
               PonerFloat('PRECIO_VENTA_CIVA_ARTICULO_ALBLIN', 0);
             end;
-            PrepararLineaFiscalVenta(dmmAlbaranes.unqryTablaG.Connection,
+            PrepararLineaFiscalVenta(CrearLecturasImpuestos(
+              dmmAlbaranes.unqryTablaG.Connection),
               dmmAlbaranes.unqryTablaG, ds, 'ALB', 'ALBLIN', 'TOTAL_ALBLIN');
             ActualizarColumnasOpcionalesLinea;
             if Datos.RequiereSku then
@@ -579,8 +584,8 @@ end;
 function TfrmMtoAlbaranes.PorcentajeIvaAlbaran(
   const ATipoIva: string): Double;
 begin
-  Result := PorcentajeIvaDocumentoVenta(
-    dmmAlbaranes.unqryTablaG.Connection, dmmAlbaranes.unqryTablaG,
+  Result := PorcentajeIvaDocumentoVenta(CrearLecturasImpuestos(
+    dmmAlbaranes.unqryTablaG.Connection), dmmAlbaranes.unqryTablaG,
     'ALB', ATipoIva);
 end;
 
@@ -789,8 +794,10 @@ end;
 
 procedure TfrmMtoAlbaranes.MostrarColumnasAtributoGlobalesAlb;
 begin
-  MostrarColumnasAtributoGlobalesDocumento(
-    dmmAlbaranes.unqryTablaG.Connection, tvLineasAlbaran);
+  AplicarNombresAtributosGlobalesDocumento(tvLineasAlbaran,
+    CrearColumnasDocumentoLecturas(
+      dmmAlbaranes.unqryTablaG.Connection).
+        ListarNombresAtributosGlobales);
 end;
 
 procedure TfrmMtoAlbaranes.cxgrdLineasAlbaranExit(Sender: TObject);
@@ -1489,7 +1496,7 @@ begin
     if (sSerieFac <> '') and (sNumeroFac <> '') then
     begin
       sCallFactura := ResolverCallFactura(
-        ConexionPrincipal,
+        CrearResolutorDestinoFacturaUniDAC(ConexionPrincipal),
         sNumeroFac,
         sSerieFac);
       ShowMto(Self.Owner, sCallFactura, sSerieFac + ',' + sNumeroFac);

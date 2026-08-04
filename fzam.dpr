@@ -240,6 +240,9 @@ uses
     'src\Modals\inMtoModalContrasenaCopia.pas',
   inMtoModalErrorAplicacion in
     'src\Modals\inMtoModalErrorAplicacion.pas',
+  inMtoModalProcesosAuxiliaresBBDD in
+    'src\Modals\inMtoModalProcesosAuxiliaresBBDD.pas'
+    {frmModalProcesosAuxiliaresBBDD},
   inMtoModalMensajeTexto in
     'src\Modals\inMtoModalMensajeTexto.pas',
   inMtoErroresEnvios in
@@ -336,6 +339,8 @@ uses
     'src\Lib\inLibVentasPantallaIntf.pas',
   UniDataGeneradorProcesosRepositorio in
     'src\DataModules\UniDataGeneradorProcesosRepositorio.pas',
+  UniDataMetadatosBBDDRepositorio in
+    'src\DataModules\UniDataMetadatosBBDDRepositorio.pas',
   UniDataInformeBalanceSinTallasRepositorio in
     'src\DataModules\UniDataInformeBalanceSinTallasRepositorio.pas',
   UniDataInformeBalanceTallasRepositorio in
@@ -362,6 +367,8 @@ uses
     'src\DataModules\UniDataWizardEditarRepositorio.pas',
   inLibGeneradorProcesosAplicacion in
     'src\Lib\inLibGeneradorProcesosAplicacion.pas',
+  inLibMetadatosBBDDIntf in
+    'src\Lib\inLibMetadatosBBDDIntf.pas',
   inLibInformeBalanceSinTallasPersistenciaIntf in
     'src\Lib\inLibInformeBalanceSinTallasPersistenciaIntf.pas',
   inLibInformeBalanceTallasPersistenciaIntf in
@@ -400,6 +407,8 @@ uses
   UniDataFamilias in 'src\DataModules\UniDataFamilias.pas' {dmFamilias1. TdmFamilias},
   UniDataFormasdePago in 'src\DataModules\UniDataFormasdePago.pas' {dmFormasdePago: TdmFormasdePago},
   UniDataGeneradorProcesos in 'src\DataModules\UniDataGeneradorProcesos.pas' {dmGeneradorProcesos: TDataModule},
+  UniDataMetadatosBBDD in 'src\DataModules\UniDataMetadatosBBDD.pas'
+    {dmMetadatosBBDD: TdmMetadatosBBDD},
   UniDataEmpleados in 'src\DataModules\UniDataEmpleados.pas' {dmEmpleados: TDataModule},
   UniDataGrupos in 'src\DataModules\UniDataGrupos.pas' {dmGrupos: TDataModule},
   UniDataIvas in 'src\DataModules\UniDataIvas.pas' {dmIvas: TDataModule},

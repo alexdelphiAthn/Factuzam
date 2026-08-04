@@ -562,6 +562,8 @@ uses
   UniDataArticulosAtributosBasicosRepositorio,
   UniDataArticulosPresentacionRepositorio,
   UniDataArticulosVariaciones,
+  UniDataArticulosCodigosBarrasRepositorio,
+  UniDataDestinoFacturaRepositorio,
   UniDataFiltroArticulosRepositorio,
   System.Diagnostics,   // TStopwatch
   inLibMsgArticulos, inLibMsgComun;
@@ -802,7 +804,10 @@ procedure TfrmMtoArticulos.AbrirFacturaLineaActiva(const ANumero,
   ASerie: string);
 begin
   ShowMto(Self.Owner,
-          ResolverCallFactura(ConexionPrincipal, ANumero, ASerie),
+          ResolverCallFactura(
+            CrearResolutorDestinoFacturaUniDAC(ConexionPrincipal),
+            ANumero,
+            ASerie),
           ANumero + ',' + ASerie);
 end;
 
@@ -1112,7 +1117,8 @@ begin
     Screen.Cursor := crHourGlass;
     try
       bGenerado := GenerarCodigosBarrasArticulo(
-        ConexionPrincipal,
+        CrearArticulosCodigosBarrasPersistenciaUniDAC(
+          ConexionPrincipal),
         CrearArticulosVariacionesUniDAC(ConexionPrincipal),
         sCodigoArticulo,
         IdentidadSesion.Usuario,
@@ -1281,16 +1287,16 @@ begin
   InicializarGuardadoArticuloVcl(Self);
   // Filtros de carga (estado, stock, temporadas): poblar la lista de
   // temporadas, leer las preferencias guardadas por usuario y aplicar
-  // el filtro reescribiendo el SQL de la lista antes de que el resto de
+  // el filtro parametrizado antes de que el resto de
   // la rutina lea FArticuloCargado / el primer registro.
   FPresFiltros.Colapsar;
   FPresFiltros.CargarTemporadas;
   FPresFiltros.LeerPerfil(oPerfilDic);
   // Precarga: DE MOMENTO sin dialogo de acotado. Dejamos la lista CERRADA
-  // con el SQL filtrado (por defecto solo activos) y que la carga la haga
+  // con el filtro aplicado (por defecto solo activos) y que la carga la haga
   // AbrirTablaPrincipalAsync en segundo plano, mostrando el overlay
   // "Cargando datos..." con barra de progreso.
-  FPresFiltros.AplicarSqlEnLista;
+  FPresFiltros.AplicarFiltroEnLista;
 end;
 
 procedure TfrmMtoArticulos.InicializarPresentadores;

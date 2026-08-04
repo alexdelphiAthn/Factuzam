@@ -60,7 +60,7 @@ uses
   inLibComprasSesionesIntf,
   inLibMsgCompras,
   inLibShowMto,
-  inLibValoresAutomaticos,
+  UniDataValoresAutomaticosRepositorio,
   inMtoComprasSesionesMaterializacionVcl,
   inMtoModalCrearAlbaranSesion,
   inMtoModalDocsCreados,

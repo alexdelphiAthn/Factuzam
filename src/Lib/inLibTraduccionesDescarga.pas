@@ -16,20 +16,17 @@ unit inLibTraduccionesDescarga;
 interface
 
 uses
-  System.SysUtils, Uni;
+  System.SysUtils,
+  inLibTraduccionesDescargaPersistenciaIntf;
 
 type
-  TProgresoDescargaTraduccion = procedure(
-    const ATexto: string;
-    APosicion: Integer) of object;
-
   TInstaladorTraducciones = class
   public
     class function DisponibleLocalmente(
-      AConexion: TUniConnection;
+      const APersistencia: IInstaladorTraduccionesPersistencia;
       const AIdioma: string): Boolean; static;
     class procedure DescargarEInstalar(
-      AConexion: TUniConnection;
+      const APersistencia: IInstaladorTraduccionesPersistencia;
       const AUrlBase, AToken, AIdioma: string;
       AProgreso: TProgresoDescargaTraduccion); static;
   end;
@@ -39,7 +36,6 @@ implementation
 uses
   System.Classes, System.Generics.Collections, System.Hash,
   System.IOUtils, System.JSON, System.Zip,
-  UniScript,
   inLibFactuzamApi, inLibMsgIntegraciones;
 
 const
@@ -52,7 +48,7 @@ type
     Nombre: string;
     Tamano: Integer;
     Huella: string;
-    Sql: string;
+    Contenido: string;
   end;
 
   TPaqueteTraduccion = record
@@ -212,7 +208,7 @@ begin
            HuellaDatos(aDatos),
            Result.Archivos[iArchivo].Huella) then
         ErrorPaquete('la huella SHA-256 de un SQL no coincide');
-      Result.Archivos[iArchivo].Sql :=
+      Result.Archivos[iArchivo].Contenido :=
         TEncoding.UTF8.GetString(aDatos);
     end;
     if not SameText(
@@ -227,128 +223,43 @@ begin
   end;
 end;
 
-procedure EjecutarPaquete(
-  AConexion: TUniConnection;
-  const AIdioma: string;
-  const APaquete: TPaqueteTraduccion;
-  const AProgreso: TProgresoDescargaTraduccion);
+function PrepararScripts(
+  const APaquete: TPaqueteTraduccion):
+  TArray<TScriptInstalacionTraduccion>;
 var
-  bTransaccionIniciada: Boolean;
   iArchivo: Integer;
-  iProgreso: Integer;
-  oConsulta: TUniQuery;
-  oScript: TUniScript;
 begin
-  bTransaccionIniciada := False;
-  try
-    for iArchivo := 0 to High(APaquete.Archivos) do
-    begin
-      if iArchivo = 1 then
-      begin
-        AConexion.StartTransaction;
-        bTransaccionIniciada := True;
-      end;
-      iProgreso := 45 +
-        ((iArchivo * 40) div Length(APaquete.Archivos));
-      NotificarProgreso(
-        AProgreso,
-        Format(
-          SProgresoTraduccionEjecutando,
-          [APaquete.Archivos[iArchivo].Nombre,
-           iArchivo + 1,
-           Length(APaquete.Archivos)]),
-        iProgreso);
-      oScript := TUniScript.Create(nil);
-      try
-        oScript.Connection := AConexion;
-        oScript.NoPreconnect := True;
-        oScript.SQL.Text := APaquete.Archivos[iArchivo].Sql;
-        oScript.Execute;
-      finally
-        FreeAndNil(oScript);
-      end;
-    end;
-    NotificarProgreso(
-      AProgreso,
-      SProgresoTraduccionComprobando,
-      90);
-    oConsulta := TUniQuery.Create(nil);
-    try
-      oConsulta.Connection := AConexion;
-      oConsulta.SQL.Text :=
-        'SELECT COUNT(*) AS TOTAL ' +
-        '  FROM fza_traducciones ' +
-        ' WHERE IDIOMA_TRAD = :IDIOMA ' +
-        '   AND ESDESCARGADA_TRAD = ''S''';
-      oConsulta.ParamByName('IDIOMA').AsString := AIdioma;
-      oConsulta.Open;
-      if oConsulta.FieldByName('TOTAL').AsInteger = 0 then
-        raise Exception.CreateFmt(
-          SErrorTraduccionSinFilas,
-          [AIdioma]);
-    finally
-      FreeAndNil(oConsulta);
-    end;
-    if bTransaccionIniciada and AConexion.InTransaction then
-      AConexion.Commit;
-  except
-    if bTransaccionIniciada and AConexion.InTransaction then
-      AConexion.Rollback;
-    raise;
+  SetLength(Result, Length(APaquete.Archivos));
+  for iArchivo := 0 to High(APaquete.Archivos) do
+  begin
+    Result[iArchivo].Nombre := APaquete.Archivos[iArchivo].Nombre;
+    Result[iArchivo].Contenido := APaquete.Archivos[iArchivo].Contenido;
   end;
 end;
 
 class function TInstaladorTraducciones.DisponibleLocalmente(
-  AConexion: TUniConnection;
+  const APersistencia: IInstaladorTraduccionesPersistencia;
   const AIdioma: string): Boolean;
-var
-  oConsulta: TUniQuery;
 begin
   Result := False;
-  if Assigned(AConexion) and AConexion.Connected then
-  begin
-    oConsulta := TUniQuery.Create(nil);
-    try
-      oConsulta.Connection := AConexion;
-      oConsulta.SQL.Text :=
-        'SELECT COUNT(*) AS TOTAL ' +
-        '  FROM INFORMATION_SCHEMA.COLUMNS ' +
-        ' WHERE TABLE_SCHEMA = DATABASE() ' +
-        '   AND TABLE_NAME = ''fza_traducciones'' ' +
-        '   AND COLUMN_NAME = ''ESDESCARGADA_TRAD''';
-      oConsulta.Open;
-      if oConsulta.FieldByName('TOTAL').AsInteger > 0 then
-      begin
-        oConsulta.Close;
-        oConsulta.SQL.Text :=
-          'SELECT COUNT(*) AS TOTAL ' +
-          '  FROM fza_traducciones ' +
-          ' WHERE IDIOMA_TRAD = :IDIOMA ' +
-          '   AND ESDESCARGADA_TRAD = ''S''';
-        oConsulta.ParamByName('IDIOMA').AsString := AIdioma;
-        oConsulta.Open;
-        Result := oConsulta.FieldByName('TOTAL').AsInteger > 0;
-      end;
-    finally
-      FreeAndNil(oConsulta);
-    end;
-  end;
+  if Assigned(APersistencia) then
+    Result := APersistencia.DisponibleLocalmente(AIdioma);
 end;
 
 class procedure TInstaladorTraducciones.DescargarEInstalar(
-  AConexion: TUniConnection;
+  const APersistencia: IInstaladorTraduccionesPersistencia;
   const AUrlBase, AToken, AIdioma: string;
   AProgreso: TProgresoDescargaTraduccion);
 var
+  aScripts: TArray<TScriptInstalacionTraduccion>;
   oResultado: TResultadoFactuzamApi;
   oPaquete: TPaqueteTraduccion;
   sConsulta: string;
   sRutaTemporal: string;
 begin
-  if not Assigned(AConexion) or not AConexion.Connected then
+  if not Assigned(APersistencia) then
     raise Exception.Create(SErrorConexionTraduccionNoDisponible);
-  if AConexion.InTransaction then
-    raise Exception.Create(SErrorTraduccionTransaccionActiva);
+  APersistencia.ComprobarDisponible;
   NotificarProgreso(
     AProgreso,
     Format(SProgresoTraduccionPreparando, [AIdioma]),
@@ -377,10 +288,10 @@ begin
       SProgresoTraduccionValidando,
       35);
     oPaquete := CargarPaquete(sRutaTemporal, AIdioma);
-    EjecutarPaquete(
-      AConexion,
+    aScripts := PrepararScripts(oPaquete);
+    APersistencia.Instalar(
       AIdioma,
-      oPaquete,
+      aScripts,
       AProgreso);
   finally
     if TFile.Exists(sRutaTemporal) then

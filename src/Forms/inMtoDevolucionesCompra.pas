@@ -41,6 +41,7 @@ uses
   cxGridDBBandedTableView, System.Generics.Collections,
   inLibArticulosAtributosIntf,
   inLibArticulosValidadorIntf,
+  inLibBusquedasCompraPersistenciaIntf,
   inLibComprasPantallaIntf,
   inLibDevolucionesCompraPersistenciaIntf,
   inLibDevolucionesCompraStock,
@@ -238,6 +239,7 @@ type
     FPersistenciaStock: IPersistenciaStockDevolucionCompra;
     FBusquedaEmpresas: IBusquedaEmpresasComprasPantalla;
     FBusquedaProveedores: IBusquedaProveedoresComprasPantalla;
+    FBusquedasArticulos: IBusquedasCompraPersistencia;
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
     procedure InicializarGestorYPivote;
@@ -330,23 +332,24 @@ uses
   System.StrUtils,
   inLibFiltroUsuario,
   inLibGridCantidad,
-  inLibColumnasDocumento, UniDataGen,
+  inLibColumnasDocumento, UniDataColumnasDocumentoRepositorio,
+  UniDataGen,
   inLibBusquedasCompra,
-  inLibValidacionDocumento,
+  inLibValidacionDocumento, UniDataValidacionDocumentoRepositorio,
   inLibPresentacionDocumento,
   inLibAtributosPaleta,
   UniDataArticulos,
-  inLibComprasImpuestos,
+  inLibComprasImpuestos, UniDataImpuestosRepositorio,
   inLibMsgArticulos, inLibMsgCompras,
   inMtoModalImpDevCompra,
   inMtoModalImpDevCompraV,
   inMtoModalEtiqDev, inLibShowMto, inLibGenBusq,
-  inLibValoresAutomaticos,
+  inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku,
   // Composicion del puerto de persistencia del pivote (V2).
   UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio,
-  UniDataColumnasSkuServicios,
+  UniDataColumnasSkuServicios, UniDataModoTallas,
   UniDataComprasPantallaComposicion;
 
 {$R *.dfm}
@@ -443,6 +446,7 @@ begin
   FPersistenciaStock := oServicios.Devolucion.Stock;
   FBusquedaEmpresas := oServicios.Devolucion.BusquedaEmpresas;
   FBusquedaProveedores := oServicios.Devolucion.BusquedaProveedores;
+  FBusquedasArticulos := oServicios.Devolucion.BusquedasArticulos;
   ConfigurarColumnaBusquedaDocumento(
     tvLineasDevolucion, 'CODIGO_UNIDAD_DEVCLIN',
     colLineaDevcCODIGO_UNIDADPropertiesButtonClick,
@@ -966,7 +970,8 @@ begin
     Result := PuedeActivarTallasHorizontalCompra(
       dmmDevolucionesCompra.unqryTablaG,
       dmmDevolucionesCompra.unqryDevolucionesCompraLineas,
-      dmmDevolucionesCompra.unqryTablaG.Connection,
+      CrearValidacionDocumentoLecturas(
+        dmmDevolucionesCompra.unqryTablaG.Connection),
       ConfiguracionTallasDocumento,
       AsegurarCabeceraPersistidaParaLineas,
       FPivote.ValidarPivotePosible, AMensaje);
@@ -1010,6 +1015,7 @@ begin
   FPersistenciaStock := nil;
   FBusquedaEmpresas := nil;
   FBusquedaProveedores := nil;
+  FBusquedasArticulos := nil;
   LiberarModoYGestoresDocumento(
     FModoEntrada, FPivote, FGestorTallas);
   FreeAndNil(FColorPivotCodigos);
@@ -1063,6 +1069,9 @@ begin
     oBase.AplicarContextoPivote := False;
     oBase.RegistroLog := RegistroLog;
     oConfigTallas := CrearConfigTallasDocumentoCompra(oBase);
+    oConfigTallas.Persistencia := CrearPersistenciaGridTallasInline(
+      oBase.Conexion,
+      CrearConfigPersistenciaTallasInline(oConfigTallas));
     FGestorTallas := TGestorGridTallas.Create(oConfigTallas);
     ConfigurarEventosTallasDocumento(FTallaColumns,
       TallaEditValueChangedHook, TallaValidateHook);
@@ -1754,9 +1763,10 @@ end;
 
 procedure TfrmMtoDevolucionesCompra.MostrarColumnasAtributoGlobalesDevc;
 begin
-  MostrarColumnasAtributoGlobalesDocumento(
-    dmmDevolucionesCompra.unqryTablaG.Connection,
-    tvLineasDevolucion);
+  AplicarNombresAtributosGlobalesDocumento(tvLineasDevolucion,
+    CrearColumnasDocumentoLecturas(
+      dmmDevolucionesCompra.unqryTablaG.Connection).
+        ListarNombresAtributosGlobales);
 end;
 
 procedure TfrmMtoDevolucionesCompra.CrearColumnasHostDevolucionCompra;
@@ -1825,7 +1835,7 @@ begin
                mtInformation, [mbOk], 0)
   else
     Result := BuscarArticuloProveedorCompra(
-      ConexionPrincipal, BusquedaVisual, sPrv, 'Búsqueda de artículos',
+      FBusquedasArticulos, BusquedaVisual, sPrv, 'Búsqueda de artículos',
       'frmMtoDevcArtSearch', Self);
 end;
 
@@ -1853,7 +1863,7 @@ begin
                mtInformation, [mbOk], 0)
   else
     Result := BuscarSkuArticuloCompra(
-      ConexionPrincipal, BusquedaVisual, sArt,
+      FBusquedasArticulos, BusquedaVisual, sArt,
       'SKUs del artículo ' + sArt,
       'frmMtoDevcSkuSearch', Self);
 end;
@@ -2274,7 +2284,7 @@ begin
         ds.FieldByName('CODIGO_PRV_DEVC').AsString :=
           oConsulta.DataSet.FieldByName('CODIGO_PRV_PRV').AsString;
         AplicarIvaExentoIntracomunitarioProveedor(
-          ConexionPrincipal,
+          CrearLecturasImpuestos(ConexionPrincipal),
           ds,
           'CODIGO_PRV_DEVC',
           'ESIVA_EXENTO_INTRACOMUNITARIO_DEVC');

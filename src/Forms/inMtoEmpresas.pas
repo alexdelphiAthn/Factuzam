@@ -347,6 +347,7 @@ uses
   inLibWin,
   inLibUser,
   inLibShowMto,
+  UniDataDestinoFacturaRepositorio,
   inLibDir,
   inLibDevExp,
   inLibIBAN,
@@ -444,7 +445,8 @@ begin
           sSerieFactura := FieldByName('SERIE_FAC').AsString;
           ShowMto(Self.Owner,
                   ResolverCallFactura(
-                    ConexionPrincipal,
+                    CrearResolutorDestinoFacturaUniDAC(
+                      ConexionPrincipal),
                     sNroFactura,
                     sSerieFactura),
                   sNroFactura + ',' + sSerieFactura);

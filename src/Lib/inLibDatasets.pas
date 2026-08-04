@@ -16,13 +16,18 @@ unit inLibDatasets;
 interface
 
 uses
-  System.Variants, System.Classes, Data.DB;
+  System.Variants, System.Classes, Data.DB,
+  inLibDatasetsPersistenciaIntf;
 
 function KeyValuesToStr(const AValores: Variant): string;
 function StrToKeyValues(
   const AValor, ACampos: string): Variant;
 function ExtraerTablaDeSQL(const ASql: string): string;
-function ObtenerClavePrimaria(ADataSet: TDataSet): string;
+function ObtenerClavePrimariaPorMetadatos(const ATabla: string;
+  const ARepositorio: IRepositorioMetadatosDatasets): string;
+function ObtenerClavePrimaria(ADataSet: TDataSet): string; overload;
+function ObtenerClavePrimaria(ADataSet: TDataSet;
+  const ARepositorio: IRepositorioMetadatosDatasets): string; overload;
 procedure GrabarDatasets(AModulo: TDataModule);
 procedure CancelarDatasets(AModulo: TDataModule);
 function CheckOpenDatasets(AModulo: TDataModule): Boolean;
@@ -169,10 +174,35 @@ begin
   end;
 end;
 
-function ObtenerClavePrimaria(ADataSet: TDataSet): string;
+function ObtenerClavePrimariaPorMetadatos(const ATabla: string;
+  const ARepositorio: IRepositorioMetadatosDatasets): string;
 var
   i: Integer;
-  oConsulta: TUniQuery;
+  oColumnas: TArray<string>;
+begin
+  Result := '';
+  if Assigned(ARepositorio) and
+     (Trim(ATabla) <> '') then
+  begin
+    oColumnas := ARepositorio.ObtenerColumnasClavePrimaria(ATabla);
+    for i := 0 to Length(oColumnas) - 1 do
+    begin
+      if Result <> '' then
+        Result := Result + ';';
+      Result := Result + oColumnas[i];
+    end;
+  end;
+end;
+
+function ObtenerClavePrimaria(ADataSet: TDataSet): string;
+begin
+  Result := ObtenerClavePrimaria(ADataSet, nil);
+end;
+
+function ObtenerClavePrimaria(ADataSet: TDataSet;
+  const ARepositorio: IRepositorioMetadatosDatasets): string;
+var
+  i: Integer;
   sTabla: string;
 begin
   Result := '';
@@ -196,39 +226,14 @@ begin
     end;
     if (Result = '') and
        (ADataSet is TUniQuery) and
-       Assigned(TUniQuery(ADataSet).Connection) then
+       Assigned(ARepositorio) then
     begin
       sTabla := ExtraerTablaDeSQL(
         TUniQuery(ADataSet).SQL.Text);
       if sTabla <> '' then
       begin
-        oConsulta := TUniQuery.Create(nil);
-        try
-          oConsulta.Connection :=
-            TUniQuery(ADataSet).Connection;
-          oConsulta.SQL.Text :=
-            'SELECT COLUMN_NAME ' +
-            '  FROM information_schema.KEY_COLUMN_USAGE ' +
-            ' WHERE TABLE_SCHEMA = database() ' +
-            '   AND TABLE_NAME = :TAB ' +
-            '   AND CONSTRAINT_NAME = ''PRIMARY'' ' +
-            ' ORDER BY ORDINAL_POSITION';
-          oConsulta.ParamByName(
-            'TAB').AsString := sTabla;
-          oConsulta.Open;
-          while not oConsulta.Eof do
-          begin
-            if Result <> '' then
-              Result := Result + ';';
-            Result := Result +
-              oConsulta.FieldByName(
-                'COLUMN_NAME').AsString;
-            oConsulta.Next;
-          end;
-          oConsulta.Close;
-        finally
-          FreeAndNil(oConsulta);
-        end;
+        Result := ObtenerClavePrimariaPorMetadatos(
+          sTabla, ARepositorio);
       end;
     end;
   end;

@@ -170,7 +170,8 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsgCaja, inLibMsgComun;
+  inLibMsgCaja, inLibMsgComun, UniDataModoTallas,
+  UniDataGridArticulosRepositorio;
 
 procedure TfrmMtoOpeTraspaso.FormCreate(Sender: TObject);
 var
@@ -278,6 +279,8 @@ begin
     Campos,
     ContextoSesion,
     BusquedaVisual,
+    CrearBusquedaSkusTallas(ConexionPrincipal),
+    CrearConsultaArticulosGridUniDAC(ConexionPrincipal),
     FValidadorArticulos,
     FLookupAtributosArticulos,
     RegistroLog);

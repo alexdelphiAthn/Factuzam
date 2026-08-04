@@ -42,7 +42,7 @@ implementation
 
 uses
   System.SysUtils, Data.DB, inLibDocumento, inLibDocumentoIntf,
-  inLibValoresAutomaticos, inLibMsgCompras;
+  UniDataValoresAutomaticosRepositorio, inLibMsgCompras;
 type
   TMovimientosAlbaranCompraUniDAC = class(
     TInterfacedObject,

@@ -27,6 +27,10 @@ type
     Linea: Integer;
     Total: Double;
   end;
+  TPosicionConjuntoTallas = record
+    IdAv: Integer;
+    Valor: string;
+  end;
   // Cantidad viva en la propia linea (la que no tiene celdas).
   TCantidadLineaTallas = record
     Linea: Integer;
@@ -168,6 +172,15 @@ type
     function ConsultarTotalesPorLinea: TArray<TTotalLineaTallas>;
     function PrimerAlmacenEstandar: string;
   end;
+  IPersistenciaGridTallasInline = interface
+    ['{BD596DBD-6EC7-4907-9BA4-EEFD64F34233}']
+    function ConsultarPosicionesConjunto(
+      AIdConjunto: Integer): TArray<TPosicionConjuntoTallas>;
+    function ConsultarCeldasLinea(
+      ALinea: Integer): TArray<TCeldaTallas>;
+    procedure FijarCantidadCelda(ALinea, AIdAv: Integer;
+      ACantidad: Double; const AAlmacen: string);
+  end;
   // Puertos de lineas segregados por los cuatro consumidores reales.
   ILineasRederivacionTallas = interface
     ['{F2D70385-D065-409A-B0DA-B5D604F41A86}']
@@ -227,6 +240,7 @@ type
     Desmontaje: IPersistenciaDesmontajeTallas;
     Entrada: IPersistenciaEntradaTallas;
     Presentacion: IPersistenciaPresentacionTallas;
+    GridInline: IPersistenciaGridTallasInline;
   end;
   TServiciosLineasDocumentoTallas = record
     Rederivacion: ILineasRederivacionTallas;

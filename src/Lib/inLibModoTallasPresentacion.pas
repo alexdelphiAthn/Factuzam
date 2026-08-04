@@ -102,6 +102,7 @@ type
       const ACfgTallas: TGridTallasConfig;
       const ALineas: ILineasPresentacionTallas;
       const APersistencia: IPersistenciaPresentacionTallas;
+      const APersistenciaInline: IPersistenciaGridTallasInline;
       const ABusqueda: IBusquedaSkusTallas; ARegistro: TRegistroTallas);
     destructor Destroy; override;
     // Crea las columnas del modo y engancha los eventos de la vista.
@@ -149,11 +150,13 @@ constructor TPresentacionModoTallas.Create(
   const ACfgTallas: TGridTallasConfig;
   const ALineas: ILineasPresentacionTallas;
   const APersistencia: IPersistenciaPresentacionTallas;
+  const APersistenciaInline: IPersistenciaGridTallasInline;
   const ABusqueda: IBusquedaSkusTallas; ARegistro: TRegistroTallas);
 begin
   inherited Create;
   FConfig := AConfig;
   FCfgTallas := ACfgTallas;
+  FCfgTallas.Persistencia := APersistenciaInline;
   FLineas := ALineas;
   FPersistencia := APersistencia;
   FRegistro := ARegistro;

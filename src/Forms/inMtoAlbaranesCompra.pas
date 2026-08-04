@@ -46,6 +46,7 @@ uses
   inLibAplicacionArticuloCompraIntf,
   inLibArticulosAtributosIntf,
   inLibArticulosValidadorIntf,
+  inLibBusquedasCompraPersistenciaIntf,
   inLibComprasPantallaIntf,
   UniDataAlbaranesCompra, cxBlobEdit, dxShellDialogs, System.Actions,
   Vcl.ActnList, cxSplitter, inLibDocumento, inLibDocumentoIntf;
@@ -228,6 +229,7 @@ type
     FLookupAtributos: IArticulosAtributosLookup;
     FBusquedaEmpresas: IBusquedaEmpresasComprasPantalla;
     FBusquedaProveedores: IBusquedaProveedoresComprasPantalla;
+    FBusquedasArticulos: IBusquedasCompraPersistencia;
     // Guarda contra reentrada del toggle desde dsTablaGDataChangeHook
     // disparado por el Edit/Post de PersistirPreferenciaPivote (entre
     // el Edit y el set, la cabecera tiene el ESPIVOTE viejo y el hook
@@ -308,14 +310,15 @@ uses
   System.StrUtils,
   inLibFiltroUsuario,
 
-  inLibValoresAutomaticos,
+  inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   UniDataAplicacionArticuloCompra,
   inLibGridCantidad,
-  inLibColumnasDocumento, UniDataGen,
+  inLibColumnasDocumento, UniDataColumnasDocumentoRepositorio,
+  UniDataGen,
   inLibBusquedasCompra,
-  inLibValidacionDocumento,
+  inLibValidacionDocumento, UniDataValidacionDocumentoRepositorio,
   inLibPresentacionDocumento,
-  inLibComprasImpuestos,
+  inLibComprasImpuestos, UniDataImpuestosRepositorio,
   inLibAtributosPaleta,
   inLibMsgArticulos, inLibMsgCompras,
   UniDataArticulos,
@@ -326,7 +329,7 @@ uses
   inLibColumnasSku,
   // Composicion del puerto de persistencia del pivote (V2).
   UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio,
-  UniDataColumnasSkuServicios,
+  UniDataColumnasSkuServicios, UniDataModoTallas,
   UniDataComprasPantallaComposicion;
 
 {$R *.dfm}
@@ -350,7 +353,7 @@ begin
                  mtInformation, [mbOk], 0)
     else
       Result := BuscarArticuloProveedorCompra(
-        dmmAlbaranesCompra.unqryTablaG.Connection, BusquedaVisual, sPrv,
+        FBusquedasArticulos, BusquedaVisual, sPrv,
         'Búsqueda de artículos', 'frmMtoDevcArtSearch', Self);
   end;
 end;
@@ -379,7 +382,7 @@ begin
                mtInformation, [mbOk], 0)
   else
     Result := BuscarSkuArticuloCompra(
-      dmmAlbaranesCompra.unqryTablaG.Connection, BusquedaVisual, sArt,
+      FBusquedasArticulos, BusquedaVisual, sArt,
       'SKUs del artículo ' + sArt,
       'frmMtoAlbcSkuSearch', Self);
 end;
@@ -412,7 +415,8 @@ begin
     Result := PuedeActivarTallasHorizontalCompra(
       dmmAlbaranesCompra.unqryTablaG,
       dmmAlbaranesCompra.unqryAlbaranesCompraLineas,
-      dmmAlbaranesCompra.unqryTablaG.Connection,
+      CrearValidacionDocumentoLecturas(
+        dmmAlbaranesCompra.unqryTablaG.Connection),
       ConfiguracionTallasDocumento,
       AsegurarCabeceraPersistidaParaLineas,
       FPivote.ValidarPivotePosible, AMensaje);
@@ -529,6 +533,7 @@ begin
   FLookupAtributos := oServicios.Documento.LookupAtributos;
   FBusquedaEmpresas := oServicios.Documento.BusquedaEmpresas;
   FBusquedaProveedores := oServicios.Documento.BusquedaProveedores;
+  FBusquedasArticulos := oServicios.Documento.BusquedasArticulos;
   ConfigurarColumnaBusquedaDocumento(
     tvLineasAlbaran, 'CODIGO_UNIDAD_ALBCLIN',
     colLineaAlbcCODIGO_UNIDADPropertiesButtonClick,
@@ -609,6 +614,7 @@ begin
   FLookupAtributos := nil;
   FBusquedaEmpresas := nil;
   FBusquedaProveedores := nil;
+  FBusquedasArticulos := nil;
   LiberarModoYGestoresDocumento(
     FModoEntrada, FPivote, FGestorTallas);
   inherited;
@@ -661,6 +667,9 @@ begin
     oBase.AplicarContextoPivote := True;
     oBase.RegistroLog := RegistroLog;
     oConfigTallas := CrearConfigTallasDocumentoCompra(oBase);
+    oConfigTallas.Persistencia := CrearPersistenciaGridTallasInline(
+      oBase.Conexion,
+      CrearConfigPersistenciaTallasInline(oConfigTallas));
     FGestorTallas := TGestorGridTallas.Create(oConfigTallas);
     ConfigurarEventosTallasDocumento(FTallaColumns,
       TallaEditValueChangedHook, TallaValidateHook);
@@ -1128,9 +1137,10 @@ end;
 
 procedure TfrmMtoAlbaranesCompra.MostrarColumnasAtributoGlobalesAlbc;
 begin
-  MostrarColumnasAtributoGlobalesDocumento(
-    dmmAlbaranesCompra.unqryTablaG.Connection,
-    tvLineasAlbaran);
+  AplicarNombresAtributosGlobalesDocumento(tvLineasAlbaran,
+    CrearColumnasDocumentoLecturas(
+      dmmAlbaranesCompra.unqryTablaG.Connection).
+        ListarNombresAtributosGlobales);
 end;
 
 procedure TfrmMtoAlbaranesCompra.CrearColumnasHostAlbaranCompra;
@@ -1284,7 +1294,8 @@ begin
       if not (ds.State in [dsInsert, dsEdit]) then
         ds.Edit;
       ds.FieldByName('CODIGO_PRV_ALBC').AsString := sCodigo;
-      AplicarIvaExentoIntracomunitarioProveedor(ConexionPrincipal, ds,
+      AplicarIvaExentoIntracomunitarioProveedor(
+        CrearLecturasImpuestos(ConexionPrincipal), ds,
         'CODIGO_PRV_ALBC', 'ESIVA_EXENTO_INTRACOMUNITARIO_ALBC');
       dmmAlbaranesCompra.CalcularTotalesAlbaranCompra;
       ActualizarLabelProveedor;

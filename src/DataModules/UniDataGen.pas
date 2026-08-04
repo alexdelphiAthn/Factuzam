@@ -219,9 +219,10 @@ implementation
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 uses
-  Vcl.Forms, inLibData, inLibMsgComun, inLibRegistroLogNulo,
+  Vcl.Forms, UniDataAlmacenesEmpresaRepositorio,
+  inLibMsgComun, inLibRegistroLogNulo,
   inLibDatasets, inLibFiltroUsuario, inLibMtoGenAplicacion,
-  inLibValoresAutomaticos;
+  UniDataValoresAutomaticosRepositorio;
 
 {$R *.dfm}
 

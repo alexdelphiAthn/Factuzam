@@ -2,25 +2,27 @@
 {                                                                              }
 {  Módulo:       inLibGenerarTicketCaja                                        }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       26/05/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       04/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Generación e impresión de tickets para operaciones de caja no             }
-{    fiscales: Entrada de Cambio (EC) y Gastos por Caja / Retiradas (GC).      }
-{    Usa TTicketTermico (ESC/POS) igual que los tickets de venta.              }
+{    Generación de tickets no fiscales y apertura manual del cajón de Caja.    }
 {******************************************************************************}
 unit inLibGenerarTicketCaja;
 
 interface
 
 uses
-  System.SysUtils, System.Classes, Uni,
-  inLibPermisosIntf, inLibParametrosIntf, inLibPreviewTicket,
-  inLibGenerarTicketIntf;
+  System.Classes,
+  Uni,
+  inLibGenerarTicketCajaPersistenciaIntf,
+  inLibGenerarTicketIntf,
+  inLibParametrosIntf,
+  inLibPermisosIntf,
+  inLibPreviewTicket;
 
 type
   TEstadoAperturaCajon = (
@@ -33,6 +35,27 @@ type
     Mensaje: string;
     function Correcto: Boolean;
   end;
+  TModeloTicketOperacionCaja = record
+    Encontrada: Boolean;
+    Titulo: string;
+    FechaTexto: string;
+    CodigoEmpleado: string;
+    Concepto: string;
+    Importe: Currency;
+  end;
+
+function PrepararModeloTicketOperacionCaja(
+  const ALecturasTicket: ILecturasImpresionTicket;
+  const AClave: TClaveOperacionTicketCaja):
+  TModeloTicketOperacionCaja;
+
+procedure ImprimirTicketOperacionCaja(
+  const APreview: IPreviewTicket;
+  const ALecturasTicket: ILecturasImpresionTicket;
+  const AEmpresa, AAlmacen, ACaja, ANumOperacion: string;
+  const ANombreImpresora: string = 'DEBUG';
+  ARutasPDF: TStrings = nil;
+  ASoloPDF: Boolean = False); overload;
 
 procedure ImprimirTicketOperacionCaja(
   const APreview: IPreviewTicket;
@@ -41,32 +64,179 @@ procedure ImprimirTicketOperacionCaja(
   const AEmpresa, AAlmacen, ACaja, ANumOperacion: string;
   const ANombreImpresora: string = 'DEBUG';
   ARutasPDF: TStrings = nil;
-  ASoloPDF: Boolean = False);
+  ASoloPDF: Boolean = False); overload;
 
-// Apertura manual del cajon portamonedas sin venta asociada (tecla F9
-// global en cualquier ventana del programa). Comprueba el permiso
-// 'caja.abrirCajon' y manda el pulso de apertura por la impresora de
-// tickets resuelta por los parámetros de caja.
 function AbrirCajonSinVenta(
   const APermisos: IPermisosAplicacion;
   const AParametrosCaja: IParametrosCaja): TResultadoAperturaCajon;
 
-// True si hay impresora de tickets real asignada en parametros
-// (valor no vacío y distinto de 'DEBUG').
 function ImpresoraCajaAsignada(
   const AParametrosCaja: IParametrosCaja): Boolean;
 
 implementation
 
 uses
-  Data.DB, DBAccess,
-  inLibFTicket, inLibDir,
-  inLibGenerarTicket, inLibMsgCaja, inLibMsgConfiguracion,
+  System.SysUtils,
+  inLibDir,
+  inLibFTicket,
+  inLibGenerarTicket,
+  inLibMsgCaja,
+  inLibMsgConfiguracion,
   inLibMsgTickets;
+
+type
+  TContextoImpresionTicketOperacionCaja = record
+    Preview: IPreviewTicket;
+    LecturasTicket: ILecturasImpresionTicket;
+    Clave: TClaveOperacionTicketCaja;
+    NombreImpresora: string;
+    RutasPdf: TStrings;
+    SoloPdf: Boolean;
+  end;
 
 function TResultadoAperturaCajon.Correcto: Boolean;
 begin
   Result := Estado = eacAbierto;
+end;
+
+function PrepararModeloTicketOperacionCaja(
+  const ALecturasTicket: ILecturasImpresionTicket;
+  const AClave: TClaveOperacionTicketCaja):
+  TModeloTicketOperacionCaja;
+var
+  oDatos: TDatosOperacionTicketCaja;
+begin
+  Result := Default(TModeloTicketOperacionCaja);
+  if Assigned(ALecturasTicket) then
+  begin
+    oDatos := ALecturasTicket.ObtenerOperacion(AClave);
+    Result.Encontrada := oDatos.Encontrada;
+    if Result.Encontrada then
+    begin
+      Result.FechaTexto := FormatDateTime(
+        'dd/mm/yyyy hh:nn',
+        oDatos.FechaOperacion);
+      Result.CodigoEmpleado := oDatos.CodigoEmpleado;
+      Result.Concepto := oDatos.Concepto;
+      Result.Importe := oDatos.Importe;
+      if oDatos.TipoOperacion = 'EC' then
+        Result.Titulo := STicketEntradaCambio
+      else
+        Result.Titulo := STicketGastoRetiradaCaja;
+    end;
+  end;
+end;
+
+procedure EscribirContenidoTicketOperacionCaja(
+  ATicket: TTicketTermico;
+  const AContexto: TContextoImpresionTicketOperacionCaja;
+  const AModelo: TModeloTicketOperacionCaja);
+begin
+  ATicket.Inicializar;
+  ATicket.Alinear(alCentro);
+  ATicket.Negrita(True);
+  ATicket.EscribirLinea(AModelo.Titulo);
+  ATicket.Negrita(False);
+  ATicket.LineaSeparadora;
+  ATicket.Alinear(alIzquierda);
+  ATicket.TextoColumnas(STicketFecha, AModelo.FechaTexto);
+  ATicket.TextoColumnas(STicketCaja, AContexto.Clave.Caja);
+  ATicket.TextoColumnas(
+    STicketEmpleado,
+    AModelo.CodigoEmpleado);
+  ATicket.TextoColumnas(
+    STicketOperacionAbreviada,
+    AContexto.Clave.NumeroOperacion);
+  if AModelo.Concepto <> '' then
+  begin
+    ATicket.TextoColumnas(STicketConcepto, AModelo.Concepto);
+  end;
+  ATicket.LineaSeparadora;
+  ATicket.Negrita(True);
+  ATicket.TextoColumnas(
+    STicketImporte,
+    FormatFloat(',0.00', AModelo.Importe) + ' EUR');
+  ATicket.Negrita(False);
+  ATicket.LineaSeparadora;
+  ATicket.Alinear(alCentro);
+  ATicket.EscribirLinea(STicketFirma);
+  ATicket.SaltarLineas(2);
+  ATicket.LineaSeparadora('.');
+  EscribirPieTicketCaja(
+    AContexto.LecturasTicket,
+    ATicket,
+    AContexto.Clave.Empresa);
+  ATicket.SaltarLineas(1);
+  ATicket.CortarPapel;
+end;
+
+procedure ImprimirModeloTicketOperacionCaja(
+  const AContexto: TContextoImpresionTicketOperacionCaja;
+  const AModelo: TModeloTicketOperacionCaja);
+var
+  oTicket: TTicketTermico;
+  sComandosEsc: string;
+  sRutaFicheroPdf: string;
+begin
+  oTicket := TTicketTermico.Create(AContexto.NombreImpresora);
+  try
+    EscribirContenidoTicketOperacionCaja(
+      oTicket,
+      AContexto,
+      AModelo);
+    sComandosEsc := oTicket.ObtenerComandos;
+    sRutaFicheroPdf := GetUserFolderTickets + 'ticket_caja_' +
+      AContexto.Clave.NumeroOperacion + '.pdf';
+    ImprimirOPrevisualizarTicket(
+      AContexto.Preview,
+      oTicket,
+      sComandosEsc,
+      sRutaFicheroPdf,
+      AContexto.NombreImpresora,
+      AContexto.SoloPdf);
+    if Assigned(AContexto.RutasPdf) and
+       FileExists(sRutaFicheroPdf) then
+    begin
+      AContexto.RutasPdf.Add(sRutaFicheroPdf);
+    end;
+  finally
+    FreeAndNil(oTicket);
+  end;
+end;
+
+procedure ImprimirTicketOperacionCaja(
+  const APreview: IPreviewTicket;
+  const ALecturasTicket: ILecturasImpresionTicket;
+  const AEmpresa, AAlmacen, ACaja, ANumOperacion: string;
+  const ANombreImpresora: string;
+  ARutasPDF: TStrings;
+  ASoloPDF: Boolean); overload;
+var
+  oClave: TClaveOperacionTicketCaja;
+  oContexto: TContextoImpresionTicketOperacionCaja;
+  oModelo: TModeloTicketOperacionCaja;
+begin
+  oClave := Default(TClaveOperacionTicketCaja);
+  oClave.Empresa := AEmpresa;
+  oClave.Almacen := AAlmacen;
+  oClave.Caja := ACaja;
+  oClave.NumeroOperacion := ANumOperacion;
+  oModelo := PrepararModeloTicketOperacionCaja(
+    ALecturasTicket,
+    oClave);
+  if oModelo.Encontrada then
+  begin
+    oContexto := Default(TContextoImpresionTicketOperacionCaja);
+    oContexto.Preview := APreview;
+    oContexto.LecturasTicket := ALecturasTicket;
+    oContexto.Clave := oClave;
+    oContexto.NombreImpresora := ANombreImpresora;
+    oContexto.RutasPdf := ARutasPDF;
+    oContexto.SoloPdf := ASoloPDF;
+    ImprimirModeloTicketOperacionCaja(
+      oContexto,
+      oModelo);
+  end;
 end;
 
 procedure ImprimirTicketOperacionCaja(
@@ -76,99 +246,18 @@ procedure ImprimirTicketOperacionCaja(
   const AEmpresa, AAlmacen, ACaja, ANumOperacion: string;
   const ANombreImpresora: string;
   ARutasPDF: TStrings;
-  ASoloPDF: Boolean);
-var
-  Qry: TUniQuery;
-  Ticket: TTicketTermico;
-  ComandosESC, RutaFicheroPDF: string;
-  sTipo, sConcepto, sEmpleado, sFecha: string;
-  dImporte: Currency;
-  sTitulo: string;
+  ASoloPDF: Boolean); overload;
 begin
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := AConexion;
-    Qry.SQL.Text :=
-      'SELECT o.TIPO_OPERACION_OPCAJA,' +
-      '       o.FECHA_OPERACION_OPCAJA,' +
-      '       o.CODIGO_EMPLEADO_OPCAJA,' +
-      '       o.CONCEPTO_GASTO_INGRESO_OPCAJA,' +
-      '       o.IMPORTE_TOTAL_OPCAJA,' +
-      '       e.RAZON_SOCIAL_EMP' +
-      '  FROM fza_caja_operaciones o' +
-      '  LEFT JOIN fza_empresas e' +
-      '    ON e.CODIGO_EMP_EMP = o.CODIGO_EMP_OPCAJA' +
-      ' WHERE o.CODIGO_EMP_OPCAJA       = :EMP' +
-      '   AND o.CODIGO_ALM_OPCAJA       = :ALM' +
-      '   AND o.CODIGO_CAJA_OPCAJA      = :CAJA' +
-      '   AND o.NUMERO_OPERACION_OPCAJA = :OP' +
-      ' LIMIT 1';
-    Qry.ParamByName('EMP').AsString  := AEmpresa;
-    Qry.ParamByName('ALM').AsString  := AAlmacen;
-    Qry.ParamByName('CAJA').AsString := ACaja;
-    Qry.ParamByName('OP').AsString   := ANumOperacion;
-    Qry.Open;
-    if Qry.IsEmpty then
-      Exit;
-    sTipo     := Qry.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
-    sFecha    := FormatDateTime('dd/mm/yyyy hh:nn',
-                   Qry.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime);
-    sEmpleado := Qry.FieldByName('CODIGO_EMPLEADO_OPCAJA').AsString;
-    sConcepto := Qry.FieldByName('CONCEPTO_GASTO_INGRESO_OPCAJA').AsString;
-    dImporte  := Qry.FieldByName('IMPORTE_TOTAL_OPCAJA').AsCurrency;
-    if sTipo = 'EC' then
-      sTitulo := STicketEntradaCambio
-    else
-      sTitulo := STicketGastoRetiradaCaja;
-  finally
-    FreeAndNil(Qry);
-  end;
-  Ticket := TTicketTermico.Create(ANombreImpresora);
-  try
-    Ticket.Inicializar;
-    { Título }
-    Ticket.Alinear(alCentro);
-    Ticket.Negrita(True);
-    Ticket.EscribirLinea(sTitulo);
-    Ticket.Negrita(False);
-    Ticket.LineaSeparadora;
-    { Datos }
-    Ticket.Alinear(alIzquierda);
-    Ticket.TextoColumnas(STicketFecha, sFecha);
-    Ticket.TextoColumnas(STicketCaja, ACaja);
-    Ticket.TextoColumnas(STicketEmpleado, sEmpleado);
-    Ticket.TextoColumnas(
-      STicketOperacionAbreviada,
-      ANumOperacion);
-    if sConcepto <> '' then
-      Ticket.TextoColumnas(STicketConcepto, sConcepto);
-    Ticket.LineaSeparadora;
-    { Importe }
-    Ticket.Negrita(True);
-    Ticket.TextoColumnas(STicketImporte,
-      FormatFloat(',0.00', dImporte) + ' EUR');
-    Ticket.Negrita(False);
-    Ticket.LineaSeparadora;
-    { Pie }
-    Ticket.Alinear(alCentro);
-    Ticket.EscribirLinea(STicketFirma);
-    Ticket.SaltarLineas(2);
-    Ticket.LineaSeparadora('.');
-    EscribirPieTicketCaja(ALecturasTicket, Ticket, AEmpresa);
-    Ticket.SaltarLineas(1);
-    Ticket.CortarPapel;
-    { Imprimir o previsualizar }
-    ComandosESC := Ticket.ObtenerComandos;
-    RutaFicheroPDF := GetUserFolderTickets + 'ticket_caja_' +
-      ANumOperacion + '.pdf';
-    ImprimirOPrevisualizarTicket(
-      APreview, Ticket, ComandosESC, RutaFicheroPDF,
-                                 ANombreImpresora, ASoloPDF);
-    if Assigned(ARutasPDF) and FileExists(RutaFicheroPDF) then
-      ARutasPDF.Add(RutaFicheroPDF);
-  finally
-    FreeAndNil(Ticket);
-  end;
+  ImprimirTicketOperacionCaja(
+    APreview,
+    ALecturasTicket,
+    AEmpresa,
+    AAlmacen,
+    ACaja,
+    ANumOperacion,
+    ANombreImpresora,
+    ARutasPDF,
+    ASoloPDF);
 end;
 
 function ImpresoraCajaAsignada(
@@ -189,7 +278,7 @@ function AbrirCajonSinVenta(
   const APermisos: IPermisosAplicacion;
   const AParametrosCaja: IParametrosCaja): TResultadoAperturaCajon;
 var
-  Ticket: TTicketTermico;
+  oTicket: TTicketTermico;
 begin
   Result.Estado := eacSinPermiso;
   Result.Mensaje := SErrorPermisoAbrirCajon;
@@ -208,13 +297,12 @@ begin
   end
   else
   begin
-    Ticket := TTicketTermico.Create(
-      AParametrosCaja.ImpresoraCaja);
+    oTicket := TTicketTermico.Create(AParametrosCaja.ImpresoraCaja);
     try
-      Ticket.AbrirCajon;
-      Ticket.Imprimir;
+      oTicket.AbrirCajon;
+      oTicket.Imprimir;
     finally
-      FreeAndNil(Ticket);
+      FreeAndNil(oTicket);
     end;
     Result.Estado := eacAbierto;
     Result.Mensaje := '';

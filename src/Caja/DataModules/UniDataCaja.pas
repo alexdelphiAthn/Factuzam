@@ -379,8 +379,8 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibValoresAutomaticos,
-     inLibData,
+uses UniDataValoresAutomaticosRepositorio,
+     UniDataAlmacenesEmpresaRepositorio,
      inLibDevExp,
      inLibFacturas,
      inLibVerifactu,
@@ -393,6 +393,7 @@ uses inLibValoresAutomaticos,
      UniDataFacturasLecturas,
      inLibDocumentoFiscal,
      inLibLicenciaAplicacion,
+     UniDataLicenciaAplicacionRepositorio,
      inLibRectificativas,
      inLibEAN13,
      inLibMsgCaja, inLibMsgFacturas;

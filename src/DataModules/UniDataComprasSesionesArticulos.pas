@@ -44,7 +44,7 @@ uses
   Data.DB, DBAccess,
   inLibEAN13,
   inLibComprasSesionesReglas,
-  inLibValoresAutomaticos,
+  UniDataValoresAutomaticosRepositorio,
   inLibMsgCompras;
 function GenerarEAN13Local(
                            const ALecturas:

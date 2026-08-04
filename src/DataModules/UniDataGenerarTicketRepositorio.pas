@@ -12,7 +12,9 @@ function CrearLecturasImpresionTicket(
 implementation
 
 uses
-  System.SysUtils, Data.DB, DBAccess;
+  System.SysUtils, Data.DB, DBAccess,
+  inLibGenerarTicketCajaPersistenciaIntf,
+  UniDataGenerarTicketCajaRepositorio;
 
 const
   CAMPOS_PIE_TICKET_CAJA: array[0..3] of string = (
@@ -27,6 +29,7 @@ type
     ILecturasImpresionTicket)
   private
     FConexion: TUniConnection;
+    FGenerarTicketCaja: IGenerarTicketCajaPersistencia;
     function NuevaConsulta: TUniQuery;
     function CamposPieDisponibles: Boolean;
   public
@@ -37,6 +40,9 @@ type
       const ACodigoEmpleado: string): string;
     function ObtenerCodigoBarras(
       const ASerie, ANumero: string): string;
+    function ObtenerOperacion(
+      const AClave: TClaveOperacionTicketCaja):
+      TDatosOperacionTicketCaja;
   end;
 
 function CrearLecturasImpresionTicket(
@@ -49,6 +55,14 @@ constructor TLecturasImpresionTicket.Create(AConexion: TUniConnection);
 begin
   inherited Create;
   FConexion := AConexion;
+  FGenerarTicketCaja := CrearGenerarTicketCajaRepositorio(AConexion);
+end;
+
+function TLecturasImpresionTicket.ObtenerOperacion(
+  const AClave: TClaveOperacionTicketCaja):
+  TDatosOperacionTicketCaja;
+begin
+  Result := FGenerarTicketCaja.ObtenerOperacion(AClave);
 end;
 
 function TLecturasImpresionTicket.NuevaConsulta: TUniQuery;

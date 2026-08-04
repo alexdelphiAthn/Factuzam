@@ -11,7 +11,7 @@ function CrearPreparadorInformeRecibosFacturaUniDAC(
 implementation
 
 uses
-  inLibFormatoDocumento;
+  UniDataFormatoDocumentoRepositorio;
 
 type
   TPreparadorInformeRecibosFacturaUniDAC = class(
