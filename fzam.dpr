@@ -372,6 +372,8 @@ uses
     'src\DataModules\UniDataLogonRepositorio.pas',
   UniDataMovimientosAlmacenRepositorio in
     'src\DataModules\UniDataMovimientosAlmacenRepositorio.pas',
+  UniDataMovimientosAlmacenRecalculo in
+    'src\DataModules\UniDataMovimientosAlmacenRecalculo.pas',
   UniDataWizardEditarRepositorio in
     'src\DataModules\UniDataWizardEditarRepositorio.pas',
   inLibGeneradorProcesosAplicacion in

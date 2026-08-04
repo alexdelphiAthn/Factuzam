@@ -53,6 +53,7 @@ type
     FDataLink: TFieldDataLink;
     fEditing: Boolean;
     FBeginEdit: Boolean;
+    FCargandoDatos: Boolean;
     FLoadData: TNotifyEvent;
     procedure DataChange(Sender: TObject);
     procedure EditingChange(Sender: TObject);
@@ -226,7 +227,14 @@ begin
       Exit;
     end;
     if FDataLink.Field.IsBlob then
-      LoadMemo
+    begin
+      FCargandoDatos := True;
+      try
+        LoadMemo;
+      finally
+        FCargandoDatos := False;
+      end;
+    end
     else
       Text := FDataLink.Field.Text;
     if Assigned(FLoadData) then
@@ -317,7 +325,7 @@ begin
     Modified := False;
     ClearUndo;
   except
-    // Memo too large 
+    // Memo too large
     on E: EInvalidOperation do
       Lines.Text := Format('(%s)', [E.Message]);
   end;
@@ -326,7 +334,8 @@ end;
 
 procedure TCustomDBSynEdit.DoChange;
 begin
-  FDataLink.Modified;
+  if not FCargandoDatos then
+    FDataLink.Modified;
   inherited;
 end;
 

@@ -129,6 +129,8 @@ type
     function ParseTypeDefinition(AParent: TSQLElement; Flags: TParseTypeFlags)
       : TSQLTypeDefinition;
     function ParseTableFieldDef(AParent: TSQLElement): TSQLTableFieldDef;
+    function ParseTableKeyConstraint(AParent: TSQLElement)
+      : TSQLTableConstraintDef;
     function ParseTableConstraint(AParent: TSQLElement): TSQLTableConstraintDef;
     function ParseCreateDomainStatement(AParent: TSQLElement; IsAlter: Boolean)
       : TSQLCreateOrAlterStatement;
@@ -201,6 +203,7 @@ type
     // EXECUTE parsing
     function ParseExecuteProcedureStatement(AParent: TSQLElement)
       : TSQLExecuteProcedureStatement;
+    function ParseCallStatement(AParent: TSQLElement): TSQLStatement;
     // Stored procedure parsing
     function ParseAssignStatement(AParent: TSQLElement): TSQLAssignStatement;
     function ParseExceptionStatement(AParent: TSQLElement)
@@ -315,10 +318,32 @@ type
     function GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer = 0): TSQLStringType; override;
   end;
 
+  TSQLMariaDBCallStatement = class(TSQLStatement)
+  private
+    FCallExpression: TSQLExpression;
+  public
+    destructor Destroy; override;
+    function GetAsSQL(Options: TSQLFormatOptions;
+      AIndent: Integer = 0): TSQLStringType; override;
+    property CallExpression: TSQLExpression
+      read FCallExpression write FCallExpression;
+  end;
+
   TSQLMariaDBTableFieldDef = class(TSQLTableFieldDef)
   public
     RawModifiers: string;
     function GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer = 0): TSQLStringType; override;
+  end;
+
+  TSQLMariaDBKeyConstraintDef = class(TSQLTableFieldsConstraintDef)
+  private
+    FIndexName: TSQLIdentifierName;
+  public
+    destructor Destroy; override;
+    function GetAsSQL(Options: TSQLFormatOptions;
+      AIndent: Integer = 0): TSQLStringType; override;
+    property IndexName: TSQLIdentifierName
+      read FIndexName write FIndexName;
   end;
 
 function TSQLStartTransactionStatement.GetAsSQL(Options: TSQLFormatOptions; AIndent: Integer = 0): TSQLStringType;
@@ -333,6 +358,35 @@ begin
   Result := inherited GetAsSQL(Options, AIndent);
   if RawModifiers <> '' then
     Result := Result + ' ' + Trim(RawModifiers);
+end;
+
+destructor TSQLMariaDBKeyConstraintDef.Destroy;
+begin
+  FreeAndNil(FIndexName);
+  inherited Destroy;
+end;
+
+function TSQLMariaDBKeyConstraintDef.GetAsSQL(Options: TSQLFormatOptions;
+  AIndent: Integer): TSQLStringType;
+begin
+  Result := SQLKeyWord('KEY', Options);
+  if Assigned(FIndexName) then
+    Result := Result + ' ' + FIndexName.GetAsSQL(Options, AIndent);
+  Result := Result + ' ' + FieldListSQL(Options, AIndent);
+end;
+
+destructor TSQLMariaDBCallStatement.Destroy;
+begin
+  FreeAndNil(FCallExpression);
+  inherited Destroy;
+end;
+
+function TSQLMariaDBCallStatement.GetAsSQL(Options: TSQLFormatOptions;
+  AIndent: Integer): TSQLStringType;
+begin
+  Result := SQLKeyWord('CALL ', Options);
+  if Assigned(FCallExpression) then
+    Result := Result + FCallExpression.GetAsSQL(Options, AIndent);
 end;
 
 Resourcestring
@@ -453,6 +507,7 @@ var
   J : TSQLJoinTableReference;
   PCount: Integer;
   SubQueryStr: string;
+  TableName: string;
 begin
   if (CurrentToken = tsqlBraceOpen) then
   begin
@@ -507,8 +562,16 @@ begin
     Expect(tsqlIdentifier);
     T := TSQLSimpleTablereference(CreateElement(TSQLSimpleTablereference, AParent));
     Result := T;
-    T.ObjectName := CreateIdentifier(T, CurrentTokenString);
+    TableName := CurrentTokenString;
     GetNextToken;
+    while CurrentToken = tsqlDot do
+    begin
+      GetNextToken;
+      Expect(tsqlIdentifier);
+      TableName := TableName + '.' + CurrentTokenString;
+      GetNextToken;
+    end;
+    T.ObjectName := CreateIdentifier(T, TableName);
     if CurrentToken = tsqlBraceOpen then
     begin
       T.Params := ParseValueList(AParent, [eoParamValue]);
@@ -615,8 +678,10 @@ begin
         GetNextToken;
       end;
     end;
-    Expect([tsqlComma, tsqlFrom]);
-  until (CurrentToken = tsqlFrom);
+    Expect([tsqlComma, tsqlFrom, tsqlWhere, tsqlGroup, tsqlHaving,
+      tsqlUnion, tsqlPlan, tsqlOrder, tsqlFor, tsqlInto, tsqlSemicolon,
+      tsqlEOF, tsqlBraceClose]);
+  until (CurrentToken <> tsqlComma);
 end;
 
 procedure TSQLParser.ParseGroupBy(AParent : TSQLSelectStatement;
@@ -818,7 +883,8 @@ begin
       Result.TransactionName := CreateIdentifier(Result, CurrentTokenString);
     end;
     ParseSelectFieldList(Result, Result.Fields, sfSingleTon in Flags);
-    ParseFromClause(Result, Result.Tables);
+    if CurrentToken = tsqlFrom then
+      ParseFromClause(Result, Result.Tables);
     if CurrentToken = tsqlWhere then
     begin
       GetNextToken;
@@ -979,7 +1045,8 @@ begin
               if PCount > 0 then
               begin
                 if CurrentToken = tsqlString then
-                  MDBInsert.ExtraValues := MDBInsert.ExtraValues + '''' + CurrentTokenString + ''''
+                  MDBInsert.ExtraValues := MDBInsert.ExtraValues +
+                    SQLFormatString(CurrentTokenString, [])
                 else
                   MDBInsert.ExtraValues := MDBInsert.ExtraValues + CurrentTokenString;
                 GetNextToken;
@@ -1017,7 +1084,8 @@ begin
       while not (CurrentToken in [tsqlEOF, tsqlSemicolon]) do
       begin
         if CurrentToken = tsqlString then
-          MDBInsert.OnDuplicateKey := MDBInsert.OnDuplicateKey + '''' + CurrentTokenString + ''''
+          MDBInsert.OnDuplicateKey := MDBInsert.OnDuplicateKey +
+            SQLFormatString(CurrentTokenString, [])
         else
           MDBInsert.OnDuplicateKey := MDBInsert.OnDuplicateKey + CurrentTokenString;
 
@@ -1070,8 +1138,6 @@ begin
   Result := MDBField;
   try
     Result.FieldName := CreateIdentifier(Result, CurrentTokenString);
-    GetNextToken;
-
     if PeekNextToken = tsqlComputed then
     begin
       GetNextToken;
@@ -1116,7 +1182,8 @@ begin
 
         // Reconstruir literales o cadenas
         if CurrentToken = tsqlString then
-          MDBField.RawModifiers := MDBField.RawModifiers + '''' + CurrentTokenString + ''''
+          MDBField.RawModifiers := MDBField.RawModifiers +
+            SQLFormatString(CurrentTokenString, [])
         else
           MDBField.RawModifiers := MDBField.RawModifiers + CurrentTokenString;
 
@@ -1201,6 +1268,30 @@ begin
   end;
 end;
 
+function TSQLParser.ParseTableKeyConstraint(AParent: TSQLElement)
+  : TSQLTableConstraintDef;
+var
+  K: TSQLMariaDBKeyConstraintDef;
+begin
+  Expect([tsqlKey, tsqlIndex]);
+  K := TSQLMariaDBKeyConstraintDef(
+    CreateElement(TSQLMariaDBKeyConstraintDef, AParent));
+  Result := K;
+  try
+    GetNextToken;
+    if CurrentToken = tsqlIdentifier then
+    begin
+      K.IndexName := CreateIdentifier(K, CurrentTokenString);
+      GetNextToken;
+    end;
+    Consume(tsqlBraceOpen);
+    ParseIdentifierList(K, K.FieldList);
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
+end;
+
 function TSQLParser.ParseCreateTableStatement(AParent: TSQLElement): TSQLCreateOrAlterStatement;
 var
   C  : TSQLMariaDBCreateTableStatement; // CAMBIO: Usamos nuestra clase custom
@@ -1240,9 +1331,15 @@ begin
           begin
             C.Constraints.Add(ParseTableConstraint(C));
             HC := True;
+          end;
+        tsqlKey, tsqlIndex:
+          begin
+            C.Constraints.Add(ParseTableKeyConstraint(C));
+            HC := True;
           end
       else
-        UnexpectedToken([tsqlIdentifier, tsqlCheck, tsqlConstraint, tsqlForeign, tsqlPrimary, tsqlUnique]);
+        UnexpectedToken([tsqlIdentifier, tsqlCheck, tsqlConstraint,
+          tsqlForeign, tsqlPrimary, tsqlUnique, tsqlKey, tsqlIndex]);
       end;
       Expect([tsqlBraceClose, tsqlComma]);
     until (CurrentToken = tsqlBraceClose);
@@ -1250,7 +1347,8 @@ begin
     while not (CurrentToken in [tsqlEOF, tsqlSemicolon]) do
     begin
       if CurrentToken = tsqlString then
-        C.TableOptions := C.TableOptions + '''' + CurrentTokenString + ''' '
+        C.TableOptions := C.TableOptions +
+          SQLFormatString(CurrentTokenString, []) + ' '
       else
         C.TableOptions := C.TableOptions + CurrentTokenString + ' ';
       GetNextToken;
@@ -1392,7 +1490,8 @@ begin
         while not (CurrentToken in [tsqlEOF, tsqlSemicolon, tsqlComma]) do
         begin
           if CurrentToken = tsqlString then
-            RawOp.RawText := RawOp.RawText + ' ''' + CurrentTokenString + ''''
+            RawOp.RawText := RawOp.RawText + ' ' +
+              SQLFormatString(CurrentTokenString, [])
           else
             RawOp.RawText := RawOp.RawText + ' ' + CurrentTokenString;
           GetNextToken;
@@ -2297,7 +2396,7 @@ begin
           while not (CurrentToken in [tsqlBraceClose, tsqlEOF]) do
           begin
             if CurrentToken = tsqlString then
-              TN := TN + '''' + CurrentTokenString + ''''
+              TN := TN + SQLFormatString(CurrentTokenString, [])
             else if CurrentToken = tsqlComma then
               TN := TN + ', '
             else
@@ -2502,7 +2601,8 @@ begin
     tsqlFloatNumber:
       begin
         Result := TSQLLiteral(CreateElement(TSQLFloatLiteral, AParent));
-        TSQLFloatLiteral(Result).Value := StrToFloat(CurrentTokenString);
+        TSQLFloatLiteral(Result).Value := StrToFloat(
+          CurrentTokenString, TFormatSettings.Invariant);
       end;
     tsqlNull :
       Result := TSQLLiteral(CreateElement(TSQLNullLiteral, AParent));
@@ -3105,7 +3205,7 @@ begin
          (PreviousToken <> tsqlDot) then
         N := N + ' ';
       if CurrentToken = tsqlString then
-        N := N + '''' + CurrentTokenString + ''''
+        N := N + SQLFormatString(CurrentTokenString, [])
       else
         N := N + CurrentTokenString;
       GetNextToken;
@@ -3289,7 +3389,8 @@ begin
       // tsqlLeft / tsqlRight son palabras reservadas (LEFT/RIGHT JOIN) pero
       // tambien funciones de cadena MySQL LEFT(str,n) / RIGHT(str,n). En una
       // expresion solo pueden ser la funcion, asi que las tratamos como tal.
-      tsqlIdentifier, tsqlIf, tsqlLeft, tsqlRight, tsqlDate:
+      tsqlIdentifier, tsqlIf, tsqlLeft, tsqlRight, tsqlDate,
+        tsqlDatabase:
         begin
           if CurrentToken = tsqlIf then
             N := 'IF'
@@ -4065,6 +4166,27 @@ begin
   end;
 end;
 
+function TSQLParser.ParseCallStatement(AParent: TSQLElement): TSQLStatement;
+var
+  C: TSQLMariaDBCallStatement;
+  N: string;
+begin
+  C := TSQLMariaDBCallStatement(
+    CreateElement(TSQLMariaDBCallStatement, AParent));
+  Result := C;
+  try
+    GetNextToken;
+    Expect(tsqlIdentifier);
+    N := CurrentTokenString;
+    GetNextToken;
+    Expect(tsqlBraceOpen);
+    C.CallExpression := ParseRawFunctionCall(C, N);
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
+end;
+
 function TSQLParser.ParseSetStatement(AParent: TSQLElement): TSQLStatement;
 var
   Raw: TSQLRawStatement;
@@ -4080,7 +4202,8 @@ begin
     while not (CurrentToken in [tsqlEOF, tsqlSemicolon]) do
     begin
       if CurrentToken = tsqlString then
-        Raw.RawText := Raw.RawText + ' ''' + CurrentTokenString + ''''
+        Raw.RawText := Raw.RawText + ' ' +
+          SQLFormatString(CurrentTokenString, [])
       else
         Raw.RawText := Raw.RawText + ' ' + CurrentTokenString;
       GetNextToken;
@@ -4645,7 +4768,7 @@ var
       R.RawText := R.RawText + ' ';
 
     if CurrentToken = tsqlString then
-      R.RawText := R.RawText + '''' + CurrentTokenString + ''''
+      R.RawText := R.RawText + SQLFormatString(CurrentTokenString, [])
     else
       R.RawText := R.RawText + CurrentTokenString;
 
@@ -4820,7 +4943,7 @@ var
     end;
 
     if CurrentToken = tsqlString then
-      Result := Result + '''' + CurrentTokenString + ''''
+      Result := Result + SQLFormatString(CurrentTokenString, [])
     else
       Result := Result + CurrentTokenString;
 
@@ -5154,7 +5277,8 @@ begin
           begin
             if CurrentToken = tsqlString then
               TSQLRawStatement(Result).RawText :=
-                TSQLRawStatement(Result).RawText + ' ''' + CurrentTokenString + ''''
+                TSQLRawStatement(Result).RawText + ' ' +
+                SQLFormatString(CurrentTokenString, [])
             else
               TSQLRawStatement(Result).RawText :=
                 TSQLRawStatement(Result).RawText + ' ' + CurrentTokenString;
@@ -5172,7 +5296,9 @@ begin
       Result := ParseRevokeStatement(nil);
     tsqlIdentifier:
       begin
-        if SameText(CurrentTokenString, 'START') then
+        if SameText(CurrentTokenString, 'CALL') then
+          Result := ParseCallStatement(nil)
+        else if SameText(CurrentTokenString, 'START') then
         begin
           GetNextToken; // Pasamos el token 'START'
           if (CurrentToken = tsqlTransaction) or
@@ -5206,7 +5332,9 @@ begin
           while not (CurrentToken in [tsqlEOF, tsqlSemicolon]) do
           begin
             if CurrentToken = tsqlString then
-              TSQLRawStatement(Result).RawText := TSQLRawStatement(Result).RawText + ' ''' + CurrentTokenString + ''''
+              TSQLRawStatement(Result).RawText :=
+                TSQLRawStatement(Result).RawText + ' ' +
+                SQLFormatString(CurrentTokenString, [])
             else
               TSQLRawStatement(Result).RawText := TSQLRawStatement(Result).RawText + ' ' + CurrentTokenString;
             GetNextToken;

@@ -554,8 +554,18 @@
                   object tvLineasPMP_NUEVO: TcxGridDBColumn
                     Caption = 'PMP nuevo'
                     DataBinding.FieldName = 'PRECIO_MEDIO_NUEVO_INVLIN'
+                    PropertiesClassName = 'TcxTextEditProperties'
+                    Properties.OnValidate = tvLineasUdsFisicasPropertiesValidate
                     HeaderAlignmentHorz = taRightJustify
                     Width = 128
+                  end
+                  object tvLineasPMP_CORREGIDO: TcxGridDBColumn
+                    Caption = 'PMP manual'
+                    DataBinding.FieldName = 'ESPRECIO_MEDIO_CORREGIDO_INVLIN'
+                    PropertiesClassName = 'TcxCheckBoxProperties'
+                    Properties.ValueChecked = 'S'
+                    Properties.ValueUnchecked = 'N'
+                    Width = 90
                   end
                   object tvLineasDIF_UNIDADES: TcxGridDBColumn
                     Caption = 'Dif. uds.'

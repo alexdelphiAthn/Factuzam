@@ -103,6 +103,7 @@ begin
           Datos.Sku := Linea.Sku;
           Datos.Articulo := Linea.Articulo;
           Datos.Cantidad := Linea.Cantidad;
+          Datos.Fecha := ASolicitud.Fecha;
           Datos.Usuario := ASolicitud.Usuario;
           Datos.NumeroOperacion := ASolicitud.NumeroOperacion;
           Datos.Caja := ASolicitud.Caja;
@@ -122,6 +123,11 @@ begin
         end;
       end;
     end;
+    if Result > 0 then
+      FRepositorio.RecalcularDocumento(
+        FEstrategiaDocumento.TipoDocumentoMovimientoStock,
+        ASolicitud.Serie,
+        ASolicitud.Numero);
     if TransaccionPropia then
       FConexion.Commit;
   except

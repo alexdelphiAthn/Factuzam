@@ -134,7 +134,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsgCaja;
+  inLibMsgCaja, UniDataMovimientosAlmacenRecalculo;
 
 constructor TdmTraspaso.Create(
   AOwner: TComponent;
@@ -703,6 +703,21 @@ begin
       end;
       if iLinea = 0 then
         raise EValidacionTraspaso.Create(SErrorLineasTraspasoNoDisponibles);
+      RecalcularMovimientosDocumento(
+        FConexion, sTipoDoc, sSerieDoc, sNumeroDoc);
+      QryTrx.SQL.Text :=
+        'SELECT IFNULL(SUM(TOTAL_COSTE_MOV), 0) AS TOTAL ' +
+        '  FROM fza_movimientos_almacen ' +
+        ' WHERE TIPO_DOC_MOV = :TIPO ' +
+        '   AND SERIE_DOC_MOV = :SERIE ' +
+        '   AND NUMERO_DOC_MOV = :NUMERO ' +
+        '   AND TIPO_MOV = ''S''';
+      QryTrx.ParamByName('TIPO').AsString := sTipoDoc;
+      QryTrx.ParamByName('SERIE').AsString := sSerieDoc;
+      QryTrx.ParamByName('NUMERO').AsString := sNumeroDoc;
+      QryTrx.Open;
+      cTotal := QryTrx.FieldByName('TOTAL').AsCurrency;
+      QryTrx.Close;
       // Operación de caja del traspaso (cabecera del documento). Si atiende
       // una solicitud, se enlaza por SERIE/NUMERO_REF_ORIGEN.
       InsertarOperacionCaja(QryTrx, sEmpresa, sAlmacenOrigen, sCaja,

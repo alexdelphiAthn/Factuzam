@@ -81,7 +81,7 @@ type
 // ClearItems del contrato de entrada.
 procedure CrearColumnasDocumentoInventario(
   AVista: TcxGridDBTableView;
-  AValidarRecuento: TcxEditValidateEvent);
+  AValidarEdicion: TcxEditValidateEvent);
 
 implementation
 
@@ -89,6 +89,7 @@ uses
   System.SysUtils,
   System.Classes,
   cxGraphics,
+  cxCheckBox,
   cxTextEdit,
   inLibInventariosPresentacion;
 
@@ -111,9 +112,11 @@ end;
 
 procedure CrearColumnasDocumentoInventario(
   AVista: TcxGridDBTableView;
-  AValidarRecuento: TcxEditValidateEvent);
+  AValidarEdicion: TcxEditValidateEvent);
 var
   oDescripcion: TcxGridDBColumn;
+  oPmp: TcxGridDBColumn;
+  oPmpCorregido: TcxGridDBColumn;
   oRecuento: TcxGridDBColumn;
 begin
   oDescripcion := CrearColumnaDocumentoInventario(AVista,
@@ -125,11 +128,18 @@ begin
     'Recuento', 'CANTIDAD_FISICA_INVLIN', 90, True);
   oRecuento.PropertiesClass := TcxTextEditProperties;
   TcxTextEditProperties(oRecuento.Properties).OnValidate :=
-    AValidarRecuento;
+    AValidarEdicion;
   CrearColumnaDocumentoInventario(AVista,
     'PMP actual', 'PRECIO_MEDIO_INVLIN', 85, False);
-  CrearColumnaDocumentoInventario(AVista,
+  oPmp := CrearColumnaDocumentoInventario(AVista,
     'PMP nuevo', 'PRECIO_MEDIO_NUEVO_INVLIN', 85, True);
+  oPmp.PropertiesClass := TcxTextEditProperties;
+  TcxTextEditProperties(oPmp.Properties).OnValidate := AValidarEdicion;
+  oPmpCorregido := CrearColumnaDocumentoInventario(AVista,
+    'PMP manual', 'ESPRECIO_MEDIO_CORREGIDO_INVLIN', 75, True);
+  oPmpCorregido.PropertiesClass := TcxCheckBoxProperties;
+  TcxCheckBoxProperties(oPmpCorregido.Properties).ValueChecked := 'S';
+  TcxCheckBoxProperties(oPmpCorregido.Properties).ValueUnchecked := 'N';
   CrearColumnaDocumentoInventario(AVista,
     'Dif. uds.', 'CANTIDAD_DIFERENCIA_INVLIN', 80, False);
   CrearColumnaDocumentoInventario(AVista,

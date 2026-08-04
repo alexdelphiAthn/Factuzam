@@ -105,6 +105,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_facturas_compra_lineas`         | `FACCLIN` |
 | `fza_facturas_consolidaciones`       | `FACCON`  |
 | `fza_facturas_lineas`                | `FACLIN`  |
+| `fza_facturas_operaciones_caja`      | `FACOP`   |
 | `fza_facturas_relaciones`            | `FACREL`  |
 | `fza_facturas_pagos`                 | `FACPAG`  |
 | `fza_familias_atributos`             | `FA`      |
@@ -128,6 +129,8 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_pedidos_mensajes`               | `PEDMSG`  |
 | `fza_propiedades`                    | `PROP`    |
 | `fza_propiedades_valores`            | `PV`      |
+| `fza_proformas_caja`                 | `PROCAJ`  |
+| `fza_proformas_caja_lineas`          | `PROCLIN` |
 | `fza_proveedores`                    | `PRV`     |
 | `fza_proveedores_familias`           | `PF`      |
 | `fza_proveedores_familias_conjuntos` | `PFC`     |

@@ -25,7 +25,8 @@ function CrearPersistenciaFacturasUniDAC(
 implementation
 
 uses
-  System.SysUtils, System.Hash, System.IOUtils, Data.DB;
+  System.SysUtils, System.Hash, System.IOUtils, Data.DB,
+  UniDataMovimientosAlmacenRecalculo;
 
 type
   TPersistenciaFacturasUniDAC = class(
@@ -94,6 +95,8 @@ type
     procedure ActualizarLineaMovimiento(
       const ASerie, ANumero, ALinea, ANumeroMovimiento,
         AUsuario: string);
+    procedure RecalcularDocumento(
+      const ATipo, ASerie, ANumero: string);
     { IRepositorioPdfFactura }
     function GuardarPdf(
       const ASerie, ANumero, ARutaPdf, AFormato,
@@ -369,7 +372,7 @@ begin
     Qry.SQL.Text :=
       'SELECT FASE_FAC, TIPO_FAC, NIF_CLIENTE_FAC, ' +
       '       CODIGO_EMP_FAC, CODIGO_CLI_FAC, CODIGO_CAJA_FAC, ' +
-      '       NUMERO_OPERACION_FAC, ESMUEVE_STOCK_FAC, ' +
+      '       NUMERO_OPERACION_FAC, FECHA_FAC, ESMUEVE_STOCK_FAC, ' +
       '       (SELECT COUNT(*) ' +
       '          FROM fza_facturas_lineas l ' +
       '         WHERE l.SERIE_FAC_FACLIN = :serie_lineas ' +
@@ -397,6 +400,7 @@ begin
       Result.Caja := Qry.FieldByName('CODIGO_CAJA_FAC').AsString;
       Result.NumeroOperacion :=
         Qry.FieldByName('NUMERO_OPERACION_FAC').AsString;
+      Result.Fecha := Qry.FieldByName('FECHA_FAC').AsDateTime;
       Result.MueveStock := SameText(
         Qry.FieldByName('ESMUEVE_STOCK_FAC').AsString,
         'S');
@@ -648,6 +652,7 @@ end;
 procedure TPersistenciaFacturasUniDAC.InsertarMovimiento(
   const ADatos: TInsercionMovimientoFactura);
 var
+  QryFecha: TUniQuery;
   Procedimiento: TUniStoredProc;
 begin
   Procedimiento := TUniStoredProc.Create(nil);
@@ -770,9 +775,31 @@ begin
     Procedimiento.ParamByName('p_CODARTICULO').AsString :=
       ADatos.Articulo;
     Procedimiento.ExecProc;
+    if ADatos.Fecha > 0 then
+    begin
+      QryFecha := NuevaConsulta;
+      try
+        QryFecha.SQL.Text :=
+          'UPDATE fza_movimientos_almacen ' +
+          '   SET FECHA_MOV = :fecha ' +
+          ' WHERE NUMERO_MOV = :numero';
+        QryFecha.ParamByName('fecha').AsDateTime := ADatos.Fecha;
+        QryFecha.ParamByName('numero').AsString :=
+          ADatos.NumeroMovimiento;
+        QryFecha.ExecSQL;
+      finally
+        FreeAndNil(QryFecha);
+      end;
+    end;
   finally
     FreeAndNil(Procedimiento);
   end;
+end;
+
+procedure TPersistenciaFacturasUniDAC.RecalcularDocumento(
+  const ATipo, ASerie, ANumero: string);
+begin
+  RecalcularMovimientosDocumento(FConexion, ATipo, ASerie, ANumero);
 end;
 
 procedure TPersistenciaFacturasUniDAC.ActualizarLineaMovimiento(

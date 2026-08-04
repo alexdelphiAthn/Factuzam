@@ -2239,8 +2239,7 @@ end;
 function TSQLFloatLiteral.GetAsSQL(Options: TSQLFormatOptions;
   AIndent: Integer = 0): TSQLStringType;
 begin
-  // Needs improvement.
-  Result := FloatToStr(FValue);
+  Result := FloatToStr(FValue, TFormatSettings.Invariant);
 end;
 
 { TSQLStringElement }
@@ -4058,7 +4057,7 @@ begin
     Result :=
       SQLKeyWord('DELIMITER $$', Options) + SlineBreak + SlineBreak +
       Result + SlineBreak + FMariaDBBodyText + ' $$' + SlineBreak + SlineBreak +
-      SQLKeyWord('DELIMITER', Options);
+      SQLKeyWord('DELIMITER ', Options);
   end
   else
   begin

@@ -150,7 +150,8 @@ uses
   UniDataContadorLineasRepositorio, inLibData,
   UniDataAlmacenesEmpresaRepositorio,
   inLibMsgArticulos, inLibMsgFacturas, inLibMsgVentas,
-  inLibSqlSeguro, inLibDocumento, inLibDocumentoIntf;
+  inLibSqlSeguro, inLibDocumento, inLibDocumentoIntf,
+  UniDataMovimientosAlmacenRecalculo;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -2117,7 +2118,6 @@ function TdmAlbaranes.GenerarMovimientosSalida: Integer;
 var
   qLineas: TUniQuery;
   qExiste: TUniQuery;
-  qFechaMov: TUniQuery;
   Procedimiento: TUniStoredProc;
   sNumeroAlb, sSerieAlb, sEmpresa, sCliente: string;
   sAlmacenCabecera: string;
@@ -2145,7 +2145,6 @@ begin
 
   qLineas := TUniQuery.Create(nil);
   qExiste := TUniQuery.Create(nil);
-  qFechaMov := TUniQuery.Create(nil);
   try
     qLineas.Connection := unqryTablaG.Connection;
     qLineas.SQL.Text :=
@@ -2169,12 +2168,6 @@ begin
       '   AND LINEA_MOV      = :pLIN';
     qExiste.ParamByName('pTIPODOC').AsString :=
       EstrategiaAlbaranVenta.TipoDocumentoMovimientoStock;
-    qFechaMov.Connection := unqryTablaG.Connection;
-    qFechaMov.SQL.Text :=
-      'UPDATE fza_movimientos_almacen ' +
-      '   SET FECHA_MOV = :pFECHA ' +
-      ' WHERE NUMERO_MOV = :pNUMMOV';
-
     qLineas.First;
     while not qLineas.Eof do
     begin
@@ -2276,9 +2269,6 @@ begin
           Procedimiento.ParamByName('p_CODARTICULO').AsString :=
             sArticulo;
           Procedimiento.ExecProc;
-          qFechaMov.ParamByName('pFECHA').AsDateTime := dFechaAlb;
-          qFechaMov.ParamByName('pNUMMOV').AsString := sNumeroMov;
-          qFechaMov.ExecSQL;
           Inc(Result);
         end;
         qExiste.Close;
@@ -2294,8 +2284,15 @@ begin
   finally
     FreeAndNil(qLineas);
     FreeAndNil(qExiste);
-    FreeAndNil(qFechaMov);
   end;
+
+  if Result > 0 then
+    FecharYRecalcularMovimientosDocumento(
+      unqryTablaG.Connection,
+      EstrategiaAlbaranVenta.TipoDocumentoMovimientoStock,
+      sSerieAlb,
+      sNumeroAlb,
+      dFechaAlb);
 
   // Refrescar el grid de movimientos si está abierto.
   if unqryMovimientosAlb.Active then

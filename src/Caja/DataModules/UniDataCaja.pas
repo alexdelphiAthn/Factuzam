@@ -398,6 +398,7 @@ uses UniDataValoresAutomaticosRepositorio,
      inLibDocumentoFiscal,
      inLibLicenciaAplicacion,
      UniDataLicenciaAplicacionRepositorio,
+     UniDataMovimientosAlmacenRecalculo,
      inLibRectificativas,
      inLibEAN13,
      inLibMsgCaja, inLibMsgFacturas;
@@ -2048,6 +2049,10 @@ begin
       SincronizarContadorLineas;
       RegistrarTotalesVenta;
       GenerarTraspasoAutomaticoDevolucion;
+      if FGenerarMovimientos and (Trim(FNumeroOperacion) <> '') then
+        RecalcularMovimientosOperacion(
+          FDataModule.FConexion,
+          FNumeroOperacion);
       RegistrarFiscalmente;
       RegistrarFormasPago;
       RegistrarValesRecogidos;
@@ -2281,6 +2286,8 @@ begin
         FLineasTraspasoDev[i].Articulo, FFechaOperacion);
       cTotal := cTotal + cCoste * FLineasTraspasoDev[i].Cantidad;
     end;
+    RecalcularMovimientosDocumento(FDataModule.FConexion, sTipoDoc,
+      sSerieDoc, sNumeroDoc);
     // Operación del traspaso: registrada en el origen con contra el
     // almacén actual (misma convención que el traspaso manual F3)
     FDataModule.InsertarOperacionCaja(

@@ -117,6 +117,7 @@ begin
   Result.Cliente := ADatos.Cliente;
   Result.Caja := ADatos.Caja;
   Result.NumeroOperacion := ADatos.NumeroOperacion;
+  Result.Fecha := ADatos.Fecha;
   Result.Usuario := AUsuario;
 end;
 

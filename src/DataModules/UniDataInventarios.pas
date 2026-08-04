@@ -49,6 +49,7 @@ type
     cdsLineasCANTIDAD_DIFERENCIA_INVENTARIO_LINEA: TFloatField;
     cdsLineasPRECIO_MEDIO_INVENTARIO_LINEA: TFloatField;
     cdsLineasPRECIO_MEDIO_NUEVO_INVENTARIO_LINEA: TFloatField;
+    cdsLineasESPRECIO_MEDIO_CORREGIDO_INVLIN: TWideStringField;
     cdsLineasTOTAL_COSTE_DIFERENCIA_LINEA: TFloatField;
     cdsLineasFECHA_RECUENTO_INVENTARIO_LINEA: TDateTimeField;
     // Conjunto pivotado en tallas horizontal (0 = sin pivote); columna
@@ -368,6 +369,8 @@ begin
     '  PRECIO_MEDIO_INVLIN            = :PRECIO_MEDIO_INVLIN,' + sLineBreak +
     '  PRECIO_MEDIO_NUEVO_INVLIN      = :PRECIO_MEDIO_NUEVO_INVLIN,'
       + sLineBreak +
+    '  ESPRECIO_MEDIO_CORREGIDO_INVLIN = ' +
+    ':ESPRECIO_MEDIO_CORREGIDO_INVLIN,' + sLineBreak +
     '  TOTAL_COSTE_DIFERENCIA_INVLIN  = :TOTAL_COSTE_DIFERENCIA_INVLIN,'
       + sLineBreak +
     '  FECHA_RECUENTO_INVLIN          = :FECHA_RECUENTO_INVLIN,' + sLineBreak +
@@ -907,6 +910,8 @@ begin
   DataSet.FieldByName('CANTIDAD_DIFERENCIA_INVLIN').AsCurrency := 0;
   DataSet.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency        := 0;
   DataSet.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency  := 0;
+  DataSet.FieldByName(
+    'ESPRECIO_MEDIO_CORREGIDO_INVLIN').AsString := 'N';
   DataSet.FieldByName('FECHA_RECUENTO_INVLIN').AsDateTime      :=
     FechaRecuentoPorDefecto;
   DataSet.FieldByName('NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger        := 0;

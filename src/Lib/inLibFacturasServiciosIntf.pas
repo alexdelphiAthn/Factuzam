@@ -180,6 +180,7 @@ type
     Cliente: string;
     Caja: string;
     NumeroOperacion: string;
+    Fecha: TDateTime;
     Usuario: string;
   end;
   IServicioMovimientosFactura = interface

@@ -44,7 +44,7 @@ implementation
 uses
   System.SysUtils, Data.DB, DBAccess, inLibDocumento,
   inLibDocumentoIntf, UniDataValoresAutomaticosRepositorio,
-  inLibMsgCompras;
+  inLibMsgCompras, UniDataMovimientosAlmacenRecalculo;
 type
   TMovimientosDevolucionCompraUniDAC = class(
     TInterfacedObject,
@@ -69,17 +69,19 @@ end;
 // llevan almacen propio).
 procedure LeerCabeceraDevolucion(AConn: TUniConnection;
                               const ASerieDevc, ANumDevc: string;
-                              out ACodigoEmp, ACodigoAlmCab: string);
+                              out ACodigoEmp, ACodigoAlmCab: string;
+                              out AFechaDevc: TDateTime);
 var
   q: TUniQuery;
 begin
   ACodigoEmp    := '';
   ACodigoAlmCab := '';
+  AFechaDevc := Date;
   q := TUniQuery.Create(nil);
   try
     q.Connection := AConn;
     q.SQL.Text :=
-      'SELECT CODIGO_EMP_DEVC, CODIGO_ALM_DEVC ' +
+      'SELECT CODIGO_EMP_DEVC, CODIGO_ALM_DEVC, FECHA_DEVC ' +
       '  FROM fza_devoluciones_compra ' +
       ' WHERE SERIE_DEVC = :s AND NUMERO_DEVC = :n';
     q.ParamByName('s').AsString := ASerieDevc;
@@ -91,6 +93,8 @@ begin
         [ASerieDevc, ANumDevc]);
     ACodigoEmp    := q.FieldByName('CODIGO_EMP_DEVC').AsString;
     ACodigoAlmCab := q.FieldByName('CODIGO_ALM_DEVC').AsString;
+    if not q.FieldByName('FECHA_DEVC').IsNull then
+      AFechaDevc := q.FieldByName('FECHA_DEVC').AsDateTime;
   finally
     FreeAndNil(q);
   end;
@@ -104,13 +108,15 @@ var
   sCodigoEmp, sCodigoAlmCab, sCodigoAlm, sCodigoSku, sCodigoArt,
   sNumeroMov, sLinea: string;
   iCount: Integer;
+  dFechaDevc: TDateTime;
   rCantidad, rPrecio, rTotal: Double;
 begin
   LeerCabeceraDevolucion(AConn,
                          ASerieDevc,
                          ANumDevc,
                          sCodigoEmp,
-                         sCodigoAlmCab);
+                         sCodigoAlmCab,
+                         dFechaDevc);
   // Defensa: si la devolucion no tiene almacen ni en cabecera ni en
   // lineas/celdas, no podemos generar movimientos. Lo detectamos linea
   // a linea (mas abajo) para no abortar el resto.
@@ -290,6 +296,12 @@ begin
       raise Exception.CreateFmt(
         SErrorDevolucionCompraSinCantidadParaMovimientos,
         [ASerieDevc, ANumDevc]);
+    FecharYRecalcularMovimientosDocumento(
+      AConn,
+      EstrategiaDevolucionCompra.TipoDocumentoMovimientoStock,
+      ASerieDevc,
+      ANumDevc,
+      dFechaDevc);
   finally
     FreeAndNil(qSrc);
     FreeAndNil(spIns);

@@ -36,6 +36,7 @@ uses
   Data.DB,
   System.SysUtils,
   inLibFiltroUsuario,
+  UniDataMovimientosAlmacenRecalculo,
   UniDataValoresAutomaticosRepositorio;
 
 const
@@ -476,6 +477,7 @@ begin
       ConsultaFecha.Free;
     end;
   end;
+  RecalcularMovimiento(FConexion, Numero);
 end;
 
 function CrearLectorMovimientosAlmacenUniDAC(

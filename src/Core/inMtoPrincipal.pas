@@ -121,6 +121,7 @@ type
     mnuCajaOperacionesHist: TMenuItem;
     mnuDepositosCliente: TMenuItem;
     mnuFacturasSimplif: TMenuItem;
+    mnuFacturasProforma: TMenuItem;
     mnuCajaArqueosHist: TMenuItem;
     mnuAlmacenInformes: TMenuItem;
     mnuBalanceAlmacenHorizontal: TMenuItem;

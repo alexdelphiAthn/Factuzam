@@ -35,6 +35,7 @@ type
     Cliente: string;
     Caja: string;
     NumeroOperacion: string;
+    Fecha: TDateTime;
     MueveStock: Boolean;
     NumeroLineas: Integer;
   end;
@@ -59,6 +60,7 @@ type
     Sku: string;
     Articulo: string;
     Cantidad: Double;
+    Fecha: TDateTime;
     Usuario: string;
     NumeroOperacion: string;
     Caja: string;
@@ -122,6 +124,8 @@ type
     procedure ActualizarLineaMovimiento(
       const ASerie, ANumero, ALinea, ANumeroMovimiento,
         AUsuario: string);
+    procedure RecalcularDocumento(
+      const ATipo, ASerie, ANumero: string);
   end;
   IRepositorioPdfFactura = interface
     ['{DF36BDC0-6E1D-4DBC-9D32-715DA126B32A}']

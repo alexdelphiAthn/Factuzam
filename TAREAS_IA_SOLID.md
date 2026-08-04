@@ -5,7 +5,8 @@ el mismo repositorio. Esta versión sustituye por completo al catálogo
 anterior: conserva lo resuelto, asigna propiedad exclusiva de archivos y
 separa las tareas paralelas mediante barreras de integración.
 
-Estado medido: **04/08/2026**, sobre el árbol de trabajo actual.
+Estado medido: **04/08/2026**, sobre una instantánea estable del árbol de
+trabajo.
 
 ---
 
@@ -84,16 +85,15 @@ de esta iteración lo reemplaza por composición explícita por feature.
 
 ### Trabajo local que se debe respetar
 
-La fotografía tomada al cerrar esta versión contiene cambios ajenos en:
+El árbol cambia mientras se prepara este catálogo, por lo que no se conserva
+aquí una lista estática de archivos sucios. `IA-00` obtiene el `git status`
+vigente y publica el mapa de propiedad para cada ejecución. Ningún archivo
+modificado o sin seguimiento entra en una tarea hasta identificar a su
+propietario o recibir una transferencia expresa del usuario.
 
-- `src/DataModules/UniDataFacturasIncidenciaFiscal.pas`;
-- `src/Forms/inMtoFacturasIncidenciaFiscalVcl.pas`;
-- `src/Modals/inMtoModalResolverIncidenciaVerifactu.pas`.
-
-La lista es solo un aviso inicial: puede quedar obsoleta. `IA-00` genera el
-mapa de propiedad válido para cada ejecución. Ninguna tarea de Facturas
-empieza hasta que esas rutas estén libres o el usuario transfiera expresamente
-su propiedad.
+Facturas e incidencias fiscales se consideran bloqueadas si `IA-00` encuentra
+cambios locales en cualquiera de sus formularios, modales, data modules o
+contratos.
 
 ---
 
@@ -134,7 +134,8 @@ nueva pertenece al hilo cuyo prefijo esté reservado.
 Ningún hilo paralelo modifica:
 
 - `fzam.dpr` y `fzam.dproj`;
-- `tests/FactuzamTests.dpr` y `tests/FactuzamTests.dproj`;
+- `tests/FactuzamTests.dpr`, `tests/FactuzamTests.dproj` y
+  `tests/FactuzamTests.res`;
 - `src/Core/inMtoPrincipal.pas` y su DFM;
 - `src/Lib/inLibShowMto.pas`;
 - `src/Lib/inLibRegistroPantallas.pas`;
@@ -209,12 +210,11 @@ Motivo del alta:
 |------|-----------|--------|-------------------|
 | B0 | Serial | `IA-00` | Línea base y mapa de propiedad publicados |
 | B1 | Serial | `IA-01` | Canal de inyección estable y congelado |
-| O1 | Paralela | `IA-02C`, `IA-02V`, `IA-02M` | Contextos de familias preparados |
-| O2 | Paralela | `IA-03A`, `IA-03I`, `IA-03S`, `IA-04` | Features sin búsqueda oculta |
-| O2F | Aislada | `IA-05` | Facturas migradas tras cerrar su WIP |
+| O1 | Paralela | `IA-02C/V/M`, `IA-03A/I/S`, `IA-04` | Features sin búsqueda oculta |
+| O1F | Aislada | `IA-05` | Facturas migradas tras cerrar su WIP |
 | B2 | Serial | `IA-06` | Raíz cableada y localizador retirado |
-| O3 | Paralela | `IA-10A` a `IA-16B` | Agregados grandes reducidos |
-| B3 | Serial | `IA-18` | Ola O3 integrada y verde |
+| O3 | Paralela | subtareas `IA-10P` a `IA-16F` | Agregados grandes reducidos |
+| B3 | Serial | `IA-14`; después `IA-18` | Bases y ola O3 integradas |
 | O4 | Paralela | `IA-20A`, `IA-20B`, `IA-20C` | Ranking residual reducido |
 | B4 | Serial | `IA-99` | Verificación final y nuevos trinquetes |
 
@@ -223,9 +223,14 @@ que la barrera anterior esté verde. Si solo hay tres hilos disponibles, el
 coordinador despacha la misma ola en tantas tandas como sean necesarias sin
 introducir una barrera lógica entre ellas.
 
+En este documento, **integrada** significa: todos los escritores están
+detenidos, la propiedad se transfirió al integrador, las altas se aplicaron,
+las pruebas están registradas y la barrera canónica quedó verde. No implica
+que exista un commit.
+
 ---
 
-## 5. Fase A — composición explícita
+## 4. Fase A — composición explícita
 
 ### [ ] IA-00 — confirmar una línea base estable
 
@@ -277,7 +282,8 @@ retirar todavía la compatibilidad de los demás features.
 - `src/Lib/inLibRepositoriosPantallaIntf.pas`;
 - `src/Forms/inMtoStockConsulta.pas`;
 - `src/Forms/inMtoStockConsultaPresentacionComposicion.pas`;
-- `tests/FactuzamTests.dpr` y `tests/FactuzamTests.dproj`;
+- `tests/FactuzamTests.dpr`, `tests/FactuzamTests.dproj` y
+  `tests/FactuzamTests.res`;
 - `tests/PruebasRegistroPantallas.pas`;
 - `tests/PruebasRepositoriosPantallaComposicion.pas`;
 - una prueba nueva reservada como `PruebasInyeccionStockConsulta.pas`.
@@ -303,7 +309,7 @@ retirar todavía la compatibilidad de los demás features.
 - El localizador heredado no recibe lógica nueva.
 - Las seis pruebas detectadas por `IA-00` están registradas y se han
   ejecutado realmente.
-- La API de inyección queda congelada para las tareas de O1 y O2.
+- La API de inyección queda congelada para las tareas de O1.
 
 ### [ ] IA-02C — composición de Configuración
 
@@ -344,7 +350,7 @@ retirar todavía la compatibilidad de los demás features.
 
 **Depende de:** `IA-01`.
 
-**Puede ejecutarse con:** todas las tareas O1/O2 salvo un refactor de las
+**Puede ejecutarse con:** todas las tareas O1 salvo un refactor de las
 mismas pantallas de venta.
 
 **Propiedad exclusiva**
@@ -381,7 +387,7 @@ mismas pantallas de venta.
 
 **Depende de:** `IA-01`.
 
-**Puede ejecutarse con:** O1/O2 salvo `IA-05`, `IA-10P` e `IA-10D`.
+**Puede ejecutarse con:** O1 salvo `IA-05`, `IA-10P` e `IA-10D`.
 
 **Propiedad exclusiva**
 
@@ -409,7 +415,7 @@ mismas pantallas de venta.
 
 **Depende de:** `IA-01`.
 
-**Puede ejecutarse con:** las demás tareas O1/O2.
+**Puede ejecutarse con:** las demás tareas O1.
 
 **Propiedad exclusiva**
 
@@ -433,7 +439,7 @@ mismas pantallas de venta.
 
 **Depende de:** `IA-01`.
 
-**Puede ejecutarse con:** las demás tareas O1/O2.
+**Puede ejecutarse con:** las demás tareas O1.
 
 **Propiedad exclusiva**
 
@@ -454,7 +460,7 @@ mismas pantallas de venta.
 
 **Depende de:** `IA-01`.
 
-**Puede ejecutarse con:** las demás tareas O1/O2.
+**Puede ejecutarse con:** las demás tareas O1.
 
 **Propiedad exclusiva**
 
@@ -527,7 +533,7 @@ rg -l "ComponerCajaPantalla" src -g "*.pas"
 Los cambios locales de Facturas indicados en la sección 2 están integrados o
 el usuario ha cedido expresamente su propiedad a esta tarea.
 
-**Depende de:** `IA-02M` integrada.
+**Depende de:** `IA-02M` en `LISTA_PARA_INTEGRAR`, con sus rutas liberadas.
 
 **Ejecución:** aislada; no comparte ola con Compras ni con `IA-12*`.
 
@@ -562,7 +568,7 @@ consolidación, incidencia fiscal y artículos reciban capacidades concretas.
 
 ### [ ] IA-06 — retirar el localizador de repositorios de pantalla
 
-**Ejecución:** serial, con todos los hilos de O1, O2 y O2F detenidos.
+**Ejecución:** serial, con todos los hilos de O1 y O1F detenidos.
 
 **Objetivo**
 
@@ -579,7 +585,8 @@ serial y no rediseña otra vez los features ya migrados.
 - `src/DataModules/UniDataComposicionAplicacion.pas`;
 - `src/Core/inMtoPrincipal.pas`;
 - `fzam.dpr` y `fzam.dproj`;
-- `tests/FactuzamTests.dpr` y `tests/FactuzamTests.dproj`;
+- `tests/FactuzamTests.dpr`, `tests/FactuzamTests.dproj` y
+  `tests/FactuzamTests.res`;
 - `tests/PruebasRegistroPantallas.pas`;
 - `tests/PruebasRepositoriosPantallaComposicion.pas`;
 - `scripts/comprobar_dependencias_ocultas.ps1` y sus pruebas de trinquete.
@@ -595,7 +602,7 @@ serial y no rediseña otra vez los features ya migrados.
 - El comprobador bloquea la reaparición de búsqueda mediante `Owner`,
   `GetInterface` o `Application.MainForm` para repositorios de feature.
 - El fan-out máximo del proyecto baja de 72 a 50 o menos.
-- Todas las solicitudes de alta de O1/O2/O2F están aplicadas.
+- Todas las solicitudes de alta de O1/O1F están aplicadas.
 - Calidad, compilación y DUnitX están verdes en Win32 y Win64.
 
 No se prohíbe usar `Application.MainForm` para una operación estrictamente
@@ -604,11 +611,16 @@ resolver una dependencia de negocio o persistencia.
 
 ---
 
-## 6. Fase B — dividir por motivos de cambio
+## 5. Fase B — dividir por motivos de cambio
 
 Estas tareas empiezan cuando `IA-06` está integrada. Cada extracción debe
 reducir la pieza original y dejar la nueva pieza por debajo de los límites P5
 que le correspondan. Trasladar el mismo monolito a otra unidad no cuenta.
+
+Las firmas públicas entre dos subtareas de la misma ola quedan congeladas. Si
+una extracción exige cambiar el contrato que consume un hilo hermano, ambos
+se detienen y el coordinador crea primero una barrera de contrato; no adaptan
+cada lado de forma independiente mientras siguen trabajando.
 
 ### [ ] IA-10P / IA-10D — documentos de compra
 
@@ -774,8 +786,8 @@ separar en el data module la persistencia de la coordinación de cierre.
 |-------|---------------------|--------------------|
 | `IA-13E` | `src/Caja/Forms/inMtoCajaOpe.pas` y DFM | `PruebasCajaEntrada`, `PruebasCajaVentaOperacion` |
 | `IA-13C` | `src/Caja/DataModules/UniDataCaja.pas` y DFM | `PruebasCajaVenta`, `PruebasCajaStock` |
-| `IA-13T` | `src/Caja/Lib/inLibArqueoTicket.pas` | `PruebasArqueoTicketCatalogo` |
-| `IA-13A` | `src/Caja/Modals/inMtoModalArqueo.pas` y DFM, `src/Caja/DataModules/UniDataModalArqueoRepositorio.pas` | `PruebasArqueoCatalogo` no; nueva `PruebasModalArqueoPersistencia.pas` |
+| `IA-13T` | `src/Caja/Lib/inLibArqueoTicket.pas` | `tests/PruebasArqueoTicketCatalogo.pas` |
+| `IA-13A` | `src/Caja/Modals/inMtoModalArqueo.pas` y DFM, `src/Caja/DataModules/UniDataModalArqueoRepositorio.pas` | nueva `tests/PruebasModalArqueoPersistencia.pas` |
 
 `PruebasArqueoTicketCatalogo.pas` pertenece solo a `IA-13T`; la prueba nueva
 de `IA-13A` evita compartir archivos entre ambos hilos.
@@ -909,25 +921,56 @@ sin crear un repositorio genérico.
 - Los contratos no exponen UniDAC ni detalles de almacenamiento.
 - Se prueban ausencia, fallback artículo/SKU, reemplazo y error de escritura.
 
+### [ ] IA-18 — integrar la ola de refactorización
+
+**Ejecución:** serial; empieza después de `IA-10*` a `IA-16*` y de `IA-14`.
+
+**Propiedad exclusiva de la barrera**
+
+- `fzam.dpr` y `fzam.dproj`;
+- `tests/FactuzamTests.dpr`, `tests/FactuzamTests.dproj` y
+  `tests/FactuzamTests.res`;
+- altas de unidades solicitadas por los hilos;
+- manifiestos y archivos de proyecto afectados.
+
+**Acciones**
+
+1. Verificar que cada hilo entregó solo archivos de su reserva.
+2. Aplicar altas de producción y pruebas.
+3. Eliminar unidades nuevas huérfanas o no consumidas.
+4. Ejecutar calidad, compilación y DUnitX en Win32 y Win64.
+5. Medir tamaños, fan-out, métodos largos y riesgo.
+6. Publicar la reserva exacta de `IA-20A`, `IA-20B` e `IA-20C`.
+
+**Aceptación**
+
+- Todas las tareas O3 quedan `CERRADA` o `REABIERTA` con un fallo concreto.
+- Las pruebas nuevas están registradas y se han ejecutado realmente.
+- La barrera queda verde antes de iniciar O4.
+
 ---
 
-## 7. Fase C — métodos largos residuales
+## 6. Fase C — métodos largos residuales
 
-### [ ] IA-20 — reducir el ranking restante por tandas
+### [ ] IA-20A / IA-20B / IA-20C — métodos largos residuales
 
 **Objetivo**
 
-Después de `IA-10` a `IA-16`, volver a medir y reducir los métodos de más de
-120 líneas que no hayan quedado cubiertos. Se trabaja en tandas de hasta cinco
-unidades para que cada diff sea revisable.
+Después de `IA-18`, reducir en tres hilos los métodos de más de 120 líneas que
+no hayan quedado cubiertos. Cada hilo recibe hasta cinco unidades completas.
 
 **Selección de cada tanda**
 
-1. Ejecutar `scripts/comprobar_metodos_largos.ps1`.
-2. Ordenar primero por zona fiscal/caja, después por riesgo y luego por líneas.
-3. Elegir hasta cinco unidades sin cambios locales ajenos.
-4. Caracterizar cada flujo antes de extraer.
-5. Cerrar y verificar la tanda antes de seleccionar la siguiente.
+1. `IA-18` ejecuta `scripts/comprobar_metodos_largos.ps1`.
+2. Ordena primero por zona fiscal/caja, después por riesgo y luego por líneas.
+3. Excluye unidades sucias, compartidas o ya reservadas.
+4. Selecciona hasta quince unidades y mantiene cada unidad completa.
+5. Asigna puestos 1, 4, 7... a `IA-20A`; 2, 5, 8... a `IA-20B`; y
+   3, 6, 9... a `IA-20C`.
+6. Publica rutas, pruebas y prefijos antes de iniciar los tres hilos.
+
+No se permite seleccionar archivos dinámicamente después de empezar la ola.
+Si un hilo termina antes, no toma una unidad de otro sin transferencia formal.
 
 **Reglas de extracción**
 
@@ -936,6 +979,12 @@ unidades para que cada diff sea revisable.
 - Separar cálculo, decisión, persistencia y presentación.
 - Usar estrategia solo cuando exista una variante de negocio real.
 - No crear una clase que reciba el objeto original completo.
+
+**Propiedad exclusiva**
+
+La lista exacta publicada por `IA-18`. Cada hilo reserva además pruebas nuevas
+con sufijo `Ola20A`, `Ola20B` u `Ola20C`. Manifiestos, scripts y métricas
+globales siguen prohibidos durante la ola.
 
 **Aceptación de la iteración**
 
@@ -951,9 +1000,12 @@ no se seleccionan unidades usando el ranking antiguo de la sección 2.
 
 ---
 
-## 8. IA-99 — integración y cierre
+## 7. IA-99 — integración y cierre
 
 ### [ ] IA-99 — actualizar trinquetes y demostrar el resultado
+
+**Ejecución:** serial, con `IA-20A`, `IA-20B` e `IA-20C` en
+`LISTA_PARA_INTEGRAR` y sin ningún escritor activo.
 
 **Objetivo**
 
@@ -994,16 +1046,19 @@ aceptación no se cumple, reabre la tarea responsable con el dato concreto.
 
 ---
 
-## 9. Definición de terminado por tarea
+## 8. Definición de terminado por tarea
 
-Una tarea se marca como completada solo si entrega:
+Un hilo termina su edición en `LISTA_PARA_INTEGRAR`. La tarea solo pasa a
+`CERRADA` después de la barrera. Para quedar lista debe entregar:
 
 - comportamiento conservado o cambio funcional autorizado y documentado;
 - archivos editados y creados;
 - métrica antes y después de la pieza original y de las nuevas;
 - pruebas añadidas o adaptadas, con casos de éxito y fallo relevantes;
 - comprobadores ejecutados y resultado;
-- compilación y DUnitX en las plataformas disponibles;
+- pruebas realmente ejecutadas o la mini-barrera que falta para ejecutarlas;
+- solicitudes de alta en manifiestos y de cableado en la raíz;
+- confirmación de 0 archivos modificados fuera de su reserva;
 - riesgos pendientes y decisiones que deba conocer la siguiente tarea.
 
 No está terminada si:
@@ -1019,18 +1074,26 @@ No está terminada si:
 Formato recomendado de entrega:
 
 ```text
-Resultado:
-Unidades editadas/creadas:
+Tarea:
+Estado: LISTA_PARA_INTEGRAR
+Reserva recibida:
+Archivos editados:
+Archivos creados y nombres de unidad reservados:
+Archivos ajenos detectados y no tocados:
 Responsabilidad extraída:
-Métricas antes/después:
-Pruebas ejecutadas:
-Calidad y compilación:
-Riesgos pendientes:
+Comportamiento caracterizado:
+Métricas locales antes/después:
+Pruebas añadidas:
+Pruebas realmente ejecutadas:
+Compilación privada o mini-barrera utilizada:
+Solicitudes de alta en manifiestos:
+Solicitudes de cableado en la raíz:
+Riesgos y dependencias pendientes:
 ```
 
 ---
 
-## 10. Decisiones que no se reabren
+## 9. Decisiones que no se reabren
 
 - UniDAC sigue siendo el acceso a datos.
 - `factuzam_original.sql` no se modifica.

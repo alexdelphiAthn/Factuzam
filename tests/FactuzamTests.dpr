@@ -407,6 +407,7 @@ uses
   PruebasImpuestosComun in 'PruebasImpuestosComun.pas',
   PruebasTotalesDocumentos in 'PruebasTotalesDocumentos.pas',
   PruebasSqlSeguro in 'PruebasSqlSeguro.pas',
+  PruebasFormateadorSQL in 'PruebasFormateadorSQL.pas',
   PruebasRectificativas in 'PruebasRectificativas.pas',
   PruebasReglasCompartidas in 'PruebasReglasCompartidas.pas',
   PruebasCajaVenta in 'PruebasCajaVenta.pas',

@@ -260,6 +260,7 @@ begin
   AddSuf('fza_facturas_compra_lineas',          'FACCLIN');
   AddSuf('fza_facturas_consolidaciones',        'FACCON');
   AddSuf('fza_facturas_lineas',                 'FACLIN');
+  AddSuf('fza_facturas_operaciones_caja',       'FACOP');
   AddSuf('fza_facturas_pagos',                  'FACPAG');
   AddSuf('fza_familias_atributos',              'FA');
   AddSuf('fza_familias_atributos_defecto',      'FAD');
@@ -282,6 +283,8 @@ begin
   AddSuf('fza_pedidos_mensajes',                'PEDMSG');
   AddSuf('fza_propiedades',                     'PROP');
   AddSuf('fza_propiedades_valores',             'PV');
+  AddSuf('fza_proformas_caja',                  'PROCAJ');
+  AddSuf('fza_proformas_caja_lineas',           'PROCLIN');
   AddSuf('fza_proveedores',                     'PRV');
   AddSuf('fza_proveedores_familias',            'PF');
   AddSuf('fza_proveedores_familias_conjuntos',  'PFC');

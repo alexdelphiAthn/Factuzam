@@ -149,6 +149,10 @@
       FieldName = 'PRECIO_MEDIO_NUEVO_INVLIN'
       DisplayFormat = ',0.0000'
     end
+    object cdsLineasESPRECIO_MEDIO_CORREGIDO_INVLIN: TWideStringField
+      FieldName = 'ESPRECIO_MEDIO_CORREGIDO_INVLIN'
+      Size = 1
+    end
     object cdsLineasTOTAL_COSTE_DIFERENCIA_LINEA: TFloatField
       FieldName = 'TOTAL_COSTE_DIFERENCIA_INVLIN'
       DisplayFormat = '+,0.00 '#8364';-,0.00 '#8364

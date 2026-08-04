@@ -1197,6 +1197,10 @@
         ShortCut = 24646
         OnClick = MenuGenericoClick
       end
+      object mnuFacturasProforma: TMenuItem
+        Caption = 'Facturas proforma'
+        OnClick = MenuGenericoClick
+      end
     end
     object mnuAlmacen: TMenuItem
       Caption = 'Almac'#233'n'

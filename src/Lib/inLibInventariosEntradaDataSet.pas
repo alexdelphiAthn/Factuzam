@@ -52,6 +52,8 @@ begin
     APrecioMedio;
   ALineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency :=
     APrecioMedio;
+  ALineas.FieldByName(
+    'ESPRECIO_MEDIO_CORREGIDO_INVLIN').AsString := 'N';
 end;
 
 end.

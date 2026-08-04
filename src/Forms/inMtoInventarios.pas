@@ -109,6 +109,7 @@ type
     tvLineasUDS_FISICAS: TcxGridDBColumn;
     tvLineasPMP_ACTUAL: TcxGridDBColumn;
     tvLineasPMP_NUEVO: TcxGridDBColumn;
+    tvLineasPMP_CORREGIDO: TcxGridDBColumn;
     tvLineasDIF_UNIDADES: TcxGridDBColumn;
     tvLineasDIF_COSTE: TcxGridDBColumn;
     tvLineasUDS_REGULARIZADAS: TcxGridDBColumn;
@@ -951,7 +952,8 @@ begin
   // (equivalente runtime de las del dfm; LOTE/CADUCIDAD/USUARIO, que
   // iban ocultas, quedan fuera de la prueba).
   CrearColumnasDocumentoInventario(
-    tvLineas, tvLineasUdsFisicasPropertiesValidate);
+    tvLineas,
+    tvLineasUdsFisicasPropertiesValidate);
 end;
 
 procedure TfrmMtoInventarios.MostrarColumnasAtributoGlobales;
@@ -1507,13 +1509,25 @@ begin
   Error := False;
   if not (dmmInventarios.cdsLineas.State in [dsEdit, dsInsert]) then
     dmmInventarios.cdsLineas.Edit;
-  Fis := StrToCurrDef(VarToStr(DisplayValue), 0);
+  Fis := dmmInventarios.cdsLineas.FieldByName(
+    'CANTIDAD_FISICA_INVLIN').AsCurrency;
   Teo := dmmInventarios.cdsLineas.FieldByName(
     'CANTIDAD_TEORICA_INVLIN').AsCurrency;
   PMPAct := dmmInventarios.cdsLineas.FieldByName(
     'PRECIO_MEDIO_INVLIN').AsCurrency;
   PMPNue := dmmInventarios.cdsLineas.FieldByName(
     'PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency;
+  if SameText(
+       TcxGridDBColumn(
+         tvLineas.Controller.FocusedColumn).DataBinding.FieldName,
+       'PRECIO_MEDIO_NUEVO_INVLIN') then
+  begin
+    PMPNue := StrToCurrDef(VarToStr(DisplayValue), 0);
+    dmmInventarios.cdsLineas.FieldByName(
+      'ESPRECIO_MEDIO_CORREGIDO_INVLIN').AsString := 'S';
+  end
+  else
+    Fis := StrToCurrDef(VarToStr(DisplayValue), 0);
   dmmInventarios.cdsLineas.FieldByName(
     'CANTIDAD_DIFERENCIA_INVLIN').AsCurrency :=
     DiferenciaUnidadesInventario(Fis, Teo);

@@ -40,7 +40,8 @@ implementation
 uses
   System.SysUtils, Data.DB, inLibDocumento, inLibDocumentoIntf,
   UniDataValoresAutomaticosRepositorio, inLibMsgCompras,
-  UniDataAlbaranesCompraMovimientosSql;
+  UniDataAlbaranesCompraMovimientosSql,
+  UniDataMovimientosAlmacenRecalculo;
 type
   TMovimientosAlbaranCompraUniDAC = class(
     TInterfacedObject,
@@ -109,7 +110,7 @@ begin
       '   ESPROVEEDORPRINCIPAL_AP, INSTANTE_ALTA, USUARIO_ALTA, ' +
       '   INSTANTE_MODIF, USUARIO_MODIF) ' +
       'SELECT X.CODIGO_PRV, X.CODIGO_ART, NULLIF(X.REF_PRV, ''''), ' +
-      '       X.PRECIO, NOW(), ' +
+      '       X.PRECIO, X.FECHA_ALBC, ' +
       '       CASE WHEN EXISTS ( ' +
       '              SELECT 1 FROM fza_articulos_proveedores AP2 ' +
       '               WHERE AP2.CODIGO_ART_AP = X.CODIGO_ART ' +
@@ -120,6 +121,7 @@ begin
       '  FROM ( ' +
       '        SELECT A.CODIGO_PRV_ALBC AS CODIGO_PRV, ' +
       '               L.CODIGO_ART_ALBCLIN AS CODIGO_ART, ' +
+      '               COALESCE(A.FECHA_ALBC, CURRENT_DATE) AS FECHA_ALBC, ' +
       '               COALESCE(TRIM(L.REF_PRV_ALBCLIN), '''') AS REF_PRV, ' +
       '               CASE WHEN IFNULL(A.ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, ' +
       '''N'') <> ''S'' ' +
@@ -192,10 +194,15 @@ begin
       '                    AND L2.LINEA_ALBCLIN > L.LINEA_ALBCLIN) ' +
       '       ) X ' +
       'ON DUPLICATE KEY UPDATE ' +
-      '  PRECIO_ULT_COMPRA_AP = VALUES(PRECIO_ULT_COMPRA_AP), ' +
-      '  FECHA_VALIDEZ_AP = VALUES(FECHA_VALIDEZ_AP), ' +
-      '  REF_PROVEEDOR_AP = COALESCE(VALUES(REF_PROVEEDOR_AP), ' +
-      '                              REF_PROVEEDOR_AP), ' +
+      '  PRECIO_ULT_COMPRA_AP = IF(VALUES(FECHA_VALIDEZ_AP) >= ' +
+      '    IFNULL(FECHA_VALIDEZ_AP, ''1000-01-01''), ' +
+      '    VALUES(PRECIO_ULT_COMPRA_AP), PRECIO_ULT_COMPRA_AP), ' +
+      '  REF_PROVEEDOR_AP = IF(VALUES(FECHA_VALIDEZ_AP) >= ' +
+      '    IFNULL(FECHA_VALIDEZ_AP, ''1000-01-01''), ' +
+      '    COALESCE(VALUES(REF_PROVEEDOR_AP), REF_PROVEEDOR_AP), ' +
+      '    REF_PROVEEDOR_AP), ' +
+      '  FECHA_VALIDEZ_AP = GREATEST(IFNULL(FECHA_VALIDEZ_AP, ' +
+      '    ''1000-01-01''), VALUES(FECHA_VALIDEZ_AP)), ' +
       '  INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u3';
     q.ParamByName('s').AsString  := ASerieAlbc;
     q.ParamByName('n').AsString  := ANumAlbc;
@@ -296,8 +303,12 @@ begin
       '                    AND L2.LINEA_ALBCLIN > L.LINEA_ALBCLIN) ' +
       '       ) X ' +
       'ON DUPLICATE KEY UPDATE ' +
-      '  PRECIO_ULT_COMPRA_SKUC = VALUES(PRECIO_ULT_COMPRA_SKUC), ' +
-      '  FECHA_ULT_COMPRA_SKUC = VALUES(FECHA_ULT_COMPRA_SKUC), ' +
+      '  PRECIO_ULT_COMPRA_SKUC = IF(VALUES(FECHA_ULT_COMPRA_SKUC) >= ' +
+      '    IFNULL(FECHA_ULT_COMPRA_SKUC, ''1000-01-01''), ' +
+      '    VALUES(PRECIO_ULT_COMPRA_SKUC), PRECIO_ULT_COMPRA_SKUC), ' +
+      '  FECHA_ULT_COMPRA_SKUC = GREATEST(' +
+      '    IFNULL(FECHA_ULT_COMPRA_SKUC, ''1000-01-01''), ' +
+      '    VALUES(FECHA_ULT_COMPRA_SKUC)), ' +
       '  INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u3';
     q.ParamByName('s').AsString  := ASerieAlbc;
     q.ParamByName('n').AsString  := ANumAlbc;
@@ -318,7 +329,7 @@ procedure GenerarMovimientosDesdeAlbaranCompra(AConn: TUniConnection;
                                                const ASerieAlbc, ANumAlbc,
                                                      AUsuario: string);
 var
-  qSrc, qChk, qFechaMov: TUniQuery;
+  qSrc, qChk: TUniQuery;
   spIns: TUniStoredProc;
   sCodigoEmp, sCodigoAlmCab, sCodigoAlm, sCodigoSku, sCodigoArt,
   sNumeroMov, sLinea: string;
@@ -354,7 +365,6 @@ begin
     FreeAndNil(qChk);
   end;
   qSrc := TUniQuery.Create(nil);
-  qFechaMov := TUniQuery.Create(nil);
   spIns := TUniStoredProc.Create(nil);
   try
     qSrc.Connection := AConn;
@@ -419,11 +429,6 @@ begin
     qSrc.ParamByName('n2').AsString      := ANumAlbc;
     qSrc.ParamByName('alm_cab2').AsString := sCodigoAlmCab;
     qSrc.Open;
-    qFechaMov.Connection := AConn;
-    qFechaMov.SQL.Text :=
-      'UPDATE fza_movimientos_almacen ' +
-      '   SET FECHA_MOV = :f ' +
-      ' WHERE NUMERO_MOV = :m';
     // Stored proc reutilizable: declaramos params una vez y reasignamos
     // los valores en cada vuelta para no crear/destruir N veces.
     spIns.Connection := AConn;
@@ -489,9 +494,6 @@ begin
       spIns.ParamByName('p_CODCLIENTE').AsString          := '';
       spIns.ParamByName('p_CODARTICULO').AsString         := sCodigoArt;
       spIns.ExecProc;
-      qFechaMov.ParamByName('f').AsDateTime := dFechaAlbc;
-      qFechaMov.ParamByName('m').AsString := sNumeroMov;
-      qFechaMov.ExecSQL;
         Inc(iCount);
       end;
       qSrc.Next;
@@ -504,9 +506,14 @@ begin
       ANumAlbc, AUsuario);
     ActualizarCostesSkuDesdeAlbaranCompra(AConn, ASerieAlbc, ANumAlbc,
       AUsuario);
+    FecharYRecalcularMovimientosDocumento(
+      AConn,
+      EstrategiaAlbaranCompra.TipoDocumentoMovimientoStock,
+      ASerieAlbc,
+      ANumAlbc,
+      dFechaAlbc);
   finally
     FreeAndNil(qSrc);
-    FreeAndNil(qFechaMov);
     FreeAndNil(spIns);
   end;
 end;

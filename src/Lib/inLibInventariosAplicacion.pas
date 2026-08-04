@@ -55,6 +55,7 @@ const
   CAMPO_UNIDAD_IMPORTACION = 'CODIGO_UNIDAD_INVLIN';
   CAMPO_CANTIDAD_IMPORTACION = 'CANTIDAD_FISICA_INVLIN';
   CAMPO_PRECIO_IMPORTACION = 'PRECIO_MEDIO_NUEVO_INVLIN';
+  CAMPO_PRECIO_CORREGIDO = 'ESPRECIO_MEDIO_CORREGIDO_INVLIN';
 
 type
   TOperacionesImportacionInventarioDataSet = class(
@@ -74,6 +75,7 @@ type
     procedure IniciarEdicionLinea;
     procedure EscribirCantidadFisica(ACantidad: Double);
     procedure EscribirPrecioMedioNuevo(APrecio: Double);
+    procedure UsarPrecioMedioHistorico;
     procedure ConfirmarLinea;
     procedure ConsolidarCambios;
     procedure AnadirUnidadPendiente(const ATextoOriginal: string);
@@ -230,7 +232,9 @@ begin
         AOperaciones.EscribirCantidadFisica(ALineas[iLinea].Cantidad);
         if ALineas[iLinea].TienePrecioMedio then
           AOperaciones.EscribirPrecioMedioNuevo(
-            ALineas[iLinea].PrecioMedioNuevo);
+            ALineas[iLinea].PrecioMedioNuevo)
+        else
+          AOperaciones.UsarPrecioMedioHistorico;
         AOperaciones.ConfirmarLinea;
         Inc(Result.Actualizadas);
       end
@@ -283,6 +287,12 @@ procedure TOperacionesImportacionInventarioDataSet.
   EscribirPrecioMedioNuevo(APrecio: Double);
 begin
   FLineas.FieldByName(CAMPO_PRECIO_IMPORTACION).AsFloat := APrecio;
+  FLineas.FieldByName(CAMPO_PRECIO_CORREGIDO).AsString := 'S';
+end;
+
+procedure TOperacionesImportacionInventarioDataSet.UsarPrecioMedioHistorico;
+begin
+  FLineas.FieldByName(CAMPO_PRECIO_CORREGIDO).AsString := 'N';
 end;
 
 procedure TOperacionesImportacionInventarioDataSet.ConfirmarLinea;

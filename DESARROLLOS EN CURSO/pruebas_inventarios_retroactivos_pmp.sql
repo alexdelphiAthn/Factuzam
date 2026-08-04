@@ -1,0 +1,211 @@
+-- =============================================================================
+-- Pruebas de integracion del motor cronologico de stock y PMP
+-- Ejecutar solo en una base de pruebas con inventarios_retroactivos_pmp.sql.
+-- =============================================================================
+DROP PROCEDURE IF EXISTS tmp_pmp_assert;
+DELIMITER ;;
+CREATE PROCEDURE tmp_pmp_assert(
+  IN p_CUMPLE int,
+  IN p_MENSAJE varchar(255)
+)
+BEGIN
+  IF IFNULL(p_CUMPLE, 0) = 0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = p_MENSAJE;
+  END IF;
+END;;
+DELIMITER ;
+
+DELETE FROM fza_movimientos_almacen
+ WHERE CODIGO_ALM_MOV IN ('ZPMP', 'ZORG', 'ZDST')
+   AND CODIGO_UNIDAD_MOV LIKE 'ZPMP/%';
+DELETE FROM fza_articulos_stockactual
+ WHERE CODIGO_ALM_STK IN ('ZPMP', 'ZORG', 'ZDST')
+   AND CODIGO_UNIDAD_STK LIKE 'ZPMP/%';
+DELETE FROM fza_inventarios_lineas
+ WHERE CODIGO_EMP_INVLIN = 'ZP';
+DELETE FROM fza_inventarios
+ WHERE CODIGO_EMP_INV = 'ZP';
+
+CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
+  'ZPMP0001', 'AC', 'ZP', '1', '0001', 'ZP', 'ZPMP', NULL,
+  'ZPMP/SKU1', 'E', 10, 10, 100, 'PRUEBA', 'ZPMP', NULL, NULL, NULL,
+  'ZPMP');
+UPDATE fza_movimientos_almacen
+   SET FECHA_MOV = '2026-01-01 10:00:00'
+ WHERE NUMERO_MOV = 'ZPMP0001';
+CALL PRC_FZA_MOVIMIENTOS_RECALCULAR_DOCUMENTO('AC', 'ZP', '1');
+
+INSERT INTO fza_inventarios
+  (CODIGO_EMP_INV, CODIGO_ALM_INV, SERIE_INV, NUMERO_INV,
+   FECHA_INV, ESTADO_INV, CONTADOR_LINEAS_INV,
+   INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)
+VALUES
+  ('ZP', 'ZPMP', 'ZP', '9001', '2026-01-05 12:00:00', 'ABIERTO',
+   '00000001', NOW(), 'PRUEBA', 'PRUEBA');
+INSERT INTO fza_inventarios_lineas
+  (CODIGO_EMP_INVLIN, CODIGO_ALM_INVLIN, SERIE_INV_INVLIN,
+   NUMERO_INV_INVLIN, LINEA_INVLIN, CODIGO_ART_INVLIN,
+   CODIGO_UNIDAD_INVLIN, DESCRIPCION_ARTICULO_INVLIN,
+   CANTIDAD_FISICA_INVLIN, FECHA_RECUENTO_INVLIN,
+   ESPRECIO_MEDIO_CORREGIDO_INVLIN,
+   INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)
+VALUES
+  ('ZP', 'ZPMP', 'ZP', '9001', '00000001', 'ZPMP', 'ZPMP/SKU1',
+   'Prueba cronologica', 8, '2026-01-05 12:00:00', 'N',
+   NOW(), 'PRUEBA', 'PRUEBA');
+CALL PRC_FZA_INVENTARIOS_APLICAR('ZP', 'ZPMP', 'ZP', '9001', 'PRUEBA');
+CALL tmp_pmp_assert((
+  SELECT ABS(CANTIDAD_STK - 8) < 0.000001
+    FROM fza_articulos_stockactual
+   WHERE CODIGO_ALM_STK = 'ZPMP' AND CODIGO_UNIDAD_STK = 'ZPMP/SKU1'),
+  'El inventario inicial no fija el stock fisico');
+
+CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
+  'ZPMP0002', 'VE', 'ZP', '2', '0001', 'ZP', 'ZPMP', NULL,
+  'ZPMP/SKU1', 'S', 2, 0, 0, 'PRUEBA', 'ZPMP', NULL, NULL, NULL,
+  'ZPMP');
+UPDATE fza_movimientos_almacen
+   SET FECHA_MOV = '2026-01-06 10:00:00'
+ WHERE NUMERO_MOV = 'ZPMP0002';
+CALL PRC_FZA_MOVIMIENTOS_RECALCULAR_DOCUMENTO('VE', 'ZP', '2');
+
+CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
+  'ZPMP0003', 'AC', 'ZP', '3', '0001', 'ZP', 'ZPMP', NULL,
+  'ZPMP/SKU1', 'E', 5, 20, 100, 'PRUEBA', 'ZPMP', NULL, NULL, NULL,
+  'ZPMP');
+UPDATE fza_movimientos_almacen
+   SET FECHA_MOV = '2026-01-03 10:00:00'
+ WHERE NUMERO_MOV = 'ZPMP0003';
+CALL PRC_FZA_MOVIMIENTOS_RECALCULAR_DOCUMENTO('AC', 'ZP', '3');
+CALL tmp_pmp_assert((
+  SELECT ABS(CANTIDAD_MOV - 15) < 0.000001
+    FROM fza_movimientos_almacen
+   WHERE NUMERO_MOV = 'IV-9001-00000001S'),
+  'El ajuste no absorbe el AC anterior al recuento');
+CALL tmp_pmp_assert((
+  SELECT ABS(CANTIDAD_STK - 6) < 0.000001
+    FROM fza_articulos_stockactual
+   WHERE CODIGO_ALM_STK = 'ZPMP' AND CODIGO_UNIDAD_STK = 'ZPMP/SKU1'),
+  'El AC anterior ha alterado la cantidad contada');
+CALL tmp_pmp_assert((
+  SELECT ABS(PRECIO_MEDIO_STK - 13.333333) < 0.000002
+    FROM fza_articulos_stockactual
+   WHERE CODIGO_ALM_STK = 'ZPMP' AND CODIGO_UNIDAD_STK = 'ZPMP/SKU1'),
+  'El PMP historico del recuento no se ha reconstruido');
+
+CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
+  'ZPMP0004', 'DC', 'ZP', '4', '0001', 'ZP', 'ZPMP', NULL,
+  'ZPMP/SKU1', 'S', 3, 0, 0, 'PRUEBA', 'ZPMP', NULL, NULL, NULL,
+  'ZPMP');
+UPDATE fza_movimientos_almacen
+   SET FECHA_MOV = '2026-01-04 10:00:00'
+ WHERE NUMERO_MOV = 'ZPMP0004';
+CALL PRC_FZA_MOVIMIENTOS_RECALCULAR_DOCUMENTO('DC', 'ZP', '4');
+CALL tmp_pmp_assert((
+  SELECT ABS(CANTIDAD_MOV - 12) < 0.000001
+    FROM fza_movimientos_almacen
+   WHERE NUMERO_MOV = 'IV-9001-00000001S'),
+  'El ajuste no absorbe la DC anterior al recuento');
+CALL tmp_pmp_assert((
+  SELECT ABS(CANTIDAD_STK - 6) < 0.000001
+    FROM fza_articulos_stockactual
+   WHERE CODIGO_ALM_STK = 'ZPMP' AND CODIGO_UNIDAD_STK = 'ZPMP/SKU1'),
+  'La DC anterior ha alterado la cantidad contada');
+
+CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
+  'ZPMP0011', 'AC', 'ZM', '1', '0001', 'ZP', 'ZPMP', NULL,
+  'ZPMP/SKU2', 'E', 10, 10, 100, 'PRUEBA', 'ZPMP', NULL, NULL, NULL,
+  'ZPMP');
+UPDATE fza_movimientos_almacen SET FECHA_MOV = '2026-01-01 10:00:00'
+ WHERE NUMERO_MOV = 'ZPMP0011';
+CALL PRC_FZA_MOVIMIENTOS_RECALCULAR_DOCUMENTO('AC', 'ZM', '1');
+INSERT INTO fza_inventarios
+  (CODIGO_EMP_INV, CODIGO_ALM_INV, SERIE_INV, NUMERO_INV,
+   FECHA_INV, ESTADO_INV, CONTADOR_LINEAS_INV,
+   INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)
+VALUES
+  ('ZP', 'ZPMP', 'ZM', '9002', '2026-01-05 12:00:00', 'ABIERTO',
+   '00000001', NOW(), 'PRUEBA', 'PRUEBA');
+INSERT INTO fza_inventarios_lineas
+  (CODIGO_EMP_INVLIN, CODIGO_ALM_INVLIN, SERIE_INV_INVLIN,
+   NUMERO_INV_INVLIN, LINEA_INVLIN, CODIGO_ART_INVLIN,
+   CODIGO_UNIDAD_INVLIN, DESCRIPCION_ARTICULO_INVLIN,
+   CANTIDAD_FISICA_INVLIN, PRECIO_MEDIO_NUEVO_INVLIN,
+   FECHA_RECUENTO_INVLIN, ESPRECIO_MEDIO_CORREGIDO_INVLIN,
+   INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF)
+VALUES
+  ('ZP', 'ZPMP', 'ZM', '9002', '00000001', 'ZPMP', 'ZPMP/SKU2',
+   'Prueba PMP manual', 8, 7, '2026-01-05 12:00:00', 'S',
+   NOW(), 'PRUEBA', 'PRUEBA');
+CALL PRC_FZA_INVENTARIOS_APLICAR('ZP', 'ZPMP', 'ZM', '9002', 'PRUEBA');
+CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
+  'ZPMP0012', 'AC', 'ZM', '2', '0001', 'ZP', 'ZPMP', NULL,
+  'ZPMP/SKU2', 'E', 5, 20, 100, 'PRUEBA', 'ZPMP', NULL, NULL, NULL,
+  'ZPMP');
+UPDATE fza_movimientos_almacen SET FECHA_MOV = '2026-01-03 10:00:00'
+ WHERE NUMERO_MOV = 'ZPMP0012';
+CALL PRC_FZA_MOVIMIENTOS_RECALCULAR_DOCUMENTO('AC', 'ZM', '2');
+CALL tmp_pmp_assert((
+  SELECT ABS(PRECIO_COSTE_UNITARIO_MOV - 7) < 0.000001
+    FROM fza_movimientos_almacen
+   WHERE NUMERO_MOV = 'IV-9002-00000001E'),
+  'El recalculo no respeta el PMP manual del inventario');
+CALL tmp_pmp_assert((
+  SELECT ABS(CANTIDAD_STK - 8) < 0.000001 AND
+         ABS(PRECIO_MEDIO_STK - 7) < 0.000001
+    FROM fza_articulos_stockactual
+   WHERE CODIGO_ALM_STK = 'ZPMP' AND CODIGO_UNIDAD_STK = 'ZPMP/SKU2'),
+  'El cierre manual no conserva cantidad y PMP');
+
+CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
+  'ZPMP0101', 'AC', 'ZT', '1', '0001', 'ZP', 'ZORG', NULL,
+  'ZPMP/TR1', 'E', 10, 10, 100, 'PRUEBA', 'ZORG', NULL, NULL, NULL,
+  'ZPMP');
+CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
+  'ZPMP0102', 'AC', 'ZT', '2', '0001', 'ZP', 'ZDST', NULL,
+  'ZPMP/TR1', 'E', 10, 5, 50, 'PRUEBA', 'ZDST', NULL, NULL, NULL,
+  'ZPMP');
+UPDATE fza_movimientos_almacen SET FECHA_MOV = '2026-02-01 10:00:00'
+ WHERE NUMERO_MOV IN ('ZPMP0101', 'ZPMP0102');
+CALL PRC_FZA_MOVIMIENTOS_RECALCULAR_DOCUMENTO('AC', 'ZT', '1');
+CALL PRC_FZA_MOVIMIENTOS_RECALCULAR_DOCUMENTO('AC', 'ZT', '2');
+CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
+  'ZPMP0103', 'TR', 'ZT', '3', '0001', 'ZP', 'ZORG', 'ZDST',
+  'ZPMP/TR1', 'S', 4, 10, 40, 'PRUEBA', 'ZORG', '77', NULL, NULL,
+  'ZPMP');
+CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
+  'ZPMP0104', 'TR', 'ZT', '3', '0001', 'ZP', 'ZDST', 'ZORG',
+  'ZPMP/TR1', 'E', 4, 10, 40, 'PRUEBA', 'ZORG', '77', NULL, NULL,
+  'ZPMP');
+UPDATE fza_movimientos_almacen SET FECHA_MOV = '2026-02-03 10:00:00'
+ WHERE NUMERO_MOV IN ('ZPMP0103', 'ZPMP0104');
+CALL PRC_FZA_MOVIMIENTOS_RECALCULAR_DOCUMENTO('TR', 'ZT', '3');
+CALL PRC_FZA_MOVIMIENTOS_ALMACEN_INSERT(
+  'ZPMP0105', 'AC', 'ZT', '4', '0001', 'ZP', 'ZORG', NULL,
+  'ZPMP/TR1', 'E', 10, 20, 200, 'PRUEBA', 'ZORG', NULL, NULL, NULL,
+  'ZPMP');
+UPDATE fza_movimientos_almacen SET FECHA_MOV = '2026-02-02 10:00:00'
+ WHERE NUMERO_MOV = 'ZPMP0105';
+CALL PRC_FZA_MOVIMIENTOS_RECALCULAR_DOCUMENTO('AC', 'ZT', '4');
+CALL tmp_pmp_assert((
+  SELECT ABS(PRECIO_COSTE_UNITARIO_MOV - 15) < 0.000001
+    FROM fza_movimientos_almacen WHERE NUMERO_MOV = 'ZPMP0104'),
+  'El coste de salida no se propaga a la entrada del traspaso');
+CALL tmp_pmp_assert((
+  SELECT ABS(PRECIO_MEDIO_STK - 7.857143) < 0.000002
+    FROM fza_articulos_stockactual
+   WHERE CODIGO_ALM_STK = 'ZDST' AND CODIGO_UNIDAD_STK = 'ZPMP/TR1'),
+  'El PMP del almacen destino no se recalcula');
+
+SELECT 'OK' AS resultado,
+       'inventario, PMP manual, AC/DC y traspaso' AS escenarios;
+
+DELETE FROM fza_movimientos_almacen
+ WHERE CODIGO_ALM_MOV IN ('ZPMP', 'ZORG', 'ZDST')
+   AND CODIGO_UNIDAD_MOV LIKE 'ZPMP/%';
+DELETE FROM fza_articulos_stockactual
+ WHERE CODIGO_ALM_STK IN ('ZPMP', 'ZORG', 'ZDST')
+   AND CODIGO_UNIDAD_STK LIKE 'ZPMP/%';
+DELETE FROM fza_inventarios_lineas WHERE CODIGO_EMP_INVLIN = 'ZP';
+DELETE FROM fza_inventarios WHERE CODIGO_EMP_INV = 'ZP';
+DROP PROCEDURE tmp_pmp_assert;

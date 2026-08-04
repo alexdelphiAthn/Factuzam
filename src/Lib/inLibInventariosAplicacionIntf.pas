@@ -82,6 +82,7 @@ type
     procedure IniciarEdicionLinea;
     procedure EscribirCantidadFisica(ACantidad: Double);
     procedure EscribirPrecioMedioNuevo(APrecio: Double);
+    procedure UsarPrecioMedioHistorico;
     procedure ConfirmarLinea;
     procedure ConsolidarCambios;
     procedure AnadirUnidadPendiente(const ATextoOriginal: string);

@@ -115,6 +115,7 @@ type
     FConfirmaciones: Integer;
     FConsolidaciones: Integer;
     FPreciosEscritos: Integer;
+    FPreciosHistoricos: Integer;
     FUltimaCantidad: Double;
     FUltimoPrecio: Double;
   public
@@ -122,6 +123,7 @@ type
     procedure IniciarEdicionLinea;
     procedure EscribirCantidadFisica(ACantidad: Double);
     procedure EscribirPrecioMedioNuevo(APrecio: Double);
+    procedure UsarPrecioMedioHistorico;
     procedure ConfirmarLinea;
     procedure ConsolidarCambios;
     procedure AnadirUnidadPendiente(const ATextoOriginal: string);
@@ -164,6 +166,11 @@ procedure TOperacionesImportacionFalsas.EscribirPrecioMedioNuevo(
 begin
   Inc(FPreciosEscritos);
   FUltimoPrecio := APrecio;
+end;
+
+procedure TOperacionesImportacionFalsas.UsarPrecioMedioHistorico;
+begin
+  Inc(FPreciosHistoricos);
 end;
 
 procedure TOperacionesImportacionFalsas.ConfirmarLinea;
@@ -452,12 +459,14 @@ begin
   AplicarImportacionInventario(
     LineasDePrueba('SKU1', 5, 0, False), Operaciones);
   Assert.AreEqual(0, SinPrecio.FPreciosEscritos);
+  Assert.AreEqual(1, SinPrecio.FPreciosHistoricos);
   ConPrecio := TOperacionesImportacionFalsas.Create;
   Operaciones := ConPrecio;
   ConPrecio.FUnidadesConocidas := 'SKU1';
   AplicarImportacionInventario(
     LineasDePrueba('SKU1', 5, 7.5, True), Operaciones);
   Assert.AreEqual(1, ConPrecio.FPreciosEscritos);
+  Assert.AreEqual(0, ConPrecio.FPreciosHistoricos);
   Assert.AreEqual(Double(7.5), ConPrecio.FUltimoPrecio, 0.0001);
 end;
 
