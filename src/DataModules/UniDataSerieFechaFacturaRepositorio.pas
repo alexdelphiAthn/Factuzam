@@ -38,6 +38,8 @@ const
     '          FROM vi_empresas_series ' +
     '         WHERE CODIGO_EMP_EMPSER = :EMP ' +
     '           AND TIPO_DOC_EMPSER = ''FC'' ' +
+    '           AND (SUBTIPO_EMPSER = ''NORMAL'' ' +
+    '                OR IFNULL(SUBTIPO_EMPSER, '''') = '''') ' +
     '           AND (FECHA_DESDE_EMPSER IS NULL ' +
     '                OR FECHA_DESDE_EMPSER <= CURDATE()) ' +
     '           AND (FECHA_HASTA_EMPSER IS NULL ' +
@@ -48,8 +50,11 @@ const
     'SELECT EMPSER FROM vi_empresas_series ' +
     'WHERE CODIGO_EMP_EMPSER = :EMP AND TIPO_DOC_EMPSER = ''FC'' ' +
     'AND CODIGO_ALM_EMPSER = :ALM ' +
+    'AND (SUBTIPO_EMPSER = ''NORMAL'' ' +
+    '     OR IFNULL(SUBTIPO_EMPSER, '''') = '''') ' +
     'AND (FECHA_DESDE_EMPSER IS NULL OR FECHA_DESDE_EMPSER <= CURDATE()) ' +
     'AND (FECHA_HASTA_EMPSER IS NULL OR FECHA_HASTA_EMPSER >= CURDATE()) ' +
+    'ORDER BY CASE WHEN SUBTIPO_EMPSER = ''NORMAL'' THEN 0 ELSE 1 END ' +
     'LIMIT 1';
 
 type

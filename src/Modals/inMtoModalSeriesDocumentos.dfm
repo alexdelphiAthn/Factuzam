@@ -1,7 +1,7 @@
 ﻿inherited frmModalSeriesDocumentos: TfrmModalSeriesDocumentos
   BorderStyle = bsDialog
   Caption = 'Añadir serie a todos'
-  ClientHeight = 210
+  ClientHeight = 250
   ClientWidth = 430
   Position = poScreenCenter
   OnCreate = FormCreate
@@ -10,7 +10,7 @@
     Left = 0
     Top = 0
     Width = 430
-    Height = 160
+    Height = 200
     Align = alClient
     BevelOuter = bvNone
     ParentBackground = False
@@ -81,21 +81,41 @@
     object lblSerieTokenizada: TcxLabel
       Left = 16
       Top = 118
-      Caption = 'Serie tokenizada'
+      Caption = 'Serie tokenizada base'
       TabOrder = 9
       Transparent = True
     end
     object txtSerieTokenizada: TcxTextEdit
       Left = 130
       Top = 116
-      Properties.MaxLength = 12
+      Properties.MaxLength = 11
       TabOrder = 2
       Width = 180
+    end
+    object lblLeyendaTokens: TcxLabel
+      Left = 16
+      Top = 150
+      Caption =
+        'Tokens: yyyy = a'#241'o | q = trimestre | mm = mes | dd = d'#237'a'
+      Style.TextColor = clGrayText
+      Style.Font.Size = 8
+      TabOrder = 10
+      Transparent = True
+    end
+    object lblLeyendaSubtipos: TcxLabel
+      Left = 16
+      Top = 174
+      Caption =
+        'Facturas: +N normal | +S simplificada | +R rectificativa'
+      Style.TextColor = clGrayText
+      Style.Font.Size = 8
+      TabOrder = 11
+      Transparent = True
     end
   end
   object pnlBotones: TPanel [1]
     Left = 0
-    Top = 160
+    Top = 200
     Width = 430
     Height = 50
     Align = alBottom
@@ -123,7 +143,7 @@
   end
   object alAcciones: TActionList
     Left = 16
-    Top = 168
+    Top = 208
     object actAceptar: TAction
       Caption = 'Aceptar (F12)'
       ShortCut = 123

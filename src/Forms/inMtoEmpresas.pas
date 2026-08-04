@@ -511,6 +511,7 @@ procedure TfrmMtoEmpresas.btnCrearSeriesDocClick(Sender: TObject);
 const
   SUBTIPOS_FACTURA: array[0..2] of string = ('NORMAL', 'SIMPLIFICADA',
                                              'RECTIFICATIVA');
+  SUFIJOS_FACTURA: array[0..2] of string = ('N', 'S', 'R');
 var
   Tipos: TTiposDocumentoEmpresa;
   TipoListado: TTipoDocumentoEmpresa;
@@ -525,13 +526,13 @@ var
   i: Integer;
 
   procedure CrearSiFalta(
-    const ATipo, ASubtipo, ACajaTipo: string);
+    const ATipo, ASubtipo, ACajaTipo, ASerieTokenizada: string);
   begin
     if FRepositorioSeriesEmpresa.CrearSerieSiFalta(
       sEmpresa,
       sAlmacen,
       ACajaTipo,
-      sSerieTokenizada,
+      ASerieTokenizada,
       ATipo,
       ASubtipo,
       IdentidadSesion.Usuario) then
@@ -573,12 +574,17 @@ begin
         begin
           sCajaTipo := sCaja;
         end;
-        CrearSiFalta(sTipo, '', sCajaTipo);
         if sTipo = 'FC' then
         begin
           for i := Low(SUBTIPOS_FACTURA) to High(SUBTIPOS_FACTURA) do
-            CrearSiFalta(sTipo, SUBTIPOS_FACTURA[i], sCajaTipo);
-        end;
+            CrearSiFalta(
+              sTipo,
+              SUBTIPOS_FACTURA[i],
+              sCajaTipo,
+              sSerieTokenizada + SUFIJOS_FACTURA[i]);
+        end
+        else
+          CrearSiFalta(sTipo, '', sCajaTipo, sSerieTokenizada);
       end;
       dmmEmpresas.AsegurarSeriesAbierta;
       dmmEmpresas.unqrySeries.Refresh;

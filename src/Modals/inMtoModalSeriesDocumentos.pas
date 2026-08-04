@@ -37,6 +37,8 @@ type
     cbbCaja: TcxLookupComboBox;
     lblSerieTokenizada: TcxLabel;
     txtSerieTokenizada: TcxTextEdit;
+    lblLeyendaTokens: TcxLabel;
+    lblLeyendaSubtipos: TcxLabel;
     btnAceptar: TcxButton;
     btnCancelar: TcxButton;
     alAcciones: TActionList;

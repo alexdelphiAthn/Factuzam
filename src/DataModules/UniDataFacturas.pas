@@ -532,18 +532,24 @@ begin
                 'SELECT EMPSER AS SERIE_CON            ' +
                 '  FROM vi_empresas_series                       ' +
                 ' WHERE CODIGO_EMP_EMPSER = :EMPRESA          ' +
-                '   AND (FECHA_DESDE_EMPSER <= :FECHA             ' +
-                '        AND (FECHA_HASTA_EMPSER >= :FECHA        ' +
-                '             OR FECHA_HASTA_EMPSER IS NULL ))    ' +
+                '   AND TIPO_DOC_EMPSER = ''FC''               ' +
+                '   AND (SUBTIPO_EMPSER = :SUBTIPO             ' +
+                '        OR IFNULL(SUBTIPO_EMPSER, '''') = '''') ' +
+                '   AND (FECHA_DESDE_EMPSER IS NULL            ' +
+                '        OR FECHA_DESDE_EMPSER <= :FECHA)      ' +
+                '   AND (FECHA_HASTA_EMPSER IS NULL            ' +
+                '        OR FECHA_HASTA_EMPSER >= :FECHA)      ' +
                 ' UNION                                          ' +
                 'SELECT SERIE_CON AS SERIE_CON         ' +
                 '  FROM vi_contadores                            ' +
                 ' WHERE ESACTIVO_CON = ''S''                  ' +
+                '   AND TIPO_DOC_CON = ''FC''                 ' +
                 '   AND EMPRESA_CON = :EMPRESA              ';
     Prepare;
     Params.ParamByName('EMPRESA').AsSTring := sEmpresa;
     Params.ParamByName('FECHA').AsDateTime := dtFecha;
     Params.ParamByName('CLIENTE').AsString := sCliente;
+    Params.ParamByName('SUBTIPO').AsString := FTipoFacturaDefecto;
     if unqrySeriesEditCombo.Active then
       unqrySeriesEditCombo.Close;
     unqrySeriesEditCombo.Open;
