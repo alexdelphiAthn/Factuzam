@@ -476,145 +476,25 @@ begin
   end;
 end;
 
-// Recalcula el siguiente numero desde los documentos ya importados. Nunca
-// reduce un contador existente: permite repetir el ajuste sin pisar numeros
-// que la aplicacion haya reservado despues de la migracion.
+// Delega el ajuste al procedimiento comun instalado por
+// DESARROLLOS EN CURSO/contadores_ajustar.sql. El calculo de maximos queda
+// exclusivamente en el script SQL y nunca reduce contadores existentes.
 procedure AjustarContadoresDestino(Eng: IContextoMigracion);
 var
-  q: TUniQuery;
-
-  procedure AjustarContadorDocumentos(const sTipo, sTabla, sEmpresa,
-    sSerie, sNumero: string; const iDigitos: Integer);
-  begin
-    q.SQL.Text := Format(
-      'INSERT INTO fza_contadores (' +
-      ' TIPO_DOC_CON, EMPRESA_CON, SERIE_CON, CON, NUM_DIGITOS_CON, ' +
-      ' ESACTIVO_CON, DEFAULT_CON, INSTANTE_ALTA, INSTANTE_MODIF, ' +
-      ' USUARIO_ALTA, USUARIO_MODIF) ' +
-      'SELECT :tipo, TRIM(%s), TRIM(%s), ' +
-      '       MAX(CAST(TRIM(%s) AS UNSIGNED)) + 1, ' +
-      '       GREATEST(:digitos, MAX(CHAR_LENGTH(TRIM(%s)))), ' +
-      '       ''S'', ''N'', NOW(), NOW(), :usuario, :usuario ' +
-      '  FROM %s ' +
-      ' WHERE TRIM(COALESCE(%s, '''')) <> '''' ' +
-      '   AND TRIM(COALESCE(%s, '''')) <> '''' ' +
-      '   AND TRIM(COALESCE(%s, '''')) REGEXP ''^[0-9]+$'' ' +
-      ' GROUP BY TRIM(%s), TRIM(%s) ' +
-      'ON DUPLICATE KEY UPDATE ' +
-      ' CON = GREATEST(CON, VALUES(CON)), ' +
-      ' NUM_DIGITOS_CON = GREATEST(NUM_DIGITOS_CON, ' +
-      '                            VALUES(NUM_DIGITOS_CON)), ' +
-      ' ESACTIVO_CON = ''S'', INSTANTE_MODIF = NOW(), ' +
-      ' USUARIO_MODIF = VALUES(USUARIO_MODIF)',
-      [sEmpresa, sSerie, sNumero, sNumero, sTabla, sEmpresa, sSerie,
-       sNumero, sEmpresa, sSerie]);
-    q.ParamByName('tipo').AsString := sTipo;
-    q.ParamByName('digitos').AsInteger := iDigitos;
-    q.ParamByName('usuario').AsString := Eng.Usuario;
-    q.ExecSQL;
-  end;
-
-  procedure AjustarContadorOperaciones;
-  begin
-    q.SQL.Text :=
-      'INSERT INTO fza_contadores (' +
-      ' TIPO_DOC_CON, EMPRESA_CON, SERIE_CON, CON, NUM_DIGITOS_CON, ' +
-      ' ESACTIVO_CON, DEFAULT_CON, INSTANTE_ALTA, INSTANTE_MODIF, ' +
-      ' USUARIO_ALTA, USUARIO_MODIF) ' +
-      'SELECT ''OV'', TRIM(CODIGO_EMP_OPCAJA), ''OV'', ' +
-      '       MAX(CAST(TRIM(NUMERO_OPERACION_OPCAJA) AS UNSIGNED)) + 1, ' +
-      '       GREATEST(8, MAX(CHAR_LENGTH(TRIM(NUMERO_OPERACION_OPCAJA)))), ' +
-      '       ''S'', ''N'', NOW(), NOW(), :usuario, :usuario ' +
-      '  FROM fza_caja_operaciones ' +
-      ' WHERE TRIM(COALESCE(CODIGO_EMP_OPCAJA, '''')) <> '''' ' +
-      '   AND TRIM(COALESCE(NUMERO_OPERACION_OPCAJA, '''')) ' +
-      '       REGEXP ''^[0-9]+$'' ' +
-      ' GROUP BY TRIM(CODIGO_EMP_OPCAJA) ' +
-      'ON DUPLICATE KEY UPDATE ' +
-      ' CON = GREATEST(CON, VALUES(CON)), ' +
-      ' NUM_DIGITOS_CON = GREATEST(NUM_DIGITOS_CON, ' +
-      '                            VALUES(NUM_DIGITOS_CON)), ' +
-      ' ESACTIVO_CON = ''S'', INSTANTE_MODIF = NOW(), ' +
-      ' USUARIO_MODIF = VALUES(USUARIO_MODIF)';
-    q.ParamByName('usuario').AsString := Eng.Usuario;
-    q.ExecSQL;
-    q.SQL.Text :=
-      'UPDATE fza_contadores c ' +
-      'JOIN (SELECT TRIM(CODIGO_EMP_OPCAJA) AS EMPRESA, ' +
-      '             MAX(CAST(TRIM(NUMERO_OPERACION_OPCAJA) AS UNSIGNED)) + 1 ' +
-      '               AS SIGUIENTE ' +
-      '        FROM fza_caja_operaciones ' +
-      '       WHERE TRIM(COALESCE(CODIGO_EMP_OPCAJA, '''')) <> '''' ' +
-      '         AND TRIM(COALESCE(NUMERO_OPERACION_OPCAJA, '''')) ' +
-      '             REGEXP ''^[0-9]+$'' ' +
-      '       GROUP BY TRIM(CODIGO_EMP_OPCAJA)) o ' +
-      '  ON o.EMPRESA = c.EMPRESA_CON ' +
-      ' SET c.CON = GREATEST(c.CON, o.SIGUIENTE), ' +
-      '     c.NUM_DIGITOS_CON = GREATEST(c.NUM_DIGITOS_CON, 8), ' +
-      '     c.INSTANTE_MODIF = NOW(), c.USUARIO_MODIF = :usuario ' +
-      'WHERE c.TIPO_DOC_CON = ''OV''';
-    q.ParamByName('usuario').AsString := Eng.Usuario;
-    q.ExecSQL;
-  end;
-
-  procedure AjustarContadorGlobal(const sTipo, sTabla, sNumero: string;
-    const iDigitos: Integer);
-  begin
-    q.SQL.Text := Format(
-      'INSERT INTO fza_contadores (' +
-      ' TIPO_DOC_CON, EMPRESA_CON, SERIE_CON, CON, NUM_DIGITOS_CON, ' +
-      ' ESACTIVO_CON, DEFAULT_CON, INSTANTE_ALTA, INSTANTE_MODIF, ' +
-      ' USUARIO_ALTA, USUARIO_MODIF) ' +
-      'SELECT :tipo, ''-'', ''-'', ' +
-      '       MAX(CAST(TRIM(%s) AS UNSIGNED)) + 1, ' +
-      '       GREATEST(:digitos, MAX(CHAR_LENGTH(TRIM(%s)))), ' +
-      '       ''S'', ''S'', NOW(), NOW(), :usuario, :usuario ' +
-      '  FROM %s ' +
-      ' WHERE TRIM(COALESCE(%s, '''')) REGEXP ''^[0-9]+$'' ' +
-      'HAVING COUNT(*) > 0 ' +
-      'ON DUPLICATE KEY UPDATE ' +
-      ' CON = GREATEST(CON, VALUES(CON)), ' +
-      ' NUM_DIGITOS_CON = GREATEST(NUM_DIGITOS_CON, ' +
-      '                            VALUES(NUM_DIGITOS_CON)), ' +
-      ' ESACTIVO_CON = ''S'', DEFAULT_CON = ''S'', ' +
-      ' INSTANTE_MODIF = NOW(), USUARIO_MODIF = VALUES(USUARIO_MODIF)',
-      [sNumero, sNumero, sTabla, sNumero]);
-    q.ParamByName('tipo').AsString := sTipo;
-    q.ParamByName('digitos').AsInteger := iDigitos;
-    q.ParamByName('usuario').AsString := Eng.Usuario;
-    q.ExecSQL;
-  end;
-
+  oProcedimiento: TUniStoredProc;
 begin
-  q := TUniQuery.Create(nil);
+  oProcedimiento := TUniStoredProc.Create(nil);
   try
-    q.Connection := Eng.Datos.ConexionDestino;
-    AjustarContadorOperaciones;
-    AjustarContadorDocumentos('FC', 'fza_facturas', 'CODIGO_EMP_FAC',
-      'SERIE_FAC', 'NUMERO_FAC', 6);
-    AjustarContadorDocumentos('PE', 'fza_pedidos', 'CODIGO_EMP_PED',
-      'SERIE_PED', 'NUMERO_PED', 6);
-    AjustarContadorDocumentos('AV', 'fza_albaranes', 'CODIGO_EMP_ALB',
-      'SERIE_ALB', 'NUMERO_ALB', 6);
-    AjustarContadorDocumentos('PC', 'fza_pedidos_compra', 'CODIGO_EMP_PEDC',
-      'SERIE_PEDC', 'NUMERO_PEDC', 6);
-    AjustarContadorDocumentos('AB', 'fza_albaranes_compra', 'CODIGO_EMP_ALBC',
-      'SERIE_ALBC', 'NUMERO_ALBC', 6);
-    AjustarContadorDocumentos('DC', 'fza_devoluciones_compra',
-      'CODIGO_EMP_DEVC', 'SERIE_DEVC', 'NUMERO_DEVC', 6);
-    AjustarContadorDocumentos('FP', 'fza_facturas_compra', 'CODIGO_EMP_FACC',
-      'SERIE_FACC', 'NUMERO_FACC', 6);
-    AjustarContadorDocumentos('IN', 'fza_inventarios', 'CODIGO_EMP_INV',
-      'SERIE_INV', 'NUMERO_INV', 6);
-    AjustarContadorGlobal('CL', 'fza_clientes', 'CODIGO_CLI_CLI', 3);
-    AjustarContadorGlobal('CO', 'fza_clientes', 'ORDEN_CLI', 3);
-    AjustarContadorGlobal('PV', 'fza_proveedores', 'CODIGO_PRV_PRV', 3);
-    AjustarContadorGlobal('PO', 'fza_proveedores', 'ORDEN_PRV', 3);
-    AjustarContadorGlobal('EM', 'fza_empresas', 'CODIGO_EMP_EMP', 3);
-    AjustarContadorGlobal('EO', 'fza_empresas', 'ORDEN_EMP', 3);
-    Eng.Registro.Log('  contadores ajustados desde los documentos ya importados.');
+    oProcedimiento.Connection := Eng.Datos.ConexionDestino;
+    oProcedimiento.StoredProcName := 'PRC_AJUSTAR_CONTADORES';
+    oProcedimiento.Params.Clear;
+    oProcedimiento.Params.CreateParam(ftString, 'p_USUARIO', ptInput);
+    oProcedimiento.ParamByName('p_USUARIO').AsString := Eng.Usuario;
+    oProcedimiento.ExecProc;
+    Eng.Registro.Log(
+      '  contadores ajustados desde los datos ya importados.');
   finally
-    q.Free;
+    FreeAndNil(oProcedimiento);
   end;
 end;
 

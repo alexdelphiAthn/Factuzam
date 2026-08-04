@@ -7404,6 +7404,24 @@ begin
     @inLibMsgConfiguracion.
       SCaptionFiltroArchivosSqlTexto);
   ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SPreguntaAjustarContadores',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SPreguntaAjustarContadores);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SInfoContadoresAjustados',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SInfoContadoresAjustados);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorAjustarContadores',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorAjustarContadores);
+  ARegistrar(
     'inLibMsgFacturas.' +
     'SErrorLecturasFacturasNoRegistradas',
     'src/Lib/inLibMsgFacturas.pas',

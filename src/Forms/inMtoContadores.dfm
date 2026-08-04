@@ -112,6 +112,17 @@
       end
     end
   end
+  inherited pButtonRightBar: TPanel
+    object btnAjustar: TcxButton
+      Left = 1
+      Top = 154
+      Width = 138
+      Height = 34
+      Caption = '&Ajustar'
+      TabOrder = 2
+      OnClick = btnAjustarClick
+    end
+  end
   inherited dsTablaG: TDataSource
     DataSet = dmContadores.unqryTablaG
     Left = 96

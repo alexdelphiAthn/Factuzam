@@ -19,7 +19,7 @@ interface
 uses
   inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics,
+  System.Classes, System.UITypes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoGen, dxSkinsCore,
   dxSkinsDefaultPainters, cxGraphics, cxControls,
   cxLookAndFeels, cxLookAndFeelPainters, cxStyles, cxCustomData, cxFilter,
@@ -62,9 +62,11 @@ type
     cxGrdDBTabPrinEMPRESA_CONTADOR: TcxGridDBColumn;
     cxGrdDBTabPrinDESCRIPCION_TIPODOCUMENTO: TcxGridDBColumn;
     cxGrdDBTabPrinTABLAORIGEN_TIPODOCUMENTO: TcxGridDBColumn;
+    btnAjustar: TcxButton;
+    procedure btnAjustarClick(Sender: TObject);
     procedure dsTablaGStateChange(Sender: TObject);
   private
-    { Private declarations }
+    procedure FinalizarAjusteContadores(const AError: string);
   public
     dmmContadores: TdmContadores;
     procedure CrearTablaPrincipal; override;
@@ -74,13 +76,31 @@ type
 implementation
 
 uses
-  inLibWin;
+  inLibWin, inLibMsgConfiguracion, inLibPermisosIntf;
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoContadores }
+
+procedure TfrmMtoContadores.btnAjustarClick(Sender: TObject);
+begin
+  inherited;
+  if not PuedeAccionMto(apmModificar) then
+    ShowMessage(SErrorPermisoModificarRegistro)
+  else if MessageDlg(SPreguntaAjustarContadores, mtConfirmation,
+    [mbYes, mbNo], 0) = mrYes then
+    EjecutarEnBackground(
+      procedure
+      begin
+        dmmContadores.AjustarContadores;
+      end,
+      procedure(AError: string)
+      begin
+        FinalizarAjusteContadores(AError);
+      end);
+end;
 
 procedure TfrmMtoContadores.CrearTablaPrincipal;
 begin
@@ -92,15 +112,31 @@ end;
 procedure TfrmMtoContadores.ResetForm;
 begin
   inherited;
+  btnAjustar.Enabled :=
+    PuedeAccionMto(apmModificar) and (dsTablaG.State = dsBrowse);
 end;
 
 procedure TfrmMtoContadores.dsTablaGStateChange(Sender: TObject);
 begin
   inherited;
+  btnAjustar.Enabled :=
+    PuedeAccionMto(apmModificar) and (dsTablaG.State = dsBrowse);
   if dsTablaG.State = dsInsert then
     cxgrdbclmnGrdDBTabPrinTIPODOC_CONTADOR.Options.Editing := True
   else
     cxgrdbclmnGrdDBTabPrinTIPODOC_CONTADOR.Options.Editing := False;
+end;
+
+procedure TfrmMtoContadores.FinalizarAjusteContadores(
+  const AError: string);
+begin
+  if AError <> '' then
+    ShowMessage(Format(SErrorAjustarContadores, [AError]))
+  else
+  begin
+    dmmContadores.RefrescarContadores;
+    ShowMessage(SInfoContadoresAjustados);
+  end;
 end;
 
 initialization

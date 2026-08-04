@@ -27,7 +27,8 @@ type
   private
     { Private declarations }
   public
-    { Public declarations }
+    procedure AjustarContadores;
+    procedure RefrescarContadores;
   end;
 
 implementation
@@ -37,6 +38,30 @@ implementation
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure TdmContadores.AjustarContadores;
+var
+  oProcedimiento: TUniStoredProc;
+begin
+  oProcedimiento := TUniStoredProc.Create(nil);
+  try
+    oProcedimiento.Connection := unqryTablaG.Connection;
+    oProcedimiento.StoredProcName := 'PRC_AJUSTAR_CONTADORES';
+    oProcedimiento.Params.Clear;
+    oProcedimiento.Params.CreateParam(ftString, 'p_USUARIO', ptInput);
+    oProcedimiento.ParamByName('p_USUARIO').AsString :=
+      IdentidadSesion.Usuario;
+    oProcedimiento.ExecProc;
+  finally
+    FreeAndNil(oProcedimiento);
+  end;
+end;
+
+procedure TdmContadores.RefrescarContadores;
+begin
+  if unqryTablaG.Active then
+    unqryTablaG.Refresh;
+end;
 
 initialization
   RegistrarDataModule(TdmContadores);

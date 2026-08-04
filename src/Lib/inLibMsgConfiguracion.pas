@@ -276,6 +276,15 @@ resourcestring
     'No tienes permiso para guardar este registro.';
   SErrorPermisoBorrarRegistro =
     'No tienes permiso para borrar registros en esta pantalla.';
+  SPreguntaAjustarContadores =
+    'Se buscará el mayor número utilizado en cada origen y el contador ' +
+    'se situará en el siguiente número disponible.' + sLineBreak +
+    sLineBreak + 'Los contadores solo avanzarán; nunca se reducirán.' +
+    sLineBreak + sLineBreak + '¿Desea continuar?';
+  SInfoContadoresAjustados =
+    'Los contadores se han ajustado correctamente.';
+  SErrorAjustarContadores =
+    'No se pudieron ajustar los contadores.' + sLineBreak + '%s';
   SErrorNodoPermisosNoSeleccionado =
     'Selecciona primero un nodo del arbol.';
   SErrorOrigenDestinoPermisosNoSeleccionados =
