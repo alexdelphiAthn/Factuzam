@@ -85,6 +85,7 @@ implementation
 
 uses
   System.SysUtils,
+  System.UITypes,
   Vcl.Dialogs,
   inLibMsgVerifactu;
 

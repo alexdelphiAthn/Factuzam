@@ -35,9 +35,10 @@ consolidación única de la factura para mantener su identidad fiscal.
 - `inLibFacturasIncidenciaFiscal` aplica la decisión y las validaciones.
 - `UniDataFacturasIncidenciaFiscal` carga la incidencia y crea la R4.
 - `inMtoModalResolverIncidenciaVerifactu` recoge la decisión del usuario.
-- `UniDataVerifactuColaRepositorio` encola solo subsanaciones válidas.
-- `UniDataVerifactuColaResultados` conserva el alta original al aceptar la
-  subsanación.
+- `inMtoFacturasIncidenciaFiscalVcl` integra el botón en Venta Mayor.
+- `UniDataVerifactuSubsanacionRepositorio` encola solo subsanaciones válidas.
+- `UniDataVerifactuSubsanacionResultados` conserva el alta original al
+  aceptar la subsanación.
 
 ## Pruebas manuales
 

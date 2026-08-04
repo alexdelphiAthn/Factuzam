@@ -4,15 +4,19 @@
 -- no modifica nada.
 --
 -- Salida: una fila por script, con '>>> FALTA <<<' arriba. Cada script
--- de la lista es idempotente: el que falte se lanza tal cual, en el orden
--- mostrado por orden_aplicacion.
+-- verificable de la lista es idempotente: el que falte se lanza tal cual,
+-- en el orden mostrado por orden_aplicacion.
 --
 -- Cubre los scripts de esquema detectables de las últimas tandas
 -- (jun/jul-2026). Los scripts solo-datos no se pueden detectar por
 -- esquema; ver la lista al final del fichero.
 SELECT t.orden AS orden_aplicacion,
        t.script,
-       IF(t.aplicado = 1, 'OK', '>>> FALTA <<<') AS estado,
+       CASE
+         WHEN t.aplicado = 1 THEN 'OK'
+         WHEN t.aplicado = 0 THEN '>>> FALTA <<<'
+         ELSE 'NO VERIFICABLE'
+       END AS estado,
        t.objeto
   FROM (
     SELECT 10 AS orden, 'verifactu_relaciones.sql' AS script,
@@ -833,8 +837,58 @@ SELECT t.orden AS orden_aplicacion,
                        WHERE TABLE_SCHEMA = DATABASE()
                          AND TABLE_NAME = 'fza_facturas_consolidaciones'
                          AND COLUMN_NAME = 'INSTANTE_SUBSANACION_FACCON')
+    UNION ALL
+    SELECT 540, 'series_ejercicio_natural.sql',
+           'tokens naturales de series de empresa + vistas',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_empresas'
+                     AND COLUMN_NAME = 'ESTOKENS_CALENDARIO_NATURAL_EMP')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_empresas_series'
+                         AND COLUMN_NAME = 'SERIE_TOKENIZADA_EMPSER')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'vi_empresas_series'
+                         AND COLUMN_NAME = 'SERIE_TOKENIZADA_EMPSER')
+    UNION ALL
+    SELECT 550, 'generadorprocesos_ampliar_proceso.sql',
+           'fza_generadorprocesos.PROCESO_GENERADOR_PROCESO_GP MEDIUMTEXT',
+           EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                   WHERE TABLE_SCHEMA = DATABASE()
+                     AND TABLE_NAME = 'fza_generadorprocesos'
+                     AND COLUMN_NAME = 'PROCESO_GENERADOR_PROCESO_GP'
+                     AND DATA_TYPE IN ('mediumtext', 'longtext'))
+    UNION ALL
+    SELECT 560, 'vales_emitidos_pagos.sql',
+           'forma de pago VALE + pagos de vales emitidos',
+           EXISTS(SELECT 1 FROM fza_caja_formas_pago
+                   WHERE CODIGO_FP_CFP = 'VALE')
+           AND NOT EXISTS(
+             SELECT 1
+               FROM fza_caja_vales v
+              WHERE ABS(COALESCE(v.IMPORTE_NOMINAL_VL, 0)) >= 0.005
+                AND NOT EXISTS(
+                  SELECT 1
+                    FROM fza_caja_pagos p
+                   WHERE p.CODIGO_EMP_PAGO = v.CODIGO_EMP_EMI_VL
+                     AND p.CODIGO_ALM_PAGO = v.CODIGO_ALM_EMI_VL
+                     AND p.CODIGO_CAJA_PAGO = v.CODIGO_CAJA_EMI_VL
+                     AND p.NUMERO_OPERACION_PAGO =
+                         v.NUMERO_OPERACION_EMI_VL
+                     AND p.CODIGO_FP_CFP = 'VALE'
+                     AND p.IMPORTE_ENTREGADO_PAGO < 0
+                     AND (p.REFERENCIA_FACPAG = v.CODIGO_VL
+                       OR ABS(p.IMPORTE_ENTREGADO_PAGO
+                              + ABS(v.IMPORTE_NOMINAL_VL)) < 0.005)))
   ) t
- ORDER BY t.aplicado, t.orden;
+ ORDER BY CASE
+            WHEN t.aplicado = 0 THEN 0
+            WHEN t.aplicado = 1 THEN 1
+            ELSE 2
+          END,
+          t.orden;
 -- Scripts solo-datos, no detectables por esquema. Son idempotentes:
 -- si hay duda, relanzarlos no hace daño.
 --   busqueda_datos_shortcuts.sql

@@ -26,6 +26,7 @@ implementation
 
 uses
   System.SysUtils,
+  Data.DB,
   inLibMsgVerifactu;
 
 const
@@ -112,7 +113,14 @@ begin
       '        f.CODIGO_CLI_FAC, f.RAZON_SOCIAL_CLIENTE_FAC, ' +
       '        f.NIF_CLIENTE_FAC, c.ESTADO_FACCON, ' +
       '        c.CODIGO_ERROR_AEAT_FACCON, ' +
-      '        c.DESCRIPCION_ERROR_AEAT_FACCON, ' +
+      '        COALESCE(NULLIF(c.DESCRIPCION_ERROR_AEAT_FACCON, ''''), ' +
+      '          (SELECT qa.MENSAJE_ERROR_VFCOLA ' +
+      '             FROM fza_verifactu_cola qa ' +
+      '            WHERE qa.SERIE_FAC_VFCOLA = f.SERIE_FAC ' +
+      '              AND qa.NUMERO_FAC_VFCOLA = f.NUMERO_FAC ' +
+      '              AND qa.TIPO_OPERACION_VFCOLA = ''ALTA'' ' +
+      '            ORDER BY qa.ID_VFCOLA DESC LIMIT 1)) ' +
+      '          AS DESCRIPCION_ERROR_AEAT_FACCON, ' +
       '        (SELECT q.ESTADO_VFCOLA ' +
       '           FROM fza_verifactu_cola q ' +
       '          WHERE q.SERIE_FAC_VFCOLA = f.SERIE_FAC ' +

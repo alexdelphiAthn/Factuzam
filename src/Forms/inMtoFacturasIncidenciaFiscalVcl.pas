@@ -19,7 +19,7 @@ uses
   cxButtons;
 type
   TcxResolverIncidenciaVerifactuButton = class(TcxButton)
-  protected
+  public
     procedure Click; override;
   end;
 procedure ActualizarBotonResolverIncidenciaVcl(

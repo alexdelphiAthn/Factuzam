@@ -1,844 +1,1051 @@
-# TAREAS IA SOLID — ejecución sin unidades concurrentes
+# TAREAS IA SOLID — siguiente iteración
 
-Catálogo listo para repartir el plan `PLAN_SOLID.md` entre sesiones de IA.
-Las tareas están organizadas por olas. **Solo las tareas de una misma ola se
-pueden ejecutar en paralelo.** Dentro de cada ola no se repite ninguna unidad
-Pascal. Las tareas seriales actúan como barrera y nunca se ejecutan mientras
-otra sesión esté editando el repositorio.
+Catálogo para continuar mejorando Factuzam mediante varios hilos de IA sobre
+el mismo repositorio. Esta versión sustituye por completo al catálogo
+anterior: conserva lo resuelto, asigna propiedad exclusiva de archivos y
+separa las tareas paralelas mediante barreras de integración.
 
-Estado de partida: 02/08/2026.
-
----
-
-## 1. Cómo usar este catálogo
-
-Para abrir una tarea, entregar a la IA:
-
-1. el “Contrato común” de la sección 2;
-2. el bloque completo de la tarea elegida;
-3. la indicación de que lea `AGENTS.md`, `PLAN_SOLID.md`,
-   `LIBRO_DE_ESTILO_DELPHI.md` y, si toca SQL,
-   `LIBRO_DE_ESTILO_BBDD.md`.
-
-No se inicia una ola hasta que la anterior está integrada y vuelve a estar
-verde. Si una tarea descubre que necesita editar una unidad de otra tarea, se
-detiene y lo informa; no amplía su alcance por su cuenta.
-
-Cada `.pas` VCL asignado incluye automáticamente su `.dfm` homónimo. Una
-unidad nueva pertenece a la tarea que la crea y debe tener un nombre específico
-del feature; queda prohibido crear catálogos, `Utils`, `Common` o repositorios
-genéricos para eludir la propiedad.
+Estado medido: **04/08/2026**, sobre el árbol de trabajo actual.
 
 ---
 
-## 2. Contrato común para todas las IA
+## 1. Resultado que persigue esta iteración
+
+Al terminar esta hoja de ruta, el código debe haber mejorado de forma
+observable en cuatro frentes:
+
+1. Las pantallas reciben sus dependencias; no las buscan recorriendo `Owner`
+   ni recurriendo a `Application.MainForm`.
+2. Ninguna clase propia supera 2.000 líneas y las extracciones representan
+   responsabilidades reales, no trozos del mismo formulario.
+3. Los métodos de mayor riesgo quedan divididos por intención y su núcleo se
+   puede probar sin VCL ni una conexión real.
+4. Los trinquetes que ya están a cero permanecen a cero: estilo, SQL en
+   dominio, consultas en UI, dependencias de capa y estado global.
+
+No se busca aumentar el número de interfaces. Se busca que cada consumidor
+conozca menos cosas y que las dependencias necesarias aparezcan en una firma,
+un constructor o un contexto de feature pequeño.
+
+---
+
+## 2. Línea base real
+
+`scripts/comprobar_calidad.ps1` termina correctamente con 17 comprobadores.
+La situación actual que no se debe perder es:
+
+| Indicador | Estado |
+|-----------|-------:|
+| Codificación y finales de línea fuera de norma | 0 |
+| `Exit`, `Continue`, `with`, líneas anchas y tabuladores | 0 |
+| Consultas, SQL, UniDAC o transacciones en UI | 0 |
+| SQL literal en `inLib*` | 0 |
+| Dependencias `inLib* -> UniData*` | 0 |
+| Ciclo mayor entre unidades | 1 |
+| Variables globales en `interface` y `except` vacíos | 0 |
+| Métodos de más de 200 líneas | 0 |
+| Métodos de más de 120 líneas | 67 |
+| Riesgo acumulado de métodos largos | 13.134 |
+| Riesgo individual máximo | 280 |
+| Fan-out máximo | 72, en `inMtoFacturasBase` |
+| Clases analizadas | 713 |
+| Tamaño máximo de clase | 2.684 líneas |
+
+Las mayores clases pendientes son:
+
+| Clase | Líneas | Métodos | Motivo principal de cambio pendiente |
+|-------|-------:|--------:|--------------------------------------|
+| `TfrmMtoPedidosCompra` | 2.684 | 88 | Pedido, recepción y albarán |
+| `TdmFacturas` | 2.529 | 71 | Dataset, validación y fiscalidad |
+| `TfrmMtoDevolucionesCompra` | 2.259 | 84 | Edición, stock y devolución |
+| `TEditorLineasCajaVcl` | 2.193 | 74 | Entrada, búsqueda, stock y renderizado |
+| `TdmAlbaranes` | 2.176 | 43 | Persistencia y movimientos de salida |
+| `TfrmMtoPrincipal` | 2.131 | 98 | Shell, arranque y composición |
+| `TdmPedidos` | 2.057 | 43 | Persistencia y flujo de pedidos |
+| `TfrmMtoGen` | 2.053 | 101 | Base visual con demasiadas capacidades |
+| `TdmCajaOpe` | 2.033 | 31 | Persistencia y cierre de venta |
+
+Quedan además dos unidades procedurales por encima de su objetivo de 30
+rutinas:
+
+- `UniDataArticulosVariaciones`: 43 rutinas.
+- `UniDataFotosRepositorio`: 33 rutinas.
+
+### Hallazgo arquitectónico principal
+
+`inLibRepositoriosPantallaIntf` todavía contiene `BuscarCompositor` y nueve
+funciones `ObtenerCompositor*Pantalla`. La resolución recorre la cadena de
+propietarios y usa `Application.MainForm` como último recurso. Además, los
+contratos de repositorios de pantalla exponen `TUniConnection` o `TDataSet`.
+
+El mecanismo funciona, pero oculta dependencias y obliga a las pantallas a
+conservar factorías más amplias que sus necesidades reales. La primera fase
+de esta iteración lo reemplaza por composición explícita por feature.
+
+### Trabajo local que se debe respetar
+
+La fotografía tomada al cerrar esta versión contiene cambios ajenos en:
+
+- `src/DataModules/UniDataFacturasIncidenciaFiscal.pas`;
+- `src/Forms/inMtoFacturasIncidenciaFiscalVcl.pas`;
+- `src/Modals/inMtoModalResolverIncidenciaVerifactu.pas`.
+
+La lista es solo un aviso inicial: puede quedar obsoleta. `IA-00` genera el
+mapa de propiedad válido para cada ejecución. Ninguna tarea de Facturas
+empieza hasta que esas rutas estén libres o el usuario transfiera expresamente
+su propiedad.
+
+---
+
+## 3. Modelo de trabajo con varios hilos
+
+Todos los hilos comparten el mismo árbol. La concurrencia se controla mediante
+propiedad temporal de archivos, no mediante la confianza en resolver luego los
+conflictos.
+
+### 3.1 Coordinador e hilos de trabajo
+
+Estados permitidos:
 
 ```text
-Trabaja en el repositorio Factuzam y responde en español.
+PENDIENTE -> EN_CURSO -> LISTA_PARA_INTEGRAR -> INTEGRANDO -> CERRADA
+                                                   \-> REABIERTA
+```
+
+Una tarea en `LISTA_PARA_INTEGRAR` ya no edita. La propiedad solo termina
+cuando el coordinador la transfiere expresamente al integrador.
+
+Hay un único coordinador por ola. El coordinador:
+
+1. comprueba la barrera de entrada;
+2. publica el arrendamiento de rutas de cada tarea;
+3. reserva los nombres de unidades nuevas;
+4. inicia los hilos de la ola;
+5. espera a que todos queden en `LISTA_PARA_INTEGRAR`;
+6. verifica que no existan archivos solapados;
+7. integra manifiestos y ejecuta la barrera de salida.
+
+Un hilo solo puede editar las rutas de su bloque **Propiedad exclusiva**. Un
+`.pas` VCL y su `.dfm` homónimo forman una propiedad indivisible. Una unidad
+nueva pertenece al hilo cuyo prefijo esté reservado.
+
+### 3.2 Archivos compartidos reservados al integrador
+
+Ningún hilo paralelo modifica:
+
+- `fzam.dpr` y `fzam.dproj`;
+- `tests/FactuzamTests.dpr` y `tests/FactuzamTests.dproj`;
+- `src/Core/inMtoPrincipal.pas` y su DFM;
+- `src/Lib/inLibShowMto.pas`;
+- `src/Lib/inLibRegistroPantallas.pas`;
+- `src/Lib/inLibRepositoriosPantallaIntf.pas`;
+- `src/DataModules/UniDataComposicionAplicacion.pas`;
+- `src/DataModules/UniDataRepositoriosPantalla.pas`;
+- `scripts/`, documentos de planificación y baselines.
+
+`IA-01`, `IA-06` e `IA-99` son barreras seriales y sí pueden recibir la
+propiedad explícita de esos archivos.
+
+### 3.3 Contrato que recibe cada hilo
+
+```text
+Trabaja en Factuzam y responde en español.
 
 Antes de editar:
-- Lee AGENTS.md y los libros de estilo aplicables completos.
-- Conserva todos los cambios locales ajenos; el árbol puede estar sucio.
-- Revisa PLAN_SOLID.md y esta tarea.
+- Lee AGENTS.md y LIBRO_DE_ESTILO_DELPHI.md completos.
+- Si hay SQL o esquema, lee también LIBRO_DE_ESTILO_BBDD.md completo.
+- Lee la barrera de entrada, tu tarea y su Propiedad exclusiva.
+- Ejecuta git status --short y no toques ningún cambio ajeno.
+- Comprueba que ningún archivo arrendado está asignado a otro hilo.
 
-Límites:
-- Edita únicamente las unidades asignadas y las unidades nuevas reservadas
-  por esta tarea.
-- Una unit VCL incluye su DFM homónimo.
-- No edites fzam.dpr, fzam.dproj, tests/FactuzamTests.dpr,
-  tests/FactuzamTests.dproj, .github/workflows/calidad.yml, scripts/,
-  baselines ni documentos de planificación. Los integra IA-99.
-- Nunca modifiques factuzam_original.sql.
-- No introduzcas dependencias nuevas, no sustituyas UniDAC y no hagas commit.
-- Si necesitas tocar una unidad no asignada, detente y entrega el motivo,
-  la ruta y el cambio mínimo necesario.
+Durante el trabajo:
+- Edita solo las rutas arrendadas y unidades nuevas con tu prefijo reservado.
+- Considera el PAS y su DFM una sola unidad de propiedad.
+- Caracteriza el comportamiento antes de extraerlo.
+- No mezcles refactor, cambio funcional y normalización mecánica.
+- No pases un formulario completo a aplicación o dominio.
+- Recibe y valida las dependencias obligatorias de forma explícita.
+- Todo código nuevo cumple P5.
+- No edites manifiestos, raíz, scripts, baselines ni planes compartidos.
+- No modifiques factuzam_original.sql, no añadas dependencias y no hagas commit.
 
-Método:
-1. Mide el estado inicial de tus unidades.
-2. Añade o adapta pruebas de caracterización antes del refactor.
-3. Extrae por comportamiento, no por tamaño ni por nombre de evento.
-4. Las dependencias quedan visibles y mínimas; ningún colaborador conserva
-   un formulario completo ni busca servicios globales.
-5. Todo código nuevo cumple P5. No mezcles normalización masiva con lógica.
-6. Ejecuta los comprobadores relevantes, compila Win32/Win64 y ejecuta DUnitX.
+Si necesitas una ruta no arrendada:
+- Detente antes de editarla.
+- Informa de ruta, motivo y cambio mínimo.
+- Espera a que el coordinador cambie el reparto o reserve una barrera serial.
 
-Entrega:
-- Resultado funcional.
-- Unidades editadas y creadas.
-- Métricas antes/después.
-- Pruebas ejecutadas y resultado.
-- Riesgos pendientes o archivos compartidos que IA-99 debe integrar.
+Antes de entregar:
+- Ejecuta pruebas y comprobadores limitados a tu alcance.
+- No ejecutes la compilación global mientras otros hilos estén escribiendo.
+- Informa de archivos, pruebas, métricas, altas de manifiesto y riesgos.
+- Deja el estado LISTA_PARA_INTEGRAR.
+```
+
+Las pruebas completas usan salidas compartidas en `tests/bin` y `tests/dcu`.
+Por eso calidad global, compilación y DUnitX en Win32/Win64 se ejecutan solo en
+una mini-barrera con los demás escritores pausados o en la barrera de salida.
+Un fallo observado mientras otro hilo edita no se atribuye a ninguna tarea.
+
+Una prueba de caracterización se añade antes o en el mismo fascículo que la
+extracción. No es válido mover código y escribir después una prueba que solo
+reproduzca la nueva implementación.
+
+### 3.4 Alta de unidades y pruebas nuevas
+
+El hilo crea la unidad bajo su prefijo reservado, la referencia desde una
+unidad propia cuando corresponda y solicita al integrador el alta. Solo el
+integrador modifica los proyectos. La solicitud indica:
+
+```text
+Unidad nueva:
+Proyecto de producción o pruebas:
+Unidad que la consume:
+Motivo del alta:
+```
+
+### 3.5 Barreras y olas
+
+| Fase | Ejecución | Tareas | Barrera de salida |
+|------|-----------|--------|-------------------|
+| B0 | Serial | `IA-00` | Línea base y mapa de propiedad publicados |
+| B1 | Serial | `IA-01` | Canal de inyección estable y congelado |
+| O1 | Paralela | `IA-02C`, `IA-02V`, `IA-02M` | Contextos de familias preparados |
+| O2 | Paralela | `IA-03A`, `IA-03I`, `IA-03S`, `IA-04` | Features sin búsqueda oculta |
+| O2F | Aislada | `IA-05` | Facturas migradas tras cerrar su WIP |
+| B2 | Serial | `IA-06` | Raíz cableada y localizador retirado |
+| O3 | Paralela | `IA-10A` a `IA-16B` | Agregados grandes reducidos |
+| B3 | Serial | `IA-18` | Ola O3 integrada y verde |
+| O4 | Paralela | `IA-20A`, `IA-20B`, `IA-20C` | Ranking residual reducido |
+| B4 | Serial | `IA-99` | Verificación final y nuevos trinquetes |
+
+Las tareas de una ola se pueden ejecutar a la vez. Una ola no empieza hasta
+que la barrera anterior esté verde. Si solo hay tres hilos disponibles, el
+coordinador despacha la misma ola en tantas tandas como sean necesarias sin
+introducir una barrera lógica entre ellas.
+
+---
+
+## 5. Fase A — composición explícita
+
+### [ ] IA-00 — confirmar una línea base estable
+
+**Objetivo**
+
+Evitar que una refactorización empiece sobre un fallo o sobre archivos que
+otra sesión está editando.
+
+**Acciones**
+
+1. Ejecutar `git status --short`.
+2. Identificar propietario de cada cambio local.
+3. Comparar las unidades `tests/Pruebas*.pas` con
+   `tests/FactuzamTests.dpr`.
+4. Ejecutar `scripts/comprobar_calidad.ps1`.
+5. Ejecutar `scripts/ejecutar_pruebas_delphi.ps1` si Delphi está disponible.
+6. Guardar las cifras de acoplamiento, tamaño y métodos largos.
+7. Publicar el mapa de rutas, pruebas y nombres reservados fuera del repo.
+
+**Aceptación**
+
+- Calidad verde.
+- Compilación y DUnitX verdes en Win32 y Win64, o limitación de entorno
+  documentada.
+- Ningún archivo ajeno queda incluido en el alcance de la siguiente tarea.
+- El inventario identifica toda prueba presente pero ausente del DPR.
+
+En la auditoría del 04/08/2026 se detectaron seis unidades no registradas:
+las cuatro `PruebasComposicion*Pantalla`, `PruebasModoTallas` y
+`PruebasRepositoriosPantallaComposicion`. La barrera `IA-01` debe registrarlas
+y ejecutarlas antes de congelar el canal de composición.
+
+Esta tarea no modifica código ni documentos.
+
+### [ ] IA-01 — crear el canal de composición explícita
+
+**Objetivo**
+
+Hacer que la raíz pueda entregar a una pantalla un contexto de feature ya
+construido durante su creación. Probar el mecanismo con Stock Consulta, sin
+retirar todavía la compatibilidad de los demás features.
+
+**Propiedad exclusiva**
+
+- `src/Lib/inLibShowMto.pas`;
+- `src/Lib/inLibRegistroPantallas.pas`;
+- `src/Core/inMtoPrincipal.pas`;
+- `src/DataModules/UniDataComposicionAplicacion.pas`;
+- `src/Lib/inLibRepositoriosPantallaIntf.pas`;
+- `src/Forms/inMtoStockConsulta.pas`;
+- `src/Forms/inMtoStockConsultaPresentacionComposicion.pas`;
+- `tests/FactuzamTests.dpr` y `tests/FactuzamTests.dproj`;
+- `tests/PruebasRegistroPantallas.pas`;
+- `tests/PruebasRepositoriosPantallaComposicion.pas`;
+- una prueba nueva reservada como `PruebasInyeccionStockConsulta.pas`.
+
+**Diseño exigido**
+
+- La raíz crea las implementaciones concretas.
+- Stock Consulta recibe un `record` o contrato propio con solo las
+  capacidades que utiliza.
+- La falta de una dependencia obligatoria falla al crear o preparar la
+  pantalla, no al pulsar un botón.
+- El núcleo de Stock Consulta no recibe `TComponent`, `TForm`,
+  `TUniConnection` ni una factoría general.
+- El mecanismo debe servir para pantallas creadas desde el registro sin
+  introducir un diccionario de servicios por nombre.
+
+**Aceptación**
+
+- Stock Consulta no llama a ninguna función `ObtenerCompositor*Pantalla`.
+- Sus pruebas construyen el feature con dobles y sin `Application.MainForm`.
+- Abrir una pantalla registrada conserva su autorización, propietario y
+  ciclo de vida.
+- El localizador heredado no recibe lógica nueva.
+- Las seis pruebas detectadas por `IA-00` están registradas y se han
+  ejecutado realmente.
+- La API de inyección queda congelada para las tareas de O1 y O2.
+
+### [ ] IA-02C — composición de Configuración
+
+**Depende de:** `IA-01`.
+
+**Puede ejecutarse con:** `IA-02V`, `IA-02M`, `IA-03A`, `IA-03I`,
+`IA-03S` e `IA-04`.
+
+**Propiedad exclusiva**
+
+- `src/DataModules/UniDataConfiguracionPantalla.pas`;
+- `src/Core/inMtoAppParam.pas` y su DFM;
+- `src/Forms/inMtoBusquedaDatos.pas` y su DFM;
+- `src/Forms/inMtoEmpresas.pas` y su DFM;
+- `src/Modals/inMtoModalAddBlockBase.pas` y su DFM;
+- `src/Modals/inMtoModalCalcularMargen.pas` y su DFM;
+- `src/Modals/inMtoModalCargarEfectosRemesa.pas` y su DFM;
+- `src/Modals/inMtoModalDistribuidor.pas` y su DFM;
+- `src/Modals/inMtoModalFiltroArt.pas` y su DFM;
+- `src/Modals/inMtoModalGenerarSKUs.pas` y su DFM;
+- `src/Modals/inMtoModalGestionFiltros.pas` y su DFM;
+- `src/Modals/inMtoModalGuiasBase.pas` y su DFM;
+- `src/Modals/inMtoModalSeleccionarBanco.pas` y su DFM;
+- `tests/PruebasComposicionConfiguracionPantalla.pas`.
+
+**Nombres nuevos reservados:** prefijos
+`inLibConfiguracionPantallaInyeccion*` y
+`UniDataConfiguracionPantallaInyeccion*`.
+
+**Aceptación**
+
+- La propiedad exclusiva contiene 0 llamadas `ObtenerCompositor*Pantalla`.
+- `ComponerConfiguracionPantalla` no usa `AOrigen` para buscar servicios.
+- Cada consumidor recibe solo el repositorio o servicio que necesita.
+- La prueba se ejecuta con dobles y sin raíz visual.
+
+### [ ] IA-02V — composición de Ventas
+
+**Depende de:** `IA-01`.
+
+**Puede ejecutarse con:** todas las tareas O1/O2 salvo un refactor de las
+mismas pantallas de venta.
+
+**Propiedad exclusiva**
+
+- `src/DataModules/UniDataVentasPantallaComposicion.pas`;
+- `src/Forms/inMtoAlbaranes.pas` y su DFM;
+- `src/Forms/inMtoClientes.pas` y su DFM;
+- `src/Forms/inMtoFacturasSimplif.pas` y su DFM;
+- `src/Forms/inMtoPedidos.pas` y su DFM;
+- `src/Modals/inMtoModalEnviarDestino.pas` y su DFM;
+- `src/Modals/inMtoModalFacturarTicket.pas` y su DFM;
+- `src/Modals/inMtoModalFacturarAlbaranesFechas.pas` y su DFM;
+- `src/Modals/inMtoModalFacturarAlbaranes.pas` y su DFM;
+- `src/Modals/inMtoModalGenImp.pas` y su DFM;
+- `src/Modals/inMtoModalListadoVentas.pas` y su DFM;
+- `src/Modals/inMtoModalSelAlmacenAlbaran.pas` y su DFM;
+- `src/Modals/inMtoModalSelAlmacenPedido.pas` y su DFM;
+- `src/Modals/inMtoModalSelFamilia.pas` y su DFM;
+- `src/Modals/inMtoModalSerieFechaFactura.pas` y su DFM;
+- `tests/PruebasComposicionVentasPantalla.pas`.
+
+**Nombres nuevos reservados:** prefijos `inLibVentasPantallaInyeccion*` y
+`UniDataVentasPantallaInyeccion*`.
+
+**Aceptación**
+
+- La propiedad exclusiva contiene 0 llamadas `ObtenerCompositor*Pantalla`.
+- Los contextos de albarán, pedido, cliente, factura simplificada e impresión
+  reciben capacidades concretas.
+- Ningún consumidor conserva una bolsa de artículos, documentos o ventas.
+- La prueba cubre creación, dependencia ausente y liberación.
+
+### [ ] IA-02M — composición de documentos de Compra
+
+**Depende de:** `IA-01`.
+
+**Puede ejecutarse con:** O1/O2 salvo `IA-05`, `IA-10P` e `IA-10D`.
+
+**Propiedad exclusiva**
+
+- `src/DataModules/UniDataComprasPantallaComposicion.pas`;
+- `src/Forms/inMtoAlbaranesCompra.pas` y su DFM;
+- `src/Forms/inMtoComprasPlantillas.pas` y su DFM;
+- `src/Forms/inMtoDevolucionesCompra.pas` y su DFM;
+- `src/Forms/inMtoDocumentosTrabajo.pas` y su DFM;
+- `src/Forms/inMtoFacturasCompra.pas` y su DFM;
+- `src/Forms/inMtoPedidosCompra.pas` y su DFM;
+- `tests/PruebasComposicionComprasPantalla.pas`.
+
+**Nombres nuevos reservados:** prefijos `inLibComprasPantallaInyeccion*` y
+`UniDataComprasPantallaInyeccion*`.
+
+**Aceptación**
+
+- La propiedad exclusiva contiene 0 llamadas `ObtenerCompositor*Pantalla`.
+- `ComponerComprasPantalla` no descubre el repositorio de artículos.
+- Albarán, factura, pedido, devolución y documento de trabajo reciben
+  contextos distintos.
+- La prueba cubre cada variante y una dependencia obligatoria ausente.
+
+### [ ] IA-03A — inyección de Artículos
+
+**Depende de:** `IA-01`.
+
+**Puede ejecutarse con:** las demás tareas O1/O2.
+
+**Propiedad exclusiva**
+
+- `src/Forms/inMtoArticulos.pas` y su DFM;
+- `tests/PruebasArticulosGuardado.pas`;
+- `tests/PruebasArticulosAtributosBasicos.pas`;
+- `tests/PruebasArticulosVisibilidad.pas`;
+- `tests/PruebasArticulosVariaciones.pas`.
+
+**Nombres nuevos reservados:** prefijos `inLibArticulosInyeccion*` y
+`UniDataArticulosInyeccion*`.
+
+**Aceptación**
+
+- El formulario no conserva `IRepositoriosArticulosPantalla`.
+- Guardado, propiedades y variaciones entran como capacidades separadas.
+- Ningún evento crea un repositorio.
+- Las pruebas construyen el contexto sin raíz visual.
+
+### [ ] IA-03I — inyección de Inventarios
+
+**Depende de:** `IA-01`.
+
+**Puede ejecutarse con:** las demás tareas O1/O2.
+
+**Propiedad exclusiva**
+
+- `src/Forms/inMtoInventarios.pas` y su DFM;
+- `tests/PruebasInventariosAplicacion.pas`;
+- `tests/PruebasInventariosEntrada.pas`.
+
+**Nombres nuevos reservados:** prefijos `inLibInventariosInyeccion*` y
+`UniDataInventariosInyeccion*`.
+
+**Aceptación**
+
+- El formulario no conserva `IRepositoriosArticulosPantalla`.
+- Resolución, validación y atributos son dependencias visibles y mínimas.
+- Los modos Auto, SKU y Tallas se prueban sin raíz visual.
+
+### [ ] IA-03S — inyección de Sesiones de compra
+
+**Depende de:** `IA-01`.
+
+**Puede ejecutarse con:** las demás tareas O1/O2.
+
+**Propiedad exclusiva**
+
+- `src/Forms/inMtoComprasSesiones.pas` y su DFM;
+- `tests/PruebasComprasSesionesAplicacion.pas`;
+- `tests/PruebasComprasSesionesCreacion.pas`;
+- `tests/PruebasComprasSesionesRepositorio.pas`.
+
+**Nombres nuevos reservados:** prefijos
+`inLibComprasSesionesInyeccion*` y
+`UniDataComprasSesionesInyeccion*`.
+
+**Aceptación**
+
+- El formulario no llama a `ObtenerCompositorSqlPantalla`.
+- Catálogo SQL e incidencias entran como capacidades explícitas.
+- Creación, reutilización y error se prueban sin raíz visual.
+
+### [ ] IA-04 — migrar composición de Caja
+
+**Depende de:** `IA-01`.
+
+**Puede ejecutarse con:** `IA-02C`, `IA-02V`, `IA-02M`, `IA-03A`,
+`IA-03I` e `IA-03S`.
+
+**No puede ejecutarse con:** ningún refactor `IA-13*`.
+
+**Objetivo**
+
+Sustituir las bolsas de artículos, caja, configuración, operaciones y tickets
+por contextos mínimos para cada caso de uso de Caja.
+
+**Propiedad exclusiva**
+
+- `src/Caja/Forms/inMtoCajaOpe.pas`;
+- `src/DataModules/UniDataCajaPantallaComposicion.pas`;
+- `src/Forms/inMtoConsultaOpe.pas`;
+- todos los `.pas` bajo `src/Caja/Forms/` que llaman a
+  `ComponerCajaPantalla`;
+- todos los `.pas` bajo `src/Caja/Modals/` que llaman a
+  `ComponerCajaPantalla`;
+- `src/Modals/inMtoModalCajDef.pas`;
+- `src/Modals/inMtoModalEntradaCambio.pas`;
+- `src/Modals/inMtoModalOperacionesCajaSku.pas`;
+- el DFM homónimo de cada formulario o modal de esta lista;
+- `tests/PruebasComposicionCajaPantalla.pas`.
+
+La reserva se materializa antes de iniciar con la salida exacta de:
+
+```powershell
+rg -l "ComponerCajaPantalla" src -g "*.pas"
+```
+
+**Nombres nuevos reservados:** prefijos `inLibCajaPantallaInyeccion*` y
+`UniDataCajaPantallaInyeccion*`.
+
+**Aceptación**
+
+- `inMtoCajaOpe` no almacena `IRepositoriosArticulosPantalla`,
+  `IRepositoriosCajaPantalla` ni `IRepositoriosTicketsCajaPantalla`.
+- `UniDataCajaPantallaComposicion` no busca compositores por propietario.
+- Cierre, tickets, stock y arqueo reciben contratos separados.
+- No se introduce un `TServiciosCaja` que vuelva a exponer todo el dominio.
+- Éxito, cancelación, fallo y rollback permanecen caracterizados.
+
+### [ ] IA-05 — migrar composición de Facturas
+
+**Precondición**
+
+Los cambios locales de Facturas indicados en la sección 2 están integrados o
+el usuario ha cedido expresamente su propiedad a esta tarea.
+
+**Depende de:** `IA-02M` integrada.
+
+**Ejecución:** aislada; no comparte ola con Compras ni con `IA-12*`.
+
+**Objetivo**
+
+Completar la inyección de Facturas para que listado, líneas, cobros,
+consolidación, incidencia fiscal y artículos reciban capacidades concretas.
+
+**Propiedad exclusiva**
+
+- `src/Forms/inMtoFacturasBase.pas` y su DFM;
+- `src/Forms/inMtoFacturasIncidenciaFiscalVcl.pas`;
+- `src/DataModules/UniDataFacturasIncidenciaFiscal.pas`;
+- `src/Modals/inMtoModalResolverIncidenciaVerifactu.pas` y su DFM;
+- `tests/PruebasFacturasAplicacion.pas`;
+- `tests/PruebasFacturasIncidenciaFiscal.pas`;
+- `tests/PruebasFacturasServicios.pas`.
+
+**Nombres nuevos reservados:** prefijos `inLibFacturasInyeccion*` y
+`UniDataFacturasInyeccion*`.
+
+**Aceptación**
+
+- `inMtoFacturasBase` no conserva `IRepositoriosArticulosPantalla`.
+- No llama a `ObtenerCompositorSqlPantalla` ni a
+  `ObtenerCompositorArticulosPantalla`.
+- Ningún colaborador conserva el formulario completo para acceder a sus
+  servicios.
+- La incidencia fiscal recibe un servicio compuesto; su capa VCL no crea
+  adaptadores UniDAC.
+- El fan-out de `inMtoFacturasBase` baja de 72 a 50 o menos.
+
+### [ ] IA-06 — retirar el localizador de repositorios de pantalla
+
+**Ejecución:** serial, con todos los hilos de O1, O2 y O2F detenidos.
+
+**Objetivo**
+
+Cerrar la migración y eliminar el mecanismo de compatibilidad. Esta tarea es
+serial y no rediseña otra vez los features ya migrados.
+
+**Propiedad exclusiva de la barrera**
+
+- `src/Lib/inLibRepositoriosPantallaIntf.pas`;
+- `src/Lib/inLibShowMto.pas`;
+- `src/Lib/inLibRegistroPantallas.pas`;
+- `src/DataModules/UniDataRepositoriosPantalla.pas`;
+- adaptadores `UniDataRepositorios*Pantalla.pas`;
+- `src/DataModules/UniDataComposicionAplicacion.pas`;
+- `src/Core/inMtoPrincipal.pas`;
+- `fzam.dpr` y `fzam.dproj`;
+- `tests/FactuzamTests.dpr` y `tests/FactuzamTests.dproj`;
+- `tests/PruebasRegistroPantallas.pas`;
+- `tests/PruebasRepositoriosPantallaComposicion.pas`;
+- `scripts/comprobar_dependencias_ocultas.ps1` y sus pruebas de trinquete.
+
+**Aceptación**
+
+- 0 símbolos `BuscarCompositor` y `ObtenerCompositor*Pantalla` en `src/`.
+- 0 campos `IRepositorios*Pantalla` en formularios y colaboradores de
+  presentación.
+- `inLibRepositoriosPantallaIntf` desaparece o queda como un contrato puro:
+  sin VCL, UniDAC, `TDataSet`, `TComponent` ni implementaciones concretas.
+- `TfrmMtoPrincipal` deja de implementar los nueve compositores por familia.
+- El comprobador bloquea la reaparición de búsqueda mediante `Owner`,
+  `GetInterface` o `Application.MainForm` para repositorios de feature.
+- El fan-out máximo del proyecto baja de 72 a 50 o menos.
+- Todas las solicitudes de alta de O1/O2/O2F están aplicadas.
+- Calidad, compilación y DUnitX están verdes en Win32 y Win64.
+
+No se prohíbe usar `Application.MainForm` para una operación estrictamente
+visual, como enfocar o restaurar la ventana principal. Se prohíbe usarlo para
+resolver una dependencia de negocio o persistencia.
+
+---
+
+## 6. Fase B — dividir por motivos de cambio
+
+Estas tareas empiezan cuando `IA-06` está integrada. Cada extracción debe
+reducir la pieza original y dejar la nueva pieza por debajo de los límites P5
+que le correspondan. Trasladar el mismo monolito a otra unidad no cuenta.
+
+### [ ] IA-10P / IA-10D — documentos de compra
+
+**Objetivo**
+
+Separar la interacción VCL de la creación/recepción de albaranes y de la
+devolución de stock.
+
+**Ejecución:** dos hilos paralelos.
+
+#### IA-10P — pedidos de compra
+
+**Propiedad exclusiva**
+
+- `src/Forms/inMtoPedidosCompra.pas` y su DFM;
+- `src/Lib/inLibPedidosCompra.pas`;
+- `src/Lib/inLibPedidosCompraIntf.pas`;
+- `src/DataModules/UniDataPedidosCompraOperaciones.pas`;
+- `src/DataModules/UniDataPedidosCompraPendientes.pas`;
+- `src/DataModules/UniDataPedidosCompraAlbaranComun.pas`;
+- `src/DataModules/UniDataPedidosCompraCreacionAlbaran.pas`;
+- `src/DataModules/UniDataPedidosCompraIncorporacionAlbaran.pas`;
+- `src/DataModules/UniDataPedidosCompraRecepcion.pas`;
+- `tests/PruebasPedidosCompra.pas`;
+- `tests/PruebasPivoteCompraCalculo.pas`;
+- `tests/PruebasGridPivoteCompraPersistencia.pas`.
+
+**Nombres nuevos reservados:** prefijos `inLibPedidosCompraPresentacion*` y
+`UniDataPedidosCompraFlujo*`.
+
+#### IA-10D — devoluciones de compra
+
+**Propiedad exclusiva**
+
+- `src/Forms/inMtoDevolucionesCompra.pas` y su DFM;
+- `src/Lib/inLibDevolucionesCompraMovimientos.pas`;
+- `src/Lib/inLibDevolucionesCompraMovimientosIntf.pas`;
+- `src/DataModules/UniDataDevolucionesCompraMovimientos.pas`;
+- `tests/PruebasDevolucionesCompraMovimientos.pas`.
+
+**Nombres nuevos reservados:** prefijos
+`inLibDevolucionesCompraPresentacion*` y
+`UniDataDevolucionesCompraFlujo*`.
+
+**Focos obligatorios**
+
+- `btnCrearAlbaranClick`;
+- `DevolverTodoStock`;
+- `AplicarArticuloDevolucion`;
+- propietario de transacción y rollback de movimientos.
+
+**Aceptación**
+
+- `IA-10P`: `TfrmMtoPedidosCompra` queda por debajo de 2.000 líneas y
+  `btnCrearAlbaranClick` queda en 15 líneas efectivas o menos.
+- `IA-10D`: `TfrmMtoDevolucionesCompra` queda por debajo de 2.000 líneas y
+  el riesgo de `DevolverTodoStock` baja de 92 a 30 o menos.
+- Cada hilo prueba su operación sin el formulario.
+- Ambos cubren cancelación, cantidades parciales, fallo y rollback.
+
+### [ ] IA-11P / IA-11A — documentos de venta
+
+**Objetivo**
+
+Separar edición/presentación, reglas de entrada y generación de movimientos
+de la persistencia de pedidos y albaranes.
+
+**Ejecución:** dos hilos paralelos, después de `IA-02V`.
+
+#### IA-11P — pedidos de venta
+
+**Propiedad exclusiva**
+
+- `src/Forms/inMtoPedidos.pas` y su DFM;
+- `src/DataModules/UniDataPedidos.pas` y su DFM;
+- `tests/PruebasPivoteVenta.pas`;
+- una prueba nueva reservada como `PruebasPedidosVentaPresentacion.pas`.
+
+**Nombres nuevos reservados:** prefijos `inLibPedidosVentaPresentacion*` y
+`UniDataPedidosVentaFlujo*`.
+
+#### IA-11A — albaranes de venta
+
+**Propiedad exclusiva**
+
+- `src/Forms/inMtoAlbaranes.pas` y su DFM;
+- `src/DataModules/UniDataAlbaranes.pas` y su DFM;
+- una prueba nueva reservada como `PruebasAlbaranesVentaMovimientos.pas`.
+
+**Nombres nuevos reservados:** prefijos `inLibAlbaranesVentaPresentacion*` y
+`UniDataAlbaranesVentaMovimientos*`.
+
+**Focos obligatorios**
+
+- `ConstruirModoEntrada`;
+- `AplicarArticuloAlbaran`;
+- `GenerarMovimientosSalida`.
+
+**Aceptación**
+
+- `IA-11P`: `TdmPedidos` queda por debajo de 2.000 líneas y
+  `ConstruirModoEntrada` queda en 60 líneas o menos.
+- `IA-11A`: `TdmAlbaranes` queda por debajo de 2.000 líneas;
+  `AplicarArticuloAlbaran` y `GenerarMovimientosSalida` quedan en 60 o menos.
+- El evento de dataset delega; no coordina por sí solo varias escrituras.
+- Las reglas extraídas trabajan con valores o records, no con controles.
+- Movimientos de salida conservan atomicidad y pruebas de rollback.
+
+### [ ] IA-12F / IA-12E / IA-12V / IA-12R — fiscalidad
+
+**Precondición**
+
+`IA-05` está cerrada y no hay trabajo local ajeno en las unidades fiscales.
+
+**Objetivo**
+
+Separar validación de cabecera, construcción del registro fiscal, registro de
+eventos y persistencia de resultados.
+
+**Ejecución:** cuatro hilos paralelos. Ninguno toca las unidades de incidencia
+fiscal de `IA-05`.
+
+| Tarea | Propiedad exclusiva | Prueba exclusiva |
+|-------|---------------------|------------------|
+| `IA-12F` | `src/DataModules/UniDataFacturas.pas` y DFM | `tests/PruebasFacturasLecturas.pas` |
+| `IA-12E` | `src/verifactu/inLibVerifactuEnvio.pas` | `tests/PruebasEmisionFiscal.pas` |
+| `IA-12V` | `src/verifactu/inLibVerifactu.pas` | nueva `PruebasRegistroEventosVerifactu.pas` |
+| `IA-12R` | `src/verifactu/UniDataVerifactuColaResultados.pas` | nueva `PruebasVerifactuColaResultados.pas` |
+
+**Nombres nuevos reservados**
+
+- `IA-12F`: `inLibFacturasValidacion*`;
+- `IA-12E`: `inLibVerifactuConstruccionEnvio*`;
+- `IA-12V`: `inLibVerifactuRegistroEventos*`;
+- `IA-12R`: `UniDataVerifactuResultadosEnvio*`.
+
+**Focos obligatorios**
+
+- `TdmFacturas.ValidarCabeceraBeforePost`;
+- `ConstruirRegistroAlta`;
+- `RegistrarEventoVerifactu`;
+- `TResultadosVerifactuColaUniDAC.GuardarEnvioOk`;
+- `EnviarRegistroFactura`.
+
+**Aceptación**
+
+- `IA-12F` deja `TdmFacturas` por debajo de 2.000 líneas.
+- Cada hilo deja sus focos en 60 líneas o menos.
+- Ningún método fiscal modificado supera 10 decisiones.
+- Construcción y validación se prueban sin VCL y, cuando sean puras, sin BBDD.
+- Idempotencia, error parcial y estado de cola quedan caracterizados.
+
+### [ ] IA-13E / IA-13C / IA-13T / IA-13A — Caja
+
+**Objetivo**
+
+Dividir `TEditorLineasCajaVcl` por interacción, búsqueda/stock y renderizado;
+separar en el data module la persistencia de la coordinación de cierre.
+
+**Ejecución:** cuatro hilos paralelos, después de `IA-04`.
+
+| Tarea | Propiedad exclusiva | Pruebas exclusivas |
+|-------|---------------------|--------------------|
+| `IA-13E` | `src/Caja/Forms/inMtoCajaOpe.pas` y DFM | `PruebasCajaEntrada`, `PruebasCajaVentaOperacion` |
+| `IA-13C` | `src/Caja/DataModules/UniDataCaja.pas` y DFM | `PruebasCajaVenta`, `PruebasCajaStock` |
+| `IA-13T` | `src/Caja/Lib/inLibArqueoTicket.pas` | `PruebasArqueoTicketCatalogo` |
+| `IA-13A` | `src/Caja/Modals/inMtoModalArqueo.pas` y DFM, `src/Caja/DataModules/UniDataModalArqueoRepositorio.pas` | `PruebasArqueoCatalogo` no; nueva `PruebasModalArqueoPersistencia.pas` |
+
+`PruebasArqueoTicketCatalogo.pas` pertenece solo a `IA-13T`; la prueba nueva
+de `IA-13A` evita compartir archivos entre ambos hilos.
+
+**Nombres nuevos reservados:** prefijos `inMtoCajaEditorLineas*`,
+`UniDataCajaCierreVenta*`, `inLibArqueoTicketPresentacion*` y
+`UniDataModalArqueoOperacion*`, respectivamente.
+
+**Focos obligatorios**
+
+- `TEditorLineasCajaVcl`;
+- `TdmCajaOpe.GrabarFacturaSimplificada`;
+- `TArqueoTicket.ImprimirCierre`;
+- `TfrmModalArqueo.GrabarArqueo`.
+
+**Aceptación**
+
+- `IA-13E` deja `TEditorLineasCajaVcl` por debajo de 2.000 líneas.
+- `IA-13C` deja `TdmCajaOpe` por debajo de 2.000 líneas.
+- Cada colaborador nuevo tiene un único propietario y ciclo de vida.
+- El cálculo y las decisiones se prueban sin rejilla ni controles DevExpress.
+- Los handlers VCL modificados quedan en 15 líneas efectivas o menos.
+- Los métodos de caja modificados no superan 10 decisiones.
+
+### [ ] IA-14 — shell, arranque y bases VCL
+
+**Ejecución:** serial después de que todos los hilos O3 estén detenidos y
+antes de `IA-18`. No se ejecuta a la vez que ninguna tarea de feature.
+
+**Objetivo**
+
+Reducir responsabilidades de `TfrmMtoPrincipal` y `TfrmMtoGen` sin romper el
+contrato de herencia de las pantallas existentes.
+
+**Propiedad exclusiva**
+
+- `src/Core/inMtoPrincipal.pas` y su DFM;
+- `src/Core/inMtoLogon.pas` y su DFM;
+- `src/Core/inMtoFrmBase.pas` y su DFM;
+- `src/Forms/inMtoGen.pas` y su DFM;
+- `tests/PruebasLogonAplicacion.pas`;
+- `tests/PruebasMtoGenAplicacion.pas`;
+- `tests/PruebasRegistroPantallas.pas`.
+
+**Nombres nuevos reservados:** prefijos `inLibArranqueAplicacion*`,
+`inMtoPrincipalPresentacion*` e `inLibContratoMtoGen*`.
+
+**Focos obligatorios**
+
+- `TfrmMtoPrincipal.InicializarAplicacion`;
+- `TfrmLogon.FormCreate`;
+- propagación de servicios heredados;
+- hooks de `TfrmMtoGen` y orden de `inherited`.
+
+**Aceptación**
+
+- `TfrmMtoPrincipal` y `TfrmMtoGen` quedan por debajo de 2.000 líneas.
+- Arranque y autenticación se coordinan mediante casos de uso comprobables.
+- `FormCreate` queda limitado a preparar y delegar.
+- Cada contrato heredado relevante tiene una batería compartida para sus
+  descendientes.
+- No se añade una capacidad a la clase base si solo la usa un feature.
+
+### [ ] IA-15B / IA-15C / IA-15X — infraestructura
+
+**Objetivo**
+
+Dividir los algoritmos largos de infraestructura en lectura, transformación,
+validación y escritura, preservando streaming y mensajes de error.
+
+**Ejecución:** tres hilos paralelos.
+
+| Tarea | Propiedad exclusiva | Pruebas exclusivas |
+|-------|---------------------|--------------------|
+| `IA-15B` | `src/Lib/backup/Backup.Engine.pas` | `tests/PruebasCopiasSeguridad.pas`, `tests/PruebasRestauracionCopiasConexion.pas` |
+| `IA-15C` | `src/Lib/backup/Core_Engine.pas` | nueva `tests/PruebasComparacionCopias.pas` |
+| `IA-15X` | `src/Lib/inLibVerifactuNoVerifactuVerify.pas` | nueva `tests/PruebasVerificacionXadesNoVerifactu.pas` |
+
+**Nombres nuevos reservados:** prefijos `Backup.Lectura*`,
+`Backup.Comparacion*` e `inLibVerificacionXades*`, respectivamente.
+
+**Focos obligatorios**
+
+- `TDBBackupEngine.BackupTableData`;
+- `TDBComparerEngine.CompareData`;
+- `VerificarPerfilXadesNoVerifactu`.
+
+**Aceptación**
+
+- Cada hilo deja su foco en 60 líneas o menos.
+- Comparar no modifica y respaldar no valida reglas ajenas a su formato.
+- La verificación devuelve un resultado tipado por causa de rechazo.
+- Se prueban datos vacíos, lotes grandes, cancelación y entrada mal formada.
+- No se carga en memoria completa una tabla que antes se procesaba en flujo.
+
+### [ ] IA-16V / IA-16F — variaciones y fotos
+
+**Objetivo**
+
+Dividir los adaptadores pendientes según lectura/escritura y metadatos/blob,
+sin crear un repositorio genérico.
+
+**Ejecución:** dos hilos paralelos.
+
+#### IA-16V — variaciones de artículos
+
+**Propiedad exclusiva**
+
+- `src/DataModules/UniDataArticulosVariaciones.pas`;
+- `src/Lib/inLibArticulosVariaciones.pas`;
+- `src/Lib/inLibArticulosVariacionesIntf.pas`;
+- `tests/PruebasArticulosVariaciones.pas`.
+
+**Nombres nuevos reservados:** prefijo `UniDataArticulosVariaciones*`.
+
+#### IA-16F — fotos
+
+**Propiedad exclusiva**
+
+- `src/DataModules/UniDataFotosRepositorio.pas`;
+- `src/Lib/inLibFotosPersistenciaIntf.pas`;
+- `tests/PruebasFotosPersistencia.pas`.
+
+**Nombres nuevos reservados:** prefijo `UniDataFotos*Repositorio`.
+
+**Aceptación**
+
+- `IA-16V` baja `UniDataArticulosVariaciones` de 43 a 30 rutinas o menos.
+- `IA-16F` baja `UniDataFotosRepositorio` de 33 a 30 rutinas o menos.
+- Lectura y escritura se segregan cuando tienen consumidores distintos.
+- Los contratos no exponen UniDAC ni detalles de almacenamiento.
+- Se prueban ausencia, fallback artículo/SKU, reemplazo y error de escritura.
+
+---
+
+## 7. Fase C — métodos largos residuales
+
+### [ ] IA-20 — reducir el ranking restante por tandas
+
+**Objetivo**
+
+Después de `IA-10` a `IA-16`, volver a medir y reducir los métodos de más de
+120 líneas que no hayan quedado cubiertos. Se trabaja en tandas de hasta cinco
+unidades para que cada diff sea revisable.
+
+**Selección de cada tanda**
+
+1. Ejecutar `scripts/comprobar_metodos_largos.ps1`.
+2. Ordenar primero por zona fiscal/caja, después por riesgo y luego por líneas.
+3. Elegir hasta cinco unidades sin cambios locales ajenos.
+4. Caracterizar cada flujo antes de extraer.
+5. Cerrar y verificar la tanda antes de seleccionar la siguiente.
+
+**Reglas de extracción**
+
+- Extraer decisiones o pasos con nombre, no intervalos de líneas.
+- Mantener un solo nivel de abstracción por método.
+- Separar cálculo, decisión, persistencia y presentación.
+- Usar estrategia solo cuando exista una variante de negocio real.
+- No crear una clase que reciba el objeto original completo.
+
+**Aceptación de la iteración**
+
+| Indicador | Inicio | Objetivo máximo |
+|-----------|-------:|----------------:|
+| Métodos de más de 120 líneas | 67 | 40 |
+| Riesgo acumulado | 13.134 | 9.000 |
+| Riesgo individual máximo | 280 | 200 |
+| Métodos de más de 200 líneas | 0 | 0 |
+
+La siguiente versión de este documento continuará desde la nueva medición;
+no se seleccionan unidades usando el ranking antiguo de la sección 2.
+
+---
+
+## 8. IA-99 — integración y cierre
+
+### [ ] IA-99 — actualizar trinquetes y demostrar el resultado
+
+**Objetivo**
+
+Integrar las tareas terminadas, ajustar los límites exclusivamente a la baja
+y dejar una fotografía reproducible para la siguiente iteración.
+
+**Propiedad exclusiva durante esta tarea**
+
+- `fzam.dpr` y `fzam.dproj`;
+- manifiestos de `tests/`;
+- `scripts/comprobar_*.ps1` y pruebas de trinquetes;
+- `PLAN_SOLID.md` y `TAREAS_IA_SOLID.md`.
+
+**Acciones**
+
+1. Revisar que cada unidad nueva esté incluida en los proyectos adecuados.
+2. Eliminar fachadas de migración sin consumidores.
+3. Ejecutar `rg` para detectar contratos o métodos retirados.
+4. Bajar topes individuales a las medidas reales conseguidas.
+5. Ejecutar calidad, compilación y DUnitX en Win32 y Win64.
+6. Actualizar la línea base y marcar únicamente tareas demostradas.
+
+**Aceptación final**
+
+- Calidad completa verde.
+- Compilación y DUnitX verdes en Win32 y Win64.
+- 0 localizadores de repositorios de pantalla.
+- 0 clases propias por encima de 2.000 líneas.
+- Fan-out máximo de 50 o menos.
+- Como máximo 40 métodos de más de 120 líneas.
+- Riesgo acumulado de 9.000 o menos y riesgo máximo de 200.
+- Permanecen a cero estilo, consultas UI, SQL en dominio, ciclos de capa,
+  globales y `except` vacíos.
+- No se ha modificado `factuzam_original.sql`.
+
+IA-99 no hace una refactorización nueva para maquillar una métrica. Si una
+aceptación no se cumple, reabre la tarea responsable con el dato concreto.
+
+---
+
+## 9. Definición de terminado por tarea
+
+Una tarea se marca como completada solo si entrega:
+
+- comportamiento conservado o cambio funcional autorizado y documentado;
+- archivos editados y creados;
+- métrica antes y después de la pieza original y de las nuevas;
+- pruebas añadidas o adaptadas, con casos de éxito y fallo relevantes;
+- comprobadores ejecutados y resultado;
+- compilación y DUnitX en las plataformas disponibles;
+- riesgos pendientes y decisiones que deba conocer la siguiente tarea.
+
+No está terminada si:
+
+- la nueva clase conserva el formulario completo;
+- una dependencia se obtiene con un singleton, `Application.MainForm`,
+  recorrido de propietarios o una factoría general;
+- se ha movido el monolito sin reducir sus responsabilidades;
+- un resultado de error se convierte en éxito aparente;
+- se amplía un tope, baseline, exclusión o lista blanca;
+- el diff incluye archivos ajenos o normalización masiva no solicitada.
+
+Formato recomendado de entrega:
+
+```text
+Resultado:
+Unidades editadas/creadas:
+Responsabilidad extraída:
+Métricas antes/después:
+Pruebas ejecutadas:
+Calidad y compilación:
+Riesgos pendientes:
 ```
 
 ---
 
-## 3. Calendario de olas
-
-| Ola | Ejecución | Tareas | Barrera de salida |
-|-----|-----------|--------|-------------------|
-| 0 | Serial | `IA-00` | Calidad, Win32, Win64 y DUnitX verdes |
-| 1 | Paralela | `IA-11` a `IA-16` | Seis features con núcleo comprobable |
-| 2 | Paralela | `IA-21` a `IA-24` | Consumidores preparados para inyección estrecha |
-| 3 | Serial | `IA-31` | Localizador general retirado y composición dividida |
-| 4 | Paralela | `IA-41` a `IA-43` | Trinquete de persistencia UI a cero |
-| 5 | Paralela | `IA-51` a `IA-56` | SQL en `inLib*` a cero |
-| 6 | Paralela | `IA-61` a `IA-63` | Métodos >200 y data modules prioritarios divididos |
-| 7 | Serial | `IA-98`, después `IA-99` | P5 mecánico y verificación final |
-
-No deben lanzarse tareas de olas distintas a la vez, aunque sus listas
-parezcan disjuntas: las tareas seriales cambian contratos de integración.
-
----
-
-## 4. Ola 0 — línea base
-
-### IA-00 — P0: normalizar codificación sin cambiar lógica
-
-**Objetivo**
-
-Dejar verde `comprobar_codificacion.ps1` corrigiendo solo las infracciones
-nuevas que informe en el momento de ejecutar la tarea.
-
-**Propiedad temporal**
-
-- Todos y solo los archivos listados por el bloque “infracciones nuevas” del
-  comprobador.
-- Esta tarea es serial y termina antes de cualquier otra; por ello puede
-  normalizar unidades que pertenecerán a olas posteriores.
-
-**Instrucciones específicas**
-
-- UTF-8 con BOM para Pascal/DFM y CRLF en los tipos exigidos por el libro.
-- No cambiar espacios, nombres, comentarios ni lógica salvo lo imprescindible
-  para conservar exactamente el texto.
-- No añadir excepciones al baseline.
-- Comparar el contenido lógico antes/después ignorando BOM y finales de línea.
-
-**Aceptación**
-
-- 0 infracciones nuevas de codificación.
-- Calidad completa verde.
-- 604/604 pruebas Win32 y 604/604 Win64.
-
----
-
-## 5. Ola 1 — features críticos
-
-### IA-11 — P1: Facturas sin controlador acoplado al formulario
-
-**Objetivo**
-
-Retirar el falso desacoplamiento de `TControladorFacturas`, convertir sus
-responsabilidades en presentadores/casos de uso probables sin VCL y dejar el
-formulario como adaptador de vista. El trabajo incluye eliminar su SQL UI
-residual.
-
-**Unidades exclusivas**
-
-- `src\Forms\inMtoFacturasBase.pas`
-- `src\Forms\inMtoFacturasConsolidacionVcl.pas`
-- `src\Forms\inMtoFacturasCobrosVcl.pas`
-- `tests\PruebasFacturasCobrosPresentacion.pas`
-- `tests\PruebasFacturasConsolidacionPresentacion.pas`
-- `tests\PruebasFacturasEstadoFiscalPresentacion.pas`
-- `tests\PruebasFacturasOperacionFiscal.pas`
-
-Se reservan nombres nuevos que empiecen por `inLibFacturasPresentador` o
-`inMtoFacturasPresentador` y sus pruebas homónimas.
-
-**Aceptación**
-
-- No existe un colaborador con campo `TfrmMtoFacturasBase`.
-- El formulario mantiene menos de 75 métodos y no crece en líneas.
-- 0 `TUniQuery.Create` y 0 asignaciones SQL propias en estas unidades VCL.
-- Estado fiscal, consolidación, cobros, SKU y errores conservan sus pruebas.
-
-### IA-12 — P1: operación de Caja como caso de uso
-
-**Objetivo**
-
-Extraer del formulario el procesamiento de teclado/escáner, cálculo y cierre
-de venta. El handler de riesgo 335 debe delegar en un objeto sin VCL. La
-transacción queda en una unidad de trabajo y la UI no crea consultas ni SQL.
-
-**Unidades exclusivas**
-
-- `src\Caja\Forms\inMtoCajaOpe.pas`
-- `src\Caja\Forms\inMtoCajaEntradaVcl.pas`
-- `src\Caja\Lib\inLibCajaVentaIntf.pas`
-- `src\Caja\Lib\inLibCajaVentaOperacion.pas`
-- `src\Caja\Lib\inLibCajaOpeComposicion.pas`
-- `tests\PruebasCajaEntrada.pas`
-- `tests\PruebasCajaVentaOperacion.pas`
-
-Se reservan unidades `inLibCajaOpePresentacion*` y
-`inMtoCajaOpePresentacion*`.
-
-**Aceptación**
-
-- `TfrmMtoOpeCaja` baja de 2.000 líneas.
-- El handler de teclado queda en hasta 15 líneas efectivas y 0 salidas.
-- Las decisiones fiscales/de caja del nuevo núcleo no superan 10 por método.
-- El núcleo se prueba sin formulario ni conexión real.
-
-### IA-13 — P1: Compras Sesiones como orquestación explícita
-
-**Objetivo**
-
-Separar del formulario búsqueda incremental, edición de tallas, copia de
-líneas y coordinación de materialización. Aprovechar el caso de uso existente
-sin volver a introducir SQL ni UniDAC en `inLib*`.
-
-**Unidades exclusivas**
-
-- `src\Forms\inMtoComprasSesiones.pas`
-- `src\Lib\inLibComprasSesionesAplicacionIntf.pas`
-- `src\Lib\inLibComprasSesionesAplicacion.pas`
-- `tests\PruebasComprasSesionesAplicacion.pas`
-- `tests\PruebasGestorCopiaLineasCompra.pas`
-
-Se reservan unidades `inLibComprasSesionesPresentacion*` y
-`inMtoComprasSesionesPresentacion*`.
-
-**Aceptación**
-
-- El formulario baja de 2.000 líneas.
-- Timers, búsqueda incremental y materialización son colaboradores separados.
-- La aplicación no conoce controles VCL, `TUniQuery` ni nombres de componentes.
-- Se conservan creación, reutilización, error y cancelación mediante pruebas.
-
-### IA-14 — P1: Artículos con guardado y edición independientes
-
-**Objetivo**
-
-Separar propiedades, variaciones, atributos básicos, stock y guardado. El
-formulario solo adapta controles y presenta resultados. Extraer también sus
-consultas y la transacción que todavía viven en UI.
-
-**Unidades exclusivas**
-
-- `src\Forms\inMtoArticulos.pas`
-- `src\Forms\inMtoArticulosGuardadoVcl.pas`
-- `src\Lib\inLibArticulosGuardadoIntf.pas`
-- `src\Lib\inLibArticulosGuardado.pas`
-- `tests\PruebasArticulosGuardado.pas`
-- `tests\PruebasArticulosAtributosBasicos.pas`
-- `tests\PruebasArticulosVisibilidad.pas`
-
-Se reservan unidades `inLibArticulosPresentacion*` y
-`inMtoArticulosPresentacion*`.
-
-**Aceptación**
-
-- `TfrmMtoArticulos` baja de 2.000 líneas.
-- 0 consultas, SQL y transacciones creadas por la UI asignada.
-- Guardado, variaciones y atributos se prueban sin VCL ni BBDD.
-- Ningún nuevo servicio recibe el formulario o un contexto general.
-
-### IA-15 — P1: Inventarios con entrada y presentación separadas
-
-**Objetivo**
-
-Extraer resolución de SKU, columnas dinámicas, importación y aplicación de
-líneas. El formulario coordina la vista y no ejecuta SQL.
-
-**Unidades exclusivas**
-
-- `src\Forms\inMtoInventarios.pas`
-- `src\Lib\inLibInventariosAplicacionIntf.pas`
-- `src\Lib\inLibInventariosAplicacion.pas`
-- `tests\PruebasInventariosAplicacion.pas`
-- `tests\PruebasInventariosEntrada.pas`
-
-Se reservan unidades `inLibInventariosPresentacion*` y
-`inMtoInventariosPresentacion*`.
-
-**Aceptación**
-
-- `TfrmMtoInventarios` baja de 2.000 líneas.
-- 0 SQL/consultas en la UI asignada.
-- Se reduce de forma material su deuda actual de 102 `Exit`.
-- Modos Auto/SKU/Tallas, lector e importación quedan caracterizados.
-
-### IA-16 — P1: Stock Consulta con estado de vista explícito
-
-**Objetivo**
-
-Separar lector, historial, fotos, tarjetas, pivote y carga de artículo en
-presentadores cohesivos. El formulario no descubre repositorios durante un
-evento.
-
-**Unidades exclusivas**
-
-- `src\Forms\inMtoStockConsulta.pas`
-- `src\Forms\inMtoStockConsultaEntradaVcl.pas`
-- `src\Lib\inLibStockConsultaEntradaIntf.pas`
-- `src\Lib\inLibStockConsultaEntrada.pas`
-- `tests\PruebasStockConsultaEntrada.pas`
-- `tests\PruebasStockConsultaInfo.pas`
-
-Se reservan unidades `inLibStockConsultaPresentacion*` y
-`inMtoStockConsultaPresentacion*`.
-
-**Aceptación**
-
-- `TfrmStockConsulta` baja de 2.000 líneas y de 30 campos propios.
-- No contiene acceso directo a repositorios generales ni SQL.
-- Lector, historial y dimensiones de fotos se prueban como estados puros.
-
----
-
-## 6. Ola 2 — consumidores del contexto general
-
-El objetivo común de esta ola es concentrar la resolución actual en una única
-rutina de composición por feature, inyectar campos estrechos y dejar toda la
-lógica operativa libre de `ContextoRepositoriosPantalla`. La retirada final
-del punto de compatibilidad corresponde a `IA-31`.
-
-### IA-21 — P1/P2: ventas y documentos de salida
-
-**Unidades exclusivas**
-
-- `src\Forms\inMtoAlbaranes.pas`
-- `src\Forms\inMtoPedidos.pas`
-- `src\Forms\inMtoClientes.pas`
-- `src\Forms\inMtoFacturasSimplif.pas`
-- `src\Modals\inMtoModalEnviarDestino.pas`
-- `src\Modals\inMtoModalFacturarAlbaranesFechas.pas`
-- `src\Modals\inMtoModalFacturarAlbaranes.pas`
-- `src\Modals\inMtoModalFacturarTicket.pas`
-- `src\Modals\inMtoModalSerieFechaFactura.pas`
-- `src\Modals\inMtoModalSelFamilia.pas`
-- `src\Modals\inMtoModalSelAlmacenPedido.pas`
-- `src\Modals\inMtoModalSelAlmacenAlbaran.pas`
-- `src\Modals\inMtoModalListadoVentas.pas`
-- `src\Modals\inMtoModalGenImp.pas`
-
-Se reservan unidades nuevas con prefijo de feature
-`inLibVentasPantalla*`/`UniDataVentasPantalla*` y una prueba
-`PruebasComposicionVentasPantalla.pas`.
-
-**Aceptación**
-
-- Dependencias de artículos, documentos y ventas quedan en contextos mínimos.
-- 0 SQL directo en las unidades asignadas.
-- `btnCrearAlbaranClick` queda dividido y probado fuera de la VCL.
-- La impresión no recibe una bolsa general de repositorios.
-
-### IA-22 — P1/P2: documentos de compra
-
-**Unidades exclusivas**
-
-- `src\Forms\inMtoAlbaranesCompra.pas`
-- `src\Forms\inMtoFacturasCompra.pas`
-- `src\Forms\inMtoPedidosCompra.pas`
-- `src\Forms\inMtoDevolucionesCompra.pas`
-- `src\Forms\inMtoDocumentosTrabajo.pas`
-- `src\Forms\inMtoComprasPlantillas.pas`
-
-Se reservan `inLibComprasPantalla*`, `UniDataComprasPantalla*` y
-`PruebasComposicionComprasPantalla.pas`.
-
-**Aceptación**
-
-- Cada formulario recibe solo validación, resolución y persistencia que usa.
-- 0 SQL directo y 0 componentes UniDAC en sus DFM.
-- `TfrmMtoPedidosCompra` inicia una reducción neta y ningún colaborador nuevo
-  recibe el formulario completo.
-- Devolución y creación/incorporación de albaranes conservan pruebas de error y
-  rollback.
-
-### IA-23 — P1/P2: Caja, históricos y arqueos
-
-**Unidades exclusivas**
-
-- `src\Forms\inMtoConsultaOpe.pas`
-- `src\Caja\Forms\inMtoTraspasoOpe.pas`
-- `src\Caja\Forms\inMtoCajaFaseCobro.pas`
-- `src\Caja\Forms\inMtoCajaMenu.pas`
-- `src\Caja\Forms\inMtoCajaOperacionesHist.pas`
-- `src\Caja\Forms\inMtoCajaPagosHist.pas`
-- `src\Caja\Forms\inMtoCajaParam.pas`
-- `src\Caja\Forms\inMtoCajaSeleccionVale.pas`
-- `src\Caja\Forms\inMtoCajaArqueosHist.pas`
-- `src\Caja\Forms\inMtoCajaFormasPago.pas`
-- `src\Caja\Forms\inMtoCajaImpresorVenta.pas`
-- `src\Caja\Forms\inMtoCajaValesHist.pas`
-- `src\Caja\Modals\inMtoModalGastoCaja.pas`
-- `src\Caja\Modals\inMtoModalImpPagos.pas`
-- `src\Caja\Modals\inMtoModalImpDepositos.pas`
-- `src\Caja\Modals\inMtoModalImpArqueos.pas`
-- `src\Caja\Modals\inMtoModalImpOperacionesVenta.pas`
-- `src\Caja\Modals\inMtoModalArqueosHistCaja.pas`
-- `src\Caja\Modals\inMtoModalImpOperaciones.pas`
-- `src\Caja\Modals\inMtoModalArqueo.pas`
-- `src\Modals\inMtoModalEntradaCambio.pas`
-- `src\Modals\inMtoModalCajDef.pas`
-- `src\Modals\inMtoModalOperacionesCajaSku.pas`
-
-Se reservan `inLibCajaPantalla*`, `UniDataCajaPantalla*` y
-`PruebasComposicionCajaPantalla.pas`.
-
-**Aceptación**
-
-- Consultas, tickets, arqueos e informes se inyectan por capacidades separadas.
-- Las transacciones de históricos salen de los formularios.
-- `CrearFichaDetalle` se divide en modelo, carga y renderizado.
-- Operaciones de caja conservan éxito, cancelación, error y rollback.
-
-### IA-24 — P1/P2: configuración y auxiliares de artículos
-
-**Unidades exclusivas**
-
-- `src\Core\inMtoAppParam.pas`
-- `src\Forms\inMtoBusquedaDatos.pas`
-- `src\Forms\inMtoEmpresas.pas`
-- `src\Modals\inMtoModalAddBlockBase.pas`
-- `src\Modals\inMtoModalCalcularMargen.pas`
-- `src\Modals\inMtoModalCargarEfectosRemesa.pas`
-- `src\Modals\inMtoModalDistribuidor.pas`
-- `src\Modals\inMtoModalFiltroArt.pas`
-- `src\Modals\inMtoModalGenerarSKUs.pas`
-- `src\Modals\inMtoModalGestionFiltros.pas`
-- `src\Modals\inMtoModalGuiasBase.pas`
-- `src\Modals\inMtoModalSeleccionarBanco.pas`
-
-Se reservan `inLibConfiguracionPantalla*`,
-`UniDataConfiguracionPantalla*` y
-`PruebasComposicionConfiguracionPantalla.pas`.
-
-**Aceptación**
-
-- Cada modal recibe uno o dos contratos con intención, no un contexto general.
-- Series, bancos, filtros, guías, margen y SKU conservan casos límite.
-- 0 SQL y 0 creación de consultas en las unidades asignadas.
-
----
-
-## 7. Ola 3 — raíz de composición
-
-### IA-31 — P1: retirar el localizador de servicios de pantalla
-
-Esta tarea es **serial** y se ejecuta cuando IA-11…IA-24 están integradas.
-Puede hacer el cableado mínimo en las rutinas de composición creadas por esas
-tareas, pero no rediseñar de nuevo sus features.
-
-**Objetivo**
-
-Eliminar el acceso general desde `TfrmBase`, dividir los mega-adaptadores por
-capacidad y dejar `TfrmMtoPrincipal`/`UniDataComposicionAplicacion` como única
-raíz que conoce las implementaciones.
-
-**Unidades principales**
-
-- `src\Core\inMtoFrmBase.pas`
-- `src\Core\inMtoPrincipal.pas`
-- `src\Lib\inLibRepositoriosPantallaIntf.pas`
-- `src\DataModules\UniDataRepositoriosPantalla.pas`
-- `src\DataModules\UniDataRepositoriosGeneralesPantalla.pas`
-- `src\DataModules\UniDataRepositoriosCajaPantalla.pas`
-- `src\DataModules\UniDataComposicionAplicacion.pas`
-- `tests\PruebasRegistroPantallas.pas`
-
-Se reservan adaptadores nuevos `UniDataRepositorios<Feature>Pantalla.pas` y
-pruebas `PruebasRepositoriosPantallaComposicion.pas`.
-
-**Aceptación**
-
-- 0 accesos a `ContextoRepositoriosPantalla.` en `src/`.
-- `TfrmBase` no expone el contexto ni una fábrica equivalente.
-- Ninguna nueva interfaz/fábrica supera 10 miembros.
-- Ninguna unidad de composición supera fan-out 40.
-- `UniDataRepositoriosGeneralesPantalla` deja de implementar seis familias.
-- No aparece un diccionario por nombre de formulario ni un service locator
-  renombrado.
-
----
-
-## 8. Ola 4 — persistencia UI residual
-
-### IA-41 — P2: bases genéricas, búsqueda y logon
-
-**Unidades exclusivas**
-
-- `src\Forms\inMtoGen.pas`
-- `src\Forms\inMtoGenSearch.pas`
-- `src\Core\inMtoLogon.pas`
-- `src\DataModules\UniDataGen.pas`
-
-Se reservan `inLibMtoGenAplicacion*`, `inLibLogonAplicacion*`,
-`UniDataLogonRepositorio*` y sus pruebas.
-
-**Aceptación**
-
-- 0 SQL, consultas y transacciones en las tres unidades VCL.
-- 0 componentes UniDAC en `inMtoGenSearch.dfm` e `inMtoLogon.dfm`.
-- `TfrmMtoGen` reduce métodos y deja documentado/probado el contrato de sus
-  hooks para descendientes.
-- Autenticación distingue credenciales inválidas, indisponibilidad y error.
-
-### IA-42 — P2: generador de procesos y movimientos de almacén
-
-**Unidades exclusivas**
-
-- `src\Forms\inMtoGeneradorProcesos.pas`
-- `src\Forms\inMtoMovimientosAlmacen.pas`
-
-Se reservan `inLibGeneradorProcesosAplicacion*`,
-`UniDataGeneradorProcesosRepositorio*`,
-`inLibMovimientosAlmacenAplicacion*` y
-`UniDataMovimientosAlmacenRepositorio*`.
-
-**Aceptación**
-
-- 0 de las 5 consultas y 15 asignaciones SQL actuales en estas pantallas.
-- Generación, cancelación y movimientos parciales se prueban sin VCL.
-- La escritura de almacén usa una unidad de trabajo explícita.
-
-### IA-43 — P2: modales de informes e importación
-
-**Unidades exclusivas**
-
-- `src\Modals\inMtoModalImpEfectosPago.pas`
-- `src\Modals\inMtoModalImpFac.pas`
-- `src\Modals\inMtoModalImpMultiFiltro.pas`
-- `src\Modals\inMtoModalImpRecFac.pas`
-- `src\Modals\inMtoModalVerifactuDecl.pas`
-- `src\Modals\inMtoModalWizardEditar.pas`
-- `src\Modals\inMtoModalImpBalanceSinTallas.pas`
-- `src\Modals\inMtoModalImpBalanceTallas.pas`
-- `src\Modals\inMtoModalImpDocsProveedor.pas`
-- `src\Modals\inMtoModalImpMovVentasArt.pas`
-- `src\Modals\inMtoModalEtiqArt.pas`
-
-Se reservan contratos y adaptadores con el nombre completo del informe, no
-una fábrica genérica de SQL.
-
-**Aceptación**
-
-- 0 consultas y 0 `SQL.Text` en los modales asignados.
-- 0 componentes UniDAC en sus DFM.
-- Cada informe recibe un dataset/DTO ya preparado o un contrato de lectura.
-- El trinquete global de UI queda en 0 para todas sus categorías.
-
----
-
-## 9. Ola 5 — SQL restante en dominio
-
-Objetivo común: mover SQL a adaptadores `UniData*`, mantener
-`inLib* -> UniData* = 0` y probar los contratos con dobles. Cada tarea debe
-reducir a cero el SQL de todas sus unidades asignadas.
-
-### IA-51 — P1/P3: copia y restauración segura
-
-**Unidades exclusivas**
-
-- `src\Lib\inLibBackupWorker.pas`
-- `src\Lib\backup\Backup.Types.pas`
-- `src\Lib\backup\Backup.Engine.pas`
-- `tests\PruebasCopiasSeguridad.pas`
-- `tests\PruebasRestauracionCopiasConexion.pas`
-
-Se reservan `inLibBackupPersistenciaIntf.pas`,
-`UniDataBackupRepositorio.pas` y pruebas homónimas.
-
-**Aceptación**
-
-- 0 SQL/DDL en `inLibBackupWorker`.
-- `EjecutarSQLStreaming` queda por debajo de 120 líneas y riesgo 200.
-- Se prueban delimitadores, comentarios, sentencias parciales, cancelación y
-  error de conexión.
-- No se promete rollback de DDL cuando MariaDB no lo ofrece.
-
-### IA-52 — P3: artículos, grids y búsquedas de compra
-
-**Unidades exclusivas**
-
-- `src\Lib\inLibArticulosCodigosBarras.pas`
-- `src\Lib\inLibGridTallasInline.pas`
-- `src\Lib\inLibGridArticulos.pas`
-- `src\Lib\inLibArticulosFiltro.pas`
-- `src\Lib\inLibBusquedasCompra.pas`
-- `src\Lib\inLibComprasSesionesReglas.pas`
-- `tests\PruebasBusquedasCompra.pas`
-- `tests\PruebasValidacionTallasCompra.pas`
-
-Se reservan contratos/adaptadores que conserven el nombre de cada capacidad,
-por ejemplo `inLibGridTallasInlinePersistenciaIntf` y su `UniData*Repositorio`.
-
-**Aceptación**
-
-- 0 SQL en las seis unidades `inLib*`.
-- `TGridArticulosLineas` baja de 1.200 líneas y 30 métodos.
-- Las búsquedas no devuelven `TUniQuery` salvo enlace de presentación
-  expresamente justificado.
-
-### IA-53 — P3: configuración e infraestructura de datos
-
-**Unidades exclusivas**
-
-- `src\Lib\inLibValoresAutomaticos.pas`
-- `src\Lib\inLibDBStructure.pas`
-- `src\Lib\inLibData.pas`
-- `src\Lib\inLibUnidadesMedida.pas`
-- `src\Lib\inLibDatasets.pas`
-- `src\Lib\inLibPermisosUniDAC.pas`
-- `src\Lib\inLibConfigCampos.pas`
-- `src\Lib\inLibLicenciaAplicacion.pas`
-- `tests\PruebasValoresAutomaticos.pas`
-- `tests\PruebasDatasets.pas`
-
-Se reservan contratos/adaptadores con el nombre de cada servicio; queda
-prohibido un `IRepositorioGeneral`.
-
-**Aceptación**
-
-- 0 SQL en las ocho unidades de librería.
-- Esquema, licencia, permisos y valores automáticos expresan errores con tipos
-  o resultados, no con texto interpretado.
-- Las comprobaciones de estructura se separan de su presentación.
-
-### IA-54 — P3/P4: traducción, perfiles, guías y utilidades de pantalla
-
-**Unidades exclusivas**
-
-- `src\Lib\inLibTraduccionesDescarga.pas`
-- `src\Lib\inLibTraducciones.pas`
-- `src\Lib\inLibGridColumnChooser.pas`
-- `src\Lib\inLibGestorGuiasGridMto.pas`
-- `src\Lib\inLibGestorPerfilesMto.pas`
-- `src\Lib\inLibUnitForm.pas`
-- `src\Lib\inLibShowMto.pas`
-- `tests\PruebasTraducciones.pas`
-- `tests\PruebasGestorGuiasGridMto.pas`
-- `tests\PruebasGestorPerfilesMto.pas`
-
-Se reservan adaptadores `UniDataTraducciones*`, `UniDataGuias*` y
-`UniDataPerfiles*` específicos.
-
-**Aceptación**
-
-- 0 SQL en las siete unidades.
-- `EnriquecerQueryConGuias` y `ShowMto` quedan por debajo de 120 líneas.
-- Navegación, perfiles y presentación no conocen la conexión.
-
-### IA-55 — P3: documentos, impuestos y correo
-
-**Unidades exclusivas**
-
-- `src\Lib\inLibSepaRemesasVenta.pas`
-- `src\Lib\inLibImpuestosComun.pas`
-- `src\Lib\inLibComprasImpuestos.pas`
-- `src\Lib\inLibVentasImpuestos.pas`
-- `src\Lib\inLibValidacionDocumento.pas`
-- `src\Lib\inLibFormatoDocumento.pas`
-- `src\Lib\inLibCorreoTickets.pas`
-- `src\Lib\inLibColumnasDocumento.pas`
-- `tests\PruebasImpuestosComun.pas`
-- `tests\PruebasColumnasDocumento.pas`
-
-Se reservan contratos/adaptadores con prefijos `Sepa`, `Impuestos`,
-`ValidacionDocumento`, `CorreoTickets` y `ColumnasDocumento`.
-
-**Aceptación**
-
-- 0 SQL en las ocho unidades.
-- Cálculo de impuestos queda puro y separado de lecturas de tipos/zonas.
-- SEPA, formato y correo reciben datos ya validados.
-
-### IA-56 — P3: inventario y utilidades de Caja
-
-**Unidades exclusivas**
-
-- `src\Caja\Lib\inLibCajaStock.pas`
-- `src\Lib\inLibInventarioNube.pas`
-- `src\Caja\Lib\inLibGenerarTicketCaja.pas`
-
-Se reservan `inLibCajaStockPersistenciaIntf`,
-`UniDataCajaStockRepositorio`, `inLibInventarioNubePersistenciaIntf`,
-`UniDataInventarioNubeRepositorio` y contratos homólogos de ticket.
-
-**Aceptación**
-
-- 0 SQL en las tres unidades.
-- Política de stock, sincronización y generación de ticket se prueban sin
-  UniDAC.
-- Reintento de inventario nube y actualización de stock son idempotentes.
-
----
-
-## 10. Ola 6 — complejidad residual
-
-### IA-61 — P4: exportadores y presentación tabular
-
-**Unidades exclusivas**
-
-- `src\Lib\inLibMovVentasArtExcel.pas`
-- `src\Lib\inLibDocumentosTrabajoExcel.pas`
-- `src\Lib\inLibDocCompraExcel.pas`
-- `src\Lib\inLibDevExp.pas`
-
-Se reservan modelos/presentadores `inLibExportacion*` y
-`PruebasExportadores.pas`.
-
-**Aceptación**
-
-- Los cuatro métodos señalados por riesgo quedan por debajo de 120 líneas.
-- Cálculo de columnas/celdas es puro; DevExpress solo renderiza.
-- Se prueban 0, 1 y muchas filas, nulos, tallas y formatos numéricos.
-
-### IA-62 — P4: fiscalidad, factura y cálculo de cobro
-
-**Unidades exclusivas**
-
-- `src\Lib\inLibGenerarTicketBD.pas`
-- `src\verifactu\inLibVerifactuEnvio.pas`
-- `src\Caja\Lib\inLibFaseCobro.pas`
-- `src\Caja\DataModules\UniDataCaja.pas`
-- `src\DataModules\UniDataFacturas.pas`
-- `tests\PruebasEmisionFiscal.pas`
-- `tests\PruebasFacturasServicios.pas`
-
-Se reservan colaboradores `inLibTicketDatos*`, `inLibVerifactuCarga*` y
-`inLibFaseCobroCalculo*`.
-
-**Aceptación**
-
-- `ImprimirTicketDesdeBD`, `CargarDatosFactura`, `CalcularTotales` y
-  `TransformarLineasParaCobroParcial` quedan por debajo de 120 líneas.
-- Ningún método fiscal/caja modificado supera 10 decisiones.
-- `TdmFacturas` y `TdmCajaOpe` dejan separados lectura, escritura y cálculo.
-- Se prueban redondeo, pago parcial, rechazo fiscal, reintento y rollback.
-
-### IA-63 — P4: data modules de artículos, pedidos y efectos
-
-**Unidades exclusivas**
-
-- `src\DataModules\UniDataArticulos.pas`
-- `src\DataModules\UniDataPedidos.pas`
-- `src\DataModules\UniDataEfectosCompra.pas`
-- `src\DataModules\UniDataEfectosVenta.pas`
-- `src\DataModules\UniDataTarifasCambios.pas`
-- `src\DataModules\UniDataPedidosCompraIncorporacionAlbaran.pas`
-- `src\DataModules\UniDataAlbaranes.pas`
-- `src\DataModules\UniDataInventarios.pas`
-- `src\DataModules\UniDataArticulosVariaciones.pas`
-- `src\DataModules\UniDataFotosRepositorio.pas`
-- `tests\PruebasFusionEfectos.pas`
-- `tests\PruebasImportacionPedidos.pas`
-- `tests\PruebasArticulosVariaciones.pas`
-
-Se reservan colaboradores `UniData<Feature>Lecturas`,
-`UniData<Feature>Escrituras` y contratos de resultado específicos.
-
-**Aceptación**
-
-- Los métodos señalados de etiquetas, PrestaShop, efectos, tarifas e
-  incorporación quedan por debajo de 120 líneas.
-- Ninguna extracción crea una clase con más de 30 métodos.
-- Los efectos de compra y venta comparten cálculo puro, no SQL concatenado.
-- Cada escritura múltiple declara propietario de transacción y rollback.
-
----
-
-## 11. Ola 7 — acabado e integración serial
-
-### IA-98 — P5: retirar deuda mecánica restante
-
-Tarea serial posterior a todos los cambios lógicos.
-
-**Objetivo**
-
-Procesar el código propio por lotes pequeños hasta llevar a cero excepciones
-de codificación, `Exit`, `Continue`, `with` y líneas anchas, sin alterar
-comportamiento.
-
-**Reglas**
-
-- Un lote por dominio; caracterización y compilación entre lotes.
-- No hacer sustituciones globales ciegas de control de flujo.
-- Un `Exit` solo se retira reestructurando la intención y sin aumentar
-  anidación.
-- Separar cada lote mecánico de cualquier cambio funcional.
-
-**Aceptación**
-
-- 0 excepciones de codificación.
-- 0 `Exit`, 0 `Continue`, 0 `with`, 0 tabuladores y 0 líneas anchas en código
-  propio, salvo recurso generado documentado y excluido por regla explícita.
-- Calidad, compilación y pruebas verdes tras cada lote y al final.
-
-### IA-99 — integración final, manifiestos y trinquetes
-
-Esta tarea es serial, no modifica lógica de unidades Pascal y se ejecuta la
-última.
-
-**Archivos compartidos reservados**
-
-- `fzam.dpr`
-- `fzam.dproj`
-- `tests\FactuzamTests.dpr`
-- `tests\FactuzamTests.dproj`
-- `.github\workflows\calidad.yml`
-- `scripts\*.ps1`
-- baselines de calidad
-- `PLAN_SOLID.md`, `TAREAS_IA_SOLID.md` y libros de estilo si una regla ha
-  cambiado de forma aprobada
-
-**Objetivo**
-
-Registrar todas las unidades nuevas, eliminar referencias muertas, bajar cada
-tope a la cifra alcanzada y verificar la solución completa.
-
-**Aceptación**
-
-- No hay unidades nuevas sin registrar ni unidades retiradas referenciadas.
-- Los topes solo bajan; ninguna lista blanca se amplía sin justificación.
-- `ContextoRepositoriosPantalla.` = 0.
-- SQL en UI = 0 y SQL en `inLib*` = 0.
-- Métodos >200 = 0.
-- Calidad completa verde.
-- `fzam` y DUnitX compilan y las pruebas pasan en Win32 y Win64.
-- La CI obligatoria conserva jobs Windows/Delphi no opcionales.
-
----
-
-## 12. Control de concurrencia
-
-Antes de lanzar una ola:
-
-1. Comprobar que ninguna sesión de la ola anterior sigue activa.
-2. Asignar una tarea completa por sesión, nunca media tarea.
-3. Publicar las unidades nuevas previstas antes de crearlas.
-4. Rechazar cualquier edición fuera de la lista exclusiva.
-5. Integrar una tarea cada vez, ejecutar calidad y solo entonces integrar la
-   siguiente.
-
-Matriz de conflictos deliberados:
-
-- `IA-00` puede normalizar archivos de cualquier ola: siempre se ejecuta
-  antes y en solitario.
-- `IA-31` integra los puntos de composición preparados en olas 1 y 2: siempre
-  se ejecuta después y en solitario.
-- `IA-98` puede recorrer unidades ya refactorizadas: siempre se ejecuta al
-  final y en solitario.
-- `IA-99` es la única propietaria de manifiestos, scripts, workflow, baselines
-  y documentación compartida.
-
-Con estas barreras no existe edición concurrente de una misma unidad, aunque
-una tarea serial posterior necesite realizar el cableado final de una unidad
-ya integrada.
-
-### Cobertura comprobada del reparto
-
-La asignación se ha contrastado automáticamente contra el árbol actual:
-
-- 0 unidades Pascal repetidas entre tareas de una misma ola;
-- 55/55 unidades que consumen `ContextoRepositoriosPantalla` asignadas;
-- 27/27 unidades con acceso directo a datos en UI o UniDAC en DFM asignadas;
-- 33/33 unidades `inLib*` con SQL asignadas;
-- 20/20 focos mostrados por el ranking actual de métodos largos asignados.
-
-Estas cifras son una fotografía del 02/08/2026. Antes de iniciar una ola se
-repiten los comprobadores, porque una integración anterior puede haber
-retirado o creado focos.
+## 10. Decisiones que no se reabren
+
+- UniDAC sigue siendo el acceso a datos.
+- `factuzam_original.sql` no se modifica.
+- Todo cambio de esquema vive en un script idempotente dentro de
+  `DESARROLLOS EN CURSO/`.
+- `inLib* -> UniData*` permanece en cero.
+- SQL y transacciones no vuelven a formularios.
+- SQL literal no vuelve a unidades de dominio.
+- No vuelven `Exit`, `Continue`, `with`, líneas anchas, tabuladores,
+  globales de interfaz ni `except` vacíos.
+- No se añade una interfaz por método ni un patrón por apariencia.
+- La herencia VCL se conserva donde expresa una relación real, pero sus
+  contratos se prueban y las capacidades opcionales se componen.
+- No se hace commit ni push salvo petición expresa del usuario.
+
+Esta hoja de ruta es un trinquete, no un registro histórico. Al cerrar
+`IA-99`, Git conserva el pasado y el documento se vuelve a escribir con los
+problemas que sigan siendo reales.
