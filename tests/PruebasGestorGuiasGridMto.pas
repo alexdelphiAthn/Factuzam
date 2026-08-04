@@ -17,9 +17,29 @@ interface
 
 uses
   Vcl.Forms, Vcl.Menus, DUnitX.TestFramework, cxGrid,
-  cxGridDBTableView, inLibGestorGuiasGridMto;
+  cxGridDBTableView, inLibGestorGuiasGridMto,
+  inLibGuiasGridPersistenciaIntf, inLibInformesGuiasCache;
 
 type
+  TPersistenciaGuiasPrueba = class(
+    TInterfacedObject,
+    IPersistenciaGuiasGrid)
+  private
+    FBorrados: Integer;
+    FUltimoInforme: string;
+  public
+    function Enriquecer(
+      const ASqlOriginal: string;
+      const AParametros: TArray<TParametroConsultaGuia>;
+      const AGuias: TArray<TInformeGuiaItem>
+    ): TResultadoEnriquecimientoGuias;
+    procedure Borrar(const AInforme: string);
+    procedure GuardarColumnasVisibles(
+      const AInforme, AColumnas: string);
+    property Borrados: Integer read FBorrados;
+    property UltimoInforme: string read FUltimoInforme;
+  end;
+
   [TestFixture]
   TPruebasGestorGuiasGridMto = class
   private
@@ -29,6 +49,8 @@ type
     FColumnaNormal: TcxGridDBColumn;
     FColumnaGuia: TcxGridDBColumn;
     FGestor: TGestorGuiasGridMto;
+    FPersistenciaObjeto: TPersistenciaGuiasPrueba;
+    FPersistencia: IPersistenciaGuiasGrid;
     function BuscarItemRaiz(
       const ACaption: string): TMenuItem;
   public
@@ -46,12 +68,36 @@ type
     procedure Alternar_InvierteVisibilidad;
     [Test]
     procedure Limpiar_EliminaSoloColumnasGuia;
+    [Test]
+    procedure Borrar_DelegaEnPersistenciaSinConexion;
   end;
 
 implementation
 
 uses
   System.SysUtils, System.Classes;
+
+function TPersistenciaGuiasPrueba.Enriquecer(
+  const ASqlOriginal: string;
+  const AParametros: TArray<TParametroConsultaGuia>;
+  const AGuias: TArray<TInformeGuiaItem>
+): TResultadoEnriquecimientoGuias;
+begin
+  Result := Default(TResultadoEnriquecimientoGuias);
+end;
+
+procedure TPersistenciaGuiasPrueba.Borrar(
+  const AInforme: string);
+begin
+  Inc(FBorrados);
+  FUltimoInforme := AInforme;
+end;
+
+procedure TPersistenciaGuiasPrueba.GuardarColumnasVisibles(
+  const AInforme, AColumnas: string);
+begin
+  FUltimoInforme := AInforme;
+end;
 
 procedure TPruebasGestorGuiasGridMto.Preparar;
 begin
@@ -72,11 +118,16 @@ begin
   FGestor := TGestorGuiasGridMto.Create(
     FFormulario, FGrid, FVista, nil,
     nil, nil, nil);
+  FPersistenciaObjeto := TPersistenciaGuiasPrueba.Create;
+  FPersistencia := FPersistenciaObjeto;
+  FGestor.AsignarPersistencia(FPersistencia);
 end;
 
 procedure TPruebasGestorGuiasGridMto.Limpiar;
 begin
   FreeAndNil(FGestor);
+  FPersistencia := nil;
+  FPersistenciaObjeto := nil;
   FreeAndNil(FFormulario);
 end;
 
@@ -229,6 +280,15 @@ begin
     FVista.Columns[0].DataBinding.FieldName);
   Assert.AreEqual(
     0, Integer(FGestor.CamposGuia.Count));
+end;
+
+procedure TPruebasGestorGuiasGridMto.
+  Borrar_DelegaEnPersistenciaSinConexion;
+begin
+  FGestor.BorrarGuias;
+  Assert.AreEqual(1, FPersistenciaObjeto.Borrados);
+  Assert.AreEqual(
+    'GRID:frmPrueba', FPersistenciaObjeto.UltimoInforme);
 end;
 
 end.

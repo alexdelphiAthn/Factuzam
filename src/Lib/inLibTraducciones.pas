@@ -17,7 +17,8 @@ interface
 
 uses
   System.Classes, System.Generics.Collections, System.SyncObjs,
-  Uni, inLibConexionesIntf, inLibTraduccionesIntf, inLibLogIntf;
+  inLibTraduccionesIntf, inLibLogIntf,
+  inLibTraduccionesPersistenciaIntf;
 
 type
   TServicioTraducciones = class(
@@ -26,9 +27,9 @@ type
   )
   private
     FBloqueo: TCriticalSection;
-    FConexiones: IServicioConexiones;
     FIdioma: string;
     FIdiomaBase: string;
+    FLector: ILectorCatalogoTraducciones;
     FTextos: TDictionary<string, string>;
     FTextosInforme: TDictionary<string, string>;
     FCacheCargada: Boolean;
@@ -62,11 +63,11 @@ type
       const ARuta, APropiedad: string);
   public
     constructor Create(
-      const AConexiones: IServicioConexiones;
+      const ALector: ILectorCatalogoTraducciones;
       const AIdioma: string = IDIOMA_ESPANOL;
       const AIdiomaBase: string = IDIOMA_ESPANOL); overload;
     constructor Create(
-      const AConexiones: IServicioConexiones;
+      const ALector: ILectorCatalogoTraducciones;
       const ARegistroLog: IRegistroLog;
       const AIdioma: string = IDIOMA_ESPANOL;
       const AIdiomaBase: string = IDIOMA_ESPANOL); overload;
@@ -88,7 +89,7 @@ function ClaveTraduccionComponente(
 function NormalizarIdiomaAplicacion(
   const AIdioma: string): string;
 function ObtenerIdiomaConfigurado(
-  AConexion: TUniConnection;
+  const ALector: ILectorIdiomaConfigurado;
   const AUsuario: string;
   const ARegistroLog: IRegistroLog = nil): string;
 function ResolverServicioTraducciones(
@@ -273,18 +274,18 @@ begin
 end;
 
 constructor TServicioTraducciones.Create(
-  const AConexiones: IServicioConexiones;
+  const ALector: ILectorCatalogoTraducciones;
   const AIdioma, AIdiomaBase: string);
 begin
   Create(
-    AConexiones,
+    ALector,
     CrearRegistroLogNulo,
     AIdioma,
     AIdiomaBase);
 end;
 
 constructor TServicioTraducciones.Create(
-  const AConexiones: IServicioConexiones;
+  const ALector: ILectorCatalogoTraducciones;
   const ARegistroLog: IRegistroLog;
   const AIdioma, AIdiomaBase: string);
 begin
@@ -295,7 +296,7 @@ begin
   FBloqueo := TCriticalSection.Create;
   FTextos := TDictionary<string, string>.Create;
   FTextosInforme := TDictionary<string, string>.Create;
-  FConexiones := AConexiones;
+  FLector := ALector;
   FIdiomaBase := NormalizarIdioma(AIdiomaBase);
   FIdioma := NormalizarIdioma(AIdioma);
   FCacheCargada := False;
@@ -304,7 +305,7 @@ end;
 destructor TServicioTraducciones.Destroy;
 begin
   FRegistroLog := nil;
-  FConexiones := nil;
+  FLector := nil;
   FreeAndNil(FTextos);
   FreeAndNil(FTextosInforme);
   FreeAndNil(FBloqueo);
@@ -401,85 +402,40 @@ end;
 
 procedure TServicioTraducciones.CargarCache;
 var
-  Conexion: TUniConnection;
-  Consulta: TUniQuery;
-  Clave: string;
-  TextoBase: string;
+  iEntrada: Integer;
+  oCatalogo: TCatalogoTraducciones;
+  sClave: string;
+  sTextoBase: string;
 begin
   FTextos.Clear;
   FTextosInforme.Clear;
   FCacheCargada := True;
-  Conexion := nil;
-  Consulta := nil;
-  if Assigned(FConexiones) and FConexiones.Disponible then
+  if Assigned(FLector) then
   begin
-    try
-      Conexion := FConexiones.CrearConexion(nil, uctPrecarga);
-      Consulta := TUniQuery.Create(nil);
-      Consulta.Connection := Conexion;
-      Consulta.SQL.Text :=
-        'SELECT CLAVE_TRAD, TEXTO_TRAD ' +
-        '  FROM fza_traducciones ' +
-        ' WHERE ESACTIVO_TRAD = ''S'' ' +
-        '   AND (IDIOMA_TRAD = :idioma ' +
-        '        OR IDIOMA_TRAD = :idioma_base) ' +
-        ' ORDER BY CASE WHEN IDIOMA_TRAD = :idioma_base ' +
-        '               THEN 1 ELSE 2 END';
-      Consulta.ParamByName('idioma').AsString := FIdioma;
-      Consulta.ParamByName('idioma_base').AsString := FIdiomaBase;
-      Consulta.Open;
-      while not Consulta.Eof do
-      begin
-        Clave := LowerCase(
-          Trim(Consulta.FieldByName('CLAVE_TRAD').AsString));
-        if Clave <> '' then
-          FTextos.AddOrSetValue(
-            Clave,
-            Consulta.FieldByName('TEXTO_TRAD').AsString);
-        Consulta.Next;
-      end;
-      if not SameText(FIdioma, FIdiomaBase) then
-      begin
-        // Mapa texto base -> texto traducido de los informes
-        // FastReport. Lo usan los formatos personalizados, que
-        // no tienen clave propia (D22-B).
-        Consulta.Close;
-        Consulta.SQL.Text :=
-          'SELECT B.TEXTO_TRAD AS TEXTO_BASE, ' +
-          '       T.TEXTO_TRAD AS TEXTO_IDIOMA ' +
-          '  FROM fza_traducciones B ' +
-          '  JOIN fza_traducciones T ' +
-          '    ON T.CLAVE_TRAD = B.CLAVE_TRAD ' +
-          '   AND T.IDIOMA_TRAD = :idioma ' +
-          '   AND T.ESACTIVO_TRAD = ''S'' ' +
-          ' WHERE B.IDIOMA_TRAD = :idioma_base ' +
-          '   AND B.ESACTIVO_TRAD = ''S'' ' +
-          '   AND B.CLAVE_TRAD LIKE ''FastReport.%'' ' +
-          ' ORDER BY B.CLAVE_TRAD';
-        Consulta.ParamByName('idioma').AsString := FIdioma;
-        Consulta.ParamByName('idioma_base').AsString :=
-          FIdiomaBase;
-        Consulta.Open;
-        while not Consulta.Eof do
-        begin
-          TextoBase :=
-            Consulta.FieldByName('TEXTO_BASE').AsString;
-          if (TextoBase <> '') and
-             not FTextosInforme.ContainsKey(TextoBase) then
-            FTextosInforme.Add(
-              TextoBase,
-              Consulta.FieldByName('TEXTO_IDIOMA').AsString);
-          Consulta.Next;
-        end;
-      end;
-      FRegistroLog.RegistrarInformacion(
-        Format(
-          'Catálogo de traducciones cargado: idioma=%s, textos=%d',
-          [FIdioma, FTextos.Count]));
-    finally
-      FreeAndNil(Consulta);
-      FreeAndNil(Conexion);
+    oCatalogo := FLector.Cargar(FIdioma, FIdiomaBase);
+    for iEntrada := 0 to High(oCatalogo.Textos) do
+    begin
+      sClave := LowerCase(Trim(oCatalogo.Textos[iEntrada].Clave));
+      if sClave <> '' then
+        FTextos.AddOrSetValue(
+          sClave,
+          oCatalogo.Textos[iEntrada].Texto);
     end;
+    for iEntrada := 0 to High(oCatalogo.TextosInforme) do
+    begin
+      sTextoBase := oCatalogo.TextosInforme[iEntrada].TextoBase;
+      if (sTextoBase <> '') and
+         not FTextosInforme.ContainsKey(sTextoBase) then
+      begin
+        FTextosInforme.Add(
+          sTextoBase,
+          oCatalogo.TextosInforme[iEntrada].TextoIdioma);
+      end;
+    end;
+    FRegistroLog.RegistrarInformacion(
+      Format(
+        'Catálogo de traducciones cargado: idioma=%s, textos=%d',
+        [FIdioma, FTextos.Count]));
   end;
 end;
 
@@ -828,59 +784,28 @@ begin
 end;
 
 function ObtenerIdiomaConfigurado(
-  AConexion: TUniConnection;
+  const ALector: ILectorIdiomaConfigurado;
   const AUsuario: string;
   const ARegistroLog: IRegistroLog): string;
 var
-  Consulta: TUniQuery;
-  Idioma: string;
-  Registro: IRegistroLog;
+  oRegistro: IRegistroLog;
+  sIdioma: string;
 begin
-  Registro := ARegistroLog;
-  if not Assigned(Registro) then
-  begin
-    Registro := CrearRegistroLogNulo;
-  end;
+  oRegistro := ARegistroLog;
+  if not Assigned(oRegistro) then
+    oRegistro := CrearRegistroLogNulo;
   Result := IDIOMA_ESPANOL;
-  if Assigned(AConexion) and AConexion.Connected then
+  if Assigned(ALector) then
   begin
-    Consulta := TUniQuery.Create(nil);
     try
-      try
-        Consulta.Connection := AConexion;
-        Consulta.SQL.Text :=
-          'SELECT P.VALUE_USUPER ' +
-          '  FROM fza_usuarios_perfiles P ' +
-          '  LEFT JOIN fza_usuarios U ' +
-          '    ON U.USUARIO_USU = :usuario ' +
-          ' WHERE P.KEY_USUPER = ''frmMtoAppParam'' ' +
-          '   AND P.SUBKEY_USUPER = ''appIdioma'' ' +
-          '   AND P.USUARIO_GRUPO_USUPER IN ' +
-          '       (:usuario, U.GRUPO_USU, :todos) ' +
-          ' ORDER BY CASE P.USUARIO_GRUPO_USUPER ' +
-          '            WHEN :usuario THEN 1 ' +
-          '            WHEN U.GRUPO_USU THEN 2 ' +
-          '            ELSE 3 ' +
-          '          END ' +
-          ' LIMIT 1';
-        Consulta.ParamByName('usuario').AsString := AUsuario;
-        Consulta.ParamByName('todos').AsString := 'Todos';
-        Consulta.Open;
-        if not Consulta.Eof then
-        begin
-          Idioma := Trim(
-            Consulta.FieldByName('VALUE_USUPER').AsString);
-          if Idioma <> '' then
-            Result := NormalizarIdiomaAplicacion(Idioma);
-        end;
-      except
-        on E: Exception do
-          Registro.RegistrarAviso(
-            'No se pudo resolver el idioma configurado: ' +
-            E.ClassName + ': ' + E.Message);
-      end;
-    finally
-      FreeAndNil(Consulta);
+      sIdioma := Trim(ALector.Leer(AUsuario));
+      if sIdioma <> '' then
+        Result := NormalizarIdiomaAplicacion(sIdioma);
+    except
+      on E: Exception do
+        oRegistro.RegistrarAviso(
+          'No se pudo resolver el idioma configurado: ' +
+          E.ClassName + ': ' + E.Message);
     end;
   end;
 end;

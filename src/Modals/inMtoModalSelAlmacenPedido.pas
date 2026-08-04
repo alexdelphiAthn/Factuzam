@@ -123,7 +123,7 @@ type
 implementation
 
 uses
-  inLibFormatoDocumento,
+  inLibFormatoDocumento, UniDataFormatoDocumentoRepositorio,
   inLibMsgCompras, inLibMsgVentas,
   inLibVentasPantallaIntf,
   UniDataVentasPantallaComposicion;
@@ -166,8 +166,9 @@ var
 begin
   inherited;
   lblPedido.Caption := Format(SCaptionCrearAlbaranDesdePedidoCompra,
-    [FormatearDocumentoEmpresa(ConexionPrincipal, CodigoEmpresa, SeriePedc,
-      NumPedc)]);
+    [FormatearDocumento(CrearFormatoDocumentoLecturas(
+      ConexionPrincipal).LeerFormatoEmpresa(CodigoEmpresa),
+      SeriePedc, NumPedc)]);
   CargarAlmacenes;
   ConfigurarLookupTemporada;
   // Defaults. El combo de serie ofrece las series 'AB' de la empresa.

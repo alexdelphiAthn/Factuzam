@@ -23,9 +23,9 @@ type
   TPruebasBusquedasCompra = class
   public
     [Test]
-    procedure SqlArticulos_ConservaProveedorYActivos;
+    procedure Articulo_ConsultaPuertoYDevuelveSeleccion;
     [Test]
-    procedure SqlSku_ConservaAtributosYActivos;
+    procedure Sku_ConsultaPuertoYDevuelveSeleccion;
     [Test]
     procedure ValorTexto_ValidaEstadoYCampo;
   end;
@@ -33,36 +33,142 @@ type
 implementation
 
 uses
-  System.SysUtils, Data.DB, Datasnap.DBClient,
-  inLibBusquedasCompra;
+  System.SysUtils, Data.DB, Datasnap.DBClient, Uni, DBAccess, Vcl.Forms,
+  inLibBusquedasCompra, inLibBusquedasCompraPersistenciaIntf,
+  inLibGenBusq;
 
-procedure TPruebasBusquedasCompra.
-  SqlArticulos_ConservaProveedorYActivos;
-var
-  sSql: string;
+type
+  TConsultaBusquedaCompraMemoria = class(
+    TInterfacedObject,
+    IConsultaBusquedaCompra)
+  private
+    FDatos: TClientDataSet;
+  public
+    constructor Create(const ACampo, AValor: string);
+    destructor Destroy; override;
+    function DataSet: TDataSet;
+  end;
+
+  TBusquedasCompraPersistenciaMemoria = class(
+    TInterfacedObject,
+    IBusquedasCompraPersistencia)
+  private
+    FArticuloConsultado: string;
+    FSkuConsultado: string;
+  public
+    function ConsultarArticulosProveedor(
+      const ACodigoProveedor: string): IConsultaBusquedaCompra;
+    function ConsultarSkusArticulo(
+      const ACodigoArticulo: string): IConsultaBusquedaCompra;
+    property ArticuloConsultado: string read FArticuloConsultado;
+    property SkuConsultado: string read FSkuConsultado;
+  end;
+
+  TBusquedaVisualMemoria = class(TInterfacedObject, IBusquedaVisual)
+  public
+    function EjecutarBusqueda(AConexion: TUniConnection;
+      const ACaption: string; ADataSet: TCustomDADataSet;
+      const AName: string; AParentForm: TCustomForm = nil): Boolean;
+      overload;
+    function EjecutarBusquedaDataSet(const ACaption: string;
+      ADataSet: TDataSet; const AName: string;
+      AParentForm: TCustomForm = nil): Boolean;
+    function EjecutarBusqueda(AConexion: TUniConnection;
+      const ACaption, ASql, ACampoResultado: string;
+      out AValorDevuelto: string; const AName: string;
+      AParentForm: TCustomForm = nil): Boolean; overload;
+  end;
+
+constructor TConsultaBusquedaCompraMemoria.Create(
+  const ACampo, AValor: string);
 begin
-  sSql := SqlBusquedaArticulosProveedorCompra;
-  Assert.IsTrue(Pos('FROM fza_articulos_proveedores ap', sSql) > 0);
-  Assert.IsTrue(Pos('ap.CODIGO_PRV_AP = :prv', sSql) > 0);
-  Assert.IsTrue(Pos('COALESCE(art.ESACTIVO_ART', sSql) > 0);
-  Assert.IsTrue(Pos('ap.REF_PROVEEDOR_AP AS REF_PROVEEDOR',
-    sSql) > 0);
-  Assert.AreEqual('', BuscarArticuloProveedorCompra(
-    nil, nil, 'PRV1', '', '', nil));
+  inherited Create;
+  FDatos := TClientDataSet.Create(nil);
+  FDatos.FieldDefs.Add(ACampo, ftString, 30);
+  FDatos.CreateDataSet;
+  FDatos.Append;
+  FDatos.FieldByName(ACampo).AsString := AValor;
+  FDatos.Post;
+end;
+
+destructor TConsultaBusquedaCompraMemoria.Destroy;
+begin
+  FDatos.Free;
+  inherited;
+end;
+
+function TConsultaBusquedaCompraMemoria.DataSet: TDataSet;
+begin
+  Result := FDatos;
+end;
+
+function TBusquedasCompraPersistenciaMemoria.ConsultarArticulosProveedor(
+  const ACodigoProveedor: string): IConsultaBusquedaCompra;
+begin
+  FArticuloConsultado := ACodigoProveedor;
+  Result := TConsultaBusquedaCompraMemoria.Create(
+    'CODIGO_ART_ART', 'ART1');
+end;
+
+function TBusquedasCompraPersistenciaMemoria.ConsultarSkusArticulo(
+  const ACodigoArticulo: string): IConsultaBusquedaCompra;
+begin
+  FSkuConsultado := ACodigoArticulo;
+  Result := TConsultaBusquedaCompraMemoria.Create(
+    'CODIGO_UNIDAD_SKU', 'SKU1');
+end;
+
+function TBusquedaVisualMemoria.EjecutarBusqueda(
+  AConexion: TUniConnection; const ACaption: string;
+  ADataSet: TCustomDADataSet; const AName: string;
+  AParentForm: TCustomForm): Boolean;
+begin
+  Result := False;
+end;
+
+function TBusquedaVisualMemoria.EjecutarBusquedaDataSet(
+  const ACaption: string; ADataSet: TDataSet; const AName: string;
+  AParentForm: TCustomForm): Boolean;
+begin
+  Result := Assigned(ADataSet) and ADataSet.Active and
+    not ADataSet.IsEmpty;
+end;
+
+function TBusquedaVisualMemoria.EjecutarBusqueda(
+  AConexion: TUniConnection; const ACaption, ASql,
+  ACampoResultado: string; out AValorDevuelto: string;
+  const AName: string; AParentForm: TCustomForm): Boolean;
+begin
+  AValorDevuelto := '';
+  Result := False;
 end;
 
 procedure TPruebasBusquedasCompra.
-  SqlSku_ConservaAtributosYActivos;
+  Articulo_ConsultaPuertoYDevuelveSeleccion;
 var
-  sSql: string;
+  oPersistencia: TBusquedasCompraPersistenciaMemoria;
+  oPuerto: IBusquedasCompraPersistencia;
 begin
-  sSql := SqlBusquedaSkuCompra;
-  Assert.IsTrue(Pos('FROM fza_articulos_skus SK', sSql) > 0);
-  Assert.IsTrue(Pos('SK.CODIGO_ART_SKU = :art', sSql) > 0);
-  Assert.IsTrue(Pos('COALESCE(SK.ESACTIVO_SKU', sSql) > 0);
-  Assert.IsTrue(Pos('GROUP_CONCAT(AV.AV', sSql) > 0);
-  Assert.AreEqual('', BuscarSkuArticuloCompra(
-    nil, nil, 'ART1', '', '', nil));
+  oPersistencia := TBusquedasCompraPersistenciaMemoria.Create;
+  oPuerto := oPersistencia;
+  Assert.AreEqual('ART1', BuscarArticuloProveedorCompra(
+    oPuerto, TBusquedaVisualMemoria.Create, ' PRV1 ',
+    '', '', nil));
+  Assert.AreEqual('PRV1', oPersistencia.ArticuloConsultado);
+end;
+
+procedure TPruebasBusquedasCompra.
+  Sku_ConsultaPuertoYDevuelveSeleccion;
+var
+  oPersistencia: TBusquedasCompraPersistenciaMemoria;
+  oPuerto: IBusquedasCompraPersistencia;
+begin
+  oPersistencia := TBusquedasCompraPersistenciaMemoria.Create;
+  oPuerto := oPersistencia;
+  Assert.AreEqual('SKU1', BuscarSkuArticuloCompra(
+    oPuerto, TBusquedaVisualMemoria.Create, ' ART1 ',
+    '', '', nil));
+  Assert.AreEqual('ART1', oPersistencia.SkuConsultado);
 end;
 
 procedure TPruebasBusquedasCompra.

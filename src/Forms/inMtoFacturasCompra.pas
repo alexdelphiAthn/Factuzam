@@ -47,6 +47,7 @@ uses
   inLibAplicacionArticuloCompraIntf,
   inLibArticulosAtributosIntf,
   inLibArticulosValidadorIntf,
+  inLibBusquedasCompraPersistenciaIntf,
   inLibComprasPantallaIntf,
   UniDataFacturasCompra, cxBlobEdit, dxShellDialogs, System.Actions,
   Vcl.ActnList, cxSplitter, inLibDocumento, inLibDocumentoIntf;
@@ -204,6 +205,7 @@ type
     FValidadorArticulos: IArticulosValidador;
     FLookupAtributos: IArticulosAtributosLookup;
     FBusquedaProveedores: IBusquedaProveedoresComprasPantalla;
+    FBusquedasArticulos: IBusquedasCompraPersistencia;
     // Guarda contra reentrada del toggle desde dsTablaGDataChangeHook
     // disparado por el Edit/Post de PersistirPreferenciaPivote (entre
     // el Edit y el set, la cabecera tiene el ESPIVOTE viejo y el hook
@@ -290,9 +292,10 @@ uses
   inLibFiltroUsuario,
   UniDataAplicacionArticuloCompra,
   inLibGridCantidad,
-  inLibColumnasDocumento, UniDataGen,
+  inLibColumnasDocumento, UniDataColumnasDocumentoRepositorio,
+  UniDataGen,
   inLibBusquedasCompra,
-  inLibValidacionDocumento,
+  inLibValidacionDocumento, UniDataValidacionDocumentoRepositorio,
   inLibPresentacionDocumento,
   inLibComprasImpuestos,
   inLibAtributosPaleta,
@@ -302,12 +305,12 @@ uses
   inMtoModalImpFacCompraV,
   inLibShowMto, inMtoModalRegistrarPago,
   inMtoModalSeleccionarBanco, inLibGenBusq,
-  inLibValoresAutomaticos,
+  inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku,
   // Composicion del puerto de persistencia del pivote (V2).
   UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio,
-  UniDataColumnasSkuServicios,
+  UniDataColumnasSkuServicios, UniDataModoTallas,
   UniDataComprasPantallaComposicion;
 
 {$R *.dfm}
@@ -362,7 +365,7 @@ begin
                  mtInformation, [mbOk], 0)
     else
       Result := BuscarArticuloProveedorCompra(
-        dmmFacturasCompra.unqryTablaG.Connection, BusquedaVisual, sPrv,
+        FBusquedasArticulos, BusquedaVisual, sPrv,
         'Búsqueda de artículos', 'frmMtoFaccArtSearch', Self);
   end;
 end;
@@ -391,7 +394,7 @@ begin
                mtInformation, [mbOk], 0)
   else
     Result := BuscarSkuArticuloCompra(
-      dmmFacturasCompra.unqryTablaG.Connection, BusquedaVisual, sArt,
+      FBusquedasArticulos, BusquedaVisual, sArt,
       'SKUs del artículo ' + sArt,
       'frmMtoFaccSkuSearch', Self);
 end;
@@ -431,6 +434,7 @@ begin
   FValidadorArticulos := oServicios.Documento.ValidadorArticulos;
   FLookupAtributos := oServicios.Documento.LookupAtributos;
   FBusquedaProveedores := oServicios.Documento.BusquedaProveedores;
+  FBusquedasArticulos := oServicios.Documento.BusquedasArticulos;
   ConfigurarColumnaBusquedaDocumento(
     tvLineasFactura, 'CODIGO_ART_FACCLIN',
     colLineaFaccCODIGO_ARTPropertiesButtonClick,
@@ -506,6 +510,7 @@ begin
   FValidadorArticulos := nil;
   FLookupAtributos := nil;
   FBusquedaProveedores := nil;
+  FBusquedasArticulos := nil;
   LiberarModoYGestoresDocumento(
     FModoEntrada, FPivote, FGestorTallas);
   inherited;
@@ -558,6 +563,9 @@ begin
     oBase.AplicarContextoPivote := True;
     oBase.RegistroLog := RegistroLog;
     oConfigTallas := CrearConfigTallasDocumentoCompra(oBase);
+    oConfigTallas.Persistencia := CrearPersistenciaGridTallasInline(
+      oBase.Conexion,
+      CrearConfigPersistenciaTallasInline(oConfigTallas));
     FGestorTallas := TGestorGridTallas.Create(oConfigTallas);
     ConfigurarEventosTallasDocumento(FTallaColumns,
       TallaEditValueChangedHook, TallaValidateHook);
@@ -986,9 +994,10 @@ end;
 
 procedure TfrmMtoFacturasCompra.MostrarColumnasAtributoGlobalesFacc;
 begin
-  MostrarColumnasAtributoGlobalesDocumento(
-    dmmFacturasCompra.unqryTablaG.Connection,
-    tvLineasFactura);
+  AplicarNombresAtributosGlobalesDocumento(tvLineasFactura,
+    CrearColumnasDocumentoLecturas(
+      dmmFacturasCompra.unqryTablaG.Connection).
+        ListarNombresAtributosGlobales);
 end;
 
 procedure TfrmMtoFacturasCompra.CrearColumnasHostFacturaCompra;
@@ -1096,7 +1105,8 @@ begin
     Result := PuedeActivarTallasHorizontalCompra(
       dmmFacturasCompra.unqryTablaG,
       dmmFacturasCompra.unqryFacturasCompraLineas,
-      dmmFacturasCompra.unqryTablaG.Connection,
+      CrearValidacionDocumentoLecturas(
+        dmmFacturasCompra.unqryTablaG.Connection),
       ConfiguracionTallasDocumento,
       AsegurarCabeceraPersistidaParaLineas,
       FPivote.ValidarPivotePosible, AMensaje);

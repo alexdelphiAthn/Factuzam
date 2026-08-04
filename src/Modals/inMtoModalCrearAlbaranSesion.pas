@@ -132,7 +132,8 @@ type
 implementation
 
 uses
-  inLibValoresAutomaticos, inLibMsgCompras, inLibMsgVentas;
+  UniDataValoresAutomaticosRepositorio, inLibMsgCompras,
+  inLibMsgVentas;
 
 {$R *.dfm}
 

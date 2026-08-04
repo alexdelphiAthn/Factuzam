@@ -124,14 +124,14 @@ type
 implementation
 
 uses
-  inLibValoresAutomaticos,
+  inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   System.Diagnostics, System.UITypes,
   inLibDevolucionesCompraMovimientos,
   UniDataDevolucionesCompraMovimientos,
   inLibContadorLineas,
   UniDataContadorLineasRepositorio,
-  inLibComprasImpuestos,
-  inLibData,
+  inLibComprasImpuestos, UniDataImpuestosRepositorio,
+  inLibData, UniDataAlmacenesEmpresaRepositorio,
   inLibArticulosValidadorIntf,
   UniDataArticulosValidadorRepositorio,
   inLibMsgCompras, inLibDocumento, inLibDocumentoIntf;
@@ -295,9 +295,11 @@ begin
       FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_DEVC').AsString := 'N';
     if FindField('ESPIVOTE_HORIZONTAL_DEVC') <> nil then
       FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString := 'N';
-    AplicarRecargoComprasEmpresa(ConexionPrincipal, unqryTablaG,
+    AplicarRecargoComprasEmpresa(
+      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
       'CODIGO_EMP_DEVC', 'ESIVA_RECARGO_COMPRAS_DEVC');
-    AplicarPorcentajesIvaCompra(ConexionPrincipal, unqryTablaG,
+    AplicarPorcentajesIvaCompra(
+      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
       'DEVC');
   end;
   RefrescarAlmacenes(
@@ -315,7 +317,8 @@ begin
   if (unqryTablaG.FieldByName('NUMERO_DEVC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_DEVC').AsString = '') then
     GetCodigoAutoDevolucionCompra;
-  AplicarPorcentajesIvaCompra(ConexionPrincipal, unqryTablaG,
+  AplicarPorcentajesIvaCompra(
+    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
     'DEVC');
   CalcularTotalesDevolucionCompra;
 end;
@@ -514,7 +517,8 @@ begin
         unqrySkusDevc.Close;
       end;
     end;
-    PrepararLineaFiscalCompra(ConexionPrincipal, unqryTablaG,
+    PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionPrincipal),
+      unqryTablaG,
       unqryDevolucionesCompraLineas, 'DEVC', 'DEVCLIN', 'TOTAL_DEVCLIN');
   end;
 end;
@@ -619,7 +623,8 @@ begin
   // recalculo por linea (cascada de consultas de IVA al navegar).
   if FDesempaquetandoAtributos then
     Exit;
-  CalcularTotalesDocumentoCompra(unqryTablaG.Connection, unqryTablaG,
+  CalcularTotalesDocumentoCompra(
+    CrearLecturasImpuestos(unqryTablaG.Connection), unqryTablaG,
     unqryDevolucionesCompraLineas, 'DEVC', 'TOTAL_DEVCLIN',
     'TIPO_IVA_ARTICULO_DEVCLIN', 'PORCENTAJE_IVA_DEVCLIN');
 end;

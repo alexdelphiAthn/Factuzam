@@ -39,7 +39,7 @@ implementation
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
-  Data.DB, DBAccess, inLibValoresAutomaticos, inLibMsgCompras,
+  Data.DB, DBAccess, UniDataValoresAutomaticosRepositorio, inLibMsgCompras,
   UniDataPedidosCompraAlbaranComun,
   UniDataPedidosCompraPendientes;
 

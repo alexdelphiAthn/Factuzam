@@ -16,75 +16,12 @@ unit inLibComprasSesionesReglas;
 
 interface
 
-uses
-  Data.DB, Uni;
-
-function ResolverCodigoFamilia(
-  AConexion: TUniConnection;
-  const ACodigoTecleado, AUsuario: string;
-  out ACodigoGenerado: string): Boolean;
 function SanearColorSku(const ATexto: string): string;
 
 implementation
 
 uses
   System.SysUtils;
-
-function ResolverCodigoFamilia(
-  AConexion: TUniConnection;
-  const ACodigoTecleado, AUsuario: string;
-  out ACodigoGenerado: string): Boolean;
-var
-  iContador: Integer;
-  iLongitud: Integer;
-  oConsulta: TUniQuery;
-  sNumero: string;
-begin
-  Result := False;
-  ACodigoGenerado := '';
-  if Trim(ACodigoTecleado) <> '' then
-  begin
-    oConsulta := TUniQuery.Create(nil);
-    try
-      oConsulta.Connection := AConexion;
-      oConsulta.SQL.Text :=
-        'SELECT CONTADOR_ART_FAM, ESCONTADOR_ART_FAM, ' +
-        '       IFNULL(PAD_ART_FAM, 5) AS PAD_ART_FAM ' +
-        '  FROM fza_articulos_familias ' +
-        ' WHERE CODIGO_FAM_FAM = :p ' +
-        '   AND ESACTIVO_FAM = ''S'' ' +
-        ' FOR UPDATE';
-      oConsulta.ParamByName('p').AsString := ACodigoTecleado;
-      oConsulta.Open;
-      if not oConsulta.IsEmpty and
-         (oConsulta.FieldByName('ESCONTADOR_ART_FAM').AsString = 'S') then
-      begin
-        iContador :=
-          oConsulta.FieldByName('CONTADOR_ART_FAM').AsInteger + 1;
-        iLongitud := oConsulta.FieldByName('PAD_ART_FAM').AsInteger;
-        if iLongitud < 1 then
-          iLongitud := 5;
-        oConsulta.Close;
-        sNumero := IntToStr(iContador);
-        while Length(sNumero) < iLongitud do
-          sNumero := '0' + sNumero;
-        ACodigoGenerado := ACodigoTecleado + sNumero;
-        oConsulta.SQL.Text :=
-          'UPDATE fza_articulos_familias SET ' +
-          '  CONTADOR_ART_FAM = :c, ' +
-          '  INSTANTE_MODIF = NOW(), USUARIO_MODIF = :u ' +
-          ' WHERE CODIGO_FAM_FAM = :p';
-        oConsulta.ParamByName('c').AsInteger := iContador;
-        oConsulta.ParamByName('u').AsString := AUsuario;
-        oConsulta.ParamByName('p').AsString := ACodigoTecleado;
-        oConsulta.ExecSQL;
-        Result := True;
-      end;
-    finally
-      FreeAndNil(oConsulta);
-    end;
-  end;
-end;
 
 function SanearColorSku(const ATexto: string): string;
 var

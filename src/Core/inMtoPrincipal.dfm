@@ -2621,6 +2621,10 @@
         ShortCut = 16455
         OnClick = MenuGenericoClick
       end
+      object mnuProcesosAuxiliaresBBDD: TMenuItem
+        Caption = 'Procesos auxiliares BBDD'
+        OnClick = mnuProcesosAuxiliaresBBDDClick
+      end
     end
     object mnuVerifactu: TMenuItem
       Caption = '&Verifactu'

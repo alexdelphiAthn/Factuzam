@@ -38,6 +38,7 @@ uses
   // Contrato de entrada de articulos (ColumnSKUcxGrid, en src\Lib).
   inLibColumnasSkuIntf,
   inLibInventariosAplicacionIntf,
+  inLibInventarioNubePersistenciaIntf,
   inLibRepositoriosPantallaIntf,
   inMtoInventariosPresentacionColumnas,
   inMtoInventariosPresentacionEntrada;
@@ -49,6 +50,7 @@ type
     AplicacionEntrada: IAplicacionEntradaInventario;
     Busquedas: IBusquedasInventario;
     RecuentoRemoto: IRepositorioRecuentoRemotoInventario;
+    InventarioNube: IInventarioNubePersistencia;
   end;
 
   TfrmMtoInventarios = class(TfrmMtoGen)
@@ -357,10 +359,12 @@ uses
   System.Diagnostics,
   inMtoModalAddBlockInventario,
   // Factoria del contrato de entrada (prueba ColumnSKUcxGrid).
-  inLibColumnasSku, inLibColumnasDocumento, UniDataGen,
+  inLibColumnasSku, inLibColumnasDocumento,
+  UniDataColumnasDocumentoRepositorio, UniDataGen,
   UniDataColumnasSkuServicios,
   // Adaptadores de persistencia propios de la pantalla.
-  UniDataInventariosBusquedas;
+  UniDataInventariosBusquedas,
+  UniDataInventarioNubeRepositorio;
 
 {$R *.dfm}
 
@@ -530,6 +534,8 @@ begin
     CrearBusquedasInventarioUniDAC(ConexionPrincipal);
   FDependencias.RecuentoRemoto :=
     CrearRepositorioRecuentoRemotoInventarioUniDAC(ConexionPrincipal);
+  FDependencias.InventarioNube :=
+    CrearInventarioNubeRepositorio(ConexionPrincipal);
   InicializarEntradaInventarioVcl(
     Self,
     FRepositoriosArticulos.CrearValidadorArticulos(ConexionPrincipal));
@@ -969,8 +975,9 @@ end;
 
 procedure TfrmMtoInventarios.MostrarColumnasAtributoGlobales;
 begin
-  MostrarColumnasAtributoGlobalesDocumento(
-    ConexionPrincipal, tvLineas);
+  AplicarNombresAtributosGlobalesDocumento(tvLineas,
+    CrearColumnasDocumentoLecturas(ConexionPrincipal).
+      ListarNombresAtributosGlobales);
   // Las columnas de atributo del contrato nacen con el ancho por defecto
   // y AZUL_CIELO quedaba ilegible: el gestor las ensancha segun el valor
   // mas largo cargado, sin pisar anchos tocados a mano.
@@ -2096,7 +2103,7 @@ begin
       'DESCRIPCION_INV').AsString;
     Screen.Cursor := crHourGlass;
     try
-      if EnviarInventario(ParametrosApp, ConexionPrincipal,
+      if EnviarInventario(ParametrosApp, FDependencias.InventarioNube,
            Clave.Empresa, Clave.Almacen, Clave.Serie, Clave.Numero,
            sDesc, 'DIRIGIDO', idRec, sMsg) then
       begin
@@ -2149,7 +2156,7 @@ begin
     Screen.Cursor := crHourGlass;
     Lista := TStringList.Create;
     try
-      if RecogerRecuento(ParametrosApp, ConexionPrincipal,
+      if RecogerRecuento(ParametrosApp, FDependencias.InventarioNube,
            Clave.Empresa, Clave.Almacen, Clave.Serie, Clave.Numero,
            IdentidadSesion.Usuario, idRec, Lista, iNumEv, sMsg) then
       begin

@@ -108,7 +108,8 @@ type
 implementation
 
 uses
-  inLibFormatoDocumento, inLibMsgVentas,
+  inLibFormatoDocumento, UniDataFormatoDocumentoRepositorio,
+  inLibMsgVentas,
   inLibVentasPantallaIntf,
   UniDataVentasPantallaComposicion;
 
@@ -178,8 +179,9 @@ begin
   FConsultaAlmacenes := nil;
   FConsultaAlbaranes := nil;
   lblPedido.Caption := Format(SCaptionCrearAlbaranDesdePedido,
-    [FormatearDocumentoEmpresa(ConexionPrincipal, FCodigoEmpresa, FSeriePed,
-      FNumPed)]);
+    [FormatearDocumento(CrearFormatoDocumentoLecturas(
+      ConexionPrincipal).LeerFormatoEmpresa(FCodigoEmpresa),
+      FSeriePed, FNumPed)]);
   CargarAlmacenes;
   CargarAlbaranesPedido;
   // Defecto: almacen comun de las lineas a entregar. Si viene vacio

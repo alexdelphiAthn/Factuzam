@@ -47,7 +47,8 @@ implementation
 
 uses
   System.SysUtils, Data.DB, DBAccess, inLibDocumento,
-  inLibDocumentoIntf, inLibValoresAutomaticos, inLibMsgCompras;
+  inLibDocumentoIntf, UniDataValoresAutomaticosRepositorio,
+  inLibMsgCompras;
 type
   TMovimientosDevolucionCompraUniDAC = class(
     TInterfacedObject,

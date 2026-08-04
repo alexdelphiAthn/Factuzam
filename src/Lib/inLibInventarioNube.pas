@@ -2,28 +2,23 @@
 {                                                                              }
 {  Módulo:       inLibInventarioNube                                           }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       30/05/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       04/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Cliente del servidor de recuentos (PHP) desde Factuzam. Gemelo de         }
-{    inLibFotosNube: THTTPClient + System.JSON, X-API-Key + carpeta_cliente,   }
-{    parámetros comunes de la categoría "Servicios web".                      }
-{      - EnviarInventario: manda la plantilla (cabecera + líneas + códigos de  }
-{        barras) a inv_enviar.php. Devuelve el id_recuento del servidor.       }
-{      - RecogerRecuento: trae los eventos de inv_recoger.php, los inserta en  }
-{        fza_inventarios_recuentos (INVREC, idempotente por UUID) y devuelve   }
-{        el agregado SKU=CANTIDAD para que el Mto lo cargue como físicas.       }
+{    Sincroniza recuentos con el servidor sin conocer su persistencia UniDAC.  }
 {******************************************************************************}
 unit inLibInventarioNube;
 
 interface
 
 uses
-  System.SysUtils, System.Classes, Uni, inLibParametrosIntf;
+  System.Classes,
+  inLibInventarioNubePersistenciaIntf,
+  inLibParametrosIntf;
 
 function InventarioNubeConfigurado(
   const AParametrosApp: IParametrosAplicacion;
@@ -31,127 +26,140 @@ function InventarioNubeConfigurado(
 
 function EnviarInventario(
   const AParametrosApp: IParametrosAplicacion;
-  AConexion: TUniConnection;
+  const APersistencia: IInventarioNubePersistencia;
   const AEmp, AAlm, ASerie, ANumero, ADescripcion, AModo: string;
-  out AIdRecuento: Int64; out AMensaje: string): Boolean;
+  out AIdRecuento: Int64;
+  out AMensaje: string): Boolean;
 
-// Recoge el recuento del servidor: inserta los eventos en INVREC y deja en
-// AAgregado la lista 'SKU=CANTIDAD' (lo que el Mto pasa a CargarDesdeListaSkus
-// para rellenar CANTIDAD_FISICA_INVLIN). ANumEventos = eventos insertados.
 function RecogerRecuento(
   const AParametrosApp: IParametrosAplicacion;
-  AConexion: TUniConnection;
-  const AEmp, AAlm, ASerie, ANumero, AUsuario: string; AIdRecuento: Int64;
-  AAgregado: TStringList; out ANumEventos: Integer;
+  const APersistencia: IInventarioNubePersistencia;
+  const AEmp, AAlm, ASerie, ANumero, AUsuario: string;
+  AIdRecuento: Int64;
+  AAgregado: TStringList;
+  out ANumEventos: Integer;
   out AMensaje: string): Boolean;
+
+function AplicarRespuestaRecuento(
+  const ARespuesta: string;
+  const APersistencia: IInventarioNubePersistencia;
+  const AClave: TClaveInventarioNube;
+  const AUsuario: string;
+  AAgregado: TStrings;
+  out ANumEventos: Integer): Boolean;
 
 implementation
 
 uses
-  System.JSON, System.Generics.Collections, System.NetEncoding,
-  System.Net.HttpClient, System.Net.URLClient,
-  Data.DB,
-  inLibFactuzamApi, inLibMsgArticulos;
-
-// ============================================================================
-//   Configuración y transporte
-// ============================================================================
+  System.Generics.Collections,
+  System.JSON,
+  System.Net.HttpClient,
+  System.SysUtils,
+  inLibFactuzamApi,
+  inLibMsgArticulos;
 
 function InventarioNubeConfigurado(
   const AParametrosApp: IParametrosAplicacion;
   out AMensaje: string): Boolean;
 var
-  faltan: TStringList;
+  oFaltan: TStringList;
 begin
   AMensaje := '';
-  faltan := TStringList.Create;
+  oFaltan := TStringList.Create;
   try
     if TClienteFactuzamApi.UrlBase(AParametrosApp) = '' then
-      faltan.Add(STextoParametroUrlInventarioNube);
+      oFaltan.Add(STextoParametroUrlInventarioNube);
     if TClienteFactuzamApi.Token(AParametrosApp) = '' then
-      faltan.Add(STextoParametroTokenInventarioNube);
+      oFaltan.Add(STextoParametroTokenInventarioNube);
     if TClienteFactuzamApi.Referencia(AParametrosApp) = '' then
-      faltan.Add(STextoParametroReferenciaInventarioNube);
-    Result := faltan.Count = 0;
+      oFaltan.Add(STextoParametroReferenciaInventarioNube);
+    Result := oFaltan.Count = 0;
     if not Result then
-      AMensaje := Format(SErrorParametrosInventarioNubeFaltantes,
-        [faltan.Text]);
+    begin
+      AMensaje := Format(
+        SErrorParametrosInventarioNubeFaltantes,
+        [oFaltan.Text]);
+    end;
   finally
-    FreeAndNil(faltan);
+    FreeAndNil(oFaltan);
   end;
 end;
 
 function LeerStream(AStream: TStream): string;
 var
-  oSS: TStringStream;
+  oTexto: TStringStream;
 begin
-  oSS := TStringStream.Create('', TEncoding.UTF8);
+  oTexto := TStringStream.Create('', TEncoding.UTF8);
   try
     AStream.Position := 0;
     if AStream.Size > 0 then
-      oSS.CopyFrom(AStream, AStream.Size);
-    Result := oSS.DataString;
+      oTexto.CopyFrom(AStream, AStream.Size);
+    Result := oTexto.DataString;
   finally
-    FreeAndNil(oSS);
+    FreeAndNil(oTexto);
   end;
 end;
 
-function MensajeError(const ABody: string; AStatus: Integer): string;
+function MensajeError(const ACuerpo: string; AEstado: Integer): string;
 var
-  jval, jmsg: TJSONValue;
+  oJson: TJSONValue;
+  oMensaje: TJSONValue;
 begin
   Result := '';
-  jval := TJSONObject.ParseJSONValue(ABody);
+  oJson := TJSONObject.ParseJSONValue(ACuerpo);
   try
-    if jval <> nil then
+    if oJson <> nil then
     begin
-      jmsg := jval.FindValue('message');
-      if jmsg <> nil then
-        Result := jmsg.Value;
+      oMensaje := oJson.FindValue('message');
+      if oMensaje <> nil then
+        Result := oMensaje.Value;
     end;
   finally
-    FreeAndNil(jval);
+    FreeAndNil(oJson);
   end;
   if Result = '' then
-    Result := Format(SErrorServidorInventarioNubeHttp, [AStatus]);
+    Result := Format(SErrorServidorInventarioNubeHttp, [AEstado]);
 end;
 
 function PostNube(
   const AParametrosApp: IParametrosAplicacion;
-  const ARuta, ABody: string;
+  const ARuta, ACuerpo: string;
   out ARespuesta: string;
   out AMensaje: string): Integer;
 var
-  http: THTTPClient;
-  req: TStringStream;
-  resp: TMemoryStream;
-  respHttp: IHTTPResponse;
+  oHttp: THTTPClient;
+  oPeticion: TStringStream;
+  oRespuesta: TMemoryStream;
+  oRespuestaHttp: IHTTPResponse;
 begin
   Result := 0;
   ARespuesta := '';
-  http := THTTPClient.Create;
-  req := TStringStream.Create(ABody, TEncoding.UTF8);
-  resp := TMemoryStream.Create;
+  oHttp := THTTPClient.Create;
+  oPeticion := TStringStream.Create(ACuerpo, TEncoding.UTF8);
+  oRespuesta := TMemoryStream.Create;
   try
-    http.CustomHeaders['X-API-Key'] :=
+    oHttp.CustomHeaders['X-API-Key'] :=
       TClienteFactuzamApi.Token(AParametrosApp);
-    http.CustomHeaders['Content-Type'] := 'application/json';
+    oHttp.CustomHeaders['Content-Type'] := 'application/json';
     try
-      respHttp := http.Post(
+      oRespuestaHttp := oHttp.Post(
         TClienteFactuzamApi.ComponerUrl(AParametrosApp, ARuta),
-        req,
-        resp);
-      Result := respHttp.StatusCode;
-      ARespuesta := LeerStream(resp);
+        oPeticion,
+        oRespuesta);
+      Result := oRespuestaHttp.StatusCode;
+      ARespuesta := LeerStream(oRespuesta);
     except
       on E: Exception do
-        AMensaje := Format(SErrorConexionServidorInventarioNube,
+      begin
+        AMensaje := Format(
+          SErrorConexionServidorInventarioNube,
           [E.Message]);
+      end;
     end;
   finally
-    FreeAndNil(resp);
-    FreeAndNil(req);
-    FreeAndNil(http);
+    FreeAndNil(oRespuesta);
+    FreeAndNil(oPeticion);
+    FreeAndNil(oHttp);
   end;
 end;
 
@@ -161,249 +169,306 @@ function GetNube(
   out ARespuesta: string;
   out AMensaje: string): Integer;
 var
-  http: THTTPClient;
-  resp: TMemoryStream;
-  respHttp: IHTTPResponse;
+  oHttp: THTTPClient;
+  oRespuesta: TMemoryStream;
+  oRespuestaHttp: IHTTPResponse;
 begin
   Result := 0;
   ARespuesta := '';
-  http := THTTPClient.Create;
-  resp := TMemoryStream.Create;
+  oHttp := THTTPClient.Create;
+  oRespuesta := TMemoryStream.Create;
   try
-    http.CustomHeaders['X-API-Key'] :=
+    oHttp.CustomHeaders['X-API-Key'] :=
       TClienteFactuzamApi.Token(AParametrosApp);
     try
-      respHttp := http.Get(
+      oRespuestaHttp := oHttp.Get(
         TClienteFactuzamApi.ComponerUrl(AParametrosApp, ARuta),
-        resp);
-      Result := respHttp.StatusCode;
-      ARespuesta := LeerStream(resp);
+        oRespuesta);
+      Result := oRespuestaHttp.StatusCode;
+      ARespuesta := LeerStream(oRespuesta);
     except
       on E: Exception do
-        AMensaje := Format(SErrorConexionServidorInventarioNube,
+      begin
+        AMensaje := Format(
+          SErrorConexionServidorInventarioNube,
           [E.Message]);
+      end;
     end;
   finally
-    FreeAndNil(resp);
-    FreeAndNil(http);
+    FreeAndNil(oRespuesta);
+    FreeAndNil(oHttp);
   end;
 end;
 
-// ============================================================================
-//   Enviar inventario (plantilla)
-// ============================================================================
+function CrearClaveInventario(
+  const AEmp, AAlm, ASerie, ANumero: string): TClaveInventarioNube;
+begin
+  Result := Default(TClaveInventarioNube);
+  Result.Empresa := AEmp;
+  Result.Almacen := AAlm;
+  Result.Serie := ASerie;
+  Result.Numero := ANumero;
+end;
+
+function CrearJsonLinea(
+  const ALinea: TLineaInventarioNube): TJSONObject;
+begin
+  Result := TJSONObject.Create;
+  Result.AddPair('codigo_articulo', ALinea.CodigoArticulo);
+  Result.AddPair('codigo_unidad', ALinea.CodigoUnidad);
+  Result.AddPair('descripcion', ALinea.Descripcion);
+  Result.AddPair('codigo_barras', ALinea.CodigoBarras);
+  Result.AddPair(
+    'cantidad_teorica',
+    TJSONNumber.Create(ALinea.CantidadTeorica));
+  Result.AddPair('estrazable', ALinea.EsTrazable);
+end;
+
+function ConstruirCuerpoEnvio(
+  const APersistencia: IInventarioNubePersistencia;
+  const AClave: TClaveInventarioNube;
+  const AReferencia, ADescripcion, AModo: string): string;
+var
+  oRaiz: TJSONObject;
+  oLineasJson: TJSONArray;
+  aLineas: TLineasInventarioNube;
+  iLinea: Integer;
+begin
+  oRaiz := TJSONObject.Create;
+  try
+    oRaiz.AddPair('carpeta_cliente', AReferencia);
+    oRaiz.AddPair('codigo_emp', AClave.Empresa);
+    oRaiz.AddPair('codigo_alm', AClave.Almacen);
+    oRaiz.AddPair('serie', AClave.Serie);
+    oRaiz.AddPair('numero', AClave.Numero);
+    oRaiz.AddPair('descripcion', ADescripcion);
+    oRaiz.AddPair('modo', AModo);
+    oLineasJson := TJSONArray.Create;
+    aLineas := APersistencia.ListarLineas(AClave);
+    for iLinea := Low(aLineas) to High(aLineas) do
+    begin
+      oLineasJson.AddElement(CrearJsonLinea(aLineas[iLinea]));
+    end;
+    oRaiz.AddPair('lineas', oLineasJson);
+    Result := oRaiz.ToString;
+  finally
+    FreeAndNil(oRaiz);
+  end;
+end;
 
 function EnviarInventario(
   const AParametrosApp: IParametrosAplicacion;
-  AConexion: TUniConnection;
+  const APersistencia: IInventarioNubePersistencia;
   const AEmp, AAlm, ASerie, ANumero, ADescripcion, AModo: string;
-  out AIdRecuento: Int64; out AMensaje: string): Boolean;
+  out AIdRecuento: Int64;
+  out AMensaje: string): Boolean;
 var
-  qry: TUniQuery;
-  root, linea: TJSONObject;
-  arr: TJSONArray;
-  sBody, sResp: string;
-  iStatus: Integer;
-  respJson: TJSONValue;
+  oClave: TClaveInventarioNube;
+  oRespuestaJson: TJSONValue;
+  sCuerpo: string;
+  sRespuesta: string;
+  iEstado: Integer;
 begin
   Result := False;
   AIdRecuento := 0;
   AMensaje := '';
+  if not Assigned(APersistencia) then
+    raise EArgumentNilException.Create('APersistencia');
   if InventarioNubeConfigurado(AParametrosApp, AMensaje) then
   begin
-    root := TJSONObject.Create;
-    qry := TUniQuery.Create(nil);
-    try
-      root.AddPair(
-        'carpeta_cliente',
-        TClienteFactuzamApi.Referencia(AParametrosApp));
-      root.AddPair('codigo_emp', AEmp);
-      root.AddPair('codigo_alm', AAlm);
-      root.AddPair('serie', ASerie);
-      root.AddPair('numero', ANumero);
-      root.AddPair('descripcion', ADescripcion);
-      root.AddPair('modo', AModo);
-      // Una fila por (línea, código de barras): el SKU se repite si tiene
-      // varios códigos. El catálogo del servidor guarda una fila por código.
-      qry.Connection := AConexion;
-      qry.SQL.Text :=
-        ' SELECT L.CODIGO_ART_INVLIN, L.CODIGO_UNIDAD_INVLIN,' +
-        '        L.DESCRIPCION_ARTICULO_INVLIN, L.CANTIDAD_TEORICA_INVLIN,' +
-        '        A.ESTRAZABLE_ART, CB.CODIGO_BARRAS_CB' +
-        '   FROM fza_inventarios_lineas L' +
-        '   LEFT JOIN fza_articulos A' +
-        '          ON A.CODIGO_ART_ART = L.CODIGO_ART_INVLIN' +
-        '   LEFT JOIN fza_codigos_barras CB' +
-        '          ON CB.CODIGO_UNIDAD_CB = L.CODIGO_UNIDAD_INVLIN' +
-        '  WHERE L.CODIGO_EMP_INVLIN = :E AND L.CODIGO_ALM_INVLIN = :A' +
-        '    AND L.SERIE_INV_INVLIN = :S AND L.NUMERO_INV_INVLIN = :N';
-      qry.ParamByName('E').AsString := AEmp;
-      qry.ParamByName('A').AsString := AAlm;
-      qry.ParamByName('S').AsString := ASerie;
-      qry.ParamByName('N').AsString := ANumero;
-      qry.Open;
-      arr := TJSONArray.Create;
-      while not qry.Eof do
-      begin
-        linea := TJSONObject.Create;
-        linea.AddPair('codigo_articulo',
-                      qry.FieldByName('CODIGO_ART_INVLIN').AsString);
-        linea.AddPair('codigo_unidad',
-                      qry.FieldByName('CODIGO_UNIDAD_INVLIN').AsString);
-        linea.AddPair('descripcion',
-                      qry.FieldByName('DESCRIPCION_ARTICULO_INVLIN').AsString);
-        linea.AddPair('codigo_barras',
-                      qry.FieldByName('CODIGO_BARRAS_CB').AsString);
-        linea.AddPair('cantidad_teorica',
-          TJSONNumber.Create(qry.FieldByName('CANTIDAD_TEORICA_INVLIN').AsFloat));
-        linea.AddPair('estrazable',
-                      qry.FieldByName('ESTRAZABLE_ART').AsString);
-        arr.AddElement(linea);
-        qry.Next;
-      end;
-      root.AddPair('lineas', arr);
-      sBody := root.ToString;
-    finally
-      FreeAndNil(qry);
-      FreeAndNil(root);
-    end;
-    iStatus := PostNube(
+    oClave := CrearClaveInventario(AEmp, AAlm, ASerie, ANumero);
+    sCuerpo := ConstruirCuerpoEnvio(
+      APersistencia,
+      oClave,
+      TClienteFactuzamApi.Referencia(AParametrosApp),
+      ADescripcion,
+      AModo);
+    iEstado := PostNube(
       AParametrosApp,
       'inv_enviar.php',
-      sBody,
-      sResp,
+      sCuerpo,
+      sRespuesta,
       AMensaje);
-    if iStatus = 200 then
+    if iEstado = 200 then
     begin
-      respJson := TJSONObject.ParseJSONValue(sResp);
+      oRespuestaJson := TJSONObject.ParseJSONValue(sRespuesta);
       try
-        if respJson is TJSONObject then
-          AIdRecuento :=
-            Trunc(TJSONObject(respJson).GetValue<Double>('id_recuento', 0));
+        if oRespuestaJson is TJSONObject then
+        begin
+          AIdRecuento := Trunc(
+            TJSONObject(oRespuestaJson).GetValue<Double>(
+              'id_recuento',
+              0));
+        end;
       finally
-        FreeAndNil(respJson);
+        FreeAndNil(oRespuestaJson);
       end;
       Result := AIdRecuento > 0;
       if not Result then
         AMensaje := SErrorInventarioNubeSinIdRecuento;
     end
-    else if iStatus <> 0 then
-      AMensaje := MensajeError(sResp, iStatus);
+    else if iEstado <> 0 then
+      AMensaje := MensajeError(sRespuesta, iEstado);
   end;
 end;
 
-// ============================================================================
-//   Recoger recuento
-// ============================================================================
+function LeerEvento(
+  AJson: TJSONObject): TEventoInventarioNube;
+begin
+  Result := Default(TEventoInventarioNube);
+  Result.Uuid := AJson.GetValue<string>('uuid_evento', '');
+  Result.CodigoArticulo :=
+    AJson.GetValue<string>('codigo_articulo', '');
+  Result.CodigoUnidad := AJson.GetValue<string>('codigo_unidad', '');
+  Result.CodigoBarras := AJson.GetValue<string>('codigo_barras', '');
+  Result.Cantidad := AJson.GetValue<Double>('cantidad', 0);
+  Result.Lote := AJson.GetValue<string>('lote', '');
+  Result.FechaCaducidad :=
+    AJson.GetValue<string>('fecha_caducidad', '');
+  Result.InstanteRecuento :=
+    AJson.GetValue<string>('instante_recuento', '');
+  Result.Operario := AJson.GetValue<string>('operario', '');
+  Result.Dispositivo := AJson.GetValue<string>('dispositivo', '');
+  Result.Zona := AJson.GetValue<string>('zona', '');
+end;
+
+procedure AplicarEventos(
+  ARaiz: TJSONObject;
+  const APersistencia: IInventarioNubePersistencia;
+  const AClave: TClaveInventarioNube;
+  const AUsuario: string;
+  out ANumEventos: Integer);
+var
+  oEventos: TJSONArray;
+  oEvento: TEventoInventarioNube;
+  iEvento: Integer;
+begin
+  ANumEventos := 0;
+  if ARaiz.GetValue('eventos') is TJSONArray then
+  begin
+    oEventos := ARaiz.GetValue('eventos') as TJSONArray;
+    for iEvento := 0 to oEventos.Count - 1 do
+    begin
+      if oEventos.Items[iEvento] is TJSONObject then
+      begin
+        oEvento := LeerEvento(TJSONObject(oEventos.Items[iEvento]));
+        if APersistencia.GuardarEventoSiNuevo(
+             AClave,
+             oEvento,
+             AUsuario) then
+        begin
+          Inc(ANumEventos);
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure AplicarAgregado(
+  ARaiz: TJSONObject;
+  AAgregado: TStrings);
+var
+  oAgregadoJson: TJSONArray;
+  oLinea: TJSONObject;
+  sCodigoUnidad: string;
+  dCantidad: Double;
+  iLinea: Integer;
+begin
+  if Assigned(AAgregado) and
+     (ARaiz.GetValue('agregado') is TJSONArray) then
+  begin
+    oAgregadoJson := ARaiz.GetValue('agregado') as TJSONArray;
+    for iLinea := 0 to oAgregadoJson.Count - 1 do
+    begin
+      if oAgregadoJson.Items[iLinea] is TJSONObject then
+      begin
+        oLinea := TJSONObject(oAgregadoJson.Items[iLinea]);
+        sCodigoUnidad :=
+          oLinea.GetValue<string>('codigo_unidad', '');
+        dCantidad := oLinea.GetValue<Double>('cantidad', 0);
+        AAgregado.Add(sCodigoUnidad + '=' + FloatToStr(dCantidad));
+      end;
+    end;
+  end;
+end;
+
+function AplicarRespuestaRecuento(
+  const ARespuesta: string;
+  const APersistencia: IInventarioNubePersistencia;
+  const AClave: TClaveInventarioNube;
+  const AUsuario: string;
+  AAgregado: TStrings;
+  out ANumEventos: Integer): Boolean;
+var
+  oRespuestaJson: TJSONValue;
+  oRaiz: TJSONObject;
+begin
+  if not Assigned(APersistencia) then
+    raise EArgumentNilException.Create('APersistencia');
+  ANumEventos := 0;
+  if Assigned(AAgregado) then
+    AAgregado.Clear;
+  Result := False;
+  oRespuestaJson := TJSONObject.ParseJSONValue(ARespuesta);
+  try
+    if oRespuestaJson is TJSONObject then
+    begin
+      oRaiz := TJSONObject(oRespuestaJson);
+      AplicarEventos(
+        oRaiz,
+        APersistencia,
+        AClave,
+        AUsuario,
+        ANumEventos);
+      AplicarAgregado(oRaiz, AAgregado);
+      Result := True;
+    end;
+  finally
+    FreeAndNil(oRespuestaJson);
+  end;
+end;
 
 function RecogerRecuento(
   const AParametrosApp: IParametrosAplicacion;
-  AConexion: TUniConnection;
-  const AEmp, AAlm, ASerie, ANumero, AUsuario: string; AIdRecuento: Int64;
-  AAgregado: TStringList; out ANumEventos: Integer;
+  const APersistencia: IInventarioNubePersistencia;
+  const AEmp, AAlm, ASerie, ANumero, AUsuario: string;
+  AIdRecuento: Int64;
+  AAgregado: TStringList;
+  out ANumEventos: Integer;
   out AMensaje: string): Boolean;
 var
-  sResp: string;
-  iStatus, i: Integer;
-  respJson: TJSONValue;
-  oRoot: TJSONObject;
-  arrEv, arrAg: TJSONArray;
-  oEv: TJSONObject;
-  ins: TUniQuery;
-  sCad: string;
+  oClave: TClaveInventarioNube;
+  sRespuesta: string;
+  iEstado: Integer;
 begin
   Result := False;
   ANumEventos := 0;
   AMensaje := '';
-  if AAgregado <> nil then
+  if Assigned(AAgregado) then
     AAgregado.Clear;
+  if not Assigned(APersistencia) then
+    raise EArgumentNilException.Create('APersistencia');
   if InventarioNubeConfigurado(AParametrosApp, AMensaje) then
   begin
-    iStatus := GetNube(AParametrosApp, 'inv_recoger.php?id_recuento=' +
-                       IntToStr(AIdRecuento) + '&marcar=1', sResp, AMensaje);
-    if iStatus = 200 then
+    iEstado := GetNube(
+      AParametrosApp,
+      'inv_recoger.php?id_recuento=' +
+        IntToStr(AIdRecuento) + '&marcar=1',
+      sRespuesta,
+      AMensaje);
+    if iEstado = 200 then
     begin
-      respJson := TJSONObject.ParseJSONValue(sResp);
-      ins := TUniQuery.Create(nil);
-      try
-        if respJson is TJSONObject then
-        begin
-          oRoot := TJSONObject(respJson);
-          // 1) Insertar cada evento en INVREC (idempotente por UUID).
-          ins.Connection := AConexion;
-          ins.SQL.Text :=
-            ' INSERT INTO fza_inventarios_recuentos' +
-            '   (UUID_INVREC, CODIGO_EMP_INVREC, CODIGO_ALM_INVREC,' +
-            '    SERIE_INV_INVREC, NUMERO_INV_INVREC, CODIGO_ART_INVREC,' +
-            '    CODIGO_UNIDAD_INVREC, CODIGO_BARRAS_INVREC, CANTIDAD_INVREC,' +
-            '    LOTE_INVREC, FECHA_CADUCIDAD_INVREC, INSTANTE_RECUENTO_INVREC,' +
-            '    OPERARIO_INVREC, DISPOSITIVO_INVREC, ZONA_INVREC,' +
-            '    ESANULADO_INVREC, INSTANTE_ALTA, USUARIO_ALTA)' +
-            ' VALUES (:UUID, :E, :A, :S, :N, :ART, :SKU, :BAR, :CANT, :LOTE,' +
-            '   :CAD, :INST, :OP, :DISP, :ZONA, ''N'', NOW(), :USU)' +
-            ' ON DUPLICATE KEY UPDATE ID_INVREC = ID_INVREC';
-          if oRoot.GetValue('eventos') is TJSONArray then
-          begin
-            arrEv := oRoot.GetValue('eventos') as TJSONArray;
-            for i := 0 to arrEv.Count - 1 do
-              if arrEv.Items[i] is TJSONObject then
-              begin
-                oEv := TJSONObject(arrEv.Items[i]);
-                ins.ParamByName('UUID').AsString :=
-                  oEv.GetValue<string>('uuid_evento', '');
-                ins.ParamByName('E').AsString := AEmp;
-                ins.ParamByName('A').AsString := AAlm;
-                ins.ParamByName('S').AsString := ASerie;
-                ins.ParamByName('N').AsString := ANumero;
-                ins.ParamByName('ART').AsString :=
-                  oEv.GetValue<string>('codigo_articulo', '');
-                ins.ParamByName('SKU').AsString :=
-                  oEv.GetValue<string>('codigo_unidad', '');
-                ins.ParamByName('BAR').AsString :=
-                  oEv.GetValue<string>('codigo_barras', '');
-                ins.ParamByName('CANT').AsFloat :=
-                  oEv.GetValue<Double>('cantidad', 0);
-                ins.ParamByName('LOTE').AsString :=
-                  oEv.GetValue<string>('lote', '');
-                sCad := oEv.GetValue<string>('fecha_caducidad', '');
-                if Trim(sCad) = '' then
-                  ins.ParamByName('CAD').Clear
-                else
-                  ins.ParamByName('CAD').AsString := sCad;
-                ins.ParamByName('INST').AsString :=
-                  oEv.GetValue<string>('instante_recuento', '');
-                ins.ParamByName('OP').AsString :=
-                  oEv.GetValue<string>('operario', '');
-                ins.ParamByName('DISP').AsString :=
-                  oEv.GetValue<string>('dispositivo', '');
-                ins.ParamByName('ZONA').AsString :=
-                  oEv.GetValue<string>('zona', '');
-                ins.ParamByName('USU').AsString := AUsuario;
-                ins.ExecSQL;
-                Inc(ANumEventos);
-              end;
-          end;
-          // 2) Agregado SKU=CANTIDAD para CargarDesdeListaSkus.
-          if (AAgregado <> nil) and (oRoot.GetValue('agregado') is TJSONArray) then
-          begin
-            arrAg := oRoot.GetValue('agregado') as TJSONArray;
-            for i := 0 to arrAg.Count - 1 do
-              if arrAg.Items[i] is TJSONObject then
-                AAgregado.Add(
-                  TJSONObject(arrAg.Items[i]).GetValue<string>('codigo_unidad',
-                    '') + '=' +
-                  FloatToStr(TJSONObject(arrAg.Items[i]).GetValue<Double>(
-                    'cantidad', 0)));
-          end;
-          Result := True;
-        end;
-      finally
-        FreeAndNil(ins);
-        FreeAndNil(respJson);
-      end;
+      oClave := CrearClaveInventario(AEmp, AAlm, ASerie, ANumero);
+      Result := AplicarRespuestaRecuento(
+        sRespuesta,
+        APersistencia,
+        oClave,
+        AUsuario,
+        AAgregado,
+        ANumEventos);
     end
-    else if iStatus <> 0 then
-      AMensaje := MensajeError(sResp, iStatus);
+    else if iEstado <> 0 then
+      AMensaje := MensajeError(sRespuesta, iEstado);
   end;
 end;
 

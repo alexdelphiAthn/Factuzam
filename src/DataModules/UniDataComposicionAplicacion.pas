@@ -171,6 +171,9 @@ uses
   inLibVerifactuCola,
   UniDataVerifactuColaProcesador,
   UniDataVentasWsSesion,
+  UniDataConfigCamposRepositorio,
+  UniDataUnidadesMedidaRepositorio,
+  UniDataRegistroPantallasRepositorio,
   UniDataRepositoriosConfiguracionAplicacionPantalla,
   UniDataRepositoriosOperacionesAplicacionPantalla,
   UniDataRepositoriosPantalla;
@@ -269,11 +272,12 @@ begin
   FDmConn.conUni.Connect;
   FConexiones := TServicioConexionesUniDAC.Create(FDmConn.conUni);
   FConfigCamposCarga := TConfigCamposCache.Create(
-    FDmConn.conUni,
+    TRepositorioConfigCamposUniDAC.Create(FDmConn.conUni),
     FRegistroLog);
   FConfigCampos := FConfigCamposCarga;
-  FUnidades := TUnidadesMedida.Create(FRegistroLog);
-  FUnidades.AsignarConexion(FDmConn.conUni);
+  FUnidades := TUnidadesMedida.Create(
+    TRepositorioUnidadesMedidaUniDAC.Create(FDmConn.conUni),
+    FRegistroLog);
   FAuditoriaDatos := TServicioAuditoriaDatos.Create(FContextoSesion);
 end;
 
@@ -456,8 +460,11 @@ begin
   oComposicionFiltros := CrearFiltrosAplicacionPantalla(FOwner);
   FDmFiltros := oComposicionFiltros.DataModule;
   FServiciosFiltros := oComposicionFiltros.Servicios;
-  FRegistroPantallas := TfzaWinF.Create(FOwner, FRegistroLog);
-  FRegistroPantallas.Charge(FDmConn.conUni);
+  FRegistroPantallas := TfzaWinF.Create(
+    FOwner,
+    FRegistroLog,
+    CrearLectorRegistroPantallasUniDAC(FDmConn.conUni));
+  FRegistroPantallas.Charge;
   FRegistroPantallas.ComprobarRegistradas;
 end;
 
@@ -613,7 +620,8 @@ begin
       msConfig := EjecutarCargaWorker(
         procedure(AConexion: TUniConnection)
         begin
-          FConfigCamposCarga.Precargar(AConexion);
+          FConfigCamposCarga.Precargar(
+            TRepositorioConfigCamposUniDAC.Create(AConexion));
         end,
         sErrorConfig);
     end);

@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inLibValoresAutomaticos                                      }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       28/07/2026                                                    }
+{ Versión:       2.0.0                                                         }
+{   Fecha:       04/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -16,37 +16,41 @@ unit inLibValoresAutomaticos;
 interface
 
 uses
-  System.Classes, Data.DB, Uni;
+  System.Classes, Data.DB,
+  inLibValoresAutomaticosPersistenciaIntf;
 
-function ObtenerSeriePropiaAlmacen(AConexion: TUniConnection;
+function ObtenerSeriePropiaAlmacen(
+  const ARepositorio: IRepositorioValoresAutomaticos;
   const AEmpresa, ATipoDocumento, AAlmacen: string): string;
-function ObtenerSerieDefecto(AConexion: TUniConnection;
+function ObtenerSerieDefecto(
+  const ARepositorio: IRepositorioValoresAutomaticos;
   const AEmpresa, ATipoDocumento: string;
   const AAlmacen: string = ''): string;
-procedure CargarSeriesEmpresa(AConexion: TUniConnection;
+procedure CargarSeriesEmpresa(
+  const ARepositorio: IRepositorioValoresAutomaticos;
   const AEmpresa, ATipoDocumento: string;
   AElementos: TStrings);
-function ObtenerSiguienteContador(AConexion: TUniConnection;
+function IntentarObtenerSiguienteContador(
+  const ARepositorio: IRepositorioValoresAutomaticos;
+  const ATipoDocumento, AUsuario: string):
+  TResultadoContadorAutomatico;
+function ObtenerSiguienteContador(
+  const ARepositorio: IRepositorioValoresAutomaticos;
   const ATipoDocumento, AUsuario: string): string;
-function ObtenerValorPorDefecto(AConexion: TUniConnection;
+function ObtenerValorPorDefecto(
+  const ARepositorio: IRepositorioValoresAutomaticos;
   const ATabla, ACampo, ACampoCondicion: string): string;
 procedure AsignarValorPorDefecto(ADataSet: TDataSet;
   const ACampo, AValor, ATipoDato: string);
-procedure AplicarValoresPorDefecto(AConexion: TUniConnection;
+procedure AplicarValoresPorDefecto(
+  const ARepositorio: IRepositorioValoresAutomaticos;
   ADataSetDestino: TDataSet;
   const ANombreTabla: string);
 
 implementation
 
 uses
-  System.SysUtils, inLibMsgComun;
-
-const
-  SQL_VIGENCIA_SERIE =
-    '   AND (FECHA_DESDE_EMPSER IS NULL OR ' +
-    'FECHA_DESDE_EMPSER <= CURDATE()) ' +
-    '   AND (FECHA_HASTA_EMPSER IS NULL OR ' +
-    'FECHA_HASTA_EMPSER >= CURDATE()) ';
+  System.SysUtils;
 
 function HayDatosSerie(const AEmpresa, ATipoDocumento: string): Boolean;
 begin
@@ -55,161 +59,90 @@ begin
     (Trim(ATipoDocumento) <> '');
 end;
 
-function ObtenerSeriePropiaAlmacen(AConexion: TUniConnection;
+function ObtenerSeriePropiaAlmacen(
+  const ARepositorio: IRepositorioValoresAutomaticos;
   const AEmpresa, ATipoDocumento, AAlmacen: string): string;
-var
-  oConsulta: TUniQuery;
 begin
   Result := '';
-  if HayDatosSerie(AEmpresa, ATipoDocumento) and
+  if Assigned(ARepositorio) and
+     HayDatosSerie(AEmpresa, ATipoDocumento) and
      (Trim(AAlmacen) <> '') then
   begin
-    oConsulta := TUniQuery.Create(nil);
-    try
-      oConsulta.Connection := AConexion;
-      oConsulta.SQL.Text :=
-        'SELECT EMPSER FROM fza_empresas_series ' +
-        ' WHERE CODIGO_EMP_EMPSER = :emp ' +
-        '   AND TIPO_DOC_EMPSER = :tip ' +
-        '   AND CODIGO_ALM_EMPSER = :alm ' +
-        SQL_VIGENCIA_SERIE +
-        ' LIMIT 1';
-      oConsulta.ParamByName('emp').AsString := AEmpresa;
-      oConsulta.ParamByName('tip').AsString := ATipoDocumento;
-      oConsulta.ParamByName('alm').AsString := AAlmacen;
-      oConsulta.Open;
-      if not oConsulta.IsEmpty then
-        Result := oConsulta.FieldByName('EMPSER').AsString;
-    finally
-      FreeAndNil(oConsulta);
-    end;
+    Result := ARepositorio.ObtenerSeriePropiaAlmacen(
+      AEmpresa, ATipoDocumento, AAlmacen);
   end;
 end;
 
-function ObtenerSerieDefecto(AConexion: TUniConnection;
-  const AEmpresa, ATipoDocumento: string;
-  const AAlmacen: string): string;
-var
-  oConsulta: TUniQuery;
-  sFiltroAlmacen: string;
+function ObtenerSerieDefecto(
+  const ARepositorio: IRepositorioValoresAutomaticos;
+  const AEmpresa, ATipoDocumento, AAlmacen: string): string;
 begin
   Result := '';
-  if HayDatosSerie(AEmpresa, ATipoDocumento) then
+  if Assigned(ARepositorio) and
+     HayDatosSerie(AEmpresa, ATipoDocumento) then
   begin
-    if Trim(AAlmacen) <> '' then
-      Result := ObtenerSeriePropiaAlmacen(
-        AConexion, AEmpresa, ATipoDocumento, AAlmacen);
-    if Result = '' then
-    begin
-      sFiltroAlmacen := '';
-      if Trim(AAlmacen) <> '' then
-        sFiltroAlmacen :=
-          '   AND IFNULL(CODIGO_ALM_EMPSER, '''') = '''' ';
-      oConsulta := TUniQuery.Create(nil);
-      try
-        oConsulta.Connection := AConexion;
-        oConsulta.SQL.Text :=
-          'SELECT EMPSER FROM fza_empresas_series ' +
-          ' WHERE CODIGO_EMP_EMPSER = :emp ' +
-          '   AND TIPO_DOC_EMPSER = :tip ' +
-          SQL_VIGENCIA_SERIE +
-          sFiltroAlmacen +
-          ' LIMIT 1';
-        oConsulta.ParamByName('emp').AsString := AEmpresa;
-        oConsulta.ParamByName('tip').AsString := ATipoDocumento;
-        oConsulta.Open;
-        if not oConsulta.IsEmpty then
-          Result := oConsulta.FieldByName('EMPSER').AsString;
-      finally
-        FreeAndNil(oConsulta);
-      end;
-    end;
+    Result := ARepositorio.ObtenerSerieDefecto(
+      AEmpresa, ATipoDocumento, AAlmacen);
   end;
 end;
 
-procedure CargarSeriesEmpresa(AConexion: TUniConnection;
+procedure CargarSeriesEmpresa(
+  const ARepositorio: IRepositorioValoresAutomaticos;
   const AEmpresa, ATipoDocumento: string;
   AElementos: TStrings);
-var
-  oConsulta: TUniQuery;
 begin
   AElementos.Clear;
-  if HayDatosSerie(AEmpresa, ATipoDocumento) then
+  if Assigned(ARepositorio) and
+     HayDatosSerie(AEmpresa, ATipoDocumento) then
   begin
-    oConsulta := TUniQuery.Create(nil);
-    try
-      oConsulta.Connection := AConexion;
-      oConsulta.SQL.Text :=
-        'SELECT DISTINCT EMPSER FROM fza_empresas_series ' +
-        ' WHERE CODIGO_EMP_EMPSER = :emp ' +
-        '   AND TIPO_DOC_EMPSER = :tip ' +
-        SQL_VIGENCIA_SERIE +
-        ' ORDER BY EMPSER';
-      oConsulta.ParamByName('emp').AsString := AEmpresa;
-      oConsulta.ParamByName('tip').AsString := ATipoDocumento;
-      oConsulta.Open;
-      while not oConsulta.Eof do
-      begin
-        AElementos.Add(
-          oConsulta.FieldByName('EMPSER').AsString);
-        oConsulta.Next;
-      end;
-    finally
-      FreeAndNil(oConsulta);
-    end;
+    ARepositorio.CargarSeriesEmpresa(
+      AEmpresa, ATipoDocumento, AElementos);
   end;
 end;
 
-function ObtenerSiguienteContador(AConexion: TUniConnection;
+function IntentarObtenerSiguienteContador(
+  const ARepositorio: IRepositorioValoresAutomaticos;
+  const ATipoDocumento, AUsuario: string):
+  TResultadoContadorAutomatico;
+begin
+  if Assigned(ARepositorio) then
+  begin
+    Result := ARepositorio.ObtenerSiguienteContador(
+      ATipoDocumento, AUsuario);
+  end
+  else
+  begin
+    Result := TResultadoContadorAutomatico.Fallido(
+      evaConexionNoDisponible,
+      'No se ha configurado el repositorio de valores automáticos.');
+  end;
+end;
+
+function ObtenerSiguienteContador(
+  const ARepositorio: IRepositorioValoresAutomaticos;
   const ATipoDocumento, AUsuario: string): string;
 var
-  oProcedimiento: TUniStoredProc;
+  oResultado: TResultadoContadorAutomatico;
 begin
-  Result := '';
-  oProcedimiento := TUniStoredProc.Create(nil);
-  try
-    oProcedimiento.Connection := AConexion;
-    oProcedimiento.StoredProcName := 'PRC_GET_NEXT_CONT';
-    oProcedimiento.Params.Clear;
-    oProcedimiento.Params.CreateParam(
-      ftString, 'pTipoDoc', ptInput).AsString :=
-        ATipoDocumento;
-    oProcedimiento.Params.CreateParam(
-      ftString, 'pUSUARIO_MODIF', ptInput).AsString :=
-        AUsuario;
-    oProcedimiento.Params.CreateParam(
-      ftString, 'pcont', ptOutput);
-    try
-      oProcedimiento.Execute;
-      Result :=
-        oProcedimiento.Params.ParamByName('pcont').AsString;
-    except
-      on E: Exception do
-        raise Exception.Create(Format(
-          SErrorGenerarContadorAutomatico, [E.Message]));
-    end;
-  finally
-    FreeAndNil(oProcedimiento);
+  oResultado := IntentarObtenerSiguienteContador(
+    ARepositorio, ATipoDocumento, AUsuario);
+  if not oResultado.Exito then
+  begin
+    raise EValoresAutomaticosPersistencia.Create(
+      oResultado.Error, oResultado.Detalle);
   end;
+  Result := oResultado.Valor;
 end;
 
-function ObtenerValorPorDefecto(AConexion: TUniConnection;
+function ObtenerValorPorDefecto(
+  const ARepositorio: IRepositorioValoresAutomaticos;
   const ATabla, ACampo, ACampoCondicion: string): string;
-var
-  oConsulta: TUniQuery;
 begin
   Result := '';
-  oConsulta := TUniQuery.Create(nil);
-  try
-    oConsulta.Connection := AConexion;
-    oConsulta.SQL.Text := Format(
-      'SELECT %s FROM %s WHERE %s = %s LIMIT 1',
-      [ACampo, ATabla, ACampoCondicion, QuotedStr('S')]);
-    oConsulta.Open;
-    if not oConsulta.Eof then
-      Result := oConsulta.Fields[0].AsString;
-  finally
-    FreeAndNil(oConsulta);
+  if Assigned(ARepositorio) then
+  begin
+    Result := ARepositorio.ObtenerValorPorDefecto(
+      ATabla, ACampo, ACampoCondicion);
   end;
 end;
 
@@ -230,40 +163,27 @@ begin
   end;
 end;
 
-procedure AplicarValoresPorDefecto(AConexion: TUniConnection;
+procedure AplicarValoresPorDefecto(
+  const ARepositorio: IRepositorioValoresAutomaticos;
   ADataSetDestino: TDataSet;
   const ANombreTabla: string);
 var
-  oConsulta: TUniQuery;
+  i: Integer;
+  oValores: TArray<TValorPorDefectoPersistido>;
 begin
-  if not (
-    ADataSetDestino.State in [dsInsert, dsEdit]) then
+  if not (ADataSetDestino.State in [dsInsert, dsEdit]) then
     ADataSetDestino.Edit;
-  oConsulta := TUniQuery.Create(nil);
-  try
-    oConsulta.Connection := AConexion;
-    oConsulta.SQL.Text :=
-      'SELECT CAMPO_OBJETIVO_DEF_VD, ' +
-      '       VALOR_DEF_VD, ' +
-      '       TIPO_DATO_DEF_VD ' +
-      '  FROM fza_valores_defecto ' +
-      ' WHERE TABLA_OBJETIVO_DEF_VD = ' +
-      QuotedStr(ANombreTabla);
-    oConsulta.Open;
-    while not oConsulta.Eof do
+  if Assigned(ARepositorio) then
+  begin
+    oValores := ARepositorio.CargarValoresPorDefecto(ANombreTabla);
+    for i := 0 to Length(oValores) - 1 do
     begin
       AsignarValorPorDefecto(
         ADataSetDestino,
-        oConsulta.FieldByName(
-          'CAMPO_OBJETIVO_DEF_VD').AsString,
-        oConsulta.FieldByName(
-          'VALOR_DEF_VD').AsString,
-        oConsulta.FieldByName(
-          'TIPO_DATO_DEF_VD').AsString);
-      oConsulta.Next;
+        oValores[i].Campo,
+        oValores[i].Valor,
+        oValores[i].TipoDato);
     end;
-  finally
-    FreeAndNil(oConsulta);
   end;
 end;
 

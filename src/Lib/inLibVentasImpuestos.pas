@@ -17,19 +17,23 @@ unit inLibVentasImpuestos;
 interface
 
 uses
-  System.SysUtils, Data.DB, DBAccess, Uni;
+  System.SysUtils, Data.DB, inLibImpuestosLecturasIntf;
 
-procedure AplicarPorcentajesIvaVenta(AConn: TUniConnection;
+procedure AplicarPorcentajesIvaVenta(
+  const ALecturas: ILecturasImpuestos;
   ACabecera: TDataSet; const ASufijoCabecera: string);
 
-function PorcentajeIvaDocumentoVenta(AConn: TUniConnection;
+function PorcentajeIvaDocumentoVenta(
+  const ALecturas: ILecturasImpuestos;
   ACabecera: TDataSet; const ASufijoCabecera, ATipoIva: string): Double;
 
-procedure PrepararLineaFiscalVenta(AConn: TUniConnection;
+procedure PrepararLineaFiscalVenta(
+  const ALecturas: ILecturasImpuestos;
   ACabecera, ALinea: TDataSet; const ASufijoCabecera, ASufijoLinea,
   ACampoTotalLinea: string);
 
-procedure CalcularTotalesDocumentoVenta(AConn: TUniConnection;
+procedure CalcularTotalesDocumentoVenta(
+  const ALecturas: ILecturasImpuestos;
   ACabecera, ALineas: TDataSet; const ASufijoCabecera,
   ACampoTotalLinea, ACampoTipoIvaLinea, ACampoPorcentajeIvaLinea: string);
 
@@ -78,35 +82,14 @@ end;
 
 
 
-function LeerPorcentajeRetencionEmpresa(AConn: TUniConnection;
+function LeerPorcentajeRetencionEmpresa(
+  const ALecturas: ILecturasImpuestos;
   const ACodigoEmp: string; AFecha: TDateTime): Double;
-var
-  q: TUniQuery;
 begin
   Result := 0;
-  if (AConn <> nil) and (Trim(ACodigoEmp) <> '') and
+  if Assigned(ALecturas) and (Trim(ACodigoEmp) <> '') and
      (Trim(ACodigoEmp) <> '0') then
-  begin
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := AConn;
-      q.SQL.Text :=
-        'SELECT IFNULL(PORCENTAJE_EMPRET, 0) AS PORCENTAJE ' +
-        '  FROM fza_empresas_retenciones ' +
-        ' WHERE CODIGO_EMP_EMPRET = :empresa ' +
-        '   AND FECHA_DESDE_EMPRET <= :fecha ' +
-        '   AND (FECHA_HASTA_EMPRET >= :fecha ' +
-        '        OR FECHA_HASTA_EMPRET IS NULL) ' +
-        ' LIMIT 1';
-      q.ParamByName('empresa').AsString := ACodigoEmp;
-      q.ParamByName('fecha').AsDateTime := AFecha;
-      q.Open;
-      if not q.Eof then
-        Result := q.FieldByName('PORCENTAJE').AsFloat;
-    finally
-      FreeAndNil(q);
-    end;
-  end;
+    Result := ALecturas.LeerRetencionEmpresa(ACodigoEmp, AFecha);
 end;
 
 
@@ -121,7 +104,8 @@ begin
     'PORCENTAJE_' + CODIGOS_RE[iIndice] + '_' + ASufijoCabecera);
 end;
 
-function PorcentajeIvaDocumentoVenta(AConn: TUniConnection;
+function PorcentajeIvaDocumentoVenta(
+  const ALecturas: ILecturasImpuestos;
   ACabecera: TDataSet; const ASufijoCabecera, ATipoIva: string): Double;
 var
   bEncontrado: Boolean;
@@ -135,13 +119,13 @@ begin
   sCodigoIva := Trim(CampoString(ACabecera,
     'CODIGO_IVA_' + ASufijoCabecera));
   if (sCodigoIva <> '') and (sCodigoIva <> '0') then
-    bEncontrado := LeerPorcentajesIvaPorCodigo(AConn, sCodigoIva,
+    bEncontrado := LeerPorcentajesIvaPorCodigo(ALecturas, sCodigoIva,
       rIvaN, rIvaR, rIvaS, rIvaE, rRecN, rRecR, rRecS, rRecE);
   if not bEncontrado then
   begin
     sEmpresa := CampoString(ACabecera,
       'CODIGO_EMP_' + ASufijoCabecera);
-    bEncontrado := LeerPorcentajesIvaPorEmpresa(AConn, sEmpresa,
+    bEncontrado := LeerPorcentajesIvaPorEmpresa(ALecturas, sEmpresa,
       sCodigoIva, rIvaN, rIvaR, rIvaS, rIvaE,
       rRecN, rRecR, rRecS, rRecE);
   end;
@@ -196,7 +180,8 @@ begin
   Result := (sNif <> '') and (sRazon <> '') and (sDireccion <> '');
 end;
 
-function CrearConfiguracionMotorFiscalVenta(AConn: TUniConnection;
+function CrearConfiguracionMotorFiscalVenta(
+  const ALecturas: ILecturasImpuestos;
   ACabecera: TDataSet; const ASufijoCabecera: string):
   TConfiguracionMotorFiscalVenta;
 var
@@ -231,7 +216,7 @@ begin
     sEmpresa := CampoString(ACabecera,
       'CODIGO_EMP_' + ASufijoCabecera);
     dFecha := CampoFecha(ACabecera, 'FECHA_' + ASufijoCabecera);
-    rPorRetencion := LeerPorcentajeRetencionEmpresa(AConn,
+    rPorRetencion := LeerPorcentajeRetencionEmpresa(ALecturas,
       sEmpresa, dFecha);
     PonerFloat(ACabecera,
       'PORCENTAJE_RETENCION_' + ASufijoCabecera, rPorRetencion);
@@ -242,7 +227,8 @@ begin
   Result.PorcentajeRetencion := rPorRetencion;
 end;
 
-procedure AplicarPorcentajesIvaVenta(AConn: TUniConnection;
+procedure AplicarPorcentajesIvaVenta(
+  const ALecturas: ILecturasImpuestos;
   ACabecera: TDataSet; const ASufijoCabecera: string);
 var
   bEncontrado: Boolean;
@@ -255,13 +241,15 @@ begin
       'CODIGO_IVA_' + ASufijoCabecera));
     bEncontrado := False;
     if (sCodigoIva <> '') and (sCodigoIva <> '0') then
-      bEncontrado := LeerPorcentajesIvaPorCodigo(AConn, sCodigoIva,
+      bEncontrado := LeerPorcentajesIvaPorCodigo(
+        ALecturas, sCodigoIva,
         rIvaN, rIvaR, rIvaS, rIvaE, rRecN, rRecR, rRecS, rRecE);
     if not bEncontrado then
     begin
       sEmpresa := CampoString(ACabecera,
         'CODIGO_EMP_' + ASufijoCabecera);
-      bEncontrado := LeerPorcentajesIvaPorEmpresa(AConn, sEmpresa,
+      bEncontrado := LeerPorcentajesIvaPorEmpresa(
+        ALecturas, sEmpresa,
         sCodigoIva, rIvaN, rIvaR, rIvaS, rIvaE,
         rRecN, rRecR, rRecS, rRecE);
     end;
@@ -289,7 +277,8 @@ begin
   end;
 end;
 
-procedure PrepararLineaFiscalVenta(AConn: TUniConnection;
+procedure PrepararLineaFiscalVenta(
+  const ALecturas: ILecturasImpuestos;
   ACabecera, ALinea: TDataSet; const ASufijoCabecera, ASufijoLinea,
   ACampoTotalLinea: string);
 var
@@ -306,11 +295,11 @@ begin
       sTipoIva := 'E'
     else
     begin
-      sTipoArt := ObtenerTipoIvaArticulo(AConn, sArticulo);
+      sTipoArt := ObtenerTipoIvaArticulo(ALecturas, sArticulo);
       if sTipoArt <> '' then
         sTipoIva := sTipoArt;
     end;
-    rPorIva := PorcentajeIvaDocumentoVenta(AConn, ACabecera,
+    rPorIva := PorcentajeIvaDocumentoVenta(ALecturas, ACabecera,
       ASufijoCabecera, sTipoIva);
     if ClienteExento(ACabecera, ASufijoCabecera) then
       rPorIva := 0;
@@ -365,7 +354,8 @@ begin
   ALineas[Indice].Bruto := ABase;
 end;
 
-function CargarLineasMotorFiscalVenta(AConn: TUniConnection;
+function CargarLineasMotorFiscalVenta(
+  const ALecturas: ILecturasImpuestos;
   ACabecera, ALineas: TDataSet; const ASufijoCabecera,
   ACampoTotalLinea, ACampoTipoIvaLinea,
   ACampoPorcentajeIvaLinea: string): TLineasMotorFiscalVenta;
@@ -395,7 +385,7 @@ begin
       begin
         sArticulo := CampoString(ALineas,
           'CODIGO_ART_' + sSufijoLinea);
-        sTipoArt := ObtenerTipoIvaArticulo(AConn, sArticulo);
+        sTipoArt := ObtenerTipoIvaArticulo(ALecturas, sArticulo);
         if sTipoArt <> '' then
           sTipoIva := sTipoArt;
       end;
@@ -463,7 +453,8 @@ begin
     AResultado.TotalLiquido);
 end;
 
-procedure CalcularTotalesDocumentoVenta(AConn: TUniConnection;
+procedure CalcularTotalesDocumentoVenta(
+  const ALecturas: ILecturasImpuestos;
   ACabecera, ALineas: TDataSet; const ASufijoCabecera,
   ACampoTotalLinea, ACampoTipoIvaLinea, ACampoPorcentajeIvaLinea: string);
 var
@@ -473,10 +464,11 @@ var
 begin
   if Assigned(ACabecera) and Assigned(ALineas) and ALineas.Active then
   begin
-    AplicarPorcentajesIvaVenta(AConn, ACabecera, ASufijoCabecera);
+    AplicarPorcentajesIvaVenta(
+      ALecturas, ACabecera, ASufijoCabecera);
     Configuracion := CrearConfiguracionMotorFiscalVenta(
-      AConn, ACabecera, ASufijoCabecera);
-    LineasMotor := CargarLineasMotorFiscalVenta(AConn,
+      ALecturas, ACabecera, ASufijoCabecera);
+    LineasMotor := CargarLineasMotorFiscalVenta(ALecturas,
       ACabecera, ALineas, ASufijoCabecera, ACampoTotalLinea,
       ACampoTipoIvaLinea, ACampoPorcentajeIvaLinea);
     Resultado := CalcularTotalesMotorFiscalVenta(

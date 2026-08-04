@@ -199,7 +199,8 @@ begin
   FModelo := TModeloTallas.Create(FLookup, FPersistencias.Modelo,
     FConfig.Servicios.Paleta, LogSesion);
   FPresentacion := TPresentacionModoTallas.Create(FConfig, FCfgTallas,
-    FLineas.Presentacion, FPersistencias.Presentacion, Busqueda, LogSesion);
+    FLineas.Presentacion, FPersistencias.Presentacion,
+    FPersistencias.GridInline, Busqueda, LogSesion);
   FPresentacion.OnResolverEntrada := ResolverEntradaDiferida;
   FPresentacion.OnEntrarEdicion := EntrarEdicion;
   FPresentacion.OnSalirEdicion := SalirEdicion;
@@ -221,7 +222,6 @@ begin
     FPersistencias.Entrada.ConsultarTotalesPorLinea,
     FLineas.Entrada.CantidadesPorLinea);
 end;
-
 procedure TModoEntradaTallas.AtributosEscritos(
   const AValores, ANombres: TValoresAttrTallas);
 begin

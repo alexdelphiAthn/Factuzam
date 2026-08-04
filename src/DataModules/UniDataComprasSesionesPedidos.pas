@@ -32,7 +32,7 @@ uses
   System.SysUtils,
   Data.DB, DBAccess, Uni,
   inLibMsgCompras,
-  inLibValoresAutomaticos,
+  UniDataValoresAutomaticosRepositorio,
   UniDataComprasSesionesArticulos,
   UniDataComprasSesionesDocumentosComun,
   UniDataComprasSesionesOperaciones;

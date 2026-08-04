@@ -152,10 +152,13 @@ type
 implementation
 
 uses
-  inLibValoresAutomaticos, System.Diagnostics, System.UITypes,
-  inLibVentasImpuestos, inLibContadorLineas,
+  inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
+  System.Diagnostics, System.UITypes,
+  inLibVentasImpuestos, UniDataImpuestosRepositorio,
+  inLibContadorLineas,
   UniDataContadorLineasRepositorio, JclDebug,
-  inLibData, inLibMsgArticulos, inLibMsgVentas,
+  inLibData, UniDataAlmacenesEmpresaRepositorio,
+  inLibMsgArticulos, inLibMsgVentas,
   inLibDocumento, inLibDocumentoIntf, inLibLogIntf;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -508,7 +511,8 @@ begin
   if (unqryTablaG.FieldByName('NUMERO_PED').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_PED').AsString = '') then
     GetCodigoAutoPedido;
-  AplicarPorcentajesIvaVenta(ConexionPrincipal, unqryTablaG, 'PED');
+  AplicarPorcentajesIvaVenta(
+    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG, 'PED');
   CalcularTotalesPedido;
 end;
 
@@ -721,7 +725,8 @@ begin
       else
         FieldByName('ESENTREGADA_PEDLIN').AsString := 'N';
     end;
-    PrepararLineaFiscalVenta(ConexionPrincipal, unqryTablaG,
+    PrepararLineaFiscalVenta(CrearLecturasImpuestos(ConexionPrincipal),
+      unqryTablaG,
       unqryPedidosLineas, 'PED', 'PEDLIN', 'TOTAL_PEDLIN');
     if FindField('USUARIO_MODIF') <> nil then
       FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
@@ -952,7 +957,8 @@ begin
   begin
     FCalculandoTotales := True;
     try
-      CalcularTotalesDocumentoVenta(ConexionPrincipal, unqryTablaG,
+      CalcularTotalesDocumentoVenta(
+        CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
         unqryPedidosLineas, 'PED', 'TOTAL_PEDLIN',
         'TIPO_IVA_ARTICULO_PEDLIN', 'PORCENTAJE_IVA_PEDLIN');
     finally
@@ -1214,7 +1220,8 @@ begin
   // La serie acompana a la empresa emisora (fza_empresas_series).
   // Cubre las dos rutas: codigo tecleado (BuscarEmpresa) y modal.
   ProponerSerieEmpresa(DataSet.FindField('CODIGO_EMP_EMP').AsString);
-  AplicarPorcentajesIvaVenta(ConexionPrincipal, unqryTablaG, 'PED');
+  AplicarPorcentajesIvaVenta(
+    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG, 'PED');
 end;
 
 procedure TdmPedidos.ActualizarImpuestosTarifaCabecera(
@@ -1297,7 +1304,8 @@ begin
       FindField('FORMA_PAGO_PED').AsString :=
         Trim(DataSet.FindField('CODIGO_FP_CLI').AsString);
   end;
-  AplicarPorcentajesIvaVenta(ConexionPrincipal, unqryTablaG, 'PED');
+  AplicarPorcentajesIvaVenta(
+    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG, 'PED');
 end;
 
 procedure TdmPedidos.CopiarFormaPagoPedidoAAlbaran(const ASeriePed,

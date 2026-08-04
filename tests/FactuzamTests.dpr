@@ -464,7 +464,22 @@ uses
     'PruebasMovimientosAlmacenAplicacion.pas',
   PruebasInformesOla4IA43 in
     'PruebasInformesOla4IA43.pas',
-  PruebasFacturasPresentadorDetalle in 'PruebasFacturasPresentadorDetalle.pas';
+  PruebasFacturasPresentadorDetalle in 'PruebasFacturasPresentadorDetalle.pas',
+  PruebasCajaStock in 'PruebasCajaStock.pas',
+  PruebasCorreoTickets in 'PruebasCorreoTickets.pas',
+  PruebasFormatoDocumento in 'PruebasFormatoDocumento.pas',
+  PruebasGenerarTicketCaja in 'PruebasGenerarTicketCaja.pas',
+  PruebasInventarioNube in 'PruebasInventarioNube.pas',
+  PruebasSepaRemesasVenta in 'PruebasSepaRemesasVenta.pas',
+  Backup.Engine in '..\src\Lib\backup\Backup.Engine.pas',
+  Backup.Types in '..\src\Lib\backup\Backup.Types.pas',
+  Core_Engine in '..\src\Lib\backup\Core_Engine.pas',
+  Core_Helpers in '..\src\Lib\backup\Core_Helpers.pas',
+  Core_Interfaces in '..\src\Lib\backup\Core_Interfaces.pas',
+  Providers_MySQL in '..\src\Lib\backup\Providers_MySQL.pas',
+  Providers_MySQL_Helpers in
+    '..\src\Lib\backup\Providers_MySQL_Helpers.pas',
+  ScriptWriters in '..\src\Lib\backup\ScriptWriters.pas';
 
 var
   oEjecutor: ITestRunner;

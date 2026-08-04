@@ -416,7 +416,7 @@ begin
   var cDoc := AColMax - 3;
   if cDoc < 10 then
     cDoc := 10;
-  sDocumento := FormatearDocumentoDataSet(AConexion, QMaster,
+  sDocumento := FormatearDocumentoDataSet(QMaster,
     ACfg.FieldSerie,
     ACfg.FieldNumero);
   iRow := 3;

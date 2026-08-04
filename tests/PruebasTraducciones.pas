@@ -42,15 +42,30 @@ type
     procedure Idioma_PreservaEtiquetasCatalogadas;
     [Test]
     procedure AtajosPuros_NoSeTraducen;
+    [Test]
+    procedure CatalogoInyectado_TraduceClaveEInforme;
+    [Test]
+    procedure CatalogoInyectado_RecargaBajoDemanda;
+    [Test]
+    procedure IdiomaConfigurado_UsaLectorYNormaliza;
+    [Test]
+    procedure TraduccionLocal_DelegaEnPersistencia;
+    [Test]
+    procedure AdaptadoresSinConexion_DevuelvenEstadoNoDisponible;
   end;
 
 implementation
 
 uses
   System.Classes, System.SysUtils,
-  cxRadioGroup,
+  cxRadioGroup, Uni,
   inLibTraduccionesIntf,
-  inLibTraducciones;
+  inLibTraducciones,
+  inLibTraduccionesDescarga,
+  inLibTraduccionesPersistenciaIntf,
+  inLibTraduccionesDescargaPersistenciaIntf,
+  UniDataTraduccionesRepositorio,
+  UniDataTraduccionesDescargaRepositorio;
 
 type
   TComponenteTextoPrueba = class(TComponent)
@@ -72,6 +87,91 @@ type
 
   TRaizHeredadaPrueba = class(TRaizBasePrueba)
   end;
+
+  TLectorCatalogoTraduccionesPrueba = class(
+    TInterfacedObject,
+    ILectorCatalogoTraducciones)
+  private
+    FIdioma: string;
+    FIdiomaBase: string;
+    FLlamadas: Integer;
+  public
+    function Cargar(
+      const AIdioma, AIdiomaBase: string): TCatalogoTraducciones;
+    property Idioma: string read FIdioma;
+    property IdiomaBase: string read FIdiomaBase;
+    property Llamadas: Integer read FLlamadas;
+  end;
+
+  TLectorIdiomaConfiguradoPrueba = class(
+    TInterfacedObject,
+    ILectorIdiomaConfigurado)
+  private
+    FUsuario: string;
+  public
+    function Leer(const AUsuario: string): string;
+    property Usuario: string read FUsuario;
+  end;
+
+  TInstaladorTraduccionesPrueba = class(
+    TInterfacedObject,
+    IInstaladorTraduccionesPersistencia)
+  private
+    FComprobaciones: Integer;
+    FIdiomaConsultado: string;
+    FInstalaciones: Integer;
+  public
+    procedure ComprobarDisponible;
+    function DisponibleLocalmente(const AIdioma: string): Boolean;
+    procedure Instalar(
+      const AIdioma: string;
+      const AScripts: TArray<TScriptInstalacionTraduccion>;
+      AProgreso: TProgresoDescargaTraduccion);
+    property IdiomaConsultado: string read FIdiomaConsultado;
+  end;
+
+function TLectorCatalogoTraduccionesPrueba.Cargar(
+  const AIdioma, AIdiomaBase: string): TCatalogoTraducciones;
+begin
+  Inc(FLlamadas);
+  FIdioma := AIdioma;
+  FIdiomaBase := AIdiomaBase;
+  Result := Default(TCatalogoTraducciones);
+  SetLength(Result.Textos, 1);
+  Result.Textos[0].Clave := Format('Prueba.%s', ['Saludo']);
+  Result.Textos[0].Texto := 'Hello';
+  SetLength(Result.TextosInforme, 1);
+  Result.TextosInforme[0].TextoBase := 'Factura';
+  Result.TextosInforme[0].TextoIdioma := 'Invoice';
+end;
+
+function TLectorIdiomaConfiguradoPrueba.Leer(
+  const AUsuario: string): string;
+begin
+  FUsuario := AUsuario;
+  Result := 'ca_ES';
+end;
+
+procedure TInstaladorTraduccionesPrueba.ComprobarDisponible;
+begin
+  Inc(FComprobaciones);
+end;
+
+function TInstaladorTraduccionesPrueba.DisponibleLocalmente(
+  const AIdioma: string): Boolean;
+begin
+  FIdiomaConsultado := AIdioma;
+  Result := SameText(AIdioma, IDIOMA_CATALAN);
+end;
+
+procedure TInstaladorTraduccionesPrueba.Instalar(
+  const AIdioma: string;
+  const AScripts: TArray<TScriptInstalacionTraduccion>;
+  AProgreso: TProgresoDescargaTraduccion);
+begin
+  FIdiomaConsultado := AIdioma;
+  Inc(FInstalaciones);
+end;
 
 procedure TPruebasTraducciones.
   Pseudoidioma_TraduceRaizYComponenteHeredados;
@@ -324,6 +424,86 @@ begin
     Servicio := nil;
     FreeAndNil(Raiz);
   end;
+end;
+
+procedure TPruebasTraducciones.CatalogoInyectado_TraduceClaveEInforme;
+var
+  oLector: TLectorCatalogoTraduccionesPrueba;
+  oServicio: IServicioTraducciones;
+begin
+  oLector := TLectorCatalogoTraduccionesPrueba.Create;
+  oServicio := TServicioTraducciones.Create(oLector, IDIOMA_INGLES);
+  Assert.AreEqual(
+    'Hello',
+    oServicio.Traducir('Prueba.Saludo', 'Hola'));
+  Assert.AreEqual(
+    'Invoice',
+    oServicio.TraducirTextoInforme('Factura'));
+  Assert.AreEqual(IDIOMA_INGLES, oLector.Idioma);
+  Assert.AreEqual(IDIOMA_ESPANOL, oLector.IdiomaBase);
+end;
+
+procedure TPruebasTraducciones.CatalogoInyectado_RecargaBajoDemanda;
+var
+  oLector: TLectorCatalogoTraduccionesPrueba;
+  oServicio: IServicioTraducciones;
+begin
+  oLector := TLectorCatalogoTraduccionesPrueba.Create;
+  oServicio := TServicioTraducciones.Create(oLector, IDIOMA_INGLES);
+  Assert.IsTrue(oServicio.ExisteTraduccion('Prueba.Saludo'));
+  Assert.AreEqual(1, oLector.Llamadas);
+  oServicio.Recargar;
+  Assert.AreEqual(1, oLector.Llamadas);
+  Assert.IsTrue(oServicio.ExisteTraduccion('Prueba.Saludo'));
+  Assert.AreEqual(2, oLector.Llamadas);
+end;
+
+procedure TPruebasTraducciones.IdiomaConfigurado_UsaLectorYNormaliza;
+var
+  oContrato: ILectorIdiomaConfigurado;
+  oLector: TLectorIdiomaConfiguradoPrueba;
+begin
+  oLector := TLectorIdiomaConfiguradoPrueba.Create;
+  oContrato := oLector;
+  Assert.AreEqual(
+    IDIOMA_CATALAN,
+    ObtenerIdiomaConfigurado(oContrato, 'DEMO'));
+  Assert.AreEqual('DEMO', oLector.Usuario);
+end;
+
+procedure TPruebasTraducciones.TraduccionLocal_DelegaEnPersistencia;
+var
+  oContrato: IInstaladorTraduccionesPersistencia;
+  oInstalador: TInstaladorTraduccionesPrueba;
+begin
+  oInstalador := TInstaladorTraduccionesPrueba.Create;
+  oContrato := oInstalador;
+  Assert.IsTrue(
+    TInstaladorTraducciones.DisponibleLocalmente(
+      oContrato,
+      IDIOMA_CATALAN));
+  Assert.AreEqual(IDIOMA_CATALAN, oInstalador.IdiomaConsultado);
+end;
+
+procedure TPruebasTraducciones.
+  AdaptadoresSinConexion_DevuelvenEstadoNoDisponible;
+var
+  oCatalogo: TCatalogoTraducciones;
+  oInstalador: IInstaladorTraduccionesPersistencia;
+  oLectorCatalogo: ILectorCatalogoTraducciones;
+  oLectorIdioma: ILectorIdiomaConfigurado;
+begin
+  oLectorCatalogo := TLectorCatalogoTraduccionesUniDAC.Create(
+    TUniConnection(nil));
+  oCatalogo := oLectorCatalogo.Cargar(
+    IDIOMA_CATALAN,
+    IDIOMA_ESPANOL);
+  Assert.AreEqual(NativeInt(0), Length(oCatalogo.Textos));
+  Assert.AreEqual(NativeInt(0), Length(oCatalogo.TextosInforme));
+  oLectorIdioma := TLectorIdiomaConfiguradoUniDAC.Create(nil);
+  Assert.AreEqual('', oLectorIdioma.Leer('DEMO'));
+  oInstalador := TInstaladorTraduccionesUniDAC.Create(nil);
+  Assert.IsFalse(oInstalador.DisponibleLocalmente(IDIOMA_CATALAN));
 end;
 
 end.

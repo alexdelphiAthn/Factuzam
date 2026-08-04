@@ -1,25 +1,24 @@
 ﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibBackupWorker                                             }
-{    Tipo:       Librería (Lib)                                                }
-{ Versión:       1.1.0                                                         }
-{   Fecha:       02/08/2026                                                    }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.2.0                                                         }
+{   Fecha:       04/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
-{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
-{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo.                                    }
+{  SPDX-License-Identifier: MPL-2.0                                            }
 {  Descripción:                                                                }
-{    Hilos para ejecutar copia de seguridad y restauración en segundo plano.   }
-{    Cada worker crea su propia conexión a BBDD (thread-safe).                 }
-{    Reporta progreso vía Synchronize y finalización vía Queue.                }
+{    Hilos para ejecutar copia y restauración segura en segundo plano.         }
 {******************************************************************************}
 unit inLibBackupWorker;
 
 interface
 
 uses
-  System.Classes, System.SysUtils, System.Diagnostics,
-  Backup.Engine, Backup.Types, DAScript, Uni,
+  System.Classes, System.SysUtils,
+  Backup.Engine, Backup.Types,
+  inLibBackupPersistenciaIntf,
   inLibCopiasSeguridadIntf;
 
 type
@@ -45,19 +44,25 @@ type
     FProgresoFilasGlobalTotal: Integer;
     FOnProgreso: TWorkerProgresoEvent;
     FOnFinalizar: TWorkerFinalizarEvent;
-    procedure EngineProgress(const AEtapa: string;
-                              APaso, ATotal: Integer;
-                              AFilaGlobal, AFilasGlobalTotal: Integer);
+    FFabricaPersistencia: IFabricaPersistenciaBackup;
+    procedure EngineProgress(
+      const AEtapa: string;
+      APaso, ATotal: Integer;
+      AFilaGlobal, AFilasGlobalTotal: Integer);
     procedure SyncProgreso;
     procedure SyncFinalizar;
   protected
     procedure Execute; override;
   public
-    constructor Create(const AHost: string; APort: Integer;
-                       const ADatabase, AUser, APassword: string;
-                       const ARutaFichero: string;
-                       AEncriptar: Boolean;
-                       const APassEncriptar: string);
+    constructor Create(
+      const AHost: string;
+      APort: Integer;
+      const ADatabase, AUser, APassword: string;
+      const ARutaFichero: string;
+      AEncriptar: Boolean;
+      const APassEncriptar: string;
+      const AFabricaPersistencia:
+        IFabricaPersistenciaBackup = nil);
     property OnProgreso: TWorkerProgresoEvent
       read FOnProgreso write FOnProgreso;
     property OnFinalizar: TWorkerFinalizarEvent
@@ -77,28 +82,20 @@ type
     FResultado: TResultadoCopiaSeguridad;
     FError: string;
     FLogBuffer: TStringList;
-    FStopwatch: TStopwatch;
     FErrores: Integer;
     FPosicion: Integer;
     FTotal: Integer;
     FSentenciasEjecutadas: Integer;
-    FColacionesNormalizadas: Boolean;
     FProgresoEtapa: string;
     FPrimerError: string;
     FOnProgreso: TWorkerProgresoEvent;
     FOnFinalizar: TWorkerFinalizarEvent;
-    procedure ActualizarProgresoFichero(AFichero: TFileStream);
-    procedure EjecutarSQLStreaming(AConn: TUniConnection);
-    procedure NormalizarColacionesRestauracion(AConn: TUniConnection);
-    procedure ValidarEstructuraRestaurada(AConn: TUniConnection);
-    function NombreBBDDSQL(const ANombre: string): string;
-    function EsCreacionVista(const ASQL: string): Boolean;
-    procedure ScriptBeforeExecute(Sender: TObject;
-                                   var SQL: string;
-                                   var Omit: Boolean);
-    procedure ScriptAfterExecute(Sender: TObject; SQL: string);
-    procedure ScriptError(Sender: TObject; E: Exception;
-                           SQL: string; var Action: TErrorAction);
+    FFabricaPersistencia: IFabricaPersistenciaBackup;
+    function CrearFlujoRestauracion: TStream;
+    procedure EjecutarSQLStreaming(
+      const APersistencia: IPersistenciaRestauracionBackup);
+    procedure ActualizarProgresoSQL(
+      APosicion, ATotal, ASentencias: Integer);
     procedure ComprobarCancelacion;
     procedure RegistrarExcepcion(E: Exception);
     procedure SyncProgreso;
@@ -106,184 +103,238 @@ type
   protected
     procedure Execute; override;
   public
-    constructor Create(const AHost: string; APort: Integer;
-                       const ADatabase, AUser, APassword: string;
-                       const ARutaFichero: string;
-                       const APassDesencriptar: string;
-                       ADesencriptar: Boolean = False);
+    constructor Create(
+      const AHost: string;
+      APort: Integer;
+      const ADatabase, AUser, APassword: string;
+      const ARutaFichero: string;
+      const APassDesencriptar: string;
+      ADesencriptar: Boolean = False;
+      const AFabricaPersistencia:
+        IFabricaPersistenciaBackup = nil);
+    destructor Destroy; override;
     property OnProgreso: TWorkerProgresoEvent
       read FOnProgreso write FOnProgreso;
     property OnFinalizar: TWorkerFinalizarEvent
       read FOnFinalizar write FOnFinalizar;
   end;
 
-function CrearCopiaSeguridadBD(const AHost: string; APort: Integer;
-                               const ADatabase, AUser, APassword: string;
-                               const ARutaFichero: string;
-                                AEncriptar: Boolean;
-                               const APassEncriptar: string;
-                               AOnProgreso: TWorkerProgresoEvent;
-                               out AError: string;
-                               AComprimirAntesCifrado: Boolean = True):
-                                TResultadoCopiaSeguridad;
+function CrearCopiaSeguridadBD(
+  const AHost: string;
+  APort: Integer;
+  const ADatabase, AUser, APassword: string;
+  const ARutaFichero: string;
+  AEncriptar: Boolean;
+  const APassEncriptar: string;
+  AOnProgreso: TWorkerProgresoEvent;
+  out AError: string;
+  AComprimirAntesCifrado: Boolean = True;
+  const AFabricaPersistencia:
+    IFabricaPersistenciaBackup = nil): TResultadoCopiaSeguridad;
 
 implementation
 
 uses
-  Core_Interfaces,
-  Providers_MySQL, Providers_MySQL_Helpers, ScriptWriters,
-  MySQLUniProvider, UniScript,
-  System.StrUtils,
-  inLibDBStructure,
+  Core_Interfaces, ScriptWriters, System.StrUtils,
   inLibCifradoCopias,
   inLibMsgConfiguracion;
 
-function FiltroDatosTraducciones(AConn: TUniConnection): string;
-var
-  Consulta: TUniQuery;
+function CrearConfiguracionConexion(
+  const AHost: string;
+  APort: Integer;
+  const ADatabase, AUser, APassword: string):
+  TConfiguracionConexionBackup;
 begin
-  Result := '1 = 0';
-  Consulta := TUniQuery.Create(nil);
-  try
-    Consulta.Connection := AConn;
-    Consulta.SQL.Text :=
-      'SELECT COUNT(*) AS TOTAL' +
-      '  FROM INFORMATION_SCHEMA.COLUMNS' +
-      ' WHERE TABLE_SCHEMA = DATABASE()' +
-      '   AND TABLE_NAME = ''fza_traducciones''' +
-      '   AND COLUMN_NAME = ''ESDESCARGADA_TRAD''';
-    Consulta.Open;
-    if Consulta.FieldByName('TOTAL').AsInteger > 0 then
-      Result := '`ESDESCARGADA_TRAD` = ''S''';
-  finally
-    FreeAndNil(Consulta);
+  Result := Default(TConfiguracionConexionBackup);
+  Result.Host := AHost;
+  Result.Puerto := APort;
+  Result.BaseDatos := ADatabase;
+  Result.Usuario := AUser;
+  Result.Contrasena := APassword;
+end;
+
+function ResolverFabricaPersistencia(
+  const AFabrica: IFabricaPersistenciaBackup):
+  IFabricaPersistenciaBackup;
+begin
+  Result := AFabrica;
+  if not Assigned(Result) then
+  begin
+    Result := CrearFabricaPersistenciaBackupPredeterminada;
   end;
 end;
 
-function CrearCopiaSeguridadBD(const AHost: string; APort: Integer;
-                               const ADatabase, AUser, APassword: string;
-                               const ARutaFichero: string;
-                               AEncriptar: Boolean;
-                               const APassEncriptar: string;
-                               AOnProgreso: TWorkerProgresoEvent;
-                               out AError: string;
-                               AComprimirAntesCifrado: Boolean):
-                               TResultadoCopiaSeguridad;
-var
-  Conn: TUniConnection;
-  Options: TBackupOptions;
-  Lecturas: TServiciosLecturaBBDD;
-  Sql: TServiciosSqlBBDD;
-  Writer: IScriptWriter;
-  Engine: TDBBackupEngine;
-  IncludeTables: TStringList;
-  ExcludeTables: TStringList;
-  DataFilters: TStringList;
-  s: string;
-  MyText: TStringList;
+function CrearOpcionesBackup: TBackupOptions;
 begin
-  AError := '';
-  Conn := TUniConnection.Create(nil);
+  Result := Default(TBackupOptions);
+  Result.WithData := True;
+  Result.WithTriggers := True;
+  Result.WithProcedures := True;
+  Result.WithFunctions := True;
+  Result.WithViews := True;
+  Result.DropTablesFirst := True;
+  Result.UseTransactions := True;
+  Result.ExtendedInsert := True;
+  Result.ExtendedInsertRows := 500;
+end;
+
+function CrearWriterBackup(
+  const ARutaFichero: string;
+  AEncriptar: Boolean): IScriptWriter;
+begin
+  if AEncriptar then
+  begin
+    Result := TScriptWriter.Create('');
+  end
+  else
+  begin
+    Result := TScriptWriter.Create(ARutaFichero);
+  end;
+end;
+
+procedure GuardarCopiaCifrada(
+  const AWriter: IScriptWriter;
+  const ARutaFichero, APassEncriptar: string;
+  AComprimirAntesCifrado: Boolean);
+var
+  sContenido: string;
+  stTexto: TStringList;
+begin
+  sContenido := AWriter.GetScript;
+  sContenido := StringReplace(
+    sContenido,
+    'DEFINER=`root`@`localhost`',
+    '',
+    [rfReplaceAll, rfIgnoreCase]);
+  if AComprimirAntesCifrado then
+  begin
+    sContenido := CifrarCopiaSeguridadComprimida(
+      sContenido,
+      APassEncriptar);
+  end
+  else
+  begin
+    sContenido := CifrarCopiaSeguridad(
+      sContenido,
+      APassEncriptar);
+  end;
+  stTexto := TStringList.Create;
   try
+    stTexto.Text := sContenido;
+    stTexto.SaveToFile(ARutaFichero);
+  finally
+    FreeAndNil(stTexto);
+  end;
+end;
+
+procedure GenerarCopia(
+  const APersistencia: IPersistenciaCopiaBackup;
+  const ARutaFichero, APassEncriptar: string;
+  AEncriptar, AComprimirAntesCifrado: Boolean;
+  AOnProgreso: TWorkerProgresoEvent);
+var
+  oEngine: TDBBackupEngine;
+  oExcluirTablas: TStringList;
+  oFiltrosDatos: TStringList;
+  oIncluirTablas: TStringList;
+  oWriter: IScriptWriter;
+begin
+  oIncluirTablas := TStringList.Create;
+  oExcluirTablas := TStringList.Create;
+  oFiltrosDatos := TStringList.Create;
+  try
+    oFiltrosDatos.Values['fza_traducciones'] :=
+      APersistencia.ObtenerFiltroTraducciones;
+    oWriter := CrearWriterBackup(ARutaFichero, AEncriptar);
+    oEngine := TDBBackupEngine.Create(
+      APersistencia.ObtenerServiciosLectura,
+      oWriter,
+      APersistencia.ObtenerServiciosSql,
+      CrearOpcionesBackup,
+      oIncluirTablas,
+      oExcluirTablas,
+      oFiltrosDatos);
     try
-      Conn.ProviderName := 'MySQL';
-      Conn.Server := AHost;
-      Conn.Port := APort;
-      Conn.Database := ADatabase;
-      Conn.Username := AUser;
-      Conn.Password := APassword;
-      Conn.SpecificOptions.Values['MySQL.UseUnicode'] := 'True';
-      Conn.SpecificOptions.Values['MySQL.Charset'] := 'utf8mb4';
-      Conn.LoginPrompt := False;
-      Conn.Connected := True;
-      Conn.ExecSQL('SET NAMES utf8mb4 COLLATE utf8mb4_spanish_ci');
-      Options.WithData := True;
-      Options.WithTriggers := True;
-      Options.WithProcedures := True;
-      Options.WithFunctions := True;
-      Options.WithViews := True;
-      Options.DropTablesFirst := True;
-      Options.UseTransactions := True;
-      Options.ExtendedInsert := True;
-      Options.ExtendedInsertRows := 500;
-      IncludeTables := TStringList.Create;
-      ExcludeTables := TStringList.Create;
-      DataFilters := TStringList.Create;
-      try
-        DataFilters.Values['fza_traducciones'] :=
-          FiltroDatosTraducciones(Conn);
-        Lecturas := CrearServiciosLecturaMySQL(Conn, ADatabase);
-        Sql := CrearServiciosSqlMySQL;
-        if AEncriptar then
-          Writer := TScriptWriter.Create('')
-        else
-          Writer := TScriptWriter.Create(ARutaFichero);
-        Engine := TDBBackupEngine.Create(Lecturas, Writer, Sql,
-                                         Options,
-                                         IncludeTables, ExcludeTables,
-                                         DataFilters);
-        try
-          Engine.OnProgress := AOnProgreso;
-          Engine.GenerateBackup;
-          if AEncriptar then
-          begin
-            s := Writer.GetScript;
-            s := StringReplace(s, 'DEFINER=`root`@`localhost`', '',
-                               [rfReplaceAll, rfIgnoreCase]);
-            if AComprimirAntesCifrado then
-            begin
-              s := CifrarCopiaSeguridadComprimida(
-                s,
-                APassEncriptar);
-            end
-            else
-            begin
-              s := CifrarCopiaSeguridad(
-                s,
-                APassEncriptar);
-            end;
-            MyText := TStringList.Create;
-            try
-              MyText.Text := s;
-              MyText.SaveToFile(ARutaFichero);
-            finally
-              FreeAndNil(MyText);
-            end;
-          end;
-          Result := rcsCompletada;
-        finally
-          FreeAndNil(Engine);
-        end;
-      finally
-        FreeAndNil(DataFilters);
-        FreeAndNil(IncludeTables);
-        FreeAndNil(ExcludeTables);
-      end;
-    except
-      on E: Exception do
+      oEngine.OnProgress := AOnProgreso;
+      oEngine.GenerateBackup;
+      if AEncriptar then
       begin
-        if E is EAbort then
-        begin
-          AError := E.Message;
-          Result := rcsCancelada;
-        end
-        else
-        begin
-          AError := E.ClassName + ': ' + E.Message;
-          Result := rcsFallida;
-        end;
+        GuardarCopiaCifrada(
+          oWriter,
+          ARutaFichero,
+          APassEncriptar,
+          AComprimirAntesCifrado);
       end;
+    finally
+      FreeAndNil(oEngine);
     end;
   finally
-    Conn.Free;
+    FreeAndNil(oFiltrosDatos);
+    FreeAndNil(oExcluirTablas);
+    FreeAndNil(oIncluirTablas);
   end;
 end;
 
-{ TBackupWorker }
+function CrearCopiaSeguridadBD(
+  const AHost: string;
+  APort: Integer;
+  const ADatabase, AUser, APassword: string;
+  const ARutaFichero: string;
+  AEncriptar: Boolean;
+  const APassEncriptar: string;
+  AOnProgreso: TWorkerProgresoEvent;
+  out AError: string;
+  AComprimirAntesCifrado: Boolean;
+  const AFabricaPersistencia: IFabricaPersistenciaBackup):
+  TResultadoCopiaSeguridad;
+var
+  oFabrica: IFabricaPersistenciaBackup;
+  oPersistencia: IPersistenciaCopiaBackup;
+begin
+  AError := '';
+  oFabrica := ResolverFabricaPersistencia(AFabricaPersistencia);
+  try
+    oPersistencia := oFabrica.CrearCopia(
+      CrearConfiguracionConexion(
+        AHost,
+        APort,
+        ADatabase,
+        AUser,
+        APassword));
+    oPersistencia.Preparar;
+    GenerarCopia(
+      oPersistencia,
+      ARutaFichero,
+      APassEncriptar,
+      AEncriptar,
+      AComprimirAntesCifrado,
+      AOnProgreso);
+    Result := rcsCompletada;
+  except
+    on E: Exception do
+    begin
+      if E is EAbort then
+      begin
+        AError := E.Message;
+        Result := rcsCancelada;
+      end
+      else
+      begin
+        AError := E.ClassName + ': ' + E.Message;
+        Result := rcsFallida;
+      end;
+    end;
+  end;
+end;
 
-constructor TBackupWorker.Create(const AHost: string; APort: Integer;
-  const ADatabase, AUser, APassword, ARutaFichero: string;
-  AEncriptar: Boolean; const APassEncriptar: string);
+constructor TBackupWorker.Create(
+  const AHost: string;
+  APort: Integer;
+  const ADatabase, AUser, APassword: string;
+  const ARutaFichero: string;
+  AEncriptar: Boolean;
+  const APassEncriptar: string;
+  const AFabricaPersistencia: IFabricaPersistenciaBackup);
 begin
   inherited Create(True);
   FreeOnTerminate := True;
@@ -295,36 +346,46 @@ begin
   FRutaFichero := ARutaFichero;
   FEncriptar := AEncriptar;
   FPassEncriptar := APassEncriptar;
+  FFabricaPersistencia := AFabricaPersistencia;
   FResultado := rcsFallida;
 end;
 
-procedure TBackupWorker.EngineProgress(const AEtapa: string;
-  APaso, ATotal, AFilaGlobal, AFilasGlobalTotal: Integer);
+procedure TBackupWorker.EngineProgress(
+  const AEtapa: string;
+  APaso, ATotal: Integer;
+  AFilaGlobal, AFilasGlobalTotal: Integer);
 begin
   if Terminated then
-    raise EAbort.Create(SErrorOperacionCanceladaUsuario)
-  else
   begin
-    FProgresoEtapa := AEtapa;
-    FProgresoPaso := APaso;
-    FProgresoTotal := ATotal;
-    FProgresoFilaGlobal := AFilaGlobal;
-    FProgresoFilasGlobalTotal := AFilasGlobalTotal;
-    Synchronize(SyncProgreso);
+    raise EAbort.Create(SErrorOperacionCanceladaUsuario);
   end;
+  FProgresoEtapa := AEtapa;
+  FProgresoPaso := APaso;
+  FProgresoTotal := ATotal;
+  FProgresoFilaGlobal := AFilaGlobal;
+  FProgresoFilasGlobalTotal := AFilasGlobalTotal;
+  Synchronize(SyncProgreso);
 end;
 
 procedure TBackupWorker.SyncProgreso;
 begin
   if Assigned(FOnProgreso) then
-    FOnProgreso(FProgresoEtapa, FProgresoPaso, FProgresoTotal,
-                FProgresoFilaGlobal, FProgresoFilasGlobalTotal);
+  begin
+    FOnProgreso(
+      FProgresoEtapa,
+      FProgresoPaso,
+      FProgresoTotal,
+      FProgresoFilaGlobal,
+      FProgresoFilasGlobalTotal);
+  end;
 end;
 
 procedure TBackupWorker.SyncFinalizar;
 begin
   if Assigned(FOnFinalizar) then
+  begin
     FOnFinalizar(FResultado, FError, nil);
+  end;
 end;
 
 procedure TBackupWorker.Execute;
@@ -340,17 +401,22 @@ begin
       FEncriptar,
       FPassEncriptar,
       EngineProgress,
-      FError);
+      FError,
+      True,
+      FFabricaPersistencia);
   finally
     Synchronize(SyncFinalizar);
   end;
 end;
 
-{ TRestoreWorker }
-
-constructor TRestoreWorker.Create(const AHost: string; APort: Integer;
-  const ADatabase, AUser, APassword, ARutaFichero: string;
-  const APassDesencriptar: string; ADesencriptar: Boolean);
+constructor TRestoreWorker.Create(
+  const AHost: string;
+  APort: Integer;
+  const ADatabase, AUser, APassword: string;
+  const ARutaFichero: string;
+  const APassDesencriptar: string;
+  ADesencriptar: Boolean;
+  const AFabricaPersistencia: IFabricaPersistenciaBackup);
 begin
   inherited Create(True);
   FreeOnTerminate := True;
@@ -362,21 +428,24 @@ begin
   FRutaFichero := ARutaFichero;
   FDesencriptar := ADesencriptar;
   FPassDesencriptar := APassDesencriptar;
+  FFabricaPersistencia := AFabricaPersistencia;
   FResultado := rcsFallida;
-  FErrores := 0;
-  FPosicion := 0;
-  FTotal := 0;
-  FSentenciasEjecutadas := 0;
-  FColacionesNormalizadas := False;
   FProgresoEtapa := 'Restaurando';
-  FPrimerError := '';
   FLogBuffer := TStringList.Create;
+end;
+
+destructor TRestoreWorker.Destroy;
+begin
+  FreeAndNil(FLogBuffer);
+  inherited Destroy;
 end;
 
 procedure TRestoreWorker.ComprobarCancelacion;
 begin
   if Terminated then
+  begin
     raise EAbort.Create(SErrorOperacionCanceladaUsuario);
+  end;
 end;
 
 procedure TRestoreWorker.RegistrarExcepcion(E: Exception);
@@ -393,431 +462,73 @@ begin
   end;
 end;
 
-function TRestoreWorker.EsCreacionVista(const ASQL: string): Boolean;
+function TRestoreWorker.CrearFlujoRestauracion: TStream;
 var
-  sSQLNorm: string;
+  sContenido: string;
+  stTexto: TStringList;
 begin
-  sSQLNorm := UpperCase(ASQL);
-  sSQLNorm := StringReplace(sSQLNorm, #13, ' ', [rfReplaceAll]);
-  sSQLNorm := StringReplace(sSQLNorm, #10, ' ', [rfReplaceAll]);
-  Result := (Pos('CREATE ', sSQLNorm) > 0) and
-            (Pos(' VIEW ', sSQLNorm) > 0);
-end;
-
-procedure TRestoreWorker.NormalizarColacionesRestauracion(
-  AConn: TUniConnection);
-var
-  Q: TUniQuery;
-  Tablas: TStringList;
-  i: Integer;
-begin
-  if not FColacionesNormalizadas then
+  if FDesencriptar then
   begin
-    FLogBuffer.Add(' -- Normalizando colaciones antes de crear vistas');
-    AConn.ExecSQL(Format(
-      'ALTER DATABASE %s CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci',
-      [NombreBBDDSQL(FDatabase)]));
-    Tablas := TStringList.Create;
+    stTexto := TStringList.Create;
     try
-      Q := TUniQuery.Create(nil);
-      try
-        Q.Connection := AConn;
-        Q.SQL.Text :=
-          'SELECT DISTINCT T.TABLE_NAME ' +
-          '  FROM INFORMATION_SCHEMA.TABLES T ' +
-          ' WHERE T.TABLE_SCHEMA = DATABASE() ' +
-          '   AND T.TABLE_TYPE = ''BASE TABLE'' ' +
-          '   AND ( ' +
-          '       (T.TABLE_COLLATION IS NOT NULL ' +
-          '        AND T.TABLE_COLLATION <> ''utf8mb4_spanish_ci'') ' +
-          '        OR EXISTS ( ' +
-          '          SELECT 1 ' +
-          '            FROM INFORMATION_SCHEMA.COLUMNS C ' +
-          '           WHERE C.TABLE_SCHEMA = T.TABLE_SCHEMA ' +
-          '             AND C.TABLE_NAME = T.TABLE_NAME ' +
-          '             AND C.CHARACTER_SET_NAME IS NOT NULL ' +
-          '             AND (C.CHARACTER_SET_NAME <> ''utf8mb4'' ' +
-          '                  OR C.COLLATION_NAME <> ' +
-          '                     ''utf8mb4_spanish_ci'') ' +
-          '        ) ' +
-          '       ) ' +
-          ' ORDER BY T.TABLE_NAME';
-        Q.Open;
-        while not Q.Eof do
-        begin
-          Tablas.Add(Q.FieldByName('TABLE_NAME').AsString);
-          Q.Next;
-        end;
-      finally
-        FreeAndNil(Q);
-      end;
-      for i := 0 to Tablas.Count - 1 do
-      begin
-        ComprobarCancelacion;
-        AConn.ExecSQL(
-          'ALTER TABLE ' + NombreBBDDSQL(Tablas[i]) +
-          ' CONVERT TO CHARACTER SET utf8mb4 ' +
-          'COLLATE utf8mb4_spanish_ci');
-      end;
-      if Tablas.Count > 0 then
-      begin
-        FLogBuffer.Add(Format(' -- Tablas normalizadas: %d',
-                              [Tablas.Count]));
-      end;
+      stTexto.LoadFromFile(FRutaFichero);
+      sContenido := DescifrarCopiaSeguridad(
+        stTexto.Text,
+        FPassDesencriptar);
     finally
-      FreeAndNil(Tablas);
+      FreeAndNil(stTexto);
     end;
-    FColacionesNormalizadas := True;
-  end;
-end;
-
-procedure TRestoreWorker.ScriptBeforeExecute(Sender: TObject;
-  var SQL: string; var Omit: Boolean);
-begin
-  ComprobarCancelacion;
-  if EsCreacionVista(SQL) then
-    NormalizarColacionesRestauracion((Sender as TUniScript).Connection);
-  FLogBuffer.Add(' -- Ejecutando (' +
-                  FormatDateTime('hh:nn:ss.zzz', Now) + '): ');
-  FLogBuffer.Add(SQL);
-  FStopwatch := TStopwatch.StartNew;
-end;
-
-procedure TRestoreWorker.ScriptAfterExecute(Sender: TObject; SQL: string);
-begin
-  FStopwatch.Stop;
-  FLogBuffer.Add(
-    Format(' -- [OK] Filas afectadas: %d | Tiempo: %d ms',
-           [(Sender as TUniScript).RowsAffected,
-           FStopwatch.ElapsedMilliseconds]));
-  FLogBuffer.Add('--------------------------------------------------');
-  Inc(FSentenciasEjecutadas);
-  Inc(FPosicion);
-  if (FPosicion mod 20) = 0 then
-    Synchronize(SyncProgreso);
-  ComprobarCancelacion;
-end;
-
-procedure TRestoreWorker.ScriptError(Sender: TObject; E: Exception;
-  SQL: string; var Action: TErrorAction);
-begin
-  FStopwatch.Stop;
-  Inc(FErrores);
-  if FPrimerError = '' then
-    FPrimerError := E.Message;
-  FLogBuffer.Add(Format(' -- [ERROR] %s | Tiempo: %d ms',
-                          [E.Message, FStopwatch.ElapsedMilliseconds]));
-  FLogBuffer.Add('--------------------------------------------------');
-  Action := eaFail;
-end;
-
-procedure TRestoreWorker.ActualizarProgresoFichero(AFichero: TFileStream);
-begin
-  if AFichero.Size > 0 then
-    FTotal := Integer(AFichero.Size div 1024)
+    if Trim(sContenido) = '' then
+    begin
+      raise Exception.Create(SErrorDesencriptarCopia);
+    end;
+    Result := TStringStream.Create(sContenido, TEncoding.UTF8);
+  end
   else
-    FTotal := 0;
-  if FTotal <= 0 then
-    FTotal := 1;
-  FPosicion := Integer(AFichero.Position div 1024);
-  if FPosicion > FTotal then
-    FPosicion := FTotal;
+  begin
+    Result := TFileStream.Create(
+      FRutaFichero,
+      fmOpenRead or fmShareDenyWrite);
+  end;
 end;
 
-procedure TRestoreWorker.EjecutarSQLStreaming(AConn: TUniConnection);
-const
-  BYTES_ENTRE_PROGRESO = 4 * 1024 * 1024;
-var
-  Fichero: TFileStream;
-  Lector: TStreamReader;
-  Sentencia: TStringBuilder;
-  sLinea: string;
-  sDelimitador: string;
-  sNuevoDelimitador: string;
-  sSQL: string;
-  sResumen: string;
-  bEnCadena: Boolean;
-  bEnComentarioBloque: Boolean;
-  cCadena: Char;
-  iSentencia: Integer;
-  nUltimaPosicion: Int64;
-
-  function EsLineaIgnorable(const ALinea: string): Boolean;
-  var
-    sTrim: string;
-  begin
-    sTrim := Trim(ALinea);
-    Result := (sTrim = '') or StartsText('--', sTrim) or
-              StartsText('#', sTrim);
-  end;
-
-  function EsDirectivaDelimitador(const ALinea: string;
-                                  out ADelimitador: string): Boolean;
-  const
-    DIRECTIVA = 'DELIMITER';
-  var
-    sTrim: string;
-  begin
-    Result := False;
-    ADelimitador := '';
-    sTrim := Trim(ALinea);
-    if Length(sTrim) >= Length(DIRECTIVA) then
-    begin
-      if SameText(Copy(sTrim, 1, Length(DIRECTIVA)), DIRECTIVA) then
-      begin
-        if Length(sTrim) = Length(DIRECTIVA) then
-          Result := True
-        else
-          Result := CharInSet(sTrim[Length(DIRECTIVA) + 1], [' ', #9]);
-        if Result then
-        begin
-          ADelimitador := Trim(Copy(sTrim, Length(DIRECTIVA) + 1, MaxInt));
-          if ADelimitador = '' then
-            ADelimitador := ';';
-        end;
-      end;
-    end;
-  end;
-
-  function EsComentarioLinea(const ALinea: string; AIndice: Integer): Boolean;
-  var
-    bGuion: Boolean;
-  begin
-    Result := False;
-    bGuion := (AIndice < Length(ALinea)) and
-              (ALinea[AIndice] = '-') and (ALinea[AIndice + 1] = '-');
-    if bGuion then
-    begin
-      if AIndice + 1 = Length(ALinea) then
-        Result := True
-      else
-        Result := CharInSet(ALinea[AIndice + 2], [' ', #9, #13, #10]);
-    end;
-    if not Result then
-      Result := ALinea[AIndice] = '#';
-  end;
-
-  procedure EjecutarSentenciaActual;
-  var
-    Reloj: TStopwatch;
-  begin
-    sSQL := Trim(Sentencia.ToString);
-    Sentencia.Clear;
-    if sSQL <> '' then
-    begin
-      ComprobarCancelacion;
-      Inc(iSentencia);
-      FSentenciasEjecutadas := iSentencia;
-      Reloj := TStopwatch.StartNew;
-      try
-        if EsCreacionVista(sSQL) then
-          NormalizarColacionesRestauracion(AConn);
-        AConn.ExecSQL(sSQL);
-        Reloj.Stop;
-        if (iSentencia mod 250) = 0 then
-        begin
-          FLogBuffer.Add(Format(
-            ' -- [OK] Sentencias ejecutadas: %d | %d / %d KB',
-            [iSentencia, FPosicion, FTotal]));
-        end;
-      except
-        on E: Exception do
-        begin
-          Reloj.Stop;
-          Inc(FErrores);
-          if FPrimerError = '' then
-            FPrimerError := E.Message;
-          sResumen := sSQL;
-          if Length(sResumen) > 4000 then
-          begin
-            sResumen := Copy(sResumen, 1, 4000) + sLineBreak + '...';
-          end;
-          FLogBuffer.Add(Format(
-            ' -- [ERROR] Sentencia %d: %s | Tiempo: %d ms',
-            [iSentencia, E.Message, Reloj.ElapsedMilliseconds]));
-          FLogBuffer.Add(sResumen);
-          FLogBuffer.Add('--------------------------------------------------');
-          raise;
-        end;
-      end;
-      ComprobarCancelacion;
-    end;
-  end;
-
-  function CoincideDelimitador(const ALinea: string;
-                               AIndice: Integer): Boolean;
-  begin
-    Result := (sDelimitador <> '') and
-              (Copy(ALinea, AIndice, Length(sDelimitador)) =
-               sDelimitador);
-  end;
-
-  procedure ProcesarLineaSQL(const ALinea: string);
-  var
-    i: Integer;
-    sResto: string;
-  begin
-    i := 1;
-    while i <= Length(ALinea) do
-    begin
-      if bEnComentarioBloque then
-      begin
-        Sentencia.Append(ALinea[i]);
-        if (ALinea[i] = '*') and (i < Length(ALinea)) and
-           (ALinea[i + 1] = '/') then
-        begin
-          Sentencia.Append(ALinea[i + 1]);
-          bEnComentarioBloque := False;
-          Inc(i, 2);
-        end
-        else
-          Inc(i);
-      end
-      else if bEnCadena then
-      begin
-        Sentencia.Append(ALinea[i]);
-        if ALinea[i] = '\' then
-        begin
-          if i < Length(ALinea) then
-          begin
-            Sentencia.Append(ALinea[i + 1]);
-            Inc(i, 2);
-          end
-          else
-            Inc(i);
-        end
-        else if ALinea[i] = cCadena then
-        begin
-          if (i < Length(ALinea)) and (ALinea[i + 1] = cCadena) then
-          begin
-            Sentencia.Append(ALinea[i + 1]);
-            Inc(i, 2);
-          end
-          else
-          begin
-            bEnCadena := False;
-            Inc(i);
-          end;
-        end
-        else
-          Inc(i);
-      end
-      else if CoincideDelimitador(ALinea, i) then
-      begin
-        EjecutarSentenciaActual;
-        Inc(i, Length(sDelimitador));
-        sResto := Trim(Copy(ALinea, i, MaxInt));
-        if (sResto = '') or StartsText('--', sResto) or
-           StartsText('#', sResto) then
-          Break;
-      end
-      else if (ALinea[i] = '/') and (i < Length(ALinea)) and
-              (ALinea[i + 1] = '*') then
-      begin
-        Sentencia.Append(ALinea[i]);
-        Sentencia.Append(ALinea[i + 1]);
-        bEnComentarioBloque := True;
-        Inc(i, 2);
-      end
-      else if EsComentarioLinea(ALinea, i) then
-      begin
-        Sentencia.Append(Copy(ALinea, i, MaxInt));
-        Break;
-      end
-      else if CharInSet(ALinea[i], ['''', '"', '`']) then
-      begin
-        cCadena := ALinea[i];
-        bEnCadena := True;
-        Sentencia.Append(ALinea[i]);
-        Inc(i);
-      end
-      else
-      begin
-        Sentencia.Append(ALinea[i]);
-        Inc(i);
-      end;
-    end;
-    if Sentencia.Length > 0 then
-      Sentencia.AppendLine;
-  end;
-
+procedure TRestoreWorker.ActualizarProgresoSQL(
+  APosicion, ATotal, ASentencias: Integer);
 begin
   FProgresoEtapa := 'Restaurando SQL (KB)';
-  Fichero := TFileStream.Create(FRutaFichero, fmOpenRead or fmShareDenyWrite);
+  FPosicion := APosicion;
+  FTotal := ATotal;
+  FSentenciasEjecutadas := ASentencias;
+  Synchronize(SyncProgreso);
+end;
+
+procedure TRestoreWorker.EjecutarSQLStreaming(
+  const APersistencia: IPersistenciaRestauracionBackup);
+var
+  oEjecutor: TEjecutorRestauracionSQL;
+  oFlujo: TStream;
+begin
+  oFlujo := CrearFlujoRestauracion;
   try
-    Lector := TStreamReader.Create(Fichero, TEncoding.UTF8, True);
+    oEjecutor := TEjecutorRestauracionSQL.Create(
+      APersistencia,
+      ComprobarCancelacion,
+      ActualizarProgresoSQL,
+      FLogBuffer);
     try
-      Sentencia := TStringBuilder.Create;
       try
-        sDelimitador := ';';
-        bEnCadena := False;
-        bEnComentarioBloque := False;
-        cCadena := #0;
-        iSentencia := 0;
-        nUltimaPosicion := 0;
-        ActualizarProgresoFichero(Fichero);
-        Synchronize(SyncProgreso);
-        while not Lector.EndOfStream do
-        begin
-          ComprobarCancelacion;
-          sLinea := Lector.ReadLine;
-          if (Sentencia.Length = 0) and
-             (not bEnCadena) and
-             (not bEnComentarioBloque) and
-             EsDirectivaDelimitador(sLinea, sNuevoDelimitador) then
-          begin
-            sDelimitador := sNuevoDelimitador;
-          end
-          else
-          begin
-            if not ((Sentencia.Length = 0) and EsLineaIgnorable(sLinea)) then
-              ProcesarLineaSQL(sLinea);
-          end;
-          if Fichero.Position - nUltimaPosicion >= BYTES_ENTRE_PROGRESO then
-          begin
-            ActualizarProgresoFichero(Fichero);
-            Synchronize(SyncProgreso);
-            nUltimaPosicion := Fichero.Position;
-          end;
-        end;
-        ComprobarCancelacion;
-        if Trim(Sentencia.ToString) <> '' then
-          EjecutarSentenciaActual;
-        ActualizarProgresoFichero(Fichero);
-        FPosicion := FTotal;
-        Synchronize(SyncProgreso);
-        FLogBuffer.Add(Format(' -- Restauración SQL completada. ' +
-                              'Sentencias ejecutadas: %d',
-                              [FSentenciasEjecutadas]));
+        oEjecutor.Ejecutar(oFlujo);
       finally
-        FreeAndNil(Sentencia);
+        FErrores := oEjecutor.Errores;
+        FSentenciasEjecutadas := oEjecutor.SentenciasEjecutadas;
+        FPrimerError := oEjecutor.PrimerError;
       end;
     finally
-      FreeAndNil(Lector);
+      FreeAndNil(oEjecutor);
     end;
   finally
-    FreeAndNil(Fichero);
+    FreeAndNil(oFlujo);
   end;
-end;
-
-procedure TRestoreWorker.ValidarEstructuraRestaurada(AConn: TUniConnection);
-var
-  CheckResult: TDBStructureCheckResult;
-begin
-  CheckResult := TDBStructureChecker.Check(AConn, FDatabase);
-  if not CheckResult.IsOK then
-  begin
-    raise Exception.Create(Format(SErrorRestauracionEstructuraIncompleta,
-                                  [CheckResult.FormattedMessage]));
-  end;
-end;
-
-function TRestoreWorker.NombreBBDDSQL(const ANombre: string): string;
-var
-  sNombre: string;
-begin
-  sNombre := StringReplace(ANombre, '`', '``', [rfReplaceAll]);
-  Result := '`' + sNombre + '`';
 end;
 
 procedure TRestoreWorker.SyncProgreso;
@@ -826,126 +537,82 @@ var
 begin
   sEtapa := FProgresoEtapa;
   if sEtapa = '' then
+  begin
     sEtapa := 'Restaurando';
+  end;
   if Assigned(FOnProgreso) then
-    FOnProgreso(sEtapa, FPosicion, FTotal, FPosicion, FTotal);
+  begin
+    FOnProgreso(
+      sEtapa,
+      FPosicion,
+      FTotal,
+      FPosicion,
+      FTotal);
+  end;
 end;
 
 procedure TRestoreWorker.SyncFinalizar;
+var
+  stLog: TStringList;
 begin
+  stLog := FLogBuffer;
+  FLogBuffer := nil;
   if Assigned(FOnFinalizar) then
-    FOnFinalizar(FResultado, FError, FLogBuffer)
+  begin
+    FOnFinalizar(FResultado, FError, stLog);
+  end
   else
-    FreeAndNil(FLogBuffer);
+  begin
+    FreeAndNil(stLog);
+  end;
 end;
 
 procedure TRestoreWorker.Execute;
 var
-  Conn: TUniConnection;
-  SqlScript: TUniScript;
-  MyText: TStringList;
-  s: string;
-  i: Integer;
-  Linea: string;
+  oFabrica: IFabricaPersistenciaBackup;
+  oPersistencia: IPersistenciaRestauracionBackup;
 begin
   try
     try
-      Conn := TUniConnection.Create(nil);
-      try
-        Conn.ProviderName := 'MySQL';
-        Conn.Server := FHost;
-        Conn.Port := FPort;
-        if Trim(FDatabase) = '' then
-          raise Exception.Create(SErrorNombreBBDDDestinoVacio);
-        if not FileExists(FRutaFichero) then
-          raise Exception.Create(Format(SErrorFicheroCopiaNoExiste,
-                                        [FRutaFichero]));
-        Conn.Database := 'information_schema';
-        Conn.Username := FUser;
-        Conn.Password := FPassword;
-        Conn.SpecificOptions.Values['MySQL.UseUnicode'] := 'True';
-        Conn.SpecificOptions.Values['MySQL.Charset'] := 'utf8mb4';
-        Conn.LoginPrompt := False;
-        Conn.Connected := True;
-        Conn.ExecSQL('SET NAMES utf8mb4 COLLATE utf8mb4_spanish_ci');
-        FLogBuffer.Add(' -- Preparando BBDD destino: ' + FDatabase);
-        Conn.ExecSQL(Format(
-          'CREATE DATABASE IF NOT EXISTS %s ' +
-          'CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci',
-          [NombreBBDDSQL(FDatabase)]));
-        Conn.ExecSQL(Format(
-          'ALTER DATABASE %s CHARACTER SET utf8mb4 ' +
-          'COLLATE utf8mb4_spanish_ci',
-          [NombreBBDDSQL(FDatabase)]));
-        Conn.ExecSQL('USE ' + NombreBBDDSQL(FDatabase));
-        Conn.Database := FDatabase;
-        ComprobarCancelacion;
-        try
-          if FDesencriptar then
-          begin
-            SqlScript := TUniScript.Create(nil);
-            try
-              SqlScript.Connection := Conn;
-              SqlScript.NoPreconnect := True;
-              SqlScript.OnError := ScriptError;
-              SqlScript.BeforeExecute := ScriptBeforeExecute;
-              SqlScript.AfterExecute := ScriptAfterExecute;
-              MyText := TStringList.Create;
-              try
-                MyText.LoadFromFile(FRutaFichero);
-                s := DescifrarCopiaSeguridad(
-                  MyText.Text,
-                  FPassDesencriptar);
-              finally
-                FreeAndNil(MyText);
-              end;
-              if Trim(s) = '' then
-              begin
-                raise Exception.Create(SErrorDesencriptarCopia);
-              end;
-              ComprobarCancelacion;
-              SqlScript.SQL.Text := s;
-              s := '';
-              FTotal := 0;
-              FPosicion := 0;
-              for i := 0 to SqlScript.SQL.Count - 1 do
-              begin
-                Linea := SqlScript.SQL[i];
-                if Pos(';', Linea) > 0 then
-                  Inc(FTotal);
-              end;
-              FProgresoEtapa := 'Restaurando';
-              Synchronize(SyncProgreso);
-              SqlScript.Execute;
-            finally
-              FreeAndNil(SqlScript);
-            end;
-          end
-          else
-          begin
-            EjecutarSQLStreaming(Conn);
-          end;
-          ComprobarCancelacion;
-          ValidarEstructuraRestaurada(Conn);
-          FResultado := rcsCompletada;
-        except
-          on E: Exception do
-            RegistrarExcepcion(E);
-        end;
-      finally
-        Conn.Free;
+      if Trim(FDatabase) = '' then
+      begin
+        raise Exception.Create(SErrorNombreBBDDDestinoVacio);
       end;
+      if not FileExists(FRutaFichero) then
+      begin
+        raise Exception.Create(Format(
+          SErrorFicheroCopiaNoExiste,
+          [FRutaFichero]));
+      end;
+      ComprobarCancelacion;
+      oFabrica := ResolverFabricaPersistencia(FFabricaPersistencia);
+      oPersistencia := oFabrica.CrearRestauracion(
+        CrearConfiguracionConexion(
+          FHost,
+          FPort,
+          FDatabase,
+          FUser,
+          FPassword));
+      EjecutarSQLStreaming(oPersistencia);
+      ComprobarCancelacion;
+      FResultado := rcsCompletada;
     except
       on E: Exception do
+      begin
         RegistrarExcepcion(E);
+      end;
     end;
   finally
     if (FError = '') and (FResultado = rcsFallida) then
     begin
       if FPrimerError <> '' then
-        FError := FPrimerError
+      begin
+        FError := FPrimerError;
+      end
       else
+      begin
         FError := SErrorRestauracionNoFinalizada;
+      end;
     end;
     Synchronize(SyncFinalizar);
   end;

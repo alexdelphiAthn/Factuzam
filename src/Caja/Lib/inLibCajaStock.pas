@@ -16,21 +16,20 @@ unit inLibCajaStock;
 interface
 
 uses
-  Data.DB, Uni, inLibParametrosIntf, inLibCajaVentaIntf;
+  inLibParametrosIntf, inLibCajaVentaIntf,
+  inLibCajaStockPersistenciaIntf;
 
 type
   TPoliticaStockVenta = class(TInterfacedObject, IPoliticaStockVenta)
   private
-    FConexion: TUniConnection;
+    FPersistencia: ICajaStockPersistencia;
     FParametrosCaja: IParametrosCaja;
-    procedure ConsultarExistencia(
-      const ACodigoSku: string;
-      out AExiste, AActivo: Boolean);
-    function ConsultarCantidad(
-      const ACodigoSku, ACodigoAlmacen: string): Double;
+    procedure CompletarMensaje(
+      const ACodigoSku, AMensajeStock: string;
+      var AResultado: TResultadoPoliticaStockVenta);
   public
     constructor Create(
-      AConexion: TUniConnection;
+      const APersistencia: ICajaStockPersistencia;
       const AParametrosCaja: IParametrosCaja);
     function Validar(
       const ACodigoSku, ACodigoAlmacen: string
@@ -43,67 +42,37 @@ uses
   System.SysUtils, inLibMsgCaja;
 
 constructor TPoliticaStockVenta.Create(
-  AConexion: TUniConnection;
+  const APersistencia: ICajaStockPersistencia;
   const AParametrosCaja: IParametrosCaja);
 begin
   inherited Create;
-  FConexion := AConexion;
+  if not Assigned(APersistencia) then
+    raise EArgumentNilException.Create('APersistencia');
+  FPersistencia := APersistencia;
   FParametrosCaja := AParametrosCaja;
 end;
 
-procedure TPoliticaStockVenta.ConsultarExistencia(
-  const ACodigoSku: string;
-  out AExiste, AActivo: Boolean);
-var
-  Qry: TUniQuery;
+procedure TPoliticaStockVenta.CompletarMensaje(
+  const ACodigoSku, AMensajeStock: string;
+  var AResultado: TResultadoPoliticaStockVenta);
 begin
-  AExiste := False;
-  AActivo := False;
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := FConexion;
-    Qry.SQL.Text :=
-      'SELECT ESACTIVO_SKU FROM fza_articulos_skus ' +
-      ' WHERE CODIGO_UNIDAD_SKU = :SKU';
-    Qry.ParamByName('SKU').AsString := ACodigoSku;
-    Qry.Open;
-    AExiste := not Qry.IsEmpty;
-    if AExiste then
-      AActivo := Qry.FieldByName('ESACTIVO_SKU').AsString = 'S';
-  finally
-    FreeAndNil(Qry);
-  end;
-end;
-
-function TPoliticaStockVenta.ConsultarCantidad(
-  const ACodigoSku, ACodigoAlmacen: string): Double;
-var
-  Qry: TUniQuery;
-begin
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := FConexion;
-    if Trim(ACodigoAlmacen) <> '' then
-    begin
-      Qry.SQL.Text :=
-        'SELECT COALESCE(SUM(CANTIDAD_STK), 0) AS QTY ' +
-        '  FROM fza_articulos_stockactual ' +
-        ' WHERE CODIGO_UNIDAD_STK = :SKU ' +
-        '   AND CODIGO_ALM_STK = :ALM';
-      Qry.ParamByName('ALM').AsString := ACodigoAlmacen;
-    end
-    else
-    begin
-      Qry.SQL.Text :=
-        'SELECT COALESCE(SUM(CANTIDAD_STK), 0) AS QTY ' +
-        '  FROM fza_articulos_stockactual ' +
-        ' WHERE CODIGO_UNIDAD_STK = :SKU';
-    end;
-    Qry.ParamByName('SKU').AsString := ACodigoSku;
-    Qry.Open;
-    Result := Qry.FieldByName('QTY').AsFloat;
-  finally
-    FreeAndNil(Qry);
+  case AResultado.Motivo of
+    msvSkuNoExiste:
+      AResultado.Mensaje := Format(
+        SErrorSkuVentaCajaNoExiste,
+        [ACodigoSku]);
+    msvSkuInactivo:
+      AResultado.Mensaje := Format(
+        SErrorSkuVentaCajaNoActivo,
+        [ACodigoSku]);
+    msvSinStock:
+      begin
+        AResultado.Mensaje := AMensajeStock;
+        if AResultado.Mensaje = '' then
+        begin
+          AResultado.Mensaje := SErrorArticuloVentaCajaSinStock;
+        end;
+      end;
   end;
 end;
 
@@ -112,6 +81,7 @@ function TPoliticaStockVenta.Validar(
 ): TResultadoPoliticaStockVenta;
 var
   Entrada: TEntradaPoliticaStockVenta;
+  EstadoSku: TEstadoSkuCajaStock;
   sCodigoSku: string;
   sMensajeStock: string;
 begin
@@ -125,10 +95,9 @@ begin
       FParametrosCaja.GetBool('vgerChkExistOnly', True);
     if Entrada.VerificarExistencia then
     begin
-      ConsultarExistencia(
-        sCodigoSku,
-        Entrada.Existe,
-        Entrada.Activo);
+      EstadoSku := FPersistencia.ObtenerEstadoSku(sCodigoSku);
+      Entrada.Existe := EstadoSku.Existe;
+      Entrada.Activo := EstadoSku.Activo;
     end;
     Entrada.BloquearSinStock :=
       FParametrosCaja.GetBool('vgerChkStockOnly', False);
@@ -141,25 +110,12 @@ begin
         (Entrada.Existe and Entrada.Activo)) then
     begin
       Entrada.CantidadDisponible :=
-        ConsultarCantidad(sCodigoSku, ACodigoAlmacen);
+        FPersistencia.ObtenerCantidadDisponible(
+          sCodigoSku,
+          ACodigoAlmacen);
     end;
     Result := EvaluarPoliticaStockVenta(Entrada);
-    case Result.Motivo of
-      msvSkuNoExiste:
-        Result.Mensaje := Format(
-          SErrorSkuVentaCajaNoExiste,
-          [sCodigoSku]);
-      msvSkuInactivo:
-        Result.Mensaje := Format(
-          SErrorSkuVentaCajaNoActivo,
-          [sCodigoSku]);
-      msvSinStock:
-        begin
-          Result.Mensaje := sMensajeStock;
-          if Result.Mensaje = '' then
-            Result.Mensaje := SErrorArticuloVentaCajaSinStock;
-        end;
-    end;
+    CompletarMensaje(sCodigoSku, sMensajeStock, Result);
   end
   else
   begin

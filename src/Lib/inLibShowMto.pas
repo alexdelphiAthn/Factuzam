@@ -19,8 +19,9 @@ unit inLibShowMto;
 interface
 
 uses
-  Classes, Forms, Menus, Controls, Data.DB, Uni, System.SysUtils,
-  Vcl.Dialogs, cxPC, inLibUnitForm, inLibFormManager;
+  Classes, Forms, Menus, Controls, Data.DB, System.SysUtils,
+  Vcl.Dialogs, cxPC, inLibUnitForm, inLibFormManager,
+  inLibDestinoFacturaPersistenciaIntf;
 
 type
   // Lo que ShowMto necesita del formulario principal. TfrmMtoPrincipal
@@ -51,7 +52,8 @@ type
     const ACall: string; ADataSet: TDataSet;
     const ACampoSerie, ACampoNumero: string;
     const AMensajeVacio: string = '');
-  function ResolverCallFactura(AConexion: TUniConnection;
+  function ResolverCallFactura(
+    const AResolutor: IResolutorDestinoFactura;
     const ANumero, ASerie: string): string;
   // Crea el data module de la pantalla desde el registro de clases. El
   // cableado con el form (FCurrentForm, dsTablaG, SQL de perfil) vive
@@ -161,176 +163,220 @@ begin
   Result := Proveedor.RegistroLog;
 end;
 
+type
+  TContextoAperturaPantalla = record
+    Anfitrion: IAnfitrionPantallas;
+    Gestor: TEmbeddedFormManager;
+    Pantalla: TfzaForm;
+    RegistroLog: IRegistroLog;
+    Busqueda: string;
+  end;
+
+  TDestinoAperturaPantalla = record
+    Formulario: TForm;
+    Clave: string;
+    Titulo: string;
+  end;
+
+function ResolverPantallaAccesible(
+  const AContexto: TContextoAperturaPantalla;
+  const ACall: string): Boolean;
+begin
+  Result := Assigned(AContexto.Pantalla);
+  if not Result then
+    ShowMessageFmt(SResWinFNotFnd, [ACall])
+  else if Assigned(AContexto.Pantalla.mnMenuItem) and
+          (not AContexto.Pantalla.mnMenuItem.Visible) then
+  begin
+    AContexto.RegistroLog.RegistrarAviso(
+      'Intento de acceso a menú oculto: ' + ACall);
+    Result := False;
+  end;
+end;
+
+function CalcularNumeroInstancia(
+  const AContexto: TContextoAperturaPantalla): Integer;
+var
+  iActiva: Integer;
+  iHueco: Integer;
+  iInstancia: Integer;
+  iPrimera: Integer;
+  iSiguiente: Integer;
+begin
+  iActiva := NumInstanciaActiva(
+    AContexto.Gestor, AContexto.Pantalla.Call);
+  iPrimera := 0;
+  iSiguiente := 0;
+  iHueco := 0;
+  for iInstancia := 2 to AContexto.Pantalla.NumVentanas do
+  begin
+    if Assigned(AContexto.Gestor.FormPorClave(
+      AContexto.Pantalla.Call + '#' + IntToStr(iInstancia))) then
+    begin
+      if iPrimera = 0 then
+        iPrimera := iInstancia;
+      if (iSiguiente = 0) and (iInstancia > iActiva) then
+        iSiguiente := iInstancia;
+    end
+    else if iHueco = 0 then
+      iHueco := iInstancia;
+  end;
+  if iPrimera = 0 then
+    Result := 2
+  else if iActiva = 0 then
+    Result := iPrimera
+  else if iSiguiente > 0 then
+    Result := iSiguiente
+  else if iHueco > 0 then
+    Result := iHueco
+  else
+    Result := iPrimera;
+end;
+
+function ResolverDestinoApertura(
+  const AContexto: TContextoAperturaPantalla):
+  TDestinoAperturaPantalla;
+var
+  iInstancia: Integer;
+begin
+  Result.Formulario := nil;
+  Result.Clave := AContexto.Pantalla.Call;
+  Result.Titulo := AContexto.Pantalla.Caption;
+  if AContexto.Pantalla.NumVentanas > 1 then
+  begin
+    if AContexto.Busqueda <> '' then
+      iInstancia := 1
+    else
+      iInstancia := CalcularNumeroInstancia(AContexto);
+    Result.Clave := AContexto.Pantalla.Call + '#' +
+      IntToStr(iInstancia);
+    Result.Titulo := AContexto.Pantalla.Caption + ' ' +
+      IntToStr(iInstancia);
+  end;
+  Result.Formulario := AContexto.Gestor.FormPorClave(Result.Clave);
+end;
+
+function PrepararModoBusqueda(
+  const AContexto: TContextoAperturaPantalla;
+  const ADestino: TDestinoAperturaPantalla;
+  const AMantenimiento: IMantenimientoEmbebido): Boolean;
+begin
+  Result := False;
+  if AContexto.Busqueda <> '' then
+  begin
+    if (AContexto.Pantalla.NumVentanas > 1) and
+       (ADestino.Clave = AContexto.Pantalla.Call + '#1') then
+      AMantenimiento.ActivarModoBusqueda(True)
+    else
+    begin
+      AMantenimiento.ActivarModoBusqueda(False);
+      Result := True;
+    end;
+  end;
+end;
+
+function CrearMantenimiento(
+  const AContexto: TContextoAperturaPantalla;
+  var ADestino: TDestinoAperturaPantalla): IMantenimientoEmbebido;
+var
+  bBusquedaTemporal: Boolean;
+  oClaseFormulario: TFormClass;
+begin
+  Result := nil;
+  oClaseFormulario := ClasePantalla(AContexto.Pantalla.UnitForm);
+  if not Assigned(oClaseFormulario) then
+  begin
+    AContexto.RegistroLog.RegistrarError(
+      'Pantalla sin clase registrada: ' + AContexto.Pantalla.UnitForm);
+    ShowMessageFmt(SClassRttiNotFnd, [AContexto.Pantalla.UnitForm]);
+  end
+  else
+  begin
+    ADestino.Formulario :=
+      AContexto.Anfitrion.CrearPantalla(oClaseFormulario);
+    try
+      Result := ADestino.Formulario as IMantenimientoEmbebido;
+    except
+      FreeAndNil(ADestino.Formulario);
+      raise EServicioNoDisponible.Create(
+        SErrorMantenimientoEmbebidoNoDisponible);
+    end;
+    ADestino.Formulario.Hide;
+    bBusquedaTemporal := PrepararModoBusqueda(
+      AContexto, ADestino, Result);
+    try
+      AContexto.Gestor.EmbedForm(
+        ADestino.Formulario, Result, ADestino.Titulo,
+        ADestino.Clave, True);
+    finally
+      if bBusquedaTemporal then
+        Result.DesactivarModoBusqueda;
+    end;
+    AContexto.RegistroLog.RegistrarInformacion(
+      'Pantalla abierta: ' + AContexto.Pantalla.Caption);
+  end;
+end;
+
+function ActivarMantenimiento(
+  const AContexto: TContextoAperturaPantalla;
+  const ADestino: TDestinoAperturaPantalla): IMantenimientoEmbebido;
+begin
+  Result := AContexto.Gestor.MantenimientoDeForm(
+    ADestino.Formulario);
+  if not Assigned(Result) then
+    raise EServicioNoDisponible.Create(
+      SErrorMantenimientoEmbebidoNoDisponible);
+  if ADestino.Formulario.Parent is TcxTabSheet then
+  begin
+    (ADestino.Formulario.Parent as TcxTabSheet).PageControl.ActivePage :=
+      ADestino.Formulario.Parent as TcxTabSheet;
+  end;
+end;
+
+procedure AbrirMantenimiento(
+  const AContexto: TContextoAperturaPantalla;
+  const AMantenimiento: IMantenimientoEmbebido);
+begin
+  if Assigned(AMantenimiento) then
+  begin
+    if AContexto.Busqueda <> '' then
+    begin
+      AMantenimiento.PrepararBusquedaExterna(AContexto.Busqueda);
+      AMantenimiento.AbrirTablaPrincipal(True);
+      if not AMantenimiento.LocalizarYEnfocar(AContexto.Busqueda) then
+      begin
+        ShowMessageFmt(SLocateNotFnd,
+          [AContexto.Busqueda, AContexto.Pantalla.Caption]);
+      end;
+    end
+    else
+      AMantenimiento.AbrirTablaPrincipal(False);
+  end;
+end;
+
 procedure ShowMto(AOwner: TComponent;
                   ACall: String;
                   ABusq:string = '');
 var
-  oAnfitrion: IAnfitrionPantallas;
-  oGestor: TEmbeddedFormManager;
-  ofzaF: TfzaForm;
-  TargetForm: TForm;
-  FormClass: TFormClass;
+  oContexto: TContextoAperturaPantalla;
+  oDestino: TDestinoAperturaPantalla;
   oMto: IMantenimientoEmbebido;
-  oRegistroLog: IRegistroLog;
-  iNum : Integer;
-  iActiva, iSiguiente, iPrimera, iHueco: Integer;
-  sClave: string;
-  NewCaption: string;
-  bBusquedaTemporal: Boolean;
 begin
-  oAnfitrion := ExigirAnfitrionPantallas(AOwner);
-  oRegistroLog := ExigirRegistroLog(AOwner);
-  oAnfitrion.PrepararAperturaPantalla;
-  oGestor := oAnfitrion.GestorVentanas;
-  ofzaF := oAnfitrion.RegistroPantallas.GetElement(ACall);
-  if ofzaF = nil then
+  oContexto.Anfitrion := ExigirAnfitrionPantallas(AOwner);
+  oContexto.RegistroLog := ExigirRegistroLog(AOwner);
+  oContexto.Anfitrion.PrepararAperturaPantalla;
+  oContexto.Gestor := oContexto.Anfitrion.GestorVentanas;
+  oContexto.Pantalla :=
+    oContexto.Anfitrion.RegistroPantallas.GetElement(ACall);
+  oContexto.Busqueda := ABusq;
+  if ResolverPantallaAccesible(oContexto, ACall) then
   begin
-    ShowMessageFmt(SResWinFNotFnd, [ACall]);
-    Exit;
-  end;
-  if (ofzaF.mnMenuItem <> nil) and (not ofzaF.mnMenuItem.Visible) then
-  begin
-    oRegistroLog.RegistrarAviso(
-      'Intento de acceso a menú oculto: ' + ACall);
-    Exit;
-  end;
-  // Identidad de la ventana: clave estable CALL[#instancia] separada
-  // del caption visible (antes se buscaba por caption y cambiar un
-  // título rompía la detección de instancias).
-  NewCaption := ofzaF.Caption;
-  sClave := ofzaF.Call;
-  if ofzaF.NumVentanas > 1 then
-  begin
-    if ABusq <> '' then
-    begin
-      // Ctrl+A: la instancia 1 es la de búsquedas (filtro Todos).
-      // Si no existe la creamos; si existe la reutilizamos.
-      sClave := ofzaF.Call + '#1';
-      NewCaption := ofzaF.Caption + ' 1';
-      TargetForm := oGestor.FormPorClave(sClave);
-    end
+    oDestino := ResolverDestinoApertura(oContexto);
+    if Assigned(oDestino.Formulario) then
+      oMto := ActivarMantenimiento(oContexto, oDestino)
     else
-    begin
-      // Apertura normal (Ctrl+K / menu) con rotacion. Las instancias van
-      // de 2..NumVentanas (la 1 se reserva para busquedas). Regla:
-      //  - ninguna abierta -> crea la #2.
-      //  - estas en otra pantalla -> trae al frente la mas baja abierta.
-      //  - estas en una instancia y hay otra abierta por encima -> saltas
-      //    a ella (rota el foco).
-      //  - estas en la ultima abierta y queda hueco -> crea la siguiente.
-      //  - todo lleno y estas en la ultima -> vuelves a la primera
-      //    (rotacion circular 2->3->4->2).
-      iActiva := NumInstanciaActiva(oGestor, ofzaF.Call);
-      iPrimera := 0;
-      iSiguiente := 0;
-      iHueco := 0;
-      for iNum := 2 to ofzaF.NumVentanas do
-      begin
-        if oGestor.FormPorClave(
-             ofzaF.Call + '#' + IntToStr(iNum)) <> nil then
-        begin
-          if iPrimera = 0 then
-            iPrimera := iNum;
-          if (iSiguiente = 0) and (iNum > iActiva) then
-            iSiguiente := iNum;
-        end
-        else if iHueco = 0 then
-          iHueco := iNum;
-      end;
-      if iPrimera = 0 then
-        iNum := 2
-      else if iActiva = 0 then
-        iNum := iPrimera
-      else if iSiguiente > 0 then
-        iNum := iSiguiente
-      else if iHueco > 0 then
-        iNum := iHueco
-      else
-        iNum := iPrimera;
-      sClave := ofzaF.Call + '#' + IntToStr(iNum);
-      NewCaption := ofzaF.Caption + ' ' + IntToStr(iNum);
-      // Si la clave elegida existe -> se activa; si no -> se crea (el
-      // bloque 'if TargetForm = nil' de abajo hace ambos casos).
-      TargetForm := oGestor.FormPorClave(sClave);
-    end;
-  end
-  else
-    TargetForm := oGestor.FormPorClave(sClave);
-  if TargetForm = nil then
-  begin
-    FormClass := ClasePantalla(ofzaF.UnitForm);
-    if FormClass = nil then
-    begin
-      // Antes era un FindType RTTI que fallaba en runtime; ahora la
-      // clase o está en el catálogo o se avisa (y el arranque ya lo
-      // dejó en el log vía ComprobarRegistradas).
-      oRegistroLog.RegistrarError(
-        'Pantalla sin clase registrada: ' + ofzaF.UnitForm);
-      ShowMessageFmt(SClassRttiNotFnd, [ofzaF.UnitForm]);
-      Exit;
-    end;
-    TargetForm := oAnfitrion.CrearPantalla(FormClass);
-    try
-      oMto := TargetForm as IMantenimientoEmbebido;
-    except
-      FreeAndNil(TargetForm);
-      raise EServicioNoDisponible.Create(
-        SErrorMantenimientoEmbebidoNoDisponible);
-    end;
-    TargetForm.Hide;
-    bBusquedaTemporal := False;
-    // Si es la instancia 1 (reservada para busquedas), marcar el modo
-    // y recortar el layout antes de embeber: sin Lista, sin Busqueda,
-    // sin Precarga, sin Exportar a Excel; navegador con solo Insert/
-    // Delete/Edit/Post/Cancel. Asi el Show muestra ya la UI reducida.
-    if ABusq <> '' then
-    begin
-      if (ofzaF.NumVentanas > 1) and
-         (sClave = ofzaF.Call + '#1') then
-        oMto.ActivarModoBusqueda(True)
-      else
-      begin
-        oMto.ActivarModoBusqueda(False);
-        bBusquedaTemporal := True;
-      end;
-    end;
-    try
-      oGestor.EmbedForm(
-        TargetForm, oMto, NewCaption, sClave, True);
-    finally
-      if bBusquedaTemporal then
-        oMto.DesactivarModoBusqueda;
-    end;
-    oRegistroLog.RegistrarInformacion(
-      'Pantalla abierta: ' + ofzaF.Caption);
-  end
-  else
-  begin
-    oMto := oGestor.MantenimientoDeForm(TargetForm);
-    if not Assigned(oMto) then
-      raise EServicioNoDisponible.Create(
-        SErrorMantenimientoEmbebidoNoDisponible);
-    if (TargetForm.Parent is TcxTabSheet) then
-      (TargetForm.Parent as TcxTabSheet).PageControl.ActivePage :=
-                                             (TargetForm.Parent as TcxTabSheet);
-  end;
-  // Carga inicial de la lista principal:
-  // - Sin parametro de busqueda: async, asi el tab aparece de inmediato
-  //   y se rellena en background mientras la UI sigue respondiendo.
-  // - Con parametro de busqueda: sincrono, porque el Locate necesita la
-  //   query activa al volver.
-  if Assigned(oMto) then
-  begin
-    if ABusq <> '' then
-    begin
-      // Busqueda externa: filtrar a la clave recibida antes del Open.
-      oMto.PrepararBusquedaExterna(ABusq);
-      oMto.AbrirTablaPrincipal(True);
-      if not oMto.LocalizarYEnfocar(ABusq) then
-        ShowMessageFmt(SLocateNotFnd, [ABusq, ofzaF.Caption]);
-    end
-    else
-      oMto.AbrirTablaPrincipal(False);
+      oMto := CrearMantenimiento(oContexto, oDestino);
+    AbrirMantenimiento(oContexto, oMto);
   end;
 end;
 
@@ -350,33 +396,13 @@ begin
     Result := TDataModule(Clase.Create(AOwner));
 end;
 
-function ResolverCallFactura(AConexion: TUniConnection;
+function ResolverCallFactura(
+  const AResolutor: IResolutorDestinoFactura;
   const ANumero, ASerie: string): string;
-var
-  qry: TUniQuery;
-  sTipo: string;
 begin
   Result := 'Facturas';
-  if (AConexion = nil) or (not AConexion.Connected) then
-    Exit;
-  qry := TUniQuery.Create(nil);
-  try
-    qry.Connection := AConexion;
-    qry.SQL.Text :=
-      'SELECT TIPO_FAC FROM fza_facturas' +
-      ' WHERE NUMERO_FAC = :NUM AND SERIE_FAC = :SER';
-    qry.ParamByName('NUM').AsString := ANumero;
-    qry.ParamByName('SER').AsString := ASerie;
-    qry.Open;
-    if not qry.IsEmpty then
-    begin
-      sTipo := qry.FieldByName('TIPO_FAC').AsString;
-      if SameText(sTipo, 'SIMPLIFICADA') then
-        Result := 'FacturasSimplif';
-    end;
-  finally
-    FreeAndNil(qry);
-  end;
+  if Assigned(AResolutor) then
+    Result := AResolutor.Resolver(ANumero, ASerie);
 end;
 
 end.

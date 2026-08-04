@@ -134,11 +134,14 @@ type
 implementation
 
 uses
-  inLibValoresAutomaticos, System.Diagnostics,
+  inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
+  System.Diagnostics,
   System.UITypes, inLibArticulosValidadorIntf,
   UniDataArticulosValidadorRepositorio,
-  inLibVentasImpuestos, inLibContadorLineas,
+  inLibVentasImpuestos, UniDataImpuestosRepositorio,
+  inLibContadorLineas,
   UniDataContadorLineasRepositorio, inLibData,
+  UniDataAlmacenesEmpresaRepositorio,
   inLibMsgArticulos, inLibMsgFacturas, inLibMsgVentas,
   inLibSqlSeguro, inLibDocumento, inLibDocumentoIntf;
 
@@ -412,7 +415,8 @@ begin
   if (unqryTablaG.FieldByName('NUMERO_ALB').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_ALB').AsString = '') then
     GetCodigoAutoAlbaran;
-  AplicarPorcentajesIvaVenta(ConexionPrincipal, unqryTablaG, 'ALB');
+  AplicarPorcentajesIvaVenta(
+    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG, 'ALB');
   CalcularTotalesAlbaran;
 end;
 
@@ -727,7 +731,8 @@ begin
     if (FindField('CANTIDAD_ALBLIN') <> nil) and
        (FindField('PRECIO_VENTA_SIVA_ARTICULO_ALBLIN') <> nil) and
        (FindField('TOTAL_ALBLIN') <> nil) then
-      PrepararLineaFiscalVenta(ConexionPrincipal, unqryTablaG,
+      PrepararLineaFiscalVenta(CrearLecturasImpuestos(ConexionPrincipal),
+        unqryTablaG,
         unqryAlbaranesLineas, 'ALB', 'ALBLIN', 'TOTAL_ALBLIN');
 
     // Si el usuario ha tecleado un SKU pero no el artículo, lo deducimos
@@ -933,7 +938,8 @@ begin
   begin
     FCalculandoTotales := True;
     try
-      CalcularTotalesDocumentoVenta(unqryTablaG.Connection, unqryTablaG,
+      CalcularTotalesDocumentoVenta(
+        CrearLecturasImpuestos(unqryTablaG.Connection), unqryTablaG,
         unqryAlbaranesLineas, 'ALB', 'TOTAL_ALBLIN',
         'TIPO_IVA_ARTICULO_ALBLIN', 'PORCENTAJE_IVA_ALBLIN');
     finally
@@ -1395,7 +1401,8 @@ begin
   // La serie acompana a la empresa emisora (fza_empresas_series).
   // Cubre las dos rutas: codigo tecleado (BuscarEmpresa) y modal.
   ProponerSerieEmpresa(DataSet.FindField('CODIGO_EMP_EMP').AsString);
-  AplicarPorcentajesIvaVenta(ConexionPrincipal, unqryTablaG, 'ALB');
+  AplicarPorcentajesIvaVenta(
+    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG, 'ALB');
 end;
 
 procedure TdmAlbaranes.ActualizarImpuestosTarifaCabecera(
@@ -1469,7 +1476,8 @@ begin
     FindField('TARIFA_ARTICULO_CLIENTE_ALB').AsString := sTarifa;
     ActualizarImpuestosTarifaCabecera(sTarifa);
   end;
-  AplicarPorcentajesIvaVenta(ConexionPrincipal, unqryTablaG, 'ALB');
+  AplicarPorcentajesIvaVenta(
+    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG, 'ALB');
 end;
 
 procedure TdmAlbaranes.NegarMovimientosFacturaDesdeAlbaran(

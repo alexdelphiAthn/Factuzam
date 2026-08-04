@@ -36,7 +36,7 @@ function RecogerEntradaArticuloCompra(
 implementation
 
 uses
-  System.SysUtils, inLibComprasImpuestos;
+  System.SysUtils, inLibComprasImpuestos, UniDataImpuestosRepositorio;
 
 type
   TRepositorioLecturasArticuloCompraUniDAC = class(
@@ -396,7 +396,7 @@ begin
   PonerFloat(AConfiguracion.CampoPrecioCompra, ALinea.PrecioCompra);
   PonerFloat(AConfiguracion.CampoTotal, ALinea.Total);
   PrepararLineaFiscalCompra(
-    FConexion,
+    CrearLecturasImpuestos(FConexion),
     FCabecera,
     FLineas,
     AConfiguracion.SufijoCabecera,

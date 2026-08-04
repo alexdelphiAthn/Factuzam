@@ -36,9 +36,6 @@ type
 function CorreoTicketsConfigurado(
   const AParametrosApp: IParametrosAplicacion;
   out AMensaje: string): Boolean;
-function ObtenerDatosCorreoOperacion(AConexion: TUniConnection;
-  const AEmpresa, AAlmacen, ACaja,
-  ANumeroOperacion: string): TDatosCorreoOperacion;
 function EnviarDocumentacionOperacion(
   const AParametrosApp: IParametrosAplicacion;
   const APreviewTicket: IPreviewTicket;
@@ -47,6 +44,7 @@ function EnviarDocumentacionOperacion(
   const ARepositorioTicketsCaja: TRepositoriosTicketsCaja;
   const ARegistroLog: IRegistroLog;
   AConexion: TUniConnection;
+  const ADatos: TDatosCorreoOperacion;
   const AEmpresa, AAlmacen, ACaja, ANumeroOperacion, AEmail: string;
   out AMensaje: string): Boolean;
 
@@ -81,85 +79,6 @@ begin
         'aplicación -> Servicios web):' + sLineBreak + Faltan.Text;
   finally
     FreeAndNil(Faltan);
-  end;
-end;
-
-function ObtenerDatosCorreoOperacion(AConexion: TUniConnection;
-  const AEmpresa, AAlmacen, ACaja,
-  ANumeroOperacion: string): TDatosCorreoOperacion;
-var
-  Qry: TUniQuery;
-  sTipos: string;
-begin
-  Result := Default(TDatosCorreoOperacion);
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := AConexion;
-    Qry.SQL.Text :=
-      'SELECT COUNT(*) AS NUM_FILAS,' +
-      '       MAX(COALESCE(NULLIF(f.CODIGO_CLI_FAC, ''''),' +
-      '                    NULLIF(o.CODIGO_CLI_OPCAJA, ''''))) ' +
-      '         AS CODIGO_CLIENTE,' +
-      '       MAX(cli.EMAIL_CLI) AS EMAIL_CLIENTE,' +
-      '       MAX(emp.RAZON_SOCIAL_EMP) AS NOMBRE_EMPRESA,' +
-      '       GROUP_CONCAT(DISTINCT o.TIPO_OPERACION_OPCAJA ' +
-      '         SEPARATOR '','') AS TIPOS_OPERACION,' +
-      '       SUM(CASE WHEN f.NUMERO_FAC IS NULL THEN 0 ELSE 1 END) ' +
-      '         AS NUM_FACTURAS,' +
-      '       (SELECT COUNT(*) FROM fza_caja_depositos_view d' +
-      '         WHERE d.CODIGO_EMPRESA_OP = :EMP' +
-      '           AND d.CODIGO_ALMACEN_OP = :ALM' +
-      '           AND d.CODIGO_CAJA_OP = :CAJA' +
-      '           AND d.NUMERO_OPERACION_OP = :OPERACION) ' +
-      '         AS NUM_DEPOSITOS' +
-      '  FROM fza_caja_operaciones o' +
-      '  LEFT JOIN fza_facturas f' +
-      '    ON f.CODIGO_EMP_FAC = o.CODIGO_EMP_OPCAJA' +
-      '   AND ((TRIM(COALESCE(o.SERIE_FAC_OPCAJA, '''')) <> ''''' +
-      '         AND TRIM(COALESCE(o.NUMERO_FAC_OPCAJA, '''')) <> ''''' +
-      '         AND f.SERIE_FAC = o.SERIE_FAC_OPCAJA' +
-      '         AND f.NUMERO_FAC = o.NUMERO_FAC_OPCAJA)' +
-      '     OR ((TRIM(COALESCE(o.SERIE_FAC_OPCAJA, '''')) = ''''' +
-      '          OR TRIM(COALESCE(o.NUMERO_FAC_OPCAJA, '''')) = '''')' +
-      '         AND f.CODIGO_ALM_FAC = o.CODIGO_ALM_OPCAJA' +
-      '         AND f.CODIGO_CAJA_FAC = o.CODIGO_CAJA_OPCAJA' +
-      '         AND f.NUMERO_OPERACION_FAC = ' +
-      '             o.NUMERO_OPERACION_OPCAJA))' +
-      '  LEFT JOIN fza_clientes cli' +
-      '    ON cli.CODIGO_CLI_CLI = COALESCE(NULLIF(f.CODIGO_CLI_FAC, ''''),' +
-      '                                      o.CODIGO_CLI_OPCAJA)' +
-      '  LEFT JOIN fza_empresas emp' +
-      '    ON emp.CODIGO_EMP_EMP = o.CODIGO_EMP_OPCAJA' +
-      ' WHERE o.CODIGO_EMP_OPCAJA = :EMP' +
-      '   AND o.CODIGO_ALM_OPCAJA = :ALM' +
-      '   AND o.CODIGO_CAJA_OPCAJA = :CAJA' +
-      '   AND o.NUMERO_OPERACION_OPCAJA = :OPERACION';
-    Qry.ParamByName('EMP').AsString := AEmpresa;
-    Qry.ParamByName('ALM').AsString := AAlmacen;
-    Qry.ParamByName('CAJA').AsString := ACaja;
-    Qry.ParamByName('OPERACION').AsString := ANumeroOperacion;
-    Qry.Open;
-    Result.Encontrada := Qry.FieldByName('NUM_FILAS').AsInteger > 0;
-    if Result.Encontrada then
-    begin
-      Result.CodigoCliente :=
-        Qry.FieldByName('CODIGO_CLIENTE').AsString;
-      Result.EmailCliente := Trim(
-        Qry.FieldByName('EMAIL_CLIENTE').AsString);
-      Result.NombreEmpresa := Trim(
-        Qry.FieldByName('NOMBRE_EMPRESA').AsString);
-      Result.TieneFactura :=
-        Qry.FieldByName('NUM_FACTURAS').AsInteger > 0;
-      Result.TieneDepositos :=
-        Qry.FieldByName('NUM_DEPOSITOS').AsInteger > 0;
-      sTipos := ',' + Qry.FieldByName('TIPOS_OPERACION').AsString + ',';
-      Result.EsOperacionCaja := (Pos(',EC,', sTipos) > 0) or
-        (Pos(',GC,', sTipos) > 0);
-      Result.EsTraspaso := (Pos(',TR,', sTipos) > 0) or
-        (Pos(',TA,', sTipos) > 0);
-    end;
-  finally
-    FreeAndNil(Qry);
   end;
 end;
 
@@ -302,10 +221,10 @@ function EnviarDocumentacionOperacion(
   const ARepositorioTicketsCaja: TRepositoriosTicketsCaja;
   const ARegistroLog: IRegistroLog;
   AConexion: TUniConnection;
+  const ADatos: TDatosCorreoOperacion;
   const AEmpresa, AAlmacen, ACaja, ANumeroOperacion, AEmail: string;
   out AMensaje: string): Boolean;
 var
-  Datos: TDatosCorreoOperacion;
   RutasPDF: TStringList;
   sUrl: string;
   sApiKey: string;
@@ -320,9 +239,7 @@ begin
       AMensaje := 'Indique una dirección de correo electrónico.'
     else
     begin
-      Datos := ObtenerDatosCorreoOperacion(AConexion, AEmpresa, AAlmacen, ACaja,
-        ANumeroOperacion);
-      if not Datos.Encontrada then
+      if not ADatos.Encontrada then
         AMensaje := 'No se ha encontrado la operación seleccionada.'
       else
       begin
@@ -340,7 +257,7 @@ begin
               AAlmacen,
               ACaja,
               ANumeroOperacion,
-              Datos,
+              ADatos,
               RutasPDF);
             if RutasPDF.Count = 0 then
               AMensaje := 'La operación no tiene documentación asociada.'
@@ -353,7 +270,7 @@ begin
               sReferencia :=
                 TClienteFactuzamApi.Referencia(AParametrosApp);
               Result := EnviarAlServicio(sUrl, sApiKey, sReferencia,
-                ANumeroOperacion, Datos.NombreEmpresa, Trim(AEmail),
+                ANumeroOperacion, ADatos.NombreEmpresa, Trim(AEmail),
                 RutasPDF, AMensaje);
             end;
           except

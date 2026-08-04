@@ -240,6 +240,9 @@ uses
     'src\Modals\inMtoModalContrasenaCopia.pas',
   inMtoModalErrorAplicacion in
     'src\Modals\inMtoModalErrorAplicacion.pas',
+  inMtoModalProcesosAuxiliaresBBDD in
+    'src\Modals\inMtoModalProcesosAuxiliaresBBDD.pas'
+    {frmModalProcesosAuxiliaresBBDD},
   inMtoModalMensajeTexto in
     'src\Modals\inMtoModalMensajeTexto.pas',
   inMtoErroresEnvios in
@@ -336,6 +339,8 @@ uses
     'src\Lib\inLibVentasPantallaIntf.pas',
   UniDataGeneradorProcesosRepositorio in
     'src\DataModules\UniDataGeneradorProcesosRepositorio.pas',
+  UniDataMetadatosBBDDRepositorio in
+    'src\DataModules\UniDataMetadatosBBDDRepositorio.pas',
   UniDataInformeBalanceSinTallasRepositorio in
     'src\DataModules\UniDataInformeBalanceSinTallasRepositorio.pas',
   UniDataInformeBalanceTallasRepositorio in
@@ -362,6 +367,8 @@ uses
     'src\DataModules\UniDataWizardEditarRepositorio.pas',
   inLibGeneradorProcesosAplicacion in
     'src\Lib\inLibGeneradorProcesosAplicacion.pas',
+  inLibMetadatosBBDDIntf in
+    'src\Lib\inLibMetadatosBBDDIntf.pas',
   inLibInformeBalanceSinTallasPersistenciaIntf in
     'src\Lib\inLibInformeBalanceSinTallasPersistenciaIntf.pas',
   inLibInformeBalanceTallasPersistenciaIntf in
@@ -400,6 +407,8 @@ uses
   UniDataFamilias in 'src\DataModules\UniDataFamilias.pas' {dmFamilias1. TdmFamilias},
   UniDataFormasdePago in 'src\DataModules\UniDataFormasdePago.pas' {dmFormasdePago: TdmFormasdePago},
   UniDataGeneradorProcesos in 'src\DataModules\UniDataGeneradorProcesos.pas' {dmGeneradorProcesos: TDataModule},
+  UniDataMetadatosBBDD in 'src\DataModules\UniDataMetadatosBBDD.pas'
+    {dmMetadatosBBDD: TdmMetadatosBBDD},
   UniDataEmpleados in 'src\DataModules\UniDataEmpleados.pas' {dmEmpleados: TDataModule},
   UniDataGrupos in 'src\DataModules\UniDataGrupos.pas' {dmGrupos: TDataModule},
   UniDataIvas in 'src\DataModules\UniDataIvas.pas' {dmIvas: TDataModule},
@@ -1190,7 +1199,117 @@ uses
   UniDataPrincipalCertificadosRepositorio in
     'src\DataModules\UniDataPrincipalCertificadosRepositorio.pas',
   UniDataComprasSesionesPresentacionRepositorio in
-    'src\DataModules\UniDataComprasSesionesPresentacionRepositorio.pas';
+    'src\DataModules\UniDataComprasSesionesPresentacionRepositorio.pas',
+  UniDataCajaStockRepositorio in
+    'src\Caja\DataModules\UniDataCajaStockRepositorio.pas',
+  UniDataGenerarTicketCajaRepositorio in
+    'src\Caja\DataModules\UniDataGenerarTicketCajaRepositorio.pas',
+  inLibCajaStockPersistenciaIntf in
+    'src\Caja\Lib\inLibCajaStockPersistenciaIntf.pas',
+  inLibGenerarTicketCajaPersistenciaIntf in
+    'src\Caja\Lib\inLibGenerarTicketCajaPersistenciaIntf.pas',
+  UniDataAlmacenesEmpresaRepositorio in
+    'src\DataModules\UniDataAlmacenesEmpresaRepositorio.pas',
+  UniDataArticulosCodigosBarrasRepositorio in
+    'src\DataModules\UniDataArticulosCodigosBarrasRepositorio.pas',
+  UniDataBackupRepositorio in
+    'src\DataModules\UniDataBackupRepositorio.pas',
+  UniDataBusquedasCompraRepositorio in
+    'src\DataModules\UniDataBusquedasCompraRepositorio.pas',
+  UniDataColumnasDocumentoRepositorio in
+    'src\DataModules\UniDataColumnasDocumentoRepositorio.pas',
+  UniDataConfigCamposRepositorio in
+    'src\DataModules\UniDataConfigCamposRepositorio.pas',
+  UniDataCorreoTicketsRepositorio in
+    'src\DataModules\UniDataCorreoTicketsRepositorio.pas',
+  UniDataDatasetsRepositorio in
+    'src\DataModules\UniDataDatasetsRepositorio.pas',
+  UniDataDBStructureRepositorio in
+    'src\DataModules\UniDataDBStructureRepositorio.pas',
+  UniDataDestinoFacturaRepositorio in
+    'src\DataModules\UniDataDestinoFacturaRepositorio.pas',
+  UniDataFormatoDocumentoRepositorio in
+    'src\DataModules\UniDataFormatoDocumentoRepositorio.pas',
+  UniDataGridArticulosRepositorio in
+    'src\DataModules\UniDataGridArticulosRepositorio.pas',
+  UniDataGuiasGridRepositorio in
+    'src\DataModules\UniDataGuiasGridRepositorio.pas',
+  UniDataImpuestosRepositorio in
+    'src\DataModules\UniDataImpuestosRepositorio.pas',
+  UniDataInventarioNubeRepositorio in
+    'src\DataModules\UniDataInventarioNubeRepositorio.pas',
+  UniDataLicenciaAplicacionRepositorio in
+    'src\DataModules\UniDataLicenciaAplicacionRepositorio.pas',
+  UniDataPerfilesMtoRepositorio in
+    'src\DataModules\UniDataPerfilesMtoRepositorio.pas',
+  UniDataPermisosRepositorio in
+    'src\DataModules\UniDataPermisosRepositorio.pas',
+  UniDataRegistroPantallasRepositorio in
+    'src\DataModules\UniDataRegistroPantallasRepositorio.pas',
+  UniDataSepaRemesasVentaRepositorio in
+    'src\DataModules\UniDataSepaRemesasVentaRepositorio.pas',
+  UniDataTraduccionesDescargaRepositorio in
+    'src\DataModules\UniDataTraduccionesDescargaRepositorio.pas',
+  UniDataTraduccionesRepositorio in
+    'src\DataModules\UniDataTraduccionesRepositorio.pas',
+  UniDataUnidadesMedidaRepositorio in
+    'src\DataModules\UniDataUnidadesMedidaRepositorio.pas',
+  UniDataValidacionDocumentoRepositorio in
+    'src\DataModules\UniDataValidacionDocumentoRepositorio.pas',
+  UniDataValoresAutomaticosRepositorio in
+    'src\DataModules\UniDataValoresAutomaticosRepositorio.pas',
+  inLibAlmacenesEmpresaPersistenciaIntf in
+    'src\Lib\inLibAlmacenesEmpresaPersistenciaIntf.pas',
+  inLibArticulosCodigosBarrasPersistenciaIntf in
+    'src\Lib\inLibArticulosCodigosBarrasPersistenciaIntf.pas',
+  inLibBackupPersistenciaIntf in
+    'src\Lib\inLibBackupPersistenciaIntf.pas',
+  inLibBusquedasCompraPersistenciaIntf in
+    'src\Lib\inLibBusquedasCompraPersistenciaIntf.pas',
+  inLibColumnasDocumentoLecturasIntf in
+    'src\Lib\inLibColumnasDocumentoLecturasIntf.pas',
+  inLibConfigCamposPersistenciaIntf in
+    'src\Lib\inLibConfigCamposPersistenciaIntf.pas',
+  inLibCorreoTicketsLecturasIntf in
+    'src\Lib\inLibCorreoTicketsLecturasIntf.pas',
+  inLibDatasetsPersistenciaIntf in
+    'src\Lib\inLibDatasetsPersistenciaIntf.pas',
+  inLibDBStructurePersistenciaIntf in
+    'src\Lib\inLibDBStructurePersistenciaIntf.pas',
+  inLibDestinoFacturaPersistenciaIntf in
+    'src\Lib\inLibDestinoFacturaPersistenciaIntf.pas',
+  inLibFormatoDocumentoLecturasIntf in
+    'src\Lib\inLibFormatoDocumentoLecturasIntf.pas',
+  inLibGridArticulosBusqueda in
+    'src\Lib\inLibGridArticulosBusqueda.pas',
+  inLibGridArticulosPersistenciaIntf in
+    'src\Lib\inLibGridArticulosPersistenciaIntf.pas',
+  inLibGuiasGridPersistenciaIntf in
+    'src\Lib\inLibGuiasGridPersistenciaIntf.pas',
+  inLibImpuestosLecturasIntf in
+    'src\Lib\inLibImpuestosLecturasIntf.pas',
+  inLibInventarioNubePersistenciaIntf in
+    'src\Lib\inLibInventarioNubePersistenciaIntf.pas',
+  inLibLicenciaAplicacionPersistenciaIntf in
+    'src\Lib\inLibLicenciaAplicacionPersistenciaIntf.pas',
+  inLibPerfilesMtoPersistenciaIntf in
+    'src\Lib\inLibPerfilesMtoPersistenciaIntf.pas',
+  inLibPermisosPersistenciaIntf in
+    'src\Lib\inLibPermisosPersistenciaIntf.pas',
+  inLibRegistroPantallasPersistenciaIntf in
+    'src\Lib\inLibRegistroPantallasPersistenciaIntf.pas',
+  inLibSepaRemesasVentaLecturasIntf in
+    'src\Lib\inLibSepaRemesasVentaLecturasIntf.pas',
+  inLibTraduccionesDescargaPersistenciaIntf in
+    'src\Lib\inLibTraduccionesDescargaPersistenciaIntf.pas',
+  inLibTraduccionesPersistenciaIntf in
+    'src\Lib\inLibTraduccionesPersistenciaIntf.pas',
+  inLibUnidadesMedidaPersistenciaIntf in
+    'src\Lib\inLibUnidadesMedidaPersistenciaIntf.pas',
+  inLibValidacionDocumentoLecturasIntf in
+    'src\Lib\inLibValidacionDocumentoLecturasIntf.pas',
+  inLibValoresAutomaticosPersistenciaIntf in
+    'src\Lib\inLibValoresAutomaticosPersistenciaIntf.pas';
 
 {$R *.res}
 {$R fondo.res}

@@ -69,7 +69,7 @@ type
 implementation
 
 uses
-  inLibWin, inLibShowMto;
+  inLibWin, inLibShowMto, UniDataDestinoFacturaRepositorio;
 
 {$R *.dfm}
 
@@ -119,7 +119,10 @@ begin
   begin
     sSerie  := ds.FieldByName('SERIE_FAC_VFCOLA').AsString;
     sNumero := ds.FieldByName('NUMERO_FAC_VFCOLA').AsString;
-    sCall   := ResolverCallFactura(ConexionPrincipal,sNumero, sSerie);
+    sCall := ResolverCallFactura(
+      CrearResolutorDestinoFacturaUniDAC(ConexionPrincipal),
+      sNumero,
+      sSerie);
     ShowMto(Self.Owner, sCall, sNumero + ',' + sSerie);
   end;
 end;

@@ -333,12 +333,13 @@ uses
   inMtoModalSelAlmacenAlbaran, inMtoModalDocsCreados, inLibGenBusq,
   inLibShowMto, inLibFiltroUsuario, inLibArticulosResolverIntf,
   inLibArticulosValidadorIntf,
-  inLibVentasImpuestos,
-  inLibValoresAutomaticos,
+  inLibVentasImpuestos, UniDataImpuestosRepositorio,
+  inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   inLibGridTallasInline,
   inLibEntradaAlbaranVentaPersistenciaIntf,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
-  inLibColumnasSku, inLibColumnasDocumento, UniDataGen,
+  inLibColumnasSku, inLibColumnasDocumento,
+  UniDataColumnasDocumentoRepositorio, UniDataGen,
   inLibValidacionDocumento, inLibPresentacionDocumento,
   inLibMsgArticulos, inLibMsgVentas,
   // Composicion del puerto de persistencia del pivote (V2).
@@ -605,7 +606,8 @@ begin
                          Precio.PrecioFinal);
               PonerFloat('PRECIO_VENTA_CIVA_ARTICULO_PEDLIN', 0);
             end;
-            PrepararLineaFiscalVenta(dmmPedidos.unqryTablaG.Connection,
+            PrepararLineaFiscalVenta(CrearLecturasImpuestos(
+              dmmPedidos.unqryTablaG.Connection),
               dmmPedidos.unqryTablaG, ds, 'PED', 'PEDLIN', 'TOTAL_PEDLIN');
             if Datos.RequiereSku then
               EnfocarSku(True);
@@ -626,8 +628,8 @@ end;
 
 function TfrmMtoPedidos.PorcentajeIvaPedido(const ATipoIva: string): Double;
 begin
-  Result := PorcentajeIvaDocumentoVenta(
-    dmmPedidos.unqryTablaG.Connection, dmmPedidos.unqryTablaG,
+  Result := PorcentajeIvaDocumentoVenta(CrearLecturasImpuestos(
+    dmmPedidos.unqryTablaG.Connection), dmmPedidos.unqryTablaG,
     'PED', ATipoIva);
 end;
 
@@ -1485,8 +1487,10 @@ end;
 
 procedure TfrmMtoPedidos.MostrarColumnasAtributoGlobalesPed;
 begin
-  MostrarColumnasAtributoGlobalesDocumento(
-    dmmPedidos.unqryTablaG.Connection, tvPedidosLineas);
+  AplicarNombresAtributosGlobalesDocumento(tvPedidosLineas,
+    CrearColumnasDocumentoLecturas(
+      dmmPedidos.unqryTablaG.Connection).
+        ListarNombresAtributosGlobales);
 end;
 
 procedure TfrmMtoPedidos.ModoEntradaResuelto(const ACodArt, ASku,

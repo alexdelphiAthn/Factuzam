@@ -464,6 +464,7 @@ uses
   inLibMsgVentas,
   inLibPermisosIntf,
   inLibVentasPantallaIntf,
+  UniDataDestinoFacturaRepositorio,
   UniDataVentasPantallaComposicion;
 
 {$R *.dfm}
@@ -590,7 +591,10 @@ begin
   sSerieFactura := tvFacturacion.DataController.DataSet.FieldByName(
                                                       'SERIE_FAC').AsString;
   ShowMto(Self.Owner,
-          ResolverCallFactura(ConexionPrincipal,sNroFactura, sSerieFactura),
+          ResolverCallFactura(
+            CrearResolutorDestinoFacturaUniDAC(ConexionPrincipal),
+            sNroFactura,
+            sSerieFactura),
           sNroFactura + ',' + sSerieFactura);
 end;
 

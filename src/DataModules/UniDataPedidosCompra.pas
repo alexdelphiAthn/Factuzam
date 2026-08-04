@@ -126,14 +126,15 @@ type
 implementation
 
 uses
-  inLibValoresAutomaticos, inLibContadorLineas,
+  inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
+  inLibContadorLineas,
   UniDataContadorLineasRepositorio,
   System.Diagnostics, System.UITypes, System.Generics.Collections,
   ComCtrls, cxListView,
   inLibPedidosCompra,
   UniDataPedidosCompraPendientes,
-  inLibComprasImpuestos,
-  inLibData,
+  inLibComprasImpuestos, UniDataImpuestosRepositorio,
+  inLibData, UniDataAlmacenesEmpresaRepositorio,
   inLibArticulosValidadorIntf,
   UniDataArticulosValidadorRepositorio,
   UniDataArticulos,
@@ -507,9 +508,11 @@ begin
       FieldByName('ESPIVOTE_HORIZONTAL_PEDC').AsString := 'N';
     if FindField('ESIVA_EXENTO_INTRACOMUNITARIO_PEDC') <> nil then
       FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_PEDC').AsString := 'N';
-    AplicarRecargoComprasEmpresa(ConexionPrincipal, unqryTablaG,
+    AplicarRecargoComprasEmpresa(
+      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
       'CODIGO_EMP_PEDC', 'ESIVA_RECARGO_COMPRAS_PEDC');
-    AplicarPorcentajesIvaCompra(ConexionPrincipal, unqryTablaG,
+    AplicarPorcentajesIvaCompra(
+      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
       'PEDC');
   end;
   RefrescarAlmacenes(
@@ -599,7 +602,8 @@ begin
   if (unqryTablaG.FieldByName('NUMERO_PEDC').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_PEDC').AsString = '') then
     GetCodigoAutoPedidoCompra;
-  AplicarPorcentajesIvaCompra(ConexionPrincipal, unqryTablaG,
+  AplicarPorcentajesIvaCompra(
+    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
     'PEDC');
   CalcularTotalesPedidoCompra;
 end;
@@ -766,7 +770,8 @@ begin
         unqrySkusPedc.Close;
       end;
     end;
-    PrepararLineaFiscalCompra(ConexionPrincipal, unqryTablaG,
+    PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionPrincipal),
+      unqryTablaG,
       unqryPedidosCompraLineas, 'PEDC', 'PEDCLIN', 'TOTAL_PEDCLIN');
   end;
 end;
@@ -1303,7 +1308,8 @@ begin
   begin
     FCalculandoTotales := True;
     try
-      CalcularTotalesDocumentoCompra(ConexionPrincipal, unqryTablaG,
+      CalcularTotalesDocumentoCompra(
+        CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
         unqryPedidosCompraLineas, 'PEDC', 'TOTAL_PEDCLIN',
         'TIPO_IVA_ARTICULO_PEDCLIN', 'PORCENTAJE_IVA_PEDCLIN');
       // Nº de prendas: TOTAL_PRENDAS_PEDC es columna calculada de la

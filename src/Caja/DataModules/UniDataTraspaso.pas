@@ -20,7 +20,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, Data.DB, Datasnap.DBClient, Uni, MemDS,
-  DBAccess, System.Math, System.StrUtils, inLibValoresAutomaticos,
+  DBAccess, System.Math, System.StrUtils,
+  UniDataValoresAutomaticosRepositorio,
   inLibContextoSesionIntf;
 
 type

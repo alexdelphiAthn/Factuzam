@@ -2,28 +2,37 @@
 {                                                                              }
 {  Módulo:       inLibPermisosUniDAC                                           }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       23/07/2026                                                    }
+{ Versión:       2.0.0                                                         }
+{   Fecha:       04/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Carga desde MariaDB las reglas usadas por el servicio de permisos.        }
+{    Construye permisos desde reglas obtenidas mediante un contrato estrecho. }
 {******************************************************************************}
 unit inLibPermisosUniDAC;
 
 interface
 
 uses
-  Uni,
-  inLibPermisosIntf;
+  System.SysUtils,
+  inLibPermisosIntf, inLibPermisosPersistenciaIntf;
 
 type
+  EErrorCargaPermisos = class(Exception)
+  private
+    FError: TErrorLecturaPermisos;
+  public
+    constructor Create(AError: TErrorLecturaPermisos;
+      const ADetalle: string);
+    property Error: TErrorLecturaPermisos read FError;
+  end;
+
   TCargadorPermisosUniDAC = class
   public
     class function Cargar(
-      AConexion: TUniConnection;
+      const ARepositorio: IRepositorioPermisos;
       const AIdentidad: TIdentidadPermisos
     ): IPermisosAplicacion;
   end;
@@ -31,50 +40,51 @@ type
 implementation
 
 uses
-  System.SysUtils, System.Generics.Collections,
-  inLibPermisos, inLibMsgConfiguracion;
+  System.Generics.Collections,
+  inLibPermisos;
+
+constructor EErrorCargaPermisos.Create(
+  AError: TErrorLecturaPermisos; const ADetalle: string);
+begin
+  inherited Create(ADetalle);
+  FError := AError;
+end;
 
 class function TCargadorPermisosUniDAC.Cargar(
-  AConexion: TUniConnection;
+  const ARepositorio: IRepositorioPermisos;
   const AIdentidad: TIdentidadPermisos): IPermisosAplicacion;
 var
-  qry: TUniQuery;
-  Reglas: TList<TReglaPermiso>;
-  Regla: TReglaPermiso;
+  i: Integer;
+  oReglas: TList<TReglaPermiso>;
+  oResultado: TResultadoLecturaPermisos;
 begin
-  if (AConexion = nil) or (not AConexion.Connected) then
-    raise Exception.Create(SErrorConexionPermisosNoDisponible);
-  Reglas := TList<TReglaPermiso>.Create;
+  if not Assigned(ARepositorio) then
+  begin
+    raise EErrorCargaPermisos.Create(
+      elpConexionNoDisponible,
+      'No se ha configurado el repositorio de permisos.');
+  end;
+  oResultado := ARepositorio.CargarReglas(AIdentidad);
+  if not oResultado.Exito then
+  begin
+    raise EErrorCargaPermisos.Create(
+      oResultado.Error, oResultado.Detalle);
+  end;
+  oReglas := TList<TReglaPermiso>.Create;
   try
-    qry := TUniQuery.Create(nil);
-    try
-      qry.Connection := AConexion;
-      qry.SQL.Text :=
-        'SELECT USUARIO_GRUPO_PERM, CODIGO_PERM, VALOR_PERM' +
-        '  FROM fza_permisos' +
-        ' WHERE USUARIO_GRUPO_PERM IN (:U, :G, :A)';
-      qry.ParamByName('U').AsString := AIdentidad.Usuario;
-      qry.ParamByName('G').AsString := AIdentidad.Grupo;
-      qry.ParamByName('A').AsString := 'Todos';
-      qry.Open;
-      while not qry.Eof do
-      begin
-        Regla := TReglaPermiso.Crear(
-          qry.FieldByName('USUARIO_GRUPO_PERM').AsString,
-          qry.FieldByName('CODIGO_PERM').AsString,
-          SameText(qry.FieldByName('VALOR_PERM').AsString, 'S'));
-        Reglas.Add(Regla);
-        qry.Next;
-      end;
-    finally
-      FreeAndNil(qry);
+    for i := 0 to Length(oResultado.Reglas) - 1 do
+    begin
+      oReglas.Add(TReglaPermiso.Crear(
+        oResultado.Reglas[i].Sujeto,
+        oResultado.Reglas[i].Codigo,
+        oResultado.Reglas[i].Permitido));
     end;
     Result := TPermisosAplicacion.Create(
       AIdentidad,
-      Reglas.ToArray,
+      oReglas.ToArray,
       True);
   finally
-    FreeAndNil(Reglas);
+    FreeAndNil(oReglas);
   end;
 end;
 

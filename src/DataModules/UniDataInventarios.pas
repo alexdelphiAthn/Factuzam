@@ -234,7 +234,7 @@ uses
   System.StrUtils,      // IfThen(Boolean, string, string) para snapshot
   inLibUser,            // Usuario logueado
                // RegistroLog.RegistrarInformacion para metricas
-  inLibData,
+  UniDataAlmacenesEmpresaRepositorio,
   UniDataConn,
   inLibMsgArticulos;
 

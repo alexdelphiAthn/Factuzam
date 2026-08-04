@@ -210,7 +210,8 @@ type
 implementation
 
 uses
-  inLibWin, inLibUser, inLibDevExp, inLibShowMto, inLibFotos;
+  inLibWin, inLibUser, inLibDevExp, inLibShowMto, inLibFotos,
+  UniDataDestinoFacturaRepositorio;
 
 {$R *.dfm}
 
@@ -278,7 +279,8 @@ begin
   begin
     ShowMto(Self.Owner,
             ResolverCallFactura(
-              ConexionPrincipal,
+              CrearResolutorDestinoFacturaUniDAC(
+                ConexionPrincipal),
               FieldByName('NUMERO_FAC').AsString,
               FieldByName('SERIE_FAC').AsString),
             FieldByName('NUMERO_FAC').AsString + ',' +

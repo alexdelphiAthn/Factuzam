@@ -21,7 +21,8 @@ function CrearRepositorioSeriesEmpresaUniDAC(
 implementation
 
 uses
-  System.SysUtils, Data.DB, inLibValoresAutomaticos, inLibMsgComun;
+  System.SysUtils, Data.DB, UniDataValoresAutomaticosRepositorio,
+  inLibMsgComun;
 
 const
   SQL_TIPOS_DOCUMENTO =

@@ -16,8 +16,9 @@ unit inLibGestorPerfilesMto;
 interface
 
 uses
-  System.Classes, Vcl.Forms, Data.DB, Uni, cxLabel, cxGridCustomTableView,
-  inLibPerfilesUsuarioIntf, inLibConfigCamposIntf, inLibLogIntf;
+  System.Classes, Vcl.Forms, Data.DB, cxLabel, cxGridCustomTableView,
+  inLibPerfilesUsuarioIntf, inLibPerfilesMtoPersistenciaIntf,
+  inLibConfigCamposIntf, inLibLogIntf;
 
 type
   TSolicitarDestinoPerfilMto = function(
@@ -44,6 +45,7 @@ type
     FEtiquetaTabla: TcxLabel;
     FServicioLectura: ILectorPerfilesUsuario;
     FServicioEscritura: IEscritorPerfilesUsuario;
+    FPersistencia: IPersistenciaPerfilesMto;
     FConfiguracionCampos: IConfiguracionCampos;
     FRegistroLog: IRegistroLog;
     FSolicitarDestino: TSolicitarDestinoPerfilMto;
@@ -69,6 +71,8 @@ type
       AResetearGrid: TResetearGridPerfilMto;
       ABorrarGuias: TBorrarGuiasPerfilMto);
     destructor Destroy; override;
+    procedure AsignarPersistencia(
+      const APersistencia: IPersistenciaPerfilesMto);
     procedure CargarPerfil(
       const AUsuario, AGrupo: string);
     function Valor(
@@ -81,15 +85,11 @@ type
     procedure ConstruirPerfilesLayout(
       const APermisos: string;
       APerfiles: TPerfilList);
-    procedure GrabarLayout(
-      const ADescripcion: string;
-      AConexion: TUniConnection);
+    procedure GrabarLayout(const ADescripcion: string);
     procedure ResetearLayout(const ADescripcion: string);
     procedure AbrirPerfiles(
       AVisible: Boolean;
-      AConsulta: TUniQuery;
-      const ANombreDataModule: string;
-      AConexion: TUniConnection);
+      const ANombreDataModule: string);
     procedure RestaurarFoco(AVista: TcxCustomGridTableView);
     property Perfil: TProfileDicc read FPerfil;
   end;
@@ -97,7 +97,7 @@ type
 implementation
 
 uses
-  System.SysUtils, System.Generics.Collections, Data.DBCommon,
+  System.SysUtils, System.Generics.Collections, Data.DBCommon, Uni,
   Vcl.Controls, cxGridDBTableView, inLibDevExp, inLibUser,
   inLibMsgComun, inLibMsgConfiguracion;
 
@@ -120,6 +120,7 @@ begin
   FEtiquetaTabla := AEtiquetaTabla;
   FServicioLectura := AServicioLectura;
   FServicioEscritura := AServicioEscritura;
+  FPersistencia := nil;
   FConfiguracionCampos := AConfiguracionCampos;
   FRegistroLog := ARegistroLog;
   FSolicitarDestino := ASolicitarDestino;
@@ -134,9 +135,16 @@ begin
   FreeAndNil(FPerfil);
   FServicioLectura := nil;
   FServicioEscritura := nil;
+  FPersistencia := nil;
   FConfiguracionCampos := nil;
   FRegistroLog := nil;
   inherited;
+end;
+
+procedure TGestorPerfilesMto.AsignarPersistencia(
+  const APersistencia: IPersistenciaPerfilesMto);
+begin
+  FPersistencia := APersistencia;
 end;
 
 procedure TGestorPerfilesMto.CargarPerfil(
@@ -344,8 +352,7 @@ begin
 end;
 
 procedure TGestorPerfilesMto.GrabarLayout(
-  const ADescripcion: string;
-  AConexion: TUniConnection);
+  const ADescripcion: string);
 var
   sPermisos: string;
   oPerfiles: TPerfilList;
@@ -360,20 +367,17 @@ begin
       if not Assigned(FServicioEscritura) then
         raise Exception.Create(
           SErrorServicioPerfilesUsuarioNoConfigurado);
-      FServicioEscritura.EliminarPerfil(
-        sPermisos, FFormulario.Name);
-      ConstruirPerfilesLayout(sPermisos, oPerfiles);
-      if not Assigned(AConexion) then
+      if not Assigned(FPersistencia) then
         raise Exception.Create(
-          SErrorConexionPrincipalNoDisponible);
-      AConexion.StartTransaction;
-      try
-        FServicioEscritura.GrabarPerfiles(oPerfiles);
-        AConexion.Commit;
-      except
-        AConexion.Rollback;
-        raise;
-      end;
+          SErrorPersistenciaPerfilesNoConfigurada);
+      FPersistencia.GuardarAtomico(
+        procedure
+        begin
+          FServicioEscritura.EliminarPerfil(
+            sPermisos, FFormulario.Name);
+          ConstruirPerfilesLayout(sPermisos, oPerfiles);
+          FServicioEscritura.GrabarPerfiles(oPerfiles);
+        end);
     finally
       FreeAndNil(oPerfiles);
       Screen.Cursor := crDefault;
@@ -410,47 +414,15 @@ end;
 
 procedure TGestorPerfilesMto.AbrirPerfiles(
   AVisible: Boolean;
-  AConsulta: TUniQuery;
-  const ANombreDataModule: string;
-  AConexion: TUniConnection);
+  const ANombreDataModule: string);
 begin
-  if AVisible and Assigned(AConsulta) then
+  if AVisible then
   begin
-    if ANombreDataModule = '' then
-    begin
-      if (Pos('Nothing', AConsulta.SQL.Text) > 0) or
-         (Trim(AConsulta.SQL.Text) = '') then
-      begin
-        AConsulta.SQL.Text :=
-          'SELECT * ' +
-          '  FROM fza_usuarios_perfiles ' +
-          ' WHERE (KEY_USUPER = :NameFormModule)';
-        AConsulta.ParamByName(
-          'NameFormModule').AsString := FFormulario.Name;
-      end;
-    end
-    else
-    begin
-      if (Pos('Nothing', AConsulta.SQL.Text) > 0) or
-         (Trim(AConsulta.SQL.Text) = '') or
-         (Pos(':NameDataModule', AConsulta.SQL.Text) > 0) then
-      begin
-        AConsulta.SQL.Text :=
-          'SELECT * ' +
-          '  FROM fza_usuarios_perfiles ' +
-          ' WHERE ((KEY_USUPER = :NameDataModule) ' +
-          '    OR  (KEY_USUPER = :NameFormModule)) ';
-        AConsulta.ParamByName(
-          'NameDataModule').AsString := FFormulario.Name;
-        AConsulta.ParamByName(
-          'NameFormModule').AsString := ANombreDataModule;
-      end;
-    end;
-    if not AConsulta.Active then
-    begin
-      AConsulta.Connection := AConexion;
-      AConsulta.Open;
-    end;
+    if not Assigned(FPersistencia) then
+      raise Exception.Create(
+        SErrorPersistenciaPerfilesNoConfigurada);
+    FPersistencia.AbrirPerfiles(
+      FFormulario.Name, ANombreDataModule);
   end;
 end;
 

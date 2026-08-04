@@ -16,7 +16,8 @@ unit inLibValidacionDocumento;
 interface
 
 uses
-  Data.DB, Uni, inLibDocumentoIntf, inLibArticulosValidadorIntf;
+  Data.DB, inLibDocumentoIntf, inLibArticulosValidadorIntf,
+  inLibValidacionDocumentoLecturasIntf;
 
 type
   TAccionCabeceraDocumento = procedure of object;
@@ -42,11 +43,9 @@ procedure AsegurarCabeceraPersistidaCompra(
   ACabecera, ALineas: TDataSet;
   const AConfiguracion: TConfiguracionDocumento;
   AValidarCabecera: TAccionCabeceraCompra);
-function SqlArticulosSinSistemaTallasCompra(
-  const AConfiguracion: TConfiguracionDocumento): string;
 function PuedeActivarTallasHorizontalCompra(
   ACabecera, ALineas: TDataSet;
-  AConexion: TUniConnection;
+  const ALecturas: IValidacionDocumentoLecturas;
   const AConfiguracion: TConfiguracionDocumento;
   AAsegurarCabecera: TAccionCabeceraCompra;
   AValidarPivote: TValidadorPivoteCompra;
@@ -271,32 +270,17 @@ begin
     ACabecera, ALineas, AConfiguracion, AValidarCabecera);
 end;
 
-function SqlArticulosSinSistemaTallasCompra(
-  const AConfiguracion: TConfiguracionDocumento): string;
-begin
-  Result :=
-    'SELECT DISTINCT L.' + AConfiguracion.CampoArticuloLinea +
-    ' AS ART ' +
-    '  FROM ' + AConfiguracion.TablaLineas + ' L ' +
-    ' WHERE L.' + AConfiguracion.CampoSerieLinea + ' = :serie ' +
-    '   AND L.' + AConfiguracion.CampoNumeroLinea + ' = :numero ' +
-    '   AND COALESCE(TRIM(L.' +
-    AConfiguracion.CampoArticuloLinea + '), '''') <> '''' ' +
-    '   AND (L.' + AConfiguracion.CampoPivoteLinea + ' IS NULL ' +
-    '        OR L.' + AConfiguracion.CampoPivoteLinea + ' = 0) ' +
-    ' ORDER BY ART';
-end;
-
 function PuedeActivarTallasHorizontalCompra(
   ACabecera, ALineas: TDataSet;
-  AConexion: TUniConnection;
+  const ALecturas: IValidacionDocumentoLecturas;
   const AConfiguracion: TConfiguracionDocumento;
   AAsegurarCabecera: TAccionCabeceraCompra;
   AValidarPivote: TValidadorPivoteCompra;
   var AMensaje: string): Boolean;
 var
-  oConsulta: TUniQuery;
+  aArticulos: TArray<string>;
   oIncidencias: TStringList;
+  sArticulo: string;
   sNumero: string;
   sSerie: string;
 begin
@@ -337,28 +321,21 @@ begin
         AConfiguracion.CampoSerieCabecera).AsString);
       sNumero := Trim(ACabecera.FieldByName(
         AConfiguracion.CampoNumeroCabecera).AsString);
+      if not Assigned(ALecturas) then
+        raise EArgumentNilException.Create('ALecturas');
+      aArticulos := ALecturas.ListarArticulosSinSistemaTallas(
+        AConfiguracion, sSerie, sNumero);
       oIncidencias := TStringList.Create;
-      oConsulta := TUniQuery.Create(nil);
       try
-        oConsulta.Connection := AConexion;
-        oConsulta.SQL.Text :=
-          SqlArticulosSinSistemaTallasCompra(AConfiguracion);
-        oConsulta.ParamByName('serie').AsString := sSerie;
-        oConsulta.ParamByName('numero').AsString := sNumero;
-        oConsulta.Open;
-        while not oConsulta.Eof do
-        begin
+        for sArticulo in aArticulos do
           oIncidencias.Add(Format(SErrorArticuloSinSistemaTallasCompra,
-            [oConsulta.FieldByName('ART').AsString]));
-          oConsulta.Next;
-        end;
+            [sArticulo]));
         if oIncidencias.Count > 0 then
           AMensaje := Format(SErrorActivarTallasHorizontalesCompra,
             [oIncidencias.Text])
         else
           Result := AValidarPivote(AMensaje);
       finally
-        FreeAndNil(oConsulta);
         FreeAndNil(oIncidencias);
       end;
     end;

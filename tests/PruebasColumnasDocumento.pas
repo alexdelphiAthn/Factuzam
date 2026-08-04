@@ -68,7 +68,7 @@ type
     [Test]
     procedure AtributosGlobales_AplicaSoloTagsPositivos;
     [Test]
-    procedure AtributosGlobales_SinConexionConservaVista;
+    procedure AtributosGlobales_SinDatosConservaVista;
     [Test]
     procedure CargaCaptions_ConsultaNulaConservaCaption;
     [Test]
@@ -465,7 +465,7 @@ begin
 end;
 
 procedure TPruebasColumnasDocumento.
-  AtributosGlobales_SinConexionConservaVista;
+  AtributosGlobales_SinDatosConservaVista;
 var
   oColumna: TcxGridDBColumn;
 begin
@@ -473,8 +473,7 @@ begin
   oColumna.Tag := 1;
   oColumna.Caption := 'Anterior';
   oColumna.Visible := False;
-  MostrarColumnasAtributoGlobalesDocumento(nil, FVista);
-  MostrarColumnasAtributoGlobalesDocumento(nil, nil);
+  AplicarNombresAtributosGlobalesDocumento(FVista, []);
   AplicarNombresAtributosGlobalesDocumento(nil, ['Color']);
   Assert.AreEqual('Anterior', oColumna.Caption);
   Assert.IsFalse(oColumna.Visible);

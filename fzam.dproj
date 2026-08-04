@@ -426,6 +426,9 @@
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalContrasenaCopia.pas"/>
         <DCCReference Include="src\Modals\inMtoModalErrorAplicacion.pas"/>
+        <DCCReference Include="src\Modals\inMtoModalProcesosAuxiliaresBBDD.pas">
+            <Form>frmModalProcesosAuxiliaresBBDD</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalMensajeTexto.pas"/>
         <DCCReference Include="src\Forms\inMtoErroresEnvios.pas">
             <Form>frmMtoErroresEnvios</Form>
@@ -544,6 +547,7 @@
         <DCCReference Include="src\Lib\inLibVentasPantallaCrearAlbaran.pas"/>
         <DCCReference Include="src\Lib\inLibVentasPantallaIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataGeneradorProcesosRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataMetadatosBBDDRepositorio.pas"/>
         <DCCReference Include="src\DataModules\UniDataInformeBalanceSinTallasRepositorio.pas"/>
         <DCCReference Include="src\DataModules\UniDataInformeBalanceTallasRepositorio.pas"/>
         <DCCReference Include="src\DataModules\UniDataInformeDocumentosProveedorRepositorio.pas"/>
@@ -557,6 +561,7 @@
         <DCCReference Include="src\DataModules\UniDataMovimientosAlmacenRepositorio.pas"/>
         <DCCReference Include="src\DataModules\UniDataWizardEditarRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibGeneradorProcesosAplicacion.pas"/>
+        <DCCReference Include="src\Lib\inLibMetadatosBBDDIntf.pas"/>
         <DCCReference Include="src\Lib\inLibInformeBalanceSinTallasPersistenciaIntf.pas"/>
         <DCCReference Include="src\Lib\inLibInformeBalanceTallasPersistenciaIntf.pas"/>
         <DCCReference Include="src\Lib\inLibInformeDocumentosProveedorPersistenciaIntf.pas"/>
@@ -602,6 +607,10 @@
         <DCCReference Include="src\DataModules\UniDataGeneradorProcesos.pas">
             <Form>dmGeneradorProcesos</Form>
             <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataMetadatosBBDD.pas">
+            <Form>dmMetadatosBBDD</Form>
+            <DesignClass>TdmMetadatosBBDD</DesignClass>
         </DCCReference>
         <DCCReference Include="src\DataModules\UniDataEmpleados.pas">
             <Form>dmEmpleados</Form>
@@ -1473,6 +1482,61 @@
         <DCCReference Include="src\Lib\inLibPrincipalCertificadosIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataPrincipalCertificadosRepositorio.pas"/>
         <DCCReference Include="src\DataModules\UniDataComprasSesionesPresentacionRepositorio.pas"/>
+        <DCCReference Include="src\Caja\DataModules\UniDataCajaStockRepositorio.pas"/>
+        <DCCReference Include="src\Caja\DataModules\UniDataGenerarTicketCajaRepositorio.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibCajaStockPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibGenerarTicketCajaPersistenciaIntf.pas"/>
+        <DCCReference Include="src\DataModules\UniDataAlmacenesEmpresaRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataArticulosCodigosBarrasRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataBackupRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataBusquedasCompraRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataColumnasDocumentoRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataConfigCamposRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataCorreoTicketsRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataDatasetsRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataDBStructureRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataDestinoFacturaRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataFormatoDocumentoRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataGridArticulosRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataGuiasGridRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataImpuestosRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataInventarioNubeRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataLicenciaAplicacionRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataPerfilesMtoRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataPermisosRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataRegistroPantallasRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataSepaRemesasVentaRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataTraduccionesDescargaRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataTraduccionesRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataUnidadesMedidaRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataValidacionDocumentoRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataValoresAutomaticosRepositorio.pas"/>
+        <DCCReference Include="src\Lib\inLibAlmacenesEmpresaPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibArticulosCodigosBarrasPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibBackupPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibBusquedasCompraPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibColumnasDocumentoLecturasIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibConfigCamposPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibCorreoTicketsLecturasIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibDatasetsPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibDBStructurePersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibDestinoFacturaPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibFormatoDocumentoLecturasIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibGridArticulosBusqueda.pas"/>
+        <DCCReference Include="src\Lib\inLibGridArticulosPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibGuiasGridPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibImpuestosLecturasIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibInventarioNubePersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibLicenciaAplicacionPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibPerfilesMtoPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibPermisosPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibRegistroPantallasPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibSepaRemesasVentaLecturasIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibTraduccionesDescargaPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibTraduccionesPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibUnidadesMedidaPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibValidacionDocumentoLecturasIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibValoresAutomaticosPersistenciaIntf.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

@@ -47,15 +47,78 @@ type
     procedure SufijoFiscal_ExtraeSoloElPrefijoEsperado;
     [Test]
     procedure LecturasConConexionNula_DevuelvenValoresNeutros;
+    [Test]
+    procedure LecturasInyectadas_DevuelvenDatosSinAccesoARepositorio;
   end;
 
 implementation
 
 uses
-  inLibImpuestosComun;
+  inLibImpuestosComun, inLibImpuestosLecturasIntf;
+
+type
+  TLecturasImpuestosPrueba = class(TInterfacedObject, ILecturasImpuestos)
+  public
+    function LeerPorCodigo(const ACodigoIva: string;
+      out APorcentajes: TPorcentajesImpuestos): Boolean;
+    function LeerPorEmpresa(const ACodigoEmpresa: string;
+      out APorcentajes: TPorcentajesImpuestos): Boolean;
+    function LeerTipoIvaArticulo(
+      const ACodigoArticulo: string): string;
+    function LeerRecargoComprasEmpresa(
+      const ACodigoEmpresa: string): Boolean;
+    function LeerExentoIntracomunitarioProveedor(
+      const ACodigoProveedor: string): Boolean;
+    function LeerRetencionEmpresa(const ACodigoEmpresa: string;
+      AFecha: TDateTime): Double;
+  end;
 
 const
   MARGEN: Double = 0.000001;
+
+function TLecturasImpuestosPrueba.LeerPorCodigo(
+  const ACodigoIva: string;
+  out APorcentajes: TPorcentajesImpuestos): Boolean;
+begin
+  APorcentajes := Default(TPorcentajesImpuestos);
+  APorcentajes.CodigoIva := ACodigoIva;
+  APorcentajes.IvaNormal := 21;
+  APorcentajes.IvaReducido := 10;
+  APorcentajes.IvaSuperReducido := 4;
+  APorcentajes.RecargoNormal := 5.2;
+  Result := ACodigoIva <> '';
+end;
+
+function TLecturasImpuestosPrueba.LeerPorEmpresa(
+  const ACodigoEmpresa: string;
+  out APorcentajes: TPorcentajesImpuestos): Boolean;
+begin
+  Result := LeerPorCodigo('IVA-' + ACodigoEmpresa, APorcentajes);
+end;
+
+function TLecturasImpuestosPrueba.LeerTipoIvaArticulo(
+  const ACodigoArticulo: string): string;
+begin
+  Result := 'R';
+end;
+
+function TLecturasImpuestosPrueba.LeerRecargoComprasEmpresa(
+  const ACodigoEmpresa: string): Boolean;
+begin
+  Result := ACodigoEmpresa = 'EMP';
+end;
+
+function TLecturasImpuestosPrueba.LeerExentoIntracomunitarioProveedor(
+  const ACodigoProveedor: string): Boolean;
+begin
+  Result := ACodigoProveedor = 'PRV';
+end;
+
+function TLecturasImpuestosPrueba.LeerRetencionEmpresa(
+  const ACodigoEmpresa: string; AFecha: TDateTime): Double;
+begin
+  Result := 15;
+end;
 
 procedure TPruebasImpuestosComun.Preparar;
 begin
@@ -232,6 +295,28 @@ begin
     rIvaS, rIvaE, rRecN, rRecR, rRecS, rRecE));
   Assert.AreEqual('', ObtenerTipoIvaArticulo(nil, 'ART'));
   Assert.AreEqual('', ObtenerTipoIvaArticulo(nil, ''));
+end;
+
+procedure TPruebasImpuestosComun.
+  LecturasInyectadas_DevuelvenDatosSinAccesoARepositorio;
+var
+  oLecturas: ILecturasImpuestos;
+  rIvaN, rIvaR, rIvaS, rIvaE: Double;
+  rRecN, rRecR, rRecS, rRecE: Double;
+  sCodigoIva: string;
+begin
+  oLecturas := TLecturasImpuestosPrueba.Create;
+  Assert.IsTrue(LeerPorcentajesIvaPorCodigo(oLecturas, 'GENERAL',
+    rIvaN, rIvaR, rIvaS, rIvaE, rRecN, rRecR, rRecS, rRecE));
+  Assert.AreEqual(Double(21), rIvaN, MARGEN);
+  Assert.AreEqual(Double(10), rIvaR, MARGEN);
+  Assert.AreEqual(Double(4), rIvaS, MARGEN);
+  Assert.AreEqual(Double(5.2), rRecN, MARGEN);
+  Assert.AreEqual('R', ObtenerTipoIvaArticulo(oLecturas, 'ART'));
+  Assert.IsTrue(LeerPorcentajesIvaPorEmpresa(oLecturas, 'EMP',
+    sCodigoIva, rIvaN, rIvaR, rIvaS, rIvaE,
+    rRecN, rRecR, rRecS, rRecE));
+  Assert.AreEqual('IVA-EMP', sCodigoIva);
 end;
 
 end.

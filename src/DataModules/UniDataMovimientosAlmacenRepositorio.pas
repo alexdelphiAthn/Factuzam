@@ -36,7 +36,7 @@ uses
   Data.DB,
   System.SysUtils,
   inLibFiltroUsuario,
-  inLibValoresAutomaticos;
+  UniDataValoresAutomaticosRepositorio;
 
 const
   NOMBRE_SAVEPOINT_MOVIMIENTOS = 'FZAM_IA42_MOVIMIENTOS';

@@ -18,7 +18,8 @@ interface
 
 uses
   Uni, inLibDocumentoIntf, inLibFacturasServiciosIntf,
-  inLibFacturasPersistenciaIntf;
+  inLibFacturasPersistenciaIntf,
+  inLibValoresAutomaticosPersistenciaIntf;
 
 type
   TServicioMovimientosFactura = class(
@@ -28,10 +29,12 @@ type
     FConexion: TUniConnection;
     FEstrategiaDocumento: IEstrategiaDocumento;
     FRepositorio: IRepositorioMovimientosFactura;
+    FValoresAutomaticos: IRepositorioValoresAutomaticos;
   public
     constructor Create(
       AConexion: TUniConnection;
-      const ARepositorio: IRepositorioMovimientosFactura);
+      const ARepositorio: IRepositorioMovimientosFactura;
+      const AValoresAutomaticos: IRepositorioValoresAutomaticos);
     function GenerarSalidas(
       const ASolicitud: TSolicitudMovimientosFactura): Integer;
   end;
@@ -43,13 +46,15 @@ uses
 
 constructor TServicioMovimientosFactura.Create(
   AConexion: TUniConnection;
-  const ARepositorio: IRepositorioMovimientosFactura);
+  const ARepositorio: IRepositorioMovimientosFactura;
+  const AValoresAutomaticos: IRepositorioValoresAutomaticos);
 begin
   inherited Create;
   FConexion := AConexion;
   FEstrategiaDocumento := CrearEstrategiaDocumento(
     CrearConfiguracionDocumento(tdFactura, sdVenta));
   FRepositorio := ARepositorio;
+  FValoresAutomaticos := AValoresAutomaticos;
 end;
 
 function TServicioMovimientosFactura.GenerarSalidas(
@@ -82,7 +87,7 @@ begin
         if NumeroMovimiento = '' then
         begin
           NumeroMovimiento := ObtenerSiguienteContador(
-            FConexion,
+            FValoresAutomaticos,
             'MV',
             ASolicitud.Usuario);
           Datos.NumeroMovimiento := NumeroMovimiento;

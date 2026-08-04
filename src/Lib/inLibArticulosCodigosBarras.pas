@@ -9,7 +9,8 @@
 interface
 
 uses
-  Uni, inLibArticulosVariacionesIntf;
+  inLibArticulosVariacionesIntf,
+  inLibArticulosCodigosBarrasPersistenciaIntf;
 
 type
   TResultadoCodigosBarrasArticulo = record
@@ -20,7 +21,7 @@ type
   end;
 
 function GenerarCodigosBarrasArticulo(
-  AConexion: TUniConnection;
+  const APersistencia: IArticulosCodigosBarrasPersistencia;
   const AArticulosVariaciones: IArticulosVariaciones;
   const ACodigoArticulo, AUsuario: string;
   out AResultado: TResultadoCodigosBarrasArticulo): Boolean;
@@ -29,11 +30,8 @@ implementation
 
 uses
   System.SysUtils,
-  Data.DB,
-  DBAccess,
   inLibArticulosVariaciones,
-  inLibEAN13,
-  inLibValoresAutomaticos;
+  inLibEAN13;
 
 const
   cTipoContadorCodigoBarras = 'BA';
@@ -57,146 +55,75 @@ begin
 end;
 
 function CrearCodigoBarrasInterno(
-  AConexion: TUniConnection;
+  const APersistencia: IArticulosCodigosBarrasPersistencia;
   const AUsuario: string): string;
 var
-  sContador: string;
   sCodigoBase: string;
+  sContador: string;
 begin
-  sContador := ObtenerSiguienteContador(
-    AConexion, cTipoContadorCodigoBarras, AUsuario);
+  sContador := APersistencia.ObtenerSiguienteContador(
+    cTipoContadorCodigoBarras, AUsuario);
   sContador := NormalizarContadorCodigoBarras(sContador);
   sCodigoBase := cPrefijoCodigoBarrasInterno + sContador;
   Result := sCodigoBase + CalcularDigitoEAN13(sCodigoBase);
 end;
 
-procedure InsertarCodigoPrincipal(
-  AConsulta: TUniQuery;
-  const ACodigoSku, ACodigoBarras, AUsuario: string);
-begin
-  AConsulta.Close;
-  AConsulta.SQL.Text :=
-    'INSERT INTO fza_codigos_barras ' +
-    '  (CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, ' +
-    '   ESPRINCIPAL_CB, INSTANTE_ALTA, USUARIO_ALTA, ' +
-    '   USUARIO_MODIF) ' +
-    'VALUES (:codigo, :sku, :tipo, ''S'', ' +
-    '        CURRENT_TIMESTAMP, :usuario, :usuario)';
-  AConsulta.ParamByName('codigo').AsString := ACodigoBarras;
-  AConsulta.ParamByName('sku').AsString := ACodigoSku;
-  AConsulta.ParamByName('tipo').AsString := cTipoCodigoBarrasInterno;
-  AConsulta.ParamByName('usuario').AsString := AUsuario;
-  AConsulta.ExecSQL;
-end;
-
-procedure InsertarFilaCodigoFabricante(
-  AConsulta: TUniQuery;
-  const ACodigoSku, AUsuario: string);
-begin
-  AConsulta.Close;
-  AConsulta.SQL.Text :=
-    'INSERT INTO fza_codigos_barras ' +
-    '  (CODIGO_BARRAS_CB, CODIGO_UNIDAD_CB, TIPO_CODIGO_CB, ' +
-    '   ESPRINCIPAL_CB, INSTANTE_ALTA, USUARIO_ALTA, ' +
-    '   USUARIO_MODIF) ' +
-    'VALUES ('''', :sku, ''EAN13'', ''N'', ' +
-    '        CURRENT_TIMESTAMP, :usuario, :usuario)';
-  AConsulta.ParamByName('sku').AsString := ACodigoSku;
-  AConsulta.ParamByName('usuario').AsString := AUsuario;
-  AConsulta.ExecSQL;
-end;
-
 function GenerarCodigosBarrasArticulo(
-  AConexion: TUniConnection;
+  const APersistencia: IArticulosCodigosBarrasPersistencia;
   const AArticulosVariaciones: IArticulosVariaciones;
   const ACodigoArticulo, AUsuario: string;
   out AResultado: TResultadoCodigosBarrasArticulo): Boolean;
 var
-  ConsultaSkus: TUniQuery;
-  ConsultaCambio: TUniQuery;
-  bTxOwned: Boolean;
-  sCodigoSku: string;
+  aSkus: TArray<TEstadoCodigoBarrasSku>;
+  bTransaccionPropia: Boolean;
+  iIndice: Integer;
   sCodigoBarras: string;
 begin
   Result := False;
-  AResultado.PrincipalesGenerados := 0;
-  AResultado.FilasFabricanteCreadas := 0;
-  AResultado.SkusSinCambios := 0;
-  AResultado.MarcadoresAntiguosEliminados := 0;
-  if ACodigoArticulo <> '' then
+  AResultado := Default(TResultadoCodigosBarrasArticulo);
+  if (Trim(ACodigoArticulo) <> '') and Assigned(APersistencia) then
   begin
-    bTxOwned := not AConexion.InTransaction;
-    if bTxOwned then
-      AConexion.StartTransaction;
+    bTransaccionPropia := not APersistencia.EnTransaccion;
+    if bTransaccionPropia then
+      APersistencia.IniciarTransaccion;
     try
       AsegurarSkuArticuloActivo(
         AArticulosVariaciones, ACodigoArticulo, AUsuario);
-      ConsultaSkus := TUniQuery.Create(nil);
-      ConsultaCambio := TUniQuery.Create(nil);
-      try
-        ConsultaSkus.Connection := AConexion;
-        ConsultaCambio.Connection := AConexion;
-        ConsultaCambio.SQL.Text :=
-          'DELETE CB FROM fza_codigos_barras CB ' +
-          '  JOIN fza_articulos_skus SKU ' +
-          '    ON SKU.CODIGO_UNIDAD_SKU = CB.CODIGO_UNIDAD_CB ' +
-          ' WHERE SKU.CODIGO_ART_SKU = :art ' +
-          '   AND LEFT(CB.CODIGO_BARRAS_CB, 5) = ''_FAB_''';
-        ConsultaCambio.ParamByName('art').AsString := ACodigoArticulo;
-        ConsultaCambio.ExecSQL;
-        AResultado.MarcadoresAntiguosEliminados :=
-          ConsultaCambio.RowsAffected;
-        ConsultaSkus.SQL.Text :=
-          'SELECT SKU.CODIGO_UNIDAD_SKU, ' +
-          '       (SELECT COUNT(*) FROM fza_codigos_barras P ' +
-          '         WHERE P.CODIGO_UNIDAD_CB = SKU.CODIGO_UNIDAD_SKU ' +
-          '           AND P.ESPRINCIPAL_CB = ''S'') AS NUM_PRIN, ' +
-          '       (SELECT COUNT(*) FROM fza_codigos_barras V ' +
-          '         WHERE V.CODIGO_UNIDAD_CB = SKU.CODIGO_UNIDAD_SKU ' +
-          '           AND COALESCE(V.CODIGO_BARRAS_CB, '''') = '''') ' +
-          '         AS NUM_EMPTY ' +
-          '  FROM fza_articulos_skus SKU ' +
-          ' WHERE SKU.CODIGO_ART_SKU = :art ' +
-          '   AND SKU.ESACTIVO_SKU = ''S''';
-        ConsultaSkus.ParamByName('art').AsString := ACodigoArticulo;
-        ConsultaSkus.Open;
-        Result := not ConsultaSkus.IsEmpty;
-        while not ConsultaSkus.Eof do
+      AResultado.MarcadoresAntiguosEliminados :=
+        APersistencia.EliminarMarcadoresAntiguos(ACodigoArticulo);
+      aSkus := APersistencia.ConsultarSkusActivos(ACodigoArticulo);
+      Result := Length(aSkus) > 0;
+      for iIndice := 0 to High(aSkus) do
+      begin
+        if not aSkus[iIndice].TienePrincipal then
         begin
-          sCodigoSku :=
-            ConsultaSkus.FieldByName('CODIGO_UNIDAD_SKU').AsString;
-          if ConsultaSkus.FieldByName('NUM_PRIN').AsInteger = 0 then
-          begin
-            sCodigoBarras := CrearCodigoBarrasInterno(
-              AConexion, AUsuario);
-            InsertarCodigoPrincipal(
-              ConsultaCambio, sCodigoSku, sCodigoBarras, AUsuario);
-            Inc(AResultado.PrincipalesGenerados);
-          end
-          else if ConsultaSkus.FieldByName('NUM_EMPTY').AsInteger = 0 then
-          begin
-            InsertarFilaCodigoFabricante(
-              ConsultaCambio, sCodigoSku, AUsuario);
-            Inc(AResultado.FilasFabricanteCreadas);
-          end
-          else
-            Inc(AResultado.SkusSinCambios);
-          ConsultaSkus.Next;
-        end;
-      finally
-        FreeAndNil(ConsultaCambio);
-        FreeAndNil(ConsultaSkus);
+          sCodigoBarras := CrearCodigoBarrasInterno(
+            APersistencia, AUsuario);
+          APersistencia.InsertarCodigoPrincipal(
+            aSkus[iIndice].CodigoSku, sCodigoBarras,
+            cTipoCodigoBarrasInterno, AUsuario);
+          Inc(AResultado.PrincipalesGenerados);
+        end
+        else if not aSkus[iIndice].TieneFilaFabricante then
+        begin
+          APersistencia.InsertarFilaFabricante(
+            aSkus[iIndice].CodigoSku,
+            cTipoCodigoBarrasInterno, AUsuario);
+          Inc(AResultado.FilasFabricanteCreadas);
+        end
+        else
+          Inc(AResultado.SkusSinCambios);
       end;
       if Result then
       begin
-        if bTxOwned and AConexion.InTransaction then
-          AConexion.Commit;
+        if bTransaccionPropia and APersistencia.EnTransaccion then
+          APersistencia.ConfirmarTransaccion;
       end
-      else if bTxOwned and AConexion.InTransaction then
-        AConexion.Rollback;
+      else if bTransaccionPropia and APersistencia.EnTransaccion then
+        APersistencia.RevertirTransaccion;
     except
-      if bTxOwned and AConexion.InTransaction then
-        AConexion.Rollback;
+      if bTransaccionPropia and APersistencia.EnTransaccion then
+        APersistencia.RevertirTransaccion;
       raise;
     end;
   end;

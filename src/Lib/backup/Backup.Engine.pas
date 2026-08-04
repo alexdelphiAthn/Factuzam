@@ -1,10 +1,24 @@
-﻿unit Backup.Engine;
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       Backup.Engine                                                 }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       04/08/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo.                                    }
+{  SPDX-License-Identifier: MPL-2.0                                            }
+{  Descripción:                                                                }
+{    Genera copias y ejecuta restauraciones SQL mediante contratos mínimos.    }
+{******************************************************************************}
+unit Backup.Engine;
 
 interface
 
 uses
   Core_Interfaces, Backup.Types, System.Classes,
-  Data.DB, System.SysUtils, system.StrUtils;
+  Data.DB, System.SysUtils, System.StrUtils, System.Diagnostics,
+  inLibBackupPersistenciaIntf;
 
 type
   // AEtapa: nombre de tabla o etapa actual
@@ -15,6 +29,63 @@ type
                                     APaso, ATotal: Integer;
                                     AFilaGlobal,
                                     AFilasGlobalTotal: Integer) of object;
+
+  TComprobarCancelacionBackupEvent = procedure of object;
+  TProgresoRestauracionBackupEvent = procedure(
+    APosicion, ATotal, ASentencias: Integer) of object;
+
+  TEjecutorRestauracionSQL = class
+  private
+    FPersistencia: IPersistenciaRestauracionBackup;
+    FComprobarCancelacion: TComprobarCancelacionBackupEvent;
+    FOnProgreso: TProgresoRestauracionBackupEvent;
+    FLog: TStrings;
+    FFlujo: TStream;
+    FSentencia: TStringBuilder;
+    FDelimitador: string;
+    FCaracterCadena: Char;
+    FEnCadena: Boolean;
+    FEnComentarioBloque: Boolean;
+    FTieneContenidoEjecutable: Boolean;
+    FColacionesNormalizadas: Boolean;
+    FSentenciasEjecutadas: Integer;
+    FErrores: Integer;
+    FPosicion: Integer;
+    FTotal: Integer;
+    FUltimaPosicionNotificada: Int64;
+    FPrimerError: string;
+    procedure ComprobarCancelacion;
+    procedure Inicializar(AFlujo: TStream);
+    procedure NotificarProgreso(AForzar: Boolean = False);
+    procedure ProcesarLectura(ALector: TStreamReader);
+    procedure ProcesarLinea(const ALinea: string);
+    procedure ProcesarComentarioBloque(
+      const ALinea: string; var AIndice: Integer);
+    procedure ProcesarCadena(
+      const ALinea: string; var AIndice: Integer);
+    function ProcesarContenidoNormal(
+      const ALinea: string; var AIndice: Integer): Boolean;
+    procedure EjecutarSentenciaActual;
+    procedure NormalizarColaciones;
+    function EsLineaIgnorable(const ALinea: string): Boolean;
+    function EsDirectivaDelimitador(
+      const ALinea: string; out ADelimitador: string): Boolean;
+    function EsComentarioLinea(
+      const ALinea: string; AIndice: Integer): Boolean;
+    function CoincideDelimitador(
+      const ALinea: string; AIndice: Integer): Boolean;
+    function EsCreacionVista(const ASentencia: string): Boolean;
+  public
+    constructor Create(
+      const APersistencia: IPersistenciaRestauracionBackup;
+      AComprobarCancelacion: TComprobarCancelacionBackupEvent;
+      AOnProgreso: TProgresoRestauracionBackupEvent;
+      ALog: TStrings);
+    procedure Ejecutar(AFlujo: TStream);
+    property SentenciasEjecutadas: Integer read FSentenciasEjecutadas;
+    property Errores: Integer read FErrores;
+    property PrimerError: string read FPrimerError;
+  end;
 
   TDBBackupEngine = class
   private
@@ -53,10 +124,465 @@ type
       read FOnProgress write FOnProgress;
   end;
 
+function CrearFabricaPersistenciaBackupPredeterminada:
+  IFabricaPersistenciaBackup;
+
 implementation
+
+uses
+  UniDataBackupRepositorio;
 
 const
   MAX_BYTES_LOTE_EXTENDIDO = 1024 * 1024;
+  BYTES_ENTRE_PROGRESO_RESTAURACION = 4 * 1024 * 1024;
+
+constructor TEjecutorRestauracionSQL.Create(
+  const APersistencia: IPersistenciaRestauracionBackup;
+  AComprobarCancelacion: TComprobarCancelacionBackupEvent;
+  AOnProgreso: TProgresoRestauracionBackupEvent;
+  ALog: TStrings);
+begin
+  inherited Create;
+  if not Assigned(APersistencia) then
+  begin
+    raise EArgumentNilException.Create('APersistencia');
+  end;
+  FPersistencia := APersistencia;
+  FComprobarCancelacion := AComprobarCancelacion;
+  FOnProgreso := AOnProgreso;
+  FLog := ALog;
+end;
+
+procedure TEjecutorRestauracionSQL.ComprobarCancelacion;
+begin
+  if Assigned(FComprobarCancelacion) then
+  begin
+    FComprobarCancelacion;
+  end;
+end;
+
+procedure TEjecutorRestauracionSQL.Inicializar(AFlujo: TStream);
+begin
+  FFlujo := AFlujo;
+  FDelimitador := ';';
+  FCaracterCadena := #0;
+  FEnCadena := False;
+  FEnComentarioBloque := False;
+  FTieneContenidoEjecutable := False;
+  FColacionesNormalizadas := False;
+  FSentenciasEjecutadas := 0;
+  FErrores := 0;
+  FPrimerError := '';
+  FUltimaPosicionNotificada := 0;
+  FTotal := Integer(FFlujo.Size div 1024);
+  if FTotal <= 0 then
+  begin
+    FTotal := 1;
+  end;
+  FPosicion := 0;
+  if Assigned(FLog) then
+  begin
+    FLog.Add(
+      ' -- El DDL de MariaDB puede confirmar cambios de forma implícita;');
+    FLog.Add(' -- la restauración no promete rollback transaccional.');
+  end;
+end;
+
+procedure TEjecutorRestauracionSQL.NotificarProgreso(AForzar: Boolean);
+begin
+  if Assigned(FFlujo) then
+  begin
+    FPosicion := Integer(FFlujo.Position div 1024);
+    if FPosicion > FTotal then
+    begin
+      FPosicion := FTotal;
+    end;
+    if AForzar or
+       (FFlujo.Position - FUltimaPosicionNotificada >=
+        BYTES_ENTRE_PROGRESO_RESTAURACION) then
+    begin
+      if Assigned(FOnProgreso) then
+      begin
+        FOnProgreso(
+          FPosicion,
+          FTotal,
+          FSentenciasEjecutadas);
+      end;
+      FUltimaPosicionNotificada := FFlujo.Position;
+    end;
+  end;
+end;
+
+function TEjecutorRestauracionSQL.EsLineaIgnorable(
+  const ALinea: string): Boolean;
+var
+  sLinea: string;
+begin
+  sLinea := Trim(ALinea);
+  Result := (sLinea = '') or
+            StartsText('--', sLinea) or
+            StartsText('#', sLinea);
+end;
+
+function TEjecutorRestauracionSQL.EsDirectivaDelimitador(
+  const ALinea: string; out ADelimitador: string): Boolean;
+const
+  DIRECTIVA_DELIMITADOR = 'DELIMITER';
+var
+  sLinea: string;
+begin
+  Result := False;
+  ADelimitador := '';
+  sLinea := Trim(ALinea);
+  if Length(sLinea) >= Length(DIRECTIVA_DELIMITADOR) then
+  begin
+    Result := SameText(
+      Copy(sLinea, 1, Length(DIRECTIVA_DELIMITADOR)),
+      DIRECTIVA_DELIMITADOR);
+    if Result and (Length(sLinea) > Length(DIRECTIVA_DELIMITADOR)) then
+    begin
+      Result := CharInSet(
+        sLinea[Length(DIRECTIVA_DELIMITADOR) + 1],
+        [' ', #9]);
+    end;
+    if Result then
+    begin
+      ADelimitador := Trim(
+        Copy(sLinea, Length(DIRECTIVA_DELIMITADOR) + 1, MaxInt));
+      if ADelimitador = '' then
+      begin
+        ADelimitador := ';';
+      end;
+    end;
+  end;
+end;
+
+function TEjecutorRestauracionSQL.EsComentarioLinea(
+  const ALinea: string; AIndice: Integer): Boolean;
+var
+  bEsDobleGuion: Boolean;
+begin
+  bEsDobleGuion :=
+    (AIndice < Length(ALinea)) and
+    (ALinea[AIndice] = '-') and
+    (ALinea[AIndice + 1] = '-');
+  Result := False;
+  if bEsDobleGuion then
+  begin
+    Result := AIndice + 1 = Length(ALinea);
+    if not Result then
+    begin
+      Result := CharInSet(
+        ALinea[AIndice + 2],
+        [' ', #9, #13, #10]);
+    end;
+  end;
+  if not Result then
+  begin
+    Result := ALinea[AIndice] = '#';
+  end;
+end;
+
+function TEjecutorRestauracionSQL.CoincideDelimitador(
+  const ALinea: string; AIndice: Integer): Boolean;
+begin
+  Result :=
+    (FDelimitador <> '') and
+    (Copy(ALinea, AIndice, Length(FDelimitador)) = FDelimitador);
+end;
+
+function TEjecutorRestauracionSQL.EsCreacionVista(
+  const ASentencia: string): Boolean;
+var
+  sSentencia: string;
+begin
+  sSentencia := UpperCase(ASentencia);
+  sSentencia := StringReplace(sSentencia, #13, ' ', [rfReplaceAll]);
+  sSentencia := StringReplace(sSentencia, #10, ' ', [rfReplaceAll]);
+  Result :=
+    (Pos('CREATE ', sSentencia) > 0) and
+    (Pos(' VIEW ', sSentencia) > 0);
+end;
+
+procedure TEjecutorRestauracionSQL.ProcesarComentarioBloque(
+  const ALinea: string; var AIndice: Integer);
+begin
+  FSentencia.Append(ALinea[AIndice]);
+  if (ALinea[AIndice] = '*') and (AIndice < Length(ALinea)) and
+     (ALinea[AIndice + 1] = '/') then
+  begin
+    FSentencia.Append(ALinea[AIndice + 1]);
+    FEnComentarioBloque := False;
+    Inc(AIndice, 2);
+  end
+  else
+  begin
+    Inc(AIndice);
+  end;
+end;
+
+procedure TEjecutorRestauracionSQL.ProcesarCadena(
+  const ALinea: string; var AIndice: Integer);
+begin
+  FSentencia.Append(ALinea[AIndice]);
+  if (ALinea[AIndice] = '\') and (AIndice < Length(ALinea)) then
+  begin
+    FSentencia.Append(ALinea[AIndice + 1]);
+    Inc(AIndice, 2);
+  end
+  else if ALinea[AIndice] = FCaracterCadena then
+  begin
+    if (AIndice < Length(ALinea)) and
+       (ALinea[AIndice + 1] = FCaracterCadena) then
+    begin
+      FSentencia.Append(ALinea[AIndice + 1]);
+      Inc(AIndice, 2);
+    end
+    else
+    begin
+      FEnCadena := False;
+      Inc(AIndice);
+    end;
+  end
+  else
+  begin
+    Inc(AIndice);
+  end;
+end;
+
+function TEjecutorRestauracionSQL.ProcesarContenidoNormal(
+  const ALinea: string; var AIndice: Integer): Boolean;
+var
+  sResto: string;
+begin
+  Result := False;
+  if CoincideDelimitador(ALinea, AIndice) then
+  begin
+    EjecutarSentenciaActual;
+    Inc(AIndice, Length(FDelimitador));
+    sResto := Trim(Copy(ALinea, AIndice, MaxInt));
+    Result :=
+      (sResto = '') or
+      StartsText('--', sResto) or
+      StartsText('#', sResto);
+  end
+  else if (ALinea[AIndice] = '/') and
+          (AIndice < Length(ALinea)) and
+          (ALinea[AIndice + 1] = '*') then
+  begin
+    if (AIndice + 1 < Length(ALinea)) and
+       (ALinea[AIndice + 2] = '!') then
+    begin
+      FTieneContenidoEjecutable := True;
+    end;
+    FSentencia.Append(ALinea[AIndice]);
+    FSentencia.Append(ALinea[AIndice + 1]);
+    FEnComentarioBloque := True;
+    Inc(AIndice, 2);
+  end
+  else if EsComentarioLinea(ALinea, AIndice) then
+  begin
+    FSentencia.Append(Copy(ALinea, AIndice, MaxInt));
+    AIndice := Length(ALinea) + 1;
+    Result := True;
+  end
+  else if CharInSet(ALinea[AIndice], ['''', '"', '`']) then
+  begin
+    FCaracterCadena := ALinea[AIndice];
+    FEnCadena := True;
+    FTieneContenidoEjecutable := True;
+    FSentencia.Append(ALinea[AIndice]);
+    Inc(AIndice);
+  end
+  else
+  begin
+    if not CharInSet(ALinea[AIndice], [' ', #9, #13, #10]) then
+    begin
+      FTieneContenidoEjecutable := True;
+    end;
+    FSentencia.Append(ALinea[AIndice]);
+    Inc(AIndice);
+  end;
+end;
+
+procedure TEjecutorRestauracionSQL.ProcesarLinea(
+  const ALinea: string);
+var
+  bFinalizarLinea: Boolean;
+  iIndice: Integer;
+begin
+  iIndice := 1;
+  bFinalizarLinea := False;
+  while (iIndice <= Length(ALinea)) and not bFinalizarLinea do
+  begin
+    if FEnComentarioBloque then
+    begin
+      ProcesarComentarioBloque(ALinea, iIndice);
+    end
+    else if FEnCadena then
+    begin
+      ProcesarCadena(ALinea, iIndice);
+    end
+    else
+    begin
+      bFinalizarLinea := ProcesarContenidoNormal(ALinea, iIndice);
+    end;
+  end;
+  if FSentencia.Length > 0 then
+  begin
+    FSentencia.AppendLine;
+  end;
+end;
+
+procedure TEjecutorRestauracionSQL.NormalizarColaciones;
+var
+  aTablas: TArray<string>;
+  iTabla: Integer;
+begin
+  if not FColacionesNormalizadas then
+  begin
+    if Assigned(FLog) then
+    begin
+      FLog.Add(' -- Normalizando colaciones antes de crear vistas');
+    end;
+    FPersistencia.NormalizarBaseDatos;
+    aTablas := FPersistencia.ObtenerTablasConColacionNoValida;
+    for iTabla := Low(aTablas) to High(aTablas) do
+    begin
+      ComprobarCancelacion;
+      FPersistencia.NormalizarTabla(aTablas[iTabla]);
+    end;
+    if Assigned(FLog) and (Length(aTablas) > 0) then
+    begin
+      FLog.Add(
+        Format(' -- Tablas normalizadas: %d', [Length(aTablas)]));
+    end;
+    FColacionesNormalizadas := True;
+  end;
+end;
+
+procedure TEjecutorRestauracionSQL.EjecutarSentenciaActual;
+var
+  oReloj: TStopwatch;
+  sResumen: string;
+  sSentencia: string;
+begin
+  sSentencia := Trim(FSentencia.ToString);
+  FSentencia.Clear;
+  if FTieneContenidoEjecutable and (sSentencia <> '') then
+  begin
+    ComprobarCancelacion;
+    Inc(FSentenciasEjecutadas);
+    oReloj := TStopwatch.StartNew;
+    try
+      if EsCreacionVista(sSentencia) then
+      begin
+        NormalizarColaciones;
+      end;
+      FPersistencia.EjecutarSentencia(sSentencia);
+      if Assigned(FLog) and ((FSentenciasEjecutadas mod 250) = 0) then
+      begin
+        FLog.Add(Format(
+          ' -- [OK] Sentencias ejecutadas: %d | %d / %d KB',
+          [FSentenciasEjecutadas, FPosicion, FTotal]));
+      end;
+    except
+      on E: Exception do
+      begin
+        Inc(FErrores);
+        if FPrimerError = '' then
+        begin
+          FPrimerError := E.Message;
+        end;
+        sResumen := sSentencia;
+        if Length(sResumen) > 4000 then
+        begin
+          sResumen := Copy(sResumen, 1, 4000) + sLineBreak + '...';
+        end;
+        if Assigned(FLog) then
+        begin
+          FLog.Add(Format(
+            ' -- [ERROR] Sentencia %d: %s | Tiempo: %d ms',
+            [FSentenciasEjecutadas, E.Message,
+             oReloj.ElapsedMilliseconds]));
+          FLog.Add(sResumen);
+          FLog.Add('--------------------------------------------------');
+        end;
+        raise;
+      end;
+    end;
+    ComprobarCancelacion;
+  end;
+  FTieneContenidoEjecutable := False;
+end;
+
+procedure TEjecutorRestauracionSQL.ProcesarLectura(
+  ALector: TStreamReader);
+var
+  sLinea: string;
+  sNuevoDelimitador: string;
+begin
+  while not ALector.EndOfStream do
+  begin
+    ComprobarCancelacion;
+    sLinea := ALector.ReadLine;
+    if (FSentencia.Length = 0) and
+       (not FEnCadena) and
+       (not FEnComentarioBloque) and
+       EsDirectivaDelimitador(sLinea, sNuevoDelimitador) then
+    begin
+      FDelimitador := sNuevoDelimitador;
+    end
+    else if not ((FSentencia.Length = 0) and
+                 EsLineaIgnorable(sLinea)) then
+    begin
+      ProcesarLinea(sLinea);
+    end;
+    NotificarProgreso;
+  end;
+end;
+
+procedure TEjecutorRestauracionSQL.Ejecutar(AFlujo: TStream);
+var
+  oLector: TStreamReader;
+begin
+  if not Assigned(AFlujo) then
+  begin
+    raise EArgumentNilException.Create('AFlujo');
+  end;
+  ComprobarCancelacion;
+  FPersistencia.PrepararDestino;
+  Inicializar(AFlujo);
+  FSentencia := TStringBuilder.Create;
+  try
+    oLector := TStreamReader.Create(AFlujo, TEncoding.UTF8, True);
+    try
+      NotificarProgreso(True);
+      ProcesarLectura(oLector);
+      ComprobarCancelacion;
+      EjecutarSentenciaActual;
+      FPersistencia.ValidarEstructura;
+      FPosicion := FTotal;
+      NotificarProgreso(True);
+      if Assigned(FLog) then
+      begin
+        FLog.Add(Format(
+          ' -- Restauración SQL completada. Sentencias ejecutadas: %d',
+          [FSentenciasEjecutadas]));
+      end;
+    finally
+      FreeAndNil(oLector);
+    end;
+  finally
+    FreeAndNil(FSentencia);
+  end;
+end;
+
+function CrearFabricaPersistenciaBackupPredeterminada:
+  IFabricaPersistenciaBackup;
+begin
+  Result := CrearFabricaPersistenciaBackupUniDAC;
+end;
 
 constructor TDBBackupEngine.Create(const ALecturas: TServiciosLecturaBBDD;
                                    Writer: IScriptWriter;

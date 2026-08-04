@@ -634,9 +634,11 @@ uses
   inMtoFacturasCobrosVcl,
   inLibFacturasReapertura,
   inLibFacturasComposicion,
+  UniDataValoresAutomaticosRepositorio,
   inMtoModalFacturarTicket,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
-  inLibColumnasSku, inLibColumnasDocumento, UniDataGen,
+  inLibColumnasSku, inLibColumnasDocumento,
+  UniDataColumnasDocumentoRepositorio, UniDataGen,
   inLibPresentacionDocumento,
   // Composicion del puerto de persistencia del pivote (V2).
   UniDataPivoteVenta, UniDataColumnasSkuServicios;
@@ -1085,7 +1087,9 @@ begin
         AFormulario.ConexionPrincipal));
     oServicioMovimientos := TServicioMovimientosFactura.Create(
       AFormulario.ConexionPrincipal,
-      AFormulario.FPersistenciaFacturas.Movimientos);
+      AFormulario.FPersistenciaFacturas.Movimientos,
+      TRepositorioValoresAutomaticosUniDAC.Create(
+        AFormulario.ConexionPrincipal));
     oCasoUsoConsolidacion := CrearCasoUsoConsolidacionFactura(
       AFormulario.FPersistenciaFacturas.UnidadTrabajo,
       AFormulario.FPersistenciaFacturas.Consolidacion,
@@ -1353,9 +1357,11 @@ begin
     begin
       AFormulario.tsLineasFactura.Caption :=
         SCaptionTabLineasBorradorDesglose;
-      MostrarColumnasAtributoGlobalesDocumento(
-        AFormulario.dmmFacturas.unqryTablaG.Connection,
-        AFormulario.tvLineasFactura);
+      AplicarNombresAtributosGlobalesDocumento(
+        AFormulario.tvLineasFactura,
+        CrearColumnasDocumentoLecturas(
+          AFormulario.dmmFacturas.unqryTablaG.Connection).
+            ListarNombresAtributosGlobales);
     end;
   end;
 end;

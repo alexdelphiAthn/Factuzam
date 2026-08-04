@@ -261,11 +261,11 @@ public
 implementation
 
 uses
-  inLibValoresAutomaticos,
+  UniDataValoresAutomaticosRepositorio,
 
   System.Diagnostics,
   inLibFacturas,
-  inLibData,
+  UniDataAlmacenesEmpresaRepositorio,
   inLibVerifactu,
   inLibDocumentoFiscal,
   inLibDocumento,
@@ -273,6 +273,7 @@ uses
   inLibArticulosValidadorIntf,
   UniDataArticulosValidadorRepositorio,
   inLibLicenciaAplicacion,
+  UniDataLicenciaAplicacionRepositorio,
   inLibVentasImpuestos,
   inLibContadorLineas,
   UniDataContadorLineasRepositorio,

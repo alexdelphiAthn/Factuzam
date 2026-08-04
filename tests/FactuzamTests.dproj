@@ -345,6 +345,20 @@
         <DCCReference Include="PruebasMovimientosAlmacenAplicacion.pas"/>
         <DCCReference Include="PruebasInformesOla4IA43.pas"/>
         <DCCReference Include="PruebasFacturasPresentadorDetalle.pas"/>
+        <DCCReference Include="PruebasCajaStock.pas"/>
+        <DCCReference Include="PruebasCorreoTickets.pas"/>
+        <DCCReference Include="PruebasFormatoDocumento.pas"/>
+        <DCCReference Include="PruebasGenerarTicketCaja.pas"/>
+        <DCCReference Include="PruebasInventarioNube.pas"/>
+        <DCCReference Include="PruebasSepaRemesasVenta.pas"/>
+        <DCCReference Include="..\src\Lib\backup\Backup.Engine.pas"/>
+        <DCCReference Include="..\src\Lib\backup\Backup.Types.pas"/>
+        <DCCReference Include="..\src\Lib\backup\Core_Engine.pas"/>
+        <DCCReference Include="..\src\Lib\backup\Core_Helpers.pas"/>
+        <DCCReference Include="..\src\Lib\backup\Core_Interfaces.pas"/>
+        <DCCReference Include="..\src\Lib\backup\Providers_MySQL.pas"/>
+        <DCCReference Include="..\src\Lib\backup\Providers_MySQL_Helpers.pas"/>
+        <DCCReference Include="..\src\Lib\backup\ScriptWriters.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

@@ -399,6 +399,8 @@ uses inLibData,
      inMtoModalGuardarFiltro,
      inMtoModalGestionFiltros,
      UniDataGen, uGenericIfThen,
+     UniDataGuiasGridRepositorio,
+     UniDataPerfilesMtoRepositorio,
      inMtoFotoArticulo, inMtoStockConsulta,
      inMtoModalGridGuias,
      System.Diagnostics,    // TStopwatch para cronometrar carga inicial
@@ -484,9 +486,7 @@ begin
       (tdmDataModule as TdmBase).dsPerfiles;
     FGestorPerfiles.AbrirPerfiles(
       bTabVisible,
-      (tdmDataModule as TdmBase).unqryPerfiles,
-      (tdmDataModule as TdmBase).Name,
-      ConexionTrabajo);
+      (tdmDataModule as TdmBase).Name);
   end;
 end;
 
@@ -579,7 +579,7 @@ procedure TfrmMtoGen.sbGrabarGridClick(Sender: TObject);
 begin
   inherited;
   FGestorPerfiles.GrabarLayout(
-    'Grabar Grids', ConexionPrincipal);
+    'Grabar Grids');
 end;
 
 procedure TfrmMtoGen.sbResetGridClick(Sender: TObject);
@@ -1041,6 +1041,14 @@ begin
     end;
     if Assigned(tdmDataModule) then
     begin
+      FGestorGuias.AsignarPersistencia(
+        CrearPersistenciaGuiasGridUniDAC(
+          ConexionTrabajo));
+      FGestorPerfiles.AsignarPersistencia(
+        CrearPersistenciaPerfilesMtoUniDAC(
+          ConexionPrincipal,
+          ConexionTrabajo,
+          TdmBase(tdmDataModule).unqryPerfiles));
       // El DM ya no busca dsTablaG con GetOwnerForm: el form empuja el
       // maestro y se suscribe al aviso de insercion (misma pauta que
       // TdmFacturas en la Fase 3).
@@ -1470,8 +1478,8 @@ begin
     VincularFotoArticulo, MostrarStockArticulo);
   FGestorGuias := TGestorGuiasGridMto.Create(
     Self, cxgrdPrincipal, cxGrdDBTabPrin,
-    InformesGuiasCache, GetConexionTrabajo,
-    ObtenerConsultaGuias, EjecutarModalGuias, RegistroLog);
+    InformesGuiasCache, ObtenerConsultaGuias,
+    EjecutarModalGuias, RegistroLog);
   FGestorPerfiles := TGestorPerfilesMto.Create(
     Self, dsTablaG, lblTablaOrigen,
     PerfilesLectura, PerfilesEscritura,

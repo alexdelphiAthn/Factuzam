@@ -18,9 +18,10 @@ interface
 
 uses
   System.Generics.Defaults, System.Generics.Collections, System.Contnrs,
-  Classes, Windows, Forms, vcl.Menus, Controls, Data.DB, Uni,
+  Classes, Windows, Forms, vcl.Menus, Controls,
   System.SysUtils,
-  System.StrUtils, inLibUser, Vcl.Buttons, Types, inLibLogIntf;
+  System.StrUtils, inLibUser, Vcl.Buttons, Types, inLibLogIntf,
+  inLibRegistroPantallasPersistenciaIntf;
 
 type
 
@@ -75,10 +76,12 @@ type
    FList:TObjectList<TfzaForm>;
    FOwner:TComponent;
    FRegistroLog: IRegistroLog;
+   FLector: ILectorRegistroPantallas;
  public
-   constructor Create(Owner:TComponent; const ARegistroLog: IRegistroLog);
+   constructor Create(Owner:TComponent; const ARegistroLog: IRegistroLog;
+     const ALector: ILectorRegistroPantallas);
    destructor Destroy; override;
-   procedure Charge(nConn:TUniConnection);
+   procedure Charge;
    function GetDataModuleName(sUnitName:string):String;
    function GetElement(sCall:string):TfzaForm;
    function GetShortCutListOrd:TList<integer>;
@@ -107,6 +110,10 @@ implementation
 
 uses
   inLibRegistroPantallas;
+
+resourcestring
+  SErrorLectorRegistroPantallasNoDisponible =
+    'El lector del registro de pantallas no está disponible.';
 
 
 { TfzaForm }
@@ -218,42 +225,24 @@ end;
 
 { TfzaWinF }
 
-procedure TfzaWinF.Charge(nConn: TUniConnection);
+procedure TfzaWinF.Charge;
 var
-  qrySol: TUniQuery;
-  ozaForm:TfzaForm;
-  fldNumVent: TField;
-  iNumVent: Integer;
+  aPantallas: TArray<TPantallaRegistrada>;
+  oPantalla: TPantallaRegistrada;
+  ozaForm: TfzaForm;
 begin
-  qrySol := TUniQuery.Create(nil);
-  try
-    qrySol.Connection := nConn;
-    qrySol.SQL.Text := 'SELECT * FROM fza_winforms';
-    qrySol.Open;
-    while not qrySol.Eof  do
-    begin
-      With qrySol do
-      begin
-        fldNumVent := FindField('NUM_VENTANAS_WINF');
-        if (fldNumVent <> nil) and (not fldNumVent.IsNull) then
-          iNumVent := fldNumVent.AsInteger
-        else
-          iNumVent := 1;
-        ozaForm := TfzaForm.Create(FieldByName('CALL_WINF').AsString,
-                                   FieldByName('CAPTION_WINF').AsString,
-                                   FieldByName('MENUITEM_WINF').AsString,
-                                   FieldByName('UNITF_WINF').AsString,
-                                   FieldByName('SHORTCUT_WINF').AsString,
-                                   FieldByName('DATAMODULE_WINF').AsString,
-                                   iNumVent,
-                                   Self.FOwner);
-      end;
-      FList.Add(ozaForm);
-      qrySol.Next;
-    end;
-    qrySol.Close;
-  finally
-    FreeAndNil(qrySol);
+  aPantallas := FLector.Cargar;
+  for oPantalla in aPantallas do
+  begin
+    ozaForm := TfzaForm.Create(oPantalla.Llamada,
+                               oPantalla.Titulo,
+                               oPantalla.ElementoMenu,
+                               oPantalla.UnidadFormulario,
+                               oPantalla.Atajo,
+                               oPantalla.UnidadDatos,
+                               oPantalla.NumeroVentanas,
+                               Self.FOwner);
+    FList.Add(ozaForm);
   end;
 end;
 
@@ -333,15 +322,21 @@ begin
 end;
 
 constructor TfzaWinF.Create(Owner:TComponent;
-  const ARegistroLog: IRegistroLog);
+  const ARegistroLog: IRegistroLog;
+  const ALector: ILectorRegistroPantallas);
 begin
+  if not Assigned(ALector) then
+    raise EInvalidOpException.Create(
+      SErrorLectorRegistroPantallasNoDisponible);
   FList := TObjectList<TfzaForm>.Create;
   FOwner := Owner;
   FRegistroLog := ARegistroLog;
+  FLector := ALector;
 end;
 
 destructor TfzaWinF.Destroy;
 begin
+  FLector := nil;
   FRegistroLog := nil;
   FreeAndNil(FList);
   inherited;

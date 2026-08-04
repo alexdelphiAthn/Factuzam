@@ -7,8 +7,8 @@
 -- Factuzam, no este puente. Convención propia: prefijo `inv_` + snake_case.
 --
 -- Idempotente: CREATE TABLE IF NOT EXISTS. Re-ejecutable sin efectos.
--- Motor InnoDB + utf8mb4 (igual que Factuzam). FKs con ON DELETE CASCADE de
--- catálogo y eventos hacia su recuento.
+-- Motor InnoDB + utf8mb4 (igual que Factuzam). Las relaciones entre tablas
+-- son logicas y no se crean claves foraneas fisicas.
 --
 -- Modelo:
 --   inv_recuentos     una sesión de recuento. origen=FACTUZAM (plantilla
@@ -73,9 +73,7 @@ CREATE TABLE IF NOT EXISTS inv_catalogo (
   PRIMARY KEY (id),
   KEY idx_cat_recuento (id_recuento),
   KEY idx_cat_barras (id_recuento, codigo_barras),
-  KEY idx_cat_sku (id_recuento, codigo_unidad),
-  CONSTRAINT fk_cat_recuento FOREIGN KEY (id_recuento)
-    REFERENCES inv_recuentos (id) ON DELETE CASCADE
+  KEY idx_cat_sku (id_recuento, codigo_unidad)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- ----------------------------------------------------------------------------
@@ -100,9 +98,7 @@ CREATE TABLE IF NOT EXISTS inv_eventos (
   PRIMARY KEY (id),
   UNIQUE KEY uq_evento_uuid (uuid_evento),                 -- dedupe reenvíos
   KEY idx_evt_recuento (id_recuento, id),                  -- cursor incremental
-  KEY idx_evt_sku (id_recuento, codigo_unidad),
-  CONSTRAINT fk_evt_recuento FOREIGN KEY (id_recuento)
-    REFERENCES inv_recuentos (id) ON DELETE CASCADE
+  KEY idx_evt_sku (id_recuento, codigo_unidad)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
 
 -- ----------------------------------------------------------------------------

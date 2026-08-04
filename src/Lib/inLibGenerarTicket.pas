@@ -238,7 +238,6 @@ begin
     FFechaOperacion := Now;
   FLineas := FDatosCobro.TotalesFactura.Lineas;
   FDocumento := FormatearDocumentoDataSet(
-    FConexion,
     FDatosCobro.TotalesFactura.Cabecera,
     'SERIE_FAC',
     'NUMERO_FAC');
