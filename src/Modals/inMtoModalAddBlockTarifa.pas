@@ -106,7 +106,12 @@ type
   public
     class function Ejecutar(
       AOwner: TComponent;
-      const ACodigoTarifa: string): TAddBlockTarifaResult;
+      const ACodigoTarifa: string): TAddBlockTarifaResult; overload;
+    class function Ejecutar(
+      AOwner: TComponent;
+      const ACodigoTarifa: string;
+      const AServicios: TServiciosCargaMasivaArticulos):
+      TAddBlockTarifaResult; overload;
     property ResultadoTarifa: TAddBlockTarifaResult read FResultadoTarifa;
   end;
 
@@ -125,10 +130,22 @@ class function TfrmModalAddBlockTarifa.Ejecutar(
   AOwner: TComponent;
   const ACodigoTarifa: string): TAddBlockTarifaResult;
 var
+  Servicios: TServiciosCargaMasivaArticulos;
+begin
+  Servicios := Default(TServiciosCargaMasivaArticulos);
+  Result := Ejecutar(AOwner, ACodigoTarifa, Servicios);
+end;
+
+class function TfrmModalAddBlockTarifa.Ejecutar(
+  AOwner: TComponent;
+  const ACodigoTarifa: string;
+  const AServicios: TServiciosCargaMasivaArticulos):
+  TAddBlockTarifaResult;
+var
   frm: TfrmModalAddBlockTarifa;
   i  : Integer;
 begin
-  frm := TfrmModalAddBlockTarifa.Create(AOwner);
+  frm := TfrmModalAddBlockTarifa.Create(AOwner, AServicios);
   try
     frm.FCodigoTarifaIni := ACodigoTarifa;
     frm.Inicializar;

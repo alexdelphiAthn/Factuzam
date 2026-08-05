@@ -55,11 +55,10 @@ uses
   inLibExcepcionesAplicacionIntf,
   inLibOperacionesAplicacionIntf,
   inLibDistribuidorPersistenciaIntf,
-  inLibRepositoriosPantallaIntf,
   UniDataComposicionAplicacion,
-  UniDataMantenimientosInyeccionRaiz,
-  UniDataCajaInyeccionRaiz,
-  UniDataConfiguracionInyeccionRaiz;
+  inMtoMantenimientosInyeccionRaiz,
+  inMtoCajaInyeccionRaiz,
+  inMtoConfiguracionInyeccionRaiz;
 
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
@@ -70,16 +69,7 @@ type
     IAnfitrionMantenimiento,
     IProveedorMenuPantallas,
     IAnfitrionCajaVentanas,
-    IPresentacionOperacionesAplicacion,
-    ICompositorSqlPantalla,
-    ICompositorArticulosPantalla,
-    ICompositorConfiguracionPantalla,
-    ICompositorDocumentosPantalla,
-    ICompositorRemesasPantalla,
-    ICompositorOperacionesPantalla,
-    ICompositorVentasPantalla,
-    ICompositorCajaPantalla,
-    ICompositorTicketsCajaPantalla
+    IPresentacionOperacionesAplicacion
   )
     mnuCaja: TMenuItem;
     mnuMenuCaja: TMenuItem;
@@ -181,24 +171,6 @@ type
       const APermisos: IPermisosAplicacion): ITraspasoCaja;
     function CrearRepositorioDistribuidorVisual:
       IRepositorioDistribuidor;
-    function CrearServiciosSqlPantalla(
-      const ANombrePantalla: string): TServiciosSqlPantalla;
-    function CrearRepositoriosArticulosPantalla(
-      const ANombrePantalla: string): IRepositoriosArticulosPantalla;
-    function CrearRepositoriosConfiguracionPantalla(
-      const ANombrePantalla: string): IRepositoriosConfiguracionPantalla;
-    function CrearRepositoriosDocumentosPantalla(
-      const ANombrePantalla: string): IRepositoriosDocumentosPantalla;
-    function CrearRepositoriosRemesasPantalla(
-      const ANombrePantalla: string): IRepositoriosRemesasPantalla;
-    function CrearRepositoriosOperacionesPantalla(
-      const ANombrePantalla: string): IRepositoriosOperacionesPantalla;
-    function CrearRepositoriosVentasPantalla(
-      const ANombrePantalla: string): IRepositoriosVentasPantalla;
-    function CrearRepositoriosCajaPantalla(
-      const ANombrePantalla: string): IRepositoriosCajaPantalla;
-    function CrearRepositoriosTicketsCajaPantalla(
-      const ANombrePantalla: string): IRepositoriosTicketsCajaPantalla;
   published
     tmr1: TTimer;
     StyleRepository1: TcxStyleRepository;
@@ -393,23 +365,14 @@ uses inLibWin,
   inLibMsgConfiguracion,
   inLibDir,
   inMtoSplash,
-  inMtoAppParam,
   inMtoCajaMenu,
   inMtoBusquedaDatos,
-  inMtoModalVerifactuDecl,
   inLibGenerarTicketCaja,
   inMtoStockConsulta,
-  inMtoModalListadoVentas,
+  inMtoPrincipalAccionesVcl,
   inMtoModalScriptLog,
-  inMtoModalImpBalanceTallas,
-  inMtoModalImpBalanceSinTallas,
-  inMtoModalImpMovVentasArt,
-  inMtoModalImpDocsProveedor,
-  inMtoModalImpEfectosPago,
-  inMtoModalFacturarAlbaranes,
   inMtoRestauracionCopiasVcl,
   inMtoModalCargarEfectosRemesa,
-  inMtoModalProcesosAuxiliaresBBDD,
   inLibCertificates,
   inLibPrincipalCertificadosIntf,
   UniDataPrincipalCertificadosRepositorio,
@@ -641,67 +604,6 @@ end;
 function TfrmMtoPrincipal.GetParametrosCajaEdicion: IParametrosEdicion;
 begin
   Result := FComposicion.ParametrosCajaEdicion;
-end;
-
-function TfrmMtoPrincipal.CrearServiciosSqlPantalla(
-  const ANombrePantalla: string): TServiciosSqlPantalla;
-begin
-  Result := FComposicion.CrearServiciosSqlPantalla(ANombrePantalla);
-end;
-
-function TfrmMtoPrincipal.CrearRepositoriosArticulosPantalla(
-  const ANombrePantalla: string): IRepositoriosArticulosPantalla;
-begin
-  Result := FComposicion.CrearRepositoriosArticulosPantalla(
-    ANombrePantalla);
-end;
-
-function TfrmMtoPrincipal.CrearRepositoriosConfiguracionPantalla(
-  const ANombrePantalla: string): IRepositoriosConfiguracionPantalla;
-begin
-  Result := FComposicion.CrearRepositoriosConfiguracionPantalla(
-    ANombrePantalla);
-end;
-
-function TfrmMtoPrincipal.CrearRepositoriosDocumentosPantalla(
-  const ANombrePantalla: string): IRepositoriosDocumentosPantalla;
-begin
-  Result := FComposicion.CrearRepositoriosDocumentosPantalla(
-    ANombrePantalla);
-end;
-
-function TfrmMtoPrincipal.CrearRepositoriosRemesasPantalla(
-  const ANombrePantalla: string): IRepositoriosRemesasPantalla;
-begin
-  Result := FComposicion.CrearRepositoriosRemesasPantalla(
-    ANombrePantalla);
-end;
-
-function TfrmMtoPrincipal.CrearRepositoriosOperacionesPantalla(
-  const ANombrePantalla: string): IRepositoriosOperacionesPantalla;
-begin
-  Result := FComposicion.CrearRepositoriosOperacionesPantalla(
-    ANombrePantalla);
-end;
-
-function TfrmMtoPrincipal.CrearRepositoriosVentasPantalla(
-  const ANombrePantalla: string): IRepositoriosVentasPantalla;
-begin
-  Result := FComposicion.CrearRepositoriosVentasPantalla(
-    ANombrePantalla);
-end;
-
-function TfrmMtoPrincipal.CrearRepositoriosCajaPantalla(
-  const ANombrePantalla: string): IRepositoriosCajaPantalla;
-begin
-  Result := FComposicion.CrearRepositoriosCajaPantalla(ANombrePantalla);
-end;
-
-function TfrmMtoPrincipal.CrearRepositoriosTicketsCajaPantalla(
-  const ANombrePantalla: string): IRepositoriosTicketsCajaPantalla;
-begin
-  Result := FComposicion.CrearRepositoriosTicketsCajaPantalla(
-    ANombrePantalla);
 end;
 
 procedure TfrmMtoPrincipal.PrepararContextoAplicacion(
@@ -1822,42 +1724,21 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.mnuLisVentasClick(Sender: TObject);
-var
-  frmListadoVentas: TfrmModalListadoVentas;
 begin
   inherited;
-  try
-    frmListadoVentas := TfrmModalListadoVentas.Create(Self);
-    frmListadoVentas.ShowModal;
-  finally
-    FreeAndNil(frmListadoVentas);
-  end;
+  MostrarListadoVentas(Self);
 end;
 
 procedure TfrmMtoPrincipal.mnuListadoDocsProveedorClick(Sender: TObject);
-var
-  frmListadoDocsProveedor: TfrmPrintDocsProveedor;
 begin
   inherited;
-  try
-    frmListadoDocsProveedor := TfrmPrintDocsProveedor.Create(Self);
-    frmListadoDocsProveedor.ShowModal;
-  finally
-    FreeAndNil(frmListadoDocsProveedor);
-  end;
+  MostrarListadoDocumentosProveedor(Self);
 end;
 
 procedure TfrmMtoPrincipal.mnuListadoEfectosPagoClick(Sender: TObject);
-var
-  frmListadoEfectosPago: TfrmPrintEfectosPago;
 begin
   inherited;
-  try
-    frmListadoEfectosPago := TfrmPrintEfectosPago.Create(Self);
-    frmListadoEfectosPago.ShowModal;
-  finally
-    FreeAndNil(frmListadoEfectosPago);
-  end;
+  MostrarListadoEfectosPago(Self);
 end;
 
 procedure TfrmMtoPrincipal.mnuMenuCajaClick(Sender: TObject);
@@ -1957,7 +1838,7 @@ procedure TfrmMtoPrincipal.mnuProcesosAuxiliaresBBDDClick(
 begin
   inherited;
   if mnuProcesosAuxiliaresBBDD.Visible then
-    TfrmModalProcesosAuxiliaresBBDD.Ejecutar(Self);
+    MostrarProcesosAuxiliares(Self);
 end;
 
 procedure TfrmMtoPrincipal.MenuGenericoClick(Sender: TObject);
@@ -2022,20 +1903,10 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.FacturarAlbaranes1Click(Sender: TObject);
-var
-  f: TfrmModalFacturarAlbaranes;
 begin
   inherited;
-  if FacturarAlbaranes1.Visible then
-  begin
-    f := TfrmModalFacturarAlbaranes.Create(nil);
-    try
-      if f.ShowModal = mrOk then
-        ShowMto(Self, 'FacturasCompra');
-    finally
-      f.Free;
-    end;
-  end;
+  if FacturarAlbaranes1.Visible and FacturarAlbaranesCompra then
+    ShowMto(Self, 'FacturasCompra');
 end;
 
 procedure TfrmMtoPrincipal.CargarEfectos1Click(Sender: TObject);
@@ -2095,63 +1966,36 @@ end;
 procedure TfrmMtoPrincipal.mnuVerifactuDeclaracionClick(Sender: TObject);
 begin
   if (mnuVerifactuDeclaracion.Visible) then
-    TfrmModalVerifactuDecl.Ejecutar(Self);
+    MostrarDeclaracionVerifactu(Self);
 end;
 
 procedure TfrmMtoPrincipal.mnuBalanceAlmacenHorizontalClick(Sender: TObject);
-var
-  frm: TfrmPrintBalanceTallas;
 begin
   // Informe A4 horizontal (FastReport) del balance de almacén por tallas
   // con foto. El usuario filtra modo (entre fechas / acumulados), nivel de
   // detalle, fechas, almacén y familia en el propio modal.
   if mnuBalanceAlmacenHorizontal.Visible then
-  begin
-    frm := TfrmPrintBalanceTallas.Create(Application);
-    try
-      frm.ShowModal;
-    finally
-      FreeAndNil(frm);
-    end;
-  end;
+    MostrarBalanceAlmacenHorizontal;
 end;
 
 procedure TfrmMtoPrincipal.mnuBalanceAlmacenSinTallasClick(Sender: TObject);
-var
-  frm: TfrmPrintBalanceSinTallas;
 begin
   // Informe vertical (FastReport) del balance de almacén SIN tallas: una fila
   // por (artículo, color, banda). Incluye todos los artículos, también los no
   // tallables que el informe horizontal deja fuera. Mismos filtros, modos,
   // bandas y agrupaciones.
   if mnuBalanceAlmacenSinTallas.Visible then
-  begin
-    frm := TfrmPrintBalanceSinTallas.Create(Application);
-    try
-      frm.ShowModal;
-    finally
-      FreeAndNil(frm);
-    end;
-  end;
+    MostrarBalanceAlmacenSinTallas;
 end;
 
 procedure TfrmMtoPrincipal.mnuMovVentasArtClick(Sender: TObject);
-var
-  frm: TfrmPrintMovVentasArt;
 begin
   // Informe A4 horizontal (FastReport) del ranking de ventas por artículos y
   // fechas: una fila por artículo (o por artículo+almacén si se agrupa por
   // almacén) con las magnitudes de compra/venta del periodo y dos márgenes.
   // Mismos filtros que el balance más la fecha "Inicio compras".
   if mnuMovVentasArt.Visible then
-  begin
-    frm := TfrmPrintMovVentasArt.Create(Application);
-    try
-      frm.ShowModal;
-    finally
-      FreeAndNil(frm);
-    end;
-  end;
+    MostrarMovimientosVentasArticulos;
 end;
 
 // Foto flotante transversal: cuando el usuario cambia de pestana

@@ -21,7 +21,8 @@ uses
   inLibColumnasSkuIntf,
   inLibColumnasDocumentoLecturasIntf,
   inLibInventariosAplicacionIntf,
-  inLibInventarioNubePersistenciaIntf;
+  inLibInventarioNubePersistenciaIntf,
+  inLibCargaMasivaArticulosPersistenciaIntf;
 
 type
   TDependenciasArticulosInventarios = record
@@ -38,11 +39,13 @@ type
     Busquedas: IBusquedasInventario;
     RecuentoRemoto: IRepositorioRecuentoRemotoInventario;
     InventarioNube: IInventarioNubePersistencia;
+    CargaMasiva: TServiciosCargaMasivaArticulos;
     class function Crear(
       const AArticulos: TDependenciasArticulosInventarios;
       const ABusquedas: IBusquedasInventario;
       const ARecuentoRemoto: IRepositorioRecuentoRemotoInventario;
-      const AInventarioNube: IInventarioNubePersistencia
+      const AInventarioNube: IInventarioNubePersistencia;
+      const ACargaMasiva: TServiciosCargaMasivaArticulos
     ): TDependenciasInventarios; static;
     procedure Validar;
     procedure Liberar;
@@ -70,6 +73,8 @@ resourcestring
     'No se proporcionó el repositorio de recuento remoto de inventario.';
   SErrorInventarioNubeNoDisponible =
     'No se proporcionó la persistencia del inventario en la nube.';
+  SErrorCargaMasivaInventarioNoDisponible =
+    'No se proporcionó la carga masiva de artículos de inventario.';
 
 procedure TDependenciasArticulosInventarios.Validar;
 begin
@@ -107,7 +112,8 @@ class function TDependenciasInventarios.Crear(
   const AArticulos: TDependenciasArticulosInventarios;
   const ABusquedas: IBusquedasInventario;
   const ARecuentoRemoto: IRepositorioRecuentoRemotoInventario;
-  const AInventarioNube: IInventarioNubePersistencia
+  const AInventarioNube: IInventarioNubePersistencia;
+  const ACargaMasiva: TServiciosCargaMasivaArticulos
 ): TDependenciasInventarios;
 begin
   Result := Default(TDependenciasInventarios);
@@ -115,6 +121,7 @@ begin
   Result.Busquedas := ABusquedas;
   Result.RecuentoRemoto := ARecuentoRemoto;
   Result.InventarioNube := AInventarioNube;
+  Result.CargaMasiva := ACargaMasiva;
   Result.Validar;
 end;
 
@@ -130,6 +137,12 @@ begin
   if not Assigned(InventarioNube) then
     raise EArgumentNilException.Create(
       SErrorInventarioNubeNoDisponible);
+  if not Assigned(CargaMasiva.Consultas) or
+     not Assigned(CargaMasiva.Inserciones) then
+  begin
+    raise EArgumentNilException.Create(
+      SErrorCargaMasivaInventarioNoDisponible);
+  end;
 end;
 
 procedure TDependenciasInventarios.Liberar;
@@ -138,6 +151,8 @@ begin
   Busquedas := nil;
   RecuentoRemoto := nil;
   InventarioNube := nil;
+  CargaMasiva.Consultas := nil;
+  CargaMasiva.Inserciones := nil;
 end;
 
 end.

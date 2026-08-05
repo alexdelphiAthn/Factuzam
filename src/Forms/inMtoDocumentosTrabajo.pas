@@ -35,8 +35,9 @@ uses
   inLibColumnasSkuIntf, inLibGridTallasInline,
   inLibArticulosAtributosIntf, inLibArticulosValidadorIntf,
   inLibComprasPantallaIntf, inLibDocumentosTrabajo,
+  inLibCargaMasivaArticulosPersistenciaIntf,
   inLibPermisosIntf,
-  inLibRepositoriosPantallaIntf,
+  UniDataComprasPantallaComposicion,
   inLibCajasDefectoPersistenciaIntf,
   inLibCajaVentanasIntf;
 
@@ -135,6 +136,7 @@ type
     FValidadorArticulos: IArticulosValidador;
     FLookupAtributos: IArticulosAtributosLookup;
     FRepositorioCajasDefecto: IRepositorioCajasDefecto;
+    FCargaMasiva: TServiciosCargaMasivaArticulos;
   private
     procedure ConstruirModoEntrada;
     procedure CrearColumnasHostDTR;
@@ -180,7 +182,7 @@ type
 function CrearDocumentosTrabajoCompraInyectada(
   AOwner: TComponent;
   const AContexto: TContextoAutorizacionPantalla;
-  const AArticulos: IRepositoriosArticulosPantalla;
+  const AComponer: TComponerDocumentosTrabajoPantalla;
   const ACajasDefecto: IRepositorioCajasDefecto): TForm;
 
 implementation
@@ -195,20 +197,19 @@ uses
   inMtoModalEnviarDestino, inMtoModalCajDef,
   // Listado del documento con una foto de 300 x 300 por línea.
   inMtoPreviewExcel, inLibDocumentosTrabajoExcel, inLibWin,
-  inLibMsgArticulos, inLibMsgCaja, inLibMsgComun, inLibMsgVentas,
-  UniDataComprasPantallaComposicion;
+  inLibMsgArticulos, inLibMsgCaja, inLibMsgComun, inLibMsgVentas;
 
 {$R *.dfm}
 
 type
   TfrmMtoDocumentosTrabajoInyectada = class(TfrmMtoDocumentosTrabajo)
   private
-    FArticulos: IRepositoriosArticulosPantalla;
+    FComponer: TComponerDocumentosTrabajoPantalla;
   public
     constructor Create(
       AOwner: TComponent;
       const AContexto: TContextoAutorizacionPantalla;
-      const AArticulos: IRepositoriosArticulosPantalla;
+      const AComponer: TComponerDocumentosTrabajoPantalla;
       const ACajasDefecto: IRepositorioCajasDefecto); reintroduce;
     procedure CrearTablaPrincipal; override;
   end;
@@ -220,25 +221,27 @@ end;
 function CrearDocumentosTrabajoCompraInyectada(
   AOwner: TComponent;
   const AContexto: TContextoAutorizacionPantalla;
-  const AArticulos: IRepositoriosArticulosPantalla;
+  const AComponer: TComponerDocumentosTrabajoPantalla;
   const ACajasDefecto: IRepositorioCajasDefecto): TForm;
 begin
   Result := TfrmMtoDocumentosTrabajoInyectada.Create(
     AOwner,
     AContexto,
-    AArticulos,
+    AComponer,
     ACajasDefecto);
 end;
 
 constructor TfrmMtoDocumentosTrabajoInyectada.Create(
   AOwner: TComponent;
   const AContexto: TContextoAutorizacionPantalla;
-  const AArticulos: IRepositoriosArticulosPantalla;
+  const AComponer: TComponerDocumentosTrabajoPantalla;
   const ACajasDefecto: IRepositorioCajasDefecto);
 begin
+  if not Assigned(AComponer) then
+    raise EArgumentNilException.Create('AComponer');
   if not Assigned(ACajasDefecto) then
     raise EArgumentNilException.Create('ACajasDefecto');
-  FArticulos := AArticulos;
+  FComponer := AComponer;
   FRepositorioCajasDefecto := ACajasDefecto;
   inherited Create(AOwner, AContexto);
 end;
@@ -248,15 +251,15 @@ var
   oContexto: TContextoDocumentosTrabajoCompraPantalla;
 begin
   inherited;
-  ComponerComprasPantalla(
-    FArticulos,
+  FComponer(
     dmmDocumentosTrabajo.unqryTablaG.Connection,
     oContexto);
   FLecturasDocumentosTrabajo := oContexto.Lecturas;
   FMaterializacionDocumentosTrabajo := oContexto.Materializacion;
   FValidadorArticulos := oContexto.ValidadorArticulos;
   FLookupAtributos := oContexto.LookupAtributos;
-  FArticulos := nil;
+  FCargaMasiva := oContexto.CargaMasiva;
+  FComponer := nil;
 end;
 
 procedure TfrmMtoDocumentosTrabajo.CrearTablaPrincipal;
@@ -282,6 +285,8 @@ end;
 
 destructor TfrmMtoDocumentosTrabajo.Destroy;
 begin
+  FCargaMasiva.Consultas := nil;
+  FCargaMasiva.Inserciones := nil;
   FLookupAtributos := nil;
   FValidadorArticulos := nil;
   FMaterializacionDocumentosTrabajo := nil;
@@ -662,7 +667,8 @@ begin
           Self,
           ds.FieldByName('ID_DTR').AsLargeInt,
           sAlmacen,
-          sTitulo);
+          sTitulo,
+          FCargaMasiva);
         if res.Aceptado then
         begin
           pcDetalleDTR.ActivePage := tsLineasDTR;

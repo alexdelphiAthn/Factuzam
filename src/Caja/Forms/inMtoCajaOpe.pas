@@ -596,29 +596,15 @@ uses
   inLibCorreoTickets, UniDataCorreoTicketsRepositorio,
   inLibCajaVentaCliente,
   inLibCajaVentaOperacion,
-  inLibCajaOpeComposicion,
   inLibCajaOpePresentacion,
   inLibCajaEntrada,
   inMtoCajaEntradaVcl,
-  // Raiz de composicion de la ventana de caja: el adaptador UniData* se
-  // construye aqui y se inyecta en la factoria de dominio.
-  UniDataCajaConsultasRepositorio,
-  UniDataCajaStockRepositorio,
-  inMtoCajaImpresorVenta,
   inMtoCajaCierreVentaVcl,
-  UniDataCajaUnidadTrabajo,
+  inMtoCajaOperacionVclInyeccion,
+  UniDataFacturasLecturas,
   inMtoModalDevolucionTicket,
   inMtoModalSeleccionVentaOrigen,
   inMtoModalMotivoDevolucion,
-  inLibContextoSesionIntf,
-  inLibPerfilesUsuarioIntf,
-  inLibTicketsCajaIntf,
-  UniDataCatalogoSqlAplicacion,
-  UniDataFacturasLecturas,
-  UniDataFacturasOperaciones,
-  UniDataVentasWsCola,
-  inLibFacturasPersistenciaIntf,
-  inLibUnidadesMedida, inLibPreviewTicket,
   System.StrUtils,
   inLibMsgCaja, inLibMsgVentas;
 
@@ -795,74 +781,6 @@ begin
     AFormulario.FDependenciasPantalla.FaseCobro;
 end;
 
-function CrearServiciosOperacionCajaVcl(
-  APropietario: TComponent;
-  const AParametrosApp: IParametrosAplicacion;
-  const APreviewTicket: IPreviewTicket;
-  AUnidades: TUnidadesMedida;
-  AConexion: TUniConnection;
-  const AParametrosCaja: IParametrosCaja;
-  const APermisos: IPermisosAplicacion;
-  const AContextoSesion: IContextoSesionAplicacion;
-  const APerfilesLectura: ILectorPerfilesUsuario;
-  const APerfilesEscritura: IEscritorPerfilesUsuario;
-  const ARegistroLog: IRegistroLog;
-  const ARepositoriosTickets: TRepositoriosTicketsCaja;
-  const ANombreFormulario: string;
-  ADatosCaja: TdmCajaOpe;
-  out AIncidenciasSql: IRegistroIncidenciasSql
-): TContextoDependenciasOperacionCaja;
-var
-  bCatalogoSqlActivo: Boolean;
-  oCatalogoSql: ICatalogoSql;
-  oUnidadTrabajo: IUnidadTrabajoVentaCaja;
-  oImpresor: IImpresorVenta;
-  oPersistenciaFacturas: TPersistenciaFacturas;
-begin
-  bCatalogoSqlActivo := False;
-  if Assigned(APerfilesLectura) then
-    bCatalogoSqlActivo := SameText(
-      APerfilesLectura.ObtenerValorPerfil(
-        ANombreFormulario,
-        'oGetSQLFromDB',
-        'False'),
-      'True');
-  CrearCatalogoSqlAplicacion(
-    APerfilesLectura,
-    APerfilesEscritura,
-    bCatalogoSqlActivo,
-    oCatalogoSql,
-    AIncidenciasSql,
-    ARegistroLog);
-  ADatosCaja.AsignarRepositorioTicketsCaja(
-    ARepositoriosTickets);
-  oImpresor := TImpresorVentaVcl.Create(
-    APropietario,
-    AParametrosApp,
-    AConexion,
-    AParametrosCaja,
-    APermisos,
-    ARepositoriosTickets.Tickets,
-    AUnidades,
-    APreviewTicket);
-  oUnidadTrabajo := TUnidadTrabajoVentaCajaUniDAC.Create(
-    ADatosCaja);
-  oPersistenciaFacturas := CrearPersistenciaFacturasUniDAC(AConexion);
-  Result := CrearServiciosOperacionCaja(
-    AParametrosCaja,
-    CrearCajaStockRepositorio(AConexion),
-    AContextoSesion,
-    oImpresor,
-    oUnidadTrabajo,
-    TRepositorioConsultasCaja.Create(
-      AConexion,
-      oCatalogoSql,
-      AIncidenciasSql),
-    oPersistenciaFacturas.Pdf,
-    CrearRepositorioVentasWsColaUniDAC(AConexion),
-    ARegistroLog);
-end;
-
 procedure InicializarServiciosOperacionCajaVcl(
   AFormulario: TfrmMtoOpeCaja);
 begin
@@ -872,7 +790,7 @@ begin
     AFormulario.ParametrosApp,
     AFormulario.ParametrosCaja,
     AFormulario.PreviewTicket);
-  AFormulario.FDependencias := CrearServiciosOperacionCajaVcl(
+  AFormulario.FDependencias := CrearDependenciasOperacionCajaVclUniDAC(
     AFormulario,
     AFormulario.ParametrosApp,
     AFormulario.PreviewTicket,

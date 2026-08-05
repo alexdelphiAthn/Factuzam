@@ -23,7 +23,8 @@ uses
   inLibArticulosValidadorIntf,
   inLibDocumentosTrabajo,
   inLibLectorScanner,
-  inLibRepositoriosPantallaIntf,
+  UniDataRepositoriosArticulosPantalla,
+  UniDataRepositoriosDocumentosPantalla,
   inLibStockConsultaEntradaIntf,
   inLibStockConsultaInfo,
   inLibStockConsultaPersistenciaIntf;

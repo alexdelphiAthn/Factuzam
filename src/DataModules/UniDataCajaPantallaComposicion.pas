@@ -17,7 +17,11 @@ interface
 
 uses
   Data.DB, Uni,
-  inLibRepositoriosPantallaIntf,
+  UniDataRepositoriosArticulosPantalla,
+  UniDataRepositoriosCajaPantalla,
+  UniDataRepositoriosConfiguracionPantalla,
+  UniDataRepositoriosOperacionesPantalla,
+  UniDataRepositoriosTicketsCajaPantalla,
   inLibPerfilesUsuarioIntf,
   inLibConsultaFacturasOperacionesPersistenciaIntf,
   inLibOperacionesCajaSkuPersistenciaIntf,

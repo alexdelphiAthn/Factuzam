@@ -16,7 +16,7 @@ unit UniDataRepositoriosDocumentosPantalla;
 interface
 
 uses
-  Uni, inLibRepositoriosPantallaIntf, inLibCatalogoSqlIntf,
+  Uni, inLibCatalogoSqlIntf,
   inLibParametrosIntf, inLibLogIntf,
   inLibImpresionPersistenciaIntf,
   inLibDevolucionesCompraPersistenciaIntf,
@@ -30,6 +30,33 @@ uses
   UniDataRepositoriosGeneralesPantalla;
 
 type
+  IRepositoriosDocumentosPantalla = interface
+    ['{62FEB439-E697-482A-9A0B-D986CE865B48}']
+    function CrearServiciosPersistenciaImpresion(
+      AConexion: TUniConnection = nil): TServiciosPersistenciaImpresion;
+    function CrearServiciosPersistenciaDevolucionCompra(
+      AConexion: TUniConnection = nil
+    ): TServiciosPersistenciaDevolucionCompra;
+    function CrearRepositorioDestinoEnvio(
+      AConexion: TUniConnection = nil): IRepositorioDestinoEnvio;
+    function CrearRepositorioSeleccionFamilia(
+      AConexion: TUniConnection = nil): IRepositorioSeleccionFamilia;
+    function CrearRepositorioSerieFechaFactura(
+      AConexion: TUniConnection = nil): IRepositorioSerieFechaFactura;
+    function CrearRepositorioSeleccionAlmacen(
+      AConexion: TUniConnection = nil): IRepositorioSeleccionAlmacen;
+    function CrearRepositorioFacturacionAlbaranesFechas(
+      AConexion: TUniConnection = nil
+    ): IRepositorioFacturacionAlbaranesFechas;
+    function CrearRepositorioFacturacionAlbaranesCompra(
+      AConexion: TUniConnection = nil
+    ): IRepositorioFacturacionAlbaranesCompra;
+    function CrearServicioFacturacionTicket(
+      AConexion: TUniConnection = nil): IServicioFacturacionTicket;
+    function CrearRepositoriosDocumentosTrabajo(
+      AConexion: TUniConnection = nil): TRepositoriosDocumentosTrabajo;
+  end;
+
   TRepositoriosDocumentosPantallaUniDAC = class(
     TAdaptadorRepositoriosPantallaUniDAC,
     IRepositoriosDocumentosPantalla)

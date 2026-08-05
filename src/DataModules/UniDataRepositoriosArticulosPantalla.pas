@@ -16,7 +16,7 @@ unit UniDataRepositoriosArticulosPantalla;
 interface
 
 uses
-  Uni, inLibRepositoriosPantallaIntf, inLibCatalogoSqlIntf,
+  Uni, inLibCatalogoSqlIntf,
   inLibParametrosIntf, inLibArticulosResolverIntf,
   inLibArticulosValidadorIntf, inLibArticulosAtributosIntf,
   inLibArticulosPropiedadesPersistenciaIntf,
@@ -28,6 +28,30 @@ uses
   UniDataRepositoriosGeneralesPantalla;
 
 type
+  IRepositoriosArticulosPantalla = interface
+    ['{41046501-116D-42EF-B24D-E64A811DA5D8}']
+    function CrearResolverArticulos(
+      AConexion: TUniConnection = nil): IArticulosResolver;
+    function CrearValidadorArticulos(
+      AConexion: TUniConnection = nil): IArticulosValidador;
+    function CrearLookupAtributosArticulos(
+      AConexion: TUniConnection = nil): IArticulosAtributosLookup;
+    function CrearServiciosPropiedadesArticulo(
+      AConexion: TUniConnection = nil): TServiciosPropiedadesArticulo;
+    function CrearServiciosStockConsulta(
+      AConexion: TUniConnection = nil): TServiciosStockConsulta;
+    function CrearRepositorioGeneracionSkus(
+      AConexion: TUniConnection = nil): IRepositorioGeneracionSkus;
+    function CrearRepositorioDistribuidor(
+      AConexion: TUniConnection = nil): IRepositorioDistribuidor;
+    function CrearRepositorioMargen(
+      AConexion: TUniConnection = nil): IRepositorioMargen;
+    function CrearRepositorioFiltroArticulos(
+      AConexion: TUniConnection = nil): IRepositorioFiltroArticulos;
+    function CrearServicioCargaMasivaArticulos:
+      TServiciosCargaMasivaArticulos;
+  end;
+
   TRepositoriosArticulosPantallaUniDAC = class(
     TAdaptadorRepositoriosPantallaUniDAC,
     IRepositoriosArticulosPantalla)

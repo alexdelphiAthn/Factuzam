@@ -16,7 +16,7 @@ unit UniDataRepositoriosTicketsCajaPantalla;
 interface
 
 uses
-  Uni, inLibRepositoriosPantallaIntf, inLibCatalogoSqlIntf,
+  Uni, inLibCatalogoSqlIntf,
   inLibParametrosIntf, inLibContextoSesionIntf, inLibPreviewTicket,
   inLibGastoCajaPersistenciaIntf, inLibEntradaCambioPersistenciaIntf,
   inLibGenerarTicketIntf, inLibTraspasoTicketIntf, inLibArqueoIntf,
@@ -24,6 +24,26 @@ uses
   inLibTicketsCajaIntf, UniDataRepositoriosGeneralesPantalla;
 
 type
+  IRepositoriosTicketsCajaPantalla = interface
+    ['{E2452458-D235-4816-9EEE-40FF9C4E3826}']
+    function CrearRepositorioGastoCaja(
+      AConexion: TUniConnection = nil): IRepositorioGastoCaja;
+    function CrearRepositorioEntradaCambio(
+      AConexion: TUniConnection = nil): IRepositorioEntradaCambio;
+    function CrearLecturasImpresionTicketCaja(
+      AConexion: TUniConnection = nil): ILecturasImpresionTicket;
+    function CrearRepositorioTraspasoTicket(
+      AConexion: TUniConnection = nil): IRepositorioTraspasoTicket;
+    function CrearRepositorioArqueoCaja(
+      AConexion: TUniConnection = nil): IRepositorioArqueoCaja;
+    function CrearRepositorioArqueoTicket(
+      AConexion: TUniConnection = nil): IRepositorioArqueoTicket;
+    function CrearRepositorioTiraCajaTicket(
+      AConexion: TUniConnection = nil): IRepositorioTiraCajaTicket;
+    function CrearRepositorioTicketsCaja(
+      AConexion: TUniConnection = nil): TRepositoriosTicketsCaja;
+  end;
+
   TRepositoriosTicketsCajaPantallaUniDAC = class(
     TAdaptadorRepositoriosPantallaUniDAC,
     IRepositoriosTicketsCajaPantalla)

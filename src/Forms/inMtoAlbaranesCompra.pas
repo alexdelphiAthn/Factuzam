@@ -49,7 +49,7 @@ uses
   inLibBusquedasCompraPersistenciaIntf,
   inLibComprasPantallaIntf,
   inLibPermisosIntf,
-  inLibRepositoriosPantallaIntf,
+  UniDataComprasPantallaComposicion,
   UniDataAlbaranesCompra, cxBlobEdit, dxShellDialogs, System.Actions,
   Vcl.ActnList, cxSplitter, inLibDocumento, inLibDocumentoIntf;
 
@@ -312,7 +312,7 @@ type
 function CrearAlbaranesCompraInyectada(
   AOwner: TComponent;
   const AContexto: TContextoAutorizacionPantalla;
-  const AArticulos: IRepositoriosArticulosPantalla): TForm;
+  const AComponer: TComponerAlbaranCompraPantalla): TForm;
 
 implementation
 
@@ -339,20 +339,19 @@ uses
   inLibColumnasSku,
   // Composicion del puerto de persistencia del pivote (V2).
   UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio,
-  UniDataColumnasSkuServicios, UniDataModoTallas,
-  UniDataComprasPantallaComposicion;
+  UniDataColumnasSkuServicios, UniDataModoTallas;
 
 {$R *.dfm}
 
 type
   TfrmMtoAlbaranesCompraInyectada = class(TfrmMtoAlbaranesCompra)
   private
-    FArticulos: IRepositoriosArticulosPantalla;
+    FComponer: TComponerAlbaranCompraPantalla;
   public
     constructor Create(
       AOwner: TComponent;
       const AContexto: TContextoAutorizacionPantalla;
-      const AArticulos: IRepositoriosArticulosPantalla); reintroduce;
+      const AComponer: TComponerAlbaranCompraPantalla); reintroduce;
     procedure CrearTablaPrincipal; override;
   end;
 
@@ -361,20 +360,22 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 function CrearAlbaranesCompraInyectada(
   AOwner: TComponent;
   const AContexto: TContextoAutorizacionPantalla;
-  const AArticulos: IRepositoriosArticulosPantalla): TForm;
+  const AComponer: TComponerAlbaranCompraPantalla): TForm;
 begin
   Result := TfrmMtoAlbaranesCompraInyectada.Create(
     AOwner,
     AContexto,
-    AArticulos);
+    AComponer);
 end;
 
 constructor TfrmMtoAlbaranesCompraInyectada.Create(
   AOwner: TComponent;
   const AContexto: TContextoAutorizacionPantalla;
-  const AArticulos: IRepositoriosArticulosPantalla);
+  const AComponer: TComponerAlbaranCompraPantalla);
 begin
-  FArticulos := AArticulos;
+  if not Assigned(AComponer) then
+    raise EArgumentNilException.Create('AComponer');
+  FComponer := AComponer;
   inherited Create(AOwner, AContexto);
 end;
 
@@ -388,14 +389,14 @@ begin
   oEntrada.Conexion := ConexionPrincipal;
   oEntrada.Cabecera := dmmAlbaranesCompra.unqryTablaG;
   oEntrada.Lineas := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
-  ComponerComprasPantalla(FArticulos, oEntrada, oContexto);
+  FComponer(oEntrada, oContexto);
   FAplicacionArticuloCompra := oContexto.AplicacionArticulo;
   FValidadorArticulos := oContexto.ValidadorArticulos;
   FLookupAtributos := oContexto.LookupAtributos;
   FBusquedaEmpresas := oContexto.BusquedaEmpresas;
   FBusquedaProveedores := oContexto.BusquedaProveedores;
   FBusquedasArticulos := oContexto.BusquedasArticulos;
-  FArticulos := nil;
+  FComponer := nil;
 end;
 
 // dsTablaG apunta a la cabecera del albaran de compra. El articulo

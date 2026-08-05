@@ -35,7 +35,8 @@ uses
   Vcl.Menus, dxSkinsForm, cxButtons, dxSkinsDefaultPainters, cxMemo, cxSpinEdit,
   cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
   System.Actions, Vcl.ActnList, Vcl.PlatformDefaultStyleActnCtrls, Vcl.ActnMan,
-  cxSplitter, JvComponentBase, JvEnterTab, dxShellDialogs, System.UITypes;
+  cxSplitter, JvComponentBase, JvEnterTab, dxShellDialogs, System.UITypes,
+  inLibCargaMasivaArticulosPersistenciaIntf, inLibPermisosIntf;
 
 type
   TfrmMtoTarifas = class(TfrmMtoGen)
@@ -149,10 +150,17 @@ type
     procedure dsTablaGStateChange(Sender: TObject);
   private
     FBtnSesionesCambios: TcxButton;
+    FCargaMasiva: TServiciosCargaMasivaArticulos;
     procedure CrearBotonSesionesCambios;
     procedure btnSesionesCambiosClick(Sender: TObject);
   public
     dmmTarifas: TdmTarifas;
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const ACargaMasiva: TServiciosCargaMasivaArticulos); reintroduce;
+      overload;
+    destructor Destroy; override;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
@@ -172,6 +180,27 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+constructor TfrmMtoTarifas.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const ACargaMasiva: TServiciosCargaMasivaArticulos);
+begin
+  if not Assigned(ACargaMasiva.Consultas) or
+     not Assigned(ACargaMasiva.Inserciones) then
+  begin
+    raise EArgumentNilException.Create('ACargaMasiva');
+  end;
+  FCargaMasiva := ACargaMasiva;
+  inherited Create(AOwner, AContexto);
+end;
+
+destructor TfrmMtoTarifas.Destroy;
+begin
+  FCargaMasiva.Consultas := nil;
+  FCargaMasiva.Inserciones := nil;
+  inherited;
+end;
 
 procedure TfrmMtoTarifas.actFamiliasExecute(Sender: TObject);
 begin
@@ -228,7 +257,8 @@ begin
   if bContinuar then
   begin
     codigoTar := dsTablaG.DataSet.FieldByName('CODIGO_TAR_ARTTAR').AsString;
-    res := TfrmModalAddBlockTarifa.Ejecutar(Self, codigoTar);
+    res := TfrmModalAddBlockTarifa.Ejecutar(
+      Self, codigoTar, FCargaMasiva);
     if res.Aceptado then
     begin
       dmmTarifas.unqryArticulosTarifas.Close;

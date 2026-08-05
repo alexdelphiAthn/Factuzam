@@ -71,7 +71,12 @@ type
     class function Ejecutar(
       AOwner: TComponent;
       const AEmpresa, AAlmacen, ASerie,
-      ANro: string): TAddBlockInventarioResult;
+      ANro: string): TAddBlockInventarioResult; overload;
+    class function Ejecutar(
+      AOwner: TComponent;
+      const AEmpresa, AAlmacen, ASerie, ANro: string;
+      const AServicios: TServiciosCargaMasivaArticulos):
+      TAddBlockInventarioResult; overload;
     property ResultadoInv: TAddBlockInventarioResult read FResultadoInv;
   end;
 
@@ -86,10 +91,23 @@ class function TfrmModalAddBlockInventario.Ejecutar(
   AOwner: TComponent;
   const AEmpresa, AAlmacen, ASerie, ANro: string): TAddBlockInventarioResult;
 var
+  Servicios: TServiciosCargaMasivaArticulos;
+begin
+  Servicios := Default(TServiciosCargaMasivaArticulos);
+  Result := Ejecutar(
+    AOwner, AEmpresa, AAlmacen, ASerie, ANro, Servicios);
+end;
+
+class function TfrmModalAddBlockInventario.Ejecutar(
+  AOwner: TComponent;
+  const AEmpresa, AAlmacen, ASerie, ANro: string;
+  const AServicios: TServiciosCargaMasivaArticulos):
+  TAddBlockInventarioResult;
+var
   frm: TfrmModalAddBlockInventario;
   i  : Integer;
 begin
-  frm := TfrmModalAddBlockInventario.Create(AOwner);
+  frm := TfrmModalAddBlockInventario.Create(AOwner, AServicios);
   try
     frm.FEmpresa := AEmpresa;
     frm.FAlmacen := AAlmacen;

@@ -1893,7 +1893,8 @@ begin
       ds.FieldByName('CODIGO_EMP_INV').AsString,
       ds.FieldByName('CODIGO_ALM_INV').AsString,
       ds.FieldByName('SERIE_INV').AsString,
-      ds.FieldByName('NUMERO_INV').AsString);
+      ds.FieldByName('NUMERO_INV').AsString,
+      FDependencias.CargaMasiva);
     if res.Aceptado then
     begin
       // Refrescar el grid de lineas y proponer recalcular.

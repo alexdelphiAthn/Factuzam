@@ -16,12 +16,20 @@ unit UniDataRepositoriosVentasPantalla;
 interface
 
 uses
-  inLibRepositoriosPantallaIntf,
   inLibEntradaAlbaranVentaPersistenciaIntf, inLibColumnasSkuIntf,
   inLibClientesPersistenciaIntf, inLibListadoVentasPersistenciaIntf,
   UniDataRepositoriosGeneralesPantalla;
 
 type
+  IRepositoriosVentasPantalla = interface
+    ['{4CBCCABC-3FBC-4D4D-B9CC-37E7F592D9A4}']
+    function CrearRepositorioEntradaAlbaranVenta:
+      IRepositorioEntradaAlbaranVenta;
+    function CrearServiciosColumnasSku: TServiciosColumnasSku;
+    function CrearRepositorioClientes: IRepositorioClientes;
+    function CrearRepositorioListadoVentas: IRepositorioListadoVentas;
+  end;
+
   TRepositoriosVentasPantallaUniDAC = class(
     TAdaptadorRepositoriosPantallaUniDAC,
     IRepositoriosVentasPantalla)

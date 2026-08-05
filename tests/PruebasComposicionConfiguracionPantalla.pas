@@ -17,7 +17,10 @@ interface
 
 uses
   DUnitX.TestFramework,
-  inLibRepositoriosPantallaIntf;
+  UniDataRepositoriosArticulosPantalla,
+  UniDataRepositoriosConfiguracionPantalla,
+  UniDataRepositoriosDocumentosPantalla,
+  UniDataRepositoriosRemesasPantalla;
 
 type
   [TestFixture]

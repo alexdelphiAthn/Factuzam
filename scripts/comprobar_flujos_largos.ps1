@@ -730,14 +730,15 @@ $rutaFormularioConsultaOpe =
 $contenidoFormularioConsultaOpe =
   Get-Content -LiteralPath $rutaFormularioConsultaOpe -Raw
 if ($contenidoFormularioConsultaOpe -notmatch
-    '(?s)FRepositorioTraspasoTicket\s*:=\s*' +
-    'oComposicion\.Tickets\.\s*CrearRepositorioTraspasoTicket' -or
+    '(?s)TDependenciasConsultaOperacionesCaja.*?' +
+    'FRepositorioTraspasoTicket\s*:=\s*' +
+    'ADependencias\.TraspasoTicket' -or
     $contenidoFormularioConsultaOpe -notmatch
     '(?s)FRepositoriosTicketsCaja\s*:=\s*' +
-    'oComposicion\.Tickets\.\s*CrearRepositorioTicketsCaja' -or
+    'ADependencias\.Tickets' -or
     $contenidoFormularioConsultaOpe -notmatch
     '(?s)FLecturasImpresionTicket\s*:=\s*' +
-    'oComposicion\.Tickets\.\s*CrearLecturasImpresionTicketCaja' -or
+    'ADependencias\.LecturasTicket' -or
     $contenidoFormularioConsultaOpe -notmatch
     '(?s)EnviarDocumentacionOperacion\(.*?' +
     'FRepositorioTraspasoTicket.*?' +
@@ -760,15 +761,24 @@ $rutaFormularioCajaOpe =
   Join-Path $Raiz 'src\Caja\Forms\inMtoCajaOpe.pas'
 $contenidoFormularioCajaOpe =
   Get-Content -LiteralPath $rutaFormularioCajaOpe -Raw
+$rutaComposicionCajaOpe = Join-Path $Raiz `
+  'src\Caja\Forms\inMtoCajaOperacionVclInyeccion.pas'
+$contenidoComposicionCajaOpe =
+  Get-Content -LiteralPath $rutaComposicionCajaOpe -Raw
 if ($contenidoFormularioCajaOpe -notmatch
-    '(?s)CrearRepositoriosTicketsCaja\(.*?' +
-    'AsignarRepositorioTicketsCaja\(.*?' +
-    'TImpresorVentaVcl\.Create\(.*?' +
-    'oRepositorioTicketsCaja\.Tickets' -or
+    '(?s)TDependenciasOperacionCaja.*?' +
+    'FDependenciasPantalla\s*:=\s*ADependencias' -or
     $contenidoFormularioCajaOpe -notmatch
     '(?s)EnviarDocumentacionOperacion\(.*?' +
-    'CrearRepositorioTraspasoTicket.*?' +
-    'CrearRepositorioTicketsCaja.*?ConexionPrincipal') {
+    'FDependenciasPantalla\.TraspasoTicket.*?' +
+    'FDependenciasPantalla\.Tickets.*?ConexionPrincipal' -or
+    $contenidoFormularioCajaOpe -notmatch
+    '(?s)CrearDependenciasOperacionCajaVclUniDAC\(.*?' +
+    'FDependenciasPantalla\.Tickets' -or
+    $contenidoComposicionCajaOpe -notmatch
+    '(?s)AsignarRepositorioTicketsCaja\(ARepositoriosTickets\).*?' +
+    'TImpresorVentaVcl\.Create\(.*?' +
+    'ARepositoriosTickets\.Tickets') {
   throw 'La caja no conserva la composición del repositorio de tickets.'
 }
 

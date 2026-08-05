@@ -18,7 +18,15 @@ interface
 uses
   Uni, inLibRepositoriosPantallaIntf, inLibParametrosIntf,
   inLibContextoSesionIntf, inLibPerfilesUsuarioIntf,
-  inLibLogIntf, inLibPreviewTicket;
+  inLibLogIntf, inLibPreviewTicket,
+  UniDataRepositoriosArticulosPantalla,
+  UniDataRepositoriosConfiguracionPantalla,
+  UniDataRepositoriosDocumentosPantalla,
+  UniDataRepositoriosRemesasPantalla,
+  UniDataRepositoriosOperacionesPantalla,
+  UniDataRepositoriosVentasPantalla,
+  UniDataRepositoriosCajaPantalla,
+  UniDataRepositoriosTicketsCajaPantalla;
 
 function CrearServiciosSqlPantallaUniDAC(
   const ANombrePantalla: string;
@@ -69,15 +77,7 @@ function CrearRepositoriosTicketsCajaPantallaUniDAC(
 implementation
 
 uses
-  System.SysUtils, UniDataCatalogoSqlAplicacion,
-  UniDataRepositoriosArticulosPantalla,
-  UniDataRepositoriosConfiguracionPantalla,
-  UniDataRepositoriosDocumentosPantalla,
-  UniDataRepositoriosRemesasPantalla,
-  UniDataRepositoriosOperacionesPantalla,
-  UniDataRepositoriosVentasPantalla,
-  UniDataRepositoriosCajaPantalla,
-  UniDataRepositoriosTicketsCajaPantalla;
+  System.SysUtils, UniDataCatalogoSqlAplicacion;
 
 function CrearServiciosSqlPantallaUniDAC(
   const ANombrePantalla: string;

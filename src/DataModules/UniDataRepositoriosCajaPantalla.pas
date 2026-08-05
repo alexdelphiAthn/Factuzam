@@ -16,7 +16,7 @@ unit UniDataRepositoriosCajaPantalla;
 interface
 
 uses
-  Data.DB, Uni, inLibRepositoriosPantallaIntf,
+  Data.DB, Uni,
   inLibCajasDefectoPersistenciaIntf, inLibFaseCobroPersistenciaIntf,
   inLibCajaOperacionesHistPersistenciaIntf,
   inLibCajaPagosHistPersistenciaIntf, inLibCajaVentaIntf,
@@ -25,6 +25,30 @@ uses
   UniDataRepositoriosGeneralesPantalla;
 
 type
+  IRepositoriosCajaPantalla = interface
+    ['{6348B7FD-E5FE-48AC-85CB-7B85AD979A44}']
+    function CrearRepositorioCajasDefecto(
+      AConexion: TUniConnection = nil): IRepositorioCajasDefecto;
+    function CrearRepositorioFaseCobro(
+      AConexion: TUniConnection = nil): IRepositorioFaseCobro;
+    function CrearRepositorioCajaOperacionesHist(
+      ADataSet: TDataSet): IRepositorioCajaOperacionesHist;
+    function CrearRepositorioCajaPagosHist(
+      ADataSet: TDataSet): IRepositorioCajaPagosHist;
+    function CrearRepositorioConsultasCaja(
+      AConexion: TUniConnection = nil): IRepositorioConsultasCaja;
+    function CrearRepositorioArticulosCaja(
+      AConexion: TUniConnection = nil): IRepositorioArticulosCaja;
+    function CrearRepositorioTraspasoOpe(
+      AConexion: TUniConnection = nil): IRepositorioTraspasoOpe;
+    function CrearRepositorioModalArqueo(
+      AConexion: TUniConnection = nil): IRepositorioModalArqueo;
+    function CrearPersistenciaArqueoCaja(
+      AConexion: TUniConnection = nil): IArqueoPersistencia;
+    function CrearRepositorioInformesCaja(
+      AConexion: TUniConnection = nil): IRepositorioInformesCaja;
+  end;
+
   TRepositoriosCajaPantallaUniDAC = class(
     TAdaptadorRepositoriosPantallaUniDAC,
     IRepositoriosCajaPantalla)

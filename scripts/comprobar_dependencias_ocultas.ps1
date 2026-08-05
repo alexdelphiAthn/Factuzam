@@ -13,6 +13,16 @@ $archivosPascal = Get-ChildItem `
   -Filter '*.pas' `
   -File `
   -Recurse
+$archivosPropios = @(
+  $archivosPascal |
+    Where-Object { $_.FullName -notmatch '\\3rdpartyComp\\' }
+)
+$archivosPresentacion = @(
+  $archivosPropios |
+    Where-Object {
+      $_.FullName -match '\\(?:Core|Forms|Modals)\\'
+    }
+)
 
 function Agregar-Coincidencias {
   param(
@@ -28,6 +38,26 @@ function Agregar-Coincidencias {
       $coincidencia.Path)
     $fallos.Add(
       "${Descripcion}: ${relativa}:$($coincidencia.LineNumber)")
+  }
+}
+
+function Agregar-CoincidenciasTexto {
+  param(
+    [System.IO.FileInfo[]]$Archivos,
+    [string]$Patron,
+    [string]$Descripcion
+  )
+  foreach ($archivo in $Archivos) {
+    $texto = Get-Content -LiteralPath $archivo.FullName -Raw
+    $coincidencias = [regex]::Matches($texto, $Patron)
+    foreach ($coincidencia in $coincidencias) {
+      $prefijo = $texto.Substring(0, $coincidencia.Index)
+      $linea = ([regex]::Matches($prefijo, "`n")).Count + 1
+      $relativa = [System.IO.Path]::GetRelativePath(
+        $Raiz,
+        $archivo.FullName)
+      $fallos.Add("${Descripcion}: ${relativa}:${linea}")
+    }
   }
 }
 
@@ -54,6 +84,39 @@ Agregar-Coincidencias `
   -Patron 'function\s+TfrmBase\.Crear(?:Repositorio|Servicio|Persistencia)' `
   -Descripcion 'Factoría concreta alojada en TfrmBase'
 
+Agregar-Coincidencias `
+  -Archivos $archivosPropios `
+  -Patron '\bBuscarCompositor\b' `
+  -Descripcion 'Localizador de compositor de pantalla'
+Agregar-Coincidencias `
+  -Archivos $archivosPropios `
+  -Patron '\bObtenerCompositor[A-Za-z0-9_]*Pantalla\b' `
+  -Descripcion 'Acceso global a compositor de pantalla'
+Agregar-Coincidencias `
+  -Archivos $archivosPropios `
+  -Patron '\bICompositor[A-Za-z0-9_]*Pantalla\b' `
+  -Descripcion 'Contrato de compositor de pantalla obsoleto'
+Agregar-Coincidencias `
+  -Archivos $archivosPresentacion `
+  -Patron (
+    '\bF[A-Za-z0-9_]*\s*:\s*' +
+    'IRepositorios[A-Za-z0-9_]*Pantalla\b') `
+  -Descripcion 'Familia amplia de repositorios almacenada en presentación'
+Agregar-Coincidencias `
+  -Archivos $archivosPropios `
+  -Patron '\bOwner\.FindComponent\s*\(' `
+  -Descripcion 'Resolución de dependencia mediante Owner.FindComponent'
+Agregar-Coincidencias `
+  -Archivos $archivosPropios `
+  -Patron '\.GetInterface\s*\(' `
+  -Descripcion 'Resolución de dependencia mediante GetInterface'
+Agregar-CoincidenciasTexto `
+  -Archivos $archivosPropios `
+  -Patron (
+    '(?is)Supports\s*\(\s*Application\.MainForm\s*,\s*' +
+    'I(?:Repositorios|Compositor)[A-Za-z0-9_]*Pantalla\b') `
+  -Descripcion 'Repositorio de feature resuelto desde Application.MainForm'
+
 $contextosEsperados = @(
   'TContextoDependenciasFacturas',
   'TContextoDependenciasOperacionCaja',
@@ -75,5 +138,5 @@ if ($fallos.Count -gt 0) {
   exit 1
 }
 Write-Output (
-  'Dependencias ocultas: OK. Log, configuración, factorías y ' +
-  'contextos de pantalla comprobados.')
+  'Dependencias ocultas: OK. Log, configuración, factorías, ' +
+  'localizadores y contextos de pantalla comprobados.')

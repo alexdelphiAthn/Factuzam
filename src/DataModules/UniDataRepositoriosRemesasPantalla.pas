@@ -16,11 +16,17 @@ unit UniDataRepositoriosRemesasPantalla;
 interface
 
 uses
-  Uni, inLibRepositoriosPantallaIntf,
+  Uni,
   inLibCargaEfectosRemesaPersistenciaIntf,
   UniDataRepositoriosGeneralesPantalla;
 
 type
+  IRepositoriosRemesasPantalla = interface
+    ['{24B93D18-5C59-4DC4-B9C2-911F88A849A5}']
+    function CrearRepositorioCargaEfectosRemesa(
+      AConexion: TUniConnection = nil): IRepositorioCargaEfectosRemesa;
+  end;
+
   TRepositoriosRemesasPantallaUniDAC = class(
     TAdaptadorRepositoriosPantallaUniDAC,
     IRepositoriosRemesasPantalla)

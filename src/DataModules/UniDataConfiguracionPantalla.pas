@@ -17,7 +17,10 @@ interface
 
 uses
   Uni,
-  inLibRepositoriosPantallaIntf,
+  UniDataRepositoriosArticulosPantalla,
+  UniDataRepositoriosConfiguracionPantalla,
+  UniDataRepositoriosDocumentosPantalla,
+  UniDataRepositoriosRemesasPantalla,
   inLibArticulosResolverIntf,
   inLibAppParamPersistenciaIntf,
   inLibBusquedaDatosPersistenciaIntf,

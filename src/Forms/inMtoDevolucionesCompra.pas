@@ -44,7 +44,7 @@ uses
   inLibBusquedasCompraPersistenciaIntf,
   inLibComprasPantallaIntf,
   inLibPermisosIntf,
-  inLibRepositoriosPantallaIntf,
+  UniDataComprasPantallaComposicion,
   inLibDevolucionesCompraPersistenciaIntf,
   inLibDevolucionesCompraStock,
   inLibGridTallasInline,
@@ -334,7 +334,7 @@ type
 function CrearDevolucionesCompraInyectada(
   AOwner: TComponent;
   const AContexto: TContextoAutorizacionPantalla;
-  const AArticulos: IRepositoriosArticulosPantalla): TForm;
+  const AComponer: TComponerDevolucionCompraPantalla): TForm;
 
 implementation
 
@@ -359,20 +359,19 @@ uses
   inLibColumnasSku,
   // Composicion del puerto de persistencia del pivote (V2).
   UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio,
-  UniDataColumnasSkuServicios, UniDataModoTallas,
-  UniDataComprasPantallaComposicion;
+  UniDataColumnasSkuServicios, UniDataModoTallas;
 
 {$R *.dfm}
 
 type
   TfrmMtoDevolucionesCompraInyectada = class(TfrmMtoDevolucionesCompra)
   private
-    FArticulos: IRepositoriosArticulosPantalla;
+    FComponer: TComponerDevolucionCompraPantalla;
   public
     constructor Create(
       AOwner: TComponent;
       const AContexto: TContextoAutorizacionPantalla;
-      const AArticulos: IRepositoriosArticulosPantalla); reintroduce;
+      const AComponer: TComponerDevolucionCompraPantalla); reintroduce;
     procedure CrearTablaPrincipal; override;
   end;
 
@@ -381,20 +380,22 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 function CrearDevolucionesCompraInyectada(
   AOwner: TComponent;
   const AContexto: TContextoAutorizacionPantalla;
-  const AArticulos: IRepositoriosArticulosPantalla): TForm;
+  const AComponer: TComponerDevolucionCompraPantalla): TForm;
 begin
   Result := TfrmMtoDevolucionesCompraInyectada.Create(
     AOwner,
     AContexto,
-    AArticulos);
+    AComponer);
 end;
 
 constructor TfrmMtoDevolucionesCompraInyectada.Create(
   AOwner: TComponent;
   const AContexto: TContextoAutorizacionPantalla;
-  const AArticulos: IRepositoriosArticulosPantalla);
+  const AComponer: TComponerDevolucionCompraPantalla);
 begin
-  FArticulos := AArticulos;
+  if not Assigned(AComponer) then
+    raise EArgumentNilException.Create('AComponer');
+  FComponer := AComponer;
   inherited Create(AOwner, AContexto);
 end;
 
@@ -403,8 +404,7 @@ var
   oContexto: TContextoDevolucionCompraPantalla;
 begin
   inherited;
-  ComponerComprasPantalla(
-    FArticulos,
+  FComponer(
     dmmDevolucionesCompra.unqryTablaG.Connection,
     oContexto);
   FAplicacionArticulo := oContexto.AplicacionArticulo;
@@ -415,7 +415,7 @@ begin
   FBusquedaEmpresas := oContexto.BusquedaEmpresas;
   FBusquedaProveedores := oContexto.BusquedaProveedores;
   FBusquedasArticulos := oContexto.BusquedasArticulos;
-  FArticulos := nil;
+  FComponer := nil;
 end;
 
 procedure TfrmMtoDevolucionesCompra.cbbSERIE_DEVCPropertiesInitPopup(

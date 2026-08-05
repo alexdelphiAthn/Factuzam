@@ -197,6 +197,8 @@ uses
   inMtoFrmBase in 'src\Core\inMtoFrmBase.pas' {frmBase},
   inMtoLogon in 'src\Core\inMtoLogon.pas' {frmLogon},
   inMtoPrincipal in 'src\Core\inMtoPrincipal.pas' {frmMtoPrincipal},
+  inMtoPrincipalAccionesVcl in
+    'src\Core\inMtoPrincipalAccionesVcl.pas',
   inMtoGen in 'src\Forms\inMtoGen.pas' {frmMtoGen},
   inMtoBusquedaDatos in
     'src\Forms\inMtoBusquedaDatos.pas' {frmMtoBusquedaDatos},
@@ -290,12 +292,12 @@ uses
   UniDataConn in 'src\DataModules\UniDataConn.pas' {dmConn: TDataModule},
   UniDataComposicionAplicacion in
     'src\DataModules\UniDataComposicionAplicacion.pas',
-  UniDataMantenimientosInyeccionRaiz in
-    'src\DataModules\UniDataMantenimientosInyeccionRaiz.pas',
-  UniDataCajaInyeccionRaiz in
-    'src\DataModules\UniDataCajaInyeccionRaiz.pas',
-  UniDataConfiguracionInyeccionRaiz in
-    'src\DataModules\UniDataConfiguracionInyeccionRaiz.pas',
+  inMtoMantenimientosInyeccionRaiz in
+    'src\Core\inMtoMantenimientosInyeccionRaiz.pas',
+  inMtoCajaInyeccionRaiz in
+    'src\Core\inMtoCajaInyeccionRaiz.pas',
+  inMtoConfiguracionInyeccionRaiz in
+    'src\Core\inMtoConfiguracionInyeccionRaiz.pas',
   UniDataFacturasInyeccion in
     'src\DataModules\UniDataFacturasInyeccion.pas',
   UniDataInventariosInyeccion in
@@ -481,6 +483,8 @@ uses
   UniDataCaja in 'src\Caja\DataModules\UniDataCaja.pas' {dmCajaOpe},
   UniDataCajaUnidadTrabajo in
     'src\Caja\DataModules\UniDataCajaUnidadTrabajo.pas',
+  inMtoCajaOperacionVclInyeccion in
+    'src\Caja\Forms\inMtoCajaOperacionVclInyeccion.pas',
   inMtoTraspasoOpe in 'src\Caja\Forms\inMtoTraspasoOpe.pas' {frmMtoOpeTraspaso},
   inLibTraspasoOpePersistenciaIntf in 'src\Caja\Lib\inLibTraspasoOpePersistenciaIntf.pas',
   UniDataTraspasoOpeRepositorio in 'src\Caja\DataModules\UniDataTraspasoOpeRepositorio.pas',

@@ -16,6 +16,8 @@ $rutaInterfaces = Join-Path $RaizRepositorio `
   'scripts\comprobar_interfaces_segregadas.ps1'
 $rutaConsultasUi = Join-Path $RaizRepositorio `
   'scripts\comprobar_consultas_ui.ps1'
+$rutaDependenciasOcultas = Join-Path $RaizRepositorio `
+  'scripts\comprobar_dependencias_ocultas.ps1'
 $rutaPruebasDelphi = Join-Path $RaizRepositorio `
   'scripts\ejecutar_pruebas_delphi.ps1'
 $rutaWorkflowCalidad = Join-Path $RaizRepositorio `
@@ -380,6 +382,7 @@ Registrar-Prueba 'sintaxis y formato de los scripts' {
     $rutaMetodos,
     $rutaInterfaces,
     $rutaConsultasUi,
+    $rutaDependenciasOcultas,
     $rutaPruebasDelphi)) {
     $tokens = $null
     $errores = $null
@@ -455,6 +458,84 @@ if (-not $OmitirLineaBase) {
         'TUniStoredProc.Create: 0;'
       )
   }
+  Registrar-Prueba 'linea base real de dependencias ocultas' {
+    $resultado = Ejecutar-Script -Ruta $rutaDependenciasOcultas
+    Confirmar-Resultado `
+      -Resultado $resultado `
+      -Codigo 0 `
+      -Textos @(
+        'Dependencias ocultas: OK.',
+        'localizadores y contextos de pantalla comprobados.'
+      )
+  }
+}
+
+$raizDependenciasOcultas = Nueva-RaizPrueba
+try {
+  $contenidoFrmBase = @(
+    'unit inMtoFrmBase;',
+    'interface',
+    'type',
+    '  TContextoDependenciasFacturas = record end;',
+    '  TContextoDependenciasOperacionCaja = record end;',
+    '  TContextoDependenciasComprasSesiones = record end;',
+    '  TContextoDependenciasInventario = record end;',
+    '  TContextoDependenciasArticulos = record end;',
+    '  TContextoDependenciasStockConsulta = record end;',
+    'implementation',
+    'end.'
+  ) -join "`r`n"
+  Escribir-ArchivoPrueba `
+    -Ruta (Join-Path $raizDependenciasOcultas `
+      'src\Core\inMtoFrmBase.pas') `
+    -Contenido $contenidoFrmBase
+  $contenidoCasoOculto = @(
+    'unit CasoDependenciaOculta;',
+    'interface',
+    'type',
+    '  TFormularioMalo = class',
+    '  private',
+    '    FRepositorios: IRepositoriosArticulosPantalla;',
+    '  end;',
+    'implementation',
+    'procedure Resolver;',
+    'var',
+    '  Compositor: ICompositorArticulosPantalla;',
+    'begin',
+    "  Owner.FindComponent('Repositorios');",
+    '  Objeto.GetInterface(',
+    '    IRepositoriosArticulosPantalla, Repositorios);',
+    '  BuscarCompositor;',
+    '  ObtenerCompositorArticulosPantalla;',
+    '  Supports(Application.MainForm,',
+    '    IRepositoriosArticulosPantalla, Repositorios);',
+    'end;',
+    'end.'
+  ) -join "`r`n"
+  Escribir-ArchivoPrueba `
+    -Ruta (Join-Path $raizDependenciasOcultas `
+      'src\Forms\CasoDependenciaOculta.pas') `
+    -Contenido $contenidoCasoOculto
+  Registrar-Prueba 'dependencias ocultas: bloquea localizadores' {
+    $resultado = Ejecutar-Script `
+      -Ruta $rutaDependenciasOcultas `
+      -Argumentos @('-Raiz', $raizDependenciasOcultas)
+    Confirmar-Resultado `
+      -Resultado $resultado `
+      -Codigo 1 `
+      -Textos @(
+        'Localizador de compositor de pantalla',
+        'Acceso global a compositor de pantalla',
+        'Contrato de compositor de pantalla obsoleto',
+        'Familia amplia de repositorios almacenada en presentación',
+        'Resolución de dependencia mediante Owner.FindComponent',
+        'Resolución de dependencia mediante GetInterface',
+        'Repositorio de feature resuelto desde Application.MainForm'
+      )
+  }
+}
+finally {
+  Borrar-RaizPrueba -Ruta $raizDependenciasOcultas
 }
 
 Registrar-Prueba 'CI Delphi obligatoria en cada PR' {

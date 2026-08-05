@@ -2055,7 +2055,9 @@ procedure TfrmMtoGen.EjecutarModalGuias;
 var
   oFormulario: TfrmModalGridGuias;
 begin
-  oFormulario := TfrmModalGridGuias.Create(Application);
+  oFormulario := TfrmModalGridGuias.Create(
+    Application,
+    FiltrosGuias);
   try
     oFormulario.sFormulario := Self.Name;
     oFormulario.FDataSet := nil;

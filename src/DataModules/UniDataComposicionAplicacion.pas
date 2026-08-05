@@ -32,6 +32,14 @@ uses
   inLibConfigCamposIntf,
   inLibConfigCampos,
   inLibRepositoriosPantallaIntf,
+  UniDataRepositoriosArticulosPantalla,
+  UniDataRepositoriosConfiguracionPantalla,
+  UniDataRepositoriosDocumentosPantalla,
+  UniDataRepositoriosRemesasPantalla,
+  UniDataRepositoriosOperacionesPantalla,
+  UniDataRepositoriosVentasPantalla,
+  UniDataRepositoriosCajaPantalla,
+  UniDataRepositoriosTicketsCajaPantalla,
   inLibParametrosIntf,
   inLibPerfilesUsuarioIntf,
   inLibFiltrosGuardadosIntf,
@@ -466,6 +474,9 @@ begin
   FServiciosFiltros.Destinos :=
     CrearRepositoriosConfiguracionPantalla('GestionFiltros').
     CrearRepositorioDestinosFiltros;
+  FServiciosFiltros.Guias :=
+    CrearRepositoriosConfiguracionPantalla('Guias').
+    CrearRepositorioGuias;
   FRegistroPantallas := TfzaWinF.Create(
     FOwner,
     FRegistroLog,

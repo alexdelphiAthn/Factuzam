@@ -17,7 +17,8 @@ interface
 
 uses
   System.Classes, Data.DB, Uni, UniDataFacturas,
-  inLibFacturasAplicacionIntf;
+  inLibFacturasAplicacionIntf,
+  inLibSeleccionBancoEmpresaPersistenciaIntf;
 
 type
   TAccionCobrosFacturaVcl = reference to procedure;
@@ -30,6 +31,7 @@ type
     Conexion: TUniConnection;
     PropietarioVisual: TComponent;
     Usuario: string;
+    SeleccionBanco: IRepositorioSeleccionBancoEmpresa;
     EsVentaMayor: Boolean;
     AsegurarEfectos: TAccionCobrosFacturaVcl;
     AsegurarRecibos: TAccionCobrosFacturaVcl;
@@ -134,9 +136,9 @@ begin
       sPreferido := AContexto.Aplicacion.BancoDefectoCliente(sCliente);
       SeleccionBanco := TfrmModalSeleccionarBanco.Ejecutar(
         AContexto.PropietarioVisual,
-        AContexto.Conexion,
         sEmpresa,
         ubeCobro,
+        AContexto.SeleccionBanco,
         sPreferido);
       if not SeleccionBanco.Aceptado then
       begin

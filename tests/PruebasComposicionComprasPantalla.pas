@@ -68,12 +68,14 @@ uses
   inLibArticulosAtributosIntf,
   inLibArticulosValidadorIntf,
   inLibBusquedasCompraPersistenciaIntf,
+  inLibCargaMasivaArticulosPersistenciaIntf,
   inLibComprasPantallaIntf,
   inLibComprasPantallaTransaccion,
   inLibDevolucionesCompraPersistenciaIntf,
   inLibDevolucionesCompraStock,
   inLibDocumentosTrabajo,
   inLibPedidosCompraIntf,
+  inLibSeleccionBancoEmpresaPersistenciaIntf,
   UniDataComprasPantallaComposicion;
 
 type
@@ -222,6 +224,44 @@ type
     procedure BorrarKit;
   end;
 
+  TDobleConfiguracionCompra = class(
+    TInterfacedObject,
+    IRepositorioSeleccionBancoEmpresa,
+    IConsultasCargaMasivaArticulos,
+    IInsercionesCargaMasivaArticulos)
+  public
+    function ConsultarCuentas(
+      const ACodigoEmpresa: string;
+      AUso: TUsoBancoEmpresa): IConsultaBancosEmpresa;
+    function ConsultarFamilias: IConsultaCargaMasivaArticulos;
+    function ConsultarProveedores: IConsultaCargaMasivaArticulos;
+    function ConsultarValoresPropiedad(
+      const ACodigoPropiedad: string): IConsultaCargaMasivaArticulos;
+    function ListarPropiedades: TPropiedadesCargaMasiva;
+    function ListarAlmacenes: TAlmacenesCargaMasiva;
+    function ListarTarifas: TTarifasCargaMasiva;
+    function Previsualizar(
+      const AFiltros: TFiltrosCargaMasivaArticulos;
+      const AContexto: TContextoCargaMasivaArticulos):
+      IConsultaCargaMasivaArticulos;
+    function InsertarTarifa(
+      const AConsulta: IConsultaCargaMasivaArticulos;
+      const AParametros: TParametrosInsercionTarifa):
+      TResultadoInsercionCargaMasiva;
+    function InsertarInventario(
+      const AConsulta: IConsultaCargaMasivaArticulos;
+      const AParametros: TParametrosInsercionInventario):
+      TResultadoInsercionCargaMasiva;
+    function InsertarDocumentoTrabajo(
+      const AConsulta: IConsultaCargaMasivaArticulos;
+      const AParametros: TParametrosInsercionDocumentoTrabajo):
+      TResultadoInsercionCargaMasiva;
+    function InsertarSesionTarifa(
+      const AConsulta: IConsultaCargaMasivaArticulos;
+      const AParametros: TParametrosInsercionSesionTarifa):
+      TResultadoInsercionCargaMasiva;
+  end;
+
   TComportamientoColaborador = (
     ccExito,
     ccRechazo,
@@ -282,6 +322,89 @@ type
       out AEstado: TEstadoStockDevolucionCompra): Boolean;
     property Llamadas: Integer read FLlamadas;
   end;
+
+function TDobleConfiguracionCompra.ConsultarCuentas(
+  const ACodigoEmpresa: string;
+  AUso: TUsoBancoEmpresa): IConsultaBancosEmpresa;
+begin
+  Result := nil;
+end;
+
+function TDobleConfiguracionCompra.ConsultarFamilias:
+  IConsultaCargaMasivaArticulos;
+begin
+  Result := nil;
+end;
+
+function TDobleConfiguracionCompra.ConsultarProveedores:
+  IConsultaCargaMasivaArticulos;
+begin
+  Result := nil;
+end;
+
+function TDobleConfiguracionCompra.ConsultarValoresPropiedad(
+  const ACodigoPropiedad: string): IConsultaCargaMasivaArticulos;
+begin
+  Result := nil;
+end;
+
+function TDobleConfiguracionCompra.ListarPropiedades:
+  TPropiedadesCargaMasiva;
+begin
+  Result := nil;
+end;
+
+function TDobleConfiguracionCompra.ListarAlmacenes:
+  TAlmacenesCargaMasiva;
+begin
+  Result := nil;
+end;
+
+function TDobleConfiguracionCompra.ListarTarifas:
+  TTarifasCargaMasiva;
+begin
+  Result := nil;
+end;
+
+function TDobleConfiguracionCompra.Previsualizar(
+  const AFiltros: TFiltrosCargaMasivaArticulos;
+  const AContexto: TContextoCargaMasivaArticulos):
+  IConsultaCargaMasivaArticulos;
+begin
+  Result := nil;
+end;
+
+function TDobleConfiguracionCompra.InsertarTarifa(
+  const AConsulta: IConsultaCargaMasivaArticulos;
+  const AParametros: TParametrosInsercionTarifa):
+  TResultadoInsercionCargaMasiva;
+begin
+  Result := Default(TResultadoInsercionCargaMasiva);
+end;
+
+function TDobleConfiguracionCompra.InsertarInventario(
+  const AConsulta: IConsultaCargaMasivaArticulos;
+  const AParametros: TParametrosInsercionInventario):
+  TResultadoInsercionCargaMasiva;
+begin
+  Result := Default(TResultadoInsercionCargaMasiva);
+end;
+
+function TDobleConfiguracionCompra.InsertarDocumentoTrabajo(
+  const AConsulta: IConsultaCargaMasivaArticulos;
+  const AParametros: TParametrosInsercionDocumentoTrabajo):
+  TResultadoInsercionCargaMasiva;
+begin
+  Result := Default(TResultadoInsercionCargaMasiva);
+end;
+
+function TDobleConfiguracionCompra.InsertarSesionTarifa(
+  const AConsulta: IConsultaCargaMasivaArticulos;
+  const AParametros: TParametrosInsercionSesionTarifa):
+  TResultadoInsercionCargaMasiva;
+begin
+  Result := Default(TResultadoInsercionCargaMasiva);
+end;
 
 function TDobleArticuloCompra.Ejecutar(
   const AEntrada: TEntradaAplicacionArticuloCompra;
@@ -968,16 +1091,19 @@ procedure TPruebasComposicionComprasPantalla.
 var
   oArticulo: TDobleArticuloCompra;
   oBusquedas: TDobleBusquedasCompra;
+  oConfiguracion: TDobleConfiguracionCompra;
   Contexto: TContextoFacturaCompraPantalla;
 begin
   oArticulo := TDobleArticuloCompra.Create;
   oBusquedas := TDobleBusquedasCompra.Create;
+  oConfiguracion := TDobleConfiguracionCompra.Create;
   Contexto := Default(TContextoFacturaCompraPantalla);
   Contexto.AplicacionArticulo := oArticulo;
   Contexto.ValidadorArticulos := oArticulo;
   Contexto.LookupAtributos := oArticulo;
   Contexto.BusquedaProveedores := oBusquedas;
   Contexto.BusquedasArticulos := oBusquedas;
+  Contexto.SeleccionBanco := oConfiguracion;
   Assert.WillNotRaise(
     procedure
     begin
@@ -1043,16 +1169,20 @@ procedure TPruebasComposicionComprasPantalla.
   ContextoDocumentosTrabajo_ValidaCapacidadesConcretas;
 var
   oArticulo: TDobleArticuloCompra;
+  oConfiguracion: TDobleConfiguracionCompra;
   oDocumentos: TDobleDocumentosTrabajo;
   Contexto: TContextoDocumentosTrabajoCompraPantalla;
 begin
   oArticulo := TDobleArticuloCompra.Create;
+  oConfiguracion := TDobleConfiguracionCompra.Create;
   oDocumentos := TDobleDocumentosTrabajo.Create;
   Contexto := Default(TContextoDocumentosTrabajoCompraPantalla);
   Contexto.ValidadorArticulos := oArticulo;
   Contexto.LookupAtributos := oArticulo;
   Contexto.Lecturas := oDocumentos;
   Contexto.Materializacion := oDocumentos;
+  Contexto.CargaMasiva.Consultas := oConfiguracion;
+  Contexto.CargaMasiva.Inserciones := oConfiguracion;
   Assert.WillNotRaise(
     procedure
     begin

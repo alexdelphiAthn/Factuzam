@@ -650,6 +650,8 @@ begin
   Result.Conexion := AFormulario.ConexionPrincipal;
   Result.PropietarioVisual := AFormulario;
   Result.Usuario := AFormulario.IdentidadSesion.Usuario;
+  Result.SeleccionBanco :=
+    AFormulario.FDependenciasInyeccion.SeleccionBanco;
   Result.EsVentaMayor := SameText(
     AFormulario.TipoFacturaFiltro,
     'NORMAL');

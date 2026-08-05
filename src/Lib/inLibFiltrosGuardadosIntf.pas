@@ -17,7 +17,8 @@ interface
 
 uses
   System.Generics.Collections,
-  inLibDestinosFiltrosPersistenciaIntf;
+  inLibDestinosFiltrosPersistenciaIntf,
+  inLibGuiasPersistenciaIntf;
 
 type
   TFiltroGuardadoInfo = record
@@ -82,6 +83,7 @@ type
     Escritura: IEscritorFiltrosGuardados;
     Comparticion: ICompartidorFiltrosGuardados;
     Destinos: IRepositorioDestinosFiltros;
+    Guias: IRepositorioGuias;
   end;
 
   IProveedorFiltrosGuardados = interface
@@ -115,6 +117,7 @@ begin
   Result.Escritura := AEscritura;
   Result.Comparticion := AComparticion;
   Result.Destinos := nil;
+  Result.Guias := nil;
 end;
 
 function CrearServiciosFiltrosGuardados(

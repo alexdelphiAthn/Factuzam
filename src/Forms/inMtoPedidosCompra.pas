@@ -52,7 +52,7 @@ uses
   inLibBusquedasCompraPersistenciaIntf,
   inLibComprasPantallaIntf,
   inLibPermisosIntf,
-  inLibRepositoriosPantallaIntf,
+  UniDataComprasPantallaComposicion,
   inLibPedidosCompraIntf,
   UniDataPedidosCompra, cxBlobEdit, System.Actions, Vcl.ActnList,
   dxShellDialogs, cxSplitter, inLibDocumento, inLibDocumentoIntf;
@@ -406,7 +406,7 @@ type
 function CrearPedidosCompraInyectada(
   AOwner: TComponent;
   const AContexto: TContextoAutorizacionPantalla;
-  const AArticulos: IRepositoriosArticulosPantalla): TForm;
+  const AComponer: TComponerPedidoCompraPantalla): TForm;
 
 implementation
 
@@ -417,7 +417,6 @@ uses
   inLibPedidosCompra,
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   UniDataAplicacionArticuloCompra,
-  UniDataComprasPantallaComposicion,
   inLibGridCantidad,
   inLibColumnasDocumento, UniDataColumnasDocumentoRepositorio,
   UniDataGen,
@@ -438,12 +437,12 @@ uses
 type
   TfrmMtoPedidosCompraInyectada = class(TfrmMtoPedidosCompra)
   private
-    FArticulos: IRepositoriosArticulosPantalla;
+    FComponer: TComponerPedidoCompraPantalla;
   public
     constructor Create(
       AOwner: TComponent;
       const AContexto: TContextoAutorizacionPantalla;
-      const AArticulos: IRepositoriosArticulosPantalla); reintroduce;
+      const AComponer: TComponerPedidoCompraPantalla); reintroduce;
     procedure CrearTablaPrincipal; override;
   end;
 
@@ -452,20 +451,22 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 function CrearPedidosCompraInyectada(
   AOwner: TComponent;
   const AContexto: TContextoAutorizacionPantalla;
-  const AArticulos: IRepositoriosArticulosPantalla): TForm;
+  const AComponer: TComponerPedidoCompraPantalla): TForm;
 begin
   Result := TfrmMtoPedidosCompraInyectada.Create(
     AOwner,
     AContexto,
-    AArticulos);
+    AComponer);
 end;
 
 constructor TfrmMtoPedidosCompraInyectada.Create(
   AOwner: TComponent;
   const AContexto: TContextoAutorizacionPantalla;
-  const AArticulos: IRepositoriosArticulosPantalla);
+  const AComponer: TComponerPedidoCompraPantalla);
 begin
-  FArticulos := AArticulos;
+  if not Assigned(AComponer) then
+    raise EArgumentNilException.Create('AComponer');
+  FComponer := AComponer;
   inherited Create(AOwner, AContexto);
 end;
 
@@ -479,7 +480,7 @@ begin
   oEntrada.Conexion := dmmPedidosCompra.unqryTablaG.Connection;
   oEntrada.Cabecera := dmmPedidosCompra.unqryTablaG;
   oEntrada.Lineas := dmmPedidosCompra.unqryPedidosCompraLineas;
-  ComponerComprasPantalla(FArticulos, oEntrada, oContexto);
+  FComponer(oEntrada, oContexto);
   FAplicacionArticuloCompra := oContexto.AplicacionArticulo;
   FValidadorArticulos := oContexto.ValidadorArticulos;
   FLookupAtributos := oContexto.LookupAtributos;
@@ -488,7 +489,7 @@ begin
   FBusquedaEmpresas := oContexto.BusquedaEmpresas;
   FBusquedaProveedores := oContexto.BusquedaProveedores;
   FBusquedasArticulos := oContexto.BusquedasArticulos;
-  FArticulos := nil;
+  FComponer := nil;
 end;
 
 // dsTablaG apunta a la cabecera del pedido de compra. El articulo

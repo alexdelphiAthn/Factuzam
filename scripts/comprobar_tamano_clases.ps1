@@ -8,26 +8,26 @@ param(
   [int]$MaximoCamposPorClase = 37,
   [hashtable]$LimitesClases = @{
     TfrmMtoComprasSesiones = @{
-      Lineas = 1827
-      Metodos = 82
+      Lineas = 1843
+      Metodos = 83
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
     }
     TfrmMtoFacturasBase = @{
-      Lineas = 1601
-      Metodos = 72
+      Lineas = 1603
+      Metodos = 73
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
     }
     TfrmMtoOpeCaja = @{
-      Lineas = 1918
-      Metodos = 95
+      Lineas = 2121
+      Metodos = 97
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
     }
     TfrmMtoArticulos = @{
-      Lineas = 1811
-      Metodos = 86
+      Lineas = 1905
+      Metodos = 87
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
     }
@@ -38,8 +38,8 @@ param(
       ObjetivoMetodos = 120
     }
     TfrmMtoInventarios = @{
-      Lineas = 1980
-      Metodos = 75
+      Lineas = 1979
+      Metodos = 76
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
     }

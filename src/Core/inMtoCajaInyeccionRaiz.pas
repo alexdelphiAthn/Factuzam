@@ -1,6 +1,6 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
-{  Módulo:       UniDataCajaInyeccionRaiz                                      }
+{  Módulo:       inMtoCajaInyeccionRaiz                                       }
 {    Tipo:       Composición raíz                                              }
 { Versión:       1.0.0                                                         }
 {   Fecha:       05/08/2026                                                    }
@@ -8,7 +8,7 @@
 {  Descripción:                                                                }
 {    Compone los contextos mínimos de Caja y registra sus fábricas.            }
 {******************************************************************************}
-unit UniDataCajaInyeccionRaiz;
+unit inMtoCajaInyeccionRaiz;
 
 interface
 
@@ -181,12 +181,7 @@ begin
     AOwner,
     TContextoAutorizacionPantalla.Crear(APermisos),
     Dependencias);
-  if not Supports(Formulario, IOperacionCaja, Result) then
-  begin
-    FreeAndNil(Formulario);
-    raise EInvalidCast.Create(
-      'La ventana de operación no implementa IOperacionCaja.');
-  end;
+  Result := Formulario;
 end;
 
 function TInyeccionCajaRaiz.CrearConsulta(
@@ -215,12 +210,7 @@ begin
     AOwner,
     APermisos,
     Dependencias);
-  if not Supports(Formulario, IConsultaOperacionesCaja, Result) then
-  begin
-    FreeAndNil(Formulario);
-    raise EInvalidCast.Create(
-      'La ventana de consulta no implementa IConsultaOperacionesCaja.');
-  end;
+  Result := Formulario;
 end;
 
 function TInyeccionCajaRaiz.CrearTraspaso(

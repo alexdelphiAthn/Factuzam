@@ -50,7 +50,8 @@ uses
   inLibBusquedasCompraPersistenciaIntf,
   inLibComprasPantallaIntf,
   inLibPermisosIntf,
-  inLibRepositoriosPantallaIntf,
+  UniDataComprasPantallaComposicion,
+  inLibSeleccionBancoEmpresaPersistenciaIntf,
   UniDataFacturasCompra, cxBlobEdit, dxShellDialogs, System.Actions,
   Vcl.ActnList, cxSplitter, inLibDocumento, inLibDocumentoIntf;
 
@@ -282,6 +283,7 @@ type
     // mismo paso que albaranes/pedidos de compra.
     procedure MostrarColumnasAtributoGlobalesFacc;
   protected
+    FRepositorioSeleccionBanco: IRepositorioSeleccionBancoEmpresa;
     // F1 = ciclar el modo de entrada (KeyPreview de TfrmBase),
     // mismo atajo que albaranes y pedidos de compra.
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
@@ -293,7 +295,7 @@ type
 function CrearFacturasCompraInyectada(
   AOwner: TComponent;
   const AContexto: TContextoAutorizacionPantalla;
-  const AArticulos: IRepositoriosArticulosPantalla): TForm;
+  const AComponer: TComponerFacturaCompraPantalla): TForm;
 
 implementation
 
@@ -320,20 +322,19 @@ uses
   inLibColumnasSku,
   // Composicion del puerto de persistencia del pivote (V2).
   UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio,
-  UniDataColumnasSkuServicios, UniDataModoTallas,
-  UniDataComprasPantallaComposicion;
+  UniDataColumnasSkuServicios, UniDataModoTallas;
 
 {$R *.dfm}
 
 type
   TfrmMtoFacturasCompraInyectada = class(TfrmMtoFacturasCompra)
   private
-    FArticulos: IRepositoriosArticulosPantalla;
+    FComponer: TComponerFacturaCompraPantalla;
   public
     constructor Create(
       AOwner: TComponent;
       const AContexto: TContextoAutorizacionPantalla;
-      const AArticulos: IRepositoriosArticulosPantalla); reintroduce;
+      const AComponer: TComponerFacturaCompraPantalla); reintroduce;
     procedure CrearTablaPrincipal; override;
   end;
 
@@ -342,20 +343,22 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 function CrearFacturasCompraInyectada(
   AOwner: TComponent;
   const AContexto: TContextoAutorizacionPantalla;
-  const AArticulos: IRepositoriosArticulosPantalla): TForm;
+  const AComponer: TComponerFacturaCompraPantalla): TForm;
 begin
   Result := TfrmMtoFacturasCompraInyectada.Create(
     AOwner,
     AContexto,
-    AArticulos);
+    AComponer);
 end;
 
 constructor TfrmMtoFacturasCompraInyectada.Create(
   AOwner: TComponent;
   const AContexto: TContextoAutorizacionPantalla;
-  const AArticulos: IRepositoriosArticulosPantalla);
+  const AComponer: TComponerFacturaCompraPantalla);
 begin
-  FArticulos := AArticulos;
+  if not Assigned(AComponer) then
+    raise EArgumentNilException.Create('AComponer');
+  FComponer := AComponer;
   inherited Create(AOwner, AContexto);
 end;
 
@@ -369,13 +372,14 @@ begin
   oEntrada.Conexion := ConexionPrincipal;
   oEntrada.Cabecera := dmmFacturasCompra.unqryTablaG;
   oEntrada.Lineas := dmmFacturasCompra.unqryFacturasCompraLineas;
-  ComponerComprasPantalla(FArticulos, oEntrada, oContexto);
+  FComponer(oEntrada, oContexto);
   FAplicacionArticuloCompra := oContexto.AplicacionArticulo;
   FValidadorArticulos := oContexto.ValidadorArticulos;
   FLookupAtributos := oContexto.LookupAtributos;
   FBusquedaProveedores := oContexto.BusquedaProveedores;
   FBusquedasArticulos := oContexto.BusquedasArticulos;
-  FArticulos := nil;
+  FRepositorioSeleccionBanco := oContexto.SeleccionBanco;
+  FComponer := nil;
 end;
 
 procedure TfrmMtoFacturasCompra.cbbSERIE_FACCPropertiesInitPopup(
@@ -1431,8 +1435,12 @@ begin
     sEmp  := dsTablaG.DataSet.FieldByName('CODIGO_EMP_FACC').AsString;
     sPrv  := dsTablaG.DataSet.FieldByName('CODIGO_PRV_FACC').AsString;
     sPref := dmmFacturasCompra.GetBancoDefectoProveedor(sPrv);
-    selBanco := TfrmModalSeleccionarBanco.Ejecutar(Self, ConexionPrincipal,
-                                                   sEmp, ubePago, sPref);
+    selBanco := TfrmModalSeleccionarBanco.Ejecutar(
+      Self,
+      sEmp,
+      ubePago,
+      FRepositorioSeleccionBanco,
+      sPref);
     if not selBanco.Aceptado then
       ShowMessage(SInfoGeneracionEfectosPagoCancelada)
     else

@@ -314,6 +314,7 @@
         <DCCReference Include="src\Core\inMtoPrincipal.pas">
             <Form>frmMtoPrincipal</Form>
         </DCCReference>
+        <DCCReference Include="src\Core\inMtoPrincipalAccionesVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoGen.pas">
             <Form>frmMtoGen</Form>
         </DCCReference>
@@ -524,9 +525,9 @@
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <DCCReference Include="src\DataModules\UniDataComposicionAplicacion.pas"/>
-        <DCCReference Include="src\DataModules\UniDataMantenimientosInyeccionRaiz.pas"/>
-        <DCCReference Include="src\DataModules\UniDataCajaInyeccionRaiz.pas"/>
-        <DCCReference Include="src\DataModules\UniDataConfiguracionInyeccionRaiz.pas"/>
+        <DCCReference Include="src\Core\inMtoMantenimientosInyeccionRaiz.pas"/>
+        <DCCReference Include="src\Core\inMtoCajaInyeccionRaiz.pas"/>
+        <DCCReference Include="src\Core\inMtoConfiguracionInyeccionRaiz.pas"/>
         <DCCReference Include="src\DataModules\UniDataFacturasInyeccion.pas"/>
         <DCCReference Include="src\DataModules\UniDataInventariosInyeccion.pas"/>
         <DCCReference Include="src\DataModules\UniDataRepositoriosPantalla.pas"/>
@@ -724,6 +725,7 @@
             <Form>dmCajaOpe</Form>
         </DCCReference>
         <DCCReference Include="src\Caja\DataModules\UniDataCajaUnidadTrabajo.pas"/>
+        <DCCReference Include="src\Caja\Forms\inMtoCajaOperacionVclInyeccion.pas"/>
         <DCCReference Include="src\Caja\Forms\inMtoTraspasoOpe.pas">
             <Form>frmMtoOpeTraspaso</Form>
         </DCCReference>

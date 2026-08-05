@@ -431,7 +431,9 @@ procedure TfrmPrint.EditarGuiasParaFormato(const aFormato: string;
 var
   oForm: TfrmModalInformesGuias;
 begin
-  oForm := TfrmModalInformesGuias.Create(Self);
+  oForm := TfrmModalInformesGuias.Create(
+    Self,
+    FiltrosGuias);
   try
     oForm.sInforme := Self.Name;
     // Si el formato es 'Predeterminado' tratamos al usuario como si

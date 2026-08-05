@@ -69,6 +69,13 @@ type
       AOwner: TComponent;
       AIdDtr: Int64;
       const AAlmacen, ATitulo: string): TAddBlockDocumentoTrabajoResult;
+      overload;
+    class function Ejecutar(
+      AOwner: TComponent;
+      AIdDtr: Int64;
+      const AAlmacen, ATitulo: string;
+      const AServicios: TServiciosCargaMasivaArticulos):
+      TAddBlockDocumentoTrabajoResult; overload;
     property ResultadoDoc: TAddBlockDocumentoTrabajoResult read FResultadoDoc;
   end;
 
@@ -84,9 +91,22 @@ class function TfrmModalAddBlockDocumentoTrabajo.Ejecutar(
   AIdDtr: Int64;
   const AAlmacen, ATitulo: string): TAddBlockDocumentoTrabajoResult;
 var
+  Servicios: TServiciosCargaMasivaArticulos;
+begin
+  Servicios := Default(TServiciosCargaMasivaArticulos);
+  Result := Ejecutar(AOwner, AIdDtr, AAlmacen, ATitulo, Servicios);
+end;
+
+class function TfrmModalAddBlockDocumentoTrabajo.Ejecutar(
+  AOwner: TComponent;
+  AIdDtr: Int64;
+  const AAlmacen, ATitulo: string;
+  const AServicios: TServiciosCargaMasivaArticulos):
+  TAddBlockDocumentoTrabajoResult;
+var
   frm: TfrmModalAddBlockDocumentoTrabajo;
 begin
-  frm := TfrmModalAddBlockDocumentoTrabajo.Create(AOwner);
+  frm := TfrmModalAddBlockDocumentoTrabajo.Create(AOwner, AServicios);
   try
     frm.FIdDtr := AIdDtr;
     frm.FAlmacen := AAlmacen;

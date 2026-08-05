@@ -28,6 +28,7 @@ uses
   inLibFacturasPresentadorListado,
   inLibFacturasServiciosIntf,
   inLibGenBusq,
+  inLibSeleccionBancoEmpresaPersistenciaIntf,
   inLibPivoteVentaComposicionIntf;
 
 type
@@ -67,6 +68,7 @@ type
     Cobros: IServicioEfectosFactura;
     Reapertura: IServicioReaperturaBorrador;
     IncidenciaFiscal: IServicioIncidenciaFiscalFactura;
+    SeleccionBanco: IRepositorioSeleccionBancoEmpresa;
     procedure Validar;
     procedure Liberar;
   end;
@@ -109,6 +111,8 @@ resourcestring
     'No se proporcionó la reapertura de facturas.';
   SErrorIncidenciaFiscalFacturaNoDisponible =
     'No se proporcionó la resolución de incidencias fiscales.';
+  SErrorSeleccionBancoFacturaNoDisponible =
+    'No se proporcionó la selección de banco de facturas.';
 
 procedure TDependenciasArticulosFactura.Validar;
 begin
@@ -206,6 +210,9 @@ begin
   if not Assigned(IncidenciaFiscal) then
     raise EArgumentNilException.Create(
       SErrorIncidenciaFiscalFacturaNoDisponible);
+  if not Assigned(SeleccionBanco) then
+    raise EArgumentNilException.Create(
+      SErrorSeleccionBancoFacturaNoDisponible);
 end;
 
 procedure TDependenciasFacturas.Liberar;
@@ -230,6 +237,7 @@ begin
   Cobros := nil;
   Reapertura := nil;
   IncidenciaFiscal := nil;
+  SeleccionBanco := nil;
 end;
 
 end.

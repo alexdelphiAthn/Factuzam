@@ -16,7 +16,7 @@ unit UniDataRepositoriosOperacionesPantalla;
 interface
 
 uses
-  Uni, inLibRepositoriosPantallaIntf, inLibCatalogoSqlIntf,
+  Uni, inLibCatalogoSqlIntf,
   inLibParametrosIntf, inLibLogIntf,
   inLibConsultaFacturasOperacionesPersistenciaIntf,
   inLibVentasCalendarioIntf, inLibEmisionFiscalIntf,
@@ -24,6 +24,17 @@ uses
   UniDataRepositoriosGeneralesPantalla;
 
 type
+  IRepositoriosOperacionesPantalla = interface
+    ['{AF97D4E0-A6D6-49C8-9070-1763E7BF95B1}']
+    function CrearRepositorioConsultaFacturas:
+      IRepositorioConsultaFacturasOperaciones;
+    function CrearRepositorioVentasCalendario:
+      IRepositorioVentasCalendario;
+    function CrearServicioEmisionFiscal: IServicioEmisionFiscal;
+    function CrearRepositorioOperacionesCajaSku(
+      AConexion: TUniConnection = nil): IRepositorioOperacionesCajaSku;
+  end;
+
   TRepositoriosOperacionesPantallaUniDAC = class(
     TAdaptadorRepositoriosPantallaUniDAC,
     IRepositoriosOperacionesPantalla)

@@ -31,10 +31,16 @@ type
 implementation
 
 uses
-  System.SysUtils, inLibRepositoriosPantallaIntf,
+  System.SysUtils,
+  UniDataRepositoriosArticulosPantalla,
   UniDataRepositoriosCajaPantalla,
+  UniDataRepositoriosConfiguracionPantalla,
+  UniDataRepositoriosDocumentosPantalla,
   UniDataRepositoriosGeneralesPantalla,
-  UniDataRepositoriosTicketsCajaPantalla;
+  UniDataRepositoriosOperacionesPantalla,
+  UniDataRepositoriosRemesasPantalla,
+  UniDataRepositoriosTicketsCajaPantalla,
+  UniDataRepositoriosVentasPantalla;
 
 procedure TPruebasRepositoriosPantallaComposicion.
   General_NoImplementaLasSeisFamiliasExtraidas;

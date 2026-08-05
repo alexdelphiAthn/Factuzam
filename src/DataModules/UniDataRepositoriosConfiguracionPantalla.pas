@@ -16,7 +16,7 @@ unit UniDataRepositoriosConfiguracionPantalla;
 interface
 
 uses
-  Uni, inLibRepositoriosPantallaIntf, inLibCatalogoSqlIntf,
+  Uni, inLibCatalogoSqlIntf,
   inLibAppParamPersistenciaIntf, inLibBusquedaDatosPersistenciaIntf,
   inLibDestinosFiltrosPersistenciaIntf, inLibGuiasPersistenciaIntf,
   inLibSeriesEmpresaPersistenciaIntf,
@@ -24,6 +24,22 @@ uses
   UniDataRepositoriosGeneralesPantalla;
 
 type
+  IRepositoriosConfiguracionPantalla = interface
+    ['{51902F28-F05D-4855-AB2D-16EF80EB0384}']
+    function CrearRepositorioAppParam(
+      AConexion: TUniConnection = nil): IRepositorioAppParam;
+    function CrearRepositorioBusquedaDatos(
+      AConexion: TUniConnection = nil): IRepositorioBusquedaDatos;
+    function CrearRepositorioDestinosFiltros(
+      AConexion: TUniConnection = nil): IRepositorioDestinosFiltros;
+    function CrearRepositorioGuias(
+      AConexion: TUniConnection = nil): IRepositorioGuias;
+    function CrearRepositorioSeriesEmpresa(
+      AConexion: TUniConnection = nil): IRepositorioSeriesEmpresa;
+    function CrearRepositorioSeleccionBancoEmpresa(
+      AConexion: TUniConnection = nil): IRepositorioSeleccionBancoEmpresa;
+  end;
+
   TRepositoriosConfiguracionPantallaUniDAC = class(
     TAdaptadorRepositoriosPantallaUniDAC,
     IRepositoriosConfiguracionPantalla)

@@ -17,7 +17,7 @@ interface
 
 uses
   Uni,
-  inLibRepositoriosPantallaIntf,
+  UniDataRepositoriosArticulosPantalla,
   inLibInventariosInyeccion;
 
 function CrearDependenciasInventariosUniDAC(
@@ -56,7 +56,8 @@ begin
     DependenciasArticulos,
     CrearBusquedasInventarioUniDAC(AConexion),
     CrearRepositorioRecuentoRemotoInventarioUniDAC(AConexion),
-    CrearInventarioNubeRepositorio(AConexion));
+    CrearInventarioNubeRepositorio(AConexion),
+    AArticulos.CrearServicioCargaMasivaArticulos);
 end;
 
 end.

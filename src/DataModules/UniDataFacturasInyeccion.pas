@@ -20,7 +20,8 @@ uses
   inLibCatalogoSqlIntf,
   inLibFacturasInyeccion,
   inLibLogIntf,
-  inLibParametrosIntf;
+  inLibParametrosIntf,
+  inLibSeleccionBancoEmpresaPersistenciaIntf;
 
 type
   TContextoFacturasUniDAC = record
@@ -30,6 +31,7 @@ type
     CatalogoSql: ICatalogoSql;
     IncidenciasSql: IRegistroIncidenciasSql;
     RegistroLog: IRegistroLog;
+    SeleccionBanco: IRepositorioSeleccionBancoEmpresa;
     Usuario: string;
     procedure Validar;
   end;
@@ -77,6 +79,8 @@ resourcestring
     'No se proporcionaron los parámetros de Caja para Facturas.';
   SErrorRegistroLogFacturasNoDisponible =
     'No se proporcionó el registro de actividad de Facturas.';
+  SErrorSeleccionBancoFacturasNoDisponible =
+    'No se proporcionó la selección de banco de Facturas.';
 
 type
   TCreadorPivoteVentaFacturaUniDAC = class(
@@ -106,6 +110,9 @@ begin
   if not Assigned(RegistroLog) then
     raise EArgumentNilException.Create(
       SErrorRegistroLogFacturasNoDisponible);
+  if not Assigned(SeleccionBanco) then
+    raise EArgumentNilException.Create(
+      SErrorSeleccionBancoFacturasNoDisponible);
 end;
 
 constructor TCreadorPivoteVentaFacturaUniDAC.Create(
@@ -222,6 +229,7 @@ begin
   Result.Lineas := CrearDependenciasLineasFacturasUniDAC(AContexto);
   Result.Listado := CrearPreparadorListadoFacturasUniDAC(
     AContexto.Conexion);
+  Result.SeleccionBanco := AContexto.SeleccionBanco;
   ComponerOperacionesFacturasUniDAC(AContexto, Result);
   Result.Validar;
 end;

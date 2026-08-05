@@ -1,6 +1,6 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
-{  Módulo:       UniDataMantenimientosInyeccionRaiz                            }
+{  Módulo:       inMtoMantenimientosInyeccionRaiz                             }
 {    Tipo:       Composición raíz                                              }
 { Versión:       1.0.0                                                         }
 {   Fecha:       05/08/2026                                                    }
@@ -9,7 +9,7 @@
 {    Registra las fábricas de mantenimientos que requieren dependencias        }
 {    explícitas y las compone exclusivamente en la raíz de la aplicación.      }
 {******************************************************************************}
-unit UniDataMantenimientosInyeccionRaiz;
+unit inMtoMantenimientosInyeccionRaiz;
 
 interface
 
@@ -22,6 +22,10 @@ type
   private
     FOwnerRaiz: TComponent;
     FComposicion: TComposicionAplicacion;
+    procedure RegistrarFabricasStockYTarifas;
+    procedure RegistrarFabricasCompras;
+    procedure RegistrarFabricasCatalogos;
+    procedure RegistrarFabricasFacturas;
   public
     constructor Create(
       AOwnerRaiz: TComponent;
@@ -38,6 +42,7 @@ uses
   inLibRegistroPantallas,
   inMtoFrmBase,
   inMtoStockConsulta,
+  inMtoTarifas,
   inMtoStockConsultaPresentacionComposicion,
   inMtoAlbaranesCompra,
   inMtoFacturasCompra,
@@ -57,6 +62,9 @@ uses
   inLibComprasSesionesInyeccion,
   UniDataArticulosPropiedadesRepositorio,
   UniDataArticulosVariaciones,
+  UniDataComprasPantallaComposicion,
+  UniDataRepositoriosArticulosPantalla,
+  UniDataRepositoriosDocumentosPantalla,
   UniDataInventariosInyeccion,
   UniDataFacturasInyeccion;
 
@@ -115,7 +123,7 @@ begin
   FComposicion := AComposicion;
 end;
 
-procedure TInyeccionMantenimientosRaiz.RegistrarFabricas;
+procedure TInyeccionMantenimientosRaiz.RegistrarFabricasStockYTarifas;
 begin
   RegistrarFabricaPantalla(
     TfrmStockConsulta,
@@ -150,6 +158,33 @@ begin
     end);
 
   RegistrarFabricaPantalla(
+    TfrmMtoTarifas,
+    function(AOwner: TComponent): TForm
+    var
+      Articulos: IRepositoriosArticulosPantalla;
+      Formulario: TfrmMtoTarifas;
+      OwnerCreacion: TComponent;
+      ReparentarAplicacion: Boolean;
+    begin
+      NormalizarOwnerPantalla(
+        AOwner,
+        FOwnerRaiz,
+        OwnerCreacion,
+        ReparentarAplicacion);
+      Articulos := FComposicion.CrearRepositoriosArticulosPantalla(
+        'frmMtoTarifas');
+      Formulario := TfrmMtoTarifas.Create(
+        OwnerCreacion,
+        TContextoAutorizacionPantalla.Crear(FComposicion.Permisos),
+        Articulos.CrearServicioCargaMasivaArticulos);
+      ReparentarAplicacionSiProcede(Formulario, ReparentarAplicacion);
+      Result := Formulario;
+    end);
+end;
+
+procedure TInyeccionMantenimientosRaiz.RegistrarFabricasCompras;
+begin
+  RegistrarFabricaPantalla(
     TfrmMtoAlbaranesCompra,
     function(AOwner: TComponent): TForm
     var
@@ -164,8 +199,9 @@ begin
       Result := CrearAlbaranesCompraInyectada(
         OwnerCreacion,
         TContextoAutorizacionPantalla.Crear(FComposicion.Permisos),
-        FComposicion.CrearRepositoriosArticulosPantalla(
-          NOMBRE_PANTALLA_ALBARANES_COMPRA));
+        CrearCompositorAlbaranCompraPantalla(
+          FComposicion.CrearRepositoriosArticulosPantalla(
+            NOMBRE_PANTALLA_ALBARANES_COMPRA)));
       ReparentarAplicacionSiProcede(Result, ReparentarAplicacion);
     end);
 
@@ -184,8 +220,12 @@ begin
       Result := CrearFacturasCompraInyectada(
         OwnerCreacion,
         TContextoAutorizacionPantalla.Crear(FComposicion.Permisos),
-        FComposicion.CrearRepositoriosArticulosPantalla(
-          NOMBRE_PANTALLA_FACTURAS_COMPRA));
+        CrearCompositorFacturaCompraPantalla(
+          FComposicion.CrearRepositoriosArticulosPantalla(
+            NOMBRE_PANTALLA_FACTURAS_COMPRA),
+          FComposicion.CrearRepositoriosConfiguracionPantalla(
+            NOMBRE_PANTALLA_FACTURAS_COMPRA).
+            CrearRepositorioSeleccionBancoEmpresa));
       ReparentarAplicacionSiProcede(Result, ReparentarAplicacion);
     end);
 
@@ -204,8 +244,9 @@ begin
       Result := CrearPedidosCompraInyectada(
         OwnerCreacion,
         TContextoAutorizacionPantalla.Crear(FComposicion.Permisos),
-        FComposicion.CrearRepositoriosArticulosPantalla(
-          NOMBRE_PANTALLA_PEDIDOS_COMPRA));
+        CrearCompositorPedidoCompraPantalla(
+          FComposicion.CrearRepositoriosArticulosPantalla(
+            NOMBRE_PANTALLA_PEDIDOS_COMPRA)));
       ReparentarAplicacionSiProcede(Result, ReparentarAplicacion);
     end);
 
@@ -224,8 +265,9 @@ begin
       Result := CrearDevolucionesCompraInyectada(
         OwnerCreacion,
         TContextoAutorizacionPantalla.Crear(FComposicion.Permisos),
-        FComposicion.CrearRepositoriosArticulosPantalla(
-          NOMBRE_PANTALLA_DEVOLUCIONES_COMPRA));
+        CrearCompositorDevolucionCompraPantalla(
+          FComposicion.CrearRepositoriosArticulosPantalla(
+            NOMBRE_PANTALLA_DEVOLUCIONES_COMPRA)));
       ReparentarAplicacionSiProcede(Result, ReparentarAplicacion);
     end);
 
@@ -244,14 +286,18 @@ begin
       Result := CrearDocumentosTrabajoCompraInyectada(
         OwnerCreacion,
         TContextoAutorizacionPantalla.Crear(FComposicion.Permisos),
-        FComposicion.CrearRepositoriosArticulosPantalla(
-          NOMBRE_PANTALLA_DOCUMENTOS_TRABAJO),
+        CrearCompositorDocumentosTrabajoPantalla(
+          FComposicion.CrearRepositoriosArticulosPantalla(
+            NOMBRE_PANTALLA_DOCUMENTOS_TRABAJO)),
         FComposicion.CrearRepositoriosCajaPantalla(
           NOMBRE_PANTALLA_DOCUMENTOS_TRABAJO).
           CrearRepositorioCajasDefecto);
       ReparentarAplicacionSiProcede(Result, ReparentarAplicacion);
     end);
+end;
 
+procedure TInyeccionMantenimientosRaiz.RegistrarFabricasCatalogos;
+begin
   RegistrarFabricaPantalla(
     TfrmMtoArticulos,
     function(AOwner: TComponent): TForm
@@ -341,7 +387,10 @@ begin
       ReparentarAplicacionSiProcede(Formulario, ReparentarAplicacion);
       Result := Formulario;
     end);
+end;
 
+procedure TInyeccionMantenimientosRaiz.RegistrarFabricasFacturas;
+begin
   RegistrarFabricaPantalla(
     TfrmMtoFacturasNormal,
     function(AOwner: TComponent): TForm
@@ -367,6 +416,10 @@ begin
       ContextoUniDAC.CatalogoSql := Sql.Catalogo;
       ContextoUniDAC.IncidenciasSql := Sql.Incidencias;
       ContextoUniDAC.RegistroLog := FComposicion.RegistroLog;
+      ContextoUniDAC.SeleccionBanco :=
+        FComposicion.CrearRepositoriosConfiguracionPantalla(
+          'frmMtoFacturasNormal').
+          CrearRepositorioSeleccionBancoEmpresa;
       ContextoUniDAC.Usuario := FComposicion.ContextoSesion.Identidad.Usuario;
       Dependencias := CrearDependenciasFacturasUniDAC(ContextoUniDAC);
       Formulario := TfrmMtoFacturasNormal.Create(
@@ -402,6 +455,10 @@ begin
       ContextoUniDAC.CatalogoSql := Sql.Catalogo;
       ContextoUniDAC.IncidenciasSql := Sql.Incidencias;
       ContextoUniDAC.RegistroLog := FComposicion.RegistroLog;
+      ContextoUniDAC.SeleccionBanco :=
+        FComposicion.CrearRepositoriosConfiguracionPantalla(
+          'frmMtoFacturasSimplif').
+          CrearRepositorioSeleccionBancoEmpresa;
       ContextoUniDAC.Usuario := FComposicion.ContextoSesion.Identidad.Usuario;
       Dependencias := CrearDependenciasFacturasUniDAC(ContextoUniDAC);
       Formulario := TfrmMtoFacturasSimplif.Create(
@@ -411,6 +468,14 @@ begin
       ReparentarAplicacionSiProcede(Formulario, ReparentarAplicacion);
       Result := Formulario;
     end);
+end;
+
+procedure TInyeccionMantenimientosRaiz.RegistrarFabricas;
+begin
+  RegistrarFabricasStockYTarifas;
+  RegistrarFabricasCompras;
+  RegistrarFabricasCatalogos;
+  RegistrarFabricasFacturas;
 end;
 
 procedure TInyeccionMantenimientosRaiz.RetirarFabricas;
@@ -425,6 +490,7 @@ begin
   RetirarFabricaPantalla(TfrmMtoPedidosCompra);
   RetirarFabricaPantalla(TfrmMtoFacturasCompra);
   RetirarFabricaPantalla(TfrmMtoAlbaranesCompra);
+  RetirarFabricaPantalla(TfrmMtoTarifas);
   RetirarFabricaPantalla(TfrmStockConsulta);
 end;
 

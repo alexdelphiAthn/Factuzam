@@ -21,12 +21,14 @@ uses
   inLibArticulosAtributosIntf,
   inLibArticulosValidadorIntf,
   inLibBusquedasCompraPersistenciaIntf,
+  inLibCargaMasivaArticulosPersistenciaIntf,
   inLibComprasPantallaIntf,
   inLibDevolucionesCompraPersistenciaIntf,
   inLibDevolucionesCompraStock,
   inLibDocumentosTrabajo,
   inLibPedidosCompraRecepcionIntf,
-  inLibRepositoriosPantallaIntf;
+  inLibSeleccionBancoEmpresaPersistenciaIntf,
+  UniDataRepositoriosArticulosPantalla;
 
 type
   TEntradaDocumentoCompraPantalla = record
@@ -56,6 +58,7 @@ type
     LookupAtributos: IArticulosAtributosLookup;
     BusquedaProveedores: IBusquedaProveedoresComprasPantalla;
     BusquedasArticulos: IBusquedasCompraPersistencia;
+    SeleccionBanco: IRepositorioSeleccionBancoEmpresa;
     procedure Validar;
   end;
 
@@ -88,6 +91,7 @@ type
     LookupAtributos: IArticulosAtributosLookup;
     Lecturas: ILecturasDocumentosTrabajo;
     Materializacion: IMaterializacionDocumentosTrabajo;
+    CargaMasiva: TServiciosCargaMasivaArticulos;
     procedure Validar;
   end;
 
@@ -96,12 +100,46 @@ type
     procedure Validar;
   end;
 
+  TComponerAlbaranCompraPantalla = reference to procedure(
+    const AEntrada: TEntradaDocumentoCompraPantalla;
+    out AContexto: TContextoAlbaranCompraPantalla);
+  TComponerFacturaCompraPantalla = reference to procedure(
+    const AEntrada: TEntradaDocumentoCompraPantalla;
+    out AContexto: TContextoFacturaCompraPantalla);
+  TComponerPedidoCompraPantalla = reference to procedure(
+    const AEntrada: TEntradaDocumentoCompraPantalla;
+    out AContexto: TContextoPedidoCompraPantalla);
+  TComponerDevolucionCompraPantalla = reference to procedure(
+    AConexion: TUniConnection;
+    out AContexto: TContextoDevolucionCompraPantalla);
+  TComponerDocumentosTrabajoPantalla = reference to procedure(
+    AConexion: TUniConnection;
+    out AContexto: TContextoDocumentosTrabajoCompraPantalla);
+
+function CrearCompositorAlbaranCompraPantalla(
+  const AArticulos: IRepositoriosArticulosPantalla):
+  TComponerAlbaranCompraPantalla;
+function CrearCompositorFacturaCompraPantalla(
+  const AArticulos: IRepositoriosArticulosPantalla;
+  const ASeleccionBanco: IRepositorioSeleccionBancoEmpresa):
+  TComponerFacturaCompraPantalla;
+function CrearCompositorPedidoCompraPantalla(
+  const AArticulos: IRepositoriosArticulosPantalla):
+  TComponerPedidoCompraPantalla;
+function CrearCompositorDevolucionCompraPantalla(
+  const AArticulos: IRepositoriosArticulosPantalla):
+  TComponerDevolucionCompraPantalla;
+function CrearCompositorDocumentosTrabajoPantalla(
+  const AArticulos: IRepositoriosArticulosPantalla):
+  TComponerDocumentosTrabajoPantalla;
+
 procedure ComponerComprasPantalla(
   const AArticulos: IRepositoriosArticulosPantalla;
   const AEntrada: TEntradaDocumentoCompraPantalla;
   out AContexto: TContextoAlbaranCompraPantalla); overload;
 procedure ComponerComprasPantalla(
   const AArticulos: IRepositoriosArticulosPantalla;
+  const ASeleccionBanco: IRepositorioSeleccionBancoEmpresa;
   const AEntrada: TEntradaDocumentoCompraPantalla;
   out AContexto: TContextoFacturaCompraPantalla); overload;
 procedure ComponerComprasPantalla(
@@ -146,6 +184,80 @@ procedure ComprobarArticulos(
 begin
   if not Assigned(AArticulos) then
     raise EArgumentNilException.Create('AArticulos');
+end;
+
+function CrearCompositorAlbaranCompraPantalla(
+  const AArticulos: IRepositoriosArticulosPantalla):
+  TComponerAlbaranCompraPantalla;
+begin
+  ComprobarArticulos(AArticulos);
+  Result :=
+    procedure(
+      const AEntrada: TEntradaDocumentoCompraPantalla;
+      out AContexto: TContextoAlbaranCompraPantalla)
+    begin
+      ComponerComprasPantalla(AArticulos, AEntrada, AContexto);
+    end;
+end;
+
+function CrearCompositorFacturaCompraPantalla(
+  const AArticulos: IRepositoriosArticulosPantalla;
+  const ASeleccionBanco: IRepositorioSeleccionBancoEmpresa):
+  TComponerFacturaCompraPantalla;
+begin
+  ComprobarArticulos(AArticulos);
+  if not Assigned(ASeleccionBanco) then
+    raise EArgumentNilException.Create('ASeleccionBanco');
+  Result :=
+    procedure(
+      const AEntrada: TEntradaDocumentoCompraPantalla;
+      out AContexto: TContextoFacturaCompraPantalla)
+    begin
+      ComponerComprasPantalla(
+        AArticulos, ASeleccionBanco, AEntrada, AContexto);
+    end;
+end;
+
+function CrearCompositorPedidoCompraPantalla(
+  const AArticulos: IRepositoriosArticulosPantalla):
+  TComponerPedidoCompraPantalla;
+begin
+  ComprobarArticulos(AArticulos);
+  Result :=
+    procedure(
+      const AEntrada: TEntradaDocumentoCompraPantalla;
+      out AContexto: TContextoPedidoCompraPantalla)
+    begin
+      ComponerComprasPantalla(AArticulos, AEntrada, AContexto);
+    end;
+end;
+
+function CrearCompositorDevolucionCompraPantalla(
+  const AArticulos: IRepositoriosArticulosPantalla):
+  TComponerDevolucionCompraPantalla;
+begin
+  ComprobarArticulos(AArticulos);
+  Result :=
+    procedure(
+      AConexion: TUniConnection;
+      out AContexto: TContextoDevolucionCompraPantalla)
+    begin
+      ComponerComprasPantalla(AArticulos, AConexion, AContexto);
+    end;
+end;
+
+function CrearCompositorDocumentosTrabajoPantalla(
+  const AArticulos: IRepositoriosArticulosPantalla):
+  TComponerDocumentosTrabajoPantalla;
+begin
+  ComprobarArticulos(AArticulos);
+  Result :=
+    procedure(
+      AConexion: TUniConnection;
+      out AContexto: TContextoDocumentosTrabajoCompraPantalla)
+    begin
+      ComponerComprasPantalla(AArticulos, AConexion, AContexto);
+    end;
 end;
 
 procedure ComprobarEntradaDocumento(
@@ -240,6 +352,7 @@ end;
 
 procedure ComponerComprasPantalla(
   const AArticulos: IRepositoriosArticulosPantalla;
+  const ASeleccionBanco: IRepositorioSeleccionBancoEmpresa;
   const AEntrada: TEntradaDocumentoCompraPantalla;
   out AContexto: TContextoFacturaCompraPantalla);
 var
@@ -247,6 +360,8 @@ var
   oServicios: TServiciosDocumentoCompraPantalla;
 begin
   ComprobarArticulos(AArticulos);
+  if not Assigned(ASeleccionBanco) then
+    raise EArgumentNilException.Create('ASeleccionBanco');
   ComprobarEntradaDocumento(AEntrada);
   oServicios := CrearServiciosArticuloDocumento(AArticulos, AEntrada);
   AsignarBusquedas(
@@ -254,6 +369,7 @@ begin
     oEmpresas,
     oServicios.BusquedaProveedores);
   CopiarDocumentoFactura(oServicios, AContexto);
+  AContexto.SeleccionBanco := ASeleccionBanco;
   AContexto.Validar;
 end;
 
@@ -339,6 +455,8 @@ begin
   oRepositorios := CrearRepositoriosDocumentosTrabajo(AConexion);
   AContexto.Lecturas := oRepositorios.Lecturas;
   AContexto.Materializacion := oRepositorios.Materializacion;
+  AContexto.CargaMasiva :=
+    AArticulos.CrearServicioCargaMasivaArticulos;
   AContexto.Validar;
 end;
 
@@ -385,6 +503,8 @@ begin
     raise EArgumentNilException.Create('BusquedaProveedores');
   if not Assigned(BusquedasArticulos) then
     raise EArgumentNilException.Create('BusquedasArticulos');
+  if not Assigned(SeleccionBanco) then
+    raise EArgumentNilException.Create('SeleccionBanco');
 end;
 
 procedure TContextoPedidoCompraPantalla.Validar;
@@ -437,6 +557,11 @@ begin
     raise EArgumentNilException.Create('Lecturas');
   if not Assigned(Materializacion) then
     raise EArgumentNilException.Create('Materializacion');
+  if not Assigned(CargaMasiva.Consultas) or
+     not Assigned(CargaMasiva.Inserciones) then
+  begin
+    raise EArgumentNilException.Create('CargaMasiva');
+  end;
 end;
 
 procedure TContextoPlantillasCompraPantalla.Validar;

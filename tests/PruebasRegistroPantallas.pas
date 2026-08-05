@@ -27,42 +27,24 @@ type
     [Test]
     procedure DataModule_SeResuelveIgnorandoEspaciosYMayusculas;
     [Test]
-    procedure Compositor_SeResuelvePorLaCadenaDePropietarios;
-    [Test]
     procedure FabricaInyectada_ConservaClaseYPropietario;
     [Test]
     procedure FabricaAusente_FallaDuranteLaCreacion;
+    [Test]
+    procedure FabricaRetirada_EliminaElCanalInyectado;
   end;
 
 implementation
 
 uses
   System.SysUtils, System.Classes, Vcl.Forms,
-  inLibRegistroPantallas, inLibRepositoriosPantallaIntf;
+  inLibRegistroPantallas;
 
 type
   TPantallaRegistroPrueba = class(TForm);
   TPantallaInyectadaRegistroPrueba = class(TForm);
   TPantallaSinFabricaRegistroPrueba = class(TForm);
   TDataModuleRegistroPrueba = class(TDataModule);
-  TCompositorArticulosRegistroPrueba = class(
-    TComponent,
-    ICompositorArticulosPantalla)
-  private
-    FNombrePantalla: string;
-  public
-    function CrearRepositoriosArticulosPantalla(
-      const ANombrePantalla: string): IRepositoriosArticulosPantalla;
-    property NombrePantalla: string read FNombrePantalla;
-  end;
-
-function TCompositorArticulosRegistroPrueba.
-  CrearRepositoriosArticulosPantalla(
-  const ANombrePantalla: string): IRepositoriosArticulosPantalla;
-begin
-  FNombrePantalla := ANombrePantalla;
-  Result := nil;
-end;
 
 procedure TPruebasRegistroPantallas.
   Pantalla_SeResuelvePorNombreCualificado;
@@ -85,26 +67,6 @@ begin
     TDataModuleRegistroPrueba.QualifiedClassName) + '  ';
   Assert.IsTrue(
     ClaseDataModule(sNombre) = TDataModuleRegistroPrueba);
-end;
-
-procedure TPruebasRegistroPantallas.
-  Compositor_SeResuelvePorLaCadenaDePropietarios;
-var
-  oCompositor: ICompositorArticulosPantalla;
-  oHijo: TComponent;
-  oRaiz: TCompositorArticulosRegistroPrueba;
-begin
-  oRaiz := TCompositorArticulosRegistroPrueba.Create(nil);
-  try
-    oHijo := TComponent.Create(oRaiz);
-    oCompositor := ObtenerCompositorArticulosPantalla(oHijo);
-    oCompositor.CrearRepositoriosArticulosPantalla(
-      'frmPruebaComposicion');
-    Assert.AreEqual('frmPruebaComposicion', oRaiz.NombrePantalla);
-    oCompositor := nil;
-  finally
-    FreeAndNil(oRaiz);
-  end;
 end;
 
 procedure TPruebasRegistroPantallas.
@@ -146,6 +108,26 @@ begin
     begin
       CrearPantallaInyectada(
         TPantallaSinFabricaRegistroPrueba,
+        nil);
+    end,
+    EFabricaPantallaNoRegistrada);
+end;
+
+procedure TPruebasRegistroPantallas.
+  FabricaRetirada_EliminaElCanalInyectado;
+begin
+  RegistrarFabricaPantalla(
+    TPantallaInyectadaRegistroPrueba,
+    function(AOwner: TComponent): TForm
+    begin
+      Result := TPantallaInyectadaRegistroPrueba.CreateNew(AOwner);
+    end);
+  RetirarFabricaPantalla(TPantallaInyectadaRegistroPrueba);
+  Assert.WillRaise(
+    procedure
+    begin
+      CrearPantallaInyectada(
+        TPantallaInyectadaRegistroPrueba,
         nil);
     end,
     EFabricaPantallaNoRegistrada);

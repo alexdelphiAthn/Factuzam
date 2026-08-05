@@ -1,6 +1,6 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
-{  Módulo:       UniDataConfiguracionInyeccionRaiz                             }
+{  Módulo:       inMtoConfiguracionInyeccionRaiz                              }
 {    Tipo:       Composición raíz                                              }
 { Versión:       1.0.0                                                         }
 {   Fecha:       05/08/2026                                                    }
@@ -8,7 +8,7 @@
 {  Descripción:                                                                }
 {    Compone las entradas compartidas de configuración, búsqueda y remesas.    }
 {******************************************************************************}
-unit UniDataConfiguracionInyeccionRaiz;
+unit inMtoConfiguracionInyeccionRaiz;
 
 interface
 
@@ -46,7 +46,10 @@ uses
   System.SysUtils,
   inLibRegistroPantallas,
   inLibPermisosIntf,
-  inLibRepositoriosPantallaIntf,
+  UniDataRepositoriosArticulosPantalla,
+  UniDataRepositoriosConfiguracionPantalla,
+  UniDataRepositoriosDocumentosPantalla,
+  UniDataRepositoriosRemesasPantalla,
   inMtoAppParam,
   inMtoBusquedaDatos,
   inMtoEmpresas,
