@@ -22,6 +22,17 @@ type
       const ASerieDevc, ANumDevc, AUsuario: string);
     procedure RevertirDesdeDevolucion(
       const ASerieDevc, ANumDevc, AUsuario: string);
+    procedure SincronizarDesdeDevolucion(
+      const ASerieDevc, ANumDevc, AUsuario: string;
+      AGenerar: Boolean);
+  end;
+
+  IUnidadTrabajoMovimientosDevolucionCompra = interface
+    ['{BC2DE26A-1272-4AB1-8556-3BD95C4088F4}']
+    function EstaActiva: Boolean;
+    procedure Iniciar;
+    procedure Confirmar;
+    procedure Revertir;
   end;
 
 implementation

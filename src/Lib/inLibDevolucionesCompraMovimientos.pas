@@ -30,8 +30,50 @@ procedure GenerarMovimientosDesdeDevolucionCompra(
 procedure RevertirMovimientosDesdeDevolucionCompra(
   const AMovimientos: IMovimientosDevolucionCompra;
   const ASerieDevc, ANumDevc, AUsuario: string);
+procedure SincronizarMovimientosDesdeDevolucionCompra(
+  const AMovimientos: IMovimientosDevolucionCompra;
+  const ASerieDevc, ANumDevc, AUsuario: string;
+  AGenerar: Boolean);
+function ProtegerMovimientosDevolucionCompra(
+  const AMovimientos: IMovimientosDevolucionCompra;
+  const AUnidadTrabajo: IUnidadTrabajoMovimientosDevolucionCompra):
+  IMovimientosDevolucionCompra;
 
 implementation
+
+uses
+  System.SysUtils;
+
+type
+  TMovimientosDevolucionCompraTransaccionales = class(
+    TInterfacedObject,
+    IMovimientosDevolucionCompra)
+  private
+    FMovimientos: IMovimientosDevolucionCompra;
+    FUnidadTrabajo: IUnidadTrabajoMovimientosDevolucionCompra;
+    procedure EjecutarEnTransaccion(const AOperacion: TProc);
+  public
+    constructor Create(
+      const AMovimientos: IMovimientosDevolucionCompra;
+      const AUnidadTrabajo: IUnidadTrabajoMovimientosDevolucionCompra);
+    procedure GenerarDesdeDevolucion(
+      const ASerieDevc, ANumDevc, AUsuario: string);
+    procedure RevertirDesdeDevolucion(
+      const ASerieDevc, ANumDevc, AUsuario: string);
+    procedure SincronizarDesdeDevolucion(
+      const ASerieDevc, ANumDevc, AUsuario: string;
+      AGenerar: Boolean);
+  end;
+
+function ProtegerMovimientosDevolucionCompra(
+  const AMovimientos: IMovimientosDevolucionCompra;
+  const AUnidadTrabajo: IUnidadTrabajoMovimientosDevolucionCompra):
+  IMovimientosDevolucionCompra;
+begin
+  Result := TMovimientosDevolucionCompraTransaccionales.Create(
+    AMovimientos,
+    AUnidadTrabajo);
+end;
 
 procedure GenerarMovimientosDesdeDevolucionCompra(
   const AMovimientos: IMovimientosDevolucionCompra;
@@ -47,6 +89,94 @@ procedure RevertirMovimientosDesdeDevolucionCompra(
 begin
   AMovimientos.RevertirDesdeDevolucion(
     ASerieDevc, ANumDevc, AUsuario);
+end;
+
+procedure SincronizarMovimientosDesdeDevolucionCompra(
+  const AMovimientos: IMovimientosDevolucionCompra;
+  const ASerieDevc, ANumDevc, AUsuario: string;
+  AGenerar: Boolean);
+begin
+  AMovimientos.SincronizarDesdeDevolucion(
+    ASerieDevc,
+    ANumDevc,
+    AUsuario,
+    AGenerar);
+end;
+
+constructor TMovimientosDevolucionCompraTransaccionales.Create(
+  const AMovimientos: IMovimientosDevolucionCompra;
+  const AUnidadTrabajo: IUnidadTrabajoMovimientosDevolucionCompra);
+begin
+  if AMovimientos = nil then
+    raise EArgumentNilException.Create('AMovimientos');
+  if AUnidadTrabajo = nil then
+    raise EArgumentNilException.Create('AUnidadTrabajo');
+  inherited Create;
+  FMovimientos := AMovimientos;
+  FUnidadTrabajo := AUnidadTrabajo;
+end;
+
+procedure TMovimientosDevolucionCompraTransaccionales.EjecutarEnTransaccion(
+  const AOperacion: TProc);
+var
+  EsPropia: Boolean;
+begin
+  EsPropia := not FUnidadTrabajo.EstaActiva;
+  if EsPropia then
+    FUnidadTrabajo.Iniciar;
+  try
+    AOperacion;
+    if EsPropia then
+      FUnidadTrabajo.Confirmar;
+  except
+    if EsPropia and FUnidadTrabajo.EstaActiva then
+      FUnidadTrabajo.Revertir;
+    raise;
+  end;
+end;
+
+procedure TMovimientosDevolucionCompraTransaccionales.
+  GenerarDesdeDevolucion(
+  const ASerieDevc, ANumDevc, AUsuario: string);
+begin
+  EjecutarEnTransaccion(
+    procedure
+    begin
+      FMovimientos.GenerarDesdeDevolucion(
+        ASerieDevc,
+        ANumDevc,
+        AUsuario);
+    end);
+end;
+
+procedure TMovimientosDevolucionCompraTransaccionales.
+  RevertirDesdeDevolucion(
+  const ASerieDevc, ANumDevc, AUsuario: string);
+begin
+  EjecutarEnTransaccion(
+    procedure
+    begin
+      FMovimientos.RevertirDesdeDevolucion(
+        ASerieDevc,
+        ANumDevc,
+        AUsuario);
+    end);
+end;
+
+procedure TMovimientosDevolucionCompraTransaccionales.
+  SincronizarDesdeDevolucion(
+  const ASerieDevc, ANumDevc, AUsuario: string;
+  AGenerar: Boolean);
+begin
+  EjecutarEnTransaccion(
+    procedure
+    begin
+      FMovimientos.SincronizarDesdeDevolucion(
+        ASerieDevc,
+        ANumDevc,
+        AUsuario,
+        AGenerar);
+    end);
 end;
 
 end.

@@ -90,6 +90,12 @@ uses
     'src\DataModules\UniDataFacturasRepositorio.pas',
   inLibFacturasValidacionFiscal in
     'src\Lib\inLibFacturasValidacionFiscal.pas',
+  inLibFacturasValidacionCabecera in
+    'src\Lib\inLibFacturasValidacionCabecera.pas',
+  inLibFacturasValidacionDatos in
+    'src\Lib\inLibFacturasValidacionDatos.pas',
+  inLibFacturasValidacionUniDAC in
+    'src\DataModules\inLibFacturasValidacionUniDAC.pas',
   inLibFacturasCalculo in
     'src\Lib\inLibFacturasCalculo.pas',
   inLibFacturasComposicion in
@@ -461,6 +467,10 @@ uses
   UniDataGenFilter in 'src\DataModules\UniDataGenFilter.pas' {dmGenFilter: TDataModule},
   inMtoPedidos in 'src\Forms\inMtoPedidos.pas' {frmMtoPedidos},
   UniDataPedidos in 'src\DataModules\UniDataPedidos.pas' {/cxButtonHelper in 'cxButtonHelper.pas';: TdmPedidos},
+  inLibPedidosVentaPresentacionReglas in
+    'src\Lib\inLibPedidosVentaPresentacionReglas.pas',
+  UniDataPedidosVentaFlujoEdicion in
+    'src\DataModules\UniDataPedidosVentaFlujoEdicion.pas',
   UniDataPedidosPrestaShopEscrituras in
     'src\DataModules\UniDataPedidosPrestaShopEscrituras.pas',
   inMtoPaises in 'src\Forms\inMtoPaises.pas' {frmMtoPaises},
@@ -823,7 +833,11 @@ uses
   inLibVerifactuInstalacion in 'src\verifactu\inLibVerifactuInstalacion.pas',
   inLibVerifactuTipos in 'src\verifactu\inLibVerifactuTipos.pas',
   inLibVerifactu in 'src\verifactu\inLibVerifactu.pas',
+  inLibVerifactuRegistroEventos in
+    'src\verifactu\inLibVerifactuRegistroEventos.pas',
   inLibVerifactuEnvio in 'src\verifactu\inLibVerifactuEnvio.pas',
+  inLibVerifactuConstruccionEnvio in
+    'src\verifactu\inLibVerifactuConstruccionEnvio.pas',
   inLibVerifactuColaIntf in
     'src\verifactu\inLibVerifactuColaIntf.pas',
   inLibVerifactuSubsanacionIntf in
@@ -841,6 +855,10 @@ uses
     'src\verifactu\UniDataVerifactuColaProcesador.pas',
   UniDataVerifactuColaResultados in
     'src\verifactu\UniDataVerifactuColaResultados.pas',
+  UniDataVerifactuResultadosEnvioOperacion in
+    'src\verifactu\UniDataVerifactuResultadosEnvioOperacion.pas',
+  UniDataVerifactuResultadosEnvioPersistencia in
+    'src\verifactu\UniDataVerifactuResultadosEnvioPersistencia.pas',
   UniDataVerifactuSubsanacionResultados in
     'src\verifactu\UniDataVerifactuSubsanacionResultados.pas',
   inLibVerifactuReintentos in
@@ -896,6 +914,12 @@ uses
   inMtoAlbaranes in 'src\Forms\inMtoAlbaranes.pas' {frmMtoAlbaranes},
   inMtoDocumento in 'src\Forms\inMtoDocumento.pas',
   UniDataAlbaranes in 'src\DataModules\UniDataAlbaranes.pas' {dmAlbaranes: TdmAlbaranes},
+  inLibAlbaranesVentaPresentacionArticulo in
+    'src\Lib\inLibAlbaranesVentaPresentacionArticulo.pas',
+  inLibAlbaranesVentaPresentacionMovimientos in
+    'src\Lib\inLibAlbaranesVentaPresentacionMovimientos.pas',
+  UniDataAlbaranesVentaMovimientos in
+    'src\DataModules\UniDataAlbaranesVentaMovimientos.pas',
   inMtoAlbaranesCompra in 'src\Forms\inMtoAlbaranesCompra.pas' {frmMtoAlbaranesCompra},
   UniDataAlbaranesCompra in 'src\DataModules\UniDataAlbaranesCompra.pas' {dmAlbaranesCompra: TdmAlbaranesCompra},
   UniDataAlbaranesCompraMovimientos in
@@ -906,6 +930,8 @@ uses
     'src\DataModules\UniDataDevolucionesCompraMovimientosSql.pas',
   UniDataDevolucionesCompraMovimientos in
     'src\DataModules\UniDataDevolucionesCompraMovimientos.pas',
+  inLibDevolucionesCompraPresentacionFlujo in
+    'src\Lib\inLibDevolucionesCompraPresentacionFlujo.pas',
   inMtoDevolucionesCompra in 'src\Forms\inMtoDevolucionesCompra.pas' {frmMtoDevolucionesCompra},
   UniDataDevolucionesCompra in 'src\DataModules\UniDataDevolucionesCompra.pas' {dmDevolucionesCompra: TdmDevolucionesCompra},
   inMtoFacturasCompra in 'src\Forms\inMtoFacturasCompra.pas' {frmMtoFacturasCompra},
@@ -938,6 +964,14 @@ uses
     'src\DataModules\UniDataPedidosCompraIncorporacionEscritura.pas',
   UniDataPedidosCompraRecepcion in
     'src\DataModules\UniDataPedidosCompraRecepcion.pas',
+  UniDataPedidosCompraFlujoTransaccion in
+    'src\DataModules\UniDataPedidosCompraFlujoTransaccion.pas',
+  inLibPedidosCompraPresentacionOperacion in
+    'src\Lib\inLibPedidosCompraPresentacionOperacion.pas',
+  inLibPedidosCompraPresentacionRecepcion in
+    'src\Lib\inLibPedidosCompraPresentacionRecepcion.pas',
+  inLibPedidosCompraPresentacionCantidades in
+    'src\Lib\inLibPedidosCompraPresentacionCantidades.pas',
   UniDataPedidosCompraOperaciones in
     'src\DataModules\UniDataPedidosCompraOperaciones.pas',
   inMtoModalSelAlmacenPedido in 'src\Modals\inMtoModalSelAlmacenPedido.pas' {frmModalSelAlmacenPedido},

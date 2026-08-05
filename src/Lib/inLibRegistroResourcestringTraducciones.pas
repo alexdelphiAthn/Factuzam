@@ -6325,6 +6325,12 @@ begin
       SCaptionCerrar);
   ARegistrar(
     'inLibMsgComun.' +
+    'SCaptionSalirAplicacion',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SCaptionSalirAplicacion);
+  ARegistrar(
+    'inLibMsgComun.' +
     'SCaptionCopiarPortapapeles',
     'src/Lib/inLibMsgComun.pas',
     @inLibMsgComun.

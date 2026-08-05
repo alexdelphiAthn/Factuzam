@@ -471,6 +471,7 @@ resourcestring
     'Detalle completo del error. Puedes enviarlo directamente al ' +
     'desarrollador o copiarlo al portapapeles.';
   SCaptionCerrar = 'Cerrar';
+  SCaptionSalirAplicacion = 'Salir de la aplicación';
   SCaptionCopiarPortapapeles = 'Copiar al portapapeles';
   SCaptionEnviarDesarrollador = 'Enviar error al soporte';
   SCaptionActivarLogCompleto = 'Activar LOG completo';

@@ -41,6 +41,7 @@ type
     pnlFacturacion      : TPanel;
     dteDesde            : TcxDateEdit;
     dteHasta            : TcxDateEdit;
+    cbbEmpresaOrigen    : TcxLookupComboBox;
     cbbEmpresaDestino   : TcxLookupComboBox;
     rgModalidad         : TcxRadioGroup;
     btnGenerar          : TcxButton;
@@ -50,6 +51,7 @@ type
     procedure CrearControlesDinamicos;
     procedure CrearEtiqueta(const ATexto: string; AIzq, ATop: Integer);
     procedure CrearColumnas;
+    procedure ActualizarEstadoEmpresaDestino;
     function CrearColumna(const ACampo, ATitulo: string;
       AAncho: Integer): TcxGridDBColumn;
     function ObtenerModalidad: TModalidadFacturacionCaja;
@@ -71,6 +73,7 @@ type
     procedure btnGenerarClick(Sender: TObject);
     procedure btnRefrescarClick(Sender: TObject);
     procedure btnImprimirClick(Sender: TObject);
+    procedure rgModalidadPropertiesEditValueChanged(Sender: TObject);
   public
     destructor Destroy; override;
     procedure CrearTablaPrincipal; override;
@@ -98,7 +101,8 @@ resourcestring
   SErrorReferenciaProformaCajaInvalida =
     'No se ha podido identificar la proforma seleccionada.';
   SAvisoPeriodoFacturacionCajaDuplicado =
-    'Ya existe un registro con el mismo periodo, empresa y modalidad.';
+    'Ya existe un registro con el mismo periodo, ámbito empresarial ' +
+    'y modalidad.';
   SAvisoPeriodoFacturacionCajaSolapado =
     'El periodo indicado se solapa con otro registro de facturación.';
   SInfoIdempotenciaFacturacionCaja =
@@ -125,6 +129,8 @@ end;
 
 destructor TfrmMtoFacturasProforma.Destroy;
 begin
+  if Assigned(cbbEmpresaOrigen) then
+    cbbEmpresaOrigen.Properties.ListSource := nil;
   if Assigned(cbbEmpresaDestino) then
     cbbEmpresaDestino.Properties.ListSource := nil;
   inherited;
@@ -139,7 +145,7 @@ begin
     pnlFacturacion := TPanel.Create(Self);
     pnlFacturacion.Parent := tsLista;
     pnlFacturacion.Align := alTop;
-    pnlFacturacion.Height := 132;
+    pnlFacturacion.Height := 170;
     pnlFacturacion.BevelOuter := bvNone;
     pnlFacturacion.ParentBackground := False;
     pnlFacturacion.Color := clWhite;
@@ -155,11 +161,20 @@ begin
     dteHasta.Left := 250;
     dteHasta.Top := 10;
     dteHasta.Width := 118;
-    CrearEtiqueta('Empresa destino', 388, 14);
+    CrearEtiqueta('Empresa emisora', 388, 14);
+    cbbEmpresaOrigen := TcxLookupComboBox.Create(Self);
+    cbbEmpresaOrigen.Parent := pnlFacturacion;
+    cbbEmpresaOrigen.Left := 506;
+    cbbEmpresaOrigen.Top := 10;
+    cbbEmpresaOrigen.Width := 330;
+    cbbEmpresaOrigen.Properties.DropDownListStyle := lsFixedList;
+    cbbEmpresaOrigen.Properties.KeyFieldNames := 'CODIGO_EMP_EMP';
+    cbbEmpresaOrigen.Properties.ListFieldNames := 'RAZON_SOCIAL_EMP';
+    CrearEtiqueta('Empresa destino', 388, 52);
     cbbEmpresaDestino := TcxLookupComboBox.Create(Self);
     cbbEmpresaDestino.Parent := pnlFacturacion;
     cbbEmpresaDestino.Left := 506;
-    cbbEmpresaDestino.Top := 10;
+    cbbEmpresaDestino.Top := 48;
     cbbEmpresaDestino.Width := 330;
     cbbEmpresaDestino.Properties.DropDownListStyle := lsFixedList;
     cbbEmpresaDestino.Properties.KeyFieldNames := 'CODIGO_EMP_EMP';
@@ -167,7 +182,7 @@ begin
     rgModalidad := TcxRadioGroup.Create(Self);
     rgModalidad.Parent := pnlFacturacion;
     rgModalidad.Left := 12;
-    rgModalidad.Top := 47;
+    rgModalidad.Top := 85;
     rgModalidad.Width := 824;
     rgModalidad.Height := 48;
     rgModalidad.Caption := ' Modalidad ';
@@ -176,6 +191,8 @@ begin
       'Ventas (VE): proforma interna no fiscal';
     rgModalidad.Properties.Items.Add.Caption :=
       'Traspasos (TA): borrador fiscal de Venta mayor';
+    rgModalidad.Properties.OnEditValueChanged :=
+      rgModalidadPropertiesEditValueChanged;
     rgModalidad.ItemIndex := 0;
     btnGenerar := TcxButton.Create(Self);
     btnGenerar.Parent := pnlFacturacion;
@@ -204,7 +221,7 @@ begin
     lblExplicacion := TcxLabel.Create(Self);
     lblExplicacion.Parent := pnlFacturacion;
     lblExplicacion.Left := 12;
-    lblExplicacion.Top := 102;
+    lblExplicacion.Top := 140;
     lblExplicacion.Caption :=
       'Cada operación conserva su fecha e identificador. Las ventas ' +
       'rectificadas se incorporan como ajustes posteriores.';
@@ -213,6 +230,7 @@ begin
     dteDesde.Date := EncodeDate(
       YearOf(dHoy), ((MonthOf(dHoy) - 1) div 3) * 3 + 1, 1);
     dteHasta.Date := dHoy;
+    ActualizarEstadoEmpresaDestino;
     FControlesCreados := True;
   end;
 end;
@@ -252,7 +270,7 @@ begin
     CrearColumna('FECHA_DOCUMENTO', 'Fecha', 90);
     CrearColumna('FECHA_DESDE', 'Periodo desde', 100);
     CrearColumna('FECHA_HASTA', 'Periodo hasta', 100);
-    CrearColumna('CODIGO_EMPRESA', 'Empresa', 100);
+    CrearColumna('EMPRESA_ORIGEN', 'Empresa emisora', 210);
     CrearColumna('EMPRESA_DESTINO', 'Empresa destino', 210);
     CrearColumna('ESTADO_DOCUMENTO', 'Estado', 100);
     CrearColumna('CANTIDAD_OPERACIONES', 'Operaciones', 90);
@@ -261,6 +279,13 @@ begin
     CrearColumna('TOTAL_IMPUESTOS', 'Impuestos', 100);
     CrearColumna('TOTAL_DOCUMENTO', 'Total', 110);
   end;
+end;
+
+procedure TfrmMtoFacturasProforma.ActualizarEstadoEmpresaDestino;
+begin
+  cbbEmpresaDestino.Enabled := ObtenerModalidad = mfcTraspaso;
+  if not cbbEmpresaDestino.Enabled then
+    cbbEmpresaDestino.EditValue := Null;
 end;
 
 procedure TfrmMtoFacturasProforma.CrearTablaPrincipal;
@@ -273,9 +298,13 @@ begin
   cxGrdDBTabPrin.OptionsData.Deleting := False;
   tsFicha.TabVisible := False;
   nvNavegador.Visible := False;
+  cbbEmpresaOrigen.Properties.ListSource :=
+    dmmFacturasProforma.dsEmpresas;
   cbbEmpresaDestino.Properties.ListSource :=
     dmmFacturasProforma.dsEmpresas;
-  cbbEmpresaDestino.EditValue := UbicacionSesion.Empresa;
+  cbbEmpresaOrigen.EditValue := UbicacionSesion.Empresa;
+  cbbEmpresaDestino.EditValue := Null;
+  ActualizarEstadoEmpresaDestino;
   CrearColumnas;
 end;
 
@@ -292,9 +321,17 @@ function TfrmMtoFacturasProforma.PrepararSolicitud:
 begin
   Result.FechaDesde := Trunc(dteDesde.Date);
   Result.FechaHasta := Trunc(dteHasta.Date);
+  Result.CodigoEmpresaOrigen :=
+    Trim(VarToStr(cbbEmpresaOrigen.EditValue));
   Result.CodigoEmpresaDestino :=
     Trim(VarToStr(cbbEmpresaDestino.EditValue));
   Result.Usuario := Trim(IdentidadSesion.Usuario);
+end;
+
+procedure TfrmMtoFacturasProforma.
+  rgModalidadPropertiesEditValueChanged(Sender: TObject);
+begin
+  ActualizarEstadoEmpresaDestino;
 end;
 
 function TfrmMtoFacturasProforma.ConfirmarGeneracion(

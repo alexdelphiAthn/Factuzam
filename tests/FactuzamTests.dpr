@@ -218,16 +218,38 @@ uses
     '..\src\verifactu\UniDataVerifactuColaProcesador.pas',
   UniDataVerifactuColaResultados in
     '..\src\verifactu\UniDataVerifactuColaResultados.pas',
+  UniDataVerifactuResultadosEnvioOperacion in
+    '..\src\verifactu\UniDataVerifactuResultadosEnvioOperacion.pas',
+  UniDataVerifactuResultadosEnvioPersistencia in
+    '..\src\verifactu\UniDataVerifactuResultadosEnvioPersistencia.pas',
   UniDataVerifactuSubsanacionResultados in
     '..\src\verifactu\UniDataVerifactuSubsanacionResultados.pas',
   inLibVerifactuReintentos in
     '..\src\verifactu\inLibVerifactuReintentos.pas',
   UniDataVerifactuColaOperaciones in
     '..\src\verifactu\UniDataVerifactuColaOperaciones.pas',
+  inLibVerifactuConstruccionEnvio in
+    '..\src\verifactu\inLibVerifactuConstruccionEnvio.pas',
+  inLibVerifactuRegistroEventos in
+    '..\src\verifactu\inLibVerifactuRegistroEventos.pas',
+  inLibFacturasValidacionCabecera in
+    '..\src\Lib\inLibFacturasValidacionCabecera.pas',
+  inLibFacturasValidacionDatos in
+    '..\src\Lib\inLibFacturasValidacionDatos.pas',
+  inLibFacturasValidacionUniDAC in
+    '..\src\DataModules\inLibFacturasValidacionUniDAC.pas',
   UniDataAlbaranesCompraMovimientos in
     '..\src\DataModules\UniDataAlbaranesCompraMovimientos.pas',
   UniDataDevolucionesCompraMovimientos in
     '..\src\DataModules\UniDataDevolucionesCompraMovimientos.pas',
+  inLibDevolucionesCompraPresentacionFlujo in
+    '..\src\Lib\inLibDevolucionesCompraPresentacionFlujo.pas',
+  inLibAlbaranesVentaPresentacionArticulo in
+    '..\src\Lib\inLibAlbaranesVentaPresentacionArticulo.pas',
+  inLibAlbaranesVentaPresentacionMovimientos in
+    '..\src\Lib\inLibAlbaranesVentaPresentacionMovimientos.pas',
+  UniDataAlbaranesVentaMovimientos in
+    '..\src\DataModules\UniDataAlbaranesVentaMovimientos.pas',
   UniDataArticulosVariaciones in
     '..\src\DataModules\UniDataArticulosVariaciones.pas',
   UniDataFotosRepositorio in
@@ -244,6 +266,18 @@ uses
     '..\src\DataModules\UniDataPedidosCompraIncorporacionAlbaran.pas',
   UniDataPedidosCompraRecepcion in
     '..\src\DataModules\UniDataPedidosCompraRecepcion.pas',
+  UniDataPedidosCompraFlujoTransaccion in
+    '..\src\DataModules\UniDataPedidosCompraFlujoTransaccion.pas',
+  inLibPedidosCompraPresentacionOperacion in
+    '..\src\Lib\inLibPedidosCompraPresentacionOperacion.pas',
+  inLibPedidosCompraPresentacionRecepcion in
+    '..\src\Lib\inLibPedidosCompraPresentacionRecepcion.pas',
+  inLibPedidosCompraPresentacionCantidades in
+    '..\src\Lib\inLibPedidosCompraPresentacionCantidades.pas',
+  inLibPedidosVentaPresentacionReglas in
+    '..\src\Lib\inLibPedidosVentaPresentacionReglas.pas',
+  UniDataPedidosVentaFlujoEdicion in
+    '..\src\DataModules\UniDataPedidosVentaFlujoEdicion.pas',
   UniDataPedidosCompraOperaciones in
     '..\src\DataModules\UniDataPedidosCompraOperaciones.pas',
   UniDataVentasWsJson in
@@ -413,6 +447,10 @@ uses
     'PruebasComprasSesionesAplicacion.pas',
   DoblesPivoteVenta in 'DoblesPivoteVenta.pas',
   PruebasPivoteVenta in 'PruebasPivoteVenta.pas',
+  PruebasPedidosVentaPresentacion in
+    'PruebasPedidosVentaPresentacion.pas',
+  PruebasAlbaranesVentaMovimientos in
+    'PruebasAlbaranesVentaMovimientos.pas',
   PruebasExportadores in 'PruebasExportadores.pas',
   PruebasValidacionTallasCompra in
     'PruebasValidacionTallasCompra.pas',
@@ -453,6 +491,10 @@ uses
     'PruebasExcepcionesAplicacion.pas',
   PruebasEnvioErrores in 'PruebasEnvioErrores.pas',
   PruebasEmisionFiscal in 'PruebasEmisionFiscal.pas',
+  PruebasRegistroEventosVerifactu in
+    'PruebasRegistroEventosVerifactu.pas',
+  PruebasVerifactuColaResultados in
+    'PruebasVerifactuColaResultados.pas',
   PruebasAlbaranesCompraMovimientos in
     'PruebasAlbaranesCompraMovimientos.pas',
   PruebasDevolucionesCompraMovimientos in

@@ -42,6 +42,54 @@ type
     function RegistroPantallas: TfzaWinF;
   end;
 
+// Las pantallas creadas mediante una clase decoradora/inyectada no tienen
+// por que figurar en fza_winforms. Se consulta primero la clase concreta y
+// despues sus ancestros hasta reutilizar el registro de la pantalla base.
+function ResolverCallPantallaPorJerarquia(
+  const AAnfitrion: IAnfitrionMantenimiento;
+  AClasePantalla: TClass): string;
+function ResolverDataModulePantallaPorJerarquia(
+  const AAnfitrion: IAnfitrionMantenimiento;
+  AClasePantalla: TClass): string;
+
 implementation
+
+function ResolverCallPantallaPorJerarquia(
+  const AAnfitrion: IAnfitrionMantenimiento;
+  AClasePantalla: TClass): string;
+var
+  Clase: TClass;
+begin
+  Result := '';
+  if not Assigned(AAnfitrion) then
+    Exit;
+  Clase := AClasePantalla;
+  while Assigned(Clase) and (Result = '') do
+  begin
+    Result := AAnfitrion.ResolverCallPantalla(
+      Clase.UnitName + '.' + Clase.ClassName);
+    if Result = '' then
+      Clase := Clase.ClassParent;
+  end;
+end;
+
+function ResolverDataModulePantallaPorJerarquia(
+  const AAnfitrion: IAnfitrionMantenimiento;
+  AClasePantalla: TClass): string;
+var
+  Clase: TClass;
+begin
+  Result := '';
+  if not Assigned(AAnfitrion) then
+    Exit;
+  Clase := AClasePantalla;
+  while Assigned(Clase) and (Result = '') do
+  begin
+    Result := AAnfitrion.ResolverDataModulePantalla(
+      Clase.UnitName + '.' + Clase.ClassName);
+    if Result = '' then
+      Clase := Clase.ClassParent;
+  end;
+end;
 
 end.

@@ -31,6 +31,7 @@ type
     CambiarCopiaSeguridad: TProc;
     CopiarDetalle: TProc;
     EnviarError: TProc;
+    SalirAplicacion: TProc;
   end;
 
   TConfiguracionVistaErrorAplicacion = record
@@ -39,6 +40,7 @@ type
     EtiquetaTelefono: string;
     EtiquetaDescripcion: string;
     TextoCerrar: string;
+    TextoSalirAplicacion: string;
     TextoCopiar: string;
     TextoEnviar: string;
     TextoActivarLog: string;

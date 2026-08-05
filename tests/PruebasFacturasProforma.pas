@@ -37,7 +37,13 @@ type
     [Test]
     procedure FechaFinalVacia_EsRechazada;
     [Test]
+    procedure EmpresaOrigenVacia_EsRechazada;
+    [Test]
     procedure EmpresaDestinoVacia_EsRechazada;
+    [Test]
+    procedure EmpresasTraspasoIguales_SonRechazadas;
+    [Test]
+    procedure VentaSinEmpresaDestino_EsValida;
     [Test]
     procedure UsuarioVacio_EsRechazado;
     [Test]
@@ -88,6 +94,7 @@ begin
   Result := Default(TSolicitudFacturacionCaja);
   Result.FechaDesde := EncodeDate(2026, 1, 1);
   Result.FechaHasta := EncodeDate(2026, 3, 31);
+  Result.CodigoEmpresaOrigen := 'EMP1';
   Result.CodigoEmpresaDestino := 'EMP2';
   Result.Usuario := 'PRUEBAS';
 end;
@@ -147,6 +154,8 @@ begin
     Assert.AreEqual(0, Repositorio.GeneracionesTraspaso);
     Assert.AreEqual(3, Resultado.CantidadOperaciones);
     Assert.AreEqual(1, Resultado.CantidadAjustes);
+    Assert.AreEqual('EMP1',
+      Repositorio.UltimaSolicitud.CodigoEmpresaOrigen);
     Assert.AreEqual('EMP2',
       Repositorio.UltimaSolicitud.CodigoEmpresaDestino);
   finally
@@ -291,6 +300,28 @@ begin
   end;
 end;
 
+procedure TPruebasFacturasProforma.EmpresaOrigenVacia_EsRechazada;
+var
+  Repositorio: IRepositorioFacturasProforma;
+  Servicio   : TFacturadorOperacionesCaja;
+  Solicitud  : TSolicitudFacturacionCaja;
+begin
+  Repositorio := TRepositorioFacturasProformaFalso.Create;
+  Servicio := TFacturadorOperacionesCaja.Create(Repositorio);
+  try
+    Solicitud := CrearSolicitudValida;
+    Solicitud.CodigoEmpresaOrigen := ' ';
+    Assert.WillRaise(
+      procedure
+      begin
+        Servicio.Ejecutar(mfcVenta, Solicitud);
+      end,
+      EArgumentException);
+  finally
+    Servicio.Free;
+  end;
+end;
+
 procedure TPruebasFacturasProforma.EmpresaDestinoVacia_EsRechazada;
 var
   Repositorio: IRepositorioFacturasProforma;
@@ -305,9 +336,54 @@ begin
     Assert.WillRaise(
       procedure
       begin
-        Servicio.Ejecutar(mfcVenta, Solicitud);
+        Servicio.Ejecutar(mfcTraspaso, Solicitud);
       end,
       EArgumentException);
+  finally
+    Servicio.Free;
+  end;
+end;
+
+procedure TPruebasFacturasProforma.
+  EmpresasTraspasoIguales_SonRechazadas;
+var
+  Repositorio: IRepositorioFacturasProforma;
+  Servicio   : TFacturadorOperacionesCaja;
+  Solicitud  : TSolicitudFacturacionCaja;
+begin
+  Repositorio := TRepositorioFacturasProformaFalso.Create;
+  Servicio := TFacturadorOperacionesCaja.Create(Repositorio);
+  try
+    Solicitud := CrearSolicitudValida;
+    Solicitud.CodigoEmpresaDestino := Solicitud.CodigoEmpresaOrigen;
+    Assert.WillRaise(
+      procedure
+      begin
+        Servicio.Ejecutar(mfcTraspaso, Solicitud);
+      end,
+      EArgumentException);
+  finally
+    Servicio.Free;
+  end;
+end;
+
+procedure TPruebasFacturasProforma.VentaSinEmpresaDestino_EsValida;
+var
+  Repositorio: TRepositorioFacturasProformaFalso;
+  Servicio   : TFacturadorOperacionesCaja;
+  Solicitud  : TSolicitudFacturacionCaja;
+begin
+  Repositorio := TRepositorioFacturasProformaFalso.Create;
+  Servicio := TFacturadorOperacionesCaja.Create(Repositorio);
+  try
+    Solicitud := CrearSolicitudValida;
+    Solicitud.CodigoEmpresaDestino := '';
+    Servicio.Ejecutar(mfcVenta, Solicitud);
+    Assert.AreEqual(1, Repositorio.GeneracionesVenta);
+    Assert.AreEqual('EMP1',
+      Repositorio.UltimaSolicitud.CodigoEmpresaOrigen);
+    Assert.AreEqual('',
+      Repositorio.UltimaSolicitud.CodigoEmpresaDestino);
   finally
     Servicio.Free;
   end;

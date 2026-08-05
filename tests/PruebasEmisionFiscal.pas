@@ -40,6 +40,12 @@ type
     procedure Reintento_AumentaEsperaSinSuperarTope;
     [Test]
     procedure Reintento_AgotadoQuedaEnError;
+    [Test]
+    procedure ConstruccionAlta_MismaEntradaEsIdempotente;
+    [Test]
+    procedure RespuestaDuplicada_SeConsideraAceptada;
+    [Test]
+    procedure RespuestaParcial_ConservaCodigoYDescripcion;
   end;
 
 implementation
@@ -47,7 +53,27 @@ implementation
 uses
   inLibVerifactu, inLibVerifactuTipos,
   inLibEmisionFiscalIntf, inLibEmisionFiscal,
-  inLibVerifactuReintentos;
+  inLibVerifactuReintentos, inLibVerifactuConstruccionEnvio;
+
+function CrearEntradaAlta: TEntradaConstruccionRegistroAlta;
+begin
+  Result := Default(TEntradaConstruccionRegistroAlta);
+  Result.Serie := 'F';
+  Result.Numero := '42';
+  Result.NumSerieFactura := 'F42';
+  Result.NifEmisor := 'B12345678';
+  Result.NombreEmisor := 'Empresa & Pruebas';
+  Result.FechaExpedicion := '05-08-2026';
+  Result.TipoFactura := 'F1';
+  Result.NifCliente := '12345678Z';
+  Result.NombreCliente := 'Cliente de pruebas';
+  Result.CuotaTotal := '21.00';
+  Result.ImporteTotal := '121.00';
+  Result.FechaHoraHuso := '2026-08-05T10:00:00+02:00';
+  Result.SistemaInformaticoXml := '<sum1:SistemaInformatico/>';
+  Result.DesgloseXml := '<sum1:DetalleDesglose/>';
+  Result.DescripcionOperacion := 'Venta';
+end;
 
 procedure TPruebasEmisionFiscal.Factoria_SeleccionaVerifactu;
 var
@@ -167,6 +193,60 @@ begin
   Assert.AreEqual(
     'ERROR',
     CalcularEstadoReintentoVerifactu(9, 10));
+end;
+
+procedure TPruebasEmisionFiscal.
+  ConstruccionAlta_MismaEntradaEsIdempotente;
+var
+  oEntrada: TEntradaConstruccionRegistroAlta;
+  oPrimera: TResultadoConstruccionRegistroAlta;
+  oSegunda: TResultadoConstruccionRegistroAlta;
+begin
+  oEntrada := CrearEntradaAlta;
+  oPrimera := ConstruirRegistroAltaVerifactu(oEntrada);
+  oSegunda := ConstruirRegistroAltaVerifactu(oEntrada);
+  Assert.AreEqual(oPrimera.Huella, oSegunda.Huella);
+  Assert.AreEqual(oPrimera.Xml, oSegunda.Xml);
+  Assert.AreEqual(
+    '3C6EAE0660A1BC7DBAA75598E3B4AA105D0C3C23543A55FEFA04AA411D905175',
+    oPrimera.Huella);
+  Assert.Contains(oPrimera.Xml, 'Empresa &amp; Pruebas');
+  Assert.Contains(oPrimera.Xml, '<sum1:PrimerRegistro>S');
+end;
+
+procedure TPruebasEmisionFiscal.
+  RespuestaDuplicada_SeConsideraAceptada;
+var
+  oRespuesta: TInterpretacionRespuestaAeat;
+begin
+  oRespuesta := InterpretarRespuestaAeat(200,
+    '<r:EstadoEnvio>Incorrecto</r:EstadoEnvio>' +
+    '<r:EstadoRegistro>Incorrecto</r:EstadoRegistro>' +
+    '<r:CodigoErrorRegistro>3000</r:CodigoErrorRegistro>' +
+    '<r:DescripcionErrorRegistro>Registro duplicado' +
+    '</r:DescripcionErrorRegistro>');
+  Assert.IsTrue(oRespuesta.EsHttpCorrecto);
+  Assert.IsTrue(oRespuesta.Duplicado);
+  Assert.IsTrue(oRespuesta.Aceptado);
+end;
+
+procedure TPruebasEmisionFiscal.
+  RespuestaParcial_ConservaCodigoYDescripcion;
+var
+  oRespuesta: TInterpretacionRespuestaAeat;
+begin
+  oRespuesta := InterpretarRespuestaAeat(200,
+    '<EstadoEnvio>ParcialmenteCorrecto</EstadoEnvio>' +
+    '<EstadoRegistro>AceptadoConErrores</EstadoRegistro>' +
+    '<CodigoErrorRegistro>2001</CodigoErrorRegistro>' +
+    '<DescripcionErrorRegistro>Aviso fiscal</DescripcionErrorRegistro>' +
+    '<TiempoEsperaEnvio>60</TiempoEsperaEnvio>');
+  Assert.IsTrue(oRespuesta.Aceptado);
+  Assert.IsFalse(oRespuesta.Duplicado);
+  Assert.AreEqual('AceptadoConErrores', oRespuesta.EstadoRegistro);
+  Assert.AreEqual('2001', oRespuesta.CodigoError);
+  Assert.AreEqual('Aviso fiscal', oRespuesta.DescripcionError);
+  Assert.AreEqual(60, oRespuesta.EsperaSegundos);
 end;
 
 initialization

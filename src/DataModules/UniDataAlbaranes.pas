@@ -22,7 +22,8 @@ uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   Data.DB, MemDS, DBAccess, Uni,
   UniDataGen, inLibUser,
-  frxClass, frxDBSet, frCoreClasses;
+  frxClass, frxDBSet, frCoreClasses,
+  inLibAlbaranesVentaPresentacionMovimientos;
 
 type
   TdmAlbaranes = class(TdmBase)
@@ -123,15 +124,14 @@ type
     procedure ProcesarLineasPosteadas;
     procedure NegarMovimientosFacturaDesdeAlbaran(const ASerie,
                                                   ANumero: string);
+    function CrearDocumentoMovimientosSalida:
+      TDocumentoMovimientosAlbaranVenta;
     procedure AsignarNumeroLineaAlbaran(DataSet: TDataSet);
     procedure NormalizarCamposOpcionalesLinea(DataSet: TDataSet);
-    function ResolverSkuMovimientoSalida(const ACodigoArticulo: string): string;
-    procedure PrepararLineasMovimientoSalida(const ASerie, ANumero,
-                                             AAlmacenCabecera: string);
     procedure SincronizarAlmacenLinea(DataSet: TDataSet);
     procedure SincronizarAlmacenLineasCabecera;
     procedure ValidarAlmacenCabecera;
-    procedure BorrarMovimientosSalida;
+    procedure RefrescarDatosMovimientosSalida;
     procedure SincronizarMovimientosSalida;
     // Propone la serie AV de fza_empresas_series de la empresa emisora
     // en documentos nuevos sin numerar (al cambiar la empresa en el alta)
@@ -151,7 +151,7 @@ uses
   UniDataAlmacenesEmpresaRepositorio,
   inLibMsgArticulos, inLibMsgFacturas, inLibMsgVentas,
   inLibSqlSeguro, inLibDocumento, inLibDocumentoIntf,
-  UniDataMovimientosAlmacenRecalculo;
+  UniDataAlbaranesVentaMovimientos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -988,238 +988,69 @@ begin
   end;
 end;
 
-procedure TdmAlbaranes.BorrarMovimientosSalida;
+function TdmAlbaranes.CrearDocumentoMovimientosSalida:
+  TDocumentoMovimientosAlbaranVenta;
 var
-  q: TUniQuery;
+  Estrategia: IEstrategiaDocumento;
 begin
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := unqryTablaG.Connection;
-    q.SQL.Text := 'CALL PRC_FZA_MOVIMIENTOS_ALMACEN_DELETE_DOC(:t, :s, :n)';
-    q.ParamByName('t').AsString :=
-      EstrategiaAlbaranVenta.TipoDocumentoMovimientoStock;
-    q.ParamByName('s').AsString :=
-      unqryTablaG.FieldByName('SERIE_ALB').AsString;
-    q.ParamByName('n').AsString :=
-      unqryTablaG.FieldByName('NUMERO_ALB').AsString;
-    q.ExecSQL;
-  finally
-    FreeAndNil(q);
+  Result := Default(TDocumentoMovimientosAlbaranVenta);
+  if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
+  begin
+    Estrategia := EstrategiaAlbaranVenta;
+    Result.Serie := Trim(
+      unqryTablaG.FieldByName('SERIE_ALB').AsString);
+    Result.Numero := Trim(
+      unqryTablaG.FieldByName('NUMERO_ALB').AsString);
+    Result.Empresa := unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString;
+    Result.Cliente := unqryTablaG.FieldByName('CODIGO_CLI_ALB').AsString;
+    Result.Usuario := IdentidadSesion.Usuario;
+    Result.TipoDocumento := Estrategia.TipoDocumentoMovimientoStock;
+    Result.TipoMovimiento := Estrategia.TipoMovimientoStock;
+    Result.InstanteMovimiento := Now;
+    if unqryTablaG.FindField('CODIGO_ALM_ALB') <> nil then
+      Result.Almacen := Trim(
+        unqryTablaG.FieldByName('CODIGO_ALM_ALB').AsString);
+    if not unqryTablaG.FieldByName('INSTANTE_MOVIMIENTO_ALB').IsNull then
+      Result.InstanteMovimiento := unqryTablaG.FieldByName(
+        'INSTANTE_MOVIMIENTO_ALB').AsDateTime
+    else if not unqryTablaG.FieldByName('FECHA_ALB').IsNull then
+      Result.InstanteMovimiento :=
+        unqryTablaG.FieldByName('FECHA_ALB').AsDateTime;
   end;
 end;
 
-function TdmAlbaranes.ResolverSkuMovimientoSalida(
-  const ACodigoArticulo: string): string;
-var
-  q: TUniQuery;
-  iSkus: Integer;
-  sArticulo: string;
-  sUnico: string;
+procedure TdmAlbaranes.RefrescarDatosMovimientosSalida;
 begin
-  Result := '';
-  sArticulo := Trim(ACodigoArticulo);
-  if sArticulo <> '' then
+  if unqryAlbaranesLineas.Active and
+     (not (unqryAlbaranesLineas.State in dsEditModes)) then
   begin
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := unqryTablaG.Connection;
-      q.SQL.Text :=
-        'SELECT CODIGO_UNIDAD_SKU ' +
-        '  FROM fza_articulos_skus ' +
-        ' WHERE CODIGO_ART_SKU = :art ' +
-        '   AND COALESCE(ESACTIVO_SKU, ''S'') = ''S'' ' +
-        ' ORDER BY CODIGO_UNIDAD_SKU';
-      q.ParamByName('art').AsString := sArticulo;
-      q.Open;
-      iSkus := 0;
-      sUnico := '';
-      while not q.Eof do
-      begin
-        Inc(iSkus);
-        if iSkus = 1 then
-          sUnico := q.FieldByName('CODIGO_UNIDAD_SKU').AsString;
-        q.Next;
-      end;
-      q.Close;
-      if iSkus = 1 then
-        Result := sUnico;
-      if Result = '' then
-      begin
-        q.SQL.Text :=
-          'INSERT IGNORE INTO fza_articulos_skus ' +
-          '  (CODIGO_UNIDAD_SKU, CODIGO_ART_SKU, CODIGO_VAR_SKU, ' +
-          '   ESACTIVO_SKU, INSTANTE_ALTA, USUARIO_ALTA, ' +
-          '   USUARIO_MODIF) ' +
-          'SELECT a.CODIGO_ART_ART, a.CODIGO_ART_ART, ''-'', ''S'', ' +
-          '       CURRENT_TIMESTAMP, :usr, :usr ' +
-          '  FROM fza_articulos a ' +
-          ' WHERE a.CODIGO_ART_ART = :art ' +
-          '   AND COALESCE(a.ESVARIACION_ART, ''N'') = ''N'' ' +
-          '   AND COALESCE(a.ESACTIVO_ART, ''S'') = ''S'' ' +
-          '   AND NOT EXISTS (SELECT 1 FROM fza_articulos_skus sk ' +
-          '                    WHERE sk.CODIGO_ART_SKU = a.CODIGO_ART_ART)';
-        q.ParamByName('usr').AsString := IdentidadSesion.Usuario;
-        q.ParamByName('art').AsString := sArticulo;
-        q.ExecSQL;
-        q.SQL.Text :=
-          'SELECT CODIGO_UNIDAD_SKU ' +
-          '  FROM fza_articulos_skus ' +
-          ' WHERE CODIGO_UNIDAD_SKU = :sku ' +
-          '   AND CODIGO_ART_SKU = :art ' +
-          '   AND COALESCE(ESACTIVO_SKU, ''S'') = ''S''';
-        q.ParamByName('sku').AsString := sArticulo;
-        q.ParamByName('art').AsString := sArticulo;
-        q.Open;
-        if not q.Eof then
-          Result := q.FieldByName('CODIGO_UNIDAD_SKU').AsString;
-        q.Close;
-      end;
-    finally
-      FreeAndNil(q);
-    end;
+    unqryAlbaranesLineas.Close;
+    unqryAlbaranesLineas.Open;
   end;
-end;
-
-procedure TdmAlbaranes.PrepararLineasMovimientoSalida(
-  const ASerie, ANumero, AAlmacenCabecera: string);
-var
-  qLineas: TUniQuery;
-  qUpd: TUniQuery;
-  iNuevaLinea: Integer;
-  sArticulo: string;
-  sLineaActual: string;
-  sLineaNueva: string;
-  sLineaVieja: string;
-  sSku: string;
-begin
-  if (ASerie <> '') and (ANumero <> '') then
+  if unqryMovimientosAlb.Active then
   begin
-    qLineas := TUniQuery.Create(nil);
-    qUpd := TUniQuery.Create(nil);
-    try
-      qLineas.Connection := unqryTablaG.Connection;
-      qUpd.Connection := unqryTablaG.Connection;
-      if AAlmacenCabecera <> '' then
-      begin
-        qUpd.SQL.Text :=
-          'UPDATE fza_albaranes_lineas ' +
-          '   SET CODIGO_ALMACEN_ALBLIN = :alm, ' +
-          '       USUARIO_MODIF = :usr, ' +
-          '       INSTANTE_MODIF = CURRENT_TIMESTAMP ' +
-          ' WHERE SERIE_ALB_ALBLIN = :ser ' +
-          '   AND NUMERO_ALB_ALBLIN = :num ' +
-          '   AND COALESCE(CODIGO_ALMACEN_ALBLIN, '''') <> :alm2';
-        qUpd.ParamByName('alm').AsString := AAlmacenCabecera;
-        qUpd.ParamByName('alm2').AsString := AAlmacenCabecera;
-        qUpd.ParamByName('usr').AsString := IdentidadSesion.Usuario;
-        qUpd.ParamByName('ser').AsString := ASerie;
-        qUpd.ParamByName('num').AsString := ANumero;
-        qUpd.ExecSQL;
-      end;
-      qLineas.SQL.Text :=
-        'SELECT LINEA_ALBLIN, CODIGO_ART_ALBLIN, CODIGO_UNIDAD_ALBLIN ' +
-        '  FROM fza_albaranes_lineas ' +
-        ' WHERE SERIE_ALB_ALBLIN = :ser ' +
-        '   AND NUMERO_ALB_ALBLIN = :num ' +
-        ' ORDER BY LINEA_ALBLIN, INSTANTE_ALTA, CODIGO_ART_ALBLIN';
-      qLineas.ParamByName('ser').AsString := ASerie;
-      qLineas.ParamByName('num').AsString := ANumero;
-      qLineas.Open;
-      while not qLineas.Eof do
-      begin
-        sLineaVieja := Trim(qLineas.FieldByName('LINEA_ALBLIN').AsString);
-        sLineaActual := sLineaVieja;
-        if (sLineaVieja = '') or (StrToIntDef(sLineaVieja, 0) = 0) then
-        begin
-          iNuevaLinea := GetSiguienteLineaDocLibre(
-            CrearContadorLineasDocumento(ConexionPrincipal),
-            CONT_ALBARANES, LIN_ALBARANES, ASerie, ANumero);
-          if iNuevaLinea > 0 then
-          begin
-            sLineaNueva := Format('%.4d', [iNuevaLinea]);
-            qUpd.SQL.Text :=
-              'UPDATE fza_albaranes_lineas ' +
-              '   SET LINEA_ALBLIN = :lin, ' +
-              '       USUARIO_MODIF = :usr, ' +
-              '       INSTANTE_MODIF = CURRENT_TIMESTAMP ' +
-              ' WHERE SERIE_ALB_ALBLIN = :ser ' +
-              '   AND NUMERO_ALB_ALBLIN = :num ' +
-              '   AND COALESCE(LINEA_ALBLIN, '''') = :lin_ant ' +
-              ' ORDER BY INSTANTE_ALTA, CODIGO_ART_ALBLIN ' +
-              ' LIMIT 1';
-            qUpd.ParamByName('lin').AsString := sLineaNueva;
-            qUpd.ParamByName('usr').AsString := IdentidadSesion.Usuario;
-            qUpd.ParamByName('ser').AsString := ASerie;
-            qUpd.ParamByName('num').AsString := ANumero;
-            qUpd.ParamByName('lin_ant').AsString := sLineaVieja;
-            qUpd.ExecSQL;
-            if qUpd.RowsAffected <> 0 then
-              sLineaActual := sLineaNueva;
-          end;
-        end;
-        sArticulo := Trim(qLineas.FieldByName('CODIGO_ART_ALBLIN').AsString);
-        sSku := Trim(qLineas.FieldByName('CODIGO_UNIDAD_ALBLIN').AsString);
-        if (sSku = '') and (sArticulo <> '') then
-        begin
-          sSku := ResolverSkuMovimientoSalida(sArticulo);
-          if sSku <> '' then
-          begin
-            qUpd.SQL.Text :=
-              'UPDATE fza_albaranes_lineas ' +
-              '   SET CODIGO_UNIDAD_ALBLIN = :sku, ' +
-              '       USUARIO_MODIF = :usr, ' +
-              '       INSTANTE_MODIF = CURRENT_TIMESTAMP ' +
-              ' WHERE SERIE_ALB_ALBLIN = :ser ' +
-              '   AND NUMERO_ALB_ALBLIN = :num ' +
-              '   AND COALESCE(LINEA_ALBLIN, '''') = :lin ' +
-              '   AND CODIGO_ART_ALBLIN = :art ' +
-              '   AND COALESCE(CODIGO_UNIDAD_ALBLIN, '''') = ''''';
-            qUpd.ParamByName('sku').AsString := sSku;
-            qUpd.ParamByName('usr').AsString := IdentidadSesion.Usuario;
-            qUpd.ParamByName('ser').AsString := ASerie;
-            qUpd.ParamByName('num').AsString := ANumero;
-            qUpd.ParamByName('lin').AsString := sLineaActual;
-            qUpd.ParamByName('art').AsString := sArticulo;
-            qUpd.ExecSQL;
-          end;
-        end;
-        qLineas.Next;
-      end;
-    finally
-      FreeAndNil(qLineas);
-      FreeAndNil(qUpd);
-    end;
-    if unqryAlbaranesLineas.Active and
-       (not (unqryAlbaranesLineas.State in dsEditModes)) then
-    begin
-      unqryAlbaranesLineas.Close;
-      unqryAlbaranesLineas.Open;
-    end;
+    unqryMovimientosAlb.Close;
+    unqryMovimientosAlb.Open;
   end;
 end;
 
 procedure TdmAlbaranes.SincronizarMovimientosSalida;
 var
-  sAlmacen: string;
-  sNumero: string;
-  sSerie: string;
+  Documento: TDocumentoMovimientosAlbaranVenta;
+  Operacion: IOperacionMovimientosAlbaranVenta;
 begin
-  if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
+  Documento := CrearDocumentoMovimientosSalida;
+  if Documento.PuedeSincronizar then
   begin
-    sNumero := Trim(unqryTablaG.FieldByName('NUMERO_ALB').AsString);
-    sSerie := Trim(unqryTablaG.FieldByName('SERIE_ALB').AsString);
-    sAlmacen := '';
-    if unqryTablaG.FindField('CODIGO_ALM_ALB') <> nil then
-      sAlmacen := Trim(unqryTablaG.FieldByName('CODIGO_ALM_ALB').AsString);
-    if (sNumero <> '') and (sNumero <> '0') and (sSerie <> '') then
-    begin
-      if sAlmacen <> '' then
-      begin
-        PrepararLineasMovimientoSalida(sSerie, sNumero, sAlmacen);
-        BorrarMovimientosSalida;
-        GenerarMovimientosSalida;
-      end;
-    end;
+    Operacion := CrearOperacionMovimientosAlbaranVenta(
+      CrearPersistenciaMovimientosAlbaranVentaUniDAC(
+        unqryTablaG.Connection,
+        unstrdprcInsertarMovAlb,
+        RegistroLog),
+      CrearUnidadTrabajoMovimientosAlbaranVentaUniDAC(
+        unqryTablaG.Connection));
+    Operacion.Sincronizar(Documento);
+    RefrescarDatosMovimientosSalida;
   end;
 end;
 
@@ -2125,194 +1956,22 @@ end;
 
 function TdmAlbaranes.GenerarMovimientosSalida: Integer;
 var
-  qLineas: TUniQuery;
-  qExiste: TUniQuery;
-  Procedimiento: TUniStoredProc;
-  sNumeroAlb, sSerieAlb, sEmpresa, sCliente: string;
-  sAlmacenCabecera: string;
-  sLinea, sSku, sAlmacen, sArticulo, sNumeroMov: string;
-  dtInstanteMovimiento: TDateTime;
-  fCantidad: Double;
+  Documento: TDocumentoMovimientosAlbaranVenta;
+  Operacion: IOperacionMovimientosAlbaranVenta;
 begin
   Result := 0;
-  if unqryTablaG.Active then
+  Documento := CrearDocumentoMovimientosSalida;
+  if Documento.TieneIdentidad then
   begin
-    sNumeroAlb := unqryTablaG.FieldByName('NUMERO_ALB').AsString;
-    sSerieAlb  := unqryTablaG.FieldByName('SERIE_ALB').AsString;
-    if (sNumeroAlb <> '') and (sNumeroAlb <> '0') then
-    begin
-      sEmpresa := unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString;
-  sCliente := unqryTablaG.FieldByName('CODIGO_CLI_ALB').AsString;
-  dtInstanteMovimiento := Now;
-  if not unqryTablaG.FieldByName('INSTANTE_MOVIMIENTO_ALB').IsNull then
-    dtInstanteMovimiento := unqryTablaG.FieldByName(
-      'INSTANTE_MOVIMIENTO_ALB').AsDateTime
-  else if not unqryTablaG.FieldByName('FECHA_ALB').IsNull then
-    dtInstanteMovimiento :=
-      unqryTablaG.FieldByName('FECHA_ALB').AsDateTime;
-  sAlmacenCabecera := '';
-  if unqryTablaG.FindField('CODIGO_ALM_ALB') <> nil then
-    sAlmacenCabecera :=
-      Trim(unqryTablaG.FieldByName('CODIGO_ALM_ALB').AsString);
-
-  qLineas := TUniQuery.Create(nil);
-  qExiste := TUniQuery.Create(nil);
-  try
-    qLineas.Connection := unqryTablaG.Connection;
-    qLineas.SQL.Text :=
-      'SELECT LINEA_ALBLIN, CODIGO_UNIDAD_ALBLIN, CODIGO_ART_ALBLIN, ' +
-      '       CANTIDAD_ALBLIN, CODIGO_ALMACEN_ALBLIN ' +
-      '  FROM fza_albaranes_lineas ' +
-      ' WHERE NUMERO_ALB_ALBLIN = :pNUM ' +
-      '   AND SERIE_ALB_ALBLIN  = :pSER ' +
-      ' ORDER BY LINEA_ALBLIN';
-    qLineas.ParamByName('pNUM').AsString := sNumeroAlb;
-    qLineas.ParamByName('pSER').AsString := sSerieAlb;
-    qLineas.Open;
-
-    qExiste.Connection := unqryTablaG.Connection;
-    qExiste.SQL.Text :=
-      'SELECT COUNT(*) AS N ' +
-      '  FROM fza_movimientos_almacen ' +
-      ' WHERE TIPO_DOC_MOV   = :pTIPODOC ' +
-      '   AND SERIE_DOC_MOV  = :pSER ' +
-      '   AND NUMERO_DOC_MOV = :pNUM ' +
-      '   AND LINEA_MOV      = :pLIN';
-    qExiste.ParamByName('pTIPODOC').AsString :=
-      EstrategiaAlbaranVenta.TipoDocumentoMovimientoStock;
-    qLineas.First;
-    while not qLineas.Eof do
-    begin
-      sLinea    := qLineas.FieldByName('LINEA_ALBLIN').AsString;
-      sSku      := Trim(qLineas.FieldByName('CODIGO_UNIDAD_ALBLIN').AsString);
-      sArticulo := qLineas.FieldByName('CODIGO_ART_ALBLIN').AsString;
-      fCantidad := qLineas.FieldByName('CANTIDAD_ALBLIN').AsFloat;
-      sAlmacen  := Trim(qLineas.FieldByName('CODIGO_ALMACEN_ALBLIN').AsString);
-      if sAlmacen = '' then
-        sAlmacen := sAlmacenCabecera;
-
-      if (sLinea <> '') and (StrToIntDef(sLinea, 0) > 0) and
-         (sSku <> '') and (sAlmacen <> '') and (fCantidad > 0) then
-      begin
-        // ¿Ya hay movimiento para esta línea? Si es así, saltar.
-        qExiste.Close;
-        qExiste.ParamByName('pSER').AsString := sSerieAlb;
-        qExiste.ParamByName('pNUM').AsString := sNumeroAlb;
-        qExiste.ParamByName('pLIN').AsString := sLinea;
-        qExiste.Open;
-        if qExiste.FieldByName('N').AsInteger = 0 then
-        begin
-          Procedimiento := unstrdprcInsertarMovAlb;
-          Procedimiento.Connection := unqryTablaG.Connection;
-          Procedimiento.Params.Clear;
-          Procedimiento.Params.CreateParam(
-            ftString, 'p_NUMERO_MOV', ptInput);
-          Procedimiento.Params.CreateParam(
-            ftString, 'p_TIPO_DOC_MOV', ptInput);
-          Procedimiento.Params.CreateParam(
-            ftString, 'p_SERIE_DOC_MOV', ptInput);
-          Procedimiento.Params.CreateParam(
-            ftString, 'p_NRO_DOC_MOV', ptInput);
-          Procedimiento.Params.CreateParam(
-            ftString, 'p_LINEA_MOV', ptInput);
-          Procedimiento.Params.CreateParam(
-            ftString, 'p_CODIGO_EMPRESA_MOV', ptInput);
-          Procedimiento.Params.CreateParam(
-            ftString, 'p_CODIGO_ALMACEN_MOV', ptInput);
-          Procedimiento.Params.CreateParam(
-            ftString, 'p_CODIGO_ALMACEN_CONTRA_MOV', ptInput);
-          Procedimiento.Params.CreateParam(
-            ftString, 'p_CODIGO_UNIDAD_MOV', ptInput);
-          Procedimiento.Params.CreateParam(
-            ftString, 'p_TIPO_MOVIMIENTO_MOV', ptInput);
-          Procedimiento.Params.CreateParam(
-            ftBCD, 'p_CANTIDAD_MOV', ptInput);
-          Procedimiento.Params.CreateParam(
-            ftBCD, 'p_PRECIO_MEDIO_MOV', ptInput);
-          Procedimiento.Params.CreateParam(
-            ftBCD, 'p_TOTAL_COSTE_MOV', ptInput);
-          Procedimiento.Params.CreateParam(
-            ftString, 'p_USUARIO', ptInput);
-          Procedimiento.Params.CreateParam(
-            ftString, 'p_ALMACEN_DOC', ptInput);
-          Procedimiento.Params.CreateParam(
-            ftString, 'p_NUMOP_DOC', ptInput);
-          Procedimiento.Params.CreateParam(
-            ftString, 'p_CODIGO_CAJA_DOC_MOV', ptInput);
-          Procedimiento.Params.CreateParam(
-            ftString, 'p_CODCLIENTE', ptInput);
-          Procedimiento.Params.CreateParam(
-            ftString, 'p_CODARTICULO', ptInput);
-          sNumeroMov := ObtenerSiguienteContador(
-            ConexionPrincipal,
-            'MV',
-            IdentidadSesion.Usuario);
-          Procedimiento.ParamByName('p_NUMERO_MOV').AsString :=
-            sNumeroMov;
-          Procedimiento.ParamByName('p_TIPO_DOC_MOV').AsString :=
-            EstrategiaAlbaranVenta.TipoDocumentoMovimientoStock;
-          Procedimiento.ParamByName('p_SERIE_DOC_MOV').AsString :=
-            sSerieAlb;
-          Procedimiento.ParamByName('p_NRO_DOC_MOV').AsString :=
-            sNumeroAlb;
-          Procedimiento.ParamByName('p_LINEA_MOV').AsString := sLinea;
-          Procedimiento.ParamByName('p_CODIGO_EMPRESA_MOV').AsString :=
-            sEmpresa;
-          Procedimiento.ParamByName('p_CODIGO_ALMACEN_MOV').AsString :=
-            sAlmacen;
-          Procedimiento.ParamByName(
-            'p_CODIGO_ALMACEN_CONTRA_MOV').Clear;
-          Procedimiento.ParamByName('p_CODIGO_UNIDAD_MOV').AsString :=
-            sSku;
-          Procedimiento.ParamByName('p_TIPO_MOVIMIENTO_MOV').AsString :=
-            EstrategiaAlbaranVenta.TipoMovimientoStock;
-          Procedimiento.ParamByName('p_CANTIDAD_MOV').AsFloat :=
-            fCantidad;
-          Procedimiento.ParamByName('p_PRECIO_MEDIO_MOV').AsFloat := 0;
-          Procedimiento.ParamByName('p_TOTAL_COSTE_MOV').AsFloat := 0;
-          Procedimiento.ParamByName('p_USUARIO').AsString :=
-            IdentidadSesion.Usuario;
-          Procedimiento.ParamByName('p_ALMACEN_DOC').AsString :=
-            sAlmacen;
-          Procedimiento.ParamByName('p_NUMOP_DOC').AsString := '';
-          Procedimiento.ParamByName('p_CODIGO_CAJA_DOC_MOV').AsString :=
-            '';
-          Procedimiento.ParamByName('p_CODCLIENTE').AsString := sCliente;
-          Procedimiento.ParamByName('p_CODARTICULO').AsString :=
-            sArticulo;
-          Procedimiento.ExecProc;
-          Inc(Result);
-        end;
-        qExiste.Close;
-      end;
-      if ((sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
-          (sSku = '') or (sAlmacen = '')) and (fCantidad > 0) then
-        RegistroLog.RegistrarAviso(Format(
-          'Albaran %s/%s linea %s sin movimiento AV. Articulo=%s, ' +
-          'SKU=%s, almacen=%s.',
-          [sSerieAlb, sNumeroAlb, sLinea, sArticulo, sSku, sAlmacen]));
-      qLineas.Next;
-    end;
-  finally
-    FreeAndNil(qLineas);
-    FreeAndNil(qExiste);
-  end;
-
-  if Result > 0 then
-    FecharYRecalcularMovimientosDocumento(
-      unqryTablaG.Connection,
-      EstrategiaAlbaranVenta.TipoDocumentoMovimientoStock,
-      sSerieAlb,
-      sNumeroAlb,
-      dtInstanteMovimiento);
-
-  // Refrescar el grid de movimientos si está abierto.
-  if unqryMovimientosAlb.Active then
-  begin
-    unqryMovimientosAlb.Close;
-    unqryMovimientosAlb.Open;
-  end;
-    end;
+    Operacion := CrearOperacionMovimientosAlbaranVenta(
+      CrearPersistenciaMovimientosAlbaranVentaUniDAC(
+        unqryTablaG.Connection,
+        unstrdprcInsertarMovAlb,
+        RegistroLog),
+      CrearUnidadTrabajoMovimientosAlbaranVentaUniDAC(
+        unqryTablaG.Connection));
+    Result := Operacion.GenerarFaltantes(Documento);
+    RefrescarDatosMovimientosSalida;
   end;
 end;
 

@@ -27,6 +27,7 @@ type
   TSolicitudFacturacionCaja = record
     FechaDesde          : TDateTime;
     FechaHasta          : TDateTime;
+    CodigoEmpresaOrigen : string;
     CodigoEmpresaDestino: string;
     Usuario             : string;
   end;

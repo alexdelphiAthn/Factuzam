@@ -53,6 +53,7 @@ type
     btnActivarLog: TcxButton;
     btnEnviar: TcxButton;
     btnCopiar: TcxButton;
+    btnSalirAplicacion: TcxButton;
     btnCerrar: TcxButton;
     mDetalle: TcxMemo;
   end;
@@ -80,6 +81,7 @@ type
     procedure CambiarCopiaSeguridadClick(Sender: TObject);
     procedure CopiarDetalleClick(Sender: TObject);
     procedure EnviarErrorClick(Sender: TObject);
+    procedure SalirAplicacionClick(Sender: TObject);
   public
     constructor Create;
     destructor Destroy; override;
@@ -123,6 +125,7 @@ begin
   FAcciones.CambiarCopiaSeguridad := nil;
   FAcciones.CopiarDetalle := nil;
   FAcciones.EnviarError := nil;
+  FAcciones.SalirAplicacion := nil;
   FreeAndNil(FFormulario);
   inherited;
 end;
@@ -137,6 +140,8 @@ begin
   FFormulario.lblDescripcion.Caption :=
     AConfiguracion.EtiquetaDescripcion;
   FFormulario.btnCerrar.Caption := AConfiguracion.TextoCerrar;
+  FFormulario.btnSalirAplicacion.Caption :=
+    AConfiguracion.TextoSalirAplicacion;
   FFormulario.btnCopiar.Caption := AConfiguracion.TextoCopiar;
   FFormulario.btnEnviar.Caption := AConfiguracion.TextoEnviar;
   FFormulario.btnActivarLog.Caption := AConfiguracion.TextoActivarLog;
@@ -146,6 +151,7 @@ begin
   FFormulario.btnActivarLog.OnClick := ActivarLogClick;
   FFormulario.btnCopiar.OnClick := CopiarDetalleClick;
   FFormulario.btnEnviar.OnClick := EnviarErrorClick;
+  FFormulario.btnSalirAplicacion.OnClick := SalirAplicacionClick;
   FFormulario.ActiveControl := FFormulario.btnCerrar;
 end;
 
@@ -233,6 +239,14 @@ procedure TVistaErrorAplicacionVcl.EnviarErrorClick(Sender: TObject);
 begin
   if Assigned(FAcciones.EnviarError) then
     FAcciones.EnviarError();
+end;
+
+procedure TVistaErrorAplicacionVcl.SalirAplicacionClick(
+  Sender: TObject);
+begin
+  FFormulario.ModalResult := mrAbort;
+  if Assigned(FAcciones.SalirAplicacion) then
+    FAcciones.SalirAplicacion();
 end;
 
 function TPresentacionExcepcionesAplicacionVcl.CrearVistaError:

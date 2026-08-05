@@ -37,7 +37,8 @@ uses
   // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
   inLibColumnasSkuIntf, inLibGridPivoteVenta,
   inLibDocumento, inLibDocumentoIntf,
-  inLibVentasPantallaIntf, inLibVentasPantallaCrearAlbaran;
+  inLibVentasPantallaIntf, inLibVentasPantallaCrearAlbaran,
+  inLibPedidosVentaPresentacionReglas;
 
 type
   TfrmMtoPedidos = class(TfrmMtoDocumento)
@@ -262,6 +263,28 @@ type
     FContextoVentas: TContextoPedidosVentasPantalla;
     procedure AsegurarModoEntradaLineas(AMostrarEditor: Boolean);
     procedure ConstruirModoEntrada;
+    function PuedeConstruirModoEntrada(
+      out ADataSet: TDataSet): Boolean;
+    function CrearPlanModoEntrada:
+      TPlanModoEntradaPedidoVenta;
+    function CrearPlanModoResuelto(
+      AModo: TModoColumnasSku): TPlanModoEntradaPedidoVenta;
+    procedure OcultarEditorModoEntrada;
+    procedure SoltarFocoModoEntrada;
+    procedure DesmontarModoAnterior;
+    procedure DesvincularOrigenLineas;
+    procedure LimpiarVistaModoEntrada;
+    procedure RetirarModoEntrada(ADataSet: TDataSet);
+    function CrearConfiguracionModoEntrada(
+      ADataSet: TDataSet): TConfigColumnasSku;
+    function CrearConfiguracionPivoteVenta:
+      TGridPivoteVentaConfig;
+    procedure CrearModoEntradaSeleccionado(
+      const AConfiguracion: TConfigColumnasSku);
+    procedure MontarColumnasModoEntrada(
+      const APlan: TPlanModoEntradaPedidoVenta);
+    procedure AplicarPresentacionModoEntrada(
+      const AConfiguracion: TConfigColumnasSku);
     procedure CrearColumnasHostPedido;
     procedure MostrarColumnasAtributoGlobalesPed;
     procedure ModoEntradaResuelto(const ACodArt, ASku,
@@ -1273,73 +1296,142 @@ end;
 
 procedure TfrmMtoPedidos.ConstruirModoEntrada;
 var
-  Cfg: TConfigColumnasSku;
-  CfgPV: TGridPivoteVentaConfig;
-  ds: TDataSet;
+  oConfiguracion: TConfigColumnasSku;
+  oDataSet: TDataSet;
+  oPlan: TPlanModoEntradaPedidoVenta;
 begin
-  if (dmmPedidos <> nil) and not (csDestroying in ComponentState) then
+  if PuedeConstruirModoEntrada(oDataSet) then
   begin
-    ds := dmmPedidos.unqryPedidosLineas;
-    if ds.Active then
-    begin
-  // Teardown del modo anterior (patron DTR/inventarios).
+    oPlan := CrearPlanModoEntrada;
+    RetirarModoEntrada(oDataSet);
+    if oPlan.DesempaquetarAtributos then
+      dmmPedidos.DesempaquetarAtributosLineas;
+    oConfiguracion := CrearConfiguracionModoEntrada(oDataSet);
+    CrearModoEntradaSeleccionado(oConfiguracion);
+    Supports(FModoEntrada, IPivoteVentaAlbaranar, FPivoteAlbaranar);
+    Supports(FModoEntrada, IPivoteVentaBorrarGrupo, FPivoteBorrarGrupo);
+    FColsModoConstruido := True;
+    MontarColumnasModoEntrada(oPlan);
+    AplicarPresentacionModoEntrada(oConfiguracion);
+  end;
+end;
+
+function TfrmMtoPedidos.PuedeConstruirModoEntrada(
+  out ADataSet: TDataSet): Boolean;
+begin
+  ADataSet := nil;
+  Result := (dmmPedidos <> nil) and
+    not (csDestroying in ComponentState);
+  if Result then
+  begin
+    ADataSet := dmmPedidos.unqryPedidosLineas;
+    Result := ADataSet.Active;
+  end;
+end;
+
+function TfrmMtoPedidos.CrearPlanModoEntrada:
+  TPlanModoEntradaPedidoVenta;
+begin
+  Result := CrearPlanModoResuelto(FModoEntradaSel);
+end;
+
+function TfrmMtoPedidos.CrearPlanModoResuelto(
+  AModo: TModoColumnasSku): TPlanModoEntradaPedidoVenta;
+var
+  eModo: TModoPresentacionPedidoVenta;
+begin
+  case AModo of
+    mcsSku:
+      eModo := mpvSku;
+    mcsTallasHorPed:
+      eModo := mpvTallas;
+    mcsDesglose:
+      eModo := mpvDesglose;
+  else
+    eModo := mpvAutomatico;
+  end;
+  Result := CrearPlanModoEntradaPedidoVenta(eModo);
+end;
+
+procedure TfrmMtoPedidos.OcultarEditorModoEntrada;
+begin
+  if tvPedidosLineas.Controller.EditingController.IsEditing then
+  begin
+    try
+      tvPedidosLineas.Controller.EditingController.HideEdit(False);
+    except
+      on E: Exception do
+        RegistroLog.RegistrarAviso(
+          'Pedidos.ConstruirModoEntrada: HideEdit ignorado: ' +
+          E.Message);
+    end;
+  end;
+end;
+
+procedure TfrmMtoPedidos.SoltarFocoModoEntrada;
+begin
+  try
+    tvPedidosLineas.Controller.FocusedItem := nil;
+  except
+    on E: Exception do
+      RegistroLog.RegistrarAviso(
+        'Pedidos.ConstruirModoEntrada: soltar FocusedItem ' +
+        'fallo: ' + E.Message);
+  end;
+end;
+
+procedure TfrmMtoPedidos.DesmontarModoAnterior;
+begin
+  if FModoEntrada <> nil then
+  begin
+    try
+      FModoEntrada.Desmontar;
+    except
+      on E: Exception do
+        RegistroLog.RegistrarAviso(
+          'Pedidos.ConstruirModoEntrada: Desmontar fallo: ' +
+          E.Message);
+    end;
+  end;
+end;
+
+procedure TfrmMtoPedidos.DesvincularOrigenLineas;
+begin
+  try
+    tvPedidosLineas.DataController.DataSource := nil;
+  except
+    on E: Exception do
+      RegistroLog.RegistrarAviso(
+        'Pedidos.ConstruirModoEntrada: soltar DataSource ' +
+        'fallo: ' + E.Message);
+  end;
+end;
+
+procedure TfrmMtoPedidos.LimpiarVistaModoEntrada;
+begin
+  tvPedidosLineas.OnInitEdit := nil;
+  tvPedidosLineas.OnEditKeyDown := nil;
+  tvPedidosLineas.OnEditing := nil;
+  tvPedidosLineas.OnFocusedRecordChanged := nil;
+  tvPedidosLineas.OnFocusedItemChanged := nil;
+  tvPedidosLineas.OnCustomDrawCell := nil;
+  tvPedidosLineas.ClearItems;
+  FPivoteAlbaranar := nil;
+  FPivoteBorrarGrupo := nil;
+  FModoEntrada := nil;
+end;
+
+procedure TfrmMtoPedidos.RetirarModoEntrada(ADataSet: TDataSet);
+begin
   tvPedidosLineas.BeginUpdate;
   try
-    if tvPedidosLineas.Controller.EditingController.IsEditing then
-      try
-        tvPedidosLineas.Controller.EditingController.HideEdit(False);
-      except
-        on E: Exception do
-          // Teardown defensivo; queda constancia en el log.
-          RegistroLog.RegistrarAviso(
-            'Pedidos.ConstruirModoEntrada: HideEdit ignorado: ' +
-            E.Message);
-      end;
-    try
-      tvPedidosLineas.Controller.FocusedItem := nil;
-    except
-      on E: Exception do
-        // Teardown defensivo; queda constancia en el log.
-        RegistroLog.RegistrarAviso(
-          'Pedidos.ConstruirModoEntrada: soltar FocusedItem ' +
-          'fallo: ' + E.Message);
-    end;
-    if FModoEntrada <> nil then
-      try
-        FModoEntrada.Desmontar;
-      except
-        on E: Exception do
-          // Teardown defensivo; queda constancia en el log.
-          RegistroLog.RegistrarAviso(
-            'Pedidos.ConstruirModoEntrada: Desmontar fallo: ' +
-            E.Message);
-      end;
-    try
-      tvPedidosLineas.DataController.DataSource := nil;
-    except
-      on E: Exception do
-        // Teardown defensivo; queda constancia en el log.
-        RegistroLog.RegistrarAviso(
-          'Pedidos.ConstruirModoEntrada: soltar DataSource ' +
-          'fallo: ' + E.Message);
-    end;
-    if ds.State in dsEditModes then
-      ds.Cancel;
-    tvPedidosLineas.OnInitEdit := nil;
-    tvPedidosLineas.OnEditKeyDown := nil;
-    tvPedidosLineas.OnEditing := nil;
-    tvPedidosLineas.OnFocusedRecordChanged := nil;
-    tvPedidosLineas.OnFocusedItemChanged := nil;
-    tvPedidosLineas.OnCustomDrawCell := nil;
-    // Las columnas del modo saliente guardan handlers (OnGetProperties,//
-    // OnCustomDrawCell...) del objeto que se libera en la linea de abajo.
-    // Se eliminan ANTES: el repintado que provoca DesempaquetarAtributos-
-    // Lineas llamaria a un modo muerto (AV en ArtGetProperties 07/07/26).
-    tvPedidosLineas.ClearItems;
-    // Las capacidades sostienen la misma instancia: soltar ANTES.
-    FPivoteAlbaranar := nil;
-    FPivoteBorrarGrupo := nil;
-    FModoEntrada := nil;
+    OcultarEditorModoEntrada;
+    SoltarFocoModoEntrada;
+    DesmontarModoAnterior;
+    DesvincularOrigenLineas;
+    if ADataSet.State in dsEditModes then
+      ADataSet.Cancel;
+    LimpiarVistaModoEntrada;
   finally
     try
       tvPedidosLineas.DataController.DataSource :=
@@ -1353,92 +1445,101 @@ begin
     end;
     tvPedidosLineas.EndUpdate;
   end;
-  // Desglose y tallas ensenyan atributos: desempaquetar SKU->ATTR
-  // (columnas reales _PEDLIN; idempotente por linea).
-  if FModoEntradaSel <> mcsSku then
-    dmmPedidos.DesempaquetarAtributosLineas;
-  Cfg := CrearConfigColumnasSkuDocumento(
+end;
+
+function TfrmMtoPedidos.CrearConfiguracionModoEntrada(
+  ADataSet: TDataSet): TConfigColumnasSku;
+begin
+  Result := CrearConfigColumnasSkuDocumento(
     FContextoVentas.ColumnasSku, ContextoSesion,
-    tvPedidosLineas, ds, FModoEntradaSel,
+    tvPedidosLineas, ADataSet, FModoEntradaSel,
     dmmPedidos.unqryTablaG.FieldByName(
       'CODIGO_ALM_PED').AsString, 'PEDLIN');
-  Cfg.RegistroLog := RegistroLog;
-  Cfg.BusquedaVisual := BusquedaVisual;
-  Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
-  Cfg.ValidadorArticulos := FContextoVentas.ValidadorArticulos;
-  Cfg.LookupAtributos := FContextoVentas.AtributosArticulos;
-  // Precio por SKU para la consolidacion del modo tallas: lineas con
-  // precio distinto no fusionan.
-  Cfg.ObtenerPrecioSku := PrecioSkuTallas;
+  Result.RegistroLog := RegistroLog;
+  Result.BusquedaVisual := BusquedaVisual;
+  Result.DistribuidorTallasVisual := DistribuidorTallasVisual;
+  Result.ValidadorArticulos := FContextoVentas.ValidadorArticulos;
+  Result.LookupAtributos := FContextoVentas.AtributosArticulos;
+  Result.ObtenerPrecioSku := PrecioSkuTallas;
+end;
+
+function TfrmMtoPedidos.CrearConfiguracionPivoteVenta:
+  TGridPivoteVentaConfig;
+begin
+  Result := Default(TGridPivoteVentaConfig);
+  Result.Conexion := dmmPedidos.unqryTablaG.Connection;
+  Result.Usuario := IdentidadSesion.Usuario;
+  Result.SourceMaster := dsTablaG;
+  Result.SourceLineas := dmmPedidos.dsPedidosLineas;
+  Result.FieldSerieMaster := 'SERIE_PED';
+  Result.FieldNumeroMaster := 'NUMERO_PED';
+  Result.FieldLinea := 'LINEA_PEDLIN';
+  Result.FieldArt := 'CODIGO_ART_PEDLIN';
+  Result.FieldSku := 'CODIGO_UNIDAD_PEDLIN';
+  Result.FieldDescripcion := 'DESCRIPCION_ARTICULO_PEDLIN';
+  Result.FieldTipoCantidad := 'TIPO_CANTIDAD_ARTICULO_PEDLIN';
+  Result.FieldCantidadPedida := 'CANTIDAD_PEDLIN';
+  Result.FieldCantidadEntregada := 'CANTIDAD_ENTREGADA_PEDLIN';
+  Result.FieldCantidadAAlbaranar := 'CANTIDAD_A_ALBARANAR_PEDLIN';
+  Result.FieldPrecioBase := 'PRECIO_VENTA_CIVA_ARTICULO_PEDLIN';
+  Result.FieldAlmacen := 'CODIGO_ALMACEN_PEDLIN';
+  Result.FieldAlmacenMaster := 'CODIGO_ALM_PED';
+  Result.MaxColumnas := 20;
+  Result.Repositorios := CrearRepositorioPivoteVenta(
+    Result.Conexion, Result.Usuario, BusquedaVisual);
+  Result.OnCrearLineaSku := PivoteVentaCrearLineaSku;
+  Result.OnBandaCambiada := PivoteVentaBandaCambiada;
+end;
+
+procedure TfrmMtoPedidos.CrearModoEntradaSeleccionado(
+  const AConfiguracion: TConfigColumnasSku);
+var
+  oConfiguracionPivote: TGridPivoteVentaConfig;
+begin
   if FModoEntradaSel = mcsTallasHorPed then
   begin
-    CfgPV := Default(TGridPivoteVentaConfig);
-    CfgPV.Conexion := dmmPedidos.unqryTablaG.Connection;
-    CfgPV.Usuario := IdentidadSesion.Usuario;
-    CfgPV.SourceMaster := dsTablaG;
-    CfgPV.SourceLineas := dmmPedidos.dsPedidosLineas;
-    CfgPV.FieldSerieMaster := 'SERIE_PED';
-    CfgPV.FieldNumeroMaster := 'NUMERO_PED';
-    CfgPV.FieldLinea := 'LINEA_PEDLIN';
-    CfgPV.FieldArt := 'CODIGO_ART_PEDLIN';
-    CfgPV.FieldSku := 'CODIGO_UNIDAD_PEDLIN';
-    CfgPV.FieldDescripcion := 'DESCRIPCION_ARTICULO_PEDLIN';
-    CfgPV.FieldTipoCantidad := 'TIPO_CANTIDAD_ARTICULO_PEDLIN';
-    CfgPV.FieldCantidadPedida := 'CANTIDAD_PEDLIN';
-    CfgPV.FieldCantidadEntregada := 'CANTIDAD_ENTREGADA_PEDLIN';
-    CfgPV.FieldCantidadAAlbaranar := 'CANTIDAD_A_ALBARANAR_PEDLIN';
-    CfgPV.FieldPrecioBase := 'PRECIO_VENTA_CIVA_ARTICULO_PEDLIN';
-    CfgPV.FieldAlmacen := 'CODIGO_ALMACEN_PEDLIN';
-    CfgPV.FieldAlmacenMaster := 'CODIGO_ALM_PED';
-    CfgPV.MaxColumnas := 20;
-    CfgPV.Repositorios :=
-      CrearRepositorioPivoteVenta(
-        CfgPV.Conexion, CfgPV.Usuario, BusquedaVisual);
-    CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
-    CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
-    FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);
+    oConfiguracionPivote := CrearConfiguracionPivoteVenta;
+    FModoEntrada := CrearModoEntradaGridPivoteVenta(
+      AConfiguracion, oConfiguracionPivote);
   end
   else
-    FModoEntrada := CrearModoEntradaGrid(Cfg);
-  // Capacidades opcionales del modo recien montado: Supports las deja
-  // a nil si el modo no las implementa (solo el pivote las tiene).
-  Supports(FModoEntrada, IPivoteVentaAlbaranar, FPivoteAlbaranar);
-  Supports(FModoEntrada, IPivoteVentaBorrarGrupo, FPivoteBorrarGrupo);
-  // El flag ANTES del Construir: si aborta a medias, nadie debe tocar
-  // las columnas del dfm, muertas en el ClearItems.
-  FColsModoConstruido := True;
-  if FModoEntradaSel = mcsTallasHorPed then
-  begin
+    FModoEntrada := CrearModoEntradaGrid(AConfiguracion);
+end;
+
+procedure TfrmMtoPedidos.MontarColumnasModoEntrada(
+  const APlan: TPlanModoEntradaPedidoVenta);
+begin
+  if APlan.CrearColumnasAntes then
     CrearColumnasHostPedido;
-    ConstruirModoEntradaDocumento(FModoEntrada, ModoEntradaResuelto,
-      DesactivarEnterAsTabTemporal, RestaurarEnterAsTabTemporal,
-      FModoEntradaSel, [], '');
-  end
-  else
-  begin
-    ConstruirModoEntradaDocumento(FModoEntrada, ModoEntradaResuelto,
-      DesactivarEnterAsTabTemporal, RestaurarEnterAsTabTemporal,
-      FModoEntradaSel, [], '');
+  ConstruirModoEntradaDocumento(FModoEntrada, ModoEntradaResuelto,
+    DesactivarEnterAsTabTemporal, RestaurarEnterAsTabTemporal,
+    FModoEntradaSel, [], '');
+  if not APlan.CrearColumnasAntes then
     CrearColumnasHostPedido;
-  end;
-  // Navegación tipo Excel en todos los modos de presentación.
+end;
+
+procedure TfrmMtoPedidos.AplicarPresentacionModoEntrada(
+  const AConfiguracion: TConfigColumnasSku);
+var
+  oPlan: TPlanModoEntradaPedidoVenta;
+begin
   tvPedidosLineas.OptionsBehavior.GoToNextCellOnEnter := True;
   tvPedidosLineas.OptionsBehavior.FocusCellOnTab := True;
   tvPedidosLineas.OptionsBehavior.FocusCellOnCycle := True;
-  case DetectarModoColumnasSku(Cfg) of
-    mcsSku: tsLineasPedido.Caption := '&1_Líneas [SKU]';
-    mcsTallasHorPed:
-      PivoteVentaBandaCambiada(bpvPedida);
-  else
-    begin
-      tsLineasPedido.Caption := '&1_Líneas [Desglose]';
-      MostrarColumnasAtributoGlobalesPed;
-    end;
-  end;
-    end;
-  end;
+  oPlan := CrearPlanModoResuelto(
+    DetectarModoColumnasSku(AConfiguracion));
+  if oPlan.TituloLineas <> '' then
+    tsLineasPedido.Caption := oPlan.TituloLineas;
+  if oPlan.MostrarBandaPedida then
+    PivoteVentaBandaCambiada(bpvPedida)
+  else if oPlan.MostrarAtributos then
+    MostrarColumnasAtributoGlobalesPed;
 end;
 
+{
+  El orden de montaje es deliberado: el pivote necesita las columnas del
+  pedido antes de construir sus bandas; los modos planos las añaden después.
+}
 procedure TfrmMtoPedidos.CrearColumnasHostPedido;
   function Col(const ACaption, ACampo: string; AAncho: Integer;
                AEditable: Boolean): TcxGridDBColumn;

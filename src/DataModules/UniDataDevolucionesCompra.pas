@@ -709,16 +709,13 @@ begin
       sNumero := Trim(unqryTablaG.FieldByName('NUMERO_DEVC').AsString);
       if (sSerie <> '') and (sNumero <> '') and (sNumero <> '0') then
       begin
-        inLibDevolucionesCompraMovimientos.
-          RevertirMovimientosDesdeDevolucionCompra(
-            CrearMovimientosDevolucionCompraUniDAC(unqryTablaG.Connection),
-            sSerie, sNumero, IdentidadSesion.Usuario);
-        if HayLineasMovimiento(sSerie, sNumero) then
-          inLibDevolucionesCompraMovimientos.
-            GenerarMovimientosDesdeDevolucionCompra(
-              CrearMovimientosDevolucionCompraUniDAC(
-                unqryTablaG.Connection),
-              sSerie, sNumero, IdentidadSesion.Usuario);
+        SincronizarMovimientosDesdeDevolucionCompra(
+          CrearMovimientosDevolucionCompraUniDAC(
+            unqryTablaG.Connection),
+          sSerie,
+          sNumero,
+          IdentidadSesion.Usuario,
+          HayLineasMovimiento(sSerie, sNumero));
         RefrescarMovimientosProveedor;
       end;
     end;

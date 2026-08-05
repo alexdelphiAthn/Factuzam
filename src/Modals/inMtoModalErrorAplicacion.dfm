@@ -88,9 +88,9 @@
   end
   object pnlBotones: TPanel [1]
     Left = 0
-    Top = 652
+    Top = 612
     Width = 844
-    Height = 52
+    Height = 92
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
@@ -103,7 +103,7 @@
       TabOrder = 0
     end
     object btnEnviar: TcxButton
-      Left = 336
+      Left = 444
       Top = 8
       Width = 190
       Height = 32
@@ -112,7 +112,7 @@
       TabOrder = 1
     end
     object btnCopiar: TcxButton
-      Left = 534
+      Left = 642
       Top = 8
       Width = 190
       Height = 32
@@ -120,9 +120,18 @@
       Caption = 'Copiar al portapapeles'
       TabOrder = 2
     end
+    object btnSalirAplicacion: TcxButton
+      Left = 534
+      Top = 48
+      Width = 190
+      Height = 32
+      Anchors = [akTop, akRight]
+      Caption = 'Salir de la aplicación'
+      TabOrder = 3
+    end
     object btnCerrar: TcxButton
       Left = 732
-      Top = 8
+      Top = 48
       Width = 100
       Height = 32
       Anchors = [akTop, akRight]
@@ -130,7 +139,7 @@
       Caption = 'Cerrar'
       Default = True
       ModalResult = 1
-      TabOrder = 3
+      TabOrder = 4
     end
   end
   object mDetalle: TcxMemo [2]
@@ -147,7 +156,7 @@
     Style.Font.Style = []
     Style.IsFontAssigned = True
     TabOrder = 2
-    Height = 418
+    Height = 378
     Width = 844
   end
 end

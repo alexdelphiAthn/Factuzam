@@ -39,13 +39,23 @@ type
     procedure Pendientes_AdmiteContratoEstrecho;
     [Test]
     procedure EjecutarRecepcion_AdmiteContratoEstrecho;
+    [Test]
+    procedure Operacion_CantidadesParcialesConfirma;
+    [Test]
+    procedure Operacion_CanceladaRevierte;
+    [Test]
+    procedure Operacion_FalloRevierteYPropaga;
+    [Test]
+    procedure Presentacion_CanceladaNoEjecutaRecepcion;
   end;
 
 implementation
 
 uses
   System.SysUtils, inLibGridPivoteCompraTipos,
-  inLibPedidosCompraIntf, inLibPedidosCompra;
+  inLibPedidosCompraIntf, inLibPedidosCompra,
+  inLibPedidosCompraPresentacionOperacion,
+  inLibPedidosCompraPresentacionRecepcion;
 
 type
   TOperacionPedidoCompraFalsa = (
@@ -62,15 +72,20 @@ type
     TInterfacedObject,
     IPedidosCompra,
     IPedidosCompraPendientes,
+    ICreacionAlbaranPedidoCompra,
+    IIncorporacionAlbaranPedidoCompra,
     IRecepcionPedidoCompra)
   public
     Almacen: string;
     CantidadCeldas: Integer;
+    CantidadPrimeraCelda: Double;
+    CompletarOperacion: Boolean;
     Fecha: TDateTime;
     Linea: string;
     Numero: string;
     NumeroAlbaran: string;
     Operacion: TOperacionPedidoCompraFalsa;
+    ProvocarFallo: Boolean;
     Referencia: string;
     Serie: string;
     SerieAlbaran: string;
@@ -111,6 +126,53 @@ type
       const AParametros: TParametrosRecepcionPedidoCompra;
       out AResultado: TResultadoRecepcionPedidoCompra): Boolean;
   end;
+  TUnidadTrabajoRecepcionFalsa = class(
+    TInterfacedObject, IUnidadTrabajoRecepcionPedidoCompra)
+  public
+    Activa: Boolean;
+    Confirmaciones: Integer;
+    Inicios: Integer;
+    Reversiones: Integer;
+    function EstaActiva: Boolean;
+    procedure Iniciar;
+    procedure Confirmar;
+    procedure Revertir;
+  end;
+  TSeleccionCantidadesRecepcionFalsa = class(
+    TInterfacedObject, ISeleccionCantidadesRecepcionPedidoCompra)
+  public
+    Limpiadas: Integer;
+    Recogidas: Integer;
+    function PrimerAlmacen(AUsarCampo: Boolean): string;
+    function Recoger(
+      const ACodigoAlmacen: string;
+      AUsarCampo: Boolean): TArray<TCeldaARecibir>;
+    procedure Limpiar(
+      const ACodigoAlmacen: string;
+      AUsarCampo: Boolean);
+    function Total(AUsarCampo: Boolean): Double;
+    function RellenarTodo(AUsarCampo: Boolean): Integer;
+    procedure LimitarCampo(Sender: TObject);
+    procedure LimitarVertical(Sender: TObject);
+  end;
+  TVisualizacionRecepcionFalsa = class(
+    TInterfacedObject, IVisualizacionRecepcionPedidoCompra)
+  public
+    Aceptar: Boolean;
+    Avisos: Integer;
+    Errores: Integer;
+    Presentaciones: Integer;
+    function Solicitar(
+      const AEntrada: TEntradaPresentacionRecepcionPedidoCompra;
+      out ASolicitud: TSolicitudPresentacionRecepcionPedidoCompra):
+      Boolean;
+    procedure MostrarAviso(const AMensaje: string);
+    procedure MostrarError(const AMensaje: string);
+    procedure PresentarRecepcion(
+      const AEntrada: TEntradaPresentacionRecepcionPedidoCompra;
+      const ASolicitud: TSolicitudPresentacionRecepcionPedidoCompra;
+      const AResultado: TResultadoRecepcionPedidoCompra);
+  end;
 
 var
   oServicioFalso: IPedidosCompra;
@@ -143,6 +205,8 @@ function TPedidosCompraFalso.CrearAlbaranDesdePedido(
   AIdPvTemporada: Integer;
   out ANumAlbc, AMensaje: string): Boolean;
 begin
+  if ProvocarFallo then
+    raise Exception.Create('FALLO DE CREACIÓN');
   Operacion := opcfCrear;
   Serie := ASeriePedc;
   Numero := ANumPedc;
@@ -154,7 +218,7 @@ begin
   Temporada := AIdPvTemporada;
   ANumAlbc := '1001';
   AMensaje := 'CREADO';
-  Result := True;
+  Result := CompletarOperacion;
 end;
 
 function TPedidosCompraFalso.CrearAlbaranDesdePedidoConCantidades(
@@ -165,6 +229,8 @@ function TPedidosCompraFalso.CrearAlbaranDesdePedidoConCantidades(
   const ACeldas: TArray<TCeldaARecibir>;
   out ANumAlbc, AMensaje: string): Boolean;
 begin
+  if ProvocarFallo then
+    raise Exception.Create('FALLO DE CREACIÓN');
   Operacion := opcfCrearConCantidades;
   Serie := ASeriePedc;
   Numero := ANumPedc;
@@ -175,9 +241,11 @@ begin
   Fecha := AFechaRecepcion;
   Temporada := AIdPvTemporada;
   CantidadCeldas := Length(ACeldas);
+  if CantidadCeldas > 0 then
+    CantidadPrimeraCelda := ACeldas[0].Cantidad;
   ANumAlbc := '1002';
   AMensaje := 'CREADO CON CANTIDADES';
-  Result := True;
+  Result := CompletarOperacion;
 end;
 
 function TPedidosCompraFalso.CalcularPendienteTotal(
@@ -195,6 +263,8 @@ function TPedidosCompraFalso.IncorporarAlbaranDesdePedido(
   AIdPvTemporada: Integer;
   out AMensaje: string): Boolean;
 begin
+  if ProvocarFallo then
+    raise Exception.Create('FALLO DE INCORPORACIÓN');
   Operacion := opcfIncorporar;
   Serie := ASeriePedc;
   Numero := ANumPedc;
@@ -204,7 +274,7 @@ begin
   Usuario := AUsuario;
   Temporada := AIdPvTemporada;
   AMensaje := 'INCORPORADO';
-  Result := True;
+  Result := CompletarOperacion;
 end;
 
 function TPedidosCompraFalso.
@@ -215,6 +285,8 @@ function TPedidosCompraFalso.
   const ACeldas: TArray<TCeldaARecibir>;
   out AMensaje: string): Boolean;
 begin
+  if ProvocarFallo then
+    raise Exception.Create('FALLO DE INCORPORACIÓN');
   Operacion := opcfIncorporarConCantidades;
   Serie := ASeriePedc;
   Numero := ANumPedc;
@@ -224,8 +296,10 @@ begin
   Usuario := AUsuario;
   Temporada := AIdPvTemporada;
   CantidadCeldas := Length(ACeldas);
+  if CantidadCeldas > 0 then
+    CantidadPrimeraCelda := ACeldas[0].Cantidad;
   AMensaje := 'INCORPORADO CON CANTIDADES';
-  Result := True;
+  Result := CompletarOperacion;
 end;
 
 function TPedidosCompraFalso.EjecutarRecepcionPedidoCompra(
@@ -246,9 +320,106 @@ begin
   Result := True;
 end;
 
+function TUnidadTrabajoRecepcionFalsa.EstaActiva: Boolean;
+begin
+  Result := Activa;
+end;
+
+procedure TUnidadTrabajoRecepcionFalsa.Iniciar;
+begin
+  Activa := True;
+  Inc(Inicios);
+end;
+
+procedure TUnidadTrabajoRecepcionFalsa.Confirmar;
+begin
+  Activa := False;
+  Inc(Confirmaciones);
+end;
+
+procedure TUnidadTrabajoRecepcionFalsa.Revertir;
+begin
+  Activa := False;
+  Inc(Reversiones);
+end;
+
+function TSeleccionCantidadesRecepcionFalsa.PrimerAlmacen(
+  AUsarCampo: Boolean): string;
+begin
+  Result := 'A1';
+end;
+
+function TSeleccionCantidadesRecepcionFalsa.Recoger(
+  const ACodigoAlmacen: string;
+  AUsarCampo: Boolean): TArray<TCeldaARecibir>;
+begin
+  Inc(Recogidas);
+  Result := nil;
+end;
+
+procedure TSeleccionCantidadesRecepcionFalsa.Limpiar(
+  const ACodigoAlmacen: string;
+  AUsarCampo: Boolean);
+begin
+  Inc(Limpiadas);
+end;
+
+function TSeleccionCantidadesRecepcionFalsa.Total(
+  AUsarCampo: Boolean): Double;
+begin
+  Result := 0;
+end;
+
+function TSeleccionCantidadesRecepcionFalsa.RellenarTodo(
+  AUsarCampo: Boolean): Integer;
+begin
+  Result := 0;
+end;
+
+procedure TSeleccionCantidadesRecepcionFalsa.LimitarCampo(
+  Sender: TObject);
+begin
+end;
+
+procedure TSeleccionCantidadesRecepcionFalsa.LimitarVertical(
+  Sender: TObject);
+begin
+end;
+
+function TVisualizacionRecepcionFalsa.Solicitar(
+  const AEntrada: TEntradaPresentacionRecepcionPedidoCompra;
+  out ASolicitud: TSolicitudPresentacionRecepcionPedidoCompra):
+  Boolean;
+begin
+  ASolicitud := Default(TSolicitudPresentacionRecepcionPedidoCompra);
+  ASolicitud.CodigoAlmacen := AEntrada.AlmacenSugerido;
+  Result := Aceptar;
+end;
+
+procedure TVisualizacionRecepcionFalsa.MostrarAviso(
+  const AMensaje: string);
+begin
+  Inc(Avisos);
+end;
+
+procedure TVisualizacionRecepcionFalsa.MostrarError(
+  const AMensaje: string);
+begin
+  Inc(Errores);
+end;
+
+procedure TVisualizacionRecepcionFalsa.PresentarRecepcion(
+  const AEntrada: TEntradaPresentacionRecepcionPedidoCompra;
+  const ASolicitud: TSolicitudPresentacionRecepcionPedidoCompra;
+  const AResultado: TResultadoRecepcionPedidoCompra);
+begin
+  Inc(Presentaciones);
+end;
+
 procedure PrepararServicioFalso;
 begin
   oFalso := TPedidosCompraFalso.Create;
+  oFalso.CompletarOperacion := True;
   oServicioFalso := oFalso;
   oPendientesFalso := oFalso;
   oRecepcionFalsa := oFalso;
@@ -396,6 +567,138 @@ begin
     Parametros, Resultado));
   Assert.AreEqual(opcfEjecutarRecepcion, oFalso.Operacion);
   Assert.AreEqual('10', oFalso.Numero);
+end;
+
+procedure TPruebasPedidosCompra.Operacion_CantidadesParcialesConfirma;
+var
+  Creacion: ICreacionAlbaranPedidoCompra;
+  Incorporacion: IIncorporacionAlbaranPedidoCompra;
+  Unidad: IUnidadTrabajoRecepcionPedidoCompra;
+  Operacion: IRecepcionPedidoCompra;
+  UnidadFalsa: TUnidadTrabajoRecepcionFalsa;
+  Parametros: TParametrosRecepcionPedidoCompra;
+  Resultado: TResultadoRecepcionPedidoCompra;
+begin
+  PrepararServicioFalso;
+  Creacion := oFalso;
+  Incorporacion := oFalso;
+  UnidadFalsa := TUnidadTrabajoRecepcionFalsa.Create;
+  Unidad := UnidadFalsa;
+  Operacion := CrearOperacionRecepcionPedidoCompra(
+    Creacion, Incorporacion, Unidad);
+  Parametros := Default(TParametrosRecepcionPedidoCompra);
+  Parametros.SeriePedido := 'PC';
+  Parametros.NumeroPedido := '11';
+  Parametros.CodigoAlmacen := 'A1';
+  Parametros.SerieAlbaran := 'AC';
+  SetLength(Parametros.Celdas, 1);
+  Parametros.Celdas[0].LineaPedido := '0010';
+  Parametros.Celdas[0].CodigoAlmacen := 'A1';
+  Parametros.Celdas[0].Cantidad := 2.5;
+  Assert.IsTrue(Operacion.EjecutarRecepcionPedidoCompra(
+    Parametros, Resultado));
+  Assert.AreEqual(opcfCrearConCantidades, oFalso.Operacion);
+  Assert.AreEqual(2.5, oFalso.CantidadPrimeraCelda, 0.000001);
+  Assert.AreEqual(1, UnidadFalsa.Inicios);
+  Assert.AreEqual(1, UnidadFalsa.Confirmaciones);
+  Assert.AreEqual(0, UnidadFalsa.Reversiones);
+end;
+
+procedure TPruebasPedidosCompra.Operacion_CanceladaRevierte;
+var
+  Creacion: ICreacionAlbaranPedidoCompra;
+  Incorporacion: IIncorporacionAlbaranPedidoCompra;
+  Unidad: IUnidadTrabajoRecepcionPedidoCompra;
+  Operacion: IRecepcionPedidoCompra;
+  UnidadFalsa: TUnidadTrabajoRecepcionFalsa;
+  Parametros: TParametrosRecepcionPedidoCompra;
+  Resultado: TResultadoRecepcionPedidoCompra;
+begin
+  PrepararServicioFalso;
+  oFalso.CompletarOperacion := False;
+  Creacion := oFalso;
+  Incorporacion := oFalso;
+  UnidadFalsa := TUnidadTrabajoRecepcionFalsa.Create;
+  Unidad := UnidadFalsa;
+  Operacion := CrearOperacionRecepcionPedidoCompra(
+    Creacion, Incorporacion, Unidad);
+  Parametros := Default(TParametrosRecepcionPedidoCompra);
+  Parametros.SeriePedido := 'PC';
+  Parametros.NumeroPedido := '12';
+  Parametros.CodigoAlmacen := 'A1';
+  Parametros.SerieAlbaran := 'AC';
+  Assert.IsFalse(Operacion.EjecutarRecepcionPedidoCompra(
+    Parametros, Resultado));
+  Assert.AreEqual(1, UnidadFalsa.Inicios);
+  Assert.AreEqual(0, UnidadFalsa.Confirmaciones);
+  Assert.AreEqual(1, UnidadFalsa.Reversiones);
+end;
+
+procedure TPruebasPedidosCompra.Operacion_FalloRevierteYPropaga;
+var
+  Creacion: ICreacionAlbaranPedidoCompra;
+  Incorporacion: IIncorporacionAlbaranPedidoCompra;
+  Unidad: IUnidadTrabajoRecepcionPedidoCompra;
+  Operacion: IRecepcionPedidoCompra;
+  UnidadFalsa: TUnidadTrabajoRecepcionFalsa;
+  Parametros: TParametrosRecepcionPedidoCompra;
+  Resultado: TResultadoRecepcionPedidoCompra;
+begin
+  PrepararServicioFalso;
+  oFalso.ProvocarFallo := True;
+  Creacion := oFalso;
+  Incorporacion := oFalso;
+  UnidadFalsa := TUnidadTrabajoRecepcionFalsa.Create;
+  Unidad := UnidadFalsa;
+  Operacion := CrearOperacionRecepcionPedidoCompra(
+    Creacion, Incorporacion, Unidad);
+  Parametros := Default(TParametrosRecepcionPedidoCompra);
+  Parametros.SeriePedido := 'PC';
+  Parametros.NumeroPedido := '13';
+  Parametros.CodigoAlmacen := 'A1';
+  Parametros.SerieAlbaran := 'AC';
+  Assert.WillRaise(
+    procedure
+    begin
+      Operacion.EjecutarRecepcionPedidoCompra(
+        Parametros, Resultado);
+    end,
+    Exception);
+  Assert.AreEqual(1, UnidadFalsa.Inicios);
+  Assert.AreEqual(0, UnidadFalsa.Confirmaciones);
+  Assert.AreEqual(1, UnidadFalsa.Reversiones);
+end;
+
+procedure TPruebasPedidosCompra.
+  Presentacion_CanceladaNoEjecutaRecepcion;
+var
+  Seleccion: ISeleccionCantidadesRecepcionPedidoCompra;
+  Visualizacion: IVisualizacionRecepcionPedidoCompra;
+  SeleccionFalsa: TSeleccionCantidadesRecepcionFalsa;
+  VisualizacionFalsa: TVisualizacionRecepcionFalsa;
+  Flujo: TFlujoPresentacionRecepcionPedidoCompra;
+  Entrada: TEntradaPresentacionRecepcionPedidoCompra;
+begin
+  PrepararServicioFalso;
+  SeleccionFalsa := TSeleccionCantidadesRecepcionFalsa.Create;
+  Seleccion := SeleccionFalsa;
+  VisualizacionFalsa := TVisualizacionRecepcionFalsa.Create;
+  VisualizacionFalsa.Aceptar := False;
+  Visualizacion := VisualizacionFalsa;
+  Flujo := TFlujoPresentacionRecepcionPedidoCompra.Create(
+    oRecepcionFalsa, Seleccion, Visualizacion);
+  try
+    Entrada := Default(TEntradaPresentacionRecepcionPedidoCompra);
+    Entrada.SeriePedido := 'PC';
+    Entrada.NumeroPedido := '14';
+    Flujo.Ejecutar(Entrada);
+    Assert.AreEqual(opcfNinguna, oFalso.Operacion);
+    Assert.AreEqual(0, SeleccionFalsa.Recogidas);
+    Assert.AreEqual(0, SeleccionFalsa.Limpiadas);
+    Assert.AreEqual(0, VisualizacionFalsa.Presentaciones);
+  finally
+    FreeAndNil(Flujo);
+  end;
 end;
 
 initialization

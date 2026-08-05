@@ -1,4 +1,4 @@
-param(
+﻿param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [int]$MaximoFlujo = 92,
   [int]$MaximoMetodosMayoresDe200 = 0
@@ -105,7 +105,8 @@ function Obtener-MetodosPascal {
 function Comprobar-Metodo {
   param(
     [string]$RutaRelativa,
-    [string]$Nombre
+    [string]$Nombre,
+    [int]$Maximo = $MaximoFlujo
   )
   $ruta = Join-Path $Raiz $RutaRelativa
   $metodos = Obtener-MetodosPascal -Ruta $ruta
@@ -114,10 +115,10 @@ function Comprobar-Metodo {
     throw "No se encontro una implementacion unica de $Nombre."
   }
   $metodo = $encontrados[0]
-  if ($metodo.Lineas -gt $MaximoFlujo) {
+  if ($metodo.Lineas -gt $Maximo) {
     throw (
       "$RutaRelativa`:$($metodo.Linea) $Nombre ocupa " +
-      "$($metodo.Lineas) lineas; maximo permitido: $MaximoFlujo.")
+      "$($metodo.Lineas) lineas; maximo permitido: $Maximo.")
   }
   return $metodo
 }
@@ -182,10 +183,31 @@ $objetivos = @(
   @{
     Ruta = 'src\Forms\inMtoDevolucionesCompra.pas'
     Nombre = 'TfrmMtoDevolucionesCompra.DevolverTodoStock'
+    Maximo = 30
   },
   @{
     Ruta = 'src\Forms\inMtoDevolucionesCompra.pas'
     Nombre = 'TfrmMtoDevolucionesCompra.AplicarArticuloDevolucion'
+  },
+  @{
+    Ruta = 'src\Forms\inMtoPedidosCompra.pas'
+    Nombre = 'TfrmMtoPedidosCompra.btnCrearAlbaranClick'
+    Maximo = 15
+  },
+  @{
+    Ruta = 'src\Forms\inMtoPedidos.pas'
+    Nombre = 'TfrmMtoPedidos.ConstruirModoEntrada'
+    Maximo = 60
+  },
+  @{
+    Ruta = 'src\Forms\inMtoAlbaranes.pas'
+    Nombre = 'TfrmMtoAlbaranes.AplicarArticuloAlbaran'
+    Maximo = 60
+  },
+  @{
+    Ruta = 'src\DataModules\UniDataAlbaranes.pas'
+    Nombre = 'TdmAlbaranes.GenerarMovimientosSalida'
+    Maximo = 60
   },
   @{
     Ruta = 'src\Core\inMtoPreviewTicket.pas'
@@ -206,9 +228,14 @@ $objetivos = @(
 )
 $mediciones = [System.Collections.Generic.List[object]]::new()
 foreach ($objetivo in $objetivos) {
+  $maximoObjetivo = $MaximoFlujo
+  if ($objetivo.ContainsKey('Maximo')) {
+    $maximoObjetivo = [int]$objetivo.Maximo
+  }
   $medicion = Comprobar-Metodo `
     -RutaRelativa $objetivo.Ruta `
-    -Nombre $objetivo.Nombre
+    -Nombre $objetivo.Nombre `
+    -Maximo $maximoObjetivo
   $mediciones.Add($medicion)
 }
 
@@ -1057,6 +1084,10 @@ $rutaFormularioArticuloDevolucion =
   Join-Path $Raiz 'src\Forms\inMtoDevolucionesCompra.pas'
 $contenidoFormularioArticuloDevolucion =
   Get-Content -LiteralPath $rutaFormularioArticuloDevolucion -Raw
+$rutaPresentacionArticuloDevolucion = Join-Path $Raiz `
+  'src\Lib\inLibDevolucionesCompraPresentacionFlujo.pas'
+$contenidoPresentacionArticuloDevolucion =
+  Get-Content -LiteralPath $rutaPresentacionArticuloDevolucion -Raw
 $ayudantesAplicacionArticuloDevolucion = @(
   'ResolverEntrada',
   'CargarDatos',
@@ -1086,7 +1117,8 @@ foreach ($nombre in $ayudantesAplicacionArticuloDevolucion) {
   }
   $referencias = [regex]::Matches(
     $contenidoAplicacionArticuloDevolucion +
-      $contenidoFormularioArticuloDevolucion,
+      $contenidoFormularioArticuloDevolucion +
+      $contenidoPresentacionArticuloDevolucion,
     "\b$nombre\b").Count
   if ($referencias -lt 3) {
     throw "El ayudante de articulo devuelto $nombre no tiene consumidor."
@@ -1124,17 +1156,24 @@ foreach ($contrato in $contratosAplicacionArticuloDevolucion) {
   }
 }
 $contratosFormularioArticuloDevolucion = @(
-  'PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN',
-  'ID_AC_PIVOT_DEVCLIN',
-  'TOTAL_UNIDADES_DEVCLIN',
-  'PrepararColorPendienteArticuloDevolucion(',
-  'TThread.ForceQueue(nil',
   'RefrescarVisibilidadTallas',
   'CargarCaptionsAtributosLineaActiva'
 )
 foreach ($contrato in $contratosFormularioArticuloDevolucion) {
   if (-not $contenidoFormularioArticuloDevolucion.Contains($contrato)) {
     throw "La fachada de articulo devuelto no conserva: $contrato."
+  }
+}
+$contratosPresentacionArticuloDevolucion = @(
+  'PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN',
+  'ID_AC_PIVOT_DEVCLIN',
+  'TOTAL_UNIDADES_DEVCLIN',
+  'PrepararColorPendienteDevolucion(',
+  'TThread.ForceQueue(nil'
+)
+foreach ($contrato in $contratosPresentacionArticuloDevolucion) {
+  if (-not $contenidoPresentacionArticuloDevolucion.Contains($contrato)) {
+    throw "La presentacion de articulo devuelto no conserva: $contrato."
   }
 }
 $rutaRepositorioArticuloDevolucion = Join-Path $Raiz `

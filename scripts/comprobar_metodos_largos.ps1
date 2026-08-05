@@ -1,15 +1,15 @@
-param(
+﻿param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [ValidateRange(1, [int]::MaxValue)]
   [int]$UmbralLineas = 120,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoMetodosLargos = 67,
+  [int]$MaximoMetodosLargos = 58,
   [ValidateRange(0, [int]::MaxValue)]
   [int]$MaximoLineasPorMetodo = 200,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoRiesgoAcumulado = 13145,
+  [int]$MaximoRiesgoAcumulado = 10820,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoRiesgoPorMetodo = 280,
+  [int]$MaximoRiesgoPorMetodo = 250,
   [switch]$MostrarTodos
 )
 

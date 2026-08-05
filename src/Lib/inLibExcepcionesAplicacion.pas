@@ -59,6 +59,7 @@ type
     FEstadoVista: TEstadoVistaErrorAplicacion;
     FPresentacion: IPresentacionExcepcionesAplicacion;
     FRegistroLog: IRegistroLog;
+    FSalidaAplicacionSolicitada: Boolean;
     FServicioEnvioErrores: IServicioEnvioErrores;
     FVista: IVistaErrorAplicacion;
     function ConstruirDetalle(Sender: TObject;
@@ -79,6 +80,7 @@ type
     procedure RegistrarDetalleSeguro(E: Exception;
       const ADetalle: string);
     procedure RegistrarRuidoSeguro(E: Exception);
+    procedure SalirAplicacionClick(Sender: TObject);
   public
     constructor Create(
       const AContextoSesion: IContextoSesionAplicacion;
@@ -192,17 +194,21 @@ procedure TGestorExcepcionesAplicacion.Gestionar(
 var
   sDetalle: string;
 begin
-  if EsRuidoEditorInplace(E) then
-    RegistrarRuidoSeguro(E)
-  else
+  if not FSalidaAplicacionSolicitada then
   begin
-    try
-      sDetalle := ConstruirDetalle(Sender, E);
-      RegistrarDetalleSeguro(E, sDetalle);
-      PrepararEvidencia(E, sDetalle);
-      MostrarDetalle(sDetalle);
-    except
-      MostrarFallback(E);
+    if EsRuidoEditorInplace(E) then
+      RegistrarRuidoSeguro(E)
+    else
+    begin
+      try
+        sDetalle := ConstruirDetalle(Sender, E);
+        RegistrarDetalleSeguro(E, sDetalle);
+        PrepararEvidencia(E, sDetalle);
+        MostrarDetalle(sDetalle);
+      except
+        if not FSalidaAplicacionSolicitada then
+          MostrarFallback(E);
+      end;
     end;
   end;
 end;
@@ -245,12 +251,18 @@ begin
     begin
       EnviarDesarrolladorClick(nil);
     end;
+  Acciones.SalirAplicacion :=
+    procedure
+    begin
+      SalirAplicacionClick(nil);
+    end;
   Configuracion := Default(TConfiguracionVistaErrorAplicacion);
   Configuracion.Titulo := STituloErrorProducido;
   Configuracion.EtiquetaEmail := SCaptionEmailContactoError;
   Configuracion.EtiquetaTelefono := SCaptionTelefonoContactoError;
   Configuracion.EtiquetaDescripcion := SCaptionDescripcionError;
   Configuracion.TextoCerrar := SCaptionCerrar;
+  Configuracion.TextoSalirAplicacion := SCaptionSalirAplicacion;
   Configuracion.TextoCopiar := SCaptionCopiarPortapapeles;
   Configuracion.TextoEnviar := SCaptionEnviarDesarrollador;
   Configuracion.TextoActivarLog := SCaptionActivarLogCompleto;
@@ -268,6 +280,13 @@ begin
   FEstadoVista.ActivarLogHabilitado := True;
   ActualizarEstadoLog;
   AplicarEstadoVista;
+end;
+
+procedure TGestorExcepcionesAplicacion.SalirAplicacionClick(
+  Sender: TObject);
+begin
+  FSalidaAplicacionSolicitada := True;
+  Application.Terminate;
 end;
 
 procedure ConfigurarEtiqueta(

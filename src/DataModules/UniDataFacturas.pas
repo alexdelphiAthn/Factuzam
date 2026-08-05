@@ -280,6 +280,9 @@ uses
   inLibVentasImpuestos,
   inLibContadorLineas,
   UniDataContadorLineasRepositorio,
+  inLibFacturasValidacionCabecera,
+  inLibFacturasValidacionDatos,
+  inLibFacturasValidacionUniDAC,
   inLibMsgFacturas, inLibMsgVentas,
   inLibSqlSeguro;
 
@@ -563,57 +566,9 @@ begin
 end;
 
 procedure TdmFacturas.AsignarIVA(s:string; unqryT:TUniQuery);
-var
-  unqrySol:TUniQuery;
 begin
-  if ( (s <> '') ) then
-  begin
-    unqrySol := TUniQuery.Create(Self);
-    unqrySol.Connection := ConexionPrincipal;
-    unqrySol.SQL.Text :=  'SELECT *  ' +
-                         '  FROM vi_ivas ' +
-                         ' WHERE IVA_IVAGRP = :grupo ' +
-                         '   AND FECHA_DESDE_IVA <= :fecha_ini ' +
-                         '   AND (    FECHA_HASTA_IVA >= :fecha_fin ' +
-                         '         OR FECHA_HASTA_IVA IS NULL)';
-    unqrySol.ParamByName('grupo').AsString := s;
-    unqrySol.ParamByName('fecha_ini').AsDateTime :=
-      unqryT.FieldByName('FECHA_FAC').AsDateTime;
-    unqrySol.ParamByName('fecha_fin').AsDateTime :=
-      unqryT.FieldByName('FECHA_FAC').AsDateTime;
-    unqrySol.Open;
-    if unqrySol.RecordCount > 0 then
-    begin
-      unqryT.FindField('PORCENTAJE_IVAN_FAC').AsString :=
-        unqrySol.FieldByName('PORCENTAJE_NORMAL_IVA').AsString;
-         unqryT.FindField('PORCENTAJE_REN_FAC').AsString :=
-        unqrySol.FieldByName('PORCENTAJE_NORMAL_RE_IVA').AsString;
-         unqryT.FindField('PORCENTAJE_IVAR_FAC').AsString :=
-        unqrySol.FieldByName('PORCENTAJE_REDUCIDO_IVA').AsString;
-         unqryT.FindField('PORCENTAJE_RER_FAC').AsString :=
-        unqrySol.FieldByName('PORCENTAJE_REDUCIDO_RE_IVA').AsString;
-         unqryT.FindField('PORCENTAJE_IVAS_FAC').AsString :=
-        unqrySol.FieldByName('PORCENTAJE_SUPERREDUCIDO_IVA').AsString;
-         unqryT.FindField('PORCENTAJE_RES_FAC').AsString :=
-        unqrySol.FieldByName('PORCENTAJE_SUPERREDUCIDO_RE_IVA').AsString;
-         unqryT.FindField('PORCENTAJE_IVAE_FAC').AsString :=
-        unqrySol.FieldByName('PORCENTAJE_EXENTO_IVA').AsString;
-         unqryT.FindField('PORCENTAJE_REE_FAC').AsString :=
-        unqrySol.FieldByName('PORCENTAJE_EXENTO_RE_IVA').AsString;
-         unqryT.FindField('ESIRPF_IMP_INCL_ZONA_IVA_FAC').AsString :=
-        unqrySol.FieldByName('ESIRPF_IMP_INCL_IVA_IVAGRP').AsString;
-         unqryT.FindField('ESAPLICA_RE_ZONA_IVA_FAC').AsString :=
-        unqrySol.FieldByName('ESAPLICA_RE_IVA_IVAGRP').AsString;
-         unqryT.FindField('CODIGO_IVA_FAC').AsString :=
-        unqrySol.FieldByName('CODIGO_IVA').AsString;
-         unqryT.FindField('ESIVAAGRICOLA_ZONA_IVA_FAC').AsString :=
-        unqrySol.FieldByName('ESIVAAGRICOLA_IVA_IVAGRP').AsString;
-         unqryT.FindField('PALABRA_REPORTS_ZONA_IVA_FAC').AsString :=
-        unqrySol.FieldByName('PALABRA_REPORTS_IVA_IVAGRP').AsString;
-      unqrySol.Close;
-      FreeAndNil(unqrySol);
-    end;
-  end;
+  CargarConfiguracionIvaFactura(Self, ConexionPrincipal, s,
+    unqryT.FieldByName('FECHA_FAC').AsDateTime, unqryT);
 end;
 
 function TdmFacturas.BuscarCliente(s: string):Boolean;
@@ -642,7 +597,6 @@ begin
     FreeAndNil(unqrySol);
   end;
 end;
-
 
 function TdmFacturas.CalcularFactura: TResultadoOperacionFactura;
 var
@@ -678,36 +632,8 @@ begin
 end;
 
 procedure TdmFacturas.CalcularRetencionesEmpresa;
-var
-  unqrySol:TUniQuery;
-  function FindField(const Nombre: string): TField;
-  begin
-    Result := unqryTablaG.FindField(Nombre);
-  end;
 begin
-  unqrySol := TUniQuery.Create(Self);
-  try
-    unqrySol.Connection := ConexionPrincipal;
-      unqrySol.SQL.Text := 'SELECT * '+
-                           '  FROM fza_empresas_retenciones ' +
-                           ' WHERE CODIGO_EMP_EMPRET = :empresa ' +
-                           '   AND FECHA_DESDE_EMPRET <= :fecha ' +
-                           '   AND (    FECHA_HASTA_EMPRET >= :fecha ' +
-                           '         OR FECHA_HASTA_EMPRET IS NULL)' +
-                           ' LIMIT 1';
-      unqrySol.ParamByName('empresa').AsString :=
-                                     FindField('CODIGO_EMP_FAC').AsString;
-      unqrySol.ParamByName('fecha').AsDateTime :=
-        unqryTablaG.FieldByName('FECHA_FAC').AsDateTime;
-      unqrySol.Open;
-      if ((unqrySol.RecordCount > 0) and
-          (FindField('PORCENTAJE_RETENCION_FAC').AsFloat = 0)) then
-        FindField('PORCENTAJE_RETENCION_FAC').AsFloat :=
-                        unqrySol.FindField('PORCENTAJE_EMPRET').AsFloat;
-    unqrySol.Close;
-  finally
-    FreeAndNil(unqrySol);
-  end;
+  AplicarRetencionEmpresaFactura(Self, ConexionPrincipal, unqryTablaG);
 end;
 
 procedure TdmFacturas.MarcarRecalculoFacturaPendiente;
@@ -717,246 +643,56 @@ end;
 
 procedure TdmFacturas.CopiarArticuloaLinea(DataSet: TDataSet);
 var
-  sPpTipoIVA:string;
-  fPorcen:Currency;
-  iPorcen:Integer;
-  bDtoVig    : Boolean;
-  dFinalEf   : Double;
-  Lineas: TDataSet;
-  function FindField(const Nombre: string): TField;
-  begin
-    Result := Lineas.FindField(Nombre);
-  end;
+  bDtoVig: Boolean;
 begin
-  Lineas := dsLinFac.Dataset;
-     if ( (Lineas.State <> dsEdit) and
-          (Lineas.State <> dsInsert)
-         ) then
-       Lineas.Edit;
-     FindField('CODIGO_ART_FACLIN').AsString :=
-                                  DataSet.FindField('CODIGO_ART_ART').AsString;
-     FindField('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString :=
-                           DataSet.FindField('TIPO_CANTIDAD_ART').AsString;
-     FindField('DESCRIPCION_ARTICULO_FACLIN').AsString :=
-                             DataSet.FindField('DESCRIPCION_ART').AsString;
-     FindField('TIPO_IVA_ARTICULO_FACLIN').AsString :=
-                                 DataSet.FindField('TIPO_IVA_ART').AsString;
-     sPpTipoIVA :=  DataSet.FindField('TIPO_IVA_ART').AsString;
-     iPorcen := 0;
-      case IndexStr(sPpTipoIVA, ['N', 'R', 'S', 'E']) of
-         0: iPorcen := unqryTablaG.FindField('PORCENTAJE_IVAN_FAC').AsInteger;
-         1: iPorcen := unqryTablaG.FindField('PORCENTAJE_IVAR_FAC').AsInteger;
-         2: iPorcen := unqryTablaG.FindField('PORCENTAJE_IVAS_FAC').AsInteger;
-         3: iPorcen := unqryTablaG.FindField('PORCENTAJE_IVAE_FAC').AsInteger;
-      end;
-     fPorcen := iPorcen / 100;
-     FindField('CODIGO_TAR_FACLIN').AsString :=
-              unqryTablaG.FindField('TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-     FindField('ESIMP_INCL_TARIFA_FACLIN').AsString :=
-            unqryTablaG.FindField('ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString;
-     FindField('CODIGO_FAM_FACLIN').AsString :=
-                          DataSet.FindField('CODIGO_FAM_ART').AsString;
-     FindField('NOMBRE_FAM_FACLIN').AsString :=
-                              DataSet.FindField('DESCRIPCION_FAM').AsString;
-     FindField('ESPROVEEDORPRINCIPAL_FACLIN').AsString :=
-                             DataSet.FindField('ESPROVEEDORPRINCIPAL').AsString;
-     FindField('CODIGO_PRV_FACLIN').AsString :=
-                                 DataSet.FindField('CODIGO_PRV_PRV').AsString;
-     FindField('RAZON_SOCIAL_PROVEEDOR_FACLIN').AsString :=
-                           DataSet.FindField('RAZON_SOCIAL_PROVEEDOR').AsString;
-     FindField('PRECIO_ULT_COMPRA_FACLIN').AsString :=
-                                DataSet.FindField('PRECIO_ULT_COMPRA').AsString;
-     FindField('PRECIO_SALIDA_FACLIN').AsString :=
-                              DataSet.FindField(
-                                'PRECIO_SALIDA_ARTTAR').AsString;
-     // Ventana de aplicacion del descuento (cabecera de tarifa): si la fecha
-     // de la factura cae fuera de la ventana, se cobra precio de salida y se
-     // anula el descuento de la linea. Sin ventana -> el descuento se aplica.
-     bDtoVig := FArticulosResolver.DescuentoTarifaVigente(
-       unqryTablaG.FindField(
-         'TARIFA_ARTICULO_CLIENTE_FAC').AsString,
-       unqryTablaG.FindField('FECHA_FAC').AsDateTime);
-     if bDtoVig then
-     begin
-       FindField('PORCENTAJE_DTO_FACLIN').AsString :=
-                                  DataSet.FindField(
-                                    'PORCENTAJE_DTO_ARTTAR').AsString;
-       FindField('PRECIO_DTO_FACLIN').AsString :=
-                                  DataSet.FindField(
-                                    'PRECIO_DTO_ARTTAR').AsString;
-       dFinalEf := DataSet.FindField('PRECIO_FINAL_ARTTAR').AsFloat;
-     end
-     else
-     begin
-       FindField('PORCENTAJE_DTO_FACLIN').AsFloat := 0;
-       FindField('PRECIO_DTO_FACLIN').AsCurrency := 0;
-       dFinalEf := DataSet.FindField('PRECIO_SALIDA_ARTTAR').AsFloat;
-     end;
-     if  DataSet.FindField('ESIMP_INCL_TAR').AsString = 'S' then
-     begin
-       FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := dFinalEf;
-       FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsFloat :=
-             (dFinalEf / (1 + (fPorcen)));
-     end
-     else
-     begin
-       FindField('PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := dFinalEf;
-       FindField('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsFloat :=
-              (dFinalEf * (1 + fPorcen));
-     end;
-     // Cantidad por defecto = 1
-     if FindField('CANTIDAD_FACLIN') <> nil then
-       FindField('CANTIDAD_FACLIN').AsCurrency := 1;
+  bDtoVig := FArticulosResolver.DescuentoTarifaVigente(
+    unqryTablaG.FieldByName(
+      'TARIFA_ARTICULO_CLIENTE_FAC').AsString,
+    unqryTablaG.FieldByName('FECHA_FAC').AsDateTime);
+  CopiarArticuloSeleccionadoFactura(
+    DataSet, dsLinFac.DataSet, unqryTablaG, bDtoVig);
 end;
 
 procedure TdmFacturas.CopiarClienteaFactura(DataSet:TDataSet);
 var
-  Factura: TDataSet;
-  function FindField(const Nombre: string): TField;
-  begin
-    Result := Factura.FindField(Nombre);
-  end;
+  Resultado: TResultadoCopiaClienteFactura;
 begin
-  Factura := unqryTablaG;
-    if ((Factura.State <> dsEdit) and (Factura.State <> dsInsert)) then
-      Factura.Edit;
-    FindField('CODIGO_CLI_FAC').AsString :=
-                                   DataSet.FindField('CODIGO_CLI_CLI').AsString;
-    FindField('RAZON_SOCIAL_CLIENTE_FAC').AsString :=
-                              DataSet.FindField('RAZON_SOCIAL_CLI').AsString;
-    FindField('NIF_CLIENTE_FAC').AsString :=
-                                      DataSet.FindField('NIF_CLI').AsString;
-    FindField('MOVIL_CLIENTE_FAC').AsString :=
-                                    DataSet.FindField('MOVIL_CLI').AsString;
-    FindField('EMAIL_CLIENTE_FAC').AsString :=
-                                    DataSet.FindField('EMAIL_CLI').AsString;
-    FindField('DIRECCION1_CLIENTE_FAC').AsString :=
-                               DataSet.FindField('DIRECCION1_CLI').AsString;
-    FindField('DIRECCION2_CLIENTE_FAC').AsString :=
-                               DataSet.FindField('DIRECCION2_CLI').AsString;
-    FindField('POBLACION_CLIENTE_FAC').AsString :=
-                                DataSet.FindField('POBLACION_CLI').AsString;
-    FindField('PROVINCIA_CLIENTE_FAC').AsString :=
-                                DataSet.FindField('PROVINCIA_CLI').AsString;
-    FindField('CODIGO_POSTAL_CLIENTE_FAC').AsString :=
-                                  DataSet.FindField(
-                                    'CODIGO_POSTAL_CLI').AsString;
-    FindField('NOMBRE_PAI_CLIENTE_FAC').AsString :=
-                              DataSet.FindField('NOMBRE_PAI_CLI').AsString;
-    FindField('CODIGO_PAI_CLIENTE_FAC').AsString :=
-                              DataSet.FindField('CODIGO_PAI_CLI').AsString;
-    if (FindField('CODIGO_OFICINA_CONTABLE_FAC') <> nil) and
-       (DataSet.FindField('CODIGO_OFICINA_CONTABLE_CLI') <> nil) then
-      FindField('CODIGO_OFICINA_CONTABLE_FAC').AsString :=
-        DataSet.FindField('CODIGO_OFICINA_CONTABLE_CLI').AsString;
-    if (FindField('CODIGO_ORGANO_GESTOR_FAC') <> nil) and
-       (DataSet.FindField('CODIGO_ORGANO_GESTOR_CLI') <> nil) then
-      FindField('CODIGO_ORGANO_GESTOR_FAC').AsString :=
-        DataSet.FindField('CODIGO_ORGANO_GESTOR_CLI').AsString;
-    if (FindField('CODIGO_UNIDAD_TRAMITADORA_FAC') <> nil) and
-       (DataSet.FindField('CODIGO_UNIDAD_TRAMITADORA_CLI') <> nil) then
-      FindField('CODIGO_UNIDAD_TRAMITADORA_FAC').AsString :=
-        DataSet.FindField('CODIGO_UNIDAD_TRAMITADORA_CLI').AsString;
-    if (FindField('NOMBRE_PERSONA_CLIENTE_FAC') <> nil) and
-       (DataSet.FindField('NOMBRE_PERSONA_CLIENTE_CLI') <> nil) then
-      FindField('NOMBRE_PERSONA_CLIENTE_FAC').AsString :=
-        DataSet.FindField('NOMBRE_PERSONA_CLIENTE_CLI').AsString;
-    if (FindField('APELLIDOS_PERSONA_CLIENTE_FAC') <> nil) and
-       (DataSet.FindField('APELLIDOS_PERSONA_CLIENTE_CLI') <> nil) then
-      FindField('APELLIDOS_PERSONA_CLIENTE_FAC').AsString :=
-        DataSet.FindField('APELLIDOS_PERSONA_CLIENTE_CLI').AsString;
-    FindField('ESIVA_RECARGO_CLIENTE_FAC').AsString :=
-                            DataSet.FindField('ESIVA_RECARGO_CLI').AsString;
-    FindField('ESIVA_EXENTO_CLIENTE_FAC').AsString :=
-                             DataSet.FindField('ESIVA_EXENTO_CLI').AsString;
-    FindField('ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC').AsString :=
-                DataSet.FindField('ESREGIMENESPECIALAGRICOLA_CLI').AsString;
-    FindField('ESRETENCIONES_CLIENTE_FAC').AsString :=
-                            DataSet.FindField('ESRETENCIONES_CLI').AsString;
-    FindField('ESINTRACOMUNITARIO_CLIENTE_FAC').AsString :=
-                       DataSet.FindField('ESINTRACOMUNITARIO_CLI').AsString;
-    if ( DataSet.FindField('CODIGO_FP_CLI').AsString <> '' ) then
-    begin
-      FindField('FORMA_PAGO_FAC').AsString :=
-                        DataSet.FindField('CODIGO_FP_CLI').AsString;
-    end
-    else
-      FindField('FORMA_PAGO_FAC').AsString := FormapagoDefault;
-    if (unqryTablaG.State = dsInsert) then
-    begin
-      if ( (DataSet.FieldByName('TARIFA_ARTICULO_CLI').AsString <> '') or
-           (DataSet.FieldByName('TARIFA_ARTICULO_CLI').IsNull)
-      ) then
-      begin
-        FindField('TARIFA_ARTICULO_CLIENTE_FAC').AsString :=
-                        DataSet.FindField('TARIFA_ARTICULO_CLI').AsString;
-      end
-      else
-        FindField('TARIFA_ARTICULO_CLIENTE_FAC').AsString := TarifaDefault;
-      if (FindField('TARIFA_ARTICULO_CLIENTE_FAC').AsString <> '') then
-      begin
-        unqryTarifas.Locate('CODIGO_TAR_ARTTAR',
-                  FindField('TARIFA_ARTICULO_CLIENTE_FAC').AsString, [] );
-        FindField('ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString :=
-                           unqryTarifas.FindField('ESIMP_INCL_TAR').ASString;
-      end;
-    end;
-    if (FindField('ESRETENCIONES_CLIENTE_FAC').AsString <> 'S') then
-      unqryTablaG.FindField('PORCENTAJE_RETENCION_FAC').AsFloat := 0;
-    if ((Factura.State = dsInsert) and Assigned(FOnSeriesCambiadas)) then
-      FOnSeriesCambiadas(Self);
+  Resultado := CopiarClienteSeleccionadoFactura(DataSet, unqryTablaG);
+  if Resultado.RequiereFormaPagoDefecto then
+  begin
+    unqryTablaG.FieldByName('FORMA_PAGO_FAC').AsString :=
+      FormaPagoDefault;
+  end;
+  if Resultado.RequiereTarifaDefecto then
+  begin
+    unqryTablaG.FieldByName(
+      'TARIFA_ARTICULO_CLIENTE_FAC').AsString := TarifaDefault;
+  end;
+  if (unqryTablaG.State = dsInsert) and
+     (unqryTablaG.FieldByName(
+       'TARIFA_ARTICULO_CLIENTE_FAC').AsString <> '') then
+  begin
+    unqryTarifas.Locate(
+      'CODIGO_TAR_ARTTAR',
+      unqryTablaG.FieldByName(
+        'TARIFA_ARTICULO_CLIENTE_FAC').AsString, []);
+    unqryTablaG.FieldByName(
+      'ESIMP_INCL_TARIFA_CLIENTE_FAC').AsString :=
+      unqryTarifas.FieldByName('ESIMP_INCL_TAR').AsString;
+  end;
+  if Resultado.NotificarSeries and Assigned(FOnSeriesCambiadas) then
+    FOnSeriesCambiadas(Self);
 end;
 
 procedure TdmFacturas.CopiarEmpresaaFactura(DataSet:TDataSet);
 var
-  Factura: TDataSet;
-  function FindField(const Nombre: string): TField;
-  begin
-    Result := Factura.FindField(Nombre);
-  end;
+  Resultado: TResultadoCopiaEmpresaFactura;
 begin
-  Factura := unqryTablaG;
-      if ((Factura.State <> dsEdit) and (Factura.State <> dsInsert)) then
-        Factura.Edit;
-      FindField('CODIGO_EMP_FAC').AsString :=
-                                   Dataset.FindField('CODIGO_EMP_EMP').AsString;
-      FindField('RAZON_SOCIAL_EMPRESA_FAC').AsString :=
-                              DataSet.FindField('RAZON_SOCIAL_EMP').AsString;
-      FindField('NIF_EMPRESA_FAC').AsString :=
-                                      DataSet.FindField('NIF_EMP').AsString;
-      FindField('MOVIL_EMPRESA_FAC').AsString :=
-                                    DataSet.FindField('MOVIL_EMP').AsString;
-      FindField('EMAIL_EMPRESA_FAC').AsString :=
-                                    DataSet.FindField('EMAIL_EMP').AsString;
-      FindField('DIRECCION1_EMPRESA_FAC').AsString :=
-                               DataSet.FindField('DIRECCION1_EMP').AsString;
-      FindField('DIRECCION2_EMPRESA_FAC').AsString :=
-                               DataSet.FindField('DIRECCION2_EMP').AsString;
-      FindField('POBLACION_EMPRESA_FAC').AsString :=
-                                DataSet.FindField('POBLACION_EMP').AsString;
-      FindField('PROVINCIA_EMPRESA_FAC').AsString :=
-                                DataSet.FindField('PROVINCIA_EMP').AsString;
-      FindField('CODIGO_POSTAL_EMPRESA_FAC').AsString :=
-                                  DataSet.FindField(
-                                    'CODIGO_POSTAL_EMP').AsString;
-      FindField('NOMBRE_PAI_EMPRESA_FAC').AsString :=
-                              DataSet.FindField('NOMBRE_PAI_EMP').AsString;
-      FindField('CODIGO_PAI_EMPRESA_FAC').AsString :=
-                              DataSet.FindField('CODIGO_PAI_EMP').AsString;
-      FindField('GRUPO_ZONA_IVA_EMPRESA_FAC').AsString :=
-                           DataSet.FindField('GRUPO_ZONA_IVA_EMP').AsString;
-      FindField('ESRETENCIONES_EMPRESA_FAC').AsString :=
-                            DataSet.FindField('ESRETENCIONES_EMP').AsString;
-      FindField('ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC').AsString :=
-                DataSet.FindField('ESREGIMENESPECIALAGRICOLA_EMP').AsString;
-      FindField('TEXTO_LEGAL_EMPRESA_FAC').AsString :=
-                      DataSet.FindField('TEXTO_LEGAL_FACTURA_EMP').AsString;
-      if (DataSet.FindField('ESRETENCIONES_EMP').AsString = 'S') then
-      begin
-        CalcularRetencionesEmpresa;
-      end;
-     if ((Factura.State = dsInsert) and Assigned(FOnSeriesCambiadas)) then
-       FOnSeriesCambiadas(Self);
+  Resultado := CopiarEmpresaSeleccionadaFactura(DataSet, unqryTablaG);
+  if Resultado.CalcularRetenciones then
+    CalcularRetencionesEmpresa;
+  if Resultado.NotificarSeries and Assigned(FOnSeriesCambiadas) then
+    FOnSeriesCambiadas(Self);
 end;
 
 procedure TdmFacturas.CrearCliente;
@@ -964,57 +700,8 @@ var
   Solicitud: TSolicitudClienteFactura;
 begin
   RequerirServiciosFactura;
-  Solicitud.Codigo :=
-    unqryTablaG.FieldByName('CODIGO_CLI_FAC').AsString;
-  Solicitud.RazonSocial :=
-    unqryTablaG.FieldByName(
-      'RAZON_SOCIAL_CLIENTE_FAC').AsString;
-  Solicitud.Nif :=
-    unqryTablaG.FieldByName('NIF_CLIENTE_FAC').AsString;
-  Solicitud.Movil :=
-    unqryTablaG.FieldByName('MOVIL_CLIENTE_FAC').AsString;
-  Solicitud.Email :=
-    unqryTablaG.FieldByName('EMAIL_CLIENTE_FAC').AsString;
-  Solicitud.Direccion1 :=
-    unqryTablaG.FieldByName(
-      'DIRECCION1_CLIENTE_FAC').AsString;
-  Solicitud.Direccion2 :=
-    unqryTablaG.FieldByName(
-      'DIRECCION2_CLIENTE_FAC').AsString;
-  Solicitud.Poblacion :=
-    unqryTablaG.FieldByName(
-      'POBLACION_CLIENTE_FAC').AsString;
-  Solicitud.Provincia :=
-    unqryTablaG.FieldByName(
-      'PROVINCIA_CLIENTE_FAC').AsString;
-  Solicitud.CodigoPostal :=
-    unqryTablaG.FieldByName(
-      'CODIGO_POSTAL_CLIENTE_FAC').AsString;
-  Solicitud.NombrePais :=
-    unqryTablaG.FieldByName(
-      'NOMBRE_PAI_CLIENTE_FAC').AsString;
-  Solicitud.CodigoPais :=
-    unqryTablaG.FieldByName(
-      'CODIGO_PAI_CLIENTE_FAC').AsString;
-  Solicitud.EsIntracomunitario :=
-    unqryTablaG.FieldByName(
-      'ESINTRACOMUNITARIO_CLIENTE_FAC').AsString;
-  Solicitud.EsIvaExento :=
-    unqryTablaG.FieldByName(
-      'ESIVA_EXENTO_CLIENTE_FAC').AsString;
-  Solicitud.EsRetenciones :=
-    unqryTablaG.FieldByName(
-      'ESRETENCIONES_CLIENTE_FAC').AsString;
-  Solicitud.EsIvaRecargo :=
-    unqryTablaG.FieldByName(
-      'ESIVA_RECARGO_CLIENTE_FAC').AsString;
-  Solicitud.EsRegimenEspecialAgricola :=
-    unqryTablaG.FieldByName(
-      'ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC').AsString;
-  Solicitud.TarifaArticulo :=
-    unqryTablaG.FieldByName(
-      'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-  Solicitud.Usuario := IdentidadSesion.Usuario;
+  Solicitud := CrearSolicitudClienteDesdeFactura(
+    unqryTablaG, IdentidadSesion.Usuario);
   FRepositorio.GuardarCliente(Solicitud);
 end;
 
@@ -1023,49 +710,8 @@ var
   Solicitud: TSolicitudEmpresaFactura;
 begin
   RequerirServiciosFactura;
-  Solicitud.Codigo :=
-    unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString;
-  Solicitud.RazonSocial :=
-    unqryTablaG.FieldByName(
-      'RAZON_SOCIAL_EMPRESA_FAC').AsString;
-  Solicitud.Nif :=
-    unqryTablaG.FieldByName('NIF_EMPRESA_FAC').AsString;
-  Solicitud.Movil :=
-    unqryTablaG.FieldByName('MOVIL_EMPRESA_FAC').AsString;
-  Solicitud.Email :=
-    unqryTablaG.FieldByName('EMAIL_EMPRESA_FAC').AsString;
-  Solicitud.Direccion1 :=
-    unqryTablaG.FieldByName(
-      'DIRECCION1_EMPRESA_FAC').AsString;
-  Solicitud.Direccion2 :=
-    unqryTablaG.FieldByName(
-      'DIRECCION2_EMPRESA_FAC').AsString;
-  Solicitud.Poblacion :=
-    unqryTablaG.FieldByName(
-      'POBLACION_EMPRESA_FAC').AsString;
-  Solicitud.Provincia :=
-    unqryTablaG.FieldByName(
-      'PROVINCIA_EMPRESA_FAC').AsString;
-  Solicitud.CodigoPostal :=
-    unqryTablaG.FieldByName(
-      'CODIGO_POSTAL_EMPRESA_FAC').AsString;
-  Solicitud.NombrePais :=
-    unqryTablaG.FieldByName(
-      'NOMBRE_PAI_EMPRESA_FAC').AsString;
-  Solicitud.CodigoPais :=
-    unqryTablaG.FieldByName(
-      'CODIGO_PAI_EMPRESA_FAC').AsString;
-  Solicitud.EsRetenciones :=
-    unqryTablaG.FieldByName(
-      'ESRETENCIONES_EMPRESA_FAC').AsString;
-  Solicitud.EsIvaRecargo := '';
-  Solicitud.EsRegimenEspecialAgricola :=
-    unqryTablaG.FieldByName(
-      'ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC').AsString;
-  Solicitud.GrupoZonaIva :=
-    unqryTablaG.FieldByName(
-      'GRUPO_ZONA_IVA_EMPRESA_FAC').AsString;
-  Solicitud.Usuario := IdentidadSesion.Usuario;
+  Solicitud := CrearSolicitudEmpresaDesdeFactura(
+    unqryTablaG, IdentidadSesion.Usuario);
   FRepositorio.GuardarEmpresa(Solicitud);
 end;
 
@@ -1832,80 +1478,21 @@ end;
 
 procedure TdmFacturas.DesempaquetarAtributosLineas;
 var
-  Partes: TArray<string>;
-  Sku, sEsperado: string;
-  i: Integer;
-  Bm: TBookmark;
-  bCambia: Boolean;
   bReadOnlyLineas: Boolean;
 begin
   if unqryLinFac.Active and (not unqryLinFac.IsEmpty) and
      (unqryLinFac.FindField('ATTR1_VALOR_FACLIN') <> nil) and
      (unqryLinFac.FindField('NUM_ATRIBUTOS_FACLIN') <> nil) then
   begin
-    Bm := unqryLinFac.GetBookmark;
-    unqryLinFac.DisableControls;
-    // Posts descriptivos: silencia numeracion, creacion de articulos
-    // y recalculos en BeforePost / AfterPost.
     FDesempaquetandoAtributos := True;
-    // Borradores cerrados (simplificadas fase ONLINE) llegan ReadOnly
-    // por ActualizarBloqueoEdicion; el troceo SKU->ATTR es descriptivo
-    // y debe correr igual. Mismo patron que CalcularFactura: levantar
-    // y restaurar.
     bReadOnlyLineas := unqryLinFac.ReadOnly;
     if bReadOnlyLineas then
       unqryLinFac.ReadOnly := False;
     try
-      unqryLinFac.First;
-      while not unqryLinFac.Eof do
-      begin
-        Sku := unqryLinFac.FieldByName(
-          'CODIGO_UNIDAD_FACLIN').AsString;
-        Partes := Sku.Split(['/']);
-        if Length(Partes) > 1 then
-        begin
-          // Idempotente POR COMPARACION: se edita solo si algun ATTR
-          // no coincide con el troceo del SKU (mismo criterio que
-          // TdmPedidos: el "saltar si ATTR1 relleno" dejaba lineas a
-          // medias sin resincronizar).
-          bCambia := unqryLinFac.FieldByName(
-            'NUM_ATRIBUTOS_FACLIN').AsInteger <> Length(Partes) - 1;
-          for i := 1 to 5 do
-          begin
-            if i < Length(Partes) then
-              sEsperado := Partes[i]
-            else
-              sEsperado := '';
-            if Trim(unqryLinFac.FieldByName('ATTR' + IntToStr(i) +
-                 '_VALOR_FACLIN').AsString) <> sEsperado then
-              bCambia := True;
-          end;
-          if bCambia then
-          begin
-            unqryLinFac.Edit;
-            unqryLinFac.FieldByName(
-              'NUM_ATRIBUTOS_FACLIN').AsInteger := Length(Partes) - 1;
-            for i := 1 to 5 do
-            begin
-              if i < Length(Partes) then
-                unqryLinFac.FieldByName('ATTR' + IntToStr(i) +
-                  '_VALOR_FACLIN').AsString := Partes[i]
-              else
-                unqryLinFac.FieldByName('ATTR' + IntToStr(i) +
-                  '_VALOR_FACLIN').AsString := '';
-            end;
-            unqryLinFac.Post;
-          end;
-        end;
-        unqryLinFac.Next;
-      end;
-      if unqryLinFac.BookmarkValid(Bm) then
-        unqryLinFac.GotoBookmark(Bm);
+      DesempaquetarAtributosFactura(unqryLinFac);
     finally
       unqryLinFac.ReadOnly := bReadOnlyLineas;
       FDesempaquetandoAtributos := False;
-      unqryLinFac.EnableControls;
-      unqryLinFac.FreeBookmark(Bm);
     end;
   end;
 end;
@@ -2431,167 +2018,53 @@ end;
 procedure TdmFacturas.ValidarCabeceraBeforePost(DataSet: TDataSet);
 var
   bValidar: Boolean;
-  dtUltima: TDateTime;
-  function FieldByName(const Nombre: string): TField;
-  begin
-    Result := unqryTablaG.FieldByName(Nombre);
-  end;
+  Datos: TDatosValidacionCabeceraFactura;
 begin
-    if ExisteSerieEmpresa(
-         FieldByName(fseriefac).AsString,
-         FieldByName(fcodemp).AsString,
-         CrearConfiguracionDocumento(
-           tdFactura,
-           sdVenta).TipoContador) then
+  Datos := CrearDatosValidacionCabeceraFactura(unqryTablaG);
+  Datos.SeriePerteneceOtraEmpresa := ExisteSerieEmpresa(
+    Datos.Serie, unqryTablaG.FieldByName(fcodemp).AsString,
+    CrearConfiguracionDocumento(tdFactura, sdVenta).TipoContador);
+  ValidarIdentidadCabeceraFactura(Datos);
+  bValidar := EsCabeceraFacturaValidable(Datos);
+  if bValidar then
+    ValidarOperacionVfactu;
+  Datos.ControlarCronologia :=
+    bValidar and not SinVerifactuActivo(ParametrosApp);
+  if Datos.ControlarCronologia and Datos.TieneFecha then
+  begin
+    Datos.UltimaFechaSerie := UltimaFechaSerie(Datos.Serie,
+      unqryTablaG.FieldByName(fcodemp).AsString, Datos.Numero);
+  end;
+  ValidarCoherenciaCabeceraFactura(Datos);
+  if FechaCabeceraFacturaEsFutura(Datos, Date) then
+    RegistrarAdvertencia(SAvisoFechaBorradorFutura, True);
+  if unqryTablaG.State in [dsEdit, dsInsert] then
+  begin
+    if (unqryTablaG.State = dsInsert) and
+       ParametrosApp.Licencia.Comprobada and Datos.TieneFecha then
     begin
-      raise EValidacionFactura.Create(
-        SErrorSerieFacturaOtraEmpresa,
-        cvfSerie);
+      ValidarLimiteDemoFacturas(
+        ConexionPrincipal, ParametrosApp.Licencia.Estado, Datos.Fecha);
     end;
-    if (FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString = '') and
-       (FieldByName('TIPO_FAC').AsString <> 'SIMPLIFICADA') then
+    if Datos.Numero = '0' then
+      GetCodigoAutoFactura;
+    if unqryTablaG.FieldByName('CODIGO_CLI_FAC').AsString = '0' then
+      GetCodigoAutoCliente;
+    if unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString = '0' then
+      GetCodigoAutoEmpresa;
+    Datos.Numero := unqryTablaG.FieldByName('NUMERO_FAC').AsString;
+    ValidarNumeroCabeceraFactura(Datos);
+    if bValidar and (unqryTablaG.State = dsInsert) and
+       HayHuecoNumeracion(
+         Datos.Serie,
+         unqryTablaG.FieldByName(fcodemp).AsString,
+         Datos.Numero) then
     begin
-      raise EValidacionFactura.Create(
-        SErrorRazonSocialClienteBorrador,
-        cvfRazonSocialCliente);
+      RegistrarAdvertencia(
+        Format(SAvisoHuecoNumeracionFactura, [Datos.Serie]), True);
     end;
-    if FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsString = '' then
-    begin
-      raise EValidacionFactura.Create(
-        SErrorRazonSocialEmpresaBorrador,
-        cvfRazonSocialEmpresa);
-    end;
-    if FieldByName('SERIE_FAC').AsString = '' then
-    begin
-      raise EValidacionFactura.Create(
-        SErrorSerieBorradorObligatoria,
-        cvfSerie);
-    end;
-    if ((FieldByName('CODIGO_PAI_CLIENTE_FAC').AsString = '') or
-        (FieldByName('CODIGO_PAI_EMPRESA_FAC').AsString = '')) and
-        (FieldByName('TIPO_FAC').AsString <> 'SIMPLIFICADA') then
-    begin
-      raise EValidacionFactura.Create(
-        SErrorPaisClienteEmpresaBorrador,
-        cvfPais);
-    end;
-    // Las validaciones de coherencia solo corren mientras la factura es un
-    // borrador editable (no en los posts programaticos de consolidacion /
-    // lanzamiento a Verifactu, que ya cambian la fase).
-    bValidar := (FieldByName('TIPO_FAC').AsString <> 'SIMPLIFICADA') and
-                (SameText(FieldByName('FASE_FAC').AsString, 'BORRADOR') or
-                 (Trim(FieldByName('FASE_FAC').AsString) = ''));
-    // Fecha de factura obligatoria (bloqueo)
-    if bValidar and
-       (FieldByName('FECHA_FAC').AsString = '') then
-    begin
-      raise EValidacionFactura.Create(
-        SErrorFechaBorradorObligatoria,
-        cvfFecha);
-    end;
-    // Coherencia del tipo de operacion Verifactu (bloqueo si es flagrante)
-    if bValidar then
-      ValidarOperacionVfactu;
-    if bValidar and
-       PaisEsEspana(FieldByName('CODIGO_PAI_CLIENTE_FAC').AsString,
-                    FieldByName('NOMBRE_PAI_CLIENTE_FAC').AsString) and
-       (not DocumentoFiscalValido(
-          FieldByName('NIF_CLIENTE_FAC').AsString)) then
-    begin
-      raise EValidacionFactura.Create(
-        Format(
-          SErrorNifClienteFactura,
-          [MensajeDocumentoFiscalInvalido(
-             FieldByName('NIF_CLIENTE_FAC').AsString)]),
-        cvfNifCliente);
-    end;
-    if bValidar and
-       PaisEsEspana(FieldByName('CODIGO_PAI_EMPRESA_FAC').AsString,
-                    FieldByName('NOMBRE_PAI_EMPRESA_FAC').AsString) and
-       (not DocumentoFiscalValido(
-          FieldByName('NIF_EMPRESA_FAC').AsString)) then
-    begin
-      raise EValidacionFactura.Create(
-        Format(
-          SErrorNifEmpresaFactura,
-          [MensajeDocumentoFiscalInvalido(
-             FieldByName('NIF_EMPRESA_FAC').AsString)]),
-        cvfNifEmpresa);
-    end;
-    // La fecha no puede ser anterior a la ultima factura emitida de la serie
-    // (bloqueo): la numeracion debe seguir orden cronologico. En modo SIN
-    // Verifactu se permite trabajar sin este control fiscal.
-    if bValidar and
-       (not SinVerifactuActivo(ParametrosApp)) and
-       (FieldByName('FECHA_FAC').AsString <> '') then
-    begin
-      dtUltima := UltimaFechaSerie(FieldByName('SERIE_FAC').AsString,
-                                   FieldByName('CODIGO_EMP_FAC').AsString,
-                                   FieldByName('NUMERO_FAC').AsString);
-      if (dtUltima > 0) and
-         (FieldByName('FECHA_FAC').AsDateTime < dtUltima) then
-      begin
-        raise EValidacionFactura.Create(
-          Format(
-            SErrorFechaFacturaAnteriorSerie,
-            [FormatDateTime(
-               'dd/mm/yyyy',
-               FieldByName('FECHA_FAC').AsDateTime),
-             FormatDateTime('dd/mm/yyyy', dtUltima)]),
-          cvfFecha);
-      end;
-    end;
-    // Fecha posterior a hoy (solo aviso, no bloquea)
-    if bValidar and
-       (FieldByName('FECHA_FAC').AsString <> '') and
-       (FieldByName('FECHA_FAC').AsDateTime > Date) then
-    begin
-      RegistrarAdvertencia(SAvisoFechaBorradorFutura, True);
-    end;
-    if unqryTablaG.State in [dsEdit, dsInsert] then
-    begin
-      if (unqryTablaG.State = dsInsert) and
-         ParametrosApp.Licencia.Comprobada and
-         (FieldByName('FECHA_FAC').AsString <> '') then
-      begin
-        ValidarLimiteDemoFacturas(
-          ConexionPrincipal,
-          ParametrosApp.Licencia.Estado,
-          FieldByName('FECHA_FAC').AsDateTime);
-      end;
-      if FieldByName('NUMERO_FAC').AsString = '0' then
-        GetCodigoAutoFactura;
-      if FieldByName('CODIGO_CLI_FAC').AsString = '0' then
-        GetCodigoAutoCliente;
-      if FieldByName('CODIGO_EMP_FAC').AsString = '0' then
-        GetCodigoAutoEmpresa;
-      // El numero no puede quedar en blanco tras la asignacion.
-      if bValidar and
-         ((Trim(FieldByName('NUMERO_FAC').AsString) = '') or
-          (FieldByName('NUMERO_FAC').AsString = '0')) then
-      begin
-        raise EValidacionFactura.Create(
-          Format(
-            SErrorAsignarNumeroFactura,
-            [FieldByName('SERIE_FAC').AsString]),
-          cvfSerie);
-      end;
-      // El salto de numeracion es un aviso y no bloquea la grabacion.
-      if bValidar and
-         (unqryTablaG.State = dsInsert) and
-         HayHuecoNumeracion(
-           FieldByName('SERIE_FAC').AsString,
-           FieldByName('CODIGO_EMP_FAC').AsString,
-           FieldByName('NUMERO_FAC').AsString) then
-      begin
-        RegistrarAdvertencia(
-          Format(
-            SAvisoHuecoNumeracionFactura,
-            [FieldByName('SERIE_FAC').AsString]),
-          True);
-      end;
-      ActualizarAuditoria(DataSet);
-    end;
+    ActualizarAuditoria(DataSet);
+  end;
 end;
 
 initialization

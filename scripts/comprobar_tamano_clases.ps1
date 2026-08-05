@@ -1,7 +1,7 @@
-param(
+﻿param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoLineasPorClase = 2684,
+  [int]$MaximoLineasPorClase = 2180,
   [ValidateRange(0, [int]::MaxValue)]
   [int]$MaximoMetodosPorClase = 101,
   [ValidateRange(0, [int]::MaxValue)]
@@ -24,6 +24,70 @@ param(
       Metodos = 97
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
+    }
+    TfrmMtoPedidosCompra = @{
+      Lineas = 1964
+      Metodos = 77
+      Campos = 26
+      ObjetivoLineas = 2000
+      ObjetivoMetodos = 120
+      ObjetivoCampos = 30
+    }
+    TfrmMtoDevolucionesCompra = @{
+      Lineas = 1929
+      Metodos = 80
+      Campos = 21
+      ObjetivoLineas = 2000
+      ObjetivoMetodos = 120
+      ObjetivoCampos = 30
+    }
+    TdmPedidos = @{
+      Lineas = 1937
+      Metodos = 46
+      Campos = 4
+      ObjetivoLineas = 2000
+      ObjetivoMetodos = 120
+      ObjetivoCampos = 30
+    }
+    TdmFacturas = @{
+      Lineas = 1999
+      Metodos = 71
+      Campos = 23
+      ObjetivoLineas = 2000
+      ObjetivoMetodos = 120
+      ObjetivoCampos = 30
+    }
+    TdmAlbaranes = @{
+      Lineas = 1841
+      Metodos = 42
+      Campos = 5
+      ObjetivoLineas = 2000
+      ObjetivoMetodos = 120
+      ObjetivoCampos = 30
+    }
+    TOperacionMovimientosAlbaranVenta = @{
+      Lineas = 102
+      Metodos = 6
+      Campos = 2
+      ObjetivoLineas = 300
+      ObjetivoMetodos = 15
+      ObjetivoCampos = 5
+    }
+    TPersistenciaMovimientosAlbaranVentaUniDAC = @{
+      Lineas = 593
+      Metodos = 22
+      Campos = 3
+      ObjetivoLineas = 1200
+      ObjetivoMetodos = 40
+      ObjetivoCampos = 20
+    }
+    TUnidadTrabajoMovimientosAlbaranVentaUniDAC = @{
+      Lineas = 57
+      Metodos = 5
+      Campos = 1
+      ObjetivoLineas = 200
+      ObjetivoMetodos = 10
+      ObjetivoCampos = 5
     }
     TfrmMtoArticulos = @{
       Lineas = 1905
@@ -92,9 +156,9 @@ param(
       ObjetivoCampos = 3
     }
     TRecepcionPedidoCompraUniDAC = @{
-      Lineas = 114
+      Lineas = 35
       Metodos = 2
-      Campos = 3
+      Campos = 1
       ObjetivoLineas = 150
       ObjetivoMetodos = 5
       ObjetivoCampos = 5
@@ -189,6 +253,30 @@ param(
     }
   },
   [hashtable]$LimitesUnidades = @{
+    'src\Lib\inLibPedidosVentaPresentacionReglas.pas' = @{
+      Lineas = 92
+      Rutinas = 2
+      ObjetivoLineas = 300
+      ObjetivoRutinas = 10
+    }
+    'src\DataModules\UniDataPedidosVentaFlujoEdicion.pas' = @{
+      Lineas = 216
+      Rutinas = 11
+      ObjetivoLineas = 400
+      ObjetivoRutinas = 20
+    }
+    'src\Lib\inLibAlbaranesVentaPresentacionArticulo.pas' = @{
+      Lineas = 108
+      Rutinas = 2
+      ObjetivoLineas = 300
+      ObjetivoRutinas = 10
+    }
+    'src\Lib\inLibAlbaranesVentaPresentacionMovimientos.pas' = @{
+      Lineas = 181
+      Rutinas = 15
+      ObjetivoLineas = 300
+      ObjetivoRutinas = 20
+    }
     'src\Lib\inLibVentasWsJson.pas' = @{
       Lineas = 49
       Rutinas = 1
@@ -274,22 +362,52 @@ param(
       ObjetivoRutinas = 30
     }
     'src\Lib\inLibDevolucionesCompraMovimientos.pas' = @{
-      Lineas = 52
-      Rutinas = 2
+      Lineas = 182
+      Rutinas = 17
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
     }
     'src\Lib\inLibDevolucionesCompraMovimientosIntf.pas' = @{
-      Lineas = 28
+      Lineas = 39
       Rutinas = 0
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataDevolucionesCompraMovimientos.pas' = @{
-      Lineas = 457
-      Rutinas = 12
+      Lineas = 355
+      Rutinas = 24
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
+    }
+    'src\Lib\inLibDevolucionesCompraPresentacionFlujo.pas' = @{
+      Lineas = 509
+      Rutinas = 21
+      ObjetivoLineas = 600
+      ObjetivoRutinas = 30
+    }
+    'src\Lib\inLibPedidosCompraPresentacionOperacion.pas' = @{
+      Lineas = 182
+      Rutinas = 6
+      ObjetivoLineas = 600
+      ObjetivoRutinas = 30
+    }
+    'src\Lib\inLibPedidosCompraPresentacionRecepcion.pas' = @{
+      Lineas = 178
+      Rutinas = 4
+      ObjetivoLineas = 600
+      ObjetivoRutinas = 30
+    }
+    'src\Lib\inLibPedidosCompraPresentacionCantidades.pas' = @{
+      Lineas = 587
+      Rutinas = 24
+      ObjetivoLineas = 600
+      ObjetivoRutinas = 30
+    }
+    'src\DataModules\UniDataPedidosCompraFlujoTransaccion.pas' = @{
+      Lineas = 78
+      Rutinas = 11
+      ObjetivoLineas = 300
+      ObjetivoRutinas = 20
     }
     'src\Lib\inLibArticulosVariaciones.pas' = @{
       Lineas = 136
@@ -336,6 +454,24 @@ param(
     'src\DataModules\UniDataFacturasLecturas.pas' = @{
       Lineas = 248
       Rutinas = 19
+      ObjetivoLineas = 1200
+      ObjetivoRutinas = 30
+    }
+    'src\Lib\inLibFacturasValidacionCabecera.pas' = @{
+      Lineas = 183
+      Rutinas = 6
+      ObjetivoLineas = 600
+      ObjetivoRutinas = 30
+    }
+    'src\Lib\inLibFacturasValidacionDatos.pas' = @{
+      Lineas = 531
+      Rutinas = 19
+      ObjetivoLineas = 600
+      ObjetivoRutinas = 30
+    }
+    'src\DataModules\inLibFacturasValidacionUniDAC.pas' = @{
+      Lineas = 105
+      Rutinas = 2
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
     }
@@ -459,6 +595,18 @@ param(
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
     }
+    'src\verifactu\inLibVerifactuConstruccionEnvio.pas' = @{
+      Lineas = 391
+      Rutinas = 20
+      ObjetivoLineas = 600
+      ObjetivoRutinas = 30
+    }
+    'src\verifactu\inLibVerifactuRegistroEventos.pas' = @{
+      Lineas = 521
+      Rutinas = 28
+      ObjetivoLineas = 600
+      ObjetivoRutinas = 30
+    }
     'src\verifactu\UniDataVerifactuColaRepositorio.pas' = @{
       Lineas = 282
       Rutinas = 20
@@ -472,10 +620,22 @@ param(
       ObjetivoRutinas = 20
     }
     'src\verifactu\UniDataVerifactuColaResultados.pas' = @{
-      Lineas = 313
-      Rutinas = 3
+      Lineas = 117
+      Rutinas = 2
       ObjetivoLineas = 900
       ObjetivoRutinas = 25
+    }
+    'src\verifactu\UniDataVerifactuResultadosEnvioOperacion.pas' = @{
+      Lineas = 176
+      Rutinas = 5
+      ObjetivoLineas = 1200
+      ObjetivoRutinas = 30
+    }
+    'src\verifactu\UniDataVerifactuResultadosEnvioPersistencia.pas' = @{
+      Lineas = 418
+      Rutinas = 29
+      ObjetivoLineas = 1200
+      ObjetivoRutinas = 30
     }
   }
 )

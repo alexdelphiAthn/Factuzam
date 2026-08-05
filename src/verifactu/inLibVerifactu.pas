@@ -168,115 +168,62 @@ procedure RegistrarEventoVerifactu(
 implementation
 
 uses
-  System.Classes, System.DateUtils, System.Hash, System.StrUtils,
-  System.TimeSpan,
+  System.Classes, System.Hash, System.StrUtils,
   Vcl.Imaging.pngimage,
   DelphiZXIngQRCode, frxDBSet,
   inLibGlobalVar, inLibFotos, inLibXades,
   inLibMsgFacturas, inLibMsgVerifactu,
-  inLibRelojFiscal, inLibVerifactuInstalacion;
-
-const
-  cNsEventosSif =
-    'https://www2.agenciatributaria.gob.es/static_files/common/internet/' +
-    'dep/aplicaciones/es/aeat/tike/cont/ws/EventosSIF.xsd';
-  cNsDsig = 'http://www.w3.org/2000/09/xmldsig#';
+  inLibRelojFiscal, inLibVerifactuInstalacion,
+  inLibVerifactuRegistroEventos;
 
 type
-  TDatosEmpresaEvento = record
-    NifObligado:     string;
-    NombreObligado:  string;
-    SerialCert:      string;
-    TitularCert:     string;
-    NifProductor:    string;
-    NombreProductor: string;
-    IdInstalacion:   string;
-    VersionInstalacion:string;
-    CodigoSifInstalacion:string;
-    EsMultiOT:       string;
+  TRepositorioRegistroEventosUniDAC = class(
+    TInterfacedObject,
+    IRepositorioRegistroEventosVerifactu)
+  private
+    FParametrosApp: IParametrosAplicacion;
+    FConexion: TUniConnection;
+    procedure InicializarEmpresa(
+      out ADatos: TEmpresaRegistroEventoVerifactu);
+    procedure ConsultarEmpresa(
+      var ADatos: TEmpresaRegistroEventoVerifactu);
+    procedure ValidarEmpresa(
+      const ADatos: TEmpresaRegistroEventoVerifactu);
+    procedure PrepararSqlGuardar(
+      AQry: TUniQuery;
+      ATieneColumnasFirma: Boolean);
+    procedure AsignarParametrosGuardar(
+      AQry: TUniQuery;
+      const ARegistro: TRegistroEventoVerifactu);
+  public
+    constructor Create(
+      const AParametrosApp: IParametrosAplicacion;
+      AConexion: TUniConnection);
+    function TieneColumnasFirma: Boolean;
+    function CargarEmpresa: TEmpresaRegistroEventoVerifactu;
+    function CargarAnterior: TEventoAnteriorVerifactu;
+    procedure Guardar(const ARegistro: TRegistroEventoVerifactu);
   end;
 
-  TEventoAnterior = record
-    EsPrimero:     Boolean;
-    TipoEvento:    string;
-    FechaHoraHuso: string;
-    Huella:        string;
+  TValidadorRelojRegistroEventos = class(
+    TInterfacedObject,
+    IValidadorRelojRegistroEventosVerifactu)
+  private
+    FParametrosApp: IParametrosAplicacion;
+  public
+    constructor Create(
+      const AParametrosApp: IParametrosAplicacion);
+    procedure ExigirRelojFiscal;
   end;
 
-function EscaparXmlSif(const AValor: string): string;
-begin
-  Result := StringReplace(AValor, '&', '&amp;', [rfReplaceAll]);
-  Result := StringReplace(Result, '<', '&lt;', [rfReplaceAll]);
-  Result := StringReplace(Result, '>', '&gt;', [rfReplaceAll]);
-  Result := StringReplace(Result, '"', '&quot;', [rfReplaceAll]);
-  Result := StringReplace(Result, '''', '&apos;', [rfReplaceAll]);
-end;
-
-function TextoEventoSif(const AValor: string): string;
-begin
-  Result := Trim(AValor);
-  Result := StringReplace(Result, #13, ' ', [rfReplaceAll]);
-  Result := StringReplace(Result, #10, ' ', [rfReplaceAll]);
-  while Pos('  ', Result) > 0 do
-    Result := StringReplace(Result, '  ', ' ', [rfReplaceAll]);
-  if Length(Result) > 100 then
-    Result := Copy(Result, 1, 100);
-end;
-
-function AnadirIncidenciaCertificado(const ADatos, AMensaje: string): string;
-begin
-  Result := Trim(ADatos);
-  if Result <> '' then
-    Result := Result + ' | ';
-  Result := Result + 'INCIDENCIA_CERTIFICADO=' + Trim(AMensaje);
-end;
-
-function AnadirIncidenciaReloj(const ADatos, AMensaje: string): string;
-begin
-  Result := Trim(ADatos);
-  if Result <> '' then
-    Result := Result + ' | ';
-  Result := Result + 'INCIDENCIA_RELOJ=' + Trim(AMensaje);
-end;
-
-procedure VaciarDatosCertificado(var ADatos: TXadesDatosCertificado);
-begin
-  ADatos.NumeroSerie := '';
-  ADatos.Titular := '';
-  ADatos.HuellaSha1 := '';
-  ADatos.CertificadoBase64 := '';
-end;
-
-function FechaHoraHusoSif(ADt: TDateTime): string;
-var
-  oDesfase: TTimeSpan;
-  sSigno:   string;
-begin
-  oDesfase := TTimeZone.Local.GetUtcOffset(ADt);
-  if oDesfase.Ticks < 0 then
-    sSigno := '-'
-  else
-    sSigno := '+';
-  Result := FormatDateTime('yyyy-mm-dd"T"hh:nn:ss', ADt) + sSigno +
-            Format('%.2d:%.2d', [Abs(oDesfase.Hours),
-                                 Abs(oDesfase.Minutes)]);
-end;
-
-function TipoEventoAeat(ATipoEvento: Integer): string;
-begin
-  case ATipoEvento of
-    cEventoNoVerifactuInicio:
-      Result := '01';
-    cEventoNoVerifactuFin:
-      Result := '02';
-    cEventoNoVerifactuExportFact:
-      Result := '08';
-    cEventoNoVerifactuExportEventos:
-      Result := '09';
-  else
-    Result := '90';
+  TFirmadorRegistroEventos = class(
+    TInterfacedObject,
+    IFirmadorRegistroEventosVerifactu)
+  public
+    function Firmar(
+      const AXml, AHuella, ASerieCertificado,
+      ATitularCertificado: string): TFirmaRegistroEventoVerifactu;
   end;
-end;
 
 function ExtraerEtiquetaXml(const AXml, AEtiqueta: string): string;
 var
@@ -298,13 +245,22 @@ begin
   end;
 end;
 
-function ColumnasFirmaEventosDisponibles(AConn: TUniConnection): Boolean;
+constructor TRepositorioRegistroEventosUniDAC.Create(
+  const AParametrosApp: IParametrosAplicacion;
+  AConexion: TUniConnection);
+begin
+  inherited Create;
+  FParametrosApp := AParametrosApp;
+  FConexion := AConexion;
+end;
+
+function TRepositorioRegistroEventosUniDAC.TieneColumnasFirma: Boolean;
 var
   Qry: TUniQuery;
 begin
   Qry := TUniQuery.Create(nil);
   try
-    Qry.Connection := AConn;
+    Qry.Connection := FConexion;
     Qry.SQL.Text :=
       ' SELECT COUNT(*) AS N ' +
       ' FROM INFORMATION_SCHEMA.COLUMNS ' +
@@ -320,32 +276,29 @@ begin
   end;
 end;
 
-procedure CargarEmpresaEvento(
-                              const AParametrosApp:
-                              IParametrosAplicacion;
-                              AConn: TUniConnection;
-                              out ADatos: TDatosEmpresaEvento);
+procedure TRepositorioRegistroEventosUniDAC.InicializarEmpresa(
+  out ADatos: TEmpresaRegistroEventoVerifactu);
+begin
+  ADatos := Default(TEmpresaRegistroEventoVerifactu);
+  ADatos.NifProductor := NormalizarNifVerifactu(
+    FParametrosApp.GetString('appVerifactuSifNif', ''));
+  ADatos.NombreProductor := FParametrosApp.GetString(
+    'appVerifactuSifNombreRazon', 'Alejandro Laorden Hidalgo');
+  ADatos.EsMultiOt := 'N';
+  if Length(ADatos.NifProductor) <> 9 then
+    raise Exception.CreateFmt(
+      SErrorNifProductorEventoVerifactuInvalido,
+      [ADatos.NifProductor]);
+end;
+
+procedure TRepositorioRegistroEventosUniDAC.ConsultarEmpresa(
+  var ADatos: TEmpresaRegistroEventoVerifactu);
 var
   Qry: TUniQuery;
 begin
-  ADatos.NifObligado := '';
-  ADatos.NombreObligado := '';
-  ADatos.SerialCert := '';
-  ADatos.TitularCert := '';
-  ADatos.NifProductor := NormalizarNifVerifactu(
-    AParametrosApp.GetString('appVerifactuSifNif', ''));
-  ADatos.NombreProductor := AParametrosApp.GetString(
-    'appVerifactuSifNombreRazon', 'Alejandro Laorden Hidalgo');
-  ADatos.IdInstalacion := '';
-  ADatos.VersionInstalacion := '';
-  ADatos.CodigoSifInstalacion := '';
-  ADatos.EsMultiOT := 'N';
-  if Length(ADatos.NifProductor) <> 9 then
-    raise Exception.CreateFmt(SErrorNifProductorEventoVerifactuInvalido,
-      [ADatos.NifProductor]);
   Qry := TUniQuery.Create(nil);
   try
-    Qry.Connection := AConn;
+    Qry.Connection := FConexion;
     Qry.SQL.Text :=
       ' SELECT RAZON_SOCIAL_EMP, NIF_EMP, CODIGO_CERTIFICADO_EMP, ' +
       '        TITULAR_CERTIFICADO_EMP, NUMERO_INSTALACION_EMP, ' +
@@ -363,9 +316,9 @@ begin
       Trim(Qry.FieldByName('RAZON_SOCIAL_EMP').AsString);
     ADatos.NifObligado := NormalizarNifVerifactu(
       Qry.FieldByName('NIF_EMP').AsString);
-    ADatos.SerialCert :=
+    ADatos.SerialCertificado :=
       Trim(Qry.FieldByName('CODIGO_CERTIFICADO_EMP').AsString);
-    ADatos.TitularCert :=
+    ADatos.TitularCertificado :=
       Trim(Qry.FieldByName('TITULAR_CERTIFICADO_EMP').AsString);
     ADatos.IdInstalacion :=
       Trim(Qry.FieldByName('NUMERO_INSTALACION_EMP').AsString);
@@ -374,10 +327,15 @@ begin
     ADatos.CodigoSifInstalacion :=
       Trim(Qry.FieldByName('CODIGO_SIF_INSTALACION_EMP').AsString);
     if Qry.FieldByName('NUM_EMP').AsInteger > 1 then
-      ADatos.EsMultiOT := 'S';
+      ADatos.EsMultiOt := 'S';
   finally
     FreeAndNil(Qry);
   end;
+end;
+
+procedure TRepositorioRegistroEventosUniDAC.ValidarEmpresa(
+  const ADatos: TEmpresaRegistroEventoVerifactu);
+begin
   if Length(ADatos.NifObligado) <> 9 then
     raise Exception.CreateFmt(SErrorNifEmisorEventoNoVerifactuInvalido,
       [ADatos.NifObligado]);
@@ -388,49 +346,24 @@ begin
                         ADatos.NifObligado);
 end;
 
-function ConstruirSistemaInformaticoEvento(
-  const ADatos: TDatosEmpresaEvento): string;
+function TRepositorioRegistroEventosUniDAC.CargarEmpresa:
+  TEmpresaRegistroEventoVerifactu;
 begin
-  Result :=
-    '<sf:SistemaInformatico>' +
-    '<sf:NombreRazon>' + EscaparXmlSif(ADatos.NombreProductor) +
-    '</sf:NombreRazon>' +
-    '<sf:NIF>' + EscaparXmlSif(ADatos.NifProductor) + '</sf:NIF>' +
-    '<sf:NombreSistemaInformatico>Factuzam</sf:NombreSistemaInformatico>' +
-    '<sf:IdSistemaInformatico>FZ</sf:IdSistemaInformatico>' +
-    '<sf:Version>' + EscaparXmlSif(oVersion) + '</sf:Version>' +
-    '<sf:NumeroInstalacion>' + EscaparXmlSif(ADatos.IdInstalacion) +
-    '</sf:NumeroInstalacion>' +
-    '<sf:TipoUsoPosibleSoloVerifactu>N</sf:TipoUsoPosibleSoloVerifactu>' +
-    '<sf:TipoUsoPosibleMultiOT>S</sf:TipoUsoPosibleMultiOT>' +
-    '<sf:IndicadorMultiplesOT>' + ADatos.EsMultiOT +
-    '</sf:IndicadorMultiplesOT>' +
-    '</sf:SistemaInformatico>';
+  InicializarEmpresa(Result);
+  ConsultarEmpresa(Result);
+  ValidarEmpresa(Result);
 end;
 
-function ConstruirObligadoEvento(
-  const ADatos: TDatosEmpresaEvento): string;
-begin
-  Result :=
-    '<sf:ObligadoEmision>' +
-    '<sf:NombreRazon>' + EscaparXmlSif(ADatos.NombreObligado) +
-    '</sf:NombreRazon>' +
-    '<sf:NIF>' + EscaparXmlSif(ADatos.NifObligado) + '</sf:NIF>' +
-    '</sf:ObligadoEmision>';
-end;
-
-procedure CargarEventoAnterior(AConn: TUniConnection;
-                               out AAnterior: TEventoAnterior);
+function TRepositorioRegistroEventosUniDAC.CargarAnterior:
+  TEventoAnteriorVerifactu;
 var
   Qry: TUniQuery;
 begin
-  AAnterior.EsPrimero := True;
-  AAnterior.TipoEvento := '';
-  AAnterior.FechaHoraHuso := '';
-  AAnterior.Huella := '';
+  Result := Default(TEventoAnteriorVerifactu);
+  Result.EsPrimero := True;
   Qry := TUniQuery.Create(nil);
   try
-    Qry.Connection := AConn;
+    Qry.Connection := FConexion;
     Qry.SQL.Text :=
       ' SELECT TIPO_EVENTO_LOG, TIMESTAMP_LOG, HASH_PROPIO_LOG ' +
       ' FROM fza_verifactu_eventos ' +
@@ -439,84 +372,124 @@ begin
     Qry.Open;
     if not Qry.IsEmpty then
     begin
-      AAnterior.EsPrimero := False;
-      AAnterior.TipoEvento :=
-        TipoEventoAeat(Qry.FieldByName('TIPO_EVENTO_LOG').AsInteger);
-      AAnterior.FechaHoraHuso :=
-        FechaHoraHusoSif(Qry.FieldByName('TIMESTAMP_LOG').AsDateTime);
-      AAnterior.Huella := Qry.FieldByName('HASH_PROPIO_LOG').AsString;
+      Result.EsPrimero := False;
+      Result.TipoEvento :=
+        Qry.FieldByName('TIPO_EVENTO_LOG').AsInteger;
+      Result.Instante := Qry.FieldByName('TIMESTAMP_LOG').AsDateTime;
+      Result.Huella := Qry.FieldByName('HASH_PROPIO_LOG').AsString;
     end;
   finally
     FreeAndNil(Qry);
   end;
 end;
 
-function ConstruirEncadenamientoEvento(
-  const AAnterior: TEventoAnterior): string;
+procedure TRepositorioRegistroEventosUniDAC.PrepararSqlGuardar(
+  AQry: TUniQuery;
+  ATieneColumnasFirma: Boolean);
 begin
-  if AAnterior.EsPrimero then
-    Result := '<sf:Encadenamiento><sf:PrimerEvento>S</sf:PrimerEvento>' +
-              '</sf:Encadenamiento>'
+  if ATieneColumnasFirma then
+    AQry.SQL.Text :=
+      ' INSERT INTO fza_verifactu_eventos ' +
+      ' (TIMESTAMP_LOG, TIPO_EVENTO_LOG, USUARIO_LOG, VERSION_LOG, ' +
+      '  DESCRIPCION_LOG, DATOS_ADICIONALES_LOG, HASH_ANTERIOR_LOG, ' +
+      '  HASH_PROPIO_LOG, FIRMA_DIGITAL_LOG, NUMERO_FAC_LOG, ' +
+      '  SERIE_FAC_LOG, REGISTRO_XML_LOG, FIRMA_XADES_LOG, ' +
+      '  SERIE_CERTIFICADO_LOG, TITULAR_CERTIFICADO_LOG, ' +
+      '  HUELLA_CERTIFICADO_LOG) VALUES ' +
+      ' (:INSTANTE, :TIPO, :USUARIO, :VERSION, :DESCRIPCION, ' +
+      '  NULLIF(:DATOS, ''''), :HASHANT, :HASHPROPIO, :FIRMA, ' +
+      '  NULLIF(:NUMERO, ''''), NULLIF(:SERIE, ''''), :XML, ' +
+      '  NULLIF(:FIRMAXADES, ''''), NULLIF(:SERIECERT, ''''), ' +
+      '  NULLIF(:TITULARCERT, ''''), NULLIF(:HUELLACERT, ''''))'
   else
-    Result := '<sf:Encadenamiento><sf:EventoAnterior>' +
-      '<sf:TipoEvento>' + AAnterior.TipoEvento + '</sf:TipoEvento>' +
-      '<sf:FechaHoraHusoGenEvento>' + AAnterior.FechaHoraHuso +
-      '</sf:FechaHoraHusoGenEvento>' +
-      '<sf:HuellaEvento>' + AAnterior.Huella + '</sf:HuellaEvento>' +
-      '</sf:EventoAnterior></sf:Encadenamiento>';
+    AQry.SQL.Text :=
+      ' INSERT INTO fza_verifactu_eventos ' +
+      ' (TIMESTAMP_LOG, TIPO_EVENTO_LOG, USUARIO_LOG, VERSION_LOG, ' +
+      '  DESCRIPCION_LOG, DATOS_ADICIONALES_LOG, HASH_ANTERIOR_LOG, ' +
+      '  HASH_PROPIO_LOG, FIRMA_DIGITAL_LOG, NUMERO_FAC_LOG, ' +
+      '  SERIE_FAC_LOG) VALUES ' +
+      ' (:INSTANTE, :TIPO, :USUARIO, :VERSION, :DESCRIPCION, ' +
+      '  NULLIF(:DATOS, ''''), :HASHANT, :HASHPROPIO, :FIRMA, ' +
+      '  NULLIF(:NUMERO, ''''), NULLIF(:SERIE, ''''))';
 end;
 
-function ConstruirXmlEventoSif(const ADatos: TDatosEmpresaEvento;
-                               const AAnterior: TEventoAnterior;
-                               ATipoEvento: Integer;
-                               const AFechaHoraHuso, ADescripcion,
-                               ADatosAdicionales: string;
-                               out AHuella: string): string;
-var
-  sTipoAeat: string;
-  sOtros:    string;
-  sBaseHash: string;
+procedure TRepositorioRegistroEventosUniDAC.AsignarParametrosGuardar(
+  AQry: TUniQuery;
+  const ARegistro: TRegistroEventoVerifactu);
 begin
-  sTipoAeat := TipoEventoAeat(ATipoEvento);
-  sOtros := TextoEventoSif(ADescripcion + ' ' + ADatosAdicionales);
-  sBaseHash := 'TipoEvento=' + sTipoAeat +
-               '&FechaHoraHusoGenEvento=' + AFechaHoraHuso +
-               '&OtrosDatosEvento=' + sOtros +
-               '&HuellaEventoAnterior=' + AAnterior.Huella;
-  AHuella := UpperCase(THashSHA2.GetHashString(sBaseHash));
-  Result :=
-    '<?xml version="1.0" encoding="UTF-8"?>' +
-    '<sf:RegistroEvento xmlns:sf="' + cNsEventosSif +
-    '" xmlns:ds="' + cNsDsig + '">' +
-    '<sf:IDVersion>1.0</sf:IDVersion>' +
-    '<sf:Evento>' +
-    ConstruirSistemaInformaticoEvento(ADatos) +
-    ConstruirObligadoEvento(ADatos) +
-    '<sf:FechaHoraHusoGenEvento>' + AFechaHoraHuso +
-    '</sf:FechaHoraHusoGenEvento>' +
-    '<sf:TipoEvento>' + sTipoAeat + '</sf:TipoEvento>';
-  if sOtros <> '' then
-    Result := Result + '<sf:OtrosDatosEvento>' +
-              EscaparXmlSif(sOtros) + '</sf:OtrosDatosEvento>';
-  Result := Result + ConstruirEncadenamientoEvento(AAnterior) +
-    '<sf:TipoHuella>01</sf:TipoHuella>' +
-    '<sf:HuellaEvento>' + AHuella + '</sf:HuellaEvento>' +
-    '</sf:Evento></sf:RegistroEvento>';
+  AQry.ParamByName('INSTANTE').AsString := ARegistro.Instante;
+  AQry.ParamByName('TIPO').AsInteger := ARegistro.TipoEvento;
+  AQry.ParamByName('USUARIO').AsString := ARegistro.Usuario;
+  AQry.ParamByName('VERSION').AsString := ARegistro.Version;
+  AQry.ParamByName('DESCRIPCION').AsString := ARegistro.Descripcion;
+  AQry.ParamByName('DATOS').AsString := ARegistro.DatosAdicionales;
+  AQry.ParamByName('HASHANT').AsString := ARegistro.HashAnterior;
+  AQry.ParamByName('HASHPROPIO').AsString := ARegistro.HashPropio;
+  AQry.ParamByName('FIRMA').AsString := ARegistro.FirmaDigital;
+  AQry.ParamByName('NUMERO').AsString := ARegistro.NumeroFactura;
+  AQry.ParamByName('SERIE').AsString := ARegistro.SerieFactura;
+  if ARegistro.TieneColumnasFirma then
+  begin
+    AQry.ParamByName('XML').AsString := ARegistro.Xml;
+    AQry.ParamByName('FIRMAXADES').AsString := ARegistro.FirmaXades;
+    AQry.ParamByName('SERIECERT').AsString :=
+      ARegistro.SerieCertificado;
+    AQry.ParamByName('TITULARCERT').AsString :=
+      ARegistro.TitularCertificado;
+    AQry.ParamByName('HUELLACERT').AsString :=
+      ARegistro.HuellaCertificado;
+  end;
 end;
 
-function FirmarXmlEventoSif(const AXml, AHuella, ASerial,
-                            ATitular: string;
-                            out ADatosCert: TXadesDatosCertificado;
-                            out AFirmaXades: string): string;
+procedure TRepositorioRegistroEventosUniDAC.Guardar(
+  const ARegistro: TRegistroEventoVerifactu);
 var
+  Qry: TUniQuery;
+begin
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := FConexion;
+    PrepararSqlGuardar(Qry, ARegistro.TieneColumnasFirma);
+    AsignarParametrosGuardar(Qry, ARegistro);
+    Qry.Execute;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
+constructor TValidadorRelojRegistroEventos.Create(
+  const AParametrosApp: IParametrosAplicacion);
+begin
+  inherited Create;
+  FParametrosApp := AParametrosApp;
+end;
+
+procedure TValidadorRelojRegistroEventos.ExigirRelojFiscal;
+begin
+  inLibRelojFiscal.ExigirRelojFiscal(
+    FParametrosApp, 'Evento NO VERI*FACTU');
+end;
+
+function TFirmadorRegistroEventos.Firmar(
+  const AXml, AHuella, ASerieCertificado,
+  ATitularCertificado: string): TFirmaRegistroEventoVerifactu;
+var
+  oDatosCertificado: TXadesDatosCertificado;
   oOpciones: TXadesOpciones;
 begin
   oOpciones := OpcionesXadesNoVerifactu('FZ-EVENTO-' + AHuella);
   oOpciones.NombreNodoInsercionFirma := 'sf:Evento';
   oOpciones.FirmaSilenciosa := False;
-  Result := FirmarXmlXadesEnveloped(AXml, ASerial, ATitular, oOpciones,
-                                    ADatosCert);
-  AFirmaXades := ExtraerEtiquetaXml(Result, 'ds:SignatureValue');
+  Result.XmlFirmado := FirmarXmlXadesEnveloped(
+    AXml, ASerieCertificado, ATitularCertificado, oOpciones,
+    oDatosCertificado);
+  Result.FirmaXades := ExtraerEtiquetaXml(
+    Result.XmlFirmado, 'ds:SignatureValue');
+  Result.FirmaDigital := UpperCase(
+    THashSHA2.GetHashString(Result.FirmaXades));
+  Result.SerieCertificado := oDatosCertificado.NumeroSerie;
+  Result.TitularCertificado := oDatosCertificado.Titular;
+  Result.HuellaCertificado := oDatosCertificado.HuellaSha1;
 end;
 
 // True si el dataset tiene los campos de cabecera de factura que
@@ -1213,160 +1186,32 @@ procedure RegistrarEventoVerifactu(
                                    const ASerieFac: string;
                                    const ANumeroFac: string);
 var
-  Qry: TUniQuery;
-  DatosEmpresa:  TDatosEmpresaEvento;
-  oAnterior:     TEventoAnterior;
-  oDatosCert:    TXadesDatosCertificado;
-  sHashAnterior: string;
-  sHashPropio:   string;
-  sFirma:        string;
-  sFirmaXades:   string;
-  sInstante:     string;
-  sFechaHuso:    string;
-  sXml:          string;
-  sXmlFirmado:   string;
-  sDatosLog:     string;
-  sErrorFirma:   string;
-  sErrorReloj:   string;
-  bColumnasFirma: Boolean;
-  bFirmarCertificado: Boolean;
+  oFirmador: IFirmadorRegistroEventosVerifactu;
+  oRegistro: IRegistroEventosVerifactu;
+  oRepositorio: IRepositorioRegistroEventosVerifactu;
+  oValidadorReloj: IValidadorRelojRegistroEventosVerifactu;
+  oSolicitud: TSolicitudRegistroEventoVerifactu;
 begin
-  Qry := TUniQuery.Create(nil);
-  try
-    Qry.Connection := AConn;
-    bColumnasFirma := ColumnasFirmaEventosDisponibles(AConn);
-    bFirmarCertificado := VerifactuFirmaCertificado(AParametrosApp);
-    sDatosLog := ADatosAdicionales;
-    sErrorFirma := '';
-    sErrorReloj := '';
-    if NoVerifactuActivo(AParametrosApp) and
-       (ATipoEvento <> cEventoNoVerifactuIncidenciaReloj) then
-    begin
-      try
-        ExigirRelojFiscal(AParametrosApp, 'Evento NO VERI*FACTU');
-      except
-        on E: Exception do
-        begin
-          sErrorReloj := E.Message;
-          sDatosLog := AnadirIncidenciaReloj(sDatosLog, sErrorReloj);
-        end;
-      end;
-    end;
-    if NoVerifactuActivo(AParametrosApp) and
-       (not bFirmarCertificado) then
-      sErrorFirma := 'El modo NO VERI*FACTU exige firma electrónica ' +
-        'con certificado oficial. Active appVerifactuFirmaCertificado.';
-    if bFirmarCertificado and (not bColumnasFirma) then
-    begin
-      sErrorFirma := 'Faltan columnas de firma en fza_verifactu_eventos. ' +
-        'Aplique el script DESARROLLOS EN CURSO\' +
-        'verifactu_registros_firmados.sql.';
-      bFirmarCertificado := False;
-    end;
-    if sErrorFirma <> '' then
-      sDatosLog := AnadirIncidenciaCertificado(sDatosLog, sErrorFirma);
-    CargarEventoAnterior(AConn, oAnterior);
-    if oAnterior.EsPrimero then
-      sHashAnterior := StringOfChar('0', 64)
-    else
-      sHashAnterior := oAnterior.Huella;
-    sInstante := FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now);
-    sFechaHuso := FechaHoraHusoSif(Now);
-    CargarEmpresaEvento(AParametrosApp, AConn, DatosEmpresa);
-    sXml := ConstruirXmlEventoSif(DatosEmpresa, oAnterior, ATipoEvento,
-                                  sFechaHuso, ADescripcion,
-                                  sDatosLog, sHashPropio);
-    sXmlFirmado := sXml;
-    sFirmaXades := '';
-    sFirma := sHashPropio;
-    VaciarDatosCertificado(oDatosCert);
-    if bFirmarCertificado then
-    begin
-      try
-        if (Trim(DatosEmpresa.SerialCert) = '') or
-           (Trim(DatosEmpresa.TitularCert) = '') then
-          raise Exception.Create(
-            SErrorCertificadoEventosNoVerifactuNoConfigurado);
-        sXmlFirmado := FirmarXmlEventoSif(sXml, sHashPropio,
-                                          DatosEmpresa.SerialCert,
-                                          DatosEmpresa.TitularCert,
-                                          oDatosCert,
-                                          sFirmaXades);
-        sFirma := UpperCase(THashSHA2.GetHashString(sFirmaXades));
-      except
-        on E: Exception do
-        begin
-          sErrorFirma := E.Message;
-          sDatosLog := AnadirIncidenciaCertificado(ADatosAdicionales,
-                                                   sErrorFirma);
-          sXml := ConstruirXmlEventoSif(DatosEmpresa, oAnterior,
-                                        ATipoEvento,
-                                        sFechaHuso, ADescripcion,
-                                        sDatosLog, sHashPropio);
-          sXmlFirmado := sXml;
-          sFirmaXades := '';
-          sFirma := sHashPropio;
-          VaciarDatosCertificado(oDatosCert);
-        end;
-      end;
-    end;
-    if bColumnasFirma then
-      Qry.SQL.Text :=
-        ' INSERT INTO fza_verifactu_eventos ' +
-        ' (TIMESTAMP_LOG, TIPO_EVENTO_LOG, USUARIO_LOG, VERSION_LOG, ' +
-        '  DESCRIPCION_LOG, DATOS_ADICIONALES_LOG, HASH_ANTERIOR_LOG, ' +
-        '  HASH_PROPIO_LOG, FIRMA_DIGITAL_LOG, NUMERO_FAC_LOG, ' +
-        '  SERIE_FAC_LOG, REGISTRO_XML_LOG, FIRMA_XADES_LOG, ' +
-        '  SERIE_CERTIFICADO_LOG, TITULAR_CERTIFICADO_LOG, ' +
-        '  HUELLA_CERTIFICADO_LOG) ' +
-        ' VALUES ' +
-        ' (:INSTANTE, :TIPO, :USUARIO, :VERSION, :DESCRIPCION, ' +
-        '  NULLIF(:DATOS, ''''), :HASHANT, :HASHPROPIO, :FIRMA, ' +
-        '  NULLIF(:NUMERO, ''''), NULLIF(:SERIE, ''''), :XML, ' +
-        '  NULLIF(:FIRMAXADES, ''''), NULLIF(:SERIECERT, ''''), ' +
-        '  NULLIF(:TITULARCERT, ''''), NULLIF(:HUELLACERT, ''''))'
-    else
-      Qry.SQL.Text :=
-        ' INSERT INTO fza_verifactu_eventos ' +
-        ' (TIMESTAMP_LOG, TIPO_EVENTO_LOG, USUARIO_LOG, VERSION_LOG, ' +
-        '  DESCRIPCION_LOG, DATOS_ADICIONALES_LOG, HASH_ANTERIOR_LOG, ' +
-        '  HASH_PROPIO_LOG, FIRMA_DIGITAL_LOG, NUMERO_FAC_LOG, ' +
-        '  SERIE_FAC_LOG) ' +
-        ' VALUES ' +
-        ' (:INSTANTE, :TIPO, :USUARIO, :VERSION, :DESCRIPCION, ' +
-        '  NULLIF(:DATOS, ''''), :HASHANT, :HASHPROPIO, :FIRMA, ' +
-        '  NULLIF(:NUMERO, ''''), NULLIF(:SERIE, ''''))';
-    Qry.ParamByName('INSTANTE').AsString    := sInstante;
-    Qry.ParamByName('TIPO').AsInteger       := ATipoEvento;
-    Qry.ParamByName('USUARIO').AsString     := AUsuario;
-    Qry.ParamByName('VERSION').AsString     := oVersion;
-    Qry.ParamByName('DESCRIPCION').AsString := ADescripcion;
-    Qry.ParamByName('DATOS').AsString       := sDatosLog;
-    Qry.ParamByName('HASHANT').AsString     := sHashAnterior;
-    Qry.ParamByName('HASHPROPIO').AsString  := sHashPropio;
-    Qry.ParamByName('FIRMA').AsString       := sFirma;
-    Qry.ParamByName('NUMERO').AsString      := ANumeroFac;
-    Qry.ParamByName('SERIE').AsString       := ASerieFac;
-    if bColumnasFirma then
-    begin
-      Qry.ParamByName('XML').AsString := sXmlFirmado;
-      Qry.ParamByName('FIRMAXADES').AsString := sFirmaXades;
-      Qry.ParamByName('SERIECERT').AsString := oDatosCert.NumeroSerie;
-      Qry.ParamByName('TITULARCERT').AsString := oDatosCert.Titular;
-      Qry.ParamByName('HUELLACERT').AsString := oDatosCert.HuellaSha1;
-    end;
-    Qry.Execute;
-    if NoVerifactuActivo(AParametrosApp) and
-       (sErrorFirma <> '') then
-      raise Exception.CreateFmt(SErrorFirmarEventoNoVerifactu,
-        [sErrorFirma]);
-    if NoVerifactuActivo(AParametrosApp) and
-       (sErrorReloj <> '') then
-      raise Exception.CreateFmt(SErrorRelojEventoNoVerifactu,
-        [sErrorReloj]);
-  finally
-    FreeAndNil(Qry);
-  end;
+  oSolicitud.EsNoVerifactu := NoVerifactuActivo(AParametrosApp);
+  oSolicitud.FirmarCertificado :=
+    VerifactuFirmaCertificado(AParametrosApp);
+  oSolicitud.InstanteRegistro := Now;
+  oSolicitud.InstanteEvento := Now;
+  oSolicitud.Version := oVersion;
+  oSolicitud.Usuario := AUsuario;
+  oSolicitud.TipoEvento := ATipoEvento;
+  oSolicitud.Descripcion := ADescripcion;
+  oSolicitud.DatosAdicionales := ADatosAdicionales;
+  oSolicitud.SerieFactura := ASerieFac;
+  oSolicitud.NumeroFactura := ANumeroFac;
+  oRepositorio := TRepositorioRegistroEventosUniDAC.Create(
+    AParametrosApp, AConn);
+  oValidadorReloj := TValidadorRelojRegistroEventos.Create(
+    AParametrosApp);
+  oFirmador := TFirmadorRegistroEventos.Create;
+  oRegistro := CrearRegistroEventosVerifactu(
+    oRepositorio, oValidadorReloj, oFirmador);
+  oRegistro.Registrar(oSolicitud);
 end;
 
 end.

@@ -32,19 +32,109 @@ type
     procedure FabricaAusente_FallaDuranteLaCreacion;
     [Test]
     procedure FabricaRetirada_EliminaElCanalInyectado;
+    [Test]
+    procedure Call_SubclaseInyectadaResuelveAncestroRegistrado;
+    [Test]
+    procedure DataModule_SubclaseInyectadaResuelveAncestroRegistrado;
+    [Test]
+    procedure Jerarquia_PriorizaRegistroMasCercano;
   end;
 
 implementation
 
 uses
   System.SysUtils, System.Classes, Vcl.Forms,
-  inLibRegistroPantallas;
+  inLibAnfitrionMtoIntf, inLibRegistroPantallas;
+
+const
+  CALL_BASE_JERARQUIA = 'DocumentosTrabajo';
+  CALL_CERCANO_JERARQUIA = 'DocumentosTrabajoDecorado';
+  DATAMODULE_BASE_JERARQUIA =
+    'UniDataDocumentosTrabajo.TdmDocumentosTrabajo';
+  DATAMODULE_CERCANO_JERARQUIA =
+    'UniDataDocumentosTrabajoDecorado.TdmDocumentosTrabajoDecorado';
 
 type
   TPantallaRegistroPrueba = class(TForm);
   TPantallaInyectadaRegistroPrueba = class(TForm);
   TPantallaSinFabricaRegistroPrueba = class(TForm);
   TDataModuleRegistroPrueba = class(TDataModule);
+  TPantallaBaseJerarquiaPrueba = class(TForm);
+  TPantallaIntermediaJerarquiaPrueba = class(
+    TPantallaBaseJerarquiaPrueba);
+  TPantallaInyectadaJerarquiaPrueba = class(
+    TPantallaIntermediaJerarquiaPrueba);
+
+  TAnfitrionJerarquiaPrueba = class(
+    TInterfacedObject, IAnfitrionMantenimiento)
+  private
+    FUnidadBase: string;
+    FUnidadCercana: string;
+  public
+    constructor Create(AClaseBase, AClaseCercana: TClass);
+    function ResolverCallPantalla(
+      const AUnidadClase: string): string;
+    function ResolverDataModulePantalla(
+      const AUnidadClase: string): string;
+    procedure CancelarEdicionesPantallas;
+    procedure VincularFotoMantenimiento(AMantenimiento: TObject);
+    function CrearCopiaPreviaScriptSoporte: Boolean;
+  end;
+
+function NombreCualificadoClase(AClase: TClass): string;
+begin
+  Result := AClase.UnitName + '.' + AClase.ClassName;
+end;
+
+constructor TAnfitrionJerarquiaPrueba.Create(
+  AClaseBase, AClaseCercana: TClass);
+begin
+  inherited Create;
+  FUnidadBase := NombreCualificadoClase(AClaseBase);
+  if Assigned(AClaseCercana) then
+    FUnidadCercana := NombreCualificadoClase(AClaseCercana)
+  else
+    FUnidadCercana := '';
+end;
+
+function TAnfitrionJerarquiaPrueba.ResolverCallPantalla(
+  const AUnidadClase: string): string;
+begin
+  if (FUnidadCercana <> '') and
+     SameText(AUnidadClase, FUnidadCercana) then
+    Result := CALL_CERCANO_JERARQUIA
+  else if SameText(AUnidadClase, FUnidadBase) then
+    Result := CALL_BASE_JERARQUIA
+  else
+    Result := '';
+end;
+
+function TAnfitrionJerarquiaPrueba.ResolverDataModulePantalla(
+  const AUnidadClase: string): string;
+begin
+  if (FUnidadCercana <> '') and
+     SameText(AUnidadClase, FUnidadCercana) then
+    Result := DATAMODULE_CERCANO_JERARQUIA
+  else if SameText(AUnidadClase, FUnidadBase) then
+    Result := DATAMODULE_BASE_JERARQUIA
+  else
+    Result := '';
+end;
+
+procedure TAnfitrionJerarquiaPrueba.CancelarEdicionesPantallas;
+begin
+end;
+
+procedure TAnfitrionJerarquiaPrueba.VincularFotoMantenimiento(
+  AMantenimiento: TObject);
+begin
+end;
+
+function TAnfitrionJerarquiaPrueba.
+  CrearCopiaPreviaScriptSoporte: Boolean;
+begin
+  Result := False;
+end;
 
 procedure TPruebasRegistroPantallas.
   Pantalla_SeResuelvePorNombreCualificado;
@@ -131,6 +221,54 @@ begin
         nil);
     end,
     EFabricaPantallaNoRegistrada);
+end;
+
+procedure TPruebasRegistroPantallas.
+  Call_SubclaseInyectadaResuelveAncestroRegistrado;
+var
+  oAnfitrion: IAnfitrionMantenimiento;
+begin
+  oAnfitrion := TAnfitrionJerarquiaPrueba.Create(
+    TPantallaBaseJerarquiaPrueba, nil);
+  Assert.AreEqual(
+    CALL_BASE_JERARQUIA,
+    ResolverCallPantallaPorJerarquia(
+      oAnfitrion,
+      TPantallaInyectadaJerarquiaPrueba));
+end;
+
+procedure TPruebasRegistroPantallas.
+  DataModule_SubclaseInyectadaResuelveAncestroRegistrado;
+var
+  oAnfitrion: IAnfitrionMantenimiento;
+begin
+  oAnfitrion := TAnfitrionJerarquiaPrueba.Create(
+    TPantallaBaseJerarquiaPrueba, nil);
+  Assert.AreEqual(
+    DATAMODULE_BASE_JERARQUIA,
+    ResolverDataModulePantallaPorJerarquia(
+      oAnfitrion,
+      TPantallaInyectadaJerarquiaPrueba));
+end;
+
+procedure TPruebasRegistroPantallas.
+  Jerarquia_PriorizaRegistroMasCercano;
+var
+  oAnfitrion: IAnfitrionMantenimiento;
+begin
+  oAnfitrion := TAnfitrionJerarquiaPrueba.Create(
+    TPantallaBaseJerarquiaPrueba,
+    TPantallaIntermediaJerarquiaPrueba);
+  Assert.AreEqual(
+    CALL_CERCANO_JERARQUIA,
+    ResolverCallPantallaPorJerarquia(
+      oAnfitrion,
+      TPantallaInyectadaJerarquiaPrueba));
+  Assert.AreEqual(
+    DATAMODULE_CERCANO_JERARQUIA,
+    ResolverDataModulePantallaPorJerarquia(
+      oAnfitrion,
+      TPantallaInyectadaJerarquiaPrueba));
 end;
 
 initialization

@@ -37,7 +37,8 @@ uses
   inLibColumnasSkuIntf, inLibGridTallasInline,
   inLibDocumento, inLibDocumentoIntf,
   inLibEntradaAlbaranVentaPersistenciaIntf,
-  inLibVentasPantallaIntf;
+  inLibVentasPantallaIntf,
+  inLibAlbaranesVentaPresentacionArticulo;
 
 type
   TfrmMtoAlbaranes = class(TfrmMtoDocumento)
@@ -241,6 +242,28 @@ type
     function BuscarSkuAlbaran(const ACodigoArt: string): string;
     function ArticuloLineaActivaAlbaran: string;
     procedure AplicarArticuloAlbaran(const ACodigoArt: string);
+    function ResolverAplicacionArticuloAlbaran(
+      const ACodigoArt: string): TResultadoArticuloAlbaranVenta;
+    procedure AsignarStringLinea(
+      ADataSet: TDataSet;
+      const ACampo, AValor: string);
+    procedure AsignarNumeroLinea(
+      ADataSet: TDataSet;
+      const ACampo: string;
+      AValor: Double);
+    procedure LimpiarCampoLinea(
+      ADataSet: TDataSet;
+      const ACampo: string);
+    procedure AplicarDatosArticuloLinea(
+      ADataSet: TDataSet;
+      const AResultado: TResultadoArticuloAlbaranVenta);
+    procedure AplicarPrecioArticuloLinea(
+      ADataSet: TDataSet;
+      const AResultado: TResultadoArticuloAlbaranVenta);
+    procedure CompletarAplicacionArticuloLinea(
+      ADataSet: TDataSet;
+      const AResultado: TResultadoArticuloAlbaranVenta);
+    procedure EnfocarSkuArticuloAlbaran(AAbrirBusqueda: Boolean);
     procedure AsegurarCabeceraPersistidaParaLineas;
     procedure AsegurarPrimeraLineaAlbaran;
     procedure cxgrdcArtAlbSkuPropertiesButtonClick(Sender: TObject;
@@ -414,158 +437,184 @@ begin
   end;
 end;
 
-procedure TfrmMtoAlbaranes.AplicarArticuloAlbaran(const ACodigoArt: string);
+function TfrmMtoAlbaranes.ResolverAplicacionArticuloAlbaran(
+  const ACodigoArt: string): TResultadoArticuloAlbaranVenta;
 var
-  ds         : TDataSet;
-  Validador  : IArticulosValidador;
-  Resolver   : IArticulosResolver;
-  Resolucion : TArtResolucionEntrada;
-  Datos      : TArticuloDatos;
-  Precio     : TArticuloPrecio;
-  sInput     : string;
-  sTarifa    : string;
-  dFecha     : TDateTime;
-
-  procedure PonerString(const ACampo, AValor: string);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.AsString := AValor;
-  end;
-
-  procedure PonerFloat(const ACampo: string; AValor: Double);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.AsFloat := AValor;
-  end;
-
-  procedure LimpiarCampo(const ACampo: string);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.Clear;
-  end;
-
-  procedure EnfocarSku(AAbrirBusqueda: Boolean);
-  var
-    ColSku: TcxGridDBColumn;
-  begin
-    ColSku := tvLineasAlbaran.GetColumnByFieldName('CODIGO_UNIDAD_ALBLIN');
-    if ColSku <> nil then
-    begin
-      ColSku.Visible := True;
-      TThread.ForceQueue(nil,
-        procedure
-        begin
-          tvLineasAlbaran.Controller.FocusedColumn := ColSku;
-          tvLineasAlbaran.Controller.EditingController.ShowEdit;
-          if AAbrirBusqueda then
-            cxgrdcArtAlbSkuPropertiesButtonClick(nil, 0);
-        end);
-    end;
-  end;
-
+  Entrada: TEntradaArticuloAlbaranVenta;
 begin
-  sInput := Trim(ACodigoArt);
-  if (sInput <> '') and Assigned(dmmAlbaranes) and
+  Entrada := Default(TEntradaArticuloAlbaranVenta);
+  Entrada.CodigoEntrada := Trim(ACodigoArt);
+  Entrada.CodigoTarifa := dmmAlbaranes.unqryTablaG.FieldByName(
+    'TARIFA_ARTICULO_CLIENTE_ALB').AsString;
+  Entrada.Fecha := Date;
+  if not dmmAlbaranes.unqryTablaG.FieldByName('FECHA_ALB').IsNull then
+    Entrada.Fecha :=
+      dmmAlbaranes.unqryTablaG.FieldByName('FECHA_ALB').AsDateTime;
+  Result := ResolverArticuloAlbaranVenta(
+    FContextoVentas.ValidadorArticulos,
+    FContextoVentas.ResolverArticulos,
+    Entrada);
+end;
+
+procedure TfrmMtoAlbaranes.AsignarStringLinea(
+  ADataSet: TDataSet;
+  const ACampo, AValor: string);
+var
+  Campo: TField;
+begin
+  Campo := ADataSet.FindField(ACampo);
+  if Campo <> nil then
+    Campo.AsString := AValor;
+end;
+
+procedure TfrmMtoAlbaranes.AsignarNumeroLinea(
+  ADataSet: TDataSet;
+  const ACampo: string;
+  AValor: Double);
+var
+  Campo: TField;
+begin
+  Campo := ADataSet.FindField(ACampo);
+  if Campo <> nil then
+    Campo.AsFloat := AValor;
+end;
+
+procedure TfrmMtoAlbaranes.LimpiarCampoLinea(
+  ADataSet: TDataSet;
+  const ACampo: string);
+var
+  Campo: TField;
+begin
+  Campo := ADataSet.FindField(ACampo);
+  if Campo <> nil then
+    Campo.Clear;
+end;
+
+procedure TfrmMtoAlbaranes.AplicarDatosArticuloLinea(
+  ADataSet: TDataSet;
+  const AResultado: TResultadoArticuloAlbaranVenta);
+begin
+  AsignarStringLinea(
+    ADataSet, 'CODIGO_ART_ALBLIN', AResultado.Datos.CodigoArticulo);
+  AsignarStringLinea(
+    ADataSet, 'CODIGO_UNIDAD_ALBLIN', AResultado.Datos.CodigoSku);
+  AsignarStringLinea(ADataSet, 'DESCRIPCION_VARIACION_ALBLIN',
+    AResultado.Datos.DescripcionSku);
+  if not AResultado.Datos.EsVariacion then
+    LimpiarCampoLinea(ADataSet, 'DESCRIPCION_VARIACION_ALBLIN');
+  if not AResultado.Datos.EsTrazable then
+  begin
+    LimpiarCampoLinea(ADataSet, 'LOTE_ALBLIN');
+    LimpiarCampoLinea(ADataSet, 'FECHA_CADUCIDAD_ALBLIN');
+  end;
+  AsignarStringLinea(
+    ADataSet, 'CODIGO_FAM_ALBLIN', AResultado.Datos.CodigoFamilia);
+  AsignarStringLinea(ADataSet, 'NOMBRE_FAM_ALBLIN',
+    AResultado.Datos.DescripcionFamilia);
+  AsignarStringLinea(ADataSet, 'DESCRIPCION_ARTICULO_ALBLIN',
+    AResultado.Datos.DescripcionArticulo);
+  AsignarStringLinea(ADataSet, 'TIPO_CANTIDAD_ARTICULO_ALBLIN',
+    AResultado.Datos.TipoCantidad);
+  AsignarStringLinea(
+    ADataSet, 'TIPO_IVA_ARTICULO_ALBLIN', AResultado.Datos.TipoIVA);
+  AsignarStringLinea(ADataSet, 'CODIGO_TAR_ALBLIN',
+    AResultado.CodigoTarifa);
+end;
+
+procedure TfrmMtoAlbaranes.AplicarPrecioArticuloLinea(
+  ADataSet: TDataSet;
+  const AResultado: TResultadoArticuloAlbaranVenta);
+begin
+  if AResultado.Precio.EsImpIncl then
+    AsignarStringLinea(ADataSet, 'ESIMP_INCL_TARIFA_ALBLIN', 'S')
+  else
+    AsignarStringLinea(ADataSet, 'ESIMP_INCL_TARIFA_ALBLIN', 'N');
+  if AResultado.Datos.RequiereSku then
+  begin
+    AsignarNumeroLinea(
+      ADataSet, 'PRECIO_VENTA_SIVA_ARTICULO_ALBLIN', 0);
+    AsignarNumeroLinea(
+      ADataSet, 'PRECIO_VENTA_CIVA_ARTICULO_ALBLIN', 0);
+  end
+  else if AResultado.Precio.EsImpIncl then
+  begin
+    AsignarNumeroLinea(ADataSet, 'PRECIO_VENTA_CIVA_ARTICULO_ALBLIN',
+      AResultado.Precio.PrecioFinal);
+    AsignarNumeroLinea(
+      ADataSet, 'PRECIO_VENTA_SIVA_ARTICULO_ALBLIN', 0);
+  end
+  else
+  begin
+    AsignarNumeroLinea(ADataSet, 'PRECIO_VENTA_SIVA_ARTICULO_ALBLIN',
+      AResultado.Precio.PrecioFinal);
+    AsignarNumeroLinea(
+      ADataSet, 'PRECIO_VENTA_CIVA_ARTICULO_ALBLIN', 0);
+  end;
+end;
+
+procedure TfrmMtoAlbaranes.EnfocarSkuArticuloAlbaran(
+  AAbrirBusqueda: Boolean);
+var
+  ColumnaSku: TcxGridDBColumn;
+begin
+  ColumnaSku := tvLineasAlbaran.GetColumnByFieldName(
+    'CODIGO_UNIDAD_ALBLIN');
+  if ColumnaSku <> nil then
+  begin
+    ColumnaSku.Visible := True;
+    TThread.ForceQueue(nil,
+      procedure
+      begin
+        tvLineasAlbaran.Controller.FocusedColumn := ColumnaSku;
+        tvLineasAlbaran.Controller.EditingController.ShowEdit;
+        if AAbrirBusqueda then
+          cxgrdcArtAlbSkuPropertiesButtonClick(nil, 0);
+      end);
+  end;
+end;
+
+procedure TfrmMtoAlbaranes.CompletarAplicacionArticuloLinea(
+  ADataSet: TDataSet;
+  const AResultado: TResultadoArticuloAlbaranVenta);
+begin
+  AplicarDatosArticuloLinea(ADataSet, AResultado);
+  AplicarPrecioArticuloLinea(ADataSet, AResultado);
+  PrepararLineaFiscalVenta(
+    CrearLecturasImpuestos(dmmAlbaranes.unqryTablaG.Connection),
+    dmmAlbaranes.unqryTablaG,
+    ADataSet,
+    'ALB',
+    'ALBLIN',
+    'TOTAL_ALBLIN');
+  ActualizarColumnasOpcionalesLinea;
+  if AResultado.Datos.RequiereSku then
+    EnfocarSkuArticuloAlbaran(True);
+end;
+
+procedure TfrmMtoAlbaranes.AplicarArticuloAlbaran(
+  const ACodigoArt: string);
+var
+  DataSetLineas: TDataSet;
+  Resultado: TResultadoArticuloAlbaranVenta;
+begin
+  if (Trim(ACodigoArt) <> '') and Assigned(dmmAlbaranes) and
      (not FAplicandoArticulo) then
   begin
-    ds := dmmAlbaranes.unqryAlbaranesLineas;
-    if Assigned(ds) and ds.Active then
+    DataSetLineas := dmmAlbaranes.unqryAlbaranesLineas;
+    if Assigned(DataSetLineas) and DataSetLineas.Active then
     begin
       FAplicandoArticulo := True;
-      Validador := nil;
-      Resolver := nil;
       try
-        if ds.IsEmpty then
-          ds.Append;
-        if not (ds.State in dsEditModes) then
-          ds.Edit;
-        sTarifa := dmmAlbaranes.unqryTablaG.
-                     FieldByName('TARIFA_ARTICULO_CLIENTE_ALB').AsString;
-        dFecha := Date;
-        if not dmmAlbaranes.unqryTablaG.FieldByName('FECHA_ALB').IsNull then
-          dFecha := dmmAlbaranes.unqryTablaG.
-                      FieldByName('FECHA_ALB').AsDateTime;
-        Validador := FContextoVentas.ValidadorArticulos;
-        Resolver := FContextoVentas.ResolverArticulos;
-        Resolucion := Validador.Resolver(sInput);
-        if Resolucion.Encontrado then
-        begin
-          Datos := Resolver.ResolverDatos(Resolucion.CodigoArticulo,
-                                          Resolucion.CodigoSku,
-                                          sTarifa,
-                                          dFecha);
-          if Datos.Encontrado then
-          begin
-            if Datos.RequiereSku then
-              Precio := Resolver.ResolverPrecio(Datos.CodigoArticulo, '',
-                                                sTarifa, dFecha)
-            else
-              Precio := Datos.PrecioPedido;
-            PonerString('CODIGO_ART_ALBLIN', Datos.CodigoArticulo);
-            PonerString('CODIGO_UNIDAD_ALBLIN', Datos.CodigoSku);
-            PonerString('DESCRIPCION_VARIACION_ALBLIN',
-                        Datos.DescripcionSku);
-            if not Datos.EsVariacion then
-              LimpiarCampo('DESCRIPCION_VARIACION_ALBLIN');
-            if not Datos.EsTrazable then
-            begin
-              LimpiarCampo('LOTE_ALBLIN');
-              LimpiarCampo('FECHA_CADUCIDAD_ALBLIN');
-            end;
-            PonerString('CODIGO_FAM_ALBLIN', Datos.CodigoFamilia);
-            PonerString('NOMBRE_FAM_ALBLIN', Datos.DescripcionFamilia);
-            PonerString('DESCRIPCION_ARTICULO_ALBLIN',
-                        Datos.DescripcionArticulo);
-            PonerString('TIPO_CANTIDAD_ARTICULO_ALBLIN',
-                        Datos.TipoCantidad);
-            PonerString('TIPO_IVA_ARTICULO_ALBLIN', Datos.TipoIVA);
-            PonerString('CODIGO_TAR_ALBLIN', sTarifa);
-            if Precio.EsImpIncl then
-              PonerString('ESIMP_INCL_TARIFA_ALBLIN', 'S')
-            else
-              PonerString('ESIMP_INCL_TARIFA_ALBLIN', 'N');
-            if Datos.RequiereSku then
-            begin
-              PonerFloat('PRECIO_VENTA_SIVA_ARTICULO_ALBLIN', 0);
-              PonerFloat('PRECIO_VENTA_CIVA_ARTICULO_ALBLIN', 0);
-            end
-            else if Precio.EsImpIncl then
-            begin
-              // La rutina fiscal toma este PVP bruto como precio maestro.
-              PonerFloat('PRECIO_VENTA_CIVA_ARTICULO_ALBLIN',
-                         Precio.PrecioFinal);
-              PonerFloat('PRECIO_VENTA_SIVA_ARTICULO_ALBLIN', 0);
-            end
-            else
-            begin
-              PonerFloat('PRECIO_VENTA_SIVA_ARTICULO_ALBLIN',
-                         Precio.PrecioFinal);
-              PonerFloat('PRECIO_VENTA_CIVA_ARTICULO_ALBLIN', 0);
-            end;
-            PrepararLineaFiscalVenta(CrearLecturasImpuestos(
-              dmmAlbaranes.unqryTablaG.Connection),
-              dmmAlbaranes.unqryTablaG, ds, 'ALB', 'ALBLIN', 'TOTAL_ALBLIN');
-            ActualizarColumnasOpcionalesLinea;
-            if Datos.RequiereSku then
-              EnfocarSku(True);
-          end
-          else if Datos.Mensaje <> '' then
-            MessageDlg(Datos.Mensaje, mtWarning, [mbOk], 0);
-        end
-        else if Resolucion.Mensaje <> '' then
-          MessageDlg(Resolucion.Mensaje, mtWarning, [mbOk], 0);
+        if DataSetLineas.IsEmpty then
+          DataSetLineas.Append;
+        if not (DataSetLineas.State in dsEditModes) then
+          DataSetLineas.Edit;
+        Resultado := ResolverAplicacionArticuloAlbaran(ACodigoArt);
+        if Resultado.Preparado then
+          CompletarAplicacionArticuloLinea(DataSetLineas, Resultado)
+        else if Resultado.Mensaje <> '' then
+          MessageDlg(Resultado.Mensaje, mtWarning, [mbOk], 0);
       finally
-        Resolver := nil;
-        Validador := nil;
         FAplicandoArticulo := False;
       end;
     end;

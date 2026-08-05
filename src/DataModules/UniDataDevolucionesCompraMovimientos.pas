@@ -45,8 +45,22 @@ uses
   System.SysUtils, Data.DB, DBAccess, inLibDocumento,
   inLibDocumentoIntf, UniDataValoresAutomaticosRepositorio,
   inLibMsgCompras, UniDataMovimientosAlmacenRecalculo,
-  UniDataDevolucionesCompraMovimientosSql;
+  UniDataDevolucionesCompraMovimientosSql,
+  inLibDevolucionesCompraMovimientos;
 type
+  TUnidadTrabajoMovimientosDevolucionCompraUniDAC = class(
+    TInterfacedObject,
+    IUnidadTrabajoMovimientosDevolucionCompra)
+  private
+    FConexion: TUniConnection;
+  public
+    constructor Create(AConexion: TUniConnection);
+    function EstaActiva: Boolean;
+    procedure Iniciar;
+    procedure Confirmar;
+    procedure Revertir;
+  end;
+
   TMovimientosDevolucionCompraUniDAC = class(
     TInterfacedObject,
     IMovimientosDevolucionCompra)
@@ -58,6 +72,9 @@ type
       const ASerieDevc, ANumDevc, AUsuario: string);
     procedure RevertirDesdeDevolucion(
       const ASerieDevc, ANumDevc, AUsuario: string);
+    procedure SincronizarDesdeDevolucion(
+      const ASerieDevc, ANumDevc, AUsuario: string;
+      AGenerar: Boolean);
   end;
 function EstrategiaDevolucionCompra: IEstrategiaDocumento;
 begin
@@ -289,9 +306,50 @@ begin
   RevertirMovimientosDesdeDevolucionCompra(
     FConexion, ASerieDevc, ANumDevc, AUsuario);
 end;
+procedure TMovimientosDevolucionCompraUniDAC.SincronizarDesdeDevolucion(
+  const ASerieDevc, ANumDevc, AUsuario: string;
+  AGenerar: Boolean);
+begin
+  RevertirMovimientosDesdeDevolucionCompra(
+    FConexion, ASerieDevc, ANumDevc, AUsuario);
+  if AGenerar then
+    GenerarMovimientosDesdeDevolucionCompra(
+      FConexion, ASerieDevc, ANumDevc, AUsuario);
+end;
 function CrearMovimientosDevolucionCompraUniDAC(
   AConexion: TUniConnection): IMovimientosDevolucionCompra;
 begin
-  Result := TMovimientosDevolucionCompraUniDAC.Create(AConexion);
+  Result := ProtegerMovimientosDevolucionCompra(
+    TMovimientosDevolucionCompraUniDAC.Create(AConexion),
+    TUnidadTrabajoMovimientosDevolucionCompraUniDAC.Create(AConexion));
+end;
+
+constructor TUnidadTrabajoMovimientosDevolucionCompraUniDAC.Create(
+  AConexion: TUniConnection);
+begin
+  if not Assigned(AConexion) then
+    raise EArgumentNilException.Create('AConexion');
+  inherited Create;
+  FConexion := AConexion;
+end;
+
+function TUnidadTrabajoMovimientosDevolucionCompraUniDAC.EstaActiva: Boolean;
+begin
+  Result := FConexion.InTransaction;
+end;
+
+procedure TUnidadTrabajoMovimientosDevolucionCompraUniDAC.Iniciar;
+begin
+  FConexion.StartTransaction;
+end;
+
+procedure TUnidadTrabajoMovimientosDevolucionCompraUniDAC.Confirmar;
+begin
+  FConexion.Commit;
+end;
+
+procedure TUnidadTrabajoMovimientosDevolucionCompraUniDAC.Revertir;
+begin
+  FConexion.Rollback;
 end;
 end.

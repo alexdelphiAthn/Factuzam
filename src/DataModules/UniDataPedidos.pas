@@ -133,6 +133,9 @@ type
     procedure InstalarProcedimientoAlbaranFin(AEjecutor: TUniSQL);
     procedure InstalarProcedimientoAlbaranInicio(AEjecutor: TUniSQL);
     procedure InstalarProcedimientoAlbaranLinea(AEjecutor: TUniSQL);
+    procedure PrepararLineaAntesDeGuardar(DataSet: TDataSet);
+    procedure AplicarEstadoLineaAntesDeGuardar(DataSet: TDataSet);
+    procedure AplicarAuditoriaLineaAntesDeGuardar(DataSet: TDataSet);
     procedure AsignarNumeroLineaPedido(DataSet: TDataSet);
     procedure PersistirAlmacenCabecera;
     procedure ValidarAlmacenCabecera;
@@ -160,7 +163,9 @@ uses
   inLibData, UniDataAlmacenesEmpresaRepositorio,
   inLibMsgArticulos, inLibMsgVentas,
   inLibDocumento, inLibDocumentoIntf, inLibLogIntf,
-  UniDataPedidosPrestaShopEscrituras;
+  inLibPedidosVentaPresentacionReglas,
+  UniDataPedidosPrestaShopEscrituras,
+  UniDataPedidosVentaFlujoEdicion;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -310,69 +315,8 @@ begin
 end;
 
 procedure TdmPedidos.DesempaquetarAtributosLineas;
-var
-  Partes: TArray<string>;
-  Sku, sEsperado: string;
-  i: Integer;
-  Bm: TBookmark;
-  bCambia: Boolean;
 begin
-  if unqryPedidosLineas.Active and
-     (not unqryPedidosLineas.IsEmpty) then
-  begin
-    Bm := unqryPedidosLineas.GetBookmark;
-    unqryPedidosLineas.DisableControls;
-    try
-      unqryPedidosLineas.First;
-      while not unqryPedidosLineas.Eof do
-      begin
-        Sku := unqryPedidosLineas.FieldByName(
-          'CODIGO_UNIDAD_PEDLIN').AsString;
-        Partes := Sku.Split(['/']);
-        if Length(Partes) > 1 then
-        begin
-          // Idempotente POR COMPARACION: se edita solo si algun ATTR
-          // no coincide con el troceo del SKU. El criterio anterior
-          // (saltar si ATTR1 relleno) dejaba lineas a medias (color
-          // sin talla) sin resincronizar jamas.
-          bCambia := unqryPedidosLineas.FieldByName(
-            'NUM_ATRIBUTOS_PEDLIN').AsInteger <> Length(Partes) - 1;
-          for i := 1 to 5 do
-          begin
-            if i < Length(Partes) then
-              sEsperado := Partes[i]
-            else
-              sEsperado := '';
-            if Trim(unqryPedidosLineas.FieldByName('ATTR' + IntToStr(i) +
-                 '_VALOR_PEDLIN').AsString) <> sEsperado then
-              bCambia := True;
-          end;
-          if bCambia then
-          begin
-            unqryPedidosLineas.Edit;
-            unqryPedidosLineas.FieldByName(
-              'NUM_ATRIBUTOS_PEDLIN').AsInteger := Length(Partes) - 1;
-            for i := 1 to 5 do
-            begin
-              if i < Length(Partes) then
-                unqryPedidosLineas.FieldByName('ATTR' + IntToStr(i) +
-                  '_VALOR_PEDLIN').AsString := Partes[i]
-              else
-                unqryPedidosLineas.FieldByName('ATTR' + IntToStr(i) +
-                  '_VALOR_PEDLIN').AsString := '';
-            end;
-            unqryPedidosLineas.Post;
-          end;
-        end;
-        unqryPedidosLineas.Next;
-      end;
-      if unqryPedidosLineas.BookmarkValid(Bm) then
-        unqryPedidosLineas.GotoBookmark(Bm);
-    finally
-      unqryPedidosLineas.EnableControls;
-      unqryPedidosLineas.FreeBookmark(Bm);
-    end;
-  end;
+  DesempaquetarAtributosPedidoVenta(unqryPedidosLineas);
 end;
 
 procedure TdmPedidos.DataModuleDestroy(Sender: TObject);
@@ -564,68 +508,10 @@ begin
 end;
 
 procedure TdmPedidos.unqryPedidosLineasAfterInsert(DataSet: TDataSet);
-var
-  i: Integer;
-  function FieldByName(const ANombre: string): TField;
-  begin
-    Result := unqryPedidosLineas.FieldByName(ANombre);
-  end;
-  function FindField(const ANombre: string): TField;
-  begin
-    Result := unqryPedidosLineas.FindField(ANombre);
-  end;
 begin
   inherited;
-  FieldByName('LINEA_PEDLIN').AsString := '0000';
-    // Columnas del contrato ColumnSKUcxGrid: NOT NULL en BBDD con
-    // DEFAULT de servidor que UniDAC no conoce (llegan via vista).
-    // Sin inicializarlas aqui el Post lanza "must have a value".
-    if FindField('CODIGO_UNIDAD_PEDLIN') <> nil then
-      FieldByName('CODIGO_UNIDAD_PEDLIN').AsString := '';
-    if FindField('NUM_ATRIBUTOS_PEDLIN') <> nil then
-      FieldByName('NUM_ATRIBUTOS_PEDLIN').AsInteger := 0;
-    if FindField('ID_AC_PIVOT_PEDLIN') <> nil then
-      FieldByName('ID_AC_PIVOT_PEDLIN').AsInteger := 0;
-    for i := 1 to 5 do
-    begin
-      if FindField('ATTR' + IntToStr(i) + '_VALOR_PEDLIN') <> nil then
-        FieldByName('ATTR' + IntToStr(i) + '_VALOR_PEDLIN').AsString := '';
-      if FindField('ATTR' + IntToStr(i) + '_NOMBRE_PEDLIN') <> nil then
-        FieldByName('ATTR' + IntToStr(i) + '_NOMBRE_PEDLIN').AsString := '';
-    end;
-    FieldByName('NUMERO_PED_PEDLIN').AsString :=
-                                 unqryTablaG.FieldByName('NUMERO_PED').AsString;
-    FieldByName('SERIE_PED_PEDLIN').AsString :=
-                                  unqryTablaG.FieldByName('SERIE_PED').AsString;
-    FieldByName('CANTIDAD_PEDLIN').AsFloat := 1;
-    if FindField('CANTIDAD_ENTREGADA_PEDLIN') <> nil then
-      FieldByName('CANTIDAD_ENTREGADA_PEDLIN').AsFloat := 0;
-    if FindField('CANTIDAD_A_ALBARANAR_PEDLIN') <> nil then
-      FieldByName('CANTIDAD_A_ALBARANAR_PEDLIN').AsFloat := 0;
-    if FindField('CANTIDAD_PENDIENTE_PEDLIN') <> nil then
-      FieldByName('CANTIDAD_PENDIENTE_PEDLIN').AsFloat := 1;
-    if FindField('ESENTREGADA_PEDLIN') <> nil then
-      FieldByName('ESENTREGADA_PEDLIN').AsString := 'N';
-    if FindField('CODIGO_TAR_PEDLIN') <> nil then
-      FieldByName('CODIGO_TAR_PEDLIN').AsString :=
-        unqryTablaG.FieldByName(
-          'TARIFA_ARTICULO_CLIENTE_PED').AsString;
-    if FindField('ESIMP_INCL_TARIFA_PEDLIN') <> nil then
-      FieldByName('ESIMP_INCL_TARIFA_PEDLIN').AsString :=
-        unqryTablaG.FieldByName(
-          'ESIMP_INCL_TARIFA_CLIENTE_PED').AsString;
-    if (FindField('CODIGO_ALMACEN_PEDLIN') <> nil) and
-       (unqryTablaG.FindField('CODIGO_ALM_PED') <> nil) then
-      FieldByName('CODIGO_ALMACEN_PEDLIN').AsString :=
-        unqryTablaG.FieldByName('CODIGO_ALM_PED').AsString;
-    if FindField('USUARIO_ALTA') <> nil then
-      FieldByName('USUARIO_ALTA').AsString := IdentidadSesion.Usuario;
-    if FindField('INSTANTE_ALTA') <> nil then
-      FieldByName('INSTANTE_ALTA').AsDateTime := Now;
-    if FindField('USUARIO_MODIF') <> nil then
-      FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
-  if FindField('INSTANTE_MODIF') <> nil then
-    FieldByName('INSTANTE_MODIF').AsDateTime := Now;
+  InicializarLineaPedidoVenta(
+    DataSet, unqryTablaG, IdentidadSesion.Usuario, Now);
 end;
 
 var
@@ -690,18 +576,13 @@ begin
 end;
 
 procedure TdmPedidos.unqryPedidosLineasBeforePost(DataSet: TDataSet);
-var
-  fCantidad, fEntregada, fPendiente, fAAlbaranar: Double;
-  function FieldByName(const ANombre: string): TField;
-  begin
-    Result := unqryPedidosLineas.FieldByName(ANombre);
-  end;
-  function FindField(const ANombre: string): TField;
-  begin
-    Result := unqryPedidosLineas.FindField(ANombre);
-  end;
 begin
   inherited;
+  PrepararLineaAntesDeGuardar(DataSet);
+end;
+
+procedure TdmPedidos.PrepararLineaAntesDeGuardar(DataSet: TDataSet);
+begin
   // Guarda ColumnSKUcxGrid (bucle 07/07/2026): un Post de linea sin
   // articulo no debe llegar a BBDD. Antes de esta guarda, cada intento
   // consumia contador en GetSiguienteLineaDocLibre y el reintento del
@@ -715,48 +596,48 @@ begin
   NormalizarArticuloSkuEnDataSet(ConexionPrincipal, unqryPedidosLineas,
     'CODIGO_ART_PEDLIN', 'CODIGOPRODPS_PEDLIN', 'CODBAR_ART_PEDLIN');
   RecalcularEntregasLinea;
-  // El total de la línea siempre se mantiene coherente
-  fCantidad := FieldByName('CANTIDAD_PEDLIN').AsFloat;
-    if FindField('CANTIDAD_ENTREGADA_PEDLIN') <> nil then
-      fEntregada := FieldByName('CANTIDAD_ENTREGADA_PEDLIN').AsFloat
-    else
-      fEntregada := 0;
-    fPendiente := fCantidad - fEntregada;
-    if fPendiente < 0 then
-      fPendiente := 0;
-    if FindField('CANTIDAD_A_ALBARANAR_PEDLIN') <> nil then
-    begin
-      fAAlbaranar := FieldByName('CANTIDAD_A_ALBARANAR_PEDLIN').AsFloat;
-      if fAAlbaranar < 0 then
-        fAAlbaranar := 0;
-      if fAAlbaranar > fPendiente then
-        fAAlbaranar := fPendiente;
-      FieldByName('CANTIDAD_A_ALBARANAR_PEDLIN').AsFloat := fAAlbaranar;
-    end;
-    if FindField('CANTIDAD_PENDIENTE_PEDLIN') <> nil then
-      FieldByName('CANTIDAD_PENDIENTE_PEDLIN').AsFloat := fPendiente;
-    if FindField('ESENTREGADA_PEDLIN') <> nil then
-    begin
-      if fPendiente <= 0 then
-        FieldByName('ESENTREGADA_PEDLIN').AsString := 'S'
-      else
-        FieldByName('ESENTREGADA_PEDLIN').AsString := 'N';
-    end;
-    PrepararLineaFiscalVenta(CrearLecturasImpuestos(ConexionPrincipal),
-      unqryTablaG,
-      unqryPedidosLineas, 'PED', 'PEDLIN', 'TOTAL_PEDLIN');
-    if FindField('USUARIO_MODIF') <> nil then
-      FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
-    if FindField('INSTANTE_MODIF') <> nil then
-      FieldByName('INSTANTE_MODIF').AsDateTime := Now;
+  AplicarEstadoLineaAntesDeGuardar(DataSet);
+  PrepararLineaFiscalVenta(CrearLecturasImpuestos(ConexionPrincipal),
+    unqryTablaG,
+    unqryPedidosLineas, 'PED', 'PEDLIN', 'TOTAL_PEDLIN');
+  AplicarAuditoriaLineaAntesDeGuardar(DataSet);
+end;
+
+procedure TdmPedidos.AplicarEstadoLineaAntesDeGuardar(
+  DataSet: TDataSet);
+var
+  oEntrada: TEntradaEstadoLineaPedidoVenta;
+  oEstado: TEstadoLineaPedidoVenta;
+begin
+  oEntrada := Default(TEntradaEstadoLineaPedidoVenta);
+  oEntrada.Cantidad := DataSet.FieldByName('CANTIDAD_PEDLIN').AsFloat;
+  if DataSet.FindField('CANTIDAD_ENTREGADA_PEDLIN') <> nil then
+    oEntrada.CantidadEntregada := DataSet.FieldByName(
+      'CANTIDAD_ENTREGADA_PEDLIN').AsFloat;
+  if DataSet.FindField('CANTIDAD_A_ALBARANAR_PEDLIN') <> nil then
+    oEntrada.CantidadAAlbaranar := DataSet.FieldByName(
+      'CANTIDAD_A_ALBARANAR_PEDLIN').AsFloat;
+  oEstado := CalcularEstadoLineaPedidoVenta(oEntrada);
+  AplicarEstadoLineaPedidoVenta(DataSet, oEstado);
+end;
+
+procedure TdmPedidos.AplicarAuditoriaLineaAntesDeGuardar(
+  DataSet: TDataSet);
+begin
+  if DataSet.FindField('USUARIO_MODIF') <> nil then
+    DataSet.FieldByName('USUARIO_MODIF').AsString :=
+      IdentidadSesion.Usuario;
+  if DataSet.FindField('INSTANTE_MODIF') <> nil then
+    DataSet.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
   if DataSet.State = dsInsert then
   begin
-    if (FindField('USUARIO_ALTA') <> nil) and
-       (FieldByName('USUARIO_ALTA').AsString = '') then
-      FieldByName('USUARIO_ALTA').AsString := IdentidadSesion.Usuario;
-    if (FindField('INSTANTE_ALTA') <> nil) and
-       FieldByName('INSTANTE_ALTA').IsNull then
-      FieldByName('INSTANTE_ALTA').AsDateTime := Now;
+    if (DataSet.FindField('USUARIO_ALTA') <> nil) and
+       (DataSet.FieldByName('USUARIO_ALTA').AsString = '') then
+      DataSet.FieldByName('USUARIO_ALTA').AsString :=
+        IdentidadSesion.Usuario;
+    if (DataSet.FindField('INSTANTE_ALTA') <> nil) and
+       DataSet.FieldByName('INSTANTE_ALTA').IsNull then
+      DataSet.FieldByName('INSTANTE_ALTA').AsDateTime := Now;
   end;
 end;
 

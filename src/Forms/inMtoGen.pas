@@ -813,8 +813,8 @@ var
 begin
   sCall := '';
   if Assigned(FAnfitrionMto) then
-    sCall := FAnfitrionMto.ResolverCallPantalla(
-      Self.UnitName + '.' + Self.ClassName);
+    sCall := ResolverCallPantallaPorJerarquia(
+      FAnfitrionMto, Self.ClassType);
   if sCall = '' then
     Result := True
   else
@@ -989,8 +989,8 @@ begin
   sNameModule := '';
   // Los proyectos independientes no implementan el contrato anfitrión.
   if Assigned(FAnfitrionMto) then
-    sNameModule := FAnfitrionMto.ResolverDataModulePantalla(
-      Self.UnitName + '.' + Self.ClassName);
+    sNameModule := ResolverDataModulePantallaPorJerarquia(
+      FAnfitrionMto, Self.ClassType);
   if (sNameModule <> '') then
   begin
     swTramo := TStopwatch.StartNew;
@@ -1077,8 +1077,8 @@ begin
   // en fza_winforms (p.ej. cajas de busqueda) no tienen CALL: todo activo.
   sCall := '';
   if Assigned(FAnfitrionMto) then
-    sCall := FAnfitrionMto.ResolverCallPantalla(
-      Self.UnitName + '.' + Self.ClassName);
+    sCall := ResolverCallPantallaPorJerarquia(
+      FAnfitrionMto, Self.ClassType);
   if sCall <> '' then
   begin
     // Consultar/buscar: solo se quita el buscador global. NO se bloquea la

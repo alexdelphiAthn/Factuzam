@@ -29,7 +29,7 @@ interface
 uses
   inLibRegistroPantallas,
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls,
-  Forms, Dialogs, Uni, System.Generics.Collections, System.Types,
+  Forms, Dialogs, Uni, System.Types,
   inMtoDocumento, dxSkinsCore, dxSkinBlue, dxSkinsForm,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit,
@@ -54,6 +54,7 @@ uses
   inLibPermisosIntf,
   UniDataComprasPantallaComposicion,
   inLibPedidosCompraIntf,
+  inLibPedidosCompraPresentacionRecepcion,
   UniDataPedidosCompra, cxBlobEdit, System.Actions, Vcl.ActnList,
   dxShellDialogs, cxSplitter, inLibDocumento, inLibDocumentoIntf;
 
@@ -70,6 +71,11 @@ const
   ANCHO_TALLA_PX  = 50;
 
 type
+  IControladorRecepcionPedidoCompraVcl = interface
+    ['{FF9D62EF-CDAF-4DBE-A19D-28EE7865FEC6}']
+    procedure Ejecutar(AUsarCampoCantidades: Boolean);
+  end;
+
   TfrmMtoPedidosCompra = class(TfrmMtoDocumento)
     pnlTopFicha:         TPanel;
     splSplitterFicha:    TcxSplitter;
@@ -270,6 +276,8 @@ type
     FBusquedaEmpresas: IBusquedaEmpresasComprasPantalla;
     FBusquedaProveedores: IBusquedaProveedoresComprasPantalla;
     FBusquedasArticulos: IBusquedasCompraPersistencia;
+    FCantidadesRecepcion: ISeleccionCantidadesRecepcionPedidoCompra;
+    FControladorRecepcion: IControladorRecepcionPedidoCompraVcl;
   private
     FAfterPostLineasOriginal: TDataSetNotifyEvent;
     FEstiloRecepcionVencida : TcxStyle;
@@ -299,9 +307,6 @@ type
     procedure unqryLineasAfterPostHook(DataSet: TDataSet);
     procedure unqryLineasAfterOpenHook(DataSet: TDataSet);
     procedure PersistirPreferenciaPivote;
-    function  RecogerCeldasARecibirVertical(
-                                const ACodigoAlm: string):
-                                TArray<TCeldaARecibir>;
     // Hook unificado para OnEditValueChanged de columnas talla: en
     // pivote lo resuelve la libreria de compras; fuera de pivote
     // delega en el gestor de tallas como antes.
@@ -325,24 +330,7 @@ type
     procedure colLinPedcColorPivotButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     function  ColumnaPedidosCompraExiste(const ANombreColumna: string): Boolean;
-    // Devuelve el almacen efectivo de la primera linea del pedido
-    // (CODIGO_ALMACEN_PEDCLIN, con fallback al CODIGO_ALM_PEDC de
-    // cabecera). Usado como default del combo en el modal Crear
-    // albaran. Vacio si el pedido no tiene lineas.
-    function  AlmacenEfectivoPrimeraLinea(const ASerie,
-                                          ANumero: string): string;
-    // Devuelve el almacen efectivo de la primera linea en modo vertical
-    // cuyo "A recibir" sea > 0. Sin tecleos devuelve ''.
-    function  PrimerAlmacenARecibirVertical: string;
-    // Rellena la columna no-bound "A recibir" (modo vertical) de TODAS
-    // las lineas del pedido con su pendiente (Pedida - Recibida). Las
-    // lineas sin pendiente quedan a Null. Devuelve cuantas se rellenaron.
-    function  RellenarARecibirVerticalTodo: Integer;
-    function  TotalAAlbaranarVertical: Double;
-    function  TotalAAlbaranar: Double;
     procedure RefrescarCantidadAAlbaranar;
-    // Clamp de la columna "A recibir" en modo vertical: el maximo es el
-    // pendiente de la linea (CANTIDAD - CANTIDAD_RECIBIDA).
     procedure ARecibirVerticalEditValueChanged(Sender: TObject);
     procedure GridListaGetContentStyle(Sender: TcxCustomGridTableView;
                 ARecord: TcxCustomGridRecord;
@@ -385,15 +373,7 @@ type
                                   ACompleto: Boolean);
     procedure PivoteVentaCrearLineaSku(const ACodigoSku: string);
     procedure PivoteVentaBandaCambiada(ABanda: TBandaPivoteVenta);
-    // "A recibir" como CAMPO (CANTIDAD_A_RECIBIR_PEDCLIN): clamp al
-    // pendiente y recogida/limpieza por almacen para Crear albaran.
     procedure ARecibirCampoEditValueChanged(Sender: TObject);
-    function  RecogerCeldasARecibirCampo(
-                const ACodigoAlm: string): TArray<TCeldaARecibir>;
-    procedure LimpiarARecibirCampoAlmacen(const ACodigoAlm: string);
-    function  TotalARecibirCampo: Double;
-    function  PrimerAlmacenARecibirCampo: string;
-    function  RellenarARecibirCampoTodo: Integer;
   protected
     // F1 = ciclar el modo de entrada (KeyPreview de TfrmBase),
     // mismo atajo que pedidos/facturas de venta.
@@ -415,6 +395,7 @@ uses
   inLibFiltroUsuario,
   inLibAtributosPaleta,
   inLibPedidosCompra,
+  inLibPedidosCompraPresentacionCantidades,
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   UniDataAplicacionArticuloCompra,
   inLibGridCantidad,
@@ -444,6 +425,59 @@ type
       const AContexto: TContextoAutorizacionPantalla;
       const AComponer: TComponerPedidoCompraPantalla); reintroduce;
     procedure CrearTablaPrincipal; override;
+  end;
+  TConfigControladorRecepcionPedidoCompraVcl = record
+    Cabecera: TDataSet;
+    Lineas: TDataSet;
+    Albaranes: TDataSet;
+    PropietarioPantallas: TComponent;
+    Usuario: string;
+    Consultas: IConsultasPedidoCompraPantalla;
+    Recepcion: IRecepcionPedidoCompra;
+    Cantidades: ISeleccionCantidadesRecepcionPedidoCompra;
+  end;
+  TVisualizacionRecepcionPedidoCompraVcl = class(
+    TInterfacedObject, IVisualizacionRecepcionPedidoCompra)
+  private
+    FCabecera: TDataSet;
+    FLineas: TDataSet;
+    FAlbaranes: TDataSet;
+    FPropietarioPantallas: TComponent;
+    procedure RefrescarDatos;
+    procedure MostrarDocumentoCreado(
+      const AEntrada: TEntradaPresentacionRecepcionPedidoCompra;
+      const ASolicitud: TSolicitudPresentacionRecepcionPedidoCompra;
+      const AResultado: TResultadoRecepcionPedidoCompra);
+  public
+    constructor Create(
+      const AConfig: TConfigControladorRecepcionPedidoCompraVcl);
+    function Solicitar(
+      const AEntrada: TEntradaPresentacionRecepcionPedidoCompra;
+      out ASolicitud: TSolicitudPresentacionRecepcionPedidoCompra):
+      Boolean;
+    procedure MostrarAviso(const AMensaje: string);
+    procedure MostrarError(const AMensaje: string);
+    procedure PresentarRecepcion(
+      const AEntrada: TEntradaPresentacionRecepcionPedidoCompra;
+      const ASolicitud: TSolicitudPresentacionRecepcionPedidoCompra;
+      const AResultado: TResultadoRecepcionPedidoCompra);
+  end;
+  TControladorRecepcionPedidoCompraVcl = class(
+    TInterfacedObject, IControladorRecepcionPedidoCompraVcl)
+  private
+    FCabecera: TDataSet;
+    FLineas: TDataSet;
+    FUsuario: string;
+    FConsultas: IConsultasPedidoCompraPantalla;
+    FFlujo: TFlujoPresentacionRecepcionPedidoCompra;
+    function CrearEntrada(
+      AUsarCampoCantidades: Boolean):
+      TEntradaPresentacionRecepcionPedidoCompra;
+  public
+    constructor Create(
+      const AConfig: TConfigControladorRecepcionPedidoCompraVcl);
+    destructor Destroy; override;
+    procedure Ejecutar(AUsarCampoCantidades: Boolean);
   end;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -490,6 +524,180 @@ begin
   FBusquedaProveedores := oContexto.BusquedaProveedores;
   FBusquedasArticulos := oContexto.BusquedasArticulos;
   FComponer := nil;
+end;
+
+constructor TVisualizacionRecepcionPedidoCompraVcl.Create(
+  const AConfig: TConfigControladorRecepcionPedidoCompraVcl);
+begin
+  inherited Create;
+  FCabecera := AConfig.Cabecera;
+  FLineas := AConfig.Lineas;
+  FAlbaranes := AConfig.Albaranes;
+  FPropietarioPantallas := AConfig.PropietarioPantallas;
+end;
+
+function TVisualizacionRecepcionPedidoCompraVcl.Solicitar(
+  const AEntrada: TEntradaPresentacionRecepcionPedidoCompra;
+  out ASolicitud: TSolicitudPresentacionRecepcionPedidoCompra):
+  Boolean;
+var
+  Formulario: TfrmModalSelAlmacenPedido;
+begin
+  ASolicitud := Default(TSolicitudPresentacionRecepcionPedidoCompra);
+  Formulario := TfrmModalSelAlmacenPedido.Create(Application);
+  try
+    Formulario.SeriePedc := AEntrada.SeriePedido;
+    Formulario.NumPedc := AEntrada.NumeroPedido;
+    Formulario.CodigoEmpresa := AEntrada.CodigoEmpresa;
+    Formulario.SerieAlbDefecto := AEntrada.SeriePedido;
+    Formulario.RefProveedorDefecto := AEntrada.ReferenciaProveedor;
+    Formulario.IdPvTemporadaDefecto := AEntrada.IdPvTemporada;
+    Formulario.CodigoAlmacenDefecto := AEntrada.AlmacenSugerido;
+    Formulario.ShowModal;
+    Result := Formulario.Aceptado and
+      (Trim(Formulario.CodigoAlmacen) <> '');
+    if Result then
+    begin
+      ASolicitud.CodigoAlmacen := Formulario.CodigoAlmacen;
+      ASolicitud.SerieAlbaran := Formulario.SerieAlbaran;
+      ASolicitud.SerieAlbaranDestino :=
+        Formulario.AlbaranSerieDestino;
+      ASolicitud.NumeroAlbaranDestino :=
+        Formulario.AlbaranNumDestino;
+      ASolicitud.ReferenciaProveedor := Formulario.RefProveedor;
+      ASolicitud.FechaRecepcion := Formulario.FechaRecepcion;
+      ASolicitud.IdPvTemporada := Formulario.IdPvTemporada;
+      ASolicitud.Incorporar := Formulario.Incorporar;
+    end;
+  finally
+    FreeAndNil(Formulario);
+  end;
+end;
+
+procedure TVisualizacionRecepcionPedidoCompraVcl.MostrarAviso(
+  const AMensaje: string);
+begin
+  MessageDlg(AMensaje, mtWarning, [mbOk], 0);
+end;
+
+procedure TVisualizacionRecepcionPedidoCompraVcl.MostrarError(
+  const AMensaje: string);
+begin
+  MessageDlg(
+    Format(SErrorCrearAlbaranDesdePedidoCompra, [AMensaje]),
+    mtError, [mbOk], 0);
+end;
+
+procedure TVisualizacionRecepcionPedidoCompraVcl.RefrescarDatos;
+begin
+  FCabecera.Refresh;
+  FLineas.Refresh;
+  if FAlbaranes.Active then
+    FAlbaranes.Close;
+  FAlbaranes.Open;
+end;
+
+procedure TVisualizacionRecepcionPedidoCompraVcl.MostrarDocumentoCreado(
+  const AEntrada: TEntradaPresentacionRecepcionPedidoCompra;
+  const ASolicitud: TSolicitudPresentacionRecepcionPedidoCompra;
+  const AResultado: TResultadoRecepcionPedidoCompra);
+var
+  Formulario: TfrmModalDocsCreados;
+begin
+  Formulario := TfrmModalDocsCreados.Create(Application);
+  Formulario.OnClose := nil;
+  try
+    Formulario.lblTitulo.Caption := Format(
+      'Albarán creado desde el pedido %s/%s',
+      [AEntrada.SeriePedido, AEntrada.NumeroPedido]);
+    Formulario.Agregar(
+      'Albarán', AResultado.SerieAlbaran,
+      AResultado.NumeroAlbaran, ASolicitud.CodigoAlmacen);
+    Formulario.ShowModal;
+    if Formulario.Confirmado then
+      ShowMto(
+        FPropietarioPantallas,
+        'AlbaranesCompra',
+        AResultado.SerieAlbaran + ',' +
+        AResultado.NumeroAlbaran);
+  finally
+    FreeAndNil(Formulario);
+  end;
+end;
+
+procedure TVisualizacionRecepcionPedidoCompraVcl.PresentarRecepcion(
+  const AEntrada: TEntradaPresentacionRecepcionPedidoCompra;
+  const ASolicitud: TSolicitudPresentacionRecepcionPedidoCompra;
+  const AResultado: TResultadoRecepcionPedidoCompra);
+begin
+  RefrescarDatos;
+  MostrarDocumentoCreado(AEntrada, ASolicitud, AResultado);
+end;
+
+constructor TControladorRecepcionPedidoCompraVcl.Create(
+  const AConfig: TConfigControladorRecepcionPedidoCompraVcl);
+var
+  Visualizacion: IVisualizacionRecepcionPedidoCompra;
+begin
+  inherited Create;
+  FCabecera := AConfig.Cabecera;
+  FLineas := AConfig.Lineas;
+  FUsuario := AConfig.Usuario;
+  FConsultas := AConfig.Consultas;
+  Visualizacion := TVisualizacionRecepcionPedidoCompraVcl.Create(
+    AConfig);
+  FFlujo := TFlujoPresentacionRecepcionPedidoCompra.Create(
+    AConfig.Recepcion,
+    AConfig.Cantidades,
+    Visualizacion);
+end;
+
+destructor TControladorRecepcionPedidoCompraVcl.Destroy;
+begin
+  FreeAndNil(FFlujo);
+  FConsultas := nil;
+  inherited;
+end;
+
+function TControladorRecepcionPedidoCompraVcl.CrearEntrada(
+  AUsarCampoCantidades: Boolean):
+  TEntradaPresentacionRecepcionPedidoCompra;
+begin
+  if FCabecera.State in dsEditModes then
+    FCabecera.Post;
+  if FLineas.State in dsEditModes then
+    FLineas.Post;
+  Result := Default(TEntradaPresentacionRecepcionPedidoCompra);
+  Result.SeriePedido :=
+    FCabecera.FieldByName('SERIE_PEDC').AsString;
+  Result.NumeroPedido :=
+    FCabecera.FieldByName('NUMERO_PEDC').AsString;
+  Result.CodigoEmpresa :=
+    FCabecera.FieldByName('CODIGO_EMP_PEDC').AsString;
+  Result.ReferenciaProveedor :=
+    FCabecera.FieldByName('REF_PROVEEDOR_PEDC').AsString;
+  Result.IdPvTemporada :=
+    FCabecera.FieldByName('ID_PV_TEMPORADA_PEDC').AsInteger;
+  Result.Usuario := FUsuario;
+  Result.AlmacenAlternativo :=
+    FConsultas.AlmacenEfectivoPrimeraLinea(
+      Result.SeriePedido,
+      Result.NumeroPedido);
+  Result.UsarCampoCantidades := AUsarCampoCantidades;
+end;
+
+procedure TControladorRecepcionPedidoCompraVcl.Ejecutar(
+  AUsarCampoCantidades: Boolean);
+var
+  Entrada: TEntradaPresentacionRecepcionPedidoCompra;
+begin
+  if FCabecera.IsEmpty then
+    ShowMessage(SErrorPedidoCompraNoActivoCrearAlbaran)
+  else
+  begin
+    Entrada := CrearEntrada(AUsarCampoCantidades);
+    FFlujo.Ejecutar(Entrada);
+  end;
 end;
 
 // dsTablaG apunta a la cabecera del pedido de compra. El articulo
@@ -658,6 +866,8 @@ end;
 procedure TfrmMtoPedidosCompra.FormCreate(Sender: TObject);
 var
   i: Integer;
+  ConfigCantidades: TConfigCantidadesRecepcionPedidoCompra;
+  ConfigControlador: TConfigControladorRecepcionPedidoCompraVcl;
 begin
   // Mismo orden que albaranes / sesiones: columnas no-bound de tallas
   // y atributos se crean ANTES del inherited.
@@ -685,6 +895,28 @@ begin
     colLineaPedcCODIGO_UNIDADPropertiesButtonClick,
     colLineaPedcCODIGO_UNIDADPropertiesValidate);
   InicializarGestorYPivote;
+  ConfigCantidades := Default(TConfigCantidadesRecepcionPedidoCompra);
+  ConfigCantidades.Cabecera := dmmPedidosCompra.unqryTablaG;
+  ConfigCantidades.Lineas :=
+    dmmPedidosCompra.unqryPedidosCompraLineas;
+  ConfigCantidades.Vista := tvLineasPedido;
+  ConfigCantidades.ColumnaVertical := colLineaPedcARecibir;
+  ConfigCantidades.Pivote := FPivote;
+  FCantidadesRecepcion := TCantidadesRecepcionPedidoCompra.Create(
+    ConfigCantidades);
+  ConfigControlador :=
+    Default(TConfigControladorRecepcionPedidoCompraVcl);
+  ConfigControlador.Cabecera := dmmPedidosCompra.unqryTablaG;
+  ConfigControlador.Lineas :=
+    dmmPedidosCompra.unqryPedidosCompraLineas;
+  ConfigControlador.Albaranes := dmmPedidosCompra.unqryAlbaranesPedc;
+  ConfigControlador.PropietarioPantallas := Self.Owner;
+  ConfigControlador.Usuario := IdentidadSesion.Usuario;
+  ConfigControlador.Consultas := FConsultasPedido;
+  ConfigControlador.Recepcion := FRecepcionPedido;
+  ConfigControlador.Cantidades := FCantidadesRecepcion;
+  FControladorRecepcion := TControladorRecepcionPedidoCompraVcl.Create(
+    ConfigControlador);
   // Pintado del swatch de color en la columna no-bound: delegamos en el
   // controlador de pivote.
   if Assigned(FPivote) then
@@ -755,6 +987,8 @@ procedure TfrmMtoPedidosCompra.FormDestroy(Sender: TObject);
 var
   bHuboCambios: Boolean;
 begin
+  FControladorRecepcion := nil;
+  FCantidadesRecepcion := nil;
   FAplicacionArticuloCompra := nil;
   FValidadorArticulos := nil;
   FLookupAtributos := nil;
@@ -837,73 +1071,12 @@ begin
   end;
 end;
 
-function TfrmMtoPedidosCompra.TotalAAlbaranarVertical: Double;
-var
-  ds     : TUniQuery;
-  bk     : TBookmark;
-  recIdx : Integer;
-  idxCol : Integer;
-  vARec  : Variant;
-  rARec  : Double;
-begin
-  Result := 0;
-  if (dmmPedidosCompra <> nil) and (colLineaPedcARecibir <> nil) then
-  begin
-    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-    if (ds <> nil) and ds.Active and not ds.IsEmpty then
-    begin
-  idxCol := colLineaPedcARecibir.Index;
-  bk := ds.GetBookmark;
-  ds.DisableControls;
-  try
-    recIdx := 0;
-    ds.First;
-    while not ds.Eof do
-    begin
-      vARec := tvLineasPedido.DataController.Values[recIdx, idxCol];
-      if not (VarIsNull(vARec) or VarIsEmpty(vARec)) then
-      begin
-        if VarIsNumeric(vARec) then
-          rARec := vARec
-        else
-          rARec := StrToFloatDef(VarToStr(vARec), 0);
-        if rARec > 0 then
-          Result := Result + rARec;
-      end;
-      Inc(recIdx);
-      ds.Next;
-    end;
-  finally
-    if ds.BookmarkValid(bk) then
-      ds.GotoBookmark(bk);
-    ds.FreeBookmark(bk);
-    ds.EnableControls;
-  end;
-    end;
-  end;
-end;
-
-function TfrmMtoPedidosCompra.TotalAAlbaranar: Double;
-begin
-  Result := 0;
-  if FColsModoConstruido then
-    // Contrato construido: "A recibir" vive en el campo
-    // CANTIDAD_A_RECIBIR_PEDCLIN (columna en SKU/Desglose, banda en
-    // tallas horizontal).
-    Result := TotalARecibirCampo
-  else if Assigned(FPivote) and FPivote.Activo then
-  begin
-    if FPivote.Expandido then
-      Result := FPivote.TotalARecibir;
-  end
-  else
-    Result := TotalAAlbaranarVertical;
-end;
-
 procedure TfrmMtoPedidosCompra.RefrescarCantidadAAlbaranar;
 begin
-  if curCabCANTIDAD_A_ALBARANAR_PEDC <> nil then
-    curCabCANTIDAD_A_ALBARANAR_PEDC.EditValue := TotalAAlbaranar;
+  if (curCabCANTIDAD_A_ALBARANAR_PEDC <> nil) and
+     (FCantidadesRecepcion <> nil) then
+    curCabCANTIDAD_A_ALBARANAR_PEDC.EditValue :=
+      FCantidadesRecepcion.Total(FColsModoConstruido);
 end;
 
 procedure TfrmMtoPedidosCompra.CrearTablaPrincipal;
@@ -1191,28 +1364,16 @@ var
   iRellenadas: Integer;
 begin
   inherited;
-  if dmmPedidosCompra <> nil then
+  if FCantidadesRecepcion <> nil then
   begin
-  if FColsModoConstruido then
-    // Contrato construido: volcar el pendiente de cada linea al campo
-    // "A recibir" (los Post rearman la recarga del pivote de tallas).
-    iRellenadas := RellenarARecibirCampoTodo
-  else if Assigned(FPivote) and FPivote.Activo then
-  begin
-    // En pivote la entrada de "A recibir" vive en las celdas talla, que
-    // solo se pintan y editan en modo expandido. Si esta plano, expandimos.
-    if not FPivote.Expandido then
-      FPivote.Expandir;
-    iRellenadas := FPivote.RecibirTodo;
-    BestFitConSwatch;
-  end
-  else
-    // Modo vertical: una fila por SKU, columna "A recibir" editable.
-    iRellenadas := RellenarARecibirVerticalTodo;
-  RefrescarCantidadAAlbaranar;
-  if iRellenadas = 0 then
-    MessageDlg(SInfoPedidoCompraSinPendientesRecibir,
-               mtInformation, [mbOk], 0);
+    iRellenadas := FCantidadesRecepcion.RellenarTodo(
+      FColsModoConstruido);
+    if Assigned(FPivote) and FPivote.Activo then
+      BestFitConSwatch;
+    RefrescarCantidadAAlbaranar;
+    if iRellenadas = 0 then
+      MessageDlg(SInfoPedidoCompraSinPendientesRecibir,
+                 mtInformation, [mbOk], 0);
   end;
 end;
 
@@ -1737,14 +1898,6 @@ begin
       'SERIE_ALBC', 'NUMERO_ALBC');
 end;
 
-function TfrmMtoPedidosCompra.AlmacenEfectivoPrimeraLinea(
-                                  const ASerie, ANumero: string): string;
-begin
-  Result := FConsultasPedido.AlmacenEfectivoPrimeraLinea(
-    ASerie,
-    ANumero);
-end;
-
 procedure TfrmMtoPedidosCompra.tvLineasPedidoFocusedRecordChanged(
   Sender: TcxCustomGridTableView; APrevFocusedRecord,
   AFocusedRecord: TcxCustomGridRecord;
@@ -1880,229 +2033,14 @@ begin
     FPivote.PersistirCantidadEditValueChanged(Sender, DisplayValue);
 end;
 
-function TfrmMtoPedidosCompra.PrimerAlmacenARecibirVertical: string;
-var
-  ds: TUniQuery;
-  bk: TBookmark;
-  recIdx, idxCol: Integer;
-  vARec: Variant;
-  rARec: Double;
-  sAlmLin, sAlmCab: string;
-begin
-  Result := '';
-  if (dmmPedidosCompra <> nil) and (colLineaPedcARecibir <> nil) then
-  begin
-    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-    if (ds <> nil) and ds.Active and not ds.IsEmpty then
-    begin
-  sAlmCab :=
-    dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
-  idxCol := colLineaPedcARecibir.Index;
-  bk := ds.GetBookmark;
-  ds.DisableControls;
-  try
-    recIdx := 0;
-    ds.First;
-    while (Result = '') and not ds.Eof do
-    begin
-      vARec := tvLineasPedido.DataController.Values[recIdx, idxCol];
-      rARec := 0;
-      if not (VarIsNull(vARec) or VarIsEmpty(vARec)) then
-      begin
-        if VarIsNumeric(vARec) then
-          rARec := vARec
-        else
-          rARec := StrToFloatDef(VarToStr(vARec), 0);
-      end;
-      if rARec > 0 then
-      begin
-        sAlmLin := ds.FieldByName('CODIGO_ALMACEN_PEDCLIN').AsString;
-        if Trim(sAlmLin) <> '' then
-          Result := sAlmLin
-        else
-          Result := sAlmCab;
-      end;
-      Inc(recIdx);
-      ds.Next;
-    end;
-  finally
-    if Assigned(bk) then
-      ds.GotoBookmark(bk);
-    ds.FreeBookmark(bk);
-    ds.EnableControls;
-  end;
-    end;
-  end;
-end;
-
-function TfrmMtoPedidosCompra.RecogerCeldasARecibirVertical(
-                                  const ACodigoAlm: string):
-                                  TArray<TCeldaARecibir>;
-var
-  ds: TUniQuery;
-  res: TList<TCeldaARecibir>;
-  bk: TBookmark;
-  recIdx, idxCol: Integer;
-  vARec: Variant;
-  rARec: Double;
-  c: TCeldaARecibir;
-  sAlmLin, sAlmCab, sAlmEfe: string;
-begin
-  Result := nil;
-  if (dmmPedidosCompra <> nil) and (colLineaPedcARecibir <> nil) then
-  begin
-    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-    if (ds <> nil) and ds.Active and not ds.IsEmpty then
-    begin
-  sAlmCab :=
-    dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
-  idxCol := colLineaPedcARecibir.Index;
-  res := TList<TCeldaARecibir>.Create;
-  bk := ds.GetBookmark;
-  ds.DisableControls;
-  try
-    recIdx := 0;
-    ds.First;
-    while not ds.Eof do
-    begin
-      vARec := tvLineasPedido.DataController.Values[recIdx, idxCol];
-      rARec := 0;
-      if not (VarIsNull(vARec) or VarIsEmpty(vARec)) then
-      begin
-        if VarIsNumeric(vARec) then
-          rARec := vARec
-        else
-          rARec := StrToFloatDef(VarToStr(vARec), 0);
-      end;
-      if rARec > 0 then
-      begin
-        sAlmLin := ds.FieldByName('CODIGO_ALMACEN_PEDCLIN').AsString;
-        if Trim(sAlmLin) <> '' then
-          sAlmEfe := sAlmLin
-        else
-          sAlmEfe := sAlmCab;
-        if SameText(sAlmEfe, ACodigoAlm) then
-        begin
-          c.LineaPedido   := ds.FieldByName('LINEA_PEDCLIN').AsString;
-          c.CodigoSku     := ds.FieldByName('CODIGO_UNIDAD_PEDCLIN').AsString;
-          c.CodigoAlmacen := sAlmEfe;
-          c.Cantidad      := rARec;
-          res.Add(c);
-        end;
-      end;
-      Inc(recIdx);
-      ds.Next;
-    end;
-    Result := res.ToArray;
-  finally
-    if ds.BookmarkValid(bk) then
-      ds.GotoBookmark(bk);
-    ds.FreeBookmark(bk);
-    ds.EnableControls;
-    FreeAndNil(res);
-  end;
-    end;
-  end;
-end;
-
-// Recorre todas las lineas del pedido en modo vertical y vuelca en la
-// columna no-bound "A recibir" el pendiente de cada una (Pedida -
-// Recibida). Las lineas ya recibidas del todo quedan a Null. Devuelve
-// el numero de lineas con pendiente. Misma tecnica de iteracion que
-// RecogerCeldasARecibirVertical: dataset + recIdx paralelo del grid.
-function TfrmMtoPedidosCompra.RellenarARecibirVerticalTodo: Integer;
-var
-  ds     : TUniQuery;
-  bk     : TBookmark;
-  recIdx : Integer;
-  idxCol : Integer;
-  rPdte  : Double;
-begin
-  Result := 0;
-  if (dmmPedidosCompra <> nil) and (colLineaPedcARecibir <> nil) then
-  begin
-    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-    if (ds <> nil) and ds.Active and not ds.IsEmpty then
-    begin
-  idxCol := colLineaPedcARecibir.Index;
-  bk := ds.GetBookmark;
-  ds.DisableControls;
-  tvLineasPedido.DataController.BeginUpdate;
-  try
-    recIdx := 0;
-    ds.First;
-    while not ds.Eof do
-    begin
-      rPdte := ds.FieldByName('CANTIDAD_PEDCLIN').AsFloat -
-               ds.FieldByName('CANTIDAD_RECIBIDA_PEDCLIN').AsFloat;
-      if rPdte > 0 then
-      begin
-        tvLineasPedido.DataController.Values[recIdx, idxCol] := rPdte;
-        Inc(Result);
-      end
-      else
-        tvLineasPedido.DataController.Values[recIdx, idxCol] := Null;
-      Inc(recIdx);
-      ds.Next;
-    end;
-  finally
-    tvLineasPedido.DataController.EndUpdate;
-    if ds.BookmarkValid(bk) then
-      ds.GotoBookmark(bk);
-    ds.FreeBookmark(bk);
-    ds.EnableControls;
-  end;
-    end;
-  end;
-end;
-
-// Clamp del "A recibir" tecleado en modo vertical: si supera el
-// pendiente de la linea (CANTIDAD - CANTIDAD_RECIBIDA) se ajusta
-// automaticamente al maximo y se avisa con un beep. La reasignacion
-// de EditValue re-dispara el handler una vez, ya con valor valido.
 procedure TfrmMtoPedidosCompra.ARecibirVerticalEditValueChanged(
   Sender: TObject);
-var
-  ed     : TcxCustomEdit;
-  ds     : TUniQuery;
-  vEdit  : Variant;
-  rValor : Double;
-  rPdte  : Double;
 begin
-  // La columna solo se ve en modo vertical; en pivote el clamp lo hace
-  // la libreria sobre las celdas talla.
-  if (Sender is TcxCustomEdit) and (dmmPedidosCompra <> nil) and
-     (not (Assigned(FPivote) and FPivote.Activo)) then
-  begin
-    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-    if (ds <> nil) and ds.Active and (not ds.IsEmpty) then
-    begin
-      ed    := TcxCustomEdit(Sender);
-      vEdit := ed.EditValue;
-      rValor := 0;
-      if not (VarIsNull(vEdit) or VarIsEmpty(vEdit)) then
-      begin
-        if VarIsNumeric(vEdit) then
-          rValor := vEdit
-        else
-          rValor := StrToFloatDef(VarToStr(vEdit), 0);
-      end;
-      rPdte := ds.FieldByName('CANTIDAD_PEDCLIN').AsFloat -
-               ds.FieldByName('CANTIDAD_RECIBIDA_PEDCLIN').AsFloat;
-      if rPdte < 0 then
-        rPdte := 0;
-      if rValor > rPdte then
-      begin
-        MessageBeep(MB_ICONWARNING);
-        if rPdte > 0 then
-          ed.EditValue := rPdte
-        else
-          ed.EditValue := Null;
-      end;
-    end;
-  end;
+  if FCantidadesRecepcion <> nil then
+    FCantidadesRecepcion.LimitarVertical(Sender);
   RefrescarCantidadAAlbaranar;
 end;
+
 
 // Combo de serie de la cabecera: al desplegar se recargan las series
 // 'PC' vigentes de la empresa del pedido. Si la empresa no tiene
@@ -2175,166 +2113,15 @@ begin
   end;
 end;
 
-procedure TfrmMtoPedidosCompra.btnCrearAlbaranClick(Sender: TObject);
-var
-  form: TfrmModalSelAlmacenPedido;
-  sSerie, sNumero, sMsg: string;
-  bOk: Boolean;
-  arrCeldas: TArray<TCeldaARecibir>;
-  recIdx: Integer;
-  frmDocs: TfrmModalDocsCreados;
-  sSerieDoc, sNumeroDoc: string;
-  ParametrosRecepcion: TParametrosRecepcionPedidoCompra;
-  ResultadoRecepcion: TResultadoRecepcionPedidoCompra;
+procedure TfrmMtoPedidosCompra.btnCrearAlbaranClick(
+  Sender: TObject);
 begin
   inherited;
-  if dmmPedidosCompra <> nil then
-  begin
-  if dmmPedidosCompra.unqryTablaG.IsEmpty then
-    ShowMessage(SErrorPedidoCompraNoActivoCrearAlbaran)
-  else
-  begin
-  if dmmPedidosCompra.unqryTablaG.State in [dsEdit, dsInsert] then
-    dmmPedidosCompra.unqryTablaG.Post;
-  if dmmPedidosCompra.unqryPedidosCompraLineas.State in [dsEdit, dsInsert] then
-    dmmPedidosCompra.unqryPedidosCompraLineas.Post;
-  sSerie  := dmmPedidosCompra.unqryTablaG.FieldByName('SERIE_PEDC').AsString;
-  sNumero := dmmPedidosCompra.unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
-  form := TfrmModalSelAlmacenPedido.Create(Application);
-  try
-    form.SeriePedc            := sSerie;
-    form.NumPedc              := sNumero;
-    // Empresa del pedido: el modal carga con ella el combo de series
-    // 'AB' y propone la serie que lleve el almacen elegido.
-    form.CodigoEmpresa        :=
-      dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_EMP_PEDC').AsString;
-    form.SerieAlbDefecto      := sSerie;  // fallback = misma serie
-    form.RefProveedorDefecto  :=
-      dmmPedidosCompra.unqryTablaG.FieldByName('REF_PROVEEDOR_PEDC').AsString;
-    // La temporada del pedido se hereda en el modal. Si la cabecera no
-    // tiene (NULL) cae a 0 y el combo queda en blanco.
-    form.IdPvTemporadaDefecto :=
-      dmmPedidosCompra.unqryTablaG.FieldByName(
-        'ID_PV_TEMPORADA_PEDC').AsInteger;
-    // Almacen por defecto del modal: el de la primera celda con
-    // cantidad 'A recibir' > 0 (sea en pivote expandido o en modo
-    // vertical). Si el usuario no ha tecleado nada todavia, caemos al
-    // almacen efectivo de la primera linea del pedido como fallback.
-    if FColsModoConstruido then
-      form.CodigoAlmacenDefecto := PrimerAlmacenARecibirCampo
-    else if Assigned(FPivote) and FPivote.Activo and FPivote.Expandido then
-      form.CodigoAlmacenDefecto := FPivote.PrimerAlmacenARecibir
-    else
-      form.CodigoAlmacenDefecto := PrimerAlmacenARecibirVertical;
-    if Trim(form.CodigoAlmacenDefecto) = '' then
-      form.CodigoAlmacenDefecto :=
-        AlmacenEfectivoPrimeraLinea(sSerie, sNumero);
-    form.ShowModal;
-    if form.Aceptado and (Trim(form.CodigoAlmacen) <> '') then
-    begin
-    // Decidir flujo: si el pivote esta expandido leemos celdas via lib;
-    // si no, miramos la columna "A recibir" del modo vertical. Si no
-    // hay tecleos en ninguno, caemos al flujo clasico (pendientes
-    // totales del almacen).
-    if FColsModoConstruido then
-      // Contrato construido: "A recibir" vive en el campo
-      // CANTIDAD_A_RECIBIR_PEDCLIN, tecleado como columna en
-      // SKU/Desglose o como banda en tallas horizontal.
-      arrCeldas := RecogerCeldasARecibirCampo(form.CodigoAlmacen)
-    else if Assigned(FPivote) and FPivote.Activo and FPivote.Expandido then
-      arrCeldas := FPivote.IterarARecibirPorAlmacen(form.CodigoAlmacen)
-    else
-      arrCeldas := RecogerCeldasARecibirVertical(form.CodigoAlmacen);
-    ParametrosRecepcion.SeriePedido := sSerie;
-    ParametrosRecepcion.NumeroPedido := sNumero;
-    ParametrosRecepcion.CodigoAlmacen := form.CodigoAlmacen;
-    ParametrosRecepcion.SerieAlbaran := form.SerieAlbaran;
-    ParametrosRecepcion.SerieAlbaranDestino :=
-      form.AlbaranSerieDestino;
-    ParametrosRecepcion.NumeroAlbaranDestino :=
-      form.AlbaranNumDestino;
-    ParametrosRecepcion.Usuario := IdentidadSesion.Usuario;
-    ParametrosRecepcion.ReferenciaProveedor := form.RefProveedor;
-    ParametrosRecepcion.FechaRecepcion := form.FechaRecepcion;
-    ParametrosRecepcion.IdPvTemporada := form.IdPvTemporada;
-    ParametrosRecepcion.Incorporar := form.Incorporar;
-    ParametrosRecepcion.Celdas := arrCeldas;
-    try
-      bOk := FRecepcionPedido.EjecutarRecepcionPedidoCompra(
-        ParametrosRecepcion,
-        ResultadoRecepcion);
-      sMsg := ResultadoRecepcion.Mensaje;
-      if bOk then
-      begin
-        // Limpiar las celdas "A recibir" tecleadas para el almacen
-        // procesado, para que el usuario pueda seguir con otro almacen
-        // sin tener que borrar manualmente.
-        if FColsModoConstruido then
-          LimpiarARecibirCampoAlmacen(form.CodigoAlmacen)
-        else if Assigned(FPivote) and FPivote.Activo and FPivote.Expandido then
-          FPivote.LimpiarARecibirParaAlmacen(form.CodigoAlmacen)
-        else if Assigned(colLineaPedcARecibir) then
-        begin
-          // Modo vertical: poner a Null la columna A recibir de las
-          // lineas cuyo almacen efectivo es el procesado.
-          tvLineasPedido.DataController.BeginUpdate;
-          try
-            for recIdx := 0 to tvLineasPedido.DataController.RecordCount - 1 do
-              tvLineasPedido.DataController.Values[recIdx,
-                                  colLineaPedcARecibir.Index] := Null;
-          finally
-            tvLineasPedido.DataController.EndUpdate;
-          end;
-        end;
-        RefrescarCantidadAAlbaranar;
-        dmmPedidosCompra.unqryTablaG.Refresh;
-        dmmPedidosCompra.unqryPedidosCompraLineas.Refresh;
-        // Refrescar el grid de la pestania "Albaranes" para que aparezca
-        // el albaran recien creado / incorporado (es detail del pedido,// no se
-        // refresca solo al hacer Refresh del master).
-        if dmmPedidosCompra.unqryAlbaranesPedc.Active then
-          dmmPedidosCompra.unqryAlbaranesPedc.Close;
-        dmmPedidosCompra.unqryAlbaranesPedc.Open;
-        // Mostrar el albaran recien creado / incorporado en un modal
-        // estilo Sesiones, con boton "Ir a documento" para abrir su
-        // ficha. En modo incorporar el destino es el albaran existente
-        // (Albaran...Destino); si no, el nuevo (SerieAlbaran / sNumAlb).
-        sSerieDoc := ResultadoRecepcion.SerieAlbaran;
-        sNumeroDoc := ResultadoRecepcion.NumeroAlbaran;
-        frmDocs := TfrmModalDocsCreados.Create(Self);
-        // Bloqueamos el caFree del ancestro (FormClose lo pone) para
-        // poder leer Confirmado tras ShowModal y liberarlo nosotros.
-        frmDocs.OnClose := nil;
-        try
-          frmDocs.lblTitulo.Caption :=
-            Format('Albaran creado desde el pedido %s/%s', [sSerie, sNumero]);
-          frmDocs.Agregar('Albaran', sSerieDoc, sNumeroDoc,
-                          form.CodigoAlmacen);
-          frmDocs.ShowModal;
-          if frmDocs.Confirmado then
-            ShowMto(Self.Owner, 'AlbaranesCompra',
-                    sSerieDoc + ',' + sNumeroDoc);
-        finally
-          FreeAndNil(frmDocs);
-        end;
-      end
-      else
-        MessageDlg(sMsg, mtWarning, [mbOk], 0);
-    except
-      on E: Exception do
-      begin
-        MessageDlg(Format(SErrorCrearAlbaranDesdePedidoCompra,
-                          [E.Message]),
-                   mtError, [mbOk], 0);
-      end;
-    end;
-    end;
-  finally
-    FreeAndNil(form);
-  end;
-  end;
-  end;
+  if FControladorRecepcion <> nil then
+    FControladorRecepcion.Ejecutar(FColsModoConstruido);
+  RefrescarCantidadAAlbaranar;
 end;
+
 
 // ===========================================================================
 // CONTRATO DE ENTRADA ColumnSKUcxGrid (Auto / SKU / Tallas horizontal + F1)
@@ -2563,265 +2350,12 @@ end;
 // modo tallas el clamp lo hace el propio pivote sobre su banda.
 procedure TfrmMtoPedidosCompra.ARecibirCampoEditValueChanged(
   Sender: TObject);
-var
-  ed     : TcxCustomEdit;
-  ds     : TUniQuery;
-  vEdit  : Variant;
-  rValor : Double;
-  rPdte  : Double;
 begin
-  if (Sender is TcxCustomEdit) and (dmmPedidosCompra <> nil) then
-  begin
-    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-    if (ds <> nil) and ds.Active and (not ds.IsEmpty) then
-    begin
-      ed    := TcxCustomEdit(Sender);
-      vEdit := ed.EditValue;
-      rValor := 0;
-      if not (VarIsNull(vEdit) or VarIsEmpty(vEdit)) then
-      begin
-        if VarIsNumeric(vEdit) then
-          rValor := vEdit
-        else
-          rValor := StrToFloatDef(VarToStr(vEdit), 0);
-      end;
-      rPdte := ds.FieldByName('CANTIDAD_PEDCLIN').AsFloat -
-               ds.FieldByName('CANTIDAD_RECIBIDA_PEDCLIN').AsFloat;
-      if rPdte < 0 then
-        rPdte := 0;
-      if rValor > rPdte then
-      begin
-        MessageBeep(MB_ICONWARNING);
-        ed.EditValue := rPdte;
-      end;
-    end;
-  end;
+  if FCantidadesRecepcion <> nil then
+    FCantidadesRecepcion.LimitarCampo(Sender);
   RefrescarCantidadAAlbaranar;
 end;
 
-function TfrmMtoPedidosCompra.RecogerCeldasARecibirCampo(
-  const ACodigoAlm: string): TArray<TCeldaARecibir>;
-var
-  ds: TUniQuery;
-  res: TList<TCeldaARecibir>;
-  bk: TBookmark;
-  rARec: Double;
-  c: TCeldaARecibir;
-  sAlmLin, sAlmCab, sAlmEfe: string;
-begin
-  Result := nil;
-  if dmmPedidosCompra <> nil then
-  begin
-    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-    if (ds <> nil) and ds.Active and not ds.IsEmpty and
-       (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') <> nil) then
-    begin
-  sAlmCab :=
-    dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
-  res := TList<TCeldaARecibir>.Create;
-  bk := ds.GetBookmark;
-  ds.DisableControls;
-  try
-    ds.First;
-    while not ds.Eof do
-    begin
-      rARec := ds.FieldByName('CANTIDAD_A_RECIBIR_PEDCLIN').AsFloat;
-      if rARec > 0 then
-      begin
-        sAlmLin := ds.FieldByName('CODIGO_ALMACEN_PEDCLIN').AsString;
-        if Trim(sAlmLin) <> '' then
-          sAlmEfe := sAlmLin
-        else
-          sAlmEfe := sAlmCab;
-        if SameText(sAlmEfe, ACodigoAlm) then
-        begin
-          c.LineaPedido   := ds.FieldByName('LINEA_PEDCLIN').AsString;
-          c.CodigoSku     :=
-            ds.FieldByName('CODIGO_UNIDAD_PEDCLIN').AsString;
-          c.CodigoAlmacen := sAlmEfe;
-          c.Cantidad      := rARec;
-          res.Add(c);
-        end;
-      end;
-      ds.Next;
-    end;
-    Result := res.ToArray;
-  finally
-    if ds.BookmarkValid(bk) then
-      ds.GotoBookmark(bk);
-    ds.FreeBookmark(bk);
-    ds.EnableControls;
-    FreeAndNil(res);
-  end;
-    end;
-  end;
-end;
-
-procedure TfrmMtoPedidosCompra.LimpiarARecibirCampoAlmacen(
-  const ACodigoAlm: string);
-var
-  ds: TUniQuery;
-  bk: TBookmark;
-  sAlmLin, sAlmCab, sAlmEfe: string;
-begin
-  if dmmPedidosCompra <> nil then
-  begin
-    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-    if (ds <> nil) and ds.Active and not ds.IsEmpty and
-       (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') <> nil) then
-    begin
-  sAlmCab :=
-    dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
-  bk := ds.GetBookmark;
-  ds.DisableControls;
-  try
-    ds.First;
-    while not ds.Eof do
-    begin
-      if ds.FieldByName('CANTIDAD_A_RECIBIR_PEDCLIN').AsFloat > 0 then
-      begin
-        sAlmLin := ds.FieldByName('CODIGO_ALMACEN_PEDCLIN').AsString;
-        if Trim(sAlmLin) <> '' then
-          sAlmEfe := sAlmLin
-        else
-          sAlmEfe := sAlmCab;
-        if SameText(sAlmEfe, ACodigoAlm) then
-        begin
-          ds.Edit;
-          ds.FieldByName('CANTIDAD_A_RECIBIR_PEDCLIN').AsFloat := 0;
-          ds.Post;
-        end;
-      end;
-      ds.Next;
-    end;
-  finally
-    if ds.BookmarkValid(bk) then
-      ds.GotoBookmark(bk);
-    ds.FreeBookmark(bk);
-    ds.EnableControls;
-  end;
-    end;
-  end;
-end;
-
-function TfrmMtoPedidosCompra.TotalARecibirCampo: Double;
-var
-  ds: TUniQuery;
-  bk: TBookmark;
-begin
-  Result := 0;
-  if dmmPedidosCompra <> nil then
-  begin
-    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-    if (ds <> nil) and ds.Active and not ds.IsEmpty and
-       not (ds.State in dsEditModes) and
-       (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') <> nil) then
-    begin
-  bk := ds.GetBookmark;
-  ds.DisableControls;
-  try
-    ds.First;
-    while not ds.Eof do
-    begin
-      Result := Result +
-        ds.FieldByName('CANTIDAD_A_RECIBIR_PEDCLIN').AsFloat;
-      ds.Next;
-    end;
-  finally
-    if ds.BookmarkValid(bk) then
-      ds.GotoBookmark(bk);
-    ds.FreeBookmark(bk);
-    ds.EnableControls;
-  end;
-    end;
-  end;
-end;
-
-function TfrmMtoPedidosCompra.PrimerAlmacenARecibirCampo: string;
-var
-  ds: TUniQuery;
-  bk: TBookmark;
-  sAlmCab: string;
-begin
-  Result := '';
-  if dmmPedidosCompra <> nil then
-  begin
-    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-    if (ds <> nil) and ds.Active and not ds.IsEmpty and
-       (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') <> nil) then
-    begin
-  sAlmCab :=
-    dmmPedidosCompra.unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
-  bk := ds.GetBookmark;
-  ds.DisableControls;
-  try
-    ds.First;
-    while (Result = '') and (not ds.Eof) do
-    begin
-      if ds.FieldByName('CANTIDAD_A_RECIBIR_PEDCLIN').AsFloat > 0 then
-      begin
-        Result :=
-          Trim(ds.FieldByName('CODIGO_ALMACEN_PEDCLIN').AsString);
-        if Result = '' then
-          Result := sAlmCab;
-      end;
-      ds.Next;
-    end;
-  finally
-    if ds.BookmarkValid(bk) then
-      ds.GotoBookmark(bk);
-    ds.FreeBookmark(bk);
-    ds.EnableControls;
-  end;
-    end;
-  end;
-end;
-
-function TfrmMtoPedidosCompra.RellenarARecibirCampoTodo: Integer;
-var
-  ds: TUniQuery;
-  bk: TBookmark;
-  rPdte: Double;
-begin
-  Result := 0;
-  if dmmPedidosCompra <> nil then
-  begin
-    ds := dmmPedidosCompra.unqryPedidosCompraLineas;
-    if (ds <> nil) and ds.Active and not ds.IsEmpty and
-       (ds.FindField('CANTIDAD_A_RECIBIR_PEDCLIN') <> nil) then
-    begin
-  if ds.State in dsEditModes then
-    ds.Post;
-  bk := ds.GetBookmark;
-  ds.DisableControls;
-  try
-    ds.First;
-    while not ds.Eof do
-    begin
-      rPdte := ds.FieldByName('CANTIDAD_PEDCLIN').AsFloat -
-               ds.FieldByName('CANTIDAD_RECIBIDA_PEDCLIN').AsFloat;
-      if rPdte < 0 then
-        rPdte := 0;
-      if ds.FieldByName('CANTIDAD_A_RECIBIR_PEDCLIN').AsFloat <>
-         rPdte then
-      begin
-        ds.Edit;
-        ds.FieldByName('CANTIDAD_A_RECIBIR_PEDCLIN').AsFloat := rPdte;
-        ds.Post;
-      end;
-      if rPdte > 0 then
-        Inc(Result);
-      ds.Next;
-    end;
-  finally
-    if ds.BookmarkValid(bk) then
-      ds.GotoBookmark(bk);
-    ds.FreeBookmark(bk);
-    ds.EnableControls;
-  end;
-    end;
-  end;
-end;
 
 initialization
   RegistrarPantalla(TfrmMtoPedidosCompra);

@@ -28,12 +28,27 @@ type
     procedure MostrarSku_DelegaArticuloYResultado;
     [Test]
     procedure ContarLineas_DelegaDocumentoYResultado;
+    [Test]
+    procedure CabeceraSimplificada_AdmiteClienteAusente;
+    [Test]
+    procedure CabeceraNormal_ExigeFecha;
+    [Test]
+    procedure CabeceraNormal_RechazaRetrocesoCronologico;
+    [Test]
+    procedure CabeceraNormal_ExigeNumeroAsignado;
+    [Test]
+    procedure CabeceraValida_EsIdempotenteYDetectaFechaFutura;
   end;
 
 implementation
 
 uses
-  Data.DB, inLibFacturasLecturasIntf, inLibFacturas;
+  System.SysUtils,
+  Data.DB,
+  inLibFacturasLecturasIntf,
+  inLibFacturasServiciosIntf,
+  inLibFacturasValidacionCabecera,
+  inLibFacturas;
 
 type
   TRepositorioLecturasFacturaFalso = class(
@@ -68,6 +83,26 @@ var
 procedure PrepararRepositorioFalso;
 begin
   oRepositorioFalso := TRepositorioLecturasFacturaFalso.Create;
+end;
+
+function CrearCabeceraValida: TDatosValidacionCabeceraFactura;
+begin
+  Result := Default(TDatosValidacionCabeceraFactura);
+  Result.Serie := 'A';
+  Result.Numero := '42';
+  Result.TipoFactura := 'NORMAL';
+  Result.Fase := 'BORRADOR';
+  Result.RazonSocialCliente := 'CLIENTE';
+  Result.RazonSocialEmpresa := 'EMPRESA';
+  Result.CodigoPaisCliente := 'ES';
+  Result.NombrePaisCliente := 'ESPAÑA';
+  Result.CodigoPaisEmpresa := 'ES';
+  Result.NombrePaisEmpresa := 'ESPAÑA';
+  Result.NifCliente := '12345678Z';
+  Result.NifEmpresa := '12345678Z';
+  Result.TieneFecha := True;
+  Result.Fecha := EncodeDate(2026, 8, 5);
+  Result.ControlarCronologia := True;
 end;
 
 function TRepositorioLecturasFacturaFalso.ArticuloDebeMostrarSku(
@@ -142,6 +177,101 @@ begin
     oRepositorioFalso, 'A', '42'));
   Assert.AreEqual('A', sSerieRecibida);
   Assert.AreEqual('42', sNumeroRecibido);
+end;
+
+procedure TPruebasFacturasLecturas.
+  CabeceraSimplificada_AdmiteClienteAusente;
+var
+  Datos: TDatosValidacionCabeceraFactura;
+begin
+  Datos := CrearCabeceraValida;
+  Datos.TipoFactura := 'SIMPLIFICADA';
+  Datos.RazonSocialCliente := '';
+  Datos.CodigoPaisCliente := '';
+  Datos.TieneFecha := False;
+  ValidarIdentidadCabeceraFactura(Datos);
+  ValidarCoherenciaCabeceraFactura(Datos);
+  Assert.IsFalse(EsCabeceraFacturaValidable(Datos));
+end;
+
+procedure TPruebasFacturasLecturas.CabeceraNormal_ExigeFecha;
+var
+  bErrorCapturado: Boolean;
+  Datos: TDatosValidacionCabeceraFactura;
+begin
+  Datos := CrearCabeceraValida;
+  Datos.TieneFecha := False;
+  bErrorCapturado := False;
+  try
+    ValidarIdentidadCabeceraFactura(Datos);
+  except
+    on E: EValidacionFactura do
+    begin
+      bErrorCapturado := True;
+      Assert.AreEqual(cvfFecha, E.Campo);
+    end;
+  end;
+  Assert.IsTrue(bErrorCapturado);
+end;
+
+procedure TPruebasFacturasLecturas.
+  CabeceraNormal_RechazaRetrocesoCronologico;
+var
+  bErrorCapturado: Boolean;
+  Datos: TDatosValidacionCabeceraFactura;
+begin
+  Datos := CrearCabeceraValida;
+  Datos.UltimaFechaSerie := EncodeDate(2026, 8, 6);
+  bErrorCapturado := False;
+  try
+    ValidarCoherenciaCabeceraFactura(Datos);
+  except
+    on E: EValidacionFactura do
+    begin
+      bErrorCapturado := True;
+      Assert.AreEqual(cvfFecha, E.Campo);
+    end;
+  end;
+  Assert.IsTrue(bErrorCapturado);
+end;
+
+procedure TPruebasFacturasLecturas.
+  CabeceraNormal_ExigeNumeroAsignado;
+var
+  bErrorCapturado: Boolean;
+  Datos: TDatosValidacionCabeceraFactura;
+begin
+  Datos := CrearCabeceraValida;
+  Datos.Numero := '0';
+  bErrorCapturado := False;
+  try
+    ValidarNumeroCabeceraFactura(Datos);
+  except
+    on E: EValidacionFactura do
+    begin
+      bErrorCapturado := True;
+      Assert.AreEqual(cvfSerie, E.Campo);
+    end;
+  end;
+  Assert.IsTrue(bErrorCapturado);
+end;
+
+procedure TPruebasFacturasLecturas.
+  CabeceraValida_EsIdempotenteYDetectaFechaFutura;
+var
+  Datos: TDatosValidacionCabeceraFactura;
+begin
+  Datos := CrearCabeceraValida;
+  ValidarIdentidadCabeceraFactura(Datos);
+  ValidarCoherenciaCabeceraFactura(Datos);
+  ValidarNumeroCabeceraFactura(Datos);
+  ValidarIdentidadCabeceraFactura(Datos);
+  ValidarCoherenciaCabeceraFactura(Datos);
+  ValidarNumeroCabeceraFactura(Datos);
+  Assert.IsTrue(FechaCabeceraFacturaEsFutura(
+    Datos, EncodeDate(2026, 8, 4)));
+  Assert.IsTrue(FechaCabeceraFacturaEsFutura(
+    Datos, EncodeDate(2026, 8, 4)));
 end;
 
 initialization

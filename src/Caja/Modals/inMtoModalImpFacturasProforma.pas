@@ -57,21 +57,41 @@ resourcestring
   SIdProformaNoValido =
     'No se ha indicado una proforma interna válida para imprimir.';
 
+function SanearNombreArchivo(const AOriginal: string): string;
+var
+  cCaracter: Char;
+  iCaracter: Integer;
+begin
+  Result := '';
+  for iCaracter := 1 to Length(AOriginal) do
+  begin
+    cCaracter := AOriginal[iCaracter];
+    case cCaracter of
+      #0..#31, '/', '\', ':', '*', '?', '"', '<', '>', '|':
+        Result := Result + '_';
+    else
+      Result := Result + cCaracter;
+    end;
+  end;
+end;
+
 procedure TfrmPrintFacturasProforma.ConfigurarNombrePdf;
 var
+  sEmpresa: string;
   sNumero: string;
   sSerie: string;
 begin
   if not FDataModule.unqryProforma.IsEmpty then
   begin
+    sEmpresa := FDataModule.unqryProforma.FieldByName(
+      'CODIGO_EMP_PROCAJ').AsString;
     sSerie := FDataModule.unqryProforma.FieldByName(
       'SERIE_PROCAJ').AsString;
     sNumero := FDataModule.unqryProforma.FieldByName(
       'NUMERO_PROCAJ').AsString;
-    sSerie := StringReplace(sSerie, '/', '_', [rfReplaceAll]);
-    sSerie := StringReplace(sSerie, '\', '_', [rfReplaceAll]);
     frxpdfxprtPedWeb.FileName :=
-      Format('Proforma_%s_%s', [sSerie, sNumero]);
+      SanearNombreArchivo(
+        Format('Proforma_%s_%s_%s', [sEmpresa, sSerie, sNumero]));
   end;
 end;
 

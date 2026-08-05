@@ -1,4 +1,4 @@
-param(
+﻿param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot)
 )
 
@@ -8,6 +8,7 @@ $ErrorActionPreference = 'Stop'
 $archivosCriticos = @(
   'src\DataModules\UniDataFacturas.pas',
   'src\DataModules\UniDataAlbaranes.pas',
+  'src\DataModules\UniDataAlbaranesVentaMovimientos.pas',
   'src\DataModules\UniDataComprasSesionesAlbaranes.pas',
   'src\DataModules\UniDataComprasSesionesArticulos.pas',
   'src\DataModules\UniDataComprasSesionesDocumentosComun.pas',
@@ -295,6 +296,28 @@ $coordinadores = @(
     Ruta = 'src\DataModules\UniDataAlbaranes.pas'
     Metodo = 'TdmAlbaranes.ProcesarLineasPosteadas'
     Marcas = @('StartTransaction', 'Commit', 'Rollback')
+  },
+  @{
+    Ruta = 'src\Lib\inLibAlbaranesVentaPresentacionMovimientos.pas'
+    Metodo = 'TOperacionMovimientosAlbaranVenta.Sincronizar'
+    Marcas = @(
+      'IniciarTransaccionPropia',
+      'FPersistencia.PrepararLineas',
+      'FPersistencia.Borrar',
+      'FPersistencia.Generar',
+      'ConfirmarTransaccion',
+      'RevertirTransaccion'
+    )
+  },
+  @{
+    Ruta = 'src\Lib\inLibAlbaranesVentaPresentacionMovimientos.pas'
+    Metodo = 'TOperacionMovimientosAlbaranVenta.GenerarFaltantes'
+    Marcas = @(
+      'IniciarTransaccionPropia',
+      'FPersistencia.Generar',
+      'ConfirmarTransaccion',
+      'RevertirTransaccion'
+    )
   },
   @{
     Ruta = 'src\Caja\DataModules\UniDataCaja.pas'

@@ -113,17 +113,28 @@ const
     'SELECT COALESCE(SUM(CASE WHEN FECHA_DESDE_FACPER = :DESDE ' +
     'AND FECHA_HASTA_FACPER = :HASTA THEN 1 ELSE 0 END), 0) ' +
     'AS DUPLICADOS, COUNT(*) AS SOLAPADOS ' +
-    'FROM fza_facturacion_caja_periodos ' +
-    'WHERE MODALIDAD_FACPER = :MODALIDAD ' +
-    'AND CODIGO_EMP_DESTINO_FACPER = :EMPRESA ' +
-    'AND FECHA_DESDE_FACPER <= :HASTA ' +
-    'AND FECHA_HASTA_FACPER >= :DESDE';
+    'FROM fza_facturacion_caja_periodos FP ' +
+    'WHERE FP.MODALIDAD_FACPER = :MODALIDAD ' +
+    'AND (:MODALIDAD <> ''TA'' ' +
+    ' OR FP.CODIGO_EMP_DESTINO_FACPER = :EMPRESA_DESTINO) ' +
+    'AND (FP.CODIGO_EMP_ORIGEN_FACPER = :EMPRESA_ORIGEN ' +
+    ' OR (:MODALIDAD = ''TA'' ' +
+    ' AND FP.CODIGO_EMP_ORIGEN_FACPER IS NULL ' +
+    ' AND (EXISTS (SELECT 1 FROM fza_facturas_operaciones_caja X ' +
+    ' WHERE X.ID_FACPER_FACOP = FP.ID_FACPER ' +
+    ' AND X.CODIGO_EMP_ORIGEN_FACOP = :EMPRESA_ORIGEN) ' +
+    ' OR NOT EXISTS (SELECT 1 FROM fza_facturas_operaciones_caja X ' +
+    ' WHERE X.ID_FACPER_FACOP = FP.ID_FACPER)))) ' +
+    'AND FP.FECHA_DESDE_FACPER <= :HASTA ' +
+    'AND FP.FECHA_HASTA_FACPER >= :DESDE';
   SQL_INSERTAR_PERIODO =
     'INSERT INTO fza_facturacion_caja_periodos (' +
-    'MODALIDAD_FACPER, CODIGO_EMP_DESTINO_FACPER, ' +
+    'MODALIDAD_FACPER, CODIGO_EMP_ORIGEN_FACPER, ' +
+    'CODIGO_EMP_DESTINO_FACPER, ' +
     'FECHA_DESDE_FACPER, FECHA_HASTA_FACPER, ESTADO_FACPER, ' +
     'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
-    'VALUES (:MODALIDAD, :EMPRESA, :DESDE, :HASTA, ''ABIERTO'', ' +
+    'VALUES (:MODALIDAD, :EMPRESA_ORIGEN, :EMPRESA_DESTINO, ' +
+    ':DESDE, :HASTA, ''ABIERTO'', ' +
     'NOW(), NOW(), :USUARIO, :USUARIO)';
   SQL_ACTUALIZAR_PERIODO =
     'UPDATE fza_facturacion_caja_periodos SET ESTADO_FACPER = :ESTADO, ' +
@@ -137,7 +148,7 @@ const
     'JOIN fza_facturas F ON F.SERIE_FAC = O.SERIE_FAC_OPCAJA ' +
     ' AND F.NUMERO_FAC = O.NUMERO_FAC_OPCAJA ' +
     'WHERE O.TIPO_OPERACION_OPCAJA = ''VE'' ' +
-    ' AND O.CODIGO_EMP_OPCAJA = :EMPRESA ' +
+    ' AND O.CODIGO_EMP_OPCAJA = :EMPRESA_ORIGEN ' +
     ' AND COALESCE(O.FECHA_OP_DIA_OPCAJA, ' +
     ' DATE(O.FECHA_OPERACION_OPCAJA)) BETWEEN :DESDE AND :HASTA ' +
     ' AND F.TIPO_FAC = ''SIMPLIFICADA'' ' +
@@ -165,7 +176,7 @@ const
     'LEFT JOIN fza_facturas F ' +
     ' ON F.SERIE_FAC = P.SERIE_FAC_ORIGEN_PROCLIN ' +
     ' AND F.NUMERO_FAC = P.NUMERO_FAC_ORIGEN_PROCLIN ' +
-    'WHERE H.CODIGO_EMP_PROCAJ = :EMPRESA ' +
+    'WHERE H.CODIGO_EMP_PROCAJ = :EMPRESA_ORIGEN ' +
     ' AND P.TIPO_VINCULO_PROCLIN = ''ORIGEN'' ' +
     ' AND (F.NUMERO_FAC IS NULL ' +
     ' OR F.TIPO_FAC <> ''SIMPLIFICADA'' ' +
@@ -208,7 +219,7 @@ const
     'E.POBLACION_EMP, E.PROVINCIA_EMP, E.CODIGO_PAI_EMP, ' +
     'E.NOMBRE_PAI_EMP, ''0'', ''VENTA CONTADO'', NOW(), NOW(), ' +
     ':USUARIO, :USUARIO FROM fza_empresas E ' +
-    'WHERE E.CODIGO_EMP_EMP = :EMPRESA';
+    'WHERE E.CODIGO_EMP_EMP = :EMPRESA_ORIGEN';
   SQL_INICIAR_LINEA_PROFORMA = 'SET @linea_proforma := 0';
   SQL_CONTINUAR_LINEA_PROFORMA =
     'SET @linea_proforma := (SELECT COALESCE(' +
@@ -242,7 +253,7 @@ const
     ' ON L.SERIE_FAC_FACLIN = F.SERIE_FAC ' +
     ' AND L.NUMERO_FAC_FACLIN = F.NUMERO_FAC ' +
     'WHERE O.TIPO_OPERACION_OPCAJA = ''VE'' ' +
-    ' AND O.CODIGO_EMP_OPCAJA = :EMPRESA ' +
+    ' AND O.CODIGO_EMP_OPCAJA = :EMPRESA_ORIGEN ' +
     ' AND COALESCE(O.FECHA_OP_DIA_OPCAJA, ' +
     ' DATE(O.FECHA_OPERACION_OPCAJA)) BETWEEN :DESDE AND :HASTA ' +
     ' AND F.TIPO_FAC = ''SIMPLIFICADA'' ' +
@@ -293,7 +304,7 @@ const
     'LEFT JOIN fza_facturas F ' +
     ' ON F.SERIE_FAC = P.SERIE_FAC_ORIGEN_PROCLIN ' +
     ' AND F.NUMERO_FAC = P.NUMERO_FAC_ORIGEN_PROCLIN ' +
-    'WHERE H.CODIGO_EMP_PROCAJ = :EMPRESA ' +
+    'WHERE H.CODIGO_EMP_PROCAJ = :EMPRESA_ORIGEN ' +
     ' AND P.TIPO_VINCULO_PROCLIN = ''ORIGEN'' ' +
     ' AND (F.NUMERO_FAC IS NULL ' +
     ' OR F.TIPO_FAC <> ''SIMPLIFICADA'' ' +
@@ -345,8 +356,8 @@ const
     'FROM fza_caja_operaciones O ' +
     'WHERE O.TIPO_OPERACION_OPCAJA = ''TA'' ' +
     ' AND O.ESTRASPASO_OPCAJA = ''S'' ' +
-    ' AND O.CODIGO_EMP_CONTRA_OPCAJA = :EMPRESA ' +
-    ' AND O.CODIGO_EMP_OPCAJA <> :EMPRESA ' +
+    ' AND O.CODIGO_EMP_OPCAJA = :EMPRESA_ORIGEN ' +
+    ' AND O.CODIGO_EMP_CONTRA_OPCAJA = :EMPRESA_DESTINO ' +
     ' AND COALESCE(O.FECHA_OP_DIA_OPCAJA, ' +
     ' DATE(O.FECHA_OPERACION_OPCAJA)) BETWEEN :DESDE AND :HASTA ' +
     ' AND NOT EXISTS (SELECT 1 FROM fza_facturas_operaciones_caja X ' +
@@ -371,7 +382,7 @@ const
     ' AND O.ESTRASPASO_OPCAJA = ''S'' ' +
     ' AND O.CODIGO_EMP_OPCAJA = :ORIGEN ' +
     ' AND O.CODIGO_ALM_OPCAJA = :ALMACEN ' +
-    ' AND O.CODIGO_EMP_CONTRA_OPCAJA = :EMPRESA ' +
+    ' AND O.CODIGO_EMP_CONTRA_OPCAJA = :EMPRESA_DESTINO ' +
     ' AND COALESCE(O.FECHA_OP_DIA_OPCAJA, ' +
     ' DATE(O.FECHA_OPERACION_OPCAJA)) BETWEEN :DESDE AND :HASTA ' +
     ' AND M.TIPO_DOC_MOV = ''TA'' AND M.TIPO_MOV = ''S'' ' +
@@ -475,7 +486,7 @@ const
     'CONCAT(''Factura interna TA. Periodo '', :DESDE, '' a '', :HASTA), ' +
     '''0000'', ''N'', ''S'', ''N'', NOW(), NOW(), :USUARIO, :USUARIO ' +
     'FROM fza_empresas E JOIN fza_empresas D ' +
-    ' ON D.CODIGO_EMP_EMP = :EMPRESA ' +
+    ' ON D.CODIGO_EMP_EMP = :EMPRESA_DESTINO ' +
     'JOIN fza_ivas I ON I.IVA_IVAGRP = E.GRUPO_ZONA_IVA_EMP ' +
     ' AND I.FECHA_DESDE_IVA <= :HASTA ' +
     ' AND (I.FECHA_HASTA_IVA IS NULL OR I.FECHA_HASTA_IVA >= :HASTA) ' +
@@ -541,7 +552,7 @@ const
     ' AND X.NUMERO_FAC_FACOP = :NUMERO ' +
     ' AND O.CODIGO_EMP_OPCAJA = :ORIGEN ' +
     ' AND O.CODIGO_ALM_OPCAJA = :ALMACEN ' +
-    ' AND O.CODIGO_EMP_CONTRA_OPCAJA = :EMPRESA ' +
+    ' AND O.CODIGO_EMP_CONTRA_OPCAJA = :EMPRESA_DESTINO ' +
     ' AND M.TIPO_DOC_MOV = ''TA'' AND M.TIPO_MOV = ''S'' ' +
     ' AND M.ESACTIVO_MOV = ''S'' ' +
     'ORDER BY COALESCE(O.FECHA_OP_DIA_OPCAJA, ' +
@@ -564,7 +575,7 @@ const
     ' AND O.ESTRASPASO_OPCAJA = ''S'' ' +
     ' AND O.CODIGO_EMP_OPCAJA = :ORIGEN ' +
     ' AND O.CODIGO_ALM_OPCAJA = :ALMACEN ' +
-    ' AND O.CODIGO_EMP_CONTRA_OPCAJA = :EMPRESA ' +
+    ' AND O.CODIGO_EMP_CONTRA_OPCAJA = :EMPRESA_DESTINO ' +
     ' AND COALESCE(O.FECHA_OP_DIA_OPCAJA, ' +
     ' DATE(O.FECHA_OPERACION_OPCAJA)) BETWEEN :DESDE AND :HASTA ' +
     ' AND NOT EXISTS (SELECT 1 FROM fza_facturas_operaciones_caja X ' +
@@ -653,9 +664,14 @@ begin
   begin
     AConsulta.ParamByName('HASTA').AsDate := Trunc(ASolicitud.FechaHasta);
   end;
-  if AConsulta.Params.FindParam('EMPRESA') <> nil then
+  if AConsulta.Params.FindParam('EMPRESA_ORIGEN') <> nil then
   begin
-    AConsulta.ParamByName('EMPRESA').AsString :=
+    AConsulta.ParamByName('EMPRESA_ORIGEN').AsString :=
+      ASolicitud.CodigoEmpresaOrigen;
+  end;
+  if AConsulta.Params.FindParam('EMPRESA_DESTINO') <> nil then
+  begin
+    AConsulta.ParamByName('EMPRESA_DESTINO').AsString :=
       ASolicitud.CodigoEmpresaDestino;
   end;
   if AConsulta.Params.FindParam('USUARIO') <> nil then
@@ -886,7 +902,7 @@ begin
       sNumero := ObtenerNumeroDocumento(
         sSerie,
         'PF',
-        ASolicitud.CodigoEmpresaDestino,
+        ASolicitud.CodigoEmpresaOrigen,
         ASolicitud.Usuario);
       oConsulta := TUniQuery.Create(nil);
       try

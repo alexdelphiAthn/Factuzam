@@ -83,8 +83,10 @@ begin
     '                P.FECHA_DESDE_PROCAJ) AS FECHA_DESDE, ' +
     '       COALESCE(FP.FECHA_HASTA_FACPER, ' +
     '                P.FECHA_HASTA_PROCAJ) AS FECHA_HASTA, ' +
-    '       P.CODIGO_EMP_PROCAJ AS CODIGO_EMPRESA, ' +
-    '       E.RAZON_SOCIAL_EMP AS EMPRESA_DESTINO, ' +
+    '       P.CODIGO_EMP_PROCAJ AS CODIGO_EMPRESA_ORIGEN, ' +
+    '       P.RAZON_SOCIAL_EMPRESA_PROCAJ AS EMPRESA_ORIGEN, ' +
+    '       '''' AS CODIGO_EMPRESA_DESTINO, ' +
+    '       '''' AS EMPRESA_DESTINO, ' +
     '       P.ESTADO_PROCAJ AS ESTADO_DOCUMENTO, ' +
     '       P.TOTAL_BASE_PROCAJ AS TOTAL_BASE, ' +
     '       P.TOTAL_IMPUESTOS_PROCAJ AS TOTAL_IMPUESTOS, ' +
@@ -99,8 +101,6 @@ begin
     '           AND L.TIPO_VINCULO_PROCLIN = ''AJUSTE'') ' +
     '         AS CANTIDAD_AJUSTES ' +
     '  FROM fza_proformas_caja P ' +
-    '  LEFT JOIN fza_empresas E ' +
-    '    ON E.CODIGO_EMP_EMP = P.CODIGO_EMP_PROCAJ ' +
     '  LEFT JOIN fza_facturacion_caja_periodos FP ' +
     '    ON FP.ID_FACPER = P.ID_FACPER_PROCAJ ' +
     'UNION ALL ' +
@@ -115,8 +115,12 @@ begin
     '                MIN(DATE(O.FECHA_OPERACION_OPCAJA))) AS FECHA_DESDE, ' +
     '       COALESCE(MAX(FP.FECHA_HASTA_FACPER), ' +
     '                MAX(DATE(O.FECHA_OPERACION_OPCAJA))) AS FECHA_HASTA, ' +
-    '       M.CODIGO_EMP_ORIGEN_FACOP AS CODIGO_EMPRESA, ' +
-    '       E.RAZON_SOCIAL_EMP AS EMPRESA_DESTINO, ' +
+    '       M.CODIGO_EMP_ORIGEN_FACOP AS CODIGO_EMPRESA_ORIGEN, ' +
+    '       COALESCE(NULLIF(F.RAZON_SOCIAL_EMPRESA_FAC, ''''), ' +
+    '                EO.RAZON_SOCIAL_EMP) AS EMPRESA_ORIGEN, ' +
+    '       M.CODIGO_EMP_DESTINO_FACOP AS CODIGO_EMPRESA_DESTINO, ' +
+    '       COALESCE(NULLIF(F.RAZON_SOCIAL_CLIENTE_FAC, ''''), ' +
+    '                ED.RAZON_SOCIAL_EMP) AS EMPRESA_DESTINO, ' +
     '       M.ESTADO_FACOP AS ESTADO_DOCUMENTO, ' +
     '       F.TOTAL_BASES_FAC AS TOTAL_BASE, ' +
     '       F.TOTAL_IMPUESTOS_FAC AS TOTAL_IMPUESTOS, ' +
@@ -129,12 +133,17 @@ begin
     '   AND F.NUMERO_FAC = M.NUMERO_FAC_FACOP ' +
     '  JOIN fza_caja_operaciones O ' +
     '    ON O.ID_OPCAJA = M.ID_OPCAJA_FACOP ' +
-    '  LEFT JOIN fza_empresas E ' +
-    '    ON E.CODIGO_EMP_EMP = M.CODIGO_EMP_DESTINO_FACOP ' +
+    '  LEFT JOIN fza_empresas EO ' +
+    '    ON EO.CODIGO_EMP_EMP = M.CODIGO_EMP_ORIGEN_FACOP ' +
+    '  LEFT JOIN fza_empresas ED ' +
+    '    ON ED.CODIGO_EMP_EMP = M.CODIGO_EMP_DESTINO_FACOP ' +
     '  LEFT JOIN fza_facturacion_caja_periodos FP ' +
     '    ON FP.ID_FACPER = M.ID_FACPER_FACOP ' +
     ' GROUP BY M.SERIE_FAC_FACOP, M.NUMERO_FAC_FACOP, F.FECHA_FAC, ' +
-    '          M.CODIGO_EMP_ORIGEN_FACOP, E.RAZON_SOCIAL_EMP, ' +
+    '          M.CODIGO_EMP_ORIGEN_FACOP, ' +
+    '          F.RAZON_SOCIAL_EMPRESA_FAC, EO.RAZON_SOCIAL_EMP, ' +
+    '          M.CODIGO_EMP_DESTINO_FACOP, ' +
+    '          F.RAZON_SOCIAL_CLIENTE_FAC, ED.RAZON_SOCIAL_EMP, ' +
     '          M.ESTADO_FACOP, F.TOTAL_BASES_FAC, ' +
     '          F.TOTAL_IMPUESTOS_FAC, F.TOTAL_LIQUIDO_FAC ' +
     'UNION ALL ' +
@@ -146,16 +155,25 @@ begin
     '       FP.FECHA_HASTA_FACPER AS FECHA_DOCUMENTO, ' +
     '       FP.FECHA_DESDE_FACPER AS FECHA_DESDE, ' +
     '       FP.FECHA_HASTA_FACPER AS FECHA_HASTA, ' +
-    '       FP.CODIGO_EMP_DESTINO_FACPER AS CODIGO_EMPRESA, ' +
-    '       E.RAZON_SOCIAL_EMP AS EMPRESA_DESTINO, ' +
+    '       FP.CODIGO_EMP_ORIGEN_FACPER AS CODIGO_EMPRESA_ORIGEN, ' +
+    '       CASE WHEN FP.CODIGO_EMP_ORIGEN_FACPER IS NULL ' +
+    '            THEN ''VARIAS/TODAS (legado)'' ' +
+    '            ELSE EO.RAZON_SOCIAL_EMP END AS EMPRESA_ORIGEN, ' +
+    '       CASE WHEN FP.MODALIDAD_FACPER = ''VE'' THEN '''' ' +
+    '            ELSE FP.CODIGO_EMP_DESTINO_FACPER ' +
+    '       END AS CODIGO_EMPRESA_DESTINO, ' +
+    '       CASE WHEN FP.MODALIDAD_FACPER = ''VE'' THEN '''' ' +
+    '            ELSE ED.RAZON_SOCIAL_EMP END AS EMPRESA_DESTINO, ' +
     '       FP.ESTADO_FACPER AS ESTADO_DOCUMENTO, ' +
     '       0 AS TOTAL_BASE, 0 AS TOTAL_IMPUESTOS, ' +
     '       0 AS TOTAL_DOCUMENTO, ' +
     '       FP.CANTIDAD_OPERACIONES_FACPER AS CANTIDAD_OPERACIONES, ' +
     '       FP.CANTIDAD_AJUSTES_FACPER AS CANTIDAD_AJUSTES ' +
     '  FROM fza_facturacion_caja_periodos FP ' +
-    '  LEFT JOIN fza_empresas E ' +
-    '    ON E.CODIGO_EMP_EMP = FP.CODIGO_EMP_DESTINO_FACPER ' +
+    '  LEFT JOIN fza_empresas EO ' +
+    '    ON EO.CODIGO_EMP_EMP = FP.CODIGO_EMP_ORIGEN_FACPER ' +
+    '  LEFT JOIN fza_empresas ED ' +
+    '    ON ED.CODIGO_EMP_EMP = FP.CODIGO_EMP_DESTINO_FACPER ' +
     ' WHERE NOT EXISTS (SELECT 1 FROM fza_proformas_caja P ' +
     '                    WHERE P.ID_FACPER_PROCAJ = FP.ID_FACPER) ' +
     '   AND NOT EXISTS (SELECT 1 FROM fza_facturas_operaciones_caja M ' +

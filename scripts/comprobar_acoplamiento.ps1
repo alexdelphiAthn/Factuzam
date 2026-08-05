@@ -1,7 +1,7 @@
 param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoFanOut = 78,
+  [int]$MaximoFanOut = 50,
   [ValidateRange(0, [int]::MaxValue)]
   [int]$MaximoFanInConCuerpo = 84,
   [ValidateRange(0, [int]::MaxValue)]
