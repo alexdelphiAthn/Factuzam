@@ -86,7 +86,7 @@ type
     // (fza_empresas_series) y permite teclear una nueva.
     cbbSERIE_ALBC:    TcxDBComboBox;
     lblFechaAlbaran:  TcxLabel;
-    dteFECHA_ALBC:    TcxDBDateEdit;
+    dteINSTANTEMOVIMIENTO_ALBC: TcxDBDateEdit;
     lblTemporadaAlbaran: TcxLabel;
     cbbTemporadaAlbc: TcxDBLookupComboBox;
     lblPedidoOrigen:  TcxLabel;

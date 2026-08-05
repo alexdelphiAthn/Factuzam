@@ -71,18 +71,21 @@ end;
 procedure LeerCabeceraDevolucion(AConn: TUniConnection;
                               const ASerieDevc, ANumDevc: string;
                               out ACodigoEmp, ACodigoAlmCab: string;
-                              out AFechaDevc: TDateTime);
+                              out AInstanteMovimiento: TDateTime);
 var
   q: TUniQuery;
 begin
   ACodigoEmp    := '';
   ACodigoAlmCab := '';
-  AFechaDevc := Date;
+  AInstanteMovimiento := Now;
   q := TUniQuery.Create(nil);
   try
     q.Connection := AConn;
     q.SQL.Text :=
-      'SELECT CODIGO_EMP_DEVC, CODIGO_ALM_DEVC, FECHA_DEVC ' +
+      'SELECT CODIGO_EMP_DEVC, CODIGO_ALM_DEVC, ' +
+      '       COALESCE(INSTANTE_MOVIMIENTO_DEVC, ' +
+      '                CAST(FECHA_DEVC AS datetime), NOW()) ' +
+      '         AS INSTANTE_MOVIMIENTO ' +
       '  FROM fza_devoluciones_compra ' +
       ' WHERE SERIE_DEVC = :s AND NUMERO_DEVC = :n';
     q.ParamByName('s').AsString := ASerieDevc;
@@ -94,8 +97,8 @@ begin
         [ASerieDevc, ANumDevc]);
     ACodigoEmp    := q.FieldByName('CODIGO_EMP_DEVC').AsString;
     ACodigoAlmCab := q.FieldByName('CODIGO_ALM_DEVC').AsString;
-    if not q.FieldByName('FECHA_DEVC').IsNull then
-      AFechaDevc := q.FieldByName('FECHA_DEVC').AsDateTime;
+    AInstanteMovimiento :=
+      q.FieldByName('INSTANTE_MOVIMIENTO').AsDateTime;
   finally
     FreeAndNil(q);
   end;
@@ -136,7 +139,7 @@ var
   sCodigoEmp, sCodigoAlmCab, sCodigoAlm, sCodigoSku, sCodigoArt,
   sNumeroMov, sLinea: string;
   iCount: Integer;
-  dFechaDevc: TDateTime;
+  dtInstanteMovimiento: TDateTime;
   rCantidad, rPrecio, rTotal: Double;
 begin
   LeerCabeceraDevolucion(AConn,
@@ -144,7 +147,7 @@ begin
                          ANumDevc,
                          sCodigoEmp,
                          sCodigoAlmCab,
-                         dFechaDevc);
+                         dtInstanteMovimiento);
   // Sanidad: bloquear doble generacion. Si ya hay movs de la devolucion, no
   // generamos otra vez. La reversion debe llamarse explicita antes.
   qChk := TUniQuery.Create(nil);
@@ -240,7 +243,7 @@ begin
       EstrategiaDevolucionCompra.TipoDocumentoMovimientoStock,
       ASerieDevc,
       ANumDevc,
-      dFechaDevc);
+      dtInstanteMovimiento);
   finally
     FreeAndNil(qSrc);
     FreeAndNil(spIns);

@@ -148,7 +148,7 @@ begin
   SerieAlbaran         := '';
   RefProveedor         := '';
   IdPvTemporada        := 0;
-  FechaRecepcion       := Date;
+  FechaRecepcion       := Now;
   Incorporar           := False;
   AlbaranSerieDestino  := '';
   AlbaranNumDestino    := '';
@@ -188,7 +188,7 @@ begin
     cbbTemporada.EditValue := IdPvTemporadaDefecto
   else
     cbbTemporada.EditValue := Null;
-  dteFecha.Date := Date;
+  dteFecha.Date := Now;
   // Default del almacen: lo que pase el llamador (almacen efectivo de
   // una linea del pedido). Si no manda nada, dejamos el combo vacio
   // para forzar al usuario a elegirlo.

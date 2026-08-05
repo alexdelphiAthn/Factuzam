@@ -60,23 +60,26 @@ begin
   Result := CrearEstrategiaDocumento(
     CrearConfiguracionDocumento(tdAlbaran, sdCompra));
 end;
-// Carga empresa, fecha y almacén de respaldo para los movimientos.
+// Carga empresa, instante y almacén de respaldo para los movimientos.
 // El almacén de línea o celda siempre tiene prioridad.
 procedure LeerCabeceraAlbaran(AConn: TUniConnection;
                               const ASerieAlbc, ANumAlbc: string;
                               out ACodigoEmp, ACodigoAlmCab: string;
-                              out AFechaAlbc: TDateTime);
+                              out AInstanteMovimiento: TDateTime);
 var
   q: TUniQuery;
 begin
   ACodigoEmp    := '';
   ACodigoAlmCab := '';
-  AFechaAlbc    := Date;
+  AInstanteMovimiento := Now;
   q := TUniQuery.Create(nil);
   try
     q.Connection := AConn;
     q.SQL.Text :=
-      'SELECT CODIGO_EMP_ALBC, CODIGO_ALM_ALBC, FECHA_ALBC ' +
+      'SELECT CODIGO_EMP_ALBC, CODIGO_ALM_ALBC, ' +
+      '       COALESCE(INSTANTE_MOVIMIENTO_ALBC, ' +
+      '                CAST(FECHA_ALBC AS datetime), NOW()) ' +
+      '         AS INSTANTE_MOVIMIENTO ' +
       '  FROM fza_albaranes_compra ' +
       ' WHERE SERIE_ALBC = :s AND NUMERO_ALBC = :n';
     q.ParamByName('s').AsString := ASerieAlbc;
@@ -87,8 +90,8 @@ begin
         [ASerieAlbc, ANumAlbc]);
     ACodigoEmp    := q.FieldByName('CODIGO_EMP_ALBC').AsString;
     ACodigoAlmCab := q.FieldByName('CODIGO_ALM_ALBC').AsString;
-    if not q.FieldByName('FECHA_ALBC').IsNull then
-      AFechaAlbc := q.FieldByName('FECHA_ALBC').AsDateTime;
+    AInstanteMovimiento :=
+      q.FieldByName('INSTANTE_MOVIMIENTO').AsDateTime;
   finally
     FreeAndNil(q);
   end;
@@ -360,12 +363,12 @@ var
   spIns: TUniStoredProc;
   sCodigoEmp, sCodigoAlmCab, sCodigoAlm, sCodigoSku, sCodigoArt,
   sNumeroMov, sLinea: string;
-  dFechaAlbc: TDateTime;
+  dtInstanteMovimiento: TDateTime;
   iCount: Integer;
   rCantidad, rPrecio, rTotal: Double;
 begin
   LeerCabeceraAlbaran(AConn, ASerieAlbc, ANumAlbc, sCodigoEmp, sCodigoAlmCab,
-                      dFechaAlbc);
+                      dtInstanteMovimiento);
   // Sanidad: bloquear doble generacion. Si ya hay movs del albaran, no
   // generamos otra vez. La reversion debe llamarse explicita antes.
   qChk := TUniQuery.Create(nil);
@@ -464,7 +467,7 @@ begin
       EstrategiaAlbaranCompra.TipoDocumentoMovimientoStock,
       ASerieAlbc,
       ANumAlbc,
-      dFechaAlbc);
+      dtInstanteMovimiento);
   finally
     FreeAndNil(qSrc);
     FreeAndNil(spIns);

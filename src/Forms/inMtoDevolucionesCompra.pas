@@ -84,7 +84,7 @@ type
     lblSerieDevolucion:  TcxLabel;
     cbbSERIE_DEVC:    TcxDBComboBox;
     lblFechaDevolucion:  TcxLabel;
-    dteFECHA_DEVC:    TcxDBDateEdit;
+    dteINSTANTEMOVIMIENTO_DEVC: TcxDBDateEdit;
     lblCabTotalPrendas: TcxLabel;
     lblCabTotalPrendasValor: TcxLabel;
     lblCodigoEmpresa: TcxLabel;

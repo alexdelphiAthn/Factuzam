@@ -42,10 +42,13 @@
               DataBinding.FieldName = 'SERIE_DEVC'
               Width = 80
             end
-            object dbcGrdDevcFECHA_DEVC: TcxGridDBColumn
-              Caption = 'Fecha'
-              DataBinding.FieldName = 'FECHA_DEVC'
-              Width = 100
+            object dbcGrdDevcINSTANTEMOVIMIENTO_DEVC: TcxGridDBColumn
+              Caption = 'Fecha y hora stock'
+              DataBinding.FieldName = 'INSTANTE_MOVIMIENTO_DEVC'
+              PropertiesClassName = 'TcxDateEditProperties'
+              Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
+              Properties.Kind = ckDateTime
+              Width = 145
             end
             object dbcGrdDevcCODIGO_EMP_DEVC: TcxGridDBColumn
               Caption = 'Empresa'
@@ -150,27 +153,29 @@
               object lblFechaDevolucion: TcxLabel
                 Left = 204
                 Top = 12
-                Caption = 'Fecha'
+                Caption = 'Fecha y hora stock'
                 TabOrder = 4
                 Transparent = True
               end
-              object dteFECHA_DEVC: TcxDBDateEdit
+              object dteINSTANTEMOVIMIENTO_DEVC: TcxDBDateEdit
                 Left = 204
                 Top = 32
-                DataBinding.DataField = 'FECHA_DEVC'
+                DataBinding.DataField = 'INSTANTE_MOVIMIENTO_DEVC'
                 DataBinding.DataSource = dsTablaG
+                Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
+                Properties.Kind = ckDateTime
                 TabOrder = 5
-                Width = 110
+                Width = 156
               end
               object lblCabTotalPrendas: TcxLabel
-                Left = 320
+                Left = 366
                 Top = 12
                 Caption = 'N'#186' de prendas'
                 TabOrder = 6
                 Transparent = True
               end
               object lblCabTotalPrendasValor: TcxLabel
-                Left = 320
+                Left = 366
                 Top = 32
                 AutoSize = False
                 Caption = '0'

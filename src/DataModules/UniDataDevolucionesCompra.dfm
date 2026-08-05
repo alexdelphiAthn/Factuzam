@@ -19,7 +19,7 @@
       '  ) R'
       '    ON R.SERIE_DEVC_DEVCLIN = D.SERIE_DEVC'
       '   AND R.NUMERO_DEVC_DEVCLIN = D.NUMERO_DEVC'
-      ' ORDER BY D.FECHA_DEVC DESC, D.NUMERO_DEVC DESC')
+      ' ORDER BY D.INSTANTE_MOVIMIENTO_DEVC DESC, D.NUMERO_DEVC DESC')
     AfterInsert = unqryTablaGAfterInsert
     BeforePost = unqryTablaGBeforePost
     AfterPost = unqryTablaGAfterPost

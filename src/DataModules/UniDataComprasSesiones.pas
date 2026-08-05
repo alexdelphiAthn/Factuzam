@@ -454,7 +454,9 @@ begin
     '       prv.NOMBRE_PRV AS NOMBRE_PRV_SES, ' +
     '       t.PV AS TEMPORADA_SES, ' +
     '       s.FECHA_SES AS FECHA_REALIZACION_SES, ' +
-    '       alb.FECHA_ALBC AS FECHA_EFECTO_STOCK_SES, ' +
+    '       COALESCE(alb.INSTANTE_MOVIMIENTO_ALBC, ' +
+    '                CAST(alb.FECHA_ALBC AS datetime)) ' +
+    '         AS FECHA_EFECTO_STOCK_SES, ' +
     '       COALESCE(r.TOTAL_PRENDAS_SES, 0) AS TOTAL_PRENDAS_SES, ' +
     '       COALESCE(r.TOTAL_PRENDAS_SES, 0) AS CANTIDAD_PEDIDA_SES, ' +
     '       COALESCE(r.TOTAL_LINEAS_SES, 0) AS TOTAL_LINEAS_SES, ' +
@@ -500,7 +502,9 @@ begin
     '       prv.NOMBRE_PRV AS NOMBRE_PRV_SES, ' +
     '       t.PV AS TEMPORADA_SES, ' +
     '       s.FECHA_SES AS FECHA_REALIZACION_SES, ' +
-    '       alb.FECHA_ALBC AS FECHA_EFECTO_STOCK_SES, ' +
+    '       COALESCE(alb.INSTANTE_MOVIMIENTO_ALBC, ' +
+    '                CAST(alb.FECHA_ALBC AS datetime)) ' +
+    '         AS FECHA_EFECTO_STOCK_SES, ' +
     '       COALESCE(r.TOTAL_PRENDAS_SES, 0) AS TOTAL_PRENDAS_SES, ' +
     '       COALESCE(r.TOTAL_PRENDAS_SES, 0) AS CANTIDAD_PEDIDA_SES, ' +
     '       COALESCE(r.TOTAL_LINEAS_SES, 0) AS TOTAL_LINEAS_SES, ' +

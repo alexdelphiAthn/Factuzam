@@ -51,7 +51,8 @@ begin
     q.Connection := AConn;
     q.SQL.Text :=
       'INSERT INTO fza_albaranes_compra ' +
-      '  (NUMERO_ALBC, SERIE_ALBC, FECHA_ALBC, ESTADO_ALBC, ' +
+      '  (NUMERO_ALBC, SERIE_ALBC, FECHA_ALBC, ' +
+      '   INSTANTE_MOVIMIENTO_ALBC, ESTADO_ALBC, ' +
       '   CODIGO_EMP_ALBC, RAZON_SOCIAL_EMPRESA_ALBC, NIF_EMPRESA_ALBC, ' +
       '   MOVIL_EMPRESA_ALBC, EMAIL_EMPRESA_ALBC, ' +
       '   DIRECCION1_EMPRESA_ALBC, DIRECCION2_EMPRESA_ALBC, ' +
@@ -73,7 +74,9 @@ begin
       '   TOTAL_IMPUESTOS_ALBC, TOTAL_LIQUIDO_ALBC, ' +
       '   CONTADOR_LINEAS_ALBC, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
-      'SELECT :nalbc, :salbc, S.FECHA_SES, ''ABIERTO'', ' +
+      'SELECT :nalbc, :salbc, S.FECHA_SES, ' +
+      '       TIMESTAMP(COALESCE(S.FECHA_SES, CURDATE()), ' +
+      '                 CURRENT_TIME), ''ABIERTO'', ' +
       '       E.CODIGO_EMP_EMP, E.RAZON_SOCIAL_EMP, E.NIF_EMP, ' +
       '       E.MOVIL_EMP, E.EMAIL_EMP, ' +
       '       E.DIRECCION1_EMP, E.DIRECCION2_EMP, ' +

@@ -161,14 +161,16 @@
     object lblFecha: TcxLabel
       Left = 496
       Top = 280
-      Caption = 'Fecha recepción'
+      Caption = 'Fecha y hora recepción'
       Transparent = True
     end
     object dteFecha: TcxDateEdit
       Left = 496
       Top = 304
+      Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
+      Properties.Kind = ckDateTime
       TabOrder = 3
-      Width = 148
+      Width = 180
     end
     object lblTemporada: TcxLabel
       Left = 16

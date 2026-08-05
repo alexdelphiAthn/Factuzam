@@ -168,8 +168,9 @@ const
   // vi_albaranes (que anade NOMBRE_ALM_ALB por join y NO es
   // insertable): los DML se generan contra la tabla, como hace
   // pedidos con fza_pedidos en su dfm.
-  COLUMNAS_ALBARAN: array[0..69] of string = (
-    'NUMERO_ALB', 'SERIE_ALB', 'FECHA_ALB', 'ESCONSOLIDADO_ALB',
+  COLUMNAS_ALBARAN: array[0..70] of string = (
+    'NUMERO_ALB', 'SERIE_ALB', 'FECHA_ALB',
+    'INSTANTE_MOVIMIENTO_ALB', 'ESCONSOLIDADO_ALB',
     'ESTADO_ALB', 'NUMERO_PED_ALB', 'SERIE_PED_ALB', 'NUMERO_FAC_ALB',
     'SERIE_FAC_ALB', 'CODIGO_EMP_ALB', 'CODIGO_ALM_ALB',
     'RAZON_SOCIAL_EMPRESA_ALB', 'NIF_EMPRESA_ALB', 'MOVIL_EMPRESA_ALB',
@@ -263,9 +264,13 @@ begin
   unqryTablaG.SQLInsert.Text             := SqlInsertAlbaran;
   unqryTablaG.SQLUpdate.Text             := SqlUpdateAlbaran;
   unqryTablaG.SQLRefresh.Text            :=
-    'SELECT * FROM vi_albaranes ' +
-    ' WHERE NUMERO_ALB = :NUMERO_ALB ' +
-    '   AND SERIE_ALB = :SERIE_ALB';
+    'SELECT V.*, A.INSTANTE_MOVIMIENTO_ALB ' +
+    '  FROM vi_albaranes V ' +
+    '  JOIN fza_albaranes A ' +
+    '    ON A.NUMERO_ALB = V.NUMERO_ALB ' +
+    '   AND A.SERIE_ALB = V.SERIE_ALB ' +
+    ' WHERE V.NUMERO_ALB = :NUMERO_ALB ' +
+    '   AND V.SERIE_ALB = :SERIE_ALB';
   unqryAlbaranesLineas.Connection        := ConexionPrincipal;
   unqryEmpDataAlb.Connection             := ConexionPrincipal;
   unqryCliDataAlb.Connection             := ConexionPrincipal;
@@ -401,7 +406,9 @@ begin
       sSerie := 'A1';
     if FindField('SERIE_ALB') <> nil then
       FieldByName('SERIE_ALB').AsString := sSerie;
-    FieldByName('FECHA_ALB').AsDateTime := Date;
+    FieldByName('INSTANTE_MOVIMIENTO_ALB').AsDateTime := Now;
+    FieldByName('FECHA_ALB').AsDateTime :=
+      Trunc(FieldByName('INSTANTE_MOVIMIENTO_ALB').AsDateTime);
     if FindField('ESTADO_ALB') <> nil then
       FieldByName('ESTADO_ALB').AsString := 'ABIERTO';
     if FindField('ESCONSOLIDADO_ALB') <> nil then
@@ -426,6 +433,8 @@ end;
 procedure TdmAlbaranes.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   inherited;
+  SincronizarInstanteMovimientoDocumento(
+    DataSet, 'FECHA_ALB', 'INSTANTE_MOVIMIENTO_ALB');
   ValidarAlmacenCabecera;
   if (unqryTablaG.FieldByName('NUMERO_ALB').AsString = '0') or
      (unqryTablaG.FieldByName('NUMERO_ALB').AsString = '') then
@@ -2122,7 +2131,7 @@ var
   sNumeroAlb, sSerieAlb, sEmpresa, sCliente: string;
   sAlmacenCabecera: string;
   sLinea, sSku, sAlmacen, sArticulo, sNumeroMov: string;
-  dFechaAlb: TDateTime;
+  dtInstanteMovimiento: TDateTime;
   fCantidad: Double;
 begin
   Result := 0;
@@ -2134,10 +2143,13 @@ begin
     begin
       sEmpresa := unqryTablaG.FieldByName('CODIGO_EMP_ALB').AsString;
   sCliente := unqryTablaG.FieldByName('CODIGO_CLI_ALB').AsString;
-  dFechaAlb := Date;
-  if unqryTablaG.FindField('FECHA_ALB') <> nil then
-    if not unqryTablaG.FieldByName('FECHA_ALB').IsNull then
-      dFechaAlb := unqryTablaG.FieldByName('FECHA_ALB').AsDateTime;
+  dtInstanteMovimiento := Now;
+  if not unqryTablaG.FieldByName('INSTANTE_MOVIMIENTO_ALB').IsNull then
+    dtInstanteMovimiento := unqryTablaG.FieldByName(
+      'INSTANTE_MOVIMIENTO_ALB').AsDateTime
+  else if not unqryTablaG.FieldByName('FECHA_ALB').IsNull then
+    dtInstanteMovimiento :=
+      unqryTablaG.FieldByName('FECHA_ALB').AsDateTime;
   sAlmacenCabecera := '';
   if unqryTablaG.FindField('CODIGO_ALM_ALB') <> nil then
     sAlmacenCabecera :=
@@ -2292,7 +2304,7 @@ begin
       EstrategiaAlbaranVenta.TipoDocumentoMovimientoStock,
       sSerieAlb,
       sNumeroAlb,
-      dFechaAlb);
+      dtInstanteMovimiento);
 
   // Refrescar el grid de movimientos si está abierto.
   if unqryMovimientosAlb.Active then

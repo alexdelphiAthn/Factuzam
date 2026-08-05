@@ -86,6 +86,10 @@ type
     [Test]
     procedure Almacen_ResuelveConRepositorioEspecifico;
     [Test]
+    procedure InstanteMovimiento_SincronizaFechaDocumento;
+    [Test]
+    procedure InstanteMovimiento_LegacyConservaInicioDelDia;
+    [Test]
     procedure EstadoDatasets_GrabaYCancela;
     [Test]
     procedure PeriodoUnico_UnRegistroEsValido;
@@ -154,6 +158,8 @@ begin
   FDataSet.FieldDefs.Add('ID', ftInteger);
   FDataSet.FieldDefs.Add('SERIE', ftString, 10);
   FDataSet.FieldDefs.Add('NOMBRE', ftString, 40);
+  FDataSet.FieldDefs.Add('FECHA_DOCUMENTO', ftDate);
+  FDataSet.FieldDefs.Add('INSTANTE_MOVIMIENTO', ftDateTime);
   FDataSet.CreateDataSet;
   FDataSet.AppendRecord([1, 'A', 'Inicial']);
 end;
@@ -304,6 +310,42 @@ begin
     'A2',
     inLibData.ResolverAlmacenEmpresa(
       oRepositorio, 'EMP', 'A1'));
+end;
+
+procedure TPruebasDatasets.
+  InstanteMovimiento_SincronizaFechaDocumento;
+var
+  dtInstante: TDateTime;
+begin
+  dtInstante := EncodeDate(2026, 8, 5) + EncodeTime(14, 35, 20, 0);
+  FDataSet.Edit;
+  FDataSet.FieldByName('FECHA_DOCUMENTO').AsDateTime :=
+    EncodeDate(2026, 8, 1);
+  FDataSet.FieldByName('INSTANTE_MOVIMIENTO').AsDateTime := dtInstante;
+  inLibData.SincronizarInstanteMovimientoDocumento(
+    FDataSet, 'FECHA_DOCUMENTO', 'INSTANTE_MOVIMIENTO');
+  Assert.IsTrue(
+    FDataSet.FieldByName('FECHA_DOCUMENTO').AsDateTime =
+      EncodeDate(2026, 8, 5));
+  Assert.IsTrue(
+    FDataSet.FieldByName('INSTANTE_MOVIMIENTO').AsDateTime = dtInstante);
+end;
+
+procedure TPruebasDatasets.
+  InstanteMovimiento_LegacyConservaInicioDelDia;
+var
+  dtFecha: TDateTime;
+begin
+  dtFecha := EncodeDate(2026, 8, 4);
+  FDataSet.Edit;
+  FDataSet.FieldByName('FECHA_DOCUMENTO').AsDateTime := dtFecha;
+  FDataSet.FieldByName('INSTANTE_MOVIMIENTO').Clear;
+  inLibData.SincronizarInstanteMovimientoDocumento(
+    FDataSet, 'FECHA_DOCUMENTO', 'INSTANTE_MOVIMIENTO');
+  Assert.IsTrue(
+    FDataSet.FieldByName('INSTANTE_MOVIMIENTO').AsDateTime = dtFecha);
+  Assert.IsTrue(
+    FDataSet.FieldByName('FECHA_DOCUMENTO').AsDateTime = dtFecha);
 end;
 
 procedure TPruebasDatasets.

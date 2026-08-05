@@ -56,9 +56,12 @@
               Width = 120
             end
             object dbcFechaEfectoStockSes: TcxGridDBColumn
-              Caption = 'F.stock'
+              Caption = 'Fecha y hora stock'
               DataBinding.FieldName = 'FECHA_EFECTO_STOCK_SES'
-              Width = 100
+              PropertiesClassName = 'TcxDateEditProperties'
+              Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
+              Properties.Kind = ckDateTime
+              Width = 145
             end
             object dbcFechaTopeRecepcionSes: TcxGridDBColumn
               Caption = 'F.tope recep.'

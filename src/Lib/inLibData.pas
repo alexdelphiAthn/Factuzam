@@ -34,6 +34,9 @@ procedure AjustarEmpresaAlmacenDataSet(
 procedure AjustarEmpresasAlmacenesDocumento(
   const ARepositorio: IRepositorioAlmacenesEmpresa;
   ADataSet: TDataSet);
+procedure SincronizarInstanteMovimientoDocumento(
+  ADataSet: TDataSet;
+  const ACampoFecha, ACampoInstante: string);
 function ObtenerAlmacenDepositoEmpresa(
   const ARepositorio: IRepositorioAlmacenesEmpresa;
   const AEmpresa: string): string;
@@ -201,6 +204,28 @@ begin
     'CODIGO_EMP_TRSOL', 'CODIGO_ALM_ORIGEN_TRSOL');
   AjustarEmpresaAlmacenDataSet(ARepositorio, ADataSet,
     'CODIGO_EMP_CONTRA_TRSOL', 'CODIGO_ALM_DESTINO_TRSOL');
+end;
+
+procedure SincronizarInstanteMovimientoDocumento(
+  ADataSet: TDataSet;
+  const ACampoFecha, ACampoInstante: string);
+var
+  CampoFecha: TField;
+  CampoInstante: TField;
+begin
+  if Assigned(ADataSet) then
+  begin
+    CampoFecha := ADataSet.FieldByName(ACampoFecha);
+    CampoInstante := ADataSet.FieldByName(ACampoInstante);
+    if CampoInstante.IsNull then
+    begin
+      if CampoFecha.IsNull then
+        CampoInstante.AsDateTime := Now
+      else
+        CampoInstante.AsDateTime := Trunc(CampoFecha.AsDateTime);
+    end;
+    CampoFecha.AsDateTime := Trunc(CampoInstante.AsDateTime);
+  end;
 end;
 
 function ObtenerAlmacenDepositoEmpresa(

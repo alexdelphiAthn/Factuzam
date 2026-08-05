@@ -71,7 +71,7 @@ type
     lblSerieAlbaran: TcxLabel;
     cbbSERIE_ALB: TcxDBComboBox;
     lblFechaAlbaran: TcxLabel;
-    dteFECHA_ALB: TcxDBDateEdit;
+    dteINSTANTEMOVIMIENTO_ALB: TcxDBDateEdit;
     lblEstadoAlbaran: TcxLabel;
     txtESTADO_ALB: TcxDBTextEdit;
     lblPedidoOrigen: TcxLabel;

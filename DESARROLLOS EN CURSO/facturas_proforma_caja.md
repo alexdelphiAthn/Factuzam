@@ -35,8 +35,9 @@ enlaces de operación impiden facturar dos veces un mismo VE o TA.
   factura se solicita su emisión mediante el servicio fiscal común, que la
   registra en VeriFactu, No VeriFactu o Sin VeriFactu según la configuración.
 - El enlace de cada operación pasa a `EMITIDA` al delegarse correctamente o
-  a `ERROR_FISCAL` si falla la emisión; el estado del periodo permanece
-  separado del estado fiscal de la factura.
+  a `ERROR_FISCAL` si falla la emisión. La incidencia se recupera por el
+  circuito fiscal común sin crear otra factura para la misma operación.
+- El estado del periodo permanece separado de la fase fiscal de la factura.
 - Cada TA queda enlazado una sola vez con su factura. Una rectificación
   posterior se tramita mediante el circuito fiscal normal de rectificativas.
 

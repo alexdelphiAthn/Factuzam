@@ -46,10 +46,13 @@
               DataBinding.FieldName = 'NUMERO_ALBC'
               Width = 90
             end
-            object dbcGrdAlbcFECHA_ALBC: TcxGridDBColumn
-              Caption = 'Fecha'
-              DataBinding.FieldName = 'FECHA_ALBC'
-              Width = 100
+            object dbcGrdAlbcINSTANTEMOVIMIENTO_ALBC: TcxGridDBColumn
+              Caption = 'Fecha y hora stock'
+              DataBinding.FieldName = 'INSTANTE_MOVIMIENTO_ALBC'
+              PropertiesClassName = 'TcxDateEditProperties'
+              Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
+              Properties.Kind = ckDateTime
+              Width = 145
             end
             object dbcGrdAlbcCODIGO_ALM_ALBC: TcxGridDBColumn
               Caption = 'Almac'#233'n'
@@ -190,27 +193,29 @@
               object lblFechaAlbaran: TcxLabel
                 Left = 204
                 Top = 12
-                Caption = 'Fecha'
+                Caption = 'Fecha y hora stock'
                 TabOrder = 4
                 Transparent = True
               end
-              object dteFECHA_ALBC: TcxDBDateEdit
+              object dteINSTANTEMOVIMIENTO_ALBC: TcxDBDateEdit
                 Left = 204
                 Top = 32
-                DataBinding.DataField = 'FECHA_ALBC'
+                DataBinding.DataField = 'INSTANTE_MOVIMIENTO_ALBC'
                 DataBinding.DataSource = dsTablaG
+                Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
+                Properties.Kind = ckDateTime
                 TabOrder = 5
-                Width = 110
+                Width = 156
               end
               object lblTemporadaAlbaran: TcxLabel
-                Left = 320
+                Left = 366
                 Top = 12
                 Caption = 'Temporada'
                 TabOrder = 6
                 Transparent = True
               end
               object cbbTemporadaAlbc: TcxDBLookupComboBox
-                Left = 320
+                Left = 366
                 Top = 32
                 DataBinding.DataField = 'ID_PV_TEMPORADA_ALBC'
                 DataBinding.DataSource = dsTablaG

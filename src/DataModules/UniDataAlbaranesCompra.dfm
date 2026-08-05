@@ -10,8 +10,12 @@
       '  NUMERO_ALBC = :Old_NUMERO_ALBC'
       '  AND SERIE_ALBC = :Old_SERIE_ALBC')
     SQL.Strings = (
-      'SELECT * FROM vi_albaranes_compra'
-      ' ORDER BY FECHA_ALBC DESC, NUMERO_ALBC DESC')
+      'SELECT V.*, A.INSTANTE_MOVIMIENTO_ALBC'
+      '  FROM vi_albaranes_compra V'
+      '  JOIN fza_albaranes_compra A'
+      '    ON A.NUMERO_ALBC = V.NUMERO_ALBC'
+      '   AND A.SERIE_ALBC = V.SERIE_ALBC'
+      ' ORDER BY A.INSTANTE_MOVIMIENTO_ALBC DESC, V.NUMERO_ALBC DESC')
     AfterInsert = unqryTablaGAfterInsert
     BeforePost = unqryTablaGBeforePost
     AfterPost = unqryTablaGAfterPost

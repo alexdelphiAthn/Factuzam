@@ -40,10 +40,13 @@
               DataBinding.FieldName = 'SERIE_ALB'
               Width = 80
             end
-            object dbcGrdAlbFECHA_ALB: TcxGridDBColumn
-              Caption = 'Fecha'
-              DataBinding.FieldName = 'FECHA_ALB'
-              Width = 100
+            object dbcGrdAlbINSTANTEMOVIMIENTO_ALB: TcxGridDBColumn
+              Caption = 'Fecha y hora stock'
+              DataBinding.FieldName = 'INSTANTE_MOVIMIENTO_ALB'
+              PropertiesClassName = 'TcxDateEditProperties'
+              Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
+              Properties.Kind = ckDateTime
+              Width = 145
             end
             object dbcGrdAlbESTADO_ALB: TcxGridDBColumn
               Caption = 'Estado'
@@ -166,27 +169,29 @@
               object lblFechaAlbaran: TcxLabel
                 Left = 204
                 Top = 12
-                Caption = 'Fecha'
+                Caption = 'Fecha y hora stock'
                 TabOrder = 11
                 Transparent = True
               end
-              object dteFECHA_ALB: TcxDBDateEdit
+              object dteINSTANTEMOVIMIENTO_ALB: TcxDBDateEdit
                 Left = 204
                 Top = 32
-                DataBinding.DataField = 'FECHA_ALB'
+                DataBinding.DataField = 'INSTANTE_MOVIMIENTO_ALB'
                 DataBinding.DataSource = dsTablaG
+                Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
+                Properties.Kind = ckDateTime
                 TabOrder = 2
-                Width = 110
+                Width = 156
               end
               object lblEstadoAlbaran: TcxLabel
-                Left = 320
+                Left = 366
                 Top = 12
                 Caption = 'Estado'
                 TabOrder = 12
                 Transparent = True
               end
               object txtESTADO_ALB: TcxDBTextEdit
-                Left = 320
+                Left = 366
                 Top = 32
                 DataBinding.DataField = 'ESTADO_ALB'
                 DataBinding.DataSource = dsTablaG
@@ -195,7 +200,7 @@
                 Width = 110
               end
               object lblPedidoOrigen: TcxLabel
-                Left = 440
+                Left = 486
                 Top = 12
                 Caption = 'Pedido origen (N'#250'mero / Serie)'
                 TabOrder = 13
@@ -203,7 +208,7 @@
                 Visible = False
               end
               object txtNUMERO_PED_ALB: TcxDBTextEdit
-                Left = 440
+                Left = 486
                 Top = 32
                 DataBinding.DataField = 'NUMERO_PED_ALB'
                 DataBinding.DataSource = dsTablaG
@@ -213,7 +218,7 @@
                 Width = 90
               end
               object txtSERIE_PED_ALB: TcxDBTextEdit
-                Left = 540
+                Left = 586
                 Top = 32
                 DataBinding.DataField = 'SERIE_PED_ALB'
                 DataBinding.DataSource = dsTablaG
@@ -223,7 +228,7 @@
                 Width = 80
               end
               object btnIrDocumento: TcxButton
-                Left = 440
+                Left = 486
                 Top = 56
                 Width = 190
                 Height = 23
@@ -232,7 +237,7 @@
                 Visible = False
               end
               object lblFacturaDestino: TcxLabel
-                Left = 640
+                Left = 686
                 Top = 12
                 Caption = 'Borrador (N'#250'mero / Serie)'
                 TabOrder = 14
@@ -240,7 +245,7 @@
                 Visible = False
               end
               object txtNUMERO_FAC_ALB: TcxDBTextEdit
-                Left = 640
+                Left = 686
                 Top = 32
                 DataBinding.DataField = 'NUMERO_FAC_ALB'
                 DataBinding.DataSource = dsTablaG
@@ -250,7 +255,7 @@
                 Width = 90
               end
               object txtSERIE_FAC_ALB: TcxDBTextEdit
-                Left = 740
+                Left = 786
                 Top = 32
                 DataBinding.DataField = 'SERIE_FAC_ALB'
                 DataBinding.DataSource = dsTablaG
@@ -260,7 +265,7 @@
                 Width = 80
               end
               object btnIrFacturaCreada: TcxButton
-                Left = 640
+                Left = 686
                 Top = 56
                 Width = 190
                 Height = 23

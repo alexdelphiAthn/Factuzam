@@ -2,8 +2,10 @@
 
 ## Estado
 
-Implementado el 4 de agosto de 2026. El cambio se entrega mediante
-`inventarios_retroactivos_pmp.sql`; no modifica `factuzam_original.sql`.
+Implementado el 5 de agosto de 2026. El cambio se entrega mediante
+`inventarios_retroactivos_pmp.sql` y
+`documentos_instante_movimiento_stock.sql`; no modifica
+`factuzam_original.sql`.
 
 ## Regla de negocio
 
@@ -17,8 +19,10 @@ graba, modifica o anula un albarán o devolución con fecha anterior:
 4. los movimientos posteriores se vuelven a valorar cronológicamente.
 
 Por tanto, el documento retroactivo modifica la regularización, pero no el
-recuento. Factuzam conserva fecha y hora en `FECHA_MOV` y usa como desempate
-`INSTANTE_ALTA` y `NUMERO_MOV`.
+recuento. Albaranes y devoluciones conservan la fecha documental en su campo
+`FECHA_*` y el momento efectivo del stock en `INSTANTE_MOVIMIENTO_*`. Este
+último se copia completo a `FECHA_MOV`. `INSTANTE_ALTA` y `NUMERO_MOV` solo
+desempatan movimientos que comparten exactamente el mismo `FECHA_MOV`.
 
 El PMP del recuento es el histórico calculado en ese instante, salvo que
 `ESPRECIO_MEDIO_CORREGIDO_INVLIN = 'S'`. En ese caso se conserva exactamente
@@ -48,9 +52,9 @@ clave y fecha originales antes de cambiar la fila.
 | Flujo activo | Código | Actuación |
 |---|---|---|
 | Inventario | `IN` | Aplica atómicamente el par salida/entrada y recalcula desde un segundo antes del recuento. Mantiene el par incluso con cantidad cero. |
-| Albarán de compra | `AC` | Fecha el lote con `FECHA_ALBC`, recalcula el documento y evita que una compra retroactiva sustituya los datos de última compra posteriores. |
-| Devolución de compra | `DC` | Usa `FECHA_DEVC` y recalcula todas sus salidas. |
-| Albarán de venta | `AV` | Fecha y recalcula el lote generado; las reversiones pasan por el borrado genérico. |
+| Albarán de compra | `AC` | Usa `INSTANTE_MOVIMIENTO_ALBC`, recalcula el documento y evita que una compra retroactiva sustituya los datos de última compra posteriores. |
+| Devolución de compra | `DC` | Usa `INSTANTE_MOVIMIENTO_DEVC` y recalcula todas sus salidas. |
+| Albarán de venta | `AV` | Usa `INSTANTE_MOVIMIENTO_ALB`; las reversiones pasan por el borrado genérico. |
 | Factura o venta de caja con stock | `FC` / `VE` | Recalcula una vez por documento u operación después de generar todas las líneas. |
 | Traspaso manual o automático | `TR` / `TA` / `AT` | Incluye ambos almacenes y propaga el coste de origen a destino. |
 | Depósito y escritor genérico | `DP` y otros | Recalcula por operación o por el movimiento insertado. |
@@ -86,10 +90,12 @@ transaccionales. Cualquier excepción revierte el bloque completo.
 ## Despliegue
 
 1. Hacer copia de seguridad de la base de datos.
-2. Ejecutar `inventarios_retroactivos_pmp.sql` una vez. Es idempotente y puede
-   repetirse de forma segura.
-3. Desplegar la aplicación compilada con el nuevo campo de inventario.
-4. Ejecutar `pruebas_inventarios_retroactivos_pmp.sql` en una base de pruebas.
+2. Ejecutar `documentos_instante_movimiento_stock.sql`. Conserva los
+   documentos históricos al inicio de su fecha porque no se conoce su hora.
+3. Ejecutar `inventarios_retroactivos_pmp.sql`. Ambos scripts son idempotentes.
+4. Desplegar la aplicación compilada con los nuevos campos.
+5. Ejecutar `pruebas_documentos_instante_movimiento_stock.sql` y
+   `pruebas_inventarios_retroactivos_pmp.sql` en una base de pruebas.
 
 El script añade la columna de modo idempotente, amplía `LINEA_MOV` a diez
 caracteres, completa pares históricos y recrea todos los procedimientos del

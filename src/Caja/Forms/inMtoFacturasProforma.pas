@@ -82,8 +82,8 @@ resourcestring
     'Se generará una proforma interna no fiscal para VENTA CONTADO. ' +
     'No declarará IVA ni VeriFactu. ¿Desea continuar?';
   SPreguntaGenerarFacturaTraspaso =
-    'Se generarán y emitirán facturas fiscales normales por los ' +
-    'traspasos TA, con IVA y registro VeriFactu según la configuración. ' +
+    'Se generarán y emitirán facturas fiscales normales por los TA. ' +
+    'Incluirán IVA y seguirán el circuito VeriFactu configurado. ' +
     '¿Desea continuar?';
   SInfoSinOperacionesFacturacionCaja =
     'No hay operaciones ni ajustes pendientes para el periodo indicado.';
@@ -176,7 +176,7 @@ begin
     rgModalidad.Properties.Items.Add.Caption :=
       'Ventas (VE): proforma interna no fiscal';
     rgModalidad.Properties.Items.Add.Caption :=
-      'Traspasos (TA): factura fiscal normal';
+      'Traspasos (TA): borrador fiscal de Venta mayor';
     rgModalidad.ItemIndex := 0;
     btnGenerar := TcxButton.Create(Self);
     btnGenerar.Parent := pnlFacturacion;

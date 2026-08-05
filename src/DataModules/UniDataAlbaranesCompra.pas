@@ -159,10 +159,11 @@ uses
 
 procedure TdmAlbaranesCompra.ConfigurarSqlCabecera;
 const
-  CAMPOS_ALBC: array[0..79] of string = (
+  CAMPOS_ALBC: array[0..80] of string = (
     'NUMERO_ALBC',
     'SERIE_ALBC',
     'FECHA_ALBC',
+    'INSTANTE_MOVIMIENTO_ALBC',
     'ESTADO_ALBC',
     'NUMERO_PED_ALBC',
     'SERIE_PED_ALBC',
@@ -294,10 +295,13 @@ begin
     'INSERT INTO fza_albaranes_compra (' + sCols + ') ' + sLineBreak +
     'VALUES (' + sVals + ')';
   unqryTablaG.SQLRefresh.Text :=
-    'SELECT * ' + sLineBreak +
-    '  FROM vi_albaranes_compra ' + sLineBreak +
-    ' WHERE NUMERO_ALBC = :NUMERO_ALBC ' + sLineBreak +
-    '   AND SERIE_ALBC = :SERIE_ALBC';
+    'SELECT V.*, A.INSTANTE_MOVIMIENTO_ALBC ' + sLineBreak +
+    '  FROM vi_albaranes_compra V ' + sLineBreak +
+    '  JOIN fza_albaranes_compra A ' + sLineBreak +
+    '    ON A.NUMERO_ALBC = V.NUMERO_ALBC ' + sLineBreak +
+    '   AND A.SERIE_ALBC = V.SERIE_ALBC ' + sLineBreak +
+    ' WHERE V.NUMERO_ALBC = :NUMERO_ALBC ' + sLineBreak +
+    '   AND V.SERIE_ALBC = :SERIE_ALBC';
 end;
 
 procedure TdmAlbaranesCompra.DataModuleCreate(Sender: TObject);
@@ -450,7 +454,9 @@ begin
       else
         FieldByName('SERIE_ALBC').AsString := 'C1';
     end;
-    FieldByName('FECHA_ALBC').AsDateTime := Date;
+    FieldByName('INSTANTE_MOVIMIENTO_ALBC').AsDateTime := Now;
+    FieldByName('FECHA_ALBC').AsDateTime :=
+      Trunc(FieldByName('INSTANTE_MOVIMIENTO_ALBC').AsDateTime);
     if FindField('ESTADO_ALBC') <> nil then
       FieldByName('ESTADO_ALBC').AsString := 'ABIERTO';
     if Trim(UbicacionSesion.Empresa) <> '' then
@@ -550,6 +556,8 @@ var
   i: Integer;
 begin
   inherited;
+  SincronizarInstanteMovimientoDocumento(
+    DataSet, 'FECHA_ALBC', 'INSTANTE_MOVIMIENTO_ALBC');
   // Cinturon: los campos NOT NULL con default en BBDD (p. ej.
   // ESPIVOTE_HORIZONTAL_ALBC) llegan como Required a UniDAC y bloquean
   // el Post del alta manual con "must have a value". Mismo criterio

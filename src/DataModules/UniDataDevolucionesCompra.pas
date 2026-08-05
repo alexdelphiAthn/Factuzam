@@ -291,7 +291,9 @@ begin
       else
         FieldByName('SERIE_DEVC').AsString := 'C1';
     end;
-    FieldByName('FECHA_DEVC').AsDateTime := Date;
+    FieldByName('INSTANTE_MOVIMIENTO_DEVC').AsDateTime := Now;
+    FieldByName('FECHA_DEVC').AsDateTime :=
+      Trunc(FieldByName('INSTANTE_MOVIMIENTO_DEVC').AsDateTime);
     if FindField('ESTADO_DEVC') <> nil then
       FieldByName('ESTADO_DEVC').AsString := 'ABIERTO';
     if Trim(UbicacionSesion.Empresa) <> '' then
@@ -316,6 +318,8 @@ end;
 procedure TdmDevolucionesCompra.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
   inherited;
+  SincronizarInstanteMovimientoDocumento(
+    DataSet, 'FECHA_DEVC', 'INSTANTE_MOVIMIENTO_DEVC');
   ValidarAlmacenSalida;
   if (DataSet.FindField('ESPIVOTE_HORIZONTAL_DEVC') <> nil) and
      (Trim(DataSet.FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString) = '')
