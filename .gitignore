@@ -8,6 +8,7 @@
 *.dll
 *.bpl
 *.dcp
+*.tds
 *.so
 *.dsk
 *.~dsk
@@ -49,18 +50,11 @@ tests/bin/
 tests/dcu/
 tests/FactuzamTests.res
 
-# Contraseña de la conexión es distinta en cada punto
-UniDataConn.dfm
-
 # Configuración sensible (MySQL, etc.)
 config.ini
 database.cfg
 *.key
 *.lic
-herreras.sql
-src/certapiweb/servidor/privado/correos_config.php
-src/certapiweb/servidor/privado/vendor/
-src/certapiweb/servidor/privado/logs/
 
 # Archivos temporales o de backup de Delphi
 *.~**.dsv
