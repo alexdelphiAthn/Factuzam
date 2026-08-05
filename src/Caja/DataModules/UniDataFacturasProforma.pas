@@ -19,7 +19,7 @@ uses
   inLibRegistroPantallas,
   System.SysUtils, System.Classes,
   Data.DB, MemDS, DBAccess, Uni,
-  UniDataGen, inLibParametrosIntf, inLibEmisionFiscalIntf,
+  UniDataGen, inLibParametrosIntf,
   inLibFacturasProformaIntf;
 
 type
@@ -33,8 +33,7 @@ type
     dsEmpresas   : TDataSource;
     procedure AbrirDetalles; override;
     function CrearRepositorio(
-      const AParametrosApp: IParametrosAplicacion;
-      const AServicioEmision: IServicioEmisionFiscal
+      const AParametrosApp: IParametrosAplicacion
     ): IRepositorioFacturasProforma;
     procedure RefrescarDocumentos;
   end;
@@ -181,15 +180,13 @@ begin
 end;
 
 function TdmFacturasProforma.CrearRepositorio(
-  const AParametrosApp: IParametrosAplicacion;
-  const AServicioEmision: IServicioEmisionFiscal
+  const AParametrosApp: IParametrosAplicacion
 ):
   IRepositorioFacturasProforma;
 begin
   Result := TRepositorioFacturasProformaUniDAC.Create(
     unqryTablaG.Connection,
-    AParametrosApp,
-    AServicioEmision);
+    AParametrosApp);
 end;
 
 procedure TdmFacturasProforma.RefrescarDocumentos;

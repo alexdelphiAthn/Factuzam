@@ -18,7 +18,6 @@ interface
 uses
   Uni,
   inLibParametrosIntf,
-  inLibEmisionFiscalIntf,
   inLibFacturasProformaIntf;
 
 type
@@ -28,9 +27,6 @@ type
   private
     FConexion: TUniConnection;
     FParametrosApp: IParametrosAplicacion;
-    FServicioEmision: IServicioEmisionFiscal;
-    procedure ActualizarEstadoFiscal(
-      const ASerie, ANumero, AEstado, AUsuario: string);
     procedure ActualizarPeriodo(
       AIdPeriodo: Int64;
       const AEstado: string;
@@ -58,10 +54,6 @@ type
     function CrearPeriodo(
       const AModalidad: string;
       const ASolicitud: TSolicitudFacturacionCaja): Int64;
-    procedure EmitirFacturaTraspaso(
-      const ASerie: string;
-      const ANumero: string;
-      const AUsuario: string);
     function GenerarFacturaTraspaso(
       const ASolicitud: TSolicitudFacturacionCaja;
       AIdPeriodo: Int64;
@@ -95,8 +87,7 @@ type
   public
     constructor Create(
       AConexion: TUniConnection;
-      const AParametrosApp: IParametrosAplicacion;
-      const AServicioEmision: IServicioEmisionFiscal);
+      const AParametrosApp: IParametrosAplicacion);
     destructor Destroy; override;
     function RevisarPeriodo(
       AModalidad: TModalidadFacturacionCaja;
@@ -125,7 +116,6 @@ const
     'FROM fza_facturacion_caja_periodos ' +
     'WHERE MODALIDAD_FACPER = :MODALIDAD ' +
     'AND CODIGO_EMP_DESTINO_FACPER = :EMPRESA ' +
-    'AND ESTADO_FACPER <> ''SIN_DOCUMENTOS'' ' +
     'AND FECHA_DESDE_FACPER <= :HASTA ' +
     'AND FECHA_HASTA_FACPER >= :DESDE';
   SQL_INSERTAR_PERIODO =
@@ -141,11 +131,6 @@ const
     'CANTIDAD_OPERACIONES_FACPER = :OPERACIONES, ' +
     'CANTIDAD_AJUSTES_FACPER = :AJUSTES, INSTANTE_MODIF = NOW(), ' +
     'USUARIO_MODIF = :USUARIO WHERE ID_FACPER = :ID_PERIODO';
-  SQL_ACTUALIZAR_ESTADO_FISCAL =
-    'UPDATE fza_facturas_operaciones_caja ' +
-    'SET ESTADO_FACOP = :ESTADO, INSTANTE_MODIF = NOW(), ' +
-    'USUARIO_MODIF = :USUARIO ' +
-    'WHERE SERIE_FAC_FACOP = :SERIE AND NUMERO_FAC_FACOP = :NUMERO';
   SQL_CONTAR_CANDIDATAS_VENTA =
     'SELECT COUNT(*) AS CANTIDAD FROM (' +
     'SELECT O.ID_OPCAJA FROM fza_caja_operaciones O ' +
@@ -608,8 +593,7 @@ type
 
 constructor TRepositorioFacturasProformaUniDAC.Create(
   AConexion: TUniConnection;
-  const AParametrosApp: IParametrosAplicacion;
-  const AServicioEmision: IServicioEmisionFiscal);
+  const AParametrosApp: IParametrosAplicacion);
 begin
   inherited Create;
   if not Assigned(AConexion) then
@@ -620,39 +604,14 @@ begin
   begin
     raise EArgumentNilException.Create('AParametrosApp');
   end;
-  if not Assigned(AServicioEmision) then
-  begin
-    raise EArgumentNilException.Create('AServicioEmision');
-  end;
   FConexion := AConexion;
   FParametrosApp := AParametrosApp;
-  FServicioEmision := AServicioEmision;
 end;
 
 destructor TRepositorioFacturasProformaUniDAC.Destroy;
 begin
-  FServicioEmision := nil;
   FParametrosApp := nil;
   inherited;
-end;
-
-procedure TRepositorioFacturasProformaUniDAC.ActualizarEstadoFiscal(
-  const ASerie, ANumero, AEstado, AUsuario: string);
-var
-  oConsulta: TUniQuery;
-begin
-  oConsulta := TUniQuery.Create(nil);
-  try
-    oConsulta.Connection := FConexion;
-    oConsulta.SQL.Text := SQL_ACTUALIZAR_ESTADO_FISCAL;
-    oConsulta.ParamByName('SERIE').AsString := ASerie;
-    oConsulta.ParamByName('NUMERO').AsString := ANumero;
-    oConsulta.ParamByName('ESTADO').AsString := AEstado;
-    oConsulta.ParamByName('USUARIO').AsString := AUsuario;
-    oConsulta.Execute;
-  finally
-    FreeAndNil(oConsulta);
-  end;
 end;
 
 procedure TRepositorioFacturasProformaUniDAC.ActualizarPeriodo(
@@ -919,85 +878,104 @@ var
   oConsulta: TUniQuery;
 begin
   Result := Default(TResultadoFacturacionCaja);
-  if ContarCandidatasVenta(ASolicitud) > 0 then
-  begin
-    sSerie := 'PVE-' + FormatDateTime('yyyy', ASolicitud.FechaHasta);
-    sNumero := ObtenerNumeroDocumento(
-      sSerie,
-      'PF',
-      ASolicitud.CodigoEmpresaDestino,
-      ASolicitud.Usuario);
-    oConsulta := TUniQuery.Create(nil);
-    try
-      oConsulta.Connection := FConexion;
-      FConexion.StartTransaction;
+  iIdPeriodo := CrearPeriodo('VE', ASolicitud);
+  try
+    if ContarCandidatasVenta(ASolicitud) > 0 then
+    begin
+      sSerie := 'PVE-' + FormatDateTime('yyyy', ASolicitud.FechaHasta);
+      sNumero := ObtenerNumeroDocumento(
+        sSerie,
+        'PF',
+        ASolicitud.CodigoEmpresaDestino,
+        ASolicitud.Usuario);
+      oConsulta := TUniQuery.Create(nil);
       try
-        iIdPeriodo := CrearPeriodo('VE', ASolicitud);
-        oConsulta.SQL.Text := SQL_INSERTAR_PROFORMA;
-        AsignarSolicitud(oConsulta, ASolicitud);
-        oConsulta.ParamByName('ID_PERIODO').AsLargeInt := iIdPeriodo;
-        oConsulta.ParamByName('SERIE').AsString := sSerie;
-        oConsulta.ParamByName('NUMERO').AsString := sNumero;
-        oConsulta.Execute;
-        if oConsulta.RowsAffected = 0 then
-        begin
-          raise Exception.Create(
-            'No se pudo crear la cabecera de la proforma de caja.');
-        end;
-        iIdProforma := ObtenerIdentidad;
-        oConsulta.SQL.Text := SQL_INICIAR_LINEA_PROFORMA;
-        oConsulta.Execute;
-        oConsulta.SQL.Text := SQL_INSERTAR_LINEAS_VENTA;
-        AsignarSolicitud(oConsulta, ASolicitud);
-        oConsulta.ParamByName('ID').AsLargeInt := iIdProforma;
-        oConsulta.Execute;
-        oConsulta.SQL.Text := SQL_CONTINUAR_LINEA_PROFORMA;
-        oConsulta.ParamByName('ID').AsLargeInt := iIdProforma;
-        oConsulta.Execute;
-        oConsulta.SQL.Text := SQL_INSERTAR_AJUSTES_VENTA;
-        AsignarSolicitud(oConsulta, ASolicitud);
-        oConsulta.ParamByName('ID').AsLargeInt := iIdProforma;
-        oConsulta.Execute;
-        oConsulta.SQL.Text := SQL_ACTUALIZAR_TOTALES_PROFORMA;
-        AsignarSolicitud(oConsulta, ASolicitud);
-        oConsulta.ParamByName('ID').AsLargeInt := iIdProforma;
-        oConsulta.Execute;
-        oConsulta.SQL.Text := SQL_CONTAR_PROFORMA;
-        oConsulta.ParamByName('ID').AsLargeInt := iIdProforma;
-        oConsulta.Open;
-        Result.CantidadOperaciones :=
-          oConsulta.FieldByName('OPERACIONES').AsInteger;
-        Result.CantidadAjustes :=
-          oConsulta.FieldByName('AJUSTES').AsInteger;
-        oConsulta.Close;
-        if Result.CantidadOperaciones > 0 then
-        begin
-          Result.CantidadDocumentos := 1;
-          Result.Descripcion := Format(
-            'Proforma %s/%s generada con %d operaciones y %d ajustes.',
-            [sSerie, sNumero, Result.CantidadOperaciones,
-             Result.CantidadAjustes]);
-          ActualizarPeriodo(
-            iIdPeriodo,
-            'CERRADO',
-            Result,
-            ASolicitud.Usuario);
-          FConexion.Commit;
-        end
-        else
-        begin
-          FConexion.Rollback;
+        oConsulta.Connection := FConexion;
+        FConexion.StartTransaction;
+        try
+          oConsulta.SQL.Text := SQL_INSERTAR_PROFORMA;
+          AsignarSolicitud(oConsulta, ASolicitud);
+          oConsulta.ParamByName('ID_PERIODO').AsLargeInt := iIdPeriodo;
+          oConsulta.ParamByName('SERIE').AsString := sSerie;
+          oConsulta.ParamByName('NUMERO').AsString := sNumero;
+          oConsulta.Execute;
+          if oConsulta.RowsAffected = 0 then
+          begin
+            raise Exception.Create(
+              'No se pudo crear la cabecera de la proforma de caja.');
+          end;
+          iIdProforma := ObtenerIdentidad;
+          oConsulta.SQL.Text := SQL_INICIAR_LINEA_PROFORMA;
+          oConsulta.Execute;
+          oConsulta.SQL.Text := SQL_INSERTAR_LINEAS_VENTA;
+          AsignarSolicitud(oConsulta, ASolicitud);
+          oConsulta.ParamByName('ID').AsLargeInt := iIdProforma;
+          oConsulta.Execute;
+          oConsulta.SQL.Text := SQL_CONTINUAR_LINEA_PROFORMA;
+          oConsulta.ParamByName('ID').AsLargeInt := iIdProforma;
+          oConsulta.Execute;
+          oConsulta.SQL.Text := SQL_INSERTAR_AJUSTES_VENTA;
+          AsignarSolicitud(oConsulta, ASolicitud);
+          oConsulta.ParamByName('ID').AsLargeInt := iIdProforma;
+          oConsulta.Execute;
+          oConsulta.SQL.Text := SQL_ACTUALIZAR_TOTALES_PROFORMA;
+          AsignarSolicitud(oConsulta, ASolicitud);
+          oConsulta.ParamByName('ID').AsLargeInt := iIdProforma;
+          oConsulta.Execute;
+          oConsulta.SQL.Text := SQL_CONTAR_PROFORMA;
+          oConsulta.ParamByName('ID').AsLargeInt := iIdProforma;
+          oConsulta.Open;
+          Result.CantidadOperaciones :=
+            oConsulta.FieldByName('OPERACIONES').AsInteger;
+          Result.CantidadAjustes :=
+            oConsulta.FieldByName('AJUSTES').AsInteger;
+          oConsulta.Close;
+          if Result.CantidadOperaciones > 0 then
+          begin
+            Result.CantidadDocumentos := 1;
+            Result.Descripcion := Format(
+              'Proforma %s/%s generada con %d operaciones y %d ajustes.',
+              [sSerie, sNumero, Result.CantidadOperaciones,
+               Result.CantidadAjustes]);
+            ActualizarPeriodo(
+              iIdPeriodo,
+              'CERRADO',
+              Result,
+              ASolicitud.Usuario);
+            FConexion.Commit;
+          end
+          else
+          begin
+            FConexion.Rollback;
+          end;
+        except
+          if FConexion.InTransaction then
+          begin
+            FConexion.Rollback;
+          end;
+          raise;
         end;
       except
-        if FConexion.InTransaction then
-        begin
-          FConexion.Rollback;
-        end;
+        FreeAndNil(oConsulta);
         raise;
       end;
-    finally
       FreeAndNil(oConsulta);
     end;
+    if Result.CantidadDocumentos = 0 then
+    begin
+      ActualizarPeriodo(
+        iIdPeriodo,
+        'SIN_DOCUMENTOS',
+        Result,
+        ASolicitud.Usuario);
+    end;
+  except
+    ActualizarPeriodo(
+      iIdPeriodo,
+      'ERROR',
+      Result,
+      ASolicitud.Usuario);
+    raise;
   end;
 end;
 
@@ -1141,35 +1119,6 @@ begin
   end;
 end;
 
-procedure TRepositorioFacturasProformaUniDAC.EmitirFacturaTraspaso(
-  const ASerie: string;
-  const ANumero: string;
-  const AUsuario: string);
-var
-  oSolicitudEmision: TSolicitudEmisionFiscal;
-begin
-  oSolicitudEmision := TSolicitudEmisionFiscal.ParaAlta(
-    ASerie,
-    ANumero,
-    AUsuario,
-    'Factura fiscal TA por periodo encolada');
-  try
-    FServicioEmision.Emitir(oSolicitudEmision);
-    ActualizarEstadoFiscal(
-      ASerie,
-      ANumero,
-      'EMITIDA',
-      AUsuario);
-  except
-    ActualizarEstadoFiscal(
-      ASerie,
-      ANumero,
-      'ERROR_FISCAL',
-      AUsuario);
-    raise;
-  end;
-end;
-
 function TRepositorioFacturasProformaUniDAC.GenerarFacturaTraspaso(
   const ASolicitud: TSolicitudFacturacionCaja;
   AIdPeriodo: Int64;
@@ -1205,13 +1154,6 @@ begin
       AAlmacenOrigen,
       sSerie,
       sNumero);
-    if Result > 0 then
-    begin
-      EmitirFacturaTraspaso(
-        sSerie,
-        sNumero,
-        ASolicitud.Usuario);
-    end;
   end;
 end;
 
@@ -1226,69 +1168,66 @@ var
   oConsulta: TUniQuery;
 begin
   Result := Default(TResultadoFacturacionCaja);
-  oConsulta := TUniQuery.Create(nil);
+  iIdPeriodo := CrearPeriodo('TA', ASolicitud);
   try
-    oConsulta.Connection := FConexion;
-    oConsulta.SQL.Text := SQL_GRUPOS_TRASPASO;
-    AsignarSolicitud(oConsulta, ASolicitud);
-    oConsulta.Open;
-    while not oConsulta.Eof do
-    begin
-      SetLength(aGrupos, Length(aGrupos) + 1);
-      aGrupos[High(aGrupos)].Empresa :=
-        oConsulta.FieldByName('EMPRESA').AsString;
-      aGrupos[High(aGrupos)].Almacen :=
-        oConsulta.FieldByName('ALMACEN').AsString;
-      oConsulta.Next;
-    end;
-    oConsulta.Close;
-  finally
-    FreeAndNil(oConsulta);
-  end;
-  if Length(aGrupos) > 0 then
-  begin
-    iIdPeriodo := CrearPeriodo('TA', ASolicitud);
+    oConsulta := TUniQuery.Create(nil);
     try
-      for iIndice := 0 to High(aGrupos) do
+      oConsulta.Connection := FConexion;
+      oConsulta.SQL.Text := SQL_GRUPOS_TRASPASO;
+      AsignarSolicitud(oConsulta, ASolicitud);
+      oConsulta.Open;
+      while not oConsulta.Eof do
       begin
-        iOperaciones := GenerarFacturaTraspaso(
-          ASolicitud,
-          iIdPeriodo,
-          aGrupos[iIndice].Empresa,
-          aGrupos[iIndice].Almacen);
-        if iOperaciones > 0 then
-        begin
-          Inc(Result.CantidadDocumentos);
-          Inc(Result.CantidadOperaciones, iOperaciones);
-        end;
+        SetLength(aGrupos, Length(aGrupos) + 1);
+        aGrupos[High(aGrupos)].Empresa :=
+          oConsulta.FieldByName('EMPRESA').AsString;
+        aGrupos[High(aGrupos)].Almacen :=
+          oConsulta.FieldByName('ALMACEN').AsString;
+        oConsulta.Next;
       end;
-      if Result.CantidadDocumentos > 0 then
+      oConsulta.Close;
+    finally
+      FreeAndNil(oConsulta);
+    end;
+    for iIndice := 0 to High(aGrupos) do
+    begin
+      iOperaciones := GenerarFacturaTraspaso(
+        ASolicitud,
+        iIdPeriodo,
+        aGrupos[iIndice].Empresa,
+        aGrupos[iIndice].Almacen);
+      if iOperaciones > 0 then
       begin
-        Result.Descripcion := Format(
-          '%d facturas TA fiscales emitidas con %d operaciones.',
-          [Result.CantidadDocumentos, Result.CantidadOperaciones]);
-        ActualizarPeriodo(
-          iIdPeriodo,
-          'CERRADO',
-          Result,
-          ASolicitud.Usuario);
-      end
-      else
-      begin
-        ActualizarPeriodo(
-          iIdPeriodo,
-          'SIN_DOCUMENTOS',
-          Result,
-          ASolicitud.Usuario);
+        Inc(Result.CantidadDocumentos);
+        Inc(Result.CantidadOperaciones, iOperaciones);
       end;
-    except
+    end;
+    if Result.CantidadDocumentos > 0 then
+    begin
+      Result.Descripcion := Format(
+        '%d borradores de facturas TA con %d operaciones.',
+        [Result.CantidadDocumentos, Result.CantidadOperaciones]);
       ActualizarPeriodo(
         iIdPeriodo,
-        'ERROR',
+        'CERRADO',
         Result,
         ASolicitud.Usuario);
-      raise;
+    end
+    else
+    begin
+      ActualizarPeriodo(
+        iIdPeriodo,
+        'SIN_DOCUMENTOS',
+        Result,
+        ASolicitud.Usuario);
     end;
+  except
+    ActualizarPeriodo(
+      iIdPeriodo,
+      'ERROR',
+      Result,
+      ASolicitud.Usuario);
+    raise;
   end;
 end;
 

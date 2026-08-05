@@ -126,7 +126,7 @@ begin
   iVistas := 0;
   for i := 0 to High(aModelo) do
     Inc(iVistas, Length(aModelo[i].Vistas));
-  Assert.AreEqual(7, Length(aModelo));
+  Assert.AreEqual(7, Integer(Length(aModelo)));
   Assert.AreEqual(8, iVistas);
   Assert.AreEqual('Operación', aModelo[0].Titulo);
   Assert.AreEqual('Borrador', aModelo[6].Titulo);

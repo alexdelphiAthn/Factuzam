@@ -301,6 +301,9 @@ type
     procedure CrearServiciosSesion;
     procedure ComprobarConfiguracionFiscal;
     procedure CargarDatosArranque;
+    procedure RegistrarFabricasPantallas;
+    function CrearStockConsultaInyectada(
+      AOwner: TComponent): TForm;
     procedure IniciarProcesosSegundoPlano;
     procedure ActualizarEstadoSesion(
       const AIdentidad: TIdentidadSesion;
@@ -377,6 +380,7 @@ uses inLibWin,
 
   inLibPerfilesUsuarioIntf,
   inLibFiltrosGuardadosIntf,
+  inLibRegistroPantallas,
   inLibMsgCaja,
   inLibMsgComun,
   inLibMsgConfiguracion,
@@ -392,6 +396,7 @@ uses inLibWin,
   inMtoModalVerifactuDecl,
   inLibGenerarTicketCaja,
   inMtoStockConsulta,
+  inMtoStockConsultaPresentacionComposicion,
   inMtoModalListadoVentas,
   inMtoModalImpOperacionesVenta,
   inMtoModalScriptLog,
@@ -451,6 +456,13 @@ resourcestring
 
 type
   TClaseFrmBase = class of TfrmBase;
+  TfrmStockConsultaInyectada = class(TfrmStockConsulta)
+  public
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const ADependencias: TContextoDependenciasStockConsulta);
+  end;
   TVisorMonitorSQLMemo = class(
     TInterfacedObject,
     IVisorMonitorSQL
@@ -462,6 +474,16 @@ type
     procedure EstablecerVisible(AVisible: Boolean);
     procedure MostrarSQL(const ASQL: string);
   end;
+
+constructor TfrmStockConsultaInyectada.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const ADependencias: TContextoDependenciasStockConsulta);
+begin
+  ADependencias.Validar;
+  FDependencias := ADependencias;
+  inherited Create(AOwner, AContexto);
+end;
 
 constructor TVisorMonitorSQLMemo.Create(AMemo: TcxMemo);
 begin
@@ -798,6 +820,50 @@ begin
     AvisarFalloCargaPermisos(sErrorPermisos);
 end;
 
+function TfrmMtoPrincipal.CrearStockConsultaInyectada(
+  AOwner: TComponent): TForm;
+var
+  Articulos: IRepositoriosArticulosPantalla;
+  Dependencias: TContextoDependenciasStockConsulta;
+  Documentos: IRepositoriosDocumentosPantalla;
+  EsOwnerAplicacion: Boolean;
+  Formulario: TfrmStockConsulta;
+  OwnerCreacion: TComponent;
+begin
+  EsOwnerAplicacion := AOwner = Application;
+  OwnerCreacion := AOwner;
+  if not Assigned(OwnerCreacion) or EsOwnerAplicacion then
+    OwnerCreacion := Self;
+  Articulos := FComposicion.CrearRepositoriosArticulosPantalla(
+    NOMBRE_PANTALLA_STOCK_CONSULTA);
+  Documentos := FComposicion.CrearRepositoriosDocumentosPantalla(
+    NOMBRE_PANTALLA_STOCK_CONSULTA);
+  Dependencias := CrearContextoStockConsulta(
+    Articulos,
+    Documentos,
+    ConexionPrincipal);
+  Formulario := TfrmStockConsultaInyectada.Create(
+    OwnerCreacion,
+    TContextoAutorizacionPantalla.Crear(Permisos),
+    Dependencias);
+  if EsOwnerAplicacion then
+  begin
+    Self.RemoveComponent(Formulario);
+    Application.InsertComponent(Formulario);
+  end;
+  Result := Formulario;
+end;
+
+procedure TfrmMtoPrincipal.RegistrarFabricasPantallas;
+begin
+  RegistrarFabricaPantalla(
+    TfrmStockConsulta,
+    function(AOwner: TComponent): TForm
+    begin
+      Result := CrearStockConsultaInyectada(AOwner);
+    end);
+end;
+
 procedure TfrmMtoPrincipal.IniciarProcesosSegundoPlano;
 begin
   FComposicion.IniciarProcesosSegundoPlano;
@@ -905,6 +971,7 @@ begin
   CrearServiciosSesion;
   ComprobarConfiguracionFiscal;
   CargarDatosArranque;
+  RegistrarFabricasPantallas;
   IniciarProcesosSegundoPlano;
   ActualizarEstadoSesion(IdentidadActual, UbicacionActual);
   ConfigurarPresentacionPrincipal;
@@ -1421,6 +1488,7 @@ end;
 
 destructor TfrmMtoPrincipal.Destroy;
 begin
+  RetirarFabricaPantalla(TfrmStockConsulta);
   FCoordinadorOperaciones := nil;
   FGestorExcepciones := nil;
   FreeAndNil(FComposicion);
@@ -2197,8 +2265,13 @@ begin
     raise EInvalidCast.Create(
       SErrorPantallaNoHeredaFrmBase);
   end;
-  Contexto := TContextoAutorizacionPantalla.Crear(Permisos);
-  Result := TClaseFrmBase(AClase).Create(Self, Contexto);
+  if TieneFabricaPantalla(AClase) then
+    Result := CrearPantallaInyectada(AClase, Self)
+  else
+  begin
+    Contexto := TContextoAutorizacionPantalla.Crear(Permisos);
+    Result := TClaseFrmBase(AClase).Create(Self, Contexto);
+  end;
 end;
 
 function TfrmMtoPrincipal.ResolverCallPantalla(

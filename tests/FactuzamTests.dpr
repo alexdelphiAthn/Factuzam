@@ -460,6 +460,19 @@ uses
   PruebasJsonSeguro in 'PruebasJsonSeguro.pas',
   PruebasTraducciones in 'PruebasTraducciones.pas',
   PruebasRegistroPantallas in 'PruebasRegistroPantallas.pas',
+  PruebasComposicionCajaPantalla in
+    'PruebasComposicionCajaPantalla.pas',
+  PruebasComposicionComprasPantalla in
+    'PruebasComposicionComprasPantalla.pas',
+  PruebasComposicionConfiguracionPantalla in
+    'PruebasComposicionConfiguracionPantalla.pas',
+  PruebasComposicionVentasPantalla in
+    'PruebasComposicionVentasPantalla.pas',
+  PruebasModoTallas in 'PruebasModoTallas.pas',
+  PruebasRepositoriosPantallaComposicion in
+    'PruebasRepositoriosPantallaComposicion.pas',
+  PruebasInyeccionStockConsulta in
+    'PruebasInyeccionStockConsulta.pas',
   PruebasFacturasPresentadorCabecera in
     'PruebasFacturasPresentadorCabecera.pas',
   inLibMtoGenAplicacionIntf in

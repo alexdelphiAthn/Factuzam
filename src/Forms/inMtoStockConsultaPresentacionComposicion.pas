@@ -18,7 +18,7 @@ unit inMtoStockConsultaPresentacionComposicion;
 interface
 
 uses
-  System.Classes, Uni,
+  Uni,
   inLibArticulosResolverIntf,
   inLibArticulosValidadorIntf,
   inLibDocumentosTrabajo,
@@ -51,11 +51,20 @@ type
     DocumentosTrabajo: TRepositoriosDocumentosTrabajo;
     Lector: TLectorScanner;
     Entrada: IAplicacionEntradaStock;
+    class function Crear(
+      const AServicios: TServiciosStockConsulta;
+      const AInfoCabecera: ILectorInfoCabeceraStock;
+      const AValidador: IArticulosValidador;
+      const AResolverArticulos: IArticulosResolver;
+      const ADocumentosTrabajo: TRepositoriosDocumentosTrabajo
+    ): TContextoDependenciasStockConsulta; static;
+    procedure Validar;
     procedure Liberar;
   end;
 
 function CrearContextoStockConsulta(
-  AOrigen: TComponent;
+  const AArticulos: IRepositoriosArticulosPantalla;
+  const ADocumentos: IRepositoriosDocumentosPantalla;
   AConexion: TUniConnection): TContextoDependenciasStockConsulta;
 
 implementation
@@ -63,6 +72,20 @@ implementation
 uses
   System.SysUtils,
   UniDataStockConsultaInfo;
+
+resourcestring
+  SErrorCatalogosStockConsultaNoDisponibles =
+    'No se proporcionó el catálogo de la consulta de stock.';
+  SErrorPivoteStockConsultaNoDisponible =
+    'No se proporcionó el repositorio de stock pivotado.';
+  SErrorInfoStockConsultaNoDisponible =
+    'No se proporcionó el lector de cabecera de la consulta de stock.';
+  SErrorValidadorStockConsultaNoDisponible =
+    'No se proporcionó el validador de artículos.';
+  SErrorResolutorStockConsultaNoDisponible =
+    'No se proporcionó el resolutor de artículos.';
+  SErrorDocumentosStockConsultaNoDisponibles =
+    'No se proporcionaron los repositorios de documentos de trabajo.';
 
 type
   TLectorInfoCabeceraStockUniData = class(
@@ -89,6 +112,50 @@ begin
   Result := CargarInfoCabeceraStock(FConexion, ACodigoArticulo);
 end;
 
+class function TContextoDependenciasStockConsulta.Crear(
+  const AServicios: TServiciosStockConsulta;
+  const AInfoCabecera: ILectorInfoCabeceraStock;
+  const AValidador: IArticulosValidador;
+  const AResolverArticulos: IArticulosResolver;
+  const ADocumentosTrabajo: TRepositoriosDocumentosTrabajo
+): TContextoDependenciasStockConsulta;
+begin
+  Result := Default(TContextoDependenciasStockConsulta);
+  Result.Catalogos := AServicios.Catalogos;
+  Result.Pivote := AServicios.Pivote;
+  Result.InfoCabecera := AInfoCabecera;
+  Result.Validador := AValidador;
+  Result.ResolverArticulos := AResolverArticulos;
+  Result.DocumentosTrabajo := ADocumentosTrabajo;
+  Result.Validar;
+end;
+
+procedure TContextoDependenciasStockConsulta.Validar;
+begin
+  if not Assigned(Catalogos) then
+    raise EArgumentNilException.Create(
+      SErrorCatalogosStockConsultaNoDisponibles);
+  if not Assigned(Pivote) then
+    raise EArgumentNilException.Create(
+      SErrorPivoteStockConsultaNoDisponible);
+  if not Assigned(InfoCabecera) then
+    raise EArgumentNilException.Create(
+      SErrorInfoStockConsultaNoDisponible);
+  if not Assigned(Validador) then
+    raise EArgumentNilException.Create(
+      SErrorValidadorStockConsultaNoDisponible);
+  if not Assigned(ResolverArticulos) then
+    raise EArgumentNilException.Create(
+      SErrorResolutorStockConsultaNoDisponible);
+  if not Assigned(DocumentosTrabajo.Lecturas) or
+     not Assigned(DocumentosTrabajo.Escritura) or
+     not Assigned(DocumentosTrabajo.Materializacion) then
+  begin
+    raise EArgumentNilException.Create(
+      SErrorDocumentosStockConsultaNoDisponibles);
+  end;
+end;
+
 // El contexto es propietario del lector; el resto son contratos que solo
 // hay que soltar.
 procedure TContextoDependenciasStockConsulta.Liberar;
@@ -106,30 +173,25 @@ begin
 end;
 
 function CrearContextoStockConsulta(
-  AOrigen: TComponent;
+  const AArticulos: IRepositoriosArticulosPantalla;
+  const ADocumentos: IRepositoriosDocumentosPantalla;
   AConexion: TUniConnection): TContextoDependenciasStockConsulta;
 var
-  Articulos: IRepositoriosArticulosPantalla;
-  Documentos: IRepositoriosDocumentosPantalla;
   Servicios: TServiciosStockConsulta;
 begin
-  Result := Default(TContextoDependenciasStockConsulta);
-  Articulos := ObtenerCompositorArticulosPantalla(AOrigen).
-    CrearRepositoriosArticulosPantalla(AOrigen.Name);
-  Documentos := ObtenerCompositorDocumentosPantalla(AOrigen).
-    CrearRepositoriosDocumentosPantalla(AOrigen.Name);
-  Servicios := Articulos.CrearServiciosStockConsulta(AConexion);
-  Result.Catalogos := Servicios.Catalogos;
-  Result.Pivote := Servicios.Pivote;
-  Result.InfoCabecera :=
-    TLectorInfoCabeceraStockUniData.Create(AConexion);
-  Result.Validador := Articulos.CrearValidadorArticulos(
-    AConexion);
-  Result.ResolverArticulos :=
-    Articulos.CrearResolverArticulos(AConexion);
-  Result.DocumentosTrabajo :=
-    Documentos.CrearRepositoriosDocumentosTrabajo(
-      AConexion);
+  if not Assigned(AArticulos) then
+    raise EArgumentNilException.Create('AArticulos');
+  if not Assigned(ADocumentos) then
+    raise EArgumentNilException.Create('ADocumentos');
+  if not Assigned(AConexion) then
+    raise EArgumentNilException.Create('AConexion');
+  Servicios := AArticulos.CrearServiciosStockConsulta(AConexion);
+  Result := TContextoDependenciasStockConsulta.Crear(
+    Servicios,
+    TLectorInfoCabeceraStockUniData.Create(AConexion),
+    AArticulos.CrearValidadorArticulos(AConexion),
+    AArticulos.CrearResolverArticulos(AConexion),
+    ADocumentos.CrearRepositoriosDocumentosTrabajo(AConexion));
 end;
 
 end.

@@ -32,11 +32,9 @@ uses
   System.SysUtils,
   Data.DB, DBAccess, Uni,
   inLibAlbaranesCompraMovimientos,
-  UniDataAlbaranesCompraMovimientos,
-  inLibMsgCompras,
+  UniDataAlbaranesCompraMovimientos, inLibMsgCompras,
   UniDataValoresAutomaticosRepositorio,
-  UniDataComprasSesionesArticulos,
-  UniDataComprasSesionesDocumentosComun,
+  UniDataComprasSesionesArticulos, UniDataComprasSesionesDocumentosComun,
   UniDataComprasSesionesOperaciones;
 procedure InsertarAlbaranCompraCabecera(AConn: TUniConnection;
                                          ADM: TdmComprasSesiones;
@@ -51,8 +49,8 @@ begin
     q.Connection := AConn;
     q.SQL.Text :=
       'INSERT INTO fza_albaranes_compra ' +
-      '  (NUMERO_ALBC, SERIE_ALBC, FECHA_ALBC, ' +
-      '   INSTANTE_MOVIMIENTO_ALBC, ESTADO_ALBC, ' +
+      '  (NUMERO_ALBC, SERIE_ALBC, FECHA_ALBC, INSTANTE_MOVIMIENTO_ALBC, ' +
+      '   ESTADO_ALBC, ' +
       '   CODIGO_EMP_ALBC, RAZON_SOCIAL_EMPRESA_ALBC, NIF_EMPRESA_ALBC, ' +
       '   MOVIL_EMPRESA_ALBC, EMAIL_EMPRESA_ALBC, ' +
       '   DIRECCION1_EMPRESA_ALBC, DIRECCION2_EMPRESA_ALBC, ' +
@@ -75,9 +73,8 @@ begin
       '   CONTADOR_LINEAS_ALBC, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
       'SELECT :nalbc, :salbc, S.FECHA_SES, ' +
-      '       TIMESTAMP(COALESCE(S.FECHA_SES, CURDATE()), ' +
-      '                 CURRENT_TIME), ''ABIERTO'', ' +
-      '       E.CODIGO_EMP_EMP, E.RAZON_SOCIAL_EMP, E.NIF_EMP, ' +
+      '       TIMESTAMP(COALESCE(S.FECHA_SES, CURDATE()), CURRENT_TIME), ' +
+      '       ''ABIERTO'', E.CODIGO_EMP_EMP, E.RAZON_SOCIAL_EMP, E.NIF_EMP, ' +
       '       E.MOVIL_EMP, E.EMAIL_EMP, ' +
       '       E.DIRECCION1_EMP, E.DIRECCION2_EMP, ' +
       '       E.POBLACION_EMP, E.PROVINCIA_EMP, ' +

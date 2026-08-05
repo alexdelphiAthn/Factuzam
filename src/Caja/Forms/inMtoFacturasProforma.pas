@@ -82,8 +82,8 @@ resourcestring
     'Se generará una proforma interna no fiscal para VENTA CONTADO. ' +
     'No declarará IVA ni VeriFactu. ¿Desea continuar?';
   SPreguntaGenerarFacturaTraspaso =
-    'Se generarán y emitirán facturas fiscales normales por los TA. ' +
-    'Incluirán IVA y seguirán el circuito VeriFactu configurado. ' +
+    'Se generarán borradores de facturas normales por los traspasos TA. ' +
+    'El IVA y VeriFactu se declararán al consolidarlos en Venta mayor. ' +
     '¿Desea continuar?';
   SInfoSinOperacionesFacturacionCaja =
     'No hay operaciones ni ajustes pendientes para el periodo indicado.';
@@ -109,8 +109,7 @@ resourcestring
 implementation
 
 uses
-  inLibFacturasProforma, inMtoModalImpFacturasProforma,
-  UniDataCajaPantallaComposicion;
+  inLibFacturasProforma, inMtoModalImpFacturasProforma;
 
 {$R *.dfm}
 
@@ -361,14 +360,10 @@ function TfrmMtoFacturasProforma.RevisarPeriodo(
   const ASolicitud: TSolicitudFacturacionCaja
 ): TRevisionPeriodoFacturacionCaja;
 var
-  oComposicion: TComposicionCajaPantalla;
   oServicio: TFacturadorOperacionesCaja;
 begin
-  oComposicion := ComponerCajaPantalla(Self);
   oServicio := TFacturadorOperacionesCaja.Create(
-    dmmFacturasProforma.CrearRepositorio(
-      ParametrosApp,
-      oComposicion.Consultas.CrearServicioEmisionFiscal));
+    dmmFacturasProforma.CrearRepositorio(ParametrosApp));
   try
     Result := oServicio.RevisarPeriodo(AModalidad, ASolicitud);
   finally
@@ -380,15 +375,11 @@ procedure TfrmMtoFacturasProforma.EjecutarGeneracion(
   AModalidad: TModalidadFacturacionCaja;
   const ASolicitud: TSolicitudFacturacionCaja);
 var
-  oComposicion: TComposicionCajaPantalla;
   oResultado: TResultadoFacturacionCaja;
   oServicio : TFacturadorOperacionesCaja;
 begin
-  oComposicion := ComponerCajaPantalla(Self);
   oServicio := TFacturadorOperacionesCaja.Create(
-    dmmFacturasProforma.CrearRepositorio(
-      ParametrosApp,
-      oComposicion.Consultas.CrearServicioEmisionFiscal));
+    dmmFacturasProforma.CrearRepositorio(ParametrosApp));
   try
     oResultado := oServicio.Ejecutar(AModalidad, ASolicitud);
     dmmFacturasProforma.RefrescarDocumentos;

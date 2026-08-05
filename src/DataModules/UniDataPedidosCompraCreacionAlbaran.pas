@@ -23,8 +23,7 @@ function CrearCreacionAlbaranPedidoCompraUniDAC(
 function CrearAlbaranDesdePedidoInterno(AConn: TUniConnection;
   const ASeriePedc, ANumPedc, ACodigoAlm, ASerieAlbc,
     AUsuario, ARefPrv: string;
-  AFechaRecepcion: TDateTime;
-  AIdPvTemporada: Integer;
+  AFechaRecepcion: TDateTime; AIdPvTemporada: Integer;
   out ANumAlbc, AMensaje: string): Boolean;
 function CrearAlbaranDesdePedidoConCantidadesInterno(
   AConn: TUniConnection;
@@ -40,8 +39,7 @@ implementation
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   Data.DB, DBAccess, UniDataValoresAutomaticosRepositorio, inLibMsgCompras,
-  UniDataPedidosCompraAlbaranComun,
-  UniDataPedidosCompraPendientes;
+  UniDataPedidosCompraAlbaranComun, UniDataPedidosCompraPendientes;
 
 type
   TCreacionAlbaranPedidoCompraUniDAC = class(
@@ -179,13 +177,12 @@ begin
     AMensaje := SErrorContadorAlbaranCompraNoDisponible;
 end;
 
-procedure PrepararInsercionCabeceraAlbaranPedido(
-  AQuery: TUniQuery);
+procedure PrepararInsercionCabeceraAlbaranPedido(AQuery: TUniQuery);
 begin
   AQuery.SQL.Text :=
     'INSERT INTO fza_albaranes_compra ' +
-    '  (NUMERO_ALBC, SERIE_ALBC, FECHA_ALBC, ' +
-    '   INSTANTE_MOVIMIENTO_ALBC, ESTADO_ALBC, ' +
+    '  (NUMERO_ALBC, SERIE_ALBC, FECHA_ALBC, INSTANTE_MOVIMIENTO_ALBC, ' +
+    '   ESTADO_ALBC, ' +
     '   NUMERO_PED_ALBC, SERIE_PED_ALBC, ' +
     '   CODIGO_EMP_ALBC, RAZON_SOCIAL_EMPRESA_ALBC, ' +
     '   NIF_EMPRESA_ALBC, MOVIL_EMPRESA_ALBC, EMAIL_EMPRESA_ALBC, ' +
@@ -217,9 +214,8 @@ begin
     'SELECT :nalbc, :salbc, ' +
     '       CASE WHEN :usar_fecha = ''S'' THEN :freal ' +
     '            ELSE IFNULL(P.FECHA_PEDC, CURDATE()) END, ' +
-    '       CASE WHEN :usar_fecha = ''S'' THEN :freal ' +
-    '            ELSE TIMESTAMP(IFNULL(P.FECHA_PEDC, CURDATE()), ' +
-    '                           CURRENT_TIME) END, ' +
+    '       CASE WHEN :usar_fecha = ''S'' THEN :freal ELSE ' +
+    '       TIMESTAMP(IFNULL(P.FECHA_PEDC, CURDATE()), CURRENT_TIME) END, ' +
     '       ''ABIERTO'', P.NUMERO_PEDC, P.SERIE_PEDC, ' +
     '       P.CODIGO_EMP_PEDC, P.RAZON_SOCIAL_EMPRESA_PEDC, ' +
     '       P.NIF_EMPRESA_PEDC, P.MOVIL_EMPRESA_PEDC, ' +

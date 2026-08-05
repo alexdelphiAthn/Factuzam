@@ -26,18 +26,17 @@ enlaces de operación impiden facturar dos veces un mismo VE o TA.
 
 - El TA mantiene su naturaleza de saldo interno pendiente: por sí solo no
   declara IVA ni VeriFactu.
-- La generación crea una factura de venta `NORMAL` por cada empresa origen,
-  dirigida a la empresa destino.
+- La generación crea una factura de venta `NORMAL` en fase `BORRADOR` por cada
+  empresa origen, dirigida a la empresa destino y visible en Venta mayor.
 - La cabecera usa los datos fiscales de ambas empresas de `fza_empresas`.
 - Las líneas valoran el coste del movimiento y aplican el IVA vigente de la
   empresa emisora.
-- Antes de confirmar se validan los requisitos fiscales. Tras guardar la
-  factura se solicita su emisión mediante el servicio fiscal común, que la
-  registra en VeriFactu, No VeriFactu o Sin VeriFactu según la configuración.
-- El enlace de cada operación pasa a `EMITIDA` al delegarse correctamente o
-  a `ERROR_FISCAL` si falla la emisión. La incidencia se recupera por el
-  circuito fiscal común sin crear otra factura para la misma operación.
-- El estado del periodo permanece separado de la fase fiscal de la factura.
+- Antes de guardar se validan los requisitos fiscales, pero el borrador no se
+  emite automáticamente. Al consolidarlo manualmente desde Venta mayor sigue
+  el circuito fiscal normal, con IVA y VeriFactu según la configuración.
+- El enlace de cada operación queda reservado al borrador para impedir otra
+  factura del mismo TA. El estado del periodo permanece separado de la fase
+  fiscal de la factura.
 - Cada TA queda enlazado una sola vez con su factura. Una rectificación
   posterior se tramita mediante el circuito fiscal normal de rectificativas.
 

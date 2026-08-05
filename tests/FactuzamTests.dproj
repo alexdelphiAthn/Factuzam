@@ -346,7 +346,14 @@
         <DCCReference Include="PruebasPivoteVenta.pas"/>
         <DCCReference Include="PruebasExportadores.pas"/>
         <DCCReference Include="PruebasTraducciones.pas"/>
-
+        <DCCReference Include="PruebasRegistroPantallas.pas"/>
+        <DCCReference Include="PruebasComposicionCajaPantalla.pas"/>
+        <DCCReference Include="PruebasComposicionComprasPantalla.pas"/>
+        <DCCReference Include="PruebasComposicionConfiguracionPantalla.pas"/>
+        <DCCReference Include="PruebasComposicionVentasPantalla.pas"/>
+        <DCCReference Include="PruebasModoTallas.pas"/>
+        <DCCReference Include="PruebasRepositoriosPantallaComposicion.pas"/>
+        <DCCReference Include="PruebasInyeccionStockConsulta.pas"/>
         <DCCReference Include="PruebasFacturasPresentadorCabecera.pas"/>
         <DCCReference Include="..\src\Lib\inLibMtoGenAplicacionIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibMtoGenAplicacion.pas"/>

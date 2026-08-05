@@ -28,6 +28,10 @@ type
     procedure DataModule_SeResuelveIgnorandoEspaciosYMayusculas;
     [Test]
     procedure Compositor_SeResuelvePorLaCadenaDePropietarios;
+    [Test]
+    procedure FabricaInyectada_ConservaClaseYPropietario;
+    [Test]
+    procedure FabricaAusente_FallaDuranteLaCreacion;
   end;
 
 implementation
@@ -38,6 +42,8 @@ uses
 
 type
   TPantallaRegistroPrueba = class(TForm);
+  TPantallaInyectadaRegistroPrueba = class(TForm);
+  TPantallaSinFabricaRegistroPrueba = class(TForm);
   TDataModuleRegistroPrueba = class(TDataModule);
   TCompositorArticulosRegistroPrueba = class(
     TComponent,
@@ -99,6 +105,50 @@ begin
   finally
     FreeAndNil(oRaiz);
   end;
+end;
+
+procedure TPruebasRegistroPantallas.
+  FabricaInyectada_ConservaClaseYPropietario;
+var
+  bFabricaInvocada: Boolean;
+  oOwner: TComponent;
+  oPantalla: TForm;
+begin
+  bFabricaInvocada := False;
+  oOwner := TComponent.Create(nil);
+  RegistrarFabricaPantalla(
+    TPantallaInyectadaRegistroPrueba,
+    function(AOwner: TComponent): TForm
+    begin
+      bFabricaInvocada := True;
+      Result := TPantallaInyectadaRegistroPrueba.CreateNew(AOwner);
+    end);
+  try
+    oPantalla := CrearPantallaInyectada(
+      TPantallaInyectadaRegistroPrueba,
+      oOwner);
+    Assert.IsTrue(bFabricaInvocada);
+    Assert.IsTrue(
+      oPantalla is TPantallaInyectadaRegistroPrueba);
+    Assert.IsTrue(oPantalla.Owner = oOwner);
+  finally
+    RetirarFabricaPantalla(TPantallaInyectadaRegistroPrueba);
+    FreeAndNil(oOwner);
+  end;
+end;
+
+procedure TPruebasRegistroPantallas.
+  FabricaAusente_FallaDuranteLaCreacion;
+begin
+  RetirarFabricaPantalla(TPantallaSinFabricaRegistroPrueba);
+  Assert.WillRaise(
+    procedure
+    begin
+      CrearPantallaInyectada(
+        TPantallaSinFabricaRegistroPrueba,
+        nil);
+    end,
+    EFabricaPantallaNoRegistrada);
 end;
 
 initialization

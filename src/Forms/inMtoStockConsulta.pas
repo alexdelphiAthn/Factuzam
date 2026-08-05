@@ -68,6 +68,7 @@ uses
   inMtoStockConsultaPresentacionPivoteVcl;
 
 const
+  NOMBRE_PANTALLA_STOCK_CONSULTA = 'frmStockConsulta';
   // Detector por velocidad de tecleo (codigo de barras + CR, sin STX/ETX).
   SCAN_VEL_MS   = 40;   // max. ms entre teclas para considerarlo lector
   SCAN_MIN_LONG = 4;    // longitud minima del codigo
@@ -118,7 +119,6 @@ type
     procedure lstColoresClick(Sender: TObject);
     procedure pcVistasChange(Sender: TObject);
   private
-    FDependencias: TContextoDependenciasStockConsulta;
     FVista: TEstadoVistaStockConsulta;
     FEstados: TPresentadorEstadosStock;
     FPivote: TPresentadorPivoteStock;
@@ -160,6 +160,8 @@ type
               Shift: TShiftState);
     procedure btnArtExit(Sender: TObject);
     procedure ResolverTextoArticulo(AMostrarError: Boolean);
+  protected
+    FDependencias: TContextoDependenciasStockConsulta;
   public
     procedure SetArticuloSku(const ACodArt, ACodSku: string);
   end;
@@ -174,6 +176,7 @@ implementation
 uses
   System.StrUtils,
   inLibGenBusq, inLibUser,
+  inLibRegistroPantallas,
   inLibPerfilesUsuarioIntf,
   inLibStockCeldaDocumento,
   inLibStockConsultaInfo,
@@ -193,7 +196,7 @@ const
   CAMPO_COLOR_AV = 'AV';
   CAMPO_ES_COLOR_SKU = 'ES_COLOR_SKU';
   SEPARADOR_ALMACEN = ' - ';
-  PERFIL_STOCK_CONSULTA = 'frmStockConsulta';
+  PERFIL_STOCK_CONSULTA = NOMBRE_PANTALLA_STOCK_CONSULTA;
   PERFIL_MODO_DESGLOSADO = 'ModoDesglosado';
   LAYOUT_BUSQUEDA_ARTICULOS = 'frmMtoArtStockSearch';
 
@@ -230,14 +233,18 @@ end;
 // ---------------------------------------------------------------------------
 function BuscarStockConsulta: TfrmStockConsulta;
 var
-  Componente: TComponent;
+  iFormulario: Integer;
 begin
-  Componente := Application.FindComponent('frmStockConsulta');
-  if (Componente is TfrmStockConsulta) and
-     not (csDestroying in Componente.ComponentState) then
-    Result := TfrmStockConsulta(Componente)
-  else
-    Result := nil;
+  Result := nil;
+  for iFormulario := 0 to Screen.FormCount - 1 do
+  begin
+    if (Screen.Forms[iFormulario] is TfrmStockConsulta) and
+       not (csDestroying in
+         Screen.Forms[iFormulario].ComponentState) then
+    begin
+      Result := TfrmStockConsulta(Screen.Forms[iFormulario]);
+    end;
+  end;
 end;
 
 procedure MostrarStockConsulta(const ACodArt, ACodSku: string);
@@ -246,7 +253,9 @@ var
 begin
   Formulario := BuscarStockConsulta;
   if Formulario = nil then
-    Formulario := TfrmStockConsulta.Create(Application);
+    Formulario := CrearPantallaInyectada(
+      TfrmStockConsulta,
+      Application) as TfrmStockConsulta;
   Formulario.SetArticuloSku(ACodArt, ACodSku);
   if Formulario.WindowState = wsMinimized then
     Formulario.WindowState := wsMaximized;
@@ -274,6 +283,7 @@ end;
 procedure TfrmStockConsulta.FormCreate(Sender: TObject);
 begin
   inherited;
+  FDependencias.Validar;
   Self.Position := poDesigned;
   Self.FormStyle := fsStayOnTop;
   Self.WindowState := wsMaximized;
@@ -293,12 +303,6 @@ begin
                      Permisos.TienePermiso(
                        PERMISO_CAJA_VER_COSTE,
                        paDenegar);
-  // Unico punto de la pantalla que resuelve adaptadores de persistencia:
-  // el resto del contexto de dependencias lo completan el lector y los
-  // presentadores.
-  FDependencias := CrearContextoStockConsulta(
-    Self,
-    ConexionPrincipal);
   // Detector del lector. Modo "consumir": las teclas de la rafaga no llegan
   // a btnArt (evita disparar SetArticuloSku en cada tecla del escaneo).
   FDependencias.Lector := TLectorScanner.Create;
