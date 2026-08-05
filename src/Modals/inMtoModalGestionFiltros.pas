@@ -108,7 +108,14 @@ type
                             const AMto, AVista: string;
                             AVistaComponente: TcxCustomGridTableView;
                             const AFiltroActualBase64: string
-                            ): TGestionFiltrosResult;
+                            ): TGestionFiltrosResult; overload;
+    class function Ejecutar(
+      AOwner: TComponent;
+      const AMto, AVista: string;
+      AVistaComponente: TcxCustomGridTableView;
+      const AFiltroActualBase64: string;
+      const ARepositorio: IRepositorioDestinosFiltros
+    ): TGestionFiltrosResult; overload;
   end;
 
 implementation
@@ -146,19 +153,33 @@ class function TfrmModalGestionFiltros.Ejecutar(AOwner: TComponent;
   const AMto, AVista: string;
   AVistaComponente: TcxCustomGridTableView;
   const AFiltroActualBase64: string): TGestionFiltrosResult;
+begin
+  Result := Default(TGestionFiltrosResult);
+  ValidarDependenciaConfiguracion(
+    nil,
+    'destinos de filtros');
+end;
+
+class function TfrmModalGestionFiltros.Ejecutar(
+  AOwner: TComponent;
+  const AMto, AVista: string;
+  AVistaComponente: TcxCustomGridTableView;
+  const AFiltroActualBase64: string;
+  const ARepositorio: IRepositorioDestinosFiltros
+): TGestionFiltrosResult;
 var
   frm: TfrmModalGestionFiltros;
 begin
+  ValidarDependenciaConfiguracion(
+    ARepositorio,
+    'destinos de filtros');
   frm := TfrmModalGestionFiltros.Create(AOwner);
   try
     frm.FMto := AMto;
     frm.FVista := AVista;
     frm.FVistaComponente := AVistaComponente;
     frm.FFiltroActualBase64 := AFiltroActualBase64;
-    ComponerConfiguracionPantalla(
-      frm,
-      frm.ConexionPrincipal,
-      frm.FRepositorioDestinos);
+    frm.FRepositorioDestinos := ARepositorio;
     frm.CargarDatos;
     frm.ShowModal;
     Result := frm.FResultado;

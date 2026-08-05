@@ -28,7 +28,7 @@ uses
   frxExportBaseDialog, frxExportPDF, frxSmartMemo, frLocalization,
   frLanguageSpanish, frxExportBaseImageSettingsDialog, frCoreClasses,
   JvComponentBase, JvEnterTab, Vcl.Menus, System.Actions, Vcl.ActnList,
-  inLibInformesCajaPersistenciaIntf, UniDataCajaPantallaComposicion;
+  inLibInformesCajaPersistenciaIntf, inLibCajaPantallaInyeccion;
 
 type
   TfrmPrintOperacionesVenta = class(TfrmPrint)
@@ -75,6 +75,10 @@ type
     procedure ReportBeforePrintConColor(
       Component: TfrxReportComponent);
   public
+    constructor Create(
+      AOwner: TComponent;
+      const ARepositorio: IRepositorioInformesCaja); reintroduce;
+      overload;
     procedure AfterReportLoaded; override;
     procedure preparar_consulta; override;
     destructor Destroy; override;
@@ -88,6 +92,15 @@ uses
 {$R *.dfm}
 
 { TfrmPrintOperacionesVenta }
+
+constructor TfrmPrintOperacionesVenta.Create(
+  AOwner: TComponent;
+  const ARepositorio: IRepositorioInformesCaja);
+begin
+  ValidarDependenciaCaja(ARepositorio, 'informes de Caja');
+  FRepositorioPersistencia := ARepositorio;
+  inherited Create(AOwner);
+end;
 
 procedure TfrmPrintOperacionesVenta.AsegurarUbicacionSeleccionada;
 var
@@ -232,15 +245,8 @@ begin
 end;
 
 procedure TfrmPrintOperacionesVenta.ComponerDependencias;
-var
-  oComposicion: TComposicionCajaPantalla;
 begin
-  if not Assigned(FRepositorioPersistencia) then
-  begin
-    oComposicion := ComponerCajaPantalla(Self);
-    FRepositorioPersistencia := oComposicion.Informes.
-      CrearRepositorioInformesCaja;
-  end;
+  ValidarDependenciaCaja(FRepositorioPersistencia, 'informes de Caja');
 end;
 
 function TfrmPrintOperacionesVenta.HexAColor(

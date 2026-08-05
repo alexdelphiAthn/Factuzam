@@ -34,6 +34,14 @@ type
     procedure ExitoActualizaMaterializaRefrescaYPresenta;
     [Test]
     procedure ErrorDeMaterializacionSePresentaSinRefrescar;
+    [Test]
+    procedure Inyeccion_CreacionConservaCapacidades;
+    [Test]
+    procedure Inyeccion_ReutilizaCapacidadesSinRaizVisual;
+    [Test]
+    procedure Inyeccion_SinCatalogoFallaAlCrear;
+    [Test]
+    procedure Inyeccion_SinIncidenciasFallaAlCrear;
   end;
 
   [TestFixture]
@@ -64,9 +72,11 @@ uses
   inLibComprasSesionesAplicacion,
   inLibComprasSesionesAplicacionIntf,
   inLibComprasSesionesCreacion,
+  inLibComprasSesionesInyeccion,
   inLibComprasSesionesIntf,
   inLibComprasSesionesPresentacion,
-  inLibComprasSesionesPresentacionIntf;
+  inLibComprasSesionesPresentacionIntf,
+  inLibCatalogoSqlIntf;
 
 type
   // Sustituye al TTimer del adaptador VCL: el nucleo solo decide cuando
@@ -130,6 +140,19 @@ type
     procedure MostrarResultado(
       const AResultado: TResultadoMaterializacionSesion);
     procedure MostrarError(const AMensaje: string);
+  end;
+
+  TDobleSqlComprasSesiones = class(
+    TInterfacedObject,
+    ICatalogoSql,
+    IRegistroIncidenciasSql)
+  public
+    function Resolver(
+      const ADefinicion: TDefinicionSql): TSqlResuelto;
+    procedure Registrar(
+      const AClavePerfil, ACausa: string);
+    function ObtenerUltimaCausa(
+      const AClavePerfil: string): string;
   end;
 
 procedure TDoblePlanificadorDiferido.Rearmar;
@@ -260,6 +283,23 @@ begin
   Inc(FErroresMostrados);
 end;
 
+function TDobleSqlComprasSesiones.Resolver(
+  const ADefinicion: TDefinicionSql): TSqlResuelto;
+begin
+  Result := ResolverSqlBase(ADefinicion);
+end;
+
+procedure TDobleSqlComprasSesiones.Registrar(
+  const AClavePerfil, ACausa: string);
+begin
+end;
+
+function TDobleSqlComprasSesiones.ObtenerUltimaCausa(
+  const AClavePerfil: string): string;
+begin
+  Result := '';
+end;
+
 procedure TPruebasComprasSesionesAplicacion.SinCabeceraNoGuardaNiMaterializa;
 var
   Aplicacion: IAplicacionMaterializacionCompraSesion;
@@ -334,6 +374,87 @@ begin
   Assert.AreEqual(1, Doble.FErroresMostrados);
   Assert.AreEqual(0, Doble.FRefrescos);
   Assert.AreEqual(0, Doble.FResultadosMostrados);
+end;
+
+procedure TPruebasComprasSesionesAplicacion.
+  Inyeccion_CreacionConservaCapacidades;
+var
+  Catalogo: ICatalogoSql;
+  Contexto: TContextoDependenciasComprasSesiones;
+  Incidencias: IRegistroIncidenciasSql;
+begin
+  Catalogo := TDobleSqlComprasSesiones.Create;
+  Incidencias := Catalogo as IRegistroIncidenciasSql;
+  Contexto := TContextoDependenciasComprasSesiones.Crear(
+    Catalogo,
+    Incidencias);
+  try
+    Assert.IsTrue(Contexto.CatalogoSql = Catalogo);
+    Assert.IsTrue(Contexto.IncidenciasSql = Incidencias);
+  finally
+    Contexto.Liberar;
+  end;
+end;
+
+procedure TPruebasComprasSesionesAplicacion.
+  Inyeccion_ReutilizaCapacidadesSinRaizVisual;
+var
+  Catalogo: ICatalogoSql;
+  ContextoCreado: TContextoDependenciasComprasSesiones;
+  ContextoReutilizado: TContextoDependenciasComprasSesiones;
+  Incidencias: IRegistroIncidenciasSql;
+begin
+  Catalogo := TDobleSqlComprasSesiones.Create;
+  Incidencias := Catalogo as IRegistroIncidenciasSql;
+  ContextoCreado := TContextoDependenciasComprasSesiones.Crear(
+    Catalogo,
+    Incidencias);
+  ContextoReutilizado := TContextoDependenciasComprasSesiones.Crear(
+    ContextoCreado.CatalogoSql,
+    ContextoCreado.IncidenciasSql);
+  try
+    Assert.IsTrue(ContextoReutilizado.CatalogoSql = Catalogo);
+    Assert.IsTrue(ContextoReutilizado.IncidenciasSql = Incidencias);
+  finally
+    ContextoReutilizado.Liberar;
+    ContextoCreado.Liberar;
+  end;
+end;
+
+procedure TPruebasComprasSesionesAplicacion.
+  Inyeccion_SinCatalogoFallaAlCrear;
+var
+  Contexto: TContextoDependenciasComprasSesiones;
+  Incidencias: IRegistroIncidenciasSql;
+begin
+  Incidencias := TDobleSqlComprasSesiones.Create;
+  Assert.WillRaise(
+    procedure
+    begin
+      Contexto := TContextoDependenciasComprasSesiones.Crear(
+        nil,
+        Incidencias);
+      Contexto.Liberar;
+    end,
+    EArgumentNilException);
+end;
+
+procedure TPruebasComprasSesionesAplicacion.
+  Inyeccion_SinIncidenciasFallaAlCrear;
+var
+  Catalogo: ICatalogoSql;
+  Contexto: TContextoDependenciasComprasSesiones;
+begin
+  Catalogo := TDobleSqlComprasSesiones.Create;
+  Assert.WillRaise(
+    procedure
+    begin
+      Contexto := TContextoDependenciasComprasSesiones.Crear(
+        Catalogo,
+        nil);
+      Contexto.Liberar;
+    end,
+    EArgumentNilException);
 end;
 
 { TPruebasPresentacionComprasSesiones }

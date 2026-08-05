@@ -37,7 +37,7 @@ uses
   cxFilter, cxData, cxDataStorage, cxNavigator, dxDateRanges,
   dxScrollbarAnnotations, inLibCajaVentaIntf, inLibCajaVentanasIntf,
   inLibTraspasoOpePersistenciaIntf, inLibArticulosAtributosIntf,
-  inLibTraspasoTicketIntf, UniDataCajaPantallaComposicion;
+  inLibTraspasoTicketIntf, inLibCajaPantallaInyeccion;
 
 type
   TfrmMtoOpeTraspaso = class(TfrmBase, ITraspasoCaja)
@@ -113,6 +113,7 @@ type
     // En modo "consumir" y pasivo dentro de la rejilla (ahi resuelve la celda
     // via inLibGridArticulos); el detector por velocidad cubre el foco fuera.
     FLector: TLectorScanner;
+    procedure ValidarDependencias;
     procedure AgregarLineaExterna(
       const ALinea: TLineaCargaTraspaso;
       var ANumeroLinea: Integer);
@@ -155,6 +156,15 @@ type
               ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
               var ADone: Boolean);
   public
+    constructor Create(AOwner: TComponent); overload; override;
+    constructor Create(
+      AOwner: TComponent;
+      const APermisos: IPermisosAplicacion); reintroduce; overload;
+    constructor Create(
+      AOwner: TComponent;
+      const APermisos: IPermisosAplicacion;
+      const ADependencias: TDependenciasTraspasoCaja); reintroduce;
+      overload;
     function FormularioTraspaso: TCustomForm;
     procedure PrepararValores(AModo: TModoTraspaso; const AEmpresa, AAlmacen,
                                ACaja: string; AFecha: TDateTime);
@@ -173,12 +183,52 @@ uses
   inLibMsgCaja, inLibMsgComun, UniDataModoTallas,
   UniDataGridArticulosRepositorio;
 
-procedure TfrmMtoOpeTraspaso.FormCreate(Sender: TObject);
+constructor TfrmMtoOpeTraspaso.Create(AOwner: TComponent);
+begin
+  ValidarDependenciaCaja(
+    nil,
+    'contexto de traspasos de Caja');
+end;
+
+constructor TfrmMtoOpeTraspaso.Create(
+  AOwner: TComponent;
+  const APermisos: IPermisosAplicacion);
+begin
+  ValidarDependenciaCaja(
+    nil,
+    'contexto de traspasos de Caja');
+end;
+
+constructor TfrmMtoOpeTraspaso.Create(
+  AOwner: TComponent;
+  const APermisos: IPermisosAplicacion;
+  const ADependencias: TDependenciasTraspasoCaja);
+begin
+  ADependencias.Validar;
+  FRepositorioConsultas := ADependencias.Consultas;
+  FRepositorioPersistencia := ADependencias.Persistencia;
+  FValidadorArticulos := ADependencias.ValidadorArticulos;
+  FLookupAtributosArticulos := ADependencias.AtributosArticulos;
+  FRepositorioTraspasoTicket := ADependencias.Ticket;
+  inherited Create(AOwner, APermisos);
+end;
+
+procedure TfrmMtoOpeTraspaso.ValidarDependencias;
 var
-  oComposicion: TComposicionCajaPantalla;
+  Dependencias: TDependenciasTraspasoCaja;
+begin
+  Dependencias.Consultas := FRepositorioConsultas;
+  Dependencias.Persistencia := FRepositorioPersistencia;
+  Dependencias.ValidadorArticulos := FValidadorArticulos;
+  Dependencias.AtributosArticulos := FLookupAtributosArticulos;
+  Dependencias.Ticket := FRepositorioTraspasoTicket;
+  Dependencias.Validar;
+end;
+
+procedure TfrmMtoOpeTraspaso.FormCreate(Sender: TObject);
 begin
   inherited;
-  oComposicion := ComponerCajaPantalla(Self);
+  ValidarDependencias;
   KeyPreview := True;
   // Detector del lector de codigo de barras (trama STX/ETX + rafaga por
   // velocidad). Modo "consumir" y pasivo en la rejilla: la lectura en la celda
@@ -191,16 +241,6 @@ begin
   FLector.OnEsControlRejilla := LectorEsControlRejilla;
   FComboCodigos := TStringList.Create;
   FDatos := TdmTraspaso.Create(Self, ConexionPrincipal);
-  FRepositorioConsultas := oComposicion.Consultas.
-    CrearRepositorioConsultasCaja;
-  FRepositorioPersistencia := oComposicion.Operaciones.
-    CrearRepositorioTraspasoOpe;
-  FValidadorArticulos := oComposicion.Operaciones.
-    CrearValidadorArticulos(ConexionPrincipal);
-  FLookupAtributosArticulos := oComposicion.Operaciones.
-    CrearLookupAtributosArticulos(ConexionPrincipal);
-  FRepositorioTraspasoTicket := oComposicion.Tickets.
-    CrearRepositorioTraspasoTicket;
   // Coste/importe solo para administrador: TienePermiso devuelve True siempre a
   // admin; al resto, oculto por defecto (default False) salvo permiso explicito
   // 'caja.verCoste'. Sin sistema de permisos, oculto.

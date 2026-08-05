@@ -37,10 +37,11 @@ uses
   inLibArqueoIntf, inLibArqueoTicketIntf, inLibArqueoPersistencia,
   inLibTiraCajaTicketIntf,
   inLibModalArqueoPersistenciaIntf,
+  inLibInformesCajaPersistenciaIntf,
   Vcl.ComCtrls, dxCore,
   cxDateUtils, cxCurrencyEdit, cxRadioGroup,
   JvComponentBase, JvEnterTab, cxLocalization, cxGroupBox,
-  UniDataCajaPantallaComposicion;
+  inLibCajaPantallaInyeccion;
 
 type
   TfrmModalArqueo = class(TfrmBase)
@@ -265,6 +266,7 @@ type
     FRepositorioArqueoCaja: IRepositorioArqueoCaja;
     FRepositorioArqueoTicket: IRepositorioArqueoTicket;
     FRepositorioTiraCaja: IRepositorioTiraCajaTicket;
+    FRepositorioInformes: IRepositorioInformesCaja;
     FResumenEmpleados: IResultadoModalArqueo;
     FResumenFormasPago: IResultadoModalArqueo;
     FResumenPropiedades: IResultadoModalArqueo;
@@ -295,7 +297,16 @@ type
                              const AAlmacen : string;
                              const ACaja    : string;
                              AFechaDesde    : TDate;
-                             AFechaHasta    : TDate);
+                             AFechaHasta    : TDate); overload;
+    class procedure Ejecutar(
+      AOwner: TComponent;
+      AConn: TUniConnection;
+      const ADependencias: TDependenciasArqueoCaja;
+      const AEmpresa: string;
+      const AAlmacen: string;
+      const ACaja: string;
+      AFechaDesde: TDate;
+      AFechaHasta: TDate); overload;
   end;
 
 implementation
@@ -320,12 +331,32 @@ class procedure TfrmModalArqueo.Ejecutar(AOwner       : TComponent;
                                          const ACaja    : string;
                                          AFechaDesde    : TDate;
                                          AFechaHasta    : TDate);
+begin
+  ValidarDependenciaCaja(nil, 'contexto del arqueo de Caja');
+end;
+
+class procedure TfrmModalArqueo.Ejecutar(
+  AOwner: TComponent;
+  AConn: TUniConnection;
+  const ADependencias: TDependenciasArqueoCaja;
+  const AEmpresa: string;
+  const AAlmacen: string;
+  const ACaja: string;
+  AFechaDesde: TDate;
+  AFechaHasta: TDate);
 var
   frm: TfrmModalArqueo;
 begin
+  ADependencias.Validar;
   frm := TfrmModalArqueo.Create(AOwner);
   try
     frm.FConn    := AConn;
+    frm.FRepositorioPersistencia := ADependencias.Modal;
+    frm.FPersistenciaArqueo := ADependencias.Persistencia;
+    frm.FRepositorioArqueoCaja := ADependencias.Arqueo;
+    frm.FRepositorioArqueoTicket := ADependencias.Ticket;
+    frm.FRepositorioTiraCaja := ADependencias.Tira;
+    frm.FRepositorioInformes := ADependencias.Informes;
     frm.ComponerDependencias;
     frm.FEmpresa := AEmpresa;
     frm.FAlmacen := AAlmacen;
@@ -386,19 +417,15 @@ end;
 
 procedure TfrmModalArqueo.ComponerDependencias;
 var
-  oComposicion: TComposicionCajaPantalla;
+  Dependencias: TDependenciasArqueoCaja;
 begin
-  oComposicion := ComponerCajaPantalla(Self);
-  FRepositorioPersistencia := oComposicion.Arqueos.
-    CrearRepositorioModalArqueo(FConn);
-  FPersistenciaArqueo := oComposicion.Arqueos.
-    CrearPersistenciaArqueoCaja(FConn);
-  FRepositorioArqueoCaja := oComposicion.Arqueos.
-    CrearRepositorioArqueoCaja(FConn);
-  FRepositorioArqueoTicket := oComposicion.Arqueos.
-    CrearRepositorioArqueoTicket(FConn);
-  FRepositorioTiraCaja := oComposicion.Arqueos.
-    CrearRepositorioTiraCajaTicket(FConn);
+  Dependencias.Modal := FRepositorioPersistencia;
+  Dependencias.Persistencia := FPersistenciaArqueo;
+  Dependencias.Arqueo := FRepositorioArqueoCaja;
+  Dependencias.Ticket := FRepositorioArqueoTicket;
+  Dependencias.Tira := FRepositorioTiraCaja;
+  Dependencias.Informes := FRepositorioInformes;
+  Dependencias.Validar;
 end;
 
 // =============================================================================
@@ -498,13 +525,25 @@ begin
 end;
 
 procedure TfrmModalArqueo.actHistoricoExecute(Sender: TObject);
+var
+  Dependencias: TDependenciasArqueosHistoricosCaja;
 begin
   inherited;
   // Pantalla de histórico de arqueos de esta caja: reemite duplicados del
   // ticket o del cierre ya grabados, sin recalcular.
   if (FConn <> nil) and FConn.Connected then
+  begin
+    Dependencias.Informes := FRepositorioInformes;
+    Dependencias.Arqueo := FRepositorioArqueoCaja;
+    Dependencias.Ticket := FRepositorioArqueoTicket;
     TfrmModalArqueosHistCaja.Ejecutar(
-      Self, FConn, FEmpresa, FAlmacen, FCaja);
+      Self,
+      FConn,
+      Dependencias,
+      FEmpresa,
+      FAlmacen,
+      FCaja);
+  end;
 end;
 
 procedure TfrmModalArqueo.btnTiraCajaClick(Sender: TObject);

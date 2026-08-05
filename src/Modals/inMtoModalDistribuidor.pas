@@ -114,6 +114,10 @@ type
     SerieSes  : string;
     NumeroSes : string;
     LineaSes  : Integer;
+    constructor Create(
+      AOwner: TComponent;
+      const ARepositorio: IRepositorioDistribuidor); reintroduce;
+      overload;
     // CloseQuery se ejecuta al cerrar mediante boton, F12 o codigo.
     function CloseQuery: Boolean; override;
     // Confirmado se deriva de sFicha ('S' tras Aceptar, 'N' tras Cancelar)
@@ -134,7 +138,11 @@ type
                                AFila, AAlm, AAv, ACant: string);
   end;
 
-function CrearDistribuidorTallasVisualMto: IDistribuidorTallasVisual;
+function CrearDistribuidorTallasVisualMto:
+  IDistribuidorTallasVisual; overload;
+function CrearDistribuidorTallasVisualMto(
+  const ARepositorio: IRepositorioDistribuidor
+): IDistribuidorTallasVisual; overload;
 
 implementation
 
@@ -150,14 +158,38 @@ type
   TDistribuidorTallasVisualMto = class(
     TInterfacedObject,
     IDistribuidorTallasVisual)
+  private
+    FRepositorio: IRepositorioDistribuidor;
   public
+    constructor Create(
+      const ARepositorio: IRepositorioDistribuidor);
     function Ejecutar(
       const AParametros: TParametrosDistribuidorTallas): Boolean;
   end;
 
 function CrearDistribuidorTallasVisualMto: IDistribuidorTallasVisual;
 begin
-  Result := TDistribuidorTallasVisualMto.Create;
+  Result := nil;
+  ValidarDependenciaConfiguracion(
+    nil,
+    'distribución de tallas');
+end;
+
+function CrearDistribuidorTallasVisualMto(
+  const ARepositorio: IRepositorioDistribuidor
+): IDistribuidorTallasVisual;
+begin
+  Result := TDistribuidorTallasVisualMto.Create(ARepositorio);
+end;
+
+constructor TDistribuidorTallasVisualMto.Create(
+  const ARepositorio: IRepositorioDistribuidor);
+begin
+  ValidarDependenciaConfiguracion(
+    ARepositorio,
+    'distribución de tallas');
+  FRepositorio := ARepositorio;
+  inherited Create;
 end;
 
 function TDistribuidorTallasVisualMto.Ejecutar(
@@ -165,7 +197,9 @@ function TDistribuidorTallasVisualMto.Ejecutar(
 var
   oFormulario: TfrmModalDistribuidor;
 begin
-  oFormulario := TfrmModalDistribuidor.Create(Application);
+  oFormulario := TfrmModalDistribuidor.Create(
+    Application,
+    FRepositorio);
   oFormulario.OnClose := nil;
   try
     oFormulario.ConfigurarCeldas(
@@ -189,6 +223,17 @@ begin
   finally
     FreeAndNil(oFormulario);
   end;
+end;
+
+constructor TfrmModalDistribuidor.Create(
+  AOwner: TComponent;
+  const ARepositorio: IRepositorioDistribuidor);
+begin
+  ValidarDependenciaConfiguracion(
+    ARepositorio,
+    'distribución de tallas');
+  FRepositorio := ARepositorio;
+  inherited Create(AOwner);
 end;
 
 procedure TfrmModalDistribuidor.FormCreate(Sender: TObject);
@@ -291,7 +336,9 @@ var
   oGestor : TGestorGridTallas;
   oCfg    : TGridTallasConfig;
 begin
-  ComponerConfiguracionPantalla(Self, AConn, FRepositorio);
+  ValidarDependenciaConfiguracion(
+    FRepositorio,
+    'distribución de tallas');
   FUsuario      := AUsuario;
   SerieSes      := ASerie;
   NumeroSes     := ANumero;

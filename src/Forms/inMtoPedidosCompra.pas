@@ -51,6 +51,8 @@ uses
   inLibAplicacionArticuloCompraIntf,
   inLibBusquedasCompraPersistenciaIntf,
   inLibComprasPantallaIntf,
+  inLibPermisosIntf,
+  inLibRepositoriosPantallaIntf,
   inLibPedidosCompraIntf,
   UniDataPedidosCompra, cxBlobEdit, System.Actions, Vcl.ActnList,
   dxShellDialogs, cxSplitter, inLibDocumento, inLibDocumentoIntf;
@@ -59,6 +61,7 @@ const
   CANT_TALLAS_MAX = 20;
   CANT_ATRIB_MAX  = 5;
   ID_VA_COLOR     = 'CO';
+  NOMBRE_PANTALLA_PEDIDOS_COMPRA = 'frmMtoPedidosCompra';
   // Ancho (px) de cada columna talla en modo pivote. Tambien actua de
   // suelo tras ApplyBestFit: el BestFit mide solo el Value numerico corto
   // de la celda y, al ignorar el custom-draw (rotulo de talla + sub-cifras
@@ -258,6 +261,7 @@ type
     // que la columna Color es unica.
     FColColorProveedorPivot : TcxGridDBColumn;
     FBasicosColor           : TArray<string>;
+  protected
     FAplicacionArticuloCompra: IAplicacionArticuloCompra;
     FValidadorArticulos: IArticulosValidador;
     FLookupAtributos: IArticulosAtributosLookup;
@@ -266,6 +270,7 @@ type
     FBusquedaEmpresas: IBusquedaEmpresasComprasPantalla;
     FBusquedaProveedores: IBusquedaProveedoresComprasPantalla;
     FBusquedasArticulos: IBusquedasCompraPersistencia;
+  private
     FAfterPostLineasOriginal: TDataSetNotifyEvent;
     FEstiloRecepcionVencida : TcxStyle;
     // Guarda contra la reentrancia que provoca PersistirPreferenciaPivote:
@@ -398,6 +403,11 @@ type
     procedure CrearTablaPrincipal; override;
   end;
 
+function CrearPedidosCompraInyectada(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const AArticulos: IRepositoriosArticulosPantalla): TForm;
+
 implementation
 
 uses
@@ -425,7 +435,61 @@ uses
 
 {$R *.dfm}
 
+type
+  TfrmMtoPedidosCompraInyectada = class(TfrmMtoPedidosCompra)
+  private
+    FArticulos: IRepositoriosArticulosPantalla;
+  public
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const AArticulos: IRepositoriosArticulosPantalla); reintroduce;
+    procedure CrearTablaPrincipal; override;
+  end;
+
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+function CrearPedidosCompraInyectada(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const AArticulos: IRepositoriosArticulosPantalla): TForm;
+begin
+  Result := TfrmMtoPedidosCompraInyectada.Create(
+    AOwner,
+    AContexto,
+    AArticulos);
+end;
+
+constructor TfrmMtoPedidosCompraInyectada.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const AArticulos: IRepositoriosArticulosPantalla);
+begin
+  FArticulos := AArticulos;
+  inherited Create(AOwner, AContexto);
+end;
+
+procedure TfrmMtoPedidosCompraInyectada.CrearTablaPrincipal;
+var
+  oContexto: TContextoPedidoCompraPantalla;
+  oEntrada: TEntradaDocumentoCompraPantalla;
+begin
+  inherited;
+  oEntrada := Default(TEntradaDocumentoCompraPantalla);
+  oEntrada.Conexion := dmmPedidosCompra.unqryTablaG.Connection;
+  oEntrada.Cabecera := dmmPedidosCompra.unqryTablaG;
+  oEntrada.Lineas := dmmPedidosCompra.unqryPedidosCompraLineas;
+  ComponerComprasPantalla(FArticulos, oEntrada, oContexto);
+  FAplicacionArticuloCompra := oContexto.AplicacionArticulo;
+  FValidadorArticulos := oContexto.ValidadorArticulos;
+  FLookupAtributos := oContexto.LookupAtributos;
+  FRecepcionPedido := oContexto.Recepcion;
+  FConsultasPedido := oContexto.Consultas;
+  FBusquedaEmpresas := oContexto.BusquedaEmpresas;
+  FBusquedaProveedores := oContexto.BusquedaProveedores;
+  FBusquedasArticulos := oContexto.BusquedasArticulos;
+  FArticulos := nil;
+end;
 
 // dsTablaG apunta a la cabecera del pedido de compra. El articulo
 // activo vive en la fila del sub-grid tvLineasPedido
@@ -593,8 +657,6 @@ end;
 procedure TfrmMtoPedidosCompra.FormCreate(Sender: TObject);
 var
   i: Integer;
-  oEntrada: TEntradaComposicionComprasPantalla;
-  oServicios: TServiciosComprasPantalla;
 begin
   // Mismo orden que albaranes / sesiones: columnas no-bound de tallas
   // y atributos se crean ANTES del inherited.
@@ -611,26 +673,6 @@ begin
     FColColorPivot, colLinPedcColorPivotButtonClick);
   FColColorProveedorPivot := nil;
   inherited;
-  oEntrada := Default(TEntradaComposicionComprasPantalla);
-  oEntrada.Tipo := tccPedido;
-  oEntrada.Conexion := dmmPedidosCompra.unqryTablaG.Connection;
-  oEntrada.Cabecera := dmmPedidosCompra.unqryTablaG;
-  oEntrada.Lineas := dmmPedidosCompra.unqryPedidosCompraLineas;
-  oServicios := ComponerComprasPantalla(
-    Self,
-    oEntrada);
-  FAplicacionArticuloCompra :=
-    oServicios.Pedido.Documento.AplicacionArticulo;
-  FValidadorArticulos :=
-    oServicios.Pedido.Documento.ValidadorArticulos;
-  FLookupAtributos := oServicios.Pedido.Documento.LookupAtributos;
-  FRecepcionPedido := oServicios.Pedido.Recepcion;
-  FConsultasPedido := oServicios.Pedido.Consultas;
-  FBusquedaEmpresas := oServicios.Pedido.Documento.BusquedaEmpresas;
-  FBusquedaProveedores :=
-    oServicios.Pedido.Documento.BusquedaProveedores;
-  FBusquedasArticulos :=
-    oServicios.Pedido.Documento.BusquedasArticulos;
   FEstiloRecepcionVencida := TcxStyle.Create(Self);
   FEstiloRecepcionVencida.AssignedValues := [svTextColor];
   FEstiloRecepcionVencida.TextColor := clRed;

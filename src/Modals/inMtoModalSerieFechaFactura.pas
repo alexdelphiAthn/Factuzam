@@ -77,7 +77,6 @@ begin
   frm := TfrmModalSerieFechaFactura.Create(AOwner);
   try
     CrearContextoVentasPantalla(
-      frm,
       frm.ConexionPrincipal,
       oContexto);
     frm.FRepositorio := oContexto.Repositorio;

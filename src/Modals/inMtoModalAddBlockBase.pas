@@ -250,6 +250,10 @@ type
     procedure ActualizarContadores;
 
   public
+    constructor Create(
+      AOwner: TComponent;
+      const AServicios: TServiciosCargaMasivaArticulos); reintroduce;
+      overload;
     procedure Inicializar;
 
     property BaseResultado: TAddBlockBaseResult read FBaseResultado;
@@ -266,6 +270,15 @@ uses
 // ============================================================================
 //   API publica del hijo
 // ============================================================================
+
+constructor TfrmModalAddBlockBase.Create(
+  AOwner: TComponent;
+  const AServicios: TServiciosCargaMasivaArticulos);
+begin
+  ValidarServiciosCargaMasiva(AServicios);
+  FServicios := AServicios;
+  inherited Create(AOwner);
+end;
 
 procedure TfrmModalAddBlockBase.Inicializar;
 begin
@@ -326,7 +339,7 @@ begin
   Self.Position := poMainFormCenter;
   FBaseResultado.Aceptado := False;
   FPropagandoCheck    := False;
-  ComponerConfiguracionPantalla(Self, FServicios);
+  ValidarServiciosCargaMasiva(FServicios);
   FCodigosPropiedades := TStringList.Create;
   FDsFamilias     := TDataSource.Create(Self);
   FDsProveedores  := TDataSource.Create(Self);

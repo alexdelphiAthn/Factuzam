@@ -42,6 +42,22 @@ uses
     '..\src\Lib\inLibConfigCamposIntf.pas',
   inLibRepositoriosPantallaIntf in
     '..\src\Lib\inLibRepositoriosPantallaIntf.pas',
+  inLibArticulosInyeccion in
+    '..\src\Lib\inLibArticulosInyeccion.pas',
+  inLibCajaPantallaInyeccion in
+    '..\src\Lib\inLibCajaPantallaInyeccion.pas',
+  inLibComprasSesionesInyeccion in
+    '..\src\Lib\inLibComprasSesionesInyeccion.pas',
+  inLibFacturasInyeccion in
+    '..\src\Lib\inLibFacturasInyeccion.pas',
+  inLibInventariosInyeccion in
+    '..\src\Lib\inLibInventariosInyeccion.pas',
+  inLibVentasPantallaInyeccion in
+    '..\src\Lib\inLibVentasPantallaInyeccion.pas',
+  UniDataFacturasInyeccion in
+    '..\src\DataModules\UniDataFacturasInyeccion.pas',
+  UniDataInventariosInyeccion in
+    '..\src\DataModules\UniDataInventariosInyeccion.pas',
   UniDataRepositoriosPantalla in
     '..\src\DataModules\UniDataRepositoriosPantalla.pas',
   UniDataRepositoriosGeneralesPantalla in

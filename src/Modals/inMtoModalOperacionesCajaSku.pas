@@ -28,7 +28,7 @@ uses
   dxDateRanges, dxScrollbarAnnotations,
   Uni,
   inMtoFrmBase, inLibOperacionesCajaSkuPersistenciaIntf,
-  UniDataCajaPantallaComposicion;
+  inLibCajaPantallaInyeccion;
 
 type
   TfrmModalOperacionesCajaSku = class(TfrmBase)
@@ -78,7 +78,12 @@ type
     class procedure Ejecutar(
       AOwner: TComponent;
       AConn: TUniConnection;
-      const ACodigoSku, ADescripcionArticulo: string);
+      const ACodigoSku, ADescripcionArticulo: string); overload;
+    class procedure Ejecutar(
+      AOwner: TComponent;
+      AConn: TUniConnection;
+      const ARepositorio: IRepositorioOperacionesCajaSku;
+      const ACodigoSku, ADescripcionArticulo: string); overload;
   end;
 
 implementation
@@ -92,14 +97,25 @@ class procedure TfrmModalOperacionesCajaSku.Ejecutar(
   AOwner: TComponent;
   AConn: TUniConnection;
   const ACodigoSku, ADescripcionArticulo: string);
+begin
+  ValidarDependenciaCaja(nil, 'operaciones del SKU en Caja');
+end;
+
+class procedure TfrmModalOperacionesCajaSku.Ejecutar(
+  AOwner: TComponent;
+  AConn: TUniConnection;
+  const ARepositorio: IRepositorioOperacionesCajaSku;
+  const ACodigoSku, ADescripcionArticulo: string);
 var
   frm: TfrmModalOperacionesCajaSku;
 begin
+  ValidarDependenciaCaja(ARepositorio, 'operaciones del SKU en Caja');
   frm := TfrmModalOperacionesCajaSku.Create(AOwner);
   try
     frm.FConn := AConn;
     frm.FCodigoSku := ACodigoSku;
     frm.FDescripcionArticulo := ADescripcionArticulo;
+    frm.FRepositorioOperaciones := ARepositorio;
     frm.ComponerDependencias;
     frm.ShowModal;
     if frm.FCallNavegacion <> '' then
@@ -122,12 +138,10 @@ begin
 end;
 
 procedure TfrmModalOperacionesCajaSku.ComponerDependencias;
-var
-  oComposicion: TComposicionCajaPantalla;
 begin
-  oComposicion := ComponerCajaPantalla(Self);
-  FRepositorioOperaciones := oComposicion.Consultas.
-    CrearRepositorioOperacionesCajaSku(FConn);
+  ValidarDependenciaCaja(
+    FRepositorioOperaciones,
+    'operaciones del SKU en Caja');
 end;
 
 procedure TfrmModalOperacionesCajaSku.FormCreate(Sender: TObject);

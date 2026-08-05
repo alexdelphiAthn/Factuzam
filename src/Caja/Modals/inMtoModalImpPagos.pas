@@ -36,7 +36,7 @@ uses
   JvComponentBase, JvEnterTab, System.Actions, Vcl.ActnList, frxSmartMemo,
   frLocalization, frLanguageSpanish, frxExportBaseImageSettingsDialog,
   frCoreClasses, inLibInformesCajaPersistenciaIntf,
-  UniDataCajaPantallaComposicion;
+  inLibCajasDefectoPersistenciaIntf, inLibCajaPantallaInyeccion;
 
 type
   TfrmPrintPagos = class(TfrmPrint)
@@ -69,6 +69,7 @@ type
     // orden (el item solo guarda el texto "COD - Descripcion").
     FCodigosFP: TStringList;
     FRepositorioPersistencia: IRepositorioInformesCaja;
+    FRepositorioCajasDefecto: IRepositorioCajasDefecto;
     FResultado: IResultadoInformeCaja;
     procedure ComponerDependencias;
     // Abre el selector estandar de caja (inMtoModalCajDef) acotado a la
@@ -81,6 +82,10 @@ type
   protected
     procedure DoShow; override;
   public
+    constructor Create(
+      AOwner: TComponent;
+      const ADependencias: TDependenciasInformeCaja); reintroduce;
+      overload;
     destructor Destroy; override;
     procedure preparar_consulta; override;
   end;
@@ -93,6 +98,16 @@ uses
   inMtoModalCajDef;
 
 { TfrmPrintPagos }
+
+constructor TfrmPrintPagos.Create(
+  AOwner: TComponent;
+  const ADependencias: TDependenciasInformeCaja);
+begin
+  ADependencias.Validar;
+  FRepositorioPersistencia := ADependencias.Repositorio;
+  FRepositorioCajasDefecto := ADependencias.CajasDefecto;
+  inherited Create(AOwner);
+end;
 
 destructor TfrmPrintPagos.Destroy;
 begin
@@ -121,14 +136,11 @@ end;
 
 procedure TfrmPrintPagos.ComponerDependencias;
 var
-  oComposicion: TComposicionCajaPantalla;
+  Dependencias: TDependenciasInformeCaja;
 begin
-  if not Assigned(FRepositorioPersistencia) then
-  begin
-    oComposicion := ComponerCajaPantalla(Self);
-    FRepositorioPersistencia := oComposicion.Informes.
-      CrearRepositorioInformesCaja;
-  end;
+  Dependencias.Repositorio := FRepositorioPersistencia;
+  Dependencias.CajasDefecto := FRepositorioCajasDefecto;
+  Dependencias.Validar;
 end;
 
 procedure TfrmPrintPagos.CargarFormasPago;
@@ -168,7 +180,9 @@ begin
   // No se permite cambiar de empresa: acotamos el selector a la empresa
   // del usuario. De la fila elegida tomamos almacen y caja.
   bCambio := False;
-  frm := TfrmMtoModalCajDef.Create(Self);
+  frm := TfrmMtoModalCajDef.Create(
+    Self,
+    FRepositorioCajasDefecto);
   try
     frm.Cargar(edtEmpresa.Text);
     // Cierra el cronometro SQL antes de entrar en el selector modal.

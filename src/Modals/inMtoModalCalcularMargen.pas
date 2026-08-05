@@ -93,7 +93,20 @@ type
       const ANombreTar          : string;
       const ADescSku            : string;
       ACoste                    : Double;
-      APrecioSalidaAct          : Double): TCalcularMargenResult;
+      APrecioSalidaAct          : Double): TCalcularMargenResult; overload;
+    class function Ejecutar(
+      AOwner                    : TComponent;
+      ACodigoUnicoArttar        : Integer;
+      const ACodigoArt          : string;
+      const ACodigoUnidadArttar : string;
+      const ADescArt            : string;
+      const ACodigoTar          : string;
+      const ANombreTar          : string;
+      const ADescSku            : string;
+      ACoste                    : Double;
+      APrecioSalidaAct          : Double;
+      const ARepositorio        : IRepositorioMargen
+    ): TCalcularMargenResult; overload;
   end;
 
 implementation
@@ -119,18 +132,38 @@ class function TfrmModalCalcularMargen.Ejecutar(
   const ADescSku            : string;
   ACoste                    : Double;
   APrecioSalidaAct          : Double): TCalcularMargenResult;
+begin
+  Result := Default(TCalcularMargenResult);
+  ValidarDependenciaConfiguracion(
+    nil,
+    'repositorio de margen');
+end;
+
+class function TfrmModalCalcularMargen.Ejecutar(
+  AOwner                    : TComponent;
+  ACodigoUnicoArttar        : Integer;
+  const ACodigoArt          : string;
+  const ACodigoUnidadArttar : string;
+  const ADescArt            : string;
+  const ACodigoTar          : string;
+  const ANombreTar          : string;
+  const ADescSku            : string;
+  ACoste                    : Double;
+  APrecioSalidaAct          : Double;
+  const ARepositorio        : IRepositorioMargen
+): TCalcularMargenResult;
 var
   frm: TfrmModalCalcularMargen;
 begin
+  ValidarDependenciaConfiguracion(
+    ARepositorio,
+    'repositorio de margen');
   frm := TfrmModalCalcularMargen.Create(AOwner);
   try
     frm.FCodigoUnicoArttar  := ACodigoUnicoArttar;
     frm.FCodigoArtArt       := ACodigoArt;
     frm.FCodigoUnidadArttar := ACodigoUnidadArttar;
-    ComponerConfiguracionPantalla(
-      frm,
-      AConn,
-      frm.FRepositorio);
+    frm.FRepositorio := ARepositorio;
 
     frm.edtArticulo.Text   := ACodigoArt + ' - ' + ADescArt;
     frm.edtTarifa.Text     := ACodigoTar + ' - ' + ANombreTar;

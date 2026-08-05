@@ -16,17 +16,21 @@ unit PruebasComposicionConfiguracionPantalla;
 interface
 
 uses
-  System.Classes, DUnitX.TestFramework;
+  DUnitX.TestFramework,
+  inLibRepositoriosPantallaIntf;
 
 type
   [TestFixture]
   TPruebasComposicionConfiguracionPantalla = class
   private
-    FOrigen: TComponent;
-    FArticulos: TObject;
-    FConfiguracion: TObject;
-    FDocumentos: TObject;
-    FRemesas: TObject;
+    FArticulosObjeto: TObject;
+    FConfiguracionObjeto: TObject;
+    FDocumentosObjeto: TObject;
+    FRemesasObjeto: TObject;
+    FArticulos: IRepositoriosArticulosPantalla;
+    FConfiguracion: IRepositoriosConfiguracionPantalla;
+    FDocumentos: IRepositoriosDocumentosPantalla;
+    FRemesas: IRepositoriosRemesasPantalla;
   public
     [Setup]
     procedure Preparar;
@@ -34,13 +38,14 @@ type
     procedure Limpiar;
     [Test]
     procedure Componer_EnrutaCadaDependenciaPorSuCapacidad;
+    [Test]
+    procedure Componer_RechazaRepositorioAusente;
   end;
 
 implementation
 
 uses
   System.SysUtils, Uni,
-  inLibRepositoriosPantallaIntf,
   inLibArticulosResolverIntf,
   inLibArticulosValidadorIntf,
   inLibArticulosAtributosIntf,
@@ -161,34 +166,6 @@ type
     CargasEfectos: Integer;
     function CrearRepositorioCargaEfectosRemesa(
       AConexion: TUniConnection): IRepositorioCargaEfectosRemesa;
-  end;
-
-  TOrigenContextoFalso = class(
-    TComponent,
-    ICompositorArticulosPantalla,
-    ICompositorConfiguracionPantalla,
-    ICompositorDocumentosPantalla,
-    ICompositorRemesasPantalla)
-  private
-    FArticulos: IRepositoriosArticulosPantalla;
-    FConfiguracion: IRepositoriosConfiguracionPantalla;
-    FDocumentos: IRepositoriosDocumentosPantalla;
-    FRemesas: IRepositoriosRemesasPantalla;
-  public
-    constructor Create(
-      const AArticulos: IRepositoriosArticulosPantalla;
-      const AConfiguracion: IRepositoriosConfiguracionPantalla;
-      const ADocumentos: IRepositoriosDocumentosPantalla;
-      const ARemesas: IRepositoriosRemesasPantalla); reintroduce;
-    destructor Destroy; override;
-    function CrearRepositoriosArticulosPantalla(
-      const ANombrePantalla: string): IRepositoriosArticulosPantalla;
-    function CrearRepositoriosConfiguracionPantalla(
-      const ANombrePantalla: string): IRepositoriosConfiguracionPantalla;
-    function CrearRepositoriosDocumentosPantalla(
-      const ANombrePantalla: string): IRepositoriosDocumentosPantalla;
-    function CrearRepositoriosRemesasPantalla(
-      const ANombrePantalla: string): IRepositoriosRemesasPantalla;
   end;
 
 function TRepositoriosArticulosFalsos.CrearResolverArticulos(
@@ -371,81 +348,29 @@ begin
   Result := nil;
 end;
 
-constructor TOrigenContextoFalso.Create(
-  const AArticulos: IRepositoriosArticulosPantalla;
-  const AConfiguracion: IRepositoriosConfiguracionPantalla;
-  const ADocumentos: IRepositoriosDocumentosPantalla;
-  const ARemesas: IRepositoriosRemesasPantalla);
-begin
-  inherited Create(nil);
-  FArticulos := AArticulos;
-  FConfiguracion := AConfiguracion;
-  FDocumentos := ADocumentos;
-  FRemesas := ARemesas;
-end;
-
-destructor TOrigenContextoFalso.Destroy;
-begin
-  FRemesas := nil;
-  FDocumentos := nil;
-  FConfiguracion := nil;
-  FArticulos := nil;
-  inherited;
-end;
-
-function TOrigenContextoFalso.CrearRepositoriosArticulosPantalla(
-  const ANombrePantalla: string): IRepositoriosArticulosPantalla;
-begin
-  Result := FArticulos;
-end;
-
-function TOrigenContextoFalso.CrearRepositoriosConfiguracionPantalla(
-  const ANombrePantalla: string): IRepositoriosConfiguracionPantalla;
-begin
-  Result := FConfiguracion;
-end;
-
-function TOrigenContextoFalso.CrearRepositoriosDocumentosPantalla(
-  const ANombrePantalla: string): IRepositoriosDocumentosPantalla;
-begin
-  Result := FDocumentos;
-end;
-
-function TOrigenContextoFalso.CrearRepositoriosRemesasPantalla(
-  const ANombrePantalla: string): IRepositoriosRemesasPantalla;
-begin
-  Result := FRemesas;
-end;
-
 procedure TPruebasComposicionConfiguracionPantalla.Preparar;
-var
-  oArticulos: IRepositoriosArticulosPantalla;
-  oConfiguracion: IRepositoriosConfiguracionPantalla;
-  oDocumentos: IRepositoriosDocumentosPantalla;
-  oRemesas: IRepositoriosRemesasPantalla;
 begin
-  FArticulos := TRepositoriosArticulosFalsos.Create;
-  FConfiguracion := TRepositoriosConfiguracionFalsos.Create;
-  FDocumentos := TRepositoriosDocumentosFalsos.Create;
-  FRemesas := TRepositoriosRemesasFalsos.Create;
-  oArticulos := TRepositoriosArticulosFalsos(FArticulos);
-  oConfiguracion := TRepositoriosConfiguracionFalsos(FConfiguracion);
-  oDocumentos := TRepositoriosDocumentosFalsos(FDocumentos);
-  oRemesas := TRepositoriosRemesasFalsos(FRemesas);
-  FOrigen := TOrigenContextoFalso.Create(
-    oArticulos,
-    oConfiguracion,
-    oDocumentos,
-    oRemesas);
+  FArticulosObjeto := TRepositoriosArticulosFalsos.Create;
+  FConfiguracionObjeto := TRepositoriosConfiguracionFalsos.Create;
+  FDocumentosObjeto := TRepositoriosDocumentosFalsos.Create;
+  FRemesasObjeto := TRepositoriosRemesasFalsos.Create;
+  FArticulos := TRepositoriosArticulosFalsos(FArticulosObjeto);
+  FConfiguracion := TRepositoriosConfiguracionFalsos(
+    FConfiguracionObjeto);
+  FDocumentos := TRepositoriosDocumentosFalsos(FDocumentosObjeto);
+  FRemesas := TRepositoriosRemesasFalsos(FRemesasObjeto);
 end;
 
 procedure TPruebasComposicionConfiguracionPantalla.Limpiar;
 begin
-  FreeAndNil(FOrigen);
   FRemesas := nil;
   FDocumentos := nil;
   FConfiguracion := nil;
   FArticulos := nil;
+  FRemesasObjeto := nil;
+  FDocumentosObjeto := nil;
+  FConfiguracionObjeto := nil;
+  FArticulosObjeto := nil;
 end;
 
 procedure TPruebasComposicionConfiguracionPantalla.
@@ -466,47 +391,75 @@ var
   oSeries: IRepositorioSeriesEmpresa;
   oSkus: IRepositorioGeneracionSkus;
 begin
-  ComponerConfiguracionPantalla(FOrigen, nil, oAppParam);
+  ComponerConfiguracionPantalla(FConfiguracion, nil, oAppParam);
   ComponerConfiguracionPantalla(
-    FOrigen, nil, oBusqueda, oDocumentos, oArticulosResolver);
-  ComponerConfiguracionPantalla(FOrigen, nil, oSeries);
-  ComponerConfiguracionPantalla(FOrigen, oCargaMasiva);
-  ComponerConfiguracionPantalla(FOrigen, nil, oMargen);
-  ComponerConfiguracionPantalla(FOrigen, nil, oRemesas);
-  ComponerConfiguracionPantalla(FOrigen, nil, oDistribuidor);
-  ComponerConfiguracionPantalla(FOrigen, nil, oFiltro);
-  ComponerConfiguracionPantalla(FOrigen, nil, oSkus);
-  ComponerConfiguracionPantalla(FOrigen, nil, oDestinos);
-  ComponerConfiguracionPantalla(FOrigen, nil, oGuias);
-  ComponerConfiguracionPantalla(FOrigen, nil, oSeleccionBanco);
+    FConfiguracion,
+    FDocumentos,
+    FArticulos,
+    nil,
+    oBusqueda,
+    oDocumentos,
+    oArticulosResolver);
+  ComponerConfiguracionPantalla(FConfiguracion, nil, oSeries);
+  ComponerConfiguracionPantalla(FArticulos, oCargaMasiva);
+  ComponerConfiguracionPantalla(FArticulos, nil, oMargen);
+  ComponerConfiguracionPantalla(FRemesas, nil, oRemesas);
+  ComponerConfiguracionPantalla(FArticulos, nil, oDistribuidor);
+  ComponerConfiguracionPantalla(FArticulos, nil, oFiltro);
+  ComponerConfiguracionPantalla(FArticulos, nil, oSkus);
+  ComponerConfiguracionPantalla(FConfiguracion, nil, oDestinos);
+  ComponerConfiguracionPantalla(FConfiguracion, nil, oGuias);
+  ComponerConfiguracionPantalla(
+    FConfiguracion,
+    nil,
+    oSeleccionBanco);
   Assert.AreEqual(1, TRepositoriosConfiguracionFalsos(
-    FConfiguracion).Parametros);
+    FConfiguracionObjeto).Parametros);
   Assert.AreEqual(1, TRepositoriosConfiguracionFalsos(
-    FConfiguracion).Busquedas);
+    FConfiguracionObjeto).Busquedas);
   Assert.AreEqual(1, TRepositoriosConfiguracionFalsos(
-    FConfiguracion).Series);
+    FConfiguracionObjeto).Series);
   Assert.AreEqual(1, TRepositoriosConfiguracionFalsos(
-    FConfiguracion).DestinosFiltros);
+    FConfiguracionObjeto).DestinosFiltros);
   Assert.AreEqual(1, TRepositoriosConfiguracionFalsos(
-    FConfiguracion).Guias);
+    FConfiguracionObjeto).Guias);
   Assert.AreEqual(1, TRepositoriosConfiguracionFalsos(
-    FConfiguracion).Bancos);
+    FConfiguracionObjeto).Bancos);
   Assert.AreEqual(1, TRepositoriosArticulosFalsos(
-    FArticulos).Resoluciones);
+    FArticulosObjeto).Resoluciones);
   Assert.AreEqual(1, TRepositoriosArticulosFalsos(
-    FArticulos).CargasMasivas);
+    FArticulosObjeto).CargasMasivas);
   Assert.AreEqual(1, TRepositoriosArticulosFalsos(
-    FArticulos).Margenes);
+    FArticulosObjeto).Margenes);
   Assert.AreEqual(1, TRepositoriosArticulosFalsos(
-    FArticulos).Distribuciones);
+    FArticulosObjeto).Distribuciones);
   Assert.AreEqual(1, TRepositoriosArticulosFalsos(
-    FArticulos).Filtros);
+    FArticulosObjeto).Filtros);
   Assert.AreEqual(1, TRepositoriosArticulosFalsos(
-    FArticulos).GeneracionesSkus);
+    FArticulosObjeto).GeneracionesSkus);
   Assert.AreEqual(1, TRepositoriosDocumentosFalsos(
-    FDocumentos).DocumentosTrabajo);
+    FDocumentosObjeto).DocumentosTrabajo);
   Assert.AreEqual(1, TRepositoriosRemesasFalsos(
-    FRemesas).CargasEfectos);
+    FRemesasObjeto).CargasEfectos);
+end;
+
+procedure TPruebasComposicionConfiguracionPantalla.
+  Componer_RechazaRepositorioAusente;
+var
+  oAppParam: IRepositorioAppParam;
+  EsErrorEsperado: Boolean;
+begin
+  EsErrorEsperado := False;
+  try
+    ComponerConfiguracionPantalla(
+      IRepositoriosConfiguracionPantalla(nil),
+      nil,
+      oAppParam);
+  except
+    on EArgumentNilException do
+      EsErrorEsperado := True;
+  end;
+  Assert.IsTrue(EsErrorEsperado);
 end;
 
 initialization

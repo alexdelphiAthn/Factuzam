@@ -16,10 +16,18 @@ interface
 uses
   System.Classes,
   Data.DB,
-  cxButtons;
+  cxButtons,
+  inLibFacturasIncidenciaFiscalIntf;
 type
   TcxResolverIncidenciaVerifactuButton = class(TcxButton)
+  private
+    FFuenteFacturas: TDataSource;
+    FServicio: IServicioIncidenciaFiscalFactura;
   public
+    destructor Destroy; override;
+    procedure Configurar(
+      const AServicio: IServicioIncidenciaFiscalFactura;
+      AFuenteFacturas: TDataSource);
     procedure Click; override;
   end;
 procedure ActualizarBotonResolverIncidenciaVcl(
@@ -30,32 +38,43 @@ implementation
 uses
   System.SysUtils,
   Vcl.Dialogs,
-  inMtoFrmBase,
-  inLibEmisionFiscal,
-  inLibEmisionFiscalIntf,
   inLibFacturasIncidenciaFiscal,
-  inLibFacturasIncidenciaFiscalIntf,
-  inLibVerifactuColaIntf,
-  inLibVerifactuSubsanacionIntf,
-  inMtoModalResolverIncidenciaVerifactu,
-  UniDataFacturasIncidenciaFiscal,
-  UniDataVerifactuColaRepositorio,
-  UniDataVerifactuSubsanacionRepositorio;
+  inMtoModalResolverIncidenciaVerifactu;
 procedure ResolverIncidenciaVerifactuVcl(
-  AOwner: TfrmBase;
+  AOwner: TComponent;
   ABoton: TcxButton;
-  AFacturas: TDataSet); forward;
-procedure TcxResolverIncidenciaVerifactuButton.Click;
-var
-  Formulario: TfrmBase;
-  FuenteFacturas: TDataSource;
+  AFacturas: TDataSet;
+  const AServicio: IServicioIncidenciaFiscalFactura); forward;
+destructor TcxResolverIncidenciaVerifactuButton.Destroy;
 begin
-  Formulario := Owner as TfrmBase;
-  FuenteFacturas := Owner.FindComponent('dsTablaG') as TDataSource;
+  FServicio := nil;
+  FFuenteFacturas := nil;
+  inherited;
+end;
+procedure TcxResolverIncidenciaVerifactuButton.Configurar(
+  const AServicio: IServicioIncidenciaFiscalFactura;
+  AFuenteFacturas: TDataSource);
+begin
+  if not Assigned(AServicio) then
+    raise EArgumentNilException.Create('AServicio');
+  if not Assigned(AFuenteFacturas) then
+    raise EArgumentNilException.Create('AFuenteFacturas');
+  FServicio := AServicio;
+  FFuenteFacturas := AFuenteFacturas;
+end;
+procedure TcxResolverIncidenciaVerifactuButton.Click;
+begin
+  if not Assigned(FServicio) then
+    raise EInvalidOpException.Create(
+      'No se configuró el servicio de incidencia fiscal.');
+  if not Assigned(FFuenteFacturas) then
+    raise EInvalidOpException.Create(
+      'No se configuró el origen de facturas.');
   ResolverIncidenciaVerifactuVcl(
-    Formulario,
+    Owner,
     Self,
-    FuenteFacturas.DataSet);
+    FFuenteFacturas.DataSet,
+    FServicio);
 end;
 procedure ActualizarBotonResolverIncidenciaVcl(
   ABoton: TcxButton;
@@ -86,15 +105,11 @@ begin
   end;
 end;
 procedure ResolverIncidenciaVerifactuVcl(
-  AOwner: TfrmBase;
+  AOwner: TComponent;
   ABoton: TcxButton;
-  AFacturas: TDataSet);
+  AFacturas: TDataSet;
+  const AServicio: IServicioIncidenciaFiscalFactura);
 var
-  Emision: IServicioEmisionFiscal;
-  Cola: IServicioVerifactuCola;
-  Repositorio: IRepositorioIncidenciaFiscalFactura;
-  Servicio: IServicioIncidenciaFiscalFactura;
-  Subsanacion: IServicioVerifactuSubsanacion;
   Resultado: TResultadoResolucionIncidenciaFiscal;
   sNumero: string;
   sSerie: string;
@@ -104,28 +119,9 @@ begin
   begin
     sSerie := AFacturas.FieldByName('SERIE_FAC').AsString;
     sNumero := AFacturas.FieldByName('NUMERO_FAC').AsString;
-    Cola := CrearServicioVerifactuColaUniDAC(
-      AOwner.ConexionPrincipal);
-    Subsanacion := CrearServicioVerifactuSubsanacionUniDAC(
-      AOwner.ConexionPrincipal);
-    Emision := CrearServicioEmisionFiscal(
-      AOwner.ParametrosApp,
-      AOwner.ParametrosCaja,
-      AOwner.ConexionPrincipal,
-      Cola);
-    Repositorio := CrearRepositorioIncidenciaFiscalFacturaUniDAC(
-      AOwner.ConexionPrincipal);
-    Servicio := CrearServicioIncidenciaFiscalFactura(
-      Repositorio,
-      Cola,
-      Subsanacion,
-      Emision,
-      AOwner.ParametrosApp,
-      AOwner.ParametrosCaja,
-      AOwner.IdentidadSesion.Usuario);
     Resultado := TfrmModalResolverIncidenciaVerifactu.Ejecutar(
       AOwner,
-      Servicio,
+      AServicio,
       sSerie,
       sNumero);
     if Resultado.EsCorrecto then

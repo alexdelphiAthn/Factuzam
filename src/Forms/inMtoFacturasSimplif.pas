@@ -126,7 +126,6 @@ var
 begin
   inherited;
   CrearContextoVentasPantalla(
-    Self,
     dmmFacturas.unqryTablaG.Connection,
     dmmFacturas.unqryTablaG,
     ContextoSesion,

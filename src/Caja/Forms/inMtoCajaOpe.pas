@@ -36,8 +36,10 @@ uses
   inLibCajaVentaIntf, inLibCatalogoSqlIntf,
   inLibFacturasLecturasIntf, inLibCajaEntradaIntf,
   inLibCajaOpePresentacionIntf, inMtoCajaOpePresentacionVcl,
-  inLibParametrosIntf, inLibRepositoriosPantallaIntf, inLibLogIntf,
-  inLibGenBusq;
+  inLibParametrosIntf, inLibLogIntf, inLibGenBusq,
+  inLibPermisosIntf, inLibArticulosValidadorIntf,
+  inLibArticulosResolverIntf, inLibArticulosAtributosIntf,
+  inLibCajaPantallaInyeccion;
 
 const
   WM_CANCELAR_LINEA = WM_APP + 100;
@@ -114,7 +116,9 @@ type
     DatosCaja: TdmCajaOpe;
     Conexion: TUniConnection;
     ParametrosCaja: IParametrosCaja;
-    RepositoriosArticulos: IRepositoriosArticulosPantalla;
+    ValidadorArticulos: IArticulosValidador;
+    ResolverArticulos: IArticulosResolver;
+    AtributosArticulos: IArticulosAtributosLookup;
     Dependencias: TContextoDependenciasOperacionCaja;
     RepositorioArticulos: IRepositorioArticulosCaja;
     RepositorioFacturas: IRepositorioLecturasFactura;
@@ -133,7 +137,9 @@ type
     FDatosCaja: TdmCajaOpe;
     FConexionPrincipal: TUniConnection;
     FParametrosCaja: IParametrosCaja;
-    FRepositoriosArticulosPantalla: IRepositoriosArticulosPantalla;
+    FValidadorArticulos: IArticulosValidador;
+    FResolverArticulos: IArticulosResolver;
+    FAtributosArticulos: IArticulosAtributosLookup;
     FDependencias: TContextoDependenciasOperacionCaja;
     FRepositorioArticulos: IRepositorioArticulosCaja;
     FRepositorioFacturas: IRepositorioLecturasFactura;
@@ -216,8 +222,6 @@ type
     property DatosCaja: TdmCajaOpe read FDatosCaja;
     property ConexionPrincipal: TUniConnection read FConexionPrincipal;
     property ParametrosCaja: IParametrosCaja read FParametrosCaja;
-    property RepositoriosArticulosPantalla: IRepositoriosArticulosPantalla
-      read FRepositoriosArticulosPantalla;
     property RegistroLog: IRegistroLog read FRegistroLog;
     property BusquedaVisual: IBusquedaVisual read FBusquedaVisual;
     property FotosArticulos: TFotosArticulos read FFotosArticulos;
@@ -467,9 +471,7 @@ type
     FDependencias: TContextoDependenciasOperacionCaja;
     FLecturas: TServiciosLecturaOperacionCaja;
     FIncidenciasSql: IRegistroIncidenciasSql;
-    FRepositoriosArticulosPantalla: IRepositoriosArticulosPantalla;
-    FRepositoriosCajaPantalla: IRepositoriosCajaPantalla;
-    FRepositoriosTicketsCajaPantalla: IRepositoriosTicketsCajaPantalla;
+    FDependenciasPantalla: TDependenciasOperacionCaja;
     // Devoluciones: motivo (se pide al cobrar si hay líneas en negativo)
     // y ticket de origen (F4 o selector de venta sin código). Si el
     // origen es de otra tienda, la grabación genera el traspaso
@@ -530,6 +532,7 @@ type
     procedure LectorCodigoLeido(Sender: TObject; const ACodigo: string);
     function  LectorRejillaEditando: Boolean;
     function  LectorEsControlRejilla(AControl: TControl): Boolean;
+    function CrearOperacionCajaHermana: TfrmMtoOpeCaja;
     procedure LectorLecturaIniciada(Sender: TObject);
 //    procedure LogPerfCaja(const AContexto, ADetalles: string);
   public
@@ -547,6 +550,11 @@ type
     FNumeroCajaActual: Integer;
     const MAX_CAJAS = 5;
   public
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const ADependencias: TDependenciasOperacionCaja); reintroduce;
+      overload;
     procedure ResolverArtSkuStock(out ACodArt, ACodSku: string); override;
     function FormularioCaja: TCustomForm;
     // Carga EXTERNA ("Enviar a..." de Documentos de Trabajo): anade
@@ -582,8 +590,6 @@ uses
   inLibDevExp, inLibValoresAutomaticos,
   UniDataValoresAutomaticosRepositorio, inLibFacturas,
   inMtoModalGenImpSave, inLibLayoutForm,
-  inLibArticulosValidadorIntf, inLibArticulosResolverIntf,
-  inLibArticulosAtributosIntf,
   inLibAtributosPaleta,
   inLibShowMto,
   inMtoStockConsulta,
@@ -604,12 +610,10 @@ uses
   inMtoModalDevolucionTicket,
   inMtoModalSeleccionVentaOrigen,
   inMtoModalMotivoDevolucion,
-  inLibPermisosIntf,
   inLibContextoSesionIntf,
   inLibPerfilesUsuarioIntf,
   inLibTicketsCajaIntf,
   UniDataCatalogoSqlAplicacion,
-  UniDataTicketsCajaRepositorio,
   UniDataFacturasLecturas,
   UniDataFacturasOperaciones,
   UniDataVentasWsCola,
@@ -617,6 +621,16 @@ uses
   inLibUnidadesMedida, inLibPreviewTicket,
   System.StrUtils,
   inLibMsgCaja, inLibMsgVentas;
+
+constructor TfrmMtoOpeCaja.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const ADependencias: TDependenciasOperacionCaja);
+begin
+  ADependencias.Validar;
+  FDependenciasPantalla := ADependencias;
+  inherited Create(AOwner, AContexto);
+end;
 
 procedure InicializarEntradaCajaVcl(AFormulario: TfrmMtoOpeCaja);
 var
@@ -736,8 +750,7 @@ begin
     PuertoOperaciones,
     Vista);
   AFormulario.FEntrada.Aplicacion := CrearAplicacionEntradaCaja(
-    AFormulario.FRepositoriosArticulosPantalla.CrearValidadorArticulos(
-      AFormulario.ConexionPrincipal),
+    AFormulario.FDependenciasPantalla.ValidadorArticulos,
     PuertoOperaciones,
     Vista);
 end;
@@ -778,6 +791,8 @@ begin
       Result := AFormulario.FFecha;
     end;
   Result.PresentarResultado := AFormulario.ProcesarResultadoCierre;
+  Result.DependenciasFaseCobro :=
+    AFormulario.FDependenciasPantalla.FaseCobro;
 end;
 
 function CrearServiciosOperacionCajaVcl(
@@ -792,6 +807,7 @@ function CrearServiciosOperacionCajaVcl(
   const APerfilesLectura: ILectorPerfilesUsuario;
   const APerfilesEscritura: IEscritorPerfilesUsuario;
   const ARegistroLog: IRegistroLog;
+  const ARepositoriosTickets: TRepositoriosTicketsCaja;
   const ANombreFormulario: string;
   ADatosCaja: TdmCajaOpe;
   out AIncidenciasSql: IRegistroIncidenciasSql
@@ -802,7 +818,6 @@ var
   oUnidadTrabajo: IUnidadTrabajoVentaCaja;
   oImpresor: IImpresorVenta;
   oPersistenciaFacturas: TPersistenciaFacturas;
-  oRepositorioTicketsCaja: TRepositoriosTicketsCaja;
 begin
   bCatalogoSqlActivo := False;
   if Assigned(APerfilesLectura) then
@@ -819,17 +834,15 @@ begin
     oCatalogoSql,
     AIncidenciasSql,
     ARegistroLog);
-  oRepositorioTicketsCaja := CrearRepositoriosTicketsCaja(
-    AConexion, oCatalogoSql, AIncidenciasSql);
   ADatosCaja.AsignarRepositorioTicketsCaja(
-    oRepositorioTicketsCaja);
+    ARepositoriosTickets);
   oImpresor := TImpresorVentaVcl.Create(
     APropietario,
     AParametrosApp,
     AConexion,
     AParametrosCaja,
     APermisos,
-    oRepositorioTicketsCaja.Tickets,
+    ARepositoriosTickets.Tickets,
     AUnidades,
     APreviewTicket);
   oUnidadTrabajo := TUnidadTrabajoVentaCajaUniDAC.Create(
@@ -871,6 +884,7 @@ begin
     AFormulario.PerfilesLectura,
     AFormulario.PerfilesEscritura,
     AFormulario.RegistroLog,
+    AFormulario.FDependenciasPantalla.Tickets,
     AFormulario.Name,
     AFormulario.DatosCaja,
     AFormulario.FIncidenciasSql);
@@ -988,7 +1002,9 @@ begin
   FDatosCaja := AServicios.DatosCaja;
   FConexionPrincipal := AServicios.Conexion;
   FParametrosCaja := AServicios.ParametrosCaja;
-  FRepositoriosArticulosPantalla := AServicios.RepositoriosArticulos;
+  FValidadorArticulos := AServicios.ValidadorArticulos;
+  FResolverArticulos := AServicios.ResolverArticulos;
+  FAtributosArticulos := AServicios.AtributosArticulos;
   FDependencias := AServicios.Dependencias;
   FRepositorioArticulos := AServicios.RepositorioArticulos;
   FRepositorioFacturas := AServicios.RepositorioFacturas;
@@ -1011,7 +1027,9 @@ begin
   FResultadoBusquedaIncremental := nil;
   FRepositorioArticulos := nil;
   FRepositorioFacturas := nil;
-  FRepositoriosArticulosPantalla := nil;
+  FValidadorArticulos := nil;
+  FResolverArticulos := nil;
+  FAtributosArticulos := nil;
   FParametrosCaja := nil;
   FBusquedaVisual := nil;
   FRegistroLog := nil;
@@ -1069,12 +1087,15 @@ begin
   Servicios.DatosCaja := AFormulario.DatosCaja;
   Servicios.Conexion := AFormulario.ConexionPrincipal;
   Servicios.ParametrosCaja := AFormulario.ParametrosCaja;
-  Servicios.RepositoriosArticulos :=
-    AFormulario.FRepositoriosArticulosPantalla;
+  Servicios.ValidadorArticulos :=
+    AFormulario.FDependenciasPantalla.ValidadorArticulos;
+  Servicios.ResolverArticulos :=
+    AFormulario.FDependenciasPantalla.ResolverArticulos;
+  Servicios.AtributosArticulos :=
+    AFormulario.FDependenciasPantalla.AtributosArticulos;
   Servicios.Dependencias := AFormulario.FDependencias;
   Servicios.RepositorioArticulos :=
-    AFormulario.FRepositoriosCajaPantalla.
-      CrearRepositorioArticulosCaja(AFormulario.ConexionPrincipal);
+    AFormulario.FDependenciasPantalla.Articulos;
   Servicios.RepositorioFacturas :=
     AFormulario.FLecturas.RepositorioFacturas;
   Servicios.BusquedaVisual := AFormulario.BusquedaVisual;
@@ -2263,39 +2284,28 @@ function TEditorLineasCajaVcl.RellenarDatosArticuloEnDataset(
   const ACodigo: string): Boolean;
 var
   Resultado: TResultadoPreparacionArticuloVenta;
-  Validador: IArticulosValidador;
-  Resolver: IArticulosResolver;
 begin
   Result := False;
   FMotivoRechazoArticulo := '';
   if Trim(ACodigo) <> '' then
   begin
-    Validador := RepositoriosArticulosPantalla.
-      CrearValidadorArticulos(ConexionPrincipal);
-    Resolver := RepositoriosArticulosPantalla.
-      CrearResolverArticulos(ConexionPrincipal);
-    try
-      Resultado := PrepararArticuloLineaVenta(
-        DatosCaja.cdsLineas,
-        DatosCaja.cdsCabecera,
-        ACodigo,
-        ObtenerResolviendoPorScanner,
-        FActualizandoDepositos,
-        Validador,
-        Resolver,
-        ConsultarStock,
-        RecalcularPrecioDesdeSku);
-      Result := Resultado.Preparado;
-      FMotivoRechazoArticulo := Resultado.MotivoRechazo;
-      if Resultado.Preparado and (not FActualizandoDepositos) then
-        GridRecalc(
-          ConexionPrincipal, FRepositorioFacturas, nil,
-                   tvLineasOpe, DatosCaja.cdsLineas,
-                   DatosCaja.cdsCabecera, ActualizarLabelTotal);
-    finally
-      Validador := nil;
-      Resolver := nil;
-    end;
+    Resultado := PrepararArticuloLineaVenta(
+      DatosCaja.cdsLineas,
+      DatosCaja.cdsCabecera,
+      ACodigo,
+      ObtenerResolviendoPorScanner,
+      FActualizandoDepositos,
+      FValidadorArticulos,
+      FResolverArticulos,
+      ConsultarStock,
+      RecalcularPrecioDesdeSku);
+    Result := Resultado.Preparado;
+    FMotivoRechazoArticulo := Resultado.MotivoRechazo;
+    if Resultado.Preparado and (not FActualizandoDepositos) then
+      GridRecalc(
+        ConexionPrincipal, FRepositorioFacturas, nil,
+        tvLineasOpe, DatosCaja.cdsLineas,
+        DatosCaja.cdsCabecera, ActualizarLabelTotal);
   end;
 end;
 
@@ -2325,7 +2335,6 @@ end;
 procedure TEditorLineasCajaVcl.RecalcularPrecioDesdeSku(
   const ASku: string);
 var
-  Resolver     : IArticulosResolver;
   Precio       : TArticuloPrecio;
   CodTarifa    : string;
   CodArt       : string;
@@ -2339,34 +2348,28 @@ begin
       'FECHA_FAC').AsDateTime;
     CodArt := DatosCaja.cdsLineas.FieldByName(
       'CODIGO_ART_FACLIN').AsString;
-    Resolver := RepositoriosArticulosPantalla.CrearResolverArticulos(
-      ConexionPrincipal);
-    try
-      Precio := Resolver.ResolverPrecio(
-        CodArt, ASku, CodTarifa, FechaFactura);
-      if Precio.TieneRegistro then
-      begin
-        DatosCaja.cdsLineas.FieldByName(
-          'ESIMP_INCL_TARIFA_FACLIN').AsString :=
-            IfThen(Precio.EsImpIncl, 'S', 'N');
-        DatosCaja.cdsLineas.FieldByName(
-          'PRECIO_SALIDA_FACLIN').AsCurrency := Precio.PrecioSalida;
-        DatosCaja.cdsLineas.FieldByName(
-          'CANTIDAD_FACLIN').AsCurrency := 1;
-        DatosCaja.cdsLineas.FieldByName(
-          'PORCENTAJE_DTO_FACLIN').AsFloat := Precio.PorcentajeDto;
-        DatosCaja.cdsLineas.FieldByName(
-          'PRECIO_DTO_FACLIN').AsCurrency := 0;
-        DatosCaja.cdsLineas.FieldByName(
-          'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := 0;
-        DatosCaja.cdsLineas.FieldByName(
-          'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
-        GridRecalc(ConexionPrincipal, FRepositorioFacturas, nil,
-          tvLineasOpe, DatosCaja.cdsLineas,
-          DatosCaja.cdsCabecera, ActualizarLabelTotal);
-      end;
-    finally
-      Resolver := nil;
+    Precio := FResolverArticulos.ResolverPrecio(
+      CodArt, ASku, CodTarifa, FechaFactura);
+    if Precio.TieneRegistro then
+    begin
+      DatosCaja.cdsLineas.FieldByName(
+        'ESIMP_INCL_TARIFA_FACLIN').AsString :=
+          IfThen(Precio.EsImpIncl, 'S', 'N');
+      DatosCaja.cdsLineas.FieldByName(
+        'PRECIO_SALIDA_FACLIN').AsCurrency := Precio.PrecioSalida;
+      DatosCaja.cdsLineas.FieldByName(
+        'CANTIDAD_FACLIN').AsCurrency := 1;
+      DatosCaja.cdsLineas.FieldByName(
+        'PORCENTAJE_DTO_FACLIN').AsFloat := Precio.PorcentajeDto;
+      DatosCaja.cdsLineas.FieldByName(
+        'PRECIO_DTO_FACLIN').AsCurrency := 0;
+      DatosCaja.cdsLineas.FieldByName(
+        'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := 0;
+      DatosCaja.cdsLineas.FieldByName(
+        'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
+      GridRecalc(ConexionPrincipal, FRepositorioFacturas, nil,
+        tvLineasOpe, DatosCaja.cdsLineas,
+        DatosCaja.cdsCabecera, ActualizarLabelTotal);
     end;
   end;
 end;
@@ -2379,8 +2382,7 @@ begin
   RellenarAtributosLineaDesdeSku(
     DatosCaja.cdsLineas,
     ASku,
-    RepositoriosArticulosPantalla.
-      CrearLookupAtributosArticulos(ConexionPrincipal));
+    FAtributosArticulos);
 end;
 
 function TEditorLineasCajaVcl.ConsolidarSiExiste(
@@ -3612,8 +3614,8 @@ begin
         ParametrosApp,
         PreviewTicket,
         UnidadesMedida,
-        FRepositoriosTicketsCajaPantalla.CrearRepositorioTraspasoTicket,
-        FRepositoriosTicketsCajaPantalla.CrearRepositorioTicketsCaja,
+        FDependenciasPantalla.TraspasoTicket,
+        FDependenciasPantalla.Tickets,
         RegistroLog,
         ConexionPrincipal,
         CrearCorreoTicketsLecturas(ConexionPrincipal).
@@ -3779,6 +3781,14 @@ begin
   CargarDepositosF2;
 end;
 
+function TfrmMtoOpeCaja.CrearOperacionCajaHermana: TfrmMtoOpeCaja;
+begin
+  Result := TfrmMtoOpeCaja.Create(
+    Application,
+    TContextoAutorizacionPantalla.Crear(Permisos),
+    FDependenciasPantalla);
+end;
+
 procedure TfrmMtoOpeCaja.btnF5Click(Sender: TObject);
 var
   i: Integer;
@@ -3813,7 +3823,7 @@ begin
   end
   else
   begin
-    TargetForm := TfrmMtoOpeCaja.Create(Application, Permisos);
+    TargetForm := CrearOperacionCajaHermana;
     TargetForm.PopupParent := Self.PopupParent;
     TargetForm.Tag := NextIndex;
     TargetForm.Caption := Format(STituloOperacionNCajaReal,
@@ -3874,9 +3884,7 @@ begin
   FLecturas.RepositorioFacturas := nil;
   FLecturas.ConsultaStock := nil;
   FIncidenciasSql := nil;
-  FRepositoriosArticulosPantalla := nil;
-  FRepositoriosCajaPantalla := nil;
-  FRepositoriosTicketsCajaPantalla := nil;
+  FDependenciasPantalla := Default(TDependenciasOperacionCaja);
   FDependencias := Default(TContextoDependenciasOperacionCaja);
   FEntrada.Aplicacion := nil;
   FreeAndNil(FEntrada.Lector);
@@ -4043,14 +4051,7 @@ end;
 procedure TfrmMtoOpeCaja.FormCreate(Sender: TObject);
 begin
   inherited;
-  FRepositoriosArticulosPantalla :=
-    ObtenerCompositorArticulosPantalla(Self).
-      CrearRepositoriosArticulosPantalla(Name);
-  FRepositoriosCajaPantalla := ObtenerCompositorCajaPantalla(Self).
-    CrearRepositoriosCajaPantalla(Name);
-  FRepositoriosTicketsCajaPantalla :=
-    ObtenerCompositorTicketsCajaPantalla(Self).
-      CrearRepositoriosTicketsCajaPantalla(Name);
+  FDependenciasPantalla.Validar;
   FLecturas.RepositorioFacturas :=
     CrearRepositorioLecturasFacturaUniDAC(ConexionPrincipal);
   // Detector del lector de codigo de barras (modo restaurar, con anti-eco para
@@ -4361,8 +4362,7 @@ begin
     CargarAvsValidosArticulo(
       ArtPadre,
       Orden,
-      FRepositoriosArticulosPantalla.
-        CrearLookupAtributosArticulos(ConexionPrincipal),
+      FAtributosArticulos,
       Avs);
     if Length(Avs) = 0 then
     begin

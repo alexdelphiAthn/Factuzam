@@ -29,7 +29,8 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls,
   inLibPerfilesUsuarioIntf, inLibCajaPagosHistPersistenciaIntf,
-  inLibCajaPantallaHistoricosIntf, UniDataCajaPantallaComposicion,
+  inLibCajaPantallaHistoricosIntf, inLibPermisosIntf,
+  inLibCajaPantallaInyeccion,
   cxCheckBox, cxCheckComboBox,
   cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
   Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs;
@@ -73,12 +74,18 @@ type
     FCargaInicialHecha: Boolean;
     FRepositorioPersistencia: IRepositorioCajaPagosHist;
     FGrabadorPerfiles: IGrabadorPerfilesHistoricoCaja;
+    FDependenciasInyeccion: TDependenciasPagosHistoricosCaja;
     procedure CargarAnyosFiltro;
     procedure LeerFiltrosPerfil;
     function ObtenerFiltros: TFiltrosCajaPagosHist;
     procedure AbrirPagos;
     procedure AplicarFiltrosPagos;
   public
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const ADependencias: TDependenciasPagosHistoricosCaja); reintroduce;
+      overload;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
     procedure RecogerPerfilesParticulares(var oList: TPerfilList;
@@ -100,6 +107,16 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoCajaPagosHist }
 
+constructor TfrmMtoCajaPagosHist.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const ADependencias: TDependenciasPagosHistoricosCaja);
+begin
+  ADependencias.Validar;
+  FDependenciasInyeccion := ADependencias;
+  inherited Create(AOwner, AContexto);
+end;
+
 procedure TfrmMtoCajaPagosHist.btnImprimirInformeClick(Sender: TObject);
 var
   frm: TfrmPrintPagos;
@@ -109,7 +126,9 @@ begin
     Abort;
   // Informe A4 horizontal (FastReport) de los pagos de caja. El usuario
   // filtra empresa / almacen / caja y rango de fechas en el modal.
-  frm := TfrmPrintPagos.Create(Application);
+  frm := TfrmPrintPagos.Create(
+    Application,
+    FDependenciasInyeccion.Informe);
   try
     frm.ShowModal;
   finally
@@ -118,15 +137,12 @@ begin
 end;
 
 procedure TfrmMtoCajaPagosHist.CrearTablaPrincipal;
-var
-  oComposicion: TComposicionCajaPantalla;
 begin
   inherited;
-  oComposicion := ComponerCajaPantalla(Self);
-  FRepositorioPersistencia := oComposicion.Historicos.
-    CrearRepositorioCajaPagosHist(
-    dsTablaG.DataSet);
-  FGrabadorPerfiles := oComposicion.Historicos.CrearGrabadorPerfiles(
+  FDependenciasInyeccion.Validar;
+  FRepositorioPersistencia :=
+    FDependenciasInyeccion.CrearPersistencia(dsTablaG.DataSet);
+  FGrabadorPerfiles := FDependenciasInyeccion.CrearPerfiles(
     ConexionPrincipal,
     PerfilesEscritura);
   pkFieldName := 'CODIGO_EMP_PAGO;CODIGO_ALM_PAGO;CODIGO_CAJA_PAGO;' +

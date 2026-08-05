@@ -82,12 +82,24 @@ type
     function  CrearRemesaNueva(const AEmp: string;
                                out ASerie, ANumero: string): Boolean;
   public
+    constructor Create(
+      AOwner: TComponent;
+      const ARepositorio: IRepositorioCargaEfectosRemesa); reintroduce;
+      overload;
     procedure PrepararRemesaExistente(const AEmp, ASerie, ANumero: string);
     procedure PrepararNuevaRemesa(const AEmp: string);
     class function CrearParaCompra(AOwner: TComponent):
-      TfrmModalCargarEfectosRemesa;
+      TfrmModalCargarEfectosRemesa; overload;
+    class function CrearParaCompra(
+      AOwner: TComponent;
+      const ARepositorio: IRepositorioCargaEfectosRemesa
+    ): TfrmModalCargarEfectosRemesa; overload;
     class function CrearParaVenta(AOwner: TComponent):
-      TfrmModalCargarEfectosRemesa;
+      TfrmModalCargarEfectosRemesa; overload;
+    class function CrearParaVenta(
+      AOwner: TComponent;
+      const ARepositorio: IRepositorioCargaEfectosRemesa
+    ): TfrmModalCargarEfectosRemesa; overload;
     property Confirmado:   Boolean read FConfirmado;
     property RemesaSerie:  string  read FRemSerie;
     property RemesaNumero: string  read FRemNumero;
@@ -103,17 +115,54 @@ uses
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
+constructor TfrmModalCargarEfectosRemesa.Create(
+  AOwner: TComponent;
+  const ARepositorio: IRepositorioCargaEfectosRemesa);
+begin
+  ValidarDependenciaConfiguracion(
+    ARepositorio,
+    'carga de efectos de remesa');
+  FRepositorio := ARepositorio;
+  inherited Create(AOwner);
+end;
+
 class function TfrmModalCargarEfectosRemesa.CrearParaCompra(
   AOwner: TComponent): TfrmModalCargarEfectosRemesa;
 begin
-  Result := TfrmModalCargarEfectosRemesa.Create(AOwner);
+  Result := nil;
+  ValidarDependenciaConfiguracion(
+    nil,
+    'carga de efectos de remesa');
+end;
+
+class function TfrmModalCargarEfectosRemesa.CrearParaCompra(
+  AOwner: TComponent;
+  const ARepositorio: IRepositorioCargaEfectosRemesa
+): TfrmModalCargarEfectosRemesa;
+begin
+  Result := TfrmModalCargarEfectosRemesa.Create(
+    AOwner,
+    ARepositorio);
   Result.Configurar(tcerCompra);
 end;
 
 class function TfrmModalCargarEfectosRemesa.CrearParaVenta(
   AOwner: TComponent): TfrmModalCargarEfectosRemesa;
 begin
-  Result := TfrmModalCargarEfectosRemesa.Create(AOwner);
+  Result := nil;
+  ValidarDependenciaConfiguracion(
+    nil,
+    'carga de efectos de remesa');
+end;
+
+class function TfrmModalCargarEfectosRemesa.CrearParaVenta(
+  AOwner: TComponent;
+  const ARepositorio: IRepositorioCargaEfectosRemesa
+): TfrmModalCargarEfectosRemesa;
+begin
+  Result := TfrmModalCargarEfectosRemesa.Create(
+    AOwner,
+    ARepositorio);
   Result.Configurar(tcerVenta);
 end;
 
@@ -124,10 +173,9 @@ begin
   FConfirmado := False;
   FRemSeries  := TStringList.Create;
   FRemNumeros := TStringList.Create;
-  ComponerConfiguracionPantalla(
-    Self,
-    ConexionPrincipal,
-    FRepositorio);
+  ValidarDependenciaConfiguracion(
+    FRepositorio,
+    'carga de efectos de remesa');
   FDsEfe := TDataSource.Create(Self);
   tvEfe.DataController.DataSource := FDsEfe;
   rgModo.ItemIndex := 0;

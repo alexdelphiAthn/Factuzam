@@ -83,7 +83,8 @@ uses
   inLibGridTallasInline,
   inLibComprasSesiones,
   inLibComprasSesionesAplicacionIntf,
-  inLibRepositoriosPantallaIntf,
+  inLibComprasSesionesInyeccion,
+  inLibPermisosIntf,
   inMtoComprasSesionesPresentacionCopiaLineas,
   inMtoComprasSesionesPresentacionModelo,
   inMtoComprasSesionesPresentacionProveedor,
@@ -92,17 +93,13 @@ uses
   dxDateRanges, cxSplitter;
 
 const
+  NOMBRE_PANTALLA_COMPRAS_SESIONES = 'frmMtoComprasSesiones';
   // Numero maximo de columnas de talla inline. Subido a 20 a peticion
   // de un cliente con sistemas extensos (rangos de calzado largos,
   // tallas internacionales niño+adulto, etc.).
   CANT_TALLAS_MAX = 20;
 
 type
-  TContextoDependenciasComprasSesiones = record
-    AplicacionMaterializacion:
-      IAplicacionMaterializacionCompraSesion;
-  end;
-
   // Los tipos TPosConjunto / TArrPosConjunto viven ahora en
   // inLibGridTallasInline (compartidos con futuros Mtos de Pedidos
   // / Albaranes / Facturas que reusen el patron).
@@ -440,7 +437,8 @@ type
     Dmm: TdmComprasSesiones;
     FServicioComprasSesiones: TServicioComprasSesiones;
     FDependencias: TContextoDependenciasComprasSesiones;
-    FServiciosSqlPantalla: TServiciosSqlPantalla;
+    FAplicacionMaterializacion:
+      IAplicacionMaterializacionCompraSesion;
     FEstiloRecepcionVencida: TcxStyle;
     // Colaboradores de presentacion. Cada uno recibe por constructor
     // solo las capacidades que usa (datasets, columnas y callbacks);
@@ -487,6 +485,11 @@ type
     // mueva el foco a otra pestania.
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const ADependencias: TContextoDependenciasComprasSesiones);
+      reintroduce; overload;
     procedure CrearTablaPrincipal; override;
     // Restricción de la precarga a la empresa/almacén del usuario
     function SqlRestriccionUsuario: string; override;
@@ -518,6 +521,16 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+constructor TfrmMtoComprasSesiones.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const ADependencias: TContextoDependenciasComprasSesiones);
+begin
+  ADependencias.Validar;
+  FDependencias := ADependencias;
+  inherited Create(AOwner, AContexto);
+end;
 
 procedure TfrmMtoComprasSesiones.LogSes(const ATexto: string);
 begin
@@ -643,7 +656,7 @@ begin
     begin
       RefrescarFotosProvisionales;
     end;
-  FDependencias.AplicacionMaterializacion :=
+  FAplicacionMaterializacion :=
     CrearAplicacionMaterializacionCompraSesionVcl(EntornoMaterializacion);
 end;
 
@@ -976,8 +989,7 @@ end;
 
 procedure TfrmMtoComprasSesiones.CrearTablaPrincipal;
 begin
-  FServiciosSqlPantalla := ObtenerCompositorSqlPantalla(Self).
-    CrearServiciosSqlPantalla(Name);
+  FDependencias.Validar;
   inherited;
   if tdmDataModule <> nil then
   begin
@@ -995,8 +1007,8 @@ begin
   FreeAndNil(FServicioComprasSesiones);
   FServicioComprasSesiones := CrearServicioComprasSesiones(
     ConexionPrincipal, Dmm, FotosArticulos,
-    FServiciosSqlPantalla.Catalogo,
-    FServiciosSqlPantalla.Incidencias);
+    FDependencias.CatalogoSql,
+    FDependencias.IncidenciasSql);
   pkFieldName := 'SERIE_SES;NUMERO_SES';
 end;
 
@@ -1539,8 +1551,8 @@ begin
   // Desenganchar el log antes de soltar los colaboradores que lo usan.
   if Supports(ContextoSesion, IGestorContextoSesion, GestorContexto) then
     GestorContexto.AsignarLogSesion(nil);
-  FDependencias := Default(TContextoDependenciasComprasSesiones);
-  FServiciosSqlPantalla := Default(TServiciosSqlPantalla);
+  FAplicacionMaterializacion := nil;
+  FDependencias.Liberar;
   // Orden inverso al de creacion: primero los que consultan el gestor de
   // tallas y el servicio, despues sus proveedores. Los colaboradores
   // cierran sus propios cursores antes de que TfrmMtoGen.FormDestroy
@@ -1723,8 +1735,8 @@ end;
 procedure TfrmMtoComprasSesiones.btnCrearClick(Sender: TObject);
 begin
   inherited;
-  if Assigned(FDependencias.AplicacionMaterializacion) then
-    FDependencias.AplicacionMaterializacion.Ejecutar;
+  if Assigned(FAplicacionMaterializacion) then
+    FAplicacionMaterializacion.Ejecutar;
 end;
 
 

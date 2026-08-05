@@ -16,7 +16,7 @@ unit UniDataCajaPantallaComposicion;
 interface
 
 uses
-  System.Classes, Data.DB, Uni,
+  Data.DB, Uni,
   inLibRepositoriosPantallaIntf,
   inLibPerfilesUsuarioIntf,
   inLibConsultaFacturasOperacionesPersistenciaIntf,
@@ -27,6 +27,7 @@ uses
   inLibFaseCobroPersistenciaIntf,
   inLibCajaVentaIntf,
   inLibTraspasoOpePersistenciaIntf,
+  inLibArticulosResolverIntf,
   inLibArticulosValidadorIntf,
   inLibArticulosAtributosIntf,
   inLibCajaOperacionesHistPersistenciaIntf,
@@ -61,6 +62,10 @@ type
 
   IComposicionOperacionesCajaPantalla = interface
     ['{3BFB71AE-D021-4379-9E63-052559FF8539}']
+    function CrearResolverArticulos(
+      AConexion: TUniConnection = nil): IArticulosResolver;
+    function CrearRepositorioArticulosCaja(
+      AConexion: TUniConnection = nil): IRepositorioArticulosCaja;
     function CrearRepositorioCajasDefecto(
       AConexion: TUniConnection = nil): IRepositorioCajasDefecto;
     function CrearRepositorioFaseCobro(
@@ -136,7 +141,11 @@ type
   end;
 
 function ComponerCajaPantalla(
-  AOrigen: TComponent
+  const AArticulos: IRepositoriosArticulosPantalla;
+  const ACaja: IRepositoriosCajaPantalla;
+  const AConfiguracion: IRepositoriosConfiguracionPantalla;
+  const AOperaciones: IRepositoriosOperacionesPantalla;
+  const ATickets: IRepositoriosTicketsCajaPantalla
 ): TComposicionCajaPantalla;
 
 implementation
@@ -179,6 +188,10 @@ type
       const ACaja: IRepositoriosCajaPantalla;
       const AArticulos: IRepositoriosArticulosPantalla);
     destructor Destroy; override;
+    function CrearResolverArticulos(
+      AConexion: TUniConnection = nil): IArticulosResolver;
+    function CrearRepositorioArticulosCaja(
+      AConexion: TUniConnection = nil): IRepositorioArticulosCaja;
     function CrearRepositorioCajasDefecto(
       AConexion: TUniConnection = nil): IRepositorioCajasDefecto;
     function CrearRepositorioFaseCobro(
@@ -279,8 +292,16 @@ type
   end;
 
 resourcestring
-  SErrorContextoCajaPantallaNoAsignado =
-    'El contexto para componer las pantallas de Caja no está asignado.';
+  SErrorRepositoriosCajaPantallaNoAsignados =
+    'Los repositorios para componer las pantallas de Caja son obligatorios.';
+
+procedure ValidarRepositoriosCajaPantalla(
+  const ARepositorios: IInterface);
+begin
+  if not Assigned(ARepositorios) then
+    raise EArgumentNilException.Create(
+      SErrorRepositoriosCajaPantallaNoAsignados);
+end;
 
 constructor TComposicionConsultasCajaPantalla.Create(
   const ACaja: IRepositoriosCajaPantalla;
@@ -343,6 +364,19 @@ begin
   FArticulos := nil;
   FCaja := nil;
   inherited;
+end;
+
+function TComposicionOperacionesCajaPantalla.CrearResolverArticulos(
+  AConexion: TUniConnection): IArticulosResolver;
+begin
+  Result := FArticulos.CrearResolverArticulos(AConexion);
+end;
+
+function TComposicionOperacionesCajaPantalla.
+  CrearRepositorioArticulosCaja(
+  AConexion: TUniConnection): IRepositorioArticulosCaja;
+begin
+  Result := FCaja.CrearRepositorioArticulosCaja(AConexion);
 end;
 
 function TComposicionOperacionesCajaPantalla.CrearRepositorioCajasDefecto(
@@ -538,42 +572,33 @@ begin
 end;
 
 function ComponerCajaPantalla(
-  AOrigen: TComponent
+  const AArticulos: IRepositoriosArticulosPantalla;
+  const ACaja: IRepositoriosCajaPantalla;
+  const AConfiguracion: IRepositoriosConfiguracionPantalla;
+  const AOperaciones: IRepositoriosOperacionesPantalla;
+  const ATickets: IRepositoriosTicketsCajaPantalla
 ): TComposicionCajaPantalla;
-var
-  oArticulos: IRepositoriosArticulosPantalla;
-  oCaja: IRepositoriosCajaPantalla;
-  oConfiguracion: IRepositoriosConfiguracionPantalla;
-  oOperaciones: IRepositoriosOperacionesPantalla;
-  oTickets: IRepositoriosTicketsCajaPantalla;
 begin
-  if not Assigned(AOrigen) then
-    raise Exception.Create(SErrorContextoCajaPantallaNoAsignado);
+  ValidarRepositoriosCajaPantalla(AArticulos);
+  ValidarRepositoriosCajaPantalla(ACaja);
+  ValidarRepositoriosCajaPantalla(AConfiguracion);
+  ValidarRepositoriosCajaPantalla(AOperaciones);
+  ValidarRepositoriosCajaPantalla(ATickets);
   Result := Default(TComposicionCajaPantalla);
-  oArticulos := ObtenerCompositorArticulosPantalla(AOrigen).
-    CrearRepositoriosArticulosPantalla(AOrigen.Name);
-  oCaja := ObtenerCompositorCajaPantalla(AOrigen).
-    CrearRepositoriosCajaPantalla(AOrigen.Name);
-  oConfiguracion := ObtenerCompositorConfiguracionPantalla(AOrigen).
-    CrearRepositoriosConfiguracionPantalla(AOrigen.Name);
-  oOperaciones := ObtenerCompositorOperacionesPantalla(AOrigen).
-    CrearRepositoriosOperacionesPantalla(AOrigen.Name);
-  oTickets := ObtenerCompositorTicketsCajaPantalla(AOrigen).
-    CrearRepositoriosTicketsCajaPantalla(AOrigen.Name);
   Result.Consultas := TComposicionConsultasCajaPantalla.Create(
-    oCaja,
-    oOperaciones);
+    ACaja,
+    AOperaciones);
   Result.Operaciones := TComposicionOperacionesCajaPantalla.Create(
-    oCaja,
-    oArticulos);
-  Result.Historicos := TComposicionHistoricosCajaPantalla.Create(oCaja);
-  Result.Informes := TComposicionInformesCajaPantalla.Create(oCaja);
-  Result.Tickets := TComposicionTicketsCajaPantalla.Create(oTickets);
+    ACaja,
+    AArticulos);
+  Result.Historicos := TComposicionHistoricosCajaPantalla.Create(ACaja);
+  Result.Informes := TComposicionInformesCajaPantalla.Create(ACaja);
+  Result.Tickets := TComposicionTicketsCajaPantalla.Create(ATickets);
   Result.Arqueos := TComposicionArqueosCajaPantalla.Create(
-    oCaja,
-    oTickets);
+    ACaja,
+    ATickets);
   Result.Configuracion := TComposicionConfiguracionCajaPantalla.Create(
-    oConfiguracion);
+    AConfiguracion);
 end;
 
 end.

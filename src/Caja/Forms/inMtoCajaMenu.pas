@@ -30,7 +30,7 @@ uses
   inMtoModalCajDef, JvTFManager, JvTFGlance, JvTFMonths, Vcl.ComCtrls,
   JvExComCtrls, JvMonthCalendar, cxCalendar, CommCtrl,
   inLibVentasCalendario, System.Actions, Vcl.ActnList, dxGDIPlusClasses,
-  cxImage, inLibPermisosIntf, UniDataCajaPantallaComposicion;
+  cxImage, inLibPermisosIntf, inLibCajaPantallaInyeccion;
 
 type
   TfrmMtoMenuCaja = class(TfrmBase, IReceptorFechaCaja)
@@ -133,6 +133,7 @@ type
       end;
   private
     FVentasCal: TVentasCalendarioCache;
+    FDependenciasInyeccion: TDependenciasMenuCaja;
     procedure AbrirBuscarModificar;
   private
     // Colores originales
@@ -168,13 +169,20 @@ type
   public
     FFechaCaja: TDateTime;
     FEmpresa, FAlmacen, FCaja: string;
+    constructor Create(
+      AOwner: TComponent;
+      const APermisos: IPermisosAplicacion;
+      const ADependencias: TDependenciasMenuCaja); reintroduce; overload;
     procedure ActualizarFechaCaja(AFechaCaja: TDateTime);
     property FechaCaja: TDateTime read FFechaCaja;
   end;
 
 function MenuCajaAbierto: Boolean;
 procedure MostrarMenuCaja(
-  const APermisos: IPermisosAplicacion);
+  const APermisos: IPermisosAplicacion); overload;
+procedure MostrarMenuCaja(
+  const APermisos: IPermisosAplicacion;
+  const ADependencias: TDependenciasMenuCaja); overload;
 
 implementation
 
@@ -206,6 +214,13 @@ end;
 
 procedure MostrarMenuCaja(
   const APermisos: IPermisosAplicacion);
+begin
+  ValidarDependenciaCaja(nil, 'contexto del menú de Caja');
+end;
+
+procedure MostrarMenuCaja(
+  const APermisos: IPermisosAplicacion;
+  const ADependencias: TDependenciasMenuCaja);
 var
   Formulario: TfrmMtoMenuCaja;
 begin
@@ -214,7 +229,8 @@ begin
   begin
     Formulario := TfrmMtoMenuCaja.Create(
       Application,
-      APermisos);
+      APermisos,
+      ADependencias);
     Formulario.Show;
   end
   else
@@ -223,6 +239,16 @@ begin
       Formulario.WindowState := wsNormal;
     Formulario.BringToFront;
   end;
+end;
+
+constructor TfrmMtoMenuCaja.Create(
+  AOwner: TComponent;
+  const APermisos: IPermisosAplicacion;
+  const ADependencias: TDependenciasMenuCaja);
+begin
+  ADependencias.Validar;
+  FDependenciasInyeccion := ADependencias;
+  inherited Create(AOwner, APermisos);
 end;
 
 procedure TfrmMtoMenuCaja.CreateParams(var Params: TCreateParams);
@@ -248,12 +274,11 @@ end;
 
 procedure TfrmMtoMenuCaja.FormCreate(Sender: TObject);
 var
-  oComposicion: TComposicionCajaPantalla;
   bContinuar: Boolean;
 begin
   inherited;
+  FDependenciasInyeccion.Validar;
   bContinuar := True;
-  oComposicion := ComponerCajaPantalla(Self);
   Self.Position := poScreenCenter;
   // forzar mes actual (evita fecha cacheada en DFM)
   calMes.Date := Date;
@@ -274,7 +299,7 @@ begin
   // calendario
   FVentasCal := TVentasCalendarioCache.Create(
     ConexionPrincipal,
-    oComposicion.Consultas.CrearRepositorioVentasCalendario);
+    FDependenciasInyeccion.VentasCalendario);
 
   if ParametrosCaja.GetBool('vgerShowCajaSelection', True) then
     AbrirSelectorCaja
@@ -324,6 +349,7 @@ end;
 procedure TfrmMtoMenuCaja.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(FVentasCal);
+  FDependenciasInyeccion := Default(TDependenciasMenuCaja);
 end;
 
 procedure TfrmMtoMenuCaja.FormKeyDown(Sender: TObject; var Key: Word;
@@ -441,7 +467,9 @@ procedure TfrmMtoMenuCaja.AbrirSelectorCaja;
 var
   frm: TfrmMtoModalCajDef;
 begin
-  frm := TfrmMtoModalCajDef.Create(Self);
+  frm := TfrmMtoModalCajDef.Create(
+    Self,
+    FDependenciasInyeccion.CajasDefecto);
   try
     // Cierra el cronometro SQL antes de entrar en el selector modal.
     CerrarMonitorSQLPendiente;
@@ -730,8 +758,14 @@ end;
 
 procedure TfrmMtoMenuCaja.lblEntradaCambioClick(Sender: TObject);
 begin
-  TfrmModalEntradaCambio.Ejecutar(Self, ConexionPrincipal,
-    FEmpresa, FAlmacen, FCaja, FFechaCaja);
+  TfrmModalEntradaCambio.Ejecutar(
+    Self,
+    ConexionPrincipal,
+    FDependenciasInyeccion.EntradaCambio,
+    FEmpresa,
+    FAlmacen,
+    FCaja,
+    FFechaCaja);
 end;
 
 procedure TfrmMtoMenuCaja.lblEntradaCambioMouseEnter(Sender: TObject);
@@ -759,8 +793,14 @@ end;
 // F7 - Gastos por Caja
 procedure TfrmMtoMenuCaja.lblGastosCajaClick(Sender: TObject);
 begin
-  TfrmModalGastoCaja.Ejecutar(Self, ConexionPrincipal,
-    FEmpresa, FAlmacen, FCaja, FFechaCaja);
+  TfrmModalGastoCaja.Ejecutar(
+    Self,
+    ConexionPrincipal,
+    FDependenciasInyeccion.Gasto,
+    FEmpresa,
+    FAlmacen,
+    FCaja,
+    FFechaCaja);
 end;
 
 procedure TfrmMtoMenuCaja.lblGastosCajaMouseEnter(Sender: TObject);
@@ -807,6 +847,7 @@ begin
   begin
     TfrmModalArqueo.Ejecutar(Self,
       ConexionPrincipal,
+      FDependenciasInyeccion.Arqueo,
       FEmpresa,
       FAlmacen,
       FCaja,
@@ -846,7 +887,10 @@ begin
     ShowMessage(SErrorUbicacionCajaTraspasoNoAsignada)
   else
   begin
-    frmTraspaso := TfrmMtoOpeTraspaso.Create(Application, Permisos);
+    frmTraspaso := TfrmMtoOpeTraspaso.Create(
+      Application,
+      Permisos,
+      FDependenciasInyeccion.Traspaso);
     try
       frmTraspaso.PopupParent := Self;
       frmTraspaso.Caption := Format(STituloTraspasosAlmacenCaja,

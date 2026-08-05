@@ -2,45 +2,123 @@
 {                                                                              }
 {  Módulo:       UniDataComprasPantallaComposicion                            }
 {    Tipo:       Composición                                                   }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       03/08/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       05/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo.                                    }
 {  SPDX-License-Identifier: MPL-2.0                                            }
 {  Descripción:                                                                }
-{    Único punto de composición de servicios para documentos de compra.      }
+{    Compone contextos explícitos para cada documento de compra.              }
 {******************************************************************************}
 unit UniDataComprasPantallaComposicion;
 
 interface
 
 uses
-  System.Classes, Data.DB, Uni,
+  Data.DB, Uni,
+  inLibAplicacionArticuloCompraIntf,
+  inLibArticulosAtributosIntf,
+  inLibArticulosValidadorIntf,
+  inLibBusquedasCompraPersistenciaIntf,
   inLibComprasPantallaIntf,
+  inLibDevolucionesCompraPersistenciaIntf,
+  inLibDevolucionesCompraStock,
+  inLibDocumentosTrabajo,
+  inLibPedidosCompraRecepcionIntf,
   inLibRepositoriosPantallaIntf;
 
 type
-  TTipoComposicionComprasPantalla = (
-    tccAlbaran,
-    tccFactura,
-    tccPedido,
-    tccDevolucion,
-    tccDocumentosTrabajo,
-    tccPlantillas);
-
-  TEntradaComposicionComprasPantalla = record
-    Tipo: TTipoComposicionComprasPantalla;
+  TEntradaDocumentoCompraPantalla = record
     Conexion: TUniConnection;
     Cabecera: TDataSet;
     Lineas: TDataSet;
-    MaestroPlantillas: TDataSource;
   end;
 
-function ComponerComprasPantalla(
-  AOrigen: TComponent;
-  const AEntrada: TEntradaComposicionComprasPantalla):
-  TServiciosComprasPantalla;
+  TEntradaPlantillasCompraPantalla = record
+    Conexion: TUniConnection;
+    Maestro: TDataSource;
+  end;
+
+  TContextoAlbaranCompraPantalla = record
+    AplicacionArticulo: IAplicacionArticuloCompra;
+    ValidadorArticulos: IArticulosValidador;
+    LookupAtributos: IArticulosAtributosLookup;
+    BusquedaEmpresas: IBusquedaEmpresasComprasPantalla;
+    BusquedaProveedores: IBusquedaProveedoresComprasPantalla;
+    BusquedasArticulos: IBusquedasCompraPersistencia;
+    procedure Validar;
+  end;
+
+  TContextoFacturaCompraPantalla = record
+    AplicacionArticulo: IAplicacionArticuloCompra;
+    ValidadorArticulos: IArticulosValidador;
+    LookupAtributos: IArticulosAtributosLookup;
+    BusquedaProveedores: IBusquedaProveedoresComprasPantalla;
+    BusquedasArticulos: IBusquedasCompraPersistencia;
+    procedure Validar;
+  end;
+
+  TContextoPedidoCompraPantalla = record
+    AplicacionArticulo: IAplicacionArticuloCompra;
+    ValidadorArticulos: IArticulosValidador;
+    LookupAtributos: IArticulosAtributosLookup;
+    BusquedaEmpresas: IBusquedaEmpresasComprasPantalla;
+    BusquedaProveedores: IBusquedaProveedoresComprasPantalla;
+    BusquedasArticulos: IBusquedasCompraPersistencia;
+    Recepcion: IRecepcionPedidoCompra;
+    Consultas: IConsultasPedidoCompraPantalla;
+    procedure Validar;
+  end;
+
+  TContextoDevolucionCompraPantalla = record
+    AplicacionArticulo: IAplicacionArticuloDevolucionCompra;
+    ValidadorArticulos: IArticulosValidador;
+    LookupAtributos: IArticulosAtributosLookup;
+    Datos: IRepositorioDatosDevolucionCompra;
+    Stock: IPersistenciaStockDevolucionCompra;
+    BusquedaEmpresas: IBusquedaEmpresasComprasPantalla;
+    BusquedaProveedores: IBusquedaProveedoresComprasPantalla;
+    BusquedasArticulos: IBusquedasCompraPersistencia;
+    procedure Validar;
+  end;
+
+  TContextoDocumentosTrabajoCompraPantalla = record
+    ValidadorArticulos: IArticulosValidador;
+    LookupAtributos: IArticulosAtributosLookup;
+    Lecturas: ILecturasDocumentosTrabajo;
+    Materializacion: IMaterializacionDocumentosTrabajo;
+    procedure Validar;
+  end;
+
+  TContextoPlantillasCompraPantalla = record
+    Persistencia: IPersistenciaPlantillasCompraPantalla;
+    procedure Validar;
+  end;
+
+procedure ComponerComprasPantalla(
+  const AArticulos: IRepositoriosArticulosPantalla;
+  const AEntrada: TEntradaDocumentoCompraPantalla;
+  out AContexto: TContextoAlbaranCompraPantalla); overload;
+procedure ComponerComprasPantalla(
+  const AArticulos: IRepositoriosArticulosPantalla;
+  const AEntrada: TEntradaDocumentoCompraPantalla;
+  out AContexto: TContextoFacturaCompraPantalla); overload;
+procedure ComponerComprasPantalla(
+  const AArticulos: IRepositoriosArticulosPantalla;
+  const AEntrada: TEntradaDocumentoCompraPantalla;
+  out AContexto: TContextoPedidoCompraPantalla); overload;
+procedure ComponerComprasPantalla(
+  const AArticulos: IRepositoriosArticulosPantalla;
+  AConexion: TUniConnection;
+  out AContexto: TContextoDevolucionCompraPantalla); overload;
+procedure ComponerComprasPantalla(
+  const AArticulos: IRepositoriosArticulosPantalla;
+  AConexion: TUniConnection;
+  out AContexto: TContextoDocumentosTrabajoCompraPantalla); overload;
+procedure ComponerComprasPantalla(
+  const AEntrada: TEntradaPlantillasCompraPantalla;
+  out AContexto: TContextoPlantillasCompraPantalla); overload;
 
 implementation
 
@@ -50,8 +128,6 @@ uses
   inLibArticulosResolverIntf,
   inLibComprasPantallaArticuloDevolucion,
   inLibComprasPantallaTransaccion,
-  inLibDevolucionesCompraPersistenciaIntf,
-  inLibDocumentosTrabajo,
   UniDataAplicacionArticuloCompra,
   UniDataBusquedasCompraRepositorio,
   UniDataComprasPantallaPersistencia,
@@ -59,19 +135,32 @@ uses
   UniDataDocumentosTrabajoRepositorio,
   UniDataPedidosCompraRecepcion;
 
-procedure ComprobarEntrada(
-  AOrigen: TComponent;
-  const AEntrada: TEntradaComposicionComprasPantalla);
+procedure ComprobarConexion(AConexion: TUniConnection);
 begin
-  if AEntrada.Conexion = nil then
-    raise EArgumentNilException.Create('AEntrada.Conexion');
-  if (AEntrada.Tipo <> tccPlantillas) and (AOrigen = nil) then
-    raise EArgumentNilException.Create('AOrigen');
+  if AConexion = nil then
+    raise EArgumentNilException.Create('AConexion');
+end;
+
+procedure ComprobarArticulos(
+  const AArticulos: IRepositoriosArticulosPantalla);
+begin
+  if not Assigned(AArticulos) then
+    raise EArgumentNilException.Create('AArticulos');
+end;
+
+procedure ComprobarEntradaDocumento(
+  const AEntrada: TEntradaDocumentoCompraPantalla);
+begin
+  ComprobarConexion(AEntrada.Conexion);
+  if AEntrada.Cabecera = nil then
+    raise EArgumentNilException.Create('AEntrada.Cabecera');
+  if AEntrada.Lineas = nil then
+    raise EArgumentNilException.Create('AEntrada.Lineas');
 end;
 
 function CrearServiciosArticuloDocumento(
   const AArticulos: IRepositoriosArticulosPantalla;
-  const AEntrada: TEntradaComposicionComprasPantalla):
+  const AEntrada: TEntradaDocumentoCompraPantalla):
   TServiciosDocumentoCompraPantalla;
 var
   oResolver: IArticulosResolver;
@@ -79,10 +168,9 @@ begin
   Result := Default(TServiciosDocumentoCompraPantalla);
   Result.ValidadorArticulos := AArticulos.CrearValidadorArticulos(
     AEntrada.Conexion);
-  oResolver := AArticulos.CrearResolverArticulos(
+  oResolver := AArticulos.CrearResolverArticulos(AEntrada.Conexion);
+  Result.LookupAtributos := AArticulos.CrearLookupAtributosArticulos(
     AEntrada.Conexion);
-  Result.LookupAtributos :=
-    AArticulos.CrearLookupAtributosArticulos(AEntrada.Conexion);
   Result.AplicacionArticulo := CrearAplicacionArticuloCompra(
     CrearRepositorioLecturasArticuloCompraUniDAC(
       AEntrada.Conexion,
@@ -107,144 +195,254 @@ begin
     AProveedores);
 end;
 
-function ComponerAlbaran(
-  const AArticulos: IRepositoriosArticulosPantalla;
-  const AEntrada: TEntradaComposicionComprasPantalla):
-  TServiciosComprasPantalla;
+procedure CopiarDocumentoAlbaran(
+  const AServicios: TServiciosDocumentoCompraPantalla;
+  out AContexto: TContextoAlbaranCompraPantalla);
 begin
-  Result := Default(TServiciosComprasPantalla);
-  Result.Documento := CrearServiciosArticuloDocumento(AArticulos, AEntrada);
-  AsignarBusquedas(
-    AEntrada.Conexion,
-    Result.Documento.BusquedaEmpresas,
-    Result.Documento.BusquedaProveedores);
+  AContexto := Default(TContextoAlbaranCompraPantalla);
+  AContexto.AplicacionArticulo := AServicios.AplicacionArticulo;
+  AContexto.ValidadorArticulos := AServicios.ValidadorArticulos;
+  AContexto.LookupAtributos := AServicios.LookupAtributos;
+  AContexto.BusquedaEmpresas := AServicios.BusquedaEmpresas;
+  AContexto.BusquedaProveedores := AServicios.BusquedaProveedores;
+  AContexto.BusquedasArticulos := AServicios.BusquedasArticulos;
 end;
 
-function ComponerFactura(
+procedure CopiarDocumentoFactura(
+  const AServicios: TServiciosDocumentoCompraPantalla;
+  out AContexto: TContextoFacturaCompraPantalla);
+begin
+  AContexto := Default(TContextoFacturaCompraPantalla);
+  AContexto.AplicacionArticulo := AServicios.AplicacionArticulo;
+  AContexto.ValidadorArticulos := AServicios.ValidadorArticulos;
+  AContexto.LookupAtributos := AServicios.LookupAtributos;
+  AContexto.BusquedaProveedores := AServicios.BusquedaProveedores;
+  AContexto.BusquedasArticulos := AServicios.BusquedasArticulos;
+end;
+
+procedure ComponerComprasPantalla(
   const AArticulos: IRepositoriosArticulosPantalla;
-  const AEntrada: TEntradaComposicionComprasPantalla):
-  TServiciosComprasPantalla;
+  const AEntrada: TEntradaDocumentoCompraPantalla;
+  out AContexto: TContextoAlbaranCompraPantalla);
+var
+  oServicios: TServiciosDocumentoCompraPantalla;
+begin
+  ComprobarArticulos(AArticulos);
+  ComprobarEntradaDocumento(AEntrada);
+  oServicios := CrearServiciosArticuloDocumento(AArticulos, AEntrada);
+  AsignarBusquedas(
+    AEntrada.Conexion,
+    oServicios.BusquedaEmpresas,
+    oServicios.BusquedaProveedores);
+  CopiarDocumentoAlbaran(oServicios, AContexto);
+  AContexto.Validar;
+end;
+
+procedure ComponerComprasPantalla(
+  const AArticulos: IRepositoriosArticulosPantalla;
+  const AEntrada: TEntradaDocumentoCompraPantalla;
+  out AContexto: TContextoFacturaCompraPantalla);
 var
   oEmpresas: IBusquedaEmpresasComprasPantalla;
+  oServicios: TServiciosDocumentoCompraPantalla;
 begin
-  Result := Default(TServiciosComprasPantalla);
-  Result.Documento := CrearServiciosArticuloDocumento(AArticulos, AEntrada);
+  ComprobarArticulos(AArticulos);
+  ComprobarEntradaDocumento(AEntrada);
+  oServicios := CrearServiciosArticuloDocumento(AArticulos, AEntrada);
   AsignarBusquedas(
     AEntrada.Conexion,
     oEmpresas,
-    Result.Documento.BusquedaProveedores);
+    oServicios.BusquedaProveedores);
+  CopiarDocumentoFactura(oServicios, AContexto);
+  AContexto.Validar;
 end;
 
-function ComponerPedido(
+procedure ComponerComprasPantalla(
   const AArticulos: IRepositoriosArticulosPantalla;
-  const AEntrada: TEntradaComposicionComprasPantalla):
-  TServiciosComprasPantalla;
+  const AEntrada: TEntradaDocumentoCompraPantalla;
+  out AContexto: TContextoPedidoCompraPantalla);
+var
+  oServicios: TServiciosDocumentoCompraPantalla;
 begin
-  Result := Default(TServiciosComprasPantalla);
-  Result.Pedido.Documento := CrearServiciosArticuloDocumento(
-    AArticulos,
-    AEntrada);
+  ComprobarArticulos(AArticulos);
+  ComprobarEntradaDocumento(AEntrada);
+  oServicios := CrearServiciosArticuloDocumento(AArticulos, AEntrada);
   AsignarBusquedas(
     AEntrada.Conexion,
-    Result.Pedido.Documento.BusquedaEmpresas,
-    Result.Pedido.Documento.BusquedaProveedores);
-  Result.Pedido.Recepcion := ProtegerRecepcionPedidoCompra(
+    oServicios.BusquedaEmpresas,
+    oServicios.BusquedaProveedores);
+  AContexto := Default(TContextoPedidoCompraPantalla);
+  AContexto.AplicacionArticulo := oServicios.AplicacionArticulo;
+  AContexto.ValidadorArticulos := oServicios.ValidadorArticulos;
+  AContexto.LookupAtributos := oServicios.LookupAtributos;
+  AContexto.BusquedaEmpresas := oServicios.BusquedaEmpresas;
+  AContexto.BusquedaProveedores := oServicios.BusquedaProveedores;
+  AContexto.BusquedasArticulos := oServicios.BusquedasArticulos;
+  AContexto.Recepcion := ProtegerRecepcionPedidoCompra(
     CrearRecepcionPedidoCompraUniDAC(AEntrada.Conexion),
     CrearUnidadTrabajoComprasPantallaUniDAC(AEntrada.Conexion));
-  Result.Pedido.Consultas := CrearConsultasPedidoCompraPantallaUniDAC(
+  AContexto.Consultas := CrearConsultasPedidoCompraPantallaUniDAC(
     AEntrada.Conexion);
+  AContexto.Validar;
 end;
 
-function ComponerDevolucion(
+procedure ComponerComprasPantalla(
   const AArticulos: IRepositoriosArticulosPantalla;
-  const AEntrada: TEntradaComposicionComprasPantalla):
-  TServiciosComprasPantalla;
+  AConexion: TUniConnection;
+  out AContexto: TContextoDevolucionCompraPantalla);
 var
-  oResolver: IArticulosResolver;
   oPersistencia: TServiciosPersistenciaDevolucionCompra;
+  oResolver: IArticulosResolver;
 begin
-  Result := Default(TServiciosComprasPantalla);
-  Result.Devolucion.ValidadorArticulos :=
-    AArticulos.CrearValidadorArticulos(AEntrada.Conexion);
-  Result.Devolucion.LookupAtributos :=
-    AArticulos.CrearLookupAtributosArticulos(AEntrada.Conexion);
-  oResolver := AArticulos.CrearResolverArticulos(
-    AEntrada.Conexion);
+  ComprobarArticulos(AArticulos);
+  ComprobarConexion(AConexion);
+  AContexto := Default(TContextoDevolucionCompraPantalla);
+  AContexto.ValidadorArticulos :=
+    AArticulos.CrearValidadorArticulos(AConexion);
+  AContexto.LookupAtributos :=
+    AArticulos.CrearLookupAtributosArticulos(AConexion);
+  oResolver := AArticulos.CrearResolverArticulos(AConexion);
   oPersistencia := CrearServiciosPersistenciaDevolucionCompraUniDAC(
-    AEntrada.Conexion);
-  Result.Devolucion.Datos := oPersistencia.Datos;
-  Result.Devolucion.Stock := ProtegerStockDevolucionCompra(
+    AConexion);
+  AContexto.Datos := oPersistencia.Datos;
+  AContexto.Stock := ProtegerStockDevolucionCompra(
     oPersistencia.Stock,
-    CrearUnidadTrabajoComprasPantallaUniDAC(AEntrada.Conexion));
-  Result.Devolucion.AplicacionArticulo :=
+    CrearUnidadTrabajoComprasPantallaUniDAC(AConexion));
+  AContexto.AplicacionArticulo :=
     CrearAplicacionArticuloDevolucionCompra(
-      Result.Devolucion.ValidadorArticulos,
+      AContexto.ValidadorArticulos,
       oResolver,
-      Result.Devolucion.Datos);
-  Result.Devolucion.BusquedasArticulos :=
-    CrearBusquedasCompraPersistenciaUniDAC(AEntrada.Conexion);
+      AContexto.Datos);
+  AContexto.BusquedasArticulos :=
+    CrearBusquedasCompraPersistenciaUniDAC(AConexion);
   AsignarBusquedas(
-    AEntrada.Conexion,
-    Result.Devolucion.BusquedaEmpresas,
-    Result.Devolucion.BusquedaProveedores);
+    AConexion,
+    AContexto.BusquedaEmpresas,
+    AContexto.BusquedaProveedores);
+  AContexto.Validar;
 end;
 
-function ComponerDocumentosTrabajo(
+procedure ComponerComprasPantalla(
   const AArticulos: IRepositoriosArticulosPantalla;
-  const AEntrada: TEntradaComposicionComprasPantalla):
-  TServiciosComprasPantalla;
+  AConexion: TUniConnection;
+  out AContexto: TContextoDocumentosTrabajoCompraPantalla);
 var
   oRepositorios: TRepositoriosDocumentosTrabajo;
 begin
-  Result := Default(TServiciosComprasPantalla);
-  Result.DocumentosTrabajo.ValidadorArticulos :=
-    AArticulos.CrearValidadorArticulos(AEntrada.Conexion);
-  Result.DocumentosTrabajo.LookupAtributos :=
-    AArticulos.CrearLookupAtributosArticulos(AEntrada.Conexion);
-  oRepositorios := CrearRepositoriosDocumentosTrabajo(AEntrada.Conexion);
-  Result.DocumentosTrabajo.Lecturas := oRepositorios.Lecturas;
-  Result.DocumentosTrabajo.Materializacion :=
-    oRepositorios.Materializacion;
+  ComprobarArticulos(AArticulos);
+  ComprobarConexion(AConexion);
+  AContexto := Default(TContextoDocumentosTrabajoCompraPantalla);
+  AContexto.ValidadorArticulos :=
+    AArticulos.CrearValidadorArticulos(AConexion);
+  AContexto.LookupAtributos :=
+    AArticulos.CrearLookupAtributosArticulos(AConexion);
+  oRepositorios := CrearRepositoriosDocumentosTrabajo(AConexion);
+  AContexto.Lecturas := oRepositorios.Lecturas;
+  AContexto.Materializacion := oRepositorios.Materializacion;
+  AContexto.Validar;
 end;
 
-function ComponerPlantillas(
-  const AEntrada: TEntradaComposicionComprasPantalla):
-  TServiciosComprasPantalla;
+procedure ComponerComprasPantalla(
+  const AEntrada: TEntradaPlantillasCompraPantalla;
+  out AContexto: TContextoPlantillasCompraPantalla);
 begin
-  Result := Default(TServiciosComprasPantalla);
-  Result.Plantillas := CrearPersistenciaPlantillasCompraPantallaUniDAC(
-    AEntrada.Conexion,
-    AEntrada.MaestroPlantillas);
+  ComprobarConexion(AEntrada.Conexion);
+  if AEntrada.Maestro = nil then
+    raise EArgumentNilException.Create('AEntrada.Maestro');
+  AContexto := Default(TContextoPlantillasCompraPantalla);
+  AContexto.Persistencia :=
+    CrearPersistenciaPlantillasCompraPantallaUniDAC(
+      AEntrada.Conexion,
+      AEntrada.Maestro);
+  AContexto.Validar;
 end;
 
-function ComponerComprasPantalla(
-  AOrigen: TComponent;
-  const AEntrada: TEntradaComposicionComprasPantalla):
-  TServiciosComprasPantalla;
-var
-  oArticulos: IRepositoriosArticulosPantalla;
+procedure TContextoAlbaranCompraPantalla.Validar;
 begin
-  ComprobarEntrada(AOrigen, AEntrada);
-  oArticulos := nil;
-  if AEntrada.Tipo <> tccPlantillas then
-    oArticulos := ObtenerCompositorArticulosPantalla(AOrigen).
-      CrearRepositoriosArticulosPantalla(AOrigen.Name);
-  case AEntrada.Tipo of
-    tccAlbaran:
-      Result := ComponerAlbaran(oArticulos, AEntrada);
-    tccFactura:
-      Result := ComponerFactura(oArticulos, AEntrada);
-    tccPedido:
-      Result := ComponerPedido(oArticulos, AEntrada);
-    tccDevolucion:
-      Result := ComponerDevolucion(oArticulos, AEntrada);
-    tccDocumentosTrabajo:
-      Result := ComponerDocumentosTrabajo(oArticulos, AEntrada);
-    tccPlantillas:
-      Result := ComponerPlantillas(AEntrada);
-  else
-    raise EArgumentOutOfRangeException.Create('AEntrada.Tipo');
-  end;
+  if not Assigned(AplicacionArticulo) then
+    raise EArgumentNilException.Create('AplicacionArticulo');
+  if not Assigned(ValidadorArticulos) then
+    raise EArgumentNilException.Create('ValidadorArticulos');
+  if not Assigned(LookupAtributos) then
+    raise EArgumentNilException.Create('LookupAtributos');
+  if not Assigned(BusquedaEmpresas) then
+    raise EArgumentNilException.Create('BusquedaEmpresas');
+  if not Assigned(BusquedaProveedores) then
+    raise EArgumentNilException.Create('BusquedaProveedores');
+  if not Assigned(BusquedasArticulos) then
+    raise EArgumentNilException.Create('BusquedasArticulos');
+end;
+
+procedure TContextoFacturaCompraPantalla.Validar;
+begin
+  if not Assigned(AplicacionArticulo) then
+    raise EArgumentNilException.Create('AplicacionArticulo');
+  if not Assigned(ValidadorArticulos) then
+    raise EArgumentNilException.Create('ValidadorArticulos');
+  if not Assigned(LookupAtributos) then
+    raise EArgumentNilException.Create('LookupAtributos');
+  if not Assigned(BusquedaProveedores) then
+    raise EArgumentNilException.Create('BusquedaProveedores');
+  if not Assigned(BusquedasArticulos) then
+    raise EArgumentNilException.Create('BusquedasArticulos');
+end;
+
+procedure TContextoPedidoCompraPantalla.Validar;
+begin
+  if not Assigned(AplicacionArticulo) then
+    raise EArgumentNilException.Create('AplicacionArticulo');
+  if not Assigned(ValidadorArticulos) then
+    raise EArgumentNilException.Create('ValidadorArticulos');
+  if not Assigned(LookupAtributos) then
+    raise EArgumentNilException.Create('LookupAtributos');
+  if not Assigned(BusquedaEmpresas) then
+    raise EArgumentNilException.Create('BusquedaEmpresas');
+  if not Assigned(BusquedaProveedores) then
+    raise EArgumentNilException.Create('BusquedaProveedores');
+  if not Assigned(BusquedasArticulos) then
+    raise EArgumentNilException.Create('BusquedasArticulos');
+  if not Assigned(Recepcion) then
+    raise EArgumentNilException.Create('Recepcion');
+  if not Assigned(Consultas) then
+    raise EArgumentNilException.Create('Consultas');
+end;
+
+procedure TContextoDevolucionCompraPantalla.Validar;
+begin
+  if not Assigned(AplicacionArticulo) then
+    raise EArgumentNilException.Create('AplicacionArticulo');
+  if not Assigned(ValidadorArticulos) then
+    raise EArgumentNilException.Create('ValidadorArticulos');
+  if not Assigned(LookupAtributos) then
+    raise EArgumentNilException.Create('LookupAtributos');
+  if not Assigned(Datos) then
+    raise EArgumentNilException.Create('Datos');
+  if not Assigned(Stock) then
+    raise EArgumentNilException.Create('Stock');
+  if not Assigned(BusquedaEmpresas) then
+    raise EArgumentNilException.Create('BusquedaEmpresas');
+  if not Assigned(BusquedaProveedores) then
+    raise EArgumentNilException.Create('BusquedaProveedores');
+  if not Assigned(BusquedasArticulos) then
+    raise EArgumentNilException.Create('BusquedasArticulos');
+end;
+
+procedure TContextoDocumentosTrabajoCompraPantalla.Validar;
+begin
+  if not Assigned(ValidadorArticulos) then
+    raise EArgumentNilException.Create('ValidadorArticulos');
+  if not Assigned(LookupAtributos) then
+    raise EArgumentNilException.Create('LookupAtributos');
+  if not Assigned(Lecturas) then
+    raise EArgumentNilException.Create('Lecturas');
+  if not Assigned(Materializacion) then
+    raise EArgumentNilException.Create('Materializacion');
+end;
+
+procedure TContextoPlantillasCompraPantalla.Validar;
+begin
+  if not Assigned(Persistencia) then
+    raise EArgumentNilException.Create('Persistencia');
 end;
 
 end.

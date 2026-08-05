@@ -52,7 +52,7 @@ uses
   dxSkinVisualStudio2013Blue, dxSkinVisualStudio2013Dark, inLibCertificates,
   dxSkinVisualStudio2013Light, dxSkinVS2010, dxSkinWhiteprint, inMtoModalEmpCer,
   dxSkinXmas2008Blue, JvComponentBase, JvEnterTab, dxShellDialogs, cxDBLabel,
-  inLibSeriesEmpresaPersistenciaIntf;
+  inLibSeriesEmpresaPersistenciaIntf, inLibPermisosIntf;
 
 type
   TfrmMtoEmpresas = class(TfrmMtoGen)
@@ -330,6 +330,11 @@ type
     procedure btnGenerarInstalacionSifClick(Sender: TObject);
   public
     dmmEmpresas: TdmEmpresas;
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const ARepositorio: IRepositorioSeriesEmpresa); reintroduce;
+      overload;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
@@ -356,11 +361,24 @@ uses
   inLibFotos,
   inLibVerifactuInstalacion,
   inLibMsgComun, inLibMsgVentas,
-  inMtoModalSeriesDocumentos, UniDataConfiguracionPantalla;
+  inMtoModalSeriesDocumentos,
+  UniDataConfiguracionPantalla;
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+constructor TfrmMtoEmpresas.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const ARepositorio: IRepositorioSeriesEmpresa);
+begin
+  FRepositorioSeriesEmpresa := ARepositorio;
+  ValidarDependenciaConfiguracion(
+    FRepositorioSeriesEmpresa,
+    'series de empresa');
+  inherited Create(AOwner, AContexto);
+end;
 
 // La historia de facturacion muestra lineas con articulo
 // (tvLineasFacturacion, CODIGO_ART_FACLIN); ese es el articulo activo.
@@ -726,10 +744,6 @@ end;
 procedure TfrmMtoEmpresas.CrearTablaPrincipal;
 begin
   inherited;
-  ComponerConfiguracionPantalla(
-    Self,
-    ConexionPrincipal,
-    FRepositorioSeriesEmpresa);
   dmmEmpresas := tdmDataModule as TdmEmpresas;
   tvRetenciones.DataController.DataSource := dmmEmpresas.dsRetenciones;
   pcPestana.ActivePage := tsMasDatos;
@@ -806,6 +820,9 @@ end;
 procedure TfrmMtoEmpresas.FormCreate(Sender: TObject);
 begin
   inherited;
+  ValidarDependenciaConfiguracion(
+    FRepositorioSeriesEmpresa,
+    'series de empresa');
   chkAplicaRetencionesPropertiesChange(Sender);
 end;
 

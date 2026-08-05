@@ -94,7 +94,11 @@ type
   public
     // Método para llamar a esta pantalla desde el formulario principal
     class function Ejecutar(const ACodigoArticulo,
-                            ATipoVariacion: string): Boolean;
+                            ATipoVariacion: string): Boolean; overload;
+    class function Ejecutar(
+      AOwner: TComponent;
+      const ACodigoArticulo, ATipoVariacion: string;
+      const ARepositorio: IRepositorioGeneracionSkus): Boolean; overload;
   end;
 
 implementation
@@ -166,11 +170,26 @@ end;
 
 class function TfrmMtoModalGenerarSKUS.Ejecutar(const ACodigoArticulo,
   ATipoVariacion: string): Boolean;
+begin
+  Result := False;
+  ValidarDependenciaConfiguracion(
+    nil,
+    'generación de SKU');
+end;
+
+class function TfrmMtoModalGenerarSKUS.Ejecutar(
+  AOwner: TComponent;
+  const ACodigoArticulo, ATipoVariacion: string;
+  const ARepositorio: IRepositorioGeneracionSkus): Boolean;
 var
   frm: TfrmMtoModalGenerarSKUS;
 begin
-  frm := TfrmMtoModalGenerarSKUS.Create(nil);
+  ValidarDependenciaConfiguracion(
+    ARepositorio,
+    'generación de SKU');
+  frm := TfrmMtoModalGenerarSKUS.Create(AOwner);
   try
+    frm.FRepositorio := ARepositorio;
     frm.FCodigoArticulo := ACodigoArticulo;
     frm.FTipoVariacion  := ATipoVariacion;
     Result := (frm.ShowModal = mrOk);
@@ -181,10 +200,9 @@ end;
 
 procedure TfrmMtoModalGenerarSKUS.FormShow(Sender: TObject);
 begin
-  ComponerConfiguracionPantalla(
-    Self,
-    ConexionPrincipal,
-    FRepositorio);
+  ValidarDependenciaConfiguracion(
+    FRepositorio,
+    'generación de SKU');
   FDatos := FRepositorio.PrepararDatos(
     FCodigoArticulo,
     FTipoVariacion);

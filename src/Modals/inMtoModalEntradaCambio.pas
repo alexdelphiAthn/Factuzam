@@ -25,7 +25,7 @@ uses
   cxButtonEdit, Uni,
   inMtoFrmBase, inLibCajaVentaIntf,
   inLibEntradaCambioPersistenciaIntf, inLibGenerarTicketIntf,
-  UniDataCajaPantallaComposicion;
+  inLibCajaPantallaInyeccion;
 
 type
   TfrmModalEntradaCambio = class(TfrmBase)
@@ -70,7 +70,13 @@ type
                             AConn: TUniConnection;
                             const AEmpresa, AAlmacen, ACaja: string;
                             AFechaOperacion: TDateTime = 0
-                            ): Boolean;
+                            ): Boolean; overload;
+    class function Ejecutar(
+      AOwner: TComponent;
+      AConn: TUniConnection;
+      const ADependencias: TDependenciasEntradaCambio;
+      const AEmpresa, AAlmacen, ACaja: string;
+      AFechaOperacion: TDateTime = 0): Boolean; overload;
   end;
 
 implementation
@@ -86,10 +92,22 @@ class function TfrmModalEntradaCambio.Ejecutar(
   AOwner: TComponent;
   AConn: TUniConnection;
   const AEmpresa, AAlmacen, ACaja: string;
-  AFechaOperacion: TDateTime = 0): Boolean;
+  AFechaOperacion: TDateTime): Boolean;
+begin
+  ValidarDependenciaCaja(nil, 'contexto de entrada de cambio');
+  Result := False;
+end;
+
+class function TfrmModalEntradaCambio.Ejecutar(
+  AOwner: TComponent;
+  AConn: TUniConnection;
+  const ADependencias: TDependenciasEntradaCambio;
+  const AEmpresa, AAlmacen, ACaja: string;
+  AFechaOperacion: TDateTime): Boolean;
 var
   frm: TfrmModalEntradaCambio;
 begin
+  ADependencias.Validar;
   Result := False;
   frm := TfrmModalEntradaCambio.Create(AOwner);
   try
@@ -98,6 +116,9 @@ begin
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
     frm.FFechaOperacion := AFechaOperacion;
+    frm.FRepositorioConsultas := ADependencias.Consultas;
+    frm.FRepositorioEntrada := ADependencias.Persistencia;
+    frm.FLecturasImpresionTicket := ADependencias.LecturasTicket;
     frm.ComponerDependencias;
     frm.btnEmpleado.Text := frm.IdentidadSesion.Usuario;
     frm.ValidarEmpleado;
@@ -110,15 +131,12 @@ end;
 
 procedure TfrmModalEntradaCambio.ComponerDependencias;
 var
-  oComposicion: TComposicionCajaPantalla;
+  Dependencias: TDependenciasEntradaCambio;
 begin
-  oComposicion := ComponerCajaPantalla(Self);
-  FRepositorioConsultas := oComposicion.Consultas.
-    CrearRepositorioConsultasCaja(FConn);
-  FRepositorioEntrada := oComposicion.Tickets.
-    CrearRepositorioEntradaCambio(FConn);
-  FLecturasImpresionTicket := oComposicion.Tickets.
-    CrearLecturasImpresionTicketCaja(ConexionPrincipal);
+  Dependencias.Consultas := FRepositorioConsultas;
+  Dependencias.Persistencia := FRepositorioEntrada;
+  Dependencias.LecturasTicket := FLecturasImpresionTicket;
+  Dependencias.Validar;
 end;
 
 procedure TfrmModalEntradaCambio.FormCreate(Sender: TObject);

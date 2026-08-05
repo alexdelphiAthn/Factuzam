@@ -16,7 +16,7 @@ unit UniDataConfiguracionPantalla;
 interface
 
 uses
-  System.Classes, Uni,
+  Uni,
   inLibRepositoriosPantallaIntf,
   inLibArticulosResolverIntf,
   inLibAppParamPersistenciaIntf,
@@ -33,53 +33,60 @@ uses
   inLibSeleccionBancoEmpresaPersistenciaIntf,
   inLibSeriesEmpresaPersistenciaIntf;
 
+procedure ValidarDependenciaConfiguracion(
+  const ADependencia: IInterface;
+  const ANombre: string);
+procedure ValidarServiciosCargaMasiva(
+  const AServicios: TServiciosCargaMasivaArticulos);
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosConfiguracionPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioAppParam); overload;
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const AConfiguracion: IRepositoriosConfiguracionPantalla;
+  const ADocumentosOrigen: IRepositoriosDocumentosPantalla;
+  const AArticulos: IRepositoriosArticulosPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioBusquedaDatos;
   out ADocumentos: TRepositoriosDocumentosTrabajo;
   out AResolverArticulos: IArticulosResolver); overload;
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosConfiguracionPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioSeriesEmpresa); overload;
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosArticulosPantalla;
   out AServicios: TServiciosCargaMasivaArticulos); overload;
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosArticulosPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioMargen); overload;
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosRemesasPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioCargaEfectosRemesa); overload;
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosArticulosPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioDistribuidor); overload;
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosArticulosPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioFiltroArticulos); overload;
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosArticulosPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioGeneracionSkus); overload;
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosConfiguracionPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioDestinosFiltros); overload;
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosConfiguracionPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioGuias); overload;
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosConfiguracionPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioSeleccionBancoEmpresa); overload;
 
@@ -89,161 +96,161 @@ uses
   System.SysUtils;
 
 resourcestring
-  SErrorOrigenComposicionNulo =
-    'El origen de composición es nulo';
+  SErrorRepositoriosComposicionNulos =
+    'Los repositorios de composición son obligatorios';
+  SErrorDependenciaConfiguracionAusente =
+    'Falta la dependencia obligatoria de configuración: %s';
 
-function CrearRepositoriosArticulos(
-  AOrigen: TComponent): IRepositoriosArticulosPantalla;
+procedure ValidarDependenciaConfiguracion(
+  const ADependencia: IInterface;
+  const ANombre: string);
 begin
-  if not Assigned(AOrigen) then
-    raise EArgumentNilException.Create(SErrorOrigenComposicionNulo);
-  Result := ObtenerCompositorArticulosPantalla(AOrigen).
-    CrearRepositoriosArticulosPantalla(AOrigen.Name);
+  if not Assigned(ADependencia) then
+    raise EArgumentNilException.CreateFmt(
+      SErrorDependenciaConfiguracionAusente,
+      [ANombre]);
 end;
 
-function CrearRepositoriosConfiguracion(
-  AOrigen: TComponent): IRepositoriosConfiguracionPantalla;
+procedure ValidarServiciosCargaMasiva(
+  const AServicios: TServiciosCargaMasivaArticulos);
 begin
-  if not Assigned(AOrigen) then
-    raise EArgumentNilException.Create(SErrorOrigenComposicionNulo);
-  Result := ObtenerCompositorConfiguracionPantalla(AOrigen).
-    CrearRepositoriosConfiguracionPantalla(AOrigen.Name);
+  ValidarDependenciaConfiguracion(
+    AServicios.Consultas,
+    'consultas de carga masiva');
+  ValidarDependenciaConfiguracion(
+    AServicios.Inserciones,
+    'inserciones de carga masiva');
 end;
 
-function CrearRepositoriosDocumentos(
-  AOrigen: TComponent): IRepositoriosDocumentosPantalla;
+procedure ValidarRepositorios(const ARepositorios: IInterface);
 begin
-  if not Assigned(AOrigen) then
-    raise EArgumentNilException.Create(SErrorOrigenComposicionNulo);
-  Result := ObtenerCompositorDocumentosPantalla(AOrigen).
-    CrearRepositoriosDocumentosPantalla(AOrigen.Name);
-end;
-
-function CrearRepositoriosRemesas(
-  AOrigen: TComponent): IRepositoriosRemesasPantalla;
-begin
-  if not Assigned(AOrigen) then
-    raise EArgumentNilException.Create(SErrorOrigenComposicionNulo);
-  Result := ObtenerCompositorRemesasPantalla(AOrigen).
-    CrearRepositoriosRemesasPantalla(AOrigen.Name);
+  if not Assigned(ARepositorios) then
+    raise EArgumentNilException.Create(
+      SErrorRepositoriosComposicionNulos);
 end;
 
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosConfiguracionPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioAppParam);
 begin
-  ARepositorio := CrearRepositoriosConfiguracion(AOrigen).
-    CrearRepositorioAppParam(
+  ValidarRepositorios(ARepositorios);
+  ARepositorio := ARepositorios.CrearRepositorioAppParam(
     AConexion);
 end;
 
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const AConfiguracion: IRepositoriosConfiguracionPantalla;
+  const ADocumentosOrigen: IRepositoriosDocumentosPantalla;
+  const AArticulos: IRepositoriosArticulosPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioBusquedaDatos;
   out ADocumentos: TRepositoriosDocumentosTrabajo;
   out AResolverArticulos: IArticulosResolver);
-var
-  oArticulos: IRepositoriosArticulosPantalla;
 begin
-  ARepositorio := CrearRepositoriosConfiguracion(AOrigen).
-    CrearRepositorioBusquedaDatos(
+  ValidarRepositorios(AConfiguracion);
+  ValidarRepositorios(ADocumentosOrigen);
+  ValidarRepositorios(AArticulos);
+  ARepositorio := AConfiguracion.CrearRepositorioBusquedaDatos(
     AConexion);
-  ADocumentos := CrearRepositoriosDocumentos(AOrigen).
+  ADocumentos := ADocumentosOrigen.
     CrearRepositoriosDocumentosTrabajo(AConexion);
-  oArticulos := CrearRepositoriosArticulos(AOrigen);
-  AResolverArticulos := oArticulos.CrearResolverArticulos(
+  AResolverArticulos := AArticulos.CrearResolverArticulos(
     AConexion);
 end;
 
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosConfiguracionPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioSeriesEmpresa);
 begin
-  ARepositorio := CrearRepositoriosConfiguracion(AOrigen).
-    CrearRepositorioSeriesEmpresa(
+  ValidarRepositorios(ARepositorios);
+  ARepositorio := ARepositorios.CrearRepositorioSeriesEmpresa(
     AConexion);
 end;
 
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosArticulosPantalla;
   out AServicios: TServiciosCargaMasivaArticulos);
 begin
-  AServicios := CrearRepositoriosArticulos(AOrigen).
-    CrearServicioCargaMasivaArticulos;
+  ValidarRepositorios(ARepositorios);
+  AServicios := ARepositorios.CrearServicioCargaMasivaArticulos;
 end;
 
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosArticulosPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioMargen);
 begin
-  ARepositorio := CrearRepositoriosArticulos(AOrigen).
-    CrearRepositorioMargen(AConexion);
+  ValidarRepositorios(ARepositorios);
+  ARepositorio := ARepositorios.CrearRepositorioMargen(AConexion);
 end;
 
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosRemesasPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioCargaEfectosRemesa);
 begin
-  ARepositorio := CrearRepositoriosRemesas(AOrigen).
-    CrearRepositorioCargaEfectosRemesa(AConexion);
+  ValidarRepositorios(ARepositorios);
+  ARepositorio := ARepositorios.CrearRepositorioCargaEfectosRemesa(
+    AConexion);
 end;
 
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosArticulosPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioDistribuidor);
 begin
-  ARepositorio := CrearRepositoriosArticulos(AOrigen).
-    CrearRepositorioDistribuidor(AConexion);
+  ValidarRepositorios(ARepositorios);
+  ARepositorio := ARepositorios.CrearRepositorioDistribuidor(AConexion);
 end;
 
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosArticulosPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioFiltroArticulos);
 begin
-  ARepositorio := CrearRepositoriosArticulos(AOrigen).
-    CrearRepositorioFiltroArticulos(AConexion);
+  ValidarRepositorios(ARepositorios);
+  ARepositorio := ARepositorios.CrearRepositorioFiltroArticulos(
+    AConexion);
 end;
 
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosArticulosPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioGeneracionSkus);
 begin
-  ARepositorio := CrearRepositoriosArticulos(AOrigen).
-    CrearRepositorioGeneracionSkus(AConexion);
+  ValidarRepositorios(ARepositorios);
+  ARepositorio := ARepositorios.CrearRepositorioGeneracionSkus(
+    AConexion);
 end;
 
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosConfiguracionPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioDestinosFiltros);
 begin
-  ARepositorio := CrearRepositoriosConfiguracion(AOrigen).
-    CrearRepositorioDestinosFiltros(AConexion);
+  ValidarRepositorios(ARepositorios);
+  ARepositorio := ARepositorios.CrearRepositorioDestinosFiltros(
+    AConexion);
 end;
 
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosConfiguracionPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioGuias);
 begin
-  ARepositorio := CrearRepositoriosConfiguracion(AOrigen).
-    CrearRepositorioGuias(AConexion);
+  ValidarRepositorios(ARepositorios);
+  ARepositorio := ARepositorios.CrearRepositorioGuias(AConexion);
 end;
 
 procedure ComponerConfiguracionPantalla(
-  AOrigen: TComponent;
+  const ARepositorios: IRepositoriosConfiguracionPantalla;
   AConexion: TUniConnection;
   out ARepositorio: IRepositorioSeleccionBancoEmpresa);
 begin
-  ARepositorio := CrearRepositoriosConfiguracion(AOrigen).
+  ValidarRepositorios(ARepositorios);
+  ARepositorio := ARepositorios.
     CrearRepositorioSeleccionBancoEmpresa(AConexion);
 end;
 

@@ -49,6 +49,8 @@ uses
   inLibArticulosValidadorIntf,
   inLibBusquedasCompraPersistenciaIntf,
   inLibComprasPantallaIntf,
+  inLibPermisosIntf,
+  inLibRepositoriosPantallaIntf,
   UniDataFacturasCompra, cxBlobEdit, dxShellDialogs, System.Actions,
   Vcl.ActnList, cxSplitter, inLibDocumento, inLibDocumentoIntf;
 
@@ -56,6 +58,7 @@ const
   CANT_TALLAS_MAX = 20;
   CANT_ATRIB_MAX  = 5;
   ID_VA_COLOR     = 'CO';
+  NOMBRE_PANTALLA_FACTURAS_COMPRA = 'frmMtoFacturasCompra';
 
 type
   TfrmMtoFacturasCompra = class(TfrmMtoDocumento)
@@ -201,11 +204,13 @@ type
     FMostrarAtributos: Boolean;
     FColColorPivot   : TcxGridDBColumn;
     FBasicosColor    : TArray<string>;
+  protected
     FAplicacionArticuloCompra: IAplicacionArticuloCompra;
     FValidadorArticulos: IArticulosValidador;
     FLookupAtributos: IArticulosAtributosLookup;
     FBusquedaProveedores: IBusquedaProveedoresComprasPantalla;
     FBusquedasArticulos: IBusquedasCompraPersistencia;
+  private
     // Guarda contra reentrada del toggle desde dsTablaGDataChangeHook
     // disparado por el Edit/Post de PersistirPreferenciaPivote (entre
     // el Edit y el set, la cabecera tiene el ESPIVOTE viejo y el hook
@@ -285,6 +290,11 @@ type
     procedure CrearTablaPrincipal; override;
   end;
 
+function CrearFacturasCompraInyectada(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const AArticulos: IRepositoriosArticulosPantalla): TForm;
+
 implementation
 
 uses
@@ -315,7 +325,58 @@ uses
 
 {$R *.dfm}
 
+type
+  TfrmMtoFacturasCompraInyectada = class(TfrmMtoFacturasCompra)
+  private
+    FArticulos: IRepositoriosArticulosPantalla;
+  public
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const AArticulos: IRepositoriosArticulosPantalla); reintroduce;
+    procedure CrearTablaPrincipal; override;
+  end;
+
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+function CrearFacturasCompraInyectada(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const AArticulos: IRepositoriosArticulosPantalla): TForm;
+begin
+  Result := TfrmMtoFacturasCompraInyectada.Create(
+    AOwner,
+    AContexto,
+    AArticulos);
+end;
+
+constructor TfrmMtoFacturasCompraInyectada.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const AArticulos: IRepositoriosArticulosPantalla);
+begin
+  FArticulos := AArticulos;
+  inherited Create(AOwner, AContexto);
+end;
+
+procedure TfrmMtoFacturasCompraInyectada.CrearTablaPrincipal;
+var
+  oContexto: TContextoFacturaCompraPantalla;
+  oEntrada: TEntradaDocumentoCompraPantalla;
+begin
+  inherited;
+  oEntrada := Default(TEntradaDocumentoCompraPantalla);
+  oEntrada.Conexion := ConexionPrincipal;
+  oEntrada.Cabecera := dmmFacturasCompra.unqryTablaG;
+  oEntrada.Lineas := dmmFacturasCompra.unqryFacturasCompraLineas;
+  ComponerComprasPantalla(FArticulos, oEntrada, oContexto);
+  FAplicacionArticuloCompra := oContexto.AplicacionArticulo;
+  FValidadorArticulos := oContexto.ValidadorArticulos;
+  FLookupAtributos := oContexto.LookupAtributos;
+  FBusquedaProveedores := oContexto.BusquedaProveedores;
+  FBusquedasArticulos := oContexto.BusquedasArticulos;
+  FArticulos := nil;
+end;
 
 procedure TfrmMtoFacturasCompra.cbbSERIE_FACCPropertiesInitPopup(
   Sender: TObject);
@@ -407,9 +468,6 @@ begin
 end;
 
 procedure TfrmMtoFacturasCompra.FormCreate(Sender: TObject);
-var
-  oEntrada: TEntradaComposicionComprasPantalla;
-  oServicios: TServiciosComprasPantalla;
 begin
   // Columnas no-bound de tallas y atributos ANTES del inherited.
   CrearColumnasTallas;
@@ -422,19 +480,6 @@ begin
   ConfigurarColumnaBotonDocumento(
     FColColorPivot, colLinFaccColorPivotButtonClick);
   inherited;
-  oEntrada := Default(TEntradaComposicionComprasPantalla);
-  oEntrada.Tipo := tccFactura;
-  oEntrada.Conexion := ConexionPrincipal;
-  oEntrada.Cabecera := dmmFacturasCompra.unqryTablaG;
-  oEntrada.Lineas := dmmFacturasCompra.unqryFacturasCompraLineas;
-  oServicios := ComponerComprasPantalla(
-    Self,
-    oEntrada);
-  FAplicacionArticuloCompra := oServicios.Documento.AplicacionArticulo;
-  FValidadorArticulos := oServicios.Documento.ValidadorArticulos;
-  FLookupAtributos := oServicios.Documento.LookupAtributos;
-  FBusquedaProveedores := oServicios.Documento.BusquedaProveedores;
-  FBusquedasArticulos := oServicios.Documento.BusquedasArticulos;
   ConfigurarColumnaBusquedaDocumento(
     tvLineasFactura, 'CODIGO_ART_FACCLIN',
     colLineaFaccCODIGO_ARTPropertiesButtonClick,

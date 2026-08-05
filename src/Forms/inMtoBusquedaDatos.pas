@@ -32,6 +32,13 @@ uses
   inLibArticulosResolverIntf, inLibBusquedaDatosPersistenciaIntf;
 
 type
+  TDependenciasBusquedaDatos = record
+    Repositorio: IRepositorioBusquedaDatos;
+    Documentos: TRepositoriosDocumentosTrabajo;
+    ResolverArticulos: IArticulosResolver;
+    procedure Validar;
+  end;
+
   TfrmMtoBusquedaDatos = class(TfrmMtoSearch)
     pnlCriterios: TPanel;
     lblCampo: TcxLabel;
@@ -116,11 +123,20 @@ type
     function CodigoCombo(ACombo: TcxComboBox): string;
     function CodigoProveedor: string;
     procedure TimerPrecargaTimer(Sender: TObject);
+    procedure ValidarDependencias;
   protected
     function DebeAjustarColumnasAutomaticamente: Boolean; override;
   public
+    constructor Create(
+      AOwner: TComponent;
+      const ADependencias: TDependenciasBusquedaDatos); reintroduce;
+      overload;
     class procedure Ejecutar(AOwner: TComponent;
-      AParentForm: TCustomForm = nil);
+      AParentForm: TCustomForm = nil); overload;
+    class procedure Ejecutar(
+      AOwner: TComponent;
+      const ADependencias: TDependenciasBusquedaDatos;
+      AParentForm: TCustomForm = nil); overload;
     procedure CrearTablaPrincipal; override;
   end;
 
@@ -128,11 +144,52 @@ implementation
 
 uses
   inLibShowMto, inLibAtributosPaleta, inLibMsgComun,
-  inLibDocumentosTrabajoPresentacion, UniDataConfiguracionPantalla;
+  inLibDocumentosTrabajoPresentacion,
+  UniDataConfiguracionPantalla;
 
 {$R *.dfm}
 
+procedure TDependenciasBusquedaDatos.Validar;
+begin
+  ValidarDependenciaConfiguracion(
+    Repositorio,
+    'repositorio de búsqueda de datos');
+  ValidarDependenciaConfiguracion(
+    Documentos.Lecturas,
+    'lecturas de documentos de trabajo');
+  ValidarDependenciaConfiguracion(
+    Documentos.Escritura,
+    'escritura de documentos de trabajo');
+  ValidarDependenciaConfiguracion(
+    Documentos.Materializacion,
+    'materialización de documentos de trabajo');
+  ValidarDependenciaConfiguracion(
+    ResolverArticulos,
+    'resolución de artículos');
+end;
+
+constructor TfrmMtoBusquedaDatos.Create(
+  AOwner: TComponent;
+  const ADependencias: TDependenciasBusquedaDatos);
+begin
+  ADependencias.Validar;
+  FRepositorioPersistencia := ADependencias.Repositorio;
+  FRepositoriosDocumentos := ADependencias.Documentos;
+  FResolverArticulos := ADependencias.ResolverArticulos;
+  inherited Create(AOwner);
+end;
+
 class procedure TfrmMtoBusquedaDatos.Ejecutar(AOwner: TComponent;
+  AParentForm: TCustomForm);
+begin
+  ValidarDependenciaConfiguracion(
+    nil,
+    'contexto de búsqueda de datos');
+end;
+
+class procedure TfrmMtoBusquedaDatos.Ejecutar(
+  AOwner: TComponent;
+  const ADependencias: TDependenciasBusquedaDatos;
   AParentForm: TCustomForm);
 var
   frm: TfrmMtoBusquedaDatos;
@@ -141,7 +198,7 @@ var
 begin
   swApertura := TStopwatch.StartNew;
   sCodigoArt := '';
-  frm := TfrmMtoBusquedaDatos.Create(nil);
+  frm := TfrmMtoBusquedaDatos.Create(AOwner, ADependencias);
   try
     frm.FCronometroApertura := swApertura;
     if Assigned(AParentForm) then
@@ -165,12 +222,7 @@ end;
 procedure TfrmMtoBusquedaDatos.FormCreate(Sender: TObject);
 begin
   inherited;
-  ComponerConfiguracionPantalla(
-    Self,
-    ConexionPrincipal,
-    FRepositorioPersistencia,
-    FRepositoriosDocumentos,
-    FResolverArticulos);
+  ValidarDependencias;
   dsTablaG.DataSet := nil;
   dsProveedoresBusqueda.DataSet := nil;
   FColumnasCreadas := False;
@@ -185,6 +237,16 @@ begin
   FTimerPrecarga.Enabled := False;
   FTimerPrecarga.Interval := 1;
   FTimerPrecarga.OnTimer := TimerPrecargaTimer;
+end;
+
+procedure TfrmMtoBusquedaDatos.ValidarDependencias;
+var
+  oDependencias: TDependenciasBusquedaDatos;
+begin
+  oDependencias.Repositorio := FRepositorioPersistencia;
+  oDependencias.Documentos := FRepositoriosDocumentos;
+  oDependencias.ResolverArticulos := FResolverArticulos;
+  oDependencias.Validar;
 end;
 
 procedure TfrmMtoBusquedaDatos.ConfigurarMenuContextual;

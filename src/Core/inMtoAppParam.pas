@@ -27,7 +27,7 @@ uses
   cxDropDownEdit, Vcl.Menus, Vcl.StdCtrls, cxButtons,
   JvComponentBase, JvInspector, JvExControls, System.Actions,
   Vcl.ActnList, dxSkinsCore, System.UITypes, inLibParametrosIntf,
-  inLibAppParamPersistenciaIntf;
+  inLibAppParamPersistenciaIntf, inLibPermisosIntf;
 
 type
   PBoolean = ^Boolean;
@@ -120,6 +120,11 @@ type
     // Handler para el botón de selección de carpeta
 //    procedure OnDirButtonClick(Sender: TObject;
 //                               Index: Integer);
+  public
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const ARepositorio: IRepositorioAppParam); reintroduce; overload;
   end;
 
 implementation
@@ -136,6 +141,18 @@ uses
    inMtoModalDescargaTraduccion, inLibLogIntf,
    UniDataConfiguracionPantalla,
    UniDataTraduccionesDescargaRepositorio;
+
+constructor TfrmMtoAppParam.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const ARepositorio: IRepositorioAppParam);
+begin
+  FRepositorioPersistencia := ARepositorio;
+  ValidarDependenciaConfiguracion(
+    FRepositorioPersistencia,
+    'persistencia de parámetros de aplicación');
+  inherited Create(AOwner, AContexto);
+end;
 
 procedure RegistrarCambioConfiguracionVerifactuSeguro(
   const ARegistroLog: IRegistroLog;
@@ -181,10 +198,9 @@ begin
   if not Supports(Owner, IProveedorParametrosEdicion, Proveedor) then
     raise Exception.Create(SErrorProveedorEdicionParametrosNoConfigurado);
   FParametrosEdicion := Proveedor.ParametrosAppEdicion;
-  ComponerConfiguracionPantalla(
-    Self,
-    ConexionPrincipal,
-    FRepositorioPersistencia);
+  ValidarDependenciaConfiguracion(
+    FRepositorioPersistencia,
+    'persistencia de parámetros de aplicación');
   if not Assigned(FParametrosEdicion) then
     raise Exception.Create(
       SErrorParametrosAplicacionEditablesNoConfigurados);

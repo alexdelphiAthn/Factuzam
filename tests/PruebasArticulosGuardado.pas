@@ -34,13 +34,22 @@ type
     procedure AdaptadorDelegaCadaCapacidadEnSuCallback;
     [Test]
     procedure AdaptadorPropagaMensajeDeErrorDeVariaciones;
+    [Test]
+    procedure Contexto_SeConstruyeConCapacidadesSinRaizVisual;
+    [Test]
+    procedure Contexto_DependenciaAusenteFallaAlPrepararlo;
   end;
 
 implementation
 
 uses
+  System.SysUtils,
+  Vcl.Forms,
   inLibArticulosGuardado,
   inLibArticulosGuardadoIntf,
+  inLibArticulosInyeccion,
+  inLibArticulosPropiedadesPersistenciaIntf,
+  inLibArticulosVariacionesIntf,
   inMtoArticulosGuardadoVcl;
 
 type
@@ -60,6 +69,53 @@ type
     function GuardarPropiedades(out AMensajeError: string): Boolean;
     procedure GuardarEdicionesPendientes;
     function GuardarVariaciones(out AMensajeError: string): Boolean;
+  end;
+  TPropiedadesArticuloFalsas = class(
+    TInterfacedObject,
+    ILectorPropiedadesArticulo,
+    IEscritorPropiedadesArticulo)
+  public
+    function ListarDisponibles: TArray<TDefinicionPropiedadArticulo>;
+    function ListarAsignadas(
+      const ACodigoArticulo: string
+    ): TArray<TDefinicionPropiedadArticulo>;
+    function ListarFamilia(
+      const ACodigoFamilia: string
+    ): TArray<TDefinicionPropiedadArticulo>;
+    function Buscar(
+      const ACodigoPropiedad: string;
+      out APropiedad: TDefinicionPropiedadArticulo): Boolean;
+    function ListarOpciones(
+      const ACodigoPropiedad: string
+    ): TArray<TOpcionPropiedadArticulo>;
+    function ListarUnidades(
+      const ACodigoArticulo, ANivel: string
+    ): TArray<TUnidadPropiedadArticulo>;
+    function ListarValoresUnidades(
+      const ACodigoArticulo, ACodigoPropiedad: string
+    ): TArray<TValorUnidadPropiedadArticulo>;
+    procedure GuardarValor(
+      const ACodigoArticulo, ACodigoPropiedad, ACodigoUnidad: string;
+      AIdValor: Integer;
+      const AValorLibre, AUsuario: string);
+    procedure EliminarPropiedad(
+      const ACodigoArticulo, ACodigoPropiedad: string);
+    procedure EliminarValorUnidad(
+      const ACodigoArticulo, ACodigoPropiedad, ACodigoUnidad: string);
+  end;
+  TArticulosVariacionesFalsas = class(
+    TInterfacedObject,
+    IArticulosVariaciones)
+  public
+    procedure AsegurarSkuSinVariaciones(
+      const ACodigoArticulo, AUsuario: string);
+    procedure AsegurarSkuActivo(
+      const ACodigoArticulo, AUsuario: string);
+    function TieneSkuActivo(
+      const ACodigoArticulo: string): Boolean;
+    function CrearGestor(
+      APanelAtributos: TScrollBox;
+      const AUsuario: string): IGestorArticulosVariaciones;
   end;
 
 constructor TOperacionesGuardadoArticuloFalsas.Create;
@@ -93,6 +149,109 @@ begin
   Inc(FGuardadosVariaciones);
   AMensajeError := 'Error de variaciones';
   Result := FVariacionesCorrectas;
+end;
+
+function TPropiedadesArticuloFalsas.ListarDisponibles:
+  TArray<TDefinicionPropiedadArticulo>;
+begin
+  SetLength(Result, 0);
+end;
+
+function TPropiedadesArticuloFalsas.ListarAsignadas(
+  const ACodigoArticulo: string
+): TArray<TDefinicionPropiedadArticulo>;
+begin
+  SetLength(Result, 0);
+end;
+
+function TPropiedadesArticuloFalsas.ListarFamilia(
+  const ACodigoFamilia: string
+): TArray<TDefinicionPropiedadArticulo>;
+begin
+  SetLength(Result, 0);
+end;
+
+function TPropiedadesArticuloFalsas.Buscar(
+  const ACodigoPropiedad: string;
+  out APropiedad: TDefinicionPropiedadArticulo): Boolean;
+begin
+  APropiedad := Default(TDefinicionPropiedadArticulo);
+  Result := False;
+end;
+
+function TPropiedadesArticuloFalsas.ListarOpciones(
+  const ACodigoPropiedad: string
+): TArray<TOpcionPropiedadArticulo>;
+begin
+  SetLength(Result, 0);
+end;
+
+function TPropiedadesArticuloFalsas.ListarUnidades(
+  const ACodigoArticulo, ANivel: string
+): TArray<TUnidadPropiedadArticulo>;
+begin
+  SetLength(Result, 0);
+end;
+
+function TPropiedadesArticuloFalsas.ListarValoresUnidades(
+  const ACodigoArticulo, ACodigoPropiedad: string
+): TArray<TValorUnidadPropiedadArticulo>;
+begin
+  SetLength(Result, 0);
+end;
+
+procedure TPropiedadesArticuloFalsas.GuardarValor(
+  const ACodigoArticulo, ACodigoPropiedad, ACodigoUnidad: string;
+  AIdValor: Integer;
+  const AValorLibre, AUsuario: string);
+begin
+end;
+
+procedure TPropiedadesArticuloFalsas.EliminarPropiedad(
+  const ACodigoArticulo, ACodigoPropiedad: string);
+begin
+end;
+
+procedure TPropiedadesArticuloFalsas.EliminarValorUnidad(
+  const ACodigoArticulo, ACodigoPropiedad, ACodigoUnidad: string);
+begin
+end;
+
+procedure TArticulosVariacionesFalsas.AsegurarSkuSinVariaciones(
+  const ACodigoArticulo, AUsuario: string);
+begin
+end;
+
+procedure TArticulosVariacionesFalsas.AsegurarSkuActivo(
+  const ACodigoArticulo, AUsuario: string);
+begin
+end;
+
+function TArticulosVariacionesFalsas.TieneSkuActivo(
+  const ACodigoArticulo: string): Boolean;
+begin
+  Result := False;
+end;
+
+function TArticulosVariacionesFalsas.CrearGestor(
+  APanelAtributos: TScrollBox;
+  const AUsuario: string): IGestorArticulosVariaciones;
+begin
+  Result := nil;
+end;
+
+function CrearContextoInyeccionArticulos: TContextoDependenciasArticulos;
+var
+  oPropiedades: TPropiedadesArticuloFalsas;
+  ServiciosPropiedades: TServiciosPropiedadesArticulo;
+begin
+  oPropiedades := TPropiedadesArticuloFalsas.Create;
+  ServiciosPropiedades.Lectura := oPropiedades;
+  ServiciosPropiedades.Escritura := oPropiedades;
+  Result := TContextoDependenciasArticulos.Crear(
+    CrearCreadorGuardadoArticulo,
+    ServiciosPropiedades,
+    TArticulosVariacionesFalsas.Create);
 end;
 
 procedure TPruebasArticulosGuardado.ValidacionDetieneTodosLosGuardados;
@@ -246,6 +405,41 @@ begin
   oResultado := oAplicacion.Ejecutar;
   Assert.AreEqual(Ord(egaGuardadoVariaciones), Ord(oResultado.Error));
   Assert.AreEqual('Atributo repetido', oResultado.Mensaje);
+end;
+
+procedure TPruebasArticulosGuardado.
+  Contexto_SeConstruyeConCapacidadesSinRaizVisual;
+var
+  Contexto: TContextoDependenciasArticulos;
+begin
+  Contexto := CrearContextoInyeccionArticulos;
+  try
+    Assert.IsTrue(Assigned(Contexto.Guardado));
+    Assert.IsTrue(Assigned(Contexto.Propiedades.Lectura));
+    Assert.IsTrue(Assigned(Contexto.Propiedades.Escritura));
+    Assert.IsTrue(Assigned(Contexto.Variaciones));
+  finally
+    Contexto.Liberar;
+  end;
+end;
+
+procedure TPruebasArticulosGuardado.
+  Contexto_DependenciaAusenteFallaAlPrepararlo;
+var
+  Contexto: TContextoDependenciasArticulos;
+begin
+  Contexto := CrearContextoInyeccionArticulos;
+  try
+    Contexto.Propiedades.Escritura := nil;
+    Assert.WillRaise(
+      procedure
+      begin
+        Contexto.Validar;
+      end,
+      EArgumentNilException);
+  finally
+    Contexto.Liberar;
+  end;
 end;
 
 initialization

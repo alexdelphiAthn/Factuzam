@@ -48,6 +48,8 @@ uses
   inLibArticulosValidadorIntf,
   inLibBusquedasCompraPersistenciaIntf,
   inLibComprasPantallaIntf,
+  inLibPermisosIntf,
+  inLibRepositoriosPantallaIntf,
   UniDataAlbaranesCompra, cxBlobEdit, dxShellDialogs, System.Actions,
   Vcl.ActnList, cxSplitter, inLibDocumento, inLibDocumentoIntf;
 
@@ -55,6 +57,7 @@ const
   CANT_TALLAS_MAX = 20;
   CANT_ATRIB_MAX  = 5;
   ID_VA_COLOR     = 'CO';
+  NOMBRE_PANTALLA_ALBARANES_COMPRA = 'frmMtoAlbaranesCompra';
 
 type
   TfrmMtoAlbaranesCompra = class(TfrmMtoDocumento)
@@ -224,12 +227,14 @@ type
     FMostrarAtributos: Boolean;
     FColColorPivot   : TcxGridDBColumn;
     FBasicosColor    : TArray<string>;
+  protected
     FAplicacionArticuloCompra: IAplicacionArticuloCompra;
     FValidadorArticulos: IArticulosValidador;
     FLookupAtributos: IArticulosAtributosLookup;
     FBusquedaEmpresas: IBusquedaEmpresasComprasPantalla;
     FBusquedaProveedores: IBusquedaProveedoresComprasPantalla;
     FBusquedasArticulos: IBusquedasCompraPersistencia;
+  private
     // Guarda contra reentrada del toggle desde dsTablaGDataChangeHook
     // disparado por el Edit/Post de PersistirPreferenciaPivote (entre
     // el Edit y el set, la cabecera tiene el ESPIVOTE viejo y el hook
@@ -304,6 +309,11 @@ type
     procedure CrearTablaPrincipal; override;
   end;
 
+function CrearAlbaranesCompraInyectada(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const AArticulos: IRepositoriosArticulosPantalla): TForm;
+
 implementation
 
 uses
@@ -334,7 +344,59 @@ uses
 
 {$R *.dfm}
 
+type
+  TfrmMtoAlbaranesCompraInyectada = class(TfrmMtoAlbaranesCompra)
+  private
+    FArticulos: IRepositoriosArticulosPantalla;
+  public
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const AArticulos: IRepositoriosArticulosPantalla); reintroduce;
+    procedure CrearTablaPrincipal; override;
+  end;
+
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+function CrearAlbaranesCompraInyectada(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const AArticulos: IRepositoriosArticulosPantalla): TForm;
+begin
+  Result := TfrmMtoAlbaranesCompraInyectada.Create(
+    AOwner,
+    AContexto,
+    AArticulos);
+end;
+
+constructor TfrmMtoAlbaranesCompraInyectada.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const AArticulos: IRepositoriosArticulosPantalla);
+begin
+  FArticulos := AArticulos;
+  inherited Create(AOwner, AContexto);
+end;
+
+procedure TfrmMtoAlbaranesCompraInyectada.CrearTablaPrincipal;
+var
+  oContexto: TContextoAlbaranCompraPantalla;
+  oEntrada: TEntradaDocumentoCompraPantalla;
+begin
+  inherited;
+  oEntrada := Default(TEntradaDocumentoCompraPantalla);
+  oEntrada.Conexion := ConexionPrincipal;
+  oEntrada.Cabecera := dmmAlbaranesCompra.unqryTablaG;
+  oEntrada.Lineas := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
+  ComponerComprasPantalla(FArticulos, oEntrada, oContexto);
+  FAplicacionArticuloCompra := oContexto.AplicacionArticulo;
+  FValidadorArticulos := oContexto.ValidadorArticulos;
+  FLookupAtributos := oContexto.LookupAtributos;
+  FBusquedaEmpresas := oContexto.BusquedaEmpresas;
+  FBusquedaProveedores := oContexto.BusquedaProveedores;
+  FBusquedasArticulos := oContexto.BusquedasArticulos;
+  FArticulos := nil;
+end;
 
 // dsTablaG apunta a la cabecera del albaran de compra. El articulo
 // activo vive en la fila del sub-grid tvLineasAlbaran
@@ -505,9 +567,6 @@ begin
 end;
 
 procedure TfrmMtoAlbaranesCompra.FormCreate(Sender: TObject);
-var
-  oEntrada: TEntradaComposicionComprasPantalla;
-  oServicios: TServiciosComprasPantalla;
 begin
   // Columnas no-bound de tallas y atributos ANTES del inherited.
   CrearColumnasTallas;
@@ -520,20 +579,6 @@ begin
   ConfigurarColumnaBotonDocumento(
     FColColorPivot, colLinAlbcColorPivotButtonClick);
   inherited;
-  oEntrada := Default(TEntradaComposicionComprasPantalla);
-  oEntrada.Tipo := tccAlbaran;
-  oEntrada.Conexion := ConexionPrincipal;
-  oEntrada.Cabecera := dmmAlbaranesCompra.unqryTablaG;
-  oEntrada.Lineas := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
-  oServicios := ComponerComprasPantalla(
-    Self,
-    oEntrada);
-  FAplicacionArticuloCompra := oServicios.Documento.AplicacionArticulo;
-  FValidadorArticulos := oServicios.Documento.ValidadorArticulos;
-  FLookupAtributos := oServicios.Documento.LookupAtributos;
-  FBusquedaEmpresas := oServicios.Documento.BusquedaEmpresas;
-  FBusquedaProveedores := oServicios.Documento.BusquedaProveedores;
-  FBusquedasArticulos := oServicios.Documento.BusquedasArticulos;
   ConfigurarColumnaBusquedaDocumento(
     tvLineasAlbaran, 'CODIGO_UNIDAD_ALBCLIN',
     colLineaAlbcCODIGO_UNIDADPropertiesButtonClick,

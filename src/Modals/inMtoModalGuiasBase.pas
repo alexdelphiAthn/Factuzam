@@ -100,6 +100,9 @@ type
     procedure AutoGenerarCodigo;
   public
     sFormulario: string;
+    constructor Create(
+      AOwner: TComponent;
+      const ARepositorio: IRepositorioGuias); reintroduce; overload;
   end;
 
 implementation
@@ -107,16 +110,27 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibUser, inLibMsgComun, UniDataConfiguracionPantalla;
+  inLibUser, inLibMsgComun,
+  UniDataConfiguracionPantalla;
+
+constructor TfrmModalGuiasBase.Create(
+  AOwner: TComponent;
+  const ARepositorio: IRepositorioGuias);
+begin
+  ValidarDependenciaConfiguracion(
+    ARepositorio,
+    'persistencia de guías');
+  FRepositorio := ARepositorio;
+  inherited Create(AOwner);
+end;
 
 procedure TfrmModalGuiasBase.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
-  ComponerConfiguracionPantalla(
-    Self,
-    ConexionPrincipal,
-    FRepositorio);
+  ValidarDependenciaConfiguracion(
+    FRepositorio,
+    'persistencia de guías');
 end;
 
 procedure TfrmModalGuiasBase.FormShow(Sender: TObject);

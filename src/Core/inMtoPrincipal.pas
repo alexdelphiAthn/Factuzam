@@ -55,7 +55,10 @@ uses
   inLibExcepcionesAplicacionIntf,
   inLibOperacionesAplicacionIntf,
   inLibRepositoriosPantallaIntf,
-  UniDataComposicionAplicacion;
+  UniDataComposicionAplicacion,
+  UniDataMantenimientosInyeccionRaiz,
+  UniDataCajaInyeccionRaiz,
+  UniDataConfiguracionInyeccionRaiz;
 
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
@@ -284,6 +287,9 @@ type
     FFalloCargaPermisosAvisado: Boolean;
     FGestorExcepciones: IGestorExcepcionesAplicacion;
     FComposicion: TComposicionAplicacion;
+    FInyeccionMantenimientos: TInyeccionMantenimientosRaiz;
+    FInyeccionCaja: TInyeccionCajaRaiz;
+    FInyeccionConfiguracion: TInyeccionConfiguracionRaiz;
     FCoordinadorOperaciones: ICasoUsoCopiasSeguridad;
     // Handlers de aplicacion (OnException/OnIdle/OnMessage) registrados via
     // TApplicationEvents: una asignacion directa Application.OnX queda
@@ -302,8 +308,6 @@ type
     procedure ComprobarConfiguracionFiscal;
     procedure CargarDatosArranque;
     procedure RegistrarFabricasPantallas;
-    function CrearStockConsultaInyectada(
-      AOwner: TComponent): TForm;
     procedure IniciarProcesosSegundoPlano;
     procedure ActualizarEstadoSesion(
       const AIdentidad: TIdentidadSesion;
@@ -388,17 +392,11 @@ uses inLibWin,
   inMtoSplash,
   inMtoAppParam,
   inMtoCajaMenu,
-  inMtoCajaOpe,
-  inMtoConsultaOpe,
-  inMtoTraspasoOpe,
-  inMtoCajaParam,
   inMtoBusquedaDatos,
   inMtoModalVerifactuDecl,
   inLibGenerarTicketCaja,
   inMtoStockConsulta,
-  inMtoStockConsultaPresentacionComposicion,
   inMtoModalListadoVentas,
-  inMtoModalImpOperacionesVenta,
   inMtoModalScriptLog,
   inMtoModalImpBalanceTallas,
   inMtoModalImpBalanceSinTallas,
@@ -456,13 +454,6 @@ resourcestring
 
 type
   TClaseFrmBase = class of TfrmBase;
-  TfrmStockConsultaInyectada = class(TfrmStockConsulta)
-  public
-    constructor Create(
-      AOwner: TComponent;
-      const AContexto: TContextoAutorizacionPantalla;
-      const ADependencias: TContextoDependenciasStockConsulta);
-  end;
   TVisorMonitorSQLMemo = class(
     TInterfacedObject,
     IVisorMonitorSQL
@@ -474,16 +465,6 @@ type
     procedure EstablecerVisible(AVisible: Boolean);
     procedure MostrarSQL(const ASQL: string);
   end;
-
-constructor TfrmStockConsultaInyectada.Create(
-  AOwner: TComponent;
-  const AContexto: TContextoAutorizacionPantalla;
-  const ADependencias: TContextoDependenciasStockConsulta);
-begin
-  ADependencias.Validar;
-  FDependencias := ADependencias;
-  inherited Create(AOwner, AContexto);
-end;
 
 constructor TVisorMonitorSQLMemo.Create(AMemo: TcxMemo);
 begin
@@ -820,48 +801,18 @@ begin
     AvisarFalloCargaPermisos(sErrorPermisos);
 end;
 
-function TfrmMtoPrincipal.CrearStockConsultaInyectada(
-  AOwner: TComponent): TForm;
-var
-  Articulos: IRepositoriosArticulosPantalla;
-  Dependencias: TContextoDependenciasStockConsulta;
-  Documentos: IRepositoriosDocumentosPantalla;
-  EsOwnerAplicacion: Boolean;
-  Formulario: TfrmStockConsulta;
-  OwnerCreacion: TComponent;
-begin
-  EsOwnerAplicacion := AOwner = Application;
-  OwnerCreacion := AOwner;
-  if not Assigned(OwnerCreacion) or EsOwnerAplicacion then
-    OwnerCreacion := Self;
-  Articulos := FComposicion.CrearRepositoriosArticulosPantalla(
-    NOMBRE_PANTALLA_STOCK_CONSULTA);
-  Documentos := FComposicion.CrearRepositoriosDocumentosPantalla(
-    NOMBRE_PANTALLA_STOCK_CONSULTA);
-  Dependencias := CrearContextoStockConsulta(
-    Articulos,
-    Documentos,
-    ConexionPrincipal);
-  Formulario := TfrmStockConsultaInyectada.Create(
-    OwnerCreacion,
-    TContextoAutorizacionPantalla.Crear(Permisos),
-    Dependencias);
-  if EsOwnerAplicacion then
-  begin
-    Self.RemoveComponent(Formulario);
-    Application.InsertComponent(Formulario);
-  end;
-  Result := Formulario;
-end;
-
 procedure TfrmMtoPrincipal.RegistrarFabricasPantallas;
 begin
-  RegistrarFabricaPantalla(
-    TfrmStockConsulta,
-    function(AOwner: TComponent): TForm
-    begin
-      Result := CrearStockConsultaInyectada(AOwner);
-    end);
+  FInyeccionMantenimientos := TInyeccionMantenimientosRaiz.Create(
+    Self,
+    FComposicion);
+  FInyeccionMantenimientos.RegistrarFabricas;
+  FInyeccionCaja := TInyeccionCajaRaiz.Create(Self, FComposicion);
+  FInyeccionCaja.RegistrarFabricas;
+  FInyeccionConfiguracion := TInyeccionConfiguracionRaiz.Create(
+    Self,
+    FComposicion);
+  FInyeccionConfiguracion.RegistrarFabricas;
 end;
 
 procedure TfrmMtoPrincipal.IniciarProcesosSegundoPlano;
@@ -1488,7 +1439,15 @@ end;
 
 destructor TfrmMtoPrincipal.Destroy;
 begin
-  RetirarFabricaPantalla(TfrmStockConsulta);
+  if Assigned(FInyeccionConfiguracion) then
+    FInyeccionConfiguracion.RetirarFabricas;
+  FreeAndNil(FInyeccionConfiguracion);
+  if Assigned(FInyeccionCaja) then
+    FInyeccionCaja.RetirarFabricas;
+  FreeAndNil(FInyeccionCaja);
+  if Assigned(FInyeccionMantenimientos) then
+    FInyeccionMantenimientos.RetirarFabricas;
+  FreeAndNil(FInyeccionMantenimientos);
   FCoordinadorOperaciones := nil;
   FGestorExcepciones := nil;
   FreeAndNil(FComposicion);
@@ -1903,7 +1862,7 @@ begin
   inherited;
   if mnuMenuCaja.Visible then
   begin
-    MostrarMenuCaja(Permisos);
+    FInyeccionCaja.MostrarMenu(Permisos);
     Self.WindowState := wsMinimized;
   end;
 end;
@@ -1979,7 +1938,7 @@ begin
     LForm := Screen.ActiveForm;
     if not (LForm is TfrmMtoBusquedaDatos) then
     begin
-      TfrmMtoBusquedaDatos.Ejecutar(Self, LForm);
+      FInyeccionConfiguracion.EjecutarBusquedaDatos(Self, LForm);
     end;
   end;
 end;
@@ -2018,36 +1977,18 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.mnuCajaParamClick(Sender: TObject);
-var
-  frmMtoCajaParam: TfrmMtoCajaParam;
 begin
   inherited;
   if mnuMenuCaja.Visible then
-  begin
-    try
-      frmMtoCajaParam := TfrmMtoCajaParam.Create(Self);
-      frmMtoCajaParam.ShowModal;
-    finally
-      FreeAndNil(frmMtoCajaParam);
-    end;
-  end;
+    FInyeccionCaja.MostrarParametros;
 end;
 
 procedure TfrmMtoPrincipal.mnuListadoOperacionesVentaClick(
   Sender: TObject);
-var
-  frmListado: TfrmPrintOperacionesVenta;
 begin
   inherited;
   if mnuListadoOperacionesVenta.Visible then
-  begin
-    frmListado := TfrmPrintOperacionesVenta.Create(Self);
-    try
-      frmListado.ShowModal;
-    finally
-      FreeAndNil(frmListado);
-    end;
-  end;
+    FInyeccionCaja.MostrarInformeOperacionesVenta;
 end;
 
 procedure TfrmMtoPrincipal.CargarEfectosVenta1Click(Sender: TObject);
@@ -2057,7 +1998,10 @@ begin
   inherited;
   if CargarEfectosVenta1.Visible then
   begin
-    f := TfrmModalCargarEfectosRemesa.CrearParaVenta(nil);
+    f := TfrmModalCargarEfectosRemesa.CrearParaVenta(
+      nil,
+      FInyeccionConfiguracion.CrearRepositorioCargaEfectos(
+        'frmModalCargarEfectosVenta'));
     try
       if f.ShowModal = mrOk then
         ShowMto(Self, 'RemesasVenta');
@@ -2098,7 +2042,10 @@ begin
   inherited;
   if CargarEfectos1.Visible then
   begin
-    f := TfrmModalCargarEfectosRemesa.CrearParaCompra(nil);
+    f := TfrmModalCargarEfectosRemesa.CrearParaCompra(
+      nil,
+      FInyeccionConfiguracion.CrearRepositorioCargaEfectos(
+        'frmModalCargarEfectosCompra'));
     try
       if f.ShowModal = mrOk then
         ShowMto(Self, 'RemesasCompra');
@@ -2131,16 +2078,9 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.mnuParmetrosdeEntornoClick(Sender: TObject);
-var
-    frmMtoAppParam: TfrmMtoAppParam;
 begin
   inherited;
-  try
-    frmMtoAppParam := TfrmMtoAppParam.Create(Self);
-    frmMtoAppParam.ShowModal;
-  finally
-    FreeAndNil(frmMtoAppParam);
-  end;
+  FInyeccionConfiguracion.MostrarParametrosAplicacion;
 end;
 
 //procedure TfrmMtoPrincipal.mnuPropiedadesValoresClick(Sender: TObject);
@@ -2306,38 +2246,22 @@ end;
 function TfrmMtoPrincipal.CrearOperacionCaja(
   AOwner: TComponent;
   const APermisos: IPermisosAplicacion): IOperacionCaja;
-var
-  oFormulario: TfrmMtoOpeCaja;
 begin
-  oFormulario := TfrmMtoOpeCaja.Create(AOwner, APermisos);
-  if not Supports(oFormulario, IOperacionCaja, Result) then
-  begin
-    FreeAndNil(oFormulario);
-    raise EInvalidCast.Create(
-      'La ventana de operación no implementa IOperacionCaja.');
-  end;
+  Result := FInyeccionCaja.CrearOperacion(AOwner, APermisos);
 end;
 
 function TfrmMtoPrincipal.CrearConsultaOperacionesCaja(
   AOwner: TComponent;
   const APermisos: IPermisosAplicacion): IConsultaOperacionesCaja;
-var
-  oFormulario: TfrmConsultaOpe;
 begin
-  oFormulario := TfrmConsultaOpe.Create(AOwner, APermisos);
-  if not Supports(oFormulario, IConsultaOperacionesCaja, Result) then
-  begin
-    FreeAndNil(oFormulario);
-    raise EInvalidCast.Create(
-      'La ventana de consulta no implementa IConsultaOperacionesCaja.');
-  end;
+  Result := FInyeccionCaja.CrearConsulta(AOwner, APermisos);
 end;
 
 function TfrmMtoPrincipal.CrearTraspasoCaja(
   AOwner: TComponent;
   const APermisos: IPermisosAplicacion): ITraspasoCaja;
 begin
-  Result := TfrmMtoOpeTraspaso.Create(AOwner, APermisos);
+  Result := FInyeccionCaja.CrearTraspaso(AOwner, APermisos);
 end;
 
 // Restaurar la ventana principal y apartar el menu de caja antes de

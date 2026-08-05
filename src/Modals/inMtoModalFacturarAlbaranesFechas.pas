@@ -90,7 +90,6 @@ begin
   dteHasta.Date   := Date;
   chkAgruparPorCliente.Checked := True;
   CrearContextoVentasPantalla(
-    Self,
     ConexionPrincipal,
     oContexto);
   FRepositorio := oContexto.Repositorio;

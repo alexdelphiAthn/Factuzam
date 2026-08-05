@@ -36,7 +36,7 @@ uses
   Uni,
   inMtoFrmBase, inLibArqueoTicket,
   inLibInformesCajaPersistenciaIntf, inLibArqueoIntf,
-  inLibArqueoTicketIntf, UniDataCajaPantallaComposicion;
+  inLibArqueoTicketIntf, inLibCajaPantallaInyeccion;
 
 type
   TfrmModalArqueosHistCaja = class(TfrmBase)
@@ -88,7 +88,14 @@ type
                              AConn: TUniConnection;
                              const AEmpresa: string;
                              const AAlmacen: string;
-                             const ACaja: string);
+                             const ACaja: string); overload;
+    class procedure Ejecutar(
+      AOwner: TComponent;
+      AConn: TUniConnection;
+      const ADependencias: TDependenciasArqueosHistoricosCaja;
+      const AEmpresa: string;
+      const AAlmacen: string;
+      const ACaja: string); overload;
   end;
 
 implementation
@@ -107,12 +114,27 @@ class procedure TfrmModalArqueosHistCaja.Ejecutar(AOwner: TComponent;
                                                   const AEmpresa: string;
                                                   const AAlmacen: string;
                                                   const ACaja: string);
+begin
+  ValidarDependenciaCaja(nil, 'contexto del histórico de arqueos');
+end;
+
+class procedure TfrmModalArqueosHistCaja.Ejecutar(
+  AOwner: TComponent;
+  AConn: TUniConnection;
+  const ADependencias: TDependenciasArqueosHistoricosCaja;
+  const AEmpresa: string;
+  const AAlmacen: string;
+  const ACaja: string);
 var
   Frm: TfrmModalArqueosHistCaja;
 begin
+  ADependencias.Validar;
   Frm := TfrmModalArqueosHistCaja.Create(AOwner);
   try
     Frm.FConn    := AConn;
+    Frm.FRepositorioPersistencia := ADependencias.Informes;
+    Frm.FRepositorioArqueoCaja := ADependencias.Arqueo;
+    Frm.FRepositorioArqueoTicket := ADependencias.Ticket;
     Frm.ComponerDependencias;
     Frm.FEmpresa := AEmpresa;
     Frm.FAlmacen := AAlmacen;
@@ -125,15 +147,12 @@ end;
 
 procedure TfrmModalArqueosHistCaja.ComponerDependencias;
 var
-  oComposicion: TComposicionCajaPantalla;
+  Dependencias: TDependenciasArqueosHistoricosCaja;
 begin
-  oComposicion := ComponerCajaPantalla(Self);
-  FRepositorioPersistencia := oComposicion.Informes.
-    CrearRepositorioInformesCaja(FConn);
-  FRepositorioArqueoCaja := oComposicion.Arqueos.
-    CrearRepositorioArqueoCaja(FConn);
-  FRepositorioArqueoTicket := oComposicion.Arqueos.
-    CrearRepositorioArqueoTicket(FConn);
+  Dependencias.Informes := FRepositorioPersistencia;
+  Dependencias.Arqueo := FRepositorioArqueoCaja;
+  Dependencias.Ticket := FRepositorioArqueoTicket;
+  Dependencias.Validar;
 end;
 
 procedure TfrmModalArqueosHistCaja.FormCreate(Sender: TObject);

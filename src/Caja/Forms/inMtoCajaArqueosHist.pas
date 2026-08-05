@@ -31,7 +31,8 @@ uses
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataCajaArqueosHist,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  dxShellDialogs, cxCurrencyEdit, cxGridExportLink;
+  dxShellDialogs, cxCurrencyEdit, cxGridExportLink,
+  inLibPermisosIntf, inLibCajaPantallaInyeccion;
 
 type
   TfrmMtoCajaArqueosHist = class(TfrmMtoGen)
@@ -60,7 +61,13 @@ type
     procedure btnImprimirInformeClick(Sender: TObject);
   private
     dmmCajaArqueosHist: TdmCajaArqueosHist;
+    FDependenciasInforme: TDependenciasInformeCaja;
   public
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const ADependencias: TDependenciasInformeCaja); reintroduce;
+      overload;
     procedure CrearTablaPrincipal; override;
     // Restricción de la precarga a la empresa/almacén/caja del usuario
     function SqlRestriccionUsuario: string; override;
@@ -77,6 +84,16 @@ uses
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoCajaArqueosHist }
+
+constructor TfrmMtoCajaArqueosHist.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const ADependencias: TDependenciasInformeCaja);
+begin
+  ADependencias.Validar;
+  FDependenciasInforme := ADependencias;
+  inherited Create(AOwner, AContexto);
+end;
 
 function TfrmMtoCajaArqueosHist.SqlRestriccionUsuario: string;
 begin
@@ -122,7 +139,9 @@ begin
     Abort;
   // Informe A4 horizontal (FastReport). El usuario puede retocar el formato
   // con el botón Editar del propio modal y guardarlo como formato propio.
-  frm := TfrmPrintArqueos.Create(Application);
+  frm := TfrmPrintArqueos.Create(
+    Application,
+    FDependenciasInforme);
   try
     frm.ShowModal;
   finally

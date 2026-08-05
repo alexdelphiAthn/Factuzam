@@ -39,7 +39,7 @@ uses
   inLibCajaOperacionesHistPersistenciaIntf,
   inLibCajaPantallaHistoricosIntf,
   inLibCajaPantallaDetalleHistorico,
-  UniDataCajaPantallaComposicion;
+  inLibPermisosIntf, inLibCajaPantallaInyeccion;
 
 type
   TfrmMtoCajaOperacionesHist = class(TfrmMtoGen)
@@ -119,6 +119,7 @@ type
     dmmCajaOperacionesHist: TdmCajaOperacionesHist;
     FRepositorioPersistencia: IRepositorioCajaOperacionesHist;
     FGrabadorPerfiles: IGrabadorPerfilesHistoricoCaja;
+    FDependenciasInyeccion: TDependenciasOperacionesHistoricasCaja;
     procedure CargarAnyosFiltro;
     procedure CargarAlmacenesFiltro;
     procedure LeerFiltrosPerfil;
@@ -209,6 +210,12 @@ type
                                  AVista: TcxGridDBTableView);
     procedure ExportarOperacionExcel(ASheetControl: TdxSpreadSheet);
   public
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const ADependencias:
+        TDependenciasOperacionesHistoricasCaja); reintroduce;
+      overload;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
@@ -233,6 +240,16 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoCajaOperacionesHist }
 
+constructor TfrmMtoCajaOperacionesHist.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const ADependencias: TDependenciasOperacionesHistoricasCaja);
+begin
+  ADependencias.Validar;
+  FDependenciasInyeccion := ADependencias;
+  inherited Create(AOwner, AContexto);
+end;
+
 procedure TfrmMtoCajaOperacionesHist.btnImprimirInformeClick(Sender: TObject);
 var
   frm: TfrmPrintOperaciones;
@@ -242,7 +259,9 @@ begin
     Abort;
   // Informe A4 horizontal (FastReport) de las operaciones de caja. El
   // usuario filtra empresa / almacen / caja y rango de fechas en el modal.
-  frm := TfrmPrintOperaciones.Create(Application);
+  frm := TfrmPrintOperaciones.Create(
+    Application,
+    FDependenciasInyeccion.Informe);
   try
     frm.ShowModal;
   finally
@@ -292,16 +311,14 @@ begin
 end;
 
 procedure TfrmMtoCajaOperacionesHist.CrearTablaPrincipal;
-var
-  oComposicion: TComposicionCajaPantalla;
 begin
   inherited;
-  oComposicion := ComponerCajaPantalla(Self);
+  FDependenciasInyeccion.Validar;
   dmmCajaOperacionesHist := tdmDataModule as TdmCajaOperacionesHist;
-  FRepositorioPersistencia := oComposicion.Historicos.
-    CrearRepositorioCajaOperacionesHist(
-    dmmCajaOperacionesHist.unqryTablaG);
-  FGrabadorPerfiles := oComposicion.Historicos.CrearGrabadorPerfiles(
+  FRepositorioPersistencia :=
+    FDependenciasInyeccion.CrearPersistencia(
+      dmmCajaOperacionesHist.unqryTablaG);
+  FGrabadorPerfiles := FDependenciasInyeccion.CrearPerfiles(
     ConexionPrincipal,
     PerfilesEscritura);
   FdmConsulta := TdmConsultaOpe.Create(

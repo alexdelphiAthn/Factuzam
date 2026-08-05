@@ -42,10 +42,25 @@ type
     procedure CasoUsoConservaElFalloDelRepositorio;
   end;
 
+  [TestFixture]
+  TPruebasInyeccionVentasPantalla = class
+  public
+    [Test]
+    procedure ContextoClientesSeCreaConCapacidadConcreta;
+    [Test]
+    procedure ContextoClientesSinRepositorioFallaAlPreparar;
+    [Test]
+    procedure LiberarContextoSueltaLaCapacidad;
+  end;
+
 implementation
 
 uses
-  inLibVentasPantallaCrearAlbaran;
+  System.SysUtils,
+  inLibClientesPersistenciaIntf,
+  inLibVentasPantallaCrearAlbaran,
+  inLibVentasPantallaInyeccion,
+  inLibVentasPantallaIntf;
 
 type
   TRepositorioCreacionAlbaranFalso = class(
@@ -60,6 +75,37 @@ type
       const ASolicitud: TSolicitudCreacionAlbaranPedido):
       TResultadoCreacionAlbaranPedido;
   end;
+
+  TRepositorioClientesFalso = class(
+    TInterfacedObject,
+    IRepositorioClientes)
+  private
+    FMarcaLiberacion: PBoolean;
+  public
+    constructor Create(AMarcaLiberacion: PBoolean);
+    destructor Destroy; override;
+    function ContarDocumentos(const ACodigoCliente: string): Integer;
+  end;
+
+constructor TRepositorioClientesFalso.Create(
+  AMarcaLiberacion: PBoolean);
+begin
+  inherited Create;
+  FMarcaLiberacion := AMarcaLiberacion;
+end;
+
+destructor TRepositorioClientesFalso.Destroy;
+begin
+  if Assigned(FMarcaLiberacion) then
+    FMarcaLiberacion^ := True;
+  inherited;
+end;
+
+function TRepositorioClientesFalso.ContarDocumentos(
+  const ACodigoCliente: string): Integer;
+begin
+  Result := Length(ACodigoCliente);
+end;
 
 function CrearLinea(
   const ALinea, AAlmacen: string;
@@ -184,8 +230,56 @@ begin
   Assert.AreEqual(1, oDoble.FLlamadas);
 end;
 
+procedure TPruebasInyeccionVentasPantalla.
+  ContextoClientesSeCreaConCapacidadConcreta;
+var
+  oContexto: TContextoClientesVentasPantalla;
+  oPreparado: TContextoClientesVentasPantalla;
+begin
+  oContexto := Default(TContextoClientesVentasPantalla);
+  oContexto.Repositorio := TRepositorioClientesFalso.Create(nil);
+  oPreparado := PrepararContextoVentas(oContexto);
+  try
+    Assert.IsTrue(Assigned(oPreparado.Repositorio));
+    Assert.AreEqual(3, oPreparado.Repositorio.ContarDocumentos('C01'));
+  finally
+    LiberarContextoVentas(oPreparado);
+    LiberarContextoVentas(oContexto);
+  end;
+end;
+
+procedure TPruebasInyeccionVentasPantalla.
+  ContextoClientesSinRepositorioFallaAlPreparar;
+var
+  oContexto: TContextoClientesVentasPantalla;
+begin
+  oContexto := Default(TContextoClientesVentasPantalla);
+  Assert.WillRaise(
+    procedure
+    begin
+      PrepararContextoVentas(oContexto);
+    end,
+    EArgumentNilException);
+end;
+
+procedure TPruebasInyeccionVentasPantalla.
+  LiberarContextoSueltaLaCapacidad;
+var
+  EsLiberado: Boolean;
+  oContexto: TContextoClientesVentasPantalla;
+begin
+  EsLiberado := False;
+  oContexto := Default(TContextoClientesVentasPantalla);
+  oContexto.Repositorio :=
+    TRepositorioClientesFalso.Create(@EsLiberado);
+  LiberarContextoVentas(oContexto);
+  Assert.IsFalse(Assigned(oContexto.Repositorio));
+  Assert.IsTrue(EsLiberado);
+end;
+
 initialization
   TDUnitX.RegisterTestFixture(TPruebasPreparacionAlbaranPedido);
   TDUnitX.RegisterTestFixture(TPruebasCreacionAlbaranPedido);
+  TDUnitX.RegisterTestFixture(TPruebasInyeccionVentasPantalla);
 
 end.

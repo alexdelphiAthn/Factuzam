@@ -42,18 +42,18 @@ uses
   cxDBLabel, dxShellDialogs, inLibArticulosVariaciones, inMtoModalAceptCancel,
   cxCustomListBox, cxCheckListBox, System.UITypes, System.Types,
   inLibArticulosGuardadoIntf,
+  inLibArticulosInyeccion,
+  inLibArticulosCodigosBarrasPersistenciaIntf,
   inLibArticulosPresentacionIntf,
-  inLibRepositoriosPantallaIntf,
+  inLibArticulosVariacionesIntf,
+  inLibDestinoFacturaPersistenciaIntf,
+  inLibPermisosIntf,
   inMtoArticulosPresentacionAtributos,
   inMtoArticulosPresentacionStock,
   inMtoArticulosPresentacionTarifas,
   inMtoArticulosPresentacionFiltros;
 
 type
-  TContextoDependenciasArticulos = record
-    AplicacionGuardado: IAplicacionGuardadoArticulo;
-  end;
-
   TfrmMtoArticulos = class(TfrmMtoGen)
     pnlTopFicha: TPanel;
     pnlButtonFicha: TPanel;
@@ -511,14 +511,21 @@ type
     FPresTarifas: TPresentadorTarifasArticulo;
     FPresFiltros: TPresentadorFiltrosArticulos;
     FCodigosBarras: ILecturaCodigosBarrasArticulo;
+    FAplicacionGuardado: IAplicacionGuardadoArticulo;
     FDependencias: TContextoDependenciasArticulos;
-    FRepositoriosArticulos: IRepositoriosArticulosPantalla;
+    FCodigosBarrasPersistencia: IArticulosCodigosBarrasPersistencia;
+    FResolutorDestinoFactura: IResolutorDestinoFactura;
     procedure InicializarPestanyaVariaciones;
     procedure InicializarPestanyaPropiedades;
     procedure InicializarPresentadores;
     procedure OnAfterScrollArticulos(DataSet: TDataSet);
     procedure BtnAddPropClick(Sender: TObject);
   public
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const ADependencias: TContextoDependenciasArticulos); reintroduce;
+      overload;
     procedure ActualizarVisibilidadVariaciones;
     procedure ActualizarVisibilidadColumnaSku;
     procedure AsegurarSkuArticuloSinVariaciones(const aCodArticulo: string);
@@ -555,13 +562,11 @@ uses
   inLibArticulosCodigosBarras,
   inLibArticulosAtributosBasicos,
   inLibArticulosAtributosBasicosIntf,
-  inLibArticulosGuardado,
   inMtoArticulosGuardadoVcl,
   inLibArticulosVisibilidad,
   inLibArticulosPresentacion,
   UniDataArticulosAtributosBasicosRepositorio,
   UniDataArticulosPresentacionRepositorio,
-  UniDataArticulosVariaciones,
   UniDataArticulosCodigosBarrasRepositorio,
   UniDataDestinoFacturaRepositorio,
   UniDataFiltroArticulosRepositorio,
@@ -571,6 +576,16 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+constructor TfrmMtoArticulos.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const ADependencias: TContextoDependenciasArticulos);
+begin
+  ADependencias.Validar;
+  FDependencias := ADependencias;
+  inherited Create(AOwner, AContexto);
+end;
 
 procedure InicializarGuardadoArticuloVcl(AFormulario: TfrmMtoArticulos);
 var
@@ -641,8 +656,8 @@ begin
       end;
     end;
   Operaciones := TAdaptadorGuardadoArticuloVcl.Create(Callbacks);
-  AFormulario.FDependencias.AplicacionGuardado :=
-    CrearAplicacionGuardadoArticulo(Operaciones);
+  AFormulario.FAplicacionGuardado :=
+    AFormulario.FDependencias.CrearGuardado(Operaciones);
 end;
 
 procedure TfrmMtoArticulos.ActualizarVisibilidadVariaciones;
@@ -698,14 +713,14 @@ procedure TfrmMtoArticulos.AsegurarSkuArticuloSinVariaciones(
   const aCodArticulo: string);
 begin
   inLibArticulosVariaciones.AsegurarSkuArticuloSinVariaciones(
-    CrearArticulosVariacionesUniDAC(ConexionPrincipal),
+    FDependencias.Variaciones,
     aCodArticulo, IdentidadSesion.Usuario);
 end;
 procedure TfrmMtoArticulos.AsegurarSkuArticulo(
   const aCodArticulo: string);
 begin
   inLibArticulosVariaciones.AsegurarSkuArticuloActivo(
-    CrearArticulosVariacionesUniDAC(ConexionPrincipal),
+    FDependencias.Variaciones,
     aCodArticulo, IdentidadSesion.Usuario);
 end;
 procedure TfrmMtoArticulos.addSkuAllClick(Sender: TObject);
@@ -802,7 +817,7 @@ procedure TfrmMtoArticulos.AbrirFacturaLineaActiva(const ANumero,
 begin
   ShowMto(Self.Owner,
           ResolverCallFactura(
-            CrearResolutorDestinoFacturaUniDAC(ConexionPrincipal),
+            FResolutorDestinoFactura,
             ANumero,
             ASerie),
           ANumero + ',' + ASerie);
@@ -990,7 +1005,7 @@ procedure TfrmMtoArticulos.btnGrabarClick(Sender: TObject);
 var
   Resultado: TResultadoGuardadoArticulo;
 begin
-  Resultado := FDependencias.AplicacionGuardado.Ejecutar;
+  Resultado := FAplicacionGuardado.Ejecutar;
   case Resultado.Error of
     egaRevisionPropiedades:
       begin
@@ -1115,9 +1130,8 @@ begin
     Screen.Cursor := crHourGlass;
     try
       bGenerado := GenerarCodigosBarrasArticulo(
-        CrearArticulosCodigosBarrasPersistenciaUniDAC(
-          ConexionPrincipal),
-        CrearArticulosVariacionesUniDAC(ConexionPrincipal),
+        FCodigosBarrasPersistencia,
+        FDependencias.Variaciones,
         sCodigoArticulo,
         IdentidadSesion.Usuario,
         Resultado);
@@ -1252,10 +1266,13 @@ end;
 
 procedure TfrmMtoArticulos.CrearTablaPrincipal;
 begin
-  FRepositoriosArticulos := ObtenerCompositorArticulosPantalla(Self).
-    CrearRepositoriosArticulosPantalla(Name);
+  FDependencias.Validar;
   inherited;
   dmmArticulos := tdmDataModule as TdmArticulos;
+  FCodigosBarrasPersistencia :=
+    CrearArticulosCodigosBarrasPersistenciaUniDAC(ConexionPrincipal);
+  FResolutorDestinoFactura :=
+    CrearResolutorDestinoFacturaUniDAC(ConexionPrincipal);
   // La vista de stock se empuja al DM (ya no la busca con GetOwnerForm).
   dmmArticulos.AsignarVistaStock(tvStock);
   cbbFamilia.Properties.ListSource := dmmArticulos.dsFamiliaArticulos;
@@ -1480,8 +1497,7 @@ begin
   // Crear el gestor
   FGestorProp := TGestorPropiedades.Create(
     FScrollProp,
-    FRepositoriosArticulos.CrearServiciosPropiedadesArticulo(
-      ConexionPrincipal),
+    FDependencias.Propiedades,
     IdentidadSesion.Usuario
   );
 end;
@@ -1543,7 +1559,7 @@ begin
   FGestorVar := TGestorVariaciones.Create(
     FScrollVarAtrib,
 //    FScrollVarSkus,
-    CrearArticulosVariacionesUniDAC(ConexionPrincipal),
+    FDependencias.Variaciones,
     IdentidadSesion.Usuario
   );
 end;
@@ -1776,8 +1792,10 @@ end;
 
 procedure TfrmMtoArticulos.FormDestroy(Sender: TObject);
 begin
-  FDependencias := Default(TContextoDependenciasArticulos);
-  FRepositoriosArticulos := nil;
+  FAplicacionGuardado := nil;
+  FCodigosBarrasPersistencia := nil;
+  FResolutorDestinoFactura := nil;
+  FDependencias.Liberar;
   FCodigosBarras := nil;
   inherited;
   if Assigned(FGestorProp) then

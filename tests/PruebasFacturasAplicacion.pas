@@ -32,17 +32,28 @@ type
     procedure Estado_BorradorPermiteEditarYConsolidar;
     [Test]
     procedure ModoEntrada_CiclaSinConocerFormulario;
+    [Test]
+    procedure Inyeccion_SinListadoFallaAlPreparar;
+    [Test]
+    procedure Inyeccion_SinLineasFallaAlPreparar;
+    [Test]
+    procedure InyeccionUniDAC_SinConexionFallaAlPreparar;
   end;
 
 implementation
 
 uses
+  System.SysUtils,
+  Data.DB,
   inLibEmisionFiscalIntf,
   inLibFacturasAplicacion,
   inLibFacturasAplicacionIntf,
   inLibFacturasOperacionFiscal,
+  inLibFacturasInyeccion,
+  inLibFacturasPresentadorListado,
   inLibFacturasServiciosIntf,
-  inLibVerifactuTipos;
+  inLibVerifactuTipos,
+  UniDataFacturasInyeccion;
 
 type
   TVistaFacturaPrueba = class(TInterfacedObject, IVistaFactura)
@@ -134,6 +145,30 @@ type
     property SolicitudSerie: string read FSolicitudSerie;
     property SolicitudUsuario: string read FSolicitudUsuario;
   end;
+  TPreparadorListadoFacturasPrueba = class(
+    TInterfacedObject,
+    IPreparadorListadoFacturas)
+  public
+    function EstadoColaDisponible(out AMensaje: string): Boolean;
+    procedure PrepararListado(
+      AConsulta: TDataSet;
+      const AVista: string;
+      AIncluirEstadoCola: Boolean);
+  end;
+
+function TPreparadorListadoFacturasPrueba.EstadoColaDisponible(
+  out AMensaje: string): Boolean;
+begin
+  AMensaje := '';
+  Result := True;
+end;
+
+procedure TPreparadorListadoFacturasPrueba.PrepararListado(
+  AConsulta: TDataSet;
+  const AVista: string;
+  AIncluirEstadoCola: Boolean);
+begin
+end;
 
 function TVistaFacturaPrueba.Confirmar(
   const APregunta: string): Boolean;
@@ -353,6 +388,49 @@ begin
   Assert.AreEqual(Ord(mefSku), Ord(Vista.Modo));
   Gestor.SeleccionarSiguiente;
   Assert.AreEqual(Ord(mefTallas), Ord(Vista.Modo));
+end;
+
+procedure TPruebasFacturasAplicacion.
+  Inyeccion_SinListadoFallaAlPreparar;
+var
+  Dependencias: TDependenciasFacturas;
+begin
+  Dependencias := Default(TDependenciasFacturas);
+  Assert.WillRaise(
+    procedure
+    begin
+      Dependencias.Validar;
+    end,
+    EArgumentNilException);
+end;
+
+procedure TPruebasFacturasAplicacion.
+  Inyeccion_SinLineasFallaAlPreparar;
+var
+  Dependencias: TDependenciasFacturas;
+begin
+  Dependencias := Default(TDependenciasFacturas);
+  Dependencias.Listado := TPreparadorListadoFacturasPrueba.Create;
+  Assert.WillRaise(
+    procedure
+    begin
+      Dependencias.Validar;
+    end,
+    EArgumentNilException);
+end;
+
+procedure TPruebasFacturasAplicacion.
+  InyeccionUniDAC_SinConexionFallaAlPreparar;
+var
+  Contexto: TContextoFacturasUniDAC;
+begin
+  Contexto := Default(TContextoFacturasUniDAC);
+  Assert.WillRaise(
+    procedure
+    begin
+      Contexto.Validar;
+    end,
+    EArgumentNilException);
 end;
 
 initialization

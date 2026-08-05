@@ -155,6 +155,9 @@ type
       read FGestorExcepciones;
     property Operaciones: ICasoUsoCopiasSeguridad
       read FOperaciones;
+    property ContextoSesion: IContextoSesionAplicacion
+      read FContextoSesion;
+    property RegistroLog: IRegistroLog read FRegistroLog;
   end;
 
 implementation

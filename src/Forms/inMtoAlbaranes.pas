@@ -842,8 +842,13 @@ begin
   dmmAlbaranes := TdmAlbaranes(AsegurarDataModuleDocumento(
     Self, tdmDataModule, TdmAlbaranes));
   CrearContextoVentasPantalla(
-    Self,
     dmmAlbaranes.unqryTablaG.Connection,
+    ParametrosCaja,
+    CrearServiciosSqlVentasPantalla(
+      Self.Name,
+      PerfilesLectura,
+      PerfilesEscritura,
+      RegistroLog),
     FContextoVentas);
   ConfigurarTablaPrincipalDocumento(
     dmmAlbaranes, dsTablaG, tvLineasAlbaran,

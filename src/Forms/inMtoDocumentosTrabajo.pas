@@ -35,7 +35,12 @@ uses
   inLibColumnasSkuIntf, inLibGridTallasInline,
   inLibArticulosAtributosIntf, inLibArticulosValidadorIntf,
   inLibComprasPantallaIntf, inLibDocumentosTrabajo,
+  inLibPermisosIntf,
+  inLibRepositoriosPantallaIntf,
   inLibCajaVentanasIntf;
+
+const
+  NOMBRE_PANTALLA_DOCUMENTOS_TRABAJO = 'frmMtoDocumentosTrabajo';
 
 type
   TTipoEnvioNumeradoDocumentoTrabajo = (
@@ -122,11 +127,13 @@ type
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
+  protected
     FLecturasDocumentosTrabajo: ILecturasDocumentosTrabajo;
     FMaterializacionDocumentosTrabajo:
       IMaterializacionDocumentosTrabajo;
     FValidadorArticulos: IArticulosValidador;
     FLookupAtributos: IArticulosAtributosLookup;
+  private
     procedure ConstruirModoEntrada;
     procedure CrearColumnasHostDTR;
     procedure MostrarColumnasAtributoGlobalesDTR;
@@ -168,6 +175,12 @@ type
     function DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
+function CrearDocumentosTrabajoCompraInyectada(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const AArticulos: IRepositoriosArticulosPantalla;
+  const ACajasDefecto: IRepositorioCajasDefecto): TForm;
+
 implementation
 
 uses
@@ -185,31 +198,71 @@ uses
 
 {$R *.dfm}
 
+type
+  TfrmMtoDocumentosTrabajoInyectada = class(TfrmMtoDocumentosTrabajo)
+  private
+    FArticulos: IRepositoriosArticulosPantalla;
+  public
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const AArticulos: IRepositoriosArticulosPantalla;
+      const ACajasDefecto: IRepositorioCajasDefecto); reintroduce;
+    procedure CrearTablaPrincipal; override;
+  end;
+
 procedure ForceReferenceToClass(C: TClass);
 begin
 end;
 
-procedure TfrmMtoDocumentosTrabajo.CrearTablaPrincipal;
+function CrearDocumentosTrabajoCompraInyectada(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const AArticulos: IRepositoriosArticulosPantalla;
+  const ACajasDefecto: IRepositorioCajasDefecto): TForm;
+begin
+  Result := TfrmMtoDocumentosTrabajoInyectada.Create(
+    AOwner,
+    AContexto,
+    AArticulos,
+    ACajasDefecto);
+end;
+
+constructor TfrmMtoDocumentosTrabajoInyectada.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const AArticulos: IRepositoriosArticulosPantalla;
+  const ACajasDefecto: IRepositorioCajasDefecto);
+begin
+  if not Assigned(ACajasDefecto) then
+    raise EArgumentNilException.Create('ACajasDefecto');
+  FArticulos := AArticulos;
+  FRepositorioCajasDefecto := ACajasDefecto;
+  inherited Create(AOwner, AContexto);
+end;
+
+procedure TfrmMtoDocumentosTrabajoInyectada.CrearTablaPrincipal;
 var
-  oEntrada: TEntradaComposicionComprasPantalla;
-  oServicios: TServiciosComprasPantalla;
+  oContexto: TContextoDocumentosTrabajoCompraPantalla;
+begin
+  inherited;
+  ComponerComprasPantalla(
+    FArticulos,
+    dmmDocumentosTrabajo.unqryTablaG.Connection,
+    oContexto);
+  FLecturasDocumentosTrabajo := oContexto.Lecturas;
+  FMaterializacionDocumentosTrabajo := oContexto.Materializacion;
+  FValidadorArticulos := oContexto.ValidadorArticulos;
+  FLookupAtributos := oContexto.LookupAtributos;
+  FArticulos := nil;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.CrearTablaPrincipal;
 begin
   inherited;
   dmmDocumentosTrabajo := tdmDataModule as TdmDocumentosTrabajo;
   if dmmDocumentosTrabajo <> nil then
   begin
-    oEntrada := Default(TEntradaComposicionComprasPantalla);
-    oEntrada.Tipo := tccDocumentosTrabajo;
-    oEntrada.Conexion := dmmDocumentosTrabajo.unqryTablaG.Connection;
-    oServicios := ComponerComprasPantalla(
-      Self,
-      oEntrada);
-    FLecturasDocumentosTrabajo := oServicios.DocumentosTrabajo.Lecturas;
-    FMaterializacionDocumentosTrabajo :=
-      oServicios.DocumentosTrabajo.Materializacion;
-    FValidadorArticulos :=
-      oServicios.DocumentosTrabajo.ValidadorArticulos;
-    FLookupAtributos := oServicios.DocumentosTrabajo.LookupAtributos;
     dsTablaG.DataSet := dmmDocumentosTrabajo.unqryTablaG;
     tvLineasDTR.DataController.DataSource := dmmDocumentosTrabajo.dsLineas;
     tvCompartidosDTR.DataController.DataSource :=
@@ -1003,7 +1056,9 @@ begin
     'vgerShowCajaSelection', True);
   if not Result then
   begin
-    oSelector := TfrmMtoModalCajDef.Create(Self);
+    oSelector := TfrmMtoModalCajDef.Create(
+      Self,
+      FRepositorioCajasDefecto);
     try
       oSelector.sEmpresa := AEmpresa;
       oSelector.sAlmacen := AAlmacen;

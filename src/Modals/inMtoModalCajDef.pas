@@ -28,7 +28,7 @@ uses
   dxDateRanges, dxScrollbarAnnotations, cxDBData, cxGridLevel,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGridCustomView,
   cxGrid, System.Actions, Vcl.ActnList,
-  inLibCajasDefectoPersistenciaIntf, UniDataCajaPantallaComposicion;
+  inLibCajasDefectoPersistenciaIntf, inLibCajaPantallaInyeccion;
 type
   TfrmMtoModalCajDef = class(TfrmBase)
     pnl1: TPanel;
@@ -63,6 +63,10 @@ type
     sEmpresa: string;
     sAlmacen: string;
     sCaja:    string;
+    constructor Create(
+      AOwner: TComponent;
+      const ARepositorio: IRepositorioCajasDefecto); reintroduce;
+      overload;
     procedure Cargar(const AEmpresaFiltro: string = '');
     function EmpresaSeleccionada: string;
     function AlmacenSeleccionado: string;
@@ -76,6 +80,15 @@ implementation
 
 uses
   inLibFiltroUsuario;
+
+constructor TfrmMtoModalCajDef.Create(
+  AOwner: TComponent;
+  const ARepositorio: IRepositorioCajasDefecto);
+begin
+  ValidarDependenciaCaja(ARepositorio, 'selección de cajas');
+  FRepositorioPersistencia := ARepositorio;
+  inherited Create(AOwner);
+end;
 
 procedure TfrmMtoModalCajDef.Action1Execute(Sender: TObject);
 begin
@@ -111,14 +124,12 @@ begin
 end;
 
 procedure TfrmMtoModalCajDef.FormCreate(Sender: TObject);
-var
-  oComposicion: TComposicionCajaPantalla;
 begin
   inherited;
-  oComposicion := ComponerCajaPantalla(Self);
+  ValidarDependenciaCaja(
+    FRepositorioPersistencia,
+    'selección de cajas');
   Self.Position := poScreenCenter;
-  FRepositorioPersistencia := oComposicion.Operaciones.
-    CrearRepositorioCajasDefecto;
   Cargar;
 end;
 

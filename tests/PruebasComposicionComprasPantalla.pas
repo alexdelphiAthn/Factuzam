@@ -44,18 +44,184 @@ type
     procedure Recepcion_TransaccionActivaNoAdministra;
     [Test]
     procedure DevolucionStock_TransaccionActivaNoAdministra;
+    [Test]
+    procedure ContextoAlbaran_ValidaCapacidadesConcretas;
+    [Test]
+    procedure ContextoFactura_ValidaCapacidadesConcretas;
+    [Test]
+    procedure ContextoPedido_ValidaCapacidadesConcretas;
+    [Test]
+    procedure ContextoDevolucion_ValidaCapacidadesConcretas;
+    [Test]
+    procedure ContextoDocumentosTrabajo_ValidaCapacidadesConcretas;
+    [Test]
+    procedure ContextoPlantillas_ValidaCapacidadesConcretas;
+    [Test]
+    procedure DependenciaAusente_FallaAlPrepararContexto;
   end;
 
 implementation
 
 uses
-  System.SysUtils,
+  System.SysUtils, Data.DB,
+  inLibAplicacionArticuloCompraIntf,
+  inLibArticulosAtributosIntf,
+  inLibArticulosValidadorIntf,
+  inLibBusquedasCompraPersistenciaIntf,
   inLibComprasPantallaIntf,
   inLibComprasPantallaTransaccion,
+  inLibDevolucionesCompraPersistenciaIntf,
   inLibDevolucionesCompraStock,
-  inLibPedidosCompraIntf;
+  inLibDocumentosTrabajo,
+  inLibPedidosCompraIntf,
+  UniDataComprasPantallaComposicion;
 
 type
+  TDobleArticuloCompra = class(
+    TInterfacedObject,
+    IAplicacionArticuloCompra,
+    IAplicacionArticuloDevolucionCompra,
+    IArticulosValidador,
+    IArticulosAtributosLookup)
+  public
+    function Ejecutar(
+      const AEntrada: TEntradaAplicacionArticuloCompra;
+      ATipoDocumento: TTipoDocumentoArticuloCompra):
+      TResultadoAplicacionArticuloCompra; overload;
+    function Ejecutar(
+      const AEntrada: TEntradaArticuloDevolucionCompra):
+      TResultadoArticuloDevolucionCompra; overload;
+    function Resolver(
+      const AEntrada: string): TArtResolucionEntrada;
+    function ResolverCodigoBarras(
+      const AEntrada: string): TArtResolucionEntrada;
+    function ResolverConSku(
+      const AEntrada, ACodigoSkuPreferido: string):
+      TArtResolucionEntrada;
+    function EsValido(const AEntrada: string): Boolean;
+    function TieneSkuActivo(
+      const ACodigoArticulo: string): Boolean;
+    function ObtenerAtributos(
+      const ACodigoArticulo: string): TArray<TArticuloAtributo>;
+    function ObtenerPropiedades(
+      const ACodigoArticulo: string): TArray<TArticuloPropiedad>;
+    function ObtenerAtributosDeSku(
+      const ACodigoSku: string): TArray<TArticuloAtributoValor>;
+    function ObtenerAvsEnSkus(
+      const ACodigoArticulo: string;
+      AOrdenAtributo: Integer): TArray<TArticuloAtributoValor>;
+  end;
+
+  TDobleBusquedasCompra = class(
+    TInterfacedObject,
+    IBusquedaEmpresasComprasPantalla,
+    IBusquedaProveedoresComprasPantalla,
+    IBusquedasCompraPersistencia)
+  public
+    function ConsultarEmpresas: IConsultaComprasPantalla;
+    function ConsultarProveedores: IConsultaComprasPantalla;
+    function ConsultarArticulosProveedor(
+      const ACodigoProveedor: string): IConsultaBusquedaCompra;
+    function ConsultarSkusArticulo(
+      const ACodigoArticulo: string): IConsultaBusquedaCompra;
+  end;
+
+  TDoblePedidoCompra = class(
+    TInterfacedObject,
+    IRecepcionPedidoCompra,
+    IConsultasPedidoCompraPantalla)
+  public
+    function EjecutarRecepcionPedidoCompra(
+      const AParametros: TParametrosRecepcionPedidoCompra;
+      out AResultado: TResultadoRecepcionPedidoCompra): Boolean;
+    function ColumnaLineasExiste(
+      const ANombreColumna: string): Boolean;
+    function AlmacenEfectivoPrimeraLinea(
+      const ASerie, ANumero: string): string;
+  end;
+
+  TDobleDevolucionCompra = class(
+    TInterfacedObject,
+    IRepositorioDatosDevolucionCompra,
+    IPersistenciaStockDevolucionCompra)
+  public
+    function CodigoSkuRepresentanteColor(
+      const ACodigoArticulo, AColor: string;
+      AIdConjuntoPivot: Integer): string;
+    function ListarColoresArticulo(
+      const ACodigoArticulo: string):
+      TColoresArticuloDevolucionCompra;
+    function ObtenerColorLinea(
+      const ASerie, ANumero, ALinea: string;
+      out AIdColor: Integer): Boolean;
+    function BorrarGrupoColor(
+      const AGrupo: TGrupoColorDevolucionCompra): Integer;
+    function ResolverConjuntoPivotArticulo(
+      const ACodigoArticulo: string): Integer;
+    function ModeloProveedorArticulo(
+      const ACodigoArticulo, ACodigoProveedor: string): string;
+    function EsCodigoArticuloExacto(
+      const ACodigo: string): Boolean;
+    function ConsultarEstado(
+      const AParametros: TParametrosStockDevolucionCompra):
+      TEstadoStockDevolucionCompra;
+    function DevolverTodoStock(
+      const AParametros: TParametrosStockDevolucionCompra;
+      out ALineas: Integer;
+      out AEstado: TEstadoStockDevolucionCompra): Boolean;
+  end;
+
+  TDobleDocumentosTrabajo = class(
+    TInterfacedObject,
+    ILecturasDocumentosTrabajo,
+    IMaterializacionDocumentosTrabajo)
+  public
+    function ConsultaDocumentosAbiertos(
+      const AUsuario: string): string;
+    procedure CompletarDatosArticulo(
+      var ALinea: TDocTrabajoLineaOrigen);
+    function ConsultarDestinosCompartir: IConsultaDocumentoTrabajo;
+    function ListarNombresAtributos:
+      TNombresAtributosDocumentoTrabajo;
+    function SiguienteContador(
+      const ASerie, ATipoDocumento, AEmpresa,
+      AUsuario: string): string;
+    function CrearAlbaran(
+      AIdDocumento: Int64;
+      const AEmpresa, AAlmacen, ASerie, ANumero,
+      AUsuario: string): Integer;
+    function CrearFacturaVenta(
+      AIdDocumento: Int64;
+      const AEmpresa, AAlmacen, ASerie, ANumero,
+      AUsuario: string): Integer;
+    function CrearPedidoCompra(
+      AIdDocumento: Int64;
+      const AEmpresa, AAlmacen, ASerie, ANumero,
+      AUsuario: string): Integer;
+    function CrearInventario(
+      AIdDocumento: Int64;
+      const AEmpresa, AAlmacen, ASerie, ANumero,
+      AUsuario: string): Integer;
+    function CrearSesionTarifa(
+      AIdDocumento: Int64;
+      const AUsuario: string): Int64;
+  end;
+
+  TDoblePlantillasCompra = class(
+    TInterfacedObject,
+    IPersistenciaPlantillasCompraPantalla)
+  public
+    function DataSetPlantillas: TDataSet;
+    function DataSourcePropiedades: TDataSource;
+    function DataSourceKits: TDataSource;
+    function DataSourceDetalleKits: TDataSource;
+    procedure Abrir;
+    procedure AnadirPropiedad;
+    procedure BorrarPropiedad;
+    procedure AnadirKit;
+    procedure BorrarKit;
+  end;
+
   TComportamientoColaborador = (
     ccExito,
     ccRechazo,
@@ -116,6 +282,289 @@ type
       out AEstado: TEstadoStockDevolucionCompra): Boolean;
     property Llamadas: Integer read FLlamadas;
   end;
+
+function TDobleArticuloCompra.Ejecutar(
+  const AEntrada: TEntradaAplicacionArticuloCompra;
+  ATipoDocumento: TTipoDocumentoArticuloCompra):
+  TResultadoAplicacionArticuloCompra;
+begin
+  Result := Default(TResultadoAplicacionArticuloCompra);
+end;
+
+function TDobleArticuloCompra.Ejecutar(
+  const AEntrada: TEntradaArticuloDevolucionCompra):
+  TResultadoArticuloDevolucionCompra;
+begin
+  Result := Default(TResultadoArticuloDevolucionCompra);
+end;
+
+function TDobleArticuloCompra.Resolver(
+  const AEntrada: string): TArtResolucionEntrada;
+begin
+  Result := Default(TArtResolucionEntrada);
+end;
+
+function TDobleArticuloCompra.ResolverCodigoBarras(
+  const AEntrada: string): TArtResolucionEntrada;
+begin
+  Result := Default(TArtResolucionEntrada);
+end;
+
+function TDobleArticuloCompra.ResolverConSku(
+  const AEntrada, ACodigoSkuPreferido: string): TArtResolucionEntrada;
+begin
+  Result := Default(TArtResolucionEntrada);
+end;
+
+function TDobleArticuloCompra.EsValido(const AEntrada: string): Boolean;
+begin
+  Result := True;
+end;
+
+function TDobleArticuloCompra.TieneSkuActivo(
+  const ACodigoArticulo: string): Boolean;
+begin
+  Result := True;
+end;
+
+function TDobleArticuloCompra.ObtenerAtributos(
+  const ACodigoArticulo: string): TArray<TArticuloAtributo>;
+begin
+  Result := nil;
+end;
+
+function TDobleArticuloCompra.ObtenerPropiedades(
+  const ACodigoArticulo: string): TArray<TArticuloPropiedad>;
+begin
+  Result := nil;
+end;
+
+function TDobleArticuloCompra.ObtenerAtributosDeSku(
+  const ACodigoSku: string): TArray<TArticuloAtributoValor>;
+begin
+  Result := nil;
+end;
+
+function TDobleArticuloCompra.ObtenerAvsEnSkus(
+  const ACodigoArticulo: string;
+  AOrdenAtributo: Integer): TArray<TArticuloAtributoValor>;
+begin
+  Result := nil;
+end;
+
+function TDobleBusquedasCompra.ConsultarEmpresas:
+  IConsultaComprasPantalla;
+begin
+  Result := nil;
+end;
+
+function TDobleBusquedasCompra.ConsultarProveedores:
+  IConsultaComprasPantalla;
+begin
+  Result := nil;
+end;
+
+function TDobleBusquedasCompra.ConsultarArticulosProveedor(
+  const ACodigoProveedor: string): IConsultaBusquedaCompra;
+begin
+  Result := nil;
+end;
+
+function TDobleBusquedasCompra.ConsultarSkusArticulo(
+  const ACodigoArticulo: string): IConsultaBusquedaCompra;
+begin
+  Result := nil;
+end;
+
+function TDoblePedidoCompra.EjecutarRecepcionPedidoCompra(
+  const AParametros: TParametrosRecepcionPedidoCompra;
+  out AResultado: TResultadoRecepcionPedidoCompra): Boolean;
+begin
+  AResultado := Default(TResultadoRecepcionPedidoCompra);
+  Result := True;
+end;
+
+function TDoblePedidoCompra.ColumnaLineasExiste(
+  const ANombreColumna: string): Boolean;
+begin
+  Result := True;
+end;
+
+function TDoblePedidoCompra.AlmacenEfectivoPrimeraLinea(
+  const ASerie, ANumero: string): string;
+begin
+  Result := 'A1';
+end;
+
+function TDobleDevolucionCompra.CodigoSkuRepresentanteColor(
+  const ACodigoArticulo, AColor: string;
+  AIdConjuntoPivot: Integer): string;
+begin
+  Result := '';
+end;
+
+function TDobleDevolucionCompra.ListarColoresArticulo(
+  const ACodigoArticulo: string): TColoresArticuloDevolucionCompra;
+begin
+  Result := nil;
+end;
+
+function TDobleDevolucionCompra.ObtenerColorLinea(
+  const ASerie, ANumero, ALinea: string;
+  out AIdColor: Integer): Boolean;
+begin
+  AIdColor := 0;
+  Result := False;
+end;
+
+function TDobleDevolucionCompra.BorrarGrupoColor(
+  const AGrupo: TGrupoColorDevolucionCompra): Integer;
+begin
+  Result := 0;
+end;
+
+function TDobleDevolucionCompra.ResolverConjuntoPivotArticulo(
+  const ACodigoArticulo: string): Integer;
+begin
+  Result := 0;
+end;
+
+function TDobleDevolucionCompra.ModeloProveedorArticulo(
+  const ACodigoArticulo, ACodigoProveedor: string): string;
+begin
+  Result := '';
+end;
+
+function TDobleDevolucionCompra.EsCodigoArticuloExacto(
+  const ACodigo: string): Boolean;
+begin
+  Result := True;
+end;
+
+function TDobleDevolucionCompra.ConsultarEstado(
+  const AParametros: TParametrosStockDevolucionCompra):
+  TEstadoStockDevolucionCompra;
+begin
+  Result := esdcDisponible;
+end;
+
+function TDobleDevolucionCompra.DevolverTodoStock(
+  const AParametros: TParametrosStockDevolucionCompra;
+  out ALineas: Integer;
+  out AEstado: TEstadoStockDevolucionCompra): Boolean;
+begin
+  ALineas := 0;
+  AEstado := esdcDisponible;
+  Result := True;
+end;
+
+function TDobleDocumentosTrabajo.ConsultaDocumentosAbiertos(
+  const AUsuario: string): string;
+begin
+  Result := '';
+end;
+
+procedure TDobleDocumentosTrabajo.CompletarDatosArticulo(
+  var ALinea: TDocTrabajoLineaOrigen);
+begin
+end;
+
+function TDobleDocumentosTrabajo.ConsultarDestinosCompartir:
+  IConsultaDocumentoTrabajo;
+begin
+  Result := nil;
+end;
+
+function TDobleDocumentosTrabajo.ListarNombresAtributos:
+  TNombresAtributosDocumentoTrabajo;
+begin
+  Result := nil;
+end;
+
+function TDobleDocumentosTrabajo.SiguienteContador(
+  const ASerie, ATipoDocumento, AEmpresa, AUsuario: string): string;
+begin
+  Result := '';
+end;
+
+function TDobleDocumentosTrabajo.CrearAlbaran(
+  AIdDocumento: Int64;
+  const AEmpresa, AAlmacen, ASerie, ANumero,
+  AUsuario: string): Integer;
+begin
+  Result := 0;
+end;
+
+function TDobleDocumentosTrabajo.CrearFacturaVenta(
+  AIdDocumento: Int64;
+  const AEmpresa, AAlmacen, ASerie, ANumero,
+  AUsuario: string): Integer;
+begin
+  Result := 0;
+end;
+
+function TDobleDocumentosTrabajo.CrearPedidoCompra(
+  AIdDocumento: Int64;
+  const AEmpresa, AAlmacen, ASerie, ANumero,
+  AUsuario: string): Integer;
+begin
+  Result := 0;
+end;
+
+function TDobleDocumentosTrabajo.CrearInventario(
+  AIdDocumento: Int64;
+  const AEmpresa, AAlmacen, ASerie, ANumero,
+  AUsuario: string): Integer;
+begin
+  Result := 0;
+end;
+
+function TDobleDocumentosTrabajo.CrearSesionTarifa(
+  AIdDocumento: Int64;
+  const AUsuario: string): Int64;
+begin
+  Result := 0;
+end;
+
+function TDoblePlantillasCompra.DataSetPlantillas: TDataSet;
+begin
+  Result := nil;
+end;
+
+function TDoblePlantillasCompra.DataSourcePropiedades: TDataSource;
+begin
+  Result := nil;
+end;
+
+function TDoblePlantillasCompra.DataSourceKits: TDataSource;
+begin
+  Result := nil;
+end;
+
+function TDoblePlantillasCompra.DataSourceDetalleKits: TDataSource;
+begin
+  Result := nil;
+end;
+
+procedure TDoblePlantillasCompra.Abrir;
+begin
+end;
+
+procedure TDoblePlantillasCompra.AnadirPropiedad;
+begin
+end;
+
+procedure TDoblePlantillasCompra.BorrarPropiedad;
+begin
+end;
+
+procedure TDoblePlantillasCompra.AnadirKit;
+begin
+end;
+
+procedure TDoblePlantillasCompra.BorrarKit;
+begin
+end;
 
 constructor TUnidadTrabajoComprasFalsa.Create(AActiva: Boolean);
 begin
@@ -489,6 +938,163 @@ begin
   Assert.IsTrue(oUnidad.Activa);
   Assert.AreEqual(1, oColaborador.Llamadas);
   ComprobarTransaccion(oUnidad, 0, 0, 0);
+end;
+
+procedure TPruebasComposicionComprasPantalla.
+  ContextoAlbaran_ValidaCapacidadesConcretas;
+var
+  oArticulo: TDobleArticuloCompra;
+  oBusquedas: TDobleBusquedasCompra;
+  Contexto: TContextoAlbaranCompraPantalla;
+begin
+  oArticulo := TDobleArticuloCompra.Create;
+  oBusquedas := TDobleBusquedasCompra.Create;
+  Contexto := Default(TContextoAlbaranCompraPantalla);
+  Contexto.AplicacionArticulo := oArticulo;
+  Contexto.ValidadorArticulos := oArticulo;
+  Contexto.LookupAtributos := oArticulo;
+  Contexto.BusquedaEmpresas := oBusquedas;
+  Contexto.BusquedaProveedores := oBusquedas;
+  Contexto.BusquedasArticulos := oBusquedas;
+  Assert.WillNotRaise(
+    procedure
+    begin
+      Contexto.Validar;
+    end);
+end;
+
+procedure TPruebasComposicionComprasPantalla.
+  ContextoFactura_ValidaCapacidadesConcretas;
+var
+  oArticulo: TDobleArticuloCompra;
+  oBusquedas: TDobleBusquedasCompra;
+  Contexto: TContextoFacturaCompraPantalla;
+begin
+  oArticulo := TDobleArticuloCompra.Create;
+  oBusquedas := TDobleBusquedasCompra.Create;
+  Contexto := Default(TContextoFacturaCompraPantalla);
+  Contexto.AplicacionArticulo := oArticulo;
+  Contexto.ValidadorArticulos := oArticulo;
+  Contexto.LookupAtributos := oArticulo;
+  Contexto.BusquedaProveedores := oBusquedas;
+  Contexto.BusquedasArticulos := oBusquedas;
+  Assert.WillNotRaise(
+    procedure
+    begin
+      Contexto.Validar;
+    end);
+end;
+
+procedure TPruebasComposicionComprasPantalla.
+  ContextoPedido_ValidaCapacidadesConcretas;
+var
+  oArticulo: TDobleArticuloCompra;
+  oBusquedas: TDobleBusquedasCompra;
+  oPedido: TDoblePedidoCompra;
+  Contexto: TContextoPedidoCompraPantalla;
+begin
+  oArticulo := TDobleArticuloCompra.Create;
+  oBusquedas := TDobleBusquedasCompra.Create;
+  oPedido := TDoblePedidoCompra.Create;
+  Contexto := Default(TContextoPedidoCompraPantalla);
+  Contexto.AplicacionArticulo := oArticulo;
+  Contexto.ValidadorArticulos := oArticulo;
+  Contexto.LookupAtributos := oArticulo;
+  Contexto.BusquedaEmpresas := oBusquedas;
+  Contexto.BusquedaProveedores := oBusquedas;
+  Contexto.BusquedasArticulos := oBusquedas;
+  Contexto.Recepcion := oPedido;
+  Contexto.Consultas := oPedido;
+  Assert.WillNotRaise(
+    procedure
+    begin
+      Contexto.Validar;
+    end);
+end;
+
+procedure TPruebasComposicionComprasPantalla.
+  ContextoDevolucion_ValidaCapacidadesConcretas;
+var
+  oArticulo: TDobleArticuloCompra;
+  oBusquedas: TDobleBusquedasCompra;
+  oDevolucion: TDobleDevolucionCompra;
+  Contexto: TContextoDevolucionCompraPantalla;
+begin
+  oArticulo := TDobleArticuloCompra.Create;
+  oBusquedas := TDobleBusquedasCompra.Create;
+  oDevolucion := TDobleDevolucionCompra.Create;
+  Contexto := Default(TContextoDevolucionCompraPantalla);
+  Contexto.AplicacionArticulo := oArticulo;
+  Contexto.ValidadorArticulos := oArticulo;
+  Contexto.LookupAtributos := oArticulo;
+  Contexto.Datos := oDevolucion;
+  Contexto.Stock := oDevolucion;
+  Contexto.BusquedaEmpresas := oBusquedas;
+  Contexto.BusquedaProveedores := oBusquedas;
+  Contexto.BusquedasArticulos := oBusquedas;
+  Assert.WillNotRaise(
+    procedure
+    begin
+      Contexto.Validar;
+    end);
+end;
+
+procedure TPruebasComposicionComprasPantalla.
+  ContextoDocumentosTrabajo_ValidaCapacidadesConcretas;
+var
+  oArticulo: TDobleArticuloCompra;
+  oDocumentos: TDobleDocumentosTrabajo;
+  Contexto: TContextoDocumentosTrabajoCompraPantalla;
+begin
+  oArticulo := TDobleArticuloCompra.Create;
+  oDocumentos := TDobleDocumentosTrabajo.Create;
+  Contexto := Default(TContextoDocumentosTrabajoCompraPantalla);
+  Contexto.ValidadorArticulos := oArticulo;
+  Contexto.LookupAtributos := oArticulo;
+  Contexto.Lecturas := oDocumentos;
+  Contexto.Materializacion := oDocumentos;
+  Assert.WillNotRaise(
+    procedure
+    begin
+      Contexto.Validar;
+    end);
+end;
+
+procedure TPruebasComposicionComprasPantalla.
+  ContextoPlantillas_ValidaCapacidadesConcretas;
+var
+  Contexto: TContextoPlantillasCompraPantalla;
+begin
+  Contexto := Default(TContextoPlantillasCompraPantalla);
+  Contexto.Persistencia := TDoblePlantillasCompra.Create;
+  Assert.WillNotRaise(
+    procedure
+    begin
+      Contexto.Validar;
+    end);
+end;
+
+procedure TPruebasComposicionComprasPantalla.
+  DependenciaAusente_FallaAlPrepararContexto;
+var
+  oArticulo: TDobleArticuloCompra;
+  oBusquedas: TDobleBusquedasCompra;
+  Contexto: TContextoAlbaranCompraPantalla;
+begin
+  oArticulo := TDobleArticuloCompra.Create;
+  oBusquedas := TDobleBusquedasCompra.Create;
+  Contexto := Default(TContextoAlbaranCompraPantalla);
+  Contexto.AplicacionArticulo := oArticulo;
+  Contexto.ValidadorArticulos := oArticulo;
+  Contexto.LookupAtributos := oArticulo;
+  Contexto.BusquedaEmpresas := oBusquedas;
+  Contexto.BusquedasArticulos := oBusquedas;
+  Assert.WillRaise(
+    procedure
+    begin
+      Contexto.Validar;
+    end,
+    EArgumentNilException);
 end;
 
 initialization

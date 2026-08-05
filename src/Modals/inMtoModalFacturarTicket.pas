@@ -108,8 +108,10 @@ begin
     oFormulario.FEmpresa := AEmpresa;
     oFormulario.edtTicket.Text := ASerieTicket + '\' + ANumeroTicket;
     CrearContextoVentasPantalla(
-      oFormulario,
       oFormulario.ConexionPrincipal,
+      oFormulario.ParametrosApp,
+      oFormulario.ParametrosCaja,
+      oFormulario.RegistroLog,
       oContexto);
     oFormulario.FRepositorioSeries := oContexto.Series;
     oFormulario.FConsultaSeries :=

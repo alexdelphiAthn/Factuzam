@@ -34,7 +34,8 @@ uses
   inLibConsultaFacturasOperacionesPersistenciaIntf,
   inLibEmisionFiscalIntf, inLibGenerarTicketIntf,
   inLibTraspasoTicketIntf, inLibTicketsCajaIntf,
-  UniDataCajaPantallaComposicion;
+  inLibVentasCalendarioIntf, inLibPermisosIntf,
+  inLibCajaPantallaInyeccion;
 
 type
   TfrmConsultaOpe = class(TfrmBase, IConsultaOperacionesCaja)
@@ -123,10 +124,12 @@ type
     FAlmacen:    string;
     FCaja:       string;
     FRepositorioFacturas: IRepositorioConsultaFacturasOperaciones;
+    FRepositorioVentasCalendario: IRepositorioVentasCalendario;
     FServicioEmisionFiscal: IServicioEmisionFiscal;
     FRepositorioTraspasoTicket: IRepositorioTraspasoTicket;
     FRepositoriosTicketsCaja: TRepositoriosTicketsCaja;
     FLecturasImpresionTicket: ILecturasImpresionTicket;
+    procedure ValidarDependencias;
     // Factura de la operación seleccionada (pestaña Factura)
     procedure NotificarMensajeDesdeDM(
       Sender: TObject;
@@ -157,6 +160,15 @@ type
     procedure AbrirMovimientoActivo;
     procedure AbrirFacturaActiva;
   public
+    constructor Create(AOwner: TComponent); overload; override;
+    constructor Create(
+      AOwner: TComponent;
+      const APermisos: IPermisosAplicacion); reintroduce; overload;
+    constructor Create(
+      AOwner: TComponent;
+      const APermisos: IPermisosAplicacion;
+      const ADependencias: TDependenciasConsultaOperacionesCaja);
+      reintroduce; overload;
     function FormularioConsultaCaja: TCustomForm;
     procedure PrepararValores(const AEmpresa,
                                     AAlmacen,
@@ -183,6 +195,50 @@ uses inLibGenerarTicketBD, inLibGenerarTicketCaja,
   inLibMsgCaja, inLibMsgConfiguracion, inLibMsgFacturas;
 
 // -----------------------------------------------------------------------------
+constructor TfrmConsultaOpe.Create(AOwner: TComponent);
+begin
+  ValidarDependenciaCaja(
+    nil,
+    'contexto de consulta de operaciones de Caja');
+end;
+
+constructor TfrmConsultaOpe.Create(
+  AOwner: TComponent;
+  const APermisos: IPermisosAplicacion);
+begin
+  ValidarDependenciaCaja(
+    nil,
+    'contexto de consulta de operaciones de Caja');
+end;
+
+constructor TfrmConsultaOpe.Create(
+  AOwner: TComponent;
+  const APermisos: IPermisosAplicacion;
+  const ADependencias: TDependenciasConsultaOperacionesCaja);
+begin
+  ADependencias.Validar;
+  FRepositorioFacturas := ADependencias.Facturas;
+  FRepositorioVentasCalendario := ADependencias.VentasCalendario;
+  FServicioEmisionFiscal := ADependencias.EmisionFiscal;
+  FRepositorioTraspasoTicket := ADependencias.TraspasoTicket;
+  FRepositoriosTicketsCaja := ADependencias.Tickets;
+  FLecturasImpresionTicket := ADependencias.LecturasTicket;
+  inherited Create(AOwner, APermisos);
+end;
+
+procedure TfrmConsultaOpe.ValidarDependencias;
+var
+  Dependencias: TDependenciasConsultaOperacionesCaja;
+begin
+  Dependencias.Facturas := FRepositorioFacturas;
+  Dependencias.VentasCalendario := FRepositorioVentasCalendario;
+  Dependencias.EmisionFiscal := FServicioEmisionFiscal;
+  Dependencias.TraspasoTicket := FRepositorioTraspasoTicket;
+  Dependencias.Tickets := FRepositoriosTicketsCaja;
+  Dependencias.LecturasTicket := FLecturasImpresionTicket;
+  Dependencias.Validar;
+end;
+
 procedure TfrmConsultaOpe.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   inherited;
@@ -190,11 +246,9 @@ begin
 end;
 
 procedure TfrmConsultaOpe.FormCreate(Sender: TObject);
-var
-  oComposicion: TComposicionCajaPantalla;
 begin
   inherited;
-  oComposicion := ComponerCajaPantalla(Self);
+  ValidarDependencias;
   FdmConsulta := TdmConsultaOpe.Create(
     Self,
     ConexionPrincipal,
@@ -202,19 +256,9 @@ begin
   FdmConsulta.OnNotificarMensaje := NotificarMensajeDesdeDM;
   FLayout := TLayoutLoader.Create(
     Self.Name, ContextoSesion, PerfilesLectura);
-  FRepositorioFacturas := oComposicion.Consultas.
-    CrearRepositorioConsultaFacturas;
   FVentasCal := TVentasCalendarioCache.Create(
     ConexionPrincipal,
-    oComposicion.Consultas.CrearRepositorioVentasCalendario);
-  FServicioEmisionFiscal := oComposicion.Consultas.
-    CrearServicioEmisionFiscal;
-  FRepositorioTraspasoTicket := oComposicion.Tickets.
-    CrearRepositorioTraspasoTicket;
-  FRepositoriosTicketsCaja := oComposicion.Tickets.
-    CrearRepositorioTicketsCaja;
-  FLecturasImpresionTicket := oComposicion.Tickets.
-    CrearLecturasImpresionTicketCaja;
+    FRepositorioVentasCalendario);
   dtpFecha.Properties.OnGetDayState := dtpFechaGetDayState;
   cxViewMaestro.DataController.DataSource := FdmConsulta.dsMaestro;
   cxViewOpe.DataController.DataSource     := FdmConsulta.dsOperacion;
@@ -267,6 +311,7 @@ begin
   FRepositoriosTicketsCaja.Resguardos := nil;
   FRepositorioTraspasoTicket := nil;
   FServicioEmisionFiscal := nil;
+  FRepositorioVentasCalendario := nil;
   FRepositorioFacturas := nil;
   inherited;
   FreeAndNil(FLayout);

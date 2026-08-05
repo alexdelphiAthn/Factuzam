@@ -39,7 +39,7 @@ type
     [Test]
     procedure ModoSkuOcultaAtributosYNoDesempaqueta;
     [Test]
-    procedure ModosDeTallasNoEstanSoportadosEnInventarios;
+    procedure ModosTallasSeRechazanSinRaizVisual;
     [Test]
     procedure F1CiclaEntreAutoYSku;
     [Test]
@@ -133,7 +133,7 @@ begin
 end;
 
 procedure TPruebasInventariosPresentacion.
-  ModosDeTallasNoEstanSoportadosEnInventarios;
+  ModosTallasSeRechazanSinRaizVisual;
 begin
   // Cada linea lleva dos cantidades (teorica y recuento) y una celda de
   // pivote solo puede representar una: el pivote quedo descartado.
@@ -141,6 +141,8 @@ begin
   Assert.IsFalse(ModoEntradaInventarioSoportado(mcsTallasHorPed));
   Assert.AreEqual(Ord(mcsAuto),
     Ord(ModoEntradaInventarioSiguiente(mcsTallasInline)));
+  Assert.AreEqual(Ord(mcsAuto),
+    Ord(ModoEntradaInventarioSiguiente(mcsTallasHorPed)));
 end;
 
 procedure TPruebasInventariosPresentacion.F1CiclaEntreAutoYSku;

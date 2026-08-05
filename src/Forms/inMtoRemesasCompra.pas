@@ -30,7 +30,9 @@ uses
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs,
   cxDBEdit, cxMaskEdit, cxDropDownEdit, cxCalendar, cxCurrencyEdit, cxMemo,
-  cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox;
+  cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox,
+  inLibPermisosIntf,
+  inLibCargaEfectosRemesaPersistenciaIntf;
 
 type
   TfrmMtoRemesasCompra = class(TfrmMtoGen)
@@ -107,6 +109,7 @@ type
     procedure btnAsignarBancoClick(Sender: TObject);
     procedure btnFechaCargoClick(Sender: TObject);
   private
+    FRepositorioCargaEfectos: IRepositorioCargaEfectosRemesa;
     procedure ActualizarBancoPago;
     procedure actEliminarRemesaExecute(Sender: TObject);
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
@@ -117,6 +120,11 @@ type
     function RemesaSeleccionada: Boolean;
   public
     dmmRemesasCompra: TdmRemesasCompra;
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const ARepositorio: IRepositorioCargaEfectosRemesa); reintroduce;
+      overload;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
   end;
@@ -128,6 +136,17 @@ uses
   inMtoModalRegistrarPago, inLibMsgCompras, inLibMsgVentas;
 
 {$R *.dfm}
+
+constructor TfrmMtoRemesasCompra.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const ARepositorio: IRepositorioCargaEfectosRemesa);
+begin
+  if not Assigned(ARepositorio) then
+    raise EArgumentNilException.Create('ARepositorio');
+  FRepositorioCargaEfectos := ARepositorio;
+  inherited Create(AOwner, AContexto);
+end;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -252,7 +271,9 @@ begin
   else
   begin
     q := dmmRemesasCompra.unqryTablaG;
-    frm := TfrmModalCargarEfectosRemesa.CrearParaCompra(nil);
+    frm := TfrmModalCargarEfectosRemesa.CrearParaCompra(
+      nil,
+      FRepositorioCargaEfectos);
     try
       frm.PrepararRemesaExistente(q.FieldByName('CODIGO_EMP_REMC').AsString,
         q.FieldByName('SERIE_REMC').AsString,

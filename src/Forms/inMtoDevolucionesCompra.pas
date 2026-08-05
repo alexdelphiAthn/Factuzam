@@ -43,6 +43,8 @@ uses
   inLibArticulosValidadorIntf,
   inLibBusquedasCompraPersistenciaIntf,
   inLibComprasPantallaIntf,
+  inLibPermisosIntf,
+  inLibRepositoriosPantallaIntf,
   inLibDevolucionesCompraPersistenciaIntf,
   inLibDevolucionesCompraStock,
   inLibGridTallasInline,
@@ -55,6 +57,7 @@ uses
 const
   CANT_TALLAS_MAX = 20;
   CANT_ATRIB_MAX  = 5;
+  NOMBRE_PANTALLA_DEVOLUCIONES_COMPRA = 'frmMtoDevolucionesCompra';
 
 type
   TfrmMtoDevolucionesCompra = class(TfrmMtoDocumento)
@@ -232,6 +235,7 @@ type
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
+  protected
     FAplicacionArticulo: IAplicacionArticuloDevolucionCompra;
     FValidadorArticulos: IArticulosValidador;
     FLookupAtributos: IArticulosAtributosLookup;
@@ -240,6 +244,7 @@ type
     FBusquedaEmpresas: IBusquedaEmpresasComprasPantalla;
     FBusquedaProveedores: IBusquedaProveedoresComprasPantalla;
     FBusquedasArticulos: IBusquedasCompraPersistencia;
+  private
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
     procedure InicializarGestorYPivote;
@@ -326,6 +331,11 @@ type
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
   end;
 
+function CrearDevolucionesCompraInyectada(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const AArticulos: IRepositoriosArticulosPantalla): TForm;
+
 implementation
 
 uses
@@ -354,7 +364,59 @@ uses
 
 {$R *.dfm}
 
+type
+  TfrmMtoDevolucionesCompraInyectada = class(TfrmMtoDevolucionesCompra)
+  private
+    FArticulos: IRepositoriosArticulosPantalla;
+  public
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const AArticulos: IRepositoriosArticulosPantalla); reintroduce;
+    procedure CrearTablaPrincipal; override;
+  end;
+
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+function CrearDevolucionesCompraInyectada(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const AArticulos: IRepositoriosArticulosPantalla): TForm;
+begin
+  Result := TfrmMtoDevolucionesCompraInyectada.Create(
+    AOwner,
+    AContexto,
+    AArticulos);
+end;
+
+constructor TfrmMtoDevolucionesCompraInyectada.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const AArticulos: IRepositoriosArticulosPantalla);
+begin
+  FArticulos := AArticulos;
+  inherited Create(AOwner, AContexto);
+end;
+
+procedure TfrmMtoDevolucionesCompraInyectada.CrearTablaPrincipal;
+var
+  oContexto: TContextoDevolucionCompraPantalla;
+begin
+  inherited;
+  ComponerComprasPantalla(
+    FArticulos,
+    dmmDevolucionesCompra.unqryTablaG.Connection,
+    oContexto);
+  FAplicacionArticulo := oContexto.AplicacionArticulo;
+  FValidadorArticulos := oContexto.ValidadorArticulos;
+  FLookupAtributos := oContexto.LookupAtributos;
+  FRepositorioDatos := oContexto.Datos;
+  FPersistenciaStock := oContexto.Stock;
+  FBusquedaEmpresas := oContexto.BusquedaEmpresas;
+  FBusquedaProveedores := oContexto.BusquedaProveedores;
+  FBusquedasArticulos := oContexto.BusquedasArticulos;
+  FArticulos := nil;
+end;
 
 procedure TfrmMtoDevolucionesCompra.cbbSERIE_DEVCPropertiesInitPopup(
   Sender: TObject);
@@ -403,8 +465,6 @@ end;
 
 procedure TfrmMtoDevolucionesCompra.FormCreate(Sender: TObject);
 var
-  oEntrada: TEntradaComposicionComprasPantalla;
-  oServicios: TServiciosComprasPantalla;
   PropiedadesColor: TcxComboBoxProperties;
 begin
   FColorPivotCodigos := TDictionary<string, string>.Create;
@@ -429,23 +489,6 @@ begin
   PropiedadesColor.OnDrawItem := ColorPivotDrawItem;
   PropiedadesColor.OnEditValueChanged := ColorPivotEditValueChanged;
   inherited;
-  oEntrada := Default(TEntradaComposicionComprasPantalla);
-  oEntrada.Tipo := tccDevolucion;
-  oEntrada.Conexion := dmmDevolucionesCompra.unqryTablaG.Connection;
-  oEntrada.Cabecera := dmmDevolucionesCompra.unqryTablaG;
-  oEntrada.Lineas :=
-    dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
-  oServicios := ComponerComprasPantalla(
-    Self,
-    oEntrada);
-  FAplicacionArticulo := oServicios.Devolucion.AplicacionArticulo;
-  FValidadorArticulos := oServicios.Devolucion.ValidadorArticulos;
-  FLookupAtributos := oServicios.Devolucion.LookupAtributos;
-  FRepositorioDatos := oServicios.Devolucion.Datos;
-  FPersistenciaStock := oServicios.Devolucion.Stock;
-  FBusquedaEmpresas := oServicios.Devolucion.BusquedaEmpresas;
-  FBusquedaProveedores := oServicios.Devolucion.BusquedaProveedores;
-  FBusquedasArticulos := oServicios.Devolucion.BusquedasArticulos;
   ConfigurarColumnaBusquedaDocumento(
     tvLineasDevolucion, 'CODIGO_UNIDAD_DEVCLIN',
     colLineaDevcCODIGO_UNIDADPropertiesButtonClick,

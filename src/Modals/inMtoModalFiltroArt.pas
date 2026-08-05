@@ -74,13 +74,21 @@ type
       AUmbral: Integer;
       const APreTempCsv, APrePrvCsv, APreFamCsv: string;
       AContar: TContarArticulosFunc;
-      out aTempCsv, aPrvCsv, aFamCsv: string): Boolean;
+      out aTempCsv, aPrvCsv, aFamCsv: string): Boolean; overload;
+    class function Ejecutar(
+      AOwner: TComponent;
+      AUmbral: Integer;
+      const APreTempCsv, APrePrvCsv, APreFamCsv: string;
+      AContar: TContarArticulosFunc;
+      out aTempCsv, aPrvCsv, aFamCsv: string;
+      const ARepositorio: IRepositorioFiltroArticulos): Boolean; overload;
   end;
 
 implementation
 
 uses
-  inLibMsgArticulos, inLibMsgComun, UniDataConfiguracionPantalla;
+  inLibMsgArticulos, inLibMsgComun,
+  UniDataConfiguracionPantalla;
 
 constructor TfrmModalFiltroArt.Create(AOwner: TComponent);
 begin
@@ -336,9 +344,26 @@ class function TfrmModalFiltroArt.Ejecutar(AOwner: TComponent;
   const APreTempCsv, APrePrvCsv, APreFamCsv: string;
   AContar: TContarArticulosFunc;
   out aTempCsv, aPrvCsv, aFamCsv: string): Boolean;
+begin
+  Result := False;
+  ValidarDependenciaConfiguracion(
+    nil,
+    'filtros de artículos');
+end;
+
+class function TfrmModalFiltroArt.Ejecutar(
+  AOwner: TComponent;
+  AUmbral: Integer;
+  const APreTempCsv, APrePrvCsv, APreFamCsv: string;
+  AContar: TContarArticulosFunc;
+  out aTempCsv, aPrvCsv, aFamCsv: string;
+  const ARepositorio: IRepositorioFiltroArticulos): Boolean;
 var
   frm: TfrmModalFiltroArt;
 begin
+  ValidarDependenciaConfiguracion(
+    ARepositorio,
+    'filtros de artículos');
   // Si cancela, devolvemos lo recibido para que el Mto cargue el filtro base.
   aTempCsv := APreTempCsv;
   aPrvCsv  := APrePrvCsv;
@@ -346,7 +371,7 @@ begin
   Result := False;
   frm := TfrmModalFiltroArt.Create(AOwner);
   try
-    ComponerConfiguracionPantalla(frm, AConn, frm.FRepositorio);
+    frm.FRepositorio := ARepositorio;
     frm.FUmbral := AUmbral;
     frm.FContar := AContar;
     frm.FFamCsv := APreFamCsv;

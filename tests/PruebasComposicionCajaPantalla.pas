@@ -34,6 +34,8 @@ type
     procedure Historicos_RevierteYPropagaElError;
     [Test]
     procedure Composicion_RechazaContextoAusente;
+    [Test]
+    procedure Operacion_RechazaResolverArticulosAusente;
   end;
 
 implementation
@@ -42,6 +44,7 @@ uses
   System.SysUtils,
   inLibCajaPantallaHistoricos,
   inLibCajaPantallaDetalleHistorico,
+  inLibCajaPantallaInyeccion,
   UniDataCajaPantallaComposicion;
 
 type
@@ -225,12 +228,26 @@ var
 begin
   bErrorPropagado := False;
   try
-    ComponerCajaPantalla(nil);
+    ComponerCajaPantalla(nil, nil, nil, nil, nil);
   except
     on E: Exception do
       bErrorPropagado := True;
   end;
   Assert.IsTrue(bErrorPropagado);
+end;
+
+procedure TPruebasComposicionCajaPantalla.
+  Operacion_RechazaResolverArticulosAusente;
+var
+  Dependencias: TDependenciasOperacionCaja;
+begin
+  Dependencias := Default(TDependenciasOperacionCaja);
+  Assert.WillRaise(
+    procedure
+    begin
+      Dependencias.Validar;
+    end,
+    EArgumentNilException);
 end;
 
 initialization

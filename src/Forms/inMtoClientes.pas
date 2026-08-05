@@ -694,7 +694,7 @@ var
 begin
   inherited;
   CrearContextoVentasPantalla(
-    Self,
+    ConexionPrincipal,
     oContexto);
   FRepositorioClientes := oContexto.Repositorio;
   FDmmClientes := tdmDataModule as TdmClientes;

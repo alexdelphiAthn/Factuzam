@@ -72,7 +72,6 @@ type
     procedure tvBancosDblClick(Sender: TObject);
   private
     // Campos primero (E2169).
-    FConn:      TUniConnection;
     FRepositorio: IRepositorioSeleccionBancoEmpresa;
     FConsulta:  IConsultaBancosEmpresa;
     FDatos:     TDataSet;
@@ -87,7 +86,13 @@ type
       AConn                : TUniConnection;
       const ACodigoEmpresa : string;
       AUso                 : TUsoBancoEmpresa;
-      const APreferEmpban  : string = ''): TSeleccionBancoResult;
+      const APreferEmpban  : string = ''): TSeleccionBancoResult; overload;
+    class function Ejecutar(
+      AOwner               : TComponent;
+      const ACodigoEmpresa : string;
+      AUso                 : TUsoBancoEmpresa;
+      const ARepositorio   : IRepositorioSeleccionBancoEmpresa;
+      const APreferEmpban  : string = ''): TSeleccionBancoResult; overload;
   end;
 
 implementation
@@ -106,12 +111,28 @@ class function TfrmModalSeleccionarBanco.Ejecutar(
   const ACodigoEmpresa : string;
   AUso                 : TUsoBancoEmpresa;
   const APreferEmpban  : string): TSeleccionBancoResult;
+begin
+  Result := Default(TSeleccionBancoResult);
+  ValidarDependenciaConfiguracion(
+    nil,
+    'selección de banco de empresa');
+end;
+
+class function TfrmModalSeleccionarBanco.Ejecutar(
+  AOwner               : TComponent;
+  const ACodigoEmpresa : string;
+  AUso                 : TUsoBancoEmpresa;
+  const ARepositorio   : IRepositorioSeleccionBancoEmpresa;
+  const APreferEmpban  : string): TSeleccionBancoResult;
 var
   frm: TfrmModalSeleccionarBanco;
 begin
+  ValidarDependenciaConfiguracion(
+    ARepositorio,
+    'selección de banco de empresa');
   frm := TfrmModalSeleccionarBanco.Create(AOwner);
   try
-    frm.FConn    := AConn;
+    frm.FRepositorio := ARepositorio;
     frm.FEmpresa := ACodigoEmpresa;
     frm.FUso     := AUso;
     frm.CargarCuentas;
@@ -150,7 +171,9 @@ begin
     lblInfo.Caption := SCaptionCuentaEmpresaPagoEfectos
   else
     lblInfo.Caption := SCaptionCuentaEmpresaCobroRecibos;
-  ComponerConfiguracionPantalla(Self, FConn, FRepositorio);
+  ValidarDependenciaConfiguracion(
+    FRepositorio,
+    'selección de banco de empresa');
   FConsulta := FRepositorio.ConsultarCuentas(FEmpresa, FUso);
   FDatos := FConsulta.DataSet;
   FDs.DataSet := FDatos;

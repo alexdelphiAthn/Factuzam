@@ -30,7 +30,9 @@ uses
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs,
   cxDBEdit, cxMaskEdit, cxDropDownEdit, cxCalendar, cxCurrencyEdit, cxMemo,
-  cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox;
+  cxLookupEdit, cxDBLookupEdit, cxDBLookupComboBox,
+  inLibPermisosIntf,
+  inLibCargaEfectosRemesaPersistenciaIntf;
 
 type
   TfrmMtoRemesasVenta = class(TfrmMtoGen)
@@ -110,6 +112,7 @@ type
     procedure btnGenerarSepaClick(Sender: TObject);
     procedure dteFECHA_CARGO_REMVClick(Sender: TObject);
   private
+    FRepositorioCargaEfectos: IRepositorioCargaEfectosRemesa;
     procedure ActualizarBancoCobro;
     procedure actCrearRemesaExecute(Sender: TObject);
     procedure actEliminarRemesaExecute(Sender: TObject);
@@ -123,6 +126,11 @@ type
     function RemesaSeleccionada: Boolean;
   public
     dmmRemesasVenta: TdmRemesasVenta;
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const ARepositorio: IRepositorioCargaEfectosRemesa); reintroduce;
+      overload;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
   end;
@@ -136,6 +144,17 @@ uses
   inLibMsgVentas;
 
 {$R *.dfm}
+
+constructor TfrmMtoRemesasVenta.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const ARepositorio: IRepositorioCargaEfectosRemesa);
+begin
+  if not Assigned(ARepositorio) then
+    raise EArgumentNilException.Create('ARepositorio');
+  FRepositorioCargaEfectos := ARepositorio;
+  inherited Create(AOwner, AContexto);
+end;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -195,7 +214,9 @@ var
   sNumero: string;
 begin
   Result := False;
-  frm := TfrmModalCargarEfectosRemesa.CrearParaVenta(nil);
+  frm := TfrmModalCargarEfectosRemesa.CrearParaVenta(
+    nil,
+    FRepositorioCargaEfectos);
   try
     frm.PrepararNuevaRemesa(UbicacionSesion.Empresa);
     if frm.ShowModal = mrOk then
@@ -315,7 +336,9 @@ begin
   else
   begin
     q := dmmRemesasVenta.unqryTablaG;
-    frm := TfrmModalCargarEfectosRemesa.CrearParaVenta(nil);
+    frm := TfrmModalCargarEfectosRemesa.CrearParaVenta(
+      nil,
+      FRepositorioCargaEfectos);
     try
       frm.PrepararRemesaExistente(q.FieldByName('CODIGO_EMP_REMV').AsString,
         q.FieldByName('SERIE_REMV').AsString,

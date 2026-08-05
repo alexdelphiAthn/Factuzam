@@ -81,7 +81,6 @@ begin
   inherited;
   Self.Position := poScreenCenter;
   CrearContextoVentasPantalla(
-    Self,
     ConexionPrincipal,
     oContexto);
   FRepositorio := oContexto.Repositorio;

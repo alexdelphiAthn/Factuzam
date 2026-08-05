@@ -1005,7 +1005,6 @@ begin
   pnl1.BringToFront;
   Self.Position := poScreenCenter;
   CrearContextoVentasPantalla(
-    Self,
     ConexionPrincipal,
     oContexto);
   FServiciosPersistencia := oContexto.Persistencia;

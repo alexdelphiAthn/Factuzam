@@ -117,8 +117,13 @@ begin
   Self.Position := poScreenCenter;
   KeyPreview := True;
   CrearContextoVentasPantalla(
-    Self,
     ConexionPrincipal,
+    ParametrosCaja,
+    CrearServiciosSqlVentasPantalla(
+      Self.Name,
+      PerfilesLectura,
+      PerfilesEscritura,
+      RegistroLog),
     oContexto);
   FRepositorio := oContexto.Listado;
   FDocumentosTrabajo := oContexto.DocumentosTrabajo;

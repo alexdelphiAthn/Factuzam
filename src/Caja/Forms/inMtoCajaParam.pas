@@ -26,7 +26,8 @@ uses
   Vcl.ExtCtrls, inMtoFrmBase, cxDropDownEdit, Vcl.Menus, Vcl.StdCtrls,
   cxButtons, JvComponentBase, JvInspector, JvExControls, System.Actions,
   Vcl.ActnList, Vcl.Printers, System.UITypes, inLibParametrosIntf,
-  inLibAppParamPersistenciaIntf, UniDataCajaPantallaComposicion;
+  inLibAppParamPersistenciaIntf, inLibPermisosIntf,
+  inLibCajaPantallaInyeccion;
 
 type
   // Tipos de punteros necesarios para la generación dinámica en JvInspector
@@ -96,6 +97,12 @@ type
                                 Strings: TStrings);
     procedure GetTarifasList(Sender: TJvCustomInspectorItem;
                              Strings: TStrings);
+  public
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const ADependencias: TDependenciasParametrosCaja); reintroduce;
+      overload;
   end;
 
 implementation
@@ -105,24 +112,29 @@ implementation
 uses
   StrUtils, inLibLayoutForm, inLibMsgCaja;
 
+constructor TfrmMtoCajaParam.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const ADependencias: TDependenciasParametrosCaja);
+begin
+  ADependencias.Validar;
+  FParametrosEdicion := ADependencias.Edicion;
+  FRepositorioPersistencia := ADependencias.Persistencia;
+  inherited Create(AOwner, AContexto);
+end;
+
 // ----------------------------------------------------------------------
 // GESTIÓN DE MEMORIA Y CICLO DE VIDA
 // ----------------------------------------------------------------------
 
 procedure TfrmMtoCajaParam.FormCreate(Sender: TObject);
 var
-  oComposicion: TComposicionCajaPantalla;
-  Proveedor: IProveedorParametrosEdicion;
+  Dependencias: TDependenciasParametrosCaja;
 begin
   inherited;
-  oComposicion := ComponerCajaPantalla(Self);
-  if not Supports(Owner, IProveedorParametrosEdicion, Proveedor) then
-    raise Exception.Create(SErrorProveedorParametrosCajaNoConfigurado);
-  FParametrosEdicion := Proveedor.ParametrosCajaEdicion;
-  FRepositorioPersistencia := oComposicion.Configuracion.
-    CrearRepositorioAppParam;
-  if not Assigned(FParametrosEdicion) then
-    raise Exception.Create(SErrorParametrosCajaEditablesNoConfigurados);
+  Dependencias.Edicion := FParametrosEdicion;
+  Dependencias.Persistencia := FRepositorioPersistencia;
+  Dependencias.Validar;
   if jvntrstb1 <> nil then
     jvntrstb1.EnterAsTab := False;
   FBools := TList<PBoolean>.Create;

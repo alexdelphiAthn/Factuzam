@@ -153,7 +153,6 @@ begin
   AlbaranSerieDestino  := '';
   AlbaranNumDestino    := '';
   CrearContextoVentasPantalla(
-    Self,
     ConexionPrincipal,
     oContexto);
   FRepositorio := oContexto.Repositorio;

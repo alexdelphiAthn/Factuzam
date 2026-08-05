@@ -57,20 +57,18 @@ uses
   dxSkinWhiteprint, dxSkinXmas2008Blue,
   // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
   inLibColumnasSkuIntf, inLibGridPivoteVenta,
-  inLibFacturasServiciosIntf, inLibEmisionFiscalIntf,
-  inLibFacturasLecturasIntf,
-  inLibFacturasPersistenciaIntf,
+  inLibFacturasServiciosIntf,
   inLibFacturasAplicacionIntf,
   inLibDocumento, inLibDocumentoIntf,
   inLibFacturasColumnasPresentacion,
   inLibFacturasLineasEdicion,
-  inLibFacturasPresentadorListado,
-  inLibRepositoriosPantallaIntf,
+  inLibFacturasInyeccion,
+  inLibPermisosIntf,
   inMtoFacturasPresentadorCabeceraVcl,
   inMtoFacturasPresentadorLineasVcl;
 
 type
-  TContextoDependenciasFacturas = record
+  TDependenciasPresentacionFacturas = record
     Vista: IVistaFactura;
     Consolidacion: IAplicacionConsolidacionFactura;
     OperacionFiscal: IAplicacionOperacionFiscalFactura;
@@ -550,18 +548,13 @@ type
   private
     FColsModoConstruido: Boolean;
     FConstruyendoModo: Boolean;
-    FDependencias: TContextoDependenciasFacturas;
+    FDependencias: TDependenciasPresentacionFacturas;
+    FDependenciasInyeccion: TDependenciasFacturas;
     FEditorLineas: TEditorLineasFactura;
-    FListado: IPreparadorListadoFacturas;
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
-    FPersistenciaFacturas: TPersistenciaFacturas;
     FPresentadorCabecera: TPresentadorCabeceraFacturaVcl;
     FPresentadorLineas: TPresentadorLineasFacturaVcl;
-    FRepositorioLecturas: IRepositorioLecturasFactura;
-    FRepositoriosArticulos: IRepositoriosArticulosPantalla;
-    FServiciosFactura: TServiciosFactura;
-    FServiciosSqlPantalla: TServiciosSqlPantalla;
     // === CONTRATO DE ENTRADA ColumnSKUcxGrid ===
     // F1 cicla Auto (desglose) -> SKU -> Tallas horizontal con las
     // lineas de la factura a la vista. El Construir hace ClearItems:
@@ -586,6 +579,10 @@ type
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
     dmmFacturas : TdmFacturas;
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const ADependencias: TDependenciasFacturas); reintroduce; overload;
   end;
 
 //var
@@ -599,7 +596,6 @@ uses
   inLibMsgArticulos, inLibMsgComun, inLibMsgFacturas,
   inLibMsgVentas,
   inLibImpuestosComun,
-  inLibFiltroUsuario,
   inLibGenBusq,
   inLibShowMto,
   inLibFacturas,
@@ -609,8 +605,6 @@ uses
   inLibFacturasConsolidacionPresentacion,
   inLibFacturasPresentadorDetalle,
   inLibGridCantidad,
-  inLibArticulosValidadorIntf,
-  UniDataArticulosValidadorRepositorio,
   inLibArticulosResolverIntf,
   inMtoGenSearch,
   inMtoModalFacRec,
@@ -618,33 +612,18 @@ uses
   inMtoModalImpFac,
   inMtoModalRegistrarPago,
   inMtoModalSeleccionarBanco,
-  inLibUser,
   inLibVerifactu,
   inLibVerifactuTipos,
-  inLibVerifactuColaIntf,
-  inLibEmisionFiscal,
-  UniDataVerifactuColaRepositorio,
-  UniDataFacturasRepositorio,
-  UniDataFacturasLecturas,
-  UniDataFacturasListado,
-  UniDataFacturasOperaciones,
-  UniDataVentasWsCola,
-  inLibFacturasMovimientos,
-  inLibFacturasConsolidacion,
   inLibFacturasAplicacion,
   inMtoFacturasVistaVcl,
   inMtoFacturasConsolidacionVcl,
   inMtoFacturasCobrosVcl,
-  inLibFacturasReapertura,
-  inLibFacturasComposicion,
-  UniDataValoresAutomaticosRepositorio,
   inMtoModalFacturarTicket,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku, inLibColumnasDocumento,
-  UniDataColumnasDocumentoRepositorio, UniDataGen,
-  inLibPresentacionDocumento,
-  // Composicion del puerto de persistencia del pivote (V2).
-  UniDataPivoteVenta, UniDataColumnasSkuServicios;
+  UniDataArticulosValidadorRepositorio,
+  UniDataGen,
+  inLibPresentacionDocumento;
 
 function CrearContextoConsolidacionFacturaVcl(
   AFormulario: TfrmMtoFacturasBase
@@ -881,15 +860,14 @@ begin
   Result.Cabecera := AFormulario.dsTablaG;
   Result.DataModule := AFormulario.dmmFacturas;
   Result.Conexion := AFormulario.ConexionPrincipal;
-  Result.Lecturas := AFormulario.FRepositorioLecturas;
+  Result.Lecturas := AFormulario.FDependenciasInyeccion.Lineas.Lecturas;
   Result.RegistroLog := AFormulario.RegistroLog;
   Result.ParametrosApp := AFormulario.ParametrosApp;
   Result.BusquedaVisual := AFormulario.BusquedaVisual;
   Result.CrearResolver :=
     function: IArticulosResolver
     begin
-      Result := AFormulario.FRepositoriosArticulos.
-        CrearResolverArticulos(AFormulario.ConexionPrincipal);
+      Result := AFormulario.FDependenciasInyeccion.Lineas.Articulos.Resolver;
     end;
   Result.EtiquetaPrendas := AFormulario.lblTotalPrendasFactura;
   Result.PestanaLineas := AFormulario.tsLineasFactura;
@@ -918,7 +896,7 @@ begin
   Result.DataModule := AFormulario.dmmFacturas;
   Result.ParametrosApp := AFormulario.ParametrosApp;
   Result.Estado := AFormulario.FDependencias.Estado;
-  Result.Lecturas := AFormulario.FRepositorioLecturas;
+  Result.Lecturas := AFormulario.FDependenciasInyeccion.Lineas.Lecturas;
   Result.Numero := AFormulario.txtNRO_FACTURA;
   Result.Serie := AFormulario.cbbSerieFactura;
   Result.Tarifa := AFormulario.cbbTARIFA_ARTICULOS_CLIENTES;
@@ -967,22 +945,8 @@ end;
 procedure PrepararDependenciasFacturas(
   AFormulario: TfrmMtoFacturasBase);
 var
-  oCasoUsoConsolidacion: ICasoUsoConsolidacionFactura;
   oOperacionesVista: TOperacionesVistaFacturaVcl;
-  oServicioEmision: IServicioEmisionFiscal;
-  oServicioMovimientos: IServicioMovimientosFactura;
 begin
-  if AFormulario.FListado = nil then
-    AFormulario.FListado := CrearPreparadorListadoFacturasUniDAC(
-      AFormulario.ConexionPrincipal);
-  if AFormulario.FRepositorioLecturas = nil then
-    AFormulario.FRepositorioLecturas :=
-      CrearRepositorioLecturasFacturaUniDAC(
-        AFormulario.ConexionPrincipal);
-  if AFormulario.FPersistenciaFacturas.Borrado = nil then
-    AFormulario.FPersistenciaFacturas :=
-      CrearPersistenciaFacturasUniDAC(
-        AFormulario.ConexionPrincipal);
   if AFormulario.FDependencias.Vista = nil then
   begin
     oOperacionesVista := Default(TOperacionesVistaFacturaVcl);
@@ -1079,48 +1043,17 @@ begin
       CrearGestorModoEntradaFactura(
       AFormulario.FDependencias.Vista,
       mefAutomatico);
-  end;
-  if AFormulario.FServiciosFactura.Efectos = nil then
-  begin
-    oServicioEmision := CrearServicioEmisionFiscal(
-      AFormulario.ParametrosApp,
-      AFormulario.ParametrosCaja,
-      AFormulario.ConexionPrincipal,
-      CrearServicioVerifactuColaUniDAC(
-        AFormulario.ConexionPrincipal));
-    oServicioMovimientos := TServicioMovimientosFactura.Create(
-      AFormulario.ConexionPrincipal,
-      AFormulario.FPersistenciaFacturas.Movimientos,
-      TRepositorioValoresAutomaticosUniDAC.Create(
-        AFormulario.ConexionPrincipal));
-    oCasoUsoConsolidacion := CrearCasoUsoConsolidacionFactura(
-      AFormulario.FPersistenciaFacturas.UnidadTrabajo,
-      AFormulario.FPersistenciaFacturas.Consolidacion,
-      oServicioEmision,
-      oServicioMovimientos);
-    AFormulario.FServiciosFactura := CrearServiciosFactura(
-      AFormulario.ConexionPrincipal,
-      TRepositorioFacturas.Create(
-        AFormulario.ConexionPrincipal,
-        AFormulario.FServiciosSqlPantalla.Catalogo,
-        AFormulario.FServiciosSqlPantalla.Incidencias),
-      AFormulario.FRepositorioLecturas,
-      AFormulario.FPersistenciaFacturas,
-      AFormulario.FRepositoriosArticulos.CrearResolverArticulos(
-        AFormulario.ConexionPrincipal),
-      CrearServicioVerifactuColaUniDAC(
-        AFormulario.ConexionPrincipal));
     AFormulario.FDependencias.Consolidacion :=
       CrearAplicacionConsolidacionFactura(
-        oCasoUsoConsolidacion,
+        AFormulario.FDependenciasInyeccion.Consolidacion,
         AFormulario.FDependencias.Vista);
     AFormulario.FDependencias.OperacionFiscal :=
       CrearAplicacionOperacionFiscalFactura(
-        oServicioEmision,
+        AFormulario.FDependenciasInyeccion.EmisionFiscal,
         AFormulario.FDependencias.Vista);
     AFormulario.FDependencias.Cobros :=
       CrearAplicacionCobrosFactura(
-        AFormulario.FServiciosFactura.Efectos);
+        AFormulario.FDependenciasInyeccion.Cobros);
   end;
 end;
 
@@ -1134,11 +1067,9 @@ begin
     AFormulario.ConexionPrincipal,
     AFormulario.dmmFacturas.unqryTablaG,
     AFormulario.dmmFacturas.unqryLinFac,
-    AFormulario.FRepositoriosArticulos.
-      CrearValidadorArticulos(AFormulario.ConexionPrincipal),
-    AFormulario.FRepositoriosArticulos.
-      CrearResolverArticulos(AFormulario.ConexionPrincipal),
-    AFormulario.FRepositorioLecturas);
+    AFormulario.FDependenciasInyeccion.Lineas.Articulos.Validador,
+    AFormulario.FDependenciasInyeccion.Lineas.Articulos.Resolver,
+    AFormulario.FDependenciasInyeccion.Lineas.Lecturas);
   FreeAndNil(AFormulario.FPresentadorLineas);
   AFormulario.FPresentadorLineas := TPresentadorLineasFacturaVcl.Create(
     CrearContextoLineasFacturaVcl(AFormulario));
@@ -1256,13 +1187,14 @@ begin
   // TIPO_FAC vive en la vista. La sentencia la compone el adaptador de
   // persistencia; la pantalla no arma SQL.
   sVista := AFormulario.NombreVistaListado;
-  bEstadoCola := AFormulario.FListado.EstadoColaDisponible(sAviso);
+  bEstadoCola := AFormulario.FDependenciasInyeccion.Listado.
+    EstadoColaDisponible(sAviso);
   if sAviso <> '' then
     AFormulario.RegistroLog.RegistrarAviso(sAviso);
   AFormulario.dmmFacturas.unqryTablaG.DisableControls;
   try
     AFormulario.dmmFacturas.unqryTablaG.Close;
-    AFormulario.FListado.PrepararListado(
+    AFormulario.FDependenciasInyeccion.Listado.PrepararListado(
       AFormulario.dmmFacturas.unqryTablaG,
       sVista,
       bEstadoCola);
@@ -1283,8 +1215,7 @@ function CrearConfigColumnasSkuFacturaVcl(
   ALineas: TDataSet): TConfigColumnasSku;
 begin
   Result := CrearConfigColumnasSkuDocumento(
-    CrearServiciosColumnasSkuUniDAC(
-      AFormulario.dmmFacturas.unqryTablaG.Connection),
+    AFormulario.FDependenciasInyeccion.Lineas.ColumnasSku,
     AFormulario.ContextoSesion,
     AFormulario.tvLineasFactura, ALineas,
     AFormulario.FModoEntradaSel, '', 'FACLIN');
@@ -1292,13 +1223,9 @@ begin
   Result.BusquedaVisual := AFormulario.BusquedaVisual;
   Result.DistribuidorTallasVisual := AFormulario.DistribuidorTallasVisual;
   Result.ValidadorArticulos :=
-    AFormulario.FRepositoriosArticulos.
-      CrearValidadorArticulos(
-        AFormulario.dmmFacturas.unqryTablaG.Connection);
+    AFormulario.FDependenciasInyeccion.Lineas.Articulos.Validador;
   Result.LookupAtributos :=
-    AFormulario.FRepositoriosArticulos.
-      CrearLookupAtributosArticulos(
-        AFormulario.dmmFacturas.unqryTablaG.Connection);
+    AFormulario.FDependenciasInyeccion.Lineas.Articulos.Atributos;
   if AFormulario.dmmFacturas.unqryTablaG.FindField(
     'CODIGO_ALM_FAC') <> nil then
     Result.AlmacenStock := Trim(
@@ -1338,8 +1265,8 @@ begin
   Result.FieldAlmacenMaster := '';
   Result.MaxColumnas := 20;
   Result.BandaUnica := True;
-  Result.Repositorios := CrearRepositorioPivoteVenta(
-    Result.Conexion, Result.Usuario, AFormulario.BusquedaVisual);
+  Result.Repositorios := AFormulario.FDependenciasInyeccion.Lineas.Pivote.
+    Crear(Result.Usuario, AFormulario.BusquedaVisual);
   Result.OnCrearLineaSku :=
     AFormulario.FPresentadorLineas.PivoteCrearLineaSku;
   Result.OnBandaCambiada :=
@@ -1362,9 +1289,8 @@ begin
         SCaptionTabLineasBorradorDesglose;
       AplicarNombresAtributosGlobalesDocumento(
         AFormulario.tvLineasFactura,
-        CrearColumnasDocumentoLecturas(
-          AFormulario.dmmFacturas.unqryTablaG.Connection).
-            ListarNombresAtributosGlobales);
+        AFormulario.FDependenciasInyeccion.Lineas.AtributosGlobales.
+          ListarNombresAtributosGlobales);
     end;
   end;
 end;
@@ -1475,6 +1401,16 @@ end;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
+constructor TfrmMtoFacturasBase.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const ADependencias: TDependenciasFacturas);
+begin
+  ADependencias.Validar;
+  FDependenciasInyeccion := ADependencias;
+  inherited Create(AOwner, AContexto);
+end;
+
 procedure TfrmMtoFacturasBase.ResetForm;
 begin
   inherited;
@@ -1509,9 +1445,8 @@ begin
   FreeAndNil(FPresentadorLineas);
   FreeAndNil(FPresentadorCabecera);
   FreeAndNil(FEditorLineas);
-  FDependencias := Default(TContextoDependenciasFacturas);
-  FRepositoriosArticulos := nil;
-  FServiciosSqlPantalla := Default(TServiciosSqlPantalla);
+  FDependencias := Default(TDependenciasPresentacionFacturas);
+  FDependenciasInyeccion.Liberar;
   inherited;
 end;
 procedure TfrmMtoFacturasBase.btnUpdateClienteClick(Sender: TObject);
@@ -1900,7 +1835,7 @@ begin
     sNum := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
     sSerie := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
     Result := inLibFacturas.ContarLineasFactura(
-      FRepositorioLecturas, sSerie, sNum);
+      FDependenciasInyeccion.Lineas.Lecturas, sSerie, sNum);
   end;
 end;
 
@@ -1911,10 +1846,7 @@ end;
 
 procedure TfrmMtoFacturasBase.CrearTablaPrincipal;
 begin
-  FServiciosSqlPantalla := ObtenerCompositorSqlPantalla(Self).
-    CrearServiciosSqlPantalla(Name);
-  FRepositoriosArticulos := ObtenerCompositorArticulosPantalla(Self).
-    CrearRepositoriosArticulosPantalla(Name);
+  FDependenciasInyeccion.Validar;
   PrepararDependenciasFacturas(Self);
   InicializarDocumento(
     CrearConfiguracionDocumento(tdFactura, sdVenta));
@@ -1922,8 +1854,12 @@ begin
   inherited;
   dmmFacturas := TdmFacturas(AsegurarDataModuleDocumento(
     Self, tdmDataModule, TdmFacturas));
-  dmmFacturas.ConfigurarServicios(FServiciosFactura);
+  dmmFacturas.ConfigurarServicios(
+    FDependenciasInyeccion.ServiciosDataModule);
   dmmFacturas.TipoFacturaDefecto := TipoFacturaFiltro;
+  btnVerifactuResolverIncidencia.Configurar(
+    FDependenciasInyeccion.IncidenciaFiscal,
+    dsTablaG);
   ComponerPresentadoresFacturaVcl(Self);
   EnlazarAvisosFacturaVcl(Self);
   ConfigurarTablaPrincipalDocumento(
@@ -1964,7 +1900,6 @@ var
   sSerie: string;
   sNumero: string;
   Validacion: TResultadoOperacionFactura;
-  Servicio: IServicioReaperturaBorrador;
 begin
   // Deshace un lanzamiento que la AEAT aún NO ha aceptado (p. ej. NIF
   // erróneo detectado tras Consolidar): aparca la fila ALTA de la cola
@@ -1980,14 +1915,9 @@ begin
   end;
   sSerie  := dsTablaG.DataSet.FieldByName(fseriefac).AsString;
   sNumero := dsTablaG.DataSet.FieldByName(fnrofac).AsString;
-  Servicio := CrearServicioReaperturaBorrador(
-    ParametrosApp,
-    ParametrosCaja,
-    ConexionPrincipal,
-    FPersistenciaFacturas.Reapertura,
-    CrearRepositorioVentasWsColaUniDAC(ConexionPrincipal),
-    RegistroLog);
-  Validacion := Servicio.Validar(sSerie, sNumero);
+  Validacion := FDependenciasInyeccion.Reapertura.Validar(
+    sSerie,
+    sNumero);
   if not Validacion.Exito then
     ShowMessage(Validacion.Mensaje)
   else if MessageDlg(Format(SPreguntaDevolverBorrador, [sSerie, sNumero]),
@@ -1995,7 +1925,7 @@ begin
           mrYes then
   begin
     try
-      Servicio.Reabrir(
+      FDependenciasInyeccion.Reapertura.Reabrir(
         sSerie,
         sNumero,
         IdentidadSesion.Usuario);
@@ -2264,8 +2194,7 @@ begin
   // Aviso: lineas con articulo con variaciones y sin SKU asignado
   // (no mueven stock).
   sLineasSinSku := LineasSinSkuRequerido(
-    FRepositoriosArticulos.CrearValidadorArticulos(
-      dmmFacturas.unqryTablaG.Connection),
+    FDependenciasInyeccion.Lineas.Articulos.Validador,
     dmmFacturas.unqryLinFac, 'FACLIN');
   if (sLineasSinSku = '') or
      (MessageDlg(Format(SPreguntaGrabarFacturaVentaSinSku,

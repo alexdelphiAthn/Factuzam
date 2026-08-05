@@ -32,6 +32,12 @@ type
     procedure SkuCargaStockYAtributos;
     [Test]
     procedure ArticuloSimpleCargaStockSinAtributos;
+    [Test]
+    procedure ContextoSinResolucionFallaAlPreparar;
+    [Test]
+    procedure ContextoSinAtributosFallaAlPreparar;
+    [Test]
+    procedure ContextoSinColumnasSkuFallaAlPreparar;
   end;
 
   [TestFixture]
@@ -57,9 +63,12 @@ implementation
 
 uses
   System.SysUtils,
+  inLibArticulosAtributosIntf,
   inLibArticulosValidadorIntf,
+  inLibColumnasDocumentoLecturasIntf,
   inLibInventariosAplicacion,
-  inLibInventariosAplicacionIntf;
+  inLibInventariosAplicacionIntf,
+  inLibInventariosInyeccion;
 
 type
   TValidadorEntradaInventarioFalso = class(
@@ -103,6 +112,28 @@ type
     procedure EscribirUnidad(const ACodigoUnidad: string);
     procedure CargarStock(const ACodigoUnidad: string);
     procedure RellenarAtributos(const ACodigoSku: string);
+  end;
+
+  TLookupAtributosInventarioFalso = class(
+    TInterfacedObject,
+    IArticulosAtributosLookup)
+  public
+    function ObtenerAtributos(
+      const ACodigoArticulo: string): TArray<TArticuloAtributo>;
+    function ObtenerPropiedades(
+      const ACodigoArticulo: string): TArray<TArticuloPropiedad>;
+    function ObtenerAtributosDeSku(
+      const ACodigoSku: string): TArray<TArticuloAtributoValor>;
+    function ObtenerAvsEnSkus(
+      const ACodigoArticulo: string;
+      AOrdenAtributo: Integer): TArray<TArticuloAtributoValor>;
+  end;
+
+  TLecturasColumnasInventarioFalsas = class(
+    TInterfacedObject,
+    IColumnasDocumentoLecturas)
+  public
+    function ListarNombresAtributosGlobales: TArray<string>;
   end;
 
   TOperacionesImportacionFalsas = class(
@@ -231,6 +262,37 @@ end;
 function TOperacionesEntradaInventarioFalsas.MuestraAtributos: Boolean;
 begin
   Result := FMuestraAtributos;
+end;
+
+function TLookupAtributosInventarioFalso.ObtenerAtributos(
+  const ACodigoArticulo: string): TArray<TArticuloAtributo>;
+begin
+  SetLength(Result, 0);
+end;
+
+function TLecturasColumnasInventarioFalsas.
+  ListarNombresAtributosGlobales: TArray<string>;
+begin
+  SetLength(Result, 0);
+end;
+
+function TLookupAtributosInventarioFalso.ObtenerPropiedades(
+  const ACodigoArticulo: string): TArray<TArticuloPropiedad>;
+begin
+  SetLength(Result, 0);
+end;
+
+function TLookupAtributosInventarioFalso.ObtenerAtributosDeSku(
+  const ACodigoSku: string): TArray<TArticuloAtributoValor>;
+begin
+  SetLength(Result, 0);
+end;
+
+function TLookupAtributosInventarioFalso.ObtenerAvsEnSkus(
+  const ACodigoArticulo: string;
+  AOrdenAtributo: Integer): TArray<TArticuloAtributoValor>;
+begin
+  SetLength(Result, 0);
 end;
 
 function TOperacionesEntradaInventarioFalsas.ObtenerNumeroAtributos(
@@ -365,6 +427,58 @@ begin
   Assert.AreEqual('ART1', Resultado.CodigoUnidad);
   Assert.AreEqual(1, Operaciones.FStocksCargados);
   Assert.AreEqual(0, Operaciones.FAtributosRellenados);
+end;
+
+procedure TPruebasInventariosAplicacion.
+  ContextoSinResolucionFallaAlPreparar;
+var
+  Contexto: TDependenciasInventarios;
+begin
+  Contexto := Default(TDependenciasInventarios);
+  Assert.WillRaise(
+    procedure
+    begin
+      Contexto.Validar;
+    end,
+    EArgumentNilException);
+end;
+
+procedure TPruebasInventariosAplicacion.
+  ContextoSinAtributosFallaAlPreparar;
+var
+  Contexto: TDependenciasInventarios;
+  Validador: TValidadorEntradaInventarioFalso;
+begin
+  Contexto := Default(TDependenciasInventarios);
+  Validador := TValidadorEntradaInventarioFalso.Create;
+  Contexto.Articulos.ResolucionValidacion := Validador;
+  Assert.WillRaise(
+    procedure
+    begin
+      Contexto.Validar;
+    end,
+    EArgumentNilException);
+end;
+
+procedure TPruebasInventariosAplicacion.
+  ContextoSinColumnasSkuFallaAlPreparar;
+var
+  Contexto: TDependenciasInventarios;
+  Validador: TValidadorEntradaInventarioFalso;
+begin
+  Contexto := Default(TDependenciasInventarios);
+  Validador := TValidadorEntradaInventarioFalso.Create;
+  Contexto.Articulos.ResolucionValidacion := Validador;
+  Contexto.Articulos.Atributos :=
+    TLookupAtributosInventarioFalso.Create;
+  Contexto.Articulos.AtributosGlobales :=
+    TLecturasColumnasInventarioFalsas.Create;
+  Assert.WillRaise(
+    procedure
+    begin
+      Contexto.Validar;
+    end,
+    EArgumentNilException);
 end;
 
 procedure TPruebasInventariosImportacion.LectorCsvAdmitePuntoYComaEIgual;

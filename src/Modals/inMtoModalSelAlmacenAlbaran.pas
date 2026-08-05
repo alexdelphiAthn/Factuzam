@@ -163,7 +163,6 @@ begin
   FNumeroAlb     := '';
   FSerieAlb      := '';
   CrearContextoVentasPantalla(
-    Self,
     ConexionPrincipal,
     oContexto);
   FRepositorio := oContexto.Repositorio;

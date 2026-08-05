@@ -20,6 +20,7 @@ uses
   inLibFacturas, inLibFacturasLecturasIntf,
   inLibLogIntf,
   inLibCajaTipos, inLibCajaVentaIntf,
+  inLibCajaPantallaInyeccion,
   inMtoCajaFaseCobro;
 
 type
@@ -55,6 +56,7 @@ type
     ActualizarReloj: TActualizarRelojCierreCaja;
     LeerFecha: TLeerFechaCierreCaja;
     PresentarResultado: TPresentarResultadoCierreCaja;
+    DependenciasFaseCobro: TDependenciasFaseCobro;
   end;
   TCoordinadorCierreVentaCajaVcl = class
   private
@@ -158,7 +160,8 @@ begin
       AContexto.RegistroLog);
     ATotales.ProcesarFacturaCompleta;
     AFormulario := TfrmMtoCajaFaseCobro.Create(
-      AContexto.Propietario);
+      AContexto.Propietario,
+      AContexto.DependenciasFaseCobro);
     ConfigurarFaseCobro(AContexto, AFormulario, ATotales);
     Result := AFormulario.ShowModal = mrOk;
   end;

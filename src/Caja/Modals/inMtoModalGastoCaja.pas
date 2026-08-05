@@ -27,7 +27,7 @@ uses
   inMtoFrmBase, dxCoreGraphics, Vcl.Menus, cxMaskEdit, cxGroupBox,
   JvComponentBase, JvEnterTab, cxClasses, cxLocalization,
   inLibCajaVentaIntf, inLibGastoCajaPersistenciaIntf,
-  inLibGenerarTicketIntf, UniDataCajaPantallaComposicion;
+  inLibGenerarTicketIntf, inLibCajaPantallaInyeccion;
 
 type
   TfrmModalGastoCaja = class(TfrmBase)
@@ -75,13 +75,26 @@ type
       AOwner: TComponent;
       AConn: TUniConnection;
       const AEmpresa, AAlmacen, ACaja: string;
-      AFechaOperacion: TDateTime = 0): Boolean;
+      AFechaOperacion: TDateTime = 0): Boolean; overload;
+    class function Ejecutar(
+      AOwner: TComponent;
+      AConn: TUniConnection;
+      const ADependencias: TDependenciasGastoCaja;
+      const AEmpresa, AAlmacen, ACaja: string;
+      AFechaOperacion: TDateTime = 0): Boolean; overload;
     class function EjecutarConImporte(
       AOwner: TComponent;
       AConn: TUniConnection;
       const AEmpresa, AAlmacen, ACaja: string;
       AImporte: Currency;
-      AFechaOperacion: TDateTime = 0): Boolean;
+      AFechaOperacion: TDateTime = 0): Boolean; overload;
+    class function EjecutarConImporte(
+      AOwner: TComponent;
+      AConn: TUniConnection;
+      const ADependencias: TDependenciasGastoCaja;
+      const AEmpresa, AAlmacen, ACaja: string;
+      AImporte: Currency;
+      AFechaOperacion: TDateTime = 0): Boolean; overload;
   end;
 
 implementation
@@ -98,10 +111,22 @@ class function TfrmModalGastoCaja.Ejecutar(
   AOwner: TComponent;
   AConn: TUniConnection;
   const AEmpresa, AAlmacen, ACaja: string;
-  AFechaOperacion: TDateTime = 0): Boolean;
+  AFechaOperacion: TDateTime): Boolean;
+begin
+  ValidarDependenciaCaja(nil, 'contexto del gasto de Caja');
+  Result := False;
+end;
+
+class function TfrmModalGastoCaja.Ejecutar(
+  AOwner: TComponent;
+  AConn: TUniConnection;
+  const ADependencias: TDependenciasGastoCaja;
+  const AEmpresa, AAlmacen, ACaja: string;
+  AFechaOperacion: TDateTime): Boolean;
 var
   frm: TfrmModalGastoCaja;
 begin
+  ADependencias.Validar;
   Result := False;
   frm := TfrmModalGastoCaja.Create(AOwner);
   try
@@ -110,6 +135,9 @@ begin
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
     frm.FFechaOperacion := AFechaOperacion;
+    frm.FRepositorioConsultas := ADependencias.Consultas;
+    frm.FRepositorioPersistencia := ADependencias.Persistencia;
+    frm.FLecturasImpresionTicket := ADependencias.LecturasTicket;
     frm.ComponerDependencias;
     frm.btnEmpleado.Text := frm.IdentidadSesion.Usuario;
     frm.ValidarEmpleado;
@@ -125,10 +153,23 @@ class function TfrmModalGastoCaja.EjecutarConImporte(
   AConn: TUniConnection;
   const AEmpresa, AAlmacen, ACaja: string;
   AImporte: Currency;
-  AFechaOperacion: TDateTime = 0): Boolean;
+  AFechaOperacion: TDateTime): Boolean;
+begin
+  ValidarDependenciaCaja(nil, 'contexto del gasto de Caja');
+  Result := False;
+end;
+
+class function TfrmModalGastoCaja.EjecutarConImporte(
+  AOwner: TComponent;
+  AConn: TUniConnection;
+  const ADependencias: TDependenciasGastoCaja;
+  const AEmpresa, AAlmacen, ACaja: string;
+  AImporte: Currency;
+  AFechaOperacion: TDateTime): Boolean;
 var
   frm: TfrmModalGastoCaja;
 begin
+  ADependencias.Validar;
   Result := False;
   frm := TfrmModalGastoCaja.Create(AOwner);
   try
@@ -137,6 +178,9 @@ begin
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
     frm.FFechaOperacion := AFechaOperacion;
+    frm.FRepositorioConsultas := ADependencias.Consultas;
+    frm.FRepositorioPersistencia := ADependencias.Persistencia;
+    frm.FLecturasImpresionTicket := ADependencias.LecturasTicket;
     frm.ComponerDependencias;
     frm.btnEmpleado.Text := frm.IdentidadSesion.Usuario;
     frm.ValidarEmpleado;
@@ -158,15 +202,12 @@ end;
 
 procedure TfrmModalGastoCaja.ComponerDependencias;
 var
-  oComposicion: TComposicionCajaPantalla;
+  Dependencias: TDependenciasGastoCaja;
 begin
-  oComposicion := ComponerCajaPantalla(Self);
-  FRepositorioConsultas := oComposicion.Consultas.
-    CrearRepositorioConsultasCaja(FConn);
-  FRepositorioPersistencia := oComposicion.Tickets.
-    CrearRepositorioGastoCaja(FConn);
-  FLecturasImpresionTicket := oComposicion.Tickets.
-    CrearLecturasImpresionTicketCaja(ConexionPrincipal);
+  Dependencias.Consultas := FRepositorioConsultas;
+  Dependencias.Persistencia := FRepositorioPersistencia;
+  Dependencias.LecturasTicket := FLecturasImpresionTicket;
+  Dependencias.Validar;
 end;
 
 procedure TfrmModalGastoCaja.btnEmpleadoPropertiesButtonClick(

@@ -46,7 +46,9 @@ uses
   dxSkinSummer2008, dxSkinTheAsphaltWorld, dxSkinTheBezier, dxSkinValentine,
   dxSkinVisualStudio2013Blue, dxSkinVisualStudio2013Dark,
   dxSkinVisualStudio2013Light, dxSkinVS2010, dxSkinWhiteprint,
-  dxSkinXmas2008Blue;
+  dxSkinXmas2008Blue,
+  inLibPermisosIntf,
+  inLibCajasDefectoPersistenciaIntf;
 
 type
   TfrmMtoUsuarios = class(TfrmMtoGen)
@@ -66,9 +68,14 @@ type
     procedure dsTablaGStateChange(Sender: TObject);
     procedure btnSetCajaClick(Sender: TObject);
   private
-    { Private declarations }
+    FRepositorioCajasDefecto: IRepositorioCajasDefecto;
   public
     dmmUsuarios: TdmUsuarios;
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const ARepositorio: IRepositorioCajasDefecto); reintroduce;
+      overload;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
   end;
@@ -83,6 +90,17 @@ uses
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoUsuarios }
+
+constructor TfrmMtoUsuarios.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const ARepositorio: IRepositorioCajasDefecto);
+begin
+  if not Assigned(ARepositorio) then
+    raise EArgumentNilException.Create('ARepositorio');
+  FRepositorioCajasDefecto := ARepositorio;
+  inherited Create(AOwner, AContexto);
+end;
 
 procedure TfrmMtoUsuarios.btnSetPassClick(Sender: TObject);
 var
@@ -112,7 +130,9 @@ begin
   inherited;
   // Selector Empresa/Almacen/Caja por defecto del usuario (el mismo dialogo
   // que F5 en el menu de caja). Rellena los tres campos de forma coherente.
-  frm := TfrmMtoModalCajDef.Create(Application);
+  frm := TfrmMtoModalCajDef.Create(
+    Application,
+    FRepositorioCajasDefecto);
   try
     frm.sEmpresa :=
       dmmUsuarios.unqryTablaG.FieldByName('EMPRESA_DEFECTO_USU').AsString;

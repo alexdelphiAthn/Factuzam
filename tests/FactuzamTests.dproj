@@ -249,6 +249,14 @@
         <DCCReference Include="..\src\Lib\inLibRegistroLogNulo.pas"/>
         <DCCReference Include="..\src\Lib\inLibConfigCamposIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibRepositoriosPantallaIntf.pas"/>
+        <DCCReference Include="..\src\Lib\inLibArticulosInyeccion.pas"/>
+        <DCCReference Include="..\src\Lib\inLibCajaPantallaInyeccion.pas"/>
+        <DCCReference Include="..\src\Lib\inLibComprasSesionesInyeccion.pas"/>
+        <DCCReference Include="..\src\Lib\inLibFacturasInyeccion.pas"/>
+        <DCCReference Include="..\src\Lib\inLibInventariosInyeccion.pas"/>
+        <DCCReference Include="..\src\Lib\inLibVentasPantallaInyeccion.pas"/>
+        <DCCReference Include="..\src\DataModules\UniDataFacturasInyeccion.pas"/>
+        <DCCReference Include="..\src\DataModules\UniDataInventariosInyeccion.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataRepositoriosPantalla.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataRepositoriosGeneralesPantalla.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataRepositoriosCajaPantalla.pas"/>

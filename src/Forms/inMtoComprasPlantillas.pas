@@ -1,29 +1,18 @@
-﻿{*******************************************************}
-{                                                       }
-{       FactuZam                                        }
-{                                                       }
-{       Copyright (C) 2026 fzam.6dvdy@slmail.me         }
-{                                                       }
-{*******************************************************}
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoComprasPlantillas                                       }
+{    Tipo:       Formulario (Mto)                                              }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       05/08/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo.                                    }
+{  SPDX-License-Identifier: MPL-2.0                                            }
+{  Descripción:                                                                }
+{    Mantiene plantillas globales reutilizables para sesiones de compra.      }
+{******************************************************************************}
 
 unit inMtoComprasPlantillas;
-
-{
-  Formulario para gestionar plantillas globales reutilizables de
-  cabecera de sesión de compra (fza_compras_plantillas + _props + _kits
-  + _kits_det).
-
-  Permite:
-   - Listar plantillas existentes (filtrables por proveedor, familia).
-   - Crear/editar una plantilla manualmente.
-   - Importar la configuración de una sesión existente como plantilla
-     nueva (botón "Guardar como plantilla" en el form de sesiones; aquí
-     sólo se mantiene la plantilla resultante).
-   - Aplicar plantilla al crear sesión nueva: este formulario no aplica;
-     la aplicación se hace desde el Mto consumidor (inMtoComprasSesiones
-     u otros que se construyan sobre el patron inLibGridTallasInline)
-     invocando inLibComprasSesiones.AplicarPlantilla cuando se integre.
-}
 
 interface
 
@@ -139,16 +128,15 @@ end;
 
 procedure TfrmMtoComprasPlantillas.FormCreate(Sender: TObject);
 var
-  oEntrada: TEntradaComposicionComprasPantalla;
-  oServicios: TServiciosComprasPantalla;
+  oContexto: TContextoPlantillasCompraPantalla;
+  oEntrada: TEntradaPlantillasCompraPantalla;
 begin
   inherited;
-  oEntrada := Default(TEntradaComposicionComprasPantalla);
-  oEntrada.Tipo := tccPlantillas;
+  oEntrada := Default(TEntradaPlantillasCompraPantalla);
   oEntrada.Conexion := ConexionPrincipal;
-  oEntrada.MaestroPlantillas := dsTablaG;
-  oServicios := ComponerComprasPantalla(nil, oEntrada);
-  FPersistenciaPlantillas := oServicios.Plantillas;
+  oEntrada.Maestro := dsTablaG;
+  ComponerComprasPantalla(oEntrada, oContexto);
+  FPersistenciaPlantillas := oContexto.Persistencia;
   dsTablaG.DataSet := FPersistenciaPlantillas.DataSetPlantillas;
   tvProps.DataController.DataSource :=
     FPersistenciaPlantillas.DataSourcePropiedades;

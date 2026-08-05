@@ -71,7 +71,6 @@ begin
   try
     frm.Caption := ATitulo;
     CrearContextoVentasPantalla(
-      frm,
       AConn,
       oContexto);
     oRepositorio := oContexto.Repositorio;

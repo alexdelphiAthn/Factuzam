@@ -34,7 +34,7 @@ uses
   inMtoFrmBase, inLibFacturas, inLibFaseCobro, inLibCajaTipos,
   inLibFaseCobroPersistenciaIntf,
   inMtoCajaReferenciaPago, System.UITypes, dxGDIPlusClasses, cxImage,
-  UniDataCajaPantallaComposicion;
+  inLibInformesCajaPersistenciaIntf, inLibCajaPantallaInyeccion;
 
 type
   TTipoImpresionTicket = inLibCajaTipos.TTipoImpresionVenta;
@@ -176,6 +176,7 @@ type
     FTipoImpresion: TTipoImpresionTicket;
     FDatosCobro: TDatosFaseCobro;
     FRepositorioPersistencia: IRepositorioFaseCobro;
+    FRepositorioVales: IRepositorioInformesCaja;
     FMemTablePagos: TVirtualTable;
     FActualizandoVale: Boolean;
     FEmailEnvio: string;
@@ -216,6 +217,10 @@ type
     procedure DibujarIconoEmail;
     function GetEnviarEmail: Boolean;
   public
+    constructor Create(
+      AOwner: TComponent;
+      const ADependencias: TDependenciasFaseCobro); reintroduce;
+      overload;
     property DatosCobro: TDatosFaseCobro read FDatosCobro;
     property TipoImpresion: TTipoImpresionTicket read FTipoImpresion;
     property EnviarEmail: Boolean read GetEnviarEmail;
@@ -234,6 +239,16 @@ implementation
 
 uses inMtoCajaSeleccionVale, inMtoModalSerieFechaFactura,
      UniDataCaja, inLibDocumentoFiscal, inLibCorreoTickets, inLibMsgCaja;
+
+constructor TfrmMtoCajaFaseCobro.Create(
+  AOwner: TComponent;
+  const ADependencias: TDependenciasFaseCobro);
+begin
+  ADependencias.Validar;
+  FRepositorioPersistencia := ADependencias.Persistencia;
+  FRepositorioVales := ADependencias.Vales;
+  inherited Create(AOwner);
+end;
 
 procedure TfrmMtoCajaFaseCobro.Configurar(
   const AEntrada: TEntradaFaseCobro);
@@ -562,17 +577,17 @@ end;
 
 procedure TfrmMtoCajaFaseCobro.FormCreate(Sender: TObject);
 var
-  oComposicion: TComposicionCajaPantalla;
+  Dependencias: TDependenciasFaseCobro;
 begin
   inherited;
-  oComposicion := ComponerCajaPantalla(Self);
+  Dependencias.Persistencia := FRepositorioPersistencia;
+  Dependencias.Vales := FRepositorioVales;
+  Dependencias.Validar;
   FActualizandoEmail := False;
   FEmailEnvio := '';
   chkEnviarEmail.Checked := False;
   DibujarIconoEmail;
   ConfigurarTablaVirtual;
-  FRepositorioPersistencia := oComposicion.Operaciones.
-    CrearRepositorioFaseCobro;
   FDatosCobro := TDatosFaseCobro.Create(
     FRepositorioPersistencia,
     FMemTablePagos);
@@ -688,6 +703,7 @@ begin
   inherited;
   if Assigned(FDatosCobro) then
     FreeAndNil(FDatosCobro);
+  FRepositorioVales := nil;
   FRepositorioPersistencia := nil;
 end;
 
@@ -1167,7 +1183,9 @@ var
   PendienteActual, Exceso: Currency;
 begin
   inherited;
-  if TfrmMtoCajaSeleccionVale.Ejecutar(ValeSeleccionado) then
+  if TfrmMtoCajaSeleccionVale.Ejecutar(
+    FRepositorioVales,
+    ValeSeleccionado) then
   begin
     // 1. Averiguamos cuánto se debe antes de aplicar el vale
     if FDatosCobro.EsDevolucionEconomica then

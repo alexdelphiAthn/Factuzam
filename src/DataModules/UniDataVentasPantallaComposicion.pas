@@ -1,83 +1,87 @@
 ﻿{******************************************************************************}
 {                                                                              }
-{  Modulo:       UniDataVentasPantallaComposicion                              }
-{    Tipo:       Composicion                                                   }
-{ Version:       1.0.0                                                         }
-{   Fecha:       03/08/2026                                                    }
+{  Módulo:       UniDataVentasPantallaComposicion                              }
+{    Tipo:       Composición                                                   }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       05/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
-{                                                                              }
-{  Descripcion:                                                                }
-{    Compone cada pantalla de ventas con capacidades estrechas.                }
+{  SPDX-License-Identifier: MPL-2.0                                            }
+{  Descripción:                                                                }
+{    Compone cada pantalla de ventas con capacidades concretas y estrechas.    }
 {******************************************************************************}
 unit UniDataVentasPantallaComposicion;
 
 interface
 
 uses
-  System.Classes, Uni,
+  Uni,
   inLibContextoSesionIntf,
+  inLibLogIntf,
   inLibParametrosIntf,
-  inLibRepositoriosPantallaIntf,
+  inLibPerfilesUsuarioIntf,
+  inLibVentasPantallaInyeccion,
   inLibVentasPantallaIntf,
   UniDataPedidos;
 
+function CrearServiciosSqlVentasPantalla(
+  const ANombrePantalla: string;
+  const APerfilesLectura: ILectorPerfilesUsuario;
+  const APerfilesEscritura: IEscritorPerfilesUsuario;
+  const ARegistroLog: IRegistroLog): TServiciosSqlVentasPantalla;
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
+  const AParametrosCaja: IParametrosCaja;
+  const AServiciosSql: TServiciosSqlVentasPantalla;
   out AContexto: TContextoAlbaranesVentasPantalla); overload;
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
+  const AParametrosCaja: IParametrosCaja;
+  const AServiciosSql: TServiciosSqlVentasPantalla;
   ADataModule: TdmPedidos;
   out AContexto: TContextoPedidosVentasPantalla); overload;
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
+  AConexion: TUniConnection;
   out AContexto: TContextoClientesVentasPantalla); overload;
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
   AListado: TUniQuery;
   const AContextoSesion: IContextoSesionAplicacion;
   const AParametrosApp: IParametrosAplicacion;
   out AContexto: TContextoFacturasSimplificadasVentasPantalla); overload;
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
   out AContexto: TContextoDestinoEnvioVentasPantalla); overload;
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
   out AContexto:
     TContextoFacturacionAlbaranesFechasVentasPantalla); overload;
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
   out AContexto:
     TContextoFacturacionAlbaranesCompraVentasPantalla); overload;
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
+  const AParametrosApp: IParametrosAplicacion;
+  const AParametrosCaja: IParametrosCaja;
+  const ARegistroLog: IRegistroLog;
   out AContexto: TContextoFacturacionTicketVentasPantalla); overload;
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
   out AContexto: TContextoSerieFechaFacturaVentasPantalla); overload;
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
   out AContexto: TContextoSeleccionFamiliaVentasPantalla); overload;
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
   out AContexto: TContextoSeleccionAlmacenVentasPantalla); overload;
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
+  const AParametrosCaja: IParametrosCaja;
+  const AServiciosSql: TServiciosSqlVentasPantalla;
   out AContexto: TContextoListadoVentasPantalla); overload;
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
   out AContexto: TContextoImpresionVentasPantalla); overload;
 
@@ -85,219 +89,328 @@ implementation
 
 uses
   System.SysUtils,
+  inLibEmisionFiscal,
+  inLibEmisionFiscalIntf,
   inLibVentasPantallaCrearAlbaran,
+  inLibVerifactuColaIntf,
+  UniDataArticulosAtributosRepositorio,
+  UniDataArticulosResolverRepositorio,
+  UniDataArticulosValidadorRepositorio,
+  UniDataClientesRepositorio,
+  UniDataCatalogoSqlAplicacion,
+  UniDataColumnasSkuServicios,
+  UniDataDestinoEnvioRepositorio,
+  UniDataDocumentosTrabajoRepositorio,
+  UniDataEntradaAlbaranVentaRepositorio,
+  UniDataFacturacionAlbaranesCompraRepositorio,
+  UniDataFacturacionAlbaranesFechasRepositorio,
+  UniDataFacturacionTicketRepositorio,
+  UniDataImpresionRepositorio,
+  UniDataListadoVentasRepositorio,
+  UniDataSeleccionAlmacenRepositorio,
+  UniDataSeleccionFamiliaRepositorio,
+  UniDataSerieFechaFacturaRepositorio,
+  UniDataVentasPantallaFacturasSimplificadas,
   UniDataVentasPantallaPedidos,
-  UniDataVentasPantallaFacturasSimplificadas;
+  UniDataVerifactuColaRepositorio;
 
-procedure ComprobarOrigen(AOrigen: TComponent);
+resourcestring
+  SErrorCatalogoSqlVentasPantalla =
+    'No se pudo leer oGetSQLFromDB de %s: %s';
+
+procedure ComprobarConexion(AConexion: TUniConnection);
 begin
-  if not Assigned(AOrigen) then
-    raise EArgumentNilException.Create('AOrigen');
+  if not Assigned(AConexion) then
+    raise EArgumentNilException.Create('AConexion');
 end;
 
-function CrearRepositoriosArticulos(
-  AOrigen: TComponent): IRepositoriosArticulosPantalla;
+function CrearServiciosSqlVentasPantalla(
+  const ANombrePantalla: string;
+  const APerfilesLectura: ILectorPerfilesUsuario;
+  const APerfilesEscritura: IEscritorPerfilesUsuario;
+  const ARegistroLog: IRegistroLog): TServiciosSqlVentasPantalla;
+var
+  EsCatalogoActivo: Boolean;
 begin
-  ComprobarOrigen(AOrigen);
-  Result := ObtenerCompositorArticulosPantalla(AOrigen).
-    CrearRepositoriosArticulosPantalla(AOrigen.Name);
-end;
-
-function CrearRepositoriosDocumentos(
-  AOrigen: TComponent): IRepositoriosDocumentosPantalla;
-begin
-  ComprobarOrigen(AOrigen);
-  Result := ObtenerCompositorDocumentosPantalla(AOrigen).
-    CrearRepositoriosDocumentosPantalla(AOrigen.Name);
-end;
-
-function CrearRepositoriosVentas(
-  AOrigen: TComponent): IRepositoriosVentasPantalla;
-begin
-  ComprobarOrigen(AOrigen);
-  Result := ObtenerCompositorVentasPantalla(AOrigen).
-    CrearRepositoriosVentasPantalla(AOrigen.Name);
+  Result := Default(TServiciosSqlVentasPantalla);
+  EsCatalogoActivo := False;
+  if Assigned(APerfilesLectura) then
+  begin
+    try
+      EsCatalogoActivo := SameText(
+        APerfilesLectura.ObtenerValorPerfil(
+          ANombrePantalla,
+          'oGetSQLFromDB',
+          'False'),
+        'True');
+    except
+      on E: Exception do
+      begin
+        if Assigned(ARegistroLog) then
+        begin
+          ARegistroLog.RegistrarAviso(
+            Format(
+              SErrorCatalogoSqlVentasPantalla,
+              [ANombrePantalla, E.Message]));
+        end;
+      end;
+    end;
+  end;
+  CrearCatalogoSqlAplicacion(
+    APerfilesLectura,
+    APerfilesEscritura,
+    EsCatalogoActivo,
+    Result.Catalogo,
+    Result.Incidencias,
+    ARegistroLog);
 end;
 
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
+  const AParametrosCaja: IParametrosCaja;
+  const AServiciosSql: TServiciosSqlVentasPantalla;
   out AContexto: TContextoAlbaranesVentasPantalla);
 var
-  oArticulos: IRepositoriosArticulosPantalla;
-  oVentas: IRepositoriosVentasPantalla;
+  oContexto: TContextoAlbaranesVentasPantalla;
 begin
-  oArticulos := CrearRepositoriosArticulos(AOrigen);
-  oVentas := CrearRepositoriosVentas(AOrigen);
-  AContexto := Default(TContextoAlbaranesVentasPantalla);
-  AContexto.ResolverArticulos :=
-    oArticulos.CrearResolverArticulos(AConexion);
-  AContexto.ValidadorArticulos :=
-    oArticulos.CrearValidadorArticulos(AConexion);
-  AContexto.AtributosArticulos :=
-    oArticulos.CrearLookupAtributosArticulos(AConexion);
-  AContexto.ColumnasSku := oVentas.CrearServiciosColumnasSku;
-  AContexto.EntradaArticulos :=
-    oVentas.CrearRepositorioEntradaAlbaranVenta;
+  ComprobarConexion(AConexion);
+  oContexto := Default(TContextoAlbaranesVentasPantalla);
+  oContexto.ResolverArticulos :=
+    TRepositorioArticulosResolver.Create(
+      AConexion,
+      AParametrosCaja,
+      AServiciosSql.Catalogo,
+      AServiciosSql.Incidencias);
+  oContexto.ValidadorArticulos :=
+    TRepositorioArticulosValidador.Create(
+      AConexion,
+      AServiciosSql.Catalogo,
+      AServiciosSql.Incidencias);
+  oContexto.AtributosArticulos :=
+    TRepositorioArticulosAtributos.Create(
+      AConexion,
+      AServiciosSql.Catalogo,
+      AServiciosSql.Incidencias);
+  oContexto.ColumnasSku := CrearServiciosColumnasSkuUniDAC(AConexion);
+  oContexto.EntradaArticulos :=
+    CrearRepositorioEntradaAlbaranVentaUniDAC(AConexion);
+  AContexto := PrepararContextoVentas(oContexto);
 end;
 
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
+  const AParametrosCaja: IParametrosCaja;
+  const AServiciosSql: TServiciosSqlVentasPantalla;
   ADataModule: TdmPedidos;
   out AContexto: TContextoPedidosVentasPantalla);
 var
-  oArticulos: IRepositoriosArticulosPantalla;
-  oVentas: IRepositoriosVentasPantalla;
+  oContexto: TContextoPedidosVentasPantalla;
 begin
-  oArticulos := CrearRepositoriosArticulos(AOrigen);
-  oVentas := CrearRepositoriosVentas(AOrigen);
-  AContexto := Default(TContextoPedidosVentasPantalla);
-  AContexto.ResolverArticulos :=
-    oArticulos.CrearResolverArticulos(AConexion);
-  AContexto.ValidadorArticulos :=
-    oArticulos.CrearValidadorArticulos(AConexion);
-  AContexto.AtributosArticulos :=
-    oArticulos.CrearLookupAtributosArticulos(AConexion);
-  AContexto.ColumnasSku := oVentas.CrearServiciosColumnasSku;
-  AContexto.EntradaArticulos :=
-    oVentas.CrearRepositorioEntradaAlbaranVenta;
-  AContexto.CrearAlbaran := TCasoUsoCrearAlbaranPedido.Create(
+  ComprobarConexion(AConexion);
+  if not Assigned(ADataModule) then
+    raise EArgumentNilException.Create('ADataModule');
+  oContexto := Default(TContextoPedidosVentasPantalla);
+  oContexto.ResolverArticulos :=
+    TRepositorioArticulosResolver.Create(
+      AConexion,
+      AParametrosCaja,
+      AServiciosSql.Catalogo,
+      AServiciosSql.Incidencias);
+  oContexto.ValidadorArticulos :=
+    TRepositorioArticulosValidador.Create(
+      AConexion,
+      AServiciosSql.Catalogo,
+      AServiciosSql.Incidencias);
+  oContexto.AtributosArticulos :=
+    TRepositorioArticulosAtributos.Create(
+      AConexion,
+      AServiciosSql.Catalogo,
+      AServiciosSql.Incidencias);
+  oContexto.ColumnasSku := CrearServiciosColumnasSkuUniDAC(AConexion);
+  oContexto.EntradaArticulos :=
+    CrearRepositorioEntradaAlbaranVentaUniDAC(AConexion);
+  oContexto.CrearAlbaran := TCasoUsoCrearAlbaranPedido.Create(
     CrearRepositorioCreacionAlbaranPedidoUniDAC(ADataModule));
+  AContexto := PrepararContextoVentas(oContexto);
 end;
 
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
+  AConexion: TUniConnection;
   out AContexto: TContextoClientesVentasPantalla);
+var
+  oContexto: TContextoClientesVentasPantalla;
 begin
-  AContexto := Default(TContextoClientesVentasPantalla);
-  AContexto.Repositorio :=
-    CrearRepositoriosVentas(AOrigen).CrearRepositorioClientes;
+  ComprobarConexion(AConexion);
+  oContexto := Default(TContextoClientesVentasPantalla);
+  oContexto.Repositorio := CrearRepositorioClientesUniDAC(AConexion);
+  AContexto := PrepararContextoVentas(oContexto);
 end;
 
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
   AListado: TUniQuery;
   const AContextoSesion: IContextoSesionAplicacion;
   const AParametrosApp: IParametrosAplicacion;
   out AContexto: TContextoFacturasSimplificadasVentasPantalla);
+var
+  oContexto: TContextoFacturasSimplificadasVentasPantalla;
 begin
-  ComprobarOrigen(AOrigen);
-  AContexto := Default(TContextoFacturasSimplificadasVentasPantalla);
-  AContexto.Repositorio :=
+  ComprobarConexion(AConexion);
+  if not Assigned(AListado) then
+    raise EArgumentNilException.Create('AListado');
+  oContexto := Default(TContextoFacturasSimplificadasVentasPantalla);
+  oContexto.Repositorio :=
     CrearRepositorioFacturasSimplificadasPantallaUniDAC(
       AConexion,
       AListado,
       AContextoSesion,
       AParametrosApp);
+  AContexto := PrepararContextoVentas(oContexto);
 end;
 
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
   out AContexto: TContextoDestinoEnvioVentasPantalla);
 begin
+  ComprobarConexion(AConexion);
   AContexto := Default(TContextoDestinoEnvioVentasPantalla);
-  AContexto.Repositorio := CrearRepositoriosDocumentos(AOrigen).
-    CrearRepositorioDestinoEnvio(AConexion);
+  AContexto.Repositorio := CrearRepositorioDestinoEnvioUniDAC(AConexion);
+  ComprobarDependenciaVentas(AContexto.Repositorio, 'destino de envío');
 end;
 
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
   out AContexto: TContextoFacturacionAlbaranesFechasVentasPantalla);
 begin
+  ComprobarConexion(AConexion);
   AContexto := Default(
     TContextoFacturacionAlbaranesFechasVentasPantalla);
-  AContexto.Repositorio := CrearRepositoriosDocumentos(AOrigen).
-    CrearRepositorioFacturacionAlbaranesFechas(AConexion);
+  AContexto.Repositorio :=
+    CrearRepositorioFacturacionAlbaranesFechasUniDAC(AConexion);
+  ComprobarDependenciaVentas(
+    AContexto.Repositorio,
+    'facturación de albaranes por fechas');
 end;
 
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
   out AContexto: TContextoFacturacionAlbaranesCompraVentasPantalla);
 begin
+  ComprobarConexion(AConexion);
   AContexto := Default(
     TContextoFacturacionAlbaranesCompraVentasPantalla);
-  AContexto.Repositorio := CrearRepositoriosDocumentos(AOrigen).
-    CrearRepositorioFacturacionAlbaranesCompra(AConexion);
+  AContexto.Repositorio :=
+    CrearRepositorioFacturacionAlbaranesCompraUniDAC(AConexion);
+  ComprobarDependenciaVentas(
+    AContexto.Repositorio,
+    'facturación de albaranes de compra');
 end;
 
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
+  const AParametrosApp: IParametrosAplicacion;
+  const AParametrosCaja: IParametrosCaja;
+  const ARegistroLog: IRegistroLog;
   out AContexto: TContextoFacturacionTicketVentasPantalla);
 var
-  oDocumentos: IRepositoriosDocumentosPantalla;
+  oCola: IServicioVerifactuCola;
+  oEmision: IServicioEmisionFiscal;
 begin
-  oDocumentos := CrearRepositoriosDocumentos(AOrigen);
+  ComprobarConexion(AConexion);
+  oCola := CrearServicioVerifactuColaUniDAC(AConexion, ARegistroLog);
+  oEmision := inLibEmisionFiscal.CrearServicioEmisionFiscal(
+    AParametrosApp,
+    AParametrosCaja,
+    AConexion,
+    oCola);
   AContexto := Default(TContextoFacturacionTicketVentasPantalla);
-  AContexto.Series :=
-    oDocumentos.CrearRepositorioSerieFechaFactura(AConexion);
-  AContexto.Facturacion :=
-    oDocumentos.CrearServicioFacturacionTicket(AConexion);
+  AContexto.Series := CrearRepositorioSerieFechaFacturaUniDAC(AConexion);
+  AContexto.Facturacion := CrearServicioFacturacionTicketUniDAC(
+    AConexion,
+    AParametrosApp,
+    oEmision,
+    oCola);
+  ComprobarDependenciaVentas(AContexto.Series, 'series de factura');
+  ComprobarDependenciaVentas(AContexto.Facturacion, 'facturación de ticket');
 end;
 
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
   out AContexto: TContextoSerieFechaFacturaVentasPantalla);
 begin
+  ComprobarConexion(AConexion);
   AContexto := Default(TContextoSerieFechaFacturaVentasPantalla);
-  AContexto.Repositorio := CrearRepositoriosDocumentos(AOrigen).
-    CrearRepositorioSerieFechaFactura(AConexion);
+  AContexto.Repositorio :=
+    CrearRepositorioSerieFechaFacturaUniDAC(AConexion);
+  ComprobarDependenciaVentas(AContexto.Repositorio, 'serie de factura');
 end;
 
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
   out AContexto: TContextoSeleccionFamiliaVentasPantalla);
 begin
+  ComprobarConexion(AConexion);
   AContexto := Default(TContextoSeleccionFamiliaVentasPantalla);
-  AContexto.Repositorio := CrearRepositoriosDocumentos(AOrigen).
-    CrearRepositorioSeleccionFamilia(AConexion);
+  AContexto.Repositorio :=
+    CrearRepositorioSeleccionFamiliaUniDAC(AConexion);
+  ComprobarDependenciaVentas(AContexto.Repositorio, 'selección de familia');
 end;
 
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
   out AContexto: TContextoSeleccionAlmacenVentasPantalla);
 begin
+  ComprobarConexion(AConexion);
   AContexto := Default(TContextoSeleccionAlmacenVentasPantalla);
-  AContexto.Repositorio := CrearRepositoriosDocumentos(AOrigen).
-    CrearRepositorioSeleccionAlmacen(AConexion);
+  AContexto.Repositorio :=
+    CrearRepositorioSeleccionAlmacenUniDAC(AConexion);
+  ComprobarDependenciaVentas(AContexto.Repositorio, 'selección de almacén');
 end;
 
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
+  const AParametrosCaja: IParametrosCaja;
+  const AServiciosSql: TServiciosSqlVentasPantalla;
   out AContexto: TContextoListadoVentasPantalla);
-var
-  oArticulos: IRepositoriosArticulosPantalla;
-  oDocumentos: IRepositoriosDocumentosPantalla;
-  oVentas: IRepositoriosVentasPantalla;
 begin
-  oArticulos := CrearRepositoriosArticulos(AOrigen);
-  oDocumentos := CrearRepositoriosDocumentos(AOrigen);
-  oVentas := CrearRepositoriosVentas(AOrigen);
+  ComprobarConexion(AConexion);
   AContexto := Default(TContextoListadoVentasPantalla);
-  AContexto.Listado := oVentas.CrearRepositorioListadoVentas;
+  AContexto.Listado := CrearRepositorioListadoVentasUniDAC(AConexion);
   AContexto.DocumentosTrabajo :=
-    oDocumentos.CrearRepositoriosDocumentosTrabajo(AConexion);
+    UniDataDocumentosTrabajoRepositorio.
+      CrearRepositoriosDocumentosTrabajo(AConexion);
   AContexto.ResolverArticulos :=
-    oArticulos.CrearResolverArticulos(AConexion);
+    TRepositorioArticulosResolver.Create(
+      AConexion,
+      AParametrosCaja,
+      AServiciosSql.Catalogo,
+      AServiciosSql.Incidencias);
+  ComprobarDependenciaVentas(AContexto.Listado, 'listado de ventas');
+  ComprobarDependenciaVentas(
+    AContexto.DocumentosTrabajo.Lecturas,
+    'lectura de documentos de trabajo');
+  ComprobarDependenciaVentas(
+    AContexto.DocumentosTrabajo.Escritura,
+    'escritura de documentos de trabajo');
+  ComprobarDependenciaVentas(
+    AContexto.DocumentosTrabajo.Materializacion,
+    'materialización de documentos de trabajo');
+  ComprobarDependenciaVentas(
+    AContexto.ResolverArticulos,
+    'resolución de artículos');
 end;
 
 procedure CrearContextoVentasPantalla(
-  AOrigen: TComponent;
   AConexion: TUniConnection;
   out AContexto: TContextoImpresionVentasPantalla);
+var
+  oContexto: TContextoImpresionVentasPantalla;
 begin
-  AContexto := Default(TContextoImpresionVentasPantalla);
-  AContexto.Persistencia := CrearRepositoriosDocumentos(AOrigen).
-    CrearServiciosPersistenciaImpresion(AConexion);
+  ComprobarConexion(AConexion);
+  oContexto := Default(TContextoImpresionVentasPantalla);
+  oContexto.Persistencia :=
+    CrearServiciosPersistenciaImpresionUniDAC(AConexion);
+  AContexto := PrepararContextoVentas(oContexto);
 end;
 
 end.

@@ -38,21 +38,13 @@ uses
   // Contrato de entrada de articulos (ColumnSKUcxGrid, en src\Lib).
   inLibColumnasSkuIntf,
   inLibInventariosAplicacionIntf,
-  inLibInventarioNubePersistenciaIntf,
-  inLibRepositoriosPantallaIntf,
+  inLibInventariosInyeccion,
+  inLibPermisosIntf,
+  inMtoFrmBase,
   inMtoInventariosPresentacionColumnas,
   inMtoInventariosPresentacionEntrada;
 
 type
-  // Capacidades que la pantalla necesita del exterior. Se inyectan al
-  // crear la tabla principal; la pantalla no las localiza por su cuenta.
-  TContextoDependenciasInventario = record
-    AplicacionEntrada: IAplicacionEntradaInventario;
-    Busquedas: IBusquedasInventario;
-    RecuentoRemoto: IRepositorioRecuentoRemotoInventario;
-    InventarioNube: IInventarioNubePersistencia;
-  end;
-
   TfrmMtoInventarios = class(TfrmMtoGen)
     dlgAbrir: TOpenDialog;
     // Columnas del grid de la pestana Lista (view heredado cxGrdDBTabPrin)
@@ -250,8 +242,8 @@ type
     // cortocircuitadas con FGestorColumnas.ContratoConstruido.
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
-    FDependencias: TContextoDependenciasInventario;
-    FRepositoriosArticulos: IRepositoriosArticulosPantalla;
+    FAplicacionEntrada: IAplicacionEntradaInventario;
+    FDependencias: TDependenciasInventarios;
 
     // === COLUMNAS DINÁMICAS DE ATRIBUTOS ===
     procedure ActualizarColumnasDinamicas(const ArticuloPadre: string);
@@ -325,6 +317,10 @@ type
 
   public
     dmmInventarios: TdmInventarios;
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const ADependencias: TDependenciasInventarios); reintroduce; overload;
     procedure CrearTablaPrincipal; override;
     // Restricción de la precarga a la empresa/almacén del usuario
     function SqlRestriccionUsuario: string; override;
@@ -361,11 +357,7 @@ uses
   inMtoModalAddBlockInventario,
   // Factoria del contrato de entrada (prueba ColumnSKUcxGrid).
   inLibColumnasSku, inLibColumnasDocumento,
-  UniDataColumnasDocumentoRepositorio, UniDataGen,
-  UniDataColumnasSkuServicios,
-  // Adaptadores de persistencia propios de la pantalla.
-  UniDataInventariosBusquedas,
-  UniDataInventarioNubeRepositorio;
+  UniDataGen;
 
 {$R *.dfm}
 
@@ -454,12 +446,21 @@ begin
       AFormulario.RellenarAtributosDesdeSku(ACodigoSku);
     end;
   Operaciones := TAdaptadorEntradaInventarioVcl.Create(Callbacks);
-  AFormulario.FDependencias.AplicacionEntrada :=
+  AFormulario.FAplicacionEntrada :=
     CrearAplicacionEntradaInventario(
     AValidador,
     Operaciones);
 end;
 { TfrmMtoInventarios }
+constructor TfrmMtoInventarios.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const ADependencias: TDependenciasInventarios);
+begin
+  ADependencias.Validar;
+  FDependencias := ADependencias;
+  inherited Create(AOwner, AContexto);
+end;
 // dsTablaG apunta a la cabecera del inventario. El articulo activo
 // vive en la linea seleccionada del sub-grid tvLineas (CODIGO_ART_INVLIN
 // / CODIGO_UNIDAD_INVLIN).
@@ -490,8 +491,7 @@ procedure TfrmMtoInventarios.CrearTablaPrincipal;
 var
   emp: string;
 begin
-  FRepositoriosArticulos := ObtenerCompositorArticulosPantalla(Self).
-    CrearRepositoriosArticulosPantalla(Name);
+  FDependencias.Validar;
   dmmInventarios := nil;
   inherited;
   dmmInventarios := TdmInventarios(AsegurarDataModuleDocumento(
@@ -529,20 +529,15 @@ begin
       begin
         Result := NombresAtributosArticulo(ACodigoArticulo);
       end));
-  FDependencias.Busquedas :=
-    CrearBusquedasInventarioUniDAC(ConexionPrincipal);
-  FDependencias.RecuentoRemoto :=
-    CrearRepositorioRecuentoRemotoInventarioUniDAC(ConexionPrincipal);
-  FDependencias.InventarioNube :=
-    CrearInventarioNubeRepositorio(ConexionPrincipal);
   InicializarEntradaInventarioVcl(
     Self,
-    FRepositoriosArticulos.CrearValidadorArticulos(ConexionPrincipal));
+    FDependencias.Articulos.ResolucionValidacion);
 end;
 procedure TfrmMtoInventarios.FormCreate(Sender: TObject);
 var
   ColumnasSku: TColumnasSkuInventario;
 begin
+  FDependencias.Validar;
   ColumnasSku[1] := tvLineasSKU1;
   ColumnasSku[2] := tvLineasSKU2;
   ColumnasSku[3] := tvLineasSKU3;
@@ -591,8 +586,8 @@ begin
 end;
 procedure TfrmMtoInventarios.FormDestroy(Sender: TObject);
 begin
-  FDependencias := Default(TContextoDependenciasInventario);
-  FRepositoriosArticulos := nil;
+  FAplicacionEntrada := nil;
+  FDependencias.Liberar;
   // Contrato de entrada: soltar eventos del view y liberar el modo
   // ANTES de que muera el form (evita punteros colgantes en el grid).
   if FModoEntrada <> nil then
@@ -875,7 +870,7 @@ begin
   if FGestorColumnas.MostrarAtributos then
     AsegurarDesempaquetadoAtributos;
   Cfg := CrearConfigColumnasSkuDocumento(
-    CrearServiciosColumnasSkuUniDAC(ConexionPrincipal),
+    FDependencias.Articulos.ColumnasSku,
     ContextoSesion, tvLineas,
     dmmInventarios.cdsLineas, FModoEntradaSel,
     dsTablaG.DataSet.FieldByName(
@@ -884,10 +879,8 @@ begin
   Cfg.BusquedaVisual := BusquedaVisual;
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos :=
-    FRepositoriosArticulos.CrearValidadorArticulos(ConexionPrincipal);
-  Cfg.LookupAtributos :=
-    FRepositoriosArticulos.CrearLookupAtributosArticulos(
-      ConexionPrincipal);
+    FDependencias.Articulos.ResolucionValidacion;
+  Cfg.LookupAtributos := FDependencias.Articulos.Atributos;
   Cfg.Campos.Cantidad := 'CANTIDAD_FISICA_INVLIN';
   // El almacen es de CABECERA en inventario: sin columna de linea.
   Cfg.Campos.Almacen := '';
@@ -943,7 +936,7 @@ end;
 procedure TfrmMtoInventarios.MostrarColumnasAtributoGlobales;
 begin
   AplicarNombresAtributosGlobalesDocumento(tvLineas,
-    CrearColumnasDocumentoLecturas(ConexionPrincipal).
+    FDependencias.Articulos.AtributosGlobales.
       ListarNombresAtributosGlobales);
   // Las columnas de atributo del contrato nacen con el ancho por defecto
   // y AZUL_CIELO quedaba ilegible: el gestor las ensancha segun el valor
@@ -1009,25 +1002,17 @@ end;
 function TfrmMtoInventarios.NombresAtributosArticulo(
   const ACodigoArticulo: string): TArray<string>;
 var
+  Atributos: TArray<TArticuloAtributo>;
   iNombre: Integer;
 begin
-  // Unico punto de la pantalla que recorre la definicion de atributos.
   SetLength(Result, 0);
-  if (dmmInventarios <> nil) and (Trim(ACodigoArticulo) <> '') then
+  if Trim(ACodigoArticulo) <> '' then
   begin
-    dmmInventarios.unqryDefinicionArticulo.Close;
-    dmmInventarios.unqryDefinicionArticulo.ParamByName(
-      'ARTICULO').AsString := ACodigoArticulo;
-    dmmInventarios.unqryDefinicionArticulo.Open;
-    while not dmmInventarios.unqryDefinicionArticulo.Eof do
-    begin
-      iNombre := Length(Result);
-      SetLength(Result, iNombre + 1);
-      Result[iNombre] :=
-        dmmInventarios.unqryDefinicionArticulo.FieldByName(
-          'NOMBRE_ATRIBUTO').AsString;
-      dmmInventarios.unqryDefinicionArticulo.Next;
-    end;
+    Atributos := FDependencias.Articulos.Atributos.ObtenerAtributos(
+      ACodigoArticulo);
+    SetLength(Result, Length(Atributos));
+    for iNombre := 0 to High(Atributos) do
+      Result[iNombre] := Atributos[iNombre].NombreAtributo;
   end;
 end;
 
@@ -1138,8 +1123,7 @@ begin
   // Los valores del SKU van a ATTR1..ATTR5 mapeados por
   // ORDEN_VISUAL_ATRIBUTO (= ORDEN_VA del atributo).
   RellenarAtributosDesdeSkuInventario(
-    FRepositoriosArticulos.CrearLookupAtributosArticulos(
-      ConexionPrincipal),
+    FDependencias.Articulos.Atributos,
     dmmInventarios.cdsLineas, Sku);
 end;
 
@@ -1379,8 +1363,7 @@ begin
           (not dmmInventarios.cdsLineas.IsEmpty) then
   begin
     Avs := ValoresAtributoInventario(
-      FRepositoriosArticulos.CrearLookupAtributosArticulos(
-        ConexionPrincipal),
+      FDependencias.Articulos.Atributos,
       dmmInventarios.cdsLineas.FieldByName(
         'CODIGO_ART_INVLIN').AsString, Orden);
     if Length(Avs) = 0 then
@@ -1472,7 +1455,7 @@ var
   Cronometro: TStopwatch;
 begin
   Cronometro := TStopwatch.StartNew;
-  Resultado := FDependencias.AplicacionEntrada.Procesar(AInput);
+  Resultado := FAplicacionEntrada.Procesar(AInput);
   AResolvedValue := Resultado.CodigoUnidad;
   AError := Resultado.Error <> eeiNinguno;
   AErrorText := MensajeErrorEntradaInventario(Resultado);

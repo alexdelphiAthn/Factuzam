@@ -30,7 +30,8 @@ uses
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataDepositosCliente,
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
-  dxShellDialogs, cxSplitter, inLibFotos;
+  dxShellDialogs, cxSplitter, inLibFotos,
+  inLibPermisosIntf, inLibCajaPantallaInyeccion;
 
 type
   TfrmMtoDepositosCliente = class(TfrmMtoGen)
@@ -62,7 +63,13 @@ type
   private
     dmmDepositosCliente: TdmDepositosCliente;
     FFotoEmb: TFotoEmbebida;
+    FDependenciasInforme: TDependenciasInformeCaja;
   public
+    constructor Create(
+      AOwner: TComponent;
+      const AContexto: TContextoAutorizacionPantalla;
+      const ADependencias: TDependenciasInformeCaja); reintroduce;
+      overload;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
   end;
@@ -77,6 +84,16 @@ uses
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoDepositosCliente }
+
+constructor TfrmMtoDepositosCliente.Create(
+  AOwner: TComponent;
+  const AContexto: TContextoAutorizacionPantalla;
+  const ADependencias: TDependenciasInformeCaja);
+begin
+  ADependencias.Validar;
+  FDependenciasInforme := ADependencias;
+  inherited Create(AOwner, AContexto);
+end;
 
 procedure TfrmMtoDepositosCliente.FormCreate(Sender: TObject);
 begin
@@ -113,7 +130,9 @@ begin
     Abort;
   // Informe A4 horizontal (FastReport) de los depositos de clientes. El
   // usuario filtra empresa / almacen / caja y rango de fechas en el modal.
-  frm := TfrmPrintDepositos.Create(Application);
+  frm := TfrmPrintDepositos.Create(
+    Application,
+    FDependenciasInforme);
   try
     frm.ShowModal;
   finally

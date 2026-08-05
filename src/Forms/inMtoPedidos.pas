@@ -735,8 +735,13 @@ begin
   dmmPedidos := TdmPedidos(AsegurarDataModuleDocumento(
     Self, tdmDataModule, TdmPedidos));
   CrearContextoVentasPantalla(
-    Self,
     dmmPedidos.unqryTablaG.Connection,
+    ParametrosCaja,
+    CrearServiciosSqlVentasPantalla(
+      Self.Name,
+      PerfilesLectura,
+      PerfilesEscritura,
+      RegistroLog),
     dmmPedidos,
     FContextoVentas);
   ConfigurarTablaPrincipalDocumento(

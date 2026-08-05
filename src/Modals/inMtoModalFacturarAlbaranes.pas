@@ -114,7 +114,6 @@ begin
   FFacSeries  := TStringList.Create;
   FFacNumeros := TStringList.Create;
   CrearContextoVentasPantalla(
-    Self,
     ConexionPrincipal,
     oContexto);
   FRepositorio := oContexto.Repositorio;

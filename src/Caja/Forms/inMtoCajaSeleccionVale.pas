@@ -50,7 +50,7 @@ uses
   cxGridDBTableView, cxGrid,
   inMtoFrmBase, Vcl.Menus, cxStyles, dxDateRanges,
   dxScrollbarAnnotations, inLibInformesCajaPersistenciaIntf,
-  UniDataCajaPantallaComposicion;
+  inLibCajaPantallaInyeccion;
 
 type
   // Record con los datos del vale seleccionado que se devuelve al formulario
@@ -108,7 +108,15 @@ type
     function  ValidarPinYSeleccionar: Boolean;
     procedure ConfigurarGrid;
   public
-    class function Ejecutar(out AValeSeleccionado: TValeSeleccionado): Boolean;
+    constructor Create(
+      AOwner: TComponent;
+      const ARepositorio: IRepositorioInformesCaja); reintroduce;
+      overload;
+    class function Ejecutar(
+      out AValeSeleccionado: TValeSeleccionado): Boolean; overload;
+    class function Ejecutar(
+      const ARepositorio: IRepositorioInformesCaja;
+      out AValeSeleccionado: TValeSeleccionado): Boolean; overload;
   end;
 
 implementation
@@ -120,13 +128,31 @@ uses
 
 { TfrmMtoCajaSeleccionVale }
 
+constructor TfrmMtoCajaSeleccionVale.Create(
+  AOwner: TComponent;
+  const ARepositorio: IRepositorioInformesCaja);
+begin
+  ValidarDependenciaCaja(ARepositorio, 'selección de vales');
+  FRepositorioPersistencia := ARepositorio;
+  inherited Create(AOwner);
+end;
+
 class function TfrmMtoCajaSeleccionVale.Ejecutar(
+  out AValeSeleccionado: TValeSeleccionado): Boolean;
+begin
+  ValidarDependenciaCaja(nil, 'selección de vales');
+  Result := False;
+end;
+
+class function TfrmMtoCajaSeleccionVale.Ejecutar(
+  const ARepositorio: IRepositorioInformesCaja;
   out AValeSeleccionado: TValeSeleccionado): Boolean;
 var
   Frm: TfrmMtoCajaSeleccionVale;
 begin
+  ValidarDependenciaCaja(ARepositorio, 'selección de vales');
   Result := False;
-  Frm := TfrmMtoCajaSeleccionVale.Create(Application);
+  Frm := TfrmMtoCajaSeleccionVale.Create(Application, ARepositorio);
   try
     if Frm.ShowModal = mrOk then
     begin
@@ -159,15 +185,13 @@ begin
 end;
 
 procedure TfrmMtoCajaSeleccionVale.FormCreate(Sender: TObject);
-var
-  oComposicion: TComposicionCajaPantalla;
 begin
   inherited;
-  oComposicion := ComponerCajaPantalla(Self);
+  ValidarDependenciaCaja(
+    FRepositorioPersistencia,
+    'selección de vales');
   Self.KeyPreview := True;
   Self.OnKeyDown := FormKeyDown;
-  FRepositorioPersistencia := oComposicion.Informes.
-    CrearRepositorioInformesCaja;
   ConfigurarGrid;
 end;
 

@@ -524,10 +524,21 @@
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <DCCReference Include="src\DataModules\UniDataComposicionAplicacion.pas"/>
+        <DCCReference Include="src\DataModules\UniDataMantenimientosInyeccionRaiz.pas"/>
+        <DCCReference Include="src\DataModules\UniDataCajaInyeccionRaiz.pas"/>
+        <DCCReference Include="src\DataModules\UniDataConfiguracionInyeccionRaiz.pas"/>
+        <DCCReference Include="src\DataModules\UniDataFacturasInyeccion.pas"/>
+        <DCCReference Include="src\DataModules\UniDataInventariosInyeccion.pas"/>
         <DCCReference Include="src\DataModules\UniDataRepositoriosPantalla.pas"/>
         <DCCReference Include="src\DataModules\UniDataRepositoriosGeneralesPantalla.pas"/>
         <DCCReference Include="src\DataModules\UniDataRepositoriosCajaPantalla.pas"/>
         <DCCReference Include="src\DataModules\UniDataCajaPantallaComposicion.pas"/>
+        <DCCReference Include="src\Lib\inLibArticulosInyeccion.pas"/>
+        <DCCReference Include="src\Lib\inLibCajaPantallaInyeccion.pas"/>
+        <DCCReference Include="src\Lib\inLibComprasSesionesInyeccion.pas"/>
+        <DCCReference Include="src\Lib\inLibFacturasInyeccion.pas"/>
+        <DCCReference Include="src\Lib\inLibInventariosInyeccion.pas"/>
+        <DCCReference Include="src\Lib\inLibVentasPantallaInyeccion.pas"/>
         <DCCReference Include="src\DataModules\UniDataCajaPantallaHistoricos.pas"/>
         <DCCReference Include="src\DataModules\UniDataComprasPantallaComposicion.pas"/>
         <DCCReference Include="src\DataModules\UniDataComprasPantallaPersistencia.pas"/>
