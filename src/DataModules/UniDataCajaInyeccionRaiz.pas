@@ -76,6 +76,9 @@ uses
   inMtoCajaParam,
   inMtoCajaOperacionesHist,
   inMtoCajaPagosHist,
+  inMtoCajaArqueosHist,
+  inMtoDepositosCliente,
+  inMtoUsuarios,
   inMtoModalImpOperacionesVenta;
 
 procedure NormalizarOwnerPantallaCaja(
@@ -327,6 +330,75 @@ end;
 procedure TInyeccionCajaRaiz.RegistrarFabricas;
 begin
   RegistrarFabricaPantalla(
+    TfrmMtoCajaArqueosHist,
+    function(AOwner: TComponent): TForm
+    var
+      Caja: TComposicionCajaPantalla;
+      Formulario: TfrmMtoCajaArqueosHist;
+      OwnerCreacion: TComponent;
+      ReparentarAplicacion: Boolean;
+    begin
+      NormalizarOwnerPantallaCaja(
+        AOwner,
+        FOwnerRaiz,
+        OwnerCreacion,
+        ReparentarAplicacion);
+      Caja := Componer('frmMtoCajaArqueosHist');
+      Formulario := TfrmMtoCajaArqueosHist.Create(
+        OwnerCreacion,
+        TContextoAutorizacionPantalla.Crear(FComposicion.Permisos),
+        CrearDependenciasInforme(Caja));
+      ReparentarCajaSiProcede(Formulario, ReparentarAplicacion);
+      Result := Formulario;
+    end);
+
+  RegistrarFabricaPantalla(
+    TfrmMtoDepositosCliente,
+    function(AOwner: TComponent): TForm
+    var
+      Caja: TComposicionCajaPantalla;
+      Formulario: TfrmMtoDepositosCliente;
+      OwnerCreacion: TComponent;
+      ReparentarAplicacion: Boolean;
+    begin
+      NormalizarOwnerPantallaCaja(
+        AOwner,
+        FOwnerRaiz,
+        OwnerCreacion,
+        ReparentarAplicacion);
+      Caja := Componer('frmMtoDepositosCliente');
+      Formulario := TfrmMtoDepositosCliente.Create(
+        OwnerCreacion,
+        TContextoAutorizacionPantalla.Crear(FComposicion.Permisos),
+        CrearDependenciasInforme(Caja));
+      ReparentarCajaSiProcede(Formulario, ReparentarAplicacion);
+      Result := Formulario;
+    end);
+
+  RegistrarFabricaPantalla(
+    TfrmMtoUsuarios,
+    function(AOwner: TComponent): TForm
+    var
+      Caja: TComposicionCajaPantalla;
+      Formulario: TfrmMtoUsuarios;
+      OwnerCreacion: TComponent;
+      ReparentarAplicacion: Boolean;
+    begin
+      NormalizarOwnerPantallaCaja(
+        AOwner,
+        FOwnerRaiz,
+        OwnerCreacion,
+        ReparentarAplicacion);
+      Caja := Componer('frmMtoUsuarios');
+      Formulario := TfrmMtoUsuarios.Create(
+        OwnerCreacion,
+        TContextoAutorizacionPantalla.Crear(FComposicion.Permisos),
+        Caja.Operaciones.CrearRepositorioCajasDefecto);
+      ReparentarCajaSiProcede(Formulario, ReparentarAplicacion);
+      Result := Formulario;
+    end);
+
+  RegistrarFabricaPantalla(
     TfrmMtoCajaOperacionesHist,
     function(AOwner: TComponent): TForm
     var
@@ -417,6 +489,9 @@ procedure TInyeccionCajaRaiz.RetirarFabricas;
 begin
   RetirarFabricaPantalla(TfrmMtoCajaPagosHist);
   RetirarFabricaPantalla(TfrmMtoCajaOperacionesHist);
+  RetirarFabricaPantalla(TfrmMtoUsuarios);
+  RetirarFabricaPantalla(TfrmMtoDepositosCliente);
+  RetirarFabricaPantalla(TfrmMtoCajaArqueosHist);
 end;
 
 end.

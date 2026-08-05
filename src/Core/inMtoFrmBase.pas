@@ -41,6 +41,7 @@ uses
   JvEnterTab, Uni, inLibPermisosIntf, inLibConexionesIntf,
   inLibAuditoriaDatosIntf, inLibMonitorSQLIntf,
   inLibContextoSesionIntf, inLibFiltrosGuardadosIntf,
+  inLibDestinosFiltrosPersistenciaIntf,
   inLibPerfilesUsuarioIntf, inLibParametrosIntf,
   inLibInformesGuiasCache, inLibTraduccionesIntf,
   inLibLogIntf,
@@ -89,6 +90,7 @@ type
     FFiltrosLectura: ILectorFiltrosGuardados;
     FFiltrosEscritura: IEscritorFiltrosGuardados;
     FFiltrosComparticion: ICompartidorFiltrosGuardados;
+    FFiltrosDestinos: IRepositorioDestinosFiltros;
     FPerfilesLectura: ILectorPerfilesUsuario;
     FPerfilesEscritura: IEscritorPerfilesUsuario;
     FCachePerfiles: ICachePerfilesUsuario;
@@ -244,6 +246,8 @@ type
       read GetFiltrosEscritura;
     property FiltrosComparticion: ICompartidorFiltrosGuardados
       read GetFiltrosComparticion;
+    property FiltrosDestinos: IRepositorioDestinosFiltros
+      read FFiltrosDestinos;
     property PerfilesLectura: ILectorPerfilesUsuario
       read GetPerfilesLectura;
     property PerfilesEscritura: IEscritorPerfilesUsuario
@@ -509,12 +513,14 @@ begin
   FFiltrosLectura := nil;
   FFiltrosEscritura := nil;
   FFiltrosComparticion := nil;
+  FFiltrosDestinos := nil;
   if Supports(AOwner, IProveedorFiltrosGuardados, Proveedor) then
   begin
     Servicios := Proveedor.ServiciosFiltrosGuardados;
     FFiltrosLectura := Servicios.Lectura;
     FFiltrosEscritura := Servicios.Escritura;
     FFiltrosComparticion := Servicios.Comparticion;
+    FFiltrosDestinos := Servicios.Destinos;
   end;
   if not Assigned(FFiltrosLectura) and
      Assigned(Application.MainForm) and
@@ -528,6 +534,7 @@ begin
     FFiltrosLectura := Servicios.Lectura;
     FFiltrosEscritura := Servicios.Escritura;
     FFiltrosComparticion := Servicios.Comparticion;
+    FFiltrosDestinos := Servicios.Destinos;
   end;
 end;
 
@@ -819,6 +826,7 @@ begin
   FFiltrosLectura := AServicios.Lectura;
   FFiltrosEscritura := AServicios.Escritura;
   FFiltrosComparticion := AServicios.Comparticion;
+  FFiltrosDestinos := AServicios.Destinos;
 end;
 
 procedure TfrmBase.AsignarPerfilesUsuario(
@@ -963,7 +971,8 @@ begin
   Result := CrearServiciosFiltrosGuardados(
     FFiltrosLectura,
     FFiltrosEscritura,
-    FFiltrosComparticion);
+    FFiltrosComparticion,
+    FFiltrosDestinos);
 end;
 
 function TfrmBase.GetPerfilesLectura: ILectorPerfilesUsuario;

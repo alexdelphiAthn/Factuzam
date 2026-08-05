@@ -2127,7 +2127,8 @@ var
 begin
   oResultado := TfrmModalGestionFiltros.Ejecutar(
     Self, Self.Name, cxGrdDBTabPrin.Name,
-    cxGrdDBTabPrin, AFiltroActualBase64);
+    cxGrdDBTabPrin, AFiltroActualBase64,
+    FiltrosDestinos);
   Result.Aplicado := oResultado.Aplicado;
   Result.FiltroBase64 := oResultado.FiltroBase64;
 end;

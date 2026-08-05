@@ -37,6 +37,7 @@ uses
   cxGridTableView,
   cxGridDBTableView,
   inLibContextoSesionIntf,
+  inLibDistribuidorPersistenciaIntf,
   inLibGridTallasInline;
 
 type
@@ -51,6 +52,7 @@ type
     MaxColumnas: Integer;
     FijarTallajeDefecto: TProc<Integer>;
     RefrescarTotalesSesion: TProc;
+    RepositorioDistribuidor: IRepositorioDistribuidor;
   end;
 
   TCoordinadorTallasSesion = class
@@ -380,7 +382,9 @@ begin
     // consistente de la linea (en particular ID_AC_PIVOT_SESLIN).
     if FLineas.State in [dsEdit, dsInsert] then
       FLineas.Post;
-    Modal := TfrmModalDistribuidor.Create(Application);
+    Modal := TfrmModalDistribuidor.Create(
+      Application,
+      FEntorno.RepositorioDistribuidor);
     // Evitamos el caFree heredado para poder liberar a mano sin riesgo
     // de doble liberacion.
     Modal.OnClose := nil;

@@ -1360,7 +1360,8 @@ begin
     procedure
     begin
       ActualizarVisibilidadColumnaSku;
-    end);
+    end,
+    FDependencias.Margen);
   oControlesFiltro.Estado := cbbFiltroEstadoArt;
   oControlesFiltro.ConStock := chkFiltroConStockArt;
   oControlesFiltro.Temporadas := ccbFiltroTemporadaArt;

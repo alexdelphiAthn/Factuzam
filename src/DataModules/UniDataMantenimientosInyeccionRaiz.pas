@@ -245,7 +245,10 @@ begin
         OwnerCreacion,
         TContextoAutorizacionPantalla.Crear(FComposicion.Permisos),
         FComposicion.CrearRepositoriosArticulosPantalla(
-          NOMBRE_PANTALLA_DOCUMENTOS_TRABAJO));
+          NOMBRE_PANTALLA_DOCUMENTOS_TRABAJO),
+        FComposicion.CrearRepositoriosCajaPantalla(
+          NOMBRE_PANTALLA_DOCUMENTOS_TRABAJO).
+          CrearRepositorioCajasDefecto);
       ReparentarAplicacionSiProcede(Result, ReparentarAplicacion);
     end);
 
@@ -253,6 +256,7 @@ begin
     TfrmMtoArticulos,
     function(AOwner: TComponent): TForm
     var
+      Articulos: IRepositoriosArticulosPantalla;
       Dependencias: TContextoDependenciasArticulos;
       Formulario: TfrmMtoArticulos;
       OwnerCreacion: TComponent;
@@ -263,11 +267,14 @@ begin
         FOwnerRaiz,
         OwnerCreacion,
         ReparentarAplicacion);
+      Articulos := FComposicion.CrearRepositoriosArticulosPantalla(
+        'frmMtoArticulos');
       Dependencias := TContextoDependenciasArticulos.Crear(
         CrearCreadorGuardadoArticulo,
         CrearServiciosPropiedadesArticuloUniDAC(
           FComposicion.DmConn.conUni),
-        CrearArticulosVariacionesUniDAC(FComposicion.DmConn.conUni));
+        CrearArticulosVariacionesUniDAC(FComposicion.DmConn.conUni),
+        Articulos.CrearRepositorioMargen);
       Formulario := TfrmMtoArticulos.Create(
         OwnerCreacion,
         TContextoAutorizacionPantalla.Crear(FComposicion.Permisos),
@@ -323,7 +330,10 @@ begin
         NOMBRE_PANTALLA_COMPRAS_SESIONES);
       Dependencias := TContextoDependenciasComprasSesiones.Crear(
         Sql.Catalogo,
-        Sql.Incidencias);
+        Sql.Incidencias,
+        FComposicion.CrearRepositoriosArticulosPantalla(
+          NOMBRE_PANTALLA_COMPRAS_SESIONES).
+          CrearRepositorioDistribuidor);
       Formulario := TfrmMtoComprasSesiones.Create(
         OwnerCreacion,
         TContextoAutorizacionPantalla.Crear(FComposicion.Permisos),

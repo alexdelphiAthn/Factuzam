@@ -616,6 +616,7 @@ begin
       if Dmm <> nil then
         Dmm.RefrescarTotalesSesion;
     end;
+  Entorno.RepositorioDistribuidor := FDependencias.Distribuidor;
   FTallas := TCoordinadorTallasSesion.Create(Entorno);
 end;
 

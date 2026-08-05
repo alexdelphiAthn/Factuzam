@@ -16,16 +16,23 @@ unit inLibComprasSesionesInyeccion;
 interface
 
 uses
-  inLibCatalogoSqlIntf;
+  inLibCatalogoSqlIntf,
+  inLibDistribuidorPersistenciaIntf;
 
 type
   TContextoDependenciasComprasSesiones = record
     CatalogoSql: ICatalogoSql;
     IncidenciasSql: IRegistroIncidenciasSql;
+    Distribuidor: IRepositorioDistribuidor;
     class function Crear(
       const ACatalogoSql: ICatalogoSql;
       const AIncidenciasSql: IRegistroIncidenciasSql
-    ): TContextoDependenciasComprasSesiones; static;
+    ): TContextoDependenciasComprasSesiones; overload; static;
+    class function Crear(
+      const ACatalogoSql: ICatalogoSql;
+      const AIncidenciasSql: IRegistroIncidenciasSql;
+      const ADistribuidor: IRepositorioDistribuidor
+    ): TContextoDependenciasComprasSesiones; overload; static;
     procedure Validar;
     procedure Liberar;
   end;
@@ -52,6 +59,16 @@ begin
   Result.Validar;
 end;
 
+class function TContextoDependenciasComprasSesiones.Crear(
+  const ACatalogoSql: ICatalogoSql;
+  const AIncidenciasSql: IRegistroIncidenciasSql;
+  const ADistribuidor: IRepositorioDistribuidor
+): TContextoDependenciasComprasSesiones;
+begin
+  Result := Crear(ACatalogoSql, AIncidenciasSql);
+  Result.Distribuidor := ADistribuidor;
+end;
+
 procedure TContextoDependenciasComprasSesiones.Validar;
 begin
   if not Assigned(CatalogoSql) then
@@ -70,6 +87,7 @@ procedure TContextoDependenciasComprasSesiones.Liberar;
 begin
   CatalogoSql := nil;
   IncidenciasSql := nil;
+  Distribuidor := nil;
 end;
 
 end.

@@ -463,6 +463,9 @@ begin
   oComposicionFiltros := CrearFiltrosAplicacionPantalla(FOwner);
   FDmFiltros := oComposicionFiltros.DataModule;
   FServiciosFiltros := oComposicionFiltros.Servicios;
+  FServiciosFiltros.Destinos :=
+    CrearRepositoriosConfiguracionPantalla('GestionFiltros').
+    CrearRepositorioDestinosFiltros;
   FRegistroPantallas := TfzaWinF.Create(
     FOwner,
     FRegistroLog,

@@ -23,7 +23,8 @@ uses
   Uni,
   cxCustomData, cxEdit, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxListView,
-  inLibArticulosPresentacionIntf;
+  inLibArticulosPresentacionIntf,
+  inLibMargenPersistenciaIntf;
 
 type
   // Precio del articulo padre para una tarifa; lo resuelve el data module.
@@ -45,6 +46,7 @@ type
     FObtenerPrecioPadre: TObtenerPrecioTarifaPadre;
     FRellenarTarifas: TRellenarTarifasDisponibles;
     FTrasCambiar: TTrasCambiarTarifasArticulo;
+    FRepositorioMargen: IRepositorioMargen;
     function EnEdicion: Boolean;
     function ValorEditado(ASender: TObject): string;
     procedure IncorporarSeleccionadas(ALista: TcxListView);
@@ -57,7 +59,8 @@ type
       const ACatalogo: ICatalogoAltaTarifasArticulo;
       const AObtenerPrecioPadre: TObtenerPrecioTarifaPadre;
       const ARellenarTarifas: TRellenarTarifasDisponibles;
-      const ATrasCambiar: TTrasCambiarTarifasArticulo);
+      const ATrasCambiar: TTrasCambiarTarifasArticulo;
+      const ARepositorioMargen: IRepositorioMargen);
     procedure RecalcularDesdePorcentajeDto(ASender: TObject);
     procedure RecalcularDesdePrecioFinal(ASender: TObject);
     procedure RecalcularDesdePrecioSalida(ASender: TObject);
@@ -89,7 +92,8 @@ constructor TPresentadorTarifasArticulo.Create(
   const ACatalogo: ICatalogoAltaTarifasArticulo;
   const AObtenerPrecioPadre: TObtenerPrecioTarifaPadre;
   const ARellenarTarifas: TRellenarTarifasDisponibles;
-  const ATrasCambiar: TTrasCambiarTarifasArticulo);
+  const ATrasCambiar: TTrasCambiarTarifasArticulo;
+  const ARepositorioMargen: IRepositorioMargen);
 begin
   inherited Create;
   if ATarifas = nil then
@@ -104,6 +108,9 @@ begin
   FObtenerPrecioPadre := AObtenerPrecioPadre;
   FRellenarTarifas := ARellenarTarifas;
   FTrasCambiar := ATrasCambiar;
+  if not Assigned(ARepositorioMargen) then
+    raise EArgumentNilException.Create('ARepositorioMargen');
+  FRepositorioMargen := ARepositorioMargen;
 end;
 
 function TPresentadorTarifasArticulo.EnEdicion: Boolean;
@@ -279,9 +286,9 @@ begin
       dPrecioSalida :=
         FTarifas.FieldByName('PRECIO_SALIDA_ARTTAR').AsFloat;
       oResultado := TfrmModalCalcularMargen.Ejecutar(
-        APropietario, FConexion, iUnico, sCodigoArticulo, sCodigoUnidad,
+        APropietario, iUnico, sCodigoArticulo, sCodigoUnidad,
         sDescripcionArticulo, sCodigoTarifa, sNombreTarifa,
-        sDescripcionSku, dCoste, dPrecioSalida);
+        sDescripcionSku, dCoste, dPrecioSalida, FRepositorioMargen);
       if oResultado.Aceptado then
       begin
         FTarifas.Refresh;

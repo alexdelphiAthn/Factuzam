@@ -16,7 +16,8 @@ unit inLibFiltrosGuardadosIntf;
 interface
 
 uses
-  System.Generics.Collections;
+  System.Generics.Collections,
+  inLibDestinosFiltrosPersistenciaIntf;
 
 type
   TFiltroGuardadoInfo = record
@@ -80,6 +81,7 @@ type
     Lectura: ILectorFiltrosGuardados;
     Escritura: IEscritorFiltrosGuardados;
     Comparticion: ICompartidorFiltrosGuardados;
+    Destinos: IRepositorioDestinosFiltros;
   end;
 
   IProveedorFiltrosGuardados = interface
@@ -93,7 +95,13 @@ function CrearServiciosFiltrosGuardados(
   const ALectura: ILectorFiltrosGuardados;
   const AEscritura: IEscritorFiltrosGuardados;
   const AComparticion: ICompartidorFiltrosGuardados
-): TServiciosFiltrosGuardados;
+): TServiciosFiltrosGuardados; overload;
+function CrearServiciosFiltrosGuardados(
+  const ALectura: ILectorFiltrosGuardados;
+  const AEscritura: IEscritorFiltrosGuardados;
+  const AComparticion: ICompartidorFiltrosGuardados;
+  const ADestinos: IRepositorioDestinosFiltros
+): TServiciosFiltrosGuardados; overload;
 
 implementation
 
@@ -106,6 +114,21 @@ begin
   Result.Lectura := ALectura;
   Result.Escritura := AEscritura;
   Result.Comparticion := AComparticion;
+  Result.Destinos := nil;
+end;
+
+function CrearServiciosFiltrosGuardados(
+  const ALectura: ILectorFiltrosGuardados;
+  const AEscritura: IEscritorFiltrosGuardados;
+  const AComparticion: ICompartidorFiltrosGuardados;
+  const ADestinos: IRepositorioDestinosFiltros
+): TServiciosFiltrosGuardados;
+begin
+  Result := CrearServiciosFiltrosGuardados(
+    ALectura,
+    AEscritura,
+    AComparticion);
+  Result.Destinos := ADestinos;
 end;
 
 end.

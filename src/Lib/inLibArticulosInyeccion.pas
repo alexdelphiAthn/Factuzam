@@ -18,7 +18,8 @@ interface
 uses
   inLibArticulosGuardadoIntf,
   inLibArticulosPropiedadesPersistenciaIntf,
-  inLibArticulosVariacionesIntf;
+  inLibArticulosVariacionesIntf,
+  inLibMargenPersistenciaIntf;
 
 type
   ICreadorGuardadoArticulo = interface
@@ -32,11 +33,18 @@ type
     Guardado: ICreadorGuardadoArticulo;
     Propiedades: TServiciosPropiedadesArticulo;
     Variaciones: IArticulosVariaciones;
+    Margen: IRepositorioMargen;
     class function Crear(
       const AGuardado: ICreadorGuardadoArticulo;
       const APropiedades: TServiciosPropiedadesArticulo;
       const AVariaciones: IArticulosVariaciones
-    ): TContextoDependenciasArticulos; static;
+    ): TContextoDependenciasArticulos; overload; static;
+    class function Crear(
+      const AGuardado: ICreadorGuardadoArticulo;
+      const APropiedades: TServiciosPropiedadesArticulo;
+      const AVariaciones: IArticulosVariaciones;
+      const AMargen: IRepositorioMargen
+    ): TContextoDependenciasArticulos; overload; static;
     function CrearGuardado(
       const AOperaciones: IOperacionesGuardadoArticulo
     ): IAplicacionGuardadoArticulo;
@@ -96,6 +104,17 @@ begin
   Result.Validar;
 end;
 
+class function TContextoDependenciasArticulos.Crear(
+  const AGuardado: ICreadorGuardadoArticulo;
+  const APropiedades: TServiciosPropiedadesArticulo;
+  const AVariaciones: IArticulosVariaciones;
+  const AMargen: IRepositorioMargen
+): TContextoDependenciasArticulos;
+begin
+  Result := Crear(AGuardado, APropiedades, AVariaciones);
+  Result.Margen := AMargen;
+end;
+
 procedure TContextoDependenciasArticulos.Validar;
 begin
   if not Assigned(Guardado) then
@@ -136,6 +155,7 @@ begin
   Propiedades.Lectura := nil;
   Propiedades.Escritura := nil;
   Variaciones := nil;
+  Margen := nil;
 end;
 
 function CrearCreadorGuardadoArticulo: ICreadorGuardadoArticulo;

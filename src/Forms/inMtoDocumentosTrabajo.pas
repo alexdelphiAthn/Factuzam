@@ -37,6 +37,7 @@ uses
   inLibComprasPantallaIntf, inLibDocumentosTrabajo,
   inLibPermisosIntf,
   inLibRepositoriosPantallaIntf,
+  inLibCajasDefectoPersistenciaIntf,
   inLibCajaVentanasIntf;
 
 const
@@ -133,6 +134,7 @@ type
       IMaterializacionDocumentosTrabajo;
     FValidadorArticulos: IArticulosValidador;
     FLookupAtributos: IArticulosAtributosLookup;
+    FRepositorioCajasDefecto: IRepositorioCajasDefecto;
   private
     procedure ConstruirModoEntrada;
     procedure CrearColumnasHostDTR;

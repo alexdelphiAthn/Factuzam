@@ -1466,15 +1466,16 @@ begin
     Screen.MenuFont.Size := 11;
     Application.CreateForm(TfrmMtoPrincipal, Principal);
     Principal.AsignarRegistroLog(RegistroLogAplicacion);
-    Principal.AsignarServiciosVisuales(
-      CrearBusquedaVisualMto,
-      CrearDistribuidorTallasVisualMto,
-      CrearSolicitudPermisoLayoutMto,
-      CrearPreviewTicketMto,
-      CrearProveedorPreviewExcelMto);
     Principal.InicializarAplicacion(
       ContextoSesionInicial,
       ResultadoLicenciaInicial);
+    Principal.AsignarServiciosVisuales(
+      CrearBusquedaVisualMto,
+      CrearDistribuidorTallasVisualMto(
+        Principal.CrearRepositorioDistribuidorVisual),
+      CrearSolicitudPermisoLayoutMto,
+      CrearPreviewTicketMto,
+      CrearProveedorPreviewExcelMto);
     // Diagnóstico: con /teststack se encola una excepción de prueba
     // para verificar JCL stack trace + AppException + log + modal.
   if FindCmdLineSwitch('teststack', True) then

@@ -54,6 +54,7 @@ uses
   inLibCopiasSeguridadIntf,
   inLibExcepcionesAplicacionIntf,
   inLibOperacionesAplicacionIntf,
+  inLibDistribuidorPersistenciaIntf,
   inLibRepositoriosPantallaIntf,
   UniDataComposicionAplicacion,
   UniDataMantenimientosInyeccionRaiz,
@@ -178,6 +179,8 @@ type
     function CrearTraspasoCaja(
       AOwner: TComponent;
       const APermisos: IPermisosAplicacion): ITraspasoCaja;
+    function CrearRepositorioDistribuidorVisual:
+      IRepositorioDistribuidor;
     function CrearServiciosSqlPantalla(
       const ANombrePantalla: string): TServiciosSqlPantalla;
     function CrearRepositoriosArticulosPantalla(
@@ -2262,6 +2265,12 @@ function TfrmMtoPrincipal.CrearTraspasoCaja(
   const APermisos: IPermisosAplicacion): ITraspasoCaja;
 begin
   Result := FInyeccionCaja.CrearTraspaso(AOwner, APermisos);
+end;
+
+function TfrmMtoPrincipal.CrearRepositorioDistribuidorVisual:
+  IRepositorioDistribuidor;
+begin
+  Result := FInyeccionConfiguracion.CrearRepositorioDistribuidor;
 end;
 
 // Restaurar la ventana principal y apartar el menu de caja antes de

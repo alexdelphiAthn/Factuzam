@@ -16,6 +16,7 @@ uses
   System.Classes,
   Vcl.Forms,
   inLibCargaEfectosRemesaPersistenciaIntf,
+  inLibDistribuidorPersistenciaIntf,
   UniDataComposicionAplicacion;
 
 type
@@ -35,6 +36,8 @@ type
       AFormularioPadre: TCustomForm);
     function CrearRepositorioCargaEfectos(
       const ANombrePantalla: string): IRepositorioCargaEfectosRemesa;
+    function CrearRepositorioDistribuidor:
+      IRepositorioDistribuidor;
   end;
 
 implementation
@@ -94,6 +97,16 @@ begin
   Repositorios := FComposicion.CrearRepositoriosRemesasPantalla(
     ANombrePantalla);
   Result := Repositorios.CrearRepositorioCargaEfectosRemesa;
+end;
+
+function TInyeccionConfiguracionRaiz.CrearRepositorioDistribuidor:
+  IRepositorioDistribuidor;
+var
+  Repositorios: IRepositoriosArticulosPantalla;
+begin
+  Repositorios := FComposicion.CrearRepositoriosArticulosPantalla(
+    'ServiciosVisualesAplicacion');
+  Result := Repositorios.CrearRepositorioDistribuidor;
 end;
 
 procedure TInyeccionConfiguracionRaiz.MostrarParametrosAplicacion;
