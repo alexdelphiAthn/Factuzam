@@ -3,6 +3,12 @@
 La opción `TPV → Facturas proforma` permite seleccionar un periodo, una
 empresa destino y una modalidad de generación.
 
+Antes de generar se consulta el registro de periodos de la misma modalidad
+y empresa destino. La pantalla avisa si el intervalo coincide con uno ya
+procesado o se solapa con él y exige confirmación expresa. Cada intento queda
+registrado, incluso cuando no encuentra documentos o termina con error, y los
+enlaces de operación impiden facturar dos veces un mismo VE o TA.
+
 ## Ventas VE
 
 - Genera una proforma interna a nombre de `VENTA CONTADO`.
@@ -20,13 +26,17 @@ empresa destino y una modalidad de generación.
 
 - El TA mantiene su naturaleza de saldo interno pendiente: por sí solo no
   declara IVA ni VeriFactu.
-- La generación crea una factura de venta `NORMAL` en fase `BORRADOR` por
-  cada empresa origen, dirigida a la empresa destino.
+- La generación crea una factura de venta `NORMAL` por cada empresa origen,
+  dirigida a la empresa destino.
 - La cabecera usa los datos fiscales de ambas empresas de `fza_empresas`.
 - Las líneas valoran el coste del movimiento y aplican el IVA vigente de la
   empresa emisora.
-- El borrador aparece en el mantenimiento normal de facturas de venta mayor.
-  Solo al consolidarlo sigue el circuito fiscal habitual de IVA y VeriFactu.
+- Antes de confirmar se validan los requisitos fiscales. Tras guardar la
+  factura se solicita su emisión mediante el servicio fiscal común, que la
+  registra en VeriFactu, No VeriFactu o Sin VeriFactu según la configuración.
+- El enlace de cada operación pasa a `EMITIDA` al delegarse correctamente o
+  a `ERROR_FISCAL` si falla la emisión; el estado del periodo permanece
+  separado del estado fiscal de la factura.
 - Cada TA queda enlazado una sola vez con su factura. Una rectificación
   posterior se tramita mediante el circuito fiscal normal de rectificativas.
 
@@ -34,7 +44,7 @@ empresa destino y una modalidad de generación.
 
 Las proformas VE y las facturas TA muestran una banda antes de cada grupo de
 artículos con el documento, la fecha y el identificador de la operación de
-caja. Los estados de proforma y de factura se mantienen separados.
+caja. Los estados de periodo, proforma y factura se mantienen separados.
 
 El script `facturas_proforma_caja.sql` es idempotente y debe aplicarse a cada
 base de datos existente antes de utilizar la pantalla.

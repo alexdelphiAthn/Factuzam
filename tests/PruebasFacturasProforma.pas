@@ -27,13 +27,23 @@ type
     [Test]
     procedure Traspaso_UsaRepositorioDeFacturas;
     [Test]
-    procedure RevisionPeriodo_SeDelegaAlRepositorio;
+    procedure RevisionPeriodo_SeDelegaSinGenerarDocumentos;
+    [Test]
+    procedure RevisionPeriodoInvalido_NoConsultaRepositorio;
     [Test]
     procedure PeriodoInverso_EsRechazado;
+    [Test]
+    procedure FechaInicialVacia_EsRechazada;
+    [Test]
+    procedure FechaFinalVacia_EsRechazada;
     [Test]
     procedure EmpresaDestinoVacia_EsRechazada;
     [Test]
     procedure UsuarioVacio_EsRechazado;
+    [Test]
+    procedure ModalidadInvalida_EsRechazada;
+    [Test]
+    procedure RepositorioNulo_EsRechazado;
   end;
 
 implementation
@@ -51,6 +61,7 @@ type
     FGeneracionesVenta   : Integer;
     FGeneracionesTraspaso: Integer;
     FRevisionesPeriodo   : Integer;
+    FUltimaModalidad     : TModalidadFacturacionCaja;
     FUltimaSolicitud     : TSolicitudFacturacionCaja;
   public
     function RevisarPeriodo(
@@ -66,6 +77,8 @@ type
     property GeneracionesVenta: Integer read FGeneracionesVenta;
     property GeneracionesTraspaso: Integer read FGeneracionesTraspaso;
     property RevisionesPeriodo: Integer read FRevisionesPeriodo;
+    property UltimaModalidad: TModalidadFacturacionCaja
+      read FUltimaModalidad;
     property UltimaSolicitud: TSolicitudFacturacionCaja
       read FUltimaSolicitud;
   end;
@@ -98,6 +111,7 @@ function TRepositorioFacturasProformaFalso.RevisarPeriodo(
 ): TRevisionPeriodoFacturacionCaja;
 begin
   Inc(FRevisionesPeriodo);
+  FUltimaModalidad := AModalidad;
   FUltimaSolicitud := ASolicitud;
   Result := Default(TRevisionPeriodoFacturacionCaja);
   Result.EsDuplicado := AModalidad = mfcVenta;
@@ -161,7 +175,8 @@ begin
   end;
 end;
 
-procedure TPruebasFacturasProforma.RevisionPeriodo_SeDelegaAlRepositorio;
+procedure TPruebasFacturasProforma.
+  RevisionPeriodo_SeDelegaSinGenerarDocumentos;
 var
   Repositorio: TRepositorioFacturasProformaFalso;
   Servicio   : TFacturadorOperacionesCaja;
@@ -174,9 +189,37 @@ begin
       mfcVenta,
       CrearSolicitudValida);
     Assert.AreEqual(1, Repositorio.RevisionesPeriodo);
+    Assert.AreEqual(mfcVenta, Repositorio.UltimaModalidad);
+    Assert.AreEqual(0, Repositorio.GeneracionesVenta);
+    Assert.AreEqual(0, Repositorio.GeneracionesTraspaso);
     Assert.IsTrue(Revision.EsDuplicado);
     Assert.IsTrue(Revision.EsSolapado);
     Assert.AreEqual('Periodo ya registrado', Revision.Descripcion);
+  finally
+    Servicio.Free;
+  end;
+end;
+
+procedure TPruebasFacturasProforma.
+  RevisionPeriodoInvalido_NoConsultaRepositorio;
+var
+  Repositorio: TRepositorioFacturasProformaFalso;
+  Servicio   : TFacturadorOperacionesCaja;
+  Solicitud  : TSolicitudFacturacionCaja;
+begin
+  Repositorio := TRepositorioFacturasProformaFalso.Create;
+  Servicio := TFacturadorOperacionesCaja.Create(Repositorio);
+  try
+    Solicitud := CrearSolicitudValida;
+    Solicitud.FechaHasta := 0;
+    Assert.WillRaise(
+      procedure
+      begin
+        Servicio.RevisarPeriodo(mfcTraspaso, Solicitud);
+      end,
+      EArgumentException);
+    Assert.AreEqual(0, Repositorio.RevisionesPeriodo);
+    Assert.AreEqual(0, Repositorio.GeneracionesTraspaso);
   finally
     Servicio.Free;
   end;
@@ -193,6 +236,50 @@ begin
   try
     Solicitud := CrearSolicitudValida;
     Solicitud.FechaDesde := Solicitud.FechaHasta + 1;
+    Assert.WillRaise(
+      procedure
+      begin
+        Servicio.Ejecutar(mfcVenta, Solicitud);
+      end,
+      EArgumentException);
+  finally
+    Servicio.Free;
+  end;
+end;
+
+procedure TPruebasFacturasProforma.FechaInicialVacia_EsRechazada;
+var
+  Repositorio: IRepositorioFacturasProforma;
+  Servicio   : TFacturadorOperacionesCaja;
+  Solicitud  : TSolicitudFacturacionCaja;
+begin
+  Repositorio := TRepositorioFacturasProformaFalso.Create;
+  Servicio := TFacturadorOperacionesCaja.Create(Repositorio);
+  try
+    Solicitud := CrearSolicitudValida;
+    Solicitud.FechaDesde := 0;
+    Assert.WillRaise(
+      procedure
+      begin
+        Servicio.Ejecutar(mfcVenta, Solicitud);
+      end,
+      EArgumentException);
+  finally
+    Servicio.Free;
+  end;
+end;
+
+procedure TPruebasFacturasProforma.FechaFinalVacia_EsRechazada;
+var
+  Repositorio: IRepositorioFacturasProforma;
+  Servicio   : TFacturadorOperacionesCaja;
+  Solicitud  : TSolicitudFacturacionCaja;
+begin
+  Repositorio := TRepositorioFacturasProformaFalso.Create;
+  Servicio := TFacturadorOperacionesCaja.Create(Repositorio);
+  try
+    Solicitud := CrearSolicitudValida;
+    Solicitud.FechaHasta := 0;
     Assert.WillRaise(
       procedure
       begin
@@ -246,6 +333,44 @@ begin
   finally
     Servicio.Free;
   end;
+end;
+
+procedure TPruebasFacturasProforma.ModalidadInvalida_EsRechazada;
+var
+  Repositorio: TRepositorioFacturasProformaFalso;
+  Servicio   : TFacturadorOperacionesCaja;
+begin
+  Repositorio := TRepositorioFacturasProformaFalso.Create;
+  Servicio := TFacturadorOperacionesCaja.Create(Repositorio);
+  try
+    Assert.WillRaise(
+      procedure
+      begin
+        Servicio.Ejecutar(
+          TModalidadFacturacionCaja(Ord(High(
+            TModalidadFacturacionCaja)) + 1),
+          CrearSolicitudValida);
+      end,
+      EArgumentOutOfRangeException);
+    Assert.AreEqual(0, Repositorio.GeneracionesVenta);
+    Assert.AreEqual(0, Repositorio.GeneracionesTraspaso);
+  finally
+    Servicio.Free;
+  end;
+end;
+
+procedure TPruebasFacturasProforma.RepositorioNulo_EsRechazado;
+var
+  Servicio: TFacturadorOperacionesCaja;
+begin
+  Servicio := nil;
+  Assert.WillRaise(
+    procedure
+    begin
+      Servicio := TFacturadorOperacionesCaja.Create(nil);
+    end,
+    EArgumentNilException);
+  Assert.IsNull(Servicio);
 end;
 
 initialization

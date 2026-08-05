@@ -19,6 +19,7 @@ uses
   inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages,
   System.SysUtils, System.Variants, System.Classes, System.DateUtils,
+  System.UITypes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls,
   Data.DB,
   cxClasses, cxGraphics, cxControls, cxLookAndFeels,
@@ -81,8 +82,9 @@ resourcestring
     'Se generará una proforma interna no fiscal para VENTA CONTADO. ' +
     'No declarará IVA ni VeriFactu. ¿Desea continuar?';
   SPreguntaGenerarFacturaTraspaso =
-    'Se generarán facturas fiscales normales por los traspasos TA. ' +
-    'Al consolidarlas entrarán en IVA y VeriFactu. ¿Desea continuar?';
+    'Se generarán y emitirán facturas fiscales normales por los ' +
+    'traspasos TA, con IVA y registro VeriFactu según la configuración. ' +
+    '¿Desea continuar?';
   SInfoSinOperacionesFacturacionCaja =
     'No hay operaciones ni ajustes pendientes para el periodo indicado.';
   SInfoResultadoFacturacionCaja =
@@ -90,7 +92,9 @@ resourcestring
   SInfoSeleccionarProformaCaja =
     'Debe seleccionar una proforma de venta para imprimirla.';
   SInfoImprimirFacturaTraspaso =
-    'Las facturas de traspasos TA se imprimen desde Facturas normales.';
+    'Las facturas de traspasos TA se imprimen desde Venta mayor.';
+  SInfoPeriodoFacturacionCajaSinDocumento =
+    'El registro de periodo seleccionado no tiene un documento imprimible.';
   SErrorReferenciaProformaCajaInvalida =
     'No se ha podido identificar la proforma seleccionada.';
   SAvisoPeriodoFacturacionCajaDuplicado =
@@ -105,7 +109,8 @@ resourcestring
 implementation
 
 uses
-  inLibFacturasProforma, inMtoModalImpFacturasProforma;
+  inLibFacturasProforma, inMtoModalImpFacturasProforma,
+  UniDataCajaPantallaComposicion;
 
 {$R *.dfm}
 
@@ -248,10 +253,11 @@ begin
     CrearColumna('FECHA_DOCUMENTO', 'Fecha', 90);
     CrearColumna('FECHA_DESDE', 'Periodo desde', 100);
     CrearColumna('FECHA_HASTA', 'Periodo hasta', 100);
-    CrearColumna('CODIGO_EMPRESA', 'Empresa origen', 100);
+    CrearColumna('CODIGO_EMPRESA', 'Empresa', 100);
     CrearColumna('EMPRESA_DESTINO', 'Empresa destino', 210);
     CrearColumna('ESTADO_DOCUMENTO', 'Estado', 100);
     CrearColumna('CANTIDAD_OPERACIONES', 'Operaciones', 90);
+    CrearColumna('CANTIDAD_AJUSTES', 'Ajustes', 75);
     CrearColumna('TOTAL_BASE', 'Base', 100);
     CrearColumna('TOTAL_IMPUESTOS', 'Impuestos', 100);
     CrearColumna('TOTAL_DOCUMENTO', 'Total', 110);
@@ -355,10 +361,14 @@ function TfrmMtoFacturasProforma.RevisarPeriodo(
   const ASolicitud: TSolicitudFacturacionCaja
 ): TRevisionPeriodoFacturacionCaja;
 var
+  oComposicion: TComposicionCajaPantalla;
   oServicio: TFacturadorOperacionesCaja;
 begin
+  oComposicion := ComponerCajaPantalla(Self);
   oServicio := TFacturadorOperacionesCaja.Create(
-    dmmFacturasProforma.CrearRepositorio);
+    dmmFacturasProforma.CrearRepositorio(
+      ParametrosApp,
+      oComposicion.Consultas.CrearServicioEmisionFiscal));
   try
     Result := oServicio.RevisarPeriodo(AModalidad, ASolicitud);
   finally
@@ -370,11 +380,15 @@ procedure TfrmMtoFacturasProforma.EjecutarGeneracion(
   AModalidad: TModalidadFacturacionCaja;
   const ASolicitud: TSolicitudFacturacionCaja);
 var
+  oComposicion: TComposicionCajaPantalla;
   oResultado: TResultadoFacturacionCaja;
   oServicio : TFacturadorOperacionesCaja;
 begin
+  oComposicion := ComponerCajaPantalla(Self);
   oServicio := TFacturadorOperacionesCaja.Create(
-    dmmFacturasProforma.CrearRepositorio);
+    dmmFacturasProforma.CrearRepositorio(
+      ParametrosApp,
+      oComposicion.Consultas.CrearServicioEmisionFiscal));
   try
     oResultado := oServicio.Ejecutar(AModalidad, ASolicitud);
     dmmFacturasProforma.RefrescarDocumentos;
@@ -424,14 +438,16 @@ begin
     ShowMessage(SInfoSeleccionarProformaCaja)
   else
   begin
+    sClave := dsTablaG.DataSet.FieldByName(
+      'CLAVE_DOCUMENTO').AsString;
     sTipo := dsTablaG.DataSet.FieldByName(
       'TIPO_DOCUMENTO').AsString;
-    if not SameText(sTipo, 'VE') then
+    if SameText(Copy(sClave, 1, 4), 'PER-') then
+      ShowMessage(SInfoPeriodoFacturacionCajaSinDocumento)
+    else if not SameText(sTipo, 'VE') then
       ShowMessage(SInfoImprimirFacturaTraspaso)
     else
     begin
-      sClave := dsTablaG.DataSet.FieldByName(
-        'CLAVE_DOCUMENTO').AsString;
       iIdProforma := StrToInt64Def(Copy(sClave, 4, MaxInt), 0);
       if iIdProforma > 0 then
         TfrmPrintFacturasProforma.Mostrar(Self, iIdProforma)

@@ -1,4 +1,4 @@
--- ============================================================================
+﻿-- ============================================================================
 -- Facturacion periodica de operaciones de caja VE y TA
 -- ============================================================================
 -- VE se materializa como proforma interna no fiscal. TA genera una factura
@@ -58,7 +58,8 @@ CREATE TABLE IF NOT EXISTS `fza_proformas_caja` (
   `USUARIO_ALTA` varchar(100) NOT NULL,
   `USUARIO_MODIF` varchar(100) NOT NULL,
   PRIMARY KEY (`ID_PROCAJ`),
-  UNIQUE INDEX `UQ_PROCAJ_DOCUMENTO` (`SERIE_PROCAJ`, `NUMERO_PROCAJ`),
+  UNIQUE INDEX `UQ_PROCAJ_DOCUMENTO` (
+    `CODIGO_EMP_PROCAJ`, `SERIE_PROCAJ`, `NUMERO_PROCAJ`),
   INDEX `IDX_PROCAJ_PERIODO_REG` (`ID_FACPER_PROCAJ`),
   INDEX `IDX_PROCAJ_EMP_FECHA` (`CODIGO_EMP_PROCAJ`, `FECHA_PROCAJ`),
   INDEX `IDX_PROCAJ_PERIODO` (`FECHA_DESDE_PROCAJ`, `FECHA_HASTA_PROCAJ`),
@@ -133,6 +134,34 @@ SET @sSql = IF(@sExisteCol = 0,
   'ALTER TABLE fza_proformas_caja
      ADD COLUMN ID_FACPER_PROCAJ bigint(20) NULL DEFAULT NULL
      AFTER ID_PROCAJ',
+  'SELECT 1');
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sColumnasIdx = (
+  SELECT GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX SEPARATOR ',')
+    FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_proformas_caja'
+     AND INDEX_NAME = 'UQ_PROCAJ_DOCUMENTO');
+SET @sSql = IF(
+  @sColumnasIdx IS NOT NULL
+  AND @sColumnasIdx <>
+    'CODIGO_EMP_PROCAJ,SERIE_PROCAJ,NUMERO_PROCAJ',
+  'ALTER TABLE fza_proformas_caja DROP INDEX UQ_PROCAJ_DOCUMENTO',
+  'SELECT 1');
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sExisteIdx = (
+  SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_proformas_caja'
+     AND INDEX_NAME = 'UQ_PROCAJ_DOCUMENTO');
+SET @sSql = IF(@sExisteIdx = 0,
+  'ALTER TABLE fza_proformas_caja
+     ADD UNIQUE INDEX UQ_PROCAJ_DOCUMENTO
+       (CODIGO_EMP_PROCAJ, SERIE_PROCAJ, NUMERO_PROCAJ)',
   'SELECT 1');
 PREPARE stmt FROM @sSql;
 EXECUTE stmt;

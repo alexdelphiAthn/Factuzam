@@ -19,7 +19,8 @@ uses
   inLibRegistroPantallas,
   System.SysUtils, System.Classes,
   Data.DB, MemDS, DBAccess, Uni,
-  UniDataGen, inLibFacturasProformaIntf;
+  UniDataGen, inLibParametrosIntf, inLibEmisionFiscalIntf,
+  inLibFacturasProformaIntf;
 
 type
   TdmFacturasProforma = class(TdmBase)
@@ -31,7 +32,10 @@ type
     unqryEmpresas: TUniQuery;
     dsEmpresas   : TDataSource;
     procedure AbrirDetalles; override;
-    function CrearRepositorio: IRepositorioFacturasProforma;
+    function CrearRepositorio(
+      const AParametrosApp: IParametrosAplicacion;
+      const AServicioEmision: IServicioEmisionFiscal
+    ): IRepositorioFacturasProforma;
     procedure RefrescarDocumentos;
   end;
 
@@ -89,7 +93,12 @@ begin
     '       (SELECT COUNT(DISTINCT L.ID_OPCAJA_PROCLIN) ' +
     '          FROM fza_proformas_caja_lineas L ' +
     '         WHERE L.ID_PROCAJ_PROCLIN = P.ID_PROCAJ) ' +
-    '         AS CANTIDAD_OPERACIONES ' +
+    '         AS CANTIDAD_OPERACIONES, ' +
+    '       (SELECT COUNT(DISTINCT L.ID_OPCAJA_PROCLIN) ' +
+    '          FROM fza_proformas_caja_lineas L ' +
+    '         WHERE L.ID_PROCAJ_PROCLIN = P.ID_PROCAJ ' +
+    '           AND L.TIPO_VINCULO_PROCLIN = ''AJUSTE'') ' +
+    '         AS CANTIDAD_AJUSTES ' +
     '  FROM fza_proformas_caja P ' +
     '  LEFT JOIN fza_empresas E ' +
     '    ON E.CODIGO_EMP_EMP = P.CODIGO_EMP_PROCAJ ' +
@@ -113,7 +122,8 @@ begin
     '       F.TOTAL_BASES_FAC AS TOTAL_BASE, ' +
     '       F.TOTAL_IMPUESTOS_FAC AS TOTAL_IMPUESTOS, ' +
     '       F.TOTAL_LIQUIDO_FAC AS TOTAL_DOCUMENTO, ' +
-    '       COUNT(DISTINCT M.ID_OPCAJA_FACOP) AS CANTIDAD_OPERACIONES ' +
+    '       COUNT(DISTINCT M.ID_OPCAJA_FACOP) AS CANTIDAD_OPERACIONES, ' +
+    '       0 AS CANTIDAD_AJUSTES ' +
     '  FROM fza_facturas_operaciones_caja M ' +
     '  JOIN fza_facturas F ' +
     '    ON F.SERIE_FAC = M.SERIE_FAC_FACOP ' +
@@ -128,6 +138,29 @@ begin
     '          M.CODIGO_EMP_ORIGEN_FACOP, E.RAZON_SOCIAL_EMP, ' +
     '          M.ESTADO_FACOP, F.TOTAL_BASES_FAC, ' +
     '          F.TOTAL_IMPUESTOS_FAC, F.TOTAL_LIQUIDO_FAC ' +
+    'UNION ALL ' +
+    'SELECT CONCAT(''PER-'', FP.ID_FACPER) AS CLAVE_DOCUMENTO, ' +
+    '       FP.MODALIDAD_FACPER AS TIPO_DOCUMENTO, ' +
+    '       '''' AS SERIE_DOCUMENTO, FP.ID_FACPER AS ID_PERIODO, ' +
+    '       FP.ESTADO_FACPER AS ESTADO_PERIODO, ' +
+    '       '''' AS NUMERO_DOCUMENTO, ' +
+    '       FP.FECHA_HASTA_FACPER AS FECHA_DOCUMENTO, ' +
+    '       FP.FECHA_DESDE_FACPER AS FECHA_DESDE, ' +
+    '       FP.FECHA_HASTA_FACPER AS FECHA_HASTA, ' +
+    '       FP.CODIGO_EMP_DESTINO_FACPER AS CODIGO_EMPRESA, ' +
+    '       E.RAZON_SOCIAL_EMP AS EMPRESA_DESTINO, ' +
+    '       FP.ESTADO_FACPER AS ESTADO_DOCUMENTO, ' +
+    '       0 AS TOTAL_BASE, 0 AS TOTAL_IMPUESTOS, ' +
+    '       0 AS TOTAL_DOCUMENTO, ' +
+    '       FP.CANTIDAD_OPERACIONES_FACPER AS CANTIDAD_OPERACIONES, ' +
+    '       FP.CANTIDAD_AJUSTES_FACPER AS CANTIDAD_AJUSTES ' +
+    '  FROM fza_facturacion_caja_periodos FP ' +
+    '  LEFT JOIN fza_empresas E ' +
+    '    ON E.CODIGO_EMP_EMP = FP.CODIGO_EMP_DESTINO_FACPER ' +
+    ' WHERE NOT EXISTS (SELECT 1 FROM fza_proformas_caja P ' +
+    '                    WHERE P.ID_FACPER_PROCAJ = FP.ID_FACPER) ' +
+    '   AND NOT EXISTS (SELECT 1 FROM fza_facturas_operaciones_caja M ' +
+    '                    WHERE M.ID_FACPER_FACOP = FP.ID_FACPER) ' +
     ' ORDER BY FECHA_DOCUMENTO DESC, TIPO_DOCUMENTO, ' +
     '          SERIE_DOCUMENTO, NUMERO_DOCUMENTO DESC';
   unqryTablaG.KeyFields := 'CLAVE_DOCUMENTO';
@@ -147,11 +180,16 @@ begin
     unqryEmpresas.Open;
 end;
 
-function TdmFacturasProforma.CrearRepositorio:
+function TdmFacturasProforma.CrearRepositorio(
+  const AParametrosApp: IParametrosAplicacion;
+  const AServicioEmision: IServicioEmisionFiscal
+):
   IRepositorioFacturasProforma;
 begin
   Result := TRepositorioFacturasProformaUniDAC.Create(
-    unqryTablaG.Connection);
+    unqryTablaG.Connection,
+    AParametrosApp,
+    AServicioEmision);
 end;
 
 procedure TdmFacturasProforma.RefrescarDocumentos;
