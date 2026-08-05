@@ -45,16 +45,21 @@ type
     AplicarFechaAlta: Boolean;
     FiltrarVentas: Boolean;
     ConVentas: Boolean;
+    FiltrarStockAlmacenVenta: Boolean;
     FechaAltaDesde: TDateTime;
     FechaAltaHasta: TDateTime;
     VentaDesde: TDateTime;
     VentaHasta: TDateTime;
     NumeroMinimoVentas: Integer;
+    ReservaStockOrigen: Double;
+    MaximoServirPorSku: Double;
+    StockMaximoAlmacenVenta: Double;
     StockCombinacion: TStockCombinacionCargaMasiva;
     CodigosFamilia: TArray<string>;
     CodigosProveedor: TArray<string>;
     IdsValorPropiedad: TArray<Integer>;
     CodigosAlmacen: TArray<string>;
+    CodigosAlmacenVenta: TArray<string>;
   end;
 
   TContextoCargaMasivaArticulos = record
@@ -96,6 +101,8 @@ type
   TParametrosInsercionDocumentoTrabajo = record
     IdDocumento: Int64;
     CodigosAlmacen: TArray<string>;
+    ReservaStockOrigen: Double;
+    MaximoServirPorSku: Double;
     Usuario: string;
   end;
 

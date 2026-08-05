@@ -22,20 +22,26 @@ uses
   UniDataGen;
 
 type
-  TDocTrabajoAmbito = (dtaPropios, dtaCompartidos);
+  TDocTrabajoAmbito = (dtaPropios, dtaCompartidos, dtaArchivados);
 
   TdmDocumentosTrabajo = class(TdmBase)
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
+    procedure unqryTablaGBeforeInsertDTR(DataSet: TDataSet);
+    procedure unqryTablaGBeforeEdit(DataSet: TDataSet);
     procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure unqryLineasAfterInsert(DataSet: TDataSet);
+    procedure unqryLineasBeforeEdit(DataSet: TDataSet);
     procedure unqryLineasBeforeDelete(DataSet: TDataSet);
     procedure unqryLineasBeforePost(DataSet: TDataSet);
     procedure unqryCompartidosAfterInsert(DataSet: TDataSet);
+    procedure unqryCompartidosBeforeEdit(DataSet: TDataSet);
     procedure unqryCompartidosBeforeDelete(DataSet: TDataSet);
     procedure unqryCompartidosBeforePost(DataSet: TDataSet);
+    procedure unqryProtegidaAfterUpdateExecute(Sender: TDataSet;
+      StatementTypes: TStatementTypes; Params: TDAParams);
   private
     FAmbito: TDocTrabajoAmbito;
     procedure ConfigurarQueries;
@@ -51,7 +57,10 @@ type
     function ExisteDestinoCompartir(const ADestino, ATipo: string): Boolean;
     function NormalizarTipoDestino(const ADestino, ATipo: string): string;
     function SiguienteLinea: string;
-    function PuedeEditarDocumentoActual: Boolean;
+    function EsPropietarioDocumentoActual: Boolean;
+    function ActualizarEstadoDocumentoActual(
+      const AEstado: string): Boolean;
+    procedure RecargarAmbitoActual;
   public
     unqryLineas: TUniQuery;
     unqryCompartidos: TUniQuery;
@@ -62,6 +71,11 @@ type
     procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
     procedure AbrirDetalles; override;
     procedure CambiarAmbito(const AAmbito: TDocTrabajoAmbito);
+    function PuedeEditarDocumentoActual: Boolean;
+    function PuedeEnviarDocumentoActual: Boolean;
+    function PuedeArchivarDocumentoActual: Boolean;
+    function MarcarDocumentoActualEnviado: Boolean;
+    function ArchivarDocumentoActual: Boolean;
     procedure CargarAlmacenesEtiquetasDoc(AIdDtr: Int64; ALV: TcxListView);
     function CompartirDocumentoActual(const ADestino, ATipo: string): Boolean;
     procedure CrearDataSetEtiquetasDoc(ADmArt: TObject; AIdDtr: Int64;
@@ -81,7 +95,8 @@ implementation
 
 uses
   System.Generics.Collections, System.Variants,
-  UniDataArticulos, inLibMsgArticulos, inLibMsgVentas;
+  UniDataArticulos, inLibDocumentosTrabajoEstados,
+  inLibMsgArticulos, inLibMsgVentas;
 
 {$R *.dfm}
 
@@ -130,7 +145,18 @@ begin
       '    OR (COALESCE(c.TIPO_DESTINO_DTC, ''USUARIO'') = ''GRUPO'' ' +
       '        AND COALESCE(NULLIF(c.USUARIO_GRUPO_DTC, ''''), ' +
       '                     c.USUARIO_DTC) = :GRUPO)) ' +
-      ' ORDER BY d.INSTANTE_DOCUMENTO_DTR DESC, d.ID_DTR DESC';
+      '   AND ' + CondicionSqlDocumentoTrabajoActivo('d.ESTADO_DTR') +
+      ClausulaOrdenSqlDocumentosTrabajo('d');
+  end
+  else if FAmbito = dtaArchivados then
+  begin
+    unqryTablaG.SQL.Text :=
+      'SELECT * ' +
+      '  FROM fza_documentos_trabajo ' +
+      ' WHERE USUARIO_DTR = :USUARIO ' +
+      '   AND ' +
+      CondicionSqlDocumentoTrabajoArchivado('ESTADO_DTR') +
+      ClausulaOrdenSqlDocumentosTrabajo('');
   end
   else
   begin
@@ -138,7 +164,8 @@ begin
       'SELECT * ' +
       '  FROM fza_documentos_trabajo ' +
       ' WHERE USUARIO_DTR = :USUARIO ' +
-      ' ORDER BY INSTANTE_DOCUMENTO_DTR DESC, ID_DTR DESC';
+      '   AND ' + CondicionSqlDocumentoTrabajoActivo('ESTADO_DTR') +
+      ClausulaOrdenSqlDocumentosTrabajo('');
   end;
   unqryTablaG.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
   if FAmbito = dtaCompartidos then
@@ -233,6 +260,7 @@ procedure TdmDocumentosTrabajo.ConfigurarQueries;
 begin
   ConfigurarSqlCabecera;
   unqryTablaG.KeyFields := 'ID_DTR';
+  unqryTablaG.Options.StrictUpdate := True;
   unqryTablaG.SQLInsert.Text :=
     'INSERT INTO fza_documentos_trabajo ' +
     '  (TITULO_DTR, TIPO_DTR, ESTADO_DTR, CODIGO_EMP_DTR, CODIGO_ALM_DTR, ' +
@@ -254,22 +282,34 @@ begin
     '  INSTANTE_DOCUMENTO_DTR = :INSTANTE_DOCUMENTO_DTR, ' +
     '  OBSERVACIONES_DTR = :OBSERVACIONES_DTR, ' +
     '  USUARIO_MODIF = :USUARIO_MODIF ' +
-    'WHERE ID_DTR = :Old_ID_DTR';
+    'WHERE ID_DTR = :Old_ID_DTR ' +
+    '  AND USUARIO_DTR = :Old_USUARIO_DTR ' +
+    '  AND ' + CondicionSqlDocumentoTrabajoCreado('ESTADO_DTR');
   unqryTablaG.SQLDelete.Text :=
-    'DELETE FROM fza_documentos_trabajo WHERE ID_DTR = :Old_ID_DTR';
+    'DELETE FROM fza_documentos_trabajo ' +
+    ' WHERE ID_DTR = :Old_ID_DTR ' +
+    '   AND USUARIO_DTR = :Old_USUARIO_DTR ' +
+    '   AND ' + CondicionSqlDocumentoTrabajoCreado('ESTADO_DTR');
   unqryTablaG.SQLRefresh.Text :=
     'SELECT * FROM fza_documentos_trabajo WHERE ID_DTR = :ID_DTR';
   unqryTablaG.SQLLock.Text :=
     'SELECT * FROM fza_documentos_trabajo ' +
-    ' WHERE ID_DTR = :Old_ID_DTR FOR UPDATE';
+    ' WHERE ID_DTR = :Old_ID_DTR ' +
+    '   AND USUARIO_DTR = :Old_USUARIO_DTR ' +
+    '   AND ' + CondicionSqlDocumentoTrabajoCreado('ESTADO_DTR') +
+    ' FOR UPDATE';
+  unqryTablaG.BeforeInsert := unqryTablaGBeforeInsertDTR;
+  unqryTablaG.BeforeEdit := unqryTablaGBeforeEdit;
   unqryTablaG.AfterInsert := unqryTablaGAfterInsert;
   unqryTablaG.BeforeDelete := unqryTablaGBeforeDelete;
   unqryTablaG.BeforePost := unqryTablaGBeforePost;
+  unqryTablaG.AfterUpdateExecute := unqryProtegidaAfterUpdateExecute;
   unqryLineas.Connection := ConexionPrincipal;
   unqryLineas.SQL.Text := SqlSelectLineas +
     ' WHERE l.ID_DTR_DTL = :ID_DTR ' +
     ' ORDER BY l.LINEA_DTL';
   unqryLineas.KeyFields := 'ID_DTL';
+  unqryLineas.Options.StrictUpdate := True;
   unqryLineas.MasterFields := 'ID_DTR';
   unqryLineas.DetailFields := 'ID_DTR_DTL';
   if FMaestroCabecera <> nil then
@@ -293,8 +333,8 @@ begin
     '   NUM_ATRIBUTOS_DTL, ID_AC_PIVOT_DTL, ' +
     '   INSTANTE_ALTA, USUARIO_ALTA, ' +
     '   USUARIO_MODIF) ' +
-    'VALUES ' +
-    '  (:ID_DTR_DTL, :LINEA_DTL, :CODIGO_ART_DTL, :CODIGO_UNIDAD_DTL, ' +
+    'SELECT ' +
+    '  :ID_DTR_DTL, :LINEA_DTL, :CODIGO_ART_DTL, :CODIGO_UNIDAD_DTL, ' +
     '   :CODIGO_ALM_DTL, :LOTE_DTL, :FECHA_CADUCIDAD_DTL, ' +
     '   :DESCRIPCION_ARTICULO_DTL, :DESCRIPCION_UNIDAD_DTL, ' +
     '   :CANTIDAD_STOCK_DTL, :CANTIDAD_DTL, :INSTANTE_STOCK_DTL, ' +
@@ -306,47 +346,78 @@ begin
     '   :ATTR5_VALOR_DTL, :ATTR5_NOMBRE_DTL, ' +
     '   :NUM_ATRIBUTOS_DTL, :ID_AC_PIVOT_DTL, ' +
     '   :INSTANTE_ALTA, ' +
-    '   :USUARIO_ALTA, :USUARIO_MODIF)';
+    '   :USUARIO_ALTA, :USUARIO_MODIF ' +
+    '  FROM fza_documentos_trabajo dtr_guard ' +
+    ' WHERE dtr_guard.ID_DTR = :ID_DTR_DTL ' +
+    '   AND dtr_guard.USUARIO_DTR = :USUARIO_MODIF ' +
+    '   AND ' +
+    CondicionSqlDocumentoTrabajoCreado('dtr_guard.ESTADO_DTR');
   unqryLineas.SQLUpdate.Text :=
-    'UPDATE fza_documentos_trabajo_lineas SET ' +
-    '  ID_DTR_DTL = :ID_DTR_DTL, ' +
-    '  LINEA_DTL = :LINEA_DTL, ' +
-    '  CODIGO_ART_DTL = :CODIGO_ART_DTL, ' +
-    '  CODIGO_UNIDAD_DTL = :CODIGO_UNIDAD_DTL, ' +
-    '  CODIGO_ALM_DTL = :CODIGO_ALM_DTL, ' +
-    '  LOTE_DTL = :LOTE_DTL, ' +
-    '  FECHA_CADUCIDAD_DTL = :FECHA_CADUCIDAD_DTL, ' +
-    '  DESCRIPCION_ARTICULO_DTL = :DESCRIPCION_ARTICULO_DTL, ' +
-    '  DESCRIPCION_UNIDAD_DTL = :DESCRIPCION_UNIDAD_DTL, ' +
-    '  CANTIDAD_STOCK_DTL = :CANTIDAD_STOCK_DTL, ' +
-    '  CANTIDAD_DTL = :CANTIDAD_DTL, ' +
-    '  INSTANTE_STOCK_DTL = :INSTANTE_STOCK_DTL, ' +
-    '  ORIGEN_DTL = :ORIGEN_DTL, ' +
-    '  OBSERVACIONES_DTL = :OBSERVACIONES_DTL, ' +
-    '  ATTR1_VALOR_DTL = :ATTR1_VALOR_DTL, ' +
-    '  ATTR1_NOMBRE_DTL = :ATTR1_NOMBRE_DTL, ' +
-    '  ATTR2_VALOR_DTL = :ATTR2_VALOR_DTL, ' +
-    '  ATTR2_NOMBRE_DTL = :ATTR2_NOMBRE_DTL, ' +
-    '  ATTR3_VALOR_DTL = :ATTR3_VALOR_DTL, ' +
-    '  ATTR3_NOMBRE_DTL = :ATTR3_NOMBRE_DTL, ' +
-    '  ATTR4_VALOR_DTL = :ATTR4_VALOR_DTL, ' +
-    '  ATTR4_NOMBRE_DTL = :ATTR4_NOMBRE_DTL, ' +
-    '  ATTR5_VALOR_DTL = :ATTR5_VALOR_DTL, ' +
-    '  ATTR5_NOMBRE_DTL = :ATTR5_NOMBRE_DTL, ' +
-    '  NUM_ATRIBUTOS_DTL = :NUM_ATRIBUTOS_DTL, ' +
-    '  ID_AC_PIVOT_DTL = :ID_AC_PIVOT_DTL, ' +
-    '  USUARIO_MODIF = :USUARIO_MODIF ' +
-    'WHERE ID_DTL = :Old_ID_DTL';
+    'UPDATE fza_documentos_trabajo_lineas l ' +
+    '  JOIN fza_documentos_trabajo dtr_guard ' +
+    '    ON dtr_guard.ID_DTR = l.ID_DTR_DTL ' +
+    '   AND dtr_guard.USUARIO_DTR = :USUARIO_MODIF ' +
+    '   AND ' +
+    CondicionSqlDocumentoTrabajoCreado('dtr_guard.ESTADO_DTR') + ' ' +
+    'SET ' +
+    '  l.ID_DTR_DTL = :ID_DTR_DTL, ' +
+    '  l.LINEA_DTL = :LINEA_DTL, ' +
+    '  l.CODIGO_ART_DTL = :CODIGO_ART_DTL, ' +
+    '  l.CODIGO_UNIDAD_DTL = :CODIGO_UNIDAD_DTL, ' +
+    '  l.CODIGO_ALM_DTL = :CODIGO_ALM_DTL, ' +
+    '  l.LOTE_DTL = :LOTE_DTL, ' +
+    '  l.FECHA_CADUCIDAD_DTL = :FECHA_CADUCIDAD_DTL, ' +
+    '  l.DESCRIPCION_ARTICULO_DTL = :DESCRIPCION_ARTICULO_DTL, ' +
+    '  l.DESCRIPCION_UNIDAD_DTL = :DESCRIPCION_UNIDAD_DTL, ' +
+    '  l.CANTIDAD_STOCK_DTL = :CANTIDAD_STOCK_DTL, ' +
+    '  l.CANTIDAD_DTL = :CANTIDAD_DTL, ' +
+    '  l.INSTANTE_STOCK_DTL = :INSTANTE_STOCK_DTL, ' +
+    '  l.ORIGEN_DTL = :ORIGEN_DTL, ' +
+    '  l.OBSERVACIONES_DTL = :OBSERVACIONES_DTL, ' +
+    '  l.ATTR1_VALOR_DTL = :ATTR1_VALOR_DTL, ' +
+    '  l.ATTR1_NOMBRE_DTL = :ATTR1_NOMBRE_DTL, ' +
+    '  l.ATTR2_VALOR_DTL = :ATTR2_VALOR_DTL, ' +
+    '  l.ATTR2_NOMBRE_DTL = :ATTR2_NOMBRE_DTL, ' +
+    '  l.ATTR3_VALOR_DTL = :ATTR3_VALOR_DTL, ' +
+    '  l.ATTR3_NOMBRE_DTL = :ATTR3_NOMBRE_DTL, ' +
+    '  l.ATTR4_VALOR_DTL = :ATTR4_VALOR_DTL, ' +
+    '  l.ATTR4_NOMBRE_DTL = :ATTR4_NOMBRE_DTL, ' +
+    '  l.ATTR5_VALOR_DTL = :ATTR5_VALOR_DTL, ' +
+    '  l.ATTR5_NOMBRE_DTL = :ATTR5_NOMBRE_DTL, ' +
+    '  l.NUM_ATRIBUTOS_DTL = :NUM_ATRIBUTOS_DTL, ' +
+    '  l.ID_AC_PIVOT_DTL = :ID_AC_PIVOT_DTL, ' +
+    '  l.USUARIO_MODIF = :USUARIO_MODIF ' +
+    'WHERE l.ID_DTL = :Old_ID_DTL ' +
+    '  AND l.ID_DTR_DTL = :Old_ID_DTR_DTL ' +
+    '  AND :ID_DTR_DTL = :Old_ID_DTR_DTL ' +
+    '  AND dtr_guard.ID_DTR = :Old_ID_DTR_DTL';
   unqryLineas.SQLDelete.Text :=
-    'DELETE FROM fza_documentos_trabajo_lineas WHERE ID_DTL = :Old_ID_DTL';
+    'DELETE l ' +
+    '  FROM fza_documentos_trabajo_lineas l ' +
+    '  JOIN fza_documentos_trabajo dtr_guard ' +
+    '    ON dtr_guard.ID_DTR = l.ID_DTR_DTL ' +
+    '   AND ' +
+    CondicionSqlDocumentoTrabajoCreado('dtr_guard.ESTADO_DTR') + ' ' +
+    ' WHERE l.ID_DTL = :Old_ID_DTL ' +
+    '   AND l.ID_DTR_DTL = :Old_ID_DTR_DTL';
   unqryLineas.SQLRefresh.Text := SqlSelectLineas +
     ' WHERE l.ID_DTL = :ID_DTL';
   unqryLineas.SQLLock.Text :=
-    'SELECT * FROM fza_documentos_trabajo_lineas ' +
-    ' WHERE ID_DTL = :Old_ID_DTL FOR UPDATE';
+    'SELECT l.* ' +
+    '  FROM fza_documentos_trabajo_lineas l ' +
+    '  JOIN fza_documentos_trabajo dtr_guard ' +
+    '    ON dtr_guard.ID_DTR = l.ID_DTR_DTL ' +
+    '   AND ' +
+    CondicionSqlDocumentoTrabajoCreado('dtr_guard.ESTADO_DTR') + ' ' +
+    ' WHERE l.ID_DTL = :Old_ID_DTL ' +
+    '   AND l.ID_DTR_DTL = :Old_ID_DTR_DTL ' +
+    ' FOR UPDATE';
+  unqryLineas.BeforeInsert := unqryLineasBeforeEdit;
+  unqryLineas.BeforeEdit := unqryLineasBeforeEdit;
   unqryLineas.AfterInsert := unqryLineasAfterInsert;
   unqryLineas.BeforeDelete := unqryLineasBeforeDelete;
   unqryLineas.BeforePost := unqryLineasBeforePost;
+  unqryLineas.AfterUpdateExecute := unqryProtegidaAfterUpdateExecute;
   ConfigurarQueryCompartidos;
 end;
 
@@ -359,6 +430,7 @@ begin
     ' WHERE ID_DTR_DTC = :ID_DTR ' +
     ' ORDER BY TIPO_DESTINO_DTC, USUARIO_GRUPO_DTC';
   unqryCompartidos.KeyFields := 'ID_DTC';
+  unqryCompartidos.Options.StrictUpdate := True;
   unqryCompartidos.MasterFields := 'ID_DTR';
   unqryCompartidos.DetailFields := 'ID_DTR_DTC';
   if FMaestroCabecera <> nil then
@@ -369,30 +441,60 @@ begin
     'INSERT INTO fza_documentos_trabajo_compartidos ' +
     '  (ID_DTR_DTC, USUARIO_DTC, USUARIO_GRUPO_DTC, TIPO_DESTINO_DTC, ' +
     '   PERMISO_DTC, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-    'VALUES ' +
-    '  (:ID_DTR_DTC, :USUARIO_DTC, :USUARIO_GRUPO_DTC, ' +
+    'SELECT ' +
+    '  :ID_DTR_DTC, :USUARIO_DTC, :USUARIO_GRUPO_DTC, ' +
     '   :TIPO_DESTINO_DTC, :PERMISO_DTC, :INSTANTE_ALTA, ' +
-    '   :USUARIO_ALTA, :USUARIO_MODIF)';
+    '   :USUARIO_ALTA, :USUARIO_MODIF ' +
+    '  FROM fza_documentos_trabajo dtr_guard ' +
+    ' WHERE dtr_guard.ID_DTR = :ID_DTR_DTC ' +
+    '   AND dtr_guard.USUARIO_DTR = :USUARIO_MODIF ' +
+    '   AND ' +
+    CondicionSqlDocumentoTrabajoCreado('dtr_guard.ESTADO_DTR');
   unqryCompartidos.SQLUpdate.Text :=
-    'UPDATE fza_documentos_trabajo_compartidos SET ' +
-    '  ID_DTR_DTC = :ID_DTR_DTC, ' +
-    '  USUARIO_DTC = :USUARIO_DTC, ' +
-    '  USUARIO_GRUPO_DTC = :USUARIO_GRUPO_DTC, ' +
-    '  TIPO_DESTINO_DTC = :TIPO_DESTINO_DTC, ' +
-    '  PERMISO_DTC = :PERMISO_DTC, ' +
-    '  USUARIO_MODIF = :USUARIO_MODIF ' +
-    'WHERE ID_DTC = :Old_ID_DTC';
+    'UPDATE fza_documentos_trabajo_compartidos c ' +
+    '  JOIN fza_documentos_trabajo dtr_guard ' +
+    '    ON dtr_guard.ID_DTR = c.ID_DTR_DTC ' +
+    '   AND dtr_guard.USUARIO_DTR = :USUARIO_MODIF ' +
+    '   AND ' +
+    CondicionSqlDocumentoTrabajoCreado('dtr_guard.ESTADO_DTR') + ' ' +
+    'SET ' +
+    '  c.ID_DTR_DTC = :ID_DTR_DTC, ' +
+    '  c.USUARIO_DTC = :USUARIO_DTC, ' +
+    '  c.USUARIO_GRUPO_DTC = :USUARIO_GRUPO_DTC, ' +
+    '  c.TIPO_DESTINO_DTC = :TIPO_DESTINO_DTC, ' +
+    '  c.PERMISO_DTC = :PERMISO_DTC, ' +
+    '  c.USUARIO_MODIF = :USUARIO_MODIF ' +
+    'WHERE c.ID_DTC = :Old_ID_DTC ' +
+    '  AND c.ID_DTR_DTC = :Old_ID_DTR_DTC ' +
+    '  AND :ID_DTR_DTC = :Old_ID_DTR_DTC ' +
+    '  AND dtr_guard.ID_DTR = :Old_ID_DTR_DTC';
   unqryCompartidos.SQLDelete.Text :=
-    'DELETE FROM fza_documentos_trabajo_compartidos ' +
-    ' WHERE ID_DTC = :Old_ID_DTC';
+    'DELETE c ' +
+    '  FROM fza_documentos_trabajo_compartidos c ' +
+    '  JOIN fza_documentos_trabajo dtr_guard ' +
+    '    ON dtr_guard.ID_DTR = c.ID_DTR_DTC ' +
+    '   AND ' +
+    CondicionSqlDocumentoTrabajoCreado('dtr_guard.ESTADO_DTR') + ' ' +
+    ' WHERE c.ID_DTC = :Old_ID_DTC ' +
+    '   AND c.ID_DTR_DTC = :Old_ID_DTR_DTC';
   unqryCompartidos.SQLRefresh.Text :=
     'SELECT * FROM fza_documentos_trabajo_compartidos WHERE ID_DTC = :ID_DTC';
   unqryCompartidos.SQLLock.Text :=
-    'SELECT * FROM fza_documentos_trabajo_compartidos ' +
-    ' WHERE ID_DTC = :Old_ID_DTC FOR UPDATE';
+    'SELECT c.* ' +
+    '  FROM fza_documentos_trabajo_compartidos c ' +
+    '  JOIN fza_documentos_trabajo dtr_guard ' +
+    '    ON dtr_guard.ID_DTR = c.ID_DTR_DTC ' +
+    '   AND ' +
+    CondicionSqlDocumentoTrabajoCreado('dtr_guard.ESTADO_DTR') + ' ' +
+    ' WHERE c.ID_DTC = :Old_ID_DTC ' +
+    '   AND c.ID_DTR_DTC = :Old_ID_DTR_DTC ' +
+    ' FOR UPDATE';
+  unqryCompartidos.BeforeInsert := unqryCompartidosBeforeEdit;
+  unqryCompartidos.BeforeEdit := unqryCompartidosBeforeEdit;
   unqryCompartidos.AfterInsert := unqryCompartidosAfterInsert;
   unqryCompartidos.BeforeDelete := unqryCompartidosBeforeDelete;
   unqryCompartidos.BeforePost := unqryCompartidosBeforePost;
+  unqryCompartidos.AfterUpdateExecute := unqryProtegidaAfterUpdateExecute;
 end;
 
 function TdmDocumentosTrabajo.ObtenerAlmacenesSql(
@@ -796,44 +898,231 @@ begin
 end;
 
 procedure TdmDocumentosTrabajo.CambiarAmbito(const AAmbito: TDocTrabajoAmbito);
-var
-  bAbrir: Boolean;
 begin
   if FAmbito <> AAmbito then
   begin
     FAmbito := AAmbito;
-    bAbrir := unqryTablaG.Active;
-    if unqryCompartidos.Active then
-    begin
-      unqryCompartidos.Close;
-    end;
-    if unqryLineas.Active then
-    begin
-      unqryLineas.Close;
-    end;
-    if unqryTablaG.Active then
-    begin
-      unqryTablaG.Close;
-    end;
-    ConfigurarSqlCabecera;
-    if bAbrir then
-    begin
-      unqryTablaG.Open;
-      AbrirDetalles;
-    end;
+    RecargarAmbitoActual;
   end;
+end;
+
+procedure TdmDocumentosTrabajo.RecargarAmbitoActual;
+var
+  bAbrir: Boolean;
+begin
+  bAbrir := unqryTablaG.Active;
+  if unqryCompartidos.Active then
+  begin
+    unqryCompartidos.Close;
+  end;
+  if unqryLineas.Active then
+  begin
+    unqryLineas.Close;
+  end;
+  if unqryTablaG.Active then
+  begin
+    unqryTablaG.Close;
+  end;
+  ConfigurarSqlCabecera;
+  if bAbrir then
+  begin
+    unqryTablaG.Open;
+    AbrirDetalles;
+  end;
+end;
+
+function TdmDocumentosTrabajo.EsPropietarioDocumentoActual: Boolean;
+begin
+  Result :=
+    unqryTablaG.Active and
+    (not unqryTablaG.IsEmpty) and
+    SameText(unqryTablaG.FieldByName('USUARIO_DTR').AsString,
+             IdentidadSesion.Usuario);
 end;
 
 function TdmDocumentosTrabajo.PuedeEditarDocumentoActual: Boolean;
 begin
+  Result :=
+    (FAmbito = dtaPropios) and
+    EsPropietarioDocumentoActual and
+    EsDocumentoTrabajoCreado(
+      unqryTablaG.FieldByName('ESTADO_DTR').AsString);
+end;
+
+function TdmDocumentosTrabajo.PuedeEnviarDocumentoActual: Boolean;
+begin
+  Result :=
+    (FAmbito in [dtaPropios, dtaCompartidos]) and
+    unqryTablaG.Active and
+    (not unqryTablaG.IsEmpty) and
+    (unqryTablaG.State = dsBrowse) and
+    (not unqryTablaG.FieldByName('ID_DTR').IsNull) and
+    EsDocumentoTrabajoCreado(
+      unqryTablaG.FieldByName('ESTADO_DTR').AsString) and
+    ((FAmbito = dtaCompartidos) or EsPropietarioDocumentoActual);
+end;
+
+function TdmDocumentosTrabajo.PuedeArchivarDocumentoActual: Boolean;
+var
+  sEstado: string;
+begin
   Result := False;
-  if FAmbito = dtaPropios then
+  if (FAmbito = dtaPropios) and
+     EsPropietarioDocumentoActual and
+     (unqryTablaG.State = dsBrowse) and
+     (not unqryTablaG.FieldByName('ID_DTR').IsNull) then
   begin
-    if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
+    sEstado := unqryTablaG.FieldByName('ESTADO_DTR').AsString;
+    Result := EsDocumentoTrabajoCreado(sEstado) or
+              EsDocumentoTrabajoEnviado(sEstado);
+  end;
+end;
+
+function TdmDocumentosTrabajo.ActualizarEstadoDocumentoActual(
+  const AEstado: string): Boolean;
+var
+  idDtr: Int64;
+  q: TUniQuery;
+  sCondicion: string;
+  sEstadoActual: string;
+  sEstadoNuevo: string;
+begin
+  if not EsPropietarioDocumentoActual then
+  begin
+    raise ERangeError.Create(
+      SErrorActualizarEstadoDocumentoTrabajoSoloPropietario);
+  end;
+  if unqryTablaG.FieldByName('ID_DTR').IsNull then
+  begin
+    raise ERangeError.Create(SErrorCabeceraDocumentoTrabajoSinGrabar);
+  end;
+
+  sEstadoActual := NormalizarEstadoDocumentoTrabajo(
+    unqryTablaG.FieldByName('ESTADO_DTR').AsString);
+  sEstadoNuevo := NormalizarEstadoDocumentoTrabajo(AEstado);
+  if not EsEstadoDocumentoTrabajoValido(sEstadoNuevo) then
+  begin
+    raise ERangeError.Create(SErrorEstadoDocumentoTrabajoNoValido);
+  end;
+  if sEstadoActual = sEstadoNuevo then
+  begin
+    Exit(True);
+  end;
+
+  if sEstadoNuevo = ESTADO_DOCUMENTO_TRABAJO_ENVIADO then
+  begin
+    if not EsDocumentoTrabajoCreado(sEstadoActual) then
     begin
-      Result := SameText(unqryTablaG.FieldByName('USUARIO_DTR').AsString,
-                         IdentidadSesion.Usuario);
+      raise ERangeError.Create(SErrorEnviarDocumentoTrabajoNoPermitido);
     end;
+    sCondicion := CondicionSqlDocumentoTrabajoCreado('ESTADO_DTR');
+  end
+  else if sEstadoNuevo = ESTADO_DOCUMENTO_TRABAJO_ARCHIVADO then
+  begin
+    if not (EsDocumentoTrabajoCreado(sEstadoActual) or
+            EsDocumentoTrabajoEnviado(sEstadoActual)) then
+    begin
+      raise ERangeError.Create(SErrorArchivarDocumentoTrabajoNoPermitido);
+    end;
+    sCondicion := '(' +
+      CondicionSqlDocumentoTrabajoCreado('ESTADO_DTR') + ' OR ' +
+      CondicionSqlDocumentoTrabajoEnviado('ESTADO_DTR') + ')';
+  end
+  else
+  begin
+    raise ERangeError.Create(SErrorEstadoDocumentoTrabajoNoValido);
+  end;
+
+  if unqryCompartidos.State in dsEditModes then
+  begin
+    unqryCompartidos.Post;
+  end;
+  if unqryLineas.State in dsEditModes then
+  begin
+    unqryLineas.Post;
+  end;
+  if unqryTablaG.State in dsEditModes then
+  begin
+    unqryTablaG.Post;
+  end;
+  idDtr := unqryTablaG.FieldByName('ID_DTR').AsLargeInt;
+
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := unqryTablaG.Connection;
+    q.SQL.Text :=
+      'UPDATE fza_documentos_trabajo ' +
+      '   SET ESTADO_DTR = :ESTADO, USUARIO_MODIF = :USUARIO ' +
+      ' WHERE ID_DTR = :ID_DTR ' +
+      '   AND USUARIO_DTR = :USUARIO ' +
+      '   AND ' + sCondicion;
+    q.ParamByName('ESTADO').AsString := sEstadoNuevo;
+    q.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
+    q.ParamByName('ID_DTR').AsLargeInt := idDtr;
+    q.Execute;
+    if q.RowsAffected <> 1 then
+    begin
+      raise ERangeError.Create(SErrorActualizarEstadoDocumentoTrabajo);
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+
+  if sEstadoNuevo = ESTADO_DOCUMENTO_TRABAJO_ARCHIVADO then
+  begin
+    RecargarAmbitoActual;
+  end
+  else
+  begin
+    unqryTablaG.RefreshRecord;
+  end;
+  Result := True;
+end;
+
+function TdmDocumentosTrabajo.MarcarDocumentoActualEnviado: Boolean;
+begin
+  if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
+  begin
+    unqryTablaG.RefreshRecord;
+    if EsDocumentoTrabajoEnviado(
+         unqryTablaG.FieldByName('ESTADO_DTR').AsString) then
+    begin
+      Exit(True);
+    end;
+  end;
+  if not PuedeEditarDocumentoActual then
+  begin
+    raise ERangeError.Create(SErrorEnviarDocumentoTrabajoNoPermitido);
+  end;
+  Result := ActualizarEstadoDocumentoActual(
+    ESTADO_DOCUMENTO_TRABAJO_ENVIADO);
+end;
+
+function TdmDocumentosTrabajo.ArchivarDocumentoActual: Boolean;
+begin
+  if not PuedeArchivarDocumentoActual then
+  begin
+    raise ERangeError.Create(SErrorArchivarDocumentoTrabajoNoPermitido);
+  end;
+  Result := ActualizarEstadoDocumentoActual(
+    ESTADO_DOCUMENTO_TRABAJO_ARCHIVADO);
+end;
+
+procedure TdmDocumentosTrabajo.unqryTablaGBeforeInsertDTR(
+  DataSet: TDataSet);
+begin
+  if FAmbito <> dtaPropios then
+  begin
+    raise ERangeError.Create(SErrorModificarDocumentoTrabajoNoPermitido);
+  end;
+  inherited unqryTablaGBeforeInsert(DataSet);
+end;
+
+procedure TdmDocumentosTrabajo.unqryTablaGBeforeEdit(DataSet: TDataSet);
+begin
+  if not PuedeEditarDocumentoActual then
+  begin
+    raise ERangeError.Create(SErrorModificarDocumentoTrabajoNoPermitido);
   end;
 end;
 
@@ -841,7 +1130,7 @@ procedure TdmDocumentosTrabajo.unqryTablaGBeforeDelete(DataSet: TDataSet);
 begin
   if not PuedeEditarDocumentoActual then
   begin
-    raise ERangeError.Create(SErrorBorrarDocumentoTrabajoSoloPropietario);
+    raise ERangeError.Create(SErrorModificarDocumentoTrabajoNoPermitido);
   end;
 end;
 
@@ -850,7 +1139,8 @@ begin
   DataSet.FieldByName('TITULO_DTR').AsString :=
     'Documento de trabajo ' + FormatDateTime('dd/mm/yyyy hh:nn', Now);
   DataSet.FieldByName('TIPO_DTR').AsString := 'GENERAL';
-  DataSet.FieldByName('ESTADO_DTR').AsString := 'ABIERTO';
+  DataSet.FieldByName('ESTADO_DTR').AsString :=
+    ESTADO_DOCUMENTO_TRABAJO_CREADO;
   DataSet.FieldByName('CODIGO_EMP_DTR').AsString := UbicacionSesion.Empresa;
   DataSet.FieldByName('CODIGO_ALM_DTR').AsString := UbicacionSesion.Almacen;
   DataSet.FieldByName('USUARIO_DTR').AsString := IdentidadSesion.Usuario;
@@ -858,7 +1148,13 @@ begin
 end;
 
 procedure TdmDocumentosTrabajo.unqryTablaGBeforePost(DataSet: TDataSet);
+var
+  sEstado: string;
 begin
+  if (DataSet.State = dsEdit) and not PuedeEditarDocumentoActual then
+  begin
+    raise ERangeError.Create(SErrorModificarDocumentoTrabajoNoPermitido);
+  end;
   inherited;
   if DataSet.State = dsInsert then
   begin
@@ -877,10 +1173,19 @@ begin
   begin
     raise ERangeError.Create(SErrorTituloDocumentoTrabajoObligatorio);
   end;
-  if Trim(DataSet.FieldByName('ESTADO_DTR').AsString) = '' then
+  sEstado := NormalizarEstadoDocumentoTrabajo(
+    DataSet.FieldByName('ESTADO_DTR').AsString);
+  if DataSet.State = dsInsert then
   begin
-    DataSet.FieldByName('ESTADO_DTR').AsString := 'ABIERTO';
+    // Un alta siempre inicia el ciclo; ENVIADO y ARCHIVADO solo se alcanzan
+    // mediante las transiciones protegidas del documento ya persistido.
+    sEstado := ESTADO_DOCUMENTO_TRABAJO_CREADO;
+  end
+  else if not EsEstadoDocumentoTrabajoValido(sEstado) then
+  begin
+    raise ERangeError.Create(SErrorEstadoDocumentoTrabajoNoValido);
   end;
+  DataSet.FieldByName('ESTADO_DTR').AsString := sEstado;
   if Trim(DataSet.FieldByName('TIPO_DTR').AsString) = '' then
   begin
     DataSet.FieldByName('TIPO_DTR').AsString := 'GENERAL';
@@ -932,12 +1237,19 @@ begin
   DataSet.FieldByName('ORIGEN_DTL').AsString := 'MANUAL';
 end;
 
+procedure TdmDocumentosTrabajo.unqryLineasBeforeEdit(DataSet: TDataSet);
+begin
+  if not PuedeEditarDocumentoActual then
+  begin
+    raise ERangeError.Create(SErrorModificarDocumentoTrabajoNoPermitido);
+  end;
+end;
+
 procedure TdmDocumentosTrabajo.unqryLineasBeforeDelete(DataSet: TDataSet);
 begin
   if not PuedeEditarDocumentoActual then
   begin
-    raise ERangeError.Create(
-      SErrorBorrarLineasDocumentoTrabajoSoloPropietario);
+    raise ERangeError.Create(SErrorModificarDocumentoTrabajoNoPermitido);
   end;
 end;
 
@@ -945,8 +1257,7 @@ procedure TdmDocumentosTrabajo.unqryLineasBeforePost(DataSet: TDataSet);
 begin
   if not PuedeEditarDocumentoActual then
   begin
-    raise ERangeError.Create(
-      SErrorEditarLineasDocumentoTrabajoSoloPropietario);
+    raise ERangeError.Create(SErrorModificarDocumentoTrabajoNoPermitido);
   end;
   if DataSet.FieldByName('ID_DTR_DTL').IsNull then
   begin
@@ -1046,12 +1357,20 @@ begin
   DataSet.FieldByName('PERMISO_DTC').AsString := 'LECTURA';
 end;
 
+procedure TdmDocumentosTrabajo.unqryCompartidosBeforeEdit(
+  DataSet: TDataSet);
+begin
+  if not PuedeEditarDocumentoActual then
+  begin
+    raise ERangeError.Create(SErrorModificarDocumentoTrabajoNoPermitido);
+  end;
+end;
+
 procedure TdmDocumentosTrabajo.unqryCompartidosBeforeDelete(DataSet: TDataSet);
 begin
   if not PuedeEditarDocumentoActual then
   begin
-    raise ERangeError.Create(
-      SErrorDejarCompartirDocumentoTrabajoSoloPropietario);
+    raise ERangeError.Create(SErrorModificarDocumentoTrabajoNoPermitido);
   end;
 end;
 
@@ -1062,8 +1381,7 @@ var
 begin
   if not PuedeEditarDocumentoActual then
   begin
-    raise ERangeError.Create(
-      SErrorCompartirDocumentoTrabajoSoloPropietario);
+    raise ERangeError.Create(SErrorModificarDocumentoTrabajoNoPermitido);
   end;
   if DataSet.FieldByName('ID_DTR_DTC').IsNull then
   begin
@@ -1093,6 +1411,21 @@ begin
     DataSet.FieldByName('PERMISO_DTC').AsString := 'LECTURA';
   end;
   ActualizarAuditoria(DataSet);
+end;
+
+procedure TdmDocumentosTrabajo.unqryProtegidaAfterUpdateExecute(
+  Sender: TDataSet; StatementTypes: TStatementTypes; Params: TDAParams);
+begin
+  if ((stInsert in StatementTypes) or
+      (stUpdate in StatementTypes) or
+      (stDelete in StatementTypes)) and
+     (TUniQuery(Sender).RowsAffected <> 1) then
+  begin
+    // Las sentencias llevan el estado CREADO en el mismo guard SQL. Si
+    // otra sesion lo envio o archivo entre la lectura y el Post, 0 filas
+    // significa conflicto y nunca debe aceptarse como una escritura valida.
+    raise ERangeError.Create(SErrorModificarDocumentoTrabajoNoPermitido);
+  end;
 end;
 
 initialization

@@ -366,6 +366,13 @@ SELECT t.orden AS orden_aplicacion,
                        WHERE TABLE_SCHEMA = DATABASE()
                          AND TABLE_NAME = 'fza_documentos_trabajo'
                          AND COLUMN_NAME = 'TITULO_DTR')
+           AND EXISTS(SELECT 1 FROM information_schema.COLUMNS
+                       WHERE TABLE_SCHEMA = DATABASE()
+                         AND TABLE_NAME = 'fza_documentos_trabajo'
+                         AND COLUMN_NAME = 'ESTADO_DTR'
+                         AND UPPER(REPLACE(
+                               COALESCE(COLUMN_DEFAULT, ''), '''', '')) =
+                             'CREADO')
            AND EXISTS(SELECT 1 FROM fza_winforms
                        WHERE CALL_WINF = 'DocumentosTrabajo')
     UNION ALL

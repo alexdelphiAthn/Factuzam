@@ -27,6 +27,10 @@
             Caption = 'Compartidos conmigo'
             ImageIndex = 1
           end
+          object tsAmbitoArchivadosDTR: TcxTabSheet
+            Caption = 'Archivados'
+            ImageIndex = 2
+          end
         end
         inherited cxGrdPrincipal: TcxGrid
           Top = 34
@@ -54,6 +58,7 @@
             object colDtrEstado: TcxGridDBColumn
               Caption = 'Estado'
               DataBinding.FieldName = 'ESTADO_DTR'
+              Options.Editing = False
               Width = 90
             end
             object colDtrUsuario: TcxGridDBColumn
@@ -331,6 +336,17 @@
       inherited tsFicha: TcxTabSheet
         TabVisible = False
       end
+    end
+  end
+  inherited pButtonRightBar: TPanel
+    object btnArchivarDTR: TcxButton
+      Left = 1
+      Top = 120
+      Width = 138
+      Height = 34
+      Caption = '&Archivar'
+      TabOrder = 2
+      OnClick = btnArchivarDTRClick
     end
   end
   object pmEnviarDTR: TPopupMenu

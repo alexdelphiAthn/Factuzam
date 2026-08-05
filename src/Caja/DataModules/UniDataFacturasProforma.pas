@@ -31,6 +31,7 @@ type
   public
     unqryEmpresas: TUniQuery;
     dsEmpresas   : TDataSource;
+    procedure AbrirEmpresas;
     procedure AbrirDetalles; override;
     function CrearRepositorio(
       const AParametrosApp: IParametrosAplicacion
@@ -187,12 +188,20 @@ begin
     '  FROM fza_empresas ' +
     ' WHERE ESACTIVO_EMP = ''S'' ' +
     ' ORDER BY ORDEN_EMP, RAZON_SOCIAL_EMP';
+  // Catálogo pequeño: se materializa antes de que el historial abra en
+  // segundo plano, evitando un fetch pendiente sobre la misma conexión.
+  unqryEmpresas.SpecificOptions.Values['FetchAll'] := 'True';
   unqryEmpresas.ReadOnly := True;
 end;
 
 procedure TdmFacturasProforma.AbrirDetalles;
 begin
   inherited;
+  AbrirEmpresas;
+end;
+
+procedure TdmFacturasProforma.AbrirEmpresas;
+begin
   if not unqryEmpresas.Active then
     unqryEmpresas.Open;
 end;

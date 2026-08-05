@@ -518,6 +518,10 @@ uses
   PruebasJsonSeguro in 'PruebasJsonSeguro.pas',
   PruebasTraducciones in 'PruebasTraducciones.pas',
   PruebasRegistroPantallas in 'PruebasRegistroPantallas.pas',
+  PruebasEstadosDocumentosTrabajo in
+    'PruebasEstadosDocumentosTrabajo.pas',
+  PruebasCargaMasivaDocumentoTrabajo in
+    'PruebasCargaMasivaDocumentoTrabajo.pas',
   PruebasComposicionCajaPantalla in
     'PruebasComposicionCajaPantalla.pas',
   PruebasComposicionComprasPantalla in

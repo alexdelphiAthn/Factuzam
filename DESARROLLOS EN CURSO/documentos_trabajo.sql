@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS `fza_documentos_trabajo` (
   `ID_DTR` bigint(20) NOT NULL AUTO_INCREMENT,
   `TITULO_DTR` varchar(200) NOT NULL,
   `TIPO_DTR` varchar(20) NOT NULL DEFAULT 'GENERAL',
-  `ESTADO_DTR` varchar(20) NOT NULL DEFAULT 'ABIERTO',
+  `ESTADO_DTR` varchar(20) NOT NULL DEFAULT 'CREADO',
   `CODIGO_EMP_DTR` varchar(20) DEFAULT NULL,
   `CODIGO_ALM_DTR` varchar(10) DEFAULT NULL,
   `USUARIO_DTR` varchar(100) NOT NULL DEFAULT 'SISTEMA',
@@ -43,6 +43,43 @@ SET @sSql := IF(@sExisteTitulo = 0 AND @sExisteDescripcion > 0,
   IF(@sExisteTitulo = 0,
     'ALTER TABLE fza_documentos_trabajo ADD COLUMN TITULO_DTR varchar(200) NOT NULL DEFAULT ''Documento de trabajo'' AFTER ID_DTR',
     'SELECT ''TITULO_DTR ya existe, se omite'' AS info'));
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sExisteEstadoDtr := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_documentos_trabajo'
+     AND COLUMN_NAME = 'ESTADO_DTR'
+);
+SET @sSql := IF(@sExisteEstadoDtr = 0,
+  'ALTER TABLE fza_documentos_trabajo ADD COLUMN ESTADO_DTR varchar(20) NOT NULL DEFAULT ''CREADO'' AFTER TIPO_DTR',
+  'SELECT ''ESTADO_DTR ya existe, se omite el alta'' AS info');
+PREPARE stmt FROM @sSql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+UPDATE `fza_documentos_trabajo`
+   SET `ESTADO_DTR` = 'CREADO',
+       `INSTANTE_MODIF` = `INSTANTE_MODIF`
+ WHERE COALESCE(UPPER(TRIM(`ESTADO_DTR`)), '') IN ('', 'ABIERTO');
+
+SET @sEstadoDtrConfigurado := (
+  SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.COLUMNS
+   WHERE TABLE_SCHEMA = DATABASE()
+     AND TABLE_NAME = 'fza_documentos_trabajo'
+     AND COLUMN_NAME = 'ESTADO_DTR'
+     AND DATA_TYPE = 'varchar'
+     AND CHARACTER_MAXIMUM_LENGTH = 20
+     AND IS_NULLABLE = 'NO'
+     AND UPPER(REPLACE(COALESCE(COLUMN_DEFAULT, ''), '''', '')) = 'CREADO'
+);
+SET @sSql := IF(@sEstadoDtrConfigurado = 0,
+  'ALTER TABLE fza_documentos_trabajo MODIFY COLUMN ESTADO_DTR varchar(20) NOT NULL DEFAULT ''CREADO''',
+  'SELECT ''ESTADO_DTR ya esta configurado, se omite'' AS info');
 PREPARE stmt FROM @sSql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;

@@ -49,6 +49,24 @@ resourcestring
     'El propietario del Documento de Trabajo no se puede cambiar.';
   SErrorTituloDocumentoTrabajoObligatorio =
     'Indique el titulo del Documento de Trabajo.';
+  SErrorEstadoDocumentoTrabajoNoValido =
+    'El estado del Documento de Trabajo debe ser CREADO, ENVIADO o ' +
+    'ARCHIVADO.';
+  SErrorModificarDocumentoTrabajoNoPermitido =
+    'Solo se pueden modificar documentos propios en estado CREADO.';
+  SErrorEnviarDocumentoTrabajoNoPermitido =
+    'Solo se pueden enviar documentos en estado CREADO.';
+  SErrorArchivarDocumentoTrabajoNoPermitido =
+    'Solo se pueden archivar documentos propios en estado CREADO o ENVIADO.';
+  SErrorActualizarEstadoDocumentoTrabajoSoloPropietario =
+    'Solo el propietario puede cambiar el estado del Documento de Trabajo.';
+  SErrorActualizarEstadoDocumentoTrabajo =
+    'No se pudo actualizar el estado del Documento de Trabajo. ' +
+    'Actualice la lista y vuelva a intentarlo.';
+  SPreguntaArchivarDocumentoTrabajo =
+    '¿Archivar el Documento de Trabajo seleccionado?';
+  SInfoDocumentoTrabajoArchivado =
+    'Documento de Trabajo archivado.';
   SErrorBorrarLineasDocumentoTrabajoSoloPropietario =
     'Solo el propietario puede borrar lineas del Documento de Trabajo.';
   SErrorEditarLineasDocumentoTrabajoSoloPropietario =
@@ -340,12 +358,15 @@ resourcestring
   SErrorAlmacenesDocumentoTrabajoAddBlock =
     'Seleccione al menos un almacen para cargar articulos.';
   SPreguntaConfirmarDocumentoTrabajoAddBlock =
-    'Se van a cargar %d articulos en el Documento de Trabajo "%s".' +
+    'Se van a cargar %d SKU en el Documento de Trabajo "%s".' +
     sLineBreak +
-    'Se anadira una linea por cada SKU con stock positivo en los almacenes ' +
-    'seleccionados.' + sLineBreak +
-    'La cantidad operativa de cada linea sera 1.' + sLineBreak +
+    'Solo se anadiran los SKU previsualizados que mantengan la reserva ' +
+    'configurada en los almacenes de origen.' + sLineBreak +
+    'La cantidad a servir no superara el maximo indicado por SKU.' +
+    sLineBreak +
     sLineBreak + 'Continuar?';
+  SCaptionExcluirSkuDocumentoTrabajoAddBlock =
+    'Excluir SKU ya en el documento';
   SInfoLineasDocumentoTrabajoAddBlock =
     '%d lineas anadidas al Documento de Trabajo.';
   SErrorInsertarLineasDocumentoTrabajoAddBlock =

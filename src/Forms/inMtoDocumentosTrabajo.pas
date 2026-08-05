@@ -18,7 +18,8 @@ interface
 uses
   inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, System.Types, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
+  System.Classes, System.Types, System.UITypes,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.Dialogs,
   inMtoGen, dxSkinsCore, dxSkinsDefaultPainters, cxGraphics, cxControls,
   cxLookAndFeels, cxLookAndFeelPainters, cxStyles, cxCustomData, cxFilter,
@@ -53,6 +54,7 @@ type
     pcAmbitoDTR: TcxPageControl;
     tsAmbitoPropiosDTR: TcxTabSheet;
     tsAmbitoCompartidosDTR: TcxTabSheet;
+    tsAmbitoArchivadosDTR: TcxTabSheet;
     colDtrId: TcxGridDBColumn;
     colDtrTitulo: TcxGridDBColumn;
     colDtrTipo: TcxGridDBColumn;
@@ -106,6 +108,7 @@ type
     miEnviarPeticionTraspasoDTR: TMenuItem;
     miEnviarInventarioDTR: TMenuItem;
     miEnviarTarifasDTR: TMenuItem;
+    btnArchivarDTR: TcxButton;
     procedure btnEnviarADTRClick(Sender: TObject);
     procedure miEnviarAlbaranDTRClick(Sender: TObject);
     procedure miEnviarFacturaVentaDTRClick(Sender: TObject);
@@ -119,7 +122,12 @@ type
     procedure btnCargarFiltrosDTRClick(Sender: TObject);
     procedure btnCompartirDTRClick(Sender: TObject);
     procedure btnImprimirEtiquetasDTRClick(Sender: TObject);
+    procedure btnArchivarDTRClick(Sender: TObject);
     procedure pcAmbitoDTRChange(Sender: TObject);
+    procedure dsTablaGDataChangeDTR(Sender: TObject; Field: TField);
+    procedure dsTablaGStateChangeDTR(Sender: TObject);
+    procedure actNavDocumentoTrabajoUpdate(Sender: TObject);
+    procedure actEliminarDocumentoTrabajoUpdate(Sender: TObject);
   private
     FIdEtiquetasDTR: Int64;
     // === CONTRATO DE ENTRADA ColumnSKUcxGrid ===
@@ -161,6 +169,7 @@ type
       ATipo: TTipoEnvioNumeradoDocumentoTrabajo);
     function CrearLineasCargaTraspaso: TLineasCargaTraspaso;
     procedure AbrirTraspasoCaja(AModo: TModoVentanaTraspaso);
+    procedure MarcarDocumentoActualEnviado;
     procedure AplicarEstadoAmbito;
     procedure CargarAlmacenesEtiquetasDTR(ALV: TcxListView);
     procedure CrearDataSetEtiquetasDTR(ADmArt: TObject;
@@ -188,6 +197,7 @@ function CrearDocumentosTrabajoCompraInyectada(
 implementation
 
 uses
+  Vcl.ActnList,
   UniDataArticulos, inLibFotos, inLibGenBusq, inMtoModalEtiqArt,
   inMtoModalAddBlockDocumentoTrabajo,
   // Factoria del contrato + IdentidadSesion.Usuario para el gestor de tallas.
@@ -269,6 +279,11 @@ begin
   if dmmDocumentosTrabajo <> nil then
   begin
     dsTablaG.DataSet := dmmDocumentosTrabajo.unqryTablaG;
+    dsTablaG.OnDataChange := dsTablaGDataChangeDTR;
+    dsTablaG.OnStateChange := dsTablaGStateChangeDTR;
+    actInsertarRegistro.OnUpdate := actNavDocumentoTrabajoUpdate;
+    actEditarRegistro.OnUpdate := actNavDocumentoTrabajoUpdate;
+    actEliminarRegistro.OnUpdate := actEliminarDocumentoTrabajoUpdate;
     tvLineasDTR.DataController.DataSource := dmmDocumentosTrabajo.dsLineas;
     tvCompartidosDTR.DataController.DataSource :=
       dmmDocumentosTrabajo.dsCompartidos;
@@ -300,7 +315,7 @@ begin
     ConstruirModoEntrada;
   if (FModoEntrada <> nil) and
      (dmmDocumentosTrabajo <> nil) and
-     (dmmDocumentosTrabajo.Ambito = dtaPropios) then
+     dmmDocumentosTrabajo.PuedeEditarDocumentoActual then
     FModoEntrada.MostrarEditor;
 end;
 
@@ -524,18 +539,159 @@ end;
 
 procedure TfrmMtoDocumentosTrabajo.AplicarEstadoAmbito;
 var
+  bArchivariable: Boolean;
+  bDocumentoCreado: Boolean;
+  bEditarCabecera: Boolean;
+  bEditarExistente: Boolean;
+  bInsertando: Boolean;
+  bPuedeBorrarDocumento: Boolean;
+  bPuedeEnviar: Boolean;
+  bPuedeInsertar: Boolean;
+  bPuedeModificar: Boolean;
   bPropios: Boolean;
 begin
-  bPropios := True;
+  bArchivariable := False;
+  bEditarCabecera := False;
+  bEditarExistente := False;
+  bInsertando := Assigned(dsTablaG.DataSet) and
+                 (dsTablaG.State = dsInsert);
+  bPuedeBorrarDocumento := False;
+  bPuedeEnviar := False;
+  bPuedeInsertar := PuedeAccionMto(apmInsertar);
+  bPropios := False;
+  bPuedeModificar := PuedeAccionMto(apmModificar);
   if dmmDocumentosTrabajo <> nil then
   begin
     bPropios := dmmDocumentosTrabajo.Ambito = dtaPropios;
+    bDocumentoCreado :=
+      dmmDocumentosTrabajo.PuedeEditarDocumentoActual;
+    bEditarExistente := bDocumentoCreado and bPuedeModificar;
+    bEditarCabecera := bEditarExistente or
+      (bInsertando and bPropios and bPuedeInsertar);
+    bPuedeBorrarDocumento :=
+      bDocumentoCreado and PuedeAccionMto(apmBorrar);
+    bPuedeEnviar := dmmDocumentosTrabajo.PuedeEnviarDocumentoActual;
+    bArchivariable :=
+      dmmDocumentosTrabajo.PuedeArchivarDocumentoActual and
+      bPuedeModificar;
   end;
-  cxGrdDBTabPrin.OptionsData.Editing := bPropios;
-  tvLineasDTR.OptionsData.Editing := bPropios;
-  tvCompartidosDTR.OptionsData.Editing := bPropios;
-  btnCargarFiltrosDTR.Enabled := bPropios;
-  btnCompartirDTR.Enabled := bPropios;
+  cxGrdDBTabPrin.OptionsData.Editing := bEditarCabecera;
+  cxGrdDBTabPrin.OptionsData.Inserting :=
+    bPropios and bPuedeInsertar;
+  cxGrdDBTabPrin.OptionsData.Deleting :=
+    bPuedeBorrarDocumento;
+  tvLineasDTR.OptionsData.Editing := bEditarExistente;
+  tvLineasDTR.OptionsData.Inserting := bEditarExistente;
+  tvLineasDTR.OptionsData.Deleting := bEditarExistente;
+  tvCompartidosDTR.OptionsData.Editing := bEditarExistente;
+  tvCompartidosDTR.OptionsData.Inserting := bEditarExistente;
+  tvCompartidosDTR.OptionsData.Deleting := bEditarExistente;
+  btnEnviarADTR.Enabled := bPuedeEnviar;
+  btnCargarFiltrosDTR.Enabled := bEditarExistente;
+  btnCompartirDTR.Enabled := bEditarExistente;
+  btnArchivarDTR.Enabled := bArchivariable;
+  actInsertarRegistro.Enabled :=
+    bPropios and bPuedeInsertar;
+  actEditarRegistro.Enabled := bEditarExistente;
+  actEliminarRegistro.Enabled := bPuedeBorrarDocumento;
+  nvNavegador.Buttons.Insert.Visible :=
+    bPropios and bPuedeInsertar;
+  nvNavegador.Buttons.Append.Visible :=
+    bPropios and bPuedeInsertar;
+  nvNavegador.Buttons.Edit.Visible := bEditarExistente;
+  nvNavegador.Buttons.Post.Visible := bEditarCabecera;
+  nvNavegador.Buttons.Delete.Visible :=
+    bPuedeBorrarDocumento;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.dsTablaGDataChangeDTR(
+  Sender: TObject; Field: TField);
+begin
+  AplicarEstadoAmbito;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.dsTablaGStateChangeDTR(
+  Sender: TObject);
+begin
+  inherited dsTablaGStateChange(Sender);
+  AplicarEstadoAmbito;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.actNavDocumentoTrabajoUpdate(
+  Sender: TObject);
+var
+  bPermitido: Boolean;
+begin
+  bPermitido := False;
+  if dmmDocumentosTrabajo <> nil then
+  begin
+    if Sender = actInsertarRegistro then
+    begin
+      bPermitido :=
+        (dmmDocumentosTrabajo.Ambito = dtaPropios) and
+        PuedeAccionMto(apmInsertar);
+    end
+    else if Sender = actEditarRegistro then
+    begin
+      bPermitido :=
+        dmmDocumentosTrabajo.PuedeEditarDocumentoActual and
+        PuedeAccionMto(apmModificar);
+    end;
+  end;
+  TAction(Sender).Enabled :=
+    Assigned(dsTablaG.DataSet) and
+    dsTablaG.DataSet.Active and
+    (dsTablaG.State = dsBrowse) and
+    PermitirNavegacionTeclas and
+    bPermitido;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.actEliminarDocumentoTrabajoUpdate(
+  Sender: TObject);
+begin
+  TAction(Sender).Enabled :=
+    Assigned(dsTablaG.DataSet) and
+    dsTablaG.DataSet.Active and
+    (not dsTablaG.DataSet.IsEmpty) and
+    (dsTablaG.State = dsBrowse) and
+    (dmmDocumentosTrabajo <> nil) and
+    dmmDocumentosTrabajo.PuedeEditarDocumentoActual and
+    PuedeAccionMto(apmBorrar);
+end;
+
+procedure TfrmMtoDocumentosTrabajo.MarcarDocumentoActualEnviado;
+begin
+  if (dmmDocumentosTrabajo <> nil) and
+     (dmmDocumentosTrabajo.Ambito = dtaPropios) and
+     dmmDocumentosTrabajo.MarcarDocumentoActualEnviado then
+  begin
+    AplicarEstadoAmbito;
+  end;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.btnArchivarDTRClick(Sender: TObject);
+begin
+  if not PuedeAccionMto(apmModificar) then
+  begin
+    ShowMessage(SErrorArchivarDocumentoTrabajoNoPermitido);
+    Exit;
+  end;
+  if (dmmDocumentosTrabajo = nil) or
+     not dmmDocumentosTrabajo.PuedeArchivarDocumentoActual then
+  begin
+    ShowMessage(SErrorArchivarDocumentoTrabajoNoPermitido);
+    Exit;
+  end;
+  if MessageDlg(SPreguntaArchivarDocumentoTrabajo,
+                mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+  begin
+    Exit;
+  end;
+  if dmmDocumentosTrabajo.ArchivarDocumentoActual then
+  begin
+    AplicarEstadoAmbito;
+    ShowMessage(SInfoDocumentoTrabajoArchivado);
+  end;
 end;
 
 procedure TfrmMtoDocumentosTrabajo.CargarAlmacenesEtiquetasDTR(
@@ -798,6 +954,8 @@ begin
     ds := dmmDocumentosTrabajo.unqryTablaG;
     if (not ds.Active) or ds.IsEmpty then
       ShowMessage(SErrorDocumentoTrabajoNoSeleccionadoEnviar)
+    else if not dmmDocumentosTrabajo.PuedeEnviarDocumentoActual then
+      ShowMessage(SErrorEnviarDocumentoTrabajoNoPermitido)
     else
     begin
       if dmmDocumentosTrabajo.unqryLineas.State in dsEditModes then
@@ -859,6 +1017,8 @@ begin
       iLineas := FMaterializacionDocumentosTrabajo.CrearAlbaran(
         idDtr, sEmp, sAlm, sSerie, sNumero,
         IdentidadSesion.Usuario);
+      if iLineas > 0 then
+        MarcarDocumentoActualEnviado;
       ShowMessage(Format(SInfoAlbaranDocumentoTrabajoCreado,
         [sSerie, sNumero, iLineas]));
     end;
@@ -962,6 +1122,8 @@ begin
               idDtr, sEmp, sAlm, sSerie, sNumero,
               IdentidadSesion.Usuario);
         end;
+        if iLineas > 0 then
+          MarcarDocumentoActualEnviado;
         ShowMessage(Format(
           sMensajeCreado,
           [sSerie, sNumero, iLineas]));
@@ -1037,6 +1199,8 @@ begin
         ds.EnableControls;
         ds.FreeBookmark(Bm);
       end;
+      // La venta TPV aun esta en memoria y el usuario puede cancelarla.
+      // Sin confirmacion persistida no se bloquea el documento como ENVIADO.
       if iMal = 0 then
         ShowMessage(Format(
           SInfoLineasDocumentoTrabajoVolcadasTpv,
@@ -1180,6 +1344,8 @@ begin
         Date,
         CrearLineasCargaTraspaso);
       oFormulario.Show;
+      // La ventana no modal puede cerrarse sin grabar. El estado solo cambia
+      // a ENVIADO en materializaciones que ya han quedado persistidas.
     except
       FreeAndNil(oFormulario);
       raise;
@@ -1240,6 +1406,8 @@ begin
       iLineas := FMaterializacionDocumentosTrabajo.CrearInventario(
         idDtr, sEmp, sAlm, sSerie, sNumero,
         IdentidadSesion.Usuario);
+      if iLineas > 0 then
+        MarcarDocumentoActualEnviado;
       ShowMessage(Format(SInfoInventarioDocumentoTrabajoCreado,
         [sSerie, sNumero, sAlm, iLineas]));
     end;
@@ -1257,6 +1425,8 @@ begin
   begin
     idTarc := FMaterializacionDocumentosTrabajo.CrearSesionTarifa(
       idDtr, IdentidadSesion.Usuario);
+    if idTarc > 0 then
+      MarcarDocumentoActualEnviado;
     ShowMessage(Format(SInfoCambioTarifasDocumentoTrabajoCreado,
       [idTarc]));
   end;
@@ -1266,7 +1436,11 @@ procedure TfrmMtoDocumentosTrabajo.pcAmbitoDTRChange(Sender: TObject);
 begin
   if dmmDocumentosTrabajo <> nil then
   begin
-    if pcAmbitoDTR.ActivePage = tsAmbitoCompartidosDTR then
+    if pcAmbitoDTR.ActivePage = tsAmbitoArchivadosDTR then
+    begin
+      dmmDocumentosTrabajo.CambiarAmbito(dtaArchivados);
+    end
+    else if pcAmbitoDTR.ActivePage = tsAmbitoCompartidosDTR then
     begin
       dmmDocumentosTrabajo.CambiarAmbito(dtaCompartidos);
     end

@@ -392,6 +392,8 @@
         <DCCReference Include="PruebasExportadores.pas"/>
         <DCCReference Include="PruebasTraducciones.pas"/>
         <DCCReference Include="PruebasRegistroPantallas.pas"/>
+        <DCCReference Include="PruebasEstadosDocumentosTrabajo.pas"/>
+        <DCCReference Include="PruebasCargaMasivaDocumentoTrabajo.pas"/>
         <DCCReference Include="PruebasComposicionCajaPantalla.pas"/>
         <DCCReference Include="PruebasComposicionComprasPantalla.pas"/>
         <DCCReference Include="PruebasComposicionConfiguracionPantalla.pas"/>

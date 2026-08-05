@@ -184,6 +184,7 @@
         <DCCReference Include="src\Lib\inLibConfigCamposIntf.pas"/>
         <DCCReference Include="src\Lib\inLibRepositoriosPantallaIntf.pas"/>
         <DCCReference Include="src\Lib\inLibCargaMasivaArticulosPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibCargaMasivaArticulosReglas.pas"/>
         <DCCReference Include="src\Lib\inLibLog.pas"/>
         <DCCReference Include="src\Lib\inLibDiag.pas"/>
         <DCCReference Include="src\Lib\inLibCadenas.pas"/>
@@ -1468,6 +1469,7 @@
         <DCCReference Include="src\DataModules\UniDataFotosRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibFotos.pas"/>
         <DCCReference Include="src\Lib\inLibDocumentosTrabajo.pas"/>
+        <DCCReference Include="src\Lib\inLibDocumentosTrabajoEstados.pas"/>
         <DCCReference Include="src\Lib\inLibDocumentosTrabajoPresentacion.pas"/>
         <DCCReference Include="src\DataModules\UniDataDocumentosTrabajoRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibImagen.pas"/>

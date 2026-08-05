@@ -35,6 +35,8 @@ uses
     'src\Lib\inLibRepositoriosPantallaIntf.pas',
   inLibCargaMasivaArticulosPersistenciaIntf in
     'src\Lib\inLibCargaMasivaArticulosPersistenciaIntf.pas',
+  inLibCargaMasivaArticulosReglas in
+    'src\Lib\inLibCargaMasivaArticulosReglas.pas',
   inLibLog in 'src\Lib\inLibLog.pas',
   inLibDiag in 'src\Lib\inLibDiag.pas',
   inLibCadenas in 'src\Lib\inLibCadenas.pas',
@@ -1188,6 +1190,8 @@ uses
     'src\DataModules\UniDataFotosRepositorio.pas',
   inLibFotos in 'src\Lib\inLibFotos.pas',
   inLibDocumentosTrabajo in 'src\Lib\inLibDocumentosTrabajo.pas',
+  inLibDocumentosTrabajoEstados in
+    'src\Lib\inLibDocumentosTrabajoEstados.pas',
   inLibDocumentosTrabajoPresentacion in
     'src\Lib\inLibDocumentosTrabajoPresentacion.pas',
   UniDataDocumentosTrabajoRepositorio in

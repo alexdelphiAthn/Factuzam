@@ -6300,7 +6300,7 @@ CREATE TABLE `fza_documentos_trabajo` (
   `ID_DTR` bigint(20) NOT NULL AUTO_INCREMENT,
   `TITULO_DTR` varchar(200) NOT NULL,
   `TIPO_DTR` varchar(20) NOT NULL DEFAULT 'GENERAL',
-  `ESTADO_DTR` varchar(20) NOT NULL DEFAULT 'ABIERTO',
+  `ESTADO_DTR` varchar(20) NOT NULL DEFAULT 'CREADO',
   `CODIGO_EMP_DTR` varchar(20) NULL DEFAULT NULL,
   `CODIGO_ALM_DTR` varchar(10) NULL DEFAULT NULL,
   `USUARIO_DTR` varchar(100) NOT NULL DEFAULT 'SISTEMA',
@@ -6323,7 +6323,7 @@ CREATE TABLE `fza_documentos_trabajo` (
 
 -- Datos de fza_documentos_trabajo
 
-INSERT INTO `fza_documentos_trabajo` (`ID_DTR`, `TITULO_DTR`, `TIPO_DTR`, `ESTADO_DTR`, `CODIGO_EMP_DTR`, `CODIGO_ALM_DTR`, `USUARIO_DTR`, `INSTANTE_DOCUMENTO_DTR`, `OBSERVACIONES_DTR`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES (1,'Documento de trabajo 22/06/2026 06:48','GENERAL','ABIERTO','012','GEN','Administrador','2026-06-22 06:48:22',NULL,'2026-06-22 04:48:22','2026-06-22 04:48:22','Administrador','Administrador');
+INSERT INTO `fza_documentos_trabajo` (`ID_DTR`, `TITULO_DTR`, `TIPO_DTR`, `ESTADO_DTR`, `CODIGO_EMP_DTR`, `CODIGO_ALM_DTR`, `USUARIO_DTR`, `INSTANTE_DOCUMENTO_DTR`, `OBSERVACIONES_DTR`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) VALUES (1,'Documento de trabajo 22/06/2026 06:48','GENERAL','CREADO','012','GEN','Administrador','2026-06-22 06:48:22',NULL,'2026-06-22 04:48:22','2026-06-22 04:48:22','Administrador','Administrador');
 
 -- Tabla: fza_documentos_trabajo_celdas
 

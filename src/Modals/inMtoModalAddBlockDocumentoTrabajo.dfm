@@ -17,8 +17,8 @@
       Left = 12
       Top = 38
       Caption = 
-        'Se a'#241'adir'#225' una l'#237'nea por cada SKU con stock positivo en los alma' +
-        'cenes seleccionados. La cantidad operativa quedar'#225' a 1.'
+        'Se cargar'#225'n los SKU vendidos que cumplan los filtros de stock. La ' +
+        'reserva de origen y la cantidad m'#225'xima a servir son configurables.'
       Style.TextColor = clNavy
       TabOrder = 1
       Transparent = True
@@ -142,28 +142,42 @@
         StyleElements = [seFont, seClient, seBorder]
         ExplicitHeight = 113
         inherited rgStockCombinacion: TcxRadioGroup
-          Height = 65
-          Width = 786
-          ExplicitWidth = 786
-          ExplicitHeight = 65
+          Height = 45
+          Width = 640
+          ExplicitWidth = 640
+          ExplicitHeight = 45
         end
         inherited btnMarcarTodosAlm: TcxButton
-          Left = 470
+          Left = 660
           Top = 37
-          ExplicitLeft = 470
+          ExplicitLeft = 660
           ExplicitTop = 37
         end
         inherited btnDesmarcarTodosAlm: TcxButton
-          Left = 618
+          Left = 800
           Top = 37
           Width = 144
-          ExplicitLeft = 618
+          ExplicitLeft = 800
           ExplicitTop = 37
           ExplicitWidth = 144
         end
         inherited lblSelAlmacenes: TcxLabel
+          Left = 958
           Top = 37
+          ExplicitLeft = 958
           ExplicitTop = 37
+        end
+        inherited lblReservaStockOrigen: TcxLabel
+          Visible = True
+        end
+        inherited spnReservaStockOrigen: TcxSpinEdit
+          Visible = True
+        end
+        inherited lblMaximoServirPorSku: TcxLabel
+          Visible = True
+        end
+        inherited spnMaximoServirPorSku: TcxSpinEdit
+          Visible = True
         end
       end
       inherited chkLstAlmacenes: TcxCheckListBox
@@ -171,6 +185,23 @@
         Height = 230
         ExplicitTop = 113
         ExplicitHeight = 230
+      end
+    end
+    inherited tsVentas: TcxTabSheet
+      inherited lblAlmacenesVentas: TcxLabel
+        Visible = True
+      end
+      inherited chkLstAlmacenesVentas: TcxCheckListBox
+        Visible = True
+      end
+      inherited chkFiltrarStockAlmacenVenta: TcxCheckBox
+        Visible = True
+      end
+      inherited lblStockMaximoAlmacenVenta: TcxLabel
+        Visible = True
+      end
+      inherited spnStockMaximoAlmacenVenta: TcxSpinEdit
+        Visible = True
       end
     end
   end

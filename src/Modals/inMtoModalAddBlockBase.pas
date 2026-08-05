@@ -105,9 +105,13 @@ type
           lblAlmacenInfo: TcxLabel;
           rgStockCombinacion: TcxRadioGroup;
           btnMarcarTodosAlm: TcxButton;
-          btnDesmarcarTodosAlm: TcxButton;
-          lblSelAlmacenes: TcxLabel;
-        chkLstAlmacenes: TcxCheckListBox;
+        btnDesmarcarTodosAlm: TcxButton;
+        lblSelAlmacenes: TcxLabel;
+        lblReservaStockOrigen: TcxLabel;
+        spnReservaStockOrigen: TcxSpinEdit;
+        lblMaximoServirPorSku: TcxLabel;
+        spnMaximoServirPorSku: TcxSpinEdit;
+      chkLstAlmacenes: TcxCheckListBox;
 
       tsFechaAlta: TcxTabSheet;
         chkAplicarFechaAlta: TcxCheckBox;
@@ -125,6 +129,11 @@ type
         rgConSinVenta: TcxRadioGroup;
         lblNumMinVtas: TcxLabel;
         spnNumMinVtas: TcxSpinEdit;
+        lblAlmacenesVentas: TcxLabel;
+        chkLstAlmacenesVentas: TcxCheckListBox;
+        chkFiltrarStockAlmacenVenta: TcxCheckBox;
+        lblStockMaximoAlmacenVenta: TcxLabel;
+        spnStockMaximoAlmacenVenta: TcxSpinEdit;
 
     splitterPreview: TcxSplitter;
     pnlPreview: TPanel;
@@ -185,6 +194,11 @@ type
     FDsPropValores : TDataSource;
     FDsPreview     : TDataSource;
     FCodigosPropiedades: TStringList;
+    FCodigosAlmacenesVentas: TStringList;
+    FReservaStockOrigenDefecto: Double;
+    FMaximoServirPorSkuDefecto: Double;
+    FFiltrarStockAlmacenVentaDefecto: Boolean;
+    FStockMaximoAlmacenVentaDefecto: Double;
 
     // === HOOKS para descendientes ============================================
 
@@ -208,6 +222,9 @@ type
     // Despues de cargar el preview, los hijos pueden ajustar columnas
     procedure ConfigurarPreviewExtra; virtual;
 
+    // Resumen que se muestra sobre el grid de previsualizacion.
+    function TextoResumenPreview(ANumeroRegistros: Integer): string; virtual;
+
     // INSERCION REAL — el corazon especifico de cada hijo
     function  EjecutarInsercion(out ANumInsertados: Integer;
                                 out ACodigos: TArray<string>): Boolean;
@@ -221,6 +238,7 @@ type
     function  RecogerCodigosProveedoresSeleccionados: TArray<string>;
     function  RecogerIdsValorPropiedadSeleccionados: TArray<Integer>;
     function  RecogerCodigosAlmacenesSeleccionados: TArray<string>;
+    function  RecogerCodigosAlmacenesVentasSeleccionados: TArray<string>;
 
     function StockCombinacionActual: TStockCombinacionCargaMasiva;
     function RecogerFiltros: TFiltrosCargaMasivaArticulos;
@@ -234,6 +252,11 @@ type
     procedure CargarPropiedades;
     procedure CargarValoresPropiedad(const ACodigoPropiedad: string);
     procedure CargarAlmacenes;
+    procedure PreseleccionarAlmacenVentasSesion;
+    procedure ConfigurarValoresReposicionDefecto(
+      AReservaStockOrigen, AMaximoServirPorSku: Double;
+      AFiltrarStockAlmacenVenta: Boolean;
+      AStockMaximoAlmacenVenta: Double);
 
     property ConsultasCargaMasiva: IConsultasCargaMasivaArticulos
       read GetConsultasCargaMasiva;
@@ -329,6 +352,14 @@ begin
   // override en hijos para añadir columnas extra al grid
 end;
 
+function TfrmModalAddBlockBase.TextoResumenPreview(
+  ANumeroRegistros: Integer): string;
+begin
+  Result := Format(
+    SCaptionArticulosCoincidenFiltro,
+    [ANumeroRegistros]);
+end;
+
 // ============================================================================
 //   FORM CREATE / CLOSE
 // ============================================================================
@@ -341,6 +372,7 @@ begin
   FPropagandoCheck    := False;
   ValidarServiciosCargaMasiva(FServicios);
   FCodigosPropiedades := TStringList.Create;
+  FCodigosAlmacenesVentas := TStringList.Create;
   FDsFamilias     := TDataSource.Create(Self);
   FDsProveedores  := TDataSource.Create(Self);
   FDsPropValores  := TDataSource.Create(Self);
@@ -356,6 +388,24 @@ begin
   chkSoloConStock.Checked      := False;
   chkPropagarHijos.Checked     := True;
   rgStockCombinacion.ItemIndex := 0;
+  ConfigurarValoresReposicionDefecto(0, 1, False, 0);
+end;
+
+procedure TfrmModalAddBlockBase.ConfigurarValoresReposicionDefecto(
+  AReservaStockOrigen, AMaximoServirPorSku: Double;
+  AFiltrarStockAlmacenVenta: Boolean;
+  AStockMaximoAlmacenVenta: Double);
+begin
+  FReservaStockOrigenDefecto := AReservaStockOrigen;
+  FMaximoServirPorSkuDefecto := AMaximoServirPorSku;
+  FFiltrarStockAlmacenVentaDefecto := AFiltrarStockAlmacenVenta;
+  FStockMaximoAlmacenVentaDefecto := AStockMaximoAlmacenVenta;
+  spnReservaStockOrigen.Value := FReservaStockOrigenDefecto;
+  spnMaximoServirPorSku.Value := FMaximoServirPorSkuDefecto;
+  chkFiltrarStockAlmacenVenta.Checked :=
+    FFiltrarStockAlmacenVentaDefecto;
+  spnStockMaximoAlmacenVenta.Value :=
+    FStockMaximoAlmacenVentaDefecto;
 end;
 
 procedure TfrmModalAddBlockBase.FormClose(Sender: TObject;
@@ -372,6 +422,7 @@ begin
     end;
 
   FreeAndNil(FCodigosPropiedades);
+  FreeAndNil(FCodigosAlmacenesVentas);
   FDsFamilias.DataSet := nil;
   FDsProveedores.DataSet := nil;
   FDsPropValores.DataSet := nil;
@@ -485,9 +536,11 @@ procedure TfrmModalAddBlockBase.CargarAlmacenes;
 var
   aAlmacenes: TAlmacenesCargaMasiva;
   oAlmacen: TAlmacenCargaMasiva;
-  it : TcxCheckListBoxItem;
+  it: TcxCheckListBoxItem;
 begin
   chkLstAlmacenes.Items.Clear;
+  chkLstAlmacenesVentas.Items.Clear;
+  FCodigosAlmacenesVentas.Clear;
   aAlmacenes := FServicios.Consultas.ListarAlmacenes;
   for oAlmacen in aAlmacenes do
   begin
@@ -495,7 +548,25 @@ begin
     it.Text := oAlmacen.Codigo + ' - ' + oAlmacen.Nombre;
     it.ItemObject := TStringList.Create;
     TStringList(it.ItemObject).Add(oAlmacen.Codigo);
+
+    it := chkLstAlmacenesVentas.Items.Add;
+    it.Text := oAlmacen.Codigo + ' - ' + oAlmacen.Nombre;
+    FCodigosAlmacenesVentas.Add(oAlmacen.Codigo);
   end;
+  PreseleccionarAlmacenVentasSesion;
+end;
+
+procedure TfrmModalAddBlockBase.PreseleccionarAlmacenVentasSesion;
+var
+  CodigoAlmacenSesion: string;
+  i: Integer;
+begin
+  CodigoAlmacenSesion := '';
+  if Assigned(ContextoSesion) then
+    CodigoAlmacenSesion := UbicacionSesion.Almacen;
+  for i := 0 to chkLstAlmacenesVentas.Items.Count - 1 do
+    chkLstAlmacenesVentas.Items[i].Checked :=
+      SameText(FCodigosAlmacenesVentas[i], CodigoAlmacenSesion);
 end;
 
 // ============================================================================
@@ -684,6 +755,13 @@ begin
     chkAplicarFechaAlta.Checked := False;
     chkConVenta.Checked := False;
     chkSoloConStock.Checked := False;
+    spnReservaStockOrigen.Value := FReservaStockOrigenDefecto;
+    spnMaximoServirPorSku.Value := FMaximoServirPorSkuDefecto;
+    chkFiltrarStockAlmacenVenta.Checked :=
+      FFiltrarStockAlmacenVentaDefecto;
+    spnStockMaximoAlmacenVenta.Value :=
+      FStockMaximoAlmacenVentaDefecto;
+    PreseleccionarAlmacenVentasSesion;
     for i := 0 to chkLstAlmacenes.Items.Count - 1 do
       chkLstAlmacenes.Items[i].Checked := False;
     if Assigned(FDatosPreview) and FDatosPreview.Active then
@@ -840,6 +918,24 @@ begin
   end;
 end;
 
+function TfrmModalAddBlockBase.
+  RecogerCodigosAlmacenesVentasSeleccionados: TArray<string>;
+var
+  Codigos: TList<string>;
+  i: Integer;
+begin
+  Codigos := TList<string>.Create;
+  try
+    for i := 0 to chkLstAlmacenesVentas.Items.Count - 1 do
+      if chkLstAlmacenesVentas.Items[i].Checked and
+         (i < FCodigosAlmacenesVentas.Count) then
+        Codigos.Add(FCodigosAlmacenesVentas[i]);
+    Result := Codigos.ToArray;
+  finally
+    FreeAndNil(Codigos);
+  end;
+end;
+
 function TfrmModalAddBlockBase.RecogerFiltros:
   TFiltrosCargaMasivaArticulos;
 begin
@@ -851,16 +947,24 @@ begin
   Result.AplicarFechaAlta := chkAplicarFechaAlta.Checked;
   Result.FiltrarVentas := chkConVenta.Checked;
   Result.ConVentas := rgConSinVenta.ItemIndex = 0;
+  Result.FiltrarStockAlmacenVenta :=
+    chkFiltrarStockAlmacenVenta.Checked;
   Result.FechaAltaDesde := dtAltaDesde.Date;
   Result.FechaAltaHasta := dtAltaHasta.Date;
   Result.VentaDesde := dtVtaDesde.Date;
   Result.VentaHasta := dtVtaHasta.Date;
   Result.NumeroMinimoVentas := spnNumMinVtas.Value;
+  Result.ReservaStockOrigen := spnReservaStockOrigen.Value;
+  Result.MaximoServirPorSku := spnMaximoServirPorSku.Value;
+  Result.StockMaximoAlmacenVenta :=
+    spnStockMaximoAlmacenVenta.Value;
   Result.StockCombinacion := StockCombinacionActual;
   Result.CodigosFamilia := RecogerCodigosFamiliaSeleccionados;
   Result.CodigosProveedor := RecogerCodigosProveedoresSeleccionados;
   Result.IdsValorPropiedad := RecogerIdsValorPropiedadSeleccionados;
   Result.CodigosAlmacen := RecogerCodigosAlmacenesSeleccionados;
+  Result.CodigosAlmacenVenta :=
+    RecogerCodigosAlmacenesVentasSeleccionados;
 end;
 
 function TfrmModalAddBlockBase.GetConsultasCargaMasiva:
@@ -896,6 +1000,13 @@ begin
     ShowMessage(SErrorAlmacenesSoloStockAddBlock);
     pcFiltros.ActivePage := tsAlmacenes;
   end
+  else if chkLstAlmacenesVentas.Visible and
+          (chkConVenta.Checked or chkFiltrarStockAlmacenVenta.Checked) and
+          (Length(RecogerCodigosAlmacenesVentasSeleccionados) = 0) then
+  begin
+    ShowMessage(SErrorAlmacenesVentasAddBlock);
+    pcFiltros.ActivePage := tsVentas;
+  end
   else
   begin
     Screen.Cursor := crHourGlass;
@@ -909,9 +1020,8 @@ begin
       FDsPreview.DataSet := FDatosPreview;
       tvPreview.DataController.DataSource := FDsPreview;
       ConfigurarPreviewExtra;
-      lblPreviewInfo.Caption := Format(
-        SCaptionArticulosCoincidenFiltro,
-        [FDatosPreview.RecordCount]);
+      lblPreviewInfo.Caption := TextoResumenPreview(
+        FDatosPreview.RecordCount);
     finally
       Screen.Cursor := crDefault;
     end;

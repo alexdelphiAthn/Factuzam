@@ -58,6 +58,8 @@ type
     function TextoConfirmacion(ANumPendientes: Integer): string; override;
     function TextoExito(ANumInsertados: Integer): string; override;
     function TextoExcluirYaCargados: string; override;
+    procedure ConfigurarPreviewExtra; override;
+    function TextoResumenPreview(ANumeroRegistros: Integer): string; override;
     function EjecutarInsercion(out ANumInsertados: Integer;
                                out ACodigos: TArray<string>): Boolean;
       override;
@@ -84,7 +86,8 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibUser, inLibMsgComun, inLibMsgVentas;
+  inLibCargaMasivaArticulosReglas, inLibUser, inLibMsgArticulos,
+  inLibMsgComun, inLibMsgVentas;
 
 class function TfrmModalAddBlockDocumentoTrabajo.Ejecutar(
   AOwner: TComponent;
@@ -131,6 +134,11 @@ begin
   btnCancelar.Caption := SCaptionCancelarEsc;
   chkSoloConStock.Checked := True;
   chkSoloConStock.Enabled := False;
+  ConfigurarValoresReposicionDefecto(
+    RESERVA_STOCK_ORIGEN_DEFECTO_DTR,
+    MAXIMO_SERVIR_POR_SKU_DEFECTO_DTR,
+    True,
+    STOCK_MAXIMO_ALMACEN_VENTA_DEFECTO_DTR);
   FResultadoDoc.Aceptado := False;
 end;
 
@@ -239,7 +247,22 @@ end;
 
 function TfrmModalAddBlockDocumentoTrabajo.TextoExcluirYaCargados: string;
 begin
-  Result := 'Excluir articulos ya en el documento';
+  Result := SCaptionExcluirSkuDocumentoTrabajoAddBlock;
+end;
+
+procedure TfrmModalAddBlockDocumentoTrabajo.ConfigurarPreviewExtra;
+begin
+  inherited;
+  colPrevCodigo.Caption := SCaptionColSku;
+  colPrevCodigo.DataBinding.FieldName := 'CODIGO_UNIDAD_SKU';
+end;
+
+function TfrmModalAddBlockDocumentoTrabajo.TextoResumenPreview(
+  ANumeroRegistros: Integer): string;
+begin
+  Result := Format(
+    SCaptionSkuEncontrados,
+    [IntToStr(ANumeroRegistros)]);
 end;
 
 function TfrmModalAddBlockDocumentoTrabajo.EjecutarInsercion(
@@ -257,6 +280,8 @@ begin
   begin
     oParametros.IdDocumento := FIdDtr;
     oParametros.CodigosAlmacen := RecogerCodigosAlmacenesSeleccionados;
+    oParametros.ReservaStockOrigen := spnReservaStockOrigen.Value;
+    oParametros.MaximoServirPorSku := spnMaximoServirPorSku.Value;
     oParametros.Usuario := IdentidadSesion.Usuario;
     try
       oResultado := InsercionesCargaMasiva.InsertarDocumentoTrabajo(

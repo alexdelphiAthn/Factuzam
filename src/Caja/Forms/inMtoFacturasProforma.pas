@@ -48,6 +48,7 @@ type
     btnRefrescar        : TcxButton;
     btnImprimir         : TcxButton;
     lblExplicacion      : TcxLabel;
+    function EscalarDpi(AValor: Integer): Integer;
     procedure CrearControlesDinamicos;
     procedure CrearEtiqueta(const ATexto: string; AIzq, ATop: Integer);
     procedure CrearColumnas;
@@ -145,46 +146,46 @@ begin
     pnlFacturacion := TPanel.Create(Self);
     pnlFacturacion.Parent := tsLista;
     pnlFacturacion.Align := alTop;
-    pnlFacturacion.Height := 170;
+    pnlFacturacion.Height := EscalarDpi(170);
     pnlFacturacion.BevelOuter := bvNone;
     pnlFacturacion.ParentBackground := False;
     pnlFacturacion.Color := clWhite;
     CrearEtiqueta('Desde', 12, 14);
     dteDesde := TcxDateEdit.Create(Self);
     dteDesde.Parent := pnlFacturacion;
-    dteDesde.Left := 64;
-    dteDesde.Top := 10;
-    dteDesde.Width := 118;
+    dteDesde.Left := EscalarDpi(64);
+    dteDesde.Top := EscalarDpi(10);
+    dteDesde.Width := EscalarDpi(118);
     CrearEtiqueta('Hasta', 198, 14);
     dteHasta := TcxDateEdit.Create(Self);
     dteHasta.Parent := pnlFacturacion;
-    dteHasta.Left := 250;
-    dteHasta.Top := 10;
-    dteHasta.Width := 118;
+    dteHasta.Left := EscalarDpi(250);
+    dteHasta.Top := EscalarDpi(10);
+    dteHasta.Width := EscalarDpi(118);
     CrearEtiqueta('Empresa emisora', 388, 14);
     cbbEmpresaOrigen := TcxLookupComboBox.Create(Self);
     cbbEmpresaOrigen.Parent := pnlFacturacion;
-    cbbEmpresaOrigen.Left := 506;
-    cbbEmpresaOrigen.Top := 10;
-    cbbEmpresaOrigen.Width := 330;
+    cbbEmpresaOrigen.Left := EscalarDpi(506);
+    cbbEmpresaOrigen.Top := EscalarDpi(10);
+    cbbEmpresaOrigen.Width := EscalarDpi(330);
     cbbEmpresaOrigen.Properties.DropDownListStyle := lsFixedList;
     cbbEmpresaOrigen.Properties.KeyFieldNames := 'CODIGO_EMP_EMP';
     cbbEmpresaOrigen.Properties.ListFieldNames := 'RAZON_SOCIAL_EMP';
     CrearEtiqueta('Empresa destino', 388, 52);
     cbbEmpresaDestino := TcxLookupComboBox.Create(Self);
     cbbEmpresaDestino.Parent := pnlFacturacion;
-    cbbEmpresaDestino.Left := 506;
-    cbbEmpresaDestino.Top := 48;
-    cbbEmpresaDestino.Width := 330;
+    cbbEmpresaDestino.Left := EscalarDpi(506);
+    cbbEmpresaDestino.Top := EscalarDpi(48);
+    cbbEmpresaDestino.Width := EscalarDpi(330);
     cbbEmpresaDestino.Properties.DropDownListStyle := lsFixedList;
     cbbEmpresaDestino.Properties.KeyFieldNames := 'CODIGO_EMP_EMP';
     cbbEmpresaDestino.Properties.ListFieldNames := 'RAZON_SOCIAL_EMP';
     rgModalidad := TcxRadioGroup.Create(Self);
     rgModalidad.Parent := pnlFacturacion;
-    rgModalidad.Left := 12;
-    rgModalidad.Top := 85;
-    rgModalidad.Width := 824;
-    rgModalidad.Height := 48;
+    rgModalidad.Left := EscalarDpi(12);
+    rgModalidad.Top := EscalarDpi(85);
+    rgModalidad.Width := EscalarDpi(824);
+    rgModalidad.Height := EscalarDpi(48);
     rgModalidad.Caption := ' Modalidad ';
     rgModalidad.Properties.Columns := 2;
     rgModalidad.Properties.Items.Add.Caption :=
@@ -196,32 +197,32 @@ begin
     rgModalidad.ItemIndex := 0;
     btnGenerar := TcxButton.Create(Self);
     btnGenerar.Parent := pnlFacturacion;
-    btnGenerar.Left := 856;
-    btnGenerar.Top := 10;
-    btnGenerar.Width := 174;
-    btnGenerar.Height := 34;
+    btnGenerar.Left := EscalarDpi(856);
+    btnGenerar.Top := EscalarDpi(10);
+    btnGenerar.Width := EscalarDpi(174);
+    btnGenerar.Height := EscalarDpi(34);
     btnGenerar.Caption := 'Generar documentos';
     btnGenerar.OnClick := btnGenerarClick;
     btnRefrescar := TcxButton.Create(Self);
     btnRefrescar.Parent := pnlFacturacion;
-    btnRefrescar.Left := 856;
-    btnRefrescar.Top := 56;
-    btnRefrescar.Width := 174;
-    btnRefrescar.Height := 34;
+    btnRefrescar.Left := EscalarDpi(856);
+    btnRefrescar.Top := EscalarDpi(56);
+    btnRefrescar.Width := EscalarDpi(174);
+    btnRefrescar.Height := EscalarDpi(34);
     btnRefrescar.Caption := 'Refrescar historial';
     btnRefrescar.OnClick := btnRefrescarClick;
     btnImprimir := TcxButton.Create(Self);
     btnImprimir.Parent := pnlFacturacion;
-    btnImprimir.Left := 856;
-    btnImprimir.Top := 96;
-    btnImprimir.Width := 174;
-    btnImprimir.Height := 30;
+    btnImprimir.Left := EscalarDpi(856);
+    btnImprimir.Top := EscalarDpi(96);
+    btnImprimir.Width := EscalarDpi(174);
+    btnImprimir.Height := EscalarDpi(30);
     btnImprimir.Caption := 'Imprimir selección';
     btnImprimir.OnClick := btnImprimirClick;
     lblExplicacion := TcxLabel.Create(Self);
     lblExplicacion.Parent := pnlFacturacion;
-    lblExplicacion.Left := 12;
-    lblExplicacion.Top := 140;
+    lblExplicacion.Left := EscalarDpi(12);
+    lblExplicacion.Top := EscalarDpi(140);
     lblExplicacion.Caption :=
       'Cada operación conserva su fecha e identificador. Las ventas ' +
       'rectificadas se incorporan como ajustes posteriores.';
@@ -235,6 +236,11 @@ begin
   end;
 end;
 
+function TfrmMtoFacturasProforma.EscalarDpi(AValor: Integer): Integer;
+begin
+  Result := MulDiv(AValor, CurrentPPI, 96);
+end;
+
 procedure TfrmMtoFacturasProforma.CrearEtiqueta(
   const ATexto: string; AIzq, ATop: Integer);
 var
@@ -242,8 +248,8 @@ var
 begin
   lbl := TcxLabel.Create(Self);
   lbl.Parent := pnlFacturacion;
-  lbl.Left := AIzq;
-  lbl.Top := ATop;
+  lbl.Left := EscalarDpi(AIzq);
+  lbl.Top := EscalarDpi(ATop);
   lbl.Caption := ATexto;
   lbl.Transparent := True;
 end;
@@ -254,7 +260,7 @@ begin
   Result := cxGrdDBTabPrin.CreateColumn;
   Result.DataBinding.FieldName := ACampo;
   Result.Caption := ATitulo;
-  Result.Width := AAncho;
+  Result.Width := EscalarDpi(AAncho);
   Result.Options.Editing := False;
 end;
 
@@ -292,6 +298,8 @@ procedure TfrmMtoFacturasProforma.CrearTablaPrincipal;
 begin
   inherited;
   dmmFacturasProforma := tdmDataModule as TdmFacturasProforma;
+  // El selector debe estar disponible aunque falle la carga del historial.
+  dmmFacturasProforma.AbrirEmpresas;
   pkFieldName := 'CLAVE_DOCUMENTO';
   cxGrdDBTabPrin.OptionsData.Editing := False;
   cxGrdDBTabPrin.OptionsData.Inserting := False;

@@ -624,6 +624,9 @@ resourcestring
   SErrorAlmacenesSoloStockAddBlock =
     'Has activado "Solo con stock" pero no hay almacenes seleccionados en ' +
     'la pestana Almacenes.';
+  SErrorAlmacenesVentasAddBlock =
+    'Selecciona al menos un almacen de ventas para aplicar los filtros ' +
+    'de ventas o de stock destino.';
   SInfoArticulosYaCargadosAddBlock =
     'Todos los articulos del filtro ya estan cargados. Nada que insertar.';
   SInfoArticulosAnadidosAddBlock =

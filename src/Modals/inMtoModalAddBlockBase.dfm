@@ -419,6 +419,40 @@
           TabOrder = 4
           Transparent = True
         end
+        object lblReservaStockOrigen: TcxLabel
+          Left = 8
+          Top = 86
+          Caption = 'Stock m'#237'nimo que debe quedar en origen:'
+          TabOrder = 5
+          Transparent = True
+          Visible = False
+        end
+        object spnReservaStockOrigen: TcxSpinEdit
+          Left = 295
+          Top = 82
+          Properties.MinValue = 0.000000000000000000
+          TabOrder = 6
+          Value = 0
+          Visible = False
+          Width = 80
+        end
+        object lblMaximoServirPorSku: TcxLabel
+          Left = 400
+          Top = 86
+          Caption = 'Cantidad m'#225'xima a servir por SKU:'
+          TabOrder = 7
+          Transparent = True
+          Visible = False
+        end
+        object spnMaximoServirPorSku: TcxSpinEdit
+          Left = 640
+          Top = 82
+          Properties.MinValue = 1.000000000000000000
+          TabOrder = 8
+          Value = 1
+          Visible = False
+          Width = 80
+        end
       end
       object chkLstAlmacenes: TcxCheckListBox
         Left = 0
@@ -535,6 +569,47 @@
         Properties.MinValue = 1.000000000000000000
         TabOrder = 4
         Value = 1
+        Width = 80
+      end
+      object lblAlmacenesVentas: TcxLabel
+        Left = 410
+        Top = 16
+        Caption = 'Almacenes donde se realizaron las ventas:'
+        TabOrder = 5
+        Transparent = True
+        Visible = False
+      end
+      object chkLstAlmacenesVentas: TcxCheckListBox
+        Left = 410
+        Top = 45
+        Width = 390
+        Height = 210
+        Items = <>
+        TabOrder = 6
+        Visible = False
+      end
+      object chkFiltrarStockAlmacenVenta: TcxCheckBox
+        Left = 820
+        Top = 45
+        Caption = 'Cargar art'#237'culos sin stock en almac'#233'n de ventas'
+        TabOrder = 7
+        Visible = False
+      end
+      object lblStockMaximoAlmacenVenta: TcxLabel
+        Left = 842
+        Top = 82
+        Caption = 'Stock m'#225'ximo a considerar:'
+        TabOrder = 8
+        Transparent = True
+        Visible = False
+      end
+      object spnStockMaximoAlmacenVenta: TcxSpinEdit
+        Left = 1045
+        Top = 78
+        Properties.MinValue = 0.000000000000000000
+        TabOrder = 9
+        Value = 0
+        Visible = False
         Width = 80
       end
     end

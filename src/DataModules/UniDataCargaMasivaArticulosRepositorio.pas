@@ -16,6 +16,9 @@ interface
 uses
   Uni, inLibCargaMasivaArticulosPersistenciaIntf;
 
+function ConstruirSqlPreviewCargaMasivaDocumentoTrabajo(
+  const AFiltros: TFiltrosCargaMasivaArticulos): string;
+
 function CrearServicioCargaMasivaArticulosUniDAC(
   AConexion: TUniConnection): TServiciosCargaMasivaArticulos;
 
@@ -23,7 +26,7 @@ implementation
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections, System.Math,
-  Data.DB;
+  Data.DB, inLibCargaMasivaArticulosReglas, UniDataRectificativasSql;
 
 const
   SQL_FAMILIAS =
@@ -94,7 +97,7 @@ const
   SQL_PROXIMA_LINEA_DOCUMENTO =
     'SELECT COALESCE(MAX(CAST(LINEA_DTL AS UNSIGNED)), 0) + 1 AS PROX ' +
     'FROM fza_documentos_trabajo_lineas WHERE ID_DTR_DTL = :ID_DTR';
-  SQL_SKUS_DOCUMENTO =
+  SQL_SKU_DOCUMENTO =
     'SELECT s.CODIGO_ALM_STK AS ALM, s.CODIGO_UNIDAD_STK AS SKU, ' +
     's.LOTE_STK, s.FECHA_CADUCIDAD_STK, s.CANTIDAD_STK, ' +
     'a.DESCRIPCION_ART AS DESC_ART, COALESCE((SELECT GROUP_CONCAT(' +
@@ -106,7 +109,8 @@ const
     'ON sk.CODIGO_UNIDAD_SKU = s.CODIGO_UNIDAD_STK JOIN fza_articulos a ' +
     'ON a.CODIGO_ART_ART = COALESCE(sk.CODIGO_ART_SKU, ' +
     's.CODIGO_UNIDAD_STK) WHERE COALESCE(sk.CODIGO_ART_SKU, ' +
-    's.CODIGO_UNIDAD_STK) = :ART AND s.CANTIDAD_STK > 0';
+    's.CODIGO_UNIDAD_STK) = :ART ' +
+    'AND s.CODIGO_UNIDAD_STK = :SKU';
   SQL_INSERTAR_LINEA_DOCUMENTO =
     'INSERT INTO fza_documentos_trabajo_lineas (' +
     'ID_DTR_DTL, LINEA_DTL, CODIGO_ART_DTL, CODIGO_UNIDAD_DTL, ' +
@@ -169,6 +173,36 @@ type
       const AContexto: TContextoCargaMasivaArticulos): string;
     function CondicionExcluirCargados(
       const AContexto: TContextoCargaMasivaArticulos): string;
+    function CondicionAlmacenesSql(
+      const ACampo, AAlmacenes: string): string;
+    procedure AnadirOrigenPreviewDocumento(
+      ASql: TStrings;
+      const AFiltros: TFiltrosCargaMasivaArticulos;
+      const AAlmacenesStock, AAlmacenesVenta: string);
+    procedure AnadirFiltroStockPreviewDocumento(
+      ASql: TStrings;
+      const AFiltros: TFiltrosCargaMasivaArticulos;
+      const AAlmacenesStock: string);
+    procedure AnadirFiltroFamiliasPreviewDocumento(
+      ASql: TStrings;
+      const AFiltros: TFiltrosCargaMasivaArticulos;
+      const AFamilias: string);
+    procedure AnadirFiltrosCatalogoPreviewDocumento(
+      ASql: TStrings;
+      const AFiltros: TFiltrosCargaMasivaArticulos;
+      const AProveedores, APropiedades: string);
+    procedure AnadirFiltroVentasPreviewDocumento(
+      ASql: TStrings;
+      const AFiltros: TFiltrosCargaMasivaArticulos);
+    procedure AnadirFiltroStockAlmacenVentaPreviewDocumento(
+      ASql: TStrings;
+      const AFiltros: TFiltrosCargaMasivaArticulos;
+      const AAlmacenesVenta: string);
+    function ConstruirSqlPreviewDocumento(
+      const AFiltros: TFiltrosCargaMasivaArticulos): string;
+    function ConstruirSqlPreviewArticulos(
+      const AFiltros: TFiltrosCargaMasivaArticulos;
+      const AContexto: TContextoCargaMasivaArticulos): string;
     function ConstruirSqlPreview(
       const AFiltros: TFiltrosCargaMasivaArticulos;
       const AContexto: TContextoCargaMasivaArticulos): string;
@@ -195,9 +229,10 @@ type
       var ALineaActual: Integer;
       var ANumeroLineas: Integer);
     function ProximaLineaDocumento(AIdDocumento: Int64): Integer;
-    procedure InsertarSkusDocumento(
+    procedure InsertarSkuDocumento(
       AInsercion: TUniQuery;
       const ACodigoArticulo: string;
+      const ACodigoSku: string;
       const AParametros: TParametrosInsercionDocumentoTrabajo;
       var ALineaActual: Integer;
       var ANumeroLineas: Integer);
@@ -588,7 +623,301 @@ begin
   end;
 end;
 
-function TServicioCargaMasivaArticulosUniDAC.ConstruirSqlPreview(
+function TServicioCargaMasivaArticulosUniDAC.CondicionAlmacenesSql(
+  const ACampo, AAlmacenes: string): string;
+begin
+  if AAlmacenes = '' then
+  begin
+    Result := '1 = 0';
+  end
+  else
+  begin
+    Result := ACampo + ' IN (' + AAlmacenes + ')';
+  end;
+end;
+
+procedure TServicioCargaMasivaArticulosUniDAC.
+  AnadirOrigenPreviewDocumento(
+    ASql: TStrings;
+    const AFiltros: TFiltrosCargaMasivaArticulos;
+    const AAlmacenesStock, AAlmacenesVenta: string);
+var
+  sCampoAlmacenVenta: string;
+  sSkuVenta: string;
+begin
+  sCampoAlmacenVenta :=
+    'COALESCE(NULLIF(TRIM(FL.CODIGO_ALM_FACLIN), ''''), ' +
+    'FC.CODIGO_ALM_FAC)';
+  sSkuVenta :=
+    'COALESCE(NULLIF(TRIM(FL.CODIGO_UNIDAD_FACLIN), ''''), ' +
+    'FL.CODIGO_ART_FACLIN)';
+  ASql.Add('SELECT A.CODIGO_ART_ART, U.CODIGO_UNIDAD_SKU,');
+  ASql.Add('A.DESCRIPCION_ART, A.CODIGO_FAM_ART, F.NOMBRE_FAM_FAM,');
+  ASql.Add('(SELECT GROUP_CONCAT(AP.CODIGO_PRV_AP)');
+  ASql.Add('FROM fza_articulos_proveedores AP');
+  ASql.Add('WHERE AP.CODIGO_ART_AP = A.CODIGO_ART_ART) AS PROVEEDORES,');
+  ASql.Add('COALESCE((SELECT SUM(ST.CANTIDAD_STK)');
+  ASql.Add('FROM fza_articulos_stockactual ST');
+  ASql.Add('WHERE ST.CODIGO_UNIDAD_STK = U.CODIGO_UNIDAD_SKU');
+  ASql.Add('AND ' + CondicionAlmacenesSql(
+    'ST.CODIGO_ALM_STK', AAlmacenesStock) + '), 0) AS STOCK_TOTAL,');
+  if AFiltros.FiltrarVentas then
+  begin
+    ASql.Add('COALESCE(V.NUM_VENTAS, 0) AS NUM_VENTAS,');
+  end
+  else
+  begin
+    ASql.Add('0 AS NUM_VENTAS,');
+  end;
+  ASql.Add('CASE WHEN EXISTS (SELECT 1');
+  ASql.Add('FROM fza_documentos_trabajo_lineas DL');
+  ASql.Add('WHERE DL.ID_DTR_DTL = :P_DTR_CHK');
+  ASql.Add('AND DL.CODIGO_UNIDAD_DTL = U.CODIGO_UNIDAD_SKU)');
+  ASql.Add('THEN ''S'' ELSE ''N'' END AS YA_CARGADO');
+  ASql.Add('FROM (SELECT DISTINCT');
+  ASql.Add('COALESCE(SK0.CODIGO_ART_SKU, S0.CODIGO_UNIDAD_STK)');
+  ASql.Add('AS CODIGO_ART_ART, S0.CODIGO_UNIDAD_STK AS CODIGO_UNIDAD_SKU,');
+  ASql.Add('COALESCE(SK0.ESACTIVO_SKU, ''S'') AS ESACTIVO_SKU,');
+  ASql.Add('CASE WHEN SK0.CODIGO_UNIDAD_SKU IS NULL');
+  ASql.Add('THEN ''N'' ELSE ''S'' END AS TIENE_MAESTRO_SKU');
+  ASql.Add('FROM fza_articulos_stockactual S0');
+  ASql.Add('LEFT JOIN fza_articulos_skus SK0');
+  ASql.Add('ON SK0.CODIGO_UNIDAD_SKU = S0.CODIGO_UNIDAD_STK');
+  ASql.Add('WHERE ' + CondicionAlmacenesSql(
+    'S0.CODIGO_ALM_STK', AAlmacenesStock) + ') U');
+  ASql.Add('JOIN fza_articulos A');
+  ASql.Add('ON A.CODIGO_ART_ART = U.CODIGO_ART_ART');
+  ASql.Add('LEFT JOIN fza_articulos_familias F');
+  ASql.Add('ON F.CODIGO_FAM_FAM = A.CODIGO_FAM_ART');
+  if AFiltros.FiltrarVentas then
+  begin
+    ASql.Add('LEFT JOIN (SELECT FL.CODIGO_ART_FACLIN AS CODIGO_ART,');
+    ASql.Add(sSkuVenta + ' AS CODIGO_UNIDAD_SKU, COUNT(*) AS NUM_VENTAS');
+    ASql.Add('FROM fza_facturas_lineas FL JOIN fza_facturas FC');
+    ASql.Add('ON FC.NUMERO_FAC = FL.NUMERO_FAC_FACLIN');
+    ASql.Add('AND FC.SERIE_FAC = FL.SERIE_FAC_FACLIN');
+    ASql.Add('WHERE FC.FECHA_FAC >= :P_VTA_DESDE');
+    ASql.Add('AND FC.FECHA_FAC < :P_VTA_HASTA');
+    ASql.Add('AND COALESCE(FC.FASE_FAC, '''') <> ''CANCELADA''');
+    ASql.Add('AND FL.CANTIDAD_FACLIN > 0');
+    ASql.Add(SQLExcluirVentaRetirada(
+      'FC.CODIGO_EMP_FAC', 'FC.SERIE_FAC', 'FC.NUMERO_FAC'));
+    ASql.Add('AND ' + CondicionAlmacenesSql(
+      sCampoAlmacenVenta, AAlmacenesVenta));
+    ASql.Add('GROUP BY FL.CODIGO_ART_FACLIN, ' + sSkuVenta + ') V');
+    ASql.Add('ON V.CODIGO_ART = A.CODIGO_ART_ART');
+    ASql.Add('AND V.CODIGO_UNIDAD_SKU = U.CODIGO_UNIDAD_SKU');
+  end;
+  ASql.Add('WHERE 1 = 1');
+end;
+
+procedure TServicioCargaMasivaArticulosUniDAC.
+  AnadirFiltroStockPreviewDocumento(
+    ASql: TStrings;
+    const AFiltros: TFiltrosCargaMasivaArticulos;
+    const AAlmacenesStock: string);
+begin
+  ASql.Add('AND COALESCE((SELECT SUM(SR.CANTIDAD_STK)');
+  ASql.Add('FROM fza_articulos_stockactual SR');
+  ASql.Add('WHERE SR.CODIGO_UNIDAD_STK = U.CODIGO_UNIDAD_SKU');
+  ASql.Add('AND ' + CondicionAlmacenesSql(
+    'SR.CODIGO_ALM_STK', AAlmacenesStock) + '), 0) > ' +
+    ':P_RESERVA_STOCK_ORIGEN');
+  if AFiltros.SoloConStock then
+  begin
+    case AFiltros.StockCombinacion of
+      scCualquiera:
+        begin
+          ASql.Add('AND EXISTS (SELECT 1');
+          ASql.Add('FROM fza_articulos_stockactual SX');
+          ASql.Add('WHERE SX.CODIGO_UNIDAD_STK = U.CODIGO_UNIDAD_SKU');
+          ASql.Add('AND SX.CANTIDAD_STK > 0');
+          ASql.Add('AND ' + CondicionAlmacenesSql(
+            'SX.CODIGO_ALM_STK', AAlmacenesStock) + ')');
+        end;
+      scTodos:
+        begin
+          ASql.Add('AND (SELECT COUNT(DISTINCT SX.CODIGO_ALM_STK)');
+          ASql.Add('FROM fza_articulos_stockactual SX');
+          ASql.Add('WHERE SX.CODIGO_UNIDAD_STK = U.CODIGO_UNIDAD_SKU');
+          ASql.Add('AND SX.CANTIDAD_STK > 0');
+          ASql.Add('AND ' + CondicionAlmacenesSql(
+            'SX.CODIGO_ALM_STK', AAlmacenesStock) + ') = ' +
+            IntToStr(Length(AFiltros.CodigosAlmacen)));
+        end;
+      scSumaPositiva:
+        begin
+          ASql.Add('AND COALESCE((SELECT SUM(SX.CANTIDAD_STK)');
+          ASql.Add('FROM fza_articulos_stockactual SX');
+          ASql.Add('WHERE SX.CODIGO_UNIDAD_STK = U.CODIGO_UNIDAD_SKU');
+          ASql.Add('AND ' + CondicionAlmacenesSql(
+            'SX.CODIGO_ALM_STK', AAlmacenesStock) + '), 0) > 0');
+        end;
+    end;
+  end;
+end;
+
+procedure TServicioCargaMasivaArticulosUniDAC.
+  AnadirFiltroStockAlmacenVentaPreviewDocumento(
+    ASql: TStrings;
+    const AFiltros: TFiltrosCargaMasivaArticulos;
+    const AAlmacenesVenta: string);
+begin
+  if AFiltros.FiltrarStockAlmacenVenta then
+  begin
+    ASql.Add('AND COALESCE((SELECT SUM(SD.CANTIDAD_STK)');
+    ASql.Add('FROM fza_articulos_stockactual SD');
+    ASql.Add('WHERE SD.CODIGO_UNIDAD_STK = U.CODIGO_UNIDAD_SKU');
+    ASql.Add('AND ' + CondicionAlmacenesSql(
+      'SD.CODIGO_ALM_STK', AAlmacenesVenta) + '), 0) <= ' +
+      ':P_STOCK_MAXIMO_ALMACEN_VENTA');
+  end;
+end;
+
+procedure TServicioCargaMasivaArticulosUniDAC.
+  AnadirFiltroFamiliasPreviewDocumento(
+    ASql: TStrings;
+    const AFiltros: TFiltrosCargaMasivaArticulos;
+    const AFamilias: string);
+begin
+  if AFamilias <> '' then
+  begin
+    if AFiltros.PropagarFamilias then
+    begin
+      ASql.Add('AND A.CODIGO_FAM_ART IN (WITH RECURSIVE ARBOL AS (');
+      ASql.Add('SELECT CODIGO_FAM_FAM, CODIGO_SUBFAMILIA_FAM');
+      ASql.Add('FROM fza_articulos_familias');
+      ASql.Add('WHERE CODIGO_FAM_FAM IN (' + AFamilias + ') UNION ALL');
+      ASql.Add('SELECT H.CODIGO_FAM_FAM, H.CODIGO_SUBFAMILIA_FAM');
+      ASql.Add('FROM fza_articulos_familias H JOIN ARBOL A2');
+      ASql.Add('ON H.CODIGO_SUBFAMILIA_FAM = A2.CODIGO_FAM_FAM)');
+      ASql.Add('SELECT CODIGO_FAM_FAM FROM ARBOL)');
+    end
+    else
+    begin
+      ASql.Add('AND A.CODIGO_FAM_ART IN (' + AFamilias + ')');
+    end;
+  end;
+end;
+
+procedure TServicioCargaMasivaArticulosUniDAC.
+  AnadirFiltrosCatalogoPreviewDocumento(
+    ASql: TStrings;
+    const AFiltros: TFiltrosCargaMasivaArticulos;
+    const AProveedores, APropiedades: string);
+begin
+  if AProveedores <> '' then
+  begin
+    ASql.Add('AND EXISTS (SELECT 1 FROM fza_articulos_proveedores APX');
+    ASql.Add('WHERE APX.CODIGO_ART_AP = A.CODIGO_ART_ART');
+    ASql.Add('AND APX.CODIGO_PRV_AP IN (' + AProveedores + ')');
+    if AFiltros.SoloProveedorPrincipal then
+    begin
+      ASql.Add('AND APX.ESPROVEEDORPRINCIPAL_AP = ''S''');
+    end;
+    ASql.Add(')');
+  end;
+  if APropiedades <> '' then
+  begin
+    ASql.Add('AND (EXISTS (SELECT 1');
+    ASql.Add('FROM fza_propiedades_valores PVS');
+    ASql.Add('LEFT JOIN fza_articulos_propiedades PPS');
+    ASql.Add('ON PPS.CODIGO_ART_ART = A.CODIGO_ART_ART');
+    ASql.Add('AND PPS.CODIGO_PROP_ARTPROP = PVS.ID_PROP_PV');
+    ASql.Add('AND PPS.CODIGO_UNIDAD_ARTPROP = CASE');
+    ASql.Add('WHEN U.TIENE_MAESTRO_SKU = ''S''');
+    ASql.Add('THEN U.CODIGO_UNIDAD_SKU ELSE NULL END');
+    ASql.Add('LEFT JOIN fza_articulos_propiedades PPC');
+    ASql.Add('ON PPC.CODIGO_ART_ART = A.CODIGO_ART_ART');
+    ASql.Add('AND PPC.CODIGO_PROP_ARTPROP = PVS.ID_PROP_PV');
+    ASql.Add('AND PPC.CODIGO_UNIDAD_ARTPROP = CASE');
+    ASql.Add('WHEN U.TIENE_MAESTRO_SKU = ''S'' AND');
+    ASql.Add('CHAR_LENGTH(U.CODIGO_UNIDAD_SKU) - CHAR_LENGTH(');
+    ASql.Add('REPLACE(U.CODIGO_UNIDAD_SKU, ''/'', '''')) >= 2');
+    ASql.Add('THEN SUBSTRING_INDEX(U.CODIGO_UNIDAD_SKU, ''/'', 2)');
+    ASql.Add('ELSE NULL END');
+    ASql.Add('LEFT JOIN fza_articulos_propiedades PPA');
+    ASql.Add('ON PPA.CODIGO_ART_ART = A.CODIGO_ART_ART');
+    ASql.Add('AND PPA.CODIGO_PROP_ARTPROP = PVS.ID_PROP_PV');
+    ASql.Add('AND PPA.CODIGO_UNIDAD_ARTPROP = ''''');
+    ASql.Add('WHERE PVS.ID_PV_ARTPROP IN (' + APropiedades + ')');
+    ASql.Add('AND PVS.ID_PV_ARTPROP = COALESCE(');
+    ASql.Add('PPS.ID_PV_ARTPROP, PPC.ID_PV_ARTPROP,');
+    ASql.Add('PPA.ID_PV_ARTPROP)))');
+  end;
+  if AFiltros.AplicarFechaAlta then
+  begin
+    ASql.Add('AND A.INSTANTE_ALTA >= :P_ALTA_DESDE');
+    ASql.Add('AND A.INSTANTE_ALTA < :P_ALTA_HASTA');
+  end;
+end;
+
+procedure TServicioCargaMasivaArticulosUniDAC.
+  AnadirFiltroVentasPreviewDocumento(
+    ASql: TStrings;
+    const AFiltros: TFiltrosCargaMasivaArticulos);
+begin
+  if AFiltros.FiltrarVentas then
+  begin
+    if AFiltros.ConVentas then
+    begin
+      ASql.Add('AND COALESCE(V.NUM_VENTAS, 0) >= :P_NUM_MIN_VTAS');
+    end
+    else
+    begin
+      ASql.Add('AND COALESCE(V.NUM_VENTAS, 0) = 0');
+    end;
+  end;
+end;
+
+function TServicioCargaMasivaArticulosUniDAC.ConstruirSqlPreviewDocumento(
+  const AFiltros: TFiltrosCargaMasivaArticulos): string;
+var
+  oSql: TStringList;
+  sAlmacenesStock: string;
+  sAlmacenesVenta: string;
+  sFamilias: string;
+  sPropiedades: string;
+  sProveedores: string;
+begin
+  sAlmacenesStock := StrArrToCsvSql(AFiltros.CodigosAlmacen);
+  sAlmacenesVenta := StrArrToCsvSql(AFiltros.CodigosAlmacenVenta);
+  sFamilias := StrArrToCsvSql(AFiltros.CodigosFamilia);
+  sPropiedades := IntArrToCsvSql(AFiltros.IdsValorPropiedad);
+  sProveedores := StrArrToCsvSql(AFiltros.CodigosProveedor);
+  oSql := TStringList.Create;
+  try
+    AnadirOrigenPreviewDocumento(
+      oSql, AFiltros, sAlmacenesStock, sAlmacenesVenta);
+    if AFiltros.SoloActivos then
+    begin
+      oSql.Add('AND A.ESACTIVO_ART = ''S''');
+      oSql.Add('AND U.ESACTIVO_SKU = ''S''');
+    end;
+    if AFiltros.ExcluirYaCargados then
+    begin
+      oSql.Add('AND NOT EXISTS (SELECT 1');
+      oSql.Add('FROM fza_documentos_trabajo_lineas DLX');
+      oSql.Add('WHERE DLX.ID_DTR_DTL = :P_DTR_EXCL');
+      oSql.Add('AND DLX.CODIGO_UNIDAD_DTL = U.CODIGO_UNIDAD_SKU)');
+    end;
+    AnadirFiltroStockPreviewDocumento(
+      oSql, AFiltros, sAlmacenesStock);
+    AnadirFiltroFamiliasPreviewDocumento(oSql, AFiltros, sFamilias);
+    AnadirFiltrosCatalogoPreviewDocumento(
+      oSql, AFiltros, sProveedores, sPropiedades);
+    AnadirFiltroVentasPreviewDocumento(oSql, AFiltros);
+    AnadirFiltroStockAlmacenVentaPreviewDocumento(
+      oSql, AFiltros, sAlmacenesVenta);
+    oSql.Add('ORDER BY A.CODIGO_FAM_ART, A.CODIGO_ART_ART,');
+    oSql.Add('U.CODIGO_UNIDAD_SKU');
+    Result := oSql.Text;
+  finally
+    FreeAndNil(oSql);
+  end;
+end;
+
+function TServicioCargaMasivaArticulosUniDAC.ConstruirSqlPreviewArticulos(
   const AFiltros: TFiltrosCargaMasivaArticulos;
   const AContexto: TContextoCargaMasivaArticulos): string;
 var
@@ -721,7 +1050,8 @@ begin
           'JOIN fza_facturas fc ON fc.NUMERO_FAC = fl.NUMERO_FAC_FACLIN');
         oSql.Add('AND fc.SERIE_FAC = fl.SERIE_FAC_FACLIN');
         oSql.Add('WHERE fl.CODIGO_ART_FACLIN = a.CODIGO_ART_ART');
-        oSql.Add('AND fc.FECHA_FAC BETWEEN :P_VTA_DESDE AND :P_VTA_HASTA)');
+        oSql.Add('AND fc.FECHA_FAC >= :P_VTA_DESDE');
+        oSql.Add('AND fc.FECHA_FAC < :P_VTA_HASTA)');
         oSql.Add('>= :P_NUM_MIN_VTAS');
       end
       else
@@ -731,13 +1061,26 @@ begin
           'JOIN fza_facturas fc ON fc.NUMERO_FAC = fl.NUMERO_FAC_FACLIN');
         oSql.Add('AND fc.SERIE_FAC = fl.SERIE_FAC_FACLIN');
         oSql.Add('WHERE fl.CODIGO_ART_FACLIN = a.CODIGO_ART_ART');
-        oSql.Add('AND fc.FECHA_FAC BETWEEN :P_VTA_DESDE AND :P_VTA_HASTA)');
+        oSql.Add('AND fc.FECHA_FAC >= :P_VTA_DESDE');
+        oSql.Add('AND fc.FECHA_FAC < :P_VTA_HASTA)');
       end;
     end;
     oSql.Add('ORDER BY a.CODIGO_FAM_ART, a.CODIGO_ART_ART');
     Result := oSql.Text;
   finally
     FreeAndNil(oSql);
+  end;
+end;
+
+function TServicioCargaMasivaArticulosUniDAC.ConstruirSqlPreview(
+  const AFiltros: TFiltrosCargaMasivaArticulos;
+  const AContexto: TContextoCargaMasivaArticulos): string;
+begin
+  case AContexto.Modo of
+    mcDocumentoTrabajo:
+      Result := ConstruirSqlPreviewDocumento(AFiltros);
+  else
+    Result := ConstruirSqlPreviewArticulos(AFiltros, AContexto);
   end;
 end;
 
@@ -770,6 +1113,14 @@ procedure TServicioCargaMasivaArticulosUniDAC.VincularParametrosPreview(
     end;
   end;
 
+  procedure Decimal(const ANombre: string; AValor: Double);
+  begin
+    if Assigned(AConsulta.Params.FindParam(ANombre)) then
+    begin
+      AConsulta.ParamByName(ANombre).AsFloat := AValor;
+    end;
+  end;
+
 begin
   if Assigned(AConsulta.Params.FindParam('P_ALTA_DESDE')) then
   begin
@@ -781,9 +1132,14 @@ begin
   if Assigned(AConsulta.Params.FindParam('P_VTA_DESDE')) then
   begin
     AConsulta.ParamByName('P_VTA_DESDE').AsDateTime := AFiltros.VentaDesde;
-    AConsulta.ParamByName('P_VTA_HASTA').AsDateTime := AFiltros.VentaHasta;
+    AConsulta.ParamByName('P_VTA_HASTA').AsDateTime :=
+      AFiltros.VentaHasta + 1;
   end;
   Entero('P_NUM_MIN_VTAS', AFiltros.NumeroMinimoVentas);
+  Decimal('P_RESERVA_STOCK_ORIGEN', AFiltros.ReservaStockOrigen);
+  Decimal(
+    'P_STOCK_MAXIMO_ALMACEN_VENTA',
+    AFiltros.StockMaximoAlmacenVenta);
   Cadena('P_TARIFA_CHK', AContexto.CodigoTarifa);
   Cadena('P_TARIFA_EXCL', AContexto.CodigoTarifa);
   Cadena('P_TARIFA_ORIG_S', AContexto.CodigoTarifaOrigen);
@@ -1114,17 +1470,22 @@ begin
   end;
 end;
 
-procedure TServicioCargaMasivaArticulosUniDAC.InsertarSkusDocumento(
+procedure TServicioCargaMasivaArticulosUniDAC.InsertarSkuDocumento(
   AInsercion: TUniQuery;
   const ACodigoArticulo: string;
+  const ACodigoSku: string;
   const AParametros: TParametrosInsercionDocumentoTrabajo;
   var ALineaActual: Integer;
   var ANumeroLineas: Integer);
 var
+  dCantidadLinea: Double;
+  dCantidadPendiente: Double;
+  dStockFila: Double;
+  dStockTotal: Double;
   oConsulta: TUniQuery;
   sSql: string;
 begin
-  sSql := SQL_SKUS_DOCUMENTO;
+  sSql := SQL_SKU_DOCUMENTO;
   if Length(AParametros.CodigosAlmacen) > 0 then
   begin
     sSql := sSql + ' AND s.CODIGO_ALM_STK IN (' +
@@ -1135,41 +1496,62 @@ begin
   oConsulta := CrearConsulta(sSql);
   try
     oConsulta.ParamByName('ART').AsString := ACodigoArticulo;
+    oConsulta.ParamByName('SKU').AsString := ACodigoSku;
     oConsulta.Open;
+    dStockTotal := 0;
     while not oConsulta.Eof do
     begin
-      AInsercion.ParamByName('ID_DTR').AsLargeInt := AParametros.IdDocumento;
-      AInsercion.ParamByName('LINEA').AsString :=
-        Format('%.8d', [ALineaActual]);
-      AInsercion.ParamByName('ART').AsString := ACodigoArticulo;
-      AInsercion.ParamByName('SKU').AsString :=
-        oConsulta.FieldByName('SKU').AsString;
-      AInsercion.ParamByName('ALM').AsString :=
-        oConsulta.FieldByName('ALM').AsString;
-      AInsercion.ParamByName('LOTE').AsString :=
-        oConsulta.FieldByName('LOTE_STK').AsString;
-      if oConsulta.FieldByName('FECHA_CADUCIDAD_STK').IsNull then
-      begin
-        AInsercion.ParamByName('CADUCIDAD').Clear;
-      end
-      else
-      begin
-        AInsercion.ParamByName('CADUCIDAD').AsDate :=
-          oConsulta.FieldByName('FECHA_CADUCIDAD_STK').AsDateTime;
-      end;
-      AInsercion.ParamByName('DESC_ART').AsString :=
-        oConsulta.FieldByName('DESC_ART').AsString;
-      AInsercion.ParamByName('DESC_SKU').AsString :=
-        oConsulta.FieldByName('DESC_SKU').AsString;
-      AInsercion.ParamByName('CANTIDAD_STOCK').AsFloat :=
+      dStockTotal := dStockTotal +
         oConsulta.FieldByName('CANTIDAD_STK').AsFloat;
-      AInsercion.ParamByName('CANTIDAD').AsFloat := 1;
-      AInsercion.ParamByName('ORIGEN').AsString := 'FILTROS';
-      AInsercion.ParamByName('USR').AsString := AParametros.Usuario;
-      AInsercion.ParamByName('USR2').AsString := AParametros.Usuario;
-      AInsercion.Execute;
-      Inc(ALineaActual);
-      Inc(ANumeroLineas);
+      oConsulta.Next;
+    end;
+    dCantidadPendiente := CalcularCantidadServirSku(
+      dStockTotal,
+      AParametros.ReservaStockOrigen,
+      AParametros.MaximoServirPorSku);
+    oConsulta.First;
+    while (not oConsulta.Eof) and (dCantidadPendiente > 0) do
+    begin
+      dStockFila := Max(
+        0.0,
+        oConsulta.FieldByName('CANTIDAD_STK').AsFloat);
+      dCantidadLinea := Min(dStockFila, dCantidadPendiente);
+      if dCantidadLinea > 0 then
+      begin
+        AInsercion.ParamByName('ID_DTR').AsLargeInt :=
+          AParametros.IdDocumento;
+        AInsercion.ParamByName('LINEA').AsString :=
+          Format('%.8d', [ALineaActual]);
+        AInsercion.ParamByName('ART').AsString := ACodigoArticulo;
+        AInsercion.ParamByName('SKU').AsString :=
+          oConsulta.FieldByName('SKU').AsString;
+        AInsercion.ParamByName('ALM').AsString :=
+          oConsulta.FieldByName('ALM').AsString;
+        AInsercion.ParamByName('LOTE').AsString :=
+          oConsulta.FieldByName('LOTE_STK').AsString;
+        if oConsulta.FieldByName('FECHA_CADUCIDAD_STK').IsNull then
+        begin
+          AInsercion.ParamByName('CADUCIDAD').Clear;
+        end
+        else
+        begin
+          AInsercion.ParamByName('CADUCIDAD').AsDate :=
+            oConsulta.FieldByName('FECHA_CADUCIDAD_STK').AsDateTime;
+        end;
+        AInsercion.ParamByName('DESC_ART').AsString :=
+          oConsulta.FieldByName('DESC_ART').AsString;
+        AInsercion.ParamByName('DESC_SKU').AsString :=
+          oConsulta.FieldByName('DESC_SKU').AsString;
+        AInsercion.ParamByName('CANTIDAD_STOCK').AsFloat := dStockFila;
+        AInsercion.ParamByName('CANTIDAD').AsFloat := dCantidadLinea;
+        AInsercion.ParamByName('ORIGEN').AsString := 'FILTROS';
+        AInsercion.ParamByName('USR').AsString := AParametros.Usuario;
+        AInsercion.ParamByName('USR2').AsString := AParametros.Usuario;
+        AInsercion.Execute;
+        dCantidadPendiente := dCantidadPendiente - dCantidadLinea;
+        Inc(ALineaActual);
+        Inc(ANumeroLineas);
+      end;
       oConsulta.Next;
     end;
   finally
@@ -1188,6 +1570,7 @@ var
   oDatos: TDataSet;
   oInsercion: TUniQuery;
   sArticulo: string;
+  sSku: string;
 begin
   Result.NumeroLineas := 0;
   Result.NumeroArticulos := 0;
@@ -1206,16 +1589,18 @@ begin
         if oDatos.FieldByName('YA_CARGADO').AsString <> 'S' then
         begin
           sArticulo := oDatos.FieldByName('CODIGO_ART_ART').AsString;
+          sSku := oDatos.FieldByName('CODIGO_UNIDAD_SKU').AsString;
           iAntes := Result.NumeroLineas;
-          InsertarSkusDocumento(
+          InsertarSkuDocumento(
             oInsercion,
             sArticulo,
+            sSku,
             AParametros,
             iLineaActual,
             Result.NumeroLineas);
           if Result.NumeroLineas > iAntes then
           begin
-            oCodigos.Add(sArticulo);
+            oCodigos.Add(sSku);
           end;
         end;
         oDatos.Next;
@@ -1299,6 +1684,19 @@ begin
     oDatos.EnableControls;
     FreeAndNil(oInsercion);
     FreeAndNil(oCodigos);
+  end;
+end;
+
+function ConstruirSqlPreviewCargaMasivaDocumentoTrabajo(
+  const AFiltros: TFiltrosCargaMasivaArticulos): string;
+var
+  oServicio: TServicioCargaMasivaArticulosUniDAC;
+begin
+  oServicio := TServicioCargaMasivaArticulosUniDAC.Create(nil);
+  try
+    Result := oServicio.ConstruirSqlPreviewDocumento(AFiltros);
+  finally
+    FreeAndNil(oServicio);
   end;
 end;
 

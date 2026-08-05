@@ -13,7 +13,7 @@ implementation
 
 uses
   System.SysUtils, Data.DB, DBAccess, UniDataPedidosCompraPendientes,
-  inLibMsgVentas;
+  inLibDocumentosTrabajoEstados, inLibMsgVentas;
 
 const
   SQL_DESTINOS_COMPARTIR =
@@ -207,6 +207,8 @@ type
     FConexion: TUniConnection;
     function NuevaConsulta: TUniQuery;
     function SiguienteLinea(AIdDocumento: Int64): string;
+    procedure MarcarDocumentoEnviado(AConsulta: TUniQuery;
+      AIdDocumento: Int64; const AUsuario: string);
   public
     constructor Create(AConexion: TUniConnection);
     function ConsultaDocumentosAbiertos(
@@ -288,6 +290,46 @@ begin
   Result.Connection := FConexion;
 end;
 
+procedure TRepositorioDocumentosTrabajo.MarcarDocumentoEnviado(
+  AConsulta: TUniQuery; AIdDocumento: Int64; const AUsuario: string);
+begin
+  AConsulta.Close;
+  AConsulta.SQL.Text :=
+    'UPDATE fza_documentos_trabajo ' +
+    '   SET ESTADO_DTR = :ESTADO, USUARIO_MODIF = :USUARIO ' +
+    ' WHERE ID_DTR = :ID_DTR ' +
+    '   AND USUARIO_DTR = :USUARIO ' +
+    '   AND ' + CondicionSqlDocumentoTrabajoCreado('ESTADO_DTR');
+  AConsulta.ParamByName('ESTADO').AsString :=
+    ESTADO_DOCUMENTO_TRABAJO_ENVIADO;
+  AConsulta.ParamByName('USUARIO').AsString := AUsuario;
+  AConsulta.ParamByName('ID_DTR').AsLargeInt := AIdDocumento;
+  AConsulta.Execute;
+  if AConsulta.RowsAffected = 1 then
+  begin
+    Exit;
+  end;
+
+  AConsulta.SQL.Text :=
+    'SELECT USUARIO_DTR, ESTADO_DTR ' +
+    '  FROM fza_documentos_trabajo ' +
+    ' WHERE ID_DTR = :ID_DTR';
+  AConsulta.ParamByName('ID_DTR').AsLargeInt := AIdDocumento;
+  AConsulta.Open;
+  if (not AConsulta.IsEmpty) and
+     (not SameText(AConsulta.FieldByName('USUARIO_DTR').AsString,
+                   AUsuario)) and
+     EsDocumentoTrabajoCreado(
+       AConsulta.FieldByName('ESTADO_DTR').AsString) then
+  begin
+    // Un documento compartido es de lectura: se materializa para el
+    // destinatario sin cambiar ni bloquear el estado del propietario.
+    AConsulta.Close;
+    Exit;
+  end;
+  raise ERangeError.Create(SErrorEnviarDocumentoTrabajoNoPermitido);
+end;
+
 function TRepositorioDocumentosTrabajo.ConsultaDocumentosAbiertos(
   const AUsuario: string): string;
 begin
@@ -295,9 +337,9 @@ begin
     'SELECT ID_DTR, TITULO_DTR, USUARIO_DTR, ' +
     '       INSTANTE_DOCUMENTO_DTR, ESTADO_DTR ' +
     '  FROM fza_documentos_trabajo ' +
-    ' WHERE ESTADO_DTR = ''ABIERTO'' ' +
+    ' WHERE ' + CondicionSqlDocumentoTrabajoCreado('ESTADO_DTR') + ' ' +
     '   AND USUARIO_DTR = ' + QuotedStr(AUsuario) + ' ' +
-    ' ORDER BY INSTANTE_DOCUMENTO_DTR DESC, ID_DTR DESC';
+    ClausulaOrdenSqlDocumentosTrabajo('');
 end;
 
 function TRepositorioDocumentosTrabajo.ConsultarDestinosCompartir:
@@ -353,7 +395,9 @@ begin
       '   CODIGO_ALM_DTR, USUARIO_DTR, INSTANTE_DOCUMENTO_DTR, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
       'VALUES ' +
-      '  (:TITULO, ''GENERAL'', ''ABIERTO'', :EMPRESA, :ALMACEN, ' +
+      '  (:TITULO, ''GENERAL'', ' +
+      QuotedStr(ESTADO_DOCUMENTO_TRABAJO_CREADO) +
+      ', :EMPRESA, :ALMACEN, ' +
       '   :USUARIO, NOW(), NOW(), :USUARIO_ALTA, :USUARIO_MODIF)';
     Consulta.ParamByName('TITULO').AsString := ATitulo;
     Consulta.ParamByName('EMPRESA').AsString := AEmpresa;
@@ -509,25 +553,42 @@ function TRepositorioDocumentosTrabajo.CrearAlbaran(
   AUsuario: string): Integer;
 var
   Consulta: TUniQuery;
+  TransaccionPropia: Boolean;
 begin
   Consulta := NuevaConsulta;
   try
-    Consulta.SQL.Text := SQL_CREAR_ALBARAN;
-    Consulta.ParamByName('NUMERO').AsString := ANumero;
-    Consulta.ParamByName('SERIE').AsString := ASerie;
-    Consulta.ParamByName('EMP').AsString := AEmpresa;
-    Consulta.ParamByName('ALM').AsString := AAlmacen;
-    Consulta.ParamByName('ID').AsLargeInt := AIdDocumento;
-    Consulta.ParamByName('USU').AsString := AUsuario;
-    Consulta.Execute;
-    Consulta.SQL.Text := SQL_CREAR_LINEAS_ALBARAN;
-    Consulta.ParamByName('NUMERO').AsString := ANumero;
-    Consulta.ParamByName('SERIE').AsString := ASerie;
-    Consulta.ParamByName('ALM').AsString := AAlmacen;
-    Consulta.ParamByName('ID').AsLargeInt := AIdDocumento;
-    Consulta.ParamByName('USU').AsString := AUsuario;
-    Consulta.Execute;
-    Result := Consulta.RowsAffected;
+    TransaccionPropia := not FConexion.InTransaction;
+    if TransaccionPropia then
+      FConexion.StartTransaction;
+    try
+      Consulta.SQL.Text := SQL_CREAR_ALBARAN;
+      Consulta.ParamByName('NUMERO').AsString := ANumero;
+      Consulta.ParamByName('SERIE').AsString := ASerie;
+      Consulta.ParamByName('EMP').AsString := AEmpresa;
+      Consulta.ParamByName('ALM').AsString := AAlmacen;
+      Consulta.ParamByName('ID').AsLargeInt := AIdDocumento;
+      Consulta.ParamByName('USU').AsString := AUsuario;
+      Consulta.Execute;
+      Consulta.SQL.Text := SQL_CREAR_LINEAS_ALBARAN;
+      Consulta.ParamByName('NUMERO').AsString := ANumero;
+      Consulta.ParamByName('SERIE').AsString := ASerie;
+      Consulta.ParamByName('ALM').AsString := AAlmacen;
+      Consulta.ParamByName('ID').AsLargeInt := AIdDocumento;
+      Consulta.ParamByName('USU').AsString := AUsuario;
+      Consulta.Execute;
+      Result := Consulta.RowsAffected;
+      if Result <= 0 then
+      begin
+        raise ERangeError.Create(SErrorDocumentoTrabajoSinLineasEnviar);
+      end;
+      MarcarDocumentoEnviado(Consulta, AIdDocumento, AUsuario);
+      if TransaccionPropia and FConexion.InTransaction then
+        FConexion.Commit;
+    except
+      if TransaccionPropia and FConexion.InTransaction then
+        FConexion.Rollback;
+      raise;
+    end;
   finally
     FreeAndNil(Consulta);
   end;
@@ -568,6 +629,11 @@ begin
       Consulta.ParamByName('USU').AsString := AUsuario;
       Consulta.Execute;
       Result := Consulta.RowsAffected;
+      if Result <= 0 then
+      begin
+        raise ERangeError.Create(SErrorDocumentoTrabajoSinLineasEnviar);
+      end;
+      MarcarDocumentoEnviado(Consulta, AIdDocumento, AUsuario);
       if TransaccionPropia and FConexion.InTransaction then
         FConexion.Commit;
     except
@@ -614,11 +680,16 @@ begin
       Consulta.ParamByName('USU').AsString := AUsuario;
       Consulta.Execute;
       Result := Consulta.RowsAffected;
+      if Result <= 0 then
+      begin
+        raise ERangeError.Create(SErrorDocumentoTrabajoSinLineasEnviar);
+      end;
       GenerarPdteRecibirDesdePedidoInterno(
         FConexion,
         ASerie,
         ANumero,
         AUsuario);
+      MarcarDocumentoEnviado(Consulta, AIdDocumento, AUsuario);
       if TransaccionPropia and FConexion.InTransaction then
         FConexion.Commit;
     except
@@ -637,26 +708,43 @@ function TRepositorioDocumentosTrabajo.CrearInventario(
   AUsuario: string): Integer;
 var
   Consulta: TUniQuery;
+  TransaccionPropia: Boolean;
 begin
   Consulta := NuevaConsulta;
   try
-    Consulta.SQL.Text := SQL_CREAR_INVENTARIO;
-    Consulta.ParamByName('EMP').AsString := AEmpresa;
-    Consulta.ParamByName('ALM').AsString := AAlmacen;
-    Consulta.ParamByName('SERIE').AsString := ASerie;
-    Consulta.ParamByName('NUMERO').AsString := ANumero;
-    Consulta.ParamByName('ID').AsLargeInt := AIdDocumento;
-    Consulta.ParamByName('USU').AsString := AUsuario;
-    Consulta.Execute;
-    Consulta.SQL.Text := SQL_CREAR_LINEAS_INVENTARIO;
-    Consulta.ParamByName('EMP').AsString := AEmpresa;
-    Consulta.ParamByName('ALM').AsString := AAlmacen;
-    Consulta.ParamByName('SERIE').AsString := ASerie;
-    Consulta.ParamByName('NUMERO').AsString := ANumero;
-    Consulta.ParamByName('ID').AsLargeInt := AIdDocumento;
-    Consulta.ParamByName('USU').AsString := AUsuario;
-    Consulta.Execute;
-    Result := Consulta.RowsAffected;
+    TransaccionPropia := not FConexion.InTransaction;
+    if TransaccionPropia then
+      FConexion.StartTransaction;
+    try
+      Consulta.SQL.Text := SQL_CREAR_INVENTARIO;
+      Consulta.ParamByName('EMP').AsString := AEmpresa;
+      Consulta.ParamByName('ALM').AsString := AAlmacen;
+      Consulta.ParamByName('SERIE').AsString := ASerie;
+      Consulta.ParamByName('NUMERO').AsString := ANumero;
+      Consulta.ParamByName('ID').AsLargeInt := AIdDocumento;
+      Consulta.ParamByName('USU').AsString := AUsuario;
+      Consulta.Execute;
+      Consulta.SQL.Text := SQL_CREAR_LINEAS_INVENTARIO;
+      Consulta.ParamByName('EMP').AsString := AEmpresa;
+      Consulta.ParamByName('ALM').AsString := AAlmacen;
+      Consulta.ParamByName('SERIE').AsString := ASerie;
+      Consulta.ParamByName('NUMERO').AsString := ANumero;
+      Consulta.ParamByName('ID').AsLargeInt := AIdDocumento;
+      Consulta.ParamByName('USU').AsString := AUsuario;
+      Consulta.Execute;
+      Result := Consulta.RowsAffected;
+      if Result <= 0 then
+      begin
+        raise ERangeError.Create(SErrorDocumentoTrabajoSinLineasEnviar);
+      end;
+      MarcarDocumentoEnviado(Consulta, AIdDocumento, AUsuario);
+      if TransaccionPropia and FConexion.InTransaction then
+        FConexion.Commit;
+    except
+      if TransaccionPropia and FConexion.InTransaction then
+        FConexion.Rollback;
+      raise;
+    end;
   finally
     FreeAndNil(Consulta);
   end;
@@ -667,22 +755,41 @@ function TRepositorioDocumentosTrabajo.CrearSesionTarifa(
   const AUsuario: string): Int64;
 var
   Consulta: TUniQuery;
+  iLineas: Integer;
+  TransaccionPropia: Boolean;
 begin
   Consulta := NuevaConsulta;
   try
-    Consulta.SQL.Text := SQL_CREAR_SESION_TARIFA;
-    Consulta.ParamByName('ID').AsLargeInt := AIdDocumento;
-    Consulta.ParamByName('USU').AsString := AUsuario;
-    Consulta.Execute;
-    Consulta.SQL.Text := 'SELECT LAST_INSERT_ID() AS ID';
-    Consulta.Open;
-    Result := Consulta.FieldByName('ID').AsLargeInt;
-    Consulta.Close;
-    Consulta.SQL.Text := SQL_CREAR_LINEAS_SESION_TARIFA;
-    Consulta.ParamByName('TARC').AsLargeInt := Result;
-    Consulta.ParamByName('ID').AsLargeInt := AIdDocumento;
-    Consulta.ParamByName('USU').AsString := AUsuario;
-    Consulta.Execute;
+    TransaccionPropia := not FConexion.InTransaction;
+    if TransaccionPropia then
+      FConexion.StartTransaction;
+    try
+      Consulta.SQL.Text := SQL_CREAR_SESION_TARIFA;
+      Consulta.ParamByName('ID').AsLargeInt := AIdDocumento;
+      Consulta.ParamByName('USU').AsString := AUsuario;
+      Consulta.Execute;
+      Consulta.SQL.Text := 'SELECT LAST_INSERT_ID() AS ID';
+      Consulta.Open;
+      Result := Consulta.FieldByName('ID').AsLargeInt;
+      Consulta.Close;
+      Consulta.SQL.Text := SQL_CREAR_LINEAS_SESION_TARIFA;
+      Consulta.ParamByName('TARC').AsLargeInt := Result;
+      Consulta.ParamByName('ID').AsLargeInt := AIdDocumento;
+      Consulta.ParamByName('USU').AsString := AUsuario;
+      Consulta.Execute;
+      iLineas := Consulta.RowsAffected;
+      if (Result <= 0) or (iLineas <= 0) then
+      begin
+        raise ERangeError.Create(SErrorDocumentoTrabajoSinLineasEnviar);
+      end;
+      MarcarDocumentoEnviado(Consulta, AIdDocumento, AUsuario);
+      if TransaccionPropia and FConexion.InTransaction then
+        FConexion.Commit;
+    except
+      if TransaccionPropia and FConexion.InTransaction then
+        FConexion.Rollback;
+      raise;
+    end;
   finally
     FreeAndNil(Consulta);
   end;
