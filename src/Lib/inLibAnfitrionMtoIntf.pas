@@ -61,15 +61,16 @@ var
   Clase: TClass;
 begin
   Result := '';
-  if not Assigned(AAnfitrion) then
-    Exit;
-  Clase := AClasePantalla;
-  while Assigned(Clase) and (Result = '') do
+  if Assigned(AAnfitrion) then
   begin
-    Result := AAnfitrion.ResolverCallPantalla(
-      Clase.UnitName + '.' + Clase.ClassName);
-    if Result = '' then
-      Clase := Clase.ClassParent;
+    Clase := AClasePantalla;
+    while Assigned(Clase) and (Result = '') do
+    begin
+      Result := AAnfitrion.ResolverCallPantalla(
+        Clase.UnitName + '.' + Clase.ClassName);
+      if Result = '' then
+        Clase := Clase.ClassParent;
+    end;
   end;
 end;
 
@@ -80,15 +81,16 @@ var
   Clase: TClass;
 begin
   Result := '';
-  if not Assigned(AAnfitrion) then
-    Exit;
-  Clase := AClasePantalla;
-  while Assigned(Clase) and (Result = '') do
+  if Assigned(AAnfitrion) then
   begin
-    Result := AAnfitrion.ResolverDataModulePantalla(
-      Clase.UnitName + '.' + Clase.ClassName);
-    if Result = '' then
-      Clase := Clase.ClassParent;
+    Clase := AClasePantalla;
+    while Assigned(Clase) and (Result = '') do
+    begin
+      Result := AAnfitrion.ResolverDataModulePantalla(
+        Clase.UnitName + '.' + Clase.ClassName);
+      if Result = '' then
+        Clase := Clase.ClassParent;
+    end;
   end;
 end;
 

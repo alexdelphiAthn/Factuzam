@@ -1004,98 +1004,103 @@ begin
   begin
     raise ERangeError.Create(SErrorEstadoDocumentoTrabajoNoValido);
   end;
-  if sEstadoActual = sEstadoNuevo then
-  begin
-    Exit(True);
-  end;
-
-  if sEstadoNuevo = ESTADO_DOCUMENTO_TRABAJO_ENVIADO then
-  begin
-    if not EsDocumentoTrabajoCreado(sEstadoActual) then
-    begin
-      raise ERangeError.Create(SErrorEnviarDocumentoTrabajoNoPermitido);
-    end;
-    sCondicion := CondicionSqlDocumentoTrabajoCreado('ESTADO_DTR');
-  end
-  else if sEstadoNuevo = ESTADO_DOCUMENTO_TRABAJO_ARCHIVADO then
-  begin
-    if not (EsDocumentoTrabajoCreado(sEstadoActual) or
-            EsDocumentoTrabajoEnviado(sEstadoActual)) then
-    begin
-      raise ERangeError.Create(SErrorArchivarDocumentoTrabajoNoPermitido);
-    end;
-    sCondicion := '(' +
-      CondicionSqlDocumentoTrabajoCreado('ESTADO_DTR') + ' OR ' +
-      CondicionSqlDocumentoTrabajoEnviado('ESTADO_DTR') + ')';
-  end
-  else
-  begin
-    raise ERangeError.Create(SErrorEstadoDocumentoTrabajoNoValido);
-  end;
-
-  if unqryCompartidos.State in dsEditModes then
-  begin
-    unqryCompartidos.Post;
-  end;
-  if unqryLineas.State in dsEditModes then
-  begin
-    unqryLineas.Post;
-  end;
-  if unqryTablaG.State in dsEditModes then
-  begin
-    unqryTablaG.Post;
-  end;
-  idDtr := unqryTablaG.FieldByName('ID_DTR').AsLargeInt;
-
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := unqryTablaG.Connection;
-    q.SQL.Text :=
-      'UPDATE fza_documentos_trabajo ' +
-      '   SET ESTADO_DTR = :ESTADO, USUARIO_MODIF = :USUARIO ' +
-      ' WHERE ID_DTR = :ID_DTR ' +
-      '   AND USUARIO_DTR = :USUARIO ' +
-      '   AND ' + sCondicion;
-    q.ParamByName('ESTADO').AsString := sEstadoNuevo;
-    q.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
-    q.ParamByName('ID_DTR').AsLargeInt := idDtr;
-    q.Execute;
-    if q.RowsAffected <> 1 then
-    begin
-      raise ERangeError.Create(SErrorActualizarEstadoDocumentoTrabajo);
-    end;
-  finally
-    FreeAndNil(q);
-  end;
-
-  if sEstadoNuevo = ESTADO_DOCUMENTO_TRABAJO_ARCHIVADO then
-  begin
-    RecargarAmbitoActual;
-  end
-  else
-  begin
-    unqryTablaG.RefreshRecord;
-  end;
   Result := True;
+  if sEstadoActual <> sEstadoNuevo then
+  begin
+    if sEstadoNuevo = ESTADO_DOCUMENTO_TRABAJO_ENVIADO then
+    begin
+      if not EsDocumentoTrabajoCreado(sEstadoActual) then
+      begin
+        raise ERangeError.Create(SErrorEnviarDocumentoTrabajoNoPermitido);
+      end;
+      sCondicion := CondicionSqlDocumentoTrabajoCreado('ESTADO_DTR');
+    end;
+    else if sEstadoNuevo = ESTADO_DOCUMENTO_TRABAJO_ARCHIVADO then
+    begin
+      if not (EsDocumentoTrabajoCreado(sEstadoActual) or
+              EsDocumentoTrabajoEnviado(sEstadoActual)) then
+      begin
+        raise ERangeError.Create(SErrorArchivarDocumentoTrabajoNoPermitido);
+      end;
+      sCondicion := '(' +
+        CondicionSqlDocumentoTrabajoCreado('ESTADO_DTR') + ' OR ' +
+        CondicionSqlDocumentoTrabajoEnviado('ESTADO_DTR') + ')';
+    end
+    else
+    begin
+      raise ERangeError.Create(SErrorEstadoDocumentoTrabajoNoValido);
+    end;
+
+    if unqryCompartidos.State in dsEditModes then
+    begin
+      unqryCompartidos.Post;
+    end;
+    if unqryLineas.State in dsEditModes then
+    begin
+      unqryLineas.Post;
+    end;
+    if unqryTablaG.State in dsEditModes then
+    begin
+      unqryTablaG.Post;
+    end;
+    idDtr := unqryTablaG.FieldByName('ID_DTR').AsLargeInt;
+
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := unqryTablaG.Connection;
+      q.SQL.Text :=
+        'UPDATE fza_documentos_trabajo ' +
+        '   SET ESTADO_DTR = :ESTADO, USUARIO_MODIF = :USUARIO ' +
+        ' WHERE ID_DTR = :ID_DTR ' +
+        '   AND USUARIO_DTR = :USUARIO ' +
+        '   AND ' + sCondicion;
+      q.ParamByName('ESTADO').AsString := sEstadoNuevo;
+      q.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
+      q.ParamByName('ID_DTR').AsLargeInt := idDtr;
+      q.Execute;
+      if q.RowsAffected <> 1 then
+      begin
+        raise ERangeError.Create(SErrorActualizarEstadoDocumentoTrabajo);
+      end;
+    finally
+      FreeAndNil(q);
+    end;
+
+    if sEstadoNuevo = ESTADO_DOCUMENTO_TRABAJO_ARCHIVADO then
+    begin
+      RecargarAmbitoActual;
+    end
+    else
+    begin
+      unqryTablaG.RefreshRecord;
+    end;
+  end;
 end;
 
 function TdmDocumentosTrabajo.MarcarDocumentoActualEnviado: Boolean;
+var
+  bYaEnviado: Boolean;
 begin
+  bYaEnviado := False;
   if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
   begin
     unqryTablaG.RefreshRecord;
-    if EsDocumentoTrabajoEnviado(
-         unqryTablaG.FieldByName('ESTADO_DTR').AsString) then
-    begin
-      Exit(True);
-    end;
+    bYaEnviado := EsDocumentoTrabajoEnviado(
+      unqryTablaG.FieldByName('ESTADO_DTR').AsString);
   end;
-  if not PuedeEditarDocumentoActual then
+  if bYaEnviado then
   begin
-    raise ERangeError.Create(SErrorEnviarDocumentoTrabajoNoPermitido);
+    Result := True;
+  end
+  else
+  begin
+    if not PuedeEditarDocumentoActual then
+    begin
+      raise ERangeError.Create(SErrorEnviarDocumentoTrabajoNoPermitido);
+    end;
+    Result := ActualizarEstadoDocumentoActual(
+      ESTADO_DOCUMENTO_TRABAJO_ENVIADO);
   end;
-  Result := ActualizarEstadoDocumentoActual(
-    ESTADO_DOCUMENTO_TRABAJO_ENVIADO);
 end;
 
 function TdmDocumentosTrabajo.ArchivarDocumentoActual: Boolean;

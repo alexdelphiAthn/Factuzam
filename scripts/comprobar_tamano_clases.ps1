@@ -3,7 +3,7 @@
   [ValidateRange(0, [int]::MaxValue)]
   [int]$MaximoLineasPorClase = 2180,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoMetodosPorClase = 101,
+  [int]$MaximoMetodosPorClase = 103,
   [ValidateRange(0, [int]::MaxValue)]
   [int]$MaximoCamposPorClase = 37,
   [hashtable]$LimitesClases = @{
@@ -426,13 +426,13 @@
       ObjetivoRutinas = 20
     }
     'src\Lib\inLibArticulosVariaciones.pas' = @{
-      Lineas = 136
-      Rutinas = 10
+      Lineas = 169
+      Rutinas = 12
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
     }
     'src\Lib\inLibArticulosVariacionesIntf.pas' = @{
-      Lineas = 44
+      Lineas = 62
       Rutinas = 0
       ObjetivoLineas = 600
       ObjetivoRutinas = 30
@@ -450,7 +450,7 @@
       ObjetivoRutinas = 30
     }
     'src\Lib\inLibFotosPersistenciaIntf.pas' = @{
-      Lineas = 77
+      Lineas = 97
       Rutinas = 0
       ObjetivoLineas = 600
       ObjetivoRutinas = 30

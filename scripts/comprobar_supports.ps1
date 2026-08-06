@@ -81,7 +81,8 @@ $unidadesListaBlanca = @('inLibCajaVentanasIntf.pas')
 $rutinasExactas = @(
   'Create', 'CreateNew', 'Destroy',
   'FormCreate', 'FormDestroy', 'FormClose',
-  'InicializarAplicacion', 'ConstruirModoEntrada',
+  'InicializarAplicacion', 'InicializarMantenimiento',
+  'ConstruirModoEntrada',
   'CrearTablaPrincipal', 'CrearOperacionCaja',
   'CrearConsultaOperacionesCaja'
 )

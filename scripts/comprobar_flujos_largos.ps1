@@ -264,10 +264,12 @@ $gruposFlujosExtraidos = @(
       'MostrarSplashInicio|CrearInfraestructuraAplicacion|' +
       'CrearParametrosSesion|CrearServiciosSesion|' +
       'ComprobarConfiguracionFiscal|CargarDatosArranque|' +
-      'IniciarProcesosSegundoPlano|ActualizarEstadoSesion|' +
-      'AplicarTema|ConfigurarPresentacionPrincipal|' +
-      'RegistrarInicioAplicacion)$'
-    Minimo = 12
+      'RegistrarFabricasPantallas|IniciarProcesosSegundoPlano|' +
+      'ActualizarEstadoSesion|ConfigurarPresentacionPrincipal|' +
+      'RegistrarInicioAplicacion|CargarServiciosAplicacion|' +
+      'ActivarAplicacion|PresentarAplicacion|' +
+      'FinalizarArranqueAplicacion)$'
+    Minimo = 16
   }
 )
 foreach ($grupo in $gruposFlujosExtraidos) {

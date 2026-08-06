@@ -252,8 +252,18 @@ uses
     '..\src\DataModules\UniDataAlbaranesVentaMovimientos.pas',
   UniDataArticulosVariaciones in
     '..\src\DataModules\UniDataArticulosVariaciones.pas',
+  UniDataArticulosVariacionesGestor in
+    '..\src\DataModules\UniDataArticulosVariacionesGestor.pas',
+  UniDataArticulosVariacionesSkuRepositorio in
+    '..\src\DataModules\UniDataArticulosVariacionesSkuRepositorio.pas',
   UniDataFotosRepositorio in
     '..\src\DataModules\UniDataFotosRepositorio.pas',
+  UniDataFotosConsultaRepositorio in
+    '..\src\DataModules\UniDataFotosConsultaRepositorio.pas',
+  UniDataFotosEdicionRepositorio in
+    '..\src\DataModules\UniDataFotosEdicionRepositorio.pas',
+  UniDataFotosSesionRepositorio in
+    '..\src\DataModules\UniDataFotosSesionRepositorio.pas',
   UniDataGridPivoteCompraRepositorio in
     '..\src\DataModules\UniDataGridPivoteCompraRepositorio.pas',
   UniDataPedidosCompraPendientes in
@@ -553,10 +563,14 @@ uses
     '..\src\Lib\inLibMtoGenAplicacionIntf.pas',
   inLibMtoGenAplicacion in
     '..\src\Lib\inLibMtoGenAplicacion.pas',
+  inLibContratoMtoGenHerencia in
+    '..\src\Lib\inLibContratoMtoGenHerencia.pas',
   inLibLogonAplicacionIntf in
     '..\src\Lib\inLibLogonAplicacionIntf.pas',
   inLibLogonAplicacion in
     '..\src\Lib\inLibLogonAplicacion.pas',
+  inLibArranqueAplicacion in
+    '..\src\Lib\inLibArranqueAplicacion.pas',
   inLibGeneradorProcesosAplicacion in
     '..\src\Lib\inLibGeneradorProcesosAplicacion.pas',
   inLibMovimientosAlmacenAplicacion in
@@ -584,14 +598,24 @@ uses
     '..\src\Caja\Lib\inLibFacturasProforma.pas',
   PruebasFacturasProforma in 'PruebasFacturasProforma.pas',
   Backup.Engine in '..\src\Lib\backup\Backup.Engine.pas',
+  Backup.LecturaDatos in
+    '..\src\Lib\backup\Backup.LecturaDatos.pas',
   Backup.Types in '..\src\Lib\backup\Backup.Types.pas',
   Core_Engine in '..\src\Lib\backup\Core_Engine.pas',
+  Backup.ComparacionDatos in
+    '..\src\Lib\backup\Backup.ComparacionDatos.pas',
   Core_Helpers in '..\src\Lib\backup\Core_Helpers.pas',
   Core_Interfaces in '..\src\Lib\backup\Core_Interfaces.pas',
   Providers_MySQL in '..\src\Lib\backup\Providers_MySQL.pas',
   Providers_MySQL_Helpers in
     '..\src\Lib\backup\Providers_MySQL_Helpers.pas',
-  ScriptWriters in '..\src\Lib\backup\ScriptWriters.pas';
+  ScriptWriters in '..\src\Lib\backup\ScriptWriters.pas',
+  inLibVerificacionXadesNoVerifactu in
+    '..\src\Lib\inLibVerificacionXadesNoVerifactu.pas',
+  PruebasComparacionCopias in
+    'PruebasComparacionCopias.pas',
+  PruebasVerificacionXadesNoVerifactu in
+    'PruebasVerificacionXadesNoVerifactu.pas';
 
 var
   oEjecutor: ITestRunner;

@@ -305,29 +305,29 @@ begin
   AConsulta.ParamByName('USUARIO').AsString := AUsuario;
   AConsulta.ParamByName('ID_DTR').AsLargeInt := AIdDocumento;
   AConsulta.Execute;
-  if AConsulta.RowsAffected = 1 then
+  if AConsulta.RowsAffected <> 1 then
   begin
-    Exit;
+    AConsulta.SQL.Text :=
+      'SELECT USUARIO_DTR, ESTADO_DTR ' +
+      '  FROM fza_documentos_trabajo ' +
+      ' WHERE ID_DTR = :ID_DTR';
+    AConsulta.ParamByName('ID_DTR').AsLargeInt := AIdDocumento;
+    AConsulta.Open;
+    if (not AConsulta.IsEmpty) and
+       (not SameText(AConsulta.FieldByName('USUARIO_DTR').AsString,
+                     AUsuario)) and
+       EsDocumentoTrabajoCreado(
+         AConsulta.FieldByName('ESTADO_DTR').AsString) then
+    begin
+      // Un documento compartido es de lectura: se materializa para el
+      // destinatario sin cambiar ni bloquear el estado del propietario.
+      AConsulta.Close;
+    end
+    else
+    begin
+      raise ERangeError.Create(SErrorEnviarDocumentoTrabajoNoPermitido);
+    end;
   end;
-
-  AConsulta.SQL.Text :=
-    'SELECT USUARIO_DTR, ESTADO_DTR ' +
-    '  FROM fza_documentos_trabajo ' +
-    ' WHERE ID_DTR = :ID_DTR';
-  AConsulta.ParamByName('ID_DTR').AsLargeInt := AIdDocumento;
-  AConsulta.Open;
-  if (not AConsulta.IsEmpty) and
-     (not SameText(AConsulta.FieldByName('USUARIO_DTR').AsString,
-                   AUsuario)) and
-     EsDocumentoTrabajoCreado(
-       AConsulta.FieldByName('ESTADO_DTR').AsString) then
-  begin
-    // Un documento compartido es de lectura: se materializa para el
-    // destinatario sin cambiar ni bloquear el estado del propietario.
-    AConsulta.Close;
-    Exit;
-  end;
-  raise ERangeError.Create(SErrorEnviarDocumentoTrabajoNoPermitido);
 end;
 
 function TRepositorioDocumentosTrabajo.ConsultaDocumentosAbiertos(

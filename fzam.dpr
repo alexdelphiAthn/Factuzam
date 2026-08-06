@@ -207,6 +207,8 @@ uses
   inMtoPrincipal in 'src\Core\inMtoPrincipal.pas' {frmMtoPrincipal},
   inMtoPrincipalAccionesVcl in
     'src\Core\inMtoPrincipalAccionesVcl.pas',
+  inMtoPrincipalPresentacionInicio in
+    'src\Core\inMtoPrincipalPresentacionInicio.pas',
   inMtoGen in 'src\Forms\inMtoGen.pas' {frmMtoGen},
   inMtoBusquedaDatos in
     'src\Forms\inMtoBusquedaDatos.pas' {frmMtoBusquedaDatos},
@@ -434,6 +436,8 @@ uses
     'src\Lib\inLibLogonAplicacion.pas',
   inLibLogonAplicacionIntf in
     'src\Lib\inLibLogonAplicacionIntf.pas',
+  inLibArranqueAplicacion in
+    'src\Lib\inLibArranqueAplicacion.pas',
   inLibMovimientosAlmacenAplicacion in
     'src\Lib\inLibMovimientosAlmacenAplicacion.pas',
   inLibMtoGenAplicacion in
@@ -657,7 +661,10 @@ uses
   ts.editor.codeformatters in 'src\Lib\sqlformatter\ts.editor.codeformatters.pas',
   ts.editor.codeformatters.sql in 'src\Lib\sqlformatter\ts.editor.codeformatters.sql.pas',
   Backup.Engine in 'src\Lib\backup\Backup.Engine.pas',
+  Backup.LecturaDatos in 'src\Lib\backup\Backup.LecturaDatos.pas',
   Core_Engine in 'src\Lib\backup\Core_Engine.pas',
+  Backup.ComparacionDatos in
+    'src\Lib\backup\Backup.ComparacionDatos.pas',
   Core_Helpers in 'src\Lib\backup\Core_Helpers.pas',
   Providers_MySQL in 'src\Lib\backup\Providers_MySQL.pas',
   Providers_MySQL_Helpers in 'src\Lib\backup\Providers_MySQL_Helpers.pas',
@@ -714,6 +721,10 @@ uses
     'src\Lib\inLibArticulosVariacionesIntf.pas',
   UniDataArticulosVariaciones in
     'src\DataModules\UniDataArticulosVariaciones.pas',
+  UniDataArticulosVariacionesGestor in
+    'src\DataModules\UniDataArticulosVariacionesGestor.pas',
+  UniDataArticulosVariacionesSkuRepositorio in
+    'src\DataModules\UniDataArticulosVariacionesSkuRepositorio.pas',
   inLibArticulosCodigosBarras in 'src\Lib\inLibArticulosCodigosBarras.pas',
   inLibArticulosAltaTarifas in 'src\Lib\inLibArticulosAltaTarifas.pas',
   inLibStockCeldaDocumento in 'src\Lib\inLibStockCeldaDocumento.pas',
@@ -848,6 +859,8 @@ uses
     'src\verifactu\UniDataVerifactuNoVerifactuExport.pas',
   inLibVerifactuNoVerifactuExport in 'src\Lib\inLibVerifactuNoVerifactuExport.pas',
   inLibVerifactuNoVerifactuVerify in 'src\Lib\inLibVerifactuNoVerifactuVerify.pas',
+  inLibVerificacionXadesNoVerifactu in
+    'src\Lib\inLibVerificacionXadesNoVerifactu.pas',
   inLibVerifactuInstalacion in 'src\verifactu\inLibVerifactuInstalacion.pas',
   inLibVerifactuTipos in 'src\verifactu\inLibVerifactuTipos.pas',
   inLibVerifactu in 'src\verifactu\inLibVerifactu.pas',
@@ -1204,6 +1217,12 @@ uses
   inLibFotosPresentacion in 'src\Lib\inLibFotosPresentacion.pas',
   UniDataFotosRepositorio in
     'src\DataModules\UniDataFotosRepositorio.pas',
+  UniDataFotosConsultaRepositorio in
+    'src\DataModules\UniDataFotosConsultaRepositorio.pas',
+  UniDataFotosEdicionRepositorio in
+    'src\DataModules\UniDataFotosEdicionRepositorio.pas',
+  UniDataFotosSesionRepositorio in
+    'src\DataModules\UniDataFotosSesionRepositorio.pas',
   inLibFotos in 'src\Lib\inLibFotos.pas',
   inLibDocumentosTrabajo in 'src\Lib\inLibDocumentosTrabajo.pas',
   inLibDocumentosTrabajoEstados in
