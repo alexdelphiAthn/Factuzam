@@ -42,7 +42,8 @@
         <DCC_S>false</DCC_S>
         <DCC_ImageBase>00400000</DCC_ImageBase>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UnitSearchPath>..\src\Lib;..\src\Lib\sqlformatter;..\src\Lib3par;..\src\DataModules;..\src\Forms;..\src\verifactu;..\src\Caja\Lib;..\src\Caja\DataModules;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\src\Core;..\src\Lib;..\src\Lib\backup;..\src\Lib\sqlformatter;..\src\Lib3par;..\src\DataModules;..\src\Forms;..\src\Modals;..\src\verifactu;..\src\Caja\Lib;..\src\Caja\DataModules;..\src\Caja\Forms;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_ResourcePath>..;$(DCC_ResourcePath)</DCC_ResourcePath>
         <DCC_ExeOutput>.\bin\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_DcuOutput>.\dcu\$(Platform)\$(Config)</DCC_DcuOutput>
         <SanitizedProjectName>FactuzamTests</SanitizedProjectName>
@@ -51,10 +52,12 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Vcl;Vcl.Imaging;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_UnitSearchPath>C:\Program Files (x86)\DevExpress\VCL\Library\RS37;C:\DISCO_DURO\Fastreport\Lib37.0\VCL\Win32;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <BT_BuildType>Debug</BT_BuildType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Vcl;Vcl.Imaging;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_UnitSearchPath>C:\Program Files (x86)\DevExpress\VCL\Library\RS37\Win64;C:\DISCO_DURO\Fastreport\Lib37.0\VCL\Win64;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <BT_BuildType>Debug</BT_BuildType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">

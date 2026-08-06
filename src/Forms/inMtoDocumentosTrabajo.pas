@@ -674,12 +674,12 @@ begin
   if not PuedeAccionMto(apmModificar) then
   begin
     ShowMessage(SErrorArchivarDocumentoTrabajoNoPermitido);
-  end;
+  end
   else if (dmmDocumentosTrabajo = nil) or
           not dmmDocumentosTrabajo.PuedeArchivarDocumentoActual then
   begin
     ShowMessage(SErrorArchivarDocumentoTrabajoNoPermitido);
-  end;
+  end
   else if MessageDlg(SPreguntaArchivarDocumentoTrabajo,
                      mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin

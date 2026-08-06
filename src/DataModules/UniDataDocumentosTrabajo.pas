@@ -1014,7 +1014,7 @@ begin
         raise ERangeError.Create(SErrorEnviarDocumentoTrabajoNoPermitido);
       end;
       sCondicion := CondicionSqlDocumentoTrabajoCreado('ESTADO_DTR');
-    end;
+    end
     else if sEstadoNuevo = ESTADO_DOCUMENTO_TRABAJO_ARCHIVADO then
     begin
       if not (EsDocumentoTrabajoCreado(sEstadoActual) or
