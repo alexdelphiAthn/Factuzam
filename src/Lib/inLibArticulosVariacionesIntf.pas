@@ -19,6 +19,24 @@ uses
   Vcl.Forms;
 
 type
+  ILecturaSkuArticulosVariaciones = interface
+    ['{F2E5D165-676C-4E8D-B136-273BF1AA1EBE}']
+    function EsArticuloConVariaciones(
+      const ACodigoArticulo: string): Boolean;
+    function TieneSku(
+      const ACodigoArticulo: string): Boolean;
+    function TieneSkuActivo(
+      const ACodigoArticulo: string): Boolean;
+    function TieneSkuBase(
+      const ACodigoArticulo: string): Boolean;
+  end;
+  IEscrituraSkuArticulosVariaciones = interface
+    ['{B64A36F4-C11B-40D4-9DF1-5D5509409DFC}']
+    procedure AsegurarSkuSinVariaciones(
+      const ACodigoArticulo, AUsuario: string);
+    procedure AsegurarSkuActivo(
+      const ACodigoArticulo, AUsuario: string);
+  end;
   IGestorArticulosVariaciones = interface
     ['{BBF0B749-B893-423C-A356-D0C5F8AC705E}']
     procedure CargarVariaciones(const ACodigoArticulo: string);

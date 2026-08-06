@@ -3,7 +3,7 @@
 interface
 
 uses Backup.Types, System.Classes, Core_Interfaces,
-     Generics.Collections, Data.DB, System.StrUtils;
+     Generics.Collections, Data.DB;
 
 type
   TRes = class
@@ -58,6 +58,7 @@ type
     FWriter: IScriptWriter;
     FOptions: TComparerOptions;
     FSql: TServiciosSqlBBDD;
+    FComprobarCancelacion: TThreadMethod;
     procedure CompareTableStructure(const TableName: string);
     procedure CompareTableIndexes(const TableName: string);
     procedure CompareTables;
@@ -68,8 +69,6 @@ type
     procedure CreateNewTable(const TableName: string);
     procedure CompareData(const TableName: string);
     procedure CopyAllData(const TableName: string);
-    function BuildWhereClause(const PKCols: TStringList;
-                              DataSet: TDataSet): string;
   public
     constructor Create(const AOrigen,
                        ADestino: TServiciosLecturaBBDD;
@@ -77,12 +76,15 @@ type
                        const ASql: TServiciosSqlBBDD;
                        Options: TComparerOptions);
     procedure GenerateScript;
+    property OnComprobarCancelacion: TThreadMethod
+      read FComprobarCancelacion write FComprobarCancelacion;
   end;
 
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils,
+  Backup.ComparacionDatos;
 
 constructor TDBComparerEngine.Create(const AOrigen,
                                      ADestino: TServiciosLecturaBBDD;
@@ -458,178 +460,37 @@ end;
 
 procedure TDBComparerEngine.CompareData(const TableName: string);
 var
-  SourceData, TargetData, TempSource: TDataSet;
-  PKCols: TStringList;
-  TableStruct: TTableInfo;
-  Col: TColumnInfo;
-  WhereClause, SetClause: string;
-  Fields, Values: TStringList;
-  i: Integer;
-  HasIdentity: Boolean; // Variable para detectar autoincrementales
+  oComparador: TComparadorDatosBBDD;
+  oEstructura: TTableInfo;
+  oServicios: TServiciosComparacionDatos;
 begin
-  // 1. Obtener estructura para detectar PKs e IDENTIDAD
-  TableStruct := FOrigen.Esquema.GetTableStructure(TableName);
-  PKCols := TStringList.Create;
+  oEstructura := FOrigen.Esquema.GetTableStructure(TableName);
   try
-    HasIdentity := False;
-    // Analizar columnas
-    for Col in TableStruct.Columns do
-    begin
-      // Detectar Primary Key
-      if SameText(Col.ColumnKey, 'PRI') then
-        PKCols.Add(Col.ColumnName);
-      // Detectar Identidad (SQL Server usa 'IDENTITY', MySQL usa
-      // 'auto_increment')
-      // Buscamos en 'Extra' que es donde suele venir esta info
-      if (Pos('IDENTITY', UpperCase(Col.Extra)) > 0) or
-         (Pos('AUTO_INCREMENT', UpperCase(Col.Extra)) > 0) then
-      begin
-        HasIdentity := True;
-      end;
-    end;
-    // Si no hay PK, no podemos comparar datos de forma segura
-    if PKCols.Count = 0 then
-    begin
-      FWriter.AddComment(Format(TRes.MsgWarnNoPK, [TableName]));
-    end
-    else
-    begin
-    FWriter.AddComment(TRes.MsgSyncData  + TableName +
-                       (IfThen(HasIdentity, TRes.MsgWithIdentity, '')));
-    // =========================================================================
-    // FASE A: Recorrer ORIGEN -> Insertar o Actualizar en DESTINO
-    // =========================================================================
-    SourceData := FOrigen.Datos.GetData(TableName);
-    Fields := TStringList.Create;
-    Values := TStringList.Create;
+    oServicios := Default(TServiciosComparacionDatos);
+    oServicios.Origen := FOrigen.Datos;
+    oServicios.Destino := FDestino.Datos;
+    oServicios.Writer := FWriter;
+    oServicios.Valores := FSql.Valores;
+    oServicios.Modificacion := FSql.Modificacion;
+    oServicios.Textos.AvisoSinClave := TRes.MsgWarnNoPK;
+    oServicios.Textos.Sincronizar := TRes.MsgSyncData;
+    oServicios.Textos.ConIdentidad := TRes.MsgWithIdentity;
+    oServicios.Textos.Insertar := TRes.MsgInsertNew;
+    oServicios.Textos.Actualizar := TRes.MsgUpdateDiff;
+    oServicios.Textos.Eliminar := TRes.MsgDeleteObs;
+    oComparador := TComparadorDatosBBDD.Create(
+      oServicios,
+      FComprobarCancelacion);
     try
-      while not SourceData.Eof do
-      begin
-        WhereClause := BuildWhereClause(PKCols, SourceData);
-        // Buscamos el registro en destino
-        TargetData := FDestino.Datos.GetData(TableName, WhereClause);
-        try
-          if TargetData.IsEmpty then
-          begin
-             // --- CASO 1: INSERT (Registro nuevo) ---
-             Fields.Clear;
-             Values.Clear;
-             for i := 0 to SourceData.FieldCount - 1 do
-             begin
-               Fields.Add(FSql.Valores.QuoteIdentifier(
-                 SourceData.Fields[i].FieldName));
-               Values.Add(FSql.Valores.ValueToSQL(SourceData.Fields[i]));
-             end;
-             FWriter.AddComment(Format(TRes.MsgInsertNew,[WhereClause]));
-             // Pasamos 'HasIdentity' para que el Helper de SQL Server sepa si
-             // debe
-             // envolver el INSERT con SET IDENTITY_INSERT ON/OFF
-             FWriter.AddCommand(FSql.Valores.GenerateInsertSQL(TableName,
-                                                           Fields,
-                                                           Values,
-                                                           HasIdentity));
-          end
-          else
-          begin
-            // --- CASO 2: UPDATE (Registro existe, verificamos cambios) ---
-            SetClause := '';
-            for i := 0 to SourceData.FieldCount - 1 do
-            begin
-              // Saltamos la PK (no se actualiza)
-              if PKCols.IndexOf(SourceData.Fields[i].FieldName) < 0 then
-              begin
-              // Verificamos si el campo existe en destino y si el valor es
-              // diferente
-              if (TargetData.FindField(
-                SourceData.Fields[i].FieldName) <> nil) then
-              begin
-                 // Comparación simple de cadenas (ValueToSQL normaliza
-                 // formatos)
-                 if FSql.Valores.ValueToSQL(SourceData.Fields[i]) <>
-                    FSql.Valores.ValueToSQL(TargetData.FieldByName(
-                      SourceData.Fields[i].FieldName)) then
-                 begin
-                   if (SetClause <> '') then
-                     SetClause := SetClause + ', ';
-                   SetClause := SetClause +
-                                FSql.Valores.QuoteIdentifier(
-                                  SourceData.Fields[i].FieldName) +
-                                ' = ' +
-                                FSql.Valores.ValueToSQL(
-                                  SourceData.Fields[i]);
-                  end;
-              end;
-              end;
-            end;
-            if SetClause <> '' then
-            begin
-              FWriter.AddComment(Format(TRes.MsgUpdateDiff, [WhereClause]));
-              FWriter.AddCommand(FSql.Modificacion.GenerateUpdateSQL(TableName,
-                                                            SetClause,
-                                                            WhereClause));
-            end;
-          end;
-        finally
-          TargetData.Free;
-        end;
-        SourceData.Next;
-      end; // Fin while Source
+      oComparador.Comparar(
+        TableName,
+        oEstructura,
+        FOptions.NoDelete);
     finally
-      SourceData.Free;
-      Fields.Free;
-      Values.Free;
-    end;
-    // =========================================================================
-    // FASE B: Recorrer DESTINO -> Eliminar lo que sobre (Si --nodelete no está
-    // activo)
-    // =========================================================================
-    if not FOptions.NoDelete then
-    begin
-      // Traemos toda la tabla de destino para ver qué sobra
-      TargetData := FDestino.Datos.GetData(TableName);
-      try
-        while not TargetData.Eof do
-        begin
-          WhereClause := BuildWhereClause(PKCols, TargetData);
-          // Verificamos si este registro de destino existe en origen
-          TempSource := FOrigen.Datos.GetData(TableName, WhereClause);
-          try
-            if TempSource.IsEmpty then
-            begin
-              // --- CASO 3: DELETE (Sobra en destino) ---
-              FWriter.AddComment(Format(TRes.MsgDeleteObs, [WhereClause]));
-              FWriter.AddCommand(FSql.Modificacion.GenerateDeleteSQL(TableName,
-                                                            WhereClause));
-            end;
-          finally
-            TempSource.Free;
-          end;
-          TargetData.Next;
-        end;
-      finally
-        TargetData.Free;
-      end;
-    end;
+      FreeAndNil(oComparador);
     end;
   finally
-    TableStruct.Free;
-    PKCols.Free;
-  end;
-end;
-
-function TDBComparerEngine.BuildWhereClause(const PKCols: TStringList;
-                                            DataSet: TDataSet): string;
-var
-  i: Integer;
-  Field: TField;
-begin
-  Result := '';
-  for i := 0 to PKCols.Count - 1 do
-  begin
-    if i > 0 then Result := Result + ' AND ';
-    Field := DataSet.FieldByName(PKCols[i]);
-    Result := Result + FSql.Valores.QuoteIdentifier(PKCols[i]) + ' = ' +
-              FSql.Valores.ValueToSQL(Field);
+    FreeAndNil(oEstructura);
   end;
 end;
 

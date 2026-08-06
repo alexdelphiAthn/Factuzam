@@ -22,6 +22,10 @@ uses
   inLibArticulosVariacionesIntf;
 
 type
+  TAccionAsegurarSku = (
+    aasNinguna,
+    aasInsertar,
+    aasActivar);
   TSlotVariacion = record
     IdAtributo: string;
     NombreAtributo: string;
@@ -64,6 +68,12 @@ procedure AsegurarSkuArticuloActivo(
 function ArticuloTieneSkuActivo(
   const AArticulosVariaciones: IArticulosVariaciones;
   const ACodigoArticulo: string): Boolean;
+function ResolverSkuSinVariaciones(
+  ACodigoPresente, ATieneVariaciones, ATieneSku: Boolean):
+  TAccionAsegurarSku;
+function ResolverSkuActivo(
+  ACodigoPresente, ATieneActivo, ATieneBase: Boolean):
+  TAccionAsegurarSku;
 
 implementation
 
@@ -131,6 +141,29 @@ function ArticuloTieneSkuActivo(
 begin
   Result := AArticulosVariaciones.TieneSkuActivo(
     ACodigoArticulo);
+end;
+
+function ResolverSkuSinVariaciones(
+  ACodigoPresente, ATieneVariaciones, ATieneSku: Boolean):
+  TAccionAsegurarSku;
+begin
+  Result := aasNinguna;
+  if ACodigoPresente and
+     (not ATieneVariaciones) and
+     (not ATieneSku) then
+    Result := aasInsertar;
+end;
+
+function ResolverSkuActivo(
+  ACodigoPresente, ATieneActivo, ATieneBase: Boolean):
+  TAccionAsegurarSku;
+begin
+  Result := aasNinguna;
+  if ACodigoPresente and (not ATieneActivo) then
+    if ATieneBase then
+      Result := aasActivar
+    else
+      Result := aasInsertar;
 end;
 
 end.

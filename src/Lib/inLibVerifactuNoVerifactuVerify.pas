@@ -1,17 +1,17 @@
 ﻿{******************************************************************************}
 {                                                                              }
-{  Modulo:       inLibVerifactuNoVerifactuVerify                               }
-{    Tipo:       Libreria                                                      }
-{ Version:       1.0.0                                                         }
+{  Módulo:       inLibVerifactuNoVerifactuVerify                               }
+{    Tipo:       Librería                                                      }
+{ Versión:       1.0.0                                                         }
 {   Fecha:       15/06/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
-{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
-{                                                                              }
-{  Descripcion:                                                                }
-{    Verificacion local de ficheros NO VERI*FACTU exportados por Factuzam.     }
+{  Copyright (c) Alejandro Laorden Hidalgo.                                    }
+{  SPDX-License-Identifier: MPL-2.0                                            }
+{  Descripción:                                                                }
+{    Verificación local de ficheros NO VERI*FACTU exportados por Factuzam.     }
 {    Comprueba estructura, cadena de eventos, hashes internos y coherencia     }
-{    basica de firmas guardadas, sin invocar procesos externos.                }
+{    básica de firmas guardadas, sin invocar procesos externos.                }
 {******************************************************************************}
 unit inLibVerifactuNoVerifactuVerify;
 
@@ -52,19 +52,8 @@ implementation
 uses
   System.Classes, System.Hash, System.IOUtils, System.NetEncoding,
   System.StrUtils, Xml.XMLDoc, Xml.XMLIntf, inLibMsgFacturas,
-  inLibMsgVerifactu, inLibVerifactu;
-
-const
-  cAlgC14n = 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315';
-  cAlgEnveloped = 'http://www.w3.org/2000/09/xmldsig#enveloped-signature';
-  cAlgRsaSha256 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256';
-  cAlgSha1 = 'http://www.w3.org/2000/09/xmldsig#sha1';
-  cAlgSha256 = 'http://www.w3.org/2001/04/xmlenc#sha256';
-  cTipoSignedProperties = 'http://uri.etsi.org/01903#SignedProperties';
-  cPoliticaAeatId = 'urn:oid:2.16.724.1.3.1.1.2.1.9';
-  cPoliticaAeatUrl =
-    'https://sede.administracion.gob.es/politica_de_firma_anexo_1.pdf';
-  cPoliticaAeatHashSha1 = 'G7roucf600+f03r/o0bAOQ6WAs0=';
+  inLibMsgVerifactu, inLibVerifactu,
+  inLibVerificacionXadesNoVerifactu;
 
 function NombreLocal(const ANodeName: string): string;
 var
@@ -156,91 +145,6 @@ begin
     else if AResultado.ModoExportacion <> sModo then
       AgregarDetalle(AResultado, STextoTipoError,
         Format(SErrorModoExportacionNoCoincide, [AEtiqueta]));
-  end;
-end;
-
-function BuscarHijoConAtributo(const ANode: IXMLNode; const ANombreLocal,
-                               AAtributo, AValor: string): IXMLNode;
-var
-  i: Integer;
-  oHijo: IXMLNode;
-begin
-  Result := nil;
-  if ANode <> nil then
-  begin
-    i := 0;
-    while (Result = nil) and (i < ANode.ChildNodes.Count) do
-    begin
-      oHijo := ANode.ChildNodes[i];
-      if EsNodo(oHijo, ANombreLocal) and
-         SameText(AtributoNodo(oHijo, AAtributo), AValor) then
-        Result := oHijo;
-      Inc(i);
-    end;
-  end;
-end;
-
-function BuscarDescendienteConAtributo(const ANode: IXMLNode;
-                                       const ANombreLocal, AAtributo,
-                                       AValor: string): IXMLNode;
-var
-  i: Integer;
-  oHijo: IXMLNode;
-begin
-  Result := nil;
-  if ANode <> nil then
-  begin
-    i := 0;
-    while (Result = nil) and (i < ANode.ChildNodes.Count) do
-    begin
-      oHijo := ANode.ChildNodes[i];
-      if EsNodo(oHijo, ANombreLocal) and
-         SameText(AtributoNodo(oHijo, AAtributo), AValor) then
-        Result := oHijo
-      else
-        Result := BuscarDescendienteConAtributo(oHijo, ANombreLocal,
-          AAtributo, AValor);
-      Inc(i);
-    end;
-  end;
-end;
-
-function BuscarRuta(const ANode: IXMLNode;
-                    const ANombres: array of string): IXMLNode;
-var
-  i: Integer;
-begin
-  Result := ANode;
-  i := Low(ANombres);
-  while (Result <> nil) and (i <= High(ANombres)) do
-  begin
-    Result := BuscarHijo(Result, ANombres[i]);
-    Inc(i);
-  end;
-end;
-
-function TextoRuta(const ANode: IXMLNode;
-                   const ANombres: array of string): string;
-var
-  oNodo: IXMLNode;
-begin
-  Result := '';
-  oNodo := BuscarRuta(ANode, ANombres);
-  if oNodo <> nil then
-    Result := Trim(oNodo.Text);
-end;
-
-function ContarHijos(const ANode: IXMLNode; const ANombreLocal: string):
-  Integer;
-var
-  i: Integer;
-begin
-  Result := 0;
-  if ANode <> nil then
-  begin
-    for i := 0 to ANode.ChildNodes.Count - 1 do
-      if EsNodo(ANode.ChildNodes[i], ANombreLocal) then
-        Inc(Result);
   end;
 end;
 
@@ -405,146 +309,17 @@ procedure VerificarPerfilXadesNoVerifactu(
                                           var AResultado:
                                           TResultadoVerificacionNoVerifactu);
 var
-  oDoc: IXMLDocument;
-  oRaiz: IXMLNode;
-  oNodoFirmado: IXMLNode;
-  oFirma: IXMLNode;
-  oSignedInfo: IXMLNode;
-  oMetodo: IXMLNode;
-  oReferenciaDocumento: IXMLNode;
-  oReferenciaPropiedades: IXMLNode;
-  oDigestMethod: IXMLNode;
-  oPropiedades: IXMLNode;
-  oPolitica: IXMLNode;
-  sRaiz: string;
+  i: Integer;
+  oPerfil: TResultadoPerfilXadesNoVerifactu;
   sTipoFirma: string;
 begin
   sTipoFirma := TipoIncidenciaFirmaLegal(AParametrosApp, AResultado);
-  if not CargarXmlTexto(AXml, oDoc) then
+  oPerfil := inLibVerificacionXadesNoVerifactu.
+    VerificarPerfilXadesNoVerifactu(AXml, AEsEvento);
+  for i := 0 to Length(oPerfil.Causas) - 1 do
   begin
     AgregarDetalle(AResultado, sTipoFirma,
-      Format(SErrorXmlFirmadoNoLegible, [AEtiqueta]));
-  end
-  else
-  begin
-    oRaiz := oDoc.DocumentElement;
-    sRaiz := NombreLocal(oRaiz.NodeName);
-    oNodoFirmado := oRaiz;
-    if AEsEvento then
-    begin
-      if not SameText(sRaiz, 'RegistroEvento') then
-        AgregarDetalle(AResultado, sTipoFirma,
-          Format(SErrorFirmaEventoRaizIncorrecta, [AEtiqueta]));
-      oNodoFirmado := BuscarHijo(oRaiz, 'Evento');
-      if oNodoFirmado = nil then
-        AgregarDetalle(AResultado, sTipoFirma,
-          Format(SErrorEventoFirmadoNoEncontrado, [AEtiqueta]));
-    end
-    else if (not SameText(sRaiz, 'RegistroAlta')) and
-            (not SameText(sRaiz, 'RegistroAnulacion')) then
-      AgregarDetalle(AResultado, sTipoFirma,
-        Format(SErrorFirmaFacturaRaizIncorrecta, [AEtiqueta]));
-    oFirma := BuscarHijo(oNodoFirmado, 'Signature');
-    if oFirma = nil then
-      AgregarDetalle(AResultado, sTipoFirma,
-        Format(SErrorFirmaXadesNodoAeatIncorrecto, [AEtiqueta]))
-    else
-    begin
-      if BuscarDescendiente(oFirma, 'X509Certificate') = nil then
-        AgregarDetalle(AResultado, sTipoFirma,
-          Format(SErrorFirmaXadesSinCertificado, [AEtiqueta]));
-      oSignedInfo := BuscarHijo(oFirma, 'SignedInfo');
-      if oSignedInfo = nil then
-        AgregarDetalle(AResultado, sTipoFirma,
-          Format(SErrorFirmaXadesSinSignedInfo, [AEtiqueta]))
-      else
-      begin
-        oMetodo := BuscarHijo(oSignedInfo, 'CanonicalizationMethod');
-        if AtributoNodo(oMetodo, 'Algorithm') <> cAlgC14n then
-          AgregarDetalle(AResultado, sTipoFirma,
-            Format(SErrorCanonicalizacionFirmaAeat, [AEtiqueta]));
-        oMetodo := BuscarHijo(oSignedInfo, 'SignatureMethod');
-        if AtributoNodo(oMetodo, 'Algorithm') <> cAlgRsaSha256 then
-          AgregarDetalle(AResultado, sTipoFirma,
-            Format(SErrorMetodoFirmaNoRsaSha256, [AEtiqueta]));
-        if ContarHijos(oSignedInfo, 'Reference') <> 2 then
-          AgregarDetalle(AResultado, sTipoFirma,
-            Format(SErrorReferenciasSignedInfo, [AEtiqueta]));
-        oReferenciaDocumento := BuscarHijoConAtributo(oSignedInfo,
-          'Reference', 'URI', '');
-        if oReferenciaDocumento = nil then
-          AgregarDetalle(AResultado, sTipoFirma,
-            Format(SErrorReferenciaDocumentoFirmado, [AEtiqueta]))
-        else
-        begin
-          if BuscarDescendienteConAtributo(oReferenciaDocumento, 'Transform',
-             'Algorithm', cAlgEnveloped) = nil then
-            AgregarDetalle(AResultado, sTipoFirma,
-              Format(SErrorTransformacionFirmaEnveloped, [AEtiqueta]));
-          oDigestMethod := BuscarDescendiente(oReferenciaDocumento,
-            'DigestMethod');
-          if AtributoNodo(oDigestMethod, 'Algorithm') <> cAlgSha256 then
-            AgregarDetalle(AResultado, sTipoFirma,
-              Format(SErrorDigestRegistroNoSha256, [AEtiqueta]));
-        end;
-        oReferenciaPropiedades := BuscarHijoConAtributo(oSignedInfo,
-          'Reference', 'Type', cTipoSignedProperties);
-        if oReferenciaPropiedades = nil then
-          AgregarDetalle(AResultado, sTipoFirma,
-            Format(SErrorReferenciaSignedProperties, [AEtiqueta]))
-        else
-        begin
-          if BuscarDescendienteConAtributo(oReferenciaPropiedades,
-             'Transform', 'Algorithm', cAlgC14n) = nil then
-            AgregarDetalle(AResultado, sTipoFirma,
-              Format(SErrorCanonicalizacionSignedProperties, [AEtiqueta]));
-          oDigestMethod := BuscarDescendiente(oReferenciaPropiedades,
-            'DigestMethod');
-          if AtributoNodo(oDigestMethod, 'Algorithm') <> cAlgSha256 then
-            AgregarDetalle(AResultado, sTipoFirma,
-              Format(SErrorDigestSignedPropertiesNoSha256, [AEtiqueta]));
-        end;
-      end;
-      oPropiedades := BuscarDescendiente(oFirma, 'QualifyingProperties');
-      if oPropiedades = nil then
-        AgregarDetalle(AResultado, sTipoFirma,
-          Format(SErrorQualifyingPropertiesXades, [AEtiqueta]))
-      else
-      begin
-        if BuscarDescendiente(oPropiedades, 'SignedProperties') = nil then
-          AgregarDetalle(AResultado, sTipoFirma,
-            Format(SErrorSignedPropertiesXades, [AEtiqueta]));
-        if BuscarDescendiente(oPropiedades, 'SigningCertificate') = nil then
-          AgregarDetalle(AResultado, sTipoFirma,
-            Format(SErrorSigningCertificateXades, [AEtiqueta]));
-        oPolitica := BuscarRuta(oPropiedades,
-          ['SignedProperties', 'SignedSignatureProperties',
-           'SignaturePolicyIdentifier', 'SignaturePolicyId']);
-        if oPolitica = nil then
-          AgregarDetalle(AResultado, sTipoFirma,
-            Format(SErrorPoliticaFirmaAge, [AEtiqueta]))
-        else
-        begin
-          if TextoRuta(oPolitica, ['SigPolicyId', 'Identifier']) <>
-             cPoliticaAeatId then
-            AgregarDetalle(AResultado, sTipoFirma,
-              Format(SErrorIdentificadorPoliticaAge, [AEtiqueta]));
-          oDigestMethod := BuscarRuta(oPolitica,
-            ['SigPolicyHash', 'DigestMethod']);
-          if AtributoNodo(oDigestMethod, 'Algorithm') <> cAlgSha1 then
-            AgregarDetalle(AResultado, sTipoFirma,
-              Format(SErrorDigestPoliticaAgeNoSha1, [AEtiqueta]));
-          if TextoRuta(oPolitica, ['SigPolicyHash', 'DigestValue']) <>
-             cPoliticaAeatHashSha1 then
-            AgregarDetalle(AResultado, sTipoFirma,
-              Format(SErrorDigestValuePoliticaAge, [AEtiqueta]));
-          if TextoRuta(oPolitica, ['SigPolicyQualifiers',
-             'SigPolicyQualifier', 'SPURI']) <> cPoliticaAeatUrl then
-            AgregarDetalle(AResultado, sTipoFirma,
-              Format(SErrorUrlPoliticaAge, [AEtiqueta]));
-        end;
-      end;
-    end;
+      MensajeRechazoXadesNoVerifactu(oPerfil.Causas[i], AEtiqueta));
   end;
 end;
 

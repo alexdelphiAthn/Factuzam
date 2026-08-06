@@ -46,6 +46,14 @@ type
     procedure Streaming_EjecutaSentenciaParcialFinal;
     [Test]
     procedure Streaming_CancelacionDetieneSentencias;
+    [Test]
+    procedure Volcado_TablaVacia_NoEscribeDatos;
+    [Test]
+    procedure Volcado_LoteGrande_ConservaLotesAcotados;
+    [Test]
+    procedure Volcado_Cancelacion_NoVuelcaLoteParcial;
+    [Test]
+    procedure Volcado_DependenciaMalformada_FallaTemprano;
   end;
 
 implementation
@@ -53,7 +61,13 @@ implementation
 uses
   System.Classes,
   System.SysUtils,
+  System.StrUtils,
+  Data.DB,
+  Datasnap.DBClient,
   Backup.Engine,
+  Backup.LecturaDatos,
+  Backup.Types,
+  Core_Interfaces,
   inLibBackupPersistenciaIntf,
   inLibCopiasSeguridadIntf,
   inLibCopiasSeguridadReglas,
@@ -152,6 +166,77 @@ type
     constructor Create(APersistencia: TPersistenciaRestauracionFalsa);
     procedure Comprobar;
   end;
+  TEsquemaVolcadoFalso = class(
+    TInterfacedObject,
+    ILectorEsquemaBBDD)
+  private
+    FAutoincremento: Boolean;
+  public
+    constructor Create(AAutoincremento: Boolean);
+    function GetDatabaseName: string;
+    function GetTables: TStringList;
+    function GetTableStructure(const TableName: string): TTableInfo;
+    function GetTableIndexes(
+      const TableName: string): TArray<TIndexInfo>;
+  end;
+  TDatosVolcadoFalso = class(
+    TInterfacedObject,
+    ILectorDatosBBDD)
+  private
+    FFilas: Integer;
+  public
+    constructor Create(AFilas: Integer);
+    function GetData(
+      const TableName: string;
+      const Filter: string = ''): TDataSet;
+    function GetRowCount(
+      const TableName: string;
+      const Filter: string = ''): Integer;
+  end;
+  TEscritorVolcadoFalso = class(
+    TInterfacedObject,
+    IScriptWriter)
+  private
+    FComentarios: TStringList;
+    FComandos: TStringList;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure AddComment(const Text: string);
+    procedure AddCommand(const SQL: string);
+    function GetScript: string;
+    function ContarComandos(const AInicio: string): Integer;
+    property Comentarios: TStringList read FComentarios;
+    property Comandos: TStringList read FComandos;
+  end;
+  TValoresVolcadoFalso = class(
+    TInterfacedObject,
+    IGeneradorSqlValores)
+  public
+    function QuoteIdentifier(const Identifier: string): string;
+    function ValueToSQL(const Field: TField): string;
+    function GenerateInsertSQL(
+      const TableName: string;
+      Fields, Values: TStringList;
+      const HasIdentity: Boolean = False): string;
+  end;
+  TObservadorVolcadoFalso = class
+  private
+    FCancelarEnPaso: Integer;
+    FEtapa: string;
+    FFilasLeidas: Integer;
+    FPaso: Integer;
+    FTotal: Integer;
+  public
+    constructor Create(ACancelarEnPaso: Integer = 0);
+    procedure Progreso(
+      const AEtapa: string; APaso, ATotal: Integer);
+    procedure FilaLeida;
+    property Etapa: string read FEtapa;
+    property FilasLeidas: Integer read FFilasLeidas;
+    property Paso: Integer read FPaso;
+    property Total: Integer read FTotal;
+  end;
 
 procedure EjecutarSQLDePrueba(
   const ASQL: string;
@@ -243,6 +328,184 @@ begin
   begin
     raise EAbort.Create('Cancelada por la prueba');
   end;
+end;
+
+constructor TEsquemaVolcadoFalso.Create(AAutoincremento: Boolean);
+begin
+  inherited Create;
+  FAutoincremento := AAutoincremento;
+end;
+
+function TEsquemaVolcadoFalso.GetDatabaseName: string;
+begin
+  Result := 'PRUEBA';
+end;
+
+function TEsquemaVolcadoFalso.GetTables: TStringList;
+begin
+  Result := TStringList.Create;
+  Result.Add('TABLA');
+end;
+
+function TEsquemaVolcadoFalso.GetTableStructure(
+  const TableName: string): TTableInfo;
+var
+  oColumna: TColumnInfo;
+begin
+  Result := TTableInfo.Create;
+  Result.TableName := TableName;
+  oColumna := Default(TColumnInfo);
+  oColumna.ColumnName := 'ID';
+  if FAutoincremento then
+  begin
+    oColumna.Extra := 'auto_increment';
+  end;
+  Result.Columns.Add(oColumna);
+end;
+
+function TEsquemaVolcadoFalso.GetTableIndexes(
+  const TableName: string): TArray<TIndexInfo>;
+begin
+  Result := nil;
+end;
+
+constructor TDatosVolcadoFalso.Create(AFilas: Integer);
+begin
+  inherited Create;
+  FFilas := AFilas;
+end;
+
+function TDatosVolcadoFalso.GetData(
+  const TableName, Filter: string): TDataSet;
+var
+  I: Integer;
+  oDatos: TClientDataSet;
+begin
+  oDatos := TClientDataSet.Create(nil);
+  oDatos.FieldDefs.Add('ID', ftInteger);
+  oDatos.CreateDataSet;
+  for I := 1 to FFilas do
+  begin
+    oDatos.AppendRecord([I]);
+  end;
+  oDatos.First;
+  Result := oDatos;
+end;
+
+function TDatosVolcadoFalso.GetRowCount(
+  const TableName, Filter: string): Integer;
+begin
+  Result := FFilas;
+end;
+
+constructor TEscritorVolcadoFalso.Create;
+begin
+  inherited Create;
+  FComentarios := TStringList.Create;
+  FComandos := TStringList.Create;
+end;
+
+destructor TEscritorVolcadoFalso.Destroy;
+begin
+  FreeAndNil(FComandos);
+  FreeAndNil(FComentarios);
+  inherited Destroy;
+end;
+
+procedure TEscritorVolcadoFalso.AddComment(const Text: string);
+begin
+  FComentarios.Add(Text);
+end;
+
+procedure TEscritorVolcadoFalso.AddCommand(const SQL: string);
+begin
+  FComandos.Add(SQL);
+end;
+
+function TEscritorVolcadoFalso.GetScript: string;
+begin
+  Result := FComandos.Text;
+end;
+
+function TEscritorVolcadoFalso.ContarComandos(
+  const AInicio: string): Integer;
+var
+  I: Integer;
+begin
+  Result := 0;
+  for I := 0 to FComandos.Count - 1 do
+  begin
+    if StartsText(AInicio, FComandos[I]) then
+    begin
+      Inc(Result);
+    end;
+  end;
+end;
+
+function TValoresVolcadoFalso.QuoteIdentifier(
+  const Identifier: string): string;
+begin
+  Result := '`' + Identifier + '`';
+end;
+
+function TValoresVolcadoFalso.ValueToSQL(const Field: TField): string;
+begin
+  if Field.IsNull then
+  begin
+    Result := 'NULL';
+  end
+  else
+  begin
+    Result := Field.AsString;
+  end;
+end;
+
+function UnirValoresVolcado(APartes: TStrings): string;
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := 0 to APartes.Count - 1 do
+  begin
+    if I > 0 then
+    begin
+      Result := Result + ', ';
+    end;
+    Result := Result + APartes[I];
+  end;
+end;
+
+function TValoresVolcadoFalso.GenerateInsertSQL(
+  const TableName: string;
+  Fields, Values: TStringList;
+  const HasIdentity: Boolean): string;
+begin
+  Result := 'INSERT INTO ' + QuoteIdentifier(TableName) +
+    ' (' + UnirValoresVolcado(Fields) + ') VALUES (' +
+    UnirValoresVolcado(Values) + ');';
+end;
+
+constructor TObservadorVolcadoFalso.Create(ACancelarEnPaso: Integer);
+begin
+  inherited Create;
+  FCancelarEnPaso := ACancelarEnPaso;
+end;
+
+procedure TObservadorVolcadoFalso.Progreso(
+  const AEtapa: string; APaso, ATotal: Integer);
+begin
+  FEtapa := AEtapa;
+  FPaso := APaso;
+  FTotal := ATotal;
+  if (FCancelarEnPaso > 0) and (APaso >= FCancelarEnPaso) then
+  begin
+    raise EAbort.Create('Cancelada por la prueba de volcado');
+  end;
+end;
+
+procedure TObservadorVolcadoFalso.FilaLeida;
+begin
+  Inc(FFilasLeidas);
 end;
 
 constructor TServicioCopiasFalso.Create(
@@ -581,6 +844,161 @@ begin
     Assert.AreEqual(1, oPersistenciaFalsa.Sentencias.Count);
   finally
     FreeAndNil(oCancelacion);
+  end;
+end;
+
+procedure TPruebasCopiasSeguridad.
+  Volcado_TablaVacia_NoEscribeDatos;
+var
+  iDatos: ILectorDatosBBDD;
+  iEsquema: ILectorEsquemaBBDD;
+  iEscritor: IScriptWriter;
+  iValores: IGeneradorSqlValores;
+  oEscritor: TEscritorVolcadoFalso;
+  oLector: TLecturaDatosTablaBackup;
+  oObservador: TObservadorVolcadoFalso;
+begin
+  iEsquema := TEsquemaVolcadoFalso.Create(False);
+  iDatos := TDatosVolcadoFalso.Create(0);
+  oEscritor := TEscritorVolcadoFalso.Create;
+  iEscritor := oEscritor;
+  iValores := TValoresVolcadoFalso.Create;
+  oObservador := TObservadorVolcadoFalso.Create;
+  oLector := TLecturaDatosTablaBackup.Create(
+    TDependenciasLecturaDatosBackup.Crear(
+      iEsquema, iDatos, iEscritor, iValores),
+    TConfiguracionLecturaDatosBackup.Crear(True, 500),
+    oObservador.Progreso,
+    oObservador.FilaLeida);
+  try
+    oLector.Ejecutar('TABLA', '');
+    Assert.AreEqual(0, oEscritor.Comentarios.Count);
+    Assert.AreEqual(0, oEscritor.Comandos.Count);
+    Assert.AreEqual(0, oObservador.FilasLeidas);
+    Assert.AreEqual('TABLA (datos)', oObservador.Etapa);
+    Assert.AreEqual(0, oObservador.Total);
+  finally
+    FreeAndNil(oLector);
+    FreeAndNil(oObservador);
+  end;
+end;
+
+procedure TPruebasCopiasSeguridad.
+  Volcado_LoteGrande_ConservaLotesAcotados;
+var
+  iDatos: ILectorDatosBBDD;
+  iEsquema: ILectorEsquemaBBDD;
+  iEscritor: IScriptWriter;
+  iValores: IGeneradorSqlValores;
+  oEscritor: TEscritorVolcadoFalso;
+  oLector: TLecturaDatosTablaBackup;
+  oObservador: TObservadorVolcadoFalso;
+begin
+  iEsquema := TEsquemaVolcadoFalso.Create(True);
+  iDatos := TDatosVolcadoFalso.Create(1201);
+  oEscritor := TEscritorVolcadoFalso.Create;
+  iEscritor := oEscritor;
+  iValores := TValoresVolcadoFalso.Create;
+  oObservador := TObservadorVolcadoFalso.Create;
+  oLector := TLecturaDatosTablaBackup.Create(
+    TDependenciasLecturaDatosBackup.Crear(
+      iEsquema, iDatos, iEscritor, iValores),
+    TConfiguracionLecturaDatosBackup.Crear(True, 500),
+    oObservador.Progreso,
+    oObservador.FilaLeida);
+  try
+    oLector.Ejecutar('TABLA', '');
+    Assert.AreEqual(3, oEscritor.ContarComandos('INSERT INTO'));
+    Assert.IsTrue(
+      oEscritor.Comentarios.IndexOf('Datos de TABLA') >= 0);
+    Assert.IsTrue(
+      oEscritor.Comentarios.IndexOf(
+        '1201 registros exportados') >= 0);
+    Assert.AreEqual(1201, oObservador.FilasLeidas);
+    Assert.AreEqual('TABLA OK', oObservador.Etapa);
+    Assert.AreEqual(1201, oObservador.Paso);
+  finally
+    FreeAndNil(oLector);
+    FreeAndNil(oObservador);
+  end;
+end;
+
+procedure TPruebasCopiasSeguridad.
+  Volcado_Cancelacion_NoVuelcaLoteParcial;
+var
+  bCancelada: Boolean;
+  iDatos: ILectorDatosBBDD;
+  iEsquema: ILectorEsquemaBBDD;
+  iEscritor: IScriptWriter;
+  iValores: IGeneradorSqlValores;
+  oEscritor: TEscritorVolcadoFalso;
+  oLector: TLecturaDatosTablaBackup;
+  oObservador: TObservadorVolcadoFalso;
+begin
+  iEsquema := TEsquemaVolcadoFalso.Create(False);
+  iDatos := TDatosVolcadoFalso.Create(1200);
+  oEscritor := TEscritorVolcadoFalso.Create;
+  iEscritor := oEscritor;
+  iValores := TValoresVolcadoFalso.Create;
+  oObservador := TObservadorVolcadoFalso.Create(12);
+  oLector := TLecturaDatosTablaBackup.Create(
+    TDependenciasLecturaDatosBackup.Crear(
+      iEsquema, iDatos, iEscritor, iValores),
+    TConfiguracionLecturaDatosBackup.Crear(True, 500),
+    oObservador.Progreso,
+    oObservador.FilaLeida);
+  try
+    bCancelada := False;
+    try
+      oLector.Ejecutar('TABLA', '');
+    except
+      on E: EAbort do
+      begin
+        bCancelada := True;
+      end;
+    end;
+    Assert.IsTrue(bCancelada);
+    Assert.AreEqual(12, oObservador.FilasLeidas);
+    Assert.AreEqual(0, oEscritor.ContarComandos('INSERT INTO'));
+  finally
+    FreeAndNil(oLector);
+    FreeAndNil(oObservador);
+  end;
+end;
+
+procedure TPruebasCopiasSeguridad.
+  Volcado_DependenciaMalformada_FallaTemprano;
+var
+  bExcepcionCapturada: Boolean;
+  iEsquema: ILectorEsquemaBBDD;
+  oDependencias: TDependenciasLecturaDatosBackup;
+  oLector: TLecturaDatosTablaBackup;
+begin
+  iEsquema := TEsquemaVolcadoFalso.Create(False);
+  oDependencias := TDependenciasLecturaDatosBackup.Crear(
+    iEsquema,
+    nil,
+    nil,
+    nil);
+  oLector := nil;
+  bExcepcionCapturada := False;
+  try
+    try
+      oLector := TLecturaDatosTablaBackup.Create(
+        oDependencias,
+        TConfiguracionLecturaDatosBackup.Crear(True, 500),
+        nil,
+        nil);
+    except
+      on E: EArgumentNilException do
+      begin
+        bExcepcionCapturada := True;
+        Assert.Contains(E.Message, 'ADependencias.Datos');
+      end;
+    end;
+    Assert.IsTrue(bExcepcionCapturada);
+  finally
+    FreeAndNil(oLector);
   end;
 end;
 

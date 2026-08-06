@@ -53,7 +53,6 @@ implementation
 
 uses
   System.SysUtils,
-  Data.DB,
   inLibFotosConsulta, inLibMsgArticulos;
 
 constructor TSesionFotos.Create(
@@ -104,7 +103,7 @@ function TSesionFotos.Guardar(const ASerieSesion,
   const ACodigoArticuloTentativo, ACodigoUnidad,
   AFicheroOrigen, AUsuario: string): TFotoInfo;
 var
-  oDatos         : TDataSet;
+  oMetadatos     : TMetadatosFotoSesion;
   sClave         : string;
   sExtension     : string;
   sNombreAnterior: string;
@@ -126,21 +125,15 @@ begin
   sExtension := FAlmacenamiento.ExtensionOrigen(AFicheroOrigen);
   sNombreAnterior := '';
   iIndice := 1;
-  oDatos := nil;
-  try
-    oDatos := FRepositorioSesion.BuscarFotoSesion(
-      ASerieSesion, ANumeroSesion, ALinea, ACodigoUnidad);
-    if not oDatos.Eof then
-    begin
-      sNombreAnterior :=
-        oDatos.FieldByName('NOMBRE_FOT_CSF').AsString;
-      iIndice := FAlmacenamiento.ExtraerIndice(
-        sNombreAnterior) + 1;
-      if iIndice < 1 then
-        iIndice := 1;
-    end;
-  finally
-    FreeAndNil(oDatos);
+  if FRepositorioSesion.BuscarFotoSesion(
+    ASerieSesion, ANumeroSesion, ALinea, ACodigoUnidad,
+    oMetadatos) then
+  begin
+    sNombreAnterior := oMetadatos.Nombre;
+    iIndice := FAlmacenamiento.ExtraerIndice(
+      sNombreAnterior) + 1;
+    if iIndice < 1 then
+      iIndice := 1;
   end;
   sNombreNuevo := FAlmacenamiento.ComponerNombre(
     sClave, iIndice);
@@ -171,28 +164,20 @@ function TSesionFotos.BuscarFoto(const ASerieSesion,
   const ACodigoUnidad, ACodigoSolicitado: string;
   AOrigen: TFotoOrigen): TFotoInfo;
 var
-  oDatos: TDataSet;
+  oMetadatos: TMetadatosFotoSesion;
 begin
   Result.Clear;
-  oDatos := nil;
-  try
-    oDatos := FRepositorioSesion.BuscarFotoSesion(
-      ASerieSesion, ANumeroSesion, ALinea, ACodigoUnidad);
-    if not oDatos.Eof then
-    begin
-      Result.Encontrada := True;
-      Result.Origen := AOrigen;
-      Result.CodigoArt := oDatos.FieldByName(
-        'CODIGO_ART_TENTATIVO_CSF').AsString;
-      Result.CodigoSku := ACodigoSolicitado;
-      Result.ClaveResuelta := ACodigoUnidad;
-      Result.NombreBase :=
-        oDatos.FieldByName('NOMBRE_FOT_CSF').AsString;
-      Result.ExtensionOrigen := oDatos.FieldByName(
-        'EXTENSION_ORIGEN_CSF').AsString;
-    end;
-  finally
-    FreeAndNil(oDatos);
+  if FRepositorioSesion.BuscarFotoSesion(
+    ASerieSesion, ANumeroSesion, ALinea, ACodigoUnidad,
+    oMetadatos) then
+  begin
+    Result.Encontrada := True;
+    Result.Origen := AOrigen;
+    Result.CodigoArt := oMetadatos.CodigoArticuloTentativo;
+    Result.CodigoSku := ACodigoSolicitado;
+    Result.ClaveResuelta := ACodigoUnidad;
+    Result.NombreBase := oMetadatos.Nombre;
+    Result.ExtensionOrigen := oMetadatos.Extension;
   end;
 end;
 
@@ -238,22 +223,17 @@ procedure TSesionFotos.Eliminar(const ASerieSesion,
   ANumeroSesion: string; ALinea: Integer;
   const ACodigoUnidad: string);
 var
-  oDatos: TDataSet;
+  oMetadatos: TMetadatosFotoSesion;
   sNombre: string;
 begin
   if (ASerieSesion <> '') and (ANumeroSesion <> '') and
      (ALinea > 0) then
   begin
     sNombre := '';
-    oDatos := nil;
-    try
-      oDatos := FRepositorioSesion.BuscarFotoSesion(
-        ASerieSesion, ANumeroSesion, ALinea, ACodigoUnidad);
-      if not oDatos.Eof then
-        sNombre := oDatos.FieldByName('NOMBRE_FOT_CSF').AsString;
-    finally
-      FreeAndNil(oDatos);
-    end;
+    if FRepositorioSesion.BuscarFotoSesion(
+      ASerieSesion, ANumeroSesion, ALinea, ACodigoUnidad,
+      oMetadatos) then
+      sNombre := oMetadatos.Nombre;
     if sNombre <> '' then
     begin
       FRepositorioSesion.EliminarFotoSesion(
@@ -267,61 +247,48 @@ procedure TSesionFotos.Migrar(const ASerieSesion,
   ANumeroSesion: string; ALinea: Integer;
   const ACodigoArticulo, AUsuario: string);
 var
-  oOrigen      : TDataSet;
-  oDestino     : TDataSet;
+  aOrigen      : TArray<TMetadatosFotoSesion>;
+  oDestino     : TMetadatosFotoPersistida;
   sClave       : string;
   sCodigoUnidad: string;
   sExtension   : string;
   sNombreOrigen: string;
   sNombreNuevo : string;
   iIndice      : Integer;
+  iFoto        : Integer;
 begin
   if (ASerieSesion <> '') and (ANumeroSesion <> '') and
      (ALinea > 0) and (Trim(ACodigoArticulo) <> '') then
   begin
-    oOrigen := nil;
-    oDestino := nil;
-    try
-      oOrigen := FRepositorioSesion.BuscarFotosSesionLinea(
-        ASerieSesion, ANumeroSesion, ALinea);
-      while not oOrigen.Eof do
-      begin
-        sCodigoUnidad :=
-          oOrigen.FieldByName('CODIGO_UNIDAD_CSF').AsString;
-        sNombreOrigen :=
-          oOrigen.FieldByName('NOMBRE_FOT_CSF').AsString;
-        sExtension :=
-          oOrigen.FieldByName('EXTENSION_ORIGEN_CSF').AsString;
-        sClave := FAlmacenamiento.ClaveNombre(
-          ACodigoArticulo, sCodigoUnidad);
+    aOrigen := FRepositorioSesion.BuscarFotosSesionLinea(
+      ASerieSesion, ANumeroSesion, ALinea);
+    for iFoto := 0 to High(aOrigen) do
+    begin
+      sCodigoUnidad := aOrigen[iFoto].CodigoUnidad;
+      sNombreOrigen := aOrigen[iFoto].Nombre;
+      sExtension := aOrigen[iFoto].Extension;
+      sClave := FAlmacenamiento.ClaveNombre(
+        ACodigoArticulo, sCodigoUnidad);
+      iIndice := 1;
+      if FRepositorioEdicion.BuscarFotoEditable(
+        ACodigoArticulo, sCodigoUnidad, oDestino) then
+        iIndice := FAlmacenamiento.ExtraerIndice(
+          oDestino.Nombre) + 1;
+      if iIndice < 1 then
         iIndice := 1;
-        oDestino := FRepositorioEdicion.BuscarFotoEditable(
-          ACodigoArticulo, sCodigoUnidad);
-        if not oDestino.Eof then
-          iIndice := FAlmacenamiento.ExtraerIndice(
-            oDestino.FieldByName(fnomfot).AsString) + 1;
-        FreeAndNil(oDestino);
-        if iIndice < 1 then
-          iIndice := 1;
-        sNombreNuevo := FAlmacenamiento.ComponerNombre(
-          sClave, iIndice);
-        FAlmacenamiento.RenombrarCopias(
-          sNombreOrigen, sNombreNuevo);
-        FRepositorioSesion.GuardarFotoMigrada(
-          ACodigoArticulo,
-          sCodigoUnidad,
-          sNombreNuevo,
-          sExtension,
-          AUsuario);
-        oOrigen.Next;
-      end;
-      oOrigen.Close;
-      FRepositorioSesion.EliminarFotosSesionLinea(
-        ASerieSesion, ANumeroSesion, ALinea);
-    finally
-      FreeAndNil(oOrigen);
-      FreeAndNil(oDestino);
+      sNombreNuevo := FAlmacenamiento.ComponerNombre(
+        sClave, iIndice);
+      FAlmacenamiento.RenombrarCopias(
+        sNombreOrigen, sNombreNuevo);
+      FRepositorioSesion.GuardarFotoMigrada(
+        ACodigoArticulo,
+        sCodigoUnidad,
+        sNombreNuevo,
+        sExtension,
+        AUsuario);
     end;
+    FRepositorioSesion.EliminarFotosSesionLinea(
+      ASerieSesion, ANumeroSesion, ALinea);
   end;
 end;
 

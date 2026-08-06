@@ -17,7 +17,7 @@ interface
 
 uses
   Core_Interfaces, Backup.Types, System.Classes,
-  Data.DB, System.SysUtils, System.StrUtils, System.Diagnostics,
+  System.SysUtils, System.StrUtils, System.Diagnostics,
   inLibBackupPersistenciaIntf;
 
 type
@@ -111,6 +111,7 @@ type
     procedure BackupFunctions;
     function ShouldProcessTable(const TableName: string): Boolean;
     procedure DoProgress(const AEtapa: string; APaso, ATotal: Integer);
+    procedure RegistrarFilaDatos;
     procedure ContarFilasTotal;
   public
     constructor Create(const ALecturas: TServiciosLecturaBBDD;
@@ -130,10 +131,10 @@ function CrearFabricaPersistenciaBackupPredeterminada:
 implementation
 
 uses
-  UniDataBackupRepositorio;
+  UniDataBackupRepositorio,
+  Backup.LecturaDatos;
 
 const
-  MAX_BYTES_LOTE_EXTENDIDO = 1024 * 1024;
   BYTES_ENTRE_PROGRESO_RESTAURACION = 4 * 1024 * 1024;
 
 constructor TEjecutorRestauracionSQL.Create(
@@ -611,6 +612,11 @@ begin
                 FFilasProcesadas, FFilasGlobalTotal);
 end;
 
+procedure TDBBackupEngine.RegistrarFilaDatos;
+begin
+  Inc(FFilasProcesadas);
+end;
+
 procedure TDBBackupEngine.ContarFilasTotal;
 var
   Tables: TStringList;
@@ -777,164 +783,29 @@ end;
 
 procedure TDBBackupEngine.BackupTableData(const TableName: string);
 var
-  Data: TDataSet;
-  Fields, Values: TStringList;
-  i: Integer;
-  RowCount: Integer;
-  TableInfo: TTableInfo;
-  HasIdentity: Boolean;
-  // Para extended insert
-  FieldList: string;       // La parte INSERT INTO `tabla` (`col1`,`col2`)
-  ValueRows: TStringList;  // Acumula los VALUE(...) de cada fila
-  RowsInBatch: Integer;
-  BatchSize: Integer;
-  iBytesFila: Integer;
-  iBytesLote: Integer;
-  iFrecuenciaProgreso: Integer;
-  sParteCampos: string;
   sFilter: string;
-  sValoresFila: string;
-  // Escribe el INSERT acumulado y vacía el buffer
-  procedure FlushExtendedInsert;
-  var
-    j: Integer;
-    oSQL: TStringBuilder;
-  begin
-    if ValueRows.Count > 0 then
-    begin
-      oSQL := TStringBuilder.Create(
-        Length(FieldList) + iBytesLote + (ValueRows.Count * 8));
-      try
-        oSQL.Append(FieldList);
-        oSQL.Append(sLineBreak);
-        for j := 0 to ValueRows.Count - 1 do
-        begin
-          oSQL.Append('  (');
-          oSQL.Append(ValueRows[j]);
-          if j < ValueRows.Count - 1 then
-          begin
-            oSQL.Append('),');
-            oSQL.Append(sLineBreak);
-          end
-          else
-            oSQL.Append(');');
-        end;
-        FWriter.AddCommand(oSQL.ToString);
-      finally
-        FreeAndNil(oSQL);
-      end;
-      ValueRows.Clear;
-      RowsInBatch := 0;
-      iBytesLote := 0;
-    end;
-  end;
+  oLector: TLecturaDatosTablaBackup;
 begin
-  // Verificar si tiene columna de autoincremento
-  TableInfo := FLecturas.Esquema.GetTableStructure(TableName);
-  try
-    HasIdentity := False;
-    for i := 0 to TableInfo.Columns.Count - 1 do
-    begin
-      if ContainsText(TableInfo.Columns[i].Extra, 'auto_increment') then
-      begin
-        HasIdentity := True;
-        Break;
-      end;
-    end;
-  finally
-    TableInfo.Free;
-  end;
   sFilter := '';
   if Assigned(FDataFilters) then
+  begin
     sFilter := FDataFilters.Values[TableName];
-  Data := FLecturas.Datos.GetData(TableName, sFilter);
-  Fields  := TStringList.Create;
-  Values  := TStringList.Create;
-  ValueRows := TStringList.Create;
+  end;
+  oLector := TLecturaDatosTablaBackup.Create(
+    TDependenciasLecturaDatosBackup.Crear(
+      FLecturas.Esquema,
+      FLecturas.Datos,
+      FWriter,
+      FValores),
+    TConfiguracionLecturaDatosBackup.Crear(
+      FOptions.ExtendedInsert,
+      FOptions.ExtendedInsertRows),
+    DoProgress,
+    RegistrarFilaDatos);
   try
-    RowCount    := 0;
-    // Notificar inicio con total de filas (si el dataset lo soporta)
-    DoProgress(TableName + ' (datos)', 0, Data.RecordCount);
-    RowsInBatch := 0;
-    iBytesLote := 0;
-    FieldList   := '';
-    BatchSize   := FOptions.ExtendedInsertRows; // 0 = sin límite
-    iFrecuenciaProgreso := Data.RecordCount div 100;
-    if iFrecuenciaProgreso < 1 then
-      iFrecuenciaProgreso := 1;
-    if not Data.IsEmpty then
-    begin
-      FWriter.AddComment(Format('Datos de %s', [TableName]));
-      if HasIdentity then
-        FWriter.AddCommand(Format('/*!40000 ALTER TABLE %s DISABLE KEYS */;',
-                                  [FValores.QuoteIdentifier(TableName)]));
-      while not Data.Eof do
-      begin
-        Inc(RowCount);
-        Inc(FFilasProcesadas);
-        Fields.Clear;
-        Values.Clear;
-        for i := 0 to Data.FieldCount - 1 do
-        begin
-          Fields.Add(FValores.QuoteIdentifier(Data.Fields[i].FieldName));
-          Values.Add(FValores.ValueToSQL(Data.Fields[i]));
-        end;
-        if FOptions.ExtendedInsert then
-        begin
-          // Construir la cabecera una sola vez
-          if FieldList = '' then
-          begin
-            sParteCampos := '';
-            for i := 0 to Fields.Count - 1 do
-            begin
-              if i > 0 then
-                sParteCampos := sParteCampos + ', ';
-              sParteCampos := sParteCampos + Fields[i];
-            end;
-            FieldList := 'INSERT INTO ' + FValores.QuoteIdentifier(TableName) +
-                         ' (' + sParteCampos + ') VALUES';
-          end;
-          sValoresFila := '';
-          for i := 0 to Values.Count - 1 do
-          begin
-            if i > 0 then
-              sValoresFila := sValoresFila + ', ';
-            sValoresFila := sValoresFila + Values[i];
-          end;
-          iBytesFila := TEncoding.UTF8.GetByteCount(sValoresFila);
-          if (iBytesLote > 0) and
-             ((iBytesLote + iBytesFila) > MAX_BYTES_LOTE_EXTENDIDO) then
-            FlushExtendedInsert;
-          ValueRows.Add(sValoresFila);
-          Inc(RowsInBatch);
-          Inc(iBytesLote, iBytesFila);
-          if (BatchSize > 0) and (RowsInBatch >= BatchSize) then
-            FlushExtendedInsert;
-        end
-        else
-        begin
-          // ── Modo clásico: un INSERT por fila ───────────────────────────
-          FWriter.AddCommand(
-            FValores.GenerateInsertSQL(TableName, Fields, Values, HasIdentity));
-        end;
-        Data.Next;
-        if ((RowCount mod iFrecuenciaProgreso) = 0) or Data.Eof then
-          DoProgress(TableName + ' (datos)', RowCount, Data.RecordCount);
-      end;
-      if FOptions.ExtendedInsert then
-        FlushExtendedInsert;
-      DoProgress(TableName + ' OK', RowCount, RowCount);
-      if HasIdentity then
-        FWriter.AddCommand(Format('/*!40000 ALTER TABLE %s ENABLE KEYS */;',
-                                  [FValores.QuoteIdentifier(TableName)]));
-      FWriter.AddComment(Format('%d registros exportados', [RowCount]));
-      FWriter.AddCommand('');
-    end;
+    oLector.Ejecutar(TableName, sFilter);
   finally
-    Data.Free;
-    Fields.Free;
-    Values.Free;
-    ValueRows.Free;
+    FreeAndNil(oLector);
   end;
 end;
 

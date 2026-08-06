@@ -9,7 +9,7 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Verifica la composicion segregada y los prefijos de fotos sin BBDD.       }
+{    Verifica contratos, fallback y edición de fotos sin usar una BBDD.        }
 {******************************************************************************}
 unit PruebasFotosPersistencia;
 
@@ -30,6 +30,14 @@ type
     procedure Almacenamiento_ComponeNombreCanonico;
     [Test]
     procedure Fachada_SinServicios_SePuedeLiberar;
+    [Test]
+    procedure Consulta_SinMetadatos_DevuelveAusencia;
+    [Test]
+    procedure Consulta_PriorizaSkuYUsaFallbackArticulo;
+    [Test]
+    procedure Edicion_RotacionReemplazaNombrePersistido;
+    [Test]
+    procedure Edicion_ErrorEscritura_NoSeConvierteEnExito;
   end;
 
 implementation
@@ -37,7 +45,126 @@ implementation
 uses
   System.SysUtils,
   inLibFotosPersistenciaIntf, inLibFotosAlmacenamiento,
+  inLibFotosConsulta, inLibFotosEdicion, inLibFotosTipos,
   inLibFotos;
+
+type
+  TRepositorioConsultaFotosFalso = class(
+    TInterfacedObject,
+    IRepositorioConsultaFotos)
+  public
+    TieneSku: Boolean;
+    TieneArticulo: Boolean;
+    TienePrimeraUnidad: Boolean;
+    FotoSku: TMetadatosFotoPersistida;
+    FotoArticulo: TMetadatosFotoPersistida;
+    FotoPrimeraUnidad: TMetadatosFotoPersistida;
+    FotosLote: TArray<TMetadatosFotoPersistida>;
+    function BuscarFotoPorUnidades(
+      const ACodigoArticulo: string;
+      const AUnidades: TArray<string>;
+      out AMetadatos: TMetadatosFotoPersistida): Boolean;
+    function BuscarFotoArticulo(
+      const ACodigoArticulo: string;
+      out AMetadatos: TMetadatosFotoPersistida): Boolean;
+    function BuscarPrimeraFotoUnidad(
+      const ACodigoArticulo: string;
+      out AMetadatos: TMetadatosFotoPersistida): Boolean;
+    function BuscarFotosArticulos(
+      const ACodigosArticulo: TArray<string>):
+      TArray<TMetadatosFotoPersistida>;
+  end;
+  TRepositorioEdicionFotosFalso = class(
+    TInterfacedObject,
+    IRepositorioEdicionFotos)
+  public
+    FotoActual: TMetadatosFotoPersistida;
+    FotoGuardada: TMetadatosFotoPersistida;
+    NombreActualizado: string;
+    TieneFoto: Boolean;
+    FallarEscritura: Boolean;
+    function BuscarFotoEditable(
+      const ACodigoArticulo, ACodigoUnidad: string;
+      out AMetadatos: TMetadatosFotoPersistida): Boolean;
+    procedure GuardarFoto(
+      const AMetadatos: TMetadatosFotoPersistida;
+      const AUsuario: string);
+    procedure ActualizarNombreFoto(
+      const ACodigoArticulo, ACodigoUnidad, ANombre, AUsuario: string);
+    function BuscarNombreFoto(
+      const ACodigoArticulo, ACodigoUnidad: string): string;
+    procedure EliminarFoto(
+      const ACodigoArticulo, ACodigoUnidad: string);
+  end;
+
+function TRepositorioConsultaFotosFalso.BuscarFotoPorUnidades(
+  const ACodigoArticulo: string;
+  const AUnidades: TArray<string>;
+  out AMetadatos: TMetadatosFotoPersistida): Boolean;
+begin
+  AMetadatos := FotoSku;
+  Result := TieneSku;
+end;
+
+function TRepositorioConsultaFotosFalso.BuscarFotoArticulo(
+  const ACodigoArticulo: string;
+  out AMetadatos: TMetadatosFotoPersistida): Boolean;
+begin
+  AMetadatos := FotoArticulo;
+  Result := TieneArticulo;
+end;
+
+function TRepositorioConsultaFotosFalso.BuscarPrimeraFotoUnidad(
+  const ACodigoArticulo: string;
+  out AMetadatos: TMetadatosFotoPersistida): Boolean;
+begin
+  AMetadatos := FotoPrimeraUnidad;
+  Result := TienePrimeraUnidad;
+end;
+
+function TRepositorioConsultaFotosFalso.BuscarFotosArticulos(
+  const ACodigosArticulo: TArray<string>):
+  TArray<TMetadatosFotoPersistida>;
+begin
+  Result := FotosLote;
+end;
+
+function TRepositorioEdicionFotosFalso.BuscarFotoEditable(
+  const ACodigoArticulo, ACodigoUnidad: string;
+  out AMetadatos: TMetadatosFotoPersistida): Boolean;
+begin
+  AMetadatos := FotoActual;
+  Result := TieneFoto;
+end;
+
+procedure TRepositorioEdicionFotosFalso.GuardarFoto(
+  const AMetadatos: TMetadatosFotoPersistida;
+  const AUsuario: string);
+begin
+  if FallarEscritura then
+    raise Exception.Create('Error de escritura simulado');
+  FotoGuardada := AMetadatos;
+end;
+
+procedure TRepositorioEdicionFotosFalso.ActualizarNombreFoto(
+  const ACodigoArticulo, ACodigoUnidad, ANombre, AUsuario: string);
+begin
+  if FallarEscritura then
+    raise Exception.Create('Error de escritura simulado');
+  NombreActualizado := ANombre;
+end;
+
+function TRepositorioEdicionFotosFalso.BuscarNombreFoto(
+  const ACodigoArticulo, ACodigoUnidad: string): string;
+begin
+  Result := FotoActual.Nombre;
+end;
+
+procedure TRepositorioEdicionFotosFalso.EliminarFoto(
+  const ACodigoArticulo, ACodigoUnidad: string);
+begin
+  TieneFoto := False;
+end;
 
 procedure TPruebasFotosPersistencia.
   ServiciosVacios_NoAsignanNingunPuerto;

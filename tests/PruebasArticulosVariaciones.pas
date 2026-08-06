@@ -32,11 +32,20 @@ type
     procedure TieneSkuActivo_DevuelveElResultadoDelServicio;
     [Test]
     procedure Gestor_DelegaOperacionesYPropiedades;
+    [Test]
+    procedure CodigoAusente_NoSolicitaEscritura;
+    [Test]
+    procedure ArticuloSinSku_SeleccionaFallbackSkuBase;
+    [Test]
+    procedure SkuBaseInactivo_SeleccionaActivacion;
+    [Test]
+    procedure AsegurarActivo_PropagaErrorEscritura;
   end;
 
 implementation
 
 uses
+  System.SysUtils,
   Vcl.Forms, inLibArticulosVariacionesIntf,
   inLibArticulosVariaciones;
 
@@ -69,6 +78,7 @@ type
     CodigoArticulo: string;
     Operacion: TOperacionArticulosVariacionesFalsa;
     ResultadoTieneSku: Boolean;
+    ErrorEscritura: Boolean;
     Usuario: string;
     UsuarioGestor: string;
     procedure AsegurarSkuSinVariaciones(
@@ -125,6 +135,8 @@ end;
 procedure TArticulosVariacionesFalso.AsegurarSkuActivo(
   const ACodigoArticulo, AUsuario: string);
 begin
+  if ErrorEscritura then
+    raise Exception.Create('ERROR_ESCRITURA');
   Operacion := oavAsegurarActivo;
   CodigoArticulo := ACodigoArticulo;
   Usuario := AUsuario;
@@ -218,6 +230,53 @@ begin
   finally
     Gestor.Free;
   end;
+end;
+
+procedure TPruebasArticulosVariaciones.
+  CodigoAusente_NoSolicitaEscritura;
+begin
+  Assert.AreEqual(
+    aasNinguna,
+    ResolverSkuSinVariaciones(False, False, False));
+  Assert.AreEqual(
+    aasNinguna,
+    ResolverSkuActivo(False, False, False));
+end;
+
+procedure TPruebasArticulosVariaciones.
+  ArticuloSinSku_SeleccionaFallbackSkuBase;
+begin
+  Assert.AreEqual(
+    aasInsertar,
+    ResolverSkuSinVariaciones(True, False, False));
+  Assert.AreEqual(
+    aasNinguna,
+    ResolverSkuSinVariaciones(True, True, False));
+end;
+
+procedure TPruebasArticulosVariaciones.
+  SkuBaseInactivo_SeleccionaActivacion;
+begin
+  Assert.AreEqual(
+    aasActivar,
+    ResolverSkuActivo(True, False, True));
+  Assert.AreEqual(
+    aasInsertar,
+    ResolverSkuActivo(True, False, False));
+end;
+
+procedure TPruebasArticulosVariaciones.
+  AsegurarActivo_PropagaErrorEscritura;
+begin
+  PrepararServicioFalso;
+  oFalso.ErrorEscritura := True;
+  Assert.WillRaise(
+    procedure
+    begin
+      AsegurarSkuArticuloActivo(
+        oServicioFalso, 'ART-ERROR', 'PRUEBAS');
+    end,
+    Exception);
 end;
 
 initialization

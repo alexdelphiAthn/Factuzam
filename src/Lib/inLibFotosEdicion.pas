@@ -43,7 +43,6 @@ implementation
 
 uses
   System.SysUtils,
-  Data.DB,
   inLibMsgArticulos;
 
 constructor TEdicionFotos.Create(AConsulta: TConsultaFotos;
@@ -68,7 +67,7 @@ end;
 function TEdicionFotos.Guardar(const ACodigoArticulo, ACodigoSku,
   AFicheroOrigen, AUsuario: string): TFotoInfo;
 var
-  oDatos         : TDataSet;
+  oMetadatos     : TMetadatosFotoPersistida;
   sClave         : string;
   sExtension     : string;
   sNombreAnterior: string;
@@ -87,46 +86,27 @@ begin
   sExtension := FAlmacenamiento.ExtensionOrigen(AFicheroOrigen);
   sNombreAnterior := '';
   iIndice := 1;
-  oDatos := nil;
-  try
-    oDatos := FRepositorio.BuscarFotoEditable(
-      ACodigoArticulo, ACodigoSku);
-    bExiste := not oDatos.Eof;
-    if bExiste then
-    begin
-      sNombreAnterior := oDatos.FieldByName(fnomfot).AsString;
-      iIndice := FAlmacenamiento.ExtraerIndice(sNombreAnterior) + 1;
-      if iIndice < 1 then
-        iIndice := 1;
-    end;
-  finally
-    FreeAndNil(oDatos);
+  bExiste := FRepositorio.BuscarFotoEditable(
+    ACodigoArticulo, ACodigoSku, oMetadatos);
+  if bExiste then
+  begin
+    sNombreAnterior := oMetadatos.Nombre;
+    iIndice := FAlmacenamiento.ExtraerIndice(sNombreAnterior) + 1;
+    if iIndice < 1 then
+      iIndice := 1;
   end;
   sNombreNuevo := FAlmacenamiento.ComponerNombre(
     sClave, iIndice);
   FAlmacenamiento.GuardarCopias(AFicheroOrigen, sNombreNuevo);
-  oDatos := nil;
   try
-    oDatos := FRepositorio.BuscarFotoEditable(
-      ACodigoArticulo, ACodigoSku);
-    bExiste := not oDatos.Eof;
-    if bExiste then
-      oDatos.Edit
-    else
-      oDatos.Insert;
-    oDatos.FieldByName(fcodartfot).AsString := ACodigoArticulo;
-    oDatos.FieldByName(fcodunidadfot).AsString := ACodigoSku;
-    oDatos.FieldByName(fnomfot).AsString := sNombreNuevo;
-    oDatos.FieldByName(fextfot).AsString := sExtension;
-    if not bExiste then
-    begin
-      oDatos.FieldByName(finstalta).AsDateTime := Now;
-      oDatos.FieldByName(fusralta).AsString := AUsuario;
-    end;
-    oDatos.FieldByName(fusrmodif).AsString := AUsuario;
-    oDatos.Post;
-  finally
-    FreeAndNil(oDatos);
+    oMetadatos.CodigoArticulo := ACodigoArticulo;
+    oMetadatos.CodigoUnidad := ACodigoSku;
+    oMetadatos.Nombre := sNombreNuevo;
+    oMetadatos.Extension := sExtension;
+    FRepositorio.GuardarFoto(oMetadatos, AUsuario);
+  except
+    FAlmacenamiento.BorrarCopias(sNombreNuevo);
+    raise;
   end;
   if (sNombreAnterior <> '') and
      (sNombreAnterior <> sNombreNuevo) then

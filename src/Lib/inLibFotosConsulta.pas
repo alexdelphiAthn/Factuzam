@@ -163,11 +163,10 @@ end;
 function TConsultaFotos.Resolver(const ACodigoArticulo,
   ACodigoSku: string): TFotoInfo;
 var
-  oDatos      : TDataSet;
-  aPrefijos   : TArray<string>;
-  sClave      : string;
-  bUsarCache  : Boolean;
-  bEncontrada : Boolean;
+  oMetadatos : TMetadatosFotoPersistida;
+  aPrefijos  : TArray<string>;
+  bUsarCache : Boolean;
+  bEncontrada: Boolean;
 begin
   Result.Clear;
   Result.CodigoArt := ACodigoArticulo;
@@ -178,62 +177,49 @@ begin
       FCache.TryGetValue(ACodigoArticulo, Result);
     if not bUsarCache then
     begin
-      oDatos := nil;
-      try
-        bEncontrada := False;
-        aPrefijos := GenerarPrefijosSku(ACodigoSku);
-        if Length(aPrefijos) > 0 then
+      bEncontrada := False;
+      aPrefijos := GenerarPrefijosSku(ACodigoSku);
+      if Length(aPrefijos) > 0 then
+      begin
+        bEncontrada := FRepositorio.BuscarFotoPorUnidades(
+          ACodigoArticulo, aPrefijos, oMetadatos);
+        if bEncontrada then
         begin
-          oDatos := FRepositorio.BuscarFotoPorUnidades(
-            ACodigoArticulo, aPrefijos);
-          bEncontrada := not oDatos.Eof;
-          if bEncontrada then
-          begin
-            sClave := oDatos.FieldByName(fcodunidadfot).AsString;
-            Result.Encontrada := True;
-            if sClave = ACodigoSku then
-              Result.Origen := foSku
-            else
-              Result.Origen := foSkuPrefijo;
-            Result.ClaveResuelta := sClave;
-            Result.NombreBase := oDatos.FieldByName(fnomfot).AsString;
-            Result.ExtensionOrigen :=
-              oDatos.FieldByName(fextfot).AsString;
-          end;
-          FreeAndNil(oDatos);
-        end;
-        if not bEncontrada then
-        begin
-          oDatos := FRepositorio.BuscarFotoArticulo(ACodigoArticulo);
-          bEncontrada := not oDatos.Eof;
-          if bEncontrada then
-          begin
-            Result.Encontrada := True;
-            Result.Origen := foArticulo;
-            Result.ClaveResuelta := '';
-            Result.NombreBase := oDatos.FieldByName(fnomfot).AsString;
-            Result.ExtensionOrigen :=
-              oDatos.FieldByName(fextfot).AsString;
-          end;
-          FreeAndNil(oDatos);
-        end;
-        if (ACodigoSku = '') and (not bEncontrada) then
-        begin
-          oDatos := FRepositorio.BuscarPrimeraFotoUnidad(
-            ACodigoArticulo);
-          if not oDatos.Eof then
-          begin
-            Result.Encontrada := True;
+          Result.Encontrada := True;
+          if oMetadatos.CodigoUnidad = ACodigoSku then
+            Result.Origen := foSku
+          else
             Result.Origen := foSkuPrefijo;
-            Result.ClaveResuelta :=
-              oDatos.FieldByName(fcodunidadfot).AsString;
-            Result.NombreBase := oDatos.FieldByName(fnomfot).AsString;
-            Result.ExtensionOrigen :=
-              oDatos.FieldByName(fextfot).AsString;
-          end;
+          Result.ClaveResuelta := oMetadatos.CodigoUnidad;
+          Result.NombreBase := oMetadatos.Nombre;
+          Result.ExtensionOrigen := oMetadatos.Extension;
         end;
-      finally
-        FreeAndNil(oDatos);
+      end;
+      if not bEncontrada then
+      begin
+        bEncontrada := FRepositorio.BuscarFotoArticulo(
+          ACodigoArticulo, oMetadatos);
+        if bEncontrada then
+        begin
+          Result.Encontrada := True;
+          Result.Origen := foArticulo;
+          Result.ClaveResuelta := '';
+          Result.NombreBase := oMetadatos.Nombre;
+          Result.ExtensionOrigen := oMetadatos.Extension;
+        end;
+      end;
+      if (ACodigoSku = '') and (not bEncontrada) then
+      begin
+        bEncontrada := FRepositorio.BuscarPrimeraFotoUnidad(
+          ACodigoArticulo, oMetadatos);
+        if bEncontrada then
+        begin
+          Result.Encontrada := True;
+          Result.Origen := foSkuPrefijo;
+          Result.ClaveResuelta := oMetadatos.CodigoUnidad;
+          Result.NombreBase := oMetadatos.Nombre;
+          Result.ExtensionOrigen := oMetadatos.Extension;
+        end;
       end;
     end;
   end;
@@ -242,7 +228,7 @@ end;
 function TConsultaFotos.ResolverArticulosLote(
   const ACodigos: TArray<string>): TDictionary<string, TFotoInfo>;
 var
-  oDatos         : TDataSet;
+  aMetadatos     : TArray<TMetadatosFotoPersistida>;
   oResultado     : TDictionary<string, TFotoInfo>;
   sArticuloActual: string;
   sArticulo      : string;
@@ -253,6 +239,7 @@ var
   sNombrePrimero : string;
   sExtPrimera    : string;
   iFotosArticulo : Integer;
+  iFoto          : Integer;
   bFotoArticulo  : Boolean;
 
   procedure FinalizarArticulo(const ACodigoArticulo: string);
@@ -291,47 +278,41 @@ begin
   Result := oResultado;
   if Length(ACodigos) > 0 then
   begin
-    oDatos := nil;
-    try
-      oDatos := FRepositorio.BuscarFotosArticulos(ACodigos);
-      sArticuloActual := '';
-      iFotosArticulo := 0;
-      bFotoArticulo := False;
-      sUnidadPrimera := '';
-      sNombrePrimero := '';
-      sExtPrimera := '';
-      sNombreArticulo := '';
-      sExtArticulo := '';
-      while not oDatos.Eof do
+    aMetadatos := FRepositorio.BuscarFotosArticulos(ACodigos);
+    sArticuloActual := '';
+    iFotosArticulo := 0;
+    bFotoArticulo := False;
+    sUnidadPrimera := '';
+    sNombrePrimero := '';
+    sExtPrimera := '';
+    sNombreArticulo := '';
+    sExtArticulo := '';
+    for iFoto := 0 to High(aMetadatos) do
+    begin
+      sArticulo := aMetadatos[iFoto].CodigoArticulo;
+      sUnidad := aMetadatos[iFoto].CodigoUnidad;
+      if sArticulo <> sArticuloActual then
       begin
-        sArticulo := oDatos.FieldByName(fcodartfot).AsString;
-        sUnidad := oDatos.FieldByName(fcodunidadfot).AsString;
-        if sArticulo <> sArticuloActual then
-        begin
-          FinalizarArticulo(sArticuloActual);
-          sArticuloActual := sArticulo;
-          iFotosArticulo := 0;
-          bFotoArticulo := False;
-        end;
-        Inc(iFotosArticulo);
-        if iFotosArticulo = 1 then
-        begin
-          sUnidadPrimera := sUnidad;
-          sNombrePrimero := oDatos.FieldByName(fnomfot).AsString;
-          sExtPrimera := oDatos.FieldByName(fextfot).AsString;
-        end;
-        if sUnidad = '' then
-        begin
-          bFotoArticulo := True;
-          sNombreArticulo := oDatos.FieldByName(fnomfot).AsString;
-          sExtArticulo := oDatos.FieldByName(fextfot).AsString;
-        end;
-        oDatos.Next;
+        FinalizarArticulo(sArticuloActual);
+        sArticuloActual := sArticulo;
+        iFotosArticulo := 0;
+        bFotoArticulo := False;
       end;
-      FinalizarArticulo(sArticuloActual);
-    finally
-      FreeAndNil(oDatos);
+      Inc(iFotosArticulo);
+      if iFotosArticulo = 1 then
+      begin
+        sUnidadPrimera := sUnidad;
+        sNombrePrimero := aMetadatos[iFoto].Nombre;
+        sExtPrimera := aMetadatos[iFoto].Extension;
+      end;
+      if sUnidad = '' then
+      begin
+        bFotoArticulo := True;
+        sNombreArticulo := aMetadatos[iFoto].Nombre;
+        sExtArticulo := aMetadatos[iFoto].Extension;
+      end;
     end;
+    FinalizarArticulo(sArticuloActual);
   end;
 end;
 
