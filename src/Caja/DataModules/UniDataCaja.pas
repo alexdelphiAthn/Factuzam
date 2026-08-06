@@ -269,15 +269,6 @@ type
     property IdentidadSesion: TIdentidadSesion read GetIdentidadSesion;
     procedure CargarDepositosCliente(const ACodigoCliente: string);
     function GenerarSkuFinal(ArticuloBase: string): string;
-    procedure MarcarValeComoCanjeado(QryTrx:           TUniQuery;
-                                     const ACodigoVale: string;
-                                     const AEmpresa:    string;
-                                     const ACodigoAlmacen: string;
-                                     const ACodigoCaja:    string;
-                                     const ANumOperacion:  string;
-                                     const ASerie:         string;
-                                     const ANumFactura:    string;
-                                     AImporteRedimido:     Currency);
     function BuscarYMostrarNombre(TipoEntidad, Codigo: string;
                                   var LabelDestino: String):Boolean;
     function GetTarifaDefault : string;
@@ -326,53 +317,11 @@ type
                                  write FOnRecalcularLineas;
     property UltSerieFacturaGrabada:  string read FUltSerieFacGrabada;
     property UltNumeroFacturaGrabada: string read FUltNumeroFacGrabada;
-    function SiguienteOpCaja(AEmpresa,
-                             AAlmacen,
-                             ACaja,
-                             AEmpleado: string): string;
     // Mayor FECHA_FAC ya emitida en la serie (0 si aun no tiene tickets).
     // Soporta el control de fecha por serie (grabacion y fase de cobro).
     class function FechaUltimoTicketSerie(
                             AConexion: TUniConnection;
                             const AEmpresa, ASerie: string): TDateTime;
-    procedure InsertarOperacionCaja(
-                        QryTrx:          TUniQuery;
-                        const AEmpresa:  string;
-                        const AAlmacen:  string;
-                        const ACaja:     string;
-                        ANumOperacion:   string;
-                        const ATipoOp:   string;
-                        AImporte:        Currency;
-                        const AEmpleado: string;
-                        AFechaOperacion: TDateTime = 0;
-                        const ANroFactura:       string = '';
-                        const ASerieFactura:     string = '';
-                        const ACliente:          string = '';
-                        const AConcepto:         string = '';
-                        const ASerieOrigen:      string = '';
-                        const ANroOrigen:        string = '';
-                        const AMotivoDevolucion: string = '';
-                        const AEmpresaContra:    string = '';
-                        const AAlmContra:        string = '';
-                        const AEsTraspaso:       string = 'N';
-                        const AIdDeposito:       string = '');
-    procedure InsertarPagoCaja(
-                        QryTrx:           TUniQuery;
-                        const AEmpresa:   string;
-                        const AAlmacen:   string;
-                        const ACaja:      string;
-                        const ASerie:     string;
-                        ANumOperacion:    string;
-                        ANumLinea:        Integer;
-                        const AFormaP:    string;
-                        AImporteEntregado: Currency;
-                        AImporteCambio:   Currency;
-                        const ADivisa:       string   = '';
-                        const ARedBlockchain:string   = '';
-                        AFactorCambio:       Double   = 1;
-                        AImporteDivisa:      Double   = 0;
-                        const AReferencia:   string   = '';
-                        const AObservaciones:string   = '');
   end;
 
   function LeerCabecera(cdsCabecera:TDataset): TDatosCabeceraFactura;
@@ -399,6 +348,7 @@ uses UniDataValoresAutomaticosRepositorio,
      inLibLicenciaAplicacion,
      UniDataLicenciaAplicacionRepositorio,
      UniDataMovimientosAlmacenRecalculo,
+     UniDataCajaCierreVenta,
      inLibRectificativas,
      inLibEAN13,
      inLibMsgCaja, inLibMsgFacturas;
@@ -441,7 +391,7 @@ type
     FTipoRectificativaFiscal: string;
     FRequiereFactura: Boolean;
     FGenerarMovimientos: Boolean;
-    FTransaccionActiva: Boolean;
+    FPersistencia: TPersistenciaCierreVentaCajaUniDAC;
     FTotalVentasNormales: Currency;
     FTotalDevolucionesNormales: Currency;
     FNumeroLineaPago: Integer;
@@ -1224,6 +1174,9 @@ begin
     FDataModule.FParametrosCaja,
     FDataModule.FConexion,
     CrearServicioVerifactuColaUniDAC(FDataModule.FConexion));
+  FPersistencia := TPersistenciaCierreVentaCajaUniDAC.Create(
+    FDataModule.FConexion,
+    FDataModule.IdentidadSesion.Usuario);
   FDatosCobro := ADatosCobro;
   FEmpresa := AEmpresa;
   FAlmacen := AAlmacen;
@@ -1250,6 +1203,7 @@ destructor TGrabacionFacturaCaja.Destroy;
 begin
   FServicioEmisionFiscal := nil;
   FreeAndNil(FQuery);
+  FreeAndNil(FPersistencia);
   inherited;
 end;
 
@@ -1302,8 +1256,15 @@ end;
 
 function TGrabacionFacturaCaja.OperacionTieneNovedad: Boolean;
 var
+  DatosDecision: TDatosDecisionCierreVentaCaja;
   sAccion: string;
 begin
+  DatosDecision.ImporteEntregado := FDatosCobro.ImporteEntregado;
+  DatosDecision.EsDevolucionEconomica :=
+    FDatosCobro.EsDevolucionEconomica;
+  DatosDecision.TieneArticulosDevueltos :=
+    FDatosCobro.TieneArticulosDevueltos;
+  DatosDecision.ImporteValeEmitido := FDatosCobro.ImporteValeEmitido;
   Result := False;
   FDataModule.cdsLineas.DisableControls;
   try
@@ -1312,13 +1273,9 @@ begin
     begin
       sAccion := Trim(FDataModule.cdsLineas.FieldByName(
         'ACCION_DEPOSITO').AsString);
-      Result :=
-        (FDatosCobro.ImporteEntregado > 0) or
-        FDatosCobro.EsDevolucionEconomica or
-        FDatosCobro.TieneArticulosDevueltos or
-        (FDatosCobro.ImporteValeEmitido > 0) or
-        (sAccion = 'CANCELAR') or
-        (sAccion = 'NUEVO_DEP');
+      Result := AccionTieneNovedadCierreVenta(
+        DatosDecision,
+        sAccion);
       if not Result then
         FDataModule.cdsLineas.Next;
     end;
@@ -1353,13 +1310,9 @@ begin
     begin
       sAccion := Trim(FDataModule.cdsLineas.FieldByName(
         'ACCION_DEPOSITO').AsString);
-      FRequiereFactura :=
-        (sAccion = '') or
-        (sAccion = 'COBRAR') or
-        ((sAccion = 'CANCELAR') and (dTotalLiquido <> 0)) or
-        (((sAccion = 'NUEVO_DEP') or
-          (sAccion = 'AUMENTAR_DEP')) and
-         (dTotalLiquido > 0.001));
+      FRequiereFactura := AccionRequiereFacturaCierreVenta(
+        sAccion,
+        dTotalLiquido);
       if not FRequiereFactura then
         FDataModule.cdsLineas.Next;
     end;
@@ -1430,12 +1383,10 @@ end;
 
 procedure TGrabacionFacturaCaja.IniciarTransaccion;
 begin
-  FDataModule.FConexion.StartTransaction;
-  FTransaccionActiva := True;
-  FNumeroOperacion := FDataModule.SiguienteOpCaja(
+  FPersistencia.IniciarUnidadTrabajo;
+  FNumeroOperacion := FPersistencia.SiguienteOperacion(
     FEmpresa, FAlmacen, FCaja, FUsuario);
-  FQuery := TUniQuery.Create(nil);
-  FQuery.Connection := FDataModule.FConexion;
+  FQuery := FPersistencia.CrearConsulta;
 end;
 
 function TGrabacionFacturaCaja.ObtenerNumeroFactura: string;
@@ -1558,7 +1509,7 @@ begin
       ALinea.TotalCIva, ALinea.Vendedor, FEmpresa, FAlmacen,
       FCaja, FNumeroOperacion, '', FUsuario);
   if Abs(ALinea.TotalCIva) > 0.001 then
-    FDataModule.InsertarOperacionCaja(
+    FPersistencia.GuardarOperacion(
       FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion, 'CB',
       ALinea.TotalCIva, FUsuario, FFechaOperacion, FNumeroFactura,
       FSerieGenerada, FCabecera.CodigoCliente,
@@ -1579,7 +1530,7 @@ begin
       FQuery, ALinea.IdDeposito, FEmpresa, FAlmacen,
       FCaja, FUsuario, ALinea.TotalCIva);
     if ALinea.TotalCIva > 0 then
-      FDataModule.InsertarOperacionCaja(
+      FPersistencia.GuardarOperacion(
         FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
         'CB', ALinea.TotalCIva, FUsuario, FFechaOperacion,
         FNumeroFactura, FSerieGenerada, FCabecera.CodigoCliente,
@@ -1596,7 +1547,7 @@ begin
       FAlmacen, FAlmacenDeposito, ALinea.Cantidad,
       ALinea.TipoIva, ALinea.PorcIva, ALinea.EsImpIncl,
       FCaja, FNumeroOperacion, FFechaOperacion, sIdDeposito);
-    FDataModule.InsertarOperacionCaja(
+    FPersistencia.GuardarOperacion(
       FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
       'DE', ALinea.TotalCIva, FUsuario, FFechaOperacion,
       FNumeroFactura, FSerieGenerada, FCabecera.CodigoCliente,
@@ -1631,13 +1582,13 @@ begin
     dImporteCierre := ALinea.PrecioOriginalDep;
     if dImporteCierre = 0 then
       dImporteCierre := ALinea.TotalCIva;
-    FDataModule.InsertarOperacionCaja(
+    FPersistencia.GuardarOperacion(
       FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
       'DE', -dImporteCierre, FUsuario, FFechaOperacion,
       FNumeroFactura, FSerieGenerada, FCabecera.CodigoCliente,
       'Cierre depósito: ' + ALinea.Descripcion,
       '', '', '', '', '', 'N', sIdDeposito);
-    FDataModule.InsertarOperacionCaja(
+    FPersistencia.GuardarOperacion(
       FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
       'VE', ALinea.TotalCIva, FUsuario, FFechaOperacion,
       FNumeroFactura, FSerieGenerada, FCabecera.CodigoCliente,
@@ -1753,7 +1704,7 @@ begin
     begin
       if FTipoRectificativa = trcNinguna then
         FConceptoOperacion := 'Venta';
-      FDataModule.InsertarOperacionCaja(
+      FPersistencia.GuardarOperacion(
         FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
         'VE', FTotalVentasNormales, FUsuario, FFechaOperacion,
         FNumeroFactura, FSerieGenerada, FCabecera.CodigoCliente,
@@ -1772,7 +1723,7 @@ begin
         sSerieRefDevolucion := FSerieOrigenDevolucion;
         sNumeroRefDevolucion := FNumeroOrigenDevolucion;
       end;
-      FDataModule.InsertarOperacionCaja(
+      FPersistencia.GuardarOperacion(
         FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
         'DV', -FTotalDevolucionesNormales, FUsuario,
         FFechaOperacion, FNumeroFactura, FSerieGenerada,
@@ -1836,8 +1787,9 @@ begin
       'CODIGO_FP_CFP').AsString;
     dImporte := FDatosCobro.MemTablePagos.FieldByName(
       'IMPORTE_ENTREGADO').AsFloat;
-    if (Abs(dImporte) > 0.001) and
-       (sCodigoFormaPago <> 'VALE') then
+    if PagoDebePersistirseCierreVenta(
+         sCodigoFormaPago,
+         dImporte) then
     begin
       Inc(FNumeroLineaPago);
       sDivisa := FDatosCobro.MemTablePagos.FieldByName(
@@ -1848,7 +1800,7 @@ begin
         'IMPORTE_DIVISA').AsFloat;
       sReferencia := FDatosCobro.MemTablePagos.FieldByName(
         'REFERENCIA').AsString;
-      FDataModule.InsertarPagoCaja(
+      FPersistencia.GuardarPago(
         FQuery, FEmpresa, FAlmacen, FCaja,
         FSerieGenerada, FNumeroOperacion, FNumeroLineaPago,
         sCodigoFormaPago, dImporte,
@@ -1872,14 +1824,14 @@ begin
         FDatosCobro.ValesRecogidos[iVale].ImporteAplicado) > 0.001 then
       begin
         Inc(FNumeroLineaPago);
-        FDataModule.InsertarPagoCaja(
+        FPersistencia.GuardarPago(
           FQuery, FEmpresa, FAlmacen, FCaja,
           FSerieGenerada, FNumeroOperacion, FNumeroLineaPago,
           'VALE',
           FDatosCobro.ValesRecogidos[iVale].ImporteAplicado,
           0, '', '', 1, 0,
           FDatosCobro.ValesRecogidos[iVale].CodigoVale);
-        FDataModule.InsertarOperacionCaja(
+        FPersistencia.GuardarOperacion(
           FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
           'VR',
           FDatosCobro.ValesRecogidos[iVale].ImporteAplicado,
@@ -1887,7 +1839,7 @@ begin
           FSerieGenerada, FCabecera.CodigoCliente,
           'Vale canjeado: ' +
           FDatosCobro.ValesRecogidos[iVale].CodigoVale);
-        FDataModule.MarcarValeComoCanjeado(
+        FPersistencia.MarcarValeCanjeado(
           FQuery,
           FDatosCobro.ValesRecogidos[iVale].CodigoVale,
           FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
@@ -1945,12 +1897,12 @@ begin
     FQuery.ParamByName('USUARIO').AsString := FUsuario;
     FQuery.Execute;
     Inc(FNumeroLineaPago);
-    FDataModule.InsertarPagoCaja(
+    FPersistencia.GuardarPago(
       FQuery, FEmpresa, FAlmacen, FCaja,
       FSerieGenerada, FNumeroOperacion, FNumeroLineaPago,
       'VALE', -FDatosCobro.ImporteValeEmitido, 0,
       '', '', 1, 0, sCodigoVale);
-    FDataModule.InsertarOperacionCaja(
+    FPersistencia.GuardarOperacion(
       FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
       'VL', -FDatosCobro.ImporteValeEmitido, FUsuario,
       FFechaOperacion, FNumeroFactura, FSerieGenerada,
@@ -1980,8 +1932,7 @@ end;
 
 procedure TGrabacionFacturaCaja.ConfirmarTransaccion;
 begin
-  FDataModule.FConexion.Commit;
-  FTransaccionActiva := False;
+  FPersistencia.ConfirmarUnidadTrabajo;
 end;
 
 procedure TGrabacionFacturaCaja.ImprimirDocumentosDeposito;
@@ -2025,10 +1976,7 @@ end;
 
 procedure TGrabacionFacturaCaja.RevertirTransaccion;
 begin
-  if FTransaccionActiva and
-     FDataModule.FConexion.InTransaction then
-    FDataModule.FConexion.Rollback;
-  FTransaccionActiva := False;
+  FPersistencia.RevertirUnidadTrabajo;
 end;
 
 function TGrabacionFacturaCaja.Ejecutar(
@@ -2257,7 +2205,7 @@ begin
     finally
       FreeAndNil(oStoredProc);
     end;
-    sNumOperacion := FDataModule.SiguienteOpCaja(
+    sNumOperacion := FPersistencia.SiguienteOperacion(
       sEmpresaOrigen, FAlmacenOrigenDevolucion, FCaja, FUsuario);
     cTotal := 0;
     iLinea := 0;
@@ -2289,7 +2237,7 @@ begin
       sSerieDoc, sNumeroDoc);
     // Operación del traspaso: registrada en el origen con contra el
     // almacén actual (misma convención que el traspaso manual F3)
-    FDataModule.InsertarOperacionCaja(
+    FPersistencia.GuardarOperacion(
       FQuery, sEmpresaOrigen, FAlmacenOrigenDevolucion, FCaja,
       sNumOperacion, sTipoDoc, cTotal, FUsuario, FFechaOperacion,
       sNumeroDoc, sSerieDoc, '',
@@ -2374,217 +2322,6 @@ begin
   finally
     FreeAndNil(CalculadorFiscal);
   end;
-end;
-
-procedure TdmCajaOpe.InsertarPagoCaja(
-                        QryTrx:           TUniQuery;
-                        const AEmpresa:   string;
-                        const AAlmacen:   string;
-                        const ACaja:      string;
-                        // serie de la operación de caja
-                        const ASerie:     string;
-                        ANumOperacion:    string;
-                        // 1, 2, 3... por forma de pago
-                        ANumLinea:        Integer;
-                        const AFormaP:    string;    // FK a fza_formas_pago
-                        AImporteEntregado: Currency;
-                        AImporteCambio:   Currency;  // 0 si no hay cambio
-                        // — opcionales —
-                        const ADivisa:       string   = '';
-                        const ARedBlockchain:string   = '';
-                        AFactorCambio:       Double   = 1;
-                        AImporteDivisa:      Double   = 0;
-                        const AReferencia:   string   = '';
-                        const AObservaciones:string   = '');
-begin
-  QryTrx.SQL.Text :=
-    'INSERT INTO fza_caja_pagos (' +
-    '  CODIGO_EMP_PAGO,' +
-    '  CODIGO_ALM_PAGO,' +
-    '  CODIGO_CAJA_PAGO,' +
-    '  SERIE_OPERACION_PAGO,' +
-    '  NUMERO_OPERACION_PAGO,' +
-    '  NUMERO_LINEA_PAGO,' +
-    '  CODIGO_FP_CFP,' +
-    '  IMPORTE_ENTREGADO_PAGO,' +
-    '  IMPORTE_CAMBIO_PAGO,' +
-    '  CODIGO_DIVISA_PAGO,' +
-    '  RED_BLOCKCHAIN_PAGO,' +
-    '  FACTOR_CAMBIO_PAGO,' +
-    '  IMPORTE_DIVISA_PAGO,' +
-    '  REFERENCIA_FACPAG,' +
-    '  OBSERVACIONES_PAGO,' +
-    '  USUARIO_ALTA, INSTANTE_ALTA) ' +
-    'VALUES (' +
-    '  :EMP,' +
-    '  :ALM,' +
-    '  :CAJA,' +
-    '  :SERIE,' +
-    '  :NUMOP,' +
-    '  :LINEA,' +
-    '  :FORMAP,' +
-    '  :IMPORTE,' +
-    '  :CAMBIO,' +
-    '  NULLIF(:DIVISA,      ''''),' +
-    '  NULLIF(:BLOCKCHAIN,  ''''),' +
-    '  :FACTORCAMBIO,' +
-    '  :IMPORTEDIVISA,' +
-    '  NULLIF(:REFERENCIA,  ''''),' +
-    '  NULLIF(:OBS,         ''''),' +
-    '  :USUARIO, NOW())';
-  QryTrx.ParamByName('EMP').AsString       := AEmpresa;
-  QryTrx.ParamByName('ALM').AsString       := AAlmacen;
-  QryTrx.ParamByName('CAJA').AsString      := ACaja;
-  QryTrx.ParamByName('SERIE').AsString     := ASerie;
-  QryTrx.ParamByName('NUMOP').AsString     := ANumOperacion;
-  QryTrx.ParamByName('LINEA').AsInteger    := ANumLinea;
-  QryTrx.ParamByName('FORMAP').AsString    := AFormaP;
-  QryTrx.ParamByName('IMPORTE').AsCurrency := AImporteEntregado;
-  QryTrx.ParamByName('CAMBIO').AsCurrency  := AImporteCambio;
-  QryTrx.ParamByName('DIVISA').AsString    := ADivisa;
-  QryTrx.ParamByName('BLOCKCHAIN').AsString:= ARedBlockchain;
-  QryTrx.ParamByName('FACTORCAMBIO').AsFloat  := AFactorCambio;
-  QryTrx.ParamByName('IMPORTEDIVISA').AsFloat := AImporteDivisa;
-  QryTrx.ParamByName('REFERENCIA').AsString:= AReferencia;
-  QryTrx.ParamByName('OBS').AsString       := AObservaciones;
-  QryTrx.ParamByName('USUARIO').AsString   := IdentidadSesion.Usuario;
-  QryTrx.Execute;
-end;
-
-function TdmCajaOpe.SiguienteOpCaja(AEmpresa,
-                                      AAlmacen,
-                                      ACaja,
-                                      AEmpleado: string): string;
-var
-  SpTrx: TUniStoredProc;
-begin
-  SpTrx := TUniStoredProc.Create(nil);
-  try
-    SpTrx.Connection := FConexion;
-    SpTrx.StoredProcName := 'PRC_GET_NEXT_OP_CAJA';
-    // 1. Creación y asignación explícita de parámetros IN
-    SpTrx.Params.CreateParam(ftString,
-                             'pEmpresa',
-                             ptInput).AsString := AEmpresa;
-    SpTrx.Params.CreateParam(ftString,
-                             'pAlmacen',
-                             ptInput).AsString := AAlmacen;
-    SpTrx.Params.CreateParam(ftString, 'pCaja',    ptInput).AsString := ACaja;
-    SpTrx.Params.CreateParam(ftString,
-                             'pUsuario',
-                             ptInput).AsString := AEmpleado;
-    // 2. Creación explícita de parámetros OUT
-    SpTrx.Params.CreateParam(ftString, 'pSerie', ptOutput).Size := 12;
-    SpTrx.Params.CreateParam(ftString, 'pcont',  ptOutput).Size := 20;
-    // 3. Preparar el SP en el motor de base de datos
-    SpTrx.Prepare;
-    // 4. Ejecutar
-    SpTrx.Execute;
-    // SerieOperacion := SpTrx.ParamByName('pSerie').AsString; // misma en todas
-    // las llamadas
-    Result := SpTrx.ParamByName('pcont').AsString;
-  finally
-    // Al liberar el componente también se hace el UnPrepare automáticamente
-    FreeAndNil(SpTrx);
-  end;
-end;
-
-procedure TdmCajaOpe.InsertarOperacionCaja(
-                        QryTrx:          TUniQuery;
-                        const AEmpresa:  string;
-                        const AAlmacen:  string;
-                        const ACaja:     string;
-                        ANumOperacion:   string;
-                        // 'VE','VL','AL','CB','EC','GC','TR','AT'
-                        const ATipoOp:   string;
-                        AImporte:        Currency; // negativo en VL y AT
-                        const AEmpleado: string;
-                        AFechaOperacion: TDateTime = 0;
-                        // — opcionales —
-                        const ANroFactura:       string = '';
-                        const ASerieFactura:     string = '';
-                        const ACliente:          string = '';
-                        const AConcepto:         string = '';
-                        const ASerieOrigen:      string = '';
-                        const ANroOrigen:        string = '';
-                        const AMotivoDevolucion: string = '';
-                        const AEmpresaContra:    string = '';
-                        const AAlmContra:        string = '';
-                        const AEsTraspaso:       string = 'N';
-                        const AIdDeposito:       string = '');
-var
-  dtFechaOperacion: TDateTime;
-begin
-  dtFechaOperacion := FechaCajaConHora(AFechaOperacion);
-  QryTrx.SQL.Text :=
-    'INSERT INTO fza_caja_operaciones (' +
-    '  CODIGO_EMP_OPCAJA,' +
-    '  CODIGO_ALM_OPCAJA,' +
-    '  CODIGO_CAJA_OPCAJA,' +
-    '  NUMERO_OPERACION_OPCAJA,' +
-    '  TIPO_OPERACION_OPCAJA,' +
-    '  IMPORTE_TOTAL_OPCAJA,' +
-    '  FECHA_OPERACION_OPCAJA,' +
-    '  FECHA_OP_DIA_OPCAJA,' +
-    '  CODIGO_EMPLEADO_OPCAJA,' +
-    '  NUMERO_FAC_OPCAJA,' +
-    '  SERIE_FAC_OPCAJA,' +
-    '  CODIGO_CLI_OPCAJA,' +
-    '  CONCEPTO_GASTO_INGRESO_OPCAJA,' +
-    '  SERIE_REF_ORIGEN_OPCAJA,' +
-    '  NUMERO_REF_ORIGEN_OPCAJA,' +
-    '  MOTIVO_DEVOLUCION_OPCAJA,' +
-    '  CODIGO_EMP_CONTRA_OPCAJA,' +
-    '  CODIGO_ALM_CONTRA_OPCAJA,' +
-    '  ESTRASPASO_OPCAJA,' +
-    '  ESTADO_DEVOLUCION_OPCAJA,' +
-    '  ID_DEPOSITO_OPCAJA,' +
-    '  USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA) ' +
-    'VALUES (' +
-    '  :EMP,' +
-    '  :ALM,' +
-    '  :CAJA,' +
-    '  :NUMOP,' +
-    '  :TIPOOP,' +
-    '  :IMPORTE,' +
-    '  :FECHAOP,' +
-    '  :FECHADIA,' +
-    '  :EMPLEADO,' +
-    '  NULLIF(:NROFAC,    ''''),' +
-    '  NULLIF(:SERIEFAC,  ''''),' +
-    '  NULLIF(:CLI,       ''''),' +
-    '  NULLIF(:CONCEPTO,  ''''),' +
-    '  NULLIF(:SERIEORIG, ''''),' +
-    '  NULLIF(:NROORIG,   ''''),' +
-    '  NULLIF(:MOTIVO,    ''''),' +
-    '  NULLIF(:EMPCONTRA, ''''),' +
-    '  NULLIF(:ALMCONTRA, ''''),' +
-    '  :ESTRASPASO,' +
-    '  ''N'',' +
-    '  :DEP, ' +
-    '  :USUARIO, :USUARIO, NOW())';
-  QryTrx.ParamByName('EMP').AsString      := AEmpresa;
-  QryTrx.ParamByName('ALM').AsString      := AAlmacen;
-  QryTrx.ParamByName('CAJA').AsString     := ACaja;
-  QryTrx.ParamByName('NUMOP').AsString    := ANumOperacion;
-  QryTrx.ParamByName('TIPOOP').AsString   := ATipoOp;
-  QryTrx.ParamByName('IMPORTE').AsCurrency:= AImporte;
-  QryTrx.ParamByName('FECHAOP').AsDateTime := dtFechaOperacion;
-  QryTrx.ParamByName('FECHADIA').AsDateTime := Trunc(dtFechaOperacion);
-  QryTrx.ParamByName('EMPLEADO').AsString := AEmpleado;
-  QryTrx.ParamByName('NROFAC').AsString   := ANroFactura;
-  QryTrx.ParamByName('SERIEFAC').AsString := ASerieFactura;
-  QryTrx.ParamByName('CLI').AsString      := ACliente;
-  QryTrx.ParamByName('CONCEPTO').AsString := AConcepto;
-  QryTrx.ParamByName('SERIEORIG').AsString:= ASerieOrigen;
-  QryTrx.ParamByName('NROORIG').AsString  := ANroOrigen;
-  QryTrx.ParamByName('MOTIVO').AsString   := AMotivoDevolucion;
-  QryTrx.ParamByName('EMPCONTRA').AsString:= AEmpresaContra;
-  QryTrx.ParamByName('ALMCONTRA').AsString:= AAlmContra;
-  QryTrx.ParamByName('ESTRASPASO').AsString := AEsTraspaso;
-  QryTrx.ParamByName('USUARIO').AsString  := IdentidadSesion.Usuario;
-  QryTrx.ParamByName('DEP').AsString  := AIdDeposito;
-  QryTrx.Execute;
 end;
 
 function TdmCajaOpe.BuscarYMostrarNombre(TipoEntidad, Codigo: string;
@@ -2949,53 +2686,6 @@ begin
   qryVales.Connection := FConexion;
   ConfigurarEstructuraCabecera;
   ConfigurarEstructuraLineas;
-end;
-
-procedure TdmCajaOpe.MarcarValeComoCanjeado(QryTrx: TUniQuery;
-                                            const ACodigoVale: string;
-                                            const AEmpresa: string;
-                                            const ACodigoAlmacen: string;
-                                            const ACodigoCaja: string;
-                                            const ANumOperacion: string;
-                                            const ASerie: string;
-                                            const ANumFactura: string;
-                                            AImporteRedimido: Currency);
-var
-  FilasAfectadas: Integer;
-begin
-  QryTrx.SQL.Text :=
-    'UPDATE fza_caja_vales ' +
-    '   SET ESTADO_VL               = ''REDIMIDO'', ' +
-    '       FECHA_REDENCION_VL      = NOW(), ' +
-    '       IMPORTE_REDIMIDO_VL     = :importe, ' +
-    '       CODIGO_EMP_RED_VL       = :empresa, ' +
-    '       CODIGO_ALM_RED_VL       = :almacen, ' +
-    '       CODIGO_CAJA_RED_VL      = :caja, ' +
-    '       NUMERO_OPERACION_RED_VL = :numop, ' +
-    '       SERIE_FAC_RED_VL        = NULLIF(:serie, ''''), ' +
-    '       NUMERO_FAC_RED_VL       = NULLIF(:numfac, ''''), ' +
-    '       USUARIO_MODIF           = :usuario, ' +
-    '       INSTANTE_MODIF          = NOW() ' +
-    ' WHERE CODIGO_VL = :codigo ' +
-    '   AND ESTADO_VL = ''PENDIENTE''';
-  QryTrx.ParamByName('codigo').AsString    := ACodigoVale;
-  QryTrx.ParamByName('importe').AsCurrency := AImporteRedimido;
-  QryTrx.ParamByName('empresa').AsString   := AEmpresa;
-  QryTrx.ParamByName('almacen').AsString   := ACodigoAlmacen;
-  QryTrx.ParamByName('caja').AsString      := ACodigoCaja;
-  QryTrx.ParamByName('numop').AsString     := ANumOperacion;
-  QryTrx.ParamByName('serie').AsString     := ASerie;
-  QryTrx.ParamByName('numfac').AsString    := ANumFactura;
-  QryTrx.ParamByName('usuario').AsString   := IdentidadSesion.Usuario;
-  QryTrx.Execute;
-  // Validar que se haya marcado realmente el vale.
-  // Si RowsAffected = 0, el vale no existe, ya estaba redimido, o el codigo
-  // venia mal. En cualquier caso, abortamos la transaccion completa.
-  FilasAfectadas := QryTrx.RowsAffected;
-  if FilasAfectadas <> 1 then
-    raise Exception.CreateFmt(
-      SErrorRedimirValeCaja,
-      [ACodigoVale, FilasAfectadas]);
 end;
 
 procedure ConfigurarSqlInsertarCabeceraFacturaCaja(AConsulta: TUniQuery);

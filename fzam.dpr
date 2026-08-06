@@ -487,12 +487,22 @@ uses
     'src\DataModules\UniDataSeriesDocumentosRepositorio.pas',
   inMtoCajaMenu in 'src\Caja\Forms\inMtoCajaMenu.pas' {frmMtoMenuCaja},
   inMtoCajaOpe in 'src\Caja\Forms\inMtoCajaOpe.pas' {frmMtoOpeCaja},
+  inMtoCajaEditorLineasDecisiones in
+    'src\Caja\Forms\inMtoCajaEditorLineasDecisiones.pas',
+  inMtoCajaEditorLineasInteraccion in
+    'src\Caja\Forms\inMtoCajaEditorLineasInteraccion.pas',
+  inMtoCajaEditorLineasBusqueda in
+    'src\Caja\Forms\inMtoCajaEditorLineasBusqueda.pas',
+  inMtoCajaEditorLineasRender in
+    'src\Caja\Forms\inMtoCajaEditorLineasRender.pas',
   inMtoCajaCierreVentaVcl in
     'src\Caja\Forms\inMtoCajaCierreVentaVcl.pas',
   inMtoCajaEntradaVcl in 'src\Caja\Forms\inMtoCajaEntradaVcl.pas',
   inMtoCajaImpresorVenta in
     'src\Caja\Forms\inMtoCajaImpresorVenta.pas',
   UniDataCaja in 'src\Caja\DataModules\UniDataCaja.pas' {dmCajaOpe},
+  UniDataCajaCierreVenta in
+    'src\Caja\DataModules\UniDataCajaCierreVenta.pas',
   UniDataCajaUnidadTrabajo in
     'src\Caja\DataModules\UniDataCajaUnidadTrabajo.pas',
   inMtoCajaOperacionVclInyeccion in
@@ -586,6 +596,10 @@ uses
     'src\Caja\DataModules\UniDataTicketsCajaRepositorio.pas',
   inLibArqueo in 'src\Caja\Lib\inLibArqueo.pas',
   inLibArqueoTicket in 'src\Caja\Lib\inLibArqueoTicket.pas',
+  inLibArqueoTicketPresentacion in
+    'src\Caja\Lib\inLibArqueoTicketPresentacion.pas',
+  inLibArqueoTicketPresentacionTermica in
+    'src\Caja\Lib\inLibArqueoTicketPresentacionTermica.pas',
   inLibArqueoPersistencia in 'src\Caja\Lib\inLibArqueoPersistencia.pas',
   UniDataArqueoPersistencia in
     'src\Caja\DataModules\UniDataArqueoPersistencia.pas',
@@ -594,6 +608,8 @@ uses
   inMtoModalArqueo in 'src\Caja\Modals\inMtoModalArqueo.pas' {frmModalArqueo},
   inLibModalArqueoPersistenciaIntf in 'src\Caja\Lib\inLibModalArqueoPersistenciaIntf.pas',
   UniDataModalArqueoRepositorio in 'src\Caja\DataModules\UniDataModalArqueoRepositorio.pas',
+  UniDataModalArqueoOperacion in
+    'src\Caja\DataModules\UniDataModalArqueoOperacion.pas',
   inMtoModalArqueosHistCaja in 'src\Caja\Modals\inMtoModalArqueosHistCaja.pas' {frmModalArqueosHistCaja},
   inMtoModalTiraCaja in 'src\Caja\Modals\inMtoModalTiraCaja.pas' {frmModalTiraCaja},
   inMtoModalImpArqueos in 'src\Caja\Modals\inMtoModalImpArqueos.pas' {frmPrintArqueos},

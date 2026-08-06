@@ -35,6 +35,12 @@ type
     [Test]
     procedure Cierre_NoImprimeSiUnidadTrabajoNoGraba;
     [Test]
+    procedure Cierre_DecisionesSinInterfazSonDeterministas;
+    [Test]
+    procedure Cierre_AccionesDepositoDeterminanFactura;
+    [Test]
+    procedure Cierre_ValeNoSeDuplicaComoPago;
+    [Test]
     procedure Rectificacion_DiferenciasCopiaClienteYNiegaLineas;
     [Test]
     procedure Rectificacion_SustitutivaMantieneLineasPositivas;
@@ -46,7 +52,8 @@ uses
   System.Classes, Data.DB, Datasnap.DBClient,
   inLibCajaTipos, inLibCajaVentaIntf,
   inLibCajaDescuentos, inLibCajaCierreVenta,
-  inLibCajaRectificacion;
+  inLibCajaRectificacion,
+  UniDataCajaCierreVenta;
 
 type
   TUnidadTrabajoVentaCajaFalsa = class(
@@ -469,6 +476,59 @@ begin
   Assert.AreEqual('', Resultado.NumeroGenerado);
   Assert.AreEqual('', Resultado.CodigoValeGenerado);
   Assert.IsFalse(ImpresorObjeto.Impreso);
+end;
+
+procedure TPruebasCajaVenta.
+  Cierre_DecisionesSinInterfazSonDeterministas;
+var
+  Datos: TDatosDecisionCierreVentaCaja;
+  bPrimeraEvaluacion: Boolean;
+  bSegundaEvaluacion: Boolean;
+begin
+  Datos := Default(TDatosDecisionCierreVentaCaja);
+  bPrimeraEvaluacion := AccionTieneNovedadCierreVenta(
+    Datos,
+    'NINGUNA');
+  bSegundaEvaluacion := AccionTieneNovedadCierreVenta(
+    Datos,
+    'NINGUNA');
+  Assert.IsFalse(bPrimeraEvaluacion);
+  Assert.AreEqual(bPrimeraEvaluacion, bSegundaEvaluacion);
+  Datos.ImporteValeEmitido := 5;
+  Assert.IsTrue(
+    AccionTieneNovedadCierreVenta(Datos, 'NINGUNA'));
+  Datos.ImporteValeEmitido := 0;
+  Assert.IsTrue(
+    AccionTieneNovedadCierreVenta(Datos, 'CANCELAR'));
+end;
+
+procedure TPruebasCajaVenta.
+  Cierre_AccionesDepositoDeterminanFactura;
+begin
+  Assert.IsTrue(
+    AccionRequiereFacturaCierreVenta('', 0));
+  Assert.IsTrue(
+    AccionRequiereFacturaCierreVenta('COBRAR', 0));
+  Assert.IsFalse(
+    AccionRequiereFacturaCierreVenta('CANCELAR', 0));
+  Assert.IsTrue(
+    AccionRequiereFacturaCierreVenta('CANCELAR', 10));
+  Assert.IsFalse(
+    AccionRequiereFacturaCierreVenta('NUEVO_DEP', 0));
+  Assert.IsTrue(
+    AccionRequiereFacturaCierreVenta('AUMENTAR_DEP', 0.01));
+end;
+
+procedure TPruebasCajaVenta.Cierre_ValeNoSeDuplicaComoPago;
+begin
+  Assert.IsFalse(
+    PagoDebePersistirseCierreVenta('VALE', 10));
+  Assert.IsFalse(
+    PagoDebePersistirseCierreVenta('EFECTIVO', 0.001));
+  Assert.IsTrue(
+    PagoDebePersistirseCierreVenta('EFECTIVO', 0.01));
+  Assert.IsTrue(
+    PagoDebePersistirseCierreVenta('TARJETA', -5));
 end;
 
 procedure TPruebasCajaVenta.

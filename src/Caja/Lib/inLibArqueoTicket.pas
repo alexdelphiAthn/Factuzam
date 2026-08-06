@@ -131,6 +131,10 @@ type
 
 implementation
 
+uses
+  inLibArqueoTicketPresentacion,
+  inLibArqueoTicketPresentacionTermica;
+
 // =============================================================================
 //   Helpers de formato
 // =============================================================================
@@ -640,6 +644,39 @@ end;
 //   Ticket de recuento (cierre Z grabado)
 // =============================================================================
 
+function CrearDatosPresentacionCierre(
+  const AArqueo: TArqueoCaja;
+  const ALineas: TArray<TArqueoRecuentoLinea>;
+  ATotalSistema: Currency;
+  ATotalRecuento: Currency;
+  ADiferencia: Currency;
+  ARetirada: Currency;
+  const AConceptoRetirada: string;
+  AEfectivoDejado: Currency;
+  const ADesgloseBilletes: string;
+  const AObservaciones: string;
+  const AVendedor: string;
+  const AUsuario: string;
+  AInstanteEmision: TDateTime;
+  ADuplicado: Boolean): TDatosPresentacionCierreArqueo;
+begin
+  Result := Default(TDatosPresentacionCierreArqueo);
+  Result.Arqueo := AArqueo;
+  Result.Lineas := ALineas;
+  Result.TotalSistema := ATotalSistema;
+  Result.TotalRecuento := ATotalRecuento;
+  Result.Diferencia := ADiferencia;
+  Result.Retirada := ARetirada;
+  Result.ConceptoRetirada := AConceptoRetirada;
+  Result.EfectivoDejado := AEfectivoDejado;
+  Result.DesgloseBilletes := ADesgloseBilletes;
+  Result.Observaciones := AObservaciones;
+  Result.Vendedor := AVendedor;
+  Result.Usuario := AUsuario;
+  Result.InstanteEmision := AInstanteEmision;
+  Result.Duplicado := ADuplicado;
+end;
+
 class procedure TArqueoTicket.ImprimirCierre(
   const APreview: IPreviewTicket;
   const ARepositorioTicket: IRepositorioArqueoTicket;
@@ -658,164 +695,39 @@ class procedure TArqueoTicket.ImprimirCierre(
   const ANombreImpresora: string = 'DEBUG';
   ADuplicado: Boolean = False);
 var
-  Ticket: TTicketTermico;
-  ComandosESC, RutaPDF: string;
-  i: Integer;
-  slBilletes: TStringList;
-  sPar, sDenom, sUds: string;
-  iPos: Integer;
+  dInstanteEmision: TDateTime;
+  aPresentacion: TPresentacionTicketArqueo;
+  oDatos: TDatosPresentacionCierreArqueo;
+  oTicket: TTicketTermico;
+  sComandosESC: string;
+  sRutaPDF: string;
 begin
-  Ticket := TTicketTermico.Create(ANombreImpresora);
+  dInstanteEmision := Now;
+  oDatos := CrearDatosPresentacionCierre(
+    AArqueo, ALineas, ATotalSistema, ATotalRecuento, ADiferencia,
+    ARetirada, AConceptoRetirada, AEfectivoDejado,
+    ADesgloseBilletes, AObservaciones, AVendedor,
+    AContextoSesion.Identidad.Usuario, dInstanteEmision, ADuplicado);
+  aPresentacion := ConstruirPresentacionCierreArqueo(oDatos);
+  oTicket := TTicketTermico.Create(ANombreImpresora);
   try
-    Ticket.Inicializar;
+    oTicket.Inicializar;
     EscribirCabeceraEmpresa(
-      Ticket,
+      oTicket,
       ARepositorioTicket,
       AArqueo.Empresa);
-    { Título }
-    Ticket.SaltarLineas(1);
-    Ticket.Alinear(alCentro);
-    Ticket.Negrita(True);
-    Ticket.EscribirLinea(
-      Format(STicketCierreCaja, [AArqueo.Caja]));
-    Ticket.Negrita(False);
-    // Marca de reimpresión del justificante de cierre
-    if ADuplicado then
-    begin
-      Ticket.Negrita(True);
-      Ticket.EscribirLinea(STicketDuplicado);
-      Ticket.Negrita(False);
-    end;
-    { Datos del cierre }
-    Ticket.Alinear(alIzquierda);
-    Ticket.EscribirLinea(STicketPeriodoCerrado);
-    Ticket.TextoColumnas(STicketInicio,
-      FormatDateTime('dd/mm/yyyy hh:nn:ss', AArqueo.FechaDesde));
-    Ticket.TextoColumnas(STicketFin,
-      FormatDateTime('dd/mm/yyyy hh:nn:ss', AArqueo.FechaHasta));
-    Ticket.TextoColumnas(STicketVentas,
-      IntToStr(AArqueo.CantidadVentas));
-    Ticket.TextoColumnas(STicketCierrePor,
-      AContextoSesion.Identidad.Usuario);
-    // Vendedor (empleado de caja) que estampa el cierre; los arqueos
-    // grabados antes de exigirlo pueden venir sin él
-    if AVendedor <> '' then
-      Ticket.TextoColumnas(STicketVendedor, AVendedor);
-    Ticket.LineaSeparadora('=');
-    { Desglose de billetes y monedas }
-    if ADesgloseBilletes <> '' then
-    begin
-      Ticket.Negrita(True);
-      Ticket.EscribirLinea(STicketBilletesMonedas);
-      Ticket.Negrita(False);
-      slBilletes := TStringList.Create;
-      try
-        slBilletes.Delimiter := ';';
-        slBilletes.DelimitedText := ADesgloseBilletes;
-        for i := 0 to slBilletes.Count - 1 do
-        begin
-          sPar := slBilletes[i];
-          iPos := Pos(':', sPar);
-          if iPos > 0 then
-          begin
-            sDenom := Copy(sPar, 1, iPos - 1);
-            sUds   := Copy(sPar, iPos + 1, MaxInt);
-            if StrToIntDef(sUds, 0) > 0 then
-              Ticket.TextoColumnas(
-                '  ' + sDenom + ' EUR x ' + sUds,
-                FmtImp(StrToFloatDef(sDenom, 0) *
-                        StrToIntDef(sUds, 0)));
-          end;
-        end;
-      finally
-        FreeAndNil(slBilletes);
-      end;
-      Ticket.LineaSeparadora;
-    end;
-    { Efectivo sistema (desglose) }
-    Ticket.Negrita(True);
-    Ticket.EscribirLinea(STicketEfectivoSistema);
-    Ticket.Negrita(False);
-    Ticket.TextoColumnas(STicketVentasSangrado,
-      FmtImp(AArqueo.EfectivoIngresos));
-    Ticket.TextoColumnas(STicketEntradasSangrado,
-      FmtImp(AArqueo.EfectivoEntradas));
-    Ticket.TextoColumnas(STicketGastosSangrado,
-      FmtImp(AArqueo.EfectivoSalidas));
-    Ticket.TextoColumnas(STicketAnteriorSangrado,
-      FmtImp(AArqueo.EfectivoAnterior));
-    Ticket.TextoColumnas(STicketTotalSangrado,
-      FmtImp(AArqueo.EfectivoCaja));
-    Ticket.LineaSeparadora;
-    { Detalle por forma de pago: 3 columnas alineadas a la derecha
-      sobre los 42 caracteres del ticket (14+14+14) }
-    Ticket.Negrita(True);
-    Ticket.EscribirLinea(STicketRecuento);
-    Ticket.Negrita(False);
-    Ticket.EscribirLinea(
-      Format(
-        '%14s%14s%14s',
-        [STicketSistemaAbreviado,
-         STicketRecuentoAbreviado,
-         STicketDiferenciaAbreviada]));
-    for i := 0 to High(ALineas) do
-    begin
-      Ticket.EscribirLinea(ALineas[i].Descripcion);
-      Ticket.EscribirLinea(
-        Format('%14s%14s%14s',
-               [FmtImp(ALineas[i].Sistema),
-                FmtImp(ALineas[i].Recuento),
-                FmtImp(ALineas[i].Diferencia)]));
-    end;
-    Ticket.LineaSeparadora('=');
-    { Totales }
-    Ticket.Negrita(True);
-    Ticket.TextoColumnas(STicketTotalSistema,
-      FmtImp(ATotalSistema));
-    Ticket.TextoColumnas(STicketTotalRecontado,
-      FmtImp(ATotalRecuento));
-    Ticket.TextoColumnas(STicketDiferencia,
-      FmtImp(ADiferencia));
-    Ticket.Negrita(False);
-    Ticket.LineaSeparadora;
-    { Retirada }
-    if ARetirada > 0 then
-    begin
-      Ticket.TextoColumnas(STicketRetirada,
-        FmtImp(ARetirada));
-      Ticket.TextoColumnas(STicketDestinoSangrado,
-        AConceptoRetirada);
-    end;
-    { Dejo para mañana }
-    Ticket.Negrita(True);
-    Ticket.TextoColumnas(STicketDejoCaja,
-      FmtImp(AEfectivoDejado));
-    Ticket.Negrita(False);
-    { Observaciones }
-    if AObservaciones <> '' then
-    begin
-      Ticket.LineaSeparadora;
-      Ticket.EscribirLinea(
-        Format(STicketObservaciones, [AObservaciones]));
-    end;
-    { Pie }
-    Ticket.LineaSeparadora;
-    Ticket.Alinear(alCentro);
-    Ticket.EscribirLinea(
-      FormatDateTime('dd/mm/yyyy hh:nn:ss', Now));
-    Ticket.EscribirLinea(STicketFirma);
-    Ticket.SaltarLineas(2);
-    Ticket.LineaSeparadora('.');
-    Ticket.SaltarLineas(1);
-    Ticket.CortarPapel;
-    { Imprimir o previsualizar }
-    ComandosESC := Ticket.ObtenerComandos;
-    RutaPDF := GetUserFolderTickets + 'Recuento_' +
-               FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-    ImprimirOPrevisualizarTicket(APreview, Ticket, ComandosESC, RutaPDF,
-                                 ANombreImpresora);
+    RenderizarPresentacionTicketArqueo(oTicket, aPresentacion);
+    sComandosESC := oTicket.ObtenerComandos;
+    sRutaPDF := GetUserFolderTickets + 'Recuento_' +
+      FormatDateTime('yyyy_mm_dd_hh_nn_ss', dInstanteEmision) + '.pdf';
+    ImprimirOPrevisualizarTicket(
+      APreview,
+      oTicket,
+      sComandosESC,
+      sRutaPDF,
+      ANombreImpresora);
   finally
-    FreeAndNil(Ticket);
+    FreeAndNil(oTicket);
   end;
 end;
 

@@ -32,17 +32,31 @@ type
     procedure PerfilSinCampos_ResuelveSqlBase;
     [Test]
     procedure FalloDeEjecucion_ReintentaSqlBase;
+    [Test]
+    procedure PresentacionCierre_EsIdempotente;
+    [Test]
+    procedure DesgloseBilletes_DescartaEntradasInvalidas;
+    [Test]
+    procedure OpcionalesCierre_SePresentanCuandoExisten;
+    [Test]
+    procedure OpcionalesCierre_SeOmitenCuandoFaltan;
+    [Test]
+    procedure FilaRecuento_ConservaAnchoTermico;
   end;
 
 implementation
 
 uses
   System.SysUtils,
+  System.DateUtils,
   inLibCatalogoSqlIntf,
   inLibCatalogoSqlValidacion,
   inLibCatalogoSqlPerfiles,
   inLibCatalogoSqlEjecucion,
   inLibPerfilesUsuarioIntf,
+  inLibArqueoPersistencia,
+  inLibArqueoTicketPresentacion,
+  inLibMsgTickets,
   UniDataArqueoTicketRepositorio;
 
 type
@@ -92,6 +106,59 @@ begin
       oPerfil);
   finally
     FreeAndNil(oPerfil);
+  end;
+end;
+
+function CrearDatosPresentacionMinimos:
+  TDatosPresentacionCierreArqueo;
+begin
+  Result := Default(TDatosPresentacionCierreArqueo);
+  Result.Arqueo.Empresa := 'E1';
+  Result.Arqueo.Almacen := 'A1';
+  Result.Arqueo.Caja := 'C1';
+  Result.Arqueo.FechaDesde := EncodeDateTime(2026, 8, 6, 9, 0, 0, 0);
+  Result.Arqueo.FechaHasta := EncodeDateTime(2026, 8, 6, 18, 0, 0, 0);
+  Result.Arqueo.CantidadVentas := 3;
+  Result.Usuario := 'PRUEBAS';
+  Result.InstanteEmision := EncodeDateTime(2026, 8, 6, 18, 1, 0, 0);
+end;
+
+function ContieneTextoIzquierdo(
+  const APresentacion: TPresentacionTicketArqueo;
+  const ATexto: string): Boolean;
+var
+  iComando: Integer;
+begin
+  Result := False;
+  iComando := 0;
+  while (iComando < Length(APresentacion)) and not Result do
+  begin
+    Result := APresentacion[iComando].Texto = ATexto;
+    Inc(iComando);
+  end;
+end;
+
+function PresentacionesIguales(
+  const AIzquierda: TPresentacionTicketArqueo;
+  const ADerecha: TPresentacionTicketArqueo): Boolean;
+var
+  iComando: Integer;
+begin
+  Result := Length(AIzquierda) = Length(ADerecha);
+  iComando := 0;
+  while (iComando < Length(AIzquierda)) and Result do
+  begin
+    Result :=
+      (AIzquierda[iComando].Tipo = ADerecha[iComando].Tipo) and
+      (AIzquierda[iComando].Texto = ADerecha[iComando].Texto) and
+      (AIzquierda[iComando].TextoDerecha =
+       ADerecha[iComando].TextoDerecha) and
+      (AIzquierda[iComando].Alineacion =
+       ADerecha[iComando].Alineacion) and
+      (AIzquierda[iComando].Caracter = ADerecha[iComando].Caracter) and
+      (AIzquierda[iComando].Cantidad = ADerecha[iComando].Cantidad) and
+      (AIzquierda[iComando].Activar = ADerecha[iComando].Activar);
+    Inc(iComando);
   end;
 end;
 
@@ -215,6 +282,98 @@ begin
   Assert.AreEqual(
     2,
     iIntentos);
+end;
+
+procedure TPruebasArqueoTicketCatalogo.
+  PresentacionCierre_EsIdempotente;
+var
+  aPrimera: TPresentacionTicketArqueo;
+  aSegunda: TPresentacionTicketArqueo;
+  oDatos: TDatosPresentacionCierreArqueo;
+begin
+  oDatos := CrearDatosPresentacionMinimos;
+  aPrimera := ConstruirPresentacionCierreArqueo(oDatos);
+  aSegunda := ConstruirPresentacionCierreArqueo(oDatos);
+  Assert.IsTrue(PresentacionesIguales(aPrimera, aSegunda));
+end;
+
+procedure TPruebasArqueoTicketCatalogo.
+  DesgloseBilletes_DescartaEntradasInvalidas;
+var
+  aPresentacion: TPresentacionTicketArqueo;
+  oDatos: TDatosPresentacionCierreArqueo;
+begin
+  oDatos := CrearDatosPresentacionMinimos;
+  oDatos.DesgloseBilletes := '10:2;20:0;sin_separador;5:-1';
+  aPresentacion := ConstruirPresentacionCierreArqueo(oDatos);
+  Assert.IsTrue(
+    ContieneTextoIzquierdo(aPresentacion, '  10 EUR x 2'));
+  Assert.IsFalse(
+    ContieneTextoIzquierdo(aPresentacion, '  20 EUR x 0'));
+  Assert.IsFalse(
+    ContieneTextoIzquierdo(aPresentacion, 'sin_separador'));
+  Assert.IsFalse(
+    ContieneTextoIzquierdo(aPresentacion, '  5 EUR x -1'));
+end;
+
+procedure TPruebasArqueoTicketCatalogo.
+  OpcionalesCierre_SePresentanCuandoExisten;
+var
+  aPresentacion: TPresentacionTicketArqueo;
+  oDatos: TDatosPresentacionCierreArqueo;
+begin
+  oDatos := CrearDatosPresentacionMinimos;
+  oDatos.Duplicado := True;
+  oDatos.Vendedor := 'VENDEDOR';
+  oDatos.Retirada := 50;
+  oDatos.ConceptoRetirada := 'BANCO';
+  oDatos.Observaciones := 'SIN INCIDENCIAS';
+  aPresentacion := ConstruirPresentacionCierreArqueo(oDatos);
+  Assert.IsTrue(
+    ContieneTextoIzquierdo(aPresentacion, STicketDuplicado));
+  Assert.IsTrue(
+    ContieneTextoIzquierdo(aPresentacion, STicketVendedor));
+  Assert.IsTrue(
+    ContieneTextoIzquierdo(aPresentacion, STicketRetirada));
+  Assert.IsTrue(
+    ContieneTextoIzquierdo(aPresentacion, STicketDestinoSangrado));
+  Assert.IsTrue(
+    ContieneTextoIzquierdo(
+      aPresentacion,
+      Format(STicketObservaciones, [oDatos.Observaciones])));
+end;
+
+procedure TPruebasArqueoTicketCatalogo.
+  OpcionalesCierre_SeOmitenCuandoFaltan;
+var
+  aPresentacion: TPresentacionTicketArqueo;
+  oDatos: TDatosPresentacionCierreArqueo;
+begin
+  oDatos := CrearDatosPresentacionMinimos;
+  aPresentacion := ConstruirPresentacionCierreArqueo(oDatos);
+  Assert.IsFalse(
+    ContieneTextoIzquierdo(aPresentacion, STicketDuplicado));
+  Assert.IsFalse(
+    ContieneTextoIzquierdo(aPresentacion, STicketVendedor));
+  Assert.IsFalse(
+    ContieneTextoIzquierdo(aPresentacion, STicketRetirada));
+  Assert.IsFalse(
+    ContieneTextoIzquierdo(aPresentacion, STicketDestinoSangrado));
+end;
+
+procedure TPruebasArqueoTicketCatalogo.
+  FilaRecuento_ConservaAnchoTermico;
+var
+  sFila: string;
+begin
+  sFila := FormatearImportesRecuentoPresentacion(10, 9, -1);
+  Assert.AreEqual(42, Length(sFila));
+  Assert.IsTrue(
+    Pos(FormatearImportePresentacion(10), sFila) > 0);
+  Assert.IsTrue(
+    Pos(FormatearImportePresentacion(9), sFila) > 0);
+  Assert.IsTrue(
+    Pos(FormatearImportePresentacion(-1), sFila) > 0);
 end;
 
 initialization

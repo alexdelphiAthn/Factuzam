@@ -38,6 +38,7 @@ uses
   inLibTiraCajaTicketIntf,
   inLibModalArqueoPersistenciaIntf,
   inLibInformesCajaPersistenciaIntf,
+  UniDataModalArqueoOperacion,
   Vcl.ComCtrls, dxCore,
   cxDateUtils, cxCurrencyEdit, cxRadioGroup,
   JvComponentBase, JvEnterTab, cxLocalization, cxGroupBox,
@@ -271,6 +272,7 @@ type
     FResumenFormasPago: IResultadoModalArqueo;
     FResumenPropiedades: IResultadoModalArqueo;
     FResumenIva: IResultadoModalArqueo;
+    FOperacionArqueo: TOperacionModalArqueo;
     procedure ComponerDependencias;
     function  FechaEditada(AEdit: TcxDateEdit): TDateTime;
     function  FechaDesdeSeleccionada: TDateTime;
@@ -286,11 +288,28 @@ type
     procedure CargarRecuento(const AArqueo: TArqueoCaja);
     procedure RecalcularTotalesRecuento;
     procedure RecalcularDejoManana;
-    function  ObtenerEfectivoRecontado: Currency;
+    function ObtenerDatosRecuento:
+      TArray<TDatoRecuentoModalArqueo>;
+    function ObtenerImporteRecuento(
+      AFila: Integer;
+      AColumna: TcxGridColumn): Currency;
     function  ObtenerConceptoRetirada: string;
     function  BuscarNombreVendedor(const ACodigo: string): string;
+    function ConstruirEntradaGrabacion:
+      TEntradaGrabacionModalArqueo;
+    function ConfirmarGrabacion(
+      const AEntrada: TEntradaGrabacionModalArqueo): Boolean;
+    procedure MostrarErrorPreparacion(
+      const APreparacion: TResultadoPreparacionModalArqueo);
+    procedure PersistirArqueo(
+      const AEntrada: TEntradaGrabacionModalArqueo;
+      const APreparacion: TResultadoPreparacionModalArqueo);
+    procedure ImprimirCierre(
+      const AEntrada: TEntradaGrabacionModalArqueo;
+      const APreparacion: TResultadoPreparacionModalArqueo);
     procedure GrabarArqueo;
   public
+    destructor Destroy; override;
     class procedure Ejecutar(AOwner       : TComponent;
                              AConn        : TUniConnection;
                              const AEmpresa : string;
@@ -426,6 +445,16 @@ begin
   Dependencias.Tira := FRepositorioTiraCaja;
   Dependencias.Informes := FRepositorioInformes;
   Dependencias.Validar;
+  FreeAndNil(FOperacionArqueo);
+  FOperacionArqueo := TOperacionModalArqueo.Create(
+    FRepositorioPersistencia,
+    FPersistenciaArqueo);
+end;
+
+destructor TfrmModalArqueo.Destroy;
+begin
+  FreeAndNil(FOperacionArqueo);
+  inherited;
 end;
 
 // =============================================================================
@@ -876,47 +905,55 @@ begin
   RecalcularTotalesRecuento;
 end;
 
-function TfrmModalArqueo.ObtenerEfectivoRecontado: Currency;
+function TfrmModalArqueo.ObtenerImporteRecuento(
+  AFila: Integer;
+  AColumna: TcxGridColumn): Currency;
 var
-  v: Variant;
+  vValor: Variant;
 begin
   Result := 0;
-  if tvRecuento.DataController.RecordCount > 0 then
+  vValor := tvRecuento.DataController.Values[AFila, AColumna.Index];
+  if not VarIsNull(vValor) then
+    Result := Currency(Double(vValor));
+end;
+
+function TfrmModalArqueo.ObtenerDatosRecuento:
+  TArray<TDatoRecuentoModalArqueo>;
+var
+  i: Integer;
+begin
+  SetLength(Result, tvRecuento.DataController.RecordCount);
+  for i := 0 to High(Result) do
   begin
-    v := tvRecuento.DataController.Values[
-           0, tvRecuentoImporte.Index];
-    if not VarIsNull(v) then
-      Result := Currency(Double(v));
+    Result[i].CodigoFormaPago := VarToStr(
+      tvRecuento.DataController.Values[i, tvRecuentoFP.Index]);
+    Result[i].Descripcion := VarToStr(
+      tvRecuento.DataController.Values[i, tvRecuentoDesc.Index]);
+    Result[i].ImporteSistema := ObtenerImporteRecuento(
+      i,
+      tvRecuentoSistema);
+    Result[i].ImporteRecuento := ObtenerImporteRecuento(
+      i,
+      tvRecuentoImporte);
   end;
 end;
 
 procedure TfrmModalArqueo.RecalcularTotalesRecuento;
 var
-  i: Integer;
-  dSistema, dRecuento, dDif: Double;
-  v: Variant;
+  Plan: TPlanGrabacionModalArqueo;
 begin
-  { Sistema y recuento: todas las formas, incluido el efectivo agrupado }
-  dSistema := 0;
-  dRecuento := 0;
-  for i := 0 to tvRecuento.DataController.RecordCount - 1 do
-  begin
-    v := tvRecuento.DataController.Values[
-           i, tvRecuentoSistema.Index];
-    if not VarIsNull(v) then
-      dSistema := dSistema + Double(v);
-    v := tvRecuento.DataController.Values[
-           i, tvRecuentoImporte.Index];
-    if not VarIsNull(v) then
-      dRecuento := dRecuento + Double(v);
-  end;
-  dDif := dRecuento - dSistema;
-  lblRecTotalSistema.Caption  := FormatFloat(',0.00', dSistema);
-  lblRecTotalRecuento.Caption := FormatFloat(',0.00', dRecuento);
-  lblRecDiferencia.Caption    := FormatFloat(',0.00', dDif);
-  if dDif < 0 then
+  Plan := CalcularPlanGrabacionModalArqueo(
+    ObtenerDatosRecuento,
+    Currency(txtRetiradaImporte.Value));
+  lblRecTotalSistema.Caption :=
+    FormatFloat(',0.00', Plan.TotalSistema);
+  lblRecTotalRecuento.Caption :=
+    FormatFloat(',0.00', Plan.TotalRecuento);
+  lblRecDiferencia.Caption :=
+    FormatFloat(',0.00', Plan.DiferenciaTotal);
+  if Plan.DiferenciaTotal < 0 then
     lblRecDiferencia.Style.TextColor := clRed
-  else if dDif > 0 then
+  else if Plan.DiferenciaTotal > 0 then
     lblRecDiferencia.Style.TextColor := clGreen
   else
     lblRecDiferencia.Style.TextColor := clWindowText;
@@ -925,15 +962,15 @@ end;
 
 procedure TfrmModalArqueo.RecalcularDejoManana;
 var
-  dEfectivoRecontado, dRetirada, dDejo: Currency;
+  Plan: TPlanGrabacionModalArqueo;
 begin
-  dEfectivoRecontado := ObtenerEfectivoRecontado;
-  dRetirada := Currency(txtRetiradaImporte.Value);
-  dDejo := dEfectivoRecontado - dRetirada;
-  if dDejo < 0 then
-    dDejo := 0;
+  Plan := CalcularPlanGrabacionModalArqueo(
+    ObtenerDatosRecuento,
+    Currency(txtRetiradaImporte.Value));
   lblDejoImporte.Caption :=
-    Format(SCaptionImporteEur, [FormatFloat(',0.00', dDejo)]);
+    Format(
+      SCaptionImporteEur,
+      [FormatFloat(',0.00', Plan.EfectivoDejado)]);
 end;
 
 procedure TfrmModalArqueo.tvRecuentoImportePropertiesEditValueChanged(
@@ -1067,153 +1104,125 @@ begin
   dteFechaHasta.DroppedDown := True;
 end;
 
-procedure TfrmModalArqueo.GrabarArqueo;
-var
-  Lineas: TArray<TArqueoRecuentoLinea>;
-  i: Integer;
-  dTotalRecuento, dDiferenciaTotal: Currency;
-  dTotalSistema: Currency;
-  dEfectivoRecontado, dRetirada, dDejo: Currency;
-  sObs, sDesglose, sConceptoRet: string;
-  sVendedor, sNombreVendedor: string;
-  v: Variant;
-  bContinuar: Boolean;
+function TfrmModalArqueo.ConstruirEntradaGrabacion:
+  TEntradaGrabacionModalArqueo;
 begin
-  dEfectivoRecontado := 0;
-  bContinuar := (FConn <> nil) and FConn.Connected;
-  if bContinuar then
-  begin
-    sVendedor := Trim(txtVendedorCodigo.Text);
-    if sVendedor = '' then
-    begin
+  Result := Default(TEntradaGrabacionModalArqueo);
+  Result.Arqueo := FArqueoActual;
+  Result.Solicitud := ConstruirSolicitudResumen;
+  Result.Recuento := ObtenerDatosRecuento;
+  Result.ImporteRetirada := Currency(txtRetiradaImporte.Value);
+  Result.ConceptoRetirada := ObtenerConceptoRetirada;
+  Result.DesgloseBilletes := '';
+  Result.Observaciones := Trim(txtObservaciones.Text);
+  Result.CodigoVendedor := txtVendedorCodigo.Text;
+  Result.Usuario := IdentidadSesion.Usuario;
+end;
+
+function TfrmModalArqueo.ConfirmarGrabacion(
+  const AEntrada: TEntradaGrabacionModalArqueo): Boolean;
+begin
+  Result := Application.MessageBox(
+    PChar(Format(
+      SPreguntaGrabarArqueoCaja,
+      [FormatDateTime(
+         'dd/mm/yyyy hh:nn:ss',
+         AEntrada.Solicitud.FechaDesde),
+       FormatDateTime(
+         'dd/mm/yyyy hh:nn:ss',
+         AEntrada.Solicitud.FechaHasta)])),
+    PChar(STituloConfirmarArqueoCaja),
+    MB_YESNO or MB_ICONQUESTION) = IDYES;
+end;
+
+procedure TfrmModalArqueo.MostrarErrorPreparacion(
+  const APreparacion: TResultadoPreparacionModalArqueo);
+begin
+  case APreparacion.Estado of
+    epmaVendedorNoIndicado:
       Application.MessageBox(
         PChar(SErrorVendedorArqueoCajaNoIndicado),
         PChar(STituloVendedorArqueoCajaObligatorio),
         MB_OK or MB_ICONWARNING);
-      pcArqueo.ActivePage := tsRecuento;
-      txtVendedorCodigo.SetFocus;
-      bContinuar := False;
-    end;
-  end;
-  if bContinuar then
-  begin
-    sNombreVendedor := BuscarNombreVendedor(sVendedor);
-    if sNombreVendedor = '' then
-    begin
+    epmaVendedorNoValido:
       Application.MessageBox(
         PChar(SErrorVendedorArqueoCajaNoValido),
         PChar(STituloVendedorArqueoCajaNoValido),
         MB_OK or MB_ICONWARNING);
-      pcArqueo.ActivePage := tsRecuento;
-      txtVendedorCodigo.SetFocus;
-      bContinuar := False;
-    end
-    else
-      lblVendedorNombre.Caption := sNombreVendedor;
-  end;
-  if bContinuar and FRepositorioPersistencia.ExisteArqueoCerrado(
-       ConstruirSolicitudResumen) then
-  begin
-    Application.MessageBox(
-      PChar(SErrorArqueoCajaDuplicado),
-      PChar(STituloArqueoCajaDuplicado), MB_OK or MB_ICONWARNING);
-    bContinuar := False;
-  end;
-  if bContinuar then
-  begin
-    dEfectivoRecontado := ObtenerEfectivoRecontado;
-    if (dEfectivoRecontado = 0) and
-       (tvRecuento.DataController.RecordCount = 0) then
-    begin
+    epmaArqueoDuplicado:
+      Application.MessageBox(
+        PChar(SErrorArqueoCajaDuplicado),
+        PChar(STituloArqueoCajaDuplicado),
+        MB_OK or MB_ICONWARNING);
+    epmaRecuentoNoDisponible:
       Application.MessageBox(
         PChar(SErrorRecuentoArqueoCajaNoDisponible),
-        PChar(STituloAvisoCaja), MB_OK or MB_ICONWARNING);
-      bContinuar := False;
-    end;
+        PChar(STituloAvisoCaja),
+        MB_OK or MB_ICONWARNING);
   end;
-  if bContinuar and (Application.MessageBox(
-       PChar(Format(SPreguntaGrabarArqueoCaja,
-         [FormatDateTime('dd/mm/yyyy hh:nn:ss', FechaDesdeSeleccionada),
-          FormatDateTime('dd/mm/yyyy hh:nn:ss', FechaHastaSeleccionada)])),
-       PChar(STituloConfirmarArqueoCaja),
-       MB_YESNO or MB_ICONQUESTION) <> IDYES) then
-    bContinuar := False;
-  if bContinuar then
+  if APreparacion.Estado in [
+       epmaVendedorNoIndicado,
+       epmaVendedorNoValido] then
   begin
-    dRetirada := Currency(txtRetiradaImporte.Value);
-  dDejo     := dEfectivoRecontado - dRetirada;
-  if dDejo < 0 then
-    dDejo := 0;
-  sConceptoRet := ObtenerConceptoRetirada;
-  sDesglose    := '';
-  sObs         := Trim(txtObservaciones.Text);
-  { Montar una línea por forma de pago; la primera agrupa el efectivo }
-  SetLength(Lineas, tvRecuento.DataController.RecordCount);
-  dTotalSistema := 0;
-  dTotalRecuento := 0;
-  for i := 0 to tvRecuento.DataController.RecordCount - 1 do
-  begin
-    Lineas[i].CodigoFP := VarToStr(
-      tvRecuento.DataController.Values[i, tvRecuentoFP.Index]);
-    Lineas[i].Descripcion := VarToStr(
-      tvRecuento.DataController.Values[i, tvRecuentoDesc.Index]);
-    if i = 0 then
-      Lineas[i].EsCajon := 'S'
-    else
-      Lineas[i].EsCajon := 'N';
-    v := tvRecuento.DataController.Values[
-           i, tvRecuentoSistema.Index];
-    if not VarIsNull(v) then
-      Lineas[i].Sistema := Currency(Double(v))
-    else
-      Lineas[i].Sistema := 0;
-    v := tvRecuento.DataController.Values[
-           i, tvRecuentoImporte.Index];
-    if not VarIsNull(v) then
-      Lineas[i].Recuento := Currency(Double(v))
-    else
-      Lineas[i].Recuento := 0;
-    Lineas[i].Diferencia :=
-      Lineas[i].Recuento - Lineas[i].Sistema;
-    dTotalSistema := dTotalSistema + Lineas[i].Sistema;
-    dTotalRecuento := dTotalRecuento + Lineas[i].Recuento;
+    pcArqueo.ActivePage := tsRecuento;
+    txtVendedorCodigo.SetFocus;
   end;
-  dDiferenciaTotal := dTotalRecuento - dTotalSistema;
+end;
+
+procedure TfrmModalArqueo.PersistirArqueo(
+  const AEntrada: TEntradaGrabacionModalArqueo;
+  const APreparacion: TResultadoPreparacionModalArqueo);
+begin
   Screen.Cursor := crHourGlass;
   try
-    TArqueoPersistencia.GrabarArqueo(
-      FPersistenciaArqueo,
-      FArqueoActual,
-      Lineas,
-      dTotalRecuento,
-      dDiferenciaTotal,
-      dDejo,
-      dRetirada,
-      sConceptoRet,
-      sDesglose,
-      sObs,
-      sVendedor,
-      IdentidadSesion.Usuario);
+    FOperacionArqueo.Grabar(AEntrada, APreparacion);
   finally
     Screen.Cursor := crDefault;
   end;
-  { Justificante del cierre }
-    TArqueoTicket.ImprimirCierre(
-      PreviewTicket,
-      FRepositorioArqueoTicket,
-      ContextoSesion,
-      FArqueoActual,
-      Lineas,
-      dTotalSistema,
-      dTotalRecuento,
-      dDiferenciaTotal,
-      dRetirada,
-      sConceptoRet,
-      dDejo,
-      sDesglose,
-      sObs,
-      sVendedor + ' - ' + sNombreVendedor,
-      ParametrosCaja.ImpresoraCaja);
+end;
+
+procedure TfrmModalArqueo.ImprimirCierre(
+  const AEntrada: TEntradaGrabacionModalArqueo;
+  const APreparacion: TResultadoPreparacionModalArqueo);
+begin
+  TArqueoTicket.ImprimirCierre(
+    PreviewTicket,
+    FRepositorioArqueoTicket,
+    ContextoSesion,
+    AEntrada.Arqueo,
+    APreparacion.Plan.Lineas,
+    APreparacion.Plan.TotalSistema,
+    APreparacion.Plan.TotalRecuento,
+    APreparacion.Plan.DiferenciaTotal,
+    AEntrada.ImporteRetirada,
+    AEntrada.ConceptoRetirada,
+    APreparacion.Plan.EfectivoDejado,
+    AEntrada.DesgloseBilletes,
+    AEntrada.Observaciones,
+    APreparacion.CodigoVendedor + ' - ' +
+      APreparacion.NombreVendedor,
+    ParametrosCaja.ImpresoraCaja);
+end;
+
+procedure TfrmModalArqueo.GrabarArqueo;
+var
+  Entrada: TEntradaGrabacionModalArqueo;
+  Preparacion: TResultadoPreparacionModalArqueo;
+begin
+  if (FConn <> nil) and FConn.Connected and
+     Assigned(FOperacionArqueo) then
+  begin
+    Entrada := ConstruirEntradaGrabacion;
+    Preparacion := FOperacionArqueo.Preparar(Entrada);
+    if Preparacion.NombreVendedor <> '' then
+      lblVendedorNombre.Caption := Preparacion.NombreVendedor;
+    if not Preparacion.PuedeGrabar then
+      MostrarErrorPreparacion(Preparacion)
+    else if ConfirmarGrabacion(Entrada) then
+    begin
+      PersistirArqueo(Entrada, Preparacion);
+      ImprimirCierre(Entrada, Preparacion);
+    end;
   end;
 end;
 

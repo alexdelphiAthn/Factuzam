@@ -108,6 +108,23 @@ type
     procedure Cierre_RectificativaSiNoAcabaEnFactura;
   end;
 
+  [TestFixture]
+  TPruebasDecisionesEditorLineasCaja = class
+  public
+    [Test]
+    procedure Stock_SkuUsaArticuloPadreSiSeAgrupanColores;
+    [Test]
+    procedure Stock_ConAgrupacionDesactivadaConservaSku;
+    [Test]
+    procedure Busqueda_DescartaLaSeleccionDelEditor;
+    [Test]
+    procedure Busqueda_TextoVacioNoConsulta;
+    [Test]
+    procedure Editor_ValorExistenteSiempreEsSoloLectura;
+    [Test]
+    procedure Editor_VacioEnFocoPermiteBusqueda;
+  end;
+
   // Caracteriza el nucleo de teclado que antes vivia dentro de
   // TfrmMtoOpeCaja.cxGrid1DBTableView1EditKeyDown. Sin VCL: los cuatro
   // puertos se sustituyen por dobles en memoria.
@@ -208,7 +225,8 @@ uses
   inLibCajaOpePresentacion,
   inLibMsgCaja,
   inLibArticulosResolverIntf,
-  inLibArticulosValidadorIntf;
+  inLibArticulosValidadorIntf,
+  inMtoCajaEditorLineasDecisiones;
 
 type
   // Lookup falso: devuelve los valores fijados en el constructor.
@@ -1988,8 +2006,60 @@ begin
   end;
 end;
 
+procedure TPruebasDecisionesEditorLineasCaja.
+  Stock_SkuUsaArticuloPadreSiSeAgrupanColores;
+begin
+  Assert.AreEqual(
+    'ART1',
+    ResolverCodigoConsultaStock(
+      'ART1/ROJO/42',
+      'ART1',
+      True,
+      True));
+end;
+
+procedure TPruebasDecisionesEditorLineasCaja.
+  Stock_ConAgrupacionDesactivadaConservaSku;
+begin
+  Assert.AreEqual(
+    'ART1/ROJO/42',
+    ResolverCodigoConsultaStock(
+      'ART1/ROJO/42',
+      'ART1',
+      False,
+      True));
+end;
+
+procedure TPruebasDecisionesEditorLineasCaja.
+  Busqueda_DescartaLaSeleccionDelEditor;
+begin
+  Assert.AreEqual('CAM', ResolverTextoBusqueda('CAMISA', 3, 3));
+end;
+
+procedure TPruebasDecisionesEditorLineasCaja.
+  Busqueda_TextoVacioNoConsulta;
+begin
+  Assert.IsFalse(DebeBuscarIncremental('   '));
+  Assert.IsTrue(DebeBuscarIncremental('CAM'));
+end;
+
+procedure TPruebasDecisionesEditorLineasCaja.
+  Editor_ValorExistenteSiempreEsSoloLectura;
+begin
+  Assert.IsTrue(DebeUsarSoloTexto('ART1', True));
+  Assert.IsTrue(DebeUsarSoloTexto('ART1', False));
+end;
+
+procedure TPruebasDecisionesEditorLineasCaja.
+  Editor_VacioEnFocoPermiteBusqueda;
+begin
+  Assert.IsFalse(DebeUsarSoloTexto('', True));
+  Assert.IsTrue(DebeUsarSoloTexto('', False));
+end;
+
 initialization
   TDUnitX.RegisterTestFixture(TPruebasCajaVentaOperacion);
+  TDUnitX.RegisterTestFixture(TPruebasDecisionesEditorLineasCaja);
   TDUnitX.RegisterTestFixture(TPruebasTeclaLineaCaja);
   TDUnitX.RegisterTestFixture(TPruebasAtributosLineaCaja);
   TDUnitX.RegisterTestFixture(TPruebasLineaVentaCajaDataSet);

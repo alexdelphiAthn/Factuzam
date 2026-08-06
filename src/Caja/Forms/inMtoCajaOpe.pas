@@ -39,7 +39,8 @@ uses
   inLibParametrosIntf, inLibLogIntf, inLibGenBusq,
   inLibPermisosIntf, inLibArticulosValidadorIntf,
   inLibArticulosResolverIntf, inLibArticulosAtributosIntf,
-  inLibCajaPantallaInyeccion;
+  inLibCajaPantallaInyeccion, inMtoCajaEditorLineasBusqueda,
+  inMtoCajaEditorLineasInteraccion, inMtoCajaEditorLineasRender;
 
 const
   WM_CANCELAR_LINEA = WM_APP + 100;
@@ -143,8 +144,6 @@ type
     FDependencias: TContextoDependenciasOperacionCaja;
     FRepositorioArticulos: IRepositorioArticulosCaja;
     FRepositorioFacturas: IRepositorioLecturasFactura;
-    FBusquedaVisual: IBusquedaVisual;
-    FFotosArticulos: TFotosArticulos;
     FRegistroLog: IRegistroLog;
     FActualizarTotal: TActualizarTotalCajaVcl;
     FCerrarFormulario: TAccionCajaVcl;
@@ -152,7 +151,9 @@ type
     FLectorLeyendoTrama: TConsultaBooleanaCajaVcl;
     FObtenerAlmacen: TConsultaTextoCajaVcl;
     FResultadoBusquedaIncremental: IResultadoConsultaCaja;
-    FConsultaStock: IResultadoConsultaCaja;
+    FBusqueda: TBusquedaEditorLineasCajaVcl;
+    FInteraccion: TInteraccionEditorLineasCajaVcl;
+    FRender: TRenderEditorLineasCajaVcl;
     FTecladoLinea: TTecladoLineaOperacionCaja;
     FBmpSwatchBoton: TBitmap;
     FswArtAPopup: TStopwatch;
@@ -172,18 +173,11 @@ type
     function GetColumnaDescuento: TcxGridDBColumn;
     function GetColumnaDescuentoMenos: TcxGridDBColumn;
     function GetFuenteLineas: TDataSource;
-    function GetFuenteStock: TDataSource;
     function GetFuenteBusqueda: TDataSource;
-    function GetVistaStock: TcxGridDBTableView;
-    function GetVistaBusqueda: TcxGridDBTableView;
-    function GetRepositorioSoloTexto: TcxEditRepositoryTextItem;
-    function GetRepositorioCombo:
-      TcxEditRepositoryExtLookupComboBoxItem;
     function GetTemporizadorBusqueda: TTimer;
     function GetNavegacionEnter: TJvEnterAsTab;
     function GetBotonBuscar: TcxButton;
     function GetBotonEliminar: TcxButton;
-    function GetImagenStock: TImage;
     function ObtenerResolviendoPorScanner: Boolean;
     procedure ActualizarLabelTotal(Sender: TObject;
       ANuevoTotal: Currency);
@@ -206,25 +200,15 @@ type
       read GetColumnaDescuentoMenos;
     property cxgrdLineasOpe: TcxGrid read GetRejilla;
     property dsLineas: TDataSource read GetFuenteLineas;
-    property dsStock: TDataSource read GetFuenteStock;
     property dsBusq: TDataSource read GetFuenteBusqueda;
-    property dbtvStock: TcxGridDBTableView read GetVistaStock;
-    property dbtvBusq: TcxGridDBTableView read GetVistaBusqueda;
-    property repSoloTexto: TcxEditRepositoryTextItem
-      read GetRepositorioSoloTexto;
-    property repComboBox: TcxEditRepositoryExtLookupComboBoxItem
-      read GetRepositorioCombo;
     property tmrBusq: TTimer read GetTemporizadorBusqueda;
     property jvEnterTab: TJvEnterAsTab read GetNavegacionEnter;
     property btnF3: TcxButton read GetBotonBuscar;
     property btnF8: TcxButton read GetBotonEliminar;
-    property imgFotoStock: TImage read GetImagenStock;
     property DatosCaja: TdmCajaOpe read FDatosCaja;
     property ConexionPrincipal: TUniConnection read FConexionPrincipal;
     property ParametrosCaja: IParametrosCaja read FParametrosCaja;
     property RegistroLog: IRegistroLog read FRegistroLog;
-    property BusquedaVisual: IBusquedaVisual read FBusquedaVisual;
-    property FotosArticulos: TFotosArticulos read FFotosArticulos;
   public
     constructor Create(
       const AControles: TControlesEditorLineasCajaVcl;
@@ -854,36 +838,9 @@ begin
   Result := FControles.FuenteLineas;
 end;
 
-function TEditorLineasCajaVcl.GetFuenteStock: TDataSource;
-begin
-  Result := FControles.FuenteStock;
-end;
-
 function TEditorLineasCajaVcl.GetFuenteBusqueda: TDataSource;
 begin
   Result := FControles.FuenteBusqueda;
-end;
-
-function TEditorLineasCajaVcl.GetVistaStock: TcxGridDBTableView;
-begin
-  Result := FControles.VistaStock;
-end;
-
-function TEditorLineasCajaVcl.GetVistaBusqueda: TcxGridDBTableView;
-begin
-  Result := FControles.VistaBusqueda;
-end;
-
-function TEditorLineasCajaVcl.GetRepositorioSoloTexto:
-  TcxEditRepositoryTextItem;
-begin
-  Result := FControles.RepositorioSoloTexto;
-end;
-
-function TEditorLineasCajaVcl.GetRepositorioCombo:
-  TcxEditRepositoryExtLookupComboBoxItem;
-begin
-  Result := FControles.RepositorioCombo;
 end;
 
 function TEditorLineasCajaVcl.GetTemporizadorBusqueda: TTimer;
@@ -906,14 +863,13 @@ begin
   Result := FControles.BotonEliminar;
 end;
 
-function TEditorLineasCajaVcl.GetImagenStock: TImage;
-begin
-  Result := FControles.ImagenStock;
-end;
-
 constructor TEditorLineasCajaVcl.Create(
   const AControles: TControlesEditorLineasCajaVcl;
   const AServicios: TServiciosEditorLineasCajaVcl);
+var
+  ContextoBusqueda: TContextoBusquedaEditorLineasCajaVcl;
+  ContextoInteraccion: TContextoInteraccionEditorLineasCajaVcl;
+  ContextoRender: TContextoRenderEditorLineasCajaVcl;
 begin
   inherited Create;
   FControles := AControles;
@@ -926,8 +882,6 @@ begin
   FDependencias := AServicios.Dependencias;
   FRepositorioArticulos := AServicios.RepositorioArticulos;
   FRepositorioFacturas := AServicios.RepositorioFacturas;
-  FBusquedaVisual := AServicios.BusquedaVisual;
-  FFotosArticulos := AServicios.FotosArticulos;
   FRegistroLog := AServicios.RegistroLog;
   FActualizarTotal := AServicios.ActualizarTotal;
   FCerrarFormulario := AServicios.CerrarFormulario;
@@ -935,13 +889,55 @@ begin
   FLectorLeyendoTrama := AServicios.LectorLeyendoTrama;
   FObtenerAlmacen := AServicios.ObtenerAlmacen;
   FBmpSwatchBoton := TBitmap.Create;
+  ContextoBusqueda := Default(TContextoBusquedaEditorLineasCajaVcl);
+  ContextoBusqueda.Formulario := AControles.Formulario;
+  ContextoBusqueda.DatosCaja := AServicios.DatosCaja;
+  ContextoBusqueda.Conexion := AServicios.Conexion;
+  ContextoBusqueda.ParametrosCaja := AServicios.ParametrosCaja;
+  ContextoBusqueda.RepositorioConsultas :=
+    AServicios.Dependencias.RepositorioConsultas;
+  ContextoBusqueda.RepositorioArticulos :=
+    AServicios.RepositorioArticulos;
+  ContextoBusqueda.BusquedaVisual := AServicios.BusquedaVisual;
+  ContextoBusqueda.FotosArticulos := AServicios.FotosArticulos;
+  ContextoBusqueda.RegistroLog := AServicios.RegistroLog;
+  ContextoBusqueda.VistaLineas := AControles.VistaLineas;
+  ContextoBusqueda.FuenteLineas := AControles.FuenteLineas;
+  ContextoBusqueda.FuenteStock := AControles.FuenteStock;
+  ContextoBusqueda.FuenteBusqueda := AControles.FuenteBusqueda;
+  ContextoBusqueda.VistaStock := AControles.VistaStock;
+  ContextoBusqueda.VistaBusqueda := AControles.VistaBusqueda;
+  ContextoBusqueda.TemporizadorBusqueda :=
+    AControles.TemporizadorBusqueda;
+  ContextoBusqueda.ImagenStock := AControles.ImagenStock;
+  FBusqueda := TBusquedaEditorLineasCajaVcl.Create(
+    ContextoBusqueda);
+  ContextoInteraccion :=
+    Default(TContextoInteraccionEditorLineasCajaVcl);
+  ContextoInteraccion.VistaLineas := AControles.VistaLineas;
+  ContextoInteraccion.RepositorioSoloTexto :=
+    AControles.RepositorioSoloTexto;
+  ContextoInteraccion.RepositorioCombo :=
+    AControles.RepositorioCombo;
+  ContextoInteraccion.TemporizadorBusqueda :=
+    AControles.TemporizadorBusqueda;
+  ContextoInteraccion.LectorLeyendoTrama :=
+    AServicios.LectorLeyendoTrama;
+  FInteraccion := TInteraccionEditorLineasCajaVcl.Create(
+    ContextoInteraccion);
+  ContextoRender := Default(TContextoRenderEditorLineasCajaVcl);
+  ContextoRender.Conexion := AServicios.Conexion;
+  ContextoRender.ColumnaArticulo := AControles.ColumnaArticulo;
+  FRender := TRenderEditorLineasCajaVcl.Create(ContextoRender);
 end;
 
 destructor TEditorLineasCajaVcl.Destroy;
 begin
   FTecladoLinea.Procesador := nil;
   FTecladoLinea.Rejilla := nil;
-  FConsultaStock := nil;
+  FreeAndNil(FRender);
+  FreeAndNil(FInteraccion);
+  FreeAndNil(FBusqueda);
   FResultadoBusquedaIncremental := nil;
   FRepositorioArticulos := nil;
   FRepositorioFacturas := nil;
@@ -949,7 +945,6 @@ begin
   FResolverArticulos := nil;
   FAtributosArticulos := nil;
   FParametrosCaja := nil;
-  FBusquedaVisual := nil;
   FRegistroLog := nil;
   FreeAndNil(FBmpSwatchBoton);
   inherited;
@@ -1472,146 +1467,22 @@ begin
 end;
 
 procedure TEditorLineasCajaVcl.ConsultarStock(const ACodigo: string);
-var
-  View: TcxGridDBTableView;
-  DataSetStock: TDataSet;
-  I: Integer;
-  Mapa: TDictionary<string, string>;
-  sCodigoArticulo: string;
-  sCodigoConsulta: string;
 begin
-  sCodigoConsulta := Trim(ACodigo);
-  if sCodigoConsulta <> '' then
-  begin
-    if ParametrosCaja.GetBool(
-         'vgerStockTodosColores',
-         False) and
-       (Pos('/', sCodigoConsulta) > 0) and
-       Assigned(DatosCaja) and
-       DatosCaja.cdsLineas.Active then
-    begin
-      // El padre devuelve una fila por color y almacén.
-      sCodigoArticulo :=
-        Trim(
-          DatosCaja.cdsLineas.FieldByName(
-            'CODIGO_ART_FACLIN').AsString);
-      if sCodigoArticulo <> '' then
-      begin
-        sCodigoConsulta := sCodigoArticulo;
-      end;
-    end;
-    dsStock.DataSet := nil;
-    FConsultaStock :=
-      FDependencias.RepositorioConsultas.ConsultarStock(
-        sCodigoConsulta);
-    DataSetStock := FConsultaStock.DataSet;
-    dsStock.DataSet := DataSetStock;
-    View := dbtvStock;
-    View.BeginUpdate;
-    try
-      View.ClearItems;
-      if not DataSetStock.IsEmpty then
-      begin
-        View.DataController.CreateAllItems;
-        for I := 0 to View.ColumnCount - 1 do
-        begin
-          if (I = 0) or (I = 1) then
-          begin
-            View.Columns[I].HeaderAlignmentHorz := taLeftJustify
-          end
-          else
-          begin
-            View.Columns[I].HeaderAlignmentHorz := taRightJustify;
-          end;
-        end;
-      end;
-    finally
-      View.EndUpdate;
-    end;
-    if DataSetStock.Active and
-       (not DataSetStock.IsEmpty) then
-    begin
-      View.BeginUpdate;
-      try
-        try
-          View.ApplyBestFit;
-        except
-          // BestFit es cosmetico: no bloquea la carga del stock.
-          on E: Exception do
-            RegistroLog.RegistrarAviso(
-              'CajaOpe: ApplyBestFit del stock ignorado: ' +
-              E.Message);
-        end;
-        // ApplyBestFit no reserva el ancho del indicador de color.
-        Mapa := ObtenerMapaAtributosGlobal(
-          ConexionPrincipal);
-        if Assigned(Mapa) and
-           (Mapa.Count > 0) and
-           (View.ColumnCount > 0) then
-        begin
-          AjustarAnchoColumnaParaSwatch(
-            ConexionPrincipal,
-            View.Columns[0],
-            Mapa);
-        end;
-      finally
-        View.EndUpdate;
-      end;
-    end;
-  end;
+  FBusqueda.ConsultarStock(ACodigo);
 end;
 
 procedure TEditorLineasCajaVcl.DibujarCeldaLinea(
   Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
   AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
-var
-  Info: TInfoBasico;
-  Mapa: TDictionary<string, string>;
-  sArticulo: string;
-  sIdVa: string;
-  sTexto: string;
 begin
-  // Pinta el cuadradito de la paleta basica al lado del valor de atributo
-  // (Color = MALVA, Talla = 48, ...) en las celdas de las lineas de venta.
-  // La asignacion por articulo gana porque los codigos de proveedor pueden
-  // representar colores basicos distintos segun el articulo.
-  if (AViewInfo <> nil) and (AViewInfo.Item <> nil) and
-     (AViewInfo.GridRecord <> nil) and
-     (AViewInfo.Item.Tag >= 1) and (AViewInfo.Item.Tag <= 5) then
-  begin
-    sArticulo := VarToStr(
-      AViewInfo.GridRecord.Values[tvArticulo.Index]);
-    sTexto := AViewInfo.Text;
-    Mapa := ObtenerMapaAtributosGlobal(ConexionPrincipal);
-    sIdVa := '';
-    if (Mapa <> nil) and (AViewInfo.Item is TcxGridColumn) then
-      Mapa.TryGetValue(UpperCase(Trim(
-        TcxGridColumn(AViewInfo.Item).Caption)), sIdVa);
-    if ObtenerInfoBasicoArticulo(
-      ConexionPrincipal,
-      sArticulo,
-      sIdVa,
-      sTexto,
-      Info) then
-      ADone := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto);
-  end;
-  if (not ADone) and
-     PintarCeldaSwatchSiAplica(ConexionPrincipal,ACanvas, AViewInfo, nil) then
-    ADone := True;
+  FRender.DibujarCeldaLinea(Sender, ACanvas, AViewInfo, ADone);
 end;
 
 procedure TEditorLineasCajaVcl.DibujarCeldaStock(
   Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
   AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
 begin
-  // Solo pintamos swatch en la primera columna (Codigo "CODART/COLOR").
-  // Las columnas pivotadas de talla traen cantidades y no queremos
-  // cuadradito al lado de cada numero — basta con la del codigo.
-  if (AViewInfo <> nil) and (AViewInfo.Item <> nil) and
-     (AViewInfo.Item.VisibleIndex = 0) and
-     PintarCeldaSwatchSiAplica(
-       ConexionPrincipal, ACanvas, AViewInfo, nil) then
-    ADone := True;
+  FRender.DibujarCeldaStock(Sender, ACanvas, AViewInfo, ADone);
 end;
 
 function TEditorLineasCajaVcl.ValidarSkuParaVenta(
@@ -1714,243 +1585,36 @@ end;
 procedure TEditorLineasCajaVcl.EjecutarBusquedaIncremental(
   Sender: TObject);
 var
-  dtFechaTarifa: TDateTime;
-  EditActivo: TcxCustomEdit;
-  oDatosBusqueda: TDataSet;
-  sTarifa: string;
-  TextEdit: TcxCustomTextEdit;
-  TextoBusqueda: string;
+  Resultado: IResultadoConsultaCaja;
 begin
-  tmrBusq.Enabled := False;
-  EditActivo := nil;
-  dbtvBusq.BeginUpdate;
-  try
-    dbtvBusq.DataController.DataSource := nil;
-    dbtvBusq.DataController.Filter.Clear;
-    dbtvBusq.DataController.Filter.Active := False;
-    dbtvBusq.Controller.IncSearchingText := '';
-    if tvLineasOpe.Controller.EditingController.IsEditing then
-    begin
-      EditActivo := tvLineasOpe.Controller.EditingController.Edit;
-      if EditActivo <> nil then
-      begin
-        // Cuando el timer dispara, el editor activo puede no ser el de
-        // tvArticulo (el usuario pudo moverse a otra celda durante los
-        // 500ms de debounce). Solo casteamos a TcxCustomTextEdit si el
-        // editor realmente lo es; en otro caso usamos EditingValue.
-        // Esto evita el EInvalidCast cuando el editor activo no es de
-        // tipo texto (p.ej. TcxButtonEdit de columnas de atributo).
-        if EditActivo is TcxCustomTextEdit then
-        begin
-          TextEdit := TcxCustomTextEdit(EditActivo);
-          if TextEdit.SelLength > 0 then
-            TextoBusqueda := Copy(TextEdit.Text, 1, TextEdit.SelStart)
-          else
-            TextoBusqueda := TextEdit.Text;
-        end
-        else
-          TextoBusqueda := VarToStr(EditActivo.EditingValue);
-        TextoBusqueda := Trim(TextoBusqueda);
-        if Length(TextoBusqueda) >= 1 then
-        begin
-          sTarifa := DatosCaja.cdsCabecera.FieldByName(
-            'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-          dtFechaTarifa := DatosCaja.cdsCabecera.FieldByName(
-            'FECHA_FAC').AsDateTime;
-          dsBusq.DataSet := nil;
-          FResultadoBusquedaIncremental :=
-            FRepositorioArticulos.ConsultarArticulosIncremental(
-              sTarifa,
-              TextoBusqueda,
-              dtFechaTarifa);
-          oDatosBusqueda := FResultadoBusquedaIncremental.DataSet;
-          dsBusq.DataSet := oDatosBusqueda;
-          // Diagnostico: registramos el resultado de la busqueda incremental
-          // para saber si la vista vi_art_busquedas devuelve filas. El log SQL
-          // estandar marca filas=- en queries con LIMIT, asi que aqui lo
-          // contamos explicitamente. Si filas=0, el problema es de datos (la
-          // vista no devuelve nada para esa TARIFA/FECHA) y no del UI.
-          try
-            RegistroLog.RegistrarInformacion(
-              Format('qryBusq.Open: TARIFA="%s" ' +
-              'FECHA_TARIFA="%s" TOKEN="%s" IsEmpty=%s RecordCount=%d',
-              [sTarifa,
-               DateToStr(dtFechaTarifa),
-               TextoBusqueda,
-               BoolToStr(oDatosBusqueda.IsEmpty, True),
-               oDatosBusqueda.RecordCount]));
-            // Volcamos los primeros 5 codigos para verificar que la vista
-            // realmente devuelve algo aprovechable (no nulls, codigos validos)
-            if not oDatosBusqueda.IsEmpty then
-            begin
-              oDatosBusqueda.First;
-              while (not oDatosBusqueda.Eof) and
-                    (oDatosBusqueda.RecNo <= 5) do
-              begin
-                RegistroLog.RegistrarInformacion(
-                  Format('qryBusq fila %d: cod="%s" desc="%s"',
-                  [oDatosBusqueda.RecNo,
-                   oDatosBusqueda.FieldByName('CODIGO_PADRE').AsString,
-                   oDatosBusqueda.FieldByName('DESCRIPCION_ART').AsString]));
-                oDatosBusqueda.Next;
-              end;
-              oDatosBusqueda.First;
-            end;
-          except
-            on E: Exception do
-              RegistroLog.RegistrarAviso('qryBusq diagnostico: ' +
-                                      E.ClassName + ' ' + E.Message);
-          end;
-          dbtvBusq.DataController.DataSource := dsBusq;
-          dbtvBusq.DataController.Refresh;
-        end;
-      end;
-    end;
-  finally
-    dbtvBusq.EndUpdate;
-  end;
-  if (EditActivo is TcxExtLookupComboBox) then
-    begin
-       if not TcxExtLookupComboBox(EditActivo).DroppedDown then
-       begin
-          if Assigned(dsBusq.DataSet) and
-             not dsBusq.DataSet.IsEmpty then
-             TcxExtLookupComboBox(EditActivo).DroppedDown := True;
-       end
-       else
-       begin
-          TcxExtLookupComboBox(EditActivo).Properties.DropDownRows := 15;
-       end;
-    end;
+  Resultado := FBusqueda.EjecutarBusquedaIncremental(Sender);
+  if Assigned(Resultado) then
+    FResultadoBusquedaIncremental := Resultado;
 end;
 
 procedure TEditorLineasCajaVcl.ObtenerPropiedadesArticulo(
   Sender: TcxCustomGridTableItem; ARecord: TcxCustomGridRecord;
   var AProperties: TcxCustomEditProperties);
-var
-  EsLaCeldaFocale: Boolean;
-  ValorActual: Variant;
 begin
-  if (ARecord <> nil) and (tvLineasOpe.Controller <> nil) then
-  begin
-    ValorActual := ARecord.Values[Sender.Index];
-    if (not VarIsNull(ValorActual)) and
-       (Trim(VarToStr(ValorActual)) <> '') then
-      AProperties := repSoloTexto.Properties
-    else
-    begin
-      EsLaCeldaFocale :=
-        (tvLineasOpe.Controller.FocusedRecord = ARecord) and
-        (tvLineasOpe.Controller.FocusedItem = Sender);
-      if EsLaCeldaFocale then
-        AProperties := repComboBox.Properties
-      else
-        AProperties := repSoloTexto.Properties;
-    end;
-  end;
+  FInteraccion.ObtenerPropiedadesArticulo(
+    Sender,
+    ARecord,
+    AProperties);
 end;
 
 procedure TEditorLineasCajaVcl.CambiarArticulo(Sender: TObject);
 begin
-  if not FLectorLeyendoTrama() then
-  begin
-    tmrBusq.Enabled := False;
-    tmrBusq.Enabled := True;
-  end;
+  FInteraccion.CambiarArticulo(Sender);
 end;
 
 procedure TEditorLineasCajaVcl.CerrarBusquedaArticulo(Sender: TObject);
-var
-  Combo: TcxExtLookupComboBox;
-  Vista: TcxGridDBTableView;
 begin
-  if Sender is TcxExtLookupComboBox then
-  begin
-    Combo := TcxExtLookupComboBox(Sender);
-    if Combo.Properties.View is TcxGridDBTableView then
-    begin
-      Vista := TcxGridDBTableView(Combo.Properties.View);
-      Vista.BeginUpdate;
-      try
-        Vista.Controller.IncSearchingText := '';
-        Vista.DataController.Filter.Clear;
-        Vista.DataController.Filter.Active := False;
-      finally
-        Vista.EndUpdate;
-      end;
-    end;
-  end;
+  FInteraccion.CerrarBusquedaArticulo(Sender);
 end;
 
 function TEditorLineasCajaVcl.BuscarArticulo: string;
-  // Helper: ajusta DisplayLabel y, si procede, DisplayFormat de un campo.
-  // El cast depende del TField concreto (TFloatField / TFMTBCDField /
-  // TDateField / TSQLTimeStampField segun como UniDAC mapea la columna).
-  procedure ConfigCampo(F: TField; const ALabel, AFormat: string);
-  begin
-    if F <> nil then
-    begin
-      if ALabel <> '' then
-        F.DisplayLabel := ALabel;
-      if AFormat <> '' then
-      begin
-        if F is TFloatField then
-          TFloatField(F).DisplayFormat := AFormat
-        else if F is TBCDField then
-          TBCDField(F).DisplayFormat := AFormat
-        else if F is TFMTBCDField then
-          TFMTBCDField(F).DisplayFormat := AFormat
-        else if F is TDateField then
-          TDateField(F).DisplayFormat := AFormat
-        else if F is TDateTimeField then
-          TDateTimeField(F).DisplayFormat := AFormat
-        else if F is TSQLTimeStampField then
-          TSQLTimeStampField(F).DisplayFormat := AFormat;
-      end;
-    end;
-  end;
 begin
-  // El repositorio entrega la consulta ya abierta. Aqui solo se aplican
-  // metadatos de presentacion antes de crear las columnas de la busqueda.
-  var oResultado := FRepositorioArticulos.ConsultarArticulosBusqueda(
-    DatosCaja.cdsCabecera.FieldByName(
-      'TARIFA_ARTICULO_CLIENTE_FAC').AsString,
-    DatosCaja.cdsCabecera.FieldByName('FECHA_FAC').AsDateTime);
-  var oDatos := oResultado.DataSet;
-    ConfigCampo(oDatos.FindField('CODIGO_ART_ART'),
-                'Código',                '');
-    ConfigCampo(oDatos.FindField('DESCRIPCION_ART'),
-                'Descripción',           '');
-    ConfigCampo(oDatos.FindField('DESCRIPCION_FAM'),
-                'Familia',               '');
-    ConfigCampo(oDatos.FindField('TEMPORADA'),
-                'Temporada',             '');
-    ConfigCampo(oDatos.FindField('RAZON_SOCIAL_PROVEEDOR'),
-                'Proveedor',             '');
-    ConfigCampo(oDatos.FindField('REF_PROVEEDOR'),
-                'Ref. proveedor',        '');
-    ConfigCampo(oDatos.FindField('CODIGO_TAR_ARTTAR'),
-                'Tarifa',                '');
-    ConfigCampo(oDatos.FindField('NOMBRE_TAR_TAR'),
-                'Nombre tarifa',         '');
-    ConfigCampo(oDatos.FindField('PRECIO_FINAL_ARTTAR'),
-                'Precio',                '#,##0.00 €');
-    ConfigCampo(oDatos.FindField('FECHA_DESDE_ARTTAR'),
-                'Desde',                 'dd/mm/yyyy');
-    ConfigCampo(oDatos.FindField('FECHA_HASTA_ARTTAR'),
-                'Hasta',                 'dd/mm/yyyy');
-  if BusquedaVisual.EjecutarBusquedaDataSet(
-    'Búsqueda de Artículos en Caja',
-    oDatos,
-    'frmMtoArtFacSearch',
-    Formulario) then
-  begin
-    Result := oDatos.FieldByName('CODIGO_ART_ART').AsString;
-  end
-  else
-  begin
-    Result := '';
-  end;
+  Result := FBusqueda.BuscarArticulo;
 end;
 
 procedure TEditorLineasCajaVcl.ValidarArticulo(Sender: TObject;
@@ -3811,34 +3475,8 @@ end;
 // Carga en imgFotoStock la foto a 300 px del articulo / SKU de la
 // linea activa. Lo invoca DsLineasDataChange al cambiar de registro.
 procedure TEditorLineasCajaVcl.RefrescarFotoStock;
-var
-  sArt : string;
-  sSku : string;
-  info : TFotoInfo;
-  sRuta: string;
-  png  : TPngImage;
 begin
-  if Assigned(imgFotoStock) and Assigned(dsLineas) then
-  begin
-    LeerArtSkuDeDataSet(dsLineas.DataSet, sArt, sSku);
-    // La linea nueva conserva la foto del ultimo articulo introducido.
-    if sArt <> '' then
-    begin
-      imgFotoStock.Picture.Assign(nil);
-      info  := FotosArticulos.Resolver(sArt, sSku);
-      sRuta := FotosArticulos.RutaFoto(info, frPx300);
-      if sRuta <> '' then
-      begin
-        png := TPngImage.Create;
-        try
-          png.LoadFromFile(sRuta);
-          imgFotoStock.Picture.Assign(png);
-        finally
-          FreeAndNil(png);
-        end;
-      end;
-    end;
-  end;
+  FBusqueda.RefrescarFotoStock;
 end;
 
 procedure TEditorLineasCajaVcl.NotificarCambioLinea(

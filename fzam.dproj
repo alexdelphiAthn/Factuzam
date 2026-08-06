@@ -728,12 +728,17 @@
         <DCCReference Include="src\Caja\Forms\inMtoCajaOpe.pas">
             <Form>frmMtoOpeCaja</Form>
         </DCCReference>
+        <DCCReference Include="src\Caja\Forms\inMtoCajaEditorLineasDecisiones.pas"/>
+        <DCCReference Include="src\Caja\Forms\inMtoCajaEditorLineasInteraccion.pas"/>
+        <DCCReference Include="src\Caja\Forms\inMtoCajaEditorLineasBusqueda.pas"/>
+        <DCCReference Include="src\Caja\Forms\inMtoCajaEditorLineasRender.pas"/>
         <DCCReference Include="src\Caja\Forms\inMtoCajaCierreVentaVcl.pas"/>
         <DCCReference Include="src\Caja\Forms\inMtoCajaEntradaVcl.pas"/>
         <DCCReference Include="src\Caja\Forms\inMtoCajaImpresorVenta.pas"/>
         <DCCReference Include="src\Caja\DataModules\UniDataCaja.pas">
             <Form>dmCajaOpe</Form>
         </DCCReference>
+        <DCCReference Include="src\Caja\DataModules\UniDataCajaCierreVenta.pas"/>
         <DCCReference Include="src\Caja\DataModules\UniDataCajaUnidadTrabajo.pas"/>
         <DCCReference Include="src\Caja\Forms\inMtoCajaOperacionVclInyeccion.pas"/>
         <DCCReference Include="src\Caja\Forms\inMtoTraspasoOpe.pas">
@@ -835,6 +840,8 @@
         <DCCReference Include="src\Caja\DataModules\UniDataTicketsCajaRepositorio.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibArqueo.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibArqueoTicket.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibArqueoTicketPresentacion.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibArqueoTicketPresentacionTermica.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibArqueoPersistencia.pas"/>
         <DCCReference Include="src\Caja\DataModules\UniDataArqueoPersistencia.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibGenerarTicketCaja.pas"/>
@@ -844,6 +851,7 @@
         </DCCReference>
         <DCCReference Include="src\Caja\Lib\inLibModalArqueoPersistenciaIntf.pas"/>
         <DCCReference Include="src\Caja\DataModules\UniDataModalArqueoRepositorio.pas"/>
+        <DCCReference Include="src\Caja\DataModules\UniDataModalArqueoOperacion.pas"/>
         <DCCReference Include="src\Caja\Modals\inMtoModalArqueosHistCaja.pas">
             <Form>frmModalArqueosHistCaja</Form>
         </DCCReference>

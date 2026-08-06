@@ -25,6 +25,22 @@
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
     }
+    TEditorLineasCajaVcl = @{
+      Lineas = 1817
+      Metodos = 68
+      Campos = 30
+      ObjetivoLineas = 2000
+      ObjetivoMetodos = 120
+      ObjetivoCampos = 35
+    }
+    TdmCajaOpe = @{
+      Lineas = 1724
+      Metodos = 27
+      Campos = 12
+      ObjetivoLineas = 2000
+      ObjetivoMetodos = 120
+      ObjetivoCampos = 30
+    }
     TfrmMtoPedidosCompra = @{
       Lineas = 1964
       Metodos = 77

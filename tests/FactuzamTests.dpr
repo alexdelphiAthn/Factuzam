@@ -298,6 +298,12 @@ uses
     '..\src\DataModules\UniDataFacturaeRepositorio.pas',
   UniDataCajaConsultasRepositorio in
     '..\src\Caja\DataModules\UniDataCajaConsultasRepositorio.pas',
+  UniDataCajaCierreVenta in
+    '..\src\Caja\DataModules\UniDataCajaCierreVenta.pas',
+  UniDataModalArqueoOperacion in
+    '..\src\Caja\DataModules\UniDataModalArqueoOperacion.pas',
+  inMtoCajaEditorLineasDecisiones in
+    '..\src\Caja\Forms\inMtoCajaEditorLineasDecisiones.pas',
   inLibArticulosResolverIntf in
     '..\src\Lib\inLibArticulosResolverIntf.pas',
   UniDataArticulosResolverRepositorio in
@@ -332,6 +338,10 @@ uses
     '..\src\Caja\DataModules\UniDataArqueoRepositorio.pas',
   inLibArqueoTicketIntf in
     '..\src\Caja\Lib\inLibArqueoTicketIntf.pas',
+  inLibArqueoTicketPresentacion in
+    '..\src\Caja\Lib\inLibArqueoTicketPresentacion.pas',
+  inLibArqueoTicketPresentacionTermica in
+    '..\src\Caja\Lib\inLibArqueoTicketPresentacionTermica.pas',
   UniDataArqueoTicketRepositorio in
     '..\src\Caja\DataModules\UniDataArqueoTicketRepositorio.pas',
   inLibTiraCajaTicketIntf in
@@ -465,6 +475,8 @@ uses
   PruebasRectificativas in 'PruebasRectificativas.pas',
   PruebasReglasCompartidas in 'PruebasReglasCompartidas.pas',
   PruebasCajaVenta in 'PruebasCajaVenta.pas',
+  PruebasModalArqueoPersistencia in
+    'PruebasModalArqueoPersistencia.pas',
   PruebasCajaEntrada in 'PruebasCajaEntrada.pas',
   PruebasFacturasServicios in 'PruebasFacturasServicios.pas',
   PruebasFacturasLecturas in 'PruebasFacturasLecturas.pas',

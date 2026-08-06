@@ -28,7 +28,7 @@ function CrearRepositorioEntradaCambioUniDAC(
 implementation
 
 uses
-  System.SysUtils, UniDataCaja;
+  System.SysUtils, UniDataCajaCierreVenta;
 
 type
   TRepositorioEntradaCambioUniDAC = class(
@@ -69,28 +69,23 @@ end;
 function TRepositorioEntradaCambioUniDAC.Registrar(
   const ASolicitud: TSolicitudEntradaCambio): string;
 var
-  oDatosCaja: TdmCajaOpe;
   oConsulta: TUniQuery;
+  oPersistencia: TPersistenciaCierreVentaCajaUniDAC;
 begin
-  oDatosCaja := TdmCajaOpe.Create(
-    nil,
+  oPersistencia := TPersistenciaCierreVentaCajaUniDAC.Create(
     FConexion,
-    FParametrosApp,
-    FParametrosCaja,
-    FPreviewTicket);
+    FContextoSesion.Identidad.Usuario);
   try
-    oDatosCaja.AsignarContextoSesion(FContextoSesion);
-    Result := oDatosCaja.SiguienteOpCaja(
+    Result := oPersistencia.SiguienteOperacion(
       ASolicitud.Empresa,
       ASolicitud.Almacen,
       ASolicitud.Caja,
       ASolicitud.Empleado);
-    FConexion.StartTransaction;
+    oPersistencia.IniciarUnidadTrabajo;
     try
-      oConsulta := TUniQuery.Create(nil);
+      oConsulta := oPersistencia.CrearConsulta;
       try
-        oConsulta.Connection := FConexion;
-        oDatosCaja.InsertarOperacionCaja(
+        oPersistencia.GuardarOperacion(
           oConsulta,
           ASolicitud.Empresa,
           ASolicitud.Almacen,
@@ -104,7 +99,7 @@ begin
           '',
           '',
           ASolicitud.Concepto);
-        oDatosCaja.InsertarPagoCaja(
+        oPersistencia.GuardarPago(
           oConsulta,
           ASolicitud.Empresa,
           ASolicitud.Almacen,
@@ -118,13 +113,13 @@ begin
       finally
         FreeAndNil(oConsulta);
       end;
-      FConexion.Commit;
+      oPersistencia.ConfirmarUnidadTrabajo;
     except
-      FConexion.Rollback;
+      oPersistencia.RevertirUnidadTrabajo;
       raise;
     end;
   finally
-    FreeAndNil(oDatosCaja);
+    FreeAndNil(oPersistencia);
   end;
 end;
 
