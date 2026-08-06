@@ -917,6 +917,155 @@ begin
   end;
 end;
 
+procedure AnadirOrigenPreviewArticulos(
+  ASql: TStrings;
+  const AAlmacenes, AColumnasExtra, AYaCargado: string);
+begin
+  ASql.Add('SELECT a.CODIGO_ART_ART, a.DESCRIPCION_ART,');
+  ASql.Add('a.CODIGO_FAM_ART, f.NOMBRE_FAM_FAM,');
+  ASql.Add('(SELECT GROUP_CONCAT(ap.CODIGO_PRV_AP)');
+  ASql.Add('FROM fza_articulos_proveedores ap');
+  ASql.Add('WHERE ap.CODIGO_ART_AP = a.CODIGO_ART_ART) AS PROVEEDORES,');
+  ASql.Add('COALESCE((SELECT SUM(s.CANTIDAD_STK)');
+  ASql.Add('FROM fza_articulos_stockactual s');
+  ASql.Add('LEFT JOIN fza_articulos_skus sk');
+  ASql.Add('ON sk.CODIGO_UNIDAD_SKU = s.CODIGO_UNIDAD_STK');
+  ASql.Add('WHERE COALESCE(sk.CODIGO_ART_SKU, s.CODIGO_UNIDAD_STK)');
+  ASql.Add('= a.CODIGO_ART_ART');
+  if AAlmacenes <> '' then
+    ASql.Add('AND s.CODIGO_ALM_STK IN (' + AAlmacenes + ')');
+  ASql.Add('), 0) AS STOCK_TOTAL,');
+  if AColumnasExtra <> '' then
+    ASql.Add(AColumnasExtra);
+  ASql.Add(AYaCargado + ' AS YA_CARGADO');
+  ASql.Add('FROM fza_articulos a LEFT JOIN fza_articulos_familias f');
+  ASql.Add('ON f.CODIGO_FAM_FAM = a.CODIGO_FAM_ART WHERE 1 = 1');
+end;
+
+procedure AnadirFiltroStockPreviewArticulos(
+  ASql: TStrings;
+  const AFiltros: TFiltrosCargaMasivaArticulos;
+  const AAlmacenes: string);
+begin
+  if AFiltros.SoloConStock and (AAlmacenes <> '') then
+  begin
+    case AFiltros.StockCombinacion of
+      scCualquiera:
+        begin
+          ASql.Add('AND EXISTS (SELECT 1 FROM fza_articulos_stockactual s2');
+          ASql.Add('LEFT JOIN fza_articulos_skus sk2');
+          ASql.Add('ON sk2.CODIGO_UNIDAD_SKU = s2.CODIGO_UNIDAD_STK');
+          ASql.Add('WHERE COALESCE(sk2.CODIGO_ART_SKU,');
+          ASql.Add('s2.CODIGO_UNIDAD_STK) = a.CODIGO_ART_ART');
+          ASql.Add('AND s2.CANTIDAD_STK > 0');
+          ASql.Add('AND s2.CODIGO_ALM_STK IN (' + AAlmacenes + '))');
+        end;
+      scTodos:
+        begin
+          ASql.Add('AND (SELECT COUNT(DISTINCT s2.CODIGO_ALM_STK)');
+          ASql.Add('FROM fza_articulos_stockactual s2');
+          ASql.Add('LEFT JOIN fza_articulos_skus sk2');
+          ASql.Add('ON sk2.CODIGO_UNIDAD_SKU = s2.CODIGO_UNIDAD_STK');
+          ASql.Add('WHERE COALESCE(sk2.CODIGO_ART_SKU,');
+          ASql.Add('s2.CODIGO_UNIDAD_STK) = a.CODIGO_ART_ART');
+          ASql.Add('AND s2.CANTIDAD_STK > 0');
+          ASql.Add('AND s2.CODIGO_ALM_STK IN (' + AAlmacenes + ')) = ' +
+            IntToStr(Length(AFiltros.CodigosAlmacen)));
+        end;
+      scSumaPositiva:
+        begin
+          ASql.Add('AND COALESCE((SELECT SUM(s2.CANTIDAD_STK)');
+          ASql.Add('FROM fza_articulos_stockactual s2');
+          ASql.Add('LEFT JOIN fza_articulos_skus sk2');
+          ASql.Add('ON sk2.CODIGO_UNIDAD_SKU = s2.CODIGO_UNIDAD_STK');
+          ASql.Add('WHERE COALESCE(sk2.CODIGO_ART_SKU,');
+          ASql.Add('s2.CODIGO_UNIDAD_STK) = a.CODIGO_ART_ART');
+          ASql.Add('AND s2.CODIGO_ALM_STK IN (' + AAlmacenes + ')), 0) > 0');
+        end;
+    end;
+  end;
+end;
+
+procedure AnadirFiltroFamiliasPreviewArticulos(
+  ASql: TStrings;
+  const AFiltros: TFiltrosCargaMasivaArticulos;
+  const AFamilias: string);
+begin
+  if AFamilias <> '' then
+  begin
+    if AFiltros.PropagarFamilias then
+    begin
+      ASql.Add('AND a.CODIGO_FAM_ART IN (WITH RECURSIVE arbol AS (');
+      ASql.Add('SELECT CODIGO_FAM_FAM, CODIGO_SUBFAMILIA_FAM');
+      ASql.Add('FROM fza_articulos_familias');
+      ASql.Add('WHERE CODIGO_FAM_FAM IN (' + AFamilias + ') UNION ALL');
+      ASql.Add('SELECT h.CODIGO_FAM_FAM, h.CODIGO_SUBFAMILIA_FAM');
+      ASql.Add('FROM fza_articulos_familias h JOIN arbol a2');
+      ASql.Add('ON h.CODIGO_SUBFAMILIA_FAM = a2.CODIGO_FAM_FAM)');
+      ASql.Add('SELECT CODIGO_FAM_FAM FROM arbol)');
+    end
+    else
+      ASql.Add('AND a.CODIGO_FAM_ART IN (' + AFamilias + ')');
+  end;
+end;
+
+procedure AnadirFiltrosCatalogoPreviewArticulos(
+  ASql: TStrings;
+  const AFiltros: TFiltrosCargaMasivaArticulos;
+  const AProveedores, APropiedades: string);
+begin
+  if AProveedores <> '' then
+  begin
+    ASql.Add('AND EXISTS (SELECT 1 FROM fza_articulos_proveedores apx');
+    ASql.Add('WHERE apx.CODIGO_ART_AP = a.CODIGO_ART_ART');
+    ASql.Add('AND apx.CODIGO_PRV_AP IN (' + AProveedores + ')');
+    if AFiltros.SoloProveedorPrincipal then
+      ASql.Add('AND apx.ESPROVEEDORPRINCIPAL_AP = ''S''');
+    ASql.Add(')');
+  end;
+  if APropiedades <> '' then
+  begin
+    ASql.Add('AND EXISTS (SELECT 1 FROM fza_articulos_propiedades pp');
+    ASql.Add('WHERE pp.CODIGO_ART_ART = a.CODIGO_ART_ART');
+    ASql.Add('AND pp.ID_PV_ARTPROP IN (' + APropiedades + '))');
+  end;
+  if AFiltros.AplicarFechaAlta then
+  begin
+    ASql.Add('AND a.INSTANTE_ALTA >= :P_ALTA_DESDE');
+    ASql.Add('AND a.INSTANTE_ALTA < :P_ALTA_HASTA');
+  end;
+end;
+
+procedure AnadirFiltroVentasPreviewArticulos(
+  ASql: TStrings;
+  const AFiltros: TFiltrosCargaMasivaArticulos);
+begin
+  if AFiltros.FiltrarVentas then
+  begin
+    if AFiltros.ConVentas then
+    begin
+      ASql.Add('AND (SELECT COUNT(*) FROM fza_facturas_lineas fl');
+      ASql.Add(
+        'JOIN fza_facturas fc ON fc.NUMERO_FAC = fl.NUMERO_FAC_FACLIN');
+      ASql.Add('AND fc.SERIE_FAC = fl.SERIE_FAC_FACLIN');
+      ASql.Add('WHERE fl.CODIGO_ART_FACLIN = a.CODIGO_ART_ART');
+      ASql.Add('AND fc.FECHA_FAC >= :P_VTA_DESDE');
+      ASql.Add('AND fc.FECHA_FAC < :P_VTA_HASTA)');
+      ASql.Add('>= :P_NUM_MIN_VTAS');
+    end
+    else
+    begin
+      ASql.Add('AND NOT EXISTS (SELECT 1 FROM fza_facturas_lineas fl');
+      ASql.Add(
+        'JOIN fza_facturas fc ON fc.NUMERO_FAC = fl.NUMERO_FAC_FACLIN');
+      ASql.Add('AND fc.SERIE_FAC = fl.SERIE_FAC_FACLIN');
+      ASql.Add('WHERE fl.CODIGO_ART_FACLIN = a.CODIGO_ART_ART');
+      ASql.Add('AND fc.FECHA_FAC >= :P_VTA_DESDE');
+      ASql.Add('AND fc.FECHA_FAC < :P_VTA_HASTA)');
+    end;
+  end;
+end;
+
 function TServicioCargaMasivaArticulosUniDAC.ConstruirSqlPreviewArticulos(
   const AFiltros: TFiltrosCargaMasivaArticulos;
   const AContexto: TContextoCargaMasivaArticulos): string;
@@ -933,138 +1082,18 @@ begin
   sPropiedades := IntArrToCsvSql(AFiltros.IdsValorPropiedad);
   oSql := TStringList.Create;
   try
-    oSql.Add('SELECT a.CODIGO_ART_ART, a.DESCRIPCION_ART,');
-    oSql.Add('a.CODIGO_FAM_ART, f.NOMBRE_FAM_FAM,');
-    oSql.Add('(SELECT GROUP_CONCAT(ap.CODIGO_PRV_AP)');
-    oSql.Add('FROM fza_articulos_proveedores ap');
-    oSql.Add('WHERE ap.CODIGO_ART_AP = a.CODIGO_ART_ART) AS PROVEEDORES,');
-    oSql.Add('COALESCE((SELECT SUM(s.CANTIDAD_STK)');
-    oSql.Add('FROM fza_articulos_stockactual s');
-    oSql.Add('LEFT JOIN fza_articulos_skus sk');
-    oSql.Add('ON sk.CODIGO_UNIDAD_SKU = s.CODIGO_UNIDAD_STK');
-    oSql.Add('WHERE COALESCE(sk.CODIGO_ART_SKU, s.CODIGO_UNIDAD_STK)');
-    oSql.Add('= a.CODIGO_ART_ART');
-    if sAlmacenes <> '' then
-    begin
-      oSql.Add('AND s.CODIGO_ALM_STK IN (' + sAlmacenes + ')');
-    end;
-    oSql.Add('), 0) AS STOCK_TOTAL,');
-    if ColumnasExtra(AContexto) <> '' then
-    begin
-      oSql.Add(ColumnasExtra(AContexto));
-    end;
-    oSql.Add(ExpresionYaCargado(AContexto) + ' AS YA_CARGADO');
-    oSql.Add('FROM fza_articulos a LEFT JOIN fza_articulos_familias f');
-    oSql.Add('ON f.CODIGO_FAM_FAM = a.CODIGO_FAM_ART WHERE 1 = 1');
+    AnadirOrigenPreviewArticulos(
+      oSql, sAlmacenes, ColumnasExtra(AContexto),
+      ExpresionYaCargado(AContexto));
     if AFiltros.SoloActivos then
-    begin
       oSql.Add('AND a.ESACTIVO_ART = ''S''');
-    end;
     if AFiltros.ExcluirYaCargados then
-    begin
       oSql.Add('AND ' + CondicionExcluirCargados(AContexto));
-    end;
-    if AFiltros.SoloConStock and (sAlmacenes <> '') then
-    begin
-      case AFiltros.StockCombinacion of
-        scCualquiera:
-          begin
-            oSql.Add('AND EXISTS (SELECT 1 FROM fza_articulos_stockactual s2');
-            oSql.Add('LEFT JOIN fza_articulos_skus sk2');
-            oSql.Add('ON sk2.CODIGO_UNIDAD_SKU = s2.CODIGO_UNIDAD_STK');
-            oSql.Add('WHERE COALESCE(sk2.CODIGO_ART_SKU,');
-            oSql.Add('s2.CODIGO_UNIDAD_STK) = a.CODIGO_ART_ART');
-            oSql.Add('AND s2.CANTIDAD_STK > 0');
-            oSql.Add('AND s2.CODIGO_ALM_STK IN (' + sAlmacenes + '))');
-          end;
-        scTodos:
-          begin
-            oSql.Add('AND (SELECT COUNT(DISTINCT s2.CODIGO_ALM_STK)');
-            oSql.Add('FROM fza_articulos_stockactual s2');
-            oSql.Add('LEFT JOIN fza_articulos_skus sk2');
-            oSql.Add('ON sk2.CODIGO_UNIDAD_SKU = s2.CODIGO_UNIDAD_STK');
-            oSql.Add('WHERE COALESCE(sk2.CODIGO_ART_SKU,');
-            oSql.Add('s2.CODIGO_UNIDAD_STK) = a.CODIGO_ART_ART');
-            oSql.Add('AND s2.CANTIDAD_STK > 0');
-            oSql.Add('AND s2.CODIGO_ALM_STK IN (' + sAlmacenes + ')) = ' +
-              IntToStr(Length(AFiltros.CodigosAlmacen)));
-          end;
-        scSumaPositiva:
-          begin
-            oSql.Add('AND COALESCE((SELECT SUM(s2.CANTIDAD_STK)');
-            oSql.Add('FROM fza_articulos_stockactual s2');
-            oSql.Add('LEFT JOIN fza_articulos_skus sk2');
-            oSql.Add('ON sk2.CODIGO_UNIDAD_SKU = s2.CODIGO_UNIDAD_STK');
-            oSql.Add('WHERE COALESCE(sk2.CODIGO_ART_SKU,');
-            oSql.Add('s2.CODIGO_UNIDAD_STK) = a.CODIGO_ART_ART');
-            oSql.Add('AND s2.CODIGO_ALM_STK IN (' + sAlmacenes + ')), 0) > 0');
-          end;
-      end;
-    end;
-    if sFamilias <> '' then
-    begin
-      if AFiltros.PropagarFamilias then
-      begin
-        oSql.Add('AND a.CODIGO_FAM_ART IN (WITH RECURSIVE arbol AS (');
-        oSql.Add('SELECT CODIGO_FAM_FAM, CODIGO_SUBFAMILIA_FAM');
-        oSql.Add('FROM fza_articulos_familias');
-        oSql.Add('WHERE CODIGO_FAM_FAM IN (' + sFamilias + ') UNION ALL');
-        oSql.Add('SELECT h.CODIGO_FAM_FAM, h.CODIGO_SUBFAMILIA_FAM');
-        oSql.Add('FROM fza_articulos_familias h JOIN arbol a2');
-        oSql.Add('ON h.CODIGO_SUBFAMILIA_FAM = a2.CODIGO_FAM_FAM)');
-        oSql.Add('SELECT CODIGO_FAM_FAM FROM arbol)');
-      end
-      else
-      begin
-        oSql.Add('AND a.CODIGO_FAM_ART IN (' + sFamilias + ')');
-      end;
-    end;
-    if sProveedores <> '' then
-    begin
-      oSql.Add('AND EXISTS (SELECT 1 FROM fza_articulos_proveedores apx');
-      oSql.Add('WHERE apx.CODIGO_ART_AP = a.CODIGO_ART_ART');
-      oSql.Add('AND apx.CODIGO_PRV_AP IN (' + sProveedores + ')');
-      if AFiltros.SoloProveedorPrincipal then
-      begin
-        oSql.Add('AND apx.ESPROVEEDORPRINCIPAL_AP = ''S''');
-      end;
-      oSql.Add(')');
-    end;
-    if sPropiedades <> '' then
-    begin
-      oSql.Add('AND EXISTS (SELECT 1 FROM fza_articulos_propiedades pp');
-      oSql.Add('WHERE pp.CODIGO_ART_ART = a.CODIGO_ART_ART');
-      oSql.Add('AND pp.ID_PV_ARTPROP IN (' + sPropiedades + '))');
-    end;
-    if AFiltros.AplicarFechaAlta then
-    begin
-      oSql.Add('AND a.INSTANTE_ALTA >= :P_ALTA_DESDE');
-      oSql.Add('AND a.INSTANTE_ALTA < :P_ALTA_HASTA');
-    end;
-    if AFiltros.FiltrarVentas then
-    begin
-      if AFiltros.ConVentas then
-      begin
-        oSql.Add('AND (SELECT COUNT(*) FROM fza_facturas_lineas fl');
-        oSql.Add(
-          'JOIN fza_facturas fc ON fc.NUMERO_FAC = fl.NUMERO_FAC_FACLIN');
-        oSql.Add('AND fc.SERIE_FAC = fl.SERIE_FAC_FACLIN');
-        oSql.Add('WHERE fl.CODIGO_ART_FACLIN = a.CODIGO_ART_ART');
-        oSql.Add('AND fc.FECHA_FAC >= :P_VTA_DESDE');
-        oSql.Add('AND fc.FECHA_FAC < :P_VTA_HASTA)');
-        oSql.Add('>= :P_NUM_MIN_VTAS');
-      end
-      else
-      begin
-        oSql.Add('AND NOT EXISTS (SELECT 1 FROM fza_facturas_lineas fl');
-        oSql.Add(
-          'JOIN fza_facturas fc ON fc.NUMERO_FAC = fl.NUMERO_FAC_FACLIN');
-        oSql.Add('AND fc.SERIE_FAC = fl.SERIE_FAC_FACLIN');
-        oSql.Add('WHERE fl.CODIGO_ART_FACLIN = a.CODIGO_ART_ART');
-        oSql.Add('AND fc.FECHA_FAC >= :P_VTA_DESDE');
-        oSql.Add('AND fc.FECHA_FAC < :P_VTA_HASTA)');
-      end;
-    end;
+    AnadirFiltroStockPreviewArticulos(oSql, AFiltros, sAlmacenes);
+    AnadirFiltroFamiliasPreviewArticulos(oSql, AFiltros, sFamilias);
+    AnadirFiltrosCatalogoPreviewArticulos(
+      oSql, AFiltros, sProveedores, sPropiedades);
+    AnadirFiltroVentasPreviewArticulos(oSql, AFiltros);
     oSql.Add('ORDER BY a.CODIGO_FAM_ART, a.CODIGO_ART_ART');
     Result := oSql.Text;
   finally

@@ -34,6 +34,22 @@ type
   // El formulario informa del fallo; no debe llegar al error no controlado.
   EValidacionTraspaso = class(Exception);
 
+  TContextoGrabacionTraspaso = record
+    Empresa: string;
+    AlmacenOrigen: string;
+    AlmacenDestino: string;
+    Caja: string;
+    Usuario: string;
+    EmpresaContra: string;
+    EmpresaDestino: string;
+    TipoDocumento: string;
+    SerieDocumento: string;
+    NumeroDocumento: string;
+    Empleado: string;
+    NumeroOperacion: string;
+    FechaOperacion: TDateTime;
+  end;
+
   TdmTraspaso = class(TDataModule)
     cdsCabecera: TClientDataSet;
     cdsLineas: TClientDataSet;
@@ -88,6 +104,20 @@ type
     // Suma lo servido a las líneas de la solicitud y recalcula su estado.
     procedure MarcarSolicitudAtendida(QryTrx: TUniQuery;
                              const ANumero, ASerie: string);
+    function CrearContextoGrabacionTraspaso(
+      const AAlmacenDestino: string): TContextoGrabacionTraspaso;
+    function GrabarLineasTraspaso(
+      QryTrx: TUniQuery;
+      const AContexto: TContextoGrabacionTraspaso): Currency;
+    procedure RegistrarOperacionTraspaso(
+      QryTrx: TUniQuery;
+      const AContexto: TContextoGrabacionTraspaso;
+      ATotal: Currency;
+      const ANumSolicitud, ASerieSolicitud: string);
+    function EjecutarGrabacionTraspaso(
+      var AContexto: TContextoGrabacionTraspaso;
+      const ANumSolicitud, ASerieSolicitud: string;
+      out ANumOperacion: string): Boolean;
   public
     constructor Create(
       AOwner: TComponent;
@@ -615,117 +645,135 @@ begin
   QryTrx.Execute;
 end;
 
-function TdmTraspaso.GrabarTraspaso(const AAlmacenDestino: string;
-                                    out ANumOperacion: string;
-                                    const ANumSolicitud: string;
-                                    const ASerieSolicitud: string): Boolean;
-var
+function TdmTraspaso.CrearContextoGrabacionTraspaso(
+  const AAlmacenDestino: string): TContextoGrabacionTraspaso;
+begin
+  Result.Empresa := cdsCabecera.FieldByName('CODIGO_EMP').AsString;
+  Result.AlmacenOrigen := cdsCabecera.FieldByName(
+    'CODIGO_ALM_ORIGEN').AsString;
+  Result.AlmacenDestino := AAlmacenDestino;
+  Result.Caja := cdsCabecera.FieldByName('CODIGO_CAJA').AsString;
+  Result.Usuario := IdentidadSesion.Usuario;
+  Result.Empleado := cdsCabecera.FieldByName(
+    'CODIGO_EMPLEADO').AsString;
+  Result.FechaOperacion := cdsCabecera.FieldByName('FECHA').AsDateTime;
+  if SameText(Result.AlmacenOrigen, Result.AlmacenDestino) then
+    raise EValidacionTraspaso.Create(SErrorAlmacenesTraspasoCoincidentes);
+  ValidarStockOrigen(Result.AlmacenOrigen);
+  Result.EmpresaContra := ObtenerEmpresaAlmacen(Result.AlmacenDestino);
+  if (Result.EmpresaContra = '') or
+     SameText(Result.EmpresaContra, Result.Empresa) then
+    Result.TipoDocumento := 'TR'
+  else
+    Result.TipoDocumento := 'TA';
+  if Trim(Result.EmpresaContra) <> '' then
+    Result.EmpresaDestino := Result.EmpresaContra
+  else
+    Result.EmpresaDestino := Result.Empresa;
+  Result.SerieDocumento := ObtenerSerieDocumento(Result.Empresa,
+    Result.AlmacenOrigen, Result.Caja, Result.TipoDocumento);
+  Result.NumeroDocumento := '';
+  Result.NumeroOperacion := '';
+end;
+
+function TdmTraspaso.GrabarLineasTraspaso(
   QryTrx: TUniQuery;
-  sEmpresa, sAlmacenOrigen, sCaja, sUsuario, sEmpContra, sTipoDoc: string;
-  sEmpDestino: string;
-  sSku, sArticulo, sLinea, sSerieDoc, sNumeroDoc, sEmpleado: string;
-  dFechaOperacion: TDateTime;
+  const AContexto: TContextoGrabacionTraspaso): Currency;
+var
+  sArticulo: string;
+  sLinea: string;
+  sSku: string;
   dCantidad: Double;
-  cCoste, cTotal: Currency;
+  cCoste: Currency;
   iLinea: Integer;
 begin
-  // Quita la linea en blanco y la fantasma antes de mover stock.
-  LimpiarLineasIncompletas;
-  if cdsLineas.IsEmpty then
+  iLinea := 0;
+  cdsLineas.First;
+  while not cdsLineas.Eof do
+  begin
+    sSku := cdsLineas.FieldByName('CODIGO_UNIDAD').AsString;
+    dCantidad := cdsLineas.FieldByName('CANTIDAD').AsFloat;
+    if (Trim(sSku) <> '') and (dCantidad > 0) then
+    begin
+      Inc(iLinea, 10);
+      sLinea := Format('%.4d', [iLinea]);
+      sArticulo := cdsLineas.FieldByName('CODIGO_ART').AsString;
+      cCoste := cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency;
+      InsertarMovimientoAlmacen(QryTrx, AContexto.TipoDocumento,
+        AContexto.SerieDocumento, AContexto.NumeroDocumento, sLinea,
+        AContexto.Empresa, AContexto.AlmacenOrigen, AContexto.Caja,
+        AContexto.AlmacenDestino, 'S', sSku, dCantidad, cCoste,
+        AContexto.Usuario, AContexto.AlmacenOrigen,
+        AContexto.NumeroOperacion, '', sArticulo,
+        AContexto.FechaOperacion);
+      InsertarMovimientoAlmacen(QryTrx, AContexto.TipoDocumento,
+        AContexto.SerieDocumento, AContexto.NumeroDocumento, sLinea,
+        AContexto.EmpresaDestino, AContexto.AlmacenDestino,
+        AContexto.Caja, AContexto.AlmacenOrigen, 'E', sSku, dCantidad,
+        cCoste, AContexto.Usuario, AContexto.AlmacenOrigen,
+        AContexto.NumeroOperacion, '', sArticulo,
+        AContexto.FechaOperacion);
+    end;
+    cdsLineas.Next;
+  end;
+  if iLinea = 0 then
     raise EValidacionTraspaso.Create(SErrorLineasTraspasoNoDisponibles);
-  if Trim(AAlmacenDestino) = '' then
-    raise EValidacionTraspaso.Create(
-      SErrorAlmacenDestinoTraspasoNoSeleccionado);
-  sEmpresa := cdsCabecera.FieldByName('CODIGO_EMP').AsString;
-  sAlmacenOrigen := cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
-  sCaja := cdsCabecera.FieldByName('CODIGO_CAJA').AsString;
-  sUsuario := IdentidadSesion.Usuario;
-  sEmpleado := cdsCabecera.FieldByName('CODIGO_EMPLEADO').AsString;
-  dFechaOperacion := cdsCabecera.FieldByName('FECHA').AsDateTime;
-  if SameText(sAlmacenOrigen, AAlmacenDestino) then
-    raise EValidacionTraspaso.Create(SErrorAlmacenesTraspasoCoincidentes);
-  // No traspasar sin stock: aborta antes de mover nada si alguna linea se
-  // pasa de lo disponible en origen (evita el stock negativo).
-  ValidarStockOrigen(sAlmacenOrigen);
-  // TR = misma empresa (origen y destino); TA = entre empresas distintas.
-  sEmpContra := ObtenerEmpresaAlmacen(AAlmacenDestino);
-  if (sEmpContra = '') or SameText(sEmpContra, sEmpresa) then
-    sTipoDoc := 'TR'
-  else
-    sTipoDoc := 'TA';
-  // Empresa del almacen destino (para que su movimiento de entrada quede en su
-  // empresa cuando es un traspaso entre empresas; si no se resuelve, la
-  // propia).
-  if Trim(sEmpContra) <> '' then
-    sEmpDestino := sEmpContra
-  else
-    sEmpDestino := sEmpresa;
-  // Serie del documento de traspaso (de fza_empresas_series, con fallback).
-  sSerieDoc := ObtenerSerieDocumento(sEmpresa, sAlmacenOrigen, sCaja, sTipoDoc);
-  QryTrx := TUniQuery.Create(nil);
+  RecalcularMovimientosDocumento(FConexion, AContexto.TipoDocumento,
+    AContexto.SerieDocumento, AContexto.NumeroDocumento);
+  QryTrx.SQL.Text :=
+    'SELECT IFNULL(SUM(TOTAL_COSTE_MOV), 0) AS TOTAL ' +
+    '  FROM fza_movimientos_almacen ' +
+    ' WHERE TIPO_DOC_MOV = :TIPO ' +
+    '   AND SERIE_DOC_MOV = :SERIE ' +
+    '   AND NUMERO_DOC_MOV = :NUMERO ' +
+    '   AND TIPO_MOV = ''S''';
+  QryTrx.ParamByName('TIPO').AsString := AContexto.TipoDocumento;
+  QryTrx.ParamByName('SERIE').AsString := AContexto.SerieDocumento;
+  QryTrx.ParamByName('NUMERO').AsString := AContexto.NumeroDocumento;
+  QryTrx.Open;
+  Result := QryTrx.FieldByName('TOTAL').AsCurrency;
+  QryTrx.Close;
+end;
+
+procedure TdmTraspaso.RegistrarOperacionTraspaso(
+  QryTrx: TUniQuery;
+  const AContexto: TContextoGrabacionTraspaso;
+  ATotal: Currency;
+  const ANumSolicitud, ASerieSolicitud: string);
+begin
+  InsertarOperacionCaja(QryTrx, AContexto.Empresa,
+    AContexto.AlmacenOrigen, AContexto.Caja, AContexto.NumeroOperacion,
+    AContexto.TipoDocumento, ATotal, AContexto.FechaOperacion,
+    AContexto.Empleado, 'Traspaso a ' + AContexto.AlmacenDestino,
+    ASerieSolicitud, ANumSolicitud, AContexto.EmpresaContra,
+    AContexto.AlmacenDestino, 'S', AContexto.NumeroDocumento,
+    AContexto.SerieDocumento);
+  if Trim(ANumSolicitud) <> '' then
+    MarcarSolicitudAtendida(QryTrx, ANumSolicitud, ASerieSolicitud);
+end;
+
+function TdmTraspaso.EjecutarGrabacionTraspaso(
+  var AContexto: TContextoGrabacionTraspaso;
+  const ANumSolicitud, ASerieSolicitud: string;
+  out ANumOperacion: string): Boolean;
+var
+  oConsulta: TUniQuery;
+  cTotal: Currency;
+begin
+  oConsulta := TUniQuery.Create(nil);
   try
-    QryTrx.Connection := FConexion;
-    ANumOperacion := SiguienteOpCaja(sEmpresa, sAlmacenOrigen, sCaja, sUsuario);
-    // Número del documento dentro de la serie (mismo SP que la factura).
-    sNumeroDoc := SiguienteNumeroDocumento(sSerieDoc, sTipoDoc, sEmpresa,
-                                           sUsuario);
+    oConsulta.Connection := FConexion;
+    AContexto.NumeroOperacion := SiguienteOpCaja(AContexto.Empresa,
+      AContexto.AlmacenOrigen, AContexto.Caja, AContexto.Usuario);
+    ANumOperacion := AContexto.NumeroOperacion;
+    AContexto.NumeroDocumento := SiguienteNumeroDocumento(
+      AContexto.SerieDocumento, AContexto.TipoDocumento,
+      AContexto.Empresa, AContexto.Usuario);
     FConexion.StartTransaction;
     try
-      cTotal := 0;
-      iLinea := 0;
-      cdsLineas.First;
-      while not cdsLineas.Eof do
-      begin
-        sSku := cdsLineas.FieldByName('CODIGO_UNIDAD').AsString;
-        dCantidad := cdsLineas.FieldByName('CANTIDAD').AsFloat;
-        // Salta la linea en blanco y las denegadas (servir 0): no mueven stock.
-        // Al atender, esas lineas quedan registradas (con motivo) en
-        // MarcarSolicitudAtendida, pero sin movimiento de almacen.
-        if (Trim(sSku) <> '') and (dCantidad > 0) then
-        begin
-          iLinea := iLinea + 10;
-          sLinea := Format('%.4d', [iLinea]);
-          sArticulo := cdsLineas.FieldByName('CODIGO_ART').AsString;
-          cCoste := cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency;
-          // Salida del origen hacia el destino.
-          InsertarMovimientoAlmacen(QryTrx, sTipoDoc, sSerieDoc, sNumeroDoc,
-            sLinea, sEmpresa, sAlmacenOrigen, sCaja, AAlmacenDestino, 'S',
-            sSku, dCantidad, cCoste, sUsuario, sAlmacenOrigen, ANumOperacion,
-            '', sArticulo, dFechaOperacion);
-          // Entrada en el destino desde el origen (en la empresa del destino).
-          InsertarMovimientoAlmacen(QryTrx, sTipoDoc, sSerieDoc, sNumeroDoc,
-            sLinea, sEmpDestino, AAlmacenDestino, sCaja, sAlmacenOrigen, 'E',
-            sSku, dCantidad, cCoste, sUsuario, sAlmacenOrigen, ANumOperacion,
-            '', sArticulo, dFechaOperacion);
-          cTotal := cTotal + cCoste * dCantidad;
-        end;
-        cdsLineas.Next;
-      end;
-      if iLinea = 0 then
-        raise EValidacionTraspaso.Create(SErrorLineasTraspasoNoDisponibles);
-      RecalcularMovimientosDocumento(
-        FConexion, sTipoDoc, sSerieDoc, sNumeroDoc);
-      QryTrx.SQL.Text :=
-        'SELECT IFNULL(SUM(TOTAL_COSTE_MOV), 0) AS TOTAL ' +
-        '  FROM fza_movimientos_almacen ' +
-        ' WHERE TIPO_DOC_MOV = :TIPO ' +
-        '   AND SERIE_DOC_MOV = :SERIE ' +
-        '   AND NUMERO_DOC_MOV = :NUMERO ' +
-        '   AND TIPO_MOV = ''S''';
-      QryTrx.ParamByName('TIPO').AsString := sTipoDoc;
-      QryTrx.ParamByName('SERIE').AsString := sSerieDoc;
-      QryTrx.ParamByName('NUMERO').AsString := sNumeroDoc;
-      QryTrx.Open;
-      cTotal := QryTrx.FieldByName('TOTAL').AsCurrency;
-      QryTrx.Close;
-      // Operación de caja del traspaso (cabecera del documento). Si atiende
-      // una solicitud, se enlaza por SERIE/NUMERO_REF_ORIGEN.
-      InsertarOperacionCaja(QryTrx, sEmpresa, sAlmacenOrigen, sCaja,
-        ANumOperacion, sTipoDoc, cTotal, dFechaOperacion, sEmpleado,
-        'Traspaso a ' + AAlmacenDestino, ASerieSolicitud, ANumSolicitud,
-        sEmpContra, AAlmacenDestino, 'S', sNumeroDoc, sSerieDoc);
-      if Trim(ANumSolicitud) <> '' then
-        MarcarSolicitudAtendida(QryTrx, ANumSolicitud, ASerieSolicitud);
+      cTotal := GrabarLineasTraspaso(oConsulta, AContexto);
+      RegistrarOperacionTraspaso(oConsulta, AContexto, cTotal,
+        ANumSolicitud, ASerieSolicitud);
       FConexion.Commit;
       Result := True;
     except
@@ -733,8 +781,26 @@ begin
       raise;
     end;
   finally
-    FreeAndNil(QryTrx);
+    FreeAndNil(oConsulta);
   end;
+end;
+
+function TdmTraspaso.GrabarTraspaso(const AAlmacenDestino: string;
+                                    out ANumOperacion: string;
+                                    const ANumSolicitud: string;
+                                    const ASerieSolicitud: string): Boolean;
+var
+  oContexto: TContextoGrabacionTraspaso;
+begin
+  LimpiarLineasIncompletas;
+  if cdsLineas.IsEmpty then
+    raise EValidacionTraspaso.Create(SErrorLineasTraspasoNoDisponibles);
+  if Trim(AAlmacenDestino) = '' then
+    raise EValidacionTraspaso.Create(
+      SErrorAlmacenDestinoTraspasoNoSeleccionado);
+  oContexto := CrearContextoGrabacionTraspaso(AAlmacenDestino);
+  Result := EjecutarGrabacionTraspaso(oContexto, ANumSolicitud,
+    ASerieSolicitud, ANumOperacion);
 end;
 
 procedure TdmTraspaso.MarcarSolicitudAtendida(QryTrx: TUniQuery;

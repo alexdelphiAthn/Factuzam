@@ -86,7 +86,7 @@ uses
   System.Net.URLClient, Data.DB,
   inLibGlobalVar, inLibVerifactu, inLibVerifactuInstalacion,
   inLibMsgFacturas, inLibMsgVerifactu, inLibXades,
-  inLibVerifactuConstruccionEnvio;
+  inLibVerifactuConstruccionEnvio, inLibVerifactuDesgloseFiscal;
 
 const
   // Endpoints oficiales del servicio SOAP de Verifactu. Con certificado
@@ -745,129 +745,36 @@ begin
     '</sum1:SistemaInformatico>';
 end;
 
-function ConstruirDesglose(const ADatos: TDatosFacturaRegistro): string;
+function CrearEntradaDesglose(
+  const ADatos: TDatosFacturaRegistro): TEntradaDesgloseFiscal;
 var
-  i:          Integer;
-  sDet:       string;
-  sClaveReg:  string;
-  sCalif:     string;
-  sExenta:    string;
-  sCalifBnd:  string;
-  bRepercute: Boolean;
-  dBaseTot:   Currency;
+  iBanda: Integer;
 begin
-  Result := '';
-  // Parametros de la operacion segun el catalogo (fza_verifactu_operaciones).
-  // Por defecto: regimen general 01, sujeta S1, con IVA repercutido. Si el
-  // usuario asigno un tipo, se toma su mapeo. Si no asigno tipo pero el cliente
-  // esta fuera de la UE, se aplica exportacion (E2) de forma automatica.
-  sClaveReg  := '01';
-  sCalif     := '';
-  sExenta    := '';
-  bRepercute := True;
-  if ADatos.OpDefinida then
+  Result := Default(TEntradaDesgloseFiscal);
+  Result.Operacion.Definida := ADatos.OpDefinida;
+  Result.Operacion.ClaveRegimen := ADatos.OpClaveRegimen;
+  Result.Operacion.Calificacion := ADatos.OpCalificacion;
+  Result.Operacion.OperacionExenta := ADatos.OpOperExenta;
+  Result.Operacion.RepercuteIva := ADatos.OpRepercuteIva;
+  Result.Operacion.EsClienteUE := ADatos.EsClienteUE;
+  Result.Operacion.EsClienteExtranjero := ADatos.EsClienteExtr;
+  for iBanda := Low(ADatos.Bandas) to High(ADatos.Bandas) do
   begin
-    if ADatos.OpClaveRegimen <> '' then
-      sClaveReg := ADatos.OpClaveRegimen;
-    sCalif     := ADatos.OpCalificacion;
-    sExenta    := ADatos.OpOperExenta;
-    bRepercute := ADatos.OpRepercuteIva;
-  end
-  else if ADatos.EsClienteExtr and (not ADatos.EsClienteUE) then
-  begin
-    sExenta    := 'E2';
-    bRepercute := False;
+    Result.Bandas[iBanda].Porcentaje :=
+      ADatos.Bandas[iBanda].Porcentaje;
+    Result.Bandas[iBanda].Base := ADatos.Bandas[iBanda].Base;
+    Result.Bandas[iBanda].Cuota := ADatos.Bandas[iBanda].Cuota;
+    Result.Bandas[iBanda].PorcentajeRecargo :=
+      ADatos.Bandas[iBanda].PorcentajeRe;
+    Result.Bandas[iBanda].CuotaRecargo :=
+      ADatos.Bandas[iBanda].CuotaRe;
+    Result.Bandas[iBanda].EsExenta := ADatos.Bandas[iBanda].EsExenta;
   end;
-  if not bRepercute then
-  begin
-    // Un unico DetalleDesglose con la base total, sin tipo ni cuota: el IVA lo
-    // autoliquida el destinatario (calificacion N1/N2/S2) o la operacion esta
-    // exenta (OperacionExenta E2..E6). Si no hay codigo, exenta E1 por defecto.
-    dBaseTot := 0;
-    for i := Low(ADatos.Bandas) to High(ADatos.Bandas) do
-      dBaseTot := dBaseTot + ADatos.Bandas[i].Base;
-    if sExenta <> '' then
-      sDet := '<sum1:OperacionExenta>' + sExenta + '</sum1:OperacionExenta>'
-    else if sCalif <> '' then
-      sDet := '<sum1:CalificacionOperacion>' + sCalif +
-              '</sum1:CalificacionOperacion>'
-    else
-      sDet := '<sum1:OperacionExenta>E1</sum1:OperacionExenta>';
-    Result :=
-      '<sum1:DetalleDesglose>' +
-      '<sum1:Impuesto>01</sum1:Impuesto>' +
-      '<sum1:ClaveRegimen>' + sClaveReg + '</sum1:ClaveRegimen>' +
-      sDet +
-      '<sum1:BaseImponibleOimporteNoSujeto>' +
-      FormatearImporteVerifactu(dBaseTot) +
-      '</sum1:BaseImponibleOimporteNoSujeto>' +
-      '</sum1:DetalleDesglose>';
-  end
-  else
-  begin
-    // Operacion con IVA repercutido: desglose por bandas. La calificacion de
-    // las bandas sujetas sale del catalogo (S1 por defecto); la banda exenta
-    // mantiene su exencion nacional E1. La clave de regimen tambien es la del
-    // catalogo (p.ej. 03 para bienes usados).
-    if sCalif <> '' then
-      sCalifBnd := sCalif
-    else
-      sCalifBnd := 'S1';
-    for i := Low(ADatos.Bandas) to High(ADatos.Bandas) do
-    begin
-      if (Abs(ADatos.Bandas[i].Base) > 0.001) or
-         (Abs(ADatos.Bandas[i].Cuota) > 0.001) then
-      begin
-        sDet := '<sum1:Impuesto>01</sum1:Impuesto>' +
-                '<sum1:ClaveRegimen>' + sClaveReg + '</sum1:ClaveRegimen>';
-        if ADatos.Bandas[i].EsExenta then
-        begin
-          // Exenta: motivo E1 por defecto (art. 20 LIVA)
-          sDet := sDet +
-            '<sum1:OperacionExenta>E1</sum1:OperacionExenta>' +
-            '<sum1:BaseImponibleOimporteNoSujeto>' +
-            FormatearImporteVerifactu(ADatos.Bandas[i].Base) +
-            '</sum1:BaseImponibleOimporteNoSujeto>';
-        end
-        else
-        begin
-          sDet := sDet +
-            '<sum1:CalificacionOperacion>' + sCalifBnd +
-            '</sum1:CalificacionOperacion>' +
-            '<sum1:TipoImpositivo>' +
-            FormatearImporteVerifactu(ADatos.Bandas[i].Porcentaje) +
-            '</sum1:TipoImpositivo>' +
-            '<sum1:BaseImponibleOimporteNoSujeto>' +
-            FormatearImporteVerifactu(ADatos.Bandas[i].Base) +
-            '</sum1:BaseImponibleOimporteNoSujeto>' +
-            '<sum1:CuotaRepercutida>' +
-            FormatearImporteVerifactu(ADatos.Bandas[i].Cuota) +
-            '</sum1:CuotaRepercutida>';
-          if Abs(ADatos.Bandas[i].CuotaRe) > 0.001 then
-            sDet := sDet +
-              '<sum1:TipoRecargoEquivalencia>' +
-              FormatearImporteVerifactu(ADatos.Bandas[i].PorcentajeRe) +
-              '</sum1:TipoRecargoEquivalencia>' +
-              '<sum1:CuotaRecargoEquivalencia>' +
-              FormatearImporteVerifactu(ADatos.Bandas[i].CuotaRe) +
-              '</sum1:CuotaRecargoEquivalencia>';
-        end;
-        Result := Result + '<sum1:DetalleDesglose>' + sDet +
-                  '</sum1:DetalleDesglose>';
-      end;
-    end;
-  end;
-  // Ticket a total cero: desglose minimo para cumplir el esquema
-  if Result = '' then
-    Result := '<sum1:DetalleDesglose>' +
-      '<sum1:Impuesto>01</sum1:Impuesto>' +
-      '<sum1:ClaveRegimen>01</sum1:ClaveRegimen>' +
-      '<sum1:CalificacionOperacion>S1</sum1:CalificacionOperacion>' +
-      '<sum1:TipoImpositivo>0.00</sum1:TipoImpositivo>' +
-      '<sum1:BaseImponibleOimporteNoSujeto>0.00' +
-      '</sum1:BaseImponibleOimporteNoSujeto>' +
-      '<sum1:CuotaRepercutida>0.00</sum1:CuotaRepercutida>' +
-      '</sum1:DetalleDesglose>';
+end;
+
+function ConstruirDesglose(const ADatos: TDatosFacturaRegistro): string;
+begin
+  Result := ConstruirDesgloseFiscal(CrearEntradaDesglose(ADatos));
 end;
 
 function ConstruirRegistroAlta(

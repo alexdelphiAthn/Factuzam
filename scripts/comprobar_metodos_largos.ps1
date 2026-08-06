@@ -3,13 +3,13 @@
   [ValidateRange(1, [int]::MaxValue)]
   [int]$UmbralLineas = 120,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoMetodosLargos = 58,
+  [int]$MaximoMetodosLargos = 31,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoLineasPorMetodo = 200,
+  [int]$MaximoLineasPorMetodo = 190,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoRiesgoAcumulado = 10820,
+  [int]$MaximoRiesgoAcumulado = 4945,
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoRiesgoPorMetodo = 250,
+  [int]$MaximoRiesgoPorMetodo = 194,
   [switch]$MostrarTodos
 )
 

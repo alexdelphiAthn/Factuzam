@@ -460,6 +460,13 @@
             Include="..\src\Lib\inLibVerificacionXadesNoVerifactu.pas"/>
         <DCCReference Include="PruebasComparacionCopias.pas"/>
         <DCCReference Include="PruebasVerificacionXadesNoVerifactu.pas"/>
+        <DCCReference Include="..\src\Caja\Lib\inLibCajaDepositos.pas"/>
+        <DCCReference Include="..\src\Lib\inLibTicketRecordatorio.pas"/>
+        <DCCReference
+            Include="..\src\verifactu\inLibVerifactuDesgloseFiscal.pas"/>
+        <DCCReference Include="PruebasMetodosLargosOla20A.pas"/>
+        <DCCReference Include="PruebasMetodosLargosOla20B.pas"/>
+        <DCCReference Include="PruebasMetodosLargosOla20C.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

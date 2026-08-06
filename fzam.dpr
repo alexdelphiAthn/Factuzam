@@ -1459,7 +1459,19 @@ uses
     {dmInformeFacturasProforma: TDataModule},
   inMtoModalImpFacturasProforma in
     'src\Caja\Modals\inMtoModalImpFacturasProforma.pas'
-    {frmPrintFacturasProforma};
+    {frmPrintFacturasProforma},
+  inMtoCajaOpeBusquedaVcl in
+    'src\Caja\Forms\inMtoCajaOpeBusquedaVcl.pas',
+  inMtoCajaOpeEntradaVcl in
+    'src\Caja\Forms\inMtoCajaOpeEntradaVcl.pas',
+  inLibCajaDepositos in
+    'src\Caja\Lib\inLibCajaDepositos.pas',
+  inMtoPedidosPresentacionArticuloVcl in
+    'src\Forms\inMtoPedidosPresentacionArticuloVcl.pas',
+  inLibTicketRecordatorio in
+    'src\Lib\inLibTicketRecordatorio.pas',
+  inLibVerifactuDesgloseFiscal in
+    'src\verifactu\inLibVerifactuDesgloseFiscal.pas';
 
 {$R *.res}
 {$R fondo.res}

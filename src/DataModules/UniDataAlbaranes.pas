@@ -248,6 +248,62 @@ begin
             '   AND SERIE_ALB = :Old_SERIE_ALB';
 end;
 
+procedure PrepararConsultasFacturacionAlbaranes(
+  AConexion: TUniConnection;
+  AClientes, ALineas: TUniQuery);
+begin
+  AClientes.Connection := AConexion;
+  ALineas.Connection := AConexion;
+  AClientes.SQL.Text :=
+    'SELECT CODIGO_CLI_ALB FROM fza_albaranes ' +
+    ' WHERE NUMERO_ALB = :pNUM AND SERIE_ALB = :pSER';
+  ALineas.SQL.Text :=
+    'SELECT LINEA_ALBLIN FROM fza_albaranes_lineas ' +
+    ' WHERE NUMERO_ALB_ALBLIN = :pNUM AND SERIE_ALB_ALBLIN = :pSER ' +
+    '   AND IFNULL(ESFACTURADA_ALBLIN, ''N'') <> ''S'' ' +
+    ' ORDER BY LINEA_ALBLIN';
+end;
+
+function DescomponerReferenciaAlbaran(
+  const AReferencia: string;
+  out ASerie, ANumero: string): Boolean;
+var
+  Separador: Integer;
+begin
+  Separador := Pos('|', AReferencia);
+  Result := Separador > 0;
+  if Result then
+  begin
+    ASerie := Copy(AReferencia, 1, Separador - 1);
+    ANumero := Copy(AReferencia, Separador + 1, MaxInt);
+  end;
+end;
+
+function ConsultarClienteAlbaran(
+  AConsulta: TUniQuery;
+  const ANumero, ASerie: string;
+  out ACliente: string): Boolean;
+begin
+  AConsulta.Close;
+  AConsulta.ParamByName('pNUM').AsString := ANumero;
+  AConsulta.ParamByName('pSER').AsString := ASerie;
+  AConsulta.Open;
+  Result := not AConsulta.Eof;
+  if Result then
+    ACliente := AConsulta.FieldByName('CODIGO_CLI_ALB').AsString;
+  AConsulta.Close;
+end;
+
+procedure AbrirLineasPendientesAlbaran(
+  AConsulta: TUniQuery;
+  const ANumero, ASerie: string);
+begin
+  AConsulta.Close;
+  AConsulta.ParamByName('pNUM').AsString := ANumero;
+  AConsulta.ParamByName('pSER').AsString := ASerie;
+  AConsulta.Open;
+end;
+
 procedure TdmAlbaranes.DataModuleCreate(Sender: TObject);
 begin
   inherited;
@@ -1826,131 +1882,86 @@ function TdmAlbaranes.FacturarAlbaranesLista(
   aListaAlbaranes: TStrings;
   bAgruparPorCliente: Boolean): Integer;
 var
-  i, iSep: Integer;
-  sLin, sSer, sNum, sCliActual, sCliAlb: string;
+  i: Integer;
+  sSer, sNum, sCliActual, sCliAlb: string;
   sNumFac, sSerFac, sNumFacActual, sSerFacActual: string;
-  qCli: TUniQuery;
-  qLin: TUniQuery;
+  qCli, qLin: TUniQuery;
   bTransPropia: Boolean;
 begin
   Result := 0;
   if (aListaAlbaranes <> nil) and (aListaAlbaranes.Count > 0) then
   begin
     InstalarProcedimientos;
-
-  qCli := TUniQuery.Create(nil);
-  qLin := TUniQuery.Create(nil);
-  try
-    qCli.Connection := ConexionPrincipal;
-    qLin.Connection := ConexionPrincipal;
-    qCli.SQL.Text :=
-      'SELECT CODIGO_CLI_ALB FROM fza_albaranes ' +
-      ' WHERE NUMERO_ALB = :pNUM AND SERIE_ALB = :pSER';
-    qLin.SQL.Text :=
-      'SELECT LINEA_ALBLIN FROM fza_albaranes_lineas ' +
-      ' WHERE NUMERO_ALB_ALBLIN = :pNUM AND SERIE_ALB_ALBLIN = :pSER ' +
-      '   AND IFNULL(ESFACTURADA_ALBLIN, ''N'') <> ''S'' ' +
-      ' ORDER BY LINEA_ALBLIN';
-
-    bTransPropia := not ConexionPrincipal.InTransaction;
-    if bTransPropia then
-      ConexionPrincipal.StartTransaction;
+    qCli := TUniQuery.Create(nil);
+    qLin := TUniQuery.Create(nil);
     try
-
-    sCliActual    := '';
-    sNumFacActual := '';
-    sSerFacActual := '';
-
-    for i := 0 to aListaAlbaranes.Count - 1 do
+      PrepararConsultasFacturacionAlbaranes(
+        ConexionPrincipal, qCli, qLin);
+      bTransPropia := not ConexionPrincipal.InTransaction;
+      if bTransPropia then
+        ConexionPrincipal.StartTransaction;
+      try
+        sCliActual := '';
+        sNumFacActual := '';
+        sSerFacActual := '';
+        for i := 0 to aListaAlbaranes.Count - 1 do
+        begin
+          if DescomponerReferenciaAlbaran(
+               aListaAlbaranes[i], sSer, sNum) and
+             ConsultarClienteAlbaran(qCli, sNum, sSer, sCliAlb) then
+          begin
+            if (not bAgruparPorCliente) or
+               (sNumFacActual = '') or
+               (sCliAlb <> sCliActual) then
+            begin
+              EjecutarCrearFacturaInicio(
+                sNum, sSer, sNumFac, sSerFac);
+              NegarMovimientosFacturaDesdeAlbaran(sSerFac, sNumFac);
+              sNumFacActual := sNumFac;
+              sSerFacActual := sSerFac;
+              sCliActual := sCliAlb;
+              Inc(Result);
+            end
+            else
+            begin
+              sNumFac := sNumFacActual;
+              sSerFac := sSerFacActual;
+            end;
+            AbrirLineasPendientesAlbaran(qLin, sNum, sSer);
+            while not qLin.Eof do
+            begin
+              EjecutarCrearFacturaLinea(
+                sNumFac, sSerFac, sNum, sSer,
+                qLin.FieldByName('LINEA_ALBLIN').AsString);
+              qLin.Next;
+            end;
+            qLin.Close;
+            EjecutarCrearFacturaFin(sNumFac, sSerFac, sNum, sSer);
+          end;
+        end;
+        if bTransPropia and ConexionPrincipal.InTransaction then
+          ConexionPrincipal.Commit;
+      except
+        if bTransPropia and ConexionPrincipal.InTransaction then
+          ConexionPrincipal.Rollback;
+        raise;
+      end;
+    finally
+      FreeAndNil(qCli);
+      FreeAndNil(qLin);
+    end;
+    if unqryTablaG.Active then
+      unqryTablaG.Refresh;
+    if unqryAlbaranesLineas.Active then
     begin
-      sLin := aListaAlbaranes[i];
-      iSep := Pos('|', sLin);
-      if iSep > 0 then
-      begin
-      sSer := Copy(sLin, 1, iSep - 1);
-      sNum := Copy(sLin, iSep + 1, MaxInt);
-
-      // Resolver cliente del albarán
-      qCli.Close;
-      qCli.ParamByName('pNUM').AsString := sNum;
-      qCli.ParamByName('pSER').AsString := sSer;
-      qCli.Open;
-      if not qCli.Eof then
-      begin
-      sCliAlb := qCli.FieldByName('CODIGO_CLI_ALB').AsString;
-      qCli.Close;
-
-      // Decidir si reutilizar la factura previa o crear una nueva.
-      if (not bAgruparPorCliente) or
-         (sNumFacActual = '') or
-         (sCliAlb <> sCliActual) then
-      begin
-        // Crear nueva cabecera
-        EjecutarCrearFacturaInicio(
-          sNum, sSer, sNumFac, sSerFac);
-        NegarMovimientosFacturaDesdeAlbaran(sSerFac, sNumFac);
-        sNumFacActual := sNumFac;
-        sSerFacActual := sSerFac;
-        sCliActual    := sCliAlb;
-        Inc(Result);
-      end
-      else
-      begin
-        sNumFac := sNumFacActual;
-        sSerFac := sSerFacActual;
-      end;
-
-      // Volcar todas las líneas pendientes del albarán a la factura actual.
-      qLin.Close;
-      qLin.ParamByName('pNUM').AsString := sNum;
-      qLin.ParamByName('pSER').AsString := sSer;
-      qLin.Open;
-      while not qLin.Eof do
-      begin
-        EjecutarCrearFacturaLinea(
-          sNumFac,
-          sSerFac,
-          sNum,
-          sSer,
-          qLin.FieldByName('LINEA_ALBLIN').AsString);
-        qLin.Next;
-      end;
-      qLin.Close;
-
-      // Cerrar el albarán: marcar como facturado si no quedan líneas
-      // pendientes.
-      EjecutarCrearFacturaFin(sNumFac, sSerFac, sNum, sSer);
-      end
-      else
-        qCli.Close;
-      end;
+      unqryAlbaranesLineas.Close;
+      unqryAlbaranesLineas.Open;
     end;
-
-      if bTransPropia and ConexionPrincipal.InTransaction then
-        ConexionPrincipal.Commit;
-    except
-      if bTransPropia and ConexionPrincipal.InTransaction then
-        ConexionPrincipal.Rollback;
-      raise;
+    if unqryFacturas.Active then
+    begin
+      unqryFacturas.Close;
+      unqryFacturas.Open;
     end;
-  finally
-    FreeAndNil(qCli);
-    FreeAndNil(qLin);
-  end;
-
-  // Refrescar la pantalla del albarán activo.
-  if unqryTablaG.Active then
-    unqryTablaG.Refresh;
-  if unqryAlbaranesLineas.Active then
-  begin
-    unqryAlbaranesLineas.Close;
-    unqryAlbaranesLineas.Open;
-  end;
-  if unqryFacturas.Active then
-  begin
-    unqryFacturas.Close;
-    unqryFacturas.Open;
-  end;
   end;
 end;
 

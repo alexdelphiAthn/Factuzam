@@ -14,7 +14,7 @@ unit UniDataInformesCajaRepositorio;
 interface
 
 uses
-  Uni, inLibInformesCajaPersistenciaIntf;
+  System.Classes, Uni, inLibInformesCajaPersistenciaIntf;
 
 function CrearRepositorioInformesCajaUniDAC(
   AConexion: TUniConnection): IRepositorioInformesCaja;
@@ -22,7 +22,7 @@ function CrearRepositorioInformesCajaUniDAC(
 implementation
 
 uses
-  System.SysUtils, System.Classes, Data.DB,
+  System.SysUtils, Data.DB,
   UniDataRectificativasSql;
 
 type
@@ -48,6 +48,15 @@ type
     ): IResultadoInformeCaja;
     function ConstruirFiltroUbicaciones(
       const AUbicaciones: TUbicacionesInformeCaja): string;
+    procedure AnadirCabeceraOperacionesVenta(ALineas: TStrings);
+    procedure AnadirAtributosOperacionesVenta(ALineas: TStrings);
+    procedure AnadirImportesOperacionesVenta(ALineas: TStrings);
+    procedure AnadirOrigenOperacionesVenta(ALineas: TStrings);
+    procedure AnadirColoresOperacionesVenta(ALineas: TStrings);
+    procedure AnadirPagosOperacionesVenta(ALineas: TStrings);
+    procedure AnadirFiltrosOperacionesVenta(
+      ALineas: TStrings;
+      const AFiltroUbicaciones: string);
     function ConstruirSqlOperacionesVenta(
       const AFiltroUbicaciones: string): string;
   public
@@ -338,170 +347,207 @@ begin
   Result := Result + ')';
 end;
 
+procedure TRepositorioInformesCajaUniDAC.AnadirCabeceraOperacionesVenta(
+  ALineas: TStrings);
+begin
+  ALineas.Add('SELECT DATE(o.FECHA_OPERACION_OPCAJA) AS FECHA_DIA,');
+  ALineas.Add('       DATE(:pDESDE) AS FECHA_DESDE,');
+  ALineas.Add('       DATE(:pHASTA) AS FECHA_HASTA,');
+  ALineas.Add('       o.CODIGO_EMP_OPCAJA,');
+  ALineas.Add('       o.CODIGO_ALM_OPCAJA,');
+  ALineas.Add('       o.CODIGO_CAJA_OPCAJA,');
+  ALineas.Add('       CONCAT(o.CODIGO_EMP_OPCAJA, ''/'',');
+  ALineas.Add('              o.CODIGO_ALM_OPCAJA, ''/'',');
+  ALineas.Add('              o.CODIGO_CAJA_OPCAJA) AS CLAVE_CAJA,');
+  ALineas.Add('       o.NUMERO_OPERACION_OPCAJA,');
+  ALineas.Add('       fl.LINEA_FACLIN,');
+  ALineas.Add('       fl.CODIGO_ART_FACLIN AS ARTICULO,');
+end;
+
+procedure TRepositorioInformesCajaUniDAC.AnadirAtributosOperacionesVenta(
+  ALineas: TStrings);
+begin
+  ALineas.Add('       COALESCE(');
+  ALineas.Add('         NULLIF(CASE');
+  ALineas.Add('           WHEN UPPER(fl.ATTR1_NOMBRE_FACLIN) LIKE ''%COLOR%''');
+  ALineas.Add('             THEN fl.ATTR1_VALOR_FACLIN');
+  ALineas.Add('           WHEN UPPER(fl.ATTR2_NOMBRE_FACLIN) LIKE ''%COLOR%''');
+  ALineas.Add('             THEN fl.ATTR2_VALOR_FACLIN');
+  ALineas.Add('           WHEN UPPER(fl.ATTR3_NOMBRE_FACLIN) LIKE ''%COLOR%''');
+  ALineas.Add('             THEN fl.ATTR3_VALOR_FACLIN');
+  ALineas.Add('           WHEN UPPER(fl.ATTR4_NOMBRE_FACLIN) LIKE ''%COLOR%''');
+  ALineas.Add('             THEN fl.ATTR4_VALOR_FACLIN');
+  ALineas.Add('           WHEN UPPER(fl.ATTR5_NOMBRE_FACLIN) LIKE ''%COLOR%''');
+  ALineas.Add('             THEN fl.ATTR5_VALOR_FACLIN');
+  ALineas.Add('           ELSE ''''');
+  ALineas.Add('         END, ''''),');
+  ALineas.Add('         CASE');
+  ALineas.Add('           WHEN LENGTH(fl.CODIGO_UNIDAD_FACLIN) -');
+  ALineas.Add('                LENGTH(REPLACE(fl.CODIGO_UNIDAD_FACLIN,');
+  ALineas.Add('                               ''/'', '''')) >= 1');
+  ALineas.Add('             THEN SUBSTRING_INDEX(SUBSTRING_INDEX(');
+  ALineas.Add('                    fl.CODIGO_UNIDAD_FACLIN, ''/'', 2),');
+  ALineas.Add('                    ''/'', -1)');
+  ALineas.Add('           ELSE ''''');
+  ALineas.Add('         END, '''') AS COLOR,');
+  ALineas.Add('       COALESCE(cb.HEX_COLOR_BASICO, '''')');
+  ALineas.Add('         AS HEX_COLOR_BASICO,');
+  ALineas.Add('       COALESCE(');
+  ALineas.Add('         NULLIF(CASE');
+  ALineas.Add('           WHEN UPPER(fl.ATTR1_NOMBRE_FACLIN) LIKE ''%TALLA%''');
+  ALineas.Add('             THEN fl.ATTR1_VALOR_FACLIN');
+  ALineas.Add('           WHEN UPPER(fl.ATTR2_NOMBRE_FACLIN) LIKE ''%TALLA%''');
+  ALineas.Add('             THEN fl.ATTR2_VALOR_FACLIN');
+  ALineas.Add('           WHEN UPPER(fl.ATTR3_NOMBRE_FACLIN) LIKE ''%TALLA%''');
+  ALineas.Add('             THEN fl.ATTR3_VALOR_FACLIN');
+  ALineas.Add('           WHEN UPPER(fl.ATTR4_NOMBRE_FACLIN) LIKE ''%TALLA%''');
+  ALineas.Add('             THEN fl.ATTR4_VALOR_FACLIN');
+  ALineas.Add('           WHEN UPPER(fl.ATTR5_NOMBRE_FACLIN) LIKE ''%TALLA%''');
+  ALineas.Add('             THEN fl.ATTR5_VALOR_FACLIN');
+  ALineas.Add('           ELSE ''''');
+  ALineas.Add('         END, ''''),');
+  ALineas.Add('         CASE');
+  ALineas.Add('           WHEN LENGTH(fl.CODIGO_UNIDAD_FACLIN) -');
+  ALineas.Add('                LENGTH(REPLACE(fl.CODIGO_UNIDAD_FACLIN,');
+  ALineas.Add('                               ''/'', '''')) >= 2');
+  ALineas.Add('             THEN SUBSTRING_INDEX(SUBSTRING_INDEX(');
+  ALineas.Add('                    fl.CODIGO_UNIDAD_FACLIN, ''/'', 3),');
+  ALineas.Add('                    ''/'', -1)');
+  ALineas.Add('           ELSE ''''');
+  ALineas.Add('         END, '''') AS TALLA,');
+  ALineas.Add('       COALESCE(NULLIF(TRIM(fl.CODIGO_PRV_FACLIN), ''''),');
+  ALineas.Add('                ap.CODIGO_PRV_AP, '''') AS PROVEEDOR,');
+  ALineas.Add('       COALESCE(ap.REF_PROVEEDOR_AP, '''') AS MODELO,');
+  ALineas.Add('       fl.DESCRIPCION_ARTICULO_FACLIN AS DESCRIPCION,');
+end;
+
+procedure TRepositorioInformesCajaUniDAC.AnadirImportesOperacionesVenta(
+  ALineas: TStrings);
+begin
+  ALineas.Add('       COALESCE(fl.CANTIDAD_FACLIN, 0) AS CANTIDAD,');
+  ALineas.Add('       COALESCE(fl.CANTIDAD_FACLIN, 0) *');
+  ALineas.Add('       COALESCE(fl.PRECIO_SALIDA_FACLIN,');
+  ALineas.Add('                fl.PRECIO_VENTA_CIVA_ARTICULO_FACLIN, 0)');
+  ALineas.Add('         AS BRUTO,');
+  ALineas.Add('       COALESCE(fl.PORCENTAJE_DTO_FACLIN, 0)');
+  ALineas.Add('         AS PORCENTAJE_DTO,');
+  ALineas.Add('       COALESCE(fl.TOTAL_FACLIN, 0) AS NETO_ARTICULO,');
+  ALineas.Add('       COALESCE(');
+  ALineas.Add('         pg.INGRESOS_OPERACION * fl.TOTAL_FACLIN /');
+  ALineas.Add('         NULLIF(o.IMPORTE_TOTAL_OPCAJA, 0), 0) AS INGRESOS,');
+  ALineas.Add('       COALESCE(NULLIF(fl.CODIGO_VENDEDOR_FACLIN, ''''),');
+  ALineas.Add('                o.CODIGO_EMPLEADO_OPCAJA, '''') AS VENDEDOR,');
+  ALineas.Add('       COALESCE(pg.FORMAS_PAGO, '''') AS FORMA_PAGO,');
+  ALineas.Add('       CONCAT_WS(''.'', o.CODIGO_EMP_OPCAJA,');
+  ALineas.Add('                 o.TIPO_OPERACION_OPCAJA,');
+  ALineas.Add('                 o.SERIE_FAC_OPCAJA,');
+  ALineas.Add('                 o.NUMERO_FAC_OPCAJA) AS DOCUMENTO');
+end;
+
+procedure TRepositorioInformesCajaUniDAC.AnadirOrigenOperacionesVenta(
+  ALineas: TStrings);
+begin
+  ALineas.Add('  FROM fza_caja_operaciones o');
+  ALineas.Add('  JOIN fza_facturas_lineas fl');
+  ALineas.Add('    ON fl.SERIE_FAC_FACLIN = o.SERIE_FAC_OPCAJA');
+  ALineas.Add('   AND fl.NUMERO_FAC_FACLIN = o.NUMERO_FAC_OPCAJA');
+  ALineas.Add('   AND fl.CODIGO_EMP_FACLIN = o.CODIGO_EMP_OPCAJA');
+  ALineas.Add('  LEFT JOIN fza_articulos_proveedores ap');
+  ALineas.Add('    ON ap.CODIGO_ART_AP = fl.CODIGO_ART_FACLIN');
+  ALineas.Add('   AND ap.CODIGO_PRV_AP =');
+  ALineas.Add('       COALESCE(NULLIF(TRIM(fl.CODIGO_PRV_FACLIN), ''''),');
+  ALineas.Add('         (SELECT apx.CODIGO_PRV_AP');
+  ALineas.Add('            FROM fza_articulos_proveedores apx');
+  ALineas.Add('           WHERE apx.CODIGO_ART_AP = fl.CODIGO_ART_FACLIN');
+  ALineas.Add('           ORDER BY CASE');
+  ALineas.Add('             WHEN apx.ESPROVEEDORPRINCIPAL_AP = ''S''');
+  ALineas.Add('             THEN 0 ELSE 1');
+  ALineas.Add('           END, apx.FECHA_VALIDEZ_AP DESC,');
+  ALineas.Add('           apx.CODIGO_PRV_AP');
+  ALineas.Add('           LIMIT 1))');
+end;
+
+procedure TRepositorioInformesCajaUniDAC.AnadirColoresOperacionesVenta(
+  ALineas: TStrings);
+begin
+  ALineas.Add('  LEFT JOIN (');
+  ALineas.Add('    SELECT sa.CODIGO_UNIDAD_SKU_SA');
+  ALineas.Add('             AS CODIGO_UNIDAD_SKU,');
+  ALineas.Add('           MAX(atb.HEX_ATB) AS HEX_COLOR_BASICO');
+  ALineas.Add('      FROM fza_atributos_sku sa');
+  ALineas.Add('      JOIN fza_articulos_skus sk');
+  ALineas.Add('        ON sk.CODIGO_UNIDAD_SKU =');
+  ALineas.Add('           sa.CODIGO_UNIDAD_SKU_SA');
+  ALineas.Add('      JOIN fza_atributos_valores av');
+  ALineas.Add('        ON av.ID_AV = sa.ID_AV_SA');
+  ALineas.Add('       AND av.ID_VA_AV = ''CO''');
+  ALineas.Add('      JOIN fza_articulos_atributos_basicos aab');
+  ALineas.Add('        ON aab.CODIGO_ART_AAB = sk.CODIGO_ART_SKU');
+  ALineas.Add('       AND aab.ID_AV_AAB = av.ID_AV');
+  ALineas.Add('      JOIN fza_atributos_basicos atb');
+  ALineas.Add('        ON atb.ID_ATB = aab.ID_ATB_AAB');
+  ALineas.Add('     GROUP BY sa.CODIGO_UNIDAD_SKU_SA');
+  ALineas.Add('  ) cb');
+  ALineas.Add('    ON cb.CODIGO_UNIDAD_SKU =');
+  ALineas.Add('       fl.CODIGO_UNIDAD_FACLIN');
+end;
+
+procedure TRepositorioInformesCajaUniDAC.AnadirPagosOperacionesVenta(
+  ALineas: TStrings);
+begin
+  ALineas.Add('  LEFT JOIN (');
+  ALineas.Add('    SELECT p.CODIGO_EMP_PAGO, p.CODIGO_ALM_PAGO,');
+  ALineas.Add('           p.CODIGO_CAJA_PAGO, p.NUMERO_OPERACION_PAGO,');
+  ALineas.Add('           GROUP_CONCAT(DISTINCT p.CODIGO_FP_CFP');
+  ALineas.Add('             ORDER BY p.CODIGO_FP_CFP SEPARATOR '', '')');
+  ALineas.Add('             AS FORMAS_PAGO,');
+  ALineas.Add('           SUM(p.IMPORTE_ENTREGADO_PAGO -');
+  ALineas.Add('               p.IMPORTE_CAMBIO_PAGO) AS INGRESOS_OPERACION');
+  ALineas.Add('      FROM fza_caja_pagos p');
+  ALineas.Add('     GROUP BY p.CODIGO_EMP_PAGO, p.CODIGO_ALM_PAGO,');
+  ALineas.Add('              p.CODIGO_CAJA_PAGO,');
+  ALineas.Add('              p.NUMERO_OPERACION_PAGO');
+  ALineas.Add('  ) pg');
+  ALineas.Add('    ON pg.CODIGO_EMP_PAGO = o.CODIGO_EMP_OPCAJA');
+  ALineas.Add('   AND pg.CODIGO_ALM_PAGO = o.CODIGO_ALM_OPCAJA');
+  ALineas.Add('   AND pg.CODIGO_CAJA_PAGO = o.CODIGO_CAJA_OPCAJA');
+  ALineas.Add('   AND pg.NUMERO_OPERACION_PAGO =');
+  ALineas.Add('       o.NUMERO_OPERACION_OPCAJA');
+end;
+
+procedure TRepositorioInformesCajaUniDAC.AnadirFiltrosOperacionesVenta(
+  ALineas: TStrings;
+  const AFiltroUbicaciones: string);
+begin
+  ALineas.Add(' WHERE o.TIPO_OPERACION_OPCAJA = ''VE''');
+  ALineas.Add(AFiltroUbicaciones);
+  ALineas.Add('   AND o.FECHA_OPERACION_OPCAJA >= :pDESDE');
+  ALineas.Add('   AND o.FECHA_OPERACION_OPCAJA <');
+  ALineas.Add('       DATE_ADD(:pHASTA, INTERVAL 1 DAY)');
+  ALineas.Add(SQLExcluirVentaRetirada(
+    'o.CODIGO_EMP_OPCAJA',
+    'o.SERIE_FAC_OPCAJA',
+    'o.NUMERO_FAC_OPCAJA'));
+  ALineas.Add(' ORDER BY FECHA_DIA, o.CODIGO_EMP_OPCAJA,');
+  ALineas.Add('          o.CODIGO_ALM_OPCAJA,');
+  ALineas.Add('          o.CODIGO_CAJA_OPCAJA,');
+  ALineas.Add('          o.NUMERO_OPERACION_OPCAJA, fl.LINEA_FACLIN');
+end;
+
 function TRepositorioInformesCajaUniDAC.ConstruirSqlOperacionesVenta(
   const AFiltroUbicaciones: string): string;
 var
   slSQL: TStringList;
-
-  procedure Anadir(const ALinea: string);
-  begin
-    slSQL.Add(ALinea);
-  end;
-
 begin
   slSQL := TStringList.Create;
   try
-    Anadir('SELECT DATE(o.FECHA_OPERACION_OPCAJA) AS FECHA_DIA,');
-    Anadir('       DATE(:pDESDE) AS FECHA_DESDE,');
-    Anadir('       DATE(:pHASTA) AS FECHA_HASTA,');
-    Anadir('       o.CODIGO_EMP_OPCAJA,');
-    Anadir('       o.CODIGO_ALM_OPCAJA,');
-    Anadir('       o.CODIGO_CAJA_OPCAJA,');
-    Anadir('       CONCAT(o.CODIGO_EMP_OPCAJA, ''/'',');
-    Anadir('              o.CODIGO_ALM_OPCAJA, ''/'',');
-    Anadir('              o.CODIGO_CAJA_OPCAJA) AS CLAVE_CAJA,');
-    Anadir('       o.NUMERO_OPERACION_OPCAJA,');
-    Anadir('       fl.LINEA_FACLIN,');
-    Anadir('       fl.CODIGO_ART_FACLIN AS ARTICULO,');
-    Anadir('       COALESCE(');
-    Anadir('         NULLIF(CASE');
-    Anadir('           WHEN UPPER(fl.ATTR1_NOMBRE_FACLIN) LIKE ''%COLOR%''');
-    Anadir('             THEN fl.ATTR1_VALOR_FACLIN');
-    Anadir('           WHEN UPPER(fl.ATTR2_NOMBRE_FACLIN) LIKE ''%COLOR%''');
-    Anadir('             THEN fl.ATTR2_VALOR_FACLIN');
-    Anadir('           WHEN UPPER(fl.ATTR3_NOMBRE_FACLIN) LIKE ''%COLOR%''');
-    Anadir('             THEN fl.ATTR3_VALOR_FACLIN');
-    Anadir('           WHEN UPPER(fl.ATTR4_NOMBRE_FACLIN) LIKE ''%COLOR%''');
-    Anadir('             THEN fl.ATTR4_VALOR_FACLIN');
-    Anadir('           WHEN UPPER(fl.ATTR5_NOMBRE_FACLIN) LIKE ''%COLOR%''');
-    Anadir('             THEN fl.ATTR5_VALOR_FACLIN');
-    Anadir('           ELSE ''''');
-    Anadir('         END, ''''),');
-    Anadir('         CASE');
-    Anadir('           WHEN LENGTH(fl.CODIGO_UNIDAD_FACLIN) -');
-    Anadir('                LENGTH(REPLACE(fl.CODIGO_UNIDAD_FACLIN,');
-    Anadir('                               ''/'', '''')) >= 1');
-    Anadir('             THEN SUBSTRING_INDEX(SUBSTRING_INDEX(');
-    Anadir('                    fl.CODIGO_UNIDAD_FACLIN, ''/'', 2),');
-    Anadir('                    ''/'', -1)');
-    Anadir('           ELSE ''''');
-    Anadir('         END, '''') AS COLOR,');
-    Anadir('       COALESCE(cb.HEX_COLOR_BASICO, '''')');
-    Anadir('         AS HEX_COLOR_BASICO,');
-    Anadir('       COALESCE(');
-    Anadir('         NULLIF(CASE');
-    Anadir('           WHEN UPPER(fl.ATTR1_NOMBRE_FACLIN) LIKE ''%TALLA%''');
-    Anadir('             THEN fl.ATTR1_VALOR_FACLIN');
-    Anadir('           WHEN UPPER(fl.ATTR2_NOMBRE_FACLIN) LIKE ''%TALLA%''');
-    Anadir('             THEN fl.ATTR2_VALOR_FACLIN');
-    Anadir('           WHEN UPPER(fl.ATTR3_NOMBRE_FACLIN) LIKE ''%TALLA%''');
-    Anadir('             THEN fl.ATTR3_VALOR_FACLIN');
-    Anadir('           WHEN UPPER(fl.ATTR4_NOMBRE_FACLIN) LIKE ''%TALLA%''');
-    Anadir('             THEN fl.ATTR4_VALOR_FACLIN');
-    Anadir('           WHEN UPPER(fl.ATTR5_NOMBRE_FACLIN) LIKE ''%TALLA%''');
-    Anadir('             THEN fl.ATTR5_VALOR_FACLIN');
-    Anadir('           ELSE ''''');
-    Anadir('         END, ''''),');
-    Anadir('         CASE');
-    Anadir('           WHEN LENGTH(fl.CODIGO_UNIDAD_FACLIN) -');
-    Anadir('                LENGTH(REPLACE(fl.CODIGO_UNIDAD_FACLIN,');
-    Anadir('                               ''/'', '''')) >= 2');
-    Anadir('             THEN SUBSTRING_INDEX(SUBSTRING_INDEX(');
-    Anadir('                    fl.CODIGO_UNIDAD_FACLIN, ''/'', 3),');
-    Anadir('                    ''/'', -1)');
-    Anadir('           ELSE ''''');
-    Anadir('         END, '''') AS TALLA,');
-    Anadir('       COALESCE(NULLIF(TRIM(fl.CODIGO_PRV_FACLIN), ''''),');
-    Anadir('                ap.CODIGO_PRV_AP, '''') AS PROVEEDOR,');
-    Anadir('       COALESCE(ap.REF_PROVEEDOR_AP, '''') AS MODELO,');
-    Anadir('       fl.DESCRIPCION_ARTICULO_FACLIN AS DESCRIPCION,');
-    Anadir('       COALESCE(fl.CANTIDAD_FACLIN, 0) AS CANTIDAD,');
-    Anadir('       COALESCE(fl.CANTIDAD_FACLIN, 0) *');
-    Anadir('       COALESCE(fl.PRECIO_SALIDA_FACLIN,');
-    Anadir('                fl.PRECIO_VENTA_CIVA_ARTICULO_FACLIN, 0)');
-    Anadir('         AS BRUTO,');
-    Anadir('       COALESCE(fl.PORCENTAJE_DTO_FACLIN, 0)');
-    Anadir('         AS PORCENTAJE_DTO,');
-    Anadir('       COALESCE(fl.TOTAL_FACLIN, 0) AS NETO_ARTICULO,');
-    Anadir('       COALESCE(');
-    Anadir('         pg.INGRESOS_OPERACION * fl.TOTAL_FACLIN /');
-    Anadir('         NULLIF(o.IMPORTE_TOTAL_OPCAJA, 0), 0) AS INGRESOS,');
-    Anadir('       COALESCE(NULLIF(fl.CODIGO_VENDEDOR_FACLIN, ''''),');
-    Anadir('                o.CODIGO_EMPLEADO_OPCAJA, '''') AS VENDEDOR,');
-    Anadir('       COALESCE(pg.FORMAS_PAGO, '''') AS FORMA_PAGO,');
-    Anadir('       CONCAT_WS(''.'', o.CODIGO_EMP_OPCAJA,');
-    Anadir('                 o.TIPO_OPERACION_OPCAJA,');
-    Anadir('                 o.SERIE_FAC_OPCAJA,');
-    Anadir('                 o.NUMERO_FAC_OPCAJA) AS DOCUMENTO');
-    Anadir('  FROM fza_caja_operaciones o');
-    Anadir('  JOIN fza_facturas_lineas fl');
-    Anadir('    ON fl.SERIE_FAC_FACLIN = o.SERIE_FAC_OPCAJA');
-    Anadir('   AND fl.NUMERO_FAC_FACLIN = o.NUMERO_FAC_OPCAJA');
-    Anadir('   AND fl.CODIGO_EMP_FACLIN = o.CODIGO_EMP_OPCAJA');
-    Anadir('  LEFT JOIN fza_articulos_proveedores ap');
-    Anadir('    ON ap.CODIGO_ART_AP = fl.CODIGO_ART_FACLIN');
-    Anadir('   AND ap.CODIGO_PRV_AP =');
-    Anadir('       COALESCE(NULLIF(TRIM(fl.CODIGO_PRV_FACLIN), ''''),');
-    Anadir('         (SELECT apx.CODIGO_PRV_AP');
-    Anadir('            FROM fza_articulos_proveedores apx');
-    Anadir('           WHERE apx.CODIGO_ART_AP = fl.CODIGO_ART_FACLIN');
-    Anadir('           ORDER BY CASE');
-    Anadir('             WHEN apx.ESPROVEEDORPRINCIPAL_AP = ''S''');
-    Anadir('             THEN 0 ELSE 1');
-    Anadir('           END, apx.FECHA_VALIDEZ_AP DESC,');
-    Anadir('           apx.CODIGO_PRV_AP');
-    Anadir('           LIMIT 1))');
-    Anadir('  LEFT JOIN (');
-    Anadir('    SELECT sa.CODIGO_UNIDAD_SKU_SA');
-    Anadir('             AS CODIGO_UNIDAD_SKU,');
-    Anadir('           MAX(atb.HEX_ATB) AS HEX_COLOR_BASICO');
-    Anadir('      FROM fza_atributos_sku sa');
-    Anadir('      JOIN fza_articulos_skus sk');
-    Anadir('        ON sk.CODIGO_UNIDAD_SKU =');
-    Anadir('           sa.CODIGO_UNIDAD_SKU_SA');
-    Anadir('      JOIN fza_atributos_valores av');
-    Anadir('        ON av.ID_AV = sa.ID_AV_SA');
-    Anadir('       AND av.ID_VA_AV = ''CO''');
-    Anadir('      JOIN fza_articulos_atributos_basicos aab');
-    Anadir('        ON aab.CODIGO_ART_AAB = sk.CODIGO_ART_SKU');
-    Anadir('       AND aab.ID_AV_AAB = av.ID_AV');
-    Anadir('      JOIN fza_atributos_basicos atb');
-    Anadir('        ON atb.ID_ATB = aab.ID_ATB_AAB');
-    Anadir('     GROUP BY sa.CODIGO_UNIDAD_SKU_SA');
-    Anadir('  ) cb');
-    Anadir('    ON cb.CODIGO_UNIDAD_SKU =');
-    Anadir('       fl.CODIGO_UNIDAD_FACLIN');
-    Anadir('  LEFT JOIN (');
-    Anadir('    SELECT p.CODIGO_EMP_PAGO, p.CODIGO_ALM_PAGO,');
-    Anadir('           p.CODIGO_CAJA_PAGO, p.NUMERO_OPERACION_PAGO,');
-    Anadir('           GROUP_CONCAT(DISTINCT p.CODIGO_FP_CFP');
-    Anadir('             ORDER BY p.CODIGO_FP_CFP SEPARATOR '', '')');
-    Anadir('             AS FORMAS_PAGO,');
-    Anadir('           SUM(p.IMPORTE_ENTREGADO_PAGO -');
-    Anadir('               p.IMPORTE_CAMBIO_PAGO) AS INGRESOS_OPERACION');
-    Anadir('      FROM fza_caja_pagos p');
-    Anadir('     GROUP BY p.CODIGO_EMP_PAGO, p.CODIGO_ALM_PAGO,');
-    Anadir('              p.CODIGO_CAJA_PAGO,');
-    Anadir('              p.NUMERO_OPERACION_PAGO');
-    Anadir('  ) pg');
-    Anadir('    ON pg.CODIGO_EMP_PAGO = o.CODIGO_EMP_OPCAJA');
-    Anadir('   AND pg.CODIGO_ALM_PAGO = o.CODIGO_ALM_OPCAJA');
-    Anadir('   AND pg.CODIGO_CAJA_PAGO = o.CODIGO_CAJA_OPCAJA');
-    Anadir('   AND pg.NUMERO_OPERACION_PAGO =');
-    Anadir('       o.NUMERO_OPERACION_OPCAJA');
-    Anadir(' WHERE o.TIPO_OPERACION_OPCAJA = ''VE''');
-    Anadir(AFiltroUbicaciones);
-    Anadir('   AND o.FECHA_OPERACION_OPCAJA >= :pDESDE');
-    Anadir('   AND o.FECHA_OPERACION_OPCAJA <');
-    Anadir('       DATE_ADD(:pHASTA, INTERVAL 1 DAY)');
-    Anadir(SQLExcluirVentaRetirada(
-      'o.CODIGO_EMP_OPCAJA',
-      'o.SERIE_FAC_OPCAJA',
-      'o.NUMERO_FAC_OPCAJA'));
-    Anadir(' ORDER BY FECHA_DIA, o.CODIGO_EMP_OPCAJA,');
-    Anadir('          o.CODIGO_ALM_OPCAJA,');
-    Anadir('          o.CODIGO_CAJA_OPCAJA,');
-    Anadir('          o.NUMERO_OPERACION_OPCAJA, fl.LINEA_FACLIN');
+    AnadirCabeceraOperacionesVenta(slSQL);
+    AnadirAtributosOperacionesVenta(slSQL);
+    AnadirImportesOperacionesVenta(slSQL);
+    AnadirOrigenOperacionesVenta(slSQL);
+    AnadirColoresOperacionesVenta(slSQL);
+    AnadirPagosOperacionesVenta(slSQL);
+    AnadirFiltrosOperacionesVenta(slSQL, AFiltroUbicaciones);
     Result := slSQL.Text;
   finally
     FreeAndNil(slSQL);

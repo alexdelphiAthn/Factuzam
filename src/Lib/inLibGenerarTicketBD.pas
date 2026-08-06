@@ -51,7 +51,8 @@ implementation
 
 uses
   inLibVerifactu, inLibFormatoDocumento,
-  inLibMsgCaja, inLibMsgTickets, inLibTraducciones;
+  inLibMsgCaja, inLibMsgTickets, inLibTraducciones,
+  inLibTicketRecordatorio;
 
 function LPAD(
   const AValue: string;
@@ -854,162 +855,15 @@ procedure ImprimirRecordatorio(
   const ANombreImpresora: string;
   ARutasPDF: TStrings;
   ASoloPDF: Boolean);
-var
-  dCantidad: Double;
-  dPendiente: Currency;
-  dTotalDeposito: Currency;
-  dTotalPendienteCliente: Currency;
-  i: Integer;
-  j: Integer;
-  sComandosEsc: string;
-  sConcepto: string;
-  sOrigen: string;
-  sOrigenDeposito: string;
-  sRutaFicheroPdf: string;
-  oAnticipos: TArray<TAnticipoRecordatorioTicketCaja>;
-  oDepositos: TArray<TDepositoPendienteTicketCaja>;
-  oEmpresa: TEmpresaRecordatorioTicketCaja;
-  oTicket: TTicketTermico;
 begin
-  if (Trim(ACodigoCliente) <> '') and Assigned(ARepositorio) then
-  begin
-    oDepositos :=
-      ARepositorio.ListarDepositosPendientesRecordatorio(
-        ACodigoCliente);
-    if Length(oDepositos) > 0 then
-    begin
-      oEmpresa :=
-        ARepositorio.ObtenerEmpresaRecordatorio(ACodigoEmpresa);
-      oTicket := TTicketTermico.Create(ANombreImpresora);
-      try
-        oTicket.Inicializar;
-        oTicket.Alinear(alCentro);
-        oTicket.Negrita(True);
-        oTicket.SaltarLineas(3);
-        oTicket.EscribirLinea(STicketEstadoCuentaDepositos);
-        oTicket.EscribirLinea(
-          FormatDateTime(
-            STicketFormatoFechaLarga,
-            Now));
-        oTicket.Negrita(False);
-        oTicket.LineaSeparadora('-');
-        oTicket.Alinear(alIzquierda);
-        oTicket.Negrita(True);
-        oTicket.EscribirLinea(STicketEmpresa);
-        oTicket.Negrita(False);
-        oTicket.EscribirLinea(
-          Format(
-            '%-4s %s',
-            [oEmpresa.Codigo, Copy(oEmpresa.RazonSocial, 1, 36)]));
-        oTicket.Negrita(True);
-        oTicket.EscribirLinea(STicketCliente);
-        oTicket.Negrita(False);
-        oTicket.EscribirLinea(
-          Format(
-            '%-4s %s',
-            [oDepositos[0].CodigoCliente,
-             Copy(oDepositos[0].RazonSocialCliente, 1, 36)]));
-        oTicket.LineaSeparadora('-');
-        oTicket.EscribirLinea(
-          Format(
-            '%-14s %13s %13s',
-            [STicketFechaHora, STicketTotal, STicketPendiente]));
-        oTicket.LineaSeparadora('-');
-        dTotalPendienteCliente := 0;
-        for i := 0 to High(oDepositos) do
-        begin
-          dCantidad := oDepositos[i].CantidadPendiente;
-          if dCantidad = 0 then
-            dCantidad := 1;
-          dTotalDeposito :=
-            oDepositos[i].PrecioVenta * dCantidad;
-          dPendiente :=
-            dTotalDeposito - oDepositos[i].ImporteAnticipo;
-          dTotalPendienteCliente :=
-            dTotalPendienteCliente + dPendiente;
-          sOrigenDeposito := oDepositos[i].Empresa;
-          if oDepositos[i].Almacen <> '' then
-            sOrigenDeposito :=
-              sOrigenDeposito + '/' + oDepositos[i].Almacen;
-          if oDepositos[i].Caja <> '' then
-            sOrigenDeposito :=
-              sOrigenDeposito + '/' + oDepositos[i].Caja;
-          oTicket.Alinear(alIzquierda);
-          oTicket.EscribirLinea(
-            Format(
-              '%-14s %13s %13s',
-              [FormatDateTime(
-                 'dd/mm/yy HH:nn',
-                 oDepositos[i].FechaCreacion),
-               FormatFloat('#,##0.00 €', dTotalDeposito),
-               FormatFloat('#,##0.00 €', dPendiente)]));
-          oTicket.EscribirLinea(
-            '  ' + Copy(oDepositos[i].CodigoUnidad, 1, 40));
-          oTicket.EscribirLinea(
-            '  ' + Copy(oDepositos[i].Descripcion, 1, 40));
-          oTicket.EscribirLinea(
-            Format(
-              STicketRetiradoEn,
-              [sOrigenDeposito]));
-          oAnticipos :=
-            ARepositorio.ListarAnticiposRecordatorio(
-              oDepositos[i].IdDeposito);
-          for j := 0 to High(oAnticipos) do
-          begin
-            sConcepto := '';
-            if oAnticipos[j].TipoOperacion = 'DE' then
-              sConcepto := STicketEntregaInicial
-            else if oAnticipos[j].TipoOperacion = 'CB' then
-              sConcepto := STicketACuenta;
-            sOrigen := oAnticipos[j].Empresa;
-            if oAnticipos[j].Almacen <> '' then
-              sOrigen := sOrigen + '/' + oAnticipos[j].Almacen;
-            if oAnticipos[j].Caja <> '' then
-              sOrigen := sOrigen + '/' + oAnticipos[j].Caja;
-            oTicket.Alinear(alIzquierda);
-            oTicket.EscribirLinea(
-              sConcepto + '  ' +
-              FormatDateTime(
-                'dd/mm/yy HH:nn',
-                oAnticipos[j].FechaOperacion));
-            oTicket.EscribirLinea(
-              Format(
-                '   %-10s %13s',
-                ['(' + sOrigen + ')',
-                 '-' + FormatFloat(
-                   '#,##0.00',
-                   oAnticipos[j].Importe) + ' €']));
-            oTicket.Alinear(alDerecha);
-          end;
-          oTicket.SaltarLineas(1);
-        end;
-        oTicket.Alinear(alIzquierda);
-        oTicket.LineaSeparadora('-');
-        oTicket.Negrita(True);
-        oTicket.TextoColumnas(
-          STicketTotalPendientePago,
-          FormatFloat(
-            '#,##0.00',
-            dTotalPendienteCliente) + ' €');
-        oTicket.Negrita(False);
-        sComandosEsc := oTicket.ObtenerComandos;
-        sRutaFicheroPdf :=
-          GetUserFolderTickets + 'Recordatorio_' +
-          FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
-        ImprimirOPrevisualizarTicket(
-          APreview,
-          oTicket,
-          sComandosEsc,
-          sRutaFicheroPdf,
-          ANombreImpresora,
-          ASoloPDF);
-        if (ARutasPDF <> nil) and FileExists(sRutaFicheroPdf) then
-          ARutasPDF.Add(sRutaFicheroPdf);
-      finally
-        FreeAndNil(oTicket);
-      end;
-    end;
-  end;
+  ImprimirRecordatorioTicket(
+    APreview,
+    ARepositorio,
+    ACodigoEmpresa,
+    ACodigoCliente,
+    ANombreImpresora,
+    ARutasPDF,
+    ASoloPDF);
 end;
 
 end.

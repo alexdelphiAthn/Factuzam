@@ -742,13 +742,19 @@ $contratosResguardoDeposito = @(
   'STicketDevolucionEconomica',
   'STicketDevolucionArticulos',
   'STicketTotalPagadoDepositos',
-  'ImprimirOPrevisualizarTicket',
-  'ARutasPDF.Add'
+  'ImprimirOPrevisualizarTicket'
 )
 foreach ($contrato in $contratosResguardoDeposito) {
   if (-not $contenidoGenerarTicketBD.Contains($contrato)) {
     throw "El resguardo no conserva el contrato: $contrato."
   }
+}
+$rutaTicketRecordatorio =
+  Join-Path $Raiz 'src\Lib\inLibTicketRecordatorio.pas'
+$contenidoTicketRecordatorio =
+  Get-Content -LiteralPath $rutaTicketRecordatorio -Raw
+if (-not $contenidoTicketRecordatorio.Contains('FRutasPDF.Add')) {
+  throw 'El recordatorio no conserva la salida de la ruta PDF.'
 }
 if ($contenidoGenerarTicketBD -match
     '(?i)\b(TUniConnection|TUniQuery|SELECT|INSERT|UPDATE|DELETE|CALL)\b') {

@@ -378,165 +378,176 @@ begin
                          TUniStoredProc).StoredProcName);
 end;
 
-procedure SetLabelForm(oControl:TComponent; var oPerfilDic : TProfileDicc);
-var sName, sCompName:string;
-    i:Integer;
-    oCon:TComponent;
+procedure AplicarCaptionEtiqueta(AComponente: TComponent;
+  var APerfil: TProfileDicc);
+var
+  oEtiqueta: TcxLabel;
 begin
-  sName := oControl.Name;
-  if PerfilesLiteralesActivos then
-    for i := 0 to oControl.ComponentCount - 1 do
+  if AComponente is TcxLabel then
+    oEtiqueta := TcxLabel(AComponente)
+  else
+    oEtiqueta := nil;
+  if Assigned(oEtiqueta) and
+     not SameText(oEtiqueta.Caption, 'lblTablaOrigen') and
+     not SameText(oEtiqueta.Caption, 'lblEditMode') then
   begin
-    oCon := oControl.Components[i];
-    sCompName := oCon.Name;
-    if StartsText('lbl', sCompName)  then
-    begin                       //son los únicos label que no se deben renombrar
-      if (oCon is TcxLabel) and
-         not SameText((oCon as TcxLabel).Caption, 'lblTablaOrigen') and
-         not SameText((oCon as TcxLabel).Caption, 'lblEditMode')
-            then
-      begin
-       (oCon as TcxLabel).Caption :=   GetPerfilSubKeyValueDef(oPerfilDic,
-                                                sCompName,
-                                                'Caption',
-                                                (oCon as TcxLabel).Caption);
-      end
-        else
-        begin
-        sleep(0);
-        {$IFDEF DEBUG}
-          ShowMessage(Format(SDepuracionComponenteNoTcxLabel,
-            [oCon.ClassName]));
-        {$ENDIF }
-        end;
-    end;
-    if StartsText('ts', sCompName) then
-    begin
+    oEtiqueta.Caption := GetPerfilSubKeyValueDef(APerfil,
+      AComponente.Name, 'Caption', oEtiqueta.Caption);
+  end
+  else
+  begin
+    Sleep(0);
+    {$IFDEF DEBUG}
+    ShowMessage(Format(SDepuracionComponenteNoTcxLabel,
+      [AComponente.ClassName]));
+    {$ENDIF}
+  end;
+end;
 
-      if (oCon is TcxTabSheet) then
-      begin
-        (oCon as TcxTabSheet).Caption :=   GetPerfilSubKeyValueDef(oPerfilDic,
-                                              sCompName,
-                                              'Caption',
-                                              (oCon as TcxTabSheet).Caption);
-      end
-      else
-      begin
-        sleep(0);
-        {$IFDEF DEBUG}
-          ShowMessage(Format(SDepuracionComponenteNoTcxTabSheet,
-            [oCon.ClassName]));
-        {$ENDIF }
-      end;
-    end;
-    if StartsText('chk', sCompName) then
-    begin
-      if (oCon is TcxDBCheckBox) then
-      begin
-      (oCon as TcxDBCheckBox).Caption :=   GetPerfilSubKeyValueDef(oPerfilDic,
-                                             sCompName,
-                                             'Caption',
-                                             (oCon as TcxDBCheckBox).Caption);
-      end
-      else
-      begin
-        sleep(0);
-        {$IFDEF DEBUG}
-          ShowMessage(Format(SDepuracionComponenteNoTcxDbCheckBox,
-            [oCon.ClassName]));
-        {$ENDIF }
-      end;
-    end;
-    if StartsText('btn', sCompName) then
-    begin
-      if oCon is TcxButton then
-      begin
-      (oCon as TcxButton).Caption :=   GetPerfilSubKeyValueDef(oPerfilDic,
-                                            sCompName,
-                                            'Caption',
-                                            (oCon as TcxButton).Caption);
-      end
-      else
-        begin
-          sleep(0);
-          {$IFDEF DEBUG}
-            ShowMessage(Format(SDepuracionComponenteNoTcxButton,
-              [oCon.ClassName]));
-          {$ENDIF }
-        end;
-    end;
-    if StartsText('grp', sCompName) then
-    begin
-      if oCon is TcxGroupBox then
-      begin
-      (oCon as TcxGroupBox).Caption :=   GetPerfilSubKeyValueDef(oPerfilDic,
-                                            sCompName,
-                                            'Caption',
-                                            (oCon as TcxGroupBox).Caption);
-      end
-      else
-        begin
-          sleep(0);
-          {$IFDEF DEBUG}
-            ShowMessage(Format(SDepuracionComponenteNoTcxGroupBox,
-              [oCon.ClassName]));
-          {$ENDIF }
-        end;
-    end;
-    if StartsText('rg', sCompName) then
-    begin
-      if oCon is TcxDBRadioGroup then
-      begin
-      (oCon as TcxDBRadioGroup).Caption :=   GetPerfilSubKeyValueDef(oPerfilDic,
-                                            sCompName,
-                                            'Caption',
-                                            (oCon as TcxDBRadioGroup).Caption);
-      end
-      else
-        begin
-          sleep(0);
-          {$IFDEF DEBUG}
-            ShowMessage(Format(SDepuracionComponenteNoTcxDbRadioGroup,
-              [oCon.ClassName]));
-          {$ENDIF }
-        end;
-    end;
-    if StartsText('sb', sCompName) then
-    begin
-      if oCon is TSpeedButton then
-      begin
-      (oCon as TSpeedButton).Caption :=   GetPerfilSubKeyValueDef(oPerfilDic,
-                                            sCompName,
-                                            'Caption',
-                                            (oCon as TSpeedButton).Caption);
-      end
-      else
-        begin
-          sleep(0);
-          {$IFDEF DEBUG}
-            ShowMessage(Format(SDepuracionComponenteNoSpeedButton,
-              [oCon.ClassName]));
-          {$ENDIF }
-        end;
-    end;
-    if StartsText('rb', sCompName) then
-    begin
-      if oCon is TcxRadioButton then
-      begin
-      (oCon as TcxRadioButton).Caption :=   GetPerfilSubKeyValueDef(oPerfilDic,
-                                            sCompName,
-                                            'Caption',
-                                            (oCon as TcxRadioButton).Caption);
-      end
-      else
-        begin
-          sleep(0);
-          {$IFDEF DEBUG}
-            ShowMessage(Format(SDepuracionComponenteNoTcxRadioButton,
-              [oCon.ClassName]));
-          {$ENDIF }
-        end;
-    end;
+procedure AplicarCaptionPestana(AComponente: TComponent;
+  var APerfil: TProfileDicc);
+begin
+  if AComponente is TcxTabSheet then
+    TcxTabSheet(AComponente).Caption := GetPerfilSubKeyValueDef(APerfil,
+      AComponente.Name, 'Caption', TcxTabSheet(AComponente).Caption)
+  else
+  begin
+    Sleep(0);
+    {$IFDEF DEBUG}
+    ShowMessage(Format(SDepuracionComponenteNoTcxTabSheet,
+      [AComponente.ClassName]));
+    {$ENDIF}
+  end;
+end;
+
+procedure AplicarCaptionCheckBox(AComponente: TComponent;
+  var APerfil: TProfileDicc);
+begin
+  if AComponente is TcxDBCheckBox then
+    TcxDBCheckBox(AComponente).Caption := GetPerfilSubKeyValueDef(APerfil,
+      AComponente.Name, 'Caption', TcxDBCheckBox(AComponente).Caption)
+  else
+  begin
+    Sleep(0);
+    {$IFDEF DEBUG}
+    ShowMessage(Format(SDepuracionComponenteNoTcxDbCheckBox,
+      [AComponente.ClassName]));
+    {$ENDIF}
+  end;
+end;
+
+procedure AplicarCaptionBoton(AComponente: TComponent;
+  var APerfil: TProfileDicc);
+begin
+  if AComponente is TcxButton then
+    TcxButton(AComponente).Caption := GetPerfilSubKeyValueDef(APerfil,
+      AComponente.Name, 'Caption', TcxButton(AComponente).Caption)
+  else
+  begin
+    Sleep(0);
+    {$IFDEF DEBUG}
+    ShowMessage(Format(SDepuracionComponenteNoTcxButton,
+      [AComponente.ClassName]));
+    {$ENDIF}
+  end;
+end;
+
+procedure AplicarCaptionGrupo(AComponente: TComponent;
+  var APerfil: TProfileDicc);
+begin
+  if AComponente is TcxGroupBox then
+    TcxGroupBox(AComponente).Caption := GetPerfilSubKeyValueDef(APerfil,
+      AComponente.Name, 'Caption', TcxGroupBox(AComponente).Caption)
+  else
+  begin
+    Sleep(0);
+    {$IFDEF DEBUG}
+    ShowMessage(Format(SDepuracionComponenteNoTcxGroupBox,
+      [AComponente.ClassName]));
+    {$ENDIF}
+  end;
+end;
+
+procedure AplicarCaptionGrupoRadio(AComponente: TComponent;
+  var APerfil: TProfileDicc);
+begin
+  if AComponente is TcxDBRadioGroup then
+    TcxDBRadioGroup(AComponente).Caption := GetPerfilSubKeyValueDef(APerfil,
+      AComponente.Name, 'Caption', TcxDBRadioGroup(AComponente).Caption)
+  else
+  begin
+    Sleep(0);
+    {$IFDEF DEBUG}
+    ShowMessage(Format(SDepuracionComponenteNoTcxDbRadioGroup,
+      [AComponente.ClassName]));
+    {$ENDIF}
+  end;
+end;
+
+procedure AplicarCaptionBotonRapido(AComponente: TComponent;
+  var APerfil: TProfileDicc);
+begin
+  if AComponente is TSpeedButton then
+    TSpeedButton(AComponente).Caption := GetPerfilSubKeyValueDef(APerfil,
+      AComponente.Name, 'Caption', TSpeedButton(AComponente).Caption)
+  else
+  begin
+    Sleep(0);
+    {$IFDEF DEBUG}
+    ShowMessage(Format(SDepuracionComponenteNoSpeedButton,
+      [AComponente.ClassName]));
+    {$ENDIF}
+  end;
+end;
+
+procedure AplicarCaptionRadio(AComponente: TComponent;
+  var APerfil: TProfileDicc);
+begin
+  if AComponente is TcxRadioButton then
+    TcxRadioButton(AComponente).Caption := GetPerfilSubKeyValueDef(APerfil,
+      AComponente.Name, 'Caption', TcxRadioButton(AComponente).Caption)
+  else
+  begin
+    Sleep(0);
+    {$IFDEF DEBUG}
+    ShowMessage(Format(SDepuracionComponenteNoTcxRadioButton,
+      [AComponente.ClassName]));
+    {$ENDIF}
+  end;
+end;
+
+procedure AplicarCaptionComponente(AComponente: TComponent;
+  var APerfil: TProfileDicc);
+var
+  sNombre: string;
+begin
+  sNombre := AComponente.Name;
+  if StartsText('lbl', sNombre) then
+    AplicarCaptionEtiqueta(AComponente, APerfil)
+  else if StartsText('ts', sNombre) then
+    AplicarCaptionPestana(AComponente, APerfil)
+  else if StartsText('chk', sNombre) then
+    AplicarCaptionCheckBox(AComponente, APerfil)
+  else if StartsText('btn', sNombre) then
+    AplicarCaptionBoton(AComponente, APerfil)
+  else if StartsText('grp', sNombre) then
+    AplicarCaptionGrupo(AComponente, APerfil)
+  else if StartsText('rg', sNombre) then
+    AplicarCaptionGrupoRadio(AComponente, APerfil)
+  else if StartsText('sb', sNombre) then
+    AplicarCaptionBotonRapido(AComponente, APerfil)
+  else if StartsText('rb', sNombre) then
+    AplicarCaptionRadio(AComponente, APerfil);
+end;
+
+procedure SetLabelForm(oControl: TComponent; var oPerfilDic: TProfileDicc);
+var
+  i: Integer;
+begin
+  if PerfilesLiteralesActivos then
+  begin
+    for i := 0 to oControl.ComponentCount - 1 do
+      AplicarCaptionComponente(oControl.Components[i], oPerfilDic);
   end;
 end;
 

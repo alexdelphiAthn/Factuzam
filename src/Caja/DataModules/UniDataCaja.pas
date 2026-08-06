@@ -188,71 +188,15 @@ type
                                              AUsuario: string;
                                        ANuevoAbono: Currency);
     procedure InsertarCabeceraFactura(
-            QryTrx:          TUniQuery;
-            // — identificación —
-            const ASerie:    string;
-            const ANro:      string;
-            AFecha:          TDateTime;
-            // 'SIMPLIFICADA', 'NORMAL', 'RECTIFICATIVA'
-            const ATipo:     string;
-            const AFase:     string;   // 'BORRADOR', 'VERIFACTU_OK', etc.
-            // — empresa emisora —
-            const AEmpresa,
-                  ARazonSocialEmp,
-                  ANifEmp,
-                  AMovilEmp,
-                  AEmailEmp,
-                  ADireccion1Emp,
-                  ADireccion2Emp,
-                  APoblacionEmp,
-                  AProvinciaEmp,
-                  ACPostalEmp,
-                  ACodigoPaisEmp,
-                  ANombrePaisEmp: string;
-            AEsRetencionesEmp:    string;   // 'S'/'N'
-            AGrupoZonaIvaEmp:     string;
-            // — cliente —
-            const ACliente,
-                  ARazonSocialCli,
-                  ANifCli,
-                  AMovilCli,
-                  AEmailCli,
-                  ADireccion1Cli,
-                  ADireccion2Cli,
-                  APoblacionCli,
-                  AProvinciaCli,
-                  ACPostalCli,
-                  ACodigoPaisCli,
-                  ANombrePaisCli: string;
-            const ACodigoOficinaContable,
-                  ACodigoOrganoGestor,
-                  ACodigoUnidadTramitadora: string;
-            const ACodigoIva,
-                  ATarifa:       string;
-            AEsIvaRecargo,
-            AEsIvaExento,
-            AEsImpInclTarifa:    string;   // 'S'/'N'
-            // — totales fiscales —
-            APorcIvaN,  ATotalIvaN,  APorcReN,  ATotalReN,  ABaseIN:   Currency;
-            APorcIvaR,  ATotalIvaR,  APorcReR,  ATotalReR,  ABaseIR:   Currency;
-            APorcIvaS,  ATotalIvaS,  APorcReS,  ATotalReS,  ABaseIS:   Currency;
-            APorcIvaE,  ATotalIvaE,  APorcReE,  ATotalReE,  ABaseIE:   Currency;
-            ATotalBases,
-            ATotalImpuestos,
-            ATotalRetencion,
-            APorcRetencion,
-            ATotalLiquido:       Currency;
-            const AFormaPago:    string;
-            // — referencias —
-            const AComentarios:  string;
-            const ASeriAbono,
-                  ANroAbono:     string;   // solo en rectificativas
-            // — caja —
-            const AAlmacen,
-                  ACaja,
-                  ACajero:       string;
-            ANumOperacion:       string;
-            const AUsuario:      string);
+      AConsulta: TUniQuery;
+      const ASerie, ANumero: string;
+      AFecha: TDateTime;
+      const ATipo, AFase: string;
+      const AEmpresa: string;
+      const ACabecera: TDatosCabeceraFactura;
+      const ASerieAbono, ANumeroAbono: string;
+      const AAlmacen, ACaja, ACajero: string;
+      const ANumeroOperacion, AUsuario: string);
     procedure TransformarLineasParaCobroParcial(cdsLineas: TDataSet;
                                                 DineroEntregado: Currency);
   public
@@ -349,6 +293,7 @@ uses UniDataValoresAutomaticosRepositorio,
      UniDataLicenciaAplicacionRepositorio,
      UniDataMovimientosAlmacenRecalculo,
      UniDataCajaCierreVenta,
+     inLibCajaDepositos,
      inLibRectificativas,
      inLibEAN13,
      inLibMsgCaja, inLibMsgFacturas;
@@ -557,151 +502,198 @@ end;
 // =============================================================================
 // MÓDULO: GESTIÓN DE CUENTAS Y DEPÓSITOS DE CLIENTES
 // =============================================================================
+procedure ConfigurarConsultaDepositosCliente(
+  AConsulta: TUniQuery;
+  AConexion: TUniConnection;
+  const ACodigoCliente: string;
+  const AUbicacion: TUbicacionSesion);
+begin
+  AConsulta.Connection := AConexion;
+  AConsulta.SQL.Text :=
+    'SELECT d.ID_DEPOSITO_DEP, ' +
+    '       d.CODIGO_ART_DEP, ' +
+    '       d.CODIGO_UNIDAD_DEP, ' +
+    '       d.CANTIDAD_PENDIENTE_DEP, ' +
+    '       d.PRECIO_VENTA_DEP, ' +
+    '       d.IMPORTE_ANTICIPO_DEP, ' +
+    '       d.TIPO_IVA_DEP, ' +
+    '       d.PORCENTAJE_IVA_DEP, ' +
+    '       d.ESIMP_INCL_DEP, ' +
+    '       d.FECHA_CREACION_DEP, ' +
+    '       a.DESCRIPCION_ART ' +
+    '  FROM fza_depositos_cliente d ' +
+    '  LEFT JOIN fza_articulos a ' +
+    '    ON a.CODIGO_ART_ART = d.CODIGO_ART_DEP ' +
+    ' WHERE d.CODIGO_CLI_DEP = :CLI ' +
+    '   AND d.CODIGO_EMP_DEP = :EMPRESA ' +
+    '   AND d.CODIGO_ALM_DEP = :ALMACEN ' +
+    '   AND d.CODIGO_CAJA_DEP = :CAJA ' +
+    '   AND d.ESTADO_DEP = ''PENDIENTE''';
+  AConsulta.ParamByName('CLI').AsString := ACodigoCliente;
+  AConsulta.ParamByName('EMPRESA').AsString := AUbicacion.Empresa;
+  AConsulta.ParamByName('ALMACEN').AsString := AUbicacion.Almacen;
+  AConsulta.ParamByName('CAJA').AsString := AUbicacion.Caja;
+end;
+
+procedure IncorporarPrendaDeposito(
+  AConsulta: TUniQuery;
+  ALineas: TClientDataSet);
+var
+  sIdDeposito: string;
+  dPrecioOriginal: Currency;
+  dPorcentajeIva: Currency;
+  dPrecioSinIva: Currency;
+  dCantidadPendiente: Double;
+begin
+  sIdDeposito := AConsulta.FieldByName('ID_DEPOSITO_DEP').AsString;
+  dPrecioOriginal :=
+    AConsulta.FieldByName('PRECIO_VENTA_DEP').AsCurrency;
+  dPorcentajeIva :=
+    AConsulta.FieldByName('PORCENTAJE_IVA_DEP').AsCurrency;
+  dPrecioSinIva := CalcularImporteSinIvaDeposito(
+    dPrecioOriginal,
+    dPorcentajeIva);
+  dCantidadPendiente :=
+    AConsulta.FieldByName('CANTIDAD_PENDIENTE_DEP').AsFloat;
+  ALineas.Append;
+  ALineas.FieldByName('ID_DEPOSITO_DEP').AsString := sIdDeposito;
+  ALineas.FieldByName('CODIGO_ART_FACLIN').AsString :=
+    AConsulta.FieldByName('CODIGO_ART_DEP').AsString;
+  ALineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString :=
+    AConsulta.FieldByName('CODIGO_UNIDAD_DEP').AsString;
+  ALineas.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString :=
+    AConsulta.FieldByName('DESCRIPCION_ART').AsString;
+  ALineas.FieldByName('CANTIDAD_FACLIN').AsFloat := dCantidadPendiente;
+  ALineas.FieldByName('VIENE_DE_DEPOSITO').AsString := 'S';
+  ALineas.FieldByName('FECHA_DEPOSITO_DEP').AsString :=
+    FormatDateTime(
+      'dd/mm/yyyy hh:nn',
+      AConsulta.FieldByName('FECHA_CREACION_DEP').AsDateTime);
+  ALineas.FieldByName('ACCION_DEPOSITO').AsString := 'COBRAR';
+  ALineas.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString :=
+    AConsulta.FieldByName('TIPO_IVA_DEP').AsString;
+  ALineas.FieldByName('PORCENTAJE_IVA_FACLIN').AsCurrency :=
+    dPorcentajeIva;
+  ALineas.FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString :=
+    AConsulta.FieldByName('ESIMP_INCL_DEP').AsString;
+  ALineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency :=
+    dPrecioOriginal;
+  ALineas.FieldByName(
+    'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := dPrecioOriginal;
+  ALineas.FieldByName(
+    'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := dPrecioSinIva;
+  ALineas.FieldByName('PORCENTAJE_DTO_FACLIN').AsFloat := 0;
+  ALineas.FieldByName('PRECIO_DTO_FACLIN').AsCurrency := 0;
+  ALineas.FieldByName('TOTAL_FACLIN').AsCurrency :=
+    dPrecioOriginal * dCantidadPendiente;
+  ALineas.FieldByName('TOTAL_FAC_SIVA_FACLIN').AsCurrency :=
+    dPrecioSinIva * dCantidadPendiente;
+  ALineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency :=
+    dPrecioOriginal;
+  ALineas.FieldByName('ANTICIPO_PREVIO').AsCurrency :=
+    AConsulta.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
+  ALineas.Post;
+end;
+
+procedure IncorporarAnticipoDeposito(
+  AConsulta: TUniQuery;
+  ALineas: TClientDataSet);
+var
+  dAnticipo: Currency;
+  dPorcentajeIva: Currency;
+  dAnticipoSinIva: Currency;
+begin
+  dAnticipo := AConsulta.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
+  dPorcentajeIva :=
+    AConsulta.FieldByName('PORCENTAJE_IVA_DEP').AsCurrency;
+  dAnticipoSinIva := CalcularImporteSinIvaDeposito(
+    dAnticipo,
+    dPorcentajeIva);
+  ALineas.Append;
+  ALineas.FieldByName('ID_DEPOSITO_DEP').AsString :=
+    AConsulta.FieldByName('ID_DEPOSITO_DEP').AsString;
+  ALineas.FieldByName('CODIGO_ART_FACLIN').AsString := 'ACUENTA';
+  ALineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString := 'ACUENTA';
+  ALineas.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString :=
+    'Abono a cuenta ' +
+    AConsulta.FieldByName('CODIGO_UNIDAD_DEP').AsString;
+  ALineas.FieldByName('VIENE_DE_DEPOSITO').AsString := 'A';
+  ALineas.FieldByName('FECHA_DEPOSITO_DEP').AsString :=
+    FormatDateTime(
+      'dd/mm/yyyy hh:nn',
+      AConsulta.FieldByName('FECHA_CREACION_DEP').AsDateTime);
+  ALineas.FieldByName('CANTIDAD_FACLIN').AsFloat := -1;
+  ALineas.FieldByName('TIPO_ARTICULO_FACLIN').AsString := 'SERVICIO';
+  ALineas.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString :=
+    AConsulta.FieldByName('TIPO_IVA_DEP').AsString;
+  ALineas.FieldByName('PORCENTAJE_IVA_FACLIN').AsCurrency :=
+    dPorcentajeIva;
+  ALineas.FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString :=
+    AConsulta.FieldByName('ESIMP_INCL_DEP').AsString;
+  ALineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency := dAnticipo;
+  ALineas.FieldByName(
+    'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := dAnticipo;
+  ALineas.FieldByName(
+    'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := dAnticipoSinIva;
+  ALineas.FieldByName('TOTAL_FACLIN').AsCurrency := -dAnticipo;
+  ALineas.FieldByName('TOTAL_FAC_SIVA_FACLIN').AsCurrency :=
+    -dAnticipoSinIva;
+  ALineas.FieldByName('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString :=
+    'Uds';
+  ALineas.Post;
+end;
+
+procedure IncorporarDepositoPendiente(
+  AConsulta: TUniQuery;
+  ALineas: TClientDataSet);
+begin
+  IncorporarPrendaDeposito(AConsulta, ALineas);
+  if AConsulta.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency > 0 then
+    IncorporarAnticipoDeposito(AConsulta, ALineas);
+end;
+
+procedure IncorporarDepositosPendientes(
+  AConsulta: TUniQuery;
+  ALineas: TClientDataSet;
+  const ARecalcularLineas: TRecalcularLineasEvent);
+begin
+  ALineas.DisableControls;
+  try
+    while not AConsulta.Eof do
+    begin
+      IncorporarDepositoPendiente(AConsulta, ALineas);
+      AConsulta.Next;
+    end;
+  finally
+    ALineas.EnableControls;
+  end;
+  if Assigned(ARecalcularLineas) then
+    ARecalcularLineas;
+end;
+
 procedure TdmCajaOpe.CargarDepositosCliente(const ACodigoCliente: string);
 var
-  QryDep: TUniQuery;
-  Sku, Articulo, IdDeposito: string;
-  PrecioOriginal, AnticipoDado, AnticipoSinIVA: Currency;
-  CantidadPendiente: Double;
-  TipoIVA, EsImpIncl, Descripcion: string;
-  PorcIVA: Currency;
-  FechaCreacion: TDateTime;
-  Ubicacion: TUbicacionSesion;
+  oConsulta: TUniQuery;
+  oUbicacion: TUbicacionSesion;
 begin
   if not Assigned(FContextoSesion) then
     raise Exception.Create(SErrorContextoSesionCajaNoConfigurado);
-  Ubicacion := FContextoSesion.Ubicacion;
-  QryDep := TUniQuery.Create(nil);
+  oUbicacion := FContextoSesion.Ubicacion;
+  oConsulta := TUniQuery.Create(nil);
   try
-    QryDep.Connection := FConexion;
-    QryDep.SQL.Text :=
-        'SELECT d.ID_DEPOSITO_DEP, '           +
-        '       d.CODIGO_ART_DEP, '       +
-        '       d.CODIGO_UNIDAD_DEP, '         +
-        '       d.CANTIDAD_PENDIENTE_DEP, '    +
-        '       d.PRECIO_VENTA_DEP, '          +
-        '       d.IMPORTE_ANTICIPO_DEP, '      +
-        '       d.TIPO_IVA_DEP, '              +
-        '       d.PORCENTAJE_IVA_DEP, '            +
-        '       d.ESIMP_INCL_DEP, '            +
-        '       d.FECHA_CREACION_DEP, '        +
-        '       a.DESCRIPCION_ART '       +  // <-- join directo
-        '  FROM fza_depositos_cliente d '      +
-        '  LEFT JOIN fza_articulos a '         +
-        '    ON a.CODIGO_ART_ART = d.CODIGO_ART_DEP ' +
-        ' WHERE d.CODIGO_CLI_DEP = :CLI '  +
-        '   AND d.CODIGO_EMP_DEP = :EMPRESA ' +
-        '   AND d.CODIGO_ALM_DEP = :ALMACEN ' +
-        '   AND d.CODIGO_CAJA_DEP = :CAJA ' +
-        '   AND d.ESTADO_DEP = ''PENDIENTE''';
-    QryDep.ParamByName('CLI').AsString := ACodigoCliente;
-    QryDep.ParamByName('EMPRESA').AsString := Ubicacion.Empresa;
-    QryDep.ParamByName('ALMACEN').AsString := Ubicacion.Almacen;
-    QryDep.ParamByName('CAJA').AsString := Ubicacion.Caja;
-    QryDep.Open;
-    if not QryDep.IsEmpty then
-    begin
-      cdsLineas.DisableControls;
-      try
-        while not QryDep.Eof do
-        begin
-          IdDeposito := QryDep.FieldByName('ID_DEPOSITO_DEP').AsString;
-        Articulo          := QryDep.FieldByName('CODIGO_ART_DEP').AsString;
-        Sku               := QryDep.FieldByName('CODIGO_UNIDAD_DEP').AsString;
-        CantidadPendiente :=
-          QryDep.FieldByName('CANTIDAD_PENDIENTE_DEP').AsFloat;
-        PrecioOriginal    := QryDep.FieldByName('PRECIO_VENTA_DEP').AsCurrency;
-        AnticipoDado := QryDep.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency;
-        TipoIVA           := QryDep.FieldByName('TIPO_IVA_DEP').AsString;
-        PorcIVA := QryDep.FieldByName('PORCENTAJE_IVA_DEP').AsCurrency;
-        EsImpIncl         := QryDep.FieldByName('ESIMP_INCL_DEP').AsString;
-        Descripcion       := QryDep.FieldByName('DESCRIPCION_ART').AsString;
-        FechaCreacion := QryDep.FieldByName('FECHA_CREACION_DEP').AsDateTime;
-        // ── LÍNEA 1: LA PRENDA ───────────────────────────────────────────
-        // *** SIN FOnRellenarArticulo ni FOnRellenarAtributos ***
-        // Todo viene del SELECT, cero queries adicionales por fila
-        cdsLineas.Append;
-        cdsLineas.FieldByName('ID_DEPOSITO_DEP').AsString := IdDeposito;
-        cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString      := Articulo;
-        cdsLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString        := Sku;
-        cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString :=
-          Descripcion;
-        cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat := CantidadPendiente;
-        cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString := 'S';
-        cdsLineas.FieldByName('FECHA_DEPOSITO_DEP').AsString :=
-          FormatDateTime('dd/mm/yyyy hh:nn', FechaCreacion);
-        cdsLineas.FieldByName('ACCION_DEPOSITO').AsString := 'COBRAR';
-        cdsLineas.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString := TipoIVA;
-        cdsLineas.FieldByName('PORCENTAJE_IVA_FACLIN').AsCurrency := PorcIVA;
-        cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString := EsImpIncl;
-        cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency        :=
-          PrecioOriginal;
-        cdsLineas.FieldByName('PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency :=
-          PrecioOriginal;
-        if PorcIVA = 0 then
-          cdsLineas.FieldByName(
-            'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := PrecioOriginal
-        else
-          cdsLineas.FieldByName(
-            'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency :=
-            PrecioOriginal / (1 + (PorcIVA / 100));
-        cdsLineas.FieldByName('PORCENTAJE_DTO_FACLIN').AsFloat            := 0;
-        cdsLineas.FieldByName('PRECIO_DTO_FACLIN').AsCurrency         := 0;
-        cdsLineas.FieldByName('TOTAL_FACLIN').AsCurrency              :=
-          PrecioOriginal * CantidadPendiente;
-        cdsLineas.FieldByName('TOTAL_FAC_SIVA_FACLIN').AsCurrency          :=
-        cdsLineas.FieldByName(
-          'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency * CantidadPendiente;
-        cdsLineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency              :=
-          PrecioOriginal;
-        cdsLineas.FieldByName('ANTICIPO_PREVIO').AsCurrency := AnticipoDado;
-        cdsLineas.Post;
-        // ── LÍNEA 2: ABONO DEL ANTICIPO (negativo) ───────────────────────
-        if AnticipoDado > 0 then
-        begin
-          if PorcIVA = 0 then
-            AnticipoSinIVA := AnticipoDado
-          else
-            AnticipoSinIVA := AnticipoDado / (1 + (PorcIVA / 100));
-          cdsLineas.Append;
-          cdsLineas.FieldByName('ID_DEPOSITO_DEP').AsString := IdDeposito;
-          cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString := 'ACUENTA';
-          cdsLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString := 'ACUENTA';
-          cdsLineas.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString       :=
-            'Abono a cuenta ' + Sku;
-          cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString := 'A';
-          cdsLineas.FieldByName('FECHA_DEPOSITO_DEP').AsString :=
-            FormatDateTime('dd/mm/yyyy hh:nn', FechaCreacion);
-          cdsLineas.FieldByName('CANTIDAD_FACLIN').AsFloat := -1;
-          cdsLineas.FieldByName('TIPO_ARTICULO_FACLIN').AsString := 'SERVICIO';
-          cdsLineas.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString := TipoIVA;
-          cdsLineas.FieldByName('PORCENTAJE_IVA_FACLIN').AsCurrency := PorcIVA;
-          cdsLineas.FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString          :=
-            EsImpIncl;
-          cdsLineas.FieldByName(
-            'PRECIO_SALIDA_FACLIN').AsCurrency              := AnticipoDado;
-          cdsLineas.FieldByName(
-            'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := AnticipoDado;
-          cdsLineas.FieldByName(
-            'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := AnticipoSinIVA;
-          cdsLineas.FieldByName('TOTAL_FACLIN').AsCurrency := -AnticipoDado;
-          cdsLineas.FieldByName(
-            'TOTAL_FAC_SIVA_FACLIN').AsCurrency := -AnticipoSinIVA;
-          cdsLineas.FieldByName('TIPO_CANTIDAD_ARTICULO_FACLIN').AsString     :=
-            'Uds';
-          cdsLineas.Post;
-        end;
-          QryDep.Next;
-        end;
-      finally
-        cdsLineas.EnableControls;
-      end;
-      // Recalculo una sola vez al final, fuera del bucle.
-      if Assigned(FOnRecalcularLineas) then
-        FOnRecalcularLineas;
-    end;
+    ConfigurarConsultaDepositosCliente(
+      oConsulta,
+      FConexion,
+      ACodigoCliente,
+      oUbicacion);
+    oConsulta.Open;
+    if not oConsulta.IsEmpty then
+      IncorporarDepositosPendientes(
+        oConsulta,
+        cdsLineas,
+        FOnRecalcularLineas);
   finally
-    FreeAndNil(QryDep);
+    FreeAndNil(oConsulta);
   end;
 end;
 
@@ -1428,37 +1420,21 @@ begin
       'NUMERO_FAC').AsString := FNumeroFactura;
     FDatosCobro.TotalesFactura.Cabecera.Post;
     FDataModule.InsertarCabeceraFactura(
-      FQuery, FSerieGenerada, FNumeroFactura, FCabecera.Fecha,
-      FTipoFactura, 'BORRADOR', FEmpresa, FCabecera.RazonSocialEmp,
-      FCabecera.NifEmp, FCabecera.MovilEmp, FCabecera.EmailEmp,
-      FCabecera.Direccion1Emp, FCabecera.Direccion2Emp,
-      FCabecera.PoblacionEmp, FCabecera.ProvinciaEmp,
-      FCabecera.CPostalEmp, FCabecera.CodigoPaisEmp,
-      FCabecera.NombrePaisEmp, FCabecera.EsRetencionesEmp,
-      FCabecera.GrupoZonaIvaEmp, FCabecera.CodigoCliente,
-      FCabecera.RazonSocialCli, FCabecera.NifCli,
-      FCabecera.MovilCli, FCabecera.EmailCli,
-      FCabecera.Direccion1Cli, FCabecera.Direccion2Cli,
-      FCabecera.PoblacionCli, FCabecera.ProvinciaCli,
-      FCabecera.CPostalCli, FCabecera.CodigoPaisCli,
-      FCabecera.NombrePaisCli, FCabecera.CodigoOficinaContable,
-      FCabecera.CodigoOrganoGestor,
-      FCabecera.CodigoUnidadTramitadora, FCabecera.CodigoIva,
-      FCabecera.Tarifa, FCabecera.EsIvaRecargo,
-      FCabecera.EsIvaExento, FCabecera.EsImpInclTarifa,
-      FCabecera.PorcIvaN, FCabecera.TotalIvaN,
-      FCabecera.PorcReN, FCabecera.TotalReN, FCabecera.BaseIN,
-      FCabecera.PorcIvaR, FCabecera.TotalIvaR,
-      FCabecera.PorcReR, FCabecera.TotalReR, FCabecera.BaseIR,
-      FCabecera.PorcIvaS, FCabecera.TotalIvaS,
-      FCabecera.PorcReS, FCabecera.TotalReS, FCabecera.BaseIS,
-      FCabecera.PorcIvaE, FCabecera.TotalIvaE,
-      FCabecera.PorcReE, FCabecera.TotalReE, FCabecera.BaseIE,
-      FCabecera.TotalBases, FCabecera.TotalImpuestos,
-      FCabecera.TotalRetencion, FCabecera.PorcRetencion,
-      FCabecera.TotalLiquido, FCabecera.FormaPago,
-      FCabecera.Comentarios, '', '', FAlmacen, FCaja, FUsuario,
-      FNumeroOperacion, FUsuario);
+      FQuery,
+      FSerieGenerada,
+      FNumeroFactura,
+      FCabecera.Fecha,
+      FTipoFactura,
+      'BORRADOR',
+      FEmpresa,
+      FCabecera,
+      '',
+      '',
+      FAlmacen,
+      FCaja,
+      FUsuario,
+      FNumeroOperacion,
+      FUsuario);
     GenerarCodigoBarrasTicket;
     FDataModule.FUltSerieFacGrabada := FSerieGenerada;
     FDataModule.FUltNumeroFacGrabada := FNumeroFactura;
@@ -2766,153 +2742,142 @@ begin
     '  :USUARIO, :USUARIO, NOW())';
 end;
 
-procedure TdmCajaOpe.InsertarCabeceraFactura(
-            QryTrx:          TUniQuery;
-            // — identificación —
-            const ASerie:    string;
-            const ANro:      string;
-            AFecha:          TDateTime;
-            const ATipo:     string;
-            const AFase:     string;
-            // — empresa emisora —
-            const AEmpresa,
-                  ARazonSocialEmp,
-                  ANifEmp,
-                  AMovilEmp,
-                  AEmailEmp,
-                  ADireccion1Emp,
-                  ADireccion2Emp,
-                  APoblacionEmp,
-                  AProvinciaEmp,
-                  ACPostalEmp,
-                  ACodigoPaisEmp,
-                  ANombrePaisEmp: string;
-            AEsRetencionesEmp:    string;   // 'S'/'N'
-            AGrupoZonaIvaEmp:     string;
-            // — cliente —
-            const ACliente,
-                  ARazonSocialCli,
-                  ANifCli,
-                  AMovilCli,
-                  AEmailCli,
-                  ADireccion1Cli,
-                  ADireccion2Cli,
-                  APoblacionCli,
-                  AProvinciaCli,
-                  ACPostalCli,
-                  ACodigoPaisCli,
-                  ANombrePaisCli: string;
-            const ACodigoOficinaContable,
-                  ACodigoOrganoGestor,
-                  ACodigoUnidadTramitadora: string;
-            const ACodigoIva,
-                  ATarifa:       string;
-            AEsIvaRecargo,
-            AEsIvaExento,
-            AEsImpInclTarifa:    string;   // 'S'/'N'
-            // — totales fiscales —
-            APorcIvaN,  ATotalIvaN,  APorcReN,  ATotalReN,  ABaseIN:   Currency;
-            APorcIvaR,  ATotalIvaR,  APorcReR,  ATotalReR,  ABaseIR:   Currency;
-            APorcIvaS,  ATotalIvaS,  APorcReS,  ATotalReS,  ABaseIS:   Currency;
-            APorcIvaE,  ATotalIvaE,  APorcReE,  ATotalReE,  ABaseIE:   Currency;
-            ATotalBases,
-            ATotalImpuestos,
-            ATotalRetencion,
-            APorcRetencion,
-            ATotalLiquido:       Currency;
-            const AFormaPago:    string;
-            // — referencias —
-            const AComentarios:  string;
-            const ASeriAbono,
-                  ANroAbono:     string;
-            // — caja —
-            const AAlmacen,
-                  ACaja,
-                  ACajero:       string;
-            ANumOperacion:       String;
-            const AUsuario:      string);
+procedure AsignarIdentificacionFactura(
+  AConsulta: TUniQuery;
+  const ASerie, ANumero: string;
+  AFecha: TDateTime;
+  const ATipo, AFase: string);
 begin
-  ConfigurarSqlInsertarCabeceraFacturaCaja(QryTrx);
+  AConsulta.ParamByName('SERIE').AsString := ASerie;
+  AConsulta.ParamByName('NRO').AsString := ANumero;
+  AConsulta.ParamByName('FECHA').AsDate := AFecha;
+  AConsulta.ParamByName('TIPO').AsString := ATipo;
+  AConsulta.ParamByName('FASE').AsString := AFase;
+end;
 
-  // — identificación —
-  QryTrx.ParamByName('SERIE').AsString    := ASerie;
-  QryTrx.ParamByName('NRO').AsString      := ANro;
-  QryTrx.ParamByName('FECHA').AsDate      := AFecha;
-  QryTrx.ParamByName('TIPO').AsString     := ATipo;
-  QryTrx.ParamByName('FASE').AsString     := AFase;
-  // — empresa —
-  QryTrx.ParamByName('EMP').AsString      := AEmpresa;
-  QryTrx.ParamByName('RSEMP').AsString    := ARazonSocialEmp;
-  QryTrx.ParamByName('NIFEMP').AsString   := ANifEmp;
-  QryTrx.ParamByName('MOVILEMP').AsString := AMovilEmp;
-  QryTrx.ParamByName('EMAILEMP').AsString := AEmailEmp;
-  QryTrx.ParamByName('DIR1EMP').AsString  := ADireccion1Emp;
-  QryTrx.ParamByName('DIR2EMP').AsString  := ADireccion2Emp;
-  QryTrx.ParamByName('POBLEMP').AsString  := APoblacionEmp;
-  QryTrx.ParamByName('PROVEMP').AsString  := AProvinciaEmp;
-  QryTrx.ParamByName('CPEMP').AsString    := ACPostalEmp;
-  QryTrx.ParamByName('PAISEMP').AsString  := ACodigoPaisEmp;
-  QryTrx.ParamByName('NPAISEMP').AsString := ANombrePaisEmp;
-  QryTrx.ParamByName('RETREMP').AsString  := AEsRetencionesEmp;
-  QryTrx.ParamByName('GRUPOIVAEMP').AsString := AGrupoZonaIvaEmp;
-  // — cliente —
-  QryTrx.ParamByName('CLI').AsString      := ACliente;
-  QryTrx.ParamByName('RSCLI').AsString    := ARazonSocialCli;
-  QryTrx.ParamByName('NIFCLI').AsString   := ANifCli;
-  QryTrx.ParamByName('MOVILCLI').AsString := AMovilCli;
-  QryTrx.ParamByName('EMAILCLI').AsString := AEmailCli;
-  QryTrx.ParamByName('DIR1CLI').AsString  := ADireccion1Cli;
-  QryTrx.ParamByName('DIR2CLI').AsString  := ADireccion2Cli;
-  QryTrx.ParamByName('POBLCLI').AsString  := APoblacionCli;
-  QryTrx.ParamByName('PROVCLI').AsString  := AProvinciaCli;
-  QryTrx.ParamByName('CPCLI').AsString    := ACPostalCli;
-  QryTrx.ParamByName('PAISCLI').AsString  := ACodigoPaisCli;
-  QryTrx.ParamByName('NPAISCLI').AsString := ANombrePaisCli;
-  QryTrx.ParamByName('DIR3OFICINA').AsString := ACodigoOficinaContable;
-  QryTrx.ParamByName('DIR3ORGANO').AsString := ACodigoOrganoGestor;
-  QryTrx.ParamByName('DIR3UNIDAD').AsString := ACodigoUnidadTramitadora;
-  QryTrx.ParamByName('CODIGOIVA').AsString:= ACodigoIva;
-  QryTrx.ParamByName('TARIFA').AsString   := ATarifa;
-  QryTrx.ParamByName('ESRECARGO').AsString:= AEsIvaRecargo;
-  QryTrx.ParamByName('ESEXENTO').AsString := AEsIvaExento;
-  QryTrx.ParamByName('ESIMPINCL').AsString:= AEsImpInclTarifa;
-  // — totales —
-  QryTrx.ParamByName('PIVAN').AsCurrency  := APorcIvaN;
-  QryTrx.ParamByName('TIVAN').AsCurrency  := ATotalIvaN;
-  QryTrx.ParamByName('PREN').AsCurrency   := APorcReN;
-  QryTrx.ParamByName('TREN').AsCurrency   := ATotalReN;
-  QryTrx.ParamByName('BASEIN').AsCurrency := ABaseIN;
-  QryTrx.ParamByName('PIVAR').AsCurrency  := APorcIvaR;
-  QryTrx.ParamByName('TIVAR').AsCurrency  := ATotalIvaR;
-  QryTrx.ParamByName('PRER').AsCurrency   := APorcReR;
-  QryTrx.ParamByName('TRER').AsCurrency   := ATotalReR;
-  QryTrx.ParamByName('BASEIR').AsCurrency := ABaseIR;
-  QryTrx.ParamByName('PIVAS').AsCurrency  := APorcIvaS;
-  QryTrx.ParamByName('TIVAS').AsCurrency  := ATotalIvaS;
-  QryTrx.ParamByName('PRES').AsCurrency   := APorcReS;
-  QryTrx.ParamByName('TRES').AsCurrency   := ATotalReS;
-  QryTrx.ParamByName('BASEIS').AsCurrency := ABaseIS;
-  QryTrx.ParamByName('PIVAE').AsCurrency  := APorcIvaE;
-  QryTrx.ParamByName('TIVAE').AsCurrency  := ATotalIvaE;
-  QryTrx.ParamByName('PREE').AsCurrency   := APorcReE;
-  QryTrx.ParamByName('TREE').AsCurrency   := ATotalReE;
-  QryTrx.ParamByName('BASEIE').AsCurrency := ABaseIE;
-  QryTrx.ParamByName('TBASES').AsCurrency := ATotalBases;
-  QryTrx.ParamByName('TIMPS').AsCurrency  := ATotalImpuestos;
-  QryTrx.ParamByName('PRETENC').AsCurrency:= APorcRetencion;
-  QryTrx.ParamByName('TRETENC').AsCurrency:= ATotalRetencion;
-  QryTrx.ParamByName('TLIQUIDO').AsCurrency:= ATotalLiquido;
-  // — referencias y caja —
-  QryTrx.ParamByName('FORMAP').AsString   := AFormaPago;
-  QryTrx.ParamByName('COMENT').AsString   := AComentarios;
-  QryTrx.ParamByName('SERIEABO').AsString := ASeriAbono;
-  QryTrx.ParamByName('NROABO').AsString   := ANroAbono;
-  QryTrx.ParamByName('ALM').AsString      := AAlmacen;
-  QryTrx.ParamByName('CAJA').AsString     := ACaja;
-  QryTrx.ParamByName('CAJERO').AsString   := ACajero;
-  QryTrx.ParamByName('NUMOP').AsString   := ANumOperacion;
-  QryTrx.ParamByName('USUARIO').AsString  := AUsuario;
-  QryTrx.Execute;
+procedure AsignarEmpresaFactura(
+  AConsulta: TUniQuery;
+  const AEmpresa: string;
+  const ACabecera: TDatosCabeceraFactura);
+begin
+  AConsulta.ParamByName('EMP').AsString := AEmpresa;
+  AConsulta.ParamByName('RSEMP').AsString := ACabecera.RazonSocialEmp;
+  AConsulta.ParamByName('NIFEMP').AsString := ACabecera.NifEmp;
+  AConsulta.ParamByName('MOVILEMP').AsString := ACabecera.MovilEmp;
+  AConsulta.ParamByName('EMAILEMP').AsString := ACabecera.EmailEmp;
+  AConsulta.ParamByName('DIR1EMP').AsString := ACabecera.Direccion1Emp;
+  AConsulta.ParamByName('DIR2EMP').AsString := ACabecera.Direccion2Emp;
+  AConsulta.ParamByName('POBLEMP').AsString := ACabecera.PoblacionEmp;
+  AConsulta.ParamByName('PROVEMP').AsString := ACabecera.ProvinciaEmp;
+  AConsulta.ParamByName('CPEMP').AsString := ACabecera.CPostalEmp;
+  AConsulta.ParamByName('PAISEMP').AsString := ACabecera.CodigoPaisEmp;
+  AConsulta.ParamByName('NPAISEMP').AsString := ACabecera.NombrePaisEmp;
+  AConsulta.ParamByName('RETREMP').AsString :=
+    ACabecera.EsRetencionesEmp;
+  AConsulta.ParamByName('GRUPOIVAEMP').AsString :=
+    ACabecera.GrupoZonaIvaEmp;
+end;
+
+procedure AsignarClienteFactura(
+  AConsulta: TUniQuery;
+  const ACabecera: TDatosCabeceraFactura);
+begin
+  AConsulta.ParamByName('CLI').AsString := ACabecera.CodigoCliente;
+  AConsulta.ParamByName('RSCLI').AsString := ACabecera.RazonSocialCli;
+  AConsulta.ParamByName('NIFCLI').AsString := ACabecera.NifCli;
+  AConsulta.ParamByName('MOVILCLI').AsString := ACabecera.MovilCli;
+  AConsulta.ParamByName('EMAILCLI').AsString := ACabecera.EmailCli;
+  AConsulta.ParamByName('DIR1CLI').AsString := ACabecera.Direccion1Cli;
+  AConsulta.ParamByName('DIR2CLI').AsString := ACabecera.Direccion2Cli;
+  AConsulta.ParamByName('POBLCLI').AsString := ACabecera.PoblacionCli;
+  AConsulta.ParamByName('PROVCLI').AsString := ACabecera.ProvinciaCli;
+  AConsulta.ParamByName('CPCLI').AsString := ACabecera.CPostalCli;
+  AConsulta.ParamByName('PAISCLI').AsString := ACabecera.CodigoPaisCli;
+  AConsulta.ParamByName('NPAISCLI').AsString := ACabecera.NombrePaisCli;
+  AConsulta.ParamByName('DIR3OFICINA').AsString :=
+    ACabecera.CodigoOficinaContable;
+  AConsulta.ParamByName('DIR3ORGANO').AsString :=
+    ACabecera.CodigoOrganoGestor;
+  AConsulta.ParamByName('DIR3UNIDAD').AsString :=
+    ACabecera.CodigoUnidadTramitadora;
+  AConsulta.ParamByName('CODIGOIVA').AsString := ACabecera.CodigoIva;
+  AConsulta.ParamByName('TARIFA').AsString := ACabecera.Tarifa;
+  AConsulta.ParamByName('ESRECARGO').AsString := ACabecera.EsIvaRecargo;
+  AConsulta.ParamByName('ESEXENTO').AsString := ACabecera.EsIvaExento;
+  AConsulta.ParamByName('ESIMPINCL').AsString :=
+    ACabecera.EsImpInclTarifa;
+end;
+
+procedure AsignarTotalesFactura(
+  AConsulta: TUniQuery;
+  const ACabecera: TDatosCabeceraFactura);
+begin
+  AConsulta.ParamByName('PIVAN').AsCurrency := ACabecera.PorcIvaN;
+  AConsulta.ParamByName('TIVAN').AsCurrency := ACabecera.TotalIvaN;
+  AConsulta.ParamByName('PREN').AsCurrency := ACabecera.PorcReN;
+  AConsulta.ParamByName('TREN').AsCurrency := ACabecera.TotalReN;
+  AConsulta.ParamByName('BASEIN').AsCurrency := ACabecera.BaseIN;
+  AConsulta.ParamByName('PIVAR').AsCurrency := ACabecera.PorcIvaR;
+  AConsulta.ParamByName('TIVAR').AsCurrency := ACabecera.TotalIvaR;
+  AConsulta.ParamByName('PRER').AsCurrency := ACabecera.PorcReR;
+  AConsulta.ParamByName('TRER').AsCurrency := ACabecera.TotalReR;
+  AConsulta.ParamByName('BASEIR').AsCurrency := ACabecera.BaseIR;
+  AConsulta.ParamByName('PIVAS').AsCurrency := ACabecera.PorcIvaS;
+  AConsulta.ParamByName('TIVAS').AsCurrency := ACabecera.TotalIvaS;
+  AConsulta.ParamByName('PRES').AsCurrency := ACabecera.PorcReS;
+  AConsulta.ParamByName('TRES').AsCurrency := ACabecera.TotalReS;
+  AConsulta.ParamByName('BASEIS').AsCurrency := ACabecera.BaseIS;
+  AConsulta.ParamByName('PIVAE').AsCurrency := ACabecera.PorcIvaE;
+  AConsulta.ParamByName('TIVAE').AsCurrency := ACabecera.TotalIvaE;
+  AConsulta.ParamByName('PREE').AsCurrency := ACabecera.PorcReE;
+  AConsulta.ParamByName('TREE').AsCurrency := ACabecera.TotalReE;
+  AConsulta.ParamByName('BASEIE').AsCurrency := ACabecera.BaseIE;
+  AConsulta.ParamByName('TBASES').AsCurrency := ACabecera.TotalBases;
+  AConsulta.ParamByName('TIMPS').AsCurrency := ACabecera.TotalImpuestos;
+  AConsulta.ParamByName('PRETENC').AsCurrency := ACabecera.PorcRetencion;
+  AConsulta.ParamByName('TRETENC').AsCurrency := ACabecera.TotalRetencion;
+  AConsulta.ParamByName('TLIQUIDO').AsCurrency := ACabecera.TotalLiquido;
+end;
+
+procedure AsignarReferenciasFactura(
+  AConsulta: TUniQuery;
+  const ACabecera: TDatosCabeceraFactura;
+  const ASerieAbono, ANumeroAbono: string;
+  const AAlmacen, ACaja, ACajero: string;
+  const ANumeroOperacion, AUsuario: string);
+begin
+  AConsulta.ParamByName('FORMAP').AsString := ACabecera.FormaPago;
+  AConsulta.ParamByName('COMENT').AsString := ACabecera.Comentarios;
+  AConsulta.ParamByName('SERIEABO').AsString := ASerieAbono;
+  AConsulta.ParamByName('NROABO').AsString := ANumeroAbono;
+  AConsulta.ParamByName('ALM').AsString := AAlmacen;
+  AConsulta.ParamByName('CAJA').AsString := ACaja;
+  AConsulta.ParamByName('CAJERO').AsString := ACajero;
+  AConsulta.ParamByName('NUMOP').AsString := ANumeroOperacion;
+  AConsulta.ParamByName('USUARIO').AsString := AUsuario;
+end;
+
+procedure TdmCajaOpe.InsertarCabeceraFactura(
+  AConsulta: TUniQuery;
+  const ASerie, ANumero: string;
+  AFecha: TDateTime;
+  const ATipo, AFase: string;
+  const AEmpresa: string;
+  const ACabecera: TDatosCabeceraFactura;
+  const ASerieAbono, ANumeroAbono: string;
+  const AAlmacen, ACaja, ACajero: string;
+  const ANumeroOperacion, AUsuario: string);
+begin
+  ConfigurarSqlInsertarCabeceraFacturaCaja(AConsulta);
+  AsignarIdentificacionFactura(
+    AConsulta, ASerie, ANumero, AFecha, ATipo, AFase);
+  AsignarEmpresaFactura(AConsulta, AEmpresa, ACabecera);
+  AsignarClienteFactura(AConsulta, ACabecera);
+  AsignarTotalesFactura(AConsulta, ACabecera);
+  AsignarReferenciasFactura(
+    AConsulta, ACabecera, ASerieAbono, ANumeroAbono,
+    AAlmacen, ACaja, ACajero, ANumeroOperacion, AUsuario);
+  AConsulta.Execute;
 end;
 
 procedure TdmCajaOpe.InsertarLineaFactura(

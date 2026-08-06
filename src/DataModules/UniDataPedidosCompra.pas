@@ -27,10 +27,13 @@ interface
 uses
   inLibRegistroPantallas,
   System.SysUtils, System.Classes, System.Variants,
-  Data.DB, MemDS, DBAccess, Uni,
+  System.Generics.Collections,
+  Data.DB, Datasnap.DBClient, MemDS, DBAccess, Uni,
   UniDataGen, inLibUser;
 
 type
+  TFilasEtiquetasPedido = TArray<TArray<Variant>>;
+
   TdmPedidosCompra = class(TdmBase)
     unqryPedidosCompraLineas: TUniQuery;
     dsPedidosCompraLineas:    TDataSource;
@@ -77,6 +80,28 @@ type
     function ObtenerAlmacenesSql(const AAlmacenesCsv: string): string;
     function ObtenerSkusPedidoCsv(const ASerie, ANumero,
                                   AAlmacenesCsv: string): string;
+    procedure ConfigurarConsultaCantidadCeldas(
+      AConsulta: TUniQuery;
+      const AAlmacenes: string);
+    procedure AnadirConsultaCantidadLineas(
+      AConsulta: TUniQuery;
+      const AAlmacenes: string);
+    procedure CargarCantidadesEtiquetas(
+      const ASerie, ANumero, AAlmacenesCsv: string;
+      ACantidades: TDictionary<string, Integer>);
+    procedure PrepararCamposEtiquetas(
+      ADataSet: TClientDataSet;
+      out AIndiceSku, AIndiceStock: Integer);
+    function CapturarFilasEtiquetas(
+      ADataSet: TClientDataSet): TFilasEtiquetasPedido;
+    procedure InsertarCopiasEtiquetas(
+      ADataSet: TClientDataSet;
+      const AFilas: TFilasEtiquetasPedido;
+      AIndiceSku, AIndiceStock: Integer;
+      ACantidades: TDictionary<string, Integer>);
+    procedure ExpandirDataSetEtiquetas(
+      ADataSet: TClientDataSet;
+      ACantidades: TDictionary<string, Integer>);
     procedure CopiarEmpresaaPedidoCompra(DataSet: TDataSet);
     procedure ValidarAlmacenCabecera;
   public
@@ -129,7 +154,7 @@ uses
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   inLibContadorLineas,
   UniDataContadorLineasRepositorio,
-  System.Diagnostics, System.UITypes, System.Generics.Collections,
+  System.Diagnostics, System.UITypes,
   ComCtrls, cxListView,
   inLibPedidosCompra,
   UniDataPedidosCompraPendientes,
@@ -1034,159 +1059,220 @@ begin
   end;
 end;
 
-procedure TdmPedidosCompra.ExpandirEtiquetasPorCantidadPed(ADmArt: TObject;
-                                  const ASerie, ANumero,
-                                        AAlmacenesCsv: string);
+procedure TdmPedidosCompra.ConfigurarConsultaCantidadCeldas(
+  AConsulta: TUniQuery;
+  const AAlmacenes: string);
 const
   cAlmacenCel =
     'COALESCE(NULLIF(C.CODIGO_ALM_PEDCCEL, ''''), ' +
     '         NULLIF(L.CODIGO_ALMACEN_PEDCLIN, ''''), ' +
     '         NULLIF(P.CODIGO_ALM_PEDC, ''''))';
+begin
+  AConsulta.SQL.Text :=
+    'SELECT X.SKU, SUM(X.CANTIDAD) AS CANTIDAD ' +
+    '  FROM ( ' +
+    '        SELECT L.CODIGO_UNIDAD_PEDCLIN AS SKU, ' +
+    '               COALESCE(C.CANTIDAD_PEDCCEL, 0) AS CANTIDAD ' +
+    '          FROM fza_pedidos_compra_lineas L ' +
+    '          JOIN fza_pedidos_compra P ' +
+    '            ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
+    '           AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
+    '          JOIN fza_pedidos_compra_celdas C ' +
+    '            ON C.SERIE_PEDC_PEDCCEL = L.SERIE_PEDC_PEDCLIN ' +
+    '           AND C.NUMERO_PEDC_PEDCCEL = L.NUMERO_PEDC_PEDCLIN ' +
+    '           AND CAST(C.LINEA_PEDC_PEDCCEL AS UNSIGNED) = ' +
+    '               CAST(L.LINEA_PEDCLIN AS UNSIGNED) ' +
+    '         WHERE L.SERIE_PEDC_PEDCLIN = :s ' +
+    '           AND L.NUMERO_PEDC_PEDCLIN = :n ' +
+    '           AND COALESCE(L.CODIGO_UNIDAD_PEDCLIN, '''') <> '''' ' +
+    '           AND COALESCE(C.CANTIDAD_PEDCCEL, 0) > 0 ';
+  if AAlmacenes <> '' then
+    AConsulta.SQL.Add('           AND ' + cAlmacenCel +
+      ' IN (' + AAlmacenes + ')');
+end;
+
+procedure TdmPedidosCompra.AnadirConsultaCantidadLineas(
+  AConsulta: TUniQuery;
+  const AAlmacenes: string);
+const
   cAlmacenLin =
     'COALESCE(NULLIF(L.CODIGO_ALMACEN_PEDCLIN, ''''), ' +
     '         NULLIF(P.CODIGO_ALM_PEDC, ''''))';
+begin
+  AConsulta.SQL.Add(
+    '        UNION ALL ' +
+    '        SELECT L.CODIGO_UNIDAD_PEDCLIN AS SKU, ' +
+    '               COALESCE(L.CANTIDAD_PEDCLIN, 0) AS CANTIDAD ' +
+    '          FROM fza_pedidos_compra_lineas L ' +
+    '          JOIN fza_pedidos_compra P ' +
+    '            ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
+    '           AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
+    '         WHERE L.SERIE_PEDC_PEDCLIN = :s ' +
+    '           AND L.NUMERO_PEDC_PEDCLIN = :n ' +
+    '           AND COALESCE(L.CODIGO_UNIDAD_PEDCLIN, '''') <> '''' ' +
+    '           AND COALESCE(L.CANTIDAD_PEDCLIN, 0) > 0 ' +
+    '           AND NOT EXISTS ( ' +
+    '             SELECT 1 ' +
+    '               FROM fza_pedidos_compra_celdas C0 ' +
+    '              WHERE C0.SERIE_PEDC_PEDCCEL = ' +
+    '                    L.SERIE_PEDC_PEDCLIN ' +
+    '                AND C0.NUMERO_PEDC_PEDCCEL = ' +
+    '                    L.NUMERO_PEDC_PEDCLIN ' +
+    '                AND CAST(C0.LINEA_PEDC_PEDCCEL AS UNSIGNED) ' +
+    '                    = CAST(L.LINEA_PEDCLIN AS UNSIGNED) ' +
+    '           ) ');
+  if AAlmacenes <> '' then
+    AConsulta.SQL.Add('           AND ' + cAlmacenLin +
+      ' IN (' + AAlmacenes + ')');
+  AConsulta.SQL.Add(
+    '       ) X ' +
+    ' GROUP BY X.SKU');
+end;
+
+procedure TdmPedidosCompra.CargarCantidadesEtiquetas(
+  const ASerie, ANumero, AAlmacenesCsv: string;
+  ACantidades: TDictionary<string, Integer>);
 var
-  oQry: TUniQuery;
-  oDmArt: TdmArticulos;
+  oConsulta: TUniQuery;
+  iCantidad: Integer;
+  sAlmacenes: string;
+  sSku: string;
+begin
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := ConexionPrincipal;
+    sAlmacenes := ObtenerAlmacenesSql(AAlmacenesCsv);
+    ConfigurarConsultaCantidadCeldas(oConsulta, sAlmacenes);
+    AnadirConsultaCantidadLineas(oConsulta, sAlmacenes);
+    oConsulta.ParamByName('s').AsString := ASerie;
+    oConsulta.ParamByName('n').AsString := ANumero;
+    oConsulta.Open;
+    while not oConsulta.Eof do
+    begin
+      iCantidad := Trunc(oConsulta.FieldByName('CANTIDAD').AsFloat);
+      sSku := oConsulta.FieldByName('SKU').AsString;
+      if (sSku <> '') and (iCantidad > 0) then
+        ACantidades.AddOrSetValue(sSku, iCantidad);
+      oConsulta.Next;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure TdmPedidosCompra.PrepararCamposEtiquetas(
+  ADataSet: TClientDataSet;
+  out AIndiceSku, AIndiceStock: Integer);
+var
+  iCampo: Integer;
+begin
+  AIndiceSku := ADataSet.FieldByName('CODIGO_UNIDAD_SKU').Index;
+  AIndiceStock := -1;
+  if ADataSet.FindField('STOCK_FILTRADO') <> nil then
+    AIndiceStock := ADataSet.FieldByName('STOCK_FILTRADO').Index;
+  for iCampo := 0 to ADataSet.FieldCount - 1 do
+  begin
+    ADataSet.Fields[iCampo].ReadOnly := False;
+    ADataSet.Fields[iCampo].Required := False;
+  end;
+end;
+
+function TdmPedidosCompra.CapturarFilasEtiquetas(
+  ADataSet: TClientDataSet): TFilasEtiquetasPedido;
+var
+  iCampo: Integer;
+  iFila: Integer;
+begin
+  SetLength(Result, ADataSet.RecordCount);
+  ADataSet.First;
+  for iFila := 0 to High(Result) do
+  begin
+    SetLength(Result[iFila], ADataSet.FieldCount);
+    for iCampo := 0 to ADataSet.FieldCount - 1 do
+      Result[iFila][iCampo] := ADataSet.Fields[iCampo].Value;
+    ADataSet.Next;
+  end;
+end;
+
+procedure TdmPedidosCompra.InsertarCopiasEtiquetas(
+  ADataSet: TClientDataSet;
+  const AFilas: TFilasEtiquetasPedido;
+  AIndiceSku, AIndiceStock: Integer;
+  ACantidades: TDictionary<string, Integer>);
+var
+  iCampo: Integer;
+  iCopia: Integer;
+  iCantidad: Integer;
+  iFila: Integer;
+  sSku: string;
+begin
+  ADataSet.EmptyDataSet;
+  for iFila := 0 to High(AFilas) do
+  begin
+    sSku := VarToStr(AFilas[iFila][AIndiceSku]);
+    if ACantidades.TryGetValue(sSku, iCantidad) then
+    begin
+      for iCopia := 1 to iCantidad do
+      begin
+        ADataSet.Append;
+        for iCampo := 0 to ADataSet.FieldCount - 1 do
+          ADataSet.Fields[iCampo].Value := AFilas[iFila][iCampo];
+        if AIndiceStock >= 0 then
+          ADataSet.Fields[AIndiceStock].AsInteger := iCantidad;
+        ADataSet.Post;
+      end;
+    end;
+  end;
+end;
+
+procedure TdmPedidosCompra.ExpandirDataSetEtiquetas(
+  ADataSet: TClientDataSet;
+  ACantidades: TDictionary<string, Integer>);
+var
+  oFilas: TFilasEtiquetasPedido;
+  iIndiceSku: Integer;
+  iIndiceStock: Integer;
+begin
+  if ADataSet.IsEmpty or
+     (ADataSet.FindField('CODIGO_UNIDAD_SKU') = nil) then
+    ADataSet.EmptyDataSet
+  else
+  begin
+    ADataSet.DisableControls;
+    ADataSet.DisableConstraints;
+    try
+      PrepararCamposEtiquetas(ADataSet, iIndiceSku, iIndiceStock);
+      oFilas := CapturarFilasEtiquetas(ADataSet);
+      InsertarCopiasEtiquetas(ADataSet, oFilas, iIndiceSku,
+        iIndiceStock, ACantidades);
+    finally
+      ADataSet.EnableConstraints;
+      ADataSet.EnableControls;
+    end;
+  end;
+end;
+
+procedure TdmPedidosCompra.ExpandirEtiquetasPorCantidadPed(
+  ADmArt: TObject;
+  const ASerie, ANumero, AAlmacenesCsv: string);
+var
   oCantidades: TDictionary<string, Integer>;
-  Filas: array of array of Variant;
-  i, j, k, iOriginales, iSkuIdx, iStockIdx, iCantidad: Integer;
-  sAlmacenes, sSku: string;
+  oDmArt: TdmArticulos;
 begin
   if ADmArt is TdmArticulos then
   begin
     oDmArt := TdmArticulos(ADmArt);
     oCantidades := TDictionary<string, Integer>.Create;
     try
-      oQry := TUniQuery.Create(nil);
-      try
-        oQry.Connection := ConexionPrincipal;
-        sAlmacenes := ObtenerAlmacenesSql(AAlmacenesCsv);
-        oQry.SQL.Text :=
-          'SELECT X.SKU, SUM(X.CANTIDAD) AS CANTIDAD ' +
-          '  FROM ( ' +
-          '        SELECT L.CODIGO_UNIDAD_PEDCLIN AS SKU, ' +
-          '               COALESCE(C.CANTIDAD_PEDCCEL, 0) AS CANTIDAD ' +
-          '          FROM fza_pedidos_compra_lineas L ' +
-          '          JOIN fza_pedidos_compra P ' +
-          '            ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
-          '           AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
-          // Cruce de LINEA en numerico: celda '10' vs linea '0010'.
-          '          JOIN fza_pedidos_compra_celdas C ' +
-          '            ON C.SERIE_PEDC_PEDCCEL = L.SERIE_PEDC_PEDCLIN ' +
-          '           AND C.NUMERO_PEDC_PEDCCEL = L.NUMERO_PEDC_PEDCLIN ' +
-          '           AND CAST(C.LINEA_PEDC_PEDCCEL AS UNSIGNED) = ' +
-          '               CAST(L.LINEA_PEDCLIN AS UNSIGNED) ' +
-          '         WHERE L.SERIE_PEDC_PEDCLIN = :s ' +
-          '           AND L.NUMERO_PEDC_PEDCLIN = :n ' +
-          '           AND COALESCE(L.CODIGO_UNIDAD_PEDCLIN, '''') <> '''' ' +
-          '           AND COALESCE(C.CANTIDAD_PEDCCEL, 0) > 0 ';
-        if sAlmacenes <> '' then
-          oQry.SQL.Add('           AND ' + cAlmacenCel +
-                       ' IN (' + sAlmacenes + ')');
-        oQry.SQL.Add(
-          '        UNION ALL ' +
-          '        SELECT L.CODIGO_UNIDAD_PEDCLIN AS SKU, ' +
-          '               COALESCE(L.CANTIDAD_PEDCLIN, 0) AS CANTIDAD ' +
-          '          FROM fza_pedidos_compra_lineas L ' +
-          '          JOIN fza_pedidos_compra P ' +
-          '            ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
-          '           AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
-          '         WHERE L.SERIE_PEDC_PEDCLIN = :s ' +
-          '           AND L.NUMERO_PEDC_PEDCLIN = :n ' +
-          '           AND COALESCE(L.CODIGO_UNIDAD_PEDCLIN, '''') <> '''' ' +
-          '           AND COALESCE(L.CANTIDAD_PEDCLIN, 0) > 0 ' +
-          '           AND NOT EXISTS ( ' +
-          '             SELECT 1 ' +
-          '               FROM fza_pedidos_compra_celdas C0 ' +
-          '              WHERE C0.SERIE_PEDC_PEDCCEL = ' +
-          '                    L.SERIE_PEDC_PEDCLIN ' +
-          '                AND C0.NUMERO_PEDC_PEDCCEL = ' +
-          '                    L.NUMERO_PEDC_PEDCLIN ' +
-          '                AND CAST(C0.LINEA_PEDC_PEDCCEL AS UNSIGNED) ' +
-          '                    = CAST(L.LINEA_PEDCLIN AS UNSIGNED) ' +
-          '           ) ');
-        if sAlmacenes <> '' then
-          oQry.SQL.Add('           AND ' + cAlmacenLin +
-                       ' IN (' + sAlmacenes + ')');
-        oQry.SQL.Add(
-          '       ) X ' +
-          ' GROUP BY X.SKU');
-        oQry.ParamByName('s').AsString := ASerie;
-        oQry.ParamByName('n').AsString := ANumero;
-        oQry.Open;
-        while not oQry.Eof do
-        begin
-          iCantidad := Trunc(oQry.FieldByName('CANTIDAD').AsFloat);
-          sSku := oQry.FieldByName('SKU').AsString;
-          if (sSku <> '') and (iCantidad > 0) then
-            oCantidades.AddOrSetValue(sSku, iCantidad);
-          oQry.Next;
-        end;
-      finally
-        FreeAndNil(oQry);
-      end;
+      CargarCantidadesEtiquetas(ASerie, ANumero, AAlmacenesCsv,
+        oCantidades);
       if oDmArt.cdsEtiquetasArt.Active then
-      begin
-        if (not oDmArt.cdsEtiquetasArt.IsEmpty) and
-           (oDmArt.cdsEtiquetasArt.FindField('CODIGO_UNIDAD_SKU') <> nil) then
-        begin
-          iSkuIdx := oDmArt.cdsEtiquetasArt.FieldByName(
-            'CODIGO_UNIDAD_SKU').Index;
-          iStockIdx := -1;
-          if oDmArt.cdsEtiquetasArt.FindField('STOCK_FILTRADO') <> nil then
-            iStockIdx := oDmArt.cdsEtiquetasArt.FieldByName(
-              'STOCK_FILTRADO').Index;
-          oDmArt.cdsEtiquetasArt.DisableControls;
-          oDmArt.cdsEtiquetasArt.DisableConstraints;
-          try
-            for j := 0 to oDmArt.cdsEtiquetasArt.FieldCount - 1 do
-            begin
-              oDmArt.cdsEtiquetasArt.Fields[j].ReadOnly := False;
-              oDmArt.cdsEtiquetasArt.Fields[j].Required := False;
-            end;
-            iOriginales := oDmArt.cdsEtiquetasArt.RecordCount;
-            SetLength(Filas, iOriginales);
-            oDmArt.cdsEtiquetasArt.First;
-            for i := 0 to iOriginales - 1 do
-            begin
-              SetLength(Filas[i], oDmArt.cdsEtiquetasArt.FieldCount);
-              for j := 0 to oDmArt.cdsEtiquetasArt.FieldCount - 1 do
-                Filas[i][j] := oDmArt.cdsEtiquetasArt.Fields[j].Value;
-              oDmArt.cdsEtiquetasArt.Next;
-            end;
-            oDmArt.cdsEtiquetasArt.EmptyDataSet;
-            for i := 0 to iOriginales - 1 do
-            begin
-              sSku := VarToStr(Filas[i][iSkuIdx]);
-              if oCantidades.TryGetValue(sSku, iCantidad) then
-              begin
-                for k := 1 to iCantidad do
-                begin
-                  oDmArt.cdsEtiquetasArt.Append;
-                  for j := 0 to oDmArt.cdsEtiquetasArt.FieldCount - 1 do
-                    oDmArt.cdsEtiquetasArt.Fields[j].Value := Filas[i][j];
-                  if iStockIdx >= 0 then
-                    oDmArt.cdsEtiquetasArt.Fields[iStockIdx].AsInteger :=
-                      iCantidad;
-                  oDmArt.cdsEtiquetasArt.Post;
-                end;
-              end;
-            end;
-          finally
-            oDmArt.cdsEtiquetasArt.EnableConstraints;
-            oDmArt.cdsEtiquetasArt.EnableControls;
-          end;
-        end
-        else
-          oDmArt.cdsEtiquetasArt.EmptyDataSet;
-      end;
+        ExpandirDataSetEtiquetas(oDmArt.cdsEtiquetasArt, oCantidades);
     finally
-      oCantidades.Free;
+      FreeAndNil(oCantidades);
     end;
   end;
 end;
-
 procedure TdmPedidosCompra.CrearDataSetEtiquetasPed(ADmArt: TObject;
                                   const ASerie, ANumero,
                                         ACodTarifa, AAlmacenesCsv: string;

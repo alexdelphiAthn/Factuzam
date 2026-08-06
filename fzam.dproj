@@ -1642,6 +1642,13 @@
         <DCCReference Include="src\Caja\Modals\inMtoModalImpFacturasProforma.pas">
             <Form>frmPrintFacturasProforma</Form>
         </DCCReference>
+        <DCCReference Include="src\Caja\Forms\inMtoCajaOpeBusquedaVcl.pas"/>
+        <DCCReference Include="src\Caja\Forms\inMtoCajaOpeEntradaVcl.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibCajaDepositos.pas"/>
+        <DCCReference
+            Include="src\Forms\inMtoPedidosPresentacionArticuloVcl.pas"/>
+        <DCCReference Include="src\Lib\inLibTicketRecordatorio.pas"/>
+        <DCCReference Include="src\verifactu\inLibVerifactuDesgloseFiscal.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

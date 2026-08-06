@@ -128,6 +128,31 @@ type
     function ListarOpciones(
       const ASql: string): TOpcionesBusquedaDatos;
     function ExpresionCampo(ACampo: Integer): string;
+    function ConstruirDistanciaColor: string;
+    procedure PrepararConsultaBase(
+      AConsulta: TUniQuery;
+      AProximidad: Boolean);
+    procedure AplicarFiltrosDisponibilidad(
+      AConsulta: TUniQuery;
+      const ACriterios: TCriteriosBusquedaDatos);
+    procedure AplicarFiltrosCatalogo(
+      AConsulta: TUniQuery;
+      const ACriterios: TCriteriosBusquedaDatos);
+    procedure AplicarFiltroValor(
+      AConsulta: TUniQuery;
+      const ACriterios: TCriteriosBusquedaDatos;
+      AProximidad: Boolean;
+      var AValor: string;
+      out AParametro: string);
+    procedure AplicarOrdenYLimite(
+      AConsulta: TUniQuery;
+      AProximidad: Boolean;
+      ALimite: Integer);
+    procedure AsignarParametrosBusqueda(
+      AConsulta: TUniQuery;
+      const ACriterios: TCriteriosBusquedaDatos;
+      AProximidad: Boolean;
+      const AValor, AParametro: string);
   public
     constructor Create(AConexion: TUniConnection);
     function ListarFamilias: TOpcionesBusquedaDatos;
@@ -315,159 +340,203 @@ begin
   end;
 end;
 
+function TRepositorioBusquedaDatosUniDAC.ConstruirDistanciaColor: string;
+var
+  sAzul: string;
+  sRojo: string;
+  sVerde: string;
+begin
+  sRojo :=
+    'CONV(SUBSTRING(REPLACE(pal.HEX_ATB, ''#'', ''''), 1, 2), 16, 10)';
+  sVerde :=
+    'CONV(SUBSTRING(REPLACE(pal.HEX_ATB, ''#'', ''''), 3, 2), 16, 10)';
+  sAzul :=
+    'CONV(SUBSTRING(REPLACE(pal.HEX_ATB, ''#'', ''''), 5, 2), 16, 10)';
+  Result := 'ROUND(SQRT(POW(' + sRojo +
+    ' - :ROJO, 2) + POW(' + sVerde +
+    ' - :VERDE, 2) + POW(' + sAzul +
+    ' - :AZUL, 2)), 2)';
+end;
+
+procedure TRepositorioBusquedaDatosUniDAC.PrepararConsultaBase(
+  AConsulta: TUniQuery;
+  AProximidad: Boolean);
+begin
+  AConsulta.Connection := FConexion;
+  AConsulta.ReadOnly := True;
+  if AProximidad then
+  begin
+    AConsulta.SQL.Text := SQL_BUSQUEDA_ANTES_DISTANCIA +
+      ConstruirDistanciaColor + ' AS DISTANCIA_COLOR' +
+      SQL_BUSQUEDA_DESPUES_DISTANCIA;
+  end
+  else
+  begin
+    AConsulta.SQL.Text := SQL_BUSQUEDA_ANTES_DISTANCIA +
+      'CAST(NULL AS DECIMAL(10, 2)) AS DISTANCIA_COLOR' +
+      SQL_BUSQUEDA_DESPUES_DISTANCIA;
+  end;
+end;
+
+procedure TRepositorioBusquedaDatosUniDAC.AplicarFiltrosDisponibilidad(
+  AConsulta: TUniQuery;
+  const ACriterios: TCriteriosBusquedaDatos);
+begin
+  if ACriterios.Estado = 0 then
+  begin
+    AConsulta.SQL.Add('AND eti.ESACTIVO_ART = ''S''');
+    AConsulta.SQL.Add('AND eti.ESACTIVO_SKU = ''S''');
+  end
+  else if ACriterios.Estado = 2 then
+  begin
+    AConsulta.SQL.Add(
+      'AND (COALESCE(eti.ESACTIVO_ART, ''N'') <> ''S''');
+    AConsulta.SQL.Add(
+      'OR COALESCE(eti.ESACTIVO_SKU, ''N'') <> ''S'')');
+  end;
+  if ACriterios.Stock = 1 then
+    AConsulta.SQL.Add('AND COALESCE(stk.CANTIDAD_STOCK, 0) > 0')
+  else if ACriterios.Stock = 2 then
+    AConsulta.SQL.Add('AND COALESCE(stk.CANTIDAD_STOCK, 0) <= 0');
+end;
+
+procedure TRepositorioBusquedaDatosUniDAC.AplicarFiltrosCatalogo(
+  AConsulta: TUniQuery;
+  const ACriterios: TCriteriosBusquedaDatos);
+begin
+  if ACriterios.Familia <> '' then
+    AConsulta.SQL.Add('AND eti.CODIGO_FAM_ART = :FAMILIA');
+  if ACriterios.Proveedor <> '' then
+    AConsulta.SQL.Add('AND eti.CODIGO_PRV_PRV = :PROVEEDOR');
+  if ACriterios.Temporada <> '' then
+    AConsulta.SQL.Add('AND eti.PROP_TEMPORADA = :TEMPORADA');
+end;
+
+procedure TRepositorioBusquedaDatosUniDAC.AplicarFiltroValor(
+  AConsulta: TUniQuery;
+  const ACriterios: TCriteriosBusquedaDatos;
+  AProximidad: Boolean;
+  var AValor: string;
+  out AParametro: string);
+var
+  sCampo: string;
+begin
+  AParametro := AValor;
+  if AProximidad then
+  begin
+    AConsulta.SQL.Add(
+      'AND pal.HEX_ATB REGEXP ''^#?[0-9A-Fa-f]{6}$''');
+  end
+  else if AValor <> '' then
+  begin
+    sCampo := ExpresionCampo(ACriterios.Campo);
+    if ACriterios.DistinguirMayusculas then
+      sCampo := 'BINARY COALESCE(' + sCampo + ', '''')'
+    else
+    begin
+      sCampo := 'UPPER(COALESCE(' + sCampo + ', ''''))';
+      AValor := UpperCase(AValor);
+    end;
+    AParametro := AValor;
+    case ACriterios.Coincidencia of
+      0:
+        begin
+          AConsulta.SQL.Add('AND ' + sCampo + ' LIKE :BUSQUEDA');
+          AParametro := '%' + AValor + '%';
+        end;
+      1:
+        begin
+          AConsulta.SQL.Add('AND ' + sCampo + ' LIKE :BUSQUEDA');
+          AParametro := AValor + '%';
+        end;
+      2:
+        AConsulta.SQL.Add('AND ' + sCampo + ' = :BUSQUEDA');
+      3:
+        begin
+          AConsulta.SQL.Add('AND ' + sCampo + ' LIKE :BUSQUEDA');
+          AParametro := '%' + AValor;
+        end;
+      4:
+        begin
+          AConsulta.SQL.Add('AND ' + sCampo + ' NOT LIKE :BUSQUEDA');
+          AParametro := '%' + AValor + '%';
+        end;
+    end;
+  end;
+end;
+
+procedure TRepositorioBusquedaDatosUniDAC.AplicarOrdenYLimite(
+  AConsulta: TUniQuery;
+  AProximidad: Boolean;
+  ALimite: Integer);
+begin
+  if AProximidad then
+  begin
+    AConsulta.SQL.Add(
+      'ORDER BY DISTANCIA_COLOR, eti.CODIGO_ART_ART,');
+    AConsulta.SQL.Add('eti.CODIGO_UNIDAD_SKU');
+  end
+  else
+  begin
+    AConsulta.SQL.Add(
+      'ORDER BY eti.CODIGO_ART_ART, eti.ATR_CO, eti.ATR_TAL,');
+    AConsulta.SQL.Add('eti.CODIGO_UNIDAD_SKU');
+  end;
+  AConsulta.SQL.Add('LIMIT ' + IntToStr(ALimite));
+end;
+
+procedure TRepositorioBusquedaDatosUniDAC.AsignarParametrosBusqueda(
+  AConsulta: TUniQuery;
+  const ACriterios: TCriteriosBusquedaDatos;
+  AProximidad: Boolean;
+  const AValor, AParametro: string);
+begin
+  AConsulta.ParamByName('ALMACEN_DOC').AsString := ACriterios.Almacen;
+  if ACriterios.Familia <> '' then
+    AConsulta.ParamByName('FAMILIA').AsString := ACriterios.Familia;
+  if ACriterios.Proveedor <> '' then
+    AConsulta.ParamByName('PROVEEDOR').AsString := ACriterios.Proveedor;
+  if ACriterios.Temporada <> '' then
+    AConsulta.ParamByName('TEMPORADA').AsString := ACriterios.Temporada;
+  if AProximidad then
+  begin
+    AConsulta.ParamByName('ROJO').AsInteger := ACriterios.Rojo;
+    AConsulta.ParamByName('VERDE').AsInteger := ACriterios.Verde;
+    AConsulta.ParamByName('AZUL').AsInteger := ACriterios.Azul;
+  end
+  else if AValor <> '' then
+    AConsulta.ParamByName('BUSQUEDA').AsString := AParametro;
+end;
+
 function TRepositorioBusquedaDatosUniDAC.PrepararBusqueda(
   const ACriterios: TCriteriosBusquedaDatos
 ): IResultadoBusquedaDatos;
 var
   bProximidad: Boolean;
   oConsulta: TUniQuery;
-  sCampo: string;
-  sComponenteAzul: string;
-  sComponenteRojo: string;
-  sComponenteVerde: string;
-  sDistancia: string;
   sParametro: string;
   sValor: string;
 begin
   bProximidad := ACriterios.Campo = CAMPO_PROXIMIDAD_COLOR;
-  sComponenteRojo :=
-    'CONV(SUBSTRING(REPLACE(pal.HEX_ATB, ''#'', ''''), 1, 2), 16, 10)';
-  sComponenteVerde :=
-    'CONV(SUBSTRING(REPLACE(pal.HEX_ATB, ''#'', ''''), 3, 2), 16, 10)';
-  sComponenteAzul :=
-    'CONV(SUBSTRING(REPLACE(pal.HEX_ATB, ''#'', ''''), 5, 2), 16, 10)';
-  sDistancia := 'ROUND(SQRT(POW(' + sComponenteRojo +
-    ' - :ROJO, 2) + POW(' + sComponenteVerde +
-    ' - :VERDE, 2) + POW(' + sComponenteAzul +
-    ' - :AZUL, 2)), 2)';
+  sValor := Trim(ACriterios.Valor);
   oConsulta := TUniQuery.Create(nil);
   try
-    oConsulta.Connection := FConexion;
-    oConsulta.ReadOnly := True;
-    if bProximidad then
-    begin
-      oConsulta.SQL.Text := SQL_BUSQUEDA_ANTES_DISTANCIA +
-        sDistancia + ' AS DISTANCIA_COLOR' +
-        SQL_BUSQUEDA_DESPUES_DISTANCIA;
-    end
-    else
-    begin
-      oConsulta.SQL.Text := SQL_BUSQUEDA_ANTES_DISTANCIA +
-        'CAST(NULL AS DECIMAL(10, 2)) AS DISTANCIA_COLOR' +
-        SQL_BUSQUEDA_DESPUES_DISTANCIA;
-    end;
-    if ACriterios.Estado = 0 then
-    begin
-      oConsulta.SQL.Add('AND eti.ESACTIVO_ART = ''S''');
-      oConsulta.SQL.Add('AND eti.ESACTIVO_SKU = ''S''');
-    end
-    else if ACriterios.Estado = 2 then
-    begin
-      oConsulta.SQL.Add(
-        'AND (COALESCE(eti.ESACTIVO_ART, ''N'') <> ''S''');
-      oConsulta.SQL.Add(
-        'OR COALESCE(eti.ESACTIVO_SKU, ''N'') <> ''S'')');
-    end;
-    if ACriterios.Stock = 1 then
-    begin
-      oConsulta.SQL.Add('AND COALESCE(stk.CANTIDAD_STOCK, 0) > 0');
-    end
-    else if ACriterios.Stock = 2 then
-    begin
-      oConsulta.SQL.Add('AND COALESCE(stk.CANTIDAD_STOCK, 0) <= 0');
-    end;
-    if ACriterios.Familia <> '' then
-    begin
-      oConsulta.SQL.Add('AND eti.CODIGO_FAM_ART = :FAMILIA');
-    end;
-    if ACriterios.Proveedor <> '' then
-    begin
-      oConsulta.SQL.Add('AND eti.CODIGO_PRV_PRV = :PROVEEDOR');
-    end;
-    if ACriterios.Temporada <> '' then
-    begin
-      oConsulta.SQL.Add('AND eti.PROP_TEMPORADA = :TEMPORADA');
-    end;
-    sValor := Trim(ACriterios.Valor);
-    if bProximidad then
-    begin
-      oConsulta.SQL.Add(
-        'AND pal.HEX_ATB REGEXP ''^#?[0-9A-Fa-f]{6}$''');
-    end
-    else if sValor <> '' then
-    begin
-      sCampo := ExpresionCampo(ACriterios.Campo);
-      if ACriterios.DistinguirMayusculas then
-      begin
-        sCampo := 'BINARY COALESCE(' + sCampo + ', '''')';
-      end
-      else
-      begin
-        sCampo := 'UPPER(COALESCE(' + sCampo + ', ''''))';
-        sValor := UpperCase(sValor);
-      end;
-      sParametro := sValor;
-      case ACriterios.Coincidencia of
-        0:
-          begin
-            oConsulta.SQL.Add('AND ' + sCampo + ' LIKE :BUSQUEDA');
-            sParametro := '%' + sValor + '%';
-          end;
-        1:
-          begin
-            oConsulta.SQL.Add('AND ' + sCampo + ' LIKE :BUSQUEDA');
-            sParametro := sValor + '%';
-          end;
-        2:
-          oConsulta.SQL.Add('AND ' + sCampo + ' = :BUSQUEDA');
-        3:
-          begin
-            oConsulta.SQL.Add('AND ' + sCampo + ' LIKE :BUSQUEDA');
-            sParametro := '%' + sValor;
-          end;
-        4:
-          begin
-            oConsulta.SQL.Add('AND ' + sCampo + ' NOT LIKE :BUSQUEDA');
-            sParametro := '%' + sValor + '%';
-          end;
-      end;
-    end;
-    if bProximidad then
-    begin
-      oConsulta.SQL.Add(
-        'ORDER BY DISTANCIA_COLOR, eti.CODIGO_ART_ART,');
-      oConsulta.SQL.Add('eti.CODIGO_UNIDAD_SKU');
-    end
-    else
-    begin
-      oConsulta.SQL.Add(
-        'ORDER BY eti.CODIGO_ART_ART, eti.ATR_CO, eti.ATR_TAL,');
-      oConsulta.SQL.Add('eti.CODIGO_UNIDAD_SKU');
-    end;
-    oConsulta.SQL.Add('LIMIT ' + IntToStr(ACriterios.Limite));
-    oConsulta.ParamByName('ALMACEN_DOC').AsString := ACriterios.Almacen;
-    if ACriterios.Familia <> '' then
-    begin
-      oConsulta.ParamByName('FAMILIA').AsString := ACriterios.Familia;
-    end;
-    if ACriterios.Proveedor <> '' then
-    begin
-      oConsulta.ParamByName('PROVEEDOR').AsString := ACriterios.Proveedor;
-    end;
-    if ACriterios.Temporada <> '' then
-    begin
-      oConsulta.ParamByName('TEMPORADA').AsString := ACriterios.Temporada;
-    end;
-    if bProximidad then
-    begin
-      oConsulta.ParamByName('ROJO').AsInteger := ACriterios.Rojo;
-      oConsulta.ParamByName('VERDE').AsInteger := ACriterios.Verde;
-      oConsulta.ParamByName('AZUL').AsInteger := ACriterios.Azul;
-    end
-    else if sValor <> '' then
-    begin
-      oConsulta.ParamByName('BUSQUEDA').AsString := sParametro;
-    end;
+    PrepararConsultaBase(oConsulta, bProximidad);
+    AplicarFiltrosDisponibilidad(oConsulta, ACriterios);
+    AplicarFiltrosCatalogo(oConsulta, ACriterios);
+    AplicarFiltroValor(
+      oConsulta,
+      ACriterios,
+      bProximidad,
+      sValor,
+      sParametro);
+    AplicarOrdenYLimite(oConsulta, bProximidad, ACriterios.Limite);
+    AsignarParametrosBusqueda(
+      oConsulta,
+      ACriterios,
+      bProximidad,
+      sValor,
+      sParametro);
     Result := TResultadoBusquedaDatosUniDAC.Create(oConsulta);
     oConsulta := nil;
   finally

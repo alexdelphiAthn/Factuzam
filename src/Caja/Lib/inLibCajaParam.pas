@@ -30,6 +30,14 @@ type
     FBloqueoImpresora: TCriticalSection;
     FContextoSesion: IContextoSesionAplicacion;
     FImpresoraCaja: string;
+    procedure RegistrarControlArticulos;
+    procedure RegistrarConfiguracionCaja;
+    procedure RegistrarDevolucionesYVales;
+    procedure RegistrarAvisosYBusquedas;
+    procedure RegistrarLectorCodigoBarras;
+    procedure RegistrarImpresion;
+    procedure RegistrarEmpleado;
+    procedure RegistrarPermisosYArqueo;
     procedure InicializarParametrosCaja(
       const AUsuario, AGrupo: string);
   protected
@@ -120,7 +128,19 @@ end;
 procedure TParametrosCaja.InicializarParametrosCaja(
   const AUsuario, AGrupo: string);
 begin
-  // --- Control de Artículos ---
+  RegistrarControlArticulos;
+  RegistrarConfiguracionCaja;
+  RegistrarDevolucionesYVales;
+  RegistrarAvisosYBusquedas;
+  RegistrarLectorCodigoBarras;
+  RegistrarImpresion;
+  RegistrarEmpleado;
+  RegistrarPermisosYArqueo;
+  Inicializar(AUsuario, AGrupo);
+end;
+
+procedure TParametrosCaja.RegistrarControlArticulos;
+begin
   RegistrarParametro('Control de Artículos',
                      'vgerChkExistOnly',
                      'Permitir sólo artículos que existan',
@@ -131,8 +151,10 @@ begin
                      'Permitir sólo artículos con stock',
                      tpBoolean,
                      'False');
+end;
 
-  // --- Configuración de Caja ---
+procedure TParametrosCaja.RegistrarConfiguracionCaja;
+begin
   RegistrarParametro('Configuración de Caja',
                      'vgerShowCajaSelection',
                      'Presentar selección de caja',
@@ -168,8 +190,10 @@ begin
                      'Enviar ventas completas al webservice de respaldo',
                      tpBoolean,
                      'False');
+end;
 
-  // --- Devoluciones y Vales ---
+procedure TParametrosCaja.RegistrarDevolucionesYVales;
+begin
   RegistrarParametro('Devoluciones y Vales',
                      'vgerReqRefDevolucion',
                      'Pedir referencia en devoluciones',
@@ -190,9 +214,10 @@ begin
                      'Días hasta caducidad en vale',
                      tpInteger,
                      '365');
+end;
 
-
-  // --- Avisos y Búsquedas ---
+procedure TParametrosCaja.RegistrarAvisosYBusquedas;
+begin
   RegistrarParametro('Avisos y Búsquedas',
                      'vgerAvisoStockWarning',
                      'Aviso en artículos sin stock',
@@ -218,8 +243,10 @@ begin
                      'Mover linea al identificar artículo',
                      tpBoolean,
                      'False');
+end;
 
-  // --- Lector de Código de Barras ---
+procedure TParametrosCaja.RegistrarLectorCodigoBarras;
+begin
   RegistrarParametro('Lector de Código de Barras',
                      'vgerScanVelActivo',
                      'Detectar lecturas por velocidad de tecleo (código + CR)',
@@ -235,8 +262,10 @@ begin
                      'Longitud mínima del código para aceptar la lectura',
                      tpInteger,
                      '4');
+end;
 
-  // --- Impresión ---
+procedure TParametrosCaja.RegistrarImpresion;
+begin
   RegistrarParametro('Impresión',
                      'vgerDefPrinter',
                      'Nombre impresora de tickets',
@@ -257,8 +286,10 @@ begin
                      'Imprimir código de barras EAN13 del ticket',
                      tpBoolean,
                      'False');
+end;
 
-  // --- Empleado ---
+procedure TParametrosCaja.RegistrarEmpleado;
+begin
   RegistrarParametro('Empleado',
                      'vgerCodEmpleadoDefecto',
                      'Código de empleado por defecto',
@@ -269,8 +300,10 @@ begin
                      'Mostrar empleado en linea de caja',
                      tpBoolean,
                      'True');
+end;
 
-  // --- Permisos Extra ---
+procedure TParametrosCaja.RegistrarPermisosYArqueo;
+begin
   RegistrarParametro('Permisos Extra',
                      'vgerArqueoTarjetas',
                      'Permitir Arqueo de Tarjetas',
@@ -286,19 +319,11 @@ begin
                      'Permite descuentos en ventas',
                      tpBoolean,
                      'True');
-
-  // --- Arqueo ---
   RegistrarParametro('Arqueo',
                      'vgerArqueoNivelesFamilia',
                      'Niveles de familia en resumen por sección (1=sección)',
                      tpInteger,
                      '2');
-
-  // --------------------------------------------------------------------------
-  // Una vez registrada toda la estructura en memoria, le decimos a la librería
-  // que se conecte a la base de datos y cargue los valores reales del usuario.
-  // --------------------------------------------------------------------------
-  Inicializar(AUsuario, AGrupo);
 end;
 
 function TParametrosCaja.NivelesFamiliaArqueo: Integer;

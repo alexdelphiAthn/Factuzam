@@ -880,6 +880,75 @@ begin
   end;
 end;
 
+function ValorInspectorParaGuardar(
+  AItem: TJvCustomInspectorItem): string;
+begin
+  Result := '';
+  if AItem.Data <> nil then
+  begin
+    case AItem.Data.TypeInfo.Kind of
+      tkEnumeration:
+        if AItem.Data.AsOrdinal <> 0 then
+          Result := 'True'
+        else
+          Result := 'False';
+      tkInteger:
+        Result := IntToStr(AItem.Data.AsOrdinal);
+    else
+      Result := AItem.Data.AsString;
+    end;
+  end;
+end;
+
+procedure ClasificarCambioParametro(
+  AItem: TJvCustomInspectorItem;
+  APuedeEditar: Boolean;
+  AOriginales: TDictionary<string, string>;
+  var AValores: TValoresPerfilAppParam;
+  var AGuardados, AIgnorados: Integer;
+  var ACambioVerifactu: Boolean);
+var
+  Valor: string;
+  CambioReal: Boolean;
+begin
+  Valor := ValorInspectorParaGuardar(AItem);
+  CambioReal := True;
+  if AOriginales.ContainsKey(AItem.Name) then
+    CambioReal := not SameText(AOriginales[AItem.Name], Valor);
+  if CambioReal then
+  begin
+    if APuedeEditar then
+    begin
+      SetLength(AValores, Length(AValores) + 1);
+      AValores[High(AValores)].Subclave := AItem.Name;
+      AValores[High(AValores)].Valor := Valor;
+      Inc(AGuardados);
+      if StartsText('appVerifactu', AItem.Name) then
+        ACambioVerifactu := True;
+    end
+    else
+      Inc(AIgnorados);
+  end;
+end;
+
+procedure ActualizarOriginalesParametros(
+  AOriginales: TDictionary<string, string>;
+  const AValores: TValoresPerfilAppParam);
+var
+  Valor: TValorPerfilAppParam;
+begin
+  for Valor in AValores do
+    AOriginales.AddOrSetValue(Valor.Subclave, Valor.Valor);
+end;
+
+function EsAmbitoSesionParametros(
+  const AAmbito, AUsuario, AGrupo, ATodos: string): Boolean;
+begin
+  Result := (AAmbito = AUsuario) or
+    (AAmbito = AGrupo) or
+    (AAmbito = ATodos);
+end;
+
 procedure TfrmMtoAppParam.btnGuardarClick(Sender: TObject);
 var
   ValoresGuardar: TValoresPerfilAppParam;
@@ -887,67 +956,38 @@ var
   i, j          : Integer;
   NodoPrincipal : TJvCustomInspectorItem;
   ParamItem     : TJvCustomInspectorItem;
-  ValorAGuardar : string;
   GuardadosCount: Integer;
   IgnoradosCount: Integer;
   TemaAnterior  : string;
+  TemaNuevo     : string;
   CambioVerifactu: Boolean;
-  CambioReal: Boolean;
-  PuedeEditar: Boolean;
 begin
   JvInspector1.SaveValues;
   if cmbGrupoUsuario.ItemIndex >= 0 then
   begin
-  sUsuarioGrupo := cmbGrupoUsuario.Text;
-
-  GuardadosCount := 0;
-  IgnoradosCount := 0;
-  TemaAnterior := ParametrosApp.GetString('appTema');
-  CambioVerifactu := False;
-  SetLength(ValoresGuardar, 0);
+    sUsuarioGrupo := cmbGrupoUsuario.Text;
+    GuardadosCount := 0;
+    IgnoradosCount := 0;
+    TemaAnterior := ParametrosApp.GetString('appTema');
+    CambioVerifactu := False;
+    SetLength(ValoresGuardar, 0);
     for i := 0 to JvInspector1.Root.Count - 1 do
     begin
       NodoPrincipal := JvInspector1.Root.Items[i];
       if NodoPrincipal is TJvInspectorCustomCategoryItem then
       begin
-      for j := 0 to NodoPrincipal.Count - 1 do
-      begin
-        ParamItem := NodoPrincipal.Items[j];
-        if ParamItem.Data <> nil then
-          case ParamItem.Data.TypeInfo.Kind of
-            tkEnumeration:
-              if ParamItem.Data.AsOrdinal <> 0 then
-                ValorAGuardar := 'True'
-              else
-                ValorAGuardar := 'False';
-            tkInteger:
-              ValorAGuardar := IntToStr(ParamItem.Data.AsOrdinal);
-          else
-            ValorAGuardar := ParamItem.Data.AsString;
-          end
-        else
-          ValorAGuardar := '';
-
-        // Solo guardamos si hubo cambio real
-        CambioReal := True;
-        if FValoresOriginales.ContainsKey(ParamItem.Name) then
-          CambioReal := not SameText(FValoresOriginales[ParamItem.Name],
-                                     ValorAGuardar);
-        PuedeEditar := UsuarioPuedeEditarParametro(ParamItem.Name);
-        if CambioReal and PuedeEditar then
+        for j := 0 to NodoPrincipal.Count - 1 do
         begin
-          SetLength(ValoresGuardar, Length(ValoresGuardar) + 1);
-          ValoresGuardar[High(ValoresGuardar)].Subclave :=
-            ParamItem.Name;
-          ValoresGuardar[High(ValoresGuardar)].Valor :=
-            ValorAGuardar;
-          Inc(GuardadosCount);
-          if StartsText('appVerifactu', ParamItem.Name) then
-            CambioVerifactu := True;
-        end
-        else if CambioReal and (not PuedeEditar) then
-          Inc(IgnoradosCount);
-      end;
+          ParamItem := NodoPrincipal.Items[j];
+          ClasificarCambioParametro(
+            ParamItem,
+            UsuarioPuedeEditarParametro(ParamItem.Name),
+            FValoresOriginales,
+            ValoresGuardar,
+            GuardadosCount,
+            IgnoradosCount,
+            CambioVerifactu);
+        end;
       end;
     end;
     if Length(ValoresGuardar) > 0 then
@@ -956,12 +996,7 @@ begin
         sUsuarioGrupo,
         'frmMtoAppParam',
         ValoresGuardar);
-      for var ValorGuardado in ValoresGuardar do
-      begin
-        FValoresOriginales.AddOrSetValue(
-          ValorGuardado.Subclave,
-          ValorGuardado.Valor);
-      end;
+      ActualizarOriginalesParametros(FValoresOriginales, ValoresGuardar);
     end;
     if GuardadosCount > 0 then
     begin
@@ -969,9 +1004,11 @@ begin
                          [GuardadosCount, sUsuarioGrupo]));
 
       // Recargamos en memoria si afecta al usuario/grupo actual
-      if (sUsuarioGrupo = IdentidadSesion.Usuario) or
-         (sUsuarioGrupo = IdentidadSesion.Grupo) or
-         (sUsuarioGrupo = oAll) then
+      if EsAmbitoSesionParametros(
+           sUsuarioGrupo,
+           IdentidadSesion.Usuario,
+           IdentidadSesion.Grupo,
+           oAll) then
       begin
         FParametrosEdicion.Recargar(
           IdentidadSesion.Usuario,
@@ -979,7 +1016,7 @@ begin
         );
 
         // ── Aplicar tema al vuelo si cambió ──────────────────────────
-        var TemaNuevo := ParametrosApp.GetString('appTema');
+        TemaNuevo := ParametrosApp.GetString('appTema');
         if not SameText(TemaAnterior, TemaNuevo) and (TemaNuevo <> '') then
         begin
 //          dxSkinsCore.dxSkinController.SkinName := TemaNuevo;

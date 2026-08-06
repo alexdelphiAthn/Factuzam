@@ -1305,16 +1305,61 @@ begin
   end;
 end;
 
-function TfrmMtoPrincipal.IsShortCut(var Message: TWMKey): Boolean;
+function EsFormularioFlotante(
+  AFormulario, AFormularioPrincipal: TCustomForm): Boolean;
+begin
+  Result := Assigned(AFormulario) and
+    (AFormulario <> AFormularioPrincipal) and
+    (AFormulario.Parent = nil);
+end;
+
+function EjecutarAtajoFormulario(
+  AFormulario: TCustomForm;
+  var AMensaje: TWMKey): Boolean;
 var
-  Component: TComponent;
-  ActiveForm: TCustomForm;
-  ts: TcxTabSheet;
-  I: Integer;
-  iPageActive: Integer;
-  bFound: Boolean;
+  Componente: TComponent;
+  i: Integer;
 begin
   Result := False;
+  i := 0;
+  while (i < AFormulario.ComponentCount) and (not Result) do
+  begin
+    Componente := AFormulario.Components[i];
+    if Componente is TActionList then
+      Result := TActionList(Componente).IsShortCut(AMensaje);
+    Inc(i);
+  end;
+end;
+
+function FormularioPestanaActiva(
+  APaginas: TcxPageControl): TCustomForm;
+var
+  Pestana: TcxTabSheet;
+  PaginaActiva: Integer;
+begin
+  Result := nil;
+  if APaginas.PageCount > 0 then
+  begin
+    PaginaActiva := APaginas.ActivePageIndex;
+    if PaginaActiva >= 0 then
+    begin
+      Pestana := APaginas.Pages[PaginaActiva] as TcxTabSheet;
+      if (Pestana.ControlCount > 0) and
+         (Pestana.Controls[0] is TCustomForm) then
+        Result := Pestana.Controls[0] as TCustomForm;
+    end;
+  end;
+end;
+
+function TfrmMtoPrincipal.IsShortCut(var Message: TWMKey): Boolean;
+var
+  FormularioActivo: TCustomForm;
+  FormularioPestana: TCustomForm;
+  bEsFlotante: Boolean;
+begin
+  Result := False;
+  FormularioActivo := Screen.ActiveForm;
+  bEsFlotante := EsFormularioFlotante(FormularioActivo, Self);
   // F9 sola (sin Ctrl/Alt/Mayus ni autorrepeticion) -> abrir el cajon
   // portamonedas, mismo criterio que AppMessage. Via redundante: cubre el
   // foco en el principal y sus pestañas embebidas aunque Application.OnMessage
@@ -1342,11 +1387,8 @@ begin
           (GetKeyState(VK_CONTROL) < 0) and
           (HiWord(Message.KeyData) and KF_ALTDOWN = 0) then
   begin
-    // Ventana flotante (no modal): cerrarla
-    if Assigned(Screen.ActiveForm) and
-       (Screen.ActiveForm <> Self) and
-       (Screen.ActiveForm.Parent = nil) then
-      Screen.ActiveForm.Close
+    if bEsFlotante then
+      FormularioActivo.Close
     else if pcPrincipal.PageCount > 0 then
       FormManager.CloseActiveForm;
     Result := True;
@@ -1356,9 +1398,7 @@ begin
   begin
     if Application.ModalLevel > 0 then
       Result := inherited IsShortCut(Message)
-    else if Assigned(Screen.ActiveForm) and
-            (Screen.ActiveForm <> Self) and
-            (Screen.ActiveForm.Parent = nil) then
+    else if bEsFlotante then
       Result := inherited IsShortCut(Message)
     else if pcPrincipal.PageCount = 0 then
     begin
@@ -1371,62 +1411,15 @@ begin
       Result := True;
     end;
   end
+  else if bEsFlotante then
+    Result := EjecutarAtajoFormulario(FormularioActivo, Message)
   else
   begin
-    // Ventana no embebida: delegar a sus ActionLists
-    ActiveForm := Screen.ActiveForm;
-    if Assigned(ActiveForm) and
-       (ActiveForm <> Self) and
-       (ActiveForm.Parent = nil) then
-    begin
-      Result := False;
-      for I := 0 to ActiveForm.ComponentCount - 1 do
-      begin
-        Component := ActiveForm.Components[I];
-        if Component is TActionList then
-        begin
-          if TActionList(Component).IsShortCut(Message) then
-          begin
-            Result := True;
-            Break;
-          end;
-        end;
-      end;
-    end;
-    if not (Assigned(ActiveForm) and
-            (ActiveForm <> Self) and
-            (ActiveForm.Parent = nil)) then
-    begin
-      // Enrutar a los ActionList del formulario hijo de la pestaña activa
-      bFound := False;
-      if Self.pcPrincipal.PageCount > 0 then
-      begin
-        iPageActive := pcPrincipal.ActivePageIndex;
-        if iPageActive >= 0 then
-        begin
-          ts := Self.pcPrincipal.Pages[iPageActive] as TcxTabSheet;
-          if (ts.ControlCount > 0) and (ts.Controls[0] is TForm) then
-          begin
-            for I := 0 to (ts.Controls[0] as TForm).ComponentCount - 1 do
-            begin
-              Component := (ts.Controls[0] as TForm).Components[I];
-              if Component is TActionList then
-              begin
-                if TActionList(Component).IsShortCut(Message) then
-                begin
-                  bFound := True;
-                  Break;
-                end;
-              end;
-            end;
-          end;
-        end;
-      end;
-      if bFound then
-        Result := True
-      else
-        Result := inherited IsShortCut(Message);
-    end;
+    FormularioPestana := FormularioPestanaActiva(pcPrincipal);
+    if Assigned(FormularioPestana) then
+      Result := EjecutarAtajoFormulario(FormularioPestana, Message);
+    if not Result then
+      Result := inherited IsShortCut(Message);
   end;
 end;
 

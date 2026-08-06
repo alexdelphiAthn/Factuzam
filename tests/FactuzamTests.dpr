@@ -615,7 +615,19 @@ uses
   PruebasComparacionCopias in
     'PruebasComparacionCopias.pas',
   PruebasVerificacionXadesNoVerifactu in
-    'PruebasVerificacionXadesNoVerifactu.pas';
+    'PruebasVerificacionXadesNoVerifactu.pas',
+  inLibCajaDepositos in
+    '..\src\Caja\Lib\inLibCajaDepositos.pas',
+  inLibTicketRecordatorio in
+    '..\src\Lib\inLibTicketRecordatorio.pas',
+  inLibVerifactuDesgloseFiscal in
+    '..\src\verifactu\inLibVerifactuDesgloseFiscal.pas',
+  PruebasMetodosLargosOla20A in
+    'PruebasMetodosLargosOla20A.pas',
+  PruebasMetodosLargosOla20B in
+    'PruebasMetodosLargosOla20B.pas',
+  PruebasMetodosLargosOla20C in
+    'PruebasMetodosLargosOla20C.pas';
 
 var
   oEjecutor: ITestRunner;

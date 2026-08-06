@@ -129,6 +129,22 @@ type
     procedure AsegurarLineaNueva;
     procedure EnfocarSegunModo;
     procedure AbrirModalSolicitudes;
+    procedure ConfigurarModalSolicitudes(ADialogo: TForm);
+    function CrearPanelBotonesSolicitudes(
+      ADialogo: TForm): TPanel;
+    function CrearRejillaSolicitudes(
+      ADialogo: TForm): TcxGrid;
+    procedure TitularColumnasSolicitudes(
+      AVista: TcxGridDBTableView);
+    procedure CrearBotonesSolicitudes(
+      ADialogo: TForm;
+      APanel: TPanel);
+    function MostrarModalSolicitudes(
+      out ANumero, ASerie: string): Integer;
+    procedure PonerCantidadesSolicitudACero;
+    procedure AplicarSolicitudSeleccionada(
+      const ANumero, ASerie: string;
+      AResultadoModal: Integer);
     procedure ModalImprimirClick(Sender: TObject);
     procedure CerrarSolicitudCargada;
     procedure DenegarSolicitudCargada;
@@ -1060,16 +1076,177 @@ begin
   // Aqui no se hace nada; el combo solo se usa en Traspaso/Solicitar.
 end;
 
+procedure TfrmMtoOpeTraspaso.ConfigurarModalSolicitudes(
+  ADialogo: TForm);
+begin
+  ADialogo.Caption := STituloSolicitudesPendientesAtender;
+  ADialogo.Position := poOwnerFormCenter;
+  ADialogo.BorderStyle := bsDialog;
+  ADialogo.ClientWidth := 760;
+  ADialogo.ClientHeight := 440;
+end;
+
+function TfrmMtoOpeTraspaso.CrearPanelBotonesSolicitudes(
+  ADialogo: TForm): TPanel;
+begin
+  Result := TPanel.Create(ADialogo);
+  Result.Parent := ADialogo;
+  Result.Align := alBottom;
+  Result.Height := 60;
+  Result.BevelOuter := bvNone;
+end;
+
+function TfrmMtoOpeTraspaso.CrearRejillaSolicitudes(
+  ADialogo: TForm): TcxGrid;
+var
+  oFuente: TDataSource;
+  oVista: TcxGridDBTableView;
+begin
+  Result := TcxGrid.Create(ADialogo);
+  Result.Parent := ADialogo;
+  Result.Align := alClient;
+  oVista := Result.CreateView(TcxGridDBTableView) as TcxGridDBTableView;
+  Result.Levels.Add.GridView := oVista;
+  oFuente := TDataSource.Create(ADialogo);
+  oFuente.DataSet := FQModalSolic;
+  oVista.DataController.DataSource := oFuente;
+  oVista.OptionsData.Editing := False;
+  oVista.OptionsData.Inserting := False;
+  oVista.OptionsData.Deleting := False;
+  oVista.OptionsSelection.CellSelect := False;
+  oVista.OptionsView.GroupByBox := False;
+  oVista.OptionsView.ColumnAutoWidth := True;
+  oVista.DataController.CreateAllItems;
+  TitularColumnasSolicitudes(oVista);
+end;
+
+procedure TfrmMtoOpeTraspaso.TitularColumnasSolicitudes(
+  AVista: TcxGridDBTableView);
+var
+  iColumna: Integer;
+  sCampo: string;
+begin
+  for iColumna := 0 to AVista.ColumnCount - 1 do
+  begin
+    sCampo := AVista.Columns[iColumna].DataBinding.FieldName;
+    if SameText(sCampo, 'NUMERO_TRSOL') then
+      AVista.Columns[iColumna].Caption := SCaptionColNumeroSolicitud
+    else if SameText(sCampo, 'SERIE_TRSOL') then
+      AVista.Columns[iColumna].Caption := SCaptionColSerieSolicitud
+    else if SameText(sCampo, 'FECHA_TRSOL') then
+      AVista.Columns[iColumna].Caption := SCaptionColFechaSolicitud
+    else if SameText(sCampo, 'CODIGO_ALM_DESTINO_TRSOL') then
+      AVista.Columns[iColumna].Caption := SCaptionColPideAlmacen
+    else if SameText(sCampo, 'ESTADO_TRSOL') then
+      AVista.Columns[iColumna].Caption := SCaptionColEstadoSolicitud
+    else if SameText(sCampo, 'LINEAS_PEND_TRSOL') then
+      AVista.Columns[iColumna].Caption := SCaptionColLineasSolicitud;
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.CrearBotonesSolicitudes(
+  ADialogo: TForm;
+  APanel: TPanel);
+var
+  oAtender: TButton;
+  oImprimir: TButton;
+  oNoAtender: TButton;
+  oSalir: TButton;
+begin
+  oAtender := TButton.Create(ADialogo);
+  oAtender.Parent := APanel;
+  oAtender.SetBounds(14, 12, 160, 36);
+  oAtender.Caption := SCaptionAtender;
+  oAtender.ModalResult := mrYes;
+  oAtender.Default := True;
+  oNoAtender := TButton.Create(ADialogo);
+  oNoAtender.Parent := APanel;
+  oNoAtender.SetBounds(186, 12, 160, 36);
+  oNoAtender.Caption := SCaptionNoAtender;
+  oNoAtender.ModalResult := mrNo;
+  oImprimir := TButton.Create(ADialogo);
+  oImprimir.Parent := APanel;
+  oImprimir.SetBounds(358, 12, 160, 36);
+  oImprimir.Caption := SCaptionImprimir;
+  oImprimir.OnClick := ModalImprimirClick;
+  oSalir := TButton.Create(ADialogo);
+  oSalir.Parent := APanel;
+  oSalir.SetBounds(606, 12, 140, 36);
+  oSalir.Caption := SCaptionSalir;
+  oSalir.Cancel := True;
+  oSalir.ModalResult := mrCancel;
+end;
+
+function TfrmMtoOpeTraspaso.MostrarModalSolicitudes(
+  out ANumero, ASerie: string): Integer;
+var
+  oDialogo: TForm;
+  oPanelBotones: TPanel;
+  oRejilla: TcxGrid;
+begin
+  ANumero := '';
+  ASerie := '';
+  oDialogo := TForm.CreateNew(Self);
+  try
+    ConfigurarModalSolicitudes(oDialogo);
+    oPanelBotones := CrearPanelBotonesSolicitudes(oDialogo);
+    oRejilla := CrearRejillaSolicitudes(oDialogo);
+    CrearBotonesSolicitudes(oDialogo, oPanelBotones);
+    oDialogo.ActiveControl := oRejilla;
+    Result := oDialogo.ShowModal;
+    ANumero := FQModalSolic.FieldByName('NUMERO_TRSOL').AsString;
+    ASerie := FQModalSolic.FieldByName('SERIE_TRSOL').AsString;
+  finally
+    FreeAndNil(oDialogo);
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.PonerCantidadesSolicitudACero;
+begin
+  FDatos.cdsLineas.DisableControls;
+  try
+    FDatos.cdsLineas.First;
+    while not FDatos.cdsLineas.Eof do
+    begin
+      if Trim(FDatos.cdsLineas.FieldByName('CODIGO_UNIDAD').AsString) <>
+         '' then
+      begin
+        FDatos.cdsLineas.Edit;
+        FDatos.cdsLineas.FieldByName('CANTIDAD').AsFloat := 0;
+        FDatos.cdsLineas.Post;
+      end;
+      FDatos.cdsLineas.Next;
+    end;
+  finally
+    FDatos.cdsLineas.EnableControls;
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.AplicarSolicitudSeleccionada(
+  const ANumero, ASerie: string;
+  AResultadoModal: Integer);
+begin
+  if (ANumero <> '') and
+     ((AResultadoModal = mrYes) or (AResultadoModal = mrNo)) then
+  begin
+    if FDatos.CargarSolicitud(ANumero, ASerie) then
+    begin
+      txtOrigen.Text :=
+        FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+      if AResultadoModal = mrNo then
+        PonerCantidadesSolicitudACero;
+      ActualizarTotal;
+    end
+    else
+      ShowMessage(SErrorCargarSolicitudTraspaso);
+  end;
+end;
+
 procedure TfrmMtoOpeTraspaso.AbrirModalSolicitudes;
 var
-  Dlg: TForm;
-  Grid: TcxGrid;
-  View: TcxGridDBTableView;
-  Ds: TDataSource;
-  pnlBot: TPanel;
-  btnAt, btnNo, btnImp, btnSalir: TButton;
-  sNum, sSer, sFld: string;
-  iRes, i: Integer;
+  iResultado: Integer;
+  sNumero: string;
+  sSerie: string;
 begin
   // Modal de solicitudes PENDIENTES que me toca atender. Tres acciones:
   //   Atender    -> trae la peticion con las cantidades pedidas (editables).
@@ -1086,116 +1263,8 @@ begin
       ShowMessage(SErrorSolicitudesTraspasoPendientesNoEncontradas)
     else
     begin
-      Dlg := TForm.CreateNew(Self);
-      try
-        Dlg.Caption := STituloSolicitudesPendientesAtender;
-        Dlg.Position := poOwnerFormCenter;
-        Dlg.BorderStyle := bsDialog;
-        Dlg.ClientWidth := 760;
-        Dlg.ClientHeight := 440;
-        pnlBot := TPanel.Create(Dlg);
-        pnlBot.Parent := Dlg;
-        pnlBot.Align := alBottom;
-        pnlBot.Height := 60;
-        pnlBot.BevelOuter := bvNone;
-        Grid := TcxGrid.Create(Dlg);
-        Grid.Parent := Dlg;
-        Grid.Align := alClient;
-        View := Grid.CreateView(TcxGridDBTableView) as TcxGridDBTableView;
-        Grid.Levels.Add.GridView := View;
-        Ds := TDataSource.Create(Dlg);
-        Ds.DataSet := FQModalSolic;
-        View.DataController.DataSource := Ds;
-        View.OptionsData.Editing := False;
-        View.OptionsData.Inserting := False;
-        View.OptionsData.Deleting := False;
-        View.OptionsSelection.CellSelect := False;
-        View.OptionsView.GroupByBox := False;
-        View.OptionsView.ColumnAutoWidth := True;
-        View.DataController.CreateAllItems;
-        // Titulos legibles para las columnas conocidas de la consulta.
-        for i := 0 to View.ColumnCount - 1 do
-        begin
-          sFld := View.Columns[i].DataBinding.FieldName;
-          if SameText(sFld, 'NUMERO_TRSOL') then
-            View.Columns[i].Caption := SCaptionColNumeroSolicitud
-          else if SameText(sFld, 'SERIE_TRSOL') then
-            View.Columns[i].Caption := SCaptionColSerieSolicitud
-          else if SameText(sFld, 'FECHA_TRSOL') then
-            View.Columns[i].Caption := SCaptionColFechaSolicitud
-          else if SameText(sFld, 'CODIGO_ALM_DESTINO_TRSOL') then
-            View.Columns[i].Caption := SCaptionColPideAlmacen
-          else if SameText(sFld, 'ESTADO_TRSOL') then
-            View.Columns[i].Caption := SCaptionColEstadoSolicitud
-          else if SameText(sFld, 'LINEAS_PEND_TRSOL') then
-            View.Columns[i].Caption := SCaptionColLineasSolicitud;
-        end;
-        btnAt := TButton.Create(Dlg);
-        btnAt.Parent := pnlBot;
-        btnAt.SetBounds(14, 12, 160, 36);
-        btnAt.Caption := SCaptionAtender;
-        btnAt.ModalResult := mrYes;
-        btnAt.Default := True;
-        btnNo := TButton.Create(Dlg);
-        btnNo.Parent := pnlBot;
-        btnNo.SetBounds(186, 12, 160, 36);
-        btnNo.Caption := SCaptionNoAtender;
-        btnNo.ModalResult := mrNo;
-        btnImp := TButton.Create(Dlg);
-        btnImp.Parent := pnlBot;
-        btnImp.SetBounds(358, 12, 160, 36);
-        btnImp.Caption := SCaptionImprimir;
-        btnImp.OnClick := ModalImprimirClick;
-        btnSalir := TButton.Create(Dlg);
-        btnSalir.Parent := pnlBot;
-        btnSalir.SetBounds(606, 12, 140, 36);
-        btnSalir.Caption := SCaptionSalir;
-        btnSalir.Cancel := True;
-        btnSalir.ModalResult := mrCancel;
-        Dlg.ActiveControl := Grid;
-        iRes := Dlg.ShowModal;
-        // La rejilla navega el dataset, asi que la fila enfocada es el registro
-        // actual del query. Lo leemos antes de liberar el dialogo.
-        sNum := FQModalSolic.FieldByName('NUMERO_TRSOL').AsString;
-        sSer := FQModalSolic.FieldByName('SERIE_TRSOL').AsString;
-      finally
-        FreeAndNil(Dlg);
-      end;
-      if (sNum <> '') and ((iRes = mrYes) or (iRes = mrNo)) then
-      begin
-        if FDatos.CargarSolicitud(sNum, sSer) then
-        begin
-          txtOrigen.Text :=
-            FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
-          // No atender: arranca con todo a 0 (denegar por defecto). El usuario
-          // pone el motivo por linea y, si quiere, sube alguna cantidad para
-          // servirla, y confirma con F12 (que reparte servido/denegado).
-          // Atender: arranca con las cantidades pedidas.
-          if iRes = mrNo then
-          begin
-            FDatos.cdsLineas.DisableControls;
-            try
-              FDatos.cdsLineas.First;
-              while not FDatos.cdsLineas.Eof do
-              begin
-                if Trim(FDatos.cdsLineas.FieldByName('CODIGO_UNIDAD').AsString)
-                   <> '' then
-                begin
-                  FDatos.cdsLineas.Edit;
-                  FDatos.cdsLineas.FieldByName('CANTIDAD').AsFloat := 0;
-                  FDatos.cdsLineas.Post;
-                end;
-                FDatos.cdsLineas.Next;
-              end;
-            finally
-              FDatos.cdsLineas.EnableControls;
-            end;
-          end;
-          ActualizarTotal;
-        end
-        else
-          ShowMessage(SErrorCargarSolicitudTraspaso);
-      end;
+      iResultado := MostrarModalSolicitudes(sNumero, sSerie);
+      AplicarSolicitudSeleccionada(sNumero, sSerie, iResultado);
     end;
   finally
     FreeAndNil(FQModalSolic);

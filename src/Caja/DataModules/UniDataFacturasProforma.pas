@@ -27,6 +27,9 @@ type
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
   private
+    function ConstruirSqlProformasCaja: string;
+    function ConstruirSqlFacturasTraspaso: string;
+    function ConstruirSqlPeriodosPendientes: string;
     procedure ConfigurarConsultas;
   public
     unqryEmpresas: TUniQuery;
@@ -74,6 +77,27 @@ end;
 procedure TdmFacturasProforma.ConfigurarConsultas;
 begin
   unqryTablaG.SQL.Text :=
+    ConstruirSqlProformasCaja +
+    ConstruirSqlFacturasTraspaso +
+    ConstruirSqlPeriodosPendientes +
+    ' ORDER BY FECHA_DOCUMENTO DESC, TIPO_DOCUMENTO, ' +
+    '          SERIE_DOCUMENTO, NUMERO_DOCUMENTO DESC';
+  unqryTablaG.KeyFields := 'CLAVE_DOCUMENTO';
+  unqryTablaG.ReadOnly := True;
+  unqryEmpresas.SQL.Text :=
+    'SELECT CODIGO_EMP_EMP, RAZON_SOCIAL_EMP ' +
+    '  FROM fza_empresas ' +
+    ' WHERE ESACTIVO_EMP = ''S'' ' +
+    ' ORDER BY ORDEN_EMP, RAZON_SOCIAL_EMP';
+  // Catálogo pequeño: se materializa antes de que el historial abra en
+  // segundo plano, evitando un fetch pendiente sobre la misma conexión.
+  unqryEmpresas.SpecificOptions.Values['FetchAll'] := 'True';
+  unqryEmpresas.ReadOnly := True;
+end;
+
+function TdmFacturasProforma.ConstruirSqlProformasCaja: string;
+begin
+  Result :=
     'SELECT CONCAT(''VE-'', P.ID_PROCAJ) AS CLAVE_DOCUMENTO, ' +
     '       ''VE'' AS TIPO_DOCUMENTO, P.SERIE_PROCAJ AS SERIE_DOCUMENTO, ' +
     '       P.ID_FACPER_PROCAJ AS ID_PERIODO, ' +
@@ -103,7 +127,12 @@ begin
     '         AS CANTIDAD_AJUSTES ' +
     '  FROM fza_proformas_caja P ' +
     '  LEFT JOIN fza_facturacion_caja_periodos FP ' +
-    '    ON FP.ID_FACPER = P.ID_FACPER_PROCAJ ' +
+    '    ON FP.ID_FACPER = P.ID_FACPER_PROCAJ ';
+end;
+
+function TdmFacturasProforma.ConstruirSqlFacturasTraspaso: string;
+begin
+  Result :=
     'UNION ALL ' +
     'SELECT CONCAT(''TA-'', MIN(M.ID_FACOP)) AS CLAVE_DOCUMENTO, ' +
     '       ''TA'' AS TIPO_DOCUMENTO, ' +
@@ -146,7 +175,12 @@ begin
     '          M.CODIGO_EMP_DESTINO_FACOP, ' +
     '          F.RAZON_SOCIAL_CLIENTE_FAC, ED.RAZON_SOCIAL_EMP, ' +
     '          M.ESTADO_FACOP, F.TOTAL_BASES_FAC, ' +
-    '          F.TOTAL_IMPUESTOS_FAC, F.TOTAL_LIQUIDO_FAC ' +
+    '          F.TOTAL_IMPUESTOS_FAC, F.TOTAL_LIQUIDO_FAC ';
+end;
+
+function TdmFacturasProforma.ConstruirSqlPeriodosPendientes: string;
+begin
+  Result :=
     'UNION ALL ' +
     'SELECT CONCAT(''PER-'', FP.ID_FACPER) AS CLAVE_DOCUMENTO, ' +
     '       FP.MODALIDAD_FACPER AS TIPO_DOCUMENTO, ' +
@@ -178,20 +212,7 @@ begin
     ' WHERE NOT EXISTS (SELECT 1 FROM fza_proformas_caja P ' +
     '                    WHERE P.ID_FACPER_PROCAJ = FP.ID_FACPER) ' +
     '   AND NOT EXISTS (SELECT 1 FROM fza_facturas_operaciones_caja M ' +
-    '                    WHERE M.ID_FACPER_FACOP = FP.ID_FACPER) ' +
-    ' ORDER BY FECHA_DOCUMENTO DESC, TIPO_DOCUMENTO, ' +
-    '          SERIE_DOCUMENTO, NUMERO_DOCUMENTO DESC';
-  unqryTablaG.KeyFields := 'CLAVE_DOCUMENTO';
-  unqryTablaG.ReadOnly := True;
-  unqryEmpresas.SQL.Text :=
-    'SELECT CODIGO_EMP_EMP, RAZON_SOCIAL_EMP ' +
-    '  FROM fza_empresas ' +
-    ' WHERE ESACTIVO_EMP = ''S'' ' +
-    ' ORDER BY ORDEN_EMP, RAZON_SOCIAL_EMP';
-  // Catálogo pequeño: se materializa antes de que el historial abra en
-  // segundo plano, evitando un fetch pendiente sobre la misma conexión.
-  unqryEmpresas.SpecificOptions.Values['FetchAll'] := 'True';
-  unqryEmpresas.ReadOnly := True;
+    '                    WHERE M.ID_FACPER_FACOP = FP.ID_FACPER) ';
 end;
 
 procedure TdmFacturasProforma.AbrirDetalles;

@@ -494,8 +494,6 @@ type
     procedure ActualizarLabelTotal(Sender: TObject; NuevoTotal: Currency);
     procedure RecalcularLineasDesdeDM;
     function  ValidarSkuParaVenta(const SkuFinal: string): Boolean;
-    procedure BuscarEmpleados;
-    procedure BuscarClientes;
     procedure ProcesarResultadoCierre(
       const AResultado: TResultadoCierreVenta;
       AEnviarEmail: Boolean;
@@ -581,10 +579,10 @@ uses
   inLibCajaVentaCliente,
   inLibCajaVentaOperacion,
   inLibCajaOpePresentacion,
-  inLibCajaEntrada,
-  inMtoCajaEntradaVcl,
   inMtoCajaCierreVentaVcl,
   inMtoCajaOperacionVclInyeccion,
+  inMtoCajaOpeEntradaVcl,
+  inMtoCajaOpeBusquedaVcl,
   UniDataFacturasLecturas,
   inMtoModalDevolucionTicket,
   inMtoModalSeleccionVentaOrigen,
@@ -604,125 +602,111 @@ end;
 
 procedure InicializarEntradaCajaVcl(AFormulario: TfrmMtoOpeCaja);
 var
-  Operaciones: TOperacionesEntradaCajaVcl;
-  PuertoOperaciones: IOperacionesEntradaCaja;
-  Vista: IVistaEntradaCaja;
+  oContexto: TContextoEntradaCajaOpeVcl;
 begin
-  Operaciones := Default(TOperacionesEntradaCajaVcl);
-  Operaciones.Disponible :=
-    function: Boolean
-    begin
-      Result := Assigned(AFormulario.DatosCaja) and
-        AFormulario.DatosCaja.cdsLineas.Active;
-    end;
-  Operaciones.VendedorAsignado :=
-    function: Boolean
-    begin
-      Result := Trim(AFormulario.DatosCaja.cdsCabecera.FieldByName(
-        'CODIGO_CAJERO_FAC').AsString) <> '';
-    end;
-  Operaciones.PermitirSku :=
+  oContexto := Default(TContextoEntradaCajaOpeVcl);
+  oContexto.Cabecera := AFormulario.DatosCaja.cdsCabecera;
+  oContexto.Lineas := AFormulario.DatosCaja.cdsLineas;
+  oContexto.VistaLineas := AFormulario.tvLineasOpe;
+  oContexto.TemporizadorBusqueda := AFormulario.tmrBusq;
+  oContexto.BotonVendedor := AFormulario.btnCodigoEmpleado;
+  oContexto.Conexion := AFormulario.ConexionPrincipal;
+  oContexto.RepositorioFacturas :=
+    AFormulario.FLecturas.RepositorioFacturas;
+  oContexto.ValidadorArticulos :=
+    AFormulario.FDependenciasPantalla.ValidadorArticulos;
+  oContexto.PermitirSku :=
     function(const ACodigoSku: string): Boolean
     begin
       Result := AFormulario.ValidarSkuParaVenta(ACodigoSku);
     end;
-  Operaciones.PrepararLinea :=
-    procedure
-    begin
-      if AFormulario.DatosCaja.cdsLineas.State = dsInsert then
-      begin
-        if Trim(AFormulario.DatosCaja.cdsLineas.FieldByName(
-          'CODIGO_ART_FACLIN').AsString) <> '' then
-        begin
-          AFormulario.DatosCaja.cdsLineas.Post;
-          AFormulario.DatosCaja.cdsLineas.Append;
-        end;
-      end
-      else
-      begin
-        if AFormulario.DatosCaja.cdsLineas.State = dsEdit then
-          AFormulario.DatosCaja.cdsLineas.Post;
-        AFormulario.DatosCaja.cdsLineas.Append;
-      end;
-    end;
-  Operaciones.ConsolidarSku :=
+  oContexto.ConsolidarSku :=
     function(const ACodigoSku: string): Boolean
     begin
       Result := AFormulario.ConsolidarSiExiste(ACodigoSku);
     end;
-  Operaciones.AplicarCodigo :=
-    procedure(const ACodigo, ACodigoSku, ACodigoArticulo: string)
+  oContexto.RellenarArticulo :=
+    function(const ACodigo: string): Boolean
     begin
-      AFormulario.FEntrada.ResolviendoPorScanner := True;
-      try
-        AFormulario.RellenarDatosArticuloEnDataset(ACodigo);
-      finally
-        AFormulario.FEntrada.ResolviendoPorScanner := False;
-      end;
-      if (Trim(ACodigoSku) <> '') and
-         (ACodigoSku <> ACodigoArticulo) then
-        AFormulario.RellenarAtributosDesdeSku(ACodigoSku);
-      if AFormulario.DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
-        AFormulario.DatosCaja.cdsLineas.Post;
-      GridRecalc(
-        AFormulario.ConexionPrincipal,
-        AFormulario.FLecturas.RepositorioFacturas,
-        nil,
-        AFormulario.tvLineasOpe,
-        AFormulario.DatosCaja.cdsLineas,
-        AFormulario.DatosCaja.cdsCabecera,
-        AFormulario.ActualizarLabelTotal);
+      Result := AFormulario.RellenarDatosArticuloEnDataset(ACodigo);
     end;
-  Operaciones.Iniciar :=
-    procedure
+  oContexto.RellenarAtributos :=
+    procedure(const ACodigoSku: string)
     begin
-      AFormulario.FEntrada.ProcesandoLectura := True;
+      AFormulario.RellenarAtributosDesdeSku(ACodigoSku);
     end;
-  Operaciones.Finalizar :=
-    procedure
+  oContexto.CambiarResolviendo :=
+    procedure(AEstado: Boolean)
     begin
-      AFormulario.FEntrada.ProcesandoLectura := False;
+      AFormulario.FEntrada.ResolviendoPorScanner := AEstado;
     end;
-  Operaciones.MostrarError :=
-    procedure(const AMensaje: string)
+  oContexto.CambiarProcesando :=
+    procedure(AEstado: Boolean)
     begin
-      ShowMessage(AMensaje);
+      AFormulario.FEntrada.ProcesandoLectura := AEstado;
     end;
-  Operaciones.EnfocarVendedor :=
-    procedure
-    begin
-      if AFormulario.btnCodigoEmpleado.CanFocus then
-        AFormulario.btnCodigoEmpleado.SetFocus;
-    end;
-  Operaciones.PrepararLectura :=
-    procedure
-    begin
-      AFormulario.tmrBusq.Enabled := False;
-      if AFormulario.tvLineasOpe.Controller.
-         EditingController.IsEditing then
-        AFormulario.tvLineasOpe.Controller.
-          EditingController.HideEdit(False);
-    end;
-  Operaciones.RefrescarConsolidacion :=
-    procedure
-    begin
-      AFormulario.tvLineasOpe.DataController.UpdateItems(True);
-    end;
-  Operaciones.PrepararSiguiente :=
+  oContexto.AsegurarLinea :=
     procedure
     begin
       AFormulario.AsegurarLineaNueva;
-      AFormulario.tvLineasOpe.Controller.
-        EditingController.ShowEdit;
     end;
-  CrearPuertosEntradaCajaVcl(
-    Operaciones,
-    PuertoOperaciones,
-    Vista);
-  AFormulario.FEntrada.Aplicacion := CrearAplicacionEntradaCaja(
-    AFormulario.FDependenciasPantalla.ValidadorArticulos,
-    PuertoOperaciones,
-    Vista);
+  oContexto.ActualizarTotal := AFormulario.ActualizarLabelTotal;
+  AFormulario.FEntrada.Aplicacion :=
+    CrearAplicacionEntradaCajaOpeVcl(oContexto);
+end;
+
+function CrearContextoBusquedaCajaVcl(
+  AFormulario: TfrmMtoOpeCaja): TContextoBusquedaCajaVcl;
+begin
+  Result := Default(TContextoBusquedaCajaVcl);
+  Result.Lineas := AFormulario.DatosCaja.cdsLineas;
+  Result.Rejilla := AFormulario.cxgrdLineasOpe;
+  Result.VistaLineas := AFormulario.tvLineasOpe;
+  Result.BotonEmpleado := AFormulario.btnCodigoEmpleado;
+  Result.BotonCliente := AFormulario.btnCodigoCliente;
+  Result.ParametrosCaja := AFormulario.ParametrosCaja;
+  Result.RepositorioConsultas :=
+    AFormulario.FDependencias.RepositorioConsultas;
+  Result.AbrirAtributo :=
+    procedure(Sender: TObject)
+    begin
+      AFormulario.tvLineasOpeAvButtonClick(Sender, 0);
+    end;
+  Result.BuscarArticulo :=
+    function: string
+    begin
+      Result := AFormulario.BuscarArticulo;
+    end;
+  Result.RellenarArticulo :=
+    function(const ACodigo: string): Boolean
+    begin
+      Result := AFormulario.RellenarDatosArticuloEnDataset(ACodigo);
+    end;
+  Result.ValidarSku :=
+    function(const ACodigoSku: string): Boolean
+    begin
+      Result := AFormulario.ValidarSkuParaVenta(ACodigoSku);
+    end;
+  Result.ActualizarColumnas :=
+    procedure(const ACodigoArticulo: string)
+    begin
+      AFormulario.ActualizarColumnasDinamicas(ACodigoArticulo);
+    end;
+  Result.NumeroAtributos :=
+    function: Integer
+    begin
+      Result := AFormulario.FEditorLineas.NumeroAtributosActual;
+    end;
+  Result.RellenarAtributos :=
+    procedure(const ACodigoSku: string)
+    begin
+      AFormulario.RellenarAtributosDesdeSku(ACodigoSku);
+    end;
+  Result.ObtenerColumna :=
+    function(ANumero: Integer): TcxGridDBColumn
+    begin
+      Result := AFormulario.ObtenerColumnaPorTag(ANumero);
+    end;
 end;
 
 function CrearContextoCierreVentaCajaVcl(
@@ -2446,111 +2430,9 @@ begin
 end;
 
 procedure TfrmMtoOpeCaja.actBuscarEmpleadosExecute(Sender: TObject);
-var
-  LCtrl: TWinControl;
-  CodigoBuscado: string;
-  CurrentEdit: TcxCustomEdit;
-  bContinuar: Boolean;
 begin
-  bContinuar := True;
-  if tvLineasOpe.Controller.FocusedItem <> nil then
-  if (tvLineasOpe.Controller.FocusedItem.Tag > 0) then
-  begin
-    if dsLineas.DataSet.State = dsBrowse then
-      dsLineas.DataSet.Edit;
-    if not tvLineasOpe.Controller.EditingController.IsEditing then
-    begin
-      tvLineasOpe.Controller.EditingController.ShowEdit;
-    end;
-    if tvLineasOpe.Controller.EditingController.IsEditing then
-     begin
-       CurrentEdit := tvLineasOpe.Controller.EditingController.Edit;
-       // F3 sobre una columna de atributo (Color, Talla, ...) abre el popup
-       // SeleccionarAvConPaleta directamente, equivalente al antiguo
-       // Combo.DroppedDown := True.
-       if (CurrentEdit is TcxButtonEdit) then
-       begin
-         tvLineasOpeAvButtonClick(CurrentEdit, 0);
-         bContinuar := False;
-       end;
-    end;
-  end;
-  if bContinuar then
-  begin
-    LCtrl := Screen.ActiveControl;
-    if (LCtrl = btnCodigoEmpleado) or
-       (LCtrl.Parent = btnCodigoEmpleado) then
-      BuscarEmpleados
-    else if (LCtrl = btnCodigoCliente) or
-            (LCtrl.Parent = btnCodigoCliente) then
-      BuscarClientes
-    else
-    begin
-      if DatosCaja.cdsLineas.Active and
-         not DatosCaja.cdsLineas.IsEmpty then
-      begin
-        var VieneDeDep := DatosCaja.cdsLineas.FieldByName(
-          'VIENE_DE_DEPOSITO').AsString;
-        bContinuar := (VieneDeDep <> 'S') and (VieneDeDep <> 'A');
-      end;
-      if bContinuar then
-      begin
-        CodigoBuscado := BuscarArticulo;
-        if CodigoBuscado <> '' then
-        begin
-          if DatosCaja.cdsLineas.State = dsBrowse then
-          begin
-            if DatosCaja.cdsLineas.IsEmpty then
-              DatosCaja.cdsLineas.Append
-            else
-              DatosCaja.cdsLineas.Edit;
-          end;
-          if RellenarDatosArticuloEnDataset(CodigoBuscado) then
-          begin
-            var CodArticulo := DatosCaja.cdsLineas.FieldByName(
-              'CODIGO_ART_FACLIN').AsString;
-            var SkuDetectado := DatosCaja.cdsLineas.FieldByName(
-              'CODIGO_UNIDAD_FACLIN').AsString;
-            if (Trim(SkuDetectado) <> '') and
-               (SkuDetectado <> CodArticulo) and
-               not ValidarSkuParaVenta(SkuDetectado) then
-              EliminarLineaVentaPorValidacion(DatosCaja.cdsLineas)
-            else
-            begin
-              ActualizarColumnasDinamicas(CodArticulo);
-              var NumAtributos := FEditorLineas.NumeroAtributosActual;
-              if (Trim(SkuDetectado) <> '') and
-                 (NumAtributos > 0) then
-                RellenarAtributosDesdeSku(SkuDetectado);
-              cxgrdLineasOpe.SetFocus;
-              var EsSkuCompleto := (Trim(SkuDetectado) <> '') and
-                (SkuDetectado <> CodArticulo);
-              var AutoPasarLinea := ParametrosCaja.GetBool(
-                'vgerMoverLineaIdentif', False);
-              if (NumAtributos > 0) and not EsSkuCompleto then
-              begin
-                var PrimeraCol := ObtenerColumnaPorTag(1);
-                if PrimeraCol <> nil then
-                begin
-                  PrimeraCol.Visible := True;
-                  tvLineasOpe.Controller.FocusedColumn := PrimeraCol;
-                  tvLineasOpe.Controller.EditingController.ShowEdit;
-                end;
-              end
-              else if AutoPasarLinea then
-              begin
-                if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
-                  DatosCaja.cdsLineas.Post;
-                DatosCaja.cdsLineas.Append;
-                tvLineasOpe.Controller.FocusedColumn := tvArticulo;
-                tvLineasOpe.Controller.EditingController.ShowEdit;
-              end;
-            end;
-          end;
-        end;
-      end;
-    end;
-  end;
+  EjecutarBusquedaContextualCajaVcl(
+    CrearContextoBusquedaCajaVcl(Self));
 end;
 
 procedure TfrmMtoOpeCaja.actCargarCtaExecute(Sender: TObject);
@@ -3056,43 +2938,16 @@ begin
     TcxCustomEdit(Sender).ValidateEdit(True);
 end;
 
-procedure TfrmMtoOpeCaja.BuscarClientes;
-var
-  formulario: TfrmMtoSearch;
-  Consulta: IResultadoConsultaCaja;
-begin
-  Consulta := FDependencias.RepositorioConsultas.ConsultarClientes;
-  formulario := TfrmMtoSearch.Create(nil);
-  try
-    formulario.Name := 'frmMtoCliSearch';
-    formulario.Caption := STituloBusquedaClientes;
-    formulario.dsTablaG.DataSet := Consulta.DataSet;
-    formulario.ProcesarPerfiles;
-    formulario.ShowModal;
-    if formulario.sFicha = 'S' then
-    begin
-      btnCodigoCliente.Text :=
-        Consulta.DataSet.FieldByName('Código').AsString;
-      if btnCodigoCliente.ValidateEdit(True) then
-      begin
-        cxgrdLineasOpe.SetFocus;
-      end;
-    end;
-  finally
-    FreeAndNil(formulario);
-  end;
-end;
-
 procedure TfrmMtoOpeCaja.btnCodigoEmpleadoPropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
-  BuscarEmpleados;
+  BuscarEmpleadoCajaVcl(CrearContextoBusquedaCajaVcl(Self));
 end;
 
 procedure TfrmMtoOpeCaja.btnCodigoClientePropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
-  BuscarClientes;
+  BuscarClienteCajaVcl(CrearContextoBusquedaCajaVcl(Self));
 end;
 
 procedure TfrmMtoOpeCaja.btnCodigoEmpleadoPropertiesValidate(Sender: TObject;
@@ -3419,33 +3274,6 @@ begin
   Self.Hide;
 end;
 
-procedure TfrmMtoOpeCaja.BuscarEmpleados;
-var
-  formulario: TfrmMtoSearch;
-  Consulta: IResultadoConsultaCaja;
-begin
-  Consulta := FDependencias.RepositorioConsultas.ConsultarEmpleados;
-  formulario := TfrmMtoSearch.Create(nil);
-  try
-    formulario.Name := 'frmMtoEmpCajSearch';
-    formulario.Caption := STituloBusquedaEmpleadosCaja;
-    formulario.dsTablaG.DataSet := Consulta.DataSet;
-    formulario.ProcesarPerfiles;
-    formulario.ShowModal;
-    if formulario.sFicha = 'S' then
-    begin
-      btnCodigoEmpleado.Text :=
-        Consulta.DataSet.Fields[0].AsString;
-      if btnCodigoEmpleado.ValidateEdit(True) then
-      begin
-        btnCodigoCliente.SetFocus;
-      end;
-    end;
-  finally
-    FreeAndNil(formulario);
-  end;
-end;
-
 procedure TfrmMtoOpeCaja.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Action := caFree;
@@ -3628,8 +3456,8 @@ begin
   FEntrada.Lector.OnLecturaIniciada := LectorLecturaIniciada;
   FEntrada.Lector.OnRejillaEditando := LectorRejillaEditando;
   FEntrada.Lector.OnEsControlRejilla := LectorEsControlRejilla;
-  InicializarEntradaCajaVcl(Self);
   InicializarServiciosOperacionCajaVcl(Self);
+  InicializarEntradaCajaVcl(Self);
   dsLineas.DataSet := DatosCaja.cdsLineas;
   dsStock.DataSet := nil;
   dsLineas.OnDataChange := DsLineasDataChange;

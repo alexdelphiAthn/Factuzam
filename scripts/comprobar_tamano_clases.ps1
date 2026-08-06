@@ -1,7 +1,7 @@
 ﻿param(
   [string]$Raiz = (Split-Path -Parent $PSScriptRoot),
   [ValidateRange(0, [int]::MaxValue)]
-  [int]$MaximoLineasPorClase = 2180,
+  [int]$MaximoLineasPorClase = 1999,
   [ValidateRange(0, [int]::MaxValue)]
   [int]$MaximoMetodosPorClase = 103,
   [ValidateRange(0, [int]::MaxValue)]
@@ -20,8 +20,8 @@
       ObjetivoMetodos = 120
     }
     TfrmMtoOpeCaja = @{
-      Lineas = 2121
-      Metodos = 97
+      Lineas = 1949
+      Metodos = 95
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
     }
@@ -34,7 +34,7 @@
       ObjetivoCampos = 35
     }
     TdmCajaOpe = @{
-      Lineas = 1724
+      Lineas = 1704
       Metodos = 27
       Campos = 12
       ObjetivoLineas = 2000
@@ -58,7 +58,7 @@
       ObjetivoCampos = 30
     }
     TdmPedidos = @{
-      Lineas = 1937
+      Lineas = 1847
       Metodos = 46
       Campos = 4
       ObjetivoLineas = 2000
@@ -74,7 +74,7 @@
       ObjetivoCampos = 30
     }
     TdmAlbaranes = @{
-      Lineas = 1841
+      Lineas = 1796
       Metodos = 42
       Campos = 5
       ObjetivoLineas = 2000
@@ -111,8 +111,14 @@
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
     }
+    TfrmMtoPedidos = @{
+      Lineas = 1872
+      Metodos = 73
+      ObjetivoLineas = 2000
+      ObjetivoMetodos = 120
+    }
     TfrmStockConsulta = @{
-      Lineas = 1031
+      Lineas = 1027
       Metodos = 38
       ObjetivoLineas = 2000
       ObjetivoMetodos = 120
@@ -354,7 +360,7 @@
       ObjetivoRutinas = 20
     }
     'src\DataModules\UniDataPedidosCompraRecepcion.pas' = @{
-      Lineas = 145
+      Lineas = 68
       Rutinas = 5
       ObjetivoLineas = 250
       ObjetivoRutinas = 10
@@ -372,7 +378,7 @@
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataAlbaranesCompraMovimientos.pas' = @{
-      Lineas = 672
+      Lineas = 521
       Rutinas = 14
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
@@ -438,8 +444,8 @@
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataArticulosVariaciones.pas' = @{
-      Lineas = 688
-      Rutinas = 43
+      Lineas = 102
+      Rutinas = 11
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
     }
@@ -456,8 +462,8 @@
       ObjetivoRutinas = 30
     }
     'src\DataModules\UniDataFotosRepositorio.pas' = @{
-      Lineas = 466
-      Rutinas = 33
+      Lineas = 40
+      Rutinas = 1
       ObjetivoLineas = 1200
       ObjetivoRutinas = 30
     }

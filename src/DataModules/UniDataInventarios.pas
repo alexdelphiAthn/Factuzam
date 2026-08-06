@@ -147,6 +147,19 @@ type
     // herencia via udspLineas + poIncFieldProps hacia que el cds rechazara
     // el Post antes de cdsLineasBeforePost.
     procedure ForzarRequiredFalseEnCdsLineas;
+    procedure DesactivarRequeridosLinea(ADataSet: TDataSet);
+    function ConstruirSnapshotLinea(ADataSet: TDataSet): string;
+    procedure RegistrarSnapshotLinea(ADataSet: TDataSet);
+    procedure ValidarClavesLinea(ADataSet: TDataSet);
+    procedure DescartarLineaSinArticulo(ADataSet: TDataSet);
+    procedure CompletarUnidadLinea(ADataSet: TDataSet);
+    function RequiereValidarSkuLinea(ADataSet: TDataSet): Boolean;
+    procedure ReconstruirSkuLinea(
+      ADataSet: TDataSet;
+      const ACodigoArticulo: string);
+    procedure ValidarOCrearSkuLinea(
+      ADataSet: TDataSet;
+      const ACodigoArticulo: string);
   public
     // === CONFIGURACIÓN ===
     procedure SetClavesActivas(const AEmpresa,
@@ -943,142 +956,155 @@ begin
     DataSet.FieldByName('UDS_REGULARIZADAS').AsCurrency := 0;
 end;
 
-procedure TdmInventarios.cdsLineasBeforePost(DataSet: TDataSet);
+procedure TdmInventarios.DesactivarRequeridosLinea(ADataSet: TDataSet);
 var
-  CodArticulo, CodSku, Valor, SkuRebuilt: string;
-  Atribs: array[0..4] of string;
-  i, NumAtr: Integer;
-  Snapshot: string;
-  F: TField;
+  iCampo: Integer;
 begin
-  // Validamos antes de Post para dar un mensaje claro en lugar del cryptico
-  // "Field value required" del TClientDataSet.
-  if not FDesempaquetando then
+  for iCampo := 0 to ADataSet.FieldCount - 1 do
+    ADataSet.Fields[iCampo].Required := False;
+end;
+
+function TdmInventarios.ConstruirSnapshotLinea(
+  ADataSet: TDataSet): string;
+var
+  oCampo: TField;
+  iCampo: Integer;
+begin
+  Result := '';
+  for iCampo := 0 to ADataSet.FieldCount - 1 do
   begin
-  // Belt-and-suspenders: aunque ya forzamos Required:=False en
-  // DataModuleCreate y tras cada cdsLineas.Open, el cds puede recibir
-  // un poIncFieldProps reactivado por alguna llamada interna durante
-  // la edicion. Lo volvemos a apagar ahora mismo, justo antes del
-  // chequeo InternalCheck del TClientDataSet (que ocurre tras nuestra
-  // BeforePost). Solo TOCAMOS los campos del propio cds (DataSet).
-  for i := 0 to DataSet.FieldCount - 1 do
-    DataSet.Fields[i].Required := False;
-  // Volcado del estado actual de los campos al log: si volvemos a ver
-  // un EDBClient 'Field value required', el log nos dice exactamente
-  // que campo iba vacio cuando el cds decidio rechazar el Post.
-  Snapshot := '';
-  for i := 0 to DataSet.FieldCount - 1 do
-  begin
-    F := DataSet.Fields[i];
-    if Snapshot <> '' then Snapshot := Snapshot + ' | ';
-    if F.IsNull then
-      Snapshot := Snapshot + F.FieldName + '=<NULL>' +
-        IfThen(F.Required, '(REQ)', '')
+    oCampo := ADataSet.Fields[iCampo];
+    if Result <> '' then
+      Result := Result + ' | ';
+    if oCampo.IsNull then
+      Result := Result + oCampo.FieldName + '=<NULL>' +
+        IfThen(oCampo.Required, '(REQ)', '')
     else
-      Snapshot := Snapshot + F.FieldName + '=' + F.AsString +
-        IfThen(F.Required, '(REQ)', '');
+      Result := Result + oCampo.FieldName + '=' + oCampo.AsString +
+        IfThen(oCampo.Required, '(REQ)', '');
   end;
+end;
+
+procedure TdmInventarios.RegistrarSnapshotLinea(ADataSet: TDataSet);
+begin
   RegistroLog.RegistrarInformacion('[cdsLineasBeforePost] state=' +
-    IntToStr(Ord(DataSet.State)) + ' | ' + Snapshot);
-  AsegurarFechaRecuentoLinea;
+    IntToStr(Ord(ADataSet.State)) + ' | ' +
+    ConstruirSnapshotLinea(ADataSet));
+end;
 
-  // Las 4 PK del inventario (empresa, almacen, serie, numero) son
-  // varchar NOT NULL. DSBase / MidasLib trata el string vacio como
-  // "valor requerido faltante" y revienta el Post con un
-  // EDBClient 'Field value required' generico antes incluso de mandar
-  // nada a la BBDD. Cazamos cada caso aqui con un mensaje claro.
-  if Trim(DataSet.FieldByName('CODIGO_EMP_INVLIN').AsString) = '' then
+procedure TdmInventarios.ValidarClavesLinea(ADataSet: TDataSet);
+begin
+  if Trim(ADataSet.FieldByName('CODIGO_EMP_INVLIN').AsString) = '' then
     raise Exception.Create(SErrorEmpresaCabeceraInventarioObligatoria);
-  if Trim(DataSet.FieldByName('CODIGO_ALM_INVLIN').AsString) = '' then
+  if Trim(ADataSet.FieldByName('CODIGO_ALM_INVLIN').AsString) = '' then
     raise Exception.Create(SErrorAlmacenCabeceraInventarioObligatorio);
-  if Trim(DataSet.FieldByName('SERIE_INV_INVLIN').AsString) = '' then
+  if Trim(ADataSet.FieldByName('SERIE_INV_INVLIN').AsString) = '' then
     raise Exception.Create(SErrorSerieCabeceraInventarioObligatoria);
-  if Trim(DataSet.FieldByName('NUMERO_INV_INVLIN').AsString) = '' then
+  if Trim(ADataSet.FieldByName('NUMERO_INV_INVLIN').AsString) = '' then
     raise Exception.Create(SErrorNumeroCabeceraInventarioObligatorio);
+end;
 
-  // Linea sin articulo: cancelar silenciosamente en vez de lanzar
-  // excepcion. El cxGrid hace Post automatico al navegar con las
-  // flechas; si la linea es un placeholder vacio, Cancel + Abort
-  // lo descarta sin molestar al usuario.
-  if Trim(DataSet.FieldByName('CODIGO_ART_INVLIN').AsString) = '' then
+procedure TdmInventarios.DescartarLineaSinArticulo(ADataSet: TDataSet);
+begin
+  if Trim(ADataSet.FieldByName('CODIGO_ART_INVLIN').AsString) = '' then
   begin
-    // Diferir el Cancel: no se puede llamar dentro de BeforePost
-    // porque el dataset esta en medio de un Post. El Abort cancela
-    // el Post y deja el registro en dsEdit/dsInsert; el Cancel
-    // posterior lo revierte a Browse.
     TThread.ForceQueue(nil,
       procedure
       begin
-        if cdsLineas.Active and (cdsLineas.State in [dsEdit, dsInsert]) then
+        if cdsLineas.Active and
+           (cdsLineas.State in [dsEdit, dsInsert]) then
           cdsLineas.Cancel;
       end);
     Abort;
   end;
-  // Si por alguna razon CODIGO_UNIDAD_INVLIN ha quedado vacio, lo rellenamos
-  // con el codigo del articulo. CODIGO_UNIDAD_INVLIN es NOT NULL en BD.
-  if Trim(DataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString) = '' then
-    DataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString :=
-      DataSet.FieldByName('CODIGO_ART_INVLIN').AsString;
+end;
 
-  CodArticulo := DataSet.FieldByName('CODIGO_ART_INVLIN').AsString;
+procedure TdmInventarios.CompletarUnidadLinea(ADataSet: TDataSet);
+begin
+  if Trim(ADataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString) = '' then
+    ADataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString :=
+      ADataSet.FieldByName('CODIGO_ART_INVLIN').AsString;
+end;
 
-  // LINEA PIVOTADA o MODO TALLAS ACTIVO (prueba ColumnSKUcxGrid): la
-  // talla vive en las CELDAS (fza_inventarios_celdas) y la linea
-  // consolida articulo+color, asi que ni tiene SKU cerrado ni debe
-  // reconstruirse aqui. El flag cubre ademas los Posts intermedios de
-  // la conversion (lineas con unidad=padre y pivote aun 0, p.ej.
-  // DEMO-CAMISA sin SKU). El des-pivote regenera lineas por SKU
-  // completo, que si pasan las validaciones cuando el modo se apaga.
-  if (not FModoPivoteActivo) and
-     ((DataSet.FindField('ID_AC_PIVOT_INVLIN') = nil) or
-      (DataSet.FieldByName('ID_AC_PIVOT_INVLIN').AsInteger <= 0)) then
+function TdmInventarios.RequiereValidarSkuLinea(
+  ADataSet: TDataSet): Boolean;
+begin
+  Result := (not FModoPivoteActivo) and
+    ((ADataSet.FindField('ID_AC_PIVOT_INVLIN') = nil) or
+     (ADataSet.FieldByName('ID_AC_PIVOT_INVLIN').AsInteger <= 0));
+end;
+
+procedure TdmInventarios.ReconstruirSkuLinea(
+  ADataSet: TDataSet;
+  const ACodigoArticulo: string);
+var
+  sSku: string;
+  sValor: string;
+  iAtributo: Integer;
+  iNumeroAtributos: Integer;
+begin
+  iNumeroAtributos := ADataSet.FieldByName(
+    'NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger;
+  if iNumeroAtributos > 0 then
   begin
-
-  // BACKSTOP: si el artículo tiene atributos requeridos, reconstruimos el SKU
-  // a partir de ATTRn_VALOR aquí mismo. Así, aunque OnAtributoChanged falle
-  // silenciosamente al cambiar Color/Talla, no dejamos pasar al Post (y luego
-  // a PRC_FZA_INVENTARIOS_APLICAR) una línea con CODIGO_UNIDAD_INVLIN igual
-  // al artículo padre, que generaba movimientos huérfanos sin SKU.
-  NumAtr := DataSet.FieldByName('NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger;
-  if NumAtr > 0 then
-  begin
-    SkuRebuilt := CodArticulo;
-    for i := 1 to NumAtr do
+    sSku := ACodigoArticulo;
+    for iAtributo := 1 to iNumeroAtributos do
     begin
-      Valor := Trim(DataSet.FieldByName('ATTR' + IntToStr(i) +
-                                                          '_VALOR').AsString);
-      if Valor = '' then
+      sValor := Trim(ADataSet.FieldByName('ATTR' +
+        IntToStr(iAtributo) + '_VALOR').AsString);
+      if sValor = '' then
         raise Exception.CreateFmt(SErrorAtributoLineaInventarioObligatorio,
-          [DataSet.FieldByName('LINEA_INVLIN').AsString,
-           CodArticulo, NumAtr, i]);
-      SkuRebuilt := SkuRebuilt + '/' + Valor;
+          [ADataSet.FieldByName('LINEA_INVLIN').AsString,
+           ACodigoArticulo, iNumeroAtributos, iAtributo]);
+      sSku := sSku + '/' + sValor;
     end;
-    if DataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString <> SkuRebuilt then
-      DataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString := SkuRebuilt;
-  end;
-
-  // Validación de SKU: si la línea apunta a un SKU con atributos
-  // (CODIGO_UNIDAD_INVLIN ≠ CODIGO_ART_INVLIN) que no existe en
-  // fza_articulos_skus, preguntar al usuario si quiere crearlo. Sin esto,
-  // PRC_FZA_INVENTARIOS_APLICAR genera movimientos huérfanos sobre un SKU
-  // que no existe ni en fza_articulos_skus ni en fza_atributos_sku, y el
-  // stock no aparece bien en las pestañas de stock pivotado.
-  CodSku := DataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString;
-  if (CodSku <> CodArticulo) and (not SkuExiste(CodSku)) then
-  begin
-    if not SolicitarConfirmacion(
-      Format(SPreguntaCrearSkuInventario, [CodSku])) then
-      raise Exception.CreateFmt(SErrorSkuInventarioNoExiste, [CodSku]);
-
-    for i := 0 to 4 do
-      Atribs[i] := DataSet.FieldByName('ATTR' + IntToStr(i + 1) +
-                                                          '_VALOR').AsString;
-    CrearSkuDesdeLinea(CodArticulo, CodSku, Atribs);
-  end;
-  end;
+    if ADataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString <> sSku then
+      ADataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString := sSku;
   end;
 end;
 
+procedure TdmInventarios.ValidarOCrearSkuLinea(
+  ADataSet: TDataSet;
+  const ACodigoArticulo: string);
+var
+  Atributos: array[0..4] of string;
+  sSku: string;
+  iAtributo: Integer;
+begin
+  sSku := ADataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString;
+  if (sSku <> ACodigoArticulo) and (not SkuExiste(sSku)) then
+  begin
+    if not SolicitarConfirmacion(
+      Format(SPreguntaCrearSkuInventario, [sSku])) then
+      raise Exception.CreateFmt(SErrorSkuInventarioNoExiste, [sSku]);
+    for iAtributo := 0 to 4 do
+      Atributos[iAtributo] := ADataSet.FieldByName('ATTR' +
+        IntToStr(iAtributo + 1) + '_VALOR').AsString;
+    CrearSkuDesdeLinea(ACodigoArticulo, sSku, Atributos);
+  end;
+end;
+
+procedure TdmInventarios.cdsLineasBeforePost(DataSet: TDataSet);
+var
+  sCodigoArticulo: string;
+begin
+  if not FDesempaquetando then
+  begin
+    DesactivarRequeridosLinea(DataSet);
+    RegistrarSnapshotLinea(DataSet);
+    AsegurarFechaRecuentoLinea;
+    ValidarClavesLinea(DataSet);
+    DescartarLineaSinArticulo(DataSet);
+    CompletarUnidadLinea(DataSet);
+    sCodigoArticulo := DataSet.FieldByName(
+      'CODIGO_ART_INVLIN').AsString;
+    if RequiereValidarSkuLinea(DataSet) then
+    begin
+      ReconstruirSkuLinea(DataSet, sCodigoArticulo);
+      ValidarOCrearSkuLinea(DataSet, sCodigoArticulo);
+    end;
+  end;
+end;
 procedure TdmInventarios.cdsLineasAfterPost(DataSet: TDataSet);
 begin
   // Durante el desempaquetado de atributos in-memory NO debemos enviar

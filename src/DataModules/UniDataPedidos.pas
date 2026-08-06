@@ -173,6 +173,113 @@ uses
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
+type
+  TContextoCreacionAlbaranPedido = record
+    NumeroPedido: string;
+    SeriePedido: string;
+    NumeroAlbaran: string;
+    SerieAlbaran: string;
+    CodigoAlmacen: string;
+    Usuario: string;
+  end;
+
+procedure EjecutarInicioAlbaranPedido(
+  AProcedimiento: TUniStoredProc;
+  var AContexto: TContextoCreacionAlbaranPedido);
+begin
+  AProcedimiento.Params.Clear;
+  AProcedimiento.Params.CreateParam(
+    ftString, 'p_NUMERO_PED', ptInput);
+  AProcedimiento.Params.CreateParam(
+    ftString, 'p_SERIE_PED', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_USUARIO', ptInput);
+  AProcedimiento.Params.CreateParam(
+    ftString, 'p_NUMERO_ALB', ptOutput);
+  AProcedimiento.Params.CreateParam(
+    ftString, 'p_SERIE_ALB', ptOutput);
+  AProcedimiento.ParamByName('p_NUMERO_PED').AsString :=
+    AContexto.NumeroPedido;
+  AProcedimiento.ParamByName('p_SERIE_PED').AsString :=
+    AContexto.SeriePedido;
+  AProcedimiento.ParamByName('p_USUARIO').AsString := AContexto.Usuario;
+  AProcedimiento.ExecProc;
+  AContexto.NumeroAlbaran := AProcedimiento.ParamByName(
+    'p_NUMERO_ALB').AsString;
+  AContexto.SerieAlbaran := AProcedimiento.ParamByName(
+    'p_SERIE_ALB').AsString;
+end;
+
+procedure EjecutarLineaAlbaranPedido(
+  AProcedimiento: TUniStoredProc;
+  const AContexto: TContextoCreacionAlbaranPedido;
+  const ALinea: TPair<string, Currency>);
+begin
+  AProcedimiento.Params.Clear;
+  AProcedimiento.Params.CreateParam(
+    ftString, 'p_NUMERO_ALB', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_SERIE_ALB', ptInput);
+  AProcedimiento.Params.CreateParam(
+    ftString, 'p_NUMERO_PED', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_SERIE_PED', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_LINEA_PED', ptInput);
+  AProcedimiento.Params.CreateParam(ftBCD, 'p_CANTIDAD', ptInput);
+  AProcedimiento.Params.CreateParam(
+    ftString, 'p_CODIGO_ALM', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_USUARIO', ptInput);
+  AProcedimiento.ParamByName('p_NUMERO_ALB').AsString :=
+    AContexto.NumeroAlbaran;
+  AProcedimiento.ParamByName('p_SERIE_ALB').AsString :=
+    AContexto.SerieAlbaran;
+  AProcedimiento.ParamByName('p_NUMERO_PED').AsString :=
+    AContexto.NumeroPedido;
+  AProcedimiento.ParamByName('p_SERIE_PED').AsString :=
+    AContexto.SeriePedido;
+  AProcedimiento.ParamByName('p_LINEA_PED').AsString := ALinea.Key;
+  AProcedimiento.ParamByName('p_CANTIDAD').AsCurrency := ALinea.Value;
+  AProcedimiento.ParamByName('p_CODIGO_ALM').AsString :=
+    AContexto.CodigoAlmacen;
+  AProcedimiento.ParamByName('p_USUARIO').AsString := AContexto.Usuario;
+  AProcedimiento.ExecProc;
+end;
+
+procedure EjecutarLineasAlbaranPedido(
+  AProcedimiento: TUniStoredProc;
+  const AContexto: TContextoCreacionAlbaranPedido;
+  ALineas: TList<TPair<string, Currency>>);
+var
+  Linea: TPair<string, Currency>;
+begin
+  for Linea in ALineas do
+  begin
+    if Linea.Value > 0 then
+      EjecutarLineaAlbaranPedido(AProcedimiento, AContexto, Linea);
+  end;
+end;
+
+procedure EjecutarFinAlbaranPedido(
+  AProcedimiento: TUniStoredProc;
+  const AContexto: TContextoCreacionAlbaranPedido);
+begin
+  AProcedimiento.Params.Clear;
+  AProcedimiento.Params.CreateParam(
+    ftString, 'p_NUMERO_ALB', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_SERIE_ALB', ptInput);
+  AProcedimiento.Params.CreateParam(
+    ftString, 'p_NUMERO_PED', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_SERIE_PED', ptInput);
+  AProcedimiento.Params.CreateParam(ftString, 'p_USUARIO', ptInput);
+  AProcedimiento.ParamByName('p_NUMERO_ALB').AsString :=
+    AContexto.NumeroAlbaran;
+  AProcedimiento.ParamByName('p_SERIE_ALB').AsString :=
+    AContexto.SerieAlbaran;
+  AProcedimiento.ParamByName('p_NUMERO_PED').AsString :=
+    AContexto.NumeroPedido;
+  AProcedimiento.ParamByName('p_SERIE_PED').AsString :=
+    AContexto.SeriePedido;
+  AProcedimiento.ParamByName('p_USUARIO').AsString := AContexto.Usuario;
+  AProcedimiento.ExecProc;
+end;
+
 { TdmPedidos }
 
 procedure TdmPedidos.DataModuleCreate(Sender: TObject);
@@ -1544,155 +1651,65 @@ function TdmPedidos.CrearAlbaranDesdePedido(out sNumeroAlb, sSerieAlb: string;
                                             Currency>>;
                                             const ACodigoAlmacen: string;
                                             const AAlbExistenteNum: string;
-                                            const AAlbExistenteSerie: string)
-                                            : Boolean;
+                                             const AAlbExistenteSerie: string)
+                                             : Boolean;
 var
-  i: Integer;
-  sNumeroPed, sSeriePed: string;
+  Contexto: TContextoCreacionAlbaranPedido;
   bTransPropia: Boolean;
-  par: TPair<string, Currency>;
 begin
   Result := False;
-  sNumeroAlb := ''; sSerieAlb := '';
+  sNumeroAlb := '';
+  sSerieAlb := '';
   if (aLineas <> nil) and (aLineas.Count > 0) then
   begin
-  // Asegura que los procedimientos existen (idempotente y barato).
-  // OJO: es DDL (CREATE PROCEDURE) y debe quedar FUERA de la
-  // transaccion: el DDL hace commit implicito en MySQL/MariaDB.
-  InstalarProcedimientos;
-
-  sNumeroPed := unqryTablaG.FieldByName('NUMERO_PED').AsString;
-  sSeriePed  := unqryTablaG.FieldByName('SERIE_PED').AsString;
-
-  // Alta atomica: cabecera + lineas + totales/estado del pedido se
-  // confirman o se deshacen juntos (mismo patron bTransPropia que
-  // TdmAlbaranes).
-  bTransPropia := not ConexionPrincipal.InTransaction;
-  if bTransPropia then
-    ConexionPrincipal.StartTransaction;
-  try
-    // 1) Cabecera del albarán. Si el llamador pasa un albarán existente
-    //    (AAlbExistenteNum), las líneas se añaden a ese albarán y se omite
-    //    crear cabecera; si no, se crea uno nuevo desde el pedido.
-    if Trim(AAlbExistenteNum) <> '' then
-    begin
-      sNumeroAlb := AAlbExistenteNum;
-      sSerieAlb  := AAlbExistenteSerie;
-      CopiarFormaPagoPedidoAAlbaran(sSeriePed, sNumeroPed, sSerieAlb,
-        sNumeroAlb, False);
-    end
-    else
-    begin
-      unstrdprcCrearAlbaranInicio.Params.Clear;
-      unstrdprcCrearAlbaranInicio.Params.CreateParam(
-        ftString, 'p_NUMERO_PED', ptInput);
-      unstrdprcCrearAlbaranInicio.Params.CreateParam(
-        ftString, 'p_SERIE_PED', ptInput);
-      unstrdprcCrearAlbaranInicio.Params.CreateParam(
-        ftString, 'p_USUARIO', ptInput);
-      unstrdprcCrearAlbaranInicio.Params.CreateParam(
-        ftString, 'p_NUMERO_ALB', ptOutput);
-      unstrdprcCrearAlbaranInicio.Params.CreateParam(
-        ftString, 'p_SERIE_ALB', ptOutput);
-      unstrdprcCrearAlbaranInicio.ParamByName(
-        'p_NUMERO_PED').AsString := sNumeroPed;
-      unstrdprcCrearAlbaranInicio.ParamByName(
-        'p_SERIE_PED').AsString := sSeriePed;
-      unstrdprcCrearAlbaranInicio.ParamByName('p_USUARIO').AsString :=
-        IdentidadSesion.Usuario;
-      unstrdprcCrearAlbaranInicio.ExecProc;
-      sNumeroAlb := unstrdprcCrearAlbaranInicio.ParamByName(
-        'p_NUMERO_ALB').AsString;
-      sSerieAlb := unstrdprcCrearAlbaranInicio.ParamByName(
-        'p_SERIE_ALB').AsString;
-      CopiarFormaPagoPedidoAAlbaran(sSeriePed, sNumeroPed, sSerieAlb,
-        sNumeroAlb, True);
-    end;
-
-    // 2) Por cada línea con cantidad > 0 generamos línea de albarán
-    for i := 0 to aLineas.Count - 1 do
-    begin
-      par := aLineas[i];
-      if par.Value > 0 then
-      begin
-        unstrdprcCrearAlbaranLinea.Params.Clear;
-        unstrdprcCrearAlbaranLinea.Params.CreateParam(
-          ftString, 'p_NUMERO_ALB', ptInput);
-        unstrdprcCrearAlbaranLinea.Params.CreateParam(
-          ftString, 'p_SERIE_ALB', ptInput);
-        unstrdprcCrearAlbaranLinea.Params.CreateParam(
-          ftString, 'p_NUMERO_PED', ptInput);
-        unstrdprcCrearAlbaranLinea.Params.CreateParam(
-          ftString, 'p_SERIE_PED', ptInput);
-        unstrdprcCrearAlbaranLinea.Params.CreateParam(
-          ftString, 'p_LINEA_PED', ptInput);
-        unstrdprcCrearAlbaranLinea.Params.CreateParam(
-          ftBCD, 'p_CANTIDAD', ptInput);
-        unstrdprcCrearAlbaranLinea.Params.CreateParam(
-          ftString, 'p_CODIGO_ALM', ptInput);
-        unstrdprcCrearAlbaranLinea.Params.CreateParam(
-          ftString, 'p_USUARIO', ptInput);
-        unstrdprcCrearAlbaranLinea.ParamByName(
-          'p_NUMERO_ALB').AsString := sNumeroAlb;
-        unstrdprcCrearAlbaranLinea.ParamByName(
-          'p_SERIE_ALB').AsString := sSerieAlb;
-        unstrdprcCrearAlbaranLinea.ParamByName(
-          'p_NUMERO_PED').AsString := sNumeroPed;
-        unstrdprcCrearAlbaranLinea.ParamByName(
-          'p_SERIE_PED').AsString := sSeriePed;
-        unstrdprcCrearAlbaranLinea.ParamByName(
-          'p_LINEA_PED').AsString := par.Key;
-        unstrdprcCrearAlbaranLinea.ParamByName(
-          'p_CANTIDAD').AsCurrency := par.Value;
-        unstrdprcCrearAlbaranLinea.ParamByName(
-          'p_CODIGO_ALM').AsString := ACodigoAlmacen;
-        unstrdprcCrearAlbaranLinea.ParamByName('p_USUARIO').AsString :=
-          IdentidadSesion.Usuario;
-        unstrdprcCrearAlbaranLinea.ExecProc;
-      end;
-    end;
-
-    // 3) Recalcular totales del albarán y refrescar estado del pedido
-    unstrdprcCrearAlbaranFin.Params.Clear;
-    unstrdprcCrearAlbaranFin.Params.CreateParam(
-      ftString, 'p_NUMERO_ALB', ptInput);
-    unstrdprcCrearAlbaranFin.Params.CreateParam(
-      ftString, 'p_SERIE_ALB', ptInput);
-    unstrdprcCrearAlbaranFin.Params.CreateParam(
-      ftString, 'p_NUMERO_PED', ptInput);
-    unstrdprcCrearAlbaranFin.Params.CreateParam(
-      ftString, 'p_SERIE_PED', ptInput);
-    unstrdprcCrearAlbaranFin.Params.CreateParam(
-      ftString, 'p_USUARIO', ptInput);
-    unstrdprcCrearAlbaranFin.ParamByName(
-      'p_NUMERO_ALB').AsString := sNumeroAlb;
-    unstrdprcCrearAlbaranFin.ParamByName(
-      'p_SERIE_ALB').AsString := sSerieAlb;
-    unstrdprcCrearAlbaranFin.ParamByName(
-      'p_NUMERO_PED').AsString := sNumeroPed;
-    unstrdprcCrearAlbaranFin.ParamByName(
-      'p_SERIE_PED').AsString := sSeriePed;
-    unstrdprcCrearAlbaranFin.ParamByName('p_USUARIO').AsString :=
-      IdentidadSesion.Usuario;
-    unstrdprcCrearAlbaranFin.ExecProc;
-
+    // El DDL queda fuera de la transaccion porque MySQL hace commit implicito.
+    InstalarProcedimientos;
+    Contexto.NumeroPedido :=
+      unqryTablaG.FieldByName('NUMERO_PED').AsString;
+    Contexto.SeriePedido :=
+      unqryTablaG.FieldByName('SERIE_PED').AsString;
+    Contexto.CodigoAlmacen := ACodigoAlmacen;
+    Contexto.Usuario := IdentidadSesion.Usuario;
+    bTransPropia := not ConexionPrincipal.InTransaction;
     if bTransPropia then
-      ConexionPrincipal.Commit;
-  except
-    on E: Exception do
-    begin
+      ConexionPrincipal.StartTransaction;
+    try
+      if Trim(AAlbExistenteNum) <> '' then
+      begin
+        Contexto.NumeroAlbaran := AAlbExistenteNum;
+        Contexto.SerieAlbaran := AAlbExistenteSerie;
+        sNumeroAlb := Contexto.NumeroAlbaran;
+        sSerieAlb := Contexto.SerieAlbaran;
+        CopiarFormaPagoPedidoAAlbaran(
+          Contexto.SeriePedido, Contexto.NumeroPedido,
+          Contexto.SerieAlbaran, Contexto.NumeroAlbaran, False);
+      end
+      else
+      begin
+        EjecutarInicioAlbaranPedido(
+          unstrdprcCrearAlbaranInicio, Contexto);
+        sNumeroAlb := Contexto.NumeroAlbaran;
+        sSerieAlb := Contexto.SerieAlbaran;
+        CopiarFormaPagoPedidoAAlbaran(
+          Contexto.SeriePedido, Contexto.NumeroPedido,
+          Contexto.SerieAlbaran, Contexto.NumeroAlbaran, True);
+      end;
+      EjecutarLineasAlbaranPedido(
+        unstrdprcCrearAlbaranLinea, Contexto, aLineas);
+      EjecutarFinAlbaranPedido(unstrdprcCrearAlbaranFin, Contexto);
+      if bTransPropia then
+        ConexionPrincipal.Commit;
+    except
       if bTransPropia then
         ConexionPrincipal.Rollback;
       raise;
     end;
-  end;
-  // 4) Refrescar las queries del pedido en pantalla (fuera de la
-  // transaccion: solo lectura para la UI)
-
-  unqryPedidosLineas.Close; unqryPedidosLineas.Open;
-  unqryAlbaranes.Close;     unqryAlbaranes.Open;
-  unqryTablaG.RefreshRecord;
-  Result := True;
+    unqryPedidosLineas.Close;
+    unqryPedidosLineas.Open;
+    unqryAlbaranes.Close;
+    unqryAlbaranes.Open;
+    unqryTablaG.RefreshRecord;
+    Result := True;
   end;
 end;
 

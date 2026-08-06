@@ -62,6 +62,22 @@ type
     function EjecutarConsultarCantidadesLinea(
       const ASql, ASerie, ANumero: string;
       ALinea: Integer): TCantidadesPivotSesion;
+    procedure ValidarCabeceraSesion(AIncidencias: TStrings);
+    procedure ValidarExistenciaLineas(
+      const ASerie, ANumero: string;
+      AIncidencias: TStrings);
+    procedure ValidarDuplicadosInternos(
+      const ASerie, ANumero: string;
+      AIncidencias: TStrings);
+    procedure ValidarDuplicadosExternos(
+      const ASerie, ANumero: string;
+      AIncidencias: TStrings);
+    procedure ValidarLineasSinCodigo(
+      const ASerie, ANumero: string;
+      AIncidencias: TStrings);
+    procedure ValidarLineasSinDescripcion(
+      const ASerie, ANumero: string;
+      AIncidencias: TStrings);
     procedure ValidarMatricesSesion(
       const ASerie, ANumero: string;
       AIncidencias: TStrings);
@@ -1060,6 +1076,193 @@ begin
       ANumero);
 end;
 
+procedure TRepositorioComprasSesiones.ValidarCabeceraSesion(
+  AIncidencias: TStrings);
+begin
+  if Trim(FDataModule.unqryTablaG.FieldByName(
+    'CODIGO_EMP_SES').AsString) = '' then
+  begin
+    AnadirIncidenciaSesion(
+      AIncidencias,
+      0,
+      STipoIncidenciaCabecera,
+      SErrorEmpresaSesionFaltante);
+  end;
+  if Trim(FDataModule.unqryTablaG.FieldByName(
+    'CODIGO_PRV_SES').AsString) = '' then
+  begin
+    AnadirIncidenciaSesion(
+      AIncidencias,
+      0,
+      STipoIncidenciaCabecera,
+      SErrorProveedorSesionFaltante);
+  end;
+  if (FDataModule.unqryTablaG.FieldByName(
+      'ESGENERA_ALBARAN_SES').AsString = 'S') and
+     (Trim(FDataModule.unqryTablaG.FieldByName(
+      'CODIGO_ALM_SES').AsString) = '') then
+  begin
+    AnadirIncidenciaSesion(
+      AIncidencias,
+      0,
+      STipoIncidenciaCabecera,
+      SErrorAlmacenSesionFaltante);
+  end;
+end;
+
+procedure TRepositorioComprasSesiones.ValidarExistenciaLineas(
+  const ASerie, ANumero: string;
+  AIncidencias: TStrings);
+begin
+  EjecutarConsultaValidacionSesion(
+    FConexion,
+    DefinicionValidarSesionConLineas,
+    FCatalogoSql,
+    FIncidenciasSql,
+    ASerie,
+    ANumero,
+    AIncidencias,
+    procedure(
+      AConsulta: TUniQuery;
+      AResultado: TStrings)
+    begin
+      if AConsulta.FieldByName('N').AsInteger = 0 then
+      begin
+        AnadirIncidenciaSesion(
+          AResultado,
+          0,
+          STipoIncidenciaCabecera,
+          SErrorSesionSinLineas);
+      end;
+    end);
+end;
+
+procedure TRepositorioComprasSesiones.ValidarDuplicadosInternos(
+  const ASerie, ANumero: string;
+  AIncidencias: TStrings);
+begin
+  EjecutarConsultaValidacionSesion(
+    FConexion,
+    DefinicionValidarDuplicadosInternos,
+    FCatalogoSql,
+    FIncidenciasSql,
+    ASerie,
+    ANumero,
+    AIncidencias,
+    procedure(
+      AConsulta: TUniQuery;
+      AResultado: TStrings)
+    begin
+      while not AConsulta.Eof do
+      begin
+        AnadirIncidenciaSesion(
+          AResultado,
+          AConsulta.FieldByName('LINEA_SESLIN').AsInteger,
+          STipoIncidenciaDuplicadoInterno,
+          Format(
+            SErrorCodigoDuplicadoInternoSesion,
+            [AConsulta.FieldByName(
+               'CODIGO_ART_TENTATIVO_SESLIN').AsString,
+             AConsulta.FieldByName('PRIMERA').AsInteger]));
+        AConsulta.Next;
+      end;
+    end);
+end;
+
+procedure TRepositorioComprasSesiones.ValidarDuplicadosExternos(
+  const ASerie, ANumero: string;
+  AIncidencias: TStrings);
+begin
+  EjecutarConsultaValidacionSesion(
+    FConexion,
+    DefinicionValidarDuplicadosExternos,
+    FCatalogoSql,
+    FIncidenciasSql,
+    ASerie,
+    ANumero,
+    AIncidencias,
+    procedure(
+      AConsulta: TUniQuery;
+      AResultado: TStrings)
+    begin
+      while not AConsulta.Eof do
+      begin
+        AnadirIncidenciaSesion(
+          AResultado,
+          AConsulta.FieldByName('LINEA_SESLIN').AsInteger,
+          STipoIncidenciaDuplicado,
+          Format(
+            SErrorCodigoDuplicadoSesion,
+            [AConsulta.FieldByName(
+               'CODIGO_ART_TENTATIVO_SESLIN').AsString,
+             IfThen(
+               AConsulta.FieldByName('ESACTIVO_ART').AsString = 'N',
+               STextoArticuloInactivoSesion,
+               '')]));
+        AConsulta.Next;
+      end;
+    end);
+end;
+
+procedure TRepositorioComprasSesiones.ValidarLineasSinCodigo(
+  const ASerie, ANumero: string;
+  AIncidencias: TStrings);
+begin
+  EjecutarConsultaValidacionSesion(
+    FConexion,
+    DefinicionValidarLineasSinCodigo,
+    FCatalogoSql,
+    FIncidenciasSql,
+    ASerie,
+    ANumero,
+    AIncidencias,
+    procedure(
+      AConsulta: TUniQuery;
+      AResultado: TStrings)
+    begin
+      while not AConsulta.Eof do
+      begin
+        AnadirIncidenciaSesion(
+          AResultado,
+          AConsulta.FieldByName('LINEA_SESLIN').AsInteger,
+          STipoIncidenciaCodigo,
+          SErrorLineaSesionSinCodigo);
+        AConsulta.Next;
+      end;
+    end);
+end;
+
+procedure TRepositorioComprasSesiones.ValidarLineasSinDescripcion(
+  const ASerie, ANumero: string;
+  AIncidencias: TStrings);
+begin
+  EjecutarConsultaValidacionSesion(
+    FConexion,
+    DefinicionValidarLineasSinDescripcion,
+    FCatalogoSql,
+    FIncidenciasSql,
+    ASerie,
+    ANumero,
+    AIncidencias,
+    procedure(
+      AConsulta: TUniQuery;
+      AResultado: TStrings)
+    begin
+      while not AConsulta.Eof do
+      begin
+        AnadirIncidenciaSesion(
+          AResultado,
+          AConsulta.FieldByName('LINEA_SESLIN').AsInteger,
+          STipoIncidenciaDescripcion,
+          Format(
+            SErrorLineaSesionSinDescripcion,
+            [AConsulta.FieldByName(
+               'CODIGO_ART_TENTATIVO_SESLIN').AsString]));
+        AConsulta.Next;
+      end;
+    end);
+end;
+
 function TRepositorioComprasSesiones.ValidarSesionDetallado:
   TIncidenciasSesionCompra;
 var
@@ -1080,156 +1283,12 @@ begin
         'SERIE_SES').AsString;
       sNumero := FDataModule.unqryTablaG.FieldByName(
         'NUMERO_SES').AsString;
-      if Trim(FDataModule.unqryTablaG.FieldByName(
-        'CODIGO_EMP_SES').AsString) = '' then
-        AnadirIncidenciaSesion(
-          oIncidencias,
-          0,
-          STipoIncidenciaCabecera,
-          SErrorEmpresaSesionFaltante);
-      if Trim(FDataModule.unqryTablaG.FieldByName(
-        'CODIGO_PRV_SES').AsString) = '' then
-        AnadirIncidenciaSesion(
-          oIncidencias,
-          0,
-          STipoIncidenciaCabecera,
-          SErrorProveedorSesionFaltante);
-      if (FDataModule.unqryTablaG.FieldByName(
-          'ESGENERA_ALBARAN_SES').AsString = 'S') and
-         (Trim(FDataModule.unqryTablaG.FieldByName(
-          'CODIGO_ALM_SES').AsString) = '') then
-        AnadirIncidenciaSesion(
-          oIncidencias,
-          0,
-          STipoIncidenciaCabecera,
-          SErrorAlmacenSesionFaltante);
-      EjecutarConsultaValidacionSesion(
-        FConexion,
-        DefinicionValidarSesionConLineas,
-        FCatalogoSql,
-        FIncidenciasSql,
-        sSerie,
-        sNumero,
-        oIncidencias,
-        procedure(
-          AConsulta: TUniQuery;
-          AResultado: TStrings)
-        begin
-          if AConsulta.FieldByName('N').AsInteger = 0 then
-            AnadirIncidenciaSesion(
-              AResultado,
-              0,
-              STipoIncidenciaCabecera,
-              SErrorSesionSinLineas);
-        end);
-      EjecutarConsultaValidacionSesion(
-        FConexion,
-        DefinicionValidarDuplicadosInternos,
-        FCatalogoSql,
-        FIncidenciasSql,
-        sSerie,
-        sNumero,
-        oIncidencias,
-        procedure(
-          AConsulta: TUniQuery;
-          AResultado: TStrings)
-        begin
-          while not AConsulta.Eof do
-          begin
-            AnadirIncidenciaSesion(
-              AResultado,
-              AConsulta.FieldByName(
-                'LINEA_SESLIN').AsInteger,
-              STipoIncidenciaDuplicadoInterno,
-              Format(
-                SErrorCodigoDuplicadoInternoSesion,
-                [AConsulta.FieldByName(
-                   'CODIGO_ART_TENTATIVO_SESLIN').AsString,
-                 AConsulta.FieldByName(
-                   'PRIMERA').AsInteger]));
-            AConsulta.Next;
-          end;
-        end);
-      EjecutarConsultaValidacionSesion(
-        FConexion,
-        DefinicionValidarDuplicadosExternos,
-        FCatalogoSql,
-        FIncidenciasSql,
-        sSerie,
-        sNumero,
-        oIncidencias,
-        procedure(
-          AConsulta: TUniQuery;
-          AResultado: TStrings)
-        begin
-          while not AConsulta.Eof do
-          begin
-            AnadirIncidenciaSesion(
-              AResultado,
-              AConsulta.FieldByName(
-                'LINEA_SESLIN').AsInteger,
-              STipoIncidenciaDuplicado,
-              Format(
-                SErrorCodigoDuplicadoSesion,
-                [AConsulta.FieldByName(
-                   'CODIGO_ART_TENTATIVO_SESLIN').AsString,
-                 IfThen(
-                   AConsulta.FieldByName(
-                     'ESACTIVO_ART').AsString = 'N',
-                   STextoArticuloInactivoSesion,
-                   '')]));
-            AConsulta.Next;
-          end;
-        end);
-      EjecutarConsultaValidacionSesion(
-        FConexion,
-        DefinicionValidarLineasSinCodigo,
-        FCatalogoSql,
-        FIncidenciasSql,
-        sSerie,
-        sNumero,
-        oIncidencias,
-        procedure(
-          AConsulta: TUniQuery;
-          AResultado: TStrings)
-        begin
-          while not AConsulta.Eof do
-          begin
-            AnadirIncidenciaSesion(
-              AResultado,
-              AConsulta.FieldByName(
-                'LINEA_SESLIN').AsInteger,
-              STipoIncidenciaCodigo,
-              SErrorLineaSesionSinCodigo);
-            AConsulta.Next;
-          end;
-        end);
-      EjecutarConsultaValidacionSesion(
-        FConexion,
-        DefinicionValidarLineasSinDescripcion,
-        FCatalogoSql,
-        FIncidenciasSql,
-        sSerie,
-        sNumero,
-        oIncidencias,
-        procedure(
-          AConsulta: TUniQuery;
-          AResultado: TStrings)
-        begin
-          while not AConsulta.Eof do
-          begin
-            AnadirIncidenciaSesion(
-              AResultado,
-              AConsulta.FieldByName(
-                'LINEA_SESLIN').AsInteger,
-              STipoIncidenciaDescripcion,
-              Format(
-                SErrorLineaSesionSinDescripcion,
-                [AConsulta.FieldByName(
-                   'CODIGO_ART_TENTATIVO_SESLIN').AsString]));
-            AConsulta.Next;
-          end;
-        end);
+      ValidarCabeceraSesion(oIncidencias);
+      ValidarExistenciaLineas(sSerie, sNumero, oIncidencias);
+      ValidarDuplicadosInternos(sSerie, sNumero, oIncidencias);
+      ValidarDuplicadosExternos(sSerie, sNumero, oIncidencias);
+      ValidarLineasSinCodigo(sSerie, sNumero, oIncidencias);
+      ValidarLineasSinDescripcion(sSerie, sNumero, oIncidencias);
       ValidarMatricesSesion(sSerie, sNumero, oIncidencias);
     end;
     SetLength(Result, oIncidencias.Count);

@@ -38,7 +38,7 @@ uses
   inLibColumnasSkuIntf, inLibGridPivoteVenta,
   inLibDocumento, inLibDocumentoIntf,
   inLibVentasPantallaIntf, inLibVentasPantallaCrearAlbaran,
-  inLibPedidosVentaPresentacionReglas;
+  inLibPedidosVentaPresentacionReglas, inLibArticulosResolverIntf;
 
 type
   TfrmMtoPedidos = class(TfrmMtoDocumento)
@@ -354,8 +354,7 @@ implementation
 uses
   inMtoModalImportarPedidosPS, inLibGridCantidad,
   inMtoModalSelAlmacenAlbaran, inMtoModalDocsCreados, inLibGenBusq,
-  inLibShowMto, inLibFiltroUsuario, inLibArticulosResolverIntf,
-  inLibArticulosValidadorIntf,
+  inLibShowMto, inLibFiltroUsuario,
   inLibVentasImpuestos, UniDataImpuestosRepositorio,
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   inLibGridTallasInline,
@@ -365,6 +364,7 @@ uses
   UniDataColumnasDocumentoRepositorio, UniDataGen,
   inLibValidacionDocumento, inLibPresentacionDocumento,
   inLibMsgArticulos, inLibMsgVentas,
+  inMtoPedidosPresentacionArticuloVcl,
   // Composicion del puerto de persistencia del pivote (V2).
   UniDataPivoteVenta, UniDataVentasPantallaComposicion;
 
@@ -510,139 +510,33 @@ end;
 
 procedure TfrmMtoPedidos.AplicarArticuloPedido(const ACodigoArt: string);
 var
-  ds         : TDataSet;
-  Validador  : IArticulosValidador;
-  Resolver   : IArticulosResolver;
-  Resolucion : TArtResolucionEntrada;
-  Datos      : TArticuloDatos;
-  Precio     : TArticuloPrecio;
-  sInput     : string;
-  sTarifa    : string;
-  dFecha     : TDateTime;
-
-  procedure PonerString(const ACampo, AValor: string);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.AsString := AValor;
-  end;
-
-  procedure PonerFloat(const ACampo: string; AValor: Double);
-  var
-    Campo: TField;
-  begin
-    Campo := ds.FindField(ACampo);
-    if Campo <> nil then
-      Campo.AsFloat := AValor;
-  end;
-
-  procedure EnfocarSku(AAbrirBusqueda: Boolean);
-  var
-    ColSku: TcxGridDBColumn;
-  begin
-    ColSku := tvPedidosLineas.GetColumnByFieldName('CODIGOPRODPS_PEDLIN');
-    if ColSku <> nil then
-    begin
-      ColSku.Visible := True;
-      TThread.ForceQueue(nil,
-        procedure
-        begin
-          tvPedidosLineas.Controller.FocusedColumn := ColSku;
-          tvPedidosLineas.Controller.EditingController.ShowEdit;
-          if AAbrirBusqueda then
-            cxgrdcPedLinSKUPropertiesButtonClick(nil, 0);
-        end);
-    end;
-  end;
-
+  oContexto: TContextoArticuloPedidoVcl;
+  oDataSet: TDataSet;
+  sEntrada: string;
 begin
-  sInput := Trim(ACodigoArt);
-  if (sInput <> '') and Assigned(dmmPedidos) and
+  sEntrada := Trim(ACodigoArt);
+  if (sEntrada <> '') and Assigned(dmmPedidos) and
      (not FAplicandoArticulo) then
   begin
-    ds := dmmPedidos.unqryPedidosLineas;
-    if Assigned(ds) and ds.Active then
+    oDataSet := dmmPedidos.unqryPedidosLineas;
+    if Assigned(oDataSet) and oDataSet.Active then
     begin
       FAplicandoArticulo := True;
-      Validador := nil;
-      Resolver := nil;
       try
-        if ds.IsEmpty then
-          ds.Append;
-        if not (ds.State in dsEditModes) then
-          ds.Edit;
-        sTarifa := dmmPedidos.unqryTablaG.
-                     FieldByName('TARIFA_ARTICULO_CLIENTE_PED').AsString;
-        dFecha := Date;
-        if not dmmPedidos.unqryTablaG.FieldByName('FECHA_PED').IsNull then
-          dFecha := dmmPedidos.unqryTablaG.
-                      FieldByName('FECHA_PED').AsDateTime;
-        Validador := FContextoVentas.ValidadorArticulos;
-        Resolver := FContextoVentas.ResolverArticulos;
-        Resolucion := Validador.Resolver(sInput);
-        if Resolucion.Encontrado then
-        begin
-          Datos := Resolver.ResolverDatos(Resolucion.CodigoArticulo,
-                                          Resolucion.CodigoSku,
-                                          sTarifa,
-                                          dFecha);
-          if Datos.Encontrado then
+        oContexto := Default(TContextoArticuloPedidoVcl);
+        oContexto.Cabecera := dmmPedidos.unqryTablaG;
+        oContexto.Lineas := oDataSet;
+        oContexto.Conexion := dmmPedidos.unqryTablaG.Connection;
+        oContexto.VistaLineas := tvPedidosLineas;
+        oContexto.Resolver := FContextoVentas.ResolverArticulos;
+        oContexto.Validador := FContextoVentas.ValidadorArticulos;
+        oContexto.AbrirBusquedaSku :=
+          procedure
           begin
-            if Datos.RequiereSku then
-              Precio := Resolver.ResolverPrecio(Datos.CodigoArticulo, '',
-                                                sTarifa, dFecha)
-            else
-              Precio := Datos.PrecioPedido;
-            PonerString('CODIGO_ART_PEDLIN', Datos.CodigoArticulo);
-            PonerString('CODIGOPRODPS_PEDLIN', Datos.CodigoSku);
-            if Resolucion.CodigoBarrasMatch <> '' then
-              PonerString('CODBAR_ART_PEDLIN', Resolucion.CodigoBarrasMatch);
-            PonerString('CODIGO_FAM_PEDLIN', Datos.CodigoFamilia);
-            PonerString('NOMBRE_FAM_PEDLIN', Datos.DescripcionFamilia);
-            PonerString('DESCRIPCION_ARTICULO_PEDLIN',
-                        Datos.DescripcionArticulo);
-            PonerString('TIPO_CANTIDAD_ARTICULO_PEDLIN',
-                        Datos.TipoCantidad);
-            PonerString('TIPO_IVA_ARTICULO_PEDLIN', Datos.TipoIVA);
-            PonerString('CODIGO_TAR_PEDLIN', sTarifa);
-            if Precio.EsImpIncl then
-              PonerString('ESIMP_INCL_TARIFA_PEDLIN', 'S')
-            else
-              PonerString('ESIMP_INCL_TARIFA_PEDLIN', 'N');
-            if Datos.RequiereSku then
-            begin
-              PonerFloat('PRECIO_VENTA_SIVA_ARTICULO_PEDLIN', 0);
-              PonerFloat('PRECIO_VENTA_CIVA_ARTICULO_PEDLIN', 0);
-            end
-            else if Precio.EsImpIncl then
-            begin
-              // La rutina fiscal toma este PVP bruto como precio maestro.
-              PonerFloat('PRECIO_VENTA_CIVA_ARTICULO_PEDLIN',
-                         Precio.PrecioFinal);
-              PonerFloat('PRECIO_VENTA_SIVA_ARTICULO_PEDLIN', 0);
-            end
-            else
-            begin
-              PonerFloat('PRECIO_VENTA_SIVA_ARTICULO_PEDLIN',
-                         Precio.PrecioFinal);
-              PonerFloat('PRECIO_VENTA_CIVA_ARTICULO_PEDLIN', 0);
-            end;
-            PrepararLineaFiscalVenta(CrearLecturasImpuestos(
-              dmmPedidos.unqryTablaG.Connection),
-              dmmPedidos.unqryTablaG, ds, 'PED', 'PEDLIN', 'TOTAL_PEDLIN');
-            if Datos.RequiereSku then
-              EnfocarSku(True);
-          end
-          else if Datos.Mensaje <> '' then
-            MessageDlg(Datos.Mensaje, mtWarning, [mbOk], 0);
-        end
-        else if Resolucion.Mensaje <> '' then
-          MessageDlg(Resolucion.Mensaje, mtWarning, [mbOk], 0);
+            cxgrdcPedLinSKUPropertiesButtonClick(nil, 0);
+          end;
+        AplicarArticuloPedidoVcl(oContexto, sEntrada);
       finally
-        Resolver := nil;
-        Validador := nil;
         FAplicandoArticulo := False;
       end;
     end;
