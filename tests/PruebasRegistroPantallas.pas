@@ -38,13 +38,17 @@ type
     procedure DataModule_SubclaseInyectadaResuelveAncestroRegistrado;
     [Test]
     procedure Jerarquia_PriorizaRegistroMasCercano;
+    [Test]
+    procedure FrmBase_ConstructoresHeredanMismoRegistro;
   end;
 
 implementation
 
 uses
   System.SysUtils, System.Classes, Vcl.Forms,
-  inLibAnfitrionMtoIntf, inLibRegistroPantallas;
+  inLibAnfitrionMtoIntf, inLibLogIntf,
+  inLibRegistroLogNulo, inLibRegistroPantallas,
+  inMtoFrmBase;
 
 const
   CALL_BASE_JERARQUIA = 'DocumentosTrabajo';
@@ -65,6 +69,18 @@ type
   TPantallaInyectadaJerarquiaPrueba = class(
     TPantallaIntermediaJerarquiaPrueba);
 
+  TPropietarioRegistroPrueba = class(
+    TComponent,
+    IProveedorRegistroLog)
+  private
+    FRegistroLog: IRegistroLog;
+    function GetRegistroLog: IRegistroLog;
+  public
+    constructor Create(
+      AOwner: TComponent;
+      const ARegistroLog: IRegistroLog); reintroduce;
+  end;
+
   TAnfitrionJerarquiaPrueba = class(
     TInterfacedObject, IAnfitrionMantenimiento)
   private
@@ -80,6 +96,19 @@ type
     procedure VincularFotoMantenimiento(AMantenimiento: TObject);
     function CrearCopiaPreviaScriptSoporte: Boolean;
   end;
+
+constructor TPropietarioRegistroPrueba.Create(
+  AOwner: TComponent;
+  const ARegistroLog: IRegistroLog);
+begin
+  inherited Create(AOwner);
+  FRegistroLog := ARegistroLog;
+end;
+
+function TPropietarioRegistroPrueba.GetRegistroLog: IRegistroLog;
+begin
+  Result := FRegistroLog;
+end;
 
 function NombreCualificadoClase(AClase: TClass): string;
 begin
@@ -269,6 +298,46 @@ begin
     ResolverDataModulePantallaPorJerarquia(
       oAnfitrion,
       TPantallaInyectadaJerarquiaPrueba));
+end;
+
+procedure TPruebasRegistroPantallas.
+  FrmBase_ConstructoresHeredanMismoRegistro;
+var
+  Formulario: TfrmBase;
+  Propietario: TPropietarioRegistroPrueba;
+  Proveedor: IProveedorRegistroLog;
+  RegistroEsperado: IRegistroLog;
+begin
+  RegistroEsperado := CrearRegistroLogNulo;
+  Propietario := TPropietarioRegistroPrueba.Create(
+    nil,
+    RegistroEsperado);
+  try
+    Formulario := TfrmBase.Create(Propietario);
+    try
+      Assert.IsTrue(Supports(
+        Formulario,
+        IProveedorRegistroLog,
+        Proveedor));
+      Assert.IsTrue(Proveedor.RegistroLog = RegistroEsperado);
+      Proveedor := nil;
+    finally
+      FreeAndNil(Formulario);
+    end;
+    Formulario := TfrmBase.Create(Propietario, nil);
+    try
+      Assert.IsTrue(Supports(
+        Formulario,
+        IProveedorRegistroLog,
+        Proveedor));
+      Assert.IsTrue(Proveedor.RegistroLog = RegistroEsperado);
+      Proveedor := nil;
+    finally
+      FreeAndNil(Formulario);
+    end;
+  finally
+    FreeAndNil(Propietario);
+  end;
 end;
 
 initialization

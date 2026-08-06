@@ -181,6 +181,7 @@ type
     FGestorTareas: TGestorTareasMto;
     FGestorArticulos: TGestorArticulosMto;
     procedure InicializarMantenimiento;
+    procedure ConfigurarModoBusqueda;
     function GetConexionTrabajo: TUniConnection;
     function AplicacionCerrando: Boolean;
     function ObtenerConsultaGuias: TUniQuery;
@@ -1293,7 +1294,6 @@ end;
 
 procedure TfrmMtoGen.InicializarMantenimiento;
 var
-  sModoBusq: String;
   swTotal, swTramo: TStopwatch;
   msProcesarPerfiles: Int64;
 begin
@@ -1336,6 +1336,16 @@ begin
   swTramo := TStopwatch.StartNew;
   ProcesarPerfiles;
   msProcesarPerfiles := swTramo.ElapsedMilliseconds;
+  ConfigurarModoBusqueda;
+  RegistroLog.RegistrarRendimiento(Self.Name + '.FormCreate',
+    'ProcesarPerfiles=' + IntToStr(msProcesarPerfiles) + ' ms',
+    swTotal.ElapsedMilliseconds);
+end;
+
+procedure TfrmMtoGen.ConfigurarModoBusqueda;
+var
+  sModoBusq: String;
+begin
   sModoBusq := FGestorPerfiles.Valor(
     'oBusqGlobal', 'Database');
   if sModoBusq = 'DataBase' then
@@ -1348,9 +1358,6 @@ begin
     rbBBDD.Checked := false;
     rbGrid.Checked := true;
   end;
-  RegistroLog.RegistrarRendimiento(Self.Name + '.FormCreate',
-    'ProcesarPerfiles=' + IntToStr(msProcesarPerfiles) + ' ms',
-    swTotal.ElapsedMilliseconds);
 end;
 
 procedure TfrmMtoGen.FormKeyDown(Sender: TObject; var Key: Word;

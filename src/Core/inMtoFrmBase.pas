@@ -142,7 +142,9 @@ type
     function GetConexionPrincipal: TUniConnection;
     function NormalizarSegmentoClaveTraduccion(
       const ATexto: string): string;
-    procedure HeredarServicios(AOwner: TComponent);
+    procedure HeredarServicios(
+      AOwner: TComponent;
+      AResolverPermisos: Boolean);
     procedure HeredarConexiones(AOwner: TComponent);
     procedure HeredarAuditoriaDatos(AOwner: TComponent);
     procedure HeredarMonitorSQL(AOwner: TComponent);
@@ -291,16 +293,9 @@ uses
 {$R CXLOCALIZATION.res}
 
 constructor TfrmBase.Create(AOwner: TComponent);
-var
-  ProveedorPermisos: IProveedorPermisosAplicacion;
 begin
   FPermisos := nil;
-  HeredarServicios(AOwner);
-  if Supports(
-       AOwner,
-       IProveedorPermisosAplicacion,
-       ProveedorPermisos) then
-    FPermisos := ProveedorPermisos.Permisos;
+  HeredarServicios(AOwner, True);
   inherited Create(AOwner);
 end;
 
@@ -309,14 +304,24 @@ constructor TfrmBase.Create(
   const APermisos: IPermisosAplicacion);
 begin
   FPermisos := APermisos;
-  HeredarServicios(AOwner);
+  HeredarServicios(AOwner, False);
   inherited Create(AOwner);
 end;
 
-procedure TfrmBase.HeredarServicios(AOwner: TComponent);
+procedure TfrmBase.HeredarServicios(
+  AOwner: TComponent;
+  AResolverPermisos: Boolean);
+var
+  ProveedorPermisos: IProveedorPermisosAplicacion;
 begin
   HeredarRegistroLog(AOwner);
   HeredarConfiguracionCampos(AOwner);
+  if AResolverPermisos and
+     Supports(
+       AOwner,
+       IProveedorPermisosAplicacion,
+       ProveedorPermisos) then
+    FPermisos := ProveedorPermisos.Permisos;
   HeredarConexiones(AOwner);
   HeredarAuditoriaDatos(AOwner);
   HeredarMonitorSQL(AOwner);
