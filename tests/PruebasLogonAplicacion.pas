@@ -30,12 +30,21 @@ type
     procedure RepositorioNoDisponible_ClasificaIndisponibilidad;
     [Test]
     procedure ErrorRepositorio_ClasificaError;
+    [Test]
+    procedure ArranquePrincipal_EjecutaFasesEnOrden;
+    [Test]
+    procedure PreparacionLogon_EjecutaFasesEnOrden;
+    [Test]
+    procedure PreparacionLogon_SeDetieneAlRechazarUnaFase;
   end;
 
 implementation
 
 uses
   System.SysUtils,
+  inLibArranqueAplicacion,
+  inLibContextoSesionIntf,
+  inLibLicenciaAplicacion,
   inLibLogonAplicacion,
   inLibLogonAplicacionIntf;
 
@@ -56,6 +65,151 @@ type
     function Autenticar(
       const AUsuario, AContrasena: string): TResultadoAutenticacionLogon;
   end;
+
+  TPasosArranqueFalsos = class(
+    TInterfacedObject,
+    IPasosArranqueAplicacion)
+  private
+    FTraza: string;
+    procedure Anotar(const APaso: string);
+  public
+    procedure PrepararContextoAplicacion(
+      const AContextoSesion: IContextoSesionAplicacion;
+      out AIdentidad: TIdentidadSesion;
+      out AUbicacion: TUbicacionSesion);
+    procedure MostrarSplashInicio;
+    procedure CrearInfraestructuraAplicacion;
+    procedure CargarServiciosAplicacion(
+      const AResultadoLicencia: TResultadoLicenciaAplicacion);
+    procedure ActivarAplicacion;
+    procedure PresentarAplicacion(
+      const AIdentidad: TIdentidadSesion;
+      const AUbicacion: TUbicacionSesion);
+    procedure FinalizarArranqueAplicacion;
+    property Traza: string read FTraza;
+  end;
+
+  TPasosPreparacionLogonFalsos = class(
+    TInterfacedObject,
+    IPasosPreparacionLogon)
+  private
+    FDetenerEn: string;
+    FTraza: string;
+    procedure Anotar(const APaso: string);
+    function Continuar(const APaso: string): Boolean;
+  public
+    constructor Create(const ADetenerEn: string);
+    procedure PrepararLogon;
+    function ConectarServidorLogon: Boolean;
+    function ValidarEstructuraLogon: Boolean;
+    function ConectarAplicacionLogon: Boolean;
+    function PrepararLicenciaLogon: Boolean;
+    procedure EjecutarAutenticacionAutomatica;
+    property Traza: string read FTraza;
+  end;
+
+procedure TPasosArranqueFalsos.Anotar(const APaso: string);
+begin
+  if FTraza <> '' then
+    FTraza := FTraza + '>';
+  FTraza := FTraza + APaso;
+end;
+
+procedure TPasosArranqueFalsos.PrepararContextoAplicacion(
+  const AContextoSesion: IContextoSesionAplicacion;
+  out AIdentidad: TIdentidadSesion;
+  out AUbicacion: TUbicacionSesion);
+begin
+  Anotar('contexto');
+  AIdentidad := Default(TIdentidadSesion);
+  AUbicacion := Default(TUbicacionSesion);
+end;
+
+procedure TPasosArranqueFalsos.MostrarSplashInicio;
+begin
+  Anotar('splash');
+end;
+
+procedure TPasosArranqueFalsos.CrearInfraestructuraAplicacion;
+begin
+  Anotar('infraestructura');
+end;
+
+procedure TPasosArranqueFalsos.CargarServiciosAplicacion(
+  const AResultadoLicencia: TResultadoLicenciaAplicacion);
+begin
+  Anotar('servicios');
+end;
+
+procedure TPasosArranqueFalsos.ActivarAplicacion;
+begin
+  Anotar('activar');
+end;
+
+procedure TPasosArranqueFalsos.PresentarAplicacion(
+  const AIdentidad: TIdentidadSesion;
+  const AUbicacion: TUbicacionSesion);
+begin
+  Anotar('presentar');
+end;
+
+procedure TPasosArranqueFalsos.FinalizarArranqueAplicacion;
+begin
+  Anotar('finalizar');
+end;
+
+constructor TPasosPreparacionLogonFalsos.Create(
+  const ADetenerEn: string);
+begin
+  inherited Create;
+  FDetenerEn := ADetenerEn;
+end;
+
+procedure TPasosPreparacionLogonFalsos.Anotar(
+  const APaso: string);
+begin
+  if FTraza <> '' then
+    FTraza := FTraza + '>';
+  FTraza := FTraza + APaso;
+end;
+
+function TPasosPreparacionLogonFalsos.Continuar(
+  const APaso: string): Boolean;
+begin
+  Anotar(APaso);
+  Result := not SameText(APaso, FDetenerEn);
+end;
+
+procedure TPasosPreparacionLogonFalsos.PrepararLogon;
+begin
+  Anotar('preparar');
+end;
+
+function TPasosPreparacionLogonFalsos.ConectarServidorLogon: Boolean;
+begin
+  Result := Continuar('servidor');
+end;
+
+function TPasosPreparacionLogonFalsos.ValidarEstructuraLogon: Boolean;
+begin
+  Result := Continuar('estructura');
+end;
+
+function TPasosPreparacionLogonFalsos.ConectarAplicacionLogon: Boolean;
+begin
+  Result := Continuar('aplicacion');
+end;
+
+function TPasosPreparacionLogonFalsos.PrepararLicenciaLogon: Boolean;
+begin
+  Result := Continuar('licencia');
+end;
+
+procedure TPasosPreparacionLogonFalsos.
+  EjecutarAutenticacionAutomatica;
+begin
+  Anotar('autenticacion');
+end;
 
 constructor TRepositorioLogonFalso.Create(
   AComportamiento: TComportamientoRepositorioLogon);
@@ -137,6 +291,52 @@ begin
   Resultado := Ejecutar(crlError);
   Assert.AreEqual(Ord(ealError), Ord(Resultado.Estado));
   Assert.AreEqual('Consulta fallida', Resultado.Mensaje);
+end;
+
+procedure TPruebasLogonAplicacion.
+  ArranquePrincipal_EjecutaFasesEnOrden;
+var
+  CasoUso: ICasoUsoArranqueAplicacion;
+  Pasos: TPasosArranqueFalsos;
+  ResultadoLicencia: TResultadoLicenciaAplicacion;
+begin
+  Pasos := TPasosArranqueFalsos.Create;
+  CasoUso := CrearCasoUsoArranqueAplicacion(Pasos);
+  ResultadoLicencia := Default(TResultadoLicenciaAplicacion);
+  CasoUso.Ejecutar(nil, ResultadoLicencia);
+  Assert.AreEqual(
+    'contexto>splash>infraestructura>servicios>' +
+    'activar>presentar>finalizar',
+    Pasos.Traza);
+end;
+
+procedure TPruebasLogonAplicacion.
+  PreparacionLogon_EjecutaFasesEnOrden;
+var
+  CasoUso: ICasoUsoPreparacionLogon;
+  Pasos: TPasosPreparacionLogonFalsos;
+begin
+  Pasos := TPasosPreparacionLogonFalsos.Create('');
+  CasoUso := CrearCasoUsoPreparacionLogon(Pasos);
+  CasoUso.Ejecutar;
+  Assert.AreEqual(
+    'preparar>servidor>estructura>aplicacion>' +
+    'licencia>autenticacion',
+    Pasos.Traza);
+end;
+
+procedure TPruebasLogonAplicacion.
+  PreparacionLogon_SeDetieneAlRechazarUnaFase;
+var
+  CasoUso: ICasoUsoPreparacionLogon;
+  Pasos: TPasosPreparacionLogonFalsos;
+begin
+  Pasos := TPasosPreparacionLogonFalsos.Create('estructura');
+  CasoUso := CrearCasoUsoPreparacionLogon(Pasos);
+  CasoUso.Ejecutar;
+  Assert.AreEqual(
+    'preparar>servidor>estructura',
+    Pasos.Traza);
 end;
 
 initialization

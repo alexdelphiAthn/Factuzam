@@ -45,11 +45,12 @@ uses
   inLibContextoSesionIntf, inLibLicenciaAplicacion,
   inLibCopiasSeguridadIntf,
   inLibRestauracionCopiasConexionIntf,
-  inLibLogonAplicacionIntf;
+  inLibLogonAplicacionIntf,
+  inLibArranqueAplicacion;
 
 type
   EPassWordCorrupt = class(Exception);
-  TfrmLogon = class(TfrmBase)
+  TfrmLogon = class(TfrmBase, IPasosPreparacionLogon)
     lblUsuario: TcxLabel;
     lblContrasena: TcxLabel;
     edtUser: TcxTextEdit;
@@ -112,6 +113,12 @@ type
     FConexionLogon: TUniConnection;
     FRepositorioLogon: IRepositorioLogon;
     FAplicacionLogon: IAplicacionLogon;
+    procedure PrepararLogon;
+    function ConectarServidorLogon: Boolean;
+    function ValidarEstructuraLogon: Boolean;
+    function ConectarAplicacionLogon: Boolean;
+    function PrepararLicenciaLogon: Boolean;
+    procedure EjecutarAutenticacionAutomatica;
     procedure AplicarTraduccionesPantalla;
     function ResolverErrorScriptLogon(
       const ASentencia, AError: string): TDecisionErrorScriptLogon;
@@ -286,9 +293,13 @@ begin
 end;
 
 procedure TfrmLogon.FormCreate(Sender: TObject);
-var
-  CheckResult: TDBStructureCheckResult;
-  ContinuarCreacion: Boolean;
+begin
+  inherited;
+  CrearCasoUsoPreparacionLogon(
+    Self as IPasosPreparacionLogon).Ejecutar;
+end;
+
+procedure TfrmLogon.PrepararLogon;
 begin
   InvalidarResultadoInicioSesion;
   CrearRepositorioLogonUniDAC(
@@ -300,7 +311,8 @@ begin
   // recorten con escalado DPI (el .dfm no trae PixelsPerInch y el tamano
   // fijo anterior no se reescalaba).
   pnlBBDD.Visible := False;
-  Self.ClientWidth  := pnlButtons.Left + pnlButtons.Width + pnlButtons.Left;
+  Self.ClientWidth :=
+    pnlButtons.Left + pnlButtons.Width + pnlButtons.Left;
   Self.ClientHeight := pnlButtons.Top + pnlButtons.Height + pnlLogin.Top;
   {$IFDEF DEBUG}
     RegistroLog.RegistrarInformacion('Arrancando en modo Debug');
@@ -330,9 +342,12 @@ begin
         raise EPassWordCorrupt.Create(SErrorDecryptPassBBDD);
     end;
   end;
+end;
 
+function TfrmLogon.ConectarServidorLogon: Boolean;
+begin
   // --- 1. Conexión a information_schema para validar estructura ---
-  ContinuarCreacion := True;
+  Result := True;
   try
     ConfigurarYConectarMySQL(FConexionLogon,
                              edtUserBD.Text,
@@ -351,92 +366,91 @@ begin
         'UserInfo', 'AutoLogin', 'No', GetUserFolder);
       if not pnlBBDD.Visible then
         btnConfClick(Self);
-      ContinuarCreacion := False;
+      Result := False;
     end;
   end;
-  if ContinuarCreacion then
+end;
+
+function TfrmLogon.ValidarEstructuraLogon: Boolean;
+var
+  CheckResult: TDBStructureCheckResult;
+begin
+  Result := True;
+  CheckResult := UniDataDBStructureRepositorio.TDBStructureChecker.Check(
+    FConexionLogon,
+    edtNomBD.Text);
+  if not CheckResult.IsOK then
   begin
-    // --- 2. Verificación de estructura ---
-    CheckResult := UniDataDBStructureRepositorio.TDBStructureChecker.Check(
-      FConexionLogon,
-      edtNomBD.Text);
-    if not CheckResult.IsOK then
+    RegistroLog.RegistrarError('Estructura BBDD no válida: ' +
+                          CheckResult.FormattedMessage);
+    ShowMessage(Format(SErrorEstructuraBBDD,
+                       [CheckResult.FormattedMessage]));
+    chkAuto.Checked := False;
+    EscribirCadenaIni(
+      'UserInfo', 'AutoLogin', 'No', GetUserFolder);
+    if not pnlBBDD.Visible then
+      btnConfClick(Self);
+    if FConexionLogon.Connected then
+      FConexionLogon.Disconnect;
+    Result := False;
+  end;
+end;
+
+function TfrmLogon.ConectarAplicacionLogon: Boolean;
+begin
+  Result := True;
+  if FConexionLogon.Connected then
+    FConexionLogon.Disconnect;
+  try
+    ConfigurarYConectarMySQL(FConexionLogon,
+                             edtUserBD.Text,
+                             FPasswordConexion,
+                             edtHostName.Text,
+                             edtPortBD.Text,
+                             edtNomBD.Text);
+  except
+    on E: Exception do
     begin
-      RegistroLog.RegistrarError('Estructura BBDD no válida: ' +
-                            CheckResult.FormattedMessage);
-      ShowMessage(Format(SErrorEstructuraBBDD,
-                         [CheckResult.FormattedMessage]));
-      // Desactivamos auto-login para no entrar en bucle
+      RegistroLog.RegistrarError(
+        'Fallo al conectar a ' + edtNomBD.Text + ': ' +
+        E.ClassName + ': ' + E.Message);
+      ShowMessage(Format(SErrorConexionBBDD,
+                         [edtNomBD.Text, E.Message]));
       chkAuto.Checked := False;
       EscribirCadenaIni(
         'UserInfo', 'AutoLogin', 'No', GetUserFolder);
-      // Abrimos el panel de configuración
       if not pnlBBDD.Visible then
         btnConfClick(Self);
-      // Desconectamos de information_schema, ya no la necesitamos
-      if FConexionLogon.Connected then
-        FConexionLogon.Disconnect;
-      ContinuarCreacion := False;
+      Result := False;
     end;
   end;
-  if ContinuarCreacion then
+end;
+
+function TfrmLogon.PrepararLicenciaLogon: Boolean;
+begin
+  AplicarTraduccionesPantalla;
+  Result := ProcesarLicenciaAplicacion;
+end;
+
+procedure TfrmLogon.EjecutarAutenticacionAutomatica;
+begin
+  if FindCmdLineSwitch('relogin', True) then
+    edtPass.Text := '';
+  if IsInitializeAuto then
   begin
-    // --- 3. Estructura OK: reconectamos al schema real ---
-    if FConexionLogon.Connected then
-      FConexionLogon.Disconnect;
     try
-      ConfigurarYConectarMySQL(FConexionLogon,
-                               edtUserBD.Text,
-                               FPasswordConexion,
-                               edtHostName.Text,
-                               edtPortBD.Text,
-                               edtNomBD.Text);
+      btnAceptarClick(Self);
     except
       on E: Exception do
       begin
-        RegistroLog.RegistrarError(
-          'Fallo al conectar a ' + edtNomBD.Text + ': ' +
-          E.ClassName + ': ' + E.Message);
-        ShowMessage(Format(SErrorConexionBBDD,
-                           [edtNomBD.Text, E.Message]));
+        RegistroLog.RegistrarError('Fallo en auto-login: ' +
+                              E.ClassName + ': ' + E.Message);
+        ShowMessage(Format(SErrorInicioAutomatico, [E.Message]));
         chkAuto.Checked := False;
         EscribirCadenaIni(
           'UserInfo', 'AutoLogin', 'No', GetUserFolder);
-        if not pnlBBDD.Visible then
-          btnConfClick(Self);
-        ContinuarCreacion := False;
-      end;
-    end;
-  end;
-  if ContinuarCreacion then
-  begin
-    AplicarTraduccionesPantalla;
-    ContinuarCreacion := ProcesarLicenciaAplicacion;
-  end;
-  if ContinuarCreacion then
-  begin
-    // --- /relogin: reinicio desde 'Invocar login'. Vacia la contrasena
-    // recordada para forzar que se introduzca de nuevo (el auto-login ya
-    // queda neutralizado en IsInitializeAuto). ---
-    if FindCmdLineSwitch('relogin', True) then
-      edtPass.Text := '';
-    // --- 4. Auto-login protegido ---
-    if IsInitializeAuto then
-    begin
-      try
-        btnAceptarClick(Self);
-      except
-        on E: Exception do
-        begin
-          RegistroLog.RegistrarError('Fallo en auto-login: ' +
-                                E.ClassName + ': ' + E.Message);
-          ShowMessage(Format(SErrorInicioAutomatico, [E.Message]));
-          chkAuto.Checked := False;
-          EscribirCadenaIni(
-            'UserInfo', 'AutoLogin', 'No', GetUserFolder);
-          InvalidarResultadoInicioSesion;
-          ModalResult := mrNone;
-        end;
+        InvalidarResultadoInicioSesion;
+        ModalResult := mrNone;
       end;
     end;
   end;

@@ -142,6 +142,7 @@ type
     function GetConexionPrincipal: TUniConnection;
     function NormalizarSegmentoClaveTraduccion(
       const ATexto: string): string;
+    procedure HeredarServicios(AOwner: TComponent);
     procedure HeredarConexiones(AOwner: TComponent);
     procedure HeredarAuditoriaDatos(AOwner: TComponent);
     procedure HeredarMonitorSQL(AOwner: TComponent);
@@ -294,29 +295,12 @@ var
   ProveedorPermisos: IProveedorPermisosAplicacion;
 begin
   FPermisos := nil;
-  HeredarRegistroLog(AOwner);
-  HeredarConfiguracionCampos(AOwner);
+  HeredarServicios(AOwner);
   if Supports(
        AOwner,
        IProveedorPermisosAplicacion,
        ProveedorPermisos) then
     FPermisos := ProveedorPermisos.Permisos;
-  HeredarConexiones(AOwner);
-  HeredarAuditoriaDatos(AOwner);
-  HeredarMonitorSQL(AOwner);
-  HeredarContextoSesion(AOwner);
-  HeredarFiltrosGuardados(AOwner);
-  HeredarPerfilesUsuario(AOwner);
-  HeredarParametros(AOwner);
-  HeredarInformesGuiasCache(AOwner);
-  HeredarTraducciones(AOwner);
-  HeredarFotosArticulos(AOwner);
-  HeredarUnidadesMedida(AOwner);
-  HeredarBusquedaVisual(AOwner);
-  HeredarDistribuidorTallasVisual(AOwner);
-  HeredarSolicitudPermisoLayout(AOwner);
-  HeredarPreviewTicket(AOwner);
-  HeredarProveedorPreviewExcel(AOwner);
   inherited Create(AOwner);
 end;
 
@@ -325,6 +309,12 @@ constructor TfrmBase.Create(
   const APermisos: IPermisosAplicacion);
 begin
   FPermisos := APermisos;
+  HeredarServicios(AOwner);
+  inherited Create(AOwner);
+end;
+
+procedure TfrmBase.HeredarServicios(AOwner: TComponent);
+begin
   HeredarRegistroLog(AOwner);
   HeredarConfiguracionCampos(AOwner);
   HeredarConexiones(AOwner);
@@ -343,7 +333,6 @@ begin
   HeredarSolicitudPermisoLayout(AOwner);
   HeredarPreviewTicket(AOwner);
   HeredarProveedorPreviewExcel(AOwner);
-  inherited Create(AOwner);
 end;
 
 constructor TfrmBase.Create(

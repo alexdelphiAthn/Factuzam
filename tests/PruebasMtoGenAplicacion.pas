@@ -31,19 +31,14 @@ type
     [Test]
     procedure GuardadoConTransaccionExterna_NoLaAdministra;
     [Test]
-    procedure HooksExtension_RequierenInheritedPrimero;
-    [Test]
-    procedure HooksCoordinacion_RequierenInherited;
-    [Test]
-    procedure HooksOpcionales_PermitenSustitucion;
-    [Test]
-    procedure HooksSustitucion_NoImponenInherited;
+    procedure HooksHerencia_BateriaCompartidaCompleta;
   end;
 
 implementation
 
 uses
   System.SysUtils,
+  inLibContratoMtoGenHerencia,
   inLibMtoGenAplicacion,
   inLibMtoGenAplicacionIntf;
 
@@ -182,80 +177,28 @@ begin
 end;
 
 procedure TPruebasMtoGenAplicacion.
-  HooksExtension_RequierenInheritedPrimero;
-const
-  HOOKS: array[0..2] of THookMtoGen = (
-    hmgAplicarEtiquetas,
-    hmgResetForm,
-    hmgCargarPerfilesParticulares);
+  HooksHerencia_BateriaCompartidaCompleta;
 var
-  Hook: THookMtoGen;
   Contrato: TContratoHookMtoGen;
+  Familia: TFamiliaHookMtoGen;
+  FamiliasCubiertas: set of TFamiliaHookMtoGen;
+  Hook: THookMtoGen;
 begin
-  for Hook in HOOKS do
+  FamiliasCubiertas := [];
+  for Hook := Low(THookMtoGen) to High(THookMtoGen) do
   begin
     Contrato := ContratoHookMtoGen(Hook);
+    Familia := FamiliaHookMtoGen(Hook);
+    Include(FamiliasCubiertas, Familia);
     Assert.IsNotEmpty(Contrato.Nombre);
     Assert.AreEqual(
-      Ord(oihPrimero),
+      Ord(OrdenFamiliaHookMtoGen(Familia)),
       Ord(Contrato.OrdenInherited));
     Assert.IsTrue(Contrato.SeEjecutaEnHiloPrincipal);
   end;
-end;
-
-procedure TPruebasMtoGenAplicacion.
-  HooksCoordinacion_RequierenInherited;
-const
-  HOOKS: array[0..1] of THookMtoGen = (
-    hmgCrearTablaPrincipal,
-    hmgPrepararBusquedaExterna);
-var
-  Hook: THookMtoGen;
-begin
-  for Hook in HOOKS do
-    Assert.AreEqual(
-      Ord(oihObligatorio),
-      Ord(ContratoHookMtoGen(Hook).OrdenInherited));
-end;
-
-procedure TPruebasMtoGenAplicacion.
-  HooksOpcionales_PermitenSustitucion;
-const
-  HOOKS: array[0..2] of THookMtoGen = (
-    hmgRecogerPerfilesParticulares,
-    hmgAplicarLayoutBusqueda,
-    hmgTrasPrecarga);
-var
-  Hook: THookMtoGen;
-begin
-  for Hook in HOOKS do
-    Assert.AreEqual(
-      Ord(oihOpcional),
-      Ord(ContratoHookMtoGen(Hook).OrdenInherited));
-end;
-
-procedure TPruebasMtoGenAplicacion.
-  HooksSustitucion_NoImponenInherited;
-const
-  HOOKS: array[0..5] of THookMtoGen = (
-    hmgResolverArticuloActivo,
-    hmgDataSourcesFoto,
-    hmgNombreCampoActivo,
-    hmgContarHijosActivos,
-    hmgDescripcionHijos,
-    hmgRestriccionUsuario);
-var
-  Hook: THookMtoGen;
-  Contrato: TContratoHookMtoGen;
-begin
-  for Hook in HOOKS do
-  begin
-    Contrato := ContratoHookMtoGen(Hook);
-    Assert.IsNotEmpty(Contrato.Nombre);
-    Assert.AreEqual(
-      Ord(oihNoAplicable),
-      Ord(Contrato.OrdenInherited));
-  end;
+  Assert.IsTrue(
+    FamiliasCubiertas = [Low(TFamiliaHookMtoGen)..
+      High(TFamiliaHookMtoGen)]);
 end;
 
 initialization
