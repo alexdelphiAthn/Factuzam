@@ -439,6 +439,7 @@
         <DCCReference Include="PruebasCorreoTickets.pas"/>
         <DCCReference Include="PruebasFormatoDocumento.pas"/>
         <DCCReference Include="PruebasGenerarTicketCaja.pas"/>
+        <DCCReference Include="PruebasFTicket.pas"/>
         <DCCReference Include="PruebasInventarioNube.pas"/>
         <DCCReference Include="PruebasSepaRemesasVenta.pas"/>
         <DCCReference Include="..\src\Caja\Lib\inLibFacturasProformaIntf.pas"/>

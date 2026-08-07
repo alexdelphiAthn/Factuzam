@@ -27,6 +27,10 @@ type
     [Test]
     procedure Calculo_RetiradaMayorNoDejaEfectivoNegativo;
     [Test]
+    procedure Distribucion_CambioEditadoRecalculaLaRetirada;
+    [Test]
+    procedure Distribucion_LimitaElCambioAlEfectivoDisponible;
+    [Test]
     procedure Preparacion_VendedorVacioDetieneLaOperacion;
     [Test]
     procedure Preparacion_VendedorInvalidoDetieneLaOperacion;
@@ -242,6 +246,36 @@ begin
     Entrada.Recuento,
     200);
   Assert.AreEqual(Currency(0), Plan.EfectivoDejado);
+end;
+
+procedure TPruebasModalArqueoPersistencia.
+  Distribucion_CambioEditadoRecalculaLaRetirada;
+var
+  EfectivoDejado: Currency;
+  ImporteRetirada: Currency;
+begin
+  CalcularDistribucionEfectivoModalArqueo(
+    90,
+    25,
+    EfectivoDejado,
+    ImporteRetirada);
+  Assert.AreEqual(Currency(25), EfectivoDejado);
+  Assert.AreEqual(Currency(65), ImporteRetirada);
+end;
+
+procedure TPruebasModalArqueoPersistencia.
+  Distribucion_LimitaElCambioAlEfectivoDisponible;
+var
+  EfectivoDejado: Currency;
+  ImporteRetirada: Currency;
+begin
+  CalcularDistribucionEfectivoModalArqueo(
+    90,
+    120,
+    EfectivoDejado,
+    ImporteRetirada);
+  Assert.AreEqual(Currency(90), EfectivoDejado);
+  Assert.AreEqual(Currency(0), ImporteRetirada);
 end;
 
 procedure TPruebasModalArqueoPersistencia.

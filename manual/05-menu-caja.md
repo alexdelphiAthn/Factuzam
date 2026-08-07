@@ -569,7 +569,7 @@ cuadrar el datáfono.
 | **F11** | **Resumen** / imprimir el arqueo calculado. |
 | **F7** | **Tira de Caja** con detalle de tickets y movimientos. |
 | **F8** | **Histórico** de arqueos anteriores. |
-| **F2** | **Grabar Arqueo y emitir justificante** desde la pestaña Recuento. |
+| **F2** | **Grabar Arqueo** desde la pestaña Recuento y, si está configurado, emitir el justificante. |
 
 El botón **Resumen (F11)** emite el ticket de arqueo con el periodo, las
 operaciones, los totales de venta y cobro y los resúmenes por sección,
@@ -592,7 +592,7 @@ denominación.
 | **Efectivo** | Importe total contado en el cajón. |
 | **Otras formas de pago** | Importe recontado de tarjeta, bono, divisa, cripto u otras formas no efectivo. |
 | **Retirada** | Importe retirado a banco, encargado o caja fuerte. |
-| **Dejo para mañana** | Efectivo que queda como cambio para la siguiente jornada. |
+| **Dejo para mañana** | Efectivo que queda como cambio para la siguiente jornada. Puede editarse si el parámetro correspondiente está activo; al cambiarlo se recalcula la retirada. |
 | **Observaciones** | Aclaraciones sobre diferencias o incidencias. |
 | **Vendedor** | Empleado responsable del cierre. |
 
@@ -782,6 +782,8 @@ de crédito.
 | Parámetro | Defecto | Qué controla |
 |-----------|---------|--------------|
 | **Niveles de familia en resumen por sección** (`vgerArqueoNivelesFamilia`) | `2` | Define cuántos niveles de la ruta de familias aparecen en el resumen por sección del arqueo y en el ticket de arqueo. `1` muestra solo la sección raíz; `2` sección y familia; `3` añade subfamilia. El sistema sanea el valor al rango `1..9`. |
+| **Permitir editar el cambio dejado para la siguiente jornada** (`vgerArqueoEditarCambio`) | `False` | Permite introducir directamente el importe de **Dejo para mañana**. La retirada se recalcula para que retirada y cambio dejado coincidan con el efectivo recontado. |
+| **Emitir justificante al grabar el cierre** (`vgerArqueoEmitirJustificante`) | `True` | Con `False`, después de grabar el arqueo se pregunta si se desea imprimir el justificante del cierre. Los duplicados siguen disponibles desde el histórico. |
 
 Usa pocos niveles si el arqueo debe ser rápido y legible. Sube los niveles
 cuando se necesite analizar la venta por familias más concretas.

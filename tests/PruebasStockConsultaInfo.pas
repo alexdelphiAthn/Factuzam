@@ -86,6 +86,8 @@ type
     procedure TallaDeColumnaTraduceElCampoDinamico;
     [Test]
     procedure SolicitudDePivoteTrasladaFiltrosYModo;
+    [Test]
+    procedure SqlTallasPriorizaOrdenEspecificoDelArticulo;
   end;
 
 implementation
@@ -97,7 +99,8 @@ uses
   inLibStockConsultaPresentacionEstados,
   inLibStockConsultaPresentacionFotos,
   inLibStockConsultaPresentacionPivote,
-  inLibStockConsultaPresentacionPropiedades;
+  inLibStockConsultaPresentacionPropiedades,
+  UniDataStockConsultaRepositorio;
 
 procedure TPruebasStockConsultaInfo.
   Propiedades_FormateaListaBooleanoYTexto;
@@ -529,6 +532,36 @@ begin
   Assert.IsFalse(Solicitud.OcultarCeros);
   Assert.AreEqual(2, Integer(Length(Solicitud.Almacenes)));
   Assert.AreEqual('AZUL', Solicitud.Colores[0]);
+end;
+
+procedure TPruebasStockConsultaPivote.
+  SqlTallasPriorizaOrdenEspecificoDelArticulo;
+var
+  Colores: TArray<string>;
+  iCaso: Integer;
+  Sql: TArray<string>;
+begin
+  SetLength(Colores, 1);
+  Colores[0] := 'NEGRO';
+  SetLength(Sql, 4);
+  Sql[0] := ConstruirSqlListarTallasStock(Colores, 10);
+  Sql[1] := ConstruirSqlListarTallasStock(Colores, 0);
+  SetLength(Colores, 0);
+  Sql[2] := ConstruirSqlListarTallasStock(Colores, 10);
+  Sql[3] := ConstruirSqlListarTallasStock(Colores, 0);
+  for iCaso := 0 to High(Sql) do
+  begin
+    Assert.IsTrue(
+      Pos('fza_articulos_atributos_basicos AAB', Sql[iCaso]) > 0);
+    Assert.IsTrue(
+      Pos('AAB.ORDEN_AAB', Sql[iCaso]) > 0);
+    Assert.IsTrue(
+      Pos('ORDER BY ORDEN_TALLA', Sql[iCaso]) > 0);
+  end;
+  Assert.IsTrue(
+    Pos('AAB.ORDEN_AAB, ACD.ORDEN_ACD', Sql[0]) > 0);
+  Assert.IsTrue(
+    Pos('AAB.ORDEN_AAB, AVT.ORDEN_AV', Sql[1]) > 0);
 end;
 
 initialization

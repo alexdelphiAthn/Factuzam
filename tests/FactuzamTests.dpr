@@ -590,6 +590,7 @@ uses
   PruebasCorreoTickets in 'PruebasCorreoTickets.pas',
   PruebasFormatoDocumento in 'PruebasFormatoDocumento.pas',
   PruebasGenerarTicketCaja in 'PruebasGenerarTicketCaja.pas',
+  PruebasFTicket in 'PruebasFTicket.pas',
   PruebasInventarioNube in 'PruebasInventarioNube.pas',
   PruebasSepaRemesasVenta in 'PruebasSepaRemesasVenta.pas',
   inLibFacturasProformaIntf in

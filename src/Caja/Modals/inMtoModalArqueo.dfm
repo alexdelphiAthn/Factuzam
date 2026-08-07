@@ -1011,12 +1011,17 @@
             TabOrder = 10
             Transparent = True
           end
-          object lblDejoImporte: TcxLabel
+          object txtDejoImporte: TcxCurrencyEdit
             Left = 160
-            Top = 123
-            Caption = '0,00 EUR'
+            Top = 119
+            EditValue = 0.000000000000000000
+            Properties.DisplayFormat = ',0.00 '#8364
+            Properties.EditFormat = ',0.00 '#8364
+            Properties.ReadOnly = True
+            Properties.OnChange = txtDejoImportePropertiesChange
+            TabStop = False
             TabOrder = 11
-            Transparent = True
+            Width = 110
           end
           object lblObservacionesLbl: TcxLabel
             Left = 300

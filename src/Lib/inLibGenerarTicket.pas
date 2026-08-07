@@ -476,10 +476,7 @@ begin
   FTicket.EscribirLinea(STicketGraciasVisita);
   EscribirPieTicketCaja(FLecturasTicket, FTicket, FCodigoEmpresa);
   EscribirCodigoBarras;
-  FTicket.SaltarLineas(1);
-  FTicket.EscribirLinea('');
-  FTicket.SaltarLineas(3);
-  FTicket.CortarPapel;
+  FTicket.AvanzarYCortarPapel;
   FTicket.AbrirCajon;
 end;
 

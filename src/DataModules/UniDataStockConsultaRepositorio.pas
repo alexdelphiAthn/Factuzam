@@ -18,6 +18,9 @@ interface
 uses
   Uni, inLibStockConsultaPersistenciaIntf;
 
+function ConstruirSqlListarTallasStock(
+  const AColores: TArray<string>;
+  AIdConjunto: Integer): string;
 function CrearServiciosStockConsultaUniDAC(
   AConexion: TUniConnection): TServiciosStockConsulta;
 
@@ -138,6 +141,97 @@ begin
       Result := Result + QuotedStr(AValores[i]);
     end;
   end;
+end;
+
+function ConstruirSqlListarTallasStock(
+  const AColores: TArray<string>;
+  AIdConjunto: Integer): string;
+var
+  i: Integer;
+  sColores: string;
+begin
+  sColores := '';
+  for i := 0 to High(AColores) do
+  begin
+    if sColores <> '' then
+      sColores := sColores + ',';
+    sColores := sColores + QuotedStr(AColores[i]);
+  end;
+  if sColores = '' then
+    sColores := 'NULL';
+  if (Length(AColores) > 0) and (AIdConjunto > 0) then
+    Result :=
+      'SELECT AVT.AV, ' +
+      '       MIN(COALESCE(AAB.ORDEN_AAB, ACD.ORDEN_ACD, ' +
+      '                    AVT.ORDEN_AV)) AS ORDEN_TALLA ' +
+      '  FROM fza_articulos_skus SKU ' +
+      '  JOIN fza_atributos_sku SAT ' +
+      '    ON SAT.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+      '  JOIN fza_atributos_valores AVT ON AVT.ID_AV = SAT.ID_AV_SA ' +
+      '  JOIN fza_atributos_conjuntos_det ACD ' +
+      '    ON ACD.ID_AV_ACD = AVT.ID_AV ' +
+      '   AND ACD.ID_AC_ACD = :CONJUNTO ' +
+      '  LEFT JOIN fza_articulos_atributos_basicos AAB ' +
+      '    ON AAB.CODIGO_ART_AAB = SKU.CODIGO_ART_SKU ' +
+      '   AND AAB.ID_AV_AAB = AVT.ID_AV ' +
+      '  JOIN fza_atributos_sku SAC ' +
+      '    ON SAC.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+      '  JOIN fza_atributos_valores AVC ' +
+      '    ON AVC.ID_AV = SAC.ID_AV_SA AND AVC.ID_VA_AV = ''CO'' ' +
+      ' WHERE SKU.CODIGO_ART_SKU = :ARTICULO ' +
+      '   AND AVC.AV IN (' + sColores + ') ' +
+      ' GROUP BY AVT.AV ' +
+      ' ORDER BY ORDEN_TALLA, AVT.AV'
+  else if Length(AColores) > 0 then
+    Result :=
+      'SELECT AVT.AV, ' +
+      '       MIN(COALESCE(AAB.ORDEN_AAB, AVT.ORDEN_AV)) ' +
+      '         AS ORDEN_TALLA ' +
+      '  FROM fza_articulos_skus SKU ' +
+      '  JOIN fza_atributos_sku SAT ' +
+      '    ON SAT.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+      '  JOIN fza_atributos_valores AVT ' +
+      '    ON AVT.ID_AV = SAT.ID_AV_SA AND AVT.ID_VA_AV <> ''CO'' ' +
+      '  LEFT JOIN fza_articulos_atributos_basicos AAB ' +
+      '    ON AAB.CODIGO_ART_AAB = SKU.CODIGO_ART_SKU ' +
+      '   AND AAB.ID_AV_AAB = AVT.ID_AV ' +
+      '  JOIN fza_atributos_sku SAC ' +
+      '    ON SAC.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+      '  JOIN fza_atributos_valores AVC ' +
+      '    ON AVC.ID_AV = SAC.ID_AV_SA AND AVC.ID_VA_AV = ''CO'' ' +
+      ' WHERE SKU.CODIGO_ART_SKU = :ARTICULO ' +
+      '   AND AVC.AV IN (' + sColores + ') ' +
+      ' GROUP BY AVT.AV ' +
+      ' ORDER BY ORDEN_TALLA, AVT.AV'
+  else if AIdConjunto > 0 then
+    Result :=
+      'SELECT AV.AV, ' +
+      '       MIN(COALESCE(AAB.ORDEN_AAB, ACD.ORDEN_ACD, ' +
+      '                    AV.ORDEN_AV)) AS ORDEN_TALLA ' +
+      '  FROM fza_atributos_conjuntos_det ACD ' +
+      '  JOIN fza_atributos_valores AV ON AV.ID_AV = ACD.ID_AV_ACD ' +
+      '  LEFT JOIN fza_articulos_atributos_basicos AAB ' +
+      '    ON AAB.CODIGO_ART_AAB = :ARTICULO ' +
+      '   AND AAB.ID_AV_AAB = AV.ID_AV ' +
+      ' WHERE ACD.ID_AC_ACD = :CONJUNTO ' +
+      ' GROUP BY AV.AV ' +
+      ' ORDER BY ORDEN_TALLA, AV.AV'
+  else
+    Result :=
+      'SELECT AV.AV, ' +
+      '       MIN(COALESCE(AAB.ORDEN_AAB, AV.ORDEN_AV)) ' +
+      '         AS ORDEN_TALLA ' +
+      '  FROM fza_articulos_skus SKU ' +
+      '  JOIN fza_atributos_sku SA ' +
+      '    ON SA.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
+      '  JOIN fza_atributos_valores AV ON AV.ID_AV = SA.ID_AV_SA ' +
+      '  LEFT JOIN fza_articulos_atributos_basicos AAB ' +
+      '    ON AAB.CODIGO_ART_AAB = SKU.CODIGO_ART_SKU ' +
+      '   AND AAB.ID_AV_AAB = AV.ID_AV ' +
+      ' WHERE SKU.CODIGO_ART_SKU = :ARTICULO ' +
+      '   AND AV.ID_VA_AV <> ''CO'' ' +
+      ' GROUP BY AV.AV ' +
+      ' ORDER BY ORDEN_TALLA, AV.AV';
 end;
 
 function TRepositorioStockConsultaUniDAC.ResolverTextoArticulo(
@@ -544,7 +638,6 @@ function TRepositorioStockConsultaUniDAC.ListarTallas(
   const ACodigoArticulo: string;
   const AColores: TArray<string>): TArray<TInfoColumna>;
 var
-  bTieneColor: Boolean;
   iAcPivot: Integer;
   inf: TInfoColumna;
   oConsulta: TUniQuery;
@@ -565,69 +658,11 @@ begin
     if not oConsulta.IsEmpty then
       iAcPivot := oConsulta.FieldByName('ID_AC_ACA').AsInteger;
     oConsulta.Close;
-    bTieneColor := Length(AColores) > 0;
-    if bTieneColor and (iAcPivot > 0) then
-    begin
-      oConsulta.SQL.Text :=
-        'SELECT DISTINCT AVT.AV, ACD.ORDEN_ACD, AVT.ORDEN_AV ' +
-        '  FROM fza_articulos_skus SKU ' +
-        '  JOIN fza_atributos_sku SAT ' +
-        '    ON SAT.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-        '  JOIN fza_atributos_valores AVT ON AVT.ID_AV = SAT.ID_AV_SA ' +
-        '  JOIN fza_atributos_conjuntos_det ACD ' +
-        '    ON ACD.ID_AV_ACD = AVT.ID_AV ' +
-        '   AND ACD.ID_AC_ACD = :CONJUNTO ' +
-        '  JOIN fza_atributos_sku SAC ' +
-        '    ON SAC.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-        '  JOIN fza_atributos_valores AVC ' +
-        '    ON AVC.ID_AV = SAC.ID_AV_SA AND AVC.ID_VA_AV = ''CO'' ' +
-        ' WHERE SKU.CODIGO_ART_SKU = :ARTICULO ' +
-        '   AND AVC.AV IN (' + ListaSql(AColores) + ') ' +
-        ' ORDER BY ACD.ORDEN_ACD, AVT.ORDEN_AV, AVT.AV';
+    oConsulta.SQL.Text :=
+      ConstruirSqlListarTallasStock(AColores, iAcPivot);
+    oConsulta.ParamByName('ARTICULO').AsString := ACodigoArticulo;
+    if iAcPivot > 0 then
       oConsulta.ParamByName('CONJUNTO').AsInteger := iAcPivot;
-      oConsulta.ParamByName('ARTICULO').AsString := ACodigoArticulo;
-    end
-    else if bTieneColor then
-    begin
-      oConsulta.SQL.Text :=
-        'SELECT DISTINCT AVT.AV, AVT.ORDEN_AV ' +
-        '  FROM fza_articulos_skus SKU ' +
-        '  JOIN fza_atributos_sku SAT ' +
-        '    ON SAT.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-        '  JOIN fza_atributos_valores AVT ' +
-        '    ON AVT.ID_AV = SAT.ID_AV_SA AND AVT.ID_VA_AV <> ''CO'' ' +
-        '  JOIN fza_atributos_sku SAC ' +
-        '    ON SAC.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-        '  JOIN fza_atributos_valores AVC ' +
-        '    ON AVC.ID_AV = SAC.ID_AV_SA AND AVC.ID_VA_AV = ''CO'' ' +
-        ' WHERE SKU.CODIGO_ART_SKU = :ARTICULO ' +
-        '   AND AVC.AV IN (' + ListaSql(AColores) + ') ' +
-        ' ORDER BY AVT.ORDEN_AV, AVT.AV';
-      oConsulta.ParamByName('ARTICULO').AsString := ACodigoArticulo;
-    end
-    else if iAcPivot > 0 then
-    begin
-      oConsulta.SQL.Text :=
-        'SELECT AV.AV, AV.ORDEN_AV ' +
-        '  FROM fza_atributos_conjuntos_det ACD ' +
-        '  JOIN fza_atributos_valores AV ON AV.ID_AV = ACD.ID_AV_ACD ' +
-        ' WHERE ACD.ID_AC_ACD = :CONJUNTO ' +
-        ' ORDER BY ACD.ORDEN_ACD, AV.AV';
-      oConsulta.ParamByName('CONJUNTO').AsInteger := iAcPivot;
-    end
-    else
-    begin
-      oConsulta.SQL.Text :=
-        'SELECT DISTINCT AV.AV, AV.ORDEN_AV ' +
-        '  FROM fza_articulos_skus SKU ' +
-        '  JOIN fza_atributos_sku SA ' +
-        '    ON SA.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU ' +
-        '  JOIN fza_atributos_valores AV ON AV.ID_AV = SA.ID_AV_SA ' +
-        ' WHERE SKU.CODIGO_ART_SKU = :ARTICULO ' +
-        '   AND AV.ID_VA_AV <> ''CO'' ' +
-        ' ORDER BY AV.ORDEN_AV, AV.AV';
-      oConsulta.ParamByName('ARTICULO').AsString := ACodigoArticulo;
-    end;
     oConsulta.Open;
     while not oConsulta.Eof do
     begin

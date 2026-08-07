@@ -470,6 +470,16 @@ begin
     'ipcion',
     'Niveles de familia en resumen por sección (1=sección)',
     'src/Caja/Lib/inLibCajaParam.pas');
+  ARegistrar(
+    'inMtoCajaParam.Parametros.vgerArqueoEditarCambio.Descripc' +
+    'ion',
+    'Permitir editar el cambio dejado para la siguiente jornada',
+    'src/Caja/Lib/inLibCajaParam.pas');
+  ARegistrar(
+    'inMtoCajaParam.Parametros.vgerArqueoEmitirJustificante.De' +
+    'scripcion',
+    'Emitir justificante al grabar el cierre',
+    'src/Caja/Lib/inLibCajaParam.pas');
 end;
 
 end.

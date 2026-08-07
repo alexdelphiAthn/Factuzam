@@ -60,3 +60,6 @@ database.cfg
 
 # Archivos temporales o de backup de Delphi
 *.~**.dsv
+
+# Contexto local para asistentes de IA (rutas específicas de este equipo)
+/AGENTS.md

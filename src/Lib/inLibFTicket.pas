@@ -49,6 +49,9 @@ type
     procedure ImprimirImagen(ABitmap: Vcl.Graphics.TBitmap;
                              AEscala: Integer = 3);
     procedure CortarPapel(AParcial: Boolean = False);
+    procedure AvanzarYCortarPapel(
+      ACantidadLineas: Integer = 9;
+      AParcial: Boolean = False);
     procedure AbrirCajon;
 
     procedure TextoColumnas(const AIzq,
@@ -325,6 +328,15 @@ begin
     FComandos.Append(CMD_CORTE_PARCIAL)
   else
     FComandos.Append(CMD_CORTE_TOTAL);
+end;
+
+procedure TTicketTermico.AvanzarYCortarPapel(
+  ACantidadLineas: Integer;
+  AParcial: Boolean);
+begin
+  if ACantidadLineas > 0 then
+    SaltarLineas(ACantidadLineas);
+  CortarPapel(AParcial);
 end;
 
 procedure TTicketTermico.AbrirCajon;

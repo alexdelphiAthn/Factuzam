@@ -747,7 +747,7 @@ var
   sComandosEsc: string;
   sRutaFicheroPdf: string;
 begin
-  FTicket.CortarPapel;
+  FTicket.AvanzarYCortarPapel;
   FTicket.AbrirCajon;
   sComandosEsc := FTicket.ObtenerComandos;
   sRutaFicheroPdf := GetUserFolderTickets + 'TicketBD_' +

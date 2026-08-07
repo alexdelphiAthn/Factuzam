@@ -79,6 +79,11 @@ type
 function CalcularPlanGrabacionModalArqueo(
   const ARecuento: TArray<TDatoRecuentoModalArqueo>;
   AImporteRetirada: Currency): TPlanGrabacionModalArqueo;
+procedure CalcularDistribucionEfectivoModalArqueo(
+  AEfectivoRecontado: Currency;
+  AEfectivoDejadoSolicitado: Currency;
+  out AEfectivoDejado: Currency;
+  out AImporteRetirada: Currency);
 
 implementation
 
@@ -93,6 +98,25 @@ begin
   Result := AEfectivoRecontado - AImporteRetirada;
   if Result < 0 then
     Result := 0;
+end;
+
+procedure CalcularDistribucionEfectivoModalArqueo(
+  AEfectivoRecontado: Currency;
+  AEfectivoDejadoSolicitado: Currency;
+  out AEfectivoDejado: Currency;
+  out AImporteRetirada: Currency);
+var
+  EfectivoDisponible: Currency;
+begin
+  EfectivoDisponible := AEfectivoRecontado;
+  if EfectivoDisponible < 0 then
+    EfectivoDisponible := 0;
+  AEfectivoDejado := AEfectivoDejadoSolicitado;
+  if AEfectivoDejado < 0 then
+    AEfectivoDejado := 0;
+  if AEfectivoDejado > EfectivoDisponible then
+    AEfectivoDejado := EfectivoDisponible;
+  AImporteRetirada := EfectivoDisponible - AEfectivoDejado;
 end;
 
 function CrearLineaRecuento(

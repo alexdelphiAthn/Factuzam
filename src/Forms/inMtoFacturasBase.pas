@@ -2000,7 +2000,7 @@ procedure TfrmMtoFacturasBase.chkCrearArticulosPropertiesChange(
   Sender: TObject);
 begin
   inherited;
-  if not FConstruyendoModo then
+  if Assigned(FPresentadorLineas) and (not FConstruyendoModo) then
   begin
     // Con la presentacion reconstruida, alternar el modo creacion cambia
     // entre la presentacion CLASICA (alta de articulos inline) y el

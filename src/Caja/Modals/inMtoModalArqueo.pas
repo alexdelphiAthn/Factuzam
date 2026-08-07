@@ -204,7 +204,7 @@ type
     rgRetiradaTipo: TcxRadioGroup;
     txtRetiradaImporte: TcxCurrencyEdit;
     lblDejoLbl: TcxLabel;
-    lblDejoImporte: TcxLabel;
+    txtDejoImporte: TcxCurrencyEdit;
     txtObservaciones: TcxTextEdit;
     lblObservacionesLbl: TcxLabel;
     lblVendedorLbl: TcxLabel;
@@ -252,6 +252,7 @@ type
     procedure tvRecuentoKeyDown(Sender: TObject;
       var Key: Word; Shift: TShiftState);
     procedure txtRetiradaImportePropertiesChange(Sender: TObject);
+    procedure txtDejoImportePropertiesChange(Sender: TObject);
     procedure txtVendedorCodigoExit(Sender: TObject);
   private
     FConn         : TUniConnection;
@@ -260,6 +261,9 @@ type
     FCaja         : string;
     FArqueoActual : TArqueoCaja;
     FArqueoTarjetasPermitido: Boolean;
+    FEditarCambioPermitido: Boolean;
+    FEmitirJustificanteCierre: Boolean;
+    FActualizandoImportesCierre: Boolean;
     FPuedeVerResumen: Boolean;
     FResumenFamilias: TClientDataSet;
     FRepositorioPersistencia: IRepositorioModalArqueo;
@@ -299,6 +303,7 @@ type
       TEntradaGrabacionModalArqueo;
     function ConfirmarGrabacion(
       const AEntrada: TEntradaGrabacionModalArqueo): Boolean;
+    function DebeImprimirCierre: Boolean;
     procedure MostrarErrorPreparacion(
       const APreparacion: TResultadoPreparacionModalArqueo);
     procedure PersistirArqueo(
@@ -382,6 +387,17 @@ begin
     frm.FCaja    := ACaja;
     frm.FArqueoTarjetasPermitido :=
       frm.ParametrosCaja.GetBool('vgerArqueoTarjetas', False);
+    frm.FEditarCambioPermitido :=
+      frm.ParametrosCaja.GetBool('vgerArqueoEditarCambio', False);
+    frm.FEmitirJustificanteCierre :=
+      frm.ParametrosCaja.GetBool(
+        'vgerArqueoEmitirJustificante',
+        True);
+    frm.txtDejoImporte.Properties.ReadOnly :=
+      not frm.FEditarCambioPermitido;
+    frm.txtDejoImporte.TabStop := frm.FEditarCambioPermitido;
+    if not frm.FEmitirJustificanteCierre then
+      frm.btnGrabarArqueo.Caption := 'Grabar Arqueo (F2)';
     // Defaults: desde = 00:00:00, hasta = 23:59:59 del mismo día/rango.
     frm.dteFechaDesde.EditValue := DateOf(AFechaDesde);
     frm.dteFechaHasta.EditValue :=
@@ -964,13 +980,18 @@ procedure TfrmModalArqueo.RecalcularDejoManana;
 var
   Plan: TPlanGrabacionModalArqueo;
 begin
-  Plan := CalcularPlanGrabacionModalArqueo(
-    ObtenerDatosRecuento,
-    Currency(txtRetiradaImporte.Value));
-  lblDejoImporte.Caption :=
-    Format(
-      SCaptionImporteEur,
-      [FormatFloat(',0.00', Plan.EfectivoDejado)]);
+  if not FActualizandoImportesCierre then
+  begin
+    Plan := CalcularPlanGrabacionModalArqueo(
+      ObtenerDatosRecuento,
+      Currency(txtRetiradaImporte.Value));
+    FActualizandoImportesCierre := True;
+    try
+      txtDejoImporte.Value := Plan.EfectivoDejado;
+    finally
+      FActualizandoImportesCierre := False;
+    end;
+  end;
 end;
 
 procedure TfrmModalArqueo.tvRecuentoImportePropertiesEditValueChanged(
@@ -1047,6 +1068,37 @@ procedure TfrmModalArqueo.txtRetiradaImportePropertiesChange(
   Sender: TObject);
 begin
   RecalcularDejoManana;
+end;
+
+procedure TfrmModalArqueo.txtDejoImportePropertiesChange(
+  Sender: TObject);
+var
+  EfectivoDejado: Currency;
+  ImporteRetirada: Currency;
+  Plan: TPlanGrabacionModalArqueo;
+  ValorSolicitado: Currency;
+begin
+  if (not FActualizandoImportesCierre) and
+     FEditarCambioPermitido then
+  begin
+    Plan := CalcularPlanGrabacionModalArqueo(
+      ObtenerDatosRecuento,
+      0);
+    ValorSolicitado := Currency(txtDejoImporte.Value);
+    CalcularDistribucionEfectivoModalArqueo(
+      Plan.EfectivoRecontado,
+      ValorSolicitado,
+      EfectivoDejado,
+      ImporteRetirada);
+    FActualizandoImportesCierre := True;
+    try
+      if EfectivoDejado <> ValorSolicitado then
+        txtDejoImporte.Value := EfectivoDejado;
+      txtRetiradaImporte.Value := ImporteRetirada;
+    finally
+      FActualizandoImportesCierre := False;
+    end;
+  end;
 end;
 
 function TfrmModalArqueo.ObtenerConceptoRetirada: string;
@@ -1135,6 +1187,16 @@ begin
     MB_YESNO or MB_ICONQUESTION) = IDYES;
 end;
 
+function TfrmModalArqueo.DebeImprimirCierre: Boolean;
+begin
+  Result := FEmitirJustificanteCierre;
+  if not Result then
+    Result := Application.MessageBox(
+      PChar(SPreguntaImprimirJustificanteCierreCaja),
+      PChar(STituloJustificanteCierreCaja),
+      MB_YESNO or MB_ICONQUESTION) = IDYES;
+end;
+
 procedure TfrmModalArqueo.MostrarErrorPreparacion(
   const APreparacion: TResultadoPreparacionModalArqueo);
 begin
@@ -1221,7 +1283,8 @@ begin
     else if ConfirmarGrabacion(Entrada) then
     begin
       PersistirArqueo(Entrada, Preparacion);
-      ImprimirCierre(Entrada, Preparacion);
+      if DebeImprimirCierre then
+        ImprimirCierre(Entrada, Preparacion);
     end;
   end;
 end;

@@ -2989,6 +2989,18 @@ begin
       STituloConfirmarArqueoCaja);
   ARegistrar(
     'inLibMsgCaja.' +
+    'SPreguntaImprimirJustificanteCierreCaja',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SPreguntaImprimirJustificanteCierreCaja);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'STituloJustificanteCierreCaja',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      STituloJustificanteCierreCaja);
+  ARegistrar(
+    'inLibMsgCaja.' +
     'STituloOperacionCajaReal',
     'src/Lib/inLibMsgCaja.pas',
     @inLibMsgCaja.

@@ -296,6 +296,10 @@ resourcestring
     sLineBreak + '¿Desea continuar?';
   STituloConfirmarArqueoCaja =
     'Confirmar Arqueo';
+  SPreguntaImprimirJustificanteCierreCaja =
+    '¿Desea imprimir el justificante de cierre?';
+  STituloJustificanteCierreCaja =
+    'Justificante de cierre';
   // R03 - Título de operación de caja real
   STituloOperacionCajaReal = 'Operación - (Caja Real %s)';
   // R11 - Operaciones de caja por SKU

@@ -329,6 +329,17 @@ begin
                      'Niveles de familia en resumen por sección (1=sección)',
                      tpInteger,
                      '2');
+  RegistrarParametro('Arqueo',
+                     'vgerArqueoEditarCambio',
+                     'Permitir editar el cambio dejado para la ' +
+                     'siguiente jornada',
+                     tpBoolean,
+                     'False');
+  RegistrarParametro('Arqueo',
+                     'vgerArqueoEmitirJustificante',
+                     'Emitir justificante al grabar el cierre',
+                     tpBoolean,
+                     'True');
 end;
 
 function TParametrosCaja.NivelesFamiliaArqueo: Integer;
