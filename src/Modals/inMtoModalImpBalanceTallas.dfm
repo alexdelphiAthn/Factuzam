@@ -1,7 +1,7 @@
 ﻿inherited frmPrintBalanceTallas: TfrmPrintBalanceTallas
   Caption = 'Balance de almac'#233'n por tallas'
   ClientHeight = 470
-  ClientWidth = 620
+  ClientWidth = 1040
   TextHeight = 19
   inherited frxrprt1: TfrxReport
     Datasets = <

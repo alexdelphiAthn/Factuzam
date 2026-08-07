@@ -54,9 +54,9 @@
       Transparent = True
     end
     object btnPrevisualizar: TcxButton
-      Left = 945
+      Left = 939
       Top = 12
-      Width = 105
+      Width = 111
       Height = 28
       Caption = 'Previsualizar'
       TabOrder = 3
@@ -127,9 +127,9 @@
           OnClick = btnContraerFamiliasClick
         end
         object btnQuitarSelFamilias: TcxButton
-          Left = 462
+          Left = 458
           Top = 4
-          Width = 130
+          Width = 138
           Height = 25
           Caption = 'Quitar selecci'#243'n'
           TabOrder = 3
@@ -215,7 +215,7 @@
         object btnQuitarSelProveedores: TcxButton
           Left = 510
           Top = 4
-          Width = 130
+          Width = 138
           Height = 25
           Caption = 'Quitar selecci'#243'n'
           TabOrder = 2
@@ -300,7 +300,7 @@
         object btnQuitarSelPropiedades: TcxButton
           Left = 450
           Top = 4
-          Width = 130
+          Width = 138
           Height = 25
           Caption = 'Quitar selecci'#243'n'
           TabOrder = 1
@@ -406,7 +406,7 @@
         object btnDesmarcarTodosAlm: TcxButton
           Left = 650
           Top = 44
-          Width = 130
+          Width = 138
           Height = 25
           Caption = 'Desmarcar todos'
           TabOrder = 2

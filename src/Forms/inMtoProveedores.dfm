@@ -1316,14 +1316,14 @@
                   object btnGenerarTallasKit: TcxButton
                     Left = 196
                     Top = 3
-                    Width = 150
+                    Width = 200
                     Height = 26
                     Caption = 'A'#241'adir todas las tallas'
                     TabOrder = 2
                     OnClick = btnGenerarTallasKitClick
                   end
                   object btnAddKitDet: TcxButton
-                    Left = 350
+                    Left = 400
                     Top = 3
                     Width = 90
                     Height = 26
@@ -1332,7 +1332,7 @@
                     OnClick = btnAddKitDetClick
                   end
                   object btnDelKitDet: TcxButton
-                    Left = 444
+                    Left = 494
                     Top = 3
                     Width = 90
                     Height = 26

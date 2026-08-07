@@ -168,7 +168,7 @@ const
   // vi_albaranes (que anade NOMBRE_ALM_ALB por join y NO es
   // insertable): los DML se generan contra la tabla, como hace
   // pedidos con fza_pedidos en su dfm.
-  COLUMNAS_ALBARAN: array[0..70] of string = (
+  COLUMNAS_ALBARAN: array[0..72] of string = (
     'NUMERO_ALB', 'SERIE_ALB', 'FECHA_ALB',
     'INSTANTE_MOVIMIENTO_ALB', 'ESCONSOLIDADO_ALB',
     'ESTADO_ALB', 'NUMERO_PED_ALB', 'SERIE_PED_ALB', 'NUMERO_FAC_ALB',
@@ -195,7 +195,8 @@ const
     'PORCENTAJE_IVAN_ALB', 'TOTAL_IVAN_ALB', 'PORCENTAJE_IVAR_ALB',
     'TOTAL_IVAR_ALB', 'PORCENTAJE_IVAS_ALB', 'TOTAL_IVAS_ALB',
     'PORCENTAJE_IVAE_ALB', 'TOTAL_IVAE_ALB', 'TOTAL_BASES_ALB',
-    'TOTAL_IMPUESTOS_ALB', 'TOTAL_LIQUIDO_ALB', 'FORMA_PAGO_ALB',
+    'TOTAL_IMPUESTOS_ALB', 'PORCENTAJE_RETENCION_ALB',
+    'TOTAL_RETENCION_ALB', 'TOTAL_LIQUIDO_ALB', 'FORMA_PAGO_ALB',
     'CONTADOR_LINEAS_ALB', 'COMENTARIOS_ALB', 'OBSERVACIONES_ALB',
     'INSTANTE_MODIF', 'INSTANTE_ALTA', 'USUARIO_ALTA', 'USUARIO_MODIF'
   );
@@ -342,6 +343,9 @@ begin
   unstrdprcCrearFacturaLinea.Connection  := ConexionPrincipal;
   unstrdprcCrearFacturaFin.Connection    := ConexionPrincipal;
   unstrdprcInsertarMovAlb.Connection     := ConexionPrincipal;
+  // El mantenimiento enlaza campos de retencion de la cabecera. Aseguramos
+  // el esquema antes de que la consulta principal abra vi_albaranes.
+  InstalarProcedimientos;
 end;
 
 procedure TdmAlbaranes.DataModuleDestroy(Sender: TObject);
@@ -1478,6 +1482,7 @@ begin
     '    TARIFA_ARTICULO_CLIENTE_FAC, ESIMP_INCL_TARIFA_CLIENTE_FAC, ' +
     '    PORCENTAJE_IVAN_FAC, PORCENTAJE_IVAR_FAC, ' +
     '    PORCENTAJE_IVAS_FAC, PORCENTAJE_IVAE_FAC, ' +
+    '    PORCENTAJE_RETENCION_FAC, ' +
     '    FORMA_PAGO_FAC, CONTADOR_LINEAS_FAC, ' +
     '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
     '  SELECT v_numero, v_serie, CURRENT_DATE(), ''BORRADOR'', ''NORMAL'', ' +
@@ -1502,6 +1507,7 @@ begin
     'A.ESIMP_INCL_TARIFA_CLIENTE_ALB, ' +
     '         A.PORCENTAJE_IVAN_ALB, A.PORCENTAJE_IVAR_ALB, ' +
     '         A.PORCENTAJE_IVAS_ALB, A.PORCENTAJE_IVAE_ALB, ' +
+    '         A.PORCENTAJE_RETENCION_ALB, ' +
     '         A.FORMA_PAGO_ALB, ''0'', NOW(), p_USUARIO, p_USUARIO ' +
     '    FROM fza_albaranes A ' +
     '   WHERE A.NUMERO_ALB = p_NUMERO_ALB AND A.SERIE_ALB = p_SERIE_ALB; ' +
@@ -1526,6 +1532,20 @@ begin
     q := TUniSQL.Create(nil);
     try
       q.Connection := ConexionPrincipal;
+
+    // Retencion del albaran de venta (idempotente).
+    Run('ALTER TABLE fza_albaranes ' +
+        'ADD COLUMN IF NOT EXISTS PORCENTAJE_RETENCION_ALB ' +
+        'DECIMAL(19,6) NULL DEFAULT 0 AFTER TOTAL_IMPUESTOS_ALB');
+    Run('ALTER TABLE fza_albaranes ' +
+        'ADD COLUMN IF NOT EXISTS TOTAL_RETENCION_ALB ' +
+        'DECIMAL(18,6) NULL DEFAULT 0 AFTER PORCENTAJE_RETENCION_ALB');
+    // MariaDB congela a.* al crear una vista: hay que recrearla para que los
+    // dos campos nuevos esten disponibles en el data-binding del formulario.
+    Run('CREATE OR REPLACE VIEW vi_albaranes AS ' +
+        'SELECT a.*, alm.NOMBRE_ALM_ALM AS NOMBRE_ALM_ALB ' +
+        'FROM fza_albaranes a LEFT JOIN fza_almacenes alm ' +
+        'ON alm.CODIGO_ALM_ALM = a.CODIGO_ALM_ALB');
 
     // Columna de seguimiento de facturación a nivel de línea (idempotente).
     Run('ALTER TABLE fza_albaranes_lineas ' +
@@ -1653,6 +1673,8 @@ begin
       ') BEGIN ' +
       '  DECLARE v_total_base decimal(18,6) DEFAULT 0; ' +
       '  DECLARE v_total_iva  decimal(18,6) DEFAULT 0; ' +
+      '  DECLARE v_por_retencion decimal(19,6) DEFAULT 0; ' +
+      '  DECLARE v_total_retencion decimal(18,6) DEFAULT 0; ' +
       '  DECLARE v_pendientes int DEFAULT 0; ' +
       '  SELECT IFNULL(SUM(CANTIDAD_FACLIN * ' +
       'PRECIO_VENTA_SIVA_ARTICULO_FACLIN), 0), ' +
@@ -1663,10 +1685,16 @@ begin
       '    FROM fza_facturas_lineas ' +
       '   WHERE NUMERO_FAC_FACLIN = p_NUMERO_FAC ' +
       '     AND SERIE_FAC_FACLIN  = p_SERIE_FAC; ' +
+      '  SELECT IFNULL(PORCENTAJE_RETENCION_FAC, 0) ' +
+      '    INTO v_por_retencion FROM fza_facturas ' +
+      '   WHERE NUMERO_FAC = p_NUMERO_FAC AND SERIE_FAC = p_SERIE_FAC; ' +
+      '  SET v_total_retencion = v_total_base * v_por_retencion / 100; ' +
       '  UPDATE fza_facturas ' +
       '     SET TOTAL_BASES_FAC     = v_total_base, ' +
       '         TOTAL_IMPUESTOS_FAC = v_total_iva, ' +
-      '         TOTAL_LIQUIDO_FAC   = v_total_base + v_total_iva, ' +
+      '         TOTAL_RETENCION_FAC = v_total_retencion, ' +
+      '         TOTAL_LIQUIDO_FAC   = v_total_base + v_total_iva - ' +
+      '           v_total_retencion, ' +
       '         INSTANTE_MODIF      = NOW(), ' +
       '         USUARIO_MODIF       = p_USUARIO ' +
       '   WHERE NUMERO_FAC = p_NUMERO_FAC AND SERIE_FAC = p_SERIE_FAC; ' +

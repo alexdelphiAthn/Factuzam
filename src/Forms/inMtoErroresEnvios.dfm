@@ -230,16 +230,16 @@
               object btnFichaResponder: TcxButton
                 Left = 176
                 Top = 6
-                Width = 160
+                Width = 174
                 Height = 34
                 Caption = 'Responder al soporte'
                 TabOrder = 1
                 OnClick = btnEnviarComentarioClick
               end
               object btnFichaAbrirSeguimiento: TcxButton
-                Left = 344
+                Left = 358
                 Top = 6
-                Width = 160
+                Width = 182
                 Height = 34
                 Caption = 'Abrir seguimiento web'
                 TabOrder = 2

@@ -28,6 +28,8 @@ __recovery/
 Win32/
 Win64/
 Android/
+!src/apps_fmx/fzamcontrolu/FzamControlU.Artwork/Android/
+!src/apps_fmx/fzamcontrolu/FzamControlU.Artwork/Android/**
 Android64/
 Android32/
 iOSDevice64/

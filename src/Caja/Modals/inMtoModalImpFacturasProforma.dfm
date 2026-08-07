@@ -345,7 +345,7 @@
             '[LineasProforma."DESCRIPCION_VINCULO_PROCLIN"] - ' +
             'Documento VE [LineasProforma."NUMERO_OPERACION_PROCLIN"] ' +
             '/ ID [LineasProforma."ID_OPCAJA_PROCLIN"]')
-          Padding.Left = 5
+          GapX = 5.000000000000000000
           ParentFont = False
           VAlign = vaCenter
         end

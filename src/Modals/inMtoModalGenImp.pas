@@ -248,6 +248,10 @@ begin
 end;
 
 procedure TfrmPrint.AfterReportLoaded;
+var
+  iTalla: Integer;
+  oTalla: TfrxComponent;
+  mTalla: TfrxMemoView;
 begin
   // Hook para descendientes: re-enlazar DataSets del informe.
   // Aqui ademas enganchamos el OnBeforePrint del Report para que en
@@ -256,6 +260,20 @@ begin
   // banda padre (necesario en etiquetas y otros informes iterativos) y
   // el llamado 'qrverifactu' con el QR tributario de la factura.
   frxrprt1.OnBeforePrint := ReportBeforePrintConQR;
+
+  // Las guias horizontales reservan solo 26,5 puntos por talla. Con la
+  // fuente original de 14, valores largos como XXXL se recortan. Ajustamos
+  // exclusivamente esas celdas estrechas, también en formatos personalizados.
+  for iTalla := 1 to 20 do
+  begin
+    oTalla := frxrprt1.FindObject(Format('GuiaT%.2d', [iTalla]));
+    if oTalla is TfrxMemoView then
+    begin
+      mTalla := TfrxMemoView(oTalla);
+      if (mTalla.Width <= 30) and (mTalla.Font.Height < -12) then
+        mTalla.Font.Height := -12;
+    end;
+  end;
 end;
 
 procedure TfrmPrint.ReportBeforePrintConQR(Component: TfrxReportComponent);

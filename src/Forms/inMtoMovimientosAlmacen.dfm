@@ -16,7 +16,7 @@
           Height = 489
           ExplicitHeight = 489
           inherited cxGrdDBTabPrin: TcxGridDBTableView
-            OptionsData.Editing = True
+            OptionsData.Editing = False
             object cxGrdDBTabPrinNUMERO_MOV: TcxGridDBColumn
               Caption = 'N'#250'mero Mov.'
               DataBinding.FieldName = 'NUMERO_MOV'
@@ -323,15 +323,22 @@
       TabOrder = 2
       OnClick = btnIraArticuloClick
     end
+    object btnIrDocumento: TcxButton
+      Left = -1
+      Top = 280
+      Width = 138
+      Height = 34
+      Caption = 'Ir a &Documento'
+      TabOrder = 3
+      OnClick = btnIrDocumentoClick
+    end
   end
   inherited dsTablaG: TDataSource
     DataSet = dmMovimientosAlmacen.unqryTablaG
   end
-  object ActionList1: TActionList
-    Left = 528
-    Top = 264
+  inherited alMtoGen: TActionList
     object Action1: TAction
-      Caption = 'Art'#237'culos'
+      Caption = 'Ir a Art'#237'culo'
       ShortCut = 16449
       OnExecute = Action1Execute
     end

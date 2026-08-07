@@ -133,7 +133,7 @@
       object btnDesmarcarTodas: TcxButton
         Left = 154
         Top = 251
-        Width = 130
+        Width = 138
         Height = 25
         Caption = 'Desmarcar todas'
         TabOrder = 3

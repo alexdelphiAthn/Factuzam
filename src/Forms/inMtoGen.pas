@@ -53,6 +53,7 @@ uses
   dxSkinVisualStudio2013Light, dxSkinVS2010, dxSkinWhiteprint,
   dxSkinXmas2008Blue, System.Actions, Vcl.ActnList,
   inLibPermisosIntf, inLibVentanaEmbebidaIntf,
+  inLibAtributosPaleta,
   inLibGestorFiltrosMto, inLibGestorPerfilesMto,
   inLibGestorGuiasGridMto, inLibGestorTareasMto,
   inLibGestorArticulosMto, inLibInteraccionDatosIntf,
@@ -181,6 +182,7 @@ type
     FGestorTareas: TGestorTareasMto;
     FGestorArticulos: TGestorArticulosMto;
     procedure InicializarMantenimiento;
+    procedure AjustarBarraLateral;
     procedure ConfigurarModoBusqueda;
     function GetConexionTrabajo: TUniConnection;
     function AplicacionCerrando: Boolean;
@@ -477,17 +479,98 @@ begin
 end;
 
 procedure TfrmMtoGen.sbBestFitClick(Sender: TObject);
-var
-  i: Integer;
-begin
-  cxGrdDBTabPrin.BeginUpdate;
-  try
-    for i := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
-      if cxGrdDBTabPrin.Columns[i].Visible then
-        cxGrdDBTabPrin.Columns[i].ApplyBestFit;
-  finally
-    cxGrdDBTabPrin.EndUpdate;
+const
+  ANCHO_MARGEN_BESTFIT_96_DPI = 16;
+  ANCHO_MIN_SISTEMA_TALLAS_96_DPI = 270;
+
+  procedure AjustarGrid(AGrid: TcxCustomGrid);
+  var
+    iVista, iItem: Integer;
+    oVista: TcxCustomGridTableView;
+    oItem: TcxGridColumn;
+  begin
+    for iVista := 0 to AGrid.ViewCount - 1 do
+    begin
+      if AGrid.Views[iVista] is TcxCustomGridTableView then
+      begin
+        oVista := TcxCustomGridTableView(AGrid.Views[iVista]);
+        oVista.BeginUpdate;
+        try
+          // Con AItem = nil, DevExpress calcula el ancho de todos los
+          // elementos visibles de la vista, incluidos los encabezados.
+          oVista.ApplyBestFit(nil, True, False);
+
+          // ApplyBestFit solo mide el texto. Las columnas Color pintan antes
+          // un cuadradito que tambien necesita espacio; el evento de dibujo
+          // puede estar asociado a la columna o a la vista, por lo que las
+          // identificamos por nombre/caption y no por OnCustomDrawCell.
+          for iItem := 0 to oVista.ItemCount - 1 do
+          begin
+            if oVista.Items[iItem] is TcxGridColumn then
+            begin
+              oItem := TcxGridColumn(oVista.Items[iItem]);
+              // A escalas de Windows superiores al 100 %, el ancho medido
+              // por DevExpress queda demasiado justo y puede perder las
+              // ultimas letras del encabezado. Dejamos un margen pequeno y
+              // proporcional al DPI sin reducir la fuente.
+              oItem.Width := oItem.Width + MulDiv(
+                ANCHO_MARGEN_BESTFIT_96_DPI, CurrentPPI,
+                USER_DEFAULT_SCREEN_DPI);
+
+              if (Pos('COLOR', UpperCase(oItem.Name)) > 0) or
+                 SameText(Trim(oItem.Caption), 'Color') then
+                oItem.Width := oItem.Width + ANCHO_SWATCH_PX;
+
+              // En varias vistas el campo guarda el identificador y el texto
+              // mostrado (p. ej. "Calzado Mujer EU 39-44") se resuelve en el
+              // editor. ApplyBestFit mide el ID y deja la columna demasiado
+              // estrecha, por lo que conservamos un minimo legible escalado.
+              if SameText(Trim(oItem.Caption), 'Sistema tallas') and
+                 (oItem.Width < MulDiv(ANCHO_MIN_SISTEMA_TALLAS_96_DPI,
+                   CurrentPPI, USER_DEFAULT_SCREEN_DPI)) then
+                oItem.Width := MulDiv(ANCHO_MIN_SISTEMA_TALLAS_96_DPI,
+                  CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+            end;
+          end;
+        finally
+          oVista.EndUpdate;
+        end;
+
+        // ApplyBestFit conserva la posicion horizontal anterior. Volvemos a
+        // mostrar la primera columna visible para que el usuario no pierda el
+        // inicio de la rejilla tras pulsar el boton <->.
+        for iItem := 0 to oVista.ItemCount - 1 do
+          if oVista.Items[iItem].ActuallyVisible then
+          begin
+            oVista.Controller.MakeItemVisible(oVista.Items[iItem]);
+            Break;
+          end;
+      end;
+    end;
   end;
+
+  procedure RecorrerControles(AContenedor: TWinControl);
+  var
+    iControl: Integer;
+    oControl: TControl;
+  begin
+    for iControl := 0 to AContenedor.ControlCount - 1 do
+    begin
+      oControl := AContenedor.Controls[iControl];
+      if oControl is TcxCustomGrid then
+        AjustarGrid(TcxCustomGrid(oControl));
+
+      // Tambien entra en frames y paneles. Las paginas que no estan activas
+      // siguen formando parte del arbol y, por tanto, se ajustan igualmente.
+      if oControl is TWinControl then
+        RecorrerControles(TWinControl(oControl));
+    end;
+  end;
+begin
+  // Recorremos el arbol visual completo, no solo Components de este form.
+  // Esto incluye grids alojados en frames, paneles y pestanas de detalle, y
+  // las vistas creadas en ejecucion cuyo Owner es el propio TcxGrid.
+  RecorrerControles(Self);
 end;
 
 procedure TfrmMtoGen.tsFichaShow(Sender: TObject);
@@ -1337,9 +1420,57 @@ begin
   ProcesarPerfiles;
   msProcesarPerfiles := swTramo.ElapsedMilliseconds;
   ConfigurarModoBusqueda;
+  AjustarBarraLateral;
   RegistroLog.RegistrarRendimiento(Self.Name + '.FormCreate',
     'ProcesarPerfiles=' + IntToStr(msProcesarPerfiles) + ' ms',
     swTotal.ElapsedMilliseconds);
+end;
+
+// La barra heredada se diseno con 140 px. Varias pantallas anaden botones
+// como "Imprimir etiqueta", "Enviar comentario" o "Abrir seguimiento" que
+// no caben con la fuente normal, especialmente con DPI alto. Se reserva un
+// ancho minimo escalado y se estiran los botones que ocupan una fila completa;
+// asi mantenemos la tipografia y el mismo criterio en todos los Mtos.
+procedure TfrmMtoGen.AjustarBarraLateral;
+const
+  ANCHO_BARRA_96_DPI = 156;
+var
+  iAnchoMinimo: Integer;
+
+  procedure AjustarBotonesDe(AContenedor: TWinControl);
+  var
+    iControl: Integer;
+    iMargenDerecho: Integer;
+    iNuevoAncho: Integer;
+    oControl: TControl;
+  begin
+    for iControl := 0 to AContenedor.ControlCount - 1 do
+    begin
+      oControl := AContenedor.Controls[iControl];
+      if (oControl is TcxButton) and
+         (oControl.Align = alNone) and
+         (oControl.Left <= 7) and
+         (oControl.Width >= 100) then
+      begin
+        iMargenDerecho := oControl.Left;
+        if iMargenDerecho < 2 then
+          iMargenDerecho := 2;
+        iNuevoAncho := AContenedor.ClientWidth - oControl.Left -
+          iMargenDerecho;
+        if iNuevoAncho > oControl.Width then
+          oControl.Width := iNuevoAncho;
+      end;
+      if oControl is TWinControl then
+        AjustarBotonesDe(TWinControl(oControl));
+    end;
+  end;
+
+begin
+  iAnchoMinimo := MulDiv(
+    ANCHO_BARRA_96_DPI, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+  if pButtonRightBar.Width < iAnchoMinimo then
+    pButtonRightBar.Width := iAnchoMinimo;
+  AjustarBotonesDe(pButtonRightBar);
 end;
 
 procedure TfrmMtoGen.ConfigurarModoBusqueda;

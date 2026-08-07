@@ -1533,7 +1533,7 @@ procedure TfrmMtoPedidosCompra.BestFitConSwatch;
 var
   i: Integer;
 begin
-  if (tvLineasPedido <> nil) and not FColsModoConstruido then
+  if tvLineasPedido <> nil then
   begin
     tvLineasPedido.ApplyBestFit;
     if Assigned(FColColorPivot) and FColColorPivot.Visible then

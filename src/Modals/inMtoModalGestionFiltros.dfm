@@ -143,9 +143,9 @@
     OnClick = btnGuardarCambiosClick
   end
   object btnReemplazarActual: TcxButton
-    Left = 289
+    Left = 284
     Top = 545
-    Width = 195
+    Width = 200
     Height = 30
     Caption = 'Reemplazar por el &actual'
     TabOrder = 11

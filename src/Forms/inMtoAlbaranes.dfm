@@ -928,33 +928,68 @@
                   TabOrder = 3
                   Width = 133
                 end
+                object lblTotalesPorcRetencion: TcxLabel
+                  Left = 80
+                  Top = 118
+                  Caption = '% Retenci'#243'n'
+                  TabOrder = 4
+                  Transparent = True
+                end
+                object spnTotalesPORCENTAJE_RETENCION_ALB: TcxDBSpinEdit
+                  Left = 230
+                  Top = 114
+                  DataBinding.DataField = 'PORCENTAJE_RETENCION_ALB'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.AssignedValues.MinValue = True
+                  Properties.DisplayFormat = '0.00 %'
+                  Properties.EditFormat = '0.00 %'
+                  Properties.MaxValue = 100.000000000000000000
+                  TabOrder = 5
+                  Width = 133
+                end
+                object lblTotalesTotalRetencion: TcxLabel
+                  Left = 70
+                  Top = 158
+                  Caption = 'Total Retenci'#243'n'
+                  TabOrder = 6
+                  Transparent = True
+                end
+                object curTotalesTOTAL_RETENCION_ALB: TcxDBCurrencyEdit
+                  Left = 230
+                  Top = 154
+                  DataBinding.DataField = 'TOTAL_RETENCION_ALB'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.ReadOnly = True
+                  TabOrder = 7
+                  Width = 133
+                end
                 object lblTotalesTotalPagar: TcxLabel
                   Left = 105
-                  Top = 118
+                  Top = 199
                   Caption = 'Total a pagar'
-                  TabOrder = 4
+                  TabOrder = 8
                   Transparent = True
                 end
                 object curTotalesTOTAL_LIQUIDO_ALB: TcxDBCurrencyEdit
                   Left = 230
-                  Top = 114
+                  Top = 195
                   DataBinding.DataField = 'TOTAL_LIQUIDO_ALB'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   Properties.UseThousandSeparator = True
-                  TabOrder = 5
+                  TabOrder = 9
                   Width = 133
                 end
                 object lblTotalesFormaPago: TcxLabel
                   Left = 90
-                  Top = 158
+                  Top = 238
                   Caption = 'Forma de Pago'
-                  TabOrder = 6
+                  TabOrder = 10
                   Transparent = True
                 end
                 object cbbTotalesFORMA_PAGO_ALB: TcxDBLookupComboBox
                   Left = 230
-                  Top = 154
+                  Top = 234
                   DataBinding.DataField = 'FORMA_PAGO_ALB'
                   DataBinding.DataSource = dsTablaG
                   Properties.DropDownSizeable = True
@@ -973,34 +1008,34 @@
                       FieldName = 'DESCRIPCION_FORMA_PAGO_FP'
                     end>
                   Properties.ListOptions.CaseInsensitive = True
-                  TabOrder = 7
+                  TabOrder = 11
                   Width = 133
                 end
                 object chkTotalesESIVA_RECARGO_CLIENTE_ALB: TcxDBCheckBox
                   Left = 56
-                  Top = 195
+                  Top = 275
                   Caption = 'Recargo equivalencia cliente'
                   DataBinding.DataField = 'ESIVA_RECARGO_CLIENTE_ALB'
                   DataBinding.DataSource = dsTablaG
                   Properties.ValueChecked = 'S'
                   Properties.ValueUnchecked = 'N'
                   Style.TransparentBorder = False
-                  TabOrder = 8
+                  TabOrder = 12
                   Transparent = True
                 end
                 object lblTotalesTotalPrendas: TcxLabel
                   Left = 60
-                  Top = 235
+                  Top = 315
                   Caption = 'N'#186' de prendas'
-                  TabOrder = 9
+                  TabOrder = 13
                   Transparent = True
                 end
                 object lblTotalPrendasAlb: TcxLabel
                   Left = 230
-                  Top = 235
+                  Top = 315
                   AutoSize = False
                   Caption = '0'
-                  TabOrder = 10
+                  TabOrder = 14
                   Transparent = True
                   Height = 20
                   Width = 133
@@ -1011,7 +1046,7 @@
                   Width = 360
                   Height = 250
                   Caption = 'Desglose IVA'
-                  TabOrder = 11
+                  TabOrder = 15
                   object lblTotalesTotalIva: TcxLabel
                     Left = 236
                     Top = 40

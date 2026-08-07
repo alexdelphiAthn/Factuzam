@@ -1,14 +1,14 @@
 ﻿inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
   Caption = 'Movimientos de ventas por art'#237'culos y fechas'
-  ClientWidth = 700
+  ClientWidth = 1040
   StyleElements = [seFont, seClient, seBorder]
-  ExplicitWidth = 716
+  ExplicitWidth = 1056
   ExplicitHeight = 509
   TextHeight = 17
   inherited pnl1: TPanel
-    Left = 556
+    Left = 896
     StyleElements = [seFont, seClient, seBorder]
-    ExplicitLeft = 554
+    ExplicitLeft = 896
     ExplicitHeight = 462
     inherited btnSalir: TcxButton
       Top = 444

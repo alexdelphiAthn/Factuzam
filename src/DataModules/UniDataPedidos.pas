@@ -1398,7 +1398,10 @@ begin
         '  UPDATE fza_albaranes ' +
         '     SET TOTAL_BASES_ALB = v_total_base, ' +
         '         TOTAL_IMPUESTOS_ALB = v_total_iva, ' +
-        '         TOTAL_LIQUIDO_ALB = v_total_base + v_total_iva, ' +
+        '         TOTAL_RETENCION_ALB = v_total_base * ' +
+        '           IFNULL(PORCENTAJE_RETENCION_ALB, 0) / 100, ' +
+        '         TOTAL_LIQUIDO_ALB = v_total_base + v_total_iva - ' +
+        '           v_total_base * IFNULL(PORCENTAJE_RETENCION_ALB, 0) / 100, ' +
         '         INSTANTE_MODIF = NOW(), ' +
         '         USUARIO_MODIF = p_USUARIO ' +
         '   WHERE NUMERO_ALB = p_NUMERO_ALB ' +
@@ -1479,6 +1482,7 @@ begin
         '    ESINTRACOMUNITARIO_CLIENTE_ALB, TARIFA_ARTICULO_CLIENTE_ALB, ' +
         '    ESIMP_INCL_TARIFA_CLIENTE_ALB, PORCENTAJE_IVAN_ALB, ' +
         '    PORCENTAJE_IVAR_ALB, PORCENTAJE_IVAS_ALB, PORCENTAJE_IVAE_ALB, ' +
+        '    PORCENTAJE_RETENCION_ALB, ' +
         '    FORMA_PAGO_ALB, CONTADOR_LINEAS_ALB, ' +
         '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
         '  SELECT v_numero, v_serie, CURRENT_DATE(), NOW(), ''ABIERTO'', ' +
@@ -1513,7 +1517,8 @@ begin
         '         P.TARIFA_ARTICULO_CLIENTE_PED, ' +
         '         P.ESIMP_INCL_TARIFA_CLIENTE_PED, P.PORCENTAJE_IVAN_PED, ' +
         '         P.PORCENTAJE_IVAR_PED, P.PORCENTAJE_IVAS_PED, ' +
-        '         P.PORCENTAJE_IVAE_PED, P.FORMA_PAGO_PED, ''0'', ' +
+        '         P.PORCENTAJE_IVAE_PED, P.PORCENTAJE_RETENCION_PED, ' +
+        '         P.FORMA_PAGO_PED, ''0'', ' +
         '         NOW(), p_USUARIO, p_USUARIO ' +
         '    FROM fza_pedidos P ' +
         '   WHERE P.NUMERO_PED = p_NUMERO_PED ' +
@@ -1636,6 +1641,14 @@ begin
     Ejecutor := TUniSQL.Create(nil);
     try
       Ejecutor.Connection := ConexionPrincipal;
+      EjecutarSqlInstalacion(Ejecutor,
+        'ALTER TABLE fza_albaranes ' +
+        'ADD COLUMN IF NOT EXISTS PORCENTAJE_RETENCION_ALB ' +
+        'DECIMAL(19,6) NULL DEFAULT 0 AFTER TOTAL_IMPUESTOS_ALB');
+      EjecutarSqlInstalacion(Ejecutor,
+        'ALTER TABLE fza_albaranes ' +
+        'ADD COLUMN IF NOT EXISTS TOTAL_RETENCION_ALB ' +
+        'DECIMAL(18,6) NULL DEFAULT 0 AFTER PORCENTAJE_RETENCION_ALB');
       InstalarProcedimientoAlbaranFin(Ejecutor);
       InstalarProcedimientoAlbaranInicio(Ejecutor);
       InstalarProcedimientoAlbaranLinea(Ejecutor);

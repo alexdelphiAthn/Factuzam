@@ -48,11 +48,22 @@
       TabOrder = 0
       OnClick = btnOperacionesCajaClick
     end
+    object btnMovimientos: TcxButton
+      Left = 148
+      Top = 12
+      Width = 120
+      Height = 28
+      Hint = 'Muestra los movimientos de almac'#233'n de la talla seleccionada'
+      Caption = 'Movimientos'
+      ShowHint = True
+      TabOrder = 1
+      OnClick = btnMovimientosClick
+    end
     object lblArt: TcxLabel
       Left = 16
       Top = 54
       Caption = 'Art'#237'culo'
-      TabOrder = 2
+      TabOrder = 3
       Transparent = True
     end
     object btnArt: TcxButtonEdit
@@ -65,13 +76,13 @@
         end>
       Properties.OnButtonClick = btnArtPropertiesButtonClick
       Properties.OnEditValueChanged = btnArtPropertiesEditValueChanged
-      TabOrder = 1
+      TabOrder = 2
       Width = 200
     end
     object lblDescr: TcxLabel
       Left = 16
       Top = 86
-      TabOrder = 3
+      TabOrder = 4
       Transparent = True
     end
     object lblInfo: TcxLabel
@@ -79,7 +90,7 @@
       Top = 118
       Anchors = [akLeft, akTop, akRight]
       Properties.WordWrap = True
-      TabOrder = 4
+      TabOrder = 5
       Transparent = True
       ExplicitWidth = 459
       Width = 461
@@ -93,7 +104,7 @@
       Properties.Alignment.Horz = taCenter
       Properties.Alignment.Vert = taVCenter
       Properties.WordWrap = True
-      TabOrder = 5
+      TabOrder = 6
       Transparent = False
       Visible = False
       Height = 34
@@ -268,6 +279,7 @@
         ExplicitWidth = 613
         ExplicitHeight = 246
         object tvStock: TcxGridDBTableView
+          OnCellDblClick = tvStockCellDblClick
           OptionsCustomize.ColumnMoving = False
           OptionsData.Editing = False
           OptionsView.GroupByBox = False

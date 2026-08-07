@@ -75,7 +75,7 @@
     object btnRecalcular: TcxButton
       Left = 390
       Top = 18
-      Width = 75
+      Width = 82
       Height = 35
       Caption = 'Calc (F5)'
       TabOrder = 2

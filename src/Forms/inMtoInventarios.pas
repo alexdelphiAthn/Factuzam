@@ -498,7 +498,7 @@ begin
     Self, tdmDataModule, TdmInventarios));
   ConfigurarTablaPrincipalDocumento(
     dmmInventarios, dsTablaG, tvLineas, dmmInventarios.dsLineas,
-    [], pkFieldName, '');
+    [], pkFieldName, 'SERIE_INV;NUMERO_INV');
   emp := '';
   if (dsTablaG.DataSet <> nil) and dsTablaG.DataSet.Active and
      not dsTablaG.DataSet.IsEmpty then

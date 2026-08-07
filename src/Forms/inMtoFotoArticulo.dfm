@@ -34,14 +34,14 @@
     object btnDescargarNube: TcxButton
       Left = 140
       Top = 4
-      Width = 176
+      Width = 188
       Height = 30
       Caption = 'Bajar fotos del servidor'
       TabOrder = 1
       OnClick = btnDescargarNubeClick
     end
     object lblOrigen: TcxLabel
-      Left = 324
+      Left = 336
       Top = 8
       Caption = 'Sin foto'
       Properties.WordWrap = True

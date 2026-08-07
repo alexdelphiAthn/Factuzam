@@ -145,6 +145,10 @@ type
     curTotalesTOTAL_BASES_ALB: TcxDBCurrencyEdit;
     lblTotalesTotalImpuestos: TcxLabel;
     curTotalesTOTAL_IMPUESTOS_ALB: TcxDBCurrencyEdit;
+    lblTotalesPorcRetencion: TcxLabel;
+    spnTotalesPORCENTAJE_RETENCION_ALB: TcxDBSpinEdit;
+    lblTotalesTotalRetencion: TcxLabel;
+    curTotalesTOTAL_RETENCION_ALB: TcxDBCurrencyEdit;
     lblTotalesTotalPagar: TcxLabel;
     curTotalesTOTAL_LIQUIDO_ALB: TcxDBCurrencyEdit;
     lblTotalesFormaPago: TcxLabel;

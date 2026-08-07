@@ -77,6 +77,7 @@ type
   TfrmStockConsulta = class(TfrmBase)
     pnlCabecera   : TPanel;
       btnOperacionesCaja: TcxButton;
+      btnMovimientos: TcxButton;
       lblArt        : TcxLabel;
       btnArt        : TcxButtonEdit;
       lblDescr      : TcxLabel;
@@ -114,10 +115,15 @@ type
               AButtonIndex: Integer);
     procedure btnArtPropertiesEditValueChanged(Sender: TObject);
     procedure btnOperacionesCajaClick(Sender: TObject);
+    procedure btnMovimientosClick(Sender: TObject);
     procedure cbbEstadoPropertiesEditValueChanged(Sender: TObject);
     procedure lstAlmacenesClick(Sender: TObject);
     procedure lstColoresClick(Sender: TObject);
     procedure pcVistasChange(Sender: TObject);
+    procedure tvStockCellDblClick(Sender: TcxCustomGridTableView;
+              ACellViewInfo: TcxGridTableDataCellViewInfo;
+              AButton: TMouseButton; AShift: TShiftState;
+              var AHandled: Boolean);
   private
     FVista: TEstadoVistaStockConsulta;
     FEstados: TPresentadorEstadosStock;
@@ -183,8 +189,9 @@ uses
   inLibStockConsultaEntrada,
   inLibStockConsultaPresentacionPivote,
   inMtoStockConsultaEntradaVcl,
-  inMtoModalOperacionesCajaSku, inLibMsgArticulos, inLibMsgCaja,
-  inLibMsgComun, inLibMsgVentas,
+  inMtoModalOperacionesCajaSku, inMtoModalMovimientosSku,
+  inLibMsgArticulos, inLibMsgCaja,
+  inLibMsgComun, inLibMsgVentas, inLibMsgFacturas,
   inLibDocumentosTrabajoPresentacion;
 
 {$R *.dfm}
@@ -686,6 +693,7 @@ begin
     TfrmModalOperacionesCajaSku.Ejecutar(
       Self,
       ConexionPrincipal,
+      FDependencias.OperacionesCaja,
       sCodigoSku,
       lblDescr.Caption)
   else
@@ -693,6 +701,54 @@ begin
       PChar(sMensaje),
       PChar(STituloOperacionesCajaStock),
       MB_OK or MB_ICONINFORMATION or MB_TOPMOST or MB_SETFOREGROUND);
+end;
+
+procedure TfrmStockConsulta.btnMovimientosClick(Sender: TObject);
+var
+  sCodigoSku: string;
+  sMensaje: string;
+begin
+  if ResolverSkuCeldaOperacionesCaja(sCodigoSku, sMensaje) then
+  begin
+    if TfrmModalMovimientosSku.Ejecutar(
+         Self,
+         FDependencias.Movimientos,
+         sCodigoSku,
+         lblDescr.Caption) then
+      RecargarConsulta;
+  end
+  else
+    Application.MessageBox(
+      PChar(sMensaje),
+      PChar(STituloMovimientosAlmacen),
+      MB_OK or MB_ICONINFORMATION or MB_TOPMOST or MB_SETFOREGROUND);
+end;
+
+procedure TfrmStockConsulta.tvStockCellDblClick(
+  Sender: TcxCustomGridTableView;
+  ACellViewInfo: TcxGridTableDataCellViewInfo;
+  AButton: TMouseButton; AShift: TShiftState;
+  var AHandled: Boolean);
+var
+  Columna: TcxGridDBColumn;
+  sTalla: string;
+begin
+  if (AButton <> mbLeft) or (FPivote = nil) or
+     (ACellViewInfo = nil) or
+     not (ACellViewInfo.Item is TcxGridDBColumn) then
+    Exit;
+  Columna := TcxGridDBColumn(ACellViewInfo.Item);
+  if TallaDeColumnaPivoteStock(
+       Columna.DataBinding.FieldName,
+       FPivote.Tallas,
+       sTalla) then
+  begin
+    // El primer clic ya enfoca la fila; fijamos tambien la columna para que
+    // el doble clic siga exactamente el mismo camino que el boton.
+    tvStock.Controller.FocusedColumn := Columna;
+    btnMovimientosClick(Sender);
+    AHandled := True;
+  end;
 end;
 
 // Muestra un mensaje de error por ENCIMA de la ventana. Como el form es

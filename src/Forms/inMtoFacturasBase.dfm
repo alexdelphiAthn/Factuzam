@@ -2409,7 +2409,7 @@
                 object btnVolverBorrador: TcxButton
                   Left = 859
                   Top = 12
-                  Width = 140
+                  Width = 148
                   Height = 34
                   Caption = 'Volver a Borrador'
                   TabOrder = 16

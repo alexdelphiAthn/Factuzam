@@ -52,7 +52,7 @@
     object btnConectar: TcxButton
       Left = 560
       Top = 26
-      Width = 130
+      Width = 140
       Height = 30
       Caption = 'Conectar y listar'
       TabOrder = 2
@@ -131,9 +131,9 @@
       Transparent = True
     end
     object btnImportar: TcxButton
-      Left = 660
+      Left = 627
       Top = 12
-      Width = 120
+      Width = 153
       Height = 28
       Caption = 'Importar selecci'#243'n'
       TabOrder = 0

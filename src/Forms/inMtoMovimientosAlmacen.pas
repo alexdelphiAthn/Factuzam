@@ -69,9 +69,9 @@ type
     cxGrdDBTabPrinUSUARIOALTA: TcxGridDBColumn;
     cxGrdDBTabPrinUSUARIOMODIF: TcxGridDBColumn;
     colMovTipoCantidad: TcxGridDBColumn;
-    ActionList1: TActionList;
     Action1: TAction;
     btnIraArticulo: TcxButton;
+    btnIrDocumento: TcxButton;
     pnlFiltros: TPanel;
     btnToggleFiltros: TcxButton;
     pnlContFiltros: TPanel;
@@ -81,6 +81,7 @@ type
     ccbFiltroAlmacen: TcxCheckComboBox;
     procedure Action1Execute(Sender: TObject);
     procedure btnIraArticuloClick(Sender: TObject);
+    procedure btnIrDocumentoClick(Sender: TObject);
     procedure btnToggleFiltrosClick(Sender: TObject);
     procedure ccbFiltroAnyoPropertiesCloseUp(Sender: TObject);
     procedure ccbFiltroAlmacenPropertiesCloseUp(Sender: TObject);
@@ -100,6 +101,11 @@ type
     dmmMovimientosAlmacen: TdmMovimientosAlmacen;
     FLectorMovimientos: ILectorMovimientosAlmacen;
     FServicioCarga: TServicioCargaMovimientosAlmacen;
+    function ValorCampoMovimiento(const ACampo: string): string;
+    function EsTipoOperacionCaja(const ATipoDocumento: string): Boolean;
+    procedure AbrirOperacionCajaMovimiento;
+    procedure AbrirDocumentoSerieNumero(const ACall: string;
+      const AInvertirClave: Boolean = False);
     procedure CargarAnyosFiltro;
     procedure CargarAlmacenesFiltro;
     procedure LeerFiltrosPerfil;
@@ -125,7 +131,8 @@ implementation
 uses
   inLibWin, inLibUser, inLibShowMto, inLibGridCantidad,
   inLibMsgArticulos, inLibMsgComun,
-  UniDataMovimientosAlmacenRepositorio;
+  UniDataMovimientosAlmacenRepositorio,
+  UniDataDestinoFacturaRepositorio;
 
 {$R *.dfm}
 
@@ -136,7 +143,7 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 procedure TfrmMtoMovimientosAlmacen.Action1Execute(Sender: TObject);
 begin
   inherited;
-    btnIraArticuloClick(Sender)
+  btnIraArticuloClick(Sender);
 end;
 
 procedure TfrmMtoMovimientosAlmacen.btnIraArticuloClick(Sender: TObject);
@@ -160,6 +167,135 @@ begin
   end;
   if sCodArt <> '' then
     ShowMto(Self.Owner, 'Articulos', sCodArt);
+end;
+
+resourcestring
+  SAvisoMovimientoSinDocumento =
+    'El movimiento seleccionado no tiene un documento asociado.';
+  SAvisoMovimientoCajaSinClave =
+    'No se puede abrir la operación de caja porque el movimiento no ' +
+    'conserva la clave completa de empresa, almacén, caja y operación.';
+  SAvisoTipoDocumentoMovimientoNoSoportado =
+    'No hay una pantalla asociada al tipo de documento "%s".';
+
+function TfrmMtoMovimientosAlmacen.ValorCampoMovimiento(
+  const ACampo: string): string;
+var
+  Campo: TField;
+begin
+  Result := '';
+  if Assigned(dmmMovimientosAlmacen) and
+     Assigned(dmmMovimientosAlmacen.unqryTablaG) and
+     dmmMovimientosAlmacen.unqryTablaG.Active and
+     (not dmmMovimientosAlmacen.unqryTablaG.IsEmpty) then
+  begin
+    Campo := dmmMovimientosAlmacen.unqryTablaG.FindField(ACampo);
+    if Assigned(Campo) then
+      Result := Trim(Campo.AsString);
+  end;
+end;
+
+function TfrmMtoMovimientosAlmacen.EsTipoOperacionCaja(
+  const ATipoDocumento: string): Boolean;
+begin
+  Result := (ATipoDocumento = 'VE') or
+            (ATipoDocumento = 'DV') or
+            (ATipoDocumento = 'DE') or
+            (ATipoDocumento = 'TR') or
+            (ATipoDocumento = 'TA') or
+            (ATipoDocumento = 'AT') or
+            (ATipoDocumento = 'AL');
+end;
+
+procedure TfrmMtoMovimientosAlmacen.AbrirOperacionCajaMovimiento;
+var
+  sAlmacen: string;
+  sCaja: string;
+  sEmpresa: string;
+  sOperacion: string;
+begin
+  sEmpresa := ValorCampoMovimiento('CODIGO_EMP_MOV');
+  sAlmacen := ValorCampoMovimiento('CODIGO_ALM_DOC_MOV');
+  if sAlmacen = '' then
+    sAlmacen := ValorCampoMovimiento('CODIGO_ALM_MOV');
+  sCaja := ValorCampoMovimiento('CODIGO_CAJA_DOC_MOV');
+  sOperacion := ValorCampoMovimiento('NUMERO_OPERACION_DOC_MOV');
+  if (sEmpresa <> '') and (sAlmacen <> '') and
+     (sCaja <> '') and (sOperacion <> '') then
+    ShowMto(Self.Owner, 'CajaOperacionesHist',
+      sEmpresa + ',' + sAlmacen + ',' + sCaja + ',' + sOperacion)
+  else
+    ShowMessage(SAvisoMovimientoCajaSinClave);
+end;
+
+procedure TfrmMtoMovimientosAlmacen.AbrirDocumentoSerieNumero(
+  const ACall: string; const AInvertirClave: Boolean);
+var
+  sNumero: string;
+  sSerie: string;
+begin
+  sSerie := ValorCampoMovimiento('SERIE_DOC_MOV');
+  sNumero := ValorCampoMovimiento('NUMERO_DOC_MOV');
+  if (sSerie = '') or (sNumero = '') then
+  begin
+    ShowMessage(SAvisoMovimientoSinDocumento);
+    Exit;
+  end;
+  if AInvertirClave then
+    ShowMto(Self.Owner, ACall, sNumero + ',' + sSerie)
+  else
+    ShowMto(Self.Owner, ACall, sSerie + ',' + sNumero);
+end;
+
+procedure TfrmMtoMovimientosAlmacen.btnIrDocumentoClick(Sender: TObject);
+var
+  sCallFactura: string;
+  sNumero: string;
+  sSerie: string;
+  sTipo: string;
+begin
+  inherited;
+  sTipo := UpperCase(ValorCampoMovimiento('TIPO_DOC_MOV'));
+  if sTipo = '' then
+  begin
+    ShowMessage(SAvisoMovimientoSinDocumento);
+    Exit;
+  end;
+
+  if EsTipoOperacionCaja(sTipo) then
+    AbrirOperacionCajaMovimiento
+  else if sTipo = 'PE' then
+    AbrirDocumentoSerieNumero('Pedidos')
+  else if sTipo = 'AV' then
+    AbrirDocumentoSerieNumero('Albaranes')
+  else if sTipo = 'FC' then
+  begin
+    sSerie := ValorCampoMovimiento('SERIE_DOC_MOV');
+    sNumero := ValorCampoMovimiento('NUMERO_DOC_MOV');
+    if (sSerie = '') or (sNumero = '') then
+      ShowMessage(SAvisoMovimientoSinDocumento)
+    else
+    begin
+      sCallFactura := ResolverCallFactura(
+        CrearResolutorDestinoFacturaUniDAC(ConexionPrincipal),
+        sNumero, sSerie);
+      ShowMto(Self.Owner, sCallFactura, sNumero + ',' + sSerie);
+    end;
+  end
+  else if sTipo = 'PC' then
+    AbrirDocumentoSerieNumero('PedidosCompra')
+  else if (sTipo = 'AC') or (sTipo = 'AB') or (sTipo = 'AE') then
+    AbrirDocumentoSerieNumero('AlbaranesCompra')
+  else if sTipo = 'FP' then
+    AbrirDocumentoSerieNumero('FacturasCompra')
+  else if sTipo = 'DC' then
+    AbrirDocumentoSerieNumero('DevolucionesCompra')
+  else if sTipo = 'IN' then
+    AbrirDocumentoSerieNumero('Inventarios')
+  else if sTipo = 'SE' then
+    AbrirDocumentoSerieNumero('ComprasSesiones')
+  else
+    ShowMessageFmt(SAvisoTipoDocumentoMovimientoNoSoportado, [sTipo]);
 end;
 
 procedure TfrmMtoMovimientosAlmacen.CrearTablaPrincipal;

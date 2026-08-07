@@ -1,0 +1,164 @@
+﻿object FormStock: TFormStock
+  Left = 0
+  Top = 0
+  Caption = 'Factuzam - Consulta de stock'
+  ClientHeight = 600
+  ClientWidth = 400
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnDestroy = FormDestroy
+  OnResize = FormResize
+  OnShow = FormShow
+  DesignerMasterStyle = 0
+  object pnlTop: TPanel
+    Align = Top
+    Size.Width = 400.000000000000000000
+    Size.Height = 56.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object edtArticulo: TEdit
+      Touch.InteractiveGestures = [LongTap, DoubleTap]
+      TabOrder = 0
+      Position.X = 8.000000000000000000
+      Position.Y = 10.000000000000000000
+      Size.Width = 140.000000000000000000
+      Size.Height = 36.000000000000000000
+      Size.PlatformDefault = False
+    end
+    object btnEscanear: TButton
+      Position.X = 154.000000000000000000
+      Position.Y = 10.000000000000000000
+      Size.Width = 44.000000000000000000
+      Size.Height = 36.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'cameratoolbuttonbordered'
+      TabOrder = 1
+      OnClick = btnEscanearClick
+    end
+    object btnConsultar: TButton
+      ImageIndex = 1
+      Position.X = 201.000000000000000000
+      Position.Y = 10.000000000000000000
+      Size.Width = 49.000000000000000000
+      Size.Height = 36.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'searchtoolbutton'
+      TabOrder = 2
+      Text = 'Buscar'
+      OnClick = btnConsultarClick
+    end
+    object btnAgrupar: TButton
+      Position.X = 249.000000000000000000
+      Position.Y = 10.000000000000000000
+      Size.Width = 49.000000000000000000
+      Size.Height = 36.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'infotoolbutton'
+      TabOrder = 3
+      Text = 'Por Color'
+      OnClick = btnAgruparClick
+    end
+  end
+  object pnlArticulo: TPanel
+    Align = Top
+    Position.Y = 56.000000000000000000
+    Size.Width = 400.000000000000000000
+    Size.Height = 124.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    object pnlFoto: TPanel
+      Align = Right
+      Margins.Left = 4.000000000000000000
+      Margins.Top = 4.000000000000000000
+      Margins.Right = 4.000000000000000000
+      Margins.Bottom = 4.000000000000000000
+      Position.X = 276.000000000000000000
+      Position.Y = 4.000000000000000000
+      Size.Width = 120.000000000000000000
+      Size.Height = 116.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      object imgFoto: TImage
+        MultiResBitmap = <
+          item
+          end>
+        Align = Client
+        Size.Width = 120.000000000000000000
+        Size.Height = 116.000000000000000000
+        Size.PlatformDefault = False
+        HitTest = False
+        WrapMode = Fit
+      end
+      object lblFoto: TLabel
+        Align = Client
+        Size.Width = 120.000000000000000000
+        Size.Height = 116.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.FontColor = claGray
+        TextSettings.HorzAlign = Center
+        TextSettings.VertAlign = Center
+        HitTest = False
+        Text = 'Sin foto'#13#10'300 px'
+      end
+    end
+    object lblArticulo: TLabel
+      Align = Client
+      Margins.Left = 10.000000000000000000
+      Margins.Top = 8.000000000000000000
+      Margins.Right = 6.000000000000000000
+      Margins.Bottom = 8.000000000000000000
+      Position.X = 10.000000000000000000
+      Position.Y = 8.000000000000000000
+      Size.Width = 260.000000000000000000
+      Size.Height = 108.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.Font.Size = 15.000000000000000000
+      TextSettings.VertAlign = Center
+      HitTest = False
+      Text = 'Introduce o escanea un articulo.'
+      WordWrap = True
+    end
+  end
+  object pnlBottom: TPanel
+    Align = Bottom
+    Position.Y = 560.000000000000000000
+    Size.Width = 400.000000000000000000
+    Size.Height = 40.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+    object lblTotal: TLabel
+      Position.X = 60.000000000000000000
+      Size.Width = 332.000000000000000000
+      Size.Height = 40.000000000000000000
+      Size.PlatformDefault = False
+      TextSettings.Font.Size = 14.000000000000000000
+      Text = 'Introduce un codigo y pulsa Buscar'
+    end
+    object btnSalir: TButton
+      Position.X = 2.000000000000000000
+      Position.Y = 4.000000000000000000
+      Size.Width = 49.000000000000000000
+      Size.Height = 32.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'backtoolbutton'
+      TabOrder = 0
+      Text = 'Salir'
+      OnClick = btnSalirClick
+    end
+  end
+  object grdStock: TStringGrid
+    Align = Client
+    CanFocus = True
+    ClipChildren = True
+    Size.Width = 400.000000000000000000
+    Position.Y = 180.000000000000000000
+    Size.Height = 380.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 3
+    RowCount = 0
+    OnCellClick = grdStockCellClick
+    Viewport.Width = 396.000000000000000000
+    Viewport.Height = 355.000000000000000000
+  end
+end

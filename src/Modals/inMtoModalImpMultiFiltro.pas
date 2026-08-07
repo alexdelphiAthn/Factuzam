@@ -248,7 +248,7 @@ begin
   if frTemporadas in fs then
     FfcTemporadas := CrearTabFiltro('Temporadas');
   if frArticulos in fs then
-    FfcArticulos := CrearTabFiltro('Art' + #237 + 'culos');
+    FfcArticulos := CrearTabFiltro('Art' + #$00ED + 'culos');
   if FpcFiltros.PageCount > 0 then
     FpcFiltros.ActivePageIndex := 0;
 end;

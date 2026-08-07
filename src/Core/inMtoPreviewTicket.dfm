@@ -3,7 +3,7 @@
   Top = 0
   Caption = 'Ticket  |  F8 Imprimir  |  F7 PDF  |  F6 PNG  |  ESC Salir'
   ClientHeight = 572
-  ClientWidth = 514
+  ClientWidth = 530
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,16 +19,16 @@
   object Panel1: TPanel
     Left = 0
     Top = 522
-    Width = 514
+    Width = 530
     Height = 50
     Align = alBottom
     TabOrder = 0
     ExplicitTop = 514
     ExplicitWidth = 644
     object btnCerrar: TButton
-      Left = 397
+      Left = 430
       Top = 6
-      Width = 95
+      Width = 100
       Height = 30
       Caption = 'ESC Cerrar'
       TabOrder = 0
@@ -37,34 +37,34 @@
     object btnImprimir: TButton
       Left = 0
       Top = 6
-      Width = 97
+      Width = 105
       Height = 30
       Caption = 'F8 Imprimir'
       TabOrder = 1
       OnClick = btnImprimirClick
     end
     object btnPDF: TButton
-      Left = 103
+      Left = 111
       Top = 6
-      Width = 65
+      Width = 72
       Height = 30
       Caption = 'F7 PDF'
       TabOrder = 2
       OnClick = btnPDFClick
     end
     object btnPNG: TButton
-      Left = 175
+      Left = 189
       Top = 6
-      Width = 67
+      Width = 75
       Height = 30
       Caption = 'F6 PNG'
       TabOrder = 3
       OnClick = btnPNGClick
     end
     object btnImprimirTicket: TButton
-      Left = 249
+      Left = 270
       Top = 6
-      Width = 139
+      Width = 154
       Height = 30
       Caption = 'F5 Imprimir Ticket'
       TabOrder = 4
@@ -74,7 +74,7 @@
   object ScrollBox1: TScrollBox
     Left = 0
     Top = 0
-    Width = 514
+    Width = 530
     Height = 522
     Align = alClient
     TabOrder = 1

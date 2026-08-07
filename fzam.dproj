@@ -1022,6 +1022,8 @@
         <DCCReference Include="src\DataModules\UniDataSeleccionBancoEmpresaRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibOperacionesCajaSkuPersistenciaIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataOperacionesCajaSkuRepositorio.pas"/>
+        <DCCReference Include="src\Lib\inLibMovimientosSkuPersistenciaIntf.pas"/>
+        <DCCReference Include="src\DataModules\UniDataMovimientosSkuRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibListadoVentasPersistenciaIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataListadoVentasRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibFacturacionTicketPersistenciaIntf.pas"/>
@@ -1509,6 +1511,9 @@
         <DCCReference Include="src\Forms\inMtoStockConsultaEntradaVcl.pas"/>
         <DCCReference Include="src\Modals\inMtoModalOperacionesCajaSku.pas">
             <Form>frmModalOperacionesCajaSku</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalMovimientosSku.pas">
+            <Form>frmModalMovimientosSku</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalFotoArticulo.pas"/>
         <DCCReference Include="src\Modals\inMtoModalFiltroArt.pas"/>

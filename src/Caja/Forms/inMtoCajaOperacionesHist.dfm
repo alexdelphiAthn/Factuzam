@@ -157,7 +157,7 @@
             object btnGuardarPrecargaCaja: TcxButton
               Left = 768
               Top = 4
-              Width = 130
+              Width = 139
               Height = 25
               Caption = 'Guardar precarga'
               TabOrder = 4
@@ -203,7 +203,7 @@
         object btnImprimirInforme: TcxButton
           Left = 848
           Top = 2
-          Width = 150
+          Width = 165
           Height = 30
           Caption = 'Imprimir Informe A4'
           TabOrder = 5

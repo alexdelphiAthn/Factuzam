@@ -165,21 +165,21 @@
               Properties.Items = <>
               Properties.OnCloseUp = ccbFiltroTemporadaArtPropertiesCloseUp
               TabOrder = 2
-              Width = 235
+              Width = 210
             end
             object btnCargarAhoraArt: TcxButton
-              Left = 848
+              Left = 823
               Top = 4
-              Width = 95
+              Width = 105
               Height = 25
               Caption = 'Cargar ahora'
               TabOrder = 5
               OnClick = btnCargarAhoraArtClick
             end
             object btnGuardarPrecargaArt: TcxButton
-              Left = 948
+              Left = 932
               Top = 4
-              Width = 120
+              Width = 137
               Height = 25
               Caption = 'Guardar precarga'
               TabOrder = 6
@@ -454,16 +454,16 @@
                 BevelOuter = bvNone
                 TabOrder = 0
                 object pnlSkuMto: TPanel
-                  Left = 940
+                  Left = 881
                   Top = 0
-                  Width = 121
+                  Width = 180
                   Height = 257
                   Align = alRight
                   TabOrder = 0
                   object addSkuAll: TcxButton
                     Left = 0
                     Top = 21
-                    Width = 116
+                    Width = 175
                     Height = 34
                     Caption = '&A'#241'adir SKU'
                     TabOrder = 0
@@ -472,7 +472,7 @@
                   object btnColorSkus: TcxButton
                     Left = 0
                     Top = 61
-                    Width = 116
+                    Width = 175
                     Height = 34
                     Caption = 'Activar/Desact. color'
                     TabOrder = 1
@@ -1341,16 +1341,16 @@
                 end
               end
               object pnlFacturaOpts1: TPanel
-                Left = 940
+                Left = 921
                 Top = 0
-                Width = 121
+                Width = 140
                 Height = 425
                 Align = alRight
                 TabOrder = 1
                 object btnIraProveedor: TcxButton
                   Left = 5
                   Top = 61
-                  Width = 116
+                  Width = 130
                   Height = 34
                   Caption = '&Ir a Proveedor'
                   TabOrder = 1

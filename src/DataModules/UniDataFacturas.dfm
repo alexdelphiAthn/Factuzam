@@ -381,6 +381,26 @@
         Size = 160
       end
       item
+        FieldName = 'ID_OPERACION_CAJA_FACTURA'
+        FieldAlias = 'ID_OPERACION_CAJA_FACTURA'
+      end
+      item
+        FieldName = 'DOCUMENTO_OPERACION_CAJA'
+        FieldAlias = 'DOCUMENTO_OPERACION_CAJA'
+        FieldType = fftString
+        Size = 80
+      end
+      item
+        FieldName = 'FECHA_OPERACION_CAJA'
+        FieldAlias = 'FECHA_OPERACION_CAJA'
+        FieldType = fftDateTime
+      end
+      item
+        FieldName = 'ESFACTURA_TA_CAJA'
+        FieldAlias = 'ESFACTURA_TA_CAJA'
+        FieldType = fftString
+      end
+      item
         FieldName = 'CODIGO_TAR_FACLIN'
         FieldAlias = 'CODIGO_TAR_FACLIN'
         FieldType = fftString

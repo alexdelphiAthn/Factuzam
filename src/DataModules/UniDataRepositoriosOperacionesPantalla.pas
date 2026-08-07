@@ -21,6 +21,7 @@ uses
   inLibConsultaFacturasOperacionesPersistenciaIntf,
   inLibVentasCalendarioIntf, inLibEmisionFiscalIntf,
   inLibOperacionesCajaSkuPersistenciaIntf,
+  inLibMovimientosSkuPersistenciaIntf,
   UniDataRepositoriosGeneralesPantalla;
 
 type
@@ -33,6 +34,8 @@ type
     function CrearServicioEmisionFiscal: IServicioEmisionFiscal;
     function CrearRepositorioOperacionesCajaSku(
       AConexion: TUniConnection = nil): IRepositorioOperacionesCajaSku;
+    function CrearRepositorioMovimientosSku(
+      AConexion: TUniConnection = nil): IRepositorioMovimientosSku;
   end;
 
   TRepositoriosOperacionesPantallaUniDAC = class(
@@ -58,6 +61,8 @@ type
     function CrearServicioEmisionFiscal: IServicioEmisionFiscal;
     function CrearRepositorioOperacionesCajaSku(
       AConexion: TUniConnection = nil): IRepositorioOperacionesCajaSku;
+    function CrearRepositorioMovimientosSku(
+      AConexion: TUniConnection = nil): IRepositorioMovimientosSku;
   end;
 
 implementation
@@ -65,6 +70,7 @@ implementation
 uses
   UniDataConsultaFacturasOperacionesRepositorio,
   UniDataVentasCalendario, UniDataOperacionesCajaSkuRepositorio,
+  UniDataMovimientosSkuRepositorio,
   UniDataVerifactuColaRepositorio, inLibEmisionFiscal,
   inLibVerifactuColaIntf;
 
@@ -121,6 +127,14 @@ function TRepositoriosOperacionesPantallaUniDAC.
   AConexion: TUniConnection): IRepositorioOperacionesCajaSku;
 begin
   Result := CrearRepositorioOperacionesCajaSkuUniDAC(
+    Conexion(AConexion));
+end;
+
+function TRepositoriosOperacionesPantallaUniDAC.
+  CrearRepositorioMovimientosSku(
+  AConexion: TUniConnection): IRepositorioMovimientosSku;
+begin
+  Result := CrearRepositorioMovimientosSkuUniDAC(
     Conexion(AConexion));
 end;
 

@@ -17,6 +17,10 @@ unit inLibComprasSesionesReglas;
 interface
 
 function SanearColorSku(const ATexto: string): string;
+function ResolverCodigoColorBasico(
+  const ALiteral: string;
+  const ACodigos, ANombres: array of string;
+  out ACodigo: string): Boolean;
 
 implementation
 
@@ -50,6 +54,38 @@ begin
   while (Result <> '') and
         CharInSet(Result[Length(Result)], ['-', '_']) do
     Delete(Result, Length(Result), 1);
+end;
+
+function ResolverCodigoColorBasico(
+  const ALiteral: string;
+  const ACodigos, ANombres: array of string;
+  out ACodigo: string): Boolean;
+var
+  i: Integer;
+  sLiteral: string;
+begin
+  Result := False;
+  ACodigo := '';
+  sLiteral := SanearColorSku(ALiteral);
+  if sLiteral <> '' then
+  begin
+    // El codigo tiene prioridad sobre el nombre si una configuracion
+    // excepcional hiciera que ambos textos coincidiesen con basicos
+    // distintos.
+    for i := 0 to High(ACodigos) do
+      if SameText(sLiteral, SanearColorSku(ACodigos[i])) then
+      begin
+        ACodigo := ACodigos[i];
+        Exit(True);
+      end;
+    for i := 0 to High(ACodigos) do
+      if (i <= High(ANombres)) and
+         SameText(sLiteral, SanearColorSku(ANombres[i])) then
+      begin
+        ACodigo := ACodigos[i];
+        Exit(True);
+      end;
+  end;
 end;
 
 end.

@@ -534,9 +534,9 @@
           Transparent = True
         end
         object rbBBDD: TcxRadioButton
-          Left = 345
+          Left = 336
           Top = 2
-          Width = 100
+          Width = 118
           Height = 17
           Caption = 'Buscar BBDD'
           Font.Charset = DEFAULT_CHARSET
@@ -553,9 +553,9 @@
           Transparent = True
         end
         object rbGrid: TcxRadioButton
-          Left = 345
+          Left = 336
           Top = 17
-          Width = 100
+          Width = 118
           Height = 17
           Caption = 'Buscar Grid'
           Font.Charset = DEFAULT_CHARSET

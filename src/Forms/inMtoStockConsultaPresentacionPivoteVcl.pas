@@ -18,11 +18,12 @@ unit inMtoStockConsultaPresentacionPivoteVcl;
 interface
 
 uses
+  Winapi.Windows,
   System.Classes, System.Generics.Collections, System.Variants,
   Vcl.Controls, Vcl.Graphics, Vcl.StdCtrls,
   Data.DB, Uni,
   cxClasses, cxControls, cxContainer, cxEdit, cxTextEdit,
-  cxCurrencyEdit, cxDropDownEdit, cxGraphics, cxCustomData,
+  cxCurrencyEdit, cxDropDownEdit, cxGraphics, dxCoreGraphics, cxCustomData,
   cxData, cxDataStorage, cxDBData,
   cxGridCustomTableView, cxGridCustomView, cxGridDBTableView,
   cxGridTableView, cxRadioGroup, cxStyles,
@@ -125,7 +126,8 @@ uses
 
 const
   ANCHO_RADIO_MODO = 110;
-  ALTO_RADIO_MODO = 18;
+  ALTO_RADIO_MODO = 22;
+  MARGEN_TEXTO_RADIO_MODO = 30;
   SEPARACION_RADIO_MODO = 16;
   SEPARACION_ENTRE_RADIOS = 4;
   TOP_LEYENDA = 5;
@@ -141,6 +143,14 @@ constructor TPresentadorEstadosStock.Create(
   AReferencia: TControl;
   const ACaptionSimplificado, ACaptionDesglosado: string;
   const AAlRecargar, AAlGuardarModo: TReaccionStockConsulta);
+var
+  iAltoRadio: Integer;
+  iAnchoMinimo: Integer;
+  iAnchoSimplificado: Integer;
+  iAnchoDesglosado: Integer;
+  iMargenTexto: Integer;
+  iSeparacionModo: Integer;
+  iSeparacionRadios: Integer;
 begin
   inherited Create;
   FSeleccion := TSeleccionEstadosStock.Create;
@@ -151,18 +161,40 @@ begin
   FRadioSimplificado := TcxRadioButton.Create(AOwner);
   FRadioSimplificado.Parent := APanelModo;
   FRadioSimplificado.Caption := ACaptionSimplificado;
+  // Estos radios heredan una fuente escalada por DPI, pero antes conservaban
+  // un ancho fijo de 110 px. En monitores escalados se veian como
+  // "Simplifica" y "Desglosa". Medimos el texto ya escalado y reservamos el
+  // hueco del indicador y sus margenes; el minimo tambien se escala.
+  iAltoRadio := MulDiv(ALTO_RADIO_MODO,
+    AReferencia.CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+  iAnchoMinimo := MulDiv(ANCHO_RADIO_MODO,
+    AReferencia.CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+  iMargenTexto := MulDiv(MARGEN_TEXTO_RADIO_MODO,
+    AReferencia.CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+  iSeparacionModo := MulDiv(SEPARACION_RADIO_MODO,
+    AReferencia.CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+  iSeparacionRadios := MulDiv(SEPARACION_ENTRE_RADIOS,
+    AReferencia.CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+  iAnchoSimplificado := cxTextWidth(
+    FRadioSimplificado.Font, FRadioSimplificado.Caption) + iMargenTexto;
+  if iAnchoSimplificado < iAnchoMinimo then
+    iAnchoSimplificado := iAnchoMinimo;
   FRadioSimplificado.SetBounds(
-    AReferencia.Left + AReferencia.Width + SEPARACION_RADIO_MODO,
-    AReferencia.Top, ANCHO_RADIO_MODO, ALTO_RADIO_MODO);
+    AReferencia.Left + AReferencia.Width + iSeparacionModo,
+    AReferencia.Top, iAnchoSimplificado, iAltoRadio);
   FRadioSimplificado.GroupIndex := 1;
   FRadioSimplificado.OnClick := RadioClick;
   FRadioDesglosado := TcxRadioButton.Create(AOwner);
   FRadioDesglosado.Parent := APanelModo;
   FRadioDesglosado.Caption := ACaptionDesglosado;
+  iAnchoDesglosado := cxTextWidth(
+    FRadioDesglosado.Font, FRadioDesglosado.Caption) + iMargenTexto;
+  if iAnchoDesglosado < iAnchoMinimo then
+    iAnchoDesglosado := iAnchoMinimo;
   FRadioDesglosado.SetBounds(
     FRadioSimplificado.Left + FRadioSimplificado.Width +
-      SEPARACION_ENTRE_RADIOS,
-    AReferencia.Top, ANCHO_RADIO_MODO, ALTO_RADIO_MODO);
+      iSeparacionRadios,
+    AReferencia.Top, iAnchoDesglosado, iAltoRadio);
   FRadioDesglosado.GroupIndex := 1;
   FRadioDesglosado.OnClick := RadioClick;
   CrearLeyenda;
@@ -356,6 +388,12 @@ procedure TPresentadorPivoteStock.Consultar(
 begin
   FResultado := FRepositorio.Consultar(ASolicitud, ATallas);
   FOrigen.DataSet := FResultado.DataSet;
+  // Las columnas son dinamicas y los valores no existen cuando se crean.
+  // El BestFit debe hacerse despues de enlazar el dataset para medir tanto
+  // la cabecera como el contenido real.
+  FVista.ApplyBestFit(nil, True, False);
+  if FEsModoColor and (FColumnaGrupo <> nil) then
+    AjustarAnchoColumnaParaSwatch(FConexion, FColumnaGrupo, nil);
 end;
 
 procedure TPresentadorPivoteStock.ConfigurarColumnaDatos(
@@ -410,12 +448,14 @@ begin
     case Definicion.Clase of
       cpsGrupo:
         begin
+          Columna.BestFitMaxWidth := 360;
           Columna.HeaderAlignmentHorz := taLeftJustify;
           Columna.Options.Sorting := False;
           FColumnaGrupo := Columna;
         end;
       cpsEstado:
         begin
+          Columna.BestFitMaxWidth := 180;
           Columna.OnGetDisplayText := EstadoGetDisplayText;
           Columna.HeaderAlignmentHorz := taLeftJustify;
           Columna.Options.Sorting := False;
@@ -423,7 +463,10 @@ begin
           FColumnaEstado := Columna;
         end;
     else
-      ConfigurarColumnaDatos(Columna, AEstado);
+      begin
+        Columna.BestFitMaxWidth := 110;
+        ConfigurarColumnaDatos(Columna, AEstado);
+      end;
     end;
     FColumnas.Add(Columna);
   end;

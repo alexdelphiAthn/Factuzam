@@ -1303,9 +1303,9 @@
             object tsBancos: TcxTabSheet
               Caption = '&7_Bancos'
               object pnlBancosOpts: TPanel
-                Left = 811
+                Left = 803
                 Top = 0
-                Width = 118
+                Width = 126
                 Height = 425
                 Align = alRight
                 BevelOuter = bvNone
@@ -1313,7 +1313,7 @@
                 object btnAddBanco: TcxButton
                   Left = 6
                   Top = 13
-                  Width = 108
+                  Width = 115
                   Height = 25
                   Caption = 'A'#241'adir Banco'
                   TabOrder = 0

@@ -35,6 +35,8 @@ uses
   inLibArticulosResolverIntf,
   inLibArticulosValidadorIntf,
   inLibDocumentosTrabajo,
+  inLibOperacionesCajaSkuPersistenciaIntf,
+  inLibMovimientosSkuPersistenciaIntf,
   inLibStockConsultaInfo,
   inLibStockConsultaPersistenciaIntf,
   inMtoStockConsultaPresentacionComposicion;
@@ -112,6 +114,18 @@ type
     function DescuentoTarifaVigente(
       const ACodigoTarifa: string;
       const AFecha: TDateTime): Boolean;
+  end;
+
+  TDobleConsultasSkuStock = class(
+    TInterfacedObject,
+    IRepositorioOperacionesCajaSku,
+    IRepositorioMovimientosSku)
+  public
+    function ConsultarOperaciones(
+      const ACodigoSku: string): IConsultaOperacionesCajaSku;
+    function ConsultarMovimientos(
+      const ACodigoSku: string): IConsultaMovimientosSku;
+    function ReconstruirStock: string;
   end;
 
   TDobleDocumentosTrabajoStock = class(
@@ -391,17 +405,36 @@ begin
   Result := 0;
 end;
 
+function TDobleConsultasSkuStock.ConsultarOperaciones(
+  const ACodigoSku: string): IConsultaOperacionesCajaSku;
+begin
+  Result := nil;
+end;
+
+function TDobleConsultasSkuStock.ConsultarMovimientos(
+  const ACodigoSku: string): IConsultaMovimientosSku;
+begin
+  Result := nil;
+end;
+
+function TDobleConsultasSkuStock.ReconstruirStock: string;
+begin
+  Result := '';
+end;
+
 function CrearContextoConDobles: TContextoDependenciasStockConsulta;
 var
   Articulos: TDobleArticulosStock;
   Documentos: TRepositoriosDocumentosTrabajo;
   DobleDocumentos: TDobleDocumentosTrabajoStock;
   DobleStock: TDobleStockConsulta;
+  ConsultasSku: TDobleConsultasSkuStock;
   Servicios: TServiciosStockConsulta;
 begin
   DobleStock := TDobleStockConsulta.Create;
   Articulos := TDobleArticulosStock.Create;
   DobleDocumentos := TDobleDocumentosTrabajoStock.Create;
+  ConsultasSku := TDobleConsultasSkuStock.Create;
   Servicios.Catalogos := DobleStock;
   Servicios.Pivote := DobleStock;
   Documentos.Lecturas := DobleDocumentos;
@@ -412,7 +445,9 @@ begin
     DobleStock,
     Articulos,
     Articulos,
-    Documentos);
+    Documentos,
+    ConsultasSku,
+    ConsultasSku);
 end;
 
 procedure TPruebasInyeccionStockConsulta.
@@ -431,6 +466,8 @@ begin
     Assert.IsTrue(Assigned(Contexto.DocumentosTrabajo.Escritura));
     Assert.IsTrue(
       Assigned(Contexto.DocumentosTrabajo.Materializacion));
+    Assert.IsTrue(Assigned(Contexto.OperacionesCaja));
+    Assert.IsTrue(Assigned(Contexto.Movimientos));
   finally
     Contexto.Liberar;
   end;

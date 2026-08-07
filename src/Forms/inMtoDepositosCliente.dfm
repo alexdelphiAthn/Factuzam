@@ -159,7 +159,7 @@
         object btnImprimirInforme: TcxButton
           Left = 848
           Top = 2
-          Width = 150
+          Width = 165
           Height = 30
           Caption = 'Imprimir Informe A4'
           TabOrder = 6

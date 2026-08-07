@@ -774,16 +774,16 @@
                 end
               end
               object pnlFacturaOpts: TPanel
-                Left = 732
+                Left = 724
                 Top = 0
-                Width = 117
+                Width = 125
                 Height = 344
                 Align = alRight
                 TabOrder = 1
                 object btnExportarExcel: TcxButton
                   Left = 6
                   Top = 8
-                  Width = 106
+                  Width = 114
                   Height = 34
                   Caption = 'Exp. E&xcel'
                   TabOrder = 0
@@ -792,7 +792,7 @@
                 object btnEditar: TcxButton
                   Left = 6
                   Top = 48
-                  Width = 106
+                  Width = 114
                   Height = 34
                   Caption = 'Editar G&rid'
                   TabOrder = 1
@@ -801,7 +801,7 @@
                 object btnCopiarDatos: TcxButton
                   Left = 6
                   Top = 88
-                  Width = 106
+                  Width = 114
                   Height = 34
                   Caption = 'Copiar &Datos'
                   TabOrder = 2

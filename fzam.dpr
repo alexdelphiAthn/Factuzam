@@ -823,6 +823,10 @@ uses
     'src\Lib\inLibOperacionesCajaSkuPersistenciaIntf.pas',
   UniDataOperacionesCajaSkuRepositorio in
     'src\DataModules\UniDataOperacionesCajaSkuRepositorio.pas',
+  inLibMovimientosSkuPersistenciaIntf in
+    'src\Lib\inLibMovimientosSkuPersistenciaIntf.pas',
+  UniDataMovimientosSkuRepositorio in
+    'src\DataModules\UniDataMovimientosSkuRepositorio.pas',
   inLibListadoVentasPersistenciaIntf in
     'src\Lib\inLibListadoVentasPersistenciaIntf.pas',
   UniDataListadoVentasRepositorio in
@@ -1240,6 +1244,9 @@ uses
   inMtoModalOperacionesCajaSku in
     'src\Modals\inMtoModalOperacionesCajaSku.pas'
     {frmModalOperacionesCajaSku},
+  inMtoModalMovimientosSku in
+    'src\Modals\inMtoModalMovimientosSku.pas'
+    {frmModalMovimientosSku},
   inMtoModalFotoArticulo in 'src\Modals\inMtoModalFotoArticulo.pas',
   inMtoModalFiltroArt in 'src\Modals\inMtoModalFiltroArt.pas',
   inMtoComprasSesiones in 'src\Forms\inMtoComprasSesiones.pas' {frmMtoComprasSesiones},

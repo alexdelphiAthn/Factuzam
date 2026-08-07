@@ -968,15 +968,15 @@
       OnClick = btnCerrarClick
     end
     object btnDevolverAbonar: TButton
-      Left = 321
+      Left = 332
       Top = 6
-      Width = 200
+      Width = 222
       Height = 28
       Caption = 'Devolver Abonar Operaci'#243'n'
       TabOrder = 2
     end
     object btnRectificar: TButton
-      Left = 531
+      Left = 562
       Top = 6
       Width = 100
       Height = 28
@@ -985,18 +985,18 @@
       OnClick = btnRectificarClick
     end
     object btnAnularVerifactu: TButton
-      Left = 639
+      Left = 670
       Top = 6
-      Width = 170
+      Width = 174
       Height = 28
       Caption = 'Anular registro fiscal'
       TabOrder = 4
       OnClick = btnAnularVerifactuClick
     end
     object btnFacturarTicket: TButton
-      Left = 819
+      Left = 852
       Top = 6
-      Width = 160
+      Width = 164
       Height = 28
       Caption = 'Convertir en normal'
       TabOrder = 5
@@ -1005,16 +1005,16 @@
     object btnReimprimirOtros: TcxButton
       Left = 142
       Top = 6
-      Width = 108
+      Width = 112
       Height = 28
       Caption = 'Previsualizar'
       TabOrder = 1
       OnClick = btnReimprimirOtrosClick
     end
     object btnEnviarEmail: TcxButton
-      Left = 256
+      Left = 260
       Top = 6
-      Width = 59
+      Width = 64
       Height = 28
       Caption = 'e-mail'
       TabOrder = 7

@@ -65,6 +65,7 @@ uses
   UniDataComprasPantallaComposicion,
   UniDataRepositoriosArticulosPantalla,
   UniDataRepositoriosDocumentosPantalla,
+  UniDataRepositoriosOperacionesPantalla,
   UniDataInventariosInyeccion,
   UniDataFacturasInyeccion;
 
@@ -132,6 +133,7 @@ begin
       Articulos: IRepositoriosArticulosPantalla;
       Dependencias: TContextoDependenciasStockConsulta;
       Documentos: IRepositoriosDocumentosPantalla;
+      Operaciones: IRepositoriosOperacionesPantalla;
       Formulario: TfrmStockConsultaInyectadaRaiz;
       OwnerCreacion: TComponent;
       ReparentarAplicacion: Boolean;
@@ -145,9 +147,12 @@ begin
         NOMBRE_PANTALLA_STOCK_CONSULTA);
       Documentos := FComposicion.CrearRepositoriosDocumentosPantalla(
         NOMBRE_PANTALLA_STOCK_CONSULTA);
+      Operaciones := FComposicion.CrearRepositoriosOperacionesPantalla(
+        NOMBRE_PANTALLA_STOCK_CONSULTA);
       Dependencias := CrearContextoStockConsulta(
         Articulos,
         Documentos,
+        Operaciones,
         FComposicion.DmConn.conUni);
       Formulario := TfrmStockConsultaInyectadaRaiz.Create(
         OwnerCreacion,

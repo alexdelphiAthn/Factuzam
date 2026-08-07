@@ -471,6 +471,8 @@ type
                 ARecord: TcxCustomGridRecord;
                 AItem: TcxCustomGridTableItem;
                 var AStyle: TcxStyle);
+    procedure dsSesionLinDataChangeHook(Sender: TObject; Field: TField);
+    procedure unqrySesionLinBeforePostHook(DataSet: TDataSet);
     procedure unqrySesionLinAfterPostHook(DataSet: TDataSet);
     procedure unqrySesionLinBeforeInsertHook(DataSet: TDataSet);
     procedure unqrySesionLinAfterInsertHook(DataSet: TDataSet);
@@ -1032,6 +1034,7 @@ begin
   // Hooks del detalle: al cambiar de fila el dataset hace Post
   // automatico, cxGrid repinta desde el dataset y pierde los Values[]
   // no-bound de las tallas; hay que volver a publicarlos.
+  Dmm.unqrySesionLin.BeforePost   := unqrySesionLinBeforePostHook;
   Dmm.unqrySesionLin.AfterPost    := unqrySesionLinAfterPostHook;
   Dmm.unqrySesionLin.BeforeInsert := unqrySesionLinBeforeInsertHook;
   Dmm.unqrySesionLin.AfterInsert  := unqrySesionLinAfterInsertHook;
@@ -1056,6 +1059,7 @@ begin
   if not Dmm.unqrySesionFotos.Active then
     Dmm.unqrySesionFotos.Open;
   tvLineas.DataController.DataSource := Dmm.dsSesionLin;
+  Dmm.dsSesionLin.OnDataChange := dsSesionLinDataChangeHook;
   tvDocs.DataController.DataSource := Dmm.dsSesDocs;
   tvFotosProvisionales.DataController.DataSource := Dmm.dsSesionFotos;
   Dmm.dsSesionFotos.OnDataChange := dsSesionFotosDataChange;
@@ -1199,6 +1203,25 @@ begin
   // la fila abandonada, borrando sus Values[] no-bound.
   RecargarTallasVisibles;
   RecargarTallasDiferido;
+end;
+
+procedure TfrmMtoComprasSesiones.dsSesionLinDataChangeHook(
+  Sender: TObject; Field: TField);
+begin
+  if (Field <> nil) and
+     SameText(Field.FieldName, 'COLOR_TEXTO_SESLIN') and
+     (FProveedor <> nil) then
+    FProveedor.AsignarColorBasicoCoincidente;
+end;
+
+procedure TfrmMtoComprasSesiones.unqrySesionLinBeforePostHook(
+  DataSet: TDataSet);
+begin
+  // Respaldo para cambios programaticos o controles que no hayan publicado
+  // un DataChange antes de confirmar el registro.
+  if FProveedor <> nil then
+    FProveedor.AsignarColorBasicoCoincidente;
+  Dmm.unqrySesionLinBeforePost(DataSet);
 end;
 
 procedure TfrmMtoComprasSesiones.unqrySesionLinRecargarTallasHook(
@@ -1547,8 +1570,13 @@ procedure TfrmMtoComprasSesiones.FormDestroy(Sender: TObject);
 var
   GestorContexto: IGestorContextoSesion;
 begin
-  if (Dmm <> nil) and Assigned(Dmm.dsSesionFotos) then
-    Dmm.dsSesionFotos.OnDataChange := nil;
+  if Dmm <> nil then
+  begin
+    if Assigned(Dmm.dsSesionLin) then
+      Dmm.dsSesionLin.OnDataChange := nil;
+    if Assigned(Dmm.dsSesionFotos) then
+      Dmm.dsSesionFotos.OnDataChange := nil;
+  end;
   // Desenganchar el log antes de soltar los colaboradores que lo usan.
   if Supports(ContextoSesion, IGestorContextoSesion, GestorContexto) then
     GestorContexto.AsignarLogSesion(nil);

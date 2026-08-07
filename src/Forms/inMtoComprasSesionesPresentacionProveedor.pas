@@ -62,6 +62,7 @@ type
   private
     FEntorno: TEntornoProveedorSesion;
     FBasicosColor: TArray<string>;
+    FNombresBasicosColor: TArray<string>;
     FFichaCargada: string;
     FMenuKits: TPopupMenu;
     FCodigosKits: TArray<string>;
@@ -77,6 +78,9 @@ type
     destructor Destroy; override;
     // Codigos de color basico activos; alimentan la paleta de la linea.
     procedure CargarBasicosColor;
+    // Si el texto libre coincide con el codigo o nombre de un basico,
+    // asigna su codigo canonico a la linea actual.
+    procedure AsignarColorBasicoCoincidente;
     // Buscador generico sobre vi_proveedores; vuelca el codigo elegido
     // en la cabecera de la sesion.
     procedure BuscarProveedor;
@@ -104,6 +108,7 @@ implementation
 uses
   Vcl.Dialogs,
   inLibAtributosPaleta,
+  inLibComprasSesionesReglas,
   inLibMsgArticulos,
   inLibMsgCompras,
   inLibPresentacionDocumento,
@@ -164,9 +169,40 @@ begin
 end;
 
 procedure TCoordinadorProveedorSesion.CargarBasicosColor;
+var
+  i: Integer;
+  Info: TInfoBasico;
 begin
   FBasicosColor := FEntorno.Servicio.ConsultarCodigosBasicosActivos(
     cIdVaColor);
+  SetLength(FNombresBasicosColor, Length(FBasicosColor));
+  for i := 0 to High(FBasicosColor) do
+  begin
+    Info := Default(TInfoBasico);
+    if ObtenerInfoBasico(
+      FEntorno.Conexion, cIdVaColor, FBasicosColor[i], Info) then
+      FNombresBasicosColor[i] := Info.Nombre;
+  end;
+end;
+
+procedure TCoordinadorProveedorSesion.AsignarColorBasicoCoincidente;
+var
+  sCodigo: string;
+  sLiteral: string;
+  Lineas: TDataSet;
+begin
+  Lineas := FEntorno.Datos.unqrySesionLin;
+  if Lineas.Active and (not Lineas.IsEmpty) and
+     (Lineas.State in [dsEdit, dsInsert]) then
+  begin
+    sLiteral := Lineas.FieldByName('COLOR_TEXTO_SESLIN').AsString;
+    if ResolverCodigoColorBasico(
+      sLiteral, FBasicosColor, FNombresBasicosColor, sCodigo) and
+      (not SameText(sCodigo, Lineas.FieldByName(
+        'CODIGO_ATB_COLOR_SESLIN').AsString)) then
+      Lineas.FieldByName(
+        'CODIGO_ATB_COLOR_SESLIN').AsString := sCodigo;
+  end;
 end;
 
 procedure TCoordinadorProveedorSesion.BuscarProveedor;

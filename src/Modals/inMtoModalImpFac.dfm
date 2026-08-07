@@ -1007,7 +1007,7 @@
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
           Memo.UTF8W = (
             'Operaci'#243'n origen')
-          Padding.Left = 5
+          GapX = 5.000000000000000000
           ParentFont = False
         end
         object MemoDocumentoOperacionCaja: TfrxMemoView

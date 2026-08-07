@@ -428,22 +428,22 @@
                 Transparent = True
               end
               object lblTotalesTotalPrendas: TcxLabel
-                Left = 499
-                Top = 131
+                Left = 568
+                Top = 12
                 Caption = 'N'#186' de prendas'
                 TabOrder = 26
                 Transparent = True
               end
               object curTotalesTOTAL_PRENDAS_ALBC: TcxDBCurrencyEdit
-                Left = 611
-                Top = 131
+                Left = 568
+                Top = 32
                 DataBinding.DataField = 'TOTAL_PRENDAS_ALBC'
                 DataBinding.DataSource = dsTablaG
                 Properties.DecimalPlaces = 0
                 Properties.DisplayFormat = '#,##0'
                 Properties.ReadOnly = True
                 TabOrder = 27
-                Width = 133
+                Width = 60
               end
             end
           end
@@ -698,14 +698,14 @@
                 TabOrder = 0
                 object lblTotalesTotalBase: TcxLabel
                   Left = 38
-                  Top = 7
+                  Top = 39
                   Caption = 'Total Base Imponible'
                   TabOrder = 0
                   Transparent = True
                 end
                 object curTotalesTOTAL_BASES_ALBC: TcxDBCurrencyEdit
                   Left = 230
-                  Top = 3
+                  Top = 35
                   DataBinding.DataField = 'TOTAL_BASES_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.DecimalPlaces = 2
@@ -715,14 +715,14 @@
                 end
                 object lblTotalesTotalImpuestos: TcxLabel
                   Left = 79
-                  Top = 45
+                  Top = 77
                   Caption = 'Total Impuestos'
                   TabOrder = 2
                   Transparent = True
                 end
                 object curTotalesTOTAL_IMPUESTOS_ALBC: TcxDBCurrencyEdit
                   Left = 230
-                  Top = 41
+                  Top = 73
                   DataBinding.DataField = 'TOTAL_IMPUESTOS_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.DecimalPlaces = 2
@@ -733,14 +733,14 @@
                 end
                 object lblTotalesPorcRetencion: TcxLabel
                   Left = 80
-                  Top = 86
+                  Top = 118
                   Caption = '% Retenci'#243'n'
                   TabOrder = 4
                   Transparent = True
                 end
                 object spnTotalesPORCENTAJE_RETENCION_ALBC: TcxDBSpinEdit
                   Left = 230
-                  Top = 82
+                  Top = 114
                   DataBinding.DataField = 'PORCENTAJE_RETENCION_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.AssignedValues.MinValue = True
@@ -752,14 +752,14 @@
                 end
                 object lblTotalesTotalRetencion: TcxLabel
                   Left = 70
-                  Top = 126
+                  Top = 158
                   Caption = 'Total Retenci'#243'n'
                   TabOrder = 6
                   Transparent = True
                 end
                 object curTotalesTOTAL_RETENCION_ALBC: TcxDBCurrencyEdit
                   Left = 230
-                  Top = 122
+                  Top = 154
                   DataBinding.DataField = 'TOTAL_RETENCION_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
@@ -768,14 +768,14 @@
                 end
                 object lblTotalesTotalPagar: TcxLabel
                   Left = 105
-                  Top = 167
+                  Top = 199
                   Caption = 'Total a pagar'
                   TabOrder = 8
                   Transparent = True
                 end
                 object curTotalesTOTAL_LIQUIDO_ALBC: TcxDBCurrencyEdit
                   Left = 230
-                  Top = 163
+                  Top = 195
                   DataBinding.DataField = 'TOTAL_LIQUIDO_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
@@ -785,14 +785,14 @@
                 end
                 object lblTotalesFormaPago: TcxLabel
                   Left = 90
-                  Top = 206
+                  Top = 238
                   Caption = 'Forma de Pago'
                   TabOrder = 10
                   Transparent = True
                 end
                 object cbbTotalesFORMA_PAGO_ALBC: TcxDBLookupComboBox
                   Left = 230
-                  Top = 202
+                  Top = 234
                   DataBinding.DataField = 'FORMA_PAGO_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.DropDownSizeable = True
@@ -816,7 +816,7 @@
                 end
                 object chkTotalesESIVA_RECARGO_COMPRAS_ALBC: TcxDBCheckBox
                   Left = 56
-                  Top = 247
+                  Top = 279
                   Caption = 'Recargo equivalencia compras'
                   DataBinding.DataField = 'ESIVA_RECARGO_COMPRAS_ALBC'
                   DataBinding.DataSource = dsTablaG
@@ -828,14 +828,14 @@
                 end
                 object lblTotalesDtoComercial: TcxLabel
                   Left = 60
-                  Top = 273
+                  Top = 305
                   Caption = 'Dto. comercial'
                   TabOrder = 13
                   Transparent = True
                 end
                 object spnTotalesPORCENTAJE_DTO_COMERCIAL_ALBC: TcxDBSpinEdit
                   Left = 185
-                  Top = 269
+                  Top = 301
                   DataBinding.DataField = 'PORCENTAJE_DTO_COMERCIAL_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.AssignedValues.MinValue = True
@@ -847,7 +847,7 @@
                 end
                 object curTotalesTOTAL_DTO_COMERCIAL_ALBC: TcxDBCurrencyEdit
                   Left = 272
-                  Top = 269
+                  Top = 301
                   DataBinding.DataField = 'TOTAL_DTO_COMERCIAL_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
@@ -856,14 +856,14 @@
                 end
                 object lblTotalesDtoFinanciero: TcxLabel
                   Left = 59
-                  Top = 297
+                  Top = 329
                   Caption = 'Dto. financiero'
                   TabOrder = 16
                   Transparent = True
                 end
                 object spnTotalesPORCENTAJE_DTO_FINANCIERO_ALBC: TcxDBSpinEdit
                   Left = 185
-                  Top = 293
+                  Top = 325
                   DataBinding.DataField = 'PORCENTAJE_DTO_FINANCIERO_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.AssignedValues.MinValue = True
@@ -875,7 +875,7 @@
                 end
                 object curTotalesTOTAL_DTO_FINANCIERO_ALBC: TcxDBCurrencyEdit
                   Left = 272
-                  Top = 293
+                  Top = 325
                   DataBinding.DataField = 'TOTAL_DTO_FINANCIERO_ALBC'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
@@ -884,7 +884,7 @@
                 end
                 object grpDesgloseImpuestos: TGroupBox
                   Left = 384
-                  Top = -21
+                  Top = 11
                   Width = 525
                   Height = 318
                   Caption = 'Desglose Impuestos'
@@ -892,36 +892,36 @@
                   object shpSeparador1: TShape
                     Left = 128
                     Top = 32
-                    Width = 382
+                    Width = 396
                     Height = 40
                     Brush.Style = bsClear
                   end
                   object shpSeparador2: TShape
                     Left = 68
-                    Top = 71
-                    Width = 442
-                    Height = 50
+                    Top = 72
+                    Width = 456
+                    Height = 48
                     Brush.Style = bsClear
                   end
                   object shpSeparador3: TShape
                     Left = 13
-                    Top = 169
-                    Width = 497
-                    Height = 50
+                    Top = 168
+                    Width = 511
+                    Height = 48
                     Brush.Style = bsClear
                   end
                   object shpSeparador4: TShape
                     Left = 68
                     Top = 120
-                    Width = 442
-                    Height = 50
+                    Width = 456
+                    Height = 48
                     Brush.Style = bsClear
                   end
                   object shpSeparador5: TShape
                     Left = 68
-                    Top = 218
-                    Width = 442
-                    Height = 50
+                    Top = 216
+                    Width = 456
+                    Height = 48
                     Brush.Style = bsClear
                   end
                   object lblTotalesTotalRe: TcxLabel
@@ -960,21 +960,21 @@
                     Transparent = True
                   end
                   object lblTotalesIVAN: TcxLabel
-                    Left = 90
+                    Left = 84
                     Top = 82
                     Caption = 'Normal'
                     TabOrder = 5
                     Transparent = True
                   end
                   object curTotalesTOTAL_BASEI_IVAN_ALBC: TcxDBCurrencyEdit
-                    Left = 132
+                    Left = 145
                     Top = 78
                     DataBinding.DataField = 'TOTAL_BASEI_IVAN_ALBC'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 9
-                    Width = 105
+                    Width = 92
                   end
                   object spnTotalesPORCENTAJE_IVAN_ALBC: TcxDBSpinEdit
                     Left = 238
@@ -1027,21 +1027,21 @@
                     Width = 75
                   end
                   object lblTotalesIVAR: TcxLabel
-                    Left = 73
+                    Left = 67
                     Top = 133
                     Caption = 'Reducido'
                     TabOrder = 6
                     Transparent = True
                   end
                   object curTotalesTOTAL_BASEI_IVAR_ALBC: TcxDBCurrencyEdit
-                    Left = 132
+                    Left = 145
                     Top = 132
                     DataBinding.DataField = 'TOTAL_BASEI_IVAR_ALBC'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 10
-                    Width = 105
+                    Width = 92
                   end
                   object spnTotalesPORCENTAJE_IVAR_ALBC: TcxDBSpinEdit
                     Left = 238
@@ -1101,14 +1101,14 @@
                     Transparent = True
                   end
                   object curTotalesTOTAL_BASEI_IVAS_ALBC: TcxDBCurrencyEdit
-                    Left = 132
+                    Left = 145
                     Top = 180
                     DataBinding.DataField = 'TOTAL_BASEI_IVAS_ALBC'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 11
-                    Width = 105
+                    Width = 92
                   end
                   object spnTotalesPORCENTAJE_IVAS_ALBC: TcxDBSpinEdit
                     Left = 238
@@ -1161,21 +1161,21 @@
                     Width = 75
                   end
                   object lblTotalesIVAE: TcxLabel
-                    Left = 94
+                    Left = 87
                     Top = 229
                     Caption = 'Exento'
                     TabOrder = 8
                     Transparent = True
                   end
                   object curTotalesTOTAL_BASEI_IVAE_ALBC: TcxDBCurrencyEdit
-                    Left = 132
+                    Left = 145
                     Top = 228
                     DataBinding.DataField = 'TOTAL_BASEI_IVAE_ALBC'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 12
-                    Width = 105
+                    Width = 92
                   end
                   object spnTotalesPORCENTAJE_IVAE_ALBC: TcxDBSpinEdit
                     Left = 238

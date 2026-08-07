@@ -327,9 +327,9 @@
                 BevelOuter = bvNone
                 TabOrder = 1
                 object btnAddLinea: TcxButton
-                  Left = 12
+                  Left = 4
                   Top = 4
-                  Width = 112
+                  Width = 120
                   Height = 28
                   Caption = '+ A'#241'adir l'#237'nea'
                   TabOrder = 0
@@ -437,47 +437,47 @@
                 TabOrder = 0
                 ExplicitHeight = 371
                 object lblTotalBasesSes: TcxLabel
-                  Left = 47
-                  Top = 77
+                  Left = 38
+                  Top = 39
                   Caption = 'Total base imponible'
                   TabOrder = 0
                   Transparent = True
                 end
                 object curTotalesTOTAL_BASES_SES: TcxDBCurrencyEdit
-                  Left = 220
-                  Top = 73
+                  Left = 230
+                  Top = 35
                   DataBinding.DataField = 'TOTAL_BASES_SES'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 1
-                  Width = 130
+                  Width = 133
                 end
                 object lblTotalImpuestosSes: TcxLabel
-                  Left = 85
-                  Top = 111
+                  Left = 79
+                  Top = 77
                   Caption = 'Total impuestos'
                   TabOrder = 2
                   Transparent = True
                 end
                 object curTotalesTOTAL_IMPUESTOS_SES: TcxDBCurrencyEdit
-                  Left = 220
-                  Top = 107
+                  Left = 230
+                  Top = 73
                   DataBinding.DataField = 'TOTAL_IMPUESTOS_SES'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 3
-                  Width = 130
+                  Width = 133
                 end
                 object lblPorcRetencionSes: TcxLabel
-                  Left = 111
-                  Top = 145
+                  Left = 80
+                  Top = 118
                   Caption = '% Retenci'#243'n'
                   TabOrder = 4
                   Transparent = True
                 end
                 object spnTotalesPORCENTAJE_RETENCION_SES: TcxDBSpinEdit
-                  Left = 220
-                  Top = 141
+                  Left = 230
+                  Top = 114
                   DataBinding.DataField = 'PORCENTAJE_RETENCION_SES'
                   DataBinding.DataSource = dsTablaG
                   Properties.AssignedValues.MinValue = True
@@ -485,51 +485,51 @@
                   Properties.EditFormat = '0.00 %'
                   Properties.MaxValue = 100.000000000000000000
                   TabOrder = 5
-                  Width = 130
+                  Width = 133
                 end
                 object lblTotalRetencionSes: TcxLabel
-                  Left = 90
-                  Top = 178
+                  Left = 70
+                  Top = 158
                   Caption = 'Total retenci'#243'n'
                   TabOrder = 6
                   Transparent = True
                 end
                 object curTotalesTOTAL_RETENCION_SES: TcxDBCurrencyEdit
-                  Left = 220
-                  Top = 174
+                  Left = 230
+                  Top = 154
                   DataBinding.DataField = 'TOTAL_RETENCION_SES'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 7
-                  Width = 130
+                  Width = 133
                 end
                 object lblTotalLiquidoSes: TcxLabel
-                  Left = 107
-                  Top = 209
+                  Left = 105
+                  Top = 199
                   Caption = 'Total a pagar'
                   TabOrder = 8
                   Transparent = True
                 end
                 object curTotalesTOTAL_LIQUIDO_SES: TcxDBCurrencyEdit
-                  Left = 220
-                  Top = 208
+                  Left = 230
+                  Top = 195
                   DataBinding.DataField = 'TOTAL_LIQUIDO_SES'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   Properties.UseThousandSeparator = True
                   TabOrder = 9
-                  Width = 130
+                  Width = 133
                 end
                 object lblTotalesFormaPagoSes: TcxLabel
-                  Left = 92
-                  Top = 243
+                  Left = 90
+                  Top = 238
                   Caption = 'Forma de Pago'
                   TabOrder = 10
                   Transparent = True
                 end
                 object cbbTotalesFORMA_PAGO_SES: TcxDBLookupComboBox
-                  Left = 220
-                  Top = 239
+                  Left = 230
+                  Top = 234
                   DataBinding.DataField = 'FORMA_PAGO_SES'
                   DataBinding.DataSource = dsTablaG
                   Properties.DropDownSizeable = True
@@ -549,11 +549,11 @@
                     end>
                   Properties.ListOptions.CaseInsensitive = True
                   TabOrder = 11
-                  Width = 130
+                  Width = 133
                 end
                 object chkTotalesESIVA_RECARGO_COMPRAS_SES: TcxDBCheckBox
-                  Left = 107
-                  Top = 270
+                  Left = 56
+                  Top = 279
                   Caption = 'Recargo equivalencia compras'
                   DataBinding.DataField = 'ESIVA_RECARGO_COMPRAS_SES'
                   DataBinding.DataSource = dsTablaG
@@ -565,15 +565,15 @@
                   Transparent = True
                 end
                 object lblDtoComercialSes: TcxLabel
-                  Left = 95
-                  Top = 7
+                  Left = 60
+                  Top = 305
                   Caption = 'Dto. comercial'
                   TabOrder = 13
                   Transparent = True
                 end
                 object spnTotalesPORCENTAJE_DTO_COMERCIAL_SES: TcxDBSpinEdit
-                  Left = 220
-                  Top = 3
+                  Left = 185
+                  Top = 301
                   DataBinding.DataField = 'PORCENTAJE_DTO_COMERCIAL_SES'
                   DataBinding.DataSource = dsTablaG
                   Properties.AssignedValues.MinValue = True
@@ -581,27 +581,27 @@
                   Properties.EditFormat = '0.00 %'
                   Properties.MaxValue = 100.000000000000000000
                   TabOrder = 14
-                  Width = 60
+                  Width = 86
                 end
                 object curTotalesTOTAL_DTO_COMERCIAL_SES: TcxDBCurrencyEdit
-                  Left = 286
-                  Top = 3
+                  Left = 272
+                  Top = 301
                   DataBinding.DataField = 'TOTAL_DTO_COMERCIAL_SES'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 15
-                  Width = 64
+                  Width = 91
                 end
                 object lblDtoFinancieroSes: TcxLabel
-                  Left = 93
-                  Top = 43
+                  Left = 59
+                  Top = 329
                   Caption = 'Dto. financiero'
                   TabOrder = 16
                   Transparent = True
                 end
                 object spnTotalesPORCENTAJE_DTO_FINANCIERO_SES: TcxDBSpinEdit
-                  Left = 220
-                  Top = 39
+                  Left = 185
+                  Top = 325
                   DataBinding.DataField = 'PORCENTAJE_DTO_FINANCIERO_SES'
                   DataBinding.DataSource = dsTablaG
                   Properties.AssignedValues.MinValue = True
@@ -609,22 +609,22 @@
                   Properties.EditFormat = '0.00 %'
                   Properties.MaxValue = 100.000000000000000000
                   TabOrder = 17
-                  Width = 60
+                  Width = 86
                 end
                 object curTotalesTOTAL_DTO_FINANCIERO_SES: TcxDBCurrencyEdit
-                  Left = 286
-                  Top = 39
+                  Left = 272
+                  Top = 325
                   DataBinding.DataField = 'TOTAL_DTO_FINANCIERO_SES'
                   DataBinding.DataSource = dsTablaG
                   Properties.ReadOnly = True
                   TabOrder = 18
-                  Width = 64
+                  Width = 91
                 end
                 object grpDesgloseIvaSes: TGroupBox
                   Left = 384
-                  Top = 22
-                  Width = 548
-                  Height = 286
+                  Top = 11
+                  Width = 525
+                  Height = 318
                   Caption = 'Desglose IVA'
                   TabOrder = 19
                   object lblTotSesBase: TcxLabel
@@ -691,44 +691,44 @@
                     Transparent = True
                   end
                   object curTotSesTOTAL_BASEI_IVAN_SES: TcxDBCurrencyEdit
-                    Left = 125
+                    Left = 138
                     Top = 70
                     DataBinding.DataField = 'TOTAL_BASEI_IVAN_SES'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 9
-                    Width = 95
+                    Width = 82
                   end
                   object curTotSesTOTAL_BASEI_IVAR_SES: TcxDBCurrencyEdit
-                    Left = 125
+                    Left = 138
                     Top = 118
                     DataBinding.DataField = 'TOTAL_BASEI_IVAR_SES'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 10
-                    Width = 95
+                    Width = 82
                   end
                   object curTotSesTOTAL_BASEI_IVAS_SES: TcxDBCurrencyEdit
-                    Left = 125
+                    Left = 138
                     Top = 166
                     DataBinding.DataField = 'TOTAL_BASEI_IVAS_SES'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 11
-                    Width = 95
+                    Width = 82
                   end
                   object curTotSesTOTAL_BASEI_IVAE_SES: TcxDBCurrencyEdit
-                    Left = 125
+                    Left = 138
                     Top = 214
                     DataBinding.DataField = 'TOTAL_BASEI_IVAE_SES'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 12
-                    Width = 95
+                    Width = 82
                   end
                   object spnTotSesPORCENTAJE_IVAN_SES: TcxDBSpinEdit
                     Left = 226
@@ -1723,10 +1723,10 @@
                 TabOrder = 19
                 Width = 320
               end
-              object btnAplicarKitCab: TcxButton
+                object btnAplicarKitCab: TcxButton
                 Left = 440
                 Top = 187
-                Width = 160
+                  Width = 170
                 Height = 27
                 Caption = 'Aplicar kit a la l'#237'nea'
                 Colors.Default = 12579775

@@ -25,6 +25,10 @@ type
     [Test]
     procedure ColorSku_EliminaSimbolosYNormalizaSeparadores;
     [Test]
+    procedure ColorBasico_ResuelveCodigoONombreNormalizado;
+    [Test]
+    procedure ColorBasico_SinCoincidenciaNoResuelve;
+    [Test]
     procedure Perfil_DevuelveValorConfiguradoOPredeterminado;
     [Test]
     procedure FiltroArticulos_SeparaValoresCsv;
@@ -50,6 +54,31 @@ begin
   Assert.AreEqual(
     '',
     SanearColorSku('-_ / %'));
+end;
+
+procedure TPruebasReglasCompartidas.
+  ColorBasico_ResuelveCodigoONombreNormalizado;
+var
+  sCodigo: string;
+begin
+  Assert.IsTrue(ResolverCodigoColorBasico(
+    ' negro ', ['NEGRO', 'AZM'], ['Negro', 'Azul marino'], sCodigo));
+  Assert.AreEqual('NEGRO', sCodigo);
+  Assert.IsTrue(ResolverCodigoColorBasico(
+    ' azul / marino ', ['NEGRO', 'AZM'],
+    ['Negro', 'Azul marino'], sCodigo));
+  Assert.AreEqual('AZM', sCodigo);
+end;
+
+procedure TPruebasReglasCompartidas.
+  ColorBasico_SinCoincidenciaNoResuelve;
+var
+  sCodigo: string;
+begin
+  sCodigo := 'ANTERIOR';
+  Assert.IsFalse(ResolverCodigoColorBasico(
+    'coral', ['NEGRO', 'AZM'], ['Negro', 'Azul marino'], sCodigo));
+  Assert.AreEqual('', sCodigo);
 end;
 
 procedure TPruebasReglasCompartidas.

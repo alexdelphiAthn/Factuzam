@@ -25,6 +25,9 @@ uses
   inLibLectorScanner,
   UniDataRepositoriosArticulosPantalla,
   UniDataRepositoriosDocumentosPantalla,
+  UniDataRepositoriosOperacionesPantalla,
+  inLibOperacionesCajaSkuPersistenciaIntf,
+  inLibMovimientosSkuPersistenciaIntf,
   inLibStockConsultaEntradaIntf,
   inLibStockConsultaInfo,
   inLibStockConsultaPersistenciaIntf;
@@ -50,6 +53,8 @@ type
     Validador: IArticulosValidador;
     ResolverArticulos: IArticulosResolver;
     DocumentosTrabajo: TRepositoriosDocumentosTrabajo;
+    OperacionesCaja: IRepositorioOperacionesCajaSku;
+    Movimientos: IRepositorioMovimientosSku;
     Lector: TLectorScanner;
     Entrada: IAplicacionEntradaStock;
     class function Crear(
@@ -57,7 +62,9 @@ type
       const AInfoCabecera: ILectorInfoCabeceraStock;
       const AValidador: IArticulosValidador;
       const AResolverArticulos: IArticulosResolver;
-      const ADocumentosTrabajo: TRepositoriosDocumentosTrabajo
+      const ADocumentosTrabajo: TRepositoriosDocumentosTrabajo;
+      const AOperacionesCaja: IRepositorioOperacionesCajaSku;
+      const AMovimientos: IRepositorioMovimientosSku
     ): TContextoDependenciasStockConsulta; static;
     procedure Validar;
     procedure Liberar;
@@ -66,6 +73,7 @@ type
 function CrearContextoStockConsulta(
   const AArticulos: IRepositoriosArticulosPantalla;
   const ADocumentos: IRepositoriosDocumentosPantalla;
+  const AOperaciones: IRepositoriosOperacionesPantalla;
   AConexion: TUniConnection): TContextoDependenciasStockConsulta;
 
 implementation
@@ -87,6 +95,10 @@ resourcestring
     'No se proporcionó el resolutor de artículos.';
   SErrorDocumentosStockConsultaNoDisponibles =
     'No se proporcionaron los repositorios de documentos de trabajo.';
+  SErrorOperacionesCajaStockConsultaNoDisponibles =
+    'No se proporcionó la consulta de operaciones de caja por SKU.';
+  SErrorMovimientosStockConsultaNoDisponibles =
+    'No se proporcionó la consulta de movimientos por SKU.';
 
 type
   TLectorInfoCabeceraStockUniData = class(
@@ -118,7 +130,9 @@ class function TContextoDependenciasStockConsulta.Crear(
   const AInfoCabecera: ILectorInfoCabeceraStock;
   const AValidador: IArticulosValidador;
   const AResolverArticulos: IArticulosResolver;
-  const ADocumentosTrabajo: TRepositoriosDocumentosTrabajo
+  const ADocumentosTrabajo: TRepositoriosDocumentosTrabajo;
+  const AOperacionesCaja: IRepositorioOperacionesCajaSku;
+  const AMovimientos: IRepositorioMovimientosSku
 ): TContextoDependenciasStockConsulta;
 begin
   Result := Default(TContextoDependenciasStockConsulta);
@@ -128,6 +142,8 @@ begin
   Result.Validador := AValidador;
   Result.ResolverArticulos := AResolverArticulos;
   Result.DocumentosTrabajo := ADocumentosTrabajo;
+  Result.OperacionesCaja := AOperacionesCaja;
+  Result.Movimientos := AMovimientos;
   Result.Validar;
 end;
 
@@ -155,6 +171,12 @@ begin
     raise EArgumentNilException.Create(
       SErrorDocumentosStockConsultaNoDisponibles);
   end;
+  if not Assigned(OperacionesCaja) then
+    raise EArgumentNilException.Create(
+      SErrorOperacionesCajaStockConsultaNoDisponibles);
+  if not Assigned(Movimientos) then
+    raise EArgumentNilException.Create(
+      SErrorMovimientosStockConsultaNoDisponibles);
 end;
 
 // El contexto es propietario del lector; el resto son contratos que solo
@@ -168,6 +190,8 @@ begin
   InfoCabecera := nil;
   Validador := nil;
   ResolverArticulos := nil;
+  OperacionesCaja := nil;
+  Movimientos := nil;
   DocumentosTrabajo.Lecturas := nil;
   DocumentosTrabajo.Escritura := nil;
   DocumentosTrabajo.Materializacion := nil;
@@ -176,6 +200,7 @@ end;
 function CrearContextoStockConsulta(
   const AArticulos: IRepositoriosArticulosPantalla;
   const ADocumentos: IRepositoriosDocumentosPantalla;
+  const AOperaciones: IRepositoriosOperacionesPantalla;
   AConexion: TUniConnection): TContextoDependenciasStockConsulta;
 var
   Servicios: TServiciosStockConsulta;
@@ -184,6 +209,8 @@ begin
     raise EArgumentNilException.Create('AArticulos');
   if not Assigned(ADocumentos) then
     raise EArgumentNilException.Create('ADocumentos');
+  if not Assigned(AOperaciones) then
+    raise EArgumentNilException.Create('AOperaciones');
   if not Assigned(AConexion) then
     raise EArgumentNilException.Create('AConexion');
   Servicios := AArticulos.CrearServiciosStockConsulta(AConexion);
@@ -192,7 +219,9 @@ begin
     TLectorInfoCabeceraStockUniData.Create(AConexion),
     AArticulos.CrearValidadorArticulos(AConexion),
     AArticulos.CrearResolverArticulos(AConexion),
-    ADocumentos.CrearRepositoriosDocumentosTrabajo(AConexion));
+    ADocumentos.CrearRepositoriosDocumentosTrabajo(AConexion),
+    AOperaciones.CrearRepositorioOperacionesCajaSku(AConexion),
+    AOperaciones.CrearRepositorioMovimientosSku(AConexion));
 end;
 
 end.

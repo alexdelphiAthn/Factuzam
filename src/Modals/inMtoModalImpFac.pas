@@ -154,10 +154,29 @@ begin
 end;
 
 procedure TfrmPrintFac.AfterReportLoaded;
+var
+  oGrupoOperacion: TfrxComponent;
 begin
   inherited;
   if dmFac <> nil then
     RebindReportDataSetsByDataModule(frxrprt1, dmFac);
+  oGrupoOperacion := frxrprt1.FindObject('GroupHeaderOperacionCaja');
+  if oGrupoOperacion is TfrxGroupHeader then
+  begin
+    // Un formato guardado puede conservar una definicion antigua del
+    // dataset. Evitamos que FastReport evalue un campo inexistente y solo
+    // activamos la agrupacion cuando la consulta abierta expone el ID.
+    TfrxGroupHeader(oGrupoOperacion).Condition := '0';
+    TfrxGroupHeader(oGrupoOperacion).Visible := False;
+    if (dmFac <> nil) and dmFac.unqryLinFacPrint.Active and
+       (dmFac.unqryLinFacPrint.FindField(
+          'ID_OPERACION_CAJA_FACTURA') <> nil) then
+    begin
+      TfrxGroupHeader(oGrupoOperacion).Condition :=
+        'Lineas Facturas."ID_OPERACION_CAJA_FACTURA"';
+      TfrxGroupHeader(oGrupoOperacion).Visible := True;
+    end;
+  end;
   AplicarSkuDescripcionReport(frxrprt1);
   // Solo ajusta el título por tipo (FACTURA / FACTURA SIMPLIFICADA /
   // FACTURA RECTIFICATIVA). NO se inyecta ni se mueve ninguna banda:
@@ -299,6 +318,10 @@ begin
       dmFac.unqryFacPrint,
       dmFac.unqryLinFacPrint);
   FPreparadorInforme.Preparar(criterios);
+  // FieldDefs era una fotografia de diseno. La consulta de impresion
+  // incorpora campos calculados, por lo que FastReport debe reconstruir
+  // su catalogo desde los TField reales despues de cada apertura.
+  dmFac.fxdstPrintLinFac.ResetFieldDefs;
   dmFac.fxdsPrintFac.UpdateBounds;
   dmFac.fxdstPrintLinFac.UpdateBounds;
   ConfigurarNombrePDF;

@@ -673,14 +673,14 @@
           object btnEntregarTodo: TcxButton
             Left = 256
             Top = 6
-            Width = 169
+            Width = 182
             Height = 28
             Caption = 'Marcar todo entregado'
             TabOrder = 2
             OnClick = btnEntregarTodoClick
           end
           object btnCrearAlbaran: TcxButton
-            Left = 431
+            Left = 444
             Top = 6
             Width = 130
             Height = 28
@@ -695,16 +695,16 @@
             OnClick = btnCrearAlbaranClick
           end
           object btnImportarPS: TcxButton
-            Left = 567
+            Left = 580
             Top = 6
-            Width = 176
+            Width = 186
             Height = 28
             Caption = 'Importar de PrestaShop'
             TabOrder = 4
             OnClick = btnImportarPSClick
           end
           object btnExpandirFilas: TcxButton
-            Left = 749
+            Left = 772
             Top = 6
             Width = 160
             Height = 28
@@ -1055,14 +1055,14 @@
                     Transparent = True
                   end
                   object lblTotalesIVAN: TcxLabel
-                    Left = 90
+                    Left = 84
                     Top = 82
                     Caption = 'Normal'
                     TabOrder = 5
                     Transparent = True
                   end
                   object lblTotalesIVAR: TcxLabel
-                    Left = 73
+                    Left = 67
                     Top = 133
                     Caption = 'Reducido'
                     TabOrder = 6
@@ -1076,51 +1076,51 @@
                     Transparent = True
                   end
                   object lblTotalesIVAE: TcxLabel
-                    Left = 94
+                    Left = 87
                     Top = 229
                     Caption = 'Exento'
                     TabOrder = 8
                     Transparent = True
                   end
                   object curTotalesTOTAL_BASEI_IVAN_PED: TcxDBCurrencyEdit
-                    Left = 132
+                    Left = 145
                     Top = 78
                     DataBinding.DataField = 'TOTAL_BASEI_IVAN_PED'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 9
-                    Width = 105
+                    Width = 92
                   end
                   object curTotalesTOTAL_BASEI_IVAR_PED: TcxDBCurrencyEdit
-                    Left = 132
+                    Left = 145
                     Top = 132
                     DataBinding.DataField = 'TOTAL_BASEI_IVAR_PED'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 10
-                    Width = 105
+                    Width = 92
                   end
                   object curTotalesTOTAL_BASEI_IVAS_PED: TcxDBCurrencyEdit
-                    Left = 132
+                    Left = 145
                     Top = 180
                     DataBinding.DataField = 'TOTAL_BASEI_IVAS_PED'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 11
-                    Width = 105
+                    Width = 92
                   end
                   object curTotalesTOTAL_BASEI_IVAE_PED: TcxDBCurrencyEdit
-                    Left = 132
+                    Left = 145
                     Top = 228
                     DataBinding.DataField = 'TOTAL_BASEI_IVAE_PED'
                     DataBinding.DataSource = dsTablaG
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 12
-                    Width = 105
+                    Width = 92
                   end
                   object curTotalesTOTAL_IVAN_PED: TcxDBCurrencyEdit
                     Left = 296
