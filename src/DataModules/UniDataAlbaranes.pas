@@ -85,9 +85,6 @@ type
     // en el callback main thread. OpenTables delega aqui.
     procedure AbrirDetalles; override;
 
-    // Procedimientos de facturación: instalación idempotente.
-    procedure InstalarProcedimientos;
-
     // Genera factura del albarán cargado en pantalla con las líneas indicadas.
     // Si aLineas es nil, se facturan todas las líneas no facturadas del
     // albarán.
@@ -107,7 +104,6 @@ type
     // Devuelve el número de movimientos creados.
     function GenerarMovimientosSalida: Integer;
   private
-    FProcsInstalados: Boolean;
     FCalculandoTotales: Boolean;
     // True mientras DesempaquetarAtributosLineas postea lineas: cambio
     // puramente descriptivo que NO debe disparar la logica fiscal ni
@@ -343,9 +339,6 @@ begin
   unstrdprcCrearFacturaLinea.Connection  := ConexionPrincipal;
   unstrdprcCrearFacturaFin.Connection    := ConexionPrincipal;
   unstrdprcInsertarMovAlb.Connection     := ConexionPrincipal;
-  // El mantenimiento enlaza campos de retencion de la cabecera. Aseguramos
-  // el esquema antes de que la consulta principal abra vi_albaranes.
-  InstalarProcedimientos;
 end;
 
 procedure TdmAlbaranes.DataModuleDestroy(Sender: TObject);
@@ -404,10 +397,6 @@ var
 begin
   inherited;
   sw := TStopwatch.StartNew;
-  // Antes de abrir queries aseguramos que el esquema y los procs están al día
-  // (idempotente y barato): así las nuevas columnas de seguimiento de
-  // facturación están disponibles para el data-binding del formulario.
-  InstalarProcedimientos;
   RefrescarAlmacenes(UbicacionSesion.Empresa);
   AbrirConTiempo(unqryAlbaranesLineas, 'unqryAlbaranesLineas');
   AbrirConTiempo(unqryFacturas,        'unqryFacturas');
@@ -1445,289 +1434,6 @@ begin
   end;
 end;
 
-function SqlCrearFacturaInicio: string;
-begin
-  Result :=
-    'CREATE PROCEDURE PRC_ALB_CREAR_FACTURA_INICIO(' +
-    '  IN  p_NUMERO_ALB varchar(20),' +
-    '  IN  p_SERIE_ALB  varchar(20),' +
-    '  IN  p_USUARIO    varchar(100),' +
-    '  OUT p_NUMERO_FAC varchar(20),' +
-    '  OUT p_SERIE_FAC  varchar(20)' +
-    ') BEGIN ' +
-    '  DECLARE v_serie  varchar(20); ' +
-    '  DECLARE v_numero varchar(20); ' +
-    '  SELECT SERIE_ALB INTO v_serie FROM fza_albaranes ' +
-    '   WHERE NUMERO_ALB = p_NUMERO_ALB AND SERIE_ALB = p_SERIE_ALB; ' +
-    '  SELECT LPAD(IFNULL(MAX(CAST(NUMERO_FAC AS UNSIGNED)), 0) + 1, 6, ' +
-    '''0'') ' +
-    '    INTO v_numero FROM fza_facturas WHERE SERIE_FAC = v_serie; ' +
-    '  INSERT INTO fza_facturas ( ' +
-    '    NUMERO_FAC, SERIE_FAC, FECHA_FAC, FASE_FAC, TIPO_FAC, ' +
-    '    CODIGO_EMP_FAC, RAZON_SOCIAL_EMPRESA_FAC, NIF_EMPRESA_FAC, ' +
-    '    MOVIL_EMPRESA_FAC, EMAIL_EMPRESA_FAC, ' +
-    '    DIRECCION1_EMPRESA_FAC, DIRECCION2_EMPRESA_FAC, ' +
-    '    POBLACION_EMPRESA_FAC, PROVINCIA_EMPRESA_FAC, ' +
-    '    CODIGO_PAI_EMPRESA_FAC, NOMBRE_PAI_EMPRESA_FAC, ' +
-    '    CODIGO_POSTAL_EMPRESA_FAC, GRUPO_ZONA_IVA_EMPRESA_FAC, ' +
-    '    CODIGO_CLI_FAC, RAZON_SOCIAL_CLIENTE_FAC, NIF_CLIENTE_FAC, ' +
-    '    MOVIL_CLIENTE_FAC, EMAIL_CLIENTE_FAC, ' +
-    '    DIRECCION1_CLIENTE_FAC, DIRECCION2_CLIENTE_FAC, ' +
-    '    POBLACION_CLIENTE_FAC, PROVINCIA_CLIENTE_FAC, ' +
-    '    CODIGO_POSTAL_CLIENTE_FAC, ' +
-    '    CODIGO_PAI_CLIENTE_FAC, NOMBRE_PAI_CLIENTE_FAC, ' +
-    '    CODIGO_IVA_FAC, ' +
-    '    ESIVA_RECARGO_CLIENTE_FAC, ESIVA_EXENTO_CLIENTE_FAC, ' +
-    '    ESINTRACOMUNITARIO_CLIENTE_FAC, ' +
-    '    TARIFA_ARTICULO_CLIENTE_FAC, ESIMP_INCL_TARIFA_CLIENTE_FAC, ' +
-    '    PORCENTAJE_IVAN_FAC, PORCENTAJE_IVAR_FAC, ' +
-    '    PORCENTAJE_IVAS_FAC, PORCENTAJE_IVAE_FAC, ' +
-    '    PORCENTAJE_RETENCION_FAC, ' +
-    '    FORMA_PAGO_FAC, CONTADOR_LINEAS_FAC, ' +
-    '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-    '  SELECT v_numero, v_serie, CURRENT_DATE(), ''BORRADOR'', ''NORMAL'', ' +
-    '         A.CODIGO_EMP_ALB, A.RAZON_SOCIAL_EMPRESA_ALB, ' +
-    'A.NIF_EMPRESA_ALB, ' +
-    '         A.MOVIL_EMPRESA_ALB, A.EMAIL_EMPRESA_ALB, ' +
-    '         A.DIRECCION1_EMPRESA_ALB, A.DIRECCION2_EMPRESA_ALB, ' +
-    '         A.POBLACION_EMPRESA_ALB, A.PROVINCIA_EMPRESA_ALB, ' +
-    '         A.CODIGO_PAI_EMPRESA_ALB, A.NOMBRE_PAI_EMPRESA_ALB, ' +
-    '         A.CODIGO_POSTAL_EMPRESA_ALB, A.GRUPO_ZONA_IVA_EMPRESA_ALB, ' +
-    '         A.CODIGO_CLI_ALB, A.RAZON_SOCIAL_CLIENTE_ALB, ' +
-    'A.NIF_CLIENTE_ALB, ' +
-    '         A.MOVIL_CLIENTE_ALB, A.EMAIL_CLIENTE_ALB, ' +
-    '         A.DIRECCION1_CLIENTE_ALB, A.DIRECCION2_CLIENTE_ALB, ' +
-    '         A.POBLACION_CLIENTE_ALB, A.PROVINCIA_CLIENTE_ALB, ' +
-    '         A.CODIGO_POSTAL_CLIENTE_ALB, ' +
-    '         A.CODIGO_PAI_CLIENTE_ALB, A.NOMBRE_PAI_CLIENTE_ALB, ' +
-    '         A.CODIGO_IVA_ALB, ' +
-    '         A.ESIVA_RECARGO_CLIENTE_ALB, A.ESIVA_EXENTO_CLIENTE_ALB, ' +
-    '         A.ESINTRACOMUNITARIO_CLIENTE_ALB, ' +
-    '         A.TARIFA_ARTICULO_CLIENTE_ALB, ' +
-    'A.ESIMP_INCL_TARIFA_CLIENTE_ALB, ' +
-    '         A.PORCENTAJE_IVAN_ALB, A.PORCENTAJE_IVAR_ALB, ' +
-    '         A.PORCENTAJE_IVAS_ALB, A.PORCENTAJE_IVAE_ALB, ' +
-    '         A.PORCENTAJE_RETENCION_ALB, ' +
-    '         A.FORMA_PAGO_ALB, ''0'', NOW(), p_USUARIO, p_USUARIO ' +
-    '    FROM fza_albaranes A ' +
-    '   WHERE A.NUMERO_ALB = p_NUMERO_ALB AND A.SERIE_ALB = p_SERIE_ALB; ' +
-    '  SET p_NUMERO_FAC = v_numero; ' +
-    '  SET p_SERIE_FAC  = v_serie; ' +
-    'END';
-end;
-
-procedure TdmAlbaranes.InstalarProcedimientos;
-var
-  q: TUniSQL;
-
-  procedure Run(const sSql: string);
-  begin
-    q.SQL.Text := sSql;
-    q.Execute;
-  end;
-
-begin
-  if not FProcsInstalados then
-  begin
-    q := TUniSQL.Create(nil);
-    try
-      q.Connection := ConexionPrincipal;
-
-    // Retencion del albaran de venta (idempotente).
-    Run('ALTER TABLE fza_albaranes ' +
-        'ADD COLUMN IF NOT EXISTS PORCENTAJE_RETENCION_ALB ' +
-        'DECIMAL(19,6) NULL DEFAULT 0 AFTER TOTAL_IMPUESTOS_ALB');
-    Run('ALTER TABLE fza_albaranes ' +
-        'ADD COLUMN IF NOT EXISTS TOTAL_RETENCION_ALB ' +
-        'DECIMAL(18,6) NULL DEFAULT 0 AFTER PORCENTAJE_RETENCION_ALB');
-    // MariaDB congela a.* al crear una vista: hay que recrearla para que los
-    // dos campos nuevos esten disponibles en el data-binding del formulario.
-    Run('CREATE OR REPLACE VIEW vi_albaranes AS ' +
-        'SELECT a.*, alm.NOMBRE_ALM_ALM AS NOMBRE_ALM_ALB ' +
-        'FROM fza_albaranes a LEFT JOIN fza_almacenes alm ' +
-        'ON alm.CODIGO_ALM_ALM = a.CODIGO_ALM_ALB');
-
-    // Columna de seguimiento de facturación a nivel de línea (idempotente).
-    Run('ALTER TABLE fza_albaranes_lineas ' +
-        'ADD COLUMN IF NOT EXISTS ESFACTURADA_ALBLIN VARCHAR(1) DEFAULT ''N''');
-    Run('ALTER TABLE fza_albaranes_lineas ' +
-        'ADD COLUMN IF NOT EXISTS NUMERO_FAC_ALBLIN VARCHAR(20) DEFAULT NULL');
-    Run('ALTER TABLE fza_albaranes_lineas ' +
-        'ADD COLUMN IF NOT EXISTS SERIE_FAC_ALBLIN VARCHAR(20) DEFAULT NULL');
-    Run('ALTER TABLE fza_albaranes_lineas ' +
-        'ADD COLUMN IF NOT EXISTS LINEA_FAC_ALBLIN VARCHAR(4) DEFAULT NULL');
-
-    // Columnas SKU / lote / caducidad / variación (mismo nombre lógico que en
-    // fza_facturas_lineas, sólo cambia el sufijo); permiten propagar la
-    // información hacia la factura.
-    Run('ALTER TABLE fza_albaranes_lineas ' +
-        'ADD COLUMN IF NOT EXISTS CODIGO_UNIDAD_ALBLIN VARCHAR(50) DEFAULT ' +
-        'NULL');
-    Run('ALTER TABLE fza_albaranes_lineas ' +
-        'ADD COLUMN IF NOT EXISTS LOTE_ALBLIN VARCHAR(50) DEFAULT NULL');
-    Run('ALTER TABLE fza_albaranes_lineas ' +
-        'ADD COLUMN IF NOT EXISTS FECHA_CADUCIDAD_ALBLIN DATE DEFAULT NULL');
-    Run('ALTER TABLE fza_albaranes_lineas ' +
-        'ADD COLUMN IF NOT EXISTS DESCRIPCION_VARIACION_ALBLIN VARCHAR(200) ' +
-        'DEFAULT NULL');
-
-    // PRC_ALB_CREAR_FACTURA_INICIO: cabecera factura clonando del primer
-    // albarán.
-    Run('DROP PROCEDURE IF EXISTS PRC_ALB_CREAR_FACTURA_INICIO');
-    Run(SqlCrearFacturaInicio);
-
-    // PRC_ALB_CREAR_FACTURA_LINEA: copia una línea concreta a la factura.
-    Run('DROP PROCEDURE IF EXISTS PRC_ALB_CREAR_FACTURA_LINEA');
-    Run(
-      'CREATE PROCEDURE PRC_ALB_CREAR_FACTURA_LINEA(' +
-      '  IN  p_NUMERO_FAC varchar(20),' +
-      '  IN  p_SERIE_FAC  varchar(20),' +
-      '  IN  p_NUMERO_ALB varchar(20),' +
-      '  IN  p_SERIE_ALB  varchar(20),' +
-      '  IN  p_LINEA_ALB  varchar(4),' +
-      '  IN  p_USUARIO    varchar(100)' +
-      ') PRC: BEGIN ' +
-      '  DECLARE v_linea_fac varchar(4); ' +
-      '  DECLARE v_contador_fac int DEFAULT 0; ' +
-      '  DECLARE v_facturada varchar(1); ' +
-      '  SELECT IFNULL(ESFACTURADA_ALBLIN, ''N'') INTO v_facturada ' +
-      '    FROM fza_albaranes_lineas ' +
-      '   WHERE NUMERO_ALB_ALBLIN = p_NUMERO_ALB ' +
-      '     AND SERIE_ALB_ALBLIN  = p_SERIE_ALB ' +
-      '     AND LINEA_ALBLIN      = p_LINEA_ALB; ' +
-      '  IF v_facturada = ''S'' THEN ' +
-      '    LEAVE PRC; ' +
-      '  END IF; ' +
-      '  SELECT IFNULL(CAST(NULLIF(CONTADOR_LINEAS_FAC, '''') ' +
-      '         AS UNSIGNED), 0) + 10 ' +
-      '    INTO v_contador_fac ' +
-      '    FROM fza_facturas ' +
-      '   WHERE NUMERO_FAC = p_NUMERO_FAC ' +
-      '     AND SERIE_FAC  = p_SERIE_FAC ' +
-      '   FOR UPDATE; ' +
-      '  IF v_contador_fac = 0 THEN ' +
-      '    LEAVE PRC; ' +
-      '  END IF; ' +
-      '  UPDATE fza_facturas ' +
-      '     SET CONTADOR_LINEAS_FAC = LPAD(v_contador_fac, 8, ''0'') ' +
-      '   WHERE NUMERO_FAC = p_NUMERO_FAC ' +
-      '     AND SERIE_FAC  = p_SERIE_FAC; ' +
-      '  IF ROW_COUNT() = 0 THEN ' +
-      '    LEAVE PRC; ' +
-      '  END IF; ' +
-      '  SET v_linea_fac = LPAD(v_contador_fac, 4, ''0''); ' +
-      '  INSERT INTO fza_facturas_lineas ( ' +
-      '    NUMERO_FAC_FACLIN, SERIE_FAC_FACLIN, LINEA_FACLIN, ' +
-      '    CODIGO_ART_FACLIN, CODIGO_UNIDAD_FACLIN, ' +
-      '    LOTE_FACLIN, FECHA_CADUCIDAD_FACLIN, ' +
-      '    CODIGO_FAM_FACLIN, NOMBRE_FAM_FACLIN, ' +
-      '    DESCRIPCION_ARTICULO_FACLIN, DESCRIPCION_VARIACION_FACLIN, ' +
-      '    TIPO_CANTIDAD_ARTICULO_FACLIN, ' +
-      '    CANTIDAD_FACLIN, CODIGO_TAR_FACLIN, ESIMP_INCL_TARIFA_FACLIN, ' +
-      '    TIPO_IVA_ARTICULO_FACLIN, PORCENTAJE_IVA_FACLIN, ' +
-      '    PRECIO_VENTA_SIVA_ARTICULO_FACLIN, ' +
-      '    PRECIO_VENTA_CIVA_ARTICULO_FACLIN, ' +
-      '    TOTAL_FACLIN, CODIGO_ALM_FACLIN, ' +
-      '    INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-      '  SELECT p_NUMERO_FAC, p_SERIE_FAC, v_linea_fac, ' +
-      '         AL.CODIGO_ART_ALBLIN, AL.CODIGO_UNIDAD_ALBLIN, ' +
-      '         AL.LOTE_ALBLIN, AL.FECHA_CADUCIDAD_ALBLIN, ' +
-      '         AL.CODIGO_FAM_ALBLIN, AL.NOMBRE_FAM_ALBLIN, ' +
-      '         AL.DESCRIPCION_ARTICULO_ALBLIN, ' +
-      'AL.DESCRIPCION_VARIACION_ALBLIN, ' +
-      '         AL.TIPO_CANTIDAD_ARTICULO_ALBLIN, ' +
-      '         AL.CANTIDAD_ALBLIN, AL.CODIGO_TAR_ALBLIN, ' +
-      'AL.ESIMP_INCL_TARIFA_ALBLIN, ' +
-      '         AL.TIPO_IVA_ARTICULO_ALBLIN, AL.PORCENTAJE_IVA_ALBLIN, ' +
-      '         AL.PRECIO_VENTA_SIVA_ARTICULO_ALBLIN, ' +
-      '         AL.PRECIO_VENTA_CIVA_ARTICULO_ALBLIN, ' +
-      '         AL.TOTAL_ALBLIN, AL.CODIGO_ALMACEN_ALBLIN, ' +
-      '         NOW(), p_USUARIO, p_USUARIO ' +
-      '    FROM fza_albaranes_lineas AL ' +
-      '   WHERE AL.NUMERO_ALB_ALBLIN = p_NUMERO_ALB ' +
-      '     AND AL.SERIE_ALB_ALBLIN  = p_SERIE_ALB ' +
-      '     AND AL.LINEA_ALBLIN      = p_LINEA_ALB; ' +
-      '  UPDATE fza_albaranes_lineas ' +
-      '     SET ESFACTURADA_ALBLIN = ''S'', ' +
-      '         NUMERO_FAC_ALBLIN  = p_NUMERO_FAC, ' +
-      '         SERIE_FAC_ALBLIN   = p_SERIE_FAC, ' +
-      '         LINEA_FAC_ALBLIN   = v_linea_fac, ' +
-      '         INSTANTE_MODIF     = NOW(), ' +
-      '         USUARIO_MODIF      = p_USUARIO ' +
-      '   WHERE NUMERO_ALB_ALBLIN = p_NUMERO_ALB ' +
-      '     AND SERIE_ALB_ALBLIN  = p_SERIE_ALB ' +
-      '     AND LINEA_ALBLIN      = p_LINEA_ALB; ' +
-      'END');
-
-    // PRC_ALB_CREAR_FACTURA_FIN: recalcula totales y marca albarán como
-    // facturado
-    // si todas sus líneas se han facturado.
-    Run('DROP PROCEDURE IF EXISTS PRC_ALB_CREAR_FACTURA_FIN');
-    Run(
-      'CREATE PROCEDURE PRC_ALB_CREAR_FACTURA_FIN(' +
-      '  IN p_NUMERO_FAC varchar(20),' +
-      '  IN p_SERIE_FAC  varchar(20),' +
-      '  IN p_NUMERO_ALB varchar(20),' +
-      '  IN p_SERIE_ALB  varchar(20),' +
-      '  IN p_USUARIO    varchar(100)' +
-      ') BEGIN ' +
-      '  DECLARE v_total_base decimal(18,6) DEFAULT 0; ' +
-      '  DECLARE v_total_iva  decimal(18,6) DEFAULT 0; ' +
-      '  DECLARE v_por_retencion decimal(19,6) DEFAULT 0; ' +
-      '  DECLARE v_total_retencion decimal(18,6) DEFAULT 0; ' +
-      '  DECLARE v_pendientes int DEFAULT 0; ' +
-      '  SELECT IFNULL(SUM(CANTIDAD_FACLIN * ' +
-      'PRECIO_VENTA_SIVA_ARTICULO_FACLIN), 0), ' +
-      '         IFNULL(SUM(CANTIDAD_FACLIN * ' +
-      '(PRECIO_VENTA_CIVA_ARTICULO_FACLIN - ' +
-      'PRECIO_VENTA_SIVA_ARTICULO_FACLIN)), 0) ' +
-      '    INTO v_total_base, v_total_iva ' +
-      '    FROM fza_facturas_lineas ' +
-      '   WHERE NUMERO_FAC_FACLIN = p_NUMERO_FAC ' +
-      '     AND SERIE_FAC_FACLIN  = p_SERIE_FAC; ' +
-      '  SELECT IFNULL(PORCENTAJE_RETENCION_FAC, 0) ' +
-      '    INTO v_por_retencion FROM fza_facturas ' +
-      '   WHERE NUMERO_FAC = p_NUMERO_FAC AND SERIE_FAC = p_SERIE_FAC; ' +
-      '  SET v_total_retencion = v_total_base * v_por_retencion / 100; ' +
-      '  UPDATE fza_facturas ' +
-      '     SET TOTAL_BASES_FAC     = v_total_base, ' +
-      '         TOTAL_IMPUESTOS_FAC = v_total_iva, ' +
-      '         TOTAL_RETENCION_FAC = v_total_retencion, ' +
-      '         TOTAL_LIQUIDO_FAC   = v_total_base + v_total_iva - ' +
-      '           v_total_retencion, ' +
-      '         INSTANTE_MODIF      = NOW(), ' +
-      '         USUARIO_MODIF       = p_USUARIO ' +
-      '   WHERE NUMERO_FAC = p_NUMERO_FAC AND SERIE_FAC = p_SERIE_FAC; ' +
-      '  IF p_NUMERO_ALB IS NOT NULL AND p_NUMERO_ALB <> '''' THEN ' +
-      '    SELECT COUNT(*) INTO v_pendientes ' +
-      '      FROM fza_albaranes_lineas ' +
-      '     WHERE NUMERO_ALB_ALBLIN = p_NUMERO_ALB ' +
-      '       AND SERIE_ALB_ALBLIN  = p_SERIE_ALB ' +
-      '       AND IFNULL(ESFACTURADA_ALBLIN, ''N'') <> ''S''; ' +
-      '    IF v_pendientes = 0 THEN ' +
-      '      UPDATE fza_albaranes ' +
-      '         SET ESTADO_ALB    = ''FACTURADO'', ' +
-      '             NUMERO_FAC_ALB = p_NUMERO_FAC, ' +
-      '             SERIE_FAC_ALB  = p_SERIE_FAC, ' +
-      '             INSTANTE_MODIF = NOW(), ' +
-      '             USUARIO_MODIF  = p_USUARIO ' +
-      '       WHERE NUMERO_ALB = p_NUMERO_ALB AND SERIE_ALB = p_SERIE_ALB; ' +
-      '    ELSE ' +
-      '      UPDATE fza_albaranes ' +
-      '         SET ESTADO_ALB    = ''PARCIAL'', ' +
-      '             INSTANTE_MODIF= NOW(), ' +
-      '             USUARIO_MODIF = p_USUARIO ' +
-      '       WHERE NUMERO_ALB = p_NUMERO_ALB AND SERIE_ALB = p_SERIE_ALB; ' +
-      '    END IF; ' +
-      '  END IF; ' +
-      'END');
-
-      FProcsInstalados := True;
-    finally
-      FreeAndNil(q);
-    end;
-  end;
-end;
 
 procedure TdmAlbaranes.EjecutarCrearFacturaInicio(
   const ANumeroAlbaran, ASerieAlbaran: string;
@@ -1829,8 +1535,6 @@ var
 begin
   sNumeroFac := '';
   sSerieFac  := '';
-  InstalarProcedimientos;
-
   sNumeroAlb := unqryTablaG.FieldByName('NUMERO_ALB').AsString;
   sSerieAlb  := unqryTablaG.FieldByName('SERIE_ALB').AsString;
   bUsarTodas := (aLineas = nil) or (aLineas.Count = 0);
@@ -1919,7 +1623,6 @@ begin
   Result := 0;
   if (aListaAlbaranes <> nil) and (aListaAlbaranes.Count > 0) then
   begin
-    InstalarProcedimientos;
     qCli := TUniQuery.Create(nil);
     qLin := TUniQuery.Create(nil);
     try

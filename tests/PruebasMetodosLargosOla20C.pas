@@ -290,8 +290,8 @@ begin
     'function TdmPedidos.CrearAlbaranDesdePedido',
     'function TdmPedidos.ExistePedidoPrestaShop');
   ComprobarOrden(sMetodo,
-    ['InstalarProcedimientos', 'StartTransaction',
-     'EjecutarLineasAlbaranPedido', 'EjecutarFinAlbaranPedido',
+    ['StartTransaction', 'EjecutarLineasAlbaranPedido',
+     'EjecutarFinAlbaranPedido',
      'Commit', 'except', 'Rollback']);
   sFuente := LeerUnidad(cRuta);
   ComprobarContiene(sFuente, 'EjecutarInicioAlbaranPedido',
