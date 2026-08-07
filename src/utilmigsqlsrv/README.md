@@ -183,6 +183,9 @@ columnas saldrán incluidas en el esqueleto:
 |              | (añade `CODIGO_PADRE_FAM` y su índice — para       |
 |              | preservar la jerarquía sección→familia del legacy: |
 |              | "1401" tiene como padre "14"). |
+| Tallas por artículo | `DESARROLLOS EN CURSO/tallas_orden_por_articulo.sql` |
+|              | (añade `ORDEN_AAB`; `articulos_tallas` lo rellena con |
+|              | `dbo.ocarttal.Orden` y repara filas ya migradas) |
 | Inventarios  | `DESARROLLOS EN CURSO/widen_linea_invlin.sql`      |
 |              | (amplía `LINEA_INVLIN` de varchar(4) → varchar(8). |
 |              | Si un almacén legacy tiene >9999 SKUs en stock no  |

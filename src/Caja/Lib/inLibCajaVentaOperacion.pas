@@ -39,6 +39,7 @@ type
   TResultadoPreparacionArticuloVenta = record
     Preparado: Boolean;
     MotivoRechazo: string;
+    ConservoImportesExistentes: Boolean;
   end;
 
   TAccionCodigoCaja = procedure(const ACodigo: string) of object;
@@ -58,6 +59,13 @@ procedure EscribirCabeceraBaseOperacionVenta(
   ACabecera: TDataSet;
   const AEmpresa, ATarifa: string;
   const AFecha: TDateTime);
+
+// Para una nueva operacion se conserva el ultimo empleado validado. Si aun
+// no lo hay, el configurado solo se usa cuando el parametro lo permite.
+function ResolverEmpleadoNuevaOperacionVenta(
+  const AUltimoEmpleado: string;
+  ARellenarEmpleadoDefecto: Boolean;
+  const AEmpleadoDefecto: string): string;
 
 // Retira la linea rechazada por una validacion de SKU: la insercion se
 // cancela; la edicion se cancela y la fila se borra.
@@ -142,21 +150,22 @@ end;
 procedure PrepararSkuResuelto(
   ALineas: TDataSet;
   const ACodigoSku: string;
-  AActualizandoDepositos: Boolean;
+  AActualizandoDepositos, AConservarImportesExistentes: Boolean;
   AConsultarStock, ARecalcularPrecio: TAccionCodigoCaja);
 begin
   if (not AActualizandoDepositos) and Assigned(AConsultarStock) then
     AConsultarStock(ACodigoSku);
   ALineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString :=
     ACodigoSku;
-  if Assigned(ARecalcularPrecio) then
+  if (not AConservarImportesExistentes) and
+     Assigned(ARecalcularPrecio) then
     ARecalcularPrecio(ACodigoSku);
 end;
 
 procedure PrepararSkuPendiente(
   ALineas, ACabecera: TDataSet;
   const ACodigoArticulo: string;
-  AActualizandoDepositos: Boolean;
+  AActualizandoDepositos, AConservarImportesExistentes: Boolean;
   const AResolver: IArticulosResolver;
   AConsultarStock: TAccionCodigoCaja);
 var
@@ -169,7 +178,9 @@ begin
     AConsultarStock(ACodigoArticulo);
   ALineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString :=
     ACodigoArticulo;
-  if (not AActualizandoDepositos) and Assigned(AResolver) then
+  if (not AActualizandoDepositos) and
+     (not AConservarImportesExistentes) and
+     Assigned(AResolver) then
   begin
     sCodTarifa := ACabecera.FieldByName(
       'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
@@ -241,6 +252,16 @@ begin
   ACabecera.FieldByName('TIPO_FAC').AsString := 'SIMPLIFICADA';
   ACabecera.FieldByName('TARIFA_ARTICULO_CLIENTE_FAC').AsString :=
     ATarifa;
+end;
+
+function ResolverEmpleadoNuevaOperacionVenta(
+  const AUltimoEmpleado: string;
+  ARellenarEmpleadoDefecto: Boolean;
+  const AEmpleadoDefecto: string): string;
+begin
+  Result := Trim(AUltimoEmpleado);
+  if (Result = '') and ARellenarEmpleadoDefecto then
+    Result := Trim(AEmpleadoDefecto);
 end;
 
 procedure EliminarLineaVentaPorValidacion(ALineas: TDataSet);
@@ -407,13 +428,23 @@ function PrepararArticuloLineaVenta(
 var
   Resolucion: TArtResolucionEntrada;
   sCodigoLimpio: string;
+  sSkuPreferido: string;
 begin
   Result := Default(TResultadoPreparacionArticuloVenta);
+  Result.ConservoImportesExistentes := ALineas.State = dsEdit;
   sCodigoLimpio := UpperCase(Trim(ACodigo));
   if (sCodigoLimpio <> '') and Assigned(AValidador) then
   begin
     if AEsLecturaScanner then
       Resolucion := AValidador.ResolverCodigoBarras(sCodigoLimpio)
+    else if Result.ConservoImportesExistentes then
+    begin
+      sSkuPreferido := ALineas.FieldByName(
+        'CODIGO_UNIDAD_FACLIN').AsString;
+      Resolucion := AValidador.ResolverConSku(
+        sCodigoLimpio,
+        sSkuPreferido);
+    end
     else
       Resolucion := AValidador.Resolver(sCodigoLimpio);
     if Resolucion.Encontrado then
@@ -427,6 +458,7 @@ begin
             ALineas,
             Resolucion.CodigoSku,
             AActualizandoDepositos,
+            Result.ConservoImportesExistentes,
             AConsultarStock,
             ARecalcularPrecio);
           Result.Preparado := True;
@@ -438,6 +470,7 @@ begin
             ACabecera,
             Resolucion.CodigoArticulo,
             AActualizandoDepositos,
+            Result.ConservoImportesExistentes,
             AResolver,
             AConsultarStock);
           Result.Preparado := True;

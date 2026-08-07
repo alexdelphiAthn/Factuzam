@@ -38,6 +38,29 @@ uses
   System.SysUtils,
   Data.DB;
 
+function ProcedimientoDisponible(
+  AConexion: TUniConnection;
+  const ANombre: string): Boolean;
+var
+  Consulta: TUniQuery;
+begin
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := AConexion;
+    Consulta.SQL.Text :=
+      'SELECT COUNT(*) AS TOTAL ' +
+      '  FROM information_schema.ROUTINES ' +
+      ' WHERE ROUTINE_SCHEMA = DATABASE() ' +
+      '   AND ROUTINE_TYPE = ''PROCEDURE'' ' +
+      '   AND ROUTINE_NAME = :NOMBRE';
+    Consulta.ParamByName('NOMBRE').AsString := ANombre;
+    Consulta.Open;
+    Result := Consulta.FieldByName('TOTAL').AsInteger > 0;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+
 procedure FecharYRecalcularMovimientosDocumento(
   AConexion: TUniConnection;
   const ATipo, ASerie, ANumero: string;
@@ -75,6 +98,9 @@ var
 begin
   if not Assigned(AConexion) then
     raise EArgumentNilException.Create('AConexion');
+  if not ProcedimientoDisponible(
+    AConexion, 'PRC_FZA_MOVIMIENTOS_RECALCULAR_DOCUMENTO') then
+    Exit;
   Procedimiento := TUniStoredProc.Create(nil);
   try
     Procedimiento.Connection := AConexion;
@@ -103,6 +129,9 @@ begin
     raise EArgumentNilException.Create('AConexion');
   if Trim(AOperacion) = '' then
     raise EArgumentException.Create('AOperacion');
+  if not ProcedimientoDisponible(
+    AConexion, 'PRC_FZA_MOVIMIENTOS_RECALCULAR_OPERACION') then
+    Exit;
   Procedimiento := TUniStoredProc.Create(nil);
   try
     Procedimiento.Connection := AConexion;
@@ -127,6 +156,9 @@ begin
     raise EArgumentNilException.Create('AConexion');
   if Trim(ANumeroMovimiento) = '' then
     raise EArgumentException.Create('ANumeroMovimiento');
+  if not ProcedimientoDisponible(
+    AConexion, 'PRC_FZA_MOVIMIENTOS_RECALCULAR_MOVIMIENTO') then
+    Exit;
   Procedimiento := TUniStoredProc.Create(nil);
   try
     Procedimiento.Connection := AConexion;

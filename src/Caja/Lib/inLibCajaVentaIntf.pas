@@ -115,7 +115,10 @@ type
     DescripcionTipo: string;
   end;
   IServicioRectificacionCaja = interface
-    ['{E38D33D2-273C-4F5A-B40A-BEF6A91B5364}']
+    ['{423D8DF2-FC5F-47C4-AD75-5DB2A6B9B8A2}']
+    procedure CargarDevolucion(
+      const ASerie, ANumero: string;
+      ACabecera, ALineas: TDataSet);
     function Cargar(
       const ASerie, ANumero: string;
       ATipo: TTipoRectificativaCaja;

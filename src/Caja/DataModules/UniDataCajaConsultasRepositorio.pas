@@ -517,9 +517,11 @@ begin
   AEmpleado := Default(TEmpleadoCaja);
   sToken := Trim(ATexto);
   if sToken = '' then
-    sToken := '%'
-  else
-    sToken := '%' + sToken + '%';
+  begin
+    Result := False;
+    Exit;
+  end;
+  sToken := '%' + sToken + '%';
   oConsulta := TUniQuery.Create(nil);
   try
     oConsulta.Connection := FConexion;

@@ -974,6 +974,7 @@
       Height = 28
       Caption = 'Devolver Abonar Operaci'#243'n'
       TabOrder = 2
+      OnClick = btnDevolverAbonarClick
     end
     object btnRectificar: TButton
       Left = 562

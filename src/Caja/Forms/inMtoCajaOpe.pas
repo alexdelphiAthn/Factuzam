@@ -163,6 +163,7 @@ type
     FActualizandoDepositos: Boolean;
     FMotivoRechazoArticulo: string;
     FArticuloResueltoEdicion: string;
+    FConservoImportesUltimaPreparacion: Boolean;
     FEnfoqueArticuloPendiente: Boolean;
     function GetFormulario: TCustomForm;
     function GetRejilla: TcxGrid;
@@ -472,8 +473,6 @@ type
     procedure RestaurarLayoutCaja;
     procedure AbrirBuscarModificar;
     procedure CargarDevolucionPorTicket;
-    procedure CargarDevolucionOtraEmpresa(
-      const ASerie, ANumero, AAlmacen: string);
     procedure WMPreguntarVentaOrigen(var Msg: TMessage);
                                        message WM_PREGUNTAR_VENTA_ORIGEN;
     function PedirMotivoDevolucionSiProcede: Boolean;
@@ -547,6 +546,9 @@ type
                               ACant: Double): Boolean;
     procedure PrepararValores(AEmpresa, AAlmacen, ACaja: string;
                               AFecha: TDateTime);
+    procedure CargarDevolucion(
+      const ASerie, ANumero, AEmpresaOrigen,
+      AAlmacenOrigen: string);
     function IntentarCerrar:Boolean;
     // True si no hay venta a medias (sin líneas pendientes)
     function OperacionVacia: Boolean;
@@ -1372,7 +1374,7 @@ procedure TfrmMtoOpeCaja.PrepararValores(AEmpresa, AAlmacen, ACaja: string;
                                          AFecha: TDateTime);
 var
   EmpleadoAnterior, NombreEmpleadoAnterior: string;
-  sCodEmpleadoDefecto: string;
+  EmpleadoInicial, NombreEmpleadoInicial: string;
 begin
   FCodigoEmpresa := AEmpresa;
   FCodigoAlmacen := AAlmacen;
@@ -1384,13 +1386,19 @@ begin
 
   if Assigned(DatosCaja) then
   begin
-    // 1. Guardar el empleado actual antes de vaciar
+    // 1. Guardar el ultimo empleado que el usuario valido en esta ventana.
+    // No se toma del dataset: al insertar, los valores automaticos de la
+    // tabla pueden haber escrito un cajero que nunca se eligio en caja.
     EmpleadoAnterior := '';
     NombreEmpleadoAnterior := '';
-    if DatosCaja.cdsCabecera.Active and not DatosCaja.cdsCabecera.IsEmpty then
+    if DatosCaja.cdsCabecera.Active and
+       not DatosCaja.cdsCabecera.IsEmpty and
+       SameText(
+         Trim(btnCodigoEmpleado.Text),
+         Trim(DatosCaja.cdsCabecera.FieldByName(
+           'CODIGO_CAJERO_FAC').AsString)) then
     begin
-      EmpleadoAnterior :=
-            DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString;
+      EmpleadoAnterior := Trim(btnCodigoEmpleado.Text);
       NombreEmpleadoAnterior := lblNombreEmpleado.Caption;
     end;
     if (tvLineasOpe.Controller.EditingController <> nil) and
@@ -1422,22 +1430,34 @@ begin
       FFecha);
     lblTarifa.Caption := DatosCaja.cdsCabecera.FieldByName(
                                     'TARIFA_ARTICULO_CLIENTE_FAC').AsString;
-    // 4. Mantener el empleado o aplicar el configurado por defecto.
-    if EmpleadoAnterior <> '' then
+    // 4. El valor automatico de fza_facturas no gobierna el empleado de caja.
+    // Se conserva el ultimo validado; si no existe, solo se usa el parametro
+    // configurado. En ausencia de ambos se deja vacio para mantener el foco.
+    DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').Clear;
+    btnCodigoEmpleado.Text := '';
+    lblNombreEmpleado.Caption := '';
+    EmpleadoInicial := ResolverEmpleadoNuevaOperacionVenta(
+      EmpleadoAnterior,
+      ParametrosCaja.GetBool('vgerFillEmpleadoDefecto', False),
+      ParametrosCaja.GetString('vgerCodEmpleadoDefecto', ''));
+    if EmpleadoInicial <> '' then
     begin
-      DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString :=
-                                                               EmpleadoAnterior;
-      btnCodigoEmpleado.Text := EmpleadoAnterior;
-      lblNombreEmpleado.Caption := NombreEmpleadoAnterior;
-    end
-    else if ParametrosCaja.GetBool('vgerFillEmpleadoDefecto', False) then
-    begin
-      sCodEmpleadoDefecto :=
-        ParametrosCaja.GetString('vgerCodEmpleadoDefecto', '');
-      if sCodEmpleadoDefecto <> '' then
+      if EmpleadoAnterior <> '' then
       begin
-        btnCodigoEmpleado.Text := sCodEmpleadoDefecto;
-        btnCodigoEmpleado.ValidateEdit(True);
+        DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString :=
+          EmpleadoInicial;
+        btnCodigoEmpleado.Text := EmpleadoInicial;
+        lblNombreEmpleado.Caption := NombreEmpleadoAnterior;
+      end
+      else if DatosCaja.BuscarYMostrarNombre(
+                'EMPLEADOS',
+                EmpleadoInicial,
+                NombreEmpleadoInicial) then
+      begin
+        DatosCaja.cdsCabecera.FieldByName('CODIGO_CAJERO_FAC').AsString :=
+          EmpleadoInicial;
+        btnCodigoEmpleado.Text := EmpleadoInicial;
+        lblNombreEmpleado.Caption := NombreEmpleadoInicial;
       end;
     end;
   end;
@@ -1635,7 +1655,8 @@ begin
       Error := False;
       Abort;
     end;
-    if (NumAtributos > 0) and (SkuDetectado = CodigoPadre) then
+    if (not FConservoImportesUltimaPreparacion) and
+       (NumAtributos > 0) and (SkuDetectado = CodigoPadre) then
     begin
       DatosCaja.cdsLineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency := 0;
       GridRecalc(
@@ -1853,6 +1874,7 @@ var
 begin
   Result := False;
   FMotivoRechazoArticulo := '';
+  FConservoImportesUltimaPreparacion := False;
   if Trim(ACodigo) <> '' then
   begin
     Resultado := PrepararArticuloLineaVenta(
@@ -1867,6 +1889,8 @@ begin
       RecalcularPrecioDesdeSku);
     Result := Resultado.Preparado;
     FMotivoRechazoArticulo := Resultado.MotivoRechazo;
+    FConservoImportesUltimaPreparacion :=
+      Resultado.ConservoImportesExistentes;
     if Resultado.Preparado and (not FActualizandoDepositos) then
       GridRecalc(
         ConexionPrincipal, FRepositorioFacturas, nil,
@@ -2500,45 +2524,66 @@ begin
       FEmpresaOrigenDev := Seleccion.Empresa;
       FAlmacenOrigenDev := Seleccion.Almacen;
       if SameText(Seleccion.Empresa, FCodigoEmpresa) then
+      begin
         CargarRectificacion(
           Seleccion.Serie,
           Seleccion.Numero,
           trcDiferencias,
-          tmrMantenerOriginales)
+          tmrMantenerOriginales);
+        GridRecalc(
+          ConexionPrincipal, FLecturas.RepositorioFacturas, nil,
+          tvLineasOpe,
+          DatosCaja.cdsLineas,
+          DatosCaja.cdsCabecera,
+          ActualizarLabelTotal);
+        AsegurarLineaNueva;
+      end
       else
       begin
         ShowMessage(SAvisoDevolucionTicketOtraEmpresa);
-        CargarDevolucionOtraEmpresa(
-          Seleccion.Serie, Seleccion.Numero, Seleccion.Almacen);
+        CargarDevolucion(
+          Seleccion.Serie,
+          Seleccion.Numero,
+          Seleccion.Empresa,
+          Seleccion.Almacen);
       end;
-      GridRecalc(
-        ConexionPrincipal, FLecturas.RepositorioFacturas, nil,
-                 tvLineasOpe,
-                 DatosCaja.cdsLineas,
-                 DatosCaja.cdsCabecera,
-                 ActualizarLabelTotal);
-      AsegurarLineaNueva;
     end;
   end;
 end;
 
-procedure TfrmMtoOpeCaja.CargarDevolucionOtraEmpresa(
-  const ASerie, ANumero, AAlmacen: string);
+procedure TfrmMtoOpeCaja.CargarDevolucion(
+  const ASerie, ANumero, AEmpresaOrigen,
+  AAlmacenOrigen: string);
 begin
-  // Carga las líneas del ticket en negativo SIN marcar rectificativa
-  // fiscal (el ticket es de otra empresa): la operación DV queda
-  // referenciada al ticket de origen por SERIE/NUMERO_REF_ORIGEN.
-  FDependencias.ServicioRectificacion.Cargar(
+  // Devolucion comercial: copia la venta en negativo y conserva el ticket
+  // de origen para la operacion DV, pero no crea una rectificativa fiscal.
+  FSerieOrigenDev := ASerie;
+  FNumeroOrigenDev := ANumero;
+  FEmpresaOrigenDev := AEmpresaOrigen;
+  FAlmacenOrigenDev := AAlmacenOrigen;
+  FSerieRectifica := '';
+  FNumeroRectifica := '';
+  FTipoRectificativa := trcNinguna;
+  FTratamientoMovRectificativa := tmrMantenerOriginales;
+  FMotivoDevolucion := '';
+  FDependencias.ServicioRectificacion.CargarDevolucion(
     ASerie,
     ANumero,
-    trcDiferencias,
-    tmrMantenerOriginales,
     DatosCaja.cdsCabecera,
     DatosCaja.cdsLineas);
   if FCaptionPrevio = '' then
     FCaptionPrevio := Caption;
   Caption := FCaptionPrevio + Format(
-    SCaptionDevolucionTicketDe, [ASerie, ANumero, AAlmacen]);
+    SCaptionDevolucionTicketDe, [ASerie, ANumero, AAlmacenOrigen]);
+  lblTipoRectificativa.Caption := '';
+  lblTipoRectificativa.Visible := False;
+  GridRecalc(
+    ConexionPrincipal, FLecturas.RepositorioFacturas, nil,
+    tvLineasOpe,
+    DatosCaja.cdsLineas,
+    DatosCaja.cdsCabecera,
+    ActualizarLabelTotal);
+  AsegurarLineaNueva;
 end;
 
 procedure TfrmMtoOpeCaja.WMPreguntarVentaOrigen(var Msg: TMessage);
@@ -2977,7 +3022,7 @@ begin
       Empleado.Codigo := sCodigo;
       Empleado.Nombre := sNomEmpleado;
     end;
-    if not Encontrado then
+    if (not Encontrado) and (Trim(sCodigo) <> '') then
     begin
       Encontrado :=
         FDependencias.RepositorioConsultas.BuscarEmpleado(
@@ -3000,6 +3045,13 @@ begin
       Error := True;
       ErrorText := SErrorEmpleadoCajaNoEncontrado;
       lblNombreEmpleado.Caption := '';
+      if DatosCaja.cdsCabecera.Active and
+         not DatosCaja.cdsCabecera.IsEmpty then
+      begin
+        DatosCaja.cdsCabecera.Edit;
+        DatosCaja.cdsCabecera.FieldByName(
+          'CODIGO_CAJERO_FAC').Clear;
+      end;
     end;
   end;
 //  tvLineasOpe.ApplyBestFit(nil, True, False);

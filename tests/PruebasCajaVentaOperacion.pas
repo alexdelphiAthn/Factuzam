@@ -40,6 +40,8 @@ type
     procedure Reinicio_VaciaLineasYPreparaCabecera;
     [Test]
     procedure Reinicio_EscribeValoresBaseCabecera;
+    [Test]
+    procedure Empleado_ConservaUltimoYRespetaParametroDefecto;
 
     // --- linea rechazada por validacion ---
     [Test]
@@ -98,6 +100,8 @@ type
     procedure Articulo_SinSkuVendibleDevuelveMotivo;
     [Test]
     procedure Articulo_ActualizacionDepositoNoConsultaStock;
+    [Test]
+    procedure Articulo_RevalidacionConservaImportesYSkuExistentes;
 
     // --- documento del cierre ---
     [Test]
@@ -256,7 +260,9 @@ type
     FResolucion: TArtResolucionEntrada;
     FEntradasGenerales: Integer;
     FEntradasCodigoBarras: Integer;
+    FEntradasConSku: Integer;
     FUltimaEntrada: string;
+    FUltimoSkuPreferido: string;
   public
     constructor Create(const AResolucion: TArtResolucionEntrada);
     function Resolver(
@@ -271,7 +277,9 @@ type
       const ACodigoArticulo: string): Boolean;
     property EntradasGenerales: Integer read FEntradasGenerales;
     property EntradasCodigoBarras: Integer read FEntradasCodigoBarras;
+    property EntradasConSku: Integer read FEntradasConSku;
     property UltimaEntrada: string read FUltimaEntrada;
+    property UltimoSkuPreferido: string read FUltimoSkuPreferido;
   end;
 
   TResolverArticuloCajaFalso = class(
@@ -386,7 +394,16 @@ function TValidadorArticuloCajaFalso.ResolverConSku(
   const AEntrada, ACodigoSkuPreferido: string):
   TArtResolucionEntrada;
 begin
+  Inc(FEntradasConSku);
+  FUltimaEntrada := AEntrada;
+  FUltimoSkuPreferido := ACodigoSkuPreferido;
   Result := FResolucion;
+  if ACodigoSkuPreferido <> '' then
+  begin
+    Result.CodigoSku := ACodigoSkuPreferido;
+    Result.RequiereSku := False;
+    Result.SkuActivo := True;
+  end;
 end;
 
 function TValidadorArticuloCajaFalso.EsValido(
@@ -652,6 +669,20 @@ begin
   finally
     FreeAndNil(Cabecera);
   end;
+end;
+
+procedure TPruebasCajaVentaOperacion.
+  Empleado_ConservaUltimoYRespetaParametroDefecto;
+begin
+  Assert.AreEqual(
+    'E7',
+    ResolverEmpleadoNuevaOperacionVenta(' E7 ', False, 'E1'));
+  Assert.AreEqual(
+    '',
+    ResolverEmpleadoNuevaOperacionVenta('', False, 'E1'));
+  Assert.AreEqual(
+    'E1',
+    ResolverEmpleadoNuevaOperacionVenta('', True, ' E1 '));
 end;
 
 { --- linea rechazada por validacion --- }
@@ -1165,6 +1196,85 @@ begin
       Observador.RecalcularPrecio);
     Assert.AreEqual(0, Observador.ConsultasStock);
     Assert.AreEqual(1, Observador.RecalculosPrecio);
+  finally
+    Resolver := nil;
+    Validador := nil;
+    FreeAndNil(Observador);
+    FreeAndNil(Lineas);
+    FreeAndNil(Cabecera);
+  end;
+end;
+
+procedure TPruebasCajaVentaOperacion.
+  Articulo_RevalidacionConservaImportesYSkuExistentes;
+var
+  Cabecera: TClientDataSet;
+  Lineas: TClientDataSet;
+  Observador: TObservadorCodigoCaja;
+  ValidadorFalso: TValidadorArticuloCajaFalso;
+  Validador: IArticulosValidador;
+  Resolver: IArticulosResolver;
+  Resultado: TResultadoPreparacionArticuloVenta;
+begin
+  Cabecera := CrearCabecera;
+  Lineas := CrearLineas;
+  Observador := TObservadorCodigoCaja.Create;
+  ValidadorFalso := TValidadorArticuloCajaFalso.Create(
+    ResolucionArticulo('ART1', '', True));
+  Validador := ValidadorFalso;
+  Resolver := TResolverArticuloCajaFalso.Create;
+  try
+    Lineas.Append;
+    Lineas.FieldByName('CODIGO_ART_FACLIN').AsString := 'ART1';
+    Lineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString :=
+      'ART1/ROJO/M';
+    Lineas.FieldByName('CANTIDAD_FACLIN').AsFloat := -2;
+    Lineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency := 12.10;
+    Lineas.FieldByName('PORCENTAJE_DTO_FACLIN').AsFloat := 5;
+    Lineas.FieldByName('PRECIO_DTO_FACLIN').AsCurrency := 0.605;
+    Lineas.FieldByName(
+      'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := 11.495;
+    Lineas.FieldByName(
+      'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 9.50;
+    Lineas.Post;
+    Lineas.Edit;
+
+    Resultado := PrepararArticuloLineaVenta(
+      Lineas, Cabecera, 'ART1', False, False,
+      Validador, Resolver, Observador.ConsultarStock,
+      Observador.RecalcularPrecio);
+
+    Assert.IsTrue(Resultado.Preparado);
+    Assert.IsTrue(Resultado.ConservoImportesExistentes);
+    Assert.AreEqual(1, ValidadorFalso.EntradasConSku);
+    Assert.AreEqual(
+      'ART1/ROJO/M', ValidadorFalso.UltimoSkuPreferido);
+    Assert.AreEqual(
+      'ART1/ROJO/M',
+      Lineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString);
+    Assert.AreEqual(
+      -2.0, Lineas.FieldByName('CANTIDAD_FACLIN').AsFloat, 0.001);
+    Assert.AreEqual(
+      12.10,
+      Double(Lineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency),
+      0.001);
+    Assert.AreEqual(
+      5.0, Lineas.FieldByName('PORCENTAJE_DTO_FACLIN').AsFloat, 0.001);
+    Assert.AreEqual(
+      0.605,
+      Double(Lineas.FieldByName('PRECIO_DTO_FACLIN').AsCurrency),
+      0.001);
+    Assert.AreEqual(
+      11.495,
+      Double(Lineas.FieldByName(
+        'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency),
+      0.001);
+    Assert.AreEqual(
+      9.50,
+      Double(Lineas.FieldByName(
+        'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency),
+      0.001);
+    Assert.AreEqual(0, Observador.RecalculosPrecio);
   finally
     Resolver := nil;
     Validador := nil;

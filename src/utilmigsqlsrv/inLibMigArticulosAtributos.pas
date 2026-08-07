@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inLibMigArticulosAtributos                                    }
 {    Tipo:       Librería de migración (sin formulario)                        }
-{ Versión:       1.0.0                                                         }
+{ Versión:       1.1.0                                                         }
 {                                                                              }
 {  Descripción:                                                                }
 {    Migra las ASIGNACIONES de colores y tallas por artículo. Es decir, para  }
@@ -18,6 +18,7 @@
 {                                       (ID_VA_AV='CO', AV=UPPER(color))      }
 {                                                                              }
 {      dbo.ocarttal (Articulo, Talla)  → fza_articulos_atributos_basicos       }
+{        Orden                         → ORDEN_AAB (orden por artículo)       }
 {                                       (ID_VA_AV='TAL', AV=UPPER(talla))     }
 {                                                                              }
 {    Pre-requisito: deben estar migrados antes los CATALOGOS MAESTROS de      }
@@ -33,8 +34,8 @@
 {    transacciones (las controla el motor). El INSERT individual va por       }
 {    parametros para que sea rapido sin SQL Injection.                        }
 {                                                                              }
-{    Idempotente: la PK (CODIGO_ART_AAB, ID_AV_AAB) ya descarta duplicados   }
-{    con INSERT IGNORE. Aqui hacemos pre-check + INSERT para poder contar.   }
+{    Idempotente: la PK (CODIGO_ART_AAB, ID_AV_AAB) descarta duplicados. En  }
+{    tallas se hace UPSERT para sincronizar ORDEN_AAB al repetir la migración. }
 {******************************************************************************}
 unit inLibMigArticulosAtributos;
 
@@ -327,14 +328,19 @@ end;
 procedure MigrarArticulosTallas(const Eng: IContextoMigracion; var Stats: TMigStats);
 const
   cSelectSrc =
-    'SELECT Articulo, Talla ' +
+    'SELECT Articulo, Talla, ISNULL(Orden, 9000) AS OrdenTalla ' +
     'FROM dbo.ocarttal ' +
     'WHERE LTRIM(RTRIM(Articulo)) <> '''' ' +
     '  AND LTRIM(RTRIM(Talla))    <> '''' ' +
     'ORDER BY Articulo, Orden, Talla';
   cCols =
-    'CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, ' +
+    'CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, ORDEN_AAB, ' +
     'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF';
+  cUpsert =
+    'ON DUPLICATE KEY UPDATE ' +
+    'ORDEN_AAB = VALUES(ORDEN_AAB), ' +
+    'INSTANTE_MODIF = VALUES(INSTANTE_MODIF), ' +
+    'USUARIO_MODIF = VALUES(USUARIO_MODIF)';
 var
   qSrc:                         TUniQuery;
   bulk:                         TBulkInsert;
@@ -343,7 +349,8 @@ var
   sArt, sTalla, sAV, sCodAtb:   string;
   sFila, sAhora, sIdAtb, sUser: string;
   sKey:                         string;
-  iIdAv, iIdAtb:                Integer;
+  iIdAv, iIdAtb, iOrdenTalla:   Integer;
+  bExistia:                     Boolean;
 begin
   Eng.Registro.Log('  cargando caches en memoria...');
   oAvMap      := TDictionary<string, Integer>.Create;
@@ -367,7 +374,7 @@ begin
     qSrc.UniDirectional := True;
     bulk   := TBulkInsert.Create(Eng.Datos.ConexionDestino,
                                   'fza_articulos_atributos_basicos',
-                                  cCols, BATCH_SIZE);
+                                  cCols, BATCH_SIZE, cUpsert);
     Eng.Progreso.EstablecerTotal(Eng.Datos.ContarOrigen(
       'SELECT COUNT(*) FROM dbo.ocarttal ' +
       'WHERE LTRIM(RTRIM(Articulo)) <> '''' ' +
@@ -382,8 +389,9 @@ begin
       end;
       Inc(Stats.Leidas);
       Eng.Progreso.Avanzar;
-      sArt   := Trim(qSrc.FieldByName('Articulo').AsString);
-      sTalla := Trim(qSrc.FieldByName('Talla').AsString);
+      sArt        := Trim(qSrc.FieldByName('Articulo').AsString);
+      sTalla      := Trim(qSrc.FieldByName('Talla').AsString);
+      iOrdenTalla := qSrc.FieldByName('OrdenTalla').AsInteger;
       if (sArt = '') or (sTalla = '') then
       begin
         Inc(Stats.Saltadas);
@@ -408,20 +416,20 @@ begin
         sIdAtb := 'NULL';
 
       sKey := sArt + '|' + IntToStr(iIdAv);
-      if oAsigVistas.ContainsKey(sKey) then
-      begin
-        Inc(Stats.Saltadas);
-        qSrc.Next;
-        Continue;
-      end;
+      bExistia := oAsigVistas.ContainsKey(sKey);
 
-      sFila := Format('%s, %d, %s, %s, %s, %s, %s',
-        [ValorOrNull(sArt), iIdAv, sIdAtb,
+      sFila := Format('%s, %d, %s, %d, %s, %s, %s, %s',
+        [ValorOrNull(sArt), iIdAv, sIdAtb, iOrdenTalla,
          sAhora, sAhora, sUser, sUser]);
       try
         bulk.Add(sFila);
-        oAsigVistas.AddOrSetValue(sKey, True);
-        Inc(Stats.Insertadas);
+        if bExistia then
+          Inc(Stats.Saltadas)
+        else
+        begin
+          oAsigVistas.AddOrSetValue(sKey, True);
+          Inc(Stats.Insertadas);
+        end;
       except
         on E: Exception do
         begin

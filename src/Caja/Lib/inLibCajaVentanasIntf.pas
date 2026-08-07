@@ -36,7 +36,7 @@ type
   TLineasCargaTraspaso = TArray<TLineaCargaTraspaso>;
 
   IOperacionCaja = interface
-    ['{8DC46E81-713D-4CCB-ADCB-1D5204D6EF50}']
+    ['{3C44C353-D264-4F82-8245-6F25AE19E4A0}']
     function FormularioCaja: TCustomForm;
     function IntentarCerrar: Boolean;
     function OperacionVacia: Boolean;
@@ -46,6 +46,9 @@ type
     procedure PrepararValores(
       AEmpresa, AAlmacen, ACaja: string;
       AFecha: TDateTime);
+    procedure CargarDevolucion(
+      const ASerie, ANumero, AEmpresaOrigen,
+      AAlmacenOrigen: string);
     procedure CargarRectificacion(
       const ASerie, ANumero: string;
       ATipoRectificativa: TTipoRectificativaCaja;

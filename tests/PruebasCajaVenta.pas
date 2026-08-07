@@ -41,6 +41,8 @@ type
     [Test]
     procedure Cierre_ValeNoSeDuplicaComoPago;
     [Test]
+    procedure Devolucion_CopiaClienteYNiegaLineas;
+    [Test]
     procedure Rectificacion_DiferenciasCopiaClienteYNiegaLineas;
     [Test]
     procedure Rectificacion_SustitutivaMantieneLineasPositivas;
@@ -529,6 +531,51 @@ begin
     PagoDebePersistirseCierreVenta('EFECTIVO', 0.01));
   Assert.IsTrue(
     PagoDebePersistirseCierreVenta('TARJETA', -5));
+end;
+
+procedure TPruebasCajaVenta.
+  Devolucion_CopiaClienteYNiegaLineas;
+var
+  Repositorio: IRepositorioConsultasCaja;
+  Servicio: IServicioRectificacionCaja;
+  Cabecera: TClientDataSet;
+  Lineas: TClientDataSet;
+begin
+  Repositorio := TRepositorioConsultasCajaFalso.Create;
+  Servicio := TServicioRectificacionCaja.Create(
+    Repositorio);
+  CrearDatosRectificacionDestino(
+    Cabecera,
+    Lineas);
+  try
+    Servicio.CargarDevolucion(
+      'T',
+      '1',
+      Cabecera,
+      Lineas);
+    Assert.AreEqual(
+      'C1',
+      Cabecera.FieldByName(
+        'CODIGO_CLI_FAC').AsString);
+    Assert.AreEqual(
+      'Cliente original',
+      Cabecera.FieldByName(
+        'RAZON_SOCIAL_CLIENTE_FAC').AsString);
+    Assert.AreEqual(
+      -2.0,
+      Lineas.FieldByName(
+        'CANTIDAD_FACLIN').AsFloat,
+      0.0001);
+    Assert.AreEqual(
+      -24.2,
+      Double(
+        Lineas.FieldByName(
+          'TOTAL_FACLIN').AsCurrency),
+      0.0001);
+  finally
+    Cabecera.Free;
+    Lineas.Free;
+  end;
 end;
 
 procedure TPruebasCajaVenta.

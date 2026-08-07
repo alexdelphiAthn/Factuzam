@@ -368,6 +368,11 @@ begin
     'Aviso en artículos sin stock',
     'src/Caja/Lib/inLibCajaParam.pas');
   ARegistrar(
+    'inMtoCajaParam.Parametros.vgerAvisoHuecosNumeracion.Desc' +
+    'ripcion',
+    'Avisar de huecos en la numeración de ventas',
+    'src/Caja/Lib/inLibCajaParam.pas');
+  ARegistrar(
     'inMtoCajaParam.Parametros.vgerBusqArtStockOnly.Descripci' +
     'on',
     'Búsqueda de artículos sólo con stock',

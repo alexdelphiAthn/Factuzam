@@ -1202,6 +1202,8 @@ uses
     'src\DataModules\UniDataArticulosAtributosBasicosRepositorio.pas',
   inLibAtributosPaleta in 'src\Lib\inLibAtributosPaleta.pas',
   inLibAtributosPaletaIntf in 'src\Lib\inLibAtributosPaletaIntf.pas',
+  inMtoSelectorAtributoPaleta in
+    'src\Modals\inMtoSelectorAtributoPaleta.pas' {frmSelectorAtributoPaleta},
   UniDataAtributosPaletaRepositorio in
     'src\DataModules\UniDataAtributosPaletaRepositorio.pas',
   inMtoModalScriptLog in 'src\Modals\inMtoModalScriptLog.pas' {frmMtoModalScriptLog},

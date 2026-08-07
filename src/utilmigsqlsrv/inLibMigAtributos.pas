@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inLibMigAtributos                                             }
 {    Tipo:       Librería de migración (sin formulario)                        }
-{ Versión:       1.1.1                                                         }
+{ Versión:       1.2.0                                                         }
 {                                                                              }
 {  Descripción:                                                                }
 {    Migra los CATÁLOGOS MAESTROS de colores y tallas del ERP "Herreras"      }
@@ -22,8 +22,9 @@
 {    y los dos atributos ('CO','TAL') en `fza_variaciones_atributos`. Si no    }
 {    están, las creamos antes de empezar (idempotente).                        }
 {                                                                              }
-{    Idempotente: la combinación (ID_VA_AV, AV) es única, si existe se salta.  }
-{    El programador puede re-ejecutar con seguridad.                           }
+{    Idempotente: la combinación (ID_VA_AV, AV) es única. Las tallas que ya  }
+{    existen conservan su fila y actualizan el orden desde el legacy, por lo   }
+{    que la migración también repara importaciones anteriores.                 }
 {******************************************************************************}
 unit inLibMigAtributos;
 
@@ -143,6 +144,55 @@ begin
   finally
     qIns.Free;
     qChk.Free;
+  end;
+end;
+
+// Sincroniza el orden de un valor ya insertado. Se mantiene separado del
+// helper de alta porque los colores tienen otro proceso de numeracion; las
+// tallas, en cambio, deben poder repararse al repetir la migracion.
+procedure ActualizarOrdenValorAtributo(Eng: IContextoMigracion;
+                                        const sIdVa, sAv: string;
+                                        iOrden: Integer);
+var qUpd: TUniQuery;
+begin
+  qUpd := TUniQuery.Create(nil);
+  try
+    qUpd.Connection := Eng.Datos.ConexionDestino;
+    qUpd.SQL.Text :=
+      'UPDATE fza_atributos_valores ' +
+      'SET ORDEN_AV = :o, INSTANTE_MODIF = :im, USUARIO_MODIF = :um ' +
+      'WHERE ID_VA_AV = :v AND AV = :av AND ORDEN_AV <> :o';
+    qUpd.ParamByName('o').AsInteger := iOrden;
+    qUpd.ParamByName('im').AsDateTime := Now;
+    qUpd.ParamByName('um').AsString := Eng.Usuario;
+    qUpd.ParamByName('v').AsString := sIdVa;
+    qUpd.ParamByName('av').AsString := sAv;
+    qUpd.ExecSQL;
+  finally
+    qUpd.Free;
+  end;
+end;
+
+procedure ActualizarOrdenAtributoBasico(Eng: IContextoMigracion;
+                                         const sIdVa, sCodigo: string;
+                                         iOrden: Integer);
+var qUpd: TUniQuery;
+begin
+  qUpd := TUniQuery.Create(nil);
+  try
+    qUpd.Connection := Eng.Datos.ConexionDestino;
+    qUpd.SQL.Text :=
+      'UPDATE fza_atributos_basicos ' +
+      'SET ORDEN_ATB = :o, INSTANTE_MODIF = :im, USUARIO_MODIF = :um ' +
+      'WHERE ID_VA_ATB = :v AND CODIGO_ATB = :c AND ORDEN_ATB <> :o';
+    qUpd.ParamByName('o').AsInteger := iOrden;
+    qUpd.ParamByName('im').AsDateTime := Now;
+    qUpd.ParamByName('um').AsString := Eng.Usuario;
+    qUpd.ParamByName('v').AsString := sIdVa;
+    qUpd.ParamByName('c').AsString := sCodigo;
+    qUpd.ExecSQL;
+  finally
+    qUpd.Free;
   end;
 end;
 
@@ -388,26 +438,30 @@ const
   // Sin el UNION, las tallas "exoticas" no estarian en
   // fza_atributos_valores y la migracion de tallajes y de
   // articulos_tallas fallaria con "no esta en fza_atributos_valores".
-  // ORDEN: las tallas se numeran (ORDEN_AV = 10,20,30...) en el orden
-  // que tienen en el tallaje del legacy (ocgrptalnor.Columna), NO
-  // alfabeticamente. El ORDER BY Talla anterior volcaba ORDEN_AV como
-  // L,M,S,XL... y dejaba las tallas desordenadas en SKUs, dropdowns y
-  // descripciones (GROUP_CONCAT ... ORDER BY ORDEN_AV). Tomamos
-  // MIN(Columna): si una talla esta en varios tallajes gana su primera
-  // posicion; las que solo estan en ocarttal (ningun tallaje las
-  // define) reciben 9000 y caen al final, desempatadas por nombre.
+  // ORDEN: la fuente principal es ocarttal.Orden, que expresa el orden de
+  // las tallas asignadas a cada articulo en el legacy. Para obtener el
+  // catalogo global tomamos la primera posicion observada de cada talla.
+  // ocgrptalnor.Columna solo actua como respaldo para tallas definidas en
+  // un tallaje pero todavia no usadas por ningun articulo. El ORDER BY
+  // alfabetico anterior dejaba L,M,S,XL... en Caja y otros desplegables.
   cSelectSrc =
-    'SELECT X.Talla, MIN(X.Orden) AS Orden FROM (' +
-    '  SELECT LTRIM(RTRIM(Talla)) AS Talla, ISNULL(Columna, 9000) AS Orden ' +
-    '    FROM dbo.ocgrptalnor ' +
+    'SELECT X.Talla, ' +
+    'COALESCE(MIN(CASE WHEN X.EsArticulo = 1 THEN X.Orden END), ' +
+    '         MIN(X.Orden)) AS Orden FROM (' +
+    '  SELECT LTRIM(RTRIM(Talla)) AS Talla, ' +
+    '         ISNULL(Orden, 9000) AS Orden, 1 AS EsArticulo ' +
+    '    FROM dbo.ocarttal ' +
     '   WHERE LTRIM(RTRIM(Talla)) <> '''' ' +
     '  UNION ALL ' +
-    '  SELECT LTRIM(RTRIM(Talla)) AS Talla, 9000 AS Orden ' +
-    '    FROM dbo.ocarttal ' +
+    '  SELECT LTRIM(RTRIM(Talla)) AS Talla, ' +
+    '         ISNULL(Columna, 9000) AS Orden, 0 AS EsArticulo ' +
+    '    FROM dbo.ocgrptalnor ' +
     '   WHERE LTRIM(RTRIM(Talla)) <> '''' ' +
     ') X ' +
     'GROUP BY X.Talla ' +
-    'ORDER BY MIN(X.Orden), X.Talla';
+    'ORDER BY COALESCE(' +
+    'MIN(CASE WHEN X.EsArticulo = 1 THEN X.Orden END), MIN(X.Orden)), ' +
+    'X.Talla';
   cCount =
     'SELECT COUNT(*) FROM (' +
     '  SELECT LTRIM(RTRIM(Talla)) AS Talla FROM dbo.ocarttal ' +
@@ -448,13 +502,15 @@ begin
                                               iOrden);
       InsertarAtributoBasico(Eng, 'TAL', sCodAtb, sTalla,
                               'Talla ' + sTalla, '', iOrden);
+      // Tambien corrige una BBDD ya migrada: los helpers de insercion son
+      // idempotentes y no sustituyen filas existentes.
+      ActualizarOrdenValorAtributo(Eng, 'TAL', UpperCase(sTalla), iOrden);
+      ActualizarOrdenAtributoBasico(Eng, 'TAL', sCodAtb, iOrden);
       if bInsertoValor then
-      begin
-        Inc(Stats.Insertadas);
-        Inc(iOrden, 10);
-      end
+        Inc(Stats.Insertadas)
       else
         Inc(Stats.Saltadas);
+      Inc(iOrden, 10);
       qSrc.Next;
     end;
   finally

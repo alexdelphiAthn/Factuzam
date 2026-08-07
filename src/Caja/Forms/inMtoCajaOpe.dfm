@@ -459,7 +459,7 @@
           Top = 71
           AutoSize = False
           Caption = 'Cobro'
-          Properties.Alignment.Horz = taCenterJustify
+          Properties.Alignment.Horz = taCenter
           TabOrder = 9
           Transparent = True
           Height = 21
@@ -470,7 +470,7 @@
           Top = 71
           AutoSize = False
           Caption = 'Buscar'
-          Properties.Alignment.Horz = taCenterJustify
+          Properties.Alignment.Horz = taCenter
           TabOrder = 10
           Transparent = True
           Height = 21
@@ -481,7 +481,7 @@
           Top = 71
           AutoSize = False
           Caption = 'Eliminar'
-          Properties.Alignment.Horz = taCenterJustify
+          Properties.Alignment.Horz = taCenter
           TabOrder = 11
           Transparent = True
           Height = 21
@@ -492,7 +492,7 @@
           Top = 71
           AutoSize = False
           Caption = 'Tarifa'
-          Properties.Alignment.Horz = taCenterJustify
+          Properties.Alignment.Horz = taCenter
           TabOrder = 12
           Transparent = True
           Height = 21
@@ -503,7 +503,7 @@
           Top = 71
           AutoSize = False
           Caption = 'Devoluci'#243'n'
-          Properties.Alignment.Horz = taCenterJustify
+          Properties.Alignment.Horz = taCenter
           TabOrder = 13
           Transparent = True
           Height = 21
@@ -514,7 +514,7 @@
           Top = 71
           AutoSize = False
           Caption = 'Ind. IVA'
-          Properties.Alignment.Horz = taCenterJustify
+          Properties.Alignment.Horz = taCenter
           TabOrder = 14
           Transparent = True
           Height = 21
@@ -525,7 +525,7 @@
           Top = 71
           AutoSize = False
           Caption = 'Otro'
-          Properties.Alignment.Horz = taCenterJustify
+          Properties.Alignment.Horz = taCenter
           TabOrder = 15
           Transparent = True
           Height = 21
@@ -536,7 +536,7 @@
           Top = 71
           AutoSize = False
           Caption = 'Cargar cta.'
-          Properties.Alignment.Horz = taCenterJustify
+          Properties.Alignment.Horz = taCenter
           TabOrder = 16
           Transparent = True
           Height = 21
@@ -547,7 +547,7 @@
           Top = 71
           AutoSize = False
           Caption = 'Buscar/Mod.'
-          Properties.Alignment.Horz = taCenterJustify
+          Properties.Alignment.Horz = taCenter
           TabOrder = 17
           Transparent = True
           Height = 21

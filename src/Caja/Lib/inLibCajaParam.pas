@@ -224,6 +224,11 @@ begin
                      tpString,
                      'Artículo sin stock. Compruebe stock en almacén.');
   RegistrarParametro('Avisos y Búsquedas',
+                     'vgerAvisoHuecosNumeracion',
+                     'Avisar de huecos en la numeración de ventas',
+                     tpBoolean,
+                     'True');
+  RegistrarParametro('Avisos y Búsquedas',
                      'vgerBusqArtStockOnly',
                      'Búsqueda de artículos sólo con stock',
                      tpBoolean,

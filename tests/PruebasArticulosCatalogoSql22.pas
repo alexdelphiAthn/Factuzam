@@ -27,6 +27,8 @@ type
     [Test]
     procedure Atributos_RegistraSieteLecturasValidas;
     [Test]
+    procedure AvsEnSkus_UsaOrdenEspecificoDelArticulo;
+    [Test]
     procedure ResolverEntrada_UsaParametroEstructural;
     [Test]
     procedure PerfilValido_SeComparteSinClaveDePantalla;
@@ -141,6 +143,21 @@ begin
   ValidarDefiniciones(
     'RepositorioArticulosAtributos',
     TRepositorioArticulosAtributos.DefinicionesSql);
+end;
+
+procedure TPruebasArticulosCatalogoSql22.
+  AvsEnSkus_UsaOrdenEspecificoDelArticulo;
+var
+  sSql: string;
+begin
+  sSql :=
+    TRepositorioArticulosAtributos.DefinicionesSql[6].SqlBase;
+  Assert.IsTrue(
+    Pos('fza_articulos_atributos_basicos aab', sSql) > 0);
+  Assert.IsTrue(
+    Pos('aab.CODIGO_ART_AAB = S.CODIGO_ART_SKU', sSql) > 0);
+  Assert.IsTrue(
+    Pos('COALESCE(aab.ORDEN_AAB, av.ORDEN_AV)', sSql) > 0);
 end;
 
 procedure TPruebasArticulosCatalogoSql22.

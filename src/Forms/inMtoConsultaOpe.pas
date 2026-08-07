@@ -113,6 +113,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnAnularVerifactuClick(Sender: TObject);
     procedure btnFacturarTicketClick(Sender: TObject);
+    procedure btnDevolverAbonarClick(Sender: TObject);
     procedure btnRectificarClick(Sender: TObject);
     procedure btnEnviarEmailClick(Sender: TObject);
     procedure cxViewMovCustomDrawCell(Sender: TcxCustomGridTableView;
@@ -596,6 +597,46 @@ begin
                            sSerie, sNumero,
                            ModoVerifactuTexto(ParametrosApp)]));
     end;
+  end;
+end;
+
+procedure TfrmConsultaOpe.btnDevolverAbonarClick(Sender: TObject);
+var
+  oAnfitrion: IAnfitrionCajaVentanas;
+  oOperacionCaja: IOperacionCaja;
+  oFormularioCaja: TCustomForm;
+  sSerie: string;
+  sNumero: string;
+begin
+  // Devolver no es Rectificar: abre una venta normal con las lineas del
+  // ticket seleccionado en negativo. La referencia se guarda en la
+  // operacion DV, sin relacion ni tipo de rectificativa fiscal.
+  if not FacturaSeleccionada(sSerie, sNumero) then
+    ShowMessage(SErrorOperacionSinBorrador)
+  else
+  begin
+    oOperacionCaja := BuscarOperacionCajaVacia;
+    if oOperacionCaja = nil then
+    begin
+      oAnfitrion := ExigirAnfitrionCaja(Application.MainForm);
+      oOperacionCaja :=
+        oAnfitrion.CrearOperacionCaja(Application, Permisos);
+      oFormularioCaja := oOperacionCaja.FormularioCaja;
+      oFormularioCaja.Caption :=
+        Format(STituloOperacionCajaReal, [FCaja]);
+      oOperacionCaja.PrepararValores(
+        FEmpresa, FAlmacen, FCaja, Now);
+    end;
+    oFormularioCaja := oOperacionCaja.FormularioCaja;
+    oOperacionCaja.CargarDevolucion(
+      sSerie,
+      sNumero,
+      FEmpresa,
+      FAlmacen);
+    oFormularioCaja.Show;
+    oFormularioCaja.BringToFront;
+    if oFormularioCaja.WindowState = wsMinimized then
+      oFormularioCaja.WindowState := wsNormal;
   end;
 end;
 

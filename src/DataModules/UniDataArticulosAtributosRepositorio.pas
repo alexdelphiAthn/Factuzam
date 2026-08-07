@@ -165,7 +165,7 @@ const
   SQL_AVS_EN_SKUS =
     'SELECT MIN(av.ID_AV) AS ID_AV, av.AV, ' +
     'MAX(av.DESCRIPCION_AV) AS DESCRIPCION_AV, ' +
-    'MIN(av.ORDEN_AV) AS ORDEN_AV, ' +
+    'MIN(COALESCE(aab.ORDEN_AAB, av.ORDEN_AV)) AS ORDEN_AV, ' +
     'MAX(av.ESACTIVO_AV) AS ESACTIVO_AV ' +
     'FROM fza_atributos_valores av ' +
     'JOIN vi_atributos_nombres N ON av.ID_VA_AV = N.ID_ATRIBUTO ' +
@@ -173,6 +173,9 @@ const
     'JOIN fza_articulos_skus S ' +
     'ON REL.CODIGO_UNIDAD_SKU_SA = S.CODIGO_UNIDAD_SKU ' +
     'AND S.CODIGO_ART_SKU = N.CODIGO_ART_PADRE_ARTVIN ' +
+    'LEFT JOIN fza_articulos_atributos_basicos aab ' +
+    'ON aab.CODIGO_ART_AAB = S.CODIGO_ART_SKU ' +
+    'AND aab.ID_AV_AAB = av.ID_AV ' +
     'WHERE N.CODIGO_ART_PADRE_ARTVIN = :padre ' +
     'AND N.ORDEN_VISUAL_ATRIBUTO = :orden ' +
     'GROUP BY av.AV ORDER BY ORDEN_AV, av.AV';
@@ -531,8 +534,10 @@ begin
   // (IDs distintos), y el dropdown sale con 'NEGRO' por duplicado.
   // Mismo patron que usa inMtoModalGenerarSKUs.
   //   - MIN(ID_AV)   : ID canonico (el mas antiguo, normalmente el real).
-  //   - MIN(ORDEN_AV): orden mas bajo de los homonimos (S=10 manda sobre 0).
-  // ORDER BY ORDEN_AV (S=10, M=20, L=30, ...) con desempate alfabetico.
+  //   - MIN(ORDEN_AAB): orden propio del articulo migrado de ocarttal.Orden.
+  //   - ORDEN_AV: fallback para datos no legacy o filas antiguas sin orden.
+  // ORDER BY ORDEN_AV conserva, por ejemplo, S,M,L,XL aunque el orden global
+  // de esos mismos nombres sea distinto en otros sistemas de tallas.
   Lst := TList<TArticuloAtributoValor>.Create;
   q := TUniQuery.Create(nil);
   try

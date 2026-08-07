@@ -1468,6 +1468,9 @@
         <DCCReference Include="src\DataModules\UniDataArticulosAtributosBasicosRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibAtributosPaleta.pas"/>
         <DCCReference Include="src\Lib\inLibAtributosPaletaIntf.pas"/>
+        <DCCReference Include="src\Modals\inMtoSelectorAtributoPaleta.pas">
+            <Form>frmSelectorAtributoPaleta</Form>
+        </DCCReference>
         <DCCReference Include="src\DataModules\UniDataAtributosPaletaRepositorio.pas"/>
         <DCCReference Include="src\Modals\inMtoModalScriptLog.pas">
             <Form>frmMtoModalScriptLog</Form>

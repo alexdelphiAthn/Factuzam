@@ -9,7 +9,7 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Carga una factura origen como operación rectificativa de caja.            }
+{    Carga una factura origen como rectificativa o devolución de caja.         }
 {******************************************************************************}
 unit inLibCajaRectificacion;
 
@@ -29,9 +29,16 @@ type
     procedure CopiarLineas(
       AOrigen, ADestino: TDataSet;
       ASigno: Double);
+    procedure CargarOrigen(
+      const ASerie, ANumero: string;
+      ASigno: Double;
+      ACabecera, ALineas: TDataSet);
   public
     constructor Create(
       const ARepositorio: IRepositorioConsultasCaja);
+    procedure CargarDevolucion(
+      const ASerie, ANumero: string;
+      ACabecera, ALineas: TDataSet);
     function Cargar(
       const ASerie, ANumero: string;
       ATipo: TTipoRectificativaCaja;
@@ -145,36 +152,14 @@ begin
   end;
 end;
 
-function TServicioRectificacionCaja.Cargar(
+procedure TServicioRectificacionCaja.CargarOrigen(
   const ASerie, ANumero: string;
-  ATipo: TTipoRectificativaCaja;
-  ATratamientoMovimientos:
-    TTratamientoMovimientosRectificativa;
-  ACabecera, ALineas: TDataSet
-): TResultadoRectificacionCaja;
+  ASigno: Double;
+  ACabecera, ALineas: TDataSet);
 var
   ConsultaCabecera: IResultadoConsultaCaja;
   ConsultaLineas: IResultadoConsultaCaja;
-  Signo: Double;
-  DescripcionTipo: string;
 begin
-  case ATipo of
-    trcDiferencias:
-      begin
-        Signo := -1;
-        DescripcionTipo := 'POR DIFERENCIAS';
-      end;
-    trcSustitutiva:
-      begin
-        Signo := 1;
-        DescripcionTipo := 'SUSTITUTIVA';
-      end;
-  else
-    begin
-      raise Exception.Create(
-        SErrorTipoRectificativaCajaNoIndicado);
-    end;
-  end;
   if (not Assigned(ACabecera)) or
      (not Assigned(ALineas)) then
   begin
@@ -202,7 +187,55 @@ begin
   CopiarLineas(
     ConsultaLineas.DataSet,
     ALineas,
-    Signo);
+    ASigno);
+end;
+
+procedure TServicioRectificacionCaja.CargarDevolucion(
+  const ASerie, ANumero: string;
+  ACabecera, ALineas: TDataSet);
+begin
+  CargarOrigen(
+    ASerie,
+    ANumero,
+    -1,
+    ACabecera,
+    ALineas);
+end;
+
+function TServicioRectificacionCaja.Cargar(
+  const ASerie, ANumero: string;
+  ATipo: TTipoRectificativaCaja;
+  ATratamientoMovimientos:
+    TTratamientoMovimientosRectificativa;
+  ACabecera, ALineas: TDataSet
+): TResultadoRectificacionCaja;
+var
+  Signo: Double;
+  DescripcionTipo: string;
+begin
+  case ATipo of
+    trcDiferencias:
+      begin
+        Signo := -1;
+        DescripcionTipo := 'POR DIFERENCIAS';
+      end;
+    trcSustitutiva:
+      begin
+        Signo := 1;
+        DescripcionTipo := 'SUSTITUTIVA';
+      end;
+  else
+    begin
+      raise Exception.Create(
+        SErrorTipoRectificativaCajaNoIndicado);
+    end;
+  end;
+  CargarOrigen(
+    ASerie,
+    ANumero,
+    Signo,
+    ACabecera,
+    ALineas);
   Result.Serie := ASerie;
   Result.Numero := ANumero;
   Result.Tipo := ATipo;
