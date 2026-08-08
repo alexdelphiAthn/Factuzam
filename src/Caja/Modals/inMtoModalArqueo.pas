@@ -27,7 +27,7 @@ uses
   System.DateUtils,
   Data.DB, Datasnap.DBClient,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters, cxStyles,
-  cxClasses, cxContainer, cxEdit, cxLabel, cxTextEdit, cxButtons,
+  cxClasses, cxContainer, cxEdit, cxLabel, cxTextEdit, cxButtonEdit, cxButtons,
   cxMaskEdit, cxDropDownEdit, cxCalendar, cxPC, cxNavigator, cxDBData,
   cxCustomData, cxData, cxDataStorage, cxFilter,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView,
@@ -38,6 +38,8 @@ uses
   inLibTiraCajaTicketIntf,
   inLibModalArqueoPersistenciaIntf,
   inLibInformesCajaPersistenciaIntf,
+  inLibCajaVentaIntf,
+  inLibVentasCalendario, inLibVentasCalendarioIntf,
   UniDataModalArqueoOperacion,
   Vcl.ComCtrls, dxCore,
   cxDateUtils, cxCurrencyEdit, cxRadioGroup,
@@ -208,7 +210,7 @@ type
     txtObservaciones: TcxTextEdit;
     lblObservacionesLbl: TcxLabel;
     lblVendedorLbl: TcxLabel;
-    txtVendedorCodigo: TcxTextEdit;
+    txtVendedorCodigo: TcxButtonEdit;
     lblVendedorNombre: TcxLabel;
     btnGrabarArqueo: TcxButton;
 
@@ -253,6 +255,8 @@ type
       var Key: Word; Shift: TShiftState);
     procedure txtRetiradaImportePropertiesChange(Sender: TObject);
     procedure txtDejoImportePropertiesChange(Sender: TObject);
+    procedure txtVendedorCodigoPropertiesButtonClick(Sender: TObject;
+      AButtonIndex: Integer);
     procedure txtVendedorCodigoExit(Sender: TObject);
   private
     FConn         : TUniConnection;
@@ -266,6 +270,8 @@ type
     FActualizandoImportesCierre: Boolean;
     FPuedeVerResumen: Boolean;
     FResumenFamilias: TClientDataSet;
+    FRepositorioConsultas: IRepositorioConsultasCaja;
+    FRepositorioVentasCalendario: IRepositorioVentasCalendario;
     FRepositorioPersistencia: IRepositorioModalArqueo;
     FPersistenciaArqueo: IArqueoPersistencia;
     FRepositorioArqueoCaja: IRepositorioArqueoCaja;
@@ -277,12 +283,20 @@ type
     FResumenPropiedades: IResultadoModalArqueo;
     FResumenIva: IResultadoModalArqueo;
     FOperacionArqueo: TOperacionModalArqueo;
+    FVentasCal: TVentasCalendarioCache;
     procedure ComponerDependencias;
     function  FechaEditada(AEdit: TcxDateEdit): TDateTime;
     function  FechaDesdeSeleccionada: TDateTime;
     function  FechaHastaSeleccionada: TDateTime;
     procedure RellenarPantalla(const AArqueo: TArqueoCaja);
     procedure Recalcular;
+    procedure ConfigurarAtajosPestanas;
+    procedure FechaPropertiesGetDayState(
+      Sender: TObject;
+      ADate: TDateTime;
+      AState: TCustomDrawState;
+      AFont: TFont;
+      var ABackgroundColor: TColor);
     procedure ConfigurarResumenes;
     procedure RefrescarResumenes;
     procedure CargarResumenFamilias;
@@ -298,6 +312,7 @@ type
       AFila: Integer;
       AColumna: TcxGridColumn): Currency;
     function  ObtenerConceptoRetirada: string;
+    procedure BuscarVendedores;
     function  BuscarNombreVendedor(const ACodigo: string): string;
     function ConstruirEntradaGrabacion:
       TEntradaGrabacionModalArqueo;
@@ -340,7 +355,7 @@ implementation
 uses inLibPermisosIntf,
      inMtoModalArqueosHistCaja,
      inLibTiraCajaTicket,
-     inMtoModalTiraCaja, inLibVerifactu, inLibMsgCaja;
+     inMtoModalTiraCaja, inMtoGenSearch, inLibVerifactu, inLibMsgCaja;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -375,6 +390,8 @@ begin
   frm := TfrmModalArqueo.Create(AOwner);
   try
     frm.FConn    := AConn;
+    frm.FRepositorioConsultas := ADependencias.Consultas;
+    frm.FRepositorioVentasCalendario := ADependencias.VentasCalendario;
     frm.FRepositorioPersistencia := ADependencias.Modal;
     frm.FPersistenciaArqueo := ADependencias.Persistencia;
     frm.FRepositorioArqueoCaja := ADependencias.Arqueo;
@@ -385,6 +402,14 @@ begin
     frm.FEmpresa := AEmpresa;
     frm.FAlmacen := AAlmacen;
     frm.FCaja    := ACaja;
+    frm.FVentasCal := TVentasCalendarioCache.Create(
+      AConn,
+      frm.FRepositorioVentasCalendario);
+    frm.FVentasCal.Reconfigurar(AEmpresa, AAlmacen, ACaja);
+    frm.dteFechaDesde.Properties.OnGetDayState :=
+      frm.FechaPropertiesGetDayState;
+    frm.dteFechaHasta.Properties.OnGetDayState :=
+      frm.FechaPropertiesGetDayState;
     frm.FArqueoTarjetasPermitido :=
       frm.ParametrosCaja.GetBool('vgerArqueoTarjetas', False);
     frm.FEditarCambioPermitido :=
@@ -454,6 +479,8 @@ procedure TfrmModalArqueo.ComponerDependencias;
 var
   Dependencias: TDependenciasArqueoCaja;
 begin
+  Dependencias.Consultas := FRepositorioConsultas;
+  Dependencias.VentasCalendario := FRepositorioVentasCalendario;
   Dependencias.Modal := FRepositorioPersistencia;
   Dependencias.Persistencia := FPersistenciaArqueo;
   Dependencias.Arqueo := FRepositorioArqueoCaja;
@@ -469,6 +496,8 @@ end;
 
 destructor TfrmModalArqueo.Destroy;
 begin
+  FreeAndNil(FVentasCal);
+  FRepositorioVentasCalendario := nil;
   FreeAndNil(FOperacionArqueo);
   inherited;
 end;
@@ -481,7 +510,42 @@ procedure TfrmModalArqueo.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
+  ConfigurarAtajosPestanas;
   ConfigurarResumenes;
+end;
+
+procedure TfrmModalArqueo.ConfigurarAtajosPestanas;
+
+  procedure Prefijar(
+    APestana: TcxTabSheet;
+    const APrefijo: string);
+  begin
+    if Pos(APrefijo, APestana.Caption) <> 1 then
+      APestana.Caption := APrefijo + APestana.Caption;
+  end;
+
+begin
+  // Las traducciones de instalaciones existentes todavia pueden contener los
+  // captions anteriores. Se aplica el atajo despues de traducir para conservar
+  // el texto del idioma activo y garantizar Alt+1..Alt+4.
+  Prefijar(tsArqueo, '&1_');
+  Prefijar(tsResumenes, '&2_');
+  Prefijar(tsMasDatos, '&3_');
+  Prefijar(tsRecuento, '&4_');
+end;
+
+procedure TfrmModalArqueo.FechaPropertiesGetDayState(
+  Sender: TObject;
+  ADate: TDateTime;
+  AState: TCustomDrawState;
+  AFont: TFont;
+  var ABackgroundColor: TColor);
+begin
+  if Assigned(FVentasCal) then
+    FVentasCal.AplicarEstiloDia(
+      ADate,
+      AFont,
+      ABackgroundColor);
 end;
 
 procedure TfrmModalArqueo.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -1075,6 +1139,7 @@ procedure TfrmModalArqueo.txtDejoImportePropertiesChange(
 var
   EfectivoDejado: Currency;
   ImporteRetirada: Currency;
+  MostrarAvisoRecuento: Boolean;
   Plan: TPlanGrabacionModalArqueo;
   ValorSolicitado: Currency;
 begin
@@ -1090,14 +1155,20 @@ begin
       ValorSolicitado,
       EfectivoDejado,
       ImporteRetirada);
+    MostrarAvisoRecuento := EfectivoDejado <> ValorSolicitado;
     FActualizandoImportesCierre := True;
     try
-      if EfectivoDejado <> ValorSolicitado then
+      if MostrarAvisoRecuento then
         txtDejoImporte.Value := EfectivoDejado;
       txtRetiradaImporte.Value := ImporteRetirada;
     finally
       FActualizandoImportesCierre := False;
     end;
+    if MostrarAvisoRecuento then
+      Application.MessageBox(
+        PChar(SErrorRestanteArqueoCajaNoValido),
+        PChar(STituloAvisoCaja),
+        MB_OK or MB_ICONWARNING);
   end;
 end;
 
@@ -1114,6 +1185,29 @@ begin
   end;
 end;
 
+procedure TfrmModalArqueo.BuscarVendedores;
+var
+  Formulario: TfrmMtoSearch;
+  Resultado: IResultadoConsultaCaja;
+begin
+  Resultado := FRepositorioConsultas.ConsultarEmpleados;
+  Formulario := TfrmMtoSearch.Create(nil);
+  try
+    Formulario.Caption := STituloBusquedaEmpleadosCaja;
+    Formulario.dsTablaG.DataSet := Resultado.DataSet;
+    Formulario.ProcesarPerfiles;
+    Formulario.ShowModal;
+    if Formulario.sFicha = 'S' then
+    begin
+      txtVendedorCodigo.Text := Resultado.DataSet.Fields[0].AsString;
+      lblVendedorNombre.Caption :=
+        BuscarNombreVendedor(txtVendedorCodigo.Text);
+    end;
+  finally
+    FreeAndNil(Formulario);
+  end;
+end;
+
 // Nombre del empleado de caja activo en fza_empleados ('' si no existe).
 // El vendedor que cierra el arqueo debe estar dado de alta como empleado.
 function TfrmModalArqueo.BuscarNombreVendedor(const ACodigo: string): string;
@@ -1125,6 +1219,12 @@ begin
   begin
     Result := FRepositorioPersistencia.BuscarNombreVendedor(ACodigo);
   end;
+end;
+
+procedure TfrmModalArqueo.txtVendedorCodigoPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+begin
+  BuscarVendedores;
 end;
 
 procedure TfrmModalArqueo.txtVendedorCodigoExit(Sender: TObject);

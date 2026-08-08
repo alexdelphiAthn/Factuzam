@@ -134,6 +134,7 @@ type
       AOnEntrarEdicion, AOnSalirEdicion: TNotifyEvent);
     procedure Desmontar;
     procedure MostrarEditor;
+    procedure BuscarArticulo;
     function ResolverEntrada(const AEntrada: string): Boolean;
   end;
 
@@ -728,6 +729,22 @@ begin
         if Assigned(FConfig.RegistroLog) then
           FConfig.RegistroLog.RegistrarAviso(
           'ModoSku.MostrarEditor: ShowEdit ignorado: ' + E.Message);
+    end;
+  end;
+end;
+
+procedure TModoEntradaSku.BuscarArticulo;
+var
+  Editor: TcxCustomEdit;
+begin
+  MostrarEditor;
+  if FConfig.View.Controller.EditingController.IsEditing then
+  begin
+    Editor := FConfig.View.Controller.EditingController.Edit;
+    if Editor is TcxCustomDropDownEdit then
+    begin
+      AbrirBusquedaFiltrada('');
+      TcxCustomDropDownEdit(Editor).DroppedDown := True;
     end;
   end;
 end;

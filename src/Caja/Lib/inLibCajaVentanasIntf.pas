@@ -97,6 +97,7 @@ function ExigirAnfitrionCaja(
   AObjeto: TObject): IAnfitrionCajaVentanas;
 function BuscarOperacionCajaVacia: IOperacionCaja;
 function BuscarOperacionCajaVisible: IOperacionCaja;
+procedure ReactivarOperacionCajaVisible;
 function PuedenCerrarOperacionesCaja: Boolean;
 procedure LiberarOperacionesCaja;
 procedure RefrescarConsultasOperacionesCaja;
@@ -105,6 +106,7 @@ procedure NotificarFechaCaja(AFecha: TDateTime);
 implementation
 
 uses
+  Winapi.Windows,
   System.SysUtils;
 
 resourcestring
@@ -146,6 +148,34 @@ begin
        Supports(Screen.Forms[i], IOperacionCaja, oOperacion) and
        oOperacion.FormularioCaja.Visible then
       Result := oOperacion;
+  end;
+end;
+
+procedure ReactivarOperacionCajaVisible;
+var
+  Formulario: TCustomForm;
+  Operacion: IOperacionCaja;
+begin
+  Operacion := BuscarOperacionCajaVisible;
+  if Operacion <> nil then
+  begin
+    Formulario := Operacion.FormularioCaja;
+    if Assigned(Formulario) and
+       not (csDestroying in Formulario.ComponentState) then
+    begin
+      if Formulario.WindowState = wsMinimized then
+        Formulario.WindowState := wsNormal;
+      Formulario.Show;
+      SetWindowPos(
+        Formulario.Handle,
+        HWND_TOP,
+        0,
+        0,
+        0,
+        0,
+        SWP_NOMOVE or SWP_NOSIZE or SWP_SHOWWINDOW);
+      SetForegroundWindow(Formulario.Handle);
+    end;
   end;
 end;
 

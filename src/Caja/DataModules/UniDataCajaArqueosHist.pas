@@ -23,10 +23,13 @@ uses
 
 type
   TdmCajaArqueosHist = class(TdmBase)
+    unqryRecuento: TUniQuery;
+    dsRecuento: TDataSource;
   private
     { Private declarations }
   public
-    { Public declarations }
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
+    procedure AbrirDetalles; override;
   end;
 
 implementation
@@ -36,6 +39,20 @@ implementation
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure TdmCajaArqueosHist.AsignarMaestroCabecera(
+  ADataSource: TDataSource);
+begin
+  inherited;
+  unqryRecuento.MasterSource := ADataSource;
+end;
+
+procedure TdmCajaArqueosHist.AbrirDetalles;
+begin
+  inherited;
+  if not unqryRecuento.Active then
+    unqryRecuento.Open;
+end;
 
 initialization
   RegistrarDataModule(TdmCajaArqueosHist);

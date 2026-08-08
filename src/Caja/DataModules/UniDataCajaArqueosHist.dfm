@@ -52,4 +52,34 @@
     Active = True
     Left = 24
   end
+  object unqryRecuento: TUniQuery
+    Connection = dmConn.conUni
+    SQL.Strings = (
+      'SELECT CODIGO_ARQ_ARQR,'
+      '       CODIGO_FP_CFP_ARQR,'
+      '       DESCRIPCION_FP_ARQR,'
+      '       ESCAJON_ARQR,'
+      '       IMPORTE_SISTEMA_ARQR,'
+      '       IMPORTE_RECUENTO_ARQR,'
+      '       DIFERENCIA_ARQR'
+      '  FROM fza_caja_arqueos_recuento'
+      ' WHERE CODIGO_ARQ_ARQR = :CODIGO_ARQ'
+      ' ORDER BY ESCAJON_ARQR DESC, CODIGO_FP_CFP_ARQR')
+    MasterFields = 'CODIGO_ARQ'
+    DetailFields = 'CODIGO_ARQ_ARQR'
+    ReadOnly = True
+    Left = 160
+    Top = 24
+    ParamData = <
+      item
+        DataType = ftUnknown
+        Name = 'CODIGO_ARQ'
+        Value = nil
+      end>
+  end
+  object dsRecuento: TDataSource
+    DataSet = unqryRecuento
+    Left = 160
+    Top = 88
+  end
 end

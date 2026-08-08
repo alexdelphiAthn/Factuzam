@@ -57,6 +57,15 @@ type
     btnExportarExcel: TcxButton;
     btnImprimirInforme: TcxButton;
     dlgGuardar: TFileSaveDialog;
+    cxgrdRecuento: TcxGrid;
+    tvRecuento: TcxGridDBTableView;
+    tvRecuentoCodigo: TcxGridDBColumn;
+    tvRecuentoDescripcion: TcxGridDBColumn;
+    tvRecuentoEsCajon: TcxGridDBColumn;
+    tvRecuentoSistema: TcxGridDBColumn;
+    tvRecuentoImporte: TcxGridDBColumn;
+    tvRecuentoDiferencia: TcxGridDBColumn;
+    lvRecuento: TcxGridLevel;
     procedure btnExportarExcelClick(Sender: TObject);
     procedure btnImprimirInformeClick(Sender: TObject);
   private

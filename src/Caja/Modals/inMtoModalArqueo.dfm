@@ -33,10 +33,10 @@
       Properties.Kind = ckDateTime
       Properties.OnChange = dteFechaDesdePropertiesChange
       TabOrder = 0
-      Width = 170
+      Width = 190
     end
     object lblTituloHasta: TcxLabel
-      Left = 200
+      Left = 210
       Top = 6
       Caption = 'Fecha hasta (F6)'
       Style.TextColor = clNavy
@@ -44,16 +44,16 @@
       Transparent = True
     end
     object dteFechaHasta: TcxDateEdit
-      Left = 200
+      Left = 210
       Top = 28
       Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
       Properties.Kind = ckDateTime
       Properties.OnChange = dteFechaHastaPropertiesChange
       TabOrder = 1
-      Width = 170
+      Width = 190
     end
     object lblTituloVentas: TcxLabel
-      Left = 480
+      Left = 500
       Top = 6
       Caption = 'Ventas'
       Style.TextColor = clNavy
@@ -61,7 +61,7 @@
       Transparent = True
     end
     object lblVentas: TcxLabel
-      Left = 480
+      Left = 500
       Top = 28
       AutoSize = False
       Caption = '0'
@@ -69,11 +69,11 @@
       TabOrder = 7
       Transparent = True
       Height = 28
-      Width = 90
+      Width = 70
       AnchorX = 570
     end
     object btnRecalcular: TcxButton
-      Left = 390
+      Left = 410
       Top = 18
       Width = 82
       Height = 35
@@ -136,7 +136,7 @@
       ClientRectRight = 1002
       ClientRectTop = 28
       object tsArqueo: TcxTabSheet
-        Caption = 'Arqueo'
+        Caption = '&1_Arqueo'
         ExplicitWidth = 996
         ExplicitHeight = 479
         object pnlLineas: TPanel
@@ -538,7 +538,7 @@
         end
       end
       object tsResumenes: TcxTabSheet
-        Caption = 'Res'#250'menes'
+        Caption = '&2_Res'#250'menes'
         object pnlResEmpleado: TPanel
           Left = 8
           Top = 8
@@ -742,7 +742,7 @@
         end
       end
       object tsMasDatos: TcxTabSheet
-        Caption = 'M'#225's datos'
+        Caption = '&3_M'#225's datos'
         object pnlResIVA: TPanel
           Left = 8
           Top = 8
@@ -811,7 +811,7 @@
         end
       end
       object tsRecuento: TcxTabSheet
-        Caption = 'Recuento'
+        Caption = '&4_Recuento'
         object pnlAnterior: TPanel
           Left = 8
           Top = 4
@@ -1016,7 +1016,6 @@
             Top = 119
             EditValue = 0.000000000000000000
             Properties.DisplayFormat = ',0.00 '#8364
-            Properties.EditFormat = ',0.00 '#8364
             Properties.ReadOnly = True
             Properties.OnChange = txtDejoImportePropertiesChange
             TabStop = False
@@ -1040,17 +1039,23 @@
           object lblVendedorLbl: TcxLabel
             Left = 300
             Top = 160
-            Caption = 'Vendedor (n'#186' empl.):'
+            Caption = 'Vendedor:'
             TabOrder = 14
             Transparent = True
           end
-          object txtVendedorCodigo: TcxTextEdit
-            Left = 420
+          object txtVendedorCodigo: TcxButtonEdit
+            Left = 370
             Top = 158
+            Properties.Buttons = <
+              item
+                Default = True
+                Kind = bkEllipsis
+              end>
             Properties.MaxLength = 20
+            Properties.OnButtonClick = txtVendedorCodigoPropertiesButtonClick
             TabOrder = 15
             OnExit = txtVendedorCodigoExit
-            Width = 80
+            Width = 130
           end
           object lblVendedorNombre: TcxLabel
             Left = 506

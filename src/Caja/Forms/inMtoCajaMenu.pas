@@ -32,6 +32,9 @@ uses
   inLibVentasCalendario, System.Actions, Vcl.ActnList, dxGDIPlusClasses,
   cxImage, inLibPermisosIntf, inLibCajaPantallaInyeccion;
 
+const
+  WM_REACTIVAR_OPERACION_CAJA = WM_APP + 107;
+
 type
   TfrmMtoMenuCaja = class(TfrmBase, IReceptorFechaCaja)
     lblF5: TcxLabel;
@@ -122,6 +125,12 @@ type
     procedure Action1Execute(Sender: TObject);
   protected
     procedure CreateParams(var Params: TCreateParams); override;
+    procedure WMActivate(var Mensaje: TWMActivate); message WM_ACTIVATE;
+    procedure WMReactivarOperacionCaja(var Mensaje: TMessage);
+      message WM_REACTIVAR_OPERACION_CAJA;
+    procedure WMSize(var Mensaje: TWMSize); message WM_SIZE;
+    procedure WMSysCommand(var Mensaje: TWMSysCommand);
+      message WM_SYSCOMMAND;
   private
     type
       TMenuItem = record
@@ -189,7 +198,7 @@ implementation
 uses
   DateUtils,
   inMtoModalArqueo, inMtoModalEntradaCambio, inMtoModalGastoCaja,
-  inLibMsgCaja;
+  inLibMsgCaja, inLibTraducciones;
 
 {$R *.dfm}
 
@@ -224,20 +233,25 @@ procedure MostrarMenuCaja(
 var
   Formulario: TfrmMtoMenuCaja;
 begin
-  Formulario := BuscarMenuCaja;
-  if Formulario = nil then
-  begin
-    Formulario := TfrmMtoMenuCaja.Create(
-      Application,
-      APermisos,
-      ADependencias);
-    Formulario.Show;
-  end
+  if BuscarOperacionCajaVisible <> nil then
+    ReactivarOperacionCajaVisible
   else
   begin
-    if Formulario.WindowState = wsMinimized then
-      Formulario.WindowState := wsNormal;
-    Formulario.BringToFront;
+    Formulario := BuscarMenuCaja;
+    if Formulario = nil then
+    begin
+      Formulario := TfrmMtoMenuCaja.Create(
+        Application,
+        APermisos,
+        ADependencias);
+      Formulario.Show;
+    end
+    else
+    begin
+      if Formulario.WindowState = wsMinimized then
+        Formulario.WindowState := wsNormal;
+      Formulario.BringToFront;
+    end;
   end;
 end;
 
@@ -256,6 +270,35 @@ begin
   inherited;
   Params.ExStyle   := Params.ExStyle or WS_EX_APPWINDOW;
   Params.WndParent := 0;
+end;
+
+procedure TfrmMtoMenuCaja.WMActivate(var Mensaje: TWMActivate);
+begin
+  inherited;
+  // La restauracion de Windows termina despues de WM_ACTIVATE. Se difiere
+  // la reposicion para que el menu no tape la operacion de caja visible.
+  if Mensaje.Active <> WA_INACTIVE then
+    PostMessage(Handle, WM_REACTIVAR_OPERACION_CAJA, 0, 0);
+end;
+
+procedure TfrmMtoMenuCaja.WMReactivarOperacionCaja(var Mensaje: TMessage);
+begin
+  ReactivarOperacionCajaVisible;
+  Mensaje.Result := 0;
+end;
+
+procedure TfrmMtoMenuCaja.WMSize(var Mensaje: TWMSize);
+begin
+  inherited;
+  if Mensaje.SizeType <> SIZE_MINIMIZED then
+    PostMessage(Handle, WM_REACTIVAR_OPERACION_CAJA, 0, 0);
+end;
+
+procedure TfrmMtoMenuCaja.WMSysCommand(var Mensaje: TWMSysCommand);
+begin
+  inherited;
+  if Mensaje.CmdType and $FFF0 = SC_RESTORE then
+    PostMessage(Handle, WM_REACTIVAR_OPERACION_CAJA, 0, 0);
 end;
 
 procedure TfrmMtoMenuCaja.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -288,7 +331,10 @@ begin
   Application.HintHidePause := 5000;
   calMes.ShowHint       := True;
   calMes.ParentShowHint := False;
-  lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', Now);
+  lblFecha.Caption := FormatearFechaHoraIdioma(
+    'dddd d mmmm yyyy',
+    Now,
+    Traducciones);
   // Permiso: si no puede cambiar fecha, deshabilitar calendario
   if (not Assigned(Permisos)) or
      (not Permisos.TienePermiso(
@@ -396,7 +442,10 @@ begin
   FFechaCaja := AFechaCaja;
   FUltimoTickReloj := Now;
   calMes.Date := DateOf(FFechaCaja);
-  lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', FFechaCaja);
+  lblFecha.Caption := FormatearFechaHoraIdioma(
+    'dddd d mmmm yyyy',
+    FFechaCaja,
+    Traducciones);
   clkHora.Time := FFechaCaja;
 end;
 
@@ -412,7 +461,10 @@ begin
   FFechaCaja := FFechaCaja + (dtAhora - FUltimoTickReloj);
   FUltimoTickReloj := dtAhora;
   clkHora.Time := FFechaCaja;
-  lblFecha.Caption := FormatDateTime('dddd d mmmm yyyy', FFechaCaja);
+  lblFecha.Caption := FormatearFechaHoraIdioma(
+    'dddd d mmmm yyyy',
+    FFechaCaja,
+    Traducciones);
 end;
 
 procedure TfrmMtoMenuCaja.clkHoraDblClick(Sender: TObject);

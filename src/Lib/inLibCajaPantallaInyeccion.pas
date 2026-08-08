@@ -93,6 +93,8 @@ type
   end;
 
   TDependenciasArqueoCaja = record
+    Consultas: IRepositorioConsultasCaja;
+    VentasCalendario: IRepositorioVentasCalendario;
     Modal: IRepositorioModalArqueo;
     Persistencia: IArqueoPersistencia;
     Arqueo: IRepositorioArqueoCaja;
@@ -235,6 +237,8 @@ end;
 
 procedure TDependenciasArqueoCaja.Validar;
 begin
+  ValidarDependenciaCaja(Consultas, 'consultas de Caja');
+  ValidarDependenciaCaja(VentasCalendario, 'calendario de ventas');
   ValidarDependenciaCaja(Modal, 'persistencia del modal de arqueo');
   ValidarDependenciaCaja(Persistencia, 'persistencia de arqueos');
   ValidarDependenciaCaja(Arqueo, 'lectura de arqueos');

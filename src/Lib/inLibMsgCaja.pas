@@ -289,6 +289,8 @@ resourcestring
     'Arqueo duplicado';
   SErrorRecuentoArqueoCajaNoDisponible =
     'No hay datos de recuento. Pulse Recalcular primero.';
+  SErrorRestanteArqueoCajaNoValido =
+    'Debe usted meter el recuento válido para que el restante sea válido';
   SPreguntaGrabarArqueoCaja =
     'Se va a grabar el arqueo con los importes recontados.' + sLineBreak +
     'Periodo: %s - %s' + sLineBreak +

@@ -99,6 +99,7 @@ type
       AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit;
       var Key: Word; Shift: TShiftState);
     function LimpiarEntrada(const AEntrada: string): string;
+    procedure BuscarArticulo;
     procedure MostrarEditorArticulo;
   end;
 
@@ -574,6 +575,11 @@ procedure TBusquedaGridArticulos.ArticuloButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 begin
   AbrirBusquedaCompleta(Sender);
+end;
+
+procedure TBusquedaGridArticulos.BuscarArticulo;
+begin
+  AbrirBusquedaCompleta(nil);
 end;
 
 procedure TBusquedaGridArticulos.ArticuloValidate(

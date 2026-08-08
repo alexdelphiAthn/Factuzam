@@ -88,6 +88,10 @@ function ClaveTraduccionComponente(
   const APropiedad: string): string;
 function NormalizarIdiomaAplicacion(
   const AIdioma: string): string;
+function FormatearFechaHoraIdioma(
+  const AFormato: string;
+  AFecha: TDateTime;
+  const ATraducciones: IServicioTraducciones): string;
 function ObtenerIdiomaConfigurado(
   const ALector: ILectorIdiomaConfigurado;
   const AUsuario: string;
@@ -107,12 +111,38 @@ uses
   inLibRegistroResourcestringTraducciones, inLibRegistroLogNulo;
 
 const
-  PROPIEDADES_TRADUCIBLES: array[0..3] of string = (
+  PROPIEDADES_TRADUCIBLES: array[0..4] of string = (
     'Caption',
     'Hint',
     'Title',
-    'DisplayName'
+    'DisplayName',
+    'NoDataToDisplayInfoText'
   );
+
+function FormatearFechaHoraIdioma(
+  const AFormato: string;
+  AFecha: TDateTime;
+  const ATraducciones: IServicioTraducciones): string;
+var
+  FormatoRegional: TFormatSettings;
+  Idioma: string;
+begin
+  Idioma := IDIOMA_ESPANOL;
+  if Assigned(ATraducciones) then
+    Idioma := ATraducciones.Idioma;
+  Idioma := NormalizarIdiomaAplicacion(Idioma);
+  if SameText(Idioma, IDIOMA_PSEUDO) then
+    Idioma := IDIOMA_ESPANOL;
+  try
+    FormatoRegional := TFormatSettings.Create(Idioma);
+  except
+    FormatoRegional := TFormatSettings.Create;
+  end;
+  Result := FormatDateTime(
+    AFormato,
+    AFecha,
+    FormatoRegional);
+end;
 
 function EsAtajoTecladoPuro(const ATexto: string): Boolean;
 var

@@ -252,6 +252,10 @@ begin
     Caja.Tickets.CrearRepositorioGastoCaja;
   Dependencias.Gasto.LecturasTicket :=
     Caja.Tickets.CrearLecturasImpresionTicketCaja;
+  Dependencias.Arqueo.Consultas :=
+    Caja.Consultas.CrearRepositorioConsultasCaja;
+  Dependencias.Arqueo.VentasCalendario :=
+    Dependencias.VentasCalendario;
   Dependencias.Arqueo.Modal :=
     Caja.Arqueos.CrearRepositorioModalArqueo;
   Dependencias.Arqueo.Persistencia :=

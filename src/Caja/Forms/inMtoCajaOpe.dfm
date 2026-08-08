@@ -456,102 +456,102 @@
         end
         object lblCobro: TcxLabel
           Left = 10
-          Top = 71
+          Top = 68
           AutoSize = False
           Caption = 'Cobro'
           Properties.Alignment.Horz = taCenter
           TabOrder = 9
           Transparent = True
-          Height = 21
+          Height = 26
           Width = 96
         end
         object lblBuscar: TcxLabel
           Left = 110
-          Top = 71
+          Top = 68
           AutoSize = False
           Caption = 'Buscar'
           Properties.Alignment.Horz = taCenter
           TabOrder = 10
           Transparent = True
-          Height = 21
+          Height = 26
           Width = 96
         end
         object lblEliminar: TcxLabel
           Left = 210
-          Top = 71
+          Top = 68
           AutoSize = False
           Caption = 'Eliminar'
           Properties.Alignment.Horz = taCenter
           TabOrder = 11
           Transparent = True
-          Height = 21
+          Height = 26
           Width = 96
         end
         object lblTextoTarifa: TcxLabel
           Left = 310
-          Top = 71
+          Top = 68
           AutoSize = False
           Caption = 'Tarifa'
           Properties.Alignment.Horz = taCenter
           TabOrder = 12
           Transparent = True
-          Height = 21
+          Height = 26
           Width = 96
         end
         object lblBusqTick: TcxLabel
-          Left = 410
-          Top = 71
+          Left = 408
+          Top = 68
           AutoSize = False
-          Caption = 'Devoluci'#243'n'
+          Caption = 'Buscar ticket'
           Properties.Alignment.Horz = taCenter
           TabOrder = 13
           Transparent = True
-          Height = 21
-          Width = 96
+          Height = 26
+          Width = 100
         end
         object lblIndIVA: TcxLabel
           Left = 510
-          Top = 71
+          Top = 68
           AutoSize = False
           Caption = 'Ind. IVA'
           Properties.Alignment.Horz = taCenter
           TabOrder = 14
           Transparent = True
-          Height = 21
+          Height = 26
           Width = 96
         end
         object lblOtro: TcxLabel
           Left = 610
-          Top = 71
+          Top = 68
           AutoSize = False
           Caption = 'Otro'
           Properties.Alignment.Horz = taCenter
           TabOrder = 15
           Transparent = True
-          Height = 21
+          Height = 26
           Width = 96
         end
         object lblCargarCta: TcxLabel
-          Left = 710
-          Top = 71
+          Left = 694
+          Top = 68
           AutoSize = False
-          Caption = 'Cargar cta.'
+          Caption = 'Cta. Cliente'
           Properties.Alignment.Horz = taCenter
           TabOrder = 16
           Transparent = True
-          Height = 21
-          Width = 96
+          Height = 26
+          Width = 128
         end
         object lblBuscarModificar: TcxLabel
-          Left = 818
-          Top = 71
+          Left = 812
+          Top = 68
           AutoSize = False
-          Caption = 'Buscar/Mod.'
+          Caption = 'Buscar/Modif.'
           Properties.Alignment.Horz = taCenter
           TabOrder = 17
           Transparent = True
-          Height = 21
-          Width = 108
+          Height = 26
+          Width = 128
         end
       end
     end

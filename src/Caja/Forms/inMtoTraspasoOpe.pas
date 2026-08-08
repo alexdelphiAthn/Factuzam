@@ -37,7 +37,8 @@ uses
   cxFilter, cxData, cxDataStorage, cxNavigator, dxDateRanges,
   dxScrollbarAnnotations, inLibCajaVentaIntf, inLibCajaVentanasIntf,
   inLibTraspasoOpePersistenciaIntf, inLibArticulosAtributosIntf,
-  inLibTraspasoTicketIntf, inLibCajaPantallaInyeccion;
+  inLibTraspasoTicketIntf, inLibCajaPantallaInyeccion,
+  inLibColumnasSkuIntf, inLibColumnasSkuModoSku;
 
 type
   TfrmMtoOpeTraspaso = class(TfrmBase, ITraspasoCaja)
@@ -76,8 +77,6 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure FormKeyDown(Sender: TObject; var Key: Word;
-                          Shift: TShiftState);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure btnModoClick(Sender: TObject);
     procedure btnF11Click(Sender: TObject);
@@ -88,6 +87,8 @@ type
   private
     FDatos: TdmTraspaso;
     FGridCtrl: TGridArticulosLineas;
+    FModoSku: TModoEntradaSku;
+    FModoEntradaSel: TModoColumnasSku;
     FComboCodigos: TStringList;
     FEmpresa: string;
     FAlmacen: string;
@@ -124,6 +125,12 @@ type
     procedure ProcesarLecturaScanner(const ACodigo: string);
     function ConsolidarSiExiste(const ASku: string): Boolean;
     procedure ConstruirGrid;
+    procedure LiberarModoEntrada;
+    procedure ConfigurarGridSegunModo;
+    procedure AlternarModoEntrada;
+    function ResolverEntradaModo(const AEntrada: string): Boolean;
+    procedure MostrarEditorModo;
+    procedure BuscarContextual;
     procedure GridResuelto(const ACodArt, ASku, ADescripcion: string;
                            ACompleto: Boolean);
     procedure AsegurarLineaNueva;
@@ -171,6 +178,10 @@ type
     procedure StockViewCustomDrawCell(Sender: TcxCustomGridTableView;
               ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
               var ADone: Boolean);
+  protected
+    // Override como en documentos: F1 debe llegar antes que el editor inplace
+    // de DevExpress, que puede consumirlo como tecla de ayuda.
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
     constructor Create(AOwner: TComponent); overload; override;
     constructor Create(
@@ -197,7 +208,9 @@ implementation
 
 uses
   inLibMsgCaja, inLibMsgComun, UniDataModoTallas,
-  UniDataGridArticulosRepositorio;
+  UniDataGridArticulosRepositorio, UniDataColumnasSkuServicios,
+  UniDataColumnasDocumentoRepositorio, inLibColumnasDocumento,
+  inLibMsgArticulos;
 
 constructor TfrmMtoOpeTraspaso.Create(AOwner: TComponent);
 begin
@@ -257,6 +270,9 @@ begin
   FLector.OnEsControlRejilla := LectorEsControlRejilla;
   FComboCodigos := TStringList.Create;
   FDatos := TdmTraspaso.Create(Self, ConexionPrincipal);
+  // La entrada detallada es el modo inicial de traspasos. F1 alterna con la
+  // entrada por SKU completo en una sola columna, como en documentos.
+  FModoEntradaSel := mcsDesglose;
   // Coste/importe solo para administrador: TienePermiso devuelve True siempre a
   // admin; al resto, oculto por defecto (default False) salvo permiso explicito
   // 'caja.verCoste'. Sin sistema de permisos, oculto.
@@ -286,7 +302,7 @@ begin
   FValidadorArticulos := nil;
   FRepositorioConsultas := nil;
   FRepositorioPersistencia := nil;
-  FreeAndNil(FGridCtrl);
+  LiberarModoEntrada;
   FreeAndNil(FComboCodigos);
   // FDatos y los componentes runtime (grid/foto/datasources) los libera el
   // Owner (Self) automáticamente.
@@ -304,14 +320,15 @@ end;
 procedure TfrmMtoOpeTraspaso.ConstruirGrid;
 var
   Campos: TCamposGridArt;
+  CamposSku: TCamposColumnasSku;
+  ConfigSku: TConfigColumnasSku;
+  NombresAtributos: TArray<string>;
   Col: TcxGridDBColumn;
   i: Integer;
 begin
-  // FGrid/FView/lvlLineas viven ya en el dfm; aqui solo se cablea el origen de
-  // datos (el cds esta en un data module creado en runtime) y se construyen las
-  // columnas: primero las dinamicas (articulo + tallas/colores, via la
-  // controladora, que hace ClearItems) y despues las fijas del traspaso, para
-  // respetar ese orden.
+  // Los dos modos comparten el cds. Solo se reconstruye la presentacion:
+  // desglose = Articulo/Color/Talla; SKU = una columna con el codigo completo.
+  LiberarModoEntrada;
   FView.DataController.DataSource := FDatos.dsLineas;
   FView.OptionsData.Editing := True;
   FView.OptionsData.Inserting := True;
@@ -327,21 +344,75 @@ begin
     Campos.AttrValor[i] := 'ATTR' + IntToStr(i) + '_VALOR';
     Campos.AttrNombre[i] := 'ATTR' + IntToStr(i) + '_NOMBRE';
   end;
-  // La controladora crea la columna de artículo + las de talla/color.
-  FGridCtrl := TGridArticulosLineas.Create(
-    ConexionPrincipal,
-    FView,
-    FDatos.cdsLineas,
-    Campos,
-    ContextoSesion,
-    BusquedaVisual,
-    CrearBusquedaSkusTallas(ConexionPrincipal),
-    CrearConsultaArticulosGridUniDAC(ConexionPrincipal),
-    FValidadorArticulos,
-    FLookupAtributosArticulos,
-    RegistroLog);
-  FGridCtrl.OnResuelto := GridResuelto;
-  FGridCtrl.Construir;
+  if FModoEntradaSel = mcsSku then
+  begin
+    CamposSku := Default(TCamposColumnasSku);
+    CamposSku.CodigoArt := Campos.CodigoArt;
+    CamposSku.CodigoUnidad := Campos.CodigoUnidad;
+    CamposSku.Descripcion := Campos.Descripcion;
+    CamposSku.Cantidad := Campos.Cantidad;
+    CamposSku.NumAtributos := Campos.NumAtributos;
+    for i := 1 to 5 do
+    begin
+      CamposSku.AttrValor[i] := Campos.AttrValor[i];
+      CamposSku.AttrNombre[i] := Campos.AttrNombre[i];
+    end;
+    ConfigSku := Default(TConfigColumnasSku);
+    ConfigSku.Servicios :=
+      CrearServiciosColumnasSkuUniDAC(ConexionPrincipal);
+    ConfigSku.ContextoSesion := ContextoSesion;
+    ConfigSku.RegistroLog := RegistroLog;
+    ConfigSku.ValidadorArticulos := FValidadorArticulos;
+    ConfigSku.LookupAtributos := FLookupAtributosArticulos;
+    ConfigSku.BusquedaVisual := BusquedaVisual;
+    ConfigSku.View := FView;
+    ConfigSku.Cds := FDatos.cdsLineas;
+    ConfigSku.Campos := CamposSku;
+    ConfigSku.Modo := mcsSku;
+    ConfigSku.AlmacenStock :=
+      FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+    FModoSku := TModoEntradaSku.Create(ConfigSku);
+    FModoSku.Construir(GridResuelto, nil, nil);
+  end
+  else
+  begin
+    FGridCtrl := TGridArticulosLineas.Create(
+      ConexionPrincipal,
+      FView,
+      FDatos.cdsLineas,
+      Campos,
+      ContextoSesion,
+      BusquedaVisual,
+      CrearBusquedaSkusTallas(ConexionPrincipal),
+      CrearConsultaArticulosGridUniDAC(ConexionPrincipal),
+      FValidadorArticulos,
+      FLookupAtributosArticulos,
+      RegistroLog);
+    FGridCtrl.AlmacenStock :=
+      FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+    FGridCtrl.OnResuelto := GridResuelto;
+    FGridCtrl.Construir;
+    Col := FView.GetColumnByFieldName('CODIGO_ART');
+    if Assigned(Col) then
+      Col.Caption := SCaptionColArticulo;
+    NombresAtributos := CrearColumnasDocumentoLecturas(
+      ConexionPrincipal).ListarNombresAtributosGlobales;
+    if Length(NombresAtributos) = 0 then
+      NombresAtributos := TArray<string>.Create('Color', 'Talla')
+    else if Length(NombresAtributos) = 1 then
+    begin
+      SetLength(NombresAtributos, 2);
+      NombresAtributos[1] := 'Talla';
+    end
+    else if Length(NombresAtributos) > 2 then
+      SetLength(NombresAtributos, 2);
+    AplicarNombresAtributosGlobalesDocumento(
+      FView, NombresAtributos);
+  end;
+  FView.OptionsBehavior.FocusCellOnCycle := True;
+  FView.OptionsView.ColumnAutoWidth := True;
+  FView.OptionsView.NoDataToDisplayInfoText := 'No hay artículos';
+  FView.Navigator.Visible := True;
   // Columnas propias del traspaso.
   Col := FView.CreateColumn;
   Col.Caption := SCaptionColDescripcionTraspaso;
@@ -382,6 +453,118 @@ begin
   Col.Width := 180;
   Col.Visible := False;
   FColMotivo := Col;
+  ConfigurarGridSegunModo;
+end;
+
+procedure TfrmMtoOpeTraspaso.LiberarModoEntrada;
+begin
+  if Assigned(FView) and
+     FView.Controller.EditingController.IsEditing then
+    FView.Controller.EditingController.HideEdit(False);
+  if Assigned(FModoSku) then
+    FModoSku.Desmontar;
+  FreeAndNil(FModoSku);
+  FreeAndNil(FGridCtrl);
+  FColUds := nil;
+  FColPedidas := nil;
+  FColMotivo := nil;
+end;
+
+procedure TfrmMtoOpeTraspaso.ConfigurarGridSegunModo;
+var
+  i: Integer;
+begin
+  FView.OptionsData.Inserting := FModo <> mtAtender;
+  FView.OptionsData.Deleting := FModo <> mtAtender;
+  FView.OptionsData.Editing := True;
+  for i := 0 to FView.ColumnCount - 1 do
+  begin
+    if FModo = mtAtender then
+      FView.Columns[i].Options.Editing :=
+        (FView.Columns[i] = FColUds) or
+        (FView.Columns[i] = FColMotivo)
+    else
+      FView.Columns[i].Options.Editing := True;
+  end;
+  if Assigned(FColPedidas) then
+    FColPedidas.Visible := FModo = mtAtender;
+  if Assigned(FColMotivo) then
+    FColMotivo.Visible := FModo = mtAtender;
+  if Assigned(FColUds) then
+  begin
+    if FModo = mtAtender then
+      FColUds.Caption := SCaptionColSirvoTraspaso
+    else
+      FColUds.Caption := SCaptionColUdsTraspaso;
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.AlternarModoEntrada;
+var
+  sArticulo: string;
+begin
+  if FModoEntradaSel = mcsSku then
+    FModoEntradaSel := mcsDesglose
+  else
+    FModoEntradaSel := mcsSku;
+  ConstruirGrid;
+  if Assigned(FGridCtrl) and not FDatos.cdsLineas.IsEmpty then
+  begin
+    sArticulo := Trim(
+      FDatos.cdsLineas.FieldByName('CODIGO_ART').AsString);
+    if sArticulo <> '' then
+      FGridCtrl.MostrarColumnasAtributosArticulo(sArticulo);
+  end;
+  if FModo <> mtAtender then
+    AsegurarLineaNueva;
+  if Showing and FGrid.CanFocus then
+  begin
+    FGrid.SetFocus;
+    if FModo <> mtAtender then
+      MostrarEditorModo;
+  end;
+end;
+
+function TfrmMtoOpeTraspaso.ResolverEntradaModo(
+  const AEntrada: string): Boolean;
+begin
+  Result := False;
+  if Assigned(FModoSku) then
+    Result := FModoSku.ResolverEntrada(AEntrada)
+  else if Assigned(FGridCtrl) then
+    Result := FGridCtrl.ResolverEntrada(AEntrada);
+end;
+
+procedure TfrmMtoOpeTraspaso.MostrarEditorModo;
+begin
+  if Assigned(FModoSku) then
+    FModoSku.MostrarEditor
+  else if Assigned(FGridCtrl) then
+    FGridCtrl.MostrarEditorArticulo;
+end;
+
+procedure TfrmMtoOpeTraspaso.BuscarContextual;
+var
+  ControlActivo: TWinControl;
+  bFocoEmpleado: Boolean;
+begin
+  ControlActivo := Screen.ActiveControl;
+  bFocoEmpleado := ControlActivo = txtEmpleado;
+  if Assigned(ControlActivo) and not bFocoEmpleado then
+    bFocoEmpleado := txtEmpleado.ContainsControl(ControlActivo);
+  if bFocoEmpleado then
+    BuscarEmpleado
+  else if FModo <> mtAtender then
+  begin
+    if Assigned(FModoSku) then
+      AsegurarLineaNueva;
+    if FGrid.CanFocus then
+      FGrid.SetFocus;
+    if Assigned(FModoSku) then
+      FModoSku.BuscarArticulo
+    else if Assigned(FGridCtrl) then
+      FGridCtrl.BuscarContextual;
+  end;
 end;
 
 procedure TfrmMtoOpeTraspaso.ConstruirPanelStock;
@@ -640,6 +823,10 @@ begin
   FAlmacen := AAlmacen;
   FCaja := ACaja;
   FFecha := AFecha;
+  // Cada entrada nueva en Traspasos empieza en Articulo/Color/Talla. F1 puede
+  // cambiar a SKU durante la sesion, pero esa preferencia no se arrastra a la
+  // siguiente apertura de la operativa.
+  FModoEntradaSel := mcsDesglose;
   AplicarModo(AModo);
   // Empleado responsable por defecto desde parametros de caja (igual que
   // inMtoCajaOpe): si esta activado, se rellena al abrir la pantalla.
@@ -742,7 +929,7 @@ begin
   finally
     FDatos.cdsLineas.EnableControls;
   end;
-  if iMaxAtributos > 0 then
+  if (iMaxAtributos > 0) and Assigned(FGridCtrl) then
     FGridCtrl.MostrarColumnasAtributosArticulo(sArticuloAtributos);
   AsegurarLineaNueva;
   ActualizarTotal;
@@ -770,45 +957,14 @@ begin
 end;
 
 procedure TfrmMtoOpeTraspaso.AplicarModo(AModo: TModoTraspaso);
-var
-  i: Integer;
 begin
   FModo := AModo;
   FDatos.PrepararNuevo(AModo, FEmpresa, FAlmacen, FCaja, FFecha);
   txtOrigen.Text := FAlmacen;
-  // El buscador/desplegable de SKU muestra el stock del almacen origen y
-  // ordena por stock (los que tienen, primero). Recarga al cambiar de modo.
-  FGridCtrl.AlmacenStock :=
-    FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+  // La reconstruccion conserva el modo F1 y actualiza el almacen de stock del
+  // buscador tras cambiar entre Traspaso, Solicitar y Atender.
+  ConstruirGrid;
   btnF11.Visible := AModo <> mtSolicitar;
-  // Edicion del grid por modo. Al teclear lineas (traspaso / solicitar) todo el
-  // grid es editable. Al atender, las lineas vienen de la solicitud: solo se
-  // editan las uds a servir y, si se deniega (0), el motivo; el resto
-  // bloqueado.
-  FView.OptionsData.Inserting := AModo <> mtAtender;
-  FView.OptionsData.Deleting := AModo <> mtAtender;
-  FView.OptionsData.Editing := True;
-  for i := 0 to FView.ColumnCount - 1 do
-  begin
-    if AModo = mtAtender then
-      FView.Columns[i].Options.Editing :=
-        (FView.Columns[i] = FColUds) or (FView.Columns[i] = FColMotivo)
-    else
-      FView.Columns[i].Options.Editing := True;
-  end;
-  // Pedidas/Motivo solo al atender; "Uds" pasa a "Sirvo" para dejar claro que
-  // ahi se teclea lo que se sirve (0 = denegar la linea).
-  if Assigned(FColPedidas) then
-    FColPedidas.Visible := AModo = mtAtender;
-  if Assigned(FColMotivo) then
-    FColMotivo.Visible := AModo = mtAtender;
-  if Assigned(FColUds) then
-  begin
-    if AModo = mtAtender then
-      FColUds.Caption := SCaptionColSirvoTraspaso
-    else
-      FColUds.Caption := SCaptionColUdsTraspaso;
-  end;
   // Captions con tilde en literal: este .pas va en UTF-8 con BOM (igual que
   // inMtoCajaMenu.pas) para que el compilador las lea bien.
   case AModo of
@@ -894,12 +1050,12 @@ begin
   begin
     AsegurarLineaNueva;
     FDatos.cdsLineas.Last;
-    FGridCtrl.ResolverEntrada(Trim(ACodigo));
+    ResolverEntradaModo(Trim(ACodigo));
     // Dejamos el grid enfocado y el editor de articulo abierto para encadenar
     // lecturas sin tener que pulsar Enter (el grid queda en modo edicion).
     if (FGrid <> nil) and FGrid.CanFocus then
       FGrid.SetFocus;
-    FGridCtrl.MostrarEditorArticulo;
+    MostrarEditorModo;
   end;
 end;
 
@@ -957,8 +1113,7 @@ begin
         if (FGrid <> nil) and FGrid.CanFocus then
         begin
           FGrid.SetFocus;
-          if FGridCtrl <> nil then
-            FGridCtrl.MostrarEditorArticulo;
+          MostrarEditorModo;
         end;
     end;
   end;
@@ -1599,11 +1754,12 @@ end;
 
 procedure TfrmMtoOpeTraspaso.QuitarLinea;
 begin
-  // Borra la linea enfocada del grid (F3). No se borra al atender: las
-  // lineas vienen de la solicitud.
+  // Borra la linea enfocada con F8 o desde el navegador. No se borra al
+  // atender: las lineas vienen de la solicitud. F3 queda para buscar.
   if (FModo <> mtAtender) and (not FDatos.cdsLineas.IsEmpty) then
   begin
     FDatos.cdsLineas.Delete;
+    AsegurarLineaNueva;
     ActualizarTotal;
   end;
 end;
@@ -1622,37 +1778,72 @@ begin
     EjecutarTraspaso(True);
 end;
 
-procedure TfrmMtoOpeTraspaso.FormKeyDown(Sender: TObject; var Key: Word;
-                                         Shift: TShiftState);
+procedure TfrmMtoOpeTraspaso.KeyDown(var Key: Word; Shift: TShiftState);
 begin
   // El lector cierra la lectura por velocidad (rafaga + Enter rapido) y consume
   // el VK_RETURN si procede, antes de la gestion de teclas de funcion.
   FLector.KeyDown(Key, Shift);
   case Key of
+    VK_F1:
+      if Shift = [] then
+      begin
+        Key := 0;
+        AlternarModoEntrada;
+      end;
     VK_F3:
-      QuitarLinea;
+    begin
+      Key := 0;
+      BuscarContextual;
+    end;
     VK_F4:
+    begin
+      Key := 0;
       DenegarSolicitudCargada;
+    end;
     VK_F6:
+    begin
+      Key := 0;
       AplicarModo(mtSolicitar);
+    end;
     VK_F7:
-      AbrirMisPeticiones;
-    VK_F8:
-      if FModo = mtAtender then
+    begin
+      Key := 0;
+      if ssShift in Shift then
+        AbrirMisPeticiones
+      else if FModo = mtAtender then
         AbrirModalSolicitudes
       else
         AplicarModo(mtAtender);
+    end;
+    VK_F8:
+    begin
+      Key := 0;
+      QuitarLinea;
+    end;
     // F9 queda reservada en caja para abrir el cajon; cerrar la solicitud
     // cargada pasa de F9 a F10.
     VK_F10:
+    begin
+      Key := 0;
       CerrarSolicitudCargada;
+    end;
     VK_F11:
+    begin
+      Key := 0;
       btnF11Click(nil);
+    end;
     VK_F12:
+    begin
+      Key := 0;
       btnF12Click(nil);
+    end;
     VK_ESCAPE:
+    begin
+      Key := 0;
       Close;
+    end;
   end;
+  inherited;
 end;
 
 end.

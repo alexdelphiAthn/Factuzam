@@ -5,6 +5,7 @@
     inherited pcPantalla: TcxPageControl
       Properties.ActivePage = tsLista
       inherited tsLista: TcxTabSheet
+        Caption = '&1_Lista'
         ExplicitLeft = 4
         ExplicitTop = 30
         ExplicitWidth = 943
@@ -119,13 +120,75 @@
         end
       end
       inherited tsFicha: TcxTabSheet
-        TabVisible = False
+        Caption = '&2_Recuento'
+        TabVisible = True
         ExplicitLeft = 4
         ExplicitTop = 30
         ExplicitWidth = 943
         ExplicitHeight = 484
+        object cxgrdRecuento: TcxGrid
+          Left = 0
+          Top = 0
+          Width = 943
+          Height = 484
+          Align = alClient
+          TabOrder = 0
+          object tvRecuento: TcxGridDBTableView
+            Navigator.Buttons.CustomButtons = <>
+            ScrollbarAnnotations.CustomAnnotations = <>
+            DataController.DataSource = dmCajaArqueosHist.dsRecuento
+            DataController.Summary.DefaultGroupSummaryItems = <>
+            DataController.Summary.FooterSummaryItems = <>
+            DataController.Summary.SummaryGroups = <>
+            OptionsData.Deleting = False
+            OptionsData.Editing = False
+            OptionsData.Inserting = False
+            OptionsView.ColumnAutoWidth = True
+            OptionsView.GroupByBox = False
+            object tvRecuentoCodigo: TcxGridDBColumn
+              Caption = 'C'#243'digo'
+              DataBinding.FieldName = 'CODIGO_FP_CFP_ARQR'
+              Width = 90
+            end
+            object tvRecuentoDescripcion: TcxGridDBColumn
+              Caption = 'Forma de pago'
+              DataBinding.FieldName = 'DESCRIPCION_FP_ARQR'
+              Width = 250
+            end
+            object tvRecuentoEsCajon: TcxGridDBColumn
+              Caption = 'Efectivo'
+              DataBinding.FieldName = 'ESCAJON_ARQR'
+              PropertiesClassName = 'TcxCheckBoxProperties'
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Width = 80
+            end
+            object tvRecuentoSistema: TcxGridDBColumn
+              Caption = 'Sistema'
+              DataBinding.FieldName = 'IMPORTE_SISTEMA_ARQR'
+              PropertiesClassName = 'TcxCurrencyEditProperties'
+              Width = 120
+            end
+            object tvRecuentoImporte: TcxGridDBColumn
+              Caption = 'Recontado'
+              DataBinding.FieldName = 'IMPORTE_RECUENTO_ARQR'
+              PropertiesClassName = 'TcxCurrencyEditProperties'
+              Width = 120
+            end
+            object tvRecuentoDiferencia: TcxGridDBColumn
+              Caption = 'Diferencia'
+              DataBinding.FieldName = 'DIFERENCIA_ARQR'
+              PropertiesClassName = 'TcxCurrencyEditProperties'
+              Width = 120
+            end
+          end
+          object lvRecuento: TcxGridLevel
+            GridView = tvRecuento
+          end
+        end
       end
       inherited tsPerfil: TcxTabSheet
+        Caption = '&3_Perfil'
         inherited pnlPerfilTop: TPanel
           inherited edtPerfilBusq: TcxTextEdit
             ExplicitHeight = 27

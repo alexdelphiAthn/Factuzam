@@ -4,7 +4,6 @@
   ClientWidth = 896
   StyleElements = [seFont, seClient, seBorder]
   OnDestroy = FormDestroy
-  OnKeyDown = FormKeyDown
   OnKeyPress = FormKeyPress
   OnShow = FormShow
   ExplicitLeft = 3
@@ -46,7 +45,7 @@
       Top = 6
       Width = 200
       Height = 28
-      Caption = 'F8 Atender solicitudes'
+      Caption = 'F7 Atender solicitudes'
       TabOrder = 2
       OnClick = btnModoClick
     end
@@ -62,7 +61,7 @@
     ExplicitWidth = 894
     object lblOrigen: TcxLabel
       Left = 16
-      Top = 18
+      Top = 14
       Caption = 'ALMAC'#201'N ORIGEN'
       TabOrder = 3
     end
@@ -75,7 +74,7 @@
     end
     object lblDestino: TcxLabel
       Left = 420
-      Top = 18
+      Top = 14
       Caption = 'ALMAC'#201'N DESTINO'
       TabOrder = 4
     end
@@ -87,7 +86,7 @@
     end
     object lblEmpleado: TcxLabel
       Left = 16
-      Top = 56
+      Top = 52
       Caption = 'Empleado (responsable)'
       TabOrder = 5
     end
@@ -106,7 +105,7 @@
     end
     object lblEmpleadoNombre: TcxLabel
       Left = 330
-      Top = 56
+      Top = 52
       TabOrder = 6
     end
   end

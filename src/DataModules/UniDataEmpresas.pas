@@ -741,8 +741,7 @@ begin
         Copy(Trim(FindField('TEXTO_PIE_TICKET_CAJA_4_EMP').AsString), 1, 42);
     sCodigoEmpresa := Trim(FindField('CODIGO_EMP_EMP').AsString);
     sRazonSocial := Trim(FindField('RAZON_SOCIAL_EMP').AsString);
-    if (sRazonSocial = '') or
-       SimbolosProhibidos(sRazonSocial, PerfilesLectura) then
+    if sRazonSocial = '' then
     begin
       raise ERangeError.CreateFmt(SErrorRazonSocialEmpresa,
                                  [sRazonSocial]);

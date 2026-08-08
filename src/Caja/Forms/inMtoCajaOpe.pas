@@ -469,6 +469,8 @@ type
     FSkuPendienteVentaOrigen: string;
     FPreguntandoVentaOrigen: Boolean;
     FEditorLineas: TEditorLineasCajaVcl;
+    procedure AjustarFuenteEtiquetaBotonera(AEtiqueta: TcxLabel);
+    procedure AjustarFuentesBotonera;
     procedure GuardarLayoutCaja;
     procedure RestaurarLayoutCaja;
     procedure AbrirBuscarModificar;
@@ -590,7 +592,7 @@ uses
   inMtoModalSeleccionVentaOrigen,
   inMtoModalMotivoDevolucion,
   System.StrUtils,
-  inLibMsgCaja, inLibMsgVentas;
+  inLibMsgCaja, inLibMsgVentas, inLibTraducciones;
 
 constructor TfrmMtoOpeCaja.Create(
   AOwner: TComponent;
@@ -1299,7 +1301,10 @@ begin
     FFecha := dtAhora;
   FFecha := FFecha + (dtAhora - FUltimoTickReloj);
   FUltimoTickReloj := dtAhora;
-  lblFechaCaja.Caption := FormatDateTime('hh:nn:ss dddd d mmmm yyyy', FFecha);
+  lblFechaCaja.Caption := FormatearFechaHoraIdioma(
+    'hh:nn:ss dddd d mmmm yyyy',
+    FFecha,
+    Traducciones);
 end;
 
 procedure TfrmMtoOpeCaja.lblFechaCajaDblClick(Sender: TObject);
@@ -3484,9 +3489,53 @@ begin
     Avisos);
 end;
 
+procedure TfrmMtoOpeCaja.AjustarFuenteEtiquetaBotonera(
+  AEtiqueta: TcxLabel);
+const
+  cMargenHorizontal = 8;
+  cPorcentajeFuenteMinima = 65;
+var
+  iAlturaMinima: Integer;
+  iMargenHorizontal: Integer;
+begin
+  AEtiqueta.Style.Font.Assign(Font);
+  Canvas.Font.Assign(AEtiqueta.Style.Font);
+  iAlturaMinima := -Max(
+    12,
+    MulDiv(Abs(Font.Height), cPorcentajeFuenteMinima, 100));
+  iMargenHorizontal := MulDiv(cMargenHorizontal, CurrentPPI, 96);
+  while (Canvas.TextWidth(AEtiqueta.Caption) >
+         AEtiqueta.Width - iMargenHorizontal) and
+        (Canvas.Font.Height < iAlturaMinima) do
+    Canvas.Font.Height := Canvas.Font.Height + 1;
+  AEtiqueta.Style.Font.Assign(Canvas.Font);
+end;
+
+procedure TfrmMtoOpeCaja.AjustarFuentesBotonera;
+begin
+  AjustarFuenteEtiquetaBotonera(lblCobro);
+  AjustarFuenteEtiquetaBotonera(lblBuscar);
+  AjustarFuenteEtiquetaBotonera(lblEliminar);
+  AjustarFuenteEtiquetaBotonera(lblTextoTarifa);
+  AjustarFuenteEtiquetaBotonera(lblBusqTick);
+  AjustarFuenteEtiquetaBotonera(lblIndIVA);
+  AjustarFuenteEtiquetaBotonera(lblOtro);
+  AjustarFuenteEtiquetaBotonera(lblCargarCta);
+  AjustarFuenteEtiquetaBotonera(lblBuscarModificar);
+end;
+
 procedure TfrmMtoOpeCaja.FormCreate(Sender: TObject);
 begin
   inherited;
+  // Conserva el texto nuevo aunque la instalacion tenga el catalogo anterior.
+  if SameText(lblCargarCta.Caption, 'Cargar cta.') then
+    lblCargarCta.Caption := 'Cta. Cliente';
+  if SameText(lblBuscarModificar.Caption, 'Buscar/Mod.') then
+    lblBuscarModificar.Caption := 'Buscar/Modif.';
+  if SameText(lblBusqTick.Caption, 'Búsq Tick') or
+     SameText(lblBusqTick.Caption, 'Busq Tick') then
+    lblBusqTick.Caption := 'Buscar ticket';
+  AjustarFuentesBotonera;
   FDependenciasPantalla.Validar;
   FLecturas.RepositorioFacturas :=
     CrearRepositorioLecturasFacturaUniDAC(ConexionPrincipal);

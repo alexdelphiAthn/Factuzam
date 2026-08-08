@@ -2977,6 +2977,12 @@ begin
       SErrorRecuentoArqueoCajaNoDisponible);
   ARegistrar(
     'inLibMsgCaja.' +
+    'SErrorRestanteArqueoCajaNoValido',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SErrorRestanteArqueoCajaNoValido);
+  ARegistrar(
+    'inLibMsgCaja.' +
     'SPreguntaGrabarArqueoCaja',
     'src/Lib/inLibMsgCaja.pas',
     @inLibMsgCaja.

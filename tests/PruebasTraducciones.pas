@@ -52,6 +52,8 @@ type
     procedure TraduccionLocal_DelegaEnPersistencia;
     [Test]
     procedure AdaptadoresSinConexion_DevuelvenEstadoNoDisponible;
+    [Test]
+    procedure FechaCatalana_UsaDiaYMesDelIdiomaActivo;
   end;
 
 implementation
@@ -73,12 +75,16 @@ type
     FCaption: string;
     FDisplayName: string;
     FHint: string;
+    FNoDataToDisplayInfoText: string;
     FTitle: string;
   published
     property Caption: string read FCaption write FCaption;
     property DisplayName: string
       read FDisplayName write FDisplayName;
     property Hint: string read FHint write FHint;
+    property NoDataToDisplayInfoText: string
+      read FNoDataToDisplayInfoText
+      write FNoDataToDisplayInfoText;
     property Title: string read FTitle write FTitle;
   end;
 
@@ -187,6 +193,7 @@ begin
     Componente.Name := 'Texto';
     Componente.Caption := 'Aceptar';
     Componente.Hint := 'Ayuda';
+    Componente.NoDataToDisplayInfoText := 'Sin datos';
     Componente.Title := 'Título';
     Componente.DisplayName := 'Visible';
     Servicio := TServicioTraducciones.Create(
@@ -202,6 +209,9 @@ begin
     Assert.AreEqual(
       '[!! Ayuda ~~~~ !!]',
       Componente.Hint);
+    Assert.AreEqual(
+      '[!! Sin datos ~~~~ !!]',
+      Componente.NoDataToDisplayInfoText);
     Assert.AreEqual(
       '[!! Título ~~~~ !!]',
       Componente.Title);
@@ -424,6 +434,26 @@ begin
     Servicio := nil;
     FreeAndNil(Raiz);
   end;
+end;
+
+procedure TPruebasTraducciones.
+  FechaCatalana_UsaDiaYMesDelIdiomaActivo;
+var
+  Fecha: TDateTime;
+  Servicio: IServicioTraducciones;
+  Texto: string;
+begin
+  Fecha := EncodeDate(2026, 8, 8);
+  Servicio := TServicioTraducciones.Create(
+    nil,
+    IDIOMA_CATALAN);
+  Texto := FormatearFechaHoraIdioma(
+    'dddd d mmmm yyyy',
+    Fecha,
+    Servicio);
+  Assert.AreEqual(
+    'dissabte 8 agost 2026',
+    LowerCase(Texto));
 end;
 
 procedure TPruebasTraducciones.CatalogoInyectado_TraduceClaveEInforme;

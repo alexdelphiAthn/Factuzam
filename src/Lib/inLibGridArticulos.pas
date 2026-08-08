@@ -166,6 +166,9 @@ type
     // Resuelve una entrada (codigo de articulo, SKU, codigo de barras o ref
     // de proveedor) y rellena la linea. Devuelve False si no se encontro.
     function ResolverEntrada(const AEntrada: string): Boolean;
+    // F3 contextual del host: abre la busqueda completa en Articulo o la
+    // paleta si el foco esta en una columna de Color/Talla.
+    procedure BuscarContextual;
     // Hace visibles las columnas de color/talla de un articulo ya cargado.
     procedure MostrarColumnasAtributosArticulo(const ACodArt: string);
     property OnResuelto: TArtResueltoEvent read FOnResuelto write FOnResuelto;
@@ -432,6 +435,18 @@ end;
 procedure TGridArticulosLineas.MostrarEditorArticulo;
 begin
   FBusqueda.MostrarEditorArticulo;
+end;
+
+procedure TGridArticulosLineas.BuscarContextual;
+var
+  Columna: TcxGridColumn;
+begin
+  Columna := FView.Controller.FocusedColumn;
+  if Assigned(Columna) and (Columna.Tag >= 1) and
+     (Columna.Tag <= 5) then
+    AbrirPaletaOrden(Columna.Tag)
+  else
+    FBusqueda.BuscarArticulo;
 end;
 
 // Tras resolver un articulo decide el foco igual que la caja: si la linea aun
