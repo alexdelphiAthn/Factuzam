@@ -426,7 +426,7 @@
       object cxGridMov: TcxGrid
         Left = 0
         Top = 0
-        Width = 1155
+        Width = 947
         Height = 294
         Align = alClient
         TabOrder = 0
@@ -515,6 +515,33 @@
         end
         object cxLevelMov: TcxGridLevel
           GridView = cxViewMov
+        end
+      end
+      object splFotoConsulta: TcxSplitter
+        Left = 947
+        Top = 0
+        Width = 8
+        Height = 294
+        AlignSplitter = salRight
+        Control = pnlFotoConsulta
+      end
+      object pnlFotoConsulta: TPanel
+        Left = 955
+        Top = 0
+        Width = 200
+        Height = 294
+        Align = alRight
+        BevelOuter = bvLowered
+        TabOrder = 1
+        object imgFotoConsulta: TImage
+          Left = 1
+          Top = 1
+          Width = 198
+          Height = 292
+          Align = alClient
+          Center = True
+          Proportional = True
+          Stretch = True
         end
       end
     end
@@ -819,7 +846,7 @@
       object cxGridFacLin: TcxGrid
         Left = 0
         Top = 70
-        Width = 947
+        Width = 1155
         Height = 224
         Align = alClient
         TabOrder = 1
@@ -905,34 +932,6 @@
         end
         object cxLevelFacLin: TcxGridLevel
           GridView = cxViewFacLin
-        end
-      end
-      object splFotoConsulta: TcxSplitter
-        Left = 947
-        Top = 70
-        Width = 8
-        Height = 224
-        AlignSplitter = salRight
-        Control = pnlFotoConsulta
-      end
-      object pnlFotoConsulta: TPanel
-        Left = 955
-        Top = 70
-        Width = 200
-        Height = 224
-        Align = alRight
-        BevelOuter = bvLowered
-        TabOrder = 2
-        object imgFotoConsulta: TImage
-          Left = 1
-          Top = 1
-          Width = 198
-          Height = 222
-          Align = alClient
-          Center = True
-          Proportional = True
-          Stretch = True
-          ExplicitHeight = 258
         end
       end
     end

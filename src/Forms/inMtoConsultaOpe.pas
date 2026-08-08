@@ -148,11 +148,11 @@ type
     procedure AjustarAPantalla;
     procedure ReimprimirOperacion(const ANombreImpresora: string);
     procedure OnMaestroDataChange(Sender: TObject; Field: TField);
-    procedure OnFacturaLinDataChange(Sender: TObject; Field: TField);
+    procedure OnMovimientoDataChange(Sender: TObject; Field: TField);
     procedure RefrescarFotoConsulta;
-    // Lee el ARTICULO / SKU de la linea activa en cxViewFacLin para
+    // Lee el ARTICULO / SKU del movimiento activo en cxViewMov para
     // alimentar la pantalla flotante de fotos (Ctrl + F).
-    procedure ResolverArtSkuDeFacLin(out ACodArt, ACodSku: string);
+    procedure ResolverArtSkuDeMovimiento(out ACodArt, ACodSku: string);
     // Ctrl+A / Ctrl+M (pestana Movimientos) y Ctrl+Shift+F (pestana
     // Factura): saltan a la ficha del articulo, del movimiento de almacen o
     // de la factura del registro activo, abriendola como pestana en el
@@ -271,7 +271,7 @@ begin
   cxViewFacCab.DataController.DataSource  := FdmConsulta.dsFactura;
   cxViewFacLin.DataController.DataSource  := FdmConsulta.dsFacturaLin;
   FdmConsulta.dsMaestro.OnDataChange    := OnMaestroDataChange;
-  FdmConsulta.dsFacturaLin.OnDataChange := OnFacturaLinDataChange;
+  FdmConsulta.dsMovimientos.OnDataChange := OnMovimientoDataChange;
   tmrBusqueda.Enabled  := False;
   tmrBusqueda.Interval := 400;
   KeyPreview := True;   // para que FormKeyDown capture F5/ESC aunque el foco
@@ -397,7 +397,7 @@ begin
     AbrirMovimientoActivo;
     Key := 0;
   end
-  // Ctrl + F (sin Shift) -> Foto del articulo / SKU de la linea de factura
+  // Ctrl + F (sin Shift) -> Foto del articulo / SKU del movimiento
   // activa. Toggle: si la foto ya esta visible, ocultarla.
   else if (Key = Ord('F')) and (ssCtrl in Shift) and
      not (ssShift in Shift) and
@@ -408,14 +408,14 @@ begin
       FormularioFoto.Hide
     else
     begin
-      ResolverArtSkuDeFacLin(sArt, sSku);
+      ResolverArtSkuDeMovimiento(sArt, sSku);
       if sArt <> '' then
       begin
         MostrarFotoFlotante(Self, sArt, sSku);
         FormularioFoto := FotoFlotanteActual;
         if FormularioFoto <> nil then
-          FormularioFoto.VincularMtoPadre(FdmConsulta.dsFacturaLin,
-                                          ResolverArtSkuDeFacLin);
+          FormularioFoto.VincularMtoPadre(FdmConsulta.dsMovimientos,
+                                          ResolverArtSkuDeMovimiento);
       end;
     end;
     Key := 0;
@@ -435,14 +435,14 @@ begin
   end;
 end;
 
-procedure TfrmConsultaOpe.ResolverArtSkuDeFacLin(out ACodArt,
-                                                 ACodSku: string);
+procedure TfrmConsultaOpe.ResolverArtSkuDeMovimiento(out ACodArt,
+                                                     ACodSku: string);
 begin
   ACodArt := '';
   ACodSku := '';
   if Assigned(FdmConsulta) then
     LeerArtSkuDeDataSet(
-      FdmConsulta.dsFacturaLin.DataSet, ACodArt, ACodSku);
+      FdmConsulta.dsMovimientos.DataSet, ACodArt, ACodSku);
 end;
 
 // Ctrl + A: abre la ficha del articulo (Mto Articulos) del movimiento
@@ -762,8 +762,8 @@ begin
   end;
 end;
 
-// Recarga imgFotoConsulta con la foto a 300 px del articulo / SKU de
-// la linea de factura activa. Lo invoca OnFacturaLinDataChange.
+// Recarga imgFotoConsulta con la foto a 300 px del articulo / SKU del
+// movimiento activo. Lo invoca OnMovimientoDataChange.
 procedure TfrmConsultaOpe.RefrescarFotoConsulta;
 var
   sArt, sSku: string;
@@ -774,7 +774,7 @@ begin
   if Assigned(imgFotoConsulta) then
   begin
     imgFotoConsulta.Picture.Assign(nil);
-    ResolverArtSkuDeFacLin(sArt, sSku);
+    ResolverArtSkuDeMovimiento(sArt, sSku);
     if sArt <> '' then
     begin
       info := FotosArticulos.Resolver(sArt, sSku);
@@ -793,10 +793,11 @@ begin
   end;
 end;
 
-procedure TfrmConsultaOpe.OnFacturaLinDataChange(Sender: TObject;
+procedure TfrmConsultaOpe.OnMovimientoDataChange(Sender: TObject;
                                                  Field: TField);
 begin
-  if Field = nil then RefrescarFotoConsulta;
+  if Field = nil then
+    RefrescarFotoConsulta;
 end;
 
 procedure TfrmConsultaOpe.cxViewMovCustomDrawCell(
