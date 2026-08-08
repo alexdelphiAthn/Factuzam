@@ -56,6 +56,8 @@ type
       const ATalla: TTallaPedidoOcr); static;
     class procedure AnadirOConsolidar(var ALineas: TLineasPedidoOcr;
       const ALinea: TLineaPedidoOcr); static;
+    class procedure CompletarFotosPorModelo(
+      var ALineas: TLineasPedidoOcr); static;
   public
     class function Cargar(const AFicheroJson: string): TPedidoOcr; static;
   end;
@@ -233,6 +235,38 @@ begin
   end;
 end;
 
+class procedure TLectorPedidoOcr.CompletarFotosPorModelo(
+  var ALineas: TLineasPedidoOcr);
+var
+  iLinea: Integer;
+  oFotosPorModelo: TDictionary<string, string>;
+  sCodigoFoto: string;
+  sModelo: string;
+begin
+  oFotosPorModelo := TDictionary<string, string>.Create;
+  try
+    for iLinea := 0 to High(ALineas) do
+    begin
+      sModelo := UpperCase(Trim(ALineas[iLinea].Modelo));
+      sCodigoFoto := Trim(ALineas[iLinea].CodigoFoto);
+      if (sModelo <> '') and (sCodigoFoto <> '') and
+         (not oFotosPorModelo.ContainsKey(sModelo)) then
+        oFotosPorModelo.Add(sModelo, sCodigoFoto);
+    end;
+    for iLinea := 0 to High(ALineas) do
+    begin
+      if Trim(ALineas[iLinea].CodigoFoto) = '' then
+      begin
+        sModelo := UpperCase(Trim(ALineas[iLinea].Modelo));
+        if oFotosPorModelo.TryGetValue(sModelo, sCodigoFoto) then
+          ALineas[iLinea].CodigoFoto := sCodigoFoto;
+      end;
+    end;
+  finally
+    oFotosPorModelo.Free;
+  end;
+end;
+
 class function TLectorPedidoOcr.Cargar(
   const AFicheroJson: string): TPedidoOcr;
 var
@@ -280,6 +314,7 @@ begin
           AnadirOConsolidar(Result.Lineas, LineaLeida);
       end;
     end;
+    CompletarFotosPorModelo(Result.Lineas);
     if Length(Result.Lineas) = 0 then
       raise Exception.Create('El pedido no contiene líneas importables.');
     if oRaiz.GetValue('paginas_originales') is TJSONArray then

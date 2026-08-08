@@ -31,6 +31,8 @@ type
   TFotoOrigen = inLibFotosTipos.TFotoOrigen;
   TFotoInfo = inLibFotosTipos.TFotoInfo;
   TFotoEmbebida = inLibFotosPresentacion.TFotoEmbebida;
+  TSolicitudFotoSesion = inLibFotosSesion.TSolicitudFotoSesion;
+  TSolicitudesFotosSesion = inLibFotosSesion.TSolicitudesFotosSesion;
 
 const
   frPx300 = inLibFotosTipos.frPx300;
@@ -88,6 +90,10 @@ type
     function GuardarSesion(const ASerieSes, ANumeroSes: string;
       ALinea: Integer; const ACodArtTentativo, ACodUnidad,
       AFicheroOrigen, AUsuario: string): TFotoInfo;
+    procedure GuardarSesionesNuevasLote(const ASerieSes,
+      ANumeroSes: string;
+      const ASolicitudes: TSolicitudesFotosSesion;
+      const AUsuario: string);
     function ResolverSesion(const ASerieSes, ANumeroSes: string;
       ALinea: Integer; const ACodUnidad: string = ''): TFotoInfo;
     procedure EliminarSesion(const ASerieSes, ANumeroSes: string;
@@ -225,6 +231,18 @@ function TFotosArticulos.GuardarSesion(const ASerieSes,
 begin
   Result := FSesion.Guardar(ASerieSes, ANumeroSes, ALinea,
     ACodArtTentativo, ACodUnidad, AFicheroOrigen, AUsuario);
+end;
+
+procedure TFotosArticulos.GuardarSesionesNuevasLote(
+  const ASerieSes, ANumeroSes: string;
+  const ASolicitudes: TSolicitudesFotosSesion;
+  const AUsuario: string);
+begin
+  FSesion.GuardarNuevasLote(
+    ASerieSes,
+    ANumeroSes,
+    ASolicitudes,
+    AUsuario);
 end;
 
 function TFotosArticulos.ResolverSesion(const ASerieSes,

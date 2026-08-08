@@ -817,6 +817,7 @@ begin
   oResultado := AResultado;
   if oResultado.Encontrado and
      (oResultado.Origen <> 'SES') and
+     (not oResultado.PrecioVentaResuelta) and
      Assigned(FDataModule.unqryTablaG) and
      (not FDataModule.unqryTablaG.IsEmpty) then
   begin

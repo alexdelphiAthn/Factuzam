@@ -20,6 +20,13 @@ uses
   inLibFotosAlmacenamiento;
 
 type
+  TSolicitudFotoSesion = record
+    Linea: Integer;
+    CodigoArticuloTentativo: string;
+    CodigoUnidad: string;
+    FicheroOrigen: string;
+  end;
+  TSolicitudesFotosSesion = TArray<TSolicitudFotoSesion>;
   TSesionFotos = class
   private
     FRepositorioSesion : IRepositorioSesionFotos;
@@ -41,6 +48,10 @@ type
     function Guardar(const ASerieSesion, ANumeroSesion: string;
       ALinea: Integer; const ACodigoArticuloTentativo,
       ACodigoUnidad, AFicheroOrigen, AUsuario: string): TFotoInfo;
+    procedure GuardarNuevasLote(const ASerieSesion,
+      ANumeroSesion: string;
+      const ASolicitudes: TSolicitudesFotosSesion;
+      const AUsuario: string);
     function Resolver(const ASerieSesion, ANumeroSesion: string;
       ALinea: Integer; const ACodigoUnidad: string = ''): TFotoInfo;
     procedure Eliminar(const ASerieSesion, ANumeroSesion: string;
@@ -157,6 +168,63 @@ begin
   Result.ClaveResuelta := ACodigoUnidad;
   Result.NombreBase := sNombreNuevo;
   Result.ExtensionOrigen := sExtension;
+end;
+
+procedure TSesionFotos.GuardarNuevasLote(
+  const ASerieSesion, ANumeroSesion: string;
+  const ASolicitudes: TSolicitudesFotosSesion;
+  const AUsuario: string);
+var
+  aMetadatos: TMetadatosFotosSesionLote;
+  iCopiaCreada: Integer;
+  iFoto: Integer;
+  sClave: string;
+begin
+  if ASerieSesion = '' then
+    raise Exception.Create(SErrorFotoSesionSinSerie);
+  if ANumeroSesion = '' then
+    raise Exception.Create(SErrorFotoSesionSinNumero);
+  SetLength(aMetadatos, Length(ASolicitudes));
+  iCopiaCreada := -1;
+  try
+    for iFoto := 0 to High(ASolicitudes) do
+    begin
+      if ASolicitudes[iFoto].Linea <= 0 then
+        raise Exception.Create(SErrorFotoSesionLineaInvalida);
+      if not FileExists(ASolicitudes[iFoto].FicheroOrigen) then
+        raise Exception.Create(Format(
+          SErrorFicheroOrigenFotoNoExiste,
+          [ASolicitudes[iFoto].FicheroOrigen]));
+      sClave := ClaveNombreSesion(
+        ASerieSesion,
+        ANumeroSesion,
+        ASolicitudes[iFoto].Linea,
+        ASolicitudes[iFoto].CodigoUnidad);
+      aMetadatos[iFoto].Linea := ASolicitudes[iFoto].Linea;
+      aMetadatos[iFoto].CodigoArticuloTentativo :=
+        ASolicitudes[iFoto].CodigoArticuloTentativo;
+      aMetadatos[iFoto].CodigoUnidad :=
+        ASolicitudes[iFoto].CodigoUnidad;
+      aMetadatos[iFoto].Nombre :=
+        FAlmacenamiento.ComponerNombre(sClave, 1);
+      aMetadatos[iFoto].Extension :=
+        FAlmacenamiento.ExtensionOrigen(
+          ASolicitudes[iFoto].FicheroOrigen);
+      FAlmacenamiento.GuardarCopias(
+        ASolicitudes[iFoto].FicheroOrigen,
+        aMetadatos[iFoto].Nombre);
+      iCopiaCreada := iFoto;
+    end;
+    FRepositorioSesion.GuardarFotosSesionLote(
+      ASerieSesion,
+      ANumeroSesion,
+      aMetadatos,
+      AUsuario);
+  except
+    for iFoto := 0 to iCopiaCreada do
+      FAlmacenamiento.BorrarCopias(aMetadatos[iFoto].Nombre);
+    raise;
+  end;
 end;
 
 function TSesionFotos.BuscarFoto(const ASerieSesion,

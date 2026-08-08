@@ -31,6 +31,14 @@ type
     Nombre: string;
     Extension: string;
   end;
+  TMetadatosFotoSesionLote = record
+    Linea: Integer;
+    CodigoArticuloTentativo: string;
+    CodigoUnidad: string;
+    Nombre: string;
+    Extension: string;
+  end;
+  TMetadatosFotosSesionLote = TArray<TMetadatosFotoSesionLote>;
   IRepositorioConsultaFotos = interface
     ['{B7EF7B91-B01C-4B36-8D89-121B2E2628AF}']
     function BuscarFotoPorUnidades(
@@ -74,6 +82,10 @@ type
       ALinea: Integer;
       const ACodigoUnidad, ACodigoArticuloTentativo, ANombre,
         AExtension, AUsuario: string);
+    procedure GuardarFotosSesionLote(
+      const ASerieSesion, ANumeroSesion: string;
+      const AMetadatos: TMetadatosFotosSesionLote;
+      const AUsuario: string);
     procedure EliminarFotoSesion(
       const ASerieSesion, ANumeroSesion: string;
       ALinea: Integer;

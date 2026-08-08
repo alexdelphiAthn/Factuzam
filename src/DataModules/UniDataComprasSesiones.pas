@@ -158,8 +158,11 @@ type
     procedure unqrySesionLinAfterDelete(DataSet: TDataSet);
     procedure unqrySesionCelAfterPost(DataSet: TDataSet);
   private
+    FImportacionMasiva: Boolean;
     FInstanteCargaSesion: TDateTime;
     FPermitirLineasSinCodigoArticulo: Boolean;
+    FProximaLineaImportacion: Integer;
+    FUltimaLineaImportacion: Integer;
     FTallajeDefectoActual: Integer;
                         // Sistema de tallas (ID_AC) que se propone a la
                         // siguiente linea NUEVA de la sesion. Arranca en 0
@@ -187,6 +190,9 @@ type
       const ACodigoTecleado, AUsuario: string;
       out ACodigoGenerado: string): Boolean; static;
     procedure GetCodigoAutoSesion;
+    procedure IniciarImportacionMasiva(APrimeraLinea,
+      ACantidadLineas: Integer);
+    procedure FinalizarImportacionMasiva;
     procedure AsegurarSerieEnEmpresasSeries(const AEmpresa, ASerie: string);
     procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
     procedure ChequearDuplicado(const ACodigoArt: string;
@@ -231,6 +237,26 @@ begin
   Result := unqryTablaG.Connection;
   if not Assigned(Result) then
     Result := ConexionPrincipal;
+end;
+
+procedure TdmComprasSesiones.IniciarImportacionMasiva(
+  APrimeraLinea, ACantidadLineas: Integer);
+begin
+  FImportacionMasiva :=
+    (APrimeraLinea > 0) and (ACantidadLineas > 0);
+  FProximaLineaImportacion := APrimeraLinea;
+  if FImportacionMasiva then
+    FUltimaLineaImportacion :=
+      APrimeraLinea + ((ACantidadLineas - 1) * 10)
+  else
+    FUltimaLineaImportacion := 0;
+end;
+
+procedure TdmComprasSesiones.FinalizarImportacionMasiva;
+begin
+  FImportacionMasiva := False;
+  FProximaLineaImportacion := 0;
+  FUltimaLineaImportacion := 0;
 end;
 
 class function TdmComprasSesiones.ResolverCodigoFamiliaConexion(
@@ -824,9 +850,16 @@ begin
   // estaba en BD; el siguiente Add reasignaba la misma LINEA).
   sSerie  := unqryTablaG.FieldByName('SERIE_SES').AsString;
   sNumero := unqryTablaG.FieldByName('NUMERO_SES').AsString;
-  iNuevaLinea := GetSiguienteLineaDoc(
-    CrearContadorLineasDocumento(ConexionDatos), CONT_SESIONES,
-    sSerie, sNumero);
+  if FImportacionMasiva and
+     (FProximaLineaImportacion <= FUltimaLineaImportacion) then
+  begin
+    iNuevaLinea := FProximaLineaImportacion;
+    Inc(FProximaLineaImportacion, 10);
+  end
+  else
+    iNuevaLinea := GetSiguienteLineaDoc(
+      CrearContadorLineasDocumento(ConexionDatos), CONT_SESIONES,
+      sSerie, sNumero);
   if iNuevaLinea = 0 then
   begin
     // Cabecera no localizada (caso raro: master aun no posteado, sin
@@ -935,55 +968,57 @@ begin
     unqrySesionLin.FieldByName('COLOR_TEXTO_SESLIN').AsString :=
       inLibComprasSesionesReglas.SanearColorSku(
         unqrySesionLin.FieldByName('COLOR_TEXTO_SESLIN').AsString);
-  // Detección de duplicado
-  if unqrySesionLin.FieldByName(
-    'CODIGO_ART_TENTATIVO_SESLIN').AsString <> '' then
-  sTecla :=
-       Trim(unqrySesionLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString);
-  // Atajo familia->codigo autogenerado: si lo tecleado es exactamente el
-  // codigo de una familia con contador activo, expandir al siguiente
-  // numero de la serie e incrementar el contador.
-  if sTecla <> '' then
+  if not FImportacionMasiva then
   begin
-    if ResolverCodigoFamiliaConexion(ConexionDatos, sTecla,
-        IdentidadSesion.Usuario, sNuevo) then
+    // Detección de duplicado
+    if unqrySesionLin.FieldByName(
+      'CODIGO_ART_TENTATIVO_SESLIN').AsString <> '' then
+      sTecla := Trim(unqrySesionLin.FieldByName(
+        'CODIGO_ART_TENTATIVO_SESLIN').AsString);
+    // Atajo familia->codigo autogenerado: si lo tecleado es exactamente el
+    // codigo de una familia con contador activo, expandir al siguiente
+    // numero de la serie e incrementar el contador.
+    if sTecla <> '' then
     begin
-      unqrySesionLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString :=
-                                                                         sNuevo;
-      // Si la familia no esta seteada en la linea, ponerla a la tecleada
-      if unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').IsNull or
-         (unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').AsString = '') then
-        unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').AsString := sTecla;
-      sTecla := sNuevo;
-    end;
-  end;
-  // Detección de duplicado
-  if sTecla <> '' then
-  begin
-    ChequearDuplicado(sTecla, bExiste, sDescr);
-    if bExiste then
-    begin
-      unqrySesionLin.FieldByName('ESDUPLICADO_SESLIN').AsString := 'S';
-      // Si la linea no tiene accion resuelta, marcamos REUSAR por
-      // defecto apuntando al articulo existente. Esto es lo que el
-      // usuario espera en el flujo de muestrarios: tecleo el codigo
-      // (o la ref. proveedor) de un articulo que ya tengo y meto
-      // nuevo color + cantidades sin tener que arbitrar duplicados.
-      // Si el usuario hubiera querido RENOMBRAR, la accion ya estaria
-      // puesta por el flujo correspondiente y respetamos su eleccion.
-      if Trim(unqrySesionLin.FieldByName(
-                  'ACCION_DUPLICADO_SESLIN').AsString) = '' then
+      if ResolverCodigoFamiliaConexion(ConexionDatos, sTecla,
+          IdentidadSesion.Usuario, sNuevo) then
       begin
-        unqrySesionLin.FieldByName('ACCION_DUPLICADO_SESLIN').AsString :=
-                                                                    'REUSAR';
-        unqrySesionLin.FieldByName('CODIGO_ART_REUSAR_SESLIN').AsString :=
-                                                                       sTecla;
+        unqrySesionLin.FieldByName(
+          'CODIGO_ART_TENTATIVO_SESLIN').AsString := sNuevo;
+        // Si la familia no esta seteada en la linea, ponerla a la tecleada
+        if unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').IsNull or
+           (unqrySesionLin.FieldByName(
+             'CODIGO_FAM_SESLIN').AsString = '') then
+          unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').AsString :=
+            sTecla;
+        sTecla := sNuevo;
       end;
-    end
-    else
-      unqrySesionLin.FieldByName('ESDUPLICADO_SESLIN').AsString := 'N';
+    end;
+    // Detección de duplicado
+    if sTecla <> '' then
+    begin
+      ChequearDuplicado(sTecla, bExiste, sDescr);
+      if bExiste then
+      begin
+        unqrySesionLin.FieldByName('ESDUPLICADO_SESLIN').AsString :=
+          'S';
+        // Si la linea no tiene accion resuelta, marcamos REUSAR por
+        // defecto apuntando al articulo existente.
+        if Trim(unqrySesionLin.FieldByName(
+          'ACCION_DUPLICADO_SESLIN').AsString) = '' then
+        begin
+          unqrySesionLin.FieldByName(
+            'ACCION_DUPLICADO_SESLIN').AsString := 'REUSAR';
+          unqrySesionLin.FieldByName(
+            'CODIGO_ART_REUSAR_SESLIN').AsString := sTecla;
+        end;
+      end
+      else
+        unqrySesionLin.FieldByName('ESDUPLICADO_SESLIN').AsString :=
+          'N';
+    end;
+    CalcularTotalesLineaActual;
   end;
-  CalcularTotalesLineaActual;
   unqrySesionLin.FieldByName('USUARIO_MODIF').AsString :=
     IdentidadSesion.Usuario;
   unqrySesionLin.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
@@ -994,7 +1029,8 @@ begin
   inherited;
   LogSes(Format('DM.unqrySesionLinAfterPost: LINEA=%d posteada',
                 [unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger]));
-  RefrescarTotalesSesion;
+  if not FImportacionMasiva then
+    RefrescarTotalesSesion;
 end;
 
 procedure TdmComprasSesiones.unqrySesionLinAfterDelete(DataSet: TDataSet);

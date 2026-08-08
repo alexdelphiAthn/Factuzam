@@ -53,6 +53,7 @@ type
     TipoCantidad: string;
     UltimoCoste: Double;
     PrecioVenta: Double;
+    PrecioVentaResuelta: Boolean;
     RefProveedor: string;
     LineaOrigen: Integer;
     ColorTexto: string;

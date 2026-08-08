@@ -570,7 +570,10 @@ uses
   inLibProcesoPedidoOcr,
   inLibComprasSesionesIntf,
   inLibComprasSesionesReglas,
+  inLibDatasets,
+  inLibMtoGenAplicacionIntf,
   UniDataPedidoOcr,
+  UniDataGen,
   inMtoComprasSesionesPresentacionMaterializacion,
   UniDataComprasSesionesComposicion;
 
@@ -1253,13 +1256,19 @@ const
   EXTENSIONES_FOTO: array[0..5] of string = (
     '.png', '.jpg', '.jpeg', '.webp', '.bmp', '.avif');
 var
+  aCeldas: TCeldasPedidoOcr;
+  aFotos: TSolicitudesFotosSesion;
   aPaginas: TArray<string>;
   aPreparadas: TLineasPreparadasPedidoOcr;
   bTransaccionPropia: Boolean;
+  iCelda: Integer;
   iFoto: Integer;
   iLinea: Integer;
+  iPrimeraLinea: Integer;
   iSinCodigo: Integer;
   iTalla: Integer;
+  oCatalogoArticulos: TCatalogoArticulosPedidoOcr;
+  oCatalogoColores: TCatalogoColoresPedidoOcr;
   oCatalogo: TCatalogoTallasPedidoOcr;
   oPedido: TPedidoOcr;
   oResolucionDuplicado: TResolverDuplicadoSesion;
@@ -1272,6 +1281,7 @@ var
   sNumero: string;
   sProveedor: string;
   sSerie: string;
+  sTarifa: string;
 
   function ListaTallas(const ALinea: TLineaPedidoOcr): string;
   var
@@ -1354,6 +1364,20 @@ begin
     oCatalogo.Free;
   end;
   aPaginas := ResolverPaginasFuentePedido(oPedido);
+  sTarifa := Trim(Dmm.unqryTablaG.FieldByName(
+    'CODIGO_TAR_SES').AsString);
+  oCatalogoArticulos := TCatalogoArticulosPedidoOcr.Create(
+    ConexionTrabajo,
+    sProveedor,
+    sTarifa,
+    oPedido.Lineas);
+  oCatalogoColores := nil;
+  try
+    oCatalogoColores := TCatalogoColoresPedidoOcr.Create(
+      ConexionTrabajo,
+      sProveedor,
+      oPedido.Lineas);
+    SetLength(aCeldas, 0);
   iSinCodigo := 0;
   bTransaccionPropia := not ConexionTrabajo.InTransaction;
   if bTransaccionPropia then
@@ -1366,28 +1390,30 @@ begin
         oPedido.ReferenciaDocumento;
       Dmm.unqryTablaG.Post;
     end;
-    for iLinea := 0 to High(aPreparadas) do
-    begin
-      FAplicandoColorOcr := True;
-      Dmm.PermitirLineasSinCodigoArticulo := True;
-      try
+    iPrimeraLinea := TPersistenciaPedidoOcr.ReservarLineas(
+      ConexionTrabajo,
+      sSerie,
+      sNumero,
+      Length(aPreparadas));
+    if iPrimeraLinea <= 0 then
+      raise Exception.Create(
+        'No se pudo reservar el bloque de líneas de la sesión.');
+    Dmm.IniciarImportacionMasiva(
+      iPrimeraLinea,
+      Length(aPreparadas));
+    tvLineas.BeginUpdate;
+    Dmm.unqrySesionLin.DisableControls;
+    try
+      for iLinea := 0 to High(aPreparadas) do
+      begin
+        FAplicandoColorOcr := True;
+        Dmm.PermitirLineasSinCodigoArticulo := True;
+        try
         Dmm.unqrySesionLin.Insert;
         aPreparadas[iLinea].LineaSesion :=
           Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
-        oResolucionDuplicado :=
-          FServicioComprasSesiones.ResolverDuplicado(
-            aPreparadas[iLinea].Datos.Modelo,
-            sProveedor,
-            True,
-            '');
-        if not oResolucionDuplicado.Encontrado then
-          oResolucionDuplicado :=
-            FServicioComprasSesiones.ResolverDuplicadoIntraSesion(
-              sSerie,
-              sNumero,
-              aPreparadas[iLinea].LineaSesion,
-              aPreparadas[iLinea].Datos.Modelo,
-              '');
+        oResolucionDuplicado := oCatalogoArticulos.Resolver(
+          aPreparadas[iLinea].Datos.Modelo);
         if oResolucionDuplicado.Encontrado then
           FServicioComprasSesiones.AplicarDuplicadoEnLinea(
             oResolucionDuplicado)
@@ -1416,6 +1442,12 @@ begin
           rPvp;
         Dmm.unqrySesionLin.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger :=
           aPreparadas[iLinea].Tallas.IdAc;
+        Dmm.unqrySesionLin.FieldByName(
+          'TOTAL_UNIDADES_SESLIN').AsFloat :=
+          aPreparadas[iLinea].Datos.Cantidad;
+        Dmm.unqrySesionLin.FieldByName('TOTAL_LINEA_SESLIN').AsFloat :=
+          aPreparadas[iLinea].Datos.Cantidad *
+          aPreparadas[iLinea].Datos.PrecioCompra;
         aPreparadas[iLinea].CodigoArticulo := Trim(
           Dmm.unqrySesionLin.FieldByName(
             'CODIGO_ART_TENTATIVO_SESLIN').AsString);
@@ -1431,9 +1463,7 @@ begin
             sColorBasicoHistorico := Trim(
               oResolucionDuplicado.CodigoAtbColor);
           if sColorBasicoHistorico = '' then
-            THistoricoColoresPedidoOcr.Resolver(
-              ConexionTrabajo,
-              sProveedor,
+            oCatalogoColores.Resolver(
               aPreparadas[iLinea].Datos.Color,
               sColorBasicoHistorico);
           if sColorBasicoHistorico <> '' then
@@ -1447,19 +1477,34 @@ begin
         end;
         Dmm.unqrySesionLin.Post;
         for iTalla := 0 to High(aPreparadas[iLinea].Datos.Tallas) do
-          GestorTallas.PersistirCantidad(
-            aPreparadas[iLinea].LineaSesion,
-            aPreparadas[iLinea].Tallas.IdsAv[iTalla],
-            aPreparadas[iLinea].Datos.Tallas[iTalla].Cantidad);
-        Dmm.unqrySesionLin.Edit;
-        Dmm.unqrySesionLin.Post;
-      finally
-        Dmm.PermitirLineasSinCodigoArticulo := False;
-        FAplicandoColorOcr := False;
+        begin
+          iCelda := Length(aCeldas);
+          SetLength(aCeldas, iCelda + 1);
+          aCeldas[iCelda].Linea :=
+            aPreparadas[iLinea].LineaSesion;
+          aCeldas[iCelda].IdAv :=
+            aPreparadas[iLinea].Tallas.IdsAv[iTalla];
+          aCeldas[iCelda].Cantidad :=
+            aPreparadas[iLinea].Datos.Tallas[iTalla].Cantidad;
+        end;
+        finally
+          Dmm.PermitirLineasSinCodigoArticulo := False;
+          FAplicandoColorOcr := False;
+        end;
       end;
+      TPersistenciaPedidoOcr.GuardarCeldas(
+        ConexionTrabajo,
+        sSerie,
+        sNumero,
+        IdentidadSesion.Usuario,
+        aCeldas);
+      if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
+        Dmm.unqryTablaG.Post;
+    finally
+      Dmm.FinalizarImportacionMasiva;
+      Dmm.unqrySesionLin.EnableControls;
+      tvLineas.EndUpdate;
     end;
-    if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
-      Dmm.unqryTablaG.Post;
     if bTransaccionPropia and ConexionTrabajo.InTransaction then
       ConexionTrabajo.Commit;
   except
@@ -1473,9 +1518,13 @@ begin
       Dmm.unqrySesionLin.Refresh;
     raise;
   end;
+  finally
+    oCatalogoColores.Free;
+    oCatalogoArticulos.Free;
+  end;
   oWarnings := TStringList.Create;
   try
-    iFoto := 0;
+    SetLength(aFotos, 0);
     for iLinea := 0 to High(aPreparadas) do
     begin
       sFicheroFoto := '';
@@ -1489,22 +1538,28 @@ begin
           [aPreparadas[iLinea].Datos.CodigoFoto]));
       if (sFicheroFoto <> '') and Assigned(FotosArticulos) then
       begin
-        try
-          FotosArticulos.GuardarSesion(
-            sSerie,
-            sNumero,
-            aPreparadas[iLinea].LineaSesion,
-            aPreparadas[iLinea].CodigoArticulo,
-            '',
-            sFicheroFoto,
-            IdentidadSesion.Usuario);
-          Inc(iFoto);
-        except
-          on E: Exception do
-            oWarnings.Add(Format(
-              'Foto del modelo %s: %s',
-              [aPreparadas[iLinea].Datos.Modelo, E.Message]));
-        end;
+        iFoto := Length(aFotos);
+        SetLength(aFotos, iFoto + 1);
+        aFotos[iFoto].Linea := aPreparadas[iLinea].LineaSesion;
+        aFotos[iFoto].CodigoArticuloTentativo :=
+          aPreparadas[iLinea].CodigoArticulo;
+        aFotos[iFoto].CodigoUnidad := '';
+        aFotos[iFoto].FicheroOrigen := sFicheroFoto;
+      end;
+    end;
+    iFoto := 0;
+    if (Length(aFotos) > 0) and Assigned(FotosArticulos) then
+    begin
+      try
+        FotosArticulos.GuardarSesionesNuevasLote(
+          sSerie,
+          sNumero,
+          aFotos,
+          IdentidadSesion.Usuario);
+        iFoto := Length(aFotos);
+      except
+        on E: Exception do
+          oWarnings.Add('Fotos del pedido: ' + E.Message);
       end;
     end;
     try
@@ -1520,7 +1575,7 @@ begin
     end;
     Dmm.unqrySesionLin.Refresh;
     Dmm.RefrescarTotalesSesion;
-    RefrescarColumnasTallas;
+    ReconstruirTallas;
     RefrescarFotosProvisionales;
     CargarPaginasPedidoOriginal;
     cxPageControl1.ActivePage := tsPedidoOriginal;
@@ -1544,7 +1599,9 @@ end;
 procedure TfrmMtoComprasSesiones.btnImportarPedidoClick(
   Sender: TObject);
 var
+  CasoGuardado: ICasoUsoGuardadoMtoGen;
   ResultadoOcr: TResultadoProcesoPedidoOcr;
+  ResultadoGuardado: TResultadoGuardadoMtoGen;
   sAlmacen: string;
   sEmpresa: string;
   sSerie: string;
@@ -1587,7 +1644,18 @@ begin
       Dmm.unqryTablaG.FieldByName('NUMERO_SES').Clear;
     end;
     if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
-      btnGrabarClick(Sender);
+    begin
+      CasoGuardado := CrearCasoUsoGuardadoMtoGenUniDAC(
+        ConexionTrabajo);
+      ResultadoGuardado := CasoGuardado.Ejecutar(
+        procedure
+        begin
+          GrabarDatasets(Dmm);
+        end);
+      if ResultadoGuardado = rgmAbortado then
+        raise Exception.Create(
+          'No se pudo guardar la sesión antes de importar el pedido.');
+    end;
     Screen.Cursor := crHourGlass;
     btnImportarPedido.Enabled := False;
     try
@@ -1627,9 +1695,9 @@ begin
   if cxPageControl1.ActivePage = tsPedidoOriginal then
   begin
     if Length(FPaginasPedidoOriginal) = 0 then
-      CargarPaginasPedidoOriginal
-    else
-      AjustarPedidoOriginal;
+      CargarPaginasPedidoOriginal;
+    // Si la imagen ya esta cargada se conserva la vista actual: pagina,
+    // zoom y desplazamiento. Solo se reajusta al cargar o al pulsar el boton.
   end
   else
     RefrescarFotoProvisional;

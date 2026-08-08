@@ -51,6 +51,10 @@ type
       ALinea: Integer;
       const ACodigoUnidad, ACodigoArticuloTentativo, ANombre,
         AExtension, AUsuario: string);
+    procedure GuardarFotosSesionLote(
+      const ASerieSesion, ANumeroSesion: string;
+      const AMetadatos: TMetadatosFotosSesionLote;
+      const AUsuario: string);
     procedure EliminarFotoSesion(
       const ASerieSesion, ANumeroSesion: string;
       ALinea: Integer;
@@ -159,6 +163,75 @@ begin
     oConsulta.ExecSQL;
   finally
     FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure TRepositorioSesionFotosUniDAC.GuardarFotosSesionLote(
+  const ASerieSesion, ANumeroSesion: string;
+  const AMetadatos: TMetadatosFotosSesionLote;
+  const AUsuario: string);
+var
+  iFoto: Integer;
+  oConsulta: TUniQuery;
+  sValores: string;
+begin
+  if Length(AMetadatos) > 0 then
+  begin
+    oConsulta := NuevaConsulta;
+    try
+      sValores := '';
+      for iFoto := 0 to High(AMetadatos) do
+      begin
+        if sValores <> '' then
+          sValores := sValores + ', ';
+        sValores := sValores +
+          '(:serie, :numero, :linea' + IntToStr(iFoto) +
+          ', :unidad' + IntToStr(iFoto) +
+          ', :articulo' + IntToStr(iFoto) +
+          ', :nombre' + IntToStr(iFoto) +
+          ', :extension' + IntToStr(iFoto) +
+          ', NOW(), :usuario, NOW(), :usuario)';
+      end;
+      oConsulta.SQL.Text :=
+        'INSERT INTO fza_compras_sesiones_fotos ' +
+        '  (SERIE_SES_CSF, NUMERO_SES_CSF, LINEA_CSF, ' +
+        '   CODIGO_UNIDAD_CSF, CODIGO_ART_TENTATIVO_CSF, ' +
+        '   NOMBRE_FOT_CSF, EXTENSION_ORIGEN_CSF, ' +
+        '   INSTANTE_ALTA, USUARIO_ALTA, ' +
+        '   INSTANTE_MODIF, USUARIO_MODIF) VALUES ' +
+        sValores +
+        ' ON DUPLICATE KEY UPDATE ' +
+        '   CODIGO_ART_TENTATIVO_CSF = ' +
+        '     VALUES(CODIGO_ART_TENTATIVO_CSF), ' +
+        '   NOMBRE_FOT_CSF = VALUES(NOMBRE_FOT_CSF), ' +
+        '   EXTENSION_ORIGEN_CSF = VALUES(EXTENSION_ORIGEN_CSF), ' +
+        '   INSTANTE_MODIF = NOW(), ' +
+        '   USUARIO_MODIF = VALUES(USUARIO_MODIF)';
+      oConsulta.ParamByName('serie').AsString := ASerieSesion;
+      oConsulta.ParamByName('numero').AsString := ANumeroSesion;
+      oConsulta.ParamByName('usuario').AsString := AUsuario;
+      for iFoto := 0 to High(AMetadatos) do
+      begin
+        oConsulta.ParamByName(
+          'linea' + IntToStr(iFoto)).AsInteger :=
+          AMetadatos[iFoto].Linea;
+        oConsulta.ParamByName(
+          'unidad' + IntToStr(iFoto)).AsString :=
+          AMetadatos[iFoto].CodigoUnidad;
+        oConsulta.ParamByName(
+          'articulo' + IntToStr(iFoto)).AsString :=
+          AMetadatos[iFoto].CodigoArticuloTentativo;
+        oConsulta.ParamByName(
+          'nombre' + IntToStr(iFoto)).AsString :=
+          AMetadatos[iFoto].Nombre;
+        oConsulta.ParamByName(
+          'extension' + IntToStr(iFoto)).AsString :=
+          AMetadatos[iFoto].Extension;
+      end;
+      oConsulta.ExecSQL;
+    finally
+      FreeAndNil(oConsulta);
+    end;
   end;
 end;
 

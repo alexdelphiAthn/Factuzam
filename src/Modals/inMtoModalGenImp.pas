@@ -148,6 +148,7 @@ type
 
 procedure RebindReportDataSetsByDataModule(Report: TfrxReport;
                                            DM: TDataModule);
+procedure AjustarFormatoHorizontalTallas(AInforme: TfrxReport);
 
 implementation
 
@@ -247,11 +248,136 @@ begin
   end;
 end;
 
-procedure TfrmPrint.AfterReportLoaded;
+procedure AjustarFormatoHorizontalTallas(AInforme: TfrxReport);
+const
+  ALTO_FILA_TOTALES = 26.45671;
+  TOP_FILA_TOTALES = 3.77953;
 var
   iTalla: Integer;
+  mCampo: TfrxMemoView;
+  mImporte: TfrxMemoView;
   oTalla: TfrxComponent;
   mTalla: TfrxMemoView;
+  mTotalesFiscales: TfrxMemoView;
+  mUnidades: TfrxMemoView;
+  oImporte: TfrxComponent;
+  oResumen: TfrxComponent;
+  oTotalesFiscales: TfrxComponent;
+  oUnidades: TfrxComponent;
+
+  procedure AjustarCampoLinea(const ANombre: string;
+    AAlturaFuente: Integer);
+  var
+    oCampo: TfrxComponent;
+  begin
+    oCampo := AInforme.FindObject(ANombre);
+    if oCampo is TfrxMemoView then
+    begin
+      mCampo := TfrxMemoView(oCampo);
+      mCampo.Font.Height := AAlturaFuente;
+      mCampo.WordWrap := False;
+      mCampo.Clipped := True;
+    end;
+  end;
+
+  procedure AmpliarColumnaModelo(const ANombreModelo,
+    ANombreDescripcion: string);
+  const
+    ANCHO_MODELO_PRIORITARIO = 80;
+    ANCHO_MINIMO_DESCRIPCION = 100;
+  var
+    mDescripcion: TfrxMemoView;
+    mModelo: TfrxMemoView;
+    oDescripcion: TfrxComponent;
+    oModelo: TfrxComponent;
+    rAumento: Extended;
+  begin
+    oModelo := AInforme.FindObject(ANombreModelo);
+    oDescripcion := AInforme.FindObject(ANombreDescripcion);
+    if (oModelo is TfrxMemoView) and
+       (oDescripcion is TfrxMemoView) then
+    begin
+      mModelo := TfrxMemoView(oModelo);
+      mDescripcion := TfrxMemoView(oDescripcion);
+      if (mModelo.Width < ANCHO_MODELO_PRIORITARIO) and
+         (mDescripcion.Width > ANCHO_MINIMO_DESCRIPCION) and
+         (Abs(mDescripcion.Left -
+          (mModelo.Left + mModelo.Width)) < 1) then
+      begin
+        rAumento := ANCHO_MODELO_PRIORITARIO - mModelo.Width;
+        if rAumento >
+           (mDescripcion.Width - ANCHO_MINIMO_DESCRIPCION) then
+          rAumento := mDescripcion.Width - ANCHO_MINIMO_DESCRIPCION;
+        mModelo.Width := mModelo.Width + rAumento;
+        mDescripcion.Left := mDescripcion.Left + rAumento;
+        mDescripcion.Width := mDescripcion.Width - rAumento;
+      end;
+    end;
+  end;
+begin
+  // Las guias horizontales reservan solo 26,5 puntos por talla. Incluso con
+  // la correccion anterior a -12, valores como XXL/XXXL podian recortarse.
+  // Se fuerza una sola linea tambien en formatos personalizados de la BBDD.
+  if Assigned(AInforme) then
+  begin
+    for iTalla := 1 to 20 do
+    begin
+      oTalla := AInforme.FindObject(Format('GuiaT%.2d', [iTalla]));
+      if oTalla is TfrxMemoView then
+      begin
+        mTalla := TfrxMemoView(oTalla);
+        if mTalla.Width <= 30 then
+        begin
+          mTalla.Font.Height := -9;
+          mTalla.WordWrap := False;
+          mTalla.Clipped := True;
+        end;
+      end;
+    end;
+
+    // Se prioriza el modelo: gana espacio a la descripcion y conserva una
+    // fuente mayor. Ningun campo puede invadir la fila siguiente.
+    AmpliarColumnaModelo('HdrModelo', 'HdrDescr');
+    AmpliarColumnaModelo('LinModelo', 'LinDescr');
+    AjustarCampoLinea('LinModelo', -11);
+    AjustarCampoLinea('LinDescr', -10);
+    AjustarCampoLinea('LinColor', -10);
+
+    // El total definitivo no es un pie de pagina: debe aparecer una sola vez,
+    // despues de la ultima linea. Se mueve al resumen final incluso cuando el
+    // formato procede de la BBDD; la numeracion permanece en PageFooter1.
+    oResumen := AInforme.FindObject('ReportSummaryTotalesFiscales');
+    oUnidades := AInforme.FindObject('MemoTotalUds');
+    oImporte := AInforme.FindObject('MemoTotalImporte');
+    oTotalesFiscales := AInforme.FindObject('MemoTotalesFiscales');
+    if (oResumen is TfrxReportSummary) and
+       (oUnidades is TfrxMemoView) and
+       (oImporte is TfrxMemoView) then
+    begin
+      mUnidades := TfrxMemoView(oUnidades);
+      mImporte := TfrxMemoView(oImporte);
+      if (mUnidades.Parent <> oResumen) or
+         (mImporte.Parent <> oResumen) then
+      begin
+        if (oTotalesFiscales is TfrxMemoView) and
+           (oTotalesFiscales.Parent = oResumen) then
+        begin
+          mTotalesFiscales := TfrxMemoView(oTotalesFiscales);
+          mTotalesFiscales.Top :=
+            mTotalesFiscales.Top + ALTO_FILA_TOTALES;
+        end;
+        TfrxReportSummary(oResumen).Height :=
+          TfrxReportSummary(oResumen).Height + ALTO_FILA_TOTALES;
+        mUnidades.Parent := TfrxReportSummary(oResumen);
+        mImporte.Parent := TfrxReportSummary(oResumen);
+        mUnidades.Top := TOP_FILA_TOTALES;
+        mImporte.Top := TOP_FILA_TOTALES;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmPrint.AfterReportLoaded;
 begin
   // Hook para descendientes: re-enlazar DataSets del informe.
   // Aqui ademas enganchamos el OnBeforePrint del Report para que en
@@ -260,20 +386,7 @@ begin
   // banda padre (necesario en etiquetas y otros informes iterativos) y
   // el llamado 'qrverifactu' con el QR tributario de la factura.
   frxrprt1.OnBeforePrint := ReportBeforePrintConQR;
-
-  // Las guias horizontales reservan solo 26,5 puntos por talla. Con la
-  // fuente original de 14, valores largos como XXXL se recortan. Ajustamos
-  // exclusivamente esas celdas estrechas, también en formatos personalizados.
-  for iTalla := 1 to 20 do
-  begin
-    oTalla := frxrprt1.FindObject(Format('GuiaT%.2d', [iTalla]));
-    if oTalla is TfrxMemoView then
-    begin
-      mTalla := TfrxMemoView(oTalla);
-      if (mTalla.Width <= 30) and (mTalla.Font.Height < -12) then
-        mTalla.Font.Height := -12;
-    end;
-  end;
+  AjustarFormatoHorizontalTallas(frxrprt1);
 end;
 
 procedure TfrmPrint.ReportBeforePrintConQR(Component: TfrxReportComponent);
